@@ -1,0 +1,60 @@
+#!/bin/bash
+
+###############################################################################
+#
+# stopjobs
+# 
+#
+# RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
+# Copyright (C) 2002-2007 Jan Benda <j.benda@biologie.hu-berlin.de>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+# 
+# RELACS is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+
+# This script is for stoppping and continuing jobs of other users
+# on the local machine.
+# written by Jan Benda, 2003
+
+# In order for a user to run the script
+# add as root with the visudo command the following line to /etc/sudoers:
+# 
+# user  host = NOPASSWD : /bin/kill
+#
+# where user is the login name of the user that is allowed use the script,
+# host is the name of the local machine.
+#
+# Install this script in /usr/bin and make it owned by root:root
+# and executable for the user.
+
+# To stop jobs do 
+#   stopjobs STOP
+# To continue jobs do 
+#   stopjobs CONT
+
+if [ "$1" != "STOP" ] &&  [ "$1" != "SIGSTOP" ] &&  [ "$1" != "CONT" ] &&  [ "$1" != "SIGCONT" ]; then
+  echo "usage:"
+  echo "  stopjobs STOP | CONT"
+  exit 1
+fi
+
+SIGNAL=$1
+
+for username in $(who | awk '{ print $1 }'); do
+  if [ "$username" != "$USER" ]; then
+    for pid in $(ps -u $username | sed -n '1!p' | awk '{ print $1 }'); do
+      sudo kill -s $SIGNAL $pid
+    done
+  fi
+done

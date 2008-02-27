@@ -1,0 +1,69 @@
+#! /bin/bash
+
+###############################################################################
+#
+# scaninf
+# January 2002 by Jan Benda
+#
+# RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
+# Copyright (C) 2002-2007 Jan Benda <j.benda@biologie.hu-berlin.de>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+# 
+# RELACS is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+
+SEARCH=$1
+if [ -z "$SEARCH" ] ; then
+  echo USAGE
+  echo "scaninf <spec> [-u|-s|-d|-f]"
+  echo
+  echo "search the info.dat files for a specific entry <spec>"
+  echo
+  echo "-s: sort the values"
+  echo "-u: show each value only once (uses uniq)"
+  echo "-d: sort values and print the filename in the first column"
+  echo "-f: print the filename in the first column"
+  echo "no option: show the unsorted values"
+  echo
+  echo "examples:"
+  echo "to show just the names of all scientists who recorded the data:"
+  echo "   scaninf scientist -u"
+  echo "to show a sorted list of species used for the recordings:"
+  echo "   scaninf species -s"
+  echo "to show a sorted list of species used for the recordings with the filenames:"
+  echo "   scaninf species -d"
+  echo "to show the comments with filenames:"
+  echo "   scaninf comment -f"
+else
+  SORTOPTION=$2
+  if [ -z "$SORTOPTION" ] ; then
+    find '(' -name 'info.dat' -or -name '*.inf' ')' -exec grep -i $SEARCH '{}' ';' | \
+    awk '{ print $3, $4, $5, $6, $7, $8, $9 }'
+  else case $SORTOPTION in
+    ( -u ) find '(' -name 'info.dat' -or -name '*.inf' ')' -exec grep -i $SEARCH '{}' ';' | \
+           awk '{ print $3, $4, $5, $6, $7, $8, $9 }' | \
+           sort | uniq ;;
+    ( -s ) find '(' -name 'info.dat' -or -name '*.inf' ')' -exec grep -i $SEARCH '{}' ';' | \
+           awk '{ print $3, $4, $5, $6, $7, $8, $9 }' | \
+           sort;;
+    ( -d ) find '(' -name 'info.dat' -or -name '*.inf' ')' -exec echo '{}' ';' -exec grep -i $SEARCH '{}' ';' | \
+           awk '{ if ( $1=="#" ) { print filename, $3, $4, $5, $6, $7, $8, $9 } else { filename=$0 } }' | \
+           sort -k2;;
+    ( -f ) find '(' -name 'info.dat' -or -name '*.inf' ')' -exec echo '{}' ';' -exec grep -i $SEARCH '{}' ';' | \
+           awk '{ if ( $1=="#" ) { print filename, $3, $4, $5, $6, $7, $8, $9 } else { filename=$0 } }' ;;
+    ( * ) echo unknown option
+    esac
+  fi
+fi
+

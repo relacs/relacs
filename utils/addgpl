@@ -1,0 +1,102 @@
+#!/bin/bash
+
+###############################################################################
+#
+# addgpl
+# 
+#
+# RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
+# Copyright (C) 2002-2007 Jan Benda <j.benda@biologie.hu-berlin.de>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+# 
+# RELACS is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+
+FILE="$1"
+
+! [ -f "$FILE" ] && exit 1
+
+EXTENSION=${FILE##*.}
+[ "${FILE##*/}" = "Makefile.h" ] && EXTENSION=""
+
+DESCRIPTION=""
+HEADERFILE=""
+if [ "$EXTENSION" == "h" ]; then
+  HEADERFILE=$FILE
+fi
+if [ "$EXTENSION" == "cc" ]; then
+  HEADERFILE=${FILE%.*}.h
+fi
+if [ -f "$HEADERFILE" ]; then
+  BRIEF="$(grep '\\brief' $HEADERFILE | head -n 1)"
+  DESCRIPTION="${BRIEF##*\\brief }"
+fi
+
+if [ "$EXTENSION" == "h" ] || [ "$EXTENSION" == "cc" ]; then
+  cat <<EOF | sed -e "s|FILENAME|${FILE##*/}|; s|DESCRIPTION|$DESCRIPTION|" > tmp.txt
+/*****************************************************************************
+ *
+ * FILENAME
+ * DESCRIPTION
+ *
+ * RELACS
+ * RealTime ELectrophysiological data Acquisition, Control, and Stimulation
+ * Copyright (C) 2002-2007 Jan Benda <j.benda@biologie.hu-berlin.de>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * RELACS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *****************************************************************************/
+
+EOF
+else
+  cat <<EOF | sed -e "s|FILENAME|${FILE##*/}|; s|DESCRIPTION|$DESCRIPTION|" > tmp.txt
+###############################################################################
+#
+# FILENAME
+# DESCRIPTION
+#
+# RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
+# Copyright (C) 2002-2007 Jan Benda <j.benda@biologie.hu-berlin.de>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+# 
+# RELACS is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+
+EOF
+fi
+cat $FILE >> tmp.txt
+
+mv tmp.txt $FILE

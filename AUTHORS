@@ -1,0 +1,16 @@
+Authors of RELACS
+=================
+
+The following contributions warranted legal paper exchanges 
+with Jan Benda. 
+Also see files ChangeLog and THANKS
+
+* Jan Benda:
+  All files.
+
+* Christian Machens:
+  Initial setup of the basic structure of RELACS (at that time called "OEL").
+
+* Marco Hackenberg:
+  Interfaces for analog input and output, their implementation for comedi.
+

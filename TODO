@@ -1,0 +1,208 @@
+Update documentation of OutData, TraceSpec
+
+Bug somewhere: if session is running, start of repro kills RELACS
+This always exits at savefiles.cc line 373: 
+RelacsWidget::startRePro() ->
+SaveFiles::write( RePro ) -> SaveFiles::writeStimulus() -> 
+	    TriggerKey.save( *TF, StimulusToWrite[j].ident() );
+-> cleanup savefiles! make sure that writing to files is locked!
+
+
+Start implementing Dynclamp module!
+
+
+Things to be done for first release:
+
+- update copyright in gpl header in each file to 2008! Write a script for this.
+- reorganize the source files (more libraries)
+  * split src/ in internal classes and a relacs library:
+    not possible yet, 
+    since RELACSPlugin need RELACSWidget, and this uses everything!
+- find better and not yet used names for the libraries
+- change #include "foo.h"
+  to #include <library/foo.h> for public headers of the library.
+  Link the public header files into a subdir library/. (see gsl library)
+- check library dependencies (of hardware plugins, repros, etc.)
+- make all libraries depend on -lm (if appropriate) and -lc (every library)!
+- use autoconf and automake, and libtool (what about the -fPIC or -fpic flag for gcc?)
+
+
+new RePro name: ExPro, Protocol, ...
+
+-------------------------------------------------------------------------
+
+Update 1.8.18 oel.cfg:
+  - "extref" for AnalogOutput devices
+  - new config section FilterDetectors in oel.cfg!
+  - remove eventdetector.h eventdetector.cc, detectors.h detectors.cc,
+    *dock*, make dependall
+  - add to outputdata:
+       outputtraceid: Left-Speaker|Right-Speaker
+  outputtracechannel: 0|1
+   outputtracedevice: ao-1|ao-1
+  outputtracemaxrate: 240|240kHz
+    outputtracedelay: 0|0ms
+  - add devices:
+
+*Analog Input Devices
+  plugin1: DAQNIE|AISim
+  device1: /dev/comedi0
+   ident1: ai-1
+
+*Analog Output Devices
+  plugin1: DAQNIE|AOSim
+  device1: /dev/comedi1
+   ident1: ao-1
+
+- in Attenuator Interfaces change "daq1: daq-1" to "ao1: ao-1"
+
+Update 1.8.14:
+  - make cleanall
+  - daq/src: remove eventdata.* eventlist.* detector.h
+  - numerics/src: remove basefuncs.h
+  - oel.cfg: replace "daq1: 0" by "daq1: daq-1" in AttInterfaces
+             remove "mode1" line in AttDevices
+  - oelplugins.cfg: Auditory Neuron Model
+
+---------------------------------
+
+Announce new releases to <A
+HREF="news:comp.os.linux.announce"
+TARGET="_top"
+>comp.os.linux.announce</A
+>.  Besides being widely read itself,
+this group is a major feeder for web-based what's-new sites like
+<A
+HREF="http://www.freshmeat.net"
+TARGET="_top"
+>Freshmeat</A
+>.
+
+---------------------------------
+
+Macros, SpikeDetector, PlotTrace:
+  - check font size on fourier
+
+ConfigDialog:
+  - generalize usage of icon in header!
+  - generalize such that RePro's also can use the standard dialog.
+
+RePros:
+  - use convert( OutData& )!
+  - check save() function of all RePros.
+  - test all RePros! Especially the files they are saving.
+  - Search/FIField: slower change of input range!
+    * option: increase range only
+    * decrease range after n stimuli only
+
+Devices:
+  - Add and implement probe() and possibly requires() function
+  - implement settings() (AnalogIn/Output, Attenuator, Attenuate already done)
+  - implement "dummy (DocDevice)" devices that only get infos from
+    the config file and thus serve as documentation of all the used hardware.
+
+Attenuate:
+  - a unit for intensity!
+  - interaction with gain settings of daq board? Are there boards with
+    many gains for analog output.
+
+Session:
+  - move sessionData() to FileSave (this is the only place where this is used?)
+  - does a session really need to be an plugin? Could that not be just a Control
+    that has the "Cell found" button? Check both Auditory and Efish-Session!
+  - Both Control and RePro should have a sessionStart() and sessionStop() function
+    (not init() and reset()).
+
+ConfigDialog:
+  - check recursive mutex
+
+Need a ComediNIESeriesPFI and a ComediDIO device class.
+
+Filter/Detectors/PlotTrace:
+  Make PlotTrace better configurable!
+
+Plugins:
+ - access by index with index equal to index in container, not an id.
+ - use Qt shared libraries interface!? 
+   QWidgetPlugin would replace addPlugin and/or the Plugin class (?)
+   and can contain whatever classes as plugins.
+   What about Qt 4? Provides a new and much better interface!
+
+OutData, Acquire:
+ - handle unset SampleInterval
+
+EventData, FileWrite:
+ - units of size don't have to be the unit of the trace!
+
+A virtual I/O Data handler controlling the data flow in RELACS.
+ - online data aquisition
+ - simulation
+ - data analysis
+
+RELACS:
+ - "labbook/protocol/log" options as a tab along with the session
+   for recording manual manipulations of the experiment.
+   Saved directly in the trigger.dat file and
+   available to the RePros. 
+ - clear and reset all inputdata, eventdata and data acquisition 
+   at session start and session end to avoid index and time overflows!
+ - IOData, EventData, FileWrite, ...: new time zero reference handling!
+
+A new Tab-Widget Container:
+ - show tabs only if more than one tab
+ - switch between tabs with shift-arrow left/right
+ - minimizable
+ - button menu on right click
+ - check KDE for such a widget (KJanusWidget)
+ - use for detectors and sessions and repros
+
+datafile/datatools Makefile:
+ - check for gsl library
+
+
+---------------------------------
+
+Finding a P-Unit:
+ - Phase-locked spike response?
+   If not it might be a Pd feedback fiber (at 80-100Hz).
+ - SAM: P-Unit fires only on rising face, 
+   5Hz beat, 20% Contrast, 10 beat cycles.
+
+---------------------------------
+
+
+Name:
+
+ORCA-Lab: Online Recording, Control, and Analysis System/Lab/Tool
+CAT-Lab: Control and acquisition tool
+act: Acquisition and Control Tool
+DAC-Lab: Data acquisition and control lab
+rac-Lab: Recording, Analysis, and Control
+rac-Lab: Realtime data acquisition, Analysis, and Control lab
+OASiS : Online Acquisition and Simulation System
+NeuroLab
+NeuroNerd
+BrainFire
+RElACS (sprich: relax!): Realtime electrophysiology aquisition, control and stimulation
+RACoon: Realtime data acquisition, Analysis, and COntrol for ONline experiments: no domain name!
+REInDEER: Realtime Experimental INterface for Dynamic  ElEctrophysiological Recordings
+ANTEloPE: Advanced Neuro Tool for ELectrO-Physiological Experiments
+BOAR-Lab: Biological Online Analysis Recording Lab
+DynOSAUr: DYNamic Online Spike Analysis Utility
+ElePhAnT: Electro-Physiological AcquisitioN/ANalysis Tool
+FLEA: Flexible Laboratory for Electrophysiological Aquisition
+REINDyR: Realtime Electrophysiological Interface for Neurobiological DYnamic Recordings
+SpiDER: SPIke Detecting Electrophysiological Recordingsystem
+SEAL(SEALab): Stimulusgeneration and Electrophysiological Aquisition Laboratory
+react: no domain
+racs (sprich rex): no domain
+racs-1: real time analysis, control, and stimulation for online experiments
+excite, ACScite: schwierig mit domain name
+engram: no domain
+neuracs: Neuro aquisition, control and stimulation
+focs: no domain
+Coracs: = Rabe  Computerized online recording, analysis, control, and stimulation
+ThoRACS
+T-racs
+
+---------------------------------

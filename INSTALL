@@ -1,0 +1,100 @@
+How to install RELACS:
+
+You need:
+- Linux
+- make
+- g++  (gnu C++ compiler)
+- dl library (/usr/lib/libdl.so)
+- Qt library version 3.3
+- optional the GSL library (GNU scientific library)
+- doxygen
+
+
+1. unpack the tgz file :-)
+
+> tar xzvf relacs-xxx.tgz
+
+
+2. Compile it by executing
+
+> make all
+
+In case this it not working:
+- Make shure you have the Qt libraries and include files 
+  installed (version 3.3)
+- Check wether the environment variable QTDIR is
+  set to the right path: env | grep QTDIR
+  If not then set the QTPATH variable in Makefile.h to
+  the appropriate path
+If it is still not working wait for the first official release!
+
+
+3. Create the documentation
+
+> make doc
+
+You need doxygen to be able to generate the documentation.
+
+
+4. Create the help files for the plugins
+
+> make help
+
+This also requires doxygen.
+
+
+5. Read the relacs web pages in
+
+doc/web/index.html
+
+and the documentation in
+
+doc/html/index.html
+
+with your favorite web browser / html viewer.
+
+
+6. Start RELACS in simulation mode by calling
+
+> relacs -3
+
+
+7. If you want to use RELACS for acquiring data 
+(that's what you want!) you need to install the driver
+for the data acquisition board.
+
+Note: This prerelease still does not fully support 
+the comedi drivers and does not contain any other driver.
+Wait for the first official release!
+
+
+---------------------------------------------------------------------------
+
+
+8. Setting up device access
+For accessing devices through the parallel or serial ports you need
+to ensure that the appropriate modules are loaded and that
+the corresponding device files have the appropriate permissions set.
+
+For debian linux with an 2.6.18 linux kernel (as for January 2008) I
+need to do the following:
+
+- add "ppdev" to the file /etc/modules to have parallel port support
+  loaded into the kernel and to get the /dev/parport0 device file.
+- add "lp" and "dialout" as groups to the file /etc/security/group.conf
+  to make the current user a member of the lp and dialout groups and
+  thus allow him to use the parallel port (/dev/parport0) and the serial port
+  (/dev/ttyS0). This is the crucial line in group.conf:
+  *; *          ; *; Al0000-2400; cdrom,floppy,plugdev,fuse,dialout,lp
+- after restarting the computer and logging in you should be member of 
+  the lp and dialout groups (execute the "groups" command in a shell)
+  and both the /dev/parport0 and /dev/ttyS0 device files should be
+  present, their permissions set to 'rw' for the group members, and their 
+  groups should be lp and dialout, respectively 
+  (check with ls -l /dev/parport0).
+
+9. Start RELACS in acquisition mode by calling
+
+> relacs
+
+Enjoy!

@@ -1,0 +1,73 @@
+.\" Process this file with
+.\" groff -man -Tascii relacs.1
+.\"
+.TH RELACS 1 "September 2007" "Version 0.9.0"
+.SH NAME
+relacs \- real-time electrophysiological data acquisition, control, and stimulation
+.SH SYNOPSIS
+.BI "relacs [-3] [-f]"
+.br
+.BI "relacs [-e " "executable" "] [-p " "pathes" "] [-w " "wdir" "] [-l] [-f " "logfile" "] [-t] [-d|-D|-C " "corefile" "] [-c] [-b] [-k] [-m] [--] [-3] [-f]"
+.SH DESCRIPTION
+.B relacs
+is a platform for online acquisition, analysis, and stimulus
+generation designed for (but not limited to) electrophysiological
+recordings. Through C++ plugins
+.B relacs
+is very flexible and adaptable
+to your specific needs.
+.SH OPTIONS
+.IP "-e executable"
+path to the 
+.B relacs
+executable and libraries
+.IP "-p pathes"
+pathes to the
+.B relacs
+plugins
+.IP "-w wdir"
+working path (default '.')
+.IP -l
+write
+.B relacs
+messages from stdout and stderr to a log-file
+.IP "-f logfile"
+use logfile (default 'relacs.log') for logging all
+.B relacs
+messages.
+.IP -t
+use log file but also write messages to stdout
+.IP -d
+run
+.B relacs
+from within a debugger (disables logfile)
+.IP -D
+start debugger without running
+.B relacs
+.IP "-C corefile"
+start debugger with core-dump-file corefile
+.IP -c
+save core dump in directory 'coredumps'
+.IP -b
+in case of warnings or errors, save log file in directory 'bugs'
+.IP -k
+in case of core dumps or bugs save the output of dmesg in the 'bugs' and 'coredumps' directories as well
+.IP -m
+email notification about core dump or bugs to <j.benda@biologie.hu-berlin.de>
+.SH FILES
+.I relacs.cfg
+.RS
+The main configuration file
+.RE
+.I relacsplugins.cfg
+.RS
+Configuration for the
+.B relacs
+plugins.
+.SH ENVIRONMENT
+.IP LD_LIBRARY_PATH
+Might be important for
+.B relacs
+to find the plugins.
+.SH AUTHOR
+Jan Benda <j.benda@biologie.hu-berlin.de>

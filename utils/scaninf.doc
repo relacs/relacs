@@ -1,0 +1,37 @@
+/*!
+\page scaninf scaninf
+
+Search the *.inf files created by RELACS for a specific entry \a <spec>.
+
+\section scaninfusage USAGE
+\c scaninf \a <spec> \c [-u|-s|-d|-f]
+
+\section scaninfoptions OPTIONS
+\arg \c -s : sort the values
+\arg \c -u : show each value only once (uses uniq)
+\arg \c -d : sort values and print the filename in the first column
+\arg \c -f : print the filename in the first column
+\arg \c no \c option : show the unsorted values
+
+\section scaninfexamples EXAMPLES
+to show just the names of all scientists who recorded the data:
+\code
+   scaninf scientist -u
+\endcode
+
+to show a sorted list of species used for the recordings:
+\code
+   scaninf species -s
+\endcode
+
+to show a sorted list of species used for the recordings with the filenames:
+\code
+   scaninf species -d
+\endcode
+
+to show the comments with filenames:
+\code
+   scaninf comment -f
+\endcode
+
+*/

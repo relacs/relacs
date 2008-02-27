@@ -1,0 +1,323 @@
+#!/bin/bash
+
+###############################################################################
+#
+# relacsscript
+# 
+#
+# RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
+# Copyright (C) 2002-2007 Jan Benda <j.benda@biologie.hu-berlin.de>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+# 
+# RELACS is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+
+# default path for RELACS executables and libraries:
+RELACSEXECPATH=.
+
+# name of the RELACS executable to be used:
+RELACSEXEC=relacsexec
+
+# pathes to RELACS plugins, separated by colons:
+RELACSPLUGINPATHES=./plugins
+
+# default working path:
+WORKPATH=.
+
+# default name of the log-file:
+LOGFILE="relacs.log"
+USELOGFILE=1
+
+# double to stdout?
+TEE="tee -a"
+USETEE=1
+
+# debug:
+DEBUG=0
+DEBUGGER="gdb"
+COREFILE=""
+
+# email address for core dump and bug notifications:
+EMAILADDRESS='j.benda@biologie.hu-berlin.de'
+COREBUGEMAIL=0
+KERNELMESSAGES=0
+
+# core dumps?
+COREDUMP=0
+COREDIR=coredumps
+COREMAILCMD="mail -s RELACS_coredump $EMAILADDRESS"
+
+# bugs?
+BUGS=0
+BUGDIR=bugs
+BUGMAILCMD="mail -s RELACS_bug $EMAILADDRESS"
+
+
+# read arguments:
+HELP=0;
+for i; do
+  case $1 in
+    -e) shift
+        if [ -n "$1" ]; then
+          RELACSEXECPATH=$1
+          shift
+        fi ;;
+    -p) shift
+        if [ -n "$1" ]; then
+          RELACSPLUGINPATHES=$1
+          shift
+        fi ;;
+    -w) shift
+        if [ -n "$1" ]; then
+          WORKPATH=$1
+          shift
+        fi ;;
+    -l) USELOGFILE=1
+        shift ;;
+    -f) shift
+        if [ -n "$1" ]; then
+          LOGFILE=$1
+          USELOGFILE=1
+          shift
+        fi ;;
+    -t) USELOGFILE=1
+        USETEE=1
+        shift ;;
+    -d) DEBUG=1
+        USELOGFILE=0
+        shift ;;
+    -D) DEBUG=2
+        USELOGFILE=0
+        shift ;;
+    -C) shift
+        if [ -n "$1" ]; then
+          COREFILE=$1
+          DEBUG=1;
+          USELOGFILE=0
+          shift
+        fi ;;
+    -c) COREDUMP=1
+        ulimit -c unlimited 
+        shift ;;
+    -b) BUGS=1 
+        shift ;;
+    -m) COREBUGEMAIL=1 
+        shift ;;
+    -k) KERNELMESSAGES=1 
+        shift ;;
+    -h) HELP=1
+        break ;;
+--help) HELP=1
+        break ;;
+  '-?') HELP=1
+        break ;;
+    --) break ;;
+     *) break ;;
+  esac
+done
+
+
+# print help:
+if [ $HELP -gt 0 ]; then
+  echo "relacs"
+  echo
+  echo "script for running RELACS"
+  echo "Jan Benda, 2003-2008"
+  echo
+  echo "usage:"
+  echo "  relacs [-e xxx] [-p xxx] [-w xxx] [-l] [-f xxx] [-t]"
+  echo "         [-d | -D | -C xxx] [-c] [-b] [-k] [-m] [--]"
+  echo "         [-3] [-c xxx] [-f]"
+  echo
+  echo "  -e: path to the RELACS executable and libraries"
+  echo "      (default '$RELACSEXECPATH')"
+  echo "  -p: pathes to the RELACS plugins"
+  echo "      (default '$RELACSPLUGINPATHES')"
+  echo "  -w: working path (default '$WORKPATH')"
+  echo "  -l: write RELACS messages from stdout and stderr to a log-file"
+  echo "  -f: use logfile xxx (default '$LOGFILE')"
+  echo "  -t: use log file but also write messages to stdout "
+  echo "  -d: run RELACS from within a debugger (disables logfile)"
+  echo "  -D: start debugger without running RELACS"
+  echo "  -C: start debugger with core-file xxx"
+  echo "  -c: save core dump in directory '$COREDIR'"
+  echo "  -b: in case of warnings or errors, save log file in directory '$BUGDIR'"
+  echo "  -k: in case of core dumps or bugs save the output of dmesg"
+  echo "      in directory '$BUGDIR' or '$COREDIR' as well"
+  echo "  -m: email notification about core dumps or bugs to"
+  echo "      <$EMAILADDRESS>"
+  echo "  --: the following options are passed directly to the RELACS executable"
+  echo
+  echo "  -3: run in simulation mode"
+  echo "  -s: use xxx as the basename for the RELACS settings (configuration) files"
+  echo "      (default is 'relacs', i.e. relacs.cfg and relacsplugins.cfg)"
+  echo "  -f: fullscreen mode"
+  echo
+  exit 1
+fi
+
+
+# set the library path:
+export LD_LIBRARY_PATH=:$RELACSEXECPATH/lib:$RELACSPLUGINPATHES:$LD_LIBRARY_PATH
+
+# working path:
+cd $WORKPATH
+
+# run RELACS:
+if [ $USELOGFILE -gt 0 ] && [ -n "$LOGFILE" ]; then
+
+  # write RELACS output into logfile
+  
+  # append old log-file to $LOGFILE.old:
+  if [ -f "$LOGFILE" ]; then
+    cat $LOGFILE >> $LOGFILE.old
+  fi
+
+  # create new log-file:
+  echo > $LOGFILE
+  echo >> $LOGFILE
+  echo "NEW RUN" >> $LOGFILE
+  date >> $LOGFILE
+  echo >> $LOGFILE
+
+  # execute RELACS:
+  if [ $USETEE -gt 0 ] && [ -n "$TEE" ]; then
+    $RELACSEXECPATH/$RELACSEXEC $@ 2>&1 | $TEE $LOGFILE
+  else
+    $RELACSEXECPATH/$RELACSEXEC $@ >> $LOGFILE 2>&1
+  fi
+
+else
+
+  # do not write RELACS output into logfile
+
+  if [ $DEBUG -gt 0 ]; then
+
+    # debug RELACS
+
+    if [ -n "$COREFILE" ]; then
+
+      # run debugger on coredump:
+      $DEBUGGER $RELACSEXECPATH/$RELACSEXEC $COREFILE
+
+    else
+ 
+      if [ $DEBUG -gt 1 ]; then
+        # start debugger with RELACS:
+        $DEBUGGER --args $RELACSEXECPATH/$RELACSEXEC $@
+      else
+        # run RELACS from within debugger:
+        DEBUGCOM=relacsdebug$$
+        echo "run" > $DEBUGCOM
+        $DEBUGGER -x $DEBUGCOM --args $RELACSEXECPATH/$RELACSEXEC $@
+        rm $DEBUGCOM
+      fi
+
+    fi
+
+    exit 0
+
+  else
+
+    # simply execute RELACS:
+    $RELACSEXECPATH/$RELACSEXEC $@
+
+  fi
+
+fi
+
+SAVEDLOG=0
+
+# core dumps:
+if [ $COREDUMP -gt 0 ]; then
+  CF=$(ls -rtd core* | tail -n 1)
+  if [ -f "$CF" ]; then
+    NCF=$COREDIR/core.$(date --iso-8601=sec)${CF#core}
+    mkdir -p $COREDIR
+    mv $CF $NCF
+    if [ $USELOGFILE -gt 0 ] && [ -n "$LOGFILE" ] && [ -f "$LOGFILE" ]; then
+      cp $LOGFILE $COREDIR/$LOGFILE.$(date --iso-8601=sec)
+      egrep 'error|warning|panic|Xlib' $LOGFILE > tmp.txt
+      SAVEDLOG=1
+    fi
+    if [ $KERNELMESSAGES -gt 0 ]; then
+      dmesg > $COREDIR/dmesg.$(date --iso-8601=sec)
+    fi
+    if [ $COREBUGEMAIL -gt 0 ]; then
+      { echo
+        echo "RELACS crashed with a core dump!"
+	echo
+        echo "You find the core dump in"
+        echo "  $NCF"
+        echo "and the corresponding log-file in"
+        echo "  $COREDIR/$LOGFILE.$(date --iso-8601=sec)"
+        if [ $KERNELMESSAGES -gt 0 ]; then
+          echo "and the kernel messages in"
+          echo "  $COREDIR/dmesg.$(date --iso-8601=sec)"
+        fi
+        echo
+        if [ "$(wc -l tmp.txt | awk '{print $1}' )" -gt 0 ]; then
+          echo "The log-file contains the following warnings and error messages:"
+          echo
+          cat tmp.txt
+        else
+          echo "The log-file contains no warnings or error messages."
+        fi
+        echo
+        echo "This email was automatically generated from the 'relacs' script"
+        echo "  $0"
+        echo "The current working directory is"
+        echo "  $PWD"
+        echo
+      } | $COREMAILCMD
+    fi
+    rm -f tmp.txt
+  fi
+fi
+
+# bugs:
+if [ $BUGS -gt 0 ] && [ $USELOGFILE -gt 0 ] &&
+   [ -n "$LOGFILE" ] && [ -f "$LOGFILE" ] && [ "$SAVEDLOG" -eq 0 ]; then
+  egrep 'error|warning|panic|Xlib' $LOGFILE > tmp.txt
+  if [ "$(wc -l tmp.txt | awk '{print $1}' )" -gt 0 ]; then
+    mkdir -p $BUGDIR
+    cp $LOGFILE $BUGDIR/$LOGFILE.$(date --iso-8601=sec)
+    if [ $KERNELMESSAGES -gt 0 ]; then
+      dmesg > $BUGDIR/dmesg.$(date --iso-8601=sec)
+    fi
+    if [ $COREBUGEMAIL -gt 0 ]; then
+      { echo
+        echo "RELACS terminated with bugs!"
+        echo
+        echo "You find the log-file in"
+        echo "  $BUGDIR/$LOGFILE.$(date --iso-8601=sec)"
+        if [ $KERNELMESSAGES -gt 0 ]; then
+          echo "and the kernel messages in"
+          echo "  $BUGDIR/dmesg.$(date --iso-8601=sec)"
+        fi
+        echo
+        echo "The log-file contains the following warnings and error messages:"
+        echo
+        cat tmp.txt
+        echo
+        echo "This email was automatically generated from the 'relacs' script"
+        echo "  $0"
+        echo "The current working directory is"
+        echo "  $PWD"
+        echo
+      } | $BUGMAILCMD
+    fi
+  fi
+  rm -f tmp.txt
+fi

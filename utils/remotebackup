@@ -1,0 +1,52 @@
+#!/bin/bash
+
+###############################################################################
+#
+# remotebackup
+# 
+#
+# RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
+# Copyright (C) 2002-2007 Jan Benda <j.benda@biologie.hu-berlin.de>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+# 
+# RELACS is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+
+SRCPATH=/extra/setup/oel
+SRCMASK="??-??-??-*"
+BACKUPHOSTS="turing wiener"
+DESTPATHES=("/extra2/grasshopper/setup1/data" "/extra/grasshopper/setup1/data")
+RSYNC="rsync -avub"
+
+# exit if RELACS is running:
+ps -C relacsexec > /dev/null && exit 1
+
+# backup:
+d=0
+for h in $BACKUPHOSTS; do
+  LOGFILE=/tmp/backup$$.log
+  $RSYNC $SRCPATH/$SRCMASK $h:${DESTPATHES[$d]} > $LOGFILE
+  let d+=1
+  if [ "$(wc -l $LOGFILE | cut -d " " -f 1)" -gt 4 ]; then
+    { 
+      echo "-----------------------------------------------------------------"
+      date
+      echo
+      cat $LOGFILE
+      echo
+      echo
+    } >> $SRCPATH/backups-$h.log
+  fi
+  rm $LOGFILE
+done

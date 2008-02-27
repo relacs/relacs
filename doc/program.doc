@@ -1,0 +1,223 @@
+/*!
+\page relacsprogram RELACS for Programmers
+
+\section relacsprogramcontent Content
+
+- \ref relacsdirectories
+- \ref relacsmakefile
+- \ref naming
+- \ref relacsstructure (\ref analoginputstruct, \ref eventdetectionsstruct,
+	\ref analogoutputstruct, \ref optionsstruct, \ref datafilestruct,
+	\ref numericsstruct, \ref mplotstruct, \ref widgetsstruct,
+	\ref relacsclassesstruct)
+
+
+\section relacsdirectories Directory Structure
+
+- \c numerics: Source code for dealing with arrays of numbers and events.
+- \c daq: Source code of classes closely related to the data acquisition:
+     data classes for analog input and output, 
+     base classes for daq-drivers, attenuators and other devices.
+- \c options: Source code for dealing with strings and options.
+- \c datafile: Source code for dealing with ascii data files.
+- \c mplot: Source code for plot widgets.
+- \c widgets: Source code for other widgets.
+- \c config: Source code for classes related to configuration issues.
+- \c src: The remaining RELACS source code specific for RELACS.
+
+- \c hardware: Implementations of the base-classes from \c daq for specific hardware and drivers.
+- \c common: Source code of common, very general plugins.
+- \c auditory: Source code of plugins for auditory electrophysiology.
+
+- \c include: All the header files of the RELACS source code from 
+                 the directories \c daq, \c options, \c numerics, \c newwidgets, and \c relacsclasses.
+- \c lib: The shared libraries of RELACS.
+
+- \c doc: Main documentation for RELACS and doxygen configuration file.
+- \c doc/html: The documentation of RELACS.
+- \c doc/web: The RELACS home page.
+- \c examples: Some example code for RELACS plugins (%RePros).
+- \c backups: tgz-archives containing the source code of older versions.
+
+- \c utils: Some utility programs for RELACS.
+
+- \c dry: The directory used to store data from RePro's that are executed
+     while no %Session is started.
+
+
+\section relacsmakefile The RELACS Makefiles
+
+\c Makefile.h is included by all RELACS Makefiles and contains all
+global settings.
+This Makefile is the only place where the version and date of RELACS
+are set (variables \a VERSION and \a DATE).
+These are passed to the RELACS program itself and to the documentation.
+\a QTPATH is the base path of the Qt library.
+It is automatically set to the most recent version.
+If there are problems with Qt, then set
+\a QTPATH to the right version of the Qt library
+(try \c ls \c -d \c /usr/lib/qt* for available possibilties).
+
+Each directory containing some source code has its own \c Makefile.
+The main \c Makefile in the RELACS base directory coordinates them.
+You have the following options to invoke \c make:
+
+- \c make: Compile RELACS without plugins.
+- \c make \c plugins: Compile plugins only.
+- \c make \c all: Compile RELACS and plugins.
+
+- \c make \c depend: Update dependencies of the RELACS source code
+- \c make \c dependplugins: Update dependencies of the plugins source code.
+- \c make \c dependall: Update dependencies of the RELACS and plugins source code.
+
+- \c make \c install: Copy the RELACS libraries to their destination.
+- \c make \c installplugins: Copy  plugins libraries to their destination.
+- \c make \c installall: Copy RELACS and plugins libraries to their destination.
+
+- \c make \c backup: Create a tgz-archive in \c backups with all the RELACS source code files (configuration files are not included).
+- \c make \c backupall: Create a tgz-archive in \c backups with all the RELACS and plugins source code files (configuration files are not included).
+- \c make \c backupplugins: Create a tgz-archive in \c backups with all the plugins source code files (configuration files are not included).
+- \c make \c backupallweb: Create a tgz-archive in \c backups with all the RELACS and plugins source code files (configuration files are not included) and the web page.
+- \c make \c release: Create an relacs.tgz-archive with all the RELACS and plugins source code files, the web page, and configuration files.
+
+- \c make \c doc: Create a documentation of the RELACS source code.
+- \c make \c docall: Create a documentation of the RELACS and plugins source code.
+- \c make \c help: Create help files for the plugins.
+- \c make \c web: Add the current changelog to the web page.
+
+- \c make \c clean: Remove libraries, object files, and backupfiles (*~) in the RELACS directories.
+- \c make \c cleanplugins: Remove libraries, object files, and backupfiles (*~) in the plugins directories.
+- \c make \c cleanall: Remove libraries, object files, and backupfiles (*~) in the RELACS and plugins directories.
+
+
+\section namingconv Naming Conventions
+
+For conventions used for naming files, classes, functions, variables, etc.
+see \ref naming.
+
+
+\section relacsstructure The Structure of RELACS
+
+See the <A HREF="inherits.html"> inheritance graph</A>!
+
+\subsection analoginputstruct Analog Input
+
+Through the AnalogInput interface Acquire::read() initializes
+analog input of the data acquisition devices.
+Acquire::readData() copies the acquired data
+from the hardware driver into instances of InData.
+Each InData describes and contains data fom a single analog input line.
+InList is a container for InData.
+
+
+\subsection eventdetectionsstruct Events
+
+After reading analog data, an EventDetector can be applied to each of the
+analog input traces in order to extract events (e.g. spikes).
+An event is a time relative to the beginning of data acquisition 
+measured in seconds.
+It is also possible to associate a size and a width with each event.
+Events are stored in an EventData.
+All instances of EventData are accesible by EventList.
+The detectors are organized by the Detectors class.
+An EventDetector gets the analog data or a list of events as input
+from which it extracts the events.
+Some template functions for detecting events are defined in \c detector.h .
+They operate via iterators on the data (InputDataIterator, InputDiffIterator,
+OutputDataIterator, EventIterator, EventFrequencyIterator, EventSizeIterator).
+
+
+\subsection analogoutputstruct Analog Output
+
+An OutData specifies a stimulus for analog output.
+OutList is a container for OutData.
+Acquire::write() sends the stimulus to the data acquisition board via the
+AnalogOutput interface.
+It is possible in OutData to specify a stimulus intensity which is used to
+attenuate the voltage signal generated by the data acquisition board.
+Attenuation is implemented in a two step process.
+First, a class derived from Attenuate computes the desired attenuation level
+from the requested intensity.
+This class defines the units in which an intensity is given.
+Then a class derived from Attenuator gets the attenuation level
+and sets the attenuator device appropriately.
+This class serves as an interface to the hardware driver of an attenuator.
+The Attenuator devices are organized by the AttDevices class,
+all Attenuate interfaces are organized by the AttInterfaces class.
+
+
+\subsection optionsstruct Options
+Whenever variables (parameters) should be set by the user via a dialog
+(OptDialog, OptWidget) or a configuration file (Config, Configure),
+Options are used.
+A single option (Parameter) stores the value of the variable together
+with its name (identifier) and a default value.
+In addition, numbers have an error (e.g. standard deviation),
+a format %string, minimum and maximum values, a step size, 
+and an internal and an external unit;
+the latter is used for communication with the user.
+The Str class is an extension of the standard string class.
+It provides a lot of functions for manipulating strings,
+especially for handling numbers.
+
+
+\subsection datafilestruct Datafile
+TableKey defines a key to the columns of a table, 
+TableData holds the content of table,
+and DataFile reads in data and metadata from a file.
+In translate.h functions are defined that replace tags in a string
+with the content of metadata or a table key.
+
+
+\subsection numericsstruct Numerics
+For handling arrays of numbers there are the template classes 
+Array, Map, SampleData.
+Some basic algorithms can be found in \a stats.h, 
+fourier transform algorithms in \c spectrum.h .
+
+
+\subsection mplotstruct Plots
+Plot displays data in a single plot.
+Multiple plots can be handled with MultiPlot.
+
+
+\subsection widgetsstruct Widgets
+A few new widgets are defined in \c widgets/.
+For communication with the user to set data values
+there are the classes DoubleSpinBox, LCDRange, OptWidget and OptDialog.
+MessageBox opens a new window which displays a message.
+
+
+\subsection configstruct Configuration
+The Config class is the base class of all classes
+which contain Options that should be set by the user via the
+relacs config files or by dialogs (ConfigDialog).
+The configuration of the Config classes is managed by Configure.
+
+
+\subsection relacsclassesstruct RELACS Specific Classes
+
+Plugins loads shared object files into the running programm.
+Special types of plugins are defined in \c relacsplugins.h 
+(see also \ref pluginconcept).
+
+PlotTrace displays the read in data from the data acquisition board and the
+detected events.
+
+RePro is the base class for all research programs which are organized
+by the RePros class.
+Several %RePros can be summarized to a macro, which is handled by the Macros class.
+
+User supplied widgets derived from Control control hardware, analyze data
+in parallel to the %RePros, or display some general information
+about the recording.
+
+RELACSWidget holds everything together.
+
+<hr>
+
+Continue reading with \ref relacsutilities,
+go to the top of this page \ref relacsprogram,
+or go to the table of contents \ref maincontent
+
+*/

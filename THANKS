@@ -1,0 +1,21 @@
+RELACS THANKS file
+==================
+
+RELACS has originally been written by Jan Benda and Christian
+Machens. Many people further contributed to RELACS by reporting
+problems, suggesting various improvements or submitting actual
+code. Here is a list of these people. Help me keep it complete and
+exempt of errors.
+
+* Jan Benda <j.benda@biologie.hu-berlin.de>
+
+* Samuel Glauser <s.glauser@biologie.hu-berlin.de> for being a patient user
+during the multi-thread test phase.
+
+* Marco Hackenberg <m.hackenberg@biologie.hu-berlin.de> for implementing
+the comedi and real-time linux support needed for his Dynamic Clamp routines.
+
+* Christian Machens <machens@cshl.edu>
+
+* Hartmut Schuetze <h.schuetze@itb.biologie.hu-berlin.de> for many suggestions
+and lots of enthusiam. And for the name "RELACS"! 

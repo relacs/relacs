@@ -1,0 +1,48 @@
+#!/bin/bash
+
+###############################################################################
+#
+# bin2wav
+# 
+#
+# RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
+# Copyright (C) 2002-2007 Jan Benda <j.benda@biologie.hu-berlin.de>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+# 
+# RELACS is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+
+BINFILE=$1; shift;
+WAVFILE=$1; shift;
+CHANNEL=$(($1 + 1)); shift;
+RATE=$1; shift;
+VOLUME=$1; shift;
+
+DAT1FILE=tmp$$-1.dat
+DAT2FILE=tmp$$-2.dat
+
+# convert bin to dat format:
+bin2dat $BINFILE $DAT1FILE $@
+
+# extract time column and channel, normalize amplitudes to -1, 1:
+awk "{printf \"%8.5f %7.4f\\n\", \$1, \$$CHANNEL/2048.0}" $DAT1FILE > $DAT2FILE
+
+# convert .dat to .wav, 'stat' prints out some statistics, 
+# the last value of which is the maximum volume that can be used:
+sox -r $RATE $DAT2FILE -v $VOLUME $WAVFILE stat
+
+rm $DAT1FILE $DAT2FILE
+
+
+# bin2wav 02-11-01-aa-01.sw3 eod.wav 3 20000 3.0 -O 14879103 -U 15629121  -t0.00005

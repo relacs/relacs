@@ -1,0 +1,63 @@
+-----------------------------------------------------------------------------
+Version 0.9.6
+2008-02-14  Jan Benda
+	Created patch directory for patch-clamp related plugins
+	Added plugin documentation to web page
+2008-02-13  Jan Benda
+	Added setupInTraces() function to RELACSWidget class.
+	Added addTraces() to AnalogInput and AnalogOutput, addOutTraces() 
+	and inTraces() to Acquire, and updated the setupOutTraces() function 
+	to handle internal parameter and variables of a dynamic clamp modul.
+2008-02-12  Jan Benda
+	New class TraceSpec replaces OutData::Trace.
+	Moved static list of output traces from OutData as a member to Acquire.
+	Added setupOutTraces() function to RELACSWidget class.
+2008-02-06  Jan Benda
+	Added RELACS homepage to doc/web.
+2008-02-05  Jan Benda
+	Changed plugins directory structure from detectors/ sessions/ repros/
+	to common/ and auditory/ to be able to switch between different
+        sets of plugins.
+	Added command line option -s for passing base name of config files.
+-----------------------------------------------------------------------------
+Version 0.9.5
+2008-01-28  Jan Benda
+	Added name and vendor string to the Device class.
+2008-01-25  Jan Benda
+	Added a plugin menu for controls and models to the main menu bar.
+2008-01-23  Jan Benda
+	Made updateMenu() for the device menu be called through postEvent.
+2008-01-22  Jan Benda
+	Checked and improved locking for relacs plugins.
+	Improved interfaces to Filter in RELACSPlugin.
+2008-01-18  Jan Benda
+	Moved path variables and sessionData from Session to SaveFiles.
+	Made Session a QHBox (for displaying the elapsed time in the status bar).
+2008-01-16  Jan Benda
+	New class MetaData and SetupData in metadata.h replace SessionInfo and SetupInfo.
+	Changed the Session concept: Session is no longer a Plugin.
+-----------------------------------------------------------------------------
+Version 0.9.4
+2008-01-16  Jan Benda
+	Extended RELACSWidget and RELACSPlugin to allow for 
+	multiple Control plugins.
+2008-01-10  Jan Benda
+	Removed stop() and save() functions from the RePro interface.
+-----------------------------------------------------------------------------
+Version 0.9.2
+2007-07-11  Jan Benda
+	Created documentation files README, AUTHORS, THANKS, NEWS, CangeLog.
+-----------------------------------------------------------------------------
+
+==============================================================================
+how to use ChangeLog from Emacs
+(from http://autotoolset.sourceforge.net/tutorial.html#SEC24):
+
+To use Dired effectively, we recommend that you add the following customizations to your `.emacs' file: First, add 
+ 
+(add-hook 'dired-load-hook (function (lambda () (load "dired-x"))))
+(setq dired-omit-files-p t)
+
+to activate the extended features of Dired. Then add the following key-bindings to the global keymap: 
+ 
+(global-set-key [f8] 'add-change-log-entry-other-window)

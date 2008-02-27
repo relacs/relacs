@@ -1,0 +1,20 @@
+/sbin/rmmod ni_pcimio
+usleep 100000
+/sbin/rmmod comedi_fc
+usleep 100000
+/sbin/rmmod 8255
+usleep 100000
+/sbin/rmmod kcomedilib
+usleep 100000
+/sbin/rmmod comedi
+usleep 100000
+/sbin/rmmod rtai_shm
+usleep 100000
+/sbin/rmmod rtai_math
+usleep 100000
+/sbin/rmmod rtai_fifos
+usleep 100000
+/sbin/rmmod rtai_up
+usleep 100000
+/sbin/rmmod rtai_hal
+
