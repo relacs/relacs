@@ -30,8 +30,8 @@ Configure::Configure( void )
   : ConfigFile(),
     Configs()
 {
-  Config::setConfigList( &Configs );
-  Config::setConfigure( this );
+  ConfigClass::setConfigList( &Configs );
+  ConfigClass::setConfigure( this );
 }
 
 
@@ -40,8 +40,8 @@ Configure::Configure( int groups )
     Configs()
 {
   ConfigFile.resize( groups );
-  Config::setConfigList( &Configs );
-  Config::setConfigure( this );
+  ConfigClass::setConfigList( &Configs );
+  ConfigClass::setConfigure( this );
 }
 
 
@@ -51,16 +51,16 @@ Configure::Configure( const string &file )
 {
   ConfigFile.resize( 1 );
   setConfigFile( file );
-  Config::setConfigList( &Configs );
-  Config::setConfigure( this );
+  ConfigClass::setConfigList( &Configs );
+  ConfigClass::setConfigure( this );
 }
 
 
 Configure::~Configure( void )
 {
   Configs.clear();
-  Config::setConfigList( 0 );
-  Config::setConfigure( this );
+  ConfigClass::setConfigList( 0 );
+  ConfigClass::setConfigure( this );
 }
 
 
@@ -155,7 +155,7 @@ void Configure::read( void )
 }
 
 
-void Configure::read( int group, int level, Config &config )
+void Configure::read( int group, int level, ConfigClass &config )
 {
   if ( group < 0 || group >= (int)ConfigFile.size() ||
        level < 0 || level >= (int)ConfigFile[group].size() )
@@ -183,7 +183,7 @@ void Configure::read( int group, int level, Config &config )
 }
 
 
-void Configure::read( int group, Config &config )
+void Configure::read( int group, ConfigClass &config )
 {
   for ( unsigned int l = 0; l < ConfigFile[group].size(); l++ ) {
     read( group, l, config );
@@ -227,7 +227,7 @@ void Configure::save( int group, const string &file )
   ofstream df( file.c_str() );
   for ( ConfigList::iterator cp = Configs.begin(); cp != Configs.end(); ++cp ) {
     if ( (*cp)->configGroup() == group &&
-	 ( (*cp)->configMode() & Config::Save ) &&
+	 ( (*cp)->configMode() & ConfigClass::Save ) &&
 	 (*cp)->configSize() > 0 ) { 
       df << '*' << (*cp)->configIdent() << '\n';
       (*cp)->saveConfig( df );

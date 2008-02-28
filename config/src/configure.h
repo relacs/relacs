@@ -31,8 +31,8 @@ using namespace std;
 /*!
 \class Configure
 \author Jan Benda
-\version 1.0 beta
-\brief Coordinates configureable classes.
+\version 1.0
+\brief Coordinates configureable classes derived from ConfigClass.
 */
 
 class Configure
@@ -56,8 +56,8 @@ public:
   void read( int group );
   void read( void );
 
-  void read( int group, int level, Config &config );
-  void read( int group, Config &config );
+  void read( int group, int level, ConfigClass &config );
+  void read( int group, ConfigClass &config );
 
   void configure( int group, const string &ident );
   void configure( int group );

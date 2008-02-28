@@ -23,11 +23,11 @@
 #include "config.h"
 
 
-ConfigList *Config::Configs = 0;
-Configure *Config::CFG = 0;
+ConfigList *ConfigClass::Configs = 0;
+Configure *ConfigClass::CFG = 0;
 
 
-Config::Config( const string &ident, int group, int mode, int selectmask )
+ConfigClass::ConfigClass( const string &ident, int group, int mode, int selectmask )
   : Options(),
     ConfigIdent( ident ),
     ConfigGroup( group ),
@@ -38,18 +38,18 @@ Config::Config( const string &ident, int group, int mode, int selectmask )
 }
 
 
-Config::Config( const Config &C )
+ConfigClass::ConfigClass( const ConfigClass &C )
   : Options( C ),
     ConfigIdent( C.ConfigIdent ),
     ConfigGroup( C.ConfigGroup ),
     ConfigMode( C.ConfigMode ),
     ConfigSelect( C.ConfigSelect )
 {
-  cerr << "! warning: copied class Config. What shall we do?" << endl;
+  cerr << "! warning: copied class ConfigClass. What shall we do?" << endl;
 }
 
 
-Config::~Config( void )
+ConfigClass::~ConfigClass( void )
 {
   if ( Configs != 0 ) {
     for ( ConfigList::iterator cp = Configs->begin();
@@ -64,55 +64,55 @@ Config::~Config( void )
 }
 
 
-const string &Config::configIdent( void ) const
+const string &ConfigClass::configIdent( void ) const
 {
   return ConfigIdent;
 }
 
 
-void Config::setConfigIdent( const string &ident )
+void ConfigClass::setConfigIdent( const string &ident )
 {
   ConfigIdent = ident;
 }
 
 
-int Config::configGroup( void ) const
+int ConfigClass::configGroup( void ) const
 {
   return ConfigGroup;
 }
 
 
-void Config::setConfigGroup( int group )
+void ConfigClass::setConfigGroup( int group )
 {
   ConfigGroup = group;
 }
 
 
-int Config::configMode( void ) const
+int ConfigClass::configMode( void ) const
 {
   return ConfigMode;
 }
 
 
-void Config::setConfigMode( int mode )
+void ConfigClass::setConfigMode( int mode )
 {
   ConfigMode = mode;
 }
 
 
-int Config::configSelectMask( void ) const
+int ConfigClass::configSelectMask( void ) const
 {
   return ConfigSelect;
 }
 
 
-void Config::setConfigSelectMask( int flag )
+void ConfigClass::setConfigSelectMask( int flag )
 {
   ConfigSelect = flag;
 }
 
 
-void Config::addConfig( void )
+void ConfigClass::addConfig( void )
 {
   if ( Configs != 0 ) {
     Configs->push_back( this );
@@ -120,7 +120,7 @@ void Config::addConfig( void )
 }
 
 
-void Config::readConfig( void )
+void ConfigClass::readConfig( void )
 {
   if ( CFG != 0 ) {
     CFG->read( configGroup(), *this );
@@ -128,36 +128,36 @@ void Config::readConfig( void )
 }
 
 
-void Config::setConfigList( ConfigList *cl )
+void ConfigClass::setConfigList( ConfigList *cl )
 {
   Configs = cl;
 }
 
 
-void Config::setConfigure( Configure *cfg )
+void ConfigClass::setConfigure( Configure *cfg )
 {
   CFG = cfg;
 }
 
 
-void Config::readConfig( StrQueue &sq )
+void ConfigClass::readConfig( StrQueue &sq )
 {
   Options::read( sq, 0, ":" );
 }
 
 
-void Config::config( void )
+void ConfigClass::config( void )
 {
 }
 
 
-int Config::configSize( void ) const
+int ConfigClass::configSize( void ) const
 {
   return Options::size( ConfigSelect );
 }
 
 
-void Config::saveConfig( ofstream &str )
+void ConfigClass::saveConfig( ofstream &str )
 {
   Options::save( str, "  ", -1, ConfigSelect );
 }
