@@ -20,7 +20,7 @@
 */
 
 #include "configure.h"
-#include "config.h"
+#include "configclass.h"
 
 
 ConfigList *ConfigClass::Configs = 0;
