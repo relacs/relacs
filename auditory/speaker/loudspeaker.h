@@ -24,7 +24,7 @@
 
 
 #include <vector>
-#include "config.h"
+#include "configclass.h"
 #include "attenuate.h"
 
 using namespace std;
@@ -39,7 +39,7 @@ using namespace std;
 */
 
 
-class LoudSpeaker : public Attenuate, public Config
+class LoudSpeaker : public Attenuate, public ConfigClass
 {
 
 public:

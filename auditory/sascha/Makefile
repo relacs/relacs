@@ -145,20 +145,9 @@ isoresponse.o: ../../include/spectrum.h ../../include/eventdata.h
 isoresponse.o: ../../include/detector.h ../../include/eventlist.h
 isoresponse.o: ../../include/str.h ../../include/tablekey.h
 isoresponse.o: ../../include/options.h ../../include/strqueue.h
-isoresponse.o: ../../include/parameter.h ../include/auditorysession.h
-isoresponse.o: ../../include/optwidget.h ../../include/multiplot.h
-isoresponse.o: ../../include/plot.h ../../include/temperature.h
-isoresponse.o: ../../include/device.h ../../hardware/include/amplmode.h
-isoresponse.o: ../../hardware/include/nidio.h
-isoresponse.o: ../../common/include/ephystraces.h ../include/auditorytraces.h
-isoresponse.o: ../../include/control.h ../../include/relacsplugin.h
-isoresponse.o: ../../include/tracespec.h ../../include/indata.h
-isoresponse.o: ../../include/cyclicarray.h ../../include/daqerror.h
-isoresponse.o: ../../include/inlist.h ../../include/outdata.h
-isoresponse.o: ../../include/outlist.h ../../include/metadata.h
-isoresponse.o: ../../include/config.h ../../include/plugins.h
-isoresponse.o: ../../include/configdialog.h isoresponse.h
-isoresponse.o: ../../include/repro.h ../../include/rangeloop.h
+isoresponse.o: ../../include/parameter.h isoresponse.h
+isoresponse.o: ../../include/rangeloop.h ../../include/multiplot.h
+isoresponse.o: ../../include/plot.h
 oneclick.o: ../../include/map.h ../../include/containerops.h
 oneclick.o: ../../include/array.h ../../include/stats.h
 oneclick.o: ../../include/random.h ../../include/sampledata.h
@@ -167,16 +156,5 @@ oneclick.o: ../../include/spectrum.h ../../include/eventdata.h
 oneclick.o: ../../include/detector.h ../../include/eventlist.h
 oneclick.o: ../../include/str.h ../../include/tablekey.h
 oneclick.o: ../../include/options.h ../../include/strqueue.h
-oneclick.o: ../../include/parameter.h ../include/auditorysession.h
-oneclick.o: ../../include/optwidget.h ../../include/multiplot.h
-oneclick.o: ../../include/plot.h ../../include/temperature.h
-oneclick.o: ../../include/device.h ../../hardware/include/amplmode.h
-oneclick.o: ../../hardware/include/nidio.h ../../common/include/ephystraces.h
-oneclick.o: ../include/auditorytraces.h ../../include/control.h
-oneclick.o: ../../include/relacsplugin.h ../../include/tracespec.h
-oneclick.o: ../../include/indata.h ../../include/cyclicarray.h
-oneclick.o: ../../include/daqerror.h ../../include/inlist.h
-oneclick.o: ../../include/outdata.h ../../include/outlist.h
-oneclick.o: ../../include/metadata.h ../../include/config.h
-oneclick.o: ../../include/plugins.h ../../include/configdialog.h oneclick.h
-oneclick.o: ../../include/repro.h ../../include/rangeloop.h
+oneclick.o: ../../include/parameter.h oneclick.h ../../include/rangeloop.h
+oneclick.o: ../../include/multiplot.h ../../include/plot.h

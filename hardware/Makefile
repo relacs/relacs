@@ -130,7 +130,8 @@ niao.o: niao.h ../include/analogoutput.h ../include/outlist.h
 niao.o: ../include/outdata.h
 nidio.o: nidaq.h nidio.h ../include/device.h
 nipfi.o: nidaq.h nipfi.h ../include/device.h
-nieserieshardware.o: ../include/relacsplugin.h ../include/tracespec.h
+nieserieshardware.o: niai.h nidaq.h ../include/analoginput.h
+nieserieshardware.o: ../include/device.h ../include/inlist.h
 nieserieshardware.o: ../include/indata.h ../include/cyclicarray.h
 nieserieshardware.o: ../include/sampledata.h ../include/array.h
 nieserieshardware.o: ../include/containerops.h ../include/stats.h
@@ -138,15 +139,9 @@ nieserieshardware.o: ../include/random.h ../include/linearrange.h
 nieserieshardware.o: ../include/containerfuncs.h ../include/spectrum.h
 nieserieshardware.o: ../include/eventdata.h ../include/detector.h
 nieserieshardware.o: ../include/eventlist.h ../include/daqerror.h
-nieserieshardware.o: ../include/inlist.h ../include/outdata.h
-nieserieshardware.o: ../include/outlist.h ../include/metadata.h
-nieserieshardware.o: ../include/config.h ../include/strqueue.h
-nieserieshardware.o: ../include/str.h ../include/options.h
-nieserieshardware.o: ../include/parameter.h ../include/plugins.h
-nieserieshardware.o: ../include/configdialog.h niai.h nidaq.h
-nieserieshardware.o: ../include/analoginput.h ../include/device.h niao.h
-nieserieshardware.o: ../include/analogoutput.h nidio.h nipfi.h
-nieserieshardware.o: cs3310serialnidio.h ../include/attenuator.h
+nieserieshardware.o: ../include/tracespec.h niao.h ../include/analogoutput.h
+nieserieshardware.o: ../include/outlist.h ../include/outdata.h nidio.h
+nieserieshardware.o: nipfi.h cs3310serialnidio.h ../include/attenuator.h
 nieserieshardware.o: cs3310nidio.h amplmode.h
 comedianaloginput.o: comedianalogoutput.h ../include/analogoutput.h
 comedianaloginput.o: ../include/device.h ../include/outlist.h
@@ -172,22 +167,17 @@ comedianalogoutput.o: ../include/eventlist.h ../include/daqerror.h
 comedianalogoutput.o: ../include/tracespec.h comedianalogoutput.h
 comedianalogoutput.o: ../include/analogoutput.h ../include/outlist.h
 comedianalogoutput.o: ../include/outdata.h
-comedihardware.o: ../include/relacsplugin.h ../include/tracespec.h
-comedihardware.o: ../include/indata.h ../include/cyclicarray.h
-comedihardware.o: ../include/sampledata.h ../include/array.h
-comedihardware.o: ../include/containerops.h ../include/stats.h
-comedihardware.o: ../include/random.h ../include/linearrange.h
-comedihardware.o: ../include/containerfuncs.h ../include/spectrum.h
-comedihardware.o: ../include/eventdata.h ../include/detector.h
-comedihardware.o: ../include/eventlist.h ../include/daqerror.h
-comedihardware.o: ../include/inlist.h ../include/outdata.h
-comedihardware.o: ../include/outlist.h ../include/metadata.h
-comedihardware.o: ../include/config.h ../include/strqueue.h ../include/str.h
-comedihardware.o: ../include/options.h ../include/parameter.h
-comedihardware.o: ../include/plugins.h ../include/configdialog.h
 comedihardware.o: comedianaloginput.h ../include/analoginput.h
-comedihardware.o: ../include/device.h comedianalogoutput.h
-comedihardware.o: ../include/analogoutput.h
+comedihardware.o: ../include/device.h ../include/inlist.h ../include/indata.h
+comedihardware.o: ../include/cyclicarray.h ../include/sampledata.h
+comedihardware.o: ../include/array.h ../include/containerops.h
+comedihardware.o: ../include/stats.h ../include/random.h
+comedihardware.o: ../include/linearrange.h ../include/containerfuncs.h
+comedihardware.o: ../include/spectrum.h ../include/eventdata.h
+comedihardware.o: ../include/detector.h ../include/eventlist.h
+comedihardware.o: ../include/daqerror.h ../include/tracespec.h
+comedihardware.o: comedianalogoutput.h ../include/analogoutput.h
+comedihardware.o: ../include/outlist.h ../include/outdata.h
 cs3310nidio.o: cs3310nidio.h nidio.h ../include/device.h
 cs3310nidio.o: ../include/attenuator.h
 cs3310serialnidio.o: cs3310serialnidio.h nidio.h ../include/device.h
@@ -196,17 +186,6 @@ cs3310pp.o: cs3310pp.h ../include/attenuator.h ../include/device.h
 amplmode.o: amplmode.h nidio.h ../include/device.h
 kleindiek.o: kleindiek.h ../include/manipulator.h ../include/device.h
 tempdtm5080.o: tempdtm5080.h ../include/temperature.h ../include/device.h
-hardware.o: ../include/relacsplugin.h ../include/tracespec.h
-hardware.o: ../include/indata.h ../include/cyclicarray.h
-hardware.o: ../include/sampledata.h ../include/array.h
-hardware.o: ../include/containerops.h ../include/stats.h ../include/random.h
-hardware.o: ../include/linearrange.h ../include/containerfuncs.h
-hardware.o: ../include/spectrum.h ../include/eventdata.h
-hardware.o: ../include/detector.h ../include/eventlist.h
-hardware.o: ../include/daqerror.h ../include/inlist.h ../include/outdata.h
-hardware.o: ../include/outlist.h ../include/metadata.h ../include/config.h
-hardware.o: ../include/strqueue.h ../include/str.h ../include/options.h
-hardware.o: ../include/parameter.h ../include/plugins.h
-hardware.o: ../include/configdialog.h cs3310pp.h ../include/attenuator.h
-hardware.o: ../include/device.h kleindiek.h ../include/manipulator.h
-hardware.o: tempdtm5080.h ../include/temperature.h
+hardware.o: cs3310pp.h ../include/attenuator.h ../include/device.h
+hardware.o: kleindiek.h ../include/manipulator.h tempdtm5080.h
+hardware.o: ../include/temperature.h

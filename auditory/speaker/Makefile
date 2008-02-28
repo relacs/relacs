@@ -141,34 +141,19 @@ calibspeakers.o: ../../include/str.h ../../include/options.h
 calibspeakers.o: ../../include/strqueue.h ../../include/parameter.h
 calibspeakers.o: ../../include/tablekey.h ../../include/array.h
 calibspeakers.o: ../../include/containerops.h ../../include/stats.h
-calibspeakers.o: ../../include/random.h calibspeakers.h ../../include/repro.h
-calibspeakers.o: ../../include/outlist.h ../../include/outdata.h
+calibspeakers.o: ../../include/random.h calibspeakers.h
+calibspeakers.o: ../../include/rangeloop.h ../../include/multiplot.h
+calibspeakers.o: ../../include/plot.h ../../include/map.h
 calibspeakers.o: ../../include/sampledata.h ../../include/linearrange.h
 calibspeakers.o: ../../include/containerfuncs.h ../../include/spectrum.h
 calibspeakers.o: ../../include/eventdata.h ../../include/detector.h
-calibspeakers.o: ../../include/eventlist.h ../../include/daqerror.h
-calibspeakers.o: ../../include/relacsplugin.h ../../include/tracespec.h
-calibspeakers.o: ../../include/indata.h ../../include/cyclicarray.h
-calibspeakers.o: ../../include/inlist.h ../../include/metadata.h
-calibspeakers.o: ../../include/config.h ../../include/plugins.h
-calibspeakers.o: ../../include/configdialog.h ../include/auditorytraces.h
-calibspeakers.o: ../../include/rangeloop.h ../../include/multiplot.h
-calibspeakers.o: ../../include/plot.h ../../include/map.h loudspeaker.h
-calibspeakers.o: ../../include/attenuate.h ../../include/device.h
-calibspeakers.o: ../../include/attenuator.h
+calibspeakers.o: ../../include/eventlist.h loudspeaker.h
+calibspeakers.o: ../../include/config.h ../../include/attenuate.h
+calibspeakers.o: ../../include/device.h ../../include/attenuator.h
 loudspeaker.o: ../../include/str.h ../../include/strqueue.h
 loudspeaker.o: ../../include/options.h ../../include/parameter.h
 loudspeaker.o: ../../include/tablekey.h ../../include/array.h
 loudspeaker.o: ../../include/containerops.h ../../include/stats.h
-loudspeaker.o: ../../include/random.h ../../include/relacsplugin.h
-loudspeaker.o: ../../include/tracespec.h ../../include/indata.h
-loudspeaker.o: ../../include/cyclicarray.h ../../include/sampledata.h
-loudspeaker.o: ../../include/linearrange.h ../../include/containerfuncs.h
-loudspeaker.o: ../../include/spectrum.h ../../include/eventdata.h
-loudspeaker.o: ../../include/detector.h ../../include/eventlist.h
-loudspeaker.o: ../../include/daqerror.h ../../include/inlist.h
-loudspeaker.o: ../../include/outdata.h ../../include/outlist.h
-loudspeaker.o: ../../include/metadata.h ../../include/config.h
-loudspeaker.o: ../../include/plugins.h ../../include/configdialog.h
-loudspeaker.o: loudspeaker.h ../../include/attenuate.h ../../include/device.h
+loudspeaker.o: ../../include/random.h loudspeaker.h ../../include/config.h
+loudspeaker.o: ../../include/attenuate.h ../../include/device.h
 loudspeaker.o: ../../include/attenuator.h

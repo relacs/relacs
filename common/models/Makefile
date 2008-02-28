@@ -139,29 +139,4 @@ neuronmodels.o: ../../include/optwidget.h ../../include/options.h
 neuronmodels.o: ../../include/str.h ../../include/strqueue.h
 neuronmodels.o: ../../include/parameter.h ../../include/random.h
 neuronmodels.o: ../../include/odealgorithm.h neuronmodels.h
-neuronmodels.o: ../../include/model.h ../../include/cyclicarray.h
-neuronmodels.o: ../../include/sampledata.h ../../include/array.h
-neuronmodels.o: ../../include/containerops.h ../../include/stats.h
-neuronmodels.o: ../../include/linearrange.h ../../include/containerfuncs.h
-neuronmodels.o: ../../include/spectrum.h ../../include/eventdata.h
-neuronmodels.o: ../../include/detector.h ../../include/eventlist.h
-neuronmodels.o: ../../include/outdata.h ../../include/daqerror.h
-neuronmodels.o: ../../include/relacsplugin.h ../../include/tracespec.h
-neuronmodels.o: ../../include/indata.h ../../include/inlist.h
-neuronmodels.o: ../../include/outlist.h ../../include/metadata.h
-neuronmodels.o: ../../include/config.h ../../include/plugins.h
-neuronmodels.o: ../../include/configdialog.h
-simplemodel.o: ../../include/random.h simplemodel.h ../../include/model.h
-simplemodel.o: ../../include/cyclicarray.h ../../include/sampledata.h
-simplemodel.o: ../../include/array.h ../../include/containerops.h
-simplemodel.o: ../../include/stats.h ../../include/linearrange.h
-simplemodel.o: ../../include/containerfuncs.h ../../include/spectrum.h
-simplemodel.o: ../../include/eventdata.h ../../include/detector.h
-simplemodel.o: ../../include/eventlist.h ../../include/outdata.h
-simplemodel.o: ../../include/daqerror.h ../../include/relacsplugin.h
-simplemodel.o: ../../include/tracespec.h ../../include/indata.h
-simplemodel.o: ../../include/inlist.h ../../include/outlist.h
-simplemodel.o: ../../include/metadata.h ../../include/config.h
-simplemodel.o: ../../include/strqueue.h ../../include/str.h
-simplemodel.o: ../../include/options.h ../../include/parameter.h
-simplemodel.o: ../../include/plugins.h ../../include/configdialog.h
+simplemodel.o: ../../include/random.h simplemodel.h

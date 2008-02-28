@@ -144,12 +144,7 @@ highpass.o: ../../include/stats.h ../../include/random.h
 highpass.o: ../../include/linearrange.h ../../include/containerfuncs.h
 highpass.o: ../../include/spectrum.h ../../include/eventdata.h
 highpass.o: ../../include/detector.h ../../include/eventlist.h
-highpass.o: ../../include/daqerror.h ../../include/filter.h
-highpass.o: ../../include/relacsplugin.h ../../include/tracespec.h
-highpass.o: ../../include/inlist.h ../../include/outdata.h
-highpass.o: ../../include/outlist.h ../../include/metadata.h
-highpass.o: ../../include/config.h ../../include/plugins.h
-highpass.o: ../../include/configdialog.h
+highpass.o: ../../include/daqerror.h
 lowpass.o: lowpass.h ../../include/optwidget.h ../../include/options.h
 lowpass.o: ../../include/str.h ../../include/strqueue.h
 lowpass.o: ../../include/parameter.h ../../include/indata.h
@@ -159,9 +154,4 @@ lowpass.o: ../../include/stats.h ../../include/random.h
 lowpass.o: ../../include/linearrange.h ../../include/containerfuncs.h
 lowpass.o: ../../include/spectrum.h ../../include/eventdata.h
 lowpass.o: ../../include/detector.h ../../include/eventlist.h
-lowpass.o: ../../include/daqerror.h ../../include/filter.h
-lowpass.o: ../../include/relacsplugin.h ../../include/tracespec.h
-lowpass.o: ../../include/inlist.h ../../include/outdata.h
-lowpass.o: ../../include/outlist.h ../../include/metadata.h
-lowpass.o: ../../include/config.h ../../include/plugins.h
-lowpass.o: ../../include/configdialog.h
+lowpass.o: ../../include/daqerror.h

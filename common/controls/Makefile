@@ -143,11 +143,5 @@ spectrumanalyzer.o: ../../include/eventdata.h ../../include/detector.h
 spectrumanalyzer.o: ../../include/eventlist.h spectrumanalyzer.h
 spectrumanalyzer.o: ../../include/config.h ../../include/strqueue.h
 spectrumanalyzer.o: ../../include/str.h ../../include/options.h
-spectrumanalyzer.o: ../../include/parameter.h ../../include/control.h
-spectrumanalyzer.o: ../../include/relacsplugin.h ../../include/tracespec.h
-spectrumanalyzer.o: ../../include/indata.h ../../include/cyclicarray.h
-spectrumanalyzer.o: ../../include/daqerror.h ../../include/inlist.h
-spectrumanalyzer.o: ../../include/outdata.h ../../include/outlist.h
-spectrumanalyzer.o: ../../include/metadata.h ../../include/plugins.h
-spectrumanalyzer.o: ../../include/configdialog.h ../../include/plot.h
+spectrumanalyzer.o: ../../include/parameter.h ../../include/plot.h
 spectrumanalyzer.o: ../../include/map.h

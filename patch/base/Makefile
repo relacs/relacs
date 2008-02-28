@@ -141,12 +141,4 @@ simple.o: ../../include/random.h ../../include/map.h
 simple.o: ../../include/sampledata.h ../../include/linearrange.h
 simple.o: ../../include/containerfuncs.h ../../include/spectrum.h
 simple.o: ../../include/eventdata.h ../../include/detector.h
-simple.o: ../../include/eventlist.h ../../include/repro.h
-simple.o: ../../include/outlist.h ../../include/outdata.h
-simple.o: ../../include/daqerror.h ../../include/relacsplugin.h
-simple.o: ../../include/tracespec.h ../../include/indata.h
-simple.o: ../../include/cyclicarray.h ../../include/inlist.h
-simple.o: ../../include/metadata.h ../../include/config.h
-simple.o: ../../include/strqueue.h ../../include/str.h
-simple.o: ../../include/options.h ../../include/parameter.h
-simple.o: ../../include/plugins.h ../../include/configdialog.h
+simple.o: ../../include/eventlist.h

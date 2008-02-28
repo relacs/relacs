@@ -145,10 +145,3 @@ spikedetector.o: ../../include/linearrange.h ../../include/containerfuncs.h
 spikedetector.o: ../../include/spectrum.h ../../include/eventdata.h
 spikedetector.o: ../../include/detector.h ../../include/eventlist.h
 spikedetector.o: ../../include/plot.h ../../include/map.h
-spikedetector.o: ../../include/filter.h ../../include/relacsplugin.h
-spikedetector.o: ../../include/tracespec.h ../../include/indata.h
-spikedetector.o: ../../include/cyclicarray.h ../../include/daqerror.h
-spikedetector.o: ../../include/inlist.h ../../include/outdata.h
-spikedetector.o: ../../include/outlist.h ../../include/metadata.h
-spikedetector.o: ../../include/config.h ../../include/plugins.h
-spikedetector.o: ../../include/configdialog.h

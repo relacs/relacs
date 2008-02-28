@@ -144,20 +144,7 @@ ephystraces.o: ../../include/containerfuncs.h ../../include/spectrum.h
 ephystraces.o: ../../include/eventdata.h ../../include/detector.h
 ephystraces.o: ../../include/eventlist.h ../../include/daqerror.h
 ephystraces.o: ephystraces.h
-pause.o: pause.h ../../include/repro.h ../../include/outlist.h
-pause.o: ../../include/outdata.h ../../include/sampledata.h
-pause.o: ../../include/array.h ../../include/containerops.h
-pause.o: ../../include/stats.h ../../include/random.h
-pause.o: ../../include/linearrange.h ../../include/containerfuncs.h
-pause.o: ../../include/spectrum.h ../../include/eventdata.h
-pause.o: ../../include/detector.h ../../include/eventlist.h
-pause.o: ../../include/daqerror.h ../../include/relacsplugin.h
-pause.o: ../../include/tracespec.h ../../include/indata.h
-pause.o: ../../include/cyclicarray.h ../../include/inlist.h
-pause.o: ../../include/metadata.h ../../include/config.h
-pause.o: ../../include/strqueue.h ../../include/str.h ../../include/options.h
-pause.o: ../../include/parameter.h ../../include/plugins.h
-pause.o: ../../include/configdialog.h
+pause.o: pause.h
 restartdelay.o: ../../include/sampledata.h ../../include/array.h
 restartdelay.o: ../../include/containerops.h ../../include/stats.h
 restartdelay.o: ../../include/random.h ../../include/linearrange.h
@@ -165,15 +152,6 @@ restartdelay.o: ../../include/containerfuncs.h ../../include/spectrum.h
 restartdelay.o: ../../include/eventdata.h ../../include/detector.h
 restartdelay.o: ../../include/eventlist.h ../../include/fitalgorithm.h
 restartdelay.o: restartdelay.h ../../include/plot.h ../../include/map.h
-restartdelay.o: ../../include/repro.h ../../include/outlist.h
-restartdelay.o: ../../include/outdata.h ../../include/daqerror.h
-restartdelay.o: ../../include/relacsplugin.h ../../include/tracespec.h
-restartdelay.o: ../../include/indata.h ../../include/cyclicarray.h
-restartdelay.o: ../../include/inlist.h ../../include/metadata.h
-restartdelay.o: ../../include/config.h ../../include/strqueue.h
-restartdelay.o: ../../include/str.h ../../include/options.h
-restartdelay.o: ../../include/parameter.h ../../include/plugins.h
-restartdelay.o: ../../include/configdialog.h
 stimulusdelay.o: ../../include/sampledata.h ../../include/array.h
 stimulusdelay.o: ../../include/containerops.h ../../include/stats.h
 stimulusdelay.o: ../../include/random.h ../../include/linearrange.h
@@ -181,12 +159,3 @@ stimulusdelay.o: ../../include/containerfuncs.h ../../include/spectrum.h
 stimulusdelay.o: ../../include/eventdata.h ../../include/detector.h
 stimulusdelay.o: ../../include/eventlist.h stimulusdelay.h
 stimulusdelay.o: ../../include/plot.h ../../include/map.h
-stimulusdelay.o: ../../include/repro.h ../../include/outlist.h
-stimulusdelay.o: ../../include/outdata.h ../../include/daqerror.h
-stimulusdelay.o: ../../include/relacsplugin.h ../../include/tracespec.h
-stimulusdelay.o: ../../include/indata.h ../../include/cyclicarray.h
-stimulusdelay.o: ../../include/inlist.h ../../include/metadata.h
-stimulusdelay.o: ../../include/config.h ../../include/strqueue.h
-stimulusdelay.o: ../../include/str.h ../../include/options.h
-stimulusdelay.o: ../../include/parameter.h ../../include/plugins.h
-stimulusdelay.o: ../../include/configdialog.h

@@ -80,12 +80,13 @@ clean:
 
 # DEPENDENCIES: (do not delete this line)
 
-configclass.o: configure.h configclass.h /home/benda/include/strqueue.h
-configclass.o: /home/benda/include/str.h /home/benda/include/options.h
-configclass.o: /home/benda/include/parameter.h
-configdialog.o: /home/benda/include/optdialog.h /home/benda/include/options.h
-configdialog.o: /home/benda/include/str.h /home/benda/include/strqueue.h
-configdialog.o: /home/benda/include/parameter.h
-configdialog.o: /home/benda/include/optwidget.h configdialog.h configclass.h
-configure.o: /home/benda/include/strqueue.h /home/benda/include/str.h
-configure.o: configure.h
+configclass.o: configure.h ../../include/config.h ../../include/strqueue.h
+configclass.o: ../../include/str.h ../../include/options.h
+configclass.o: ../../include/parameter.h configclass.h
+configdialog.o: ../../include/optdialog.h ../../include/options.h
+configdialog.o: ../../include/str.h ../../include/strqueue.h
+configdialog.o: ../../include/parameter.h ../../include/optwidget.h
+configdialog.o: configdialog.h configclass.h
+configure.o: ../../include/strqueue.h ../../include/str.h configure.h
+configure.o: ../../include/config.h ../../include/options.h
+configure.o: ../../include/parameter.h

@@ -71,7 +71,7 @@ void RePro::setName( const string &name )
 
 void RePro::readConfig( StrQueue &sq )
 {
-  Config::readConfig( sq );
+  ConfigClass::readConfig( sq );
   setToDefaults();
 }
 
@@ -79,7 +79,7 @@ void RePro::readConfig( StrQueue &sq )
 void RePro::saveConfig( ofstream &str )
 {
   setDefaults();
-  Config::saveConfig( str );
+  ConfigClass::saveConfig( str );
 }
 
 
@@ -540,8 +540,8 @@ string RePro::setOptions( const string &opttxt )
   if ( opttxt.empty() )
     setDefaults();
   else {
-    Config::read( opttxt ); 
-    error = Config::warning();
+    ConfigClass::read( opttxt ); 
+    error = ConfigClass::warning();
   }
 
   return error;
