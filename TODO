@@ -1,5 +1,7 @@
 Update documentation of OutData, TraceSpec
 
+Bug in MetaData Dialog: after opening and cloing with ESC, reopening crashes the program
+
 Bug somewhere: if session is running, start of repro kills RELACS
 This always exits at savefiles.cc line 373: 
 RelacsWidget::startRePro() ->
