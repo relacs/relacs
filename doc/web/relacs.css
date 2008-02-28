@@ -1,0 +1,384 @@
+body { 
+  font-family: arial, helvetica, sans-serif;
+  font-size: 100%;
+  font-weight: normal;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #000000;
+  text-shadow: #888888 0.2em 0.2em 4px;
+  background-color: #EEEEFF;
+  font-weight: bold;
+  padding-top: 0.8ex;
+  padding-bottom: 0.6ex;
+  padding-left: 10px;
+  padding-right: 10px;
+  margin: 0;
+  margin-top: 1ex;
+  margin-bottom: 1ex;
+  border-width: 0px;
+  border-top-width: 1px;
+  border-style: solid;
+  border-color: #AAAAFF;
+  clear: none;
+}
+
+h1 {
+  font-size: 180%;
+}
+
+h2 {
+  font-size: 150%;
+  margin-top: 0px;
+}
+
+h3 {
+  font-size: 120%;
+}
+
+h4 {
+  font-size: 100%;
+  text-shadow: none;
+}
+
+h5 {
+  font-size: 100%;
+  text-shadow: none;
+}
+
+h6 {
+  font-size: 100%;
+  text-shadow: none;
+}
+
+p { 
+  text-align: justify;
+}
+
+li {
+  padding-top: 0ex;
+  padding-bottom: 1ex;
+  text-align: justify;
+}
+
+hr { 
+  color: #000000;
+  background-color: #000000;
+  height: 1px;
+  width: 100%;
+  border: none;
+}
+
+table { 
+  empty-cells: show;
+  border-collapse: collapse;
+  border-top: 1px solid #000000;
+  border-bottom: 1px solid #000000;
+  clear: both;
+}
+
+th, td { 
+  font-weight: normal;
+  text-align: left;
+  vertical-align: top;
+  padding-right: 1em;
+}
+
+thead td { 
+  font-weight: bold;
+  border-bottom: 1px solid #000000;
+}
+
+/*
+span.relacs {
+  font-family: "Penguin Attack", arial, helvetica, sans-serif;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 140%;
+  text-transform: lowercase;
+  line-height: 100%;
+}
+*/
+
+span.relacs {
+  font-family: arial, helvetica, sans-serif;
+  font-weight: bold;
+  font-style: italic;
+  text-transform: capitalize; /*   uppercase lowercase */
+}
+
+.header { 
+  background-color: #FF7700;
+  margin-bottom: 1ex;
+  border-style: solid;
+  border-color: #AAAAFF;
+  border-top-width: 1px;
+  border-bottom-width: 1px;
+  border-left-width: 0px;
+  border-right-width: 0px;
+}
+
+.header .logo { 
+  float: left;
+}
+
+.header .logo img { 
+  width: 170px;
+  padding: 10px;
+}
+
+.header h1, .header h2, .header h3, .header h4, .header h5, .header h6 { 
+  font-style: italic;
+  padding-left: 200px;
+  margin-bottom: 0px;
+  margin-top: 12px;
+  border-style: none;
+  border-width: 0px;
+  clear: none;
+}
+
+.header h1 { 
+  margin-top: 0px;
+/*
+  font-family: Penguin Attack, arial, helvetica, sans-serif;
+  font-size: 380%;
+  text-transform: lowercase; /*  capitalize uppercase lowercase */
+*/
+/*
+  font-family: "Prime Minister of Canada", arial, helvetica, sans-serif;
+  font-size: 260%;
+  font-weight: normal;
+  text-transform: lowercase; /*  capitalize uppercase lowercase */
+  text-shadow: #DD8800 0.2em 0.2em 4px;
+*/
+  font-family: arial, helvetica, sans-serif;
+  font-size: 260%;
+  font-weight: normal;
+  text-transform: lowercase; /*  capitalize uppercase lowercase */
+  text-shadow: #99AACC 0.2em 0.2em 4px;
+
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.header h1 img {
+  padding-top: 5px; 
+  padding-bottom: 5px; 
+}
+
+.header h2 { 
+  font-size: 180%;
+  font-weight: normal;
+}
+
+.header h2 b { 
+  font-weight: bold;
+}
+
+.header h3 { 
+  font-family: arial, helvetica, sans-serif;
+  font-size: 120%;
+  font-weight: normal;
+}
+
+table.layout { 
+  width: 100%;
+  empty-cells: show;
+  border-collapse: collapse;
+  border: 0px none #000000;
+  clear: both;
+}
+
+.navigation { 
+  background-color: #EEEEFF;
+  border: 1px solid #AAAAFF;
+  margin: 0px;
+  margin-right: 1ex;
+  padding: 0.5ex;
+  width: 9.5em;
+}
+
+.navigation ul { 
+  list-style-type: none;
+  text-indent: 0px;
+  margin: 0px;
+  margin-left: 1ex;
+  margin-right: 1ex;
+  padding: 0px;
+}
+
+.navigation > ul > li { 
+  font-weight: bold;
+}
+
+.navigation > ul > li > ul { 
+  list-style-type: circle;
+  margin-top: 0.5ex;
+  margin-bottom: 0ex;
+  margin-left: 2.5ex;
+  font-weight: normal;
+  font-size: 80%;
+}
+
+.navigation > ul > li > ul > li { 
+  margin-bottom: 0ex;
+  padding-bottom: 0ex;
+}
+
+.content {
+  width: 100%;
+  margin: 0px;
+  padding-top: 0ex;
+  padding-left: 1ex;
+  padding-right: 0ex;
+}
+
+.content p {
+  margin-top: 0ex;
+  margin-bottom: 0ex;
+  padding-top: 0ex;
+  padding-bottom: 1ex;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.content .floatright { 
+  float: right;
+  margin-left: 2ex;
+  margin-right: 0px;
+}
+
+.content .figure { 
+  background-color: #EEEEFF;
+  border: 1px solid #AAAAFF;
+  margin-top: 0.5ex;
+  margin-bottom: 1.5ex;
+}
+
+.content .figure .image { 
+  float: left;
+  margin: 1ex;
+  border: 1px solid #AAAAFF;
+}
+
+.content .figure .image img { 
+  padding: 0.5ex;
+  background-color: white;
+}
+
+.content .figure .caption { 
+  font-size: small;
+  border-width: 0px;
+  margin: 1ex;
+  padding: 0.5ex;
+  background-color: white;
+}
+
+.content .figureright { 
+  float: right;
+  background-color: #EEEEFF;
+  border: 1px solid #AAAAFF;
+  margin-left: 1ex;
+  margin-right: 0px;
+  margin-top: 0px;
+  margin-bottom: 1.5ex;
+}
+
+.content .figureright .image { 
+  margin: 10px;
+  border: 1px solid #AAAAFF;
+}
+
+.content .figureright .image img { 
+  padding: 0.5ex;
+  background-color: white;
+}
+
+.content .figureright .caption { 
+  font-size: small;
+  border-width: 0px;
+  margin: 10px;
+  padding: 0.5ex;
+  background-color: white;
+}
+
+.content ul, .content ol, .content dl {
+  margin-top: 0ex;
+  margin-bottom: 0ex;
+  padding-top: 0ex;
+  padding-bottom: 0ex;
+  padding-left: 5ex;
+  padding-right: 10px;
+}
+
+.content dl {
+  padding-left: 10px;
+  padding-bottom: 0.5ex;
+}
+
+.content dl dt {
+  padding-top: 0.5ex;
+  padding-bottom: 0.5ex;
+  font-weight: bold;
+}
+
+.content dl dd {
+  margin-left: 4ex;
+  padding-left: 0px;
+  padding-bottom: 0.5ex;
+  text-align: justify;
+}
+
+.content dl dd p {
+  margin-left: 0ex;
+  padding-left: 0px;
+}
+
+.content dl dd ul {
+  margin-left: 0ex;
+  padding-left: 0px;
+}
+
+.content pre { 
+  margin-left: 0px;
+  margin-right: 0px;
+  margin-top: 0ex;
+  margin-bottom: 1ex;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 0.5ex;
+  padding-bottom: 0.5ex;
+  border-style: solid;
+  border-color: #AAAAFF;
+  border-width: 1px;
+}
+
+.content blockquote {
+  margin-left: 0px;
+  margin-right: 0px;
+  margin-top: 0.5ex;
+  margin-bottom: 0.5ex;
+  padding-left: 0px;
+  padding-right: 0px;
+  padding-top: 0.5ex;
+  padding-bottom: 0.5ex;
+  border-style: solid;
+  border-color: #AAAAFF;
+  border-width: 1px;
+}
+
+.content .pluginset {
+  font-size: 67%;
+  text-shadow: none;
+}
+
+.trailer { 
+  clear: both;
+  text-align: right;
+  margin-top: 1ex;
+  padding-top: 1ex;
+  border-style: solid;
+  border-color: #AAAAFF;
+  border-width: 0px;
+  border-top-width: 1px;
+}

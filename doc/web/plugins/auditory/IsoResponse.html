@@ -1,0 +1,87 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>RELACS - Auditory Plugins: IsoResponse</title>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+    <link rel="stylesheet" type="text/css" href="../../relacs.css">
+  </head>
+
+  <body>
+
+    <div class="header">
+      <div class="logo">
+	<img src="../../relacstux.png" alt="relacs-tux">
+      </div>
+      <div class="titles">
+	<h1><img src="../../relacslogo.png" alt="relacs"></h1>
+	<h2><b>R</b>eal-time <b>El</b>ectrophysiological data <b>A</b>cquisition, <b>C</b>ontrol, and <b>S</b>timulation</h2>
+	<h3>by Jan Benda, 2002 - 2008</h3>
+      </div>
+    </div>
+
+    <table class="layout"><tr>
+    <td class="navigation">
+      <ul>
+	<li><a href="../../index.html">Home</a></li>
+	<li><a href="../../features">Features</a></li>
+	<li><a href="../../screenshots">Screenshots</a></li>
+	<li><a href="../index.html">Plugins</a>
+	  <ul>
+	    <li><a href="../hardware">Hardware</a></li>
+	    <li><a href="../common">Common</a></li>
+	    <li><a href="../auditory">Auditory</a></li>
+	    <li><a href="../patch">Patch-Clamp</a></li>
+	  </ul>
+        </li>
+	<li><a href="../../download">Download</a></li>
+	<li><a href="../../doc">Documentation</a></li>
+	<li><a href="../../faq">FAQ</a></li>
+	<li><a href="../../publications">Publications</a></li>
+	<li><a href="../../contributors">Contributors</a></li>
+      </ul>
+    </td>
+
+    <td class="content">
+
+<h2>IsoResponse <span class="pluginset">&nbsp;&nbsp;[Auditory Plugins]</span></h2>
+Measures f-I-curves for a superposition of two sine waves. 
+<p>
+<dl class="author" compact><dt><b>Author:</b></dt><dd>Alexander Wolf </dd></dl>
+<dl class="version" compact><dt><b>Version:</b></dt><dd>1.1 (Jan 10, 2008)<ol type=1>
+<li>removed stop() function </li></ol>
+<p>
+1.0 (Oct 1, 2005)</dd></dl>
+<a class="el" href="classIsoResponse.html">IsoResponse</a> extrapolates Iso-Response-Sets (IRSs) for two sine amplitudes A1 and A2, i.e. for several combinations of A1 and A2 f-I-curves are recorded and the intensities determined at which the firing rate of the cell reaches predefined values. The stimulus looks like this: s(t)=A1*sin(2pi*f1*t)+A2*sin(2pi*f2*t).<p>
+The frequencies can either be set manually (use_best_freq=0), or set at a fixed distance (dist_best_freq) from either side the best frequency (use_best_freq=1), or set at a fixed distance from each (dist_freq) other so that the pure tone stimuli have the same sensitivity according to the tuning curve (use_best_freq=2). !The last option is to be prefered; however, it does not work in all cases!<p>
+The stimulus length is defined by 'duration', the time in between stimuli by 'pause'. For each stimuli presentation we record the onset response in the time intervall 'onwidth', and the steady state response after time 'sswidth' has passed, except when 'short_stim' is true - then only the onset is recorded.<p>
+The intensity of the signal ranges from 'intmin' to 'intmax'. To find the relevant range in which the f-I-curve rises, the interval is tested with a resolution of 'estres' and each data point is measure 'estrepeats' times. When the relevant range is determined, the resolution is decreased to 'intres' and each point is repeated 'repeats' times. The order in which the intensities is measured is determined with the switch 'inshuffle' (see RangeLoop).<p>
+'setFRbounds' determines the limits of the firing rate in between which the f-I-curve is to be measured. If 'switch_high' ('switch_low') is true, the upper (lower) bound is set to 'fix_high' ('fix_low'). Otherwise, the bounds are set to the experimentally determined maximum firing rate fmax minus 'per_high' ('per_low') percent. 'setIBounds' determines then the intensity range by finding the intensities at which the upper and lower bound for the firing rate are reached.<p>
+The fraction of the amplitudes ('AmplFraction') determines the shape of the signal. In order to scan the amplitude space equidistantly, we use the tangent of 'AmplFraction' and a scaling factor 'Scaling'. 'Scaling' is estimated from the f-I-curves of the pure tones ('findScaling') to equalize the difference in sensitivity of the two stimulus frequencies. The relative amplitudes of the mixed stimuli are determined by 'AmplRatio'.<p>
+The IRSs are determined in 'plotIsoSets' for 'isonumber' firing rates 'FIso'. The extrapolation is only linear using two points. It is therefore strongly recommended to analyze the data offline.<p>
+The following options are supported (brief description of each option with default values and data type):<ul>
+<li><code>use_best_freq=0</code>: Select method of determining stimulus frequencies (<code>integer</code>)</li><li><code>dist_best_freq=1kHz</code>: Distance of f1 and f2 from best frequency (if use_best_freq=1) (<code>number</code>)</li><li><code>dist_freq=2kHz</code>: Distance between f1 and f2 (if use_best_freq=2) (<code>number</code>)</li><li><code>f1=</code> 4kHz: First stimulus frequeny (<code>number</code>)</li><li><code>f2=10kHz</code>: Second stimulus frequeny (<code>number</code>)</li><li><code>intmin=</code> 30dB: Minimum stimulus intensity (<code>number</code>)</li><li><code>intmax=100dB</code>: Maximum stimulus intensity (<code>number</code>)</li><li><code>intres=1dB</code>: Final intensity resolution (<code>number</code>)</li><li><code>estres=5dB</code>: Intensity resolution for estimation of f-I-curve (<code>number</code>)</li><li><code>intshuffle:</code> Order in which intensities are measured (<code>RangeLoop</code>)</li><li><code>short_stim=true</code>: Measure onset-response only (<code>boolean</code>)</li><li><code>duration=0</code>.2ms: Stimulus duration (<code>number</code>)</li><li><code>pause=0</code>.3ms: Pause length in between stimuli (<code>number</code>)</li><li><code>onwidth=0</code>.01ms: Time from start of stimulus to estimate onset response (<code>number</code>)</li><li><code>sswidth=0</code>.10ms: Time after which steady state response determined (<code>number</code>)</li><li><code>repeats=12</code>: Number of repetitions of each stimulus (<code>integer</code>)</li><li><code>estrepeats=3</code>: Number of repetitions for estimation of f-I-curve (<code>integer</code>)</li><li><code>intup=5dB</code>: Increases determined intensity where max firing rate is reached (<code>number</code>)</li><li><code>switch_high=false</code>: Higher bound firing rate has fixed value (<code>boolean</code>)</li><li><code>per_high=5%</code>: Decreases max firing rate by ... percent (<code>number</code>)</li><li><code>fix_high=500Hz</code>: Fixed max firing rate (<code>number</code>)</li><li><code>switch_low=false</code>: Lower bound firing rate has fixed value (<code>boolean</code>)</li><li><code>per_low=50%</code>: Decreases max firing rate by ... percent (<code>number</code>)</li><li><code>fix_low=150Hz</code>: Fixed lower firing rate (<code>number</code>)</li><li><code>minfr</code> = 30Hz: Skip all points with firing rates below minfr (<code>number</code>)</li><li><code>isonumber=5</code>: Number of IRSs evaluated (for graph only) (<code>integer</code>)</li><li><code>isopoints=9</code>: Number of f-I-curves measured (resolution in amplitude space) (<code>integer</code>)</li></ul>
+<p>
+Keyboard shortcuts:<ul>
+<li><code>Space:</code> Pressing space twice aborts <a class="el" href="classIsoResponse.html">IsoResponse</a> after finishing up measuring the curent f-I curve.</li></ul>
+<p>
+Output files:<ul>
+<li><code>isoresponsespikes.dat:</code> The spike trains...</li></ul>
+<p>
+<ul>
+<li><code>isoresponserates.dat:</code> Continuous recording of measured f-I-curves. Before each f-I-curve the header data is recorded. The 'run' number marks the experiment. In the table you find the intensity, the true intensity, first and second stimulus amplitude, onset firing rate and standard deviation, the steady state firing rate and standard deviation, the mean firing rate and standard deviation, and the number of repetitions:</li></ul>
+<p>
+I(dB SPL) I_t(dB SPL) A1(mPa) A2(mPa) f_on(Hz) sd(Hz) f_s(Hz) sd(Hz) f_m(Hz) sd(Hz) trials 
+<p>
+
+    </td>
+    </tr></table>
+      
+<div class="trailer">
+<!-- Created: Fri Feb  8 10:44:08 CET 2008 -->
+<!-- hhmts start -->
+Last modified: Wed Feb 27 10:59:35 CET 2008
+<!-- hhmts end -->
+    <a href="http://validator.w3.org/check?uri=referer"><img src="../../valid-html401.png" alt="Valid HTML 4.01 Transitional" height="31" width="88" align="middle"></a>
+</div>
+  </body>
+</html>

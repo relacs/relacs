@@ -1,0 +1,166 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>RELACS - ChangeLog</title>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+    <link rel="stylesheet" type="text/css" href="../relacs.css">
+  </head>
+
+  <body>
+
+    <div class="header">
+      <div class="logo">
+	<img src="../relacstux.png" alt="relacs-tux">
+      </div>
+      <div class="titles">
+	<h1><img src="../relacslogo.png" alt="relacs"></h1>
+	<h2><b>R</b>eal-time <b>El</b>ectrophysiological data <b>A</b>cquisition, <b>C</b>ontrol, and <b>S</b>timulation</h2>
+	<h3>by Jan Benda, 2002 - 2008</h3>
+      </div>
+    </div>
+
+    <table class="layout"><tr>
+    <td class="navigation">
+      <ul>
+	<li><a href="../index.html">Home</a></li>
+	<li><a href="../features">Features</a></li>
+	<li><a href="../screenshots">Screenshots</a></li>
+	<li><a href="../plugins">Plugins</a></li>
+	<li><a href="../download">Download</a></li>
+	<li><a href="index.html">Documentation</a>
+          <ul>
+            <li><a href="reference">User manual</a></li>
+	    <li><a href="../plugins">Plugins</a></li>
+            <li><a href="reference/classes.html">API reference</a></li>
+            <li><a href="reference/relacsprogram.html">Internals</a></li>
+            <li><a href="readme.html">README</a></li>
+            <li><a href="install.html">INSTALL</a></li>
+            <li>ChangeLog</li>
+            <li><a href="news.html">NEWS</a></li>
+          </ul>
+        </li>
+	<li><a href="../faq">FAQ</a></li>
+	<li><a href="../publications">Publications</a></li>
+	<li><a href="../contributors">Contributors</a></li>
+      </ul>
+    </td>
+
+    <td class="content">
+
+    <a name="changelog"></a>
+    <h2>Change Log</h2>
+
+    <h3>Version 0.9.6</h3>
+    <dl>
+      <dt>2008-02-14  Jan Benda</dt>
+      <dd>
+        	Created patch directory for patch-clamp related plugins
+      </dd>
+      <dd>
+        	Added plugin documentation to web page
+      </dd>
+      <dt>2008-02-13  Jan Benda</dt>
+      <dd>
+        	Added setupInTraces() function to RELACSWidget class.
+      </dd>
+      <dd>
+        	Added addTraces() to AnalogInput and AnalogOutput, addOutTraces() 
+        	and inTraces() to Acquire, and updated the setupOutTraces() function 
+        	to handle internal parameter and variables of a dynamic clamp modul.
+      </dd>
+      <dt>2008-02-12  Jan Benda</dt>
+      <dd>
+        	New class TraceSpec replaces OutData::Trace.
+      </dd>
+      <dd>
+        	Moved static list of output traces from OutData as a member to Acquire.
+      </dd>
+      <dd>
+        	Added setupOutTraces() function to RELACSWidget class.
+      </dd>
+      <dt>2008-02-06  Jan Benda</dt>
+      <dd>
+        	Added RELACS homepage to doc/web.
+      </dd>
+      <dt>2008-02-05  Jan Benda</dt>
+      <dd>
+        	Changed plugins directory structure from detectors/ sessions/ repros/
+        	to common/ and auditory/ to be able to switch between different
+                sets of plugins.
+      </dd>
+      <dd>
+        	Added command line option -s for passing base name of config files.
+      </dd>
+    </dl>
+
+    <h3>Version 0.9.5</h3>
+    <dl>
+      <dt>2008-01-28  Jan Benda</dt>
+      <dd>
+        	Added name and vendor string to the Device class.
+      </dd>
+      <dt>2008-01-25  Jan Benda</dt>
+      <dd>
+        	Added a plugin menu for controls and models to the main menu bar.
+      </dd>
+      <dt>2008-01-23  Jan Benda</dt>
+      <dd>
+        	Made updateMenu() for the device menu be called through postEvent.
+      </dd>
+      <dt>2008-01-22  Jan Benda</dt>
+      <dd>
+        	Checked and improved locking for relacs plugins.
+      </dd>
+      <dd>
+        	Improved interfaces to Filter in RELACSPlugin.
+      </dd>
+      <dt>2008-01-18  Jan Benda</dt>
+      <dd>
+        	Moved path variables and sessionData from Session to SaveFiles.
+      </dd>
+      <dd>
+        	Made Session a QHBox (for displaying the elapsed time in the status bar).
+      </dd>
+      <dt>2008-01-16  Jan Benda</dt>
+      <dd>
+        	New class MetaData and SetupData in metadata.h replace SessionInfo and SetupInfo.
+      </dd>
+      <dd>
+        	Changed the Session concept: Session is no longer a Plugin.
+      </dd>
+    </dl>
+
+    <h3>Version 0.9.4</h3>
+    <dl>
+      <dt>2008-01-16  Jan Benda</dt>
+      <dd>
+        	Extended RELACSWidget and RELACSPlugin to allow for 
+        	multiple Control plugins.
+      </dd>
+      <dt>2008-01-10  Jan Benda</dt>
+      <dd>
+        	Removed stop() and save() functions from the RePro interface.
+      </dd>
+    </dl>
+
+    <h3>Version 0.9.2</h3>
+    <dl>
+      <dt>2007-07-11  Jan Benda</dt>
+      <dd>
+        	Created documentation files README, AUTHORS, THANKS, NEWS, CangeLog.
+      </dd>
+    </dl>
+
+
+    </td>
+    </tr></table>
+      
+<div class="trailer">
+<!-- Created: Fri Feb  8 10:38:01 CET 2008 -->
+<!-- hhmts start -->
+Last modified: Wed Feb 13 09:52:00 CET 2008
+<!-- hhmts end -->
+    <a href="http://validator.w3.org/check?uri=referer"><img src="../valid-html401.png" alt="Valid HTML 4.01 Transitional" height="31" width="88" align="middle"></a>
+</div>
+  </body>
+</html>

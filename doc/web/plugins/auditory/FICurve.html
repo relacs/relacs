@@ -1,0 +1,86 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>RELACS - Auditory Plugins: FICurve</title>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+    <link rel="stylesheet" type="text/css" href="../../relacs.css">
+  </head>
+
+  <body>
+
+    <div class="header">
+      <div class="logo">
+	<img src="../../relacstux.png" alt="relacs-tux">
+      </div>
+      <div class="titles">
+	<h1><img src="../../relacslogo.png" alt="relacs"></h1>
+	<h2><b>R</b>eal-time <b>El</b>ectrophysiological data <b>A</b>cquisition, <b>C</b>ontrol, and <b>S</b>timulation</h2>
+	<h3>by Jan Benda, 2002 - 2008</h3>
+      </div>
+    </div>
+
+    <table class="layout"><tr>
+    <td class="navigation">
+      <ul>
+	<li><a href="../../index.html">Home</a></li>
+	<li><a href="../../features">Features</a></li>
+	<li><a href="../../screenshots">Screenshots</a></li>
+	<li><a href="../index.html">Plugins</a>
+	  <ul>
+	    <li><a href="../hardware">Hardware</a></li>
+	    <li><a href="../common">Common</a></li>
+	    <li><a href="../auditory">Auditory</a></li>
+	    <li><a href="../patch">Patch-Clamp</a></li>
+	  </ul>
+        </li>
+	<li><a href="../../download">Download</a></li>
+	<li><a href="../../doc">Documentation</a></li>
+	<li><a href="../../faq">FAQ</a></li>
+	<li><a href="../../publications">Publications</a></li>
+	<li><a href="../../contributors">Contributors</a></li>
+      </ul>
+    </td>
+
+    <td class="content">
+
+<h2>FICurve <span class="pluginset">&nbsp;&nbsp;[Auditory Plugins]</span></h2>
+Optimized measuring of f-I curves. 
+<p>
+<dl class="author" compact><dt><b>Author:</b></dt><dd>Jan Benda </dd></dl>
+<dl class="version" compact><dt><b>Version:</b></dt><dd>1.3 (Jan 10, 2008)<ol type=1>
+<li>removed stop() function </li></ol>
+<p>
+1.2 (Jan 10, 2006) </dd></dl>
+<dl compact><dt><b><a class="el" href="bug.html#_bug000002">Bug:</a></b></dt><dd>Need to sleep 10ms longer to prevent busy error!</dd></dl>
+Features:<ul>
+<li>Shorter pauses when there is no response.</li></ul>
+<p>
+<dl class="user" compact><dt><b>Options</b></dt><dd><ul>
+<li><b>duration</b> (<code>number</code>, <em>ms</em>): Duration of calibration stimulus. </li>
+<li><b>repeats</b> (<code>integer</code>): Maximum repetitions of the calibration protocol.</li>
+</ul>
+</dd></dl>
+<dl class="user" compact><dt><b>Files</b></dt><dd><ul>
+<li><b>calibrate.dat</b> : the calibration data (measured versus requested stimulus intensity).</li>
+</ul>
+</dd></dl>
+<dl class="user" compact><dt><b>Plots</b></dt><dd>The plot shows the measured versus the requested stimulus intensity (red circles). The yellow line is a fit of a straight line to the data. This line should for a successful calibration coincide with the blue 1:1 line.</dd></dl>
+<dl class="user" compact><dt><b>Requirements</b></dt><dd><ul>
+<li>Transdermal EOD recording (<code>EODTrace2</code>) and events (<code>EODEvents2</code>). </li>
+</ul>
+</dd></dl>
+
+<p>
+
+    </td>
+    </tr></table>
+      
+<div class="trailer">
+<!-- Created: Fri Feb  8 10:44:08 CET 2008 -->
+<!-- hhmts start -->
+Last modified: Wed Feb 27 10:59:35 CET 2008
+<!-- hhmts end -->
+    <a href="http://validator.w3.org/check?uri=referer"><img src="../../valid-html401.png" alt="Valid HTML 4.01 Transitional" height="31" width="88" align="middle"></a>
+</div>
+  </body>
+</html>

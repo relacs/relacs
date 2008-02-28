@@ -1,0 +1,176 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>RELACS - Download</title>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+    <link rel="stylesheet" type="text/css" href="../relacs.css">
+  </head>
+
+  <body>
+
+    <div class="header">
+      <div class="logo">
+	<img src="../relacstux.png" alt="relacs-tux">
+      </div>
+      <div class="titles">
+	<h1><img src="../relacslogo.png" alt="relacs"></h1>
+	<h2><b>R</b>eal-time <b>El</b>ectrophysiological data <b>A</b>cquisition, <b>C</b>ontrol, and <b>S</b>timulation</h2>
+	<h3>by Jan Benda, 2002 - 2008</h3>
+      </div>
+    </div>
+
+    <table class="layout"><tr>
+    <td class="navigation">
+      <ul>
+	<li><a href="../index.html">Home</a></li>
+	<li><a href="../features">Features</a></li>
+	<li><a href="../screenshots">Screenshots</a></li>
+	<li><a href="../plugins">Plugins</a></li>
+	<li>Download
+	  <ul>
+            <li><a href="https://sourceforge.net/projects/relacs/">Download</a></li>
+	    <li><a href="#installation">Installation</a></li>
+	    <li><a href="#platforms">Platforms</a></li>
+	    <li><a href="#requirements">Requirements</a></li>
+	    <li><a href="#license">License</a></li>
+	  </ul>
+        </li>
+	<li><a href="../doc">Documentation</a></li>
+	<li><a href="../faq">FAQ</a></li>
+	<li><a href="../publications">Publications</a></li>
+	<li><a href="../contributors">Contributors</a></li>
+      </ul>
+    </td>
+
+    <td class="content">
+
+    <a name="download"></a>
+    <h2>Download</h2>
+
+    <p>
+      <span class="relacs">relacs</span> is available on
+      <a href="https://sourceforge.net/projects/relacs/">sourceforge.net</a>.
+      We are using this program very succesfully in our lab
+      (see <a href="../publications/index.html">list of publications</a>), but before
+      we publish a first official release we need to finish a few formal things,
+      that - however - make a lot of work:
+    </p>
+    <ol>
+      <li>find better and not yet used names for the libraries</li>
+      <li>replace '#include &quot;foo.h&quot;' by '#include &lt;relacs/foo.h&gt;' in all the plugins</li>
+      <li>use autoconf and automake ... WORK IN PROGRESS</li>
+      <li>finish the <a href="http://www.comedi.org">comedi driver</a> support</li>
+      <li>add a tutorial to the documentation</li>
+    </ol>
+    <p>
+      We hope to have most of all this ready soon (maybe in spring 2008).
+      If you want to be notified about the first release,
+      write me an email: j.benda@biologie.hu-berlin.de, subject: relacs.
+    </p>
+    <p>
+      If you can't wait for the official release, you can
+      download a prerelease from sourceforge.
+      Don't expect it to compile or to work!
+    </p>
+
+    <p>
+      Get it from the
+      <a href="https://sourceforge.net/projects/relacs/">DOWNLOAD</a> page.
+    </p>
+    <p>
+      <a href="http://sourceforge.net">
+      <img src="http://sflogo.sourceforge.net/sflogo.php?group_id=199846&amp;type=5" width="210" height="62" border="0" alt="SourceForge.net Logo">
+      </a>
+    </p>
+
+
+    <a name="installation"></a>
+    <h3>Installation</h3>
+    <p>
+      After downloading, unpack the relacs.tgz file and change into the
+      relacs directory:
+    </p>
+    <pre>
+> tar xzvf relacs-xxx.tgz
+> cd relacs-xxx</pre>
+    <p>
+      Then read the <a href="../doc/readme.html">README</a> and the 
+      <a href="../doc/install.html">INSTALL</a> files for more instructions.
+    </p>
+
+
+    <a name="platforms"></a>
+    <h3>Supported Platforms</h3>
+    <p> <span class="relacs">relacs</span> is currently developed under Linux. 
+      However, since it is coded in
+      standard C++ and uses the Qt-library for the GUI,
+      a port to Windows and MAC should be possible.
+      For this, it would be helpful to change to Qt version 4 first.
+      Also, interfaces to the (data acquisition)
+      devices need to be implemented for each platform as needed.
+      Any help is appreciated!
+    </p>
+
+
+    <a name="requirements"></a>
+    <h3>Requirements</h3>
+    <ul>
+      <li>Linux with kernel version 2.6</li>
+      <li><a href="http://doc.trolltech.com/3.3/">Qt version 3.3</a> (older versions have a bug in the thread support).</li>
+      <li>Recommended: <a href="http://www.gnu.org/software/gsl/">Gnu Scientific Library</a></li>
+      <li><a href="http://www.stack.nl/~dimitri/doxygen/">doxygen</a> for generating the documentation</li>
+    </ul>
+
+
+    <a name="license"></a>
+    <h3>License</h3>
+
+    <p>
+    <span class="relacs">relacs</span> is distributed according to the
+    <a href="http://www.gnu.org/licenses/gpl.html">GNU General Public License (GPL)</a>:
+    </p>
+
+    <blockquote>
+    <p>
+      <span class="relacs">relacs</span> - RealTime ELectrophysiological data Acquisition, Control,
+      and Stimulation
+    </p> 
+
+    <p>
+      Copyright (C) 2002-2008 Jan Benda &lt;j.benda@biologie.hu-berlin.de&gt;
+    </p> 
+
+    <p>
+      This program is free software; you can redistribute it and/or
+      modify it under the terms of the GNU General Public License as
+      published by the Free Software Foundation; either version 3 of
+      the License, or (at your option) any later version.
+    </p> 
+
+    <p>
+      <span class="relacs">relacs</span> is distributed in the hope that it will be useful, but
+      WITHOUT ANY WARRANTY; without even the implied warranty of
+      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      GNU General Public License for more details.
+    </p> 
+
+    <p>
+      You should have received a copy of the GNU General Public
+      License along with this program.  If not, see
+      <a href="http://www.gnu.org/licenses/">&lt;http://www.gnu.org/licenses/&gt;</a>.
+    </p>
+
+    </blockquote>
+
+    </td>
+    </tr></table>
+      
+<div class="trailer">
+<!-- Created: Fri Feb  8 10:30:52 CET 2008 -->
+<!-- hhmts start -->
+Last modified: Wed Feb 27 18:26:09 CET 2008
+<!-- hhmts end -->
+    <a href="http://validator.w3.org/check?uri=referer"><img src="../valid-html401.png" alt="Valid HTML 4.01 Transitional" height="31" width="88" align="middle"></a>
+</div>
+  </body>
+</html>

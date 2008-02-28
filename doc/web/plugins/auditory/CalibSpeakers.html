@@ -1,0 +1,92 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <title>RELACS - Auditory Plugins: CalibSpeakers</title>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+    <link rel="stylesheet" type="text/css" href="../../relacs.css">
+  </head>
+
+  <body>
+
+    <div class="header">
+      <div class="logo">
+	<img src="../../relacstux.png" alt="relacs-tux">
+      </div>
+      <div class="titles">
+	<h1><img src="../../relacslogo.png" alt="relacs"></h1>
+	<h2><b>R</b>eal-time <b>El</b>ectrophysiological data <b>A</b>cquisition, <b>C</b>ontrol, and <b>S</b>timulation</h2>
+	<h3>by Jan Benda, 2002 - 2008</h3>
+      </div>
+    </div>
+
+    <table class="layout"><tr>
+    <td class="navigation">
+      <ul>
+	<li><a href="../../index.html">Home</a></li>
+	<li><a href="../../features">Features</a></li>
+	<li><a href="../../screenshots">Screenshots</a></li>
+	<li><a href="../index.html">Plugins</a>
+	  <ul>
+	    <li><a href="../hardware">Hardware</a></li>
+	    <li><a href="../common">Common</a></li>
+	    <li><a href="../auditory">Auditory</a></li>
+	    <li><a href="../patch">Patch-Clamp</a></li>
+	  </ul>
+        </li>
+	<li><a href="../../download">Download</a></li>
+	<li><a href="../../doc">Documentation</a></li>
+	<li><a href="../../faq">FAQ</a></li>
+	<li><a href="../../publications">Publications</a></li>
+	<li><a href="../../contributors">Contributors</a></li>
+      </ul>
+    </td>
+
+    <td class="content">
+
+<h2>CalibSpeakers <span class="pluginset">&nbsp;&nbsp;[Auditory Plugins]</span></h2>
+Calibrating attenuation for loudspeakers. 
+<p>
+<dl class="author" compact><dt><b>Author:</b></dt><dd>Jan Benda </dd></dl>
+<dl class="version" compact><dt><b>Version:</b></dt><dd>1.1 (Jan 10, 2008)<ol type=1>
+<li>removed stop() function</li><li>moved class variables to the main() functions </li></ol>
+<p>
+1.0 (Sep 1, 2004) </dd></dl>
+<dl compact><dt><b><a class="el" href="bug.html#_bug000003">Bug:</a></b></dt><dd>too many values pushed into Gains and Offsets?</dd></dl>
+Calibrates attenuators such that a full amplitude sine wave is put out at an sound pressure level as requested by setIntensity(). The sound pressure level is base on the root mean square of the sound waveform!<p>
+<dl class="user" compact><dt><b>Options</b></dt><dd><ul>
+<li><b>reset</b> (<code>boolean</code>): Reset calibration, i.e. do not use old calibration results. </li>
+<li><b>am</b> (<code>boolean</code>): Use amplitude modulation signal instead of sine wave. </li>
+<li><b>frequency</b> (<code>number</code>, <em>Hz</em>): If there is no fish EOD, then use sine wave with this frequency as a calibration stimulus. </li>
+<li><b>beatfreq</b> (<code>number</code>, <em>Hz</em>): If there is a fish EOD, then use calibration stimulus that results in this beat frequency. </li>
+<li><b>duration</b> (<code>number</code>, <em>ms</em>): Duration of calibration stimulus. </li>
+<li><b>pause</b> (<code>number</code>, <em>ms</em>): Pause between successive stimuli. </li>
+<li><b>maxcontrast</b> (<code>number</code>, <em>%</em>): Maximum contrast (beat amplitude / EOD amplitude) to be used. </li>
+<li><b>maxint</b> (<code>integer</code>): Maximum number of test intensities. </li>
+<li><b>minintensity</b> (<code>number</code>, <em>%</em>): Minimum stimulus intensity relative to EOD amplitude. </li>
+<li><b>repeats</b> (<code>integer</code>): Maximum repetitions of the calibration protocol.</li>
+</ul>
+</dd></dl>
+<dl class="user" compact><dt><b>Files</b></dt><dd><ul>
+<li><b>calibrate.dat</b> : the calibration data (measured versus requested stimulus intensity).</li>
+</ul>
+</dd></dl>
+<dl class="user" compact><dt><b>Plots</b></dt><dd>The plot shows the measured versus the requested stimulus intensity (red circles). The yellow line is a fit of a straight line to the data. This line should for a successful calibration coincide with the blue 1:1 line.</dd></dl>
+<dl class="user" compact><dt><b>Requirements</b></dt><dd><ul>
+<li>Transdermal EOD recording (<code>EODTrace2</code>) and events (<code>EODEvents2</code>). </li>
+</ul>
+</dd></dl>
+
+<p>
+
+    </td>
+    </tr></table>
+      
+<div class="trailer">
+<!-- Created: Fri Feb  8 10:44:08 CET 2008 -->
+<!-- hhmts start -->
+Last modified: Wed Feb 27 10:59:35 CET 2008
+<!-- hhmts end -->
+    <a href="http://validator.w3.org/check?uri=referer"><img src="../../valid-html401.png" alt="Valid HTML 4.01 Transitional" height="31" width="88" align="middle"></a>
+</div>
+  </body>
+</html>
