@@ -242,6 +242,13 @@ table.layout {
   padding-right: 10px;
 }
 
+
+.content p.warning {
+  border: 1px solid #FF6600;
+  background-color: #FFDD00;
+  padding-top: 1ex;
+}
+
 .content .floatright { 
   float: right;
   margin-left: 2ex;
@@ -305,7 +312,7 @@ table.layout {
 .content ul, .content ol, .content dl {
   margin-top: 0ex;
   margin-bottom: 0ex;
-  padding-top: 0ex;
+  padding-top: 0.5ex;
   padding-bottom: 0ex;
   padding-left: 5ex;
   padding-right: 10px;
