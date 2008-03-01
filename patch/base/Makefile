@@ -135,10 +135,4 @@ endif
 
 # DEPENDENCIES: (do not delete this line)
 
-simple.o: simple.h ../../include/plot.h ../../include/array.h
-simple.o: ../../include/containerops.h ../../include/stats.h
-simple.o: ../../include/random.h ../../include/map.h
-simple.o: ../../include/sampledata.h ../../include/linearrange.h
-simple.o: ../../include/containerfuncs.h ../../include/spectrum.h
-simple.o: ../../include/eventdata.h ../../include/detector.h
-simple.o: ../../include/eventlist.h
+simple.o: simple.h

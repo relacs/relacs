@@ -137,24 +137,5 @@ endif
 
 # DEPENDENCIES: (do not delete this line)
 
-isoresponse.o: ../../include/stats.h ../../include/map.h
-isoresponse.o: ../../include/containerops.h ../../include/array.h
-isoresponse.o: ../../include/random.h ../../include/sampledata.h
-isoresponse.o: ../../include/linearrange.h ../../include/containerfuncs.h
-isoresponse.o: ../../include/spectrum.h ../../include/eventdata.h
-isoresponse.o: ../../include/detector.h ../../include/eventlist.h
-isoresponse.o: ../../include/str.h ../../include/tablekey.h
-isoresponse.o: ../../include/options.h ../../include/strqueue.h
-isoresponse.o: ../../include/parameter.h isoresponse.h
-isoresponse.o: ../../include/rangeloop.h ../../include/multiplot.h
-isoresponse.o: ../../include/plot.h
-oneclick.o: ../../include/map.h ../../include/containerops.h
-oneclick.o: ../../include/array.h ../../include/stats.h
-oneclick.o: ../../include/random.h ../../include/sampledata.h
-oneclick.o: ../../include/linearrange.h ../../include/containerfuncs.h
-oneclick.o: ../../include/spectrum.h ../../include/eventdata.h
-oneclick.o: ../../include/detector.h ../../include/eventlist.h
-oneclick.o: ../../include/str.h ../../include/tablekey.h
-oneclick.o: ../../include/options.h ../../include/strqueue.h
-oneclick.o: ../../include/parameter.h oneclick.h ../../include/rangeloop.h
-oneclick.o: ../../include/multiplot.h ../../include/plot.h
+isoresponse.o: isoresponse.h
+oneclick.o: oneclick.h

@@ -135,23 +135,5 @@ endif
 
 # DEPENDENCIES: (do not delete this line)
 
-highpass.o: highpass.h ../../include/optwidget.h ../../include/options.h
-highpass.o: ../../include/str.h ../../include/strqueue.h
-highpass.o: ../../include/parameter.h ../../include/indata.h
-highpass.o: ../../include/cyclicarray.h ../../include/sampledata.h
-highpass.o: ../../include/array.h ../../include/containerops.h
-highpass.o: ../../include/stats.h ../../include/random.h
-highpass.o: ../../include/linearrange.h ../../include/containerfuncs.h
-highpass.o: ../../include/spectrum.h ../../include/eventdata.h
-highpass.o: ../../include/detector.h ../../include/eventlist.h
-highpass.o: ../../include/daqerror.h
-lowpass.o: lowpass.h ../../include/optwidget.h ../../include/options.h
-lowpass.o: ../../include/str.h ../../include/strqueue.h
-lowpass.o: ../../include/parameter.h ../../include/indata.h
-lowpass.o: ../../include/cyclicarray.h ../../include/sampledata.h
-lowpass.o: ../../include/array.h ../../include/containerops.h
-lowpass.o: ../../include/stats.h ../../include/random.h
-lowpass.o: ../../include/linearrange.h ../../include/containerfuncs.h
-lowpass.o: ../../include/spectrum.h ../../include/eventdata.h
-lowpass.o: ../../include/detector.h ../../include/eventlist.h
-lowpass.o: ../../include/daqerror.h
+highpass.o: highpass.h
+lowpass.o: lowpass.h

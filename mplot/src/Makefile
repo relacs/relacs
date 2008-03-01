@@ -79,19 +79,5 @@ clean:
 
 # DEPENDENCIES: (do not delete this line)
 
-plot.o: ../../include/str.h multiplot.h plot.h ../../include/array.h
-plot.o: ../../include/containerops.h ../../include/stats.h
-plot.o: ../../include/random.h ../../include/map.h ../../include/sampledata.h
-plot.o: ../../include/linearrange.h ../../include/containerfuncs.h
-plot.o: ../../include/spectrum.h ../../include/eventdata.h
-plot.o: ../../include/detector.h ../../include/eventlist.h
-plot.o: ../../include/indata.h ../../include/cyclicarray.h
-plot.o: ../../include/daqerror.h
-multiplot.o: ../../include/str.h multiplot.h plot.h ../../include/array.h
-multiplot.o: ../../include/containerops.h ../../include/stats.h
-multiplot.o: ../../include/random.h ../../include/map.h
-multiplot.o: ../../include/sampledata.h ../../include/linearrange.h
-multiplot.o: ../../include/containerfuncs.h ../../include/spectrum.h
-multiplot.o: ../../include/eventdata.h ../../include/detector.h
-multiplot.o: ../../include/eventlist.h ../../include/indata.h
-multiplot.o: ../../include/cyclicarray.h ../../include/daqerror.h
+plot.o: multiplot.h plot.h
+multiplot.o: multiplot.h plot.h

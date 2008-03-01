@@ -67,19 +67,7 @@ clean:
 
 # DEPENDENCIES: (do not delete this line)
 
-tablekey.o: ../../include/strqueue.h ../../include/str.h tabledata.h
-tablekey.o: ../../include/array.h ../../include/containerops.h
-tablekey.o: ../../include/stats.h ../../include/random.h tablekey.h
-tablekey.o: ../../include/options.h ../../include/parameter.h
-datafile.o: datafile.h ../../include/str.h ../../include/strqueue.h
-datafile.o: ../../include/options.h ../../include/parameter.h tablekey.h
-datafile.o: ../../include/array.h ../../include/containerops.h
-datafile.o: ../../include/stats.h ../../include/random.h tabledata.h
-tabledata.o: tablekey.h ../../include/array.h ../../include/containerops.h
-tabledata.o: ../../include/stats.h ../../include/random.h
-tabledata.o: ../../include/options.h ../../include/str.h
-tabledata.o: ../../include/strqueue.h ../../include/parameter.h tabledata.h
-translate.o: translate.h ../../include/str.h ../../include/strqueue.h
-translate.o: ../../include/options.h ../../include/parameter.h tablekey.h
-translate.o: ../../include/array.h ../../include/containerops.h
-translate.o: ../../include/stats.h ../../include/random.h
+tablekey.o: tabledata.h tablekey.h
+datafile.o: datafile.h tablekey.h tabledata.h
+tabledata.o: tablekey.h tabledata.h
+translate.o: translate.h tablekey.h

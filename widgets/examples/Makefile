@@ -74,8 +74,4 @@ xoptwidget : mmainwidget.o
 
 # DEPENDENCIES: (do not delete this line)
 
-xoptwidget.o: ../../include/optdialog.h ../../include/options.h
-xoptwidget.o: ../../include/str.h ../../include/strqueue.h
-xoptwidget.o: ../../include/parameter.h ../../include/optwidget.h
 xoptwidget.o: mainwidget.h
-dsb.o: ../../include/doublespinbox.h ../../include/str.h

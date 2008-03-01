@@ -22,7 +22,7 @@
 #ifndef _SPECTRUMANALYZER_H_
 #define _SPECTRUMANALYZER_H_
 
-#include "config.h"
+#include "configclass.h"
 #include "control.h"
 #include "plot.h"
 

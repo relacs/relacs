@@ -85,10 +85,6 @@ clean:
 
 messagebox.o: messagebox.h
 lcdrange.o: lcdrange.h
-doublespinbox.o: doublespinbox.h ../../include/str.h
-optwidget.o: optwidget.h ../../include/options.h ../../include/str.h
-optwidget.o: ../../include/strqueue.h ../../include/parameter.h
-optwidget.o: optwidgetbase.h doublespinbox.h
-optdialog.o: optdialog.h ../../include/options.h ../../include/str.h
-optdialog.o: ../../include/strqueue.h ../../include/parameter.h optwidget.h
-optdialog.o: optdialogbutton.h
+doublespinbox.o: doublespinbox.h
+optwidget.o: optwidget.h optwidgetbase.h doublespinbox.h
+optdialog.o: optdialog.h optwidget.h optdialogbutton.h

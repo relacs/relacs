@@ -135,27 +135,7 @@ endif
 
 # DEPENDENCIES: (do not delete this line)
 
-ephystraces.o: ../../include/str.h ../../include/inlist.h
-ephystraces.o: ../../include/indata.h ../../include/cyclicarray.h
-ephystraces.o: ../../include/sampledata.h ../../include/array.h
-ephystraces.o: ../../include/containerops.h ../../include/stats.h
-ephystraces.o: ../../include/random.h ../../include/linearrange.h
-ephystraces.o: ../../include/containerfuncs.h ../../include/spectrum.h
-ephystraces.o: ../../include/eventdata.h ../../include/detector.h
-ephystraces.o: ../../include/eventlist.h ../../include/daqerror.h
 ephystraces.o: ephystraces.h
 pause.o: pause.h
-restartdelay.o: ../../include/sampledata.h ../../include/array.h
-restartdelay.o: ../../include/containerops.h ../../include/stats.h
-restartdelay.o: ../../include/random.h ../../include/linearrange.h
-restartdelay.o: ../../include/containerfuncs.h ../../include/spectrum.h
-restartdelay.o: ../../include/eventdata.h ../../include/detector.h
-restartdelay.o: ../../include/eventlist.h ../../include/fitalgorithm.h
-restartdelay.o: restartdelay.h ../../include/plot.h ../../include/map.h
-stimulusdelay.o: ../../include/sampledata.h ../../include/array.h
-stimulusdelay.o: ../../include/containerops.h ../../include/stats.h
-stimulusdelay.o: ../../include/random.h ../../include/linearrange.h
-stimulusdelay.o: ../../include/containerfuncs.h ../../include/spectrum.h
-stimulusdelay.o: ../../include/eventdata.h ../../include/detector.h
-stimulusdelay.o: ../../include/eventlist.h stimulusdelay.h
-stimulusdelay.o: ../../include/plot.h ../../include/map.h
+restartdelay.o: restartdelay.h
+stimulusdelay.o: stimulusdelay.h

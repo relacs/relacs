@@ -135,13 +135,4 @@ endif
 
 # DEPENDENCIES: (do not delete this line)
 
-spectrumanalyzer.o: ../../include/sampledata.h ../../include/array.h
-spectrumanalyzer.o: ../../include/containerops.h ../../include/stats.h
-spectrumanalyzer.o: ../../include/random.h ../../include/linearrange.h
-spectrumanalyzer.o: ../../include/containerfuncs.h ../../include/spectrum.h
-spectrumanalyzer.o: ../../include/eventdata.h ../../include/detector.h
-spectrumanalyzer.o: ../../include/eventlist.h spectrumanalyzer.h
-spectrumanalyzer.o: ../../include/config.h ../../include/strqueue.h
-spectrumanalyzer.o: ../../include/str.h ../../include/options.h
-spectrumanalyzer.o: ../../include/parameter.h ../../include/plot.h
-spectrumanalyzer.o: ../../include/map.h
+spectrumanalyzer.o: spectrumanalyzer.h

@@ -137,23 +137,5 @@ endif
 
 # DEPENDENCIES: (do not delete this line)
 
-calibspeakers.o: ../../include/str.h ../../include/options.h
-calibspeakers.o: ../../include/strqueue.h ../../include/parameter.h
-calibspeakers.o: ../../include/tablekey.h ../../include/array.h
-calibspeakers.o: ../../include/containerops.h ../../include/stats.h
-calibspeakers.o: ../../include/random.h calibspeakers.h
-calibspeakers.o: ../../include/rangeloop.h ../../include/multiplot.h
-calibspeakers.o: ../../include/plot.h ../../include/map.h
-calibspeakers.o: ../../include/sampledata.h ../../include/linearrange.h
-calibspeakers.o: ../../include/containerfuncs.h ../../include/spectrum.h
-calibspeakers.o: ../../include/eventdata.h ../../include/detector.h
-calibspeakers.o: ../../include/eventlist.h loudspeaker.h
-calibspeakers.o: ../../include/config.h ../../include/attenuate.h
-calibspeakers.o: ../../include/device.h ../../include/attenuator.h
-loudspeaker.o: ../../include/str.h ../../include/strqueue.h
-loudspeaker.o: ../../include/options.h ../../include/parameter.h
-loudspeaker.o: ../../include/tablekey.h ../../include/array.h
-loudspeaker.o: ../../include/containerops.h ../../include/stats.h
-loudspeaker.o: ../../include/random.h loudspeaker.h ../../include/config.h
-loudspeaker.o: ../../include/attenuate.h ../../include/device.h
-loudspeaker.o: ../../include/attenuator.h
+calibspeakers.o: calibspeakers.h loudspeaker.h
+loudspeaker.o: loudspeaker.h

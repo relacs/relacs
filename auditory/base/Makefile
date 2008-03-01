@@ -147,97 +147,12 @@ endif
 
 # DEPENDENCIES: (do not delete this line)
 
-auditoryneuron.o: ../../include/optwidget.h ../../include/options.h
-auditoryneuron.o: ../../include/str.h ../../include/strqueue.h
-auditoryneuron.o: ../../include/parameter.h ../../include/random.h
-auditoryneuron.o: ../../include/odealgorithm.h auditoryneuron.h
-auditorysearch.o: ../../include/tablekey.h ../../include/array.h
-auditorysearch.o: ../../include/containerops.h ../../include/stats.h
-auditorysearch.o: ../../include/random.h ../../include/options.h
-auditorysearch.o: ../../include/str.h ../../include/strqueue.h
-auditorysearch.o: ../../include/parameter.h ../../include/lcdrange.h
+auditoryneuron.o: auditoryneuron.h
 auditorysearch.o: auditorysearch.h auditorytraces.h
-auditorysession.o: auditorysession.h ../../include/optwidget.h
-auditorysession.o: ../../include/options.h ../../include/str.h
-auditorysession.o: ../../include/strqueue.h ../../include/parameter.h
-auditorysession.o: ../../include/multiplot.h ../../include/plot.h
-auditorysession.o: ../../include/array.h ../../include/containerops.h
-auditorysession.o: ../../include/stats.h ../../include/random.h
-auditorysession.o: ../../include/map.h ../../include/sampledata.h
-auditorysession.o: ../../include/linearrange.h ../../include/containerfuncs.h
-auditorysession.o: ../../include/spectrum.h ../../include/eventdata.h
-auditorysession.o: ../../include/detector.h ../../include/eventlist.h
-auditorysession.o: ../../include/temperature.h ../../include/device.h
-auditorysession.o: auditorytraces.h
-auditorytraces.o: ../../include/str.h ../../include/inlist.h
-auditorytraces.o: ../../include/indata.h ../../include/cyclicarray.h
-auditorytraces.o: ../../include/sampledata.h ../../include/array.h
-auditorytraces.o: ../../include/containerops.h ../../include/stats.h
-auditorytraces.o: ../../include/random.h ../../include/linearrange.h
-auditorytraces.o: ../../include/containerfuncs.h ../../include/spectrum.h
-auditorytraces.o: ../../include/eventdata.h ../../include/detector.h
-auditorytraces.o: ../../include/eventlist.h ../../include/daqerror.h
-auditorytraces.o: ../../include/outdata.h auditorytraces.h
-ficurve.o: ../../include/array.h ../../include/containerops.h
-ficurve.o: ../../include/stats.h ../../include/random.h ../../include/map.h
-ficurve.o: ../../include/sampledata.h ../../include/linearrange.h
-ficurve.o: ../../include/containerfuncs.h ../../include/spectrum.h
-ficurve.o: ../../include/eventdata.h ../../include/detector.h
-ficurve.o: ../../include/eventlist.h ../../include/str.h
-ficurve.o: ../../include/tablekey.h ../../include/options.h
-ficurve.o: ../../include/strqueue.h ../../include/parameter.h
-ficurve.o: auditorysession.h ../../include/optwidget.h
-ficurve.o: ../../include/multiplot.h ../../include/plot.h
-ficurve.o: ../../include/temperature.h ../../include/device.h
-ficurve.o: auditorytraces.h ficurve.h ../../include/rangeloop.h
-fifield.o: ../../include/str.h ../../include/tablekey.h ../../include/array.h
-fifield.o: ../../include/containerops.h ../../include/stats.h
-fifield.o: ../../include/random.h ../../include/options.h
-fifield.o: ../../include/strqueue.h ../../include/parameter.h
-fifield.o: auditorysession.h ../../include/optwidget.h
-fifield.o: ../../include/multiplot.h ../../include/plot.h ../../include/map.h
-fifield.o: ../../include/sampledata.h ../../include/linearrange.h
-fifield.o: ../../include/containerfuncs.h ../../include/spectrum.h
-fifield.o: ../../include/eventdata.h ../../include/detector.h
-fifield.o: ../../include/eventlist.h ../../include/temperature.h
-fifield.o: ../../include/device.h auditorytraces.h fifield.h
-fifield.o: ../../include/rangeloop.h ficurve.h
-singlestimulus.o: ../../include/optwidget.h ../../include/options.h
-singlestimulus.o: ../../include/str.h ../../include/strqueue.h
-singlestimulus.o: ../../include/parameter.h ../../include/tablekey.h
-singlestimulus.o: ../../include/array.h ../../include/containerops.h
-singlestimulus.o: ../../include/stats.h ../../include/random.h
-singlestimulus.o: ../../include/translate.h ../../include/kernel.h
-singlestimulus.o: auditorysession.h ../../include/multiplot.h
-singlestimulus.o: ../../include/plot.h ../../include/map.h
-singlestimulus.o: ../../include/sampledata.h ../../include/linearrange.h
-singlestimulus.o: ../../include/containerfuncs.h ../../include/spectrum.h
-singlestimulus.o: ../../include/eventdata.h ../../include/detector.h
-singlestimulus.o: ../../include/eventlist.h ../../include/temperature.h
-singlestimulus.o: ../../include/device.h auditorytraces.h singlestimulus.h
-spikeprecision.o: ../../include/kernel.h ../../include/spectrum.h
-spikeprecision.o: ../../include/tablekey.h ../../include/array.h
-spikeprecision.o: ../../include/containerops.h ../../include/stats.h
-spikeprecision.o: ../../include/random.h ../../include/options.h
-spikeprecision.o: ../../include/str.h ../../include/strqueue.h
-spikeprecision.o: ../../include/parameter.h ../../include/translate.h
-spikeprecision.o: auditorysession.h ../../include/optwidget.h
-spikeprecision.o: ../../include/multiplot.h ../../include/plot.h
-spikeprecision.o: ../../include/map.h ../../include/sampledata.h
-spikeprecision.o: ../../include/linearrange.h ../../include/containerfuncs.h
-spikeprecision.o: ../../include/eventdata.h ../../include/detector.h
-spikeprecision.o: ../../include/eventlist.h ../../include/temperature.h
-spikeprecision.o: ../../include/device.h auditorytraces.h spikeprecision.h
-spikeprecision.o: ../../include/rangeloop.h
-syslatency.o: ../../include/tablekey.h ../../include/array.h
-syslatency.o: ../../include/containerops.h ../../include/stats.h
-syslatency.o: ../../include/random.h ../../include/options.h
-syslatency.o: ../../include/str.h ../../include/strqueue.h
-syslatency.o: ../../include/parameter.h ../../include/sampledata.h
-syslatency.o: ../../include/linearrange.h ../../include/containerfuncs.h
-syslatency.o: ../../include/spectrum.h ../../include/eventdata.h
-syslatency.o: ../../include/detector.h ../../include/eventlist.h
-syslatency.o: auditorysession.h ../../include/optwidget.h
-syslatency.o: ../../include/multiplot.h ../../include/plot.h
-syslatency.o: ../../include/map.h ../../include/temperature.h
-syslatency.o: ../../include/device.h auditorytraces.h syslatency.h
+auditorysession.o: auditorysession.h auditorytraces.h
+auditorytraces.o: auditorytraces.h
+ficurve.o: auditorysession.h auditorytraces.h ficurve.h
+fifield.o: auditorysession.h auditorytraces.h fifield.h ficurve.h
+singlestimulus.o: auditorysession.h auditorytraces.h singlestimulus.h
+spikeprecision.o: auditorysession.h auditorytraces.h spikeprecision.h
+syslatency.o: auditorysession.h auditorytraces.h syslatency.h

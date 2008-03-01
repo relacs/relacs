@@ -71,5 +71,5 @@ clean:
 
 # DEPENDENCIES: (do not delete this line)
 
-temp.o: ../tempdtm5080.h ../../include/temperature.h ../../include/device.h
-mm3a.o: ../kleindiek.h ../../include/manipulator.h ../../include/device.h
+temp.o: ../tempdtm5080.h
+mm3a.o: ../kleindiek.h

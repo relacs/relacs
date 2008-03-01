@@ -135,8 +135,5 @@ endif
 
 # DEPENDENCIES: (do not delete this line)
 
-neuronmodels.o: ../../include/optwidget.h ../../include/options.h
-neuronmodels.o: ../../include/str.h ../../include/strqueue.h
-neuronmodels.o: ../../include/parameter.h ../../include/random.h
-neuronmodels.o: ../../include/odealgorithm.h neuronmodels.h
-simplemodel.o: ../../include/random.h simplemodel.h
+neuronmodels.o: neuronmodels.h
+simplemodel.o: simplemodel.h

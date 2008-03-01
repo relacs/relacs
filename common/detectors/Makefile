@@ -135,13 +135,4 @@ endif
 
 # DEPENDENCIES: (do not delete this line)
 
-spikedetector.o: ../../include/str.h ../../include/tablekey.h
-spikedetector.o: ../../include/array.h ../../include/containerops.h
-spikedetector.o: ../../include/stats.h ../../include/random.h
-spikedetector.o: ../../include/options.h ../../include/strqueue.h
-spikedetector.o: ../../include/parameter.h spikedetector.h
-spikedetector.o: ../../include/optwidget.h ../../include/sampledata.h
-spikedetector.o: ../../include/linearrange.h ../../include/containerfuncs.h
-spikedetector.o: ../../include/spectrum.h ../../include/eventdata.h
-spikedetector.o: ../../include/detector.h ../../include/eventlist.h
-spikedetector.o: ../../include/plot.h ../../include/map.h
+spikedetector.o: spikedetector.h

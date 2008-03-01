@@ -73,20 +73,3 @@ clean:
 xoptwidget : mmainwidget.o
 
 # DEPENDENCIES: (do not delete this line)
-
-xplot.o: ../../include/map.h ../../include/containerops.h
-xplot.o: ../../include/array.h ../../include/stats.h ../../include/random.h
-xplot.o: ../../include/sampledata.h ../../include/linearrange.h
-xplot.o: ../../include/containerfuncs.h ../../include/spectrum.h
-xplot.o: ../../include/eventdata.h ../../include/detector.h
-xplot.o: ../../include/eventlist.h ../../include/plot.h
-xplot.o: ../../include/indata.h ../../include/cyclicarray.h
-xplot.o: ../../include/daqerror.h
-xplots.o: ../../include/multiplot.h ../../include/plot.h
-xplots.o: ../../include/array.h ../../include/containerops.h
-xplots.o: ../../include/stats.h ../../include/random.h ../../include/map.h
-xplots.o: ../../include/sampledata.h ../../include/linearrange.h
-xplots.o: ../../include/containerfuncs.h ../../include/spectrum.h
-xplots.o: ../../include/eventdata.h ../../include/detector.h
-xplots.o: ../../include/eventlist.h ../../include/indata.h
-xplots.o: ../../include/cyclicarray.h ../../include/daqerror.h

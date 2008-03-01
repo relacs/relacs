@@ -68,14 +68,3 @@ clean:
 
 
 # DEPENDENCIES: (do not delete this line)
-
-xstrnum.o: ../../include/str.h
-xstring.o: ../../include/str.h
-xtranslate.o: ../../include/str.h ../../include/options.h
-xtranslate.o: ../../include/strqueue.h ../../include/parameter.h
-xunit.o: ../../include/str.h ../../include/parameter.h
-xunit.o: ../../include/strqueue.h
-xparameter.o: ../../include/parameter.h ../../include/str.h
-xparameter.o: ../../include/strqueue.h
-xoptions.o: ../../include/options.h ../../include/str.h
-xoptions.o: ../../include/strqueue.h ../../include/parameter.h

@@ -24,7 +24,7 @@
 
 #include <string>
 #include <vector>
-#include "config.h"
+#include "configclass.h"
 using namespace std;
 
 

@@ -68,27 +68,3 @@ clean:
 
 
 # DEPENDENCIES: (do not delete this line)
-
-xtablekey.o: ../../include/tablekey.h ../../include/array.h
-xtablekey.o: ../../include/containerops.h ../../include/stats.h
-xtablekey.o: ../../include/random.h ../../include/options.h
-xtablekey.o: ../../include/str.h ../../include/strqueue.h
-xtablekey.o: ../../include/parameter.h
-xdatafile.o: ../../include/datafile.h ../../include/str.h
-xdatafile.o: ../../include/strqueue.h ../../include/options.h
-xdatafile.o: ../../include/parameter.h ../../include/tablekey.h
-xdatafile.o: ../../include/array.h ../../include/containerops.h
-xdatafile.o: ../../include/stats.h ../../include/random.h
-xdatafile.o: ../../include/tabledata.h
-copydata.o: ../../include/datafile.h ../../include/str.h
-copydata.o: ../../include/strqueue.h ../../include/options.h
-copydata.o: ../../include/parameter.h ../../include/tablekey.h
-copydata.o: ../../include/array.h ../../include/containerops.h
-copydata.o: ../../include/stats.h ../../include/random.h
-copydata.o: ../../include/tabledata.h
-processdata.o: ../../include/datafile.h ../../include/str.h
-processdata.o: ../../include/strqueue.h ../../include/options.h
-processdata.o: ../../include/parameter.h ../../include/tablekey.h
-processdata.o: ../../include/array.h ../../include/containerops.h
-processdata.o: ../../include/stats.h ../../include/random.h
-processdata.o: ../../include/tabledata.h
