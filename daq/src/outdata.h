@@ -66,7 +66,7 @@ The resulting voltage is then attenuated according to the requested intensity().
 
 */
 
-class OutData : public SampleDataF, public DaqError
+class OutData : public SampleData< float >, public DaqError
 {
   
  public:

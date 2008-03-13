@@ -1,6 +1,19 @@
+Doxygen:
+- Make an extra doc subdirectory for each library with an
+  appropriate dox file that has a line like
+  GENERATE_TAGFILE       = doc/numerics.tag
+- In the main documentation in doc/relacs.dox have lines like
+  TAGFILES               = "numerics/doc/numerics.tag=../../numerics/doc/html"
+- Make sure that the dox file PREDEFINED variable gets the GSL and RAND55 defines
+  via autoconf
+- don't use SampleDataF, etc. Instead inherit SampleData< float > in all
+  library and relacs headers
+- Add appropriate links to the relacs mainpage.
+
+
 Update documentation of OutData, TraceSpec
 
-Bug in MetaData Dialog: after opening and cloing with ESC, reopening crashes the program
+Bug in MetaData Dialog: after opening and closing with ESC, reopening crashes the program
 
 Bug somewhere: if session is running, start of repro kills RELACS
 This always exits at savefiles.cc line 373: 

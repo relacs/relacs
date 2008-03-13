@@ -34,7 +34,7 @@ PLUGINSETS = hardware:Hardware common:Common auditory:Auditory patch:Patch-Clamp
 # directories containing plugins (RePros, Detectors, Controls):
 PLUGINSDIRS = hardware common auditory patch
 # additional files/directories for documentation:
-DOCDIRS = numerics/src daq/src options/src datafile/src \
+DOCDIRS = daq/src options/src datafile/src \
           mplot/src widgets/src config/src \
           doc utils
 # additional directories to LIBDIRS, RELACSDIRS, and PLUGINSDIRS 

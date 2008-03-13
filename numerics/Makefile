@@ -44,7 +44,7 @@ export INCLUDEPATH LIBRARYPATH
 BACKUPFILES = Makefile Makefile.h
 
 
-.PHONY: all src examples depend install backup backupfiles clean
+.PHONY: all src examples doc depend install backup backupfiles clean
 
 
 src:
@@ -57,6 +57,9 @@ examples:
 
 all: src examples
 
+
+doc:
+	doxygen doc/numerics.dox
 
 depend:
 	$(MAKE) -C src depend
