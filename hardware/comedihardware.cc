@@ -22,6 +22,11 @@
 #include "relacsplugin.h"
 #include "comedianaloginput.h"
 #include "comedianalogoutput.h"
+#include "dynclampanaloginput.h"
+#include "dynclampanalogoutput.h"
 
 addAnalogInput( ComediAnalogInput );
 addAnalogOutput( ComediAnalogOutput );
+
+addAnalogInput( DynClampAnalogInput );
+addAnalogOutput( DynClampAnalogOutput );

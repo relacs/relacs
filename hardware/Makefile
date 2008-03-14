@@ -27,7 +27,9 @@ TOPDIR = ..
 include $(TOPDIR)/Makefile.h
 
 SOURCES = niai.cc niao.cc nidio.cc nipfi.cc nieserieshardware.cc \
-	  comedianaloginput.cc comedianalogoutput.cc comedihardware.cc \
+	  dynclampanaloginput.cc dynclampanalogoutput.cc \
+	  comedianaloginput.cc comedianalogoutput.cc \
+          comedihardware.cc \
 	  cs3310nidio.cc cs3310serialnidio.cc cs3310pp.cc cs3310hardware.cc \
 	  amplmode.cc \
 	  kleindiek.cc \
@@ -35,8 +37,8 @@ SOURCES = niai.cc niao.cc nidio.cc nipfi.cc nieserieshardware.cc \
 	  hardware.cc
 SOURCESHEADER = $(SOURCES:.cc=.h)
 OBJECTS = $(SOURCES:.cc=.o)
-HEADERS = nidaq.h
-TARGET = libhardware.so libnieserieshardware.so # libcomedihardware.so
+HEADERS = nidaq.h moduledef.h
+TARGET = libhardware.so libnieserieshardware.so libcomedihardware.so
 BACKUPFILES = Makefile loadcomedimodules.sh killcomedimodules.sh
 
 # path to the plugin libraries:
@@ -66,7 +68,12 @@ libhardware.so: cs3310pp.o kleindiek.o tempdtm5080.o
 libnieserieshardware.so: niai.o niao.o nidio.o nipfi.o \
           cs3310nidio.o cs3310serialnidio.o amplmode.o
 
-libcomedihardware.so: comedianaloginput.o comedianalogoutput.o
+libcomedihardware.so: comedianaloginput.o comedianalogoutput.o \
+                      dynclampanaloginput.o dynclampanalogoutput.o \
+		      comedihardware.o
+	$(CC) -shared -o $@ $+ -lcomedi
+	cp -p $@ tmp.so; mv tmp.so $(PLUGINLIBPATH)/$@;
+	cp -p *.h $(PLUGININCPATH)
 
 
 lib%.so: %.o
@@ -110,19 +117,129 @@ clean:
 
 # DEPENDENCIES: (do not delete this line)
 
-niai.o: niao.h nidaq.h niai.h
-niao.o: niai.h nidaq.h niao.h
-nidio.o: nidaq.h nidio.h
-nipfi.o: nidaq.h nipfi.h
-nieserieshardware.o: niai.h nidaq.h niao.h nidio.h nipfi.h
-nieserieshardware.o: cs3310serialnidio.h cs3310nidio.h amplmode.h
-comedianaloginput.o: comedianalogoutput.h comedianaloginput.h
-comedianalogoutput.o: comedianaloginput.h comedianalogoutput.h
-comedihardware.o: comedianaloginput.h comedianalogoutput.h
-cs3310nidio.o: cs3310nidio.h nidio.h
-cs3310serialnidio.o: cs3310serialnidio.h nidio.h
-cs3310pp.o: cs3310pp.h
-amplmode.o: amplmode.h nidio.h
-kleindiek.o: kleindiek.h
-tempdtm5080.o: tempdtm5080.h
-hardware.o: cs3310pp.h kleindiek.h tempdtm5080.h
+niai.o: niao.h nidaq.h ../include/analogoutput.h ../include/device.h
+niai.o: ../include/outlist.h ../include/outdata.h ../include/sampledata.h
+niai.o: ../include/array.h ../include/containerops.h ../include/stats.h
+niai.o: ../include/random.h ../include/linearrange.h
+niai.o: ../include/containerfuncs.h ../include/spectrum.h
+niai.o: ../include/eventdata.h ../include/detector.h ../include/eventlist.h
+niai.o: ../include/daqerror.h ../include/tracespec.h niai.h
+niai.o: ../include/analoginput.h ../include/inlist.h ../include/indata.h
+niai.o: ../include/cyclicarray.h
+niao.o: ../include/stats.h niai.h nidaq.h ../include/analoginput.h
+niao.o: ../include/device.h ../include/inlist.h ../include/indata.h
+niao.o: ../include/cyclicarray.h ../include/sampledata.h ../include/array.h
+niao.o: ../include/containerops.h ../include/random.h
+niao.o: ../include/linearrange.h ../include/containerfuncs.h
+niao.o: ../include/spectrum.h ../include/eventdata.h ../include/detector.h
+niao.o: ../include/eventlist.h ../include/daqerror.h ../include/tracespec.h
+niao.o: niao.h ../include/analogoutput.h ../include/outlist.h
+niao.o: ../include/outdata.h
+nidio.o: nidaq.h nidio.h ../include/device.h
+nipfi.o: nidaq.h nipfi.h ../include/device.h
+nieserieshardware.o: ../include/relacsplugin.h ../include/tracespec.h
+nieserieshardware.o: ../include/indata.h ../include/cyclicarray.h
+nieserieshardware.o: ../include/sampledata.h ../include/array.h
+nieserieshardware.o: ../include/containerops.h ../include/stats.h
+nieserieshardware.o: ../include/random.h ../include/linearrange.h
+nieserieshardware.o: ../include/containerfuncs.h ../include/spectrum.h
+nieserieshardware.o: ../include/eventdata.h ../include/detector.h
+nieserieshardware.o: ../include/eventlist.h ../include/daqerror.h
+nieserieshardware.o: ../include/inlist.h ../include/outdata.h
+nieserieshardware.o: ../include/outlist.h ../include/metadata.h
+nieserieshardware.o: ../include/config.h ../include/strqueue.h
+nieserieshardware.o: ../include/str.h ../include/options.h
+nieserieshardware.o: ../include/parameter.h ../include/plugins.h
+nieserieshardware.o: ../include/configdialog.h niai.h nidaq.h
+nieserieshardware.o: ../include/analoginput.h ../include/device.h niao.h
+nieserieshardware.o: ../include/analogoutput.h nidio.h nipfi.h
+nieserieshardware.o: cs3310serialnidio.h ../include/attenuator.h
+nieserieshardware.o: cs3310nidio.h amplmode.h
+dynclampanaloginput.o: dynclampanaloginput.h ../include/daqerror.h
+dynclampanaloginput.o: ../include/analoginput.h ../include/device.h
+dynclampanaloginput.o: ../include/inlist.h ../include/indata.h
+dynclampanaloginput.o: ../include/cyclicarray.h ../include/sampledata.h
+dynclampanaloginput.o: ../include/array.h ../include/containerops.h
+dynclampanaloginput.o: ../include/stats.h ../include/random.h
+dynclampanaloginput.o: ../include/linearrange.h ../include/containerfuncs.h
+dynclampanaloginput.o: ../include/spectrum.h ../include/eventdata.h
+dynclampanaloginput.o: ../include/detector.h ../include/eventlist.h
+dynclampanaloginput.o: ../include/tracespec.h comedianaloginput.h
+dynclampanaloginput.o: dynclampanalogoutput.h ../include/analogoutput.h
+dynclampanaloginput.o: ../include/outlist.h ../include/outdata.h
+dynclampanaloginput.o: comedianalogoutput.h moduledef.h
+dynclampanalogoutput.o: dynclampanalogoutput.h ../include/daqerror.h
+dynclampanalogoutput.o: ../include/analogoutput.h ../include/device.h
+dynclampanalogoutput.o: ../include/outlist.h ../include/outdata.h
+dynclampanalogoutput.o: ../include/sampledata.h ../include/array.h
+dynclampanalogoutput.o: ../include/containerops.h ../include/stats.h
+dynclampanalogoutput.o: ../include/random.h ../include/linearrange.h
+dynclampanalogoutput.o: ../include/containerfuncs.h ../include/spectrum.h
+dynclampanalogoutput.o: ../include/eventdata.h ../include/detector.h
+dynclampanalogoutput.o: ../include/eventlist.h ../include/tracespec.h
+dynclampanalogoutput.o: ../include/analoginput.h ../include/inlist.h
+dynclampanalogoutput.o: ../include/indata.h ../include/cyclicarray.h
+dynclampanalogoutput.o: comedianalogoutput.h moduledef.h
+comedianaloginput.o: comedianalogoutput.h ../include/analogoutput.h
+comedianaloginput.o: ../include/device.h ../include/outlist.h
+comedianaloginput.o: ../include/outdata.h ../include/sampledata.h
+comedianaloginput.o: ../include/array.h ../include/containerops.h
+comedianaloginput.o: ../include/stats.h ../include/random.h
+comedianaloginput.o: ../include/linearrange.h ../include/containerfuncs.h
+comedianaloginput.o: ../include/spectrum.h ../include/eventdata.h
+comedianaloginput.o: ../include/detector.h ../include/eventlist.h
+comedianaloginput.o: ../include/daqerror.h ../include/tracespec.h
+comedianaloginput.o: comedianaloginput.h ../include/analoginput.h
+comedianaloginput.o: ../include/inlist.h ../include/indata.h
+comedianaloginput.o: ../include/cyclicarray.h
+comedianalogoutput.o: comedianaloginput.h ../include/analoginput.h
+comedianalogoutput.o: ../include/device.h ../include/inlist.h
+comedianalogoutput.o: ../include/indata.h ../include/cyclicarray.h
+comedianalogoutput.o: ../include/sampledata.h ../include/array.h
+comedianalogoutput.o: ../include/containerops.h ../include/stats.h
+comedianalogoutput.o: ../include/random.h ../include/linearrange.h
+comedianalogoutput.o: ../include/containerfuncs.h ../include/spectrum.h
+comedianalogoutput.o: ../include/eventdata.h ../include/detector.h
+comedianalogoutput.o: ../include/eventlist.h ../include/daqerror.h
+comedianalogoutput.o: ../include/tracespec.h comedianalogoutput.h
+comedianalogoutput.o: ../include/analogoutput.h ../include/outlist.h
+comedianalogoutput.o: ../include/outdata.h
+comedihardware.o: ../include/relacsplugin.h ../include/tracespec.h
+comedihardware.o: ../include/indata.h ../include/cyclicarray.h
+comedihardware.o: ../include/sampledata.h ../include/array.h
+comedihardware.o: ../include/containerops.h ../include/stats.h
+comedihardware.o: ../include/random.h ../include/linearrange.h
+comedihardware.o: ../include/containerfuncs.h ../include/spectrum.h
+comedihardware.o: ../include/eventdata.h ../include/detector.h
+comedihardware.o: ../include/eventlist.h ../include/daqerror.h
+comedihardware.o: ../include/inlist.h ../include/outdata.h
+comedihardware.o: ../include/outlist.h ../include/metadata.h
+comedihardware.o: ../include/config.h ../include/strqueue.h ../include/str.h
+comedihardware.o: ../include/options.h ../include/parameter.h
+comedihardware.o: ../include/plugins.h ../include/configdialog.h
+comedihardware.o: comedianaloginput.h ../include/analoginput.h
+comedihardware.o: ../include/device.h comedianalogoutput.h
+comedihardware.o: ../include/analogoutput.h dynclampanaloginput.h
+comedihardware.o: dynclampanalogoutput.h moduledef.h
+cs3310nidio.o: cs3310nidio.h nidio.h ../include/device.h
+cs3310nidio.o: ../include/attenuator.h
+cs3310serialnidio.o: cs3310serialnidio.h nidio.h ../include/device.h
+cs3310serialnidio.o: ../include/attenuator.h
+cs3310pp.o: cs3310pp.h ../include/attenuator.h ../include/device.h
+amplmode.o: amplmode.h nidio.h ../include/device.h
+kleindiek.o: kleindiek.h ../include/manipulator.h ../include/device.h
+tempdtm5080.o: tempdtm5080.h ../include/temperature.h ../include/device.h
+hardware.o: ../include/relacsplugin.h ../include/tracespec.h
+hardware.o: ../include/indata.h ../include/cyclicarray.h
+hardware.o: ../include/sampledata.h ../include/array.h
+hardware.o: ../include/containerops.h ../include/stats.h ../include/random.h
+hardware.o: ../include/linearrange.h ../include/containerfuncs.h
+hardware.o: ../include/spectrum.h ../include/eventdata.h
+hardware.o: ../include/detector.h ../include/eventlist.h
+hardware.o: ../include/daqerror.h ../include/inlist.h ../include/outdata.h
+hardware.o: ../include/outlist.h ../include/metadata.h ../include/config.h
+hardware.o: ../include/strqueue.h ../include/str.h ../include/options.h
+hardware.o: ../include/parameter.h ../include/plugins.h
+hardware.o: ../include/configdialog.h cs3310pp.h ../include/attenuator.h
+hardware.o: ../include/device.h kleindiek.h ../include/manipulator.h
+hardware.o: tempdtm5080.h ../include/temperature.h

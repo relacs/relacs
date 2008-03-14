@@ -30,12 +30,13 @@
 #include "comedianalogoutput.h"
 
 ComediAnalogOutput::ComediAnalogOutput( void ) 
-  : AnalogOutput( "ComediAnalogOutput", ComediAnalogOutputType )
+  : AnalogOutput( ComediAnalogOutputType )
 {
   ErrorState = 0;
   IsPrepared = false;
   IsRunning = false;
   Mode = 0;
+  AsyncMode = true;
   DeviceP = NULL;
   Sigs = NULL;
   UnipolarExtRefRangeIndex = -1;
@@ -43,12 +44,13 @@ ComediAnalogOutput::ComediAnalogOutput( void )
 }
 
 ComediAnalogOutput::ComediAnalogOutput(  const string &devicename ) 
-  : AnalogOutput( "ComediAnalogOutput", ComediAnalogOutputType )
+  : AnalogOutput( devicename, ComediAnalogOutputType )
 {
   ErrorState = 0;
   IsPrepared = false;
   IsRunning = false;
   Mode = 0;
+  AsyncMode = true;
   DeviceP = NULL;
   Sigs = NULL;
   UnipolarExtRefRangeIndex = -1;
@@ -67,7 +69,7 @@ int ComediAnalogOutput::open( const string &devicename, long mode )
     close();
   clearSettings();
   if ( devicename.empty() )
-    return 0;
+    return InvalidDevice;
 
   int retVal;
   Devicename = devicename;
@@ -95,13 +97,13 @@ int ComediAnalogOutput::open( const string &devicename, long mode )
     return NotOpen;
   }  
 
-  if( ! ( SDF_CMD & comedi_get_subdevice_flags( DeviceP, Subdevice ) ) ) {
+  if( AsyncMode && 
+      ! ( SDF_CMD & comedi_get_subdevice_flags( DeviceP, Subdevice ) ) ) {
     cerr << /*currentTime() <<*/ " !  ComediAnalogOutput::open() -> "
 	 << "Device "  << devicename << " not supported! "
 	 << "Subdevice needs to support async. commands!" << endl;
     return InvalidDevice;
   }
-  setDeviceFile( devicename );
   setDeviceName( comedi_get_board_name( DeviceP ) );
 
   // set comedi file-descriptor to non-blocking writing mode
@@ -172,7 +174,7 @@ int ComediAnalogOutput::open( const string &devicename, long mode )
   comedi_cmd cmd;
   memset( &cmd,0, sizeof(comedi_cmd) );
   unsigned int chanlist = CR_PACK( 0, 0, AREF_GROUND );
-  retVal = comedi_get_cmd_generic_timed( DeviceP, Subdevice, &cmd, (unsigned int)1e8 );
+  retVal = comedi_get_cmd_generic_timed( DeviceP, Subdevice, &cmd, 1/*chans*/, (unsigned int)1e8/*Hz*/ );
   if( retVal < 0 ){
     cmd.subdev = Subdevice;
     cmd.start_src =        TRIG_NOW;
@@ -198,14 +200,18 @@ int ComediAnalogOutput::open( const string &devicename, long mode )
     MaxRate = 1.0e9 / cmd.scan_begin_arg;
   else //set default for NI E-series (mio-driver doesn't return a valid frequency)
     MaxRate = 1.0e6; 
-  
+ 
   return 0;
 }
 
 void ComediAnalogOutput::close( void )
 { 
   reset();
-  comedi_unlock( DeviceP,  Subdevice );
+  UnipolarExtRefRangeIndex = -1;
+  BipolarExtRefRangeIndex = -1;
+  if( !isOpen() )
+    return;
+  comedi_unlock( DeviceP, Subdevice );
   int error = comedi_close( DeviceP );
   if( error )
     cerr << /*currentTime() <<*/ " !  ComediAnalogOutput::close() -> "
@@ -213,8 +219,6 @@ void ComediAnalogOutput::close( void )
 	 << "threw an error. Forcing close..."
 	 << endl;
   DeviceP = NULL;
-  UnipolarExtRefRangeIndex = -1;
-  BipolarExtRefRangeIndex = -1;
 }
 
 int ComediAnalogOutput::reset( void ) 
@@ -233,7 +237,7 @@ int ComediAnalogOutput::reset( void )
 int ComediAnalogOutput::stop( void )
 { 
   cerr << " ComediAnalogOutput::stop()" << endl;/////TEST/////
-  if( !DeviceP )
+  if( !isOpen() )
     return NotOpen;
   if( comedi_cancel( DeviceP, Subdevice ) < 0 )
     return WriteError;
@@ -245,6 +249,8 @@ int ComediAnalogOutput::stop( void )
 int ComediAnalogOutput::reload( void )
 {
   cerr << " ComediAnalogOutput::reload()" << endl;/////TEST/////
+  if( !isOpen() )
+    return -1;
   if( loaded() )
     return 0;
 
@@ -280,6 +286,8 @@ bool ComediAnalogOutput::prepared( void ) const
 
 bool ComediAnalogOutput::loaded( void ) const 
 { 
+  if( !isOpen() )
+    return false;
   return SDF_RUNNING & comedi_get_subdevice_flags( DeviceP, Subdevice );
 }
 
@@ -314,16 +322,22 @@ comedi_t* ComediAnalogOutput::device( void ) const
 
 int ComediAnalogOutput::subdevice( void ) const
 {
+  if( !isOpen() )
+    return -1;
   return Subdevice;
 }
 
 int ComediAnalogOutput::channels( void ) const
 { 
+  if( !isOpen() )
+    return -1;
   return comedi_get_n_channels( DeviceP, Subdevice);
 }
 
 int ComediAnalogOutput::bits( void ) const
 { 
+  if( !isOpen() )
+    return -1;
   int maxData = comedi_get_maxdata( DeviceP, Subdevice, 0 );
   return (int)( log( maxData+2.0 )/ log( 2.0 ) );
 }
@@ -335,6 +349,8 @@ double ComediAnalogOutput::maxRate( void ) const
 
 int ComediAnalogOutput::bufferSize( void ) const
 {
+  if( !isOpen() )
+    return -1;
   return comedi_get_buffer_size( DeviceP, Subdevice ) / BufferElemSize;
 }
 
@@ -421,6 +437,9 @@ int ComediAnalogOutput::convertData( OutList &sigs )
 
 int ComediAnalogOutput::testWriteDevice( OutList &sigs )
 {
+  if( !isOpen() )
+    return -1;
+
   ErrorState = 0;
 
   // check channel ordering:
@@ -566,7 +585,7 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
   
   // try automatic command generation
   unsigned int intervalLength = (int)( 1e9 * sigs[0].sampleInterval() );
-  int retVal = comedi_get_cmd_generic_timed( DeviceP, Subdevice, &Cmd, intervalLength );
+  int retVal = comedi_get_cmd_generic_timed( DeviceP, Subdevice, &Cmd, sigs.size(), intervalLength );
   if( Cmd.scan_begin_arg < intervalLength ) {
     cerr << " ComediAnalogOutput::testWriteDevice(): "
 	 << "Requested sampling rate bigger than supported! max "
@@ -591,8 +610,6 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
   Cmd.start_arg = 0;
   if( Cmd.convert_src & TRIG_NOW )
     Cmd.convert_arg = 1;
-  else
-    Cmd.convert_arg /= sigs.size();
   Cmd.scan_end_arg = sigs.size();
   
   // test if countinous-state is supported
@@ -647,6 +664,9 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
 
 int ComediAnalogOutput::prepareWrite( OutList &sigs )
 {
+  if( !isOpen() )
+    return -1;
+
   reset();
 
   // copy and sort signal pointers:
@@ -848,6 +868,8 @@ int ComediAnalogOutput::startWrite( OutList &sigs )
 
 int ComediAnalogOutput::fillWriteBuffer( void )
 {
+  if( !isOpen() )
+    return -1;
 
   ErrorState = 0;
   cerr << "ComediAnalogOutput::writeData: size of device buffer: " 
@@ -942,7 +964,10 @@ int ComediAnalogOutput::writeData( OutList &sigs )
   return fillWriteBuffer();
 }
 
-void ComediAnalogOutput::take( vector< AnalogInput* > &ais, vector< AnalogOutput* > &aos,
+
+void ComediAnalogOutput::take( int syncmode, 
+			       vector< AnalogInput* > &ais, 
+			       vector< AnalogOutput* > &aos,
 			       vector< int > &aiinx, vector< int > &aoinx )
 {
   cerr << " ComediAnalogOutput::take(): 1" << endl;/////TEST/////

@@ -30,22 +30,24 @@
 #include "comedianaloginput.h"
 
 ComediAnalogInput::ComediAnalogInput( void ) 
-  : AnalogInput( "ComediAnalogInput", ComediAnalogInputType )
+  : AnalogInput( ComediAnalogInputType )
 {
   ErrorState = 0;
   IsPrepared = false;
   IsRunning = false;
   Mode = 0;
+  AsyncMode = true;
   DeviceP = NULL;
 }
 
 ComediAnalogInput::ComediAnalogInput( const string &devicename ) 
-  : AnalogInput( "ComediAnalogInput", ComediAnalogInputType )
+  : AnalogInput( devicename, ComediAnalogInputType )
 {
   ErrorState = 0;
   IsPrepared = false;
   IsRunning = false;
   Mode = 0;
+  AsyncMode = true;
   DeviceP = NULL;
   open( devicename, Mode );
 }
@@ -61,7 +63,7 @@ int ComediAnalogInput::open( const string &devicename, long mode )
     close();
   clearSettings();
   if ( devicename.empty() )
-    return 0;
+    return InvalidDevice;
 
   int retVal;
   Devicename = devicename;
@@ -89,13 +91,13 @@ int ComediAnalogInput::open( const string &devicename, long mode )
     return NotOpen;
   }  
 
-  if( ! ( SDF_CMD & comedi_get_subdevice_flags( DeviceP, Subdevice ) ) ) {
+  if( AsyncMode && 
+      ! ( SDF_CMD & comedi_get_subdevice_flags( DeviceP, Subdevice ) ) ) {
     cerr << /*currentTime() <<*/ " !  ComediAnalogInput::open() -> "
 	 << "Device "  << devicename << " not supported! "
 	 << "Subdevice needs to support async. commands!" << endl;
     return InvalidDevice;
   }
-  setDeviceFile( devicename );
   setDeviceName( comedi_get_board_name( DeviceP ) );
 
   // set comedi file-descriptor to non-blocking writing mode
@@ -124,6 +126,7 @@ int ComediAnalogInput::open( const string &devicename, long mode )
       UnipolarRangeIndex.push_back( iRange );
     }
   }
+
 
   // bubble-sorting Uni/BipolarRangeIndex according to Uni/BipolarRange.max
   unsigned int iSwap;
@@ -158,8 +161,8 @@ int ComediAnalogInput::open( const string &devicename, long mode )
   comedi_cmd cmd;
   memset( &cmd,0, sizeof(comedi_cmd) );
   unsigned int chanlist = CR_PACK( 0, 0, AREF_GROUND );
-  retVal = comedi_get_cmd_generic_timed( DeviceP, Subdevice, &cmd, (unsigned int)1e8 );
-  if( retVal < 0 ){
+  retVal = comedi_get_cmd_generic_timed( DeviceP, Subdevice, &cmd, 1/*chans*/, (unsigned int)1e8/*Hz*/ );
+   if( retVal < 0 ){
     cmd.subdev = Subdevice;
     cmd.start_src =        TRIG_NOW;
     cmd.start_arg =        0;
@@ -191,6 +194,8 @@ int ComediAnalogInput::open( const string &devicename, long mode )
 void ComediAnalogInput::close( void ) 
 {
   reset();
+  if( ! DeviceP )
+    return;
   comedi_unlock( DeviceP,  Subdevice );
   int error = comedi_close( DeviceP );
   if( error )
@@ -216,7 +221,7 @@ int ComediAnalogInput::reset( void )
 int ComediAnalogInput::stop( void )
 { 
   cerr << " ComediAnalogInput::stop()" << endl;/////TEST/////
-  if( !DeviceP )
+  if( !isOpen() )
     return NotOpen;
   if( comedi_cancel( DeviceP, Subdevice ) < 0 )
     return ReadError;
@@ -261,6 +266,8 @@ bool ComediAnalogInput::prepared( void ) const
 
 bool ComediAnalogInput::loaded( void ) const 
 { 
+  if( !isOpen() )
+    return false;
   return SDF_BUSY & comedi_get_subdevice_flags( DeviceP, Subdevice );
 }
 
@@ -295,16 +302,22 @@ comedi_t* ComediAnalogInput::device( void ) const
 
 int ComediAnalogInput::subdevice( void ) const
 {
+  if( !isOpen() )
+    return -1;
   return Subdevice;
 }
 
 int ComediAnalogInput::channels( void ) const
 { 
+  if( !isOpen() )
+    return -1;
   return comedi_get_n_channels( DeviceP, Subdevice);
 }
 
 int ComediAnalogInput::bits( void ) const
 { 
+  if( !isOpen() )
+    return -1;
   int maxData = comedi_get_maxdata( DeviceP, Subdevice, 0 );
   return (int)( log( maxData+2.0 )/ log( 2.0 ) );
 }
@@ -316,6 +329,8 @@ double ComediAnalogInput::maxRate( void ) const
 
 int ComediAnalogInput::bufferSize( void ) const
 {
+  if( !isOpen() )
+    return -1;
   return comedi_get_buffer_size( DeviceP, Subdevice ) / BufferElemSize;
 }
 
@@ -352,6 +367,9 @@ double ComediAnalogInput::bipolarRange( int index ) const
 
 int ComediAnalogInput::testReadDevice( InList &traces )
 {
+  if( !isOpen() )
+    return -1;
+
   cerr << " ComediAnalogInput::testReadDevice() " << endl;/////TEST/////  
   ErrorState = 0;
   memset( ChanList, 0, sizeof( ChanList ) );
@@ -429,7 +447,7 @@ int ComediAnalogInput::testReadDevice( InList &traces )
 
   // try automatic command generation
   unsigned int intervalLength = (int)( 1e9 * traces[0].sampleInterval() );  
-  int retVal = comedi_get_cmd_generic_timed( DeviceP, Subdevice, &Cmd, intervalLength );
+  int retVal = comedi_get_cmd_generic_timed( DeviceP, Subdevice, &Cmd, traces.size(), intervalLength );
   if( Cmd.scan_begin_arg < intervalLength ) {
     cerr << " ComediAnalogInput::testReadDevice(): "
 	 << "Requested sampling rate bigger than supported! max "
@@ -454,8 +472,6 @@ int ComediAnalogInput::testReadDevice( InList &traces )
   Cmd.start_arg = 0;
   if( Cmd.convert_src & TRIG_NOW )
     Cmd.convert_arg = 1;
-  else
-    Cmd.convert_arg /= traces.size();
   Cmd.scan_end_arg = traces.size();
 
   // test if countinous-state is supported
@@ -510,6 +526,9 @@ int ComediAnalogInput::testReadDevice( InList &traces )
 
 int ComediAnalogInput::prepareRead( InList &traces )
 {
+  if( !isOpen() )
+    return -1;
+
   reset();
   int error = testReadDevice( traces );
   if( error )
@@ -719,6 +738,9 @@ for( unsigned int ai = 0; ai < ComediAIs.size(); ai++ )
 
 int ComediAnalogInput::readData( InList &traces )
 {
+  if( !isOpen() )
+    return -1;
+
   cerr << " ComediAnalogInput::readData(): in, comedi:" << comedi_strerror( comedi_errno() ) << endl;/////TEST/////
 
   ErrorState = 0;
@@ -779,8 +801,10 @@ int ComediAnalogInput::readData( InList &traces )
 }
 
 
-void ComediAnalogInput::take( vector< AnalogInput* > &ais, vector< AnalogOutput* > &aos,
-	   vector< int > &aiinx, vector< int > &aoinx )
+void ComediAnalogInput::take( int syncmode, 
+			      vector< AnalogInput* > &ais, 
+			      vector< AnalogOutput* > &aos,
+			      vector< int > &aiinx, vector< int > &aoinx )
 {
   ComediAIs.clear();
   ComediAOs.clear();

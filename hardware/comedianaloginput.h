@@ -51,10 +51,12 @@ sleep 1
 class ComediAnalogInput : public AnalogInput
 {
 
+  friend class DynClampAnalogInput;
+
 public:
 
    /*! Device type id for comedi DAQ input devices. */
-  static const int ComediAnalogInputType = 2;
+  static const int ComediAnalogInputType = 3;
 
 
     /*! Create a new ComediAnalogInput without opening a device. */
@@ -195,15 +197,19 @@ public:
 
     /*! Check for every analog input and input device in \a ais and \a aos
         whether it can be simultaneously started by startRead()
-	from this device.
+	from this device (\a syncmode = 0)
+	or whether the device driver can read the index of an running
+	analog input at the time of starting an analog output (\a syncmode = 1).
 	Add the indices of those devices to \a aiinx and \a aoinx. */
-  void take( vector< AnalogInput* > &ais, vector< AnalogOutput* > &aos,
+  void take( int syncmode, 	     
+	     vector< AnalogInput* > &ais, vector< AnalogOutput* > &aos,
 	     vector< int > &aiinx, vector< int > &aoinx );
 
 
 private:
 
   long Mode;
+  bool AsyncMode;
   int ErrorState;
   mutable bool IsRunning;
   bool IsPrepared;
