@@ -1,5 +1,5 @@
 /*
-  config.h
+  configclass.h
   Base class for each class that has some parameters to be configured.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation

@@ -28,12 +28,11 @@ librelacsconfig_la_LIBADD = \
 librelacsconfig_ladir = $(includedir)/relacs
 
 librelacsconfig_la_HEADERS = \
-    config.h \
+    configclass.h \
     configdialog.h \
     configure.h
 
 librelacsconfig_la_SOURCES = \
-    config.cc \
+    configclass.cc \
     configdialog.cc \
     configure.cc
-
