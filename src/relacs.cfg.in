@@ -1,0 +1,4 @@
+@RELACS_CFG_HEAD@
+       pluginpathes: @prefix@/lib/@PLUGINS_BASENAME@/
+@RELACS_CFG_FOOT@
+

@@ -26,6 +26,7 @@
 #include <ctime>
 #include <unistd.h>
 #include <fcntl.h>
+#include <errno.h>
 #include "comedianalogoutput.h"
 #include "comedianaloginput.h"
 

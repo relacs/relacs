@@ -1,0 +1,3 @@
+#! /bin/sh
+find . -name '.svn' -prune -o -type d -print -exec sh -c "[ ! -d {}/.svn ] || svn propget svn:ignore {} | sed 's/^/  /'" \;
+

@@ -1,0 +1,15 @@
+@RELACS_RUNNER_HEAD@
+
+prefix="@prefix@"
+exec_prefix="@exec_prefix@"
+pkglibdir="@libdir@/@PACKAGE_NAME@"
+
+RELACSLIBPATHS="@libdir@"
+RELACSEXECPATH=${pkglibdir}
+CONFNAME=relacs
+PLUGINHOME=${pkglibdir}/plugins
+
+CONFDIR_CANDIDATES="$HOME/.relacs${SEPARATOR}@sysconfdir@"
+
+@RELACS_RUNNER_FOOT@
+

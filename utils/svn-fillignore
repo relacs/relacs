@@ -1,0 +1,10 @@
+#! /bin/sh
+SCRIPT_DIR=`dirname "${PWD}/$0"`
+svn status | grep '^\?' | sed 's/^\?  *//' | while read i ; do
+    DIR=`dirname "${i}"`
+    FILE=`basename "${i}"`
+    "${SCRIPT_DIR}/svn-propapp" svn:ignore "${FILE}" "${DIR}" >/dev/null
+    echo "I      ${i}"
+done
+exit 0
+

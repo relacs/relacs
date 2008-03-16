@@ -1,0 +1,25 @@
+== Next ==
+- Revert .cfg files to state of checkin
+- Add configure scripts to all seven libraries if possible
+  - Extract GSL detection
+    - Make macro from that
+- Doxygen stuff
+    - auditory/doc/auditory.dox
+    - common/doc/common.dox
+    - patch/doc/patch.dox
+- Move includes to include/relacs folders
+
+
+== Optional ==
+- Integrate examples (with extra target)
+- Integrate librand55
+    http://summa.physik.hu-berlin.de/~beule/random/random55.tar.gz
+- Extra summary for configure at the very end
+
+
+== Notes ==
+- Log files written to relacs exec dir, not /var/log?
+- Plugins searched in <plugins/*.so> though <pluginpathes> given?
+- Report about reading config from PWD and LD_LIBRARY_PATH containing PWD
+  - On/off by user?
+
