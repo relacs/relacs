@@ -68,7 +68,7 @@ void* createAttSim( void )
 RELACSWidget::RELACSWidget( const string &configbase, int mode,
 			    QWidget *parent, const char *name )
   : QMainWindow( parent, name ),
-    Config( "RELACS", RELACSPlugin::Core ),
+    ConfigClass( "RELACS", RELACSPlugin::Core ),
     Mode( mode ),
     SS( this ),
     MTDT( this ),
