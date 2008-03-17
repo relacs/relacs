@@ -169,38 +169,16 @@ int Plugins::open( int id )
 int Plugins::openPath( const string &path )
 {
   // read all libraries specified by path:
-  /*
-  char cs[1024];
-  sprintf( cs, "ls %s", path.c_str() );
-  FILE *F = popen( cs, "r" );
-  if( !F ) {
-    perror( "popen" );
-    return -CantGetFiles;
-  }
-
-  int n = -NoFiles;
-  char ls[1024];
-  while( fgets( ls, 1024, F ) ) {
-    // trim off the whitespace
-    char *ws = strpbrk( ls, " \t\n");
-    if ( ws ) 
-      *ws = '\0';
-    string ss = ls;
-    
-    int r = open( ss );
-    if ( r >= 0 && n < 0 )
-      n = r;
-  }
-  
-  return n;
-  */
-
   Str p( path );
-  string dir = p.dir();
-  QDir f( dir, p.notdir() );
+  p.strip();
+  if ( p.eraseFirst( "[PLUGINHOME]" ) ) {
+    p = "/pluginhome/" + p;   // XXX where do I get that from?
+  }
+  QDir files( p.dir(), p.notdir() );
   int n = -NoFiles;
-  for ( int k=0; k < f.count(); k++ ) {
-    Str libfile = dir + f[k].latin1();
+  for ( int k=0; k < files.count(); k++ ) {
+    Str libfile = files.absFilePath( files[k], false ).latin1();
+    cerr << libfile << endl;
     int r = open( libfile );
     if ( r >= 0 && n < 0 )
       n = r;
