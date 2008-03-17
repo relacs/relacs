@@ -33,6 +33,11 @@ while read pattern ; do
         ;;
     esac
 
+    # TODO Fix patterns with spaces?
+    if [[ "${pattern}" = */ ]]; then
+        pattern="${pattern}*.so"
+    fi
+
     ## Resolve pattern and collect directories
     while read pluginfilename ; do
         if [ -f "${pluginfilename}" ]; then
@@ -40,7 +45,7 @@ while read pattern ; do
             echo "Plugin found: ${pluginfilename}"
             dirlist="${dirlist}${dir}${SEPARATOR}"
         fi
-    done < <(/usr/bin/env ls -1 ${pattern} ${pattern%/}/* 2>/dev/null | grep '^/' | grep '\.so$')
+    done < <(ls -1 ${pattern} 2>/dev/null | grep '\.so$')
 done < <(grep 'pluginpathes' < "${CONFDIR}/${CONFFILE}" | sed -e 's/^[ \t]*pluginpathes:[ \t]*\(.*\)/\1/' -e 's/|/\n/g')
 echo
 
@@ -202,6 +207,8 @@ export LD_LIBRARY_PATH="${RELACSLIBPATHS}:${RELACSPLUGINPATHES}:${LD_LIBRARY_PAT
 # working path:
 cd $WORKPATH
 
+CONFPART="${CONFDIR}/${CONFNAME}"
+
 # run RELACS:
 if [ $USELOGFILE -gt 0 ] && [ -n "$LOGFILE" ]; then
 
@@ -220,11 +227,10 @@ if [ $USELOGFILE -gt 0 ] && [ -n "$LOGFILE" ]; then
   echo >> $LOGFILE
 
   # execute RELACS:
-  CONFPART="-s ${CONFDIR}/${CONFNAME}"
   if [ $USETEE -gt 0 ] && [ -n "$TEE" ]; then
-    $RELACSEXECPATH/$RELACSEXEC "${CONFPART}" $@ 2>&1 | $TEE $LOGFILE
+    "$RELACSEXECPATH/$RELACSEXEC" -s "${CONFPART}" $@ 2>&1 | $TEE $LOGFILE
   else
-    $RELACSEXECPATH/$RELACSEXEC "${CONFPART}" $@ >> $LOGFILE 2>&1
+    "$RELACSEXECPATH/$RELACSEXEC" -s "${CONFPART}" $@ >> $LOGFILE 2>&1
   fi
 
 else
@@ -260,7 +266,7 @@ else
   else
 
     # simply execute RELACS:
-    $RELACSEXECPATH/$RELACSEXEC $@
+    "$RELACSEXECPATH/$RELACSEXEC" -s "${CONFPART}" $@
 
   fi
 

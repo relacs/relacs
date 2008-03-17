@@ -166,13 +166,15 @@ int Plugins::open( int id )
 }
 
 
-int Plugins::openPath( const string &path )
+int Plugins::openPath( const string &path, const string &pluginhome )
 {
   // read all libraries specified by path:
   Str p( path );
   p.strip();
   if ( p.eraseFirst( "[PLUGINHOME]" ) ) {
-    p = "/pluginhome/" + p;   // XXX where do I get that from?
+    Str ph( pluginhome );
+    ph.provideSlash();
+    p = ph + p;
   }
   QDir files( p.dir(), p.notdir() );
   int n = -NoFiles;

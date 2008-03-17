@@ -18,7 +18,8 @@
 
 
 == Notes ==
-- Log files written to relacs exec dir, not /var/log?
+- Log files written to relacs exec dir, not /var/log? 
+  - 
 - Plugins searched in <plugins/*.so> though <pluginpathes> given?
 - Report about reading config from PWD and LD_LIBRARY_PATH containing PWD
   - On/off by user?

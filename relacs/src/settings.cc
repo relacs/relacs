@@ -14,6 +14,7 @@ Settings::Settings( RELACSWidget* rw )
   addNumber( "updateinterval", "Interval for periodic acquisition of data", 0.05, 0.001, 1000.0, 0.001, "seconds", "ms" );
   addNumber( "processinterval", "Interval for periodic processing of data", 0.10, 0.001, 1000.0, 0.001, "seconds", "ms" );
   addLabel( "Plugins" );
+  addText( "pluginhome", "Default path to plugins", "plugins/" );
   addText( "pluginpathes", "Plugin pathes", "plugins/" );
   addBoolean( "changetoplugindir", "Change to the plugin's directory", true );
   addText( "controlplugin", "Control plugin", "" );

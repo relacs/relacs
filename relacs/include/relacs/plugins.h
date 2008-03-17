@@ -102,10 +102,11 @@ public:
   static int open( int id );
     /*! Load all libraries specified by the path \a path into the program. 
         \a path may include wildcard characters. 
+	If \a path starts with "[PLUGINHOME]" it is replaced by \a pluginhome.
         Returns the id of the first successfully loaded library. 
         If \a path is invalid, -CantGetFiles is returned.
         If no library was opened successfully, -NoFiles is returned. */
-  static int openPath( const string &path );
+  static int openPath( const string &path, const string &pluginhome );
     /*! Load all libraries listed in the file \a file into the program.
         Returns the index of the first successfully loaded library.
         If \a file is invalid, -CantGetFiles is returned.

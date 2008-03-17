@@ -153,13 +153,14 @@ RELACSWidget::RELACSWidget( const string &configbase, int mode,
   PG->add( "AOSim", RELACSPlugin::AnalogOutputId, createAOSim, PLUGINVERSION );
   PG->add( "AttSim", RELACSPlugin::AttenuatorId, createAttSim, PLUGINVERSION );
   PG->setChangeToPluginDir( SS.boolean( "changetoplugindir" ) );
+  string pluginhome = SS.text( "pluginhome" );
   for ( int k=0; k<SS.Options::size( "pluginpathes" ); k++ ) {
-    Str pluginlib = SS.text( "pluginpathes", k );
-    if ( pluginlib.extension().empty() ) {
-      pluginlib.provideSlash();
-      pluginlib += "*.so";
+    string pluginlib = SS.text( "pluginpathes", k );
+    if ( !pluginlib.empty() ) {
+      if ( pluginlib[pluginlib.size()-1] == '/' )
+	pluginlib += "*.so";
+      PG->openPath( pluginlib, pluginhome );
     }
-    PG->openPath( pluginlib );
   }
   if ( PG->empty() ) {
     printlog(  "! error: No valid plugins found. Exit now." );
