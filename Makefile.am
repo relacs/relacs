@@ -15,7 +15,6 @@ SUBDIRS = \
     common \
     hardware \
     auditory \
-    patch \
     \
     utils
 
