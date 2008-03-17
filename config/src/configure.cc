@@ -113,13 +113,26 @@ void Configure::read( int group, int level )
        level < 0 || level >= (int)ConfigFile[group].size() )
     return;
 
-  cerr << currentTime()
-       << " read configuration from " << ConfigFile[group][level] << endl;
   ifstream sf( ConfigFile[group][level].c_str() );
-  Str line;
 
+  if ( ! sf.good() ) {
+    cerr << currentTime()
+	 << " failed to open configuration file " << ConfigFile[group][level] << endl;
+    return;
+  }
+
+  Str line = "";
   while ( ( line.empty() || line[0] != '*' ) &&
 	  getline( sf, line ).good() );
+
+  if ( ! sf.good() ) {
+    cerr << currentTime()
+	 << " cannot read configuration from " << ConfigFile[group][level] << endl;
+    return;
+  }
+
+  cerr << currentTime()
+       << " read configuration from " << ConfigFile[group][level] << endl;
 
   while ( sf.good() ) {
     string ident = line.strip().substr( 1 );

@@ -19,13 +19,14 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "plugins.h"
 #include <cstdlib>
 #include <dlfcn.h>
-#include <unistd.h>
 #include <cstdio>
 #include <fstream>
 #include <iostream>
+#include <qdir.h>
+#include "str.h"
+#include "plugins.h"
 
 
 #ifdef PLUGINVERSION
@@ -168,6 +169,7 @@ int Plugins::open( int id )
 int Plugins::openPath( const string &path )
 {
   // read all libraries specified by path:
+  /*
   char cs[1024];
   sprintf( cs, "ls %s", path.c_str() );
   FILE *F = popen( cs, "r" );
@@ -186,6 +188,20 @@ int Plugins::openPath( const string &path )
     string ss = ls;
     
     int r = open( ss );
+    if ( r >= 0 && n < 0 )
+      n = r;
+  }
+  
+  return n;
+  */
+
+  Str p( path );
+  string dir = p.dir();
+  QDir f( dir, p.notdir() );
+  int n = -NoFiles;
+  for ( int k=0; k < f.count(); k++ ) {
+    Str libfile = dir + f[k].latin1();
+    int r = open( libfile );
     if ( r >= 0 && n < 0 )
       n = r;
   }
