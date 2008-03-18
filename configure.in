@@ -196,9 +196,11 @@ if test ! ${RELACS_GSL} = no ; then
 
 	if test ${RELACS_GSL} = error ; then
 		AC_MSG_NOTICE(${GSL_DISABLED})
+		RELACS_GSL=no
 	elif test ${RELACS_GSL} = detect ; then
 		AC_MSG_NOTICE(${GSL_ENABLED})
 		DOXYGEN_PREDEF="${DOXYGEN_PREDEF} GSL"
+		RELACS_GSL=yes
 	fi
 fi
 
@@ -309,6 +311,8 @@ AC_SUBST_FILE(RELACS_RUNNER_HEAD)
 RELACS_RUNNER_FOOT=src/relacs_runner_foot
 AC_SUBST_FILE(RELACS_RUNNER_FOOT)
 
+
+
 # Substitute
 AC_CONFIG_FILES([
     auditory/base/Makefile
@@ -353,3 +357,18 @@ AC_CONFIG_FILES([src/relacs], [chmod a+x src/relacs])
 
 AC_OUTPUT
 
+
+
+cat <<SUMMARY
+
+    Use GSL ................ ${RELACS_GSL}
+    Build link tests ....... ${RELACS_LINKTESTS_ENABLED}
+    Create documentation ... ${DOXYGEN_ENABLED}
+
+If you can read these lines ./configure finished sucessfully.
+Relacs should build and install smoothly. If it doesn't please
+open a bug describing your problem and configuration at
+http://sourceforge.net/tracker/?group_id=199846&atid=971134
+
+Continue with \$ make && sudo make install
+SUMMARY
