@@ -20,9 +20,9 @@ endif
 
 
 librelacscommonephystraces_la_CPPFLAGS = \
-    -I../../daq/src \
-    -I../../numerics/src \
-    -I../../options/src
+    -I../../daq/include \
+    -I../../numerics/include \
+    -I../../options/include
 
 librelacscommonephystraces_la_LIBADD = \
     ../../relacs/src/librelacs.la
@@ -34,14 +34,14 @@ librelacscommonephystraces_la_SOURCES = \
 
 
 librelacscommonpause_la_CPPFLAGS = \
-    -I../../config/src \
-    -I../../daq/src \
-    -I../../numerics/src \
-    -I../../options/src \
+    -I../../config/include \
+    -I../../daq/include \
+    -I../../numerics/include \
+    -I../../options/include \
     -I../../relacs/include/relacs/ \
     @QT3_CPPFLAGS@
 
-librelacscommonpause_la-%-moc.cpp : %.h
+librelacscommonpause_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacscommonpause_la-%-moc.lo : librelacscommonpause_la-%-moc.cpp
@@ -60,15 +60,15 @@ librelacscommonpause_la_SOURCES = \
 
 
 librelacscommonrestartdelay_la_CPPFLAGS = \
-    -I../../config/src \
-    -I../../daq/src \
-    -I../../mplot/src \
-    -I../../numerics/src \
-    -I../../options/src \
+    -I../../config/include \
+    -I../../daq/include \
+    -I../../mplot/include \
+    -I../../numerics/include \
+    -I../../options/include \
     -I../../relacs/include/relacs/ \
     @QT3_CPPFLAGS@
 
-librelacscommonrestartdelay_la-%-moc.cpp : %.h
+librelacscommonrestartdelay_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacscommonrestartdelay_la-%-moc.lo : librelacscommonrestartdelay_la-%-moc.cpp
@@ -87,15 +87,15 @@ librelacscommonrestartdelay_la_SOURCES = \
 
 
 librelacscommonstimulusdelay_la_CPPFLAGS = \
-    -I../../config/src \
-    -I../../daq/src \
-    -I../../mplot/src \
-    -I../../numerics/src \
-    -I../../options/src \
+    -I../../config/include \
+    -I../../daq/include \
+    -I../../mplot/include \
+    -I../../numerics/include \
+    -I../../options/include \
     -I../../relacs/include/relacs/ \
     @QT3_CPPFLAGS@
 
-librelacscommonstimulusdelay_la-%-moc.cpp : %.h
+librelacscommonstimulusdelay_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacscommonstimulusdelay_la-%-moc.lo : librelacscommonstimulusdelay_la-%-moc.cpp

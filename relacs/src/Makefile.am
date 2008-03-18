@@ -15,16 +15,14 @@ endif
 
 librelacs_la_CPPFLAGS = \
     "-DRELACSVERSION=\"@RELACSVERSION@\"" \
-    -I../../config/src \
-    -I../../daq/src \
-    -I../../datafile/src \
-    -I../../mplot/src \
-    -I../../numerics/src \
-    -I../../options/src \
-    -I../../widgets/src \
-    \
-    -I../include/relacs \
-    \
+    -I../../config/include \
+    -I../../daq/include \
+    -I../../datafile/include \
+    -I../../mplot/include \
+    -I../../numerics/include \
+    -I../../options/include \
+    -I../../widgets/include \
+    -I../include \
     @QT3_CPPFLAGS@
 
 librelacs_la_LDFLAGS = @QT3_LDFLAGS@

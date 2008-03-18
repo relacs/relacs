@@ -1,5 +1,5 @@
 /*
-  filter.cc
+  ../include/relacs/filter.cc
   Basic virtual class for filtering or detecting events (e.g. spikes) 
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -19,7 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "filter.h"
+#include <relacs/filter.h>
 
 
 Filter::Filter( const string &ident, int mode,

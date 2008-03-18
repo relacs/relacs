@@ -7,13 +7,14 @@ lib_LTLIBRARIES = \
 
 
 librelacswidgets_la_CPPFLAGS = \
-    -I../../options/src \
+    -I../../options/include \
+    -I../include \
     @QT3_CPPFLAGS@
 
 librelacswidgets_la_LDFLAGS = \
     @QT3_LDFLAGS@
 
-librelacswidgets_la-%-moc.cpp : %.h
+librelacswidgets_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacswidgets_la-%-moc.lo : librelacswidgets_la-%-moc.cpp
@@ -33,14 +34,14 @@ librelacswidgets_la_LIBADD = \
 librelacswidgets_ladir = $(includedir)/relacs
 
 librelacswidgets_la_HEADERS = \
-    doublespinbox.h \
-    lcdrange.h \
-    messagebox.h \
-    optdialog.h \
-    optwidgetbase.h \
-    optwidget.h \
+    ../include/relacs/doublespinbox.h \
+    ../include/relacs/lcdrange.h \
+    ../include/relacs/messagebox.h \
+    ../include/relacs/optdialog.h \
+    ../include/relacs/optwidgetbase.h \
+    ../include/relacs/optwidget.h \
     \
-    optdialogbutton.h
+    ../include/relacs/optdialogbutton.h
 
 librelacswidgets_la_SOURCES = \
     doublespinbox.cc \

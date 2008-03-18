@@ -1,5 +1,5 @@
 /*
-  plottrace.cc
+  ../include/relacs/plottrace.cc
   Plot trace and spikes.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -29,9 +29,9 @@
 #include <qkeycode.h>
 #include <qtooltip.h>
 #include <qapplication.h>
-#include "str.h"
-#include "relacswidget.h"
-#include "plottrace.h"
+#include <relacs/str.h>
+#include <relacs/relacswidget.h>
+#include <relacs/plottrace.h>
 
 
 PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent, const char* name )

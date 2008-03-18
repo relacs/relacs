@@ -23,7 +23,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <iomanip>
-#include "parameter.h"
+#include <relacs/parameter.h>
 
 
 Parameter::Parameter( void )

@@ -1,5 +1,5 @@
 /*
-  repros.cc
+  ../include/relacs/repros.cc
   Container handling RePros
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -23,13 +23,13 @@
 #include <qlabel.h>
 #include <qtooltip.h>
 #include <qapplication.h>
-#include "messagebox.h"
-#include "optdialog.h"
-#include "relacswidget.h"
-#include "repro.h"
-#include "defaultrepro.h"
-#include "macros.h"
-#include "repros.h"
+#include <relacs/messagebox.h>
+#include <relacs/optdialog.h>
+#include <relacs/relacswidget.h>
+#include <relacs/repro.h>
+#include <relacs/defaultrepro.h>
+#include <relacs/macros.h>
+#include <relacs/repros.h>
 
 
 RePros::RePros( RELACSWidget *rw, QWidget *parent, const char *name )

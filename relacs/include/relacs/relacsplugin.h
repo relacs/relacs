@@ -1,5 +1,5 @@
 /*
-  relacsplugin.h
+  ../include/relacs/relacsplugin.h
   Adds specific functions for RELACS plugins to ConfigDialog
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -24,16 +24,16 @@
 
 
 #include <qapplication.h>
-#include "tracespec.h"
-#include "indata.h"
-#include "inlist.h"
-#include "eventdata.h"
-#include "eventlist.h"
-#include "outdata.h"
-#include "outlist.h"
-#include "metadata.h"
-#include "plugins.h"
-#include "configdialog.h"
+#include <relacs/tracespec.h>
+#include <relacs/indata.h>
+#include <relacs/inlist.h>
+#include <relacs/eventdata.h>
+#include <relacs/eventlist.h>
+#include <relacs/outdata.h>
+#include <relacs/outlist.h>
+#include <relacs/metadata.h>
+#include <relacs/plugins.h>
+#include <relacs/configdialog.h>
 
 
 /*! 

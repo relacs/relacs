@@ -19,7 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "sampledata.h"
+#include <relacs/sampledata.h>
 
 
 SampleData<> sin( const LinearRange &r, double f )

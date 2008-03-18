@@ -14,17 +14,17 @@ endif
 
 
 librelacscommonspikedetector_la_CPPFLAGS = \
-    -I../../config/src \
-    -I../../daq/src \
-    -I../../datafile/src \
-    -I../../mplot/src \
-    -I../../numerics/src \
-    -I../../options/src \
+    -I../../config/include \
+    -I../../daq/include \
+    -I../../datafile/include \
+    -I../../mplot/include \
+    -I../../numerics/include \
+    -I../../options/include \
     -I../../relacs/include/relacs/ \
-    -I../../widgets/src \
+    -I../../widgets/include \
     @QT3_CPPFLAGS@
 
-librelacscommonspikedetector_la-%-moc.cpp : %.h
+librelacscommonspikedetector_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacscommonspikedetector_la-%-moc.lo : librelacscommonspikedetector_la-%-moc.cpp

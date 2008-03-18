@@ -21,7 +21,7 @@
 
 #include <cmath>
 #include <iostream>
-#include "random.h"
+#include <relacs/random.h>
 using namespace std;
 
 

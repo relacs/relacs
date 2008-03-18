@@ -21,7 +21,7 @@
 
 #include <iostream>
 #include <algorithm>
-#include "fitalgorithm.h"
+#include <relacs/fitalgorithm.h>
 
 
 namespace numerics {

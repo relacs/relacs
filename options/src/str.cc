@@ -26,7 +26,7 @@
 #include <sstream>
 #include <iostream>
 #include <iomanip>
-#include "str.h"
+#include <relacs/str.h>
 
 
 ///// global settings: //////////////////////////////////////////////////////

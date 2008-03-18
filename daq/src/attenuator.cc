@@ -20,7 +20,7 @@
 */
 
 #include <sstream>
-#include "attenuator.h"
+#include <relacs/attenuator.h>
 using namespace std;
 
 

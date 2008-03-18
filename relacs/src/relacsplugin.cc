@@ -1,5 +1,5 @@
 /*
-  relacsplugin.cc
+  ../include/relacs/relacsplugin.cc
   Adds specific functions for RELACS plugins to ConfigDialog
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -20,12 +20,12 @@
 */
 
 #include <qdatetime.h>
-#include "messagebox.h"
-#include "metadata.h"
-#include "model.h"
-#include "filter.h"
-#include "relacswidget.h"
-#include "relacsplugin.h"
+#include <relacs/messagebox.h>
+#include <relacs/metadata.h>
+#include <relacs/model.h>
+#include <relacs/filter.h>
+#include <relacs/relacswidget.h>
+#include <relacs/relacsplugin.h>
 
 
 RELACSPlugin::RELACSPlugin( const string &configident, int configgroup,

@@ -22,8 +22,8 @@
 #include <qlayout.h>
 #include <qlabel.h>
 #include <qpushbutton.h>
-#include "optdialog.h"
-#include "optdialogbutton.h"
+#include <relacs/optdialog.h>
+#include <relacs/optdialogbutton.h>
 
 
 OptDialog::OptDialog( QWidget *parent, char *name )

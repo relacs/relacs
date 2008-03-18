@@ -1,5 +1,5 @@
 /*
-  defaultsession.cc
+  ../include/relacs/defaultsession.cc
   Minimum default Session
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -19,7 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "defaultsession.h"
+#include <relacs/defaultsession.h>
 
 
 DefaultSession::DefaultSession( void )

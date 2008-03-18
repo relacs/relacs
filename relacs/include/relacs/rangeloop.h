@@ -1,5 +1,5 @@
 /*
-  rangeloop.h
+  ../include/relacs/rangeloop.h
   A flexible and sophisticated way to loop trough a range of values.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation

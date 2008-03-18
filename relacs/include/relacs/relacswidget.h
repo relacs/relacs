@@ -1,5 +1,5 @@
 /*
-  relacswidget.h
+  ../include/relacs/relacswidget.h
   Coordinates RePros, session, input, output, plotting, and saving. 
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -33,21 +33,21 @@
 #include <qwaitcondition.h>
 #include <qapplication.h>
 #include <vector>
-#include "configclass.h"
-#include "configure.h"
-#include "settings.h"
-#include "relacsdevices.h"
-#include "metadata.h"
-#include "plottrace.h"
-#include "acquire.h"
-#include "simulator.h"
-#include "savefiles.h"
-#include "filterdetectors.h"
-#include "session.h"
-#include "control.h"
-#include "relacsplugin.h"
-#include "repros.h"
-#include "macros.h"
+#include <relacs/configclass.h>
+#include <relacs/configure.h>
+#include <relacs/settings.h>
+#include <relacs/relacsdevices.h>
+#include <relacs/metadata.h>
+#include <relacs/plottrace.h>
+#include <relacs/acquire.h>
+#include <relacs/simulator.h>
+#include <relacs/savefiles.h>
+#include <relacs/filterdetectors.h>
+#include <relacs/session.h>
+#include <relacs/control.h>
+#include <relacs/relacsplugin.h>
+#include <relacs/repros.h>
+#include <relacs/macros.h>
 
 using namespace std;
 

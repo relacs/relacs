@@ -22,11 +22,11 @@
 #include <cmath>
 #include <iomanip>
 #include <algorithm>
-#include "array.h"
-#include "sampledata.h"
-#include "stats.h"
-#include "kernel.h"
-#include "eventlist.h"
+#include <relacs/array.h>
+#include <relacs/sampledata.h>
+#include <relacs/stats.h>
+#include <relacs/kernel.h>
+#include <relacs/eventlist.h>
 
 using namespace std;
 using namespace numerics;

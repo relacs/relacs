@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "tablekey.h"
-#include "tabledata.h"
+#include <relacs/tablekey.h>
+#include <relacs/tabledata.h>
 
 
 TableData::TableData( void )

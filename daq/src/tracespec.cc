@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "outdata.h"
-#include "tracespec.h"
+#include <relacs/outdata.h>
+#include <relacs/tracespec.h>
 using namespace std;
 
 

@@ -7,14 +7,15 @@ lib_LTLIBRARIES = \
 
 
 librelacsconfig_la_CPPFLAGS = \
-    -I../../options/src \
-    -I../../widgets/src \
+    -I../../options/include \
+    -I../../widgets/include \
+    -I../include \
     @QT3_CPPFLAGS@
 
 librelacsconfig_la_LDFLAGS = \
     @QT3_LDFLAGS@
 
-librelacsconfig_la-%-moc.cpp : %.h
+librelacsconfig_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacsconfig_la-%-moc.lo : librelacsconfig_la-%-moc.cpp
@@ -28,9 +29,9 @@ librelacsconfig_la_LIBADD = \
 librelacsconfig_ladir = $(includedir)/relacs
 
 librelacsconfig_la_HEADERS = \
-    configclass.h \
-    configdialog.h \
-    configure.h
+    ../include/relacs/configclass.h \
+    ../include/relacs/configdialog.h \
+    ../include/relacs/configure.h
 
 librelacsconfig_la_SOURCES = \
     configclass.cc \

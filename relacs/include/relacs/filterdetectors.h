@@ -1,5 +1,5 @@
 /*
-  filterdetectors.h
+  ../include/relacs/filterdetectors.h
   Container organizing filter and event detectors.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -26,10 +26,10 @@
 #include <vector>
 #include <qtabwidget.h>
 #include <qpopupmenu.h> 
-#include "configclass.h"
-#include "inlist.h"
-#include "eventlist.h"
-#include "plottrace.h"
+#include <relacs/configclass.h>
+#include <relacs/inlist.h>
+#include <relacs/eventlist.h>
+#include <relacs/plottrace.h>
 
 class RePros;
 class Session;

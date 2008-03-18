@@ -25,7 +25,7 @@
 #include <qpushbutton.h>
 #include <qtimer.h>
 #include <qmessagebox.h>
-#include "messagebox.h"
+#include <relacs/messagebox.h>
 
 
 MessageBox::MessageBox( const string &caption, const string &message,

@@ -20,8 +20,8 @@
 */
 
 #include <sstream>
-#include "indata.h"
-#include "analoginput.h"
+#include <relacs/indata.h>
+#include <relacs/analoginput.h>
 
 using namespace std;
 

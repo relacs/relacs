@@ -21,7 +21,7 @@
 
 #include <sstream>
 #include <algorithm>
-#include "outlist.h"
+#include <relacs/outlist.h>
 using namespace std;
 
 

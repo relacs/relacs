@@ -1,4 +1,4 @@
-#include "array.h"
+#include <relacs/array.h>
 
 #ifdef GSL
 

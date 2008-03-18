@@ -5,11 +5,14 @@ lib_LTLIBRARIES = \
 
 librelacsoptions_ladir = $(includedir)/relacs
 
+librelacsoptions_la_CPPFLAGS = \
+    -I../include
+
 librelacsoptions_la_HEADERS = \
-    options.h \
-    parameter.h \
-    str.h \
-    strqueue.h
+    ../include/relacs/options.h \
+    ../include/relacs/parameter.h \
+    ../include/relacs/str.h \
+    ../include/relacs/strqueue.h
 
 librelacsoptions_la_SOURCES = \
     options.cc \

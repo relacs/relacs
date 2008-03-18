@@ -16,15 +16,15 @@ endif
 
 
 librelacscommonneuronmodels_la_CPPFLAGS = \
-    -I../../config/src \
-    -I../../daq/src \
-    -I../../numerics/src \
-    -I../../options/src \
+    -I../../config/include \
+    -I../../daq/include \
+    -I../../numerics/include \
+    -I../../options/include \
     -I../../relacs/include/relacs \
-    -I../../widgets/src \
+    -I../../widgets/include \
     @QT3_CPPFLAGS@
 
-librelacscommonneuronmodels_la-%-moc.cpp : %.h
+librelacscommonneuronmodels_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacscommonneuronmodels_la-%-moc.lo : librelacscommonneuronmodels_la-%-moc.cpp
@@ -43,14 +43,14 @@ librelacscommonneuronmodels_la_SOURCES = \
 
 
 librelacscommonsimplemodel_la_CPPFLAGS = \
-    -I../../config/src \
-    -I../../daq/src \
-    -I../../numerics/src \
-    -I../../options/src \
+    -I../../config/include \
+    -I../../daq/include \
+    -I../../numerics/include \
+    -I../../options/include \
     -I../../relacs/include/relacs \
     @QT3_CPPFLAGS@
 
-librelacscommonsimplemodel_la-%-moc.cpp : %.h
+librelacscommonsimplemodel_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacscommonsimplemodel_la-%-moc.lo : librelacscommonsimplemodel_la-%-moc.cpp

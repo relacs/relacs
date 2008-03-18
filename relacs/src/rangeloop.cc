@@ -1,5 +1,5 @@
 /*
-  rangeloop.cc
+  ../include/relacs/rangeloop.cc
   A flexible and sophisticated way to loop trough a range of values.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -24,9 +24,9 @@
 #include <cmath>
 #include <iostream>
 #include <algorithm>
-#include "random.h"
-#include "strqueue.h"
-#include "rangeloop.h"
+#include <relacs/random.h>
+#include <relacs/strqueue.h>
+#include <relacs/rangeloop.h>
 
 
 string RangeLoop::SequenceStrings = "Up|Down|AlternateInUp|AlternateInDown|AlternateOutUp|AlternateOutDown|Random|PseudoRandom";

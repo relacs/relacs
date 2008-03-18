@@ -1,5 +1,5 @@
 /*
-  plottrace.h
+  ../include/relacs/plottrace.h
   Plot trace and spikes.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -26,9 +26,9 @@
 #include <qpushbutton.h>
 #include <qpopupmenu.h> 
 #include <vector>
-#include "inlist.h"
-#include "eventlist.h"
-#include "multiplot.h"
+#include <relacs/inlist.h>
+#include <relacs/eventlist.h>
+#include <relacs/multiplot.h>
 
 class RELACSWidget;
 

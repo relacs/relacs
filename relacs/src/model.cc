@@ -1,5 +1,5 @@
 /*
-  model.cc
+  ../include/relacs/model.cc
   Base class of all models used by Simulate.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -20,8 +20,8 @@
 */
 
 #include <qaction.h>
-#include "relacswidget.h"
-#include "model.h"
+#include <relacs/relacswidget.h>
+#include <relacs/model.h>
 
 
 Model::Model( const string &name, const string &titles, 

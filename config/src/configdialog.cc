@@ -28,8 +28,8 @@
 #include <qmime.h>
 #include <qstringlist.h>
 #include <qtextbrowser.h>
-#include "optdialog.h"
-#include "configdialog.h"
+#include <relacs/optdialog.h>
+#include <relacs/configdialog.h>
 
 
 ConfigDialog::ConfigDialog( const string &configident, int configgroup,

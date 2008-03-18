@@ -13,10 +13,10 @@ endif
 
 
 librelacshardware_la_CPPFLAGS = \
-    -I../config/src \
-    -I../daq/src \
-    -I../numerics/src \
-    -I../options/src \
+    -I../config/include \
+    -I../daq/include \
+    -I../numerics/include \
+    -I../options/include \
     -I../relacs/include/relacs \
     @QT3_CPPFLAGS@
 
@@ -36,10 +36,10 @@ librelacshardware_la_SOURCES = \
 
 librelacsnieserieshardware_la_CPPFLAGS = \
     -DNIDAQ_MAJOR=254 \
-    -I../config/src \
-    -I../daq/src \
-    -I../numerics/src \
-    -I../options/src \
+    -I../config/include \
+    -I../daq/include \
+    -I../numerics/include \
+    -I../options/include \
     -I../relacs/include/relacs \
     @QT3_CPPFLAGS@
 

@@ -4,25 +4,26 @@ lib_LTLIBRARIES = \
 
 
 librelacsdaq_la_CPPFLAGS = \
-    -I../../numerics/src
+    -I../../numerics/include \
+    -I../include
 
 librelacsdaq_ladir = $(includedir)/relacs
 
 librelacsdaq_la_HEADERS = \
-    acquire.h \
-    analoginput.h \
-    analogoutput.h \
-    attenuate.h \
-    attenuator.h \
-    daqerror.h \
-    device.h \
-    indata.h \
-    inlist.h \
-    manipulator.h \
-    outdata.h \
-    outlist.h \
-    temperature.h \
-    tracespec.h
+    ../include/relacs/acquire.h \
+    ../include/relacs/analoginput.h \
+    ../include/relacs/analogoutput.h \
+    ../include/relacs/attenuate.h \
+    ../include/relacs/attenuator.h \
+    ../include/relacs/daqerror.h \
+    ../include/relacs/device.h \
+    ../include/relacs/indata.h \
+    ../include/relacs/inlist.h \
+    ../include/relacs/manipulator.h \
+    ../include/relacs/outdata.h \
+    ../include/relacs/outlist.h \
+    ../include/relacs/temperature.h \
+    ../include/relacs/tracespec.h
 
 librelacsdaq_la_SOURCES = \
     acquire.cc \

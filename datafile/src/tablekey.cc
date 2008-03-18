@@ -20,9 +20,9 @@
 */
 
 #include <cmath>
-#include "strqueue.h"
-#include "tabledata.h"
-#include "tablekey.h"
+#include <relacs/strqueue.h>
+#include <relacs/tabledata.h>
+#include <relacs/tablekey.h>
 
 
 TableKey::TableKey( void )

@@ -1,5 +1,5 @@
 /*
-  control.h
+  ../include/relacs/control.h
   Base class for widgets that control hardware or analyze data.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -34,7 +34,7 @@
 #ifdef USEWAITCONDITION
 #include <qwaitcondition.h>
 #endif
-#include "relacsplugin.h"
+#include <relacs/relacsplugin.h>
 using namespace std;
 
 

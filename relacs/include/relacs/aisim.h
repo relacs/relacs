@@ -1,5 +1,5 @@
 /*
-  aisim.h
+  ../include/relacs/aisim.h
   Implementation of AnalogInput simulating an analog input device
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -22,7 +22,7 @@
 #ifndef _AISIM_H_
 #define _AISIM_H_
 
-#include "analoginput.h"
+#include <relacs/analoginput.h>
 
 
 /*! 

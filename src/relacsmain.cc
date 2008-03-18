@@ -23,7 +23,7 @@
 #include <getopt.h>
 #include <qdatetime.h>
 #include <qapplication.h>
-#include "relacswidget.h"
+#include <relacs/relacswidget.h>
 
 using namespace std;
 

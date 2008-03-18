@@ -1,5 +1,5 @@
 /*
-  aosim.h
+  ../include/relacs/aosim.h
   Implementation of AnalogOutput simulating an analog output device
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -22,7 +22,7 @@
 #ifndef _AOSIM_H_
 #define _AOSIM_H_
 
-#include "analogoutput.h"
+#include <relacs/analogoutput.h>
 
 
 /*! 

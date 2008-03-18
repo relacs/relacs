@@ -7,40 +7,41 @@ librelacsnumerics_la_LDFLAGS = \
     @GSL_LDFLAGS@
 
 librelacsnumerics_la_CPPFLAGS = \
+    -I../include \
     @GSL_CPPFLAGS@
 
 librelacsnumerics_ladir = $(includedir)/relacs
 
 librelacsnumerics_la_HEADERS = \
-    array.h \
-    basisfunction.h \
-    containerfuncs.h \
-    containerops.h \
-    cyclicsampledata.h \
-    detector.h \
-    eventdata.h \
-    eventlist.h \
-    fitalgorithm.h \
-    kernel.h \
-    linearrange.h \
-    odealgorithm.h \
-    random.h \
-    sampledata.h \
-    spectrum.h \
-    statstests.h \
+    ../include/relacs/array.h \
+    ../include/relacs/basisfunction.h \
+    ../include/relacs/containerfuncs.h \
+    ../include/relacs/containerops.h \
+    ../include/relacs/cyclicsampledata.h \
+    ../include/relacs/detector.h \
+    ../include/relacs/eventdata.h \
+    ../include/relacs/eventlist.h \
+    ../include/relacs/fitalgorithm.h \
+    ../include/relacs/kernel.h \
+    ../include/relacs/linearrange.h \
+    ../include/relacs/odealgorithm.h \
+    ../include/relacs/random.h \
+    ../include/relacs/sampledata.h \
+    ../include/relacs/spectrum.h \
+    ../include/relacs/statstests.h \
     \
-    stats.h
+    ../include/relacs/stats.h
 
 librelacsnumerics_la_SOURCES = \
     array.cc \
     basisfunction.cc \
-    cyclicarray.h \
+    ../include/relacs/cyclicarray.h \
     eventdata.cc \
     eventlist.cc \
     fitalgorithm.cc \
     kernel.cc \
     linearrange.cc \
-    map.h \
+    ../include/relacs/map.h \
     random.cc \
     sampledata.cc \
     spectrum.cc \

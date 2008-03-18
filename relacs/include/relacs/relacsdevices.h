@@ -1,5 +1,5 @@
 /*
-  relacsdevices.h
+  ../include/relacs/relacsdevices.h
   
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -22,12 +22,12 @@
 #ifndef _RELACSDEVICES_H_
 #define _RELACSDEVICES_H_
 
-#include "devicelist.h"
-#include "device.h"
-#include "analoginput.h"
-#include "analogoutput.h"
-#include "attenuator.h"
-#include "attenuate.h"
+#include <relacs/devicelist.h>
+#include <relacs/device.h>
+#include <relacs/analoginput.h>
+#include <relacs/analogoutput.h>
+#include <relacs/attenuator.h>
+#include <relacs/attenuate.h>
 
 
 class AllDevices : public DeviceList< Device, 0 >

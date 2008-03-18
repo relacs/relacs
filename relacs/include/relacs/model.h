@@ -1,5 +1,5 @@
 /*
-  model.h
+  ../include/relacs/model.h
   Base class of all models used by Simulate.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -34,9 +34,9 @@
 #endif
 #include <qthread.h>
 #include <qdatetime.h>
-#include "cyclicarray.h"
-#include "outdata.h"
-#include "relacsplugin.h"
+#include <relacs/cyclicarray.h>
+#include <relacs/outdata.h>
+#include <relacs/relacsplugin.h>
 using namespace std;
 
 

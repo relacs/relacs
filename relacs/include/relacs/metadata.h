@@ -1,5 +1,5 @@
 /*
-  metadata.h
+  ../include/relacs/metadata.h
   Manages meta data for a recording session.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -27,7 +27,7 @@
 #include <qobject.h>
 #include <qpopupmenu.h>
 #include <qmutex.h>
-#include "configclass.h"
+#include <relacs/configclass.h>
 
 using namespace std;
 

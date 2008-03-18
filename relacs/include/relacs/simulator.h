@@ -1,5 +1,5 @@
 /*
-  simulator.h
+  ../include/relacs/simulator.h
   Simulation of Acquire
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -22,7 +22,7 @@
 #ifndef _SIMULATOR_H_
 #define _SIMULATOR_H_
 
-#include "acquire.h"
+#include <relacs/acquire.h>
 using namespace std;
 
 

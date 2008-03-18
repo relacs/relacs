@@ -22,7 +22,7 @@
 #include <iostream>
 #include <cmath>
 #include <limits.h>
-#include "doublespinbox.h"
+#include <relacs/doublespinbox.h>
 
 using namespace std;
 

@@ -22,8 +22,8 @@
 #include <cmath>
 #include <iostream>
 #include <qapplication.h>
-#include "str.h"
-#include "multiplot.h"
+#include <relacs/str.h>
+#include <relacs/multiplot.h>
 
 
 MultiPlot::MultiPlot( int plots, int columns, bool horizontal, Plot::KeepMode keep,

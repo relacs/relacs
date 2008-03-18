@@ -21,8 +21,8 @@
 
 #include <limits.h>
 #include <sstream>
-#include "outdata.h"
-#include "indata.h"
+#include <relacs/outdata.h>
+#include <relacs/indata.h>
 using namespace std;
 
 

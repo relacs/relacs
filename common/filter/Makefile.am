@@ -16,15 +16,15 @@ endif
 
 
 librelacscommonhighpass_la_CPPFLAGS = \
-    -I../../config/src \
-    -I../../daq/src \
-    -I../../numerics/src \
-    -I../../options/src \
+    -I../../config/include \
+    -I../../daq/include \
+    -I../../numerics/include \
+    -I../../options/include \
     -I../../relacs/include/relacs/ \
-    -I../../widgets/src \
+    -I../../widgets/include \
     @QT3_CPPFLAGS@
 
-librelacscommonhighpass_la-%-moc.cpp : %.h
+librelacscommonhighpass_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacscommonhighpass_la-%-moc.lo : librelacscommonhighpass_la-%-moc.cpp
@@ -43,15 +43,15 @@ librelacscommonhighpass_la_SOURCES = \
 
 
 librelacscommonlowpass_la_CPPFLAGS = \
-    -I../../config/src \
-    -I../../daq/src \
-    -I../../numerics/src \
-    -I../../options/src \
+    -I../../config/include \
+    -I../../daq/include \
+    -I../../numerics/include \
+    -I../../options/include \
     -I../../relacs/include/relacs/ \
-    -I../../widgets/src \
+    -I../../widgets/include \
     @QT3_CPPFLAGS@
 
-librelacscommonlowpass_la-%-moc.cpp : %.h
+librelacscommonlowpass_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacscommonlowpass_la-%-moc.lo : librelacscommonlowpass_la-%-moc.cpp

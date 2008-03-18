@@ -1,5 +1,5 @@
 /*
-  spiketrace.h
+  ../include/relacs/spiketrace.h
   A nice, almost useless widget, showing an animated trace of a spike.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation

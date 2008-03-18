@@ -1,5 +1,5 @@
 /*
-  session.cc
+  ../include/relacs/session.cc
   Controls a recording session.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -23,9 +23,9 @@
 #include <cmath>
 #include <qdatetime.h>
 #include <qtooltip.h>
-#include "str.h"
-#include "relacswidget.h"
-#include "session.h"
+#include <relacs/str.h>
+#include <relacs/relacswidget.h>
+#include <relacs/session.h>
 
 
 Session::Session( RELACSWidget *rw, int height,

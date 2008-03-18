@@ -1,4 +1,4 @@
-#include "translate.h"
+#include <relacs/translate.h>
 
 
 Str translate( const Str &s, vector< Options > &opt, 

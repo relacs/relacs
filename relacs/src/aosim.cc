@@ -1,5 +1,5 @@
 /*
-  aosim.cc
+  ../include/relacs/aosim.cc
   Implementation of AnalogOutput simulating an analog output device
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "analoginput.h"
-#include "aosim.h"
+#include <relacs/analoginput.h>
+#include <relacs/aosim.h>
 
 
 AOSim::AOSim( void ) 

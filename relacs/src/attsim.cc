@@ -1,5 +1,5 @@
 /*
-  attsim.cc
+  ../include/relacs/attsim.cc
   Implementation of the Attenuator class
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -21,7 +21,7 @@
 
 #include <cmath>
 #include <sstream>
-#include "attsim.h"
+#include <relacs/attsim.h>
 
 using namespace std;
 

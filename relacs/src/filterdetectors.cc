@@ -1,5 +1,5 @@
 /*
-  filterdetectors.cc
+  ../include/relacs/filterdetectors.cc
   Container organizing filter and event detectors.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -20,13 +20,13 @@
 */
 
 #include <cmath>
-#include "str.h"
-#include "repros.h"
-#include "filter.h"
-#include "session.h"
-#include "relacsdevices.h"
-#include "relacswidget.h"
-#include "filterdetectors.h"
+#include <relacs/str.h>
+#include <relacs/repros.h>
+#include <relacs/filter.h>
+#include <relacs/session.h>
+#include <relacs/relacsdevices.h>
+#include <relacs/relacswidget.h>
+#include <relacs/filterdetectors.h>
 
 
 FilterDetectors::FilterDetectors( RELACSWidget *rw, QWidget *parent, const char *name )

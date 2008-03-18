@@ -21,7 +21,7 @@
 
 #include <iomanip>
 #include <algorithm>
-#include "strqueue.h"
+#include <relacs/strqueue.h>
 
 
 string StrQueue::StopEmpty = "EMPTY";

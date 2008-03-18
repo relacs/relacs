@@ -1,5 +1,5 @@
 /*
-  repro.cc
+  ../include/relacs/repro.cc
   Parent class of all research programs.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -27,10 +27,10 @@
 #include <qpushbutton.h>
 #include <qtextbrowser.h>
 #include <qapplication.h>
-#include "str.h"
-#include "optdialog.h"
-#include "relacswidget.h"
-#include "repro.h"
+#include <relacs/str.h>
+#include <relacs/optdialog.h>
+#include <relacs/relacswidget.h>
+#include <relacs/repro.h>
 
 
 RePro::RePro( const string &name, const string &titles,

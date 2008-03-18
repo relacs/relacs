@@ -20,7 +20,7 @@
 */
 
 #include <cmath>
-#include "kernel.h"
+#include <relacs/kernel.h>
 
 
 double Kernel::value( double x ) const

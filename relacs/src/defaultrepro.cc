@@ -1,5 +1,5 @@
 /*
-  defaultrepro.cc
+  ../include/relacs/defaultrepro.cc
   Does nothing
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -19,7 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "defaultrepro.h"
+#include <relacs/defaultrepro.h>
 
 
 DefaultRePro::DefaultRePro( void )

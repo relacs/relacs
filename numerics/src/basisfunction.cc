@@ -20,7 +20,7 @@
 */
 
 #include <cmath>
-#include "basisfunction.h"
+#include <relacs/basisfunction.h>
 
 
 void BasisFunction::basis( double x, ArrayD &y ) const

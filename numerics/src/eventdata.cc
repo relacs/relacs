@@ -21,10 +21,10 @@
 
 #include <cmath>
 #include <iomanip>
-#include "sampledata.h"
-#include "kernel.h"
-#include "stats.h"
-#include "eventdata.h"
+#include <relacs/sampledata.h>
+#include <relacs/kernel.h>
+#include <relacs/stats.h>
+#include <relacs/eventdata.h>
 
 using namespace numerics;
 

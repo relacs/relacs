@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "configure.h"
-#include "configclass.h"
+#include <relacs/configure.h>
+#include <relacs/configclass.h>
 
 
 ConfigList *ConfigClass::Configs = 0;

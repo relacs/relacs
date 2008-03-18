@@ -1,7 +1,7 @@
 #include <cstdlib>
-#include "optwidget.h"
-#include "relacswidget.h"
-#include "settings.h"
+#include <relacs/optwidget.h>
+#include <relacs/relacswidget.h>
+#include <relacs/settings.h>
 
 using namespace std;
 

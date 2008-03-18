@@ -1,5 +1,5 @@
 /*
-  savefiles.h
+  ../include/relacs/savefiles.h
   Write data to files
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -28,14 +28,14 @@
 #include <qhbox.h>
 #include <qlabel.h>
 #include <qmutex.h>
-#include "str.h"
-#include "options.h"
-#include "tablekey.h"
-#include "inlist.h"
-#include "outdata.h"
-#include "eventdata.h"
-#include "repro.h"
-#include "spiketrace.h"
+#include <relacs/str.h>
+#include <relacs/options.h>
+#include <relacs/tablekey.h>
+#include <relacs/inlist.h>
+#include <relacs/outdata.h>
+#include <relacs/eventdata.h>
+#include <relacs/repro.h>
+#include <relacs/spiketrace.h>
 
 class RELACSWidget;
 

@@ -1,5 +1,5 @@
 /*
-  filter.h
+  ../include/relacs/filter.h
   Basic virtual class for filtering or detecting events (e.g. spikes) 
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -23,7 +23,7 @@
 #define _FILTER_H_
 
 #include <limits.h>
-#include "relacsplugin.h"
+#include <relacs/relacsplugin.h>
 
 /*! 
 \class Filter

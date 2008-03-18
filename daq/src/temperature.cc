@@ -19,7 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "temperature.h"
+#include <relacs/temperature.h>
 
 
 Temperature::Temperature( void ) 

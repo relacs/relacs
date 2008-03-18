@@ -1,5 +1,5 @@
 /*
-  repro.h
+  ../include/relacs/repro.h
   Parent class of all research programs.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -32,8 +32,8 @@
 #endif
 #include <qthread.h>
 #include <qdatetime.h>
-#include "outlist.h"
-#include "relacsplugin.h"
+#include <relacs/outlist.h>
+#include <relacs/relacsplugin.h>
 
 
 /*! 

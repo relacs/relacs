@@ -27,7 +27,7 @@
 #include <cstdio>
 #include <cmath>
 #include <algorithm>
-#include "acquire.h"
+#include <relacs/acquire.h>
 
 
 const string Acquire::SyncModeStrs[5] = {

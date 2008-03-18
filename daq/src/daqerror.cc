@@ -20,8 +20,8 @@
 */
 
 #include <cstring>
-#include "attenuate.h"
-#include "daqerror.h"
+#include <relacs/attenuate.h>
+#include <relacs/daqerror.h>
 
 
 string DaqError::ErrorText[LastState] =

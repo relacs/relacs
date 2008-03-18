@@ -26,8 +26,8 @@
 #include <qhbox.h>
 #include <qtabwidget.h>
 #include <qfiledialog.h>
-#include "optwidget.h"
-#include "optwidgetbase.h"
+#include <relacs/optwidget.h>
+#include <relacs/optwidgetbase.h>
 
 
 OptWidget::OptWidget( QWidget *parent, const char *name, WFlags f )

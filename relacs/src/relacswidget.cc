@@ -1,5 +1,5 @@
 /*
-  relacswidget.cc
+  ../include/relacs/relacswidget.cc
   Coordinates RePros, session, input, output, plotting, and saving. 
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -32,16 +32,16 @@
 #include <qtooltip.h>
 #include <qlayout.h>
 #include <qtextbrowser.h>
-#include "relacswidget.h"
-#include "defaultsession.h"
-#include "aisim.h"
-#include "aosim.h"
-#include "attsim.h"
-#include "attenuate.h"
-#include "filter.h"
-#include "model.h"
-#include "messagebox.h"
-#include "optdialog.h"
+#include <relacs/relacswidget.h>
+#include <relacs/defaultsession.h>
+#include <relacs/aisim.h>
+#include <relacs/aosim.h>
+#include <relacs/attsim.h>
+#include <relacs/attenuate.h>
+#include <relacs/filter.h>
+#include <relacs/model.h>
+#include <relacs/messagebox.h>
+#include <relacs/optdialog.h>
 
 
 const string RELACSWidget::ModeStr[5] = { "Idle", "Acquisition", "Simulation", "", "Analysis" };

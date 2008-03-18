@@ -20,7 +20,7 @@
 */
 
 #include <sstream>
-#include "inlist.h"
+#include <relacs/inlist.h>
 using namespace std;
 
 

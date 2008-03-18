@@ -26,9 +26,9 @@
 #include <qpainter.h>
 #include <qcursor.h>
 #include <qapplication.h>
-#include "str.h"
-#include "multiplot.h"
-#include "plot.h"
+#include <relacs/str.h>
+#include <relacs/multiplot.h>
+#include <relacs/plot.h>
 
 const double Plot::AutoScale = MAXDOUBLE;
 const double Plot::AutoMinScale = 0.1*MAXDOUBLE;

@@ -18,18 +18,18 @@ endif
 librelacsauditoryisoresponse_la_CPPFLAGS = \
     -I../base \
     -I../../common/base \
-    -I../../config/src \
-    -I../../daq/src \
-    -I../../datafile/src \
+    -I../../config/include \
+    -I../../daq/include \
+    -I../../datafile/include \
     -I../../hardware \
-    -I../../mplot/src \
-    -I../../numerics/src \
-    -I../../options/src \
+    -I../../mplot/include \
+    -I../../numerics/include \
+    -I../../options/include \
     -I../../relacs/include/relacs/ \
-    -I../../widgets/src \
+    -I../../widgets/include \
     @QT3_CPPFLAGS@
 
-librelacsauditoryisoresponse_la-%-moc.cpp : %.h
+librelacsauditoryisoresponse_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacsauditoryisoresponse_la-%-moc.lo : librelacsauditoryisoresponse_la-%-moc.cpp
@@ -52,18 +52,18 @@ librelacsauditoryisoresponse_la_SOURCES = \
 librelacsauditoryoneclick_la_CPPFLAGS = \
     -I../base \
     -I../../common/base \
-    -I../../config/src \
-    -I../../daq/src \
-    -I../../datafile/src \
+    -I../../config/include \
+    -I../../daq/include \
+    -I../../datafile/include \
     -I../../hardware \
-    -I../../mplot/src \
-    -I../../numerics/src \
-    -I../../options/src \
+    -I../../mplot/include \
+    -I../../numerics/include \
+    -I../../options/include \
     -I../../relacs/include/relacs/ \
-    -I../../widgets/src \
+    -I../../widgets/include \
     @QT3_CPPFLAGS@
 
-librelacsauditoryoneclick_la-%-moc.cpp : %.h
+librelacsauditoryoneclick_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacsauditoryoneclick_la-%-moc.lo : librelacsauditoryoneclick_la-%-moc.cpp

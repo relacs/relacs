@@ -1,5 +1,5 @@
 /*
-  control.cc
+  ../include/relacs/control.cc
   Base class for widgets that control hardware or analyze data.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -20,9 +20,9 @@
 */
 
 #include <qaction.h>
-#include "str.h"
-#include "relacswidget.h"
-#include "control.h"
+#include <relacs/str.h>
+#include <relacs/relacswidget.h>
+#include <relacs/control.h>
 
 
 Control::Control( const string &name, 

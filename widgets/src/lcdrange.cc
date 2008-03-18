@@ -19,7 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "lcdrange.h"
+#include <relacs/lcdrange.h>
 
 #include <qscrollbar.h>
 #include <qlcdnumber.h>

@@ -1,5 +1,5 @@
 /*
-  defaultrepro.h
+  ../include/relacs/defaultrepro.h
   Does nothing
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -23,7 +23,7 @@
 #define _DEFAULTREPRO_H_
 
 
-#include "repro.h"
+#include <relacs/repro.h>
 
 /*! \class DefaultRePro
     \author Jan Benda

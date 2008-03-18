@@ -16,15 +16,15 @@ endif
 
 
 librelacscommonmotorcontrol_la_CPPFLAGS = \
-    -I../../config/src \
-    -I../../daq/src \
-    -I../../numerics/src \
-    -I../../options/src \
-    -I../../widgets/src \
+    -I../../config/include \
+    -I../../daq/include \
+    -I../../numerics/include \
+    -I../../options/include \
+    -I../../widgets/include \
     -I../../relacs/include/relacs/ \
     @QT3_CPPFLAGS@
 
-librelacscommonmotorcontrol_la-%-moc.cpp : %.h
+librelacscommonmotorcontrol_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacscommonmotorcontrol_la-%-moc.lo : librelacscommonmotorcontrol_la-%-moc.cpp
@@ -43,15 +43,15 @@ librelacscommonmotorcontrol_la_SOURCES = \
 
 
 librelacscommonspectrumanalyzer_la_CPPFLAGS = \
-    -I../../config/src \
-    -I../../daq/src \
-    -I../../mplot/src \
-    -I../../numerics/src \
-    -I../../options/src \
+    -I../../config/include \
+    -I../../daq/include \
+    -I../../mplot/include \
+    -I../../numerics/include \
+    -I../../options/include \
     -I../../relacs/include/relacs/ \
     @QT3_CPPFLAGS@
 
-librelacscommonspectrumanalyzer_la-%-moc.cpp : %.h
+librelacscommonspectrumanalyzer_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacscommonspectrumanalyzer_la-%-moc.lo : librelacscommonspectrumanalyzer_la-%-moc.cpp

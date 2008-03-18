@@ -1,5 +1,5 @@
 /*
-  plugins.cc
+  ../include/relacs/plugins.cc
   Dynamically load plugins (libraries) into the running program.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -25,8 +25,8 @@
 #include <fstream>
 #include <iostream>
 #include <qdir.h>
-#include "str.h"
-#include "plugins.h"
+#include <relacs/str.h>
+#include <relacs/plugins.h>
 
 
 #ifdef PLUGINVERSION

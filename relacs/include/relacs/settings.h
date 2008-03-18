@@ -1,5 +1,5 @@
 /*
-  settings.h
+  ../include/relacs/settings.h
   Includes some general Settings into the configure mechanism.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -23,7 +23,7 @@
 #define _SETTINGS_H_
 
 
-#include "configdialog.h"
+#include <relacs/configdialog.h>
 
 
 /*! 

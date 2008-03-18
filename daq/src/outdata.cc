@@ -24,8 +24,8 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
-#include "random.h"
-#include "outdata.h"
+#include <relacs/random.h>
+#include <relacs/outdata.h>
 using namespace std;
 
 

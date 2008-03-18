@@ -1,5 +1,5 @@
 /*
-  attsim.h
+  ../include/relacs/attsim.h
   Implementation of the Attenuator class
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -22,7 +22,7 @@
 #ifndef _ATTSIM_H_
 #define _ATTSIM_H_
 
-#include "attenuator.h"
+#include <relacs/attenuator.h>
 
 /*! 
 \class AttSim

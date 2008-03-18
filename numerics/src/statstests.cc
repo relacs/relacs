@@ -21,12 +21,12 @@
 
 #include <cmath>
 #include <algorithm>
-#include "stats.h"
+#include <relacs/stats.h>
 #ifdef GSL
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_sf_gamma.h>
 #endif
-#include "statstests.h"
+#include <relacs/statstests.h>
 
 
 double alphaNormal( double x )

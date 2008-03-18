@@ -4,17 +4,17 @@ lib_LTLIBRARIES = \
 
 
 librelacsdatafile_la_CPPFLAGS = \
-    -I../../numerics/src \
-    -I../../options/src \
-    -I.
+    -I../../numerics/include \
+    -I../../options/include \
+    -I../include
 
 librelacsdatafile_ladir = $(includedir)/relacs
 
 librelacsdatafile_la_HEADERS = \
-    datafile.h \
-    tabledata.h \
-    tablekey.h \
-    translate.h
+    ../include/relacs/datafile.h \
+    ../include/relacs/tabledata.h \
+    ../include/relacs/tablekey.h \
+    ../include/relacs/translate.h
 
 librelacsdatafile_la_SOURCES = \
     datafile.cc \

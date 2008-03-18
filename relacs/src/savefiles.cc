@@ -1,5 +1,5 @@
 /*
-  savefiles.cc
+  ../include/relacs/savefiles.cc
   Write data to files
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -23,8 +23,8 @@
 #include <qdatetime.h>
 #include <qpainter.h>
 #include <qtooltip.h>
-#include "relacswidget.h"
-#include "savefiles.h"
+#include <relacs/relacswidget.h>
+#include <relacs/savefiles.h>
 
 
 SaveFiles::SaveFiles( RELACSWidget *rw, int height,

@@ -1,5 +1,5 @@
 /*
-  repros.h
+  ../include/relacs/repros.h
   Container handling RePros
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -27,8 +27,8 @@
 #include <qpopupmenu.h> 
 #include <qlabel.h>
 #include <vector>
-#include "options.h"
-#include "relacsplugin.h"
+#include <relacs/options.h>
+#include <relacs/relacsplugin.h>
 
 
 class RePro;

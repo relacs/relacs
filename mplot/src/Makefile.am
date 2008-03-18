@@ -7,16 +7,16 @@ lib_LTLIBRARIES = \
 
 
 librelacsmplot_la_CPPFLAGS = \
-    -I../../daq/src \
-    -I../../numerics/src \
-    -I../../options/src \
-    -I. \
+    -I../../daq/include \
+    -I../../numerics/include \
+    -I../../options/include \
+    -I../include \
     @QT3_CPPFLAGS@
 
 librelacsmplot_la_LDFLAGS = \
     @QT3_LDFLAGS@
 
-librelacsmplot_la-%-moc.cpp : %.h
+librelacsmplot_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacsmplot_la-%-moc.lo : librelacsmplot_la-%-moc.cpp
@@ -31,8 +31,8 @@ librelacsmplot_la_LIBADD = \
 librelacsmplot_ladir = $(includedir)/relacs
 
 librelacsmplot_la_HEADERS = \
-    multiplot.h \
-    plot.h
+    ../include/relacs/multiplot.h \
+    ../include/relacs/plot.h
 
 librelacsmplot_la_SOURCES = \
     multiplot.cc \

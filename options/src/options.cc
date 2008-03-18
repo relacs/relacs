@@ -20,7 +20,7 @@
 */
 
 #include <iomanip>
-#include "options.h"
+#include <relacs/options.h>
 
 
 Parameter Options::Dummy = Parameter();

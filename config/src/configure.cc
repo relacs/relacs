@@ -21,8 +21,8 @@
 
 #include <ctime>
 #include <fstream>
-#include "strqueue.h"
-#include "configure.h"
+#include <relacs/strqueue.h>
+#include <relacs/configure.h>
 using namespace std;
 
 

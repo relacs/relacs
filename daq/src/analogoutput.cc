@@ -20,8 +20,8 @@
 */
 
 #include <sstream>
-#include "outdata.h"
-#include "analogoutput.h"
+#include <relacs/outdata.h>
+#include <relacs/analogoutput.h>
 
 using namespace std;
 

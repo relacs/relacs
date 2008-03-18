@@ -1,5 +1,5 @@
 /*
-  spiketrace.cc
+  ../include/relacs/spiketrace.cc
   A nice, almost useless widget, showing an animated trace of a spike.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -25,7 +25,7 @@
 #include <qapplication.h>
 #include <qpainter.h>
 #include <qapplication.h>
-#include "spiketrace.h"
+#include <relacs/spiketrace.h>
 
 
 SpikeTrace::SpikeTrace( double spikewidth, int radius, int tracewidth, 

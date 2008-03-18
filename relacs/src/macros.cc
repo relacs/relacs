@@ -1,5 +1,5 @@
 /*
-  macros.cc
+  ../include/relacs/macros.cc
   A single Macro
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -27,17 +27,17 @@
 #include <qbitmap.h>
 #include <qtextbrowser.h>
 #include <qfiledialog.h>
-#include "str.h"
-#include "strqueue.h"
-#include "optdialog.h"
-#include "messagebox.h"
-#include "rangeloop.h"
-#include "relacswidget.h"
-#include "repro.h"
-#include "repros.h"
-#include "filter.h"
-#include "filterdetectors.h"
-#include "macros.h"
+#include <relacs/str.h>
+#include <relacs/strqueue.h>
+#include <relacs/optdialog.h>
+#include <relacs/messagebox.h>
+#include <relacs/rangeloop.h>
+#include <relacs/relacswidget.h>
+#include <relacs/repro.h>
+#include <relacs/repros.h>
+#include <relacs/filter.h>
+#include <relacs/filterdetectors.h>
+#include <relacs/macros.h>
 
 
 const string Macro::StartUpIdent = "startup";

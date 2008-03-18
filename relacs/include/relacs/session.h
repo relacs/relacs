@@ -1,5 +1,5 @@
 /*
-  session.h
+  ../include/relacs/session.h
   Controls a recording session.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -31,7 +31,7 @@
 #include <qlabel.h>
 #include <qpopupmenu.h>
 #include <qaction.h>
-#include "options.h"
+#include <relacs/options.h>
 
 
 class Session;

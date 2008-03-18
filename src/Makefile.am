@@ -33,14 +33,14 @@ PLUGINSDIRS = auditory common hardware patch
 # TODO
 relacs_main_CPPFLAGS = \
     "-DRELACSVERSION=\"@RELACSVERSION@\"" \
-    -I../config/src \
-    -I../daq/src \
-    -I../datafile/src \
-    -I../mplot/src \
-    -I../numerics/src \
-    -I../options/src \
-    -I../widgets/src \
-    -I../relacs/include/relacs \
+    -I../config/include \
+    -I../daq/include \
+    -I../datafile/include \
+    -I../mplot/include \
+    -I../numerics/include \
+    -I../options/include \
+    -I../widgets/include \
+    -I../relacs/include \
     @QT3_CPPFLAGS@
 
 relacs_main_LDADD = \

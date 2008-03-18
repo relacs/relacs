@@ -1,5 +1,5 @@
 /*
-  defaultsession.h
+  ../include/relacs/defaultsession.h
   Minimum default Session
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -23,7 +23,7 @@
 #define _DEFAULTSESSION_H_
 
 #include <qpushbutton.h>
-#include "control.h"
+#include <relacs/control.h>
 
 
 /*! 

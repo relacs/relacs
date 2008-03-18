@@ -1,5 +1,5 @@
 /*
-  macros.h
+  ../include/relacs/macros.h
   A single Macro
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -32,8 +32,8 @@
 #include <qpushbutton.h>
 #include <qpixmap.h>
 #include <qaccel.h>
-#include "str.h"
-#include "configclass.h"
+#include <relacs/str.h>
+#include <relacs/configclass.h>
 using namespace std;
 
 class RELACSWidget;

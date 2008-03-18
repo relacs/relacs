@@ -1,5 +1,5 @@
 /*
-  plugins.h
+  ../include/relacs/plugins.h
   Dynamically load plugins (libraries) into the running program.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation

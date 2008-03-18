@@ -1,5 +1,5 @@
 /*
-  metadata.cc
+  ../include/relacs/metadata.cc
   Manages meta data for a recording session.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -25,9 +25,9 @@
 #include <qdatetime.h>
 #include <qtimer.h>
 #include <qdatetime.h>
-#include "optdialog.h"
-#include "relacswidget.h"
-#include "metadata.h"
+#include <relacs/optdialog.h>
+#include <relacs/relacswidget.h>
+#include <relacs/metadata.h>
 
 
 MetaData::MetaData( RELACSWidget *rw )

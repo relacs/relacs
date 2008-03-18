@@ -1,5 +1,5 @@
 /*
-  simulator.cc
+  ../include/relacs/simulator.cc
   Simulation of Acquire
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "model.h"
-#include "simulator.h"
+#include <relacs/model.h>
+#include <relacs/simulator.h>
 
 
 Simulator::Simulator( void )

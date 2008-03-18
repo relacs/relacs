@@ -1,5 +1,5 @@
 /*
-  devicelist.h
+  ../include/relacs/devicelist.h
   A container template for Device-plugins.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -24,9 +24,9 @@
 
 #include <qpopupmenu.h> 
 #include <vector>
-#include "str.h"
-#include "configclass.h"
-#include "relacsplugin.h"
+#include <relacs/str.h>
+#include <relacs/configclass.h>
+#include <relacs/relacsplugin.h>
 using namespace std;
 
 class AllDevices;

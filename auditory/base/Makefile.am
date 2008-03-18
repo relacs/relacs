@@ -31,15 +31,15 @@ endif
 
 librelacsauditoryneuron_la_CPPFLAGS = \
     -I../../common/models \
-    -I../../config/src \
-    -I../../daq/src \
-    -I../../numerics/src \
-    -I../../options/src \
+    -I../../config/include \
+    -I../../daq/include \
+    -I../../numerics/include \
+    -I../../options/include \
     -I../../relacs/include/relacs/ \
-    -I../../widgets/src \
+    -I../../widgets/include \
     @QT3_CPPFLAGS@
 
-librelacsauditoryneuron_la-%-moc.cpp : %.h
+librelacsauditoryneuron_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacsauditoryneuron_la-%-moc.lo : librelacsauditoryneuron_la-%-moc.cpp
@@ -59,16 +59,16 @@ librelacsauditoryneuron_la_SOURCES = \
 
 
 librelacsauditorysearch_la_CPPFLAGS = \
-    -I../../config/src \
-    -I../../daq/src \
-    -I../../datafile/src \
-    -I../../numerics/src \
-    -I../../options/src \
+    -I../../config/include \
+    -I../../daq/include \
+    -I../../datafile/include \
+    -I../../numerics/include \
+    -I../../options/include \
     -I../../relacs/include/relacs/ \
-    -I../../widgets/src \
+    -I../../widgets/include \
     @QT3_CPPFLAGS@
 
-librelacsauditorysearch_la-%-moc.cpp : %.h
+librelacsauditorysearch_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacsauditorysearch_la-%-moc.lo : librelacsauditorysearch_la-%-moc.cpp
@@ -89,17 +89,17 @@ librelacsauditorysearch_la_SOURCES = \
 
 librelacsauditorysession_la_CPPFLAGS = \
     -I../../common/base \
-    -I../../config/src \
-    -I../../daq/src \
+    -I../../config/include \
+    -I../../daq/include \
     -I../../hardware \
-    -I../../mplot/src \
-    -I../../numerics/src \
-    -I../../options/src \
+    -I../../mplot/include \
+    -I../../numerics/include \
+    -I../../options/include \
     -I../../relacs/include/relacs/ \
-    -I../../widgets/src \
+    -I../../widgets/include \
     @QT3_CPPFLAGS@
 
-librelacsauditorysession_la-%-moc.cpp : %.h
+librelacsauditorysession_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacsauditorysession_la-%-moc.lo : librelacsauditorysession_la-%-moc.cpp
@@ -121,10 +121,10 @@ librelacsauditorysession_la_SOURCES = \
 
 
 librelacsauditorytraces_la_CPPFLAGS = \
-    -I../../config/src \
-    -I../../daq/src \
-    -I../../numerics/src \
-    -I../../options/src \
+    -I../../config/include \
+    -I../../daq/include \
+    -I../../numerics/include \
+    -I../../options/include \
     -I../../relacs/include/relacs/ \
     @QT3_CPPFLAGS@
 
@@ -139,18 +139,18 @@ librelacsauditorytraces_la_SOURCES = \
 
 librelacsauditoryficurve_la_CPPFLAGS = \
     -I../../common/base \
-    -I../../config/src \
-    -I../../daq/src \
-    -I../../datafile/src \
+    -I../../config/include \
+    -I../../daq/include \
+    -I../../datafile/include \
     -I../../hardware \
-    -I../../mplot/src \
-    -I../../numerics/src \
-    -I../../options/src \
+    -I../../mplot/include \
+    -I../../numerics/include \
+    -I../../options/include \
     -I../../relacs/include/relacs/ \
-    -I../../widgets/src \
+    -I../../widgets/include \
     @QT3_CPPFLAGS@
 
-librelacsauditoryficurve_la-%-moc.cpp : %.h
+librelacsauditoryficurve_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacsauditoryficurve_la-%-moc.lo : librelacsauditoryficurve_la-%-moc.cpp
@@ -173,18 +173,18 @@ librelacsauditoryficurve_la_SOURCES = \
 
 librelacsauditoryfifield_la_CPPFLAGS = \
     -I../../common/base \
-    -I../../config/src \
-    -I../../daq/src \
-    -I../../datafile/src \
+    -I../../config/include \
+    -I../../daq/include \
+    -I../../datafile/include \
     -I../../hardware \
-    -I../../mplot/src \
-    -I../../numerics/src \
-    -I../../options/src \
+    -I../../mplot/include \
+    -I../../numerics/include \
+    -I../../options/include \
     -I../../relacs/include/relacs/ \
-    -I../../widgets/src \
+    -I../../widgets/include \
     @QT3_CPPFLAGS@
 
-librelacsauditoryfifield_la-%-moc.cpp : %.h
+librelacsauditoryfifield_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacsauditoryfifield_la-%-moc.lo : librelacsauditoryfifield_la-%-moc.cpp
@@ -207,18 +207,18 @@ librelacsauditoryfifield_la_SOURCES = \
 
 librelacsauditorysinglestimulus_la_CPPFLAGS = \
     -I../../common/base \
-    -I../../config/src \
-    -I../../daq/src \
-    -I../../datafile/src \
+    -I../../config/include \
+    -I../../daq/include \
+    -I../../datafile/include \
     -I../../hardware \
-    -I../../mplot/src \
-    -I../../numerics/src \
-    -I../../options/src \
+    -I../../mplot/include \
+    -I../../numerics/include \
+    -I../../options/include \
     -I../../relacs/include/relacs/ \
-    -I../../widgets/src \
+    -I../../widgets/include \
     @QT3_CPPFLAGS@
 
-librelacsauditorysinglestimulus_la-%-moc.cpp : %.h
+librelacsauditorysinglestimulus_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacsauditorysinglestimulus_la-%-moc.lo : librelacsauditorysinglestimulus_la-%-moc.cpp
@@ -241,18 +241,18 @@ librelacsauditorysinglestimulus_la_SOURCES = \
 
 librelacsauditoryspikeprecision_la_CPPFLAGS = \
     -I../../common/base \
-    -I../../config/src \
-    -I../../daq/src \
-    -I../../datafile/src \
+    -I../../config/include \
+    -I../../daq/include \
+    -I../../datafile/include \
     -I../../hardware \
-    -I../../mplot/src \
-    -I../../numerics/src \
-    -I../../options/src \
+    -I../../mplot/include \
+    -I../../numerics/include \
+    -I../../options/include \
     -I../../relacs/include/relacs/ \
-    -I../../widgets/src \
+    -I../../widgets/include \
     @QT3_CPPFLAGS@
 
-librelacsauditoryspikeprecision_la-%-moc.cpp : %.h
+librelacsauditoryspikeprecision_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacsauditoryspikeprecision_la-%-moc.lo : librelacsauditoryspikeprecision_la-%-moc.cpp
@@ -275,18 +275,18 @@ librelacsauditoryspikeprecision_la_SOURCES = \
 
 librelacsauditorysyslatency_la_CPPFLAGS = \
     -I../../common/base \
-    -I../../config/src \
-    -I../../daq/src \
-    -I../../datafile/src \
+    -I../../config/include \
+    -I../../daq/include \
+    -I../../datafile/include \
     -I../../hardware \
-    -I../../mplot/src \
-    -I../../numerics/src \
-    -I../../options/src \
+    -I../../mplot/include \
+    -I../../numerics/include \
+    -I../../options/include \
     -I../../relacs/include/relacs/ \
-    -I../../widgets/src \
+    -I../../widgets/include \
     @QT3_CPPFLAGS@
 
-librelacsauditorysyslatency_la-%-moc.cpp : %.h
+librelacsauditorysyslatency_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacsauditorysyslatency_la-%-moc.lo : librelacsauditorysyslatency_la-%-moc.cpp
