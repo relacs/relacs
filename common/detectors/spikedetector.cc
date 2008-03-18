@@ -26,8 +26,8 @@
 #include <qpainter.h>
 #include <qpushbutton.h>
 #include <qapplication.h>
-#include "str.h"
-#include "tablekey.h"
+#include <relacs/str.h>
+#include <relacs/tablekey.h>
 #include "spikedetector.h"
 
 

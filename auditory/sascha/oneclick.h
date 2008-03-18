@@ -22,11 +22,11 @@
 #ifndef _ONECLICK_H_
 #define _ONECLICK_H_
 
-#include "repro.h"
-#include "rangeloop.h"
-#include "multiplot.h"
-#include "ephystraces.h"
-#include "auditorytraces.h"
+#include <relacs/repro.h>
+#include <relacs/rangeloop.h>
+#include <relacs/multiplot.h>
+#include <relacs/ephystraces.h>
+#include <relacs/auditorytraces.h>
 
 
 /*!

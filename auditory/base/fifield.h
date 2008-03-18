@@ -23,10 +23,10 @@
 #define _FIFIELD_H_
 
 #include <vector>
-#include "map.h"
-#include "rangeloop.h"
-#include "multiplot.h"
-#include "ephystraces.h"
+#include <relacs/map.h>
+#include <relacs/rangeloop.h>
+#include <relacs/multiplot.h>
+#include <relacs/ephystraces.h>
 #include "auditorytraces.h"
 #include "ficurve.h"
 

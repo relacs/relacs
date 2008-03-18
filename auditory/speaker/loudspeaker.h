@@ -24,8 +24,8 @@
 
 
 #include <vector>
-#include "configclass.h"
-#include "attenuate.h"
+#include <relacs/configclass.h>
+#include <relacs/attenuate.h>
 
 using namespace std;
 

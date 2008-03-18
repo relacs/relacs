@@ -3,7 +3,7 @@ g++ -o mm3a mm3a.cc -I ../daq/src kleindiek.o ../daq/src/device.o
  */
 
 #include <iostream>
-#include "kleindiek.h"
+#include <relacs/kleindiek.h>
 using namespace std;
 
 

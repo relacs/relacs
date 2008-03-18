@@ -25,7 +25,7 @@
 #include <string>
 #include <vector>
 #include <termios.h>
-#include "temperature.h"
+#include <relacs/temperature.h>
 using namespace std;
 
 

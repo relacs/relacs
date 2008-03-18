@@ -23,7 +23,7 @@
 #define _CS3310NIDIO_H_
 
 #include "nidio.h"
-#include "attenuator.h"
+#include <relacs/attenuator.h>
 
 /* 
 Module for the programming of the CS 3310 attenuator chip, 

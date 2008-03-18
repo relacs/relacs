@@ -23,7 +23,7 @@
 #define _NIAI_H_
 
 #include "nidaq.h"
-#include "analoginput.h"
+#include <relacs/analoginput.h>
 
 
 /*! 

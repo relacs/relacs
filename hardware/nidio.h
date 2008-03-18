@@ -23,7 +23,7 @@
 #define _NIDIO_H_
 
 #include <string>
-#include "device.h"
+#include <relacs/device.h>
 using namespace std;
 
 

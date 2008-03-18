@@ -22,12 +22,12 @@
 #include <fstream>
 #include <iomanip>
 #include <ctype.h>
-#include "optwidget.h"
-#include "tablekey.h"
-#include "translate.h"
-#include "stats.h"
-#include "kernel.h"
-#include "random.h"
+#include <relacs/optwidget.h>
+#include <relacs/tablekey.h>
+#include <relacs/translate.h>
+#include <relacs/stats.h>
+#include <relacs/kernel.h>
+#include <relacs/random.h>
 #include "auditorysession.h"
 #include "singlestimulus.h"
 

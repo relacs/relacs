@@ -21,8 +21,8 @@
 
 #include <fstream>
 #include <iomanip>
-#include "str.h"
-#include "tablekey.h"
+#include <relacs/str.h>
+#include <relacs/tablekey.h>
 #include "auditorysession.h"
 #include "fifield.h"
 

@@ -22,7 +22,7 @@
 #ifndef _AUDITORYNEURON_H_
 #define _AUDITORYNEURON_H_
 
-#include "neuronmodels.h"
+#include <relacs/neuronmodels.h>
 
 /*! 
 \class AuditoryNeuron

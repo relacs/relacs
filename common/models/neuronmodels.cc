@@ -20,9 +20,9 @@
 */
 
 #include <cmath>
-#include "optwidget.h"
-#include "random.h"
-#include "odealgorithm.h"
+#include <relacs/optwidget.h>
+#include <relacs/random.h>
+#include <relacs/odealgorithm.h>
 #include "neuronmodels.h"
 
 

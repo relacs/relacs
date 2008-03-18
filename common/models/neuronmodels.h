@@ -22,7 +22,7 @@
 #ifndef _NEURONMODELS_H_
 #define _NEURONMODELS_H_
 
-#include "model.h"
+#include <relacs/model.h>
 
 /*! 
 \class NeuronModels

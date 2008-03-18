@@ -20,11 +20,11 @@ librelacscommonspikedetector_la_CPPFLAGS = \
     -I../../mplot/include \
     -I../../numerics/include \
     -I../../options/include \
-    -I../../relacs/include/relacs/ \
+    -I../../relacs/include \
     -I../../widgets/include \
     @QT3_CPPFLAGS@
 
-librelacscommonspikedetector_la-%-moc.cpp : ../include/relacs/%.h
+librelacscommonspikedetector_la-%-moc.cpp : %.h
 	$(MOC_CREATE)
 
 librelacscommonspikedetector_la-%-moc.lo : librelacscommonspikedetector_la-%-moc.cpp

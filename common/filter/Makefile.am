@@ -20,11 +20,11 @@ librelacscommonhighpass_la_CPPFLAGS = \
     -I../../daq/include \
     -I../../numerics/include \
     -I../../options/include \
-    -I../../relacs/include/relacs/ \
+    -I../../relacs/include \
     -I../../widgets/include \
     @QT3_CPPFLAGS@
 
-librelacscommonhighpass_la-%-moc.cpp : ../include/relacs/%.h
+librelacscommonhighpass_la-%-moc.cpp : %.h
 	$(MOC_CREATE)
 
 librelacscommonhighpass_la-%-moc.lo : librelacscommonhighpass_la-%-moc.cpp
@@ -47,11 +47,11 @@ librelacscommonlowpass_la_CPPFLAGS = \
     -I../../daq/include \
     -I../../numerics/include \
     -I../../options/include \
-    -I../../relacs/include/relacs/ \
+    -I../../relacs/include \
     -I../../widgets/include \
     @QT3_CPPFLAGS@
 
-librelacscommonlowpass_la-%-moc.cpp : ../include/relacs/%.h
+librelacscommonlowpass_la-%-moc.cpp : %.h
 	$(MOC_CREATE)
 
 librelacscommonlowpass_la-%-moc.lo : librelacscommonlowpass_la-%-moc.cpp

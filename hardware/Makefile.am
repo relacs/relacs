@@ -17,7 +17,7 @@ librelacshardware_la_CPPFLAGS = \
     -I../daq/include \
     -I../numerics/include \
     -I../options/include \
-    -I../relacs/include/relacs \
+    -I../relacs/include \
     @QT3_CPPFLAGS@
 
 librelacshardware_la_LIBADD = \
@@ -40,7 +40,7 @@ librelacsnieserieshardware_la_CPPFLAGS = \
     -I../daq/include \
     -I../numerics/include \
     -I../options/include \
-    -I../relacs/include/relacs \
+    -I../relacs/include \
     @QT3_CPPFLAGS@
 
 librelacsnieserieshardware_la_LIBADD = \

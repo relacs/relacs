@@ -24,14 +24,14 @@
 
 #include <qpushbutton.h>
 #include <qhbox.h>
-#include "optwidget.h"
-#include "multiplot.h"
-#include "map.h"
-#include "temperature.h"
-#include "amplmode.h"
-#include "ephystraces.h"
+#include <relacs/optwidget.h>
+#include <relacs/multiplot.h>
+#include <relacs/map.h>
+#include <relacs/temperature.h>
+#include <relacs/amplmode.h>
+#include <relacs/ephystraces.h>
 #include "auditorytraces.h"
-#include "control.h"
+#include <relacs/control.h>
 
 
 /*! 

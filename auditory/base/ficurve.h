@@ -22,12 +22,12 @@
 #ifndef _FICURVE_H_
 #define _FICURVE_H_
 
-#include "sampledata.h"
-#include "rangeloop.h"
-#include "multiplot.h"
-#include "ephystraces.h"
+#include <relacs/sampledata.h>
+#include <relacs/rangeloop.h>
+#include <relacs/multiplot.h>
+#include <relacs/ephystraces.h>
 #include "auditorytraces.h"
-#include "repro.h"
+#include <relacs/repro.h>
 
 
 /*!

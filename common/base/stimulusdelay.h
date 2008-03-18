@@ -22,8 +22,8 @@
 #ifndef _STIMULUSDELAY_H_
 #define _STIMULUSDELAY_H_
 
-#include "plot.h"
-#include "repro.h"
+#include <relacs/plot.h>
+#include <relacs/repro.h>
 
 /*!
 \class StimulusDelay

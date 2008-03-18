@@ -19,9 +19,9 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "sampledata.h"
-#include "stats.h"
-#include "spectrum.h"
+#include <relacs/sampledata.h>
+#include <relacs/stats.h>
+#include <relacs/spectrum.h>
 #include "spectrumanalyzer.h"
 
 using namespace numerics;

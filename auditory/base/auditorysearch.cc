@@ -23,8 +23,8 @@
 #include <qvbox.h>
 #include <qlabel.h>
 #include <qkeycode.h>
-#include "tablekey.h"
-#include "lcdrange.h"
+#include <relacs/tablekey.h>
+#include <relacs/lcdrange.h>
 #include "auditorysearch.h"
 
 

@@ -22,9 +22,9 @@
 #ifndef _LOWPASS_H_
 #define _LOWPASS_H_
 
-#include "optwidget.h"
-#include "indata.h"
-#include "filter.h"
+#include <relacs/optwidget.h>
+#include <relacs/indata.h>
+#include <relacs/filter.h>
 
 
 /*! 

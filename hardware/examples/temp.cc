@@ -20,7 +20,7 @@
 */
 
 #include <iostream>
-#include "tempdtm5080.h"
+#include <relacs/tempdtm5080.h>
 
 int main( void )
 {

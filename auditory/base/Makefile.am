@@ -35,11 +35,11 @@ librelacsauditoryneuron_la_CPPFLAGS = \
     -I../../daq/include \
     -I../../numerics/include \
     -I../../options/include \
-    -I../../relacs/include/relacs/ \
+    -I../../relacs/include \
     -I../../widgets/include \
     @QT3_CPPFLAGS@
 
-librelacsauditoryneuron_la-%-moc.cpp : ../include/relacs/%.h
+librelacsauditoryneuron_la-%-moc.cpp : %.h
 	$(MOC_CREATE)
 
 librelacsauditoryneuron_la-%-moc.lo : librelacsauditoryneuron_la-%-moc.cpp
@@ -64,11 +64,11 @@ librelacsauditorysearch_la_CPPFLAGS = \
     -I../../datafile/include \
     -I../../numerics/include \
     -I../../options/include \
-    -I../../relacs/include/relacs/ \
+    -I../../relacs/include \
     -I../../widgets/include \
     @QT3_CPPFLAGS@
 
-librelacsauditorysearch_la-%-moc.cpp : ../include/relacs/%.h
+librelacsauditorysearch_la-%-moc.cpp : %.h
 	$(MOC_CREATE)
 
 librelacsauditorysearch_la-%-moc.lo : librelacsauditorysearch_la-%-moc.cpp
@@ -95,11 +95,11 @@ librelacsauditorysession_la_CPPFLAGS = \
     -I../../mplot/include \
     -I../../numerics/include \
     -I../../options/include \
-    -I../../relacs/include/relacs/ \
+    -I../../relacs/include \
     -I../../widgets/include \
     @QT3_CPPFLAGS@
 
-librelacsauditorysession_la-%-moc.cpp : ../include/relacs/%.h
+librelacsauditorysession_la-%-moc.cpp : %.h
 	$(MOC_CREATE)
 
 librelacsauditorysession_la-%-moc.lo : librelacsauditorysession_la-%-moc.cpp
@@ -125,7 +125,7 @@ librelacsauditorytraces_la_CPPFLAGS = \
     -I../../daq/include \
     -I../../numerics/include \
     -I../../options/include \
-    -I../../relacs/include/relacs/ \
+    -I../../relacs/include \
     @QT3_CPPFLAGS@
 
 librelacsauditorytraces_la_LIBADD = \
@@ -146,11 +146,11 @@ librelacsauditoryficurve_la_CPPFLAGS = \
     -I../../mplot/include \
     -I../../numerics/include \
     -I../../options/include \
-    -I../../relacs/include/relacs/ \
+    -I../../relacs/include \
     -I../../widgets/include \
     @QT3_CPPFLAGS@
 
-librelacsauditoryficurve_la-%-moc.cpp : ../include/relacs/%.h
+librelacsauditoryficurve_la-%-moc.cpp : %.h
 	$(MOC_CREATE)
 
 librelacsauditoryficurve_la-%-moc.lo : librelacsauditoryficurve_la-%-moc.cpp
@@ -180,11 +180,11 @@ librelacsauditoryfifield_la_CPPFLAGS = \
     -I../../mplot/include \
     -I../../numerics/include \
     -I../../options/include \
-    -I../../relacs/include/relacs/ \
+    -I../../relacs/include \
     -I../../widgets/include \
     @QT3_CPPFLAGS@
 
-librelacsauditoryfifield_la-%-moc.cpp : ../include/relacs/%.h
+librelacsauditoryfifield_la-%-moc.cpp : %.h
 	$(MOC_CREATE)
 
 librelacsauditoryfifield_la-%-moc.lo : librelacsauditoryfifield_la-%-moc.cpp
@@ -214,11 +214,11 @@ librelacsauditorysinglestimulus_la_CPPFLAGS = \
     -I../../mplot/include \
     -I../../numerics/include \
     -I../../options/include \
-    -I../../relacs/include/relacs/ \
+    -I../../relacs/include \
     -I../../widgets/include \
     @QT3_CPPFLAGS@
 
-librelacsauditorysinglestimulus_la-%-moc.cpp : ../include/relacs/%.h
+librelacsauditorysinglestimulus_la-%-moc.cpp : %.h
 	$(MOC_CREATE)
 
 librelacsauditorysinglestimulus_la-%-moc.lo : librelacsauditorysinglestimulus_la-%-moc.cpp
@@ -248,11 +248,11 @@ librelacsauditoryspikeprecision_la_CPPFLAGS = \
     -I../../mplot/include \
     -I../../numerics/include \
     -I../../options/include \
-    -I../../relacs/include/relacs/ \
+    -I../../relacs/include \
     -I../../widgets/include \
     @QT3_CPPFLAGS@
 
-librelacsauditoryspikeprecision_la-%-moc.cpp : ../include/relacs/%.h
+librelacsauditoryspikeprecision_la-%-moc.cpp : %.h
 	$(MOC_CREATE)
 
 librelacsauditoryspikeprecision_la-%-moc.lo : librelacsauditoryspikeprecision_la-%-moc.cpp
@@ -282,11 +282,11 @@ librelacsauditorysyslatency_la_CPPFLAGS = \
     -I../../mplot/include \
     -I../../numerics/include \
     -I../../options/include \
-    -I../../relacs/include/relacs/ \
+    -I../../relacs/include \
     -I../../widgets/include \
     @QT3_CPPFLAGS@
 
-librelacsauditorysyslatency_la-%-moc.cpp : ../include/relacs/%.h
+librelacsauditorysyslatency_la-%-moc.cpp : %.h
 	$(MOC_CREATE)
 
 librelacsauditorysyslatency_la-%-moc.lo : librelacsauditorysyslatency_la-%-moc.cpp

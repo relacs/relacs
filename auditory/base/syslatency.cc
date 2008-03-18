@@ -21,10 +21,10 @@
 
 #include <fstream>
 #include <iomanip>
-#include "tablekey.h"
-#include "stats.h"
-#include "sampledata.h"
-#include "random.h"
+#include <relacs/tablekey.h>
+#include <relacs/stats.h>
+#include <relacs/sampledata.h>
+#include <relacs/random.h>
 #include "auditorysession.h"
 #include "syslatency.h"
 

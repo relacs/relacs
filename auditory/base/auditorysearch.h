@@ -23,7 +23,7 @@
 #define _AUDITORYSEARCH_H_
 
 
-#include "repro.h"
+#include <relacs/repro.h>
 #include "auditorytraces.h"
 #include <qpushbutton.h>
 #include <qradiobutton.h>

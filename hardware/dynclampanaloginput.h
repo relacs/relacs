@@ -3,8 +3,8 @@
 
 #include <vector>
 #include <comedilib.h>
-#include "daqerror.h"
-#include "analoginput.h"
+#include <relacs/daqerror.h>
+#include <relacs/analoginput.h>
 #include "comedianaloginput.h"
 #include "dynclampanalogoutput.h"
 #include "moduledef.h"

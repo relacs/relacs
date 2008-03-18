@@ -28,7 +28,7 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>   
-#include "stats.h"
+#include <relacs/stats.h>
 #include "niai.h"
 #include "niao.h"
 

@@ -21,9 +21,9 @@
 
 #include <fstream>
 #include <iomanip>
-#include "str.h"
-#include "options.h"
-#include "tablekey.h"
+#include <relacs/str.h>
+#include <relacs/options.h>
+#include <relacs/tablekey.h>
 #include "calibspeakers.h"
 
 

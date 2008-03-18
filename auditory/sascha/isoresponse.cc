@@ -22,11 +22,11 @@
 #include <fstream>
 #include <iomanip>
 #include <cmath>
-#include "stats.h"
-#include "map.h"
-#include "str.h"
-#include "tablekey.h"
-#include "auditorysession.h"
+#include <relacs/stats.h>
+#include <relacs/map.h>
+#include <relacs/str.h>
+#include <relacs/tablekey.h>
+#include <relacs/auditorysession.h>
 #include "isoresponse.h"
 
 

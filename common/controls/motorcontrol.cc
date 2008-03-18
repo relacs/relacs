@@ -26,7 +26,7 @@
 #include <qhbox.h>
 #include <qvbox.h>
 #include <qpainter.h>
-#include "manipulator.h"
+#include <relacs/manipulator.h>
 #include "motorcontrol.h"
 
 

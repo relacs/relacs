@@ -22,7 +22,7 @@
 #ifndef _CS3310PP_H_
 #define _CS3310PP_H_
 
-#include "attenuator.h"
+#include <relacs/attenuator.h>
 
 /*!
 \class CS3310PP

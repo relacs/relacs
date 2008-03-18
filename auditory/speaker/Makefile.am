@@ -23,10 +23,10 @@ librelacsauditorycalibspeakers_la_CPPFLAGS = \
     -I../../mplot/include \
     -I../../numerics/include \
     -I../../options/include \
-    -I../../relacs/include/relacs/ \
+    -I../../relacs/include \
     @QT3_CPPFLAGS@
 
-librelacsauditorycalibspeakers_la-%-moc.cpp : ../include/relacs/%.h
+librelacsauditorycalibspeakers_la-%-moc.cpp : %.h
 	$(MOC_CREATE)
 
 librelacsauditorycalibspeakers_la-%-moc.lo : librelacsauditorycalibspeakers_la-%-moc.cpp
@@ -53,10 +53,10 @@ librelacsauditoryloudspeaker_la_CPPFLAGS = \
     -I../../datafile/include \
     -I../../numerics/include \
     -I../../options/include \
-    -I../../relacs/include/relacs/ \
+    -I../../relacs/include \
     @QT3_CPPFLAGS@
 
-librelacsauditoryloudspeaker_la-%-moc.cpp : ../include/relacs/%.h
+librelacsauditoryloudspeaker_la-%-moc.cpp : %.h
 	$(MOC_CREATE)
 
 librelacsauditoryloudspeaker_la-%-moc.lo : librelacsauditoryloudspeaker_la-%-moc.cpp

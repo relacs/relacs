@@ -25,7 +25,7 @@
 #include <string>
 #include <vector>
 #include <termios.h>
-#include "manipulator.h"
+#include <relacs/manipulator.h>
 using namespace std;
 
 

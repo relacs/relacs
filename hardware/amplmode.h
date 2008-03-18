@@ -23,7 +23,7 @@
 #define _AMPLMODE_H_
 
 #include "nidio.h"
-#include "device.h"
+#include <relacs/device.h>
 
 
 /*!

@@ -19,7 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "random.h"
+#include <relacs/random.h>
 #include "simplemodel.h"
 
 using namespace numerics;

@@ -22,10 +22,10 @@
 #ifndef _CALIBSPEAKERS_H_
 #define _CALIBSPEAKERS_H_
 
-#include "repro.h"
-#include "auditorytraces.h"
-#include "rangeloop.h"
-#include "multiplot.h"
+#include <relacs/repro.h>
+#include <relacs/auditorytraces.h>
+#include <relacs/rangeloop.h>
+#include <relacs/multiplot.h>
 #include "loudspeaker.h"
 
 

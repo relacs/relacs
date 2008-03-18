@@ -22,8 +22,8 @@
 #ifndef _RESTARTDELAY_H_
 #define _RESTARTDELAY_H_
 
-#include "plot.h"
-#include "repro.h"
+#include <relacs/plot.h>
+#include <relacs/repro.h>
 
 /*!
 \class RestartDelay

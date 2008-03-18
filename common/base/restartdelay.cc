@@ -20,8 +20,8 @@
 */
 
 #include <cmath>
-#include "sampledata.h"
-#include "fitalgorithm.h"
+#include <relacs/sampledata.h>
+#include <relacs/fitalgorithm.h>
 #include "restartdelay.h"
 
 using namespace numerics;

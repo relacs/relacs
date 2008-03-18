@@ -22,12 +22,12 @@
 #ifndef _SPIKEPRECISION_H_
 #define _SPIKEPRECISION_H_
 
-#include "sampledata.h"
-#include "multiplot.h"
-#include "rangeloop.h"
-#include "ephystraces.h"
+#include <relacs/sampledata.h>
+#include <relacs/multiplot.h>
+#include <relacs/rangeloop.h>
+#include <relacs/ephystraces.h>
 #include "auditorytraces.h"
-#include "repro.h"
+#include <relacs/repro.h>
 
 
 /*! 

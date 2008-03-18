@@ -21,10 +21,10 @@
 
 #include <fstream>
 #include <iomanip>
-#include "kernel.h"
-#include "spectrum.h"
-#include "tablekey.h"
-#include "translate.h"
+#include <relacs/kernel.h>
+#include <relacs/spectrum.h>
+#include <relacs/tablekey.h>
+#include <relacs/translate.h>
 #include "auditorysession.h"
 #include "spikeprecision.h"
 

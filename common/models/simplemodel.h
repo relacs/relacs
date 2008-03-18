@@ -22,7 +22,7 @@
 #ifndef _SIMPLEMODEL_H_
 #define _SIMPLEMODEL_H_
 
-#include "model.h"
+#include <relacs/model.h>
 
 /*! 
 \class SimpleModel

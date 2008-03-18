@@ -19,7 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "relacsplugin.h"
+#include <relacs/relacsplugin.h>
 #include "comedianaloginput.h"
 #include "comedianalogoutput.h"
 #include "dynclampanaloginput.h"

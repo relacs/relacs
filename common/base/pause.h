@@ -22,7 +22,7 @@
 #ifndef _PAUSE_H_
 #define _PAUSE_H_
 
-#include "repro.h"
+#include <relacs/repro.h>
 
 /*!
 \class Pause

@@ -24,7 +24,7 @@
 
 #include <vector>
 #include <comedilib.h>
-#include "analogoutput.h"
+#include <relacs/analogoutput.h>
 using namespace std;
 
 class ComediAnalogInput;

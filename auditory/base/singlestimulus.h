@@ -22,11 +22,11 @@
 #ifndef _SINGLESTIMULUS_H_
 #define _SINGLESTIMULUS_H_
 
-#include "repro.h"
-#include "eventlist.h"
-#include "sampledata.h"
-#include "multiplot.h"
-#include "ephystraces.h"
+#include <relacs/repro.h>
+#include <relacs/eventlist.h>
+#include <relacs/sampledata.h>
+#include <relacs/multiplot.h>
+#include <relacs/ephystraces.h>
 #include "auditorytraces.h"
 
 

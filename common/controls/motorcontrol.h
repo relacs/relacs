@@ -28,9 +28,9 @@
 #include <qpushbutton.h>
 #include <qdatetime.h>
 #include <qtimer.h>
-#include "optwidget.h"
-#include "configclass.h"
-#include "control.h"
+#include <relacs/optwidget.h>
+#include <relacs/configclass.h>
+#include <relacs/control.h>
 
 class Manipulator;
 class MiMaPu;

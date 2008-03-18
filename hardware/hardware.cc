@@ -19,7 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "relacsplugin.h"
+#include <relacs/relacsplugin.h>
 #include "cs3310pp.h"
 #include "kleindiek.h"
 #include "tempdtm5080.h"

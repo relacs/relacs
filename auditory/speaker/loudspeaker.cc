@@ -23,11 +23,11 @@
 #include <ctime>
 #include <iostream>
 #include <fstream>
-#include "str.h"
-#include "strqueue.h"
-#include "options.h"
-#include "tablekey.h"
-#include "relacsplugin.h"
+#include <relacs/str.h>
+#include <relacs/strqueue.h>
+#include <relacs/options.h>
+#include <relacs/tablekey.h>
+#include <relacs/relacsplugin.h>
 #include "loudspeaker.h"
 
 using namespace std;

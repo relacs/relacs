@@ -21,11 +21,11 @@
 
 #include <fstream>
 #include <iomanip>
-#include "array.h"
-#include "map.h"
-#include "stats.h"
-#include "str.h"
-#include "tablekey.h"
+#include <relacs/array.h>
+#include <relacs/map.h>
+#include <relacs/stats.h>
+#include <relacs/str.h>
+#include <relacs/tablekey.h>
 #include "auditorysession.h"
 #include "ficurve.h"
 

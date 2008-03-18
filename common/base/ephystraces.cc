@@ -19,9 +19,9 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "str.h"
-#include "inlist.h"
-#include "eventlist.h"
+#include <relacs/str.h>
+#include <relacs/inlist.h>
+#include <relacs/eventlist.h>
 #include "ephystraces.h"
 
 

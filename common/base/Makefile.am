@@ -38,10 +38,10 @@ librelacscommonpause_la_CPPFLAGS = \
     -I../../daq/include \
     -I../../numerics/include \
     -I../../options/include \
-    -I../../relacs/include/relacs/ \
+    -I../../relacs/include \
     @QT3_CPPFLAGS@
 
-librelacscommonpause_la-%-moc.cpp : ../include/relacs/%.h
+librelacscommonpause_la-%-moc.cpp : %.h
 	$(MOC_CREATE)
 
 librelacscommonpause_la-%-moc.lo : librelacscommonpause_la-%-moc.cpp
@@ -65,10 +65,10 @@ librelacscommonrestartdelay_la_CPPFLAGS = \
     -I../../mplot/include \
     -I../../numerics/include \
     -I../../options/include \
-    -I../../relacs/include/relacs/ \
+    -I../../relacs/include \
     @QT3_CPPFLAGS@
 
-librelacscommonrestartdelay_la-%-moc.cpp : ../include/relacs/%.h
+librelacscommonrestartdelay_la-%-moc.cpp : %.h
 	$(MOC_CREATE)
 
 librelacscommonrestartdelay_la-%-moc.lo : librelacscommonrestartdelay_la-%-moc.cpp
@@ -92,10 +92,10 @@ librelacscommonstimulusdelay_la_CPPFLAGS = \
     -I../../mplot/include \
     -I../../numerics/include \
     -I../../options/include \
-    -I../../relacs/include/relacs/ \
+    -I../../relacs/include \
     @QT3_CPPFLAGS@
 
-librelacscommonstimulusdelay_la-%-moc.cpp : ../include/relacs/%.h
+librelacscommonstimulusdelay_la-%-moc.cpp : %.h
 	$(MOC_CREATE)
 
 librelacscommonstimulusdelay_la-%-moc.lo : librelacscommonstimulusdelay_la-%-moc.cpp

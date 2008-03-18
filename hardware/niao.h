@@ -23,7 +23,7 @@
 #define _NIAO_H_
 
 #include "nidaq.h"
-#include "analogoutput.h"
+#include <relacs/analogoutput.h>
 
 
 /*! 

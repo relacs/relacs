@@ -62,7 +62,27 @@ while read makefile ; do
 done < <(find . -name 'Makefile.am')
 
 ## Fix includes in relacs/*
-while read header ; do
-    local_to_incpath "${header}"
+while read file ; do
+    local_to_incpath "${file}"
 done < <(find relacs -type f -name '*.h' -o -name '*.cc')
+
+
+
+PLUGINS="common hardware auditory"
+for dir in $PLUGINS ; do
+    ## Fix library includes in plugin code
+    while read file ; do
+        TEMPFILE=`mktemp`
+        KEEP_LOCAL=$(find $(dirname "$file") -name '*.h' -printf '%f ' | sed 's/ /\\|/g')
+        sed -e 's/^\(# *include \+\)"\(.\+\)" *$/\1<relacs\/\2>/' -e 's/^\(# *include \+\)<relacs\/\('"${KEEP_LOCAL}"'\)> *$/\1"\2"/' "${file}" > "${TEMPFILE}"
+        mv "${TEMPFILE}" "${file}"
+    done < <(find $dir -type f -name '*.h' -o -name '*.cc')
+
+    ## Fix librelacs includes in plugin code
+    while read makefile ; do
+        TEMPFILE=`mktemp`
+        sed -e 's/include\/relacs/include/' -e 's/..\/include\/%.h/%.h/' < "${makefile}" > "${TEMPFILE}"
+        mv "${TEMPFILE}" "${makefile}"
+    done < <(find $dir -name 'Makefile.am')
+done
 

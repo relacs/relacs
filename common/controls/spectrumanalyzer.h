@@ -22,9 +22,9 @@
 #ifndef _SPECTRUMANALYZER_H_
 #define _SPECTRUMANALYZER_H_
 
-#include "configclass.h"
-#include "control.h"
-#include "plot.h"
+#include <relacs/configclass.h>
+#include <relacs/control.h>
+#include <relacs/plot.h>
 
 /*! 
 \class SpectrumAnalyzer

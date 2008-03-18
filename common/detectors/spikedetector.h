@@ -25,11 +25,11 @@
 #include <qpixmap.h>
 #include <qlabel.h>
 #include <qdatetime.h>
-#include "optwidget.h"
-#include "sampledata.h"
-#include "plot.h"
-#include "detector.h"
-#include "filter.h"
+#include <relacs/optwidget.h>
+#include <relacs/sampledata.h>
+#include <relacs/plot.h>
+#include <relacs/detector.h>
+#include <relacs/filter.h>
 
 
 /*! 

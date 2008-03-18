@@ -22,12 +22,12 @@
 #ifndef _SYSLATENCY_H_
 #define _SYSLATENCY_H_
 
-#include "repro.h"
-#include "array.h"
-#include "map.h"
-#include "eventlist.h"
-#include "multiplot.h"
-#include "ephystraces.h"
+#include <relacs/repro.h>
+#include <relacs/array.h>
+#include <relacs/map.h>
+#include <relacs/eventlist.h>
+#include <relacs/multiplot.h>
+#include <relacs/ephystraces.h>
 #include "auditorytraces.h"
 
 
