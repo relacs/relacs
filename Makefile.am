@@ -36,7 +36,7 @@ doc_DATA = doc/html/*
 all: docall
 doc: docall
 docall: doc/html/*
-	
+
 doc/html/*:
 	-[ ! -f doc/html/index.html ] && doxygen doc/relacs.dox
 

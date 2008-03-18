@@ -1,17 +1,38 @@
 == Next ==
-- Revert .cfg files to state of checkin
-- Add configure scripts to all seven libraries if possible
+- Add configure scripts to all seven libraries if possible (LATER)
   - Extract GSL detection
     - Make macro from that
 - Doxygen stuff
     - auditory/doc/auditory.dox
     - common/doc/common.dox
     - patch/doc/patch.dox
-- Move includes to include/relacs folders
+
+from auditory/Makefile:
+# Create plugin documentation:
+doc:
+        sed "s-^INPUT.*-INPUT = $(SUBDIRS)-;" doc/auditory.dox > tmp.dox
+        doxygen tmp.dox
+        rm -f tmp.dox
+
+# Create RePro help files:
+help: doc
+        mkdir -p help
+        $(TOPDIR)/utils/createhelp help
+
+
+- Move includes to include/relacs folders (IMPORTANT!)
+
+- resolve moc rules in plugins (e.g. common/) and once as an example in a library (e.g. widgets/)
+
+- an example standalone plugin (patchclamp) with tests for the libraries
+
+- OS dependent make rules (for hardware plugins)? (QUICK)
+
+- hardware: find -lcomedi (www.comedi.org).
 
 
 == Optional ==
-- Integrate examples (with extra target)
+- Integrate examples (with extra target)  no-compile Makefiles???
 - Integrate librand55
     http://summa.physik.hu-berlin.de/~beule/random/random55.tar.gz
 - Extra summary for configure at the very end
@@ -19,8 +40,8 @@
 
 == Notes ==
 - Log files written to relacs exec dir, not /var/log? 
-  - 
-- Plugins searched in <plugins/*.so> though <pluginpathes> given?
-- Report about reading config from PWD and LD_LIBRARY_PATH containing PWD
+  - Set log location in <relacslocal>/<src/relacs>
+    use @...@ for this (prefix?)
+- Reading config from PWD and LD_LIBRARY_PATH containing PWD
   - On/off by user?
 
