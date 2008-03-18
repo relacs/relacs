@@ -1,6 +1,3 @@
-#noinst_PROGRAMS = \
-#    ../relacs_local
-
 bin_SCRIPTS = \
     relacs
 
@@ -9,24 +6,6 @@ pkglib_PROGRAMS = \
     
 sysconf_DATA = \
     relacs.cfg
-
-#    relacs \#
-
-
-
-PLUGINSDIRS = auditory common hardware patch
-
-# TODO
-
-#../relacs_local: relacs_main ../utils/relacsscript Makefile.am
-#	PP=""; for dir in $(PLUGINSDIRS); do PP="$$PP:$(CURDIR)/../$$dir/.libs"; done; \
-#		sed "s|RELACSEXECPATH=\.|RELACSEXECPATH=$(CURDIR)|; s|RELACSPLUGINPATHES=./plugins|RELACSPLUGINPATHES=$${PP#:}|;" ../utils/relacsscript > ../relacs_local
-#	chmod a+x ../relacs_local
-
-#relacs: relacs_main ../utils/relacsscript Makefile.am
-#	PP=""; for dir in $(PLUGINSDIRS); do PP="$$PP:$(CURDIR)/../$$dir/.libs"; done; \
-#		sed "s|RELACSEXECPATH=\.|RELACSEXECPATH=$(CURDIR)|; s|RELACSPLUGINPATHES=./plugins|RELACSPLUGINPATHES=$${PP#:}|;" ../utils/relacsscript > relacs
-#	chmod a+x relacs
 
 
 
