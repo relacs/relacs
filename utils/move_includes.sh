@@ -16,73 +16,57 @@ recursive_add() {
     cd "${PWD_BACKUP}"
 }
 
-local_to_incpath() {
+fix_includes_in_source_file() {
+    # BEFORE: #include "header.h"
+    # AFTER:  #include <relacs/header.h>
     TEMPFILE=`mktemp`
-    sed 's/^\(# *include \+\)"\(.\+\)" *$/\1<relacs\/\2>/' "$1" > "${TEMPFILE}"
+    KEEP_LOCAL=$(find $(dirname "$1") -name '*.h' -printf '%f ' | sed 's/ /\\|/g')
+    sed -e 's/^\(# *include \+\)"\(.\+\)" *$/\1<relacs\/\2>/' -e 's/^\(# *include \+\)<relacs\/\('"${KEEP_LOCAL}"'\)> *$/\1"\2"/' "$1" > "${TEMPFILE}"
     mv "${TEMPFILE}" "$1"
 }
 
-for dir in $LIBRARIES ; do
-    while read header ; do
-        ## Fix includes in source files
-        source="${header%.h}.cc"
-        if [ -f "${source}" ]; then
-            local_to_incpath "${source}"
-        fi
-
-        header_after=`sed 's/\/src\//\/include\/relacs\//' <<<"${header}"`
-        header_after_dir=`dirname "${header_after}"`
-
-        ## Add move location to repository
-        echo mkdir -p "${header_after_dir}"
-        mkdir -p "${header_after_dir}"
-        recursive_add "${header_after_dir}"
-
-        ## Move header
-        echo svn mv "${header}" "${header_after}"
-        svn mv "${header}" "${header_after}"
-
-        ## Fix includes in headers
-        local_to_incpath "${header_after}"
-
-        ## Fix header locations in Automake file
-        makefile=`dirname "${header}"`'/Makefile.am'
-        TEMPFILE=`mktemp`
-        sed 's/^\( *\)\('`basename "${header}"`'.*\)/\1..\/include\/relacs\/\2/' < "${makefile}" > "${TEMPFILE}"
-        mv "${TEMPFILE}" "${makefile}"
-    done < <(find $dir -type f -wholename '*/src/*.h')
-done
-
-## Fix include dirs in Automake files
-ANY_LIB=`sed 's/ /\\\\|/g' <<< "${LIBRARIES}"`
-while read makefile ; do
+update_header_location_in_makefile() {
+    # BEFORE:     header.h
+    # AFTER:      ../include/relacs/header.h
     TEMPFILE=`mktemp`
-    sed -e 's/^\( *-I.\+\('"${ANY_LIB}"'\)\/\)src\(.*\)/\1include\3/' -e 's/\(%-moc.cpp *: *\)\(%.h\)/\1..\/include\/relacs\/\2/'< "${makefile}" > "${TEMPFILE}"
-    mv "${TEMPFILE}" "${makefile}"
-done < <(find . -name 'Makefile.am')
+    sed 's/^\( *\)\('`basename "${header}"`'.*\)/\1..\/include\/relacs\/\2/' < "$1" > "${TEMPFILE}"
+    mv "${TEMPFILE}" "$1"
+}
 
-## Fix includes in relacs/*
+ANY_LIB=`sed 's/ /\\\\|/g' <<< "${LIBRARIES}"`
+update_incpaths_in_makefile() {
+    # BEFORE: -Ifolder/src
+    # AFTER:  -Ifolder/include/relacs
+    TEMPFILE=`mktemp`
+    sed -e 's/^\( *-I.\+\('"${ANY_LIB}"'\)\/\)src\(.*\)/\1include\3/' < "$1" > "${TEMPFILE}"
+    mv "${TEMPFILE}" "$1"
+}
+
+update_moc_rule_in_makefile() {
+    TEMPFILE=`mktemp`
+    sed -e 's/\(%-moc.cpp *: *\)\(%.h\)/\1..\/include\/relacs\/\2/' < "$1" > "${TEMPFILE}"
+    mv "${TEMPFILE}" "$1"
+}
+
+move_header() {
+    header=$1
+    header_after=`sed 's/\/src\//\/include\/relacs\//' <<<"${header}"`
+    header_after_dir=`dirname "${header_after}"`
+
+    ## Add move location to repository
+    echo mkdir -p "${header_after_dir}"
+    mkdir -p "${header_after_dir}"
+    recursive_add "${header_after_dir}"
+
+    ## Move header
+    echo svn mv "${header}" "${header_after}"
+    svn mv "${header}" "${header_after}"
+}
+
+
+
+# Fix all includes in source files
 while read file ; do
-    local_to_incpath "${file}"
-done < <(find relacs -type f -name '*.h' -o -name '*.cc')
-
-
-
-PLUGINS="common hardware auditory"
-for dir in $PLUGINS ; do
-    ## Fix library includes in plugin code
-    while read file ; do
-        TEMPFILE=`mktemp`
-        KEEP_LOCAL=$(find $(dirname "$file") -name '*.h' -printf '%f ' | sed 's/ /\\|/g')
-        sed -e 's/^\(# *include \+\)"\(.\+\)" *$/\1<relacs\/\2>/' -e 's/^\(# *include \+\)<relacs\/\('"${KEEP_LOCAL}"'\)> *$/\1"\2"/' "${file}" > "${TEMPFILE}"
-        mv "${TEMPFILE}" "${file}"
-    done < <(find $dir -type f -name '*.h' -o -name '*.cc')
-
-    ## Fix librelacs includes in plugin code
-    while read makefile ; do
-        TEMPFILE=`mktemp`
-        sed -e 's/include\/relacs/include/' -e 's/..\/include\/%.h/%.h/' < "${makefile}" > "${TEMPFILE}"
-        mv "${TEMPFILE}" "${makefile}"
-    done < <(find $dir -name 'Makefile.am')
-done
+    fix_includes_in_source_file "${file}"
+done < <(find . -type f -name '*.h' -o -name '*.cc')
 
