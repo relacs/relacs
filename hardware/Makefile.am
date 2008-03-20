@@ -25,12 +25,12 @@ librelacshardware_la_LIBADD = \
 
 librelacshardware_la_SOURCES = \
     cs3310pp.cc \
-    cs3310pp.h \
+    ../include/relacs/cs3310pp.h \
     hardware.cc \
     kleindiek.cc \
-    kleindiek.h \
+    ../include/relacs/kleindiek.h \
     tempdtm5080.cc \
-    tempdtm5080.h
+    ../include/relacs/tempdtm5080.h
 
 
 
@@ -48,21 +48,21 @@ librelacsnieserieshardware_la_LIBADD = \
 
 librelacsnieserieshardware_la_SOURCES = \
     amplmode.cc \
-    amplmode.h \
+    ../include/relacs/amplmode.h \
     cs3310nidio.cc \
-    cs3310nidio.h \
+    ../include/relacs/cs3310nidio.h \
     cs3310serialnidio.cc \
-    cs3310serialnidio.h \
+    ../include/relacs/cs3310serialnidio.h \
     niai.cc \
-    niai.h \
+    ../include/relacs/niai.h \
     niao.cc \
-    niao.h \
-    nidaq.h \
+    ../include/relacs/niao.h \
+    ../include/relacs/nidaq.h \
     nidio.cc \
-    nidio.h \
+    ../include/relacs/nidio.h \
     nieserieshardware.cc \
     nipfi.cc \
-    nipfi.h
+    ../include/relacs/nipfi.h
 
 
 

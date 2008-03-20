@@ -19,7 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "tempdtm5080.h"
+#include <relacs/tempdtm5080.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
