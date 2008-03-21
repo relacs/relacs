@@ -24,7 +24,7 @@
 
 #include <cmath>
 #include <vector>
-#include <relacs/array.h>
+#include "array.h"
 using namespace std;
 
 

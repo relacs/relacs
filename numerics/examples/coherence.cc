@@ -21,8 +21,8 @@
 
 #include <iostream>
 #include <fstream>
-#include "sampledata.h"
-#include "spectrum.h"
+#include <relacs/sampledata.h>
+#include <relacs/spectrum.h>
 using namespace std;
 using namespace numerics;
 

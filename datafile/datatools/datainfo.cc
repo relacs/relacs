@@ -25,8 +25,8 @@
 #include <fstream>
 #include <string>
 #include <getopt.h>
-#include "datafile.h"
-#include "options.h"
+#include <relacs/datafile.h>
+#include <relacs/options.h>
 using namespace std;
 
 

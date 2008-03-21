@@ -22,7 +22,7 @@
 #ifndef _BASISFUNCTION_H_
 #define _BASISFUNCTION_H_
 
-#include <relacs/array.h>
+#include "array.h"
 
 
 /*! 

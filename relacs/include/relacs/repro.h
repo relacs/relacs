@@ -33,7 +33,7 @@
 #include <qthread.h>
 #include <qdatetime.h>
 #include <relacs/outlist.h>
-#include <relacs/relacsplugin.h>
+#include "relacsplugin.h"
 
 
 /*! 

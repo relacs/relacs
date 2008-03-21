@@ -23,7 +23,7 @@
 #define _DEFAULTREPRO_H_
 
 
-#include <relacs/repro.h>
+#include "repro.h"
 
 /*! \class DefaultRePro
     \author Jan Benda

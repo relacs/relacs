@@ -24,7 +24,7 @@
 
 #include <string> 
 #include <vector> 
-#include <relacs/outdata.h>
+#include "outdata.h"
 using namespace std;
 
 

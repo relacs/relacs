@@ -21,8 +21,8 @@
 
 #include <qgroupbox.h>
 #include <qapplication.h>
-#include "multiplot.h"
-#include "data.h"
+#include <relacs/multiplot.h>
+#include <relacs/data.h>
 #include <cstdio>
 
 

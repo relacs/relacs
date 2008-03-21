@@ -21,8 +21,8 @@
 
 #include <cstdlib>
 #include <iostream>
-#include "str.h"
-#include "parameter.h"
+#include <relacs/str.h>
+#include <relacs/parameter.h>
 
 int main( int argc, char *argv[] )
 {

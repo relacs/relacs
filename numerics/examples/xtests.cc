@@ -20,8 +20,8 @@
 */
 
 #include <iostream>
-#include "random.h"
-#include "tests.h"
+#include <relacs/random.h>
+#include <relacs/tests.h>
 
 using namespace std;
 using namespace numerics;

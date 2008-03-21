@@ -20,7 +20,7 @@
 */
 
 #include <iostream>
-#include "eventlist.h"
+#include <relacs/eventlist.h>
 
 
 int main( void )

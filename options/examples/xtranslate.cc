@@ -20,8 +20,8 @@
 */
 
 #include <vector>
-#include "str.h"
-#include "options.h"
+#include <relacs/str.h>
+#include <relacs/options.h>
 using namespace std;
 
 

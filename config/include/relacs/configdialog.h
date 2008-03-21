@@ -27,7 +27,7 @@
 #include <qwidget.h>
 #include <qmutex.h>
 #include <qlayout.h>
-#include <relacs/configclass.h>
+#include "configclass.h"
 
 using namespace std;
 

@@ -23,12 +23,12 @@
 #include <cstdlib>
 #include <iostream>
 #include <getopt.h>
-#include "str.h"
-#include "strqueue.h"
-#include "options.h"
-#include "tablekey.h"
-#include "datafile.h"
-#include "translate.h"
+#include <relacs/str.h>
+#include <relacs/strqueue.h>
+#include <relacs/options.h>
+#include <relacs/tablekey.h>
+#include <relacs/datafile.h>
+#include <relacs/translate.h>
 
 
 bool allpages = false;

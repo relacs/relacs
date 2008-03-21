@@ -31,11 +31,11 @@
 #include <getopt.h>
 #include <vector>
 #include <algorithm>
-#include "str.h"
-#include "datafile.h"
-#include "tablekey.h"
-#include "array.h"
-#include "stats.h"
+#include <relacs/str.h>
+#include <relacs/datafile.h>
+#include <relacs/tablekey.h>
+#include <relacs/array.h>
+#include <relacs/stats.h>
 
 using namespace std;
 using namespace numerics;

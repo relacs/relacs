@@ -22,9 +22,9 @@
 #ifndef _CYCLICARRAY_H_
 #define _CYCLICARRAY_H_
 
-#include <relacs/cyclicarray.h>
-#include <relacs/linearrange.h>
-#include <relacs/stats.h>
+#include "cyclicarray.h"
+#include "linearrange.h"
+#include "stats.h"
 
 /*!
 \class CyclicSampleData

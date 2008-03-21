@@ -20,7 +20,7 @@
 */
 
 #include <iostream>
-#include "str.h"
+#include <relacs/str.h>
 using namespace std;
 
 

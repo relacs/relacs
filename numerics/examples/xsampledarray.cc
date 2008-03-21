@@ -22,7 +22,7 @@
 #include <iostream>
 #include <iomanip>
 #include <vector>
-#include "sampledarray.h"
+#include <relacs/sampledarray.h>
 
 using namespace std;
 using namespace numerics;

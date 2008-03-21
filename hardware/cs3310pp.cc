@@ -28,7 +28,7 @@
 #include <time.h>
 #include <sstream>
 #include <cmath>
-#include <relacs/cs3310pp.h>
+#include "cs3310pp.h"
 
 using namespace std;
 

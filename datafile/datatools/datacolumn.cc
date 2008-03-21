@@ -24,9 +24,9 @@
 #include <iostream>
 #include <string>
 #include <getopt.h>
-#include "str.h"
-#include "datafile.h"
-#include "tablekey.h"
+#include <relacs/str.h>
+#include <relacs/datafile.h>
+#include <relacs/tablekey.h>
 
 using namespace std;
 

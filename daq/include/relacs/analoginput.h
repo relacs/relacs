@@ -23,9 +23,9 @@
 #define _ANALOGINPUT_H_
 
 #include <vector>
-#include <relacs/device.h>
-#include <relacs/inlist.h>
-#include <relacs/tracespec.h>
+#include "device.h"
+#include "inlist.h"
+#include "tracespec.h"
 
 using namespace std;
 

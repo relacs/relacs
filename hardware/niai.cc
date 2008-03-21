@@ -26,8 +26,8 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>   
-#include <relacs/niao.h>
-#include <relacs/niai.h>
+#include "niao.h"
+#include "niai.h"
 
 using namespace std;
 

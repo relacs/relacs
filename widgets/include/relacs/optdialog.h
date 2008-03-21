@@ -28,7 +28,7 @@
 #include <qhbox.h>
 #include <qvbox.h>
 #include <relacs/options.h>
-#include <relacs/optwidget.h>
+#include "optwidget.h"
 
 /*! 
 \class OptDialog

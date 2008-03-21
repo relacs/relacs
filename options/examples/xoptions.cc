@@ -21,7 +21,7 @@
 
 #include <cstdlib>
 #include <iostream>
-#include "options.h"
+#include <relacs/options.h>
 
 
 int main( int argc, char *argv[] )

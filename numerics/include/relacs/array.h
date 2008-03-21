@@ -34,9 +34,9 @@
 #ifdef GSL
 #include <gsl/gsl_vector.h>
 #endif
-#include <relacs/containerops.h>
-#include <relacs/stats.h>
-#include <relacs/random.h>
+#include "containerops.h"
+#include "stats.h"
+#include "random.h"
 
 using namespace std;
 

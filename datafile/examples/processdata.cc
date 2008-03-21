@@ -20,7 +20,7 @@
 */
 
 #include <iostream>
-#include "datafile.h"
+#include <relacs/datafile.h>
 
 int main( int argc, char *argv[] )
 {

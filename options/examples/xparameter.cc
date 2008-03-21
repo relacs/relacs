@@ -21,7 +21,7 @@
 
 #include <cstdlib>
 #include <iostream>
-#include "parameter.h"
+#include <relacs/parameter.h>
 
 void print( const Parameter &p )
 {

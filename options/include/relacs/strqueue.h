@@ -23,7 +23,7 @@
 #define _STRQUEUE_H_
 
 #include <deque>
-#include <relacs/str.h>
+#include "str.h"
 using namespace std;
 
 /*!

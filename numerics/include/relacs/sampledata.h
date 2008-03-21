@@ -26,12 +26,12 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
-#include <relacs/array.h>
-#include <relacs/linearrange.h>
-#include <relacs/containerfuncs.h>
-#include <relacs/spectrum.h>
-#include <relacs/eventdata.h>
-#include <relacs/detector.h>
+#include "array.h"
+#include "linearrange.h"
+#include "containerfuncs.h"
+#include "spectrum.h"
+#include "eventdata.h"
+#include "detector.h"
 
 using namespace std;
 

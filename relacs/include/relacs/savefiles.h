@@ -34,8 +34,8 @@
 #include <relacs/inlist.h>
 #include <relacs/outdata.h>
 #include <relacs/eventdata.h>
-#include <relacs/repro.h>
-#include <relacs/spiketrace.h>
+#include "repro.h"
+#include "spiketrace.h"
 
 class RELACSWidget;
 

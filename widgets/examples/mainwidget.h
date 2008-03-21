@@ -23,7 +23,7 @@
 #define _MAINWIDGET_H_
 
 #include <qvbox.h>
-#include "options.h"
+#include <relacs/options.h>
 
 class MainWidget : public QVBox
 {

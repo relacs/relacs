@@ -23,7 +23,7 @@
 #define _REPROEXAMPLE_H_
 
 
-#include "repro.h"
+#include <relacs/repro.h>
 
 /*!
 \class ReProExample

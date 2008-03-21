@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "sampledarray.h"
-#include "spectrum.h"
+#include <relacs/sampledarray.h>
+#include <relacs/spectrum.h>
 #include <cmath>
 #include <cstdio>
 

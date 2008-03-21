@@ -21,8 +21,8 @@
 
 #include <iostream>
 #include <fstream>
-#include "eventlist.h"
-#include "sampledata.h"
+#include <relacs/eventlist.h>
+#include <relacs/sampledata.h>
 
 
 int main( void )

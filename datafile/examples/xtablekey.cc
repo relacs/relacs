@@ -23,7 +23,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include "tablekey.h"
+#include <relacs/tablekey.h>
 using namespace std;
 
 

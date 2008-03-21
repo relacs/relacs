@@ -22,8 +22,8 @@
 #include <iostream>
 #include <iomanip>
 #include <vector>
-#include "array.h"
-#include "containerfuncs.h"
+#include <relacs/array.h>
+#include <relacs/containerfuncs.h>
 
 using namespace std;
 using namespace numerics;  // doesn't matter for scalar function calls

@@ -25,11 +25,11 @@
 #include <fstream>
 #include <string>
 #include <getopt.h>
-#include "str.h"
-#include "strqueue.h"
-#include "options.h"
-#include "datafile.h"
-#include "translate.h"
+#include <relacs/str.h>
+#include <relacs/strqueue.h>
+#include <relacs/options.h>
+#include <relacs/datafile.h>
+#include <relacs/translate.h>
 using namespace std;
 
 int stopempty = 2;

@@ -32,9 +32,9 @@
 #include <qcombobox.h>
 #include <qcheckbox.h>
 #include <qpushbutton.h>
-#include <relacs/doublespinbox.h>
+#include "doublespinbox.h"
 #include <relacs/options.h>
-#include <relacs/optwidget.h>
+#include "optwidget.h"
 using namespace std;
 
 

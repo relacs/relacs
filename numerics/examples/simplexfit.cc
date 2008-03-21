@@ -21,10 +21,10 @@
 
 #include <iostream>
 #include <fstream>
-#include "array.h"
-#include "basisfunction.h"
-#include "fitalgorithm.h"
-#include "random.h"
+#include <relacs/array.h>
+#include <relacs/basisfunction.h>
+#include <relacs/fitalgorithm.h>
+#include <relacs/random.h>
 
 using namespace numerics;
 

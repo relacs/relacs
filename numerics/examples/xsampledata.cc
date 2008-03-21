@@ -22,7 +22,7 @@
 #include <iostream>
 #include <iomanip>
 #include <vector>
-#include "sampledata.h"
+#include <relacs/sampledata.h>
 
 using namespace std;
 using namespace numerics;

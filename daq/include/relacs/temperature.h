@@ -22,7 +22,7 @@
 #ifndef _TEMPERATURE_H_
 #define _TEMPERATURE_H_
 
-#include <relacs/device.h>
+#include "device.h"
 using namespace std;
 
 

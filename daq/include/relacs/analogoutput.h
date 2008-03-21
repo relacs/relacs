@@ -23,9 +23,9 @@
 #define _ANALOGOUTPUT_H_
 
 #include <vector>
-#include <relacs/device.h>
-#include <relacs/outlist.h>
-#include <relacs/tracespec.h>
+#include "device.h"
+#include "outlist.h"
+#include "tracespec.h"
 
 using namespace std;
 

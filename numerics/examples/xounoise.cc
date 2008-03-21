@@ -21,9 +21,9 @@
 
 #include <cstdio>
 #include <cmath>
-#include "random.h"
-#include "spectrum.h"
-#include "sampledata.h"
+#include <relacs/random.h>
+#include <relacs/spectrum.h>
+#include <relacs/sampledata.h>
 
 using namespace numerics;
 

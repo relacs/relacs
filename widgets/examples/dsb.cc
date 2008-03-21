@@ -20,7 +20,7 @@
 */
 
 #include <qapplication.h>
-#include "doublespinbox.h"
+#include <relacs/doublespinbox.h>
 
 
 int main( int argc, char **argv )

@@ -22,7 +22,7 @@
 #include <cstdio>
 #include <cmath>
 #include <vector>
-#include "array.h"
+#include <relacs/array.h>
 
 int main( int argc, char **argv )
 {

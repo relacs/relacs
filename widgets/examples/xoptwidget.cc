@@ -23,7 +23,7 @@
 #include <qapplication.h>
 #include <qpushbutton.h>
 #include <qlabel.h>
-#include "optdialog.h"
+#include <relacs/optdialog.h>
 #include "mainwidget.h"
 
 

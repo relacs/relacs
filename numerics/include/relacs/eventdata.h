@@ -26,9 +26,9 @@
 #include <iterator>
 #include <cassert>
 #include <iostream>
-#include <relacs/array.h>
-#include <relacs/random.h>
-#include <relacs/linearrange.h>
+#include "array.h"
+#include "random.h"
+#include "linearrange.h"
 
 using namespace std;
 

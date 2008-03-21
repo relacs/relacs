@@ -25,8 +25,8 @@
 #include <cassert>
 #include <vector>
 #include <iostream>
-#include <relacs/random.h>
-#include <relacs/eventdata.h>
+#include "random.h"
+#include "eventdata.h"
 
 using namespace std;
 

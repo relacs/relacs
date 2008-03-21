@@ -22,7 +22,7 @@
 #include <cmath>
 #include <iostream>
 #include <vector>
-#include "odealgorithm.h"
+#include <relacs/odealgorithm.h>
 using namespace std;
 
 typedef vector< double > dvector;

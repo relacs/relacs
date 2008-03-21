@@ -28,8 +28,8 @@ gcc -Wall -o checkao checkao.cc -I hardware/ -I datahandling/ -I relacsmodules/ 
 #include <iostream>
 #include <iomanip>
 
-#include "ReadWrite.hh"
-#include "IOData.hh"
+#include <relacs/ReadWrite.hh>
+#include <relacs/IOData.hh>
 
 int aochannel = 0;
 double aocarrier = 5000.0;

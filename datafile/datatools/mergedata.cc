@@ -27,9 +27,9 @@
 #include <vector>
 #include <deque>
 #include <getopt.h>
-#include "str.h"
-#include "strqueue.h"
-#include "datafile.h"
+#include <relacs/str.h>
+#include <relacs/strqueue.h>
+#include <relacs/datafile.h>
 using namespace std;
 
 int stopempty = 2;

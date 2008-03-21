@@ -25,8 +25,8 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>   
-#include <relacs/nidaq.h>
-#include <relacs/nipfi.h>
+#include "nidaq.h"
+#include "nipfi.h"
 using namespace std;
 
 

@@ -22,8 +22,8 @@
 #ifndef _DETECTOR_H_
 #define _DETECTOR_H_
 
-#include <relacs/eventdata.h>
-#include <relacs/eventlist.h>
+#include "eventdata.h"
+#include "eventlist.h"
 
 /*!
 \class Detector

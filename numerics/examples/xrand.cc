@@ -21,7 +21,7 @@
 
 #include <iostream>
 #include <iomanip>
-#include "random.h"
+#include <relacs/random.h>
 
 int main()
 {

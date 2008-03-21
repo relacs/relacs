@@ -21,8 +21,8 @@
 
 #include <qgroupbox.h>
 #include <qapplication.h>
-#include "map.h"
-#include "plot.h"
+#include <relacs/map.h>
+#include <relacs/plot.h>
 #include <cstdio>
 
 

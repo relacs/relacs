@@ -28,10 +28,10 @@
 #include <iomanip>
 #include <fstream>
 #include <sstream>
-#include <relacs/containerops.h>
-#include <relacs/array.h>
-#include <relacs/sampledata.h>
-#include <relacs/stats.h>
+#include "containerops.h"
+#include "array.h"
+#include "sampledata.h"
+#include "stats.h"
 using namespace std;
 
 

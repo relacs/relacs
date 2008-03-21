@@ -24,7 +24,7 @@ generates random paired samples for testing paired t-test and Wilcoxon test.
 */
 
 #include <iostream>
-#include "random.h"
+#include <relacs/random.h>
 
 using namespace std;
 using namespace numerics;

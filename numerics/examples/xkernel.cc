@@ -20,7 +20,7 @@
 */
 
 #include <iostream>
-#include "kernel.h"
+#include <relacs/kernel.h>
 
 double scale = 1.0;
 
