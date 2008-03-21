@@ -25,7 +25,7 @@ librelacscommonspikedetector_la_CPPFLAGS = \
     -I../include \
     @QT3_CPPFLAGS@
 
-librelacscommonspikedetector_la-%-moc.cpp : %.h
+librelacscommonspikedetector_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacscommonspikedetector_la-%-moc.lo : librelacscommonspikedetector_la-%-moc.cpp

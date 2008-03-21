@@ -25,7 +25,7 @@ librelacscommonmotorcontrol_la_CPPFLAGS = \
     -I../include \
     @QT3_CPPFLAGS@
 
-librelacscommonmotorcontrol_la-%-moc.cpp : %.h
+librelacscommonmotorcontrol_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacscommonmotorcontrol_la-%-moc.lo : librelacscommonmotorcontrol_la-%-moc.cpp
@@ -53,7 +53,7 @@ librelacscommonspectrumanalyzer_la_CPPFLAGS = \
     -I../include \
     @QT3_CPPFLAGS@
 
-librelacscommonspectrumanalyzer_la-%-moc.cpp : %.h
+librelacscommonspectrumanalyzer_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacscommonspectrumanalyzer_la-%-moc.lo : librelacscommonspectrumanalyzer_la-%-moc.cpp

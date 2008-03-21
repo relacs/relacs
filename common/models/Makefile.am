@@ -25,7 +25,7 @@ librelacscommonneuronmodels_la_CPPFLAGS = \
     -I../include \
     @QT3_CPPFLAGS@
 
-librelacscommonneuronmodels_la-%-moc.cpp : %.h
+librelacscommonneuronmodels_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacscommonneuronmodels_la-%-moc.lo : librelacscommonneuronmodels_la-%-moc.cpp
@@ -52,7 +52,7 @@ librelacscommonsimplemodel_la_CPPFLAGS = \
     -I../include \
     @QT3_CPPFLAGS@
 
-librelacscommonsimplemodel_la-%-moc.cpp : %.h
+librelacscommonsimplemodel_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacscommonsimplemodel_la-%-moc.lo : librelacscommonsimplemodel_la-%-moc.cpp

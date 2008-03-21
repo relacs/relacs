@@ -20,8 +20,6 @@ help: doc
         $(TOPDIR)/utils/createhelp help
 
 
-- Move includes to include/relacs folders (IMPORTANT!)
-
 - resolve moc rules in plugins (e.g. common/) and once as an example in a library (e.g. widgets/)
 
 - an example standalone plugin (patchclamp) with tests for the libraries

@@ -43,7 +43,7 @@ librelacscommonpause_la_CPPFLAGS = \
     -I../include \
     @QT3_CPPFLAGS@
 
-librelacscommonpause_la-%-moc.cpp : %.h
+librelacscommonpause_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacscommonpause_la-%-moc.lo : librelacscommonpause_la-%-moc.cpp
@@ -71,7 +71,7 @@ librelacscommonrestartdelay_la_CPPFLAGS = \
     -I../include \
     @QT3_CPPFLAGS@
 
-librelacscommonrestartdelay_la-%-moc.cpp : %.h
+librelacscommonrestartdelay_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacscommonrestartdelay_la-%-moc.lo : librelacscommonrestartdelay_la-%-moc.cpp
@@ -99,7 +99,7 @@ librelacscommonstimulusdelay_la_CPPFLAGS = \
     -I../include \
     @QT3_CPPFLAGS@
 
-librelacscommonstimulusdelay_la-%-moc.cpp : %.h
+librelacscommonstimulusdelay_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacscommonstimulusdelay_la-%-moc.lo : librelacscommonstimulusdelay_la-%-moc.cpp
