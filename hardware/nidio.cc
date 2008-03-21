@@ -24,8 +24,8 @@
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>   
-#include "nidaq.h"
-#include "nidio.h"
+#include <relacs/nidaq.h>
+#include <relacs/nidio.h>
 using namespace std;
 
 

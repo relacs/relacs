@@ -20,7 +20,7 @@ fix_includes_in_source_file() {
     # BEFORE: #include "header.h"
     # AFTER:  #include <relacs/header.h>
     TEMPFILE=`mktemp`
-    KEEP_LOCAL=$(find $(dirname "$1") -name '*.h' -printf '%f ' | sed 's/ /\\|/g')
+    KEEP_LOCAL=$(find $(dirname "$1") -maxdepth 1 -name '*.h' -printf '%f ' | sed 's/ /\\|/g')
     sed -e 's/^\(# *include \+\)"\(.\+\)" *$/\1<relacs\/\2>/' -e 's/^\(# *include \+\)<relacs\/\('"${KEEP_LOCAL}"'\)> *$/\1"\2"/' "$1" > "${TEMPFILE}"
     mv "${TEMPFILE}" "$1"
 }
@@ -67,6 +67,7 @@ move_header() {
 
 # Fix all includes in source files
 while read file ; do
+    echo "Patching ${file}"
     fix_includes_in_source_file "${file}"
 done < <(find . -type f -name '*.h' -o -name '*.cc')
 

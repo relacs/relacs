@@ -26,7 +26,7 @@
 #include <vector>
 #include <qtabwidget.h>
 #include <qpopupmenu.h> 
-#include <relacs/configclass.h>
+#include <relacs/config.h>
 #include <relacs/inlist.h>
 #include <relacs/eventlist.h>
 #include "plottrace.h"
@@ -46,7 +46,7 @@ class RELACSWidget;
 */
 
 
-class FilterDetectors : public QTabWidget, public ConfigClass
+class FilterDetectors : public QTabWidget, public Config
 {
   Q_OBJECT
 

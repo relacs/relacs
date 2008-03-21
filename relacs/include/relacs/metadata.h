@@ -27,7 +27,7 @@
 #include <qobject.h>
 #include <qpopupmenu.h>
 #include <qmutex.h>
-#include <relacs/configclass.h>
+#include <relacs/config.h>
 
 using namespace std;
 
@@ -64,7 +64,7 @@ With the infoDialogFlag() and the presetDialogFlag() Options
 can be selected that are displayed in the dialog() or presetDialog().
 */
 
-class MetaData : public QObject, public ConfigClass
+class MetaData : public QObject, public Config
 {
   Q_OBJECT
 
@@ -169,7 +169,7 @@ the setupFlag() set.
 They are saved from their copy in MetaData.
 */
 
-class SetupData : public ConfigClass
+class SetupData : public Config
 {
 
 public:

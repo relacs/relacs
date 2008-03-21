@@ -1,6 +1,6 @@
 /*
   configdialog.h
-  ConfigClass widget with dialogs.
+  Config widget with dialogs.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2007 Jan Benda <j.benda@biologie.hu-berlin.de>
@@ -27,18 +27,18 @@
 #include <qwidget.h>
 #include <qmutex.h>
 #include <qlayout.h>
-#include "configclass.h"
+#include "config.h"
 
 using namespace std;
 
 
 /*! 
 \class ConfigDialog
-\brief ConfigClass widget with dialogs.
+\brief Config widget with dialogs.
 \author Jan Benda
 \version 1.0
 
-ConfigDialog adds a dialog for editing the configuration Options to ConfigClass.
+ConfigDialog adds a dialog for editing the configuration Options to Config.
 You can select a subset of the Options for the dialog
 by defining a dialogSelectMask() with setDialogSelectMask() 
 and addDialogSelectMask().
@@ -63,7 +63,7 @@ setName(), setTitle(), setAuthor(), setVersion(), and setDate().
 */
 
 
-class ConfigDialog : public QWidget, public ConfigClass
+class ConfigDialog : public QWidget, public Config
 {
   Q_OBJECT
 

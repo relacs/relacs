@@ -37,7 +37,7 @@ ConfigDialog::ConfigDialog( const string &configident, int configgroup,
 			    const string &title, const string &author, 
 			    const string &version, const string &date )
   : QWidget(),
-    ConfigClass( configident, configgroup ),
+    Config( configident, configgroup ),
     HelpPathes( 0 ),
     CDMutex( false )
 {

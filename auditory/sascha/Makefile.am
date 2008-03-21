@@ -21,7 +21,7 @@ librelacsauditoryisoresponse_la_CPPFLAGS = \
     -I../../config/include \
     -I../../daq/include \
     -I../../datafile/include \
-    -I../../hardware \
+    -I../../hardware/include \
     -I../../mplot/include \
     -I../../numerics/include \
     -I../../options/include \
@@ -55,7 +55,7 @@ librelacsauditoryoneclick_la_CPPFLAGS = \
     -I../../config/include \
     -I../../daq/include \
     -I../../datafile/include \
-    -I../../hardware \
+    -I../../hardware/include \
     -I../../mplot/include \
     -I../../numerics/include \
     -I../../options/include \

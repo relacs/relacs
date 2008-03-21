@@ -20,9 +20,9 @@
 */
 
 #include <relacs/relacsplugin.h>
-#include "cs3310pp.h"
-#include "kleindiek.h"
-#include "tempdtm5080.h"
+#include <relacs/cs3310pp.h>
+#include <relacs/kleindiek.h>
+#include <relacs/tempdtm5080.h>
 
 addAttenuator( CS3310PP );
 addDevice( Kleindiek );

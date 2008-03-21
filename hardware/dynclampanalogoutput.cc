@@ -27,7 +27,7 @@
 #include <ctime>
 
 //#include "comedianaloginput.h"
-#include "dynclampanalogoutput.h"
+#include <relacs/dynclampanalogoutput.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>

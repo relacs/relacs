@@ -54,7 +54,7 @@ const string Macro::OverwriteIdent = "overwrite";
 
 Macros::Macros( RELACSWidget *rw, QWidget *parent, const char *name )
   : QWidget( parent, name ),
-    ConfigClass( "Macros", RELACSPlugin::Core ),
+    Config( "Macros", RELACSPlugin::Core ),
     RW( rw ), RP( 0 ), MCs(),
     CurrentMacro( -1 ), CurrentCommand( 0 ),
     Stack(), ResumePos(), ResumeMacroOnly( false ),
@@ -1555,7 +1555,7 @@ void Macros::saveConfig( ofstream &str )
     for ( int k=0; k<Options::size( "file" ); k++ )
       SwitchMenu->insertItem( text( "file", k ).c_str(), k );
   }
-  ConfigClass::saveConfig( str );
+  Config::saveConfig( str );
 }
 
 

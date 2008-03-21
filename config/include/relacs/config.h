@@ -1,5 +1,5 @@
 /*
-  configclass.h
+  config.h
   Base class for each class that has some parameters to be configured.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _CONFIGCLASS_H_
-#define _CONFIGCLASS_H_
+#ifndef _CONFIG_H_
+#define _CONFIG_H_
 
 #include <string>
 #include <fstream>
@@ -30,17 +30,17 @@
 using namespace std;
 
 /*!
-\class ConfigClass
-\brief Base class for each class that has some parameters (Options) to be configured.
+\class Config
+\brief Base class for each class that has some parameters to be configured.
 \author Jan Benda
 \version 1.0
 */
 
 class Configure;
-class ConfigClass;
-typedef vector<ConfigClass*> ConfigList;
+class Config;
+typedef vector<Config*> ConfigList;
 
-class ConfigClass : public Options
+class Config : public Options
 {
 
 public:
@@ -52,12 +52,12 @@ public:
     Help=8
   };
 
-  ConfigClass( const string &ident, int group=0, int mode=0xffff,
-	       int selectmask=0 );
+  Config( const string &ident, int group=0, int mode=0xffff,
+	  int selectmask=0 );
     /*! Copy constructor. */
-  ConfigClass( const ConfigClass &C );
-    /*! Deconstructs a ConfigClass. */
-  virtual ~ConfigClass( void );
+  Config( const Config &C );
+    /*! Deconstructs a Config. */
+  virtual ~Config( void );
 
   const string &configIdent( void ) const;
   void setConfigIdent( const string &ident );

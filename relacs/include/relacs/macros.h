@@ -33,7 +33,7 @@
 #include <qpixmap.h>
 #include <qaccel.h>
 #include <relacs/str.h>
-#include <relacs/configclass.h>
+#include <relacs/config.h>
 using namespace std;
 
 class RELACSWidget;
@@ -210,7 +210,7 @@ private:
 This class provides the macro buttons and the macros-menu.
 */
 
-class Macros : public QWidget, public ConfigClass
+class Macros : public QWidget, public Config
 {
   Q_OBJECT
 

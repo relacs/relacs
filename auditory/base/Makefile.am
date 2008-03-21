@@ -91,7 +91,7 @@ librelacsauditorysession_la_CPPFLAGS = \
     -I../../common/base \
     -I../../config/include \
     -I../../daq/include \
-    -I../../hardware \
+    -I../../hardware/include \
     -I../../mplot/include \
     -I../../numerics/include \
     -I../../options/include \
@@ -142,7 +142,7 @@ librelacsauditoryficurve_la_CPPFLAGS = \
     -I../../config/include \
     -I../../daq/include \
     -I../../datafile/include \
-    -I../../hardware \
+    -I../../hardware/include \
     -I../../mplot/include \
     -I../../numerics/include \
     -I../../options/include \
@@ -176,7 +176,7 @@ librelacsauditoryfifield_la_CPPFLAGS = \
     -I../../config/include \
     -I../../daq/include \
     -I../../datafile/include \
-    -I../../hardware \
+    -I../../hardware/include \
     -I../../mplot/include \
     -I../../numerics/include \
     -I../../options/include \
@@ -210,7 +210,7 @@ librelacsauditorysinglestimulus_la_CPPFLAGS = \
     -I../../config/include \
     -I../../daq/include \
     -I../../datafile/include \
-    -I../../hardware \
+    -I../../hardware/include \
     -I../../mplot/include \
     -I../../numerics/include \
     -I../../options/include \
@@ -244,7 +244,7 @@ librelacsauditoryspikeprecision_la_CPPFLAGS = \
     -I../../config/include \
     -I../../daq/include \
     -I../../datafile/include \
-    -I../../hardware \
+    -I../../hardware/include \
     -I../../mplot/include \
     -I../../numerics/include \
     -I../../options/include \
@@ -278,7 +278,7 @@ librelacsauditorysyslatency_la_CPPFLAGS = \
     -I../../config/include \
     -I../../daq/include \
     -I../../datafile/include \
-    -I../../hardware \
+    -I../../hardware/include \
     -I../../mplot/include \
     -I../../numerics/include \
     -I../../options/include \

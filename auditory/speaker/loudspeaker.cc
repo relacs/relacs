@@ -34,7 +34,7 @@ using namespace std;
 
 LoudSpeaker::LoudSpeaker( void )
   : Attenuate( "LoudSpeaker" ),
-    ConfigClass( "LoudSpeaker", RELACSPlugin::Plugins, ConfigClass::Save )
+    Config( "LoudSpeaker", RELACSPlugin::Plugins, Config::Save )
 {
   // parameter:
   DefaultGain = -1.0;

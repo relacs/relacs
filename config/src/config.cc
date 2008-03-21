@@ -1,5 +1,5 @@
 /*
-  configclass.cc
+  config.cc
   Base class for each class that has some parameters to be configured.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -20,14 +20,14 @@
 */
 
 #include <relacs/configure.h>
-#include <relacs/configclass.h>
+#include <relacs/config.h>
 
 
-ConfigList *ConfigClass::Configs = 0;
-Configure *ConfigClass::CFG = 0;
+ConfigList *Config::Configs = 0;
+Configure *Config::CFG = 0;
 
 
-ConfigClass::ConfigClass( const string &ident, int group, int mode, int selectmask )
+Config::Config( const string &ident, int group, int mode, int selectmask )
   : Options(),
     ConfigIdent( ident ),
     ConfigGroup( group ),
@@ -38,18 +38,18 @@ ConfigClass::ConfigClass( const string &ident, int group, int mode, int selectma
 }
 
 
-ConfigClass::ConfigClass( const ConfigClass &C )
+Config::Config( const Config &C )
   : Options( C ),
     ConfigIdent( C.ConfigIdent ),
     ConfigGroup( C.ConfigGroup ),
     ConfigMode( C.ConfigMode ),
     ConfigSelect( C.ConfigSelect )
 {
-  cerr << "! warning: copied class ConfigClass. What shall we do?" << endl;
+  cerr << "! warning: copied class Config. What shall we do?" << endl;
 }
 
 
-ConfigClass::~ConfigClass( void )
+Config::~Config( void )
 {
   if ( Configs != 0 ) {
     for ( ConfigList::iterator cp = Configs->begin();
@@ -64,55 +64,55 @@ ConfigClass::~ConfigClass( void )
 }
 
 
-const string &ConfigClass::configIdent( void ) const
+const string &Config::configIdent( void ) const
 {
   return ConfigIdent;
 }
 
 
-void ConfigClass::setConfigIdent( const string &ident )
+void Config::setConfigIdent( const string &ident )
 {
   ConfigIdent = ident;
 }
 
 
-int ConfigClass::configGroup( void ) const
+int Config::configGroup( void ) const
 {
   return ConfigGroup;
 }
 
 
-void ConfigClass::setConfigGroup( int group )
+void Config::setConfigGroup( int group )
 {
   ConfigGroup = group;
 }
 
 
-int ConfigClass::configMode( void ) const
+int Config::configMode( void ) const
 {
   return ConfigMode;
 }
 
 
-void ConfigClass::setConfigMode( int mode )
+void Config::setConfigMode( int mode )
 {
   ConfigMode = mode;
 }
 
 
-int ConfigClass::configSelectMask( void ) const
+int Config::configSelectMask( void ) const
 {
   return ConfigSelect;
 }
 
 
-void ConfigClass::setConfigSelectMask( int flag )
+void Config::setConfigSelectMask( int flag )
 {
   ConfigSelect = flag;
 }
 
 
-void ConfigClass::addConfig( void )
+void Config::addConfig( void )
 {
   if ( Configs != 0 ) {
     Configs->push_back( this );
@@ -120,7 +120,7 @@ void ConfigClass::addConfig( void )
 }
 
 
-void ConfigClass::readConfig( void )
+void Config::readConfig( void )
 {
   if ( CFG != 0 ) {
     CFG->read( configGroup(), *this );
@@ -128,36 +128,36 @@ void ConfigClass::readConfig( void )
 }
 
 
-void ConfigClass::setConfigList( ConfigList *cl )
+void Config::setConfigList( ConfigList *cl )
 {
   Configs = cl;
 }
 
 
-void ConfigClass::setConfigure( Configure *cfg )
+void Config::setConfigure( Configure *cfg )
 {
   CFG = cfg;
 }
 
 
-void ConfigClass::readConfig( StrQueue &sq )
+void Config::readConfig( StrQueue &sq )
 {
   Options::read( sq, 0, ":" );
 }
 
 
-void ConfigClass::config( void )
+void Config::config( void )
 {
 }
 
 
-int ConfigClass::configSize( void ) const
+int Config::configSize( void ) const
 {
   return Options::size( ConfigSelect );
 }
 
 
-void ConfigClass::saveConfig( ofstream &str )
+void Config::saveConfig( ofstream &str )
 {
   Options::save( str, "  ", -1, ConfigSelect );
 }
