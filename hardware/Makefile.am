@@ -25,9 +25,9 @@ librelacshardware_la_LIBADD = \
     ../relacs/src/librelacs.la
 
 librelacshardware_la_SOURCES = \
-    ../include/relacs/cs3310pp.h \
-    ../include/relacs/kleindiek.h \
-    ../include/relacs/tempdtm5080.h \
+    include/relacs/cs3310pp.h \
+    include/relacs/kleindiek.h \
+    include/relacs/tempdtm5080.h \
     \
     cs3310pp.cc \
     kleindiek.cc \
@@ -51,15 +51,15 @@ librelacsnieserieshardware_la_LIBADD = \
     ../relacs/src/librelacs.la
 
 librelacsnieserieshardware_la_SOURCES = \
-    ../include/relacs/amplmode.h \
-    ../include/relacs/cs3310nidio.h \
-    ../include/relacs/cs3310serialnidio.h \
-    ../include/relacs/niai.h \
-    ../include/relacs/niao.h \
-    ../include/relacs/nidio.h \
-    ../include/relacs/nipfi.h \
+    include/relacs/amplmode.h \
+    include/relacs/cs3310nidio.h \
+    include/relacs/cs3310serialnidio.h \
+    include/relacs/niai.h \
+    include/relacs/niao.h \
+    include/relacs/nidio.h \
+    include/relacs/nipfi.h \
     \
-    ../include/relacs/nidaq.h \
+    include/relacs/nidaq.h \
     \
     amplmode.cc \
     cs3310nidio.cc \
