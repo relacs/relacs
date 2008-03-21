@@ -28,3 +28,12 @@ relacs_main_LDADD = \
 relacs_main_SOURCES = \
     relacsmain.cc
 
+
+
+EXTRA_DIST = \
+    relacs_cfg_foot \
+    relacs_cfg_head \
+    \
+    relacs_runner_foot \
+    relacs_runner_head
+
