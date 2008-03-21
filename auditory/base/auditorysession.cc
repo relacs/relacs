@@ -21,7 +21,7 @@
 
 #include <qvbox.h>
 #include <qlabel.h>
-#include "auditorysession.h"
+#include <relacs/auditorysession.h>
 
 
 AuditorySession::AuditorySession( void )

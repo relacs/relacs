@@ -24,7 +24,7 @@
 #include <relacs/str.h>
 #include <relacs/options.h>
 #include <relacs/tablekey.h>
-#include "calibspeakers.h"
+#include <relacs/calibspeakers.h>
 
 
 CalibSpeakers::CalibSpeakers( void )

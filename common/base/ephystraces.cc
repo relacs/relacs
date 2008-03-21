@@ -22,7 +22,7 @@
 #include <relacs/str.h>
 #include <relacs/inlist.h>
 #include <relacs/eventlist.h>
-#include "ephystraces.h"
+#include <relacs/ephystraces.h>
 
 
 int EPhysTraces::StimulusEvents = 0;

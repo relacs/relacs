@@ -22,7 +22,7 @@
 #include <cmath>
 #include <relacs/sampledata.h>
 #include <relacs/fitalgorithm.h>
-#include "restartdelay.h"
+#include <relacs/restartdelay.h>
 
 using namespace numerics;
 

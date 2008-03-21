@@ -22,6 +22,7 @@ librelacscommonhighpass_la_CPPFLAGS = \
     -I../../options/include \
     -I../../relacs/include \
     -I../../widgets/include \
+    -I../include \
     @QT3_CPPFLAGS@
 
 librelacscommonhighpass_la-%-moc.cpp : %.h
@@ -38,7 +39,7 @@ librelacscommonhighpass_la_LIBADD = \
 
 librelacscommonhighpass_la_SOURCES = \
     highpass.cc \
-    highpass.h
+    ../include/relacs/highpass.h
 
 
 
@@ -49,6 +50,7 @@ librelacscommonlowpass_la_CPPFLAGS = \
     -I../../options/include \
     -I../../relacs/include \
     -I../../widgets/include \
+    -I../include \
     @QT3_CPPFLAGS@
 
 librelacscommonlowpass_la-%-moc.cpp : %.h
@@ -65,7 +67,7 @@ librelacscommonlowpass_la_LIBADD = \
 
 librelacscommonlowpass_la_SOURCES = \
     lowpass.cc \
-    lowpass.h
+    ../include/relacs/lowpass.h
 
 
 

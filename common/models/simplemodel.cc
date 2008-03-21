@@ -20,7 +20,7 @@
 */
 
 #include <relacs/random.h>
-#include "simplemodel.h"
+#include <relacs/simplemodel.h>
 
 using namespace numerics;
 

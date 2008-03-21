@@ -16,7 +16,6 @@ endif
 
 
 librelacsauditorycalibspeakers_la_CPPFLAGS = \
-    -I../base \
     -I../../config/include \
     -I../../daq/include \
     -I../../datafile/include \
@@ -24,9 +23,10 @@ librelacsauditorycalibspeakers_la_CPPFLAGS = \
     -I../../numerics/include \
     -I../../options/include \
     -I../../relacs/include \
+    -I../include \
     @QT3_CPPFLAGS@
 
-librelacsauditorycalibspeakers_la-%-moc.cpp : %.h
+librelacsauditorycalibspeakers_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacsauditorycalibspeakers_la-%-moc.lo : librelacsauditorycalibspeakers_la-%-moc.cpp
@@ -43,7 +43,7 @@ librelacsauditorycalibspeakers_la_LIBADD = \
 
 librelacsauditorycalibspeakers_la_SOURCES = \
     calibspeakers.cc \
-    calibspeakers.h
+    ../include/relacs/calibspeakers.h
 
 
 
@@ -54,9 +54,10 @@ librelacsauditoryloudspeaker_la_CPPFLAGS = \
     -I../../numerics/include \
     -I../../options/include \
     -I../../relacs/include \
+    -I../include \
     @QT3_CPPFLAGS@
 
-librelacsauditoryloudspeaker_la-%-moc.cpp : %.h
+librelacsauditoryloudspeaker_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacsauditoryloudspeaker_la-%-moc.lo : librelacsauditoryloudspeaker_la-%-moc.cpp
@@ -70,7 +71,7 @@ librelacsauditoryloudspeaker_la_LIBADD = \
 
 librelacsauditoryloudspeaker_la_SOURCES = \
     loudspeaker.cc \
-    loudspeaker.h
+    ../include/relacs/loudspeaker.h
 
 
 

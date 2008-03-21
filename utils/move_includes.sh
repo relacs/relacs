@@ -63,8 +63,6 @@ move_header() {
     svn mv "${header}" "${header_after}"
 }
 
-
-
 # Fix all includes in source files
 while read file ; do
     echo "Patching ${file}"

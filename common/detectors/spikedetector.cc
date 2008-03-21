@@ -28,7 +28,7 @@
 #include <qapplication.h>
 #include <relacs/str.h>
 #include <relacs/tablekey.h>
-#include "spikedetector.h"
+#include <relacs/spikedetector.h>
 
 
 SpikeDetector::SpikeDetector( const string &ident, int mode )

@@ -23,7 +23,7 @@
 #include <relacs/optwidget.h>
 #include <relacs/random.h>
 #include <relacs/odealgorithm.h>
-#include "neuronmodels.h"
+#include <relacs/neuronmodels.h>
 
 
 NeuronModels::NeuronModels( void )

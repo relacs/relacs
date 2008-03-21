@@ -30,16 +30,17 @@ endif
 
 
 librelacsauditoryneuron_la_CPPFLAGS = \
-    -I../../common/models \
+    -I../../common/include \
     -I../../config/include \
     -I../../daq/include \
     -I../../numerics/include \
     -I../../options/include \
     -I../../relacs/include \
     -I../../widgets/include \
+    -I../include \
     @QT3_CPPFLAGS@
 
-librelacsauditoryneuron_la-%-moc.cpp : %.h
+librelacsauditoryneuron_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacsauditoryneuron_la-%-moc.lo : librelacsauditoryneuron_la-%-moc.cpp
@@ -54,7 +55,7 @@ librelacsauditoryneuron_la_LIBADD = \
 
 librelacsauditoryneuron_la_SOURCES = \
     auditoryneuron.cc \
-    auditoryneuron.h
+    ../include/relacs/auditoryneuron.h
 
 
 
@@ -66,9 +67,10 @@ librelacsauditorysearch_la_CPPFLAGS = \
     -I../../options/include \
     -I../../relacs/include \
     -I../../widgets/include \
+    -I../include \
     @QT3_CPPFLAGS@
 
-librelacsauditorysearch_la-%-moc.cpp : %.h
+librelacsauditorysearch_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacsauditorysearch_la-%-moc.lo : librelacsauditorysearch_la-%-moc.cpp
@@ -83,12 +85,12 @@ librelacsauditorysearch_la_LIBADD = \
 
 librelacsauditorysearch_la_SOURCES = \
     auditorysearch.cc \
-    auditorysearch.h
+    ../include/relacs/auditorysearch.h
 
 
 
 librelacsauditorysession_la_CPPFLAGS = \
-    -I../../common/base \
+    -I../../common/include \
     -I../../config/include \
     -I../../daq/include \
     -I../../hardware/include \
@@ -97,9 +99,10 @@ librelacsauditorysession_la_CPPFLAGS = \
     -I../../options/include \
     -I../../relacs/include \
     -I../../widgets/include \
+    -I../include \
     @QT3_CPPFLAGS@
 
-librelacsauditorysession_la-%-moc.cpp : %.h
+librelacsauditorysession_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacsauditorysession_la-%-moc.lo : librelacsauditorysession_la-%-moc.cpp
@@ -116,7 +119,7 @@ librelacsauditorysession_la_LIBADD = \
 
 librelacsauditorysession_la_SOURCES = \
     auditorysession.cc \
-    auditorysession.h
+    ../include/relacs/auditorysession.h
 
 
 
@@ -126,6 +129,7 @@ librelacsauditorytraces_la_CPPFLAGS = \
     -I../../numerics/include \
     -I../../options/include \
     -I../../relacs/include \
+    -I../include \
     @QT3_CPPFLAGS@
 
 librelacsauditorytraces_la_LIBADD = \
@@ -133,12 +137,12 @@ librelacsauditorytraces_la_LIBADD = \
 
 librelacsauditorytraces_la_SOURCES = \
     auditorytraces.cc \
-    auditorytraces.h
+    ../include/relacs/auditorytraces.h
 
 
 
 librelacsauditoryficurve_la_CPPFLAGS = \
-    -I../../common/base \
+    -I../../common/include \
     -I../../config/include \
     -I../../daq/include \
     -I../../datafile/include \
@@ -148,9 +152,10 @@ librelacsauditoryficurve_la_CPPFLAGS = \
     -I../../options/include \
     -I../../relacs/include \
     -I../../widgets/include \
+    -I../include \
     @QT3_CPPFLAGS@
 
-librelacsauditoryficurve_la-%-moc.cpp : %.h
+librelacsauditoryficurve_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacsauditoryficurve_la-%-moc.lo : librelacsauditoryficurve_la-%-moc.cpp
@@ -167,12 +172,12 @@ librelacsauditoryficurve_la_LIBADD = \
 
 librelacsauditoryficurve_la_SOURCES = \
     ficurve.cc \
-    ficurve.h
+    ../include/relacs/ficurve.h
 
 
 
 librelacsauditoryfifield_la_CPPFLAGS = \
-    -I../../common/base \
+    -I../../common/include \
     -I../../config/include \
     -I../../daq/include \
     -I../../datafile/include \
@@ -182,9 +187,10 @@ librelacsauditoryfifield_la_CPPFLAGS = \
     -I../../options/include \
     -I../../relacs/include \
     -I../../widgets/include \
+    -I../include \
     @QT3_CPPFLAGS@
 
-librelacsauditoryfifield_la-%-moc.cpp : %.h
+librelacsauditoryfifield_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacsauditoryfifield_la-%-moc.lo : librelacsauditoryfifield_la-%-moc.cpp
@@ -201,12 +207,12 @@ librelacsauditoryfifield_la_LIBADD = \
 
 librelacsauditoryfifield_la_SOURCES = \
     fifield.cc \
-    fifield.h
+    ../include/relacs/fifield.h
 
 
 
 librelacsauditorysinglestimulus_la_CPPFLAGS = \
-    -I../../common/base \
+    -I../../common/include \
     -I../../config/include \
     -I../../daq/include \
     -I../../datafile/include \
@@ -216,9 +222,10 @@ librelacsauditorysinglestimulus_la_CPPFLAGS = \
     -I../../options/include \
     -I../../relacs/include \
     -I../../widgets/include \
+    -I../include \
     @QT3_CPPFLAGS@
 
-librelacsauditorysinglestimulus_la-%-moc.cpp : %.h
+librelacsauditorysinglestimulus_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacsauditorysinglestimulus_la-%-moc.lo : librelacsauditorysinglestimulus_la-%-moc.cpp
@@ -235,12 +242,12 @@ librelacsauditorysinglestimulus_la_LIBADD = \
 
 librelacsauditorysinglestimulus_la_SOURCES = \
     singlestimulus.cc \
-    singlestimulus.h
+    ../include/relacs/singlestimulus.h
 
 
 
 librelacsauditoryspikeprecision_la_CPPFLAGS = \
-    -I../../common/base \
+    -I../../common/include \
     -I../../config/include \
     -I../../daq/include \
     -I../../datafile/include \
@@ -250,9 +257,10 @@ librelacsauditoryspikeprecision_la_CPPFLAGS = \
     -I../../options/include \
     -I../../relacs/include \
     -I../../widgets/include \
+    -I../include \
     @QT3_CPPFLAGS@
 
-librelacsauditoryspikeprecision_la-%-moc.cpp : %.h
+librelacsauditoryspikeprecision_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacsauditoryspikeprecision_la-%-moc.lo : librelacsauditoryspikeprecision_la-%-moc.cpp
@@ -269,12 +277,12 @@ librelacsauditoryspikeprecision_la_LIBADD = \
 
 librelacsauditoryspikeprecision_la_SOURCES = \
     spikeprecision.cc \
-    spikeprecision.h
+    ../include/relacs/spikeprecision.h
 
 
 
 librelacsauditorysyslatency_la_CPPFLAGS = \
-    -I../../common/base \
+    -I../../common/include \
     -I../../config/include \
     -I../../daq/include \
     -I../../datafile/include \
@@ -284,9 +292,10 @@ librelacsauditorysyslatency_la_CPPFLAGS = \
     -I../../options/include \
     -I../../relacs/include \
     -I../../widgets/include \
+    -I../include \
     @QT3_CPPFLAGS@
 
-librelacsauditorysyslatency_la-%-moc.cpp : %.h
+librelacsauditorysyslatency_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacsauditorysyslatency_la-%-moc.lo : librelacsauditorysyslatency_la-%-moc.cpp
@@ -303,7 +312,7 @@ librelacsauditorysyslatency_la_LIBADD = \
 
 librelacsauditorysyslatency_la_SOURCES = \
     syslatency.cc \
-    syslatency.h
+    ../include/relacs/syslatency.h
 
 
 

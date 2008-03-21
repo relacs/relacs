@@ -23,7 +23,7 @@
 #define _CALIBSPEAKERS_H_
 
 #include <relacs/repro.h>
-#include <relacs/auditorytraces.h>
+#include "auditorytraces.h"
 #include <relacs/rangeloop.h>
 #include <relacs/multiplot.h>
 #include "loudspeaker.h"

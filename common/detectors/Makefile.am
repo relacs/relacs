@@ -22,6 +22,7 @@ librelacscommonspikedetector_la_CPPFLAGS = \
     -I../../options/include \
     -I../../relacs/include \
     -I../../widgets/include \
+    -I../include \
     @QT3_CPPFLAGS@
 
 librelacscommonspikedetector_la-%-moc.cpp : %.h
@@ -38,7 +39,7 @@ librelacscommonspikedetector_la_LIBADD = \
 
 librelacscommonspikedetector_la_SOURCES = \
     spikedetector.cc \
-    spikedetector.h
+    ../include/relacs/spikedetector.h
 
 
 

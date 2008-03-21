@@ -22,6 +22,7 @@ librelacscommonneuronmodels_la_CPPFLAGS = \
     -I../../options/include \
     -I../../relacs/include \
     -I../../widgets/include \
+    -I../include \
     @QT3_CPPFLAGS@
 
 librelacscommonneuronmodels_la-%-moc.cpp : %.h
@@ -38,7 +39,7 @@ librelacscommonneuronmodels_la_LIBADD = \
 
 librelacscommonneuronmodels_la_SOURCES = \
     neuronmodels.cc \
-    neuronmodels.h
+    ../include/relacs/neuronmodels.h
 
 
 
@@ -48,6 +49,7 @@ librelacscommonsimplemodel_la_CPPFLAGS = \
     -I../../numerics/include \
     -I../../options/include \
     -I../../relacs/include \
+    -I../include \
     @QT3_CPPFLAGS@
 
 librelacscommonsimplemodel_la-%-moc.cpp : %.h
@@ -64,7 +66,7 @@ librelacscommonsimplemodel_la_LIBADD = \
 
 librelacscommonsimplemodel_la_SOURCES = \
     simplemodel.cc \
-    simplemodel.h
+    ../include/relacs/simplemodel.h
 
 
 

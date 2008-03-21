@@ -26,8 +26,8 @@
 #include <relacs/stats.h>
 #include <relacs/str.h>
 #include <relacs/tablekey.h>
-#include "auditorysession.h"
-#include "ficurve.h"
+#include <relacs/auditorysession.h>
+#include <relacs/ficurve.h>
 
 
 FICurve::FICurve( void )

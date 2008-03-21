@@ -24,7 +24,7 @@
 #include <relacs/eventlist.h>
 #include <relacs/outdata.h>
 #include <relacs/relacsplugin.h>
-#include "auditorytraces.h"
+#include <relacs/auditorytraces.h>
 
 string AuditoryTraces::LoudspeakerName = "Speaker";
 string AuditoryTraces::SoundTraceName = "Sound";

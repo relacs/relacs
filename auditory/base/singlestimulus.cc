@@ -28,8 +28,8 @@
 #include <relacs/stats.h>
 #include <relacs/kernel.h>
 #include <relacs/random.h>
-#include "auditorysession.h"
-#include "singlestimulus.h"
+#include <relacs/auditorysession.h>
+#include <relacs/singlestimulus.h>
 
 
 SingleStimulus::SingleStimulus( void )

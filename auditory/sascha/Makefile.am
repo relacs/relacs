@@ -16,8 +16,7 @@ endif
 
 
 librelacsauditoryisoresponse_la_CPPFLAGS = \
-    -I../base \
-    -I../../common/base \
+    -I../../common/include \
     -I../../config/include \
     -I../../daq/include \
     -I../../datafile/include \
@@ -27,9 +26,10 @@ librelacsauditoryisoresponse_la_CPPFLAGS = \
     -I../../options/include \
     -I../../relacs/include \
     -I../../widgets/include \
+    -I../include \
     @QT3_CPPFLAGS@
 
-librelacsauditoryisoresponse_la-%-moc.cpp : %.h
+librelacsauditoryisoresponse_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacsauditoryisoresponse_la-%-moc.lo : librelacsauditoryisoresponse_la-%-moc.cpp
@@ -45,13 +45,12 @@ librelacsauditoryisoresponse_la_LIBADD = \
 
 librelacsauditoryisoresponse_la_SOURCES = \
     isoresponse.cc \
-    isoresponse.h
+    ../include/relacs/isoresponse.h
 
 
 
 librelacsauditoryoneclick_la_CPPFLAGS = \
-    -I../base \
-    -I../../common/base \
+    -I../../common/include \
     -I../../config/include \
     -I../../daq/include \
     -I../../datafile/include \
@@ -61,9 +60,10 @@ librelacsauditoryoneclick_la_CPPFLAGS = \
     -I../../options/include \
     -I../../relacs/include \
     -I../../widgets/include \
+    -I../include \
     @QT3_CPPFLAGS@
 
-librelacsauditoryoneclick_la-%-moc.cpp : %.h
+librelacsauditoryoneclick_la-%-moc.cpp : ../include/relacs/%.h
 	$(MOC_CREATE)
 
 librelacsauditoryoneclick_la-%-moc.lo : librelacsauditoryoneclick_la-%-moc.cpp
@@ -80,7 +80,7 @@ librelacsauditoryoneclick_la_LIBADD = \
 
 librelacsauditoryoneclick_la_SOURCES = \
     oneclick.cc \
-    oneclick.h
+    ../include/relacs/oneclick.h
 
 
 

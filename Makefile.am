@@ -38,7 +38,7 @@ doc: docall
 docall: doc/html/*
 
 doc/html/*:
-	-[ ! -f doc/html/index.html ] && doxygen doc/relacs.dox
+	[ ! -f doc/html/index.html ] || doxygen doc/relacs.dox
 
 endif
 

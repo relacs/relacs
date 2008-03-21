@@ -22,14 +22,15 @@ endif
 librelacscommonephystraces_la_CPPFLAGS = \
     -I../../daq/include \
     -I../../numerics/include \
-    -I../../options/include
+    -I../../options/include \
+    -I../include
 
 librelacscommonephystraces_la_LIBADD = \
     ../../relacs/src/librelacs.la
 
 librelacscommonephystraces_la_SOURCES = \
     ephystraces.cc \
-    ephystraces.h
+    ../include/relacs/ephystraces.h
 
 
 
@@ -39,6 +40,7 @@ librelacscommonpause_la_CPPFLAGS = \
     -I../../numerics/include \
     -I../../options/include \
     -I../../relacs/include \
+    -I../include \
     @QT3_CPPFLAGS@
 
 librelacscommonpause_la-%-moc.cpp : %.h
@@ -55,7 +57,7 @@ librelacscommonpause_la_LIBADD = \
 
 librelacscommonpause_la_SOURCES = \
     pause.cc \
-    pause.h
+    ../include/relacs/pause.h
 
 
 
@@ -66,6 +68,7 @@ librelacscommonrestartdelay_la_CPPFLAGS = \
     -I../../numerics/include \
     -I../../options/include \
     -I../../relacs/include \
+    -I../include \
     @QT3_CPPFLAGS@
 
 librelacscommonrestartdelay_la-%-moc.cpp : %.h
@@ -82,7 +85,7 @@ librelacscommonrestartdelay_la_LIBADD = \
 
 librelacscommonrestartdelay_la_SOURCES = \
     restartdelay.cc \
-    restartdelay.h
+    ../include/relacs/restartdelay.h
 
 
 
@@ -93,6 +96,7 @@ librelacscommonstimulusdelay_la_CPPFLAGS = \
     -I../../numerics/include \
     -I../../options/include \
     -I../../relacs/include \
+    -I../include \
     @QT3_CPPFLAGS@
 
 librelacscommonstimulusdelay_la-%-moc.cpp : %.h
@@ -109,7 +113,7 @@ librelacscommonstimulusdelay_la_LIBADD = \
 
 librelacscommonstimulusdelay_la_SOURCES = \
     stimulusdelay.cc \
-    stimulusdelay.h
+    ../include/relacs/stimulusdelay.h
 
 
 
