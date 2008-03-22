@@ -1,7 +1,7 @@
 // Copyright (C) 2008 Sebastian Pipping <webmaster@hartwork.org>
 // Licensed under Creative Commons Attribution-Share Alike 3.0"
 // http://creativecommons.org/licenses/by-sa/3.0/us/
-// Version 1.1, 2008-03-22
+// Version 1.2, 2008-03-22
 
 // Process file with neato of GraphViz, e.g. run
 // $ neato -T png autotools.neato > autotools.png
@@ -72,19 +72,19 @@ digraph autotools_file_summary {
     You -> THANKS [label="create", label="", color=lightgrey, fontcolor=lightgrey, len=3]
 
     // You call tools
-    You -> aclocal [label="call", label="", color=black, fontcolor=black]
-    You -> autoconf [label="call", label="", color=black, fontcolor=black]
-    You -> autoheader [label="call", label="", color=black, fontcolor=black]
+    You -> aclocal [label="call", label="", color=black, fontcolor=black, len=1.5]
+    You -> autoconf [label="call", label="", color=black, fontcolor=black, len=3]
+    You -> autoheader [label="call", label="", color=black, fontcolor=black, len=2.3]
     You -> automake [label="call", label="", color=black, fontcolor=black]
-    You -> libtoolize [label="call", label="", color=black, fontcolor=black]
+    You -> libtoolize [label="call", label="", color=black, fontcolor=black, len=1.5]
 
     // autoheader
     "configure.ac" -> autoheader [label="reads", label="", color=black, fontcolor=black, len=1.5]
-    autoheader -> "config.h.in" [label="creates", label="", color=black, fontcolor=black, len=1.5]
+    autoheader -> "config.h.in" [label="creates", label="", color=black, fontcolor=black, len=1]
 
     // aclocal
     "configure.ac" -> aclocal [label="reads", label="", color=black, fontcolor=black, len=1.5]
-    aclocal -> "aclocal.m4" [label="creates", label="", color=black, fontcolor=black]
+    aclocal -> "aclocal.m4" [label="creates", label="", color=black, fontcolor=black, len=1]
     
     // libtoolize
     libtoolize -> "config.guess" [label="creates", label="", color=lightgrey, fontcolor=lightgrey]
@@ -94,6 +94,7 @@ digraph autotools_file_summary {
 
     // autoconf
     "configure.ac" -> autoconf [label="reads", label="", color=black, fontcolor=black, len=1.5]
+    "aclocal.m4" -> autoconf [label="reads", label="", color=black, fontcolor=black, len=1]
     autoconf -> configure [label="creates", label="", color=black, fontcolor=black]
 
     // automake
