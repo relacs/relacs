@@ -1,17 +1,22 @@
+// Copyright (C) 2008 Sebastian Pipping <webmaster@hartwork.org>
+// Licensed under Creative Commons Attribution-Share Alike 3.0"
+// http://creativecommons.org/licenses/by-sa/3.0/us/
+// Version 1.1, 2008-03-22
+
 // Process file with neato of GraphViz, e.g. run
 // $ neato -T png autotools.neato > autotools.png
 
 digraph autotools_file_summary {
-    label="GNU Autotools from the developer's point of view"
+    label="\nGNU Autotools from a developer's point of view"
     outputorder=edgesfirst
     overlap=compress
     edge [len=2]
 
     subgraph foo {
         node [shape=circle, style=filled, color=black, fontcolor=white]
-        YOU
+        You
     }
-    root=YOU
+    root=You
 
     subgraph tools {
         node [style=filled, color=black, fillcolor=lightgrey]
@@ -20,11 +25,11 @@ digraph autotools_file_summary {
         autoheader
         autoconf
         libtoolize
-        configure
     }
 
     subgraph exciting {
         node [style=filled, color=black, fillcolor=white, fontcolor=black]
+        configure
         "aclocal.m4"
         Makefile
         "Makefile.am"
@@ -54,32 +59,31 @@ digraph autotools_file_summary {
     }
     
     // You create exciting files
-    YOU -> "configure.ac" [label="create", label="", color=black, fontcolor=black]
-    YOU -> "config.h.in" [label="create", label="", color=black, fontcolor=black]
-    YOU -> "Makefile.am" [label="create", label="", color=black, fontcolor=black]
+    You -> "configure.ac" [label="create", label="", color=black, fontcolor=black, len=2.3]
+    You -> "Makefile.am" [label="create", label="", color=black, fontcolor=black]
 
     // You create boring files
-    YOU -> AUTHORS [label="create", label="", color=lightgrey, fontcolor=lightgrey, len=3]
-    YOU -> ChangeLog [label="create", label="", color=lightgrey, fontcolor=lightgrey, len=2.7]
-    YOU -> COPYING [label="create", label="", color=lightgrey, fontcolor=lightgrey, len=3]
-    YOU -> INSTALL [label="create", label="", color=lightgrey, fontcolor=lightgrey, len=3]
-    YOU -> NEWS [label="create", label="", color=lightgrey, fontcolor=lightgrey, len=3]
-    YOU -> README [label="create", label="", color=lightgrey, fontcolor=lightgrey, len=3]
-    YOU -> THANKS [label="create", label="", color=lightgrey, fontcolor=lightgrey, len=3]
+    You -> AUTHORS [label="create", label="", color=lightgrey, fontcolor=lightgrey, len=3]
+    You -> ChangeLog [label="create", label="", color=lightgrey, fontcolor=lightgrey, len=3]
+    You -> COPYING [label="create", label="", color=lightgrey, fontcolor=lightgrey, len=3]
+    You -> INSTALL [label="create", label="", color=lightgrey, fontcolor=lightgrey, len=3]
+    You -> NEWS [label="create", label="", color=lightgrey, fontcolor=lightgrey, len=3]
+    You -> README [label="create", label="", color=lightgrey, fontcolor=lightgrey, len=3]
+    You -> THANKS [label="create", label="", color=lightgrey, fontcolor=lightgrey, len=3]
 
     // You call tools
-    YOU -> aclocal [label="call", label="", color=black, fontcolor=black]
-    YOU -> autoconf [label="call", label="", color=black, fontcolor=black, len=1.5]
-    YOU -> autoheader [label="call", label="", color=black, fontcolor=black]
-    YOU -> automake [label="call", label="", color=black, fontcolor=black]
-    YOU -> libtoolize [label="call", label="", color=black, fontcolor=black]
+    You -> aclocal [label="call", label="", color=black, fontcolor=black]
+    You -> autoconf [label="call", label="", color=black, fontcolor=black]
+    You -> autoheader [label="call", label="", color=black, fontcolor=black]
+    You -> automake [label="call", label="", color=black, fontcolor=black]
+    You -> libtoolize [label="call", label="", color=black, fontcolor=black]
 
     // autoheader
-    "configure.ac" -> autoheader [label="reads", label="", color=black, fontcolor=black]
-    autoheader -> "config.h.in" [label="creates", label="", color=black, fontcolor=black]
+    "configure.ac" -> autoheader [label="reads", label="", color=black, fontcolor=black, len=1.5]
+    autoheader -> "config.h.in" [label="creates", label="", color=black, fontcolor=black, len=1.5]
 
     // aclocal
-    "configure.ac" -> aclocal [label="reads", label="", color=black, fontcolor=black]
+    "configure.ac" -> aclocal [label="reads", label="", color=black, fontcolor=black, len=1.5]
     aclocal -> "aclocal.m4" [label="creates", label="", color=black, fontcolor=black]
     
     // libtoolize
@@ -89,12 +93,12 @@ digraph autotools_file_summary {
     libtoolize -> "ltmain.sh" [label="creates", label="", color=lightgrey, fontcolor=lightgrey]
 
     // autoconf
-    "configure.ac" -> autoconf [label="reads", label="", color=black, fontcolor=black]
+    "configure.ac" -> autoconf [label="reads", label="", color=black, fontcolor=black, len=1.5]
     autoconf -> configure [label="creates", label="", color=black, fontcolor=black]
 
     // automake
     "Makefile.am" -> automake [label="reads", label="", color=black, fontcolor=black]
-    "configure.ac" -> automake [label="reads", label="", color=black, fontcolor=black]
+    "configure.ac" -> automake [label="reads", label="", color=black, fontcolor=black, len=1.5]
     automake -> compile [label="creates", label="", color=lightgrey, fontcolor=lightgrey]
     automake -> depcomp [label="creates", label="", color=lightgrey, fontcolor=lightgrey]
     automake -> "install-sh" [label="creates", label="", color=lightgrey, fontcolor=lightgrey]
@@ -103,7 +107,7 @@ digraph autotools_file_summary {
 
     // configure
     "Makefile.in" -> configure [label="reads", label="", color=black, fontcolor=black]
-    "config.h.in" -> configure [label="reads", label="", color=black, fontcolor=black]
+    "config.h.in" -> configure [label="reads", label="", color=black, fontcolor=black, len=3]
     configure -> Makefile [label="creates", label="", color=black, fontcolor=black]
     configure -> "config.h" [label="creates", label="", color=black, fontcolor=black]
 }
