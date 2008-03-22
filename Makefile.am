@@ -48,22 +48,29 @@ if RELACS_CREATE_DOC
 
 doc_DATA = $(builddir)/doc/html/*
 
-.PHONY : doc docall
 all: docall
 doc: docall
 docall: doc/html/*
+clean: clean_doc
 
 $(builddir)/doc/html/*:
-	[ -f $(builddir)/doc/html/index.html ] || doxygen $(builddir)/doc/relacs.dox
+	[ -f "$(builddir)/doc/html/index.html" ] || doxygen "$(builddir)/doc/relacs.dox"
+
+clean_doc:
+	rm -f -R "$(builddir)/doc/html"
 
 endif
 
 
 
-.PHONY : clean_build_config_dump
+distclean: clean_build_config_dump
 
 clean_build_config_dump:
-	rm -f build_config_dump{,in}
+	rm -f build_config_dump{,.in}
 
-distclean: clean_build_config_dump
+## Libtool workaround for distcheck
+clean-local:
+	find "$(builddir)" -type d \( -name '.deps' -o -name '.libs' \) -exec rm -Rfv {} \;
+
+.PHONY : doc docall clean_doc clean_build_config_dump
 

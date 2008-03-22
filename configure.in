@@ -325,23 +325,23 @@ fi
 AM_CONDITIONAL([RELACS_CREATE_DOC], [test ${DOXYGEN_ENABLED} = yes])
 
 DOXYGEN_INPUT="\
-    config/src \
-    daq/src \
-    datafile/src \
-    mplot/src \
-    numerics/src \
-    options/src \
-    widgets/src \
-    \
-    relacs \
-    src \
-    \
-    hardware \
-    common \
-    auditory \
-    \
-    doc \
-    utils \
+config/src \
+daq/src \
+datafile/src \
+mplot/src \
+numerics/src \
+options/src \
+widgets/src \
+\
+relacs \
+src \
+\
+hardware \
+common \
+auditory \
+\
+doc \
+utils \
 "
 AC_SUBST(DOXYGEN_INPUT)
 
@@ -389,8 +389,6 @@ AC_CONFIG_FILES([
     daq/Makefile
     datafile/src/Makefile
     datafile/Makefile
-    doc/relacs.doc
-    doc/relacs.dox
     hardware/Makefile
     mplot/src/Makefile
     mplot/Makefile
@@ -405,6 +403,9 @@ AC_CONFIG_FILES([
     widgets/src/Makefile
     widgets/Makefile
     Makefile
+
+    doc/relacs.doc
+    doc/relacs.dox
 
     relacslocal.cfg
     src/relacs.cfg
