@@ -362,8 +362,17 @@ AC_SUBST_FILE(RELACS_RUNNER_FOOT)
 
 
 
+# Dump bild config
+awk -F"'" 'function pp(s) { return sprintf("%s = [[@%s@]]", s, s)}; start { print pp($1); \
+    if (NF > 1) exit }; $1 == "ac_subst_vars=" {start=1; print pp($2)}' configure\
+    | sort -f > build_config_dump.in
+
+
+
 # Substitute
 AC_CONFIG_FILES([
+    build_config_dump
+    
     auditory/base/Makefile
     auditory/sascha/Makefile
     auditory/speaker/Makefile
@@ -420,4 +429,6 @@ open a bug describing your problem and configuration at
 http://sourceforge.net/tracker/?group_id=199846&atid=971134
 
 Continue with \$ make && sudo make install
+
 SUMMARY
+
