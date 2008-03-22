@@ -112,3 +112,5 @@ int NIPFI::pinOut( int pin )
   return ::ioctl( Handle, NIDAQPFIOUT, pin );
 }
 
+
+#include "moc_nipfi.cc"

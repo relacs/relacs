@@ -482,3 +482,5 @@ double GammaKernel::right( void ) const
   return 5.0*stdev();
 }
 
+
+#include "moc_kernel.cc"

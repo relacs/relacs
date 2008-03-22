@@ -1158,3 +1158,5 @@ ostream &operator<< ( ostream &str, const RangeLoop &rl )
 }
 
 
+
+#include "moc_rangeloop.cc"

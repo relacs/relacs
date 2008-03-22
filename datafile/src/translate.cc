@@ -185,3 +185,5 @@ void translate( const StrQueue &sq, StrQueue &dq, vector< Options > &opt,
   }
 }
 
+
+#include "moc_translate.cc"

@@ -434,3 +434,5 @@ int NIAO::getAISyncDevice( const vector< AnalogInput* > &ais ) const
   return -1;
 }
 
+
+#include "moc_niao.cc"

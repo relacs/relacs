@@ -176,3 +176,5 @@ ostream &operator<<( ostream &str, const Device &d )
   return str;
 }
 
+
+#include "moc_device.cc"

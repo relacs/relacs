@@ -114,7 +114,9 @@ librelacs_la_SOURCES = \
     session.cc \
     settings.cc \
     simulator.cc \
-    spiketrace.cc
+    spiketrace.cc \
+    \
+    relacsdevices.cc
 
 
 

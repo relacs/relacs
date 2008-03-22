@@ -845,3 +845,5 @@ void DynClampAnalogInput::take( vector< AnalogInput* > &ais,
       }
   */
 }
+
+#include "moc_dynclampanaloginput.cc"

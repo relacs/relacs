@@ -70,3 +70,5 @@ int Attenuator::testMute( int di )
 }
 
 
+
+#include "moc_attenuator.cc"

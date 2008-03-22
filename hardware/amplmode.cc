@@ -347,3 +347,5 @@ int AmplMode::buzzer( void )
   return NotOpen;
 }
 
+
+#include "moc_amplmode.cc"

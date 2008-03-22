@@ -281,3 +281,5 @@ int AnalogOutput::convertData( OutList &sigs )
 {
   return convert<signed short>( sigs );
 }
+
+#include "moc_analogoutput.cc"

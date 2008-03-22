@@ -592,3 +592,5 @@ private:
 GSLSetErrorHandler gslseterrorhandler;
 
 #endif
+
+#include "moc_statstests.cc"

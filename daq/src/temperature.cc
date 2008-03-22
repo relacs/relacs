@@ -32,3 +32,5 @@ Temperature::Temperature( const string &deviceclass )
   : Device( deviceclass, Type )
 {
 }
+
+#include "moc_temperature.cc"

@@ -177,3 +177,5 @@ double Manipulator::maxAmplZ( void ) const
 }
 
 
+
+#include "moc_manipulator.cc"

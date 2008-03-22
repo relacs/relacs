@@ -311,3 +311,6 @@ void LoudSpeaker::setDeviceIdent( const string &ident )
 
 
 addAttenuate( LoudSpeaker );
+
+#include "moc_loudspeaker.cc"
+

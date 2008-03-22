@@ -154,3 +154,5 @@ double Sine::value( const ArrayD &c, double x ) const
 }
 
 
+
+#include "moc_basisfunction.cc"

@@ -295,3 +295,5 @@ int AnalogInput::truncate( InList &traces, double t )
   return m;
 }
 
+
+#include "moc_analoginput.cc"

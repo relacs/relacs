@@ -72,3 +72,5 @@ void EPhysTraces::initialize( const InList &data,
   }
 }
 
+#include "moc_ephystraces.cc"
+

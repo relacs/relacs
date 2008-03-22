@@ -549,3 +549,5 @@ const TableKey &DataFile::key( void ) const
   return Key;
 }
 
+
+#include "moc_datafile.cc"

@@ -834,3 +834,5 @@ void TableKey::init( void )
 
 }
 
+
+#include "moc_tablekey.cc"

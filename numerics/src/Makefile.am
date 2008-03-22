@@ -45,5 +45,9 @@ librelacsnumerics_la_SOURCES = \
     random.cc \
     sampledata.cc \
     spectrum.cc \
-    statstests.cc
+    statstests.cc \
+    \
+    containerops.cc \
+    cyclicsampledata.cc \
+    odealgorithm.cc
 

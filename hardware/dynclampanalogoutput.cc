@@ -827,3 +827,5 @@ int DynClampAnalogOutput::getAISyncDevice( const vector< AnalogInput* > &ais ) c
   }
   return -1;
 }
+
+#include "moc_dynclampanalogoutput.cc"

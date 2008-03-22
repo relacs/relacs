@@ -183,3 +183,5 @@ int AISim::error( void ) const
   return 0;
 }
 
+
+#include "moc_aisim.cc"

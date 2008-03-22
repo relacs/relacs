@@ -389,3 +389,5 @@ int CS3310SerialNIDIO::calibrate( void )
   return 0;
 }
 
+
+#include "moc_cs3310serialnidio.cc"

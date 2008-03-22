@@ -222,3 +222,5 @@ void Attenuate::setAODevice( const string &deviceid )
 }
 
 
+
+#include "moc_attenuate.cc"

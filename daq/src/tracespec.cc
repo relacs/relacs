@@ -240,3 +240,5 @@ bool operator==( const OutData &signal, const TraceSpec &trace )
   return ( trace.device() == signal.device() &&
 	   trace.channel() == signal.channel() );
 }
+
+#include "moc_tracespec.cc"

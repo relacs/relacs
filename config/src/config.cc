@@ -162,3 +162,5 @@ void Config::saveConfig( ofstream &str )
   Options::save( str, "  ", -1, ConfigSelect );
 }
 
+
+#include "moc_config.cc"

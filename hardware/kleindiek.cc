@@ -483,3 +483,5 @@ ostream &operator<<( ostream &str, const Kleindiek &k )
   return str;
 }
 
+
+#include "moc_kleindiek.cc"

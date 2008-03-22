@@ -259,3 +259,5 @@ ostream &operator<< ( ostream &str, const StrQueue &sq )
 }
 
 
+
+#include "moc_strqueue.cc"

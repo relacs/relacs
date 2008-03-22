@@ -143,3 +143,5 @@ void AuditoryTraces::setSoundTraceName( const string &name )
   SoundTraceName = name;
 }
 
+#include "moc_auditorytraces.cc"
+
