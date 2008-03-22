@@ -59,20 +59,8 @@ all: docall
 
 doc: docall
 
-clean: clean_doc
+clean-am: clean_doc
+
+.PHONY : doc docall clean_doc
 endif
-
-
-
-
-clean_build_config_dump:
-	rm -f build_config_dump{,.in}
-
-distclean: clean_build_config_dump
-
-## Libtool workaround for distcheck
-clean-local:
-	find "$(builddir)" -type d \( -name '.deps' -o -name '.libs' \) -exec rm -Rfv {} \;
-
-.PHONY : doc docall clean_doc clean_build_config_dump
 

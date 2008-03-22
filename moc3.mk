@@ -9,7 +9,7 @@ moc_%.cc : ../include/relacs/%.h
 
 
 clean-moc-extra:
-	-rm -v -f *-moc.{cpp,o,lo}
+	-rm -vf moc_*.{cc,o,lo}
 
-clean: clean-moc-extra
+clean-am: clean-moc-extra
 

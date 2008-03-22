@@ -32,6 +32,7 @@ ${LIBTOOLIZE} --copy --force >/dev/null || exit 1
 ## Autoconf
 AUTOCONF_VERSION=`autoconf --version | head -1 | grep -o '[^ ]*$'`
 step "autoconf    ${AUTOCONF_VERSION}"
+touch build_config_dump.in
 autoconf || exit 1
 
 ## Dump build config
