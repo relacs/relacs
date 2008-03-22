@@ -1,0 +1,109 @@
+// Process file with neato of GraphViz, e.g. run
+// $ neato -T png autotools.neato > autotools.png
+
+digraph autotools_file_summary {
+    label="GNU Autotools from the developer's point of view"
+    outputorder=edgesfirst
+    overlap=compress
+    edge [len=2]
+
+    subgraph foo {
+        node [shape=circle, style=filled, color=black, fontcolor=white]
+        YOU
+    }
+    root=YOU
+
+    subgraph tools {
+        node [style=filled, color=black, fillcolor=lightgrey]
+        automake
+        aclocal
+        autoheader
+        autoconf
+        libtoolize
+        configure
+    }
+
+    subgraph exciting {
+        node [style=filled, color=black, fillcolor=white, fontcolor=black]
+        "aclocal.m4"
+        Makefile
+        "Makefile.am"
+        "Makefile.in"
+        "configure.ac"
+        "config.h"
+        "config.h.in"
+    }
+
+    subgraph boring {
+        node [style=filled, color=lightgrey, fillcolor=white, fontcolor=lightgrey]
+        AUTHORS
+        ChangeLog
+        compile
+        "config.guess"
+        "config.sub"
+        COPYING
+        depcomp
+        INSTALL
+        "install-sh"
+        libtool
+        "ltmain.sh"
+        missing
+        NEWS
+        README
+        THANKS
+    }
+    
+    // You create exciting files
+    YOU -> "configure.ac" [label="create", label="", color=black, fontcolor=black]
+    YOU -> "config.h.in" [label="create", label="", color=black, fontcolor=black]
+    YOU -> "Makefile.am" [label="create", label="", color=black, fontcolor=black]
+
+    // You create boring files
+    YOU -> AUTHORS [label="create", label="", color=lightgrey, fontcolor=lightgrey, len=3]
+    YOU -> ChangeLog [label="create", label="", color=lightgrey, fontcolor=lightgrey, len=2.7]
+    YOU -> COPYING [label="create", label="", color=lightgrey, fontcolor=lightgrey, len=3]
+    YOU -> INSTALL [label="create", label="", color=lightgrey, fontcolor=lightgrey, len=3]
+    YOU -> NEWS [label="create", label="", color=lightgrey, fontcolor=lightgrey, len=3]
+    YOU -> README [label="create", label="", color=lightgrey, fontcolor=lightgrey, len=3]
+    YOU -> THANKS [label="create", label="", color=lightgrey, fontcolor=lightgrey, len=3]
+
+    // You call tools
+    YOU -> aclocal [label="call", label="", color=black, fontcolor=black]
+    YOU -> autoconf [label="call", label="", color=black, fontcolor=black, len=1.5]
+    YOU -> autoheader [label="call", label="", color=black, fontcolor=black]
+    YOU -> automake [label="call", label="", color=black, fontcolor=black]
+    YOU -> libtoolize [label="call", label="", color=black, fontcolor=black]
+
+    // autoheader
+    "configure.ac" -> autoheader [label="reads", label="", color=black, fontcolor=black]
+    autoheader -> "config.h.in" [label="creates", label="", color=black, fontcolor=black]
+
+    // aclocal
+    "configure.ac" -> aclocal [label="reads", label="", color=black, fontcolor=black]
+    aclocal -> "aclocal.m4" [label="creates", label="", color=black, fontcolor=black]
+    
+    // libtoolize
+    libtoolize -> "config.guess" [label="creates", label="", color=lightgrey, fontcolor=lightgrey]
+    libtoolize -> "config.sub" [label="creates", label="", color=lightgrey, fontcolor=lightgrey]
+    libtoolize -> "libtool" [label="creates", label="", color=lightgrey, fontcolor=lightgrey]
+    libtoolize -> "ltmain.sh" [label="creates", label="", color=lightgrey, fontcolor=lightgrey]
+
+    // autoconf
+    "configure.ac" -> autoconf [label="reads", label="", color=black, fontcolor=black]
+    autoconf -> configure [label="creates", label="", color=black, fontcolor=black]
+
+    // automake
+    "Makefile.am" -> automake [label="reads", label="", color=black, fontcolor=black]
+    "configure.ac" -> automake [label="reads", label="", color=black, fontcolor=black]
+    automake -> compile [label="creates", label="", color=lightgrey, fontcolor=lightgrey]
+    automake -> depcomp [label="creates", label="", color=lightgrey, fontcolor=lightgrey]
+    automake -> "install-sh" [label="creates", label="", color=lightgrey, fontcolor=lightgrey]
+    automake -> "Makefile.in" [label="creates", label="", color=black, fontcolor=black]
+    automake -> missing [label="creates", label="", color=lightgrey, fontcolor=lightgrey]
+
+    // configure
+    "Makefile.in" -> configure [label="reads", label="", color=black, fontcolor=black]
+    "config.h.in" -> configure [label="reads", label="", color=black, fontcolor=black]
+    configure -> Makefile [label="creates", label="", color=black, fontcolor=black]
+    configure -> "config.h" [label="creates", label="", color=black, fontcolor=black]
+}
