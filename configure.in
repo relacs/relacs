@@ -274,7 +274,7 @@ AC_SUBST_FILE(RELACS_RUNNER_FOOT)
 
 
 
-# Dump bild config
+# Dump build config
 awk -F"'" 'function pp(s) { return sprintf("%s = [[@%s@]]", s, s)}; start { print pp($1); \
     if (NF > 1) exit }; $1 == "ac_subst_vars=" {start=1; print pp($2)}' configure\
     | sort -f > build_config_dump.in
@@ -321,6 +321,8 @@ AC_CONFIG_FILES([
 
     relacslocal.cfg
     src/relacs.cfg
+
+    numerics/configure.ac
 ])
 
 AC_CONFIG_FILES([relacslocal], [chmod a+x relacslocal])
