@@ -1801,5 +1801,3 @@ ostream &operator<< ( ostream &str, const EventList &events )
   return str;
 }
 
-
-#include "moc_eventlist.cc"

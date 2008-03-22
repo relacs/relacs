@@ -48,3 +48,5 @@ void DefaultSession::sessionStopped( bool saved )
 {
   SessionButton->setText( "Start" );
 }
+
+#include "moc_defaultsession.cc"

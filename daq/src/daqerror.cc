@@ -236,5 +236,3 @@ ostream &operator<<( ostream &str, const DaqError &de )
   return str;
 }
 
-
-#include "moc_daqerror.cc"

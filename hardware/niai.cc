@@ -449,5 +449,3 @@ int NIAI::error( void ) const
   */
 }
 
-
-#include "moc_niai.cc"

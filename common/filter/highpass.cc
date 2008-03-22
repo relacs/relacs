@@ -82,3 +82,5 @@ int HighPass::filter( const InData &indata, InData &outdata )
 
 
 addFilter( HighPass );
+
+#include "moc_highpass.cc"

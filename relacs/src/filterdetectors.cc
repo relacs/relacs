@@ -1010,3 +1010,5 @@ void FilterDetectors::FilterData::print( ostream &str ) const
       << "   detector: " << FilterDetector << endl;
 }
 
+
+#include "moc_filterdetectors.cc"

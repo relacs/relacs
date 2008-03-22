@@ -1832,5 +1832,3 @@ string Acquire::currentTime( void )
   strftime( s, 200, "%H:%M:%S", localtime( &ct ) );
   return s;
 }
-
-#include "moc_acquire.cc"

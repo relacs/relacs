@@ -565,3 +565,5 @@ void RePro::noSaving( void )
   RW->noSaving();
 }
 
+
+#include "moc_repro.cc"

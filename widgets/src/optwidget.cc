@@ -1428,3 +1428,5 @@ OptWidgetSeparator::OptWidgetSeparator( Options::iterator op, Options *oo,
   }
 }
 
+
+#include "moc_optwidget.cc"

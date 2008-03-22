@@ -162,3 +162,5 @@ int StimulusDelay::analyze( const InData &data, double duration,
 
 
 addRePro( StimulusDelay );
+
+#include "moc_stimulusdelay.cc"

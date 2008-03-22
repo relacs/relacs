@@ -1009,5 +1009,3 @@ void ComediAnalogOutput::take( int syncmode,
 	ComediAIsLink[ai] = ao;
       }
 }
-
-#include "moc_comedianalogoutput.cc"

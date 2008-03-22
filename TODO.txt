@@ -23,8 +23,6 @@ help: doc
 
 - OS dependent make rules (for hardware plugins)? (QUICK)
 
-- hardware: find -lcomedi (www.comedi.org).
-
 
 == Optional ==
 - Integrate examples (with extra target)  no-compile Makefiles???

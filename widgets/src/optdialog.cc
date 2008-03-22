@@ -370,3 +370,5 @@ void OptDialogButton::clicked( void )
   }
 }
 
+
+#include "moc_optdialog.cc"

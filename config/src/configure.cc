@@ -297,4 +297,3 @@ string Configure::currentTime( void )
   return s;
 }
 
-#include "moc_configure.cc"

@@ -53,3 +53,5 @@ int DefaultRePro::main( void )
     sleep( Duration );
 }
 
+
+#include "moc_defaultrepro.cc"

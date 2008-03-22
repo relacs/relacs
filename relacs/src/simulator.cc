@@ -472,5 +472,3 @@ void Simulator::stop( void )
     Sim->clearSignals();
 }
 
-
-#include "moc_simulator.cc"

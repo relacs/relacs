@@ -581,3 +581,5 @@ void AuditorySession::plot( void )
 
 
 addControl( AuditorySession );
+
+#include "moc_auditorysession.cc"

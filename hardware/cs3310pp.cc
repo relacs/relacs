@@ -348,5 +348,3 @@ int CS3310PP::write( void )
 
   return 0;
 }
-
-#include "moc_cs3310pp.cc"

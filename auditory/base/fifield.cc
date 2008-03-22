@@ -634,3 +634,5 @@ RePro::DoneState FIField::next( vector< FIData > &results, bool msg )
 
 
 addRePro( FIField );
+
+#include "moc_fifield.cc"

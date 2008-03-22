@@ -81,3 +81,5 @@ int LowPass::filter( const InData &indata, InData &outdata )
 
 
 addFilter( LowPass );
+
+#include "moc_lowpass.cc"

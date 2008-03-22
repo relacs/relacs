@@ -188,3 +188,5 @@ void SpikeTrace::run( void )
   QApplication::postEvent( this, new QPaintEvent( rect(), false ) );
 }
 
+
+#include "moc_spiketrace.cc"

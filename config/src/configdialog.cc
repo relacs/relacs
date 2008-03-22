@@ -419,3 +419,5 @@ QMutex *ConfigDialog::mutex( void )
   return &CDMutex;
 }
 
+
+#include "moc_configdialog.cc"

@@ -355,6 +355,3 @@ SampleData<> triangle( double l, double r, double stepsize, double period )
   return triangle( LinearRange( l, r, stepsize ), period );
 }
 
-
-
-

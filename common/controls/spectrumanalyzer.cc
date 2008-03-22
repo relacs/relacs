@@ -185,3 +185,5 @@ void SpectrumAnalyzer::main( void )
 
 
 addControl( SpectrumAnalyzer );
+
+#include "moc_spectrumanalyzer.cc"

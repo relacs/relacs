@@ -256,3 +256,5 @@ void OneClick::analyze( void )
 
 
 addRePro( OneClick );
+
+#include "moc_oneclick.cc"

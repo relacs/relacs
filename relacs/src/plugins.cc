@@ -617,5 +617,3 @@ Plugins::FileInfo::FileInfo( const string &file, void *lib, int fileid )
   FileID = fileid;
 }
 
-
-#include "moc_plugins.cc"

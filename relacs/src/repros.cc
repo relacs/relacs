@@ -490,3 +490,5 @@ void ReProData::dialogClosed( int r )
 	      this, SLOT( dialogClosed( int ) ) );
 }
 
+
+#include "moc_repros.cc"

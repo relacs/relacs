@@ -492,3 +492,5 @@ void CalibSpeakers::analyze( int intrace, double duration, double skip,
 
 
 addRePro( CalibSpeakers );
+
+#include "moc_calibspeakers.cc"

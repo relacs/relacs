@@ -573,4 +573,3 @@ LinearRangeIterator &LinearRangeIterator::operator=( const LinearRangeIterator &
   return *this;
 }
 
-#include "moc_linearrange.cc"

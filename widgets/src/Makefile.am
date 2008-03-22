@@ -14,22 +14,14 @@ librelacswidgets_la_CPPFLAGS = \
 librelacswidgets_la_LDFLAGS = \
     @QT3_LDFLAGS@
 
-librelacswidgets_la-%-moc.cpp : ../include/relacs/%.h
-	$(MOC_CREATE)
-
-librelacswidgets_la-%-moc.lo : librelacswidgets_la-%-moc.cpp
-	$(MOC_COMPILE_1) $(librelacswidgets_la_CPPFLAGS) \
-	$(MOC_COMPILE_2) $(librelacswidgets_la_CXXFLAGS) \
-	$(MOC_COMPILE_3)
-
-librelacswidgets_la_LIBADD = \
-    librelacswidgets_la-doublespinbox-moc.lo \
-    librelacswidgets_la-lcdrange-moc.lo \
-    librelacswidgets_la-messagebox-moc.lo \
-    librelacswidgets_la-optdialog-moc.lo \
-    librelacswidgets_la-optdialogbutton-moc.lo \
-    librelacswidgets_la-optwidget-moc.lo \
-    librelacswidgets_la-optwidgetbase-moc.lo
+librelacswidgets.la : \
+    moc_doublespinbox.cc \
+    moc_lcdrange.cc \
+    moc_messagebox.cc \
+    moc_optdialog.cc \
+    moc_optdialogbutton.cc \
+    moc_optwidget.cc \
+    moc_optwidgetbase.cc
 
 librelacswidgets_ladir = $(includedir)/relacs
 

@@ -987,3 +987,5 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
 
 
 addRePro( SingleStimulus );
+
+#include "moc_singlestimulus.cc"

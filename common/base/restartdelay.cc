@@ -211,3 +211,5 @@ int RestartDelay::analyze( const InData &data, double duration,
 
 
 addRePro( RestartDelay );
+
+#include "moc_restartdelay.cc"

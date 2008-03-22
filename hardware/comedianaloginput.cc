@@ -843,5 +843,3 @@ void ComediAnalogInput::take( int syncmode,
 	ComediAIsLink[ai] = ao;
       }
 }
-
-#include "moc_comedianaloginput.cc"

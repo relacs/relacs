@@ -347,5 +347,3 @@ void Model::addActions( QPopupMenu *menu )
   action->addTo( menu );
 }
 
-
-#include "moc_model.cc"

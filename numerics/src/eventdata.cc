@@ -2942,5 +2942,3 @@ EventIterator &EventIterator::operator=( const EventIterator &p )
   return *this;
 }
 
-
-#include "moc_eventdata.cc"

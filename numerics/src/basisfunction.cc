@@ -153,6 +153,3 @@ double Sine::value( const ArrayD &c, double x ) const
   return operator()( c, x );
 }
 
-
-
-#include "moc_basisfunction.cc"

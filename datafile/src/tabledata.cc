@@ -136,5 +136,3 @@ TableData &TableData::sort( int scol )
 }
 
 
-
-#include "moc_tabledata.cc"

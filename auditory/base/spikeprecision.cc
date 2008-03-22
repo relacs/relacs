@@ -922,3 +922,5 @@ int SpikePrecision::createStimulus( OutData &signal, SampleDataD &amdb,
 
 
 addRePro( SpikePrecision );
+
+#include "moc_spikeprecision.cc"

@@ -228,3 +228,5 @@ double DoubleSpinBox::floorLog10( double prec )
   return pow( 10.0, floor( log10( prec ) ) );
 }
 
+
+#include "moc_doublespinbox.cc"

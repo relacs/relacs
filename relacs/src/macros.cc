@@ -2043,3 +2043,5 @@ void MacroButton::wasRightClicked( void )
 {
   emit rightClicked( Number );
 }
+
+#include "moc_macros.cc"

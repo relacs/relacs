@@ -120,5 +120,3 @@ int AttSim::testAttenuate( int di, double &decibel )
 }
 
 
-
-#include "moc_attsim.cc"

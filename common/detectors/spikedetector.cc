@@ -709,3 +709,5 @@ void SpikeDetector::customEvent( QCustomEvent *qce )
 
 
 addDetector( SpikeDetector );
+
+#include "moc_spikedetector.cc"

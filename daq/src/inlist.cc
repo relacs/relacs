@@ -539,5 +539,3 @@ void InList::clearDeviceBuffer( void )
     operator[]( k ).clearDeviceBuffer();
 }
 
-
-#include "moc_inlist.cc"

@@ -62,3 +62,5 @@ int Pause::main( void )
 
 
 addRePro( Pause );
+
+#include "moc_pause.cc"

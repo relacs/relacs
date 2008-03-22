@@ -1048,3 +1048,5 @@ void IsoResponse::findScaling(  )
 
 
 addRePro( IsoResponse );
+
+#include "moc_isoresponse.cc"

@@ -4181,3 +4181,5 @@ void Plot::clear( int index )
     PData.erase( d );
   }
 }
+
+#include "moc_plot.cc"

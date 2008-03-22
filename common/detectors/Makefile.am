@@ -25,17 +25,11 @@ librelacscommonspikedetector_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
-librelacscommonspikedetector_la-%-moc.cpp : ../include/relacs/%.h
-	$(MOC_CREATE)
-
-librelacscommonspikedetector_la-%-moc.lo : librelacscommonspikedetector_la-%-moc.cpp
-	$(MOC_COMPILE_1) $(librelacscommonspikedetector_la_CPPFLAGS) \
-	$(MOC_COMPILE_2) $(librelacscommonspikedetector_la_CXXFLAGS) \
-	$(MOC_COMPILE_3)
-
 librelacscommonspikedetector_la_LIBADD = \
-    ../../relacs/src/librelacs.la \
-    librelacscommonspikedetector_la-spikedetector-moc.lo
+    ../../relacs/src/librelacs.la
+
+librelacscommonspikedetector.la : \
+    moc_spikedetector.cc
 
 librelacscommonspikedetector_la_SOURCES = \
     spikedetector.cc \

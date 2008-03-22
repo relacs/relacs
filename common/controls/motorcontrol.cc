@@ -497,3 +497,5 @@ void MiMaPu::stop( void )
 
 
 addControl( MotorControl );
+
+#include "moc_motorcontrol.cc"

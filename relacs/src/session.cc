@@ -258,3 +258,5 @@ void Session::modeChanged( void )
   StartSessionAction->setEnabled( ( RW->simulation() || RW->acquisition() ) );
 }
 
+
+#include "moc_session.cc"

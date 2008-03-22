@@ -281,13 +281,6 @@ AC_SUBST_FILE(RELACS_RUNNER_FOOT)
 
 
 
-# Dump build config
-awk -F"'" 'function pp(s) { return sprintf("%s = [[@%s@]]", s, s)}; start { print pp($1); \
-    if (NF > 1) exit }; $1 == "ac_subst_vars=" {start=1; print pp($2)}' configure\
-    | sort -f > build_config_dump.in
-
-
-
 # Substitute
 AC_CONFIG_FILES([
     build_config_dump

@@ -215,5 +215,3 @@ ostream &operator<<( ostream &str, const TempDTM5080 &k )
   return str;
 }
 
-
-#include "moc_tempdtm5080.cc"

@@ -175,5 +175,3 @@ int NIDIO::read( unsigned char *buf, int n ) const
     return NotOpen;
 }
 
-
-#include "moc_nidio.cc"

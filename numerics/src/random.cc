@@ -516,6 +516,3 @@ string RandomGSL::name( void )
 
 #endif
 
-
-
-#include "moc_random.cc"

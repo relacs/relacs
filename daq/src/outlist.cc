@@ -450,5 +450,3 @@ ostream &operator<< ( ostream &str, const OutList &signal )
   return str;
 }
 
-
-#include "moc_outlist.cc"

@@ -328,3 +328,5 @@ double AuditoryNeuron::squareBoltzman( double x ) const
 
 
 addModel( AuditoryNeuron );
+
+#include "moc_auditoryneuron.cc"

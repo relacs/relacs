@@ -1791,5 +1791,3 @@ istream &operator>>( istream &str, Parameter &p )
 
   return str;
 }
-
-#include "moc_parameter.cc"

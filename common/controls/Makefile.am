@@ -25,17 +25,11 @@ librelacscommonmotorcontrol_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
-librelacscommonmotorcontrol_la-%-moc.cpp : ../include/relacs/%.h
-	$(MOC_CREATE)
-
-librelacscommonmotorcontrol_la-%-moc.lo : librelacscommonmotorcontrol_la-%-moc.cpp
-	$(MOC_COMPILE_1) $(librelacscommonmotorcontrol_la_CPPFLAGS) \
-	$(MOC_COMPILE_2) $(librelacscommonmotorcontrol_la_CXXFLAGS) \
-	$(MOC_COMPILE_3)
-
 librelacscommonmotorcontrol_la_LIBADD = \
-    ../../relacs/src/librelacs.la \
-    librelacscommonmotorcontrol_la-motorcontrol-moc.lo
+    ../../relacs/src/librelacs.la
+
+librelacscommonmotorcontrol.la : \
+    moc_motorcontrol.cc
 
 librelacscommonmotorcontrol_la_SOURCES = \
     motorcontrol.cc \
@@ -53,17 +47,11 @@ librelacscommonspectrumanalyzer_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
-librelacscommonspectrumanalyzer_la-%-moc.cpp : ../include/relacs/%.h
-	$(MOC_CREATE)
-
-librelacscommonspectrumanalyzer_la-%-moc.lo : librelacscommonspectrumanalyzer_la-%-moc.cpp
-	$(MOC_COMPILE_1) $(librelacscommonspectrumanalyzer_la_CPPFLAGS) \
-	$(MOC_COMPILE_2) $(librelacscommonspectrumanalyzer_la_CXXFLAGS) \
-	$(MOC_COMPILE_3)
-
 librelacscommonspectrumanalyzer_la_LIBADD = \
-    ../../relacs/src/librelacs.la \
-    librelacscommonspectrumanalyzer_la-spectrumanalyzer-moc.lo
+    ../../relacs/src/librelacs.la
+
+librelacscommonspectrumanalyzer.la : \
+    moc_spectrumanalyzer.cc
 
 librelacscommonspectrumanalyzer_la_SOURCES = \
     spectrumanalyzer.cc \

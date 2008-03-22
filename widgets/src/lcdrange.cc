@@ -122,3 +122,5 @@ void LCDRange::resizeEvent( QResizeEvent * )
   sBar->setGeometry( 0, lcd->height() + 5, width(), 16 );
   label->setGeometry( 0, lcd->height() + 21, width(), 20 );
 }
+
+#include "moc_lcdrange.cc"

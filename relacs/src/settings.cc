@@ -78,3 +78,5 @@ void Settings::notify( void )
   RW->PG->setChangeToPluginDir( boolean( "changetoplugindir" ) );
 }
 
+
+#include "moc_settings.cc"

@@ -1033,5 +1033,3 @@ InDataTimeIterator &InDataTimeIterator::operator=( const InDataIterator &p )
   return *this;
 }
 
-
-#include "moc_indata.cc"

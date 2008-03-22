@@ -60,3 +60,5 @@ void SimpleModel::main( void )
 
 
 addModel( SimpleModel );
+
+#include "moc_simplemodel.cc"

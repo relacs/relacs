@@ -45,13 +45,7 @@ EXTRA_DIST = \
 
 
 if RELACS_CREATE_DOC
-
 doc_DATA = $(builddir)/doc/html/*
-
-all: docall
-doc: docall
-docall: doc/html/*
-clean: clean_doc
 
 $(builddir)/doc/html/*:
 	[ -f "$(builddir)/doc/html/index.html" ] || doxygen "$(builddir)/doc/relacs.dox"
@@ -59,14 +53,22 @@ $(builddir)/doc/html/*:
 clean_doc:
 	rm -f -R "$(builddir)/doc/html"
 
+docall: doc/html/*
+
+all: docall
+
+doc: docall
+
+clean: clean_doc
 endif
 
 
 
-distclean: clean_build_config_dump
 
 clean_build_config_dump:
 	rm -f build_config_dump{,.in}
+
+distclean: clean_build_config_dump
 
 ## Libtool workaround for distcheck
 clean-local:

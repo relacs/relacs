@@ -614,3 +614,5 @@ void WangAdapt::read( const Options &o, const string &label )
 
 
 addModel( NeuronModels );
+
+#include "moc_neuronmodels.cc"

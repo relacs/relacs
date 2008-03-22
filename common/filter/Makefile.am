@@ -25,17 +25,11 @@ librelacscommonhighpass_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
-librelacscommonhighpass_la-%-moc.cpp : ../include/relacs/%.h
-	$(MOC_CREATE)
-
-librelacscommonhighpass_la-%-moc.lo : librelacscommonhighpass_la-%-moc.cpp
-	$(MOC_COMPILE_1) $(librelacscommonhighpass_la_CPPFLAGS) \
-	$(MOC_COMPILE_2) $(librelacscommonhighpass_la_CXXFLAGS) \
-	$(MOC_COMPILE_3)
-
 librelacscommonhighpass_la_LIBADD = \
-    ../../relacs/src/librelacs.la \
-    librelacscommonhighpass_la-highpass-moc.lo
+    ../../relacs/src/librelacs.la
+
+librelacscommonhighpass.la : \
+    moc_highpass.cc
 
 librelacscommonhighpass_la_SOURCES = \
     highpass.cc \
@@ -53,17 +47,11 @@ librelacscommonlowpass_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
-librelacscommonlowpass_la-%-moc.cpp : ../include/relacs/%.h
-	$(MOC_CREATE)
-
-librelacscommonlowpass_la-%-moc.lo : librelacscommonlowpass_la-%-moc.cpp
-	$(MOC_COMPILE_1) $(librelacscommonlowpass_la_CPPFLAGS) \
-	$(MOC_COMPILE_2) $(librelacscommonlowpass_la_CXXFLAGS) \
-	$(MOC_COMPILE_3)
-
 librelacscommonlowpass_la_LIBADD = \
-    ../../relacs/src/librelacs.la \
-    librelacscommonlowpass_la-lowpass-moc.lo
+    ../../relacs/src/librelacs.la
+
+librelacscommonlowpass.la: \
+    moc_lowpass.cc
 
 librelacscommonlowpass_la_SOURCES = \
     lowpass.cc \

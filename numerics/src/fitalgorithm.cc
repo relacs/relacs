@@ -160,3 +160,4 @@ double sineFuncDerivs( double x, const ArrayD &p, ArrayD &dfdp )
 }
 
 };
+

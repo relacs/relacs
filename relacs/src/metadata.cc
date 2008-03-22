@@ -298,3 +298,5 @@ int SetupData::setupFlag( void )
   return SetupFlag;
 }
 
+
+#include "moc_metadata.cc"

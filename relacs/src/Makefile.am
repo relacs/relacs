@@ -27,14 +27,6 @@ librelacs_la_CPPFLAGS = \
 
 librelacs_la_LDFLAGS = @QT3_LDFLAGS@
 
-librelacs_la-%-moc.cpp : ../include/relacs/%.h
-	$(MOC_CREATE)
-
-librelacs_la-%-moc.lo : librelacs_la-%-moc.cpp
-	$(MOC_COMPILE_1) $(librelacs_la_CPPFLAGS) \
-	$(MOC_COMPILE_2) $(librelacs_la_CXXFLAGS) \
-	$(MOC_COMPILE_3)
-
 librelacs_la_LIBADD = \
     ../../config/src/librelacsconfig.la \
     ../../daq/src/librelacsdaq.la \
@@ -42,24 +34,25 @@ librelacs_la_LIBADD = \
     ../../mplot/src/librelacsmplot.la \
     ../../numerics/src/librelacsnumerics.la \
     ../../options/src/librelacsoptions.la \
-    ../../widgets/src/librelacswidgets.la \
-    \
-    librelacs_la-control-moc.lo \
-    librelacs_la-defaultrepro-moc.lo \
-    librelacs_la-defaultsession-moc.lo \
-    librelacs_la-filter-moc.lo \
-    librelacs_la-filterdetectors-moc.lo \
-    librelacs_la-macros-moc.lo \
-    librelacs_la-metadata-moc.lo \
-    librelacs_la-plottrace-moc.lo \
-    librelacs_la-relacsplugin-moc.lo \
-    librelacs_la-relacswidget-moc.lo \
-    librelacs_la-repro-moc.lo \
-    librelacs_la-repros-moc.lo \
-    librelacs_la-savefiles-moc.lo \
-    librelacs_la-session-moc.lo \
-    librelacs_la-settings-moc.lo \
-    librelacs_la-spiketrace-moc.lo
+    ../../widgets/src/librelacswidgets.la
+    
+librelacs.la : \
+    moc_control.cc \
+    moc_defaultrepro.cc \
+    moc_defaultsession.cc \
+    moc_filter.cc \
+    moc_filterdetectors.cc \
+    moc_macros.cc \
+    moc_metadata.cc \
+    moc_plottrace.cc \
+    moc_relacsplugin.cc \
+    moc_relacswidget.cc \
+    moc_repro.cc \
+    moc_repros.cc \
+    moc_savefiles.cc \
+    moc_session.cc \
+    moc_settings.cc \
+    moc_spiketrace.cc
 
 librelacs_ladir = $(includedir)/relacs
 
@@ -114,9 +107,7 @@ librelacs_la_SOURCES = \
     session.cc \
     settings.cc \
     simulator.cc \
-    spiketrace.cc \
-    \
-    relacsdevices.cc
+    spiketrace.cc
 
 
 

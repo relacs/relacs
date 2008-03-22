@@ -599,3 +599,5 @@ void SysLatency::analyze( double duration, double skipwin, double analysewin,
 
 
 addRePro( SysLatency );
+
+#include "moc_syslatency.cc"

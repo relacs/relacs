@@ -16,17 +16,9 @@ librelacsmplot_la_CPPFLAGS = \
 librelacsmplot_la_LDFLAGS = \
     @QT3_LDFLAGS@
 
-librelacsmplot_la-%-moc.cpp : ../include/relacs/%.h
-	$(MOC_CREATE)
-
-librelacsmplot_la-%-moc.lo : librelacsmplot_la-%-moc.cpp
-	$(MOC_COMPILE_1) $(librelacsmplot_la_CPPFLAGS) \
-	$(MOC_COMPILE_2) $(librelacsmplot_la_CXXFLAGS) \
-	$(MOC_COMPILE_3)
-
-librelacsmplot_la_LIBADD = \
-    librelacsmplot_la-multiplot-moc.lo \
-    librelacsmplot_la-plot-moc.lo
+librelacsmplot.la : \
+    moc_multiplot.cc \
+    moc_plot.cc
 
 librelacsmplot_ladir = $(includedir)/relacs
 

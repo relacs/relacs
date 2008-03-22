@@ -50,8 +50,6 @@ librelacsnieserieshardware_la_CPPFLAGS = \
 librelacsnieserieshardware_la_LIBADD = \
     ../relacs/src/librelacs.la
 
-
-
 librelacsnieserieshardware_la_SOURCES = \
     include/relacs/amplmode.h \
     include/relacs/cs3310nidio.h \
@@ -72,9 +70,6 @@ librelacsnieserieshardware_la_SOURCES = \
     nipfi.cc \
     \
     nieserieshardware.cc
-    \
-    nidaq.cc \
-    moduledef.cc
 
 
 

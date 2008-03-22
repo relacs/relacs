@@ -1011,3 +1011,5 @@ void RELACSPlugin::unlockCurrentRePro( void )
     rp->unlock();
 }
 
+
+#include "moc_relacsplugin.cc"

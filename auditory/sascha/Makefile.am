@@ -29,19 +29,13 @@ librelacsauditoryisoresponse_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
-librelacsauditoryisoresponse_la-%-moc.cpp : ../include/relacs/%.h
-	$(MOC_CREATE)
-
-librelacsauditoryisoresponse_la-%-moc.lo : librelacsauditoryisoresponse_la-%-moc.cpp
-	$(MOC_COMPILE_1) $(librelacsauditoryisoresponse_la_CPPFLAGS) \
-	$(MOC_COMPILE_2) $(librelacsauditoryisoresponse_la_CXXFLAGS) \
-	$(MOC_COMPILE_3)
-
 librelacsauditoryisoresponse_la_LIBADD = \
     ../../relacs/src/librelacs.la \
     ../../common/base/librelacscommonephystraces.la \
-    ../base/librelacsauditorysession.la \
-    librelacsauditoryisoresponse_la-isoresponse-moc.lo
+    ../base/librelacsauditorysession.la
+
+librelacsauditoryisoresponse.la : \
+    moc_isoresponse.cc
 
 librelacsauditoryisoresponse_la_SOURCES = \
     isoresponse.cc \
@@ -63,20 +57,14 @@ librelacsauditoryoneclick_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
-librelacsauditoryoneclick_la-%-moc.cpp : ../include/relacs/%.h
-	$(MOC_CREATE)
-
-librelacsauditoryoneclick_la-%-moc.lo : librelacsauditoryoneclick_la-%-moc.cpp
-	$(MOC_COMPILE_1) $(librelacsauditoryoneclick_la_CPPFLAGS) \
-	$(MOC_COMPILE_2) $(librelacsauditoryoneclick_la_CXXFLAGS) \
-	$(MOC_COMPILE_3)
-
 librelacsauditoryoneclick_la_LIBADD = \
     ../../relacs/src/librelacs.la \
     ../../common/base/librelacscommonephystraces.la \
     ../base/librelacsauditorytraces.la \
-    ../speaker/librelacsauditoryloudspeaker.la \
-    librelacsauditoryoneclick_la-oneclick-moc.lo
+    ../speaker/librelacsauditoryloudspeaker.la
+
+librelacsauditoryoneclick.la : \
+    moc_oneclick.cc
 
 librelacsauditoryoneclick_la_SOURCES = \
     oneclick.cc \

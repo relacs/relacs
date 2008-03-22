@@ -834,3 +834,5 @@ void PlotTrace::customEvent( QCustomEvent *qce )
   }
 }
 
+
+#include "moc_plottrace.cc"

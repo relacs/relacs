@@ -1021,5 +1021,3 @@ ostream &operator<<( ostream &str, const OutData &od )
   return str;
 }
 
-
-#include "moc_outdata.cc"

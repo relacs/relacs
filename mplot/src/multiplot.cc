@@ -487,3 +487,5 @@ void MultiPlot::mouseMoveEvent( QMouseEvent *qme )
     }
   }
 }
+
+#include "moc_multiplot.cc"

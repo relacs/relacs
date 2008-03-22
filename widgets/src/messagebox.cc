@@ -145,3 +145,5 @@ void MessageBox::closeMessage( void )
   delete this;
 }
 
+
+#include "moc_messagebox.cc"

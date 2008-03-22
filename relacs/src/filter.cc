@@ -79,3 +79,5 @@ void Filter::setName( const string &name )
     setConfigIdent( "Filter: " + Ident );
 }
 
+
+#include "moc_filter.cc"

@@ -43,17 +43,11 @@ librelacscommonpause_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
-librelacscommonpause_la-%-moc.cpp : ../include/relacs/%.h
-	$(MOC_CREATE)
-
-librelacscommonpause_la-%-moc.lo : librelacscommonpause_la-%-moc.cpp
-	$(MOC_COMPILE_1) $(librelacscommonpause_la_CPPFLAGS) \
-	$(MOC_COMPILE_2) $(librelacscommonpause_la_CXXFLAGS) \
-	$(MOC_COMPILE_3)
-
 librelacscommonpause_la_LIBADD = \
-    ../../relacs/src/librelacs.la \
-    librelacscommonpause_la-pause-moc.lo
+    ../../relacs/src/librelacs.la
+
+librelacscommonpause.la : \
+    moc_pause.cc
 
 librelacscommonpause_la_SOURCES = \
     pause.cc \
@@ -71,17 +65,11 @@ librelacscommonrestartdelay_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
-librelacscommonrestartdelay_la-%-moc.cpp : ../include/relacs/%.h
-	$(MOC_CREATE)
-
-librelacscommonrestartdelay_la-%-moc.lo : librelacscommonrestartdelay_la-%-moc.cpp
-	$(MOC_COMPILE_1) $(librelacscommonrestartdelay_la_CPPFLAGS) \
-	$(MOC_COMPILE_2) $(librelacscommonrestartdelay_la_CXXFLAGS) \
-	$(MOC_COMPILE_3)
-
 librelacscommonrestartdelay_la_LIBADD = \
-    ../../relacs/src/librelacs.la \
-    librelacscommonrestartdelay_la-restartdelay-moc.lo
+    ../../relacs/src/librelacs.la
+
+librelacscommonrestartdelay.la : \
+    moc_restartdelay.cc
 
 librelacscommonrestartdelay_la_SOURCES = \
     restartdelay.cc \
@@ -99,17 +87,11 @@ librelacscommonstimulusdelay_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
-librelacscommonstimulusdelay_la-%-moc.cpp : ../include/relacs/%.h
-	$(MOC_CREATE)
-
-librelacscommonstimulusdelay_la-%-moc.lo : librelacscommonstimulusdelay_la-%-moc.cpp
-	$(MOC_COMPILE_1) $(librelacscommonstimulusdelay_la_CPPFLAGS) \
-	$(MOC_COMPILE_2) $(librelacscommonstimulusdelay_la_CXXFLAGS) \
-	$(MOC_COMPILE_3)
-
 librelacscommonstimulusdelay_la_LIBADD = \
-    ../../relacs/src/librelacs.la \
-    librelacscommonstimulusdelay_la-stimulusdelay-moc.lo
+    ../../relacs/src/librelacs.la
+
+librelacscommonstimulusdelay.la : \
+    moc_stimulusdelay.cc
 
 librelacscommonstimulusdelay_la_SOURCES = \
     stimulusdelay.cc \

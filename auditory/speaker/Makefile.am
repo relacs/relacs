@@ -26,20 +26,14 @@ librelacsauditorycalibspeakers_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
-librelacsauditorycalibspeakers_la-%-moc.cpp : ../include/relacs/%.h
-	$(MOC_CREATE)
-
-librelacsauditorycalibspeakers_la-%-moc.lo : librelacsauditorycalibspeakers_la-%-moc.cpp
-	$(MOC_COMPILE_1) $(librelacsauditorycalibspeakers_la_CPPFLAGS) \
-	$(MOC_COMPILE_2) $(librelacsauditorycalibspeakers_la_CXXFLAGS) \
-	$(MOC_COMPILE_3)
-
 librelacsauditorycalibspeakers_la_LIBADD = \
     ../../relacs/src/librelacs.la \
     ../../config/src/librelacsconfig.la \
     ../base/librelacsauditorytraces.la \
-    librelacsauditoryloudspeaker.la \
-    librelacsauditorycalibspeakers_la-calibspeakers-moc.lo
+    librelacsauditoryloudspeaker.la
+
+librelacsauditorycalibspeakers.la : \
+    moc_calibspeakers.cc
 
 librelacsauditorycalibspeakers_la_SOURCES = \
     calibspeakers.cc \
@@ -57,17 +51,11 @@ librelacsauditoryloudspeaker_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
-librelacsauditoryloudspeaker_la-%-moc.cpp : ../include/relacs/%.h
-	$(MOC_CREATE)
-
-librelacsauditoryloudspeaker_la-%-moc.lo : librelacsauditoryloudspeaker_la-%-moc.cpp
-	$(MOC_COMPILE_1) $(librelacsauditoryloudspeaker_la_CPPFLAGS) \
-	$(MOC_COMPILE_2) $(librelacsauditoryloudspeaker_la_CXXFLAGS) \
-	$(MOC_COMPILE_3)
-
 librelacsauditoryloudspeaker_la_LIBADD = \
-    ../../relacs/src/librelacs.la \
-    librelacsauditoryloudspeaker_la-loudspeaker-moc.lo
+    ../../relacs/src/librelacs.la
+
+librelacsauditoryloudspeaker.la : \
+    moc_loudspeaker.cc
 
 librelacsauditoryloudspeaker_la_SOURCES = \
     loudspeaker.cc \

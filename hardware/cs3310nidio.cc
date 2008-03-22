@@ -403,5 +403,3 @@ int CS3310NIDIO::write( void )
 
 #undef NSLEEP
 }
-
-#include "moc_cs3310nidio.cc"

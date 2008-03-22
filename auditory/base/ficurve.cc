@@ -1072,3 +1072,5 @@ RePro::DoneState FICurve::next( vector< FIData > &results, bool msg )
 
 
 addRePro( FICurve );
+
+#include "moc_ficurve.cc"

@@ -791,3 +791,5 @@ void SaveFiles::completeFiles( void )
   setPath( defaultPath() );
 }
 
+
+#include "moc_savefiles.cc"

@@ -256,3 +256,5 @@ void Control::requestStop( void )
   }
 }
 
+
+#include "moc_control.cc"

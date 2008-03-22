@@ -2743,5 +2743,3 @@ void Options::unsetNotify( void )
   CallNotify = false;
 }
 
-
-#include "moc_options.cc"

@@ -1571,3 +1571,5 @@ void KeyTimeOut::timerEvent( QTimerEvent *e )
   killTimers();
 }
 
+
+#include "moc_relacswidget.cc"

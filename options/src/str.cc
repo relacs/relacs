@@ -4888,5 +4888,3 @@ void Str::ReadFormat( const char *format, int &width, int &findex )
 
 
 
-
-#include "moc_str.cc"

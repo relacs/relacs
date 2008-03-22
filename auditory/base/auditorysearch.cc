@@ -585,3 +585,5 @@ void AuditorySearch::customEvent( QCustomEvent *qce )
 
 
 addRePro( AuditorySearch );
+
+#include "moc_auditorysearch.cc"

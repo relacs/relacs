@@ -25,17 +25,11 @@ librelacscommonneuronmodels_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
-librelacscommonneuronmodels_la-%-moc.cpp : ../include/relacs/%.h
-	$(MOC_CREATE)
-
-librelacscommonneuronmodels_la-%-moc.lo : librelacscommonneuronmodels_la-%-moc.cpp
-	$(MOC_COMPILE_1) $(librelacscommonneuronmodels_la_CPPFLAGS) \
-	$(MOC_COMPILE_2) $(librelacscommonneuronmodels_la_CXXFLAGS) \
-	$(MOC_COMPILE_3)
-
 librelacscommonneuronmodels_la_LIBADD = \
-    ../../relacs/src/librelacs.la \
-    librelacscommonneuronmodels_la-neuronmodels-moc.lo
+    ../../relacs/src/librelacs.la
+
+librelacscommonneuronmodels.la : \
+    moc_neuronmodels.cc
 
 librelacscommonneuronmodels_la_SOURCES = \
     neuronmodels.cc \
@@ -52,17 +46,11 @@ librelacscommonsimplemodel_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
-librelacscommonsimplemodel_la-%-moc.cpp : ../include/relacs/%.h
-	$(MOC_CREATE)
-
-librelacscommonsimplemodel_la-%-moc.lo : librelacscommonsimplemodel_la-%-moc.cpp
-	$(MOC_COMPILE_1) $(librelacscommonsimplemodel_la_CPPFLAGS) \
-	$(MOC_COMPILE_2) $(librelacscommonsimplemodel_la_CXXFLAGS) \
-	$(MOC_COMPILE_3)
-
 librelacscommonsimplemodel_la_LIBADD = \
-    ../../relacs/src/librelacs.la \
-    librelacscommonsimplemodel_la-simplemodel-moc.lo
+    ../../relacs/src/librelacs.la
+
+librelacscommonsimplemodel.la : \
+    moc_simplemodel.cc
 
 librelacscommonsimplemodel_la_SOURCES = \
     simplemodel.cc \
