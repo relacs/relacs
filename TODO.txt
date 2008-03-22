@@ -1,7 +1,4 @@
 == Next ==
-- Add configure scripts to all seven libraries if possible (LATER)
-  - Extract GSL detection
-    - Make macro from that
 - Doxygen stuff
     - auditory/doc/auditory.dox
     - common/doc/common.dox

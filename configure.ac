@@ -59,7 +59,7 @@ AC_ARG_WITH(qt3, [
 Extra Options:
   --with-qt3=DIR          override Qt3 path
                           ("/lib" and "/include" is appended], [
-	QT3_INC_ERROR="No path given for option --with-qt3"
+	QT3_ERROR="No path given for option --with-qt3"
 	if test ${withval} != yes -a "x${withval}" != x ; then
 		QT3_LDFLAGS="-L${withval} ${QT3_LDFLAGS}"
 		LDFLAGS="-L${withval} ${LDFLAGS}"
@@ -67,7 +67,7 @@ Extra Options:
 		CPPFLAGS="-I${withval} ${CPPFLAGS}"
 		EXTRA_MOC_LOCATION="${withval}/bin"
 	else
-		AC_MSG_ERROR(${QT3_INC_ERROR})
+		AC_MSG_ERROR(${QT3_ERROR})
 	fi
 ], [])
 
@@ -163,6 +163,13 @@ else
 fi
 
 AC_SUBST(MOC)
+
+
+
+#################################################
+## Comedi
+#################################################
+AC_RELACS_CHECK_COMEDI
 
 
 
