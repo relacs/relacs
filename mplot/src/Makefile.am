@@ -7,10 +7,10 @@ lib_LTLIBRARIES = \
 
 
 librelacsmplot_la_CPPFLAGS = \
-    -I../../daq/include \
-    -I../../numerics/include \
-    -I../../options/include \
-    -I../include \
+    -I$(srcdir)/../../daq/include \
+    -I$(srcdir)/../../numerics/include \
+    -I$(srcdir)/../../options/include \
+    -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
 librelacsmplot_la_LDFLAGS = \

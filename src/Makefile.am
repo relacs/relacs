@@ -12,14 +12,14 @@ sysconf_DATA = \
 # TODO
 relacs_main_CPPFLAGS = \
     "-DRELACSVERSION=\"@RELACSVERSION@\"" \
-    -I../config/include \
-    -I../daq/include \
-    -I../datafile/include \
-    -I../mplot/include \
-    -I../numerics/include \
-    -I../options/include \
-    -I../widgets/include \
-    -I../relacs/include \
+    -I$(srcdir)/../config/include \
+    -I$(srcdir)/../daq/include \
+    -I$(srcdir)/../datafile/include \
+    -I$(srcdir)/../mplot/include \
+    -I$(srcdir)/../numerics/include \
+    -I$(srcdir)/../options/include \
+    -I$(srcdir)/../widgets/include \
+    -I$(srcdir)/../relacs/include \
     @QT3_CPPFLAGS@
 
 relacs_main_LDADD = \

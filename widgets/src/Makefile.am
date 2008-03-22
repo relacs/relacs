@@ -7,8 +7,8 @@ lib_LTLIBRARIES = \
 
 
 librelacswidgets_la_CPPFLAGS = \
-    -I../../options/include \
-    -I../include \
+    -I$(srcdir)/../../options/include \
+    -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
 librelacswidgets_la_LDFLAGS = \

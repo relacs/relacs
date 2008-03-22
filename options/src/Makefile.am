@@ -6,7 +6,7 @@ lib_LTLIBRARIES = \
 librelacsoptions_ladir = $(includedir)/relacs
 
 librelacsoptions_la_CPPFLAGS = \
-    -I../include
+    -I$(srcdir)/../include
 
 librelacsoptions_la_HEADERS = \
     ../include/relacs/options.h \

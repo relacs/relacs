@@ -7,9 +7,9 @@ lib_LTLIBRARIES = \
 
 
 librelacsconfig_la_CPPFLAGS = \
-    -I../../options/include \
-    -I../../widgets/include \
-    -I../include \
+    -I$(srcdir)/../../options/include \
+    -I$(srcdir)/../../widgets/include \
+    -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
 librelacsconfig_la_LDFLAGS = \

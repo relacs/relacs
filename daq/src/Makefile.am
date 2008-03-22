@@ -4,8 +4,8 @@ lib_LTLIBRARIES = \
 
 
 librelacsdaq_la_CPPFLAGS = \
-    -I../../numerics/include \
-    -I../include
+    -I$(srcdir)/../../numerics/include \
+    -I$(srcdir)/../include
 
 librelacsdaq_ladir = $(includedir)/relacs
 

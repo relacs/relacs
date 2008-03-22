@@ -20,10 +20,10 @@ endif
 
 
 librelacscommonephystraces_la_CPPFLAGS = \
-    -I../../daq/include \
-    -I../../numerics/include \
-    -I../../options/include \
-    -I../include
+    -I$(srcdir)/../../daq/include \
+    -I$(srcdir)/../../numerics/include \
+    -I$(srcdir)/../../options/include \
+    -I$(srcdir)/../include
 
 librelacscommonephystraces_la_LIBADD = \
     ../../relacs/src/librelacs.la
@@ -35,12 +35,12 @@ librelacscommonephystraces_la_SOURCES = \
 
 
 librelacscommonpause_la_CPPFLAGS = \
-    -I../../config/include \
-    -I../../daq/include \
-    -I../../numerics/include \
-    -I../../options/include \
-    -I../../relacs/include \
-    -I../include \
+    -I$(srcdir)/../../config/include \
+    -I$(srcdir)/../../daq/include \
+    -I$(srcdir)/../../numerics/include \
+    -I$(srcdir)/../../options/include \
+    -I$(srcdir)/../../relacs/include \
+    -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
 librelacscommonpause_la-%-moc.cpp : ../include/relacs/%.h
@@ -62,13 +62,13 @@ librelacscommonpause_la_SOURCES = \
 
 
 librelacscommonrestartdelay_la_CPPFLAGS = \
-    -I../../config/include \
-    -I../../daq/include \
-    -I../../mplot/include \
-    -I../../numerics/include \
-    -I../../options/include \
-    -I../../relacs/include \
-    -I../include \
+    -I$(srcdir)/../../config/include \
+    -I$(srcdir)/../../daq/include \
+    -I$(srcdir)/../../mplot/include \
+    -I$(srcdir)/../../numerics/include \
+    -I$(srcdir)/../../options/include \
+    -I$(srcdir)/../../relacs/include \
+    -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
 librelacscommonrestartdelay_la-%-moc.cpp : ../include/relacs/%.h
@@ -90,13 +90,13 @@ librelacscommonrestartdelay_la_SOURCES = \
 
 
 librelacscommonstimulusdelay_la_CPPFLAGS = \
-    -I../../config/include \
-    -I../../daq/include \
-    -I../../mplot/include \
-    -I../../numerics/include \
-    -I../../options/include \
-    -I../../relacs/include \
-    -I../include \
+    -I$(srcdir)/../../config/include \
+    -I$(srcdir)/../../daq/include \
+    -I$(srcdir)/../../mplot/include \
+    -I$(srcdir)/../../numerics/include \
+    -I$(srcdir)/../../options/include \
+    -I$(srcdir)/../../relacs/include \
+    -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
 librelacscommonstimulusdelay_la-%-moc.cpp : ../include/relacs/%.h

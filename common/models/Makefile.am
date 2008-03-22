@@ -16,13 +16,13 @@ endif
 
 
 librelacscommonneuronmodels_la_CPPFLAGS = \
-    -I../../config/include \
-    -I../../daq/include \
-    -I../../numerics/include \
-    -I../../options/include \
-    -I../../relacs/include \
-    -I../../widgets/include \
-    -I../include \
+    -I$(srcdir)/../../config/include \
+    -I$(srcdir)/../../daq/include \
+    -I$(srcdir)/../../numerics/include \
+    -I$(srcdir)/../../options/include \
+    -I$(srcdir)/../../relacs/include \
+    -I$(srcdir)/../../widgets/include \
+    -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
 librelacscommonneuronmodels_la-%-moc.cpp : ../include/relacs/%.h
@@ -44,12 +44,12 @@ librelacscommonneuronmodels_la_SOURCES = \
 
 
 librelacscommonsimplemodel_la_CPPFLAGS = \
-    -I../../config/include \
-    -I../../daq/include \
-    -I../../numerics/include \
-    -I../../options/include \
-    -I../../relacs/include \
-    -I../include \
+    -I$(srcdir)/../../config/include \
+    -I$(srcdir)/../../daq/include \
+    -I$(srcdir)/../../numerics/include \
+    -I$(srcdir)/../../options/include \
+    -I$(srcdir)/../../relacs/include \
+    -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
 librelacscommonsimplemodel_la-%-moc.cpp : ../include/relacs/%.h

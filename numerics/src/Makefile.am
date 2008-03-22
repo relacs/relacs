@@ -7,7 +7,7 @@ librelacsnumerics_la_LDFLAGS = \
     @GSL_LDFLAGS@
 
 librelacsnumerics_la_CPPFLAGS = \
-    -I../include \
+    -I$(srcdir)/../include \
     @GSL_CPPFLAGS@
 
 librelacsnumerics_ladir = $(includedir)/relacs

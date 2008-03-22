@@ -13,12 +13,12 @@ endif
 
 
 librelacshardware_la_CPPFLAGS = \
-    -I../config/include \
-    -I../daq/include \
-    -I../numerics/include \
-    -I../options/include \
-    -I../relacs/include \
-    -Iinclude \
+    -I$(srcdir)/../config/include \
+    -I$(srcdir)/../daq/include \
+    -I$(srcdir)/../numerics/include \
+    -I$(srcdir)/../options/include \
+    -I$(srcdir)/../relacs/include \
+    -I$(srcdir)/include \
     @QT3_CPPFLAGS@
 
 librelacshardware_la_LIBADD = \
@@ -39,12 +39,12 @@ librelacshardware_la_SOURCES = \
 
 librelacsnieserieshardware_la_CPPFLAGS = \
     -DNIDAQ_MAJOR=254 \
-    -I../config/include \
-    -I../daq/include \
-    -I../numerics/include \
-    -I../options/include \
-    -I../relacs/include \
-    -Iinclude \
+    -I$(srcdir)/../config/include \
+    -I$(srcdir)/../daq/include \
+    -I$(srcdir)/../numerics/include \
+    -I$(srcdir)/../options/include \
+    -I$(srcdir)/../relacs/include \
+    -I$(srcdir)/include \
     @QT3_CPPFLAGS@
 
 librelacsnieserieshardware_la_LIBADD = \

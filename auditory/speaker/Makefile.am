@@ -16,14 +16,14 @@ endif
 
 
 librelacsauditorycalibspeakers_la_CPPFLAGS = \
-    -I../../config/include \
-    -I../../daq/include \
-    -I../../datafile/include \
-    -I../../mplot/include \
-    -I../../numerics/include \
-    -I../../options/include \
-    -I../../relacs/include \
-    -I../include \
+    -I$(srcdir)/../../config/include \
+    -I$(srcdir)/../../daq/include \
+    -I$(srcdir)/../../datafile/include \
+    -I$(srcdir)/../../mplot/include \
+    -I$(srcdir)/../../numerics/include \
+    -I$(srcdir)/../../options/include \
+    -I$(srcdir)/../../relacs/include \
+    -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
 librelacsauditorycalibspeakers_la-%-moc.cpp : ../include/relacs/%.h
@@ -48,13 +48,13 @@ librelacsauditorycalibspeakers_la_SOURCES = \
 
 
 librelacsauditoryloudspeaker_la_CPPFLAGS = \
-    -I../../config/include \
-    -I../../daq/include \
-    -I../../datafile/include \
-    -I../../numerics/include \
-    -I../../options/include \
-    -I../../relacs/include \
-    -I../include \
+    -I$(srcdir)/../../config/include \
+    -I$(srcdir)/../../daq/include \
+    -I$(srcdir)/../../datafile/include \
+    -I$(srcdir)/../../numerics/include \
+    -I$(srcdir)/../../options/include \
+    -I$(srcdir)/../../relacs/include \
+    -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
 librelacsauditoryloudspeaker_la-%-moc.cpp : ../include/relacs/%.h
