@@ -34,7 +34,7 @@ librelacsauditoryisoresponse_la_LIBADD = \
     ../../common/base/librelacscommonephystraces.la \
     ../base/librelacsauditorysession.la
 
-librelacsauditoryisoresponse.la : \
+$(librelacsauditoryisoresponse_la_OBJECTS) : \
     moc_isoresponse.cc
 
 librelacsauditoryisoresponse_la_SOURCES = \
@@ -63,7 +63,7 @@ librelacsauditoryoneclick_la_LIBADD = \
     ../base/librelacsauditorytraces.la \
     ../speaker/librelacsauditoryloudspeaker.la
 
-librelacsauditoryoneclick.la : \
+$(librelacsauditoryoneclick_la_OBJECTS) : \
     moc_oneclick.cc
 
 librelacsauditoryoneclick_la_SOURCES = \

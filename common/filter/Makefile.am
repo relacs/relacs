@@ -28,7 +28,7 @@ librelacscommonhighpass_la_CPPFLAGS = \
 librelacscommonhighpass_la_LIBADD = \
     ../../relacs/src/librelacs.la
 
-librelacscommonhighpass.la : \
+$(librelacscommonhighpass_la_OBJECTS) : \
     moc_highpass.cc
 
 librelacscommonhighpass_la_SOURCES = \
@@ -50,7 +50,7 @@ librelacscommonlowpass_la_CPPFLAGS = \
 librelacscommonlowpass_la_LIBADD = \
     ../../relacs/src/librelacs.la
 
-librelacscommonlowpass.la: \
+$(librelacscommonlowpass_la_OBJECTS) : \
     moc_lowpass.cc
 
 librelacscommonlowpass_la_SOURCES = \

@@ -28,7 +28,7 @@ librelacscommonneuronmodels_la_CPPFLAGS = \
 librelacscommonneuronmodels_la_LIBADD = \
     ../../relacs/src/librelacs.la
 
-librelacscommonneuronmodels.la : \
+$(librelacscommonneuronmodels_la_OBJECTS) : \
     moc_neuronmodels.cc
 
 librelacscommonneuronmodels_la_SOURCES = \
@@ -49,7 +49,7 @@ librelacscommonsimplemodel_la_CPPFLAGS = \
 librelacscommonsimplemodel_la_LIBADD = \
     ../../relacs/src/librelacs.la
 
-librelacscommonsimplemodel.la : \
+$(librelacscommonsimplemodel_la_OBJECTS) : \
     moc_simplemodel.cc
 
 librelacscommonsimplemodel_la_SOURCES = \

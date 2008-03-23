@@ -16,7 +16,7 @@ librelacsmplot_la_CPPFLAGS = \
 librelacsmplot_la_LDFLAGS = \
     @QT3_LDFLAGS@
 
-librelacsmplot.la : \
+$(librelacsmplot_la_OBJECTS) : \
     moc_multiplot.cc \
     moc_plot.cc
 

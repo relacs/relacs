@@ -14,7 +14,7 @@ librelacswidgets_la_CPPFLAGS = \
 librelacswidgets_la_LDFLAGS = \
     @QT3_LDFLAGS@
 
-librelacswidgets.la : \
+$(librelacswidgets_la_OBJECTS) : \
     moc_doublespinbox.cc \
     moc_lcdrange.cc \
     moc_messagebox.cc \

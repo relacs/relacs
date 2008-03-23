@@ -32,7 +32,7 @@ librelacsauditorycalibspeakers_la_LIBADD = \
     ../base/librelacsauditorytraces.la \
     librelacsauditoryloudspeaker.la
 
-librelacsauditorycalibspeakers.la : \
+$(librelacsauditorycalibspeakers_la_OBJECTS) : \
     moc_calibspeakers.cc
 
 librelacsauditorycalibspeakers_la_SOURCES = \
@@ -54,7 +54,7 @@ librelacsauditoryloudspeaker_la_CPPFLAGS = \
 librelacsauditoryloudspeaker_la_LIBADD = \
     ../../relacs/src/librelacs.la
 
-librelacsauditoryloudspeaker.la : \
+$(librelacsauditoryloudspeaker_la_OBJECTS) : \
     moc_loudspeaker.cc
 
 librelacsauditoryloudspeaker_la_SOURCES = \

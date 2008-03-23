@@ -44,7 +44,7 @@ librelacsauditoryneuron_la_LIBADD = \
     ../../relacs/src/librelacs.la \
     ../../common/models/librelacscommonneuronmodels.la
 
-librelacsauditoryneuron.la : \
+$(librelacsauditoryneuron_la_OBJECTS) : \
     moc_auditoryneuron.cc
 
 librelacsauditoryneuron_la_SOURCES = \
@@ -68,7 +68,7 @@ librelacsauditorysearch_la_LIBADD = \
     ../../relacs/src/librelacs.la \
     librelacsauditorytraces.la
 
-librelacsauditorysearch.la : \
+$(librelacsauditorysearch_la_OBJECTS) : \
     moc_auditorysearch.cc
 
 librelacsauditorysearch_la_SOURCES = \
@@ -96,7 +96,7 @@ librelacsauditorysession_la_LIBADD = \
     ../../hardware/librelacsnieserieshardware.la \
     librelacsauditorytraces.la
 
-librelacsauditorysession.la : \
+$(librelacsauditorysession_la_OBJECTS) : \
     moc_auditorysession.cc
 
 librelacsauditorysession_la_SOURCES = \
@@ -143,7 +143,7 @@ librelacsauditoryficurve_la_LIBADD = \
     librelacsauditorytraces.la \
     librelacsauditorysession.la
 
-librelacsauditoryficurve.la : \
+$(librelacsauditoryficurve_la_OBJECTS) : \
     moc_ficurve.cc
 
 librelacsauditoryficurve_la_SOURCES = \
@@ -172,7 +172,7 @@ librelacsauditoryfifield_la_LIBADD = \
     librelacsauditorytraces.la \
     librelacsauditoryficurve.la
 
-librelacsauditoryfifield.la: \
+$(librelacsauditoryfifield_la_OBJECTS) : \
     moc_fifield.cc
 
 librelacsauditoryfifield_la_SOURCES = \
@@ -201,7 +201,7 @@ librelacsauditorysinglestimulus_la_LIBADD = \
     librelacsauditorysession.la \
     librelacsauditorytraces.la
 
-librelacsauditorysinglestimulus.la : \
+$(librelacsauditorysinglestimulus_la_OBJECTS) : \
     moc_singlestimulus.cc
 
 librelacsauditorysinglestimulus_la_SOURCES = \
@@ -230,7 +230,7 @@ librelacsauditoryspikeprecision_la_LIBADD = \
     librelacsauditorysession.la \
     librelacsauditorytraces.la
 
-librelacsauditoryspikeprecision.la : \
+$(librelacsauditoryspikeprecision_la_OBJECTS) : \
     moc_spikeprecision.cc
 
 librelacsauditoryspikeprecision_la_SOURCES = \
@@ -259,7 +259,7 @@ librelacsauditorysyslatency_la_LIBADD = \
     librelacsauditorysession.la \
     librelacsauditorytraces.la
 
-librelacsauditorysyslatency.la : \
+$(librelacsauditorysyslatency_la_OBJECTS) : \
     moc_syslatency.cc
 
 librelacsauditorysyslatency_la_SOURCES = \

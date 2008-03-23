@@ -36,7 +36,7 @@ librelacs_la_LIBADD = \
     ../../options/src/librelacsoptions.la \
     ../../widgets/src/librelacswidgets.la
     
-librelacs.la : \
+$(librelacs_la_OBJECTS) : \
     moc_control.cc \
     moc_defaultrepro.cc \
     moc_defaultsession.cc \

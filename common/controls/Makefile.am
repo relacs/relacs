@@ -28,7 +28,7 @@ librelacscommonmotorcontrol_la_CPPFLAGS = \
 librelacscommonmotorcontrol_la_LIBADD = \
     ../../relacs/src/librelacs.la
 
-librelacscommonmotorcontrol.la : \
+$(librelacscommonmotorcontrol_la_OBJECTS) : \
     moc_motorcontrol.cc
 
 librelacscommonmotorcontrol_la_SOURCES = \
@@ -50,7 +50,7 @@ librelacscommonspectrumanalyzer_la_CPPFLAGS = \
 librelacscommonspectrumanalyzer_la_LIBADD = \
     ../../relacs/src/librelacs.la
 
-librelacscommonspectrumanalyzer.la : \
+$(librelacscommonspectrumanalyzer_la_OBJECTS) : \
     moc_spectrumanalyzer.cc
 
 librelacscommonspectrumanalyzer_la_SOURCES = \

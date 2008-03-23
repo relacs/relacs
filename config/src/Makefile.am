@@ -15,6 +15,9 @@ librelacsconfig_la_CPPFLAGS = \
 librelacsconfig_la_LDFLAGS = \
     @QT3_LDFLAGS@
 
+$(librelacsconfig_la_OBJECTS) : \
+    moc_configdialog.cc
+
 librelacsconfig_ladir = $(includedir)/relacs
 
 librelacsconfig_la_HEADERS = \
@@ -26,6 +29,4 @@ librelacsconfig_la_SOURCES = \
     config.cc \
     configdialog.cc \
     configure.cc
-
-librelacsconfig.la: moc_configdialog.cc
 

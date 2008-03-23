@@ -46,7 +46,7 @@ librelacscommonpause_la_CPPFLAGS = \
 librelacscommonpause_la_LIBADD = \
     ../../relacs/src/librelacs.la
 
-librelacscommonpause.la : \
+$(librelacscommonpause_la_OBJECTS) : \
     moc_pause.cc
 
 librelacscommonpause_la_SOURCES = \
@@ -68,7 +68,7 @@ librelacscommonrestartdelay_la_CPPFLAGS = \
 librelacscommonrestartdelay_la_LIBADD = \
     ../../relacs/src/librelacs.la
 
-librelacscommonrestartdelay.la : \
+$(librelacscommonrestartdelay_la_OBJECTS) : \
     moc_restartdelay.cc
 
 librelacscommonrestartdelay_la_SOURCES = \
@@ -90,7 +90,7 @@ librelacscommonstimulusdelay_la_CPPFLAGS = \
 librelacscommonstimulusdelay_la_LIBADD = \
     ../../relacs/src/librelacs.la
 
-librelacscommonstimulusdelay.la : \
+$(librelacscommonstimulusdelay_la_OBJECTS) : \
     moc_stimulusdelay.cc
 
 librelacscommonstimulusdelay_la_SOURCES = \

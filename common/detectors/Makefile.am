@@ -28,7 +28,7 @@ librelacscommonspikedetector_la_CPPFLAGS = \
 librelacscommonspikedetector_la_LIBADD = \
     ../../relacs/src/librelacs.la
 
-librelacscommonspikedetector.la : \
+$(librelacscommonspikedetector_la_OBJECTS) : \
     moc_spikedetector.cc
 
 librelacscommonspikedetector_la_SOURCES = \
