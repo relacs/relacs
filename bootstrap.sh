@@ -16,7 +16,7 @@ LIBTOOL_M4=$(dirname $(dirname $(which libtool)))/share/libtool/libtool.m4
 if [ -e ${LIBTOOL_M4} ]; then
 	cp "${LIBTOOL_M4}" acinclude.m4 || exit 1
 fi
-aclocal -I numerics/m4 -I hardware/m4 || exit 1
+aclocal -I numerics/m4 -I hardware/m4 -I m4 || exit 1
 
 ## Libtoolize
 LIBTOOLIZE=libtoolize
@@ -32,7 +32,7 @@ ${LIBTOOLIZE} --copy --force >/dev/null || exit 1
 ## Autoconf
 AUTOCONF_VERSION=`autoconf --version | head -1 | grep -o '[^ ]*$'`
 step "autoconf    ${AUTOCONF_VERSION}"
-touch build_config_dump.in
+touch build_config_dump.in || exit 1 # Solves chicken-and-egg problem
 autoconf || exit 1
 
 ## Dump build config
