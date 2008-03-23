@@ -74,9 +74,9 @@ librelacsauditoryoneclick_la_SOURCES = \
 
 if RELACS_LINKTESTS
 linktest_librelacsauditoryisoresponse_la_SOURCES =
-linktest_librelacsauditoryisoresponse_la_LDADD = librelacsauditoryisoresponse.la ../../relacs/src/librelacslinktest.la
+linktest_librelacsauditoryisoresponse_la_LDADD = librelacsauditoryisoresponse.la ../../linktest/librelacslinktest.la
 
 linktest_librelacsauditoryoneclick_la_SOURCES =
-linktest_librelacsauditoryoneclick_la_LDADD = librelacsauditoryoneclick.la ../../relacs/src/librelacslinktest.la
+linktest_librelacsauditoryoneclick_la_LDADD = librelacsauditoryoneclick.la ../../linktest/librelacslinktest.la
 endif
 

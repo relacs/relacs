@@ -1,13 +1,15 @@
 man_MANS = doc/relacs.1
 
 SUBDIRS = \
+    linktest \
+    \
+    options \
+    widgets \
     config \
+    numerics \
     daq \
     datafile \
     mplot \
-    numerics \
-    options \
-    widgets \
     \
     relacs \
     src \
@@ -18,8 +20,8 @@ SUBDIRS = \
     \
     utils
 
-# DIST_SUBDIRS = \
-#    library
+DIST_SUBDIRS = \
+    m4
 
 EXTRA_DIST = \
     moc3.mk \

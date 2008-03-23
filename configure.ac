@@ -147,6 +147,7 @@ AC_CONFIG_FILES([
     datafile/src/Makefile
     datafile/Makefile
     hardware/Makefile
+    linktest/Makefile
     mplot/src/Makefile
     mplot/Makefile
     numerics/src/Makefile

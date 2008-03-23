@@ -61,9 +61,9 @@ librelacscommonlowpass_la_SOURCES = \
 
 if RELACS_LINKTESTS
 linktest_librelacscommonhighpass_la_SOURCES =
-linktest_librelacscommonhighpass_la_LDADD = librelacscommonhighpass.la ../../relacs/src/librelacslinktest.la
+linktest_librelacscommonhighpass_la_LDADD = librelacscommonhighpass.la ../../linktest/librelacslinktest.la
 
 linktest_librelacscommonlowpass_la_SOURCES =
-linktest_librelacscommonlowpass_la_LDADD = librelacscommonlowpass.la ../../relacs/src/librelacslinktest.la
+linktest_librelacscommonlowpass_la_LDADD = librelacscommonlowpass.la ../../linktest/librelacslinktest.la
 endif
 

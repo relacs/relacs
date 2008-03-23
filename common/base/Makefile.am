@@ -101,15 +101,15 @@ librelacscommonstimulusdelay_la_SOURCES = \
 
 if RELACS_LINKTESTS
 linktest_librelacscommonephystraces_la_SOURCES =
-linktest_librelacscommonephystraces_la_LDADD = librelacscommonephystraces.la ../../relacs/src/librelacslinktest.la
+linktest_librelacscommonephystraces_la_LDADD = librelacscommonephystraces.la ../../linktest/librelacslinktest.la
 
 linktest_librelacscommonpause_la_SOURCES =
-linktest_librelacscommonpause_la_LDADD = librelacscommonpause.la ../../relacs/src/librelacslinktest.la
+linktest_librelacscommonpause_la_LDADD = librelacscommonpause.la ../../linktest/librelacslinktest.la
 
 linktest_librelacscommonrestartdelay_la_SOURCES =
-linktest_librelacscommonrestartdelay_la_LDADD = librelacscommonrestartdelay.la ../../relacs/src/librelacslinktest.la
+linktest_librelacscommonrestartdelay_la_LDADD = librelacscommonrestartdelay.la ../../linktest/librelacslinktest.la
 
 linktest_librelacscommonstimulusdelay_la_SOURCES =
-linktest_librelacscommonstimulusdelay_la_LDADD = librelacscommonstimulusdelay.la ../../relacs/src/librelacslinktest.la
+linktest_librelacscommonstimulusdelay_la_LDADD = librelacscommonstimulusdelay.la ../../linktest/librelacslinktest.la
 endif
 

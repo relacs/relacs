@@ -4,13 +4,6 @@ include ${top_srcdir}/moc3.mk
 lib_LTLIBRARIES = \
     librelacs.la
 
-if RELACS_LINKTESTS
-noinst_libdir = $(abs_builddir)
-
-noinst_lib_LTLIBRARIES = \
-    librelacslinktest.la
-endif
-
 
 
 librelacs_la_CPPFLAGS = \
@@ -108,11 +101,4 @@ librelacs_la_SOURCES = \
     settings.cc \
     simulator.cc \
     spiketrace.cc
-
-
-
-if RELACS_LINKTESTS
-librelacslinktest_la_SOURCES = \
-    linktest.cc
-endif
 

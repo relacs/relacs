@@ -61,9 +61,9 @@ librelacscommonspectrumanalyzer_la_SOURCES = \
 
 if RELACS_LINKTESTS
 linktest_librelacscommonmotorcontrol_la_SOURCES =
-linktest_librelacscommonmotorcontrol_la_LDADD = librelacscommonmotorcontrol.la ../../relacs/src/librelacslinktest.la
+linktest_librelacscommonmotorcontrol_la_LDADD = librelacscommonmotorcontrol.la ../../linktest/librelacslinktest.la
 
 linktest_librelacscommonspectrumanalyzer_la_SOURCES =
-linktest_librelacscommonspectrumanalyzer_la_LDADD = librelacscommonspectrumanalyzer.la ../../relacs/src/librelacslinktest.la
+linktest_librelacscommonspectrumanalyzer_la_LDADD = librelacscommonspectrumanalyzer.la ../../linktest/librelacslinktest.la
 endif
 

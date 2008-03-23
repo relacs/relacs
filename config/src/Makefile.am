@@ -4,6 +4,11 @@ include ${top_srcdir}/moc3.mk
 lib_LTLIBRARIES = \
     librelacsconfig.la
 
+if RELACS_LINKTESTS
+noinst_PROGRAMS = \
+    linktest_librelacsconfig_la
+endif
+
 
 
 librelacsconfig_la_CPPFLAGS = \
@@ -14,6 +19,9 @@ librelacsconfig_la_CPPFLAGS = \
 
 librelacsconfig_la_LDFLAGS = \
     @QT3_LDFLAGS@
+
+librelacsconfig_la_LIBADD = \
+    ../../widgets/src/librelacswidgets.la
 
 $(librelacsconfig_la_OBJECTS) : \
     moc_configdialog.cc
@@ -29,4 +37,11 @@ librelacsconfig_la_SOURCES = \
     config.cc \
     configdialog.cc \
     configure.cc
+
+
+
+if RELACS_LINKTESTS
+linktest_librelacsconfig_la_SOURCES =
+linktest_librelacsconfig_la_LDADD = librelacsconfig.la ../../linktest/librelacslinktest.la
+endif
 

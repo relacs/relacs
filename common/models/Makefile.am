@@ -60,9 +60,9 @@ librelacscommonsimplemodel_la_SOURCES = \
 
 if RELACS_LINKTESTS
 linktest_librelacscommonneuronmodels_la_SOURCES =
-linktest_librelacscommonneuronmodels_la_LDADD = librelacscommonneuronmodels.la ../../relacs/src/librelacslinktest.la
+linktest_librelacscommonneuronmodels_la_LDADD = librelacscommonneuronmodels.la ../../linktest/librelacslinktest.la
 
 linktest_librelacscommonsimplemodel_la_SOURCES =
-linktest_librelacscommonsimplemodel_la_LDADD = librelacscommonsimplemodel.la ../../relacs/src/librelacslinktest.la
+linktest_librelacscommonsimplemodel_la_LDADD = librelacscommonsimplemodel.la ../../linktest/librelacslinktest.la
 endif
 

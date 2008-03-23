@@ -1,11 +1,19 @@
 lib_LTLIBRARIES = \
     librelacsdaq.la
 
+if RELACS_LINKTESTS
+noinst_PROGRAMS = \
+    linktest_librelacsdaq_la
+endif
+
 
 
 librelacsdaq_la_CPPFLAGS = \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../include
+
+librelacsdaq_la_LIBADD = \
+    ../../numerics/src/librelacsnumerics.la
 
 librelacsdaq_ladir = $(includedir)/relacs
 
@@ -40,4 +48,11 @@ librelacsdaq_la_SOURCES = \
     outlist.cc \
     temperature.cc \
     tracespec.cc
+
+
+
+if RELACS_LINKTESTS
+linktest_librelacsdaq_la_SOURCES =
+linktest_librelacsdaq_la_LDADD = librelacsdaq.la ../../linktest/librelacslinktest.la
+endif
 

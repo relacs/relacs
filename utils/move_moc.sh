@@ -24,7 +24,6 @@ while  read header ; do
     fi
 done < <(find . -type f -name '*.h')
 rm "${TEMPFILE}"
-fi
 
 EXTRA_FILES='
 auditory/speaker/calibspeakers.cc
@@ -65,4 +64,20 @@ for HOST_SOURCE in $EXTRA_FILES ; do
         echo "#include \"${MOC_SOURCE}\"" ;
     } >> "${HOST_SOURCE}"
 done
+fi
+
+while read MOC_SOURC ; do
+    DIR=`dirname "${MOC_SOURC}"`
+    FILE=`basename "${MOC_SOURC}"`
+    HOST_SOURCE="${DIR}/${FILE#moc_}"
+    MOC_HEADER="${FILE#moc_}"
+    MOC_HEADER="${MOC_HEADER%.cc}.h"
+    if [ ! -f "${HOST_SOURCE}" ]; then
+        echo "Adding ${HOST_SOURCE}"
+        {
+            echo "#include <relacs/${MOC_HEADER}>"
+            echo "#include \"${FILE}\""
+        } > "${HOST_SOURCE}"
+    fi
+done < <(find . -name 'moc_*')
 

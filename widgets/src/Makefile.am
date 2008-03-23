@@ -4,6 +4,11 @@ include ${top_srcdir}/moc3.mk
 lib_LTLIBRARIES = \
     librelacswidgets.la
 
+if RELACS_LINKTESTS
+noinst_PROGRAMS = \
+    linktest_librelacswidgets_la
+endif
+
 
 
 librelacswidgets_la_CPPFLAGS = \
@@ -13,6 +18,9 @@ librelacswidgets_la_CPPFLAGS = \
 
 librelacswidgets_la_LDFLAGS = \
     @QT3_LDFLAGS@
+
+librelacswidgets_la_LIBADD = \
+    ../../options/src/librelacsoptions.la
 
 $(librelacswidgets_la_OBJECTS) : \
     moc_doublespinbox.cc \
@@ -40,5 +48,15 @@ librelacswidgets_la_SOURCES = \
     lcdrange.cc \
     messagebox.cc \
     optdialog.cc \
-    optwidget.cc
+    optwidget.cc \
+    \
+    optwidgetbase.cc \
+    optdialogbutton.cc
+
+
+
+if RELACS_LINKTESTS
+linktest_librelacswidgets_la_SOURCES =
+linktest_librelacswidgets_la_LDADD = librelacswidgets.la ../../linktest/librelacslinktest.la
+endif
 

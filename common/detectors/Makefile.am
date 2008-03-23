@@ -39,6 +39,6 @@ librelacscommonspikedetector_la_SOURCES = \
 
 if RELACS_LINKTESTS
 linktest_librelacscommonspikedetector_la_SOURCES =
-linktest_librelacscommonspikedetector_la_LDADD = librelacscommonspikedetector.la ../../relacs/src/librelacslinktest.la
+linktest_librelacscommonspikedetector_la_LDADD = librelacscommonspikedetector.la ../../linktest/librelacslinktest.la
 endif
 

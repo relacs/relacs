@@ -65,9 +65,9 @@ librelacsauditoryloudspeaker_la_SOURCES = \
 
 if RELACS_LINKTESTS
 linktest_librelacsauditorycalibspeakers_la_SOURCES =
-linktest_librelacsauditorycalibspeakers_la_LDADD = librelacsauditorycalibspeakers.la ../../relacs/src/librelacslinktest.la
+linktest_librelacsauditorycalibspeakers_la_LDADD = librelacsauditorycalibspeakers.la ../../linktest/librelacslinktest.la
 
 linktest_librelacsauditoryloudspeaker_la_SOURCES =
-linktest_librelacsauditoryloudspeaker_la_LDADD = librelacsauditoryloudspeaker.la ../../relacs/src/librelacslinktest.la
+linktest_librelacsauditoryloudspeaker_la_LDADD = librelacsauditoryloudspeaker.la ../../linktest/librelacslinktest.la
 endif
 

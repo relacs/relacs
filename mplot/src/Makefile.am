@@ -4,6 +4,11 @@ include ${top_srcdir}/moc3.mk
 lib_LTLIBRARIES = \
     librelacsmplot.la
 
+if RELACS_LINKTESTS
+noinst_PROGRAMS = \
+    linktest_librelacsmplot_la
+endif
+
 
 
 librelacsmplot_la_CPPFLAGS = \
@@ -15,6 +20,11 @@ librelacsmplot_la_CPPFLAGS = \
 
 librelacsmplot_la_LDFLAGS = \
     @QT3_LDFLAGS@
+
+librelacsmplot_la_LIBADD = \
+    ../../daq/src/librelacsdaq.la \
+    ../../numerics/src/librelacsnumerics.la \
+    ../../options/src/librelacsoptions.la
 
 $(librelacsmplot_la_OBJECTS) : \
     moc_multiplot.cc \
@@ -29,4 +39,11 @@ librelacsmplot_la_HEADERS = \
 librelacsmplot_la_SOURCES = \
     multiplot.cc \
     plot.cc
+
+
+
+if RELACS_LINKTESTS
+linktest_librelacsmplot_la_SOURCES =
+linktest_librelacsmplot_la_LDADD = librelacsmplot.la ../../linktest/librelacslinktest.la
+endif
 
