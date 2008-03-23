@@ -1,7 +1,7 @@
 // Copyright (C) 2008 Sebastian Pipping <webmaster@hartwork.org>
 // Licensed under Creative Commons Attribution-Share Alike 3.0"
 // http://creativecommons.org/licenses/by-sa/3.0/us/
-// Version 1.2, 2008-03-22
+// Version 1.3, 2008-03-23
 
 // Process file with neato of GraphViz, e.g. run
 // $ neato -T png autotools.neato > autotools.png
@@ -89,7 +89,6 @@ digraph autotools_file_summary {
     // libtoolize
     libtoolize -> "config.guess" [label="creates", label="", color=lightgrey, fontcolor=lightgrey]
     libtoolize -> "config.sub" [label="creates", label="", color=lightgrey, fontcolor=lightgrey]
-    libtoolize -> "libtool" [label="creates", label="", color=lightgrey, fontcolor=lightgrey]
     libtoolize -> "ltmain.sh" [label="creates", label="", color=lightgrey, fontcolor=lightgrey]
 
     // autoconf
@@ -111,4 +110,5 @@ digraph autotools_file_summary {
     "config.h.in" -> configure [label="reads", label="", color=black, fontcolor=black, len=3]
     configure -> Makefile [label="creates", label="", color=black, fontcolor=black]
     configure -> "config.h" [label="creates", label="", color=black, fontcolor=black]
+    configure -> "libtool" [label="creates", label="", color=lightgrey, fontcolor=lightgrey]
 }
