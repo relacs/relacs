@@ -1,22 +1,4 @@
 == Next ==
-- Doxygen stuff
-    - patch/doc/patch.dox
-
-from auditory/Makefile:
-# Create plugin documentation:
-doc:
-        sed "s-^INPUT.*-INPUT = $(SUBDIRS)-;" doc/auditory.dox > tmp.dox
-        doxygen tmp.dox
-        rm -f tmp.dox
-
-# Create RePro help files:
-help: doc
-        mkdir -p help
-        $(TOPDIR)/utils/createhelp help
-
-
-- an example standalone plugin (patchclamp) with tests for the libraries
-
 - OS dependent make rules (for hardware plugins)? (QUICK)
 
 
@@ -32,4 +14,6 @@ help: doc
     use @...@ for this (prefix?)
 - Reading config from PWD and LD_LIBRARY_PATH containing PWD
   - On/off by user?
+- Doxygen currently does not create anything useful for auditory and
+  common folder. Any ideas?
 

@@ -20,10 +20,8 @@ SUBDIRS = \
     \
     utils
 
-DIST_SUBDIRS = \
-    m4
-
 EXTRA_DIST = \
+    m4/*.m4 \
     moc3.mk \
     \
     doc/relacs.1 \
