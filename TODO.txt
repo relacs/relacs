@@ -1,7 +1,5 @@
 == Next ==
 - Doxygen stuff
-    - auditory/doc/auditory.dox
-    - common/doc/common.dox
     - patch/doc/patch.dox
 
 from auditory/Makefile:
@@ -17,8 +15,6 @@ help: doc
         $(TOPDIR)/utils/createhelp help
 
 
-- resolve moc rules in plugins (e.g. common/) and once as an example in a library (e.g. widgets/)
-
 - an example standalone plugin (patchclamp) with tests for the libraries
 
 - OS dependent make rules (for hardware plugins)? (QUICK)
@@ -28,7 +24,6 @@ help: doc
 - Integrate examples (with extra target)  no-compile Makefiles???
 - Integrate librand55
     http://summa.physik.hu-berlin.de/~beule/random/random55.tar.gz
-- Extra summary for configure at the very end
 
 
 == Notes ==

@@ -37,7 +37,7 @@ autoconf || exit 1
 
 ## Dump build config
 step "build_config_dump.in"
-awk -F"'" 'function pp(s) { return sprintf("%s = [[@%s@]]", s, s)}; start { print pp($1); \
+awk -F"'" 'function pp(s) { return sprintf("%s = [@%s@]", s, s)}; start { print pp($1); \
     if (NF > 1) exit }; $1 == "ac_subst_vars=" {start=1; print pp($2)}' configure \
     | sort -f > build_config_dump.in || exit 1
 
