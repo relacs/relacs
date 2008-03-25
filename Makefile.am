@@ -21,7 +21,10 @@ SUBDIRS = \
     utils
 
 EXTRA_DIST = \
-    m4/*.m4 \
+    m4/relacs_doxygen.m4 \
+    m4/relacs_gnu_make.m4 \
+    m4/relacs_link_tests.m4 \
+    m4/relacs_qt3.m4 \
     moc3.mk \
     \
     doc/relacs.1 \
