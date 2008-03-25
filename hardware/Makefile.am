@@ -73,6 +73,11 @@ librelacsnieserieshardware_la_SOURCES = \
 
 
 
+EXTRA_DIST = \
+    m4/relacs_comedi.m4
+
+
+
 if RELACS_LINKTESTS
 linktest_librelacshardware_la_SOURCES =
 linktest_librelacshardware_la_LDADD = librelacshardware.la ../linktest/librelacslinktest.la
@@ -80,4 +85,3 @@ linktest_librelacshardware_la_LDADD = librelacshardware.la ../linktest/librelacs
 linktest_librelacsnieserieshardware_la_SOURCES =
 linktest_librelacsnieserieshardware_la_LDADD = librelacsnieserieshardware.la ../linktest/librelacslinktest.la
 endif
-
