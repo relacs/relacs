@@ -181,6 +181,7 @@ AC_OUTPUT
 cat <<SUMMARY
 
     Use GSL ................ ${RELACS_GSL}
+    Use Comedi ............. ${RELACS_COMEDI}
     Build link tests ....... ${RELACS_LINKTESTS_ENABLED}
     Create documentation ... ${DOXYGEN_ENABLED}
 
