@@ -10,8 +10,15 @@ Doxygen:
   library and relacs headers
 - Add appropriate links to the relacs mainpage.
 
-
-Update documentation of OutData, TraceSpec
+Documentation:
+- Update installation and Makefile instructions to autotools
+- Hint to 
+  Integrating Qt's Meta object compiler (moc) with GNU Automake
+    http://blog.hartwork.org/?p=133
+  and
+  The Autotools file jungle (== version 3)
+    http://blog.hartwork.org/?p=131
+- update documentation of OutData, TraceSpec
 
 Bug in MetaData Dialog: after opening and closing with ESC, reopening crashes the program
 
