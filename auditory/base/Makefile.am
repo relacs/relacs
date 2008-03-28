@@ -93,7 +93,7 @@ librelacsauditorysession_la_CPPFLAGS = \
 librelacsauditorysession_la_LIBADD = \
     ../../relacs/src/librelacs.la \
     ../../common/base/librelacscommonephystraces.la \
-    ../../hardware/librelacsnieserieshardware.la \
+    ../../hardware/src/librelacsnieserieshardware.la \
     librelacsauditorytraces.la
 
 $(librelacsauditorysession_la_OBJECTS) : \

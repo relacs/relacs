@@ -146,6 +146,7 @@ AC_CONFIG_FILES([
     daq/Makefile
     datafile/src/Makefile
     datafile/Makefile
+    hardware/src/Makefile
     hardware/Makefile
     linktest/Makefile
     mplot/src/Makefile
