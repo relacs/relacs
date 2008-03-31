@@ -84,31 +84,41 @@ AC_RELACS_LINK_TESTS()
 
 
 #################################################
-## Doxygen, GraphViz, LaTeX
+## Doxygen
 #################################################
-AC_RELACS_CHECK_DOXYGEN()
 
 DOXYGEN_INPUT="\
 config/src \
+config/include/relacs \
 daq/src \
+daq/include/relacs \
 datafile/src \
+datafile/include/relacs \
 mplot/src \
-numerics/src \
+mplot/include/relacs \
 options/src \
+options/include/relacs \
 widgets/src \
+widgets/include/relacs \
 \
-relacs \
+relacs/src \
+relacs/include/relacs \
 src \
-\
-hardware \
-common \
-auditory \
 \
 doc \
 utils \
 "
 AC_SUBST(DOXYGEN_INPUT)
 
+DX_HTML_FEATURE(ON)
+DX_CHM_FEATURE(OFF)
+DX_CHI_FEATURE(OFF)
+DX_MAN_FEATURE(OFF)
+DX_RTF_FEATURE(OFF)
+DX_XML_FEATURE(OFF)
+DX_PDF_FEATURE(OFF)
+DX_PS_FEATURE(OFF)
+DX_INIT_DOXYGEN( $PACKAGE_NAME, doc/relacs.dox, doc )
 
 
 # Global flags
@@ -184,7 +194,7 @@ cat <<SUMMARY
     Use GSL ................ ${RELACS_GSL}
     Use Comedi ............. ${RELACS_COMEDI}
     Build link tests ....... ${RELACS_LINKTESTS_ENABLED}
-    Create documentation ... ${DOXYGEN_ENABLED}
+    Create documentation ... ${DX_SUMMARY}
 
 If you can read these lines ./configure finished sucessfully.
 Relacs should build and install smoothly. If it doesn't please

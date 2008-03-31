@@ -1,3 +1,5 @@
+include doxygen.mk
+
 man_MANS = doc/relacs.1
 
 SUBDIRS = \
@@ -26,9 +28,11 @@ EXTRA_DIST = \
     m4/relacs_link_tests.m4 \
     m4/relacs_qt3.m4 \
     moc3.mk \
+    doxygen.mk \
     \
     doc/relacs.1 \
     \
+    $(DX-CONFIG) \
     doc/c++.doc \
     doc/macros.doc \
     doc/naming.doc \
@@ -46,24 +50,12 @@ EXTRA_DIST = \
     doc/relacs2.png
 
 
+if DX_COND_html
 
-if RELACS_CREATE_DOC
-doc_DATA = $(builddir)/doc/html/*
+doc_DATA = @DX_DOCDIR@/html/*
 
-$(builddir)/doc/html/*:
-	[ -f "$(builddir)/doc/html/index.html" ] || doxygen "$(builddir)/doc/relacs.dox"
+endif DX_COND_html
 
-clean_doc:
-	rm -f -R "$(builddir)/doc/html"
-
-docall: doc/html/*
-
-all: docall
-
-doc: docall
-
-clean-am: clean_doc
-
-.PHONY : doc docall clean_doc
-endif
-
+doc: doxygen-doc
+all-local: doxygen-run
+clean-local: doxygen-clean

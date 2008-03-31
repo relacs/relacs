@@ -16,9 +16,9 @@ CLEAN_CPPFLAGS=${CPPFLAGS}
 CLEAN_LIBS=${LIBS}
 
 
-
 AC_RELACS_CHECK_GSL()
 
+#AC_RELACS_CHECK_DOXYGEN()
 
 
 # Substitute
@@ -28,4 +28,19 @@ src/Makefile
 ])
 
 AC_OUTPUT
+
+
+cat <<SUMMARY
+
+    Use GSL ................ ${RELACS_GSL}
+#    Create documentation ... ${DOXYGEN_ENABLED}
+
+If you can read these lines ./configure finished sucessfully.
+librelacsnumerics should build and install smoothly. If it doesn't please
+open a bug describing your problem and configuration at
+http://sourceforge.net/tracker/?group_id=199846&atid=971134
+
+Continue with \$ make && sudo make install
+
+SUMMARY
 
