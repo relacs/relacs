@@ -6,6 +6,9 @@
 
 if DX_COND_doc
 
+DOC_PACKAGE = numerics
+DOC_CFG = doc/numerics.dox
+
 ## ------------------------------- ##
 ## Rules specific for HTML output. ##
 ## ------------------------------- ##
@@ -28,8 +31,8 @@ DX_INSTALL_CHM = chm
 
 if DX_COND_chi
 
-DX_CLEAN_CHI = @DX_DOCDIR@/@PACKAGE@.chi
-DX_INSTALL_CHI = @PACKAGE@.chi
+DX_CLEAN_CHI = @DX_DOCDIR@/$(DOC_PACKAGE).chi
+DX_INSTALL_CHI = $(DOC_PACKAGE).chi
 
 endif DX_COND_chi
 
@@ -74,14 +77,14 @@ endif DX_COND_xml
 
 if DX_COND_ps
 
-DX_CLEAN_PS = @DX_DOCDIR@/@PACKAGE@.ps
-DX_INSTALL_PS = @PACKAGE@.ps
+DX_CLEAN_PS = @DX_DOCDIR@/$(DOC_PACKAGE).ps
+DX_INSTALL_PS = $(DOC_PACKAGE).ps
 
 DX_PS_GOAL = doxygen-ps
 
-doxygen-ps: @DX_DOCDIR@/@PACKAGE@.ps
+doxygen-ps: @DX_DOCDIR@/$(DOC_PACKAGE).ps
 
-@DX_DOCDIR@/@PACKAGE@.ps: @DX_DOCDIR@/@PACKAGE@.tag
+@DX_DOCDIR@/$(DOC_PACKAGE).ps: @DX_DOCDIR@/$(DOC_PACKAGE).tag
 	cd @DX_DOCDIR@/latex; \
 	rm -f *.aux *.toc *.idx *.ind *.ilg *.log *.out; \
 	$(DX_LATEX) refman.tex; \
@@ -94,7 +97,7 @@ doxygen-ps: @DX_DOCDIR@/@PACKAGE@.ps
 		$(DX_LATEX) refman.tex; \
 		countdown=`expr $$countdown - 1`; \
 	done; \
-	$(DX_DVIPS) -o ../@PACKAGE@.ps refman.dvi
+	$(DX_DVIPS) -o ../$(DOC_PACKAGE).ps refman.dvi
 
 endif DX_COND_ps
 
@@ -104,14 +107,14 @@ endif DX_COND_ps
 
 if DX_COND_pdf
 
-DX_CLEAN_PDF = @DX_DOCDIR@/@PACKAGE@.pdf
-DX_INSTALL_PDF = @PACKAGE@.pdf
+DX_CLEAN_PDF = @DX_DOCDIR@/$(DOC_PACKAGE).pdf
+DX_INSTALL_PDF = $(DOC_PACKAGE).pdf
 
 DX_PDF_GOAL = doxygen-pdf
 
-doxygen-pdf: @DX_DOCDIR@/@PACKAGE@.pdf
+doxygen-pdf: @DX_DOCDIR@/$(DOC_PACKAGE).pdf
 
-@DX_DOCDIR@/@PACKAGE@.pdf: @DX_DOCDIR@/@PACKAGE@.tag
+@DX_DOCDIR@/$(DOC_PACKAGE).pdf: @DX_DOCDIR@/$(DOC_PACKAGE).tag
 	cd @DX_DOCDIR@/latex; \
 	rm -f *.aux *.toc *.idx *.ind *.ilg *.log *.out; \
 	$(DX_PDFLATEX) refman.tex; \
@@ -124,7 +127,7 @@ doxygen-pdf: @DX_DOCDIR@/@PACKAGE@.pdf
 		$(DX_PDFLATEX) refman.tex; \
 		countdown=`expr $$countdown - 1`; \
 	done; \
-	mv refman.pdf ../@PACKAGE@.pdf
+	mv refman.pdf ../$(DOC_PACKAGE).pdf
 
 endif DX_COND_pdf
 
@@ -143,16 +146,16 @@ endif DX_COND_latex
 
 .INTERMEDIATE: doxygen-run $(DX_PS_GOAL) $(DX_PDF_GOAL)
 
-doxygen-run: @DX_DOCDIR@/@PACKAGE@.tag
+doxygen-run: @DX_DOCDIR@/$(DOC_PACKAGE).tag
 
 doxygen-runall: doxygen-run $(DX_PS_GOAL) $(DX_PDF_GOAL)
 
 doxygen-doc: doxygen-clean doxygen-runall
 
-@DX_DOCDIR@/@PACKAGE@.tag: @DX_CONFIG@ $(pkginclude_HEADERS)
-	{ cat $(srcdir)/@DX_CONFIG@; \
+@DX_DOCDIR@/$(DOC_PACKAGE).tag: $(DOC_CFG) $(pkginclude_HEADERS)
+	{ cat $(srcdir)/$(DOC_CFG); \
 	  for DX_ENV_LINE in $(DX_ENV); do echo $$DX_ENV_LINE; done; \
-	  echo "GENERATE_TAGFILE=@DX_DOCDIR@/@PACKAGE@.tag"; } \
+	  echo "GENERATE_TAGFILE=@DX_DOCDIR@/$(DOC_PACKAGE).tag"; } \
 	| $(DX_DOXYGEN) -
 
 DX_INSTALL_FILES = \
@@ -191,7 +194,7 @@ doxygen-uninstall:
 	done
 
 DX_CLEANFILES = \
-    @DX_DOCDIR@/@PACKAGE@.tag \
+    @DX_DOCDIR@/$(DOC_PACKAGE).tag \
     $(DX_CLEAN_CHI) \
     $(DX_CLEAN_PS) \
     $(DX_CLEAN_PDF) \

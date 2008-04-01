@@ -16,15 +16,34 @@ CLEAN_CPPFLAGS=${CPPFLAGS}
 CLEAN_LIBS=${LIBS}
 
 
+
+#################################################
+## GSL
+#################################################
+DOXYGEN_PREDEF="RELACSDATA"
 AC_RELACS_CHECK_GSL()
 
-#AC_RELACS_CHECK_DOXYGEN()
+
+#################################################
+## Doxygen
+#################################################
+
+DX_HTML_FEATURE(ON)
+DX_CHM_FEATURE(OFF)
+DX_CHI_FEATURE(OFF)
+DX_MAN_FEATURE(OFF)
+DX_RTF_FEATURE(OFF)
+DX_XML_FEATURE(OFF)
+DX_PDF_FEATURE(OFF)
+DX_PS_FEATURE(OFF)
+DX_INIT_DOXYGEN( $PACKAGE_NAME, doc/numerics.dox, doc )
 
 
 # Substitute
 AC_CONFIG_FILES([
 Makefile
 src/Makefile
+doc/numerics.dox
 ])
 
 AC_OUTPUT
@@ -33,7 +52,7 @@ AC_OUTPUT
 cat <<SUMMARY
 
     Use GSL ................ ${RELACS_GSL}
-#    Create documentation ... ${DOXYGEN_ENABLED}
+    Create documentation ... ${DX_SUMMARY}
 
 If you can read these lines ./configure finished sucessfully.
 librelacsnumerics should build and install smoothly. If it doesn't please

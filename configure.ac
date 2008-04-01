@@ -175,6 +175,7 @@ AC_CONFIG_FILES([
 
     doc/relacs.doc
     doc/relacs.dox
+    numerics/doc/numerics.dox
 
     relacslocal.cfg
     src/relacs.cfg

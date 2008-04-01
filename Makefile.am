@@ -3,12 +3,12 @@ man_MANS = doc/relacs.1
 SUBDIRS = \
     linktest \
     \
-    options \
-    widgets \
-    config \
     numerics \
     daq \
+    options \
     datafile \
+    config \
+    widgets \
     mplot \
     \
     relacs \
