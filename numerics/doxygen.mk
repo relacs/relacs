@@ -7,6 +7,7 @@
 if DX_COND_doc
 
 DOC_PACKAGE = numerics
+DOC_INSTALL_SUBDIR = /numerics
 DOC_CFG = doc/numerics.dox
 
 ## ------------------------------- ##
@@ -178,9 +179,10 @@ doxygen-install: doxygen-run
 	  $(INSTALL_DATA) "@DX_DOCDIR@/$$p" "$(DESTDIR)$(docdir)/$$p"; \
 	done
 	@list='$(DX_INSTALL_DIRS)'; for dir in $$list; do \
-	  test -z "@DX_DOCDIR@/$$dir" || $(MKDIR_P) "$(DESTDIR)$(docdir)/$$dir"; \
-	  echo " $(INSTALL_DATA) '@DX_DOCDIR@/$$dir/*' '$(DESTDIR)$(docdir)/$$dir'"; \
-	  $(INSTALL_DATA) @DX_DOCDIR@/$$dir/* "$(DESTDIR)$(docdir)/$$dir"; \
+	  echo " test -z @DX_DOCDIR@/$$dir || $(MKDIR_P) $(DESTDIR)$(docdir)/$${dir}$(DOC_INSTALL_SUBDIR)"; \
+	  test -z "@DX_DOCDIR@/$$dir" || $(MKDIR_P) "$(DESTDIR)$(docdir)/$${dir}$(DOC_INSTALL_SUBDIR)"; \
+	  echo " $(INSTALL_DATA) '@DX_DOCDIR@/$$dir/*.*' '$(DESTDIR)$(docdir)/$${dir}$(DOC_INSTALL_SUBDIR)'"; \
+	  $(INSTALL_DATA) @DX_DOCDIR@/$$dir/*.* "$(DESTDIR)$(docdir)/$${dir}$(DOC_INSTALL_SUBDIR)"; \
 	done
 
 doxygen-uninstall:
@@ -189,8 +191,8 @@ doxygen-uninstall:
 	  rm -f "$(DESTDIR)$(docdir)/$$p"; \
 	done
 	@list='$(DX_INSTALL_DIRS)'; for dir in $$list; do \
-	  echo " rm -f -r '$(DESTDIR)$(docdir)/$$dir'"; \
-	  rm -f -r "$(DESTDIR)$(docdir)/$$dir"; \
+	  echo " rm -f -r '$(DESTDIR)$(docdir)/$${dir}$(DOC_INSTALL_SUBDIR)'"; \
+	  rm -f -r "$(DESTDIR)$(docdir)/$${dir}$(DOC_INSTALL_SUBDIR)"; \
 	done
 
 DX_CLEANFILES = \

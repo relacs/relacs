@@ -1,3 +1,7 @@
+# This is needed for setting the default docdir to $(datarootdir)/doc/relacs.
+# PACKAGE_TARNAME seems not to be used otherwise.
+PACKAGE_TARNAME=relacs
+
 SUBDIRS = \
     src
 

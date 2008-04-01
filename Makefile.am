@@ -7,8 +7,8 @@ SUBDIRS = \
     daq \
     options \
     datafile \
-    config \
     widgets \
+    config \
     mplot \
     \
     relacs \
@@ -21,7 +21,6 @@ SUBDIRS = \
     utils
 
 EXTRA_DIST = \
-    m4/relacs_doxygen.m4 \
     m4/relacs_gnu_make.m4 \
     m4/relacs_link_tests.m4 \
     m4/relacs_qt3.m4 \
@@ -51,8 +50,11 @@ include doxygen.mk
 
 if DX_COND_doc
 
-doc: doxygen-doc
-all-local: doxygen-run
+doclinks:
+	cd $(srcdir)/doc/html; test -e numerics || ln -s ../../numerics/doc/html numerics
+
+doc: doclinks doxygen-doc
+all-local: doclinks doxygen-run
 clean-local: doxygen-clean
 install-data-local: doxygen-install
 uninstall-local: doxygen-uninstall

@@ -175,9 +175,10 @@ doxygen-install: doxygen-run
 	  $(INSTALL_DATA) "@DX_DOCDIR@/$$p" "$(DESTDIR)$(docdir)/$$p"; \
 	done
 	@list='$(DX_INSTALL_DIRS)'; for dir in $$list; do \
+	  echo " test -z @DX_DOCDIR@/$$dir || $(MKDIR_P) $(DESTDIR)$(docdir)/$${dir}"; \
 	  test -z "@DX_DOCDIR@/$$dir" || $(MKDIR_P) "$(DESTDIR)$(docdir)/$$dir"; \
-	  echo " $(INSTALL_DATA) '@DX_DOCDIR@/$$dir/*' '$(DESTDIR)$(docdir)/$$dir'"; \
-	  $(INSTALL_DATA) @DX_DOCDIR@/$$dir/* "$(DESTDIR)$(docdir)/$$dir"; \
+	  echo " $(INSTALL_DATA) '@DX_DOCDIR@/$$dir/*.*' '$(DESTDIR)$(docdir)/$$dir'"; \
+	  $(INSTALL_DATA) @DX_DOCDIR@/$$dir/*.* "$(DESTDIR)$(docdir)/$$dir"; \
 	done
 
 doxygen-uninstall:
