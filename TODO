@@ -20,6 +20,10 @@ Documentation:
     http://blog.hartwork.org/?p=131
 - update documentation of OutData, TraceSpec
 
+Autotools:
+- run ifnames and adjust defines if necessary
+- uninstall: also remove relacs subdirectories!
+
 Bug in MetaData Dialog: after opening and closing with ESC, reopening crashes the program
 
 Bug somewhere: if session is running, start of repro kills RELACS

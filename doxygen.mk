@@ -13,6 +13,7 @@ if DX_COND_doc
 if DX_COND_html
 
 DX_CLEAN_HTML = @DX_DOCDIR@/html
+DX_INSTALL_HTML = html
 
 endif DX_COND_html
 
@@ -23,10 +24,12 @@ endif DX_COND_html
 if DX_COND_chm
 
 DX_CLEAN_CHM = @DX_DOCDIR@/chm
+DX_INSTALL_CHM = chm
 
 if DX_COND_chi
 
 DX_CLEAN_CHI = @DX_DOCDIR@/@PACKAGE@.chi
+DX_INSTALL_CHI = @PACKAGE@.chi
 
 endif DX_COND_chi
 
@@ -39,6 +42,7 @@ endif DX_COND_chm
 if DX_COND_man
 
 DX_CLEAN_MAN = @DX_DOCDIR@/man
+DX_INSTALL_MAN = man
 
 endif DX_COND_man
 
@@ -49,6 +53,7 @@ endif DX_COND_man
 if DX_COND_rtf
 
 DX_CLEAN_RTF = @DX_DOCDIR@/rtf
+DX_INSTALL_RTF = rtf
 
 endif DX_COND_rtf
 
@@ -59,6 +64,7 @@ endif DX_COND_rtf
 if DX_COND_xml
 
 DX_CLEAN_XML = @DX_DOCDIR@/xml
+DX_INSTALL_XML = xml
 
 endif DX_COND_xml
 
@@ -69,6 +75,7 @@ endif DX_COND_xml
 if DX_COND_ps
 
 DX_CLEAN_PS = @DX_DOCDIR@/@PACKAGE@.ps
+DX_INSTALL_PS = @PACKAGE@.ps
 
 DX_PS_GOAL = doxygen-ps
 
@@ -98,6 +105,7 @@ endif DX_COND_ps
 if DX_COND_pdf
 
 DX_CLEAN_PDF = @DX_DOCDIR@/@PACKAGE@.pdf
+DX_INSTALL_PDF = @PACKAGE@.pdf
 
 DX_PDF_GOAL = doxygen-pdf
 
@@ -127,6 +135,7 @@ endif DX_COND_pdf
 if DX_COND_latex
 
 DX_CLEAN_LATEX = @DX_DOCDIR@/latex
+DX_INSTALL_LATEX = latex
 
 endif DX_COND_latex
 
@@ -136,7 +145,9 @@ endif DX_COND_latex
 
 doxygen-run: @DX_DOCDIR@/@PACKAGE@.tag
 
-doxygen-doc: doxygen-clean doxygen-run $(DX_PS_GOAL) $(DX_PDF_GOAL)
+doxygen-runall: doxygen-run $(DX_PS_GOAL) $(DX_PDF_GOAL)
+
+doxygen-doc: doxygen-clean doxygen-runall
 
 @DX_DOCDIR@/@PACKAGE@.tag: $(DX_CONFIG) $(pkginclude_HEADERS)
 	{ cat $(srcdir)/$(DX_CONFIG); \
@@ -144,17 +155,52 @@ doxygen-doc: doxygen-clean doxygen-run $(DX_PS_GOAL) $(DX_PDF_GOAL)
 	  echo "GENERATE_TAGFILE=@DX_DOCDIR@/@PACKAGE@.tag"; } \
 	| $(DX_DOXYGEN) -
 
+DX_INSTALL_FILES = \
+    $(DX_INSTALL_CHI) \
+    $(DX_INSTALL_PS) \
+    $(DX_INSTALL_PDF)
+
+DX_INSTALL_DIRS = \
+    $(DX_INSTALL_HTML) \
+    $(DX_INSTALL_CHM) \
+    $(DX_INSTALL_MAN) \
+    $(DX_INSTALL_RTF) \
+    $(DX_INSTALL_XML) \
+    $(DX_INSTALL_LATEX)
+
+doxygen-install: doxygen-run
+	test -z "$(docdir)" || $(MKDIR_P) "$(DESTDIR)$(docdir)"
+	@list='$(DX_INSTALL_FILES)'; for p in $$list; do \
+	  echo " $(INSTALL_DATA) '@DX_DOCDIR@/$$p' '$(DESTDIR)$(docdir)/$$p'"; \
+	  $(INSTALL_DATA) "@DX_DOCDIR@/$$p" "$(DESTDIR)$(docdir)/$$p"; \
+	done
+	@list='$(DX_INSTALL_DIRS)'; for dir in $$list; do \
+	  test -z "@DX_DOCDIR@/$$dir" || $(MKDIR_P) "$(DESTDIR)$(docdir)/$$dir"; \
+	  echo " $(INSTALL_DATA) '@DX_DOCDIR@/$$dir/*' '$(DESTDIR)$(docdir)/$$dir'"; \
+	  $(INSTALL_DATA) @DX_DOCDIR@/$$dir/* "$(DESTDIR)$(docdir)/$$dir"; \
+	done
+
+doxygen-uninstall:
+	@list='$(DX_INSTALL_FILES)'; for p in $$list; do \
+	  echo " rm -f '$(DESTDIR)$(docdir)/$$p'"; \
+	  rm -f "$(DESTDIR)$(docdir)/$$p"; \
+	done
+	@list='$(DX_INSTALL_DIRS)'; for dir in $$list; do \
+	  echo " rm -f -r '$(DESTDIR)$(docdir)/$$dir'"; \
+	  rm -f -r "$(DESTDIR)$(docdir)/$$dir"; \
+	done
+
 DX_CLEANFILES = \
     @DX_DOCDIR@/@PACKAGE@.tag \
+    $(DX_CLEAN_CHI) \
+    $(DX_CLEAN_PS) \
+    $(DX_CLEAN_PDF) \
     -r \
     $(DX_CLEAN_HTML) \
     $(DX_CLEAN_CHM) \
-    $(DX_CLEAN_CHI) \
     $(DX_CLEAN_MAN) \
     $(DX_CLEAN_RTF) \
     $(DX_CLEAN_XML) \
-    $(DX_CLEAN_PS) \
-    $(DX_CLEAN_PDF) \
     $(DX_CLEAN_LATEX)
 
 doxygen-clean:

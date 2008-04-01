@@ -1,5 +1,3 @@
-include doxygen.mk
-
 man_MANS = doc/relacs.1
 
 SUBDIRS = \
@@ -49,13 +47,10 @@ EXTRA_DIST = \
     doc/relacs1.png \
     doc/relacs2.png
 
-
-if DX_COND_html
-
-doc_DATA = @DX_DOCDIR@/html/*
-
-endif DX_COND_html
+include doxygen.mk
 
 doc: doxygen-doc
 all-local: doxygen-run
 clean-local: doxygen-clean
+install-data-local: doxygen-install
+uninstall-local: doxygen-uninstall

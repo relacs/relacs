@@ -50,18 +50,25 @@
 #
 #   Automake Support
 #
-#   The following is a template aminclude.am file for use with
-#   Automake. Make targets and variables values are controlled by the
-#   various DX_COND_* conditionals set by autoconf.
+#   The following is a template doxygen.mk file to be included in an 
+#   Automake Makefile.am file. Make targets and variables values are 
+#   controlled by the various DX_COND_* conditionals set by autoconf.
 #
 #   The provided targets are:
 #
-#     doxygen-doc: Generate all doxygen documentation.
+#     doxygen-doc: Force to generate all doxygen documentation 
+#                  (doxygen-runall).
 #
-#     doxygen-run: Run doxygen, which will generate some of the
-#                  documentation (HTML, CHM, CHI, MAN, RTF, XML)
-#                  but will not do the post processing required
+#     doxygen-run: Run doxygen if the doxygen configuration file or 
+#                  $(pkginclude_HEADERS) changed. This will generate
+#                  some of the documentation (HTML, CHM, CHI, MAN, RTF,
+#                  XML) but will not do the post processing required
 #                  for the rest of it (PS, PDF, and some MAN).
+#
+#     doxygen-runall: Run doxygen if the doxygen configuration file or 
+#                  $(pkginclude_HEADERS) changed. This will generate
+#                  the complete documentation (HTML, CHM, CHI, MAN, RTF,
+#                  XML, PS, PDF, and some MAN).
 #
 #     doxygen-man: Rename some doxygen generated man pages.
 #
@@ -69,8 +76,24 @@
 #
 #     doxygen-pdf: Generate doxygen PDF documentation.
 #
+#     doxygen-clean: Remove all generated documentation files.
+#
+#     doxygen-install: Install the documentation to $(docdir)
+#
+#     doxygen-uninstall: Uninstall the documentation.
+#
 #   Note that by default these are not integrated into the automake
-#   targets. If doxygen is used to generate man pages, you can achieve
+#   targets. The following lines in your Makefile.am would do:
+#
+#     include doxygen.mk
+#
+#     doc: doxygen-doc
+#     all-local: doxygen-run
+#     clean-local: doxygen-clean
+#     install-data-local: doxygen-install
+#     uninstall-local: doxygen-uninstall
+#
+#   If doxygen is used to generate man pages, you can achieve
 #   this integration by setting man3_MANS to the list of man pages
 #   generated and then adding the dependency:
 #
@@ -79,181 +102,231 @@
 #   This will cause make to run doxygen and generate all the
 #   documentation.
 #
-#   The following variable is intended for use in Makefile.am:
+#   The following variables are intended for use in Makefile.am:
 #
 #     DX_CLEANFILES = everything to clean.
+#     DX_INSTALL_FILES = all files to be installed
+#                        (relative to DX_DOCDIR).
+#     DX_INSTALL_DIRS = all directories to be installed
+#                       (relative to DX_DOCDIR).
 #
 #   Then add this variable to MOSTLYCLEANFILES.
 #
-#     ----- begin aminclude.am -------------------------------------
+#     ----- begin doxygen.mk -------------------------------------
 #
 #     ## --------------------------------- ##
 #     ## Format-independent Doxygen rules. ##
 #     ## --------------------------------- ##
-#
+#     
 #     if DX_COND_doc
-#
+#     
 #     ## ------------------------------- ##
 #     ## Rules specific for HTML output. ##
 #     ## ------------------------------- ##
-#
+#     
 #     if DX_COND_html
-#
+#     
 #     DX_CLEAN_HTML = @DX_DOCDIR@/html
-#
+#     DX_INSTALL_HTML = html
+#     
 #     endif DX_COND_html
-#
+#     
 #     ## ------------------------------ ##
 #     ## Rules specific for CHM output. ##
 #     ## ------------------------------ ##
-#
+#     
 #     if DX_COND_chm
-#
+#     
 #     DX_CLEAN_CHM = @DX_DOCDIR@/chm
-#
+#     DX_INSTALL_CHM = chm
+#     
 #     if DX_COND_chi
-#
+#     
 #     DX_CLEAN_CHI = @DX_DOCDIR@/@PACKAGE@.chi
-#
+#     DX_INSTALL_CHI = @PACKAGE@.chi
+#     
 #     endif DX_COND_chi
-#
+#     
 #     endif DX_COND_chm
-#
+#     
 #     ## ------------------------------ ##
 #     ## Rules specific for MAN output. ##
 #     ## ------------------------------ ##
-#
+#     
 #     if DX_COND_man
-#
+#     
 #     DX_CLEAN_MAN = @DX_DOCDIR@/man
-#
+#     DX_INSTALL_MAN = man
+#     
 #     endif DX_COND_man
-#
+#     
 #     ## ------------------------------ ##
 #     ## Rules specific for RTF output. ##
 #     ## ------------------------------ ##
-#
+#     
 #     if DX_COND_rtf
-#
+#     
 #     DX_CLEAN_RTF = @DX_DOCDIR@/rtf
-#
+#     DX_INSTALL_RTF = rtf
+#     
 #     endif DX_COND_rtf
-#
+#     
 #     ## ------------------------------ ##
 #     ## Rules specific for XML output. ##
 #     ## ------------------------------ ##
-#
+#     
 #     if DX_COND_xml
-#
+#     
 #     DX_CLEAN_XML = @DX_DOCDIR@/xml
-#
+#     DX_INSTALL_XML = xml
+#     
 #     endif DX_COND_xml
-#
+#     
 #     ## ----------------------------- ##
 #     ## Rules specific for PS output. ##
 #     ## ----------------------------- ##
-#
+#     
 #     if DX_COND_ps
-#
+#     
 #     DX_CLEAN_PS = @DX_DOCDIR@/@PACKAGE@.ps
-#
+#     DX_INSTALL_PS = @PACKAGE@.ps
+#     
 #     DX_PS_GOAL = doxygen-ps
-#
+#     
 #     doxygen-ps: @DX_DOCDIR@/@PACKAGE@.ps
-#
+#     
 #     @DX_DOCDIR@/@PACKAGE@.ps: @DX_DOCDIR@/@PACKAGE@.tag
-#   	  cd @DX_DOCDIR@/latex; \
-#   	  rm -f *.aux *.toc *.idx *.ind *.ilg *.log *.out; \
-#   	  $(DX_LATEX) refman.tex; \
-#   	  $(MAKEINDEX_PATH) refman.idx; \
-#   	  $(DX_LATEX) refman.tex; \
-#   	  countdown=5; \
-#   	  while $(DX_EGREP) 'Rerun (LaTeX|to get cross-references right)' \
-#   			    refman.log > /dev/null 2>&1 \
-#   	     && test $$countdown -gt 0; do \
-#   	      $(DX_LATEX) refman.tex; \
-#   	      countdown=`expr $$countdown - 1`; \
-#   	  done; \
-#   	  $(DX_DVIPS) -o ../@PACKAGE@.ps refman.dvi
-#
+#     	cd @DX_DOCDIR@/latex; \
+#     	rm -f *.aux *.toc *.idx *.ind *.ilg *.log *.out; \
+#     	$(DX_LATEX) refman.tex; \
+#     	$(MAKEINDEX_PATH) refman.idx; \
+#     	$(DX_LATEX) refman.tex; \
+#     	countdown=5; \
+#     	while $(DX_EGREP) 'Rerun (LaTeX|to get cross-references right)' \
+#     		refman.log > /dev/null 2>&1 \
+#     		&& test $$countdown -gt 0; do \
+#     		$(DX_LATEX) refman.tex; \
+#     		countdown=`expr $$countdown - 1`; \
+#     	done; \
+#     	$(DX_DVIPS) -o ../@PACKAGE@.ps refman.dvi
+#     
 #     endif DX_COND_ps
-#
+#     
 #     ## ------------------------------ ##
 #     ## Rules specific for PDF output. ##
 #     ## ------------------------------ ##
-#
+#     
 #     if DX_COND_pdf
-#
+#     
 #     DX_CLEAN_PDF = @DX_DOCDIR@/@PACKAGE@.pdf
-#
+#     DX_INSTALL_PDF = @PACKAGE@.pdf
+#     
 #     DX_PDF_GOAL = doxygen-pdf
-#
+#     
 #     doxygen-pdf: @DX_DOCDIR@/@PACKAGE@.pdf
-#
+#     
 #     @DX_DOCDIR@/@PACKAGE@.pdf: @DX_DOCDIR@/@PACKAGE@.tag
-#   	  cd @DX_DOCDIR@/latex; \
-#   	  rm -f *.aux *.toc *.idx *.ind *.ilg *.log *.out; \
-#   	  $(DX_PDFLATEX) refman.tex; \
-#   	  $(DX_MAKEINDEX) refman.idx; \
-#   	  $(DX_PDFLATEX) refman.tex; \
-#   	  countdown=5; \
-#   	  while $(DX_EGREP) 'Rerun (LaTeX|to get cross-references right)' \
-#   			    refman.log > /dev/null 2>&1 \
-#   	     && test $$countdown -gt 0; do \
-#   	      $(DX_PDFLATEX) refman.tex; \
-#   	      countdown=`expr $$countdown - 1`; \
-#   	  done; \
-#   	  mv refman.pdf ../@PACKAGE@.pdf
-#
+#     	cd @DX_DOCDIR@/latex; \
+#     	rm -f *.aux *.toc *.idx *.ind *.ilg *.log *.out; \
+#     	$(DX_PDFLATEX) refman.tex; \
+#     	$(DX_MAKEINDEX) refman.idx; \
+#     	$(DX_PDFLATEX) refman.tex; \
+#     	countdown=5; \
+#     	while $(DX_EGREP) 'Rerun (LaTeX|to get cross-references right)' \
+#     		refman.log > /dev/null 2>&1 \
+#     		&& test $$countdown -gt 0; do \
+#     		$(DX_PDFLATEX) refman.tex; \
+#     		countdown=`expr $$countdown - 1`; \
+#     	done; \
+#     	mv refman.pdf ../@PACKAGE@.pdf
+#     
 #     endif DX_COND_pdf
-#
+#     
 #     ## ------------------------------------------------- ##
 #     ## Rules specific for LaTeX (shared for PS and PDF). ##
 #     ## ------------------------------------------------- ##
-#
+#     
 #     if DX_COND_latex
-#
+#     
 #     DX_CLEAN_LATEX = @DX_DOCDIR@/latex
-#
+#     DX_INSTALL_LATEX = latex
+#     
 #     endif DX_COND_latex
-#
+#     
 #     .PHONY: doxygen-run doxygen-doc $(DX_PS_GOAL) $(DX_PDF_GOAL)
-#
+#     
 #     .INTERMEDIATE: doxygen-run $(DX_PS_GOAL) $(DX_PDF_GOAL)
-#
+#     
 #     doxygen-run: @DX_DOCDIR@/@PACKAGE@.tag
+#     
+#     doxygen-runall: doxygen-run $(DX_PS_GOAL) $(DX_PDF_GOAL)
 #
-#     doxygen-doc: doxygen-clean doxygen-run $(DX_PS_GOAL) $(DX_PDF_GOAL)
-#
+#     doxygen-doc: doxygen-clean doxygen-runall
+#     
 #     @DX_DOCDIR@/@PACKAGE@.tag: $(DX_CONFIG) $(pkginclude_HEADERS)
-#	{ cat $(srcdir)/$(DX_CONFIG); \
-#	  for DX_ENV_LINE in $(DX_ENV); do echo $$DX_ENV_LINE; done; \
-#	  echo "GENERATE_TAGFILE=@DX_DOCDIR@/@PACKAGE@.tag"; } \
-#	| $(DX_DOXYGEN) -
-#
+#     	{ cat $(srcdir)/$(DX_CONFIG); \
+#     	  for DX_ENV_LINE in $(DX_ENV); do echo $$DX_ENV_LINE; done; \
+#     	  echo "GENERATE_TAGFILE=@DX_DOCDIR@/@PACKAGE@.tag"; } \
+#     	| $(DX_DOXYGEN) -
+#     
+#     DX_INSTALL_FILES = \
+#         $(DX_INSTALL_CHI) \
+#         $(DX_INSTALL_PS) \
+#         $(DX_INSTALL_PDF)
+#     
+#     DX_INSTALL_DIRS = \
+#         $(DX_INSTALL_HTML) \
+#         $(DX_INSTALL_CHM) \
+#         $(DX_INSTALL_MAN) \
+#         $(DX_INSTALL_RTF) \
+#         $(DX_INSTALL_XML) \
+#         $(DX_INSTALL_LATEX)
+#     
+#     doxygen-install: doxygen-run
+#     	test -z "$(docdir)" || $(MKDIR_P) "$(DESTDIR)$(docdir)"
+#     	@list='$(DX_INSTALL_FILES)'; for p in $$list; do \
+#     	  echo " $(INSTALL_DATA) '@DX_DOCDIR@/$$p' '$(DESTDIR)$(docdir)/$$p'"; \
+#     	  $(INSTALL_DATA) "@DX_DOCDIR@/$$p" "$(DESTDIR)$(docdir)/$$p"; \
+#     	done
+#     	@list='$(DX_INSTALL_DIRS)'; for dir in $$list; do \
+#     	  test -z "@DX_DOCDIR@/$$dir" || $(MKDIR_P) "$(DESTDIR)$(docdir)/$$dir"; \
+#     	  echo " $(INSTALL_DATA) '@DX_DOCDIR@/$$dir/*' '$(DESTDIR)$(docdir)/$$dir'"; \
+#     	  $(INSTALL_DATA) @DX_DOCDIR@/$$dir/* "$(DESTDIR)$(docdir)/$$dir"; \
+#     	done
+#     
+#     doxygen-uninstall:
+#     	@list='$(DX_INSTALL_FILES)'; for p in $$list; do \
+#     	  echo " rm -f '$(DESTDIR)$(docdir)/$$p'"; \
+#     	  rm -f "$(DESTDIR)$(docdir)/$$p"; \
+#     	done
+#     	@list='$(DX_INSTALL_DIRS)'; for dir in $$list; do \
+#     	  echo " rm -f -r '$(DESTDIR)$(docdir)/$$dir'"; \
+#     	  rm -f -r "$(DESTDIR)$(docdir)/$$dir"; \
+#     	done
+#     
 #     DX_CLEANFILES = \
 #         @DX_DOCDIR@/@PACKAGE@.tag \
+#         $(DX_CLEAN_CHI) \
+#         $(DX_CLEAN_PS) \
+#         $(DX_CLEAN_PDF) \
 #         -r \
 #         $(DX_CLEAN_HTML) \
 #         $(DX_CLEAN_CHM) \
-#         $(DX_CLEAN_CHI) \
 #         $(DX_CLEAN_MAN) \
 #         $(DX_CLEAN_RTF) \
 #         $(DX_CLEAN_XML) \
-#         $(DX_CLEAN_PS) \
-#         $(DX_CLEAN_PDF) \
 #         $(DX_CLEAN_LATEX)
-#
+#     
 #     doxygen-clean:
-#	-rm -f $(DX_CLEANFILES)
-#
+#     	-rm -f $(DX_CLEANFILES)
+#     
 #     endif DX_COND_doc
 #
-#     ----- end aminclude.am ---------------------------------------
+#     ----- end doxygen.mk ---------------------------------------
 #
 # LAST MODIFICATION
 #
-#   2008-03-31
+#   2008-04-01
 #
 # COPYLEFT
 #
