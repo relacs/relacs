@@ -87,11 +87,15 @@
 #
 #     include doxygen.mk
 #
+#     if DX_COND_doc
+#
 #     doc: doxygen-doc
 #     all-local: doxygen-run
 #     clean-local: doxygen-clean
 #     install-data-local: doxygen-install
 #     uninstall-local: doxygen-uninstall
+#
+#     endif DX_COND_doc
 #
 #   If doxygen is used to generate man pages, you can achieve
 #   this integration by setting man3_MANS to the list of man pages
