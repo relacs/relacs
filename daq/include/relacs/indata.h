@@ -84,7 +84,7 @@ class InDataIterator;
 class InDataDiffIterator;
 class InDataTimeIterator;
 
-class InData : public CyclicArrayF, public DaqError
+class InData : public CyclicArray<float>, public DaqError
 {
   
  public:
