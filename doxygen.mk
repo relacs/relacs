@@ -139,7 +139,12 @@ DX_INSTALL_LATEX = latex
 
 endif DX_COND_latex
 
-.PHONY: doxygen-run doxygen-doc $(DX_PS_GOAL) $(DX_PDF_GOAL)
+## ------------------------------------------------- ##
+## General targets for making, installing, cleaning. ##
+## ------------------------------------------------- ##
+
+.PHONY: doxygen-run doxygen-runall doxygen-doc $(DX_PS_GOAL) $(DX_PDF_GOAL) \
+	doxygen-install doxygen-uninstall doxygen-clean
 
 .INTERMEDIATE: doxygen-run $(DX_PS_GOAL) $(DX_PDF_GOAL)
 
@@ -149,10 +154,12 @@ doxygen-runall: doxygen-run $(DX_PS_GOAL) $(DX_PDF_GOAL)
 
 doxygen-doc: doxygen-clean doxygen-runall
 
-@DX_DOCDIR@/@PACKAGE@.tag: @DX_CONFIG@ $(pkginclude_HEADERS)
-	{ cat $(srcdir)/@DX_CONFIG@; \
+@DX_DOCDIR@/@PACKAGE@.tag: $(abs_builddir)/@DX_CONFIG@ $(pkginclude_HEADERS)
+	cd $(srcdir); \
+	{ cat $(abs_builddir)/@DX_CONFIG@; \
 	  for DX_ENV_LINE in $(DX_ENV); do echo $$DX_ENV_LINE; done; \
-	  echo "GENERATE_TAGFILE=@DX_DOCDIR@/@PACKAGE@.tag"; } \
+	  echo "GENERATE_TAGFILE=$(abs_builddir)/@DX_DOCDIR@/@PACKAGE@.tag"; \
+	  echo "OUTPUT_DIRECTORY=$(abs_builddir)/@DX_DOCDIR@"; } \
 	| $(DX_DOXYGEN) -
 
 DX_INSTALL_FILES = \
@@ -175,7 +182,7 @@ doxygen-install: doxygen-run
 	  $(INSTALL_DATA) "@DX_DOCDIR@/$$p" "$(DESTDIR)$(docdir)/$$p"; \
 	done
 	@list='$(DX_INSTALL_DIRS)'; for dir in $$list; do \
-	  echo " test -z @DX_DOCDIR@/$$dir || $(MKDIR_P) $(DESTDIR)$(docdir)/$${dir}"; \
+	  echo " test -z @DX_DOCDIR@/$$dir || $(MKDIR_P) $(DESTDIR)$(docdir)/$$dir"; \
 	  test -z "@DX_DOCDIR@/$$dir" || $(MKDIR_P) "$(DESTDIR)$(docdir)/$$dir"; \
 	  echo " $(INSTALL_DATA) '@DX_DOCDIR@/$$dir/*.*' '$(DESTDIR)$(docdir)/$$dir'"; \
 	  $(INSTALL_DATA) @DX_DOCDIR@/$$dir/*.* "$(DESTDIR)$(docdir)/$$dir"; \

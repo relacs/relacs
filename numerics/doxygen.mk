@@ -8,7 +8,7 @@ if DX_COND_doc
 
 DOC_PACKAGE = numerics
 DOC_INSTALL_SUBDIR = /numerics
-DOC_CFG = doc/numerics.dox
+DOC_CFG = $(abs_builddir)/doc/numerics.dox
 
 ## ------------------------------- ##
 ## Rules specific for HTML output. ##
@@ -143,7 +143,12 @@ DX_INSTALL_LATEX = latex
 
 endif DX_COND_latex
 
-.PHONY: doxygen-run doxygen-doc $(DX_PS_GOAL) $(DX_PDF_GOAL)
+## ------------------------------------------------- ##
+## General targets for making, installing, cleaning. ##
+## ------------------------------------------------- ##
+
+.PHONY: doxygen-run doxygen-runall doxygen-doc $(DX_PS_GOAL) $(DX_PDF_GOAL) \
+	doxygen-install doxygen-uninstall doxygen-clean
 
 .INTERMEDIATE: doxygen-run $(DX_PS_GOAL) $(DX_PDF_GOAL)
 
@@ -154,9 +159,11 @@ doxygen-runall: doxygen-run $(DX_PS_GOAL) $(DX_PDF_GOAL)
 doxygen-doc: doxygen-clean doxygen-runall
 
 @DX_DOCDIR@/$(DOC_PACKAGE).tag: $(DOC_CFG) $(pkginclude_HEADERS)
-	{ cat $(srcdir)/$(DOC_CFG); \
+	cd $(srcdir); \
+	{ cat $(DOC_CFG); \
 	  for DX_ENV_LINE in $(DX_ENV); do echo $$DX_ENV_LINE; done; \
-	  echo "GENERATE_TAGFILE=@DX_DOCDIR@/$(DOC_PACKAGE).tag"; } \
+	  echo "GENERATE_TAGFILE=$(abs_builddir)/@DX_DOCDIR@/$(DOC_PACKAGE).tag"; \
+	  echo "OUTPUT_DIRECTORY=$(abs_builddir)/@DX_DOCDIR@"; } \
 	| $(DX_DOXYGEN) -
 
 DX_INSTALL_FILES = \
