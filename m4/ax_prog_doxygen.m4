@@ -261,7 +261,7 @@
 #     ## General targets for making, installing, cleaning. ##
 #     ## ------------------------------------------------- ##
 #
-#     .PHONY: doxygen-run doxygen-doc $(DX_PS_GOAL) $(DX_PDF_GOAL) \
+#     .PHONY: doxygen-run doxygen-runall doxygen-doc $(DX_PS_GOAL) $(DX_PDF_GOAL) \
 #	doxygen-install doxygen-uninstall doxygen-clean
 #     
 #     .INTERMEDIATE: doxygen-run $(DX_PS_GOAL) $(DX_PDF_GOAL)
