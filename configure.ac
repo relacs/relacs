@@ -3,6 +3,7 @@
 AC_INIT(relacs, 0.9.6)
 AM_INIT_AUTOMAKE([1.10 foreign subdir-objects dist-zip dist-bzip2])
 
+AC_PROG_LN_S
 AC_PROG_CXX
 AC_PROG_LIBTOOL
 
