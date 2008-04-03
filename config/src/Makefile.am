@@ -21,6 +21,7 @@ librelacsconfig_la_LDFLAGS = \
     @QT3_LDFLAGS@
 
 librelacsconfig_la_LIBADD = \
+    ../../options/src/librelacsoptions.la \
     ../../widgets/src/librelacswidgets.la
 
 $(librelacsconfig_la_OBJECTS) : \

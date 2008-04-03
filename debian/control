@@ -1,0 +1,14 @@
+Source: relacs
+Section: science
+Priority: extra
+Maintainer: Sebastian Pipping <sebastian@pipping.org>
+Build-Depends: debhelper (>= 5), autotools-dev,
+ libc6-dev, libstdc++6-4.2-dev, libqt3-mt-dev, libgsl0-dev,
+ libcomedi-dev
+Standards-Version: 3.7.3
+
+Package: relacs
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: <insert up to 60 chars description>
+ <insert long description, indented with spaces>

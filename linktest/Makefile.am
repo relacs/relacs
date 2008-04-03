@@ -1,5 +1,5 @@
 if RELACS_LINKTESTS
-noinst_libdir = $(abs_builddir)
+noinst_libdir = /dev/null
 
 noinst_lib_LTLIBRARIES = \
     librelacslinktest.la
