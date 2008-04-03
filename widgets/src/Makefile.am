@@ -20,7 +20,8 @@ librelacswidgets_la_LDFLAGS = \
     @QT3_LDFLAGS@
 
 librelacswidgets_la_LIBADD = \
-    ../../options/src/librelacsoptions.la
+    ../../options/src/librelacsoptions.la \
+    @QT3_LIBS@
 
 $(librelacswidgets_la_OBJECTS) : \
     moc_doublespinbox.cc \

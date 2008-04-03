@@ -29,7 +29,7 @@ EXTRA_DIST = \
     \
     doc/relacs.1 \
     \
-    $(DX_CONFIG) \
+    doc/relacs.dox \
     doc/c++.doc \
     doc/macros.doc \
     doc/naming.doc \
@@ -53,7 +53,9 @@ if DX_COND_doc
 doclinks:
 	cd $(srcdir)/doc/html; \
 	LND="$(LN_S)"; test "$$LND" != "cp -p" || LND="cp -r -p"; \
-        test -r numerics || $$LND ../../numerics/doc/html numerics
+        for dir in $(DOXYGEN_EXTERNAL); do \
+	  test -r $$dir || $$LND ../../$$dir/doc/html $$dir; \
+	done
 
 doc: doxygen-doc doclinks
 all-local: doclinks doxygen-run

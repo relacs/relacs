@@ -22,41 +22,16 @@ RELACSVERSION="${VERSION} (${RELACSDATE})"
 AC_SUBST(RELACSVERSION)
 
 
-
 # Backup before any additions
-CLEAN_LDFLAGS=${LDFLAGS}
 CLEAN_CPPFLAGS=${CPPFLAGS}
+CLEAN_LDFLAGS=${LDFLAGS}
 CLEAN_LIBS=${LIBS}
-
 
 
 #################################################
 ## GNU make
 #################################################
 AC_RELACS_GNU_MAKE()
-
-
-
-#################################################
-## Qt3, moc
-#################################################
-AC_RELACS_CHECK_QT3()
-
-
-
-#################################################
-## Comedi
-#################################################
-AC_RELACS_CHECK_COMEDI()
-
-
-
-#################################################
-## GSL
-#################################################
-DOXYGEN_PREDEF="RELACSDATA"
-AC_RELACS_CHECK_GSL()
-
 
 
 #################################################
@@ -67,7 +42,6 @@ LIBDL_MISSING="Please install libdl, often shipped with the C Runtime Library.
 AC_CHECK_LIB(dl, main,, AC_MSG_ERROR(${LIBDL_MISSING}))
 
 
-
 #################################################
 ## libstdc++
 #################################################
@@ -76,6 +50,43 @@ LIBSTDCPP_MISSING="Please install the C++ Standard Library (libstdc++).
 AC_CHECK_LIB(stdc++, main,, AC_MSG_ERROR(${LIBSTDCPP_MISSING}))
 
 
+# Restore
+CPPFLAGS=${CLEAN_CPPFLAGS}
+LDFLAGS=${CLEAN_LDFLAGS}
+LIBS=${CLEAN_LIBS}
+
+
+#################################################
+## math
+#################################################
+AC_RELACS_CHECK_MATH()
+
+
+#################################################
+## GSL
+#################################################
+AC_RELACS_CHECK_GSL()
+
+
+#################################################
+## Comedi
+#################################################
+AC_RELACS_CHECK_COMEDI()
+
+
+#################################################
+## Qt3, moc
+#################################################
+AC_RELACS_CHECK_QT3()
+
+
+#################################################
+## RELACSDAQ
+#################################################
+DOXYGEN_PREDEF="$DOXYGEN_PREDEF HAVE_LIBRELACSDAQ"
+AC_DEFINE([HAVE_LIBRELACSDAQ], [1],
+ [Define if relacs daq library exists.])
+
 
 #################################################
 ## Link tests
@@ -83,25 +94,11 @@ AC_CHECK_LIB(stdc++, main,, AC_MSG_ERROR(${LIBSTDCPP_MISSING}))
 AC_RELACS_LINK_TESTS()
 
 
-
 #################################################
 ## Doxygen
 #################################################
 
 DOXYGEN_INPUT="\
-config/src \
-config/include/relacs \
-daq/src \
-daq/include/relacs \
-datafile/src \
-datafile/include/relacs \
-mplot/src \
-mplot/include/relacs \
-options/src \
-options/include/relacs \
-widgets/src \
-widgets/include/relacs \
-\
 relacs/src \
 relacs/include/relacs \
 src \
@@ -109,7 +106,25 @@ src \
 doc \
 utils \
 "
+
+DOXYGEN_EXTERNAL="\
+config \
+daq \
+datafile \
+mplot \
+numerics \
+options \
+widgets \
+"
+
+DOXYGEN_TAGFILES=""
+for dir in $DOXYGEN_EXTERNAL; do
+	DOXYGEN_TAGFILES="$DOXYGEN_TAGFILES ${dir}/doc/${dir}.tag=${dir}"
+done
+
 AC_SUBST(DOXYGEN_INPUT)
+AC_SUBST(DOXYGEN_EXTERNAL)
+AC_SUBST(DOXYGEN_TAGFILES)
 
 DX_HTML_FEATURE(ON)
 DX_CHM_FEATURE(OFF)
@@ -123,7 +138,7 @@ DX_INIT_DOXYGEN( $PACKAGE_NAME, doc/relacs.dox, doc )
 
 
 # Global flags
-CPPFLAGS="${CPPFLAGS} -DRELACSDATA -DPLUGINVERSION=VERSION"
+CPPFLAGS="${CPPFLAGS} -DPLUGINVERSION=\\\"$VERSION\\\""
 
 RELACS_CFG_HEAD=src/relacs_cfg_head
 AC_SUBST_FILE(RELACS_CFG_HEAD)
@@ -145,43 +160,68 @@ AC_CONFIG_FILES([
     auditory/sascha/Makefile
     auditory/speaker/Makefile
     auditory/Makefile
+
     common/base/Makefile
     common/controls/Makefile
     common/detectors/Makefile
     common/filter/Makefile
     common/models/Makefile
     common/Makefile
+
     config/src/Makefile
     config/Makefile
+    config/doc/config.dox
+    config/configure.ac
+
     daq/src/Makefile
     daq/Makefile
+    daq/doc/daq.dox
+    daq/configure.ac
+
     datafile/src/Makefile
     datafile/Makefile
+    datafile/doc/datafile.dox
+    datafile/configure.ac
+
     hardware/src/Makefile
     hardware/Makefile
+
     linktest/Makefile
+
     mplot/src/Makefile
     mplot/Makefile
+    mplot/doc/mplot.dox
+    mplot/configure.ac
+
     numerics/src/Makefile
     numerics/Makefile
+    numerics/doc/numerics.dox
+    numerics/configure.ac
+
     options/src/Makefile
     options/Makefile
+    options/doc/options.dox
+    options/configure.ac
+
     relacs/Makefile
     relacs/src/Makefile
+
     src/Makefile
+
     utils/Makefile
+
     widgets/src/Makefile
     widgets/Makefile
+    widgets/doc/widgets.dox
+    widgets/configure.ac
+
     Makefile
 
     doc/relacs.doc
     doc/relacs.dox
-    numerics/doc/numerics.dox
 
     relacslocal.cfg
     src/relacs.cfg
-
-    numerics/configure.ac
 ])
 
 AC_CONFIG_FILES([relacslocal], [chmod a+x relacslocal])

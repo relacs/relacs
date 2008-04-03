@@ -6,7 +6,12 @@ SUBDIRS = \
     src
 
 EXTRA_DIST = \
-    m4/relacs_gsl.m4
+    m4/ax_prog_doxygen.m4 \
+    m4/relacs_link_tests.m4 \
+    m4/relacs_gsl.m4 \
+    doxygen.mk \
+    \
+    doc/numerics.dox
 
 
 include doxygen.mk

@@ -25,8 +25,12 @@ librelacscommonmotorcontrol_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
+librelacscommonmotorcontrol_la_LDFLAGS = \
+    @QT3_LDFLAGS@
+
 librelacscommonmotorcontrol_la_LIBADD = \
-    ../../relacs/src/librelacs.la
+    ../../relacs/src/librelacs.la \
+    @QT3_LIBS@
 
 $(librelacscommonmotorcontrol_la_OBJECTS) : \
     moc_motorcontrol.cc
@@ -47,8 +51,12 @@ librelacscommonspectrumanalyzer_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
+librelacscommonspectrumanalyzer_la_LDFLAGS = \
+    @QT3_LDFLAGS@
+
 librelacscommonspectrumanalyzer_la_LIBADD = \
-    ../../relacs/src/librelacs.la
+    ../../relacs/src/librelacs.la \
+    @QT3_LIBS@
 
 $(librelacscommonspectrumanalyzer_la_OBJECTS) : \
     moc_spectrumanalyzer.cc

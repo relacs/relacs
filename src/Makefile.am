@@ -3,7 +3,7 @@ bin_SCRIPTS = \
 
 pkglib_PROGRAMS = \
     relacs_main
-    
+
 sysconf_DATA = \
     relacs.cfg
 
@@ -22,8 +22,12 @@ relacs_main_CPPFLAGS = \
     -I$(srcdir)/../relacs/include \
     @QT3_CPPFLAGS@
 
+relacs_main_LDFLAGS = \
+    @QT3_LDFLAGS@
+
 relacs_main_LDADD = \
-    ../relacs/src/librelacs.la
+    ../relacs/src/librelacs.la \
+    @QT3_LIBS@
 
 relacs_main_SOURCES = \
     relacsmain.cc

@@ -26,11 +26,15 @@ librelacsauditorycalibspeakers_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
+librelacsauditorycalibspeakers_la_LDFLAGS = \
+    @QT3_LDFLAGS@
+
 librelacsauditorycalibspeakers_la_LIBADD = \
     ../../relacs/src/librelacs.la \
     ../../config/src/librelacsconfig.la \
     ../base/librelacsauditorytraces.la \
-    librelacsauditoryloudspeaker.la
+    librelacsauditoryloudspeaker.la \
+    @QT3_LIBS@
 
 $(librelacsauditorycalibspeakers_la_OBJECTS) : \
     moc_calibspeakers.cc
@@ -51,8 +55,12 @@ librelacsauditoryloudspeaker_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
+librelacsauditoryloudspeaker_la_LDFLAGS = \
+    @QT3_LDFLAGS@
+
 librelacsauditoryloudspeaker_la_LIBADD = \
-    ../../relacs/src/librelacs.la
+    ../../relacs/src/librelacs.la \
+    @QT3_LIBS@
 
 $(librelacsauditoryloudspeaker_la_OBJECTS) : \
     moc_loudspeaker.cc

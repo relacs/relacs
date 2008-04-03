@@ -22,7 +22,7 @@
 #include <cmath>
 #include <algorithm>
 #include <relacs/stats.h>
-#ifdef GSL
+#ifdef HAVE_LIBGSL
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_sf_gamma.h>
 #endif
@@ -389,7 +389,7 @@ double gammaP( double a, double x )
   if ( a <= 0.0 ) 
     cerr << "Invalid arguments in function gammaP: a <= 0.0\n";
 
-#ifdef GSL
+#ifdef HAVE_LIBGSL
 
   gsl_sf_result result;
   int r = gsl_sf_gamma_inc_P_e( a, x, &result );
@@ -433,7 +433,7 @@ double gammaQ( double a, double x )
   if ( a <= 0.0 ) 
     cerr << "Invalid arguments in function gammaQ: a <= 0.0\n";
 
-#ifdef GSL
+#ifdef HAVE_LIBGSL
   
   gsl_sf_result result;
   int r = gsl_sf_gamma_inc_Q_e( a, x, &result );
@@ -527,7 +527,7 @@ double incBeta( double a, double b, double x )
   if ( b <= 0.0 ) 
     cerr << "Invalid arguments in function incBeta: b <= 0.0\n";
 
-#ifdef GSL
+#ifdef HAVE_LIBGSL
   
   gsl_sf_result result;
   int r = gsl_sf_beta_inc_e( a, b, x, &result );
@@ -554,7 +554,7 @@ double incBeta( double a, double b, double x )
 }
 
 
-#ifdef GSL
+#ifdef HAVE_LIBGSL
 
 // set a non-aborting error handler:
 

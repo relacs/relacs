@@ -21,8 +21,12 @@ librelacshardware_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
+librelacshardware_la_LDFLAGS = \
+    @QT3_LDFLAGS@
+
 librelacshardware_la_LIBADD = \
-    ../../relacs/src/librelacs.la
+    ../../relacs/src/librelacs.la \
+    @QT3_LIBS@
 
 librelacshardware_la_SOURCES = \
     ../include/relacs/cs3310pp.h \
@@ -47,8 +51,12 @@ librelacsnieserieshardware_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
+librelacsnieserieshardware_la_LDFLAGS = \
+    @QT3_LDFLAGS@
+
 librelacsnieserieshardware_la_LIBADD = \
-    ../../relacs/src/librelacs.la
+    ../../relacs/src/librelacs.la \
+    @QT3_LIBS@
 
 librelacsnieserieshardware_la_SOURCES = \
     ../include/relacs/amplmode.h \

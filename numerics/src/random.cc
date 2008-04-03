@@ -357,7 +357,7 @@ string Ran3::name( void )
 }
 
 
-#ifdef RAND55
+#ifdef HAVE_LIBRAND55
 
 
 Rand55::Rand55( void )
@@ -431,7 +431,7 @@ string Rand55::name( void )
 #endif
 
 
-#ifdef GSL
+#ifdef HAVE_LIBGSL
 
 
 RandomGSL::RandomGSL( const gsl_rng_type *rt )

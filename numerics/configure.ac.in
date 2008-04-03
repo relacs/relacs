@@ -9,19 +9,22 @@ AC_PROG_LIBTOOL
 AC_LANG(C++)
 
 
-
 # Backup before any additions
 CLEAN_LDFLAGS=${LDFLAGS}
 CLEAN_CPPFLAGS=${CPPFLAGS}
 CLEAN_LIBS=${LIBS}
 
 
+#################################################
+## Math and GSL
+#################################################
+AC_RELACS_CHECK_GSL()
+
 
 #################################################
-## GSL
+## Link tests
 #################################################
-DOXYGEN_PREDEF="RELACSDATA"
-AC_RELACS_CHECK_GSL()
+AC_RELACS_LINK_TESTS()
 
 
 #################################################

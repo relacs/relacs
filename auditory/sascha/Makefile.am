@@ -29,10 +29,14 @@ librelacsauditoryisoresponse_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
+librelacsauditoryisoresponse_la_LDFLAGS = \
+    @QT3_LDFLAGS@
+
 librelacsauditoryisoresponse_la_LIBADD = \
     ../../relacs/src/librelacs.la \
     ../../common/base/librelacscommonephystraces.la \
-    ../base/librelacsauditorysession.la
+    ../base/librelacsauditorysession.la \
+    @QT3_LIBS@
 
 $(librelacsauditoryisoresponse_la_OBJECTS) : \
     moc_isoresponse.cc
@@ -57,11 +61,15 @@ librelacsauditoryoneclick_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
+librelacsauditoryoneclick_la_LDFLAGS = \
+    @QT3_LDFLAGS@
+
 librelacsauditoryoneclick_la_LIBADD = \
     ../../relacs/src/librelacs.la \
     ../../common/base/librelacscommonephystraces.la \
     ../base/librelacsauditorytraces.la \
-    ../speaker/librelacsauditoryloudspeaker.la
+    ../speaker/librelacsauditoryloudspeaker.la \
+    @QT3_LIBS@
 
 $(librelacsauditoryoneclick_la_OBJECTS) : \
     moc_oneclick.cc

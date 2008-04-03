@@ -36,7 +36,7 @@
 #include <relacs/sampledata.h>
 #include <relacs/eventdata.h>
 
-#ifdef RELACSDATA
+#ifdef HAVE_LIBRELACSDAQ
 #include <relacs/indata.h>
 #endif
 
@@ -661,7 +661,7 @@ public:
 	    Points ptype, double size, Coordinates sizecoor,
 	    int pcolor=Red, int pfill=Transparent );
 
-#ifdef RELACSDATA
+#ifdef HAVE_LIBRELACSDAQ
     /*! Plot InData \a data. 
         The original time is scaled by \a tscale. */
   int plot( const InData &data, int origin, double offset, double tscale,
@@ -1249,7 +1249,7 @@ private:
   };
 
 
-#ifdef RELACSDATA
+#ifdef HAVE_LIBRELACSDAQ
 
   class InDataElement : public DataElement
   {

@@ -25,8 +25,12 @@ librelacscommonhighpass_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
+librelacscommonhighpass_la_LDFLAGS = \
+    @QT3_LDFLAGS@
+
 librelacscommonhighpass_la_LIBADD = \
-    ../../relacs/src/librelacs.la
+    ../../relacs/src/librelacs.la \
+    @QT3_LIBS@
 
 $(librelacscommonhighpass_la_OBJECTS) : \
     moc_highpass.cc
@@ -47,8 +51,12 @@ librelacscommonlowpass_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
+librelacscommonlowpass_la_LDFLAGS = \
+    @QT3_LDFLAGS@
+
 librelacscommonlowpass_la_LIBADD = \
-    ../../relacs/src/librelacs.la
+    ../../relacs/src/librelacs.la \
+    @QT3_LIBS@
 
 $(librelacscommonlowpass_la_OBJECTS) : \
     moc_lowpass.cc

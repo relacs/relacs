@@ -1,15 +1,8 @@
-Doxygen:
-- Make an extra doc subdirectory for each library with an
-  appropriate dox file that has a line like
-  GENERATE_TAGFILE       = doc/numerics.tag
-- In the main documentation in doc/relacs.dox have lines like
-  TAGFILES               = "numerics/doc/numerics.tag=../../numerics/doc/html"
+Documentation:
+- Also install images (e.g. optwidget.png)
+- Also install doxygen tag files
 - Make sure that the dox file PREDEFINED variable gets the GSL and RAND55 defines
   via autoconf
-- don't use SampleDataF, etc. Instead inherit SampleData< float > in all
-  library and relacs headers
-
-Documentation:
 - Update installation and Makefile instructions to autotools
 - Hint to 
   Integrating Qt's Meta object compiler (moc) with GNU Automake
@@ -21,7 +14,7 @@ Documentation:
 - update documentation of OutData, TraceSpec
 
 Autotools:
-- run ifnames and adjust defines if necessary
+- library package don't pass distcheck because of relative includes
 - uninstall: also remove relacs subdirectories!
 
 Bug in MetaData Dialog: after opening and closing with ESC, reopening crashes the program

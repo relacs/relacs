@@ -18,7 +18,8 @@ librelacs_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
-librelacs_la_LDFLAGS = @QT3_LDFLAGS@
+librelacs_la_LDFLAGS = \
+    @QT3_LDFLAGS@
 
 librelacs_la_LIBADD = \
     ../../config/src/librelacsconfig.la \
@@ -27,8 +28,9 @@ librelacs_la_LIBADD = \
     ../../mplot/src/librelacsmplot.la \
     ../../numerics/src/librelacsnumerics.la \
     ../../options/src/librelacsoptions.la \
-    ../../widgets/src/librelacswidgets.la
-    
+    ../../widgets/src/librelacswidgets.la \
+    @QT3_LIBS@
+
 $(librelacs_la_OBJECTS) : \
     moc_control.cc \
     moc_defaultrepro.cc \

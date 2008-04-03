@@ -24,7 +24,9 @@ librelacsmplot_la_LDFLAGS = \
 librelacsmplot_la_LIBADD = \
     ../../daq/src/librelacsdaq.la \
     ../../numerics/src/librelacsnumerics.la \
-    ../../options/src/librelacsoptions.la
+    ../../options/src/librelacsoptions.la \
+    @QT3_LIBS@ \
+    @MATH_LIBS@
 
 $(librelacsmplot_la_OBJECTS) : \
     moc_multiplot.cc \

@@ -9,11 +9,17 @@ endif
 
 
 librelacsdaq_la_CPPFLAGS = \
+    @GSL_CPPFLAGS@ \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../include
 
+librelacsdaq_la_LDFLAGS = \
+    @GSL_LDFLAGS@
+
 librelacsdaq_la_LIBADD = \
-    ../../numerics/src/librelacsnumerics.la
+    ../../numerics/src/librelacsnumerics.la \
+    @GSL_LIBS@
+
 
 librelacsdaq_ladir = $(includedir)/relacs
 

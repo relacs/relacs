@@ -1,0 +1,62 @@
+# Process this file with autoconf to produce a configure script.
+
+AC_INIT(datafile, @PACKAGE_VERSION@)
+AM_INIT_AUTOMAKE([1.10 foreign subdir-objects dist-zip dist-bzip2])
+
+AC_PROG_CXX
+AC_PROG_LIBTOOL
+
+AC_LANG(C++)
+
+
+
+# Backup before any additions
+CLEAN_LDFLAGS=${LDFLAGS}
+CLEAN_CPPFLAGS=${CPPFLAGS}
+CLEAN_LIBS=${LIBS}
+
+
+#################################################
+## Link tests
+#################################################
+AC_RELACS_LINK_TESTS()
+
+
+#################################################
+## Doxygen
+#################################################
+
+DX_HTML_FEATURE(ON)
+DX_CHM_FEATURE(OFF)
+DX_CHI_FEATURE(OFF)
+DX_MAN_FEATURE(OFF)
+DX_RTF_FEATURE(OFF)
+DX_XML_FEATURE(OFF)
+DX_PDF_FEATURE(OFF)
+DX_PS_FEATURE(OFF)
+DX_INIT_DOXYGEN( $PACKAGE_NAME, doc/datafile.dox, doc )
+
+
+# Substitute
+AC_CONFIG_FILES([
+Makefile
+src/Makefile
+doc/datafile.dox
+])
+
+AC_OUTPUT
+
+
+cat <<SUMMARY
+
+    Create documentation ... ${DX_SUMMARY}
+
+If you can read these lines ./configure finished sucessfully.
+librelacsdatafile should build and install smoothly. If it doesn't please
+open a bug describing your problem and configuration at
+http://sourceforge.net/tracker/?group_id=199846&atid=971134
+
+Continue with \$ make && sudo make install
+
+SUMMARY
+

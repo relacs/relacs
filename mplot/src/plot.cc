@@ -3890,7 +3890,7 @@ int Plot::plot( const EventData &data, int origin, double offset, double tscale,
 }
 
 
-#ifdef RELACSDATA
+#ifdef HAVE_LIBRELACSDAQ
 
 Plot::InDataElement::InDataElement( const InData &data, int origin,
 				    double offset, double tscale,

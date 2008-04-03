@@ -1,14 +1,22 @@
 lib_LTLIBRARIES = \
     librelacsnumerics.la
 
+if RELACS_LINKTESTS
+noinst_PROGRAMS = \
+    linktest_librelacsnumerics_la
+endif
 
 
-librelacsnumerics_la_LDFLAGS = \
-    @GSL_LDFLAGS@
 
 librelacsnumerics_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @GSL_CPPFLAGS@
+
+librelacsnumerics_la_LDFLAGS = \
+    @GSL_LDFLAGS@
+
+librelacsnumerics_la_LIBADD = \
+    @GSL_LIBS@
 
 librelacsnumerics_ladir = $(includedir)/relacs
 
@@ -46,4 +54,11 @@ librelacsnumerics_la_SOURCES = \
     sampledata.cc \
     spectrum.cc \
     statstests.cc
+
+
+
+if RELACS_LINKTESTS
+linktest_librelacsnumerics_la_SOURCES =
+linktest_librelacsnumerics_la_LDADD = librelacsnumerics.la ../../linktest/librelacslinktest.la
+endif
 

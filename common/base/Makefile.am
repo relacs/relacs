@@ -18,7 +18,6 @@ noinst_PROGRAMS = \
 endif
 
 
-
 librelacscommonephystraces_la_CPPFLAGS = \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../numerics/include \
@@ -43,8 +42,12 @@ librelacscommonpause_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
+librelacscommonpause_la_LDFLAGS = \
+    @QT3_LDFLAGS@
+
 librelacscommonpause_la_LIBADD = \
-    ../../relacs/src/librelacs.la
+    ../../relacs/src/librelacs.la \
+    @QT3_LIBS@
 
 $(librelacscommonpause_la_OBJECTS) : \
     moc_pause.cc
@@ -65,8 +68,12 @@ librelacscommonrestartdelay_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
+librelacscommonrestartdelay_la_LDFLAGS = \
+    @QT3_LDFLAGS@
+
 librelacscommonrestartdelay_la_LIBADD = \
-    ../../relacs/src/librelacs.la
+    ../../relacs/src/librelacs.la \
+    @QT3_LIBS@
 
 $(librelacscommonrestartdelay_la_OBJECTS) : \
     moc_restartdelay.cc
@@ -87,8 +94,12 @@ librelacscommonstimulusdelay_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
+librelacscommonstimulusdelay_la_LDFLAGS = \
+    @QT3_LDFLAGS@
+
 librelacscommonstimulusdelay_la_LIBADD = \
-    ../../relacs/src/librelacs.la
+    ../../relacs/src/librelacs.la \
+    @QT3_LIBS@
 
 $(librelacscommonstimulusdelay_la_OBJECTS) : \
     moc_stimulusdelay.cc

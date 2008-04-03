@@ -1,6 +1,6 @@
 #include <relacs/array.h>
 
-#ifdef GSL
+#ifdef HAVE_LIBGSL
 
 void gslVector( gsl_vector &a, const Array<double> &b )
 {

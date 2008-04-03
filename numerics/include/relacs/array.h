@@ -31,7 +31,7 @@
 #include <fstream>
 #include <iostream>
 #include <iomanip>
-#ifdef GSL
+#ifdef HAVE_LIBGSL
 #include <gsl/gsl_vector.h>
 #endif
 #include "containerops.h"
@@ -264,7 +264,7 @@ class Array
     /*! Returns a pointer to the data buffer. */
   inline T *data( void );
 
-#ifdef GSL
+#ifdef HAVE_LIBGSL
     /*! Initializes the gsl_vector \a a such that it points
         to the data buffer of \a b. Ownership remains with \a b. */
   friend void gslVector( gsl_vector &a, const Array<double> &b );

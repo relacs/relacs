@@ -236,7 +236,7 @@ private:
 };
 
 
-#ifdef RAND55
+#ifdef HAVE_LIBRAND55
 
 
 #include <limits.h>
@@ -303,7 +303,7 @@ public:
 #endif
 
 
-#ifdef GSL
+#ifdef HAVE_LIBGSL
 
 
 #include <gsl/gsl_rng.h>
@@ -446,7 +446,7 @@ protected:
 namespace numerics
 {
 
-#ifdef GSL
+#ifdef HAVE_LIBGSL
 
   typedef RandomGSL Random;
     /*! A global random number generator. */
@@ -454,7 +454,7 @@ namespace numerics
 
 #else
 
-#ifdef RAND55
+#ifdef HAVE_LIBRAND55
 
   typedef Rand55 Random;
     /*! A global random number generator. */

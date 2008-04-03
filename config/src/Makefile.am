@@ -22,7 +22,8 @@ librelacsconfig_la_LDFLAGS = \
 
 librelacsconfig_la_LIBADD = \
     ../../options/src/librelacsoptions.la \
-    ../../widgets/src/librelacswidgets.la
+    ../../widgets/src/librelacswidgets.la \
+    @QT3_LIBS@
 
 $(librelacsconfig_la_OBJECTS) : \
     moc_configdialog.cc

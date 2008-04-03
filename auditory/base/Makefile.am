@@ -40,9 +40,13 @@ librelacsauditoryneuron_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
+librelacsauditoryneuron_la_LDFLAGS = \
+    @QT3_LDFLAGS@
+
 librelacsauditoryneuron_la_LIBADD = \
     ../../relacs/src/librelacs.la \
-    ../../common/models/librelacscommonneuronmodels.la
+    ../../common/models/librelacscommonneuronmodels.la \
+    @QT3_LIBS@
 
 $(librelacsauditoryneuron_la_OBJECTS) : \
     moc_auditoryneuron.cc
@@ -64,9 +68,13 @@ librelacsauditorysearch_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
+librelacsauditorysearch_la_LDFLAGS = \
+    @QT3_LDFLAGS@
+
 librelacsauditorysearch_la_LIBADD = \
     ../../relacs/src/librelacs.la \
-    librelacsauditorytraces.la
+    librelacsauditorytraces.la \
+    @QT3_LIBS@
 
 $(librelacsauditorysearch_la_OBJECTS) : \
     moc_auditorysearch.cc
@@ -90,11 +98,15 @@ librelacsauditorysession_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
+librelacsauditorysession_la_LDFLAGS = \
+    @QT3_LDFLAGS@
+
 librelacsauditorysession_la_LIBADD = \
     ../../relacs/src/librelacs.la \
     ../../common/base/librelacscommonephystraces.la \
     ../../hardware/src/librelacsnieserieshardware.la \
-    librelacsauditorytraces.la
+    librelacsauditorytraces.la \
+    @QT3_LIBS@
 
 $(librelacsauditorysession_la_OBJECTS) : \
     moc_auditorysession.cc
@@ -114,8 +126,12 @@ librelacsauditorytraces_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
+librelacsauditorytraces_la_LDFLAGS = \
+    @QT3_LDFLAGS@
+
 librelacsauditorytraces_la_LIBADD = \
-    ../../relacs/src/librelacs.la
+    ../../relacs/src/librelacs.la \
+    @QT3_LIBS@
 
 librelacsauditorytraces_la_SOURCES = \
     auditorytraces.cc \
@@ -137,11 +153,15 @@ librelacsauditoryficurve_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
+librelacsauditoryficurve_la_LDFLAGS = \
+    @QT3_LDFLAGS@
+
 librelacsauditoryficurve_la_LIBADD = \
     ../../relacs/src/librelacs.la \
     ../../common/base/librelacscommonephystraces.la \
     librelacsauditorytraces.la \
-    librelacsauditorysession.la
+    librelacsauditorysession.la \
+    @QT3_LIBS@
 
 $(librelacsauditoryficurve_la_OBJECTS) : \
     moc_ficurve.cc
@@ -166,11 +186,15 @@ librelacsauditoryfifield_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
+librelacsauditoryfifield_la_LDFLAGS = \
+    @QT3_LDFLAGS@
+
 librelacsauditoryfifield_la_LIBADD = \
     ../../relacs/src/librelacs.la \
     ../../common/base/librelacscommonephystraces.la \
     librelacsauditorytraces.la \
-    librelacsauditoryficurve.la
+    librelacsauditoryficurve.la \
+    @QT3_LIBS@
 
 $(librelacsauditoryfifield_la_OBJECTS) : \
     moc_fifield.cc
@@ -195,11 +219,15 @@ librelacsauditorysinglestimulus_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
+librelacsauditorysinglestimulus_la_LDFLAGS = \
+    @QT3_LDFLAGS@
+
 librelacsauditorysinglestimulus_la_LIBADD = \
     ../../relacs/src/librelacs.la \
     ../../common/base/librelacscommonephystraces.la \
     librelacsauditorysession.la \
-    librelacsauditorytraces.la
+    librelacsauditorytraces.la \
+    @QT3_LIBS@
 
 $(librelacsauditorysinglestimulus_la_OBJECTS) : \
     moc_singlestimulus.cc
@@ -224,11 +252,15 @@ librelacsauditoryspikeprecision_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
+librelacsauditoryspikeprecision_la_LDFLAGS = \
+    @QT3_LDFLAGS@
+
 librelacsauditoryspikeprecision_la_LIBADD = \
     ../../relacs/src/librelacs.la \
     ../../common/base/librelacscommonephystraces.la \
     librelacsauditorysession.la \
-    librelacsauditorytraces.la
+    librelacsauditorytraces.la \
+    @QT3_LIBS@
 
 $(librelacsauditoryspikeprecision_la_OBJECTS) : \
     moc_spikeprecision.cc
@@ -253,11 +285,15 @@ librelacsauditorysyslatency_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     @QT3_CPPFLAGS@
 
+librelacsauditorysyslatency_la_LDFLAGS = \
+    @QT3_LDFLAGS@
+
 librelacsauditorysyslatency_la_LIBADD = \
     ../../relacs/src/librelacs.la \
     ../../common/base/librelacscommonephystraces.la \
     librelacsauditorysession.la \
-    librelacsauditorytraces.la
+    librelacsauditorytraces.la \
+    @QT3_LIBS@
 
 $(librelacsauditorysyslatency_la_OBJECTS) : \
     moc_syslatency.cc
