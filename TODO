@@ -1,8 +1,6 @@
 Documentation:
-- Extra documentation for relacs/
-- Also install doxygen tag files
-- Make sure that the dox file PREDEFINED variable gets the GSL and RAND55 defines
-  via autoconf
+- Rename relacs to core to make extra documentation for relacs/ ork.
+- Add links to the library docs to the relacs mainpage.
 - Update installation and Makefile instructions to autotools
 - Hint to 
   Integrating Qt's Meta object compiler (moc) with GNU Automake
@@ -10,11 +8,11 @@ Documentation:
   and
   The Autotools file jungle (== version 3)
     http://blog.hartwork.org/?p=131
-- Add links to the library docs to the relacs mainpage.
 - update documentation of OutData, TraceSpec
 
 Autotools:
 - library package don't pass distcheck because of relative includes
+  -> conditional: if run from relacs common source, then use standard dependencies
 - uninstall: also remove relacs subdirectories!
 - make distcheck for the libraries:
   * linktests should be removed 
@@ -22,6 +20,7 @@ Autotools:
     export CPPFLAGS=-I/home/jan/prj/relacsinstall/include
     export LDFLAGS=-L/home/jan/prj/relacsinstall/lib 
     export DISTCHECK_CONFIGURE_FLAGS="--with-qt3=/usr/lib/qt3 --disable-doxygen-dot"
+- Add rand55 test and make sure that the dox file PREDEFINED variable gets HAVE_RAND55 define set
 
 Bug in MetaData Dialog: after opening and closing with ESC, reopening crashes the program
 
@@ -39,17 +38,9 @@ Start implementing Dynclamp module!
 Things to be done for first release:
 
 - update copyright in gpl header in each file to 2008! Write a script for this.
-- reorganize the source files (more libraries)
-  * split src/ in internal classes and a relacs library:
-    not possible yet, 
-    since RELACSPlugin need RELACSWidget, and this uses everything!
-- find better and not yet used names for the libraries
-- change #include "foo.h"
-  to #include <library/foo.h> for public headers of the library.
-  Link the public header files into a subdir library/. (see gsl library)
+- reorganize the source files (more/less libraries: config and widget)
+- find better names for the libraries
 - check library dependencies (of hardware plugins, repros, etc.)
-- make all libraries depend on -lm (if appropriate) and -lc (every library)!
-- use autoconf and automake, and libtool (what about the -fPIC or -fpic flag for gcc?)
 
 
 new RePro name: ExPro, Protocol, ...

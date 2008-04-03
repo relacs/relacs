@@ -99,8 +99,6 @@ AC_RELACS_LINK_TESTS()
 #################################################
 
 DOXYGEN_INPUT="\
-relacs/src \
-relacs/include/relacs \
 src \
 \
 doc \
@@ -115,6 +113,7 @@ mplot \
 numerics \
 options \
 widgets \
+core \
 "
 
 DOXYGEN_TAGFILES=""
@@ -205,6 +204,7 @@ AC_CONFIG_FILES([
 
     relacs/Makefile
     relacs/src/Makefile
+    relacs/doc/core.dox
 
     src/Makefile
 
