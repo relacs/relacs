@@ -167,6 +167,7 @@ doxygen-doc: doxygen-clean doxygen-runall
 	| $(DX_DOXYGEN) -
 
 DX_INSTALL_FILES = \
+    $(DOC_PACKAGE).tag \
     $(DX_INSTALL_CHI) \
     $(DX_INSTALL_PS) \
     $(DX_INSTALL_PDF)

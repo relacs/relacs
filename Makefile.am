@@ -41,8 +41,6 @@ EXTRA_DIST = \
     \
     doc/continuousbutton.png \
     doc/fixedbutton.png \
-    doc/optdialog.png \
-    doc/optwidget.png \
     doc/relacs1.png \
     doc/relacs2.png
 

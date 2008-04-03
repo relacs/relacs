@@ -1,5 +1,5 @@
 Documentation:
-- Also install images (e.g. optwidget.png)
+- Extra documentation for relacs/
 - Also install doxygen tag files
 - Make sure that the dox file PREDEFINED variable gets the GSL and RAND55 defines
   via autoconf
@@ -16,6 +16,12 @@ Documentation:
 Autotools:
 - library package don't pass distcheck because of relative includes
 - uninstall: also remove relacs subdirectories!
+- make distcheck for the libraries:
+  * linktests should be removed 
+  * define the following environment variabels
+    export CPPFLAGS=-I/home/jan/prj/relacsinstall/include
+    export LDFLAGS=-L/home/jan/prj/relacsinstall/lib 
+    export DISTCHECK_CONFIGURE_FLAGS="--with-qt3=/usr/lib/qt3 --disable-doxygen-dot"
 
 Bug in MetaData Dialog: after opening and closing with ESC, reopening crashes the program
 

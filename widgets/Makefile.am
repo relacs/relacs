@@ -13,7 +13,9 @@ EXTRA_DIST = \
     moc3.mk \
     doxygen.mk \
     \
-    doc/widgets.dox
+    doc/widgets.dox \
+    doc/optdialog.png \
+    doc/optwidget.png
 
 
 include doxygen.mk
