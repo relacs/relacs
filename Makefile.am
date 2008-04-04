@@ -11,7 +11,7 @@ SUBDIRS = \
     config \
     mplot \
     \
-    core \
+    relacs \
     src \
     \
     common \
@@ -29,13 +29,13 @@ EXTRA_DIST = \
     \
     doc/relacs.1 \
     \
-    doc/relacs.dox \
+    doc/relacsall.dox \
     doc/c++.doc \
     doc/macros.doc \
     doc/naming.doc \
     doc/no.doc \
     doc/program.doc \
-    doc/relacs.doc \
+    doc/relacsall.doc \
     doc/repros.doc \
     utils/scaninf.doc \
     \

@@ -2,11 +2,11 @@ SUBDIRS = \
     src
 
 EXTRA_DIST = \
-    doxygen.mk \
+    doxygenrelacs.mk \
     \
-    doc/core.dox
+    doc/relacs.dox
 
-include doxygen.mk
+include doxygenrelacs.mk
 
 if DX_COND_doc
 

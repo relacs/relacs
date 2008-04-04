@@ -114,8 +114,8 @@ options/include/relacs \
 widgets/src \
 widgets/include/relacs \
 \
-core/src \
-core/include/relacs \
+relacs/src \
+relacs/include/relacs \
 src \
 \
 doc \
@@ -130,7 +130,7 @@ mplot \
 numerics \
 options \
 widgets \
-core \
+relacs \
 "
 
 DOXYGEN_TAGFILES=""
@@ -156,7 +156,7 @@ DX_RTF_FEATURE(OFF)
 DX_XML_FEATURE(OFF)
 DX_PDF_FEATURE(OFF)
 DX_PS_FEATURE(OFF)
-DX_INIT_DOXYGEN( $PACKAGE_NAME, doc/relacs.dox, doc )
+DX_INIT_DOXYGEN( $PACKAGE_NAME, doc/relacsall.dox, doc )
 
 
 # Global flags
@@ -225,9 +225,9 @@ AC_CONFIG_FILES([
     options/doc/options.dox
     options/configure.ac
 
-    core/Makefile
-    core/src/Makefile
-    core/doc/core.dox
+    relacs/Makefile
+    relacs/src/Makefile
+    relacs/doc/relacs.dox
 
     src/Makefile
 
@@ -240,8 +240,8 @@ AC_CONFIG_FILES([
 
     Makefile
 
-    doc/relacs.doc
-    doc/relacs.dox
+    doc/relacsall.doc
+    doc/relacsall.dox
 
     relacslocal.cfg
     src/relacs.cfg
