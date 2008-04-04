@@ -10,8 +10,6 @@ Documentation:
 - update documentation of OutData, TraceSpec
 
 Autotools:
-- library package don't pass distcheck because of relative includes
-  -> conditional: if run from relacs common source, then use standard dependencies
 - uninstall: also remove relacs subdirectories!
 - make distcheck for the libraries:
   * linktests should be removed 

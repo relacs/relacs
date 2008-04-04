@@ -42,6 +42,10 @@ DX_PDF_FEATURE(OFF)
 DX_PS_FEATURE(OFF)
 DX_INIT_DOXYGEN( $PACKAGE_NAME, doc/config.dox, doc )
 
+# This library is compiled on its own and assumes
+# its dependencies to be installed already.
+AM_CONDITIONAL([RELACS_TOP_BUILD], [test 0 = 1])
+
 
 # Substitute
 AC_CONFIG_FILES([
@@ -55,6 +59,7 @@ AC_OUTPUT
 
 cat <<SUMMARY
 
+    Build link tests ....... ${RELACS_LINKTESTS_ENABLED}
     Create documentation ... ${DX_SUMMARY}
 
 If you can read these lines ./configure finished sucessfully.

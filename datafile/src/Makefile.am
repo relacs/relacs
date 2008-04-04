@@ -7,15 +7,25 @@ noinst_PROGRAMS = \
 endif
 
 
-
+if RELACS_TOP_BUILD
 librelacsdatafile_la_CPPFLAGS = \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../include
+else
+librelacsdatafile_la_CPPFLAGS = \
+    -I$(srcdir)/../include
+endif
 
+if RELACS_TOP_BUILD
 librelacsdatafile_la_LIBADD = \
     ../../numerics/src/librelacsnumerics.la \
     ../../options/src/librelacsoptions.la
+else
+librelacsdatafile_la_LIBADD = \
+    -lrelacsnumerics \
+    -lrelacsoptions
+endif
 
 librelacsdatafile_ladir = $(includedir)/relacs
 

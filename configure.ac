@@ -159,6 +159,11 @@ DX_PS_FEATURE(OFF)
 DX_INIT_DOXYGEN( $PACKAGE_NAME, doc/relacsall.dox, doc )
 
 
+# All relacs libraries, the program, and the standard plugins
+# are built from a common source tree.
+AM_CONDITIONAL([RELACS_TOP_BUILD], [test 0 = 0])
+
+
 # Global flags
 CPPFLAGS="${CPPFLAGS} -DPLUGINVERSION=\\\"$VERSION\\\""
 
