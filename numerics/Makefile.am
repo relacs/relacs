@@ -14,7 +14,7 @@ EXTRA_DIST = \
     doc/numerics.dox
 
 
-include doxygen.mk
+include doxygennumerics.mk
 
 if DX_COND_doc
 

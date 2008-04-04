@@ -14,7 +14,7 @@ EXTRA_DIST = \
     doc/daq.dox
 
 
-include doxygen.mk
+include doxygendaq.mk
 
 if DX_COND_doc
 

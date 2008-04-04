@@ -16,7 +16,7 @@ EXTRA_DIST = \
     doc/mplot.dox
 
 
-include doxygen.mk
+include doxygenmplot.mk
 
 if DX_COND_doc
 

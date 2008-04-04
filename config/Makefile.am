@@ -15,7 +15,7 @@ EXTRA_DIST = \
     doc/config.dox
 
 
-include doxygen.mk
+include doxygenconfig.mk
 
 if DX_COND_doc
 

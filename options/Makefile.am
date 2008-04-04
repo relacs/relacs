@@ -13,7 +13,7 @@ EXTRA_DIST = \
     doc/options.dox
 
 
-include doxygen.mk
+include doxygenoptions.mk
 
 if DX_COND_doc
 

@@ -13,7 +13,7 @@ EXTRA_DIST = \
     doc/datafile.dox
 
 
-include doxygen.mk
+include doxygendatafile.mk
 
 if DX_COND_doc
 

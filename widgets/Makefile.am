@@ -18,7 +18,7 @@ EXTRA_DIST = \
     doc/optwidget.png
 
 
-include doxygen.mk
+include doxygenwidgets.mk
 
 if DX_COND_doc
 
