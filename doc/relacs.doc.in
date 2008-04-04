@@ -8,6 +8,7 @@
 \section maincontent Content
 
 - \ref intro
+- \ref references
 - \ref usingrelacs (\ref startrelacs, \ref interface, \ref keys, \ref menus, \ref macros, \ref datafiles, \ref relacsconfig)
 - \ref pluginconcept
 - \ref createrepros (\ref createcode,\ref setupmakefile,\ref compilerepro,\ref addrepro,\ref debugrepro)
@@ -26,6 +27,16 @@ in closed loop.
 
 What RELACS is good for and who should use RELACS... and who should NOT use RELACS.
 
+
+\section references API References
+- <a href="numerics/index.html">numerics library</a>
+- <a href="daq/index.html">daq library</a>
+- <a href="options/index.html">options library</a>
+- <a href="datafile/index.html">datafile library</a>
+- <a href="widgets/index.html">widgets library</a>
+- <a href="config/index.html">config library</a>
+- <a href="mplot/index.html">mplot library</a>
+- <a href="core/index.html">relacs core library</a>
 
 \section usingrelacs Using RELACS
 

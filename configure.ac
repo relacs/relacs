@@ -99,6 +99,23 @@ AC_RELACS_LINK_TESTS()
 #################################################
 
 DOXYGEN_INPUT="\
+config/src \
+config/include/relacs \
+daq/src \
+daq/include/relacs \
+datafile/src \
+datafile/include/relacs \
+numerics/src \
+numerics/include/relacs \
+mplot/src \
+mplot/include/relacs \
+options/src \
+options/include/relacs \
+widgets/src \
+widgets/include/relacs \
+\
+relacs/src \
+relacs/include/relacs \
 src \
 \
 doc \
@@ -121,9 +138,15 @@ for dir in $DOXYGEN_EXTERNAL; do
 	DOXYGEN_TAGFILES="$DOXYGEN_TAGFILES ${dir}/doc/${dir}.tag=${dir}"
 done
 
+DOXYGEN_IMAGEPATHES="doc"
+for dir in $DOXYGEN_EXTERNAL; do
+	DOXYGEN_IMAGEPATHES="$DOXYGEN_IMAGEPATHES ${dir}/doc"
+done
+
 AC_SUBST(DOXYGEN_INPUT)
 AC_SUBST(DOXYGEN_EXTERNAL)
 AC_SUBST(DOXYGEN_TAGFILES)
+AC_SUBST(DOXYGEN_IMAGEPATHES)
 
 DX_HTML_FEATURE(ON)
 DX_CHM_FEATURE(OFF)
