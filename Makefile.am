@@ -11,7 +11,7 @@ SUBDIRS = \
     config \
     mplot \
     \
-    relacs \
+    core \
     src \
     \
     common \

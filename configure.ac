@@ -114,8 +114,8 @@ options/include/relacs \
 widgets/src \
 widgets/include/relacs \
 \
-relacs/src \
-relacs/include/relacs \
+core/src \
+core/include/relacs \
 src \
 \
 doc \
@@ -225,9 +225,9 @@ AC_CONFIG_FILES([
     options/doc/options.dox
     options/configure.ac
 
-    relacs/Makefile
-    relacs/src/Makefile
-    relacs/doc/core.dox
+    core/Makefile
+    core/src/Makefile
+    core/doc/core.dox
 
     src/Makefile
 
