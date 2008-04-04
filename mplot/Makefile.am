@@ -10,7 +10,7 @@ EXTRA_DIST = \
     m4/relacs_link_tests.m4 \
     m4/relacs_math.m4 \
     m4/relacs_qt3.m4 \
-    doxygen.mk \
+    doxygenmplot.mk \
     moc3.mk \
     \
     doc/mplot.dox

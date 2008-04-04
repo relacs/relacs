@@ -11,7 +11,7 @@ EXTRA_DIST = \
     m4/relacs_qt3.m4 \
     \
     moc3.mk \
-    doxygen.mk \
+    doxygenwidgets.mk \
     \
     doc/widgets.dox \
     doc/optdialog.png \

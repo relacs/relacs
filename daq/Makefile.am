@@ -9,7 +9,7 @@ EXTRA_DIST = \
     m4/ax_prog_doxygen.m4 \
     m4/relacs_link_tests.m4 \
     m4/relacs_gsl.m4 \
-    doxygen.mk \
+    doxygendaq.mk \
     \
     doc/daq.dox
 
