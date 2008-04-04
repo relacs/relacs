@@ -6,9 +6,9 @@
 
 if DX_COND_doc
 
-DOC_PACKAGE = core
-DOC_INSTALL_SUBDIR = /core
-DOC_CFG = $(abs_builddir)/doc/core.dox
+DOC_PACKAGE = relacs
+DOC_INSTALL_SUBDIR = /relacs
+DOC_CFG = $(abs_builddir)/doc/relacs.dox
 
 ## ------------------------------- ##
 ## Rules specific for HTML output. ##

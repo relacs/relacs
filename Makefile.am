@@ -49,7 +49,7 @@ include doxygen.mk
 if DX_COND_doc
 
 doclinks:
-	cd $(srcdir)/doc/html; \
+	cd $(builddir)/doc/html; \
 	LND="$(LN_S)"; test "$$LND" != "cp -p" || LND="cp -r -p"; \
         for dir in $(DOXYGEN_EXTERNAL); do \
 	  test -r $$dir || $$LND ../../$$dir/doc/html $$dir; \
