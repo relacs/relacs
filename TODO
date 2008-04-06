@@ -1,5 +1,4 @@
 Documentation:
-- Pass to each library documentation the necessary tag files
 - Update installation and Makefile instructions to autotools
 - Hint to 
   Integrating Qt's Meta object compiler (moc) with GNU Automake
@@ -10,6 +9,7 @@ Documentation:
 - update documentation of OutData, TraceSpec
 
 Autotools:
+- add relacs library tests to the libraries!
 - uninstall: also remove relacs subdirectories!
 - make distcheck for the libraries:
   * linktests should be removed 
