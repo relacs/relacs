@@ -15,5 +15,7 @@
 - Reading config from PWD and LD_LIBRARY_PATH containing PWD
   - On/off by user?
 - Doxygen currently does not create anything useful for auditory and
-  common folder. Any ideas?
+  common folder. Any ideas? -> Add the header file path to the input!
+- Use current version of doxygen for debian
+  
 
