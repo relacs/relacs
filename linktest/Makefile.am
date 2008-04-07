@@ -1,7 +1,5 @@
 if RELACS_LINKTESTS
-noinst_libdir = $(abs_builddir)
-
-noinst_lib_LTLIBRARIES = \
+noinst_LTLIBRARIES = \
     librelacslinktest.la
 
 librelacslinktest_la_SOURCES = \
@@ -9,8 +7,8 @@ librelacslinktest_la_SOURCES = \
 
 # fix for install-noinst_libLTLIBRARIES (!!!)
 # - the noinst target that gets installed.
-install:
-install-data:
+#install:
+#install-data:
 
 endif
 
