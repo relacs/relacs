@@ -8,7 +8,7 @@ if DX_COND_doc
 
 DOC_PACKAGE = relacs
 DOC_INSTALL_SUBDIR = /relacs
-DOC_CFG = $(abs_builddir)/doc/relacs.dox
+DOC_CFG = doc/relacs.dox
 
 ## ------------------------------- ##
 ## Rules specific for HTML output. ##
@@ -164,9 +164,9 @@ else
 DOC_TAGFILES="$(DESTDIR)$(docdir)/config.tag=../config $(DESTDIR)$(docdir)/daq.tag=../daq $(DESTDIR)$(docdir)/datafile.tag=../datafile $(DESTDIR)$(docdir)/mplot.tag=../mplot $(DESTDIR)$(docdir)/numerics.tag=../numerics $(DESTDIR)$(docdir)/options.tag=../options $(DESTDIR)$(docdir)/widgets.tag=../widgets"
 endif
 
-@DX_DOCDIR@/$(DOC_PACKAGE).tag: $(DOC_CFG) $(pkginclude_HEADERS)
+@DX_DOCDIR@/$(DOC_PACKAGE).tag: $(DOC_CFG).in $(pkginclude_HEADERS)
 	cd $(srcdir); \
-	{ cat $(DOC_CFG); \
+	{ cat $(abs_builddir)/$(DOC_CFG); \
 	  for DX_ENV_LINE in $(DX_ENV); do echo $$DX_ENV_LINE; done; \
 	  echo "GENERATE_TAGFILE=$(abs_builddir)/@DX_DOCDIR@/$(DOC_PACKAGE).tag"; \
 	  echo "TAGFILES=$(DOC_TAGFILES)"; \

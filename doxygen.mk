@@ -7,7 +7,7 @@
 if DX_COND_doc
 
 DOC_PACKAGE = relacsall
-DOC_CFG = $(abs_builddir)/doc/relacsall.dox
+DOC_CFG = doc/relacsall.dox
 
 ## ------------------------------- ##
 ## Rules specific for HTML output. ##
@@ -157,9 +157,9 @@ doxygen-runall: doxygen-run $(DX_PS_GOAL) $(DX_PDF_GOAL)
 
 doxygen-doc: doxygen-clean doxygen-runall
 
-@DX_DOCDIR@/$(DOC_PACKAGE).tag: $(DOC_CFG) $(pkginclude_HEADERS)
+@DX_DOCDIR@/$(DOC_PACKAGE).tag: $(DOC_CFG).in $(pkginclude_HEADERS)
 	cd $(srcdir); \
-	{ cat $(DOC_CFG); \
+	{ cat $(abs_builddir)/$(DOC_CFG); \
 	  for DX_ENV_LINE in $(DX_ENV); do echo $$DX_ENV_LINE; done; \
 	  echo "GENERATE_TAGFILE=$(abs_builddir)/@DX_DOCDIR@/$(DOC_PACKAGE).tag"; \
 	  echo "OUTPUT_DIRECTORY=$(abs_builddir)/@DX_DOCDIR@"; } \

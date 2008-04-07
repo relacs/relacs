@@ -8,7 +8,7 @@ if DX_COND_doc
 
 DOC_PACKAGE = widgets
 DOC_INSTALL_SUBDIR = /widgets
-DOC_CFG = $(abs_builddir)/doc/widgets.dox
+DOC_CFG = doc/widgets.dox
 
 ## ------------------------------- ##
 ## Rules specific for HTML output. ##
@@ -164,9 +164,9 @@ else
 DOC_TAGFILES="$(DESTDIR)$(docdir)/options.tag=../options"
 endif
 
-@DX_DOCDIR@/$(DOC_PACKAGE).tag: $(DOC_CFG) $(pkginclude_HEADERS)
+@DX_DOCDIR@/$(DOC_PACKAGE).tag: $(DOC_CFG).in $(pkginclude_HEADERS)
 	cd $(srcdir); \
-	{ cat $(DOC_CFG); \
+	{ cat $(abs_builddir)/$(DOC_CFG); \
 	  for DX_ENV_LINE in $(DX_ENV); do echo $$DX_ENV_LINE; done; \
 	  echo "GENERATE_TAGFILE=$(abs_builddir)/@DX_DOCDIR@/$(DOC_PACKAGE).tag"; \
 	  echo "TAGFILES=$(DOC_TAGFILES)"; \
