@@ -7,12 +7,9 @@ lib_LTLIBRARIES = \
     librelacscommonhighpass.la \
     librelacscommonlowpass.la
 
-if RELACS_LINKTESTS
-noinst_PROGRAMS = \
+EXTRA_PROGRAMS = \
     linktest_librelacscommonhighpass_la \
     linktest_librelacscommonlowpass_la
-endif
-
 
 
 librelacscommonhighpass_la_CPPFLAGS = \
@@ -68,10 +65,14 @@ librelacscommonlowpass_la_SOURCES = \
 
 
 if RELACS_LINKTESTS
-linktest_librelacscommonhighpass_la_SOURCES =
-linktest_librelacscommonhighpass_la_LDADD = librelacscommonhighpass.la ../../linktest/librelacslinktest.la
+noinst_PROGRAMS = \
+    linktest_librelacscommonhighpass_la \
+    linktest_librelacscommonlowpass_la
 
-linktest_librelacscommonlowpass_la_SOURCES =
-linktest_librelacscommonlowpass_la_LDADD = librelacscommonlowpass.la ../../linktest/librelacslinktest.la
+linktest_librelacscommonhighpass_la_SOURCES = linktest.cc
+linktest_librelacscommonhighpass_la_LDADD = librelacscommonhighpass.la
+
+linktest_librelacscommonlowpass_la_SOURCES = linktest.cc
+linktest_librelacscommonlowpass_la_LDADD = librelacscommonlowpass.la
 endif
 

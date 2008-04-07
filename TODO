@@ -12,10 +12,10 @@ Documentation:
 - update documentation of OutData, TraceSpec
 
 Autotools:
+- linktests: check_PROGRAMS instead of noinst_PROGRAMS?
 - add relacs library tests to the libraries!
 - uninstall: also remove relacs subdirectories!
 - make distcheck for the libraries:
-  * linktests should be removed 
   * define the following environment variabels
     export CPPFLAGS=-I/home/jan/prj/relacsinstall/include
     export LDFLAGS=-L/home/jan/prj/relacsinstall/lib 

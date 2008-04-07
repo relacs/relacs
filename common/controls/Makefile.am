@@ -7,11 +7,9 @@ lib_LTLIBRARIES = \
     librelacscommonmotorcontrol.la \
     librelacscommonspectrumanalyzer.la
 
-if RELACS_LINKTESTS
-noinst_PROGRAMS = \
+EXTRA_PROGRAMS = \
     linktest_librelacscommonmotorcontrol_la \
     linktest_librelacscommonspectrumanalyzer_la
-endif
 
 
 
@@ -68,10 +66,14 @@ librelacscommonspectrumanalyzer_la_SOURCES = \
 
 
 if RELACS_LINKTESTS
-linktest_librelacscommonmotorcontrol_la_SOURCES =
-linktest_librelacscommonmotorcontrol_la_LDADD = librelacscommonmotorcontrol.la ../../linktest/librelacslinktest.la
+noinst_PROGRAMS = \
+    linktest_librelacscommonmotorcontrol_la \
+    linktest_librelacscommonspectrumanalyzer_la
 
-linktest_librelacscommonspectrumanalyzer_la_SOURCES =
-linktest_librelacscommonspectrumanalyzer_la_LDADD = librelacscommonspectrumanalyzer.la ../../linktest/librelacslinktest.la
+linktest_librelacscommonmotorcontrol_la_SOURCES = linktest.cc
+linktest_librelacscommonmotorcontrol_la_LDADD = librelacscommonmotorcontrol.la
+
+linktest_librelacscommonspectrumanalyzer_la_SOURCES = linktest.cc
+linktest_librelacscommonspectrumanalyzer_la_LDADD = librelacscommonspectrumanalyzer.la
 endif
 

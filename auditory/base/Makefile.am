@@ -14,8 +14,7 @@ lib_LTLIBRARIES = \
     librelacsauditoryspikeprecision.la \
     librelacsauditorysyslatency.la
 
-if RELACS_LINKTESTS
-noinst_PROGRAMS = \
+EXTRA_PROGRAMS = \
     linktest_librelacsauditoryneuron_la \
     linktest_librelacsauditorysearch_la \
     linktest_librelacsauditorysession_la \
@@ -25,7 +24,6 @@ noinst_PROGRAMS = \
     linktest_librelacsauditorysinglestimulus_la \
     linktest_librelacsauditoryspikeprecision_la \
     linktest_librelacsauditorysyslatency_la
-endif
 
 
 
@@ -305,31 +303,42 @@ librelacsauditorysyslatency_la_SOURCES = \
 
 
 if RELACS_LINKTESTS
-linktest_librelacsauditoryneuron_la_SOURCES =
-linktest_librelacsauditoryneuron_la_LDADD = librelacsauditoryneuron.la ../../linktest/librelacslinktest.la
+noinst_PROGRAMS = \
+    linktest_librelacsauditoryneuron_la \
+    linktest_librelacsauditorysearch_la \
+    linktest_librelacsauditorysession_la \
+    linktest_librelacsauditorytraces_la \
+    linktest_librelacsauditoryficurve_la \
+    linktest_librelacsauditoryfifield_la \
+    linktest_librelacsauditorysinglestimulus_la \
+    linktest_librelacsauditoryspikeprecision_la \
+    linktest_librelacsauditorysyslatency_la
 
-linktest_librelacsauditorysearch_la_SOURCES =
-linktest_librelacsauditorysearch_la_LDADD = librelacsauditorysearch.la ../../linktest/librelacslinktest.la
+linktest_librelacsauditoryneuron_la_SOURCES = linktest.cc
+linktest_librelacsauditoryneuron_la_LDADD = librelacsauditoryneuron.la
 
-linktest_librelacsauditorysession_la_SOURCES =
-linktest_librelacsauditorysession_la_LDADD = librelacsauditorysession.la ../../linktest/librelacslinktest.la
+linktest_librelacsauditorysearch_la_SOURCES = linktest.cc
+linktest_librelacsauditorysearch_la_LDADD = librelacsauditorysearch.la
 
-linktest_librelacsauditorytraces_la_SOURCES =
-linktest_librelacsauditorytraces_la_LDADD = librelacsauditorytraces.la ../../linktest/librelacslinktest.la
+linktest_librelacsauditorysession_la_SOURCES = linktest.cc
+linktest_librelacsauditorysession_la_LDADD = librelacsauditorysession.la
 
-linktest_librelacsauditoryficurve_la_SOURCES =
-linktest_librelacsauditoryficurve_la_LDADD = librelacsauditoryficurve.la ../../linktest/librelacslinktest.la
+linktest_librelacsauditorytraces_la_SOURCES = linktest.cc
+linktest_librelacsauditorytraces_la_LDADD = librelacsauditorytraces.la
 
-linktest_librelacsauditoryfifield_la_SOURCES =
-linktest_librelacsauditoryfifield_la_LDADD = librelacsauditoryfifield.la ../../linktest/librelacslinktest.la
+linktest_librelacsauditoryficurve_la_SOURCES = linktest.cc
+linktest_librelacsauditoryficurve_la_LDADD = librelacsauditoryficurve.la
 
-linktest_librelacsauditorysinglestimulus_la_SOURCES =
-linktest_librelacsauditorysinglestimulus_la_LDADD = librelacsauditorysinglestimulus.la ../../linktest/librelacslinktest.la
+linktest_librelacsauditoryfifield_la_SOURCES = linktest.cc
+linktest_librelacsauditoryfifield_la_LDADD = librelacsauditoryfifield.la
 
-linktest_librelacsauditoryspikeprecision_la_SOURCES =
-linktest_librelacsauditoryspikeprecision_la_LDADD = librelacsauditoryspikeprecision.la ../../linktest/librelacslinktest.la
+linktest_librelacsauditorysinglestimulus_la_SOURCES = linktest.cc
+linktest_librelacsauditorysinglestimulus_la_LDADD = librelacsauditorysinglestimulus.la
 
-linktest_librelacsauditorysyslatency_la_SOURCES =
-linktest_librelacsauditorysyslatency_la_LDADD = librelacsauditorysyslatency.la ../../linktest/librelacslinktest.la
+linktest_librelacsauditoryspikeprecision_la_SOURCES = linktest.cc
+linktest_librelacsauditoryspikeprecision_la_LDADD = librelacsauditoryspikeprecision.la
+
+linktest_librelacsauditorysyslatency_la_SOURCES = linktest.cc
+linktest_librelacsauditorysyslatency_la_LDADD = librelacsauditorysyslatency.la
 endif
 

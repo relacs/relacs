@@ -7,12 +7,9 @@ lib_LTLIBRARIES = \
     librelacsauditoryloudspeaker.la \
     librelacsauditorycalibspeakers.la
 
-if RELACS_LINKTESTS
-noinst_PROGRAMS = \
+EXTRA_PROGRAMS = \
     linktest_librelacsauditorycalibspeakers_la \
     linktest_librelacsauditoryloudspeaker_la
-endif
-
 
 
 librelacsauditorycalibspeakers_la_CPPFLAGS = \
@@ -72,10 +69,14 @@ librelacsauditoryloudspeaker_la_SOURCES = \
 
 
 if RELACS_LINKTESTS
-linktest_librelacsauditorycalibspeakers_la_SOURCES =
-linktest_librelacsauditorycalibspeakers_la_LDADD = librelacsauditorycalibspeakers.la ../../linktest/librelacslinktest.la
+noinst_PROGRAMS = \
+    linktest_librelacsauditorycalibspeakers_la \
+    linktest_librelacsauditoryloudspeaker_la
 
-linktest_librelacsauditoryloudspeaker_la_SOURCES =
-linktest_librelacsauditoryloudspeaker_la_LDADD = librelacsauditoryloudspeaker.la ../../linktest/librelacslinktest.la
+linktest_librelacsauditorycalibspeakers_la_SOURCES = linktest.cc
+linktest_librelacsauditorycalibspeakers_la_LDADD = librelacsauditorycalibspeakers.la
+
+linktest_librelacsauditoryloudspeaker_la_SOURCES = linktest.cc
+linktest_librelacsauditoryloudspeaker_la_LDADD = librelacsauditoryloudspeaker.la
 endif
 

@@ -6,11 +6,8 @@ libdir = $(prefix)/lib/@PLUGINS_BASENAME@
 lib_LTLIBRARIES = \
     librelacscommonspikedetector.la
 
-if RELACS_LINKTESTS
-noinst_PROGRAMS = \
+EXTRA_PROGRAMS = \
     linktest_librelacscommonspikedetector_la
-endif
-
 
 
 librelacscommonspikedetector_la_CPPFLAGS = \
@@ -42,7 +39,8 @@ librelacscommonspikedetector_la_SOURCES = \
 
 
 if RELACS_LINKTESTS
-linktest_librelacscommonspikedetector_la_SOURCES =
-linktest_librelacscommonspikedetector_la_LDADD = librelacscommonspikedetector.la ../../linktest/librelacslinktest.la
+noinst_PROGRAMS = linktest_librelacscommonspikedetector_la
+linktest_librelacscommonspikedetector_la_SOURCES = linktest.cc
+linktest_librelacscommonspikedetector_la_LDADD = librelacscommonspikedetector.la
 endif
 

@@ -1,10 +1,8 @@
 lib_LTLIBRARIES = \
     librelacsdatafile.la
 
-if RELACS_LINKTESTS
-noinst_PROGRAMS = \
+EXTRA_PROGRAMS = \
     linktest_librelacsdatafile_la
-endif
 
 
 if RELACS_TOP_BUILD
@@ -44,7 +42,8 @@ librelacsdatafile_la_SOURCES = \
 
 
 if RELACS_LINKTESTS
-linktest_librelacsdatafile_la_SOURCES =
-linktest_librelacsdatafile_la_LDADD = librelacsdatafile.la ../../linktest/librelacslinktest.la
+noinst_PROGRAMS = linktest_librelacsdatafile_la
+linktest_librelacsdatafile_la_SOURCES = linktest.cc
+linktest_librelacsdatafile_la_LDADD = librelacsdatafile.la
 endif
 

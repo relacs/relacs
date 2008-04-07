@@ -213,8 +213,6 @@ AC_CONFIG_FILES([
     hardware/src/Makefile
     hardware/Makefile
 
-    linktest/Makefile
-
     mplot/src/Makefile
     mplot/Makefile
     mplot/doc/mplot.dox

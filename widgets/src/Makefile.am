@@ -4,10 +4,8 @@ include ${top_srcdir}/moc3.mk
 lib_LTLIBRARIES = \
     librelacswidgets.la
 
-if RELACS_LINKTESTS
-noinst_PROGRAMS = \
+EXTRA_PROGRAMS = \
     linktest_librelacswidgets_la
-endif
 
 
 if RELACS_TOP_BUILD
@@ -68,7 +66,8 @@ librelacswidgets_la_SOURCES = \
 
 
 if RELACS_LINKTESTS
-linktest_librelacswidgets_la_SOURCES =
-linktest_librelacswidgets_la_LDADD = librelacswidgets.la ../../linktest/librelacslinktest.la
+noinst_PROGRAMS = linktest_librelacswidgets_la
+linktest_librelacswidgets_la_SOURCES = linktest.cc
+linktest_librelacswidgets_la_LDADD = librelacswidgets.la
 endif
 

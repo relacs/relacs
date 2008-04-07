@@ -9,13 +9,11 @@ lib_LTLIBRARIES = \
     librelacscommonrestartdelay.la \
     librelacscommonstimulusdelay.la
 
-if RELACS_LINKTESTS
-noinst_PROGRAMS = \
+EXTRA_PROGRAMS = \
     linktest_librelacscommonephystraces_la \
     linktest_librelacscommonpause_la \
     linktest_librelacscommonrestartdelay_la \
     linktest_librelacscommonstimulusdelay_la
-endif
 
 
 librelacscommonephystraces_la_CPPFLAGS = \
@@ -111,16 +109,22 @@ librelacscommonstimulusdelay_la_SOURCES = \
 
 
 if RELACS_LINKTESTS
-linktest_librelacscommonephystraces_la_SOURCES =
-linktest_librelacscommonephystraces_la_LDADD = librelacscommonephystraces.la ../../linktest/librelacslinktest.la
+noinst_PROGRAMS = \
+    linktest_librelacscommonephystraces_la \
+    linktest_librelacscommonpause_la \
+    linktest_librelacscommonrestartdelay_la \
+    linktest_librelacscommonstimulusdelay_la
 
-linktest_librelacscommonpause_la_SOURCES =
-linktest_librelacscommonpause_la_LDADD = librelacscommonpause.la ../../linktest/librelacslinktest.la
+linktest_librelacscommonephystraces_la_SOURCES = linktest.cc
+linktest_librelacscommonephystraces_la_LDADD = librelacscommonephystraces.la
 
-linktest_librelacscommonrestartdelay_la_SOURCES =
-linktest_librelacscommonrestartdelay_la_LDADD = librelacscommonrestartdelay.la ../../linktest/librelacslinktest.la
+linktest_librelacscommonpause_la_SOURCES = linktest.cc
+linktest_librelacscommonpause_la_LDADD = librelacscommonpause.la
 
-linktest_librelacscommonstimulusdelay_la_SOURCES =
-linktest_librelacscommonstimulusdelay_la_LDADD = librelacscommonstimulusdelay.la ../../linktest/librelacslinktest.la
+linktest_librelacscommonrestartdelay_la_SOURCES = linktest.cc
+linktest_librelacscommonrestartdelay_la_LDADD = librelacscommonrestartdelay.la
+
+linktest_librelacscommonstimulusdelay_la_SOURCES = linktest.cc
+linktest_librelacscommonstimulusdelay_la_LDADD = librelacscommonstimulusdelay.la
 endif
 

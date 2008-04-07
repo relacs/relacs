@@ -1,8 +1,6 @@
 man_MANS = doc/relacs.1
 
 SUBDIRS = \
-    linktest \
-    \
     numerics \
     daq \
     options \

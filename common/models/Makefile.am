@@ -7,12 +7,9 @@ lib_LTLIBRARIES = \
     librelacscommonneuronmodels.la \
     librelacscommonsimplemodel.la
 
-if RELACS_LINKTESTS
-noinst_PROGRAMS = \
+EXTRA_PROGRAMS = \
     linktest_librelacscommonneuronmodels_la \
     linktest_librelacscommonsimplemodel_la
-endif
-
 
 
 librelacscommonneuronmodels_la_CPPFLAGS = \
@@ -67,10 +64,14 @@ librelacscommonsimplemodel_la_SOURCES = \
 
 
 if RELACS_LINKTESTS
-linktest_librelacscommonneuronmodels_la_SOURCES =
-linktest_librelacscommonneuronmodels_la_LDADD = librelacscommonneuronmodels.la ../../linktest/librelacslinktest.la
+noinst_PROGRAMS = \
+    linktest_librelacscommonneuronmodels_la \
+    linktest_librelacscommonsimplemodel_la
 
-linktest_librelacscommonsimplemodel_la_SOURCES =
-linktest_librelacscommonsimplemodel_la_LDADD = librelacscommonsimplemodel.la ../../linktest/librelacslinktest.la
+linktest_librelacscommonneuronmodels_la_SOURCES = linktest.cc
+linktest_librelacscommonneuronmodels_la_LDADD = librelacscommonneuronmodels.la
+
+linktest_librelacscommonsimplemodel_la_SOURCES = linktest.cc
+linktest_librelacscommonsimplemodel_la_LDADD = librelacscommonsimplemodel.la
 endif
 

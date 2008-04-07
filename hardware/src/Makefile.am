@@ -4,12 +4,9 @@ lib_LTLIBRARIES = \
     librelacshardware.la \
     librelacsnieserieshardware.la
 
-if RELACS_LINKTESTS
-noinst_PROGRAMS = \
+EXTRA_PROGRAMS = \
     linktest_librelacshardware_la \
     linktest_librelacsnieserieshardware_la
-endif
-
 
 
 librelacshardware_la_CPPFLAGS = \
@@ -82,9 +79,13 @@ librelacsnieserieshardware_la_SOURCES = \
 
 
 if RELACS_LINKTESTS
-linktest_librelacshardware_la_SOURCES =
-linktest_librelacshardware_la_LDADD = librelacshardware.la ../../linktest/librelacslinktest.la
+noinst_PROGRAMS = \
+    linktest_librelacshardware_la \
+    linktest_librelacsnieserieshardware_la
 
-linktest_librelacsnieserieshardware_la_SOURCES =
-linktest_librelacsnieserieshardware_la_LDADD = librelacsnieserieshardware.la ../../linktest/librelacslinktest.la
+linktest_librelacshardware_la_SOURCES = linktest.cc
+linktest_librelacshardware_la_LDADD = librelacshardware.la
+
+linktest_librelacsnieserieshardware_la_SOURCES = linktest.cc
+linktest_librelacsnieserieshardware_la_LDADD = librelacsnieserieshardware.la
 endif

@@ -7,12 +7,9 @@ lib_LTLIBRARIES = \
     librelacsauditoryisoresponse.la \
     librelacsauditoryoneclick.la
 
-if RELACS_LINKTESTS
-noinst_PROGRAMS = \
+EXTRA_PROGRAMS = \
     linktest_librelacsauditoryisoresponse_la \
     linktest_librelacsauditoryoneclick_la
-endif
-
 
 
 librelacsauditoryisoresponse_la_CPPFLAGS = \
@@ -81,10 +78,14 @@ librelacsauditoryoneclick_la_SOURCES = \
 
 
 if RELACS_LINKTESTS
-linktest_librelacsauditoryisoresponse_la_SOURCES =
-linktest_librelacsauditoryisoresponse_la_LDADD = librelacsauditoryisoresponse.la ../../linktest/librelacslinktest.la
+noinst_PROGRAMS = \
+    linktest_librelacsauditoryisoresponse_la \
+    linktest_librelacsauditoryoneclick_la
 
-linktest_librelacsauditoryoneclick_la_SOURCES =
-linktest_librelacsauditoryoneclick_la_LDADD = librelacsauditoryoneclick.la ../../linktest/librelacslinktest.la
+linktest_librelacsauditoryisoresponse_la_SOURCES = linktest.cc
+linktest_librelacsauditoryisoresponse_la_LDADD = librelacsauditoryisoresponse.la
+
+linktest_librelacsauditoryoneclick_la_SOURCES = linktest.cc
+linktest_librelacsauditoryoneclick_la_LDADD = librelacsauditoryoneclick.la
 endif
 

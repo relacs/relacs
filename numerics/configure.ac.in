@@ -58,6 +58,7 @@ AC_OUTPUT
 cat <<SUMMARY
 
     Use GSL ................ ${RELACS_GSL}
+    Build link tests ....... ${RELACS_LINKTESTS_ENABLED}
     Create documentation ... ${DX_SUMMARY}
 
 If you can read these lines ./configure finished sucessfully.
