@@ -1,13 +1,16 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_INIT(relacs, 0.9.6)
-AM_INIT_AUTOMAKE([1.10 foreign subdir-objects dist-zip dist-bzip2])
+AM_INIT_AUTOMAKE([1.10 -Wall foreign subdir-objects dist-zip dist-bzip2])
 
 AC_PROG_LN_S
 AC_PROG_CXX
 AC_PROG_LIBTOOL
 
 AC_LANG(C++)
+
+CXXFLAGS="-Wall $CXXFLAGS"
+CFLAGS="-Wall $CFLAGS"
 
 AM_PROG_CC_C_O
 
