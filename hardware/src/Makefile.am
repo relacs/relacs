@@ -4,10 +4,6 @@ lib_LTLIBRARIES = \
     librelacshardware.la \
     librelacsnieserieshardware.la
 
-EXTRA_PROGRAMS = \
-    linktest_librelacshardware_la \
-    linktest_librelacsnieserieshardware_la
-
 
 librelacshardware_la_CPPFLAGS = \
     -I$(srcdir)/../../config/include \
@@ -77,9 +73,7 @@ librelacsnieserieshardware_la_SOURCES = \
     nieserieshardware.cc
 
 
-
-if RELACS_LINKTESTS
-noinst_PROGRAMS = \
+check_PROGRAMS = \
     linktest_librelacshardware_la \
     linktest_librelacsnieserieshardware_la
 
@@ -88,4 +82,3 @@ linktest_librelacshardware_la_LDADD = librelacshardware.la
 
 linktest_librelacsnieserieshardware_la_SOURCES = linktest.cc
 linktest_librelacsnieserieshardware_la_LDADD = librelacsnieserieshardware.la
-endif

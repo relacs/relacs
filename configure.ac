@@ -92,12 +92,6 @@ AC_DEFINE([HAVE_LIBRELACSDAQ], [1],
 
 
 #################################################
-## Link tests
-#################################################
-AC_RELACS_LINK_TESTS()
-
-
-#################################################
 ## Doxygen
 #################################################
 
@@ -264,7 +258,6 @@ cat <<SUMMARY
 
     Use GSL ................ ${RELACS_GSL}
     Use Comedi ............. ${RELACS_COMEDI}
-    Build link tests ....... ${RELACS_LINKTESTS_ENABLED}
     Create documentation ... ${DX_SUMMARY}
 
 If you can read these lines ./configure finished sucessfully.

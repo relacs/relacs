@@ -4,9 +4,6 @@ include ${top_srcdir}/moc3.mk
 lib_LTLIBRARIES = \
     librelacswidgets.la
 
-EXTRA_PROGRAMS = \
-    linktest_librelacswidgets_la
-
 
 if RELACS_TOP_BUILD
 librelacswidgets_la_CPPFLAGS = \
@@ -64,10 +61,7 @@ librelacswidgets_la_SOURCES = \
     optdialogbutton.cc
 
 
-
-if RELACS_LINKTESTS
-noinst_PROGRAMS = linktest_librelacswidgets_la
+check_PROGRAMS = linktest_librelacswidgets_la
 linktest_librelacswidgets_la_SOURCES = linktest.cc
 linktest_librelacswidgets_la_LDADD = librelacswidgets.la
-endif
 

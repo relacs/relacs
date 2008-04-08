@@ -7,10 +7,6 @@ lib_LTLIBRARIES = \
     librelacsauditoryloudspeaker.la \
     librelacsauditorycalibspeakers.la
 
-EXTRA_PROGRAMS = \
-    linktest_librelacsauditorycalibspeakers_la \
-    linktest_librelacsauditoryloudspeaker_la
-
 
 librelacsauditorycalibspeakers_la_CPPFLAGS = \
     -I$(srcdir)/../../config/include \
@@ -67,9 +63,7 @@ librelacsauditoryloudspeaker_la_SOURCES = \
     ../include/relacs/loudspeaker.h
 
 
-
-if RELACS_LINKTESTS
-noinst_PROGRAMS = \
+check_PROGRAMS = \
     linktest_librelacsauditorycalibspeakers_la \
     linktest_librelacsauditoryloudspeaker_la
 
@@ -78,5 +72,4 @@ linktest_librelacsauditorycalibspeakers_la_LDADD = librelacsauditorycalibspeaker
 
 linktest_librelacsauditoryloudspeaker_la_SOURCES = linktest.cc
 linktest_librelacsauditoryloudspeaker_la_LDADD = librelacsauditoryloudspeaker.la
-endif
 

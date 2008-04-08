@@ -1,9 +1,6 @@
 lib_LTLIBRARIES = \
     librelacsdatafile.la
 
-EXTRA_PROGRAMS = \
-    linktest_librelacsdatafile_la
-
 
 if RELACS_TOP_BUILD
 librelacsdatafile_la_CPPFLAGS = \
@@ -40,10 +37,7 @@ librelacsdatafile_la_SOURCES = \
     translate.cc
 
 
-
-if RELACS_LINKTESTS
-noinst_PROGRAMS = linktest_librelacsdatafile_la
+check_PROGRAMS = linktest_librelacsdatafile_la
 linktest_librelacsdatafile_la_SOURCES = linktest.cc
 linktest_librelacsdatafile_la_LDADD = librelacsdatafile.la
-endif
 

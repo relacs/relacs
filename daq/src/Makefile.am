@@ -1,9 +1,6 @@
 lib_LTLIBRARIES = \
     librelacsdaq.la
 
-EXTRA_PROGRAMS = \
-    linktest_librelacsdaq_la
-
 
 if RELACS_TOP_BUILD
 librelacsdaq_la_CPPFLAGS = \
@@ -64,10 +61,7 @@ librelacsdaq_la_SOURCES = \
     tracespec.cc
 
 
-
-if RELACS_LINKTESTS
-noinst_PROGRAMS = linktest_librelacsdaq_la
+check_PROGRAMS = linktest_librelacsdaq_la
 linktest_librelacsdaq_la_SOURCES = linktest.cc
 linktest_librelacsdaq_la_LDADD = librelacsdaq.la
-endif
 

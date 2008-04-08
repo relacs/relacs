@@ -7,7 +7,6 @@ SUBDIRS = \
 
 EXTRA_DIST = \
     m4/ax_prog_doxygen.m4 \
-    m4/relacs_link_tests.m4 \
     doxygenoptions.mk \
     \
     doc/options.dox

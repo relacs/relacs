@@ -14,18 +14,6 @@ lib_LTLIBRARIES = \
     librelacsauditoryspikeprecision.la \
     librelacsauditorysyslatency.la
 
-EXTRA_PROGRAMS = \
-    linktest_librelacsauditoryneuron_la \
-    linktest_librelacsauditorysearch_la \
-    linktest_librelacsauditorysession_la \
-    linktest_librelacsauditorytraces_la \
-    linktest_librelacsauditoryficurve_la \
-    linktest_librelacsauditoryfifield_la \
-    linktest_librelacsauditorysinglestimulus_la \
-    linktest_librelacsauditoryspikeprecision_la \
-    linktest_librelacsauditorysyslatency_la
-
-
 
 librelacsauditoryneuron_la_CPPFLAGS = \
     -I$(srcdir)/../../common/include \
@@ -302,8 +290,7 @@ librelacsauditorysyslatency_la_SOURCES = \
 
 
 
-if RELACS_LINKTESTS
-noinst_PROGRAMS = \
+check_PROGRAMS = \
     linktest_librelacsauditoryneuron_la \
     linktest_librelacsauditorysearch_la \
     linktest_librelacsauditorysession_la \
@@ -340,5 +327,4 @@ linktest_librelacsauditoryspikeprecision_la_LDADD = librelacsauditoryspikeprecis
 
 linktest_librelacsauditorysyslatency_la_SOURCES = linktest.cc
 linktest_librelacsauditorysyslatency_la_LDADD = librelacsauditorysyslatency.la
-endif
 

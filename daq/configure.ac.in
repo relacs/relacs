@@ -23,12 +23,6 @@ AC_RELACS_CHECK_GSL()
 
 
 #################################################
-## Link tests
-#################################################
-AC_RELACS_LINK_TESTS()
-
-
-#################################################
 ## Doxygen
 #################################################
 
@@ -59,7 +53,6 @@ AC_OUTPUT
 cat <<SUMMARY
 
     Use GSL ................ ${RELACS_GSL}
-    Build link tests ....... ${RELACS_LINKTESTS_ENABLED}
     Create documentation ... ${DX_SUMMARY}
 
 If you can read these lines ./configure finished sucessfully.

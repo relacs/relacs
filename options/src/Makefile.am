@@ -1,9 +1,6 @@
 lib_LTLIBRARIES = \
     librelacsoptions.la
 
-EXTRA_PROGRAMS = \
-    linktest_librelacsoptions_la
-
 
 librelacsoptions_ladir = $(includedir)/relacs
 
@@ -24,9 +21,7 @@ librelacsoptions_la_SOURCES = \
 
 
 
-if RELACS_LINKTESTS
-noinst_PROGRAMS = linktest_librelacsoptions_la
+check_PROGRAMS = linktest_librelacsoptions_la
 linktest_librelacsoptions_la_SOURCES = linktest.cc
 linktest_librelacsoptions_la_LDADD = librelacsoptions.la
-endif
 

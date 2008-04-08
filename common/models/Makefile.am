@@ -7,10 +7,6 @@ lib_LTLIBRARIES = \
     librelacscommonneuronmodels.la \
     librelacscommonsimplemodel.la
 
-EXTRA_PROGRAMS = \
-    linktest_librelacscommonneuronmodels_la \
-    linktest_librelacscommonsimplemodel_la
-
 
 librelacscommonneuronmodels_la_CPPFLAGS = \
     -I$(srcdir)/../../config/include \
@@ -62,9 +58,7 @@ librelacscommonsimplemodel_la_SOURCES = \
     ../include/relacs/simplemodel.h
 
 
-
-if RELACS_LINKTESTS
-noinst_PROGRAMS = \
+check_PROGRAMS = \
     linktest_librelacscommonneuronmodels_la \
     linktest_librelacscommonsimplemodel_la
 
@@ -73,5 +67,4 @@ linktest_librelacscommonneuronmodels_la_LDADD = librelacscommonneuronmodels.la
 
 linktest_librelacscommonsimplemodel_la_SOURCES = linktest.cc
 linktest_librelacscommonsimplemodel_la_LDADD = librelacscommonsimplemodel.la
-endif
 

@@ -39,12 +39,6 @@ AC_RELACS_CHECK_QT3()
 
 
 #################################################
-## Link tests
-#################################################
-AC_RELACS_LINK_TESTS()
-
-
-#################################################
 ## Doxygen
 #################################################
 
@@ -75,7 +69,6 @@ AC_OUTPUT
 
 cat <<SUMMARY
 
-    Build link tests ....... ${RELACS_LINKTESTS_ENABLED}
     Create documentation ... ${DX_SUMMARY}
 
 If you can read these lines ./configure finished sucessfully.

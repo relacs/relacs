@@ -7,10 +7,6 @@ lib_LTLIBRARIES = \
     librelacsauditoryisoresponse.la \
     librelacsauditoryoneclick.la
 
-EXTRA_PROGRAMS = \
-    linktest_librelacsauditoryisoresponse_la \
-    linktest_librelacsauditoryoneclick_la
-
 
 librelacsauditoryisoresponse_la_CPPFLAGS = \
     -I$(srcdir)/../../common/include \
@@ -76,9 +72,7 @@ librelacsauditoryoneclick_la_SOURCES = \
     ../include/relacs/oneclick.h
 
 
-
-if RELACS_LINKTESTS
-noinst_PROGRAMS = \
+check_PROGRAMS = \
     linktest_librelacsauditoryisoresponse_la \
     linktest_librelacsauditoryoneclick_la
 
@@ -87,5 +81,4 @@ linktest_librelacsauditoryisoresponse_la_LDADD = librelacsauditoryisoresponse.la
 
 linktest_librelacsauditoryoneclick_la_SOURCES = linktest.cc
 linktest_librelacsauditoryoneclick_la_LDADD = librelacsauditoryoneclick.la
-endif
 

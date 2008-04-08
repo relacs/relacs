@@ -1,14 +1,6 @@
 lib_LTLIBRARIES = \
     librelacsnumerics.la
 
-#if RELACS_LINKTESTS
-#noinst_PROGRAMS = \
-#    linktest_librelacsnumerics_la
-#endif
-
-EXTRA_PROGRAMS = \
-    linktest_librelacsnumerics_la
-
 
 librelacsnumerics_la_CPPFLAGS = \
     -I$(srcdir)/../include \
@@ -58,10 +50,7 @@ librelacsnumerics_la_SOURCES = \
     statstests.cc
 
 
-
-if RELACS_LINKTESTS
-noinst_PROGRAMS = linktest_librelacsnumerics_la
+check_PROGRAMS = linktest_librelacsnumerics_la
 linktest_librelacsnumerics_la_SOURCES = linktest.cc
 linktest_librelacsnumerics_la_LDADD = librelacsnumerics.la
-endif
 

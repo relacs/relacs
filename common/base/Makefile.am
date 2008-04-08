@@ -9,12 +9,6 @@ lib_LTLIBRARIES = \
     librelacscommonrestartdelay.la \
     librelacscommonstimulusdelay.la
 
-EXTRA_PROGRAMS = \
-    linktest_librelacscommonephystraces_la \
-    linktest_librelacscommonpause_la \
-    linktest_librelacscommonrestartdelay_la \
-    linktest_librelacscommonstimulusdelay_la
-
 
 librelacscommonephystraces_la_CPPFLAGS = \
     -I$(srcdir)/../../daq/include \
@@ -108,8 +102,7 @@ librelacscommonstimulusdelay_la_SOURCES = \
 
 
 
-if RELACS_LINKTESTS
-noinst_PROGRAMS = \
+check_PROGRAMS = \
     linktest_librelacscommonephystraces_la \
     linktest_librelacscommonpause_la \
     linktest_librelacscommonrestartdelay_la \
@@ -126,5 +119,4 @@ linktest_librelacscommonrestartdelay_la_LDADD = librelacscommonrestartdelay.la
 
 linktest_librelacscommonstimulusdelay_la_SOURCES = linktest.cc
 linktest_librelacscommonstimulusdelay_la_LDADD = librelacscommonstimulusdelay.la
-endif
 

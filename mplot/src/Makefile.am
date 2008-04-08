@@ -4,9 +4,6 @@ include ${top_srcdir}/moc3.mk
 lib_LTLIBRARIES = \
     librelacsmplot.la
 
-EXTRA_PROGRAMS = \
-    linktest_librelacsmplot_la
-
 
 if RELACS_TOP_BUILD
 librelacsmplot_la_CPPFLAGS = \
@@ -55,10 +52,7 @@ librelacsmplot_la_SOURCES = \
     plot.cc
 
 
-
-if RELACS_LINKTESTS
-noinst_PROGRAMS = linktest_librelacsmplot_la
+check_PROGRAMS = linktest_librelacsmplot_la
 linktest_librelacsmplot_la_SOURCES = linktest.cc
 linktest_librelacsmplot_la_LDADD = librelacsmplot.la
-endif
 

@@ -5,7 +5,6 @@ lib_LTLIBRARIES = \
     librelacs.la
 
 
-
 librelacs_la_CPPFLAGS = \
     "-DRELACSVERSION=\"@RELACSVERSION@\"" \
     -I$(srcdir)/../../config/include \

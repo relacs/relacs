@@ -7,10 +7,6 @@ lib_LTLIBRARIES = \
     librelacscommonmotorcontrol.la \
     librelacscommonspectrumanalyzer.la
 
-EXTRA_PROGRAMS = \
-    linktest_librelacscommonmotorcontrol_la \
-    linktest_librelacscommonspectrumanalyzer_la
-
 
 
 librelacscommonmotorcontrol_la_CPPFLAGS = \
@@ -65,8 +61,7 @@ librelacscommonspectrumanalyzer_la_SOURCES = \
 
 
 
-if RELACS_LINKTESTS
-noinst_PROGRAMS = \
+check_PROGRAMS = \
     linktest_librelacscommonmotorcontrol_la \
     linktest_librelacscommonspectrumanalyzer_la
 
@@ -75,5 +70,4 @@ linktest_librelacscommonmotorcontrol_la_LDADD = librelacscommonmotorcontrol.la
 
 linktest_librelacscommonspectrumanalyzer_la_SOURCES = linktest.cc
 linktest_librelacscommonspectrumanalyzer_la_LDADD = librelacscommonspectrumanalyzer.la
-endif
 
