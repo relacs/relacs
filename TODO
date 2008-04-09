@@ -1,3 +1,18 @@
+Autotools:
+- add relacs library tests to the libraries!
+- install doxygen html documentation to htmldir instead of docdir?
+- moc3.mk: clean-am should be clean-local, but this is not called from Makefile!
+  However, why is this clean-am not overriding the original clean-am?
+- take website and logo out of relacs/trunk
+- upgrade to Automake 1.10.1 and add LZMA support, remove .zip archives
+- AM_INIT_AUTOMAKE( [std-options] ) to check whether all programs and scripts 
+  have --help and --version options
+- AM_INIT_AUTOMAKE( [gnu] ) checks for GNU make ?
+- uninstall: also remove relacs subdirectories!
+- make distcheck: 
+  release.sh /home/jan/prj/relacsinstall --with-qt3=/usr/lib/qt3 --disable-doxygen-dot
+- Add rand55 test and make sure that the dox file PREDEFINED variable gets HAVE_RAND55 define set
+
 Documentation:
 - Update installation and Makefile instructions to autotools
 - Hint to 
@@ -10,24 +25,6 @@ Documentation:
   CRCNS - Collaborative Research in Computational Neuroscience - Data sharing activity
   http://www.crcns.org/
 - update documentation of OutData, TraceSpec
-
-Autotools:
-- add relacs library tests to the libraries!
-- install doxygen html documentation to htmldir instead of docdir?
-- moc3.mk: clean-am should be clean-local, but this is not called from Makefile!
-  However, why is this clean-am not overriding the original clean-am?
-- take website and logo out of relacs/trunk
-- upgrade to Automake 1.10.1 and add LZMA support, remove .zip archives
-- AM_INIT_AUTOMAKE( [std-options] ) to check whether all programs and scripts 
-  have --help and --version options
-- AM_INIT_AUTOMAKE( [gnu] ) checks for GNU make ?
-- uninstall: also remove relacs subdirectories!
-- make distcheck for the libraries:
-  * define the following environment variabels
-    export CPPFLAGS=-I/home/jan/prj/relacsinstall/include
-    export LDFLAGS=-L/home/jan/prj/relacsinstall/lib 
-    export DISTCHECK_CONFIGURE_FLAGS="--with-qt3=/usr/lib/qt3 --disable-doxygen-dot"
-- Add rand55 test and make sure that the dox file PREDEFINED variable gets HAVE_RAND55 define set
 
 Bug in MetaData Dialog: after opening and closing with ESC, reopening crashes the program
 
