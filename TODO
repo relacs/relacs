@@ -14,7 +14,10 @@ Documentation:
 Autotools:
 - add relacs library tests to the libraries!
 - install doxygen html documentation to htmldir instead of docdir?
+- moc3.mk: clean-am should be clean-local, but this is not called from Makefile!
+  However, why is this clean-am not overriding the original clean-am?
 - take website and logo out of relacs/trunk
+- upgrade to Automake 1.10.1 and add LZMA support, remove .zip archives
 - AM_INIT_AUTOMAKE( [std-options] ) to check whether all programs and scripts 
   have --help and --version options
 - AM_INIT_AUTOMAKE( [gnu] ) checks for GNU make ?

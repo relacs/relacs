@@ -1,4 +1,3 @@
-MOC = @MOC@
 include ${top_srcdir}/moc3.mk
 
 libdir = $(prefix)/lib/@PLUGINS_BASENAME@
