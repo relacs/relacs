@@ -10,5 +10,8 @@ Standards-Version: 3.7.3
 Package: relacs
 Architecture: any
 Depends: ${shlibs:Depends}
-Description: <insert up to 60 chars description>
- <insert long description, indented with spaces>
+Description: Data acquisition, analysis and stimulus generation platform
+ Relacs is a software platform for online data acquisition, analysis and
+ stimulus generation specifically designed for (but not limited to)
+ electrophysiological recordings.
+

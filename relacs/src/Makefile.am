@@ -28,6 +28,7 @@ librelacs_la_LIBADD = \
     ../../numerics/src/librelacsnumerics.la \
     ../../options/src/librelacsoptions.la \
     ../../widgets/src/librelacswidgets.la \
+    -ldl \
     @QT3_LIBS@
 
 $(librelacs_la_OBJECTS) : \
