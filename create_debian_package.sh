@@ -13,7 +13,10 @@ fi
 
 cp ${PKGFILE} ${ORIGFILE} || exit 1
 
-dpkg-buildpackage -us -uc -rfakeroot -nc || exit 1
+touch configure
+find . -name '*.la' -print -delete
+
+dpkg-buildpackage -d -us -uc -rfakeroot -nc || exit 1
 lintian "${CHANGESFILE}" -i || exit 1
 
 echo DONE.
