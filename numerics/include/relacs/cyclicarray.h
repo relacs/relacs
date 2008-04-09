@@ -55,7 +55,7 @@ class CyclicArray
         Creates an CyclicArray with the same size and content as \a ca. */
   CyclicArray( const CyclicArray< T > &ca );
     /*! The destructor. */
-  ~CyclicArray( void );
+  virtual ~CyclicArray( void );
 
     /*! Assigns \a a to *this. */
   const CyclicArray<T> &operator=( const CyclicArray<T> &a );
