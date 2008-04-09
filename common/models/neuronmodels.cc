@@ -170,6 +170,11 @@ SpikingNeuron::SpikingNeuron( void )
 }
 
 
+SpikingNeuron::~SpikingNeuron( void )
+{
+}
+
+
 double SpikingNeuron::gain( void ) const
 {
   return Gain;

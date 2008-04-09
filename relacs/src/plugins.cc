@@ -178,7 +178,7 @@ int Plugins::openPath( const string &path, const string &pluginhome )
   }
   QDir files( p.dir(), p.notdir() );
   int n = -NoFiles;
-  for ( int k=0; k < files.count(); k++ ) {
+  for ( unsigned int k=0; k < files.count(); k++ ) {
     Str libfile = files.absFilePath( files[k], false ).latin1();
     cerr << libfile << endl;
     int r = open( libfile );

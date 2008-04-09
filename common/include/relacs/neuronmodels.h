@@ -46,7 +46,7 @@ public:
 		const string &author="unknown", 
 		const string &version="unknown",
 		const string &date=__DATE__ );
-  ~NeuronModels( void );
+  virtual ~NeuronModels( void );
 
   virtual void main( void );
   virtual void process( const OutData &source, OutData &dest );
@@ -102,6 +102,7 @@ class SpikingNeuron
  public:
 
   SpikingNeuron( void );
+  virtual ~SpikingNeuron( void );
 
     /*! The name of the model. */
   virtual string name( void ) = 0;

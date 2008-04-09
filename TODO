@@ -12,10 +12,10 @@ Documentation:
 - update documentation of OutData, TraceSpec
 
 Autotools:
-- linktests: check_PROGRAMS instead of noinst_PROGRAMS?
 - add relacs library tests to the libraries!
+- install doxygen html documentation to htmldir instead of docdir?
 - take website and logo out of relacs/trunk
-- AM_INIT_AUTOMAKE( [std-options] ) to check whether all rpograms and scripts 
+- AM_INIT_AUTOMAKE( [std-options] ) to check whether all programs and scripts 
   have --help and --version options
 - AM_INIT_AUTOMAKE( [gnu] ) checks for GNU make ?
 - uninstall: also remove relacs subdirectories!

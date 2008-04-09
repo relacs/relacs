@@ -112,7 +112,7 @@ class InData : public CyclicArray<float>, public DaqError
     /*! Copy constructor. */
   InData( const InData &data );
     /*! Destructor. */
-  ~InData( void );
+  virtual ~InData( void );
 
     /*! Assignment operator. */
   const InData &operator=( const InData &data );
