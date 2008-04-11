@@ -1,6 +1,7 @@
 Autotools:
 - add relacs library tests to the libraries!
 - install doxygen html documentation to htmldir instead of docdir?
+  Likewise psdir, pdfdir, etc.
 - moc3.mk: clean-am should be clean-local, but this is not called from Makefile!
   However, why is this clean-am not overriding the original clean-am?
 - take website and logo out of relacs/trunk
@@ -115,6 +116,14 @@ RePros:
     * option: increase range only
     * decrease range after n stimuli only
 
+SpikeDetector: 
+  - Add plot showing the time evolution of the spike size.
+  - Save this trace!
+
+Macros:
+  - Possibility to quit a macro after  the current RePro finished normally
+    (similar to break, but without softStopRequest).
+
 Devices:
   - Add and implement probe() and possibly requires() function
   - implement settings() (AnalogIn/Output, Attenuator, Attenuate already done)
@@ -157,6 +166,7 @@ EventData, FileWrite:
 A virtual I/O Data handler controlling the data flow in RELACS.
  - online data aquisition
  - simulation
+ - data browser
  - data analysis
 
 RELACS:
@@ -175,9 +185,6 @@ A new Tab-Widget Container:
  - button menu on right click
  - check KDE for such a widget (KJanusWidget)
  - use for detectors and sessions and repros
-
-datafile/datatools Makefile:
- - check for gsl library
 
 
 ---------------------------------
