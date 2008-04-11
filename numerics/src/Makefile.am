@@ -4,13 +4,13 @@ lib_LTLIBRARIES = \
 
 librelacsnumerics_la_CPPFLAGS = \
     -I$(srcdir)/../include \
-    @GSL_CPPFLAGS@
+    $(GSL_CPPFLAGS)
 
 librelacsnumerics_la_LDFLAGS = \
-    @GSL_LDFLAGS@
+    $(GSL_LDFLAGS)
 
 librelacsnumerics_la_LIBADD = \
-    @GSL_LIBS@
+    $(GSL_LIBS)
 
 librelacsnumerics_ladir = $(includedir)/relacs
 
@@ -53,4 +53,5 @@ librelacsnumerics_la_SOURCES = \
 check_PROGRAMS = linktest_librelacsnumerics_la
 linktest_librelacsnumerics_la_SOURCES = linktest.cc
 linktest_librelacsnumerics_la_LDADD = librelacsnumerics.la
+TESTS = $(check_PROGRAMS)
 

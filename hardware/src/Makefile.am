@@ -1,4 +1,4 @@
-libdir = $(prefix)/lib/@PLUGINS_BASENAME@
+libdir = $(prefix)/lib/$(PLUGINS_BASENAME)
 
 lib_LTLIBRARIES = \
     librelacshardware.la \
@@ -12,14 +12,14 @@ librelacshardware_la_CPPFLAGS = \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../../relacs/include \
     -I$(srcdir)/../include \
-    @QT3_CPPFLAGS@
+    $(QT3_CPPFLAGS)
 
 librelacshardware_la_LDFLAGS = \
-    @QT3_LDFLAGS@
+    $(QT3_LDFLAGS)
 
 librelacshardware_la_LIBADD = \
     ../../relacs/src/librelacs.la \
-    @QT3_LIBS@
+    $(QT3_LIBS)
 
 librelacshardware_la_SOURCES = \
     ../include/relacs/cs3310pp.h \
@@ -42,14 +42,14 @@ librelacsnieserieshardware_la_CPPFLAGS = \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../../relacs/include \
     -I$(srcdir)/../include \
-    @QT3_CPPFLAGS@
+    $(QT3_CPPFLAGS)
 
 librelacsnieserieshardware_la_LDFLAGS = \
-    @QT3_LDFLAGS@
+    $(QT3_LDFLAGS)
 
 librelacsnieserieshardware_la_LIBADD = \
     ../../relacs/src/librelacs.la \
-    @QT3_LIBS@
+    $(QT3_LIBS)
 
 librelacsnieserieshardware_la_SOURCES = \
     ../include/relacs/amplmode.h \
@@ -82,3 +82,6 @@ linktest_librelacshardware_la_LDADD = librelacshardware.la
 
 linktest_librelacsnieserieshardware_la_SOURCES = linktest.cc
 linktest_librelacsnieserieshardware_la_LDADD = librelacsnieserieshardware.la
+
+TESTS = $(check_PROGRAMS)
+

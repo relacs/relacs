@@ -11,7 +11,7 @@ sysconf_DATA = \
 
 # TODO
 relacs_main_CPPFLAGS = \
-    "-DRELACSVERSION=\"@RELACSVERSION@\"" \
+    "-DRELACSVERSION=\"$(RELACSVERSION)\"" \
     -I$(srcdir)/../config/include \
     -I$(srcdir)/../daq/include \
     -I$(srcdir)/../datafile/include \
@@ -20,14 +20,14 @@ relacs_main_CPPFLAGS = \
     -I$(srcdir)/../options/include \
     -I$(srcdir)/../widgets/include \
     -I$(srcdir)/../relacs/include \
-    @QT3_CPPFLAGS@
+    $(QT3_CPPFLAGS)
 
 relacs_main_LDFLAGS = \
-    @QT3_LDFLAGS@
+    $(QT3_LDFLAGS)
 
 relacs_main_LDADD = \
     ../relacs/src/librelacs.la \
-    @QT3_LIBS@
+    $(QT3_LIBS)
 
 relacs_main_SOURCES = \
     relacsmain.cc

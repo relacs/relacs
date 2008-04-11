@@ -40,4 +40,5 @@ librelacsdatafile_la_SOURCES = \
 check_PROGRAMS = linktest_librelacsdatafile_la
 linktest_librelacsdatafile_la_SOURCES = linktest.cc
 linktest_librelacsdatafile_la_LDADD = librelacsdatafile.la
+TESTS = $(check_PROGRAMS)
 

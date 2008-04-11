@@ -4,26 +4,26 @@ lib_LTLIBRARIES = \
 
 if RELACS_TOP_BUILD
 librelacsdaq_la_CPPFLAGS = \
-    @GSL_CPPFLAGS@ \
+    $(GSL_CPPFLAGS) \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../include
 else
 librelacsdaq_la_CPPFLAGS = \
-    @GSL_CPPFLAGS@ \
+    $(GSL_CPPFLAGS) \
     -I$(srcdir)/../include
 endif
 
 librelacsdaq_la_LDFLAGS = \
-    @GSL_LDFLAGS@
+    $(GSL_LDFLAGS)
 
 if RELACS_TOP_BUILD
 librelacsdaq_la_LIBADD = \
     ../../numerics/src/librelacsnumerics.la \
-    @GSL_LIBS@
+    $(GSL_LIBS)
 else
 librelacsdaq_la_LIBADD = \
     -lrelacsnumerics \
-    @GSL_LIBS@
+    $(GSL_LIBS)
 endif
 
 librelacsdaq_ladir = $(includedir)/relacs
@@ -64,4 +64,5 @@ librelacsdaq_la_SOURCES = \
 check_PROGRAMS = linktest_librelacsdaq_la
 linktest_librelacsdaq_la_SOURCES = linktest.cc
 linktest_librelacsdaq_la_LDADD = librelacsdaq.la
+TESTS = $(check_PROGRAMS)
 

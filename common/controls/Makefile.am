@@ -1,6 +1,6 @@
 include ${top_srcdir}/moc3.mk
 
-libdir = $(prefix)/lib/@PLUGINS_BASENAME@
+libdir = $(prefix)/lib/$(PLUGINS_BASENAME)
 
 lib_LTLIBRARIES = \
     librelacscommonmotorcontrol.la \
@@ -16,14 +16,14 @@ librelacscommonmotorcontrol_la_CPPFLAGS = \
     -I$(srcdir)/../../widgets/include \
     -I$(srcdir)/../../relacs/include \
     -I$(srcdir)/../include \
-    @QT3_CPPFLAGS@
+    $(QT3_CPPFLAGS)
 
 librelacscommonmotorcontrol_la_LDFLAGS = \
-    @QT3_LDFLAGS@
+    $(QT3_LDFLAGS)
 
 librelacscommonmotorcontrol_la_LIBADD = \
     ../../relacs/src/librelacs.la \
-    @QT3_LIBS@
+    $(QT3_LIBS)
 
 $(librelacscommonmotorcontrol_la_OBJECTS) : \
     moc_motorcontrol.cc
@@ -42,14 +42,14 @@ librelacscommonspectrumanalyzer_la_CPPFLAGS = \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../../relacs/include \
     -I$(srcdir)/../include \
-    @QT3_CPPFLAGS@
+    $(QT3_CPPFLAGS)
 
 librelacscommonspectrumanalyzer_la_LDFLAGS = \
-    @QT3_LDFLAGS@
+    $(QT3_LDFLAGS)
 
 librelacscommonspectrumanalyzer_la_LIBADD = \
     ../../relacs/src/librelacs.la \
-    @QT3_LIBS@
+    $(QT3_LIBS)
 
 $(librelacscommonspectrumanalyzer_la_OBJECTS) : \
     moc_spectrumanalyzer.cc
@@ -70,3 +70,4 @@ linktest_librelacscommonmotorcontrol_la_LDADD = librelacscommonmotorcontrol.la
 linktest_librelacscommonspectrumanalyzer_la_SOURCES = linktest.cc
 linktest_librelacscommonspectrumanalyzer_la_LDADD = librelacscommonspectrumanalyzer.la
 
+TESTS = $(check_PROGRAMS)

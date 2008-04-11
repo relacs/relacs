@@ -1,6 +1,6 @@
 include ${top_srcdir}/moc3.mk
 
-libdir = $(prefix)/lib/@PLUGINS_BASENAME@
+libdir = $(prefix)/lib/$(PLUGINS_BASENAME)
 
 lib_LTLIBRARIES = \
     librelacscommonhighpass.la \
@@ -15,14 +15,14 @@ librelacscommonhighpass_la_CPPFLAGS = \
     -I$(srcdir)/../../relacs/include \
     -I$(srcdir)/../../widgets/include \
     -I$(srcdir)/../include \
-    @QT3_CPPFLAGS@
+    $(QT3_CPPFLAGS)
 
 librelacscommonhighpass_la_LDFLAGS = \
-    @QT3_LDFLAGS@
+    $(QT3_LDFLAGS)
 
 librelacscommonhighpass_la_LIBADD = \
     ../../relacs/src/librelacs.la \
-    @QT3_LIBS@
+    $(QT3_LIBS)
 
 $(librelacscommonhighpass_la_OBJECTS) : \
     moc_highpass.cc
@@ -41,14 +41,14 @@ librelacscommonlowpass_la_CPPFLAGS = \
     -I$(srcdir)/../../relacs/include \
     -I$(srcdir)/../../widgets/include \
     -I$(srcdir)/../include \
-    @QT3_CPPFLAGS@
+    $(QT3_CPPFLAGS)
 
 librelacscommonlowpass_la_LDFLAGS = \
-    @QT3_LDFLAGS@
+    $(QT3_LDFLAGS)
 
 librelacscommonlowpass_la_LIBADD = \
     ../../relacs/src/librelacs.la \
-    @QT3_LIBS@
+    $(QT3_LIBS)
 
 $(librelacscommonlowpass_la_OBJECTS) : \
     moc_lowpass.cc
@@ -68,4 +68,6 @@ linktest_librelacscommonhighpass_la_LDADD = librelacscommonhighpass.la
 
 linktest_librelacscommonlowpass_la_SOURCES = linktest.cc
 linktest_librelacscommonlowpass_la_LDADD = librelacscommonlowpass.la
+
+TESTS = $(check_PROGRAMS)
 

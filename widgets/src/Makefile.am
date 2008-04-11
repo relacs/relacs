@@ -8,24 +8,24 @@ if RELACS_TOP_BUILD
 librelacswidgets_la_CPPFLAGS = \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../include \
-    @QT3_CPPFLAGS@
+    $(QT3_CPPFLAGS)
 else
 librelacswidgets_la_CPPFLAGS = \
     -I$(srcdir)/../include \
-    @QT3_CPPFLAGS@
+    $(QT3_CPPFLAGS)
 endif
 
 librelacswidgets_la_LDFLAGS = \
-    @QT3_LDFLAGS@
+    $(QT3_LDFLAGS)
 
 if RELACS_TOP_BUILD
 librelacswidgets_la_LIBADD = \
     ../../options/src/librelacsoptions.la \
-    @QT3_LIBS@
+    $(QT3_LIBS)
 else
 librelacswidgets_la_LIBADD = \
     -lrelacsoptions \
-    @QT3_LIBS@
+    $(QT3_LIBS)
 endif
 
 $(librelacswidgets_la_OBJECTS) : \
@@ -63,4 +63,5 @@ librelacswidgets_la_SOURCES = \
 check_PROGRAMS = linktest_librelacswidgets_la
 linktest_librelacswidgets_la_SOURCES = linktest.cc
 linktest_librelacswidgets_la_LDADD = librelacswidgets.la
+TESTS = $(check_PROGRAMS)
 

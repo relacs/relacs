@@ -1,6 +1,6 @@
 include ${top_srcdir}/moc3.mk
 
-libdir = $(prefix)/lib/@PLUGINS_BASENAME@
+libdir = $(prefix)/lib/$(PLUGINS_BASENAME)
 
 lib_LTLIBRARIES = \
     librelacscommonspikedetector.la
@@ -16,14 +16,14 @@ librelacscommonspikedetector_la_CPPFLAGS = \
     -I$(srcdir)/../../relacs/include \
     -I$(srcdir)/../../widgets/include \
     -I$(srcdir)/../include \
-    @QT3_CPPFLAGS@
+    $(QT3_CPPFLAGS)
 
 librelacscommonspikedetector_la_LDFLAGS = \
-    @QT3_LDFLAGS@
+    $(QT3_LDFLAGS)
 
 librelacscommonspikedetector_la_LIBADD = \
     ../../relacs/src/librelacs.la \
-    @QT3_LIBS@
+    $(QT3_LIBS)
 
 $(librelacscommonspikedetector_la_OBJECTS) : \
     moc_spikedetector.cc
@@ -37,4 +37,4 @@ librelacscommonspikedetector_la_SOURCES = \
 check_PROGRAMS = linktest_librelacscommonspikedetector_la
 linktest_librelacscommonspikedetector_la_SOURCES = linktest.cc
 linktest_librelacscommonspikedetector_la_LDADD = librelacscommonspikedetector.la
-
+TESTS = $(check_PROGRAMS)

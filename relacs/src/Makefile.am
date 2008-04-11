@@ -5,7 +5,7 @@ lib_LTLIBRARIES = \
 
 
 librelacs_la_CPPFLAGS = \
-    "-DRELACSVERSION=\"@RELACSVERSION@\"" \
+    "-DRELACSVERSION=\"$(RELACSVERSION)\"" \
     -I$(srcdir)/../../config/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../datafile/include \
@@ -14,10 +14,10 @@ librelacs_la_CPPFLAGS = \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../../widgets/include \
     -I$(srcdir)/../include \
-    @QT3_CPPFLAGS@
+    $(QT3_CPPFLAGS)
 
 librelacs_la_LDFLAGS = \
-    @QT3_LDFLAGS@
+    $(QT3_LDFLAGS)
 
 librelacs_la_LIBADD = \
     ../../config/src/librelacsconfig.la \
@@ -28,7 +28,7 @@ librelacs_la_LIBADD = \
     ../../options/src/librelacsoptions.la \
     ../../widgets/src/librelacswidgets.la \
     -ldl \
-    @QT3_LIBS@
+    $(QT3_LIBS)
 
 $(librelacs_la_OBJECTS) : \
     moc_control.cc \
