@@ -1,2 +1,30 @@
-Relacs is licensed under the GNU General Public License (GPL).
+Debianized by Sebastian Pipping <sebastian@pipping.org>  2008-04-15
+
+The sources of Relacs can be downloaded from:
+
+    http://sourceforge.net/project/showfiles.php?group_id=199846
+
+And the project homepage is:
+
+    http://www.relacs.net/
+
+Upstream authors:
+
+    Jan Benda <j.benda@biologie.hu-berlin.de>
+
+Copyright and license terms:
+
+  - The sources of Relacs are:
+
+    | Copyright (C) 2002-2008 Jan Benda <j.benda@biologie.hu-berlin.de>
+
+    And licensed under the terms of the GNU General Public License
+    version 3 or later. On Debian systems, the full text of the GPLv3
+    license is available in /usr/share/common-licenses/GPL-3 .
+
+  - The packaging scripts in the debian/ subdirectory are:
+
+    | Copyright (c) 2008  Sebastian Pipping
+
+    And licensed under the same terms of Relacs itself.
 
