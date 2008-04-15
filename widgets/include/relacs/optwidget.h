@@ -338,7 +338,7 @@ public slots:
 	Then the Options::notify() function is called
 	and the signal valuesChanged() is emitted.
 	Finally the changedFlag() is cleared 
-	if \a clearchanged is set to \t true.
+	if \a clearchanged is set to \c true.
 	If a mutex was provided it is locked within this function
 	and consequently during notify() and valuesChanged().
 	This function can only be called from the GUI thread.

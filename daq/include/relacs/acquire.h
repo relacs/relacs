@@ -492,6 +492,7 @@ public:
 
 protected:
 
+    /*! \return a string with the current time. */
   string currentTime( void );
 
   struct AIData {
@@ -514,6 +515,7 @@ protected:
     /*! All devices for analog input. */
   vector < AIData > AI;
 
+    /*! The flag that is used to mark adjusted traces in InData. */
   int AdjustFlag;
 
   struct AOData {
@@ -549,7 +551,9 @@ protected:
         If \a updategains, the input gains are updated as well. */
   virtual int restartRead( vector< AOData* > &aod, bool updategains );
 
+    /*! The currently used synchronization method. */
   SyncModes SyncMode;
+    /*! Human readable strings describing the synchronization methods. */
   static const string SyncModeStrs[5];
 
   struct AttData {

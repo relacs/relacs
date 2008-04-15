@@ -82,7 +82,7 @@ public:
     /*! Add a new text option at the end of the options list. 
         Its identifier string and request string is set to \a ident,
 	the unit to "-".
-        The option is formatted to a \t abs( \a width \t ) long string.
+        The option is formatted to a \c abs( \c width \c ) long string.
         If \a width is positive then the string is aligned to the right,
         if \a width is positive it is aligned to the left. */
   Parameter &addText( const string &ident, int width, int flags=0 );

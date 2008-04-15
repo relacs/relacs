@@ -575,35 +575,35 @@ class SampleData : public Array< T >
   template < class R >
   const SampleData< T > &operator+=( const R &x );
     /*! Add \a x to each of the data elements. 
-        \a x is a scalar type like \t float, \t double, \t int, etc. */
+        \a x is a scalar type like \c float, \c double, \c int, etc. */
   SAMPLEDARRAYOPS1SCALARDEC( operator+= );
     /*! Subtract each value of the container \a x 
         from the corresponding data element. */
   template < class R >
   const SampleData< T > &operator-=( const R &x );
     /*! Subtract \a x from each of the data elements. 
-        \a x is a scalar type like \t float, \t double, \t int, etc. */
+        \a x is a scalar type like \c float, \c double, \c int, etc. */
   SAMPLEDARRAYOPS1SCALARDEC( operator-= );
     /*! Multiply each value of the container \a x 
         with the corresponding data element. */
   template < class R >
   const SampleData< T > &operator*=( const R &x );
     /*! Multiply \a x with each of the data elements. 
-        \a x is a scalar type like \t float, \t double, \t int, etc. */
+        \a x is a scalar type like \c float, \c double, \c int, etc. */
   SAMPLEDARRAYOPS1SCALARDEC( operator*= );
     /*! Divide each data element by the 
         corresponding element of the container \a x. */
   template < class R >
   const SampleData< T > &operator/=( const R &x );
     /*! Divide each data element by \a x. 
-        \a x is a scalar type like \t float, \t double, \t int, etc. */
+        \a x is a scalar type like \c float, \c double, \c int, etc. */
   SAMPLEDARRAYOPS1SCALARDEC( operator/= );
     /*! Return the remainder of the division of each data element by the 
         corresponding element of the container \a x. */
   template < class R >
   const SampleData< T > &operator%=( const R &x );
     /*! Return the remainder of each data element divided by \a x. 
-        \a x is a scalar type like \t float, \t double, \t int, etc. */
+        \a x is a scalar type like \c float, \c double, \c int, etc. */
   SAMPLEDARRAYOPS1SCALARDEC( operator%= );
 
 #undef SAMPLEDARRAYOPS1SCALARDEC
@@ -636,7 +636,7 @@ class SampleData : public Array< T >
   friend SampleData<TT> operator+( const SampleData<TT> &x,  const RR &y );
     /*! Return the sum of \a x and \a y computed for each element. 
         One of the parameters is a scalar type
-	like \t float, \t double, \t int, etc.,
+	like \c float, \c double, \c int, etc.,
         the other parameter is a SampleData. */
   SAMPLEDARRAYOPS2SCALARDEC( operator+ );
     /*! Return the difference of the containers \a x and \a y computed for each element. */
@@ -644,7 +644,7 @@ class SampleData : public Array< T >
   friend SampleData<TT> operator-( const SampleData<TT> &x,  const RR &y );
     /*! Return the difference of \a x and \a y computed for each element. 
         One of the parameters is a scalar type
-	like \t float, \t double, \t int, etc.,
+	like \c float, \c double, \c int, etc.,
         the other parameter is a SampleData. */
   SAMPLEDARRAYOPS2SCALARDEC( operator- );
     /*! Return the product of the containers \a x and \a y computed for each element. */
@@ -652,7 +652,7 @@ class SampleData : public Array< T >
   friend SampleData<TT> operator*( const SampleData<TT> &x,  const RR &y );
     /*! Return the product of \a x and \a y computed for each element. 
         One of the parameters is a scalar type
-	like \t float, \t double, \t int, etc.,
+	like \c float, \c double, \c int, etc.,
         the other parameter is a SampleData. */
   SAMPLEDARRAYOPS2SCALARDEC( operator* );
     /*! Return container \a x divided by container \a y computed for each element. */
@@ -660,7 +660,7 @@ class SampleData : public Array< T >
   friend SampleData<TT> operator/( const SampleData<TT> &x,  const RR &y );
     /*! Return \a x divided by \a y computed for each element. 
         One of the parameters is a scalar type
-	like \t float, \t double, \t int, etc.,
+	like \c float, \c double, \c int, etc.,
         the other parameter is a SampleData. */
   SAMPLEDARRAYOPS2SCALARDEC( operator/ );
     /*! Return the remainder of container \a x divided by container \a y computed for each element. */
@@ -668,7 +668,7 @@ class SampleData : public Array< T >
   friend SampleData<TT> operator%( const SampleData<TT> &x,  const RR &y );
     /*! Return the remainder of \a x divided by \a y computed for each element. 
         One of the parameters is a scalar type
-	like \t float, \t double, \t int, etc.,
+	like \c float, \c double, \c int, etc.,
         the other parameter is a SampleData. */
   SAMPLEDARRAYOPS2SCALARDEC( operator% );
 

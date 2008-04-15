@@ -759,7 +759,7 @@ public:
 	then the changedFlag() is set. */
   bool read( const Parameter &p );
 
-    /*! Returns the value of \val given in \a oldunit in the unit \a newunit.
+    /*! Returns the value of \a val given in \a oldunit in the unit \a newunit.
         \a oldunit and \a newunit both are strings
         containing an optional number and an unit.
 	if \a oldUnit or \a newUnit does not contain an unit,

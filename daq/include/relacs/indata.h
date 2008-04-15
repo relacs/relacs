@@ -547,6 +547,7 @@ class InData : public CyclicArray<float>, public DaqError
         If \a width equals zero it is set to the stepsize defined by \a rd. */
   void rms( double time, SampleDataD &rd, double width=0.0 ) const;
 
+    /*! Write the internal variables to \a str. */
   friend ostream &operator<<( ostream &str, const InData &id );
 
     /*! Pointer to the internal buffer that holds the data in a 

@@ -177,6 +177,7 @@ public:
 	setDeviceName(), setDeviceVendor() */
   virtual void setDeviceIdent( const string &ident );
 
+    /*! Write the info() string to \a str. */
   friend ostream &operator<<( ostream &str, const Device &d );
 
 

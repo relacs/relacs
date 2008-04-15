@@ -241,6 +241,7 @@ class DaqError
     /*! Other failure in attenuator. \sa AttFailed, AttIntensityFailed */
   bool attenuatorFailed( void ) const;
 
+    /*! Write the internal variables to \a str. */
   friend ostream &operator<<( ostream &str, const DaqError &de );
 
 

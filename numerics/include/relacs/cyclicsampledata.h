@@ -354,13 +354,13 @@ void CyclicSampleData< T >::reserve( int n )
 
 
 template < class T >
-void CyclicSampleData< T >::resize( double duration )
+void CyclicSampleData< T >::reserve( double duration )
 {
   CyclicArray< T >::reserve( (int)::ceil( duration/stepsize() ) );
 }
 
 
-double CyclicSampleData< T >::max( int from, int upto ) const
+double CyclicSampleData< T >::max( long from, long upto ) const
 {
   if ( from < minIndex() )
     from = minIndex();
@@ -374,7 +374,7 @@ double CyclicSampleData< T >::max( int from, int upto ) const
 }
 
 
-double CyclicSampleData< T >::min( int from, int upto ) const
+double CyclicSampleData< T >::min( long from, long upto ) const
 {
   if ( from < minIndex() )
     from = minIndex();
@@ -388,7 +388,7 @@ double CyclicSampleData< T >::min( int from, int upto ) const
 }
 
 
-double CyclicSampleData< T >::maxAbs( int from, int upto ) const
+double CyclicSampleData< T >::maxAbs( long from, long upto ) const
 {
   if ( from < minIndex() )
     from = minIndex();
@@ -402,7 +402,7 @@ double CyclicSampleData< T >::maxAbs( int from, int upto ) const
 }
 
 
-double CyclicSampleData< T >::minAbs( int from, int upto ) const
+double CyclicSampleData< T >::minAbs( long from, long upto ) const
 {
   if ( from < minIndex() )
     from = minIndex();
@@ -416,7 +416,7 @@ double CyclicSampleData< T >::minAbs( int from, int upto ) const
 }
 
 
-double CyclicSampleData< T >::mean( int from, int upto ) const
+double CyclicSampleData< T >::mean( long from, long upto ) const
 {
   if ( from < minIndex() )
     from = minIndex();
@@ -430,7 +430,7 @@ double CyclicSampleData< T >::mean( int from, int upto ) const
 }
 
 
-double CyclicSampleData< T >::variance( int from, int upto ) const
+double CyclicSampleData< T >::variance( long from, long upto ) const
 {
   if ( from < minIndex() )
     from = minIndex();
@@ -444,7 +444,7 @@ double CyclicSampleData< T >::variance( int from, int upto ) const
 }
 
 
-double CyclicSampleData< T >::stdev( int from, int upto ) const
+double CyclicSampleData< T >::stdev( long from, long upto ) const
 {
   if ( from < minIndex() )
     from = minIndex();
@@ -458,7 +458,7 @@ double CyclicSampleData< T >::stdev( int from, int upto ) const
 }
 
 
-double CyclicSampleData< T >::rms( int from, int upto ) const
+double CyclicSampleData< T >::rms( long from, long upto ) const
 {
   if ( from < minIndex() )
     from = minIndex();

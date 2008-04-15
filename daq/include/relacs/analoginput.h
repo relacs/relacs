@@ -171,7 +171,7 @@ public:
   virtual int error( void ) const = 0;
 
     /*! Check for every analog input and analog output device in \a ais
-        and \aos, respectively,
+        and \a aos, respectively,
         whether it can be simultaneously started by startRead()
 	from this device.
 	Add the indices of those devices to \a aiinx and \a aoinx,

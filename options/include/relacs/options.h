@@ -135,10 +135,8 @@ public:
   Options &copy( Options &o, int flags=0 );
 
     /*! Set the value of an existing option 
-        with identifier \a ident to \a number or \a string
-	according to the type of the option.
-	Set warning message, if the values of \a number or \string
-	are invalid.
+        with identifier \a ident to \a value.
+	Set warning message, if the \a value is invalid.
         Used by read(). */
   Parameter *assign( const string &ident, const string &value );
 
@@ -428,7 +426,7 @@ public:
     /*! Add a new number option at the end of the options list. 
         Its identifier string and request string is set to \a ident.
         The option has a default value \a dflt,
-	an error a \error, a unit \a unit and a format string \a format 
+	an error \a error, a unit \a unit and a format string \a format 
 	(ANSI C printf() syntax, only %%g, %%f, %%e are allowed, 
 	since the number is a double). */
   inline Parameter &addNumber( const string &ident, double dflt,
@@ -505,13 +503,13 @@ public:
     { return insertNumber( ident, atident, ident, 0.0,
 			   -MAXDOUBLE, MAXDOUBLE, 1.0, unit, unit,
 			   format, flags, style ); };
-    /*! Return the \index-th number of the option with identifier equal to \a ident. 
+    /*! Return the \a index-th number of the option with identifier equal to \a ident. 
         If there is no option with identifier \a ident, or the option is 
 	neither a number nor an integer, zero is returned. */
   double number( const string &ident, double dflt=0.0, const string &unit="", int index=0 ) const;
   double number( const string &ident, const string &unit, double dflt=0.0, int index=0 ) const
     { return number( ident, dflt, unit, index ); };
-    /*! Return the \index-th number of the option with identifier equal to \a ident. 
+    /*! Return the \a index-th number of the option with identifier equal to \a ident. 
         If there is no option with identifier \a ident, or the option is 
 	neither a number nor an integer, zero is returned. */
   double number( const string &ident, int index, double dflt=0.0, const string &unit="" ) const

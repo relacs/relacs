@@ -100,11 +100,11 @@ class Array
     /*! Creates an array with \a n data elements and
         initialzes them with the values given in \a a. */
   Array( const T *a, int n );
-    /*! Creates an array with a copy of the range [\first,\a last)
+    /*! Creates an array with a copy of the range [\a first,\a last)
         of the vector \a a. */
   template < typename S >
   Array( const vector< S > &a, int first=0, int last=-1 );
-    /*! Creates an array with a copy of the range [\first,\a last)
+    /*! Creates an array with a copy of the range [\a first,\a last)
         of the array \a a. */
   template < typename S >
   Array( const Array< S > &a, int first=0, int last=-1 );
@@ -327,45 +327,45 @@ class Array
  CONTAINEROPS1SCALARDEC( Array<T>, operator= );
     /*! Add each value of \a x to the corresponding data element. 
         \a x can be either a container or 
-	a scalar type like \t float, \t double, \t int, etc. */
+	a scalar type like \c float, \c double, \c int, etc. */
  CONTAINEROPS1DEC( Array<T>, operator+= );
     /*! Subtract each value of \a x from the corresponding data element. 
         \a x can be either a container or 
-	a scalar type like \t float, \t double, \t int, etc. */
+	a scalar type like \c float, \c double, \c int, etc. */
  CONTAINEROPS1DEC( Array<T>, operator-= );
     /*! Multiply each data element by the corresponding value of \a x. 
         \a x can be either a container or 
-	a scalar type like \t float, \t double, \t int, etc. */
+	a scalar type like \c float, \c double, \c int, etc. */
  CONTAINEROPS1DEC( Array<T>, operator*= );
     /*! Divide each data element by the corresponding value of \a x. 
         \a x can be either a container or 
-	a scalar type like \t float, \t double, \t int, etc. */
+	a scalar type like \c float, \c double, \c int, etc. */
  CONTAINEROPS1DEC( Array<T>, operator/= );
     /*! Return the remainder of the division of each data element 
         by the corresponding value of \a x. 
         \a x can be either a container or 
-	a scalar type like \t float, \t double, \t int, etc. */
+	a scalar type like \c float, \c double, \c int, etc. */
  CONTAINEROPS1DEC( Array<T>, operator%= );
 
     /*! Return the sum of \a x and \a y computed for each element. 
         \a x and \a y can be either a container or 
-	a scalar type like \t float, \t double, \t int, etc. */
+	a scalar type like \c float, \c double, \c int, etc. */
   CONTAINEROPS2DEC( class TT, Array<TT>, operator+ );
     /*! Return the difference between \a x and \a y computed for each element. 
         \a x and \a y can be either a container or 
-	a scalar type like \t float, \t double, \t int, etc. */
+	a scalar type like \c float, \c double, \c int, etc. */
   CONTAINEROPS2DEC( class TT, Array<TT>, operator- );
     /*! Return the product of \a x and \a y computed for each element. 
         \a x and \a y can be either a container or 
-	a scalar type like \t float, \t double, \t int, etc. */
+	a scalar type like \c float, \c double, \c int, etc. */
   CONTAINEROPS2DEC( class TT, Array<TT>, operator* );
     /*! Return \a x divided by \a y computed for each element. 
         \a x and \a y can be either a container or 
-	a scalar type like \t float, \t double, \t int, etc. */
+	a scalar type like \c float, \c double, \c int, etc. */
   CONTAINEROPS2DEC( class TT, Array<TT>, operator/ );
     /*! Return the remainder of \a x divided by \a y computed for each element. 
         \a x and \a y can be either a container or 
-	a scalar type like \t float, \t double, \t int, etc. */
+	a scalar type like \c float, \c double, \c int, etc. */
   CONTAINEROPS2DEC( class TT, Array<TT>, operator% );
 
     /*! Negates each element of the array. */
@@ -423,7 +423,7 @@ class Array
 
     /*! Raise each data element of the array to the power \a x.
         \a x can be either a container or 
-	a scalar type like \t float, \t double, \t int, etc. */
+	a scalar type like \c float, \c double, \c int, etc. */
   CONTAINERFUNC1DEC( Array<T>, pow );
     /*! For each data element of the array raise \a base to the power of the data element. */
   Array<T> &exp( double base );

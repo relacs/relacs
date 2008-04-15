@@ -5,6 +5,7 @@ Autotools:
 - moc3.mk: clean-am should be clean-local, but this is not called from Makefile!
   However, why is this clean-am not overriding the original clean-am?
 - take website and logo out of relacs/trunk
+- introduce namespace 'relacs' to all libraries
 - upgrade to Automake 1.10.1 and add LZMA support, remove .zip archives
 - AM_INIT_AUTOMAKE( [std-options] ) to check whether all programs and scripts 
   have --help and --version options
@@ -12,9 +13,10 @@ Autotools:
 - uninstall: also remove relacs subdirectories!
 - make distcheck: 
   release.sh /home/jan/prj/relacsinstall --with-qt3=/usr/lib/qt3 --disable-doxygen-dot
-- Add rand55 test and make sure that the dox file PREDEFINED variable gets HAVE_RAND55 define set
+- Add rand55 test and make sure that the dox file PREDEFINED variable gets HAVE_LIBRAND55 define set
 
 Documentation:
+- Exclude moc-* files from doxygen search pattern
 - Update installation and Makefile instructions to autotools
 - Hint to 
   Integrating Qt's Meta object compiler (moc) with GNU Automake
