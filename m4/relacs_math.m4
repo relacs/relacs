@@ -1,20 +1,25 @@
 # AC_RELACS_CHECK_MATH() 
 # - Checks for the standard C math libray (-lm)
-# - Expects CLEAN_LIBS var to be set
-# - Expects clean LIBS and sets it to CLEAN_\1 when done
-# - Resets LIBS to CLEAN_\1 when done
 # - Fills MATH_LIBS and marks it for substitution
+# - Leaves LIBS untouched
 
 AC_DEFUN([AC_RELACS_CHECK_MATH], [
+
+# save flags:
+SAVE_LIBS=${LIBS}
+
+# math flags:
 MATH_LIBS=
 
+# check math:
 MATH_MISSING="Standard math library (-lm) not found!"
 AC_CHECK_LIB([m], [cos],, [AC_MSG_ERROR(${MATH_MISSING})] )
 
+# publish:
 MATH_LIBS="${LIBS}"
 AC_SUBST(MATH_LIBS)
 
-# Restore
-LIBS=${CLEAN_LIBS}
+# restore:
+LIBS=${SAVE_LIBS}
 ])
 

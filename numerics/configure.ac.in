@@ -10,11 +10,6 @@ AC_LANG(C++)
 
 CXXFLAGS="-Wall $CXXFLAGS"
 
-# Backup before any additions
-CLEAN_LDFLAGS=${LDFLAGS}
-CLEAN_CPPFLAGS=${CPPFLAGS}
-CLEAN_LIBS=${LIBS}
-
 
 #################################################
 ## Math and GSL

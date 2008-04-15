@@ -1,17 +1,22 @@
 # AC_RELACS_CHECK_QT3() 
 # - Provides --with-qt3(-(inc|lib))? options and performs header and link checks
-# - Expects CLEAN_((LD|CPP)FLAGS|LIBS) vars to be set
-# - Expects clean ((LD|CPP)FLAGS|LIBS) and sets them to CLEAN_\1 when done
-# - Resets ((LD|CPP)FLAGS|LIBS) to CLEAN_\1 when done
 # - Fills QT3_(LD|CPP)FLAGS and QT3_LIBS and marks them for substitution
 # - Fills MOC and marks it for substitution
+# - Leaves ((LD|CPP)FLAGS|LIBS) untouched
 
 AC_DEFUN([AC_RELACS_CHECK_QT3], [
 
+# save flags:
+SAVE_CPPFLAGS=${CPPFLAGS}
+SAVE_LDFLAGS=${LDFLAGS}
+SAVE_LIBS=${LIBS}
+
+# QT3 flags:
 QT3_CPPFLAGS=
 QT3_LDFLAGS=
 QT3_LIBS=
 
+# get flags:
 QT3_CPPFLAGS=`pkg-config --cflags qt-mt`
 if test "x${QT3_CPPFLAGS}" = x ; then
     QT3_CPPFLAGS=-DQT_THREAD_SUPPORT
@@ -22,9 +27,7 @@ if test "x${QT3_LIBS}" = x ; then
     QT3_LIBS=-lqt-mt
 fi
 
-LDFLAGS="${QT3_LDFLAGS} ${LDFLAGS}"
-CPPFLAGS="${QT3_CPPFLAGS} ${CPPFLAGS}"
-
+# read arguments:
 EXTRA_MOC_LOCATION=
 AC_ARG_WITH(qt3, [
 Extra Options:
@@ -32,10 +35,8 @@ Extra Options:
                           ("/lib" and "/include" is appended], [
 	QT3_ERROR="No path given for option --with-qt3"
 	if test ${withval} != yes -a "x${withval}" != x ; then
-		QT3_CPPFLAGS="-I${withval} ${QT3_CPPFLAGS}"
-		CPPFLAGS="-I${withval} ${CPPFLAGS}"
-		QT3_LDFLAGS="-L${withval} ${QT3_LDFLAGS}"
-		LDFLAGS="-L${withval} ${LDFLAGS}"
+		QT3_CPPFLAGS="-I${withval}/include"
+		QT3_LDFLAGS="-L${withval}/lib"
 		EXTRA_MOC_LOCATION="${withval}/bin"
 	else
 		AC_MSG_ERROR(${QT3_ERROR})
@@ -45,8 +46,7 @@ Extra Options:
 AC_ARG_WITH(qt3-inc, [  --with-qt3-inc=DIR      override Qt3 include path], [
 	QT3_INC_ERROR="No path given for option --with-qt3-inc"
 	if test ${withval} != yes -a "x${withval}" != x ; then
-		QT3_CPPFLAGS="-I${withval} ${QT3_CPPFLAGS}"
-		CPPFLAGS="-I${withval} ${CPPFLAGS}"
+		QT3_CPPFLAGS="-I${withval}"
 	else
 		AC_MSG_ERROR(${QT3_INC_ERROR})
 	fi
@@ -55,12 +55,15 @@ AC_ARG_WITH(qt3-inc, [  --with-qt3-inc=DIR      override Qt3 include path], [
 AC_ARG_WITH(qt3-lib, [  --with-qt3-lib=DIR      override Qt3 library path], [
 	QT3_LIB_ERROR="No path given for option --with-qt3-lib"
 	if test ${withval} != yes -a "x${withval}" != x ; then
-		QT3_LDFLAGS="-L${withval} ${QT3_LDFLAGS}"
-		LDFLAGS="-L${withval} ${LDFLAGS}"
+		QT3_LDFLAGS="-L${withval}"
 	else
 		AC_MSG_ERROR(${QT3_LIB_ERROR})
 	fi
 ], [])
+
+# update flags:
+CPPFLAGS="${QT3_CPPFLAGS} ${CPPFLAGS}"
+LDFLAGS="${QT3_LDFLAGS} ${LDFLAGS}"
 
 QT3_MISSING="Please install Qt3.
    On a Debian-based system enter 'sudo apt-get install libqt3-mt-dev'."
@@ -77,17 +80,18 @@ AC_COMPILE_IFELSE([
 #endif
 ],,AC_MSG_ERROR(${QT3_WRONG_VESION}))
 
+# publish:
 AC_SUBST(QT3_CPPFLAGS)
 AC_SUBST(QT3_LDFLAGS)
 AC_SUBST(QT3_LIBS)
 
-# Restore
-LDFLAGS=${CLEAN_LDFLAGS}
-CPPFLAGS=${CLEAN_CPPFLAGS}
-LIBS=${CLEAN_LIBS}
+# restore:
+LDFLAGS=${SAVE_LDFLAGS}
+CPPFLAGS=${SAVE_CPPFLAGS}
+LIBS=${SAVE_LIBS}
 
 
-
+# moc:
 FORCED_MOC=
 AC_ARG_WITH(moc, [  --with-moc=CMD          override moc command], [
 	QT3_MOC_ERROR="No path given for option --with-moc"
@@ -134,5 +138,6 @@ else
 fi
 
 AC_SUBST(MOC)
+
 ])
 

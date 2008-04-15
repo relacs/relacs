@@ -1,16 +1,21 @@
 # AC_RELACS_CHECK_COMEDI() 
 # - Provides --with(out)?-comedi options and performs header and link checks
-# - Expects CLEAN_((LD|CPP)FLAGS|LIBS) vars to be set
-# - Resets ((LD|CPP)FLAGS|LIBS) to CLEAN_\1 when done
-# - Fills COMEDI_(LD|CPP)FLAGS and marks them for substitution
+# - Fills (COMEDI_(LD|CPP)FLAGS|LIBS) and marks them for substitution
+# - Leaves ((LD|CPP)FLAGS|LIBS) untouched
 
 AC_DEFUN([AC_RELACS_CHECK_COMEDI], [
+
+# save flags:
+SAVE_CPPFLAGS=${CPPFLAGS}
+SAVE_LDFLAGS=${LDFLAGS}
+SAVE_LIBS=${LIBS}
+
+# comedi flags:
 COMEDI_LDFLAGS=
 COMEDI_CPPFLAGS=
+COMEDI_LIBS=
 
-LDFLAGS="$COMEDI_LDFLAGS $LDFLAGS"
-CPPFLAGS="$COMEDI_CPPFLAGS $CPPFLAGS"
-
+# read arguments:
 AC_ARG_WITH([comedi], [
   --with-comedi=DIR       set Comedi path
                           ("/lib" and "/include" is appended)
@@ -23,10 +28,10 @@ AC_ARG_WITH([comedi], [
 	# --with-comedi=foo  -> $with_comedi = foo
 	COMEDI_ERROR="No path given for option --with-comedi"
 	AS_IF([test "x$with_comedi" != xyes -a "$xwith_comedi" != xcheck -a "x$with_comedi" != xno -a "x$with_comedi" != x],[
-		COMEDI_LDFLAGS="-L${with_comedi}/lib $COMEDI_LDFLAGS"
-		LDFLAGS="-L${with_comedi}/lib $LDFLAGS"
-		COMEDI_CPPFLAGS="-I${with_comedi}/include $COMEDI_CPPFLAGS"
-		CPPFLAGS="-I${with_comedi}/include $CPPFLAGS"
+		COMEDI_CPPFLAGS="-I${with_comedi}/include"
+		COMEDI_LDFLAGS="-L${with_comedi}/lib"
+		CPPFLAGS="${COMEDI_CPPFLAGS} ${CPPFLAGS}"
+		LDFLAGS="${COMEDI_LDFLAGS} ${LDFLAGS}"
 	        ],
               [test "x$with_comedi" = xyes],
 		[AC_MSG_ERROR(${COMEDI_ERROR})],
@@ -34,31 +39,33 @@ AC_ARG_WITH([comedi], [
 ],
 [
 	# no comedi argument given
-	with_comedi=check
+	with_comedi=detect
 ])
 
+# check comedi:
 COMEDI_MISSING="Comedi not found in path ${with_comedi}."
 AS_IF([test "x$with_comedi" != xno],
   [AC_CHECK_HEADERS([comedilib.h],
-     [if test "x$with_comedi" != xcheck; then
+     [if test "x$with_comedi" != xdetect; then
         RELACS_COMEDI=$with_comedi
       else
         RELACS_COMEDI=yes
       fi
      ], 
-     [if test "x$with_comedi" != xcheck; then
+     [if test "x$with_comedi" != xdetect; then
         AC_MSG_ERROR(${COMEDI_MISSING})
       fi
       RELACS_COMEDI=no
      ])
    AC_CHECK_LIB([comedi], [main],
-     [if test "x$with_comedi" != xcheck; then
+     [COMEDI_LIBS="-lcomedi"
+      if test "x$with_comedi" != xdetect; then
         RELACS_COMEDI=$with_comedi
       else
         RELACS_COMEDI=yes
       fi
      ], 
-     [if test "x$with_comedi" != xcheck; then
+     [if test "x$with_comedi" != xdetect; then
         AC_MSG_ERROR(${COMEDI_MISSING})
       fi
       RELACS_COMEDI=no
@@ -66,12 +73,15 @@ AS_IF([test "x$with_comedi" != xno],
   ],
   [ RELACS_COMEDI=no ] )
 
+# publish:
 AC_SUBST(COMEDI_LDFLAGS)
 AC_SUBST(COMEDI_CPPFLAGS)
+AC_SUBST(COMEDI_LIBS)
 
-# Restore
-LDFLAGS=${CLEAN_LDFLAGS}
-CPPFLAGS=${CLEAN_CPPFLAGS}
-LIBS=${CLEAN_LIBS}
+# restore:
+LDFLAGS=${SAVE_LDFLAGS}
+CPPFLAGS=${SAVE_CPPFLAGS}
+LIBS=${SAVE_LIBS}
+
 ])
 

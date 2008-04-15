@@ -1,19 +1,25 @@
 # AC_RELACS_CHECK_GSL() 
 # - Provides --with(out)?-gsl options and performs header and link checks
 # - Checks for standard math library first
-# - Expects CLEAN_((LD|CPP)FLAGS|LIBS) vars to be set
-# - Expects clean ((LD|CPP)FLAGS|LIBS) and sets them to CLEAN_\1 when done
 # - Fills GSL_(LD|CPP)FLAGS and GSL_LIBS and marks them for substitution
 # - Adds HAVE_LIBGSL to the C preprocessor defines
 # - Fills RELACS_GSL with (yes|no) for the summary
 # - Extends DOXYGEN_PREDEF by HAVE_LIBGSL
+# - Leaves ((LD|CPP)FLAGS|LIBS) untouched
 
 AC_DEFUN([AC_RELACS_CHECK_GSL], [
 
+# save flags:
+SAVE_CPPFLAGS=${CPPFLAGS}
+SAVE_LDFLAGS=${LDFLAGS}
+SAVE_LIBS=${LIBS}
+
+# GSL flags:
 GSL_CPPFLAGS=
 GSL_LDFLAGS=
 GSL_LIBS=
 
+# read arguments:
 AC_ARG_WITH(gsl, [
   --with-gsl@<:@=DIR@:>@        enable GSL
                           ("/lib" and "/include" is appended)
@@ -26,8 +32,8 @@ AC_ARG_WITH(gsl, [
 		RELACS_GSL=yes
 	else
 		RELACS_GSL=yes
-		GSL_CPPFLAGS="-I${withval}/include ${GSL_CPPFLAGS}"
-		GSL_LDFLAGS="-L${withval}/lib ${GSL_LDFLAGS}"
+		GSL_CPPFLAGS="-I${withval}/include"
+		GSL_LDFLAGS="-L${withval}/lib"
 		CPPFLAGS="${GSL_CPPFLAGS} ${CPPFLAGS}"
 		LDFLAGS="${GSL_LDFLAGS} ${LDFLAGS}"
 	fi
@@ -89,8 +95,6 @@ if test ! ${RELACS_GSL} = no ; then
 		GSL_LDFLAGS=""
 		GSL_LIBS=""
 	elif test ${RELACS_GSL} = detect ; then
-		GSL_LDFLAGS="${LDFLAGS}"
-		GSL_CPPFLAGS="${CPPFLAGS}"
 		AC_MSG_NOTICE(${GSL_ENABLED})
 		RELACS_GSL=yes
 	fi
@@ -99,14 +103,16 @@ if test ! ${RELACS_GSL} = no ; then
 	fi
 fi
 
+# publish:
 AC_SUBST(GSL_CPPFLAGS)
 AC_SUBST(GSL_LDFLAGS)
 AC_SUBST(GSL_LIBS)
 AC_SUBST(DOXYGEN_PREDEF)
 
-# Restore
-CPPFLAGS=${CLEAN_CPPFLAGS}
-LDFLAGS=${CLEAN_LDFLAGS}
-LIBS=${CLEAN_LIBS}
+# restore:
+LDFLAGS=${SAVE_LDFLAGS}
+CPPFLAGS=${SAVE_CPPFLAGS}
+LIBS=${SAVE_LIBS}
+
 ])
 
