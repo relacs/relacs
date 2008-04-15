@@ -35,8 +35,8 @@ Extra Options:
                           ("/lib" and "/include" is appended], [
 	QT3_ERROR="No path given for option --with-qt3"
 	if test ${withval} != yes -a "x${withval}" != x ; then
-		QT3_CPPFLAGS="-I${withval}/include"
-		QT3_LDFLAGS="-L${withval}/lib"
+		QT3_CPPFLAGS="-I${withval}/include ${QT3_CPPFLAGS}"
+		QT3_LDFLAGS="-L${withval}/lib ${QT3_LDFLAGS}"
 		EXTRA_MOC_LOCATION="${withval}/bin"
 	else
 		AC_MSG_ERROR(${QT3_ERROR})
@@ -46,7 +46,7 @@ Extra Options:
 AC_ARG_WITH(qt3-inc, [  --with-qt3-inc=DIR      override Qt3 include path], [
 	QT3_INC_ERROR="No path given for option --with-qt3-inc"
 	if test ${withval} != yes -a "x${withval}" != x ; then
-		QT3_CPPFLAGS="-I${withval}"
+		QT3_CPPFLAGS="-I${withval} ${QT3_CPPFLAGS}"
 	else
 		AC_MSG_ERROR(${QT3_INC_ERROR})
 	fi
@@ -55,7 +55,7 @@ AC_ARG_WITH(qt3-inc, [  --with-qt3-inc=DIR      override Qt3 include path], [
 AC_ARG_WITH(qt3-lib, [  --with-qt3-lib=DIR      override Qt3 library path], [
 	QT3_LIB_ERROR="No path given for option --with-qt3-lib"
 	if test ${withval} != yes -a "x${withval}" != x ; then
-		QT3_LDFLAGS="-L${withval}"
+		QT3_LDFLAGS="-L${withval} ${QT3_LDFLAGS}"
 	else
 		AC_MSG_ERROR(${QT3_LIB_ERROR})
 	fi
@@ -69,8 +69,6 @@ QT3_MISSING="Please install Qt3.
    On a Debian-based system enter 'sudo apt-get install libqt3-mt-dev'."
 AC_CHECK_HEADERS(qvbox.h qconfig.h,, AC_MSG_ERROR(${QT3_MISSING}))
 AC_CHECK_LIB(qt-mt, main,, AC_MSG_ERROR(${QT3_MISSING}), ${QT3_LDFLAGS})
-
-QT3_LIBS="${LIBS}"
 
 QT3_WRONG_VESION="Qt version 3.3 or higher but not Qt4 is required, you have another version."
 AC_COMPILE_IFELSE([
