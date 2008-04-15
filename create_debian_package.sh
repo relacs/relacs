@@ -7,6 +7,10 @@ PKGFILE=${PKGDIR}.tar.gz
 ORIGFILE=relacs_${VERSION}.orig.tar.gz
 CHANGESFILE=relacs_${VERSION}-1_i386.changes
 
+if [ x${MAKE} = x ]; then
+    MAKE=make
+fi
+
 # Ensure we work with a fresh working package
 if true ; then
     rm "${PKGFILE}"
@@ -17,7 +21,7 @@ if true ; then
     find . -name '*.la' -print -delete
 
     ./configure --prefix=/usr || exit
-    make dist || exit 1
+    ${MAKE} dist || exit 1
 fi
 
 # Put everything in place
@@ -37,7 +41,7 @@ rm config.status
 find . -name '*.la' -print -delete
 
 # Create package
-dpkg-buildpackage -d -us -uc -rfakeroot -nc || exit 1
+MAKE=${MAKE} dpkg-buildpackage -d -us -uc -rfakeroot -nc || exit 1
 
 # Print warnings if any
 echo BEGIN  lintian output
