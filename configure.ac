@@ -128,6 +128,9 @@ numerics \
 options \
 widgets \
 relacs \
+hardware \
+common \
+auditory \
 "
 
 DOXYGEN_TAGFILES=""
@@ -184,6 +187,7 @@ AC_CONFIG_FILES([
     auditory/sascha/Makefile
     auditory/speaker/Makefile
     auditory/Makefile
+    auditory/doc/auditory.dox
 
     common/base/Makefile
     common/controls/Makefile
@@ -191,6 +195,7 @@ AC_CONFIG_FILES([
     common/filter/Makefile
     common/models/Makefile
     common/Makefile
+    common/doc/common.dox
 
     config/src/Makefile
     config/Makefile
@@ -209,6 +214,7 @@ AC_CONFIG_FILES([
 
     hardware/src/Makefile
     hardware/Makefile
+    hardware/doc/hardware.dox
 
     mplot/src/Makefile
     mplot/Makefile

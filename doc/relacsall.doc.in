@@ -37,6 +37,9 @@ What RELACS is good for and who should use RELACS... and who should NOT use RELA
 - <a href="config/index.html">config library</a>
 - <a href="mplot/index.html">mplot library</a>
 - <a href="relacs/index.html">relacs core library</a>
+- <a href="hardware/index.html">relacs plugins for accessing hardware</a>
+- <a href="common/index.html">common relacs plugins</a>
+- <a href="auditory/index.html">relacs plugins for auditory electrophysiology</a>
 
 \section usingrelacs Using RELACS
 
