@@ -5,6 +5,7 @@ SUBDIRS = \
 
 EXTRA_DIST = \
     doxygenauditory.mk \
+    relacshelp.mk \
     doc/auditory.dox \
     doc/transductionchain.jpg
 
@@ -12,11 +13,17 @@ include doxygenauditory.mk
 
 if DX_COND_doc
 
+PLUGINSET=auditory
+include relacshelp.mk
+
+.PHONY: doc help
+
 doc: doxygen-doc
-all-local: doxygen-run
-clean-local: doxygen-clean
-install-data-local: doxygen-install
-uninstall-local: doxygen-uninstall
+help: help-make
+
+all-local: doxygen-run help-run
+clean-local: doxygen-clean help-clean
+install-data-local: doxygen-install help-install
+uninstall-local: doxygen-uninstall help-uninstall
 
 endif DX_COND_doc
-

@@ -1,11 +1,17 @@
 Autotools:
-- add relacs library tests to the libraries!
+- make relacs find the right help files.
+- install doxygen tag files in pkgdatadir, not in pkgdocdir
+- split dox file into a common and an individual part or overwrite all individual parameters by the environment
+- unify doxygen*.mk files by putting the individual variabels in the calling Makefile.am
 - install doxygen html documentation to htmldir instead of docdir?
   Likewise psdir, pdfdir, etc.
-- moc3.mk: clean-am should be clean-local, but this is not called from Makefile!
-  However, why is this clean-am not overriding the original clean-am?
+- exclude moc-* files from doxygen search pattern
+- names of relacs plugins without "librelacs" prefix?
+- add relacs library tests to the libraries!
 - take website and logo out of relacs/trunk
 - introduce namespace 'relacs' to all libraries
+- moc3.mk: clean-am should be clean-local, but this is not called from Makefile!
+  However, why is this clean-am not overriding the original clean-am?
 - upgrade to Automake 1.10.1 and add LZMA support, remove .zip archives
 - AM_INIT_AUTOMAKE( [std-options] ) to check whether all programs and scripts 
   have --help and --version options
@@ -16,7 +22,6 @@ Autotools:
 - Add rand55 test and make sure that the dox file PREDEFINED variable gets HAVE_LIBRAND55 define set
 
 Documentation:
-- Exclude moc-* files from doxygen search pattern
 - Update installation and Makefile instructions to autotools
 - Hint to 
   Integrating Qt's Meta object compiler (moc) with GNU Automake
