@@ -1,3 +1,7 @@
+bin_SCRIPTS = \
+    relacshelp
+
+
 bin_PROGRAMS = \
     bin2dat
 
