@@ -1,22 +1,30 @@
-Autotools:
-- make relacs find the right help files.
+Autotools and documentation / help:
+- make relacs find the right help files:
+  RELACSPlugin::setRELACSWidget sets the pathes -> introduce helppathes option
+  that is individually set through configure.ac
+  RelacsPlugins Class should take the name of the plugin set and 
+  should reimplement the helpFileName() from ConfigDialog.
+- unify doxygen*.mk files by putting the individual variabels 
+  into the calling Makefile.am
 - install doxygen tag files in pkgdatadir, not in pkgdocdir
-- split dox file into a common and an individual part or overwrite all individual parameters by the environment
-- unify doxygen*.mk files by putting the individual variabels in the calling Makefile.am
 - install doxygen html documentation to htmldir instead of docdir?
   Likewise psdir, pdfdir, etc.
+- split dox file into a common and an individual part or overwrite all individual parameters by the environment
 - exclude moc-* files from doxygen search pattern
+- make doclinks target depend on something
+- take website and logo out of relacs/trunk
+
+Autotools:
+- introduce namespace 'relacs' to all libraries
 - names of relacs plugins without "librelacs" prefix?
 - add relacs library tests to the libraries!
-- take website and logo out of relacs/trunk
-- introduce namespace 'relacs' to all libraries
-- moc3.mk: clean-am should be clean-local, but this is not called from Makefile!
-  However, why is this clean-am not overriding the original clean-am?
-- upgrade to Automake 1.10.1 and add LZMA support, remove .zip archives
 - AM_INIT_AUTOMAKE( [std-options] ) to check whether all programs and scripts 
   have --help and --version options
 - AM_INIT_AUTOMAKE( [gnu] ) checks for GNU make ?
-- uninstall: also remove relacs subdirectories!
+- moc3.mk: clean-am should be clean-local, but this is not called from Makefile!
+  However, why is this clean-am not overriding the original clean-am?
+- upgrade to Automake 1.10.1 and add LZMA support, remove .zip archives
+- uninstall: also remove relacs subdirectories?!
 - make distcheck: 
   release.sh /home/jan/prj/relacsinstall --with-qt3=/usr/lib/qt3 --disable-doxygen-dot
 - Add rand55 test and make sure that the dox file PREDEFINED variable gets HAVE_LIBRAND55 define set

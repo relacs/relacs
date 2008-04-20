@@ -51,9 +51,9 @@ The dialog is opened with dialog().
 
 ConfigDialog also provides help() for displaying some html-based help text.
 Help texts are assumed to be contained in html files with name
-"name().html".
+helpFileName().
 These files are searched in directories as specified in the list of
-default serach pathes that can be accessed with helpPathes(), helpPath()
+default search pathes that can be accessed with helpPathes(), helpPath()
 and manipulated with clearHelpPathes(), setHelpPath(), addHelpPath().
 
 A %ConfigDialog widget has a name() and a title(),
@@ -126,6 +126,10 @@ public:
     /*! Add \a path to the list of default pathes,
         where to loock for help files. */
   void addHelpPath( const string &path );
+
+    /*! \return the name of the file to be displayed in the help dialog.
+        The default implementation returns name() + \c ".html". */
+  virtual string helpFileName( void ) const;
 
     /*! True if the dialog is open. */
   bool dialogOpen( void ) const;

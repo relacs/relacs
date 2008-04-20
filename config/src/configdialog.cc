@@ -205,6 +205,12 @@ void ConfigDialog::addHelpPath( const string &path )
 }
 
 
+string ConfigDialog::helpFileName( void ) const
+{
+  return name() + ".html";
+}
+
+
 int ConfigDialog::dialogSelectMask( void ) const
 {
   return DialogSelectMask;
@@ -382,10 +388,15 @@ void ConfigDialog::help( void )
   for ( int k=0; k<helpPathes(); k++ )
     fpl.push_back( helpPath( k ).c_str() );
   hb->mimeSourceFactory()->setFilePath( fpl );
-  string helpfile = name() + ".html";
+  string helpfile = helpFileName();
   hb->setSource( helpfile.c_str() );
   if ( hb->mimeSourceFactory()->data( helpfile.c_str() ) == 0 ) {
-    hb->setText( string( "Sorry, there is no help for <br><h2>" + name() + "</h2> available.<br><br> Try <c>make help</c>." ).c_str() );
+    string helptext = "Sorry, can't find any help text for <br><h2>"
+      + name() + "</h2>.<br><br>No file <code>" + helpfile
+      + "</code> found in any of the directories<br>";
+    for ( int k=0; k<helpPathes(); k++ )
+      helptext += "<code>" + helpPath( k ) + "</code><br>";
+    hb->setText( helptext.c_str() );
   }
   hb->setMinimumSize( 600, 400 );
   od->addWidget( hb );
