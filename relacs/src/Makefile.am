@@ -6,13 +6,13 @@ lib_LTLIBRARIES = \
 
 librelacs_la_CPPFLAGS = \
     "-DRELACSVERSION=\"$(RELACSVERSION)\"" \
-    -I$(srcdir)/../../config/include \
-    -I$(srcdir)/../../daq/include \
-    -I$(srcdir)/../../datafile/include \
     -I$(srcdir)/../../mplot/include \
-    -I$(srcdir)/../../numerics/include \
-    -I$(srcdir)/../../options/include \
+    -I$(srcdir)/../../config/include \
     -I$(srcdir)/../../widgets/include \
+    -I$(srcdir)/../../datafile/include \
+    -I$(srcdir)/../../options/include \
+    -I$(srcdir)/../../daq/include \
+    -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
@@ -20,13 +20,13 @@ librelacs_la_LDFLAGS = \
     $(QT3_LDFLAGS)
 
 librelacs_la_LIBADD = \
-    ../../config/src/librelacsconfig.la \
-    ../../daq/src/librelacsdaq.la \
-    ../../datafile/src/librelacsdatafile.la \
     ../../mplot/src/librelacsmplot.la \
-    ../../numerics/src/librelacsnumerics.la \
-    ../../options/src/librelacsoptions.la \
+    ../../config/src/librelacsconfig.la \
     ../../widgets/src/librelacswidgets.la \
+    ../../datafile/src/librelacsdatafile.la \
+    ../../options/src/librelacsoptions.la \
+    ../../daq/src/librelacsdaq.la \
+    ../../numerics/src/librelacsnumerics.la \
     -ldl \
     $(QT3_LIBS)
 
@@ -102,4 +102,10 @@ librelacs_la_SOURCES = \
     settings.cc \
     simulator.cc \
     spiketrace.cc
+
+
+check_PROGRAMS = linktest_librelacs_la
+linktest_librelacs_la_SOURCES = linktest.cc
+linktest_librelacs_la_LDADD = librelacs.la
+TESTS = $(check_PROGRAMS)
 

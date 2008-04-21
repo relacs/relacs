@@ -31,6 +31,8 @@
 #include <relacs/optdialog.h>
 #include <relacs/configdialog.h>
 
+using namespace std;
+
 
 ConfigDialog::ConfigDialog( const string &configident, int configgroup,
 			    const string &name, 
@@ -392,7 +394,7 @@ void ConfigDialog::help( void )
   hb->setSource( helpfile.c_str() );
   if ( hb->mimeSourceFactory()->data( helpfile.c_str() ) == 0 ) {
     string helptext = "Sorry, can't find any help text for <br><h2>"
-      + name() + "</h2>.<br><br>No file <code>" + helpfile
+      + name() + "</h2><br><br>No file <code>" + helpfile
       + "</code> found in any of the directories<br>";
     for ( int k=0; k<helpPathes(); k++ )
       helptext += "<code>" + helpPath( k ) + "</code><br>";

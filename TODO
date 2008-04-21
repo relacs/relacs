@@ -15,9 +15,15 @@ Autotools and documentation / help:
 - take website and logo out of relacs/trunk
 
 Autotools:
+- when changing the interface of the libraries 
+  make sure that nothing is installed in prefix/lib!
+  For finalizing a change in the interface the version number of the library
+  needs to be changes.
 - introduce namespace 'relacs' to all libraries
+- include of local headeras also with <relacs/foo.h>
 - names of relacs plugins without "librelacs" prefix?
 - add relacs library tests to the libraries!
+- no static libraries (at least for the plugins)!
 - AM_INIT_AUTOMAKE( [std-options] ) to check whether all programs and scripts 
   have --help and --version options
 - AM_INIT_AUTOMAKE( [gnu] ) checks for GNU make ?

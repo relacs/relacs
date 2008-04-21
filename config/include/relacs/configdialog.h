@@ -93,7 +93,7 @@ public:
   QBoxLayout *boxLayout( void );
 
     /*! The name of the class. */
-  string name( void ) const;
+  virtual string name( void ) const;
     /*! Set the name of the class to \a name. */
   virtual void setName( const string &name );
     /*! The title of the class as it appears above the widget. */
