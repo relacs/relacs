@@ -41,6 +41,11 @@ EXTRA_DIST = \
     doc/relacs1.png \
     doc/relacs2.png
 
+DX_PACKAGE = relacsall
+DX_INSTALL_SUBDIR =
+DX_CFG = doc/$(DX_PACKAGE).dox
+DX_TAGFILES=""
+
 include doxygen.mk
 
 if DX_COND_doc
@@ -55,7 +60,7 @@ doclinks:
 	done
 
 doc: doxygen-doc doclinks
-all-local: doclinks doxygen-run
+all-local: doxygen-run doclinks
 clean-local: doxygen-clean
 install-data-local: doxygen-install
 uninstall-local: doxygen-uninstall

@@ -6,10 +6,6 @@
 
 if DX_COND_doc
 
-DOC_PACKAGE = numerics
-DOC_INSTALL_SUBDIR = /numerics
-DOC_CFG = doc/numerics.dox
-
 ## ------------------------------- ##
 ## Rules specific for HTML output. ##
 ## ------------------------------- ##
@@ -32,8 +28,8 @@ DX_INSTALL_CHM = chm
 
 if DX_COND_chi
 
-DX_CLEAN_CHI = @DX_DOCDIR@/$(DOC_PACKAGE).chi
-DX_INSTALL_CHI = $(DOC_PACKAGE).chi
+DX_CLEAN_CHI = @DX_DOCDIR@/$(DX_PACKAGE).chi
+DX_INSTALL_CHI = $(DX_PACKAGE).chi
 
 endif DX_COND_chi
 
@@ -78,14 +74,14 @@ endif DX_COND_xml
 
 if DX_COND_ps
 
-DX_CLEAN_PS = @DX_DOCDIR@/$(DOC_PACKAGE).ps
-DX_INSTALL_PS = $(DOC_PACKAGE).ps
+DX_CLEAN_PS = @DX_DOCDIR@/$(DX_PACKAGE).ps
+DX_INSTALL_PS = $(DX_PACKAGE).ps
 
 DX_PS_GOAL = doxygen-ps
 
-doxygen-ps: @DX_DOCDIR@/$(DOC_PACKAGE).ps
+doxygen-ps: @DX_DOCDIR@/$(DX_PACKAGE).ps
 
-@DX_DOCDIR@/$(DOC_PACKAGE).ps: @DX_DOCDIR@/$(DOC_PACKAGE).tag
+@DX_DOCDIR@/$(DX_PACKAGE).ps: @DX_DOCDIR@/$(DX_PACKAGE).tag
 	cd @DX_DOCDIR@/latex; \
 	rm -f *.aux *.toc *.idx *.ind *.ilg *.log *.out; \
 	$(DX_LATEX) refman.tex; \
@@ -98,7 +94,7 @@ doxygen-ps: @DX_DOCDIR@/$(DOC_PACKAGE).ps
 		$(DX_LATEX) refman.tex; \
 		countdown=`expr $$countdown - 1`; \
 	done; \
-	$(DX_DVIPS) -o ../$(DOC_PACKAGE).ps refman.dvi
+	$(DX_DVIPS) -o ../$(DX_PACKAGE).ps refman.dvi
 
 endif DX_COND_ps
 
@@ -108,14 +104,14 @@ endif DX_COND_ps
 
 if DX_COND_pdf
 
-DX_CLEAN_PDF = @DX_DOCDIR@/$(DOC_PACKAGE).pdf
-DX_INSTALL_PDF = $(DOC_PACKAGE).pdf
+DX_CLEAN_PDF = @DX_DOCDIR@/$(DX_PACKAGE).pdf
+DX_INSTALL_PDF = $(DX_PACKAGE).pdf
 
 DX_PDF_GOAL = doxygen-pdf
 
-doxygen-pdf: @DX_DOCDIR@/$(DOC_PACKAGE).pdf
+doxygen-pdf: @DX_DOCDIR@/$(DX_PACKAGE).pdf
 
-@DX_DOCDIR@/$(DOC_PACKAGE).pdf: @DX_DOCDIR@/$(DOC_PACKAGE).tag
+@DX_DOCDIR@/$(DX_PACKAGE).pdf: @DX_DOCDIR@/$(DX_PACKAGE).tag
 	cd @DX_DOCDIR@/latex; \
 	rm -f *.aux *.toc *.idx *.ind *.ilg *.log *.out; \
 	$(DX_PDFLATEX) refman.tex; \
@@ -128,7 +124,7 @@ doxygen-pdf: @DX_DOCDIR@/$(DOC_PACKAGE).pdf
 		$(DX_PDFLATEX) refman.tex; \
 		countdown=`expr $$countdown - 1`; \
 	done; \
-	mv refman.pdf ../$(DOC_PACKAGE).pdf
+	mv refman.pdf ../$(DX_PACKAGE).pdf
 
 endif DX_COND_pdf
 
@@ -152,29 +148,23 @@ endif DX_COND_latex
 
 .INTERMEDIATE: doxygen-run $(DX_PS_GOAL) $(DX_PDF_GOAL)
 
-doxygen-run: @DX_DOCDIR@/$(DOC_PACKAGE).tag
+doxygen-run: @DX_DOCDIR@/$(DX_PACKAGE).tag
 
 doxygen-runall: doxygen-run $(DX_PS_GOAL) $(DX_PDF_GOAL)
 
 doxygen-doc: doxygen-clean doxygen-runall
 
-if RELACS_TOP_BUILD
-DOC_TAGFILES=""
-else
-DOC_TAGFILES=""
-endif
-
-@DX_DOCDIR@/$(DOC_PACKAGE).tag: $(DOC_CFG).in $(pkginclude_HEADERS)
+@DX_DOCDIR@/$(DX_PACKAGE).tag: $(DX_CFG).in $(pkginclude_HEADERS)
 	cd $(srcdir); \
-	{ cat $(abs_builddir)/$(DOC_CFG); \
+	{ cat $(abs_builddir)/$(DX_CFG); \
 	  for DX_ENV_LINE in $(DX_ENV); do echo $$DX_ENV_LINE; done; \
-	  echo "GENERATE_TAGFILE=$(abs_builddir)/@DX_DOCDIR@/$(DOC_PACKAGE).tag"; \
-	  echo "TAGFILES=$(DOC_TAGFILES)"; \
+	  echo "GENERATE_TAGFILE=$(abs_builddir)/@DX_DOCDIR@/$(DX_PACKAGE).tag"; \
+	  echo "TAGFILES=$(DX_TAGFILES)"; \
 	  echo "OUTPUT_DIRECTORY=$(abs_builddir)/@DX_DOCDIR@"; } \
 	| $(DX_DOXYGEN) -
 
 DX_INSTALL_FILES = \
-    $(DOC_PACKAGE).tag \
+    $(DX_PACKAGE).tag \
     $(DX_INSTALL_CHI) \
     $(DX_INSTALL_PS) \
     $(DX_INSTALL_PDF)
@@ -194,10 +184,10 @@ doxygen-install: doxygen-run
 	  $(INSTALL_DATA) "@DX_DOCDIR@/$$p" "$(DESTDIR)$(docdir)/$$p"; \
 	done
 	@list='$(DX_INSTALL_DIRS)'; for dir in $$list; do \
-	  echo " test -z @DX_DOCDIR@/$$dir || $(MKDIR_P) $(DESTDIR)$(docdir)/$${dir}$(DOC_INSTALL_SUBDIR)"; \
-	  test -z "@DX_DOCDIR@/$$dir" || $(MKDIR_P) "$(DESTDIR)$(docdir)/$${dir}$(DOC_INSTALL_SUBDIR)"; \
-	  echo " $(INSTALL_DATA) '@DX_DOCDIR@/$$dir/*.*' '$(DESTDIR)$(docdir)/$${dir}$(DOC_INSTALL_SUBDIR)'"; \
-	  $(INSTALL_DATA) @DX_DOCDIR@/$$dir/*.* "$(DESTDIR)$(docdir)/$${dir}$(DOC_INSTALL_SUBDIR)"; \
+	  echo " test -z @DX_DOCDIR@/$$dir || $(MKDIR_P) $(DESTDIR)$(docdir)/$${dir}$(DX_INSTALL_SUBDIR)"; \
+	  test -z "@DX_DOCDIR@/$$dir" || $(MKDIR_P) "$(DESTDIR)$(docdir)/$${dir}$(DX_INSTALL_SUBDIR)"; \
+	  echo " $(INSTALL_DATA) '@DX_DOCDIR@/$$dir/*.*' '$(DESTDIR)$(docdir)/$${dir}$(DX_INSTALL_SUBDIR)'"; \
+	  $(INSTALL_DATA) @DX_DOCDIR@/$$dir/*.* "$(DESTDIR)$(docdir)/$${dir}$(DX_INSTALL_SUBDIR)"; \
 	done
 
 doxygen-uninstall:
@@ -206,12 +196,12 @@ doxygen-uninstall:
 	  rm -f "$(DESTDIR)$(docdir)/$$p"; \
 	done
 	@list='$(DX_INSTALL_DIRS)'; for dir in $$list; do \
-	  echo " rm -f -r '$(DESTDIR)$(docdir)/$${dir}$(DOC_INSTALL_SUBDIR)'"; \
-	  rm -f -r "$(DESTDIR)$(docdir)/$${dir}$(DOC_INSTALL_SUBDIR)"; \
+	  echo " rm -f -r '$(DESTDIR)$(docdir)/$${dir}$(DX_INSTALL_SUBDIR)'"; \
+	  rm -f -r "$(DESTDIR)$(docdir)/$${dir}$(DX_INSTALL_SUBDIR)"; \
 	done
 
 DX_CLEANFILES = \
-    @DX_DOCDIR@/$(DOC_PACKAGE).tag \
+    @DX_DOCDIR@/$(DX_PACKAGE).tag \
     $(DX_CLEAN_CHI) \
     $(DX_CLEAN_PS) \
     $(DX_CLEAN_PDF) \

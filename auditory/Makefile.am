@@ -4,16 +4,27 @@ SUBDIRS = \
     sascha
 
 EXTRA_DIST = \
-    doxygenauditory.mk \
+    doxygen.mk \
     relacshelp.mk \
     doc/auditory.dox \
     doc/transductionchain.jpg
 
-include doxygenauditory.mk
+
+# This is needed for setting the default docdir to $(datarootdir)/doc/relacs.
+# PACKAGE_TARNAME seems not to be used otherwise.
+PACKAGE_TARNAME=relacs
+
+PLUGINSET = Auditory
+DX_PACKAGE = auditory
+DX_INSTALL_SUBDIR = /$(DX_PACKAGE)
+DX_CFG = doc/$(DX_PACKAGE).dox
+
+DX_TAGFILES="../doc/relacsall.tag=.. ../common/doc/common.tag=../common"
+
+include doxygen.mk
 
 if DX_COND_doc
 
-PLUGINSET=Auditory
 include relacshelp.mk
 
 .PHONY: doc help

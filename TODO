@@ -1,6 +1,4 @@
 Autotools and documentation:
-- unify doxygen*.mk files by putting the individual variabels 
-  into the calling Makefile.am
 - install doxygen tag files in pkgdatadir, not in pkgdocdir
 - install doxygen html documentation to htmldir instead of docdir?
   Likewise psdir, pdfdir, etc.
@@ -15,7 +13,9 @@ Autotools:
   For finalizing a change in the interface the version number of the library
   needs to be changes.
 - introduce namespace 'relacs' to all libraries
-- include of local headers also with <relacs/foo.h>
+- include of local headers also with <relacs/foo.h>?
+- there are unique plugin names (librelacsauditory...), unique help files
+  (Auditory-...), but what about the header files of the plugins?
 - update copyright in gpl header in each file to 2008! Write a script for this.
 - check file reference in gpl header - strip ../include/relacs
 - names of relacs plugins without "librelacs" prefix?

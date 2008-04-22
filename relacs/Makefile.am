@@ -2,11 +2,21 @@ SUBDIRS = \
     src
 
 EXTRA_DIST = \
-    doxygenrelacs.mk \
+    doxygen.mk \
     \
     doc/relacs.dox
 
-include doxygenrelacs.mk
+DX_PACKAGE = relacs
+DX_INSTALL_SUBDIR = /$(DX_PACKAGE)
+DX_CFG = doc/$(DX_PACKAGE).dox
+
+if RELACS_TOP_BUILD
+DX_TAGFILES="../config/doc/config.tag=../config ../daq/doc/daq.tag=../daq ../datafile/doc/datafile.tag=../datafile ../mplot/doc/mplot.tag=../mplot ../numerics/doc/numerics.tag=../numerics ../options/doc/options.tag=../options ../widgets/doc/widgets.tag=../widgets"
+else
+DX_TAGFILES="$(DESTDIR)$(docdir)/config.tag=../config $(DESTDIR)$(docdir)/daq.tag=../daq $(DESTDIR)$(docdir)/datafile.tag=../datafile $(DESTDIR)$(docdir)/mplot.tag=../mplot $(DESTDIR)$(docdir)/numerics.tag=../numerics $(DESTDIR)$(docdir)/options.tag=../options $(DESTDIR)$(docdir)/widgets.tag=../widgets"
+endif
+
+include doxygen.mk
 
 if DX_COND_doc
 

@@ -6,15 +6,26 @@ SUBDIRS = \
     models
 
 EXTRA_DIST = \
-    doxygencommon.mk \
+    doxygen.mk \
     relacshelp.mk \
     doc/common.dox
 
-include doxygencommon.mk
+
+# This is needed for setting the default docdir to $(datarootdir)/doc/relacs.
+# PACKAGE_TARNAME seems not to be used otherwise.
+PACKAGE_TARNAME=relacs
+
+PLUGINSET = Common
+DX_PACKAGE = common
+DX_INSTALL_SUBDIR = /$(DX_PACKAGE)
+DX_CFG = doc/$(DX_PACKAGE).dox
+
+DX_TAGFILES="../doc/relacsall.tag=.."
+
+include doxygen.mk
 
 if DX_COND_doc
 
-PLUGINSET=Common
 include relacshelp.mk
 
 .PHONY: doc help
