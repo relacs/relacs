@@ -16,6 +16,7 @@ Settings::Settings( RELACSWidget* rw )
   addLabel( "Plugins" );
   addText( "pluginhome", "Default path to plugins", "plugins/" );
   addText( "pluginpathes", "Plugin pathes", "plugins/" );
+  addText( "pluginhelppathes", "Pathes to plugin help files", "plugins/help" );
   addBoolean( "changetoplugindir", "Change to the plugin's directory", true );
   addText( "controlplugin", "Control plugin", "" );
   addText( "modelplugin", "Model plugin", "" );

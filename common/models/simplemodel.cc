@@ -26,7 +26,8 @@ using namespace numerics;
 
 
 SimpleModel::SimpleModel( void )
-  : Model( "SimpleModel", "Simple Model", "Jan Benda", "1.1", "Jan 31, 2008" )
+  : Model( "SimpleModel", "Simple Model", "Common",
+	   "Jan Benda", "1.1", "Jan 31, 2008" )
 {
   // define options:
   addSelection( "model", "The model", "Noise|Stimulus" );

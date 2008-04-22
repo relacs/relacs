@@ -31,7 +31,8 @@
 
 
 FICurve::FICurve( void )
-  : RePro( "FICurve", "F-I Curve", "Jan Benda", "1.3", "Jan 10, 2008" ),
+  : RePro( "FICurve", "F-I Curve", "Auditory",
+	   "Jan Benda", "1.3", "Jan 10, 2008" ),
     EPhysTraces(),
     AuditoryTraces(),
     P( 2, 2, true, this, "ficurveplot" )    

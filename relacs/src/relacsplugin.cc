@@ -29,18 +29,37 @@
 
 
 RELACSPlugin::RELACSPlugin( const string &configident, int configgroup,
-			    const string &name, 
-			    const string &title, const string &author, 
+			    const string &name, const string &title,
+			    const string &pluginset, const string &author, 
 			    const string &version, const string &date )
   : ConfigDialog( configident, configgroup,
 		  name, title, author, version, date )
 {
+  setPluginSet( pluginset );
   RW = 0;
 }
 
 
 RELACSPlugin::~RELACSPlugin( void )
 {
+}
+
+
+string RELACSPlugin::pluginSet( void ) const
+{
+  return PluginSet;
+}
+
+
+void RELACSPlugin::setPluginSet( const string &pluginset )
+{
+  PluginSet = pluginset;
+}
+
+
+string RELACSPlugin::helpFileName( void ) const
+{
+  return pluginSet() + '-' + name() + ".html";
 }
 
 
@@ -731,13 +750,16 @@ void RELACSPlugin::unlockDetectorEvents( const string &name )
 void RELACSPlugin::setRELACSWidget( RELACSWidget *rw )
 {
   RW = rw;
+
+  // pathes to help files of plugins:
   clearHelpPathes();
-  Parameter &p = RW->SS[ "pluginpathes" ];
+  Parameter &p = RW->SS[ "pluginhelppathes" ];
   for ( int k=0; k<p.size(); k++ ) {
     Str path = p.text( k );
     path.preventSlash();
-    addHelpPath( path.dir() + "help" );
+    addHelpPath( path );
   }
+
 }
 
 

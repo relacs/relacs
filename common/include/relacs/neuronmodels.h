@@ -42,7 +42,9 @@ class NeuronModels : public Model
 public:
 
   NeuronModels( void );
-  NeuronModels( const string &name, const string &title="", 
+  NeuronModels( const string &name,
+		const string &title="", 
+		const string &pluginset="", 
 		const string &author="unknown", 
 		const string &version="unknown",
 		const string &date=__DATE__ );

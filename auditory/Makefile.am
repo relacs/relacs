@@ -13,7 +13,7 @@ include doxygenauditory.mk
 
 if DX_COND_doc
 
-PLUGINSET=auditory
+PLUGINSET=Auditory
 include relacshelp.mk
 
 .PHONY: doc help

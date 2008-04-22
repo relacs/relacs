@@ -28,8 +28,8 @@ using namespace numerics;
 
 
 SpectrumAnalyzer::SpectrumAnalyzer( void )
-  : Control( "SpectrumAnalyzer", "Spectrum", "Jan Benda",
-	     "1.0", "Mar 1, 2005" ),
+  : Control( "SpectrumAnalyzer", "Spectrum", "Common",
+	     "Jan Benda", "1.0", "Mar 1, 2005" ),
     P( this )
 {
   // parameter:

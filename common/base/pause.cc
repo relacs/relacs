@@ -23,7 +23,8 @@
 
 
 Pause::Pause( void )
-  : RePro( "Pause", "Pause", "Jan Benda", "1.2", "Oct 1, 2004" )
+  : RePro( "Pause", "Pause", "Common",
+	   "Jan Benda", "1.2", "Oct 1, 2004" )
 {
   // add some options:
   addNumber( "duration", "Duration", 1.0, 0.01, 1000.0, 0.02, "sec", "ms" );

@@ -31,7 +31,8 @@
 
 
 IsoResponse::IsoResponse( void )
-  : RePro( "IsoResponse", "Iso-Response", "Alexander Wolf", "1.0", "Jan 10, 2008" ),
+  : RePro( "IsoResponse", "Iso-Response", "Auditory",
+	   "Alexander Wolf", "1.0", "Jan 10, 2008" ),
     EPhysTraces(),
     AuditoryTraces(),
     P( 3, 3, true, this)

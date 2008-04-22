@@ -33,8 +33,8 @@
 
 
 SingleStimulus::SingleStimulus( void )
-  : RePro( "SingleStimulus", "Single Stimulus", "Jan Benda",
-	   "1.2", "Jan 10, 2008" ),
+  : RePro( "SingleStimulus", "Single Stimulus", "Auditory",
+	   "Jan Benda", "1.2", "Jan 10, 2008" ),
     EPhysTraces(),
     AuditoryTraces(),
     SP( 3, this ),

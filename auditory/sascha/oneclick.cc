@@ -29,7 +29,8 @@
 
 
 OneClick::OneClick( void )
-  : RePro( "OneClick", "OneClick", "Alexander Wolf", "0.2", "Jan 10, 2008" ),
+  : RePro( "OneClick", "OneClick", "Auditory",
+	   "Alexander Wolf", "0.2", "Jan 10, 2008" ),
     EPhysTraces(),
     AuditoryTraces(),
     P( 1, 1, true, this)    

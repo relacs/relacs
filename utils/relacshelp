@@ -82,12 +82,12 @@ for DOXYFILES in $SRCDIR/class*.html; do
   CLASSNAME=${FILENAME#$SRCDIR/class}
   CLASSNAME=${CLASSNAME%-*}
   if test "$CLASSNAME" != "es" && test "$CLASSNAME" != "$LASTFILE"; then
-    echo "create help file for $CLASSNAME..."
+    echo "create help file for ${PLUGINSET}-${CLASSNAME}..."
     { echo "<html><body>"
 	echo "<h2>$CLASSNAME</h2>"
 	sed -n -e '/<hr><a name="_details"/,/<hr>/p' $DOXYFILES | sed '1d; $d'
 	echo "</body></html>"; 
-    } > $HELPDIR/$PLUGINSET-$CLASSNAME.html
+    } > ${HELPDIR}/${PLUGINSET}-${CLASSNAME}.html
     LASTFILE="$CLASSNAME"
   fi
 done

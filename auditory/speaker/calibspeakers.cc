@@ -28,7 +28,8 @@
 
 
 CalibSpeakers::CalibSpeakers( void )
-  : RePro( "CalibSpeakers", "CalibSpeakers", "Jan Benda", "1.1", "Jan 10, 2008" ),
+  : RePro( "CalibSpeakers", "CalibSpeakers", "Auditory",
+	   "Jan Benda", "1.1", "Jan 10, 2008" ),
     AuditoryTraces(),
     P( 2, 2, true, this )    
 {

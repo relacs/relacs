@@ -34,10 +34,10 @@
 
 
 RePro::RePro( const string &name, const string &titles,
-	      const string &author, const string &version,
-	      const string &date )
+	      const string &pluginset, const string &author,
+	      const string &version, const string &date )
   : RELACSPlugin( "RePro: " + name, RELACSPlugin::Plugins,
-	       name, titles, author, version, date ),
+		  name, titles, pluginset, author, version, date ),
     OverwriteOpt()
 {
   LastState = Continue;

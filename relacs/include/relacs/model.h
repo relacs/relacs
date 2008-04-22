@@ -57,9 +57,17 @@ class Model : public QThread, public RELACSPlugin
 
 public:
 
-    /*! Construct a Model. */
-  Model( const string &name, const string &title="", 
-	 const string &author="unknown", const string &version="unknown",
+    /*! Construct a Model with name \a name (has to be identical
+        to the class name), widget title \a title,
+	that belongs to the set of plugins named \a pluginset.
+	The implementation of a class derived from Model
+	has the version \a version and was written
+	by \a author on \a date. */
+  Model( const string &name,
+	 const string &title="", 
+	 const string &pluginset="",
+	 const string &author="unknown",
+	 const string &version="unknown",
 	 const string &date=__DATE__ );
     /*! Deconstruct a Model. */
   ~Model( void );

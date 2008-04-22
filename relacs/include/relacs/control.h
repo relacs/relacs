@@ -109,13 +109,15 @@ class Control : public RELACSPlugin, protected QThread
 
 public:
 
-    /*! Construct a control widget with name \a name and
-        widget title \a title.
+    /*! Construct a control widget with name \a name (has to be identical
+        to the class name) and widget title \a title that
+	belongs to the set of plugins named \a pluginset.
 	The implementation of a class derived from Control
 	has the version \a version and was written
 	by \a author on \a date. */
   Control( const string &name, 
 	   const string &title="",
+	   const string &pluginset="",
 	   const string &author="unknown",
 	   const string &version="unknown",
 	   const string &date=__DATE__ );

@@ -71,12 +71,18 @@ public:
     Continue
   };
 
-    /*! Contructs a RePro with name \a name, title \a title,
-        version number \a version, author \a author,
-	and date \a date.
+    /*! Constructs a RePro with name \a name (has to be identical
+        to the class name), widget title \a title,
+	that belongs to the set of plugins named \a pluginset.
+	The implementation of a class derived from Model
+	has the version \a version and was written
+	by \a author on \a date.
         The date defaults to the date of compilation. */
-  RePro( const string &name, const string &title="", 
-	 const string &author="unknown", const string &version="unknown",
+  RePro( const string &name,
+	 const string &title="", 
+	 const string &pluginset="",
+	 const string &author="unknown",
+	 const string &version="unknown",
 	 const string &date=__DATE__ );
     /*! Destructs a RePro. */
   virtual ~RePro( void );

@@ -24,8 +24,8 @@
 
 LowPass::LowPass( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogFilter, 1,
-	    "LowPass", "LowPass", "Jan Benda",
-	    "0.1", "May 3 2007" ),
+	    "LowPass", "LowPass", "Common",
+	    "Jan Benda", "0.1", "May 3 2007" ),
     LFW( (QWidget*)this )
 {
   // parameter:

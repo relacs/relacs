@@ -25,7 +25,8 @@
 
 
 AuditorySession::AuditorySession( void )
-  : Control( "AuditorySession", "Info", "Jan Benda", "1.3", "Jan 22, 2008" ),
+  : Control( "AuditorySession", "Info", "Auditory",
+	     "Jan Benda", "1.3", "Jan 22, 2008" ),
     EPhysTraces(),
     AuditoryTraces(),
     P( 2, 1, true, Plot::Pointer, this, "sessionplot" )

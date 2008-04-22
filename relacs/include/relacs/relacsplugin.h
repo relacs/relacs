@@ -40,7 +40,7 @@
 \class RELACSPlugin
 \brief Adds specific functions for RELACS plugins to ConfigDialog
 \author Jan Benda
-\version 1.9
+\version 2.0
 
 A warning meassage can be displayed in a popup window with warning()
 An info meassage can be displayed in a popup window with info().
@@ -153,7 +153,9 @@ public:
     /*! Construct an RELACSPlugin.
         The identifier \a configident is used for identifying this class
 	in the configuration file of group \a configgroup.
-	The class has a unique \a name and a widget \a title.
+        \a name has to be exactly the name of the class.
+	The class has a widget \a title and
+	belongs to the set of plugins named \a pluginset.
 	The implementation of a class derived from %RELACSPlugin
 	has a \a version and was written by \a author on \a date.
         \sa setConfigIdent(), setConfigGroup(),
@@ -161,6 +163,7 @@ public:
   RELACSPlugin( const string &configident="", int configgroup=0,
 		const string &name="", 
 		const string &title="",
+		const string &pluginset="",
 		const string &author="unknown",
 		const string &version="unknown",
 		const string &date=__DATE__ );
@@ -185,8 +188,17 @@ public:
 	AttInterfaces, Filters, Control, and RePros. */
   void setRELACSWidget( RELACSWidget *rw );
 
+    /*! \return the name of the file to be displayed in the help dialog.
+        This implementation returns pluginSet() + '-' + name() + \c ".html". */
+  virtual string helpFileName( void ) const;
+
 
 protected:
+
+    /*! The name of the plugin set the class belongs to. */
+  string pluginSet( void ) const;
+    /*! Set the name of the plugin set the class belongs to to \a pluginset. */
+  virtual void setPluginSet( const string &pluginset );
 
     /*! Write the string \a s to standard error.
         The current time and the name of the plugin
@@ -635,6 +647,8 @@ protected slots:
 
 
 private:
+
+  string PluginSet;
 
   string WarningStr;
   double WarningTimeout;

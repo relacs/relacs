@@ -30,7 +30,8 @@
 
 
 SysLatency::SysLatency( void )
-  : RePro( "SysLatency", "System - Latency", "Jan Benda", "1.5", "Jan 10, 2008" ),
+  : RePro( "SysLatency", "System - Latency", "Auditory",
+	   "Jan Benda", "1.5", "Jan 10, 2008" ),
     EPhysTraces(),
     AuditoryTraces(),
     P( 2, 2, true, this )    

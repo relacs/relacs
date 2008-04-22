@@ -30,8 +30,8 @@
 
 
 SpikePrecision::SpikePrecision( void )
-  : RePro( "SpikePrecision", "SpikePrecision", "Samuel Glauser, Jan Benda",
-	   "1.5", "Jan 10, 2008" ),
+  : RePro( "SpikePrecision", "SpikePrecision", "Auditory",
+	   "Samuel Glauser, Jan Benda", "1.5", "Jan 10, 2008" ),
     EPhysTraces(),
     AuditoryTraces(),
     SP( 3, this ),

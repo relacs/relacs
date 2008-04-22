@@ -11,7 +11,7 @@ include doxygenhardware.mk
 
 if DX_COND_doc
 
-PLUGINSET=hardware
+PLUGINSET=Hardware
 include relacshelp.mk
 
 .PHONY: doc help

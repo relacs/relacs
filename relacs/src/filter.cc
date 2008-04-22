@@ -25,10 +25,10 @@
 Filter::Filter( const string &ident, int mode,
 		FilterType type, int outtraces, 
 		const string &name, const string &title,
-		const string &author, 
+		const string &pluginset, const string &author, 
 		const string &version, const string &date )
   : RELACSPlugin( "Filter: " + ident, RELACSPlugin::Plugins,
-		  name, title, author, version, date )
+		  name, title, pluginset, author, version, date )
 {
   if ( type == SingleAnalogDetector ||
        type == MultipleAnalogDetector ||

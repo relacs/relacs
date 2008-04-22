@@ -24,8 +24,8 @@
 
 HighPass::HighPass( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogFilter, 1,
-	    "HighPass", "HighPass", "Jan Benda",
-	    "0.1", "Jan 24 2008" ),
+	    "HighPass", "HighPass", "Common",
+	    "Jan Benda", "0.1", "Jan 24 2008" ),
     LFW( (QWidget*)this )
 {
   // parameter:

@@ -25,11 +25,11 @@
 #include <relacs/control.h>
 
 
-Control::Control( const string &name, 
-		  const string &title, const string &author, 
+Control::Control( const string &name, const string &title,
+		  const string &pluginset, const string &author, 
 		  const string &version, const string &date )
   : RELACSPlugin( "Control: " + name, RELACSPlugin::Plugins,
-		  name, title, author, version, date )
+		  name, title, pluginset, author, version, date )
 {
   Interrupt = false;
 }

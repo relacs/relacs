@@ -1,9 +1,5 @@
-Autotools and documentation / help:
-- make relacs find the right help files:
-  RELACSPlugin::setRELACSWidget sets the pathes -> introduce helppathes option
-  that is individually set through configure.ac
-  RelacsPlugins Class should take the name of the plugin set and 
-  should reimplement the helpFileName() from ConfigDialog.
+Autotools and documentation:
+- how does the help menue find the right location of the documentation?
 - unify doxygen*.mk files by putting the individual variabels 
   into the calling Makefile.am
 - install doxygen tag files in pkgdatadir, not in pkgdocdir
@@ -20,7 +16,9 @@ Autotools:
   For finalizing a change in the interface the version number of the library
   needs to be changes.
 - introduce namespace 'relacs' to all libraries
-- include of local headeras also with <relacs/foo.h>
+- include of local headers also with <relacs/foo.h>
+- update copyright in gpl header in each file to 2008! Write a script for this.
+- check file reference in gpl header - strip ../include/relacs
 - names of relacs plugins without "librelacs" prefix?
 - add relacs library tests to the libraries!
 - no static libraries (at least for the plugins)!
@@ -48,6 +46,7 @@ Documentation:
   http://www.crcns.org/
 - update documentation of OutData, TraceSpec
 
+
 Bug in MetaData Dialog: after opening and closing with ESC, reopening crashes the program
 
 Bug somewhere: if session is running, start of repro kills RELACS
@@ -59,14 +58,6 @@ SaveFiles::write( RePro ) -> SaveFiles::writeStimulus() ->
 
 
 Start implementing Dynclamp module!
-
-
-Things to be done for first release:
-
-- update copyright in gpl header in each file to 2008! Write a script for this.
-- reorganize the source files (more/less libraries: config and widget)
-- find better names for the libraries
-- check library dependencies (of hardware plugins, repros, etc.)
 
 
 new RePro name: ExPro, Protocol, ...

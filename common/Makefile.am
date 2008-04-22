@@ -14,7 +14,7 @@ include doxygencommon.mk
 
 if DX_COND_doc
 
-PLUGINSET=common
+PLUGINSET=Common
 include relacshelp.mk
 
 .PHONY: doc help

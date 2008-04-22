@@ -31,7 +31,8 @@
 
 
 MotorControl::MotorControl( void )
-  : Control( "Control", "MotorControl", "Jan Benda", "1.0", "Jul 1 2004" )
+  : Control( "MotorControl", "Control", "Common",
+	     "Jan Benda", "1.0", "Jul 1 2004" )
 {
   MM.clear();
 

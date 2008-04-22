@@ -27,7 +27,8 @@
 
 
 NeuronModels::NeuronModels( void )
-  : Model( "NeuronModels", "Neuron-Models", "Jan Benda", "1.0", "Jan 10, 2006" )
+  : Model( "NeuronModels", "Neuron-Models", "Common",
+	   "Jan Benda", "1.0", "Jan 10, 2006" )
 {
   addLabel( "General" ).setStyle( OptWidget::TabLabel );
   addOptions();
@@ -36,11 +37,13 @@ NeuronModels::NeuronModels( void )
 }
 
 
-NeuronModels::NeuronModels( const string &name, const string &title, 
+NeuronModels::NeuronModels( const string &name,
+			    const string &title, 
+			    const string &pluginset,
 			    const string &author, 
 			    const string &version,
 			    const string &date )
-  : Model( name, title, author, version, date )
+  : Model( name, title, pluginset, author, version, date )
 {
 }
 

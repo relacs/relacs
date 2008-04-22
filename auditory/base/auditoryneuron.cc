@@ -27,7 +27,7 @@
 
 
 AuditoryNeuron::AuditoryNeuron( void )
-  : NeuronModels( "AuditoryNeuron", "Auditory-Neuron",
+  : NeuronModels( "AuditoryNeuron", "Auditory-Neuron", "Auditory",
 		  "Alexander Wolf, Jan Benda",
 		  "1.1", "Jan 15, 2006" )
 {

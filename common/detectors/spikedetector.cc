@@ -33,8 +33,8 @@
 
 SpikeDetector::SpikeDetector( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogDetector, 1,
-	    "SpikeDetector", "SpikeDetector", "Jan Benda",
-	    "1.6", "Jan 24, 2008" ),
+	    "SpikeDetector", "SpikeDetector", "Common",
+	    "Jan Benda", "1.6", "Jan 24, 2008" ),
     SDW( (QWidget*)this ),
     GoodSpikesHist( 0.0, 200.0, 0.5 ),
     BadSpikesHist( 0.0, 200.0, 0.5 ),

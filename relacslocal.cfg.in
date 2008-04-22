@@ -1,4 +1,5 @@
 @RELACS_CFG_HEAD@
        pluginpathes: auditory/base/.libs/|auditory/sascha/.libs/|auditory/speaker/.libs/|common/base/.libs/|common/controls/.libs/|common/detectors/.libs/|common/filter/.libs/|common/models/.libs/|hardware/.libs/
+   pluginhelppathes: hardware/help|common/help|auditory/help
 @RELACS_CFG_FOOT@
 

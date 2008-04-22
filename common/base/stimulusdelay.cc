@@ -27,7 +27,8 @@ using namespace numerics;
 
 
 StimulusDelay::StimulusDelay( void )
-  : RePro( "StimulusDelay", "StimulusDelay", "Jan Benda", "1.2", "Feb 8, 2008" ),
+  : RePro( "StimulusDelay", "StimulusDelay", "Common",
+	   "Jan Benda", "1.2", "Feb 8, 2008" ),
     P( this, "stimulusdelayplot" )
 {
   // add some options:

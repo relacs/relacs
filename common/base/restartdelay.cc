@@ -28,7 +28,8 @@ using namespace numerics;
 
 
 RestartDelay::RestartDelay( void )
-  : RePro( "RestartDelay", "RestartDelay", "Jan Benda", "1.3", "Feb 8, 2008" ),
+  : RePro( "RestartDelay", "RestartDelay", "Common",
+	   "Jan Benda", "1.3", "Feb 8, 2008" ),
     P( this, "restartdelayplot" )
 {
   // add some options:

@@ -50,8 +50,8 @@ const double AuditorySearch::MinFrequency = 2000.0;
 
 
 AuditorySearch::AuditorySearch( void )
-  : RePro( "AuditorySearch", "Search", "Jan Benda and Christian Machens",
-	   "2.2", "Jan 10, 2008" ),
+  : RePro( "AuditorySearch", "Search", "Auditory",
+	   "Jan Benda and Christian Machens", "2.2", "Jan 10, 2008" ),
     AuditoryTraces()
 {
   // parameter:
