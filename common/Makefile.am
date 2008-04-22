@@ -11,9 +11,10 @@ EXTRA_DIST = \
     doc/common.dox
 
 
-# This is needed for setting the default docdir to $(datarootdir)/doc/relacs.
-# PACKAGE_TARNAME seems not to be used otherwise.
-PACKAGE_TARNAME=relacs
+pkglibdir = $(libdir)/relacs
+pkgincludedir = $(includedir)/relacs
+pkgdatadir=$(datadir)/relacs
+docdir = $(datarootdir)/doc/relacs
 
 PLUGINSET = Common
 DX_PACKAGE = common
@@ -33,7 +34,7 @@ include relacshelp.mk
 doc: doxygen-doc
 help: help-make
 
-all-local: doxygen-run help-run
+all-local: doxygen-runall help-run
 clean-local: doxygen-clean help-clean
 install-data-local: doxygen-install help-install
 uninstall-local: doxygen-uninstall help-uninstall

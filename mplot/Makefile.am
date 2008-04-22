@@ -11,9 +11,10 @@ EXTRA_DIST = \
     doc/mplot.dox
 
 
-# This is needed for setting the default docdir to $(datarootdir)/doc/relacs.
-# PACKAGE_TARNAME seems not to be used otherwise.
-PACKAGE_TARNAME=relacs
+pkglibdir = $(libdir)/relacs
+pkgincludedir = $(includedir)/relacs
+pkgdatadir=$(datadir)/relacs
+docdir = $(datarootdir)/doc/relacs
 
 DX_PACKAGE = mplot
 DX_INSTALL_SUBDIR = /$(DX_PACKAGE)
@@ -30,7 +31,7 @@ include doxygen.mk
 if DX_COND_doc
 
 doc: doxygen-doc
-all-local: doxygen-run
+all-local: doxygen-runall
 clean-local: doxygen-clean
 install-data-local: doxygen-install
 uninstall-local: doxygen-uninstall

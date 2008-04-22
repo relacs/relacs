@@ -21,7 +21,7 @@ include doxygen.mk
 if DX_COND_doc
 
 doc: doxygen-doc
-all-local: doxygen-run
+all-local: doxygen-runall
 clean-local: doxygen-clean
 install-data-local: doxygen-install
 uninstall-local: doxygen-uninstall

@@ -60,7 +60,7 @@ doclinks:
 	done
 
 doc: doxygen-doc doclinks
-all-local: doxygen-run doclinks
+all-local: doxygen-runall doclinks
 clean-local: doxygen-clean
 install-data-local: doxygen-install
 uninstall-local: doxygen-uninstall

@@ -1,17 +1,14 @@
 Autotools and documentation:
-- install doxygen tag files in pkgdatadir, not in pkgdocdir
-- install doxygen html documentation to htmldir instead of docdir?
-  Likewise psdir, pdfdir, etc.
-- split dox file into a common and an individual part or overwrite all individual parameters by the environment
+- split dox file into a common and an individual part
+  or overwrite all individual parameters by the environment or another file
 - exclude moc-* files from doxygen search pattern
 - make doclinks target depend on something
 - take website and logo out of relacs/trunk
 
 Autotools:
-- when changing the interface of the libraries 
-  make sure that nothing is installed in prefix/lib!
-  For finalizing a change in the interface the version number of the library
-  needs to be changes.
+- rename mplot library
+- rename config classes and library
+- what about config, widgets and configdialog?
 - introduce namespace 'relacs' to all libraries
 - include of local headers also with <relacs/foo.h>?
 - there are unique plugin names (librelacsauditory...), unique help files
@@ -34,12 +31,17 @@ Autotools:
 
 Documentation:
 - Update installation and Makefile instructions to autotools
+- You may want to use: ./configure --htmldir=DOCDIR/html
 - Hint to 
   Integrating Qt's Meta object compiler (moc) with GNU Automake
     http://blog.hartwork.org/?p=133
   and
   The Autotools file jungle (== version 3)
     http://blog.hartwork.org/?p=131
+- when changing the interface of the libraries 
+  make sure that nothing is installed in prefix/lib!
+  For finalizing a change in the interface the version number of the library
+  needs to be changes.
 - Links:
   CRCNS - Collaborative Research in Computational Neuroscience - Data sharing activity
   http://www.crcns.org/
