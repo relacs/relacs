@@ -13,10 +13,11 @@ Settings::Settings( RELACSWidget* rw )
   addLabel( "General" );
   addNumber( "updateinterval", "Interval for periodic acquisition of data", 0.05, 0.001, 1000.0, 0.001, "seconds", "ms" );
   addNumber( "processinterval", "Interval for periodic processing of data", 0.10, 0.001, 1000.0, 0.001, "seconds", "ms" );
+  addText( "docpath", "Path to the documentation", "doc/html" );
   addLabel( "Plugins" );
-  addText( "pluginhome", "Default path to plugins", "plugins/" );
-  addText( "pluginpathes", "Plugin pathes", "plugins/" );
-  addText( "pluginhelppathes", "Pathes to plugin help files", "plugins/help" );
+  addText( "pluginhome", "Default path to plugins", "" );
+  addText( "pluginpathes", "Plugin pathes", "" );
+  addText( "pluginhelppathes", "Pathes to plugin help files", "" );
   addBoolean( "changetoplugindir", "Change to the plugin's directory", true );
   addText( "controlplugin", "Control plugin", "" );
   addText( "modelplugin", "Model plugin", "" );

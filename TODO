@@ -1,5 +1,4 @@
 Autotools and documentation:
-- how does the help menue find the right location of the documentation?
 - unify doxygen*.mk files by putting the individual variabels 
   into the calling Makefile.am
 - install doxygen tag files in pkgdatadir, not in pkgdocdir
