@@ -14,9 +14,9 @@ pkgincludedir = $(includedir)/relacs
 pkgdatadir=$(datadir)/relacs
 docdir = $(datarootdir)/doc/relacs
 
-DX_PACKAGE = numerics
-DX_INSTALL_SUBDIR = /$(DX_PACKAGE)
-DX_CFG = doc/$(DX_PACKAGE).dox
+DX_PROJECT = numerics
+DX_CONFIG = doc/$(DX_PROJECT).dox
+DX_INSTALL_SUBDIR = /$(DX_PROJECT)
 DX_TAGFILES=""
 
 include doxygen.mk

@@ -41,10 +41,6 @@ EXTRA_DIST = \
     doc/relacs1.png \
     doc/relacs2.png
 
-DX_PACKAGE = relacsall
-DX_INSTALL_SUBDIR =
-DX_CFG = doc/$(DX_PACKAGE).dox
-DX_TAGFILES=""
 
 include doxygen.mk
 

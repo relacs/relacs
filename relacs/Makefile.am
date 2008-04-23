@@ -6,9 +6,9 @@ EXTRA_DIST = \
     \
     doc/relacs.dox
 
-DX_PACKAGE = relacs
-DX_INSTALL_SUBDIR = /$(DX_PACKAGE)
-DX_CFG = doc/$(DX_PACKAGE).dox
+DX_PROJECT = relacs
+DX_CONFIG = doc/$(DX_PROJECT).dox
+DX_INSTALL_SUBDIR = /$(DX_PROJECT)
 
 if RELACS_TOP_BUILD
 DX_TAGFILES="../config/doc/config.tag=../config ../daq/doc/daq.tag=../daq ../datafile/doc/datafile.tag=../datafile ../mplot/doc/mplot.tag=../mplot ../numerics/doc/numerics.tag=../numerics ../options/doc/options.tag=../options ../widgets/doc/widgets.tag=../widgets"

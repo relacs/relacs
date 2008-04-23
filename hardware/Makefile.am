@@ -14,9 +14,9 @@ pkgdatadir=$(datadir)/relacs
 docdir = $(datarootdir)/doc/relacs
 
 PLUGINSET = Hardware
-DX_PACKAGE = hardware
-DX_INSTALL_SUBDIR = /$(DX_PACKAGE)
-DX_CFG = doc/$(DX_PACKAGE).dox
+DX_PROJECT = hardware
+DX_CONFIG = doc/$(DX_PROJECT).dox
+DX_INSTALL_SUBDIR = /$(DX_PROJECT)
 
 DX_TAGFILES="../doc/relacsall.tag=.."
 

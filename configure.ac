@@ -156,7 +156,7 @@ DX_RTF_FEATURE(OFF)
 DX_XML_FEATURE(OFF)
 DX_PDF_FEATURE(OFF)
 DX_PS_FEATURE(OFF)
-DX_INIT_DOXYGEN( $PACKAGE_NAME, doc/relacsall.dox, doc )
+DX_INIT_DOXYGEN( relacsall, doc/relacsall.dox, doc )
 
 
 # All relacs libraries, the program, and the standard plugins

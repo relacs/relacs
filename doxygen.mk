@@ -37,8 +37,8 @@ DX_INSTALL_CHM = chm
 
 if DX_COND_chi
 
-DX_CLEAN_CHI = $(DX_DOCDIR)/$(DX_PACKAGE).chi
-DX_INSTALL_CHI = $(DX_PACKAGE).chi
+DX_CLEAN_CHI = $(DX_DOCDIR)/$(DX_PROJECT).chi
+DX_INSTALL_CHI = $(DX_PROJECT).chi
 
 endif DX_COND_chi
 
@@ -83,15 +83,15 @@ endif DX_COND_xml
 
 if DX_COND_ps
 
-DX_CLEAN_PS = $(DX_DOCDIR)/$(DX_PACKAGE).ps
+DX_CLEAN_PS = $(DX_DOCDIR)/$(DX_PROJECT).ps
 
 DX_PS_GOAL = doxygen-ps
 DX_INSTALL_PS_GOAL = doxygen-install-ps
 DX_UNINSTALL_PS_GOAL = doxygen-uninstall-ps
 
-doxygen-ps: $(DX_DOCDIR)/$(DX_PACKAGE).ps
+doxygen-ps: $(DX_DOCDIR)/$(DX_PROJECT).ps
 
-$(DX_DOCDIR)/$(DX_PACKAGE).ps: $(DX_DOCDIR)/$(DX_PACKAGE).tag
+$(DX_DOCDIR)/$(DX_PROJECT).ps: $(DX_DOCDIR)/$(DX_PROJECT).tag
 	cd $(DX_DOCDIR)/latex; \
 	rm -f *.aux *.toc *.idx *.ind *.ilg *.log *.out; \
 	$(DX_LATEX) refman.tex; \
@@ -104,14 +104,14 @@ $(DX_DOCDIR)/$(DX_PACKAGE).ps: $(DX_DOCDIR)/$(DX_PACKAGE).tag
 		$(DX_LATEX) refman.tex; \
 		countdown=`expr $$countdown - 1`; \
 	done; \
-	$(DX_DVIPS) -o ../$(DX_PACKAGE).ps refman.dvi
+	$(DX_DVIPS) -o ../$(DX_PROJECT).ps refman.dvi
 
 doxygen-install-ps:
 	test -z "$(psdir)" || $(MKDIR_P) "$(DESTDIR)$(psdir)"
-	$(INSTALL_DATA) "$(DX_DOCDIR)/$(DX_PACKAGE).ps" "$(DESTDIR)$(psdir)/$(DX_PACKAGE).ps"
+	$(INSTALL_DATA) "$(DX_DOCDIR)/$(DX_PROJECT).ps" "$(DESTDIR)$(psdir)/$(DX_PROJECT).ps"
 
 doxygen-uninstall-ps:
-	rm -f "$(DESTDIR)$(psdir)/$(DX_PACKAGE).ps"
+	rm -f "$(DESTDIR)$(psdir)/$(DX_PROJECT).ps"
 
 endif DX_COND_ps
 
@@ -121,15 +121,15 @@ endif DX_COND_ps
 
 if DX_COND_pdf
 
-DX_CLEAN_PDF = $(DX_DOCDIR)/$(DX_PACKAGE).pdf
+DX_CLEAN_PDF = $(DX_DOCDIR)/$(DX_PROJECT).pdf
 
 DX_PDF_GOAL = doxygen-pdf
 DX_INSTALL_PDF_GOAL = doxygen-install-pdf
 DX_UNINSTALL_PDF_GOAL = doxygen-uninstall-pdf
 
-doxygen-pdf: $(DX_DOCDIR)/$(DX_PACKAGE).pdf
+doxygen-pdf: $(DX_DOCDIR)/$(DX_PROJECT).pdf
 
-$(DX_DOCDIR)/$(DX_PACKAGE).pdf: $(DX_DOCDIR)/$(DX_PACKAGE).tag
+$(DX_DOCDIR)/$(DX_PROJECT).pdf: $(DX_DOCDIR)/$(DX_PROJECT).tag
 	cd $(DX_DOCDIR)/latex; \
 	rm -f *.aux *.toc *.idx *.ind *.ilg *.log *.out; \
 	$(DX_PDFLATEX) refman.tex; \
@@ -142,14 +142,14 @@ $(DX_DOCDIR)/$(DX_PACKAGE).pdf: $(DX_DOCDIR)/$(DX_PACKAGE).tag
 		$(DX_PDFLATEX) refman.tex; \
 		countdown=`expr $$countdown - 1`; \
 	done; \
-	mv refman.pdf ../$(DX_PACKAGE).pdf
+	mv refman.pdf ../$(DX_PROJECT).pdf
 
 doxygen-install-pdf:
 	test -z "$(pdfdir)" || $(MKDIR_P) "$(DESTDIR)$(pdfdir)"
-	$(INSTALL_DATA) "$(DX_DOCDIR)/$(DX_PACKAGE).pdf" "$(DESTDIR)$(pdfdir)/$(DX_PACKAGE).pdf"
+	$(INSTALL_DATA) "$(DX_DOCDIR)/$(DX_PROJECT).pdf" "$(DESTDIR)$(pdfdir)/$(DX_PROJECT).pdf"
 
 doxygen-uninstall-pdf:
-	rm -f "$(DESTDIR)$(pdfdir)/$(DX_PACKAGE).pdf"
+	rm -f "$(DESTDIR)$(pdfdir)/$(DX_PROJECT).pdf"
 
 endif DX_COND_pdf
 
@@ -167,17 +167,17 @@ DX_CLEAN_LATEX = $(DX_DOCDIR)/latex
 #DX_INSTALL_DVI_GOAL = doxygen-install-dvi
 #DX_UNINSTALL_DVI_GOAL = doxygen-uninstall-dvi
 #
-#doxygen-dvi: $(DX_DOCDIR)/$(DX_PACKAGE).dvi
+#doxygen-dvi: $(DX_DOCDIR)/$(DX_PROJECT).dvi
 #
-#$(DX_DOCDIR)/$(DX_PACKAGE).dvi: $(DX_DOCDIR)/$(DX_PACKAGE).tag
-#	cp $(DX_DOCDIR)/latex/refman.dvi $(DX_DOCDIR)/$(DX_PACKAGE).dvi
+#$(DX_DOCDIR)/$(DX_PROJECT).dvi: $(DX_DOCDIR)/$(DX_PROJECT).tag
+#	cp $(DX_DOCDIR)/latex/refman.dvi $(DX_DOCDIR)/$(DX_PROJECT).dvi
 #
 #doxygen-install-dvi:
 #	test -z "$(dvidir)" || $(MKDIR_P) "$(DESTDIR)$(dvidir)"
-#	$(INSTALL_DATA) "$(DX_DOCDIR)/$(DX_PACKAGE).dvi" "$(DESTDIR)$(dvidir)/$(DX_PACKAGE).dvi"
+#	$(INSTALL_DATA) "$(DX_DOCDIR)/$(DX_PROJECT).dvi" "$(DESTDIR)$(dvidir)/$(DX_PROJECT).dvi"
 #
 #doxygen-uninstall-dvi:
-#	rm -f "$(DESTDIR)$(pdfdir)/$(DX_PACKAGE).dvi"
+#	rm -f "$(DESTDIR)$(pdfdir)/$(DX_PROJECT).dvi"
 
 endif DX_COND_latex
 
@@ -194,17 +194,17 @@ endif DX_COND_latex
 
 .INTERMEDIATE: doxygen-run $(DX_PS_GOAL) $(DX_PDF_GOAL)
 
-doxygen-run: $(DX_DOCDIR)/$(DX_PACKAGE).tag
+doxygen-run: $(DX_DOCDIR)/$(DX_PROJECT).tag
 
 doxygen-runall: doxygen-run $(DX_DVI_GOAL) $(DX_PS_GOAL) $(DX_PDF_GOAL)
 
 doxygen-doc: doxygen-clean doxygen-runall
 
-$(DX_DOCDIR)/$(DX_PACKAGE).tag: $(DX_CFG).in $(pkginclude_HEADERS)
+$(DX_DOCDIR)/$(DX_PROJECT).tag: $(DX_CONFIG).in $(pkginclude_HEADERS)
 	cd $(srcdir); \
-	{ cat $(abs_builddir)/$(DX_CFG); \
+	{ cat $(abs_builddir)/$(DX_CONFIG); \
 	  for DX_ENV_LINE in $(DX_ENV); do echo $$DX_ENV_LINE; done; \
-	  echo "GENERATE_TAGFILE=$(abs_builddir)/$(DX_DOCDIR)/$(DX_PACKAGE).tag"; \
+	  echo "GENERATE_TAGFILE=$(abs_builddir)/$(DX_DOCDIR)/$(DX_PROJECT).tag"; \
 	  echo "TAGFILES=$(DX_TAGFILES)"; \
 	  echo "OUTPUT_DIRECTORY=$(abs_builddir)/$(DX_DOCDIR)"; } \
 	| $(DX_DOXYGEN) -
@@ -220,7 +220,7 @@ DX_INSTALL_DIRS = \
 
 doxygen-install: doxygen-run $(DX_INSTALL_HTML_GOAL) $(DX_INSTALL_DVI_GOAL) $(DX_INSTALL_PS_GOAL) $(DX_INSTALL_PDF_GOAL)
 	test -z "$(pkgdatadir)" || $(MKDIR_P) "$(DESTDIR)$(pkgdatadir)"
-	$(INSTALL_DATA) "$(DX_DOCDIR)/$(DX_PACKAGE).tag" "$(DESTDIR)$(pkgdatadir)/$(DX_PACKAGE).tag"
+	$(INSTALL_DATA) "$(DX_DOCDIR)/$(DX_PROJECT).tag" "$(DESTDIR)$(pkgdatadir)/$(DX_PROJECT).tag"
 	test -z "$(docdir)" || $(MKDIR_P) "$(DESTDIR)$(docdir)"
 	@list='$(DX_INSTALL_FILES)'; for p in $$list; do \
 	  echo " $(INSTALL_DATA) '$(DX_DOCDIR)/$$p' '$(DESTDIR)$(docdir)/$$p'"; \
@@ -234,7 +234,7 @@ doxygen-install: doxygen-run $(DX_INSTALL_HTML_GOAL) $(DX_INSTALL_DVI_GOAL) $(DX
 	done
 
 doxygen-uninstall: $(DX_UNINSTALL_HTML_GOAL) $(DX_UNINSTALL_DVI_GOAL) $(DX_UNINSTALL_PS_GOAL) $(DX_UNINSTALL_PDF_GOAL)
-	rm -f "$(DESTDIR)$(pkgdatadir)/$(DX_PACKAGE).tag"; \
+	rm -f "$(DESTDIR)$(pkgdatadir)/$(DX_PROJECT).tag"; \
 	@list='$(DX_INSTALL_FILES)'; for p in $$list; do \
 	  echo " rm -f '$(DESTDIR)$(docdir)/$$p'"; \
 	  rm -f "$(DESTDIR)$(docdir)/$$p"; \
@@ -245,7 +245,7 @@ doxygen-uninstall: $(DX_UNINSTALL_HTML_GOAL) $(DX_UNINSTALL_DVI_GOAL) $(DX_UNINS
 	done
 
 DX_CLEANFILES = \
-    $(DX_DOCDIR)/$(DX_PACKAGE).tag \
+    $(DX_DOCDIR)/$(DX_PROJECT).tag \
     $(DX_CLEAN_CHI) \
     $(DX_CLEAN_PS) \
     $(DX_CLEAN_PDF) \

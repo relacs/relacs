@@ -13,9 +13,9 @@ pkgincludedir = $(includedir)/relacs
 pkgdatadir=$(datadir)/relacs
 docdir = $(datarootdir)/doc/relacs
 
-DX_PACKAGE = datafile
-DX_INSTALL_SUBDIR = /$(DX_PACKAGE)
-DX_CFG = doc/$(DX_PACKAGE).dox
+DX_PROJECT = datafile
+DX_CONFIG = doc/$(DX_PROJECT).dox
+DX_INSTALL_SUBDIR = /$(DX_PROJECT)
 
 if RELACS_TOP_BUILD
 DX_TAGFILES="../numerics/doc/numerics.tag=../numerics ../options/doc/options.tag=../options"
