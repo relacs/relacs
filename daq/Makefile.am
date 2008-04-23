@@ -29,6 +29,9 @@ if DX_COND_doc
 
 doc: doxygen-doc
 all-local: doxygen-runall
+html-local: doxygen-run
+ps-local: doxygen-ps
+pdf-local: doxygen-pdf
 clean-local: doxygen-clean
 install-data-local: doxygen-install
 uninstall-local: doxygen-uninstall

@@ -57,6 +57,9 @@ doclinks:
 
 doc: doxygen-doc doclinks
 all-local: doxygen-runall doclinks
+html-local: doxygen-run
+ps-local: doxygen-ps
+pdf-local: doxygen-pdf
 clean-local: doxygen-clean
 install-data-local: doxygen-install
 uninstall-local: doxygen-uninstall

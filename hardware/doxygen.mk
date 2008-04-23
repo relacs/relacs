@@ -14,9 +14,6 @@ if DX_COND_html
 
 DX_CLEAN_HTML = $(DX_DOCDIR)/html
 
-DX_INSTALL_HTML_GOAL = doxygen-install-html
-DX_UNINSTALL_HTML_GOAL = doxygen-uninstall-html
-
 doxygen-install-html:
 	test -z "$(DX_DOCDIR)/html" || $(MKDIR_P) "$(DESTDIR)$(htmldir)$(DX_INSTALL_SUBDIR)"
 	$(INSTALL_DATA) $(DX_DOCDIR)/html/*.* "$(DESTDIR)$(htmldir)$(DX_INSTALL_SUBDIR)"
@@ -85,10 +82,6 @@ if DX_COND_ps
 
 DX_CLEAN_PS = $(DX_DOCDIR)/$(DX_PROJECT).ps
 
-DX_PS_GOAL = doxygen-ps
-DX_INSTALL_PS_GOAL = doxygen-install-ps
-DX_UNINSTALL_PS_GOAL = doxygen-uninstall-ps
-
 doxygen-ps: $(DX_DOCDIR)/$(DX_PROJECT).ps
 
 $(DX_DOCDIR)/$(DX_PROJECT).ps: $(DX_DOCDIR)/$(DX_PROJECT).tag
@@ -122,10 +115,6 @@ endif DX_COND_ps
 if DX_COND_pdf
 
 DX_CLEAN_PDF = $(DX_DOCDIR)/$(DX_PROJECT).pdf
-
-DX_PDF_GOAL = doxygen-pdf
-DX_INSTALL_PDF_GOAL = doxygen-install-pdf
-DX_UNINSTALL_PDF_GOAL = doxygen-uninstall-pdf
 
 doxygen-pdf: $(DX_DOCDIR)/$(DX_PROJECT).pdf
 
@@ -163,10 +152,6 @@ DX_CLEAN_LATEX = $(DX_DOCDIR)/latex
 
 # There is no extra dvi target!
 #
-#DX_DVI_GOAL = doxygen-dvi
-#DX_INSTALL_DVI_GOAL = doxygen-install-dvi
-#DX_UNINSTALL_DVI_GOAL = doxygen-uninstall-dvi
-#
 #doxygen-dvi: $(DX_DOCDIR)/$(DX_PROJECT).dvi
 #
 #$(DX_DOCDIR)/$(DX_PROJECT).dvi: $(DX_DOCDIR)/$(DX_PROJECT).tag
@@ -186,17 +171,17 @@ endif DX_COND_latex
 ## ------------------------------------------------- ##
 
 .PHONY: doxygen-run doxygen-runall doxygen-doc \
-        $(DX_INSTALL_HTML_GOAL) $(DX_UNINSTALL_HTML_GOAL) \
-        $(DX_DVI_GOAL) $(DX_INSTALL_DVI_GOAL) $(DX_UNINSTALL_DVI_GOAL) \
-        $(DX_PS_GOAL) $(DX_INSTALL_PS_GOAL) $(DX_UNINSTALL_PS_GOAL) \
-        $(DX_PDF_GOAL) $(DX_INSTALL_PDF_GOAL) $(DX_UNINSTALL_PDF_GOAL) \
+        doxygen-install-html doxygen-uninstall-html \
+        doxygen-dvi doxygen-install-dvi doxygen-uninstall-dvi \
+        doxygen-ps doxygen-install-ps doxygen-uninstall-ps \
+        doxygen-pdf doxygen-install-pdf doxygen-uninstall-pdf \
 	doxygen-install doxygen-uninstall doxygen-clean
 
-.INTERMEDIATE: doxygen-run $(DX_PS_GOAL) $(DX_PDF_GOAL)
+.INTERMEDIATE: doxygen-run doxygen-ps doxygen-pdf
 
 doxygen-run: $(DX_DOCDIR)/$(DX_PROJECT).tag
 
-doxygen-runall: doxygen-run $(DX_DVI_GOAL) $(DX_PS_GOAL) $(DX_PDF_GOAL)
+doxygen-runall: doxygen-run doxygen-dvi doxygen-ps doxygen-pdf
 
 doxygen-doc: doxygen-clean doxygen-runall
 
@@ -218,7 +203,7 @@ DX_INSTALL_DIRS = \
     $(DX_INSTALL_RTF) \
     $(DX_INSTALL_XML)
 
-doxygen-install: doxygen-run $(DX_INSTALL_HTML_GOAL) $(DX_INSTALL_DVI_GOAL) $(DX_INSTALL_PS_GOAL) $(DX_INSTALL_PDF_GOAL)
+doxygen-install: doxygen-run doxygen-install-html doxygen-install-dvi doxygen-install-ps doxygen-install-pdf
 	test -z "$(pkgdatadir)" || $(MKDIR_P) "$(DESTDIR)$(pkgdatadir)"
 	$(INSTALL_DATA) "$(DX_DOCDIR)/$(DX_PROJECT).tag" "$(DESTDIR)$(pkgdatadir)/$(DX_PROJECT).tag"
 	test -z "$(docdir)" || $(MKDIR_P) "$(DESTDIR)$(docdir)"
@@ -233,7 +218,7 @@ doxygen-install: doxygen-run $(DX_INSTALL_HTML_GOAL) $(DX_INSTALL_DVI_GOAL) $(DX
 	  $(INSTALL_DATA) $(DX_DOCDIR)/$$dir/*.* "$(DESTDIR)$(docdir)/$${dir}$(DX_INSTALL_SUBDIR)"; \
 	done
 
-doxygen-uninstall: $(DX_UNINSTALL_HTML_GOAL) $(DX_UNINSTALL_DVI_GOAL) $(DX_UNINSTALL_PS_GOAL) $(DX_UNINSTALL_PDF_GOAL)
+doxygen-uninstall: doxygen-uninstall-html doxygen-uninstall-dvi doxygen-uninstall-ps doxygen-uninstall-pdf
 	rm -f "$(DESTDIR)$(pkgdatadir)/$(DX_PROJECT).tag"; \
 	@list='$(DX_INSTALL_FILES)'; for p in $$list; do \
 	  echo " rm -f '$(DESTDIR)$(docdir)/$$p'"; \

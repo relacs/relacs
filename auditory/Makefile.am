@@ -34,6 +34,9 @@ doc: doxygen-doc
 help: help-make
 
 all-local: doxygen-runall help-run
+html-local: doxygen-run
+ps-local: doxygen-ps
+pdf-local: doxygen-pdf
 clean-local: doxygen-clean help-clean
 install-data-local: doxygen-install help-install
 uninstall-local: doxygen-uninstall help-uninstall
