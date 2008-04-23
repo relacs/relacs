@@ -1,0 +1,6 @@
+#! /bin/bash
+
+SVGFILE="$1"
+
+sed -n -e '/\/home\//!p' "$SVGFILE" > tmp.svg
+mv tmp.svg "$SVGFILE"
