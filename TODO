@@ -1,6 +1,3 @@
-Autotools and documentation:
-- take website and logo out of relacs/trunk
-
 Autotools:
 - rename mplot library
 - rename config classes and library
