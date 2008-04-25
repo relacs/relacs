@@ -6,8 +6,7 @@ Autotools:
 - include of local headers also with <relacs/foo.h>?
 - there are unique plugin names (librelacsauditory...), unique help files
   (Auditory-...), but what about the header files of the plugins?
-- update copyright in gpl header in each file to 2008! Write a script for this.
-- check file reference in gpl header - strip ../include/relacs
+- add RELACS_ to double include prevention
 - names of relacs plugins without "librelacs" prefix?
 - add relacs library tests to the libraries!
 - no static libraries (at least for the plugins)!

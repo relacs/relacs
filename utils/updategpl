@@ -1,11 +1,8 @@
-#!/usr/bin/perl
-
-# replace.pl
-# replaces strings in files
+#!/bin/bash
 
 ###############################################################################
 #
-# replace.pl
+# updategpl
 # 
 #
 # RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -26,20 +23,14 @@
 #
 ###############################################################################
 
-while ( $sourcefile = shift @ARGV ) {
+FILE="$1"
 
-  $destfile = $sourcefile . ".tmp";
+! [ -f "$FILE" ] && exit 1
 
-  open( SF, "<$sourcefile" ) or die "can't open file\n";
-  open( DF, ">$destfile" ) or die "can't open file\n";
-  while ( $line = <SF> ) {
-    $line =~ s/FileWrite/SaveFiles/g;
-    $line =~ s/filewrite.h/savefiles.h/g;
-    print DF $line;
-  }
-  close DF;
-  close SF;
+sed -e "1,20s/2002-2007 Jan Benda/2002-2008 Jan Benda/" "$FILE" > tmp.txt
 
-  `mv $destfile $sourcefile`;
-}
+mv tmp.txt "$FILE"
 
+# for i in $(find -name '*.h'); do utils/updategpl $i; done
+# for i in $(find -name '*.cc'); do utils/updategpl $i; done
+# and scripts  in utils
