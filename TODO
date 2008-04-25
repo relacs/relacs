@@ -28,6 +28,7 @@ Autotools:
 Documentation:
 - Update installation and Makefile instructions to autotools
 - You may want to use: ./configure --htmldir=DOCDIR/html
+- Mention that all m4/ , *.mk , and Doxyfile files are identical and should remain so
 - Hint to 
   Integrating Qt's Meta object compiler (moc) with GNU Automake
     http://blog.hartwork.org/?p=133
