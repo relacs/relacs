@@ -3,17 +3,19 @@ SUBDIRS = \
 
 EXTRA_DIST = \
     doxygen.mk \
-    \
-    doc/relacs.dox
+    doc/Doxyfile
 
 DX_PROJECT = relacs
-DX_CONFIG = doc/$(DX_PROJECT).dox
 DX_INSTALL_SUBDIR = /$(DX_PROJECT)
+DX_DEPENDS = Makefile.am
+DX_SETTINGS = PROJECT_NAME='"Relacs Core Library"'
+DX_SETTINGS += INPUT='src include/relacs doc'
+DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'
 
 if RELACS_TOP_BUILD
-DX_TAGFILES="../config/doc/config.tag=../config ../daq/doc/daq.tag=../daq ../datafile/doc/datafile.tag=../datafile ../mplot/doc/mplot.tag=../mplot ../numerics/doc/numerics.tag=../numerics ../options/doc/options.tag=../options ../widgets/doc/widgets.tag=../widgets"
+DX_SETTINGS += TAGFILES='../config/doc/config.tag=../config ../daq/doc/daq.tag=../daq ../datafile/doc/datafile.tag=../datafile ../mplot/doc/mplot.tag=../mplot ../numerics/doc/numerics.tag=../numerics ../options/doc/options.tag=../options ../widgets/doc/widgets.tag=../widgets'
 else
-DX_TAGFILES="$(DESTDIR)$(docdir)/config.tag=../config $(DESTDIR)$(docdir)/daq.tag=../daq $(DESTDIR)$(docdir)/datafile.tag=../datafile $(DESTDIR)$(docdir)/mplot.tag=../mplot $(DESTDIR)$(docdir)/numerics.tag=../numerics $(DESTDIR)$(docdir)/options.tag=../options $(DESTDIR)$(docdir)/widgets.tag=../widgets"
+DX_SETTINGS += TAGFILES='$(DESTDIR)$(docdir)/config.tag=../config $(DESTDIR)$(docdir)/daq.tag=../daq $(DESTDIR)$(docdir)/datafile.tag=../datafile $(DESTDIR)$(docdir)/mplot.tag=../mplot $(DESTDIR)$(docdir)/numerics.tag=../numerics $(DESTDIR)$(docdir)/options.tag=../options $(DESTDIR)$(docdir)/widgets.tag=../widgets'
 endif
 
 include doxygen.mk

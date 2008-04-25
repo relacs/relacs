@@ -1,8 +1,4 @@
 Autotools and documentation:
-- split dox file into a common and an individual part
-  or overwrite all individual parameters by the environment or another file
-- exclude moc-* files from doxygen search pattern
-- make doclinks target depend on something
 - take website and logo out of relacs/trunk
 
 Autotools:

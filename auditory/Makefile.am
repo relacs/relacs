@@ -6,7 +6,7 @@ SUBDIRS = \
 EXTRA_DIST = \
     doxygen.mk \
     relacshelp.mk \
-    doc/auditory.dox \
+    doc/Doxyfile \
     doc/transductionchain.jpg
 
 
@@ -17,10 +17,12 @@ docdir = $(datarootdir)/doc/relacs
 
 PLUGINSET = Auditory
 DX_PROJECT = auditory
-DX_CONFIG = doc/$(DX_PROJECT).dox
 DX_INSTALL_SUBDIR = /$(DX_PROJECT)
-
-DX_TAGFILES="../doc/relacsall.tag=.. ../common/doc/common.tag=../common"
+DX_DEPENDS = Makefile.am
+DX_SETTINGS = PROJECT_NAME='"Relacs Plugins for Auditory Electrophysiology"'
+DX_SETTINGS += INPUT='include/relacs base include sascha speaker'
+DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'
+DX_SETTINGS += TAGFILES='../doc/relacsall.tag=.. ../common/doc/common.tag=../common'
 
 include doxygen.mk
 

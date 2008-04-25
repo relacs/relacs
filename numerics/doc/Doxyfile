@@ -17,7 +17,7 @@
 # The PROJECT_NAME tag is a single word (or a sequence of words surrounded 
 # by quotes) that should identify the project.
 
-PROJECT_NAME           = @PACKAGE_NAME@
+PROJECT_NAME           =
 
 # The PROJECT_NUMBER tag can be used to enter a project or revision number. 
 # This could be handy for archiving the generated documentation or 
@@ -228,7 +228,7 @@ SUBGROUPING            = YES
 # Private class members and static file members will be hidden unless 
 # the EXTRACT_PRIVATE and EXTRACT_STATIC tags are set to YES
 
-EXTRACT_ALL            = NO
+EXTRACT_ALL            = YES
 
 # If the EXTRACT_PRIVATE tag is set to YES all private members of a class 
 # will be included in the documentation.
@@ -266,7 +266,7 @@ HIDE_UNDOC_MEMBERS     = NO
 # If set to NO (the default) these classes will be included in the various 
 # overviews. This option has no effect if EXTRACT_ALL is enabled.
 
-HIDE_UNDOC_CLASSES     = YES
+HIDE_UNDOC_CLASSES     = NO
 
 # If the HIDE_FRIEND_COMPOUNDS tag is set to YES, Doxygen will hide all 
 # friend (class|struct|union) declarations. 
@@ -459,8 +459,7 @@ WARN_LOGFILE           =
 # directories like "/usr/src/myproject". Separate the files or directories 
 # with spaces.
 
-INPUT                  = @DOXYGEN_INPUT@ \
-                         @abs_builddir@
+INPUT                  = 
 
 # If the value of the INPUT tag contains directories, you can use the 
 # FILE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp 
@@ -483,16 +482,7 @@ RECURSIVE              = NO
 # excluded from the INPUT source files. This way you can easily exclude a 
 # subdirectory from a directory tree whose root is specified with the INPUT tag.
 
-EXCLUDE                = repros/base/unused \
-                         repros/jan/unused \
-                         repros/christian/unused \
-                         repros/tim/unused \
-                         repros/roland/unused \
-                         widgets/src/optwidgetbase.h \
-                         widgets/src/optdialogbutton.h \
-                         doc/html \
-                         doc/latex \
-                         doc/man
+EXCLUDE                = 
 
 # The EXCLUDE_SYMLINKS tag can be used select whether or not files or 
 # directories that are symbolic links (a Unix filesystem feature) are excluded 
@@ -506,7 +496,7 @@ EXCLUDE_SYMLINKS       = NO
 # against the file with absolute path, so to exclude all test directories 
 # for example use the pattern */test/*
 
-EXCLUDE_PATTERNS       = old*
+EXCLUDE_PATTERNS       = moc-* old*
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or 
 # directories that contain example code fragments that are included (see 
@@ -519,7 +509,9 @@ EXAMPLE_PATH           = examples
 # and *.h) to filter out the source-files in the directories. If left 
 # blank all files are included.
 
-EXAMPLE_PATTERNS       = 
+EXAMPLE_PATTERNS       = *.h \
+                         *.cc \
+                         *.doc
 
 # If the EXAMPLE_RECURSIVE tag is set to YES then subdirectories will be 
 # searched for input files to be used with the \include or \dontinclude 
@@ -532,7 +524,7 @@ EXAMPLE_RECURSIVE      = NO
 # directories that contain image that are included in the documentation (see 
 # the \image command).
 
-IMAGE_PATH             = @DOXYGEN_IMAGEPATHES@
+IMAGE_PATH             = 
 
 # The INPUT_FILTER tag can be used to specify a program that doxygen should 
 # invoke to filter for each input file. Doxygen will invoke the filter program 
@@ -1024,7 +1016,7 @@ INCLUDE_FILE_PATTERNS  =
 # undefined via #undef or recursively expanded use the := operator 
 # instead of the = operator.
 
-PREDEFINED             = @DOXYGEN_PREDEF@
+PREDEFINED             = 
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then 
 # this tag can be used to specify a list of macro names that should be expanded. 
@@ -1065,7 +1057,7 @@ TAGFILES               =
 # When a file name is specified after GENERATE_TAGFILE, doxygen will create 
 # a tag file that is based on the input files it reads.
 
-GENERATE_TAGFILE       = doc/relacsall.tag
+GENERATE_TAGFILE       = 
 
 # If the ALLEXTERNALS tag is set to YES all external classes will be listed 
 # in the class index. If set to NO only the inherited external classes 

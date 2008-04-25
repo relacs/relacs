@@ -8,7 +8,7 @@ SUBDIRS = \
 EXTRA_DIST = \
     doxygen.mk \
     relacshelp.mk \
-    doc/common.dox
+    doc/Doxyfile
 
 
 pkglibdir = $(libdir)/relacs
@@ -18,10 +18,12 @@ docdir = $(datarootdir)/doc/relacs
 
 PLUGINSET = Common
 DX_PROJECT = common
-DX_CONFIG = doc/$(DX_PROJECT).dox
 DX_INSTALL_SUBDIR = /$(DX_PROJECT)
-
-DX_TAGFILES="../doc/relacsall.tag=.."
+DX_DEPENDS = Makefile.am
+DX_SETTINGS = PROJECT_NAME='"Common Relacs Plugins"'
+DX_SETTINGS += INPUT='include/relacs base controls detectors filter include models'
+DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'
+DX_SETTINGS += TAGFILES='../doc/relacsall.tag=..'
 
 include doxygen.mk
 

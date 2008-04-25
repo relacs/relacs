@@ -26,7 +26,7 @@ EXTRA_DIST = \
     \
     doc/relacs.1 \
     \
-    doc/relacsall.dox \
+    doc/Doxyfile \
     doc/c++.doc \
     doc/macros.doc \
     doc/naming.doc \
@@ -41,12 +41,19 @@ EXTRA_DIST = \
     doc/relacs1.png \
     doc/relacs2.png
 
+DX_DEPENDS = Makefile.am
+DX_SETTINGS = PROJECT_NAME='Relacs'
+DX_SETTINGS += INPUT='$(DOXYGEN_INPUT) $(abs_builddir)'
+DX_SETTINGS += IMAGE_PATHES='$(DOXYGEN_IMAGEPATHES)'
+DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'
 
 include doxygen.mk
 
 if DX_COND_doc
 
-doclinks:
+.PHONY: doclinks
+
+doc/doclinksstamp:
 	@echo "cd $(builddir)/doc/html"; \
 	cd $(builddir)/doc/html; \
 	LND="$(LN_S)"; test "$$LND" != "cp -p" || LND="cp -r -p"; \
@@ -54,6 +61,9 @@ doclinks:
 	  echo "test -r $$dir || $$LND ../../$$dir/doc/html $$dir"; \
 	  test -r $$dir || $$LND ../../$$dir/doc/html $$dir; \
 	done
+	touch doc/doclinksstamp
+
+doclinks: doc/doclinksstamp
 
 doc: doxygen-doc doclinks
 all-local: doxygen-runall doclinks

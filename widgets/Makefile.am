@@ -19,13 +19,16 @@ pkgdatadir=$(datadir)/relacs
 docdir = $(datarootdir)/doc/relacs
 
 DX_PROJECT = widgets
-DX_CONFIG = doc/$(DX_PROJECT).dox
 DX_INSTALL_SUBDIR = /$(DX_PROJECT)
+DX_DEPENDS = Makefile.am
+DX_SETTINGS = PROJECT_NAME='"Relacs Widgets Library"'
+DX_SETTINGS += INPUT='src include/relacs doc'
+DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'
 
 if RELACS_TOP_BUILD
-DX_TAGFILES="../options/doc/options.tag=../options"
+DX_SETTINGS += TAGFILES='../options/doc/options.tag=../options'
 else
-DX_TAGFILES="$(DESTDIR)$(docdir)/options.tag=../options"
+DX_SETTINGS += TAGFILES='$(DESTDIR)$(docdir)/options.tag=../options'
 endif
 
 include doxygen.mk

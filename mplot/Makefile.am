@@ -7,8 +7,7 @@ EXTRA_DIST = \
     m4/relacs_qt3.m4 \
     doxygen.mk \
     moc3.mk \
-    \
-    doc/mplot.dox
+    doc/Doxyfile
 
 
 pkglibdir = $(libdir)/relacs
@@ -17,13 +16,16 @@ pkgdatadir=$(datadir)/relacs
 docdir = $(datarootdir)/doc/relacs
 
 DX_PROJECT = mplot
-DX_CONFIG = doc/$(DX_PROJECT).dox
 DX_INSTALL_SUBDIR = /$(DX_PROJECT)
+DX_DEPENDS = Makefile.am
+DX_SETTINGS = PROJECT_NAME='"Relacs MPlot Library"'
+DX_SETTINGS += INPUT='src include/relacs doc'
+DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'
 
 if RELACS_TOP_BUILD
-DX_TAGFILES="../numerics/doc/numerics.tag=../numerics ../daq/doc/daq.tag=../daq ../options/doc/options.tag=../options"
+DX_SETTINGS += TAGFILES='../numerics/doc/numerics.tag=../numerics ../daq/doc/daq.tag=../daq ../options/doc/options.tag=../options'
 else
-DX_TAGFILES="$(DESTDIR)$(docdir)/numerics.tag=../numerics $(DESTDIR)$(docdir)/daq.tag=../daq $(DESTDIR)$(docdir)/options.tag=../options"
+DX_SETTINGS += TAGFILES='$(DESTDIR)$(docdir)/numerics.tag=../numerics $(DESTDIR)$(docdir)/daq.tag=../daq $(DESTDIR)$(docdir)/options.tag=../options'
 endif
 
 include doxygen.mk

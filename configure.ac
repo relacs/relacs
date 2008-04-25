@@ -95,30 +95,6 @@ AC_DEFINE([HAVE_LIBRELACSDAQ], [1],
 ## Doxygen
 #################################################
 
-DOXYGEN_INPUT="\
-config/src \
-config/include/relacs \
-daq/src \
-daq/include/relacs \
-datafile/src \
-datafile/include/relacs \
-numerics/src \
-numerics/include/relacs \
-mplot/src \
-mplot/include/relacs \
-options/src \
-options/include/relacs \
-widgets/src \
-widgets/include/relacs \
-\
-relacs/src \
-relacs/include/relacs \
-src \
-\
-doc \
-utils \
-"
-
 DOXYGEN_EXTERNAL="\
 config \
 daq \
@@ -133,9 +109,16 @@ common \
 auditory \
 "
 
-DOXYGEN_TAGFILES=""
-for dir in $DOXYGEN_EXTERNAL; do
-	DOXYGEN_TAGFILES="$DOXYGEN_TAGFILES ${dir}/doc/${dir}.tag=${dir}"
+# assemble input pathes from the Makefile.am of the DOXYGEN_EXTERNAL list:
+DOXYGEN_INPUT="doc src utils"
+for FILE in $(find -name 'doxygen.mk'); do
+	FILE=${FILE#./}
+	INPUTLINE=$(grep 'DX_SETTINGS += INPUT' $(dirname $FILE)/Makefile.am)
+	INPUTLIST=${INPUTLINE#DX_SETTINGS += INPUT=\'}
+	INPUTLIST=${INPUTLIST%\'}
+	for INPUT in $INPUTLIST; do
+	  DOXYGEN_INPUT="$DOXYGEN_INPUT $(dirname $FILE)/$INPUT"
+	done
 done
 
 DOXYGEN_IMAGEPATHES="doc"
@@ -143,9 +126,8 @@ for dir in $DOXYGEN_EXTERNAL; do
 	DOXYGEN_IMAGEPATHES="$DOXYGEN_IMAGEPATHES ${dir}/doc"
 done
 
-AC_SUBST(DOXYGEN_INPUT)
 AC_SUBST(DOXYGEN_EXTERNAL)
-AC_SUBST(DOXYGEN_TAGFILES)
+AC_SUBST(DOXYGEN_INPUT)
 AC_SUBST(DOXYGEN_IMAGEPATHES)
 
 DX_HTML_FEATURE(ON)
@@ -156,7 +138,7 @@ DX_RTF_FEATURE(OFF)
 DX_XML_FEATURE(OFF)
 DX_PDF_FEATURE(OFF)
 DX_PS_FEATURE(OFF)
-DX_INIT_DOXYGEN( relacsall, doc/relacsall.dox, doc )
+DX_INIT_DOXYGEN( relacsall, doc/Doxyfile, doc )
 
 
 # All relacs libraries, the program, and the standard plugins
@@ -187,7 +169,6 @@ AC_CONFIG_FILES([
     auditory/sascha/Makefile
     auditory/speaker/Makefile
     auditory/Makefile
-    auditory/doc/auditory.dox
 
     common/base/Makefile
     common/controls/Makefile
@@ -195,45 +176,36 @@ AC_CONFIG_FILES([
     common/filter/Makefile
     common/models/Makefile
     common/Makefile
-    common/doc/common.dox
 
     config/src/Makefile
     config/Makefile
-    config/doc/config.dox
     config/configure.ac
 
     daq/src/Makefile
     daq/Makefile
-    daq/doc/daq.dox
     daq/configure.ac
 
     datafile/src/Makefile
     datafile/Makefile
-    datafile/doc/datafile.dox
     datafile/configure.ac
 
     hardware/src/Makefile
     hardware/Makefile
-    hardware/doc/hardware.dox
 
     mplot/src/Makefile
     mplot/Makefile
-    mplot/doc/mplot.dox
     mplot/configure.ac
 
     numerics/src/Makefile
     numerics/Makefile
-    numerics/doc/numerics.dox
     numerics/configure.ac
 
     options/src/Makefile
     options/Makefile
-    options/doc/options.dox
     options/configure.ac
 
     relacs/Makefile
     relacs/src/Makefile
-    relacs/doc/relacs.dox
 
     src/Makefile
 
@@ -241,13 +213,11 @@ AC_CONFIG_FILES([
 
     widgets/src/Makefile
     widgets/Makefile
-    widgets/doc/widgets.dox
     widgets/configure.ac
 
     Makefile
 
     doc/relacsall.doc
-    doc/relacsall.dox
 
     relacslocal.cfg
     src/relacs.cfg

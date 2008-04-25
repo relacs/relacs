@@ -59,16 +59,17 @@
 #     doxygen-doc: Force to generate all doxygen documentation 
 #                  (doxygen-runall).
 #
-#     doxygen-run: Run doxygen if the doxygen configuration file or 
-#                  $(pkginclude_HEADERS) changed. This will generate
-#                  some of the documentation (HTML, CHM, CHI, MAN, RTF,
-#                  XML) but will not do the post processing required
-#                  for the rest of it (PS, PDF, and some MAN).
+#     doxygen-run: Run doxygen if the doxygen configuration file,
+#                  $(pkginclude_HEADERS), or $(DX_DEPENDS) changed. 
+#                  This will generate some of the documentation
+#                  (HTML, CHM, CHI, MAN, RTF, XML) but will not do
+#                  the post processing required for the rest of it 
+#                  (PS, PDF, and some MAN).
 #
-#     doxygen-runall: Run doxygen if the doxygen configuration file or 
-#                  $(pkginclude_HEADERS) changed. This will generate
-#                  the complete documentation (HTML, CHM, CHI, MAN, RTF,
-#                  XML, PS, PDF, and some MAN).
+#     doxygen-runall: Run doxygen if the doxygen configuration file,
+#                  $(pkginclude_HEADERS), or $(DX_DEPENDS) changed.
+#                  This will generate the complete documentation
+#                  (HTML, CHM, CHI, MAN, RTF, XML, PS, PDF, and some MAN).
 #
 #     doxygen-man: Rename some doxygen generated man pages.
 #
@@ -88,8 +89,10 @@
 #     # a subdirectory for the installed documentation:
 #     DX_INSTALL_SUBDIR =
 #
-#     # a list of .tag files to be passed to the doxygen variable TAGFILES:
-#     DX_TAGFILES=""
+#     # a list of settings for overwriting the settings of the DOXYFILE
+#     # and the ones of the DX_INIT_DOXYGEN macros.
+#     # for example: DX_SETTINGS = PROJECT_NAME='My Project' INPUT=mysrc
+#     DX_SETTINGS = 
 #
 #     include doxygen.mk
 #
@@ -309,13 +312,14 @@
 #     
 #     doxygen-doc: doxygen-clean doxygen-runall
 #     
-#     $(DX_DOCDIR)/$(DX_PROJECT).tag: $(DX_CONFIG).in $(pkginclude_HEADERS)
+#     $(DX_DOCDIR)/$(DX_PROJECT).tag: $(DX_CONFIG) $(pkginclude_HEADERS) $(DX_DEPENDS)
 #     	cd $(srcdir); \
-#     	{ cat $(abs_builddir)/$(DX_CONFIG); \
+#     	{ cat $(DX_CONFIG); \
 #     	  for DX_ENV_LINE in $(DX_ENV); do echo $$DX_ENV_LINE; done; \
-#     	  echo "GENERATE_TAGFILE=$(abs_builddir)/$(DX_DOCDIR)/$(DX_PROJECT).tag"; \
-#     	  echo "TAGFILES=$(DX_TAGFILES)"; \
-#     	  echo "OUTPUT_DIRECTORY=$(abs_builddir)/$(DX_DOCDIR)"; } \
+#	  echo "GENERATE_TAGFILE=$(abs_builddir)/$(DX_DOCDIR)/$(DX_PROJECT).tag"; \
+#	  echo "OUTPUT_DIRECTORY=$(abs_builddir)/$(DX_DOCDIR)"; \
+#	  for DX_ENV_LINE in $(DX_SETTINGS); do echo $$DX_ENV_LINE; done; \
+#        } \
 #     	| $(DX_DOXYGEN) -
 #     
 #     DX_INSTALL_FILES = \
@@ -533,10 +537,8 @@ AC_SUBST([DX_CONFIG], [ifelse([$2], [], Doxyfile, [$2])])
 AC_SUBST([DX_DOCDIR], [ifelse([$3], [], doxygen-doc, [$3])])
 
 # Environment variables used inside doxygen.cfg:
-#DX_ENV_APPEND(SRCDIR, $srcdir)
-#DX_ENV_APPEND(PROJECT_NAME, $DX_PROJECT)
-#DX_ENV_APPEND(PROJECT_VERSION, $PACKAGE_VERSION)
-#DX_ENV_APPEND(OUTPUT_DIRECTORY, $DX_DOCDIR)
+DX_ENV_APPEND(PROJECT_NAME, $DX_PROJECT)
+DX_ENV_APPEND(PROJECT_VERSION, $PACKAGE_VERSION)
 
 # Doxygen itself:
 DX_ARG_ABLE(doc, [generate any doxygen documentation],
@@ -662,16 +664,4 @@ if test x$DX_FLAG_doc = x1; then
   DX_SUMMARY="$DX_SUMMARY )"
 fi
 
-#For debugging:
-#echo DX_FLAG_doc=$DX_FLAG_doc
-#echo DX_FLAG_dot=$DX_FLAG_dot
-#echo DX_FLAG_man=$DX_FLAG_man
-#echo DX_FLAG_html=$DX_FLAG_html
-#echo DX_FLAG_chm=$DX_FLAG_chm
-#echo DX_FLAG_chi=$DX_FLAG_chi
-#echo DX_FLAG_rtf=$DX_FLAG_rtf
-#echo DX_FLAG_xml=$DX_FLAG_xml
-#echo DX_FLAG_pdf=$DX_FLAG_pdf
-#echo DX_FLAG_ps=$DX_FLAG_ps
-#echo DX_ENV=$DX_ENV
 ])

@@ -6,8 +6,7 @@ EXTRA_DIST = \
     m4/relacs_qt3.m4 \
     doxygen.mk \
     moc3.mk \
-    \
-    doc/config.dox
+    doc/Doxyfile
 
 
 pkglibdir = $(libdir)/relacs
@@ -16,13 +15,16 @@ pkgdatadir=$(datadir)/relacs
 docdir = $(datarootdir)/doc/relacs
 
 DX_PROJECT = config
-DX_CONFIG = doc/$(DX_PROJECT).dox
 DX_INSTALL_SUBDIR = /$(DX_PROJECT)
+DX_DEPENDS = Makefile.am
+DX_SETTINGS = PROJECT_NAME='"Relacs Config Library"'
+DX_SETTINGS += INPUT='src include/relacs doc'
+DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'
 
 if RELACS_TOP_BUILD
-DX_TAGFILES="../options/doc/options.tag=../options ../widgets/doc/widgets.tag=../widgets"
+DX_SETTINGS += TAGFILES='../options/doc/options.tag=../options ../widgets/doc/widgets.tag=../widgets'
 else
-DX_TAGFILES="$(DESTDIR)$(docdir)/options.tag=../options $(DESTDIR)$(docdir)/widgets.tag=../widgets"
+DX_SETTINGS += TAGFILES='$(DESTDIR)$(docdir)/options.tag=../options $(DESTDIR)$(docdir)/widgets.tag=../widgets'
 endif
 
 include doxygen.mk

@@ -5,7 +5,7 @@ EXTRA_DIST = \
     m4/relacs_comedi.m4 \
     doxygen.mk \
     relacshelp.mk \
-    doc/hardware.dox
+    doc/Doxyfile
 
 
 pkglibdir = $(libdir)/relacs
@@ -15,10 +15,12 @@ docdir = $(datarootdir)/doc/relacs
 
 PLUGINSET = Hardware
 DX_PROJECT = hardware
-DX_CONFIG = doc/$(DX_PROJECT).dox
 DX_INSTALL_SUBDIR = /$(DX_PROJECT)
-
-DX_TAGFILES="../doc/relacsall.tag=.."
+DX_DEPENDS = Makefile.am
+DX_SETTINGS = PROJECT_NAME='"Relacs Plugins for Accessing Hardware"'
+DX_SETTINGS += INPUT='src include/relacs doc'
+DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'
+DX_SETTINGS += TAGFILES='../doc/relacsall.tag=..'
 
 include doxygen.mk
 

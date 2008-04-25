@@ -185,13 +185,14 @@ doxygen-runall: doxygen-run doxygen-dvi doxygen-ps doxygen-pdf
 
 doxygen-doc: doxygen-clean doxygen-runall
 
-$(DX_DOCDIR)/$(DX_PROJECT).tag: $(DX_CONFIG).in $(pkginclude_HEADERS)
+$(DX_DOCDIR)/$(DX_PROJECT).tag: $(DX_CONFIG) $(pkginclude_HEADERS) $(DX_DEPENDS)
 	cd $(srcdir); \
-	{ cat $(abs_builddir)/$(DX_CONFIG); \
+	{ cat $(DX_CONFIG); \
 	  for DX_ENV_LINE in $(DX_ENV); do echo $$DX_ENV_LINE; done; \
 	  echo "GENERATE_TAGFILE=$(abs_builddir)/$(DX_DOCDIR)/$(DX_PROJECT).tag"; \
-	  echo "TAGFILES=$(DX_TAGFILES)"; \
-	  echo "OUTPUT_DIRECTORY=$(abs_builddir)/$(DX_DOCDIR)"; } \
+	  echo "OUTPUT_DIRECTORY=$(abs_builddir)/$(DX_DOCDIR)"; \
+	  for DX_ENV_LINE in $(DX_SETTINGS); do echo $$DX_ENV_LINE; done; \
+        } \
 	| $(DX_DOXYGEN) -
 
 DX_INSTALL_FILES = \

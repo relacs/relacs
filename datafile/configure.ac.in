@@ -23,7 +23,7 @@ DX_RTF_FEATURE(OFF)
 DX_XML_FEATURE(OFF)
 DX_PDF_FEATURE(OFF)
 DX_PS_FEATURE(OFF)
-DX_INIT_DOXYGEN( $PACKAGE_NAME, doc/datafile.dox, doc )
+DX_INIT_DOXYGEN( $PACKAGE_NAME, doc/Doxyfile, doc )
 
 # This library is compiled on its own and assumes
 # its dependencies to be installed already.
@@ -33,7 +33,6 @@ AM_CONDITIONAL([RELACS_TOP_BUILD], [test 0 = 1])
 AC_CONFIG_FILES([
 Makefile
 src/Makefile
-doc/datafile.dox
 ])
 
 AC_OUTPUT

@@ -5,8 +5,7 @@ EXTRA_DIST = \
     m4/ax_prog_doxygen.m4 \
     m4/relacs_gsl.m4 \
     doxygen.mk \
-    \
-    doc/numerics.dox
+    doc/Doxyfile
 
 
 pkglibdir = $(libdir)/relacs
@@ -15,9 +14,11 @@ pkgdatadir=$(datadir)/relacs
 docdir = $(datarootdir)/doc/relacs
 
 DX_PROJECT = numerics
-DX_CONFIG = doc/$(DX_PROJECT).dox
 DX_INSTALL_SUBDIR = /$(DX_PROJECT)
-DX_TAGFILES=""
+DX_DEPENDS = Makefile.am
+DX_SETTINGS = PROJECT_NAME='"Relacs Numerics Library"'
+DX_SETTINGS += INPUT='src include/relacs doc'
+DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'
 
 include doxygen.mk
 
