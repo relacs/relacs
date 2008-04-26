@@ -111,13 +111,12 @@ auditory \
 
 # assemble input pathes from the Makefile.am of the DOXYGEN_EXTERNAL list:
 DOXYGEN_INPUT="doc src utils"
-for FILE in $(find -name 'doxygen.mk'); do
-	FILE=${FILE#./}
-	INPUTLINE=$(grep 'DX_SETTINGS += INPUT' $(dirname $FILE)/Makefile.am)
+for FILE in $DOXYGEN_EXTERNAL src; do
+	INPUTLINE=$(grep 'DX_SETTINGS += INPUT' $FILE/Makefile.am)
 	INPUTLIST=${INPUTLINE#DX_SETTINGS += INPUT=\'}
 	INPUTLIST=${INPUTLIST%\'}
 	for INPUT in $INPUTLIST; do
-	  DOXYGEN_INPUT="$DOXYGEN_INPUT $(dirname $FILE)/$INPUT"
+	  DOXYGEN_INPUT="$DOXYGEN_INPUT $FILE/$INPUT"
 	done
 done
 

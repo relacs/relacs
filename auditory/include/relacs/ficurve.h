@@ -126,6 +126,7 @@ protected:
   double MaxIntensity;
   double IntensityStep;
   bool UseBestThresh;
+  bool UseBestSaturation;
   RangeLoop::Sequence IntShuffle;
   int IntIncrement;
   int SingleRepeat;

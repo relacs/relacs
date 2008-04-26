@@ -71,6 +71,7 @@ html-local: doxygen-run
 ps-local: doxygen-ps
 pdf-local: doxygen-pdf
 clean-local: doxygen-clean
+	rm -f doc/doclinksstamp
 install-data-local: doxygen-install
 uninstall-local: doxygen-uninstall
 

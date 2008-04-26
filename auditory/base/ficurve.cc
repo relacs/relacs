@@ -42,6 +42,7 @@ FICurve::FICurve( void )
   MaxIntensity = 100.0;
   IntensityStep = 1.0;
   UseBestThresh = false;
+  UseBestSaturation = false;
   IntShuffle = RangeLoop::Up;
   IntIncrement = 0;
   SlopeIntIncrement = 2;
@@ -72,10 +73,11 @@ FICurve::FICurve( void )
 
   // add some parameter as options:
   addLabel( "Intensities" ).setStyle( OptWidget::TabLabel );
-  addNumber( "intmin", "Minimum stimulus intensity", MinIntensity, 0.0, 200.0, 5.0, "dB SPL" );
+  addNumber( "intmin", "Minimum stimulus intensity", MinIntensity, -200.0, 200.0, 5.0, "dB SPL" );
   addNumber( "intmax", "Maximum stimulus intensity", MaxIntensity, 0.0, 200.0, 5.0, "dB SPL" );
   addNumber( "intstep", "Sound intensity step", IntensityStep, 0.0, 200.0, 1.0, "dB SPL" );
   addBoolean( "usebestthresh", "Relative to the cell's best threshold", UseBestThresh );
+  addBoolean( "usebestsat", "Maximum intensity relative to the cell's best saturation", UseBestSaturation );
   addSelection( "intshuffle", "Order of intensities", RangeLoop::sequenceStrings() );
   addInteger( "intincrement", "Initial increment for intensities", IntIncrement, 0, 1000, 1 );
   addInteger( "singlerepeat", "Number of immediate repetitions of a single stimulus", SingleRepeat, 1, 10000, 1 );
@@ -175,6 +177,7 @@ int FICurve::main( void )
   MaxIntensity = number( "intmax" );
   IntensityStep = number( "intstep" );
   UseBestThresh = boolean( "usebestthresh" );
+  UseBestSaturation = boolean( "usebestsat" );
   IntShuffle = RangeLoop::Sequence( index( "intshuffle" ) );
   IntIncrement = integer( "intincrement" );
   SlopeIntIncrement = integer( "slopeintincrement" );
@@ -205,13 +208,16 @@ int FICurve::main( void )
 
   if ( PreWidth > Pause )
     Pause = PreWidth;
-  if ( UseBestThresh ) {
-    double th = metaData().number( "best threshold" );
-    if ( th > 0 ) {
-      MinIntensity += th;
-      MaxIntensity += th;
-    }
-  }
+
+  double ith = 0.0;
+  if ( UseBestThresh )
+    ith = metaData().number( "best threshold" );
+  double isat = ith;
+  if ( UseBestSaturation )
+    isat = metaData().number( "best saturation" );
+  MinIntensity += ith;
+  MaxIntensity += isat;
+
   if ( UseBestFreq ) {
     double cf = metaData().number( "best frequency" );
     if ( cf > 0.0 )

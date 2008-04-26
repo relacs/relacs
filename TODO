@@ -6,10 +6,16 @@ Autotools:
 - include of local headers also with <relacs/foo.h>?
 - there are unique plugin names (librelacsauditory...), unique help files
   (Auditory-...), but what about the header files of the plugins?
+  -> <relacs/auditory/foo.h>
 - add RELACS_ to double include prevention
-- names of relacs plugins without "librelacs" prefix?
+- names of relacs plugins without "librelacs" prefix? 
+  pkglib_LTLIBRARIES = mymodule.la
+  mymodule_la_LDFLAGS = -module
+- add libtool version to libraries:
+  librelacs_la_LDFLAGS = -version-number major[:minor[:revision]]
 - add relacs library tests to the libraries!
-- no static libraries (at least for the plugins)!
+- no static libraries (at least for the plugins)! 
+  see libtool doc: LT_INIT (OPTIONS)
 - AM_INIT_AUTOMAKE( [std-options] ) to check whether all programs and scripts 
   have --help and --version options
 - AM_INIT_AUTOMAKE( [gnu] ) checks for GNU make ?
