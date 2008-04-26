@@ -1,6 +1,6 @@
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT(mplot, @PACKAGE_VERSION@)
+AC_INIT(plot, @PACKAGE_VERSION@)
 AM_INIT_AUTOMAKE([1.10 -Wall foreign subdir-objects dist-zip dist-bzip2])
 
 AC_PROG_CXX
@@ -65,7 +65,7 @@ cat <<SUMMARY
     Create documentation ... ${DX_SUMMARY}
 
 If you can read these lines ./configure finished sucessfully.
-librelacsmplot should build and install smoothly. If it doesn't please
+librelacsplot should build and install smoothly. If it doesn't please
 open a bug describing your problem and configuration at
 http://sourceforge.net/tracker/?group_id=199846&atid=971134
 

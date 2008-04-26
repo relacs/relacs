@@ -1,5 +1,4 @@
 Autotools:
-- rename mplot library
 - rename config classes and library
 - what about config, widgets and configdialog?
 - introduce namespace 'relacs' to all libraries
@@ -28,6 +27,7 @@ Autotools:
 - Add rand55 test and make sure that the dox file PREDEFINED variable gets HAVE_LIBRAND55 define set
 
 Documentation:
+- Not DOCALLEXERNALS
 - Update installation and Makefile instructions to autotools
 - You may want to use: ./configure --htmldir=DOCDIR/html
 - Mention that all m4/ , *.mk , and Doxyfile files are identical and should remain so

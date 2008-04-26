@@ -11,7 +11,7 @@ librelacsauditorycalibspeakers_la_CPPFLAGS = \
     -I$(srcdir)/../../config/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../datafile/include \
-    -I$(srcdir)/../../mplot/include \
+    -I$(srcdir)/../../plot/include \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../../relacs/include \

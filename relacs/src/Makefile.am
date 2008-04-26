@@ -6,7 +6,7 @@ lib_LTLIBRARIES = \
 
 librelacs_la_CPPFLAGS = \
     "-DRELACSVERSION=\"$(RELACSVERSION)\"" \
-    -I$(srcdir)/../../mplot/include \
+    -I$(srcdir)/../../plot/include \
     -I$(srcdir)/../../config/include \
     -I$(srcdir)/../../widgets/include \
     -I$(srcdir)/../../datafile/include \
@@ -20,7 +20,7 @@ librelacs_la_LDFLAGS = \
     $(QT3_LDFLAGS)
 
 librelacs_la_LIBADD = \
-    ../../mplot/src/librelacsmplot.la \
+    ../../plot/src/librelacsplot.la \
     ../../config/src/librelacsconfig.la \
     ../../widgets/src/librelacswidgets.la \
     ../../datafile/src/librelacsdatafile.la \

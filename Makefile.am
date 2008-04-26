@@ -7,7 +7,7 @@ SUBDIRS = \
     datafile \
     widgets \
     config \
-    mplot \
+    plot \
     \
     relacs \
     src \

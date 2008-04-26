@@ -99,7 +99,7 @@ DOXYGEN_EXTERNAL="\
 config \
 daq \
 datafile \
-mplot \
+plot \
 numerics \
 options \
 widgets \
@@ -191,9 +191,9 @@ AC_CONFIG_FILES([
     hardware/src/Makefile
     hardware/Makefile
 
-    mplot/src/Makefile
-    mplot/Makefile
-    mplot/configure.ac
+    plot/src/Makefile
+    plot/Makefile
+    plot/configure.ac
 
     numerics/src/Makefile
     numerics/Makefile

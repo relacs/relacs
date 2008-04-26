@@ -75,7 +75,7 @@ librelacsauditorysession_la_CPPFLAGS = \
     -I$(srcdir)/../../config/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../hardware/include \
-    -I$(srcdir)/../../mplot/include \
+    -I$(srcdir)/../../plot/include \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../../relacs/include \
@@ -130,7 +130,7 @@ librelacsauditoryficurve_la_CPPFLAGS = \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../datafile/include \
     -I$(srcdir)/../../hardware/include \
-    -I$(srcdir)/../../mplot/include \
+    -I$(srcdir)/../../plot/include \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../../relacs/include \
@@ -163,7 +163,7 @@ librelacsauditoryfifield_la_CPPFLAGS = \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../datafile/include \
     -I$(srcdir)/../../hardware/include \
-    -I$(srcdir)/../../mplot/include \
+    -I$(srcdir)/../../plot/include \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../../relacs/include \
@@ -196,7 +196,7 @@ librelacsauditorysinglestimulus_la_CPPFLAGS = \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../datafile/include \
     -I$(srcdir)/../../hardware/include \
-    -I$(srcdir)/../../mplot/include \
+    -I$(srcdir)/../../plot/include \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../../relacs/include \
@@ -229,7 +229,7 @@ librelacsauditoryspikeprecision_la_CPPFLAGS = \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../datafile/include \
     -I$(srcdir)/../../hardware/include \
-    -I$(srcdir)/../../mplot/include \
+    -I$(srcdir)/../../plot/include \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../../relacs/include \
@@ -262,7 +262,7 @@ librelacsauditorysyslatency_la_CPPFLAGS = \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../datafile/include \
     -I$(srcdir)/../../hardware/include \
-    -I$(srcdir)/../../mplot/include \
+    -I$(srcdir)/../../plot/include \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../../relacs/include \

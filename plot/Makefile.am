@@ -15,10 +15,10 @@ pkgincludedir = $(includedir)/relacs
 pkgdatadir=$(datadir)/relacs
 docdir = $(datarootdir)/doc/relacs
 
-DX_PROJECT = mplot
+DX_PROJECT = plot
 DX_INSTALL_SUBDIR = /$(DX_PROJECT)
 DX_DEPENDS = Makefile.am
-DX_SETTINGS = PROJECT_NAME='"Relacs MPlot Library"'
+DX_SETTINGS = PROJECT_NAME='"Relacs Plot Library"'
 DX_SETTINGS += INPUT='src include/relacs doc'
 DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'
 
