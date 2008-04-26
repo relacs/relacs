@@ -3,6 +3,7 @@ Autotools:
 - what about config, widgets and configdialog?
 - introduce namespace 'relacs' to all libraries
 - include of local headers also with <relacs/foo.h>?
+- check libdir in the libraries and plugins
 - there are unique plugin names (librelacsauditory...), unique help files
   (Auditory-...), but what about the header files of the plugins?
   -> <relacs/auditory/foo.h>
@@ -27,7 +28,6 @@ Autotools:
 - Add rand55 test and make sure that the dox file PREDEFINED variable gets HAVE_LIBRAND55 define set
 
 Documentation:
-- Not DOCALLEXERNALS
 - Update installation and Makefile instructions to autotools
 - You may want to use: ./configure --htmldir=DOCDIR/html
 - Mention that all m4/ , *.mk , and Doxyfile files are identical and should remain so

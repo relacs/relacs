@@ -51,7 +51,7 @@ echo ""
 export CPPFLAGS="-I${INSTALLPATH}/include"
 export LDFLAGS="-L${INSTALLPATH}/lib"
 export DISTCHECK_CONFIGURE_FLAGS="$CONFIGUREFLAGS"
-for i in numerics daq options datafile widgets config mplot; do
+for i in numerics daq options datafile widgets config plot; do
     echo "Check $i library:"
     cd $i || exit 1
     find . -name '*.la' -print -delete
