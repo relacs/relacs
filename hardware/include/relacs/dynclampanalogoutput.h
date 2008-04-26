@@ -1,35 +1,11 @@
-/*****************************************************************************
- *
- * dynclampanalogoutput.h
- * Interface for accessing analog output of a daq-board via a dynamic clamp kernel module.
- *
- * RELACS
- * RealTime ELectrophysiological data Acquisition, Control, and Stimulation
- * Copyright (C) 2002-2008 Jan Benda <j.benda@biologie.hu-berlin.de>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- * 
- * RELACS is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- *****************************************************************************/
-
 #ifndef _DYNCLAMPANALOGOUTPUT_H_
 #define _DYNCLAMPANALOGOUTPUT_H_
 
 #include <vector>
 #include <comedilib.h>
-#include <relacs/daqerror.h>
-#include <relacs/analogoutput.h>
-#include <relacs/analoginput.h>
+#include "daqerror.h"
+#include "analogoutput.h"
+#include "analoginput.h"
 #include "comedianalogoutput.h"
 #include "moduledef.h"
 
@@ -151,25 +127,6 @@ public:
 	If an error ocurred in any channel, the corresponding errorflags in the
 	OutList structure are filled and a negative value is returned.  */
   int writeData( OutList &sigs );
-  
-    /*! Write data to a running data acquisition.
-        Returns the number of data values that were popped from the \a trace- 
-	device-buffer (sum over all \a traces).
-	If an error ocurred in any channel, the corresponding errorflags in the
-	OutList structure are filled and a negative value is returned.  
-	For internal usage!
-    */
-  int fillWriteBuffer( void );
-
-    /*! A template function that is used for the implementation
-        of the convertData() function.
-	This function first sorts the output signals by channel number
-	and then multiplexes the signals in a buffer of type \a T
-	after appropriate scaling.
-        Data values exceeding the range of the daq board are truncated.
-        The buffer is attached to the first signal in \a sigs. */
-  template < typename T >
-    int convert( OutList &sigs );
 
     /*! Stop any running ananlog output activity on the device.
         Returns zero on success, otherwise one of the flags 
@@ -214,7 +171,7 @@ public:
         then this function should return the this index.
         You also need to reimplement getAISyncDevice()
         to let the user know about this property. */
-  virtual long index( void );
+  virtual long index( void ) const;
   
     /*! This function is called once after opening the device
         and before any IO operation.
@@ -252,7 +209,7 @@ private:
 
   OutList *Sigs;
 
-  int ErrorState;
+  mutable int ErrorState;
   mutable bool IsRunning;
   bool IsPrepared;
 

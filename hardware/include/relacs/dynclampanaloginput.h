@@ -1,34 +1,10 @@
-/*****************************************************************************
- *
- * dynclampanaloginput.h
- * Interface for accessing analog input of a daq-board via a dynamic clamp kernel module.
- *
- * RELACS
- * RealTime ELectrophysiological data Acquisition, Control, and Stimulation
- * Copyright (C) 2002-2008 Jan Benda <j.benda@biologie.hu-berlin.de>
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
- * 
- * RELACS is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- *****************************************************************************/
-
 #ifndef _DYNCLAMPANALOGINPUT_H_
 #define _DYNCLAMPANALOGINPUT_H_
 
 #include <vector>
 #include <comedilib.h>
-#include <relacs/daqerror.h>
-#include <relacs/analoginput.h>
+#include "daqerror.h"
+#include "analoginput.h"
 #include "comedianaloginput.h"
 #include "dynclampanalogoutput.h"
 #include "moduledef.h"
@@ -41,6 +17,7 @@ using namespace std;
 \author Marco Hackenberg
 \version 0.1
 \brief Interface for accessing analog input of a daq-board via a dynamic clamp kernel module.
+\todo: testReadDevice(): we don't get integer data!!! sigs[k].setGain( 1.0 );
 */
 
 
@@ -130,14 +107,6 @@ public:
         The channels in \a sigs are not sorted. */
   int prepareRead( InList &sigs );
 
-    /*! Convert data of the input signals \a sigs.
-	If an error ocurred in any channel, the corresponding errorflags in the
-	InData structure are filled and a negative value is returned.
-	The input signals are sorted by channel number first
-        and are then multiplexed into a buffer of signed short's (2 byte).
-        The buffer is attached to the first signal in \a sigs. */
-  int convertData( InList &sigs );
-
     /*! Start analog input of the input signals \a sigs
         after they were prepared by prepareRead().
 	If an error ocurred in any signal, the corresponding errorflags in
@@ -153,25 +122,6 @@ public:
 	If an error ocurred in any channel, the corresponding errorflags in the
 	InList structure are filled and a negative value is returned.  */
   int readData( InList &sigs );
-  
-    /*! Read data to a running data acquisition.
-        Returns the number of data values that were popped from the \a trace- 
-	device-buffer (sum over all \a traces).
-	If an error ocurred in any channel, the corresponding errorflags in the
-	InList structure are filled and a negative value is returned.  
-	For internal usage!
-    */
-  int fillReadBuffer( void );
-
-    /*! A template function that is used for the implementation
-        of the convertData() function.
-	This function first sorts the input signals by channel number
-	and then multiplexes the signals in a buffer of type \a T
-	after appropriate scaling.
-        Data values exceeding the range of the daq board are truncated.
-        The buffer is attached to the first signal in \a sigs. */
-  template < typename T >
-    int convert( InList &sigs );
 
     /*! Stop any running ananlog input activity on the device.
         Returns zero on success, otherwise one of the flags 
@@ -184,12 +134,6 @@ public:
         NotOpen, InvalidDevice, ReadError.
         \sa close(), open(), isOpen() */
   int reset( void );
-
-    /* Reloads the prepared configuration commands of the following acquisition 
-       into the registers of the hardware after stop() was performed.
-       For internal usage.
-       \sa stop(), prepareRead() */
-  int reload( void );
 
     /* True, if configuration command for acquisition is successfully loaded
        into the registers of the hardware.
@@ -239,6 +183,7 @@ public:
 private:
 
   ComediAnalogInput *CAI;
+  unsigned int CAIFlags;
 
   // needed by DynClamp class e.g. for assigning TraceInfo strings to channels
   int SubdeviceID;
