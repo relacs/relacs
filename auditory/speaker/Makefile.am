@@ -8,13 +8,13 @@ lib_LTLIBRARIES = \
 
 
 librelacsauditorycalibspeakers_la_CPPFLAGS = \
-    -I$(srcdir)/../../config/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../datafile/include \
     -I$(srcdir)/../../plot/include \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../../relacs/include \
+    -I$(srcdir)/../../widgets/include \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
@@ -23,7 +23,6 @@ librelacsauditorycalibspeakers_la_LDFLAGS = \
 
 librelacsauditorycalibspeakers_la_LIBADD = \
     ../../relacs/src/librelacs.la \
-    ../../config/src/librelacsconfig.la \
     ../base/librelacsauditorytraces.la \
     librelacsauditoryloudspeaker.la \
     $(QT3_LIBS)
@@ -38,12 +37,12 @@ librelacsauditorycalibspeakers_la_SOURCES = \
 
 
 librelacsauditoryloudspeaker_la_CPPFLAGS = \
-    -I$(srcdir)/../../config/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../datafile/include \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../../relacs/include \
+    -I$(srcdir)/../../widgets/include \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 

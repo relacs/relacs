@@ -1,5 +1,5 @@
 Autotools:
-- what about config, widgets and configdialog?
+- rename widget library
 - introduce namespace 'relacs' to all libraries
 - include of local headers also with <relacs/foo.h>?
 - check libdir in the libraries and plugins

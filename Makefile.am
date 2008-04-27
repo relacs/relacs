@@ -6,7 +6,6 @@ SUBDIRS = \
     options \
     datafile \
     widgets \
-    config \
     plot \
     \
     relacs \

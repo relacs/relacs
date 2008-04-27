@@ -16,7 +16,6 @@ lib_LTLIBRARIES = \
 
 librelacsauditoryneuron_la_CPPFLAGS = \
     -I$(srcdir)/../../common/include \
-    -I$(srcdir)/../../config/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \
@@ -43,7 +42,6 @@ librelacsauditoryneuron_la_SOURCES = \
 
 
 librelacsauditorysearch_la_CPPFLAGS = \
-    -I$(srcdir)/../../config/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../datafile/include \
     -I$(srcdir)/../../numerics/include \
@@ -72,7 +70,6 @@ librelacsauditorysearch_la_SOURCES = \
 
 librelacsauditorysession_la_CPPFLAGS = \
     -I$(srcdir)/../../common/include \
-    -I$(srcdir)/../../config/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../hardware/include \
     -I$(srcdir)/../../plot/include \
@@ -103,11 +100,11 @@ librelacsauditorysession_la_SOURCES = \
 
 
 librelacsauditorytraces_la_CPPFLAGS = \
-    -I$(srcdir)/../../config/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../../relacs/include \
+    -I$(srcdir)/../../widgets/include \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
@@ -126,7 +123,6 @@ librelacsauditorytraces_la_SOURCES = \
 
 librelacsauditoryficurve_la_CPPFLAGS = \
     -I$(srcdir)/../../common/include \
-    -I$(srcdir)/../../config/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../datafile/include \
     -I$(srcdir)/../../hardware/include \
@@ -159,7 +155,6 @@ librelacsauditoryficurve_la_SOURCES = \
 
 librelacsauditoryfifield_la_CPPFLAGS = \
     -I$(srcdir)/../../common/include \
-    -I$(srcdir)/../../config/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../datafile/include \
     -I$(srcdir)/../../hardware/include \
@@ -192,7 +187,6 @@ librelacsauditoryfifield_la_SOURCES = \
 
 librelacsauditorysinglestimulus_la_CPPFLAGS = \
     -I$(srcdir)/../../common/include \
-    -I$(srcdir)/../../config/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../datafile/include \
     -I$(srcdir)/../../hardware/include \
@@ -225,7 +219,6 @@ librelacsauditorysinglestimulus_la_SOURCES = \
 
 librelacsauditoryspikeprecision_la_CPPFLAGS = \
     -I$(srcdir)/../../common/include \
-    -I$(srcdir)/../../config/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../datafile/include \
     -I$(srcdir)/../../hardware/include \
@@ -258,7 +251,6 @@ librelacsauditoryspikeprecision_la_SOURCES = \
 
 librelacsauditorysyslatency_la_CPPFLAGS = \
     -I$(srcdir)/../../common/include \
-    -I$(srcdir)/../../config/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../datafile/include \
     -I$(srcdir)/../../hardware/include \

@@ -8,7 +8,6 @@ lib_LTLIBRARIES = \
 
 
 librelacscommonneuronmodels_la_CPPFLAGS = \
-    -I$(srcdir)/../../config/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \
@@ -34,11 +33,11 @@ librelacscommonneuronmodels_la_SOURCES = \
 
 
 librelacscommonsimplemodel_la_CPPFLAGS = \
-    -I$(srcdir)/../../config/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../../relacs/include \
+    -I$(srcdir)/../../widgets/include \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 

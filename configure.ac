@@ -96,7 +96,6 @@ AC_DEFINE([HAVE_LIBRELACSDAQ], [1],
 #################################################
 
 DOXYGEN_EXTERNAL="\
-config \
 daq \
 datafile \
 plot \
@@ -175,10 +174,6 @@ AC_CONFIG_FILES([
     common/filter/Makefile
     common/models/Makefile
     common/Makefile
-
-    config/src/Makefile
-    config/Makefile
-    config/configure.ac
 
     daq/src/Makefile
     daq/Makefile

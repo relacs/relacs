@@ -8,7 +8,6 @@ lib_LTLIBRARIES = \
 
 
 librelacscommonhighpass_la_CPPFLAGS = \
-    -I$(srcdir)/../../config/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \
@@ -34,7 +33,6 @@ librelacscommonhighpass_la_SOURCES = \
 
 
 librelacscommonlowpass_la_CPPFLAGS = \
-    -I$(srcdir)/../../config/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \

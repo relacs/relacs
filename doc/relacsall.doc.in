@@ -34,7 +34,6 @@ What RELACS is good for and who should use RELACS... and who should NOT use RELA
 - <a href="options/index.html">options library</a>
 - <a href="datafile/index.html">datafile library</a>
 - <a href="widgets/index.html">widgets library</a>
-- <a href="config/index.html">config library</a>
 - <a href="plot/index.html">plot library</a>
 - <a href="relacs/index.html">relacs core library</a>
 - <a href="hardware/index.html">relacs plugins for accessing hardware</a>

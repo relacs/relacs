@@ -29,6 +29,7 @@ librelacswidgets_la_LIBADD = \
 endif
 
 $(librelacswidgets_la_OBJECTS) : \
+    moc_configdialog.cc \
     moc_doublespinbox.cc \
     moc_lcdrange.cc \
     moc_messagebox.cc \
@@ -40,6 +41,7 @@ $(librelacswidgets_la_OBJECTS) : \
 librelacswidgets_ladir = $(includedir)/relacs
 
 librelacswidgets_la_HEADERS = \
+    ../include/relacs/configdialog.h \
     ../include/relacs/doublespinbox.h \
     ../include/relacs/lcdrange.h \
     ../include/relacs/messagebox.h \
@@ -50,6 +52,7 @@ librelacswidgets_la_HEADERS = \
     ../include/relacs/optdialogbutton.h
 
 librelacswidgets_la_SOURCES = \
+    configdialog.cc \
     doublespinbox.cc \
     lcdrange.cc \
     messagebox.cc \

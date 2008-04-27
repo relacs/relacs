@@ -7,7 +7,6 @@ lib_LTLIBRARIES = \
 librelacs_la_CPPFLAGS = \
     "-DRELACSVERSION=\"$(RELACSVERSION)\"" \
     -I$(srcdir)/../../plot/include \
-    -I$(srcdir)/../../config/include \
     -I$(srcdir)/../../widgets/include \
     -I$(srcdir)/../../datafile/include \
     -I$(srcdir)/../../options/include \
@@ -21,7 +20,6 @@ librelacs_la_LDFLAGS = \
 
 librelacs_la_LIBADD = \
     ../../plot/src/librelacsplot.la \
-    ../../config/src/librelacsconfig.la \
     ../../widgets/src/librelacswidgets.la \
     ../../datafile/src/librelacsdatafile.la \
     ../../options/src/librelacsoptions.la \

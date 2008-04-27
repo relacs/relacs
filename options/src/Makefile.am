@@ -8,17 +8,20 @@ librelacsoptions_la_CPPFLAGS = \
     -I$(srcdir)/../include
 
 librelacsoptions_la_HEADERS = \
-    ../include/relacs/options.h \
-    ../include/relacs/parameter.h \
     ../include/relacs/str.h \
-    ../include/relacs/strqueue.h
+    ../include/relacs/strqueue.h \
+    ../include/relacs/parameter.h \
+    ../include/relacs/options.h \
+    ../include/relacs/configclass.h \
+    ../include/relacs/configureclasses.h
 
 librelacsoptions_la_SOURCES = \
-    options.cc \
-    parameter.cc \
     str.cc \
-    strqueue.cc
-
+    strqueue.cc \
+    parameter.cc \
+    options.cc \
+    configclass.cc \
+    configureclasses.cc
 
 
 check_PROGRAMS = linktest_librelacsoptions_la

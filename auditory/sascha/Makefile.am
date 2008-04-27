@@ -9,7 +9,6 @@ lib_LTLIBRARIES = \
 
 librelacsauditoryisoresponse_la_CPPFLAGS = \
     -I$(srcdir)/../../common/include \
-    -I$(srcdir)/../../config/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../datafile/include \
     -I$(srcdir)/../../hardware/include \
@@ -41,7 +40,6 @@ librelacsauditoryisoresponse_la_SOURCES = \
 
 librelacsauditoryoneclick_la_CPPFLAGS = \
     -I$(srcdir)/../../common/include \
-    -I$(srcdir)/../../config/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../datafile/include \
     -I$(srcdir)/../../hardware/include \

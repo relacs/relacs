@@ -6,11 +6,11 @@ lib_LTLIBRARIES = \
 
 
 librelacshardware_la_CPPFLAGS = \
-    -I$(srcdir)/../../config/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../../relacs/include \
+    -I$(srcdir)/../../widgets/include \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
@@ -36,11 +36,11 @@ librelacshardware_la_SOURCES = \
 
 librelacsnieserieshardware_la_CPPFLAGS = \
     -DNIDAQ_MAJOR=254 \
-    -I$(srcdir)/../../config/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../../relacs/include \
+    -I$(srcdir)/../../widgets/include \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 

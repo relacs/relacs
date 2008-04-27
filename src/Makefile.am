@@ -12,7 +12,6 @@ sysconf_DATA = \
 # TODO
 relacs_main_CPPFLAGS = \
     "-DRELACSVERSION=\"$(RELACSVERSION)\"" \
-    -I$(srcdir)/../config/include \
     -I$(srcdir)/../daq/include \
     -I$(srcdir)/../datafile/include \
     -I$(srcdir)/../plot/include \
