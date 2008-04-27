@@ -29,7 +29,7 @@
 #include <qdatetime.h>
 #include <qtimer.h>
 #include <relacs/optwidget.h>
-#include <relacs/config.h>
+#include <relacs/configclass.h>
 #include <relacs/control.h>
 
 class Manipulator;
@@ -131,7 +131,7 @@ private:
 };
 
 
-class MiMaPu : public QObject, public Config
+class MiMaPu : public QObject, public ConfigClass
 {
   Q_OBJECT
 

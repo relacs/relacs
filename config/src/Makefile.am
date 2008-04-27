@@ -37,14 +37,14 @@ $(librelacsconfig_la_OBJECTS) : \
 librelacsconfig_ladir = $(includedir)/relacs
 
 librelacsconfig_la_HEADERS = \
-    ../include/relacs/config.h \
+    ../include/relacs/configclass.h \
     ../include/relacs/configdialog.h \
-    ../include/relacs/configure.h
+    ../include/relacs/configureclasses.h
 
 librelacsconfig_la_SOURCES = \
-    config.cc \
+    configclass.cc \
     configdialog.cc \
-    configure.cc
+    configureclasses.cc
 
 
 check_PROGRAMS = linktest_librelacsconfig_la

@@ -33,8 +33,8 @@
 #include <qwaitcondition.h>
 #include <qapplication.h>
 #include <vector>
-#include <relacs/config.h>
-#include <relacs/configure.h>
+#include <relacs/configclass.h>
+#include <relacs/configureclasses.h>
 #include "settings.h"
 #include "relacsdevices.h"
 #include "metadata.h"
@@ -83,7 +83,7 @@ If the session is really to be stopped, stopSession() is called.
 */
 
 
-class RELACSWidget : public QMainWindow, public QThread, public Config
+class RELACSWidget : public QMainWindow, public QThread, public ConfigClass
 {
   Q_OBJECT
 
@@ -302,7 +302,7 @@ private:
   // Internal classes
   QWidget *MainWidget;
 
-  Configure CFG;
+  ConfigureClasses CFG;
   Plugins *PG;
 
   Settings SS;

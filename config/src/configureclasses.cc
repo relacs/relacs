@@ -1,6 +1,6 @@
 /*
-  configure.cc
-  Coordinates configureable classes.
+  configureclasses.cc
+  Coordinates configureable classes Config..Class.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2008 Jan Benda <j.benda@biologie.hu-berlin.de>
@@ -22,62 +22,62 @@
 #include <ctime>
 #include <fstream>
 #include <relacs/strqueue.h>
-#include <relacs/configure.h>
+#include <relacs/configureclasses.h>
 using namespace std;
 
 
-Configure::Configure( void )
+ConfigureClasses::ConfigureClasses( void )
   : ConfigFile(),
     Configs()
 {
-  Config::setConfigList( &Configs );
-  Config::setConfigure( this );
+  ConfigClass::setConfigClassList( &Configs );
+  ConfigClass::setConfigureClasses( this );
 }
 
 
-Configure::Configure( int groups )
+ConfigureClasses::ConfigureClasses( int groups )
   : ConfigFile(),
     Configs()
 {
   ConfigFile.resize( groups );
-  Config::setConfigList( &Configs );
-  Config::setConfigure( this );
+  ConfigClass::setConfigClassList( &Configs );
+  ConfigClass::setConfigureClasses( this );
 }
 
 
-Configure::Configure( const string &file )
+ConfigureClasses::ConfigureClasses( const string &file )
   : ConfigFile(),
     Configs()
 {
   ConfigFile.resize( 1 );
   setConfigFile( file );
-  Config::setConfigList( &Configs );
-  Config::setConfigure( this );
+  ConfigClass::setConfigClassList( &Configs );
+  ConfigClass::setConfigureClasses( this );
 }
 
 
-Configure::~Configure( void )
+ConfigureClasses::~ConfigureClasses( void )
 {
   Configs.clear();
-  Config::setConfigList( 0 );
-  Config::setConfigure( this );
+  ConfigClass::setConfigClassList( 0 );
+  ConfigClass::setConfigureClasses( this );
 }
 
 
-int Configure::groups( void ) const
+int ConfigureClasses::groups( void ) const
 {
   return ConfigFile.size();
 }
 
 
-void Configure::addGroup( const string &file )
+void ConfigureClasses::addGroup( const string &file )
 {
   ConfigFile.push_back( vector< string >() );
   addConfigFile( file, ConfigFile.size()-1 );  
 }
 
 
-string Configure::configFile( int group, int level ) const
+string ConfigureClasses::configFile( int group, int level ) const
 {
   if ( group < 0 || group >= (int)ConfigFile.size() ||
        level < 0 || level >= (int)ConfigFile[group].size() )
@@ -87,7 +87,7 @@ string Configure::configFile( int group, int level ) const
 }
 
 
-void Configure::setConfigFile( const string &file, int group, int level )
+void ConfigureClasses::setConfigFile( const string &file, int group, int level )
 {
   if ( group < 0 || group >= (int)ConfigFile.size() ||
        level < 0 || level >= (int)ConfigFile[group].size() )
@@ -97,7 +97,7 @@ void Configure::setConfigFile( const string &file, int group, int level )
 }
 
 
-void Configure::addConfigFile( const string &file, int group )
+void ConfigureClasses::addConfigFile( const string &file, int group )
 {
   if ( group < 0 || group >= (int)ConfigFile.size() ||
        file.empty() )
@@ -107,7 +107,7 @@ void Configure::addConfigFile( const string &file, int group )
 }
 
 
-void Configure::read( int group, int level )
+void ConfigureClasses::read( int group, int level )
 {
   if ( group < 0 || group >= (int)ConfigFile.size() ||
        level < 0 || level >= (int)ConfigFile[group].size() )
@@ -140,7 +140,7 @@ void Configure::read( int group, int level )
     line = "";
     sq.load( sf, "*", &line );
     sq.strip();
-    for ( ConfigList::iterator cp = Configs.begin(); cp != Configs.end(); ++cp ) {
+    for ( ConfigClassList::iterator cp = Configs.begin(); cp != Configs.end(); ++cp ) {
       if ( (*cp)->configGroup() == group &&
 	   (*cp)->configIdent() == ident ) {
 	(*cp)->readConfig( sq );
@@ -152,7 +152,7 @@ void Configure::read( int group, int level )
 }
 
 
-void Configure::read( int group )
+void ConfigureClasses::read( int group )
 {
   for ( unsigned int l = 0; l < ConfigFile[group].size(); l++ ) {
     read( group, l );
@@ -160,7 +160,7 @@ void Configure::read( int group )
 }
 
 
-void Configure::read( void )
+void ConfigureClasses::read( void )
 {
   for ( unsigned int g = 0; g < ConfigFile.size(); g++ ) {
     read( g );
@@ -168,7 +168,7 @@ void Configure::read( void )
 }
 
 
-void Configure::read( int group, int level, Config &config )
+void ConfigureClasses::read( int group, int level, ConfigClass &config )
 {
   if ( group < 0 || group >= (int)ConfigFile.size() ||
        level < 0 || level >= (int)ConfigFile[group].size() )
@@ -196,7 +196,7 @@ void Configure::read( int group, int level, Config &config )
 }
 
 
-void Configure::read( int group, Config &config )
+void ConfigureClasses::read( int group, ConfigClass &config )
 {
   for ( unsigned int l = 0; l < ConfigFile[group].size(); l++ ) {
     read( group, l, config );
@@ -204,9 +204,9 @@ void Configure::read( int group, Config &config )
 }
 
 
-void Configure::configure( int group, const string &ident )
+void ConfigureClasses::configure( int group, const string &ident )
 {
-  for ( ConfigList::iterator cp = Configs.begin(); cp != Configs.end(); ++cp ) {
+  for ( ConfigClassList::iterator cp = Configs.begin(); cp != Configs.end(); ++cp ) {
     if ( (*cp)->configGroup() == group &&
 	 (*cp)->configIdent() == ident ) {
       (*cp)->config();
@@ -215,9 +215,9 @@ void Configure::configure( int group, const string &ident )
 }
 
 
-void Configure::configure( int group )
+void ConfigureClasses::configure( int group )
 {
-  for ( ConfigList::iterator cp = Configs.begin(); cp != Configs.end(); ++cp ) {
+  for ( ConfigClassList::iterator cp = Configs.begin(); cp != Configs.end(); ++cp ) {
     if ( (*cp)->configGroup() == group ) {
       (*cp)->config();
     }
@@ -225,22 +225,22 @@ void Configure::configure( int group )
 }
 
 
-void Configure::configure( void )
+void ConfigureClasses::configure( void )
 {
-  for ( ConfigList::iterator cp = Configs.begin(); cp != Configs.end(); ++cp ) {
+  for ( ConfigClassList::iterator cp = Configs.begin(); cp != Configs.end(); ++cp ) {
     (*cp)->config();
   }
 }
 
 
-void Configure::save( int group, const string &file )
+void ConfigureClasses::save( int group, const string &file )
 {
   cerr << currentTime()
        << " save configuration in " << file << endl;
   ofstream df( file.c_str() );
-  for ( ConfigList::iterator cp = Configs.begin(); cp != Configs.end(); ++cp ) {
+  for ( ConfigClassList::iterator cp = Configs.begin(); cp != Configs.end(); ++cp ) {
     if ( (*cp)->configGroup() == group &&
-	 ( (*cp)->configMode() & Config::Save ) &&
+	 ( (*cp)->configMode() & ConfigClass::Save ) &&
 	 (*cp)->configSize() > 0 ) { 
       df << '*' << (*cp)->configIdent() << '\n';
       (*cp)->saveConfig( df );
@@ -251,7 +251,7 @@ void Configure::save( int group, const string &file )
 }
 
 
-void Configure::save( int group, int level )
+void ConfigureClasses::save( int group, int level )
 {
   if ( group < 0 || group >= (int)ConfigFile.size() ||
        level < 0 || level >= (int)ConfigFile[group].size() )
@@ -261,13 +261,13 @@ void Configure::save( int group, int level )
 }
 
 
-void Configure::save( int group )
+void ConfigureClasses::save( int group )
 {
   save( group, ConfigFile[group].size()-1 );
 }
 
 
-void Configure::save( void )
+void ConfigureClasses::save( void )
 {
   for ( unsigned int g = 0; g < ConfigFile.size(); g++ ) {
     save( g );
@@ -275,7 +275,7 @@ void Configure::save( void )
 }
 
 
-ostream &operator<<( ostream &str, const Configure &c )
+ostream &operator<<( ostream &str, const ConfigureClasses &c )
 {
   for ( unsigned int g = 0; g < c.ConfigFile.size(); g++ ) {
     for ( unsigned int l = 0; l < c.ConfigFile[g].size(); l++ ) {
@@ -289,7 +289,7 @@ ostream &operator<<( ostream &str, const Configure &c )
 }
 
 
-string Configure::currentTime( void )
+string ConfigureClasses::currentTime( void )
 {
   char s[200];
   time_t ct = time( NULL );

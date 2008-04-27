@@ -231,7 +231,7 @@ XXXX instead of sessionOpts we should access the spikedtector directly!
 MiMaPu::MiMaPu( Manipulator *m,	int trace, const string &title,
 		const Options &detect,MotorControl *parent )
   : QObject( parent ), 
-    Config( "MiMaPu", RELACSPlugin::Plugins, Save, 0 ), 
+    ConfigClass( "MiMaPu", RELACSPlugin::Plugins, Save, 0 ), 
     MC( parent ), 
     Trace( trace ),
     M( m ),

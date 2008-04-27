@@ -24,7 +24,7 @@
 
 
 #include <vector>
-#include <relacs/config.h>
+#include <relacs/configclass.h>
 #include <relacs/attenuate.h>
 
 using namespace std;
@@ -39,7 +39,7 @@ using namespace std;
 */
 
 
-class LoudSpeaker : public Attenuate, public Config
+class LoudSpeaker : public Attenuate, public ConfigClass
 {
 
 public:

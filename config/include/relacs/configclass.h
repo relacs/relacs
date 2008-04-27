@@ -1,5 +1,5 @@
 /*
-  config.h
+  configclass.h
   Base class for each class that has some parameters to be configured.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _CONFIG_H_
-#define _CONFIG_H_
+#ifndef _CONFIGCLASS_H_
+#define _CONFIGCLASS_H_
 
 #include <string>
 #include <fstream>
@@ -30,17 +30,17 @@
 using namespace std;
 
 /*!
-\class Config
+\class ConfigClass
 \brief Base class for each class that has some parameters to be configured.
 \author Jan Benda
 \version 1.0
 */
 
-class Configure;
-class Config;
-typedef vector<Config*> ConfigList;
+class ConfigureClasses;
+class ConfigClass;
+typedef vector<ConfigClass*> ConfigClassList;
 
-class Config : public Options
+class ConfigClass : public Options
 {
 
 public:
@@ -52,12 +52,12 @@ public:
     Help=8
   };
 
-  Config( const string &ident, int group=0, int mode=0xffff,
-	  int selectmask=0 );
+  ConfigClass( const string &ident, int group=0, int mode=0xffff,
+	       int selectmask=0 );
     /*! Copy constructor. */
-  Config( const Config &C );
-    /*! Deconstructs a Config. */
-  virtual ~Config( void );
+  ConfigClass( const ConfigClass &C );
+    /*! Deconstructs a ConfigClass. */
+  virtual ~ConfigClass( void );
 
   const string &configIdent( void ) const;
   void setConfigIdent( const string &ident );
@@ -79,8 +79,8 @@ public:
   virtual int configSize( void ) const;
   virtual void config( void );
 
-  static void setConfigList( ConfigList *cl );
-  static void setConfigure( Configure *cfg );
+  static void setConfigClassList( ConfigClassList *cl );
+  static void setConfigureClasses( ConfigureClasses *cfg );
 
 
 private:
@@ -89,8 +89,8 @@ private:
   int ConfigGroup;
   int ConfigMode;
   int ConfigSelect;
-  static ConfigList *Configs;
-  static Configure *CFG;
+  static ConfigClassList *Configs;
+  static ConfigureClasses *CFG;
 
 };
 

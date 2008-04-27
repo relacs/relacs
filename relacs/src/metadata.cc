@@ -31,8 +31,8 @@
 
 
 MetaData::MetaData( RELACSWidget *rw )
-  : Config( "MetaData", RELACSPlugin::Plugins, 
-	    Save, DialogFlag + PresetDialogFlag ),
+  : ConfigClass( "MetaData", RELACSPlugin::Plugins, 
+		 Save, DialogFlag + PresetDialogFlag ),
     SaveFlag( 0 ),
     Dialog( false ),
     PresetDialog( false ),
@@ -258,8 +258,8 @@ void MetaData::addActions( QPopupMenu *menu )
 
 
 SetupData::SetupData( Options *md )
-  : Config( "Setup", RELACSPlugin::Core, 
-	    Save, SetupFlag ),
+  : ConfigClass( "Setup", RELACSPlugin::Core, 
+		 Save, SetupFlag ),
     MD( md )
 {
 }

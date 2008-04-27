@@ -1,5 +1,4 @@
 Autotools:
-- rename config classes and library
 - what about config, widgets and configdialog?
 - introduce namespace 'relacs' to all libraries
 - include of local headers also with <relacs/foo.h>?

@@ -25,7 +25,7 @@
 #include <qpopupmenu.h> 
 #include <vector>
 #include <relacs/str.h>
-#include <relacs/config.h>
+#include <relacs/configclass.h>
 #include "relacsplugin.h"
 using namespace std;
 
@@ -40,13 +40,13 @@ class AllDevices;
 */
 
 template < class T, int PluginID >
-class DeviceList : public Config
+class DeviceList : public ConfigClass
 {
 
 public:
 
     /*! Construct an empty list of devices.
-        The \a title is passed to the Config class and is 
+        The \a title is passed to the ConfigClass class and is 
 	used to identify the device list in the configuration files.
 	Single devices are called \a name
 	in the error messages. */
@@ -128,7 +128,7 @@ protected:
 
 template < class T, int PluginID >
 DeviceList<T,PluginID>::DeviceList( const string &name, const string &title )
-  : Config( title, RELACSPlugin::Core, Config::Save ),
+  : ConfigClass( title, RELACSPlugin::Core, ConfigClass::Save ),
     Name( name ),
     Warnings( "" )
 {

@@ -31,7 +31,7 @@
 
 FilterDetectors::FilterDetectors( RELACSWidget *rw, QWidget *parent, const char *name )
   : QTabWidget( parent, name ),
-    Config( "FilterDetectors", RELACSPlugin::Core ),
+    ConfigClass( "FilterDetectors", RELACSPlugin::Core ),
     FL(),
     TraceInputTrace( 0 ),
     TraceInputEvent( 0 ),
