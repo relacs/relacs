@@ -1,4 +1,4 @@
-bin_SCRIPTS = \
+dist_bin_SCRIPTS = \
     relacshelp
 
 

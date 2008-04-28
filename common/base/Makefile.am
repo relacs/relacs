@@ -12,6 +12,7 @@ lib_LTLIBRARIES = \
 librelacscommonephystraces_la_CPPFLAGS = \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../numerics/include \
+    -I$(srcdir)/../../options/include \
     -I$(srcdir)/../include
 
 librelacscommonephystraces_la_LIBADD = \

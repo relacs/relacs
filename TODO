@@ -1,20 +1,33 @@
-Autotools:
-- rename widget library
+Libraries:
 - introduce namespace 'relacs' to all libraries
-- include of local headers also with <relacs/foo.h>?
-- check libdir in the libraries and plugins
-- there are unique plugin names (librelacsauditory...), unique help files
-  (Auditory-...), but what about the header files of the plugins?
-  -> <relacs/auditory/foo.h>
-- add RELACS_ to double include prevention
-- names of relacs plugins without "librelacs" prefix? 
-  pkglib_LTLIBRARIES = mymodule.la
-  mymodule_la_LDFLAGS = -module
 - add libtool version to libraries:
   librelacs_la_LDFLAGS = -version-number major[:minor[:revision]]
 - add relacs library tests to the libraries!
-- no static libraries (at least for the plugins)! 
-  see libtool doc: LT_INIT (OPTIONS)
+- no static libraries (at least for the plugins)! -> AC_ENABLE_SHARED, AC_DISABLE-STATIC
+
+Plugins:
+- there are unique plugin names (librelacsauditory...), unique help files
+  (Auditory-...), but what about the header files of the plugins?
+  -> <relacs/auditory/foo.h>
+- names of relacs plugins without "librelacs" prefix? 
+  pkglib_LTLIBRARIES = mymodule.la
+  mymodule_la_LDFLAGS = -module
+- The right name for dlopen can be found in the dlname filed of the *.la file!
+  Use this approach for loading the plugins?
+
+Both:
+- include of local headers also with <relacs/foo.h>?
+- check libdir in the libraries and plugins
+- add RELACS_ to double include prevention
+
+Autotools:
+- when running debugger on libtool executable (like relacs_main?)
+  you need to call
+  libtool --mode=execute gdb relacs_main
+  Update relacs script accordingly!
+- Put relacs configuration files in demo subdirectory of the plugin sets?
+- Math library check: LT_LIB_M
+- Use LT_INIT intstead of AC_PROG_LIBTOOL
 - AM_INIT_AUTOMAKE( [std-options] ) to check whether all programs and scripts 
   have --help and --version options
 - AM_INIT_AUTOMAKE( [gnu] ) checks for GNU make ?
@@ -22,9 +35,18 @@ Autotools:
   However, why is this clean-am not overriding the original clean-am?
 - upgrade to Automake 1.10.1 and add LZMA support, remove .zip archives
 - uninstall: also remove relacs subdirectories?!
+- Use current version of doxygen for debian,
+  update the Doxyfile or remove new/old settings
 - make distcheck: 
   release.sh /home/jan/prj/relacsinstall --with-qt3=/usr/lib/qt3 --disable-doxygen-dot
 - Add rand55 test and make sure that the dox file PREDEFINED variable gets HAVE_LIBRAND55 define set
+  http://summa.physik.hu-berlin.de/~beule/random/random55.tar.gz
+- Integrate examples (with extra target)  no-compile Makefiles???
+- Log files written to relacs exec dir, not /var/log?
+  - Set log location in <relacslocal>/<src/relacs>
+    use @...@ for this (prefix?)
+- Reading config from PWD and LD_LIBRARY_PATH containing PWD
+  -> On/off by user?
 
 Documentation:
 - Update installation and Makefile instructions to autotools

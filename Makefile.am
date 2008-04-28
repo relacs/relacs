@@ -29,7 +29,6 @@ EXTRA_DIST = \
     doc/c++.doc \
     doc/macros.doc \
     doc/naming.doc \
-    doc/no.doc \
     doc/program.doc \
     doc/relacsall.doc \
     doc/repros.doc \

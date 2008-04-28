@@ -8,7 +8,7 @@ EXTRA_DIST = \
     moc3.mk \
     doxygen.mk \
     \
-    doc/widgets.dox \
+    doc/Doxyfile \
     doc/optdialog.png \
     doc/optwidget.png
 

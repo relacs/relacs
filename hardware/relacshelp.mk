@@ -3,7 +3,7 @@
 
 help/helpstamp: 
 	$(MKDIR_P) help
-	../utils/relacshelp doc/html help $(PLUGINSET)
+	$(srcdir)/../utils/relacshelp doc/html help $(PLUGINSET)
 	touch help/helpstamp
 
 help-run: help/helpstamp
