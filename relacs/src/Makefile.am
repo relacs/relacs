@@ -16,6 +16,7 @@ librelacs_la_CPPFLAGS = \
     $(QT3_CPPFLAGS)
 
 librelacs_la_LDFLAGS = \
+    -version-number 0:0:0 \
     $(QT3_LDFLAGS)
 
 librelacs_la_LIBADD = \

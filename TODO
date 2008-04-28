@@ -1,9 +1,6 @@
 Libraries:
 - introduce namespace 'relacs' to all libraries
-- add libtool version to libraries:
-  librelacs_la_LDFLAGS = -version-number major[:minor[:revision]]
 - add relacs library tests to the libraries!
-- no static libraries (at least for the plugins)! -> AC_ENABLE_SHARED, AC_DISABLE-STATIC
 
 Plugins:
 - there are unique plugin names (librelacsauditory...), unique help files
@@ -12,8 +9,11 @@ Plugins:
 - names of relacs plugins without "librelacs" prefix? 
   pkglib_LTLIBRARIES = mymodule.la
   mymodule_la_LDFLAGS = -module
+- what about libtool version handling for the plugins?
+  _LDFLAGS = -version-number major[:minor[:revision]]
 - The right name for dlopen can be found in the dlname filed of the *.la file!
   Use this approach for loading the plugins?
+- what about the PLUGINS_BASENAME in configure.ac?
 
 Both:
 - include of local headers also with <relacs/foo.h>?
@@ -27,7 +27,7 @@ Autotools:
   Update relacs script accordingly!
 - Put relacs configuration files in demo subdirectory of the plugin sets?
 - Math library check: LT_LIB_M
-- Use LT_INIT intstead of AC_PROG_LIBTOOL
+- Check for C++ requirements (STL, templates)
 - AM_INIT_AUTOMAKE( [std-options] ) to check whether all programs and scripts 
   have --help and --version options
 - AM_INIT_AUTOMAKE( [gnu] ) checks for GNU make ?
@@ -51,6 +51,7 @@ Autotools:
 Documentation:
 - Update installation and Makefile instructions to autotools
 - You may want to use: ./configure --htmldir=DOCDIR/html
+- Static libraries are disabled by default
 - Mention that all m4/ , *.mk , and Doxyfile files are identical and should remain so
 - Hint to 
   Integrating Qt's Meta object compiler (moc) with GNU Automake

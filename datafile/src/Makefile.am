@@ -12,6 +12,9 @@ librelacsdatafile_la_CPPFLAGS = \
     -I$(srcdir)/../include
 endif
 
+librelacsdatafile_la_LDFLAGS = \
+    -version-number 0:0:0
+
 if RELACS_TOP_BUILD
 librelacsdatafile_la_LIBADD = \
     ../../numerics/src/librelacsnumerics.la \

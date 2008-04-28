@@ -14,6 +14,7 @@ librelacsdaq_la_CPPFLAGS = \
 endif
 
 librelacsdaq_la_LDFLAGS = \
+    -version-number 0:0:0 \
     $(GSL_LDFLAGS)
 
 if RELACS_TOP_BUILD

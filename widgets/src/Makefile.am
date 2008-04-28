@@ -16,6 +16,7 @@ librelacswidgets_la_CPPFLAGS = \
 endif
 
 librelacswidgets_la_LDFLAGS = \
+    -version-number 0:0:0 \
     $(QT3_LDFLAGS)
 
 if RELACS_TOP_BUILD

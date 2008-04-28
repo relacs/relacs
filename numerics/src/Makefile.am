@@ -7,6 +7,7 @@ librelacsnumerics_la_CPPFLAGS = \
     $(GSL_CPPFLAGS)
 
 librelacsnumerics_la_LDFLAGS = \
+    -version-number 0:0:0 \
     $(GSL_LDFLAGS)
 
 librelacsnumerics_la_LIBADD = \

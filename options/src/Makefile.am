@@ -7,6 +7,9 @@ librelacsoptions_ladir = $(includedir)/relacs
 librelacsoptions_la_CPPFLAGS = \
     -I$(srcdir)/../include
 
+librelacsoptions_la_LDFLAGS = \
+    -version-number 0:0:0
+
 librelacsoptions_la_HEADERS = \
     ../include/relacs/str.h \
     ../include/relacs/strqueue.h \

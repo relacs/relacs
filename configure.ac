@@ -3,10 +3,12 @@
 AC_INIT(relacs, 0.9.6)
 AM_INIT_AUTOMAKE([1.10 -Wall foreign subdir-objects dist-zip dist-bzip2])
 
-AC_PROG_LN_S
-AC_PROG_CXX
+AC_ENABLE_SHARED
+AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 
+AC_PROG_LN_S
+AC_PROG_CXX
 AC_LANG(C++)
 
 CXXFLAGS="-Wall $CXXFLAGS"
