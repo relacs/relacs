@@ -41,9 +41,9 @@ $(librelacsplot_la_OBJECTS) : \
     moc_multiplot.cc \
     moc_plot.cc
 
-librelacsplot_ladir = $(includedir)/relacs
+pkgincludedir = $(includedir)/relacs
 
-librelacsplot_la_HEADERS = \
+pkginclude_HEADERS = \
     ../include/relacs/multiplot.h \
     ../include/relacs/plot.h
 

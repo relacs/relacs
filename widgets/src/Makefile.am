@@ -39,9 +39,9 @@ $(librelacswidgets_la_OBJECTS) : \
     moc_optwidget.cc \
     moc_optwidgetbase.cc
 
-librelacswidgets_ladir = $(includedir)/relacs
+pkgincludedir = $(includedir)/relacs
 
-librelacswidgets_la_HEADERS = \
+pkginclude_HEADERS = \
     ../include/relacs/configdialog.h \
     ../include/relacs/doublespinbox.h \
     ../include/relacs/lcdrange.h \

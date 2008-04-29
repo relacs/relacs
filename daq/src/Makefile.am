@@ -27,9 +27,9 @@ librelacsdaq_la_LIBADD = \
     $(GSL_LIBS)
 endif
 
-librelacsdaq_ladir = $(includedir)/relacs
+pkgincludedir = $(includedir)/relacs
 
-librelacsdaq_la_HEADERS = \
+pkginclude_HEADERS = \
     ../include/relacs/acquire.h \
     ../include/relacs/analoginput.h \
     ../include/relacs/analogoutput.h \

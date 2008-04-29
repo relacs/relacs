@@ -8,6 +8,11 @@ Plugins:
   -> <relacs/auditory/foo.h>
   pkginclude = $(pkginclude)/auditory
   pkginclude_HEADERS = ...
+- what about the PLUGINS_BASENAME in configure.ac?
+  -> this is used to form the path where to install the plugins in the src/Makefile.am
+  instead of libdir = $(prefix)/lib/$(PLUGINS_BASENAME)
+  do pkglibdir = $(pkglibdir)/plugins
+  remove PLUGINS_BASENAME from configure.ac
 - names of relacs plugins without "librelacs" prefix? 
   pkglib_LTLIBRARIES = mymodule.la
   mymodule_la_LDFLAGS = -module
@@ -15,12 +20,6 @@ Plugins:
   _LDFLAGS = -version-number major[:minor[:revision]]
 - The right name for dlopen can be found in the dlname filed of the *.la file!
   Use this approach for loading the plugins?
-- what about the PLUGINS_BASENAME in configure.ac?
-  -> this is used to form the path where to install the plugins
-
-Both:
-- check libdir in the libraries and plugins
-  pkginclude_HEADERS = ...
 
 Autotools:
 - when running debugger on libtool executable (like relacs_main?)
@@ -71,6 +70,7 @@ Documentation:
   CRCNS - Collaborative Research in Computational Neuroscience - Data sharing activity
   http://www.crcns.org/
 - update documentation of OutData, TraceSpec
+- RTAI Installation: https://www.rtai.org/RTAILAB/RTAI-Lab-tutorial.pdf
 
 
 Bug in MetaData Dialog: after opening and closing with ESC, reopening crashes the program

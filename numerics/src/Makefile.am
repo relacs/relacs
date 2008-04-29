@@ -13,9 +13,9 @@ librelacsnumerics_la_LDFLAGS = \
 librelacsnumerics_la_LIBADD = \
     $(GSL_LIBS)
 
-librelacsnumerics_ladir = $(includedir)/relacs
+pkgincludedir = $(includedir)/relacs
 
-librelacsnumerics_la_HEADERS = \
+pkginclude_HEADERS = \
     ../include/relacs/array.h \
     ../include/relacs/basisfunction.h \
     ../include/relacs/eventdata.h \

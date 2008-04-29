@@ -2,15 +2,15 @@ lib_LTLIBRARIES = \
     librelacsoptions.la
 
 
-librelacsoptions_ladir = $(includedir)/relacs
-
 librelacsoptions_la_CPPFLAGS = \
     -I$(srcdir)/../include
 
 librelacsoptions_la_LDFLAGS = \
     -version-number 0:0:0
 
-librelacsoptions_la_HEADERS = \
+pkgincludedir = $(includedir)/relacs
+
+pkginclude_HEADERS = \
     ../include/relacs/str.h \
     ../include/relacs/strqueue.h \
     ../include/relacs/parameter.h \

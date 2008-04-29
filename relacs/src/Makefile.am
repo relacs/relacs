@@ -47,9 +47,9 @@ $(librelacs_la_OBJECTS) : \
     moc_settings.cc \
     moc_spiketrace.cc
 
-librelacs_ladir = $(includedir)/relacs
+pkgincludedir = $(includedir)/relacs
 
-librelacs_la_HEADERS = \
+pkginclude_HEADERS = \
     ../include/relacs/aisim.h \
     ../include/relacs/aosim.h \
     ../include/relacs/attsim.h \

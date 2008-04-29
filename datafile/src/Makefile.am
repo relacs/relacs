@@ -25,9 +25,9 @@ librelacsdatafile_la_LIBADD = \
     -lrelacsoptions
 endif
 
-librelacsdatafile_ladir = $(includedir)/relacs
+pkgincludedir = $(includedir)/relacs
 
-librelacsdatafile_la_HEADERS = \
+pkginclude_HEADERS = \
     ../include/relacs/datafile.h \
     ../include/relacs/tabledata.h \
     ../include/relacs/tablekey.h \
