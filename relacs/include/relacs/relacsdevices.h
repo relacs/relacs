@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _RELACSDEVICES_H_
-#define _RELACSDEVICES_H_
+#ifndef _RELACS_RELACSDEVICES_H_
+#define _RELACS_RELACSDEVICES_H_ 1
 
 #include "devicelist.h"
 #include <relacs/device.h>
@@ -142,4 +142,4 @@ protected:
 };
 
 
-#endif
+#endif /* ! _RELACS_RELACSDEVICES_H_ */

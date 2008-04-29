@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _OPTDIALOGBUTTON_H_
-#define _OPTDIALOGBUTTON_H_
+#ifndef _RELACS_OPTDIALOGBUTTON_H_
+#define _RELACS_OPTDIALOGBUTTON_H_ 1
 
 #include <vector>
 #include <qpushbutton.h>

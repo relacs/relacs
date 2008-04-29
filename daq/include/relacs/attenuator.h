@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _ATTENUATOR_H_
-#define _ATTENUATOR_H_
+#ifndef _RELACS_ATTENUATOR_H_
+#define _RELACS_ATTENUATOR_H_ 1
 
 
 #include "device.h"
@@ -179,4 +179,4 @@ public:
 
 };
 
-#endif
+#endif /* ! _RELACS_ATTENUATOR_H_ */

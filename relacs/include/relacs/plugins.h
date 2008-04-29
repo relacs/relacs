@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _PLUGINS_H_
-#define _PLUGINS_H_
+#ifndef _RELACS_PLUGINS_H_
+#define _RELACS_PLUGINS_H_ 1
 
 
 #include <string>
@@ -346,4 +346,4 @@ public: \
 reg ## pluginClass init ## pluginClass;
 
 
-#endif
+#endif /* ! _RELACS_PLUGINS_H_ */

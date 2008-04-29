@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _DEVICELIST_H_
-#define _DEVICELIST_H_
+#ifndef _RELACS_DEVICELIST_H_
+#define _RELACS_DEVICELIST_H_ 1
 
 #include <qpopupmenu.h> 
 #include <vector>
@@ -414,4 +414,4 @@ ostream &operator<<( ostream &str, const DeviceList<T,PluginID> &d )
 }
 
 
-#endif
+#endif /* ! _RELACS_DEVICELIST_H_ */

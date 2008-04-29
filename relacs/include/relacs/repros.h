@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _REPROS_H_
-#define _REPROS_H_
+#ifndef _RELACS_REPROS_H_
+#define _RELACS_REPROS_H_ 1
 
 #include <qobject.h>
 #include <qtabwidget.h>
@@ -218,4 +218,4 @@ signals:
 };
 
 
-#endif
+#endif /* ! _RELACS_REPROS_H_ */

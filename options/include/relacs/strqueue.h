@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _STRQUEUE_H_
-#define _STRQUEUE_H_
+#ifndef _RELACS_STRQUEUE_H_
+#define _RELACS_STRQUEUE_H_ 1
 
 #include <deque>
 #include "str.h"
@@ -155,4 +155,4 @@ class StrQueue : public StrDeque
 };
 
 
-#endif
+#endif /* ! _RELACS_STRQUEUE_H_ */

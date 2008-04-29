@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _OUTLIST_H_
-#define _OUTLIST_H_
+#ifndef _RELACS_OUTLIST_H_
+#define _RELACS_OUTLIST_H_ 1
 
 #include <string> 
 #include <vector> 
@@ -223,4 +223,4 @@ public:
 };
 
 
-#endif
+#endif /* ! _RELACS_OUTLIST_H_ */

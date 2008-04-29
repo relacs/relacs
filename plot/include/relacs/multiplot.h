@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _MULTIPLOT_H_
-#define _MULTIPLOT_H_
+#ifndef _RELACS_MULTIPLOT_H_
+#define _RELACS_MULTIPLOT_H_ 1
 
 
 #include "plot.h"
@@ -177,4 +177,4 @@ private:
 
 };
 
-#endif
+#endif /* ! _RELACS_MULTIPLOT_H_ */

@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _RANDOM_H_
-#define _RANDOM_H_
+#ifndef _RELACS_RANDOM_H_
+#define _RELACS_RANDOM_H_ 1
 
 #include <cstdlib>
 #include <cmath>
@@ -473,4 +473,4 @@ namespace numerics
 }; // namespace numerics
 
 
-#endif
+#endif /* ! _RELACS_RANDOM_H_ */

@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _INLIST_H_
-#define _INLIST_H_
+#ifndef _RELACS_INLIST_H_
+#define _RELACS_INLIST_H_ 1
 
 #include <vector> 
 #include "indata.h"
@@ -277,4 +277,4 @@ public:
 };
 
 
-#endif
+#endif /* ! _RELACS_INLIST_H_ */

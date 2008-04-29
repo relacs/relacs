@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _SPIKEPRECISION_H_
-#define _SPIKEPRECISION_H_
+#ifndef _RELACS_AUDITORY_SPIKEPRECISION_H_
+#define _RELACS_AUDITORY_SPIKEPRECISION_H_ 1
 
 #include <relacs/sampledata.h>
 #include <relacs/multiplot.h>
@@ -123,4 +123,4 @@ protected:
 };
 
 
-#endif
+#endif /* ! _RELACS_AUDITORY_SPIKEPRECISION_H_ */

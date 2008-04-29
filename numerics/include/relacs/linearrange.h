@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _LINEARRANGE_H_
-#define _LINEARRANGE_H_
+#ifndef _RELACS_LINEARRANGE_H_
+#define _RELACS_LINEARRANGE_H_ 1
 
 #include <iostream>
 #include <cassert>
@@ -433,4 +433,4 @@ protected:
 };
 
 
-#endif
+#endif /* ! _RELACS_LINEARRANGE_H_ */

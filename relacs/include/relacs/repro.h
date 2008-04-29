@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _REPRO_H_
-#define _REPRO_H_
+#ifndef _RELACS_REPRO_H_
+#define _RELACS_REPRO_H_ 1
 
 #include <qglobal.h>
 #if QT_VERSION >= 0x030301
@@ -390,4 +390,4 @@ private slots:
 };
 
 
-#endif
+#endif /* ! _RELACS_REPRO_H_ */

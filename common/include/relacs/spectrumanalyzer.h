@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _SPECTRUMANALYZER_H_
-#define _SPECTRUMANALYZER_H_
+#ifndef _RELACS_COMMON_SPECTRUMANALYZER_H_
+#define _RELACS_COMMON_SPECTRUMANALYZER_H_ 1
 
 #include <relacs/control.h>
 #include <relacs/plot.h>
@@ -66,4 +66,4 @@ private:
 };
 
 
-#endif
+#endif /* ! _RELACS_COMMON_SPECTRUMANALYZER_H_ */

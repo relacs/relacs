@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _SPECTRUM_H_
-#define _SPECTRUM_H_
+#ifndef _RELACS_SPECTRUM_H_
+#define _RELACS_SPECTRUM_H_ 1
 
 #include <cmath>
 #include <algorithm>

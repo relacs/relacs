@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _EVENTLIST_H_
-#define _EVENTLIST_H_
+#ifndef _RELACS_EVENTLIST_H_
+#define _RELACS_EVENTLIST_H_ 1
 
 #include <cassert>
 #include <vector>
@@ -740,4 +740,4 @@ public:
 };
 
 
-#endif
+#endif /* ! _RELACS_EVENTLIST_H_ */

@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _RELACSPLUGIN_H_
-#define _RELACSPLUGIN_H_
+#ifndef _RELACS_RELACSPLUGIN_H_
+#define _RELACS_RELACSPLUGIN_H_ 1
 
 
 #include <qapplication.h>
@@ -699,4 +699,4 @@ addPlugin( controlClass, RELACSPlugin::ControlId )
 addPlugin( reproClass, RELACSPlugin::ReProId )
 
 
-#endif
+#endif /* ! _RELACS_RELACSPLUGIN_H_ */

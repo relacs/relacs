@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _FICURVE_H_
-#define _FICURVE_H_
+#ifndef _RELACS_AUDITORY_FICURVE_H_
+#define _RELACS_AUDITORY_FICURVE_H_ 1
 
 #include <relacs/sampledata.h>
 #include <relacs/rangeloop.h>
@@ -209,4 +209,4 @@ protected:
 
 };
 
-#endif
+#endif /* ! _RELACS_AUDITORY_FICURVE_H_ */

@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _ODEALGORITHM_H_
-#define _ODEALGORITHM_H_
+#ifndef _RELACS_ODEALGORITHM_H_
+#define _RELACS_ODEALGORITHM_H_ 1
 
 #include <cmath>
 
@@ -562,4 +562,4 @@ int OdeInt( REAL *xd, REAL **yd, int nvar, int kmax, int *kount,
 
 #endif
 
-#endif
+#endif /* ! _RELACS_ODEALGORITHM_H_ */

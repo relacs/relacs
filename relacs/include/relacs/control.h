@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _CONTROL_H_
-#define _CONTROL_H_
+#ifndef _RELACS_CONTROL_H_
+#define _RELACS_CONTROL_H_ 1
 
 #include <qglobal.h>
 #if QT_VERSION >= 0x030301
@@ -273,4 +273,4 @@ private:
 };
 
 
-#endif
+#endif /* ! _RELACS_CONTROL_H_ */

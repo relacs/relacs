@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _SINGLESTIMULUS_H_
-#define _SINGLESTIMULUS_H_
+#ifndef _RELACS_AUDITORY_SINGLESTIMULUS_H_
+#define _RELACS_AUDITORY_SINGLESTIMULUS_H_ 1
 
 #include <relacs/repro.h>
 #include <relacs/eventlist.h>
@@ -115,4 +115,4 @@ protected:
 };
 
 
-#endif
+#endif /* ! _RELACS_AUDITORY_SINGLESTIMULUS_H_ */

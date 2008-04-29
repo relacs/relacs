@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _OPTDIALOG_H_
-#define _OPTDIALOG_H_
+#ifndef _RELACS_OPTDIALOG_H_
+#define _RELACS_OPTDIALOG_H_ 1
 
 #include <qdialog.h>
 #include <qmutex.h>
@@ -357,4 +357,4 @@ private:
 };
 
 
-#endif
+#endif /* ! _RELACS_OPTDIALOG_H_ */

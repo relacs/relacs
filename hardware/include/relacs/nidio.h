@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _NIDIO_H_
-#define _NIDIO_H_
+#ifndef _RELACS_HARDWARE_NIDIO_H_
+#define _RELACS_HARDWARE_NIDIO_H_ 1
 
 #include <string>
 #include <relacs/device.h>
@@ -89,4 +89,4 @@ private:
 };
 
 
-#endif
+#endif /* ! _RELACS_HARDWARE_NIDIO_H_ */

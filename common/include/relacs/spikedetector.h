@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _SPIKEDETECTOR_H_
-#define _SPIKEDETECTOR_H_
+#ifndef _RELACS_COMMON_SPIKEDETECTOR_H_
+#define _RELACS_COMMON_SPIKEDETECTOR_H_ 1
 
 #include <qpixmap.h>
 #include <qlabel.h>
@@ -173,4 +173,4 @@ protected:
 };
 
 
-#endif
+#endif /* ! _RELACS_COMMON_SPIKEDETECTOR_H_ */

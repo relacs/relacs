@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _DOUBLESPINBOX_H_
-#define _DOUBLESPINBOX_H_
+#ifndef _RELACS_DOUBLESPINBOX_H_
+#define _RELACS_DOUBLESPINBOX_H_ 1
 
 #include <string>
 #include <qvalidator.h> 
@@ -145,4 +145,4 @@ private:
 };
 
 
-#endif
+#endif /* ! _RELACS_DOUBLESPINBOX_H_ */

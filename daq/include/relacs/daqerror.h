@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _DAQERROR_H_
-#define _DAQERROR_H_
+#ifndef _RELACS_DAQERROR_H_
+#define _RELACS_DAQERROR_H_ 1
  
 #include <iostream>
 #include <string>
@@ -260,4 +260,4 @@ private:
 };
 
 
-#endif
+#endif /* ! _RELACS_DAQERROR_H_ */

@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _FIFIELD_H_
-#define _FIFIELD_H_
+#ifndef _RELACS_AUDITORY_FIFIELD_H_
+#define _RELACS_AUDITORY_FIFIELD_H_ 1
 
 #include <vector>
 #include <relacs/map.h>
@@ -111,4 +111,4 @@ protected:
 
 };
 
-#endif
+#endif /* ! _RELACS_AUDITORY_FIFIELD_H_ */

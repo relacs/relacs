@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _OPTWIDGETBASE_H_
-#define _OPTWIDGETBASE_H_
+#ifndef _RELACS_OPTWIDGETBASE_H_
+#define _RELACS_OPTWIDGETBASE_H_ 1
 
 #include <vector>
 #include <qobject.h>
@@ -178,4 +178,4 @@ public:
 		      QWidget *parent, QMutex *mutex=0 );
 };
 
-#endif
+#endif /* ! _RELACS_OPTWIDGETBASE_H_ */

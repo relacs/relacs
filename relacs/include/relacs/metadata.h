@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _METADATA_H_
-#define _METADATA_H_
+#ifndef _RELACS_METADATA_H_
+#define _RELACS_METADATA_H_ 1
 
 #include <iostream>
 #include <fstream>
@@ -198,4 +198,4 @@ private:
 };
 
 
-#endif
+#endif /* ! _RELACS_METADATA_H_ */

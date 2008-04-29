@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _CONFIGCLASS_H_
-#define _CONFIGCLASS_H_
+#ifndef _RELACS_CONFIGCLASS_H_
+#define _RELACS_CONFIGCLASS_H_ 1
 
 #include <string>
 #include <fstream>
@@ -95,4 +95,4 @@ private:
 };
 
 
-#endif
+#endif /* ! _RELACS_CONFIGCLASS_H_ */

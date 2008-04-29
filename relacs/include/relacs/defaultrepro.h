@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _DEFAULTREPRO_H_
-#define _DEFAULTREPRO_H_
+#ifndef _RELACS_DEFAULTREPRO_H_
+#define _RELACS_DEFAULTREPRO_H_ 1
 
 
 #include "repro.h"
@@ -54,4 +54,4 @@ protected:
 };
 
 
-#endif
+#endif /* ! _RELACS_DEFAULTREPRO_H_ */

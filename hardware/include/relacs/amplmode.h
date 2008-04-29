@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _AMPLMODE_H_
-#define _AMPLMODE_H_
+#ifndef _RELACS_HARDWARE_AMPLMODE_H_
+#define _RELACS_HARDWARE_AMPLMODE_H_ 1
 
 #include "nidio.h"
 #include <relacs/device.h>
@@ -87,4 +87,4 @@ private:
 
 };
 
-#endif
+#endif /* ! _RELACS_HARDWARE_AMPLMODE_H_ */

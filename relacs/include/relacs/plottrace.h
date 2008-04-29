@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _PLOTTRACE_H
-#define _PLOTTRACE_H
+#ifndef _RELACS_PLOTTRACE_H_
+#define _RELACS_PLOTTRACE_H_ 1
 
 #include <qhbox.h>
 #include <qpushbutton.h>
@@ -182,4 +182,4 @@ private:
 
 };
 
-#endif
+#endif /* ! _RELACS_PLOTTRACE_H_ */

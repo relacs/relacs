@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _CONFIGDIALOG_H_
-#define _CONFIGDIALOG_H_
+#ifndef _RELACS_CONFIGDIALOG_H_
+#define _RELACS_CONFIGDIALOG_H_ 1
 
 #include <string>
 #include <vector>
@@ -261,4 +261,4 @@ private:
 
 };
 
-#endif
+#endif /* ! _RELACS_CONFIGDIALOG_H_ */

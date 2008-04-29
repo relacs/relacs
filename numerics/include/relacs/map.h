@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _MAP_H_
-#define _MAP_H_
+#ifndef _RELACS_MAP_H_
+#define _RELACS_MAP_H_ 1
 
 #include <cstdlib>
 #include <string>
@@ -1416,4 +1416,4 @@ istream &operator>>( istream &str, Map<T> &a )
 }
 
 
-#endif
+#endif /* ! _RELACS_MAP_H_ */

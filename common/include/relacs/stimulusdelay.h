@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _STIMULUSDELAY_H_
-#define _STIMULUSDELAY_H_
+#ifndef _RELACS_COMMON_STIMULUSDELAY_H_
+#define _RELACS_COMMON_STIMULUSDELAY_H_ 1
 
 #include <relacs/plot.h>
 #include <relacs/repro.h>
@@ -73,4 +73,4 @@ protected:
 };
 
 
-#endif
+#endif /* ! _RELACS_COMMON_STIMULUSDELAY_H_ */

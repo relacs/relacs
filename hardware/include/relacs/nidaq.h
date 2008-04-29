@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _NIDAQIOCTL_H_
-#define _NIDAQIOCTL_H_
+#ifndef _RELACS_HARDWARE_NIDAQ_H_
+#define _RELACS_HARDWARE_NIDAQ_H_ 1
 
 #include <asm/ioctl.h>
 
@@ -190,4 +190,4 @@ typedef struct {
 #define NIDAQDIOTIMEDIV2 _IOWR( NIDAQ_MAJOR, 156, int )  /* divide timebase by two for serioal dio. */
 #define NIDAQDIOTIMEBASE _IOWR( NIDAQ_MAJOR, 157, int )  /* use slow timebase for serial dio (default). */
 
-#endif
+#endif /* ! _RELACS_HARDWARE_NIDAQ_H_ */

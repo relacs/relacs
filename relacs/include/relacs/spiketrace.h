@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _SPIKETRACE_H_
-#define _SPIKETRACE_H_
+#ifndef _RELACS_SPIKETRACE_H_
+#define _RELACS_SPIKETRACE_H_ 1
 
 #include <qwidget.h>
 #include <qthread.h>
@@ -124,4 +124,4 @@ protected:
 };
 
 
-#endif
+#endif /* ! _RELACS_SPIKETRACE_H_ */

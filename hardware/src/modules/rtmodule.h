@@ -1,5 +1,5 @@
-#ifndef _RTMODUL_H_
-#define _RTMODULE_H_
+#ifndef _RELACS_HARDWARE_RTMODUL_H_
+#define _RELACS_HARDWARE_RTMODULE_H_ 1
 
 #include "moduledef.h"
 
@@ -112,4 +112,4 @@ float *dynClampOut;
 #endif
 
 
-#endif
+#endif /* ! _RELACS_HARDWARE_RTMODULE_H_ */

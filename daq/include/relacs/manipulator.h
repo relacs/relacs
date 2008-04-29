@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _MANIPULATOR_H_
-#define _MANIPULATOR_H_
+#ifndef _RELACS_MANIPULATOR_H_
+#define _RELACS_MANIPULATOR_H_ 1
 
 
 #include "device.h"
@@ -127,4 +127,4 @@ public:
 
 };
 
-#endif
+#endif /* ! _RELACS_MANIPULATOR_H_ */

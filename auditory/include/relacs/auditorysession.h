@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _AUDITORYSESSION_H_
-#define _AUDITORYSESSION_H_
+#ifndef _RELACS_AUDITORY_AUDITORYSESSION_H_
+#define _RELACS_AUDITORY_AUDITORYSESSION_H_ 1
 
 #include <qpushbutton.h>
 #include <qhbox.h>
@@ -152,4 +152,4 @@ private:
 
 };
 
-#endif
+#endif /* ! _RELACS_AUDITORY_AUDITORYSESSION_H_ */

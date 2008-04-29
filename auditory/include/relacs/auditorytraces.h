@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _AUDITORYTRACES_H_
-#define _AUDITORYTRACES_H_
+#ifndef _RELACS_AUDITORY_AUDITORYTRACES_H_
+#define _RELACS_AUDITORY_AUDITORYTRACES_H_ 1
 
 
 /*! 
@@ -93,4 +93,4 @@ private:
 };
 
 
-#endif
+#endif /* ! _RELACS_AUDITORY_AUDITORYTRACES_H_ */

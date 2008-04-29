@@ -22,8 +22,8 @@
  *
  *****************************************************************************/
 
-#ifndef _TRANSLATE_H_
-#define _TRANSLATE_H_
+#ifndef _RELACS_TRANSLATE_H_
+#define _RELACS_TRANSLATE_H_ 1
 
 
 #include <relacs/str.h>
@@ -103,4 +103,4 @@ void translate( const StrQueue &sq, StrQueue &dq,
 		const string &dflt="", const TableKey *tkey=0 );
 
 
-#endif
+#endif /* ! _RELACS_TRANSLATE_H_ */

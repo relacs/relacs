@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _FILTERDETECTORS_H_
-#define _FILTERDETECTORS_H_
+#ifndef _RELACS_FILTERDETECTORS_H_
+#define _RELACS_FILTERDETECTORS_H_ 1
 
 #include <string>
 #include <vector>
@@ -214,4 +214,4 @@ private slots:
 
 };
 
-#endif
+#endif /* ! _RELACS_FILTERDETECTORS_H_ */

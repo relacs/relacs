@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _HIGHPASS_H_
-#define _HIGHPASS_H_
+#ifndef _RELACS_COMMON_HIGHPASS_H_
+#define _RELACS_COMMON_HIGHPASS_H_ 1
 
 #include <relacs/optwidget.h>
 #include <relacs/indata.h>
@@ -65,4 +65,4 @@ protected:
 };
 
 
-#endif
+#endif /* ! _RELACS_COMMON_HIGHPASS_H_ */

@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef LCDRANGE_H
-#define LCDRANGE_H
+#ifndef _RELACS_LCDRANGE_H_
+#define _RELACS_LCDRANGE_H_ 1
 
 #include <qwidget.h>
 
@@ -73,4 +73,4 @@ private:
   QLabel      *label;
 };
 
-#endif // LCDRANGE_H
+#endif /* ! _RELACS_LCDRANGE_H_ */ // LCDRANGE_H

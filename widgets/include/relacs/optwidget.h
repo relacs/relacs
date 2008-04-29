@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _OPTWIDGET_H_
-#define _OPTWIDGET_H_
+#ifndef _RELACS_OPTWIDGET_H_
+#define _RELACS_OPTWIDGET_H_ 1
 
 #include <vector>
 #include <qwidget.h>
@@ -474,4 +474,4 @@ private:
 
 };
 
-#endif
+#endif /* ! _RELACS_OPTWIDGET_H_ */

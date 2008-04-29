@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _AUDITORYNEURON_H_
-#define _AUDITORYNEURON_H_
+#ifndef _RELACS_AUDITORY_AUDITORYNEURON_H_
+#define _RELACS_AUDITORY_AUDITORYNEURON_H_ 1
 
 #include <relacs/neuronmodels.h>
 
@@ -144,4 +144,4 @@ public:
 };
 
 
-#endif
+#endif /* ! _RELACS_AUDITORY_AUDITORYNEURON_H_ */

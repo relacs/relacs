@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _LOUDSPEAKER_H_
-#define _LOUDSPEAKER_H_
+#ifndef _RELACS_AUDITORY_LOUDSPEAKER_H_
+#define _RELACS_AUDITORY_LOUDSPEAKER_H_ 1
 
 
 #include <vector>
@@ -120,4 +120,4 @@ private:
 
 };
 
-#endif
+#endif /* ! _RELACS_AUDITORY_LOUDSPEAKER_H_ */

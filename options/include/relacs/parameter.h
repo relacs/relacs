@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _PARAMETER_H_
-#define _PARAMETER_H_
+#ifndef _RELACS_PARAMETER_H_
+#define _RELACS_PARAMETER_H_ 1
 
 
 #include <limits.h>
@@ -826,4 +826,4 @@ private:
 };
 
 
-#endif
+#endif /* ! _RELACS_PARAMETER_H_ */

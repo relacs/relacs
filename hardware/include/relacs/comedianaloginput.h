@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _COMEDIANALOGINPUT_H_
-#define _COMEDIANALOGINPUT_H_
+#ifndef _RELACS_HARDWARE_COMEDIANALOGINPUT_H_
+#define _RELACS_HARDWARE_COMEDIANALOGINPUT_H_ 1
 
 #include <comedilib.h>
 #include <vector>
@@ -242,4 +242,4 @@ private:
 };
 
 
-#endif
+#endif /* ! _RELACS_HARDWARE_COMEDIANALOGINPUT_H_ */

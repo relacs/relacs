@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _FILTER_H_
-#define _FILTER_H_
+#ifndef _RELACS_FILTER_H_
+#define _RELACS_FILTER_H_ 1
 
 #include <limits.h>
 #include "relacsplugin.h"
@@ -289,4 +289,4 @@ private:
 };
 
 
-#endif
+#endif /* ! _RELACS_FILTER_H_ */

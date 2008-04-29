@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _TABLEKEY_H_
-#define _TABLEKEY_H_
+#ifndef _RELACS_TABLEKEY_H_
+#define _RELACS_TABLEKEY_H_ 1
 
 
 #include <vector>
@@ -541,4 +541,4 @@ ostream &TableKey::save( ostream &str, const vector< Array< T > > &v,
 }
 
 
-#endif
+#endif /* ! _RELACS_TABLEKEY_H_ */

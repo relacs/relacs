@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _EPHYSTRACES_H_
-#define _EPHYSTRACES_H_
+#ifndef _RELACS_COMMON_EPHYSTRACES_H_
+#define _RELACS_COMMON_EPHYSTRACES_H_ 1
 
 
 /*! 
@@ -80,4 +80,4 @@ private:
 };
 
 
-#endif
+#endif /* ! _RELACS_COMMON_EPHYSTRACES_H_ */

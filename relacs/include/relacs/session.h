@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _SESSION_H_
-#define _SESSION_H_
+#ifndef _RELACS_SESSION_H_
+#define _RELACS_SESSION_H_ 1
 
 #include <ctime>
 #include <string>
@@ -173,4 +173,4 @@ private slots:
 };
 
 
-#endif
+#endif /* ! _RELACS_SESSION_H_ */

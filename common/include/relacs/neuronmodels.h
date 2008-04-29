@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _NEURONMODELS_H_
-#define _NEURONMODELS_H_
+#ifndef _RELACS_COMMON_NEURONMODELS_H_
+#define _RELACS_COMMON_NEURONMODELS_H_ 1
 
 #include <relacs/model.h>
 
@@ -273,4 +273,4 @@ class WangAdapt : public SpikingNeuron
 };
 
 
-#endif
+#endif /* ! _RELACS_COMMON_NEURONMODELS_H_ */

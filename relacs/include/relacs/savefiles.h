@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _SAVEFILES_H_
-#define _SAVEFILES_H_
+#ifndef _RELACS_SAVEFILES_H_
+#define _RELACS_SAVEFILES_H_ 1
 
 #include <vector>
 #include <fstream>
@@ -257,4 +257,4 @@ protected:
 
 };
 
-#endif
+#endif /* ! _RELACS_SAVEFILES_H_ */

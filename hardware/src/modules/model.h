@@ -1,5 +1,5 @@
-#ifndef _MODEL_H_
-#define _MODEL_H_
+#ifndef _RELACS_HARDWARE_MODEL_H_
+#define _RELACS_HARDWARE_MODEL_H_ 1
 
 #include "moduledef.h"
 
@@ -93,4 +93,4 @@ extern float *dynClampOut;
 
 
 
-#endif
+#endif /* ! _RELACS_HARDWARE_MODEL_H_ */

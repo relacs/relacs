@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _SIMPLEMODEL_H_
-#define _SIMPLEMODEL_H_
+#ifndef _RELACS_COMMON_SIMPLEMODEL_H_
+#define _RELACS_COMMON_SIMPLEMODEL_H_ 1
 
 #include <relacs/model.h>
 
@@ -48,4 +48,4 @@ public:
 };
 
 
-#endif
+#endif /* ! _RELACS_COMMON_SIMPLEMODEL_H_ */

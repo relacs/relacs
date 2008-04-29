@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _DEFAULTSESSION_H_
-#define _DEFAULTSESSION_H_
+#ifndef _RELACS_DEFAULTSESSION_H_
+#define _RELACS_DEFAULTSESSION_H_ 1
 
 #include <qpushbutton.h>
 #include "control.h"
@@ -53,4 +53,4 @@ private:
 
 };
 
-#endif
+#endif /* ! _RELACS_DEFAULTSESSION_H_ */

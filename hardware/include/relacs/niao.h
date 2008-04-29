@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _NIAO_H_
-#define _NIAO_H_
+#ifndef _RELACS_HARDWARE_NIAO_H_
+#define _RELACS_HARDWARE_NIAO_H_ 1
 
 #include "nidaq.h"
 #include <relacs/analogoutput.h>
@@ -104,4 +104,4 @@ public:
 };
 
 
-#endif
+#endif /* ! _RELACS_HARDWARE_NIAO_H_ */

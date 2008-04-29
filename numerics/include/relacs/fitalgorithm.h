@@ -19,7 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _FITALGORITHM_H_
+#ifndef _RELACS_FITALGORITHM_H_
 #define _FITALGORITHM_H
 
 #include <cmath>
@@ -1181,4 +1181,4 @@ int marquardtFit( const ContainerX &x, const ContainerY &y, const ContainerS &s,
 
 };
 
-#endif
+#endif /* ! _RELACS_FITALGORITHM_H_ */

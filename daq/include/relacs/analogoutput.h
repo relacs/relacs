@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _ANALOGOUTPUT_H_
-#define _ANALOGOUTPUT_H_
+#ifndef _RELACS_ANALOGOUTPUT_H_
+#define _RELACS_ANALOGOUTPUT_H_ 1
 
 #include <vector>
 #include "device.h"
@@ -318,4 +318,4 @@ int AnalogOutput::convert( OutList &sigs )
 }
 
 
-#endif
+#endif /* ! _RELACS_ANALOGOUTPUT_H_ */

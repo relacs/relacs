@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _CS3310PP_H_
-#define _CS3310PP_H_
+#ifndef _RELACS_HARDWARE_CS3310PP_H_
+#define _RELACS_HARDWARE_CS3310PP_H_ 1
 
 #include <relacs/attenuator.h>
 
@@ -129,4 +129,4 @@ private:
 
 };
 
-#endif
+#endif /* ! _RELACS_HARDWARE_CS3310PP_H_ */

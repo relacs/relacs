@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _INDATA_H_
-#define _INDATA_H_
+#ifndef _RELACS_INDATA_H_
+#define _RELACS_INDATA_H_ 1
  
 #include <iostream>
 #include <string>
@@ -1160,4 +1160,4 @@ inline double InDataDiffIterator::operator[]( int n ) const
 }
 
 
-#endif
+#endif /* ! _RELACS_INDATA_H_ */

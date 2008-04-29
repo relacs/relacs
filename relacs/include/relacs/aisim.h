@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _AISIM_H_
-#define _AISIM_H_
+#ifndef _RELACS_AISIM_H_
+#define _RELACS_AISIM_H_ 1
 
 #include <relacs/analoginput.h>
 
@@ -101,4 +101,4 @@ private:
 };
 
 
-#endif
+#endif /* ! _RELACS_AISIM_H_ */

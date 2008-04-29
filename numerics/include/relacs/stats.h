@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _STATS_H_
-#define _STATS_H_
+#ifndef _RELACS_STATS_H_
+#define _RELACS_STATS_H_ 1
 
 #include <cmath>
 #include <vector>
@@ -2779,4 +2779,4 @@ void detrend( ContainerX &vecx )
   detrend( vecx.begin(), vecx.end() );
 }
 
-#endif
+#endif /* ! _RELACS_STATS_H_ */

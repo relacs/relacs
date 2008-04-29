@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _PLOT_H_
-#define _PLOT_H_
+#ifndef _RELACS_PLOT_H_
+#define _RELACS_PLOT_H_ 1
 
 
 #include <values.h>
@@ -1651,4 +1651,4 @@ int Plot::plot( const T &x, double tscale,
 }
 
 
-#endif
+#endif /* ! _RELACS_PLOT_H_ */

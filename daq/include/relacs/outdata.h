@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _OUTDATA_H_
-#define _OUTDATA_H_
+#ifndef _RELACS_OUTDATA_H_
+#define _RELACS_OUTDATA_H_ 1
  
 #include <fstream>
 #include <string>
@@ -844,4 +844,4 @@ const OutData &OutData::append( const R &a )
 }
 
 
-#endif
+#endif /* ! _RELACS_OUTDATA_H_ */

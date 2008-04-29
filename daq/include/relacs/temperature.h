@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _TEMPERATURE_H_
-#define _TEMPERATURE_H_
+#ifndef _RELACS_TEMPERATURE_H_
+#define _RELACS_TEMPERATURE_H_ 1
 
 #include "device.h"
 using namespace std;
@@ -55,4 +55,4 @@ public:
 };
 
 
-#endif
+#endif /* ! _RELACS_TEMPERATURE_H_ */

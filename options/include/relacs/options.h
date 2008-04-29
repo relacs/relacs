@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _OPTIONS_H_
-#define _OPTIONS_H_
+#ifndef _RELACS_OPTIONS_H_
+#define _RELACS_OPTIONS_H_ 1
 
 
 #include <string>
@@ -1078,4 +1078,4 @@ private:
 };
 
 
-#endif
+#endif /* ! _RELACS_OPTIONS_H_ */

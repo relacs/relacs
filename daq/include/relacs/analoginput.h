@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _ANALOGINPUT_H_
-#define _ANALOGINPUT_H_
+#ifndef _RELACS_ANALOGINPUT_H_
+#define _RELACS_ANALOGINPUT_H_ 1
 
 #include <vector>
 #include "device.h"
@@ -317,4 +317,4 @@ void AnalogInput::convert( InList &traces )
 }
 
 
-#endif
+#endif /* ! _RELACS_ANALOGINPUT_H_ */

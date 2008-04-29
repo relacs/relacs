@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _KERNEL_H_
-#define _KERNEL_H_
+#ifndef _RELACS_KERNEL_H_
+#define _RELACS_KERNEL_H_ 1
 
 
 /*! 
@@ -335,4 +335,4 @@ private:
 };
 
 
-#endif
+#endif /* ! _RELACS_KERNEL_H_ */

@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _RANGELOOP_H_
-#define _RANGELOOP_H_
+#ifndef _RELACS_RANGELOOP_H_
+#define _RELACS_RANGELOOP_H_ 1
 
 
 #include <vector>
@@ -449,4 +449,4 @@ class RangeLoop
 };
 
 
-#endif
+#endif /* ! _RELACS_RANGELOOP_H_ */

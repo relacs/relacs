@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _SIMULATOR_H_
-#define _SIMULATOR_H_
+#ifndef _RELACS_SIMULATOR_H_
+#define _RELACS_SIMULATOR_H_ 1
 
 #include <relacs/acquire.h>
 using namespace std;
@@ -106,4 +106,4 @@ private:
 
 };
 
-#endif
+#endif /* ! _RELACS_SIMULATOR_H_ */

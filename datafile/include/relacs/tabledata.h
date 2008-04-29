@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _TABLEDATA_H_
-#define _TABLEDATA_H_
+#ifndef _RELACS_TABLEDATA_H_
+#define _RELACS_TABLEDATA_H_ 1
 
 
 #include <fstream>
@@ -97,4 +97,4 @@ private:
 };
 
 
-#endif
+#endif /* ! _RELACS_TABLEDATA_H_ */

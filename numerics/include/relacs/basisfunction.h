@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _BASISFUNCTION_H_
-#define _BASISFUNCTION_H_
+#ifndef _RELACS_BASISFUNCTION_H_
+#define _RELACS_BASISFUNCTION_H_ 1
 
 #include "array.h"
 
@@ -184,4 +184,4 @@ private:
 };
 
 
-#endif
+#endif /* ! _RELACS_BASISFUNCTION_H_ */

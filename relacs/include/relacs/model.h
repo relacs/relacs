@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _MODEL_H_
-#define _MODEL_H_
+#ifndef _RELACS_MODEL_H_
+#define _RELACS_MODEL_H_ 1
 
 #include <vector>
 #include <string>
@@ -259,4 +259,4 @@ private:
 
 };
 
-#endif
+#endif /* ! _RELACS_MODEL_H_ */

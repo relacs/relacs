@@ -1,5 +1,5 @@
-#ifndef _DYNCLAMPANALOGINPUT_H_
-#define _DYNCLAMPANALOGINPUT_H_
+#ifndef _RELACS_HARDWARE_DYNCLAMPANALOGINPUT_H_
+#define _RELACS_HARDWARE_DYNCLAMPANALOGINPUT_H_ 1
 
 #include <vector>
 #include <comedilib.h>
@@ -216,4 +216,4 @@ private:
 };
 
 
-#endif
+#endif /* ! _RELACS_HARDWARE_DYNCLAMPANALOGINPUT_H_ */

@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _MOTORCONTROL_H_
-#define _MOTORCONTROL_H_
+#ifndef _RELACS_COMMON_MOTORCONTROL_H_
+#define _RELACS_COMMON_MOTORCONTROL_H_ 1
 
 #include <vector>
 #include <qpixmap.h>
@@ -182,4 +182,4 @@ private slots:
 };
 
 
-#endif
+#endif /* ! _RELACS_COMMON_MOTORCONTROL_H_ */

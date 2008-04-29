@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _EVENTDATA_H_
-#define _EVENTDATA_H_
+#ifndef _RELACS_EVENTDATA_H_
+#define _RELACS_EVENTDATA_H_ 1
 
 #include <vector>
 #include <iterator>
@@ -1645,4 +1645,4 @@ inline double EventSizeIterator::operator[]( long n ) const
 }
 
 
-#endif
+#endif /* ! _RELACS_EVENTDATA_H_ */

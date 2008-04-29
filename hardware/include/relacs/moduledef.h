@@ -1,7 +1,7 @@
 /* DEFINITIONS SHARED BETWEEN USER SPACE AND KERNEL SPACE */
 
-#ifndef _MODULEDEF_H_
-#define _MODULEDEF_H_
+#ifndef _RELACS_HARDWARE_MODULEDEF_H_
+#define _RELACS_HARDWARE_MODULEDEF_H_ 1
 
 #include <linux/ioctl.h>
 
@@ -188,4 +188,4 @@ struct paramDefT {
 
 
 
-#endif
+#endif /* ! _RELACS_HARDWARE_MODULEDEF_H_ */

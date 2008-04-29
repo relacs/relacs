@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _CYCLICARRAY_H_
-#define _CYCLICARRAY_H_
+#ifndef _RELACS_CYCLICSAMPLEDATA_H_
+#define _RELACS_CYCLICSAMPLEDATA_H_ 1
 
 #include "cyclicarray.h"
 #include "linearrange.h"
@@ -472,4 +472,4 @@ double CyclicSampleData< T >::rms( long from, long upto ) const
 }
 
 
-#endif
+#endif /* ! _RELACS_CYCLICSAMPLEDATA_H_ */

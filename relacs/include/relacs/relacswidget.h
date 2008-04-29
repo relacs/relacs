@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _RELACSWIDGET_H_
-#define _RELACSWIDGET_H_
+#ifndef _RELACS_RELACSWIDGET_H_
+#define _RELACS_RELACSWIDGET_H_ 1
 
 #include <qmainwindow.h>
 #include <qpopupmenu.h>

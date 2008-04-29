@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _ACQUIRE_H_
-#define _ACQUIRE_H_
+#ifndef _RELACS_ACQUIRE_H_
+#define _RELACS_ACQUIRE_H_ 1
 
 #include <string>
 #include <ctime>
@@ -587,4 +587,4 @@ protected:
 };
 
 
-#endif
+#endif /* ! _RELACS_ACQUIRE_H_ */

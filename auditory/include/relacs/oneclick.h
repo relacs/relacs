@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _ONECLICK_H_
-#define _ONECLICK_H_
+#ifndef _RELACS_AUDITORY_ONECLICK_H_
+#define _RELACS_AUDITORY_ONECLICK_H_ 1
 
 #include <relacs/repro.h>
 #include <relacs/rangeloop.h>
@@ -84,4 +84,4 @@ protected:
 
 };
 
-#endif
+#endif /* ! _RELACS_AUDITORY_ONECLICK_H_ */

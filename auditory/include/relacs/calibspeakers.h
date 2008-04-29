@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _CALIBSPEAKERS_H_
-#define _CALIBSPEAKERS_H_
+#ifndef _RELACS_AUDITORY_CALIBSPEAKERS_H_
+#define _RELACS_AUDITORY_CALIBSPEAKERS_H_ 1
 
 #include <relacs/repro.h>
 #include "auditorytraces.h"
@@ -109,4 +109,4 @@ protected:
 
 };
 
-#endif
+#endif /* ! _RELACS_AUDITORY_CALIBSPEAKERS_H_ */

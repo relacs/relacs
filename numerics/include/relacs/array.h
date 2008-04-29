@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _ARRAY_H_
-#define _ARRAY_H_
+#ifndef _RELACS_ARRAY_H_
+#define _RELACS_ARRAY_H_ 1
 
 
 #include <cstdlib>
@@ -2090,4 +2090,4 @@ istream &operator>>( istream &str, Array<T> &a )
 }
 
 
-#endif
+#endif /* ! _RELACS_ARRAY_H_ */

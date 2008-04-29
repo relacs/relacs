@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _CONTAINEROPS_H_
-#define _CONTAINEROPS_H_
+#ifndef _RELACS_CONTAINEROPS_H_
+#define _RELACS_CONTAINEROPS_H_ 1
 
 
 ///////////// unary class member operators //////////////////////////////////
@@ -356,4 +356,4 @@
 
 
   
-#endif
+#endif /* ! _RELACS_CONTAINEROPS_H_ */

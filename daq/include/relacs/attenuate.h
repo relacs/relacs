@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _ATTENUATE_H_
-#define _ATTENUATE_H_
+#ifndef _RELACS_ATTENUATE_H_
+#define _RELACS_ATTENUATE_H_ 1
 
 
 #include "device.h"
@@ -342,4 +342,4 @@ private:
   int AOChannel;
 };
 
-#endif
+#endif /* ! _RELACS_ATTENUATE_H_ */

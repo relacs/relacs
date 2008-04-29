@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _CONTAINERFUNCS_H_
-#define _CONTAINERFUNCS_H_
+#ifndef _RELACS_CONTAINERFUNCS_H_
+#define _RELACS_CONTAINERFUNCS_H_ 1
 
 #include <cmath>
 
@@ -685,4 +685,4 @@ namespace numerics
 }; // namespace numerics
 
 
-#endif
+#endif /* ! _RELACS_CONTAINERFUNCS_H_ */

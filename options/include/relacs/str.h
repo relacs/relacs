@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _STR_H_
-#define _STR_H_
+#ifndef _RELACS_STR_H_
+#define _RELACS_STR_H_ 1
 
 #include <string>
 #include <vector>
@@ -1169,4 +1169,4 @@ private:
   void ReadFormat( const char *format, int &width, int &findex );
 };
 
-#endif
+#endif /* ! _RELACS_STR_H_ */

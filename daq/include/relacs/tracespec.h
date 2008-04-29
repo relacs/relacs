@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _TRACESPEC_H_
-#define _TRACESPEC_H_
+#ifndef _RELACS_TRACESPEC_H_
+#define _RELACS_TRACESPEC_H_ 1
  
 #include <string>
 
@@ -173,4 +173,4 @@ class TraceSpec
 };
 
 
-#endif
+#endif /* ! _RELACS_TRACESPEC_H_ */

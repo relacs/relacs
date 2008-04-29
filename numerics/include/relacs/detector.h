@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _DETECTOR_H_
-#define _DETECTOR_H_
+#ifndef _RELACS_DETECTOR_H_
+#define _RELACS_DETECTOR_H_ 1
 
 #include "eventdata.h"
 #include "eventlist.h"
@@ -2902,4 +2902,4 @@ int AcceptEvent<DataIter,TimeIter>::checkTrough(
 }
 
 
-#endif
+#endif /* ! _RELACS_DETECTOR_H_ */

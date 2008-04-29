@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _SYSLATENCY_H_
-#define _SYSLATENCY_H_
+#ifndef _RELACS_AUDITORY_SYSLATENCY_H_
+#define _RELACS_AUDITORY_SYSLATENCY_H_ 1
 
 #include <relacs/repro.h>
 #include <relacs/array.h>
@@ -104,4 +104,4 @@ protected:
 };
 
 
-#endif
+#endif /* ! _RELACS_AUDITORY_SYSLATENCY_H_ */

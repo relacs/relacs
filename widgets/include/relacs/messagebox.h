@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _MESSAGEBOX_H_
-#define _MESSAGEBOX_H_
+#ifndef _RELACS_MESSAGEBOX_H_
+#define _RELACS_MESSAGEBOX_H_ 1
 
 #include <string>
 #include <qdialog.h>
@@ -203,4 +203,4 @@ private slots:
 };
 
 
-#endif
+#endif /* ! _RELACS_MESSAGEBOX_H_ */

@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _KLEINDIEK_H_
-#define _KLEINDIEK_H_
+#ifndef _RELACS_HARDWARE_KLEINDIEK_H_
+#define _RELACS_HARDWARE_KLEINDIEK_H_ 1
 
 #include <string>
 #include <vector>
@@ -139,4 +139,4 @@ private:
 };
 
 
-#endif
+#endif /* ! _RELACS_HARDWARE_KLEINDIEK_H_ */

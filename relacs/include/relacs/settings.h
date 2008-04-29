@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _SETTINGS_H_
-#define _SETTINGS_H_
+#ifndef _RELACS_SETTINGS_H_
+#define _RELACS_SETTINGS_H_ 1
 
 
 #include <relacs/configdialog.h>
@@ -58,4 +58,4 @@ private:
 };
 
 
-#endif
+#endif /* ! _RELACS_SETTINGS_H_ */

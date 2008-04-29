@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _AOSIM_H_
-#define _AOSIM_H_
+#ifndef _RELACS_AOSIM_H_
+#define _RELACS_AOSIM_H_ 1
 
 #include <relacs/analogoutput.h>
 
@@ -94,4 +94,4 @@ public:
 };
 
 
-#endif
+#endif /* ! _RELACS_AOSIM_H_ */

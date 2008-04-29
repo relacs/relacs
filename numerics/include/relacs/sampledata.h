@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _SAMPLEDATA_H_
-#define _SAMPLEDATA_H_
+#ifndef _RELACS_SAMPLEDATA_H_
+#define _RELACS_SAMPLEDATA_H_ 1
 
 #include <string>
 #include <iostream>
@@ -3510,4 +3510,4 @@ istream &operator>>( istream &str, SampleData< T > &a )
 }
 
 
-#endif
+#endif /* ! _RELACS_SAMPLEDATA_H_ */

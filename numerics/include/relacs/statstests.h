@@ -19,7 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _STATSTESTS_H_
+#ifndef _RELACS_STATSTESTS_H_
 #define _STATSTESTS_H
 
 #include "array.h"
@@ -102,4 +102,4 @@ double gammaQ( double a, double x );
 double incBeta( double a, double b, double x );
 
 
-#endif
+#endif /* ! _RELACS_STATSTESTS_H_ */

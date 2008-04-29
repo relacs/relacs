@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _MACROS_H_
-#define _MACROS_H_
+#ifndef _RELACS_MACROS_H_
+#define _RELACS_MACROS_H_ 1
 
 #include <iostream>
 #include <string>
@@ -587,4 +587,4 @@ private slots:
 };
 
 
-#endif
+#endif /* ! _RELACS_MACROS_H_ */
