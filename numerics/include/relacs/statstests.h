@@ -22,7 +22,7 @@
 #ifndef _RELACS_STATSTESTS_H_
 #define _STATSTESTS_H
 
-#include "array.h"
+#include <relacs/array.h>
 
 
   /*! The integral over the standard normal distribution upto x. 

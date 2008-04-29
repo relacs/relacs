@@ -27,7 +27,7 @@
 #include <relacs/sampledata.h>
 #include <relacs/multiplot.h>
 #include <relacs/ephystraces.h>
-#include "auditorytraces.h"
+#include <relacs/auditorytraces.h>
 
 
 /*! 

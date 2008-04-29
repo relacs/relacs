@@ -23,7 +23,7 @@
 #define _RELACS_MULTIPLOT_H_ 1
 
 
-#include "plot.h"
+#include <relacs/plot.h>
 #include <vector>
 #include <qwidget.h>
 #include <qpixmap.h>

@@ -27,8 +27,8 @@
 #include <relacs/rangeloop.h>
 #include <relacs/multiplot.h>
 #include <relacs/ephystraces.h>
-#include "auditorytraces.h"
-#include "ficurve.h"
+#include <relacs/auditorytraces.h>
+#include <relacs/ficurve.h>
 
 using namespace std;
 

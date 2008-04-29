@@ -23,8 +23,8 @@
 #define _RELACS_ATTENUATE_H_ 1
 
 
-#include "device.h"
-#include "attenuator.h"
+#include <relacs/device.h>
+#include <relacs/attenuator.h>
 using namespace std;
 
 

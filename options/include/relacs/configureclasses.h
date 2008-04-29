@@ -24,7 +24,7 @@
 
 #include <string>
 #include <vector>
-#include "configclass.h"
+#include <relacs/configclass.h>
 using namespace std;
 
 

@@ -31,8 +31,8 @@
 #include <relacs/eventlist.h>
 #include <relacs/outdata.h>
 #include <relacs/outlist.h>
-#include "metadata.h"
-#include "plugins.h"
+#include <relacs/metadata.h>
+#include <relacs/plugins.h>
 #include <relacs/configdialog.h>
 
 

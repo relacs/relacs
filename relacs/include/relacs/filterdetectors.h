@@ -29,7 +29,7 @@
 #include <relacs/configclass.h>
 #include <relacs/inlist.h>
 #include <relacs/eventlist.h>
-#include "plottrace.h"
+#include <relacs/plottrace.h>
 
 class RePros;
 class Session;

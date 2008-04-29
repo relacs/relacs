@@ -30,8 +30,8 @@
 #include <relacs/str.h>
 #include <relacs/strqueue.h>
 #include <relacs/options.h>
-#include "tablekey.h"
-#include "tabledata.h"
+#include <relacs/tablekey.h>
+#include <relacs/tabledata.h>
 using namespace std;
 
 /*!

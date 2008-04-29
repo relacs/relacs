@@ -29,7 +29,7 @@
 #include <relacs/str.h>
 #include <relacs/strqueue.h>
 #include <relacs/options.h>
-#include "tablekey.h"
+#include <relacs/tablekey.h>
 
 
   /*! Returns the string \a s with each occurence of a pattern $(xxxx) 

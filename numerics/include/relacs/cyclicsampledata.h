@@ -22,9 +22,9 @@
 #ifndef _RELACS_CYCLICSAMPLEDATA_H_
 #define _RELACS_CYCLICSAMPLEDATA_H_ 1
 
-#include "cyclicarray.h"
-#include "linearrange.h"
-#include "stats.h"
+#include <relacs/cyclicarray.h>
+#include <relacs/linearrange.h>
+#include <relacs/stats.h>
 
 /*!
 \class CyclicSampleData

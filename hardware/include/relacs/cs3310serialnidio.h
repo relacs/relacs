@@ -22,7 +22,7 @@
 #ifndef _RELACS_HARDWARE_CS3310SERIALNIDIO_H_
 #define _RELACS_HARDWARE_CS3310SERIALNIDIO_H_ 1
 
-#include "nidio.h"
+#include <relacs/nidio.h>
 #include <relacs/attenuator.h>
 
 /* 

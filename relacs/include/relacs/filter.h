@@ -23,7 +23,7 @@
 #define _RELACS_FILTER_H_ 1
 
 #include <limits.h>
-#include "relacsplugin.h"
+#include <relacs/relacsplugin.h>
 
 /*! 
 \class Filter

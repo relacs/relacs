@@ -26,7 +26,7 @@
 #include <string>
 #include <vector>
 #include <relacs/sampledata.h>
-#include "daqerror.h"
+#include <relacs/daqerror.h>
 
 using namespace std;
 

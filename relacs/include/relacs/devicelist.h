@@ -26,7 +26,7 @@
 #include <vector>
 #include <relacs/str.h>
 #include <relacs/configclass.h>
-#include "relacsplugin.h"
+#include <relacs/relacsplugin.h>
 using namespace std;
 
 class AllDevices;

@@ -36,7 +36,7 @@
 #include <qdatetime.h>
 #include <relacs/cyclicarray.h>
 #include <relacs/outdata.h>
-#include "relacsplugin.h"
+#include <relacs/relacsplugin.h>
 using namespace std;
 
 

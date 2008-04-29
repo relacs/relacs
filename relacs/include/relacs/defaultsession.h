@@ -23,7 +23,7 @@
 #define _RELACS_DEFAULTSESSION_H_ 1
 
 #include <qpushbutton.h>
-#include "control.h"
+#include <relacs/control.h>
 
 
 /*! 

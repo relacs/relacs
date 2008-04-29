@@ -19,7 +19,6 @@ Plugins:
   -> this is used to form the path where to install the plugins
 
 Both:
-- include of local headers also with <relacs/foo.h>?
 - check libdir in the libraries and plugins
   pkginclude_HEADERS = ...
 

@@ -26,12 +26,12 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
-#include "array.h"
-#include "linearrange.h"
-#include "containerfuncs.h"
-#include "spectrum.h"
-#include "eventdata.h"
-#include "detector.h"
+#include <relacs/array.h>
+#include <relacs/linearrange.h>
+#include <relacs/containerfuncs.h>
+#include <relacs/spectrum.h>
+#include <relacs/eventdata.h>
+#include <relacs/detector.h>
 
 using namespace std;
 
@@ -77,7 +77,7 @@ The more general interface for computations with mathematical functions
 is defined in \c basefuncs.h and operates directly on the array.
 The range is neither affected nor used.
 \code
-  #include "basefuncs.h"
+  #include <relacs/basefuncs.h>
 
   SampleDataD y( 0.0, 1.0, 0.01 );
   y.identity();

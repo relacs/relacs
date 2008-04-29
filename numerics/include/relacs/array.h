@@ -34,9 +34,9 @@
 #ifdef HAVE_LIBGSL
 #include <gsl/gsl_vector.h>
 #endif
-#include "containerops.h"
-#include "stats.h"
-#include "random.h"
+#include <relacs/containerops.h>
+#include <relacs/stats.h>
+#include <relacs/random.h>
 
 using namespace std;
 

@@ -28,7 +28,7 @@
 #include <qlabel.h>
 #include <vector>
 #include <relacs/options.h>
-#include "relacsplugin.h"
+#include <relacs/relacsplugin.h>
 
 
 class RePro;

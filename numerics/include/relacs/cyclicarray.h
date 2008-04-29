@@ -25,7 +25,7 @@
 #include <cstdlib>
 #include <cassert>
 #include <iostream>
-#include "sampledata.h"
+#include <relacs/sampledata.h>
 using namespace std;
 
 /*!

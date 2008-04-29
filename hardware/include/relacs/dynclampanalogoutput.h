@@ -3,11 +3,11 @@
 
 #include <vector>
 #include <comedilib.h>
-#include "daqerror.h"
-#include "analogoutput.h"
-#include "analoginput.h"
-#include "comedianalogoutput.h"
-#include "moduledef.h"
+#include <relacs/daqerror.h>
+#include <relacs/analogoutput.h>
+#include <relacs/analoginput.h>
+#include <relacs/comedianalogoutput.h>
+#include <relacs/moduledef.h>
 
 using namespace std;
 

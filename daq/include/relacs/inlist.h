@@ -23,7 +23,7 @@
 #define _RELACS_INLIST_H_ 1
 
 #include <vector> 
-#include "indata.h"
+#include <relacs/indata.h>
 using namespace std;
 
 

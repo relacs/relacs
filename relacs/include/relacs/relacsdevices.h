@@ -22,7 +22,7 @@
 #ifndef _RELACS_RELACSDEVICES_H_
 #define _RELACS_RELACSDEVICES_H_ 1
 
-#include "devicelist.h"
+#include <relacs/devicelist.h>
 #include <relacs/device.h>
 #include <relacs/analoginput.h>
 #include <relacs/analogoutput.h>

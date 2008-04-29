@@ -30,7 +30,7 @@
 #include <relacs/temperature.h>
 #include <relacs/amplmode.h>
 #include <relacs/ephystraces.h>
-#include "auditorytraces.h"
+#include <relacs/auditorytraces.h>
 #include <relacs/control.h>
 
 

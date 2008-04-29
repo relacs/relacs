@@ -34,7 +34,7 @@
 #ifdef USEWAITCONDITION
 #include <qwaitcondition.h>
 #endif
-#include "relacsplugin.h"
+#include <relacs/relacsplugin.h>
 using namespace std;
 
 

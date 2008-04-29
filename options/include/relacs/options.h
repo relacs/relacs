@@ -25,9 +25,9 @@
 
 #include <string>
 #include <deque>
-#include "str.h"
-#include "strqueue.h"
-#include "parameter.h"
+#include <relacs/str.h>
+#include <relacs/strqueue.h>
+#include <relacs/parameter.h>
 using namespace std;
 
 

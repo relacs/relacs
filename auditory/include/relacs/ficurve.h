@@ -26,7 +26,7 @@
 #include <relacs/rangeloop.h>
 #include <relacs/multiplot.h>
 #include <relacs/ephystraces.h>
-#include "auditorytraces.h"
+#include <relacs/auditorytraces.h>
 #include <relacs/repro.h>
 
 

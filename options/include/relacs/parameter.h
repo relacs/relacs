@@ -28,8 +28,8 @@
 #include <string>
 #include <iostream>
 #include <vector>
-#include "str.h"
-#include "strqueue.h"
+#include <relacs/str.h>
+#include <relacs/strqueue.h>
 using namespace std;
 
 

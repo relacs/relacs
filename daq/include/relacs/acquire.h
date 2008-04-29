@@ -26,13 +26,13 @@
 #include <ctime>
 #include <vector>
 #include <deque>
-#include "tracespec.h"
-#include "inlist.h"
-#include "outlist.h"
+#include <relacs/tracespec.h>
+#include <relacs/inlist.h>
+#include <relacs/outlist.h>
 #include <relacs/eventlist.h>
-#include "analoginput.h"
-#include "analogoutput.h"
-#include "attenuate.h"
+#include <relacs/analoginput.h>
+#include <relacs/analogoutput.h>
+#include <relacs/attenuate.h>
 
 using namespace std;
 

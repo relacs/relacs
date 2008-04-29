@@ -23,10 +23,10 @@
 #define _RELACS_AUDITORY_CALIBSPEAKERS_H_ 1
 
 #include <relacs/repro.h>
-#include "auditorytraces.h"
+#include <relacs/auditorytraces.h>
 #include <relacs/rangeloop.h>
 #include <relacs/multiplot.h>
-#include "loudspeaker.h"
+#include <relacs/loudspeaker.h>
 
 
 /*!
