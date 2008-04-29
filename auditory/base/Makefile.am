@@ -1,20 +1,20 @@
 include ${top_srcdir}/moc3.mk
 
-libdir = $(prefix)/lib/$(PLUGINS_BASENAME)
+pluginlibdir = $(pkglibdir)/plugins
 
-lib_LTLIBRARIES = \
-    librelacsauditorytraces.la \
-    librelacsauditorysession.la \
-    librelacsauditoryficurve.la \
-    librelacsauditoryneuron.la \
-    librelacsauditorysearch.la \
-    librelacsauditoryfifield.la \
-    librelacsauditorysinglestimulus.la \
-    librelacsauditoryspikeprecision.la \
-    librelacsauditorysyslatency.la
+pluginlib_LTLIBRARIES = \
+    libauditorytraces.la \
+    libauditorysession.la \
+    libauditoryficurve.la \
+    libauditoryneuron.la \
+    libauditorysearch.la \
+    libauditoryfifield.la \
+    libauditorysinglestimulus.la \
+    libauditoryspikeprecision.la \
+    libauditorysyslatency.la
 
 
-librelacsauditoryneuron_la_CPPFLAGS = \
+libauditoryneuron_la_CPPFLAGS = \
     -I$(srcdir)/../../common/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../numerics/include \
@@ -24,24 +24,29 @@ librelacsauditoryneuron_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
-librelacsauditoryneuron_la_LDFLAGS = \
+libauditoryneuron_la_LDFLAGS = \
+    -module -avoid-version \
     $(QT3_LDFLAGS)
 
-librelacsauditoryneuron_la_LIBADD = \
+libauditoryneuron_la_LIBADD = \
     ../../relacs/src/librelacs.la \
-    ../../common/models/librelacscommonneuronmodels.la \
+    ../../common/models/libcommonneuronmodels.la \
     $(QT3_LIBS)
 
-$(librelacsauditoryneuron_la_OBJECTS) : \
+$(libauditoryneuron_la_OBJECTS) : \
     moc_auditoryneuron.cc
 
-librelacsauditoryneuron_la_SOURCES = \
-    auditoryneuron.cc \
+libauditoryneuron_la_SOURCES = \
+    auditoryneuron.cc
+
+libauditoryneuron_la_includedir = $(pkgincludedir)/auditory
+
+libauditoryneuron_la_include_HEADERS = \
     ../include/relacs/auditoryneuron.h
 
 
 
-librelacsauditorysearch_la_CPPFLAGS = \
+libauditorysearch_la_CPPFLAGS = \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../datafile/include \
     -I$(srcdir)/../../numerics/include \
@@ -51,24 +56,29 @@ librelacsauditorysearch_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
-librelacsauditorysearch_la_LDFLAGS = \
+libauditorysearch_la_LDFLAGS = \
+    -module -avoid-version \
     $(QT3_LDFLAGS)
 
-librelacsauditorysearch_la_LIBADD = \
+libauditorysearch_la_LIBADD = \
     ../../relacs/src/librelacs.la \
-    librelacsauditorytraces.la \
+    libauditorytraces.la \
     $(QT3_LIBS)
 
-$(librelacsauditorysearch_la_OBJECTS) : \
+$(libauditorysearch_la_OBJECTS) : \
     moc_auditorysearch.cc
 
-librelacsauditorysearch_la_SOURCES = \
-    auditorysearch.cc \
+libauditorysearch_la_SOURCES = \
+    auditorysearch.cc
+
+libauditorysearch_la_includedir = $(pkgincludedir)/auditory
+
+libauditorysearch_la_include_HEADERS = \
     ../include/relacs/auditorysearch.h
 
 
 
-librelacsauditorysession_la_CPPFLAGS = \
+libauditorysession_la_CPPFLAGS = \
     -I$(srcdir)/../../common/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../hardware/include \
@@ -80,26 +90,31 @@ librelacsauditorysession_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
-librelacsauditorysession_la_LDFLAGS = \
+libauditorysession_la_LDFLAGS = \
+    -module -avoid-version \
     $(QT3_LDFLAGS)
 
-librelacsauditorysession_la_LIBADD = \
+libauditorysession_la_LIBADD = \
     ../../relacs/src/librelacs.la \
-    ../../common/base/librelacscommonephystraces.la \
-    ../../hardware/src/librelacsnieserieshardware.la \
-    librelacsauditorytraces.la \
+    ../../common/base/libcommonephystraces.la \
+    ../../hardware/src/libnieserieshardware.la \
+    libauditorytraces.la \
     $(QT3_LIBS)
 
-$(librelacsauditorysession_la_OBJECTS) : \
+$(libauditorysession_la_OBJECTS) : \
     moc_auditorysession.cc
 
-librelacsauditorysession_la_SOURCES = \
-    auditorysession.cc \
+libauditorysession_la_SOURCES = \
+    auditorysession.cc
+
+libauditorysession_la_includedir = $(pkgincludedir)/auditory
+
+libauditorysession_la_include_HEADERS = \
     ../include/relacs/auditorysession.h
 
 
 
-librelacsauditorytraces_la_CPPFLAGS = \
+libauditorytraces_la_CPPFLAGS = \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \
@@ -108,20 +123,25 @@ librelacsauditorytraces_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
-librelacsauditorytraces_la_LDFLAGS = \
+libauditorytraces_la_LDFLAGS = \
+    -module -avoid-version \
     $(QT3_LDFLAGS)
 
-librelacsauditorytraces_la_LIBADD = \
+libauditorytraces_la_LIBADD = \
     ../../relacs/src/librelacs.la \
     $(QT3_LIBS)
 
-librelacsauditorytraces_la_SOURCES = \
-    auditorytraces.cc \
+libauditorytraces_la_SOURCES = \
+    auditorytraces.cc
+
+libauditorytraces_la_includedir = $(pkgincludedir)/auditory
+
+libauditorytraces_la_include_HEADERS = \
     ../include/relacs/auditorytraces.h
 
 
 
-librelacsauditoryficurve_la_CPPFLAGS = \
+libauditoryficurve_la_CPPFLAGS = \
     -I$(srcdir)/../../common/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../datafile/include \
@@ -134,26 +154,31 @@ librelacsauditoryficurve_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
-librelacsauditoryficurve_la_LDFLAGS = \
+libauditoryficurve_la_LDFLAGS = \
+    -module -avoid-version \
     $(QT3_LDFLAGS)
 
-librelacsauditoryficurve_la_LIBADD = \
+libauditoryficurve_la_LIBADD = \
     ../../relacs/src/librelacs.la \
-    ../../common/base/librelacscommonephystraces.la \
-    librelacsauditorytraces.la \
-    librelacsauditorysession.la \
+    ../../common/base/libcommonephystraces.la \
+    libauditorytraces.la \
+    libauditorysession.la \
     $(QT3_LIBS)
 
-$(librelacsauditoryficurve_la_OBJECTS) : \
+$(libauditoryficurve_la_OBJECTS) : \
     moc_ficurve.cc
 
-librelacsauditoryficurve_la_SOURCES = \
-    ficurve.cc \
+libauditoryficurve_la_SOURCES = \
+    ficurve.cc
+
+libauditoryficurve_la_includedir = $(pkgincludedir)/auditory
+
+libauditoryficurve_la_include_HEADERS = \
     ../include/relacs/ficurve.h
 
 
 
-librelacsauditoryfifield_la_CPPFLAGS = \
+libauditoryfifield_la_CPPFLAGS = \
     -I$(srcdir)/../../common/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../datafile/include \
@@ -166,26 +191,31 @@ librelacsauditoryfifield_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
-librelacsauditoryfifield_la_LDFLAGS = \
+libauditoryfifield_la_LDFLAGS = \
+    -module -avoid-version \
     $(QT3_LDFLAGS)
 
-librelacsauditoryfifield_la_LIBADD = \
+libauditoryfifield_la_LIBADD = \
     ../../relacs/src/librelacs.la \
-    ../../common/base/librelacscommonephystraces.la \
-    librelacsauditorytraces.la \
-    librelacsauditoryficurve.la \
+    ../../common/base/libcommonephystraces.la \
+    libauditorytraces.la \
+    libauditoryficurve.la \
     $(QT3_LIBS)
 
-$(librelacsauditoryfifield_la_OBJECTS) : \
+$(libauditoryfifield_la_OBJECTS) : \
     moc_fifield.cc
 
-librelacsauditoryfifield_la_SOURCES = \
-    fifield.cc \
+libauditoryfifield_la_SOURCES = \
+    fifield.cc
+
+libauditoryfifield_la_includedir = $(pkgincludedir)/auditory
+
+libauditoryfifield_la_include_HEADERS = \
     ../include/relacs/fifield.h
 
 
 
-librelacsauditorysinglestimulus_la_CPPFLAGS = \
+libauditorysinglestimulus_la_CPPFLAGS = \
     -I$(srcdir)/../../common/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../datafile/include \
@@ -198,26 +228,31 @@ librelacsauditorysinglestimulus_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
-librelacsauditorysinglestimulus_la_LDFLAGS = \
+libauditorysinglestimulus_la_LDFLAGS = \
+    -module -avoid-version \
     $(QT3_LDFLAGS)
 
-librelacsauditorysinglestimulus_la_LIBADD = \
+libauditorysinglestimulus_la_LIBADD = \
     ../../relacs/src/librelacs.la \
-    ../../common/base/librelacscommonephystraces.la \
-    librelacsauditorysession.la \
-    librelacsauditorytraces.la \
+    ../../common/base/libcommonephystraces.la \
+    libauditorysession.la \
+    libauditorytraces.la \
     $(QT3_LIBS)
 
-$(librelacsauditorysinglestimulus_la_OBJECTS) : \
+$(libauditorysinglestimulus_la_OBJECTS) : \
     moc_singlestimulus.cc
 
-librelacsauditorysinglestimulus_la_SOURCES = \
-    singlestimulus.cc \
+libauditorysinglestimulus_la_SOURCES = \
+    singlestimulus.cc
+
+libauditorysinglestimulus_la_includedir = $(pkgincludedir)/auditory
+
+libauditorysinglestimulus_la_include_HEADERS = \
     ../include/relacs/singlestimulus.h
 
 
 
-librelacsauditoryspikeprecision_la_CPPFLAGS = \
+libauditoryspikeprecision_la_CPPFLAGS = \
     -I$(srcdir)/../../common/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../datafile/include \
@@ -230,26 +265,31 @@ librelacsauditoryspikeprecision_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
-librelacsauditoryspikeprecision_la_LDFLAGS = \
+libauditoryspikeprecision_la_LDFLAGS = \
+    -module -avoid-version \
     $(QT3_LDFLAGS)
 
-librelacsauditoryspikeprecision_la_LIBADD = \
+libauditoryspikeprecision_la_LIBADD = \
     ../../relacs/src/librelacs.la \
-    ../../common/base/librelacscommonephystraces.la \
-    librelacsauditorysession.la \
-    librelacsauditorytraces.la \
+    ../../common/base/libcommonephystraces.la \
+    libauditorysession.la \
+    libauditorytraces.la \
     $(QT3_LIBS)
 
-$(librelacsauditoryspikeprecision_la_OBJECTS) : \
+$(libauditoryspikeprecision_la_OBJECTS) : \
     moc_spikeprecision.cc
 
-librelacsauditoryspikeprecision_la_SOURCES = \
-    spikeprecision.cc \
+libauditoryspikeprecision_la_SOURCES = \
+    spikeprecision.cc
+
+libauditoryspikeprecision_la_includedir = $(pkgincludedir)/auditory
+
+libauditoryspikeprecision_la_include_HEADERS = \
     ../include/relacs/spikeprecision.h
 
 
 
-librelacsauditorysyslatency_la_CPPFLAGS = \
+libauditorysyslatency_la_CPPFLAGS = \
     -I$(srcdir)/../../common/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../datafile/include \
@@ -262,62 +302,67 @@ librelacsauditorysyslatency_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
-librelacsauditorysyslatency_la_LDFLAGS = \
+libauditorysyslatency_la_LDFLAGS = \
+    -module -avoid-version \
     $(QT3_LDFLAGS)
 
-librelacsauditorysyslatency_la_LIBADD = \
+libauditorysyslatency_la_LIBADD = \
     ../../relacs/src/librelacs.la \
-    ../../common/base/librelacscommonephystraces.la \
-    librelacsauditorysession.la \
-    librelacsauditorytraces.la \
+    ../../common/base/libcommonephystraces.la \
+    libauditorysession.la \
+    libauditorytraces.la \
     $(QT3_LIBS)
 
-$(librelacsauditorysyslatency_la_OBJECTS) : \
+$(libauditorysyslatency_la_OBJECTS) : \
     moc_syslatency.cc
 
-librelacsauditorysyslatency_la_SOURCES = \
-    syslatency.cc \
+libauditorysyslatency_la_SOURCES = \
+    syslatency.cc
+
+libauditorysyslatency_la_includedir = $(pkgincludedir)/auditory
+
+libauditorysyslatency_la_include_HEADERS = \
     ../include/relacs/syslatency.h
 
 
 
 check_PROGRAMS = \
-    linktest_librelacsauditoryneuron_la \
-    linktest_librelacsauditorysearch_la \
-    linktest_librelacsauditorysession_la \
-    linktest_librelacsauditorytraces_la \
-    linktest_librelacsauditoryficurve_la \
-    linktest_librelacsauditoryfifield_la \
-    linktest_librelacsauditorysinglestimulus_la \
-    linktest_librelacsauditoryspikeprecision_la \
-    linktest_librelacsauditorysyslatency_la
+    linktest_libauditoryneuron_la \
+    linktest_libauditorysearch_la \
+    linktest_libauditorysession_la \
+    linktest_libauditorytraces_la \
+    linktest_libauditoryficurve_la \
+    linktest_libauditoryfifield_la \
+    linktest_libauditorysinglestimulus_la \
+    linktest_libauditoryspikeprecision_la \
+    linktest_libauditorysyslatency_la
 
-linktest_librelacsauditoryneuron_la_SOURCES = linktest.cc
-linktest_librelacsauditoryneuron_la_LDADD = librelacsauditoryneuron.la
+linktest_libauditoryneuron_la_SOURCES = linktest.cc
+linktest_libauditoryneuron_la_LDADD = libauditoryneuron.la
 
-linktest_librelacsauditorysearch_la_SOURCES = linktest.cc
-linktest_librelacsauditorysearch_la_LDADD = librelacsauditorysearch.la
+linktest_libauditorysearch_la_SOURCES = linktest.cc
+linktest_libauditorysearch_la_LDADD = libauditorysearch.la
 
-linktest_librelacsauditorysession_la_SOURCES = linktest.cc
-linktest_librelacsauditorysession_la_LDADD = librelacsauditorysession.la
+linktest_libauditorysession_la_SOURCES = linktest.cc
+linktest_libauditorysession_la_LDADD = libauditorysession.la
 
-linktest_librelacsauditorytraces_la_SOURCES = linktest.cc
-linktest_librelacsauditorytraces_la_LDADD = librelacsauditorytraces.la
+linktest_libauditorytraces_la_SOURCES = linktest.cc
+linktest_libauditorytraces_la_LDADD = libauditorytraces.la
 
-linktest_librelacsauditoryficurve_la_SOURCES = linktest.cc
-linktest_librelacsauditoryficurve_la_LDADD = librelacsauditoryficurve.la
+linktest_libauditoryficurve_la_SOURCES = linktest.cc
+linktest_libauditoryficurve_la_LDADD = libauditoryficurve.la
 
-linktest_librelacsauditoryfifield_la_SOURCES = linktest.cc
-linktest_librelacsauditoryfifield_la_LDADD = librelacsauditoryfifield.la
+linktest_libauditoryfifield_la_SOURCES = linktest.cc
+linktest_libauditoryfifield_la_LDADD = libauditoryfifield.la
 
-linktest_librelacsauditorysinglestimulus_la_SOURCES = linktest.cc
-linktest_librelacsauditorysinglestimulus_la_LDADD = librelacsauditorysinglestimulus.la
+linktest_libauditorysinglestimulus_la_SOURCES = linktest.cc
+linktest_libauditorysinglestimulus_la_LDADD = libauditorysinglestimulus.la
 
-linktest_librelacsauditoryspikeprecision_la_SOURCES = linktest.cc
-linktest_librelacsauditoryspikeprecision_la_LDADD = librelacsauditoryspikeprecision.la
+linktest_libauditoryspikeprecision_la_SOURCES = linktest.cc
+linktest_libauditoryspikeprecision_la_LDADD = libauditoryspikeprecision.la
 
-linktest_librelacsauditorysyslatency_la_SOURCES = linktest.cc
-linktest_librelacsauditorysyslatency_la_LDADD = librelacsauditorysyslatency.la
+linktest_libauditorysyslatency_la_SOURCES = linktest.cc
+linktest_libauditorysyslatency_la_LDADD = libauditorysyslatency.la
 
 TESTS = $(check_PROGRAMS)
 

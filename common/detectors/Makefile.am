@@ -1,12 +1,12 @@
 include ${top_srcdir}/moc3.mk
 
-libdir = $(prefix)/lib/$(PLUGINS_BASENAME)
+pluginlibdir = $(pkglibdir)/plugins
 
-lib_LTLIBRARIES = \
-    librelacscommonspikedetector.la
+pluginlib_LTLIBRARIES = \
+    libcommonspikedetector.la
 
 
-librelacscommonspikedetector_la_CPPFLAGS = \
+libcommonspikedetector_la_CPPFLAGS = \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../datafile/include \
     -I$(srcdir)/../../plot/include \
@@ -17,23 +17,28 @@ librelacscommonspikedetector_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
-librelacscommonspikedetector_la_LDFLAGS = \
+libcommonspikedetector_la_LDFLAGS = \
+    -module -avoid-version \
     $(QT3_LDFLAGS)
 
-librelacscommonspikedetector_la_LIBADD = \
+libcommonspikedetector_la_LIBADD = \
     ../../relacs/src/librelacs.la \
     $(QT3_LIBS)
 
-$(librelacscommonspikedetector_la_OBJECTS) : \
+$(libcommonspikedetector_la_OBJECTS) : \
     moc_spikedetector.cc
 
-librelacscommonspikedetector_la_SOURCES = \
-    spikedetector.cc \
+libcommonspikedetector_la_SOURCES = \
+    spikedetector.cc
+
+libcommonspikedetector_la_includedir = $(pkgincludedir)/common
+
+libcommonspikedetector_la_include_HEADERS = \
     ../include/relacs/spikedetector.h
 
 
 
-check_PROGRAMS = linktest_librelacscommonspikedetector_la
-linktest_librelacscommonspikedetector_la_SOURCES = linktest.cc
-linktest_librelacscommonspikedetector_la_LDADD = librelacscommonspikedetector.la
+check_PROGRAMS = linktest_libcommonspikedetector_la
+linktest_libcommonspikedetector_la_SOURCES = linktest.cc
+linktest_libcommonspikedetector_la_LDADD = libcommonspikedetector.la
 TESTS = $(check_PROGRAMS)

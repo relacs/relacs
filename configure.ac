@@ -17,9 +17,6 @@ CFLAGS="-Wall $CFLAGS"
 AM_PROG_CC_C_O
 
 # Static substitutions
-PLUGINS_BASENAME=relacs/plugins
-AC_SUBST(PLUGINS_BASENAME)
-
 RELACSDATE=`date '+%m/%d/%y'`
 AC_SUBST(RELACSDATE)
 

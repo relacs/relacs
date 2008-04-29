@@ -1,27 +1,23 @@
 Libraries:
+- use -version-info and not -version-number
 - introduce namespace 'relacs' to all libraries
 - add relacs library tests to the libraries!
 
 Plugins:
-- there are unique plugin names (librelacsauditory...), unique help files
-  (Auditory-...), but what about the header files of the plugins?
-  -> <relacs/auditory/foo.h>
-  pkginclude = $(pkginclude)/auditory
-  pkginclude_HEADERS = ...
-- what about the PLUGINS_BASENAME in configure.ac?
-  -> this is used to form the path where to install the plugins in the src/Makefile.am
-  instead of libdir = $(prefix)/lib/$(PLUGINS_BASENAME)
-  do pkglibdir = $(pkglibdir)/plugins
-  remove PLUGINS_BASENAME from configure.ac
-- names of relacs plugins without "librelacs" prefix? 
-  pkglib_LTLIBRARIES = mymodule.la
-  mymodule_la_LDFLAGS = -module
-- what about libtool version handling for the plugins?
-  _LDFLAGS = -version-number major[:minor[:revision]]
+- Fix help files / documentation.
+- where to put header files in the tree? 
+  They should go in include/relacs/common/foo.h etc.
+  and they should be included via include <relacs/common/foo.h>.
+- Rethink directory structure of the plugin sets.
+- put libraries of plugin sets in subdirectories of libdir/relacs/plugins
+  and adjust runner script /configuration appropriately
+- use -disable-plugins-common etc. to exclude plugin sets from compilation
 - The right name for dlopen can be found in the dlname filed of the *.la file!
   Use this approach for loading the plugins?
 
 Autotools:
+- doxygen.mk: uninstall: remove '\' after first line.
+- Doxyfile: EXCLUDE_PATTERNS       = moc_* old*
 - when running debugger on libtool executable (like relacs_main?)
   you need to call
   libtool --mode=execute gdb relacs_main

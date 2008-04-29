@@ -1,14 +1,13 @@
 include ${top_srcdir}/moc3.mk
 
-libdir = $(prefix)/lib/$(PLUGINS_BASENAME)
+pluginlibdir = $(pkglibdir)/plugins
 
-lib_LTLIBRARIES = \
-    librelacscommonmotorcontrol.la \
-    librelacscommonspectrumanalyzer.la
+pluginlib_LTLIBRARIES = \
+    libcommonmotorcontrol.la \
+    libcommonspectrumanalyzer.la
 
 
-
-librelacscommonmotorcontrol_la_CPPFLAGS = \
+libcommonmotorcontrol_la_CPPFLAGS = \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \
@@ -17,23 +16,28 @@ librelacscommonmotorcontrol_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
-librelacscommonmotorcontrol_la_LDFLAGS = \
+libcommonmotorcontrol_la_LDFLAGS = \
+    -module -avoid-version \
     $(QT3_LDFLAGS)
 
-librelacscommonmotorcontrol_la_LIBADD = \
+libcommonmotorcontrol_la_LIBADD = \
     ../../relacs/src/librelacs.la \
     $(QT3_LIBS)
 
-$(librelacscommonmotorcontrol_la_OBJECTS) : \
+$(libcommonmotorcontrol_la_OBJECTS) : \
     moc_motorcontrol.cc
 
-librelacscommonmotorcontrol_la_SOURCES = \
-    motorcontrol.cc \
+libcommonmotorcontrol_la_SOURCES = \
+    motorcontrol.cc
+
+libcommonmotorcontrol_la_includedir = $(pkgincludedir)/common
+
+libcommonmotorcontrol_la_include_HEADERS = \
     ../include/relacs/motorcontrol.h
 
 
 
-librelacscommonspectrumanalyzer_la_CPPFLAGS = \
+libcommonspectrumanalyzer_la_CPPFLAGS = \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../plot/include \
     -I$(srcdir)/../../numerics/include \
@@ -43,30 +47,35 @@ librelacscommonspectrumanalyzer_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
-librelacscommonspectrumanalyzer_la_LDFLAGS = \
+libcommonspectrumanalyzer_la_LDFLAGS = \
+    -module -avoid-version \
     $(QT3_LDFLAGS)
 
-librelacscommonspectrumanalyzer_la_LIBADD = \
+libcommonspectrumanalyzer_la_LIBADD = \
     ../../relacs/src/librelacs.la \
     $(QT3_LIBS)
 
-$(librelacscommonspectrumanalyzer_la_OBJECTS) : \
+$(libcommonspectrumanalyzer_la_OBJECTS) : \
     moc_spectrumanalyzer.cc
 
-librelacscommonspectrumanalyzer_la_SOURCES = \
-    spectrumanalyzer.cc \
+libcommonspectrumanalyzer_la_SOURCES = \
+    spectrumanalyzer.cc
+
+libcommonspectrumanalyzer_la_includedir = $(pkgincludedir)/common
+
+libcommonspectrumanalyzer_la_include_HEADERS = \
     ../include/relacs/spectrumanalyzer.h
 
 
 
 check_PROGRAMS = \
-    linktest_librelacscommonmotorcontrol_la \
-    linktest_librelacscommonspectrumanalyzer_la
+    linktest_libcommonmotorcontrol_la \
+    linktest_libcommonspectrumanalyzer_la
 
-linktest_librelacscommonmotorcontrol_la_SOURCES = linktest.cc
-linktest_librelacscommonmotorcontrol_la_LDADD = librelacscommonmotorcontrol.la
+linktest_libcommonmotorcontrol_la_SOURCES = linktest.cc
+linktest_libcommonmotorcontrol_la_LDADD = libcommonmotorcontrol.la
 
-linktest_librelacscommonspectrumanalyzer_la_SOURCES = linktest.cc
-linktest_librelacscommonspectrumanalyzer_la_LDADD = librelacscommonspectrumanalyzer.la
+linktest_libcommonspectrumanalyzer_la_SOURCES = linktest.cc
+linktest_libcommonspectrumanalyzer_la_LDADD = libcommonspectrumanalyzer.la
 
 TESTS = $(check_PROGRAMS)

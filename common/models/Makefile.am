@@ -1,13 +1,13 @@
 include ${top_srcdir}/moc3.mk
 
-libdir = $(prefix)/lib/$(PLUGINS_BASENAME)
+pluginlibdir = $(pkglibdir)/plugins
 
-lib_LTLIBRARIES = \
-    librelacscommonneuronmodels.la \
-    librelacscommonsimplemodel.la
+pluginlib_LTLIBRARIES = \
+    libcommonneuronmodels.la \
+    libcommonsimplemodel.la
 
 
-librelacscommonneuronmodels_la_CPPFLAGS = \
+libcommonneuronmodels_la_CPPFLAGS = \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \
@@ -16,23 +16,28 @@ librelacscommonneuronmodels_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
-librelacscommonneuronmodels_la_LDFLAGS = \
+libcommonneuronmodels_la_LDFLAGS = \
+    -module -avoid-version \
     $(QT3_LDFLAGS)
 
-librelacscommonneuronmodels_la_LIBADD = \
+libcommonneuronmodels_la_LIBADD = \
     ../../relacs/src/librelacs.la \
     $(QT3_LIBS)
 
-$(librelacscommonneuronmodels_la_OBJECTS) : \
+$(libcommonneuronmodels_la_OBJECTS) : \
     moc_neuronmodels.cc
 
-librelacscommonneuronmodels_la_SOURCES = \
-    neuronmodels.cc \
+libcommonneuronmodels_la_SOURCES = \
+    neuronmodels.cc
+
+libcommonneuronmodels_la_includedir = $(pkgincludedir)/common
+
+libcommonneuronmodels_la_include_HEADERS = \
     ../include/relacs/neuronmodels.h
 
 
 
-librelacscommonsimplemodel_la_CPPFLAGS = \
+libcommonsimplemodel_la_CPPFLAGS = \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \
@@ -41,30 +46,35 @@ librelacscommonsimplemodel_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
-librelacscommonsimplemodel_la_LDFLAGS = \
+libcommonsimplemodel_la_LDFLAGS = \
+    -module -avoid-version \
     $(QT3_LDFLAGS)
 
-librelacscommonsimplemodel_la_LIBADD = \
+libcommonsimplemodel_la_LIBADD = \
     ../../relacs/src/librelacs.la \
     $(QT3_LIBS)
 
-$(librelacscommonsimplemodel_la_OBJECTS) : \
+$(libcommonsimplemodel_la_OBJECTS) : \
     moc_simplemodel.cc
 
-librelacscommonsimplemodel_la_SOURCES = \
-    simplemodel.cc \
+libcommonsimplemodel_la_SOURCES = \
+    simplemodel.cc
+
+libcommonsimplemodel_la_includedir = $(pkgincludedir)/common
+
+libcommonsimplemodel_la_include_HEADERS = \
     ../include/relacs/simplemodel.h
 
 
 check_PROGRAMS = \
-    linktest_librelacscommonneuronmodels_la \
-    linktest_librelacscommonsimplemodel_la
+    linktest_libcommonneuronmodels_la \
+    linktest_libcommonsimplemodel_la
 
-linktest_librelacscommonneuronmodels_la_SOURCES = linktest.cc
-linktest_librelacscommonneuronmodels_la_LDADD = librelacscommonneuronmodels.la
+linktest_libcommonneuronmodels_la_SOURCES = linktest.cc
+linktest_libcommonneuronmodels_la_LDADD = libcommonneuronmodels.la
 
-linktest_librelacscommonsimplemodel_la_SOURCES = linktest.cc
-linktest_librelacscommonsimplemodel_la_LDADD = librelacscommonsimplemodel.la
+linktest_libcommonsimplemodel_la_SOURCES = linktest.cc
+linktest_libcommonsimplemodel_la_LDADD = libcommonsimplemodel.la
 
 TESTS = $(check_PROGRAMS)
 

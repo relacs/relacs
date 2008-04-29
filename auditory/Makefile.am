@@ -20,7 +20,7 @@ DX_PROJECT = auditory
 DX_INSTALL_SUBDIR = /$(DX_PROJECT)
 DX_DEPENDS = Makefile.am
 DX_SETTINGS = PROJECT_NAME='"Relacs Plugins for Auditory Electrophysiology"'
-DX_SETTINGS += INPUT='include/relacs base include sascha speaker'
+DX_SETTINGS += INPUT='include/relacs base sascha speaker'
 DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'
 DX_SETTINGS += TAGFILES='../doc/relacsall.tag=.. ../common/doc/common.tag=../common'
 

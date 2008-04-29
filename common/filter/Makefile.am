@@ -1,13 +1,13 @@
 include ${top_srcdir}/moc3.mk
 
-libdir = $(prefix)/lib/$(PLUGINS_BASENAME)
+pluginlibdir = $(pkglibdir)/plugins
 
-lib_LTLIBRARIES = \
-    librelacscommonhighpass.la \
-    librelacscommonlowpass.la
+pluginlib_LTLIBRARIES = \
+    libcommonhighpass.la \
+    libcommonlowpass.la
 
 
-librelacscommonhighpass_la_CPPFLAGS = \
+libcommonhighpass_la_CPPFLAGS = \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \
@@ -16,23 +16,28 @@ librelacscommonhighpass_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
-librelacscommonhighpass_la_LDFLAGS = \
+libcommonhighpass_la_LDFLAGS = \
+    -module -avoid-version \
     $(QT3_LDFLAGS)
 
-librelacscommonhighpass_la_LIBADD = \
+libcommonhighpass_la_LIBADD = \
     ../../relacs/src/librelacs.la \
     $(QT3_LIBS)
 
-$(librelacscommonhighpass_la_OBJECTS) : \
+$(libcommonhighpass_la_OBJECTS) : \
     moc_highpass.cc
 
-librelacscommonhighpass_la_SOURCES = \
-    highpass.cc \
+libcommonhighpass_la_SOURCES = \
+    highpass.cc
+
+libcommonhighpass_la_includedir = $(pkgincludedir)/common
+
+libcommonhighpass_la_include_HEADERS = \
     ../include/relacs/highpass.h
 
 
 
-librelacscommonlowpass_la_CPPFLAGS = \
+libcommonlowpass_la_CPPFLAGS = \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \
@@ -41,31 +46,36 @@ librelacscommonlowpass_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
-librelacscommonlowpass_la_LDFLAGS = \
+libcommonlowpass_la_LDFLAGS = \
+    -module -avoid-version \
     $(QT3_LDFLAGS)
 
-librelacscommonlowpass_la_LIBADD = \
+libcommonlowpass_la_LIBADD = \
     ../../relacs/src/librelacs.la \
     $(QT3_LIBS)
 
-$(librelacscommonlowpass_la_OBJECTS) : \
+$(libcommonlowpass_la_OBJECTS) : \
     moc_lowpass.cc
 
-librelacscommonlowpass_la_SOURCES = \
-    lowpass.cc \
+libcommonlowpass_la_SOURCES = \
+    lowpass.cc
+
+libcommonlowpass_la_includedir = $(pkgincludedir)/common
+
+libcommonlowpass_la_include_HEADERS = \
     ../include/relacs/lowpass.h
 
 
 
 check_PROGRAMS = \
-    linktest_librelacscommonhighpass_la \
-    linktest_librelacscommonlowpass_la
+    linktest_libcommonhighpass_la \
+    linktest_libcommonlowpass_la
 
-linktest_librelacscommonhighpass_la_SOURCES = linktest.cc
-linktest_librelacscommonhighpass_la_LDADD = librelacscommonhighpass.la
+linktest_libcommonhighpass_la_SOURCES = linktest.cc
+linktest_libcommonhighpass_la_LDADD = libcommonhighpass.la
 
-linktest_librelacscommonlowpass_la_SOURCES = linktest.cc
-linktest_librelacscommonlowpass_la_LDADD = librelacscommonlowpass.la
+linktest_libcommonlowpass_la_SOURCES = linktest.cc
+linktest_libcommonlowpass_la_LDADD = libcommonlowpass.la
 
 TESTS = $(check_PROGRAMS)
 

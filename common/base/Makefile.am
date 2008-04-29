@@ -1,30 +1,37 @@
 include ${top_srcdir}/moc3.mk
 
-libdir = $(prefix)/lib/$(PLUGINS_BASENAME)
+pluginlibdir = $(pkglibdir)/plugins
 
-lib_LTLIBRARIES = \
-    librelacscommonephystraces.la \
-    librelacscommonpause.la \
-    librelacscommonrestartdelay.la \
-    librelacscommonstimulusdelay.la
+pluginlib_LTLIBRARIES = \
+    libcommonephystraces.la \
+    libcommonpause.la \
+    libcommonrestartdelay.la \
+    libcommonstimulusdelay.la
 
 
-librelacscommonephystraces_la_CPPFLAGS = \
+libcommonephystraces_la_CPPFLAGS = \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../include
 
-librelacscommonephystraces_la_LIBADD = \
+libcommonephystraces_la_LDFLAGS = \
+    -module -avoid-version
+
+libcommonephystraces_la_LIBADD = \
     ../../relacs/src/librelacs.la
 
-librelacscommonephystraces_la_SOURCES = \
-    ephystraces.cc \
+libcommonephystraces_la_SOURCES = \
+    ephystraces.cc
+
+libcommonephystraces_la_includedir = $(pkgincludedir)/common
+
+libcommonephystraces_la_include_HEADERS = \
     ../include/relacs/ephystraces.h
 
 
 
-librelacscommonpause_la_CPPFLAGS = \
+libcommonpause_la_CPPFLAGS = \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \
@@ -33,23 +40,28 @@ librelacscommonpause_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
-librelacscommonpause_la_LDFLAGS = \
+libcommonpause_la_LDFLAGS = \
+    -module -avoid-version \
     $(QT3_LDFLAGS)
 
-librelacscommonpause_la_LIBADD = \
+libcommonpause_la_LIBADD = \
     ../../relacs/src/librelacs.la \
     $(QT3_LIBS)
 
-$(librelacscommonpause_la_OBJECTS) : \
+$(libcommonpause_la_OBJECTS) : \
     moc_pause.cc
 
-librelacscommonpause_la_SOURCES = \
-    pause.cc \
+libcommonpause_la_SOURCES = \
+    pause.cc
+
+libcommonpause_la_includedir = $(pkgincludedir)/common
+
+libcommonpause_la_include_HEADERS = \
     ../include/relacs/pause.h
 
 
 
-librelacscommonrestartdelay_la_CPPFLAGS = \
+libcommonrestartdelay_la_CPPFLAGS = \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../plot/include \
     -I$(srcdir)/../../numerics/include \
@@ -59,23 +71,28 @@ librelacscommonrestartdelay_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
-librelacscommonrestartdelay_la_LDFLAGS = \
+libcommonrestartdelay_la_LDFLAGS = \
+    -module -avoid-version \
     $(QT3_LDFLAGS)
 
-librelacscommonrestartdelay_la_LIBADD = \
+libcommonrestartdelay_la_LIBADD = \
     ../../relacs/src/librelacs.la \
     $(QT3_LIBS)
 
-$(librelacscommonrestartdelay_la_OBJECTS) : \
+$(libcommonrestartdelay_la_OBJECTS) : \
     moc_restartdelay.cc
 
-librelacscommonrestartdelay_la_SOURCES = \
-    restartdelay.cc \
+libcommonrestartdelay_la_SOURCES = \
+    restartdelay.cc
+
+libcommonrestartdelay_la_includedir = $(pkgincludedir)/common
+
+libcommonrestartdelay_la_include_HEADERS = \
     ../include/relacs/restartdelay.h
 
 
 
-librelacscommonstimulusdelay_la_CPPFLAGS = \
+libcommonstimulusdelay_la_CPPFLAGS = \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../plot/include \
     -I$(srcdir)/../../numerics/include \
@@ -85,39 +102,44 @@ librelacscommonstimulusdelay_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
-librelacscommonstimulusdelay_la_LDFLAGS = \
+libcommonstimulusdelay_la_LDFLAGS = \
+    -module -avoid-version \
     $(QT3_LDFLAGS)
 
-librelacscommonstimulusdelay_la_LIBADD = \
+libcommonstimulusdelay_la_LIBADD = \
     ../../relacs/src/librelacs.la \
     $(QT3_LIBS)
 
-$(librelacscommonstimulusdelay_la_OBJECTS) : \
+$(libcommonstimulusdelay_la_OBJECTS) : \
     moc_stimulusdelay.cc
 
-librelacscommonstimulusdelay_la_SOURCES = \
-    stimulusdelay.cc \
+libcommonstimulusdelay_la_SOURCES = \
+    stimulusdelay.cc
+
+libcommonstimulusdelay_la_includedir = $(pkgincludedir)/common
+
+libcommonstimulusdelay_la_include_HEADERS = \
     ../include/relacs/stimulusdelay.h
 
 
 
 check_PROGRAMS = \
-    linktest_librelacscommonephystraces_la \
-    linktest_librelacscommonpause_la \
-    linktest_librelacscommonrestartdelay_la \
-    linktest_librelacscommonstimulusdelay_la
+    linktest_libcommonephystraces_la \
+    linktest_libcommonpause_la \
+    linktest_libcommonrestartdelay_la \
+    linktest_libcommonstimulusdelay_la
 
-linktest_librelacscommonephystraces_la_SOURCES = linktest.cc
-linktest_librelacscommonephystraces_la_LDADD = librelacscommonephystraces.la
+linktest_libcommonephystraces_la_SOURCES = linktest.cc
+linktest_libcommonephystraces_la_LDADD = libcommonephystraces.la
 
-linktest_librelacscommonpause_la_SOURCES = linktest.cc
-linktest_librelacscommonpause_la_LDADD = librelacscommonpause.la
+linktest_libcommonpause_la_SOURCES = linktest.cc
+linktest_libcommonpause_la_LDADD = libcommonpause.la
 
-linktest_librelacscommonrestartdelay_la_SOURCES = linktest.cc
-linktest_librelacscommonrestartdelay_la_LDADD = librelacscommonrestartdelay.la
+linktest_libcommonrestartdelay_la_SOURCES = linktest.cc
+linktest_libcommonrestartdelay_la_LDADD = libcommonrestartdelay.la
 
-linktest_librelacscommonstimulusdelay_la_SOURCES = linktest.cc
-linktest_librelacscommonstimulusdelay_la_LDADD = librelacscommonstimulusdelay.la
+linktest_libcommonstimulusdelay_la_SOURCES = linktest.cc
+linktest_libcommonstimulusdelay_la_LDADD = libcommonstimulusdelay.la
 
 TESTS = $(check_PROGRAMS)
 

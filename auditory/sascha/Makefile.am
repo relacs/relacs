@@ -1,13 +1,13 @@
 include ${top_srcdir}/moc3.mk
 
-libdir = $(prefix)/lib/$(PLUGINS_BASENAME)
+pluginlibdir = $(pkglibdir)/plugins
 
-lib_LTLIBRARIES = \
-    librelacsauditoryisoresponse.la \
-    librelacsauditoryoneclick.la
+pluginlib_LTLIBRARIES = \
+    libauditoryisoresponse.la \
+    libauditoryoneclick.la
 
 
-librelacsauditoryisoresponse_la_CPPFLAGS = \
+libauditoryisoresponse_la_CPPFLAGS = \
     -I$(srcdir)/../../common/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../datafile/include \
@@ -20,25 +20,30 @@ librelacsauditoryisoresponse_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
-librelacsauditoryisoresponse_la_LDFLAGS = \
+libauditoryisoresponse_la_LDFLAGS = \
+    -module -avoid-version \
     $(QT3_LDFLAGS)
 
-librelacsauditoryisoresponse_la_LIBADD = \
+libauditoryisoresponse_la_LIBADD = \
     ../../relacs/src/librelacs.la \
-    ../../common/base/librelacscommonephystraces.la \
-    ../base/librelacsauditorysession.la \
+    ../../common/base/libcommonephystraces.la \
+    ../base/libauditorysession.la \
     $(QT3_LIBS)
 
-$(librelacsauditoryisoresponse_la_OBJECTS) : \
+$(libauditoryisoresponse_la_OBJECTS) : \
     moc_isoresponse.cc
 
-librelacsauditoryisoresponse_la_SOURCES = \
-    isoresponse.cc \
+libauditoryisoresponse_la_SOURCES = \
+    isoresponse.cc
+
+libauditoryisoresponse_la_includedir = $(pkgincludedir)/auditory
+
+libauditoryisoresponse_la_include_HEADERS = \
     ../include/relacs/isoresponse.h
 
 
 
-librelacsauditoryoneclick_la_CPPFLAGS = \
+libauditoryoneclick_la_CPPFLAGS = \
     -I$(srcdir)/../../common/include \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../datafile/include \
@@ -51,33 +56,38 @@ librelacsauditoryoneclick_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
-librelacsauditoryoneclick_la_LDFLAGS = \
+libauditoryoneclick_la_LDFLAGS = \
+    -module -avoid-version \
     $(QT3_LDFLAGS)
 
-librelacsauditoryoneclick_la_LIBADD = \
+libauditoryoneclick_la_LIBADD = \
     ../../relacs/src/librelacs.la \
-    ../../common/base/librelacscommonephystraces.la \
-    ../base/librelacsauditorytraces.la \
-    ../speaker/librelacsauditoryloudspeaker.la \
+    ../../common/base/libcommonephystraces.la \
+    ../base/libauditorytraces.la \
+    ../speaker/libauditoryloudspeaker.la \
     $(QT3_LIBS)
 
-$(librelacsauditoryoneclick_la_OBJECTS) : \
+$(libauditoryoneclick_la_OBJECTS) : \
     moc_oneclick.cc
 
-librelacsauditoryoneclick_la_SOURCES = \
-    oneclick.cc \
+libauditoryoneclick_la_SOURCES = \
+    oneclick.cc
+
+libauditoryoneclick_la_includedir = $(pkgincludedir)/auditory
+
+libauditoryoneclick_la_include_HEADERS = \
     ../include/relacs/oneclick.h
 
 
 check_PROGRAMS = \
-    linktest_librelacsauditoryisoresponse_la \
-    linktest_librelacsauditoryoneclick_la
+    linktest_libauditoryisoresponse_la \
+    linktest_libauditoryoneclick_la
 
-linktest_librelacsauditoryisoresponse_la_SOURCES = linktest.cc
-linktest_librelacsauditoryisoresponse_la_LDADD = librelacsauditoryisoresponse.la
+linktest_libauditoryisoresponse_la_SOURCES = linktest.cc
+linktest_libauditoryisoresponse_la_LDADD = libauditoryisoresponse.la
 
-linktest_librelacsauditoryoneclick_la_SOURCES = linktest.cc
-linktest_librelacsauditoryoneclick_la_LDADD = librelacsauditoryoneclick.la
+linktest_libauditoryoneclick_la_SOURCES = linktest.cc
+linktest_libauditoryoneclick_la_LDADD = libauditoryoneclick.la
 
 TESTS = $(check_PROGRAMS)
 
