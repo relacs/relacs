@@ -13,7 +13,7 @@ librelacsdatafile_la_CPPFLAGS = \
 endif
 
 librelacsdatafile_la_LDFLAGS = \
-    -version-number 0:0:0
+    -version-info 0:0:0
 
 if RELACS_TOP_BUILD
 librelacsdatafile_la_LIBADD = \

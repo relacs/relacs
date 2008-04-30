@@ -320,7 +320,8 @@
 #	  echo "OUTPUT_DIRECTORY=$(abs_builddir)/$(DX_DOCDIR)"; \
 #	  for DX_ENV_LINE in $(DX_SETTINGS); do echo $$DX_ENV_LINE; done; \
 #        } \
-#     	| $(DX_DOXYGEN) -
+#     	| tee $(abs_builddir)/tmp.dox | $(DX_DOXYGEN) -; \
+#	mv $(abs_builddir)/tmp.dox $(abs_builddir)/$(DX_CONFIG).all
 #     
 #     DX_INSTALL_FILES = \
 #         $(DX_INSTALL_CHI)
@@ -347,7 +348,7 @@
 #     	done
 #     
 #     doxygen-uninstall: doxygen-uninstall-html doxygen-uninstall-dvi doxygen-uninstall-ps doxygen-uninstall-pdf
-#     	rm -f "$(DESTDIR)$(pkgdatadir)/$(DX_PROJECT).tag"; \
+#     	rm -f "$(DESTDIR)$(pkgdatadir)/$(DX_PROJECT).tag"
 #     	@list='$(DX_INSTALL_FILES)'; for p in $$list; do \
 #     	  echo " rm -f '$(DESTDIR)$(docdir)/$$p'"; \
 #     	  rm -f "$(DESTDIR)$(docdir)/$$p"; \
@@ -358,6 +359,7 @@
 #     	done
 #     
 #     DX_CLEANFILES = \
+#         $(DX_CONFIG).all \
 #         $(DX_DOCDIR)/$(DX_PROJECT).tag \
 #         $(DX_CLEAN_CHI) \
 #         $(DX_CLEAN_PS) \

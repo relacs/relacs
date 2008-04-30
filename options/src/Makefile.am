@@ -6,7 +6,7 @@ librelacsoptions_la_CPPFLAGS = \
     -I$(srcdir)/../include
 
 librelacsoptions_la_LDFLAGS = \
-    -version-number 0:0:0
+    -version-info 0:0:0
 
 pkgincludedir = $(includedir)/relacs
 
