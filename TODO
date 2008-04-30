@@ -5,11 +5,9 @@ Libraries:
 Plugins:
 - put libraries of plugin sets in subdirectories of libdir/relacs/plugins
   and adjust runner script /configuration appropriately
-- same for the help files
 - where to put header files in the tree? 
   They should go in include/relacs/common/foo.h etc.
   and they should be included via include <relacs/common/foo.h>.
-- Fix help files / documentation on SuSE
 - Rethink directory structure of the plugin sets.
 - use -disable-plugins-common etc. to exclude plugin sets from compilation
 - The right name for dlopen can be found in the dlname filed of the *.la file!

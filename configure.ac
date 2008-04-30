@@ -94,7 +94,9 @@ AC_DEFINE([HAVE_LIBRELACSDAQ], [1],
 ## Doxygen
 #################################################
 
-DOXYGEN_EXTERNAL="\
+# list of libraries that should go 
+# into the main documentation:
+RELACS_DOCLIBS="\
 daq \
 datafile \
 plot \
@@ -102,14 +104,19 @@ numerics \
 options \
 widgets \
 relacs \
+"
+
+# list of directories with their own documentation:
+DOXYGEN_EXTERNAL="\
+${RELACS_DOCLIBS} \
 hardware \
 common \
 auditory \
 "
 
-# assemble input pathes from the Makefile.am of the DOXYGEN_EXTERNAL list:
+# assemble input pathes from the Makefile.am of the RELACS_DOCLIBS list:
 DOXYGEN_INPUT="doc src utils"
-for FILE in $DOXYGEN_EXTERNAL src; do
+for FILE in $RELACS_DOCLIBS; do
 	INPUTLINE=$(grep 'DX_SETTINGS += INPUT' $FILE/Makefile.am)
 	INPUTLIST=${INPUTLINE#DX_SETTINGS += INPUT=\'}
 	INPUTLIST=${INPUTLIST%\'}
@@ -118,11 +125,12 @@ for FILE in $DOXYGEN_EXTERNAL src; do
 	done
 done
 
-DOXYGEN_IMAGEPATHES="doc"
-for dir in $DOXYGEN_EXTERNAL; do
+DOXYGEN_IMAGEPATHES="doc utils"
+for dir in $RELACS_DOCLIBS; do
 	DOXYGEN_IMAGEPATHES="$DOXYGEN_IMAGEPATHES ${dir}/doc"
 done
 
+AC_SUBST(RELACS_DOCLIBS)
 AC_SUBST(DOXYGEN_EXTERNAL)
 AC_SUBST(DOXYGEN_INPUT)
 AC_SUBST(DOXYGEN_IMAGEPATHES)

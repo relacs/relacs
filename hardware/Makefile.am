@@ -31,7 +31,7 @@ include relacshelp.mk
 .PHONY: doc help
 
 doc: doxygen-doc
-help: help-make
+help: doc help-make
 
 all-local: doxygen-runall help-run
 html-local: doxygen-run
