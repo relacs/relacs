@@ -23,7 +23,7 @@
 #include <relacs/optwidget.h>
 #include <relacs/random.h>
 #include <relacs/odealgorithm.h>
-#include <relacs/auditoryneuron.h>
+#include <relacs/auditory/auditoryneuron.h>
 
 
 AuditoryNeuron::AuditoryNeuron( void )

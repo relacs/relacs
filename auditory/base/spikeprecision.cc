@@ -25,8 +25,8 @@
 #include <relacs/spectrum.h>
 #include <relacs/tablekey.h>
 #include <relacs/translate.h>
-#include <relacs/auditorysession.h>
-#include <relacs/spikeprecision.h>
+#include <relacs/auditory/auditorysession.h>
+#include <relacs/auditory/spikeprecision.h>
 
 
 SpikePrecision::SpikePrecision( void )

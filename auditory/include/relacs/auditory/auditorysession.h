@@ -28,9 +28,9 @@
 #include <relacs/multiplot.h>
 #include <relacs/map.h>
 #include <relacs/temperature.h>
-#include <relacs/amplmode.h>
-#include <relacs/ephystraces.h>
-#include <relacs/auditorytraces.h>
+#include <relacs/hardware/amplmode.h>
+#include <relacs/common/ephystraces.h>
+#include <relacs/auditory/auditorytraces.h>
 #include <relacs/control.h>
 
 

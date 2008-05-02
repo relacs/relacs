@@ -22,7 +22,7 @@
 #include <sstream>
 #include <cmath>
 #include <unistd.h>
-#include <relacs/cs3310serialnidio.h>
+#include <relacs/hardware/cs3310serialnidio.h>
 
 using namespace std;
 

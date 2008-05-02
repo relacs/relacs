@@ -1,4 +1,4 @@
-moc_%.cc : ../include/relacs/%.h
+moc_%.cc : $(HEADER_PATH)/%.h
 	$(MOC) -i -o "$@" "$<"
 
 clean-moc-extra:

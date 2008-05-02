@@ -5,9 +5,9 @@
 #include <comedilib.h>
 #include <relacs/daqerror.h>
 #include <relacs/analoginput.h>
-#include <relacs/comedianaloginput.h>
-#include <relacs/dynclampanalogoutput.h>
-#include <relacs/moduledef.h>
+#include <relacs/hardware/comedianaloginput.h>
+#include <relacs/hardware/dynclampanalogoutput.h>
+#include <relacs/hardware/moduledef.h>
 
 using namespace std;
 

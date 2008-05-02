@@ -19,7 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <relacs/pause.h>
+#include <relacs/common/pause.h>
 
 
 Pause::Pause( void )

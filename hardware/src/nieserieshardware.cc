@@ -20,13 +20,13 @@
 */
 
 #include <relacs/relacsplugin.h>
-#include <relacs/niai.h>
-#include <relacs/niao.h>
-#include <relacs/nidio.h>
-#include <relacs/nipfi.h>
-#include <relacs/cs3310serialnidio.h>
-#include <relacs/cs3310nidio.h>
-#include <relacs/amplmode.h>
+#include <relacs/hardware/niai.h>
+#include <relacs/hardware/niao.h>
+#include <relacs/hardware/nidio.h>
+#include <relacs/hardware/nipfi.h>
+#include <relacs/hardware/cs3310serialnidio.h>
+#include <relacs/hardware/cs3310nidio.h>
+#include <relacs/hardware/amplmode.h>
 
 addAnalogInput( NIAI );
 addAnalogOutput( NIAO );

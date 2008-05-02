@@ -1,3 +1,4 @@
+HEADER_PATH = ../include/relacs/common
 include ${top_srcdir}/moc3.mk
 
 pluginlibdir = $(pkglibdir)/plugins
@@ -33,7 +34,7 @@ libcommonmotorcontrol_la_SOURCES = \
 libcommonmotorcontrol_la_includedir = $(pkgincludedir)/common
 
 libcommonmotorcontrol_la_include_HEADERS = \
-    ../include/relacs/motorcontrol.h
+    $(HEADER_PATH)/motorcontrol.h
 
 
 
@@ -64,7 +65,7 @@ libcommonspectrumanalyzer_la_SOURCES = \
 libcommonspectrumanalyzer_la_includedir = $(pkgincludedir)/common
 
 libcommonspectrumanalyzer_la_include_HEADERS = \
-    ../include/relacs/spectrumanalyzer.h
+    $(HEADER_PATH)/spectrumanalyzer.h
 
 
 

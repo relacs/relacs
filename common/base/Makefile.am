@@ -1,3 +1,4 @@
+HEADER_PATH = ../include/relacs/common
 include ${top_srcdir}/moc3.mk
 
 pluginlibdir = $(pkglibdir)/plugins
@@ -27,7 +28,7 @@ libcommonephystraces_la_SOURCES = \
 libcommonephystraces_la_includedir = $(pkgincludedir)/common
 
 libcommonephystraces_la_include_HEADERS = \
-    ../include/relacs/ephystraces.h
+    $(HEADER_PATH)/ephystraces.h
 
 
 
@@ -57,7 +58,7 @@ libcommonpause_la_SOURCES = \
 libcommonpause_la_includedir = $(pkgincludedir)/common
 
 libcommonpause_la_include_HEADERS = \
-    ../include/relacs/pause.h
+    $(HEADER_PATH)/pause.h
 
 
 
@@ -88,7 +89,7 @@ libcommonrestartdelay_la_SOURCES = \
 libcommonrestartdelay_la_includedir = $(pkgincludedir)/common
 
 libcommonrestartdelay_la_include_HEADERS = \
-    ../include/relacs/restartdelay.h
+    $(HEADER_PATH)/restartdelay.h
 
 
 
@@ -119,7 +120,7 @@ libcommonstimulusdelay_la_SOURCES = \
 libcommonstimulusdelay_la_includedir = $(pkgincludedir)/common
 
 libcommonstimulusdelay_la_include_HEADERS = \
-    ../include/relacs/stimulusdelay.h
+    $(HEADER_PATH)/stimulusdelay.h
 
 
 

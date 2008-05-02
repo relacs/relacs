@@ -21,7 +21,7 @@
 
 #include <cmath>
 #include <relacs/sampledata.h>
-#include <relacs/stimulusdelay.h>
+#include <relacs/common/stimulusdelay.h>
 
 using namespace numerics;
 

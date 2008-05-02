@@ -22,7 +22,7 @@
 #ifndef _RELACS_HARDWARE_NIAO_H_
 #define _RELACS_HARDWARE_NIAO_H_ 1
 
-#include <relacs/nidaq.h>
+#include <relacs/hardware/nidaq.h>
 #include <relacs/analogoutput.h>
 
 

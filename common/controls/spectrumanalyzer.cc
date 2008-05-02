@@ -22,7 +22,7 @@
 #include <relacs/sampledata.h>
 #include <relacs/stats.h>
 #include <relacs/spectrum.h>
-#include <relacs/spectrumanalyzer.h>
+#include <relacs/common/spectrumanalyzer.h>
 
 using namespace numerics;
 

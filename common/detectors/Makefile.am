@@ -1,3 +1,4 @@
+HEADER_PATH = ../include/relacs/common
 include ${top_srcdir}/moc3.mk
 
 pluginlibdir = $(pkglibdir)/plugins
@@ -34,7 +35,7 @@ libcommonspikedetector_la_SOURCES = \
 libcommonspikedetector_la_includedir = $(pkgincludedir)/common
 
 libcommonspikedetector_la_include_HEADERS = \
-    ../include/relacs/spikedetector.h
+    $(HEADER_PATH)/spikedetector.h
 
 
 

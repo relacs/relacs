@@ -1,3 +1,4 @@
+HEADER_PATH = ../include/relacs/common
 include ${top_srcdir}/moc3.mk
 
 pluginlibdir = $(pkglibdir)/plugins
@@ -33,7 +34,7 @@ libcommonhighpass_la_SOURCES = \
 libcommonhighpass_la_includedir = $(pkgincludedir)/common
 
 libcommonhighpass_la_include_HEADERS = \
-    ../include/relacs/highpass.h
+    $(HEADER_PATH)/highpass.h
 
 
 
@@ -63,7 +64,7 @@ libcommonlowpass_la_SOURCES = \
 libcommonlowpass_la_includedir = $(pkgincludedir)/common
 
 libcommonlowpass_la_include_HEADERS = \
-    ../include/relacs/lowpass.h
+    $(HEADER_PATH)/lowpass.h
 
 
 

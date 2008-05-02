@@ -27,7 +27,7 @@
 #include <qvbox.h>
 #include <qpainter.h>
 #include <relacs/manipulator.h>
-#include <relacs/motorcontrol.h>
+#include <relacs/common/motorcontrol.h>
 
 
 MotorControl::MotorControl( void )

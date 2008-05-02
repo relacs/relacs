@@ -23,7 +23,7 @@
 #include <cmath>
 #include <unistd.h>
 #include <time.h>
-#include <relacs/cs3310nidio.h>
+#include <relacs/hardware/cs3310nidio.h>
 
 using namespace std;
 

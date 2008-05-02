@@ -25,8 +25,8 @@
 #include <relacs/sampledata.h>
 #include <relacs/multiplot.h>
 #include <relacs/rangeloop.h>
-#include <relacs/ephystraces.h>
-#include <relacs/auditorytraces.h>
+#include <relacs/common/ephystraces.h>
+#include <relacs/auditory/auditorytraces.h>
 #include <relacs/repro.h>
 
 

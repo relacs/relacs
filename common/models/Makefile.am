@@ -1,3 +1,4 @@
+HEADER_PATH = ../include/relacs/common
 include ${top_srcdir}/moc3.mk
 
 pluginlibdir = $(pkglibdir)/plugins
@@ -33,7 +34,7 @@ libcommonneuronmodels_la_SOURCES = \
 libcommonneuronmodels_la_includedir = $(pkgincludedir)/common
 
 libcommonneuronmodels_la_include_HEADERS = \
-    ../include/relacs/neuronmodels.h
+    $(HEADER_PATH)/neuronmodels.h
 
 
 
@@ -63,7 +64,7 @@ libcommonsimplemodel_la_SOURCES = \
 libcommonsimplemodel_la_includedir = $(pkgincludedir)/common
 
 libcommonsimplemodel_la_include_HEADERS = \
-    ../include/relacs/simplemodel.h
+    $(HEADER_PATH)/simplemodel.h
 
 
 check_PROGRAMS = \

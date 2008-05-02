@@ -1,3 +1,4 @@
+HEADER_PATH = ../include/relacs/auditory
 include ${top_srcdir}/moc3.mk
 
 pluginlibdir = $(pkglibdir)/plugins
@@ -39,7 +40,7 @@ libauditoryisoresponse_la_SOURCES = \
 libauditoryisoresponse_la_includedir = $(pkgincludedir)/auditory
 
 libauditoryisoresponse_la_include_HEADERS = \
-    ../include/relacs/isoresponse.h
+    $(HEADER_PATH)/isoresponse.h
 
 
 
@@ -76,7 +77,7 @@ libauditoryoneclick_la_SOURCES = \
 libauditoryoneclick_la_includedir = $(pkgincludedir)/auditory
 
 libauditoryoneclick_la_include_HEADERS = \
-    ../include/relacs/oneclick.h
+    $(HEADER_PATH)/oneclick.h
 
 
 check_PROGRAMS = \

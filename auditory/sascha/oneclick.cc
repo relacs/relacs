@@ -24,8 +24,8 @@
 #include <relacs/map.h>
 #include <relacs/str.h>
 #include <relacs/tablekey.h>
-#include <relacs/auditorysession.h>
-#include <relacs/oneclick.h>
+#include <relacs/auditory/auditorysession.h>
+#include <relacs/auditory/oneclick.h>
 
 
 OneClick::OneClick( void )

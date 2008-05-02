@@ -22,7 +22,7 @@
 #ifndef _RELACS_HARDWARE_AMPLMODE_H_
 #define _RELACS_HARDWARE_AMPLMODE_H_ 1
 
-#include <relacs/nidio.h>
+#include <relacs/hardware/nidio.h>
 #include <relacs/device.h>
 
 

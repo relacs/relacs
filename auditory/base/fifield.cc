@@ -23,8 +23,8 @@
 #include <iomanip>
 #include <relacs/str.h>
 #include <relacs/tablekey.h>
-#include <relacs/auditorysession.h>
-#include <relacs/fifield.h>
+#include <relacs/auditory/auditorysession.h>
+#include <relacs/auditory/fifield.h>
 
 
 FIField::FIField( void )

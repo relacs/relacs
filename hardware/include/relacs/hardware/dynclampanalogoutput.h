@@ -6,8 +6,8 @@
 #include <relacs/daqerror.h>
 #include <relacs/analogoutput.h>
 #include <relacs/analoginput.h>
-#include <relacs/comedianalogoutput.h>
-#include <relacs/moduledef.h>
+#include <relacs/hardware/comedianalogoutput.h>
+#include <relacs/hardware/moduledef.h>
 
 using namespace std;
 

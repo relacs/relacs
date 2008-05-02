@@ -26,8 +26,8 @@
 #include <cmath>
 #include <ctime>
 
-//#include "comedianaloginput.h"
-#include "dynclampanaloginput.h"
+//#include <relacs/hardware/comedianaloginput.h>
+#include <relacs/hardware/dynclampanaloginput.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>

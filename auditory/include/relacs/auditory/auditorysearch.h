@@ -24,7 +24,7 @@
 
 
 #include <relacs/repro.h>
-#include <relacs/auditorytraces.h>
+#include <relacs/auditory/auditorytraces.h>
 #include <qpushbutton.h>
 #include <qradiobutton.h>
 #include <qbuttongroup.h>

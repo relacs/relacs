@@ -1,3 +1,4 @@
+HEADER_PATH = ../include/relacs/auditory
 include ${top_srcdir}/moc3.mk
 
 pluginlibdir = $(pkglibdir)/plugins
@@ -42,7 +43,7 @@ libauditoryneuron_la_SOURCES = \
 libauditoryneuron_la_includedir = $(pkgincludedir)/auditory
 
 libauditoryneuron_la_include_HEADERS = \
-    ../include/relacs/auditoryneuron.h
+    $(HEADER_PATH)/auditoryneuron.h
 
 
 
@@ -74,7 +75,7 @@ libauditorysearch_la_SOURCES = \
 libauditorysearch_la_includedir = $(pkgincludedir)/auditory
 
 libauditorysearch_la_include_HEADERS = \
-    ../include/relacs/auditorysearch.h
+    $(HEADER_PATH)/auditorysearch.h
 
 
 
@@ -110,7 +111,7 @@ libauditorysession_la_SOURCES = \
 libauditorysession_la_includedir = $(pkgincludedir)/auditory
 
 libauditorysession_la_include_HEADERS = \
-    ../include/relacs/auditorysession.h
+    $(HEADER_PATH)/auditorysession.h
 
 
 
@@ -137,7 +138,7 @@ libauditorytraces_la_SOURCES = \
 libauditorytraces_la_includedir = $(pkgincludedir)/auditory
 
 libauditorytraces_la_include_HEADERS = \
-    ../include/relacs/auditorytraces.h
+    $(HEADER_PATH)/auditorytraces.h
 
 
 
@@ -174,7 +175,7 @@ libauditoryficurve_la_SOURCES = \
 libauditoryficurve_la_includedir = $(pkgincludedir)/auditory
 
 libauditoryficurve_la_include_HEADERS = \
-    ../include/relacs/ficurve.h
+    $(HEADER_PATH)/ficurve.h
 
 
 
@@ -211,7 +212,7 @@ libauditoryfifield_la_SOURCES = \
 libauditoryfifield_la_includedir = $(pkgincludedir)/auditory
 
 libauditoryfifield_la_include_HEADERS = \
-    ../include/relacs/fifield.h
+    $(HEADER_PATH)/fifield.h
 
 
 
@@ -248,7 +249,7 @@ libauditorysinglestimulus_la_SOURCES = \
 libauditorysinglestimulus_la_includedir = $(pkgincludedir)/auditory
 
 libauditorysinglestimulus_la_include_HEADERS = \
-    ../include/relacs/singlestimulus.h
+    $(HEADER_PATH)/singlestimulus.h
 
 
 
@@ -285,7 +286,7 @@ libauditoryspikeprecision_la_SOURCES = \
 libauditoryspikeprecision_la_includedir = $(pkgincludedir)/auditory
 
 libauditoryspikeprecision_la_include_HEADERS = \
-    ../include/relacs/spikeprecision.h
+    $(HEADER_PATH)/spikeprecision.h
 
 
 
@@ -322,7 +323,7 @@ libauditorysyslatency_la_SOURCES = \
 libauditorysyslatency_la_includedir = $(pkgincludedir)/auditory
 
 libauditorysyslatency_la_include_HEADERS = \
-    ../include/relacs/syslatency.h
+    $(HEADER_PATH)/syslatency.h
 
 
 

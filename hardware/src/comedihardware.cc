@@ -20,10 +20,10 @@
 */
 
 #include <relacs/relacsplugin.h>
-#include <relacs/comedianaloginput.h>
-#include <relacs/comedianalogoutput.h>
-#include <relacs/dynclampanaloginput.h>
-#include <relacs/dynclampanalogoutput.h>
+#include <relacs/hardware/comedianaloginput.h>
+#include <relacs/hardware/comedianalogoutput.h>
+#include <relacs/hardware/dynclampanaloginput.h>
+#include <relacs/hardware/dynclampanalogoutput.h>
 
 addAnalogInput( ComediAnalogInput );
 addAnalogOutput( ComediAnalogOutput );

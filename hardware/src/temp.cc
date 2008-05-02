@@ -20,7 +20,7 @@
 */
 
 #include <iostream>
-#include <relacs/tempdtm5080.h>
+#include <relacs/hardware/tempdtm5080.h>
 
 int main( void )
 {

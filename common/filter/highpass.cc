@@ -19,7 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <relacs/highpass.h>
+#include <relacs/common/highpass.h>
 
 
 HighPass::HighPass( const string &ident, int mode )

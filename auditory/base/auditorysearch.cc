@@ -25,7 +25,7 @@
 #include <qkeycode.h>
 #include <relacs/tablekey.h>
 #include <relacs/lcdrange.h>
-#include <relacs/auditorysearch.h>
+#include <relacs/auditory/auditorysearch.h>
 
 
 const double AuditorySearch::ShortIntensityStep = 1.0;

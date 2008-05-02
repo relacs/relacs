@@ -19,7 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <relacs/lowpass.h>
+#include <relacs/common/lowpass.h>
 
 
 LowPass::LowPass( const string &ident, int mode )

@@ -1,3 +1,4 @@
+HEADER_PATH = ../include/relacs/auditory
 include ${top_srcdir}/moc3.mk
 
 pluginlibdir = $(pkglibdir)/plugins
@@ -37,7 +38,7 @@ libauditorycalibspeakers_la_SOURCES = \
 libauditorycalibspeakers_la_includedir = $(pkgincludedir)/auditory
 
 libauditorycalibspeakers_la_include_HEADERS = \
-    ../include/relacs/calibspeakers.h
+    $(HEADER_PATH)/calibspeakers.h
 
 
 
@@ -68,7 +69,7 @@ libauditoryloudspeaker_la_SOURCES = \
 libauditoryloudspeaker_la_includedir = $(pkgincludedir)/auditory
 
 libauditoryloudspeaker_la_include_HEADERS = \
-    ../include/relacs/loudspeaker.h
+    $(HEADER_PATH)/loudspeaker.h
 
 
 check_PROGRAMS = \

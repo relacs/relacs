@@ -26,8 +26,8 @@
 #include <relacs/map.h>
 #include <relacs/str.h>
 #include <relacs/tablekey.h>
-#include <relacs/auditorysession.h>
-#include <relacs/isoresponse.h>
+#include <relacs/auditory/auditorysession.h>
+#include <relacs/auditory/isoresponse.h>
 
 
 IsoResponse::IsoResponse( void )

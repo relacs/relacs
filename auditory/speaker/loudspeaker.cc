@@ -28,7 +28,7 @@
 #include <relacs/options.h>
 #include <relacs/tablekey.h>
 #include <relacs/relacsplugin.h>
-#include <relacs/loudspeaker.h>
+#include <relacs/auditory/loudspeaker.h>
 
 using namespace std;
 

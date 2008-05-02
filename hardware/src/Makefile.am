@@ -1,3 +1,5 @@
+HEADER_PATH = ../include/relacs/hardware
+
 pluginlibdir = $(pkglibdir)/plugins
 
 pluginlib_LTLIBRARIES = \
@@ -32,9 +34,9 @@ libhardware_la_SOURCES = \
 libhardware_la_includedir = $(pkgincludedir)/hardware
 
 libhardware_la_include_HEADERS = \
-    ../include/relacs/cs3310pp.h \
-    ../include/relacs/kleindiek.h \
-    ../include/relacs/tempdtm5080.h
+    $(HEADER_PATH)/cs3310pp.h \
+    $(HEADER_PATH)/kleindiek.h \
+    $(HEADER_PATH)/tempdtm5080.h
 
 
 libnieserieshardware_la_CPPFLAGS = \
@@ -56,7 +58,7 @@ libnieserieshardware_la_LIBADD = \
     $(QT3_LIBS)
 
 libnieserieshardware_la_SOURCES = \
-    ../include/relacs/nidaq.h \
+    $(HEADER_PATH)/nidaq.h \
     \
     amplmode.cc \
     cs3310nidio.cc \
@@ -71,13 +73,13 @@ libnieserieshardware_la_SOURCES = \
 libnieserieshardware_la_includedir = $(pkgincludedir)/hardware
 
 libnieserieshardware_la_include_HEADERS = \
-    ../include/relacs/amplmode.h \
-    ../include/relacs/cs3310nidio.h \
-    ../include/relacs/cs3310serialnidio.h \
-    ../include/relacs/niai.h \
-    ../include/relacs/niao.h \
-    ../include/relacs/nidio.h \
-    ../include/relacs/nipfi.h
+    $(HEADER_PATH)/amplmode.h \
+    $(HEADER_PATH)/cs3310nidio.h \
+    $(HEADER_PATH)/cs3310serialnidio.h \
+    $(HEADER_PATH)/niai.h \
+    $(HEADER_PATH)/niao.h \
+    $(HEADER_PATH)/nidio.h \
+    $(HEADER_PATH)/nipfi.h
 
 
 check_PROGRAMS = \

@@ -27,8 +27,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <relacs/comedianaloginput.h>
-#include <relacs/comedianalogoutput.h>
+#include <relacs/hardware/comedianaloginput.h>
+#include <relacs/hardware/comedianalogoutput.h>
 
 ComediAnalogOutput::ComediAnalogOutput( void ) 
   : AnalogOutput( ComediAnalogOutputType )

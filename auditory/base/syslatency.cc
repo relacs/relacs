@@ -25,8 +25,8 @@
 #include <relacs/stats.h>
 #include <relacs/sampledata.h>
 #include <relacs/random.h>
-#include <relacs/auditorysession.h>
-#include <relacs/syslatency.h>
+#include <relacs/auditory/auditorysession.h>
+#include <relacs/auditory/syslatency.h>
 
 
 SysLatency::SysLatency( void )
