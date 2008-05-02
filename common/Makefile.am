@@ -21,7 +21,7 @@ DX_PROJECT = common
 DX_INSTALL_SUBDIR = /$(DX_PROJECT)
 DX_DEPENDS = Makefile.am
 DX_SETTINGS = PROJECT_NAME='"Common Relacs Plugins"'
-DX_SETTINGS += INPUT='include/relacs base controls detectors filter models'
+DX_SETTINGS += INPUT='include/relacs/common base controls detectors filter models'
 DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'
 DX_SETTINGS += TAGFILES='../doc/relacsall.tag=..'
 

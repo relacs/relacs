@@ -18,7 +18,7 @@ DX_PROJECT = hardware
 DX_INSTALL_SUBDIR = /$(DX_PROJECT)
 DX_DEPENDS = Makefile.am
 DX_SETTINGS = PROJECT_NAME='"Relacs Plugins for Accessing Hardware"'
-DX_SETTINGS += INPUT='src include/relacs doc'
+DX_SETTINGS += INPUT='include/relacs/hardware src doc'
 DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'
 DX_SETTINGS += TAGFILES='../doc/relacsall.tag=..'
 
