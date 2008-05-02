@@ -24,6 +24,8 @@
 
 #include <relacs/array.h>
 
+namespace relacs {
+
 
 /*! 
 \class BasisFunction
@@ -183,5 +185,7 @@ private:
 
 };
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_BASISFUNCTION_H_ */

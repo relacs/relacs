@@ -21,6 +21,8 @@
 
 #include <relacs/sampledata.h>
 
+namespace relacs {
+
 
 SampleData<> sin( const LinearRange &r, double f )
 {
@@ -354,4 +356,7 @@ SampleData<> triangle( double l, double r, double stepsize, double period )
 {
   return triangle( LinearRange( l, r, stepsize ), period );
 }
+
+
+}; /* namespace relacs */
 

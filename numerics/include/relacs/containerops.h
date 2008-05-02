@@ -22,6 +22,8 @@
 #ifndef _RELACS_CONTAINEROPS_H_
 #define _RELACS_CONTAINEROPS_H_ 1
 
+namespace relacs {
+
 
 ///////////// unary class member operators //////////////////////////////////
 
@@ -355,5 +357,6 @@
   CONTAINERFUNC1SCALARDEF( CONTAINERTEMPL, CONTAINERTYPE, CFUNCNAME, CFUNC ) \
 
 
-  
+}; /* namespace relacs */
+
 #endif /* ! _RELACS_CONTAINEROPS_H_ */

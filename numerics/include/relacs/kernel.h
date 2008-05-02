@@ -22,6 +22,8 @@
 #ifndef _RELACS_KERNEL_H_
 #define _RELACS_KERNEL_H_ 1
 
+namespace relacs {
+
 
 /*! 
 \class Kernel
@@ -334,5 +336,7 @@ private:
 
 };
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_KERNEL_H_ */

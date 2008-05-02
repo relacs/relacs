@@ -26,7 +26,7 @@
 #include <relacs/stats.h>
 #include <relacs/eventdata.h>
 
-using namespace numerics;
+namespace relacs {
 
 
 const double EventData::MaxInterval = 1.0e12;
@@ -2545,7 +2545,7 @@ void EventData::serialCorr( double tbegin, double tend, ArrayD &sc ) const
   for ( int k=n+1; k<=p; k++ )
     iv.push( (*this)[k] - (*this)[k-1] );
 
-  ::serialCorr( iv, sc );
+  ::relacs::serialCorr( iv, sc );
 }
 
 
@@ -2736,7 +2736,7 @@ void EventData::spectrum( double tbegin, double tend, double step,
   SampleDataD rr( tbegin, tend, step );
   rate( rr );
   rr -= mean( rr );
-  ::rPSD( rr, psd );
+  ::relacs::rPSD( rr, psd );
 }
 
 
@@ -2745,7 +2745,7 @@ void EventData::coherence( const SampleDataD &stimulus, SampleDataD &c ) const
   SampleDataD rr( stimulus.range() );
   rate( rr );
   rr -= mean( rr );
-  ::coherence( stimulus, rr, c );
+  ::relacs::coherence( stimulus, rr, c );
 }
 
 
@@ -2760,7 +2760,7 @@ void EventData::coherence( const EventData &e, double tbegin, double tend,
   e.rate( r2 );
   r2 -= mean( r2 );
 
-  ::coherence( r1, r2, c );
+  ::relacs::coherence( r1, r2, c );
 }
 
 
@@ -2811,7 +2811,7 @@ void EventData::saveText( ostream &os, double tfac,
     os.setf( ios::left, ios::adjustfield );
   else
     os.unsetf( ios::adjustfield );
-  width = abs( width );
+  width = ::abs( width );
 
   os << setprecision( precision ); 
 
@@ -2847,7 +2847,7 @@ void EventData::savePoint( ostream &os, double y, double tfac,
 
   int n = 0;
   for ( const_iterator i = begin()+minEvent(); i != end(); ++i, ++n ) {
-    os << setw( abs( width ) ) << *i * tfac << ' ' << y << '\n';
+    os << setw( ::abs( width ) ) << *i * tfac << ' ' << y << '\n';
   }
 
   if ( n <= 0 && noevents.size() > 0 )
@@ -2879,8 +2879,8 @@ void EventData::saveStroke( ostream &os, int offs, double tfac,
 
   int nn = 0;
   for ( const_iterator i = begin()+minEvent(); i != end(); ++i, ++nn ) {
-    os << setw( abs( width ) ) << *i * tfac << ' ' << offs+lower << '\n';
-    os << setw( abs( width ) ) << *i * tfac << ' ' << offs+upper << '\n';
+    os << setw( ::abs( width ) ) << *i * tfac << ' ' << offs+lower << '\n';
+    os << setw( ::abs( width ) ) << *i * tfac << ' ' << offs+upper << '\n';
     os << '\n';
   }
 
@@ -2917,10 +2917,10 @@ void EventData::saveBox( ostream &os, double bin, int offs, double tfac,
   int nn = 0;
   for ( const_iterator i = begin()+minEvent(); i != end(); ++i, ++nn ) {
     double t = ::floor( *i * tfac / bin );
-    os << setw( abs( width ) ) << t << ' ' << offs+lower << '\n';
-    os << setw( abs( width ) ) << t << ' ' << offs+upper << '\n';
-    os << setw( abs( width ) ) << t+bin << ' ' << offs+upper << '\n';
-    os << setw( abs( width ) ) << t+bin << ' ' << offs+lower << '\n';
+    os << setw( ::abs( width ) ) << t << ' ' << offs+lower << '\n';
+    os << setw( ::abs( width ) ) << t << ' ' << offs+upper << '\n';
+    os << setw( ::abs( width ) ) << t+bin << ' ' << offs+upper << '\n';
+    os << setw( ::abs( width ) ) << t+bin << ' ' << offs+lower << '\n';
     os << '\n';
   }
 
@@ -2941,4 +2941,7 @@ EventIterator &EventIterator::operator=( const EventIterator &p )
 
   return *this;
 }
+
+
+}; /* namespace relacs */
 

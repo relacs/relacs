@@ -26,9 +26,8 @@
 #include <vector>
 using namespace std;
 
+namespace relacs {
 
-namespace numerics
-{
 
   /*! Returns the median of the sorted range \a first, \a last.
       \a RandomIter is a random access iterator
@@ -2743,9 +2742,6 @@ void lineFit( const ContainerX &vecx, const ContainerY &vecy, const ContainerS &
 }
 
 
-};
-
-
 template < typename ForwardIterX >
 void detrend( ForwardIterX firstx, ForwardIterX lastx )
 {
@@ -2778,5 +2774,8 @@ void detrend( ContainerX &vecx )
 {
   detrend( vecx.begin(), vecx.end() );
 }
+
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_STATS_H_ */

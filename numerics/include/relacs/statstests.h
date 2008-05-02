@@ -24,6 +24,8 @@
 
 #include <relacs/array.h>
 
+namespace relacs {
+
 
   /*! The integral over the standard normal distribution upto x. 
       \f[ \alpha = \int_{-\infty}^x \frac{1}{\sqrt{2\pi}}e^{-z^2/2} dz \f]
@@ -101,5 +103,7 @@ double gammaQ( double a, double x );
       is the Beta Function. */
 double incBeta( double a, double b, double x );
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_STATSTESTS_H_ */

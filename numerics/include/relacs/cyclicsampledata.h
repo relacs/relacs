@@ -26,6 +26,9 @@
 #include <relacs/linearrange.h>
 #include <relacs/stats.h>
 
+namespace relacs {
+
+
 /*!
 \class CyclicSampleData
 \author Jan Benda
@@ -370,7 +373,7 @@ double CyclicSampleData< T >::max( long from, long upto ) const
   if ( from >= upto )
     return 0.0;
 
-  return numerics::max( begin()+from, begin()+upto );
+  return ::relacs::max( begin()+from, begin()+upto );
 }
 
 
@@ -384,7 +387,7 @@ double CyclicSampleData< T >::min( long from, long upto ) const
   if ( from >= upto )
     return 0.0;
 
-  return numerics::min( begin()+from, begin()+upto );
+  return ::relacs::min( begin()+from, begin()+upto );
 }
 
 
@@ -398,7 +401,7 @@ double CyclicSampleData< T >::maxAbs( long from, long upto ) const
   if ( from >= upto )
     return 0.0;
 
-  return numerics::maxAbs( begin()+from, begin()+upto );
+  return ::relacs::maxAbs( begin()+from, begin()+upto );
 }
 
 
@@ -412,7 +415,7 @@ double CyclicSampleData< T >::minAbs( long from, long upto ) const
   if ( from >= upto )
     return 0.0;
 
-  return numerics::minAbs( begin()+from, begin()+upto );
+  return ::relacs::minAbs( begin()+from, begin()+upto );
 }
 
 
@@ -426,7 +429,7 @@ double CyclicSampleData< T >::mean( long from, long upto ) const
   if ( from >= upto )
     return 0.0;
 
-  return numerics::mean( begin()+from, begin()+upto );
+  return ::relacs::mean( begin()+from, begin()+upto );
 }
 
 
@@ -440,7 +443,7 @@ double CyclicSampleData< T >::variance( long from, long upto ) const
   if ( from >= upto )
     return 0.0;
 
-  return numerics::variance( begin()+from, begin()+upto );
+  return ::relacs::variance( begin()+from, begin()+upto );
 }
 
 
@@ -454,7 +457,7 @@ double CyclicSampleData< T >::stdev( long from, long upto ) const
   if ( from >= upto )
     return 0.0;
 
-  return numerics::stdev( begin()+from, begin()+upto );
+  return ::relacs::stdev( begin()+from, begin()+upto );
 }
 
 
@@ -468,8 +471,10 @@ double CyclicSampleData< T >::rms( long from, long upto ) const
   if ( from >= upto )
     return 0.0;
 
-  return numerics::rms( begin()+from, begin()+upto );
+  return ::relacs::rms( begin()+from, begin()+upto );
 }
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_CYCLICSAMPLEDATA_H_ */

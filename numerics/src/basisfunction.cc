@@ -22,6 +22,8 @@
 #include <cmath>
 #include <relacs/basisfunction.h>
 
+namespace relacs {
+
 
 void BasisFunction::basis( double x, ArrayD &y ) const
 {
@@ -152,4 +154,7 @@ double Sine::value( const ArrayD &c, double x ) const
 {
   return operator()( c, x );
 }
+
+
+}; /* namespace relacs */
 

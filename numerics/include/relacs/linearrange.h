@@ -28,6 +28,9 @@
 
 using namespace std;
 
+namespace relacs {
+
+
 /*! 
 \class LinearRange
 \author Jan Benda
@@ -432,5 +435,7 @@ protected:
     
 };
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_LINEARRANGE_H_ */

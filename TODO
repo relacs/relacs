@@ -1,11 +1,17 @@
 Libraries:
 - introduce namespace 'relacs' to all libraries
+  for headers:
+for i in *.h; do h=${i%.cc}; { if fgrep -q 'using namespace' $i; then sed -e "/using namespace numerics/d;" -e "\|using namespace|a\\\nnamespace relacs {" -e '\|#endif /\* !|i\}; /* namespace relacs */\n' $i; else sed -e "\|#include <relacs/$h.h>|a\\\nnamespace relacs {" -e '\|#endif /\* !|i\}; /* namespace relacs */\n' $i; fi; } > tmp.h; mv tmp.h $i; done
+  for sources:
+for i in *.cc; do h=${i%.cc}; { if fgrep -q 'using namespace' $i; then sed -e "/using namespace numerics/d;" -e "\|using namespace|a\\\nnamespace relacs {" -e '$a\\n}; /* namespace relacs */\n' $i; else sed -e "\|#include <relacs/$h.h>|a\\\nnamespace relacs {" -e '$a\\n}; /* namespace relacs */\n' $i; fi; } > tmp.cc; mv tmp.cc $i; done
 - add relacs library tests to the libraries!
 
 Plugins:
 - Rethink directory structure of the plugin sets.
-- use -disable-plugins-common etc. to exclude plugin sets from compilation
-- The right name for dlopen can be found in the dlname filed of the *.la file!
+- Use -disable-plugins-common etc. to exclude plugin sets from compilation.
+  Make sure that dependencies among the plugin sets are fullfilled.
+- Put relacs configuration files in demo subdirectory of the plugin sets?
+- The right name for dlopen can be found in the dlname field of the *.la file!
   Use this approach for loading the plugins?
 
 Autotools:
@@ -13,7 +19,6 @@ Autotools:
   you need to call
   libtool --mode=execute gdb relacs_main
   Update relacs script accordingly!
-- Put relacs configuration files in demo subdirectory of the plugin sets?
 - Math library check: LT_LIB_M
 - Check for C++ requirements (STL, templates)
 - Make datatools a separate project

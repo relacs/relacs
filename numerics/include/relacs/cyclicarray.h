@@ -28,6 +28,9 @@
 #include <relacs/sampledata.h>
 using namespace std;
 
+namespace relacs {
+
+
 /*!
 \class CyclicArray
 \brief A template defining an one-dimensional cyclic array of data.
@@ -883,5 +886,7 @@ ostream &operator<<( ostream &str, const CyclicArray< T > &ca )
 }
 
 
-#endif
+}; /* namespace relacs */
+
+#endif /* ! _RELACS_CYCLICARRAY_H_ */
 

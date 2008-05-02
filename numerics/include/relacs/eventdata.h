@@ -32,6 +32,9 @@
 
 using namespace std;
 
+namespace relacs {
+
+
 template < typename T > class SampleData;
 typedef SampleData< double > SampleDataD;
 class Kernel;
@@ -905,7 +908,7 @@ public:
         for duration \a duration seconds.
         Use the random number gnerator \a random. */
   void poisson( double rate, double refract, 
-		double duration, RandomBase &random=numerics::rnd );
+		double duration, RandomBase &random=rnd );
 
     /*! Write event times as a single column of text in stream \a s.
         Each event time is multiplied by \a tfac,
@@ -1644,5 +1647,7 @@ inline double EventSizeIterator::operator[]( long n ) const
     //    return ED->value( ED->indices( (*ED)[ Index+n ] ) );
 }
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_EVENTDATA_H_ */

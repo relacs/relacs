@@ -24,6 +24,8 @@
 
 #include <relacs/array.h>
 
+namespace relacs {
+
 #ifdef HAVE_LIBGSL
 
 void gslVector( gsl_vector &a, const Array<double> &b )
@@ -62,4 +64,7 @@ void gslVector( gsl_vector_int &a, const Array<int> &b )
 }
 
 #endif
+
+
+}; /* namespace relacs */
 

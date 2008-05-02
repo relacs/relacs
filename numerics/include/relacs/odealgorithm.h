@@ -24,6 +24,8 @@
 
 #include <cmath>
 
+namespace relacs {
+
 
 template < class Derivs >
 void eulerStep( double x, double *y, double *dydx, int n,
@@ -561,5 +563,8 @@ int OdeInt( REAL *xd, REAL **yd, int nvar, int kmax, int *kount,
 }
 
 #endif
+
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_ODEALGORITHM_H_ */

@@ -27,9 +27,7 @@
 
 using namespace std;
 
-
-namespace numerics
-{
+namespace relacs {
 
   /*! Compute an in-place radix-2 FFT on the range \a first, \a last
       of complex numbers.
@@ -167,10 +165,10 @@ double welch( int j, int n );
 template < typename ForwardIterX, typename ForwardIterP >
 int rPSD( ForwardIterX firstx, ForwardIterX lastx,
 	  ForwardIterP firstp, ForwardIterP lastp,
-	  bool overlap=true, double (*window)( int j, int n )=numerics::bartlett );
+	  bool overlap=true, double (*window)( int j, int n )=bartlett );
 template < typename ContainerX, typename ContainerP >
 int rPSD( const ContainerX &x, ContainerP &p,
-	  bool overlap=true, double (*window)( int j, int n )=numerics::bartlett );
+	  bool overlap=true, double (*window)( int j, int n )=bartlett );
 
   /*! Compute transfer function in range \a firsth, \a lasth
       as a half-complex sequence
@@ -183,10 +181,10 @@ template < typename ForwardIterX, typename ForwardIterY,
 int transfer( ForwardIterX firstx, ForwardIterX lastx,
 	      ForwardIterY firsty, ForwardIterY lasty,
 	      BidirectIterH firsth, BidirectIterH lasth,
-	      bool overlap=true, double (*window)( int j, int n )=numerics::bartlett );
+	      bool overlap=true, double (*window)( int j, int n )=bartlett );
 template < typename ContainerX, typename ContainerY, typename ContainerH >
 int transfer( const ContainerX &x, const ContainerY &y, ContainerH &h,
-	      bool overlap=true, double (*window)( int j, int n )=numerics::bartlett );
+	      bool overlap=true, double (*window)( int j, int n )=bartlett );
   /*! Compute gain (absolute value of the transfer function)
       in range \a firstg, \a lastg
       between the two ranges \a firstx, \a lastx and \a firsty, \a lasty.
@@ -197,10 +195,10 @@ template < typename ForwardIterX, typename ForwardIterY,
 int gain( ForwardIterX firstx, ForwardIterX lastx,
 	  ForwardIterY firsty, ForwardIterY lasty,
 	  ForwardIterG firstg, ForwardIterG lastg,
-	  bool overlap=true, double (*window)( int j, int n )=numerics::bartlett );
+	  bool overlap=true, double (*window)( int j, int n )=bartlett );
 template < typename ContainerX, typename ContainerY, typename ContainerG >
 int gain( const ContainerX &x, const ContainerY &y, ContainerG &g,
-	  bool overlap=true, double (*window)( int j, int n )=numerics::bartlett );
+	  bool overlap=true, double (*window)( int j, int n )=bartlett );
   /*! Compute coherence in range \a firstc, \a lastc
       of the two ranges \a firstx, \a lastx and \a firsty, \a lasty.
       \a ForwardIterX, \a ForwardIterY, \a ForwardIterC
@@ -210,10 +208,10 @@ template < typename ForwardIterX, typename ForwardIterY,
 int coherence( ForwardIterX firstx, ForwardIterX lastx,
 	       ForwardIterY firsty, ForwardIterY lasty,
 	       ForwardIterC firstc, ForwardIterC lastc,
-	       bool overlap=true, double (*window)( int j, int n )=numerics::bartlett );
+	       bool overlap=true, double (*window)( int j, int n )=bartlett );
 template < typename ContainerX, typename ContainerY, typename ContainerC >
 int coherence( const ContainerX &x, const ContainerY &y, ContainerC &c,
-	       bool overlap=true, double (*window)( int j, int n )=numerics::bartlett );
+	       bool overlap=true, double (*window)( int j, int n )=bartlett );
   /*! Returns a lower bound of transmitted information based on the coherence
       \f$ \gamma^2 \f$ in the range \a firstc, \a lastc computed by
       \f[ I_{\mathrm{LB}} = -\int_0^{\infty} \log_2(1-\gamma^2) \, df \f]
@@ -232,10 +230,10 @@ template < typename ForwardIterX, typename ForwardIterY,
 int rCSD( ForwardIterX firstx, ForwardIterX lastx,
 	  ForwardIterY firsty, ForwardIterY lasty,
 	  ForwardIterC firstc, ForwardIterC lastc,
-	  bool overlap=true, double (*window)( int j, int n )=numerics::bartlett );
+	  bool overlap=true, double (*window)( int j, int n )=bartlett );
 template < typename ContainerX, typename ContainerY, typename ContainerC >
 int rCSD( const ContainerX &x, const ContainerY &y, ContainerC &c,
-	  bool overlap=true, double (*window)( int j, int n )=numerics::bartlett );
+	  bool overlap=true, double (*window)( int j, int n )=bartlett );
   /*! Compute gain (in range \a firstg, \a lastg),
       coherence (in range \a firstc, \a lastc), 
       and spectrum of the response (in range \a firstyp, \a lastyp)
@@ -249,12 +247,12 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
 	     ForwardIterG firstg, ForwardIterG lastg,
 	     ForwardIterC firstc, ForwardIterC lastc,
 	     ForwardIterYP firstyp, ForwardIterYP lastyp,
-	     bool overlap=true, double (*window)( int j, int n )=numerics::bartlett );
+	     bool overlap=true, double (*window)( int j, int n )=bartlett );
 template < typename ContainerX, typename ContainerY, 
   typename ContainerG, typename ContainerC, typename ContainerYP >
 int spectra( const ContainerX &x, const ContainerY &y,
 	     ContainerG &g, ContainerC &c, ContainerYP &yp,
-	     bool overlap=true, double (*window)( int j, int n )=numerics::bartlett );
+	     bool overlap=true, double (*window)( int j, int n )=bartlett );
   /*! Compute gain (in range \a firstg, \a lastg),
       coherence (in range \a firstc, \a lastc), 
       auto- (in range \a firstxp, \a lastxp and \a firstyp, \a lastyp)
@@ -273,14 +271,14 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
 	     ForwardIterCP firstcp, ForwardIterCP lastcp,
 	     ForwardIterXP firstxp, ForwardIterXP lastxp,
 	     ForwardIterYP firstyp, ForwardIterYP lastyp,
-	     bool overlap=true, double (*window)( int j, int n )=numerics::bartlett );
+	     bool overlap=true, double (*window)( int j, int n )=bartlett );
 template < typename ContainerX, typename ContainerY, 
   typename ContainerG, typename ContainerC, typename ContainerCP,
   typename ContainerXP, typename ContainerYP >
 int spectra( const ContainerX &x, const ContainerY &y,
 	     ContainerG &g, ContainerC &c,
 	     ContainerCP &cp, ContainerXP &xp, ContainerYP &yp,
-	     bool overlap=true, double (*window)( int j, int n )=numerics::bartlett );
+	     bool overlap=true, double (*window)( int j, int n )=bartlett );
 
 
 ///// implementation /////////////////////////////////////////////////////////
@@ -1808,7 +1806,7 @@ int spectra( const ContainerX &x, const ContainerY &y,
 }
 
 
-};
+}; /* namespace relacs */
 
-#endif
+#endif /* ! _RELACS_SPECTRUM_H_ */
 

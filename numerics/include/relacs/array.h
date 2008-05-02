@@ -40,6 +40,8 @@
 
 using namespace std;
 
+namespace relacs {
+
 
 /*! 
 \class Array
@@ -143,12 +145,12 @@ class Array
     /*! Initialize the array with \a n uniformly distributed random numbers 
         between zero and one, using the random number generator \a r. */
   template < typename R >
-  Array<T> &rand( int n, R &r=numerics::rnd );
+  Array<T> &rand( int n, R &r=rnd );
     /*! Initialize the array with \a n normally distributed random numbers 
         with zero mean and unit standard deviation, 
 	using the random number generator \a r. */
   template < typename R >
-  Array<T> &randNorm( int n, R &r=numerics::rnd );
+  Array<T> &randNorm( int n, R &r=rnd );
 
     /*! Copy the content of the array to \a a. 
         If necessary remaining elements of \a a
@@ -1594,9 +1596,9 @@ double Array<T>::min( int first, int last ) const
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return numerics::min( begin()+first, end() );
+    return ::relacs::min( begin()+first, end() );
   else
-    return numerics::min( begin()+first, begin()+last );
+    return ::relacs::min( begin()+first, begin()+last );
 }
 
 
@@ -1606,9 +1608,9 @@ int Array<T>::minIndex( int first, int last ) const
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return numerics::minIndex( begin()+first, end() );
+    return ::relacs::minIndex( begin()+first, end() );
   else
-    return numerics::minIndex( begin()+first, begin()+last );
+    return ::relacs::minIndex( begin()+first, begin()+last );
 }
 
 
@@ -1619,9 +1621,9 @@ int Array<T>::minIndex( double &min, int first, int last ) const
     first = 0;
   int index = -1;
   if ( last < 0 )
-    min = numerics::min( index, begin()+first, end() );
+    min = ::relacs::min( index, begin()+first, end() );
   else
-    min = numerics::min( index, begin()+first, begin()+last );
+    min = ::relacs::min( index, begin()+first, begin()+last );
   return index;
 }
 
@@ -1632,9 +1634,9 @@ double Array<T>::max( int first, int last ) const
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return numerics::max( begin()+first, end() );
+    return ::relacs::max( begin()+first, end() );
   else
-    return numerics::max( begin()+first, begin()+last );
+    return ::relacs::max( begin()+first, begin()+last );
 }
 
 
@@ -1644,9 +1646,9 @@ int Array<T>::maxIndex( int first, int last ) const
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return numerics::maxIndex( begin()+first, end() );
+    return ::relacs::maxIndex( begin()+first, end() );
   else
-    return numerics::maxIndex( begin()+first, begin()+last );
+    return ::relacs::maxIndex( begin()+first, begin()+last );
 }
 
 
@@ -1657,9 +1659,9 @@ int Array<T>::maxIndex( double &max, int first, int last ) const
     first = 0;
   int index = -1;
   if ( last < 0 )
-    max = numerics::max( index, begin()+first, end() );
+    max = ::relacs::max( index, begin()+first, end() );
   else
-    max = numerics::max( index, begin()+first, begin()+last );
+    max = ::relacs::max( index, begin()+first, begin()+last );
   return index;
 }
 
@@ -1670,9 +1672,9 @@ void Array<T>::minMax( double &min, double &max, int first, int last ) const
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    numerics::minMax( min, max, begin()+first, end() );
+    ::relacs::minMax( min, max, begin()+first, end() );
   else
-    numerics::minMax( min, max, begin()+first, begin()+last );
+    ::relacs::minMax( min, max, begin()+first, begin()+last );
 }
 
 
@@ -1682,9 +1684,9 @@ void Array<T>::minMaxIndex( int &minindex, int &maxindex, int first, int last ) 
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    numerics::minMaxIndex( minindex, maxindex, begin()+first, end() );
+    ::relacs::minMaxIndex( minindex, maxindex, begin()+first, end() );
   else
-    numerics::minMaxIndex( minindex, maxindex, begin()+first, begin()+last );
+    ::relacs::minMaxIndex( minindex, maxindex, begin()+first, begin()+last );
 }
 
 
@@ -1695,9 +1697,9 @@ void Array<T>::minMaxIndex( double &min, int &minindex, double &max, int &maxind
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    numerics::minMax( min, minindex, max, maxindex, begin()+first, end() );
+    ::relacs::minMax( min, minindex, max, maxindex, begin()+first, end() );
   else
-    numerics::minMax( min, minindex, max, maxindex, begin()+first, begin()+last );
+    ::relacs::minMax( min, minindex, max, maxindex, begin()+first, begin()+last );
 }
 
 
@@ -1707,9 +1709,9 @@ double Array<T>::mean( int first, int last ) const
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return numerics::mean( begin()+first, end() );
+    return ::relacs::mean( begin()+first, end() );
   else
-    return numerics::mean( begin()+first, begin()+last );
+    return ::relacs::mean( begin()+first, begin()+last );
 }
 
 
@@ -1719,9 +1721,9 @@ double Array<T>::mean( double &stdev, int first, int last ) const
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return numerics::meanStdev( stdev, begin()+first, end() );
+    return ::relacs::meanStdev( stdev, begin()+first, end() );
   else
-    return numerics::meanStdev( stdev, begin()+first, begin()+last );
+    return ::relacs::meanStdev( stdev, begin()+first, begin()+last );
 }
 
 
@@ -1731,9 +1733,9 @@ double Array<T>::variance( int first, int last ) const
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return numerics::variance( begin()+first, end() );
+    return ::relacs::variance( begin()+first, end() );
   else
-    return numerics::variance( begin()+first, begin()+last );
+    return ::relacs::variance( begin()+first, begin()+last );
 }
 
 
@@ -1743,9 +1745,9 @@ double Array<T>::variance( double mean, int first, int last ) const
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return numerics::variance( mean, begin()+first, end() );
+    return ::relacs::variance( mean, begin()+first, end() );
   else
-    return numerics::variance( mean, begin()+first, begin()+last );
+    return ::relacs::variance( mean, begin()+first, begin()+last );
 }
 
 
@@ -1755,9 +1757,9 @@ double Array<T>::varianceFixed( double fixedmean, int first, int last ) const
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return numerics::varianceFixed( fixedmean, begin()+first, end() );
+    return ::relacs::varianceFixed( fixedmean, begin()+first, end() );
   else
-    return numerics::varianceFixed( fixedmean, begin()+first, begin()+last );
+    return ::relacs::varianceFixed( fixedmean, begin()+first, begin()+last );
 }
 
 
@@ -1767,9 +1769,9 @@ double Array<T>::stdev( int first, int last ) const
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return numerics::stdev( begin()+first, end() );
+    return ::relacs::stdev( begin()+first, end() );
   else
-    return numerics::stdev( begin()+first, begin()+last );
+    return ::relacs::stdev( begin()+first, begin()+last );
 }
 
 
@@ -1779,9 +1781,9 @@ double Array<T>::stdev( double mean, int first, int last ) const
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return numerics::stdev( mean, begin()+first, end() );
+    return ::relacs::stdev( mean, begin()+first, end() );
   else
-    return numerics::stdev( mean, begin()+first, begin()+last );
+    return ::relacs::stdev( mean, begin()+first, begin()+last );
 }
 
 
@@ -1791,9 +1793,9 @@ double Array<T>::stdevFixed( double fixedmean, int first, int last ) const
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return numerics::stdevFixed( fixedmean, begin()+first, end() );
+    return ::relacs::stdevFixed( fixedmean, begin()+first, end() );
   else
-    return numerics::stdevFixed( fixedmean, begin()+first, begin()+last );
+    return ::relacs::stdevFixed( fixedmean, begin()+first, begin()+last );
 }
 
 
@@ -1803,9 +1805,9 @@ double Array<T>::sem( int first, int last ) const
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return numerics::sem( begin()+first, end() );
+    return ::relacs::sem( begin()+first, end() );
   else
-    return numerics::sem( begin()+first, begin()+last );
+    return ::relacs::sem( begin()+first, begin()+last );
 }
 
 
@@ -1815,9 +1817,9 @@ double Array<T>::sem( double mean, int first, int last ) const
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return numerics::sem( mean, begin()+first, end() );
+    return ::relacs::sem( mean, begin()+first, end() );
   else
-    return numerics::sem( mean, begin()+first, begin()+last );
+    return ::relacs::sem( mean, begin()+first, begin()+last );
 }
 
 
@@ -1827,9 +1829,9 @@ double Array<T>::semFixed( double fixedmean, int first, int last ) const
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return numerics::semFixed( fixedmean, begin()+first, end() );
+    return ::relacs::semFixed( fixedmean, begin()+first, end() );
   else
-    return numerics::semFixed( fixedmean, begin()+first, begin()+last );
+    return ::relacs::semFixed( fixedmean, begin()+first, begin()+last );
 }
 
 
@@ -1839,9 +1841,9 @@ double Array<T>::absdev( int first, int last ) const
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return numerics::absdev( begin()+first, end() );
+    return ::relacs::absdev( begin()+first, end() );
   else
-    return numerics::absdev( begin()+first, begin()+last );
+    return ::relacs::absdev( begin()+first, begin()+last );
 }
 
 
@@ -1851,9 +1853,9 @@ double Array<T>::absdev( double mean, int first, int last ) const
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return numerics::absdev( mean, begin()+first, end() );
+    return ::relacs::absdev( mean, begin()+first, end() );
   else
-    return numerics::absdev( mean, begin()+first, begin()+last );
+    return ::relacs::absdev( mean, begin()+first, begin()+last );
 }
 
 
@@ -1863,9 +1865,9 @@ double Array<T>::rms( int first, int last ) const
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return numerics::rms( begin()+first, end() );
+    return ::relacs::rms( begin()+first, end() );
   else
-    return numerics::rms( begin()+first, begin()+last );
+    return ::relacs::rms( begin()+first, begin()+last );
 }
 
 
@@ -1875,9 +1877,9 @@ double Array<T>::skewness( int first, int last ) const
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return numerics::skewness( begin()+first, end() );
+    return ::relacs::skewness( begin()+first, end() );
   else
-    return numerics::skewness( begin()+first, begin()+last );
+    return ::relacs::skewness( begin()+first, begin()+last );
 }
 
 
@@ -1887,9 +1889,9 @@ double Array<T>::kurtosis( int first, int last ) const
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return numerics::kurtosis( begin()+first, end() );
+    return ::relacs::kurtosis( begin()+first, end() );
   else
-    return numerics::kurtosis( begin()+first, begin()+last );
+    return ::relacs::kurtosis( begin()+first, begin()+last );
 }
 
 
@@ -1899,9 +1901,9 @@ double Array<T>::sum( int first, int last ) const
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return numerics::sum( begin()+first, end() );
+    return ::relacs::sum( begin()+first, end() );
   else
-    return numerics::sum( begin()+first, begin()+last );
+    return ::relacs::sum( begin()+first, begin()+last );
 }
 
 
@@ -1911,9 +1913,9 @@ double Array<T>::squaredSum( int first, int last ) const
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return numerics::squaredSum( begin()+first, end() );
+    return ::relacs::squaredSum( begin()+first, end() );
   else
-    return numerics::squaredSum( begin()+first, begin()+last );
+    return ::relacs::squaredSum( begin()+first, begin()+last );
 }
 
 
@@ -1923,9 +1925,9 @@ double Array<T>::power( int first, int last ) const
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return numerics::power( begin()+first, end() );
+    return ::relacs::power( begin()+first, end() );
   else
-    return numerics::power( begin()+first, begin()+last );
+    return ::relacs::power( begin()+first, begin()+last );
 }
 
 
@@ -1966,9 +1968,9 @@ double Array<T>::rank( int first, int last )
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return numerics::rank( begin()+first, end() );
+    return ::relacs::rank( begin()+first, end() );
   else
-    return numerics::rank( begin()+first, begin()+last );
+    return ::relacs::rank( begin()+first, begin()+last );
 }
 
 
@@ -2089,5 +2091,8 @@ istream &operator>>( istream &str, Array<T> &a )
   return a.load( str );
 }
 
+
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_ARRAY_H_ */

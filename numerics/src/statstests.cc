@@ -28,6 +28,8 @@
 #endif
 #include <relacs/statstests.h>
 
+namespace relacs {
+
 
 double alphaNormal( double x )
 {
@@ -122,7 +124,7 @@ double rankSumWilcoxon( const ArrayD &xdata, const ArrayD &ydata, int &n )
   for ( f=0; f<diff.size() && fabs( diff[f] ) == 0.0; f++ );
   ArrayD rdata( diff, f );
   n = rdata.size();
-  numerics::rank( rdata );
+  rank( rdata );
   // compute rank sum of positive differences:
   double Wp = 0.0;
   for ( int k=0; k<rdata.size(); k++ )
@@ -592,3 +594,6 @@ private:
 GSLSetErrorHandler gslseterrorhandler;
 
 #endif
+
+}; /* namespace relacs */
+

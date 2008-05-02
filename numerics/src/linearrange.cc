@@ -21,6 +21,8 @@
 
 #include <relacs/linearrange.h>
 
+namespace relacs {
+
 
 LinearRange::LinearRange( void )
   : Offset( 0 ),
@@ -572,4 +574,7 @@ LinearRangeIterator &LinearRangeIterator::operator=( const LinearRangeIterator &
 
   return *this;
 }
+
+
+}; /* namespace relacs */
 

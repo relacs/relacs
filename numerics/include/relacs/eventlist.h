@@ -30,6 +30,9 @@
 
 using namespace std;
 
+namespace relacs {
+
+
 class Kernel;
 template < typename T > class Array;
 typedef Array< double > ArrayD;
@@ -666,7 +669,7 @@ public:
         and duration \a duration seconds.
         Use the random number gnerator \a random. */
   void poisson( int trials, double rate, double refract, double duration,
-		RandomBase &random=numerics::rnd );
+		RandomBase &random=rnd );
 
     /*! Write event times as a single column of text in stream \a s.
         Each event time is multiplied by \a tfac,
@@ -739,5 +742,7 @@ public:
 
 };
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_EVENTLIST_H_ */

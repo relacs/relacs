@@ -25,6 +25,9 @@
 #include <relacs/eventdata.h>
 #include <relacs/eventlist.h>
 
+namespace relacs {
+
+
 /*!
 \class Detector
 \author Jan Benda
@@ -2901,5 +2904,8 @@ int AcceptEvent<DataIter,TimeIter>::checkTrough(
   return 1; 
 }
 
+
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_DETECTOR_H_ */

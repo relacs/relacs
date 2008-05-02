@@ -28,6 +28,8 @@
 #include <ctime>
 using namespace std;
 
+namespace relacs {
+
 
 /*!
 \class RandomBase
@@ -443,9 +445,6 @@ protected:
 #endif
 
 
-namespace numerics
-{
-
 #ifdef HAVE_LIBGSL
 
   typedef RandomGSL Random;
@@ -470,7 +469,7 @@ namespace numerics
 
 #endif
 
-}; // namespace numerics
 
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_RANDOM_H_ */

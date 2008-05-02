@@ -22,6 +22,8 @@
 #include <cmath>
 #include <relacs/kernel.h>
 
+namespace relacs {
+
 
 double Kernel::value( double x ) const
 {
@@ -481,4 +483,7 @@ double GammaKernel::right( void ) const
 {
   return 5.0*stdev();
 }
+
+
+}; /* namespace relacs */
 

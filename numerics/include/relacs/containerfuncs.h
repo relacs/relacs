@@ -24,17 +24,9 @@
 
 #include <cmath>
 
-/*!
-\namespace numerics
-\author Jan Benda
-\version 0.5
-\brief Collection of basic mathematical functions 
-       for scalars, arrays, and matrices.
-\todo add gamma and bessel functions from the glibc library
- */
+namespace relacs {
 
-namespace numerics
-{
+
     /*! Computes the appropriate width \a width and precision \a prec
         for the output of numbers as text with minimal precision \a step
         and the largest number \a max. */
@@ -682,7 +674,7 @@ namespace numerics
 #undef CONTAINERFUNC1
 #undef CONTAINERFUNC2
 
-}; // namespace numerics
 
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_CONTAINERFUNCS_H_ */

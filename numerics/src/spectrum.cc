@@ -21,9 +21,7 @@
 
 #include <relacs/spectrum.h>
 
-
-namespace numerics
-{
+namespace relacs {
 
 
 double bartlett( int j, int n )
@@ -90,5 +88,5 @@ double welch( int j, int n )
 }
 
 
-};
+}; /* namespace relacs */
 

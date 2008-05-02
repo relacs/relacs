@@ -24,6 +24,8 @@
 #include <relacs/random.h>
 using namespace std;
 
+namespace relacs {
+
 
 double RandomBase::exponential( void )
 {
@@ -515,4 +517,7 @@ string RandomGSL::name( void )
 
 
 #endif
+
+
+}; /* namespace relacs */
 

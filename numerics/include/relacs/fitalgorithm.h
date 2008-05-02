@@ -27,8 +27,8 @@
 #include <relacs/array.h>
 using namespace std;
 
+namespace relacs {
 
-namespace numerics {
 
 static bool FitFlag = true;
 
@@ -1179,6 +1179,7 @@ int marquardtFit( const ContainerX &x, const ContainerY &y, const ContainerS &s,
 		       f, params, paramfit, uncert, chisq, iter, os, chieps, maxiter );
 }
 
-};
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_FITALGORITHM_H_ */

@@ -35,6 +35,8 @@
 
 using namespace std;
 
+namespace relacs {
+
 
 /*! 
 \class SampleData
@@ -228,7 +230,7 @@ class SampleData : public Array< T >
         \sa ouNoise(), Array::zeros(), Array::ones(), Array::rand(), Array::randNorm() */
   template < typename R >
   SampleData< T > &whiteNoise( int n, double step,
-			       double cl, double cu, R &r=numerics::rnd );
+			       double cl, double cu, R &r=rnd );
     /*! Resize the array to hold \a l / \a step data elements sampled 
         with stepsize \a step and initialize the data elements
         with Gaussian distributed white noise
@@ -238,7 +240,7 @@ class SampleData : public Array< T >
         \sa ouNoise(), Array::zeros(), Array::ones(), Array::rand(), Array::randNorm() */
   template < typename R >
   SampleData< T > &whiteNoise( double l, double step,
-			       double cl, double cu, R &r=numerics::rnd );
+			       double cl, double cu, R &r=rnd );
     /*! Resize the array to \a n data elements sampled 
         with stepsize \a step and initialize the data elements
         with Ornstein-Uhlenbeck noise
@@ -248,7 +250,7 @@ class SampleData : public Array< T >
         Algorithmus from L. Bartosch (2001), International Journal of Modern Physics C, 12, 851-855.
         \sa whiteNoise(), Array::zeros(), Array::ones(), Array::rand(), Array::randNorm() */
   template < typename R >
-  SampleData< T > &ouNoise( int n, double step, double tau, R &r=numerics::rnd );
+  SampleData< T > &ouNoise( int n, double step, double tau, R &r=rnd );
     /*! Resize the array to hold \a l / \a step data elements sampled 
         with stepsize \a step and initialize the data elements
         with Ornstein-Uhlenbeck noise
@@ -258,7 +260,7 @@ class SampleData : public Array< T >
         Algorithmus from L. Bartosch (2001), International Journal of Modern Physics C, 12, 851-855.
         \sa whiteNoise(), Array::zeros(), Array::ones(), Array::rand(), Array::randNorm() */
   template < typename R >
-  SampleData< T > &ouNoise( double l, double step, double tau, R &r=numerics::rnd );
+  SampleData< T > &ouNoise( double l, double step, double tau, R &r=rnd );
 
     /*! Copy the content of the array to \a a. 
         If necessary remaining elements of \a a
@@ -1250,7 +1252,7 @@ void hcPhase( const SampleData<TT> &hc, SampleData<SS> &p );
 template < typename TT, typename SS >
   int rPSD( const SampleData<TT> &x, SampleData<SS> &p,
 	    bool overlap=true, 
-	    double (*window)( int j, int n )=numerics::bartlett );
+	    double (*window)( int j, int n )=bartlett );
   /*! Compute transfer function \a h (half-complex sequence) 
       between \a x and \a y.
       \a TT, \a SS, and \a RR are real numbers. */
@@ -1258,7 +1260,7 @@ template < typename TT, typename SS, typename RR >
   int transfer( const SampleData<TT> &x, const SampleData<SS> &y,
 		SampleData<RR> &h,
 		bool overlap=true, 
-		double (*window)( int j, int n )=numerics::bartlett );
+		double (*window)( int j, int n )=bartlett );
   /*! Compute gain \a g (magnitude of the transfer function)
       between \a x and \a y.
       \a TT, \a SS, and \a RR are real numbers. */
@@ -1266,14 +1268,14 @@ template < typename TT, typename SS, typename RR >
   int gain( const SampleData<TT> &x, const SampleData<SS> &y,
 	    SampleData<RR> &g,
 	    bool overlap=true, 
-	    double (*window)( int j, int n )=numerics::bartlett );
+	    double (*window)( int j, int n )=bartlett );
   /*! Compute coherence \a c of \a x and \a y.
       \a TT, \a SS, and \a RR are real numbers. */
 template < typename TT, typename SS, typename RR >
   int coherence( const SampleData<TT> &x, const SampleData<SS> &y,
 		 SampleData<RR> &c,
 		 bool overlap=true, 
-		 double (*window)( int j, int n )=numerics::bartlett );
+		 double (*window)( int j, int n )=bartlett );
   /*! Returns a lower bound of transmitted information based on the coherence
       \f$ \gamma^2 \f$ in \a c computed by
       \f[ I_{\mathrm{LB}} = -\int_{f_0}^{f_1} \log_2(1-\gamma^2) \, df \f] */
@@ -1286,7 +1288,7 @@ template < typename TT, typename SS, typename RR >
   int rCSD( const SampleData<TT> &x, const SampleData<SS> &y,
 	    SampleData<RR> &c,
 	    bool overlap=true, 
-	    double (*window)( int j, int n )=numerics::bartlett );
+	    double (*window)( int j, int n )=bartlett );
   /*! Compute gain \a g, coherence \a c and powerspectrum \a ys
       between \a x and \a y.
       a TT, \a SS, and \a RR are real numbers. */
@@ -1294,7 +1296,7 @@ template < typename TT, typename SS, typename RR >
   int spectra( const SampleData<TT> &x, const SampleData<SS> &y,
 	       SampleData<RR> &g, SampleData<RR> &c, SampleData<RR> &ys,
 	       bool overlap=true, 
-	       double (*window)( int j, int n )=numerics::bartlett );
+	       double (*window)( int j, int n )=bartlett );
   /*! Compute gain \a g, coherence \a c, auto- (\a xs and \a ys)
       and cross spectra (\a cs) between \a x and \a y.
       \a TT, \a SS, and \a RR are real numbers. */
@@ -1304,7 +1306,7 @@ template < typename TT, typename SS, typename RR >
 	       SampleData<RR> &cs, 
 	       SampleData<RR> &xs, SampleData<RR> &ys,
 	       bool overlap=true, 
-	       double (*window)( int j, int n )=numerics::bartlett );
+	       double (*window)( int j, int n )=bartlett );
 
 
 template < typename T > 
@@ -1601,7 +1603,7 @@ SampleData< T > &SampleData< T >::whiteNoise( int n, double step,
     whitef[nn/2] = r.gaussian();
 
   // fourier inversion and renormalization:
-  numerics::hcFFT( whitef );
+  hcFFT( whitef );
   whitef *= sigma;
 
   // copy result into buffer:
@@ -2526,7 +2528,7 @@ SampleData< T > &SampleData< T >::freqFilter( const SampleData< TT > &g,
   int n = size();
   double orms = 1.0;
   if ( rescale )
-    orms = numerics::rms( array() );
+    orms = ::relacs::rms( array() );
 
   // take next power of 2 to n:
   int nn = 1 << (int)::ceil( ::log(size())/::log(2.0) );
@@ -2535,7 +2537,7 @@ SampleData< T > &SampleData< T >::freqFilter( const SampleData< TT > &g,
   resize( nn, 0 );
 
   // fourier transformation:
-  numerics::rFFT( array() );
+  rFFT( array() );
 
   // apply filter:
   operator[]( 0 ) *= g[0];
@@ -2547,7 +2549,7 @@ SampleData< T > &SampleData< T >::freqFilter( const SampleData< TT > &g,
   operator[]( nn/2 ) *= g( double( nn/2 ) / length() );
 
   // fourier inversion and renormalization:
-  numerics::hcFFT( array() );
+  hcFFT( array() );
   array() *= 1.0/nn;
 
   // shrink to original size:
@@ -2555,7 +2557,7 @@ SampleData< T > &SampleData< T >::freqFilter( const SampleData< TT > &g,
 
   // rescale rms amplitude:
   if ( rescale ) {
-    double frms = numerics::rms( array() );
+    double frms = ::relacs::rms( array() );
     array() *= orms/frms;
   }
 
@@ -2578,7 +2580,7 @@ double SampleData< T >::min( double first, double last ) const
   if ( li <= fi )
     return 0.0;
   else
-    return numerics::min( begin()+fi, begin()+li );
+    return ::relacs::min( begin()+fi, begin()+li );
 }
 
 
@@ -2594,7 +2596,7 @@ int SampleData< T >::minIndex( double first, double last ) const
   if ( li <= fi )
     return 0;
   else
-    return fi + numerics::minIndex( begin()+fi, begin()+li );
+    return fi + ::relacs::minIndex( begin()+fi, begin()+li );
 }
 
 
@@ -2613,7 +2615,7 @@ int SampleData< T >::minIndex( double &min, double first, double last ) const
   }
   else {
     int index = -1;
-    min = numerics::min( index, begin()+fi, begin()+li );
+    min = ::relacs::min( index, begin()+fi, begin()+li );
     return fi + index;
   }
 }
@@ -2631,7 +2633,7 @@ double SampleData< T >::max( double first, double last ) const
   if ( li <= fi )
     return 0.0;
   else
-    return numerics::max( begin()+fi, begin()+li );
+    return ::relacs::max( begin()+fi, begin()+li );
 }
 
 
@@ -2647,7 +2649,7 @@ int SampleData< T >::maxIndex( double first, double last ) const
   if ( li <= fi )
     return 0;
   else
-    return fi + numerics::maxIndex( begin()+fi, begin()+li );
+    return fi + ::relacs::maxIndex( begin()+fi, begin()+li );
 }
 
 
@@ -2666,7 +2668,7 @@ int SampleData< T >::maxIndex( double &max, double first, double last ) const
   }
   else {
     int index = -1;
-    max = numerics::max( index, begin()+fi, begin()+li );
+    max = ::relacs::max( index, begin()+fi, begin()+li );
     return fi + index;
   }
 }
@@ -2686,7 +2688,7 @@ void SampleData< T >::minMax( double &min, double &max, double first, double las
     max = 0.0;
   }
   else
-    numerics::minMax( min, max, begin()+fi, begin()+li );
+    ::relacs::minMax( min, max, begin()+fi, begin()+li );
 }
 
 
@@ -2704,7 +2706,7 @@ void SampleData< T >::minMaxIndex( int &minindex, int &maxindex, double first, d
     maxindex = 0;
   }
   else {
-    numerics::minMaxIndex( minindex, maxindex, begin()+fi, begin()+li );
+    ::relacs::minMaxIndex( minindex, maxindex, begin()+fi, begin()+li );
     minindex += fi;
     maxindex += fi;
   }
@@ -2728,7 +2730,7 @@ void SampleData< T >::minMaxIndex( double &min, int &minindex, double &max, int 
     maxindex = 0;
   }
   else {
-    numerics::minMax( min, minindex, max, maxindex, begin()+fi, begin()+li );
+    ::relacs::minMax( min, minindex, max, maxindex, begin()+fi, begin()+li );
     minindex += fi;
     maxindex += fi;
   }
@@ -2747,7 +2749,7 @@ double SampleData< T >::mean( double first, double last ) const
   if ( li <= fi )
     return 0.0;
   else
-    return numerics::mean( begin()+fi, begin()+li );
+    return ::relacs::mean( begin()+fi, begin()+li );
 }
 
 
@@ -2765,7 +2767,7 @@ double SampleData< T >::mean( double &stdev, double first, double last ) const
     return 0.0;
   }
   else
-    return numerics::meanStdev( stdev, begin()+fi, begin()+li );
+    return ::relacs::meanStdev( stdev, begin()+fi, begin()+li );
 }
 
 
@@ -2781,7 +2783,7 @@ double SampleData< T >::variance( double first, double last ) const
   if ( li <= fi )
     return 0.0;
   else
-    return numerics::variance( begin()+fi, begin()+li );
+    return ::relacs::variance( begin()+fi, begin()+li );
 }
 
 
@@ -2797,7 +2799,7 @@ double SampleData< T >::variance( double mean, double first, double last ) const
   if ( li <= fi )
     return 0.0;
   else
-    return numerics::variance( mean, begin()+fi, begin()+li );
+    return ::relacs::variance( mean, begin()+fi, begin()+li );
 }
 
 
@@ -2813,7 +2815,7 @@ double SampleData< T >::varianceFixed( double fixedmean, double first, double la
   if ( li <= fi )
     return 0.0;
   else
-    return numerics::varianceFixed( fixedmean, begin()+fi, begin()+li );
+    return ::relacs::varianceFixed( fixedmean, begin()+fi, begin()+li );
 }
 
 
@@ -2829,7 +2831,7 @@ double SampleData< T >::stdev( double first, double last ) const
   if ( li <= fi )
     return 0.0;
   else
-    return numerics::stdev( begin()+fi, begin()+li );
+    return ::relacs::stdev( begin()+fi, begin()+li );
 }
 
 
@@ -2845,7 +2847,7 @@ double SampleData< T >::stdev( double mean, double first, double last ) const
   if ( li <= fi )
     return 0.0;
   else
-    return numerics::stdev( mean, begin()+fi, begin()+li );
+    return ::relacs::stdev( mean, begin()+fi, begin()+li );
 }
 
 
@@ -2861,7 +2863,7 @@ double SampleData< T >::stdevFixed( double fixedmean, double first, double last 
   if ( li <= fi )
     return 0.0;
   else
-    return numerics::stdevFixed( fixedmean, begin()+fi, begin()+li );
+    return ::relacs::stdevFixed( fixedmean, begin()+fi, begin()+li );
 }
 
 
@@ -2877,7 +2879,7 @@ double SampleData< T >::sem( double first, double last ) const
   if ( li <= fi )
     return 0.0;
   else
-    return numerics::sem( begin()+fi, begin()+li );
+    return ::relacs::sem( begin()+fi, begin()+li );
 }
 
 
@@ -2893,7 +2895,7 @@ double SampleData< T >::sem( double mean, double first, double last ) const
   if ( li <= fi )
     return 0.0;
   else
-    return numerics::sem( mean, begin()+fi, begin()+li );
+    return ::relacs::sem( mean, begin()+fi, begin()+li );
 }
 
 
@@ -2909,7 +2911,7 @@ double SampleData< T >::semFixed( double fixedmean, double first, double last ) 
   if ( li <= fi )
     return 0.0;
   else
-    return numerics::semFixed( fixedmean, begin()+fi, begin()+li );
+    return ::relacs::semFixed( fixedmean, begin()+fi, begin()+li );
 }
 
 
@@ -2925,7 +2927,7 @@ double SampleData< T >::absdev( double first, double last ) const
   if ( li <= fi )
     return 0.0;
   else
-    return numerics::absdev( begin()+fi, begin()+li );
+    return ::relacs::absdev( begin()+fi, begin()+li );
 }
 
 
@@ -2941,7 +2943,7 @@ double SampleData< T >::absdev( double mean, double first, double last ) const
   if ( li <= fi )
     return 0.0;
   else
-    return numerics::absdev( mean, begin()+fi, begin()+li );
+    return ::relacs::absdev( mean, begin()+fi, begin()+li );
 }
 
 
@@ -2957,7 +2959,7 @@ double SampleData< T >::rms( double first, double last ) const
   if ( li <= fi )
     return 0.0;
   else
-    return numerics::rms( begin()+fi, begin()+li );
+    return ::relacs::rms( begin()+fi, begin()+li );
 }
 
 
@@ -2973,7 +2975,7 @@ double SampleData< T >::skewness( double first, double last ) const
   if ( li <= fi )
     return 0.0;
   else
-    return numerics::skewness( begin()+fi, begin()+li );
+    return ::relacs::skewness( begin()+fi, begin()+li );
 }
 
 
@@ -2989,7 +2991,7 @@ double SampleData< T >::kurtosis( double first, double last ) const
   if ( li <= fi )
     return 0.0;
   else
-    return numerics::kurtosis( begin()+fi, begin()+li );
+    return ::relacs::kurtosis( begin()+fi, begin()+li );
 }
 
 
@@ -3005,7 +3007,7 @@ double SampleData< T >::sum( double first, double last ) const
   if ( li <= fi )
     return 0.0;
   else
-    return numerics::sum( begin()+fi, begin()+li );
+    return ::relacs::sum( begin()+fi, begin()+li );
 }
 
 
@@ -3021,7 +3023,7 @@ double SampleData< T >::squaredSum( double first, double last ) const
   if ( li <= fi )
     return 0.0;
   else
-    return numerics::squaredSum( begin()+fi, begin()+li );
+    return ::relacs::squaredSum( begin()+fi, begin()+li );
 }
 
 
@@ -3037,7 +3039,7 @@ double SampleData< T >::power( double first, double last ) const
   if ( li <= fi )
     return 0.0;
   else
-    return numerics::power( begin()+fi, begin()+li );
+    return ::relacs::power( begin()+fi, begin()+li );
 }
 
 
@@ -3045,7 +3047,7 @@ template < typename TT, typename SS >
 void hcPower( const SampleData<TT> &hc, SampleData<SS> &p )
 {
   p.setStepsize( 1.0/hc.stepsize()/hc.size() );
-  numerics::hcPower( hc, p );
+  hcPower( hc, p );
 }
 
 
@@ -3053,7 +3055,7 @@ template < typename TT, typename SS >
 void hcMagnitude( const SampleData<TT> &hc, SampleData<SS> &m )
 {
   m.setStepsize( 1.0/hc.stepsize()/hc.size() );
-  numerics::hcMagnitude( hc, m );
+  hcMagnitude( hc, m );
 }
 
 
@@ -3061,7 +3063,7 @@ template < typename TT, typename SS >
 void hcPhase( const SampleData<TT> &hc, SampleData<SS> &p )
 {
   p.setStepsize( 1.0/hc.stepsize()/hc.size() );
-  numerics::hcPhase( hc, p );
+  hcPhase( hc, p );
 }
 
 
@@ -3073,7 +3075,7 @@ int rPSD( const SampleData< TT > &x, SampleData< SS > &p,
   for ( n = 1; n < p.size(); n <<= 1 );
   p.setStepsize( 0.5/x.stepsize()/n );
 
-  return numerics::rPSD( x, p, overlap, window );
+  return rPSD( x, p, overlap, window );
 }
 
 
@@ -3083,7 +3085,7 @@ int transfer( const SampleData<TT> &x, const SampleData<SS> &y,
 	      bool overlap, double (*window)( int j, int n ) )
 {
   h.setStepsize( 1.0/x.stepsize()/h.stepsize() );
-  return numerics::transfer( x, y, h, overlap, window );
+  return transfer( x, y, h, overlap, window );
 }
 
 
@@ -3095,7 +3097,7 @@ int gain( const SampleData<TT> &x, const SampleData<SS> &y,
   int n = 1;
   for ( n = 1; n < g.size(); n <<= 1 );
   g.setStepsize( 0.5/x.stepsize()/n );
-  return numerics::gain( x, y, g, overlap, window );
+  return gain( x, y, g, overlap, window );
 }
 
 
@@ -3107,7 +3109,7 @@ int coherence( const SampleData<TT> &x, const SampleData<SS> &y,
   int n = 1;
   for ( n = 1; n < c.size(); n <<= 1 );
   c.setStepsize( 0.5/x.stepsize()/n );
-  return numerics::coherence( x, y, c, overlap, window );
+  return coherence( x, y, c, overlap, window );
 }
 
 
@@ -3124,7 +3126,7 @@ double coherenceInfo( const SampleData< RR > &c,
   if ( i1 <= i0 )
     return 0.0;
   else
-    return numerics::coherenceInfo( c.begin()+i0, c.begin()+i1, c.stepsize() );
+    return coherenceInfo( c.begin()+i0, c.begin()+i1, c.stepsize() );
 }
 
 
@@ -3136,7 +3138,7 @@ int rCSD( const SampleData<TT> &x, const SampleData<SS> &y,
   int n = 1;
   for ( n = 1; n < c.size(); n <<= 1 );
   c.setStepsize( 0.5/x.stepsize()/n );
-  return numerics::rCSD( x, y, c, overlap, window );
+  return rCSD( x, y, c, overlap, window );
 }
 
 
@@ -3151,7 +3153,7 @@ int spectra( const SampleData<TT> &x, const SampleData<SS> &y,
   g.setStepsize( 0.5/x.stepsize()/n );
   c.setStepsize( 0.5/x.stepsize()/n );
   ys.setStepsize( 0.5/x.stepsize()/n );
-  return numerics::spectra( x, y, g, c, ys, overlap, window );
+  return spectra( x, y, g, c, ys, overlap, window );
   // normalisation of results by deltat?
 }
 
@@ -3170,7 +3172,7 @@ int spectra( const SampleData<TT> &x, const SampleData<SS> &y,
   cs.setStepsize( 0.5/x.stepsize()/n );
   xs.setStepsize( 0.5/x.stepsize()/n );
   ys.setStepsize( 0.5/x.stepsize()/n );
-  return numerics::spectra( x, y, g, c, cs, xs, ys, overlap, window );
+  return spectra( x, y, g, c, cs, xs, ys, overlap, window );
   // normalisation of results by deltat?
 }
 
@@ -3343,7 +3345,7 @@ ostream &SampleData< T >::save( ostream &str,
   // time format:
   int timeprec=0;
   int timewidth=0;
-  numerics::numberFormat( stepsize(), rangeBack(), timewidth, timeprec );
+  numberFormat( stepsize(), rangeBack(), timewidth, timeprec );
 
   // output:
   str.setf( ios::fixed, ios::floatfield );
@@ -3509,5 +3511,7 @@ istream &operator>>( istream &str, SampleData< T > &a )
   return a.load( str );
 }
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_SAMPLEDATA_H_ */

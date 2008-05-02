@@ -29,7 +29,8 @@
 #include <relacs/eventlist.h>
 
 using namespace std;
-using namespace numerics;
+
+namespace relacs {
 
 
 EventList::EventList( void )
@@ -1082,7 +1083,7 @@ void EventList::directIntervalHistogram( double time,
   hist.hist( intervals );
 
   // normalize:
-  double s = ::sum( hist );
+  double s = ::relacs::sum( hist );
   double norm = s > 0.0 ? 1.0 / s / hist.stepsize() : 1.0;
   hist *= norm;
 }
@@ -1459,7 +1460,7 @@ void EventList::spectrum( double tbegin, double tend, double step,
   for ( int i=0; i<size(); i++ ) {
     (*this)[i].rate( rr );
     rr -= mean( rr );
-    ::rPSD( rr, p );
+    rPSD( rr, p );
     for ( int k=0; k<psd.size(); k++ )
       psd[k] += ( p[k] - psd[k] ) / (k+1);
   }
@@ -1477,7 +1478,7 @@ void EventList::spectrum( double tbegin, double tend, double step,
   for ( int i=0; i<size(); i++ ) {
     (*this)[i].rate( rr );
     rr -= mean( rr );
-    ::rPSD( rr, p );
+    rPSD( rr, p );
     n++;
     for ( int k=0; k<psd.size(); k++ ) {
       psd[k] += ( p[k] - psd[k] ) / n;
@@ -1499,7 +1500,7 @@ void EventList::coherence( const SampleDataD &stimulus, SampleDataD &c ) const
   for ( int i=0; i<size(); i++ ) {
     (*this)[i].rate( rr );
     rr -= mean( rr );
-    ::coherence( stimulus, rr, cohere );
+    ::relacs::coherence( stimulus, rr, cohere );
     for ( int k=0; k<c.size(); k++ )
       c[k] += ( cohere[k] - c[k] ) / (k+1);
   }
@@ -1517,7 +1518,7 @@ void EventList::coherence( const SampleDataD &stimulus,
   for ( int i=0; i<size(); i++ ) {
     (*this)[i].rate( rr );
     rr -= mean( rr );
-    ::coherence( stimulus, rr, cohere );
+    ::relacs::coherence( stimulus, rr, cohere );
     n++;
     for ( int k=0; k<c.size(); k++ ) {
       c[k] += ( cohere[k] - c[k] ) / n;
@@ -1547,7 +1548,7 @@ void EventList::coherence( double tbegin, double tend, double step,
   int n=0;
   for ( unsigned int i=0; i<rr.size(); i++ ) {
     for ( unsigned int j=i+1; j<rr.size(); j++ ) {
-      ::coherence( rr[i], rr[j], cohere );
+      ::relacs::coherence( rr[i], rr[j], cohere );
       n++;
       for ( int k=0; k<c.size(); k++ )
 	c[k] += ( cohere[k] - c[k] ) / n;
@@ -1572,7 +1573,7 @@ void EventList::coherence( double tbegin, double tend, double step,
   int n=0;
   for ( unsigned int i=0; i<rr.size(); i++ ) {
     for ( unsigned int j=i+1; j<rr.size(); j++ ) {
-      ::coherence( rr[i], rr[j], cohere );
+      ::relacs::coherence( rr[i], rr[j], cohere );
       n++;
       for ( int k=0; k<c.size(); k++ ) {
 	c[k] += ( cohere[k] - c[k] ) / n;
@@ -1800,4 +1801,7 @@ ostream &operator<< ( ostream &str, const EventList &events )
 
   return str;
 }
+
+
+}; /* namespace relacs */
 

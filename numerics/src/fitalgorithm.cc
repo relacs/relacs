@@ -23,8 +23,8 @@
 #include <algorithm>
 #include <relacs/fitalgorithm.h>
 
+namespace relacs {
 
-namespace numerics {
 
   /*! \a a is m x m matrix with m < n,
       \a b is n-dim or 0-dim vector. 
@@ -159,5 +159,6 @@ double sineFuncDerivs( double x, const ArrayD &p, ArrayD &dfdp )
   return p[0]+p[1]*s;
 }
 
-};
+
+}; /* namespace relacs */
 

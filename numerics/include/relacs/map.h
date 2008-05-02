@@ -34,6 +34,8 @@
 #include <relacs/stats.h>
 using namespace std;
 
+namespace relacs {
+
 
 /*! 
 \class Map
@@ -1121,11 +1123,11 @@ double Map<T>::cov( int first, int last ) const
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return numerics::cov( XData.begin()+first, XData.end(), 
-		       begin()+first, end() );
+    return ::relacs::cov( XData.begin()+first, XData.end(), 
+			  begin()+first, end() );
   else
-    return numerics::cov( XData.begin()+first, XData.begin()+last, 
-		       begin()+first, begin()+last );
+    return ::relacs::cov( XData.begin()+first, XData.begin()+last, 
+			  begin()+first, begin()+last );
 }
 
 
@@ -1135,11 +1137,11 @@ double Map<T>::corrCoef( int first, int last ) const
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return numerics::corrCoef( XData.begin()+first, XData.end(), 
-			     begin()+first, end() );
+    return ::relacs::corrCoef( XData.begin()+first, XData.end(), 
+			       begin()+first, end() );
   else
-    return numerics::corrCoef( XData.begin()+first, XData.begin()+last, 
-			     begin()+first, begin()+last );
+    return ::relacs::corrCoef( XData.begin()+first, XData.begin()+last, 
+			       begin()+first, begin()+last );
 }
 
 
@@ -1150,13 +1152,13 @@ void Map<T>::propFit( int first, int last,
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    numerics::propFit( XData.begin()+first, XData.end(), 
-		    begin()+first, end(),
-		    m, mu, chisq );
+    ::relacs::propFit( XData.begin()+first, XData.end(), 
+		       begin()+first, end(),
+		       m, mu, chisq );
   else
-    numerics::propFit( XData.begin()+first, XData.begin()+last, 
-		    begin()+first, begin()+last,
-		    m, mu, chisq );
+    ::relacs::propFit( XData.begin()+first, XData.begin()+last, 
+		       begin()+first, begin()+last,
+		       m, mu, chisq );
 }
 
 
@@ -1167,13 +1169,13 @@ void Map<T>::lineFit( int first, int last, double &b, double &bu,
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    numerics::lineFit( XData.begin()+first, XData.end(), 
-		    begin()+first, end(),
-		    b, bu, m, mu, chisq );
+    ::relacs::lineFit( XData.begin()+first, XData.end(), 
+		       begin()+first, end(),
+		       b, bu, m, mu, chisq );
   else
-    numerics::lineFit( XData.begin()+first, XData.begin()+last, 
-		    begin()+first, begin()+last,
-		    b, bu, m, mu, chisq );
+    ::relacs::lineFit( XData.begin()+first, XData.begin()+last, 
+		       begin()+first, begin()+last,
+		       b, bu, m, mu, chisq );
 }
 
 
@@ -1415,5 +1417,7 @@ istream &operator>>( istream &str, Map<T> &a )
   return a.load( str );
 }
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_MAP_H_ */
