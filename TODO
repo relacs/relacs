@@ -1,9 +1,9 @@
 Libraries:
 - introduce namespace 'relacs' to all libraries
   for headers:
-for i in *.h; do h=${i%.cc}; { if fgrep -q 'using namespace' $i; then sed -e "/using namespace numerics/d;" -e "\|using namespace|a\\\nnamespace relacs {" -e '\|#endif /\* !|i\}; /* namespace relacs */\n' $i; else sed -e "\|#include <relacs/$h.h>|a\\\nnamespace relacs {" -e '\|#endif /\* !|i\}; /* namespace relacs */\n' $i; fi; } > tmp.h; mv tmp.h $i; done
+for i in x.h; do h=${i%.cc}; { if fgrep -q 'using namespace' $i; then sed -e "/using namespace numerics/d;" -e "\|using namespace|a\\\nnamespace relacs {" -e '\|#endif /\* !|i\}; /* namespace relacs */\n' $i; else sed -e "\|#include <relacs/$h.h>|a\\\nnamespace relacs {" -e '\|#endif /\* !|i\}; /* namespace relacs */\n' $i; fi; } > tmp.h; mv tmp.h $i; done
   for sources:
-for i in *.cc; do h=${i%.cc}; { if fgrep -q 'using namespace' $i; then sed -e "/using namespace numerics/d;" -e "\|using namespace|a\\\nnamespace relacs {" -e '$a\\n}; /* namespace relacs */\n' $i; else sed -e "\|#include <relacs/$h.h>|a\\\nnamespace relacs {" -e '$a\\n}; /* namespace relacs */\n' $i; fi; } > tmp.cc; mv tmp.cc $i; done
+for i in x.cc; do h=${i%.cc}; { if fgrep -q 'using namespace' $i; then sed -e "/using namespace numerics/d;" -e "\|using namespace|a\\\nnamespace relacs {" -e '$a\\n}; /* namespace relacs */\n' $i; else sed -e "\|#include <relacs/$h.h>|a\\\nnamespace relacs {" -e '$a\\n}; /* namespace relacs */\n' $i; fi; } > tmp.cc; mv tmp.cc $i; done
 - add relacs library tests to the libraries!
 
 Plugins:

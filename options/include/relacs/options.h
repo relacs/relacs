@@ -30,6 +30,8 @@
 #include <relacs/parameter.h>
 using namespace std;
 
+namespace relacs {
+
 
 /*! 
 \class Options
@@ -1077,5 +1079,7 @@ private:
 
 };
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_OPTIONS_H_ */

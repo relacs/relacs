@@ -25,6 +25,8 @@
 #include <iomanip>
 #include <relacs/parameter.h>
 
+namespace relacs {
+
 
 Parameter::Parameter( void )
 {
@@ -1791,3 +1793,6 @@ istream &operator>>( istream &str, Parameter &p )
 
   return str;
 }
+
+}; /* namespace relacs */
+

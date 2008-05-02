@@ -28,6 +28,8 @@
 #include <iomanip>
 #include <relacs/str.h>
 
+namespace relacs {
+
 
 ///// global settings: //////////////////////////////////////////////////////
 
@@ -4884,7 +4886,5 @@ void Str::ReadFormat( const char *format, int &width, int &findex )
 }
 
 
-
-
-
+}; /* namespace relacs */
 

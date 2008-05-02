@@ -22,6 +22,8 @@
 #include <iomanip>
 #include <relacs/options.h>
 
+namespace relacs {
+
 
 Parameter Options::Dummy = Parameter();
 
@@ -2742,4 +2744,7 @@ void Options::unsetNotify( void )
 {
   CallNotify = false;
 }
+
+
+}; /* namespace relacs */
 

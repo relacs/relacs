@@ -27,6 +27,8 @@
 #include <ctime>
 using namespace std;
 
+namespace relacs {
+
 /*! 
 \class Str
 \author Jan Benda
@@ -1168,5 +1170,7 @@ private:
 
   void ReadFormat( const char *format, int &width, int &findex );
 };
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_STR_H_ */

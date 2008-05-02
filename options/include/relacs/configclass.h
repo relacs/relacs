@@ -29,6 +29,8 @@
 #include <relacs/options.h>
 using namespace std;
 
+namespace relacs {
+
 /*!
 \class ConfigClass
 \brief Base class for each class that has some parameters to be configured.
@@ -94,5 +96,7 @@ private:
 
 };
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_CONFIGCLASS_H_ */

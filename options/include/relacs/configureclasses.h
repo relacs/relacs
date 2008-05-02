@@ -27,6 +27,8 @@
 #include <relacs/configclass.h>
 using namespace std;
 
+namespace relacs {
+
 
 /*!
 \class ConfigureClasses
@@ -79,5 +81,7 @@ private:
 
 };
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_CONFIGURECLASSES_H_ */

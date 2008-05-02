@@ -26,6 +26,8 @@
 #include <relacs/str.h>
 using namespace std;
 
+namespace relacs {
+
 /*!
 \class StrQueue
 \author Jan Benda
@@ -154,5 +156,7 @@ class StrQueue : public StrDeque
 
 };
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_STRQUEUE_H_ */

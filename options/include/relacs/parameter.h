@@ -32,6 +32,8 @@
 #include <relacs/strqueue.h>
 using namespace std;
 
+namespace relacs {
+
 
 /*! 
 \class Parameter
@@ -825,5 +827,7 @@ private:
   mutable Str Warning;
 };
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_PARAMETER_H_ */

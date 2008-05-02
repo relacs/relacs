@@ -22,6 +22,8 @@
 #include <relacs/configureclasses.h>
 #include <relacs/configclass.h>
 
+namespace relacs {
+
 
 ConfigClassList *ConfigClass::Configs = 0;
 ConfigureClasses *ConfigClass::CFG = 0;
@@ -162,4 +164,7 @@ void ConfigClass::saveConfig( ofstream &str )
 {
   Options::save( str, "  ", -1, ConfigSelect );
 }
+
+
+}; /* namespace relacs */
 

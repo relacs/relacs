@@ -23,6 +23,8 @@
 #include <algorithm>
 #include <relacs/strqueue.h>
 
+namespace relacs {
+
 
 string StrQueue::StopEmpty = "EMPTY";
 
@@ -258,4 +260,6 @@ ostream &operator<< ( ostream &str, const StrQueue &sq )
   return str;
 }
 
+
+}; /* namespace relacs */
 

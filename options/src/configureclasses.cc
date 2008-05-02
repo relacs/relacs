@@ -25,6 +25,8 @@
 #include <relacs/configureclasses.h>
 using namespace std;
 
+namespace relacs {
+
 
 ConfigureClasses::ConfigureClasses( void )
   : ConfigFile(),
@@ -296,4 +298,7 @@ string ConfigureClasses::currentTime( void )
   strftime( s, 200, "%H:%M:%S", localtime( &ct ) );
   return s;
 }
+
+
+}; /* namespace relacs */
 
