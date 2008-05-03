@@ -31,6 +31,9 @@
 #include <relacs/eventlist.h>
 #include <relacs/plottrace.h>
 
+namespace relacs {
+
+
 class RePros;
 class Session;
 class Filter;
@@ -214,4 +217,8 @@ private slots:
 
 };
 
+
+}; /* namespace relacs */
+
 #endif /* ! _RELACS_FILTERDETECTORS_H_ */
+

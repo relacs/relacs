@@ -25,6 +25,8 @@
 
 using namespace std;
 
+namespace relacs {
+
 
 const double AttSim::AttStep = 0.5;
 const double AttSim::AttMax = 100.0;
@@ -119,4 +121,6 @@ int AttSim::testAttenuate( int di, double &decibel )
   return 0;
 }
 
+
+}; /* namespace relacs */
 

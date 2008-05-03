@@ -26,6 +26,9 @@
 #include <qdialog.h>
 using namespace std;
 
+namespace relacs {
+
+
 /*! 
 \class MessageBox
 \author Jan Benda
@@ -202,5 +205,7 @@ private slots:
 
 };
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_MESSAGEBOX_H_ */

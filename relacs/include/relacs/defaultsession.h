@@ -25,6 +25,8 @@
 #include <qpushbutton.h>
 #include <relacs/control.h>
 
+namespace relacs {
+
 
 /*! 
 \class DefaultSession
@@ -53,4 +55,8 @@ private:
 
 };
 
+
+}; /* namespace relacs */
+
 #endif /* ! _RELACS_DEFAULTSESSION_H_ */
+

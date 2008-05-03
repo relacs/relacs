@@ -31,6 +31,8 @@
 
 using namespace std;
 
+namespace relacs {
+
 
 /*! 
 \class ConfigDialog
@@ -260,5 +262,8 @@ private:
   mutable QMutex CDMutex;
 
 };
+
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_CONFIGDIALOG_H_ */

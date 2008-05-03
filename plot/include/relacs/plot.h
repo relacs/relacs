@@ -40,6 +40,9 @@
 #include <relacs/indata.h>
 #endif
 
+namespace relacs {
+
+
 /*! 
 \class Plot
 \author Jan Benda
@@ -1620,21 +1623,21 @@ void Plot::EventsElement<T>::setRange( double xmin[MaxAxis], double xmax[MaxAxis
 
   if ( Size > 0 ) {
     if ( SizeCoor == Plot::Graph || SizeCoor == Plot::GraphY )
-      Point.setSize( (int)::rint( Size*abs( ypmax - ypmin ) ) );
+      Point.setSize( (int)::rint( Size*::abs( ypmax - ypmin ) ) );
     else if ( SizeCoor == Plot::GraphX )
-      Point.setSize( (int)::rint( Size*abs( xpmax - xpmin ) ) );
+      Point.setSize( (int)::rint( Size*::abs( xpmax - xpmin ) ) );
     else if ( SizeCoor == Plot::First || SizeCoor == Plot::FirstY )
-      Point.setSize( (int)::rint( Size*fabs( (ypmax-ypmin)/double(ymax[0]-ymin[0]) ) ) );
+      Point.setSize( (int)::rint( Size*::fabs( (ypmax-ypmin)/double(ymax[0]-ymin[0]) ) ) );
     else if ( SizeCoor == Plot::FirstX )
-      Point.setSize( (int)::rint( Size*fabs( (xpmax-xpmin)/double(xmax[0]-xmin[0]) ) ) );
+      Point.setSize( (int)::rint( Size*::fabs( (xpmax-xpmin)/double(xmax[0]-xmin[0]) ) ) );
     else if ( SizeCoor == Plot::Second || SizeCoor == Plot::SecondY )
-      Point.setSize( (int)::rint( Size*fabs( (ypmax-ypmin)/double(ymax[1]-ymin[1]) ) ) );
+      Point.setSize( (int)::rint( Size*::fabs( (ypmax-ypmin)/double(ymax[1]-ymin[1]) ) ) );
     else if ( SizeCoor == Plot::SecondX )
-      Point.setSize( (int)::rint( Size*fabs( (xpmax-xpmin)/double(xmax[1]-xmin[1]) ) ) );
+      Point.setSize( (int)::rint( Size*::fabs( (xpmax-xpmin)/double(xmax[1]-xmin[1]) ) ) );
     else if ( SizeCoor == Plot::Pixel )
       Point.setSize( (int)::rint( Size ) );
     else
-      Point.setSize( (int)::rint( Size*fabs( (ypmax-ypmin)/double(ymax[YAxis]-ymin[YAxis]) ) ) );
+      Point.setSize( (int)::rint( Size*::fabs( (ypmax-ypmin)/double(ymax[YAxis]-ymin[YAxis]) ) ) );
   }
 }
 
@@ -1650,5 +1653,7 @@ int Plot::plot( const T &x, double tscale,
   return addData( DE );
 }
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_PLOT_H_ */

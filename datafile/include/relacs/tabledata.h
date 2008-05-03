@@ -28,6 +28,9 @@
 #include <relacs/array.h>
 using namespace std;
 
+namespace relacs {
+
+
 class TableKey;
 
 /*!
@@ -96,5 +99,7 @@ private:
 
 };
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_TABLEDATA_H_ */

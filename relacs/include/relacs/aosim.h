@@ -24,6 +24,8 @@
 
 #include <relacs/analogoutput.h>
 
+namespace relacs {
+
 
 /*! 
 \class AOSim
@@ -94,4 +96,7 @@ public:
 };
 
 
+}; /* namespace relacs */
+
 #endif /* ! _RELACS_AOSIM_H_ */
+

@@ -28,6 +28,8 @@
 #include <relacs/str.h>
 #include <relacs/plugins.h>
 
+namespace relacs {
+
 
 #ifdef PLUGINVERSION
   string Plugins::Version = PLUGINVERSION;
@@ -616,4 +618,7 @@ Plugins::FileInfo::FileInfo( const string &file, void *lib, int fileid )
   Lib = lib;
   FileID = fileid;
 }
+
+
+}; /* namespace relacs */
 

@@ -30,6 +30,9 @@
 #include <relacs/options.h>
 #include <relacs/optwidget.h>
 
+namespace relacs {
+
+
 /*! 
 \class OptDialog
 \author Jan Benda
@@ -356,5 +359,7 @@ private:
 
 };
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_OPTDIALOG_H_ */

@@ -30,6 +30,8 @@
 
 using namespace std;
 
+namespace relacs {
+
 
 /*! 
 \class OutData
@@ -843,5 +845,7 @@ const OutData &OutData::append( const R &a )
   return *this;
 }
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_OUTDATA_H_ */

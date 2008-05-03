@@ -25,6 +25,8 @@
 #include <relacs/str.h>
 #include <relacs/multiplot.h>
 
+namespace relacs {
+
 
 MultiPlot::MultiPlot( int plots, int columns, bool horizontal, Plot::KeepMode keep,
 	      QWidget *parent, const char *name )
@@ -488,4 +490,8 @@ void MultiPlot::mouseMoveEvent( QMouseEvent *qme )
   }
 }
 
+
+}; /* namespace relacs */
+
 #include "moc_multiplot.cc"
+

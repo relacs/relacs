@@ -37,6 +37,8 @@
 #include <relacs/optwidget.h>
 using namespace std;
 
+namespace relacs {
+
 
 class OptWidgetBase : public QObject 
 {
@@ -177,5 +179,8 @@ public:
   OptWidgetSeparator( Options::iterator op, Options *oo, OptWidget *ow,
 		      QWidget *parent, QMutex *mutex=0 );
 };
+
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_OPTWIDGETBASE_H_ */

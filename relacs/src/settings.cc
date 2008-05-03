@@ -29,6 +29,8 @@
 
 using namespace std;
 
+namespace relacs {
+
 
 Settings::Settings( RELACSWidget* rw )
   : ConfigDialog( "Settings", RELACSPlugin::Core, "Settings" ),
@@ -105,4 +107,7 @@ void Settings::notify( void )
 }
 
 
+}; /* namespace relacs */
+
 #include "moc_settings.cc"
+

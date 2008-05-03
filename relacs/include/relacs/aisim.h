@@ -24,6 +24,8 @@
 
 #include <relacs/analoginput.h>
 
+namespace relacs {
+
 
 /*! 
 \class AISim
@@ -100,5 +102,7 @@ private:
   double AIbiRanges[30];
 };
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_AISIM_H_ */

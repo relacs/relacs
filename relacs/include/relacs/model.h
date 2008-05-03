@@ -39,6 +39,8 @@
 #include <relacs/relacsplugin.h>
 using namespace std;
 
+namespace relacs {
+
 
 /*! 
 \class Model
@@ -259,4 +261,8 @@ private:
 
 };
 
+
+}; /* namespace relacs */
+
 #endif /* ! _RELACS_MODEL_H_ */
+

@@ -29,6 +29,8 @@
 #include <relacs/attenuator.h>
 #include <relacs/attenuate.h>
 
+namespace relacs {
+
 
 class AllDevices : public DeviceList< Device, 0 >
 {
@@ -142,4 +144,7 @@ protected:
 };
 
 
+}; /* namespace relacs */
+
 #endif /* ! _RELACS_RELACSDEVICES_H_ */
+

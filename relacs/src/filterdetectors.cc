@@ -28,6 +28,8 @@
 #include <relacs/relacswidget.h>
 #include <relacs/filterdetectors.h>
 
+namespace relacs {
+
 
 FilterDetectors::FilterDetectors( RELACSWidget *rw, QWidget *parent, const char *name )
   : QTabWidget( parent, name ),
@@ -1011,4 +1013,8 @@ void FilterDetectors::FilterData::print( ostream &str ) const
 }
 
 
+
+}; /* namespace relacs */
+
 #include "moc_filterdetectors.cc"
+

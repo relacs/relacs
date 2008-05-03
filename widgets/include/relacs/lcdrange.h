@@ -28,6 +28,9 @@ class QScrollBar;
 class QLCDNumber;
 class QLabel;
 
+namespace relacs {
+
+
 /*! 
 \class LCDRange
 \author Jan Benda
@@ -73,4 +76,7 @@ private:
   QLabel      *label;
 };
 
-#endif /* ! _RELACS_LCDRANGE_H_ */ // LCDRANGE_H
+
+}; /* namespace relacs */
+
+#endif /* ! _RELACS_LCDRANGE_H_ */

@@ -30,6 +30,9 @@
 #include <relacs/multiplot.h>
 #include <relacs/plot.h>
 
+namespace relacs {
+
+
 const double Plot::AutoScale = MAXDOUBLE;
 const double Plot::AutoMinScale = 0.1*MAXDOUBLE;
 const double Plot::ExactScale = 0.01*MAXDOUBLE;
@@ -1636,8 +1639,8 @@ void Plot::drawBorder( QPainter &paint )
 	if ( ::fabs( y ) < 0.001*YTicsIncr[k] )
 	  y = 0.0;
 	int yp = PlotY1 + (int)::rint( double(PlotY2-PlotY1)/(YMax[k]-YMin[k])*(y-YMin[k]) );
-	if ( abs( PlotY1 - yp ) > YGridStyle[k].width() &&
-	     abs( PlotY2 - yp ) > YGridStyle[k].width() )
+	if ( ::abs( PlotY1 - yp ) > YGridStyle[k].width() &&
+	     ::abs( PlotY2 - yp ) > YGridStyle[k].width() )
 	  paint.drawLine( PlotX1, yp, PlotX2, yp );
       }
     }
@@ -1653,8 +1656,8 @@ void Plot::drawBorder( QPainter &paint )
 	if ( ::fabs( x ) < 0.001*XTicsIncr[k] )
 	  x = 0.0;
 	int xp = PlotX1 + (int)::rint( double(PlotX2-PlotX1)/(XMax[k]-XMin[k])*(x-XMin[k]) );
-	if ( abs( PlotX1 - xp ) > XGridStyle[k].width() &&
-	     abs( PlotX2 - xp ) > XGridStyle[k].width() )
+	if ( ::abs( PlotX1 - xp ) > XGridStyle[k].width() &&
+	     ::abs( PlotX2 - xp ) > XGridStyle[k].width() )
 	  paint.drawLine( xp, PlotY1, xp, PlotY2 );
       }
     }
@@ -3676,21 +3679,21 @@ void Plot::PointElement::setRange( double xmin[MaxAxis], double xmax[MaxAxis],
 
   if ( Size > 0 ) {
     if ( SizeCoor == Plot::Graph || SizeCoor == Plot::GraphY )
-      Point.setSize( (int)::rint( Size*abs( ypmax - ypmin ) ) );
+      Point.setSize( (int)::rint( Size*::abs( ypmax - ypmin ) ) );
     else if ( SizeCoor == Plot::GraphX )
-      Point.setSize( (int)::rint( Size*abs( xpmax - xpmin ) ) );
+      Point.setSize( (int)::rint( Size*::abs( xpmax - xpmin ) ) );
     else if ( SizeCoor == Plot::First || SizeCoor == Plot::FirstY )
-      Point.setSize( (int)::rint( Size*fabs( (ypmax-ypmin)/double(ymax[0]-ymin[0]) ) ) );
+      Point.setSize( (int)::rint( Size*::fabs( (ypmax-ypmin)/double(ymax[0]-ymin[0]) ) ) );
     else if ( SizeCoor == Plot::FirstX )
-      Point.setSize( (int)::rint( Size*fabs( (xpmax-xpmin)/double(xmax[0]-xmin[0]) ) ) );
+      Point.setSize( (int)::rint( Size*::fabs( (xpmax-xpmin)/double(xmax[0]-xmin[0]) ) ) );
     else if ( SizeCoor == Plot::Second || SizeCoor == Plot::SecondY )
-      Point.setSize( (int)::rint( Size*fabs( (ypmax-ypmin)/double(ymax[1]-ymin[1]) ) ) );
+      Point.setSize( (int)::rint( Size*::fabs( (ypmax-ypmin)/double(ymax[1]-ymin[1]) ) ) );
     else if ( SizeCoor == Plot::SecondX )
-      Point.setSize( (int)::rint( Size*fabs( (xpmax-xpmin)/double(xmax[1]-xmin[1]) ) ) );
+      Point.setSize( (int)::rint( Size*::fabs( (xpmax-xpmin)/double(xmax[1]-xmin[1]) ) ) );
     else if ( SizeCoor == Plot::Pixel )
       Point.setSize( (int)::rint( Size ) );
     else
-      Point.setSize( (int)::rint( Size*fabs( (ypmax-ypmin)/double(ymax[YAxis]-ymin[YAxis]) ) ) );
+      Point.setSize( (int)::rint( Size*::fabs( (ypmax-ypmin)/double(ymax[YAxis]-ymin[YAxis]) ) ) );
   }
 }
 
@@ -4182,4 +4185,8 @@ void Plot::clear( int index )
   }
 }
 
+
+}; /* namespace relacs */
+
 #include "moc_plot.cc"
+

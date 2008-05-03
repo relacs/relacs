@@ -21,6 +21,8 @@
 
 #include <relacs/temperature.h>
 
+namespace relacs {
+
 
 Temperature::Temperature( void ) 
   : Device( Type )
@@ -32,3 +34,7 @@ Temperature::Temperature( const string &deviceclass )
   : Device( deviceclass, Type )
 {
 }
+
+
+}; /* namespace relacs */
+

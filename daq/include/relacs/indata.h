@@ -29,6 +29,7 @@
 #include <relacs/daqerror.h>
 using namespace std;
 
+namespace relacs {
 
 
 /*! 
@@ -1159,5 +1160,7 @@ inline double InDataDiffIterator::operator[]( int n ) const
   return (*ID)[i] - (*ID)[j];
 }
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_INDATA_H_ */

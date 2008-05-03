@@ -23,6 +23,8 @@
 #include <relacs/attenuator.h>
 using namespace std;
 
+namespace relacs {
+
 
 Attenuator::Attenuator( void )
   : Device( Type )
@@ -69,4 +71,6 @@ int Attenuator::testMute( int di )
   return testAttenuate( di, l );
 }
 
+
+}; /* namespace relacs */
 

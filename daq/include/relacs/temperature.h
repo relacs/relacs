@@ -25,6 +25,8 @@
 #include <relacs/device.h>
 using namespace std;
 
+namespace relacs {
+
 
 /*!
 \class Temperature
@@ -54,5 +56,7 @@ public:
 
 };
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_TEMPERATURE_H_ */

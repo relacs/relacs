@@ -25,6 +25,9 @@
 #include <limits.h>
 #include <relacs/relacsplugin.h>
 
+namespace relacs {
+
+
 /*! 
 \class Filter
 \brief Basic virtual class for filtering or detecting events (e.g. spikes) 
@@ -289,4 +292,7 @@ private:
 };
 
 
+}; /* namespace relacs */
+
 #endif /* ! _RELACS_FILTER_H_ */
+

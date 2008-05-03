@@ -43,6 +43,8 @@
 #include <relacs/messagebox.h>
 #include <relacs/optdialog.h>
 
+namespace relacs {
+
 
 const string RELACSWidget::ModeStr[5] = { "Idle", "Acquisition", "Simulation", "", "Analysis" };
 
@@ -1572,4 +1574,8 @@ void KeyTimeOut::timerEvent( QTimerEvent *e )
 }
 
 
+
+}; /* namespace relacs */
+
 #include "moc_relacswidget.cc"
+

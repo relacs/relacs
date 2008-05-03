@@ -35,6 +35,8 @@
 #include <relacs/plugins.h>
 #include <relacs/configdialog.h>
 
+namespace relacs {
+
 
 /*! 
 \class RELACSPlugin
@@ -699,4 +701,7 @@ addPlugin( controlClass, RELACSPlugin::ControlId )
 addPlugin( reproClass, RELACSPlugin::ReProId )
 
 
+}; /* namespace relacs */
+
 #endif /* ! _RELACS_RELACSPLUGIN_H_ */
+

@@ -26,6 +26,8 @@
 #include <vector>
 using namespace std;
 
+namespace relacs {
+
 
 /*!
   \class RangeLoop
@@ -449,4 +451,7 @@ class RangeLoop
 };
 
 
+}; /* namespace relacs */
+
 #endif /* ! _RELACS_RANGELOOP_H_ */
+

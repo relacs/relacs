@@ -27,6 +27,8 @@
 #include <relacs/relacswidget.h>
 #include <relacs/session.h>
 
+namespace relacs {
+
 
 Session::Session( RELACSWidget *rw, int height,
 		  QWidget *parent, const char *name )
@@ -259,4 +261,8 @@ void Session::modeChanged( void )
 }
 
 
+
+}; /* namespace relacs */
+
 #include "moc_session.cc"
+

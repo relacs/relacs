@@ -27,6 +27,8 @@
 #include <relacs/attenuator.h>
 using namespace std;
 
+namespace relacs {
+
 
 /*!
 \class Attenuate
@@ -341,5 +343,8 @@ private:
         which is attenuated by this instance of the Attenuate class. */
   int AOChannel;
 };
+
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_ATTENUATE_H_ */

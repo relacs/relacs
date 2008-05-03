@@ -21,6 +21,8 @@
 
 #include <relacs/defaultsession.h>
 
+namespace relacs {
+
 
 DefaultSession::DefaultSession( void )
   : Control( "DefaultSession", "Info", "Jan Benda", "1.0" )
@@ -49,4 +51,8 @@ void DefaultSession::sessionStopped( bool saved )
   SessionButton->setText( "Start" );
 }
 
+
+}; /* namespace relacs */
+
 #include "moc_defaultsession.cc"
+

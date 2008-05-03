@@ -24,6 +24,8 @@
 
 #include <relacs/translate.h>
 
+namespace relacs {
+
 
 Str translate( const Str &s, vector< Options > &opt, 
 	       const string &ts, const string &dflt,
@@ -208,4 +210,7 @@ void translate( const StrQueue &sq, StrQueue &dq, vector< Options > &opt,
     dq.add( translate( *i, opt, ts, dflt, tkey ) );
   }
 }
+
+
+}; /* namespace relacs */
 

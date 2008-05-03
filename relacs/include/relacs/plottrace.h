@@ -30,6 +30,9 @@
 #include <relacs/eventlist.h>
 #include <relacs/multiplot.h>
 
+namespace relacs {
+
+
 class RELACSWidget;
 
 /*!
@@ -182,4 +185,8 @@ private:
 
 };
 
+
+}; /* namespace relacs */
+
 #endif /* ! _RELACS_PLOTTRACE_H_ */
+

@@ -23,6 +23,8 @@
 #include <relacs/tracespec.h>
 using namespace std;
 
+namespace relacs {
+
 
 TraceSpec::TraceSpec( void )
   : Trace( -1 ),
@@ -240,3 +242,7 @@ bool operator==( const OutData &signal, const TraceSpec &trace )
   return ( trace.device() == signal.device() &&
 	   trace.channel() == signal.channel() );
 }
+
+
+}; /* namespace relacs */
+

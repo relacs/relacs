@@ -29,6 +29,9 @@
 
 using namespace std;
 
+namespace relacs {
+
+
 class AnalogInput;
 
 /*! 
@@ -317,5 +320,7 @@ int AnalogOutput::convert( OutList &sigs )
   return 0;
 }
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_ANALOGOUTPUT_H_ */

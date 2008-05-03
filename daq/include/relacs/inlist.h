@@ -26,6 +26,8 @@
 #include <relacs/indata.h>
 using namespace std;
 
+namespace relacs {
+
 
 /*!
 \class InList
@@ -276,5 +278,7 @@ public:
 
 };
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_INLIST_H_ */

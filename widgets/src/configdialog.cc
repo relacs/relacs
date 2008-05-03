@@ -33,6 +33,8 @@
 
 using namespace std;
 
+namespace relacs {
+
 
 ConfigDialog::ConfigDialog( const string &configident, int configgroup,
 			    const string &name, 
@@ -433,4 +435,7 @@ QMutex *ConfigDialog::mutex( void )
 }
 
 
+}; /* namespace relacs */
+
 #include "moc_configdialog.cc"
+

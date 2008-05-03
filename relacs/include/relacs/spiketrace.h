@@ -25,6 +25,9 @@
 #include <qwidget.h>
 #include <qthread.h>
 
+namespace relacs {
+
+
 /*!
   \class SpikeTrace
   \author Jan Benda
@@ -124,4 +127,7 @@ protected:
 };
 
 
+}; /* namespace relacs */
+
 #endif /* ! _RELACS_SPIKETRACE_H_ */
+

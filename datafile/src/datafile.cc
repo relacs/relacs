@@ -21,6 +21,8 @@
 
 #include <relacs/datafile.h>
 
+namespace relacs {
+
 
 int DataFile::LevelOffset = 3;
 
@@ -548,4 +550,7 @@ const TableKey &DataFile::key( void ) const
   }
   return Key;
 }
+
+
+}; /* namespace relacs */
 

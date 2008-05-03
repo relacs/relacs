@@ -33,6 +33,8 @@
 #include <qaction.h>
 #include <relacs/options.h>
 
+namespace relacs {
+
 
 class Session;
 
@@ -173,4 +175,7 @@ private slots:
 };
 
 
+}; /* namespace relacs */
+
 #endif /* ! _RELACS_SESSION_H_ */
+

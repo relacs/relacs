@@ -24,6 +24,8 @@
 #include <relacs/relacswidget.h>
 #include <relacs/control.h>
 
+namespace relacs {
+
 
 Control::Control( const string &name, const string &title,
 		  const string &pluginset, const string &author, 
@@ -257,4 +259,8 @@ void Control::requestStop( void )
 }
 
 
+
+}; /* namespace relacs */
+
 #include "moc_control.cc"
+

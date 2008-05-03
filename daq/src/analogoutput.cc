@@ -25,6 +25,8 @@
 
 using namespace std;
 
+namespace relacs {
+
 
 AnalogOutput::AnalogOutput( void )
   : Device( Type ),
@@ -281,3 +283,7 @@ int AnalogOutput::convertData( OutList &sigs )
 {
   return convert<signed short>( sigs );
 }
+
+
+}; /* namespace relacs */
+

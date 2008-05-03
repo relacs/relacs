@@ -36,6 +36,9 @@
 #include <relacs/configclass.h>
 using namespace std;
 
+namespace relacs {
+
+
 class RELACSWidget;
 class RePro;
 class RePros;
@@ -587,4 +590,7 @@ private slots:
 };
 
 
+}; /* namespace relacs */
+
 #endif /* ! _RELACS_MACROS_H_ */
+

@@ -26,6 +26,8 @@
 
 using namespace std;
 
+namespace relacs {
+
 
 DoubleSpinBox::DoubleSpinBox( double val, double min, double max,
 			      double step,
@@ -229,4 +231,7 @@ double DoubleSpinBox::floorLog10( double prec )
 }
 
 
+}; /* namespace relacs */
+
 #include "moc_doublespinbox.cc"
+

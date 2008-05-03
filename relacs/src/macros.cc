@@ -39,6 +39,8 @@
 #include <relacs/filterdetectors.h>
 #include <relacs/macros.h>
 
+namespace relacs {
+
 
 const string Macro::StartUpIdent = "startup";
 const string Macro::ShutDownIdent = "shutdown";
@@ -2044,4 +2046,8 @@ void MacroButton::wasRightClicked( void )
   emit rightClicked( Number );
 }
 
+
+}; /* namespace relacs */
+
 #include "moc_macros.cc"
+

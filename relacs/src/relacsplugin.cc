@@ -27,6 +27,8 @@
 #include <relacs/relacswidget.h>
 #include <relacs/relacsplugin.h>
 
+namespace relacs {
+
 
 RELACSPlugin::RELACSPlugin( const string &configident, int configgroup,
 			    const string &name, const string &title,
@@ -1034,4 +1036,8 @@ void RELACSPlugin::unlockCurrentRePro( void )
 }
 
 
+
+}; /* namespace relacs */
+
 #include "moc_relacsplugin.cc"
+

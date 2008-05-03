@@ -36,6 +36,8 @@
 
 using namespace std;
 
+namespace relacs {
+
 
 /*! 
 \class Acquire
@@ -586,5 +588,7 @@ protected:
 
 };
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_ACQUIRE_H_ */

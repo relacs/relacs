@@ -23,6 +23,8 @@
 #include <relacs/device.h>
 using namespace std;
 
+namespace relacs {
+
 
 Device::Device( int type )
   : DeviceType( type ),
@@ -175,4 +177,7 @@ ostream &operator<<( ostream &str, const Device &d )
   str << d.info();
   return str;
 }
+
+
+}; /* namespace relacs */
 

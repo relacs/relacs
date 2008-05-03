@@ -1,12 +1,9 @@
-Libraries:
-- introduce namespace 'relacs' to all libraries
+Plugins:
+- introduce pluginset namespaces
   for headers:
 for i in x.h; do h=${i%.cc}; { if fgrep -q 'using namespace' $i; then sed -e "/using namespace numerics/d;" -e "\|using namespace|a\\\nnamespace relacs {" -e '\|#endif /\* !|i\}; /* namespace relacs */\n' $i; else sed -e "\|#include <relacs/$h.h>|a\\\nnamespace relacs {" -e '\|#endif /\* !|i\}; /* namespace relacs */\n' $i; fi; } > tmp.h; mv tmp.h $i; done
   for sources:
-for i in x.cc; do h=${i%.cc}; { if fgrep -q 'using namespace' $i; then sed -e "/using namespace numerics/d;" -e "\|using namespace|a\\\nnamespace relacs {" -e '$a\\n}; /* namespace relacs */\n' $i; else sed -e "\|#include <relacs/$h.h>|a\\\nnamespace relacs {" -e '$a\\n}; /* namespace relacs */\n' $i; fi; } > tmp.cc; mv tmp.cc $i; done
-- add relacs library tests to the libraries!
-
-Plugins:
+for i in x.cc; do h=${i%.cc}; { if fgrep -q 'using namespace' $i; then sed -e "/using namespace numerics/d;" -e "\|using namespace|a\\\nnamespace relacs {" -e '/#incude "moc_/i\\n}; /* namespace relacs */\n' $i; else sed -e "\|#include <relacs/$h.h>|a\\\nnamespace relacs {" -e '/#include "moc_/i\\n}; /* namespace relacs */\n' $i; fi; } > tmp.cc; mv tmp.cc $i; done
 - Rethink directory structure of the plugin sets.
 - Use -disable-plugins-common etc. to exclude plugin sets from compilation.
   Make sure that dependencies among the plugin sets are fullfilled.
@@ -22,6 +19,7 @@ Autotools:
 - Math library check: LT_LIB_M
 - Check for C++ requirements (STL, templates)
 - Make datatools a separate project
+- Add relacs library tests to the libraries!
 - AM_INIT_AUTOMAKE( [std-options] ) to check whether all programs and scripts 
   have --help and --version options
 - AM_INIT_AUTOMAKE( [gnu] ) checks for GNU make ?

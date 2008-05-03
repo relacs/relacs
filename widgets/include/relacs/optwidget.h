@@ -31,6 +31,9 @@
 #include <relacs/options.h>
 using namespace std;
 
+namespace relacs {
+
+
 /*! 
 \class OptWidget
 \author Jan Benda
@@ -473,5 +476,7 @@ private:
 
 
 };
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_OPTWIDGET_H_ */

@@ -28,6 +28,9 @@
 #include <relacs/options.h>
 using namespace std;
 
+namespace relacs {
+
+
 class StrQueue;
 class TableData;
 
@@ -540,5 +543,7 @@ ostream &TableKey::save( ostream &str, const vector< Array< T > > &v,
   return str;  
 }
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_TABLEKEY_H_ */

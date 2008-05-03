@@ -21,6 +21,8 @@
 
 #include <relacs/filter.h>
 
+namespace relacs {
+
 
 Filter::Filter( const string &ident, int mode,
 		FilterType type, int outtraces, 
@@ -80,4 +82,8 @@ void Filter::setName( const string &name )
 }
 
 
+
+}; /* namespace relacs */
+
 #include "moc_filter.cc"
+

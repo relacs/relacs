@@ -19,11 +19,14 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <relacs/lcdrange.h>
 
 #include <qscrollbar.h>
 #include <qlcdnumber.h>
 #include <qlabel.h>
+#include <relacs/lcdrange.h>
+
+namespace relacs {
+
 
 LCDRange::LCDRange( QWidget *parent, const char *name ,
 		    int nodigits, int minval, int maxval,
@@ -123,4 +126,8 @@ void LCDRange::resizeEvent( QResizeEvent * )
   label->setGeometry( 0, lcd->height() + 21, width(), 20 );
 }
 
+
+}; /* namespace relacs */
+
 #include "moc_lcdrange.cc"
+

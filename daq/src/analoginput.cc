@@ -25,6 +25,8 @@
 
 using namespace std;
 
+namespace relacs {
+
 
 AnalogInput::AnalogInput( void )
   : Device( Type ),
@@ -294,4 +296,7 @@ int AnalogInput::truncate( InList &traces, double t )
 
   return m;
 }
+
+
+}; /* namespace relacs */
 

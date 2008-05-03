@@ -24,6 +24,8 @@
 #include <relacs/tabledata.h>
 #include <relacs/tablekey.h>
 
+namespace relacs {
+
 
 TableKey::TableKey( void )
   : Opt(),
@@ -833,4 +835,7 @@ void TableKey::init( void )
   }
 
 }
+
+
+}; /* namespace relacs */
 

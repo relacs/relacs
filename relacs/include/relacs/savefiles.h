@@ -37,6 +37,9 @@
 #include <relacs/repro.h>
 #include <relacs/spiketrace.h>
 
+namespace relacs {
+
+
 class RELACSWidget;
 
 // constants for open() and toggle():
@@ -257,4 +260,8 @@ protected:
 
 };
 
+
+}; /* namespace relacs */
+
 #endif /* ! _RELACS_SAVEFILES_H_ */
+

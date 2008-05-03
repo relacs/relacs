@@ -25,6 +25,8 @@
 #include <relacs/optdialog.h>
 #include <relacs/optdialogbutton.h>
 
+namespace relacs {
+
 
 OptDialog::OptDialog( QWidget *parent, char *name )
   : QDialog( parent, name, TRUE,
@@ -371,4 +373,7 @@ void OptDialogButton::clicked( void )
 }
 
 
+}; /* namespace relacs */
+
 #include "moc_optdialog.cc"
+

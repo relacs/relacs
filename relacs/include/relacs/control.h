@@ -37,6 +37,8 @@
 #include <relacs/relacsplugin.h>
 using namespace std;
 
+namespace relacs {
+
 
 /*! 
 \class Control
@@ -273,4 +275,7 @@ private:
 };
 
 
+}; /* namespace relacs */
+
 #endif /* ! _RELACS_CONTROL_H_ */
+

@@ -27,6 +27,8 @@
 #include <qapplication.h>
 #include <relacs/spiketrace.h>
 
+namespace relacs {
+
 
 SpikeTrace::SpikeTrace( double spikewidth, int radius, int tracewidth, 
 			QWidget *parent, const char *name )
@@ -189,4 +191,8 @@ void SpikeTrace::run( void )
 }
 
 
+
+}; /* namespace relacs */
+
 #include "moc_spiketrace.cc"
+

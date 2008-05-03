@@ -23,6 +23,8 @@
 #include <relacs/inlist.h>
 using namespace std;
 
+namespace relacs {
+
 
 InList::InList( void )
   : IL()
@@ -538,4 +540,7 @@ void InList::clearDeviceBuffer( void )
   for ( int k=0; k<size(); k++ )
     operator[]( k ).clearDeviceBuffer();
 }
+
+
+}; /* namespace relacs */
 

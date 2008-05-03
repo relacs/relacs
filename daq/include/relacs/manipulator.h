@@ -26,6 +26,8 @@
 #include <relacs/device.h>
 using namespace std;
 
+namespace relacs {
+
 
 /*!
 \class Manipulator
@@ -126,5 +128,8 @@ public:
   virtual double maxAmplZ( void ) const;
 
 };
+
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_MANIPULATOR_H_ */

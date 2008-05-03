@@ -23,6 +23,8 @@
 #include <relacs/attenuate.h>
 #include <relacs/daqerror.h>
 
+namespace relacs {
+
 
 string DaqError::ErrorText[LastState] =
   { "no device", "device not open", "multiple devices",
@@ -235,4 +237,7 @@ ostream &operator<<( ostream &str, const DaqError &de )
   str << "Error text: " << de.errorText() << '\n';
   return str;
 }
+
+
+}; /* namespace relacs */
 

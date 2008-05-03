@@ -29,6 +29,8 @@
 #include <relacs/relacswidget.h>
 #include <relacs/metadata.h>
 
+namespace relacs {
+
 
 MetaData::MetaData( RELACSWidget *rw )
   : ConfigClass( "MetaData", RELACSPlugin::Plugins, 
@@ -299,4 +301,8 @@ int SetupData::setupFlag( void )
 }
 
 
+
+}; /* namespace relacs */
+
 #include "moc_metadata.cc"
+

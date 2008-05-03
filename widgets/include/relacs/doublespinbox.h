@@ -28,6 +28,8 @@
 #include <relacs/str.h>
 using namespace std;
 
+namespace relacs {
+
 
 /*!
   \class DoubleSpinBox
@@ -144,5 +146,7 @@ private:
 
 };
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_DOUBLESPINBOX_H_ */

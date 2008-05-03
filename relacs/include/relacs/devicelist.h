@@ -29,6 +29,9 @@
 #include <relacs/relacsplugin.h>
 using namespace std;
 
+namespace relacs {
+
+
 class AllDevices;
 
 
@@ -414,4 +417,7 @@ ostream &operator<<( ostream &str, const DeviceList<T,PluginID> &d )
 }
 
 
+}; /* namespace relacs */
+
 #endif /* ! _RELACS_DEVICELIST_H_ */
+

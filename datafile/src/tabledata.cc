@@ -22,6 +22,8 @@
 #include <relacs/tablekey.h>
 #include <relacs/tabledata.h>
 
+namespace relacs {
+
 
 TableData::TableData( void )
 {
@@ -135,4 +137,6 @@ TableData &TableData::sort( int scol )
   return *this;
 }
 
+
+}; /* namespace relacs */
 

@@ -33,6 +33,8 @@
 #include <relacs/relacswidget.h>
 #include <relacs/plottrace.h>
 
+namespace relacs {
+
 
 PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent, const char* name )
   : MultiPlot( 1, Plot::Pointer, parent, "PlotTrace::Plot" ),
@@ -835,4 +837,8 @@ void PlotTrace::customEvent( QCustomEvent *qce )
 }
 
 
+
+}; /* namespace relacs */
+
 #include "moc_plottrace.cc"
+

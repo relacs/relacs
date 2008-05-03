@@ -26,6 +26,9 @@
 
 using namespace std;
 
+namespace relacs {
+
+
 class OutData;
 
 
@@ -172,5 +175,7 @@ class TraceSpec
   
 };
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_TRACESPEC_H_ */

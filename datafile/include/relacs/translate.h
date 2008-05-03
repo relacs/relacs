@@ -31,6 +31,8 @@
 #include <relacs/options.h>
 #include <relacs/tablekey.h>
 
+namespace relacs {
+
 
   /*! Returns the string \a s with each occurence of a pattern $(xxxx) 
       substituted by the value of the identifier xxxx found in
@@ -102,5 +104,7 @@ void translate( const StrQueue &sq, StrQueue &dq,
 		vector< Options > &opt, const string &ts="", 
 		const string &dflt="", const TableKey *tkey=0 );
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_TRANSLATE_H_ */

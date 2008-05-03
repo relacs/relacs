@@ -23,6 +23,8 @@
 #include <relacs/attenuate.h>
 using namespace std;
 
+namespace relacs {
+
 
 Attenuate::Attenuate( void )
   : Device( Type ),
@@ -221,4 +223,6 @@ void Attenuate::setAODevice( const string &deviceid )
   AODevice = deviceid;
 }
 
+
+}; /* namespace relacs */
 

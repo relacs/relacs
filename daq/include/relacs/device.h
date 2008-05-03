@@ -27,6 +27,8 @@
 #include <string>
 using namespace std;
 
+namespace relacs {
+
 
 /*!
 \class Device
@@ -222,5 +224,8 @@ private:
   string DeviceVendor;
 
 };
+
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_DEVICE_H_ */

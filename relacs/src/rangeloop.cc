@@ -28,6 +28,8 @@
 #include <relacs/strqueue.h>
 #include <relacs/rangeloop.h>
 
+namespace relacs {
+
 
 string RangeLoop::SequenceStrings = "Up|Down|AlternateInUp|AlternateInDown|AlternateOutUp|AlternateOutDown|Random|PseudoRandom";
 
@@ -757,7 +759,7 @@ void RangeLoop::initSequence( int pos )
   }
 
   case Random: {
-    numerics::Random r( (unsigned long)0 );
+    ::relacs::Random r( (unsigned long)0 );
     for ( unsigned int k=0; k<einx.size(); k++ ) {
       int inx = 0;
       unsigned int j = 0;
@@ -773,7 +775,7 @@ void RangeLoop::initSequence( int pos )
   }
 
   case PseudoRandom: {
-    numerics::Random r( (unsigned long)87342 );
+    ::relacs::Random r( (unsigned long)87342 );
     for ( unsigned int k=0; k<einx.size(); k++ ) {
       int inx = 0;
       unsigned int j = 0;
@@ -1157,4 +1159,6 @@ ostream &operator<< ( ostream &str, const RangeLoop &rl )
   return str;
 }
 
+
+}; /* namespace relacs */
 

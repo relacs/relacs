@@ -26,6 +26,9 @@
 #include <relacs/device.h>
 using namespace std;
 
+namespace relacs {
+
+
 /*! 
 \class Attenuator
 \author Jan Benda
@@ -178,5 +181,8 @@ public:
   static const int Overflow = -6;
 
 };
+
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_ATTENUATOR_H_ */

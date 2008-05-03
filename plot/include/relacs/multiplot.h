@@ -29,6 +29,8 @@
 #include <qpixmap.h>
 #include <qmutex.h>
 
+namespace relacs {
+
 
 /*! 
 \class MultiPlot
@@ -176,5 +178,8 @@ private:
   QPixmap *PixMap;
 
 };
+
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_MULTIPLOT_H_ */

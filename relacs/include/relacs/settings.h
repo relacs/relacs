@@ -25,6 +25,8 @@
 
 #include <relacs/configdialog.h>
 
+namespace relacs {
+
 
 /*! 
 \class Settings
@@ -58,4 +60,7 @@ private:
 };
 
 
+}; /* namespace relacs */
+
 #endif /* ! _RELACS_SETTINGS_H_ */
+

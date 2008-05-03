@@ -27,6 +27,8 @@
 #include <qmessagebox.h>
 #include <relacs/messagebox.h>
 
+namespace relacs {
+
 
 MessageBox::MessageBox( const string &caption, const string &message,
 			MessageType type, bool blocking,
@@ -146,4 +148,7 @@ void MessageBox::closeMessage( void )
 }
 
 
+}; /* namespace relacs */
+
 #include "moc_messagebox.cc"
+

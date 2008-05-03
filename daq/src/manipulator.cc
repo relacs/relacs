@@ -21,6 +21,8 @@
 
 #include <relacs/manipulator.h>
 
+namespace relacs {
+
 
 Manipulator::Manipulator( void ) 
   : Device( Type )
@@ -176,4 +178,6 @@ double Manipulator::maxAmplZ( void ) const
   return maxAmplX();
 }
 
+
+}; /* namespace relacs */
 

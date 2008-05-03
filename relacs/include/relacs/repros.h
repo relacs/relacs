@@ -30,6 +30,8 @@
 #include <relacs/options.h>
 #include <relacs/relacsplugin.h>
 
+namespace relacs {
+
 
 class RePro;
 class ReProData;
@@ -218,4 +220,7 @@ signals:
 };
 
 
+}; /* namespace relacs */
+
 #endif /* ! _RELACS_REPROS_H_ */
+

@@ -27,6 +27,8 @@
 #include <relacs/outdata.h>
 using namespace std;
 
+namespace relacs {
+
 
 /*!
 \class OutList
@@ -222,5 +224,7 @@ public:
 
 };
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_OUTLIST_H_ */

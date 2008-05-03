@@ -24,6 +24,9 @@
 
 #include <relacs/attenuator.h>
 
+namespace relacs {
+
+
 /*! 
 \class AttSim
 \author Jan Benda
@@ -82,4 +85,8 @@ private:
 
 };
 
+
+}; /* namespace relacs */
+
 #endif /* ! _RELACS_ATTSIM_H_ */
+

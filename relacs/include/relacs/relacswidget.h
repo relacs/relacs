@@ -51,6 +51,8 @@
 
 using namespace std;
 
+namespace relacs {
+
 
 /*! 
 \class RELACSWidget
@@ -403,5 +405,7 @@ private:
 };
 
 
-#endif
+}; /* namespace relacs */
+
+#endif /* ! _RELACS_RELACSWIDGET_H_ */
 

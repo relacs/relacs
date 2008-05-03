@@ -35,6 +35,8 @@
 #include <relacs/outlist.h>
 #include <relacs/relacsplugin.h>
 
+namespace relacs {
+
 
 /*! 
 \class RePro
@@ -390,4 +392,7 @@ private slots:
 };
 
 
+}; /* namespace relacs */
+
 #endif /* ! _RELACS_REPRO_H_ */
+

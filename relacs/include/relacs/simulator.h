@@ -25,6 +25,8 @@
 #include <relacs/acquire.h>
 using namespace std;
 
+namespace relacs {
+
 
 /*! 
 \class Simulator
@@ -106,4 +108,7 @@ private:
 
 };
 
+}; /* namespace relacs */
+
 #endif /* ! _RELACS_SIMULATOR_H_ */
+

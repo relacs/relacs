@@ -24,6 +24,8 @@
 #include <relacs/outlist.h>
 using namespace std;
 
+namespace relacs {
+
 
 OutList::OutList( void )
   : OL()
@@ -449,4 +451,7 @@ ostream &operator<< ( ostream &str, const OutList &signal )
   }
   return str;
 }
+
+
+}; /* namespace relacs */
 

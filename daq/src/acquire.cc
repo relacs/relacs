@@ -29,6 +29,8 @@
 #include <algorithm>
 #include <relacs/acquire.h>
 
+namespace relacs {
+
 
 const string Acquire::SyncModeStrs[5] = {
   "simple restart of analog input together with analog output",
@@ -1832,3 +1834,7 @@ string Acquire::currentTime( void )
   strftime( s, 200, "%H:%M:%S", localtime( &ct ) );
   return s;
 }
+
+
+}; /* namespace relacs */
+

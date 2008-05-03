@@ -26,6 +26,8 @@
 #include <relacs/relacswidget.h>
 #include <relacs/savefiles.h>
 
+namespace relacs {
+
 
 SaveFiles::SaveFiles( RELACSWidget *rw, int height,
 		      QWidget *parent, const char *name )
@@ -792,4 +794,8 @@ void SaveFiles::completeFiles( void )
 }
 
 
+
+}; /* namespace relacs */
+
 #include "moc_savefiles.cc"
+

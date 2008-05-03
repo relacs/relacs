@@ -32,6 +32,8 @@
 #include <relacs/relacswidget.h>
 #include <relacs/repro.h>
 
+namespace relacs {
+
 
 RePro::RePro( const string &name, const string &titles,
 	      const string &pluginset, const string &author,
@@ -566,4 +568,8 @@ void RePro::noSaving( void )
 }
 
 
+
+}; /* namespace relacs */
+
 #include "moc_repro.cc"
+

@@ -728,11 +728,11 @@ public:
   /// justify:
   Str &leftJustify( int width=Width, char pad=Pad );
   Str leftJustified( int width=Width, char pad=Pad ) const
-    { return Str( *this, -abs( width ), pad ); };
+    { return Str( *this, -::abs( width ), pad ); };
 
   Str &rightJustify( int width=Width, char pad=Pad );
   Str rightJustified( int width=Width, char pad=Pad ) const
-    { return Str( *this, abs( width ), pad ); };
+    { return Str( *this, ::abs( width ), pad ); };
 
   Str &centerJustify( int width=Width, char pad=Pad );
   Str centerJustified( int width=Width, char pad=Pad ) const;

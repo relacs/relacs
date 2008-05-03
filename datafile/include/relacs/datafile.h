@@ -34,6 +34,9 @@
 #include <relacs/tabledata.h>
 using namespace std;
 
+namespace relacs {
+
+
 /*!
 \class DataFile
 \brief Reading Ascii Data Files.
@@ -351,5 +354,7 @@ private:
  
 };
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_DATAFILE_H_ */

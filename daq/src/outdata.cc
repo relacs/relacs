@@ -28,6 +28,8 @@
 #include <relacs/outdata.h>
 using namespace std;
 
+namespace relacs {
+
 
 double OutData::DefaultMinSampleInterval = 0.001;
 
@@ -823,7 +825,7 @@ OutData &OutData::load( const string &filename,
 
 double OutData::maximize( double max )
 {
-  double maxval = numerics::max( *this );
+  double maxval = ::relacs::max( *this );
   double c = max/maxval;
   *this *= c;
   return c;
@@ -904,7 +906,7 @@ void OutData::noiseWave( double cutofffreq, double duration, double stdev,
 			 double r, const string &ident )
 {
   whiteNoise( duration, bestSampleInterval( cutofffreq ), 0.0, 
-	      cutofffreq, numerics::rnd );
+	      cutofffreq, ::relacs::rnd );
   if ( stdev != 1.0 )
     array() *= stdev;
   if ( r > 0.0 )
@@ -922,7 +924,7 @@ void OutData::bandNoiseWave( double cutofffreqlow, double cutofffreqhigh,
 			     double r, const string &ident )
 {
   whiteNoise( duration, bestSampleInterval( cutofffreqhigh ), 
-	      cutofffreqlow, cutofffreqhigh, numerics::rnd );
+	      cutofffreqlow, cutofffreqhigh, ::relacs::rnd );
   if ( stdev != 1.0 )
     array() *= stdev;
   if ( r > 0.0 )
@@ -938,7 +940,7 @@ void OutData::bandNoiseWave( double cutofffreqlow, double cutofffreqhigh,
 void OutData::ouNoiseWave( double tau, double duration, double stdev,
 			   double r, const string &ident )
 {
-  ouNoise( duration, minSampleInterval(), tau, numerics::rnd );
+  ouNoise( duration, minSampleInterval(), tau, ::relacs::rnd );
   if ( stdev != 1.0 )
     array() *= stdev;
   if ( r > 0.0 )
@@ -1020,4 +1022,7 @@ ostream &operator<<( ostream &str, const OutData &od )
   str << "AutoConvert: " << od.AutoConvert << '\n';
   return str;
 }
+
+
+}; /* namespace relacs */
 

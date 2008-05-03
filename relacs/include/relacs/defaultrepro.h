@@ -25,6 +25,9 @@
 
 #include <relacs/repro.h>
 
+namespace relacs {
+
+
 /*! \class DefaultRePro
     \author Jan Benda
     \version 2.0
@@ -54,4 +57,7 @@ protected:
 };
 
 
+}; /* namespace relacs */
+
 #endif /* ! _RELACS_DEFAULTREPRO_H_ */
+

@@ -22,6 +22,8 @@
 #include <relacs/model.h>
 #include <relacs/simulator.h>
 
+namespace relacs {
+
 
 Simulator::Simulator( void )
   : Acquire(),
@@ -471,4 +473,7 @@ void Simulator::stop( void )
   if ( Sim != 0 )
     Sim->clearSignals();
 }
+
+
+}; /* namespace relacs */
 

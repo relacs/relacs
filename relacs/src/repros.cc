@@ -31,6 +31,8 @@
 #include <relacs/macros.h>
 #include <relacs/repros.h>
 
+namespace relacs {
+
 
 RePros::RePros( RELACSWidget *rw, QWidget *parent, const char *name )
   : QTabWidget( parent, name ), Menu( 0 )
@@ -491,4 +493,8 @@ void ReProData::dialogClosed( int r )
 }
 
 
+
+}; /* namespace relacs */
+
 #include "moc_repros.cc"
+

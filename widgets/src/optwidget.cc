@@ -29,6 +29,8 @@
 #include <relacs/optwidget.h>
 #include <relacs/optwidgetbase.h>
 
+namespace relacs {
+
 
 OptWidget::OptWidget( QWidget *parent, const char *name, WFlags f )
   : QWidget( parent, name, f ),
@@ -1429,4 +1431,7 @@ OptWidgetSeparator::OptWidgetSeparator( Options::iterator op, Options *oo,
 }
 
 
+}; /* namespace relacs */
+
 #include "moc_optwidget.cc"
+

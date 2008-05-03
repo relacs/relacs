@@ -21,6 +21,8 @@
 
 #include <relacs/defaultrepro.h>
 
+namespace relacs {
+
 
 DefaultRePro::DefaultRePro( void )
   : RePro( "DefaultRePro", "DefaultRePro", "Jan Benda", "1.0" )
@@ -53,5 +55,8 @@ int DefaultRePro::main( void )
     sleep( Duration );
 }
 
+
+
+}; /* namespace relacs */
 
 #include "moc_defaultrepro.cc"

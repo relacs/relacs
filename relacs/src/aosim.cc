@@ -22,6 +22,8 @@
 #include <relacs/analoginput.h>
 #include <relacs/aosim.h>
 
+namespace relacs {
+
 
 AOSim::AOSim( void ) 
   : AnalogOutput( "Analog Output Simulation", SimAnalogOutputType )
@@ -150,4 +152,7 @@ int AOSim::getAISyncDevice( const vector< AnalogInput* > &ais ) const
   }
   return -1;
 }
+
+
+}; /* namespace relacs */
 

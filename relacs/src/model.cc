@@ -23,6 +23,8 @@
 #include <relacs/relacswidget.h>
 #include <relacs/model.h>
 
+namespace relacs {
+
 
 Model::Model( const string &name, const string &titles, 
 	      const string &pluginset, const string &author,
@@ -346,4 +348,7 @@ void Model::addActions( QPopupMenu *menu )
 	   this, SLOT( help() ) );
   action->addTo( menu );
 }
+
+
+}; /* namespace relacs */
 

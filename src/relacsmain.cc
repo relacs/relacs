@@ -34,7 +34,7 @@ int main( int argc, char **argv )
   QApplication::setColorSpec( QApplication::CustomColor );
   QApplication a( argc, argv );
 
-  int mode = RELACSWidget::AcquisitionMode;
+  int mode = relacs::RELACSWidget::AcquisitionMode;
   bool fullscreen = false;
   string configbase = "relacs";
 
@@ -49,7 +49,7 @@ int main( int argc, char **argv )
       break;
 
     case '3':
-      mode = RELACSWidget::SimulationMode;
+      mode = relacs::RELACSWidget::SimulationMode;
       break;
 
     case 's':
@@ -59,7 +59,7 @@ int main( int argc, char **argv )
       break;
     }
 
-  RELACSWidget relacs( configbase, mode );
+  relacs::RELACSWidget relacs( configbase, mode );
 
   if ( fullscreen )
     relacs.fullScreen();

@@ -26,6 +26,8 @@
 #include <string>
 using namespace std;
 
+namespace relacs {
+
 
 /*! 
   \class DaqError
@@ -259,5 +261,7 @@ private:
 
 };
 
+
+}; /* namespace relacs */
 
 #endif /* ! _RELACS_DAQERROR_H_ */

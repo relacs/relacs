@@ -27,6 +27,8 @@
 #include <vector>
 using namespace std;
 
+namespace relacs {
+
 
 /*!
   \class Plugins
@@ -346,4 +348,7 @@ public: \
 reg ## pluginClass init ## pluginClass;
 
 
+}; /* namespace relacs */
+
 #endif /* ! _RELACS_PLUGINS_H_ */
+

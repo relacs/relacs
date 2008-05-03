@@ -21,6 +21,8 @@
 
 #include <relacs/aisim.h>
 
+namespace relacs {
+
 
 AISim::AISim( void )
   : AnalogInput( "Analog Input Simulation", SimAnalogInputType )
@@ -182,4 +184,7 @@ int AISim::error( void ) const
 {
   return 0;
 }
+
+
+}; /* namespace relacs */
 

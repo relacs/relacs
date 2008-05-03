@@ -25,6 +25,8 @@
 #include <relacs/indata.h>
 using namespace std;
 
+namespace relacs {
+
 
 const string InData::RefStr[4] =
   { "differential", "common", "ground", "other" };
@@ -1032,4 +1034,7 @@ InDataTimeIterator &InDataTimeIterator::operator=( const InDataIterator &p )
   ID = p.ID;
   return *this;
 }
+
+
+}; /* namespace relacs */
 

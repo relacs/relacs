@@ -27,6 +27,8 @@
 #include <relacs/optdialog.h>
 using namespace std;
 
+namespace relacs {
+
 
 class OptDialogButton : public QObject
 {
@@ -70,5 +72,8 @@ private:
  
 };
 
-#endif
+
+}; /* namespace relacs */
+
+#endif /* ! _RELACS_OPTDIAlOGBUTTON_H_ */
 
