@@ -29,8 +29,8 @@
 #include <relacs/common/ephystraces.h>
 #include <relacs/auditory/auditorytraces.h>
 #include <relacs/auditory/ficurve.h>
-
 using namespace std;
+using namespace relacs;
 
 
 /*!

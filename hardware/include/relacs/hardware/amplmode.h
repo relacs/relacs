@@ -24,6 +24,7 @@
 
 #include <relacs/hardware/nidio.h>
 #include <relacs/device.h>
+using namespace relacs;
 
 
 /*!

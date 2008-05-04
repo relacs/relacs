@@ -27,6 +27,7 @@
 #include <relacs/translate.h>
 #include <relacs/auditory/auditorysession.h>
 #include <relacs/auditory/spikeprecision.h>
+using namespace relacs;
 
 
 SpikePrecision::SpikePrecision( void )
@@ -811,26 +812,26 @@ int SpikePrecision::createStimulus( OutData &signal, SampleDataD &amdb,
 	  wave.freqFilter( filter, true );
 	else {
 	  wave.freqFilter( filter, false );
-	  peakamplitudefac = numerics::rms( wave );
+	  peakamplitudefac = ::relacs::rms( wave );
 	}
       }
       if ( peakamplitudefac <= 0.0 )
-	peakamplitudefac = numerics::rms( wave );
+	peakamplitudefac = ::relacs::rms( wave );
 
       /*
 	wave.save( "wavef.dat" );
 
 	SampleDataD spec( 4096, 0.0, 0.5/(wave.stepsize()*4096) );
-	numerics::psd( wave.begin(), wave.end(), 
+	::relacs::psd( wave.begin(), wave.end(), 
 	spec.begin(), spec.end(), 
-	true, numerics::hanning );
-	spec /= numerics::max( spec );
+	true, ::relacs::hanning );
+	spec /= ::relacs::max( spec );
 	spec.log10();
 	spec *= 10.0;
 	spec.save( "waves.dat", 10, 8 );
       */
 
-      int c = numerics::clip( -1.0, 1.0, wave );
+      int c = ::relacs::clip( -1.0, 1.0, wave );
       double cp = 100.0*double(c)/wave.size();
       if ( cp > 1.0 )
 	warning( "Clipped " + Str( cp, 0, 3, 'g' ) + "% of the stimulus waveform.", 4.0 );
@@ -860,20 +861,20 @@ int SpikePrecision::createStimulus( OutData &signal, SampleDataD &amdb,
 	wave.freqFilter( filter, true );
       }
       if ( peakamplitudefac <= 0.0 )
-	peakamplitudefac = numerics::rms( wave );
+	peakamplitudefac = ::relacs::rms( wave );
       /*
 	wave.save( "wavef.dat" );
 
 	SampleDataD spec( 4096, 0.0, 0.5/(wave.stepsize()*4096) );
-	numerics::psd( wave.begin(), wave.end(), 
+	::relacs::psd( wave.begin(), wave.end(), 
 	spec.begin(), spec.end(), 
-	true, numerics::hanning );
-	spec /= numerics::max( spec );
+	true, ::relacs::hanning );
+	spec /= ::relacs::max( spec );
 	spec.log10();
 	spec *= 10.0;
 	spec.save( "waves.dat", 10, 8 );
       */
-      int c = numerics::clip( -1.0, 1.0, wave );
+      int c = ::relacs::clip( -1.0, 1.0, wave );
       double cp = 100.0*double(c)/wave.size();
       if ( cp > 1.0 )
 	warning( "Clipped " + Str( cp, 0, 3, 'g' ) + "% of the stimulus waveform.", 4.0 );

@@ -23,6 +23,8 @@
 #define _RELACS_COMMON_SIMPLEMODEL_H_ 1
 
 #include <relacs/model.h>
+using namespace relacs;
+
 
 /*! 
 \class SimpleModel

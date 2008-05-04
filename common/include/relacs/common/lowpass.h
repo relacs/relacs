@@ -25,6 +25,7 @@
 #include <relacs/optwidget.h>
 #include <relacs/indata.h>
 #include <relacs/filter.h>
+using namespace relacs;
 
 
 /*! 

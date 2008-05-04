@@ -23,6 +23,8 @@
 #define _RELACS_COMMON_PAUSE_H_ 1
 
 #include <relacs/repro.h>
+using namespace relacs;
+
 
 /*!
 \class Pause

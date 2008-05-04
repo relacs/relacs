@@ -20,9 +20,8 @@
 */
 
 #include <relacs/str.h>
-#include <relacs/inlist.h>
-#include <relacs/eventlist.h>
 #include <relacs/common/ephystraces.h>
+using namespace relacs;
 
 
 int EPhysTraces::StimulusEvents = 0;

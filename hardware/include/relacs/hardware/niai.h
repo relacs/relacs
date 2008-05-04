@@ -24,6 +24,7 @@
 
 #include <relacs/hardware/nidaq.h>
 #include <relacs/analoginput.h>
+using namespace relacs;
 
 
 /*! 

@@ -32,6 +32,7 @@
 #include <relacs/common/ephystraces.h>
 #include <relacs/auditory/auditorytraces.h>
 #include <relacs/control.h>
+using namespace relacs;
 
 
 /*! 

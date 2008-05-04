@@ -20,11 +20,10 @@
 */
 
 #include <relacs/str.h>
-#include <relacs/inlist.h>
-#include <relacs/eventlist.h>
 #include <relacs/outdata.h>
-#include <relacs/relacsplugin.h>
 #include <relacs/auditory/auditorytraces.h>
+using namespace relacs;
+
 
 string AuditoryTraces::LoudspeakerName = "Speaker";
 string AuditoryTraces::SoundTraceName = "Sound";

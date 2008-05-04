@@ -31,8 +31,9 @@
 #include <relacs/optwidget.h>
 #include <relacs/configclass.h>
 #include <relacs/control.h>
+#include <relacs/common/motorcontrol.h>
+using namespace relacs;
 
-class Manipulator;
 class MiMaPu;
 
 /*! 

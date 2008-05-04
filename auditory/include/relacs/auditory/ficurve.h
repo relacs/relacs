@@ -28,6 +28,7 @@
 #include <relacs/common/ephystraces.h>
 #include <relacs/auditory/auditorytraces.h>
 #include <relacs/repro.h>
+using namespace relacs;
 
 
 /*!

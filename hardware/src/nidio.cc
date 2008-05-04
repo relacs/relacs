@@ -27,7 +27,7 @@
 #include <relacs/hardware/nidaq.h>
 #include <relacs/hardware/nidio.h>
 using namespace std;
-
+using namespace relacs;
 
 
 NIDIO::NIDIO( const string &device )

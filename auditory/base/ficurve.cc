@@ -28,6 +28,7 @@
 #include <relacs/tablekey.h>
 #include <relacs/auditory/auditorysession.h>
 #include <relacs/auditory/ficurve.h>
+using namespace relacs;
 
 
 FICurve::FICurve( void )
@@ -645,7 +646,7 @@ void FICurve::analyzeFICurve( const vector< FIData > &results, double minrate )
     ri -= shift;
     // fit:
     double s=0.0, us=0.0, b=0.0, ub=0.0, ch=0.0;
-    numerics::lineFit( ri, rm, rs, b, ub, s, us, ch );
+    lineFit( ri, rm, rs, b, ub, s, us, ch );
     // fit succesfull?
     if ( ch >= 0.0 ) {
       double as = fabs( s );

@@ -27,6 +27,7 @@
 #include <relacs/random.h>
 #include <relacs/auditory/auditorysession.h>
 #include <relacs/auditory/syslatency.h>
+using namespace relacs;
 
 
 SysLatency::SysLatency( void )
@@ -133,7 +134,7 @@ int SysLatency::main( void )
     if ( fic.empty() )
       fic = as->fICurve();
     // find appropriate intensity:
-    for ( int k = numerics::maxIndex( fic.y() ); k >= 0; k-- ) {
+    for ( int k = ::relacs::maxIndex( fic.y() ); k >= 0; k-- ) {
       if ( fic[k] <= targetrate ) {
 	if ( k+1 < fic.size() &&
 	     ::fabs( fic[k+1] - targetrate ) < ::fabs( fic[k] - targetrate ) )
@@ -155,7 +156,7 @@ int SysLatency::main( void )
   double t = skipwin;
   do {
     trigger.push( t );
-    t += 3.0 * ( 1.0 + numerics::rnd() ) / targetrate;
+    t += 3.0 * ( 1.0 + ::relacs::rnd() ) / targetrate;
   } while ( t < duration - analysewin - 3.0 / targetrate );
 
   // create stimulus and adjust trigger:
@@ -170,7 +171,7 @@ int SysLatency::main( void )
     // generate sine waves:
     SampleDataD sin2;
     sin2.sin( LinearRange( 0.0, 1.0/carrierfrequency, signal.stepsize() ), carrierfrequency );
-    SampleDataD sin1 = pow( 10.0, -pintensity/20.0 ) * sin2;
+    SampleDataD sin1 = ::pow( 10.0, -pintensity/20.0 ) * sin2;
     // create stimulus:
     for ( int i=0; i<trigger.size(); i++ ) {
       // background:

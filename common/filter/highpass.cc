@@ -20,6 +20,7 @@
 */
 
 #include <relacs/common/highpass.h>
+using namespace relacs;
 
 
 HighPass::HighPass( const string &ident, int mode )

@@ -27,6 +27,7 @@
 #include <termios.h>
 #include <relacs/temperature.h>
 using namespace std;
+using namespace relacs;
 
 
 class TempDTM5080 : public Temperature

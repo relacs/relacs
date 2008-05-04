@@ -24,8 +24,8 @@
 #include <unistd.h>
 #include <time.h>
 #include <relacs/hardware/cs3310nidio.h>
-
 using namespace std;
+using namespace relacs;
 
 
 CS3310NIDIO::CS3310NIDIO( const string &device )

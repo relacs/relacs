@@ -29,8 +29,8 @@
 #include <sstream>
 #include <cmath>
 #include <relacs/hardware/cs3310pp.h>
-
 using namespace std;
+using namespace relacs;
 
 
 CS3310PP::CS3310PP( const string &device )

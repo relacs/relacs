@@ -23,6 +23,8 @@
 #define _RELACS_COMMON_NEURONMODELS_H_ 1
 
 #include <relacs/model.h>
+using namespace relacs;
+
 
 /*! 
 \class NeuronModels

@@ -5,6 +5,7 @@ g++ -o mm3a mm3a.cc -I ../daq/src kleindiek.o ../daq/src/device.o
 #include <iostream>
 #include <relacs/hardware/kleindiek.h>
 using namespace std;
+using namespace relacs;
 
 
 int main( void )

@@ -8,8 +8,8 @@
 #include <relacs/hardware/comedianaloginput.h>
 #include <relacs/hardware/dynclampanalogoutput.h>
 #include <relacs/hardware/moduledef.h>
-
 using namespace std;
+using namespace relacs;
 
 
 /*! 

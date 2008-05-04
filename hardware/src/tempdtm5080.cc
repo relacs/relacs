@@ -29,6 +29,7 @@
 #include <iostream>
 #include <sstream>
 using namespace std;
+using namespace relacs;
 
 
 TempDTM5080::TempDTM5080( void )

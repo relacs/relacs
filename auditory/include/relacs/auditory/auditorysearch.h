@@ -28,6 +28,8 @@
 #include <qpushbutton.h>
 #include <qradiobutton.h>
 #include <qbuttongroup.h>
+using namespace relacs;
+
 
 /*! 
 \class AuditorySearch

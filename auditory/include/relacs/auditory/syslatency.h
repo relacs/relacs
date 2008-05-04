@@ -29,6 +29,7 @@
 #include <relacs/multiplot.h>
 #include <relacs/common/ephystraces.h>
 #include <relacs/auditory/auditorytraces.h>
+using namespace relacs;
 
 
 /*! 

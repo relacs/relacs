@@ -25,6 +25,7 @@
 #include <relacs/tablekey.h>
 #include <relacs/auditory/auditorysession.h>
 #include <relacs/auditory/fifield.h>
+using namespace relacs;
 
 
 FIField::FIField( void )

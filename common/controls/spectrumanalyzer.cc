@@ -23,8 +23,7 @@
 #include <relacs/stats.h>
 #include <relacs/spectrum.h>
 #include <relacs/common/spectrumanalyzer.h>
-
-using namespace numerics;
+using namespace relacs;
 
 
 SpectrumAnalyzer::SpectrumAnalyzer( void )
@@ -38,7 +37,7 @@ SpectrumAnalyzer::SpectrumAnalyzer( void )
   Duration = 1.0;
   SpecSize = 1024;
   Overlap = true;
-  Window = numerics::hanning;
+  Window = hanning;
   Decibel = true;
   FMax = 500.0;
   PMin = -50.0;

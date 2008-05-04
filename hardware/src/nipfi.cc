@@ -28,7 +28,7 @@
 #include <relacs/hardware/nidaq.h>
 #include <relacs/hardware/nipfi.h>
 using namespace std;
-
+using namespace relacs;
 
 
 NIPFI::NIPFI( const string &device, long mode )

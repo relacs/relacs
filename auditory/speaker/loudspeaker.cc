@@ -29,8 +29,9 @@
 #include <relacs/tablekey.h>
 #include <relacs/relacsplugin.h>
 #include <relacs/auditory/loudspeaker.h>
-
 using namespace std;
+using namespace relacs;
+
 
 LoudSpeaker::LoudSpeaker( void )
   : Attenuate( "LoudSpeaker" ),

@@ -23,6 +23,8 @@
 #define _RELACS_AUDITORY_AUDITORYNEURON_H_ 1
 
 #include <relacs/common/neuronmodels.h>
+using namespace relacs;
+
 
 /*! 
 \class AuditoryNeuron

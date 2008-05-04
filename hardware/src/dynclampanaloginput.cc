@@ -32,6 +32,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
+using namespace relacs;
+
 
 DynClampAnalogInput::DynClampAnalogInput( void ) 
   : AnalogInput( DynClampAnalogInputType )

@@ -30,6 +30,7 @@
 #include <relacs/random.h>
 #include <relacs/auditory/auditorysession.h>
 #include <relacs/auditory/singlestimulus.h>
+using namespace relacs;
 
 
 SingleStimulus::SingleStimulus( void )
@@ -462,7 +463,7 @@ int SingleStimulus::main( void )
 	if ( ( signal.success() && rate < targetrate ) || signal.underflow() ) {
 	  // saturation?
 	  if ( rinx == rates.size()-1 && rinx > 0 &&
-	       numerics::max( rates.y() ) > silentrate ) {
+	       ::relacs::max( rates.y() ) > silentrate ) {
 	    int satcount = 0;
 	    for ( int k = rinx-1; k >= 0; k-- )
 	      if ( fabs( rates.y( k ) - rate ) < ratetolerance )
@@ -822,8 +823,8 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
       wave.resize( wave.indices( duration ) );
     duration = wave.length();
     if ( PeakAmplitudeFac <= 0.0 )
-      PeakAmplitudeFac = numerics::rms( wave );
-    int c = numerics::clip( -1.0, 1.0, wave );
+      PeakAmplitudeFac = ::relacs::rms( wave );
+    int c = ::relacs::clip( -1.0, 1.0, wave );
     double cp = 100.0*double(c)/wave.size();
     if ( cp > 0.0 )
       info( "Clipped " + Str( cp, 0, 3, 'g' ) + "% of the stimulus waveform.", 4.0 );
@@ -845,14 +846,14 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
 	wave.sin( LinearRange( 0.0, duration, 0.001 ), Frequency );
       }
       else {
-	numerics::Random rand;
+	Random rand;
 	unsigned long seed = rand.setSeed( Seed );
 	if ( WaveForm == Whitenoise )
 	  wave.whiteNoise( duration, 0.001, 0.0, Frequency, rand );
 	else if ( WaveForm == OUnoise )
 	  wave.ouNoise( duration, 0.001, 1.0/Frequency, rand );
 	wave *= PeakAmplitudeFac;
-	int c = numerics::clip( -1.0, 1.0, wave );
+	int c = ::relacs::clip( -1.0, 1.0, wave );
 	double cp = 100.0*double(c)/wave.size();
 	if ( cp > 0.0 )
 	  info( "Clipped " + Str( cp, 0, 3, 'g' ) + "% of the stimulus waveform.", 4.0 );
@@ -942,7 +943,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     }
   }
   else if ( WaveType == Envelope ) {
-    if ( numerics::min( wave ) < 0.0 ) {
+    if ( ::relacs::min( wave ) < 0.0 ) {
       warning( "This envelope contains negative values!" );
       return -1;
     }

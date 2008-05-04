@@ -29,6 +29,7 @@
 #include <cstring>
 #include <iostream>
 using namespace std;
+using namespace relacs;
 
 
 Kleindiek::Kleindiek( const string &device )

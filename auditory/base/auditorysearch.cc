@@ -26,6 +26,7 @@
 #include <relacs/tablekey.h>
 #include <relacs/lcdrange.h>
 #include <relacs/auditory/auditorysearch.h>
+using namespace relacs;
 
 
 const double AuditorySearch::ShortIntensityStep = 1.0;

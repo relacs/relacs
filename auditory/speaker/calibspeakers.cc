@@ -25,6 +25,7 @@
 #include <relacs/options.h>
 #include <relacs/tablekey.h>
 #include <relacs/auditory/calibspeakers.h>
+using namespace relacs;
 
 
 CalibSpeakers::CalibSpeakers( void )

@@ -24,6 +24,7 @@
 #include <relacs/random.h>
 #include <relacs/odealgorithm.h>
 #include <relacs/auditory/auditoryneuron.h>
+using namespace relacs;
 
 
 AuditoryNeuron::AuditoryNeuron( void )
@@ -257,7 +258,7 @@ void AuditoryNeuron::process( const OutData &source, OutData &dest )
 
 void AuditoryNeuron::operator()( double t, double *x, double *dxdt, int n ) const
 {
-  static numerics::Random rand;
+  static Random rand;
 
   if ( TympanumModel == 2 ) {
     dxdt[0] = x[1];

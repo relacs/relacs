@@ -26,6 +26,7 @@
 #include <relacs/tablekey.h>
 #include <relacs/auditory/auditorysession.h>
 #include <relacs/auditory/oneclick.h>
+using namespace relacs;
 
 
 OneClick::OneClick( void )

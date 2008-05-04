@@ -28,6 +28,7 @@
 #include <relacs/tablekey.h>
 #include <relacs/auditory/auditorysession.h>
 #include <relacs/auditory/isoresponse.h>
+using namespace relacs;
 
 
 IsoResponse::IsoResponse( void )
@@ -188,8 +189,7 @@ int IsoResponse::findIsoFreq( void )
 
   // index of minimum threshold:
     
-  //int inx     = stats::minIndex( thresh );
-  int inx     = numerics::minIndex( thresh );
+  int inx     = minIndex( thresh );
   /*int inx = 0;
     double imin = thresh.y(0);
     for( int i=1; i < thresh.size(); i++) {
@@ -704,15 +704,15 @@ void IsoResponse::plotIsoSets(  )
 		      double slope = (currint - preint)/(currssrate - pressrate);
 		      double irms = currint - slope*(currssrate-FIso[l]);
 		      if ( State==0 ) {
-			a1 = A0*pow( 10.0, irms/20 )*sqrt(2.0);
+			a1 = A0 * ::pow( 10.0, irms/20 )*sqrt(2.0);
 			a2 = 0.0;
 		      }
 		      else if ( State==1 ) {
 			a1 = 0.0;
-			a2 = A0*pow( 10.0, irms/20 )*sqrt(2.0);
+			a2 = A0 * ::pow( 10.0, irms/20 )*sqrt(2.0);
 		      }
 		      else {
-			a1 = A0*sqrt( 2.0/(1+AmplRatio*AmplRatio) )*pow( 10.0, irms/20 );
+			a1 = A0 * sqrt( 2.0/(1+AmplRatio*AmplRatio) ) * ::pow( 10.0, irms/20 );
 			a2 = a1*AmplRatio;
 		      }
 		      IsoResults[AmplitudeRelation.pos()].IsoSets.push( a1, a2 );
@@ -770,15 +770,15 @@ void IsoResponse::plotIsoSets(  )
 		double slope = (currint - preint)/(currssrate - pressrate);
 		double irms = currint - slope*(currssrate-FIso[l]);
 		if ( State==0 ) {
-		  a1 = A0*pow( 10.0, irms/20 )*sqrt(2.0);
+		  a1 = A0 * ::pow( 10.0, irms/20 )*sqrt(2.0);
 		  a2 = 0.0;
 		}
 		else if ( State==1 ) {
 		  a1 = 0.0;
-		  a2 = A0*pow( 10.0, irms/20 )*sqrt(2.0);
+		  a2 = A0 * ::pow( 10.0, irms/20 )*sqrt(2.0);
 		}
 		else {
-		  a1 = A0*sqrt( 2.0/(1+AmplRatio*AmplRatio) )*pow( 10.0, irms/20 );
+		  a1 = A0*sqrt( 2.0/(1+AmplRatio*AmplRatio) ) * ::pow( 10.0, irms/20 );
 		  a2 = a1*AmplRatio;
 		}
 		IsoResults[AmplitudeRelation.pos()].OnIsoSets.push( a1, a2 );
@@ -842,17 +842,17 @@ void IsoResponse::analyze( const OutData &signal )
 
   // amplitudes
   if ( State==0 ) {
-    fid.A1 = A0*pow( 10.0, fid.Intensity/20 )*sqrt(2.0);
+    fid.A1 = A0 * ::pow( 10.0, fid.Intensity/20 )*sqrt(2.0);
     fid.A2 = 0.0;
     //cerr << "analyze: State " << State <<  "   A1 " << fid.A1 << "    A2 " << fid.A2 << endl;
   }
   else if ( State==1 ) {
     fid.A1 = 0.0;
-    fid.A2 = A0*pow( 10.0, fid.Intensity/20 )*sqrt(2.0);
+    fid.A2 = A0 * ::pow( 10.0, fid.Intensity/20 )*sqrt(2.0);
     //cerr << "analyze: State " << State <<  "   A1 " << fid.A1 << "    A2 " << fid.A2 << endl;
   }
   else {
-    fid.A1 = A0*sqrt( 2.0/(1+AmplRatio*AmplRatio) )*pow( 10.0, fid.Intensity/20 );
+    fid.A1 = A0*sqrt( 2.0/(1+AmplRatio*AmplRatio) ) * ::pow( 10.0, fid.Intensity/20 );
     fid.A2 = fid.A1*AmplRatio;
     //cerr << "analyze: State " << State <<  "   A1 " << fid.A1 << "    A2 " << fid.A2 << endl;
   }
@@ -1042,7 +1042,7 @@ void IsoResponse::findScaling(  )
 	    pk = k;
 	  }
 	}
-      Scaling += pow( 10.0, (i2[l]-i1[l])/20.0 )/3;
+      Scaling += ::pow( 10.0, (i2[l]-i1[l])/20.0 )/3.0;
       printlog( "Scaling: " + Str( Scaling ) );
     }
 }

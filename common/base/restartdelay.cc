@@ -23,8 +23,7 @@
 #include <relacs/sampledata.h>
 #include <relacs/fitalgorithm.h>
 #include <relacs/common/restartdelay.h>
-
-using namespace numerics;
+using namespace relacs;
 
 
 RestartDelay::RestartDelay( void )

@@ -24,6 +24,8 @@
 
 #include <relacs/plot.h>
 #include <relacs/repro.h>
+using namespace relacs;
+
 
 /*!
 \class RestartDelay

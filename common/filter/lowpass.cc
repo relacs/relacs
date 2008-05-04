@@ -20,6 +20,7 @@
 */
 
 #include <relacs/common/lowpass.h>
+using namespace relacs;
 
 
 LowPass::LowPass( const string &ident, int mode )

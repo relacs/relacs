@@ -26,8 +26,8 @@
 #include <vector>
 #include <relacs/configclass.h>
 #include <relacs/attenuate.h>
-
 using namespace std;
+using namespace relacs;
 
 
 /*!

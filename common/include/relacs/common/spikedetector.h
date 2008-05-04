@@ -30,6 +30,7 @@
 #include <relacs/plot.h>
 #include <relacs/detector.h>
 #include <relacs/filter.h>
+using namespace relacs;
 
 
 /*! 

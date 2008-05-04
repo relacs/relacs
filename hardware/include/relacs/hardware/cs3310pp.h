@@ -23,6 +23,8 @@
 #define _RELACS_HARDWARE_CS3310PP_H_ 1
 
 #include <relacs/attenuator.h>
+using namespace relacs;
+
 
 /*!
 \class CS3310PP

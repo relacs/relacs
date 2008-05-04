@@ -20,6 +20,7 @@
 */
 
 #include <relacs/common/pause.h>
+using namespace relacs;
 
 
 Pause::Pause( void )

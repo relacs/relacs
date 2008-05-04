@@ -29,6 +29,8 @@
 #include <errno.h>
 #include <relacs/hardware/comedianaloginput.h>
 #include <relacs/hardware/comedianalogoutput.h>
+using namespace relacs;
+
 
 ComediAnalogOutput::ComediAnalogOutput( void ) 
   : AnalogOutput( ComediAnalogOutputType )

@@ -24,6 +24,8 @@
 
 #include <relacs/control.h>
 #include <relacs/plot.h>
+using namespace relacs;
+
 
 /*! 
 \class SpectrumAnalyzer

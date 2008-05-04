@@ -25,6 +25,7 @@
 #include <string>
 #include <relacs/device.h>
 using namespace std;
+using namespace relacs;
 
 
 /*!

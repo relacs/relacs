@@ -23,8 +23,8 @@
 #include <cmath>
 #include <unistd.h>
 #include <relacs/hardware/cs3310serialnidio.h>
-
 using namespace std;
+using namespace relacs;
 
 
 CS3310SerialNIDIO::CS3310SerialNIDIO( const string &device )

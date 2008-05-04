@@ -22,6 +22,10 @@
 #ifndef _RELACS_COMMON_EPHYSTRACES_H_
 #define _RELACS_COMMON_EPHYSTRACES_H_ 1
 
+#include <relacs/inlist.h>
+#include <relacs/eventlist.h>
+using namespace relacs;
+
 
 /*! 
 \class EPhysTraces
@@ -29,11 +33,6 @@
 \version 1.0
 \brief Variables for standard input traces and events in electrophysiology.
 */
-
-
-class InList;
-class EventList;
-
 
 class EPhysTraces
 {

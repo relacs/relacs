@@ -22,6 +22,11 @@
 #ifndef _RELACS_AUDITORY_AUDITORYTRACES_H_
 #define _RELACS_AUDITORY_AUDITORYTRACES_H_ 1
 
+#include <relacs/inlist.h>
+#include <relacs/eventlist.h>
+#include <relacs/relacsplugin.h>
+using namespace relacs;
+
 
 /*! 
 \class AuditoryTraces
@@ -30,12 +35,6 @@
 \brief Variables for standard output traces of acoustic stimuli
        and recordings from microphones.
 */
-
-
-class RELACSPlugin;
-class InList;
-class EventList;
-
 
 class AuditoryTraces
 {

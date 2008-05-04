@@ -29,6 +29,7 @@
 #include <relacs/str.h>
 #include <relacs/tablekey.h>
 #include <relacs/common/spikedetector.h>
+using namespace relacs;
 
 
 SpikeDetector::SpikeDetector( const string &ident, int mode )

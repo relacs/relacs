@@ -26,6 +26,7 @@
 #include <fcntl.h>
 #include <sys/soundcard.h>
 #include <relacs/hardware/amplmode.h>
+using namespace relacs;
 
 
 AmplMode::AmplMode( const string &device, long mode )

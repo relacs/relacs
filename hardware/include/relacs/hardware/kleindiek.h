@@ -27,6 +27,7 @@
 #include <termios.h>
 #include <relacs/manipulator.h>
 using namespace std;
+using namespace relacs;
 
 
 class Kleindiek : public Manipulator

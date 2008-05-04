@@ -28,6 +28,7 @@
 #include <qpainter.h>
 #include <relacs/manipulator.h>
 #include <relacs/common/motorcontrol.h>
+using namespace relacs;
 
 
 MotorControl::MotorControl( void )

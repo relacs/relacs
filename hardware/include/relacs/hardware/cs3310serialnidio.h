@@ -24,6 +24,8 @@
 
 #include <relacs/hardware/nidio.h>
 #include <relacs/attenuator.h>
+using namespace relacs;
+
 
 /* 
 Module for the programming of the CS 3310 attenuator chip, 

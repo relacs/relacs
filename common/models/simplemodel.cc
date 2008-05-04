@@ -21,8 +21,7 @@
 
 #include <relacs/random.h>
 #include <relacs/common/simplemodel.h>
-
-using namespace numerics;
+using namespace relacs;
 
 
 SimpleModel::SimpleModel( void )

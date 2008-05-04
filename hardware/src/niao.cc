@@ -31,8 +31,8 @@
 #include <relacs/stats.h>
 #include <relacs/hardware/niai.h>
 #include <relacs/hardware/niao.h>
-
 using namespace std;
+using namespace relacs;
 
 
 NIAO::NIAO( void )
@@ -131,7 +131,7 @@ int NIAO::testWriteDevice( OutList &sigs )
     if ( min == OutData::AutoRange || max == OutData::AutoRange ) {
       double smin = 0.0;
       double smax = 0.0;
-      numerics::minMax( smin, smax, sigs[k] );
+      relacs::minMax( smin, smax, sigs[k] );
       if ( min == OutData::AutoRange )
 	min = smin;
       if ( max == OutData::AutoRange )

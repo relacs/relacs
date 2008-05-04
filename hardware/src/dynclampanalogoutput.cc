@@ -33,6 +33,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
+using namespace relacs;
+
 
 DynClampAnalogOutput::DynClampAnalogOutput( void ) 
   : AnalogOutput( DynClampAnalogOutputType )

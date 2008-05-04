@@ -28,8 +28,8 @@
 #include <fcntl.h>   
 #include <relacs/hardware/niao.h>
 #include <relacs/hardware/niai.h>
-
 using namespace std;
+using namespace relacs;
 
 
 NIAI::NIAI( void ) 

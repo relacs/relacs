@@ -24,6 +24,7 @@
 #include <relacs/random.h>
 #include <relacs/odealgorithm.h>
 #include <relacs/common/neuronmodels.h>
+using namespace relacs;
 
 
 NeuronModels::NeuronModels( void )
@@ -101,7 +102,7 @@ void NeuronModels::main( void )
 
 void NeuronModels::operator()( double t, double *x, double *dxdt, int n )
 {
-  double s = signal( 0.001 * t ) + NoiseSD * numerics::rnd.gaussian();;
+  double s = signal( 0.001 * t ) + NoiseSD * rnd.gaussian();;
   (*NM)( t, s, x, dxdt, n );
 }
 

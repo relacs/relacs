@@ -27,6 +27,7 @@
 #include <relacs/rangeloop.h>
 #include <relacs/multiplot.h>
 #include <relacs/auditory/loudspeaker.h>
+using namespace relacs;
 
 
 /*!
