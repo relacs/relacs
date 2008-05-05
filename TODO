@@ -12,10 +12,6 @@ for i in x.cc; do h=${i%.cc}; { if fgrep -q 'using namespace' $i; then sed -e "/
   Use this approach for loading the plugins?
 
 Autotools:
-- when running debugger on libtool executable (like relacs_main?)
-  you need to call
-  libtool --mode=execute gdb relacs_main
-  Update relacs script accordingly!
 - Math library check: LT_LIB_M
 - Check for C++ requirements (STL, templates)
 - Make datatools a separate project

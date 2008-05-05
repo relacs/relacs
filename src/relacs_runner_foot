@@ -78,7 +78,7 @@ USETEE=1
 
 # debug:
 DEBUG=0
-DEBUGGER="gdb"
+DEBUGGER="libtool --mode=execute gdb"
 COREFILE=""
 
 # email address for core dump and bug notifications:
@@ -250,12 +250,12 @@ else
  
       if [ $DEBUG -gt 1 ]; then
         # start debugger with RELACS:
-        $DEBUGGER --args $RELACSEXECPATH/$RELACSEXEC $@
+        $DEBUGGER --args $RELACSEXECPATH/$RELACSEXEC -s "${CONFPART}" $@
       else
         # run RELACS from within debugger:
         DEBUGCOM=relacsdebug$$
         echo "run" > $DEBUGCOM
-        $DEBUGGER -x $DEBUGCOM --args $RELACSEXECPATH/$RELACSEXEC $@
+        $DEBUGGER -x $DEBUGCOM --args $RELACSEXECPATH/$RELACSEXEC -s "${CONFPART}" $@
         rm $DEBUGCOM
       fi
 

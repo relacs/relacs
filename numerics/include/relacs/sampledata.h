@@ -3047,7 +3047,7 @@ template < typename TT, typename SS >
 void hcPower( const SampleData<TT> &hc, SampleData<SS> &p )
 {
   p.setStepsize( 1.0/hc.stepsize()/hc.size() );
-  hcPower( hc, p );
+  hcPower( hc.array(), p.array() );
 }
 
 
@@ -3055,7 +3055,7 @@ template < typename TT, typename SS >
 void hcMagnitude( const SampleData<TT> &hc, SampleData<SS> &m )
 {
   m.setStepsize( 1.0/hc.stepsize()/hc.size() );
-  hcMagnitude( hc, m );
+  hcMagnitude( hc.array(), m.array() );
 }
 
 
@@ -3063,7 +3063,7 @@ template < typename TT, typename SS >
 void hcPhase( const SampleData<TT> &hc, SampleData<SS> &p )
 {
   p.setStepsize( 1.0/hc.stepsize()/hc.size() );
-  hcPhase( hc, p );
+  hcPhase( hc.array(), p.array() );
 }
 
 
@@ -3075,7 +3075,7 @@ int rPSD( const SampleData< TT > &x, SampleData< SS > &p,
   for ( n = 1; n < p.size(); n <<= 1 );
   p.setStepsize( 0.5/x.stepsize()/n );
 
-  return rPSD( x, p, overlap, window );
+  return rPSD( x.array(), p.array(), overlap, window );
 }
 
 
@@ -3085,7 +3085,7 @@ int transfer( const SampleData<TT> &x, const SampleData<SS> &y,
 	      bool overlap, double (*window)( int j, int n ) )
 {
   h.setStepsize( 1.0/x.stepsize()/h.stepsize() );
-  return transfer( x, y, h, overlap, window );
+  return transfer( x.array(), y.array(), h.array(), overlap, window );
 }
 
 
@@ -3097,7 +3097,7 @@ int gain( const SampleData<TT> &x, const SampleData<SS> &y,
   int n = 1;
   for ( n = 1; n < g.size(); n <<= 1 );
   g.setStepsize( 0.5/x.stepsize()/n );
-  return gain( x, y, g, overlap, window );
+  return gain( x.array(), y.array(), g.array(), overlap, window );
 }
 
 
@@ -3109,7 +3109,7 @@ int coherence( const SampleData<TT> &x, const SampleData<SS> &y,
   int n = 1;
   for ( n = 1; n < c.size(); n <<= 1 );
   c.setStepsize( 0.5/x.stepsize()/n );
-  return coherence( x, y, c, overlap, window );
+  return coherence( x.array(), y.array(), c.array(), overlap, window );
 }
 
 
@@ -3138,7 +3138,7 @@ int rCSD( const SampleData<TT> &x, const SampleData<SS> &y,
   int n = 1;
   for ( n = 1; n < c.size(); n <<= 1 );
   c.setStepsize( 0.5/x.stepsize()/n );
-  return rCSD( x, y, c, overlap, window );
+  return rCSD( x.array(), y.array(), c.array(), overlap, window );
 }
 
 
@@ -3153,7 +3153,8 @@ int spectra( const SampleData<TT> &x, const SampleData<SS> &y,
   g.setStepsize( 0.5/x.stepsize()/n );
   c.setStepsize( 0.5/x.stepsize()/n );
   ys.setStepsize( 0.5/x.stepsize()/n );
-  return spectra( x, y, g, c, ys, overlap, window );
+  return spectra( x.array(), y.array(), g.array(), c.array(), ys.array(),
+		  overlap, window );
   // normalisation of results by deltat?
 }
 
@@ -3172,7 +3173,8 @@ int spectra( const SampleData<TT> &x, const SampleData<SS> &y,
   cs.setStepsize( 0.5/x.stepsize()/n );
   xs.setStepsize( 0.5/x.stepsize()/n );
   ys.setStepsize( 0.5/x.stepsize()/n );
-  return spectra( x, y, g, c, cs, xs, ys, overlap, window );
+  return spectra( x.array(), y.array(), g.array(), c.array(), cs.array(),
+		  xs.array(), ys.array(), overlap, window );
   // normalisation of results by deltat?
 }
 

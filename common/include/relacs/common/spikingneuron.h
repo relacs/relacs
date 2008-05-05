@@ -23,6 +23,7 @@
 #define _RELACS_COMMON_SPIKINGNEURON_H_ 1
 
 #include <string>
+#include <vector>
 #include <relacs/options.h>
 using namespace std;
 using namespace relacs;
@@ -117,24 +118,6 @@ class Stimulus : public SpikingNeuron
   virtual void operator()(  double t, double s, double *x, double *dxdt, int n );
     /*! Initialize the state \a x with usefull inital conditions. */
   virtual void init( double *x ) const;
-    /*! Returns in \a conductancenames the names of the individual 
-        ionic conductances that conductances( double * ) would return.
-        The default implementation returns an empty vector. */
-  virtual void conductances( vector< string > &conductancenames ) const;
-    /*! Returns in \a g the values of the individual ionic conductances.
-        The number of conductances is defined by the size of 
-        \a conductancenames the function conductances() returns.
-        The default implementation returns nothing. */
-  virtual void conductances( double *g ) const;
-    /*! Returns in \a currentnames the names of the individual ionic currents
-        that currents( double * ) would return.
-        The default implementation returns an empty vector. */
-  virtual void currents( vector< string > &currentnames ) const;
-    /*! Returns in \a c the values of the individual ionic currents.
-        The number of currents is defined by the size of \a currentnames
-        the function currents() returns.
-        The default implementation returns nothing. */
-  virtual void currents( double *c ) const;
     /*! Add some options to \a o. */
   virtual void add( Options &o ) const;
     /*! Read values op options \a o.
