@@ -12,7 +12,7 @@ if [ "x${CONFDIR}" = x ]; then
     echo "${CONFFILE} not found" 1>&2
     exit 1
 fi
-echo "Using config from ${CONFDIR}"
+#echo "Using config from ${CONFDIR}"
 
 
 ## Find all directories we need to link plugins at runtime
@@ -42,12 +42,12 @@ while read pattern ; do
     while read pluginfilename ; do
         if [ -f "${pluginfilename}" ]; then
             dir=${pluginfilename%/*}
-            echo "Plugin found: ${pluginfilename}"
+#            echo "Plugin found: ${pluginfilename}"
             dirlist="${dirlist}${dir}${SEPARATOR}"
         fi
     done < <(ls -1 ${pattern} 2>/dev/null | grep '\.so$')
 done < <(grep 'pluginpathes' < "${CONFDIR}/${CONFFILE}" | sed -e 's/^[ \t]*pluginpathes:[ \t]*\(.*\)/\1/' -e 's/|/\n/g')
-echo
+#echo
 
 
 ## Assemble directory list for LD_LIBRARY_PATH
@@ -60,145 +60,6 @@ while read dir ; do
 done < <(sed "s/${SEPARATOR}/\n/g" <<< ${dirlist} | sort -u)
 RELACSPLUGINPATHES=${RELACSPLUGINPATHES#:}
 
-
-
-# name of the RELACS executable to be used:
-RELACSEXEC=relacs_main
-
-# default working path:
-WORKPATH=.
-
-# default name of the log-file:
-LOGFILE="relacs.log"
-USELOGFILE=1
-
-# double to stdout?
-TEE="tee -a"
-USETEE=1
-
-# debug:
-DEBUG=0
-DEBUGGER="libtool --mode=execute gdb"
-COREFILE=""
-
-# email address for core dump and bug notifications:
-EMAILADDRESS='j.benda@biologie.hu-berlin.de'
-COREBUGEMAIL=0
-KERNELMESSAGES=0
-
-# core dumps?
-COREDUMP=0
-COREDIR=coredumps
-COREMAILCMD="mail -s RELACS_coredump $EMAILADDRESS"
-
-# bugs?
-BUGS=0
-BUGDIR=bugs
-BUGMAILCMD="mail -s RELACS_bug $EMAILADDRESS"
-
-
-# read arguments:
-HELP=0;
-for i; do
-  case $1 in
-    -e) shift
-        if [ -n "$1" ]; then
-          RELACSEXECPATH=$1
-          shift
-        fi ;;
-    -p) shift
-        if [ -n "$1" ]; then
-          RELACSPLUGINPATHES=$1
-          shift
-        fi ;;
-    -w) shift
-        if [ -n "$1" ]; then
-          WORKPATH=$1
-          shift
-        fi ;;
-    -l) USELOGFILE=1
-        shift ;;
-    -f) shift
-        if [ -n "$1" ]; then
-          LOGFILE=$1
-          USELOGFILE=1
-          shift
-        fi ;;
-    -t) USELOGFILE=1
-        USETEE=1
-        shift ;;
-    -d) DEBUG=1
-        USELOGFILE=0
-        shift ;;
-    -D) DEBUG=2
-        USELOGFILE=0
-        shift ;;
-    -C) shift
-        if [ -n "$1" ]; then
-          COREFILE=$1
-          DEBUG=1;
-          USELOGFILE=0
-          shift
-        fi ;;
-    -c) COREDUMP=1
-        ulimit -c unlimited 
-        shift ;;
-    -b) BUGS=1 
-        shift ;;
-    -m) COREBUGEMAIL=1 
-        shift ;;
-    -k) KERNELMESSAGES=1 
-        shift ;;
-    -h) HELP=1
-        break ;;
---help) HELP=1
-        break ;;
-  '-?') HELP=1
-        break ;;
-    --) break ;;
-     *) break ;;
-  esac
-done
-
-
-# print help:
-if [ $HELP -gt 0 ]; then
-  echo "relacs"
-  echo
-  echo "script for running RELACS"
-  echo "Jan Benda, 2003-2008"
-  echo
-  echo "usage:"
-  echo "  relacs [-e xxx] [-p xxx] [-w xxx] [-l] [-f xxx] [-t]"
-  echo "         [-d | -D | -C xxx] [-c] [-b] [-k] [-m] [--]"
-  echo "         [-3] [-c xxx] [-f]"
-  echo
-  echo "  -e: path to the RELACS executable and libraries"
-  echo "      (default '$RELACSEXECPATH')"
-  echo "  -p: pathes to the RELACS plugins"
-  echo "      (default '$RELACSPLUGINPATHES')"
-  echo "  -w: working path (default '$WORKPATH')"
-  echo "  -l: write RELACS messages from stdout and stderr to a log-file"
-  echo "  -f: use logfile xxx (default '$LOGFILE')"
-  echo "  -t: use log file but also write messages to stdout "
-  echo "  -d: run RELACS from within a debugger (disables logfile)"
-  echo "  -D: start debugger without running RELACS"
-  echo "  -C: start debugger with core-file xxx"
-  echo "  -c: save core dump in directory '$COREDIR'"
-  echo "  -b: in case of warnings or errors, save log file in directory '$BUGDIR'"
-  echo "  -k: in case of core dumps or bugs save the output of dmesg"
-  echo "      in directory '$BUGDIR' or '$COREDIR' as well"
-  echo "  -m: email notification about core dumps or bugs to"
-  echo "      <$EMAILADDRESS>"
-  echo "  --: the following options are passed directly to the RELACS executable"
-  echo
-  echo "  -3: run in simulation mode"
-  echo "  -s: use xxx as the basename for the RELACS settings (configuration) files"
-  echo "      (default is 'relacs', i.e. relacs.cfg and relacsplugins.cfg)"
-  echo "  -f: fullscreen mode"
-  echo
-  exit 1
-fi
 
 
 # set the library path:

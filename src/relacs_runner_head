@@ -2,8 +2,7 @@
 
 ###############################################################################
 #
-# relacsscript
-# 
+# relacs
 #
 # RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
 # Copyright (C) 2002-2008 Jan Benda <j.benda@biologie.hu-berlin.de>
@@ -22,6 +21,150 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 ###############################################################################
+
+
+# name of the RELACS executable to be used:
+RELACSEXEC=relacs_main
+
+# default working path:
+WORKPATH=.
+
+# default name of the log-file:
+LOGFILE="relacs.log"
+USELOGFILE=1
+
+# double to stdout?
+TEE="tee -a"
+USETEE=1
+
+# debug:
+DEBUG=0
+DEBUGGER="libtool --mode=execute gdb"
+COREFILE=""
+
+# email address for core dump and bug notifications:
+EMAILADDRESS='j.benda@biologie.hu-berlin.de'
+COREBUGEMAIL=0
+KERNELMESSAGES=0
+
+# core dumps?
+COREDUMP=0
+COREDIR=coredumps
+COREMAILCMD="mail -s RELACS_coredump $EMAILADDRESS"
+
+# bugs?
+BUGS=0
+BUGDIR=bugs
+BUGMAILCMD="mail -s RELACS_bug $EMAILADDRESS"
+
+
+# read arguments:
+HELP=0;
+for i; do
+  case $1 in
+    -e) shift
+        if [ -n "$1" ]; then
+          RELACSEXECPATH=$1
+          shift
+        fi ;;
+    -p) shift
+        if [ -n "$1" ]; then
+          RELACSPLUGINPATHES=$1
+          shift
+        fi ;;
+    -w) shift
+        if [ -n "$1" ]; then
+          WORKPATH=$1
+          shift
+        fi ;;
+    -l) USELOGFILE=1
+        shift ;;
+    -f) shift
+        if [ -n "$1" ]; then
+          LOGFILE=$1
+          USELOGFILE=1
+          shift
+        fi ;;
+    -t) USELOGFILE=1
+        USETEE=1
+        shift ;;
+    -d) DEBUG=1
+        USELOGFILE=0
+        shift ;;
+    -D) DEBUG=2
+        USELOGFILE=0
+        shift ;;
+    -C) shift
+        if [ -n "$1" ]; then
+          COREFILE=$1
+          DEBUG=1;
+          USELOGFILE=0
+          shift
+        fi ;;
+    -c) COREDUMP=1
+        ulimit -c unlimited 
+        shift ;;
+    -b) BUGS=1 
+        shift ;;
+    -m) COREBUGEMAIL=1 
+        shift ;;
+    -k) KERNELMESSAGES=1 
+        shift ;;
+    -h) HELP=1
+        break ;;
+--help) HELP=1
+        break ;;
+  '-?') HELP=1
+        break ;;
+    --) break ;;
+     *) break ;;
+  esac
+done
+
+
+# print help:
+if [ $HELP -gt 0 ]; then
+  echo "relacs"
+  echo
+  echo "script for running RELACS"
+  echo "Jan Benda, 2003-2008"
+  echo
+  echo "usage:"
+  echo "  relacs [-e xxx] [-p xxx] [-w xxx] [-l] [-f xxx] [-t]"
+  echo "         [-d | -D | -C xxx] [-c] [-b] [-k] [-m] [--]"
+  echo "         [-3] [-c xxx] [-f]"
+  echo "  relacs [--help | --version]"
+  echo
+  echo "  -e: Path to the RELACS executable and libraries"
+  echo "      (default '$RELACSEXECPATH')"
+  echo "  -p: Pathes to the RELACS plugins"
+  echo "      (default '$RELACSPLUGINPATHES')"
+  echo "  -w: Working path (default '$WORKPATH')"
+  echo "  -l: Write RELACS messages from stdout and stderr to a log-file"
+  echo "  -f: Use logfile xxx (default '$LOGFILE')"
+  echo "  -t: Use log file but also write messages to stdout "
+  echo "  -d: Run RELACS from within a debugger (disables logfile)"
+  echo "  -D: Start debugger without running RELACS"
+  echo "  -C: Start debugger with core-file xxx"
+  echo "  -c: Save core dump in directory '$COREDIR'"
+  echo "  -b: In case of warnings or errors, save log file in directory '$BUGDIR'"
+  echo "  -k: In case of core dumps or bugs save the output of dmesg"
+  echo "      in directory '$BUGDIR' or '$COREDIR' as well"
+  echo "  -m: Email notification about core dumps or bugs to"
+  echo "      <$EMAILADDRESS>"
+  echo "  --: The following options are passed directly to the RELACS executable"
+  echo
+  echo "  -3: Run in simulation mode"
+  echo "  -s: Use xxx as the basename for the RELACS settings (configuration) files"
+  echo "      (default is 'relacs', i.e. relacs.cfg and relacsplugins.cfg)"
+  echo "  -f: Fullscreen mode"
+  echo
+  echo "  --help: Print this help message and exit."
+  echo "  --version: Print the version number of RELACS and exit."
+  echo
+  exit 0
+fi
+
 
 SEPARATOR=AJ3S4G5U
 

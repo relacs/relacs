@@ -40,3 +40,5 @@ EXTRA_DIST = \
     relacs_runner_foot \
     relacs_runner_head
 
+
+DISTCLEANFILES = relacs.log relacs.log.old

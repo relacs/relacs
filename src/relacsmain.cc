@@ -30,19 +30,33 @@ using namespace std;
 
 int main( int argc, char **argv )
 {
-
-  QApplication::setColorSpec( QApplication::CustomColor );
-  QApplication a( argc, argv );
-
   int mode = relacs::RELACSWidget::AcquisitionMode;
   bool fullscreen = false;
   string configbase = "relacs";
 
+  static struct option longoptions[] = {
+    { "version", 0, 0, 0 },
+    { "help", 0, 0, 0 }
+  };
   optind = 0;
   opterr = 0;
+  int longindex = 0;
   char c;
-  while ( (c = getopt( argc, argv, "f3s:" )) >= 0 )
+  while ( (c = getopt_long( argc, argv, "f3s:", longoptions, &longindex )) >= 0 ) {
     switch ( c ) {
+    case 0: switch ( longindex ) {
+      case 0:
+	cout << "RELACS " << RELACSVERSION << endl;
+	cout << "Copyright (C) 2008 Jan Benda\n";
+	exit( 0 );
+	break;
+      case 1:
+	cout << "relacsmain should not be called directly\n"
+	     << "Use 'relacs' instead!\n";
+	exit( 0 );
+	break;
+      }
+      break;
 
     case 'f':
       fullscreen = true;
@@ -58,6 +72,10 @@ int main( int argc, char **argv )
       
       break;
     }
+  }
+
+  QApplication::setColorSpec( QApplication::CustomColor );
+  QApplication a( argc, argv );
 
   relacs::RELACSWidget relacs( configbase, mode );
 

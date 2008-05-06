@@ -162,28 +162,28 @@ void extractData( void )
 void WriteUsage()
 
 {
-  fprintf( stderr, "\nusage:\n" );
-  fprintf( stderr, "\n" );
-  fprintf( stderr, "bin2dat <binfile> <datfile> [-o|O ## -u|U ## -n|N ## -T ## -t ## -s ## -d ## -c ## -v] \n" );
-  fprintf( stderr, "\n" );
-  fprintf( stderr, "save binary data from file <binfile> as ascii data in file <datfile>.\n" );
-  fprintf( stderr, "-o : save data starting from byte offset ##.\n" );
-  fprintf( stderr, "-O : save data starting from byte offset ## times size of data type.\n" );
-  fprintf( stderr, "-u : save data upto byte offset ##.\n" );
-  fprintf( stderr, "-U : save data upto byte offset ## times size of data type.\n" );
-  fprintf( stderr, "-n : save at maximum ## bytes.\n" );
-  fprintf( stderr, "-N : save at maximum ## lines (i.e. ## times size of data type times number of channels bytes).\n" );
-  fprintf( stderr, "-T : save at maximum ## divided by stepsize (-t) lines of data.\n" );
-  fprintf( stderr, "-t : add a time column with stepsize ##.\n" );
-  fprintf( stderr, "Usually the type of the data contained in the binary file\n" );
-  fprintf( stderr, "is determined from its extension. The following options can be\n" );
-  fprintf( stderr, "used to specify the data type directly.\n" );
-  fprintf( stderr, "-s : specify sign of the binary data (0=unsigned, 1=signed, default=signed).\n" );
-  fprintf( stderr, "-d : specify size of the binary data type in bytes (1, 2, 4, 8, default=2).\n" );
-  fprintf( stderr, "-c : specify number of channels multiplexed in the binary data file (default=1).\n" );
-  fprintf( stderr, "-v : print settings to stderr.\n" );
-  fprintf( stderr, "\n" );
-  exit( 1 );
+  printf( "\nusage:\n" );
+  printf( "\n" );
+  printf( "bin2dat <binfile> <datfile> [-o|O ## -u|U ## -n|N ## -T ## -t ## -s ## -d ## -c ## -v] \n" );
+  printf( "\n" );
+  printf( "save binary data from file <binfile> as ascii data in file <datfile>.\n" );
+  printf( "-o : save data starting from byte offset ##.\n" );
+  printf( "-O : save data starting from byte offset ## times size of data type.\n" );
+  printf( "-u : save data upto byte offset ##.\n" );
+  printf( "-U : save data upto byte offset ## times size of data type.\n" );
+  printf( "-n : save at maximum ## bytes.\n" );
+  printf( "-N : save at maximum ## lines (i.e. ## times size of data type times number of channels bytes).\n" );
+  printf( "-T : save at maximum ## divided by stepsize (-t) lines of data.\n" );
+  printf( "-t : add a time column with stepsize ##.\n" );
+  printf( "Usually the type of the data contained in the binary file\n" );
+  printf( "is determined from its extension. The following options can be\n" );
+  printf( "used to specify the data type directly.\n" );
+  printf( "-s : specify sign of the binary data (0=unsigned, 1=signed, default=signed).\n" );
+  printf( "-d : specify size of the binary data type in bytes (1, 2, 4, 8, default=2).\n" );
+  printf( "-c : specify number of channels multiplexed in the binary data file (default=1).\n" );
+  printf( "-v : print settings to stderr.\n" );
+  printf( "\n" );
+  exit( 0 );
 }
 
 
@@ -203,54 +203,72 @@ void ReadArgs( int argc, char *argv[] )
 
   if ( argc <= 1 )
     WriteUsage();
+  static struct option longoptions[] = {
+    { "version", 0, 0, 0 },
+    { "help", 0, 0, 0 }
+  };
   optind = 0;
   opterr = 0;
-  while ( (c = getopt( argc, argv, "o:O:u:U:n:N:T:t:s:d:c:v" )) >= 0 )
+  int longindex = 0;
+  while ( (c = getopt_long( argc, argv, "o:O:u:U:n:N:T:t:s:d:c:v",
+			    longoptions, &longindex )) >= 0 ) {
     switch ( c ) {
-      case 'o': if ( optarg == NULL || sscanf( optarg, "%ld", &offset ) == 0 )
-            	  offset = 0;
-                break;
-      case 'O': if ( optarg == NULL || sscanf( optarg, "%ld", &offset ) == 0 )
-            	  offset = 0;
-                offsd = 1;
-                break;
-      case 'u': if ( optarg == NULL || sscanf( optarg, "%ld", &upto ) == 0 )
-            	  upto = 0;
-                break;
-      case 'U': if ( optarg == NULL || sscanf( optarg, "%ld", &upto ) == 0 )
-            	  upto = 0;
-                uptod = 1;
-                break;
-      case 'n': if ( optarg == NULL || sscanf( optarg, "%ld", &ndata ) == 0 )
-          	  ndata = 0;
-                break;
-      case 'N': if ( optarg == NULL || sscanf( optarg, "%ld", &ndata ) == 0 )
-            	  ndata = 0;
-                ndatad = 1;
-                break;
-      case 'T': if ( optarg == NULL || sscanf( optarg, "%lf", &time ) == 0 )
-            	  time = 0.0;
-                break;
-      case 't': if ( optarg == NULL || sscanf( optarg, "%lf", &deltat ) == 0 )
-            	  deltat = 1.0;
-                tcol = 1;
-                break;
-      case 's': if ( optarg == NULL || sscanf( optarg, "%d", &datasign ) == 0 )
-            	  datasign = 1;
-                setsign = 0;
-                break;
-      case 'd': if ( optarg == NULL || sscanf( optarg, "%d", &datasize ) == 0 )
-            	  datasize = 2;
-                setsize = 0;
-                break;
-      case 'c': if ( optarg == NULL || sscanf( optarg, "%d", &datachannels ) == 0 )
-            	  datachannels = 1;
-                setcol = 0;
-                break;
-      case 'v': showvals=1;
-                break;
-      default : WriteUsage();
+    case 0: switch ( longindex ) {
+      case 0:
+	printf( "bin2dat 1.0\n" );
+	exit( 0 );
+	break;
+      case 1:
+	WriteUsage();
+	break;
+      }
+      break;
+
+    case 'o': if ( optarg == NULL || sscanf( optarg, "%ld", &offset ) == 0 )
+	offset = 0;
+      break;
+    case 'O': if ( optarg == NULL || sscanf( optarg, "%ld", &offset ) == 0 )
+	offset = 0;
+      offsd = 1;
+      break;
+    case 'u': if ( optarg == NULL || sscanf( optarg, "%ld", &upto ) == 0 )
+	upto = 0;
+      break;
+    case 'U': if ( optarg == NULL || sscanf( optarg, "%ld", &upto ) == 0 )
+	upto = 0;
+      uptod = 1;
+      break;
+    case 'n': if ( optarg == NULL || sscanf( optarg, "%ld", &ndata ) == 0 )
+	ndata = 0;
+      break;
+    case 'N': if ( optarg == NULL || sscanf( optarg, "%ld", &ndata ) == 0 )
+	ndata = 0;
+      ndatad = 1;
+      break;
+    case 'T': if ( optarg == NULL || sscanf( optarg, "%lf", &time ) == 0 )
+	time = 0.0;
+      break;
+    case 't': if ( optarg == NULL || sscanf( optarg, "%lf", &deltat ) == 0 )
+	deltat = 1.0;
+      tcol = 1;
+      break;
+    case 's': if ( optarg == NULL || sscanf( optarg, "%d", &datasign ) == 0 )
+	datasign = 1;
+      setsign = 0;
+      break;
+    case 'd': if ( optarg == NULL || sscanf( optarg, "%d", &datasize ) == 0 )
+	datasize = 2;
+      setsize = 0;
+      break;
+    case 'c': if ( optarg == NULL || sscanf( optarg, "%d", &datachannels ) == 0 )
+	datachannels = 1;
+      setcol = 0;
+      break;
+    case 'v': showvals=1;
+      break;
+    default : WriteUsage();
     }
+  }
   if ( optind >= argc-1 || argv[optind][0] == '?' )
     WriteUsage();
 

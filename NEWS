@@ -1,9 +1,13 @@
-
+May 6, 2008: Version 0.9.6 - prerelease
+  Full autotools support, that is relacs should compile smoothly on your
+  system provided running ./configure was successfull.
+  Still no hardware support is shipped with this release. 
+  Use this release as a demo only.
+  
 Mar 1, 2008
   The new web site goes online.
 
 Aug 22, 2007: Version 0.9.0 - prerelease 
-
   Note that names of libraries and classes as well as class interfaces
   may still change. Also, no hardware support is shipped with this
   release. Use this release as a demo only and don't put any work into

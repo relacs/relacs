@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_INIT(relacs, 0.9.6)
-AM_INIT_AUTOMAKE([1.10 -Wall foreign subdir-objects dist-zip dist-bzip2])
+AM_INIT_AUTOMAKE([1.10 -Wall gnits subdir-objects dist-bzip2])
 
 AC_ENABLE_SHARED
 AC_DISABLE_STATIC
@@ -154,14 +154,14 @@ AM_CONDITIONAL([RELACS_TOP_BUILD], [test 0 = 0])
 # Global flags
 CPPFLAGS="${CPPFLAGS} -DPLUGINVERSION=\\\"$VERSION\\\""
 
-RELACS_CFG_HEAD=src/relacs_cfg_head
+RELACS_CFG_HEAD=$srcdir/src/relacs_cfg_head
 AC_SUBST_FILE(RELACS_CFG_HEAD)
-RELACS_CFG_FOOT=src/relacs_cfg_foot
+RELACS_CFG_FOOT=$srcdir/src/relacs_cfg_foot
 AC_SUBST_FILE(RELACS_CFG_FOOT)
 
-RELACS_RUNNER_HEAD=src/relacs_runner_head
+RELACS_RUNNER_HEAD=$srcdir/src/relacs_runner_head
 AC_SUBST_FILE(RELACS_RUNNER_HEAD)
-RELACS_RUNNER_FOOT=src/relacs_runner_foot
+RELACS_RUNNER_FOOT=$srcdir/src/relacs_runner_foot
 AC_SUBST_FILE(RELACS_RUNNER_FOOT)
 
 

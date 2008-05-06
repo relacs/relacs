@@ -39,6 +39,8 @@ EXTRA_DIST = \
     doc/relacs1.png \
     doc/relacs2.png
 
+DISTCLEANFILES = relacs.log relacs.log.old
+
 DX_DEPENDS = Makefile.am
 DX_SETTINGS = PROJECT_NAME='Relacs'
 DX_SETTINGS += INPUT='$(DOXYGEN_INPUT) $(abs_builddir)'
