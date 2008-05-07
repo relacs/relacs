@@ -1,6 +1,8 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_INIT(relacs, 0.9.6)
+AC_CONFIG_MACRO_DIR([m4 numerics/m4 hardware/m4])
+
 AM_INIT_AUTOMAKE([1.10 -Wall gnits subdir-objects dist-bzip2])
 
 AC_ENABLE_SHARED

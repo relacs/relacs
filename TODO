@@ -14,7 +14,6 @@ for i in x.cc; do h=${i%.cc}; { if fgrep -q 'using namespace' $i; then sed -e "/
 Autotools:
 - AM_INIT_AUTOMAKE( [gnu/gnits] ) checks for GNU make ?
 - Math library check: LT_LIB_M
-- Make autoreconf work as well
 - Check for C++ requirements (STL, templates)
 - Make datatools a separate project
 - moc3.mk: clean-am should be clean-local, but this is not called from Makefile!
@@ -37,6 +36,7 @@ Autotools:
 
 Documentation:
 - Update installation and Makefile instructions to autotools
+- Usage of autoreconf: autoreconf -v --install
 - You may want to use: ./configure --htmldir=DOCDIR/html
 - Static libraries are disabled by default, enable with --enable-static
 - Mention that all m4/ , *.mk , and Doxyfile files are identical and should remain so

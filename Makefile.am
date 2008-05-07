@@ -1,3 +1,5 @@
+ACLOCAL_AMFLAGS = -I m4 -I numerics/m4 -I hardware/m4
+
 man_MANS = doc/relacs.1
 
 SUBDIRS = \
