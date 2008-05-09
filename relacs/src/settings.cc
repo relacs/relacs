@@ -39,9 +39,9 @@ Settings::Settings( RELACSWidget* rw )
   addLabel( "General" );
   addNumber( "updateinterval", "Interval for periodic acquisition of data", 0.05, 0.001, 1000.0, 0.001, "seconds", "ms" );
   addNumber( "processinterval", "Interval for periodic processing of data", 0.10, 0.001, 1000.0, 0.001, "seconds", "ms" );
-  addText( "docpath", "Path to the documentation", "doc/html" );
+  addText( "docpath", "Path to the documentation", "doc/html" ).setStyle( OptWidget::BrowseDirectory );
   addLabel( "Plugins" );
-  addText( "pluginhome", "Default path to plugins", "" );
+  addText( "pluginhome", "Default path to plugins", "" ).setStyle( OptWidget::BrowseDirectory );
   addText( "pluginpathes", "Plugin pathes", "" );
   addText( "pluginhelppathes", "Pathes to plugin help files", "" );
   addBoolean( "changetoplugindir", "Change to the plugin's directory", true );

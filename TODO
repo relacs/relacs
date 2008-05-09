@@ -12,29 +12,24 @@ for i in x.cc; do h=${i%.cc}; { if fgrep -q 'using namespace' $i; then sed -e "/
   Use this approach for loading the plugins?
 
 Autotools:
-- AM_INIT_AUTOMAKE( [gnu/gnits] ) checks for GNU make ?
-- Math library check: LT_LIB_M
-- Check for C++ requirements (STL, templates)
 - Make datatools a separate project
-- moc3.mk: clean-am should be clean-local, but this is not called from Makefile!
-  However, why is this clean-am not overriding the original clean-am?
-- upgrade to Automake 1.10.1 and add LZMA support, remove .zip archives
-- uninstall: also remove relacs subdirectories?!
-- Use current version of doxygen for debian,
-  update the Doxyfile or remove new/old settings
-- make distcheck: 
-  release.sh /home/jan/prj/relacsinstall --with-qt3=/usr/lib/qt3 --disable-doxygen-dot
-- Add rand55 test and make sure that the dox file PREDEFINED variable gets HAVE_LIBRAND55 define set
-  http://summa.physik.hu-berlin.de/~beule/random/random55.tar.gz
 - Integrate examples (with extra target)  no-compile Makefiles???
   Include into distribution, compile if --enable-examples, noinst_PROGRAMS
+- Check for C++ requirements (STL, templates)
+- Add rand55 test and make sure that the dox file PREDEFINED variable gets HAVE_LIBRAND55 define set
+  http://summa.physik.hu-berlin.de/~beule/random/random55.tar.gz
+
+Relacs:
+- Update plugin loader
+- Reading config from PWD and LD_LIBRARY_PATH containing PWD
+  -> On/off by user?
 - Log files written to relacs exec dir, not /var/log?
   - Set log location in <relacslocal>/<src/relacs>
     use @...@ for this (prefix?)
-- Reading config from PWD and LD_LIBRARY_PATH containing PWD
-  -> On/off by user?
+- RelacsPlugin: finalize setting of the header image file.
 
 Documentation:
+- Update doxygen dot settings
 - Update installation and Makefile instructions to autotools
 - Usage of autoreconf: autoreconf -v --install
 - You may want to use: ./configure --htmldir=DOCDIR/html
@@ -59,6 +54,17 @@ Documentation:
 Libraries:
 - Add relacs library tests to the libraries!
 - AM_INIT_AUTOMAKE( gnits )
+
+Autotools details:
+- Math library check: LT_LIB_M
+- moc3.mk: clean-am should be clean-local, but this is not called from Makefile!
+  However, why is this clean-am not overriding the original clean-am?
+- upgrade to Automake 1.10.1 and add LZMA support, remove .zip archives
+- uninstall: also remove relacs subdirectories?!
+- Use current version of doxygen for debian,
+  update the Doxyfile or remove new/old settings
+- make distcheck: 
+  release.sh /home/jan/prj/relacsinstall --with-qt3=/usr/lib/qt3 --disable-doxygen-dot
 
 
 Bug in MetaData Dialog: after opening and closing with ESC, reopening crashes the program
@@ -129,10 +135,6 @@ TARGET="_top"
 
 Macros, SpikeDetector, PlotTrace:
   - check font size on fourier
-
-ConfigDialog:
-  - generalize usage of icon in header!
-  - generalize such that RePro's also can use the standard dialog.
 
 RePros:
   - use convert( OutData& )!

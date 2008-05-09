@@ -471,51 +471,42 @@ string RePro::addReProPath( const string &file, bool v )
 
 void RePro::dialog( void )
 { 
-  if ( dialogOpen() || empty() )
+  if ( dialogOpen() )
     return;
-
   setDialogOpen();
 
-  // create and exec dialog:
   OptDialog *od = new OptDialog( false, this );
-  od->setCaption( title() + " Settings" );
-  // title:
-  QGroupBox *gb = new QGroupBox( 2, Qt::Horizontal, this );
-  gb->setFrameStyle( QFrame::Panel | QFrame::Sunken );
-  QLabel *rt = new QLabel( gb );
-  string s = "<p align=\"center\">RePro <b>" + name() + "</b><br>version " + version() + 
-    " (" + date() + ")<br>" + "by <b>" + author() + "</b></p>";
-  rt->setText( s.c_str() );
-  //  rt->setAlignment( Qt::AlignCenter );
-  QPushButton *pb = new QPushButton( "&Help", gb );
-  pb->setFixedSize( pb->sizeHint() );
-  connect( pb, SIGNAL( clicked( void ) ), this, SLOT( help( void ) ) );
-  od->addWidget( gb );
-  // repro options:
-  Options::addStyle( OptWidget::LabelBlue, MacroFlag );
-  Options::delStyle( OptWidget::LabelBlue, OverwriteFlag );
-  Options::addStyle( OptWidget::LabelGreen, OverwriteFlag );
-  Options::delStyle( OptWidget::LabelGreen, CurrentFlag );
-  Options::addStyle( OptWidget::LabelRed, CurrentFlag );
-  OptWidget *row = od->addOptions( *this, dialogSelectMask(), 
-				   dialogReadOnlyMask(), dialogStyle(),
-				   mutex() );
-  od->addOptions( reprosDialogOpts() );
-  od->setSpacing( int(9.0*exp(-double(row->lines())/14.0))+1 );
-  od->setMargin( 10 );
-  // buttons:
-  od->setRejectCode( 0 );
-  od->addButton( "&Ok", OptDialog::Accept, 1 );
-  od->addButton( "&Apply", OptDialog::Accept, 1, false );
-  od->addButton( "&Run", OptDialog::Accept, 2, false );
-  od->addButton( "&Defaults", OptDialog::Defaults, 3, false );
-  od->addButton( "&Close" );
-  connect( od, SIGNAL( dialogClosed( int ) ),
-	   this, SLOT( dClosed( int ) ) );
-  connect( od, SIGNAL( buttonClicked( int ) ),
-	   this, SIGNAL( dialogAction( int ) ) );
-  connect( od, SIGNAL( valuesChanged( void ) ),
-	   this, SIGNAL( dialogAccepted( void ) ) );
+  od->setCaption( dialogCaption() );
+  dialogHeaderWidget( od );
+  if ( Options::size( dialogSelectMask() ) <= 0 )
+    dialogEmptyMessage( od );
+  else {
+    // repro options:
+    Options::addStyle( OptWidget::LabelBlue, MacroFlag );
+    Options::delStyle( OptWidget::LabelBlue, OverwriteFlag );
+    Options::addStyle( OptWidget::LabelGreen, OverwriteFlag );
+    Options::delStyle( OptWidget::LabelGreen, CurrentFlag );
+    Options::addStyle( OptWidget::LabelRed, CurrentFlag );
+    OptWidget *row = od->addOptions( *this, dialogSelectMask(), 
+				     dialogReadOnlyMask(), dialogStyle(),
+				     mutex() );
+    od->addOptions( reprosDialogOpts() );
+    od->setSpacing( int(9.0*exp(-double(row->lines())/14.0))+1 );
+    od->setMargin( 10 );
+    // buttons:
+    od->setRejectCode( 0 );
+    od->addButton( "&Ok", OptDialog::Accept, 1 );
+    od->addButton( "&Apply", OptDialog::Accept, 1, false );
+    od->addButton( "&Run", OptDialog::Accept, 2, false );
+    od->addButton( "&Defaults", OptDialog::Defaults, 3, false );
+    od->addButton( "&Close" );
+    connect( od, SIGNAL( dialogClosed( int ) ),
+	     this, SLOT( dClosed( int ) ) );
+    connect( od, SIGNAL( buttonClicked( int ) ),
+	     this, SIGNAL( dialogAction( int ) ) );
+    connect( od, SIGNAL( valuesChanged( void ) ),
+	     this, SIGNAL( dialogAccepted( void ) ) );
+  }
   od->exec();
 }
 

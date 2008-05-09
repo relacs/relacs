@@ -28,7 +28,6 @@
 #include <qmime.h>
 #include <qstringlist.h>
 #include <qtextbrowser.h>
-#include <relacs/optdialog.h>
 #include <relacs/configdialog.h>
 
 using namespace std;
@@ -59,6 +58,7 @@ ConfigDialog::ConfigDialog( const string &configident, int configgroup,
   DialogCaption = "";
   Dialog = false;
   UseHeader = true;
+  HeaderImageFile = "";
   UseHelp = true;
   HelpCaption = "";
   Help = false;
@@ -172,6 +172,18 @@ bool ConfigDialog::dialogHelp( void ) const
 void ConfigDialog::setDialogHelp( bool d )
 {
   UseHelp = d;
+}
+
+
+string ConfigDialog::headerImageFile( void ) const
+{
+  return HeaderImageFile;
+}
+
+
+void ConfigDialog::setHeaderImageFile( const string &file )
+{
+  HeaderImageFile = file;
 }
 
 
@@ -308,22 +320,21 @@ void ConfigDialog::setHelpOpen( bool open )
 }
 
 
-void ConfigDialog::dialog( void )
+void ConfigDialog::dialogHeaderWidget( OptDialog *od )
 {
-  if ( Dialog )
-    return;
-
-  // create and exec dialog:
-  Dialog = true;
-  OptDialog *od = new OptDialog( false, this );
-  od->setCaption( dialogCaption() );
   if ( UseHeader ) {
-    QGroupBox *gb = new QGroupBox( 2 + UseHelp, Qt::Horizontal, this );
-    gb->setFrameStyle( QFrame::Panel | QFrame::Sunken );
-    QLabel *pic = new QLabel( gb );
-    QImage image( "doc/web/relacstux.png" );
-    pic->setPixmap( QPixmap( image.scale( 150, 150, QImage::ScaleMin ) ) );
-    QLabel *rt = new QLabel( gb );
+    // frame:
+    QGroupBox *gb = 0;
+    // background image:
+    if ( headerImageFile().empty() )
+      gb = new QGroupBox( 1 + UseHelp, Qt::Horizontal, this );
+    else {
+      gb = new QGroupBox( 2 + UseHelp, Qt::Horizontal, this );
+      QImage image( headerImageFile().c_str() );
+      QLabel *pic = new QLabel( gb );
+      pic->setPixmap( QPixmap( image.scale( 150, 150, QImage::ScaleMin ) ) );
+    }
+    // infos:
     string s = "<p align=\"center\">";
     if ( ! name().empty() )
       s += "<b>" + name() + "</b><br>";
@@ -334,37 +345,70 @@ void ConfigDialog::dialog( void )
     if ( ! author().empty() )
       s += "by <b>" + author() + "</b>";
     s += "</p>";
+    QLabel *rt = new QLabel( gb );
     rt->setText( s.c_str() );
+    // help button:
     if ( UseHelp ) {
       QPushButton *pb = new QPushButton( "&Help", gb );
       pb->setFixedSize( pb->sizeHint() );
       connect( pb, SIGNAL( clicked( void ) ), this, SLOT( help( void ) ) );
     }
+
+    gb->setFrameStyle( QFrame::Panel | QFrame::Sunken );
     od->addWidget( gb );
   }
-  if ( empty() ) {
-    QLabel *ml = new QLabel( string( "There are <b>no</b> options for <b>" +
-				     name() + "</b>!" ).c_str(), this );
-    od->addWidget( ml );
-    od->addButton( "&Ok" );
-    connect( od, SIGNAL( dialogClosed( int ) ),
-	     this, SLOT( dClosed( int ) ) );
-  }
+}
+
+
+void ConfigDialog::dialogEmptyMessage( OptDialog *od )
+{
+  QLabel *ml = new QLabel( string( "There are <b>no</b> options for <b>" +
+				   name() + "</b>!" ).c_str(), this );
+  od->addWidget( ml );
+  od->addButton( "&Ok" );
+  connect( od, SIGNAL( dialogClosed( int ) ),
+	   this, SLOT( dClosed( int ) ) );
+}
+
+
+void ConfigDialog::dialogOptions( OptDialog *od )
+{
+  od->addOptions( *this, DialogSelectMask, DialogROMask, DialogStyle, mutex() );
+  od->setSpacing( int(9.0*::exp(-double(Options::size())/14.0))+1 );
+  od->setMargin( 10 );
+}
+
+
+void ConfigDialog::dialogButtons( OptDialog *od )
+{
+  od->setRejectCode( 0 );
+  od->addButton( "&Ok", OptDialog::Accept, 1 );
+  od->addButton( "&Apply", OptDialog::Accept );
+  od->addButton( "&Reset", OptDialog::Reset );
+  od->addButton( "&Close" );
+  connect( od, SIGNAL( dialogClosed( int ) ),
+	   this, SLOT( dClosed( int ) ) );
+  connect( od, SIGNAL( buttonClicked( int ) ),
+	   this, SIGNAL( dialogAction( int ) ) );
+  connect( od, SIGNAL( valuesChanged( void ) ),
+	   this, SIGNAL( dialogAccepted( void ) ) );
+}
+
+
+void ConfigDialog::dialog( void )
+{
+  if ( dialogOpen() )
+    return;
+  setDialogOpen();
+
+  OptDialog *od = new OptDialog( false, this );
+  od->setCaption( dialogCaption() );
+  dialogHeaderWidget( od );
+  if ( Options::size( DialogSelectMask ) <= 0 )
+    dialogEmptyMessage( od );
   else {
-    od->addOptions( *this, DialogSelectMask, DialogROMask, DialogStyle, mutex() );
-    od->setSpacing( int(9.0*::exp(-double(Options::size())/14.0))+1 );
-    od->setMargin( 10 );
-    od->setRejectCode( 0 );
-    od->addButton( "&Ok", OptDialog::Accept, 1 );
-    od->addButton( "&Apply", OptDialog::Accept );
-    od->addButton( "&Reset", OptDialog::Reset );
-    od->addButton( "&Close" );
-    connect( od, SIGNAL( dialogClosed( int ) ),
-	     this, SLOT( dClosed( int ) ) );
-    connect( od, SIGNAL( buttonClicked( int ) ),
-	     this, SIGNAL( dialogAction( int ) ) );
-    connect( od, SIGNAL( valuesChanged( void ) ),
-	     this, SIGNAL( dialogAccepted( void ) ) );
+    dialogOptions( od );
+    dialogButtons( od );
   }
   od->exec();
 }
