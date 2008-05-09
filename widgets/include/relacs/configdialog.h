@@ -59,7 +59,9 @@ Alternatively to the options and buttons,
 a message is displayed by dialogEmptyMessage()
 if there are no options selected by dialogSelectMask().
 The header can be switched on or off by setDialogHeader()
-and uses headerImageFile() as an background image.
+and uses headerForegroundColor() and headerBackgroundColor()
+as the foreground and background color, respectively, and 
+headerImageFile() as an image.
 
 ConfigDialog also provides help() for displaying some html-based help text.
 This can be enabled or disabled by setDialogHelp().
@@ -127,6 +129,27 @@ public:
     /*! Set the date of the last revision of the class to \a date. */
   virtual void setDate( const string &date );
 
+    /*! \return background color of the dialog header
+        as a hex string (#rrggbb).
+        \sa setHeaderBackgroundColor(), headerForegroundColor(),
+	headerImageFile(), dialogHeaderWidget() */
+  string headerBackgroundColor( void ) const;
+    /*! Set the background color of the dialog header.
+        \param[in] color the background color as a hex string (#rrggbb).
+        \sa headerBackgroundColor(), setHeaderForegroundColor(),
+	setHeaderImageFile(), dialogHeaderWidget() */
+  void setHeaderBackgroundColor( const string &color );
+    /*! \return foreground color of the dialog header
+        for the labels as a hex string (#rrggbb).
+        \sa setHeaderForegroundColor(), headerBackgroundColor(),
+	headerImageFile(), dialogHeaderWidget() */
+  string headerForegroundColor( void ) const;
+    /*! Set the foreground color of the dialog header 
+        that is used for the labels.
+        \param[in] color the foreground color as a hex string (#rrggbb).
+        \sa headerForegroundColor(), setHeaderBackgroundColor(),
+	setHeaderImageFile(), dialogHeaderWidget() */
+  void setHeaderForegroundColor( const string &color );
     /*! \return name of the image file (full path) used to
         be displayed in the dialog header.
         \sa setHeaderImageFile(), dialogHeaderWidget() */
@@ -319,6 +342,8 @@ private:
   string DialogCaption;
   bool Dialog;
   bool UseHeader;
+  string HeaderBackgroundColor;
+  string HeaderForegroundColor;
   string HeaderImageFile;
   bool UseHelp;
   string HelpCaption;

@@ -58,6 +58,8 @@ ConfigDialog::ConfigDialog( const string &configident, int configgroup,
   DialogCaption = "";
   Dialog = false;
   UseHeader = true;
+  HeaderBackgroundColor = "";
+  HeaderForegroundColor = "";
   HeaderImageFile = "";
   UseHelp = true;
   HelpCaption = "";
@@ -172,6 +174,36 @@ bool ConfigDialog::dialogHelp( void ) const
 void ConfigDialog::setDialogHelp( bool d )
 {
   UseHelp = d;
+}
+
+
+string ConfigDialog::headerBackgroundColor( void ) const
+{
+  return HeaderBackgroundColor;
+}
+
+
+void ConfigDialog::setHeaderBackgroundColor( const string &color )
+{
+  if ( color.size() == 7 && color[0] == '#' )
+    HeaderBackgroundColor = color;
+  else
+    HeaderBackgroundColor = "";
+}
+
+
+string ConfigDialog::headerForegroundColor( void ) const
+{
+  return HeaderForegroundColor;
+}
+
+
+void ConfigDialog::setHeaderForegroundColor( const string &color )
+{
+  if ( color.size() == 7 && color[0] == '#' )
+    HeaderForegroundColor = color;
+  else
+    HeaderForegroundColor = "";
 }
 
 
@@ -320,19 +352,31 @@ void ConfigDialog::setHelpOpen( bool open )
 }
 
 
+int hextodec( char c1, char c2 )
+{
+  int d1 = c1 == '0' ? 0 : c1 >= '1' && c1 <= '9' ? c1-'1'+1 : c1-'a'+10;
+  int d2 = c2 == '0' ? 0 : c2 >= '1' && c2 <= '9' ? c2-'1'+1 : c2-'a'+10;
+  return d1*16+d2;
+}
+
+
 void ConfigDialog::dialogHeaderWidget( OptDialog *od )
 {
   if ( UseHeader ) {
     // frame:
-    QGroupBox *gb = 0;
+    QGroupBox *gb = new QGroupBox( 1, Qt::Vertical, this );
+    if ( ! headerBackgroundColor().empty() ) {
+      int r = hextodec( headerBackgroundColor()[1], headerBackgroundColor()[2] );
+      int g = hextodec( headerBackgroundColor()[3], headerBackgroundColor()[4] );
+      int b = hextodec( headerBackgroundColor()[5], headerBackgroundColor()[6] );
+      gb->setPaletteBackgroundColor( QColor( r, g, b ) );
+    }
     // background image:
-    if ( headerImageFile().empty() )
-      gb = new QGroupBox( 1 + UseHelp, Qt::Horizontal, this );
-    else {
-      gb = new QGroupBox( 2 + UseHelp, Qt::Horizontal, this );
+    if ( ! headerImageFile().empty() ) {
+      int h = fontMetrics().height()*11/2;
       QImage image( headerImageFile().c_str() );
       QLabel *pic = new QLabel( gb );
-      pic->setPixmap( QPixmap( image.scale( 150, 150, QImage::ScaleMin ) ) );
+      pic->setPixmap( QPixmap( image.scale( h, h, QImage::ScaleMin ) ) );
     }
     // infos:
     string s = "<p align=\"center\">";
@@ -347,6 +391,13 @@ void ConfigDialog::dialogHeaderWidget( OptDialog *od )
     s += "</p>";
     QLabel *rt = new QLabel( gb );
     rt->setText( s.c_str() );
+    rt->setSizePolicy( QSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::Fixed ) );
+    if ( ! headerForegroundColor().empty() ) {
+      int r = hextodec( headerForegroundColor()[1], headerForegroundColor()[2] );
+      int g = hextodec( headerForegroundColor()[3], headerForegroundColor()[4] );
+      int b = hextodec( headerForegroundColor()[5], headerForegroundColor()[6] );
+      rt->setPaletteForegroundColor( QColor( r, g, b ) );
+    }
     // help button:
     if ( UseHelp ) {
       QPushButton *pb = new QPushButton( "&Help", gb );
@@ -354,7 +405,7 @@ void ConfigDialog::dialogHeaderWidget( OptDialog *od )
       connect( pb, SIGNAL( clicked( void ) ), this, SLOT( help( void ) ) );
     }
 
-    gb->setFrameStyle( QFrame::Panel | QFrame::Sunken );
+    gb->setFrameStyle( QFrame::Box | QFrame::Sunken );
     od->addWidget( gb );
   }
 }

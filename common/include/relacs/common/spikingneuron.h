@@ -24,7 +24,7 @@
 
 #include <string>
 #include <vector>
-#include <relacs/options.h>
+#include <relacs/configclass.h>
 using namespace std;
 using namespace relacs;
 
@@ -34,57 +34,151 @@ using namespace relacs;
 \brief Base class for a spiking (point-) neuron.
 \author Jan Benda
 \author Alexander Wolf
-\version 1.2 (May 5, 2008)
+\version 1.2 (May 7, 2008)
+-# SpikingNeuron inherits Options
+-# Added interface for accessing the values 
+   of the iionic currents and conductances
 \version 1.1 (Jan 10, 2006)
+
+Each model of a spiking neuron has a name().
+The model is implemented as a set of differential equations
+\f[ \left( \begin{array}{c} \frac{dx_1}{dt} \\ \frac{dx_2}{dt} \\
+                            \vdots \\ \frac{dx_n}{dt} \end{array} \right) = 
+    \left( \begin{array}{c} f_1(x_1, x_2, \ldots, x_n) \\ f_2(x_1, x_2, \ldots, x_n) \\
+                            \vdots \\ f_n(x_1, x_2, \ldots, x_n) \end{array} \right) \f]
+The state of the model is described by the state vector \f$ \vec x = (x_1, x_2, \ldots, x_n)\f$
+of dimension \a n = dimension().
+operator() computes the derivatives \f$ d\vec x/dt\f$ with respect to time \a t.
+The variables() function returns names for each of the state variables \a x,
+and init() sets the state variables \a x to useful initial conditions.
+
+While integrating the model, the current values and the names
+of the ionic currents and their corresponding conductances can be 
+retrieved by the currents() and conductances() functions.
+
+Parameter values of the model can be made accessible by adding them to
+the Options in add().
+Changed parameter values are read out from the Options by notify().
+The parameter values are classified as either scalingFlag(), modelFlag(), 
+or descriptionFlag().
+
+SpikingNeuron defines two parameters offset() and gain() with default values
+0 and 1, respectively, that should be applied to whatever input before
+it is passed on as the stimulus \a s for computing the derivatives
+via operator().
 */
 
-class SpikingNeuron
+class SpikingNeuron : public ConfigClass
 {
 
  public:
 
+    /*! Constructs the model, i.e. initializes model parameter with
+        useful default values.
+        \note The constructor should not add any new options.
+	This goes into the add() function. */
   SpikingNeuron( void );
   virtual ~SpikingNeuron( void );
 
-    /*! The name of the model. */
-  virtual string name( void ) const = 0;
-    /*! The dimension of the system. */
+    /*! \return the name of the model. */
+  virtual string name( void ) const;
+    /*! \return the dimension of the system. \sa variables, operator() */
   virtual int dimension( void ) const = 0;
-    /*! Returns in \a varnames the names of each of the dimension variables. */
+    /*! \param[out] varnames the names of each of the dimension() variables.
+        Gating variables (ranging between 0 and 1) should be a 
+        single lower-case character, potentials and equivalent potentials
+	a single upper-case character, and concentrations should be in 
+	brackets (e.g. [Ca]).
+        \sa dimension(), operator() */
   virtual void variables( vector< string > &varnames ) const = 0;
     /*! Computes the derivative \a dxdt at time \a t
-        with stimulus \a s given the state \a x. */
+        with stimulus \a s given the state \a x.
+	Implement this function with your model.
+        \param[in] t the time.
+        \param[in] s the stimulus.
+        \param[in,out] x the state vector.
+        \param[out] dxdt the derivative with respect to time.
+        \param[in] n the number of variables, usually equalt to dimension().
+        \sa dimension(), init(), variables() */
   virtual void operator()(  double t, double s, double *x, double *dxdt, int n ) = 0;
-    /*! Initialize the state \a x with usefull inital conditions. */
+    /*! Initialize the state \a x with useful inital conditions.
+        \param[out] x the dimension() state variables of the model.
+        \sa dimension(), operator() */
   virtual void init( double *x ) const = 0;
-    /*! Returns in \a conductancenames the names of the individual 
-        ionic conductances that conductances( double * ) would return.
-        The default implementation returns an empty vector. */
+    /*! Implement this function to return the names of the individual
+        ionic conductances that conductances(double*) would return.
+        The default implementation returns an empty vector.
+        \param[out] conductancenames the names of the individual 
+	ionic conductances.
+        \sa currents() */
   virtual void conductances( vector< string > &conductancenames ) const;
-    /*! Returns in \a g the values of the individual ionic conductances.
-        The number of conductances is defined by the size of 
-        \a conductancenames the function conductances() returns.
-        The default implementation returns nothing. */
+    /*! Implement this function to return in \a g the values of the individual
+        ionic conductances. The number of conductances is defined by the size
+	of \a conductancenames the function conductances(vector<string>&)
+	returns. The default implementation returns nothing.
+        \param[out] g the current values of the individual ionic conductances.
+        \sa currents() */
   virtual void conductances( double *g ) const;
-    /*! Returns in \a currentnames the names of the individual ionic currents
-        that currents( double * ) would return.
-        The default implementation returns an empty vector. */
+    /*! Implement this function to return in \a currentnames the names of the
+        individual ionic currents that currents(double*) would return.
+        The default implementation returns an empty vector.
+	\param[out] currentnames the names of the individual ionic currents.
+        \sa conductances */
   virtual void currents( vector< string > &currentnames ) const;
-    /*! Returns in \a c the values of the individual ionic currents.
-        The number of currents is defined by the size of \a currentnames
-        the function currents() returns.
-        The default implementation returns nothing. */
+    /*! Implement this function to return in \a c the values of the individual
+        ionic currents. The number of currents is defined by the size of
+	\a currentnames the function currents(vector<string>&) returns.
+        The default implementation returns nothing.
+        \param[out] c the values of the individual ionic currents.
+        \sa conductances */
   virtual void currents( double *c ) const;
-    /*! Add some options to \a o. */
-  virtual void add( Options &o ) const {};
-    /*! Read values of options \a o.
-        Prepend \a label to the search strings. */
-  virtual void read( const Options &o, const string &label=0 ) {};
 
-    /*! Returns a gain that should be applied to the input. */
+    /*! Implement this function to add all necessary options.
+        Use the flags of each option to either one of
+	ScalingFlag, ModelFlag, or DescriptionFlag.
+        For example:
+        \code
+	addLabel( "Sodium current", ModelFlag );
+	addNumber( "gna", "Na conductivity", GNa, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+	addNumber( "ena", "Na reversal potential", ENa, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
+        \endcode
+        This implementation adds a label "Input" followed by two numbers
+        "Gain" and "Offset".
+        Call it in your reimplementation via
+        \code
+	SpikingNeuron::add();
+        \endcode
+        \sa notify() */
+  virtual void add( void );
+    /*! Implement this function to read out the current values
+        from the list of Options.
+        For example:
+        \code
+	ENa = number( "ena" );
+	GNa = number( "gna" );
+	\endcode
+        This implementation reads out the gain() and the offset().
+        Call it in your reimplementation via
+        \code
+	SpikingNeuron::notify();
+        \endcode
+        \sa add() */
+  virtual void notify( void );
+
+    /*! \return a gain that should be applied to the input.
+        \sa offset() */
   double gain( void ) const;
-    /*! Returns an offset that should be applied to the input. */
+    /*! \return an offset that should be applied to the input.
+        \sa gain() */
   double offset( void ) const;
+
+    /*! Flag for selecting input / output gain and offset options. */
+  static const int ScalingFlag = 16;
+    /*! Flag for selecting the model options. */
+  static const int ModelFlag = 32;
+    /*! Flag for selecting the model description. */
+  static const int DescriptionFlag = 64;
+
   
  protected:
 
@@ -98,7 +192,7 @@ class SpikingNeuron
 
 /*! 
 \class Stimulus
-\brief Just returns the stimulus.
+\brief Implementation of SpikingNeuron that just returns the stimulus.
 \author Jan Benda
 */
 
@@ -107,30 +201,30 @@ class Stimulus : public SpikingNeuron
  public:
   Stimulus( void );
 
-    /*! The name of the model. */
+    /*! \copydoc SpikingNeuron::name() */
   virtual string name( void ) const;
-    /*! The dimension of the system. */
+    /*! \copydoc SpikingNeuron::dimension()  */
   virtual int dimension( void ) const;
-    /*! Returns in \a varnames the names of each of the dimension variables. */
+    /*! \copydoc SpikingNeuron::variables() */
   virtual void variables( vector< string > &varnames ) const;
-    /*! Computes the derivative \a dxdt at time \a t
-        with stimulus \a s given the state \a x. */
+    /*! Simply sets the first variable to the stimulus \a s
+        \code
+	x[0] = s;
+	dxdt[0] = 0.0;
+	\endcode */
   virtual void operator()(  double t, double s, double *x, double *dxdt, int n );
-    /*! Initialize the state \a x with usefull inital conditions. */
+    /*! Initialize the first variable with zero. */
   virtual void init( double *x ) const;
-    /*! Add some options to \a o. */
-  virtual void add( Options &o ) const;
-    /*! Read values op options \a o.
-        Prepend \a label to the search strings. */
-  virtual void read( const Options &o, const string &label=0 );
 
 };
 
 
 /*! 
 \class FitzhughNagumo
-\brief The Fitzhugh-Nagumo model
+\brief Implementation of SpikingNeuron with the Fitzhugh-Nagumo model
 \author Jan Benda
+
+From Koch, Biophysics of Computation, Chap.7.1
 */
 
 class FitzhughNagumo : public SpikingNeuron
@@ -138,33 +232,37 @@ class FitzhughNagumo : public SpikingNeuron
  public:
   FitzhughNagumo( void );
 
-    /*! The name of the model. */
+    /*! \copydoc SpikingNeuron::name() */
   virtual string name( void ) const;
-    /*! The dimension of the system. */
+    /*! \copydoc SpikingNeuron::dimension()  */
   virtual int dimension( void ) const;
-    /*! Returns in \a varnames the names of each of the dimension variables. */
+    /*! \copydoc SpikingNeuron::variables() */
   virtual void variables( vector< string > &varnames ) const;
-    /*! Computes the derivative \a dxdt at time \a t
-        with stimulus \a s given the state \a x. */
+    /*! Implementation of the Fitzhugh-Nagumo equations:
+        \f{eqnarray*}{
+           dV/dt & = & (V-V^3/3-W+s)/{\rm TimeScale} \\
+           dW/dt & = & {\rm Phi}(V+A-BW)/{\rm TimeScale}
+	\f} 
+        x is a scaled version of the \a V variable. */
   virtual void operator()(  double t, double s, double *x, double *dxdt, int n );
     /*! Initialize the state \a x with usefull inital conditions. */
   virtual void init( double *x ) const;
-    /*! Add some options to \a o. */
-  virtual void add( Options &o ) const;
-    /*! Read values op options \a o.
-        Prepend \a label to the search strings. */
-  virtual void read( const Options &o, const string &label=0 );
+
+    /*! Add parameters as options. */
+  virtual void add( void );
+    /*! Read out the current values from the list of Options. */
+  virtual void notify( void );
 
  protected:
 
-  double Phi, A, B, TimeScale, Scale;
+  double Phi, A, B, TimeScale;
 
 };
 
 
 /*! 
 \class MorrisLecar
-\brief The Morris-Lecar model.
+\brief Implementation of SpikingNeuron with the Morris-Lecar model.
 \author Jan Benda
 */
 
@@ -173,40 +271,37 @@ class MorrisLecar : public SpikingNeuron
  public:
   MorrisLecar( void );
 
-    /*! The name of the model. */
+    /*! \copydoc SpikingNeuron::name() */
   virtual string name( void ) const;
-    /*! The dimension of the system. */
+    /*! \copydoc SpikingNeuron::dimension()  */
   virtual int dimension( void ) const;
-    /*! Returns in \a varnames the names of each of the dimension variables. */
+    /*! \copydoc SpikingNeuron::variables() */
   virtual void variables( vector< string > &varnames ) const;
     /*! Computes the derivative \a dxdt at time \a t
         with stimulus \a s given the state \a x. */
   virtual void operator()(  double t, double s, double *x, double *dxdt, int n );
     /*! Initialize the state \a x with usefull inital conditions. */
   virtual void init( double *x ) const;
+
     /*! Returns in \a conductancenames the names of the individual 
-        ionic conductances that conductances( double * ) would return.
-        The default implementation returns an empty vector. */
+        ionic conductances that conductances( double * ) would return. */
   virtual void conductances( vector< string > &conductancenames ) const;
     /*! Returns in \a g the values of the individual ionic conductances.
         The number of conductances is defined by the size of 
-        \a conductancenames the function conductances() returns.
-        The default implementation returns nothing. */
+        \a conductancenames the function conductances() returns. */
   virtual void conductances( double *g ) const;
     /*! Returns in \a currentnames the names of the individual ionic currents
-        that currents( double * ) would return.
-        The default implementation returns an empty vector. */
+        that currents( double * ) would return. */
   virtual void currents( vector< string > &currentnames ) const;
     /*! Returns in \a c the values of the individual ionic currents.
         The number of currents is defined by the size of \a currentnames
-        the function currents() returns.
-        The default implementation returns nothing. */
+        the function currents() returns. */
   virtual void currents( double *c ) const;
-    /*! Add some options to \a o. */
-  virtual void add( Options &o ) const;
-    /*! Read values op options \a o.
-        Prepend \a label to the search strings. */
-  virtual void read( const Options &o, const string &label=0 );
+
+    /*! Add parameters as options. */
+  virtual void add( void );
+    /*! Read out the current values from the list of Options. */
+  virtual void notify( void );
 
  protected:
 
@@ -222,7 +317,7 @@ class MorrisLecar : public SpikingNeuron
 
 /*! 
 \class HodgkinHuxley
-\brief The original Hodgkin-Huxley model
+\brief Implementation of SpikingNeuron with the original Hodgkin-Huxley model
 \author Jan Benda
 */
 
@@ -231,40 +326,37 @@ class HodgkinHuxley : public SpikingNeuron
  public:
   HodgkinHuxley( void );
 
-    /*! The name of the model. */
+    /*! \copydoc SpikingNeuron::name() */
   virtual string name( void ) const;
-    /*! The dimension of the system. */
+    /*! \copydoc SpikingNeuron::dimension()  */
   virtual int dimension( void ) const;
-    /*! Returns in \a varnames the names of each of the dimension variables. */
+    /*! \copydoc SpikingNeuron::variables() */
   virtual void variables( vector< string > &varnames ) const;
     /*! Computes the derivative \a dxdt at time \a t
         with stimulus \a s given the state \a x. */
   virtual void operator()(  double t, double s, double *x, double *dxdt, int n );
     /*! Initialize the state \a x with usefull inital conditions. */
   virtual void init( double *x ) const;
+
     /*! Returns in \a conductancenames the names of the individual 
-        ionic conductances that conductances( double * ) would return.
-        The default implementation returns an empty vector. */
+        ionic conductances that conductances( double * ) would return. */
   virtual void conductances( vector< string > &conductancenames ) const;
     /*! Returns in \a g the values of the individual ionic conductances.
         The number of conductances is defined by the size of 
-        \a conductancenames the function conductances() returns.
-        The default implementation returns nothing. */
+        \a conductancenames the function conductances() returns. */
   virtual void conductances( double *g ) const;
     /*! Returns in \a currentnames the names of the individual ionic currents
-        that currents( double * ) would return.
-        The default implementation returns an empty vector. */
+        that currents( double * ) would return. */
   virtual void currents( vector< string > &currentnames ) const;
     /*! Returns in \a c the values of the individual ionic currents.
         The number of currents is defined by the size of \a currentnames
-        the function currents() returns.
-        The default implementation returns nothing. */
+        the function currents() returns. */
   virtual void currents( double *c ) const;
-    /*! Add some options to \a o. */
-  virtual void add( Options &o ) const;
-    /*! Read values op options \a o.
-        Prepend \a label to the search strings. */
-  virtual void read( const Options &o, const string &label=0 );
+
+    /*! Add parameters as options. */
+  virtual void add( void );
+    /*! Read out the current values from the list of Options. */
+  virtual void notify( void );
 
  protected:
 
@@ -278,7 +370,7 @@ class HodgkinHuxley : public SpikingNeuron
 
 /*! 
 \class TraubHH
-\brief Simplified %Traub-Miles (1991) model with the HH currents I_Na, I_K, and I-l only.
+\brief Implementation of SpikingNeuron with simplified %Traub-Miles (1991) model with the HH currents I_Na, I_K, and I-l only.
 \author Jan Benda
 
 Conductances are from %Traub, scaled to Ermentrouts Na.
@@ -290,7 +382,7 @@ class TraubHH : public HodgkinHuxley
  public:
   TraubHH( void );
 
-    /*! The name of the model. */
+    /*! \copydoc SpikingNeuron::name() */
   virtual string name( void ) const;
     /*! Computes the derivative \a dxdt at time \a t
         with stimulus \a s given the state \a x. */
@@ -303,7 +395,7 @@ class TraubHH : public HodgkinHuxley
 
 /*! 
 \class Traub
-\brief %Traub-Miles (1991) soma model.
+\brief Implementation of SpikingNeuron with the %Traub-Miles (1991) soma model.
 \author Jan Benda
 
 Conductances are from %Traub, scaled to Ermentrouts Na.
@@ -315,40 +407,37 @@ class Traub : public HodgkinHuxley
  public:
   Traub( void );
 
-    /*! The name of the model. */
+    /*! \copydoc SpikingNeuron::name() */
   virtual string name( void ) const;
-    /*! The dimension of the system. */
+    /*! \copydoc SpikingNeuron::dimension()  */
   virtual int dimension( void ) const;
-    /*! Returns in \a varnames the names of each of the dimension variables. */
+    /*! \copydoc SpikingNeuron::variables() */
   virtual void variables( vector< string > &varnames ) const;
     /*! Computes the derivative \a dxdt at time \a t
         with stimulus \a s given the state \a x. */
   virtual void operator()(  double t, double s, double *x, double *dxdt, int n );
     /*! Initialize the state \a x with usefull inital conditions. */
   virtual void init( double *x ) const;
+
     /*! Returns in \a conductancenames the names of the individual 
-        ionic conductances that conductances( double * ) would return.
-        The default implementation returns an empty vector. */
+        ionic conductances that conductances( double * ) would return. */
   virtual void conductances( vector< string > &conductancenames ) const;
     /*! Returns in \a g the values of the individual ionic conductances.
         The number of conductances is defined by the size of 
-        \a conductancenames the function conductances() returns.
-        The default implementation returns nothing. */
+        \a conductancenames the function conductances() returns. */
   virtual void conductances( double *g ) const;
     /*! Returns in \a currentnames the names of the individual ionic currents
-        that currents( double * ) would return.
-        The default implementation returns an empty vector. */
+        that currents( double * ) would return. */
   virtual void currents( vector< string > &currentnames ) const;
     /*! Returns in \a c the values of the individual ionic currents.
         The number of currents is defined by the size of \a currentnames
-        the function currents() returns.
-        The default implementation returns nothing. */
+        the function currents() returns. */
   virtual void currents( double *c ) const;
-    /*! Add some options to \a o. */
-  virtual void add( Options &o ) const;
-    /*! Read values op options \a o.
-        Prepend \a label to the search strings. */
-  virtual void read( const Options &o, const string &label=0 );
+
+    /*! Add parameters as options. */
+  virtual void add( void );
+    /*! Read out the current values from the list of Options. */
+  virtual void notify( void );
 
  protected:
 
@@ -362,7 +451,7 @@ class Traub : public HodgkinHuxley
 
 /*! 
 \class TraubErmentrout
-\brief %Traub-Miles (1991) model modified by Ermentrout.
+\brief Implementation of SpikingNeuron with the %Traub-Miles (1991) model modified by Ermentrout.
 \author Jan Benda
 */
 
@@ -371,40 +460,37 @@ class TraubErmentrout : public HodgkinHuxley
  public:
   TraubErmentrout( void );
 
-    /*! The name of the model. */
+    /*! \copydoc SpikingNeuron::name() */
   virtual string name( void ) const;
-    /*! The dimension of the system. */
+    /*! \copydoc SpikingNeuron::dimension()  */
   virtual int dimension( void ) const;
-    /*! Returns in \a varnames the names of each of the dimension variables. */
+    /*! \copydoc SpikingNeuron::variables() */
   virtual void variables( vector< string > &varnames ) const;
     /*! Computes the derivative \a dxdt at time \a t
         with stimulus \a s given the state \a x. */
   virtual void operator()(  double t, double s, double *x, double *dxdt, int n );
     /*! Initialize the state \a x with usefull inital conditions. */
   virtual void init( double *x ) const;
+
     /*! Returns in \a conductancenames the names of the individual 
-        ionic conductances that conductances( double * ) would return.
-        The default implementation returns an empty vector. */
+        ionic conductances that conductances( double * ) would return. */
   virtual void conductances( vector< string > &conductancenames ) const;
     /*! Returns in \a g the values of the individual ionic conductances.
         The number of conductances is defined by the size of 
-        \a conductancenames the function conductances() returns.
-        The default implementation returns nothing. */
+        \a conductancenames the function conductances() returns. */
   virtual void conductances( double *g ) const;
     /*! Returns in \a currentnames the names of the individual ionic currents
-        that currents( double * ) would return.
-        The default implementation returns an empty vector. */
+        that currents( double * ) would return. */
   virtual void currents( vector< string > &currentnames ) const;
     /*! Returns in \a c the values of the individual ionic currents.
         The number of currents is defined by the size of \a currentnames
-        the function currents() returns.
-        The default implementation returns nothing. */
+        the function currents() returns. */
   virtual void currents( double *c ) const;
-    /*! Add some options to \a o. */
-  virtual void add( Options &o ) const;
-    /*! Read values op options \a o.
-        Prepend \a label to the search strings. */
-  virtual void read( const Options &o, const string &label=0 );
+
+    /*! Add parameters as options. */
+  virtual void add( void );
+    /*! Read out the current values from the list of Options. */
+  virtual void notify( void );
 
  protected:
 
@@ -418,8 +504,36 @@ class TraubErmentrout : public HodgkinHuxley
 
 
 /*! 
+\class TraubErmentroutNaSI
+\brief Implementation of SpikingNeuron with %Traub-Miles (1991) model modified by Ermentrout with the HH currents and additional slow inactivating sodium.
+\author Jan Benda
+
+Slow inactivation of sodium is from Edman
+*/
+
+class TraubErmentroutNaSI : public TraubErmentrout
+{
+ public:
+  TraubErmentroutNaSI( void );
+
+    /*! \copydoc SpikingNeuron::name() */
+  virtual string name( void ) const;
+    /*! \copydoc SpikingNeuron::dimension()  */
+  virtual int dimension( void ) const;
+    /*! \copydoc SpikingNeuron::variables() */
+  virtual void variables( vector< string > &varnames ) const;
+    /*! Computes the derivative \a dxdt at time \a t
+        with stimulus \a s given the state \a x. */
+  virtual void operator()(  double t, double s, double *x, double *dxdt, int n );
+    /*! Initialize the state \a x with usefull inital conditions. */
+  virtual void init( double *x ) const;
+
+};
+
+
+/*! 
 \class Wang
-\brief The %Wang model.
+\brief Implementation of SpikingNeuron with the %Wang model.
 \author Jan Benda
 */
 
@@ -428,11 +542,11 @@ class Wang : public HodgkinHuxley
  public:
   Wang( void );
 
-    /*! The name of the model. */
+    /*! \copydoc SpikingNeuron::name() */
   virtual string name( void ) const;
-    /*! The dimension of the system. */
+    /*! \copydoc SpikingNeuron::dimension()  */
   virtual int dimension( void ) const;
-    /*! Returns in \a varnames the names of each of the dimension variables. */
+    /*! \copydoc SpikingNeuron::variables() */
   virtual void variables( vector< string > &varnames ) const;
     /*! Computes the derivative \a dxdt at time \a t
         with stimulus \a s given the state \a x. */
@@ -445,7 +559,7 @@ class Wang : public HodgkinHuxley
 
 /*! 
 \class WangAdapt
-\brief The %Wang model with an additional adaptation current.
+\brief Implementation of SpikingNeuron with the %Wang model with an additional adaptation current.
 \author Jan Benda
 */
 
@@ -454,40 +568,37 @@ class WangAdapt : public Wang
  public:
   WangAdapt( void );
 
-    /*! The name of the model. */
+    /*! \copydoc SpikingNeuron::name() */
   virtual string name( void ) const;
-    /*! The dimension of the system. */
+    /*! \copydoc SpikingNeuron::dimension()  */
   virtual int dimension( void ) const;
-    /*! Returns in \a varnames the names of each of the dimension variables. */
+    /*! \copydoc SpikingNeuron::variables() */
   virtual void variables( vector< string > &varnames ) const;
     /*! Computes the derivative \a dxdt at time \a t
         with stimulus \a s given the state \a x. */
   virtual void operator()(  double t, double s, double *x, double *dxdt, int n );
     /*! Initialize the state \a x with usefull inital conditions. */
   virtual void init( double *x ) const;
+
     /*! Returns in \a conductancenames the names of the individual 
-        ionic conductances that conductances( double * ) would return.
-        The default implementation returns an empty vector. */
+        ionic conductances that conductances( double * ) would return. */
   virtual void conductances( vector< string > &conductancenames ) const;
     /*! Returns in \a g the values of the individual ionic conductances.
         The number of conductances is defined by the size of 
-        \a conductancenames the function conductances() returns.
-        The default implementation returns nothing. */
+        \a conductancenames the function conductances() returns. */
   virtual void conductances( double *g ) const;
     /*! Returns in \a currentnames the names of the individual ionic currents
-        that currents( double * ) would return.
-        The default implementation returns an empty vector. */
+        that currents( double * ) would return. */
   virtual void currents( vector< string > &currentnames ) const;
     /*! Returns in \a c the values of the individual ionic currents.
         The number of currents is defined by the size of \a currentnames
-        the function currents() returns.
-        The default implementation returns nothing. */
+        the function currents() returns. */
   virtual void currents( double *c ) const;
-    /*! Add some options to \a o. */
-  virtual void add( Options &o ) const;
-    /*! Read values op options \a o.
-        Prepend \a label to the search strings. */
-  virtual void read( const Options &o, const string &label=0 );
+
+    /*! Add parameters as options. */
+  virtual void add( void );
+    /*! Read out the current values from the list of Options. */
+  virtual void notify( void );
 
  protected:
 
@@ -496,6 +607,59 @@ class WangAdapt : public Wang
   double GAA;
   double Atau;
   double IA;
+
+};
+
+
+/*! 
+\class Edman
+\brief Implementation of SpikingNeuron with the Edman model for slow inactivation of sodium current.
+\author Jan Benda
+*/
+
+class Edman : public SpikingNeuron
+{
+ public:
+  Edman( void );
+
+    /*! \copydoc SpikingNeuron::name() */
+  virtual string name( void ) const;
+    /*! \copydoc SpikingNeuron::dimension()  */
+  virtual int dimension( void ) const;
+    /*! \copydoc SpikingNeuron::variables() */
+  virtual void variables( vector< string > &varnames ) const;
+    /*! Computes the derivative \a dxdt at time \a t
+        with stimulus \a s given the state \a x. */
+  virtual void operator()(  double t, double s, double *x, double *dxdt, int n );
+    /*! Initialize the state \a x with usefull inital conditions. */
+  virtual void init( double *x ) const;
+
+    /*! Returns in \a conductancenames the names of the individual 
+        ionic conductances that conductances( double * ) would return. */
+  virtual void conductances( vector< string > &conductancenames ) const;
+    /*! Returns in \a g the values of the individual ionic conductances.
+        The number of conductances is defined by the size of 
+        \a conductancenames the function conductances() returns. */
+  virtual void conductances( double *g ) const;
+    /*! Returns in \a currentnames the names of the individual ionic currents
+        that currents( double * ) would return. */
+  virtual void currents( vector< string > &currentnames ) const;
+    /*! Returns in \a c the values of the individual ionic currents.
+        The number of currents is defined by the size of \a currentnames
+        the function currents() returns. */
+  virtual void currents( double *c ) const;
+
+    /*! Add parameters as options. */
+  virtual void add( void );
+    /*! Read out the current values from the list of Options. */
+  virtual void notify( void );
+
+ protected:
+
+  double C;
+  double GNa, GK, GLNa, GLK, GLCl, GP;
+  double INa, IK, ILNa, ILK, ILCl, IP;
+  double GNaM2HL, GKN2R, GLNaA, GLKA, GLClA, GPA;
 
 };
 

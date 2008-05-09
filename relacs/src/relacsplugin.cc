@@ -762,10 +762,20 @@ void RELACSPlugin::setRELACSWidget( RELACSWidget *rw )
     addHelpPath( path );
   }
 
-  // background image for dialog headers:
-  //  XXX check for existance of the image file (open it)
-  // and use alternatively the installed one
-  setHeaderImageFile( "src/relacstuxheader.png" );
+  string img = "src/relacstuxheader.png";
+  ifstream imgfl( img.c_str() );
+  if ( imgfl.good() )
+    setHeaderImageFile( img );
+  else {
+    imgfl.close();
+    img = PKGDATADIR;
+    img += "/relacstuxheader.png";
+    imgfl.open( img.c_str() );
+    if ( imgfl.good() )
+      setHeaderImageFile( img );
+  }
+  setHeaderBackgroundColor( "#ffdd33" );
+  setHeaderForegroundColor( "#ff0000" );
 }
 
 

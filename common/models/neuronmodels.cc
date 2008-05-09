@@ -31,10 +31,9 @@ NeuronModels::NeuronModels( void )
   : Model( "NeuronModels", "Neuron-Models", "Common",
 	   "Jan Benda", "1.0", "Jan 10, 2006" )
 {
-  addLabel( "General" ).setStyle( OptWidget::TabLabel );
   addOptions();
-  addModels();
   addTypeStyle( OptWidget::Bold, Parameter::Label );
+  addModels();
 }
 
 
@@ -117,15 +116,15 @@ void NeuronModels::process( const OutData &source, OutData &dest )
 
 void NeuronModels::add( SpikingNeuron *model )
 {
-  addLabel( model->name() ).setStyle( OptWidget::TabLabel | OptWidget::ReadPatternLabel );
-  int opts = Options::size();
-  model->add( *this );
-  if ( opts == Options::size() )
-    Options::pop();
   if ( text( "spikemodel", 0 ).empty() )
     setText( "spikemodel", model->name() );
   else
     pushText( "spikemodel", model->name() );
+  model->setConfigIdent( "Model: " + model->name() );
+  model->setConfigGroup( RELACSPlugin::Plugins );
+  model->add();
+  model->addTypeStyle( OptWidget::Bold, Parameter::Label );
+  model->unsetNotify();
   Models.push_back( model );
 }
 
@@ -133,7 +132,6 @@ void NeuronModels::add( SpikingNeuron *model )
 void NeuronModels::addModels( void )
 {
   add( new Stimulus() );
-  add( new FitzhughNagumo() );
   add( new MorrisLecar() );
   add( new HodgkinHuxley() );
   add( new WangAdapt() );
@@ -156,7 +154,7 @@ void NeuronModels::readOptions( void )
   NoiseSD = number( "noise" );
   SimDT = number( "deltat" );
   NM = Models[ index( "spikemodel" ) ];
-  NM->read( *this, NM->name() + ">" );
+  NM->notify();
   int integrator = index( "integrator" );
   if ( integrator == 1 )
     Integrate = midpointStep;
@@ -164,6 +162,25 @@ void NeuronModels::readOptions( void )
     Integrate = rk4Step;
   else
     Integrate = eulerStep;
+}
+
+
+void NeuronModels::dialogModelOptions( OptDialog *od )
+{
+  for ( unsigned int k=0; k<Models.size(); k++ ) {
+    od->addTabOptions( Models[k]->name(), *Models[k], dialogSelectMask(),
+		       dialogReadOnlyMask(), dialogStyle(), mutex() );
+  }
+}
+
+
+void NeuronModels::dialogOptions( OptDialog *od )
+{
+  od->addTabOptions( "General", *this, dialogSelectMask(),
+		     dialogReadOnlyMask(), dialogStyle(), mutex() );
+  dialogModelOptions( od );
+  od->setSpacing( 1 );
+  od->setMargin( 10 );
 }
 
 

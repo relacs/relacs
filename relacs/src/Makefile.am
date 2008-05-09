@@ -7,6 +7,7 @@ lib_LTLIBRARIES = \
 
 librelacs_la_CPPFLAGS = \
     "-DRELACSVERSION=\"$(RELACSVERSION)\"" \
+    "-DPKGDATADIR=\"$(pkgdatadir)\"" \
     -I$(srcdir)/../../plot/include \
     -I$(srcdir)/../../widgets/include \
     -I$(srcdir)/../../datafile/include \

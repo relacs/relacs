@@ -125,6 +125,8 @@ public:
   double squareBoltzman( double x ) const;
   double (AuditoryNeuron::*Nonlinearity)( double ) const;
 
+  virtual void dialogOptions( OptDialog *od );
+
   // tympanum:
   int TympanumModel;
   double Omega;

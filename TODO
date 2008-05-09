@@ -21,12 +21,12 @@ Autotools:
 
 Relacs:
 - Update plugin loader
+- Fix config files
 - Reading config from PWD and LD_LIBRARY_PATH containing PWD
   -> On/off by user?
 - Log files written to relacs exec dir, not /var/log?
   - Set log location in <relacslocal>/<src/relacs>
     use @...@ for this (prefix?)
-- RelacsPlugin: finalize setting of the header image file.
 
 Documentation:
 - Update doxygen dot settings

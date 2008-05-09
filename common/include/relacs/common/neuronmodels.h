@@ -81,6 +81,11 @@ public:
   
   void (*Integrate)( double, double*, double*, int, double, NeuronModels& );
 
+    /*! Add the options of the models as tabs to the dialog \a od.
+        To be used in dialogOptions(). */
+  void dialogModelOptions( OptDialog *od );
+  virtual void dialogOptions( OptDialog *od );
+
  private:
   
   vector< SpikingNeuron* > Models;

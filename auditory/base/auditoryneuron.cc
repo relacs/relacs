@@ -43,16 +43,14 @@ AuditoryNeuron::AuditoryNeuron( void )
   Slope2 = 600000;
 
   // options:
-  addLabel( "General" ).setStyle( OptWidget::TabLabel );
   addLabel( "Transduction chain" );
   addSelection( "tymp", "Tympanum model", "Scaling|None|Scaling|Oscillator" );
   addNumber( "freq", "Eigenfrequency", 5.0, 0.5, 40.0, 0.1, "kHz" );
   addNumber( "tdec", "Decay constant", TDec, 0.01, 10.0, 0.01, "ms" );
   addSelection( "nl", "Static nonlinearity", "Square saturated|Square|Square saturated|linear Boltzman|square Boltzman|Linear|Linear saturated|Box|None" );
-
   addOptions();
+  addFlags( 1 );
 
-  addLabel( "Nonlinearity" ).setStyle( OptWidget::TabLabel );
   addLabel( "Square = ax^2+imin, a=(imax-imin)/cut^2" ).setStyle( OptWidget::MathLabel );
   addLabel( "Square saturated = imax, for |x|>=cut" ).setStyle( OptWidget::MathLabel );
   addLabel( "Linear = b|x|+imin, b=(imax-imin)/cut" ).setStyle( OptWidget::MathLabel );
@@ -69,10 +67,11 @@ AuditoryNeuron::AuditoryNeuron( void )
   addLabel( "Boltzmann, 2(imax-imin)(1/(1+exp[-slope2*x^2])-1/2)+imin" ).setStyle( OptWidget::MathLabel );
   addNumber( "slope2", "Slope of square Boltzmann", Slope2, 0.0, 1.0e10, 5.0e4, "mPa^-2" ).setActivation( "matchslope2", "false" );
   addBoolean( "matchslope2", "Set slope of square Boltzmann to match square", true );
+  addTypeStyle( OptWidget::Bold, Parameter::Label );
+  addFlags( 2 );
+  delFlags( 2, 1 );
 
   addModels();
-
-  addTypeStyle( OptWidget::Bold, Parameter::Label );
 }
 
 
@@ -325,6 +324,18 @@ double AuditoryNeuron::linearBoltzman( double x ) const
 double AuditoryNeuron::squareBoltzman( double x ) const
 {
   return 2.0*DI*(1.0/(1.0+exp(-Slope2*x*x))-0.5)+Imin;
+}
+
+
+void AuditoryNeuron::dialogOptions( OptDialog *od )
+{
+  od->addTabOptions( "General", *this, dialogSelectMask() | 1,
+		     dialogReadOnlyMask(), dialogStyle(), mutex() );
+  od->addTabOptions( "Nonlinearity", *this, dialogSelectMask() | 2,
+		     dialogReadOnlyMask(), dialogStyle(), mutex() );
+  dialogModelOptions( od );
+  od->setSpacing( 1 );
+  od->setMargin( 10 );
 }
 
 
