@@ -77,6 +77,7 @@ for DOXYFILES in $SRCDIR/class*.html; do
   FILENAME=${DOXYFILES%.html}
   CLASSNAME=${FILENAME#$SRCDIR/class}
   CLASSNAME=${CLASSNAME%-*}
+  CLASSNAME=${CLASSNAME##*_1}
   if test "$CLASSNAME" != "es" && test "$CLASSNAME" != "$LASTFILE"; then
     echo "create help file for ${PLUGINSET}${CLASSNAME}..."
     { echo "<html><body>"

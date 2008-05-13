@@ -17,6 +17,8 @@ SUBDIRS = \
     hardware \
     auditory \
     \
+    plugins \
+    \
     utils
 
 EXTRA_DIST = \
@@ -60,8 +62,8 @@ doc/doclinksstamp:
 	cd $(builddir)/doc/html; \
 	LND="$(LN_S)"; test "$$LND" != "cp -p" || LND="cp -r -p"; \
         for dir in $(DOXYGEN_EXTERNAL); do \
-	  echo "test -r $$dir || $$LND ../../$$dir/doc/html $$dir"; \
-	  test -r $$dir || $$LND ../../$$dir/doc/html $$dir; \
+	  echo "test -r $$dir || $$LND ../../$$dir/doc/html $${dir##*/}"; \
+	  test -r $$dir || $$LND ../../$$dir/doc/html $${dir##*/}; \
 	done
 	touch doc/doclinksstamp
 

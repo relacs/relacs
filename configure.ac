@@ -114,6 +114,10 @@ ${RELACS_DOCLIBS} \
 hardware \
 common \
 auditory \
+plugins/base \
+plugins/calibration \
+plugins/ephys \
+plugins/acoustic \
 "
 
 # assemble input pathes from the Makefile.am of the RELACS_DOCLIBS list:
@@ -206,6 +210,16 @@ AC_CONFIG_FILES([
     options/src/Makefile
     options/Makefile
     options/configure.ac
+
+    plugins/Makefile
+    plugins/base/Makefile
+    plugins/base/src/Makefile
+    plugins/calibration/Makefile
+    plugins/calibration/src/Makefile
+    plugins/ephys/Makefile
+    plugins/ephys/src/Makefile
+    plugins/acoustic/Makefile
+    plugins/acoustic/src/Makefile
 
     relacs/Makefile
     relacs/src/Makefile
