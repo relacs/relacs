@@ -610,10 +610,11 @@ public:
         If there is no option with identifier \a ident, or the option is
 	neither a number nor an integer, an empty string is returned. */
   Str outUnit( const string &ident ) const;
-    /*! Set the unit of an existing number option 
-        with identifier \a ident to \a unit. */
-  Parameter &setUnit( const string &ident, const string &outputUnit, 
-		      const string &internUnit="" );
+    /*! Set the output unit and the internal unit of an existing number option 
+        with identifier \a ident to \a outputunit and inputunit, respectively.
+        If \a internunit is an empty string it is set to \a outputunit. */
+  Parameter &setUnit( const string &ident, const string &outputunit, 
+		      const string &internunit="" );
 
     /*! Add a new integer option at the end of the options list. 
         Its request string for the options dialog is set to \a request,

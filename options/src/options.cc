@@ -1439,13 +1439,13 @@ Str Options::outUnit( const string &ident ) const
 }
 
 
-Parameter &Options::setUnit( const string &ident, const string &internUnit, 
-			     const string &outputUnit )
+Parameter &Options::setUnit( const string &ident, const string &internunit, 
+			     const string &outputunit )
 {
   iterator pp = find( ident );
   // set values:
   if ( pp != end() ) {
-    (*pp).setUnit( internUnit, outputUnit );
+    (*pp).setUnit( internunit, outputunit );
     Warning += (*pp).warning();
   }
 #ifndef NDEBUG

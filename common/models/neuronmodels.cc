@@ -53,6 +53,7 @@ NeuronModels::~NeuronModels( void )
   for ( unsigned int k=0; k<Models.size(); k++ )
     delete Models[k];
   Models.clear();
+  Titles.clear();
 }
 
 
@@ -114,18 +115,22 @@ void NeuronModels::process( const OutData &source, OutData &dest )
 }
 
 
-void NeuronModels::add( SpikingNeuron *model )
+void NeuronModels::add( SpikingNeuron *model, const string &title )
 {
+  string ts = title;
+  if ( ts.empty() )
+    ts = model->name();
   if ( text( "spikemodel", 0 ).empty() )
-    setText( "spikemodel", model->name() );
+    setText( "spikemodel", ts );
   else
-    pushText( "spikemodel", model->name() );
+    pushText( "spikemodel", ts );
   model->setConfigIdent( "Model: " + model->name() );
   model->setConfigGroup( RELACSPlugin::Plugins );
   model->add();
   model->addTypeStyle( OptWidget::Bold, Parameter::Label );
   model->unsetNotify();
   Models.push_back( model );
+  Titles.push_back( ts );
 }
 
 
@@ -134,7 +139,7 @@ void NeuronModels::addModels( void )
   add( new Stimulus() );
   add( new MorrisLecar() );
   add( new HodgkinHuxley() );
-  add( new WangAdapt() );
+  add( new WangBuzsakiAdapt(), "Wang-Buzsaki" );
 }
 
 
@@ -168,7 +173,7 @@ void NeuronModels::readOptions( void )
 void NeuronModels::dialogModelOptions( OptDialog *od )
 {
   for ( unsigned int k=0; k<Models.size(); k++ ) {
-    od->addTabOptions( Models[k]->name(), *Models[k], dialogSelectMask(),
+    od->addTabOptions( Titles[k], *Models[k], dialogSelectMask(),
 		       dialogReadOnlyMask(), dialogStyle(), mutex() );
   }
 }

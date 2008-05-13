@@ -54,6 +54,12 @@ void SpikingNeuron::conductances( double *g ) const
 }
 
 
+string SpikingNeuron::conductanceUnit( void ) const
+{
+  return "mS/cm^2";
+}
+
+
 void SpikingNeuron::currents( vector< string > &currentnames ) const
 {
   currentnames.clear();
@@ -62,6 +68,18 @@ void SpikingNeuron::currents( vector< string > &currentnames ) const
 
 void SpikingNeuron::currents( double *c ) const
 {
+}
+
+
+string SpikingNeuron::currentUnit( void ) const
+{
+  return "uA/cm^2";
+}
+
+
+string SpikingNeuron::inputUnit( void ) const
+{
+  return "uA/cm^2";
 }
 
 
@@ -113,8 +131,16 @@ int Stimulus::dimension( void ) const
 void Stimulus::variables( vector< string > &varnames ) const
 {
   varnames.clear();
-  varnames.reserve( 1 );
+  varnames.reserve( dimension() );
   varnames.push_back( "Stimulus" );
+}
+
+
+void Stimulus::units( vector< string > &u ) const
+{
+  u.clear();
+  u.reserve( dimension() );
+  u.push_back( "" );
 }
 
 
@@ -166,9 +192,18 @@ int FitzhughNagumo::dimension( void ) const
 void FitzhughNagumo::variables( vector< string > &varnames ) const
 {
   varnames.clear();
-  varnames.reserve( 2 );
+  varnames.reserve( dimension() );
   varnames.push_back( "V" );
   varnames.push_back( "W" );
+}
+
+
+void FitzhughNagumo::units( vector< string > &u ) const
+{
+  u.clear();
+  u.reserve( dimension() );
+  u.push_back( "1" );
+  u.push_back( "1" );
 }
 
 
@@ -232,8 +267,8 @@ MorrisLecar::MorrisLecar( void )
   Gain = 1.0;
   Offset = 40.0;
 
-  GCaM = GCa;
-  GKW = GK;
+  GCaGates = GCa;
+  GKGates = GK;
 
   ICa = 0.0;
   IK = 0.0;
@@ -256,9 +291,18 @@ int MorrisLecar::dimension( void ) const
 void MorrisLecar::variables( vector< string > &varnames ) const
 {
   varnames.clear();
-  varnames.reserve( 2 );
+  varnames.reserve( dimension() );
   varnames.push_back( "V" );
   varnames.push_back( "w" );
+}
+
+
+void MorrisLecar::units( vector< string > &u ) const
+{
+  u.clear();
+  u.reserve( dimension() );
+  u.push_back( "mV" );
+  u.push_back( "1" );
 }
 
 
@@ -268,11 +312,11 @@ void MorrisLecar::operator()(  double t, double s, double *x, double *dxdt, int 
   double w = 1.0/(1.0+exp(-2.0*(x[0]-MVK)/MKK));
   double tau = 1.0/(MPhiK*cosh((x[0]-MVK)/MKK));
 
-  GCaM = GCa*m;
-  GKW = GK*x[1];
+  GCaGates = GCa*m;
+  GKGates = GK*x[1];
 
-  ICa = GCaM*(x[0]-ECa);
-  IK = GKW*(x[0]-EK);
+  ICa = GCaGates*(x[0]-ECa);
+  IK = GKGates*(x[0]-EK);
   IL = GL*(x[0]-EL);
 
   /* V */ dxdt[0] = TimeScale*(-ICa-IK-IL+s)/C;
@@ -299,8 +343,8 @@ void MorrisLecar::conductances( vector< string > &conductancenames ) const
 
 void MorrisLecar::conductances( double *g ) const
 {
-  g[0] = GCaM;
-  g[1] = GKW;
+  g[0] = GCaGates;
+  g[1] = GKGates;
   g[2] = GL;
 }
 
@@ -419,8 +463,8 @@ HodgkinHuxley::HodgkinHuxley( void )
   C = 1.0;
   PT = 1.0;
 
-  GNaM3H = GNa;
-  GKN4 = GK;
+  GNaGates = GNa;
+  GKGates = GK;
 
   INa= 0.0;
   IK= 0.0;
@@ -443,7 +487,7 @@ int HodgkinHuxley::dimension( void ) const
 void HodgkinHuxley::variables( vector< string > &varnames ) const
 {
   varnames.clear();
-  varnames.reserve( 4 );
+  varnames.reserve( dimension() );
   varnames.push_back( "V" );
   varnames.push_back( "m" );
   varnames.push_back( "h" );
@@ -451,13 +495,24 @@ void HodgkinHuxley::variables( vector< string > &varnames ) const
 }
 
 
+void HodgkinHuxley::units( vector< string > &u ) const
+{
+  u.clear();
+  u.reserve( dimension() );
+  u.push_back( "mV" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+}
+
+
 void HodgkinHuxley::operator()(  double t, double s, double *x, double *dxdt, int n )
 {
-  GNaM3H = GNa*x[1]*x[1]*x[1]*x[2];
-  GKN4 = GK*x[3]*x[3]*x[3]*x[3];
+  GNaGates = GNa*x[1]*x[1]*x[1]*x[2];
+  GKGates = GK*x[3]*x[3]*x[3]*x[3];
 
-  INa = GNaM3H*(x[0]-ENa);
-  IK = GKN4*(x[0]-EK);
+  INa = GNaGates*(x[0]-ENa);
+  IK = GKGates*(x[0]-EK);
   IL = GL*(x[0]-EL);
 
   /* V */ dxdt[0] = (-INa-IK-IL+s)/C;
@@ -488,8 +543,8 @@ void HodgkinHuxley::conductances( vector< string > &conductancenames ) const
 
 void HodgkinHuxley::conductances( double *g ) const
 {
-  g[0] = GNaM3H;
-  g[1] = GKN4;
+  g[0] = GNaGates;
+  g[1] = GKGates;
   g[2] = GL;
 }
 
@@ -546,6 +601,441 @@ void HodgkinHuxley::notify( void )
 }
 
 
+Connor::Connor( void )
+  : HodgkinHuxley()
+{
+  GNa = 120.0;
+  GK = 20.0;
+  GKA = 47.0;
+  GL = 0.3;
+
+  ENa = +50.0;
+  EK = -77.0;
+  EKA = -80.0;
+  EL = -22.0;
+
+  C = 1.0;
+  PT = 1.0;
+
+  GNaGates = GNa;
+  GKGates = GK;
+  GKAGates = GKA;
+
+  INa= 0.0;
+  IK= 0.0;
+  IKA = 0.0;
+  IL= 0.0;
+}
+
+
+string Connor::name( void ) const
+{
+  return "Connor";
+}
+
+
+int Connor::dimension( void ) const
+{
+  return 6;
+}
+
+
+void Connor::variables( vector< string > &varnames ) const
+{
+  HodgkinHuxley::variables( varnames );
+  varnames.push_back( "a" );
+  varnames.push_back( "b" );
+}
+
+
+void Connor::units( vector< string > &u ) const
+{
+  HodgkinHuxley::units( u );
+  u.push_back( "1" );
+  u.push_back( "1" );
+}
+
+
+void Connor::operator()(  double t, double s, double *x, double *dxdt, int n )
+{
+  double V = x[0];
+
+  GNaGates = GNa*x[1]*x[1]*x[1]*x[2];
+  GKGates = GK*x[3]*x[3]*x[3]*x[3];
+  GKAGates = GKA*x[4]*x[4]*x[4]*x[5];
+
+  INa = GNaGates*(V-ENa);
+  IK = GKGates*(V-EK);
+  IKA = GKAGates*(V-EKA);
+  IL = GL*(V-EL);
+
+  /* V */ dxdt[0] = (-INa-IK-IKA-IL+s)/C;
+  /* m */ dxdt[1] = PT*( 0.1*(V+40.0)/(1.0-exp(-(V+40.0)/10.0))*(1.0-x[1]) - x[1]*4.0*exp(-(V+65.0)/18.0) );
+  /* h */ dxdt[2] = PT*( 0.07*exp(-(V+65)/20.0)*(1.0-x[2]) - x[2]*1.0/(1.0+exp(-(V+35.0)/10.0)) );
+  /* n */ dxdt[3] = PT*( 0.01*(V+55.0)/(1.0-exp(-(V+55.0)/10.0))*(1.0-x[3]) - x[3]*0.125*exp(-(V+65.0)/80.0) );
+  /* a */ dxdt[4] = (pow(0.0761*exp((V+99.22)/31.84)/(1.0+exp((V+6.17)/28.93)),1.0/3.0)-x[4])/(0.3632+1.158/(1.0+exp((V+60.96)/20.12)));
+  /* b */ dxdt[5] = (1.0/(pow(1.0+exp((V+58.3)/14.54),4.0))-x[5])/(1.24+2.678/(1.0+exp((V+55.0)/16.072)));
+}
+
+
+void Connor::init( double *x ) const
+{
+  x[0] = -72.975;
+  x[1] = 0.01008;
+  x[2] = 0.9659;
+  x[3] = 0.15589;
+  x[4] = 0.54044;
+  x[5] = 0.28848;
+}
+
+
+void Connor::conductances( vector< string > &conductancenames ) const
+{
+  conductancenames.clear();
+  conductancenames.reserve( 4 );
+  conductancenames.push_back( "g_Na" );
+  conductancenames.push_back( "g_K" );
+  conductancenames.push_back( "g_KA" );
+  conductancenames.push_back( "g_l" );
+}
+
+
+void Connor::conductances( double *g ) const
+{
+  g[0] = GNaGates;
+  g[1] = GKGates;
+  g[2] = GKAGates;
+  g[3] = GL;
+}
+
+
+void Connor::currents( vector< string > &currentnames ) const
+{
+  currentnames.clear();
+  currentnames.reserve( 4 );
+  currentnames.push_back( "I_Na" );
+  currentnames.push_back( "I_K" );
+  currentnames.push_back( "I_KA" );
+  currentnames.push_back( "I_l" );
+}
+
+
+void Connor::currents( double *c ) const
+{
+  c[0] = INa;
+  c[1] = IK;
+  c[2] = IKA;
+  c[3] = IL;
+}
+
+
+void Connor::add( void )
+{
+  HodgkinHuxley::add();
+
+  insertLabel( "A current", "Leak current", ModelFlag );
+  insertNumber( "gka", "Leak current", "A conductivity", GKA, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  insertNumber( "eka", "Leak current", "A reversal potential", EKA, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
+
+  SpikingNeuron::add();
+}
+
+
+void Connor::notify( void )
+{
+  SpikingNeuron::notify();
+  HodgkinHuxley::notify();
+  EKA = number( "eka" );
+  GKA = number( "gka" );
+}
+
+
+RushRinzel::RushRinzel( void )
+  : Connor()
+{
+  GNa = 120.0;
+  GK = 20.0;
+  GKA = 60.0;
+  GL = 0.315; // ????
+
+  ENa = +50.0;
+  EK = -72.0;
+  EKA = -72.0;
+  EL = -17.0;
+
+  AV0 = -75.0;
+  ADV = -50.0;
+  BV0 = -70.0;
+  BDV = 6.0;
+  BTau = 1.0;
+
+  C = 1.0;
+  PT = 3.82;
+
+  GNaGates = GNa;
+  GKGates = GK;
+  GKAGates = GKA;
+
+  INa= 0.0;
+  IK= 0.0;
+  IKA = 0.0;
+  IL= 0.0;
+}
+
+
+string RushRinzel::name( void ) const
+{
+  return "Rush-Rinzel";
+}
+
+
+int RushRinzel::dimension( void ) const
+{
+  return 3;
+}
+
+
+void RushRinzel::variables( vector< string > &varnames ) const
+{
+  varnames.clear();
+  varnames.reserve( dimension() );
+  varnames.push_back( "V" );
+  varnames.push_back( "n" );
+  varnames.push_back( "b" );
+}
+
+
+void RushRinzel::units( vector< string > &u ) const
+{
+  u.clear();
+  u.reserve( dimension() );
+  u.push_back( "mV" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+}
+
+
+void RushRinzel::operator()(  double t, double s, double *x, double *dxdt, int n )
+{
+  double V = x[0];
+
+  double am = 0.1*(V+35.0)/(1.0-exp(-0.1*(V+35)));
+  double bm = 4.0*exp(-0.05*(V+60.0));
+  double m0 = am/(am+bm);
+
+  double an = 0.01*(V+50.01)/(1.0-exp(-0.1*(V+50.01)));
+  double bn = 0.125*exp( -0.0125*(V+60));
+  double n0 = an/(an+bn);
+  double tn = 1.0/(an+bn);
+
+  double a0 = 1.0/(1.0+exp((V-AV0)/ADV));
+  double b0 = 1.0/(1.0+exp((V-BV0)/BDV));
+  double tb = BTau;
+
+  GNaGates = GNa*m0*m0*m0*(0.9-1.2*x[1]);
+  GKGates = GK*x[1]*x[1]*x[1]*x[1];
+  GKAGates = GKA*a0*a0*a0*x[2];
+
+  INa = GNaGates*(V-ENa);
+  IK = GKGates*(V-EK);
+  IKA = GKAGates*(V-EKA);
+  IL = GL*(V-EL);
+
+  /* V */ dxdt[0] = (-INa-IK-IKA-IL+s)/C;
+  /* n */ dxdt[1] = PT*( n0 - x[1] )/tn;
+  /* b */ dxdt[2] = (b0 - x[2])/tb;
+}
+
+
+void RushRinzel::init( double *x ) const
+{
+  x[0] = -67.78;
+  x[1] = 0.207863;
+  x[2] = 0.408565;
+}
+
+
+void RushRinzel::add( void )
+{
+  Connor::add();
+
+  insertNumber( "av0", "Leak current", "Midpoint potential of a-gate", AV0, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
+  insertNumber( "adv", "Leak current", "Dynamic range of a-gate", ADV, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
+  insertNumber( "bv0", "Leak current", "Midpoint potential of b-gate", BV0, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
+  insertNumber( "bdv", "Leak current", "Dynamic range of b-gate", BDV, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
+  insertNumber( "btau", "Leak current", "Time constant of b-gate", BTau, 0.0, 1000.0, 0.2, "ms" ).setFlags( ModelFlag );
+
+  SpikingNeuron::add();
+}
+
+
+void RushRinzel::notify( void )
+{
+  SpikingNeuron::notify();
+  Connor::notify();
+  AV0 = number( "av0" );
+  ADV = number( "adv" );
+  BV0 = number( "bv0" );
+  BDV = number( "bdv" );
+  BTau = number( "btau" );
+}
+
+
+Awiszus::Awiszus( void )
+  : Connor()
+{
+  GNa = 240.0;
+  GK = 36.0;
+  GKA = 61.0;
+  GL = 0.068;
+
+  ENa = +64.7;
+  EK = -95.2;
+  EKA = -95.2;
+  EL = -51.3;
+
+  C = 1.0;
+
+  GNaGates = GNa;
+  GKGates = GK;
+  GKAGates = GKA;
+
+  INa= 0.0;
+  IK= 0.0;
+  IKA = 0.0;
+  IL= 0.0;
+}
+
+
+string Awiszus::name( void ) const
+{
+  return "Awiszus";
+}
+
+
+void Awiszus::operator()(  double t, double s, double *x, double *dxdt, int n )
+{
+  double V = x[0];
+  
+  double z = -(53.0+V)/6.0;
+  double am = fabs( z ) < 1e-4 ? 11.3 : 11.3*z/(exp(z)-1.0);
+  z = (57.0+V)/9.0;
+  double bm = fabs( z ) < 1e-4 ? 37.4 : 37.4*z/(exp(z)-1.0);
+  z = (V+106.0)/9.0;
+  double ah = fabs( z ) < 1e-4 ? 5.0 : 5.0*z/(exp(z)-1.0);
+
+  GNaGates = GNa*x[1]*x[1]*x[1]*x[2];
+  GKGates = GK*x[3]*x[3]*x[3];
+  GKAGates = GKA*x[4]*x[4]*x[4]*x[4]*x[5];
+
+  INa = GNaGates*(V-ENa);
+  IK = GKGates*(V-EK);
+  IKA = GKAGates*(V-EKA);
+  IL = GL*(V-EL);
+
+  /* V */ dxdt[0] = (-INa-IK-IKA-IL+s)/C;
+  /* m */ dxdt[1] = (1-x[1])*am-x[1]*bm;
+  /* h */ dxdt[2] = (1-x[2])*ah-x[2]*22.6/(exp(-(V+22.0)/12.5)+1.0);
+  /* n */ dxdt[3] = (1.0/(1.0+exp((1.7-V)/11.4))-x[3])/(0.24+0.7/(1.0+exp((V+12.0)/16.4)));
+  /* a */ dxdt[4] = (1.0/(1.0+exp(-(55+V)/13.8))-x[4])/(0.12+0.6/(1.0+exp((V+24)/16.5)));
+  /* b */ dxdt[5] = (1.0/(1.0+exp((77.0+V)/7.8))-x[5])/(2.1+1.8/(1.0+exp((V-18.0)/5.7)));
+}
+
+
+void Awiszus::init( double *x ) const
+{
+  x[0] = -67.78;
+  x[1] = 0.207863;
+  x[2] = 0.408565;
+}
+
+
+FleidervishSI::FleidervishSI( void )
+  : HodgkinHuxley()
+{
+  GNa = 10.0;
+  GK = 1.5;
+  GL = 0.008;
+
+  ENa = +50.0;
+  EK = -90.0;
+  EL = -70.0;
+
+  GNa = 120.0;
+  GK = 36.0;
+  GL = 0.3;
+
+  ENa = +50.0;
+  EK = -77.0;
+  EL = -54.384;
+
+  C = 1.0;
+  PT = 1.0;
+
+  GNaGates = GNa;
+  GKGates = GK;
+
+  INa = 0.0;
+  IK = 0.0;
+  IL = 0.0;
+}
+
+
+string FleidervishSI::name( void ) const
+{
+  return "Fleidervish";
+}
+
+
+int FleidervishSI::dimension( void ) const
+{
+  return 5;
+}
+
+
+void FleidervishSI::variables( vector< string > &varnames ) const
+{
+  HodgkinHuxley::variables( varnames );
+  varnames.push_back( "s" );
+}
+
+
+void FleidervishSI::units( vector< string > &u ) const
+{
+  HodgkinHuxley::units( u );
+  u.push_back( "1" );
+}
+
+
+void FleidervishSI::operator()(  double t, double s, double *x, double *dxdt, int n )
+{
+  double V = x[0];
+
+  GNaGates = GNa*x[1]*x[1]*x[1]*x[2]*x[4];
+  GKGates = GK*x[3]*x[3]*x[3]*x[3];
+
+  INa = GNaGates*(V-ENa);
+  IK = GKGates*(V-EK);
+  IL = GL*(V-EL);
+
+  /* V */ dxdt[0] = ( - INa - IK - IL + s )/C;
+  /* m */ dxdt[1] = (1-x[1])*0.091*(V+40.0)/(1.0-exp(-(V+40.0)/5.0))-x[1]*(-0.062)*(V+40.0)/(1.0-exp((V+40)/5.0));
+  /* h */ dxdt[2] = (1-x[2])*0.06*exp(-(55.0+V)/15.0)-x[2]*6.01/(exp((17.0-V)/21.0)+1.0);
+  /* n */ dxdt[3] = (1-x[3])*0.034*(V+45)/(1.0-exp(-(V+45.0)/5.0))-x[3]*0.54*exp(-(75+V)/40);
+  /* s */ dxdt[4] = (1-x[4])*0.001*exp(-(85.0+V)/30.0)-x[4]*0.0034/(exp(-(17.0+V)/10.0)+1.0);
+}
+
+
+void FleidervishSI::init( double *x ) const
+{
+  x[0] = -72.975;
+  x[1] = 0.01008;
+  x[2] = 0.9659;
+  x[3] = 0.15589;
+  x[4] = 0.54044;
+}
+
+
 TraubHH::TraubHH( void )
   : HodgkinHuxley()
 {
@@ -560,8 +1050,8 @@ TraubHH::TraubHH( void )
   C = 1.0;
   PT = 1.0;
 
-  GNaM3H = GNa;
-  GKN4 = GK;
+  GNaGates = GNa;
+  GKGates = GK;
 
   INa = 0.0;
   IK = 0.0;
@@ -571,7 +1061,7 @@ TraubHH::TraubHH( void )
 
 string TraubHH::name( void ) const
 {
-  return "Traub & Miles (1991) HH currents only";
+  return "Traub-Miles, HH currents only";
 }
 
 
@@ -588,11 +1078,11 @@ void TraubHH::operator()(  double t, double s, double *x, double *dxdt, int n )
   double an = 0.032*(V+52.0)/(1-exp(-(V+52.0)/5.0));
   double bn = 0.5*exp(-(V+57.0)/40.0);
 
-  GNaM3H = GNa*x[1]*x[1]*x[1]*x[2];
-  GKN4 = GK*x[3]*x[3]*x[3]*x[3];
+  GNaGates = GNa*x[1]*x[1]*x[1]*x[2];
+  GKGates = GK*x[3]*x[3]*x[3]*x[3];
 
-  INa = GNa*(V-ENa);
-  IK = GK*(V-EK);
+  INa = GNaGates*(V-ENa);
+  IK = GKGates*(V-EK);
   IL = GL*(V-EL);
 
   /* V */ dxdt[0] = ( - INa - IK - IL + s )/C;
@@ -611,7 +1101,7 @@ void TraubHH::init( double *x ) const
 }
 
 
-Traub::Traub( void )
+TraubMiles::TraubMiles( void )
   : HodgkinHuxley()
 {
   GNa = 100.0;
@@ -629,10 +1119,10 @@ Traub::Traub( void )
   C = 1.0;
   PT = 1.0;
 
-  GNaM3H = GNa;
-  GKN4 = GK;
-  GCaS5R = GCa;
-  GAHPQ = GAHP;
+  GNaGates = GNa;
+  GKGates = GK;
+  GCaGates = GCa;
+  GAHPGates = GAHP;
 
   INa = 0.0;
   IK = 0.0;
@@ -642,22 +1132,22 @@ Traub::Traub( void )
 }
 
 
-string Traub::name( void ) const
+string TraubMiles::name( void ) const
 {
-  return "Traub-Miles (1991)";
+  return "Traub-Miles";
 }
 
 
-int Traub::dimension( void ) const
+int TraubMiles::dimension( void ) const
 {
   return 9;
 }
 
 
-void Traub::variables( vector< string > &varnames ) const
+void TraubMiles::variables( vector< string > &varnames ) const
 {
   varnames.clear();
-  varnames.reserve( 9 );
+  varnames.reserve( dimension() );
   varnames.push_back( "V" );
   varnames.push_back( "m" );
   varnames.push_back( "h" );
@@ -670,7 +1160,23 @@ void Traub::variables( vector< string > &varnames ) const
 }
 
 
-void Traub::operator()(  double t, double s, double *x, double *dxdt, int n )
+void TraubMiles::units( vector< string > &u ) const
+{
+  u.clear();
+  u.reserve( dimension() );
+  u.push_back( "mV" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+  u.push_back( "mM" );
+}
+
+
+void TraubMiles::operator()(  double t, double s, double *x, double *dxdt, int n )
 {
   double V = x[0];
   double Ca = x[8];
@@ -696,16 +1202,16 @@ void Traub::operator()(  double t, double s, double *x, double *dxdt, int n )
   double aq = exp((V+67.0)/27.0)*0.005*(200.0-Ca)/(exp((200.0-Ca)/20.0)-1.0);
   double bq = 0.002;
 
-  GNaM3H = GNa*x[1]*x[1]*x[1]*x[2];
-  GKN4 = GK*x[3]*x[3]*x[3]*x[3]*x[4];
-  GCaS5R = GCa*x[5]*x[5]*x[5]*x[5]*x[5]*x[6];
-  GAHPQ = GAHP*x[7];
+  GNaGates = GNa*x[1]*x[1]*x[1]*x[2];
+  GKGates = GK*x[3]*x[3]*x[3]*x[3]*x[4];
+  GCaGates = GCa*x[5]*x[5]*x[5]*x[5]*x[5]*x[6];
+  GAHPGates = GAHP*x[7];
 
-  INa = GNa*(V-ENa);
-  IK = GK*(V-EK);
+  INa = GNaGates*(V-ENa);
+  IK = GKGates*(V-EK);
   IL = GL*(V-EL);
-  ICa = GCa*(V-ECa);
-  IAHP = GAHP*(V-EAHP);
+  ICa = GCaGates*(V-ECa);
+  IAHP = GAHPGates*(V-EAHP);
 
   /* V */ dxdt[0] = ( - INa - IK - IL - ICa - IAHP + s )/C;
   /* m */ dxdt[1] = am*(1.0-x[1]) - x[1]*bm;
@@ -719,7 +1225,7 @@ void Traub::operator()(  double t, double s, double *x, double *dxdt, int n )
 }
 
 
-void Traub::init( double *x ) const
+void TraubMiles::init( double *x ) const
 {
   x[0] = -66.61;
   x[1] = 0.015995;
@@ -733,7 +1239,7 @@ void Traub::init( double *x ) const
 }
 
 
-void Traub::conductances( vector< string > &conductancenames ) const
+void TraubMiles::conductances( vector< string > &conductancenames ) const
 {
   conductancenames.clear();
   conductancenames.reserve( 5 );
@@ -745,17 +1251,17 @@ void Traub::conductances( vector< string > &conductancenames ) const
 }
 
 
-void Traub::conductances( double *g ) const
+void TraubMiles::conductances( double *g ) const
 {
-  g[0] = GNaM3H;
-  g[1] = GKN4;
+  g[0] = GNaGates;
+  g[1] = GKGates;
   g[2] = GL;
-  g[3] = GCaS5R;
-  g[4] = GAHPQ;
+  g[3] = GCaGates;
+  g[4] = GAHPGates;
 }
 
 
-void Traub::currents( vector< string > &currentnames ) const
+void TraubMiles::currents( vector< string > &currentnames ) const
 {
   currentnames.clear();
   currentnames.reserve( 5 );
@@ -767,7 +1273,7 @@ void Traub::currents( vector< string > &currentnames ) const
 }
 
 
-void Traub::currents( double *c ) const
+void TraubMiles::currents( double *c ) const
 {
   c[0] = INa;
   c[1] = IK;
@@ -777,7 +1283,7 @@ void Traub::currents( double *c ) const
 }
 
 
-void Traub::add( void )
+void TraubMiles::add( void )
 {
   HodgkinHuxley::add();
 
@@ -791,7 +1297,7 @@ void Traub::add( void )
 }
 
 
-void Traub::notify( void )
+void TraubMiles::notify( void )
 {
   HodgkinHuxley::notify();
 
@@ -823,11 +1329,11 @@ TraubErmentrout::TraubErmentrout( void )
   C = 1.0;
   PT = 1.0;
 
-  GNaM3H = GNa;
-  GKN4 = GK;
-  GCaS = GCa;
-  GMW = GM;
-  GAHPQ = GAHP;
+  GNaGates = GNa;
+  GKGates = GK;
+  GCaGates = GCa;
+  GMGates = GM;
+  GAHPGates = GAHP;
 
   INa = 0.0;
   IK = 0.0;
@@ -840,7 +1346,7 @@ TraubErmentrout::TraubErmentrout( void )
 
 string TraubErmentrout::name( void ) const
 {
-  return "Traub-Miles (1991) / Ermentrout";
+  return "Traub-Miles-Ermentrout";
 }
 
 
@@ -853,7 +1359,7 @@ int TraubErmentrout::dimension( void ) const
 void TraubErmentrout::variables( vector< string > &varnames ) const
 {
   varnames.clear();
-  varnames.reserve( 8 );
+  varnames.reserve( dimension() );
   varnames.push_back( "V" );
   varnames.push_back( "m" );
   varnames.push_back( "h" );
@@ -865,21 +1371,23 @@ void TraubErmentrout::variables( vector< string > &varnames ) const
 }
 
 
+void TraubErmentrout::units( vector< string > &u ) const
+{
+  u.clear();
+  u.reserve( dimension() );
+  u.push_back( "mV" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+  u.push_back( "mM" );
+}
+
+
 void TraubErmentrout::operator()(  double t, double s, double *x, double *dxdt, int n )
 {
-  GNaM3H = GNa*x[1]*x[1]*x[1]*x[2];
-  GKN4 = GK*x[3]*x[3]*x[3]*x[3];
-
-  INa = GNaM3H*(x[0]-ENa);
-  IK = GKN4*(x[0]-EK);
-  IL = GL*(x[0]-EL);
-
-  /* V */ dxdt[0] = (-INa-IK-IL+s)/C;
-  /* m */ dxdt[1] = PT*( 0.1*(x[0]+40.0)/(1.0-exp(-(x[0]+40.0)/10.0))*(1.0-x[1]) - x[1]*4.0*exp(-(x[0]+65.0)/18.0) );
-  /* h */ dxdt[2] = PT*( 0.07*exp(-(x[0]+65)/20.0)*(1.0-x[2]) - x[2]*1.0/(1.0+exp(-(x[0]+35.0)/10.0)) );
-  /* n */ dxdt[3] = PT*( 0.01*(x[0]+55.0)/(1.0-exp(-(x[0]+55.0)/10.0))*(1.0-x[3]) - x[3]*0.125*exp(-(x[0]+65.0)/80.0) );
-
-
   double V = x[0];
   double Ca = x[7];
 
@@ -895,18 +1403,18 @@ void TraubErmentrout::operator()(  double t, double s, double *x, double *dxdt, 
   x[4] = 1.0/(1.0+exp(-(V+25.0)/5.0));
   x[6] = Ca/(30.0+Ca);
 
-  GNaM3H = GNa*x[1]*x[1]*x[1]*x[2];
-  GKN4 = GK*x[3]*x[3]*x[3]*x[3];
-  GCaS = GCa*x[4];
-  GMW = GM*x[5];
-  GAHPQ = GAHP*x[6];
+  GNaGates = GNa*x[1]*x[1]*x[1]*x[2];
+  GKGates = GK*x[3]*x[3]*x[3]*x[3];
+  GCaGates = GCa*x[4];
+  GMGates = GM*x[5];
+  GAHPGates = GAHP*x[6];
 
-  INa = GNaM3H*(V-ENa);
-  IK = GKN4*(V-EK);
+  INa = GNaGates*(V-ENa);
+  IK = GKGates*(V-EK);
   IL = GL*(V-EL);
-  ICa = GCaS*(V-ECa);
-  IM = GMW*(V-EM);
-  IAHP = GAHPQ*(V-EAHP);
+  ICa = GCaGates*(V-ECa);
+  IM = GMGates*(V-EM);
+  IAHP = GAHPGates*(V-EAHP);
 
   /* V */ dxdt[0] = ( - INa - IK - IL - ICa - IM - IAHP + s )/C;
   /* m */ dxdt[1] = am*(1.0-x[1]) - x[1]*bm;
@@ -947,12 +1455,12 @@ void TraubErmentrout::conductances( vector< string > &conductancenames ) const
 
 void TraubErmentrout::conductances( double *g ) const
 {
-  g[0] = GNaM3H;
-  g[1] = GKN4;
+  g[0] = GNaGates;
+  g[1] = GKGates;
   g[2] = GL;
-  g[3] = GCaS;
-  g[4] = GMW;
-  g[5] = GAHPQ;
+  g[3] = GCaGates;
+  g[4] = GMGates;
+  g[5] = GAHPGates;
 }
 
 
@@ -1021,7 +1529,7 @@ TraubErmentroutNaSI::TraubErmentroutNaSI( void )
 
 string TraubErmentroutNaSI::name( void ) const
 {
-  return "Traub-Miles (1991) / Ermentrout with slow inactivating sodium current";
+  return "Traub-Miles-Ermentrout NaSI";
 }
 
 
@@ -1034,7 +1542,7 @@ int TraubErmentroutNaSI::dimension( void ) const
 void TraubErmentroutNaSI::variables( vector< string > &varnames ) const
 {
   varnames.clear();
-  varnames.reserve( 9 );
+  varnames.reserve( dimension() );
   varnames.push_back( "V" );
   varnames.push_back( "m" );
   varnames.push_back( "h" );
@@ -1044,6 +1552,22 @@ void TraubErmentroutNaSI::variables( vector< string > &varnames ) const
   varnames.push_back( "w" );
   varnames.push_back( "q" );
   varnames.push_back( "[Ca]" );
+}
+
+
+void TraubErmentroutNaSI::units( vector< string > &u ) const
+{
+  u.clear();
+  u.reserve( dimension() );
+  u.push_back( "mV" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+  u.push_back( "mM" );
 }
 
 
@@ -1077,18 +1601,18 @@ void TraubErmentroutNaSI::operator()(  double t, double s, double *x, double *dx
   x[5] = 1.0/(1.0+exp(-(V+25.0)/5.0));
   x[7] = Ca/(30.0+Ca);
 
-  GNaM3H = GNa*x[1]*x[1]*x[1]*x[2]*x[3];
-  GKN4 = GK*x[4]*x[4]*x[4]*x[4];
-  GCaS = GCa*x[5];
-  GMW = GM*x[6];
-  GAHPQ = GAHP*x[7];
+  GNaGates = GNa*x[1]*x[1]*x[1]*x[2]*x[3];
+  GKGates = GK*x[4]*x[4]*x[4]*x[4];
+  GCaGates = GCa*x[5];
+  GMGates = GM*x[6];
+  GAHPGates = GAHP*x[7];
 
-  INa = GNaM3H*(V-ENa);
-  IK = GKN4*(V-EK);
+  INa = GNaGates*(V-ENa);
+  IK = GKGates*(V-EK);
   IL = GL*(V-EL);
-  ICa = GCaS*(V-ECa);
-  IM = GMW*(V-EM);
-  IAHP = GAHPQ*(V-EAHP);
+  ICa = GCaGates*(V-ECa);
+  IM = GMGates*(V-EM);
+  IAHP = GAHPGates*(V-EAHP);
 
   /* V */ dxdt[0] = ( - INa - IK - IL - ICa - IM - IAHP + s )/C;
   /* m */ dxdt[1] = am*(1.0-x[1]) - x[1]*bm;
@@ -1116,7 +1640,7 @@ void TraubErmentroutNaSI::init( double *x ) const
 }
 
 
-Wang::Wang( void )
+WangBuzsaki::WangBuzsaki( void )
   : HodgkinHuxley()
 {
   GNa = 35.0;
@@ -1130,8 +1654,8 @@ Wang::Wang( void )
   C = 1.0;
   PT = 5.0;
 
-  GNaM3H = GNa;
-  GKN4 = GK;
+  GNaGates = GNa;
+  GKGates = GK;
 
   INa = 0.0;
   IK = 0.0;
@@ -1139,37 +1663,47 @@ Wang::Wang( void )
 }
 
 
-string Wang::name( void ) const
+string WangBuzsaki::name( void ) const
 {
-  return "Wang";
+  return "Wang-Buzsaki";
 }
 
 
-int Wang::dimension( void ) const
+int WangBuzsaki::dimension( void ) const
 {
   return 3;
 }
 
 
-void Wang::variables( vector< string > &varnames ) const
+void WangBuzsaki::variables( vector< string > &varnames ) const
 {
   varnames.clear();
-  varnames.reserve( 3 );
+  varnames.reserve( dimension() );
   varnames.push_back( "V" );
   varnames.push_back( "h" );
   varnames.push_back( "n" );
 }
 
 
-void Wang::operator()(  double t, double s, double *x, double *dxdt, int n )
+void WangBuzsaki::units( vector< string > &u ) const
+{
+  u.clear();
+  u.reserve( dimension() );
+  u.push_back( "mV" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+}
+
+
+void WangBuzsaki::operator()(  double t, double s, double *x, double *dxdt, int n )
 {
   double ms = 1.0/(1.0+4.0*exp(-(x[0]+60.0)/18.0)*(exp(-0.1*(x[0]+35.0))-1.0)/(-0.1*(x[0]+35.0)));
 
-  GNaM3H = GNa*ms*ms*ms*x[1];
-  GKN4 = GK*x[2]*x[2]*x[2]*x[2];
+  GNaGates = GNa*ms*ms*ms*x[1];
+  GKGates = GK*x[2]*x[2]*x[2]*x[2];
 
-  INa = GNaM3H*(x[0]-ENa);
-  IK = GKN4*(x[0]-EK);
+  INa = GNaGates*(x[0]-ENa);
+  IK = GKGates*(x[0]-EK);
   IL = GL*(x[0]-EL);
 
   /* V */ dxdt[0] = (-INa-IK-IL+s)/C;
@@ -1178,7 +1712,7 @@ void Wang::operator()(  double t, double s, double *x, double *dxdt, int n )
 }
 
 
-void Wang::init( double *x ) const
+void WangBuzsaki::init( double *x ) const
 {
   x[0] = -64.018;
   x[1] = 0.7808;
@@ -1186,8 +1720,8 @@ void Wang::init( double *x ) const
 }
 
 
-WangAdapt::WangAdapt( void )
-  : Wang()
+WangBuzsakiAdapt::WangBuzsakiAdapt( void )
+  : WangBuzsaki()
 {
   EA = -90.0;
 
@@ -1195,42 +1729,49 @@ WangAdapt::WangAdapt( void )
 
   Atau = 100.0;
 
-  GAA = GA;
+  GAGates = GA;
   IA = 0.0;
 }
 
 
-string WangAdapt::name( void ) const
+string WangBuzsakiAdapt::name( void ) const
 {
-  return "WangAdapt";
+  return "Wang-Buzsaki Adapt";
 }
 
 
-int WangAdapt::dimension( void ) const
+int WangBuzsakiAdapt::dimension( void ) const
 {
   return 4;
 }
 
 
-void WangAdapt::variables( vector< string > &varnames ) const
+void WangBuzsakiAdapt::variables( vector< string > &varnames ) const
 {
-  Wang::variables( varnames );
+  WangBuzsaki::variables( varnames );
   varnames.push_back( "a" );
 }
 
 
-void WangAdapt::operator()(  double t, double s, double *x, double *dxdt, int n )
+void WangBuzsakiAdapt::units( vector< string > &u ) const
+{
+  WangBuzsaki::units( u );
+  u.push_back( "1" );
+}
+
+
+void WangBuzsakiAdapt::operator()(  double t, double s, double *x, double *dxdt, int n )
 {
   double ms = 1.0/(1.0+4.0*exp(-(x[0]+60.0)/18.0)*(exp(-0.1*(x[0]+35.0))-1.0)/(-0.1*(x[0]+35.0)));
   double w0 = 1.0/(exp(-(x[0]+35.0)/10.0)+1.0);
 
-  GNaM3H = GNa*ms*ms*ms*x[1];
-  GKN4 = GK*x[2]*x[2]*x[2]*x[2];
-  GAA = GA*x[3];
+  GNaGates = GNa*ms*ms*ms*x[1];
+  GKGates = GK*x[2]*x[2]*x[2]*x[2];
+  GAGates = GA*x[3];
 
-  INa = GNaM3H*(x[0]-ENa);
-  IK = GKN4*(x[0]-EK);
-  IA = GAA*(x[0]-EA);
+  INa = GNaGates*(x[0]-ENa);
+  IK = GKGates*(x[0]-EK);
+  IA = GAGates*(x[0]-EA);
   IL = GL*(x[0]-EL);
 
   /* V */ dxdt[0] = (-INa-IK-IL-IA+s)/C;
@@ -1240,37 +1781,37 @@ void WangAdapt::operator()(  double t, double s, double *x, double *dxdt, int n 
 }
 
 
-void WangAdapt::init( double *x ) const
+void WangBuzsakiAdapt::init( double *x ) const
 {
-  Wang::init( x );
+  WangBuzsaki::init( x );
   x[3] = 0.0;
 }
 
 
-void WangAdapt::conductances( vector< string > &conductancenames ) const
+void WangBuzsakiAdapt::conductances( vector< string > &conductancenames ) const
 {
-  Wang::conductances( conductancenames );
+  WangBuzsaki::conductances( conductancenames );
   conductancenames.push_back( "g_A" );
 }
 
 
-void WangAdapt::conductances( double *g ) const
+void WangBuzsakiAdapt::conductances( double *g ) const
 {
-  g[0] = GNaM3H;
-  g[1] = GKN4;
+  g[0] = GNaGates;
+  g[1] = GKGates;
   g[2] = GL;
-  g[3] = GAA;
+  g[3] = GAGates;
 }
 
 
-void WangAdapt::currents( vector< string > &currentnames ) const
+void WangBuzsakiAdapt::currents( vector< string > &currentnames ) const
 {
-  Wang::currents( currentnames );
+  WangBuzsaki::currents( currentnames );
   currentnames.push_back( "I_A" );
 }
 
 
-void WangAdapt::currents( double *c ) const
+void WangBuzsakiAdapt::currents( double *c ) const
 {
   c[0] = INa;
   c[1] = IK;
@@ -1279,9 +1820,9 @@ void WangAdapt::currents( double *c ) const
 }
 
 
-void WangAdapt::add( void )
+void WangBuzsakiAdapt::add( void )
 {
-  Wang::add();
+  WangBuzsaki::add();
 
   insertLabel( "Adaptation current", "Input", ModelFlag );
   insertNumber( "ga", "Input", "A conductivity", GA, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
@@ -1290,12 +1831,558 @@ void WangAdapt::add( void )
 }
 
 
-void WangAdapt::notify( void )
+void WangBuzsakiAdapt::notify( void )
 {
-  Wang::notify();
+  WangBuzsaki::notify();
   EA = number( "ea" );
   GA = number( "ga" );
   Atau = number( "atau" );
+}
+
+
+Crook::Crook( void )
+  : HodgkinHuxley()
+{
+  GNa = 221.0;
+  GK = 47.0;
+  GL = 2.0;
+  GCa = 8.5;
+  GKAHP = 7.0;
+  GKM = 10.0;
+  GLD = 0.05;
+  GDS = 1.1;
+
+  ENa = +55.0;
+  EK = -90.0;
+  EL = -70.0;
+  ECa = +120.0;
+
+  C = 0.8;
+  SFrac = 0.05;
+  CaA = 3.0;
+  CaTau = 60.0;
+
+  GNaGates = GNa;
+  GKGates = GK;
+  GCaGates = GCa;
+  GKAHPGates = GKAHP;
+  GKMGates = GKM;
+  GDSGates = GDS;
+  GSDGates = GDS;
+
+  INa = 0.0;
+  IK = 0.0;
+  IL = 0.0;
+  ICa = 0.0;
+  IKAHP = 0.0;
+  IKM = 0.0;
+  IDS = 0.0;
+  ILD = 0.0;
+  ISD = 0.0;
+}
+
+
+string Crook::name( void ) const
+{
+  return "Crook";
+}
+
+
+int Crook::dimension( void ) const
+{
+  return 10;
+}
+
+
+void Crook::variables( vector< string > &varnames ) const
+{
+  HodgkinHuxley::variables( varnames );
+  varnames[0] = "VS";
+  varnames.push_back( "s" );
+  varnames.push_back( "r" );
+  varnames.push_back( "q" );
+  varnames.push_back( "w" );
+  varnames.push_back( "[Ca]" );
+  varnames.push_back( "VD" );
+}
+
+
+void Crook::units( vector< string > &u ) const
+{
+  HodgkinHuxley::units( u );
+  u.push_back( "1" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+  u.push_back( "mM" );
+  u.push_back( "mV" );
+}
+
+
+void Crook::operator()(  double t, double s, double *x, double *dxdt, int n )
+{
+  double VS = x[0];
+  double VD = x[9];
+  double Ca = x[8];
+
+  double am = 0.32*(-47.1-VS)/(exp(0.25*(-47.1-VS))-1.0);
+  double bm = 0.28*(VS+20.1)/(exp((VS+20.1)/5.0)-1.0);
+
+  double ah = 0.128*exp((-43.0-VS)/18.0);
+  double bh = 4.0/(exp((-20.0-VS)/5.0)+1.0);
+
+  double an = 0.59*(-25.1-VS)/(exp((-25.1-VS)/5.0)-1.0);
+  double bn = 0.925*exp(0.925-0.025*(VS+77));
+
+  double as = 0.912/(exp(-0.072*(VS-5.0))+1.0);
+  double bs = 0.0114*(VS+8.9)/(exp((VS+8.9)/5.0)-1.0);
+
+  double r0 = (exp(-(VS+60.0)/20.0))<1.0 ? (exp(-(VS+60.0)/20.0)) : 1.0;
+  double tr = 1.0/0.005;
+
+  double q0 = (0.0005*Ca)*(0.0005*Ca);
+  double tq = 0.0338/((0.00001*Ca < 0.01 ? 0.00001*Ca : 0.01)+0.001);
+
+  double w0 = 1.0/(exp(-(VS+35.0)/10.0)+1.0);
+  double tw = 92.0*exp(-(VS+35.0)/20.0)/(1.0+0.3*exp(-(VS+35.0)/10.0));
+
+  GNaGates = GNa*x[1]*x[1]*x[2];
+  GKGates = GK*x[3];
+  GCaGates = GCa*x[4]*x[4]*x[5];
+  GKAHPGates = GKAHP*x[6];
+  GKMGates = GKM*x[7];
+  GDSGates = GDS/SFrac;
+  GSDGates = GDS/SFrac;
+
+  INa = GNaGates*(VS-ENa);
+  IK = GKGates*(VS-EK);
+  ICa = GCaGates*(VS-ECa);
+  IKAHP = GKAHPGates*(VS-EK);
+  IKM = GKMGates*(VS-EK);
+  IL = GL*(VS-EL);
+  IDS = GDSGates*(VS-VD);
+  ILD = GLD*(VD-EL);
+  ISD = -GSDGates*(VS-VD);
+
+  /* VS */ dxdt[0] = ( - INa - IK - ICa - IKAHP - IKM - IL - IDS + s/SFrac )/C;
+  /* m */  dxdt[1] = am*(1.0-x[1]) - x[1]*bm;
+  /* h */  dxdt[2] = ah*(1.0-x[2]) - x[2]*bh;
+  /* n */  dxdt[3] = an*(1.0-x[3]) - x[3]*bn;
+  /* s */  dxdt[4] = as*(1.0-x[4]) - x[4]*bs;
+  /* r */  dxdt[5] = (r0-x[5])/tr;
+  /* q */  dxdt[6] = (q0-x[6])/tq;
+  /* w */  dxdt[7] = (w0-x[7])/tw;
+  /* Ca */ dxdt[8] = -CaA*ICa - x[8]/CaTau;
+  /* VD */ dxdt[9] = ( - ILD - ISD )/C;
+}
+
+
+void Crook::init( double *x ) const
+{
+  x[0] = -71.41;
+  x[1] = 0.001243;
+  x[2] = 0.999779;
+  x[3] = 0.001277;
+  x[4] = 0.005174;
+  x[5] = 1.0;
+  x[6] = 0.000014;
+  x[7] = 0.025478;
+  x[8] = 7.615;
+  x[9] = -71.35;
+}
+
+
+void Crook::conductances( vector< string > &conductancenames ) const
+{
+  conductancenames.clear();
+  conductancenames.reserve( 9 );
+  conductancenames.push_back( "g_Na" );
+  conductancenames.push_back( "g_K" );
+  conductancenames.push_back( "g_lS" );
+  conductancenames.push_back( "g_Ca" );
+  conductancenames.push_back( "g_M" );
+  conductancenames.push_back( "g_AHP" );
+  conductancenames.push_back( "g_DS" );
+  conductancenames.push_back( "g_lD" );
+  conductancenames.push_back( "g_SD" );
+}
+
+
+void Crook::conductances( double *g ) const
+{
+  g[0] = GNaGates;
+  g[1] = GKGates;
+  g[2] = GL;
+  g[3] = GCaGates;
+  g[4] = GKMGates;
+  g[5] = GKAHPGates;
+  g[6] = GDSGates;
+  g[7] = GLD;
+  g[8] = GSDGates;
+}
+
+
+void Crook::currents( vector< string > &currentnames ) const
+{
+  currentnames.clear();
+  currentnames.reserve( 9 );
+  currentnames.push_back( "I_Na" );
+  currentnames.push_back( "I_K" );
+  currentnames.push_back( "I_lS" );
+  currentnames.push_back( "I_Ca" );
+  currentnames.push_back( "I_M" );
+  currentnames.push_back( "I_AHP" );
+  currentnames.push_back( "I_DS" );
+  currentnames.push_back( "I_lD" );
+  currentnames.push_back( "I_SD" );
+}
+
+
+void Crook::currents( double *c ) const
+{
+  c[0] = INa;
+  c[1] = IK;
+  c[2] = IL;
+  c[3] = ICa;
+  c[4] = IKM;
+  c[5] = IKAHP;
+  c[6] = IDS;
+  c[7] = ILD;
+  c[8] = ISD;
+}
+
+
+void Crook::add( void )
+{
+  addLabel( "Soma Sodium current", ModelFlag );
+  addNumber( "gna", "Na conductivity", GNa, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "ena", "Na reversal potential", ENa, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
+
+  addLabel( "Soma Potassium current", ModelFlag );
+  addNumber( "gk", "K conductivity", GK, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "ek", "K reversal potential", EK, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
+
+  addLabel( "Soma Calcium current", ModelFlag );
+  addNumber( "gcas", "Ca conductivity", GCa, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "eca", "Ca reversal potential", ECa, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
+  addNumber( "caa", "Ca activation", CaA, 0.0, 200.0, 1.0, "1" ).setFlags( ModelFlag );
+  addNumber( "catau", "Ca removal time constant", CaTau, 0.0, 10000.0, 1.0, "ms" ).setFlags( ModelFlag );
+
+  addLabel( "Soma Leak current", ModelFlag );
+  addNumber( "gl", "Leak conductivity", GL, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "el", "Leak reversal potential", EL, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
+  addNumber( "c", "Capacitance", C, 0.0, 100.0, 0.1, "muF/cm^2" ).setFlags( ModelFlag );
+  addNumber( "phi", "Phi", PT, 0.0, 100.0, 1.0 ).setFlags( ModelFlag );
+
+  addLabel( "Other currents", ModelFlag );
+  addNumber( "gahp", "Soma AHP-type K conductivity", GKAHP, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gm", "Soma M-type K conductivity", GKM, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gld", "Dendrite leak conductivity", GLD, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gds", "Soma-dendrite conductivity", GDS, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "sfrac", "Soma coupling fraction", SFrac, 0.0, 1.0, 0.01 ).setFlags( ModelFlag );
+
+  SpikingNeuron::add();
+}
+
+
+void Crook::notify( void )
+{
+  SpikingNeuron::notify();
+  HodgkinHuxley::notify();
+  ECa = number( "eca" );
+  GCa = number( "gcas" );
+  CaA = number( "caa" );
+  CaTau = number( "catau" );
+  GKAHP = number( "gahp" );
+  GKM = number( "gm" );
+  GLD = number( "gld" );
+  SFrac = number( "sfrac" );
+}
+
+
+WangIKNa::WangIKNa( void )
+  : HodgkinHuxley()
+{
+  GNa = 45.0;
+  GK = 18.0;
+  GL = 0.1;
+  GCaS = 1.0;
+  GKCaS = 5.0;
+  GKNa = 5.0;
+  GDS = 2.0;
+  GLD = 0.1;
+  GCaD = 1.0;
+  GKCaD = 5.0;
+
+  ENa = +55.0;
+  EK = -80.0;
+  EL = -65.0;
+  ECa = +120.0;
+
+  C = 1.0;
+  PT = 4.0;
+
+  CaSA = 0.002;
+  CaSTau = 240.0;
+  CaDA = 0.00067;
+  CaDTau = 80.0;
+
+  GNaGates = GNa;
+  GKGates = GK;
+  GCaSGates = GCaS;
+  GKCaSGates = GKCaS;
+  GKNaGates = GKNa;
+  GDSGates = GDS;
+  GCaDGates = GCaD;
+  GKCaDGates = GKCaD;
+  GSDGates = GDS;
+
+  INa = 0.0;
+  IK = 0.0;
+  IL = 0.0;
+  ICaS = 0.0;
+  IKCaS = 0.0;
+  IKNa = 0.0;
+  IDS = 0.0;
+  ILD = 0.0;
+  ICaD = 0.0;
+  IKCaD = 0.0;
+  ISD = 0.0;
+}
+
+
+string WangIKNa::name( void ) const
+{
+  return "Wang I_KNa";
+}
+
+
+int WangIKNa::dimension( void ) const
+{
+  return 11;
+}
+
+
+void WangIKNa::variables( vector< string > &varnames ) const
+{
+  HodgkinHuxley::variables( varnames );
+  varnames[0] = "VS";
+  varnames.push_back( "vs" );
+  varnames.push_back( "[CaS]" );
+  varnames.push_back( "ws" );
+  varnames.push_back( "[Na]" );
+  varnames.push_back( "VD" );
+  varnames.push_back( "vd" );
+  varnames.push_back( "[CaD]" );
+}
+
+
+void WangIKNa::units( vector< string > &u ) const
+{
+  HodgkinHuxley::units( u );
+  u.push_back( "1" );
+  u.push_back( "mM" );
+  u.push_back( "1" );
+  u.push_back( "mM" );
+  u.push_back( "mV" );
+  u.push_back( "1" );
+  u.push_back( "mM" );
+}
+
+
+void WangIKNa::operator()(  double t, double s, double *x, double *dxdt, int n )
+{
+  double VS = x[0];
+  double CaS = x[5];
+  double Na = x[7];
+  double Na3 = Na*Na*Na;
+  double Nae3 = 8.0*8.0*8.0;
+  double CaD = x[10];
+  double VD = x[8];
+
+  double ms = 1.0/(1.0+4.0*exp(-(VS+58.0)/12.0)*(exp(-0.1*(VS+33.0))-1.0)/(-0.1*(VS+33.0)));
+  x[1] = ms;
+  double vs = 1.0/(1.0+exp(-(VS+20.0)/9.0));
+  x[4] = vs;
+  double ws = 0.37/(1.0+pow(38.7/Na,3.5));
+  x[6] = ws;
+  double vd = 1.0/(1.0+exp(-(VD+20.0)/9.0));
+  x[9] = vd;
+
+  GNaGates = GNa*ms*ms*ms*x[2];
+  GKGates = GK*x[3]*x[3]*x[3]*x[3];
+  GCaSGates = GCaS*vs*vs;
+  GKCaSGates = GKCaS*CaS/(CaS+30.0);
+  GKNaGates = GKNa*ws;
+  GDSGates = GDS/0.5;
+  GCaDGates = GCaD*vd*vd;
+  GKCaDGates = GKCaD*CaD/(CaD+30.0);
+  GSDGates = GDS/(1.0-0.5);
+
+  INa = GNaGates*(VS-ENa);
+  IK = GKGates*(VS-EK);
+  IL = GL*(VS-EL);
+  ICaS = GCaSGates*(VS-ECa);
+  IKCaS = GKCaSGates*(VS-EK);
+  IKNa = GKNaGates*(VS-EK);
+  IDS = GDSGates*(VS-VD);
+  ILD = GLD*(VD-EL);
+  ICaD = GCaDGates*(VD-ECa);
+  IKCaD = GKCaDGates*(VD-EK);
+  ISD = GSDGates*(VD-VS);
+
+  /* VS */  dxdt[0] = ( - INa - IK - IL - ICaS - IKCaS - IKNa - IDS + s )/C;
+  /* m */   dxdt[1] = 0.0;
+  /* h */   dxdt[2] = PT*(0.07*exp(-(VS+50.0)/10.0)*(1.0-x[2])-x[2]/(exp(-0.1*(VS+20.0))+1.0));
+  /* n */   dxdt[3] = PT*(-0.01*(VS+34.0)*(1.0-x[3])/(exp(-0.1*(VS+34.0))-1.0)-0.125*exp(-(VS+44.0)/25.0)*x[3]);
+  /* vs */  dxdt[4] = 0.0;
+  /* CaS */ dxdt[5] = -CaSA*ICaS - x[5]/CaSTau;
+  /* ws */  dxdt[6] = 0.0;
+  /* Na */  dxdt[7] = -0.0003*INa - 3.0*0.0006*( Na3/(Na3+15.0*15.0*15.0) - Nae3/(Nae3+15.0*15.0*15.0));
+  /* VD */  dxdt[8] = ( - ILD - ICaD - IKCaD - ISD )/C;
+  /* vd */  dxdt[9] = 0.0;
+  /* CaD */ dxdt[10] = -CaDA*ICaD - x[10]/CaDTau;
+}
+
+
+void WangIKNa::init( double *x ) const
+{
+  x[0] = -64.86;
+  x[1] = 0.019024;
+  x[2] = 0.965235;
+  x[3] = 0.048809;
+  x[4] = 0.006798;
+  x[5] = 0.004101;
+  x[6] = 0.0;
+  x[7] = 2.5494;
+  x[8] = -64.86;
+  x[9] = 0.0068;
+  x[10] = 0.00046;
+}
+
+
+void WangIKNa::conductances( vector< string > &conductancenames ) const
+{
+  conductancenames.clear();
+  conductancenames.reserve( 11 );
+  conductancenames.push_back( "g_Na" );
+  conductancenames.push_back( "g_K" );
+  conductancenames.push_back( "g_lS" );
+  conductancenames.push_back( "g_CaS" );
+  conductancenames.push_back( "g_KCaS" );
+  conductancenames.push_back( "g_KNa" );
+  conductancenames.push_back( "g_DS" );
+  conductancenames.push_back( "g_lD" );
+  conductancenames.push_back( "g_CaD" );
+  conductancenames.push_back( "g_KCaD" );
+  conductancenames.push_back( "g_SD" );
+}
+
+
+void WangIKNa::conductances( double *g ) const
+{
+  g[0] = GNaGates;
+  g[1] = GKGates;
+  g[2] = GL;
+  g[3] = GCaSGates;
+  g[4] = GKCaSGates;
+  g[5] = GKNaGates;
+  g[6] = GDSGates;
+  g[7] = GLD;
+  g[8] = GCaDGates;
+  g[9] = GKCaDGates;
+  g[10] = GSDGates;
+}
+
+
+void WangIKNa::currents( vector< string > &currentnames ) const
+{
+  currentnames.clear();
+  currentnames.reserve( 11 );
+  currentnames.push_back( "I_Na" );
+  currentnames.push_back( "I_K" );
+  currentnames.push_back( "I_lS" );
+  currentnames.push_back( "I_CaS" );
+  currentnames.push_back( "I_KCaS" );
+  currentnames.push_back( "I_KNa" );
+  currentnames.push_back( "I_DS" );
+  currentnames.push_back( "I_lD" );
+  currentnames.push_back( "I_CaD" );
+  currentnames.push_back( "I_KCaD" );
+  currentnames.push_back( "I_SD" );
+}
+
+
+void WangIKNa::currents( double *c ) const
+{
+  c[0] = INa;
+  c[1] = IK;
+  c[2] = IL;
+  c[3] = ICaS;
+  c[4] = IKCaS;
+  c[5] = IKNa;
+  c[6] = IDS;
+  c[7] = ILD;
+  c[8] = ICaD;
+  c[9] = IKCaD;
+  c[10] = ISD;
+}
+
+
+void WangIKNa::add( void )
+{
+  addLabel( "Soma Sodium current", ModelFlag );
+  addNumber( "gna", "Na conductivity", GNa, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "ena", "Na reversal potential", ENa, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
+
+  addLabel( "Soma Potassium current", ModelFlag );
+  addNumber( "gk", "K conductivity", GK, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "ek", "K reversal potential", EK, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
+
+  addLabel( "Soma Calcium current", ModelFlag );
+  addNumber( "gcas", "Ca conductivity", GCaS, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "eca", "Ca reversal potential", ECa, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
+  addNumber( "casa", "Ca activation", CaSA, 0.0, 200.0, 1.0, "1" ).setFlags( ModelFlag );
+  addNumber( "castau", "Ca removal time constant", CaSTau, 0.0, 10000.0, 1.0, "ms" ).setFlags( ModelFlag );
+
+  addLabel( "Soma Leak current", ModelFlag );
+  addNumber( "gl", "Leak conductivity", GL, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "el", "Leak reversal potential", EL, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
+  addNumber( "c", "Capacitance", C, 0.0, 100.0, 0.1, "muF/cm^2" ).setFlags( ModelFlag );
+  addNumber( "phi", "Phi", PT, 0.0, 100.0, 1.0 ).setFlags( ModelFlag );
+
+  addLabel( "Dendrite Calcium current", ModelFlag );
+  addNumber( "gcad", "Ca conductivity", GCaD, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "cada", "Ca activation", CaDA, 0.0, 200.0, 1.0, "1" ).setFlags( ModelFlag );
+  addNumber( "cadtau", "Ca removal time constant", CaDTau, 0.0, 10000.0, 1.0, "ms" ).setFlags( ModelFlag );
+
+  addLabel( "Other currents", ModelFlag );
+  addNumber( "gkcas", "Soma Ca dependent K conductivity", GKCaS, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gkna", "Soma Na dependent K conductivity", GKNa, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gds", "Soma-dendrite conductivity", GDS, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gld", "Dendrite leak conductivity", GLD, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gkcad", "Dendrite Ca dependent K conductivity", GKCaD, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+
+  SpikingNeuron::add();
+}
+
+
+void WangIKNa::notify( void )
+{
+  SpikingNeuron::notify();
+  HodgkinHuxley::notify();
+  ECa = number( "eca" );
+  GCaS = number( "gcas" );
+  CaSA = number( "casa" );
+  CaSTau = number( "castau" );
+  GCaD = number( "gcad" );
+  CaDA = number( "cada" );
+  CaDTau = number( "cadtau" );
+  GKCaS = number( "gkcas" );
+  GKNa = number( "gkna" );
+  GDS = number( "gds" );
+  GLD = number( "gld" );
+  GKCaD = number( "gkcad" );
 }
 
 
@@ -1315,8 +2402,8 @@ Edman::Edman( void )
 
   C = 7.8;
 
-  GNaM2HL = GNa;
-  GKN2R = GK;
+  GNaGates = GNa;
+  GKGates = GK;
   GLNaA = GLNa;
   GLKA = GLK;
   GLClA = GLCl;
@@ -1346,7 +2433,7 @@ int Edman::dimension( void ) const
 void Edman::variables( vector< string > &varnames ) const
 {
   varnames.clear();
-  varnames.reserve( 7 );
+  varnames.reserve( dimension() );
   varnames.push_back( "V" );
   varnames.push_back( "m" );
   varnames.push_back( "h" );
@@ -1354,6 +2441,20 @@ void Edman::variables( vector< string > &varnames ) const
   varnames.push_back( "n" );
   varnames.push_back( "r" );
   varnames.push_back( "[Na]" );
+}
+
+
+void Edman::units( vector< string > &u ) const
+{
+  u.clear();
+  u.reserve( dimension() );
+  u.push_back( "mV" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+  u.push_back( "mM" );
 }
 
 
@@ -1395,15 +2496,15 @@ void Edman::operator()(  double t, double s, double *x, double *dxdt, int n )
   double tn = tnmax*(pow( (1.0-dn)/dn, dn ) + pow( (1.0-dn)/dn, dn-1.0 ))/(exp(dn*zn*eKT*(V-Vn))+exp((dn-1.0)*zn*eKT*(V-Vn)));
   double tr = trmax*(pow( (1.0-dr)/dr, dr ) + pow( (1.0-dr)/dr, dr-1.0 ))/(exp(dr*zr*eKT*(V-Vr))+exp((dr-1.0)*zr*eKT*(V-Vr)));
 
-  GNaM2HL = A*GNa*x[1]*x[1]*x[2]*x[3];
-  GKN2R = A*GK*x[4]*x[4]*x[5];
+  GNaGates = A*GNa*x[1]*x[1]*x[2]*x[3];
+  GKGates = A*GK*x[4]*x[4]*x[5];
   GLNaA = A*GLNa;
   GLKA = A*GLK;
   GLClA = A*GLCl;
   GPA = A*GP;
 
-  INa = GNaM2HL*V*F2RT*(NaO-Na*exp(V*FRT))/(1.0-exp(V*FRT));
-  IK = GKN2R*V*F2RT*(KO-K*exp(V*FRT))/(1.0-exp(V*FRT));
+  INa = GNaGates*V*F2RT*(NaO-Na*exp(V*FRT))/(1.0-exp(V*FRT));
+  IK = GKGates*V*F2RT*(KO-K*exp(V*FRT))/(1.0-exp(V*FRT));
   ILNa = GLNaA*V*F2RT*(NaO-Na*exp(V*FRT))/(1.0-exp(V*FRT));
   ILK = GLKA*V*F2RT*(KO-K*exp(V*FRT))/(1.0-exp(V*FRT));
   ILCl = GLClA*V*F2RT*(ClO-Cl*exp(V*FRT))/(1.0-exp(V*FRT));
@@ -1446,8 +2547,8 @@ void Edman::conductances( vector< string > &conductancenames ) const
 
 void Edman::conductances( double *g ) const
 {
-  g[0] = GNaM2HL;
-  g[1] = GKN2R;
+  g[0] = GNaGates;
+  g[1] = GKGates;
   g[2] = GLNaA;
   g[3] = GLKA;
   g[4] = GLClA;

@@ -66,7 +66,7 @@ public:
   SpikingNeuron *neuron( void ) const { return NM; };
 
     /*! Add a SpikingNeuron \a model */
-  void add( SpikingNeuron *model );
+  void add( SpikingNeuron *model, const string &title="" );
     /*! Add all SpikingNeuron models. */
   void addModels( void );
     /*! Add some general options for integrating SpikingNeuron models
@@ -89,6 +89,7 @@ public:
  private:
   
   vector< SpikingNeuron* > Models;
+  vector< string > Titles;
   SpikingNeuron *NM;
   double NoiseSD;
   double SimDT;
