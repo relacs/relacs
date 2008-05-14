@@ -21,6 +21,7 @@ libauditoryprojectsspikeprecision_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(top_srcdir)/plugins/acoustic/include \
+    -I$(top_srcdir)/plugins/auditory/include \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
@@ -56,6 +57,7 @@ libauditoryprojectsisoresponse_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(top_srcdir)/plugins/acoustic/include \
+    -I$(top_srcdir)/plugins/auditory/include \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
@@ -91,6 +93,7 @@ libauditoryprojectsoneclick_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(top_srcdir)/plugins/acoustic/include \
+    -I$(top_srcdir)/plugins/auditory/include \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
@@ -102,7 +105,7 @@ libauditoryprojectsoneclick_la_LIBADD = \
     $(top_srcdir)/relacs/src/librelacs.la \
     $(srcdir)/../../ephys/src/libephystraces.la \
     $(srcdir)/../../acoustic/src/libacoustictraces.la \
-    $(srcdir)/../../acoustic/src/libauditoryloudspeaker.la \
+    $(srcdir)/../../acoustic/src/libacousticloudspeaker.la \
     $(QT3_LIBS)
 
 $(libauditoryprojectsoneclick_la_OBJECTS) : moc_oneclick.cc

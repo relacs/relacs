@@ -33,7 +33,7 @@ namespace auditoryprojects {
 
 
 SpikePrecision::SpikePrecision( void )
-  : RePro( "SpikePrecision", "SpikePrecision", "Auditory-projects",
+  : RePro( "SpikePrecision", "SpikePrecision", "Auditoryprojects",
 	   "Samuel Glauser, Jan Benda", "1.5", "Jan 10, 2008" ),
     SP( 3, this ),
     P( 4, this )
@@ -258,7 +258,7 @@ int SpikePrecision::main( void )
     rates.reserve( 20 );
 
     // get f-I curve:
-    AuditorySession *as = dynamic_cast<AuditorySession*>( control( "AuditorySession" ) );
+    auditory::Session *as = dynamic_cast<auditory::Session*>( control( "Session" ) );
     if ( as == 0 )
       warning( "No auditory session!", 4.0 );
     else {

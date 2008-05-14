@@ -32,7 +32,7 @@ namespace auditoryprojects {
 
 
 OneClick::OneClick( void )
-  : RePro( "OneClick", "OneClick", "Auditory-projects",
+  : RePro( "OneClick", "OneClick", "Auditoryprojects",
 	   "Alexander Wolf", "0.2", "Jan 10, 2008" ),
     P( 1, 1, true, this)    
 {

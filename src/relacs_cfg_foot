@@ -1,6 +1,6 @@
   changetoplugindir: false
-      controlplugin: AuditorySession|SpectrumAnalyzer
-        modelplugin: AuditoryNeuron
+      controlplugin: Session|SpectrumAnalyzer
+        modelplugin: ReceptorModel
   Pathes
          pathformat: %04Y-%02m-%02d-%a2a
         defaultpath: dry/

@@ -34,7 +34,7 @@ namespace auditoryprojects {
 
 
 IsoResponse::IsoResponse( void )
-  : RePro( "IsoResponse", "Iso-Response", "Auditory-projects",
+  : RePro( "IsoResponse", "Iso-Response", "Auditoryprojects",
 	   "Alexander Wolf", "1.0", "Jan 10, 2008" ),
     P( 3, 3, true, this)
 {
@@ -183,8 +183,7 @@ void IsoResponse::createSignal( OutData &signal, double a1, double a2 )
 int IsoResponse::findIsoFreq( void )
 {
   double del = DistFrequencies;
-  AuditorySession *as = dynamic_cast<AuditorySession*>( control( "AuditorySession" ) );
-  //DMap thresh = as->threshCurve();
+  auditory::Session *as = dynamic_cast<auditory::Session*>( control( "Session" ) );
   MapD thresh = as->threshCurve();
 
   // index of minimum threshold:
@@ -644,7 +643,6 @@ void IsoResponse::plot( void )
 
   // f-I curve:
   P[0].clear();
-  //DMap sm, cm, om;
   MapD sm, cm, om;
   
   for ( unsigned int k=0; k<Results.size(); k++ ) {
@@ -659,7 +657,6 @@ void IsoResponse::plot( void )
   P[0].plot( cm, 1.0, Plot::Orange, 3, Plot::Solid, Plot::Circle, 6, Plot::Orange, Plot::Orange );
   P[0].plot( om, 1.0, Plot::Blue,   3, Plot::Solid, Plot::Circle, 6, Plot::Blue,   Plot::Blue   );
   int c = IntensityRange.pos();
-  //DMap am;
   MapD am;
   if ( !ShortStim ) am.push( Results[c].Intensity, Results[c].CurSSRate   );
   am.push( Results[c].Intensity, Results[c].CurMeanRate );
@@ -731,7 +728,6 @@ void IsoResponse::plotIsoSets(  )
       
       //plot iso-response-sets
       for (int l=0; l<IsoResults[AmplitudeRelation.pos()].IsoSets.size(); l++ ) {
-	//DMap p;
 	MapD p;
 	p.push( IsoResults[AmplitudeRelation.pos()].IsoSets.x( l ), 
 		IsoResults[AmplitudeRelation.pos()].IsoSets.y( l ) ); 
@@ -797,7 +793,6 @@ void IsoResponse::plotIsoSets(  )
 
   //plot iso-response-sets
   for (int l=0; l<IsoResults[AmplitudeRelation.pos()].OnIsoSets.size(); l++ ) {
-    //DMap p;
     MapD p;
     p.push( IsoResults[AmplitudeRelation.pos()].OnIsoSets.x( l ), 
 	    IsoResults[AmplitudeRelation.pos()].OnIsoSets.y( l ) ); 

@@ -13,9 +13,7 @@ SUBDIRS = \
     relacs \
     src \
     \
-    common \
     hardware \
-    auditory \
     \
     plugins \
     \

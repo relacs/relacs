@@ -112,8 +112,6 @@ relacs \
 DOXYGEN_EXTERNAL="\
 ${RELACS_DOCLIBS} \
 hardware \
-common \
-auditory \
 plugins/base \
 plugins/calibration \
 plugins/ephys \
@@ -178,18 +176,6 @@ AC_SUBST_FILE(RELACS_RUNNER_FOOT)
 AC_CONFIG_FILES([
     build_config_dump
     
-    auditory/base/Makefile
-    auditory/sascha/Makefile
-    auditory/speaker/Makefile
-    auditory/Makefile
-
-    common/base/Makefile
-    common/controls/Makefile
-    common/detectors/Makefile
-    common/filter/Makefile
-    common/models/Makefile
-    common/Makefile
-
     daq/src/Makefile
     daq/Makefile
     daq/configure.ac
