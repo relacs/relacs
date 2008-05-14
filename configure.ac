@@ -118,6 +118,8 @@ plugins/base \
 plugins/calibration \
 plugins/ephys \
 plugins/acoustic \
+plugins/auditory \
+plugins/auditoryprojects \
 "
 
 # assemble input pathes from the Makefile.am of the RELACS_DOCLIBS list:
@@ -220,6 +222,10 @@ AC_CONFIG_FILES([
     plugins/ephys/src/Makefile
     plugins/acoustic/Makefile
     plugins/acoustic/src/Makefile
+    plugins/auditory/Makefile
+    plugins/auditory/src/Makefile
+    plugins/auditoryprojects/Makefile
+    plugins/auditoryprojects/src/Makefile
 
     relacs/Makefile
     relacs/src/Makefile

@@ -5,13 +5,13 @@ pkgincludedir = $(includedir)/relacs
 pkgdatadir=$(datadir)/relacs
 docdir = $(datarootdir)/doc/relacs
 
-PLUGINSET = Acoustic
-DX_PROJECT = acoustic
+PLUGINSET = Auditory-projects
+DX_PROJECT = auditoryprojects
 DX_CONFIG = $(top_srcdir)/doc/Doxyfile
 DX_INSTALL_SUBDIR = /$(DX_PROJECT)
 DX_DEPENDS = Makefile.am src/Makefile.am
-DX_SETTINGS = PROJECT_NAME='" Acoustics Relacs Plugins"'
-DX_SETTINGS += INPUT='include/relacs/acoustic src'
+DX_SETTINGS = PROJECT_NAME='"Auditory-Projects Relacs Plugins"'
+DX_SETTINGS += INPUT='include/relacs/auditoryprojects src'
 DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'
 DX_SETTINGS += TAGFILES='../doc/relacsall.tag=..'
 

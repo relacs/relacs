@@ -2,11 +2,9 @@ SUBDIRS = \
     base \
     calibration \
     ephys \
-    acoustic
-
-#\
-#    auditory \
-#    auditory-projects
+    acoustic \
+    auditory \
+    auditoryprojects
 
 EXTRA_DIST = \
     relacshelp.mk
