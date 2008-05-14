@@ -26,7 +26,7 @@ libbasehighpass_la_LDFLAGS = \
     $(QT3_LDFLAGS)
 
 libbasehighpass_la_LIBADD = \
-    $(top_srcdir)/relacs/src/librelacs.la \
+    $(top_builddir)/relacs/src/librelacs.la \
     $(QT3_LIBS)
 
 $(libbasehighpass_la_OBJECTS) : moc_highpass.cc
@@ -53,7 +53,7 @@ libbaselowpass_la_LDFLAGS = \
     $(QT3_LDFLAGS)
 
 libbaselowpass_la_LIBADD = \
-    $(top_srcdir)/relacs/src/librelacs.la \
+    $(top_builddir)/relacs/src/librelacs.la \
     $(QT3_LIBS)
 
 $(libbaselowpass_la_OBJECTS) : moc_lowpass.cc
@@ -81,7 +81,7 @@ libbasespectrumanalyzer_la_LDFLAGS = \
     $(QT3_LDFLAGS)
 
 libbasespectrumanalyzer_la_LIBADD = \
-    $(top_srcdir)/relacs/src/librelacs.la \
+    $(top_builddir)/relacs/src/librelacs.la \
     $(QT3_LIBS)
 
 $(libbasespectrumanalyzer_la_OBJECTS) : moc_spectrumanalyzer.cc
@@ -108,7 +108,7 @@ libbasepause_la_LDFLAGS = \
     $(QT3_LDFLAGS)
 
 libbasepause_la_LIBADD = \
-    $(top_srcdir)/relacs/src/librelacs.la \
+    $(top_builddir)/relacs/src/librelacs.la \
     $(QT3_LIBS)
 
 $(libbasepause_la_OBJECTS) : moc_pause.cc
@@ -135,7 +135,7 @@ libbasesimplemodel_la_LDFLAGS = \
     $(QT3_LDFLAGS)
 
 libbasesimplemodel_la_LIBADD = \
-    $(top_srcdir)/relacs/src/librelacs.la \
+    $(top_builddir)/relacs/src/librelacs.la \
     $(QT3_LIBS)
 
 $(libbasesimplemodel_la_OBJECTS) : moc_simplemodel.cc

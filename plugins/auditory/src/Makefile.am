@@ -29,8 +29,8 @@ libauditoryreceptormodel_la_LDFLAGS = \
     $(QT3_LDFLAGS)
 
 libauditoryreceptormodel_la_LIBADD = \
-    $(top_srcdir)/relacs/src/librelacs.la \
-    $(srcdir)/../../ephys/src/libephysneuronmodels.la \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(builddir)/../../ephys/src/libephysneuronmodels.la \
     $(QT3_LIBS)
 
 $(libauditoryreceptormodel_la_OBJECTS) : moc_receptormodel.cc
@@ -59,8 +59,8 @@ libauditorysearch_la_LDFLAGS = \
     $(QT3_LDFLAGS)
 
 libauditorysearch_la_LIBADD = \
-    $(top_srcdir)/relacs/src/librelacs.la \
-    $(srcdir)/../../acoustic/src/libacoustictraces.la \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(builddir)/../../acoustic/src/libacoustictraces.la \
     $(QT3_LIBS)
 
 $(libauditorysearch_la_OBJECTS) : moc_search.cc
@@ -91,10 +91,10 @@ libauditorysession_la_LDFLAGS = \
     $(QT3_LDFLAGS)
 
 libauditorysession_la_LIBADD = \
-    $(top_srcdir)/relacs/src/librelacs.la \
-    $(srcdir)/../../ephys/src/libephystraces.la \
-    $(srcdir)/../../acoustic/src/libacoustictraces.la \
-    $(top_srcdir)/hardware/src/libnieserieshardware.la \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(builddir)/../../ephys/src/libephystraces.la \
+    $(builddir)/../../acoustic/src/libacoustictraces.la \
+    $(top_builddir)/hardware/src/libnieserieshardware.la \
     $(QT3_LIBS)
 
 $(libauditorysession_la_OBJECTS) : moc_session.cc
@@ -127,9 +127,9 @@ libauditoryficurve_la_LDFLAGS = \
     $(QT3_LDFLAGS)
 
 libauditoryficurve_la_LIBADD = \
-    $(top_srcdir)/relacs/src/librelacs.la \
-    $(srcdir)/../../ephys/src/libephystraces.la \
-    $(srcdir)/../../acoustic/src/libacoustictraces.la \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(builddir)/../../ephys/src/libephystraces.la \
+    $(builddir)/../../acoustic/src/libacoustictraces.la \
     libauditorysession.la \
     $(QT3_LIBS)
 
@@ -162,9 +162,9 @@ libauditoryfifield_la_LDFLAGS = \
     $(QT3_LDFLAGS)
 
 libauditoryfifield_la_LIBADD = \
-    $(top_srcdir)/relacs/src/librelacs.la \
-    $(srcdir)/../../ephys/src/libephystraces.la \
-    $(srcdir)/../../acoustic/src/libacoustictraces.la \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(builddir)/../../ephys/src/libephystraces.la \
+    $(builddir)/../../acoustic/src/libacoustictraces.la \
     libauditoryficurve.la \
     $(QT3_LIBS)
 
@@ -197,9 +197,9 @@ libauditorysinglestimulus_la_LDFLAGS = \
     $(QT3_LDFLAGS)
 
 libauditorysinglestimulus_la_LIBADD = \
-    $(top_srcdir)/relacs/src/librelacs.la \
-    $(srcdir)/../../ephys/src/libephystraces.la \
-    $(srcdir)/../../acoustic/src/libacoustictraces.la \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(builddir)/../../ephys/src/libephystraces.la \
+    $(builddir)/../../acoustic/src/libacoustictraces.la \
     libauditorysession.la \
     $(QT3_LIBS)
 
@@ -233,9 +233,9 @@ libauditorysyslatency_la_LDFLAGS = \
     $(QT3_LDFLAGS)
 
 libauditorysyslatency_la_LIBADD = \
-    $(top_srcdir)/relacs/src/librelacs.la \
-    $(srcdir)/../../ephys/src/libephystraces.la \
-    $(srcdir)/../../acoustic/src/libacoustictraces.la \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(builddir)/../../ephys/src/libephystraces.la \
+    $(builddir)/../../acoustic/src/libacoustictraces.la \
     libauditorysession.la \
     $(QT3_LIBS)
 

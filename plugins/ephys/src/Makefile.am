@@ -20,7 +20,7 @@ libephystraces_la_CPPFLAGS = \
 
 libephystraces_la_LDFLAGS = -module -avoid-version
 
-libephystraces_la_LIBADD = $(top_srcdir)/relacs/src/librelacs.la
+libephystraces_la_LIBADD = $(top_builddir)/relacs/src/librelacs.la
 
 libephystraces_la_SOURCES = traces.cc
 
@@ -36,7 +36,7 @@ libephysspikingneuron_la_CPPFLAGS = \
 
 libephysspikingneuron_la_LDFLAGS = -version-info=0:0:0
 
-libephysspikingneuron_la_LIBADD = $(top_srcdir)/options/src/librelacsoptions.la
+libephysspikingneuron_la_LIBADD = $(top_builddir)/options/src/librelacsoptions.la
 
 libephysspikingneuron_la_SOURCES = spikingneuron.cc
 
@@ -61,7 +61,7 @@ libephysneuronmodels_la_LDFLAGS = \
 
 libephysneuronmodels_la_LIBADD = \
     libephysspikingneuron.la \
-    $(top_srcdir)/relacs/src/librelacs.la \
+    $(top_builddir)/relacs/src/librelacs.la \
     $(QT3_LIBS)
 
 $(libephysneuronmodels_la_OBJECTS) : moc_neuronmodels.cc
@@ -90,7 +90,7 @@ libephysspikedetector_la_LDFLAGS = \
     $(QT3_LDFLAGS)
 
 libephysspikedetector_la_LIBADD = \
-    $(top_srcdir)/relacs/src/librelacs.la \
+    $(top_builddir)/relacs/src/librelacs.la \
     $(QT3_LIBS)
 
 $(libephysspikedetector_la_OBJECTS) : moc_spikedetector.cc
@@ -117,7 +117,7 @@ libephysmotorcontrol_la_LDFLAGS = \
     $(QT3_LDFLAGS)
 
 libephysmotorcontrol_la_LIBADD = \
-    $(top_srcdir)/relacs/src/librelacs.la \
+    $(top_builddir)/relacs/src/librelacs.la \
     $(QT3_LIBS)
 
 $(libephysmotorcontrol_la_OBJECTS) : moc_motorcontrol.cc

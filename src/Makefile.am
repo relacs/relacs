@@ -7,7 +7,7 @@ pkglib_PROGRAMS = \
 sysconf_DATA = \
     relacs.cfg
 
-pkgdata_DATA = \
+dist_pkgdata_DATA = \
     relacstuxheader.png
 
 

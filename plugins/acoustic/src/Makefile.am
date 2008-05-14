@@ -24,7 +24,7 @@ libacoustictraces_la_LDFLAGS = \
     $(QT3_LDFLAGS)
 
 libacoustictraces_la_LIBADD = \
-    $(top_srcdir)/relacs/src/librelacs.la \
+    $(top_builddir)/relacs/src/librelacs.la \
     $(QT3_LIBS)
 
 libacoustictraces_la_SOURCES = traces.cc
@@ -50,7 +50,7 @@ libacousticloudspeaker_la_LDFLAGS = \
     $(QT3_LDFLAGS)
 
 libacousticloudspeaker_la_LIBADD = \
-    $(top_srcdir)/relacs/src/librelacs.la \
+    $(top_builddir)/relacs/src/librelacs.la \
     $(QT3_LIBS)
 
 $(libacousticloudspeaker_la_OBJECTS) : moc_loudspeaker.cc
@@ -79,7 +79,7 @@ libacousticcalibspeakers_la_LDFLAGS = \
     $(QT3_LDFLAGS)
 
 libacousticcalibspeakers_la_LIBADD = \
-    $(top_srcdir)/relacs/src/librelacs.la \
+    $(top_builddir)/relacs/src/librelacs.la \
     libacoustictraces.la \
     libacousticloudspeaker.la \
     $(QT3_LIBS)

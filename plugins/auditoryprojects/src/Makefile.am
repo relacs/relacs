@@ -30,10 +30,10 @@ libauditoryprojectsspikeprecision_la_LDFLAGS = \
     $(QT3_LDFLAGS)
 
 libauditoryprojectsspikeprecision_la_LIBADD = \
-    $(top_srcdir)/relacs/src/librelacs.la \
-    $(srcdir)/../../ephys/src/libephystraces.la \
-    $(srcdir)/../../acoustic/src/libacoustictraces.la \
-    $(srcdir)/../../auditory/src/libauditorysession.la \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(builddir)/../../ephys/src/libephystraces.la \
+    $(builddir)/../../acoustic/src/libacoustictraces.la \
+    $(builddir)/../../auditory/src/libauditorysession.la \
     $(QT3_LIBS)
 
 $(libauditoryprojectsspikeprecision_la_OBJECTS) : moc_spikeprecision.cc
@@ -66,10 +66,10 @@ libauditoryprojectsisoresponse_la_LDFLAGS = \
     $(QT3_LDFLAGS)
 
 libauditoryprojectsisoresponse_la_LIBADD = \
-    $(top_srcdir)/relacs/src/librelacs.la \
-    $(srcdir)/../../ephys/src/libephystraces.la \
-    $(srcdir)/../../acoustic/src/libacoustictraces.la \
-    $(srcdir)/../../auditory/src/libauditorysession.la \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(builddir)/../../ephys/src/libephystraces.la \
+    $(builddir)/../../acoustic/src/libacoustictraces.la \
+    $(builddir)/../../auditory/src/libauditorysession.la \
     $(QT3_LIBS)
 
 $(libauditoryprojectsisoresponse_la_OBJECTS) : moc_isoresponse.cc
@@ -102,10 +102,10 @@ libauditoryprojectsoneclick_la_LDFLAGS = \
     $(QT3_LDFLAGS)
 
 libauditoryprojectsoneclick_la_LIBADD = \
-    $(top_srcdir)/relacs/src/librelacs.la \
-    $(srcdir)/../../ephys/src/libephystraces.la \
-    $(srcdir)/../../acoustic/src/libacoustictraces.la \
-    $(srcdir)/../../acoustic/src/libacousticloudspeaker.la \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(builddir)/../../ephys/src/libephystraces.la \
+    $(builddir)/../../acoustic/src/libacoustictraces.la \
+    $(builddir)/../../acoustic/src/libacousticloudspeaker.la \
     $(QT3_LIBS)
 
 $(libauditoryprojectsoneclick_la_OBJECTS) : moc_oneclick.cc

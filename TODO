@@ -1,9 +1,12 @@
 Plugins:
-- introduce pluginset namespaces
-  for headers:
-for i in x.h; do h=${i%.cc}; { if fgrep -q 'using namespace' $i; then sed -e "/using namespace numerics/d;" -e "\|using namespace|a\\\nnamespace relacs {" -e '\|#endif /\* !|i\}; /* namespace relacs */\n' $i; else sed -e "\|#include <relacs/$h.h>|a\\\nnamespace relacs {" -e '\|#endif /\* !|i\}; /* namespace relacs */\n' $i; fi; } > tmp.h; mv tmp.h $i; done
-  for sources:
-for i in x.cc; do h=${i%.cc}; { if fgrep -q 'using namespace' $i; then sed -e "/using namespace numerics/d;" -e "\|using namespace|a\\\nnamespace relacs {" -e '/#incude "moc_/i\\n}; /* namespace relacs */\n' $i; else sed -e "\|#include <relacs/$h.h>|a\\\nnamespace relacs {" -e '/#include "moc_/i\\n}; /* namespace relacs */\n' $i; fi; } > tmp.cc; mv tmp.cc $i; done
+- VPATH build problem in doxygen.mk with
+	mv $(abs_builddir)/tmp.dox $(abs_builddir)/$(DX_CONFIG).all
+  and
+	DX_CONFIG = $(top_srcdir)/doc/Doxyfile
+  in plugins/*/Makefile.am.
+  $(abs_builddir)/$(top_srcdir)/doc/Doxyfile.all
+  is in the readonly source tree!
+- Introduce pluginset namespaces
 - Rethink directory structure of the plugin sets.
 - Use -disable-plugins-common etc. to exclude plugin sets from compilation.
   Make sure that dependencies among the plugin sets are fullfilled.

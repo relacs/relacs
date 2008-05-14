@@ -24,7 +24,7 @@ libcalibrationrestartdelay_la_LDFLAGS = \
     $(QT3_LDFLAGS)
 
 libcalibrationrestartdelay_la_LIBADD = \
-    $(top_srcdir)/relacs/src/librelacs.la \
+    $(top_builddir)/relacs/src/librelacs.la \
     $(QT3_LIBS)
 
 $(libcalibrationrestartdelay_la_OBJECTS) : moc_restartdelay.cc
@@ -52,7 +52,7 @@ libcalibrationstimulusdelay_la_LDFLAGS = \
     $(QT3_LDFLAGS)
 
 libcalibrationstimulusdelay_la_LIBADD = \
-    $(top_srcdir)/relacs/src/librelacs.la \
+    $(top_builddir)/relacs/src/librelacs.la \
     $(QT3_LIBS)
 
 $(libcalibrationstimulusdelay_la_OBJECTS) : moc_stimulusdelay.cc
