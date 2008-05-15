@@ -118,6 +118,7 @@ plugins/ephys \
 plugins/acoustic \
 plugins/auditory \
 plugins/auditoryprojects \
+plugins/linuxdevices/nieseries \
 "
 
 # assemble input pathes from the Makefile.am of the RELACS_DOCLIBS list:
@@ -212,6 +213,10 @@ AC_CONFIG_FILES([
     plugins/auditory/src/Makefile
     plugins/auditoryprojects/Makefile
     plugins/auditoryprojects/src/Makefile
+
+    plugins/linuxdevices/Makefile
+    plugins/linuxdevices/nieseries/Makefile
+    plugins/linuxdevices/nieseries/src/Makefile
 
     relacs/Makefile
     relacs/src/Makefile

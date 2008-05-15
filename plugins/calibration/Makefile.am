@@ -7,7 +7,7 @@ docdir = $(datarootdir)/doc/relacs
 
 PLUGINSET = Calibration
 DX_PROJECT = calibration
-DX_CONFIG = $(top_srcdir)/doc/Doxyfile
+DX_CONFIG = ../../doc/Doxyfile
 DX_INSTALL_SUBDIR = /$(DX_PROJECT)
 DX_DEPENDS = Makefile.am src/Makefile.am
 DX_SETTINGS = PROJECT_NAME='"Calibration Relacs Plugins"'

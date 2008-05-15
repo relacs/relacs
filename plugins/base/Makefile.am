@@ -7,7 +7,7 @@ docdir = $(datarootdir)/doc/relacs
 
 PLUGINSET = Base
 DX_PROJECT = base
-DX_CONFIG = $(top_srcdir)/doc/Doxyfile
+DX_CONFIG = ../../doc/Doxyfile
 DX_INSTALL_SUBDIR = /$(DX_PROJECT)
 DX_DEPENDS = Makefile.am src/Makefile.am
 DX_SETTINGS = PROJECT_NAME='"Base Relacs Plugins"'

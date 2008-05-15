@@ -4,7 +4,8 @@ SUBDIRS = \
     ephys \
     acoustic \
     auditory \
-    auditoryprojects
+    auditoryprojects \
+    linuxdevices
 
 EXTRA_DIST = \
     relacshelp.mk

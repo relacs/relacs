@@ -5,13 +5,13 @@ pkgincludedir = $(includedir)/relacs
 pkgdatadir=$(datadir)/relacs
 docdir = $(datarootdir)/doc/relacs
 
-PLUGINSET = Auditoryprojects
-DX_PROJECT = auditoryprojects
-DX_CONFIG = ../../doc/Doxyfile
+PLUGINSET = NIESeries
+DX_PROJECT = nieseries
+DX_CONFIG = ../../../doc/Doxyfile
 DX_INSTALL_SUBDIR = /$(DX_PROJECT)
 DX_DEPENDS = Makefile.am src/Makefile.am
-DX_SETTINGS = PROJECT_NAME='"Auditory-Projects Relacs Plugins"'
-DX_SETTINGS += INPUT='include/relacs/auditoryprojects src'
+DX_SETTINGS = PROJECT_NAME='"NI-ESeries Relacs Plugins"'
+DX_SETTINGS += INPUT='include/relacs/nieseries src'
 DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'
 DX_SETTINGS += TAGFILES='../doc/relacsall.tag=..'
 
@@ -19,7 +19,7 @@ include $(top_srcdir)/doxygen.mk
 
 if DX_COND_doc
 
-include $(srcdir)/../relacshelp.mk
+include $(srcdir)/../../relacshelp.mk
 
 .PHONY: doc help
 

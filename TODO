@@ -1,16 +1,10 @@
 Plugins:
-- VPATH build problem in doxygen.mk with
-	mv $(abs_builddir)/tmp.dox $(abs_builddir)/$(DX_CONFIG).all
-  and
-	DX_CONFIG = $(top_srcdir)/doc/Doxyfile
-  in plugins/*/Makefile.am.
-  $(abs_builddir)/$(top_srcdir)/doc/Doxyfile.all
-  is in the readonly source tree!
 - Introduce pluginset namespaces
 - Rethink directory structure of the plugin sets.
 - Use -disable-plugins-common etc. to exclude plugin sets from compilation.
   Make sure that dependencies among the plugin sets are fullfilled.
 - Put relacs configuration files in demo subdirectory of the plugin sets?
+- The installed help files all have the same names for the equation images (form_*.png)!
 - The right name for dlopen can be found in the dlname field of the *.la file!
   Use this approach for loading the plugins?
 
