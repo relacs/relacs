@@ -25,6 +25,7 @@
 #include <relacs/attcs3310/cs3310serialnidio.h>
 using namespace std;
 using namespace relacs;
+using namespace nieseries;
 
 namespace attcs3310 {
 

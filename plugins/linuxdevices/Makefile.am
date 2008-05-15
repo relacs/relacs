@@ -4,6 +4,5 @@ endif
 
 SUBDIRS = \
     nieseries \
-    $(MORESUBDIRS)
-
-
+    $(MORESUBDIRS) \
+    attcs3310

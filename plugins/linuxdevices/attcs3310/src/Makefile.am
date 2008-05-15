@@ -40,6 +40,7 @@ libattcs3310cs3310nidio_la_CPPFLAGS = \
     -I$(top_srcdir)/options/include \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
+    -I$(srcdir)/../../nieseries/include \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
@@ -65,6 +66,7 @@ libattcs3310cs3310serialnidio_la_CPPFLAGS = \
     -I$(top_srcdir)/options/include \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
+    -I$(srcdir)/../../nieseries/include \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
@@ -89,13 +91,13 @@ check_PROGRAMS = \
     linktest_libattcs3310cs3310nidio.la \
     linktest_libattcs3310cs3310serialnidio.la
 
-linktest_attcs3310cs3310pp_la_SOURCES = linktest.cc
-linktest_attcs3310cs3310pp_la_LDADD = attcs3310cs3310pp.la
+linktest_libattcs3310cs3310pp_la_SOURCES = linktest.cc
+linktest_libattcs3310cs3310pp_la_LDADD = libattcs3310cs3310pp.la
 
-linktest_attcs3310cs3310nidio_la_SOURCES = linktest.cc
-linktest_attcs3310cs3310nidio_la_LDADD = attcs3310cs3310nidio.la
+linktest_libattcs3310cs3310nidio_la_SOURCES = linktest.cc
+linktest_libattcs3310cs3310nidio_la_LDADD = libattcs3310cs3310nidio.la
 
-linktest_attcs3310cs3310serialnidio_la_SOURCES = linktest.cc
-linktest_attcs3310cs3310serialnidio_la_LDADD = attcs3310cs3310serialnidio.la
+linktest_libattcs3310cs3310serialnidio_la_SOURCES = linktest.cc
+linktest_libattcs3310cs3310serialnidio_la_LDADD = libattcs3310cs3310serialnidio.la
 
 TESTS = $(check_PROGRAMS)

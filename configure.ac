@@ -121,6 +121,7 @@ plugins/auditory \
 plugins/auditoryprojects \
 plugins/linuxdevices/nieseries \
 plugins/linuxdevices/comedi \
+plugins/linuxdevices/attcs3310 \
 "
 
 # assemble input pathes from the Makefile.am of the RELACS_DOCLIBS list:
@@ -221,6 +222,8 @@ AC_CONFIG_FILES([
     plugins/linuxdevices/nieseries/src/Makefile
     plugins/linuxdevices/comedi/Makefile
     plugins/linuxdevices/comedi/src/Makefile
+    plugins/linuxdevices/attcs3310/Makefile
+    plugins/linuxdevices/attcs3310/src/Makefile
 
     relacs/Makefile
     relacs/src/Makefile

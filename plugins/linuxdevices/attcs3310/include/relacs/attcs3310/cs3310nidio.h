@@ -25,6 +25,7 @@
 #include <relacs/nieseries/nidio.h>
 #include <relacs/attenuator.h>
 using namespace relacs;
+using namespace nieseries;
 
 namespace attcs3310 {
 
