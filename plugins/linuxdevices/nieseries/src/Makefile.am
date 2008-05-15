@@ -32,7 +32,9 @@ libnieseriesniai_la_SOURCES = niai.cc niaidevice.cc
 
 libnieseriesniai_la_includedir = $(pkgincludedir)/nieseries
 
-libnieseriesniai_la_include_HEADERS = $(HEADER_PATH)/niai.h
+libnieseriesniai_la_include_HEADERS = \
+    $(HEADER_PATH)/nidaq.h \
+    $(HEADER_PATH)/niai.h
 
 
 
@@ -58,7 +60,9 @@ libnieseriesniao_la_SOURCES = niao.cc niaodevice.cc
 
 libnieseriesniao_la_includedir = $(pkgincludedir)/nieseries
 
-libnieseriesniao_la_include_HEADERS = $(HEADER_PATH)/niao.h
+libnieseriesniao_la_include_HEADERS = \
+    $(HEADER_PATH)/nidaq.h \
+    $(HEADER_PATH)/niao.h
 
 
 
@@ -84,7 +88,9 @@ libnieseriesnidio_la_SOURCES = nidio.cc nidiodevice.cc
 
 libnieseriesnidio_la_includedir = $(pkgincludedir)/nieseries
 
-libnieseriesnidio_la_include_HEADERS = $(HEADER_PATH)/nidio.h
+libnieseriesnidio_la_include_HEADERS = \
+    $(HEADER_PATH)/nidaq.h \
+    $(HEADER_PATH)/nidio.h
 
 
 
@@ -110,7 +116,9 @@ libnieseriesnipfi_la_SOURCES = nipfi.cc nipfidevice.cc
 
 libnieseriesnipfi_la_includedir = $(pkgincludedir)/nieseries
 
-libnieseriesnipfi_la_include_HEADERS = $(HEADER_PATH)/nipfi.h
+libnieseriesnipfi_la_include_HEADERS = \
+    $(HEADER_PATH)/nidaq.h \
+    $(HEADER_PATH)/nipfi.h
 
 
 

@@ -16,7 +16,7 @@ LIBTOOL_M4=$(dirname $(dirname $(which libtool)))/share/libtool/libtool.m4
 if [ -e ${LIBTOOL_M4} ]; then
 	cp "${LIBTOOL_M4}" acinclude.m4 || exit 1
 fi
-aclocal -I numerics/m4 -I hardware/m4 -I m4 || exit 1
+aclocal -I m4 -I numerics/m4 -I plugins/linuxdevices/comedi/m4 || exit 1
 
 ## Libtoolize
 LIBTOOLIZE=libtoolize

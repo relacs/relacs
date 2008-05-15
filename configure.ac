@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_INIT(relacs, 0.9.6)
-AC_CONFIG_MACRO_DIR([m4 numerics/m4 hardware/m4])
+AC_CONFIG_MACRO_DIR([m4 numerics/m4 plugins/linuxdevices/comedi/m4])
 
 AM_INIT_AUTOMAKE([1.10 -Wall gnits subdir-objects dist-bzip2])
 
@@ -76,6 +76,7 @@ AC_RELACS_CHECK_GSL()
 ## Comedi
 #################################################
 AC_RELACS_CHECK_COMEDI()
+AM_CONDITIONAL([COND_COMEDI], [test "$RELACS_COMEDI" != no])
 
 
 #################################################
@@ -119,6 +120,7 @@ plugins/acoustic \
 plugins/auditory \
 plugins/auditoryprojects \
 plugins/linuxdevices/nieseries \
+plugins/linuxdevices/comedi \
 "
 
 # assemble input pathes from the Makefile.am of the RELACS_DOCLIBS list:
@@ -217,6 +219,8 @@ AC_CONFIG_FILES([
     plugins/linuxdevices/Makefile
     plugins/linuxdevices/nieseries/Makefile
     plugins/linuxdevices/nieseries/src/Makefile
+    plugins/linuxdevices/comedi/Makefile
+    plugins/linuxdevices/comedi/src/Makefile
 
     relacs/Makefile
     relacs/src/Makefile
