@@ -75,7 +75,6 @@ libauditorysearch_la_include_HEADERS = $(HEADER_PATH)/search.h
 
 libauditorysession_la_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
-    -I$(top_srcdir)/hardware/include \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -83,6 +82,8 @@ libauditorysession_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(top_srcdir)/plugins/acoustic/include \
+    -I$(top_srcdir)/plugins/linuxdevices/nieseries/include \
+    -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
@@ -92,9 +93,10 @@ libauditorysession_la_LDFLAGS = \
 
 libauditorysession_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(builddir)/../../ephys/src/libephystraces.la \
-    $(builddir)/../../acoustic/src/libacoustictraces.la \
-    $(top_builddir)/hardware/src/libnieserieshardware.la \
+    $(top_builddir)/plugins/ephys/src/libephystraces.la \
+    $(top_builddir)/plugins/acoustic/src/libacoustictraces.la \
+    $(top_builddir)/plugins/linuxdevices/nieseries/src/libnieseriesnidio.la \
+    $(top_builddir)/plugins/linuxdevices/misc/src/libmiscamplmode.la \
     $(QT3_LIBS)
 
 $(libauditorysession_la_OBJECTS) : moc_session.cc
@@ -111,12 +113,13 @@ libauditorysession_la_include_HEADERS = $(HEADER_PATH)/session.h
 libauditoryficurve_la_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/datafile/include \
-    -I$(top_srcdir)/hardware/include \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/plugins/linuxdevices/nieseries/include \
+    -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
@@ -146,12 +149,13 @@ libauditoryficurve_la_include_HEADERS = $(HEADER_PATH)/ficurve.h
 libauditoryfifield_la_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/datafile/include \
-    -I$(top_srcdir)/hardware/include \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/plugins/linuxdevices/nieseries/include \
+    -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
@@ -181,12 +185,13 @@ libauditoryfifield_la_include_HEADERS = $(HEADER_PATH)/fifield.h
 libauditorysinglestimulus_la_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/datafile/include \
-    -I$(top_srcdir)/hardware/include \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/plugins/linuxdevices/nieseries/include \
+    -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
@@ -217,12 +222,13 @@ libauditorysinglestimulus_la_include_HEADERS = $(HEADER_PATH)/singlestimulus.h
 libauditorysyslatency_la_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/datafile/include \
-    -I$(top_srcdir)/hardware/include \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/plugins/linuxdevices/nieseries/include \
+    -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \

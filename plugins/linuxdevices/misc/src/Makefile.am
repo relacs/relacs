@@ -25,6 +25,7 @@ libmiscamplmode_la_LDFLAGS = \
 
 libmiscamplmode_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/plugins/linuxdevices/nieseries/src/libnieseriesnidio.la \
     $(QT3_LIBS)
 
 libmiscamplmode_la_SOURCES = amplmode.cc amplmodedevice.cc

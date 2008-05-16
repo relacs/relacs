@@ -50,6 +50,7 @@ libattcs3310cs3310nidio_la_LDFLAGS = \
 
 libattcs3310cs3310nidio_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/plugins/linuxdevices/nieseries/src/libnieseriesnidio.la \
     $(QT3_LIBS)
 
 libattcs3310cs3310nidio_la_SOURCES = cs3310nidio.cc cs3310nidiodevice.cc
@@ -76,6 +77,7 @@ libattcs3310cs3310serialnidio_la_LDFLAGS = \
 
 libattcs3310cs3310serialnidio_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/plugins/linuxdevices/nieseries/src/libnieseriesnidio.la \
     $(QT3_LIBS)
 
 libattcs3310cs3310serialnidio_la_SOURCES = cs3310serialnidio.cc cs3310serialnidiodevice.cc
@@ -87,9 +89,9 @@ libattcs3310cs3310serialnidio_la_include_HEADERS = $(HEADER_PATH)/cs3310serialni
 
 
 check_PROGRAMS = \
-    linktest_libattcs3310cs3310pp.la \
-    linktest_libattcs3310cs3310nidio.la \
-    linktest_libattcs3310cs3310serialnidio.la
+    linktest_libattcs3310cs3310pp_la \
+    linktest_libattcs3310cs3310nidio_la \
+    linktest_libattcs3310cs3310serialnidio_la
 
 linktest_libattcs3310cs3310pp_la_SOURCES = linktest.cc
 linktest_libattcs3310cs3310pp_la_LDADD = libattcs3310cs3310pp.la

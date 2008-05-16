@@ -1,11 +1,12 @@
 SUBDIRS = \
+    linuxdevices \
     base \
     calibration \
     ephys \
     acoustic \
     auditory \
     auditoryprojects \
-    linuxdevices
+    patchclamp
 
 EXTRA_DIST = \
     relacshelp.mk

@@ -1,11 +1,9 @@
 Plugins:
 - Check doxygen external references
-- Use -disable-plugins-common etc. to exclude plugin sets from compilation.
-  Make sure that dependencies among the plugin sets are fullfilled.
 - Put relacs configuration files in root directory of the plugin sets
 - The installed help files all have the same names for the equation images (form_*.png)!
-- The right name for dlopen can be found in the dlname field of the *.la file!
-  Use this approach for loading the plugins?
+- Use -disable-plugins-common etc. to exclude plugin sets from compilation.
+  Make sure that dependencies among the plugin sets are fullfilled.
 
 Autotools:
 - Make datatools a separate project
@@ -17,6 +15,8 @@ Autotools:
 
 Relacs:
 - Update plugin loader
+- The right name for dlopen can be found in the dlname field of the *.la file!
+  Use this approach for loading the plugins?
 - Fix config files
 - Reading config from PWD and LD_LIBRARY_PATH containing PWD
   -> On/off by user?
@@ -50,6 +50,9 @@ Documentation:
 Libraries:
 - Add relacs library tests to the libraries!
 - AM_INIT_AUTOMAKE( gnits )
+- autoreconf:
+  * configure.ac.in AC_CONFIG_MACRO_DIR([m4])
+  * Makefile.am: ACLOCAL_AMFLAGS = -I m4
 
 Autotools details:
 - Math library check: LT_LIB_M

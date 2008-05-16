@@ -29,6 +29,7 @@ clean:
 	-rm -f *.ko *.o *.mod.c logdata
 
 distclean: clean
+distdir:
 mostlyclean: clean
 check:
 install:

@@ -6,8 +6,9 @@ if test "x$1" = "x--help"; then
   echo "release.sh [-l] [-d] <install-path> <configure-options>"
   echo ""
   echo "Calls ./bootstrap.sh && ./configure && make && make check &&"
-  echo "make install && make distcheck for the whole relacs project"
-  echo "and the individual relacs libraries (if the -l option is supplied)."
+  echo "make install && make installcheck && make distcheck"
+  echo "for the whole relacs project and the individual relacs libraries"
+  echo "(if the -l option is supplied)."
   echo "You must supply an absolute <install-path> as the first argument."
   echo "All following arguments are supplied as further options to configure."
   echo ""
@@ -56,6 +57,7 @@ if test $DISTCHECKONLY = no; then
   ${MAKE} || exit 1
   ${MAKE} check || exit 1
   ${MAKE} install || exit 1
+  ${MAKE} installcheck || exit 1
 fi
 ${MAKE} distcheck || exit 1
 echo ""
@@ -77,6 +79,7 @@ if test $CHECKLIBS = yes; then
         ${MAKE} || exit 1
         ${MAKE} check || exit 1
         ${MAKE} install || exit 1
+	${MAKE} installcheck || exit 1
         ${MAKE} distcheck || exit 1
       fi
       cd - || exit 1

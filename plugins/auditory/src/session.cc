@@ -186,7 +186,7 @@ void Session::initDevices( void )
     unlockStimulusData();
   }
 
-  Ampl = dynamic_cast< AmplMode* >( device( "ampl-1" ) );
+  Ampl = dynamic_cast< misc::AmplMode* >( device( "ampl-1" ) );
   if ( Ampl != 0 ) {
     lockMetaData();
     metaData().unsetNotify();
