@@ -1,10 +1,8 @@
 Plugins:
-- Introduce pluginset namespaces
-- Rethink directory structure of the plugin sets.
+- Check doxygen external references
 - Use -disable-plugins-common etc. to exclude plugin sets from compilation.
   Make sure that dependencies among the plugin sets are fullfilled.
-- Add nidaq driver as a module to nieseries
-- Put relacs configuration files in demo subdirectory of the plugin sets?
+- Put relacs configuration files in root directory of the plugin sets
 - The installed help files all have the same names for the equation images (form_*.png)!
 - The right name for dlopen can be found in the dlname field of the *.la file!
   Use this approach for loading the plugins?

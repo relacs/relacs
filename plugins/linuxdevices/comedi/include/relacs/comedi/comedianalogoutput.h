@@ -34,7 +34,7 @@ namespace comedi {
 class ComediAnalogInput;
 
 /*! 
-\class AnalogOutput
+\class ComediAnalogOutput
 \author Marco Hackenberg
 \version 0.1
 \brief Interface for accessing analog output of a daq-board via comedi.

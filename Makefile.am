@@ -13,8 +13,6 @@ SUBDIRS = \
     relacs \
     src \
     \
-    hardware \
-    \
     plugins \
     \
     utils

@@ -1,0 +1,34 @@
+#!/bin/bash
+
+MAJOR=$1
+shift
+SUBDEVICES=$@
+MAXBOARDS=3        # number of boards - 1
+
+ROOTUID=0          # Only users with $UID 0 have root privileges.
+ENOTROOT=67        # Non-root exit error.
+
+
+if [ -z "$MAJOR" ] || [ -z "$SUBDEVICES" ]; then
+  echo mkdevices major subdevices
+  exit 1
+fi
+
+
+if [ "$UID" -ne "$ROOTUID" ]; then
+  echo "Login as root before executing this script!"
+  exit $ENOTROOT
+fi  
+
+
+SDEVID=0
+for SDEV in $SUBDEVICES; do
+  for BOARD in $(seq 0 $MAXBOARDS); do
+    DEVICE=/dev/$SDEV$BOARD
+    MINOR=$(($SDEVID+16*$BOARD))
+    echo creating device $DEVICE with major=$MAJOR and minor=$MINOR
+    rm -f $DEVICE
+    mknod -m 666 $DEVICE c $MAJOR $MINOR
+  done
+  SDEVID=$(($SDEVID+1))
+done

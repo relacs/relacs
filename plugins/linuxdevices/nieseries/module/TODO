@@ -1,0 +1,19 @@
+driver:
+ - ao overrun for small data buffers that fir into the FIFO?
+ - enable triggering for ao and ai: PFI0? Analog Triggering?
+ - unset DEBUG mode!
+ - ao-staging: MUTE (BC_TC must care for loading next data into FIFO)
+ - user interface documentation
+
+examples:
+ - all ioctls, writes, and reads with error check!
+ - small documentation
+
+install:
+ - script for getting valid MAJOR number
+ - script for setting MAJOR number in header file
+ - script for installing devices
+ - find out where to install the object file
+ - documentation
+
+

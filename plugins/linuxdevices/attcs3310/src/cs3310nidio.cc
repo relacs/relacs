@@ -1,6 +1,6 @@
 /*
   attcs3310/cs3310nidio.cc
-  
+  Control the cs3310 attenuator via the nieseries/nidio software timed digital IO  
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2008 Jan Benda <j.benda@biologie.hu-berlin.de>

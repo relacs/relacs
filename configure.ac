@@ -112,7 +112,6 @@ relacs \
 # list of directories with their own documentation:
 DOXYGEN_EXTERNAL="\
 ${RELACS_DOCLIBS} \
-hardware \
 plugins/base \
 plugins/calibration \
 plugins/ephys \
@@ -188,9 +187,6 @@ AC_CONFIG_FILES([
     datafile/Makefile
     datafile/configure.ac
 
-    hardware/src/Makefile
-    hardware/Makefile
-
     plot/src/Makefile
     plot/Makefile
     plot/configure.ac
@@ -224,6 +220,8 @@ AC_CONFIG_FILES([
     plugins/linuxdevices/comedi/src/Makefile
     plugins/linuxdevices/attcs3310/Makefile
     plugins/linuxdevices/attcs3310/src/Makefile
+    plugins/linuxdevices/misc/Makefile
+    plugins/linuxdevices/misc/src/Makefile
 
     relacs/Makefile
     relacs/src/Makefile
