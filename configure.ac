@@ -211,6 +211,7 @@ AC_CONFIG_FILES([
     plugins/acoustic/src/Makefile
     plugins/auditory/Makefile
     plugins/auditory/src/Makefile
+    plugins/auditory/relacslocal
     plugins/auditoryprojects/Makefile
     plugins/auditoryprojects/src/Makefile
     plugins/patchclamp/Makefile

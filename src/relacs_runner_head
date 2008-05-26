@@ -24,7 +24,7 @@
 
 
 # name of the RELACS executable to be used:
-RELACSEXEC=relacs_main
+RELACSEXEC=relacsgui
 
 # default working path:
 WORKPATH=.
@@ -124,43 +124,45 @@ done
 
 # print help:
 if [ $HELP -gt 0 ]; then
-  echo "relacs"
+  RELACSSCRIPT=${0##*/}
+  echo "$RELACSSCRIPT"
   echo
-  echo "script for running RELACS"
+  echo "Script for running RELACS"
   echo "Jan Benda, 2003-2008"
   echo
-  echo "usage:"
-  echo "  relacs [-e xxx] [-p xxx] [-w xxx] [-l] [-f xxx] [-t]"
-  echo "         [-d | -D | -C xxx] [-c] [-b] [-k] [-m] [--]"
-  echo "         [-3] [-c xxx] [-f]"
-  echo "  relacs [--help | --version]"
+  echo "Usage:"
+  echo "  $RELACSSCRIPT [options]"
   echo
-  echo "  -e: Path to the RELACS executable and libraries"
-  echo "      (default '$RELACSEXECPATH')"
-  echo "  -p: Pathes to the RELACS plugins"
-  echo "      (default '$RELACSPLUGINPATHES')"
-  echo "  -w: Working path (default '$WORKPATH')"
-  echo "  -l: Write RELACS messages from stdout and stderr to a log-file"
-  echo "  -f: Use logfile xxx (default '$LOGFILE')"
-  echo "  -t: Use log file but also write messages to stdout "
-  echo "  -d: Run RELACS from within a debugger (disables logfile)"
-  echo "  -D: Start debugger without running RELACS"
-  echo "  -C: Start debugger with core-file xxx"
-  echo "  -c: Save core dump in directory '$COREDIR'"
-  echo "  -b: In case of warnings or errors, save log file in directory '$BUGDIR'"
-  echo "  -k: In case of core dumps or bugs save the output of dmesg"
-  echo "      in directory '$BUGDIR' or '$COREDIR' as well"
-  echo "  -m: Email notification about core dumps or bugs to"
-  echo "      <$EMAILADDRESS>"
-  echo "  --: The following options are passed directly to the RELACS executable"
+  echo "Options:"
+  echo "  -e DIRECTORY   Path to the RELACS executable and libraries"
+  echo "                 (default '$RELACSEXECPATH')"
+  echo "  -p DIRECTORY   Pathes to the RELACS plugins"
+  echo "                 (default '$RELACSPLUGINPATHES')"
+  echo "  -w DIRECTORY   Working path (default '$WORKPATH')"
+  echo "  -l             Write RELACS messages from stdout and stderr to a log-file"
+  echo "  -f FILE        Use logfile FILE (default '$LOGFILE')"
+  echo "  -t             Use log file but also write messages to stdout "
+  echo "  -d             Run RELACS from within a debugger (disables logfile)"
+  echo "  -D             Start debugger without running RELACS"
+  echo "  -C FILE        Start debugger with core-dump file FILE"
+  echo "  -c             Save core dump in directory '$COREDIR'"
+  echo "  -b             In case of warnings or errors, save log file in directory"
+  echo "                 '$BUGDIR'"
+  echo "  -k             In case of core dumps or bugs save the output of dmesg"
+  echo "                 in directory '$BUGDIR' or '$COREDIR' as well"
+  echo "  -m             Email notification about core dumps or bugs to"
+  echo "                 <$EMAILADDRESS>"
+  echo "  --             The following options are passed directly"
+  echo "                 to the RELACS executable"
   echo
-  echo "  -3: Run in simulation mode"
-  echo "  -s: Use xxx as the basename for the RELACS settings (configuration) files"
-  echo "      (default is 'relacs', i.e. relacs.cfg and relacsplugins.cfg)"
-  echo "  -f: Fullscreen mode"
+  echo "  -3             Run in simulation mode"
+  echo "  -s BASE        Use BASE as the basename for the RELACS settings"
+  echo "                 (configuration) files (default is 'relacs',"
+  echo "                 i.e. relacs.cfg and relacsplugins.cfg)"
+  echo "  -f             Run RELACS in fullscreen mode"
   echo
-  echo "  --help: Print this help message and exit."
-  echo "  --version: Print the version number of RELACS and exit."
+  echo "  --help         Print this help message and exit."
+  echo "  --version      Print the version number of RELACS and exit."
   echo
   exit 0
 fi

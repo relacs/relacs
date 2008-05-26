@@ -2,7 +2,7 @@ bin_SCRIPTS = \
     relacs
 
 pkglib_PROGRAMS = \
-    relacs_main
+    relacsgui
 
 sysconf_DATA = \
     relacs.cfg
@@ -13,7 +13,7 @@ dist_pkgdata_DATA = \
 
 
 # TODO
-relacs_main_CPPFLAGS = \
+relacsgui_CPPFLAGS = \
     "-DRELACSVERSION=\"$(RELACSVERSION)\"" \
     -I$(srcdir)/../daq/include \
     -I$(srcdir)/../datafile/include \
@@ -24,14 +24,14 @@ relacs_main_CPPFLAGS = \
     -I$(srcdir)/../relacs/include \
     $(QT3_CPPFLAGS)
 
-relacs_main_LDFLAGS = \
+relacsgui_LDFLAGS = \
     $(QT3_LDFLAGS)
 
-relacs_main_LDADD = \
+relacsgui_LDADD = \
     ../relacs/src/librelacs.la \
     $(QT3_LIBS)
 
-relacs_main_SOURCES = \
+relacsgui_SOURCES = \
     relacsmain.cc
 
 
