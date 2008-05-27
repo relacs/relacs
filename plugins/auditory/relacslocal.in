@@ -27,7 +27,7 @@
 WORKPATH="."
 
 # base of the config files (as passed to relacs by -s):
-CONFIGBASE=relacs
+CONFIGBASE="relacs"
 
 # default name of the log-file:
 LOGFILE="relacs.log"
@@ -44,7 +44,7 @@ DEBUGGER="libtool --mode=execute gdb"
 COREFILE=""
 
 # email address for core dump and bug notifications:
-EMAILADDRESS=''
+EMAILADDRESS=""
 
 # core dumps?
 COREDUMP="no"
@@ -172,14 +172,14 @@ RELACSLIBPATHS="@abs_top_builddir@/daq/src/.libs\
 :@abs_top_builddir@/mplot/src/.libs\
 :@abs_top_builddir@/numerics/src/.libs\
 :@abs_top_builddir@/options/src/.libs\
-:@abs_top_builddir@/widgets/src/.libs"
+:@abs_top_builddir@/widgets/src/.libs:"
 
 PLUGINHOME=@abs_top_builddir@
 
 # possible locations of config files,
 # must be separated by '|':
-CONFDIR_CANDIDATES='@abs_top_builddir@'
-### shouldn't that be better full file names? of both?
+CONFDIR_CANDIDATES='@abs_builddir@'
+### shouldn't that be better full file names? or both?
 # default config files could/should sit in
 # /etc/relacs/relacs.cfg
 # /usr/share/relacs.cfg
@@ -261,14 +261,15 @@ while read dir ; do
     if test "x${dir}" = x; then
         continue
     fi
-    RELACSPLUGINPATHES="${RELACSPLUGINPATHES}:${dir}"
+    RELACSPLUGINPATHES="${RELACSPLUGINPATHES}${dir}:"
 done < <(sed "s/${SEPARATOR}/\n/g" <<< ${dirlist} | sort -u)
-RELACSPLUGINPATHES=${RELACSPLUGINPATHES#:}
 
+echo ">$RELACSPLUGINPATHES<"
+exit 0
 
 
 # set the library path:
-export LD_LIBRARY_PATH="${RELACSLIBPATHS}:${RELACSPLUGINPATHES}:${LD_LIBRARY_PATH}"
+export LD_LIBRARY_PATH="${RELACSLIBPATHS}${RELACSPLUGINPATHES}${LD_LIBRARY_PATH}"
 
 # working path:
 cd "$WORKPATH"

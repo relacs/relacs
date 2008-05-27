@@ -62,7 +62,7 @@ ConfigureClasses::~ConfigureClasses( void )
 {
   Configs.clear();
   ConfigClass::setConfigClassList( 0 );
-  ConfigClass::setConfigureClasses( this );
+  ConfigClass::setConfigureClasses( 0 );
 }
 
 
