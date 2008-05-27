@@ -103,6 +103,18 @@ void ConfigClass::setConfigMode( int mode )
 }
 
 
+void ConfigClass::addConfigMode( int mode )
+{
+  ConfigMode |= mode;
+}
+
+
+void ConfigClass::delConfigMode( int mode )
+{
+  ConfigMode &= ~mode;
+}
+
+
 int ConfigClass::configSelectMask( void ) const
 {
   return ConfigSelect;
@@ -126,7 +138,7 @@ void ConfigClass::addConfig( void )
 void ConfigClass::readConfig( void )
 {
   if ( CFG != 0 ) {
-    CFG->read( configGroup(), *this );
+    CFG->read( *this );
   }
 }
 

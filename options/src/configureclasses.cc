@@ -115,18 +115,18 @@ void ConfigureClasses::read( int group, int level )
        level < 0 || level >= (int)ConfigFile[group].size() )
     return;
 
+  // open the requested configuration file:
   ifstream sf( ConfigFile[group][level].c_str() );
-
   if ( ! sf.good() ) {
     cerr << currentTime()
 	 << " failed to open configuration file " << ConfigFile[group][level] << endl;
     return;
   }
 
+  // skip any initial lines until the first line starting with '*':
   Str line = "";
   while ( ( line.empty() || line[0] != '*' ) &&
 	  getline( sf, line ).good() );
-
   if ( ! sf.good() ) {
     cerr << currentTime()
 	 << " cannot read configuration from " << ConfigFile[group][level] << endl;
@@ -136,16 +136,20 @@ void ConfigureClasses::read( int group, int level )
   cerr << currentTime()
        << " read configuration from " << ConfigFile[group][level] << endl;
 
+  // read in configuration sections:
   while ( sf.good() ) {
     string ident = line.strip().substr( 1 );
+    // read in section:
     StrQueue sq;
     line = "";
     sq.load( sf, "*", &line );
     sq.strip();
+    // pass this section to the corresponding ConfigClass instance:
     for ( ConfigClassList::iterator cp = Configs.begin(); cp != Configs.end(); ++cp ) {
       if ( (*cp)->configGroup() == group &&
 	   (*cp)->configIdent() == ident ) {
 	(*cp)->readConfig( sq );
+	break;
       }
     }
   }
@@ -170,27 +174,47 @@ void ConfigureClasses::read( void )
 }
 
 
-void ConfigureClasses::read( int group, int level, ConfigClass &config )
+void ConfigureClasses::read( int level, ConfigClass &config )
 {
+  int group = config.configGroup();
+
   if ( group < 0 || group >= (int)ConfigFile.size() ||
        level < 0 || level >= (int)ConfigFile[group].size() )
     return;
 
+  // open the requested configuration file:
   ifstream sf( ConfigFile[group][level].c_str() );
-  Str line;
+  if ( ! sf.good() ) {
+    cerr << currentTime()
+	 << " failed to open configuration file " << ConfigFile[group][level] << endl;
+    return;
+  }
 
+  // skip any initial lines until the first line starting with '*':
+  Str line = "";
   while ( ( line.empty() || line[0] != '*' ) &&
 	  getline( sf, line ).good() );
+  if ( ! sf.good() ) {
+    cerr << currentTime()
+	 << " cannot read configuration from " << ConfigFile[group][level] << endl;
+    return;
+  }
 
+  cerr << currentTime()
+       << " read configuration from " << ConfigFile[group][level] << endl;
+
+  // read in configuration sections:
   while ( sf.good() ) {
-    string is = line.strip().substr( 1 );
+    string ident = line.strip().substr( 1 );
+    // read in section:
     StrQueue sq;
     line = "";
     sq.load( sf, "*", &line );
-    if ( config.configGroup() == group &&
-	 config.configIdent() == is ) {
+    // pass this section to config:
+    if ( config.configIdent() == ident ) {
       sq.strip();
       config.readConfig( sq );
+      break;
     }
   }
 
@@ -198,10 +222,12 @@ void ConfigureClasses::read( int group, int level, ConfigClass &config )
 }
 
 
-void ConfigureClasses::read( int group, ConfigClass &config )
+void ConfigureClasses::read( ConfigClass &config )
 {
-  for ( unsigned int l = 0; l < ConfigFile[group].size(); l++ ) {
-    read( group, l, config );
+  for ( unsigned int l = 0;
+	l < ConfigFile[config.configGroup()].size();
+	l++ ) {
+    read( l, config );
   }
 }
 

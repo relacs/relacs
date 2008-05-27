@@ -194,7 +194,8 @@ public:
 
 public slots:
 
-    /*! Launches a dialog that allows to edit the values of the Options.
+    /*! Launches a dialog that allows to edit the values of the Options
+        if the ConfigClass::Dialog flag is set in configMode().
         You may reimplement dialog() with your own dialog.
 	The parts of the default dialog are composed out of
 	dialogHeaderWidget(), dialogEmptyMessage(), dialogOptions(), and
@@ -203,7 +204,7 @@ public slots:
 	\code
 void ConfigDialog::dialog( void )
 {
-  if ( dialogOpen() )
+  if ( dialogOpen() || ( configMode() & ConfigClass::Dialog == 0 ) )
     return;
   setDialogOpen();
 
@@ -222,7 +223,8 @@ void ConfigDialog::dialog( void )
         \sa dialogOpen(), setDialogOpen(), dClosed(),
         dialogAccepted(), dialogAction(), dialogClosed() */
   virtual void dialog( void );
-    /*! Opens a new window that displays some help information.
+    /*! Opens a new window that displays some help information
+        if dialogHelp() returns true.
         You may reimplement help() with your own help browser.
         \sa helpOpen(), setHelpOpen(), hClosed() */
   virtual void help( void );
@@ -251,7 +253,8 @@ protected:
   void setDialogHeader( bool d );
     /*! Returns true if a help button should be displayed in the dialog header. */
   bool dialogHelp( void ) const;
-    /*! Add a help-button to the dialog header if \a d is set to true. */
+    /*! Add a help-button to the dialog header if \a d is set to true.
+        Modifies the ConfigClass::Help flag of configMode(). */
   void setDialogHelp( bool d );
     /*! The mask that is used to select single options for the standard dialog. */
   int dialogSelectMask( void ) const;
@@ -345,7 +348,6 @@ private:
   string HeaderBackgroundColor;
   string HeaderForegroundColor;
   string HeaderImageFile;
-  bool UseHelp;
   string HelpCaption;
   bool Help;
   vector<string> HelpPathes;

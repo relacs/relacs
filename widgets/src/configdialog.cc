@@ -61,7 +61,6 @@ ConfigDialog::ConfigDialog( const string &configident, int configgroup,
   HeaderBackgroundColor = "";
   HeaderForegroundColor = "";
   HeaderImageFile = "";
-  UseHelp = true;
   HelpCaption = "";
   Help = false;
 }
@@ -167,13 +166,16 @@ void ConfigDialog::setDialogCaption( const string &caption )
 
 bool ConfigDialog::dialogHelp( void ) const
 {
-  return UseHelp;
+  return ( configMode() & ConfigClass::Help );
 }
 
 
 void ConfigDialog::setDialogHelp( bool d )
 {
-  UseHelp = d;
+  if ( d )
+    addConfigMode( ConfigClass::Help );
+  else
+    delConfigMode( ConfigClass::Help );
 }
 
 
@@ -399,7 +401,7 @@ void ConfigDialog::dialogHeaderWidget( OptDialog *od )
       rt->setPaletteForegroundColor( QColor( r, g, b ) );
     }
     // help button:
-    if ( UseHelp ) {
+    if ( dialogHelp() ) {
       QPushButton *pb = new QPushButton( "&Help", gb );
       pb->setFixedSize( pb->sizeHint() );
       connect( pb, SIGNAL( clicked( void ) ), this, SLOT( help( void ) ) );
@@ -448,7 +450,7 @@ void ConfigDialog::dialogButtons( OptDialog *od )
 
 void ConfigDialog::dialog( void )
 {
-  if ( dialogOpen() )
+  if ( dialogOpen() || ( configMode() & ConfigClass::Dialog == 0 ) )
     return;
   setDialogOpen();
 
@@ -474,7 +476,7 @@ void ConfigDialog::dClosed( int r )
 
 void ConfigDialog::help( void )
 {
-  if ( Help )
+  if ( Help || ! dialogHelp() )
     return;
 
   Help = true;

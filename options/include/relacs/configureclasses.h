@@ -32,9 +32,43 @@ namespace relacs {
 
 /*!
 \class ConfigureClasses
-\brief Coordinates configureable classes ConfigClass.
+\brief Coordinates storage of configuration settings of ConfigClass instances.
 \author Jan Benda
-\version 1.0
+\version 1.1
+
+ConfigureClasses stores a pointer to each instance of a ConfigClass.
+The configuration of each ConfigClass instance can be read in from
+configuration files by the read() functions and saved by the save()
+functions. The configure() functions call the config() function
+of the ConfigClass instances for some post-configuration.
+
+ConfigClass instances are organized in configurations groups 
+via their ConfigClass::configGroup() flag.
+The configuration groups are indexed starting with 0.
+Each configuration group gets its own set of configuration files.
+Configuration groups can be added with addGroup()
+and the number of defined groups is returned by groups().
+
+To each configuration group several configuration files of increasing
+level can be added by addConfigFile() or set by setConfigFile().
+The read() functions read in the configuration files with
+increasing level, such that configuration files of higher levels may overwrite
+the settings specified by the configuration files of lower levels.
+
+For example, if your program should first read in a system wide configuration
+file in \c /etc/myprog.cfg, then a personal configuration file in
+\c /home/me/.myprog.cfg, and finally a configuration file \c myprog.cfg
+in the current working directory, then you would specify three levels
+of configuration files in the following order:
+\code
+ConfigureClasses c;
+c.addConfigFile( "/etc/myprog.cfg" );
+c.addConfigFile( "/home/me/.myprog.cfg" );
+c.addConfigFile( "myprog.cfg" );
+\endcode
+
+The name of a configuration file of a given configuration group and level
+is returned by configFile().
 */
 
 class ConfigureClasses
@@ -45,18 +79,22 @@ public:
     /*! Constructs an empty ConfigureClasses (no configuration files)
         and makes itself and the list of configureable classes
 	known to the ConfigClass (ConfigClass::setConfigureClasses()
-	and ConfigClass::setConfigClassList() ). */
+	and ConfigClass::setConfigClassList() ).
+        You need to create a configuration group by calling addGroup(). */
   ConfigureClasses( void );
     /*! Constructs an empty ConfigureClasses (no configuration files)
         that is set up for \a groups of configuration files
         and makes itself and the list of configureable classes
 	known to the ConfigClass (ConfigClass::setConfigureClasses()
 	and ConfigClass::setConfigClassList() ).
+	You then can specify configuration file names
+	by calling addConfigFile( const string&, int) for each of the groups
+	at least once.
         \param[in] groups the number of groups of configuration files
 	to be used. */
   ConfigureClasses( int groups );
     /*! Constructs an ConfigureClasses with a single configuration file
-        \a file (in one group)
+        \a file (in one configuration group)
         and makes itself and the list of configureable classes
 	known to the ConfigClass (ConfigClass::setConfigureClasses()
 	and ConfigClass::setConfigClassList() ).
@@ -69,8 +107,8 @@ public:
     /*! \return the number of different groups of configuration files.
         \sa addGroup() */
   int groups( void ) const;
-    /*! Adds a new gropu of configuration files
-        and optionally initializes the new group with
+    /*! Adds a new group of configuration files
+        and optionally initializes the new configuration group with
 	the configuration file name \a file.
 	\param[in] name of the configuration file for the added group.
 	If left empty, then no filename is assigned to the group.
@@ -78,64 +116,157 @@ public:
   void addGroup( const string &file="" );
 
     /*! \return the name (full path) of the configuration file
-        for group \a group and level \a level or an empty string
+        for configuration group \a group and level \a level or an empty string
 	if \a group or \a level are invalid.
-        \param[in] group the group index of the requested configuration file.
+        \param[in] group the configuration group index of the requested configuration file.
         \param[in] level the level of the requested configuration file.
         \sa setConfigFile(), addConfigFile() */
   string configFile( int group=0, int level=0 ) const;
     /*! Set the name (full path) of the configuration file of group \a group
         for level \a level to \a file.
-	If the group index or level do not exist or \a file is an empty string,
-	this function has no effect.
-	The group must have been created before
+	Configuration files of level 0 are read in first.
+	Thus, configuration files of higher levels may overwrite
+	the settings specified by the configuration files of lower levels.
+	If the configuration group index or level do not exist or 
+	\a file is an empty string, this function has no effect.
+	The configuration group must have been created before
 	via the constructor or addGroup().
 	The level must have been created begore by addConfigFile().
         \param[in] file the name (full path) of the configuration file.
-        \param[in] group the index of the group. 
+        \param[in] group the index of the configuration group. 
         \param[in] level the level index. 
         \sa configFile(), addConfigFile() */
   void setConfigFile( const string &file, int group=0, int level=0 );
-    /*! Add a new level to the group \a group and
+    /*! Add a new level to the configuration group \a group and
         set the name of the corresponding configuration file to \a file.
-	If the group index does not exist or \a file is an empty string,
-	this function has no effect.
-	The group must have been created before 
+	This configuration file is read in after the previously
+	added configuration files of the same group
+	and might therefore overwrite their settings.
+	If the configuration group index does not exist or
+	\a file is an empty string, this function has no effect.
+	The configuration group must have been created before 
 	via the constructor or addGroup().
         \param[in] file the name (full path) of the configuration file.
-        \param[in] group the group index. 
+        \param[in] group the configuration group index. 
         \sa configFile(), setConfigFile() */
   void addConfigFile( const string &file, int group=0 );
 
-    /*! */
+    /*! Read in the configuration file of the configuration group with
+        index \a group and the level \a level and pass each section to
+	the corresponding ConfigClass instances via ConfigClass::readConfig().
+        \param[in] group the configuration group index of the requested configuration file.
+        \param[in] level the level of the requested configuration file.
+        \sa read( int, ConfigClass&), save(), configure() */
   void read( int group, int level );
-    /*! */
+    /*! Read in the configuration files of all levels
+        of the configuration group with index \a group and pass each section 
+	to the corresponding ConfigClass instances
+	via ConfigClass::readConfig().
+	Configuration files of level 0 are read in first.
+	Thus, configuration files of higher levels may overwrite
+	the settings specified by the configuration files of lower levels.
+        \param[in] group the configuration group index of the requested configuration files.
+        \sa read( ConfigClass&), save(), configure() */
   void read( int group );
-    /*! */
+    /*! Read in the configuration files of all configuration groups and all
+        levels and pass each section to the corresponding ConfigClass
+	instances via ConfigClass::readConfig().
+	Configuration files of level 0 are read in first.
+	Thus, configuration files of higher levels may overwrite
+	the settings specified by the configuration files of lower levels.
+        \sa save(), configure() */
   void read( void );
 
-    /*! */
-  void read( int group, int level, ConfigClass &config );
-    /*! */
-  void read( int group, ConfigClass &config );
+    /*! Read in the configuration file of the configuration group as
+        specified by config.configGroup() and the level \a level.
+	Pass the section for \a config to \a config
+	via ConfigClass::readConfig().
+        \param[in] level the level of the requested configuration file.
+	\param[in] config the ConfigClass instance for which the 
+	configuration settings should be read in.
+        \sa read( int, int ), save(), configure() */
+  void read( int level, ConfigClass &config );
+    /*! Read in the configuration files of the configuration group as
+        specified by config.configGroup() and all levels.
+	Pass the sections for \a config to \a config
+	via ConfigClass::readConfig().
+	Configuration files of level 0 are read in first.
+	Thus, configuration files of higher levels may overwrite
+	the settings specified by the configuration files of lower levels.
+	\param[in] config the ConfigClass instance for which the 
+	configuration settings should be read in.
+        \sa read( int ), save(), configure() */
+  void read( ConfigClass &config );
 
-    /*! */
+    /*! Configure, i.e. call ConfigClass::config() of the 
+        ConfigClass instance from the configuration group with index \a group
+        and identifier (ConfigClass::configIdent()) matching \a ident.
+	\note This function should be called only after
+	all configuration files have been read in.
+        \param[in] group the configuration group index.
+        \param[in] ident the configuration identifier specifying
+	a ConfigClass instance.
+	\sa read(), save() */
   void configure( int group, const string &ident );
-    /*! */
+    /*! Configure, i.e. call ConfigClass::config() of all the 
+        ConfigClass instances from the configuration group with index \a group. 
+	\note This function should be called only after
+	all configuration files have been read in.
+        \param[in] group the configuration group index.
+	\sa read(), save() */
   void configure( int group );
-    /*! */
+    /*! Configure, i.e. call ConfigClass::config() of all 
+        ConfigClass instances.
+	\note This function should be called only after
+	all configuration files have been read in.
+	\sa read(), save() */
   void configure( void );
 
-    /*! */
+    /*! Save the configuration of all ConfigClass instances of the 
+        configuration group with index \a group to the file \a file
+	by calling ConfigClass::saveConfig().
+	Only the settings of those ConfigClass instances are saved
+	that have the ConfigClass::Save flag 
+	in their ConfigClass::configMode() set.
+        \param[in] group the configuration group index.
+        \param[in] file the name (full path) of the file.
+        \sa read(), configure() */
   void save( int group, const string &file );
-    /*! */
+    /*! Save the configuration of all ConfigClass instances of the 
+        configuration group with index \a group to the
+	configuration file from level \a level
+	by calling ConfigClass::saveConfig().
+	Only the settings of those ConfigClass instances are saved
+	that have the ConfigClass::Save flag 
+	in their ConfigClass::configMode() set.
+        \param[in] group the configuration group index.
+        \param[in] level the level of the requested configuration file.
+        \sa read(), configure() */
   void save( int group, int level );
-    /*! */
+    /*! Save the configuration of all ConfigClass instances of the 
+        configuration group with index \a group to the 
+	respective top-level configuration file
+	by calling ConfigClass::saveConfig().
+	Only the settings of those ConfigClass instances are saved
+	that have the ConfigClass::Save flag 
+	in their ConfigClass::configMode() set.
+        \param[in] group the configuration group index.
+        \sa read(), configure() */
   void save( int group );
-    /*! */
+    /*! Save the configuration of all ConfigClass instances to the 
+	respective top-level configuration file of each configuration group
+	by calling ConfigClass::saveConfig().
+	Only the settings of those ConfigClass instances are saved
+	that have the ConfigClass::Save flag 
+	in their ConfigClass::configMode() set.
+        \sa read(), configure() */
   void save( void );
 
-    /*! */
+    /*! Write the names of all configuration files to \a str.
+        The file names of each configuration group are written
+        in a single line, levels are separated by ','.
+        \param[in] str the output stream.
+        \param[in] c the ConfigureClasses instance. */
   friend ostream &operator<<( ostream &str, const ConfigureClasses &c );
 
 
