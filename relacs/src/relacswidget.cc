@@ -67,8 +67,9 @@ void* createAttSim( void )
 }
 
 
-RELACSWidget::RELACSWidget( const string &configbase, int mode,
-			    QWidget *parent, const char *name )
+RELACSWidget::RELACSWidget( const string &coreconfigfiles,
+			    const string &pluginconfigfiles,
+			    int mode, QWidget *parent, const char *name )
   : QMainWindow( parent, name ),
     ConfigClass( "RELACS", RELACSPlugin::Core ),
     Mode( mode ),
@@ -86,9 +87,9 @@ RELACSWidget::RELACSWidget( const string &configbase, int mode,
     Help( false )
 {
   printlog( "this is RELACS, version " + string( RELACSVERSION ) );
-  // setup configure:
-  CFG.addGroup( configbase + ".cfg" );
-  CFG.addGroup( configbase + "plugins.cfg" );
+  // setup configuration files:
+  CFG.addGroup( coreconfigfiles );
+  CFG.addGroup( pluginconfigfiles );
 
   // configuration parameter for RELACS:
   addConfig();

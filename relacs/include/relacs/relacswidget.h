@@ -91,7 +91,8 @@ class RELACSWidget : public QMainWindow, public QThread, public ConfigClass
 
 public:
 
-  RELACSWidget( const string &configbase, int mode,
+  RELACSWidget( const string &coreconfigfiles,
+		const string &pluginconfigfiles, int mode,
 		QWidget *parent=0, const char *name=0 );
   ~RELACSWidget( void );
 

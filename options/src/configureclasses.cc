@@ -72,10 +72,17 @@ int ConfigureClasses::groups( void ) const
 }
 
 
-void ConfigureClasses::addGroup( const string &file )
+void ConfigureClasses::addGroup( const string &files )
 {
   ConfigFile.push_back( vector< string >() );
-  addConfigFile( file, ConfigFile.size()-1 );  
+  setConfigFiles( files, ConfigFile.size()-1 );  
+}
+
+
+void ConfigureClasses::clearGroups( void )
+{
+  clearConfigFiles();
+  ConfigFile.clear();
 }
 
 
@@ -99,6 +106,20 @@ void ConfigureClasses::setConfigFile( const string &file, int group, int level )
 }
 
 
+void ConfigureClasses::setConfigFiles( const string &files, int group )
+{
+  if ( group < 0 || group >= (int)ConfigFile.size() )
+    return;
+  else {
+    ConfigFile[group].clear();
+    StrQueue sq( files, "|" );
+    sq.strip();
+    for ( int k=0; k<sq.size(); k++ )
+      ConfigFile[group].push_back( sq[k] );
+  }
+}
+
+
 void ConfigureClasses::addConfigFile( const string &file, int group )
 {
   if ( group < 0 || group >= (int)ConfigFile.size() ||
@@ -106,6 +127,36 @@ void ConfigureClasses::addConfigFile( const string &file, int group )
     return;
   else
     ConfigFile[group].push_back( file );
+}
+
+
+void ConfigureClasses::addConfigFiles( const string &files, int group )
+{
+  if ( group < 0 || group >= (int)ConfigFile.size() )
+    return;
+  else {
+    StrQueue sq( files, "|" );
+    sq.strip();
+    for ( int k=0; k<sq.size(); k++ )
+      ConfigFile[group].push_back( sq[k] );
+  }
+}
+
+
+void ConfigureClasses::clearConfigFiles( int group )
+{
+  if ( group < 0 || group >= (int)ConfigFile.size() )
+    return;
+  else
+    ConfigFile[group].clear();
+}
+
+
+void ConfigureClasses::clearConfigFiles( void )
+{
+  for ( unsigned int g = 0; g < ConfigFile.size(); g++ ) {
+    clearConfigFiles( g );
+  }
 }
 
 
@@ -306,12 +357,10 @@ void ConfigureClasses::save( void )
 ostream &operator<<( ostream &str, const ConfigureClasses &c )
 {
   for ( unsigned int g = 0; g < c.ConfigFile.size(); g++ ) {
+    str << "group " << g << ": \n";
     for ( unsigned int l = 0; l < c.ConfigFile[g].size(); l++ ) {
-      if ( l > 0 )
-	str << ", ";
-      str << c.ConfigFile[g][l];
+      str << "  '" << c.ConfigFile[g][l] << "'\n";
     }
-    str << '\n';
   }  
   return str;
 }

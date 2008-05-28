@@ -205,7 +205,8 @@ void ReadArgs( int argc, char *argv[] )
     WriteUsage();
   static struct option longoptions[] = {
     { "version", 0, 0, 0 },
-    { "help", 0, 0, 0 }
+    { "help", 0, 0, 0 },
+    { 0, 0, 0, 0 }
   };
   optind = 0;
   opterr = 0;

@@ -102,7 +102,8 @@ public:
 	get a configuration dialog, etc. 
 	See ConfigClass::Action or possible values.
         \param[in] selectmask selects a subset of items to be saved
-	in a configuration file. */
+	in a configuration file.
+        \sa addConfig() */
   ConfigClass( const string &ident, int group=0, int mode=0xffff,
 	       int selectmask=0 );
     /*! Copy constructor. Never should be called. */
@@ -136,21 +137,21 @@ public:
 	its settings should be saved in a configuration file,
 	get a configuration dialog, etc. 
 	See ConfigClass::Action or possible values.
-        \sa setConfigMode() */
+        \sa setConfigMode(), addConfigMode(), delConfigMode() */
   int configMode( void ) const;
     /*! Set the mode flags of this instance of ConfigClass to \a mode.
 	\param[in] mode the mode flags that determine whether
 	the settings of this instance should be saved in a configuration file,
 	get a configuration dialog, etc. 
 	See ConfigClass::Action or possible values.
-        \sa configMode() */
+        \sa configMode(), addConfigMode(), delConfigMode() */
   void setConfigMode( int mode );
     /*! Sets the bits specified by \a mode in the mode flags.
 	\param[in] mode the mode flags that determine whether
 	the settings of this instance should be saved in a configuration file,
 	get a configuration dialog, etc. 
 	See ConfigClass::Action or possible values.
-        \sa configMode() */
+        \sa configMode(), setConfigMode(), delConfigMode() */
   void addConfigMode( int mode );
     /*! Unsets the bits specified by \a mode from the mode flags.
 	\param[in] mode the mode flags that determine whether
@@ -175,7 +176,8 @@ public:
         existed. */
   void addConfig( void );
     /*! Read in all configuration files and pass the right sections
-        to readConfig( StrQueue& ) of this instance only. */
+        to readConfig( StrQueue& ) of this instance only.
+        \sa readConfig( StrQueue& ) */
   void readConfig( void );
 
     /*! Read out the configuration settings from \a sq.
@@ -185,7 +187,8 @@ public:
         \param[in] sq the section from a configuration file
         for this ConfigClass instance.
         The first line specifying the ConfigClass instance is already removed
-        as well as any leading and trailing empty lines. */
+        as well as any leading and trailing empty lines.
+        \sa saveConfig(), readConfig( void ) */
   virtual void readConfig( StrQueue &sq );
     /*! Save the configuration settings to \a str.
         The default implementation simply calls 
@@ -195,7 +198,8 @@ public:
 	only if configMode() has the Save flag set.
         \param[in] str the output stream for saving the configuration
 	settings. The first line specifying the ConfigClass instance
-	is already written. */
+	is already written.
+        \sa readConfig( StrQueue& ) */
   virtual void saveConfig( ofstream &str );
     /*! \return the number of items as selected by configSelectMask()
         to be saved to a configuration file.
@@ -205,7 +209,7 @@ public:
   virtual int configSize( void ) const;
     /*! This function can be reimplemented to do some post-configuration.
         It is called by ConfigureClasses::configure() after all configuration
-        files have been read in. */
+        files have been read in via readConfig( StrQueue& ). */
   virtual void config( void );
 
     /*! This function is called by the constructors of ConfigureClasses

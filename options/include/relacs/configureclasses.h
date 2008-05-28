@@ -46,11 +46,12 @@ ConfigClass instances are organized in configurations groups
 via their ConfigClass::configGroup() flag.
 The configuration groups are indexed starting with 0.
 Each configuration group gets its own set of configuration files.
-Configuration groups can be added with addGroup()
+Configuration groups can be added with addGroup(), cleared with clearGroups(),
 and the number of defined groups is returned by groups().
 
 To each configuration group several configuration files of increasing
-level can be added by addConfigFile() or set by setConfigFile().
+level can be added by addConfigFile(), set by setConfigFile(),
+and cleared by clearConfigFiles().
 The read() functions read in the configuration files with
 increasing level, such that configuration files of higher levels may overwrite
 the settings specified by the configuration files of lower levels.
@@ -109,18 +110,24 @@ public:
   int groups( void ) const;
     /*! Adds a new group of configuration files
         and optionally initializes the new configuration group with
-	the configuration file name \a file.
-	\param[in] name of the configuration file for the added group.
+	the configuration file names given in \a files.
+	\param[in] files names (full pathes) of the configuration files
+	for the added group separated by '|'.
 	If left empty, then no filename is assigned to the group.
-	\sa groups() */
-  void addGroup( const string &file="" );
+	\sa groups(), addConfigFile() */
+  void addGroup( const string &files="" );
+    /*! Clear all configuration groups and all
+        levels of configuration files they contain.
+	\sa clearConfigFiles(), addGroup() */
+  void clearGroups( void );
 
     /*! \return the name (full path) of the configuration file
         for configuration group \a group and level \a level or an empty string
 	if \a group or \a level are invalid.
         \param[in] group the configuration group index of the requested configuration file.
         \param[in] level the level of the requested configuration file.
-        \sa setConfigFile(), addConfigFile() */
+        \sa setConfigFile(), setConfigFiles(),
+	addConfigFile(), addConfigFiles(), clearConfigFiles() */
   string configFile( int group=0, int level=0 ) const;
     /*! Set the name (full path) of the configuration file of group \a group
         for level \a level to \a file.
@@ -135,8 +142,21 @@ public:
         \param[in] file the name (full path) of the configuration file.
         \param[in] group the index of the configuration group. 
         \param[in] level the level index. 
-        \sa configFile(), addConfigFile() */
+        \sa configFile(), setConfigFiles(),
+	addConfigFile(), addConfigFiles(), clearConfigFiles() */
   void setConfigFile( const string &file, int group=0, int level=0 );
+    /*! Set the names (full pathes) of the configuration files 
+        of group \a group according to \a files.
+	If the configuration group index does not exist
+	this function has no effect.
+	The configuration group must have been created before
+	via the constructor or addGroup().
+        \param[in] files the names (full pathes) of the configuration files
+	separated by '|'.
+        \param[in] group the index of the configuration group. 
+        \sa configFile(), setConfigFile(),
+	addConfigFile(), addConfigFiles(), clearConfigFiles() */
+  void setConfigFiles( const string &files, int group=0 );
     /*! Add a new level to the configuration group \a group and
         set the name of the corresponding configuration file to \a file.
 	This configuration file is read in after the previously
@@ -148,8 +168,33 @@ public:
 	via the constructor or addGroup().
         \param[in] file the name (full path) of the configuration file.
         \param[in] group the configuration group index. 
-        \sa configFile(), setConfigFile() */
+        \sa addGroup(), configFile(), setConfigFile(), setConfigFiles(),
+	addConfigFiles(), clearConfigFiles() */
   void addConfigFile( const string &file, int group=0 );
+    /*! Add the names (full pathes) of the configuration files 
+        of group \a group according to \a files.
+	If the configuration group index does not exist
+	this function has no effect.
+	The configuration group must have been created before
+	via the constructor or addGroup().
+        \param[in] files the names (full pathes) of the configuration files
+	separated by '|'.
+        \param[in] group the index of the configuration group. 
+        \sa addGroup(), configFile(), setConfigFile(), setConfigFiles(),
+	addConfigFile(), clearConfigFiles() */
+  void addConfigFiles( const string &files, int group=0 );
+    /*! Clear all levels of configuration files of
+        the configuration group with index \a group.
+        \param[in] group the configuration group index. 
+	\sa clearGroups(), configFile(), setConfigFile(), setConfigFiles(),
+	addConfigFile(), addConfigFiles() */
+  void clearConfigFiles( int group );
+    /*! Clear all levels of configuration files of
+        all configuration groups.
+	The groups are not erased, this is done by clearGroups().
+	\sa configFile(), setConfigFile(), setConfigFiles(),
+	addConfigFile(), addConfigFiles() */
+  void clearConfigFiles( void );
 
     /*! Read in the configuration file of the configuration group with
         index \a group and the level \a level and pass each section to

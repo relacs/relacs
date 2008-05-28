@@ -23,44 +23,44 @@
 ###############################################################################
 
 
-# default working path:
+# Default working path:
 WORKPATH="."
 
-# base of the config files (as passed to relacs by -s):
-CONFIGBASE="relacs"
+# Base of the config files (as passed to relacs by -s):
+CONFIGBASE=""
 
-# default name of the log-file:
+# Default name of the log-file:
 LOGFILE="relacs.log"
 USELOGFILE="no"
 
-# double log messages to stdout?
+# Dublicate log messages to stdout?
 TEE="tee -a"
 USETEE="no"
 
-# debug:
+# Debug:
 DEBUG="no"
 DEBUGRUN="no"
 DEBUGGER="libtool --mode=execute gdb"
 COREFILE=""
 
-# email address for core dump and bug notifications:
+# Email address for core dump and bug notifications:
 EMAILADDRESS=""
 
-# core dumps?
+# Core dumps?
 COREDUMP="no"
 COREDIR="coredumps"
 COREMAILSUBJ="RELACS coredump"
 
-# bugs?
+# Bugs?
 BUGS="no"
 BUGDIR="bugs"
 BUGMAILSUBJ="RELACS bug"
 
-# kernel messages (from dmesg)?
+# Kernel messages (from dmesg)?
 KERNELMESSAGES="no"
 
 
-# read arguments:
+# Read arguments:
 HELP="no";
 for i; do
   case $1 in
@@ -120,7 +120,7 @@ for i; do
 done
 
 
-# print help:
+# Print help:
 if test "x$HELP" = "xyes"; then
   RELACSSCRIPT=${0##*/}
   echo "$RELACSSCRIPT"
@@ -149,9 +149,9 @@ if test "x$HELP" = "xyes"; then
   echo "                 to the RELACS executable"
   echo
   echo "  -3             Run in simulation mode"
-  echo "  -s BASE        Use BASE as the basename for the RELACS settings"
-  echo "                 (configuration) files (default is 'relacs',"
-  echo "                 i.e. relacs.cfg and relacsplugins.cfg)"
+  echo "  -s BASE        Use BASE as the basename for additional RELACS"
+  echo "                 settings (configuration) files (i.e. BASE.cfg"
+  echo "                 and BASEplugins.cfg)"
   echo "  -f             Run RELACS in fullscreen mode"
   echo
   echo "  --help         Print this help message and exit."
@@ -160,25 +160,24 @@ if test "x$HELP" = "xyes"; then
   exit 0
 fi
 
-
-SEPARATOR=AJ3S4G5U
-
-# full path of the RELACS executable to be used:
+# Full path of the RELACS executable to be used:
 RELACSEXEC="@abs_top_builddir@/src/relacsgui"
 
-# pathes to the RELACS libraries:
-RELACSLIBPATHS="@abs_top_builddir@/daq/src/.libs\
+# Pathes to the RELACS libraries:
+RELACSLIBPATHES="@abs_top_builddir@/daq/src/.libs\
 :@abs_top_builddir@/datafile/src/.libs\
 :@abs_top_builddir@/mplot/src/.libs\
 :@abs_top_builddir@/numerics/src/.libs\
 :@abs_top_builddir@/options/src/.libs\
 :@abs_top_builddir@/widgets/src/.libs:"
 
-PLUGINHOME=@abs_top_builddir@
+PLUGINHOME='@abs_top_builddir@'
 
-# possible locations of config files,
-# must be separated by '|':
-CONFDIR_CANDIDATES='@abs_builddir@'
+# Possible config files separated by '|':
+# for local demo's use only the ones in the current directory.
+CONFCOREFILES='@abs_builddir@/relacslocal.cfg'
+CONFPLUGINSFILES='@abs_builddir@/relacsplugins.cfg'
+
 ### shouldn't that be better full file names? or both?
 # default config files could/should sit in
 # /etc/relacs/relacs.cfg
@@ -189,89 +188,98 @@ CONFDIR_CANDIDATES='@abs_builddir@'
 # /aa/bb/ccc/myrelacs.cfg
 
 
-CONFFILE=${CONFIGBASE}.cfg
+# Add user defined configuration files:
+if test "x${CONFIGBASE}" != x; then
+    CONFCOREFILES="${CONFCOREFILES}|${CONFIGBASE}.cfg"
+    CONFPLUGINSFILES="${CONFPLUGINSFILES}|${CONFIGBASE}plugins.cfg"
+fi
 
-# We need the config file for the pluginpathes!
-# start out from the user defined config file
-# then the default config files
-# stop es soon a config file with an pluginpath entry is found!!!
-
-## Find config file location
-#while read i ; do
-#    if test -f "${i}/${CONFFILE}"; then
-#        CONFDIR=${i}
-#        break
-#    fi
-#done < <(sed "s/${SEPARATOR}/\n/g" <<< ${CONFDIR_CANDIDATES})
+# Find top-most configuration file that contains pluginpathes:
 SAVEIFS="$IFS"
 IFS="|"
-for i in $CONFDIR_CANDIDATES; do
-    if test -f "${i}/${CONFFILE}"; then
-        CONFDIR=${i}
+CONFARRAY=( $CONFCOREFILES )
+IFS="$SAVEIFS"
+for (( k=${#CONFARRAY[*]}-1; k >= 0; k-- )); do
+    if test -f "${CONFARRAY[$k]}" && grep -q pluginpathes "${CONFARRAY[$k]}"; then
+        CONFFILE="${CONFARRAY[$k]}"
         break
     fi
 done
-IFS="$SAVEIFS"
-if test "x${CONFDIR}" = x; then
-    echo "${CONFFILE} not found" 1>&2
-    exit 1
+if test "x${CONFFILE}" = x; then
+    echo "! warning: did not find a configuration file containing pluginpathes." 1>&2
 fi
-CONFPART="${CONFDIR}/${CONFIGBASE}"
-#echo "Using config from ${CONFDIR}"
+#echo "Using config file '${CONFFILE}'"
+CONFDIR=${CONFFILE%/*}
+if test "x$CONFDIR" = x; then
+    CONFDIR="."
+fi
 
 
-## Find all directories we need to link plugins at runtime
+# Find all directories we need to link plugins at runtime:
 dirlist=
-while read pattern ; do
-    ## Ensure absolute path
+IFS="|"
+for pattern in $(grep 'pluginpathes' < "${CONFFILE}" | sed -e 's/^[ \t]*pluginpathes:[ \t]*\(.*\)/\1/'); do
+#    echo "check >$pattern<":
+    # Ensure absolute path:
     case "${pattern}" in
     /*)
-        ## Absolute path pattern
+        # Absolute path pattern, nothing to be done:
+#	echo "absolute path: >$pattern<"
         ;;
-    \[PLUGINHOME\]*)
-        ## Plugin home relative pattern
-        pattern="${PLUGINHOME}${pattern#\[PLUGINHOME\]}"
-        ;;
-    *)
-        ## Relative pattern
+
+    ?*/*)
+        # pattern relative to directory of config file:
         pattern="${CONFDIR}/${pattern}"
+#	echo "relative path: >$pattern<"
+        ;;
+
+    *)
+        # Plugin home relative file name pattern:
+        pattern="${PLUGINHOME}/${pattern}"
+#	echo "plugin home: >$pattern<"
         ;;
     esac
 
-    # TODO Fix patterns with spaces?
-    if [[ "${pattern}" = */ ]]; then
+    # Add wildcard pattern:
+    if test "x${pattern:${#pattern}-1}" = "x/"; then
         pattern="${pattern}*.so"
     fi
 
-    ## Resolve pattern and collect directories
-    while read pluginfilename ; do
+    # Resolve pattern and collect directories:
+    for pluginfilename in $pattern; do
+#	echo "potential plugin >$pluginfilename<"
         if test -f "${pluginfilename}"; then
             dir=${pluginfilename%/*}
-#            echo "Plugin found: ${pluginfilename}"
-            dirlist="${dirlist}${dir}${SEPARATOR}"
+#            echo "plugin found: ${pluginfilename}"
+            dirlist="${dirlist}${dir}|"
         fi
-    done < <(ls -1 ${pattern} 2>/dev/null | grep '\.so$')
-done < <(grep 'pluginpathes' < "${CONFDIR}/${CONFFILE}" | sed -e 's/^[ \t]*pluginpathes:[ \t]*\(.*\)/\1/' -e 's/|/\n/g')
-#echo
+    done
 
+done
+IFS="$SAVEIFS"
 
-## Assemble directory list for LD_LIBRARY_PATH
+# Assemble directory list for LD_LIBRARY_PATH:
 RELACSPLUGINPATHES=
 while read dir ; do
     if test "x${dir}" = x; then
         continue
     fi
+#    echo "directory >$dir<"
     RELACSPLUGINPATHES="${RELACSPLUGINPATHES}${dir}:"
-done < <(sed "s/${SEPARATOR}/\n/g" <<< ${dirlist} | sort -u)
-
-echo ">$RELACSPLUGINPATHES<"
-exit 0
-
+done < <(sed "s/|/\n/g" <<< ${dirlist} | sort -u)
+#echo "plugin pathes: >$RELACSPLUGINPATHES<"
 
 # set the library path:
-export LD_LIBRARY_PATH="${RELACSLIBPATHS}${RELACSPLUGINPATHES}${LD_LIBRARY_PATH}"
+export LD_LIBRARY_PATH="${RELACSLIBPATHES}${RELACSPLUGINPATHES}${LD_LIBRARY_PATH}"
+#IFS=":"
+#echo "LD_LIBRARY_PATH:"
+#for dir in $LD_LIBRARY_PATH; do
+#  echo "  $dir"
+#done
+#IFS="$SAVEIFS"
 
 # working path:
+### This should go earlier because of configuration file pathes!!!!!????
 cd "$WORKPATH"
 
 # run RELACS:
@@ -293,9 +301,9 @@ if test "x$USELOGFILE" = "xyes" && test "x$LOGFILE" != "x"; then
 
   # execute RELACS:
   if test "x$USETEE" = "xyes"; then
-    "$RELACSEXEC" -s "${CONFPART}" $@ 2>&1 | $TEE $LOGFILE
+    "$RELACSEXEC" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" $@ 2>&1 | $TEE $LOGFILE
   else
-    "$RELACSEXEC" -s "${CONFPART}" $@ >> $LOGFILE 2>&1
+    "$RELACSEXEC" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" $@ >> $LOGFILE 2>&1
   fi
 
 else
@@ -315,12 +323,12 @@ else
  
       if test "x$DEBUGRUN" = "xyes"; then
         # start debugger with RELACS:
-        $DEBUGGER --args "$RELACSEXEC" -s "${CONFPART}" $@
+        $DEBUGGER --args "$RELACSEXEC" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" $@
       else
         # run RELACS from within debugger:
         DEBUGCOM=relacsdebug$$
         echo "run" > $DEBUGCOM
-        $DEBUGGER -x $DEBUGCOM --args "$RELACSEXEC" -s "${CONFPART}" $@
+        $DEBUGGER -x $DEBUGCOM --args "$RELACSEXEC" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" $@
         rm $DEBUGCOM
       fi
 
@@ -331,7 +339,7 @@ else
   else
 
     # simply execute RELACS:
-    "$RELACSEXEC" -s "${CONFPART}" $@
+    "$RELACSEXEC" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" $@
 
   fi
 

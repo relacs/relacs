@@ -32,17 +32,21 @@ int main( int argc, char **argv )
 {
   int mode = relacs::RELACSWidget::AcquisitionMode;
   bool fullscreen = false;
-  string configbase = "relacs";
+  string coreconfigfiles = "relacs.cfg";
+  string pluginconfigfiles = "relacsplugins.cfg";
 
   static struct option longoptions[] = {
     { "version", 0, 0, 0 },
-    { "help", 0, 0, 0 }
+    { "help", 0, 0, 0 },
+    { "core-config-files", 1, 0, 0 },
+    { "plugins-config-files", 1, 0, 0 },
+    { 0, 0, 0, 0 }
   };
   optind = 0;
   opterr = 0;
   int longindex = 0;
   char c;
-  while ( (c = getopt_long( argc, argv, "f3s:", longoptions, &longindex )) >= 0 ) {
+  while ( (c = getopt_long( argc, argv, "f3", longoptions, &longindex )) >= 0 ) {
     switch ( c ) {
     case 0: switch ( longindex ) {
       case 0:
@@ -51,9 +55,17 @@ int main( int argc, char **argv )
 	exit( 0 );
 	break;
       case 1:
-	cout << "relacsmain should not be called directly\n"
+	cout << "relacsgui should not be called directly\n"
 	     << "Use 'relacs' instead!\n";
 	exit( 0 );
+	break;
+      case 2:
+	if ( optarg && *optarg != '\0' )
+	  coreconfigfiles = optarg;
+	break;
+      case 3:
+	if ( optarg && *optarg != '\0' )
+	  pluginconfigfiles = optarg;
 	break;
       }
       break;
@@ -66,10 +78,7 @@ int main( int argc, char **argv )
       mode = relacs::RELACSWidget::SimulationMode;
       break;
 
-    case 's':
-      configbase = optarg;
-      break;
-      
+    default:
       break;
     }
   }
@@ -77,7 +86,7 @@ int main( int argc, char **argv )
   QApplication::setColorSpec( QApplication::CustomColor );
   QApplication a( argc, argv );
 
-  relacs::RELACSWidget relacs( configbase, mode );
+  relacs::RELACSWidget relacs( coreconfigfiles, pluginconfigfiles, mode );
 
   if ( fullscreen )
     relacs.fullScreen();
