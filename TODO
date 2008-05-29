@@ -1,12 +1,14 @@
 Plugins:
 - Check doxygen external references
 - Put relacs configuration files in root directory of the plugin sets
+- Fix config files
 - The installed help files all have the same names for the equation images (form_*.png)!
 - Use -disable-plugins-common etc. to exclude plugin sets from compilation.
   Make sure that dependencies among the plugin sets are fullfilled.
 
 Autotools:
 - Make datatools a separate project
+- What about the "global flags" in configure.ac? For plugins only?
 - Integrate examples (with extra target)  no-compile Makefiles???
   Include into distribution, compile if --enable-examples, noinst_PROGRAMS
 - Check for C++ requirements (STL, templates)
@@ -14,10 +16,11 @@ Autotools:
   http://summa.physik.hu-berlin.de/~beule/random/random55.tar.gz
 
 Relacs:
-- Update plugin loader
+- Update plugin loader: relative pathes relative to configuration file, implicit plugin home
+- How are plugins (control, repros) found/identified? Possibility of name clashes!
+  Use plugin-set name as well.
 - The right name for dlopen can be found in the dlname field of the *.la file!
   Use this approach for loading the plugins?
-- Fix config files
 - Reading config from PWD and LD_LIBRARY_PATH containing PWD
   -> On/off by user?
 - Log files written to relacs exec dir, not /var/log?

@@ -1,0 +1,162 @@
+#! /usr/bin/env bash
+
+###############################################################################
+#
+# relacslocal
+#
+# RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
+# Copyright (C) 2002-2008 Jan Benda <j.benda@biologie.hu-berlin.de>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+# 
+# RELACS is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+
+
+# Default working path:
+WORKPATH="."
+
+# Base of the config files (as passed to relacs by -s):
+CONFIGBASE=""
+
+# Default name of the log-file:
+LOGFILE="relacs.log"
+USELOGFILE="no"
+
+# Dublicate log messages to stdout?
+TEE="tee -a"
+USETEE="no"
+
+# Debug:
+DEBUG="no"
+DEBUGRUN="no"
+DEBUGGER="libtool --mode=execute gdb"
+COREFILE=""
+
+# Email address for core dump and bug notifications:
+EMAILADDRESS=""
+
+# Core dumps?
+COREDUMP="no"
+COREDIR="coredumps"
+COREMAILSUBJ="RELACS coredump"
+
+# Bugs?
+BUGS="no"
+BUGDIR="bugs"
+BUGMAILSUBJ="RELACS bug"
+
+# Kernel messages (from dmesg)?
+KERNELMESSAGES="no"
+
+
+# Read arguments:
+HELP="no";
+for i; do
+  case $1 in
+    -s) shift
+        CONFIGBASE="$1"
+	shift ;;
+    -w) shift
+        if test "x$1" != "x"; then
+          WORKPATH="$1"
+          shift
+        fi ;;
+    -l) USELOGFILE="yes"
+        shift
+	if test "x${1:0:1}" != "x-"; then
+          LOGFILE=$1
+	  shift
+	fi ;;
+    -t) USELOGFILE="yes"
+        USETEE="yes"
+        shift ;;
+    -d) DEBUG="yes"
+        DEBUGRUN="no"
+        USELOGFILE="no"
+        shift ;;
+    -D) DEBUG="yes"
+        DEBUGRUN="yes"
+        USELOGFILE="no"
+        shift ;;
+    -C) shift
+        if test "x$1" != "x"; then
+          COREFILE="$1"
+          DEBUG="yes";
+          USELOGFILE="no"
+          shift
+        fi ;;
+    -c) COREDUMP="yes"
+        ulimit -c unlimited 
+        USELOGFILE="yes"
+        shift ;;
+    -b) BUGS="yes"
+        USELOGFILE="yes"
+        shift ;;
+    -k) KERNELMESSAGES="yes"
+        shift ;;
+    -m) shift
+        EMAILADDRESS="$1" 
+        shift ;;
+    -h) HELP="yes"
+        break ;;
+--help) HELP="yes"
+        break ;;
+  '-?') HELP="yes"
+        break ;;
+    --) break ;;
+     *) break ;;
+  esac
+done
+
+
+# Print help:
+if test "x$HELP" = "xyes"; then
+  RELACSSCRIPT=${0##*/}
+  echo "$RELACSSCRIPT"
+  echo
+  echo "Script for running RELACS locally in the source tree"
+  echo "Jan Benda, 2003-2008"
+  echo
+  echo "Usage:"
+  echo "  $RELACSSCRIPT [options]"
+  echo
+  echo "Options:"
+  echo "  -w DIRECTORY   Working path (default '$WORKPATH')"
+  echo "  -l [FILE]      Write RELACS messages from stdout and stderr to the log-file"
+  echo "                 FILE (default '$LOGFILE')"
+  echo "  -t             Use log file but also write messages to stdout "
+  echo "  -d             Run RELACS from within a debugger (disables logfile)"
+  echo "  -D             Start debugger without running RELACS"
+  echo "  -C FILE        Start debugger with core-dump file FILE"
+  echo "  -c             Save core dump in directory '$COREDIR' (enables -l)"
+  echo "  -b             In case of warnings or errors, save log file in directory"
+  echo "                 '$BUGDIR' (enables -l)"
+  echo "  -k             In case of core dumps or bugs save the output of dmesg as well"
+  echo "  -m EMAIL       Email notification about core dumps or bugs to EMAIL"
+  echo "                 (default '$EMAILADDRESS')"
+  echo "  --             The following options are passed directly"
+  echo "                 to the RELACS executable"
+  echo
+  echo "  -3             Run in simulation mode"
+  echo "  -s BASE        Use BASE as the basename for additional RELACS"
+  echo "                 settings (configuration) files (i.e. BASE.cfg"
+  echo "                 and BASEplugins.cfg)"
+  echo "  -f             Run RELACS in fullscreen mode"
+  echo
+  echo "  --help         Print this help message and exit."
+  echo "  --version      Print the version number of RELACS and exit."
+  echo
+  exit 0
+fi
+

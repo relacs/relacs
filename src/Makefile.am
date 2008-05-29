@@ -10,6 +10,13 @@ sysconf_DATA = \
 dist_pkgdata_DATA = \
     relacstuxheader.png
 
+EXTRA_DIST = \
+    relacslocal_head \
+    relacs_head \
+    relacs_foot \
+    \
+    relacs_cfg_foot \
+    relacs_cfg_head
 
 
 # TODO
@@ -33,15 +40,6 @@ relacsgui_LDADD = \
 
 relacsgui_SOURCES = \
     relacsmain.cc
-
-
-
-EXTRA_DIST = \
-    relacs_cfg_foot \
-    relacs_cfg_head \
-    \
-    relacs_runner_foot \
-    relacs_runner_head
 
 
 DISTCLEANFILES = relacs.log relacs.log.old

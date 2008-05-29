@@ -1,0 +1,254 @@
+
+# Change to working path:
+cd "$WORKPATH"
+
+# Check path:
+if test "x$RELACSSCRIPTPATH" != "x" && test "x$RELACSSCRIPTPATH" != "x$(pwd)"; then
+    echo "! error: This script should only run in '$RELACSSCRIPTPATH'!"
+    echo "! error: Don't copy or move this script to other locations."
+    echo "! error: Use the script provided in"
+    echo "! error: '$RELACSRUNNERPATH'"
+    echo "! error: instead or simply install RELACS."
+    echo "Exit now."
+    exit 1
+fi
+
+# Add user defined configuration files:
+if test "x${CONFIGBASE}" != x; then
+    CONFCOREFILES="${CONFCOREFILES}|${CONFIGBASE}.cfg"
+    CONFPLUGINSFILES="${CONFPLUGINSFILES}|${CONFIGBASE}plugins.cfg"
+fi
+
+# Find top-most configuration file that contains pluginpathes:
+SAVEIFS="$IFS"
+IFS="|"
+CONFARRAY=( $CONFCOREFILES )
+IFS="$SAVEIFS"
+for (( k=${#CONFARRAY[*]}-1; k >= 0; k-- )); do
+    if test -f "${CONFARRAY[$k]}" && grep -q pluginpathes "${CONFARRAY[$k]}"; then
+        CONFFILE="${CONFARRAY[$k]}"
+        break
+    fi
+done
+if test "x${CONFFILE}" = x; then
+    echo "! warning: did not find a configuration file containing pluginpathes." 1>&2
+fi
+#echo "Using config file '${CONFFILE}'"
+# Absolute path of configuration file:
+CONFDIR=${CONFFILE%/*}
+if test "x$CONFDIR" = "x$CONFFILE"; then
+    CONFDIR="."
+fi
+CONFDIR=$(cd "$CONFDIR"; pwd)
+
+# Find all directories we need to link plugins at runtime:
+dirlist=
+IFS="|"
+for pattern in $(grep 'pluginpathes' < "${CONFFILE}" | sed -e 's/^[ \t]*pluginpathes:[ \t]*\(.*\)/\1/'); do
+#    echo "check >$pattern<":
+    # Ensure absolute path:
+    case "${pattern}" in
+    /*)
+        # Absolute path pattern, nothing to be done:
+#	echo "absolute path: >$pattern<"
+        ;;
+
+    ?*/*)
+        # pattern relative to directory of config file:
+        pattern="${CONFDIR}/${pattern}"
+#	echo "relative path: >$pattern<"
+        ;;
+
+    *)
+        # Plugin home relative file name pattern:
+        pattern="${PLUGINHOME}/${pattern}"
+#	echo "plugin home: >$pattern<"
+        ;;
+    esac
+
+    # Add wildcard pattern:
+    if test "x${pattern:${#pattern}-1}" = "x/"; then
+        pattern="${pattern}*.so"
+    fi
+
+    # Resolve pattern and collect directories:
+    for pluginfilename in $pattern; do
+#	echo "potential plugin >$pluginfilename<"
+        if test -f "${pluginfilename}"; then
+            dir=${pluginfilename%/*}
+#            echo "plugin found: ${pluginfilename}"
+            dirlist="${dirlist}${dir}|"
+        fi
+    done
+
+done
+IFS="$SAVEIFS"
+
+# Assemble directory list for LD_LIBRARY_PATH:
+RELACSPLUGINPATHES=
+while read dir ; do
+    if test "x${dir}" = x; then
+        continue
+    fi
+#    echo "directory >$dir<"
+    RELACSPLUGINPATHES="${RELACSPLUGINPATHES}${dir}:"
+done < <(sed "s/|/\n/g" <<< ${dirlist} | sort -u)
+#echo "plugin pathes: >$RELACSPLUGINPATHES<"
+
+# set the library path:
+export LD_LIBRARY_PATH="${RELACSLIBPATHES}${RELACSPLUGINPATHES}${LD_LIBRARY_PATH}"
+#IFS=":"
+#echo "LD_LIBRARY_PATH:"
+#for dir in $LD_LIBRARY_PATH; do
+#  echo "  $dir"
+#done
+#IFS="$SAVEIFS"
+
+# run RELACS:
+if test "x$USELOGFILE" = "xyes" && test "x$LOGFILE" != "x"; then
+
+  # write RELACS output into logfile
+  
+  # append old log-file to $LOGFILE.old:
+  if test -f "$LOGFILE"; then
+    cat $LOGFILE >> $LOGFILE.old
+  fi
+
+  # create new log-file:
+  echo > $LOGFILE
+  echo >> $LOGFILE
+  echo "NEW RUN" >> $LOGFILE
+  date >> $LOGFILE
+  echo >> $LOGFILE
+
+  # execute RELACS:
+  if test "x$USETEE" = "xyes"; then
+    "$RELACSEXEC" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" $@ 2>&1 | $TEE $LOGFILE
+  else
+    "$RELACSEXEC" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" $@ >> $LOGFILE 2>&1
+  fi
+
+else
+
+  # do not write RELACS output into logfile
+
+  if test "x$DEBUG" = "xyes"; then
+
+    # debug RELACS
+
+    if test "x$COREFILE" != "x"; then
+
+      # run debugger on coredump:
+      $DEBUGGER "$RELACSEXEC" "$COREFILE"
+
+    else
+ 
+      if test "x$DEBUGRUN" = "xyes"; then
+        # start debugger with RELACS:
+        $DEBUGGER --args "$RELACSEXEC" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" $@
+      else
+        # run RELACS from within debugger:
+        DEBUGCOM=relacsdebug$$
+        echo "run" > $DEBUGCOM
+        $DEBUGGER -x $DEBUGCOM --args "$RELACSEXEC" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" $@
+        rm $DEBUGCOM
+      fi
+
+    fi
+
+    exit 0
+
+  else
+
+    # simply execute RELACS:
+    "$RELACSEXEC" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" $@
+
+  fi
+
+fi
+
+SAVEDLOG="no"
+
+# core dumps:
+if test "x$COREDUMP" = "xyes"; then
+  CF=$(ls -rtd core* | tail -n 1)
+  if test -f "$CF"; then
+    NCF=$COREDIR/core.$(date --iso-8601=sec)${CF#core}
+    mkdir -p $COREDIR
+    mv $CF $NCF
+    if test "x$LOGFILE" != "x" && test -f "$LOGFILE"; then
+      cp $LOGFILE $COREDIR/$LOGFILE.$(date --iso-8601=sec)
+      egrep 'error|warning|panic|Xlib' $LOGFILE > tmp.txt
+      SAVEDLOG="yes"
+    fi
+    if test "x$KERNELMESSAGES" = "xyes"; then
+      dmesg > $COREDIR/dmesg.$(date --iso-8601=sec)
+    fi
+    if test "x$EMAILADDRESS" != "x"; then
+      { echo
+        echo "RELACS crashed with a core dump!"
+	echo
+        echo "You find the core dump in"
+        echo "  $NCF"
+        echo "and the corresponding log-file in"
+        echo "  $COREDIR/$LOGFILE.$(date --iso-8601=sec)"
+        if test "x$KERNELMESSAGES" = "xyes"; then
+          echo "and the kernel messages in"
+          echo "  $COREDIR/dmesg.$(date --iso-8601=sec)"
+        fi
+        echo
+        if test "$(wc -l tmp.txt | awk '{print $1}' )" -gt 0; then
+          echo "The log-file contains the following warnings and error messages:"
+          echo
+          cat tmp.txt
+        else
+          echo "The log-file contains no warnings or error messages."
+        fi
+        echo
+        echo "This email was automatically generated from the 'relacs' script"
+        echo "  $0"
+        echo "The current working directory is"
+        echo "  $PWD"
+        echo
+      } | mail -s "$COREMAILSUBJ" "$EMAILADDRESS"
+    fi
+    rm -f tmp.txt
+  fi
+fi
+
+# bugs:
+if test "x$BUGS" = "xyes" && test "x$LOGFILE" != "x" &&
+   test -f "$LOGFILE" && test "x$SAVEDLOG" = "xno"; then
+  egrep 'error|warning|panic|Xlib' $LOGFILE > tmp.txt
+  if test "$(wc -l tmp.txt | awk '{print $1}' )" -gt 0; then
+    mkdir -p $BUGDIR
+    cp $LOGFILE $BUGDIR/$LOGFILE.$(date --iso-8601=sec)
+    if test "x$KERNELMESSAGES" = "xyes"; then
+      dmesg > $BUGDIR/dmesg.$(date --iso-8601=sec)
+    fi
+    if test "x$EMAILADDRESS" != "x"; then
+      { echo
+        echo "RELACS terminated with bugs!"
+        echo
+        echo "You find the log-file in"
+        echo "  $BUGDIR/$LOGFILE.$(date --iso-8601=sec)"
+        if test "x$KERNELMESSAGES" = "xyes"; then
+          echo "and the kernel messages in"
+          echo "  $BUGDIR/dmesg.$(date --iso-8601=sec)"
+        fi
+        echo
+        echo "The log-file contains the following warnings and error messages:"
+        echo
+        cat tmp.txt
+        echo
+        echo "This email was automatically generated from the 'relacs' script"
+        echo "  $0"
+        echo "The current working directory is"
+        echo "  $PWD"
+        echo
+      } | mail -s "$BUGMAILSUBJ" "$EMAILADDRESS"
+    fi
+  fi
+  rm -f tmp.txt
+fi
+

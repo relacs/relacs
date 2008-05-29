@@ -23,98 +23,96 @@
 ###############################################################################
 
 
-# name of the RELACS executable to be used:
-RELACSEXEC=relacsgui
+# Default working path:
+WORKPATH="."
 
-# default working path:
-WORKPATH=.
+# Base of the config files (as passed to relacs by -s):
+CONFIGBASE=""
 
-# default name of the log-file:
+# Default name of the log-file:
 LOGFILE="relacs.log"
-USELOGFILE=1
+USELOGFILE="yes"
 
-# double to stdout?
+# Dublicate log messages to stdout?
 TEE="tee -a"
-USETEE=1
+USETEE="no"
 
-# debug:
-DEBUG=0
+# Debug:
+DEBUG="no"
+DEBUGRUN="no"
 DEBUGGER="libtool --mode=execute gdb"
 COREFILE=""
 
-# email address for core dump and bug notifications:
-EMAILADDRESS='j.benda@biologie.hu-berlin.de'
-COREBUGEMAIL=0
-KERNELMESSAGES=0
+# Email address for core dump and bug notifications:
+EMAILADDRESS=""
 
-# core dumps?
-COREDUMP=0
-COREDIR=coredumps
-COREMAILCMD="mail -s RELACS_coredump $EMAILADDRESS"
+# Core dumps?
+COREDUMP="no"
+COREDIR="coredumps"
+COREMAILSUBJ="RELACS coredump"
 
-# bugs?
-BUGS=0
-BUGDIR=bugs
-BUGMAILCMD="mail -s RELACS_bug $EMAILADDRESS"
+# Bugs?
+BUGS="no"
+BUGDIR="bugs"
+BUGMAILSUBJ="RELACS bug"
+
+# Kernel messages (from dmesg)?
+KERNELMESSAGES="no"
 
 
-# read arguments:
-HELP=0;
+# Read arguments:
+HELP="no";
 for i; do
   case $1 in
-    -e) shift
-        if [ -n "$1" ]; then
-          RELACSEXECPATH=$1
-          shift
-        fi ;;
-    -p) shift
-        if [ -n "$1" ]; then
-          RELACSPLUGINPATHES=$1
-          shift
-        fi ;;
+    -s) shift
+        CONFIGBASE="$1"
+	shift ;;
     -w) shift
-        if [ -n "$1" ]; then
-          WORKPATH=$1
+        if test "x$1" != "x"; then
+          WORKPATH="$1"
           shift
         fi ;;
-    -l) USELOGFILE=1
-        shift ;;
-    -f) shift
-        if [ -n "$1" ]; then
+    -l) USELOGFILE="yes"
+        shift
+	if test "x${1:0:1}" != "x-"; then
           LOGFILE=$1
-          USELOGFILE=1
-          shift
-        fi ;;
-    -t) USELOGFILE=1
-        USETEE=1
+	  shift
+	fi ;;
+    -t) USELOGFILE="yes"
+        USETEE="yes"
         shift ;;
-    -d) DEBUG=1
-        USELOGFILE=0
+    -d) DEBUG="yes"
+        DEBUGRUN="no"
+        USELOGFILE="no"
         shift ;;
-    -D) DEBUG=2
-        USELOGFILE=0
+    -D) DEBUG="yes"
+        DEBUGRUN="yes"
+        USELOGFILE="no"
         shift ;;
     -C) shift
-        if [ -n "$1" ]; then
-          COREFILE=$1
-          DEBUG=1;
-          USELOGFILE=0
+        if test "x$1" != "x"; then
+          COREFILE="$1"
+          DEBUG="yes";
+          USELOGFILE="no"
           shift
         fi ;;
-    -c) COREDUMP=1
+    -c) COREDUMP="yes"
         ulimit -c unlimited 
+        USELOGFILE="yes"
         shift ;;
-    -b) BUGS=1 
+    -b) BUGS="yes"
+        USELOGFILE="yes"
         shift ;;
-    -m) COREBUGEMAIL=1 
+    -k) KERNELMESSAGES="yes"
         shift ;;
-    -k) KERNELMESSAGES=1 
+    -m) shift
+        EMAILADDRESS="$1" 
         shift ;;
-    -h) HELP=1
+    -h) HELP="yes"
         break ;;
---help) HELP=1
+--help) HELP="yes"
         break ;;
-  '-?') HELP=1
+  '-?') HELP="yes"
         break ;;
     --) break ;;
      *) break ;;
@@ -122,8 +120,8 @@ for i; do
 done
 
 
-# print help:
-if [ $HELP -gt 0 ]; then
+# Print help:
+if test "x$HELP" = "xyes"; then
   RELACSSCRIPT=${0##*/}
   echo "$RELACSSCRIPT"
   echo
@@ -134,31 +132,26 @@ if [ $HELP -gt 0 ]; then
   echo "  $RELACSSCRIPT [options]"
   echo
   echo "Options:"
-  echo "  -e DIRECTORY   Path to the RELACS executable and libraries"
-  echo "                 (default '$RELACSEXECPATH')"
-  echo "  -p DIRECTORY   Pathes to the RELACS plugins"
-  echo "                 (default '$RELACSPLUGINPATHES')"
   echo "  -w DIRECTORY   Working path (default '$WORKPATH')"
-  echo "  -l             Write RELACS messages from stdout and stderr to a log-file"
-  echo "  -f FILE        Use logfile FILE (default '$LOGFILE')"
+  echo "  -l [FILE]      Write RELACS messages from stdout and stderr to the log-file"
+  echo "                 FILE (default '$LOGFILE')"
   echo "  -t             Use log file but also write messages to stdout "
   echo "  -d             Run RELACS from within a debugger (disables logfile)"
   echo "  -D             Start debugger without running RELACS"
   echo "  -C FILE        Start debugger with core-dump file FILE"
-  echo "  -c             Save core dump in directory '$COREDIR'"
+  echo "  -c             Save core dump in directory '$COREDIR' (enables -l)"
   echo "  -b             In case of warnings or errors, save log file in directory"
-  echo "                 '$BUGDIR'"
-  echo "  -k             In case of core dumps or bugs save the output of dmesg"
-  echo "                 in directory '$BUGDIR' or '$COREDIR' as well"
-  echo "  -m             Email notification about core dumps or bugs to"
-  echo "                 <$EMAILADDRESS>"
+  echo "                 '$BUGDIR' (enables -l)"
+  echo "  -k             In case of core dumps or bugs save the output of dmesg as well"
+  echo "  -m EMAIL       Email notification about core dumps or bugs to EMAIL"
+  echo "                 (default '$EMAILADDRESS')"
   echo "  --             The following options are passed directly"
   echo "                 to the RELACS executable"
   echo
   echo "  -3             Run in simulation mode"
-  echo "  -s BASE        Use BASE as the basename for the RELACS settings"
-  echo "                 (configuration) files (default is 'relacs',"
-  echo "                 i.e. relacs.cfg and relacsplugins.cfg)"
+  echo "  -s BASE        Use BASE as the basename for additional RELACS"
+  echo "                 settings (configuration) files (i.e. BASE.cfg"
+  echo "                 and BASEplugins.cfg)"
   echo "  -f             Run RELACS in fullscreen mode"
   echo
   echo "  --help         Print this help message and exit."
@@ -166,7 +159,4 @@ if [ $HELP -gt 0 ]; then
   echo
   exit 0
 fi
-
-
-SEPARATOR=AJ3S4G5U
 

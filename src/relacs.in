@@ -1,15 +1,23 @@
-@RELACS_RUNNER_HEAD@
+@RELACS_HEAD@
 
-prefix="@prefix@"
-exec_prefix="@exec_prefix@"
-pkglibdir="@libdir@/@PACKAGE_NAME@"
+# Full path of the RELACS executable to be used:
+RELACSEXEC="@pkglibdir@/relacsgui"
 
-RELACSLIBPATHS="@libdir@"
-RELACSEXECPATH=${pkglibdir}
-CONFNAME=relacs
-PLUGINHOME=${pkglibdir}/plugins
+# Pathes to the RELACS libraries that need to be added to LD_LIBRARY_PATH:
+RELACSLIBPATHES="@libdir@"
 
-CONFDIR_CANDIDATES="$HOME/.relacs${SEPARATOR}@sysconfdir@"
+PLUGINHOME='@pkglibdir@/plugins'
 
-@RELACS_RUNNER_FOOT@
+# Possible config files separated by '|':
+CONFCOREFILES="@sysconfdir@/relacs.cfg|@pkgdatadir@/relacs.cfg|${HOME}/.relacs/relacs.cfg"
+CONFPLUGINSFILES="@sysconfdir@/relacsplugins.cfg|@pkgdatadir@/relacsplugins.cfg|${HOME}/.relacs/relacsplugins.cfg"
+
+# Absolute path in which this script is allowed to be executed.
+# If left empty, it is allowed to be executed everywhere.
+RELACSSCRIPTPATH=""
+
+# Path to the relacs runner script that is to be installed:
+RELACSRUNNERPATH='@abs_top_builddir@/src/relacs'
+
+@RELACS_FOOT@
 

@@ -164,15 +164,22 @@ AM_CONDITIONAL([RELACS_TOP_BUILD], [test 0 = 0])
 # Global flags
 CPPFLAGS="${CPPFLAGS} -DPLUGINVERSION=\\\"$VERSION\\\""
 
+# Head of global relacs runner script:
+RELACS_HEAD=$srcdir/src/relacs_head
+AC_SUBST_FILE(RELACS_HEAD)
+
+# Head of relacslocal runner scripts:
+RELACSLOCAL_HEAD=$srcdir/src/relacslocal_head
+AC_SUBST_FILE(RELACSLOCAL_HEAD)
+
+# Foot of relacs runner script:
+RELACS_FOOT=$srcdir/src/relacs_foot
+AC_SUBST_FILE(RELACS_FOOT)
+
 RELACS_CFG_HEAD=$srcdir/src/relacs_cfg_head
 AC_SUBST_FILE(RELACS_CFG_HEAD)
 RELACS_CFG_FOOT=$srcdir/src/relacs_cfg_foot
 AC_SUBST_FILE(RELACS_CFG_FOOT)
-
-RELACS_RUNNER_HEAD=$srcdir/src/relacs_runner_head
-AC_SUBST_FILE(RELACS_RUNNER_HEAD)
-RELACS_RUNNER_FOOT=$srcdir/src/relacs_runner_foot
-AC_SUBST_FILE(RELACS_RUNNER_FOOT)
 
 
 
@@ -211,7 +218,6 @@ AC_CONFIG_FILES([
     plugins/acoustic/src/Makefile
     plugins/auditory/Makefile
     plugins/auditory/src/Makefile
-    plugins/auditory/relacslocal
     plugins/auditoryprojects/Makefile
     plugins/auditoryprojects/src/Makefile
     plugins/patchclamp/Makefile
@@ -247,8 +253,9 @@ AC_CONFIG_FILES([
     src/relacs.cfg
 ])
 
-AC_CONFIG_FILES([relacslocal], [chmod a+x relacslocal])
 AC_CONFIG_FILES([src/relacs], [chmod a+x src/relacs])
+AC_CONFIG_FILES([relacslocal], [chmod a+x relacslocal])
+AC_CONFIG_FILES([plugins/auditory/relacslocal], [chmod a+x plugins/auditory/relacslocal])
 
 AC_OUTPUT
 
