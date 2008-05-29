@@ -1,5 +1,5 @@
 /*
-  comedi/dynclampanalogoutput.cc
+  dynclampanalogoutput.cc
   Interface for accessing analog output of a daq-board via the dynamic clamp 
   kernel module.
 
@@ -25,17 +25,14 @@
 #include <cstdio>
 #include <cmath>
 #include <ctime>
+
+//#include "comedianaloginput.h"
+#include "dynclampanalogoutput.h"
+#include "dynclampanaloginput.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
-//#include <relacs/comedi/comedianaloginput.h>
-#include <relacs/comedi/dynclampanalogoutput.h>
-#include <relacs/comedi/dynclampanaloginput.h>
-using namespace relacs;
-
-namespace comedi {
-
 
 DynClampAnalogOutput::DynClampAnalogOutput( void ) 
   : AnalogOutput( DynClampAnalogOutputType )
@@ -50,6 +47,7 @@ DynClampAnalogOutput::DynClampAnalogOutput( void )
  
   BufferElemSize = sizeof(float);
   Modulename = "";
+  FifoFd = -1;
   Channels = 0;
   Bits = 0;
   MaxRate = 50000.0;
@@ -71,6 +69,7 @@ DynClampAnalogOutput::DynClampAnalogOutput( const string &deviceclass )
 
   BufferElemSize = sizeof(float);
   Modulename = "";
+  FifoFd = -1;
   Channels = 0;
   Bits =  0;
   MaxRate = 50000.0;
@@ -159,6 +158,7 @@ void DynClampAnalogOutput::close( void )
     return;
   }
   ::ioctl( Modulefile, IOC_REQ_CLOSE, &SubdeviceID );
+  ::close( FifoFd );
   if( ::close( Modulefile ) < 0 )
     cerr << "Close of module file failed!" << endl;
   Channels = -1;
@@ -374,7 +374,7 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
     if ( min == OutData::AutoRange || max == OutData::AutoRange ) {
       double smin = 0.0;
       double smax = 0.0;
-      minMax( smin, smax, sigs[k] );
+      numerics::minMax( smin, smax, sigs[k] );
       if ( min == OutData::AutoRange )
 	min = smin;
       if ( max == OutData::AutoRange )
@@ -549,6 +549,19 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
     return ErrorState;
   }
 
+  // initialize Connection to RTAI-FIFO:
+  char fifoName[] = "/dev/rtf1";
+  FifoFd = ::open( fifoName, O_WRONLY | O_NONBLOCK );
+  if( FifoFd < 0 ) {
+    cerr << " DynClampAnalogOutput::startWrite -> oping RTAI-FIFO " 
+         << fifoName << " failed!" << endl;
+    return ErrorState;
+  }
+
+
+
+	
+
   IsLoaded = true;
   IsPrepared = true;
 
@@ -625,7 +638,7 @@ int DynClampAnalogOutput::writeData( OutList &sigs )
   for ( int tryit = 0;
 	tryit < 2 && !failed && sigs[0].deviceBufferMaxPop() > 0; 
 	tryit++ ){
-    
+/*    
     retVal = ::ioctl( Modulefile, IOC_REQ_WRITE, &SubdeviceID );
     if( retVal < 0 ) {
       cerr << " DynClampAnalogOutput::writeData() -> ioctl command IOC_REQ_WRITE on device "
@@ -633,7 +646,8 @@ int DynClampAnalogOutput::writeData( OutList &sigs )
       ErrorState = -2;
       return ErrorState;
     }
-    bytesWritten = ::write( Modulefile, sigs[0].deviceBufferPopBuffer(),
+*/
+    bytesWritten = ::write( FifoFd, sigs[0].deviceBufferPopBuffer(),
 			                      sigs[0].deviceBufferMaxPop() * BufferElemSize );
     cerr << " DynClampAnalogOutput::writeData(): " << bytesWritten << " of "
          << sigs[0].deviceBufferMaxPop() * BufferElemSize << "bytes written:"
@@ -711,6 +725,3 @@ int DynClampAnalogOutput::getAISyncDevice( const vector< AnalogInput* > &ais ) c
   }
   return -1;
 }
-
-
-}; /* namespace comedi */

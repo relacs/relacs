@@ -14,7 +14,7 @@ rmmod kcomedilib
 usleep 100000
 rmmod comedi
 usleep 100000
-rmmod rtai_math
+rtai_fifos.ko
 usleep 100000
 rmmod rtai_up
 usleep 100000

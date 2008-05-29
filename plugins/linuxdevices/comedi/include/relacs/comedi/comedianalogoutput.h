@@ -1,9 +1,9 @@
 /*
-  comedi/comedianalogoutput.h
+  comedianalogoutput.h
   Interface for accessing analog output of a daq-board via comedi.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
-  Copyright (C) 2002-2008 Jan Benda <j.benda@biologie.hu-berlin.de>
+  Copyright (C) 2002-2007 Jan Benda <j.benda@biologie.hu-berlin.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,22 +19,18 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _RELACS_COMEDI_COMEDIANALOGOUTPUT_H_
-#define _RELACS_COMEDI_COMEDIANALOGOUTPUT_H_ 1
+#ifndef _COMEDIANALOGOUTPUT_H_
+#define _COMEDIANALOGOUTPUT_H_
 
 #include <vector>
 #include <comedilib.h>
-#include <relacs/analogoutput.h>
+#include "analogoutput.h"
 using namespace std;
-using namespace relacs;
-
-namespace comedi {
-
 
 class ComediAnalogInput;
 
 /*! 
-\class ComediAnalogOutput
+\class AnalogOutput
 \author Marco Hackenberg
 \version 0.1
 \brief Interface for accessing analog output of a daq-board via comedi.
@@ -266,6 +262,4 @@ private:
 };
 
 
-}; /* namespace comedi */
-
-#endif /* ! _RELACS_COMEDI_COMEDIANALOGOUTPUT_H_ */
+#endif

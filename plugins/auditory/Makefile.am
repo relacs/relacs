@@ -1,5 +1,12 @@
 SUBDIRS = src
 
+EXTRA_DIST = \
+    relacs.cfg \
+    relacsplugins.cfg \
+    macros.cfg \
+    calib0-0.cfg \
+    calib0-1.cfg
+
 pkglibdir = $(libdir)/relacs
 pkgincludedir = $(includedir)/relacs
 pkgdatadir=$(datadir)/relacs

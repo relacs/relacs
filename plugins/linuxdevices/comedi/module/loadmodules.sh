@@ -1,9 +1,10 @@
 #!/bin/bash
 echo "please wait..."
-insmod /usr/src/kernels/rtai/modules/rtai_hal.ko
-insmod /usr/src/kernels/rtai/modules/rtai_ksched.ko
-insmod /usr/src/kernels/rtai/modules/rtai_sem.ko
-insmod /usr/src/kernels/rtai/modules/rtai_math.ko
+insmod /usr/src/rtai/modules/rtai_hal.ko
+insmod /usr/src/rtai/modules/rtai_ksched.ko
+insmod /usr/src/rtai/modules/rtai_sem.ko
+insmod /usr/src/rtai/modules/rtai_fifos.ko
+#insmod /usr/src/rtai/modules/rtai_math.ko
 modprobe kcomedilib
 modprobe ni_pcimio
 sleep 5

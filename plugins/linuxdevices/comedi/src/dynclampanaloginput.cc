@@ -1,5 +1,5 @@
 /*
-  comedi/dynclampanaloginput.cc
+  dynclampanaloginput.cc
   Interface for accessing analog input of a daq-board via the dynamic clamp 
   kernel module.
 
@@ -25,16 +25,13 @@
 #include <cstdio>
 #include <cmath>
 #include <ctime>
+
+//#include "comedianaloginput.h"
+#include "dynclampanaloginput.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
-//#include <relacs/comedi/comedianaloginput.h>
-#include <relacs/comedi/dynclampanaloginput.h>
-using namespace relacs;
-
-namespace comedi {
-
 
 DynClampAnalogInput::DynClampAnalogInput( void ) 
   : AnalogInput( DynClampAnalogInputType )
@@ -48,6 +45,7 @@ DynClampAnalogInput::DynClampAnalogInput( void )
 
   BufferElemSize = sizeof(float);
   Modulename = "";
+  FifoFd = -1;
   Channels = 0;
   Bits = 0;
   MaxRate = 50000.0;
@@ -68,6 +66,7 @@ DynClampAnalogInput::DynClampAnalogInput( const string &deviceclass )
 
   BufferElemSize = sizeof(float);
   Modulename = "";
+  FifoFd = -1;
   Channels = 0;
   Bits =  0;
   MaxRate = 0;
@@ -156,6 +155,7 @@ void DynClampAnalogInput::close( void )
   reset();
 
   ::ioctl( Modulefile, IOC_REQ_CLOSE, &SubdeviceID );
+  ::close( FifoFd );
   if( ::close( Modulefile ) < 0 )
     cerr << "Close of module file failed!" << endl;
  
@@ -468,6 +468,15 @@ int DynClampAnalogInput::prepareRead( InList &sigs )
     return ErrorState;
   }
 
+  // initialize Connection to RTAI-FIFO:
+  char fifoName[] = "/dev/rtf0";
+  FifoFd = ::open( fifoName, O_RDONLY | O_NONBLOCK );
+  if( FifoFd < 0 ) {
+    cerr << " DynClampAnalogOutput::startWrite -> oping RTAI-FIFO " 
+         << fifoName << " failed!" << endl;
+    return ErrorState;
+  }
+
   IsLoaded = true;
   IsPrepared = true;
 
@@ -537,7 +546,7 @@ int DynClampAnalogInput::readData( InList &sigs )
   for ( int tryit = 0;
 	tryit < 2 && !failed && sigs[0].deviceBufferMaxPush() > 0; 
 	tryit++ ){
-    
+/*
     retVal = ioctl( Modulefile, IOC_REQ_READ, &SubdeviceID );
     if( retVal < 0 ) {
       cerr << " DynClampAnalogInput::readData() -> ioctl command IOC_REQ_READ on device "
@@ -545,8 +554,9 @@ int DynClampAnalogInput::readData( InList &sigs )
       ErrorState = -2;
       return ErrorState;
     }
+*/
     void *deviceBuf = sigs[0].deviceBufferPushBuffer();
-    bytesRead = ::read( Modulefile, deviceBuf,
+    bytesRead = ::read( FifoFd, deviceBuf,
                         sigs[0].deviceBufferMaxPush() * BufferElemSize );
     /*    cerr << " DynClampAnalogInput::readData():" << bytesRead << "of "
          << sigs[0].deviceBufferMaxPush() * BufferElemSize << "bytes read:"
@@ -699,6 +709,3 @@ void DynClampAnalogInput::take( vector< AnalogInput* > &ais,
       }
   */
 }
-
-
-}; /* namespace comedi */

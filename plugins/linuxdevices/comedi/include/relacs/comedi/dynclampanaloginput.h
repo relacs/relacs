@@ -1,38 +1,15 @@
-/*
-  comedi/dynclampanaloginput.h
-  Interface for accessing analog output of a daq-board via comedi.
-
-  RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
-  Copyright (C) 2002-2008 Jan Benda <j.benda@biologie.hu-berlin.de>
-
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 3 of the License, or
-  (at your option) any later version.
-  
-  RELACS is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-  
-  You should have received a copy of the GNU General Public License
-  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
-#ifndef _RELACS_COMEDI_DYNCLAMPANALOGINPUT_H_
-#define _RELACS_COMEDI_DYNCLAMPANALOGINPUT_H_ 1
+#ifndef _DYNCLAMPANALOGINPUT_H_
+#define _DYNCLAMPANALOGINPUT_H_
 
 #include <vector>
 #include <comedilib.h>
-#include <relacs/daqerror.h>
-#include <relacs/analoginput.h>
-#include <relacs/comedi/comedianaloginput.h>
-#include <relacs/comedi/dynclampanalogoutput.h>
-#include <relacs/comedi/moduledef.h>
-using namespace std;
-using namespace relacs;
+#include "daqerror.h"
+#include "analoginput.h"
+#include "comedianaloginput.h"
+#include "dynclampanalogoutput.h"
+#include "moduledef.h"
 
-namespace comedi {
+using namespace std;
 
 
 /*! 
@@ -215,6 +192,7 @@ private:
 
   string Modulename;
   int Modulefile;
+  int FifoFd;
 
   unsigned int Subdevice;
   int Channels;
@@ -239,6 +217,4 @@ private:
 };
 
 
-}; /* namespace comedi */
-
-#endif /* ! _RELACS_COMEDI_DYNCLAMPANALOGINPUT_H_ */
+#endif

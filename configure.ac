@@ -256,6 +256,7 @@ AC_CONFIG_FILES([
 AC_CONFIG_FILES([src/relacs], [chmod a+x src/relacs])
 AC_CONFIG_FILES([relacslocal], [chmod a+x relacslocal])
 AC_CONFIG_FILES([plugins/auditory/relacslocal], [chmod a+x plugins/auditory/relacslocal])
+AC_CONFIG_FILES([plugins/patchclamp/relacslocal], [chmod a+x plugins/patchclamp/relacslocal])
 
 AC_OUTPUT
 

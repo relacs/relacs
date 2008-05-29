@@ -1,9 +1,9 @@
 /*
-  comedi/comedianaloginput.cc
+  comedianaloginput.cc
   Interface for accessing analog input of a daq-board via comedi.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
-  Copyright (C) 2002-2008 Jan Benda <j.benda@biologie.hu-berlin.de>
+  Copyright (C) 2002-2007 Jan Benda <j.benda@biologie.hu-berlin.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -26,13 +26,8 @@
 #include <ctime>
 #include <unistd.h>
 #include <fcntl.h>
-#include <errno.h>
-#include <relacs/comedi/comedianalogoutput.h>
-#include <relacs/comedi/comedianaloginput.h>
-using namespace relacs;
-
-namespace comedi {
-
+#include "comedianalogoutput.h"
+#include "comedianaloginput.h"
 
 ComediAnalogInput::ComediAnalogInput( void ) 
   : AnalogInput( ComediAnalogInputType )
@@ -847,6 +842,3 @@ void ComediAnalogInput::take( int syncmode,
 	ComediAIsLink[ai] = ao;
       }
 }
-
-
-}; /* namespace comedi */

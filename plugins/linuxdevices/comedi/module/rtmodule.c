@@ -854,13 +854,13 @@ static int updateDMABuf( int iS )
 
 
 /*! Calcuclation task for Euler */
-void rtEulerCalc( int dummy )
+void rtEulerCalc( long dummy )
 { 
 }
 
 
 /*! Dynamic clamp task */
-void rtDynClamp( int dummy )
+void rtDynClamp( long dummy )
 {
   int retVal;
   int iS, iC;
@@ -1039,7 +1039,7 @@ void rtDynClamp( int dummy )
             }
             // Wert in FIFO schreiben:
             voltage = sample_to_value( &subdev[iS].chanlist[iC], lsample );
-            retVal = rtf_get( subdev[iS].fifo, &voltage, sizeof(voltage) );
+            retVal = rtf_put( subdev[iS].fifo, &voltage, sizeof(voltage) );
             if( retVal != sizeof(voltage) ) {
               if( retVal == EINVAL ) {
                 DEBUG_MSG( "rtDynClamp: No open FIFO for subdevice ID %d at loopCnt %lu\n",

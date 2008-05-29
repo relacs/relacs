@@ -1,9 +1,9 @@
 /*
-  comedi/comedianalogoutput.cc
+  comedianalogoutput.cc
   Interface for accessing analog output of a daq-board via comedi.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
-  Copyright (C) 2002-2008 Jan Benda <j.benda@biologie.hu-berlin.de>
+  Copyright (C) 2002-2007 Jan Benda <j.benda@biologie.hu-berlin.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -21,17 +21,16 @@
 
 #include <iostream>
 #include <sstream>
+#include <algorithm>
 #include <cstdio>
 #include <cmath>
 #include <ctime>
 #include <unistd.h>
 #include <fcntl.h>
-#include <errno.h>
-#include <relacs/comedi/comedianaloginput.h>
-#include <relacs/comedi/comedianalogoutput.h>
-using namespace relacs;
+#include "comedianaloginput.h"
+#include "comedianalogoutput.h"
 
-namespace comedi {
+using namespace std;
 
 
 ComediAnalogOutput::ComediAnalogOutput( void ) 
@@ -123,6 +122,12 @@ int ComediAnalogOutput::open( const string &devicename, long mode )
   comedi_set_buffer_size( DeviceP, Subdevice, bufSize );
 
   // initialize ranges
+  BipolarRange.clear();
+  BipolarRangeIndex.clear();
+  UnipolarRange.clear();
+  UnipolarRangeIndex.clear();
+  UnipolarExtRefRangeIndex = -1;
+  BipolarExtRefRangeIndex = -1;
   int nRanges = comedi_get_n_ranges( DeviceP, Subdevice, 0 );  
   for ( int iRange = 0; iRange < nRanges; iRange++ ) {
     comedi_range *range = comedi_get_range( DeviceP, Subdevice, 0, iRange );
@@ -133,7 +138,7 @@ int ComediAnalogOutput::open( const string &devicename, long mode )
 	BipolarExtRefRangeIndex = iRange;
       else {	
 	BipolarRange.push_back( *range );
-	BipolarRangeIndex.push_back( iRange );
+	BipolarRangeIndex.push_back( BipolarRangeIndex.size() );
       }
     }
     else {
@@ -141,29 +146,30 @@ int ComediAnalogOutput::open( const string &devicename, long mode )
 	UnipolarExtRefRangeIndex = iRange;
       else {	
 	UnipolarRange.push_back( *range );
-	UnipolarRangeIndex.push_back( iRange );
+	UnipolarRangeIndex.push_back( UnipolarRangeIndex.size() );
       }
     }
   }
 
   // bubble-sort Uni/BipolarRangeIndex descendingly according to Uni/BipolarRange.max
-  unsigned int iSwap;
-  for( unsigned int i = 0; i < UnipolarRangeIndex.size(); i++ )
+  for( unsigned int i = 0; i < UnipolarRangeIndex.size(); i++ ) {
     for ( unsigned int j = i+1; j < UnipolarRangeIndex.size(); j++ )
       if(  UnipolarRange[ UnipolarRangeIndex[i] ].max
          < UnipolarRange[ UnipolarRangeIndex[j] ].max ) {
-	iSwap = UnipolarRangeIndex[i];
+	unsigned int iSwap = UnipolarRangeIndex[i];
 	UnipolarRangeIndex[i] = UnipolarRangeIndex[j];
 	UnipolarRangeIndex[j] = iSwap;
       }
-  for( unsigned int i = 0; i < BipolarRangeIndex.size(); i++ )
+  }
+  for( unsigned int i = 0; i < BipolarRangeIndex.size(); i++ ) {
     for ( unsigned int j = i+1; j < BipolarRangeIndex.size(); j++ )
       if(  BipolarRange[ BipolarRangeIndex[i] ].max
          < BipolarRange[ BipolarRangeIndex[j] ].max ) {
-	iSwap = BipolarRangeIndex[i];
+	unsigned int iSwap = BipolarRangeIndex[i];
 	BipolarRangeIndex[i] = BipolarRangeIndex[j];
 	BipolarRangeIndex[j] = iSwap;
       }
+  }
   
   // set comedi out-of-range behavior on sample values
   comedi_set_global_oor_behavior( COMEDI_OOR_NUMBER ); // COMEDI_OOR_NAN
@@ -212,8 +218,6 @@ int ComediAnalogOutput::open( const string &devicename, long mode )
 void ComediAnalogOutput::close( void )
 { 
   reset();
-  UnipolarExtRefRangeIndex = -1;
-  BipolarExtRefRangeIndex = -1;
   if( !isOpen() )
     return;
   comedi_unlock( DeviceP, Subdevice );
@@ -230,7 +234,6 @@ int ComediAnalogOutput::reset( void )
 { 
   int retVal = stop();
   clearSettings();
-
 
   ErrorState = 0;
   IsPrepared = false;
@@ -372,7 +375,7 @@ int ComediAnalogOutput::error( void ) const
 
 int ComediAnalogOutput::maxRanges( void ) const
 {
-  return UnipolarRangeIndex.size() + BipolarRangeIndex.size();
+  return max( UnipolarRangeIndex.size(), BipolarRangeIndex.size() );
 }
 
 double ComediAnalogOutput::unipolarRange( int index ) const
@@ -475,7 +478,7 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
     if ( min == OutData::AutoRange || max == OutData::AutoRange ) {
       double smin = 0.0;
       double smax = 0.0;
-      minMax( smin, smax, sigs[k] );
+      numerics::minMax( smin, smax, sigs[k] );
       if ( min == OutData::AutoRange )
 	min = smin;
       if ( max == OutData::AutoRange )
@@ -1013,6 +1016,3 @@ void ComediAnalogOutput::take( int syncmode,
 	ComediAIsLink[ai] = ao;
       }
 }
-
-
-}; /* namespace comedi */
