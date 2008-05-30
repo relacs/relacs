@@ -41,10 +41,8 @@ Settings::Settings( RELACSWidget* rw )
   addNumber( "processinterval", "Interval for periodic processing of data", 0.10, 0.001, 1000.0, 0.001, "seconds", "ms" );
   addText( "docpath", "Path to the documentation", "doc/html" ).setStyle( OptWidget::BrowseDirectory );
   addLabel( "Plugins" );
-  addText( "pluginhome", "Default path to plugins", "" ).setStyle( OptWidget::BrowseDirectory );
   addText( "pluginpathes", "Plugin pathes", "" );
   addText( "pluginhelppathes", "Pathes to plugin help files", "" );
-  addBoolean( "changetoplugindir", "Change to the plugin's directory", true );
   addText( "controlplugin", "Control plugin", "" );
   addText( "modelplugin", "Model plugin", "" );
   addLabel( "Pathes" );
@@ -102,8 +100,6 @@ void Settings::notify( void )
   Str rp = text( "repropath" );
   rp.provideSlash();
   setenv( "RELACSREPROPATH", rp.c_str(), 1 );
-
-  RW->PG->setChangeToPluginDir( boolean( "changetoplugindir" ) );
 }
 
 

@@ -12,6 +12,7 @@ RELACSLIBPATHES="@abs_top_builddir@/daq/src/.libs\
 :@abs_top_builddir@/widgets/src/.libs:"
 
 PLUGINHOME='@abs_top_builddir@'
+PLUGINRELATIVE='@abs_builddir@'
 
 # Possible config files separated by '|':
 # for local demo's use only the ones in the current directory.

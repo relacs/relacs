@@ -80,7 +80,7 @@ public:
 
     /*! Create \a devices from plugins. */
   template < class DD >
-    int create( Plugins &plugins, DD &devices, int n, const string &dflt="" );
+    int create( DD &devices, int n, const string &dflt="" );
     /*! Returns the warning messages of the last call of create(). */
   Str warnings( void ) const;
     /*! True if the last call of create() was succesfull, i.e. no warnings. */
@@ -221,7 +221,7 @@ int DeviceList<T,PluginID>::mode( int n, const Str &ns )
 
 
 template < class T, int PluginID > template < class DD >
-int DeviceList<T,PluginID>::create( Plugins &plugins, DD &devices,
+int DeviceList<T,PluginID>::create( DD &devices,
 				    int m, const string &dflt )
 {
   Warnings = "";
@@ -244,9 +244,9 @@ int DeviceList<T,PluginID>::create( Plugins &plugins, DD &devices,
       continue;
     if ( ms.empty() )
       ms = dflt;
-    int k = plugins.index( ms, PluginID );
+    int k = Plugins::index( ms, PluginID );
     if ( !ms.empty() && k >= 0 ) {
-      void *mp = plugins.create( k );
+      void *mp = Plugins::create( k );
       if ( mp != 0 ) {
 	T *dv = static_cast<T*>( mp );
 	Str ds = text( "device" + ns );

@@ -34,12 +34,18 @@ if test "x${CONFFILE}" = x; then
     echo "! warning: did not find a configuration file containing pluginpathes." 1>&2
 fi
 #echo "Using config file '${CONFFILE}'"
+
 # Absolute path of configuration file:
 CONFDIR=${CONFFILE%/*}
 if test "x$CONFDIR" = "x$CONFFILE"; then
     CONFDIR="."
 fi
-CONFDIR=$(cd "$CONFDIR"; pwd)
+
+# Relative path for plugins:
+if test "x$PLUGINRELATIVE" = "x"; then
+    PLUGINRELATIVE="$CONFDIR";
+fi
+PLUGINRELATIVE=$(cd "$PLUGINRELATIVE"; pwd)
 
 # Find all directories we need to link plugins at runtime:
 dirlist=
@@ -55,7 +61,7 @@ for pattern in $(grep 'pluginpathes' < "${CONFFILE}" | sed -e 's/^[ \t]*pluginpa
 
     ?*/*)
         # pattern relative to directory of config file:
-        pattern="${CONFDIR}/${pattern}"
+        pattern="${PLUGINRELATIVE}/${pattern}"
 #	echo "relative path: >$pattern<"
         ;;
 
@@ -123,9 +129,9 @@ if test "x$USELOGFILE" = "xyes" && test "x$LOGFILE" != "x"; then
 
   # execute RELACS:
   if test "x$USETEE" = "xyes"; then
-    "$RELACSEXEC" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" $@ 2>&1 | $TEE $LOGFILE
+    "$RELACSEXEC" "--plugin-relative-dir=${PLUGINRELATIVE}" "--plugin-home-dir=${PLUGINHOME}" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" $@ 2>&1 | $TEE $LOGFILE
   else
-    "$RELACSEXEC" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" $@ >> $LOGFILE 2>&1
+    "$RELACSEXEC" "--plugin-relative-dir=${PLUGINRELATIVE}" "--plugin-home-dir=${PLUGINHOME}" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" $@ >> $LOGFILE 2>&1
   fi
 
 else
@@ -145,12 +151,12 @@ else
  
       if test "x$DEBUGRUN" = "xyes"; then
         # start debugger with RELACS:
-        $DEBUGGER --args "$RELACSEXEC" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" $@
+        $DEBUGGER --args "$RELACSEXEC" "--plugin-relative-dir=${PLUGINRELATIVE}" "--plugin-home-dir=${PLUGINHOME}" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" $@
       else
         # run RELACS from within debugger:
         DEBUGCOM=relacsdebug$$
         echo "run" > $DEBUGCOM
-        $DEBUGGER -x $DEBUGCOM --args "$RELACSEXEC" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" $@
+        $DEBUGGER -x $DEBUGCOM --args "$RELACSEXEC" "--plugin-relative-dir=${PLUGINRELATIVE}" "--plugin-home-dir=${PLUGINHOME}" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" $@
         rm $DEBUGCOM
       fi
 
@@ -161,7 +167,7 @@ else
   else
 
     # simply execute RELACS:
-    "$RELACSEXEC" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" $@
+    "$RELACSEXEC" "--plugin-relative-dir=${PLUGINRELATIVE}" "--plugin-home-dir=${PLUGINHOME}" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" $@
 
   fi
 

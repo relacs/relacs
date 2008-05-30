@@ -33,6 +33,7 @@
 #include <qlayout.h>
 #include <qtextbrowser.h>
 #include <relacs/relacswidget.h>
+#include <relacs/plugins.h>
 #include <relacs/defaultsession.h>
 #include <relacs/aisim.h>
 #include <relacs/aosim.h>
@@ -67,7 +68,9 @@ void* createAttSim( void )
 }
 
 
-RELACSWidget::RELACSWidget( const string &coreconfigfiles,
+RELACSWidget::RELACSWidget( const string &pluginrelative,
+			    const string &pluginhome,
+			    const string &coreconfigfiles,
 			    const string &pluginconfigfiles,
 			    int mode, QWidget *parent, const char *name )
   : QMainWindow( parent, name ),
@@ -151,30 +154,25 @@ RELACSWidget::RELACSWidget( const string &coreconfigfiles,
   CFG.configure( RELACSPlugin::Core );
 
   // loading plugins:
-  PG = new Plugins();
-  PG->add( "AISim", RELACSPlugin::AnalogInputId, createAISim, PLUGINVERSION );
-  PG->add( "AOSim", RELACSPlugin::AnalogOutputId, createAOSim, PLUGINVERSION );
-  PG->add( "AttSim", RELACSPlugin::AttenuatorId, createAttSim, PLUGINVERSION );
-  PG->setChangeToPluginDir( SS.boolean( "changetoplugindir" ) );
-  string pluginhome = SS.text( "pluginhome" );
+  Plugins::add( "AISim", RELACSPlugin::AnalogInputId, createAISim, PLUGINVERSION );
+  Plugins::add( "AOSim", RELACSPlugin::AnalogOutputId, createAOSim, PLUGINVERSION );
+  Plugins::add( "AttSim", RELACSPlugin::AttenuatorId, createAttSim, PLUGINVERSION );
   for ( int k=0; k<SS.Options::size( "pluginpathes" ); k++ ) {
     string pluginlib = SS.text( "pluginpathes", k );
     if ( !pluginlib.empty() ) {
-      if ( pluginlib[pluginlib.size()-1] == '/' )
-	pluginlib += "*.so";
-      PG->openPath( pluginlib, pluginhome );
+      Plugins::openPath( pluginlib, pluginrelative, pluginhome );
     }
   }
-  if ( PG->empty() ) {
+  if ( Plugins::empty() ) {
     printlog(  "! error: No valid plugins found. Exit now." );
     MessageBox::error( "RELACS Error !", "No valid plugins found.<br>\nExit now.", this );
     qApp->exit( 1 );
     ::exit( 1 ); // do we need that?
   }
   else {
-    if ( !PG->libraryErrors().empty() ) {
+    if ( !Plugins::libraryErrors().empty() ) {
       Str ws = "Errors in loading library\n";
-      string s = PG->libraryErrors();
+      string s = Plugins::libraryErrors();
       s.insert( 0, "<ul><li>" );
       string::size_type p = s.find( "\n" );
       while ( p != string::npos ) {
@@ -190,9 +188,9 @@ RELACSWidget::RELACSWidget( const string &coreconfigfiles,
       printlog( "! warning: " + ws.erasedMarkup() );
       MessageBox::warning( "RELACS Warning !", ws, this );
     }
-    if ( !PG->classErrors().empty() ) {
+    if ( !Plugins::classErrors().empty() ) {
       Str ws = "Errors in following plugins (recompile them!):\n";
-      string s = PG->classErrors();
+      string s = Plugins::classErrors();
       s.insert( 0, "<ul><li>" );
       string::size_type p = s.find( "\n" );
       while ( p != string::npos ) {
@@ -226,7 +224,7 @@ RELACSWidget::RELACSWidget( const string &coreconfigfiles,
   for ( int k=0; k<cp.size(); k++ ) {
     string cm = cp.text( k, "" );
     if ( ! cm.empty() ) {
-      Control *cn = (Control *)PG->create( cm, RELACSPlugin::ControlId );
+      Control *cn = (Control *)Plugins::create( cm, RELACSPlugin::ControlId );
       if ( cn == 0 ) {
 	printlog( "! warning: Contol plugin " + cm + " not found!" );
 	MessageBox::warning( "RELACS Warning !", 
@@ -251,7 +249,7 @@ RELACSWidget::RELACSWidget( const string &coreconfigfiles,
     MessageBox::warning( "RELACS Warning !", es, this );
   }
   else {
-    MD = (Model *)PG->create( ms, RELACSPlugin::ModelId );
+    MD = (Model *)Plugins::create( ms, RELACSPlugin::ModelId );
     if ( MD == 0 ) {
       Str es = "Model plugin \"<b>";
       es += ms;
@@ -446,7 +444,7 @@ RELACSWidget::~RELACSWidget( void )
 {
   stopThreads();
   saveConfig();
-  PG->close();
+  Plugins::close();
 }
 
 
@@ -475,14 +473,14 @@ int RELACSWidget::setupHardware( int n )
   bool Fatal = false;
 
   // activate devices:
-  DV->create( *PG, *ADV, n );
+  DV->create( *ADV, n );
   warnings += DV->warnings();
 
   // activate analog input devices:
   if ( n == 0 )
-    AID->create( *PG, *ADV, n );
+    AID->create( *ADV, n );
   else
-    AID->create( *PG, *ADV, 1, "AISim" );
+    AID->create( *ADV, 1, "AISim" );
   warnings += AID->warnings();
   if ( ! AID->ok() ) {
     Fatal = true;
@@ -491,9 +489,9 @@ int RELACSWidget::setupHardware( int n )
 
   // activate analog output devices:
   if ( n == 0 )
-    AOD->create( *PG, *ADV, n );
+    AOD->create( *ADV, n );
   else
-    AOD->create( *PG, *ADV, 1, "AOSim" );
+    AOD->create( *ADV, 1, "AOSim" );
   warnings += AOD->warnings();
   if ( ! AOD->ok() ) {
     Fatal = true;
@@ -502,14 +500,14 @@ int RELACSWidget::setupHardware( int n )
 
   // activate attenuators:
   if ( n == 0 )
-    ATD->create( *PG, *ADV, n );
+    ATD->create( *ADV, n );
   else
-    ATD->create( *PG, *ADV, 1, "AttSim" );
+    ATD->create( *ADV, 1, "AttSim" );
   warnings += ATD->warnings();
   if ( ! ATD->ok() )
     Fatal = true;
 
-  ATI->create( *PG, *ADV, 0 );
+  ATI->create( *ADV, 0 );
   warnings += ATI->warnings();
   if ( ! ATI->ok() )
     Fatal = true;

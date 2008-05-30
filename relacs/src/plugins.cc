@@ -21,12 +21,12 @@
 
 #include <cstdlib>
 #include <dlfcn.h>
-#include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <qdir.h>
 #include <relacs/str.h>
 #include <relacs/plugins.h>
+using namespace std;
 
 namespace relacs {
 
@@ -42,7 +42,6 @@ Plugins::FilesType Plugins::Files;
 
 string Plugins::LibraryErrors = "";
 string Plugins::ClassErrors = "";
-bool Plugins::ChangeToLibDir = true;
 int Plugins::CurrentFileID = 0;
 
 
@@ -63,29 +62,10 @@ int Plugins::open( const string &file )
   for ( index=0; index<Files.size(); index++ )
     if ( Files[index].File == file && Files[index].Lib != 0 )
       return -AlreadyLoaded;
-  
-  // change to the file's directory:
-  string lf = "";
-  char cwd[400];
-  if ( ChangeToLibDir ) {
-    getcwd( cwd, 400 );
-    string::size_type p = file.rfind( '/' );
-    if ( p != string::npos ) {
-      chdir( file.substr( 0, p+1 ).c_str() );
-      lf = "./" + file.substr( p+1 );
-    }
-  }
-  else
-    lf = file;
 
   // load plugin file:
   CurrentFileID = newFileID();
-  void *dlib = dlopen( lf.c_str(), RTLD_NOW | RTLD_GLOBAL );
-
-  // change to previous working directory:
-  if ( ChangeToLibDir ) {
-    chdir( cwd );
-  }
+  void *dlib = dlopen( file.c_str(), RTLD_NOW | RTLD_GLOBAL );
 
   // check success:
   if ( dlib == 0 ) {
@@ -127,28 +107,9 @@ int Plugins::open( int id )
   
   string file = Files[index].File;
 
-  // change to the file's directory:
-  string lf = "";
-  char cwd[400];
-  if ( ChangeToLibDir ) {
-    getcwd( cwd, 400 );
-    string::size_type p = file.rfind( '/' );
-    if ( p != string::npos ) {
-      chdir( file.substr( 0, p+1 ).c_str() );
-      lf = "./" + file.substr( p+1 );
-    }
-  }
-  else
-    lf = file;
-
   // load plugin file:
   CurrentFileID = newFileID();
-  void *dlib = dlopen( lf.c_str(), RTLD_NOW | RTLD_GLOBAL );
-
-  // change to previous working directory:
-  if ( ChangeToLibDir ) {
-    chdir( cwd );
-  }
+  void *dlib = dlopen( file.c_str(), RTLD_NOW | RTLD_GLOBAL );
 
   // check success:
   if ( dlib == 0 ) {
@@ -168,16 +129,45 @@ int Plugins::open( int id )
 }
 
 
-int Plugins::openPath( const string &path, const string &pluginhome )
+int Plugins::openPath( const string &path, const string &relativepath, const string &pluginhome )
 {
-  // read all libraries specified by path:
   Str p( path );
   p.strip();
-  if ( p.eraseFirst( "[PLUGINHOME]" ) ) {
-    Str ph( pluginhome );
-    ph.provideSlash();
-    p = ph + p;
+  if ( p.empty() )
+    return -NoFiles;
+
+  // add pattern:
+  if ( p[p.size()-1] == '/' )
+    p += "*.so";
+
+  // complete path:
+  if ( p[0] != '/' ) {
+    // no absolute path:
+    if ( p.find( '/' ) > 0 ) {
+      // relative path:
+      if ( ! relativepath.empty() ) {
+	Str rp( relativepath );
+	rp.provideSlash();
+	p = rp + p;
+      }
+    }
+    else {
+      // plugin home:
+      if ( ! pluginhome.empty() ) {
+	Str ph( pluginhome );
+	ph.provideSlash();
+	p = ph + p;
+      }
+      else if ( ! relativepath.empty() ) {
+      // relative path:
+	Str rp( relativepath );
+	rp.provideSlash();
+	p = rp + p;
+      }
+    }
   }
+
+  // read all libraries specified by path:
   QDir files( p.dir(), p.notdir() );
   int n = -NoFiles;
   for ( unsigned int k=0; k < files.count(); k++ ) {
@@ -236,7 +226,7 @@ int Plugins::close( int id )
     if ( Plugs[k].FileID == id && Plugs[k].UseCount > 0 )
       return -LibraryInUse;
 
-  // close plugins:
+  // remove plugins:
   for ( PluginsType::iterator p = Plugs.begin(); p != Plugs.end(); )
     if ( p->FileID == id )
       p = Plugs.erase( p );
@@ -247,6 +237,7 @@ int Plugins::close( int id )
   if ( dlclose( Files[index].Lib ) != 0 )
     return -LibraryInUse;
 
+  // mark as unused:
   Files[index].Lib = 0;
 
   return id;
@@ -344,29 +335,10 @@ int Plugins::reopen( const string &file )
 
   // erase file from list:
   Files.erase( Files.begin() + index );
-
-  // change to the file's directory:
-  string lf = "";
-  char cwd[400];
-  if ( ChangeToLibDir ) {
-    getcwd( cwd, 400 );
-    string::size_type p = file.rfind( '/' );
-    if ( p != string::npos ) {
-      chdir( file.substr( 0, p+1 ).c_str() );
-      lf = "./" + file.substr( p+1 );
-    }
-  }
-  else
-    lf = file;
   
   // load plugin file:
   CurrentFileID = newFileID();
-  void *dlib = dlopen( lf.c_str(), RTLD_NOW | RTLD_GLOBAL );
-
-  // change to previous working directory:
-  if ( ChangeToLibDir ) {
-    chdir( cwd );
-  }
+  void *dlib = dlopen( file.c_str(), RTLD_NOW | RTLD_GLOBAL );
 
   // check success:
   if ( dlib == 0 ) {
@@ -407,29 +379,10 @@ int Plugins::reopen( int id )
   // erase file from list:
   string file = Files[index].File;
   Files.erase( Files.begin() + index );
-
-  // change to the file's directory:
-  string lf = "";
-  char cwd[400];
-  if ( ChangeToLibDir ) {
-    getcwd( cwd, 400 );
-    string::size_type p = file.rfind( '/' );
-    if ( p != string::npos ) {
-      chdir( file.substr( 0, p+1 ).c_str() );
-      lf = "./" + file.substr( p+1 );
-    }
-  }
-  else
-    lf = file;
   
   // load plugin file:
   CurrentFileID = newFileID();
-  void *dlib = dlopen( lf.c_str(), RTLD_NOW | RTLD_GLOBAL );
-
-  // change to previous working directory:
-  if ( ChangeToLibDir ) {
-    chdir( cwd );
-  }
+  void *dlib = dlopen( file.c_str(), RTLD_NOW | RTLD_GLOBAL );
 
   // check success:
   if ( dlib == 0 ) {
@@ -444,6 +397,24 @@ int Plugins::reopen( int id )
   // memorize plugin file:
   Files.push_back( FileInfo( file, dlib, CurrentFileID ) );
   return CurrentFileID;
+}
+
+
+int Plugins::size( void )
+{
+  return Files.size();
+}
+
+
+bool Plugins::empty( void )
+{
+  return Files.empty();
+}
+
+
+int Plugins::plugins( void )
+{
+  return Plugs.size();
 }
 
 
@@ -470,6 +441,16 @@ string Plugins::ident( int index )
 }
 
 
+string Plugins::first( int type )
+{
+  for ( unsigned int index=0; index<Plugs.size(); index++ )
+    if ( type <= 0 || (Plugs[index].Type & type) > 0 )
+      return Plugs[index].Ident;
+
+  return "";
+}
+
+
 int Plugins::index( const string &plugin, int type )
 {
   for ( unsigned int k=0; k<Plugs.size(); k++ )
@@ -490,12 +471,24 @@ int Plugins::type( int index )
 }
 
 
+int Plugins::type( const string &plugin )
+{
+  return type( index( plugin, -1 ) );
+}
+
+
 int Plugins::fileID( int index )
 {
   if ( index >= 0 && index < (int)Plugs.size() )
     return Plugs[index].FileID;
 
   return -InvalidPlugin;
+}
+
+
+int Plugins::fileID( const string &plugin )
+{
+  return fileID( index( plugin, -1 ) );
 }
 
 
@@ -512,6 +505,12 @@ void *Plugins::create( int index )
 }
 
 
+void *Plugins::create( const string &plugin, int type )
+{
+  return create( index( plugin, type ) );
+}
+
+
 int Plugins::destroy( int index )
 {
   if ( index >= 0 && index < (int)Plugs.size() ) {
@@ -524,13 +523,47 @@ int Plugins::destroy( int index )
 }
 
 
-string Plugins::first( int type )
+int Plugins::destroy( const string &plugin, int type )
 {
-  for ( unsigned int index=0; index<Plugs.size(); index++ )
-    if ( type <= 0 || (Plugs[index].Type & type) > 0 )
-      return Plugs[index].Ident;
+  return destroy( index( plugin, type ) );
+}
 
-  return "";
+
+const string &Plugins::libraryErrors( void )
+{
+  return LibraryErrors;
+}
+
+
+void Plugins::addLibraryError( const string &error )
+{
+  LibraryErrors += error;
+  LibraryErrors += '\n';
+}
+
+
+void Plugins::clearLibraryErrors( void )
+{
+  LibraryErrors = "";
+}
+
+
+const string &Plugins::classErrors( void )
+{
+  return ClassErrors;
+}
+
+
+void Plugins::addClassError( const string &error )
+{
+  ClassErrors += error;
+  ClassErrors += '\n';
+}
+
+
+void Plugins::clearClassErrors( void )
+{
+  ClassErrors = "";
 }
 
 

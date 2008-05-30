@@ -91,7 +91,9 @@ class RELACSWidget : public QMainWindow, public QThread, public ConfigClass
 
 public:
 
-  RELACSWidget( const string &coreconfigfiles,
+  RELACSWidget( const string &pluginrelative,
+		const string &pluginhome,
+		const string &coreconfigfiles,
 		const string &pluginconfigfiles, int mode,
 		QWidget *parent=0, const char *name=0 );
   ~RELACSWidget( void );
@@ -306,7 +308,6 @@ private:
   QWidget *MainWidget;
 
   ConfigureClasses CFG;
-  Plugins *PG;
 
   Settings SS;
   MetaData MTDT;

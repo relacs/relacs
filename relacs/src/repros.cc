@@ -67,18 +67,14 @@ int RePros::create( RELACSWidget *rw )
   DialogOpt.addBoolean( "default", "Set values as default", true );
   DialogOpt.addBoolean( "overwrite", "Changes overwrite macro options", false );
 
-  Plugins *pg = RW->PG;
-  if ( pg == 0 ) 
-    return 0;
-
   int n = 0;
-  for ( int k=0; k<pg->plugins(); k++ )
-    if ( pg->type( k ) & RELACSPlugin::ReProId ) {
-      void *mp = pg->create( k );
+  for ( int k=0; k<Plugins::plugins(); k++ )
+    if ( Plugins::type( k ) & RELACSPlugin::ReProId ) {
+      void *mp = Plugins::create( k );
       RePro *rp = (RePro*)mp;
       rp->setRELACSWidget( RW );
       addTab( rp, rp->title().c_str() );
-      ReProData *rd = new ReProData( pg->ident( k ), rp, DialogOpt );
+      ReProData *rd = new ReProData( Plugins::ident( k ), rp, DialogOpt );
       RPs.push_back( rd );
       connect( rd, SIGNAL( stopRePro( void ) ),
 	       this, SIGNAL( stopRePro( void ) ) );
@@ -257,15 +253,14 @@ void RePros::reload( int index )
   removePage( RPs[index]->RP );
   delete RPs[index]->RP;
 
-  Plugins *pg = RW->PG;
-  if ( pg->destroy( RPs[index]->Name, RELACSPlugin::ReProId ) <= 0 ) {
-    pg->reopen( pg->fileID( RPs[index]->Name ) );
+  if ( Plugins::destroy( RPs[index]->Name, RELACSPlugin::ReProId ) <= 0 ) {
+    Plugins::reopen( Plugins::fileID( RPs[index]->Name ) );
   }
   else {
     RW->printlog( "! warning: RePros::reload() -> unable to reopen plugin!" );
   }
 
-  void *mp = pg->create( RPs[index]->Name, RELACSPlugin::ReProId );
+  void *mp = Plugins::create( RPs[index]->Name, RELACSPlugin::ReProId );
   if ( mp != 0 ) {
     RePro *rp = (RePro*)mp;
     rp->setRELACSWidget( RW );

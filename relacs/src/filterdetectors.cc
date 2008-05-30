@@ -91,8 +91,8 @@ string FilterDetectors::createFilters( void )
       // create filter instance:
       string ident = text( label + "name" );
       string filter = text( label + "filter" );
-      Filter *fp = (Filter*)( RW->PG->create( filter,
-					      RELACSPlugin::FilterId ) );
+      Filter *fp = (Filter*)( Plugins::create( filter,
+					       RELACSPlugin::FilterId ) );
       if ( fp == 0 ) {
 	warning += "<b>" + ident + "</b>: Plugin \"<b>" + ident + "</b>\" not found!<br>\n";
 	continue;

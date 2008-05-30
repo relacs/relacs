@@ -16,7 +16,7 @@ Autotools:
   http://summa.physik.hu-berlin.de/~beule/random/random55.tar.gz
 
 Relacs:
-- Update plugin loader: relative pathes relative to configuration file, implicit plugin home
+- Update plugin loader: multiple pluginhome pathes
 - How are plugins (control, repros) found/identified? Possibility of name clashes!
   Use plugin-set name as well.
 - The right name for dlopen can be found in the dlname field of the *.la file!
@@ -181,7 +181,6 @@ Filter/Detectors/PlotTrace:
   Make PlotTrace better configurable!
 
 Plugins:
- - access by index with index equal to index in container, not an id.
  - use Qt shared libraries interface!? 
    QWidgetPlugin would replace addPlugin and/or the Plugin class (?)
    and can contain whatever classes as plugins.
