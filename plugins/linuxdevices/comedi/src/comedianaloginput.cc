@@ -1,5 +1,5 @@
 /*
-  comedianaloginput.cc
+  comedi/comedianaloginput.cc
   Interface for accessing analog input of a daq-board via comedi.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -26,8 +26,13 @@
 #include <ctime>
 #include <unistd.h>
 #include <fcntl.h>
-#include "comedianalogoutput.h"
-#include "comedianaloginput.h"
+#include <relacs/comedi/comedianalogoutput.h>
+#include <relacs/comedi/comedianaloginput.h>
+using namespace std;
+using namespace relacs;
+
+namespace comedi {
+
 
 ComediAnalogInput::ComediAnalogInput( void ) 
   : AnalogInput( ComediAnalogInputType )
@@ -777,7 +782,7 @@ int ComediAnalogInput::readData( InList &traces )
   else
     convert<sampl_t>( traces );
 
-  if( failed || errno == EAGAIN || errno == EINTR ) {
+  if( failed || errno == EINTR ) {
     // check buffer underrun:
     if( errno == EPIPE ) {
       ErrorState = 1;
@@ -801,9 +806,8 @@ int ComediAnalogInput::readData( InList &traces )
 }
 
 
-void ComediAnalogInput::take( int syncmode, 
-			      vector< AnalogInput* > &ais, 
-			      vector< AnalogOutput* > &aos,
+void ComediAnalogInput::take( const vector< AnalogInput* > &ais,
+			      const vector< AnalogOutput* > &aos,
 			      vector< int > &aiinx, vector< int > &aoinx )
 {
   ComediAIs.clear();
@@ -842,3 +846,6 @@ void ComediAnalogInput::take( int syncmode,
 	ComediAIsLink[ai] = ao;
       }
 }
+
+
+}; /* namespace comedi */

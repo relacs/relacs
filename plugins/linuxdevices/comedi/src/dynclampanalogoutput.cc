@@ -1,5 +1,5 @@
 /*
-  dynclampanalogoutput.cc
+  coemdi/dynclampanalogoutput.cc
   Interface for accessing analog output of a daq-board via the dynamic clamp 
   kernel module.
 
@@ -25,14 +25,18 @@
 #include <cstdio>
 #include <cmath>
 #include <ctime>
-
-//#include "comedianaloginput.h"
-#include "dynclampanalogoutput.h"
-#include "dynclampanaloginput.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
+//#include <relacs/comedi/comedianaloginput.h>
+#include <relacs/comedi/dynclampanalogoutput.h>
+#include <relacs/comedi/dynclampanaloginput.h>
+using namespace std;
+using namespace relacs;
+
+namespace comedi {
+
 
 DynClampAnalogOutput::DynClampAnalogOutput( void ) 
   : AnalogOutput( DynClampAnalogOutputType )
@@ -111,7 +115,7 @@ int DynClampAnalogOutput::open( const string &devicefile, long mode )
   if( Modulefile == -1 ) {
   cerr << " DynClampAnalogOutput::open(): opening dynclamp-module failed" 
        << endl;/////TEST/////
-    return ErrorState;
+    return -1;
   }
 
   // get subdevice ID from module:
@@ -119,7 +123,7 @@ int DynClampAnalogOutput::open( const string &devicefile, long mode )
   if( retVal < 0 ) {
     cerr << " DynClampAnalogOutput::open -> ioctl command IOC_GET_SUBDEV_ID on device "
 	 << Modulename << " failed!" << endl;
-    return ErrorState;
+    return -1;
   }
 
   // set device and subdevice:
@@ -134,7 +138,7 @@ int DynClampAnalogOutput::open( const string &devicefile, long mode )
   if( retVal < 0 ) {
     cerr << " DynClampAnalogOutput::open -> ioctl command IOC_OPEN_SUBDEV on device "
 	 << Modulename << " failed!" << endl;
-    return ErrorState;
+    return -1;
   }
   IsKernelDaqOpened = 1;
 
@@ -177,7 +181,6 @@ int DynClampAnalogOutput::reset( void )
     if( retVal < 0 ) {
       cerr << " DynClampAnalogOutput::stop -> ioctl command IOC_STOP_SUBDEV on device "
   	  << Modulename << " failed!" << endl;
-      ErrorState = -2;
       return -1;
     }
  
@@ -188,7 +191,6 @@ int DynClampAnalogOutput::reset( void )
     if( retVal < 0 ) {
       cerr << " DynClampAnalogOutput::close -> ioctl command IOC_RELEASE_SUBDEV on device "
   	 << Modulename << " failed!" << endl;
-      ErrorState = -2;
       return -1;
     }
   }
@@ -218,7 +220,6 @@ int DynClampAnalogOutput::stop( void )
   if( retVal < 0 ) {
     cerr << " DynClampAnalogOutput::stop -> ioctl command IOC_STOP_SUBDEV on device "
 	 << Modulename << " failed!" << endl;
-    ErrorState = -2;
     return -1;
   }
 
@@ -374,7 +375,7 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
     if ( min == OutData::AutoRange || max == OutData::AutoRange ) {
       double smin = 0.0;
       double smax = 0.0;
-      numerics::minMax( smin, smax, sigs[k] );
+      minMax( smin, smax, sigs[k] );
       if ( min == OutData::AutoRange )
 	min = smin;
       if ( max == OutData::AutoRange )
@@ -515,7 +516,7 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
   struct chanlistIOCT chanlistIOC;
   struct syncCmdIOCT syncCmdIOC;
   int retVal;
-  ErrorState = -2;
+  int errorFlag = -2;
 
   // set chanlist:
   chanlistIOC.subdevID = SubdeviceID;
@@ -529,7 +530,7 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
   if( retVal < 0 ) {
     cerr << " DynClampAnalogOutput::prepareWrite -> ioctl command IOC_CHANLIST on device "
 	 << Modulename << " failed!" << endl;
-    return ErrorState;
+    return errorFlag;
   }
 
   // set up synchronous command:
@@ -546,7 +547,7 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
       sigs.addError( DaqError::InvalidSampleRate );
     else
       sigs.addErrorStr( errno );
-    return ErrorState;
+    return errorFlag;
   }
 
   // initialize Connection to RTAI-FIFO:
@@ -555,7 +556,7 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
   if( FifoFd < 0 ) {
     cerr << " DynClampAnalogOutput::startWrite -> oping RTAI-FIFO " 
          << fifoName << " failed!" << endl;
-    return ErrorState;
+    return errorFlag;
   }
 
 
@@ -586,8 +587,7 @@ int DynClampAnalogOutput::startWrite( OutList &sigs )
   int retVal = writeData( sigs );
 
   if(retVal < 1 ) {
-    ErrorState = 2;
-    return ErrorState;
+    return -2;
   }
 
   // start subdevice:
@@ -595,11 +595,10 @@ int DynClampAnalogOutput::startWrite( OutList &sigs )
   if( retVal < 0 ) {
     cerr << " DynClampAnalogOutput::startWrite -> ioctl command IOC_START_SUBDEV on device "
 	 << Modulename << " failed!" << endl;
-    ErrorState = 2;
-    return ErrorState;
+    return -2;
   }
   
-  return ErrorState; //elemWritten;
+  return 0;
 }
 
 int DynClampAnalogOutput::writeData( OutList &sigs )
@@ -625,7 +624,6 @@ int DynClampAnalogOutput::writeData( OutList &sigs )
   int bytesWritten, retVal;
 
   if( sigs[0].deviceBufferMaxPop() <= 0 ) {
-    //    ErrorState = 1;
     //    sigs.addErrorStr( "DynClampAnalogOutput::writeData: " +
     //		      deviceFile() + " - buffer-underrun in outlist!" );
     //    sigs.addError( DaqError::OverflowUnderrun );
@@ -643,8 +641,7 @@ int DynClampAnalogOutput::writeData( OutList &sigs )
     if( retVal < 0 ) {
       cerr << " DynClampAnalogOutput::writeData() -> ioctl command IOC_REQ_WRITE on device "
 	   << Modulename << " failed!" << endl;
-      ErrorState = -2;
-      return ErrorState;
+      return -2;
     }
 */
     bytesWritten = ::write( FifoFd, sigs[0].deviceBufferPopBuffer(),
@@ -665,7 +662,7 @@ int DynClampAnalogOutput::writeData( OutList &sigs )
 
   }
 
-  if( failed || errno == EAGAIN || errno == EINTR )
+  if( failed || errno == EINTR )
     switch( errno ) {
 
     case EPIPE: 
@@ -711,8 +708,7 @@ long DynClampAnalogOutput::index( void ) const
   if( retVal < 0 ) {
     cerr << " DynClampAnalogOutput::index() -> ioctl command IOC_GETLOOPCNT on device "
 	   << Modulename << " failed!" << endl;
-    ErrorState = -2;
-    return ErrorState;
+    return -2;
   }
   return index;
 }
@@ -725,3 +721,6 @@ int DynClampAnalogOutput::getAISyncDevice( const vector< AnalogInput* > &ais ) c
   }
   return -1;
 }
+
+
+}; /* namespace comedi */

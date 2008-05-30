@@ -4,7 +4,7 @@ SUBDIRS = \
 
 
 EXTRA_DIST = \
-    module/Makefile.in \
+    module/Makefile \
     module/blocklist.h \
     module/blocklist.c \
     module/model.h \

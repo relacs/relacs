@@ -181,7 +181,7 @@ public:
         respectively. */
   virtual void take( const vector< AnalogInput* > &ais,
 		     const vector< AnalogOutput* > &aos,
-		     vector< int > &aiinx, vector< int > &aoinx ) const;
+		     vector< int > &aiinx, vector< int > &aoinx );
 
     /*! If the analog input device supports inputs that
         are not physical input lines but rather readable internal variables,

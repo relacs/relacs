@@ -1,5 +1,5 @@
 /*
-  dynclampanaloginput.cc
+  comedi/dynclampanaloginput.cc
   Interface for accessing analog input of a daq-board via the dynamic clamp 
   kernel module.
 
@@ -25,13 +25,17 @@
 #include <cstdio>
 #include <cmath>
 #include <ctime>
-
-//#include "comedianaloginput.h"
-#include "dynclampanaloginput.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
+//#include <relacs/comedi/comedianaloginput.h>
+#include <relacs/comedi/dynclampanaloginput.h>
+using namespace std;
+using namespace relacs;
+
+namespace comedi {
+
 
 DynClampAnalogInput::DynClampAnalogInput( void ) 
   : AnalogInput( DynClampAnalogInputType )
@@ -110,7 +114,7 @@ int DynClampAnalogInput::open( const string &devicefile, long mode )
   if( Modulefile == -1 ) {
   cerr << " DynClampAnalogInput::open(): opening dynclamp-module failed" 
        << endl;/////TEST/////
-    return ErrorState;
+    return -1;
   }
 
 
@@ -119,7 +123,7 @@ int DynClampAnalogInput::open( const string &devicefile, long mode )
   if( retVal < 0 ) {
     cerr << " DynClampAnalogInput::open -> ioctl command IOC_GET_SUBDEV_ID on device "
 	 << Modulename << " failed!" << endl;
-    return ErrorState;
+    return -1;
   }
 
   // set device and subdevice:
@@ -134,7 +138,7 @@ int DynClampAnalogInput::open( const string &devicefile, long mode )
   if( retVal < 0 ) {
     cerr << " DynClampAnalogInput::open -> ioctl command IOC_OPEN_SUBDEV on device "
 	 << Modulename << " failed!" << endl;
-    return ErrorState;
+    return -1;
   }
   IsKernelDaqOpened = true;
 
@@ -178,7 +182,6 @@ int DynClampAnalogInput::reset( void )
     if( retVal < 0 ) {
       cerr << " DynClampAnalogInput::reset -> ioctl command IOC_STOP_SUBDEV on device "
   	  << Modulename << " failed!" << endl;
-      ErrorState = -2;
       return -1;
     }
 
@@ -189,7 +192,6 @@ int DynClampAnalogInput::reset( void )
     if( retVal < 0 ) {
       cerr << " DynClampAnalogInput::reset -> ioctl command IOC_RELEASE_SUBDEV on device "
   	 << Modulename << " failed!" << endl;
-      ErrorState = -2;
       return -1;
     }
   }
@@ -215,7 +217,6 @@ int DynClampAnalogInput::stop( void )
   if( retVal < 0 ) {
     cerr << " DynClampAnalogInput::stop -> ioctl command IOC_STOP_SUBDEV on device "
 	 << Modulename << " failed!" << endl;
-    ErrorState = -2;
     return -1;
   }
 
@@ -438,7 +439,7 @@ int DynClampAnalogInput::prepareRead( InList &sigs )
   struct chanlistIOCT chanlistIOC;
   struct syncCmdIOCT syncCmdIOC;
   int retVal;
-  ErrorState = -2;
+  int errorFlag = -2;
 
   // set chanlist:
   chanlistIOC.subdevID = SubdeviceID;
@@ -452,7 +453,7 @@ int DynClampAnalogInput::prepareRead( InList &sigs )
   if( retVal < 0 ) {
     cerr << " DynClampAnalogInput::prepareRead -> ioctl command IOC_CHANLIST on device "
 	 << Modulename << " failed!" << endl;
-    return ErrorState;
+    return errorFlag;
   }
 
   // set up synchronous command:
@@ -465,7 +466,7 @@ int DynClampAnalogInput::prepareRead( InList &sigs )
   if( retVal < 0 ) {
     cerr << " DynClampAnalogInput::prepareRead -> ioctl command IOC_SYNC_CMD on device "
 	 << Modulename << " failed!" << endl;
-    return ErrorState;
+    return errorFlag;
   }
 
   // initialize Connection to RTAI-FIFO:
@@ -474,7 +475,7 @@ int DynClampAnalogInput::prepareRead( InList &sigs )
   if( FifoFd < 0 ) {
     cerr << " DynClampAnalogOutput::startWrite -> oping RTAI-FIFO " 
          << fifoName << " failed!" << endl;
-    return ErrorState;
+    return errorFlag;
   }
 
   IsLoaded = true;
@@ -531,9 +532,9 @@ int DynClampAnalogInput::readData( InList &sigs )
   bool failed = false;
   int elemRead = 0;
   int bytesRead, retVal;
+  int errnoSave = 0;
 
   if( sigs[0].deviceBufferMaxPush() <= 0 ) {
-    //    ErrorState = 1;
     //    sigs.addErrorStr( "DynClampAnalogInput::readData: " +
     //		      deviceFile() + " - buffer-underrun in inlist!" );
     //    sigs.addError( DaqError::OverflowUnderrun );
@@ -551,19 +552,21 @@ int DynClampAnalogInput::readData( InList &sigs )
     if( retVal < 0 ) {
       cerr << " DynClampAnalogInput::readData() -> ioctl command IOC_REQ_READ on device "
 	   << Modulename << " failed!" << endl;
-      ErrorState = -2;
-      return ErrorState;
+      return -2;
     }
 */
     void *deviceBuf = sigs[0].deviceBufferPushBuffer();
     bytesRead = ::read( FifoFd, deviceBuf,
                         sigs[0].deviceBufferMaxPush() * BufferElemSize );
-    /*    cerr << " DynClampAnalogInput::readData():" << bytesRead << "of "
+    /*
+        cerr << " DynClampAnalogInput::readData(): " << tryit << " " << bytesRead << "of "
          << sigs[0].deviceBufferMaxPush() * BufferElemSize << "bytes read:"
-         << endl;/////TEST/////*/
-
-    if( bytesRead < 0 && errno != EAGAIN && errno != EINTR ) {
-      sigs.addErrorStr( errno );
+         << endl;/////TEST/////
+    */
+    errnoSave = errno;
+    
+    if( bytesRead < 0 && errnoSave != EAGAIN && errnoSave != EINTR ) {
+      sigs.addErrorStr( errnoSave );
       failed = true;
       cerr << " DynClampAnalogInput::readData(): error" << endl;/////TEST/////
     }
@@ -574,35 +577,35 @@ int DynClampAnalogInput::readData( InList &sigs )
 
   }
 
-  if( failed || errno == EAGAIN || errno == EINTR )
-    switch( errno ) {
+  if( failed || errnoSave == EINTR )
+    switch( errnoSave ) {
 
     case EPIPE: 
       ErrorState = 1;
-      sigs.addErrorStr( deviceFile() + " - buffer-underrun: "
-			+ strerror( errno ) );
-      sigs.addError( DaqError::OverflowUnderrun );
       cerr << " DynClampAnalogInput::readData(): buffer-overflow: "
-      	   << strerror( errno ) << endl;/////TEST/////
+      	   << strerror( errnoSave ) << endl;/////TEST/////
+      sigs.addErrorStr( deviceFile() + " - buffer-underrun: "
+			+ strerror( errnoSave ) );
+      sigs.addError( DaqError::OverflowUnderrun );
       return -1;
 
     case EBUSY:
       ErrorState = 2;
-      sigs.addErrorStr( deviceFile() + " - device busy: "
-			+ strerror( errno ) );
-      sigs.addError( DaqError::Busy );
       cerr << " DynClampAnalogInput::readData(): device busy: "
-	         << strerror( errno ) << endl;/////TEST/////
+	         << strerror( errnoSave ) << endl;/////TEST/////
+      sigs.addErrorStr( deviceFile() + " - device busy: "
+			+ strerror( errnoSave ) );
+      sigs.addError( DaqError::Busy );
       return -1;
 
     default:
       ErrorState = 2;
-      sigs.addErrorStr( "Error while reading from device-file: " + deviceFile()
-			+ "  system: " + strerror( errno ) );
       cerr << " DynClampAnalogInput::readData(): buffer-underrun: "
-	   << "  system: " << strerror( errno )
-     << " (device file descriptor " << Modulefile
+	   << "  system: " << strerror( errnoSave )
+	   << " (device file descriptor " << Modulefile
 	   << endl;/////TEST/////
+//      sigs.addErrorStr( "Error while reading from device-file: " + deviceFile()
+//			+ "  system: " + strerror( errnoSave ) );
       sigs.addError( DaqError::Unknown );
       return -1;
     }
@@ -657,8 +660,7 @@ long DynClampAnalogInput::index( void )
   if( retVal < 0 ) {
     cerr << " DynClampAnalogInput::index() -> ioctl command IOC_GETLOOPCNT on device "
 	   << Modulename << " failed!" << endl;
-    ErrorState = -2;
-    return ErrorState;
+    return -1;
   }
   return index;
 
@@ -709,3 +711,6 @@ void DynClampAnalogInput::take( vector< AnalogInput* > &ais,
       }
   */
 }
+
+
+}; /* namespace comedi */

@@ -95,7 +95,7 @@ int AnalogOutput::getAISyncDevice( const vector< AnalogInput* > &ais ) const
 
 
 void AnalogOutput::take( const vector< AnalogOutput* > &aos,
-			 vector< int > &aoinx ) const
+			 vector< int > &aoinx )
 {
 }
 

@@ -195,7 +195,7 @@ public:
 	from this device.
 	Add the indices of those devices to \a aoinx. */
   virtual void take( const vector< AnalogOutput* > &aos,
-		     vector< int > &aoinx ) const;
+		     vector< int > &aoinx );
 
     /*! If the analog output device supports outputs that
         are not physical output lines but rather writeable parameter,

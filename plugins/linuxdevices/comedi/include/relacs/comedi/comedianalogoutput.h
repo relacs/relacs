@@ -1,5 +1,5 @@
 /*
-  comedianalogoutput.h
+  comedi/comedianalogoutput.h
   Interface for accessing analog output of a daq-board via comedi.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -19,13 +19,17 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _COMEDIANALOGOUTPUT_H_
-#define _COMEDIANALOGOUTPUT_H_
+#ifndef _COMEDI_COMEDIANALOGOUTPUT_H_
+#define _COMEDI_COMEDIANALOGOUTPUT_H_
 
 #include <vector>
 #include <comedilib.h>
-#include "analogoutput.h"
+#include <relacs/analogoutput.h>
 using namespace std;
+using namespace relacs;
+
+namespace comedi {
+
 
 class ComediAnalogInput;
 
@@ -34,6 +38,7 @@ class ComediAnalogInput;
 \author Marco Hackenberg
 \version 0.1
 \brief Interface for accessing analog output of a daq-board via comedi.
+\bug fix errno usage
 */
 
 
@@ -211,15 +216,12 @@ public:
         other: unknown */
   int error( void ) const;
 
-    /*! Check for every analog input and output device in \a ais and \a aos
-        whether it can be simultaneously started by startRead()
-	from this device (\a syncmode = 0)
-	or whether the device driver can read the index of an running
-	analog input at the time of starting an analog output (\a syncmode = 1).
-	Add the indices of those devices to \a aiinx and \a aoinx. */
-  void take( int syncmode, 
-	     vector< AnalogInput* > &ais, vector< AnalogOutput* > &aos,
-		     vector< int > &aiinx, vector< int > &aoinx );
+    /*! Check for every analog output device in \a aos
+        whether it can be simultaneously started by startWrite()
+        from this device.
+        Add the indices of those devices to \a aoinx. */
+  virtual void take( const vector< AnalogOutput* > &aos,
+                     vector< int > &aoinx );
 
 
 private:
@@ -254,12 +256,12 @@ private:
   int UnipolarExtRefRangeIndex;
   int BipolarExtRefRangeIndex;
 
-  vector< ComediAnalogInput* > ComediAIs;
   vector< ComediAnalogOutput* > ComediAOs;
-  vector< int > ComediAIsLink;
   vector< int > ComediAOsLink;
 
 };
 
 
-#endif
+}; /* namespace comedi */
+
+#endif /* ! _COMEDI_COMEDIANALOGOUTPUT_H_ */

@@ -21,10 +21,13 @@ libcomedicomedianaloginput_la_CPPFLAGS = \
 
 libcomedicomedianaloginput_la_LDFLAGS = \
     -module -avoid-version \
+    $(COMEDI_LDFLAGS) \
     $(QT3_LDFLAGS)
 
 libcomedicomedianaloginput_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
+    libcomedicomedianalogoutput.la \
+    $(COMEDI_LIBS) \
     $(QT3_LIBS)
 
 libcomedicomedianaloginput_la_SOURCES = \
@@ -49,10 +52,12 @@ libcomedicomedianalogoutput_la_CPPFLAGS = \
 
 libcomedicomedianalogoutput_la_LDFLAGS = \
     -module -avoid-version \
+    $(COMEDI_LDFLAGS) \
     $(QT3_LDFLAGS)
 
 libcomedicomedianalogoutput_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
+    $(COMEDI_LIBS) \
     $(QT3_LIBS)
 
 libcomedicomedianalogoutput_la_SOURCES = \
@@ -77,10 +82,13 @@ libcomedidynclampanaloginput_la_CPPFLAGS = \
 
 libcomedidynclampanaloginput_la_LDFLAGS = \
     -module -avoid-version \
+    $(COMEDI_LDFLAGS) \
     $(QT3_LDFLAGS)
 
 libcomedidynclampanaloginput_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
+    libcomedicomedianaloginput.la \
+    $(COMEDI_LIBS) \
     $(QT3_LIBS)
 
 libcomedidynclampanaloginput_la_SOURCES = \
@@ -106,10 +114,13 @@ libcomedidynclampanalogoutput_la_CPPFLAGS = \
 
 libcomedidynclampanalogoutput_la_LDFLAGS = \
     -module -avoid-version \
+    $(COMEDI_LDFLAGS) \
     $(QT3_LDFLAGS)
 
 libcomedidynclampanalogoutput_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
+    libcomedicomedianalogoutput.la \
+    $(COMEDI_LIBS) \
     $(QT3_LIBS)
 
 libcomedidynclampanalogoutput_la_SOURCES = \
@@ -125,10 +136,10 @@ libcomedidynclampanalogoutput_la_include_HEADERS = \
 
 
 check_PROGRAMS = \
-    linktest_libcomedicomedianaloginput.la \
-    linktest_libcomedicomedianalogoutput.la \
-    linktest_libcomedidynclampanaloginput.la \
-    linktest_libcomedidynclampanalogoutput.la
+    linktest_libcomedicomedianaloginput_la \
+    linktest_libcomedicomedianalogoutput_la \
+    linktest_libcomedidynclampanaloginput_la \
+    linktest_libcomedidynclampanalogoutput_la
 
 linktest_libcomedicomedianaloginput_la_SOURCES = linktest.cc
 linktest_libcomedicomedianaloginput_la_LDADD = libcomedicomedianaloginput.la

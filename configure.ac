@@ -228,7 +228,6 @@ AC_CONFIG_FILES([
     plugins/linuxdevices/nieseries/src/Makefile
     plugins/linuxdevices/comedi/Makefile
     plugins/linuxdevices/comedi/src/Makefile
-    plugins/linuxdevices/comedi/module/Makefile
     plugins/linuxdevices/attcs3310/Makefile
     plugins/linuxdevices/attcs3310/src/Makefile
     plugins/linuxdevices/misc/Makefile

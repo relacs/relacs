@@ -75,7 +75,7 @@ int AnalogInput::open( Device &device, long mode )
 
 void AnalogInput::take( const vector< AnalogInput* > &ais,
 			const vector< AnalogOutput* > &aos,
-			vector< int > &aiinx, vector< int > &aoinx ) const
+			vector< int > &aiinx, vector< int > &aoinx )
 {
 }
 

@@ -1,5 +1,5 @@
 /*
-  comedianaloginput.h
+  comedi/comedianaloginput.h
   Interface for accessing analog input of a daq-board via comedi.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -19,13 +19,17 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _COMEDIANALOGINPUT_H_
-#define _COMEDIANALOGINPUT_H_
+#ifndef _COMEDI_COMEDIANALOGINPUT_H_
+#define _COMEDI_COMEDIANALOGINPUT_H_
 
 #include <comedilib.h>
 #include <vector>
-#include "analoginput.h"
+#include <relacs/analoginput.h>
 using namespace std;
+using namespace relacs;
+
+namespace comedi {
+
 
 class ComediAnalogOutput;
 
@@ -34,6 +38,7 @@ class ComediAnalogOutput;
 \author Marco Hackenberg
 \version 0.1
 \brief Interface for accessing analog input of a daq-board via comedi.
+\bug fix errno usage
 
 
 insmod /usr/src/kernels/rtai/modules/rtai_hal.ko
@@ -195,15 +200,15 @@ public:
         other: unknown */
   int error( void ) const;
 
-    /*! Check for every analog input and input device in \a ais and \a aos
+    /*! Check for every analog input and analog output device in \a ais
+        and \a aos, respectively,
         whether it can be simultaneously started by startRead()
-	from this device (\a syncmode = 0)
-	or whether the device driver can read the index of an running
-	analog input at the time of starting an analog output (\a syncmode = 1).
-	Add the indices of those devices to \a aiinx and \a aoinx. */
-  void take( int syncmode, 	     
-	     vector< AnalogInput* > &ais, vector< AnalogOutput* > &aos,
-	     vector< int > &aiinx, vector< int > &aoinx );
+        from this device.
+        Add the indices of those devices to \a aiinx and \a aoinx,
+        respectively. */
+  virtual void take( const vector< AnalogInput* > &ais,
+		     const vector< AnalogOutput* > &aos,
+		     vector< int > &aiinx, vector< int > &aoinx );
 
 
 private:
@@ -242,4 +247,6 @@ private:
 };
 
 
-#endif
+}; /* namespace comedi */
+
+#endif /* ! _COMEDI_COMEDIANALOGINPUT_H_ */

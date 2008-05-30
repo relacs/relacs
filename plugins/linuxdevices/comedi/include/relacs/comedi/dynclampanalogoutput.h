@@ -1,15 +1,17 @@
-#ifndef _DYNCLAMPANALOGOUTPUT_H_
-#define _DYNCLAMPANALOGOUTPUT_H_
+#ifndef _COMEDI_DYNCLAMPANALOGOUTPUT_H_
+#define _COMEDI_DYNCLAMPANALOGOUTPUT_H_
 
 #include <vector>
 #include <comedilib.h>
-#include "daqerror.h"
-#include "analogoutput.h"
-#include "analoginput.h"
-#include "comedianalogoutput.h"
-#include "moduledef.h"
-
+#include <relacs/daqerror.h>
+#include <relacs/analogoutput.h>
+#include <relacs/analoginput.h>
+#include <relacs/comedi/comedianalogoutput.h>
+#include <relacs/comedi/moduledef.h>
 using namespace std;
+using namespace relacs;
+
+namespace comedi {
 
 
 /*! 
@@ -17,6 +19,7 @@ using namespace std;
 \author Marco Hackenberg
 \version 0.1
 \brief Interface for accessing analog output of a daq-board via a dynamic clamp kernel module.
+\bug fix errno usage
 */
 
 
@@ -218,4 +221,6 @@ private:
 };
 
 
-#endif
+}; /* namespace comedi */
+
+#endif /* ! _COMEDI_DYNCLAMPANALOGOUTPUT_H_ */

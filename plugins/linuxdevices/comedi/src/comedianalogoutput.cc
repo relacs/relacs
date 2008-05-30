@@ -1,5 +1,5 @@
 /*
-  comedianalogoutput.cc
+  comedi/comedianalogoutput.cc
   Interface for accessing analog output of a daq-board via comedi.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -27,10 +27,12 @@
 #include <ctime>
 #include <unistd.h>
 #include <fcntl.h>
-#include "comedianaloginput.h"
-#include "comedianalogoutput.h"
-
+#include <relacs/comedi/comedianaloginput.h>
+#include <relacs/comedi/comedianalogoutput.h>
 using namespace std;
+using namespace relacs;
+
+namespace comedi {
 
 
 ComediAnalogOutput::ComediAnalogOutput( void ) 
@@ -375,7 +377,7 @@ int ComediAnalogOutput::error( void ) const
 
 int ComediAnalogOutput::maxRanges( void ) const
 {
-  return max( UnipolarRangeIndex.size(), BipolarRangeIndex.size() );
+  return ::std::max( UnipolarRangeIndex.size(), BipolarRangeIndex.size() );
 }
 
 double ComediAnalogOutput::unipolarRange( int index ) const
@@ -478,7 +480,7 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
     if ( min == OutData::AutoRange || max == OutData::AutoRange ) {
       double smin = 0.0;
       double smax = 0.0;
-      numerics::minMax( smin, smax, sigs[k] );
+      minMax( smin, smax, sigs[k] );
       if ( min == OutData::AutoRange )
 	min = smin;
       if ( max == OutData::AutoRange )
@@ -735,7 +737,7 @@ int ComediAnalogOutput::startWrite( OutList &sigs )
   int insnlistNr = 0;
   int insnN;
   vector< bool > comediAOsAdded( ComediAOs.size(), false );
-  vector< bool > comediAIsAdded( ComediAIs.size(), false );
+  //  vector< bool > comediAIsAdded( ComediAIs.size(), false );
 
   // setup start triggers for AOs - synchronize start triggers for AOs linked to an AI
   for( unsigned int ao = 0; ao < ComediAOs.size(); ao++ )
@@ -756,6 +758,7 @@ int ComediAnalogOutput::startWrite( OutList &sigs )
       comediAOsAdded[ao] = true;
 
       int aiLinked = ComediAOsLink[ao];
+      /* XXXX  revise XXXXX
       if( aiLinked >= 0
 	  && ComediAIs[aiLinked]->prepared() && !ComediAIs[aiLinked]->running()
 	  && ComediAIs[aiLinked]->reload() >= 0 ) {
@@ -773,7 +776,7 @@ int ComediAnalogOutput::startWrite( OutList &sigs )
 	if( ComediAIs[aiLinked]->running() )
 	  cerr << " ComediAnalogOutput::startWrite(): Error -> AI-device "
 	     << aiLinked << "is already running!"  << endl;
-
+      */
       il.n_insns = insnN;
       il.insns = insn[insnlistNr];
       insnlist.push_back( il );
@@ -791,6 +794,7 @@ int ComediAnalogOutput::startWrite( OutList &sigs )
       
 
   // setup start triggers for remaining (non-linked) AIs
+  /* XXXX revise XXXX
   for( unsigned int ai = 0; ai < ComediAIs.size(); ai++ )
   if( !comediAIsAdded[ai] 
       && ComediAIs[ai]->prepared() && !ComediAIs[ai]->running()
@@ -818,7 +822,7 @@ int ComediAnalogOutput::startWrite( OutList &sigs )
     if( ComediAIs[ai]->running() )
       cerr << " ComediAnalogOutput::startWrite(): Error -> AI-device "
 	   << ai << "is already running!"  << endl;
-  
+  */  
   cerr << " ComediAnalogOutput::startWrite(): 2" << endl;/////TEST/////
 
  // * start instructionlist *
@@ -840,6 +844,7 @@ int ComediAnalogOutput::startWrite( OutList &sigs )
     if( insError )
       sigs.addErrorStr( "  comedi -> " + (string)comedi_strerror( comedi_errno() ) );
     // usleep() here ???
+    /* XXX revise
     for( unsigned int ai = 0; ai < ComediAIs.size(); ai++ )
       if( comediAIsAdded[ai] && !ComediAIs[ai]->loaded() )
 	sigs.addErrorStr( "  Failure of analog Input on device "
@@ -848,9 +853,10 @@ int ComediAnalogOutput::startWrite( OutList &sigs )
       if( comediAIsAdded[ao] && !ComediAOs[ao]->loaded() )
 	sigs.addErrorStr( "  Failure of analog Output on device "
 			    + ComediAIs[ao]->deviceName() );
+    */
     return -1;
   }
-  
+  /* XXX revise
   for( unsigned int ai = 0; ai < ComediAIs.size(); ai++ )
     if( comediAIsAdded[ai] ) {
       ComediAIs[ai]->setRunning();
@@ -867,6 +873,7 @@ int ComediAnalogOutput::startWrite( OutList &sigs )
 	   << " set up successfully for analog output"
 	   << endl;/////TEST/////
 	}
+  */
   
   cerr << " ComediAnalogOutput::startWrite(): 3" << endl;/////TEST/////
   
@@ -888,7 +895,6 @@ int ComediAnalogOutput::fillWriteBuffer( void )
   int bytesWritten;
 
   if( (*Sigs)[0].deviceBufferMaxPop() <= 0 ) {
-    //    ErrorState = 1;
     //    (*Sigs).addErrorStr( "ComediAnalogOutput::writeData: " +
     //		      Devicename + " - buffer-underrun in outlist!" );
     //    (*Sigs).addError( DaqError::OverflowUnderrun );
@@ -918,7 +924,7 @@ int ComediAnalogOutput::fillWriteBuffer( void )
 
   }
 
-  if( failed || errno == EAGAIN || errno == EINTR )
+  if( failed || errno == EINTR )
     switch( errno ) {
 
     case EPIPE: 
@@ -973,25 +979,14 @@ int ComediAnalogOutput::writeData( OutList &sigs )
 }
 
 
-void ComediAnalogOutput::take( int syncmode, 
-			       vector< AnalogInput* > &ais, 
-			       vector< AnalogOutput* > &aos,
-			       vector< int > &aiinx, vector< int > &aoinx )
+void ComediAnalogOutput::take( const vector< AnalogOutput* > &aos,
+			       vector< int > &aoinx )
 {
   cerr << " ComediAnalogOutput::take(): 1" << endl;/////TEST/////
-  ComediAIs.clear();
   ComediAOs.clear();
-  ComediAIsLink.clear();
   ComediAOsLink.clear();
 
-  for ( unsigned int k=0; k<ais.size(); k++ ) {
-    if ( ais[k]->analogInputType() == ComediAnalogInput::ComediAnalogInputType ) {
-      aiinx.push_back( k );
-      ComediAIs.push_back( dynamic_cast< ComediAnalogInput* >( ais[k] ) );
-      ComediAIsLink.push_back( -1 );
-    }
-  }
-
+  /* XXX Needs to be revised!!!! XXX
   bool weAreMember = false;
   for ( unsigned int k=0; k<aos.size(); k++ ) {
     if ( aos[k]->analogOutputType() == ComediAnalogOutputType ) {
@@ -1010,9 +1005,11 @@ void ComediAnalogOutput::take( int syncmode,
 
   // find subdevices to be started together within the same instruction list
   for( unsigned int ao = 0; ao < ComediAOs.size(); ao++ )
-    for( unsigned int ai = 0; ai < ComediAIs.size(); ai++ )
-      if( ComediAOs[ao]->deviceName() == ComediAOs[ai]->deviceName() ) {
-	ComediAOsLink[ao] = ai;
-	ComediAIsLink[ai] = ao;
-      }
+    if( ComediAOs[ao]->deviceName() == ComediAOs[ai]->deviceName() ) {
+      ComediAOsLink[ao] = ai; /// XXXX
+    }
+  */
 }
+
+
+}; /* namespace comedi */
