@@ -755,25 +755,13 @@ void RELACSPlugin::setRELACSWidget( RELACSWidget *rw )
 
   // pathes to help files of plugins:
   clearHelpPathes();
-  Parameter &p = RW->SS[ "pluginhelppathes" ];
-  for ( int k=0; k<p.size(); k++ ) {
-    Str path = p.text( k );
-    path.preventSlash();
-    addHelpPath( path );
-  }
+  for ( int k=0; k<RW->HelpPathes.size(); k++ )
+    addHelpPath( RW->HelpPathes[k] );
 
-  string img = "src/relacstuxheader.png";
+  string img = RW->IconPath + "/relacstuxheader.png";
   ifstream imgfl( img.c_str() );
   if ( imgfl.good() )
     setHeaderImageFile( img );
-  else {
-    imgfl.close();
-    img = PKGDATADIR;
-    img += "/relacstuxheader.png";
-    imgfl.open( img.c_str() );
-    if ( imgfl.good() )
-      setHeaderImageFile( img );
-  }
   setHeaderBackgroundColor( "#ffdd33" );
   setHeaderForegroundColor( "#ff0000" );
 }

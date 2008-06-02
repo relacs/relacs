@@ -33,17 +33,23 @@ int main( int argc, char **argv )
   int mode = relacs::RELACSWidget::AcquisitionMode;
   bool fullscreen = false;
   string pluginrelative = "./";
-  string pluginhome = "";
+  string pluginhomes = "";
+  string pluginhelp = "";
   string coreconfigfiles = "relacs.cfg";
   string pluginconfigfiles = "relacsplugins.cfg";
+  string docpath = "";
+  string iconpath = "";
 
   static struct option longoptions[] = {
     { "version", 0, 0, 0 },
     { "help", 0, 0, 0 },
     { "plugin-relative-dir", 1, 0, 0 },
-    { "plugin-home-dir", 1, 0, 0 },
+    { "plugin-home-dirs", 1, 0, 0 },
+    { "plugin-help-dirs", 1, 0, 0 },
     { "core-config-files", 1, 0, 0 },
     { "plugins-config-files", 1, 0, 0 },
+    { "doc-path", 1, 0, 0 },
+    { "icon-path", 1, 0, 0 },
     { 0, 0, 0, 0 }
   };
   optind = 0;
@@ -69,15 +75,27 @@ int main( int argc, char **argv )
 	break;
       case 3:
 	if ( optarg && *optarg != '\0' )
-	  pluginhome = optarg;
+	  pluginhomes = optarg;
 	break;
       case 4:
 	if ( optarg && *optarg != '\0' )
-	  coreconfigfiles = optarg;
+	  pluginhelp = optarg;
 	break;
       case 5:
 	if ( optarg && *optarg != '\0' )
+	  coreconfigfiles = optarg;
+	break;
+      case 6:
+	if ( optarg && *optarg != '\0' )
 	  pluginconfigfiles = optarg;
+	break;
+      case 7:
+	if ( optarg && *optarg != '\0' )
+	  docpath = optarg;
+	break;
+      case 8:
+	if ( optarg && *optarg != '\0' )
+	  iconpath = optarg;
 	break;
       }
       break;
@@ -98,8 +116,9 @@ int main( int argc, char **argv )
   QApplication::setColorSpec( QApplication::CustomColor );
   QApplication a( argc, argv );
 
-  relacs::RELACSWidget relacs( pluginrelative, pluginhome,
-			       coreconfigfiles, pluginconfigfiles, mode );
+  relacs::RELACSWidget relacs( pluginrelative, pluginhomes, pluginhelp,
+			       coreconfigfiles, pluginconfigfiles, 
+			       docpath, iconpath, mode );
 
   if ( fullscreen )
     relacs.fullScreen();

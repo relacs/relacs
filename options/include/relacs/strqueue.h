@@ -66,6 +66,10 @@ class StrQueue : public StrDeque
         the StrQueue. */
   StrQueue &assign( const Str &s, const string &separator );
 
+    /*! Append the fields of \a s separated by \a separator to
+        the StrQueue. */
+  StrQueue &append( const Str &s, const string &separator );
+
     /*! Write the elements of the StrQueue into \a s separated by \a separator. */
   StrQueue &copy( string &s, const string &separator );
 

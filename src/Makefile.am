@@ -4,19 +4,13 @@ bin_SCRIPTS = \
 pkglib_PROGRAMS = \
     relacsgui
 
-sysconf_DATA = \
-    relacs.cfg
-
 dist_pkgdata_DATA = \
     relacstuxheader.png
 
 EXTRA_DIST = \
     relacslocal_head \
     relacs_head \
-    relacs_foot \
-    \
-    relacs_cfg_foot \
-    relacs_cfg_head
+    relacs_foot
 
 
 # TODO

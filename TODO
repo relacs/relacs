@@ -1,7 +1,6 @@
 Plugins:
 - Check doxygen external references
 - Put relacs configuration files in root directory of the plugin sets
-- Fix config files
 - The installed help files all have the same names for the equation images (form_*.png)!
 - Use -disable-plugins-common etc. to exclude plugin sets from compilation.
   Make sure that dependencies among the plugin sets are fullfilled.
@@ -16,9 +15,9 @@ Autotools:
   http://summa.physik.hu-berlin.de/~beule/random/random55.tar.gz
 
 Relacs:
-- Update plugin loader: multiple pluginhome pathes
 - How are plugins (control, repros) found/identified? Possibility of name clashes!
   Use plugin-set name as well.
+- Fix command line arg names from path to dir in relacsmain and RELACSWidget.
 - The right name for dlopen can be found in the dlname field of the *.la file!
   Use this approach for loading the plugins?
 - Reading config from PWD and LD_LIBRARY_PATH containing PWD

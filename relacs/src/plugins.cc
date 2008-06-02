@@ -24,6 +24,7 @@
 #include <fstream>
 #include <iostream>
 #include <qdir.h>
+#include <qfileinfo.h>
 #include <relacs/str.h>
 #include <relacs/plugins.h>
 using namespace std;
@@ -129,53 +130,64 @@ int Plugins::open( int id )
 }
 
 
-int Plugins::openPath( const string &path, const string &relativepath, const string &pluginhome )
+int Plugins::openPath( const string &path, const string &relativepath,
+		       const StrQueue &pluginhomes )
 {
   Str p( path );
   p.strip();
   if ( p.empty() )
-    return -NoFiles;
+    return 0;
 
   // add pattern:
   if ( p[p.size()-1] == '/' )
-    p += "*.so";
+    p += "*";
+  if ( p.extension().empty() ) {
+    p.providePeriod();
+    p += "so";
+  }
 
-  // complete path:
+  // possible relative pathes:
+  StrQueue rps;
   if ( p[0] != '/' ) {
-    // no absolute path:
-    if ( p.find( '/' ) > 0 ) {
-      // relative path:
-      if ( ! relativepath.empty() ) {
-	Str rp( relativepath );
-	rp.provideSlash();
-	p = rp + p;
-      }
-    }
-    else {
-      // plugin home:
-      if ( ! pluginhome.empty() ) {
-	Str ph( pluginhome );
-	ph.provideSlash();
-	p = ph + p;
-      }
-      else if ( ! relativepath.empty() ) {
-      // relative path:
-	Str rp( relativepath );
-	rp.provideSlash();
-	p = rp + p;
-      }
-    }
+    // plugin homes:
+    if ( p.find( '/' ) < 0 &&
+	 ! pluginhomes.empty() && !pluginhomes[0].empty() )
+      rps = pluginhomes;
+    // or relative path:
+    else if ( ! relativepath.empty() )
+      rps = relativepath;
+    else
+      rps = "./";
+  }
+  else {
+    // absolute path:
+    rps = "";
   }
 
   // read all libraries specified by path:
-  QDir files( p.dir(), p.notdir() );
-  int n = -NoFiles;
-  for ( unsigned int k=0; k < files.count(); k++ ) {
-    Str libfile = files.absFilePath( files[k], false ).latin1();
-    cerr << libfile << endl;
-    int r = open( libfile );
-    if ( r >= 0 && n < 0 )
-      n = r;
+  int n = 0;
+  for ( int j=0; j<rps.size(); j++ ) {
+    // add relative path:
+    Str file = p;
+    if ( ! rps[j].empty() ) {
+      rps[j].provideSlash();
+      file = rps[j] + p;
+    }
+    // check prefix:
+    string filename = file.notdir();
+    if ( filename.substr( 0, 3 ) != "lib" )
+      filename = "lib" + filename;
+    // look for files in directory:
+    QDir files( file.dir(), filename );
+    for ( unsigned int k=0; k < files.count(); k++ ) {
+      Str libfile = files.absFilePath( files[k], false ).latin1();
+      QFileInfo qfi( libfile.c_str() );
+      if ( qfi.exists() ) {
+	int r = open( libfile );
+	if ( r >= 0 || r == -AlreadyLoaded )
+	  n ++;
+      }
+    }
   }
   
   return n;
@@ -189,7 +201,7 @@ int Plugins::openFile( const string &file )
   if ( !pluginFile ) 
     return -CantGetFiles;
 
-  int n = -NoFiles;
+  int n = 0;
   string ls, ss;
   while ( getline( pluginFile, ls ) )
     if ( ls.length() > 0 && ls[0] != '#' ) {
@@ -201,9 +213,8 @@ int Plugins::openFile( const string &file )
 	ss = "./" + ls;
       
       int r = open( ss );
-      if ( r >= 0 && n < 0 )
-	n = r;
-      open( ss );
+      if ( r >= 0 )
+	n++;
     }
   
   return n;

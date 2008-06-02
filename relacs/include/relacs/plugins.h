@@ -25,6 +25,7 @@
 
 #include <string>
 #include <vector>
+#include <relacs/strqueue.h>
 using namespace std;
 
 namespace relacs {
@@ -93,8 +94,6 @@ public:
     InvalidFile,
       /*! Can't read files of a directory or from file. */
     CantGetFiles,
-      /*! No files found in the directory or file. */
-    NoFiles,
       /*! Some plugins of the library are still in use. */
     LibraryInUse,
       /*! The requested plugin does not exist. */
@@ -132,29 +131,30 @@ public:
         \sa openPath(), openFile(), close(), erase(), clear(), reopen() */
   static int open( int id );
     /*! Load all libraries specified by the path \a path into the program. 
-        \a path may include wildcard characters.
-	If \a path ends with a slash, "*.so" is added.
 	Relative pathes (not starting with a slash) are interpreted
 	relative to \a relativepath, provided \a relativepath is not empty.
 	If \a path is a pure filename (no directory, but may contain wildcards)
-	then it is assumed to be found in \a pluginhome.
+	then it is assumed to be found in one of the \a pluginhomes directories.
 	If \a pluginhome is an empty string, then pure filenames are also interpreted
 	relative to \a relativepath, provided \a relativepath is not empty.
-	\param[in] path the file pattern selecting the libraries to be loaded. 
+	\param[in] path the file pattern (can include wildcard characters)
+	selecting the libraries to be loaded. 
+	If \a path ends with a slash, "*" is added first.
+	If \a path has no file extension, the appropriate extension (".so")
+	is added.
+	If the filename of \a path does not start with "lib",
+	the filename is prefixed with "lib".
 	\param[in] relativepah the path to be used for relative pathes. 
-	\param[in] pluginhome the standard path for the plugin files.
-        \return the id of the first successfully loaded library. 
-        If \a path is invalid, -CantGetFiles is returned.
-        If no library was opened successfully, -NoFiles is returned.
+	\param[in] pluginhomes default pathes for the plugin files.
+        \return the number of the successfully loaded libraries. 
         \sa open(), openFile(), close(), erase(), clear(), reopen() */
   static int openPath( const string &path, const string &relativepath,
-		       const string &pluginhome );
+		       const StrQueue &pluginhome );
     /*! Load all libraries listed in the file \a file into the program.
         \param[in] file the name of a text file that contains in each line
 	the file name of a library that is to be loaded.
-        \return the index of the first successfully loaded library.
+        \return the number of the successfully loaded libraries. 
         If \a file is invalid, -CantGetFiles is returned.
-        If no library was opened successfully, -NoFiles is returned.
         \sa open(), openPath(), close(), erase(), clear(), reopen() */
   static int openFile( const string &file );
 

@@ -1,6 +1,0 @@
-@RELACS_CFG_HEAD@
-            docpath: @htmldir@
-       pluginpathes: @prefix@/lib/@PLUGINS_BASENAME@/
-   pluginhelppathes: @pkgdatadir@/help
-@RELACS_CFG_FOOT@
-

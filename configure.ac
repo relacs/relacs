@@ -176,11 +176,6 @@ AC_SUBST_FILE(RELACSLOCAL_HEAD)
 RELACS_FOOT=$srcdir/src/relacs_foot
 AC_SUBST_FILE(RELACS_FOOT)
 
-RELACS_CFG_HEAD=$srcdir/src/relacs_cfg_head
-AC_SUBST_FILE(RELACS_CFG_HEAD)
-RELACS_CFG_FOOT=$srcdir/src/relacs_cfg_foot
-AC_SUBST_FILE(RELACS_CFG_FOOT)
-
 
 
 # Substitute
@@ -247,9 +242,6 @@ AC_CONFIG_FILES([
     Makefile
 
     doc/relacsall.doc
-
-    relacslocal.cfg
-    src/relacs.cfg
 ])
 
 AC_CONFIG_FILES([src/relacs], [chmod a+x src/relacs])

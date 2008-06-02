@@ -5,13 +5,23 @@ RELACSEXEC="@pkglibdir@/relacsgui"
 
 # Pathes to the RELACS libraries that need to be added to LD_LIBRARY_PATH:
 RELACSLIBPATHES="@libdir@"
+# the librarie should be installed in one of the default library pathes and
+# therefore do not need to be added to LD_LIBRARY_PATH:
+RELACSLIBPATHES=
 
 PLUGINHOME='@pkglibdir@/plugins'
+PLUGINHELPPATHES='@pkgdatadir@/help'
 PLUGINRELATIVE=""
 
 # Possible config files separated by '|':
 CONFCOREFILES="@sysconfdir@/relacs.cfg|@pkgdatadir@/relacs.cfg|${HOME}/.relacs/relacs.cfg"
 CONFPLUGINSFILES="@sysconfdir@/relacsplugins.cfg|@pkgdatadir@/relacsplugins.cfg|${HOME}/.relacs/relacsplugins.cfg"
+
+# Path to the documentation:
+DOCPATH="@htmldir@"
+
+# Path to the icons:
+ICONPATH="@pkgdatadir@"
 
 # Absolute path in which this script is allowed to be executed.
 # If left empty, it is allowed to be executed everywhere.
@@ -21,4 +31,3 @@ RELACSSCRIPTPATH=""
 RELACSRUNNERPATH='@abs_top_builddir@/src/relacs'
 
 @RELACS_FOOT@
-

@@ -11,13 +11,29 @@ RELACSLIBPATHES="@abs_top_builddir@/daq/src/.libs\
 :@abs_top_builddir@/options/src/.libs\
 :@abs_top_builddir@/widgets/src/.libs:"
 
-PLUGINHOME='@abs_top_builddir@'
+# Base pathes for relacs plugins and help files:
+PLUGINPATHES='base|calibration|ephys|patchclamp|linuxdevices/comedi'
+PLUGINHOME=""
+PLUGINHELPPATHES=""
+SAVEIFS="$IFS"
+IFS="|"
+for dir in $PLUGINPATHES; do
+  PLUGINHOME="${PLUGINHOME}@abs_builddir@/../${dir}/src/.libs|"
+  PLUGINHELPPATHES="${PLUGINHELPPATHES}@abs_builddir@/../${dir}/help|"
+done
+IFS="$SAVEIFS"
 PLUGINRELATIVE='@abs_builddir@'
 
 # Possible config files separated by '|':
 # for local demo's use only the ones in the current directory.
 CONFCOREFILES='@abs_srcdir@/relacs.cfg'
 CONFPLUGINSFILES='@abs_srcdir@/relacsplugins.cfg'
+
+# Path to the documentation:
+DOCPATH="@abs_top_builddir@/doc/html"
+
+# Path to the icons:
+ICONPATH="@top_srcdir@/src"
 
 # Absolute path in which this script is allowed to be executed.
 # If left empty, it is allowed to be executed everywhere.

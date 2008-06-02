@@ -40,6 +40,22 @@ StrQueue &StrQueue::assign( const Str &s, const string &separator )
 {
   clear();
 
+  return append( s, separator );
+}
+
+
+StrQueue &StrQueue::assign( const string &s )
+{
+  clear();
+
+  add( s );
+
+  return *this;
+}
+
+
+StrQueue &StrQueue::append( const Str &s, const string &separator )
+{
   if ( separator.empty() ) {
     add( s );
     return *this;
@@ -56,16 +72,6 @@ StrQueue &StrQueue::assign( const Str &s, const string &separator )
 	add( s.mid( word, index-1 ) );
     }
   } while ( word >= 0 );
-
-  return *this;
-}
-
-
-StrQueue &StrQueue::assign( const string &s )
-{
-  clear();
-
-  add( s );
 
   return *this;
 }

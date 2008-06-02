@@ -1,6 +1,0 @@
-@RELACS_CFG_HEAD@
-            docpath: doc/html
-       pluginpathes: plugins/base/src/.libs/|plugins/calibration/src/.libs/|plugins/ephys/src/.libs/|plugins/acoustic/src/.libs/|plugins/auditory/src/.libs/|plugins/auditoryprojects/src/.libs/|hardware/.libs/
-   pluginhelppathes: hardware/help|plugins/base/help|plugins/calibration/help|plugins/ephys/help|plugins/acoustic/help|plugins/auditory/help|plugins/auditoryprojects/help
-@RELACS_CFG_FOOT@
-

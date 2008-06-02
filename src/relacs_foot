@@ -50,45 +50,22 @@ PLUGINRELATIVE=$(cd "$PLUGINRELATIVE"; pwd)
 # Find all directories we need to link plugins at runtime:
 dirlist=
 IFS="|"
+# 1) absolute pathes:
 for pattern in $(grep 'pluginpathes' < "${CONFFILE}" | sed -e 's/^[ \t]*pluginpathes:[ \t]*\(.*\)/\1/'); do
-#    echo "check >$pattern<":
-    # Ensure absolute path:
-    case "${pattern}" in
-    /*)
-        # Absolute path pattern, nothing to be done:
-#	echo "absolute path: >$pattern<"
-        ;;
-
-    ?*/*)
-        # pattern relative to directory of config file:
-        pattern="${PLUGINRELATIVE}/${pattern}"
-#	echo "relative path: >$pattern<"
-        ;;
-
-    *)
-        # Plugin home relative file name pattern:
-        pattern="${PLUGINHOME}/${pattern}"
-#	echo "plugin home: >$pattern<"
-        ;;
-    esac
-
-    # Add wildcard pattern:
-    if test "x${pattern:${#pattern}-1}" = "x/"; then
-        pattern="${pattern}*.so"
+    # absolute path?
+    if test "x${pattern:0:1}" = "/"; then
+	dir=${pattern%/*}
+	dirlist="${dirlist}${dir}|"
     fi
 
-    # Resolve pattern and collect directories:
-    for pluginfilename in $pattern; do
-#	echo "potential plugin >$pluginfilename<"
-        if test -f "${pluginfilename}"; then
-            dir=${pluginfilename%/*}
-#            echo "plugin found: ${pluginfilename}"
-            dirlist="${dirlist}${dir}|"
-        fi
-    done
-
+done
+# 2) plugin home pathes:
+for dir in $PLUGINHOME; do
+    dirlist="${dirlist}${dir}|"
 done
 IFS="$SAVEIFS"
+# 3) relative path:
+dirlist="${dirlist}${PLUGINRELATIVE}|"
 
 # Assemble directory list for LD_LIBRARY_PATH:
 RELACSPLUGINPATHES=
@@ -129,9 +106,9 @@ if test "x$USELOGFILE" = "xyes" && test "x$LOGFILE" != "x"; then
 
   # execute RELACS:
   if test "x$USETEE" = "xyes"; then
-    "$RELACSEXEC" "--plugin-relative-dir=${PLUGINRELATIVE}" "--plugin-home-dir=${PLUGINHOME}" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" $@ 2>&1 | $TEE $LOGFILE
+    "$RELACSEXEC" "--plugin-relative-dir=${PLUGINRELATIVE}" "--plugin-home-dirs=${PLUGINHOME}" "--plugin-help-dirs=${PLUGINHELPPATHES}" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" "--doc-path=${DOCPATH}" "--icon-path=${ICONPATH}" $@ 2>&1 | $TEE $LOGFILE
   else
-    "$RELACSEXEC" "--plugin-relative-dir=${PLUGINRELATIVE}" "--plugin-home-dir=${PLUGINHOME}" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" $@ >> $LOGFILE 2>&1
+    "$RELACSEXEC" "--plugin-relative-dir=${PLUGINRELATIVE}" "--plugin-home-dirs=${PLUGINHOME}" "--plugin-help-dirs=${PLUGINHELPPATHES}" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" "--doc-path=${DOCPATH}" "--icon-path=${ICONPATH}" $@ >> $LOGFILE 2>&1
   fi
 
 else
@@ -151,12 +128,12 @@ else
  
       if test "x$DEBUGRUN" = "xyes"; then
         # start debugger with RELACS:
-        $DEBUGGER --args "$RELACSEXEC" "--plugin-relative-dir=${PLUGINRELATIVE}" "--plugin-home-dir=${PLUGINHOME}" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" $@
+        $DEBUGGER --args "$RELACSEXEC" "--plugin-relative-dir=${PLUGINRELATIVE}" "--plugin-home-dirs=${PLUGINHOME}" "--plugin-help-dirs=${PLUGINHELPPATHES}" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" "--doc-path=${DOCPATH}" "--icon-path=${ICONPATH}" $@
       else
         # run RELACS from within debugger:
         DEBUGCOM=relacsdebug$$
         echo "run" > $DEBUGCOM
-        $DEBUGGER -x $DEBUGCOM --args "$RELACSEXEC" "--plugin-relative-dir=${PLUGINRELATIVE}" "--plugin-home-dir=${PLUGINHOME}" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" $@
+        $DEBUGGER -x $DEBUGCOM --args "$RELACSEXEC" "--plugin-relative-dir=${PLUGINRELATIVE}" "--plugin-home-dirs=${PLUGINHOME}" "--plugin-help-dirs=${PLUGINHELPPATHES}" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" "--doc-path=${DOCPATH}" "--icon-path=${ICONPATH}" $@
         rm $DEBUGCOM
       fi
 
@@ -167,7 +144,7 @@ else
   else
 
     # simply execute RELACS:
-    "$RELACSEXEC" "--plugin-relative-dir=${PLUGINRELATIVE}" "--plugin-home-dir=${PLUGINHOME}" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" $@
+    "$RELACSEXEC" "--plugin-relative-dir=${PLUGINRELATIVE}" "--plugin-home-dirs=${PLUGINHOME}" "--plugin-help-dirs=${PLUGINHELPPATHES}" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" "--doc-path=${DOCPATH}" "--icon-path=${ICONPATH}" $@
 
   fi
 

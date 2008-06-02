@@ -33,6 +33,7 @@
 #include <qwaitcondition.h>
 #include <qapplication.h>
 #include <vector>
+#include <relacs/strqueue.h>
 #include <relacs/configclass.h>
 #include <relacs/configureclasses.h>
 #include <relacs/settings.h>
@@ -93,8 +94,12 @@ public:
 
   RELACSWidget( const string &pluginrelative,
 		const string &pluginhome,
+		const string &pluginhelp,
 		const string &coreconfigfiles,
-		const string &pluginconfigfiles, int mode,
+		const string &pluginconfigfiles,
+		const string &docpath,
+		const string &iconpath,
+		int mode,
 		QWidget *parent=0, const char *name=0 );
   ~RELACSWidget( void );
 
@@ -308,6 +313,9 @@ private:
   QWidget *MainWidget;
 
   ConfigureClasses CFG;
+  Str DocPath;
+  StrQueue HelpPathes;
+  Str IconPath;
 
   Settings SS;
   MetaData MTDT;

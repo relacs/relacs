@@ -70,8 +70,11 @@ void* createAttSim( void )
 
 RELACSWidget::RELACSWidget( const string &pluginrelative,
 			    const string &pluginhome,
+			    const string &pluginhelp,
 			    const string &coreconfigfiles,
 			    const string &pluginconfigfiles,
+			    const string &docpath,
+			    const string &iconpath,
 			    int mode, QWidget *parent, const char *name )
   : QMainWindow( parent, name ),
     ConfigClass( "RELACS", RELACSPlugin::Core ),
@@ -90,9 +93,15 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     Help( false )
 {
   printlog( "this is RELACS, version " + string( RELACSVERSION ) );
+
   // setup configuration files:
   CFG.addGroup( coreconfigfiles );
   CFG.addGroup( pluginconfigfiles );
+  DocPath = docpath;
+  DocPath.preventSlash();
+  setenv( "RELACSDOCPATH", DocPath.c_str(), 1 );
+  IconPath = iconpath;
+  IconPath.preventSlash();
 
   // configuration parameter for RELACS:
   addConfig();
@@ -157,10 +166,12 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   Plugins::add( "AISim", RELACSPlugin::AnalogInputId, createAISim, PLUGINVERSION );
   Plugins::add( "AOSim", RELACSPlugin::AnalogOutputId, createAOSim, PLUGINVERSION );
   Plugins::add( "AttSim", RELACSPlugin::AttenuatorId, createAttSim, PLUGINVERSION );
+  StrQueue pluginhomes( pluginhome, "|" );
+  pluginhomes.strip();
   for ( int k=0; k<SS.Options::size( "pluginpathes" ); k++ ) {
     string pluginlib = SS.text( "pluginpathes", k );
     if ( !pluginlib.empty() ) {
-      Plugins::openPath( pluginlib, pluginrelative, pluginhome );
+      Plugins::openPath( pluginlib, pluginrelative, pluginhomes );
     }
   }
   if ( Plugins::empty() ) {
@@ -207,6 +218,18 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
       MessageBox::warning( "RELACS Warning !", ws, this );
     }
   }
+
+  // assemble help pathes:
+  Parameter &p = SS[ "pluginhelppathes" ];
+  for ( int k=0; k<p.size(); k++ ) {
+    Str path = p.text( k );
+    path.preventSlash();
+    HelpPathes.add( path );
+  }
+  HelpPathes.append( pluginhelp, "|" );
+  HelpPathes.strip();
+  for ( int k=0; k<HelpPathes.size(); k++ )
+    HelpPathes[k].preventSlash();
 
   // session, control tabwidget:
   QTabWidget *cw = new QTabWidget( MainWidget );
@@ -1520,7 +1543,7 @@ void RELACSWidget::help( void )
   OptDialog *od = new OptDialog( false, this );
   od->setCaption( "RELACS Help" );
   QTextBrowser *hb = new QTextBrowser( this );
-  hb->mimeSourceFactory()->setFilePath( "doc/html" );
+  hb->mimeSourceFactory()->setFilePath( DocPath.c_str() );
   hb->setSource( "index.html" );
   if ( hb->mimeSourceFactory()->data( "index.html" ) == 0 ) {
     hb->setText( "Sorry, there is no help for <br><h2>RELACS</h2> available.<br><br> Try <c>make doc</c>." );
