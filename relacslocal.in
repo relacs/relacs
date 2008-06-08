@@ -18,8 +18,8 @@ PLUGINHELPPATHES=""
 SAVEIFS="$IFS"
 IFS="|"
 for dir in $PLUGINPATHES; do
-  PLUGINHOME="${PLUGINHOME}@abs_builddir@/../${dir}/src/.libs|"
-  PLUGINHELPPATHES="${PLUGINHELPPATHES}@abs_builddir@/../${dir}/help|"
+  PLUGINHOME="${PLUGINHOME}@abs_top_builddir@/plugins/${dir}/src/.libs|"
+  PLUGINHELPPATHES="${PLUGINHELPPATHES}@abs_top_builddir@/plugins/${dir}/help|"
 done
 IFS="$SAVEIFS"
 PLUGINRELATIVE='@abs_builddir@'

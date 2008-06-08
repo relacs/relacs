@@ -1,5 +1,9 @@
 -----------------------------------------------------------------------------
 Version 0.9.6
+2008-02-27  Jan Benda, Sebastian Pipping
+	First commit to the subversion repository.
+	Subsequently set up the GNU autotools.
+	See svn log for details.
 2008-02-14  Jan Benda
 	Created patch directory for patch-clamp related plugins
 	Added plugin documentation to web page

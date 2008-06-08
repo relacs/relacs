@@ -17,5 +17,7 @@ the comedi and real-time linux support needed for his Dynamic Clamp routines.
 
 * Christian Machens <machens@cshl.edu>
 
+* Sebastian Pipping <http://www.hartwork.org> for autoconfiscating relacs.
+
 * Hartmut Schuetze <h.schuetze@itb.biologie.hu-berlin.de> for many suggestions
 and lots of enthusiam. And for the name "RELACS"! 

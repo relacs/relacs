@@ -29,6 +29,8 @@ Relacs:
 Documentation:
 - Update doxygen dot settings
 - Update installation and Makefile instructions to autotools
+- Include linuxdevices plugins to website
+- Make separate build tree for website (without the .svn directories!)
 - Usage of autoreconf: autoreconf -v --install
 - You may want to use: ./configure --htmldir=DOCDIR/html
 - Static libraries are disabled by default, enable with --enable-static

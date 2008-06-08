@@ -1,3 +1,48 @@
+1. `cd' to the directory containing the relacs source code.
+
+
+2. If you dowloaded the RELACS source code from the subversion
+repository then you need to run
+
+> autoreconf -v --install
+
+or alternatively
+
+> ./bootstrap.sh
+
+first.
+
+
+3. Configure RELACS
+
+> ./configure
+
+You may need to specify the location of the Qt3 libraries. For example,
+
+> ./configure --with-qt3=/usr/lib/qt3
+
+
+4. Compile RELACS
+
+> make
+
+That make take a while
+
+
+5. Run a demo
+
+> ./relacslocal -3
+
+Press for example 'F1'. More instructions on the demo will follow...
+
+
+6. Don't install this version of RELACS!
+
+
+========================================================================
+The following is a general instruction to the GNU configure script:
+
+
 Installation Instructions
 *************************
 
