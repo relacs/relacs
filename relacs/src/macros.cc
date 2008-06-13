@@ -1163,11 +1163,12 @@ void Macros::startNextRePro( bool saving )
 	    c = msg.size();
 	  string cs( msg.substr( i+2, c-i-2 ) );
 	  FILE *p = popen( cs.c_str(), "r" );
-	  string ns = "";
-	  char ls[256];
-	  while ( fgets( ls, 256, p ) != NULL )
+	  Str ns = "";
+	  char ls[1024];
+	  while ( fgets( ls, 1024, p ) != NULL )
 	    ns += ls;
 	  pclose( p );
+	  ns.strip();
 	  msg.replace( i, c-i+1, ns );
 	  i = msg.find( "$(", i+3 );
 	}
@@ -1190,11 +1191,12 @@ void Macros::startNextRePro( bool saving )
 	    c = file.size();
 	  string cs( file.substr( i+2, c-i-2 ) );
 	  FILE *p = popen( cs.c_str(), "r" );
-	  string ns = "";
-	  char ls[256];
-	  while ( fgets( ls, 256, p ) != NULL )
+	  Str ns = "";
+	  char ls[1024];
+	  while ( fgets( ls, 1024, p ) != NULL )
 	    ns += ls;
 	  pclose( p );
+	  ns.strip();
 	  file.replace( i, c-i+1, ns );
 	  i = file.find( "$(", i+3 );
 	}
@@ -1207,12 +1209,9 @@ void Macros::startNextRePro( bool saving )
 	  OptDialog *od = new OptDialog( false, this );
 	  od->setCaption( MCs[CurrentMacro]->Commands[CurrentCommand]->Name );
 	  QTextBrowser *hb = new QTextBrowser( this );
-	  QStringList pathes;
-       	  pathes += ".";
-	  pathes += file.dir().c_str();
-	  hb->mimeSourceFactory()->setFilePath( pathes );
+	  hb->mimeSourceFactory()->setFilePath( file.dir().c_str() );
 	  hb->setSource( file.notdir().c_str() );
-	  if ( hb->mimeSourceFactory()->data( file.c_str() ) == 0 ) {
+	  if ( hb->mimeSourceFactory()->data( file.notdir().c_str() ) == 0 ) {
 	    hb->setText( string( "Sorry, can't find file <b>" + file + "</b>." ).c_str() );
 	  }
 	  hb->setMinimumSize( 600, 400 );
