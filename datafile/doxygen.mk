@@ -207,7 +207,8 @@ DX_INSTALL_DIRS = \
 
 doxygen-install: doxygen-run doxygen-install-html doxygen-install-dvi doxygen-install-ps doxygen-install-pdf
 	test -z "$(pkgdatadir)" || $(MKDIR_P) "$(DESTDIR)$(pkgdatadir)"
-	$(INSTALL_DATA) "$(DX_DOCDIR)/$(DX_PROJECT).tag" "$(DESTDIR)$(pkgdatadir)/$(DX_PROJECT).tag"
+	test -z "$(pkgdatadir)/doctags" || $(MKDIR_P) "$(DESTDIR)$(pkgdatadir)/doctags"
+	$(INSTALL_DATA) "$(DX_DOCDIR)/$(DX_PROJECT).tag" "$(DESTDIR)$(pkgdatadir)/doctags/$(DX_PROJECT).tag"
 	test -z "$(docdir)" || $(MKDIR_P) "$(DESTDIR)$(docdir)"
 	@list='$(DX_INSTALL_FILES)'; for p in $$list; do \
 	  echo " $(INSTALL_DATA) '$(DX_DOCDIR)/$$p' '$(DESTDIR)$(docdir)/$$p'"; \

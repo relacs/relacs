@@ -66,7 +66,7 @@ Autotools details:
 - Use current version of doxygen for debian,
   update the Doxyfile or remove new/old settings
 - make distcheck: 
-  release.sh /home/jan/prj/relacsinstall --with-qt3=/usr/lib/qt3 --disable-doxygen-dot
+  release.sh /home/jan/prj/relacs/relacsinstall --with-qt3=/usr/lib/qt3 --disable-doxygen-dot
 
 
 Bug in MetaData Dialog: after opening and closing with ESC, reopening crashes the program

@@ -92,9 +92,9 @@ done
 
 # copy image files:
 for IMAGE in $SRCDIR/*.jpg $SRCDIR/*.png; do
-  if test -f $IMAGE && test "x$IMAGE" != "xdoxygen.png"; then
+  if test -f $IMAGE && test "x${IMAGE##*/}" != "xdoxygen.png"; then
     echo "copy image file ${PLUGINSET}${IMAGE##*/} ..."
-    mv $IMAGE  $HELPDIR/${PLUGINSET}${IMAGE##*/}
+    cp $IMAGE  $HELPDIR/${PLUGINSET}${IMAGE##*/}
   fi
 done
 

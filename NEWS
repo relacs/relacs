@@ -1,4 +1,6 @@
-June 8, 2008
+Future: Version 0.9.6 release
+
+June 14, 2008
   Full autotools support in the subversion repository.
   That is, relacs should compile smoothly on your
   system provided running ./configure was successfull.
