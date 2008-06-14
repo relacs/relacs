@@ -110,20 +110,20 @@ relacs \
 "
 
 # list of directories with their own documentation:
-DOXYGEN_EXTERNAL="\
-${RELACS_DOCLIBS} \
-plugins/base \
-plugins/calibration \
-plugins/ephys \
-plugins/acoustic \
-plugins/auditory \
-plugins/auditoryprojects \
-plugins/patchclamp \
-plugins/linuxdevices/nieseries \
-plugins/linuxdevices/comedi \
-plugins/linuxdevices/attcs3310 \
-plugins/linuxdevices/misc \
-"
+DOXYGEN_EXTERNAL="${RELACS_DOCLIBS}"
+
+# init plugin sets:
+AC_RELACS_PLUGIN_SET([base])
+AC_RELACS_PLUGIN_SET([calibration])
+AC_RELACS_PLUGIN_SET([ephys])
+AC_RELACS_PLUGIN_SET([acoustic])
+AC_RELACS_PLUGIN_SET([auditory])
+AC_RELACS_PLUGIN_SET([auditoryprojects])
+AC_RELACS_PLUGIN_SET([patchclamp])
+AC_RELACS_PLUGIN_SET([linuxdevices/nieseries])
+AC_RELACS_PLUGIN_SET([linuxdevices/comedi])
+AC_RELACS_PLUGIN_SET([linuxdevices/attcs3310])
+AC_RELACS_PLUGIN_SET([linuxdevices/misc])
 
 # assemble input pathes from the Makefile.am of the RELACS_DOCLIBS list:
 DOXYGEN_INPUT="doc src utils"

@@ -7,6 +7,7 @@ Plugins:
 Autotools:
 - Make datatools a separate project
 - What about the "global flags" in configure.ac? For plugins only?
+- Check and improve output of configure --help (include running a demo)
 - Integrate examples (with extra target)  no-compile Makefiles???
   Include into distribution, compile if --enable-examples, noinst_PROGRAMS
 - Check for C++ requirements (STL, templates)
