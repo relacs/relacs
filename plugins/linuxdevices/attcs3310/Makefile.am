@@ -13,7 +13,7 @@ DX_DEPENDS = Makefile.am src/Makefile.am
 DX_SETTINGS = PROJECT_NAME='"AttCS3310 Relacs Plugins"'
 DX_SETTINGS += INPUT='include/relacs/attcs3310 src'
 DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'
-DX_SETTINGS += TAGFILES='../doc/relacsall.tag=..'
+DX_SETTINGS += TAGFILES='../../../doc/relacsall.tag=.. ../nieseries/doc/nieseries.tag=../nieseries'
 
 include $(top_srcdir)/doxygen.mk
 

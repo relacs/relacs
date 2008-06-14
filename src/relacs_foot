@@ -13,6 +13,12 @@ if test "x$RELACSSCRIPTPATH" != "x" && test "x$RELACSSCRIPTPATH" != "x$(pwd)"; t
     exit 1
 fi
 
+# print version:
+if test "x$VERSION" = "xyes"; then
+    "$RELACSEXEC" $@
+    exit 0
+fi
+
 # Add user defined configuration files:
 if test "x${CONFIGBASE}" != x; then
     CONFCOREFILES="${CONFCOREFILES}|${CONFIGBASE}.cfg"

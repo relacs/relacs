@@ -1,9 +1,8 @@
 Plugins:
-- Check doxygen external references
 - Put relacs configuration files in root directory of the plugin sets
-- The installed help files all have the same names for the equation images (form_*.png)!
 - Use -disable-plugins-common etc. to exclude plugin sets from compilation.
   Make sure that dependencies among the plugin sets are fullfilled.
+- Put plugin sets into relacs namespace
 
 Autotools:
 - Make datatools a separate project

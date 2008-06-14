@@ -70,11 +70,12 @@ if test "x$PLUGINSET" != "x"; then
 fi
 shift
 
+
 # create help files:
 echo ""
 LASTFILE=""
-for DOXYFILES in $SRCDIR/class*.html; do
-  FILENAME=${DOXYFILES%.html}
+for DOXYFILE in $SRCDIR/class*.html; do
+  FILENAME=${DOXYFILE%.html}
   CLASSNAME=${FILENAME#$SRCDIR/class}
   CLASSNAME=${CLASSNAME%-*}
   CLASSNAME=${CLASSNAME##*_1}
@@ -82,15 +83,20 @@ for DOXYFILES in $SRCDIR/class*.html; do
     echo "create help file for ${PLUGINSET}${CLASSNAME}..."
     { echo "<html><body>"
 	echo "<h2>$CLASSNAME</h2>"
-	sed -n -e '/<hr><a name="_details"/,/<hr>/p' $DOXYFILES | sed '1d; $d'
+	sed -n -e '/<hr><a name="_details"/,/<hr>/p' $DOXYFILE | sed "1d; $d; s/\\(<img.*\\)src=\"\\(.*\\)\"/\\1src=\"${PLUGINSET}\2\"/"
 	echo "</body></html>"; 
     } > ${HELPDIR}/${PLUGINSET}${CLASSNAME}.html
     LASTFILE="$CLASSNAME"
   fi
 done
 
-echo "copy image files ..."
-cp -p $SRCDIR/*.jpg $SRCDIR/*.png $HELPDIR
+# copy image files:
+for IMAGE in $SRCDIR/*.jpg $SRCDIR/*.png; do
+  if test -f $IMAGE && test "x$IMAGE" != "xdoxygen.png"; then
+    echo "copy image file ${PLUGINSET}${IMAGE##*/} ..."
+    mv $IMAGE  $HELPDIR/${PLUGINSET}${IMAGE##*/}
+  fi
+done
 
 echo "DONE"
 exit 0

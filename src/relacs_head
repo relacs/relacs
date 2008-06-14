@@ -62,6 +62,7 @@ KERNELMESSAGES="no"
 
 # Read arguments:
 HELP="no";
+VERSION="no";
 for i; do
   case $1 in
     -s) shift
@@ -113,6 +114,8 @@ for i; do
 --help) HELP="yes"
         break ;;
   '-?') HELP="yes"
+        break ;;
+--version) VERSION="yes"
         break ;;
     --) break ;;
      *) break ;;

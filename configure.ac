@@ -122,6 +122,7 @@ plugins/patchclamp \
 plugins/linuxdevices/nieseries \
 plugins/linuxdevices/comedi \
 plugins/linuxdevices/attcs3310 \
+plugins/linuxdevices/misc \
 "
 
 # assemble input pathes from the Makefile.am of the RELACS_DOCLIBS list:
@@ -246,7 +247,11 @@ AC_CONFIG_FILES([
 
 AC_CONFIG_FILES([src/relacs], [chmod a+x src/relacs])
 AC_CONFIG_FILES([relacslocal], [chmod a+x relacslocal])
+AC_CONFIG_FILES([plugins/base/relacslocal], [chmod a+x plugins/base/relacslocal])
+AC_CONFIG_FILES([plugins/calibration/relacslocal], [chmod a+x plugins/calibration/relacslocal])
+AC_CONFIG_FILES([plugins/acoustic/relacslocal], [chmod a+x plugins/acoustic/relacslocal])
 AC_CONFIG_FILES([plugins/auditory/relacslocal], [chmod a+x plugins/auditory/relacslocal])
+AC_CONFIG_FILES([plugins/auditoryprojects/relacslocal], [chmod a+x plugins/auditoryprojects/relacslocal])
 AC_CONFIG_FILES([plugins/patchclamp/relacslocal], [chmod a+x plugins/patchclamp/relacslocal])
 
 AC_OUTPUT

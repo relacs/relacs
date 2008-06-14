@@ -13,7 +13,7 @@ DX_DEPENDS = Makefile.am src/Makefile.am
 DX_SETTINGS = PROJECT_NAME='"Electrophysiology Relacs Plugins"'
 DX_SETTINGS += INPUT='include/relacs/ephys src'
 DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'
-DX_SETTINGS += TAGFILES='../doc/relacsall.tag=..'
+DX_SETTINGS += TAGFILES='../../doc/relacsall.tag=..'
 
 include $(top_srcdir)/doxygen.mk
 

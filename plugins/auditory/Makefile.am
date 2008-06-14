@@ -20,7 +20,7 @@ DX_DEPENDS = Makefile.am src/Makefile.am
 DX_SETTINGS = PROJECT_NAME='"Auditory Relacs Plugins"'
 DX_SETTINGS += INPUT='include/relacs/auditory src'
 DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'
-DX_SETTINGS += TAGFILES='../doc/relacsall.tag=..'
+DX_SETTINGS += TAGFILES='../../doc/relacsall.tag=.. ../acoustic/doc/acoustic.tag=../acoustic ../ephys/doc/ephys.tag=../ephys ../linuxdevices/misc/doc/misc.tag=../misc'
 
 include $(top_srcdir)/doxygen.mk
 
