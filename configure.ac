@@ -76,7 +76,6 @@ AC_RELACS_CHECK_GSL()
 ## Comedi
 #################################################
 AC_RELACS_CHECK_COMEDI()
-AM_CONDITIONAL([COND_COMEDI], [test "$RELACS_COMEDI" != no])
 
 
 #################################################
@@ -113,17 +112,20 @@ relacs \
 DOXYGEN_EXTERNAL="${RELACS_DOCLIBS}"
 
 # init plugin sets:
-AC_RELACS_PLUGIN_SET([base])
-AC_RELACS_PLUGIN_SET([calibration])
-AC_RELACS_PLUGIN_SET([ephys])
-AC_RELACS_PLUGIN_SET([acoustic])
-AC_RELACS_PLUGIN_SET([auditory])
-AC_RELACS_PLUGIN_SET([auditoryprojects])
-AC_RELACS_PLUGIN_SET([patchclamp])
-AC_RELACS_PLUGIN_SET([linuxdevices/nieseries])
-AC_RELACS_PLUGIN_SET([linuxdevices/comedi])
-AC_RELACS_PLUGIN_SET([linuxdevices/attcs3310])
-AC_RELACS_PLUGIN_SET([linuxdevices/misc])
+AC_RELACS_PLUGIN_SET([nieseries],[linuxdevices/nieseries])
+AC_RELACS_PLUGIN_SET([comedi],[linuxdevices/comedi],[],[test "$RELACS_COMEDI" != no])
+AC_RELACS_PLUGIN_SET([attcs3310],[linuxdevices/attcs3310],[nieseries])
+AC_RELACS_PLUGIN_SET([misc],[linuxdevices/misc],[nieseries])
+AC_RELACS_PLUGIN_SET([base],[base])
+AC_RELACS_PLUGIN_SET([calibration],[calibration])
+AC_RELACS_PLUGIN_SET([ephys],[ephys])
+AC_RELACS_PLUGIN_SET([acoustic],[acoustic])
+AC_RELACS_PLUGIN_SET([auditory],[auditory],[ephys acoustic misc])
+AC_RELACS_PLUGIN_SET([auditoryprojects],[auditoryprojects],[ephys acoustic auditory misc])
+AC_RELACS_PLUGIN_SET([patchclamp],[patchclamp])
+
+AC_SUBST([RELACS_PLUGINS_SUBDIRS])
+AC_SUBST([RELACS_PLUGINS_DIST_SUBDIRS])
 
 # assemble input pathes from the Makefile.am of the RELACS_DOCLIBS list:
 DOXYGEN_INPUT="doc src utils"
@@ -219,7 +221,6 @@ AC_CONFIG_FILES([
     plugins/patchclamp/Makefile
     plugins/patchclamp/src/Makefile
 
-    plugins/linuxdevices/Makefile
     plugins/linuxdevices/nieseries/Makefile
     plugins/linuxdevices/nieseries/src/Makefile
     plugins/linuxdevices/comedi/Makefile
@@ -264,6 +265,7 @@ cat <<SUMMARY
     Use GSL ................ ${RELACS_GSL}
     Use Comedi ............. ${RELACS_COMEDI}
     Create documentation ... ${DX_SUMMARY}
+    Compile plugin sets ....${RELACS_PLUGINS}
 
 If you can read these lines ./configure finished sucessfully.
 Relacs should build and install smoothly. If it doesn't please

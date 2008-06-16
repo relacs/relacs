@@ -1,12 +1,5 @@
-SUBDIRS = \
-    linuxdevices \
-    base \
-    calibration \
-    ephys \
-    acoustic \
-    auditory \
-    auditoryprojects \
-    patchclamp
+SUBDIRS = $(RELACS_PLUGINS_SUBDIRS) 
+DIST_SUBDIRS = $(RELACS_PLUGINS_DIST_SUBDIRS)
 
 EXTRA_DIST = \
     relacshelp.mk

@@ -222,7 +222,7 @@ doxygen-install: doxygen-run doxygen-install-html doxygen-install-dvi doxygen-in
 	done
 
 doxygen-uninstall: doxygen-uninstall-html doxygen-uninstall-dvi doxygen-uninstall-ps doxygen-uninstall-pdf
-	rm -f "$(DESTDIR)$(pkgdatadir)/$(DX_PROJECT).tag"
+	rm -f "$(DESTDIR)$(pkgdatadir)/doctags/$(DX_PROJECT).tag"
 	@list='$(DX_INSTALL_FILES)'; for p in $$list; do \
 	  echo " rm -f '$(DESTDIR)$(docdir)/$$p'"; \
 	  rm -f "$(DESTDIR)$(docdir)/$$p"; \

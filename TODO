@@ -1,7 +1,5 @@
 Plugins:
 - Put relacs configuration files in root directory of the plugin sets
-- Use -disable-plugins-common etc. to exclude plugin sets from compilation.
-  Make sure that dependencies among the plugin sets are fullfilled.
 - Put plugin sets into relacs namespace
 
 Autotools:
@@ -11,6 +9,7 @@ Autotools:
 - Integrate examples (with extra target)  no-compile Makefiles???
   Include into distribution, compile if --enable-examples, noinst_PROGRAMS
 - Check for C++ requirements (STL, templates)
+- Check m4 macro names and style
 - Add rand55 test and make sure that the dox file PREDEFINED variable gets HAVE_LIBRAND55 define set
   http://summa.physik.hu-berlin.de/~beule/random/random55.tar.gz
 

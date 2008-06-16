@@ -3,7 +3,7 @@
 if test "x$1" = "x--help"; then
   echo "Usage:"
   echo ""
-  echo "release.sh [-l] [-d] <install-path> <configure-options>"
+  echo "release.sh [-l] [-d] [--prefix=]<install-path> <configure-options>"
   echo ""
   echo "Calls ./bootstrap.sh && ./configure && make distcheck &&"
   echo "make && make check && make install && make installcheck"
@@ -29,12 +29,13 @@ if test "x$1" = "x-d"; then
   shift
 fi
 
-INSTALLPATH="$1"
+INSTALLPATH="${1#--prefix=}"
 shift
 if test "x${INSTALLPATH}" = x; then
-  echo "You need to specify an absolute installation path."
+  echo "You need to specify an installation path."
   exit 1
 fi
+INSTALLPATH=$(cd "$INSTALLPATH"; pwd)
 CONFIGUREPREFIX="--prefix=$INSTALLPATH"
 
 # further options for configure (without prefix):
@@ -53,6 +54,7 @@ echo ""
 # configure and check everything:
 echo "Check relacs:"
 ./bootstrap.sh || exit 1
+echo "./configure $CONFIGUREPREFIX $CONFIGUREFLAGS"
 ./configure $CONFIGUREPREFIX $CONFIGUREFLAGS # Also creates configure.ac files of libraries
 ${MAKE} distcheck || exit 1
 echo ""
