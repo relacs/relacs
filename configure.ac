@@ -114,6 +114,7 @@ DOXYGEN_EXTERNAL="${RELACS_DOCLIBS}"
 # init plugin sets:
 AC_RELACS_PLUGIN_SET([nieseries],[linuxdevices/nieseries])
 AC_RELACS_PLUGIN_SET([comedi],[linuxdevices/comedi],[],[test "$RELACS_COMEDI" != no])
+AC_CONFIG_FILES([plugins/linuxdevices/comedi/module/Makefile])
 AC_RELACS_PLUGIN_SET([attcs3310],[linuxdevices/attcs3310],[nieseries])
 AC_RELACS_PLUGIN_SET([misc],[linuxdevices/misc],[nieseries])
 AC_RELACS_PLUGIN_SET([base],[base])
@@ -206,30 +207,6 @@ AC_CONFIG_FILES([
     options/configure.ac
 
     plugins/Makefile
-    plugins/base/Makefile
-    plugins/base/src/Makefile
-    plugins/calibration/Makefile
-    plugins/calibration/src/Makefile
-    plugins/ephys/Makefile
-    plugins/ephys/src/Makefile
-    plugins/acoustic/Makefile
-    plugins/acoustic/src/Makefile
-    plugins/auditory/Makefile
-    plugins/auditory/src/Makefile
-    plugins/auditoryprojects/Makefile
-    plugins/auditoryprojects/src/Makefile
-    plugins/patchclamp/Makefile
-    plugins/patchclamp/src/Makefile
-
-    plugins/linuxdevices/nieseries/Makefile
-    plugins/linuxdevices/nieseries/src/Makefile
-    plugins/linuxdevices/comedi/Makefile
-    plugins/linuxdevices/comedi/src/Makefile
-    plugins/linuxdevices/comedi/module/Makefile
-    plugins/linuxdevices/attcs3310/Makefile
-    plugins/linuxdevices/attcs3310/src/Makefile
-    plugins/linuxdevices/misc/Makefile
-    plugins/linuxdevices/misc/src/Makefile
 
     relacs/Makefile
     relacs/src/Makefile

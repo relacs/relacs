@@ -5,9 +5,11 @@
 # The plugin set might depend on further external dependencies as 
 # determined by the shell test $externaldependencies.
 # If $pluginsetname is anabled and all dependencies are fullfilled, then
-# - adds plugins/$pluginset to DOXYGEN_EXTERNAL
-# - adds $pluginset to SUBDIRS in plugins/Makefile.am
-# In any case adds $pluginset DIST_SUBDIRS in plugins/Makefile.am
+# plugins/$pluginset is added to DOXYGEN_EXTERNAL
+# and $pluginset is added to SUBDIRS in plugins/Makefile.am.
+# In any case $pluginset is added to DIST_SUBDIRS in plugins/Makefile.am
+# and plugins/$pluginsetdir/Makefile and plugins/$pluginsetdir/src/Makefile
+# are passed to AC_CONFIG_FILES.
 
 AC_DEFUN([AC_RELACS_PLUGIN_SET], [
 
@@ -60,6 +62,8 @@ fi
 
 # in any case, the plugin set should go into the distribution:
 RELACS_PLUGINS_DIST_SUBDIRS="${RELACS_PLUGINS_DIST_SUBDIRS} $2"
+# ... and the Makefiles should be configured:
+AC_CONFIG_FILES([ plugins/$2/Makefile plugins/$2/src/Makefile ])
 
 ])
 
