@@ -23,6 +23,7 @@
 #include <fstream>
 #include <relacs/eventlist.h>
 #include <relacs/sampledata.h>
+using namespace relacs;
 
 
 int main( void )

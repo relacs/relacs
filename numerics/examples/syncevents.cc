@@ -21,6 +21,8 @@
 
 #include <iostream>
 #include <relacs/eventlist.h>
+using namespace std;
+using namespace relacs;
 
 
 int main( void )

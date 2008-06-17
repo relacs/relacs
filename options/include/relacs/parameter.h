@@ -110,10 +110,6 @@ public:
         Its value an its default value are set to \a strg. */
   Parameter( const string &ident, const string &request,
 	     const string &strg, int flags=0, int style=0 );
-    /*! Construct and initialize a single Parameter of type Text.
-        Its value an its default value are set to \a strg. */
-  Parameter( const string &ident, const string &request,
-	     const char *strg, int flags=0, int style=0 );
     /*! Construct and initialize a single Parameter of type Number. 
         Its value and its default value are set to \a number,
 	its standard deviation to \a error.

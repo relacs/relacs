@@ -23,11 +23,14 @@
 #include <iostream>
 #include <relacs/str.h>
 #include <relacs/parameter.h>
+using namespace relacs;
+
 
 int main( int argc, char *argv[] )
 {
   if ( argc <  3 ) {
-    cerr << "xunit 2.0ms ns" << endl; 
+    cerr << "Usage:\n";
+    cerr << "xunit 2.0ms ns\n";
     return 1;
   }
 

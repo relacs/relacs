@@ -22,11 +22,14 @@
 #include <iostream>
 #include <iomanip>
 #include <relacs/random.h>
+using namespace std;
+using namespace relacs;
+
 
 int main()
 {
   Ran3 rnd1;
-  GslRandom rnd2( gsl_rng_taus );
+  RandomGSL rnd2( gsl_rng_taus );
   for ( int k=0; k<10000; k++ ) {
     cout << setw( 10 ) << rnd1();
     //    cout << setw( 10 ) << rnd2();

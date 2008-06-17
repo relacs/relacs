@@ -22,10 +22,17 @@
 #include <iostream>
 #include <relacs/str.h>
 using namespace std;
+using namespace relacs;
 
 
 int main( int argc, char *argv[] )
 { 
+  if ( argc <  2 ) {
+    cerr << "Usage:\n";
+    cerr << "xstrnum some_text_starting_with_a_number\n";
+    return 1;
+  }
+
   Str ss( argv[1] );
 
   ss.setSpace( Str::WhiteSpace );

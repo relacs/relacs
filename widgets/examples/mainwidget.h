@@ -24,6 +24,8 @@
 
 #include <qvbox.h>
 #include <relacs/options.h>
+using namespace relacs;
+
 
 class MainWidget : public QVBox
 {

@@ -19,13 +19,12 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <relacs/sampledarray.h>
-#include <relacs/spectrum.h>
 #include <cmath>
-#include <cstdio>
-
+#include <iostream>
+#include <relacs/sampledata.h>
+#include <relacs/spectrum.h>
 using namespace std;
-using namespace numerics;
+using namespace relacs;
 
 
 int main( int argc, char **argv )
@@ -50,12 +49,12 @@ int main( int argc, char **argv )
 
   /*
   // Create data array with the sum of two sine waves at 50 and 100 Hz:
-  SampledArrayD data( 4096*16, 0.0, 0.00005 );
+  SampleDataD data( 4096*16, 0.0, 0.00005 );
   for ( int k=0; k<data.size(); k++ )
     data[k] = sin( 2.0*M_PI*50.0*data.pos( k ) ) + 0.5*sin(  2.0*M_PI*100.0*data.pos( k )  );
 
   // simple fourier transform:
-  SampledArrayD fourier( data );
+  SampleDataD fourier( data );
   rFFT( fourier );
   cout << 0.0 << " " << fourier[0]*fourier[0] << '\n';
   for ( int k=1; k<data.size()/2; k++ )
@@ -71,20 +70,20 @@ int main( int argc, char **argv )
   cout << "\n\n";
 
   // power spectrum:
-  SampledArrayD spec( 4096, 0.0, 0.5/data.stepsize()/4096 );
+  SampleDataD spec( 4096, 0.0, 0.5/data.stepsize()/4096 );
   psd( data, spec, true, hanning );
   cout << spec << endl;
   */
 
   // Create data array with a sine wave at 100 Hz:
-  SampledArrayD data( 4096*16, 0.0, 0.00005 );
+  SampleDataD data( 4096*16, 0.0, 0.00005 );
   for ( int k=0; k<data.size(); k++ )
     data[k] = 1.0*sin(  2.0*M_PI*100.0*data.pos( k )  );
 
   // power spectrum:
-  SampledArrayD power( 4096, 0.0, 0.5/data.stepsize()/4096 );
-  realPSD( data.begin(), data.end(), power.begin(), power.end(),
-	   true, hanning );
+  SampleDataD power( 4096, 0.0, 0.5/data.stepsize()/4096 );
+  rPSD( data.begin(), data.end(), power.begin(), power.end(),
+	true, hanning );
   cout << power << endl;
 
   return 0;

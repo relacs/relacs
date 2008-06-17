@@ -25,6 +25,7 @@
 #include <vector>
 #include <relacs/tablekey.h>
 using namespace std;
+using namespace relacs;
 
 
 int main( int argc, char *argv[] )
@@ -60,7 +61,6 @@ int main( int argc, char *argv[] )
   key2.loadKey( sq );
   cout << '\n' << key2 << endl;
   key2.saveMetaData( cout );
-
 
   return 0;
 }

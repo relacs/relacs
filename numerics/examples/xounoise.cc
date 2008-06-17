@@ -24,8 +24,9 @@
 #include <relacs/random.h>
 #include <relacs/spectrum.h>
 #include <relacs/sampledata.h>
+using namespace std;
+using namespace relacs;
 
-using namespace numerics;
 
 int main( int argc, char **argv )
 {
@@ -35,8 +36,8 @@ int main( int argc, char **argv )
 
   // power spectrum:
   SampleDataD power( 4096, 0.0, 0.5/noise.stepsize()/4096 );
-  realPSD( noise.begin(), noise.end(), power.begin(), power.end(),
-	   true, hanning );
+  rPSD( noise.begin(), noise.end(), power.begin(), power.end(),
+	true, hanning );
   power.save( cout, 0, 5 );
 
   return 0;

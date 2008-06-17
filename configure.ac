@@ -185,41 +185,46 @@ AC_SUBST_FILE(RELACS_FOOT)
 # Substitute
 AC_CONFIG_FILES([
     build_config_dump
+
+    Makefile
+
+    numerics/configure.ac
+    numerics/Makefile
+    numerics/src/Makefile
+    numerics/examples/Makefile
     
     daq/src/Makefile
     daq/Makefile
     daq/configure.ac
 
-    datafile/src/Makefile
-    datafile/Makefile
-    datafile/configure.ac
-
-    plot/src/Makefile
-    plot/Makefile
-    plot/configure.ac
-
-    numerics/src/Makefile
-    numerics/Makefile
-    numerics/configure.ac
-
-    options/src/Makefile
-    options/Makefile
     options/configure.ac
+    options/Makefile
+    options/src/Makefile
+    options/examples/Makefile
 
-    plugins/Makefile
+    datafile/configure.ac
+    datafile/Makefile
+    datafile/src/Makefile
+    datafile/examples/Makefile
+
+    widgets/configure.ac
+    widgets/Makefile
+    widgets/src/Makefile
+    widgets/examples/Makefile
+
+    plot/configure.ac
+    plot/Makefile
+    plot/src/Makefile
+    plot/examples/Makefile
 
     relacs/Makefile
     relacs/src/Makefile
 
     src/Makefile
 
+    plugins/Makefile
+
     utils/Makefile
-
-    widgets/src/Makefile
-    widgets/Makefile
-    widgets/configure.ac
-
-    Makefile
 
     doc/relacsall.doc
 ])

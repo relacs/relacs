@@ -24,6 +24,8 @@
 #include <vector>
 #include <relacs/odealgorithm.h>
 using namespace std;
+using namespace relacs;
+
 
 typedef vector< double > dvector;
 typedef vector< dvector > dmatrix;
@@ -57,7 +59,8 @@ int main( void )
   for ( unsigned int k=0; k<y.size(); k++ )
     y[k].resize( n );
 
-  midpointInt( x, y, ystart, x1, x2, deltax, LinearFirstOrder( 2.0 ) );
+  LinearFirstOrder lfo( 2.0 );
+  midpointInt( x, y, ystart, x1, x2, deltax, lfo );
 
   for ( unsigned int k=0; k<x.size(); k++ )
     cout << x[k] << " " << y[0][k] << endl;

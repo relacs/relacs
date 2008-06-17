@@ -21,10 +21,10 @@
 
 #include <iostream>
 #include <relacs/random.h>
-#include <relacs/tests.h>
-
+#include <relacs/statstests.h>
 using namespace std;
-using namespace numerics;
+using namespace relacs;
+
 
 int main( void ) 
 {

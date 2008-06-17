@@ -24,7 +24,7 @@
 #include <relacs/sampledata.h>
 #include <relacs/spectrum.h>
 using namespace std;
-using namespace numerics;
+using namespace relacs;
 
 
 int main ( void )

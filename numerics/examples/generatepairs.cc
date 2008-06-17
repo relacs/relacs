@@ -25,9 +25,9 @@ generates random paired samples for testing paired t-test and Wilcoxon test.
 
 #include <iostream>
 #include <relacs/random.h>
-
 using namespace std;
-using namespace numerics;
+using namespace relacs;
+
 
 int n = 400;
 double diffsigma = 60.0;

@@ -19,9 +19,6 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/*
-g++ -g -Wall -o pipe pipe.cc
- */
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -31,16 +28,11 @@ using namespace std;
 int main( int argc, char *argv[] )
 {
   // redirect cin:
-  istream sf;
-  ifstream isf;
+  ifstream sf;
   if ( argc > 1 ) {
-    isf.open( argv[1] );
-    streambuf *sb = isf.rdbuf();
-    sf.rdbuf( sb );
-  }
-  else {
-    streambuf *sb = cin.rdbuf();
-    sf.rdbuf( sb );
+    sf.open( argv[1] );
+    streambuf *sb = sf.rdbuf();
+    cin.rdbuf( sb );
   }
 
   // redirect cout:
@@ -52,11 +44,11 @@ int main( int argc, char *argv[] )
   }
 
   string s;
-  while ( ! getline( sf, s ).eof() )
+  while ( ! getline( cin, s ).eof() )
     cout << "piped: " << s << endl;
 
-  if ( isf.is_open() )
-    isf.close();
+  if ( sf.is_open() )
+    sf.close();
   if ( df.is_open() )
     df.close();
 

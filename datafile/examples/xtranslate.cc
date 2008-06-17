@@ -22,7 +22,9 @@
 #include <vector>
 #include <relacs/str.h>
 #include <relacs/options.h>
+#include <relacs/translate.h>
 using namespace std;
+using namespace relacs;
 
 
 int main( int argc, char *argv[] )
@@ -45,7 +47,7 @@ int main( int argc, char *argv[] )
     cout << "enter string to be translated: ";
     getline( cin, ss );
     cout << "translated: " 
-	 << ss.translated( opt, "pst" ) << endl;
+	 << translate( ss, opt, "pst" ) << endl;
   }
 
   return 0;

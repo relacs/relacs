@@ -23,7 +23,7 @@
 #include <qapplication.h>
 #include <relacs/map.h>
 #include <relacs/plot.h>
-#include <cstdio>
+using namespace relacs;
 
 
 int main( int argc, char **argv )

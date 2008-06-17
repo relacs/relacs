@@ -24,9 +24,8 @@
 #include <vector>
 #include <relacs/array.h>
 #include <relacs/containerfuncs.h>
-
 using namespace std;
-using namespace numerics;  // doesn't matter for scalar function calls
+using namespace relacs;
 
 
 int main( void )
@@ -42,7 +41,7 @@ int main( void )
   cerr << c << "\n\n";
 
   cerr << "scalar: ::sin( a ):\n";
-  double d = numerics::sin( a );    // numerics
+  double d = relacs::sin( a );    // relacs
   cerr << d << "\n\n";
 
   vector< long double > vecla;
@@ -50,17 +49,17 @@ int main( void )
   vecla.push_back( 1.0 );
   vecla.push_back( 1.5 );
   cerr << "Vector vector< long double >: sin( vecla ):\n";
-  vector< long double > veclb = sin( vecla );    // numerics
+  vector< long double > veclb = sin( vecla );    // relacs
   for ( unsigned int k=0; k<veclb.size(); k++ )
     cerr << " " << veclb[k];
   cerr << "\n\n";
 
   Array< float > arrayfa;
-  arrayfa.push( 0.5 );
-  arrayfa.push( 1.0 );
-  arrayfa.push( 1.5 );
+  arrayfa.push( float( 0.5 ) );
+  arrayfa.push( float( 1.0 ) );
+  arrayfa.push( float( 1.5 ) );
   cerr << "Vector Array< float >: cos( arrayfa ):\n";
-  Array< float > arrayfb = cos( arrayfa );    // numerics
+  Array< float > arrayfb = cos( arrayfa );    // relacs
   for ( int k=0; k<arrayfb.size(); k++ )
     cerr << " " << arrayfb[k];
   cerr << "\n\n";
@@ -74,7 +73,7 @@ int main( void )
   darrayda[2][2] = 2.5;
   darrayda[2][0] = 3.0;
   cerr << "Matrix vector< Array< double > >: exp( darrayda ):\n";
-  vector< Array< double > > darraydb = exp( darrayda );    // numerics
+  vector< Array< double > > darraydb = exp( darrayda );    // relacs
   for ( unsigned int j=0; j<darraydb.size(); j++ ) {
     for ( int k=0; k<darraydb[j].size(); k++ )
       cerr << " " << setprecision( 4 ) << setw( 7 ) << darraydb[j][k];
@@ -90,33 +89,38 @@ int main( void )
 
   cerr << "scalar: pow( 2.0, a ):\n";
   a = 4.0;
-  d = pow( 2.0, a );    // numerics
+  d = pow( 2.0, a );    // relacs
   cerr << d << "\n\n";
 
+  /*
   vecla[0] = 1.0;
   vecla[1] = 2.0;
   vecla[2] = 3.0;
   cerr << "Vector vector< long double >: pow( 2.0, vecla ):\n";
-  veclb = pow( 2.0, vecla );    // numerics
+  veclb = pow( 2.0, vecla );    // relacs
   for ( unsigned int k=0; k<veclb.size(); k++ )
     cerr << " " << veclb[k];
   cerr << "\n\n";
+  */
 
+  /*
   arrayfa[0] = 1.0;
   arrayfa[1] = 2.0;
   arrayfa[2] = 3.0;
   cerr << "Vector Array< long double >: pow( arrayfa, 2.0 ):\n";
-  arrayfb = pow( arrayfa, 2.0 );    // numerics
+  arrayfb = pow( arrayfa, 2.0 );    // relacs
   for ( int k=0; k<arrayfb.size(); k++ )
     cerr << " " << arrayfb[k];
   cerr << "\n\n";
 
   cerr << "Vector Array< long double >: pow( arrayfa, vecla ):\n";
-  arrayfb = pow( arrayfa, vecla );    // numerics
+  arrayfb = pow( arrayfa, vecla );    // relacs
   for ( int k=0; k<arrayfb.size(); k++ )
     cerr << " " << arrayfb[k];
   cerr << "\n\n";
+  */
 
+  /*
   darrayda[0][0] = 1.0;
   darrayda[0][2] = 2.0;
   darrayda[1][1] = 3.0;
@@ -124,7 +128,7 @@ int main( void )
   darrayda[2][2] = 5.0;
   darrayda[2][0] = 6.0;
   cerr << "Matrix vector< Array< double > >: pow( 2.0, darrayda ):\n";
-  darraydb = pow( 2.0, darrayda );    // numerics
+  darraydb = pow( 2.0, darrayda );    // relacs
   for ( unsigned int j=0; j<darraydb.size(); j++ ) {
     for ( int k=0; k<darraydb[j].size(); k++ )
       cerr << " " << setprecision( 4 ) << setw( 7 ) << darraydb[j][k];
@@ -133,7 +137,7 @@ int main( void )
   cerr << "\n";
 
   cerr << "Matrix vector< Array< double > >: pow( darrayda, 2.0 ):\n";
-  darraydb = pow( darrayda, 2.0 );    // numerics
+  darraydb = pow( darrayda, 2.0 );    // relacs
   for ( unsigned int j=0; j<darraydb.size(); j++ ) {
     for ( int k=0; k<darraydb[j].size(); k++ )
       cerr << " " << setprecision( 4 ) << setw( 7 ) << darraydb[j][k];
@@ -142,13 +146,14 @@ int main( void )
   cerr << "\n";
 
   cerr << "Matrix vector< Array< double > >: pow( darrayda, darrayda ):\n";
-  darraydb = pow( darrayda, darrayda );    // numerics
+  darraydb = pow( darrayda, darrayda );    // relacs
   for ( unsigned int j=0; j<darraydb.size(); j++ ) {
     for ( int k=0; k<darraydb[j].size(); k++ )
       cerr << " " << setprecision( 6 ) << setw( 9 ) << darraydb[j][k];
     cerr << "\n";
   }
   cerr << "\n";
+  */
 
   return 0;
 }

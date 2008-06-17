@@ -25,6 +25,7 @@
 #include <qlabel.h>
 #include <relacs/optdialog.h>
 #include "mainwidget.h"
+using namespace relacs;
 
 
 MainWidget::MainWidget( QWidget *parent, const char *name )
@@ -37,7 +38,7 @@ MainWidget::MainWidget( QWidget *parent, const char *name )
 		 0.2, 0.0, 1.0, 0.01, "seconds", "ms", "%g", 3 ).setStyle( OptWidget::LabelNormal + OptWidget::ValueItalic + OptWidget::LabelBold +  OptWidget::ValueGreen + OptWidget::ValueBackBlack + OptWidget::ValueLCD );
   Opt1.setNumber( "pause", 0.180 );
   Opt1.addInteger( "repeats", "Repeats", 8, 0, 100 );
-  Opt1.addSeparator( "Settings", 0,  OptWidget::Large + OptWidget::Bold +  OptWidget::Red );
+  Opt1.addLabel( "Settings", 0,  OptWidget::Large + OptWidget::Bold +  OptWidget::Red );
   Opt1.addText( "color", "Color", "red|green|blue");
   Opt1.addText( "comment", "Comments", "no comment" );
 
@@ -107,3 +108,5 @@ int main( int argc, char **argv )
   w.show();
   return a.exec();
 }
+
+#include "moc_mainwidget.cc"

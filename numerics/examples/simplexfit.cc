@@ -25,8 +25,8 @@
 #include <relacs/basisfunction.h>
 #include <relacs/fitalgorithm.h>
 #include <relacs/random.h>
-
-using namespace numerics;
+using namespace std;
+using namespace relacs;
 
 
 double expfunc( double x, const ArrayD &p )

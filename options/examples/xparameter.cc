@@ -22,6 +22,8 @@
 #include <cstdlib>
 #include <iostream>
 #include <relacs/parameter.h>
+using namespace relacs;
+
 
 void print( const Parameter &p )
 {
@@ -45,14 +47,13 @@ void print( const Parameter &p )
   cout << " p.format(): " << p.format() << endl;
   cout << "   p.text(): " << p.text( "r='%r', i=%i, s=%s, n=%g, e=%G, u=%u" ) << endl;
   cout << "          p: ";
-  p.save( cout, false );
+  p.save( cout, 0, false );
   cout << endl;
 }
 
 
 int main( int argc, char *argv[] )
 {
-  Parameter sp( "textid", "enter a text", string( "string-text" ) );
   Parameter tp( "textid", "enter a text", "char-text" );
 
   cout << endl;

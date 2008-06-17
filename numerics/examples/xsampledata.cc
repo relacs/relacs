@@ -23,9 +23,8 @@
 #include <iomanip>
 #include <vector>
 #include <relacs/sampledata.h>
-
 using namespace std;
-using namespace numerics;
+using namespace relacs;
 
 
 int main( void )

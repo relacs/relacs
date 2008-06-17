@@ -19,15 +19,18 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <cstdio>
 #include <cmath>
+#include <iostream>
 #include <vector>
 #include <relacs/array.h>
+using namespace std;
+using namespace relacs;
+
 
 int main( int argc, char **argv )
 {
-  DArray a( 4 );
-  FArray b( 4 );
+  ArrayD a( 4 );
+  ArrayF b( 4 );
   vector< double > c( 4 );
   Array< int > d( 4 );
 

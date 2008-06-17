@@ -21,6 +21,8 @@
 
 #include <iostream>
 #include <relacs/datafile.h>
+using namespace relacs;
+
 
 int main( int argc, char *argv[] )
 {

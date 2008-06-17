@@ -19,13 +19,21 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <iostream>
 #include <vector>
 #include <relacs/str.h>
 using namespace std;
+using namespace relacs;
 
 
 int main( int argc, char *argv[] )
 { 
+  if ( argc <  2 ) {
+    cerr << "Usage:\n";
+    cerr << "xstring some_text\n";
+    return 1;
+  }
+
   Str ss( argv[1] );
   //string a( argv[2] );
   //char *a = argv[2];

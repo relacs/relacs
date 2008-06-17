@@ -22,6 +22,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <relacs/options.h>
+using namespace relacs;
 
 
 int main( int argc, char *argv[] )

@@ -21,6 +21,7 @@
 
 #include <qapplication.h>
 #include <relacs/doublespinbox.h>
+using namespace relacs;
 
 
 int main( int argc, char **argv )

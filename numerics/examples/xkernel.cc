@@ -21,6 +21,8 @@
 
 #include <iostream>
 #include <relacs/kernel.h>
+using namespace std;
+using namespace relacs;
 
 double scale = 1.0;
 

@@ -26,6 +26,8 @@ g++ -g -Wall -o xdatafile xdatafile.cc -I$HOME/include -L$HOME/lib -loptions
 #include <iostream>
 #include <relacs/datafile.h>
 using namespace std;
+using namespace relacs;
+
 
 int main( void )
 {

@@ -24,6 +24,9 @@
 #include <iostream>
 #include <iomanip>
 #include <relacs/random.h>
+using namespace std;
+using namespace relacs;
+
 
 int main()
 {
@@ -47,9 +50,9 @@ int main()
   t2 = time( 0 );
   cerr << "ran3 uniform: " << difftime( t2, t1 ) << "sec\n"; 
 
-  //  GslRandom rnd2( gsl_rng_taus );
-  GslRandom gslran;
-  RandomBase &rnd2 = gslran;
+  //  RandomGSL rnd2( gsl_rng_taus );
+  RandomGSL rangsl;
+  RandomBase &rnd2 = rangsl;
   t1 = time( 0 );
   for ( int k=0; k<max; k++ ) {
     r = rnd2.gaussian();

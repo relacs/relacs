@@ -22,8 +22,7 @@
 #include <qgroupbox.h>
 #include <qapplication.h>
 #include <relacs/multiplot.h>
-#include <relacs/data.h>
-#include <cstdio>
+using namespace relacs;
 
 
 int main( int argc, char **argv )
@@ -32,7 +31,7 @@ int main( int argc, char **argv )
 
   QGroupBox g( 1, Qt::Horizontal, "My Plots" );
   a.setMainWidget( &g );
-  Plots p( 3, &g );
+  MultiPlot p( 3, &g );
 
   const int n = 19;
   vector< double > xd( n ), yd( n );
@@ -45,9 +44,9 @@ int main( int argc, char **argv )
   p[0].setXTics();
   p[0].setYTics();
   p[0].setXLabel( "xlabel" );
-  p[0].setXLabelPos( 1.0, Plot::Graph, -1.0, Plot::X1Axis, Plot::Right, 0.0 );
+  p[0].setXLabelPos( 1.0, Plot::Graph, -1.0, Plot::FirstAxis, Plot::Right, 0.0 );
   p[0].setYLabel( "ylabel" );
-  p[0].setYLabelPos( -0.6, Plot::Y1Axis, 0.5, Plot::Graph, Plot::Center, -90.0 );
+  p[0].setYLabelPos( -0.6, Plot::FirstAxis, 0.5, Plot::Graph, Plot::Center, -90.0 );
   p[0].setTitle( "title" );
   p[0].setLabel( "label", 0.5, Plot::Graph, 0.5, Plot::Graph, Plot::Center, 45.0 );
   p[0].plotVLine( -2.0, Plot::Green, 4, Plot::Solid );

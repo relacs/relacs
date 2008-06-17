@@ -19,12 +19,13 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <iostream>
 #include <relacs/array.h>
 #include <relacs/basisfunction.h>
 #include <relacs/fitalgorithm.h>
 #include <relacs/random.h>
-
-using namespace numerics;
+using namespace std;
+using namespace relacs;
 
 
 int main( void )
