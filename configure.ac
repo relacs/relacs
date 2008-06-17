@@ -239,10 +239,17 @@ AC_OUTPUT
 
 cat <<SUMMARY
 
-    Use GSL ................ ${RELACS_GSL}
-    Use Comedi ............. ${RELACS_COMEDI}
-    Create documentation ... ${DX_SUMMARY}
-    Compile plugin sets ....${RELACS_PLUGINS}
+    Use GSL .................. ${RELACS_GSL}
+    Use Comedi ............... ${RELACS_COMEDI}
+    Generate documentation ... ${DX_SUMMARY}
+    Compile the following plugin sets:
+SUMMARY
+
+for RELACS_PLUGIN in ${RELACS_PLUGINS}; do
+    echo "        ${RELACS_PLUGIN}"
+done
+
+cat <<SUMMARY
 
 If you can read these lines ./configure finished sucessfully.
 Relacs should build and install smoothly. If it doesn't please

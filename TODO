@@ -1,6 +1,6 @@
 Plugins:
 - Put relacs configuration files in root directory of the plugin sets
-- Put plugin sets into relacs namespace
+- Put plugin sets into relacs namespace, no! Only the library like plugins.
 
 Autotools:
 - Make datatools a separate project
@@ -43,7 +43,7 @@ Documentation:
 - when changing the interface of the libraries 
   make sure that nothing is installed in prefix/lib!
   For finalizing a change in the interface the version number of the library
-  needs to be changes.
+  needs to be changed.
 - Links:
   CRCNS - Collaborative Research in Computational Neuroscience - Data sharing activity
   http://www.crcns.org/
