@@ -1,5 +1,7 @@
-SUBDIRS = \
-    src
+if RELACS_EXAMPLES_COND
+    EXAMPLES = examples
+endif
+SUBDIRS = src $(EXAMPLES)
 
 EXTRA_DIST = \
     m4/ax_prog_doxygen.m4 \

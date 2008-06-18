@@ -1,4 +1,7 @@
-SUBDIRS = src
+if RELACS_EXAMPLES_COND
+    EXAMPLES = examples
+endif
+SUBDIRS = src $(EXAMPLES)
 
 pkglibdir = $(libdir)/relacs
 pkgincludedir = $(includedir)/relacs

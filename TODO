@@ -6,9 +6,6 @@ Autotools:
 - Make datatools a separate project
 - What about the "global flags" in configure.ac? For plugins only?
 - Check and improve output of configure --help (include running a demo)
-- Include into distribution! compile if --enable-examples
-  Add brief documentation to the examples! (a README file)
-  xarray.cc: Problems with the pow function (in containerfuncs.h)
 - Check for C++ requirements (STL, templates)
 - Check m4 macro names and style
 - Add rand55 test and make sure that the dox file PREDEFINED variable gets HAVE_LIBRAND55 define set
@@ -48,6 +45,7 @@ Documentation:
 - Links:
   CRCNS - Collaborative Research in Computational Neuroscience - Data sharing activity
   http://www.crcns.org/
+- Add brief documentation to the examples! (a README file)
 - update documentation of OutData, TraceSpec
 - RTAI Installation: https://www.rtai.org/RTAILAB/RTAI-Lab-tutorial.pdf
 
@@ -78,6 +76,8 @@ RelacsWidget::startRePro() ->
 SaveFiles::write( RePro ) -> SaveFiles::writeStimulus() -> 
 	    TriggerKey.save( *TF, StimulusToWrite[j].ident() );
 -> cleanup savefiles! make sure that writing to files is locked!
+
+Bug in xarray.cc: Problems with the pow function (in containerfuncs.h)
 
 
 Start implementing Dynclamp module!

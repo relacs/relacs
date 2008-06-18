@@ -93,6 +93,12 @@ AC_DEFINE([HAVE_LIBRELACSDAQ], [1],
 
 
 #################################################
+## Examples
+#################################################
+RELACS_EXAMPLES()
+
+
+#################################################
 ## Doxygen
 #################################################
 
@@ -245,9 +251,10 @@ AC_OUTPUT
 
 cat <<SUMMARY
 
-    Use GSL .................. ${RELACS_GSL}
-    Use Comedi ............... ${RELACS_COMEDI}
-    Generate documentation ... ${DX_SUMMARY}
+    Use GSL .................... ${RELACS_GSL}
+    Use Comedi ................. ${RELACS_COMEDI}
+    Generate documentation ..... ${DX_SUMMARY}
+    Compile example programs ... ${RELACS_COMPILE_EXAMPLES}
     Compile the following plugin sets:
 SUMMARY
 

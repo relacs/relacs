@@ -18,7 +18,7 @@ RELACS_COMPILE="yes"
 AC_ARG_ENABLE(plugins-$1,
    [AS_HELP_STRING([--disable-plugins-$1],[don't compile $1 plugins])],
    [AS_IF([test "x$enableval" = xyes],[RELACS_COMPILE="yes"],[RELACS_COMPILE="no"])],
-   [])
+   [RELACS_COMPILE="yes"])
 
 # is the external dependecy fullfilled?
 RELACS_EXTERNAL_DEPENDENCY="$4"
