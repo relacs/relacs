@@ -117,9 +117,6 @@ public:
 
   friend ostream &operator<<( ostream &str, const Kleindiek &k );
 
-
-protected:
-
   int coarse( int channel, int steps );
   int pause( int ms );
 

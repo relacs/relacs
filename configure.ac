@@ -223,6 +223,7 @@ AC_CONFIG_FILES([
     src/Makefile
 
     plugins/Makefile
+    plugins/linuxdevices/misc/examples/Makefile
 
     utils/Makefile
 

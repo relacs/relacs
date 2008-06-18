@@ -6,10 +6,9 @@ Autotools:
 - Make datatools a separate project
 - What about the "global flags" in configure.ac? For plugins only?
 - Check and improve output of configure --help (include running a demo)
-- Integrate examples (with extra target, plugins example remain to be integrated)
-  Include into distribution! compile if --enable-examples
+- Include into distribution! compile if --enable-examples
   Add brief documentation to the examples! (a README file)
-  xarray.cc: Problems with the pow function
+  xarray.cc: Problems with the pow function (in containerfuncs.h)
 - Check for C++ requirements (STL, templates)
 - Check m4 macro names and style
 - Add rand55 test and make sure that the dox file PREDEFINED variable gets HAVE_LIBRAND55 define set
