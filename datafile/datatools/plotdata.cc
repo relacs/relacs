@@ -29,6 +29,7 @@
 #include <relacs/tablekey.h>
 #include <relacs/datafile.h>
 #include <relacs/translate.h>
+using namespace relacs;
 
 
 bool allpages = false;

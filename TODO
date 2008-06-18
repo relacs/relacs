@@ -10,6 +10,7 @@ Autotools:
   http://summa.physik.hu-berlin.de/~beule/random/random55.tar.gz
 
 Relacs:
+- Check for missing files from the pre-autotools version - just to make sure.
 - How are plugins (control, repros) found/identified? Possibility of name clashes!
   Use plugin-set name as well.
 - Fix command line arg names from path to dir in relacsmain and RELACSWidget.

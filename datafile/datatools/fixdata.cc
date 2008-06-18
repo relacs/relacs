@@ -28,6 +28,7 @@
 #include <relacs/datafile.h>
 #include <relacs/options.h>
 using namespace std;
+using namespace relacs;
 
 
 int stopempty = 1;

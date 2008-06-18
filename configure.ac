@@ -234,6 +234,7 @@ AC_CONFIG_FILES([
     datafile/Makefile
     datafile/src/Makefile
     datafile/examples/Makefile
+    datafile/datatools/Makefile
 
     widgets/configure.ac
     widgets/Makefile

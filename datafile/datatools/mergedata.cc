@@ -31,6 +31,8 @@
 #include <relacs/strqueue.h>
 #include <relacs/datafile.h>
 using namespace std;
+using namespace relacs;
+
 
 int stopempty = 2;
 bool metadata = true;

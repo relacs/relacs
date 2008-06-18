@@ -35,7 +35,8 @@
 #include <relacs/statstests.h>
 
 using namespace std;
-using namespace numerics;
+using namespace relacs;
+
 
 const double noval = 1e30;
 vector<int> xcol; 

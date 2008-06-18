@@ -38,7 +38,7 @@
 #include <relacs/stats.h>
 
 using namespace std;
-using namespace numerics;
+using namespace relacs;
 
 const double noval = 1e30;
 int xcol = 0; 

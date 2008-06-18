@@ -31,6 +31,8 @@
 #include <relacs/datafile.h>
 #include <relacs/translate.h>
 using namespace std;
+using namespace relacs;
+
 
 int stopempty = 2;
 bool erase = false;

@@ -28,6 +28,7 @@
 #include <relacs/strqueue.h>
 #include <relacs/datafile.h>
 using namespace std;
+using namespace relacs;
 
 int stopempty = 100;
 bool erase = false;
