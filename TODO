@@ -1,13 +1,11 @@
 Plugins:
 - Put relacs configuration files in root directory of the plugin sets
-- Put plugin sets into relacs namespace, no! Only the library like plugins.
 
 Autotools:
 - Make datatools a separate project
-- What about the "global flags" in configure.ac? For plugins only?
-- Check and improve output of configure --help (include running a demo)
-- Check for C++ requirements (STL, templates)
 - Check m4 macro names and style
+- Check and improve output of configure --help
+- Check for C++ requirements (STL, templates)
 - Add rand55 test and make sure that the dox file PREDEFINED variable gets HAVE_LIBRAND55 define set
   http://summa.physik.hu-berlin.de/~beule/random/random55.tar.gz
 

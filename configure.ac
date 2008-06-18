@@ -5,6 +5,7 @@ AC_CONFIG_MACRO_DIR([m4 numerics/m4 plugins/linuxdevices/comedi/m4])
 
 AM_INIT_AUTOMAKE([1.10 -Wall gnits subdir-objects dist-bzip2])
 
+# no static libraries:
 AC_ENABLE_SHARED
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
@@ -17,13 +18,6 @@ CXXFLAGS="-Wall $CXXFLAGS"
 CFLAGS="-Wall $CFLAGS"
 
 AM_PROG_CC_C_O
-
-# Static substitutions
-RELACSDATE=`date '+%m/%d/%y'`
-AC_SUBST(RELACSDATE)
-
-RELACSVERSION="${VERSION} (${RELACSDATE})"
-AC_SUBST(RELACSVERSION)
 
 
 # Backup before any additions
@@ -99,7 +93,7 @@ RELACS_EXAMPLES()
 
 
 #################################################
-## Doxygen
+## Documentation directories
 #################################################
 
 # list of libraries that should go 
@@ -117,7 +111,11 @@ relacs \
 # list of directories with their own documentation:
 DOXYGEN_EXTERNAL="${RELACS_DOCLIBS}"
 
-# init plugin sets:
+
+#################################################
+## Plugin sets
+#################################################
+
 AC_RELACS_PLUGIN_SET([nieseries],[linuxdevices/nieseries])
 AC_RELACS_PLUGIN_SET([comedi],[linuxdevices/comedi],[],[test "$RELACS_COMEDI" != no])
 AC_CONFIG_FILES([plugins/linuxdevices/comedi/module/Makefile])
@@ -133,6 +131,11 @@ AC_RELACS_PLUGIN_SET([patchclamp],[patchclamp])
 
 AC_SUBST([RELACS_PLUGINS_SUBDIRS])
 AC_SUBST([RELACS_PLUGINS_DIST_SUBDIRS])
+
+
+#################################################
+## Doxygen
+#################################################
 
 # assemble input pathes from the Makefile.am of the RELACS_DOCLIBS list:
 DOXYGEN_INPUT="doc src utils"
@@ -166,13 +169,9 @@ DX_PS_FEATURE(OFF)
 DX_INIT_DOXYGEN( relacsall, doc/Doxyfile, doc )
 
 
-# All relacs libraries, the program, and the standard plugins
-# are built from a common source tree.
-AM_CONDITIONAL([RELACS_TOP_BUILD], [test 0 = 0])
-
-
-# Global flags
-CPPFLAGS="${CPPFLAGS} -DPLUGINVERSION=\\\"$VERSION\\\""
+#################################################
+## RELACS runner scripts
+#################################################
 
 # Head of global relacs runner script:
 RELACS_HEAD=$srcdir/src/relacs_head
@@ -186,9 +185,32 @@ AC_SUBST_FILE(RELACSLOCAL_HEAD)
 RELACS_FOOT=$srcdir/src/relacs_foot
 AC_SUBST_FILE(RELACS_FOOT)
 
+AC_CONFIG_FILES([src/relacs], [chmod a+x src/relacs])
+AC_CONFIG_FILES([relacslocal], [chmod a+x relacslocal])
+AC_CONFIG_FILES([plugins/base/relacslocal], [chmod a+x plugins/base/relacslocal])
+AC_CONFIG_FILES([plugins/calibration/relacslocal], [chmod a+x plugins/calibration/relacslocal])
+AC_CONFIG_FILES([plugins/acoustic/relacslocal], [chmod a+x plugins/acoustic/relacslocal])
+AC_CONFIG_FILES([plugins/auditory/relacslocal], [chmod a+x plugins/auditory/relacslocal])
+AC_CONFIG_FILES([plugins/auditoryprojects/relacslocal], [chmod a+x plugins/auditoryprojects/relacslocal])
+AC_CONFIG_FILES([plugins/patchclamp/relacslocal], [chmod a+x plugins/patchclamp/relacslocal])
 
 
-# Substitute
+#################################################
+## RELACS general
+#################################################
+
+# Relacs version and build date as a preprocessor define:
+AC_DEFINE_UNQUOTED([RELACSVERSION],["${VERSION} (`date '+%m/%d/%y'`)"])
+
+# All relacs libraries, the program, and the standard plugins
+# are built from a common source tree.
+AM_CONDITIONAL([RELACS_TOP_BUILD], [test 0 = 0])
+
+
+#################################################
+## File substitutions:
+#################################################
+
 AC_CONFIG_FILES([
     build_config_dump
 
@@ -236,18 +258,13 @@ AC_CONFIG_FILES([
     doc/relacsall.doc
 ])
 
-AC_CONFIG_FILES([src/relacs], [chmod a+x src/relacs])
-AC_CONFIG_FILES([relacslocal], [chmod a+x relacslocal])
-AC_CONFIG_FILES([plugins/base/relacslocal], [chmod a+x plugins/base/relacslocal])
-AC_CONFIG_FILES([plugins/calibration/relacslocal], [chmod a+x plugins/calibration/relacslocal])
-AC_CONFIG_FILES([plugins/acoustic/relacslocal], [chmod a+x plugins/acoustic/relacslocal])
-AC_CONFIG_FILES([plugins/auditory/relacslocal], [chmod a+x plugins/auditory/relacslocal])
-AC_CONFIG_FILES([plugins/auditoryprojects/relacslocal], [chmod a+x plugins/auditoryprojects/relacslocal])
-AC_CONFIG_FILES([plugins/patchclamp/relacslocal], [chmod a+x plugins/patchclamp/relacslocal])
 
 AC_OUTPUT
 
 
+#################################################
+## Summary:
+#################################################
 
 cat <<SUMMARY
 
@@ -269,7 +286,9 @@ Relacs should build and install smoothly. If it doesn't please
 open a bug describing your problem and configuration at
 http://sourceforge.net/tracker/?group_id=199846&atid=971134
 
-Continue with \$ make && sudo make install
+Continue with  \$ make
+Run a demo     \$ ./relacslocal -3
+Install relacs \$ sudo make install
 
 SUMMARY
 

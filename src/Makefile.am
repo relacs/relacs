@@ -15,7 +15,6 @@ EXTRA_DIST = \
 
 # TODO
 relacsgui_CPPFLAGS = \
-    "-DRELACSVERSION=\"$(RELACSVERSION)\"" \
     -I$(srcdir)/../daq/include \
     -I$(srcdir)/../datafile/include \
     -I$(srcdir)/../plot/include \

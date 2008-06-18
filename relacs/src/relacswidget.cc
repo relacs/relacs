@@ -163,9 +163,9 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   CFG.configure( RELACSPlugin::Core );
 
   // loading plugins:
-  Plugins::add( "AISim", RELACSPlugin::AnalogInputId, createAISim, PLUGINVERSION );
-  Plugins::add( "AOSim", RELACSPlugin::AnalogOutputId, createAOSim, PLUGINVERSION );
-  Plugins::add( "AttSim", RELACSPlugin::AttenuatorId, createAttSim, PLUGINVERSION );
+  Plugins::add( "AISim", RELACSPlugin::AnalogInputId, createAISim, VERSION );
+  Plugins::add( "AOSim", RELACSPlugin::AnalogOutputId, createAOSim, VERSION );
+  Plugins::add( "AttSim", RELACSPlugin::AttenuatorId, createAttSim, VERSION );
   StrQueue pluginhomes( pluginhome, "|" );
   pluginhomes.strip();
   for ( int k=0; k<SS.Options::size( "pluginpathes" ); k++ ) {

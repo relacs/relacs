@@ -423,7 +423,7 @@ class reg ## pluginClass : public Plugins \
 public: \
   reg ## pluginClass() \
   { \
-    add( # pluginClass, pluginType, create ## pluginClass, PLUGINVERSION ); \
+    add( # pluginClass, pluginType, create ## pluginClass, VERSION ); \
   } \
 \
   ~reg ## pluginClass() \

@@ -32,10 +32,10 @@ using namespace std;
 namespace relacs {
 
 
-#ifdef PLUGINVERSION
-  string Plugins::Version = PLUGINVERSION;
+#ifdef VERSION
+  string Plugins::Version = VERSION;
 #else
-  #error no PLUGINVERSION string defined!
+  #error no VERSION string defined!
 #endif
 
 Plugins::PluginsType Plugins::Plugs;
