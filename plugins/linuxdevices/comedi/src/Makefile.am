@@ -78,6 +78,7 @@ libcomedidynclampanaloginput_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
+    -I/usr/src/rtai-3.6/base/include \
     $(QT3_CPPFLAGS)
 
 libcomedidynclampanaloginput_la_LDFLAGS = \
@@ -110,6 +111,7 @@ libcomedidynclampanalogoutput_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
+    -I/usr/src/rtai-3.6/base/include \
     $(QT3_CPPFLAGS)
 
 libcomedidynclampanalogoutput_la_LDFLAGS = \

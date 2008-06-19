@@ -5,7 +5,7 @@ EXTRA_CFLAGS += -I/usr/src/rtai-3.6/base/include/ -I/usr/include/ -ffast-math -m
 EXTRA_CFLAGS += -Wall
 
 obj-m := dynclamp.o
-dynclamp-objs := rtmodule.o model.o blocklist.o
+dynclamp-objs := rtmodule.o model.o
 
 else
 
@@ -17,13 +17,6 @@ all: module
 
 module:
 	$(MAKE) -C $(LINUXDIR) CC=$(CC) SUBDIRS=$(PWD) modules
-
-#logdata: logdata.c diffstep.o
-#	$(CC) -o logdata $^ -lm
-
-#diffstep.o: diffstep.c diffstep.h
-#	$(CC) -c diffstep.c
-
 
 clean:
 	-rm -f *.ko *.o *.mod.c logdata

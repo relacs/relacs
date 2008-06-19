@@ -32,6 +32,7 @@
 //#include <relacs/comedi/comedianaloginput.h>
 #include <relacs/comedi/dynclampanalogoutput.h>
 #include <relacs/comedi/dynclampanaloginput.h>
+#include <rtai_fifos.h>
 using namespace std;
 using namespace relacs;
 
@@ -169,63 +170,37 @@ void DynClampAnalogOutput::close( void )
 
 }
 
-int DynClampAnalogOutput::reset( void ) 
+
+int DynClampAnalogOutput::reset( void )
 { 
   clearSettings();
   ErrorState = 0;
 
-  int retVal = 0;
-
-  if( IsPrepared || IsLoaded ) {
-    retVal = ::ioctl( Modulefile, IOC_STOP_SUBDEV, &SubdeviceID );
-    if( retVal < 0 ) {
-      cerr << " DynClampAnalogOutput::stop -> ioctl command IOC_STOP_SUBDEV on device "
-  	  << Modulename << " failed!" << endl;
-      return -1;
-    }
- 
-    if( retVal )
-      return retVal;  
-
-    retVal = ::ioctl( Modulefile, IOC_RELEASE_SUBDEV, &SubdeviceID );
-    if( retVal < 0 ) {
-      cerr << " DynClampAnalogOutput::close -> ioctl command IOC_RELEASE_SUBDEV on device "
-  	 << Modulename << " failed!" << endl;
-      return -1;
-    }
-  }
-
-  IsPrepared = false; 
-  IsLoaded = false;
-  IsRunning = false;
-  IsKernelDaqOpened = false;
-
-  return retVal;
-}
-
-
-int DynClampAnalogOutput::stop( void )
-{ 
   if( !IsLoaded )
     return 0;
 
-  int exchangeVal = SubdeviceID;
-  int retVal = ::ioctl( Modulefile, IOC_CHK_RUNNING, &exchangeVal );
+  int running = SubdeviceID;
+  int retVal = ::ioctl( Modulefile, IOC_CHK_RUNNING, &running );
   if( retVal < 0 ) {
     cerr << " DynClampAnalogOutput::running -> ioctl command IOC_CHK_RUNNING on device "
 	 << Modulename << " failed!" << endl;
+    return -1;
   }
 
-  retVal = ::ioctl( Modulefile, IOC_STOP_SUBDEV, &SubdeviceID );
-  if( retVal < 0 ) {
-    cerr << " DynClampAnalogOutput::stop -> ioctl command IOC_STOP_SUBDEV on device "
-	 << Modulename << " failed!" << endl;
-    return -1;
+  if ( running > 0 ) {
+    retVal = ::ioctl( Modulefile, IOC_STOP_SUBDEV, &SubdeviceID );
+    if( retVal < 0 ) {
+      cerr << " DynClampAnalogOutput::stop -> ioctl command IOC_STOP_SUBDEV on device "
+	   << Modulename << " failed!" << endl;
+      return -1;
+    }
+    rtf_reset( FifoFd );
   }
 
   IsPrepared = false;
   IsLoaded = false;
   IsRunning = false;
+
   return 0;
 }
 

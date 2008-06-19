@@ -31,6 +31,7 @@
 #include <fcntl.h>
 //#include <relacs/comedi/comedianaloginput.h>
 #include <relacs/comedi/dynclampanaloginput.h>
+#include <rtai_fifos.h>
 using namespace std;
 using namespace relacs;
 
@@ -175,29 +176,17 @@ int DynClampAnalogInput::reset( void )
   IsRunning = false;
   IsKernelDaqOpened = false;
 
-  int retVal;
-
   if( IsPrepared || IsLoaded ) {
-   retVal = ::ioctl( Modulefile, IOC_STOP_SUBDEV, &SubdeviceID );
+    int retVal = ::ioctl( Modulefile, IOC_STOP_SUBDEV, &SubdeviceID );
     if( retVal < 0 ) {
       cerr << " DynClampAnalogInput::reset -> ioctl command IOC_STOP_SUBDEV on device "
   	  << Modulename << " failed!" << endl;
       return -1;
     }
-
-    if( retVal )
-      return retVal;  
-
-    retVal = ::ioctl( Modulefile, IOC_RELEASE_SUBDEV, &SubdeviceID );
-    if( retVal < 0 ) {
-      cerr << " DynClampAnalogInput::reset -> ioctl command IOC_RELEASE_SUBDEV on device "
-  	 << Modulename << " failed!" << endl;
-      return -1;
-    }
+    rtf_reset( FifoFd );
   }
 
-  return retVal;
-  
+  return 0;
 }
 
 
@@ -206,18 +195,21 @@ int DynClampAnalogInput::stop( void )
   if( !IsLoaded )
     return 0;
 
-  int exchangeVal = SubdeviceID;
-  int retVal = ::ioctl( Modulefile, IOC_CHK_RUNNING, &exchangeVal );
+  int running = SubdeviceID;
+  int retVal = ::ioctl( Modulefile, IOC_CHK_RUNNING, &running );
   if( retVal < 0 ) {
     cerr << " DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
 	 << Modulename << " failed!" << endl;
+    return -1;
   }
 
-  retVal = ::ioctl( Modulefile, IOC_STOP_SUBDEV, &SubdeviceID );
-  if( retVal < 0 ) {
-    cerr << " DynClampAnalogInput::stop -> ioctl command IOC_STOP_SUBDEV on device "
-	 << Modulename << " failed!" << endl;
-    return -1;
+  if ( running  > 0 ) {
+    retVal = ::ioctl( Modulefile, IOC_STOP_SUBDEV, &SubdeviceID );
+    if( retVal < 0 ) {
+      cerr << " DynClampAnalogInput::stop -> ioctl command IOC_STOP_SUBDEV on device "
+	   << Modulename << " failed!" << endl;
+      return -1;
+    }
   }
 
   IsPrepared = false;

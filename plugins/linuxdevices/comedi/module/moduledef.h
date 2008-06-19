@@ -47,11 +47,7 @@
 
 //* Data buffering:
 
-#define DATABLOCKSIZE   65536
-#define BUFFERLEN       1000  // in msec
-#define MAXBUFFERBLOCKS 1000  // max number each of size DATABLOCKSIZE 
-                              // (for limiting BUFFERLEN)
-
+#define FIFO_SIZE   200000 // bytes
 
 //* DAQ-devices:
 
