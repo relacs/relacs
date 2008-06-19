@@ -567,7 +567,6 @@ class FleidervishSI : public HodgkinHuxley
   virtual void operator()(  double t, double s, double *x, double *dxdt, int n );
     /*! Initialize the state \a x with usefull inital conditions. */
   virtual void init( double *x ) const;
-
 };
 
 
@@ -909,6 +908,66 @@ class Crook : public HodgkinHuxley
   double GCaGates, GKAHPGates, GKMGates, GDSGates, GSDGates;
   double ICa, IKAHP, IKM, IDS, ILD, ISD;
   double SFrac, CaA, CaTau;
+
+};
+
+
+/*! 
+\class MilesDai
+\brief The Miles-Dai model for spinal motoneurones with slowly inactivating sodium current
+\author Jan Benda
+
+(G. B. Miles and Y. Dai and R. M. Brownstone (2005):
+Mechanisms underlying the early phase of spike frequency adaptation in mouse spinal motoneurones.
+J. Physiol. 566, pp. 519-532)
+*/
+
+class MilesDai : public HodgkinHuxley
+{
+ public:
+  MilesDai( void );
+
+    /*! \copydoc SpikingNeuron::name() */
+  virtual string name( void ) const;
+    /*! \copydoc SpikingNeuron::dimension()  */
+  virtual int dimension( void ) const;
+    /*! \copydoc SpikingNeuron::variables() */
+  virtual void variables( vector< string > &varnames ) const;
+    /*! \copydoc SpikingNeuron::units() */
+  virtual void units( vector< string > &u ) const;
+    /*! Computes the derivative \a dxdt at time \a t
+        with stimulus \a s given the state \a x. */
+  virtual void operator()(  double t, double s, double *x, double *dxdt, int n );
+    /*! Initialize the state \a x with usefull inital conditions. */
+  virtual void init( double *x ) const;
+
+    /*! Returns in \a conductancenames the names of the individual 
+        ionic conductances that conductances( double * ) would return. */
+  virtual void conductances( vector< string > &conductancenames ) const;
+    /*! Returns in \a g the values of the individual ionic conductances.
+        The number of conductances is defined by the size of 
+        \a conductancenames the function conductances() returns. */
+  virtual void conductances( double *g ) const;
+    /*! Returns in \a currentnames the names of the individual ionic currents
+        that currents( double * ) would return. */
+  virtual void currents( vector< string > &currentnames ) const;
+    /*! Returns in \a c the values of the individual ionic currents.
+        The number of currents is defined by the size of \a currentnames
+        the function currents() returns. */
+  virtual void currents( double *c ) const;
+
+    /*! Add parameters as options. */
+  virtual void add( void );
+    /*! Read out the current values from the list of Options. */
+  virtual void notify( void );
+
+ protected:
+
+  double ECa;
+  double GCa, GKAHP, GLD, GDS;
+  double GCaGates, GKAHPGates, GDSGates, GSDGates;
+  double ICa, IKAHP, IDS, ILD, ISD;
+  double CaA, CaTau;
 
 };
 

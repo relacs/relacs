@@ -1,6 +1,6 @@
 SUBDIRS = \
-    src \
-    module
+    src
+#    module
 
 
 EXTRA_DIST = \

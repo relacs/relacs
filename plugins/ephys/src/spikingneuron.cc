@@ -2065,7 +2065,7 @@ void Crook::add( void )
   addNumber( "ek", "K reversal potential", EK, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
 
   addLabel( "Soma Calcium current", ModelFlag );
-  addNumber( "gcas", "Ca conductivity", GCa, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gca", "Ca conductivity", GCa, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
   addNumber( "eca", "Ca reversal potential", ECa, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
   addNumber( "caa", "Ca activation", CaA, 0.0, 200.0, 1.0, "1" ).setFlags( ModelFlag );
   addNumber( "catau", "Ca removal time constant", CaTau, 0.0, 10000.0, 1.0, "ms" ).setFlags( ModelFlag );
@@ -2092,13 +2092,251 @@ void Crook::notify( void )
   SpikingNeuron::notify();
   HodgkinHuxley::notify();
   ECa = number( "eca" );
-  GCa = number( "gcas" );
+  GCa = number( "gca" );
   CaA = number( "caa" );
   CaTau = number( "catau" );
   GKAHP = number( "gahp" );
   GKM = number( "gm" );
   GLD = number( "gld" );
   SFrac = number( "sfrac" );
+}
+
+
+MilesDai::MilesDai( void )
+  : HodgkinHuxley()
+{
+  double AS = 1.0;
+  GNa = 120.0;
+  GK = 100.0;
+  GL = 5.38e-6;
+  GCa = 4.0;
+  GKAHP = 1.0;
+  GLD = 7.18e-6;
+  GDS = 1.5e-3;
+
+  ENa = +115.0;
+  EK = -10.0;
+  EL = 0.0;
+  ECa = +140.0;
+
+  C = 1.0;
+  CaA = 50.0;
+  CaTau = 20.0;
+
+  GNaGates = GNa;
+  GKGates = GK;
+  GCaGates = GCa;
+  GKAHPGates = GKAHP;
+  GDSGates = GDS;
+  GSDGates = GDS;
+
+  INa = 0.0;
+  IK = 0.0;
+  IL = 0.0;
+  ICa = 0.0;
+  IKAHP = 0.0;
+  IDS = 0.0;
+  ILD = 0.0;
+  ISD = 0.0;
+}
+
+
+string MilesDai::name( void ) const
+{
+  return "Miles-Dai";
+}
+
+
+int MilesDai::dimension( void ) const
+{
+  return 10;
+}
+
+
+void MilesDai::variables( vector< string > &varnames ) const
+{
+  HodgkinHuxley::variables( varnames );
+  varnames.push_back( "s" );
+  varnames.push_back( "mn" );
+  varnames.push_back( "hn" );
+  varnames.push_back( "q" );
+  varnames.push_back( "Ca" );
+  varnames.push_back( "VD" );
+}
+
+
+void MilesDai::units( vector< string > &u ) const
+{
+  HodgkinHuxley::units( u );
+  u.push_back( "1" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+  u.push_back( "XXX" );
+  u.push_back( "mV" );
+}
+
+
+void MilesDai::operator()(  double t, double s, double *x, double *dxdt, int n )
+{
+  double VS = x[0];
+  double Ca = x[8];
+  double VD = x[9];
+
+  double alpham = 10.0/(1.0+exp((21.0-VS)/5.3));
+  double betam = 10.0/(1.0+exp(-(21.0-VS)/5.3));
+  double alphah = 0.83/(1.0+exp(-(19.0-VS)/7.0));
+  double betah = 0.83/(1.0+exp((19.0-VS)/7.0));
+  double alphas = 0.0077/(1.0+exp(-(18.0-VS)/9.0));
+  double betas = 0.0077/(1.0+exp((18.0-VS)/9.0));
+  double alphan = 0.02*(22.0-VS)/(exp((22.0-VS)/10.0)-1.0);
+  double betan = 0.25*exp((5.0-VS)/80.0);
+  double alphamn = 0.2*exp((VS-40.0)/6.13);
+  double betamn = 0.2*exp(-(VS-40.0)/55.2);
+  double alphahn = 0.05*exp(-(VS-25.0)/55.2);
+  double betahn = 0.05*exp((VS-25.0)/6.13);
+  double alphaq = 4.0*Ca*Ca;
+  double betaq = 0.3;
+
+  GNaGates = GNa*x[1]*x[1]*x[1]*x[2]*x[4];
+  GKGates = GK*x[3]*x[3]*x[3]*x[3];
+  GCaGates = GCa*x[5]*x[5]*x[6];
+  GKAHPGates = GKAHP*x[7];
+
+  INa = GNaGates*(VS-ENa);
+  IK = GKGates*(VS-EK);
+  ICa = GCaGates*(VS-ECa);
+  IKAHP= GKAHPGates*(VS-EK);
+  IL = GL*(VS-EL);
+  IDS = GDS*(VS-VD);
+  ILD = GLD*(VD-EL);
+  ISD = -GDS*(VS-VD);
+
+  /* VS */ dxdt[0] = ( - INa - IK -ICa - IKAHP - IL - IDS + s )/C;
+  /* m  */ dxdt[1] = (1-x[1])*alpham-x[1]*betam;
+  /* h  */ dxdt[2] = (1-x[2])*alphah-x[2]*betah;
+  /* n  */ dxdt[3] = (1-x[3])*alphan-x[3]*betan;
+  /* s  */ dxdt[4] = (1-x[4])*alphas-x[4]*betas;
+  /* mn */ dxdt[5] = (1-x[5])*alphamn-x[5]*betamn;
+  /* hn */ dxdt[6] = (1-x[6])*alphahn-x[6]*betahn;
+  /* q  */ dxdt[7] = (1-x[7])*alphaq-x[7]*betaq;
+  /* Ca */ dxdt[8] = -CaA*ICa - Ca/CaTau;
+  /* VD */ dxdt[9] = ( - ILD - ISD )/C;
+}
+
+
+void MilesDai::init( double *x ) const
+{
+  x[0] = 0.0;
+  x[1] = 0.0;
+  x[2] = 1.0;
+  x[3] = 0.0;
+  x[4] = 1.0;
+  x[5] = 0.0;
+  x[6] = 0.0;
+  x[7] = 0.0;
+  x[8] = 0.0;
+  x[9] = 0.0;
+}
+
+
+void MilesDai::conductances( vector< string > &conductancenames ) const
+{
+  conductancenames.clear();
+  conductancenames.reserve( 8 );
+  conductancenames.push_back( "g_Na" );
+  conductancenames.push_back( "g_K" );
+  conductancenames.push_back( "g_lS" );
+  conductancenames.push_back( "g_Ca" );
+  conductancenames.push_back( "g_AHP" );
+  conductancenames.push_back( "g_DS" );
+  conductancenames.push_back( "g_lD" );
+  conductancenames.push_back( "g_SD" );
+}
+
+
+void MilesDai::conductances( double *g ) const
+{
+  g[0] = GNaGates;
+  g[1] = GKGates;
+  g[2] = GL;
+  g[3] = GCaGates;
+  g[4] = GKAHPGates;
+  g[5] = GDSGates;
+  g[6] = GLD;
+  g[7] = GSDGates;
+}
+
+
+void MilesDai::currents( vector< string > &currentnames ) const
+{
+  currentnames.clear();
+  currentnames.reserve( 9 );
+  currentnames.push_back( "I_Na" );
+  currentnames.push_back( "I_K" );
+  currentnames.push_back( "I_lS" );
+  currentnames.push_back( "I_Ca" );
+  currentnames.push_back( "I_AHP" );
+  currentnames.push_back( "I_DS" );
+  currentnames.push_back( "I_lD" );
+  currentnames.push_back( "I_SD" );
+}
+
+
+void MilesDai::currents( double *c ) const
+{
+  c[0] = INa;
+  c[1] = IK;
+  c[2] = IL;
+  c[3] = ICa;
+  c[4] = IKAHP;
+  c[5] = IDS;
+  c[6] = ILD;
+  c[7] = ISD;
+}
+
+
+void MilesDai::add( void )
+{
+  addLabel( "Soma Sodium current", ModelFlag );
+  addNumber( "gna", "Na conductivity", GNa, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "ena", "Na reversal potential", ENa, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
+
+  addLabel( "Soma Potassium current", ModelFlag );
+  addNumber( "gk", "K conductivity", GK, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "ek", "K reversal potential", EK, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
+
+  addLabel( "Soma Calcium current", ModelFlag );
+  addNumber( "gca", "Ca conductivity", GCa, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "eca", "Ca reversal potential", ECa, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
+  addNumber( "caa", "Ca activation", CaA, 0.0, 200.0, 1.0, "1" ).setFlags( ModelFlag );
+  addNumber( "catau", "Ca removal time constant", CaTau, 0.0, 10000.0, 1.0, "ms" ).setFlags( ModelFlag );
+
+  addLabel( "Soma Leak current", ModelFlag );
+  addNumber( "gl", "Leak conductivity", GL, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "el", "Leak reversal potential", EL, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
+  addNumber( "c", "Capacitance", C, 0.0, 100.0, 0.1, "muF/cm^2" ).setFlags( ModelFlag );
+  addNumber( "phi", "Phi", PT, 0.0, 100.0, 1.0 ).setFlags( ModelFlag );
+
+  addLabel( "Other currents", ModelFlag );
+  addNumber( "gahp", "Soma AHP-type K conductivity", GKAHP, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gld", "Dendrite leak conductivity", GLD, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gds", "Soma-dendrite conductivity", GDS, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+
+  SpikingNeuron::add();
+}
+
+
+void MilesDai::notify( void )
+{
+  SpikingNeuron::notify();
+  HodgkinHuxley::notify();
+  ECa = number( "eca" );
+  GCa = number( "gca" );
+  CaA = number( "caa" );
+  CaTau = number( "catau" );
+  GKAHP = number( "gahp" );
+  GLD = number( "gld" );
 }
 
 
