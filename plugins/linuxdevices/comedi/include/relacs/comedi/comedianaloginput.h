@@ -60,55 +60,30 @@ class ComediAnalogInput : public AnalogInput
 
 public:
 
-   /*! Device type id for comedi DAQ input devices. */
-  static const int ComediAnalogInputType = 3;
-
-
     /*! Create a new ComediAnalogInput without opening a device. */
   ComediAnalogInput( void );
-    /*! Constructs an ComediAnalogInput with device name \a device
-        and type id \a aitype.  
-        \sa setDeviceName() */
-  ComediAnalogInput( const string &devicename );
+    /*! Open the analog input driver specified by its device file \a device. */
+  ComediAnalogInput( const string &device, long mode=0 );
     /*! Stop analog input and close the daq driver. */
   ~ComediAnalogInput( void );
 
-    /*! Open the analog input device specified by \a device.
- 	Returns zero on success, or InvalidDevice (or any other negative number
-	indicating the error).
-        \sa isOpen(), close(), reset() */
-  int open( const string &devicename, long mode=0 );
-    /*! Returns true if driver was succesfully opened.
-        \sa open(), close(), reset() */
+    /*! Open the analog input device on device file \a device. */
+  int open( const string &device, long mode=0 );
+    /*! Returns true if driver was succesfully opened. */
   bool isOpen( void ) const;
-    /*! Stop all activity and close the device.
-        \sa open(), isOpen(), reset() */
+    /*! Stop all activity and close the device. */
   void close( void );
 
-    /*! Returns the mode for which the driver is opened. */
-  int mode( void ) const;
-    /*! Set the mode for which the driver is opened to \a mode. */
-  void setMode( int mode );
-
-    /*! Returns the name of the device file.
-      \sa setDeviceName() \sa open() \sa subdevice() */
-  string deviceName( void ) const;
-
-    /*! Returns the pointer to the device file.
-      \sa setDeviceName() \sa open() \sa subdevice() */
+    /*! Returns the pointer to the comedi device file.
+        \sa subdevice() */
   comedi_t* device( void ) const;
-
     /*! Comedi internal index of analog input subdevice. */
   int subdevice( void ) const;
 
-  int maxBufSize ( void ) const;
-
     /*! Number of analog input channels. */
   int channels( void ) const;
-
     /*! Resolution in bits of analog input. */
   int bits( void ) const;
-
     /*! Maximum sampling rate in Hz of analog input. */
   double maxRate( void ) const;
 
@@ -135,14 +110,12 @@ public:
         The channels in \a sigs are not sorted.
         This function is called by testRead(). */
   int testReadDevice( InList &traces );
-
     /*! Prepare analog input of the input traces \a traces on the device.
 	If an error ocurred in any trace, the corresponding errorflags in
 	InData are set and a negative value is returned.
 	This function assumes that \a traces successfully passed testRead().
         The channels in \a traces are not sorted. */
   int prepareRead( InList &traces );
-
     /*! Start analog input of the input traces \a traces on the device
         after they were prepared by prepareRead().
 	If an error ocurred in any channel, the corresponding errorflags in the
@@ -151,7 +124,6 @@ public:
 	Also start possible pending acquisition on other devices
 	that are known from take(). */
   int startRead( InList &sigs );
-
     /*! Read data from a running data acquisition.
         Returns the number of new data values that were added to the \a traces
 	(sum over all \a traces).
@@ -164,7 +136,6 @@ public:
         NotOpen, InvalidDevice, ReadError.
         \sa close(), open(), isOpen() */
   int stop ( void );
-
     /*! Stop any running ananlog input activity and reset the device.
         Returns zero on success, otherwise one of the flags 
         NotOpen, InvalidDevice, ReadError.
@@ -177,19 +148,16 @@ public:
        For internal usage.
        \sa stop(), readData(), prepareRead() */
   int reload( void );
-
     /* True, if configuration command for acquisition is successfully loaded
        into the registers of the hardware.
        For internal usage.
        \sa running(), reload() */
   bool loaded( void ) const;
-
     /*! True if analog input was prepared using testReadDevice() and prepareRead() */
   bool prepared( void ) const;
   
     /*! True if analog input is running. */
   bool running( void ) const;
-
     /* Sets the running status and unsets the prepared status. For internal 
        usage. */
   void setRunning( void );
@@ -213,13 +181,15 @@ public:
 
 private:
 
-  long Mode;
+    /*! Unique analog I/O device type id for all 
+        Comedi DAQ devices. */
+  static const int ComediAnalogIOType = 1;
+
   bool AsyncMode;
   int ErrorState;
   mutable bool IsRunning;
   bool IsPrepared;
 
-  string Devicename;
   comedi_t *DeviceP;
   unsigned int Subdevice;
   double MaxRate;

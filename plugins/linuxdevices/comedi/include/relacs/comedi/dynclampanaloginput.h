@@ -29,29 +29,19 @@ class DynClampAnalogInput : public AnalogInput
 
 public:
 
-    /*! Device type id for dynamic clamp analog input device. */
-  static const int DynClampAnalogInputType = 5;
-
     /*! Create a new DynClampAnalogInput without opening a device. */
   DynClampAnalogInput( void );
-    /*! Constructs an DynClampAnalogInput with device class name \a device
-        and type id \a aotype. */
-  DynClampAnalogInput( const string &deviceclass );
+    /*! Open the analog input driver specified by its device file \a device. */
+  DynClampAnalogInput( const string &device, long mode=0 );
     /*! Stop analog input and close the daq driver. */
   ~DynClampAnalogInput( void );
 
-    /*! Open the analog input device specified by \a device.
-        Returns zero on success, or InvalidDevice (or any other negative number
-	indicating the error).
-        \sa isOpen(), close(), reset() */
-  int open( const string &devicename, long mode=0 );
-    /*! Returns true if dynamic clamp module was succesfully opened.
-        \sa open(), close(), reset() */
+    /*! Open the analog input device on device file \a device. */
+  int open( const string &device, long mode=0 );
+    /*! Returns true if dynamic clamp module was succesfully opened. */
   bool isOpen( void ) const;
-    /*! Stop all activity and close the device.
-        \sa open(), isOpen(), reset() */
+    /*! Stop all activity and close the device. */
   void close( void );
-
 
     /*! Set the name of the dynamic clamp module file. This has to be done 
         before performing prepareRead() or  startRead().
@@ -65,7 +55,7 @@ public:
   string moduleName( void ) const;
 
     /*! Returns the pointer to the device file.
-      \sa setDeviceName() \sa open() \sa subdevice() */
+        \sa subdevice() */
 //  comedi_t* device( void ) const;
 
     /*! Comedi internal index of analog input subdevice. */
@@ -184,6 +174,10 @@ public:
 
 
 private:
+
+    /*! Unique analog I/O device type id for all 
+        DynClamp DAQ devices. */
+  static const int DynClampAnalogIOType = 2;
 
   ComediAnalogInput *CAI;
   unsigned int CAIFlags;

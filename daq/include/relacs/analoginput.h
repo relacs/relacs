@@ -48,10 +48,6 @@ class AnalogOutput;
 class AnalogInput : public Device
 {
 
-   /*! Device type id for analog input devices. */
-  static const int Type = 1;
-
-
 public:
 
     /*! Create a new AnalogInput without opening a device.
@@ -262,6 +258,9 @@ protected:
 
 
 private:
+
+   /*! Device type id for all analog input devices. */
+  static const int Type = 1;
 
     /*! The type of the implementation of AnalogInput. */
   int AnalogInputType;

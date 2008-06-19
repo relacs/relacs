@@ -47,10 +47,6 @@ class AnalogInput;
 class AnalogOutput : public Device
 {
 
-   /*! Device type id for DAQ devices. */
-  static const int Type = 2;
-
-
 public:
   
     /*! Create a new AnalogOutput without opening a device.
@@ -278,6 +274,10 @@ protected:
 
 private:
 
+   /*! Device type id for all analog output devices. */
+  static const int Type = 2;
+
+    /*! The type of the implementation of AnalogOutput. */
   int AnalogOutputType;
   double ExternalReference;
 

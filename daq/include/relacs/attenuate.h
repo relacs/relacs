@@ -106,10 +106,6 @@ Possible return values of write(), testWrite() and mute() are:
 class Attenuate : public Device
 {
 
-    /*! Device type id for Attenuate devices. */
-  static const int Type = 4;
-
-
 public:
 
     /*! Constructor. */
@@ -330,6 +326,9 @@ protected:
 
 
 private:
+
+    /*! Device type id for all Attenuate devices. */
+  static const int Type = 4;
 
     /*! The attenuator device. */
   Attenuator *Att;

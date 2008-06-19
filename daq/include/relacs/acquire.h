@@ -89,7 +89,7 @@ Before calling write(), testWrite() can be used to check if all parameter are va
 With writeZero() the output of a specified channel is set to zero.
 stopWrite() stops any activity related to analog output.
 
-A list of possible analog output traces and their proeprties
+A list of possible analog output traces and their properties
 can be created with addOutTrace().
 By using this list via applyOutTrace() and outTrace(),
 analog output traces can be accessed by a trace name or trace index

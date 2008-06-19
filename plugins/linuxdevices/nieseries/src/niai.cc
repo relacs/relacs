@@ -35,14 +35,14 @@ namespace nieseries {
 
 
 NIAI::NIAI( void ) 
-  : AnalogInput( "NI E-Series Analog Input", NIAnalogInputType ),
+  : AnalogInput( "NI E-Series Analog Input", NIAnalogIOType ),
     Handle( -1 )
 {
 }
 
 
 NIAI::NIAI( const string &device, long mode )
-  : AnalogInput( "NI E-Series Analog Input", NIAnalogInputType ),
+  : AnalogInput( "NI E-Series Analog Input", NIAnalogIOType ),
     Handle( -1 )
 {
   open( device, mode );

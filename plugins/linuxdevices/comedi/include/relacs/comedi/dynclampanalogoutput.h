@@ -28,29 +28,19 @@ class DynClampAnalogOutput : public AnalogOutput
 
 public:
 
-    /*! Device type id for dynamic clamp analog output device. */
-  static const int DynClampAnalogOutputType = 6;
-
     /*! Create a new DynClampAnalogOutput without opening a device. */
   DynClampAnalogOutput( void );
-    /*! Constructs an DynClampAnalogOutput with device class name \a deviceclass
-        and type id \a aotype. */
-  DynClampAnalogOutput( const string &deviceclass );
+    /*! Open the analog output driver specified by its device file \a device. */
+  DynClampAnalogOutput( const string &device, long mode=0 );
     /*! Stop analog output and close the daq driver. */
   ~DynClampAnalogOutput( void );
 
-    /*! Open the analog output device specified by \a device.
-        Returns zero on success, or InvalidDevice (or any other negative number
-	indicating the error).
-        \sa isOpen(), close(), reset() */
-  int open( const string &devicename, long mode=0 );
-    /*! Returns true if dynamic clamp module was succesfully opened.
-        \sa open(), close(), reset() */
+    /*! Open the analog output device on device file \a device. */
+  int open( const string &device, long mode=0 );
+    /*! Returns true if dynamic clamp module was succesfully opened. */
   bool isOpen( void ) const;
-    /*! Stop all activity and close the device.
-        \sa open(), isOpen(), reset() */
+    /*! Stop all activity and close the device. */
   void close( void );
-
 
     /*! Set the name of the dynamic clamp module file. This has to be done 
         before performing prepareWrite() or  startWrite().
@@ -64,7 +54,7 @@ public:
   string moduleName( void ) const;
 
     /*! Returns the pointer to the device file.
-      \sa setDeviceName() \sa open() \sa subdevice() */
+        \sa subdevice() */
 //  comedi_t* device( void ) const;
 
     /*! Comedi internal index of analog output subdevice. */
@@ -190,6 +180,10 @@ public:
 
 
 private:
+
+    /*! Unique analog I/O device type id for all 
+        DynClamp DAQ devices. */
+  static const int DynClampAnalogIOType = 2;
 
   ComediAnalogOutput *CAO;
 

@@ -39,7 +39,7 @@ namespace comedi {
 
 
 DynClampAnalogInput::DynClampAnalogInput( void ) 
-  : AnalogInput( DynClampAnalogInputType )
+  : AnalogInput( "Dyn Clamp Analog Input", DynClampAnalogIOType )
 {
   ErrorState = 0;
   IsPrepared = false;
@@ -59,8 +59,8 @@ DynClampAnalogInput::DynClampAnalogInput( void )
 }
 
 
-DynClampAnalogInput::DynClampAnalogInput( const string &deviceclass ) 
-  : AnalogInput( deviceclass, DynClampAnalogInputType )
+  DynClampAnalogInput::DynClampAnalogInput( const string &device, long mode ) 
+  : AnalogInput( "Dyn Clamp Analog Input", DynClampAnalogIOType )
 {
   ErrorState = 0;
   IsPrepared = false;
@@ -77,6 +77,7 @@ DynClampAnalogInput::DynClampAnalogInput( const string &deviceclass )
   MaxRate = 0;
   ComediBufferSize = 0;
   CAI = new ComediAnalogInput;
+  open( device, mode );
 }
 
 
@@ -86,13 +87,13 @@ DynClampAnalogInput::~DynClampAnalogInput( void )
   delete CAI;
 }
 
-int DynClampAnalogInput::open( const string &devicefile, long mode )
+int DynClampAnalogInput::open( const string &device, long mode )
 { 
-  if ( devicefile.empty() )
+  if ( device.empty() )
     return InvalidDevice;
-  setDeviceFile( devicefile );
+  setDeviceFile( device );
 
-  int retVal = CAI->open( devicefile );
+  int retVal = CAI->open( device );
   
   // copy information not available after CAI->close()
   Subdevice = CAI->subdevice();
@@ -671,7 +672,7 @@ void DynClampAnalogInput::take( vector< AnalogInput* > &ais,
   ComediAOsLink.clear();
   
   for ( unsigned int k=0; k<ais.size(); k++ ) {
-    if ( ais[k]->analogInputType() == ComediAnalogInput::ComediAnalogInputType ) {
+    if ( ais[k]->analogInputType() == ComediAnalogIOType ) {
       aiinx.push_back( k );
       ComediAIs.push_back( dynamic_cast< ComediAnalogInput* >( ais[k] ) );
       ComediAIsLink.push_back( -1 );
@@ -680,7 +681,7 @@ void DynClampAnalogInput::take( vector< AnalogInput* > &ais,
 
   bool weAreMember = false;
   for ( unsigned int k=0; k<aos.size(); k++ ) {
-    if ( aos[k]->analogInputType() == ComediAnalogOuput::DynClampAnalogInputType ) {
+    if ( aos[k]->analogInputType() == DynClampAnalogIOType ) {
       aoinx.push_back( k );
       ComediAOs.push_back( dynamic_cast< DynClampAnalogOutput* >( aos[k] ) );
       ComediAOsLink.push_back( -1 );

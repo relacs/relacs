@@ -49,57 +49,30 @@ class ComediAnalogOutput : public AnalogOutput
 
 public:
 
-   /*! Device type id for comedi DAQ output devices. */
-  static const int ComediAnalogOutputType = 4;
-
-
     /*! Create a new ComediAnalogOutput without opening a device. */
   ComediAnalogOutput( void );
-    /*! Constructs an ComediAnalogOutput with device name \a device
-        and type id \a aotype.  
-        \sa setDeviceName() */
-  ComediAnalogOutput( const string &devicename );
+    /*! Open the analog output driver specified by its device file \a device. */
+  ComediAnalogOutput( const string &device, long mode=0 );
     /*! Stop analog output and close the daq driver. */
   ~ComediAnalogOutput( void );
 
-    /*! Open the analog output device specified by \a device.
-	Returns zero on success, or InvalidDevice (or any other negative number
-	indicating the error).
-        \sa isOpen(), close(), reset() */
-  int open( const string &devicename, long mode=0 );
-    /*! Returns true if driver was succesfully opened.
-        \sa open(), close(), reset() */
+    /*! Open the analog output device on device file \a device. */
+  int open( const string &device, long mode=0 );
+    /*! Returns true if driver was succesfully opened. */
   bool isOpen( void ) const;
-    /*! Stop all activity and close the device.
-        \sa open(), isOpen(), reset() */
+    /*! Stop all activity and close the device. */
   void close( void );
 
-  long index( void ) const { return -1; };
-
-    /*! Returns the mode for which the driver is opened. */
-  int mode( void ) const;
-    /*! Set the mode for which the driver is opened to \a mode. */
-  void setMode( int mode );
-
-    /*! Returns the name of the device file.
-      \sa setDeviceName() \sa open() \sa subdevice() */
-  string deviceName( void ) const;
-
-    /*! Returns the pointer to the device file.
-      \sa setDeviceName() \sa open() \sa subdevice() */
+    /*! Returns the pointer to the comedi device file.
+        \sa subdevice() */
   comedi_t* device( void ) const;
-
     /*! Comedi internal index of analog output subdevice. */
   int subdevice( void ) const;
 
-  int maxBufSize ( void ) const;
-
     /*! Number of analog output channels. */
   int channels( void ) const;
-
     /*! Resolution in bits of analog output. */
   int bits( void ) const;
-
     /*! Maximum sampling rate in Hz of analog output. */
   double maxRate( void ) const;
 
@@ -216,6 +189,8 @@ public:
         other: unknown */
   int error( void ) const;
 
+  long index( void ) const { return -1; };
+
     /*! Check for every analog output device in \a aos
         whether it can be simultaneously started by startWrite()
         from this device.
@@ -226,7 +201,10 @@ public:
 
 private:
 
-  long Mode;
+    /*! Unique analog I/O device type id for all 
+        Comedi DAQ devices. */
+  static const int ComediAnalogIOType = 1;
+
   bool AsyncMode;
   int ErrorState;
   mutable bool IsRunning;
@@ -234,7 +212,6 @@ private:
   
   OutList *Sigs;
 
-  string Devicename;
   comedi_t *DeviceP;
   unsigned int Subdevice;
   double MaxRate;

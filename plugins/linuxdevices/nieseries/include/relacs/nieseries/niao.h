@@ -41,9 +41,6 @@ class NIAO: public AnalogOutput
 
 public:
 
-    /*! Device type id for National Instruments E-Series DAQ output devices. */
-  static const int NIAnalogOutputType = 3;
-
     /*! Create a new NIAO without opening a device. */
   NIAO( void );
     /*! Open the analog output driver specified by its device file \a device. */
@@ -51,11 +48,11 @@ public:
     /*! Stop analog output and close the daq driver. */
   ~NIAO( void );           
 
-    /*! Open the analog output device simulation */
-  virtual int open( const string &device, long mode );
-    /*! Returns true. */
+    /*! Open the analog output on device file \a device */
+  virtual int open( const string &device, long mode=0 );
+    /*! Returns true if the device is open. */
   virtual bool isOpen( void ) const;
-    /*! Close the device simulation. */
+    /*! Close the device. */
   virtual void close( void );
 
     /*! Number of analog output channels. */
@@ -97,6 +94,10 @@ public:
 
   
  private:
+
+    /*! Unique analog I/O device type id for all 
+        National Instruments E-Series DAQ devices. */
+  static const int NIAnalogIOType = 100;
 
     /*! handle for driver. */
   int Handle;

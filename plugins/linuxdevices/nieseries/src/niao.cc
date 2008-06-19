@@ -38,14 +38,14 @@ namespace nieseries {
 
 
 NIAO::NIAO( void )
-  : AnalogOutput( "NI E-Series Analog Output", NIAnalogOutputType ),
+  : AnalogOutput( "NI E-Series Analog Output", NIAnalogIOType ),
     Handle( -1 )
 {
 }
 
 
 NIAO::NIAO( const string &device, long mode )
-  : AnalogOutput( "NI E-Series Analog Output", NIAnalogOutputType ),
+  : AnalogOutput( "NI E-Series Analog Output", NIAnalogIOType ),
     Handle( -1 )
 {
   open( device, mode );
@@ -427,7 +427,7 @@ long NIAO::index( void ) const
 int NIAO::getAISyncDevice( const vector< AnalogInput* > &ais ) const
 {
   for ( unsigned int k=0; k<ais.size(); k++ ) {
-    if ( ais[k]->analogInputType() == NIAI::NIAnalogInputType &&
+    if ( ais[k]->analogInputType() == NIAnalogIOType &&
 	 ais[k]->deviceFile().size() > 0 && deviceFile().size() > 0 &&
 	 ais[k]->deviceFile()[ais[k]->deviceFile().size()-1] == deviceFile()[deviceFile().size()-1] ) {
       return k;

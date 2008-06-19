@@ -42,9 +42,6 @@ class NIAI: public AnalogInput
 
 public:
 
-    /*! Device type id for National Instruments E-Series DAQ input devices. */
-  static const int NIAnalogInputType = 3;
-
     /*! Create a new NIAI without opening a device. */
   NIAI( void );
     /*! Open the analog input driver specified by its device file \a device. */
@@ -52,11 +49,11 @@ public:
     /*! Stop analog input and close the driver. */
   ~NIAI( void );           
 
-    /*! Open the analog input device simulation */
+    /*! Open the analog input on device file \a device. */
   virtual int open( const string &device, long mode=0 );
-    /*! Returns true. */
+    /*! Returns true if the device is open. */
   virtual bool isOpen( void ) const;
-    /*! Close the device simulation. */
+    /*! Close the device. */
   virtual void close( void );
 
     /*! Number of analog input channels. */
@@ -104,6 +101,10 @@ public:
 
   
  private:
+
+    /*! Unique analog I/O device type id for all 
+        National Instruments E-Series DAQ devices. */
+  static const int NIAnalogIOType = 100;
 
     /*! handle for driver. */
   int Handle;

@@ -39,10 +39,6 @@ namespace relacs {
 class Temperature : public Device
 {
 
-    /*! Device type id for Temperature devices. */
-  static const int Type = 6;
-
-
 public:
 
     /*! Construct a Temperature Device. */
@@ -53,6 +49,12 @@ public:
 
     /*! The current temperature in degree celsius. */
   virtual double temperature( void ) = 0;
+
+
+ private:
+
+    /*! Device type id for Temperature devices. */
+  static const int Type = 6;
 
 };
 

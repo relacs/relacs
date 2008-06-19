@@ -40,7 +40,7 @@ namespace comedi {
 
 
 DynClampAnalogOutput::DynClampAnalogOutput( void ) 
-  : AnalogOutput( DynClampAnalogOutputType )
+  : AnalogOutput( "Dyn Clamp Analog Output", DynClampAnalogIOType )
 {
   ErrorState = 0;
   IsPrepared = false;
@@ -61,8 +61,8 @@ DynClampAnalogOutput::DynClampAnalogOutput( void )
 }
 
 
-DynClampAnalogOutput::DynClampAnalogOutput( const string &deviceclass ) 
-  : AnalogOutput( deviceclass, DynClampAnalogOutputType )
+  DynClampAnalogOutput::DynClampAnalogOutput( const string &device, long mode ) 
+  : AnalogOutput( "Dyn Clamp Analog Output", DynClampAnalogIOType )
 {
   ErrorState = 0;
   IsPrepared = false;
@@ -80,6 +80,7 @@ DynClampAnalogOutput::DynClampAnalogOutput( const string &deviceclass )
   MaxRate = 50000.0;
   ComediBufferSize = 0;
   CAO = new ComediAnalogOutput;
+  open( device, mode );
 }
 
 
@@ -89,13 +90,13 @@ DynClampAnalogOutput::~DynClampAnalogOutput( void )
   delete CAO;
 }
 
-int DynClampAnalogOutput::open( const string &devicefile, long mode )
+int DynClampAnalogOutput::open( const string &device, long mode )
 { 
-  if ( devicefile.empty() )
+  if ( device.empty() )
     return InvalidDevice;
-  setDeviceFile( devicefile );
+  setDeviceFile( device );
 
-  int retVal = CAO->open( devicefile );
+  int retVal = CAO->open( device );
   
   // copy information not available after CAO->close()
   Subdevice = CAO->subdevice();
@@ -691,7 +692,7 @@ long DynClampAnalogOutput::index( void ) const
 int DynClampAnalogOutput::getAISyncDevice( const vector< AnalogInput* > &ais ) const
 {
   for ( unsigned int k=0; k<ais.size(); k++ ) {
-    if ( ais[k]->analogInputType() == DynClampAnalogInput::DynClampAnalogInputType )
+    if ( ais[k]->analogInputType() == DynClampAnalogIOType )
       return k;
   }
   return -1;

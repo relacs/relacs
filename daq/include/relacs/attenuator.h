@@ -86,10 +86,6 @@ const double MuteAttenuationLevel = 1.0e37;
 class Attenuator : public Device
 {
 
-    /*! Device type id for Attenuator devices. */
-  static const int Type = 3;
-
-
 public:
 
     /*! Constructs an Attenuator. */
@@ -179,6 +175,12 @@ public:
     /*! Return code indicating a too low requested attenuation level,
         i.e. the requested signal amplitude is too large. */
   static const int Overflow = -6;
+
+
+ private:
+
+    /*! Device type id for all Attenuator devices. */
+  static const int Type = 3;
 
 };
 
