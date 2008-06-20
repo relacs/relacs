@@ -176,14 +176,15 @@ public:
         You also need to reimplement getAISyncDevice()
         to let the user know about this property. */
   virtual long index( void ) const;
-    /*! This function is called once after opening the device
-        and before any IO operation.
-        In case the analog output driver can return
+    /*! In case the analog output driver can return
         an index (via the index() function)
         into the data stream of a running analog input
         where the last analog output started,
         then this function should return the index
-        of the corresponding analog input device in \a ais. */
+        of the corresponding analog input device in \a ais.
+        This function is called once after opening the device
+        and before any IO operation.
+        The default implementation simply returns -1. */
   virtual int getAISyncDevice( const vector< AnalogInput* > &ais ) const;
 
     /*! Check for every analog output device in \a aos

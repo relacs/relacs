@@ -59,7 +59,7 @@ DynClampAnalogInput::DynClampAnalogInput( void )
 }
 
 
-  DynClampAnalogInput::DynClampAnalogInput( const string &device, long mode ) 
+DynClampAnalogInput::DynClampAnalogInput( const string &device, long mode ) 
   : AnalogInput( "Dyn Clamp Analog Input", DynClampAnalogIOType )
 {
   ErrorState = 0;
@@ -86,6 +86,7 @@ DynClampAnalogInput::~DynClampAnalogInput( void )
   close();
   delete CAI;
 }
+
 
 int DynClampAnalogInput::open( const string &device, long mode )
 { 
@@ -148,11 +149,9 @@ int DynClampAnalogInput::open( const string &device, long mode )
 }
 
 
-int DynClampAnalogInput::setModuleName( string modulename )
-{
-  Modulename = modulename;
-  // TODO: test opening here?
-  return 0;
+bool DynClampAnalogInput::isOpen( void ) const 
+{ 
+  return ( Channels >= 0 );
 }
 
 
@@ -168,143 +167,50 @@ void DynClampAnalogInput::close( void )
 
 }
 
-int DynClampAnalogInput::reset( void ) 
-{ 
-  clearSettings();
-  ErrorState = 0;
-  IsPrepared = false;
-  IsLoaded = false;
-  IsRunning = false;
-  IsKernelDaqOpened = false;
 
-  if( IsPrepared || IsLoaded ) {
-    int retVal = ::ioctl( Modulefile, IOC_STOP_SUBDEV, &SubdeviceID );
-    if( retVal < 0 ) {
-      cerr << " DynClampAnalogInput::reset -> ioctl command IOC_STOP_SUBDEV on device "
-  	  << Modulename << " failed!" << endl;
-      return -1;
-    }
-    rtf_reset( FifoFd );
-  }
-
+int DynClampAnalogInput::setModuleName( string modulename )
+{
+  Modulename = modulename;
+  // TODO: test opening here?
   return 0;
 }
 
-
-int DynClampAnalogInput::stop( void )
-{ 
-  if( !IsLoaded )
-    return 0;
-
-  int running = SubdeviceID;
-  int retVal = ::ioctl( Modulefile, IOC_CHK_RUNNING, &running );
-  if( retVal < 0 ) {
-    cerr << " DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
-	 << Modulename << " failed!" << endl;
-    return -1;
-  }
-
-  if ( running  > 0 ) {
-    retVal = ::ioctl( Modulefile, IOC_STOP_SUBDEV, &SubdeviceID );
-    if( retVal < 0 ) {
-      cerr << " DynClampAnalogInput::stop -> ioctl command IOC_STOP_SUBDEV on device "
-	   << Modulename << " failed!" << endl;
-      return -1;
-    }
-  }
-
-  IsPrepared = false;
-  IsLoaded = false;
-  IsRunning = false;
-  return 0;
-}
-
-
-bool DynClampAnalogInput::isOpen( void ) const 
-{ 
-  return ( Channels >= 0 );
-}
-
-bool DynClampAnalogInput::prepared( void ) const 
-{ 
-  return IsPrepared;
-}
-
-bool DynClampAnalogInput::loaded( void ) const 
-{
-  return IsLoaded;
-}
-
-bool DynClampAnalogInput::running( void ) const
-{
-  if( !IsLoaded )
-    return false;
-
-  int exchangeVal = SubdeviceID;
-  int retVal = ::ioctl( Modulefile, IOC_CHK_RUNNING, &exchangeVal );
-
-  cerr << " DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
-       << Modulename << " " << exchangeVal << endl;
-
-  if( retVal < 0 ) {
-    cerr << " DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
-	 << Modulename << " failed!" << endl;
-    return false;
-  }
-
-  return exchangeVal;
-}
-
-void DynClampAnalogInput::setRunning( void )
-{
-  IsRunning = true;
-}
 
 string DynClampAnalogInput::moduleName( void ) const
 {
   return Modulename;
 }
 
-int DynClampAnalogInput::subdevice( void ) const
-{
-  return Subdevice;
-}
 
 int DynClampAnalogInput::channels( void ) const
 { 
   return Channels;
 }
 
+
 int DynClampAnalogInput::bits( void ) const
 { 
   return Bits;
 }
+
 
 double DynClampAnalogInput::maxRate( void ) const 
 { 
   return MaxRate;
 }
 
-int DynClampAnalogInput::error( void ) const
-{
-  return ErrorState;
-  /*
-    0: ok
-    1: OverflowUnderrun
-    2: Unknown (device error)
-  */
-
-}
 
 int DynClampAnalogInput::maxRanges( void ) const
 {
   return CAI->maxRanges();
 }
 
+
 double DynClampAnalogInput::unipolarRange( int index ) const
 {
   return CAI->unipolarRange( index );
 }
+
 
 double DynClampAnalogInput::bipolarRange( int index ) const
 {
@@ -646,22 +552,95 @@ int DynClampAnalogInput::readData( InList &sigs )
   return elemRead;
 }
 
-long DynClampAnalogInput::index( void )
-{
-  long index = 0;
-  int retVal = ::ioctl( Modulefile, IOC_GETLOOPCNT, &index );
+
+int DynClampAnalogInput::stop( void )
+{ 
+  if( !IsLoaded )
+    return 0;
+
+  int running = SubdeviceID;
+  int retVal = ::ioctl( Modulefile, IOC_CHK_RUNNING, &running );
   if( retVal < 0 ) {
-    cerr << " DynClampAnalogInput::index() -> ioctl command IOC_GETLOOPCNT on device "
-	   << Modulename << " failed!" << endl;
+    cerr << " DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
+	 << Modulename << " failed!" << endl;
     return -1;
   }
-  return index;
+
+  if ( running  > 0 ) {
+    retVal = ::ioctl( Modulefile, IOC_STOP_SUBDEV, &SubdeviceID );
+    if( retVal < 0 ) {
+      cerr << " DynClampAnalogInput::stop -> ioctl command IOC_STOP_SUBDEV on device "
+	   << Modulename << " failed!" << endl;
+      return -1;
+    }
+  }
+
+  IsPrepared = false;
+  IsLoaded = false;
+  IsRunning = false;
+  return 0;
+}
+
+
+int DynClampAnalogInput::reset( void ) 
+{ 
+  clearSettings();
+  ErrorState = 0;
+  IsPrepared = false;
+  IsLoaded = false;
+  IsRunning = false;
+  IsKernelDaqOpened = false;
+
+  if( IsPrepared || IsLoaded ) {
+    int retVal = ::ioctl( Modulefile, IOC_STOP_SUBDEV, &SubdeviceID );
+    if( retVal < 0 ) {
+      cerr << " DynClampAnalogInput::reset -> ioctl command IOC_STOP_SUBDEV on device "
+  	  << Modulename << " failed!" << endl;
+      return -1;
+    }
+    rtf_reset( FifoFd );
+  }
+
+  return 0;
+}
+
+
+bool DynClampAnalogInput::running( void ) const
+{
+  if( !IsLoaded )
+    return false;
+
+  int exchangeVal = SubdeviceID;
+  int retVal = ::ioctl( Modulefile, IOC_CHK_RUNNING, &exchangeVal );
+
+  cerr << " DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
+       << Modulename << " " << exchangeVal << endl;
+
+  if( retVal < 0 ) {
+    cerr << " DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
+	 << Modulename << " failed!" << endl;
+    return false;
+  }
+
+  return exchangeVal;
+}
+
+
+int DynClampAnalogInput::error( void ) const
+{
+  return ErrorState;
+  /*
+    0: ok
+    1: OverflowUnderrun
+    2: Unknown (device error)
+  */
 
 }
 
+
 void DynClampAnalogInput::take( vector< AnalogInput* > &ais, 
-				                        vector< AnalogOutput* > &aos,
-				                        vector< int > &aiinx, 
+				vector< AnalogOutput* > &aos,
+				vector< int > &aiinx, 
                                 vector< int > &aoinx )
 {
   /*
@@ -703,6 +682,30 @@ void DynClampAnalogInput::take( vector< AnalogInput* > &ais,
 	ComediAIsLink[ai] = ao;
       }
   */
+}
+
+
+int DynClampAnalogInput::subdevice( void ) const
+{
+  return Subdevice;
+}
+
+
+bool DynClampAnalogInput::loaded( void ) const 
+{
+  return IsLoaded;
+}
+
+
+bool DynClampAnalogInput::prepared( void ) const 
+{ 
+  return IsPrepared;
+}
+
+
+void DynClampAnalogInput::setRunning( void )
+{
+  IsRunning = true;
 }
 
 

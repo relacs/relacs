@@ -45,6 +45,7 @@ class ComediAnalogInput;
 class ComediAnalogOutput : public AnalogOutput
 {
 
+  friend class ComediAnalogInput;
   friend class DynClampAnalogOutput;
 
 public:
@@ -54,39 +55,83 @@ public:
     /*! Open the analog output driver specified by its device file \a device. */
   ComediAnalogOutput( const string &device, long mode=0 );
     /*! Stop analog output and close the daq driver. */
-  ~ComediAnalogOutput( void );
+  virtual ~ComediAnalogOutput( void );
 
     /*! Open the analog output device on device file \a device. */
-  int open( const string &device, long mode=0 );
+  virtual int open( const string &device, long mode=0 );
     /*! Returns true if driver was succesfully opened. */
-  bool isOpen( void ) const;
+  virtual bool isOpen( void ) const;
     /*! Stop all activity and close the device. */
-  void close( void );
-
-    /*! Returns the pointer to the comedi device file.
-        \sa subdevice() */
-  comedi_t* device( void ) const;
-    /*! Comedi internal index of analog output subdevice. */
-  int subdevice( void ) const;
+  virtual void close( void );
 
     /*! Number of analog output channels. */
-  int channels( void ) const;
+  virtual int channels( void ) const;
     /*! Resolution in bits of analog output. */
-  int bits( void ) const;
+  virtual int bits( void ) const;
     /*! Maximum sampling rate in Hz of analog output. */
-  double maxRate( void ) const;
-
-    /*! returns buffer-size of device in samples. */
-  int bufferSize( void ) const;
+  virtual double maxRate( void ) const;
 
     /*! Maximum number of analog output ranges. */
-  int maxRanges( void ) const;
+  virtual int maxRanges( void ) const;
     /*! Voltage range \a index in Volt for unipolar mode.
         If -1 is returned this range is not supported. */
-  double unipolarRange( int index ) const;
+  virtual double unipolarRange( int index ) const;
     /*! Voltage range \a index in Volt for bipolar mode.
         If -1 is returned this range is not supported. */
-  double bipolarRange( int index ) const;
+  virtual double bipolarRange( int index ) const;
+
+    /*! Convert data of the output signals \a sigs.
+	If an error ocurred in any channel, the corresponding errorflags in the
+	OutData structure are filled and a negative value is returned.
+	The output signals are sorted by channel number first
+        and are then multiplexed into a buffer of signed short's (2 byte).
+        The buffer is attached to the first signal in \a sigs. */
+  virtual int convertData( OutList &sigs );
+    /*! Prepare analog output of the output signals \a sigs on the device.
+	If an error ocurred in any signal, the corresponding errorflags in
+	OutData are set and a negative value is returned.
+	This function assumes that \a sigs successfully passed testWrite().
+        The channels in \a sigs are not sorted. */
+  virtual int prepareWrite( OutList &sigs );
+    /*! Start analog output of the output signals \a sigs
+        after they were prepared by prepareWrite().
+	If an error ocurred in any signal, the corresponding errorflags in
+	OutData are set and a negative value is returned.
+        The channels in \a sigs are not sorted.
+	Also start possible pending acquisition on other devices
+	that are known from take(). */
+  virtual int startWrite( OutList &sigs );
+    /*! Write data to a running data acquisition.
+        Returns the number of data values that were popped from the \a trace- 
+	device-buffer (sum over all \a traces).
+	If an error ocurred in any channel, the corresponding errorflags in the
+	OutList structure are filled and a negative value is returned.  */
+  virtual int writeData( OutList &sigs );
+
+    /*! Stop any running ananlog output activity and reset the device.
+        Returns zero on success, otherwise one of the flags 
+        NotOpen, InvalidDevice, WriteError.
+        \sa close(), open(), isOpen() */
+  virtual int reset( void );
+  
+    /*! True if analog output is running. */
+  virtual bool running( void ) const;
+
+    /*! Get error status of the device. 
+        0: no error
+	-1: underrun
+        other: unknown */
+  virtual int error( void ) const;
+
+    /*! Check for every analog output device in \a aos
+        whether it can be simultaneously started by startWrite()
+        from this device.
+        Add the indices of those devices to \a aoinx. */
+  virtual void take( const vector< AnalogOutput* > &aos,
+                     vector< int > &aoinx );
+
+
+protected:
 
     /*! Device driver specific tests on the settings in \a sigs
         for each output signal.
@@ -98,47 +143,7 @@ public:
 	OutData are set and a negative value is returned.
         The channels in \a sigs are not sorted.
         This function is called by testWrite(). */
-  int testWriteDevice( OutList &sigs );
-
-    /*! Prepare analog output of the output signals \a sigs on the device.
-	If an error ocurred in any signal, the corresponding errorflags in
-	OutData are set and a negative value is returned.
-	This function assumes that \a sigs successfully passed testWrite().
-        The channels in \a sigs are not sorted. */
-  int prepareWrite( OutList &sigs );
-
-    /*! Convert data of the output signals \a sigs.
-	If an error ocurred in any channel, the corresponding errorflags in the
-	OutData structure are filled and a negative value is returned.
-	The output signals are sorted by channel number first
-        and are then multiplexed into a buffer of signed short's (2 byte).
-        The buffer is attached to the first signal in \a sigs. */
-  int convertData( OutList &sigs );
-
-    /*! Start analog output of the output signals \a sigs
-        after they were prepared by prepareWrite().
-	If an error ocurred in any signal, the corresponding errorflags in
-	OutData are set and a negative value is returned.
-        The channels in \a sigs are not sorted.
-	Also start possible pending acquisition on other devices
-	that are known from take(). */
-  int startWrite( OutList &sigs );
-
-    /*! Write data to a running data acquisition.
-        Returns the number of data values that were popped from the \a trace- 
-	device-buffer (sum over all \a traces).
-	If an error ocurred in any channel, the corresponding errorflags in the
-	OutList structure are filled and a negative value is returned.  */
-  int writeData( OutList &sigs );
-
-    /*! Write data to a running data acquisition.
-        Returns the number of data values that were popped from the \a trace- 
-	device-buffer (sum over all \a traces).
-	If an error ocurred in any channel, the corresponding errorflags in the
-	OutList structure are filled and a negative value is returned.  
-	For internal usage!
-    */
-  int fillWriteBuffer( void );
+  virtual int testWriteDevice( OutList &sigs );
   
     /*! A template function that is used for the implementation
         of the convertData() function.
@@ -150,53 +155,37 @@ public:
   template < typename T >
     int convert( OutList &sigs );
 
-    /*! Stop any running ananlog output activity on the device.
-        Returns zero on success, otherwise one of the flags 
-        NotOpen, InvalidDevice, WriteError.
-        \sa close(), open(), isOpen() */
-  int stop ( void );
+    /*! Write data to a running data acquisition.
+        Returns the number of data values that were popped from the \a trace- 
+	device-buffer (sum over all \a traces).
+	If an error ocurred in any channel, the corresponding errorflags in the
+	OutList structure are filled and a negative value is returned.  
+	For internal usage! */
+  int fillWriteBuffer( void );
 
-    /*! Stop any running ananlog output activity and reset the device.
-        Returns zero on success, otherwise one of the flags 
-        NotOpen, InvalidDevice, WriteError.
-        \sa close(), open(), isOpen() */
-  int reset( void );
+    /*! Returns the pointer to the comedi device file.
+        \sa subdevice() */
+  comedi_t* device( void ) const;
+    /*! Comedi internal index of analog output subdevice. */
+  int subdevice( void ) const;
+    /*! returns buffer-size of device in samples. */
+  int bufferSize( void ) const;
 
     /* Reloads the prepared configuration commands of the following acquisition 
        into the registers of the hardware after stop() was performed.
        For internal usage.
        \sa stop(), prepareRead() */
   int reload( void );
-
     /* True, if configuration command for acquisition is successfully loaded
        into the registers of the hardware.
        For internal usage.
        \sa running(), reload() */
   bool loaded( void ) const;
-
     /*! True if analog output was prepared using testWriteDevice() and prepareWrite() */
   bool prepared( void ) const;
-  
-    /*! True if analog output is running. */
-  bool running( void ) const;
 
     /* Sets the running status and unsets the prepared status. */
   void setRunning( void );
-
-    /*! Get error status of the device. 
-        0: no error
-	-1: underrun
-        other: unknown */
-  int error( void ) const;
-
-  long index( void ) const { return -1; };
-
-    /*! Check for every analog output device in \a aos
-        whether it can be simultaneously started by startWrite()
-        from this device.
-        Add the indices of those devices to \a aoinx. */
-  virtual void take( const vector< AnalogOutput* > &aos,
-                     vector< int > &aoinx );
 
 
 private:

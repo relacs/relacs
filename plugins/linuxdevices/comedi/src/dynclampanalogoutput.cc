@@ -61,7 +61,7 @@ DynClampAnalogOutput::DynClampAnalogOutput( void )
 }
 
 
-  DynClampAnalogOutput::DynClampAnalogOutput( const string &device, long mode ) 
+DynClampAnalogOutput::DynClampAnalogOutput( const string &device, long mode ) 
   : AnalogOutput( "Dyn Clamp Analog Output", DynClampAnalogIOType )
 {
   ErrorState = 0;
@@ -89,6 +89,7 @@ DynClampAnalogOutput::~DynClampAnalogOutput( void )
   close();
   delete CAO;
 }
+
 
 int DynClampAnalogOutput::open( const string &device, long mode )
 { 
@@ -148,11 +149,9 @@ int DynClampAnalogOutput::open( const string &device, long mode )
 }
 
 
-int DynClampAnalogOutput::setModuleName( string modulename )
-{
-  Modulename = modulename;
-  // TODO: test opening here?
-  return 0;
+bool DynClampAnalogOutput::isOpen( void ) const 
+{ 
+  return ( Channels >= 0 );
 }
 
 
@@ -172,98 +171,31 @@ void DynClampAnalogOutput::close( void )
 }
 
 
-int DynClampAnalogOutput::reset( void )
-{ 
-  clearSettings();
-  ErrorState = 0;
-
-  if( !IsLoaded )
-    return 0;
-
-  int running = SubdeviceID;
-  int retVal = ::ioctl( Modulefile, IOC_CHK_RUNNING, &running );
-  if( retVal < 0 ) {
-    cerr << " DynClampAnalogOutput::running -> ioctl command IOC_CHK_RUNNING on device "
-	 << Modulename << " failed!" << endl;
-    return -1;
-  }
-
-  if ( running > 0 ) {
-    retVal = ::ioctl( Modulefile, IOC_STOP_SUBDEV, &SubdeviceID );
-    if( retVal < 0 ) {
-      cerr << " DynClampAnalogOutput::stop -> ioctl command IOC_STOP_SUBDEV on device "
-	   << Modulename << " failed!" << endl;
-      return -1;
-    }
-    rtf_reset( FifoFd );
-  }
-
-  IsPrepared = false;
-  IsLoaded = false;
-  IsRunning = false;
-
+int DynClampAnalogOutput::setModuleName( string modulename )
+{
+  Modulename = modulename;
+  // TODO: test opening here?
   return 0;
 }
 
-
-
-bool DynClampAnalogOutput::isOpen( void ) const 
-{ 
-  return ( Channels >= 0 );
-}
-
-
-bool DynClampAnalogOutput::prepared( void ) const 
-{ 
-  return IsPrepared;
-}
-
-bool DynClampAnalogOutput::loaded( void ) const 
-{
-  return IsLoaded;
-}
-
-bool DynClampAnalogOutput::running( void ) const
-{
-  if( !IsLoaded )
-    return false;
-
-  int exchangeVal = SubdeviceID;
-  int retVal = ::ioctl( Modulefile, IOC_CHK_RUNNING, &exchangeVal );
-  if( retVal < 0 ) {
-    cerr << " DynClampAnalogOutput::running -> ioctl command IOC_CHK_RUNNING on device "
-	 << Modulename << " failed!" << endl;
-    return false;
-  }
-  cerr << "DynClampAnalogOutput::running returned " << exchangeVal << endl;
-
-  return exchangeVal;
-}
-
-void DynClampAnalogOutput::setRunning( void )
-{
-  IsRunning = true;
-}
 
 string DynClampAnalogOutput::moduleName( void ) const
 {
   return Modulename;
 }
 
-int DynClampAnalogOutput::subdevice( void ) const
-{
-  return Subdevice;
-}
 
 int DynClampAnalogOutput::channels( void ) const
 { 
   return Channels;
 }
 
+
 int DynClampAnalogOutput::bits( void ) const
 { 
   return Bits;
 }
+
 
 double DynClampAnalogOutput::maxRate( void ) const 
 { 
@@ -273,57 +205,24 @@ double DynClampAnalogOutput::maxRate( void ) const
   return MaxRate;
 }
 
-int DynClampAnalogOutput::error( void ) const
-{
-  return ErrorState;
-  /*
-    0: ok
-    1: OverflowUnderrun
-    2: Unknown (device error)
-  */
-
-}
 
 int DynClampAnalogOutput::maxRanges( void ) const
 {
   return CAO->maxRanges();
 }
 
+
 double DynClampAnalogOutput::unipolarRange( int index ) const
 {
   return CAO->unipolarRange( index );
 }
+
 
 double DynClampAnalogOutput::bipolarRange( int index ) const
 {
   return CAO->bipolarRange( index );
 }
 
-
-int DynClampAnalogOutput::convertData( OutList &sigs )
-{
-  // copy and sort signal pointers:
-  OutList ol;
-  ol.add( sigs );
-  ol.sortByChannel();
-
-  // allocate buffer:
-  int nbuffer = ol.size()*ol[0].size();
-  float *buffer = new float [nbuffer];
-
-  // multiplex data into buffer:
-  float *bp = buffer;
-  for ( int i=0; i<ol[0].size(); i++ ) {
-    for ( int k=0; k<ol.size(); k++ ) {
-      *bp = ol[k][i];
-      ++bp;
-    }
-  }
-
-  sigs[0].setDeviceBuffer( (char *)buffer, nbuffer, sizeof( float ) );
-
-  return 0;
-}
 
 int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
 {
@@ -466,6 +365,32 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
 }
 
 
+int DynClampAnalogOutput::convertData( OutList &sigs )
+{
+  // copy and sort signal pointers:
+  OutList ol;
+  ol.add( sigs );
+  ol.sortByChannel();
+
+  // allocate buffer:
+  int nbuffer = ol.size()*ol[0].size();
+  float *buffer = new float [nbuffer];
+
+  // multiplex data into buffer:
+  float *bp = buffer;
+  for ( int i=0; i<ol[0].size(); i++ ) {
+    for ( int k=0; k<ol.size(); k++ ) {
+      *bp = ol[k][i];
+      ++bp;
+    }
+  }
+
+  sigs[0].setDeviceBuffer( (char *)buffer, nbuffer, sizeof( float ) );
+
+  return 0;
+}
+
+
 int DynClampAnalogOutput::prepareWrite( OutList &sigs )
 {
   cerr << " DynClampAnalogOutput::prepareWrite(): 1" << endl;/////TEST/////
@@ -535,10 +460,6 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
     return errorFlag;
   }
 
-
-
-	
-
   IsLoaded = true;
   IsPrepared = true;
 
@@ -576,6 +497,7 @@ int DynClampAnalogOutput::startWrite( OutList &sigs )
   
   return 0;
 }
+
 
 int DynClampAnalogOutput::writeData( OutList &sigs )
 {
@@ -676,6 +598,71 @@ int DynClampAnalogOutput::writeData( OutList &sigs )
   return elemWritten;
 }
 
+
+int DynClampAnalogOutput::reset( void )
+{ 
+  clearSettings();
+  ErrorState = 0;
+
+  if( !IsLoaded )
+    return 0;
+
+  int running = SubdeviceID;
+  int retVal = ::ioctl( Modulefile, IOC_CHK_RUNNING, &running );
+  if( retVal < 0 ) {
+    cerr << " DynClampAnalogOutput::running -> ioctl command IOC_CHK_RUNNING on device "
+	 << Modulename << " failed!" << endl;
+    return -1;
+  }
+
+  if ( running > 0 ) {
+    retVal = ::ioctl( Modulefile, IOC_STOP_SUBDEV, &SubdeviceID );
+    if( retVal < 0 ) {
+      cerr << " DynClampAnalogOutput::stop -> ioctl command IOC_STOP_SUBDEV on device "
+	   << Modulename << " failed!" << endl;
+      return -1;
+    }
+    rtf_reset( FifoFd );
+  }
+
+  IsPrepared = false;
+  IsLoaded = false;
+  IsRunning = false;
+
+  return 0;
+}
+
+
+bool DynClampAnalogOutput::running( void ) const
+{
+  if( !IsLoaded )
+    return false;
+
+  int exchangeVal = SubdeviceID;
+  int retVal = ::ioctl( Modulefile, IOC_CHK_RUNNING, &exchangeVal );
+  if( retVal < 0 ) {
+    cerr << " DynClampAnalogOutput::running -> ioctl command IOC_CHK_RUNNING on device "
+	 << Modulename << " failed!" << endl;
+    return false;
+  }
+  cerr << "DynClampAnalogOutput::running returned " << exchangeVal << endl;
+
+  return exchangeVal;
+}
+
+
+int DynClampAnalogOutput::error( void ) const
+{
+  return ErrorState;
+  /*
+    0: ok
+    1: OverflowUnderrun
+    2: Unknown (device error)
+  */
+
+}
+
+
 long DynClampAnalogOutput::index( void ) const
 {
   long index = 0;
@@ -689,6 +676,7 @@ long DynClampAnalogOutput::index( void ) const
   return index;
 }
 
+
 int DynClampAnalogOutput::getAISyncDevice( const vector< AnalogInput* > &ais ) const
 {
   for ( unsigned int k=0; k<ais.size(); k++ ) {
@@ -696,6 +684,30 @@ int DynClampAnalogOutput::getAISyncDevice( const vector< AnalogInput* > &ais ) c
       return k;
   }
   return -1;
+}
+
+
+int DynClampAnalogOutput::subdevice( void ) const
+{
+  return Subdevice;
+}
+
+
+bool DynClampAnalogOutput::loaded( void ) const 
+{
+  return IsLoaded;
+}
+
+
+bool DynClampAnalogOutput::prepared( void ) const 
+{ 
+  return IsPrepared;
+}
+
+
+void DynClampAnalogOutput::setRunning( void )
+{
+  IsRunning = true;
 }
 
 

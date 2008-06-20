@@ -965,9 +965,9 @@ class MilesDai : public HodgkinHuxley
 
   double ECa;
   double GCa, GKAHP, GLD, GDS;
-  double GCaGates, GKAHPGates, GDSGates, GSDGates;
+  double GCaGates, GKAHPGates;
   double ICa, IKAHP, IDS, ILD, ISD;
-  double CaA, CaTau;
+  double CaA, CaTau, CD;
 
 };
 

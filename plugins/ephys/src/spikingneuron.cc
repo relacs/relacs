@@ -1859,6 +1859,7 @@ Crook::Crook( void )
   EL = -70.0;
   ECa = +120.0;
 
+  PT = 1.0;
   C = 0.8;
   SFrac = 0.05;
   CaA = 3.0;
@@ -2074,7 +2075,6 @@ void Crook::add( void )
   addNumber( "gl", "Leak conductivity", GL, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
   addNumber( "el", "Leak reversal potential", EL, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
   addNumber( "c", "Capacitance", C, 0.0, 100.0, 0.1, "muF/cm^2" ).setFlags( ModelFlag );
-  addNumber( "phi", "Phi", PT, 0.0, 100.0, 1.0 ).setFlags( ModelFlag );
 
   addLabel( "Other currents", ModelFlag );
   addNumber( "gahp", "Soma AHP-type K conductivity", GKAHP, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
@@ -2105,13 +2105,15 @@ void Crook::notify( void )
 MilesDai::MilesDai( void )
   : HodgkinHuxley()
 {
-  double AS = 1.0;
-  GNa = 120.0;
-  GK = 100.0;
-  GL = 5.38e-6;
-  GCa = 4.0;
-  GKAHP = 1.0;
-  GLD = 7.18e-6;
+  double AS = 3.76991e-05;  // surface area soma in cm^2
+  double AD = 5.02655e-05;  // surface area dendrite in cm^2
+
+  GNa = 120.0*AS;
+  GK = 100.0*AS;
+  GL = 0.142857*AS;         // 1/(7kOhm*cm^2) =  0.142857 mS/cm^2
+  GCa = 4.0*AS;
+  GKAHP = 1.0*AS;
+  GLD = 0.142857*AD;        // 1/(7kOhm*cm^2) =  0.142857 mS/cm^2
   GDS = 1.5e-3;
 
   ENa = +115.0;
@@ -2119,16 +2121,16 @@ MilesDai::MilesDai( void )
   EL = 0.0;
   ECa = +140.0;
 
-  C = 1.0;
+  PT = 1.0;
+  C = 1.0*AS;
   CaA = 50.0;
   CaTau = 20.0;
+  CD = 1.0*AD;
 
   GNaGates = GNa;
   GKGates = GK;
   GCaGates = GCa;
   GKAHPGates = GKAHP;
-  GDSGates = GDS;
-  GSDGates = GDS;
 
   INa = 0.0;
   IK = 0.0;
@@ -2160,7 +2162,7 @@ void MilesDai::variables( vector< string > &varnames ) const
   varnames.push_back( "mn" );
   varnames.push_back( "hn" );
   varnames.push_back( "q" );
-  varnames.push_back( "Ca" );
+  varnames.push_back( "[Ca]" );
   varnames.push_back( "VD" );
 }
 
@@ -2172,7 +2174,7 @@ void MilesDai::units( vector< string > &u ) const
   u.push_back( "1" );
   u.push_back( "1" );
   u.push_back( "1" );
-  u.push_back( "XXX" );
+  u.push_back( "mM" );
   u.push_back( "mV" );
 }
 
@@ -2210,18 +2212,18 @@ void MilesDai::operator()(  double t, double s, double *x, double *dxdt, int n )
   IL = GL*(VS-EL);
   IDS = GDS*(VS-VD);
   ILD = GLD*(VD-EL);
-  ISD = -GDS*(VS-VD);
+  ISD = GDS*(VD-VS);
 
   /* VS */ dxdt[0] = ( - INa - IK -ICa - IKAHP - IL - IDS + s )/C;
-  /* m  */ dxdt[1] = (1-x[1])*alpham-x[1]*betam;
-  /* h  */ dxdt[2] = (1-x[2])*alphah-x[2]*betah;
-  /* n  */ dxdt[3] = (1-x[3])*alphan-x[3]*betan;
-  /* s  */ dxdt[4] = (1-x[4])*alphas-x[4]*betas;
-  /* mn */ dxdt[5] = (1-x[5])*alphamn-x[5]*betamn;
-  /* hn */ dxdt[6] = (1-x[6])*alphahn-x[6]*betahn;
-  /* q  */ dxdt[7] = (1-x[7])*alphaq-x[7]*betaq;
-  /* Ca */ dxdt[8] = -CaA*ICa - Ca/CaTau;
-  /* VD */ dxdt[9] = ( - ILD - ISD )/C;
+  /* m  */ dxdt[1] = (1.0-x[1])*alpham-x[1]*betam;
+  /* h  */ dxdt[2] = (1.0-x[2])*alphah-x[2]*betah;
+  /* n  */ dxdt[3] = (1.0-x[3])*alphan-x[3]*betan;
+  /* s  */ dxdt[4] = (1.0-x[4])*alphas-x[4]*betas;
+  /* mn */ dxdt[5] = (1.0-x[5])*alphamn-x[5]*betamn;
+  /* hn */ dxdt[6] = (1.0-x[6])*alphahn-x[6]*betahn;
+  /* q  */ dxdt[7] = (1.0-x[7])*alphaq-x[7]*betaq;
+  /* Ca */ dxdt[8] = -CaA*ICa - x[8]/CaTau;
+  /* VD */ dxdt[9] = ( - ILD - ISD )/CD;
 }
 
 
@@ -2262,9 +2264,9 @@ void MilesDai::conductances( double *g ) const
   g[2] = GL;
   g[3] = GCaGates;
   g[4] = GKAHPGates;
-  g[5] = GDSGates;
+  g[5] = GDS;
   g[6] = GLD;
-  g[7] = GSDGates;
+  g[7] = GDS;
 }
 
 
@@ -2299,29 +2301,29 @@ void MilesDai::currents( double *c ) const
 void MilesDai::add( void )
 {
   addLabel( "Soma Sodium current", ModelFlag );
-  addNumber( "gna", "Na conductivity", GNa, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gna", "Na conductivity", GNa, 0.0, 10000.0, 0.1, "mS" ).setFlags( ModelFlag );
   addNumber( "ena", "Na reversal potential", ENa, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
 
   addLabel( "Soma Potassium current", ModelFlag );
-  addNumber( "gk", "K conductivity", GK, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gk", "K conductivity", GK, 0.0, 10000.0, 0.1, "mS" ).setFlags( ModelFlag );
   addNumber( "ek", "K reversal potential", EK, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
 
   addLabel( "Soma Calcium current", ModelFlag );
-  addNumber( "gca", "Ca conductivity", GCa, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gca", "Ca conductivity", GCa, 0.0, 10000.0, 0.1, "mS" ).setFlags( ModelFlag );
   addNumber( "eca", "Ca reversal potential", ECa, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
   addNumber( "caa", "Ca activation", CaA, 0.0, 200.0, 1.0, "1" ).setFlags( ModelFlag );
   addNumber( "catau", "Ca removal time constant", CaTau, 0.0, 10000.0, 1.0, "ms" ).setFlags( ModelFlag );
 
   addLabel( "Soma Leak current", ModelFlag );
-  addNumber( "gl", "Leak conductivity", GL, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gl", "Leak conductivity", GL, 0.0, 10000.0, 0.1, "mS" ).setFlags( ModelFlag );
   addNumber( "el", "Leak reversal potential", EL, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
-  addNumber( "c", "Capacitance", C, 0.0, 100.0, 0.1, "muF/cm^2" ).setFlags( ModelFlag );
-  addNumber( "phi", "Phi", PT, 0.0, 100.0, 1.0 ).setFlags( ModelFlag );
+  addNumber( "c", "Capacitance", C, 0.0, 100.0, 0.1, "muF" ).setFlags( ModelFlag );
 
   addLabel( "Other currents", ModelFlag );
-  addNumber( "gahp", "Soma AHP-type K conductivity", GKAHP, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
-  addNumber( "gld", "Dendrite leak conductivity", GLD, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
-  addNumber( "gds", "Soma-dendrite conductivity", GDS, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gahp", "Soma AHP-type K conductivity", GKAHP, 0.0, 10000.0, 0.1, "mS" ).setFlags( ModelFlag );
+  addNumber( "gld", "Dendrite leak conductivity", GLD, 0.0, 10000.0, 0.1, "mS" ).setFlags( ModelFlag );
+  addNumber( "gds", "Soma-dendrite conductivity", GDS, 0.0, 10000.0, 0.1, "mS" ).setFlags( ModelFlag );
+  addNumber( "cd", "Capacitance of dendrite", CD, 0.0, 100.0, 0.1, "muF" ).setFlags( ModelFlag );
 
   SpikingNeuron::add();
 }
@@ -2337,6 +2339,7 @@ void MilesDai::notify( void )
   CaTau = number( "catau" );
   GKAHP = number( "gahp" );
   GLD = number( "gld" );
+  GDS = number( "gds" );
 }
 
 

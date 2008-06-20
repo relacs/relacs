@@ -57,6 +57,9 @@ NIAI::~NIAI( void )
 
 int NIAI::open( const string &device, long mode )
 {
+  if ( isOpen )
+    return -5;
+
   clearSettings();
   if ( device.empty() )
     Handle = -1;
@@ -76,6 +79,8 @@ int NIAI::open( const string &device, long mode )
     setDeviceVendor( "National Instruments" );
     setDeviceFile( device );
   }
+  else
+    return InvalidDevice;
 
   return 0;
 }

@@ -39,7 +39,7 @@ class ComediAnalogOutput;
 \version 0.1
 \brief Interface for accessing analog input of a daq-board via comedi.
 \bug fix errno usage
-
+\todo support delays in testReadDevice() and convertData()!
 
 insmod /usr/src/kernels/rtai/modules/rtai_hal.ko
 insmod /usr/src/kernels/rtai/modules/rtai_ksched.ko
@@ -56,6 +56,7 @@ sleep 1
 class ComediAnalogInput : public AnalogInput
 {
 
+  friend class ComediAnalogOutput;
   friend class DynClampAnalogInput;
 
 public:
@@ -65,39 +66,89 @@ public:
     /*! Open the analog input driver specified by its device file \a device. */
   ComediAnalogInput( const string &device, long mode=0 );
     /*! Stop analog input and close the daq driver. */
-  ~ComediAnalogInput( void );
+  virtual ~ComediAnalogInput( void );
 
-    /*! Open the analog input device on device file \a device. */
-  int open( const string &device, long mode=0 );
+    /*! Open the analog input device on device file \a device.
+        \todo  if a ranges is not supported but comedi thinks so: set max = -1.0
+        i.e. NI 6070E PCI: range #8 (0..20V) not supported
+        \todo do we need to set the file descriptor to O_NONBLOCK? 
+        \todo maybe use an internal maximum buffer size (in case comedi max is way too much)? */
+  virtual int open( const string &device, long mode=0 );
     /*! Returns true if driver was succesfully opened. */
-  bool isOpen( void ) const;
+  virtual bool isOpen( void ) const;
     /*! Stop all activity and close the device. */
-  void close( void );
-
-    /*! Returns the pointer to the comedi device file.
-        \sa subdevice() */
-  comedi_t* device( void ) const;
-    /*! Comedi internal index of analog input subdevice. */
-  int subdevice( void ) const;
+  virtual void close( void );
 
     /*! Number of analog input channels. */
-  int channels( void ) const;
+  virtual int channels( void ) const;
     /*! Resolution in bits of analog input. */
-  int bits( void ) const;
+  virtual int bits( void ) const;
     /*! Maximum sampling rate in Hz of analog input. */
-  double maxRate( void ) const;
-
-    /*! returns buffer-size of device in samples. */
-  int bufferSize( void ) const;
+  virtual double maxRate( void ) const;
 
     /*! Maximum number of analog input ranges. */
-  int maxRanges( void ) const;
+  virtual int maxRanges( void ) const;
     /*! Voltage range \a index in Volt for unipolar mode.
         If -1 is returned this range is not supported. */
-  double unipolarRange( int index ) const;
+  virtual double unipolarRange( int index ) const;
     /*! Voltage range \a index in Volt for bipolar mode.
         If -1 is returned this range is not supported. */
-  double bipolarRange( int index ) const;
+  virtual double bipolarRange( int index ) const;
+
+    /*! Prepare analog input of the input traces \a traces on the device.
+	If an error ocurred in any trace, the corresponding errorflags in
+	InData are set and a negative value is returned.
+	This function assumes that \a traces successfully passed testRead().
+        The channels in \a traces are not sorted. */
+  virtual int prepareRead( InList &traces );
+    /*! Start analog input of the input traces \a traces on the device
+        after they were prepared by prepareRead().
+	If an error ocurred in any channel, the corresponding errorflags in the
+	InData structure are filled and a negative value is returned.
+        The channels in \a traces are not sorted.
+	Also start possible pending acquisition on other devices
+	that are known from take(). */
+  virtual int startRead( InList &sigs );
+    /*! Read data from a running data acquisition.
+        Returns the number of new data values that were added to the \a traces
+	(sum over all \a traces).
+	If an error ocurred in any channel, the corresponding errorflags in the
+	InList structure are filled and a negative value is returned.  */
+  virtual int readData( InList &sigs );
+
+    /*! Stop any running ananlog input activity on the device.
+        Returns zero on success, otherwise one of the flags 
+        NotOpen, InvalidDevice, ReadError.
+        \sa close(), open(), isOpen() */
+  virtual int stop ( void );
+    /*! Stop any running ananlog input activity and reset the device.
+        Returns zero on success, otherwise one of the flags 
+        NotOpen, InvalidDevice, ReadError.
+        \sa close(), open(), isOpen()
+        \todo clear buffers! */
+  virtual int reset( void );
+  
+    /*! True if analog input is running. */
+  virtual bool running( void ) const;
+
+    /*! Get error status of the device. 
+        0: no error
+	-1: input buffer overflow
+        other: unknown */
+  virtual int error( void ) const;
+
+    /*! Check for every analog input and analog output device in \a ais
+        and \a aos, respectively,
+        whether it can be simultaneously started by startRead()
+        from this device.
+        Add the indices of those devices to \a aiinx and \a aoinx,
+        respectively. */
+  virtual void take( const vector< AnalogInput* > &ais,
+		     const vector< AnalogOutput* > &aos,
+		     vector< int > &aiinx, vector< int > &aoinx );
+
+
+protected:
 
     /*! Device driver specific tests on the settings in \a sigs
         for each input channel.
@@ -108,39 +159,21 @@ public:
 	If an error ocurred in any trace, the corresponding errorflags in the
 	InData are set and a negative value is returned.
         The channels in \a sigs are not sorted.
-        This function is called by testRead(). */
+        This function is called by testRead().
+        \todo does testing work on running devices? 
+	\todo maybe put the second half into prepareRead,
+	since it is called there anyways.
+	\todo analyse errors from test command */
   int testReadDevice( InList &traces );
-    /*! Prepare analog input of the input traces \a traces on the device.
-	If an error ocurred in any trace, the corresponding errorflags in
-	InData are set and a negative value is returned.
-	This function assumes that \a traces successfully passed testRead().
-        The channels in \a traces are not sorted. */
-  int prepareRead( InList &traces );
-    /*! Start analog input of the input traces \a traces on the device
-        after they were prepared by prepareRead().
-	If an error ocurred in any channel, the corresponding errorflags in the
-	InData structure are filled and a negative value is returned.
-        The channels in \a traces are not sorted.
-	Also start possible pending acquisition on other devices
-	that are known from take(). */
-  int startRead( InList &sigs );
-    /*! Read data from a running data acquisition.
-        Returns the number of new data values that were added to the \a traces
-	(sum over all \a traces).
-	If an error ocurred in any channel, the corresponding errorflags in the
-	InList structure are filled and a negative value is returned.  */
-  int readData( InList &sigs );
 
-    /*! Stop any running ananlog input activity on the device.
-        Returns zero on success, otherwise one of the flags 
-        NotOpen, InvalidDevice, ReadError.
-        \sa close(), open(), isOpen() */
-  int stop ( void );
-    /*! Stop any running ananlog input activity and reset the device.
-        Returns zero on success, otherwise one of the flags 
-        NotOpen, InvalidDevice, ReadError.
-        \sa close(), open(), isOpen() */
-  int reset( void );
+    /*! Returns the pointer to the comedi device file.
+        \sa subdevice() */
+  comedi_t* device( void ) const;
+    /*! Comedi internal index of analog input subdevice. */
+  int subdevice( void ) const;
+
+    /*! returns buffer-size of device in samples. */
+  int bufferSize( void ) const;
   
     /* Reloads the prepared configuration commands of the following acquisition 
        into the registers of the hardware after stop() was performed.
@@ -155,28 +188,10 @@ public:
   bool loaded( void ) const;
     /*! True if analog input was prepared using testReadDevice() and prepareRead() */
   bool prepared( void ) const;
-  
-    /*! True if analog input is running. */
-  bool running( void ) const;
+
     /* Sets the running status and unsets the prepared status. For internal 
        usage. */
   void setRunning( void );
-
-    /*! Get error status of the device. 
-        0: no error
-	-1: input buffer overflow
-        other: unknown */
-  int error( void ) const;
-
-    /*! Check for every analog input and analog output device in \a ais
-        and \a aos, respectively,
-        whether it can be simultaneously started by startRead()
-        from this device.
-        Add the indices of those devices to \a aiinx and \a aoinx,
-        respectively. */
-  virtual void take( const vector< AnalogInput* > &ais,
-		     const vector< AnalogOutput* > &aos,
-		     vector< int > &aiinx, vector< int > &aoinx );
 
 
 private:
@@ -185,28 +200,33 @@ private:
         Comedi DAQ devices. */
   static const int ComediAnalogIOType = 1;
 
-  bool AsyncMode;
   int ErrorState;
-  mutable bool IsRunning;
   bool IsPrepared;
+  mutable bool IsRunning;
 
+    /*! Pointer to the comedi device. */
   comedi_t *DeviceP;
-  unsigned int Subdevice;
-  double MaxRate;
+    /*! The comedi subdevice number. */
+  unsigned int SubDevice;
+    /*! True if the sample type is lsampl_t. */
   bool LongSampleType;
+    /*! The size of a single sample in bytes. */
   unsigned int BufferElemSize;  
+    /*! The maximum sampling rate supported by the DAQ board. */
+  double MaxRate;
+
   comedi_cmd Cmd;
   unsigned int ChanList[512];
 
-  /*! holds the list of supported unipolar comedi ranges. */
+    /*! Holds the list of supported unipolar comedi ranges. */
   vector< comedi_range > UnipolarRange;
-  /*! holds the list of supported bipolar comedi ranges. */
+    /*! Holds the list of supported bipolar comedi ranges. */
   vector< comedi_range > BipolarRange;
-  /*! maps descendingly sorted range indices to (unsorted) \a UnipolarRange
-      indices. */
+    /*! Maps descendingly sorted range indices to (unsorted) \a UnipolarRange
+        indices. */
   vector< unsigned int > UnipolarRangeIndex;
-  /*! maps descendingly sorted range indices to (unsorted) \a BipolarRange
-      indices. */
+    /*! Maps descendingly sorted range indices to (unsorted) \a BipolarRange
+        indices. */
   vector< unsigned int > BipolarRangeIndex;
 
   vector< ComediAnalogInput* > ComediAIs;
