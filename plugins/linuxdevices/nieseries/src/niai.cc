@@ -389,8 +389,6 @@ int NIAI::readData( InList &traces )
 	r<2 && ! failed && traces[0].deviceBufferMaxPush() > 0;
 	r++ ) {
 
-    long m = 0;
-
     // data present?
     long nd = 0;
     if ( ::ioctl( Handle, NIDAQAIDATA, &nd ) != 0 ||
@@ -398,8 +396,8 @@ int NIAI::readData( InList &traces )
       break;
 
     // read data:
-    m = ::read( Handle, traces[0].deviceBufferPushBuffer(),
-		traces[0].deviceBufferMaxPush()*sizeof( signed short ) );
+    long m = ::read( Handle, traces[0].deviceBufferPushBuffer(),
+		     traces[0].deviceBufferMaxPush()*sizeof( signed short ) );
     int ern = errno;
     if ( m < 0 && ern != EAGAIN ) {
       traces.addErrorStr( ern );

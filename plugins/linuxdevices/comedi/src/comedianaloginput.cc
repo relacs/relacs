@@ -380,6 +380,15 @@ int ComediAnalogInput::testReadDevice( InList &traces )
   // try automatic command generation:
   unsigned int intervalLength = (int)::rint( 1.0e9 * traces[0].sampleInterval() );  
   int retVal = comedi_get_cmd_generic_timed( DeviceP, SubDevice, &Cmd, traces.size(), intervalLength );
+  /*
+  from QTScope:
+        if ((cmd->convert_src ==  TRIG_TIMER)&&(cmd->convert_arg)) {
+                freq=1E9 / cmd->convert_arg;
+        }
+        if ((cmd->scan_begin_src ==  TRIG_TIMER)&&(cmd->scan_begin_arg)) {
+                freq=1E9 / cmd->scan_begin_arg;
+        }
+  */
   if ( Cmd.scan_begin_arg < intervalLength ) {
     cerr << " ComediAnalogInput::testReadDevice(): "
 	 << "Requested sampling rate bigger than supported! max "
@@ -433,12 +442,15 @@ int ComediAnalogInput::testReadDevice( InList &traces )
 
   Cmd.chanlist = ChanList;
   Cmd.chanlist_len = traces.size();
-  // ATTENTION:  maybe TRIG_WAKE_EOS causes many interrupts!
-  Cmd.flags = TRIG_WAKE_EOS | TRIG_RT;
+  // XXX ATTENTION:  maybe TRIG_WAKE_EOS causes many interrupts!
+  //  Cmd.flags = TRIG_WAKE_EOS | TRIG_RT;
+  Cmd.flags = TRIG_ROUND_NEAREST;
   
   // test command:
   // XXX analyse errors!
+  // after first call pf comedi_command_test Cmd should be ok:
   retVal = comedi_command_test( DeviceP, &Cmd );
+  // if this second call is not successfull, then something is really wrong:
   retVal = comedi_command_test( DeviceP, &Cmd );
   if ( retVal ) {
     Cmd.flags &= ~TRIG_RT;
@@ -450,6 +462,15 @@ int ComediAnalogInput::testReadDevice( InList &traces )
       retVal = comedi_command_test( DeviceP, &Cmd );
     }
   }
+  /* from QTScope:
+
+        if ((cmd->convert_src ==  TRIG_TIMER)&&(cmd->convert_arg)) {
+                freq=1E9 / cmd->convert_arg;
+        }
+        if ((cmd->scan_begin_src ==  TRIG_TIMER)&&(cmd->scan_begin_arg)) {
+                freq=1E9 / cmd->scan_begin_arg;
+        }
+  */
   if ( retVal != 0 )
     return -retVal;
 
@@ -468,16 +489,14 @@ int ComediAnalogInput::prepareRead( InList &traces )
   if ( error )
     return error;
   
-  // hard-test command:  
+  // execute command:  
   if ( Cmd.start_src != TRIG_NOW ) {
     if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
       traces.addErrorStr( deviceFile() + " - execution of comedi_cmd failed: "
 			  + comedi_strerror( comedi_errno() ) );
       return -1;
     }
-    stop();
   }
-
 
   // setup the buffer (don't free the buffer!):
   if ( traces[0].deviceBuffer() == NULL ) {
@@ -497,17 +516,18 @@ int ComediAnalogInput::prepareRead( InList &traces )
   if ( traces.success() )
     setSettings( traces );
 
+  IsPrepared = traces.success();
+
   if ( traces.success() )
     cerr << " ComediAnalogInput::prepareRead(): success" << endl;/////TEST/////
 
-  IsPrepared = traces.success();
   return traces.success() ? 0 : -1;
 }
 
 
 int ComediAnalogInput::startRead( InList &traces )
 {
-  cerr << " ComediAnalogInput::startRead(): 1" << endl;/////TEST/////
+  cerr << " ComediAnalogInput::startRead(): begin" << endl;/////TEST/////
 
   if ( !prepared() ) {
     traces.addError( DaqError::Unknown );
@@ -515,7 +535,29 @@ int ComediAnalogInput::startRead( InList &traces )
   }
 
   ErrorState = 0;
-  
+
+  // execute command:  
+  if ( Cmd.start_src == TRIG_NOW ) {
+    if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
+      traces.addErrorStr( deviceFile() + " - execution of comedi_cmd failed: "
+			  + comedi_strerror( comedi_errno() ) );
+      return -1;
+    }
+    else
+      return 0;
+  }
+
+  // instruction for starting command:
+  comedi_insn insn;
+  memset(&insn, 0, sizeof(comedi_insn));
+  insn.insn = INSN_INTTRIG;
+  insn.subdev = SubDevice;
+  lsampl_t data[1] = { 0 };
+  insn.data = data;
+  insn.n = 1;
+  comedi_do_insn( DeviceP, &insn );
+
+  /*  
  // * set up instructionlist *
   lsampl_t dataAO[1], dataAI[1];
   dataAO[0] = 0;
@@ -662,44 +704,52 @@ int ComediAnalogInput::startRead( InList &traces )
 	   << " set up successfully for analog output"
 	   << endl;//////TEST//////
     }
+  */
 
-  cerr << " ComediAnalogInput::startRead(): 3" << endl;//////TEST/////
+  cerr << " ComediAnalogInput::startRead(): end" << endl;//////TEST/////
   return 0;  
 }
 
 
 int ComediAnalogInput::readData( InList &traces )
 {
-  if ( !isOpen() )
+  // buffer overflow:
+  if ( traces[0].deviceBufferSize() >= traces[0].deviceBufferCapacity() ) {
+    traces.addError( DaqError::BufferOverflow );
     return -1;
-
-  cerr << " ComediAnalogInput::readData(): in, comedi:" << comedi_strerror( comedi_errno() ) << endl;/////TEST/////
+  }
 
   ErrorState = 0;
-  
   bool failed = false;
-  int elemRead = 0;
-  int bytesRead;
+  int n = 0;
+
+  cerr << " ComediAnalogInput::readData(): begin strerror -> " << comedi_strerror( comedi_errno() ) << endl;/////TEST/////
   
-  //  sampl_t *buf = NULL;/////TEST/////
-  //  int maxElem = 1;/////TEST/////
-  // try to read twice
+  // try to read twice:
   for ( int tryit = 0;
 	tryit < 2 && ! failed && traces[0].deviceBufferMaxPush() > 0;
-	tryit++ ){
-    
-    bytesRead = read( comedi_fileno(DeviceP), traces[0].deviceBufferPushBuffer(), 
-    		      traces[0].deviceBufferMaxPush() * BufferElemSize );
-    cerr << " ComediAnalogInput::readData():  bytes read:" << bytesRead << endl;/////TEST/////
+	tryit++ ) {
 
-    if ( bytesRead < 0 && errno != EAGAIN && errno != EINTR ) {
-      traces.addErrorStr( errno );
+    // data present?
+    if ( comedi_get_buffer_contents( DeviceP, SubDevice ) <= 0 )
+      break;
+    
+    // read data:
+    ssize_t m = read( comedi_fileno( DeviceP ),
+		      traces[0].deviceBufferPushBuffer(), 
+		      traces[0].deviceBufferMaxPush() * BufferElemSize );
+    cerr << " ComediAnalogInput::readData():  bytes read:" << bytesRead << endl;//////TEST/////
+
+    int ern = errno;
+    if ( m < 0 && ern != EAGAIN && ern != EINTR ) {
+      traces.addErrorStr( ern );
       failed = true;
       cerr << " ComediAnalogInput::readData(): error" << endl;/////TEST/////
     }
-    else if ( bytesRead > 0 ) {
-      traces[0].deviceBufferPush( bytesRead / BufferElemSize );
-      elemRead += bytesRead / BufferElemSize;
+    else if ( m > 0 ) {
+      m /= BufferElemSize;
+      traces[0].deviceBufferPush( m );
+      n += m;
     }
 
   }
@@ -709,7 +759,8 @@ int ComediAnalogInput::readData( InList &traces )
   else
     convert<sampl_t>( traces );
 
-  if ( failed || errno == EINTR ) {
+  if ( failed ) {
+    /* XXX
     // check buffer underrun:
     if ( errno == EPIPE ) {
       ErrorState = 1;
@@ -725,11 +776,13 @@ int ComediAnalogInput::readData( InList &traces )
       traces.addError( DaqError::Unknown );
     }
     cerr << "ComediAnalogInput::readData(): Errorstate = " << ErrorState << endl;
+    */
     return -1;   
   }
 
-  cerr << " ComediAnalogInput::readData(): out" << endl;/////TEST/////
-  return elemRead;
+  cerr << " ComediAnalogInput::readData(): end" << endl;/////TEST/////
+
+  return n;
 }
 
 
@@ -755,7 +808,6 @@ int ComediAnalogInput::reset( void )
 
   ErrorState = 0;
   IsPrepared = false;
-  IsRunning = false;
 
   return retVal;
 }
@@ -763,11 +815,13 @@ int ComediAnalogInput::reset( void )
 
 bool ComediAnalogInput::running( void ) const
 {   
+  /*
   if ( !loaded() ) {
     if ( IsRunning )
       cerr << " ComediAnalogInput::running(): stopped!"  << endl;
     IsRunning = false;
   }
+  */
   if ( IsRunning )
     cerr << " ComediAnalogInput::running(): running"  << endl;
   else
@@ -791,6 +845,7 @@ void ComediAnalogInput::take( const vector< AnalogInput* > &ais,
 			      const vector< AnalogOutput* > &aos,
 			      vector< int > &aiinx, vector< int > &aoinx )
 {
+  /*
   ComediAIs.clear();
   ComediAOs.clear();
   ComediAIsLink.clear();
@@ -826,6 +881,7 @@ void ComediAnalogInput::take( const vector< AnalogInput* > &ais,
 	ComediAOsLink[ao] = ai;
 	ComediAIsLink[ai] = ao;
       }
+  */
 }
 
 
@@ -840,14 +896,6 @@ int ComediAnalogInput::subdevice( void ) const
   if ( !isOpen() )
     return -1;
   return SubDevice;
-}
-
-
-int ComediAnalogInput::bufferSize( void ) const
-{
-  if ( !isOpen() )
-    return -1;
-  return comedi_get_buffer_size( DeviceP, SubDevice ) / BufferElemSize;
 }
 
 

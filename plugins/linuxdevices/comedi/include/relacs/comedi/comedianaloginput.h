@@ -40,6 +40,8 @@ class ComediAnalogOutput;
 \brief Interface for accessing analog input of a daq-board via comedi.
 \bug fix errno usage
 \todo support delays in testReadDevice() and convertData()!
+\todo Fix usage of ErrorState variable (also in readData() )
+\todo Fix usage of IsRunning, IsLoaded, and IsPrepared
 
 insmod /usr/src/kernels/rtai/modules/rtai_hal.ko
 insmod /usr/src/kernels/rtai/modules/rtai_ksched.ko
@@ -113,7 +115,7 @@ public:
         Returns the number of new data values that were added to the \a traces
 	(sum over all \a traces).
 	If an error ocurred in any channel, the corresponding errorflags in the
-	InList structure are filled and a negative value is returned.  */
+	InList structure are filled and a negative value is returned. */
   virtual int readData( InList &sigs );
 
     /*! Stop any running ananlog input activity on the device.
@@ -142,7 +144,8 @@ public:
         whether it can be simultaneously started by startRead()
         from this device.
         Add the indices of those devices to \a aiinx and \a aoinx,
-        respectively. */
+        respectively. 
+	\todo needs to be implemented. */
   virtual void take( const vector< AnalogInput* > &ais,
 		     const vector< AnalogOutput* > &aos,
 		     vector< int > &aiinx, vector< int > &aoinx );
@@ -161,6 +164,8 @@ protected:
         The channels in \a sigs are not sorted.
         This function is called by testRead().
         \todo does testing work on running devices? 
+	\todo check if setting of sampling rate is correct for acquisition
+	from two or more channels
 	\todo maybe put the second half into prepareRead,
 	since it is called there anyways.
 	\todo analyse errors from test command */
@@ -171,9 +176,6 @@ protected:
   comedi_t* device( void ) const;
     /*! Comedi internal index of analog input subdevice. */
   int subdevice( void ) const;
-
-    /*! returns buffer-size of device in samples. */
-  int bufferSize( void ) const;
   
     /* Reloads the prepared configuration commands of the following acquisition 
        into the registers of the hardware after stop() was performed.
