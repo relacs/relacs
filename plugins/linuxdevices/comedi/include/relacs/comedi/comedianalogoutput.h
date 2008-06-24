@@ -57,7 +57,13 @@ public:
     /*! Stop analog output and close the daq driver. */
   virtual ~ComediAnalogOutput( void );
 
-    /*! Open the analog output device on device file \a device. */
+    /*! Open the analog output device on device file \a device.
+        \todo  if a ranges is not supported but comedi thinks so: set max = -1.0,
+        i.e. NI 6070E PCI: range #3&4 (-1..1V, 0..1V) not supported
+        \todo do we need to set the file descriptor to O_NONBLOCK? 
+        \todo maybe use an internal maximum buffer size (in case comedi max is way too much)? 
+        \todo check usage of comedi_get_cmd_generic_timed for finding out max sample rate 
+	\todo set default for NI E-series (mio-driver doesn't return a valid frequency) */
   virtual int open( const string &device, long mode=0 );
     /*! Returns true if driver was succesfully opened. */
   virtual bool isOpen( void ) const;
@@ -99,7 +105,8 @@ public:
 	OutData are set and a negative value is returned.
         The channels in \a sigs are not sorted.
 	Also start possible pending acquisition on other devices
-	that are known from take(). */
+	that are known from take().
+        \todo How to prefill buffer with data for TRIG_NOW? */
   virtual int startWrite( OutList &sigs );
     /*! Write data to a running data acquisition.
         Returns the number of data values that were popped from the \a trace- 
@@ -111,7 +118,8 @@ public:
     /*! Stop any running ananlog output activity and reset the device.
         Returns zero on success, otherwise one of the flags 
         NotOpen, InvalidDevice, WriteError.
-        \sa close(), open(), isOpen() */
+        \sa close(), open(), isOpen()
+        \todo clear buffers! */
   virtual int reset( void );
   
     /*! True if analog output is running. */
@@ -126,7 +134,8 @@ public:
     /*! Check for every analog output device in \a aos
         whether it can be simultaneously started by startWrite()
         from this device.
-        Add the indices of those devices to \a aoinx. */
+        Add the indices of those devices to \a aoinx.
+	\todo needs to be implemented. */
   virtual void take( const vector< AnalogOutput* > &aos,
                      vector< int > &aoinx );
 
@@ -142,7 +151,13 @@ protected:
 	If an error ocurred in any trace, the corresponding errorflags in the
 	OutData are set and a negative value is returned.
         The channels in \a sigs are not sorted.
-        This function is called by testWrite(). */
+        This function is called by testWrite().
+        \todo does testing work on running devices?
+	\todo check if setting of sampling rate is correct for acquisition
+	from two or more channels
+	\todo maybe put the second half into prepareRead,
+	since it is called there anyways.
+	\todo analyse errors from test command */
   virtual int testWriteDevice( OutList &sigs );
   
     /*! A template function that is used for the implementation
@@ -168,6 +183,7 @@ protected:
   comedi_t* device( void ) const;
     /*! Comedi internal index of analog output subdevice. */
   int subdevice( void ) const;
+
     /*! returns buffer-size of device in samples. */
   int bufferSize( void ) const;
 
@@ -194,30 +210,35 @@ private:
         Comedi DAQ devices. */
   static const int ComediAnalogIOType = 1;
 
-  bool AsyncMode;
   int ErrorState;
-  mutable bool IsRunning;
   bool IsPrepared;
+  mutable bool IsRunning;
   
   OutList *Sigs;
 
+    /*! Pointer to the comedi device. */
   comedi_t *DeviceP;
-  unsigned int Subdevice;
-  double MaxRate;
-  unsigned int BufferElemSize;  
+    /*! The comedi subdevice number. */
+  unsigned int SubDevice;
+    /*! True if the sample type is lsampl_t. */
   bool LongSampleType;
+    /*! The size of a single sample in bytes. */
+  unsigned int BufferElemSize;  
+    /*! The maximum sampling rate supported by the DAQ board. */
+  double MaxRate;
+
   comedi_cmd Cmd;
   unsigned int ChanList[512];
 
-  /*! holds the list of supported unipolar comedi ranges. */
+    /*! Holds the list of supported unipolar comedi ranges. */
   vector< comedi_range > UnipolarRange;
-  /*! holds the list of supported bipolar comedi ranges. */
+    /*! Holds the list of supported bipolar comedi ranges. */
   vector< comedi_range > BipolarRange;
-  /*! maps descendingly sorted range indices to (unsorted) \a UnipolarRange
-      indices. */
+    /*! Maps descendingly sorted range indices to (unsorted) \a UnipolarRange
+        indices. */
   vector< unsigned int > UnipolarRangeIndex;
-  /*! maps descendingly sorted range indices to (unsorted) \a BipolarRange
-      indices. */
+    /*! Maps descendingly sorted range indices to (unsorted) \a BipolarRange
+        indices. */
   vector< unsigned int > BipolarRangeIndex;
   int UnipolarExtRefRangeIndex;
   int BipolarExtRefRangeIndex;

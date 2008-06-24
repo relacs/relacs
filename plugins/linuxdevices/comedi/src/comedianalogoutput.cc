@@ -21,7 +21,6 @@
 
 #include <iostream>
 #include <sstream>
-#include <algorithm>
 #include <cstdio>
 #include <cmath>
 #include <ctime>
@@ -41,8 +40,11 @@ ComediAnalogOutput::ComediAnalogOutput( void )
   ErrorState = 0;
   IsPrepared = false;
   IsRunning = false;
-  AsyncMode = true;
   DeviceP = NULL;
+  SubDevice = 0;
+  LongSampleType = false;
+  BufferElemSize = 0;
+  MaxRate = 1000.0;
   Sigs = NULL;
   UnipolarExtRefRangeIndex = -1;
   BipolarExtRefRangeIndex = -1;
@@ -55,8 +57,11 @@ ComediAnalogOutput::ComediAnalogOutput(  const string &device, long mode )
   ErrorState = 0;
   IsPrepared = false;
   IsRunning = false;
-  AsyncMode = true;
   DeviceP = NULL;
+  SubDevice = 0;
+  LongSampleType = false;
+  BufferElemSize = 0;
+  MaxRate = 1000.0;
   Sigs = NULL;
   UnipolarExtRefRangeIndex = -1;
   BipolarExtRefRangeIndex = -1;
@@ -72,82 +77,97 @@ ComediAnalogOutput::~ComediAnalogOutput( void )
 
 int ComediAnalogOutput::open( const string &device, long mode )
 { 
-  if( DeviceP )
-    close();
+  if ( isOpen() )
+    return -5;
+
   clearSettings();
   if ( device.empty() )
     return InvalidDevice;
 
-  int retVal;
+  // open comedi device:
   DeviceP = comedi_open( device.c_str() );
   if ( DeviceP == NULL ) {
-    cerr <</* currentTime() <<*/ " !  ComediAnalogOutput::open() -> "
-	 << "Device-file " << device << " could not be opened!" << endl;
+    cerr << "! error: ComediAnalogOutput::open() -> "
+	 << "Device-file " << device << " could not be opened!\n";
     return NotOpen;
   }
 
-  Subdevice = comedi_find_subdevice_by_type( DeviceP, COMEDI_SUBD_AO, 0 );
-  if( Subdevice < 0 ) {
-    cerr << /*currentTime() <<*/ " !  ComediAnalogOutput::open() -> "
-	 << "No Subdevice for analog output found on device "  << device
-	 << endl;
+  // get AO subdevice:
+  int subdev = comedi_find_subdevice_by_type( DeviceP, COMEDI_SUBD_AO, 0 );
+  if ( subdev < 0 ) {
+    cerr << "! error: ComediAnalogOutput::open() -> "
+	 << "No SubDevice for AO found on device "  << device << '\n';
+    comedi_close( DeviceP );
     DeviceP = NULL;
     return InvalidDevice;
   }
+  SubDevice = subdev;
 
-  if( comedi_lock( DeviceP, Subdevice ) != 0 ) {
-    cerr << /*currentTime() <<*/ " !  ComediAnalogOutput::open() -> "
-	 << "Locking of analog output Subdevice failed on device " << device
-	 << endl;
+  // lock AI subdevice:
+  if ( comedi_lock( DeviceP, SubDevice ) != 0 ) {
+    cerr << "! error: ComediAnalogOutput::open() -> "
+	 << "Locking of AO SubDevice failed on device " << device << '\n';
+    comedi_close( DeviceP );
     DeviceP = NULL;
+    SubDevice = 0;
     return NotOpen;
   }  
 
-  if( AsyncMode && 
-      ! ( SDF_CMD & comedi_get_subdevice_flags( DeviceP, Subdevice ) ) ) {
-    cerr << /*currentTime() <<*/ " !  ComediAnalogOutput::open() -> "
+  // check for async. command support:
+  if ( ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_CMD ) == 0 ) {
+    cerr << "! error: ComediAnalogOutput::open() -> "
 	 << "Device "  << device << " not supported! "
-	 << "Subdevice needs to support async. commands!" << endl;
+	 << "SubDevice needs to support async. commands!" << endl;
+    comedi_unlock( DeviceP,  SubDevice );
+    comedi_close( DeviceP );
+    DeviceP = NULL;
+    SubDevice = 0;
     return InvalidDevice;
   }
+
+  // set basic device infos:
   setDeviceName( comedi_get_board_name( DeviceP ) );
-  setDeviceVendor( "unknown" );
+  setDeviceVendor( comedi_get_driver_name( DeviceP ) );
   setDeviceFile( device );
 
-  // set comedi file-descriptor to non-blocking writing mode
+  /* XXX
+  // set comedi file-descriptor to non-blocking writing mode:
   retVal = fcntl( comedi_fileno(DeviceP), F_SETFL, O_NONBLOCK );//|O_ASYNC
-  if( retVal < 0 )
-    cerr << /*currentTime() <<*/ " !  ComediAnalogOutput::open() -> "
+  if ( retVal < 0 )
+    cerr << " !  ComediAnalogOutput::open() -> "
 	 << "Switching the device "  << device 
 	 << " to non-blocking mode failed: " << strerror( errno ) << endl;
+  */
 
-  // set size of comedi-internal buffer to maximum
-  int bufSize = comedi_get_max_buffer_size( DeviceP, Subdevice );
-  comedi_set_buffer_size( DeviceP, Subdevice, bufSize );
+  // set size of comedi-internal buffer to maximum:
+  // XXXX maybe use an internal maximum as well 
+  // (in case comedi max is way too much)?
+  int bufSize = comedi_get_max_buffer_size( DeviceP, SubDevice );
+  comedi_set_buffer_size( DeviceP, SubDevice, bufSize );
 
-  // initialize ranges
-  BipolarRange.clear();
-  BipolarRangeIndex.clear();
+  // initialize ranges:
   UnipolarRange.clear();
+  BipolarRange.clear();
   UnipolarRangeIndex.clear();
+  BipolarRangeIndex.clear();
   UnipolarExtRefRangeIndex = -1;
   BipolarExtRefRangeIndex = -1;
-  int nRanges = comedi_get_n_ranges( DeviceP, Subdevice, 0 );  
-  for ( int iRange = 0; iRange < nRanges; iRange++ ) {
-    comedi_range *range = comedi_get_range( DeviceP, Subdevice, 0, iRange );
+  int nRanges = comedi_get_n_ranges( DeviceP, SubDevice, 0 );  
+  for ( int i = 0; i < nRanges; i++ ) {
+    comedi_range *range = comedi_get_range( DeviceP, SubDevice, 0, i );
     // TODO: if a ranges is not supported but comedi thinks so: set max = -1.0
-    // i.e. NI 6070E PCI: iRange 3&4 (-1..1V, 0..1V) not supported
-    if( range->min < 0.0 ) {
-      if( range->unit & RF_EXTERNAL )
-	BipolarExtRefRangeIndex = iRange;
+    // i.e. NI 6070E PCI: range #3&4 (-1..1V, 0..1V) not supported
+    if ( range->min < 0.0 ) {
+      if ( range->unit & RF_EXTERNAL )
+	BipolarExtRefRangeIndex = i;
       else {	
 	BipolarRange.push_back( *range );
 	BipolarRangeIndex.push_back( BipolarRangeIndex.size() );
       }
     }
     else {
-      if( range->unit & RF_EXTERNAL )
-	UnipolarExtRefRangeIndex = iRange;
+      if ( range->unit & RF_EXTERNAL )
+	UnipolarExtRefRangeIndex = i;
       else {	
 	UnipolarRange.push_back( *range );
 	UnipolarRangeIndex.push_back( UnipolarRangeIndex.size() );
@@ -155,10 +175,10 @@ int ComediAnalogOutput::open( const string &device, long mode )
     }
   }
 
-  // bubble-sort Uni/BipolarRangeIndex descendingly according to Uni/BipolarRange.max
+  // bubble-sort Uni/BipolarRangeIndex according to Uni/BipolarRange.max:
   for( unsigned int i = 0; i < UnipolarRangeIndex.size(); i++ ) {
     for ( unsigned int j = i+1; j < UnipolarRangeIndex.size(); j++ )
-      if(  UnipolarRange[ UnipolarRangeIndex[i] ].max
+      if (  UnipolarRange[ UnipolarRangeIndex[i] ].max
          < UnipolarRange[ UnipolarRangeIndex[j] ].max ) {
 	unsigned int iSwap = UnipolarRangeIndex[i];
 	UnipolarRangeIndex[i] = UnipolarRangeIndex[j];
@@ -167,31 +187,31 @@ int ComediAnalogOutput::open( const string &device, long mode )
   }
   for( unsigned int i = 0; i < BipolarRangeIndex.size(); i++ ) {
     for ( unsigned int j = i+1; j < BipolarRangeIndex.size(); j++ )
-      if(  BipolarRange[ BipolarRangeIndex[i] ].max
+      if (  BipolarRange[ BipolarRangeIndex[i] ].max
          < BipolarRange[ BipolarRangeIndex[j] ].max ) {
 	unsigned int iSwap = BipolarRangeIndex[i];
 	BipolarRangeIndex[i] = BipolarRangeIndex[j];
 	BipolarRangeIndex[j] = iSwap;
       }
   }
-  
-  // set comedi out-of-range behavior on sample values
-  comedi_set_global_oor_behavior( COMEDI_OOR_NUMBER ); // COMEDI_OOR_NAN
 
-  // get size of datatype for sample values
-  LongSampleType = SDF_LSAMPL & comedi_get_subdevice_flags( DeviceP, Subdevice );
-  if( LongSampleType )
-    BufferElemSize = sizeof(lsampl_t);
+  // get size of datatype for sample values:
+  LongSampleType = ( comedi_get_subdevice_flags( DeviceP, SubDevice ) &
+		     SDF_LSAMPL );
+  if ( LongSampleType )
+    BufferElemSize = sizeof( lsampl_t );
   else
-    BufferElemSize = sizeof(sampl_t);
+    BufferElemSize = sizeof( sampl_t );
 
-  // try to find out the maximum sampling rate
+  // try to find out the maximum sampling rate:
   comedi_cmd cmd;
   memset( &cmd,0, sizeof(comedi_cmd) );
   unsigned int chanlist = CR_PACK( 0, 0, AREF_GROUND );
-  retVal = comedi_get_cmd_generic_timed( DeviceP, Subdevice, &cmd, 1/*chans*/, (unsigned int)1e8/*Hz*/ );
-  if( retVal < 0 ){
-    cmd.subdev = Subdevice;
+  int retVal = comedi_get_cmd_generic_timed( DeviceP, SubDevice, &cmd,
+					     1/*chans*/,
+					     (unsigned int)1e8/*Hz*/ );
+  if ( retVal < 0 ){
+    cmd.subdev = SubDevice;
     cmd.start_src =        TRIG_NOW;
     cmd.start_arg =        0;
     cmd.scan_begin_src =   TRIG_TIMER;
@@ -204,17 +224,22 @@ int ComediAnalogOutput::open( const string &device, long mode )
   cmd.chanlist           = &chanlist;
   cmd.chanlist_len       = 1;
   cmd.scan_end_arg = 1;
-  if(cmd.stop_src==TRIG_COUNT)
+  if ( cmd.stop_src == TRIG_COUNT )
     cmd.stop_arg = 1;
   retVal = comedi_command_test( DeviceP, &cmd );
-  if( retVal == 1 || retVal == 2 )
+  if ( retVal == 1 || retVal == 2 )
     retVal = comedi_command_test( DeviceP, &cmd );
-  if( retVal == 1 || retVal == 2 )
+  if ( retVal == 1 || retVal == 2 )
     retVal = comedi_command_test( DeviceP, &cmd );
-  if( cmd.scan_begin_arg > 0 )
+  if ( cmd.scan_begin_arg > 0 )
     MaxRate = 1.0e9 / cmd.scan_begin_arg;
-  else //set default for NI E-series (mio-driver doesn't return a valid frequency)
+  else //XXX set default for NI E-series (mio-driver doesn't return a valid frequency)
     MaxRate = 1.0e6; 
+
+  // clear flags:
+  ErrorState = 0;
+  IsPrepared = false;
+  IsRunning = false;
  
   return 0;
 }
@@ -222,39 +247,48 @@ int ComediAnalogOutput::open( const string &device, long mode )
 
 bool ComediAnalogOutput::isOpen( void ) const 
 { 
-  return DeviceP != NULL;
+  return ( DeviceP != NULL );
 }
 
 
 void ComediAnalogOutput::close( void )
 { 
-  reset();
-  if( !isOpen() )
+  if ( ! isOpen() )
     return;
-  comedi_unlock( DeviceP, Subdevice );
-  int error = comedi_close( DeviceP );
-  if( error )
-    cerr << /*currentTime() <<*/ " !  ComediAnalogOutput::close() -> "
-	 << "Closing of analog out subdevice on device " << deviceFile()
-	 << "threw an error. Forcing close..."
-	 << endl;
+
+  reset();
+
+  // unlock:
+  int error = comedi_unlock( DeviceP, SubDevice );
+  if ( error < 0 )
+    cerr << "! warning: ComediAnalogOutput::close() -> "
+	 << "Unlocking of AO subdevice on device " << deviceFile() << "failed\n";
+  
+  // close:
+  error = comedi_close( DeviceP );
+  if ( error )
+    cerr << "! warning: ComediAnalogInput::close() -> "
+	 << "Closing of AI subdevice on device " << deviceFile() << "failed.\n";
+
+  // clear flags:
   DeviceP = NULL;
+  SubDevice = 0;
 }
 
 
 int ComediAnalogOutput::channels( void ) const
 { 
-  if( !isOpen() )
+  if ( !isOpen() )
     return -1;
-  return comedi_get_n_channels( DeviceP, Subdevice);
+  return comedi_get_n_channels( DeviceP, SubDevice );
 }
 
 
 int ComediAnalogOutput::bits( void ) const
 { 
-  if( !isOpen() )
+  if ( !isOpen() )
     return -1;
-  int maxData = comedi_get_maxdata( DeviceP, Subdevice, 0 );
+  int maxData = comedi_get_maxdata( DeviceP, SubDevice, 0 );
   return (int)( log( maxData+2.0 )/ log( 2.0 ) );
 }
 
@@ -267,13 +301,14 @@ double ComediAnalogOutput::maxRate( void ) const
 
 int ComediAnalogOutput::maxRanges( void ) const
 {
-  return ::std::max( UnipolarRangeIndex.size(), BipolarRangeIndex.size() );
+  return UnipolarRangeIndex.size() > BipolarRangeIndex.size() ?
+    UnipolarRangeIndex.size() : BipolarRangeIndex.size();
 }
 
 
 double ComediAnalogOutput::unipolarRange( int index ) const
 {
-  if( (index < 0) || (index >= (int)UnipolarRangeIndex.size()) )
+  if ( (index < 0) || (index >= (int)UnipolarRangeIndex.size()) )
     return -1.0;
   return UnipolarRange[ UnipolarRangeIndex[index] ].max;
   
@@ -282,7 +317,7 @@ double ComediAnalogOutput::unipolarRange( int index ) const
 
 double ComediAnalogOutput::bipolarRange( int index ) const
 {
-  if( (index < 0) || (index >= (int)BipolarRangeIndex.size()) )
+  if ( (index < 0) || (index >= (int)BipolarRangeIndex.size()) )
     return -1.0;
   return BipolarRange[ BipolarRangeIndex[index] ].max;
 }
@@ -311,7 +346,7 @@ int ComediAnalogOutput::convert( OutList &sigs )
   for ( int i=-iDelay; i<ol[0].size(); i++ ) {
     for ( int k=0; k<ol.size(); k++ ) {
       int v;
-      if( i < 0 ) // simulate delay
+      if ( i < 0 ) // simulate delay
 	v = (T) ::rint( ( 0.0 + ol[k].offset() ) * scale[k] );
       else
 	v = (T) ::rint( ( ol[k][i] + ol[k].offset() ) * scale[k] );
@@ -332,19 +367,17 @@ int ComediAnalogOutput::convert( OutList &sigs )
 
 int ComediAnalogOutput::convertData( OutList &sigs )
 {
-  if( LongSampleType )
-    return convert<lsampl_t>( sigs );// default for NI E-series, since the mio-driver does not return a valid frequency)
-  
-  return convert<sampl_t>( sigs );
+  if ( LongSampleType )
+    return convert<lsampl_t>( sigs );
+  else  
+    return convert<sampl_t>( sigs );
 }
 
 
 int ComediAnalogOutput::testWriteDevice( OutList &sigs )
 {
-  if( !isOpen() )
+  if ( !isOpen() )
     return -1;
-
-  ErrorState = 0;
 
   // check channel ordering:
   if ( sigs.size() > 1 ) {
@@ -399,16 +432,16 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
     int index = unipolar ? UnipolarRangeIndex.size() - 1 
                          :  BipolarRangeIndex.size() - 1;
     for( ; index >= 0; index-- ) {
-      if( unipolar && unipolarRange( index ) > maxvolt ) {
+      if ( unipolar && unipolarRange( index ) > maxvolt ) {
 	maxboardvolt = unipolarRange( index );
 	break;
       }
-      if( !unipolar && bipolarRange( index ) > maxvolt ){
+      if ( !unipolar && bipolarRange( index ) > maxvolt ){
 	maxboardvolt = bipolarRange( index );
 	break;
       }
     }
-    if( index < 0 )
+    if ( index < 0 )
       sigs[k].addError( DaqError::InvalidReference );
         
     if ( sigs[k].noIntensity() ) {
@@ -462,7 +495,7 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
     sigs[k].setMaxData( unipolar ? maxrange - 1 : maxrange/2 - 1 );
 
     // set up channel in chanlist:
-    if( unipolar )
+    if ( unipolar )
       ChanList[k] = CR_PACK( sigs[k].channel(), UnipolarRangeIndex[ index ], aref );
     else
       ChanList[k] = CR_PACK( sigs[k].channel(), BipolarRangeIndex[ index ], aref );
@@ -470,33 +503,29 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
   }
 
 
-  /* // i'm not sure if testing works on running device...
-  if( running() ) {
+  /* // XXX i'm not sure if testing works on running device...
+  if ( running() ) {
     sigs.addError( DaqError::Busy );
     return -1;
   }
   */
 
-  if( sigs[0].sampleRate() * double( sigs.size() ) > maxRate() ) {
-    cerr << " ComediAnalogOutput::testWriteDevice(): "
-	 << "Requested sampling rate bigger than the supported " /////TEST/////
-	 << maxRate() << "Hz for all channels together!" << endl;
+  if ( sigs[0].sampleRate() * double( sigs.size() ) > maxRate() )
     sigs.addError( DaqError::InvalidSampleRate );
-  }
 
-  if( sigs.failed() )
+  if ( sigs.failed() )
     return -1;
   
-  // try automatic command generation
+  // try automatic command generation:
   unsigned int intervalLength = (int)( 1e9 * sigs[0].sampleInterval() );
-  int retVal = comedi_get_cmd_generic_timed( DeviceP, Subdevice, &Cmd, sigs.size(), intervalLength );
-  if( Cmd.scan_begin_arg < intervalLength ) {
+  int retVal = comedi_get_cmd_generic_timed( DeviceP, SubDevice, &Cmd, sigs.size(), intervalLength );
+  if ( Cmd.scan_begin_arg < intervalLength ) {
     cerr << " ComediAnalogOutput::testWriteDevice(): "
 	 << "Requested sampling rate bigger than supported! max "
 	 << Cmd.scan_begin_arg << "ns sampling interval possible." << endl;/////TEST/////
     sigs.addError( DaqError::InvalidSampleRate );    
   }
-  if( retVal < 0 ) {
+  if ( retVal < 0 ) {
     Cmd.scan_begin_src = TRIG_TIMER; // when to perform a scan is triggered by timer
     Cmd.scan_begin_arg = intervalLength; // nsec's between 2 scans (1/sampling-frequency)
     Cmd.convert_src = TRIG_TIMER;
@@ -504,26 +533,26 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
     Cmd.scan_end_src = TRIG_COUNT;
   }
 
-  // adapt command to our purpose
+  // adapt command to our purpose:
   comedi_cmd testCmd;
-  comedi_get_cmd_src_mask( DeviceP, Subdevice, &testCmd );
-  if( testCmd.start_src & TRIG_INT )
+  comedi_get_cmd_src_mask( DeviceP, SubDevice, &testCmd );
+  if ( testCmd.start_src & TRIG_INT )
     Cmd.start_src = TRIG_INT;
   else
     Cmd.start_src = TRIG_NOW;
   Cmd.start_arg = 0;
-  if( Cmd.convert_src & TRIG_NOW )
+  if ( Cmd.convert_src & TRIG_NOW )
     Cmd.convert_arg = 1;
   Cmd.scan_end_arg = sigs.size();
   
-  // test if countinous-state is supported
-  if( sigs[0].continuous() && !(testCmd.stop_src & TRIG_NONE) ) {
+  // test if countinous-state is supported:
+  if ( sigs[0].continuous() && !(testCmd.stop_src & TRIG_NONE) ) {
     cerr << " ComediAnalogOutput::testWriteDevice(): "
 	 << " continuous mode not supported!" << endl;/////TEST/////
     sigs.addError( DaqError::InvalidContinuous );
     sigs.setContinuous( false );
   }
-  if( !sigs[0].continuous() && !(testCmd.stop_src & TRIG_COUNT) ) {
+  if ( !sigs[0].continuous() && !(testCmd.stop_src & TRIG_COUNT) ) {
     cerr << " ComediAnalogOutput::testWriteDevice(): "
 	 << " only continuous mode supported!" << endl;/////TEST/////
     sigs.addError( DaqError::InvalidContinuous );
@@ -531,11 +560,11 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
   }
     
   // set countinous-state
-  if( sigs[0].continuous() ) {
+  if ( sigs[0].continuous() ) {
       Cmd.stop_src = TRIG_NONE;
       Cmd.stop_arg = 0;
     }
-  if( !sigs[0].continuous() ) {
+  if ( !sigs[0].continuous() ) {
       Cmd.stop_src = TRIG_COUNT;
       // set length of acquisition as number of scans:
       Cmd.stop_arg = sigs[0].size() + sigs[0].indices( sigs[0].delay());
@@ -543,23 +572,27 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
 
   Cmd.chanlist = ChanList;
   Cmd.chanlist_len = sigs.size();
-  // ATTENTION:  maybe TRIG_WAKE_EOS causes many interrupts!
-  Cmd.flags = TRIG_WAKE_EOS | TRIG_RT;
+  // XXX ATTENTION:  maybe TRIG_WAKE_EOS causes many interrupts!
+  //  Cmd.flags = TRIG_WAKE_EOS | TRIG_RT;
+  Cmd.flags = TRIG_ROUND_NEAREST;
 
-  // test command
+  // test command:
+  // XXX analyse errors!
+  // after first call pf comedi_command_test Cmd should be ok:
   retVal = comedi_command_test( DeviceP, &Cmd );
   retVal = comedi_command_test( DeviceP, &Cmd );
-  if( retVal ) {
+  // if this second call is not successfull, then something is really wrong:
+  if ( retVal ) {
     Cmd.flags &= ~TRIG_RT;
     retVal = comedi_command_test( DeviceP, &Cmd );
     retVal = comedi_command_test( DeviceP, &Cmd );
-    if( retVal ) {
+    if ( retVal ) {
       Cmd.flags = 0;
       retVal = comedi_command_test( DeviceP, &Cmd );
       retVal = comedi_command_test( DeviceP, &Cmd );
     }
   }
-  if( retVal != 0 )
+  if ( retVal != 0 )
     return -retVal;
 
   return 0;
@@ -568,7 +601,7 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
 
 int ComediAnalogOutput::prepareWrite( OutList &sigs )
 {
-  if( !isOpen() )
+  if ( !isOpen() )
     return -1;
 
   reset();
@@ -579,46 +612,66 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   ol.sortByChannel();
 
   int error = testWriteDevice( ol );
-  if( error )
+  if ( error )
     return error;
 
-  // hard-test command:  
-  if( Cmd.start_src != TRIG_NOW ) {
-    if( comedi_command( DeviceP, &Cmd ) < 0 ) {
+  // execute command:  
+  if ( Cmd.start_src != TRIG_NOW ) {
+    if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
       sigs.addErrorStr( deviceFile() + " - execution of comedi_cmd failed: "
 			  + comedi_strerror( comedi_errno() ) );
       return -1;
     }
-    stop();
+    fillWriteBuffer();
   }
 
   if ( ol.success() )
     setSettings( ol );
 
-    cerr << " ComediAnalogOutput::prepareWrite(): success" << endl;/////TEST/////
+  cerr << " ComediAnalogOutput::prepareWrite(): success" << endl;//////TEST/////
 
-  IsPrepared = true;
+  IsPrepared = ol.success();
   
-  // prefill device buffer with data
-  // PROBLEM: how to fill data if Cmd.start_src == TRIG_NOW ?
-
   Sigs = &sigs;
 
-  return 0; //elemWritten;
+  return sigs.success() ? 0 : -1;
 }
 
 
 int ComediAnalogOutput::startWrite( OutList &sigs )
 {
-  cerr << " ComediAnalogOutput::startWrite(): 1" << endl;/////TEST/////
+  cerr << " ComediAnalogOutput::startWrite(): begin" << endl;/////TEST/////
 
-  if( !prepared() ) {
+  if ( !prepared() ) {
     sigs.addError( DaqError::Unknown );
     return -1;
   }
 
   ErrorState = 0;
 
+  // execute command:  
+  if ( Cmd.start_src == TRIG_NOW ) {
+    if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
+      sigs.addErrorStr( deviceFile() + " - execution of comedi_cmd failed: "
+			  + comedi_strerror( comedi_errno() ) );
+      return -1;
+    }
+    else
+      return 0;
+    // PROBLEM: how to fill data if Cmd.start_src == TRIG_NOW ?
+  }
+
+  // instruction for starting command:
+  comedi_insn insn;
+  memset(&insn, 0, sizeof(comedi_insn));
+  insn.insn = INSN_INTTRIG;
+  insn.subdev = SubDevice;
+  lsampl_t data[1] = { 0 };
+  insn.data = data;
+  insn.n = 1;
+  comedi_do_insn( DeviceP, &insn );
+
+#ifdef NOTHING
  // * set up instructionlist *
   lsampl_t dataAO[1], dataAI[1];
   dataAO[0] = 0;
@@ -635,7 +688,7 @@ int ComediAnalogOutput::startWrite( OutList &sigs )
 
   // setup start triggers for AOs - synchronize start triggers for AOs linked to an AI
   for( unsigned int ao = 0; ao < ComediAOs.size(); ao++ )
-    if( ComediAOs[ao]->prepared() && !ComediAOs[ao]->running() 
+    if ( ComediAOs[ao]->prepared() && !ComediAOs[ao]->running() 
 	&& ComediAOs[ao]->reload() >= 0 ) {
 
       ComediAOs[ao]->fillWriteBuffer();
@@ -653,7 +706,7 @@ int ComediAnalogOutput::startWrite( OutList &sigs )
 
       int aiLinked = ComediAOsLink[ao];
       /* XXXX  revise XXXXX
-      if( aiLinked >= 0
+      if ( aiLinked >= 0
 	  && ComediAIs[aiLinked]->prepared() && !ComediAIs[aiLinked]->running()
 	  && ComediAIs[aiLinked]->reload() >= 0 ) {
 	insn[insnlistNr][1].insn = INSN_INTTRIG;
@@ -667,7 +720,7 @@ int ComediAnalogOutput::startWrite( OutList &sigs )
 	     << " initialized" << endl;/////TEST/////
       }
       else /////TEST/////
-	if( ComediAIs[aiLinked]->running() )
+	if ( ComediAIs[aiLinked]->running() )
 	  cerr << " ComediAnalogOutput::startWrite(): Error -> AI-device "
 	     << aiLinked << "is already running!"  << endl;
       */
@@ -680,7 +733,7 @@ int ComediAnalogOutput::startWrite( OutList &sigs )
 	   << " initialized" << endl;/////TEST/////
     }
     else /////TEST/////
-      if( ComediAOs[ao]->running() )
+      if ( ComediAOs[ao]->running() )
 	cerr << " ComediAnalogOutput::startWrite(): Error -> AO-device "
 	     << ao << "is already running!"  << endl;
   
@@ -690,7 +743,7 @@ int ComediAnalogOutput::startWrite( OutList &sigs )
   // setup start triggers for remaining (non-linked) AIs
   /* XXXX revise XXXX
   for( unsigned int ai = 0; ai < ComediAIs.size(); ai++ )
-  if( !comediAIsAdded[ai] 
+  if ( !comediAIsAdded[ai] 
       && ComediAIs[ai]->prepared() && !ComediAIs[ai]->running()
       && ComediAIs[ai]->reload() >= 0 ) {
       insnP = new comedi_insn[1];
@@ -713,7 +766,7 @@ int ComediAnalogOutput::startWrite( OutList &sigs )
 	   << " initialized" << endl;/////TEST/////
   }
   else /////TEST/////
-    if( ComediAIs[ai]->running() )
+    if ( ComediAIs[ai]->running() )
       cerr << " ComediAnalogOutput::startWrite(): Error -> AI-device "
 	   << ai << "is already running!"  << endl;
   */  
@@ -724,7 +777,7 @@ int ComediAnalogOutput::startWrite( OutList &sigs )
   int insError = 0;  
   for( unsigned int k = 0; k < insnlist.size(); k++ ) {    
     int retVal = comedi_do_insnlist( insnlistDevice[k], &insnlist[k] );
-    if( retVal >= 0 )
+    if ( retVal >= 0 )
       notStarted += il.n_insns - retVal;
     else {
       insError = comedi_errno();
@@ -733,18 +786,18 @@ int ComediAnalogOutput::startWrite( OutList &sigs )
   for( unsigned int k = 0; k < insn.size(); k++ )
     delete [] insn[k];
 
-  if( insError || notStarted ) {
+  if ( insError || notStarted ) {
     sigs.addErrorStr( "ComediAnalogOutput::startWrite()-> Instruction-setup for (multiple) daq start failed for at least one device: " );
-    if( insError )
+    if ( insError )
       sigs.addErrorStr( "  comedi -> " + (string)comedi_strerror( comedi_errno() ) );
     // usleep() here ???
     /* XXX revise
     for( unsigned int ai = 0; ai < ComediAIs.size(); ai++ )
-      if( comediAIsAdded[ai] && !ComediAIs[ai]->loaded() )
+      if ( comediAIsAdded[ai] && !ComediAIs[ai]->loaded() )
 	sigs.addErrorStr( "  Failure of analog Input on device "
 			    + ComediAIs[ai]->deviceFile() );
     for( unsigned int ao = 0; ao < ComediAOs.size(); ao++ )
-      if( comediAIsAdded[ao] && !ComediAOs[ao]->loaded() )
+      if ( comediAIsAdded[ao] && !ComediAOs[ao]->loaded() )
 	sigs.addErrorStr( "  Failure of analog Output on device "
 			    + ComediAIs[ao]->deviceFile() );
     */
@@ -752,7 +805,7 @@ int ComediAnalogOutput::startWrite( OutList &sigs )
   }
   /* XXX revise
   for( unsigned int ai = 0; ai < ComediAIs.size(); ai++ )
-    if( comediAIsAdded[ai] ) {
+    if ( comediAIsAdded[ai] ) {
       ComediAIs[ai]->setRunning();
       cerr << " ComediAnalogOutput::startWrite(): " 
 	   << "Device " << ComediAIs[ai]->deviceFile()
@@ -760,7 +813,7 @@ int ComediAnalogOutput::startWrite( OutList &sigs )
 	   << endl;/////TEST/////
 	}
   for( unsigned int ao = 0; ao < ComediAOs.size(); ao++ )
-    if( comediAOsAdded[ao] ) {
+    if ( comediAOsAdded[ao] ) {
       ComediAOs[ao]->setRunning();
       cerr << " ComediAnalogOutput::startWrite(): " 
 	   << "Device " << ComediAIs[ao]->deviceFile()
@@ -768,19 +821,21 @@ int ComediAnalogOutput::startWrite( OutList &sigs )
 	   << endl;/////TEST/////
 	}
   */
+
+#endif
   
-  cerr << " ComediAnalogOutput::startWrite(): 3" << endl;/////TEST/////
+  cerr << " ComediAnalogOutput::startWrite(): end\n";/////TEST/////
   
-  return 0; //elemWritten;  
+  return 0;
 }
 
 
 int ComediAnalogOutput::writeData( OutList &sigs )
 {
-  cerr << " ComediAnalogOutput::writeData(): in, comedi:" << comedi_strerror( comedi_errno() ) << endl;/////TEST/////
+  cerr << " ComediAnalogOutput::writeData(): comedi_strerror -> " << comedi_strerror( comedi_errno() ) << endl;/////TEST/////
 
   //device stopped?
-  if( !running() ) {
+  if ( !running() ) {
     sigs.addErrorStr( "ComediAnalogOutput::writeData: " +
 		      deviceFile() + " is not running!" );
     cerr << "ComediAnalogOutput::writeData: device is not running!"  << endl;/////TEST/////
@@ -795,10 +850,11 @@ int ComediAnalogOutput::reset( void )
 { 
   cerr << " ComediAnalogOutput::reset()" << endl;/////TEST/////
 
-  if( !isOpen() )
+  if ( !isOpen() )
     return NotOpen;
-  if( comedi_cancel( DeviceP, Subdevice ) < 0 )
+  if ( comedi_cancel( DeviceP, SubDevice ) < 0 )
     return WriteError;
+  // XXX clear buffers!
 
   clearSettings();
   ErrorState = 0;
@@ -811,12 +867,14 @@ int ComediAnalogOutput::reset( void )
 
 bool ComediAnalogOutput::running( void ) const
 {   
-  if( !loaded() ) {
-    if( IsRunning )
+  /*
+  if ( !loaded() ) {
+    if ( IsRunning )
       cerr << " ComediAnalogOutput::running(): stopped!"  << endl;
     IsRunning = false;
   }
-  if( IsRunning )
+  */
+  if ( IsRunning )
     cerr << " ComediAnalogOutput::running(): running"  << endl;
   else
     cerr << " ComediAnalogOutput::running(): not running"  << endl;
@@ -839,10 +897,11 @@ int ComediAnalogOutput::error( void ) const
 void ComediAnalogOutput::take( const vector< AnalogOutput* > &aos,
 			       vector< int > &aoinx )
 {
+  /*
   cerr << " ComediAnalogOutput::take(): 1" << endl;/////TEST/////
   ComediAOs.clear();
   ComediAOsLink.clear();
-
+  */
   /* XXX Needs to be revised!!!! XXX
   bool weAreMember = false;
   for ( unsigned int k=0; k<aos.size(); k++ ) {
@@ -850,19 +909,19 @@ void ComediAnalogOutput::take( const vector< AnalogOutput* > &aos,
       aoinx.push_back( k );
       ComediAOs.push_back( dynamic_cast< ComediAnalogOutput* >( aos[k] ) );
       ComediAOsLink.push_back( -1 );
-      if( ComediAOs[k]->deviceFile() == deviceFile() )
+      if ( ComediAOs[k]->deviceFile() == deviceFile() )
 	weAreMember = true;
 
     }
   }
-  if( !weAreMember ) {
+  if ( !weAreMember ) {
     ComediAOs.push_back( this );
     ComediAOsLink.push_back( -1 );
   }
 
   // find subdevices to be started together within the same instruction list
   for( unsigned int ao = 0; ao < ComediAOs.size(); ao++ )
-    if( ComediAOs[ao]->deviceFile() == ComediAOs[ai]->deviceFile() ) {
+    if ( ComediAOs[ao]->deviceFile() == ComediAOs[ai]->deviceFile() ) {
       ComediAOsLink[ao] = ai; /// XXXX
     }
   */
@@ -871,7 +930,7 @@ void ComediAnalogOutput::take( const vector< AnalogOutput* > &aos,
 
 int ComediAnalogOutput::fillWriteBuffer( void )
 {
-  if( !isOpen() )
+  if ( !isOpen() )
     return -1;
 
   ErrorState = 0;
@@ -882,7 +941,7 @@ int ComediAnalogOutput::fillWriteBuffer( void )
   int elemWritten = 0;
   int bytesWritten;
 
-  if( (*Sigs)[0].deviceBufferMaxPop() <= 0 ) {
+  if ( (*Sigs)[0].deviceBufferMaxPop() <= 0 ) {
     //    (*Sigs).addErrorStr( "ComediAnalogOutput::writeData: " +
     //		      deviceFile() + " - buffer-underrun in outlist!" );
     //    (*Sigs).addError( DaqError::OverflowUnderrun );
@@ -896,11 +955,12 @@ int ComediAnalogOutput::fillWriteBuffer( void )
 	tryit < 2 && !failed && (*Sigs)[0].deviceBufferMaxPop() > 0; 
 	tryit++ ){
     
-    bytesWritten = write( comedi_fileno(DeviceP), (*Sigs)[0].deviceBufferPopBuffer(),
+    bytesWritten = write( comedi_fileno(DeviceP),
+			  (*Sigs)[0].deviceBufferPopBuffer(),
 			  (*Sigs)[0].deviceBufferMaxPop() * BufferElemSize );
     cerr << " ComediAnalogOutput::writeData():  bytes written:" << bytesWritten << endl;/////TEST/////
 
-    if( bytesWritten < 0 && errno != EAGAIN && errno != EINTR ) {
+    if ( bytesWritten < 0 && errno != EAGAIN && errno != EINTR ) {
       (*Sigs).addErrorStr( errno );
       failed = true;
       cerr << " ComediAnalogOutput::writeData(): error" << endl;/////TEST/////
@@ -912,7 +972,7 @@ int ComediAnalogOutput::fillWriteBuffer( void )
 
   }
 
-  if( failed || errno == EINTR )
+  if ( failed || errno == EINTR )
     switch( errno ) {
 
     case EPIPE: 
@@ -960,9 +1020,9 @@ comedi_t* ComediAnalogOutput::device( void ) const
 
 int ComediAnalogOutput::subdevice( void ) const
 {
-  if( !isOpen() )
+  if ( !isOpen() )
     return -1;
-  return Subdevice;
+  return SubDevice;
 }
 
 
@@ -970,20 +1030,19 @@ int ComediAnalogOutput::bufferSize( void ) const
 {
   if( !isOpen() )
     return -1;
-  return comedi_get_buffer_size( DeviceP, Subdevice ) / BufferElemSize;
+  return comedi_get_buffer_size( DeviceP, SubDevice ) / BufferElemSize;
 }
-
 
 
 int ComediAnalogOutput::reload( void )
 {
   cerr << " ComediAnalogOutput::reload()" << endl;/////TEST/////
-  if( !isOpen() )
+  if ( !isOpen() )
     return -1;
-  if( loaded() )
+  if ( loaded() )
     return 0;
 
-  if( !prepared() ||  comedi_command( DeviceP, &Cmd ) < 0 ) {
+  if ( !prepared() ||  comedi_command( DeviceP, &Cmd ) < 0 ) {
     cerr << "ComediAnalogOutput::reload()-> " << deviceFile()
 	 <<" - execution of comedi_cmd failed: " << comedi_strerror( comedi_errno() );
     cerr << " ComediAnalogOutput::reload() -> ERROR!" << endl;/////TEST/////
@@ -993,17 +1052,17 @@ int ComediAnalogOutput::reload( void )
 }
 
 
-bool ComediAnalogOutput::prepared( void ) const 
+bool ComediAnalogOutput::loaded( void ) const 
 { 
-  return IsPrepared;
+  if ( !isOpen() )
+    return false;
+  return SDF_RUNNING & comedi_get_subdevice_flags( DeviceP, SubDevice );
 }
 
 
-bool ComediAnalogOutput::loaded( void ) const 
+bool ComediAnalogOutput::prepared( void ) const 
 { 
-  if( !isOpen() )
-    return false;
-  return SDF_RUNNING & comedi_get_subdevice_flags( DeviceP, Subdevice );
+  return IsPrepared;
 }
 
 

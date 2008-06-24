@@ -91,6 +91,7 @@ int ComediAnalogInput::open( const string &device, long mode )
   if ( subdev < 0 ) {
     cerr << "! error: ComediAnalogInput::open() -> "
 	 << "No subdevice for AI found on device "  << device << '\n';
+    comedi_close( DeviceP );
     DeviceP = NULL;
     return InvalidDevice;
   }
@@ -100,6 +101,7 @@ int ComediAnalogInput::open( const string &device, long mode )
   if ( comedi_lock( DeviceP, SubDevice ) != 0 ) {
     cerr << "! error: ComediAnalogInput::open() -> "
 	 << "Locking of AI subdevice failed on device " << device << '\n';
+    comedi_close( DeviceP );
     DeviceP = NULL;
     SubDevice = 0;
     return NotOpen;
@@ -110,6 +112,10 @@ int ComediAnalogInput::open( const string &device, long mode )
     cerr << "! error: ComediAnalogInput::open() -> "
 	 << "Device "  << device << " not supported! "
 	 << "SubDevice needs to support async. commands!" << endl;
+    comedi_unlock( DeviceP,  SubDevice );
+    comedi_close( DeviceP );
+    DeviceP = NULL;
+    SubDevice = 0;
     return InvalidDevice;
   }
 
@@ -153,7 +159,7 @@ int ComediAnalogInput::open( const string &device, long mode )
     }
   }
 
-  // bubble-sorting Uni/BipolarRangeIndex according to Uni/BipolarRange.max
+  // bubble-sorting Uni/BipolarRangeIndex according to Uni/BipolarRange.max:
   unsigned int iSwap;
   for( unsigned int i = 0; i < UnipolarRangeIndex.size(); i++ ) {
     for ( unsigned int j = i+1; j < UnipolarRangeIndex.size(); j++ ) {
@@ -177,7 +183,8 @@ int ComediAnalogInput::open( const string &device, long mode )
   }
 
   // get size of datatype for sample values:
-  LongSampleType = comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_LSAMPL;
+  LongSampleType = ( comedi_get_subdevice_flags( DeviceP, SubDevice ) &
+		     SDF_LSAMPL );
   if ( LongSampleType )
     BufferElemSize = sizeof( lsampl_t );
   else
@@ -187,7 +194,9 @@ int ComediAnalogInput::open( const string &device, long mode )
   comedi_cmd cmd;
   memset( &cmd,0, sizeof(comedi_cmd) );
   unsigned int chanlist = CR_PACK( 0, 0, AREF_GROUND );
-  int retVal = comedi_get_cmd_generic_timed( DeviceP, SubDevice, &cmd, 1/*chans*/, (unsigned int)1e8/*Hz*/ );
+  int retVal = comedi_get_cmd_generic_timed( DeviceP, SubDevice, &cmd,
+					     1/*chans*/,
+					     (unsigned int)1e8/*Hz*/ );
   if ( retVal < 0 ) {
     cmd.subdev = SubDevice;
     cmd.start_src =        TRIG_NOW;
@@ -450,8 +459,8 @@ int ComediAnalogInput::testReadDevice( InList &traces )
   // XXX analyse errors!
   // after first call pf comedi_command_test Cmd should be ok:
   retVal = comedi_command_test( DeviceP, &Cmd );
-  // if this second call is not successfull, then something is really wrong:
   retVal = comedi_command_test( DeviceP, &Cmd );
+  // if this second call is not successfull, then something is really wrong:
   if ( retVal ) {
     Cmd.flags &= ~TRIG_RT;
     retVal = comedi_command_test( DeviceP, &Cmd );
@@ -713,17 +722,17 @@ int ComediAnalogInput::startRead( InList &traces )
 
 int ComediAnalogInput::readData( InList &traces )
 {
+  cerr << " ComediAnalogInput::readData(): begin strerror -> " << comedi_strerror( comedi_errno() ) << endl;/////TEST/////
+
   // buffer overflow:
   if ( traces[0].deviceBufferSize() >= traces[0].deviceBufferCapacity() ) {
-    traces.addError( DaqError::BufferOverflow );
+    cerr << " ComediAnalogInput::readData():  buffer overflow\n";//////TEST/////
     return -1;
   }
 
   ErrorState = 0;
   bool failed = false;
   int n = 0;
-
-  cerr << " ComediAnalogInput::readData(): begin strerror -> " << comedi_strerror( comedi_errno() ) << endl;/////TEST/////
   
   // try to read twice:
   for ( int tryit = 0;
@@ -738,7 +747,7 @@ int ComediAnalogInput::readData( InList &traces )
     ssize_t m = read( comedi_fileno( DeviceP ),
 		      traces[0].deviceBufferPushBuffer(), 
 		      traces[0].deviceBufferMaxPush() * BufferElemSize );
-    cerr << " ComediAnalogInput::readData():  bytes read:" << bytesRead << endl;//////TEST/////
+    cerr << " ComediAnalogInput::readData():  bytes read:" << m << endl;//////TEST/////
 
     int ern = errno;
     if ( m < 0 && ern != EAGAIN && ern != EINTR ) {
@@ -896,6 +905,14 @@ int ComediAnalogInput::subdevice( void ) const
   if ( !isOpen() )
     return -1;
   return SubDevice;
+}
+
+
+int ComediAnalogInput::bufferSize( void ) const
+{
+  if( !isOpen() )
+    return -1;
+  return comedi_get_buffer_size( DeviceP, SubDevice ) / BufferElemSize;
 }
 
 

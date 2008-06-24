@@ -176,6 +176,9 @@ protected:
   comedi_t* device( void ) const;
     /*! Comedi internal index of analog input subdevice. */
   int subdevice( void ) const;
+
+    /*! returns buffer-size of device in samples. */
+  int bufferSize( void ) const;
   
     /* Reloads the prepared configuration commands of the following acquisition 
        into the registers of the hardware after stop() was performed.

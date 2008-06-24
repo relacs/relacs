@@ -57,7 +57,7 @@ NIAI::~NIAI( void )
 
 int NIAI::open( const string &device, long mode )
 {
-  if ( isOpen )
+  if ( isOpen() )
     return -5;
 
   clearSettings();
