@@ -3,10 +3,12 @@ HEADER_PATH = ../include/relacs/attcs3310
 pluginlibdir = $(pkglibdir)/plugins
 
 pluginlib_LTLIBRARIES = \
-    libattcs3310cs3310pp.la \
+    libattcs3310cs3310pp.la
+if RELACS_COND_nieseries
+pluginlib_LTLIBRARIES += \
     libattcs3310cs3310nidio.la \
     libattcs3310cs3310serialnidio.la
-
+endif
 
 
 libattcs3310cs3310pp_la_CPPFLAGS = \

@@ -67,10 +67,11 @@ AC_RELACS_CHECK_GSL()
 
 
 #################################################
-## Comedi
+## RTAI and Comedi
 #################################################
-AC_RELACS_CHECK_COMEDI()
-
+RELACS_CHECK_RTAI()
+AM_CONDITIONAL(RELACS_COND_RTAI,[test "$RELACS_RTAI" != no])
+RELACS_CHECK_COMEDI()
 
 #################################################
 ## Qt3, moc
@@ -116,18 +117,18 @@ DOXYGEN_EXTERNAL="${RELACS_DOCLIBS}"
 ## Plugin sets
 #################################################
 
-AC_RELACS_PLUGIN_SET([nieseries],[linuxdevices/nieseries])
-AC_RELACS_PLUGIN_SET([comedi],[linuxdevices/comedi],[],[test "$RELACS_COMEDI" != no])
+RELACS_PLUGINSET([nieseries],[linuxdevices/nieseries])
+RELACS_PLUGINSET([comedi],[linuxdevices/comedi],[],[test "$RELACS_COMEDI" != no])
 AC_CONFIG_FILES([plugins/linuxdevices/comedi/module/Makefile])
-AC_RELACS_PLUGIN_SET([attcs3310],[linuxdevices/attcs3310],[nieseries])
-AC_RELACS_PLUGIN_SET([misc],[linuxdevices/misc],[nieseries])
-AC_RELACS_PLUGIN_SET([base],[base])
-AC_RELACS_PLUGIN_SET([calibration],[calibration])
-AC_RELACS_PLUGIN_SET([ephys],[ephys])
-AC_RELACS_PLUGIN_SET([acoustic],[acoustic])
-AC_RELACS_PLUGIN_SET([auditory],[auditory],[ephys acoustic misc])
-AC_RELACS_PLUGIN_SET([auditoryprojects],[auditoryprojects],[ephys acoustic auditory misc])
-AC_RELACS_PLUGIN_SET([patchclamp],[patchclamp])
+RELACS_PLUGINSET([attcs3310],[linuxdevices/attcs3310])
+RELACS_PLUGINSET([misc],[linuxdevices/misc])
+RELACS_PLUGINSET([base],[base])
+RELACS_PLUGINSET([calibration],[calibration])
+RELACS_PLUGINSET([ephys],[ephys])
+RELACS_PLUGINSET([acoustic],[acoustic])
+RELACS_PLUGINSET([auditory],[auditory],[ephys acoustic misc])
+RELACS_PLUGINSET([auditoryprojects],[auditoryprojects],[ephys acoustic auditory misc])
+RELACS_PLUGINSET([patchclamp],[patchclamp])
 
 AC_SUBST([RELACS_PLUGINS_SUBDIRS])
 AC_SUBST([RELACS_PLUGINS_DIST_SUBDIRS])
@@ -271,6 +272,7 @@ cat <<SUMMARY
 
     Use GSL .................... ${RELACS_GSL}
     Use Comedi ................. ${RELACS_COMEDI}
+    Use RTAI ................... ${RELACS_RTAI}
     Generate documentation ..... ${DX_SUMMARY}
     Compile example programs ... ${RELACS_COMPILE_EXAMPLES}
     Compile the following plugin sets:
@@ -287,9 +289,9 @@ Relacs should build and install smoothly. If it doesn't please
 open a bug describing your problem and configuration at
 http://sourceforge.net/tracker/?group_id=199846&atid=971134
 
-Continue with  \$ make
-Run a demo     \$ ./relacslocal -3
-Install relacs \$ sudo make install
+Continue with .... \$ make
+Run a demo ....... \$ ./relacslocal -3
+Install relacs ... \$ sudo make install
 
 SUMMARY
 

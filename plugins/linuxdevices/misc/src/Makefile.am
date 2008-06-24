@@ -3,9 +3,12 @@ HEADER_PATH = ../include/relacs/misc
 pluginlibdir = $(pkglibdir)/plugins
 
 pluginlib_LTLIBRARIES = \
-    libmiscamplmode.la \
     libmisckleindiek.la \
     libmisctempdtm5080.la
+if RELACS_COND_nieseries
+pluginlib_LTLIBRARIES += \
+    libmiscamplmode.la
+endif
 
 
 

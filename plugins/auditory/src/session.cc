@@ -80,7 +80,7 @@ Session::Session( void )
   P.unlock();
 
   Temp = 0;
-  Ampl = 0;
+  //  Ampl = 0;
   RMeasure = false;
 
   MaxResistance = 100.0;
@@ -186,6 +186,7 @@ void Session::initDevices( void )
     unlockStimulusData();
   }
 
+  /*
   Ampl = dynamic_cast< misc::AmplMode* >( device( "ampl-1" ) );
   if ( Ampl != 0 ) {
     lockMetaData();
@@ -209,8 +210,9 @@ void Session::initDevices( void )
     }
   }
   else {
+  */
     AmplBox->hide();
-  }
+    //  }
 
   ASW->assign( &metaData(), MetaDataDisplay, MetaDataReadOnly, true, 
 	       OptWidget::BreakLinesStyle + OptWidget::ExtraSpaceStyle,
@@ -283,6 +285,7 @@ void Session::main( void )
 
 void Session::startResistance( void )
 {
+  /*
   if ( Ampl != 0 && SpikeTrace[0] >= 0 && ! RMeasure ) {
     readLockData();
     DGain = trace( SpikeTrace[0] ).gainIndex();
@@ -292,11 +295,13 @@ void Session::startResistance( void )
     Ampl->resistance();
     RMeasure = true;
   }
+  */
 }
 
 
 void Session::measureResistance( void )
 {
+  /*
   if ( Ampl != 0 && SpikeTrace[0] >= 0 && RMeasure ) {
     readLockData();
     double r = trace( SpikeTrace[0] ).stdev( trace( SpikeTrace[0] ).currentTime() - 0.05,
@@ -307,11 +312,13 @@ void Session::measureResistance( void )
     metaData().setNumber( "resistance", r );
     unlockMetaData();
   }
+  */
 }
 
 
 void Session::stopResistance( void )
 {
+  /*
   if ( Ampl != 0 && SpikeTrace[0] >= 0 && RMeasure ) {
     Ampl->manual();
     readLockData();
@@ -320,14 +327,17 @@ void Session::stopResistance( void )
     activateGains();
     RMeasure = false;
   }
+  */
 }
 
 
 void Session::buzz( void )
 {
+  /*
   if ( Ampl != 0 ) {
     Ampl->buzzer( );
   }
+  */
 }
 
 
@@ -336,7 +346,7 @@ void Session::keyPressEvent( QKeyEvent *e )
   Control::keyPressEvent( e );
 
   switch ( e->key() ) {
-
+    /*
   case Key_O:
     if ( Ampl != 0 && ResistanceButton != 0 ) {
       ResistanceButton->setDown( true );
@@ -353,7 +363,7 @@ void Session::keyPressEvent( QKeyEvent *e )
     else
       e->ignore();
     break;
-
+    */
   default:
     e->ignore();
 
@@ -364,7 +374,7 @@ void Session::keyPressEvent( QKeyEvent *e )
 void Session::keyReleaseEvent( QKeyEvent *e )
 {
   switch ( e->key() ) {
-
+    /*
   case Key_O: 
     if ( Ampl != 0 && ResistanceButton != 0 ) {
       measureResistance();
@@ -376,7 +386,7 @@ void Session::keyReleaseEvent( QKeyEvent *e )
     else
       e->ignore();
     break;
-
+    */
   default:
     e->ignore();
 

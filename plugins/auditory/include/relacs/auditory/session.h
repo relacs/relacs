@@ -28,7 +28,7 @@
 #include <relacs/multiplot.h>
 #include <relacs/map.h>
 #include <relacs/temperature.h>
-#include <relacs/misc/amplmode.h>
+//#include <relacs/misc/amplmode.h>
 #include <relacs/ephys/traces.h>
 #include <relacs/acoustic/traces.h>
 #include <relacs/control.h>
@@ -142,7 +142,7 @@ private:
   static const int MetaDataSave = 8;
 
   Temperature *Temp;
-  misc::AmplMode *Ampl;
+  //  misc::AmplMode *Ampl;
   bool RMeasure;
   int DGain;
   double MaxResistance;

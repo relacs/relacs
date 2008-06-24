@@ -1,17 +1,18 @@
-# AC_RELACS_PLUGIN_SET( pluginsetname, pluginsetdir, dependencies, externaldependency ) 
+# RELACS_PLUGINSET( pluginsetname, pluginsetdir, dependencies, externaldependency ) 
 # Takes care of the plugin set with name $pluginsetname in 
 # directory $pluginsetdir relative to plugins/.
 # The plugin set depends on the plugin sets whose names are listed in $dependencies.
 # The plugin set might depend on further external dependencies as 
 # determined by the shell test $externaldependencies.
 # If $pluginsetname is anabled and all dependencies are fullfilled, then
-# plugins/$pluginset is added to DOXYGEN_EXTERNAL
-# and $pluginset is added to SUBDIRS in plugins/Makefile.am.
-# In any case $pluginset is added to DIST_SUBDIRS in plugins/Makefile.am
-# and plugins/$pluginsetdir/Makefile and plugins/$pluginsetdir/src/Makefile
-# are passed to AC_CONFIG_FILES.
+# $pluginset is added to SUBDIRS in plugins/Makefile.am
+# and plugins/$pluginset is added to DOXYGEN_EXTERNAL.
+# In any case $pluginset is added to DIST_SUBDIRS in plugins/Makefile.am,
+# plugins/$pluginsetdir/Makefile and plugins/$pluginsetdir/src/Makefile
+# are passed to AC_CONFIG_FILES,
+# and an am conditional RELACS_COND_$pluginsetname is defined.
 
-AC_DEFUN([AC_RELACS_PLUGIN_SET], [
+AC_DEFUN([RELACS_PLUGINSET], [
 
 # check whether the plugin set should be compiled at all:
 RELACS_COMPILE="yes"
@@ -53,11 +54,14 @@ fi
 # inform the user:
 AC_MSG_NOTICE([enable plugin set $1: $RELACS_COMPILE ])
 
-# add the plugin set to various variables:
+# add the plugin set to various variables and define an am conditional:
 if test "x$RELACS_COMPILE" = "xyes"; then
     DOXYGEN_EXTERNAL="${DOXYGEN_EXTERNAL} plugins/$2"
     RELACS_PLUGINS_SUBDIRS="${RELACS_PLUGINS_SUBDIRS} $2"
     RELACS_PLUGINS="${RELACS_PLUGINS} $1"
+    AM_CONDITIONAL(RELACS_COND_$1,true)
+else
+    AM_CONDITIONAL(RELACS_COND_$1,false)
 fi
 
 # in any case, the plugin set should go into the distribution:

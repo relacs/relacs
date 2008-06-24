@@ -96,8 +96,8 @@ libauditorysession_la_LIBADD = \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
     $(top_builddir)/plugins/acoustic/src/libacoustictraces.la \
     $(top_builddir)/plugins/linuxdevices/nieseries/src/libnieseriesnidio.la \
-    $(top_builddir)/plugins/linuxdevices/misc/src/libmiscamplmode.la \
     $(QT3_LIBS)
+#    $(top_builddir)/plugins/linuxdevices/misc/src/libmiscamplmode.la
 
 $(libauditorysession_la_OBJECTS) : moc_session.cc
 

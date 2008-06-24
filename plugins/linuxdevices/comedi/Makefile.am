@@ -1,7 +1,7 @@
-SUBDIRS = \
-    src
-#    module
-
+SUBDIRS = src
+if RELACS_COND_RTAI
+SUBDIRS += module
+endif
 
 EXTRA_DIST = \
     module/Makefile \

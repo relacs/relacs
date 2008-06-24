@@ -1,6 +1,6 @@
 ifneq ($(KERNELRELEASE),)
 
-EXTRA_CFLAGS += -I/usr/src/rtai-3.6/base/include/ -I/usr/include/ -ffast-math -mhard-float
+EXTRA_CFLAGS += @RTAI-CPPFLAGS@ -I/usr/include/ -ffast-math -mhard-float
 
 EXTRA_CFLAGS += -Wall
 

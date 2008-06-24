@@ -47,6 +47,7 @@ Documentation:
 - Add brief documentation to the examples! (a README file)
 - update documentation of OutData, TraceSpec
 - RTAI Installation: https://www.rtai.org/RTAILAB/RTAI-Lab-tutorial.pdf
+- RTAI include path: --with-rtai=/usr/src/rtai-3.6/base/include
 
 Libraries:
 - Add relacs library tests to the libraries!
