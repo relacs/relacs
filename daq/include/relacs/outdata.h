@@ -46,11 +46,10 @@ interface class depends on whether an attenuator is connected to the
 output line and on the type of external reference. For normal operation
 without a connected attenuator, the data values are given in units \a unit.
 The hardware driver interface class converts the data values
-by adding offset() and multiplying with \a scale()
-to the voltage that is put out by the daq board. 
-The intensity() is ignored. Further multiplication with 
-gain() results in the integer number that needs to be transferred 
-to the daq board.
+multiplying with \a scale() to the voltage that is put out by the daq board. 
+The intensity() is ignored. Further addition of offset()
+and multiplication with gain() results in the integer number 
+that needs to be transferred to the daq board.
 Which gain is used can be controlled by request().
 A constant voltage external reference is used as an additionally 
 available gain factor.
@@ -58,14 +57,14 @@ If a non-constant external reference is used by explicitely requesting
 it with setExtRef() or request( min, ExtRef ),
 then the values from 0 to 1 (unipolar mode) or -1 to 1 (bipolar mode)
 are mapped to the full output range of the daq board.
-This range can be modified by offset() and scale().
+This range can be modified by scale().
 
 In case of an attenuator connected to the output line,
 the  values from 0 to 1 (unipolar mode) or -1 to 1 (bipolar mode)
 are mapped to the full output range of the daq board.
-This range can be modified by offset() and scale().
-The resulting voltage is then attenuated according to the requested intensity().
-
+This range can be modified by scale().
+The resulting voltage is then attenuated by additional hardware
+according to the requested intensity().
 */
 
 class OutData : public SampleData< float >, public DaqError
@@ -108,7 +107,7 @@ class OutData : public SampleData< float >, public DaqError
   OutData( const Array< R > &a, const double stepsize=1.0 );
     /*! Create an OutData-object with the same size and content
         as the array \a sa.
-        The offset is set to zero. */
+        sa.offset() is set to zero. */
   template < typename R >
   OutData( const SampleData< R > &sa );
     /*! Copy constructor.
@@ -160,7 +159,7 @@ class OutData : public SampleData< float >, public DaqError
   const OutData &assign( const R &a, const double stepsize=1 );
     /*! Set the size(), capacity(), stepsize(), and content 
         of the OutData array to \a sa.
-        The offset is set tot zero.
+        sa.offset() is set tot zero.
         All other properties are not affected. */
   template < typename R >
   const OutData &assign( const SampleData< R > &sa );
@@ -361,17 +360,36 @@ class OutData : public SampleData< float >, public DaqError
     /*! The gain factor for the signal.
         This factor is used to scale the voltage values that should be
 	put out by the daq board to the appropriate device dependent
-	integer values.
-        \sa setGain(), gainIndex(), requestedMin(), requestedMax(), request(), 
-	scale(), setScale(), offset(), setOffset(), unit(), setUnit() */
+	integer values after offset() has been added.
+        \sa setGain(), offset(), setOffset(), gainIndex(),
+	requestedMin(), requestedMax(), request(), 
+	scale(), setScale(), unit(), setUnit() */
   double gain( void ) const;
     /*! Set the gain factor to \a gain.
-	The gain factor \a gain is used to scale the voltage values
-	that should be put out by the daq board 
-	to the appropriate device dependent integer values.
-        \sa gain(), gainIndex(), requestedMin(), requestedMax(), request(),
-	scale(), setScale(), offset(), setOffset(), unit(), setUnit() */
+        The gain factor is used to scale the voltage values that should be
+	put out by the daq board to the appropriate device dependent
+	integer values after offset() has been added.
+        \sa gain(), offset(), setOffset(), gainIndex(),
+	requestedMin(), requestedMax(), request(),
+	scale(), setScale(), unit(), setUnit() */
   void setGain( double gain );
+    /*! Set the gain factor to \a gain
+        and the offset to \a offset.
+        The \a gain factor is used to scale the voltage values that should be
+	put out by the daq board to the appropriate device dependent
+	integer values after \a offset has been added.
+        \sa gain(), offset(), setOffset(), gainIndex(),
+	requestedMin(), requestedMax(), request(),
+	scale(), setScale(), unit(), setUnit() */
+  void setGain( double gain, double offset );
+    /*! The offset that is added to the output voltage before it is
+        scaled by gain() to the raw integer data that is put out 
+	by the analog output device.
+        \sa setOffset(), gain(), setGain() */
+  double offset( void ) const;
+    /*! Set the offset that is added to the output voltage to \a offset.
+        \sa offset(), gain(), setGain() */
+  void setOffset( double offset );
 
     /*! Get the voltage of the \a index -th element in Volt.
 	\a index must be a valid index. */
@@ -387,39 +405,30 @@ class OutData : public SampleData< float >, public DaqError
 
     /*! The scale factor used for scaling the output signal to the voltage
         that is put out by the analog output device.
-        \sa setScale(), offset(), setOffset(), unit(), setUnit() */
+        \sa setScale(), unit(), setUnit() */
   double scale( void ) const;
     /*! Set the scale factor to \a scale.
 	The scale factor \a scale is used to scale the output signal
 	to the voltage that is put out by the analog output device.
-        \sa scale(), offset(), setOffset(), unit(), setUnit() */
+        \sa multiplyScale(), scale(), unit(), setUnit() */
   void setScale( double scale );
     /*! Multiply the scale factor by \a fac.
 	The scale factor \a scale is used to scale the output signal
 	to the voltage that is put out by the analog output device.
-        \sa scale(), setScale(), offset(), setOffset(), unit(), setUnit() */
+        \sa scale(), setScale(), unit(), setUnit() */
   void multiplyScale( double fac );
-    /*! The offset that is added to the output signal before it is
-        scaled by scale() to the voltage that is put out 
-	by the analog output device.
-        \sa setOffset(), scale(), setScale(), unit(), setUnit() */
-  double offset( void ) const;
-    /*! Set the offset that is added to the output signal to \a offset.
-        \sa offset(), scale(), setScale(), unit(), setUnit() */
-  void setOffset( double offset );
     /*! The unit of the signal.
-        \sa setUnit(), scale(), setScale(), offset(), setOffset() */
+        \sa setUnit(), scale(), setScale() */
   string unit( void ) const;
     /*! Set the unit of the signal to \a unit.
-        \sa unit(), scale(), setScale(), offset(), setOffset() */
+        \sa unit(), scale(), setScale() */
   void setUnit( const string &unit );
     /*! Set the specifications for the output signal.
-	First, \a offset() is added to the output signal
-	that is given in units \a unit.
-	Then the signal is scaled by \a scale  to the voltage 
+	The signal given in unit \a unit
+	is scaled by \a scale  to the voltage 
 	that is put out by the analog output device.
-        \sa unit(), scale(), setScale(), offset(), setOffset() */
-  void setUnit( double scale, double offset, const string &unit );
+        \sa unit(), scale(), setScale() */
+  void setUnit( double scale, const string &unit );
     /*! Minimum possible value of the signal, given the preset gain
         value of the daq board.
         \sa maxValue(), minVoltage() */
@@ -708,10 +717,10 @@ class OutData : public SampleData< float >, public DaqError
   int GainIndex;
      /*! Gain to voltage in Volt. */
   double Gain;
+    /*! Offset which is added to the voltage before scaling by Gain. */
+  double Offset;
     /*! Scale from signal to voltage. */
   double Scale;
-    /*! Offset which is added to the signal before scaling. */
-  double Offset;
     /*! The unit of the signal. */
   string Unit;
     /*! The minimum possible raw data value for the preset gain of the daq board. */

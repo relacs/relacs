@@ -211,11 +211,11 @@ void Acquire::closeAttLines( void )
 
 void Acquire::addOutTrace( const string &name,
 			   int device, int channel, 
-			   double scale, double offset, const string &unit,
+			   double scale, const string &unit,
 			   bool reglitch, double maxrate, double signaldelay )
 {
   OutTraces.push_back( TraceSpec( OutTraces.size(), name, device, channel,
-				  scale, offset, unit,
+				  scale, unit,
 				  reglitch, maxrate, signaldelay ) );
 }
 
@@ -908,13 +908,13 @@ int Acquire::adjustGain( const InData &data, double maxvalue )
 	maxindex = k;
       // check it:
       if ( data.unipolar() ) {
-	if ( ai.AI->unipolarRange( k ) * data.scale() + data.offset() >= maxvalue ) {
+	if ( ai.AI->unipolarRange( k ) * data.scale() >= maxvalue ) {
 	  newindex = k;
 	  break;
 	}
       }
       else {
-	if ( ai.AI->bipolarRange( k ) * data.scale() + data.offset() >= maxvalue ) {
+	if ( ai.AI->bipolarRange( k ) * data.scale() >= maxvalue ) {
 	  newindex = k;
 	  break;
 	}

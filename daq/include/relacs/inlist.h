@@ -173,20 +173,16 @@ public:
     /*! Set the scale factor for all input traces to \a scale.
 	The scale factor \a scale is used to scale the voltage data to
 	a secondary unit.
-        \sa setOffset(), setUnit() */
+        \sa setUnit() */
   void setScale( double scale );
-    /*! Set the offset that is added to the scaled voltage data 
-        for all input traces to \a offset.
-        \sa  setScale(), setUnit() */
-  void setOffset( double offset );
     /*! Set the secondary unit for all input traces  to \a unit.
-        \sa setScale(), setOffset() */
+        \sa setScale() */
   void setUnit( const string &unit );
     /*! Set the specifications of a secondary unit for all input traces.
-	First, the voltage data are scaled by \a scale.
-	Then \a offset is added to get the data in the secondary unit \a unit.
-        \sa setScale(), setOffset() */
-  void setUnit( double scale, double offset, const string &unit );
+	The scale factor \a scale is used to scale the voltage data to
+	a secondary unit \a unit.
+        \sa setScale() */
+  void setUnit( double scale, const string &unit );
     /*! Set the maximum time the hardware driver should buffer the data
         before they are written into the InData buffers to \a time seconds. */
   void setUpdateTime( double time );

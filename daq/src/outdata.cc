@@ -74,8 +74,8 @@ OutData::OutData( const OutData  &od )
   RequestMaxValue = od.RequestMaxValue;
   GainIndex = od.GainIndex;
   Gain = od.Gain;
-  Scale = od.Scale;
   Offset = od.Offset;
+  Scale = od.Scale;
   Unit = od.Unit;
   MinData = od.MinData;
   MaxData = od.MaxData;
@@ -114,8 +114,8 @@ void OutData::construct( void )
   RequestMaxValue = AutoRange;
   GainIndex = 0;
   Gain = 1.0;
-  Scale = 1.0;
   Offset = 0.0;
+  Scale = 1.0;
   Unit = "V";
   MinData = -1;
   MaxData = +1;
@@ -197,8 +197,8 @@ const OutData &OutData::assign( const OutData &od )
   RequestMaxValue = od.RequestMaxValue;
   GainIndex = od.GainIndex;
   Gain = od.Gain;
-  Scale = od.Scale;
   Offset = od.Offset;
+  Scale = od.Scale;
   Unit = od.Unit;
   MinData = od.MinData;
   MaxData = od.MaxData;
@@ -236,8 +236,8 @@ const OutData &OutData::copy( OutData &od ) const
   od.RequestMaxValue = RequestMaxValue;
   od.GainIndex = GainIndex;
   od.Gain = Gain;
-  od.Scale = Scale;
   od.Offset = Offset;
+  od.Scale = Scale;
   od.Unit = Unit;
   od.MinData = MinData;
   od.MaxData = MaxData;
@@ -569,15 +569,34 @@ void OutData::setGain( double gain )
 }
 
 
+void OutData::setGain( double gain, double offset )
+{
+  Gain = gain;
+  Offset = offset;
+}
+
+
+double OutData::offset( void ) const
+{
+  return Offset;
+}
+
+
+void OutData::setOffset( double offset )
+{
+  Offset = offset;
+}
+
+
 double OutData::voltage( int index ) const
 {
-  return ( operator[]( index ) + offset() ) * scale();
+  return operator[]( index ) * scale();
 }
 
 
 double OutData::getVoltage( double val ) const
 {
-  return ( val + offset() ) * scale();
+  return val * scale();
 }
 
 
@@ -611,18 +630,6 @@ void OutData::multiplyScale( double fac )
 }
 
 
-double OutData::offset( void ) const
-{
-  return Offset;
-}
-
-
-void OutData::setOffset( double offset )
-{
-  Offset = offset;
-}
-
-
 string OutData::unit( void ) const
 {
   return Unit;
@@ -635,10 +642,9 @@ void OutData::setUnit( const string &unit )
 }
 
 
-void OutData::setUnit( double scale, double offset, const string &unit )
+void OutData::setUnit( double scale, const string &unit )
 {
   Scale = scale;
-  Offset = offset;
   Unit = unit;
 }
 
@@ -646,7 +652,7 @@ void OutData::setUnit( double scale, double offset, const string &unit )
 double OutData::minValue( void ) const
 {
   if ( noIntensity() )
-    return MinData/Gain/Scale - Offset;
+    return ( MinData/Gain - Offset )/Scale;
   else
     return -1.0;
 }
@@ -655,7 +661,7 @@ double OutData::minValue( void ) const
 double OutData::maxValue( void ) const
 {
   if ( noIntensity() )
-    return MaxData/Gain/Scale - Offset;
+    return ( MaxData/Gain - Offset )/Scale;
   else
     return 1.0;
 }
@@ -1007,8 +1013,8 @@ ostream &operator<<( ostream &str, const OutData &od )
   str << "RequestMaxValue: " << od.RequestMaxValue << '\n';
   str << "GainIndex: " << od.GainIndex << '\n';
   str << "Gain: " << od.Gain << '\n';
-  str << "Scale: " << od.Scale << '\n';
   str << "Offset: " << od.Offset << '\n';
+  str << "Scale: " << od.Scale << '\n';
   str << "Unit: " << od.Unit << '\n';
   str << "MinData: " << od.MinData << '\n';
   str << "MaxData: " << od.MaxData << '\n';

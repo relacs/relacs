@@ -162,7 +162,7 @@ int ComediAnalogOutput::open( const string &device, long mode )
 	BipolarExtRefRangeIndex = i;
       else {	
 	BipolarRange.push_back( *range );
-	BipolarRangeIndex.push_back( BipolarRangeIndex.size() );
+	BipolarRangeIndex.push_back( i );
       }
     }
     else {
@@ -170,29 +170,35 @@ int ComediAnalogOutput::open( const string &device, long mode )
 	UnipolarExtRefRangeIndex = i;
       else {	
 	UnipolarRange.push_back( *range );
-	UnipolarRangeIndex.push_back( UnipolarRangeIndex.size() );
+	UnipolarRangeIndex.push_back( i );
       }
     }
   }
 
-  // bubble-sort Uni/BipolarRangeIndex according to Uni/BipolarRange.max:
+  // bubble-sorting Uni/BipolarRange according to Uni/BipolarRange.max:
   for( unsigned int i = 0; i < UnipolarRangeIndex.size(); i++ ) {
-    for ( unsigned int j = i+1; j < UnipolarRangeIndex.size(); j++ )
-      if (  UnipolarRange[ UnipolarRangeIndex[i] ].max
-         < UnipolarRange[ UnipolarRangeIndex[j] ].max ) {
-	unsigned int iSwap = UnipolarRangeIndex[i];
+    for ( unsigned int j = i+1; j < UnipolarRangeIndex.size(); j++ ) {
+      if (  UnipolarRange[i].max < UnipolarRange[j].max ) {
+	comedi_range rangeSwap = UnipolarRange[i];
+	UnipolarRange[i] = UnipolarRange[j];
+	UnipolarRange[j] = rangeSwap;
+	unsigned int indexSwap = UnipolarRangeIndex[i];
 	UnipolarRangeIndex[i] = UnipolarRangeIndex[j];
-	UnipolarRangeIndex[j] = iSwap;
+	UnipolarRangeIndex[j] = indexSwap;
       }
+    }
   }
   for( unsigned int i = 0; i < BipolarRangeIndex.size(); i++ ) {
-    for ( unsigned int j = i+1; j < BipolarRangeIndex.size(); j++ )
-      if (  BipolarRange[ BipolarRangeIndex[i] ].max
-         < BipolarRange[ BipolarRangeIndex[j] ].max ) {
-	unsigned int iSwap = BipolarRangeIndex[i];
+    for ( unsigned int j = i+1; j < BipolarRangeIndex.size(); j++ ) {
+      if (  BipolarRange[i].max < BipolarRange[j].max ) {
+	comedi_range rangeSwap = BipolarRange[i];
+	BipolarRange[i] = BipolarRange[j];
+	BipolarRange[j] = rangeSwap;
+	unsigned int indexSwap = BipolarRangeIndex[i];
 	BipolarRangeIndex[i] = BipolarRangeIndex[j];
-	BipolarRangeIndex[j] = iSwap;
+	BipolarRangeIndex[j] = indexSwap;
       }
+    }
   }
 
   // get size of datatype for sample values:
@@ -267,7 +273,7 @@ void ComediAnalogOutput::close( void )
   // close:
   error = comedi_close( DeviceP );
   if ( error )
-    cerr << "! warning: ComediAnalogInput::close() -> "
+    cerr << "! warning: ComediAnalogOutput::close() -> "
 	 << "Closing of AI subdevice on device " << deviceFile() << "failed.\n";
 
   // clear flags:
@@ -310,8 +316,7 @@ double ComediAnalogOutput::unipolarRange( int index ) const
 {
   if ( (index < 0) || (index >= (int)UnipolarRangeIndex.size()) )
     return -1.0;
-  return UnipolarRange[ UnipolarRangeIndex[index] ].max;
-  
+  return UnipolarRange[index].max;
 }
 
 
@@ -319,7 +324,7 @@ double ComediAnalogOutput::bipolarRange( int index ) const
 {
   if ( (index < 0) || (index >= (int)BipolarRangeIndex.size()) )
     return -1.0;
-  return BipolarRange[ BipolarRangeIndex[index] ].max;
+  return BipolarRange[index].max;
 }
 
 
@@ -334,8 +339,11 @@ int ComediAnalogOutput::convert( OutList &sigs )
   // set scaling factors:
   unsigned int iDelay = sigs[0].indices( sigs[0].delay() );
   double scale[ ol.size() ];
-  for ( int k=0; k<ol.size(); k++ )
+  double offs[ ol.size() ];
+  for ( int k=0; k<ol.size(); k++ ) {
     scale[k] = ol[k].scale() * ol[k].gain();
+    offs[k] = ol[k].offset() * ol[k].gain();
+  }
 
   // allocate buffer:
   int nbuffer = ol.size() * ( sigs[0].size() + iDelay );
@@ -347,9 +355,9 @@ int ComediAnalogOutput::convert( OutList &sigs )
     for ( int k=0; k<ol.size(); k++ ) {
       int v;
       if ( i < 0 ) // simulate delay
-	v = (T) ::rint( ( 0.0 + ol[k].offset() ) * scale[k] );
+	v = (T) ::rint( offs[k] );
       else
-	v = (T) ::rint( ( ol[k][i] + ol[k].offset() ) * scale[k] );
+	v = (T) ::rint( ol[k][i] * scale[k] + offs[k] );
       if ( v > ol[k].maxData() )
 	v = ol[k].maxData();
       else if ( v < ol[k].minData() ) 
@@ -413,6 +421,7 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
       if ( max == OutData::AutoRange )
 	max = smax;
     }
+    cerr << "ComediAnalogOutput::testWriteDevice() -> min: " << min << " max: " << max << "\n";
     // reference and polarity:
     bool unipolar = false;
     if ( min >= 0.0 )
@@ -426,6 +435,7 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
       if ( min > max )
 	max = min;
     }
+    cerr << "ComediAnalogOutput::testWriteDevice() -> unipolar: " << unipolar << " max: " << max << "\n";
     // set range:
     double maxboardvolt = -1.0;
     double maxvolt = sigs[k].getVoltage( max );
@@ -468,15 +478,22 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
 	                   :  BipolarExtRefRangeIndex;
 	}
       }
-      sigs[k].setGain( unipolar ? maxrange/maxboardvolt : maxrange/2/maxboardvolt );
+      if ( unipolar )
+	sigs[k].setGain( maxrange/maxboardvolt, 0.0 );
+      else
+	sigs[k].setGain( maxrange/2/maxboardvolt, maxboardvolt );
     }
     else {
       if ( extref && externalReference() < 0.0 ) {
 	sigs[k].addError( DaqError::InvalidReference );
 	extref = false;
       }
-      sigs[k].setGain( unipolar ? maxrange : maxrange/2 );
+      if ( unipolar )
+	sigs[k].setGain( maxrange, 0.0 );
+      else
+	sigs[k].setGain( maxrange/2, maxrange/2 );
     }
+    cerr << "ComediAnalogOutput::testWriteDevice() -> gain: " << sigs[k].gain() << " offset: " << sigs[k].offset() << " index: " << index << "\n";
 
     int gainIndex = index;
     if ( unipolar )
@@ -491,15 +508,21 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
     }
 
     sigs[k].setGainIndex( gainIndex );
-    sigs[k].setMinData( unipolar ? 0 : -maxrange/2 );
-    sigs[k].setMaxData( unipolar ? maxrange - 1 : maxrange/2 - 1 );
+    sigs[k].setMinData( 0 );
+    sigs[k].setMaxData( maxrange - 1 );
+    cerr << "ComediAnalogOutput::testWriteDevice() -> gainIndex: " << sigs[k].gainIndex() << " mindata: " << sigs[k].minData() << " maxData: " << sigs[k].maxData() << "\n";
 
     // set up channel in chanlist:
-    if ( unipolar )
-      ChanList[k] = CR_PACK( sigs[k].channel(), UnipolarRangeIndex[ index ], aref );
-    else
-      ChanList[k] = CR_PACK( sigs[k].channel(), BipolarRangeIndex[ index ], aref );
-
+    if ( unipolar ) {
+      ChanList[k] = CR_PACK( sigs[k].channel(),
+			     UnipolarRangeIndex[index], aref );
+      cerr << "ComediAnalogOutput::testWriteDevice() -> CR_PACK unipolar: " << unipolar << " channel: " << sigs[k].channel() << " rangeindex: " << UnipolarRangeIndex[index] << " aref: " << aref << "\n";
+    }
+    else {
+      ChanList[k] = CR_PACK( sigs[k].channel(),
+			     BipolarRangeIndex[index], aref );
+      cerr << "ComediAnalogOutput::testWriteDevice() -> CR_PACK unipolar: " << unipolar << " channel: " << sigs[k].channel() << " rangeindex: " << BipolarRangeIndex[index] << " aref: " << aref << "\n";
+    }
   }
 
 
@@ -610,6 +633,8 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   OutList ol;
   ol.add( sigs );
   ol.sortByChannel();
+  
+  Sigs = &sigs;
 
   int error = testWriteDevice( ol );
   if ( error )
@@ -631,8 +656,6 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   cerr << " ComediAnalogOutput::prepareWrite(): success" << endl;//////TEST/////
 
   IsPrepared = ol.success();
-  
-  Sigs = &sigs;
 
   return sigs.success() ? 0 : -1;
 }
@@ -832,13 +855,11 @@ int ComediAnalogOutput::startWrite( OutList &sigs )
 
 int ComediAnalogOutput::writeData( OutList &sigs )
 {
-  cerr << " ComediAnalogOutput::writeData(): comedi_strerror -> " << comedi_strerror( comedi_errno() ) << endl;/////TEST/////
-
   //device stopped?
   if ( !running() ) {
     sigs.addErrorStr( "ComediAnalogOutput::writeData: " +
 		      deviceFile() + " is not running!" );
-    cerr << "ComediAnalogOutput::writeData: device is not running!"  << endl;/////TEST/////
+    cerr << "ComediAnalogOutput::writeData: device is not running! comedi_strerror: " << comedi_strerror( comedi_errno() ) << endl;/////TEST/////
     return 0;/////TEST/////
   }
 
@@ -934,12 +955,8 @@ int ComediAnalogOutput::fillWriteBuffer( void )
     return -1;
 
   ErrorState = 0;
-  cerr << "ComediAnalogOutput::writeData: size of device buffer: " 
-       << (*Sigs)[0].deviceBufferSize() << " - size of outdata: " 
-       << " - continuous: " << (*Sigs)[0].continuous() << endl;
   bool failed = false;
   int elemWritten = 0;
-  int bytesWritten;
 
   if ( (*Sigs)[0].deviceBufferMaxPop() <= 0 ) {
     //    (*Sigs).addErrorStr( "ComediAnalogOutput::writeData: " +
@@ -955,10 +972,10 @@ int ComediAnalogOutput::fillWriteBuffer( void )
 	tryit < 2 && !failed && (*Sigs)[0].deviceBufferMaxPop() > 0; 
 	tryit++ ){
     
-    bytesWritten = write( comedi_fileno(DeviceP),
-			  (*Sigs)[0].deviceBufferPopBuffer(),
-			  (*Sigs)[0].deviceBufferMaxPop() * BufferElemSize );
-    cerr << " ComediAnalogOutput::writeData():  bytes written:" << bytesWritten << endl;/////TEST/////
+    int bytesWritten = write( comedi_fileno(DeviceP),
+			      (*Sigs)[0].deviceBufferPopBuffer(),
+			      (*Sigs)[0].deviceBufferMaxPop() * BufferElemSize );
+       cerr << " ComediAnalogOutput::writeData():  bytes written:" << bytesWritten << endl;/////TEST/////
 
     if ( bytesWritten < 0 && errno != EAGAIN && errno != EINTR ) {
       (*Sigs).addErrorStr( errno );
@@ -1007,7 +1024,6 @@ int ComediAnalogOutput::fillWriteBuffer( void )
       return -1;
     }
   
-  cerr << " ComediAnalogOutput::writeData(): out" << endl;/////TEST/////
   return elemWritten;
 }
 

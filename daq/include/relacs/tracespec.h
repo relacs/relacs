@@ -47,7 +47,7 @@ class TraceSpec
   TraceSpec( void );
   TraceSpec( int index, const string &name,
 	     int device, int channel,
-	     double scale=1.0, double offset=0.0, const string &unit="",
+	     double scale=1.0, const string &unit="",
 	     bool reglitch=false, double maxrate=-1.0,
 	     double signaldelay=0.0 );
     /*! Copy constructor. */
@@ -87,34 +87,24 @@ class TraceSpec
 
     /*! The scale factor used for scaling the output signal to the voltage
         that is put out by the analog output device.
-        \sa setScale(), offset(), setOffset(), unit(), setUnit() */
+        \sa setScale(), unit(), setUnit() */
   double scale( void ) const;
     /*! Set the scale factor to \a scale.
 	The scale factor \a scale is used to scale the output signal
 	to the voltage that is put out by the analog output device.
-        \sa scale(), offset(), setOffset(), unit(), setUnit() */
+        \sa scale(), unit(), setUnit() */
   void setScale( double scale );
-    /*! The offset that is added to the output signal before it is
-        scaled by scale() to the voltage that is put out 
-	by the analog output device.
-        \sa setOffset(), scale(), setScale(), unit(), setUnit() */
-  double offset( void ) const;
-    /*! Set the offset that is added to the output signal to \a offset.
-        \sa offset(), scale(), setScale(), unit(), setUnit() */
-  void setOffset( double offset );
     /*! The unit of the signal.
-        \sa setUnit(), scale(), setScale(), offset(), setOffset() */
+        \sa setUnit(), scale(), setScale() */
   string unit( void ) const;
     /*! Set the unit of the signal to \a unit.
-        \sa unit(), scale(), setScale(), offset(), setOffset() */
+        \sa unit(), scale(), setScale() */
   void setUnit( const string &unit );
     /*! Set the specifications for the output signal.
-	First, \a offset() is added to the output signal
-	that is given in units \a unit.
-	Then the signal is scaled by \a scale  to the voltage 
+	The signal with unit \a unit is scaled by \a scale  to the voltage 
 	that is put out by the analog output device.
-        \sa unit(), scale(), setScale(), offset(), setOffset() */
-  void setUnit( double scale, double offset, const string &unit );
+        \sa unit(), scale(), setScale() */
+  void setUnit( double scale, const string &unit );
 
     /*! Returns \c true if reglitch circuit to make glitches more uniform
         is enabled. 
@@ -167,7 +157,6 @@ class TraceSpec
   int Device;
   int Channel;
   double Scale;
-  double Offset;
   string Unit;
   bool Reglitch;
   double MaxRate;

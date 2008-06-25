@@ -327,13 +327,6 @@ void InList::setScale( double scale )
 }
 
 
-void InList::setOffset( double offset )
-{
-  for ( int k=0; k<size(); k++ )
-    operator[]( k ).setOffset( offset );
-}
-
-
 void InList::setUnit( const string &unit )
 {
   for ( int k=0; k<size(); k++ )
@@ -341,10 +334,10 @@ void InList::setUnit( const string &unit )
 }
 
 
-void InList::setUnit( double scale, double offset, const string &unit )
+void InList::setUnit( double scale, const string &unit )
 {
   for ( int k=0; k<size(); k++ )
-    operator[]( k ).setUnit( scale, offset, unit );
+    operator[]( k ).setUnit( scale, unit );
 }
 
 

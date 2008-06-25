@@ -178,14 +178,14 @@ int NIAO::testWriteDevice( OutList &sigs )
 	    maxboardvolt = externalReference();
 	}
       }
-      sigs[k].setGain( unipolar ? maxrange/maxboardvolt : maxrange/2/maxboardvolt );
+      sigs[k].setGain( unipolar ? maxrange/maxboardvolt : maxrange/2/maxboardvolt, 0.0 );
     }
     else {
       if ( extref && externalReference() < 0.0 ) {
 	sigs[k].addError( DaqError::InvalidReference );
 	extref = false;
       }
-      sigs[k].setGain( unipolar ? maxrange : maxrange/2 );
+      sigs[k].setGain( unipolar ? maxrange : maxrange/2, 0.0 );
     }
     int index = 0;
     if ( unipolar )
@@ -282,10 +282,10 @@ int NIAO::prepareWrite( OutList &sigs )
 	double maxboardvolt = 10.0;
 	if ( extref )
 	  maxboardvolt = externalReference();
-	ol[k].setGain( unipolar ? maxrange/maxboardvolt : maxrange/2/maxboardvolt );
+	ol[k].setGain( unipolar ? maxrange/maxboardvolt : maxrange/2/maxboardvolt, 0.0 );
       }
       else
-	ol[k].setGain( unipolar ? maxrange : maxrange/2 );
+	ol[k].setGain( unipolar ? maxrange : maxrange/2, 0.0 );
       ol[k].setMinData( unipolar ? 0 : -maxrange/2 );
       ol[k].setMaxData( unipolar ? maxrange - 1 : maxrange/2 - 1 );
 

@@ -159,25 +159,28 @@ int ComediAnalogInput::open( const string &device, long mode )
     }
   }
 
-  // bubble-sorting Uni/BipolarRangeIndex according to Uni/BipolarRange.max:
-  unsigned int iSwap;
+  // bubble-sorting Uni/BipolarRange according to Uni/BipolarRange.max:
   for( unsigned int i = 0; i < UnipolarRangeIndex.size(); i++ ) {
     for ( unsigned int j = i+1; j < UnipolarRangeIndex.size(); j++ ) {
-      if (  UnipolarRange[ UnipolarRangeIndex[i] ].max
-         < UnipolarRange[ UnipolarRangeIndex[j] ].max ) {
-	iSwap = UnipolarRangeIndex[i];
+      if (  UnipolarRange[i].max < UnipolarRange[j].max ) {
+	comedi_range rangeSwap = UnipolarRange[i];
+	UnipolarRange[i] = UnipolarRange[j];
+	UnipolarRange[j] = rangeSwap;
+	unsigned int indexSwap = UnipolarRangeIndex[i];
 	UnipolarRangeIndex[i] = UnipolarRangeIndex[j];
-	UnipolarRangeIndex[j] = iSwap;
+	UnipolarRangeIndex[j] = indexSwap;
       }
     }
   }
   for( unsigned int i = 0; i < BipolarRangeIndex.size(); i++ ) {
     for ( unsigned int j = i+1; j < BipolarRangeIndex.size(); j++ ) {
-      if (  BipolarRange[ BipolarRangeIndex[i] ].max
-         < BipolarRange[ BipolarRangeIndex[j] ].max ) {
-	iSwap = BipolarRangeIndex[i];
+      if (  BipolarRange[i].max < BipolarRange[j].max ) {
+	comedi_range rangeSwap = BipolarRange[i];
+	BipolarRange[i] = BipolarRange[j];
+	BipolarRange[j] = rangeSwap;
+	unsigned int indexSwap = BipolarRangeIndex[i];
 	BipolarRangeIndex[i] = BipolarRangeIndex[j];
-	BipolarRangeIndex[j] = iSwap;
+	BipolarRangeIndex[j] = indexSwap;
       }
     }
   }
@@ -297,7 +300,7 @@ double ComediAnalogInput::unipolarRange( int index ) const
 {
   if ( (index < 0) || (index >= (int)UnipolarRangeIndex.size()) )
     return -1.0;
-  return UnipolarRange[ UnipolarRangeIndex[index] ].max;
+  return UnipolarRange[index].max;
 }
 
 
@@ -305,7 +308,7 @@ double ComediAnalogInput::bipolarRange( int index ) const
 {
   if ( (index < 0) || (index >= (int)BipolarRangeIndex.size()) )
     return -1.0;
-  return BipolarRange[ BipolarRangeIndex[index] ].max;
+  return BipolarRange[index].max;
 }
 
 
@@ -348,23 +351,27 @@ int ComediAnalogInput::testReadDevice( InList &traces )
       traces[k].addError( DaqError::InvalidReference );
 
     if ( traces[k].unipolar() ) {
-      double max = unipolarRange( traces[k].gainIndex() );
-      if ( max < 0 )
+      double max = UnipolarRange[traces[k].gainIndex()].max;
+      double min = UnipolarRange[traces[k].gainIndex()].min;
+      if ( max < 0 || min < 0 )
 	traces[k].addError( DaqError::InvalidGain );
       traces[k].setMaxVoltage( max );
       traces[k].setMinVoltage( 0.0 );
-      traces[k].setGain( max / comedi_get_maxdata( DeviceP, SubDevice, 0 ) );
+      traces[k].setGain( (max-min)/comedi_get_maxdata( DeviceP, SubDevice, 0 ),
+			 min );
       ChanList[k] = CR_PACK( traces[k].channel(), 
 			     UnipolarRangeIndex[ traces[k].gainIndex() ],
 			     aref );
     }
     else {
-      double max = bipolarRange( traces[k].gainIndex() );
-      if ( max < 0 )
+      double max = BipolarRange[traces[k].gainIndex()].max;
+      double min = BipolarRange[traces[k].gainIndex()].min;
+      if ( max < 0 || min >= 0.0 )
 	traces[k].addError( DaqError::InvalidGain );
       traces[k].setMaxVoltage( max );
-      traces[k].setMinVoltage( -max );
-      traces[k].setGain( 2.0*max / comedi_get_maxdata( DeviceP, SubDevice, 0 ) );
+      traces[k].setMinVoltage( min );
+      traces[k].setGain( (max-min)/comedi_get_maxdata( DeviceP, SubDevice, 0 ),
+			 min );
       ChanList[k] = CR_PACK( traces[k].channel(), 
 			     BipolarRangeIndex[ traces[k].gainIndex() ],
 			     aref );
@@ -722,8 +729,6 @@ int ComediAnalogInput::startRead( InList &traces )
 
 int ComediAnalogInput::readData( InList &traces )
 {
-  cerr << " ComediAnalogInput::readData(): begin strerror -> " << comedi_strerror( comedi_errno() ) << endl;/////TEST/////
-
   // buffer overflow:
   if ( traces[0].deviceBufferSize() >= traces[0].deviceBufferCapacity() ) {
     cerr << " ComediAnalogInput::readData():  buffer overflow\n";//////TEST/////
@@ -747,7 +752,6 @@ int ComediAnalogInput::readData( InList &traces )
     ssize_t m = read( comedi_fileno( DeviceP ),
 		      traces[0].deviceBufferPushBuffer(), 
 		      traces[0].deviceBufferMaxPush() * BufferElemSize );
-    cerr << " ComediAnalogInput::readData():  bytes read:" << m << endl;//////TEST/////
 
     int ern = errno;
     if ( m < 0 && ern != EAGAIN && ern != EINTR ) {
@@ -788,8 +792,6 @@ int ComediAnalogInput::readData( InList &traces )
     */
     return -1;   
   }
-
-  cerr << " ComediAnalogInput::readData(): end" << endl;/////TEST/////
 
   return n;
 }

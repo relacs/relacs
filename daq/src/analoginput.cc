@@ -85,7 +85,7 @@ string AnalogInput::info( void ) const
   ostringstream ss;
   ss << ";channels: " << channels();
   ss << ";bits: " << bits();
-  ss << ";sampling rate: " << 0.001*maxRate() << " kHz";
+  ss << ";max sampling rate: " << 0.001*maxRate() << " kHz";
   ss << ends;
   return Device::info() + ss.str();
 }
@@ -111,7 +111,7 @@ void AnalogInput::setSettings( const InList &traces )
   ss << "continuous: " << ( traces[0].continuous() ? "yes" : "no" );
   ss << ";startsource: " << traces[0].startSource();
   ss << ";delay: " << 1000.0*traces[0].delay() << "ms";
-  ss << ";scan rate: " << 0.001*traces[0].sampleRate() << "kHz";
+  ss << ";sampling rate: " << 0.001*traces[0].sampleRate() << "kHz";
 
   Settings += ss.str();
 }

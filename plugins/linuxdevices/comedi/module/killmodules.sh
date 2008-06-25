@@ -19,7 +19,7 @@ rmmod rtai_fifos.ko
 sleep 0.1
 rmmod rtai_up
 sleep 0.1
-rmmod rtai_hal
-sleep 0.1
 rmmod rtai_sem
+sleep 0.1
+rmmod rtai_hal
 

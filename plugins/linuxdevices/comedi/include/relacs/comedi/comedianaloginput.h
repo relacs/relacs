@@ -227,11 +227,9 @@ private:
   vector< comedi_range > UnipolarRange;
     /*! Holds the list of supported bipolar comedi ranges. */
   vector< comedi_range > BipolarRange;
-    /*! Maps descendingly sorted range indices to (unsorted) \a UnipolarRange
-        indices. */
+    /*! Maps unipolar range indices to comei range indices. */
   vector< unsigned int > UnipolarRangeIndex;
-    /*! Maps descendingly sorted range indices to (unsorted) \a BipolarRange
-        indices. */
+    /*! Maps bipolar range indices to comei range indices. */
   vector< unsigned int > BipolarRangeIndex;
 
   vector< ComediAnalogInput* > ComediAIs;

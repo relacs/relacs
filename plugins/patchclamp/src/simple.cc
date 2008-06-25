@@ -98,6 +98,7 @@ int Simple::main( void )
 
   OutData signal( duration, trace( intrace ).sampleInterval() );
   signal = amplitude;
+  //  signal[0] = -amplitude;
   signal.back() = 0;
   signal.setTrace( outtrace );
   signal.setIdent( "one" );

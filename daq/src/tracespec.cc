@@ -32,7 +32,6 @@ TraceSpec::TraceSpec( void )
     Device( 0 ),
     Channel( 0 ),
     Scale( 1.0 ),
-    Offset( 0.0 ),
     Unit( "V" ),
     Reglitch( false ),
     MaxRate( 1000.0 ),
@@ -43,14 +42,13 @@ TraceSpec::TraceSpec( void )
 
 TraceSpec::TraceSpec( int index, const string &name,
 		      int device, int channel, 
-		      double scale, double offset, const string &unit,
+		      double scale, const string &unit,
 		      bool reglitch, double maxrate, double signaldelay )
   : Trace( index ),
     TraceName( name ),
     Device( device ),
     Channel( channel ),
     Scale( scale ),
-    Offset( offset ),
     Unit( unit ),
     Reglitch( reglitch ),
     MaxRate( maxrate ),
@@ -65,7 +63,6 @@ TraceSpec::TraceSpec( const TraceSpec &trace )
     Device( trace.Device ),
     Channel( trace.Channel ),
     Scale( trace.Scale ),
-    Offset( trace.Offset ),
     Unit( trace.Unit ),
     Reglitch( trace.Reglitch ),
     MaxRate( trace.MaxRate ),
@@ -141,18 +138,6 @@ void TraceSpec::setScale( double scale )
 }
 
 
-double TraceSpec::offset( void ) const
-{
-  return Offset;
-}
-
-
-void TraceSpec::setOffset( double offset )
-{
-  Offset = offset;
-}
-
-
 string TraceSpec::unit( void ) const
 {
   return Unit;
@@ -165,10 +150,9 @@ void TraceSpec::setUnit( const string &unit )
 }
 
 
-void TraceSpec::setUnit( double scale, double offset, const string &unit )
+void TraceSpec::setUnit( double scale, const string &unit )
 {
   Scale = scale;
-  Offset = offset;
   Unit = unit;
 }
 
@@ -216,7 +200,6 @@ int TraceSpec::apply( OutData &signal ) const
     signal.setDevice( Device );
     signal.setChannel( Channel );
     signal.setScale( Scale );
-    signal.setOffset( Offset );
     signal.setUnit( Unit );
     signal.setReglitch( Reglitch );
     signal.setMaxSampleRate( MaxRate );

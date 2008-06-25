@@ -295,8 +295,11 @@ int AnalogOutput::convert( OutList &sigs )
 
   // set scaling factors:
   double scale[ ol.size() ];
-  for ( int k=0; k<ol.size(); k++ )
+  double offs[ ol.size() ];
+  for ( int k=0; k<ol.size(); k++ ) {
     scale[k] = ol[k].scale() * ol[k].gain();
+    offs[k] = ol[k].offset() * ol[k].gain();
+  }
 
   // allocate buffer:
   int nbuffer = ol.size()*ol[0].size();
@@ -306,7 +309,7 @@ int AnalogOutput::convert( OutList &sigs )
   T *bp = buffer;
   for ( int i=0; i<ol[0].size(); i++ ) {
     for ( int k=0; k<ol.size(); k++ ) {
-      int v = (T) ::rint( ( ol[k][i] + ol[k].offset() ) * scale[k] );
+      int v = (T) ::rint( ol[k][i] * scale[k] + offs[k] );
       if ( v > ol[k].maxData() )
 	v = ol[k].maxData();
       else if ( v < ol[k].minData() ) 

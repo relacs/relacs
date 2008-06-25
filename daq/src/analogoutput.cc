@@ -110,7 +110,7 @@ string AnalogOutput::info( void ) const
   ostringstream ss;
   ss << ";channels: " << channels();
   ss << ";bits: " << bits();
-  ss << ";sampling rate: " << 0.001*maxRate() << " kHz";
+  ss << ";max sampling rate: " << 0.001*maxRate() << " kHz";
   ss << ends;
   return Device::info() + ss.str();
 }

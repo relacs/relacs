@@ -68,8 +68,8 @@ InData::InData( const InData &data )
   Unipolar = data.Unipolar;
   GainIndex = data.GainIndex;
   Gain = data.Gain;
-  Scale = data.Scale;
   Offset = data.Offset;
+  Scale = data.Scale;
   Unit = data.Unit;
   UpdateTime = data.UpdateTime;
   MinValue = data.MinValue;
@@ -109,8 +109,8 @@ void InData::construct( void )
   Unipolar = false;
   GainIndex = 0;
   Gain = 1.0;
-  Scale = 1.0;
   Offset = 0.0;
+  Scale = 1.0;
   Unit = "V";
   UpdateTime = 0.0;
   MinValue = -1.0;
@@ -148,8 +148,8 @@ const InData &InData::operator=( const InData &data )
   Unipolar = data.Unipolar;
   GainIndex = data.GainIndex;
   Gain = data.Gain;
-  Scale = data.Scale;
   Offset = data.Offset;
+  Scale = data.Scale;
   Unit = data.Unit;
   UpdateTime = data.UpdateTime;
   MinValue = data.MinValue;
@@ -379,37 +379,37 @@ void InData::setMaxValue( double maxv )
 
 double InData::voltage( int index ) const
 {
-  return ( operator[]( index ) - offset() ) / scale();
+  return operator[]( index ) / scale();
 }
 
 
 double InData::getVoltage( double val ) const
 {
-  return (val-offset())/scale();
+  return val/scale();
 }
 
 
 double InData::minVoltage( void ) const
 {
-  return (MinValue-offset())/scale();
+  return MinValue/scale();
 }
 
 
 double InData::maxVoltage( void ) const
 {
-  return (MaxValue-offset())/scale();
+  return MaxValue/scale();
 }
 
 
 void InData::setMinVoltage( double minv )
 {
-  MinValue = minv*scale()+offset();
+  MinValue = minv*scale();
 }
 
 
 void InData::setMaxVoltage( double maxv )
 {
-  MaxValue = maxv*scale()+offset();
+  MaxValue = maxv*scale();
 }
 
 
@@ -643,10 +643,22 @@ void InData::setGain( double gain )
 }
 
 
-void InData::setGain( double gain, int gainindex )
+void InData::setGain( double gain, double offset )
 {
   Gain = gain;
-  GainIndex = gainindex;
+  Offset = offset;
+}
+
+
+double InData::offset( void ) const
+{
+  return Offset;
+}
+
+
+void InData::setOffset( double offset )
+{
+  Offset = offset;
 }
 
 
@@ -674,18 +686,6 @@ void InData::setScale( double scale )
 }
 
 
-double InData::offset( void ) const
-{
-  return Offset;
-}
-
-
-void InData::setOffset( double offset )
-{
-  Offset = offset;
-}
-
-
 string InData::unit( void ) const
 {
   return Unit;
@@ -698,10 +698,9 @@ void InData::setUnit( const string &unit )
 }
 
 
-void InData::setUnit( double scale, double offset, const string &unit )
+void InData::setUnit( double scale, const string &unit )
 {
   Scale = scale;
-  Offset = offset;
   Unit = unit;
 }
 
@@ -915,8 +914,8 @@ ostream &operator<<( ostream &str, const InData &id )
   str << "Unipolar: " << id.Unipolar << '\n';
   str << "GainIndex: " << id.GainIndex << '\n';
   str << "Gain: " << id.Gain << '\n';
-  str << "Scale: " << id.Scale << '\n';
   str << "Offset: " << id.Offset << '\n';
+  str << "Scale: " << id.Scale << '\n';
   str << "Unit: " << id.Unit << '\n';
   str << "Source: " << id.Source << '\n';
   str << "UpdateTime: " << id.UpdateTime << '\n';

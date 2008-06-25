@@ -276,7 +276,7 @@ void AnalogInput::convert( InList &traces )
   double offs[traces.size()];
   for ( int k=0; k<traces.size(); k++ ) {
     scale[k] = traces[k].gain() * traces[k].scale();
-    offs[k] = traces[k].offset();
+    offs[k] = traces[k].offset() * traces[k].scale();
   }
 
   // buffer pointers and sizes:

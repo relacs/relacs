@@ -154,12 +154,14 @@ int NIAI::testReadDevice( InList &traces )
 	traces[k].setMaxVoltage( max );
 	traces[k].setMinVoltage( 0.0 );
 	traces[k].setGain( max / v );
+	traces[k].setOffset( 0.0 );
       }
       else {
 	double max = bipolarRange( traces[k].gainIndex() );
 	traces[k].setMaxVoltage( max );
 	traces[k].setMinVoltage( -max );
 	traces[k].setGain( 2.0 * max / v );
+	traces[k].setOffset( 0.0 );
       }
     }
   }
@@ -252,12 +254,14 @@ int NIAI::prepareRead( InList &traces )
 	traces[k].setMaxVoltage( max );
 	traces[k].setMinVoltage( 0.0 );
 	traces[k].setGain( max / v );
+	traces[k].setOffset( 0.0 );
       }
       else {
 	double max = bipolarRange( traces[k].gainIndex() );
 	traces[k].setMaxVoltage( max );
 	traces[k].setMinVoltage( -max );
 	traces[k].setGain( 2.0 * max / v );
+	traces[k].setOffset( 0.0 );
       }
 
     }
