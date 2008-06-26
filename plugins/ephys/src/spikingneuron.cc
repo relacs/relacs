@@ -2105,8 +2105,10 @@ void Crook::notify( void )
 MilesDai::MilesDai( void )
   : HodgkinHuxley()
 {
-  double AS = 3.76991e-05;  // surface area soma in cm^2
-  double AD = 5.02655e-05;  // surface area dendrite in cm^2
+  // surface areas of soma and dendrite with an additional scaling factor
+  // for converting mS to muS and muF to nF.
+  double AS = 3.76991e-5*1.0e3;  // surface area soma in cm^2 (d=12um, l=100um) times 1000 muS/mS
+  double AD = 5.02655e-5*1.0e3;  // surface area dendrite in cm^2 (d=8um, l=200um) times 1000 muS/mS
 
   GNa = 120.0*AS;
   GK = 100.0*AS;
@@ -2114,16 +2116,17 @@ MilesDai::MilesDai( void )
   GCa = 4.0*AS;
   GKAHP = 1.0*AS;
   GLD = 0.142857*AD;        // 1/(7kOhm*cm^2) =  0.142857 mS/cm^2
-  GDS = 1.5e-3;
+  GDS = 1.5e-3*1.0e3;
 
-  ENa = +115.0;
-  EK = -10.0;
-  EL = 0.0;
-  ECa = +140.0;
+  // all potentials have -60mV added:
+  ENa = +55.0;
+  EK = -70.0;
+  EL = -60.0;
+  ECa = +80.0;
 
   PT = 1.0;
   C = 1.0*AS;
-  CaA = 50.0;
+  CaA = 50.0*1.0e-3;
   CaTau = 20.0;
   CD = 1.0*AD;
 
@@ -2185,22 +2188,41 @@ void MilesDai::operator()(  double t, double s, double *x, double *dxdt, int n )
   double Ca = x[8];
   double VD = x[9];
 
-  double alpham = 10.0/(1.0+exp((21.0-VS)/5.3));
-  double betam = 10.0/(1.0+exp(-(21.0-VS)/5.3));
-  double alphah = 0.83/(1.0+exp(-(19.0-VS)/7.0));
-  double betah = 0.83/(1.0+exp((19.0-VS)/7.0));
-  double alphas = 0.0077/(1.0+exp(-(18.0-VS)/9.0));
-  double betas = 0.0077/(1.0+exp((18.0-VS)/9.0));
-  double alphan = 0.02*(22.0-VS)/(exp((22.0-VS)/10.0)-1.0);
-  double betan = 0.25*exp((5.0-VS)/80.0);
-  double alphamn = 0.2*exp((VS-40.0)/6.13);
-  double betamn = 0.2*exp(-(VS-40.0)/55.2);
-  double alphahn = 0.05*exp(-(VS-25.0)/55.2);
-  double betahn = 0.05*exp((VS-25.0)/6.13);
+  // all potentials have -60mV added:
+  double alpham = 10.0/(1.0+exp(-(VS+39.0)/5.3));
+  double betam = 10.0/(1.0+exp((VS+39.0)/5.3));
+  // tau_m = 0.1
+
+  double alphah = 0.83/(1.0+exp((VS+41.0)/7.0));
+  double betah = 0.83/(1.0+exp(-(VS+41.0)/7.0));
+  // tau_h = 1.205
+
+  double alphas = 0.0077/(1.0+exp((VS+42.0)/9.0));
+  double betas = 0.0077/(1.0+exp(-(VS+42.0)/9.0));
+  // tau_s = 129.9
+
+  double alphan = 0.02*(VS+38.0)/(1.0-exp(-(VS+38.0)/10.0));
+  double betan = 0.25*exp(-(VS+55.0)/80.0);
+
+  double alphamn = 0.2*exp((VS+20.0)/6.13);
+  double betamn = 0.2*exp(-(VS+20.0)/55.2);
+  // The additional 1 ms for the mn time constant is not in the manuscript 
+  // but was in the original code from Yue Dai:
+  double taumn = 1.0+1.0/(alphamn+betamn);
+  double ssmn = alphamn/(alphamn+betamn);
+
+  double alphahn = 0.05*exp(-(VS+35.0)/55.2);
+  double betahn = 0.05*exp((VS+35.0)/6.13);
+  // The additional 5 ms for the hn time constant is not in the manuscript 
+  // but was in the original code from Yue Dai:
+  double tauhn = 5.0+1.0/(alphahn+betahn);
+  double sshn = alphahn/(alphahn+betahn);
+
   double alphaq = 4.0*Ca*Ca;
   double betaq = 0.3;
 
-  GNaGates = GNa*x[1]*x[1]*x[1]*x[2]*x[4];
+  //  GNaGates = GNa*x[1]*x[1]*x[1]*x[2]*x[4];
+  GNaGates = GNa*x[1]*x[1]*x[1]*x[2];
   GKGates = GK*x[3]*x[3]*x[3]*x[3];
   GCaGates = GCa*x[5]*x[5]*x[6];
   GKAHPGates = GKAHP*x[7];
@@ -2219,8 +2241,10 @@ void MilesDai::operator()(  double t, double s, double *x, double *dxdt, int n )
   /* h  */ dxdt[2] = (1.0-x[2])*alphah-x[2]*betah;
   /* n  */ dxdt[3] = (1.0-x[3])*alphan-x[3]*betan;
   /* s  */ dxdt[4] = (1.0-x[4])*alphas-x[4]*betas;
-  /* mn */ dxdt[5] = (1.0-x[5])*alphamn-x[5]*betamn;
-  /* hn */ dxdt[6] = (1.0-x[6])*alphahn-x[6]*betahn;
+  //  /* mn */ dxdt[5] = (1.0-x[5])*alphamn-x[5]*betamn;
+  //  /* hn */ dxdt[6] = (1.0-x[6])*alphahn-x[6]*betahn;
+  /* mn */ dxdt[5] = (ssmn-x[5])/taumn;
+  /* hn */ dxdt[6] = (sshn-x[6])/tauhn;
   /* q  */ dxdt[7] = (1.0-x[7])*alphaq-x[7]*betaq;
   /* Ca */ dxdt[8] = -CaA*ICa - x[8]/CaTau;
   /* VD */ dxdt[9] = ( - ILD - ISD )/CD;
@@ -2229,16 +2253,16 @@ void MilesDai::operator()(  double t, double s, double *x, double *dxdt, int n )
 
 void MilesDai::init( double *x ) const
 {
-  x[0] = 0.0;
-  x[1] = 0.0;
-  x[2] = 1.0;
-  x[3] = 0.0;
-  x[4] = 1.0;
-  x[5] = 0.0;
-  x[6] = 0.0;
+  x[0] = -61.39687;
+  x[1] = 0.01440;
+  x[2] = 0.94853;
+  x[3] = 0.15558;
+  x[4] = 0.89834;
+  x[5] = 0.00055;
+  x[6] = 0.99171;
   x[7] = 0.0;
-  x[8] = 0.0;
-  x[9] = 0.0;
+  x[8] = 0.00001;
+  x[9] = -61.39022;
 }
 
 
@@ -2270,6 +2294,12 @@ void MilesDai::conductances( double *g ) const
 }
 
 
+string MilesDai::conductanceUnit( void ) const
+{
+  return "muS";
+}
+
+
 void MilesDai::currents( vector< string > &currentnames ) const
 {
   currentnames.clear();
@@ -2298,32 +2328,44 @@ void MilesDai::currents( double *c ) const
 }
 
 
+string MilesDai::currentUnit( void ) const
+{
+  return "nA";
+}
+
+
+string MilesDai::inputUnit( void ) const
+{
+  return "nA";
+}
+
+
 void MilesDai::add( void )
 {
   addLabel( "Soma Sodium current", ModelFlag );
-  addNumber( "gna", "Na conductivity", GNa, 0.0, 10000.0, 0.1, "mS" ).setFlags( ModelFlag );
+  addNumber( "gna", "Na conductivity", GNa, 0.0, 10000.0, 0.1, "muS" ).setFlags( ModelFlag );
   addNumber( "ena", "Na reversal potential", ENa, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
 
-  addLabel( "Soma Potassium current", ModelFlag );
-  addNumber( "gk", "K conductivity", GK, 0.0, 10000.0, 0.1, "mS" ).setFlags( ModelFlag );
+  addLabel( "Soma Delayed Rectifier Potassium current", ModelFlag );
+  addNumber( "gk", "K conductivity", GK, 0.0, 10000.0, 0.1, "muS" ).setFlags( ModelFlag );
   addNumber( "ek", "K reversal potential", EK, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
 
-  addLabel( "Soma Calcium current", ModelFlag );
-  addNumber( "gca", "Ca conductivity", GCa, 0.0, 10000.0, 0.1, "mS" ).setFlags( ModelFlag );
+  addLabel( "Soma N-Type Calcium current", ModelFlag );
+  addNumber( "gca", "Ca conductivity", GCa, 0.0, 10000.0, 0.1, "muS" ).setFlags( ModelFlag );
   addNumber( "eca", "Ca reversal potential", ECa, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
   addNumber( "caa", "Ca activation", CaA, 0.0, 200.0, 1.0, "1" ).setFlags( ModelFlag );
   addNumber( "catau", "Ca removal time constant", CaTau, 0.0, 10000.0, 1.0, "ms" ).setFlags( ModelFlag );
 
   addLabel( "Soma Leak current", ModelFlag );
-  addNumber( "gl", "Leak conductivity", GL, 0.0, 10000.0, 0.1, "mS" ).setFlags( ModelFlag );
+  addNumber( "gl", "Leak conductivity", GL, 0.0, 10000.0, 0.1, "muS" ).setFlags( ModelFlag );
   addNumber( "el", "Leak reversal potential", EL, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
-  addNumber( "c", "Capacitance", C, 0.0, 100.0, 0.1, "muF" ).setFlags( ModelFlag );
+  addNumber( "c", "Capacitance", C, 0.0, 100.0, 0.1, "nF" ).setFlags( ModelFlag );
 
   addLabel( "Other currents", ModelFlag );
-  addNumber( "gahp", "Soma AHP-type K conductivity", GKAHP, 0.0, 10000.0, 0.1, "mS" ).setFlags( ModelFlag );
-  addNumber( "gld", "Dendrite leak conductivity", GLD, 0.0, 10000.0, 0.1, "mS" ).setFlags( ModelFlag );
-  addNumber( "gds", "Soma-dendrite conductivity", GDS, 0.0, 10000.0, 0.1, "mS" ).setFlags( ModelFlag );
-  addNumber( "cd", "Capacitance of dendrite", CD, 0.0, 100.0, 0.1, "muF" ).setFlags( ModelFlag );
+  addNumber( "gahp", "Soma AHP-type potassium conductivity", GKAHP, 0.0, 10000.0, 0.1, "muS" ).setFlags( ModelFlag );
+  addNumber( "gld", "Dendrite leak conductivity", GLD, 0.0, 10000.0, 0.1, "muS" ).setFlags( ModelFlag );
+  addNumber( "gds", "Soma-dendrite coupling conductivity", GDS, 0.0, 10000.0, 0.1, "muS" ).setFlags( ModelFlag );
+  addNumber( "cd", "Capacitance of dendrite", CD, 0.0, 100.0, 0.1, "nF" ).setFlags( ModelFlag );
 
   SpikingNeuron::add();
 }

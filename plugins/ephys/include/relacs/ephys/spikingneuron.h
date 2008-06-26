@@ -917,9 +917,12 @@ class Crook : public HodgkinHuxley
 \brief The Miles-Dai model for spinal motoneurones with slowly inactivating sodium current
 \author Jan Benda
 
-(G. B. Miles and Y. Dai and R. M. Brownstone (2005):
+The two-compartment model is from 
+G. B. Miles and Y. Dai and R. M. Brownstone (2005):
 Mechanisms underlying the early phase of spike frequency adaptation in mouse spinal motoneurones.
-J. Physiol. 566, pp. 519-532)
+J. Physiol. 566, pp. 519-532.
+However, all potentials are shifted by -60mV, all conductances are in muS,
+and capacitances in nF.
 */
 
 class MilesDai : public HodgkinHuxley
@@ -948,6 +951,9 @@ class MilesDai : public HodgkinHuxley
         The number of conductances is defined by the size of 
         \a conductancenames the function conductances() returns. */
   virtual void conductances( double *g ) const;
+    /*! Returns the unit of the conductances returned by conductances(),
+        i.e. muS */
+  virtual string conductanceUnit( void ) const;
     /*! Returns in \a currentnames the names of the individual ionic currents
         that currents( double * ) would return. */
   virtual void currents( vector< string > &currentnames ) const;
@@ -955,6 +961,10 @@ class MilesDai : public HodgkinHuxley
         The number of currents is defined by the size of \a currentnames
         the function currents() returns. */
   virtual void currents( double *c ) const;
+    /*! Returns the unit of the currents returned by currents(), i.e. uA. */
+  virtual string currentUnit( void ) const;
+    /*! Returns the unit of the input (the stimulus), i.e. nA. */
+  virtual string inputUnit( void ) const;
 
     /*! Add parameters as options. */
   virtual void add( void );
