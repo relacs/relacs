@@ -1523,125 +1523,6 @@ void TraubErmentrout::notify( void )
 }
 
 
-TraubErmentroutNaSI::TraubErmentroutNaSI( void )
-  : TraubErmentrout()
-{
-}
-
-
-string TraubErmentroutNaSI::name( void ) const
-{
-  return "Traub-Miles-Ermentrout NaSI";
-}
-
-
-int TraubErmentroutNaSI::dimension( void ) const
-{
-  return 9;
-}
-
-
-void TraubErmentroutNaSI::variables( vector< string > &varnames ) const
-{
-  varnames.clear();
-  varnames.reserve( dimension() );
-  varnames.push_back( "V" );
-  varnames.push_back( "m" );
-  varnames.push_back( "h" );
-  varnames.push_back( "l" );
-  varnames.push_back( "n" );
-  varnames.push_back( "s" );
-  varnames.push_back( "w" );
-  varnames.push_back( "q" );
-  varnames.push_back( "[Ca]" );
-}
-
-
-void TraubErmentroutNaSI::units( vector< string > &u ) const
-{
-  u.clear();
-  u.reserve( dimension() );
-  u.push_back( "mV" );
-  u.push_back( "1" );
-  u.push_back( "1" );
-  u.push_back( "1" );
-  u.push_back( "1" );
-  u.push_back( "1" );
-  u.push_back( "1" );
-  u.push_back( "1" );
-  u.push_back( "mM" );
-}
-
-
-void TraubErmentroutNaSI::operator()(  double t, double s, double *x, double *dxdt, int n )
-{
-  double dl=0.3;
-  double zl=-3.5;
-  double vl=0.0;
-  double tlmax=1700.0;
-  double Vl=-53.0;
-  double T=291.0;  /* K, 18GradCelsius */
-  double e=1.60217653e-19; /* C   */
-  double k=1.3806505e-23; /*  J/K */
-  double eKT=0.001*e/k/T; /*  */
-
-  double V = x[0];
-  double Ca = x[8];
-
-  double am = 0.32*(V+54.0)/(1.0-exp(-(V+54.0)/4));
-  double bm = 0.28*(V+27.0)/(exp((V+27.0)/5.0)-1.0);
-
-  double ah = 0.128*exp(-(V+50.0)/18.0);
-  double bh = 4.0/(1.0+exp(-(V+27.0)/5.0));
-  
-  double an = 0.032*(V+52.0)/(1-exp(-(V+52.0)/5.0));
-  double bn = 0.5*exp(-(V+57.0)/40.0);
-
-  double tl = tlmax*(pow( (1.0-dl)/dl, dl ) + pow( (1.0-dl)/dl, dl-1.0 ))/(exp(dl*zl*eKT*(V-Vl))+exp((dl-1.0)*zl*eKT*(V-Vl)));
-  double ls = vl+(1.0-vl)/(1.0+exp(-zl*eKT*(V-Vl)));
-
-  x[5] = 1.0/(1.0+exp(-(V+25.0)/5.0));
-  x[7] = Ca/(30.0+Ca);
-
-  GNaGates = GNa*x[1]*x[1]*x[1]*x[2]*x[3];
-  GKGates = GK*x[4]*x[4]*x[4]*x[4];
-  GCaGates = GCa*x[5];
-  GMGates = GM*x[6];
-  GAHPGates = GAHP*x[7];
-
-  INa = GNaGates*(V-ENa);
-  IK = GKGates*(V-EK);
-  IL = GL*(V-EL);
-  ICa = GCaGates*(V-ECa);
-  IM = GMGates*(V-EM);
-  IAHP = GAHPGates*(V-EAHP);
-
-  /* V */ dxdt[0] = ( - INa - IK - IL - ICa - IM - IAHP + s )/C;
-  /* m */ dxdt[1] = am*(1.0-x[1]) - x[1]*bm;
-  /* h */ dxdt[2] = ah*(1.0-x[2]) - x[2]*bh;
-  /* l */ dxdt[3] = ( ls - x[3] ) / tl;
-  /* n */ dxdt[4] = an*(1.0-x[4]) - x[4]*bn;
-  /* s */ dxdt[5] = 0.0;
-  /* w */ dxdt[6] = (1.0/(1.0+exp(-(V+20.0)/5.0)) - x[6])/TauW;
-  /* q */ dxdt[7] = 0.0;
-  /* Ca */ dxdt[8] = -0.002*ICa - 0.0125*Ca;
-}
-
-
-void TraubErmentroutNaSI::init( double *x ) const
-{
-  x[0] = -66.01;
-  x[1] = 0.018030;
-  x[2] = 0.994788;
-  x[3] = 1.0;
-  x[4] = 0.044163;
-  x[5] = 0.000274;
-  x[6] = 0.000137;
-  x[7] = 0.001291;
-  x[8] = 0.038781;
-}
-
-
 WangBuzsaki::WangBuzsaki( void )
   : HodgkinHuxley()
 {
@@ -2674,18 +2555,39 @@ void WangIKNa::notify( void )
 Edman::Edman( void )
   : SpikingNeuron()
 {
-  GNa = 5.6e-4;
-  GNa = 0.004;
-  GNa = 0.015;
-  GNa = 0.02;
-  GK = 2.4e-4;
-  GLNa = 5.8e-8;
-  GLK = 1.8e-6;
-  GLK = 1.0e-5;
-  GLCl = 1.1e-7;
-  GP = 3.0e-10;
+  A = 1.0e-3;     // cm^2
+  Vol = 1.25e-6;  // cm^3 
 
-  C = 7.8;
+  GNa = 5.6e-4;   // cm/s
+  GK = 2.4e-4;    // cm/s
+  GLNa = 5.8e-8;  // cm/s
+  GLK = 1.8e-6;   // cm/s
+  GLCl = 1.1e-7;  // cm/s
+  GP = 3.0e-10;   // mol/cm^2/s
+
+  Narest = 10.0;  // mM
+  Krest = 160.0;  // mM
+  ClI = 46.0;     // mM
+
+  NaO = 325.0;    // mM, from methods: solutions
+  KO = 5.0;       // mM, from methods: solutions
+  ClO = 325.0+5.0+2.0*25.0+2.0*4.0+26.0; // mM, from methods: solutions
+
+  Vm = -13.0; // mV
+  Vh = -35.0; // mV
+  Vl = -53.0; // mV
+  Vn = -18.0; // mV
+  Vr = -61.0; // mV
+
+  Tmmax = 0.3;    // ms
+  Thmax = 5.0;    // ms
+  Tlmax = 1700.0; // ms
+  Tnmax = 6.0;    // ms
+  Trmax = 1200.0; // ms
+
+  Km = 7.7;       // mM
+  C = 7.8;        // muF/cm^2
+  T = 291.0;      // K, 18GradCelsius
 
   GNaGates = GNa;
   GKGates = GK;
@@ -2700,6 +2602,10 @@ Edman::Edman( void )
   ILK = 0.0;
   ILCl = 0.0;
   IP = 0.0;
+
+  FRT=0.001*Faraday/GasConst/T; // 1/mV
+  F2RT=0.001*Faraday*Faraday/GasConst/T;  // makes all currents measured in muA
+  ekT=-0.001*eCharge/kBoltz/T;  // -1/mV, without the negative sign all the activation functions and time constants are wrong
 }
 
 
@@ -2745,41 +2651,25 @@ void Edman::units( vector< string > &u ) const
 
 void Edman::operator()(  double t, double s, double *x, double *dxdt, int n )
 {
-  double A=1.0e-3;
-  double vol=1.25e-6; /* cm^3 */
-  double Narest=0.001*10.0, Krest=0.001*160.0, Clrest=0.001*46.0;
-  double NaO=0.001*325.0, KO=0.001*5.0, ClO=0.001*(325.0+5.0+2.0*25.0+2.0*4.0+26.0);
-  double dm=0.3, dh=0.5, dl=0.3, dn=0.3, dr=0.5;
-  double zm=3.1, zh=-4.0, zl=-3.5, zn=2.6, zr=-4.0;
-  double vm=0.0, vh=0.0, vl=0.0, vn=0.03, vr=0.3;
-  double tmmax=0.3, thmax=5.0, tlmax=1700.0, tnmax=6.0, trmax=1200.0;
-  double Vm=-13.0, Vh=-35.0, Vl=-53.0, Vn=-18.0, Vr=-61.0;
-  double Km=7.7;
-  double F=96485.0; /* C/mol */
-  double R=8.3144; /* J/K/mol */
-  double T=291.0;  /* K, 18GradCelsius */
-  double FRT=0.001*F/R/T;
-  double F2RT=F*F/R/T;
-  double e=1.60217653e-19; /* C   */
-  double k=1.3806505e-23; /*  J/K */
-  double eKT=0.001*e/k/T; /*  */
+  const double dm=0.3, dh=0.5, dl=0.3, dn=0.3, dr=0.5;
+  const double zm=3.1, zh=-4.0, zl=-3.5, zn=2.6, zr=-4.0;
+  const double vm=0.0, vh=0.0, vl=0.0, vn=0.03, vr=0.3;
 
   double V = x[0];
   double Na = x[6];
   double K = Krest - ( Na - Narest );
-  double Cl = Clrest;
 
-  double ms = vm+(1.0-vm)/(1.0+exp(-zm*eKT*(V-Vm)));
-  double hs = vh+(1.0-vh)/(1.0+exp(-zh*eKT*(V-Vh)));
-  double ls = vl+(1.0-vl)/(1.0+exp(-zl*eKT*(V-Vl)));
-  double ns = vn+(1.0-vn)/(1.0+exp(-zn*eKT*(V-Vn)));
-  double rs = vr+(1.0-vr)/(1.0+exp(-zr*eKT*(V-Vr)));
+  double ms = vm+(1.0-vm)/(1.0+exp(zm*ekT*(V-Vm)));
+  double hs = vh+(1.0-vh)/(1.0+exp(zh*ekT*(V-Vh)));
+  double ls = vl+(1.0-vl)/(1.0+exp(zl*ekT*(V-Vl)));
+  double ns = vn+(1.0-vn)/(1.0+exp(zn*ekT*(V-Vn)));
+  double rs = vr+(1.0-vr)/(1.0+exp(zr*ekT*(V-Vr)));
 
-  double tm = tmmax*(pow( (1.0-dm)/dm, dm ) + pow( (1.0-dm)/dm, dm-1.0 ))/(exp(dm*zm*eKT*(V-Vm))+exp((dm-1.0)*zm*eKT*(V-Vm)));
-  double th = thmax*(pow( (1.0-dh)/dh, dh ) + pow( (1.0-dh)/dh, dh-1.0 ))/(exp(dh*zh*eKT*(V-Vh))+exp((dh-1.0)*zh*eKT*(V-Vh)));
-  double tl = tlmax*(pow( (1.0-dl)/dl, dl ) + pow( (1.0-dl)/dl, dl-1.0 ))/(exp(dl*zl*eKT*(V-Vl))+exp((dl-1.0)*zl*eKT*(V-Vl)));
-  double tn = tnmax*(pow( (1.0-dn)/dn, dn ) + pow( (1.0-dn)/dn, dn-1.0 ))/(exp(dn*zn*eKT*(V-Vn))+exp((dn-1.0)*zn*eKT*(V-Vn)));
-  double tr = trmax*(pow( (1.0-dr)/dr, dr ) + pow( (1.0-dr)/dr, dr-1.0 ))/(exp(dr*zr*eKT*(V-Vr))+exp((dr-1.0)*zr*eKT*(V-Vr)));
+  double tm = Tmmax*(pow( (1.0-dm)/dm, dm ) + pow( (1.0-dm)/dm, dm-1.0 ))/(exp(dm*zm*ekT*(V-Vm))+exp((dm-1.0)*zm*ekT*(V-Vm)));
+  double th = Thmax*(pow( (1.0-dh)/dh, dh ) + pow( (1.0-dh)/dh, dh-1.0 ))/(exp(dh*zh*ekT*(V-Vh))+exp((dh-1.0)*zh*ekT*(V-Vh)));
+  double tl = Tlmax*(pow( (1.0-dl)/dl, dl ) + pow( (1.0-dl)/dl, dl-1.0 ))/(exp(dl*zl*ekT*(V-Vl))+exp((dl-1.0)*zl*ekT*(V-Vl)));
+  double tn = Tnmax*(pow( (1.0-dn)/dn, dn ) + pow( (1.0-dn)/dn, dn-1.0 ))/(exp(dn*zn*ekT*(V-Vn))+exp((dn-1.0)*zn*ekT*(V-Vn)));
+  double tr = Trmax*(pow( (1.0-dr)/dr, dr ) + pow( (1.0-dr)/dr, dr-1.0 ))/(exp(dr*zr*ekT*(V-Vr))+exp((dr-1.0)*zr*ekT*(V-Vr)));
 
   GNaGates = A*GNa*x[1]*x[1]*x[2]*x[3];
   GKGates = A*GK*x[4]*x[4]*x[5];
@@ -2792,8 +2682,8 @@ void Edman::operator()(  double t, double s, double *x, double *dxdt, int n )
   IK = GKGates*V*F2RT*(KO-K*exp(V*FRT))/(1.0-exp(V*FRT));
   ILNa = GLNaA*V*F2RT*(NaO-Na*exp(V*FRT))/(1.0-exp(V*FRT));
   ILK = GLKA*V*F2RT*(KO-K*exp(V*FRT))/(1.0-exp(V*FRT));
-  ILCl = GLClA*V*F2RT*(ClO-Cl*exp(V*FRT))/(1.0-exp(V*FRT));
-  IP = 1.0e6*GPA*F/3.0/pow( 1.0+Km/Na, 3.0 );
+  ILCl = GLClA*V*F2RT*(ClO-ClI*exp(-V*FRT))/(1.0-exp(-V*FRT));
+  IP = 1.0e6*GPA*Faraday/3.0/pow( 1.0+Km/Na, 3.0 );
 
   /* V */ dxdt[0] = ( - INa - IK - ILNa - ILK - ILCl - IP + 0.001*s )/C/A;
   /* m */ dxdt[1] = ( ms - x[1] ) / tm;
@@ -2801,19 +2691,19 @@ void Edman::operator()(  double t, double s, double *x, double *dxdt, int n )
   /* l */ dxdt[3] = ( ls - x[3] ) / tl;
   /* n */ dxdt[4] = ( ns - x[4] ) / tn;
   /* r */ dxdt[5] = ( rs - x[5] ) / tr;
-  /* Na */ dxdt[6] = - 1.0e-6 * ( INa + ILNa + 3.0*IP ) / F / vol;
+  /* Na */ dxdt[6] = - 1.0e-3 * ( INa + ILNa + 3.0*IP ) / Faraday / Vol;
 }
 
 
 void Edman::init( double *x ) const
 {
-  x[0] = -60.86;
-  x[1] = 0.002688;
-  x[2] = 0.984;
-  x[3] = 0.8609;
-  x[4] = 0.0412;
-  x[5] = 0.8117;
-  x[6] = 0.001*10.022;
+  x[0] = -64.89677;
+  x[1] = 0.00163;
+  x[2] = 0.99158;
+  x[3] = 0.84030;
+  x[4] = 0.03744;
+  x[5] = 0.75540;
+  x[6] = 9.95128;
 }
 
 
@@ -2841,6 +2731,12 @@ void Edman::conductances( double *g ) const
 }
 
 
+string Edman::conductanceUnit( void ) const
+{
+  return "cm^3/s";
+}
+
+
 void Edman::currents( vector< string > &currentnames ) const
 {
   currentnames.clear();
@@ -2865,16 +2761,52 @@ void Edman::currents( double *c ) const
 }
 
 
+string Edman::currentUnit( void ) const
+{
+  return "muA";
+}
+
+
+string Edman::inputUnit( void ) const
+{
+  return "nA";
+}
+
+
 void Edman::add( void )
 {
-  addLabel( "Conductivities", ModelFlag );
-  addNumber( "gna", "Na conductivity", GNa, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
-  addNumber( "gk", "K conductivity", GK, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
-  addNumber( "glna", "Na leak conductivity", GLNa, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
-  addNumber( "glk", "K leak conductivity", GLK, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
-  addNumber( "glcl", "Cl leak conductivity", GLCl, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
-  addNumber( "gp", "Pump conductivity", GP, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addLabel( "Sodium current", ModelFlag );
+  addNumber( "gna", "Na conductivity", GNa, 0.0, 10000.0, 0.1, "cm/s" ).setFlags( ModelFlag );
+  addNumber( "glna", "Na leak conductivity", GLNa, 0.0, 10000.0, 0.1, "cm/s" ).setFlags( ModelFlag );
+  addNumber( "naex", "Extracellular concentration", NaO, 0.0, 1000.0, 1.0, "mM" ).setFlags( ModelFlag );
+  addNumber( "narest", "Intracellular concentration at rest", Narest, 0.0, 1000.0, 1.0, "mM" ).setFlags( ModelFlag );
+  addNumber( "vm", "Midpoint potential of m gate", Vm, -1000.0, 1000.0, 0.1, "mV" ).setFlags( ModelFlag );
+  addNumber( "tmmax", "Maximum time constant of m gate", Tmmax, 0.0, 1000.0, 0.1, "ms" ).setFlags( ModelFlag );
+  addNumber( "vh", "Midpoint potential of h gate", Vh, -1000.0, 1000.0, 0.1, "mV" ).setFlags( ModelFlag );
+  addNumber( "thmax", "Maximum time constant of h gate", Thmax, 0.0, 1000.0, 0.1, "ms" ).setFlags( ModelFlag );
+  addNumber( "vl", "Midpoint potential of l gate", Vl, -1000.0, 1000.0, 0.1, "mV" ).setFlags( ModelFlag );
+  addNumber( "tlmax", "Maximum time constant of l gate", Tlmax, 0.0, 1000.0, 01., "ms" ).setFlags( ModelFlag );
+  addLabel( "Potassium current", ModelFlag );
+  addNumber( "gk", "K conductivity", GK, 0.0, 10000.0, 0.1, "cm/s" ).setFlags( ModelFlag );
+  addNumber( "glk", "K leak conductivity", GLK, 0.0, 10000.0, 0.1, "cm/s" ).setFlags( ModelFlag );
+  addNumber( "kex", "Extracellular concentration", KO, 0.0, 1000.0, 1.0, "mM" ).setFlags( ModelFlag );
+  addNumber( "krest", "Intracellular concentration at rest", Krest, 0.0, 1000.0, 1.0, "mM" ).setFlags( ModelFlag );
+  addNumber( "vn", "Midpoint potential of n gate", Vn, -1000.0, 1000.0, 0.1, "mV" ).setFlags( ModelFlag );
+  addNumber( "tnmax", "Maximum time constant of n gate", Tnmax, 0.0, 1000.0, 0.1, "ms" ).setFlags( ModelFlag );
+  addNumber( "vr", "Midpoint potential of r gate", Vr, -1000.0, 1000.0, 0.1, "mV" ).setFlags( ModelFlag );
+  addNumber( "trmax", "Maximum time constant of r gate", Trmax, 0.0, 1000.0, 01., "ms" ).setFlags( ModelFlag );
+  addLabel( "Chloride current", ModelFlag );
+  addNumber( "glcl", "Cl leak conductivity", GLCl, 0.0, 10000.0, 0.1, "cm/s" ).setFlags( ModelFlag );
+  addNumber( "clex", "Extracellular concentration", ClO, 0.0, 1000.0, 1.0, "mM" ).setFlags( ModelFlag );
+  addNumber( "clin", "Intracellular concentration", ClI, 0.0, 1000.0, 1.0, "mM" ).setFlags( ModelFlag );
+  addLabel( "Na-K Pump", ModelFlag );
+  addNumber( "gp", "Maximum extrusion capacity", GP, 0.0, 1.0, 1.0e-11, "mol/cm^2/s" ).setFlags( ModelFlag );
+  addNumber( "km", "Dissociation constant", Km, 0.0, 100.0, 0.1, "mM" ).setFlags( ModelFlag );
+  addLabel( "Other", ModelFlag );
   addNumber( "c", "Capacitance", C, 0.0, 100.0, 0.1, "muF/cm^2" ).setFlags( ModelFlag );
+  addNumber( "area", "Membrane area", A, 0.0, 1.0, 0.0001, "cm^2" ).setFlags( ModelFlag );
+  addNumber( "volume", "Cell volume", Vol, 0.0, 1.0, 1e-7, "cm^3" ).setFlags( ModelFlag );
+  addNumber( "temp", "Temperature", T, 0.0, 1000.0, 1.0, "K" ).setFlags( ModelFlag );
 
   SpikingNeuron::add();
 }
@@ -2883,13 +2815,42 @@ void Edman::add( void )
 void Edman::notify( void )
 {
   SpikingNeuron::notify();
+
   GNa = number( "gna" );
-  GK = number( "gk" );
   GLNa = number( "glna" );
+  NaO = number( "naex" );
+  Narest = number( "narest" );
+  Vm = number( "vm" );
+  Tmmax = number( "tmmax" );
+  Vh = number( "vh" );
+  Thmax = number( "thmax" );
+  Vl = number( "vl" );
+  Tlmax = number( "tlmax" );
+
+  GK = number( "gk" );
   GLK = number( "glk" );
+  KO = number( "kex" );
+  Krest = number( "krest" );
+  Vn = number( "vn" );
+  Tnmax = number( "tnmax" );
+  Vr = number( "vr" );
+  Trmax = number( "trmax" );
+
   GLCl = number( "glcl" );
+  ClO = number( "clex" );
+  ClI = number( "clin" );
+
   GP = number( "gp" );
+  Km = number( "km" );
+
   C = number( "c" );
+  A = number( "area" );
+  Vol = number( "volume" );
+  T = number( "temp" );
+
+  FRT=0.001*Faraday/GasConst/T; // 1/mV
+  F2RT=0.001*Faraday*Faraday/GasConst/T;  // makes all currents measured in muA
+  ekT=-0.001*eCharge/kBoltz/T;  // -1/mV, without the negative sign all the activation functions and time constants are wrong
 }
 
 

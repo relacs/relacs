@@ -421,7 +421,7 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
       if ( max == OutData::AutoRange )
 	max = smax;
     }
-    cerr << "ComediAnalogOutput::testWriteDevice() -> min: " << min << " max: " << max << "\n";
+    //    cerr << "ComediAnalogOutput::testWriteDevice() -> min: " << min << " max: " << max << "\n";
     // reference and polarity:
     bool unipolar = false;
     if ( min >= 0.0 )
@@ -435,7 +435,7 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
       if ( min > max )
 	max = min;
     }
-    cerr << "ComediAnalogOutput::testWriteDevice() -> unipolar: " << unipolar << " max: " << max << "\n";
+    //    cerr << "ComediAnalogOutput::testWriteDevice() -> unipolar: " << unipolar << " max: " << max << "\n";
     // set range:
     double maxboardvolt = -1.0;
     double maxvolt = sigs[k].getVoltage( max );
@@ -493,7 +493,7 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
       else
 	sigs[k].setGain( maxrange/2, maxrange/2 );
     }
-    cerr << "ComediAnalogOutput::testWriteDevice() -> gain: " << sigs[k].gain() << " offset: " << sigs[k].offset() << " index: " << index << "\n";
+    //    cerr << "ComediAnalogOutput::testWriteDevice() -> gain: " << sigs[k].gain() << " offset: " << sigs[k].offset() << " index: " << index << "\n";
 
     int gainIndex = index;
     if ( unipolar )
@@ -510,19 +510,15 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
     sigs[k].setGainIndex( gainIndex );
     sigs[k].setMinData( 0 );
     sigs[k].setMaxData( maxrange - 1 );
-    cerr << "ComediAnalogOutput::testWriteDevice() -> gainIndex: " << sigs[k].gainIndex() << " mindata: " << sigs[k].minData() << " maxData: " << sigs[k].maxData() << "\n";
+    //    cerr << "ComediAnalogOutput::testWriteDevice() -> gainIndex: " << sigs[k].gainIndex() << " mindata: " << sigs[k].minData() << " maxData: " << sigs[k].maxData() << "\n";
 
     // set up channel in chanlist:
-    if ( unipolar ) {
+    if ( unipolar )
       ChanList[k] = CR_PACK( sigs[k].channel(),
 			     UnipolarRangeIndex[index], aref );
-      cerr << "ComediAnalogOutput::testWriteDevice() -> CR_PACK unipolar: " << unipolar << " channel: " << sigs[k].channel() << " rangeindex: " << UnipolarRangeIndex[index] << " aref: " << aref << "\n";
-    }
-    else {
+    else
       ChanList[k] = CR_PACK( sigs[k].channel(),
 			     BipolarRangeIndex[index], aref );
-      cerr << "ComediAnalogOutput::testWriteDevice() -> CR_PACK unipolar: " << unipolar << " channel: " << sigs[k].channel() << " rangeindex: " << BipolarRangeIndex[index] << " aref: " << aref << "\n";
-    }
   }
 
 
@@ -653,7 +649,7 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   if ( ol.success() )
     setSettings( ol );
 
-  cerr << " ComediAnalogOutput::prepareWrite(): success" << endl;//////TEST/////
+  //  cerr << " ComediAnalogOutput::prepareWrite(): success" << endl;//////TEST/////
 
   IsPrepared = ol.success();
 
@@ -663,7 +659,7 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
 
 int ComediAnalogOutput::startWrite( OutList &sigs )
 {
-  cerr << " ComediAnalogOutput::startWrite(): begin" << endl;/////TEST/////
+  //  cerr << " ComediAnalogOutput::startWrite(): begin" << endl;/////TEST/////
 
   if ( !prepared() ) {
     sigs.addError( DaqError::Unknown );
@@ -847,7 +843,7 @@ int ComediAnalogOutput::startWrite( OutList &sigs )
 
 #endif
   
-  cerr << " ComediAnalogOutput::startWrite(): end\n";/////TEST/////
+  //  cerr << " ComediAnalogOutput::startWrite(): end\n";/////TEST/////
   
   return 0;
 }
@@ -869,7 +865,7 @@ int ComediAnalogOutput::writeData( OutList &sigs )
 
 int ComediAnalogOutput::reset( void ) 
 { 
-  cerr << " ComediAnalogOutput::reset()" << endl;/////TEST/////
+  //  cerr << " ComediAnalogOutput::reset()" << endl;/////TEST/////
 
   if ( !isOpen() )
     return NotOpen;
@@ -894,11 +890,11 @@ bool ComediAnalogOutput::running( void ) const
       cerr << " ComediAnalogOutput::running(): stopped!"  << endl;
     IsRunning = false;
   }
-  */
   if ( IsRunning )
     cerr << " ComediAnalogOutput::running(): running"  << endl;
   else
     cerr << " ComediAnalogOutput::running(): not running"  << endl;
+  */
   return IsRunning;
 }
 
@@ -975,7 +971,7 @@ int ComediAnalogOutput::fillWriteBuffer( void )
     int bytesWritten = write( comedi_fileno(DeviceP),
 			      (*Sigs)[0].deviceBufferPopBuffer(),
 			      (*Sigs)[0].deviceBufferMaxPop() * BufferElemSize );
-       cerr << " ComediAnalogOutput::writeData():  bytes written:" << bytesWritten << endl;/////TEST/////
+    //    cerr << " ComediAnalogOutput::writeData():  bytes written:" << bytesWritten << endl;/////TEST/////
 
     if ( bytesWritten < 0 && errno != EAGAIN && errno != EINTR ) {
       (*Sigs).addErrorStr( errno );

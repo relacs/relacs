@@ -543,7 +543,7 @@ int ComediAnalogInput::prepareRead( InList &traces )
 
 int ComediAnalogInput::startRead( InList &traces )
 {
-  cerr << " ComediAnalogInput::startRead(): begin" << endl;/////TEST/////
+  //  cerr << " ComediAnalogInput::startRead(): begin" << endl;/////TEST/////
 
   if ( !prepared() ) {
     traces.addError( DaqError::Unknown );
@@ -722,7 +722,7 @@ int ComediAnalogInput::startRead( InList &traces )
     }
   */
 
-  cerr << " ComediAnalogInput::startRead(): end" << endl;//////TEST/////
+  //  cerr << " ComediAnalogInput::startRead(): end" << endl;//////TEST/////
   return 0;  
 }
 
@@ -832,11 +832,11 @@ bool ComediAnalogInput::running( void ) const
       cerr << " ComediAnalogInput::running(): stopped!"  << endl;
     IsRunning = false;
   }
-  */
   if ( IsRunning )
     cerr << " ComediAnalogInput::running(): running"  << endl;
   else
     cerr << " ComediAnalogInput::running(): not running"  << endl;
+  */
   return IsRunning;
 }
 
