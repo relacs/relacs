@@ -1,23 +1,22 @@
-#include "model.h"
 
 /*! Name, by which this module is known inside Linux: */
 char *moduleName;
 
-char *paramnames[PARAM_N];
-char *inputnames[INPUT_N];
-char *outputnames[OUTPUT_N];
+char *inputNames[] = { "input0", NULL };
+char *outputNames[] = { "output0", NULL };
+char *inputUnits[] = { "mV", NULL };
+char *outputUnits[] = { "mA", NULL };
+
+float input[] = { 0, 0 };
+float output[] = { 0, 0 };
 
 void initModel( void )
 {
   moduleName = "/dev/dynclamp";
-  paramnames[0] = "paramSum"; // RESERVED FOR DIRECT OUT (E.G. PROVIDED WITH ZERO DATA)
-  paramnames[1] = "param1";
-  inputnames[0] = "input0";
-  outputnames[0] = "output0";
 }
 
 void calcDummyModel( void )
 {
 //  PARAM(1) = 
-
+// OUTPUT = -input[0];
 }

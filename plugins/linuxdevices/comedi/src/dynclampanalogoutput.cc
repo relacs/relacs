@@ -116,10 +116,11 @@ int DynClampAnalogOutput::open( const string &device, long mode )
   Modulename = "/dev/dynclamp";
   Modulefile = ::open( Modulename.c_str(), O_WRONLY ); //O_RDONLY
   if( Modulefile == -1 ) {
-  cerr << " DynClampAnalogOutput::open(): opening dynclamp-module failed" 
+    cerr << " DynClampAnalogOutput::open(): opening dynclamp-module failed" 
        << endl;/////TEST/////
     return -1;
   }
+  cerr << " DynClampAnalogOutput::open() success\n" ;
 
   // get subdevice ID from module:
   retVal = ::ioctl( Modulefile, IOC_GET_SUBDEV_ID, &SubdeviceID );
@@ -151,7 +152,7 @@ int DynClampAnalogOutput::open( const string &device, long mode )
 
 bool DynClampAnalogOutput::isOpen( void ) const 
 { 
-  return ( Channels >= 0 );
+  return ( Modulefile >= 0 );
 }
 
 
@@ -167,6 +168,7 @@ void DynClampAnalogOutput::close( void )
   if( ::close( Modulefile ) < 0 )
     cerr << "Close of module file failed!" << endl;
   Channels = -1;
+  Modulefile = -1;
 
 }
 
@@ -684,6 +686,20 @@ int DynClampAnalogOutput::getAISyncDevice( const vector< AnalogInput* > &ais ) c
       return k;
   }
   return -1;
+}
+
+
+void DynClampAnalogOutput::addTraces( vector< TraceSpec > &traces, int deviceid ) const
+{
+  struct traceInfoIOCT traceInfo;
+  int channel=1000;
+  while ( 0 == ::ioctl( Modulefile, IOC_GET_INTRACE_INFO, &traceInfo ) ) {
+    traces.push_back( TraceSpec( traces.size(), traceInfo.name,
+				 deviceid, channel++, 1.0, traceInfo.unit ) );
+  }
+  int ern = errno;
+  if ( ern != ERANGE )
+    cerr << "DynClampAnalogOutput::addTraces() -> errno " << strerror( errno ) <<  endl;
 }
 
 

@@ -130,6 +130,15 @@ public:
         of the corresponding analog input device in \a ais. */
   virtual int getAISyncDevice( const vector< AnalogInput* > &ais ) const;
 
+    /*! If the analog output device supports outputs that
+        are not physical output lines but rather writeable parameter,
+        like model parameter for a dynamic clamp modul,
+        then reimplement this function. 
+        Add for each such parameter a TraceSpec to \a traces.
+        \a deviceid is the id of the analog output device
+        that you should use for initializing the TraceSpec. */
+  virtual void addTraces( vector< TraceSpec > &traces, int deviceid ) const;
+
 
 protected:
 

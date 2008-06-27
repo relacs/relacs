@@ -230,6 +230,7 @@ int DynClampAnalogInput::testReadDevice( InList &sigs )
   
   cerr << " DynClampAnalogInput::testRead(): 1" << endl;/////TEST/////
 
+    // XXX check whether channel >=1000 is valid!
 
   memset( ChanList, 0, sizeof( ChanList ) );
   // find ranges for synchronous acquisition:
@@ -682,6 +683,20 @@ void DynClampAnalogInput::take( vector< AnalogInput* > &ais,
 	ComediAIsLink[ai] = ao;
       }
   */
+}
+
+
+void DynClampAnalogInput::addTraces( vector< TraceSpec > &traces, int deviceid ) const
+{
+  struct traceInfoIOCT traceInfo;
+  int channel=1000;
+  while ( 0 == ::ioctl( Modulefile, IOC_GET_INTRACE_INFO, &traceInfo ) ) {
+    traces.push_back( TraceSpec( traces.size(), traceInfo.name,
+				 deviceid, channel++, 1.0, traceInfo.unit ) );
+  }
+  int ern = errno;
+  if ( ern != ERANGE )
+    cerr << "DynClampAnalogOutput::addTraces() -> errno " << errno << endl;
 }
 
 

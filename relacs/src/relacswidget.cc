@@ -685,6 +685,11 @@ void RELACSWidget::setupOutTraces( void )
 
   AQ->addOutTraces();
 
+  cerr << "setupOutTraces:\n";
+  for ( int k=0; k<AQ->outTracesSize(); k++ )
+    cerr << "setupOutTraces: " << k << " " << AQ->outTraceName( k ) << " " << AQ->outTrace( k ).unit() << endl;
+
+
 }
 
 

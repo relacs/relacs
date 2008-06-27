@@ -16,7 +16,6 @@
 
 #include <math.h>
 
-#include "model.h"
 #include "rtmodule.h"
 
 
@@ -50,6 +49,7 @@ struct chanT {
   comedi_t *devP;
   int subdev;
   unsigned int chan;
+  int isParamChan;
   int aref;
   int rangeIndex;
   lsampl_t maxData;
@@ -123,12 +123,24 @@ int subdevN = 0;
 int reqTraceSubdevID = -1;
 int reqCloseSubdevID = -1;
 
+int inTraceIndex = 0;
+int outTraceIndex = 0;
+
 //* RTAI TASK:
 
 struct dynClampTaskT dynClampTask;
 struct calcTaskT calcTask;
 
-char *moduleName = "/dev/dynclamp";
+
+// for debug:
+
+char *iocNames[RTMODULE_IOC_MAXNR] = {
+        "dummy",
+        "IOC_GET_SUBDEV_ID", "IOC_GET_PARAM_ID", "IOC_OPEN_SUBDEV", "IOC_CHANLIST", "IOC_COMEDI_CMD", "IOC_SYNC_CMD", 
+        "IOC_START_SUBDEV", "IOC_CHK_RUNNING", "IOC_REQ_READ", "IOC_REQ_WRITE", "IOC_REQ_CLOSE", "IOC_STOP_SUBDEV", 
+        "IOC_RELEASE_SUBDEV", "IOC_GET_INTRACE_INFO", "IOC_GET_OUTTRACE_INFO", "IOC_GETLOOPCNT", "IOC_GETAOINDEX" 
+};
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // *** PROTOTYPES ***
@@ -147,6 +159,12 @@ static struct file_operations fops = {
   .release= rtmodule_close,
 };
 
+
+
+///////////////////////////////////////////////////////////////////////////////
+// *** MODEL INCLUDE ***
+///////////////////////////////////////////////////////////////////////////////
+#include "model.c"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -171,6 +189,8 @@ void init_globals( void ) {
   subdevN = 0;
   reqCloseSubdevID = -1;
   reqTraceSubdevID = -1;
+  inTraceIndex = 0;
+  outTraceIndex = 0;
   memset( device, 0, sizeof(device) );
   memset( subdev, 0, sizeof(subdev) );
   memset( &dynClampTask, 0, sizeof(struct dynClampTaskT ) );
@@ -340,6 +360,9 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
     subdev[iS].chanlist[iC].devP = device[iD].devP;
     subdev[iS].chanlist[iC].subdev = subdev[iS].subdev;
     subdev[iS].chanlist[iC].chan = CR_CHAN( chanlistIOC->chanlist[iC] );
+    subdev[iS].chanlist[iC].isParamChan = (subdev[iS].chanlist[iC].chan >= PARAM_CHAN_OFFSET);
+    if( subdev[iS].chanlist[iC].isParamChan )
+       subdev[iS].chanlist[iC].chan -= PARAM_CHAN_OFFSET;
     subdev[iS].chanlist[iC].aref = CR_AREF( chanlistIOC->chanlist[iC] );
     subdev[iS].chanlist[iC].rangeIndex = CR_RANGE( chanlistIOC->chanlist[iC] );
     subdev[iS].chanlist[iC].maxData = 
@@ -397,7 +420,6 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC )
   subdev[iS].prepared = 1;
   return 0;
 }
-
 
 
 int startSubdevice( int iS )
@@ -824,18 +846,22 @@ void cleanup_rt_task( void )
 int rtmodule_ioctl( struct inode *devFile, struct file *fModule, 
 		    unsigned int cmd, unsigned long arg )
 {
-  static struct deviceIOCT deviceIOC;
-  static struct chanlistIOCT chanlistIOC;
-  static struct syncCmdIOCT syncCmdIOC;
+  struct deviceIOCT deviceIOC;
+  struct chanlistIOCT chanlistIOC;
+  struct syncCmdIOCT syncCmdIOC;
+  struct traceInfoIOCT traceInfo;
 
   int tmp, subdevID;
   int retVal;
   unsigned long luTmp;
 
-  DEBUG_MSG( "ioctl: user triggered ioctl with id: %d\n", _IOC_NR( cmd ) );
 
-  if (_IOC_TYPE(cmd) != RTMODULE_MAJOR) return -ENOTTY;
-  if (_IOC_NR(cmd) > RTMODULE_IOC_MAXNR) return -ENOTTY;
+  if( _IOC_TYPE(cmd) != RTMODULE_MAJOR || _IOC_NR(cmd) > RTMODULE_IOC_MAXNR) {
+     ERROR_MSG( " ioctl: Major wrong or ioctl %d bigger than max %d\n", 
+                 _IOC_TYPE(cmd), RTMODULE_IOC_MAXNR );
+     return -ENOTTY;
+  }
+  DEBUG_MSG( "ioctl: user triggered ioctl %d %s\n",_IOC_NR( cmd ), iocNames[_IOC_NR( cmd )] );
 
 
   // TODO: use access_ok for verifying userspace mem. 
@@ -922,6 +948,38 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
     }
     retVal = loadSyncCmd( &syncCmdIOC );
     return retVal;
+
+
+  case IOC_GET_INTRACE_INFO:
+    DEBUG_MSG( "rtmodule_ioctl: inTraceIndex: %d (ERANGE=%d)\n", inTraceIndex, ERANGE );
+    if( inputUnits[inTraceIndex] == NULL ) {
+      inTraceIndex = 0;
+      return -ERANGE; // Ende der Liste signalisieren
+    }
+    strncpy( traceInfo.name, inputNames[inTraceIndex], PARAM_NAME_MAXLEN );
+    strncpy( traceInfo.unit, inputUnits[inTraceIndex], PARAM_NAME_MAXLEN );
+    retVal = __copy_to_user( (void __user *)arg, &traceInfo, sizeof(struct traceInfoIOCT) );
+    if( retVal ) {
+      ERROR_MSG( "rtmodule_ioctl ERROR: invalid user pointer for traceInfoIOCT!\n" );
+      return -EFAULT;
+    }
+    inTraceIndex++;
+    return 0;
+
+  case IOC_GET_OUTTRACE_INFO:
+    if( outputUnits[outTraceIndex] == NULL ) {
+      outTraceIndex = 0;
+      return -ERANGE; // Ende der Liste signalisieren
+    }
+    strncpy( traceInfo.name, outputNames[outTraceIndex], PARAM_NAME_MAXLEN );
+    strncpy( traceInfo.unit, outputUnits[outTraceIndex], PARAM_NAME_MAXLEN );
+    retVal = __copy_to_user( (void __user *)arg, &traceInfo, sizeof(struct traceInfoIOCT) );
+    if( retVal ) {
+      ERROR_MSG( "rtmodule_ioctl ERROR: invalid user pointer for traceInfoIOCT!\n" );
+      return -EFAULT;
+    }
+    outTraceIndex++;
+    return 0;
 
 
   case IOC_START_SUBDEV:
@@ -1022,6 +1080,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
   }
 
 
+  ERROR_MSG( "rtmodule_ioctl ERROR - Invalid IOCTL!\n" );
 
   return -EINVAL;
 }

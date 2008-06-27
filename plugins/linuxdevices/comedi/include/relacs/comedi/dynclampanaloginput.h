@@ -73,7 +73,8 @@ public:
 	If an error ocurred in any signal, the corresponding errorflags in
 	InData are set and a negative value is returned.
 	This function assumes that \a sigs successfully passed testRead().
-        The channels in \a sigs are not sorted. */
+        The channels in \a sigs are not sorted.
+        \todo check whether channel >=1000 is valid! */
   virtual int prepareRead( InList &sigs );
     /*! Start analog input of the input signals \a sigs
         after they were prepared by prepareRead().
@@ -120,6 +121,14 @@ public:
 		     vector< AnalogOutput* > &aos,
 		     vector< int > &aiinx, vector< int > &aoinx );
 
+    /*! If the analog input device supports inputs that
+        are not physical input lines but rather readable internal variables,
+        like model outputs of a dynamic clamp modul,
+        then reimplement this function. 
+        Add for each such variable a TraceSpec to \a traces.
+        \a deviceid is the id of the analog output device
+        that you should use for initializing the TraceSpec. */
+  virtual void addTraces( vector< TraceSpec > &traces, int deviceid ) const;
 
 
 protected:

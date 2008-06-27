@@ -33,7 +33,6 @@
 
 // (one byte reserved for null-termination!)
 #define PARAM_NAME_MAXLEN 128
-#define PARAM_UNIT_MAXLEN 10
 #define DEV_NAME_MAXLEN   128
 
 
@@ -55,6 +54,7 @@
 #define MAXSUBDEV   8
 #define MAXCHANLIST 128
 
+#define PARAM_CHAN_OFFSET 1000
 
 //* Integration algorithms:
 
@@ -107,12 +107,9 @@ struct traceNameIOCT {
 
 //* Trace-data:
 
-struct paramDefT {
+struct traceInfoIOCT {
   char name[PARAM_NAME_MAXLEN];
-  char unit[PARAM_UNIT_MAXLEN];
-  float preset;
-  float min;
-  float max;
+  char unit[PARAM_NAME_MAXLEN];
 };
 
 
@@ -122,68 +119,32 @@ struct paramDefT {
 
 
 // Give information to user space:
-/*
-#define IOC_RT_START       _IOR(RTMODULE_MAJOR,  5, int)
-#define IOC_RT_STOP        _IO( RTMODULE_MAJOR,  6)
-
-#define IOC_PARAM_N        _IOR(RTMODULE_MAJOR, 10, int)
-#define IOC_PARAM_NAMES    _IOR(RTMODULE_MAJOR, 12, int)
-#define IOC_PARAM_UNITS    _IOR(RTMODULE_MAJOR, 13, int)
-#define IOC_PARAM_VALUES   _IOR(RTMODULE_MAJOR, 14, int)
-#define IOC_PARAM_MINS     _IOR(RTMODULE_MAJOR, 15, int)
-#define IOC_PARAM_MAXS     _IOR(RTMODULE_MAJOR, 16, int)
-
-#define IOC_PARAM_TRACE_N           _IOR(RTMODULE_MAJOR, 21, int)
-#define IOC_PARAM_TRACE_NAMES       _IOR(RTMODULE_MAJOR, 22, int)
-#define IOC_DYNCLAMP_AI_TRACE_N     _IOR(RTMODULE_MAJOR, 23, int)
-#define IOC_DYNCLAMP_AI_TRACE_NAMES _IOR(RTMODULE_MAJOR, 24, int)
-#define IOC_DYNCLAMP_AO_TRACE_N     _IOR(RTMODULE_MAJOR, 25, int)
-#define IOC_DYNCLAMP_AO_TRACE_NAMES _IOR(RTMODULE_MAJOR, 26, int)
-*/
 
 // control devices:
 
-#define IOC_GET_SUBDEV_ID   _IOR(RTMODULE_MAJOR, 29, int)
-#define IOC_GET_PARAM_ID    _IOR(RTMODULE_MAJOR, 30, int)
-#define IOC_OPEN_SUBDEV     _IOW(RTMODULE_MAJOR, 31, int)
-#define IOC_CHANLIST        _IOW(RTMODULE_MAJOR, 32, int)
-#define IOC_COMEDI_CMD      _IOW(RTMODULE_MAJOR, 33, int)
-#define IOC_SYNC_CMD        _IOW(RTMODULE_MAJOR, 34, int)
-#define IOC_START_SUBDEV    _IOW(RTMODULE_MAJOR, 35, int)
-//#define IOC_START_SUBDEVLIST _IOW(RTMODULE_MAJOR, 36, int)
-#define IOC_CHK_RUNNING     _IOWR(RTMODULE_MAJOR,37, int)
-#define IOC_REQ_READ        _IOW(RTMODULE_MAJOR, 38, int)
-#define IOC_REQ_WRITE       _IOW(RTMODULE_MAJOR, 39, int)
-#define IOC_REQ_CLOSE       _IOW(RTMODULE_MAJOR, 40, int)
-#define IOC_STOP_SUBDEV     _IOW(RTMODULE_MAJOR, 41, int)
-#define IOC_RELEASE_SUBDEV  _IOW(RTMODULE_MAJOR, 42, int)
-#define IOC_TRACENAMELIST_N _IOW(RTMODULE_MAJOR, 43, int)
-#define IOC_TRACENAMELIST   _IOW(RTMODULE_MAJOR, 44, int)
-#define IOC_GETLOOPCNT      _IOR(RTMODULE_MAJOR, 45, int)
-#define IOC_GETAOINDEX      _IOR(RTMODULE_MAJOR, 46, int)
+#define IOC_GET_SUBDEV_ID       _IOR(RTMODULE_MAJOR,  1, int)
+#define IOC_GET_PARAM_ID        _IOR(RTMODULE_MAJOR,  2, int)
+#define IOC_OPEN_SUBDEV         _IOW(RTMODULE_MAJOR,  3, int)
+#define IOC_CHANLIST            _IOW(RTMODULE_MAJOR,  4, int)
+#define IOC_COMEDI_CMD          _IOW(RTMODULE_MAJOR,  5, int)
+#define IOC_SYNC_CMD            _IOW(RTMODULE_MAJOR,  6, int)
+#define IOC_START_SUBDEV        _IOW(RTMODULE_MAJOR,  7, int)
+#define IOC_CHK_RUNNING         _IOWR(RTMODULE_MAJOR, 8, int)
+#define IOC_REQ_READ            _IOW(RTMODULE_MAJOR,  9, int)
+#define IOC_REQ_WRITE           _IOW(RTMODULE_MAJOR, 10, int)
+#define IOC_REQ_CLOSE           _IOW(RTMODULE_MAJOR, 11, int)
+#define IOC_STOP_SUBDEV         _IOW(RTMODULE_MAJOR, 12, int)
+#define IOC_RELEASE_SUBDEV      _IOW(RTMODULE_MAJOR, 13, int)
+                                                       
+// exchange info:
+
+#define IOC_GET_INTRACE_INFO    _IOR(RTMODULE_MAJOR, 14, int)
+#define IOC_GET_OUTTRACE_INFO   _IOR(RTMODULE_MAJOR, 15, int)
+#define IOC_GETLOOPCNT          _IOR(RTMODULE_MAJOR, 16, int)
+#define IOC_GETAOINDEX          _IOR(RTMODULE_MAJOR, 17, int)
 
 
-/*
-#define IOC_DEV_STIMUL_N       _IOW(RTMODULE_MAJOR, 50, int)
-#define IOC_DEV_STIMUL_TRACES  _IOW(RTMODULE_MAJOR, 51, int)
-#define IOC_DEV_DIROUT_N       _IOW(RTMODULE_MAJOR, 52, int)
-#define IOC_DEV_DIROUT_TRACES  _IOW(RTMODULE_MAJOR, 53, int)
-#define IOC_DEV_DYNCIN_TRACES  _IOW(RTMODULE_MAJOR, 54, int)
-#define IOC_DEV_DYNCOUT_TRACES _IOW(RTMODULE_MAJOR, 55, int)
-
-
-// Change fixed model parameters:
-
-#define IOC_CH_PARAM_VALUES   _IOW(RTMODULE_MAJOR, 60, int)
-*/
-
-
-
-#define RTMODULE_IOC_MAXNR 60
-
-
-
-
+#define RTMODULE_IOC_MAXNR 18
 
 
 #endif
