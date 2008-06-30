@@ -246,6 +246,7 @@ int ComediAnalogOutput::open( const string &device, long mode )
   ErrorState = 0;
   IsPrepared = false;
   IsRunning = false;
+  ComediAOs.clear();
  
   return 0;
 }
@@ -279,6 +280,7 @@ void ComediAnalogOutput::close( void )
   // clear flags:
   DeviceP = NULL;
   SubDevice = 0;
+  ComediAOs.clear();
 }
 
 
@@ -636,16 +638,6 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   if ( error )
     return error;
 
-  // execute command:  
-  if ( Cmd.start_src != TRIG_NOW ) {
-    if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
-      sigs.addErrorStr( deviceFile() + " - execution of comedi_cmd failed: "
-			  + comedi_strerror( comedi_errno() ) );
-      return -1;
-    }
-    fillWriteBuffer();
-  }
-
   if ( ol.success() )
     setSettings( ol );
 
@@ -657,195 +649,68 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
 }
 
 
+int ComediAnalogOutput::executeCommand( void )
+{
+  ErrorState = 0;
+  if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
+    cerr << "AO command failed: " << comedi_strerror( comedi_errno() ) << endl;
+    /*
+    traces.addErrorStr( deviceFile() + " - execution of comedi_cmd failed: "
+			+ comedi_strerror( comedi_errno() ) );
+    */
+    return -1;
+  }
+  fillWriteBuffer();
+  return 0;
+}
+
+
 int ComediAnalogOutput::startWrite( OutList &sigs )
 {
   //  cerr << " ComediAnalogOutput::startWrite(): begin" << endl;/////TEST/////
 
   if ( !prepared() ) {
-    sigs.addError( DaqError::Unknown );
+    cerr << "AO not prepared!\n";
     return -1;
   }
 
-  ErrorState = 0;
-
-  // execute command:  
-  if ( Cmd.start_src == TRIG_NOW ) {
-    if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
-      sigs.addErrorStr( deviceFile() + " - execution of comedi_cmd failed: "
-			  + comedi_strerror( comedi_errno() ) );
-      return -1;
-    }
-    else
-      return 0;
-    // PROBLEM: how to fill data if Cmd.start_src == TRIG_NOW ?
+  // setup instruction list:
+  comedi_insnlist insnlist;
+  insnlist.n_insns = ComediAOs.size();
+  insnlist.insns = new comedi_insn[insnlist.n_insns];
+  for ( unsigned int k=0; k<insnlist.n_insns; k++ ) {
+    insnlist.insns[k].insn = INSN_INTTRIG;
+    insnlist.insns[k].subdev = -1;
+    InsnData[0] = 0;
+    insnlist.insns[k].data = InsnData;
+    insnlist.insns[k].n = 1;
   }
+  bool success = true;
+  int ilinx = 0;
+  for ( unsigned int k=0; k<ComediAOs.size() && success; k++ ) {
+    if ( ComediAOs[k]->prepared() ) {
+      if ( ComediAOs[k]->executeCommand() < 0 )
+	success = false;
+      else
+	insnlist.insns[ilinx++].subdev = ComediAOs[k]->comediSubdevice();
+    }
+  }
+  insnlist.n_insns = ilinx;
+  if ( success ) {
+    int ninsns = comedi_do_insnlist( DeviceP, &insnlist );
 
-  // instruction for starting command:
-  comedi_insn insn;
-  memset(&insn, 0, sizeof(comedi_insn));
-  insn.insn = INSN_INTTRIG;
-  insn.subdev = SubDevice;
-  lsampl_t data[1] = { 0 };
-  insn.data = data;
-  insn.n = 1;
-  comedi_do_insn( DeviceP, &insn );
-
-#ifdef NOTHING
- // * set up instructionlist *
-  lsampl_t dataAO[1], dataAI[1];
-  dataAO[0] = 0;
-  dataAI[0] = 0;
-  comedi_insnlist il;
-  comedi_insn *insnP;
-  vector< comedi_insnlist > insnlist;
-  vector< comedi_insn* > insn;
-  vector< comedi_t* > insnlistDevice;
-  int insnlistNr = 0;
-  int insnN;
-  vector< bool > comediAOsAdded( ComediAOs.size(), false );
-  //  vector< bool > comediAIsAdded( ComediAIs.size(), false );
-
-  // setup start triggers for AOs - synchronize start triggers for AOs linked to an AI
-  for( unsigned int ao = 0; ao < ComediAOs.size(); ao++ )
-    if ( ComediAOs[ao]->prepared() && !ComediAOs[ao]->running() 
-	&& ComediAOs[ao]->reload() >= 0 ) {
-
-      ComediAOs[ao]->fillWriteBuffer();
-      insnP = new comedi_insn[2];
-      memset( insnP, 0, sizeof(comedi_insn[2]) );
-      insn.push_back( insnP );
-      insnlistNr = insn.size() - 1;
-      memset( insn[insnlistNr], 0, sizeof(comedi_insn[2]) );
-      insn[insnlistNr][0].insn = INSN_INTTRIG;
-      insn[insnlistNr][0].n = 1;
-      insn[insnlistNr][0].data = dataAO;
-      insn[insnlistNr][0].subdev = ComediAOs[ao]->subdevice();
-      insnN = 1;
-      comediAOsAdded[ao] = true;
-
-      int aiLinked = ComediAOsLink[ao];
-      /* XXXX  revise XXXXX
-      if ( aiLinked >= 0
-	  && ComediAIs[aiLinked]->prepared() && !ComediAIs[aiLinked]->running()
-	  && ComediAIs[aiLinked]->reload() >= 0 ) {
-	insn[insnlistNr][1].insn = INSN_INTTRIG;
-	insn[insnlistNr][1].n = 1;
-	insn[insnlistNr][1].data = dataAI;
-	insn[insnlistNr][1].subdev = ComediAIs[aiLinked]->subdevice();
-	insnN = 2;
-	comediAIsAdded[aiLinked] = true;
-	cerr << " ComediAnalogOutput::startWrite(): " 
-	     << "Input device " << ComediAIs[aiLinked]->deviceFile() 
-	     << " initialized" << endl;/////TEST/////
+    if ( ninsns == ilinx ) {
+      for ( unsigned int k=0; k<ComediAOs.size(); k++ ) {
+ 	ComediAOs[k]->setRunning();
       }
-      else /////TEST/////
-	if ( ComediAIs[aiLinked]->running() )
-	  cerr << " ComediAnalogOutput::startWrite(): Error -> AI-device "
-	     << aiLinked << "is already running!"  << endl;
-      */
-      il.n_insns = insnN;
-      il.insns = insn[insnlistNr];
-      insnlist.push_back( il );
-      insnlistDevice.push_back( ComediAOs[ao]->device() );
-      cerr << " ComediAnalogOutput::startWrite(): " 
-	   << "Output device " << ComediAOs[ao]->deviceFile() 
-	   << " initialized" << endl;/////TEST/////
     }
-    else /////TEST/////
-      if ( ComediAOs[ao]->running() )
-	cerr << " ComediAnalogOutput::startWrite(): Error -> AO-device "
-	     << ao << "is already running!"  << endl;
-  
-
-      
-
-  // setup start triggers for remaining (non-linked) AIs
-  /* XXXX revise XXXX
-  for( unsigned int ai = 0; ai < ComediAIs.size(); ai++ )
-  if ( !comediAIsAdded[ai] 
-      && ComediAIs[ai]->prepared() && !ComediAIs[ai]->running()
-      && ComediAIs[ai]->reload() >= 0 ) {
-      insnP = new comedi_insn[1];
-      memset( insnP, 0, sizeof(comedi_insn[1]) );
-      insn.push_back( insnP );
-      insnlistNr = insn.size() - 1;
-      memset( insn[insnlistNr], 0, sizeof(comedi_insn[1]) );
-      insn[insnlistNr][0].insn = INSN_INTTRIG;
-      insn[insnlistNr][0].n = 1;
-      insn[insnlistNr][0].data = dataAI;
-      insn[insnlistNr][0].subdev = ComediAIs[ai]->subdevice();
-      comediAIsAdded[ai] = true;
-
-      il.n_insns = 1;
-      il.insns = insn[insnlistNr];
-      insnlist.push_back( il );
-      insnlistDevice.push_back( ComediAOs[ai]->device() );
-      cerr << " ComediAnalogOutput::startWrite(): " 
-	   << "Input device " << ComediAIs[ai]->deviceFile() 
-	   << " initialized" << endl;/////TEST/////
-  }
-  else /////TEST/////
-    if ( ComediAIs[ai]->running() )
-      cerr << " ComediAnalogOutput::startWrite(): Error -> AI-device "
-	   << ai << "is already running!"  << endl;
-  */  
-  cerr << " ComediAnalogOutput::startWrite(): 2" << endl;/////TEST/////
-
- // * start instructionlist *
-  int notStarted = 0;
-  int insError = 0;  
-  for( unsigned int k = 0; k < insnlist.size(); k++ ) {    
-    int retVal = comedi_do_insnlist( insnlistDevice[k], &insnlist[k] );
-    if ( retVal >= 0 )
-      notStarted += il.n_insns - retVal;
     else {
-      insError = comedi_errno();
+      success = false;
     }
   }
-  for( unsigned int k = 0; k < insn.size(); k++ )
-    delete [] insn[k];
-
-  if ( insError || notStarted ) {
-    sigs.addErrorStr( "ComediAnalogOutput::startWrite()-> Instruction-setup for (multiple) daq start failed for at least one device: " );
-    if ( insError )
-      sigs.addErrorStr( "  comedi -> " + (string)comedi_strerror( comedi_errno() ) );
-    // usleep() here ???
-    /* XXX revise
-    for( unsigned int ai = 0; ai < ComediAIs.size(); ai++ )
-      if ( comediAIsAdded[ai] && !ComediAIs[ai]->loaded() )
-	sigs.addErrorStr( "  Failure of analog Input on device "
-			    + ComediAIs[ai]->deviceFile() );
-    for( unsigned int ao = 0; ao < ComediAOs.size(); ao++ )
-      if ( comediAIsAdded[ao] && !ComediAOs[ao]->loaded() )
-	sigs.addErrorStr( "  Failure of analog Output on device "
-			    + ComediAIs[ao]->deviceFile() );
-    */
-    return -1;
-  }
-  /* XXX revise
-  for( unsigned int ai = 0; ai < ComediAIs.size(); ai++ )
-    if ( comediAIsAdded[ai] ) {
-      ComediAIs[ai]->setRunning();
-      cerr << " ComediAnalogOutput::startWrite(): " 
-	   << "Device " << ComediAIs[ai]->deviceFile()
-	   << " set up successfully for analog input"
-	   << endl;/////TEST/////
-	}
-  for( unsigned int ao = 0; ao < ComediAOs.size(); ao++ )
-    if ( comediAOsAdded[ao] ) {
-      ComediAOs[ao]->setRunning();
-      cerr << " ComediAnalogOutput::startWrite(): " 
-	   << "Device " << ComediAIs[ao]->deviceFile()
-	   << " set up successfully for analog output"
-	   << endl;/////TEST/////
-	}
-  */
-
-#endif
+  delete [] insnlist.insns;
   
-  //  cerr << " ComediAnalogOutput::startWrite(): end\n";/////TEST/////
-  
-  return 0;
+  return success ? 0 : -1;
 }
 
 
@@ -884,18 +749,7 @@ int ComediAnalogOutput::reset( void )
 
 bool ComediAnalogOutput::running( void ) const
 {   
-  /*
-  if ( !loaded() ) {
-    if ( IsRunning )
-      cerr << " ComediAnalogOutput::running(): stopped!"  << endl;
-    IsRunning = false;
-  }
-  if ( IsRunning )
-    cerr << " ComediAnalogOutput::running(): running"  << endl;
-  else
-    cerr << " ComediAnalogOutput::running(): not running"  << endl;
-  */
-  return IsRunning;
+  return ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING );
 }
 
 
@@ -914,34 +768,14 @@ int ComediAnalogOutput::error( void ) const
 void ComediAnalogOutput::take( const vector< AnalogOutput* > &aos,
 			       vector< int > &aoinx )
 {
-  /*
-  cerr << " ComediAnalogOutput::take(): 1" << endl;/////TEST/////
   ComediAOs.clear();
-  ComediAOsLink.clear();
-  */
-  /* XXX Needs to be revised!!!! XXX
-  bool weAreMember = false;
   for ( unsigned int k=0; k<aos.size(); k++ ) {
-    if ( aos[k]->analogOutputType() == ComediAnalogIOType ) {
+    if ( aos[k]->analogOutputType() == ComediAnalogIOType &&
+	 aos[k]->deviceFile() == deviceFile() ) {
       aoinx.push_back( k );
       ComediAOs.push_back( dynamic_cast< ComediAnalogOutput* >( aos[k] ) );
-      ComediAOsLink.push_back( -1 );
-      if ( ComediAOs[k]->deviceFile() == deviceFile() )
-	weAreMember = true;
-
     }
   }
-  if ( !weAreMember ) {
-    ComediAOs.push_back( this );
-    ComediAOsLink.push_back( -1 );
-  }
-
-  // find subdevices to be started together within the same instruction list
-  for( unsigned int ao = 0; ao < ComediAOs.size(); ao++ )
-    if ( ComediAOs[ao]->deviceFile() == ComediAOs[ai]->deviceFile() ) {
-      ComediAOsLink[ao] = ai; /// XXXX
-    }
-  */
 }
 
 
@@ -961,7 +795,7 @@ int ComediAnalogOutput::fillWriteBuffer( void )
     cerr << "ComediAnalogOutput::writeData: buffer-underrun in outlist!"  
 	 << endl;/////TEST/////
     //    (*Sigs)[0].deviceBufferReset();/////TEST////
-    return 0;/////TEST////
+    return -1;/////TEST////
   }
   // try to write twice
   for ( int tryit = 0;
@@ -983,6 +817,14 @@ int ComediAnalogOutput::fillWriteBuffer( void )
       elemWritten += bytesWritten / BufferElemSize;
     }
 
+  }
+
+
+  // no more data:
+  if ( (*Sigs)[0].deviceBufferMaxPop() == 0 ) {
+    IsRunning = false;
+    if ( ! failed )
+      return 0;
   }
 
   if ( failed || errno == EINTR )
@@ -1024,13 +866,13 @@ int ComediAnalogOutput::fillWriteBuffer( void )
 }
 
 
-comedi_t* ComediAnalogOutput::device( void ) const
+comedi_t* ComediAnalogOutput::comediDevice( void ) const
 {
   return DeviceP;
 }
 
 
-int ComediAnalogOutput::subdevice( void ) const
+int ComediAnalogOutput::comediSubdevice( void ) const
 {
   if ( !isOpen() )
     return -1;
@@ -1081,6 +923,7 @@ bool ComediAnalogOutput::prepared( void ) const
 void ComediAnalogOutput::setRunning( void )
 {
   IsRunning = true;
+  ErrorState = 0;
 }
 
 

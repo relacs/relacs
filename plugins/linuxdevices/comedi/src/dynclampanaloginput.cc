@@ -97,7 +97,7 @@ int DynClampAnalogInput::open( const string &device, long mode )
   int retVal = CAI->open( device );
   
   // copy information not available after CAI->close()
-  Subdevice = CAI->subdevice();
+  Subdevice = CAI->comediSubdevice();
   Channels = CAI->channels();
   Bits =  CAI->bits();
   MaxRate = CAI->maxRate();  // XXX This is not the max freq of the real time loop!

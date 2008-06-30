@@ -756,6 +756,18 @@ int Acquire::restartRead( vector< AOData* > &aod, bool updategains )
   if ( ! success )
     return -1;
 
+  // map aod devices to AO devices:
+  vector< int > aoinx;
+  aoinx.reserve( aod.size() );
+  for ( unsigned int i=0; i<aod.size(); i++ ) {
+    for ( unsigned int k=0; k<AO.size(); k++ ) {
+      if ( aod[i] == &AO[k] ) {
+	aoinx.push_back( k );
+	break;
+      }
+    }
+  }
+
   // start reading from daq boards:
   vector< int > aistarted;
   aistarted.reserve( AI.size() );
@@ -776,21 +788,10 @@ int Acquire::restartRead( vector< AOData* > &aod, bool updategains )
       }
     }
   }
-
+    
   if ( ! success )
     return -1;
-
-  // map aod devices to AO devices:
-  vector< int > aoinx;
-  aoinx.reserve( aod.size() );
-  for ( unsigned int i=0; i<aod.size(); i++ ) {
-    for ( unsigned int k=0; k<AO.size(); k++ ) {
-      if ( aod[i] == &AO[k] ) {
-	aoinx.push_back( k );
-	break;
-      }
-    }
-  }
+    
   // start writing signals:
   vector< int > aostarted;
   aostarted.reserve( aod.size() );
@@ -818,7 +819,7 @@ int Acquire::restartRead( vector< AOData* > &aod, bool updategains )
     }
   }
 
-  //  cerr << currentTime() << " Acquire::restartRead() -> acquisition restarted\n";
+  //  cerr << currentTime() << " Acquire::restartRead() -> acquisition restarted " << success << "\n";
 
   return success ? 0 : -1;
 }
@@ -1610,27 +1611,14 @@ int Acquire::write( OutList &signal )
       success = false;
   }
   else {
-    vector< int > aostarted;
-    aostarted.reserve( AO.size() );
     for ( unsigned int i=0; i<AO.size(); i++ ) {
       if ( AO[i].Signals.size() > 0 ) {
-	bool started = false;
-	for ( unsigned int k=0; k<aostarted.size(); k++ ) {
-	  if ( aostarted[k] == AO[i].AODevice ) {
-	    started = true;
-	    break;
-	  }
-	}
-	if ( ! started ) {
-	  if ( AO[i].AO->startWrite( AO[i].Signals ) != 0 )
-	    success = false;
-	  else
-	    aostarted.push_back( i );
-	}
+	if ( AO[i].AO->startWrite( AO[i].Signals ) != 0 )
+	  success = false;
       }
     }
   }
-
+  
   // error?
   if ( ! success )
     return -1;

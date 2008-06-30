@@ -178,11 +178,14 @@ protected:
 	For internal usage! */
   int fillWriteBuffer( void );
 
+    /*! Execute the command that was prepared by prepareWrite(). */
+  int executeCommand( void );
+
     /*! Returns the pointer to the comedi device file.
         \sa subdevice() */
-  comedi_t* device( void ) const;
+  comedi_t* comediDevice( void ) const;
     /*! Comedi internal index of analog output subdevice. */
-  int subdevice( void ) const;
+  int comediSubdevice( void ) const;
 
     /*! returns buffer-size of device in samples. */
   int bufferSize( void ) const;
@@ -199,7 +202,7 @@ protected:
   bool loaded( void ) const;
     /*! True if analog output was prepared using testWriteDevice() and prepareWrite() */
   bool prepared( void ) const;
-
+  
     /* Sets the running status and unsets the prepared status. */
   void setRunning( void );
 
@@ -229,6 +232,7 @@ private:
 
   comedi_cmd Cmd;
   unsigned int ChanList[512];
+  lsampl_t InsnData[1];
 
     /*! Holds the list of supported unipolar comedi ranges. */
   vector< comedi_range > UnipolarRange;
@@ -243,8 +247,9 @@ private:
   int UnipolarExtRefRangeIndex;
   int BipolarExtRefRangeIndex;
 
+    /*! List of analog output subdevices that can be 
+        started via an instruction list together with this subdevice. */
   vector< ComediAnalogOutput* > ComediAOs;
-  vector< int > ComediAOsLink;
 
 };
 

@@ -100,7 +100,7 @@ int DynClampAnalogOutput::open( const string &device, long mode )
   int retVal = CAO->open( device );
   
   // copy information not available after CAO->close()
-  Subdevice = CAO->subdevice();
+  Subdevice = CAO->comediSubdevice();
   Channels = CAO->channels();
   Bits =  CAO->bits();
   MaxRate = CAO->maxRate();  // XXX This is not the max freq of the real time loop!

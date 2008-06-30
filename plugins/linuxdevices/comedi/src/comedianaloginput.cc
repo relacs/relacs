@@ -230,6 +230,8 @@ int ComediAnalogInput::open( const string &device, long mode )
   ErrorState = 0;
   IsPrepared = false;
   IsRunning = false;
+  ComediAIs.clear();
+  ComediAOs.clear();
   
   return 0;
 }
@@ -263,6 +265,8 @@ void ComediAnalogInput::close( void )
   // clear flags:
   DeviceP = NULL;
   SubDevice = 0;
+  ComediAIs.clear();
+  ComediAOs.clear();
 }
 
 
@@ -504,15 +508,6 @@ int ComediAnalogInput::prepareRead( InList &traces )
   int error = testReadDevice( traces );
   if ( error )
     return error;
-  
-  // execute command:  
-  if ( Cmd.start_src != TRIG_NOW ) {
-    if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
-      traces.addErrorStr( deviceFile() + " - execution of comedi_cmd failed: "
-			  + comedi_strerror( comedi_errno() ) );
-      return -1;
-    }
-  }
 
   // setup the buffer (don't free the buffer!):
   if ( traces[0].deviceBuffer() == NULL ) {
@@ -541,189 +536,74 @@ int ComediAnalogInput::prepareRead( InList &traces )
 }
 
 
+int ComediAnalogInput::executeCommand( void )
+{
+  ErrorState = 0;
+  if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
+    cerr << "AI command failed: " << comedi_strerror( comedi_errno() ) << endl;
+    /*
+    traces.addErrorStr( deviceFile() + " - execution of comedi_cmd failed: "
+			+ comedi_strerror( comedi_errno() ) );
+    */
+    return -1;
+  }
+  return 0;
+}
+
+
 int ComediAnalogInput::startRead( InList &traces )
 {
   //  cerr << " ComediAnalogInput::startRead(): begin" << endl;/////TEST/////
 
   if ( !prepared() ) {
-    traces.addError( DaqError::Unknown );
+    cerr << "AI not prepared!\n";
     return -1;
   }
 
-  ErrorState = 0;
-
-  // execute command:  
-  if ( Cmd.start_src == TRIG_NOW ) {
-    if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
-      traces.addErrorStr( deviceFile() + " - execution of comedi_cmd failed: "
-			  + comedi_strerror( comedi_errno() ) );
-      return -1;
+  // setup instruction list:
+  comedi_insnlist insnlist;
+  insnlist.n_insns = ComediAIs.size() + ComediAOs.size();
+  insnlist.insns = new comedi_insn[insnlist.n_insns];
+  for ( unsigned int k=0; k<insnlist.n_insns; k++ ) {
+    insnlist.insns[k].insn = INSN_INTTRIG;
+    insnlist.insns[k].subdev = -1;
+    InsnData[0] = 0;
+    insnlist.insns[k].data = InsnData;
+    insnlist.insns[k].n = 1;
+  }
+  bool success = true;
+  int ilinx = 0;
+  for ( unsigned int k=0; k<ComediAIs.size() && success; k++ ) {
+    if ( ComediAIs[k]->prepared() ) {
+      if ( ComediAIs[k]->executeCommand() < 0 )
+	success = false;
+      else
+	insnlist.insns[ilinx++].subdev = ComediAIs[k]->comediSubdevice();
+    }
+  }
+  for ( unsigned int k=0; k<ComediAOs.size() && success; k++ ) {
+    if ( ComediAOs[k]->prepared() ) {
+      if ( ComediAOs[k]->executeCommand() < 0 )
+	success = false;
+      else
+	insnlist.insns[ilinx++].subdev = ComediAOs[k]->comediSubdevice();
+    }
+  }
+  insnlist.n_insns = ilinx;
+  if ( success ) {
+    int ninsns = comedi_do_insnlist( DeviceP, &insnlist );
+    if ( ninsns == ilinx ) {
+      for ( unsigned int k=0; k<ComediAIs.size(); k++ )
+	ComediAIs[k]->setRunning();
+      for ( unsigned int k=0; k<ComediAOs.size(); k++ )
+ 	ComediAOs[k]->setRunning();
     }
     else
-      return 0;
+      success = false;
   }
+  delete [] insnlist.insns;
 
-  // instruction for starting command:
-  comedi_insn insn;
-  memset(&insn, 0, sizeof(comedi_insn));
-  insn.insn = INSN_INTTRIG;
-  insn.subdev = SubDevice;
-  lsampl_t data[1] = { 0 };
-  insn.data = data;
-  insn.n = 1;
-  comedi_do_insn( DeviceP, &insn );
-
-  /*  
- // * set up instructionlist *
-  lsampl_t dataAO[1], dataAI[1];
-  dataAO[0] = 0;
-  dataAI[0] = 0;
-  comedi_insnlist il;
-  comedi_insn *insnP;
-  vector< comedi_insnlist > insnlist;
-  vector< comedi_insn* > insn;
-  vector< comedi_t* > insnlistDevice;
-  int insnlistNr = 0;
-  int insnN;
-  vector< bool > comediAOsAdded( ComediAOs.size(), false );
-  vector< bool > comediAIsAdded( ComediAIs.size(), false );
-
-  // setup start triggers for AOs - synchronize start triggers  for AOs linked to an AI
-  for( unsigned int ao = 0; ao < ComediAOs.size(); ao++ )
-    if ( ComediAOs[ao]->prepared() && !ComediAOs[ao]->running() 
-	&& ComediAOs[ao]->reload() >= 0 ) {
-
-      ComediAOs[ao]->fillWriteBuffer();
-      insnP = new comedi_insn[2];
-      memset( insnP, 0, sizeof(comedi_insn[2]) );
-      insn.push_back( insnP );
-      insnlistNr = insn.size() - 1;
-      memset( insn[insnlistNr], 0, sizeof(comedi_insn[2]) );
-      insn[insnlistNr][0].insn = INSN_INTTRIG;
-      insn[insnlistNr][0].n = 1;
-      insn[insnlistNr][0].data = dataAO;
-      insn[insnlistNr][0].subdev = ComediAOs[ao]->subdevice();
-      insnN = 1;
-      comediAOsAdded[ao] = true;
-
-      int aiLinked = ComediAOsLink[ao];
-      if ( aiLinked >= 0
-	  && ComediAIs[aiLinked]->prepared() && !ComediAIs[aiLinked]->running()
-	  && ComediAIs[aiLinked]->reload() >= 0 ) {
-	insn[insnlistNr][1].insn = INSN_INTTRIG;
-	insn[insnlistNr][1].n = 1;
-	insn[insnlistNr][1].data = dataAI;
-	insn[insnlistNr][1].subdev = ComediAIs[aiLinked]->subdevice();
-	insnN = 2;
-	comediAIsAdded[aiLinked] = true;
-	cerr << " ComediAnalogInput::startRead(): " 
-	     << "Input device " << ComediAIs[aiLinked]->deviceFile() 
-	     << " initialized" << endl;/////TEST/////
-      }
-      else /////TEST/////
-	if ( ComediAIs[aiLinked]->running() )
-	  cerr << " ComediAnalogOutput::startWrite(): Error -> AI-device "
-	     << aiLinked << "is already running!"  << endl;
-
-      il.n_insns = insnN;
-      il.insns = insn[insnlistNr];
-      insnlist.push_back( il );
-      insnlistDevice.push_back( ComediAOs[ao]->device() );
-      cerr << " ComediAnalogInput::startRead(): " 
-	   << "Output device " << ComediAOs[ao]->deviceFile() 
-	   << " initialized" << endl;/////TEST/////
-
-    }
-    else /////TEST/////
-      if ( ComediAOs[ao]->running() )
-	cerr << " ComediAnalogOutput::startWrite(): Error -> AO-device "
-	     << ao << "is already running!"  << endl;
-
-  // setup start triggers for remaining (non-linked) AIs
-  for( unsigned int ai = 0; ai < ComediAIs.size(); ai++ )
-    if ( !comediAIsAdded[ai] 
-	&& ComediAIs[ai]->prepared() && !ComediAIs[ai]->running()
-	&& ComediAIs[ai]->reload() >= 0 ) {
-      insnP = new comedi_insn[1];
-      memset( insnP, 0, sizeof(comedi_insn[1]) );
-      insn.push_back( insnP );
-      insnlistNr = insn.size() - 1;
-      memset( insn[insnlistNr], 0, sizeof(comedi_insn[1]) );
-      insn[insnlistNr][0].insn = INSN_INTTRIG;
-      insn[insnlistNr][0].n = 1;
-      insn[insnlistNr][0].data = dataAI;
-      insn[insnlistNr][0].subdev = ComediAIs[ai]->subdevice();
-      comediAIsAdded[ai] = true;
-      
-      il.n_insns = 1;
-      il.insns = insn[insnlistNr];
-      insnlist.push_back( il );
-      insnlistDevice.push_back( ComediAOs[ai]->device() );
-      cerr << " ComediAnalogInput::startRead(): " 
-	   << "Input device " << ComediAIs[ai]->deviceFile() 
-	   << " initialized" << endl;//////TEST/////
-	
-    }
-    else /////TEST/////
-      if ( ComediAIs[ai]->running() )
-	cerr << " ComediAnalogOutput::startWrite(): Error -> AI-device "
-	     << ai << "is already running!"  << endl;
-  
-  
-  cerr << " ComediAnalogInput::startRead(): 2" << endl;//////TEST/////
-    
-  // * start instructionlist *
-  int notStarted = 0;
-  int insError = 0;  
-  for( unsigned int k = 0; k < insnlist.size(); k++ ) {    
-    int retVal = comedi_do_insnlist( insnlistDevice[k], &insnlist[k] );
-    if ( retVal >= 0 )
-      notStarted += il.n_insns - retVal;
-    else {
-      insError = comedi_errno();
-    }
-  }
-  for( unsigned int k = 0; k < insn.size(); k++ )
-    delete [] insn[k];
-  
-  if ( insError || notStarted ) {
-    traces.addErrorStr( "ComediAnalogInput::startRead()-> Instruction-setup for (multiple) daq start failed for at least one device: " );
-    if ( insError )
-      traces.addErrorStr( "  comedi -> " + (string)comedi_strerror( comedi_errno() ) );
-    for( unsigned int ai = 0; ai < ComediAIs.size(); ai++ )
-      if ( comediAIsAdded[ai] && !ComediAIs[ai]->loaded() )
-	traces.addErrorStr( "  Failure of analog Input on device "
-			    + ComediAIs[ai]->deviceFile() );
-    for( unsigned int ao = 0; ao < ComediAOs.size(); ao++ )
-      if ( comediAIsAdded[ao] && !ComediAOs[ao]->loaded() )
-	traces.addErrorStr( "  Failure of analog Output on device "
-			    + ComediAIs[ao]->deviceFile() );
-    cerr << " ComediAnalogInput::startRead(): " 
-	 << "set up of instruction list failed!"
-	 << endl;/////TEST/////
-      return -1;
-  }
-  
-  for( unsigned int ai = 0; ai < ComediAIs.size(); ai++ )
-    if ( comediAIsAdded[ai] ) {
-      ComediAIs[ai]->setRunning();
-      cerr << " ComediAnalogInput::startRead(): " 
-	   << "Device " << ComediAIs[ai]->deviceFile()
-	   << " set up successfully for analog input"
-	   << endl;//////TEST//////
-    }
-  for( unsigned int ao = 0; ao < ComediAOs.size(); ao++ )
-    if ( comediAOsAdded[ao] ) {
-      ComediAOs[ao]->setRunning();
-      cerr << " ComediAnalogInput::startRead(): " 
-	   << "Device " << ComediAIs[ao]->deviceFile()
-	   << " set up successfully for analog output"
-	   << endl;//////TEST//////
-    }
-  */
-
-  //  cerr << " ComediAnalogInput::startRead(): end" << endl;//////TEST/////
-  return 0;  
+  return success ? 0 : -1;
 }
 
 
@@ -826,18 +706,7 @@ int ComediAnalogInput::reset( void )
 
 bool ComediAnalogInput::running( void ) const
 {   
-  /*
-  if ( !loaded() ) {
-    if ( IsRunning )
-      cerr << " ComediAnalogInput::running(): stopped!"  << endl;
-    IsRunning = false;
-  }
-  if ( IsRunning )
-    cerr << " ComediAnalogInput::running(): running"  << endl;
-  else
-    cerr << " ComediAnalogInput::running(): not running"  << endl;
-  */
-  return IsRunning;
+  return ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_RUNNING );
 }
 
 
@@ -854,55 +723,39 @@ int ComediAnalogInput::error( void ) const
 
 void ComediAnalogInput::take( const vector< AnalogInput* > &ais,
 			      const vector< AnalogOutput* > &aos,
-			      vector< int > &aiinx, vector< int > &aoinx )
+			      vector< int > &aiinx,
+			      vector< int > &aoinx )
 {
-  /*
   ComediAIs.clear();
   ComediAOs.clear();
-  ComediAIsLink.clear();
-  ComediAOsLink.clear();
-  cerr << " ComediAnalogInput::take(): 1" << endl;/////TEST/////
-  bool weAreMember = false;
+
+  // check for analog input devices:
   for ( unsigned int k=0; k<ais.size(); k++ ) {
-    if ( ais[k]->analogInputType() == ComediAnalogIOType ) {
+    if ( ais[k]->analogInputType() == ComediAnalogIOType &&
+	 ais[k]->deviceFile() == deviceFile() ) {
       aiinx.push_back( k );
       ComediAIs.push_back( dynamic_cast< ComediAnalogInput* >( ais[k] ) );
-      ComediAIsLink.push_back( -1 );
-      if ( ComediAIs[k]->deviceFile() == deviceFile() )
-	weAreMember = true;
-    }
-  }
-  if ( !weAreMember ) {
-    ComediAIs.push_back( this );
-    ComediAIsLink.push_back( -1 );
-  }
-  
-  for ( unsigned int k=0; k<aos.size(); k++ ) {
-    if ( aos[k]->analogOutputType() == ComediAnalogIOType ) {
-      aoinx.push_back( k );
-      ComediAOs.push_back( dynamic_cast< ComediAnalogOutput* >( aos[k] ) );
-      ComediAOsLink.push_back( -1 );
     }
   }
 
-  // find subdevices to be started together within the same instruction list
-  for( unsigned int ao = 0; ao < ComediAOs.size(); ao++ )
-    for( unsigned int ai = 0; ai < ComediAIs.size(); ai++ )
-      if ( ComediAOs[ao]->deviceFile() == ComediAOs[ai]->deviceFile() ) {
-	ComediAOsLink[ao] = ai;
-	ComediAIsLink[ai] = ao;
-      }
-  */
+  // check for analog output devices:
+  for ( unsigned int k=0; k<aos.size(); k++ ) {
+    if ( aos[k]->analogOutputType() == ComediAnalogIOType &&
+	 aos[k]->deviceFile() == deviceFile() ) {
+      aoinx.push_back( k );
+      ComediAOs.push_back( dynamic_cast< ComediAnalogOutput* >( aos[k] ) );
+    }
+  }
 }
 
 
-comedi_t* ComediAnalogInput::device( void ) const
+comedi_t* ComediAnalogInput::comediDevice( void ) const
 {
   return DeviceP;
 }
 
 
-int ComediAnalogInput::subdevice( void ) const
+int ComediAnalogInput::comediSubdevice( void ) const
 {
   if ( !isOpen() )
     return -1;
@@ -951,6 +804,7 @@ bool ComediAnalogInput::prepared( void ) const
 void ComediAnalogInput::setRunning( void )
 {
   IsRunning = true;
+  ErrorState = 0;
 }
 
 

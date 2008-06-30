@@ -171,11 +171,14 @@ protected:
 	\todo analyse errors from test command */
   int testReadDevice( InList &traces );
 
+    /*! Execute the command that was prepared by prepareRead(). */
+  int executeCommand( void );
+
     /*! Returns the pointer to the comedi device file.
         \sa subdevice() */
-  comedi_t* device( void ) const;
+  comedi_t* comediDevice( void ) const;
     /*! Comedi internal index of analog input subdevice. */
-  int subdevice( void ) const;
+  int comediSubdevice( void ) const;
 
     /*! returns buffer-size of device in samples. */
   int bufferSize( void ) const;
@@ -222,6 +225,7 @@ private:
 
   comedi_cmd Cmd;
   unsigned int ChanList[512];
+  lsampl_t InsnData[1];
 
     /*! Holds the list of supported unipolar comedi ranges. */
   vector< comedi_range > UnipolarRange;
@@ -232,10 +236,12 @@ private:
     /*! Maps bipolar range indices to comei range indices. */
   vector< unsigned int > BipolarRangeIndex;
 
+    /*! List of analog input subdevices that can be 
+        started via an instruction list together with this subdevice. */
   vector< ComediAnalogInput* > ComediAIs;
+    /*! List of analog output subdevices that can be 
+        started via an instruction list together with this subdevice. */
   vector< ComediAnalogOutput* > ComediAOs;
-  vector< int > ComediAIsLink;
-  vector< int > ComediAOsLink;
 
 };
 
