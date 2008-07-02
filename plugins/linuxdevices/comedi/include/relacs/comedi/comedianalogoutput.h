@@ -34,7 +34,7 @@ namespace comedi {
 class ComediAnalogInput;
 
 /*! 
-\class AnalogOutput
+\class ComediAnalogOutput
 \author Marco Hackenberg
 \version 0.1
 \brief Interface for accessing analog output of a daq-board via comedi.
@@ -60,10 +60,7 @@ public:
     /*! Open the analog output device on device file \a device.
         \todo  if a ranges is not supported but comedi thinks so: set max = -1.0,
         i.e. NI 6070E PCI: range #3&4 (-1..1V, 0..1V) not supported
-        \todo do we need to set the file descriptor to O_NONBLOCK? 
-        \todo maybe use an internal maximum buffer size (in case comedi max is way too much)? 
-        \todo check usage of comedi_get_cmd_generic_timed for finding out max sample rate 
-	\todo set default for NI E-series (mio-driver doesn't return a valid frequency) */
+        \todo maybe use an internal maximum buffer size (in case comedi max is way too much)? */
   virtual int open( const string &device, long mode=0 );
     /*! Returns true if driver was succesfully opened. */
   virtual bool isOpen( void ) const;
@@ -118,8 +115,7 @@ public:
     /*! Stop any running ananlog output activity and reset the device.
         Returns zero on success, otherwise one of the flags 
         NotOpen, InvalidDevice, WriteError.
-        \sa close(), open(), isOpen()
-        \todo clear buffers! */
+        \sa close(), open(), isOpen() */
   virtual int reset( void );
   
     /*! True if analog output is running. */
@@ -142,6 +138,9 @@ public:
 
 protected:
 
+    /*! Setup and test \a cmd according to \a sigs. */
+  int setupCommand( OutList &sigs, comedi_cmd &cmd );
+
     /*! Device driver specific tests on the settings in \a sigs
         for each output signal.
 	Before this function is called, the validity of the settings in 
@@ -152,12 +151,7 @@ protected:
 	OutData are set and a negative value is returned.
         The channels in \a sigs are not sorted.
         This function is called by testWrite().
-        \todo does testing work on running devices?
-	\todo check if setting of sampling rate is correct for acquisition
-	from two or more channels
-	\todo maybe put the second half into prepareRead,
-	since it is called there anyways.
-	\todo analyse errors from test command */
+        \todo does testing work on running devices? */
   virtual int testWriteDevice( OutList &sigs );
   
     /*! A template function that is used for the implementation
@@ -190,21 +184,8 @@ protected:
     /*! returns buffer-size of device in samples. */
   int bufferSize( void ) const;
 
-    /* Reloads the prepared configuration commands of the following acquisition 
-       into the registers of the hardware after stop() was performed.
-       For internal usage.
-       \sa stop(), prepareRead() */
-  int reload( void );
-    /* True, if configuration command for acquisition is successfully loaded
-       into the registers of the hardware.
-       For internal usage.
-       \sa running(), reload() */
-  bool loaded( void ) const;
     /*! True if analog output was prepared using testWriteDevice() and prepareWrite() */
   bool prepared( void ) const;
-  
-    /* Sets the running status and unsets the prepared status. */
-  void setRunning( void );
 
 
 private:
@@ -212,12 +193,6 @@ private:
     /*! Unique analog I/O device type id for all 
         Comedi DAQ devices. */
   static const int ComediAnalogIOType = 1;
-
-  int ErrorState;
-  bool IsPrepared;
-  mutable bool IsRunning;
-  
-  OutList *Sigs;
 
     /*! Pointer to the comedi device. */
   comedi_t *DeviceP;
@@ -229,10 +204,6 @@ private:
   unsigned int BufferElemSize;  
     /*! The maximum sampling rate supported by the DAQ board. */
   double MaxRate;
-
-  comedi_cmd Cmd;
-  unsigned int ChanList[512];
-  lsampl_t InsnData[1];
 
     /*! Holds the list of supported unipolar comedi ranges. */
   vector< comedi_range > UnipolarRange;
@@ -250,6 +221,15 @@ private:
     /*! List of analog output subdevices that can be 
         started via an instruction list together with this subdevice. */
   vector< ComediAnalogOutput* > ComediAOs;
+
+    /*! Comedi command for asynchronous acquisition. */
+  comedi_cmd Cmd;
+    /*! True if the command is prepared. */
+  bool IsPrepared;
+
+  int ErrorState;
+  
+  OutList *Sigs;
 
 };
 

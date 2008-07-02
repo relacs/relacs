@@ -35,6 +35,8 @@ Simple::Simple( void )
   addSelection( "outtrace", "Output trace", "Speaker-1" );
   addNumber( "amplitude", "Amplitude of output signal", 1.0, 0.0, 1000.0, 1.0 );
   addNumber( "duration", "Duration of output", 0.1, 0.001, 1.0, 0.001, "sec", "ms" );
+  addBoolean( "samerate", "Use sampling rate of input", true );
+  addNumber( "rate", "Sampling rate of output", 1000.0, 0.0, 10000000.0, 1000.0, "Hz", "kHz" ).setActivation( "samerate", "false" );
   addNumber( "pause", "Duration of pause bewteen outputs", 0.4, 0.001, 1.0, 0.001, "sec", "ms" );
   addInteger( "repeats", "Repeats", 100, 0, 10000, 1 );
 
@@ -83,6 +85,10 @@ int Simple::main( void )
   int outtrace = index( "outtrace" );
   string unit = outTrace( outtrace ).unit();
   double amplitude = number( "amplitude" );
+  bool samerate = boolean( "samerate" );
+  double samplerate = number( "rate" );
+  if ( samerate )
+    samplerate = trace( intrace ).sampleRate();
   double duration = number( "duration" );
   double pause = number( "pause" );
   int repeats = integer( "repeats" );
@@ -96,7 +102,7 @@ int Simple::main( void )
   // plot:
   P.setXRange( -1000.0*duration, 1000.0*duration );
 
-  OutData signal( duration, trace( intrace ).sampleInterval() );
+  OutData signal( duration, 1.0/samplerate );
   signal = amplitude;
   //  signal[0] = -amplitude;
   signal.back() = 0;
@@ -119,16 +125,21 @@ int Simple::main( void )
       return Failed;
     }
     sleep( duration );
-    if ( interrupt() )
+    if ( interrupt() ) {
+      //      writeZero( outtrace );
       return count > 2 ? Completed : Aborted;
+    }
 
     //    analyze( trace( intrace ), duration, count, deltat );
     sleep( pause );
-    if ( interrupt() )
+    if ( interrupt() ) {
+      //      writeZero( outtrace );
       return count > 2 ? Completed : Aborted;
+    }
 
   }
 
+  //  writeZero( outtrace );
   return Completed;
 }
 
