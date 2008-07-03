@@ -141,8 +141,7 @@ public:
         whether it can be simultaneously started by startRead()
         from this device.
         Add the indices of those devices to \a aiinx and \a aoinx,
-        respectively. 
-	\todo needs to be implemented. */
+        respectively. */
   virtual void take( const vector< AnalogInput* > &ais,
 		     const vector< AnalogOutput* > &aos,
 		     vector< int > &aiinx, vector< int > &aoinx );
@@ -162,8 +161,7 @@ protected:
 	If an error ocurred in any trace, the corresponding errorflags in the
 	InData are set and a negative value is returned.
         The channels in \a sigs are not sorted.
-        This function is called by testRead().
-        \todo does testing work on running devices? */
+        This function is called by testRead(). */
   int testReadDevice( InList &traces );
 
     /*! Execute the command that was prepared by prepareRead(). */

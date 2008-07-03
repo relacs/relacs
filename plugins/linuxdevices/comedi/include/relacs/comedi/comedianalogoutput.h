@@ -102,8 +102,7 @@ public:
 	OutData are set and a negative value is returned.
         The channels in \a sigs are not sorted.
 	Also start possible pending acquisition on other devices
-	that are known from take().
-        \todo How to prefill buffer with data for TRIG_NOW? */
+	that are known from take(). */
   virtual int startWrite( OutList &sigs );
     /*! Write data to a running data acquisition.
         Returns the number of data values that were popped from the \a trace- 
@@ -130,8 +129,7 @@ public:
     /*! Check for every analog output device in \a aos
         whether it can be simultaneously started by startWrite()
         from this device.
-        Add the indices of those devices to \a aoinx.
-	\todo needs to be implemented. */
+        Add the indices of those devices to \a aoinx. */
   virtual void take( const vector< AnalogOutput* > &aos,
                      vector< int > &aoinx );
 
@@ -150,8 +148,7 @@ protected:
 	If an error ocurred in any trace, the corresponding errorflags in the
 	OutData are set and a negative value is returned.
         The channels in \a sigs are not sorted.
-        This function is called by testWrite().
-        \todo does testing work on running devices? */
+        This function is called by testWrite(). */
   virtual int testWriteDevice( OutList &sigs );
   
     /*! A template function that is used for the implementation
@@ -174,6 +171,9 @@ protected:
 
     /*! Execute the command that was prepared by prepareWrite(). */
   int executeCommand( void );
+    /*! Clear the command that was prepared by prepareWrite()
+        after successfull execution via the instruction list. */
+  void clearCommand( void );
 
     /*! Returns the pointer to the comedi device file.
         \sa subdevice() */

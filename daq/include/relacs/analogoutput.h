@@ -113,7 +113,10 @@ public:
 	If an error ocurred in any signal, the corresponding errorflags in
 	OutData are set and a negative value is returned.
         The channels in \a sigs are not sorted. 
-        Simply calls testWriteData() and testWriteDevice(). */
+        Simply calls testWriteData() and testWriteDevice().
+        This function can be called any time
+        independently of prepareWrite() and startWrite() with
+        different \a sigs. */
   virtual int testWrite( OutList &sigs );
     /*! Convert data of the output signals \a sigs.
 	If an error ocurred in any channel, the corresponding errorflags in the
@@ -122,7 +125,8 @@ public:
 	i.e. the output signals are sorted by channel number first
         and are then multiplexed into a buffer of signed short's (2 byte).
         This should be good for most 12 or 16 bit daq boards.
-        The buffer is attached to the first signal in \a sigs. */
+        The buffer is attached to the first signal in \a sigs.
+        This function is called before prepareWrite(). */
   virtual int convertData( OutList &sigs );
     /*! Prepare analog output of the output signals \a sigs on the device.
 	If an error ocurred in any signal, the corresponding errorflags in
@@ -142,16 +146,21 @@ public:
 	OutData are set and a negative value is returned.
         The channels in \a sigs are not sorted.
 	Also start possible pending acquisition on other devices
-	that are known from take(). */
+	that are known from take().
+        This function is always called after a successfull prepareRead()
+        with with exactly the same \a sigs. */
   virtual int startWrite( OutList &sigs ) = 0;
     /*! Write data of the output signals \a sigs to the analog output device.
         Returns the number of transferred data elements.
 	Returns zero if all data are transferred.
 	If an error ocurred in any channel, the corresponding errorflags in the
-	InData structure are filled and a negative value is returned. */
+	InData structure are filled and a negative value is returned.
+        This function is called periodically after writing has been successfully
+        started by startWrite(). The \a sigs are exactly the same. */
   virtual int writeData( OutList &sigs ) = 0;
 
-    /*! Stop any running ananlog output activity and reset the device.
+    /*! Stop any running ananlog output activity and reset the device,
+        i.e. clear all buffers.
         Returns zero on success, otherwise one of the flags 
         NotOpen, InvalidDevice, WriteError.
         \sa close(), open(), isOpen() */

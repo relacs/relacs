@@ -477,14 +477,6 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd )
 			     BipolarRangeIndex[index], aref );
   }
 
-
-  /* // XXX i'm not sure if testing works on running device...
-  if ( running() ) {
-    sigs.addError( DaqError::Busy );
-    return -1;
-  }
-  */
-
   if ( sigs.failed() )
     return -1;
   
@@ -699,6 +691,18 @@ int ComediAnalogOutput::executeCommand( void )
 }
 
 
+void ComediAnalogOutput::clearCommand( void )
+{
+  if ( ! IsPrepared )
+    return;
+
+  if ( Cmd.chanlist != 0 )
+    delete [] Cmd.chanlist;
+  memset( &Cmd, 0, sizeof( comedi_cmd ) );
+  IsPrepared = false;
+}
+
+
 int ComediAnalogOutput::startWrite( OutList &sigs )
 {
   //  cerr << " ComediAnalogOutput::startWrite(): begin" << endl;/////TEST/////
@@ -733,7 +737,11 @@ int ComediAnalogOutput::startWrite( OutList &sigs )
   insnlist.n_insns = ilinx;
   if ( success ) {
     int ninsns = comedi_do_insnlist( DeviceP, &insnlist );
-    if ( ninsns < ilinx )
+    if ( ninsns == ilinx ) {
+      for ( unsigned int k=0; k<ComediAOs.size() && success; k++ )
+	ComediAOs[k]->clearCommand();
+    }
+    else
       success = false;
   }
   delete [] insnlist.insns;
@@ -766,11 +774,7 @@ int ComediAnalogOutput::reset( void )
     return WriteError;
 
   // clear buffers by closing and reopening comedi:
-  int error = comedi_unlock( DeviceP,  SubDevice );
-  if ( error < 0 )
-    cerr << "! warning: ComediAnalogOutput::reset() -> "
-	 << "Unlocking of AI subdevice on device " << deviceFile() << "failed\n";
-  error = comedi_close( DeviceP );
+  int error = comedi_close( DeviceP );
   if ( error )
     cerr << "! warning: ComediAnalogOutput::reset() -> "
 	 << "Closing of AI subdevice on device " << deviceFile() << "failed.\n";
@@ -778,12 +782,6 @@ int ComediAnalogOutput::reset( void )
   if ( DeviceP == NULL ) {
     cerr << "! error: ComediAnalogOutput::reset() -> "
 	 << "Device-file " << deviceFile() << " could not be opened!\n";
-    return NotOpen;
-  }
-  if ( comedi_lock( DeviceP, SubDevice ) != 0 ) {
-    cerr << "! error: ComediAnalogOutput::reset() -> "
-	 << "Locking of AI subdevice failed on device " << deviceFile() << '\n';
-    comedi_close( DeviceP );
     DeviceP = NULL;
     SubDevice = 0;
     if ( Cmd.chanlist != 0 )
@@ -791,7 +789,7 @@ int ComediAnalogOutput::reset( void )
     memset( &Cmd, 0, sizeof( comedi_cmd ) );
     IsPrepared = false;
     return NotOpen;
-  }  
+  }
 
   clearSettings();
   ErrorState = 0;

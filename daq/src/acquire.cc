@@ -688,6 +688,8 @@ int Acquire::stopRead( void )
 
 int Acquire::restartRead( vector< AOData* > &aod, bool updategains )
 {
+  //  cerr << currentTime() << " Acquire::restartRead() begin \n";
+
   bool success = true;
 
   for ( unsigned int i=0; i<AI.size(); i++ ) {
@@ -1436,6 +1438,8 @@ int Acquire::write( OutData &signal )
   //  LastWrite = 0.0; this is set in restartRead
   LastDuration = signal.duration();
   LastDelay = signal.delay();
+
+  //  cerr << "Acquire::write( OutData& ) end\n";
 
   return 0;
 }

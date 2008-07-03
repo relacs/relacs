@@ -110,7 +110,10 @@ public:
 	If an error ocurred in any trace, the corresponding errorflags in the
 	InData are set and a negative value is returned.
         The channels in \a traces are not sorted. 
-        Simply calls testReadData() and testReadDevice(). */
+        Simply calls testReadData() and testReadDevice().
+        This function can be called any time
+        independently of prepareRead() and startRead() with
+        different \a traces. */
   virtual int testRead( InList &traces );
     /*! Prepare analog input of the input traces \a traces on the device.
 	If an error ocurred in any channel, the corresponding errorflags in the
@@ -128,13 +131,18 @@ public:
 	InData structure are filled and a negative value is returned.
         The channels in \a traces are not sorted.
 	Also start possible pending acquisition on other devices
-	that are known from take(). */
+	that are known from take().
+        This function is called after a successfull prepareRead()
+	with with exactly the same \a traces
+	or after reading has been stopped via stop(). */
   virtual int startRead( InList &traces ) = 0;
     /*! Read data from a running data acquisition.
         Returns the number of new data values that were added to the \a traces
 	(sum over all \a traces).
 	If an error ocurred in any channel, the corresponding errorflags in the
-	InData structure are filled and a negative value is returned.  */
+	InData structure are filled and a negative value is returned.
+        This function is called periodically after reading has been successfully
+        started by startRead(). The \a traces are exactly the same. */
   virtual int readData( InList &traces ) = 0;
     /*! Truncate all input traces in \a traces at time \a t.
         The internal device dependend buffer is truncated as well.

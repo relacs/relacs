@@ -93,6 +93,7 @@ OutData::OutData( const OutData  &od )
 
 OutData::~OutData( void )
 {
+  freeDeviceBuffer();
 }
 
 
