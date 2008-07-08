@@ -1,5 +1,16 @@
 dist_bin_SCRIPTS = \
-    relacshelp
+    relacshelp \
+    bin2wav \
+    scaninf
+
+
+bin_SCRIPTS = \
+    remotebackup
+
+
+EXTRA_DIST = \
+    utils/scaninf.doc \
+    RELACS.kdelnk
 
 
 bin_PROGRAMS = \

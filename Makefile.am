@@ -34,7 +34,6 @@ EXTRA_DIST = \
     doc/program.doc \
     doc/relacsall.doc \
     doc/repros.doc \
-    utils/scaninf.doc \
     \
     doc/continuousbutton.png \
     doc/fixedbutton.png \

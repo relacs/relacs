@@ -4,6 +4,15 @@ Plugins:
 Autotools:
 - Make datatools a separate project
 - Look through and clean up utils/ folder
+  update & install: bin2wav (--help and --version)
+  update & dist: RELACS.kdelnk
+  update & dist: remotebackup
+  update & install: scaninf scaninf.doc
+  update: stopjobs
+  update: updatefiles
+  move & update: checkao -> comedi/examples
+  move & update: data.c -> datatools (extract a table from metadata)
+  help: svn-*
 - Check m4 macro style
 - Check for C++ requirements (STL, templates)
 - We need GNU make for the moc rules. And therefore test for GNU make.
