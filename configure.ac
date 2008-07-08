@@ -201,8 +201,12 @@ AC_CONFIG_FILES([plugins/patchclamp/relacslocal], [chmod a+x plugins/patchclamp/
 ## RELACS general
 #################################################
 
+# Relacs build date:
+RELACSDATE=`date '+%m/%d/%y'`
+AC_SUBST(RELACSDATE)
+
 # Relacs version and build date as a preprocessor define:
-AC_DEFINE_UNQUOTED([RELACSVERSION],["${VERSION} (`date '+%m/%d/%y'`)"])
+AC_DEFINE_UNQUOTED([RELACSVERSION],["${VERSION} (${RELACSDATE})"])
 
 # All relacs libraries, the program, and the standard plugins
 # are built from a common source tree.
@@ -257,6 +261,9 @@ AC_CONFIG_FILES([
     plugins/linuxdevices/misc/examples/Makefile
 
     utils/Makefile
+
+    examples/Makefile
+    examples/src/Makefile
 
     doc/relacsall.doc
 ])

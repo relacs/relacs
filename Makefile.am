@@ -15,7 +15,9 @@ SUBDIRS = \
     \
     plugins \
     \
-    utils
+    utils \
+    \
+    examples
 
 EXTRA_DIST = \
     m4/relacs_gnu_make.m4 \
@@ -44,7 +46,7 @@ DISTCLEANFILES = relacs.log relacs.log.old
 DX_DEPENDS = Makefile.am
 DX_SETTINGS = PROJECT_NAME='Relacs'
 DX_SETTINGS += INPUT='$(DOXYGEN_INPUT) $(abs_builddir)'
-DX_SETTINGS += IMAGE_PATHES='$(DOXYGEN_IMAGEPATHES)'
+DX_SETTINGS += IMAGE_PATH='$(DOXYGEN_IMAGEPATHES)'
 DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'
 
 include doxygen.mk

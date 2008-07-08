@@ -1,5 +1,5 @@
 /*
-  reproexample.cc
+  examples/reproexample.cc
   A simple example showing how to program your own RePro.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -19,11 +19,15 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "reproexample.h"
+#include <relacs/examples/reproexample.h>
+using namespace relacs;
+
+namespace examples {
 
 
 ReProExample::ReProExample( void )
-  : RePro( "ReProExample", "RePro - Example", "1.0", "Jan Benda" )
+  : RePro( "ReProExample", "RePro - Example", "Examples",
+	   "Jan Benda", "1.0", "July 8, 2008" )
 {
   // add some parameter as options:
   addNumber( "duration", "Duration", 0.1, 0.01, 1000.0, 0.02, "sec", "ms" );
@@ -35,7 +39,7 @@ ReProExample::~ReProExample( void )
 }
 
 
-void ReProExample::main( void )
+int ReProExample::main( void )
 {
   // get options:
   double duration = number( "duration" );
@@ -44,7 +48,7 @@ void ReProExample::main( void )
   noMessage();
 
   // plot trace:
-  emit plotToggle( true, false, Duration, 0.0 );
+  plotToggle( true, false, duration, 0.0 );
 
   sleep( duration );
 
@@ -53,3 +57,10 @@ void ReProExample::main( void )
 
 
 addRePro( ReProExample );
+
+
+}; /* namespace examples */
+
+
+#include "moc_reproexample.cc"
+

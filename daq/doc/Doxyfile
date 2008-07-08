@@ -510,15 +510,14 @@ EXAMPLE_PATH           = examples
 # blank all files are included.
 
 EXAMPLE_PATTERNS       = *.h \
-                         *.cc \
-                         *.doc
+                         *.cc
 
 # If the EXAMPLE_RECURSIVE tag is set to YES then subdirectories will be 
 # searched for input files to be used with the \include or \dontinclude 
 # commands irrespective of the value of the RECURSIVE tag. 
 # Possible values are YES and NO. If left blank NO is used.
 
-EXAMPLE_RECURSIVE      = NO
+EXAMPLE_RECURSIVE      = YES
 
 # The IMAGE_PATH tag can be used to specify one or more files or 
 # directories that contain image that are included in the documentation (see 

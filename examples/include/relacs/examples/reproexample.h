@@ -1,5 +1,5 @@
 /*
-  reproexample.h
+  examples/reproexample.h
   A simple example showing how to program your own RePro.
 
   RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
@@ -19,11 +19,15 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _REPROEXAMPLE_H_
-#define _REPROEXAMPLE_H_
+#ifndef _RELACS_EXAMPLES_REPROEXAMPLE_H_
+#define _RELACS_EXAMPLES_REPROEXAMPLE_H_
 
 
 #include <relacs/repro.h>
+using namespace relacs;
+
+namespace examples {
+
 
 /*!
 \class ReProExample
@@ -44,9 +48,11 @@ public:
   ~ReProExample( void );
 
     /*! Run the RePro */
-  virtual void main( void );
+  virtual int main( void );
 
 };
 
 
-#endif
+}; /* namespace examples */
+
+#endif /* ! _RELACS_EXAMPLES_REPROEXAMPLE_H_ */

@@ -5,13 +5,15 @@ endif
 
 EXTRA_DIST = \
     module/Makefile \
-    module/blocklist.h \
-    module/blocklist.c \
     module/model.h \
     module/model.c \
     module/rtmodule.h \
     module/rtmodule.c \
-    module/moduledef.h
+    module/dynclampmodule.h \
+    module/dynclampmodule.c \
+    module/moduledef.h \
+    module/loadmodules.sh \
+    module/killmodules.sh
 
 
 pkglibdir = $(libdir)/relacs

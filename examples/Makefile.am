@@ -1,0 +1,4 @@
+if RELACS_EXAMPLES_COND
+    EXAMPLES = src
+endif
+SUBDIRS = $(EXAMPLES)

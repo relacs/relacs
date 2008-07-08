@@ -3,15 +3,22 @@ Plugins:
 
 Autotools:
 - Make datatools a separate project
+- Look through and clean up utils/ folder
 - Check m4 macro style
 - Check for C++ requirements (STL, templates)
-- We need GNU make for the moc rules. 
-  However, can't we use from automake "18.2 Handling new file extensions"?
+- We need GNU make for the moc rules. And therefore test for GNU make.
+  However, can't we use from automake "18.2 Handling new file extensions"
+  something like:
+  SUFFIXES = .h .moc.cc
+  .h.moc.cc :
+	$(MOC) -i -o "$@" "$<"
+  However, the header files are not in the same directory!
 - Add rand55 test and make sure that the dox file PREDEFINED variable gets HAVE_LIBRAND55 define set
   http://summa.physik.hu-berlin.de/~beule/random/random55.tar.gz
 
 Relacs:
 - Check for missing files from the pre-autotools version - just to make sure.
+  -> checked all on turing.
 - How are plugins (control, repros) found/identified? Possibility of name clashes!
   Use plugin-set name as well.
 - Fix command line arg names from path to dir in relacsmain and RELACSWidget.
