@@ -1,4 +1,4 @@
-# AC_RELACS_CHECK_GSL() 
+# RELACS_LIB_GSL() 
 # - Provides --with(out)?-gsl options and performs header and link checks
 # - Checks for standard math library first
 # - Fills GSL_(LD|CPP)FLAGS and GSL_LIBS and marks them for substitution
@@ -7,7 +7,7 @@
 # - Extends DOXYGEN_PREDEF by HAVE_LIBGSL
 # - Leaves ((LD|CPP)FLAGS|LIBS) untouched
 
-AC_DEFUN([AC_RELACS_CHECK_GSL], [
+AC_DEFUN([RELACS_LIB_GSL], [
 
 # save flags:
 SAVE_CPPFLAGS=${CPPFLAGS}
@@ -20,10 +20,11 @@ GSL_LDFLAGS=
 GSL_LIBS=
 
 # read arguments:
-AC_ARG_WITH(gsl, [
-  --with-gsl@<:@=DIR@:>@        enable GSL
-                          ("/lib" and "/include" is appended)
-  --without-gsl           disable GSL, i.e. prevent auto-detection], [
+AC_ARG_WITH([gsl],
+[AS_HELP_STRING([--with-gsl@<:@=DIR@:>@],
+		[enable GSL ("/lib" and "/include" is appended)])
+AS_HELP_STRING([--without-gsl],	[disable GSL, i.e. prevent auto-detection])],
+ 	[
 	if test ${withval} = yes ; then
 		RELACS_GSL=yes
 	elif test ${withval} = no ; then
@@ -36,11 +37,8 @@ AC_ARG_WITH(gsl, [
 		GSL_LDFLAGS="-L${withval}/lib"
 		CPPFLAGS="${GSL_CPPFLAGS} ${CPPFLAGS}"
 		LDFLAGS="${GSL_LDFLAGS} ${LDFLAGS}"
-	fi
-	
-], [
-	RELACS_GSL=detect
-])
+	fi],
+	[RELACS_GSL=detect])
 
 GSL_DISABLED="GSL disabled (configure with --with-gsl@<:@=DIR@:>@ to enable)"
 GSL_ENABLED="GSL enabled"

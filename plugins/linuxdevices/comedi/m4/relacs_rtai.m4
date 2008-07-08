@@ -1,10 +1,10 @@
-# RELACS_CHECK_RTAI() 
+# RELACS_HEADER_RTAI() 
 # - Provides --with(out)?-rtai options and performs header checks
 # - Fills RTAI_CPPFLAGS and marks it for substitution
 # - Leaves ((LD|CPP)FLAGS|LIBS) untouched
 # - Sets RELACS_RTAI with the result of the tests
 
-AC_DEFUN([RELACS_CHECK_RTAI], [
+AC_DEFUN([RELACS_HEADER_RTAI], [
 
 # save flags:
 SAVE_CPPFLAGS=${CPPFLAGS}
@@ -13,9 +13,9 @@ SAVE_CPPFLAGS=${CPPFLAGS}
 RTAI_CPPFLAGS=
 
 # read arguments:
-AC_ARG_WITH([rtai], [
-  --with-rtai=DIR       set path to RTAI includes
-  --without-rtai        don't use RTAI, i.e. prevent auto-detection],
+AC_ARG_WITH([rtai],
+[AS_HELP_STRING([--with-rtai=DIR],[set path to RTAI includes])
+AS_HELP_STRING([--without-rtai],[don't use RTAI, i.e. prevent auto-detection])],
 [
 	# --without-rtai  -> $with_rtai = no
 	# --with-rtai=no  -> $with_rtai = no

@@ -3,9 +3,10 @@ Plugins:
 
 Autotools:
 - Make datatools a separate project
-- Check m4 macro names and style
-- Check and improve output of configure --help
+- Check m4 macro style
 - Check for C++ requirements (STL, templates)
+- We need GNU make for the moc rules. 
+  However, can't we use from automake "18.2 Handling new file extensions"?
 - Add rand55 test and make sure that the dox file PREDEFINED variable gets HAVE_LIBRAND55 define set
   http://summa.physik.hu-berlin.de/~beule/random/random55.tar.gz
 

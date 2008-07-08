@@ -1,10 +1,10 @@
-# RELACS_CHECK_COMEDI() 
+# RELACS_LIB_COMEDI() 
 # - Provides --with(out)?-comedi options and performs header and link checks
 # - Fills (COMEDI_(LD|CPP)FLAGS|LIBS) and marks them for substitution
 # - Leaves ((LD|CPP)FLAGS|LIBS) untouched
 # - Sets RELACS_COMEDI with the result of the tests
 
-AC_DEFUN([RELACS_CHECK_COMEDI], [
+AC_DEFUN([RELACS_LIB_COMEDI], [
 
 # save flags:
 SAVE_CPPFLAGS=${CPPFLAGS}
@@ -17,10 +17,9 @@ COMEDI_CPPFLAGS=
 COMEDI_LIBS=
 
 # read arguments:
-AC_ARG_WITH([comedi], [
-  --with-comedi=DIR       set Comedi path
-                          ("/lib" and "/include" is appended)
-  --without-comedi        don't use Comedi, i.e. prevent auto-detection],
+AC_ARG_WITH([comedi],
+[AS_HELP_STRING([--with-comedi=DIR],[set Comedi path ("/lib" and "/include" is appended)])
+AS_HELP_STRING([--without-comedi],[don't use Comedi, i.e. prevent auto-detection])],
 [
 	# --without-comedi  -> $with_comedi = no
 	# --with-comedi=no  -> $with_comedi = no

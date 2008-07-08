@@ -1,9 +1,9 @@
-# AC_RELACS_CHECK_MATH() 
+# RELACS_LIB_MATH() 
 # - Checks for the standard C math libray (-lm)
 # - Fills MATH_LIBS and marks it for substitution
 # - Leaves LIBS untouched
 
-AC_DEFUN([AC_RELACS_CHECK_MATH], [
+AC_DEFUN([RELACS_LIB_MATH], [
 
 # save flags:
 SAVE_LIBS=${LIBS}

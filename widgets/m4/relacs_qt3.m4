@@ -1,10 +1,10 @@
-# AC_RELACS_CHECK_QT3() 
+# RELACS_LIB_QT3() 
 # - Provides --with-qt3(-(inc|lib))? options and performs header and link checks
 # - Fills QT3_(LD|CPP)FLAGS and QT3_LIBS and marks them for substitution
 # - Fills MOC and marks it for substitution
 # - Leaves ((LD|CPP)FLAGS|LIBS) untouched
 
-AC_DEFUN([AC_RELACS_CHECK_QT3], [
+AC_DEFUN([RELACS_LIB_QT3], [
 
 # save flags:
 SAVE_CPPFLAGS=${CPPFLAGS}
@@ -29,37 +29,38 @@ fi
 
 # read arguments:
 EXTRA_MOC_LOCATION=
-AC_ARG_WITH(qt3, [
-Extra Options:
-  --with-qt3=DIR          override Qt3 path
-                          ("/lib" and "/include" is appended], [
-	QT3_ERROR="No path given for option --with-qt3"
+AC_ARG_WITH([qt3],
+	[AS_HELP_STRING([--with-qt3=DIR],
+	           	[override Qt3 path ("/lib" and "/include" is appended)])],
+	[QT3_ERROR="No path given for option --with-qt3"
 	if test ${withval} != yes -a "x${withval}" != x ; then
 		QT3_CPPFLAGS="-I${withval}/include ${QT3_CPPFLAGS}"
 		QT3_LDFLAGS="-L${withval}/lib ${QT3_LDFLAGS}"
 		EXTRA_MOC_LOCATION="${withval}/bin"
 	else
 		AC_MSG_ERROR(${QT3_ERROR})
-	fi
-], [])
+	fi],
+	[])
 
-AC_ARG_WITH(qt3-inc, [  --with-qt3-inc=DIR      override Qt3 include path], [
-	QT3_INC_ERROR="No path given for option --with-qt3-inc"
+AC_ARG_WITH([qt3-inc],
+	[AS_HELP_STRING([--with-qt3-inc=DIR],[override Qt3 include path])],
+	[QT3_INC_ERROR="No path given for option --with-qt3-inc"
 	if test ${withval} != yes -a "x${withval}" != x ; then
 		QT3_CPPFLAGS="-I${withval} ${QT3_CPPFLAGS}"
 	else
 		AC_MSG_ERROR(${QT3_INC_ERROR})
-	fi
-], [])
+	fi],
+	[])
 
-AC_ARG_WITH(qt3-lib, [  --with-qt3-lib=DIR      override Qt3 library path], [
-	QT3_LIB_ERROR="No path given for option --with-qt3-lib"
+AC_ARG_WITH([qt3-lib],
+	[AS_HELP_STRING([--with-qt3-lib=DIR],[override Qt3 library path])],
+	[QT3_LIB_ERROR="No path given for option --with-qt3-lib"
 	if test ${withval} != yes -a "x${withval}" != x ; then
 		QT3_LDFLAGS="-L${withval} ${QT3_LDFLAGS}"
 	else
 		AC_MSG_ERROR(${QT3_LIB_ERROR})
-	fi
-], [])
+	fi],
+	[])
 
 # update flags:
 CPPFLAGS="${QT3_CPPFLAGS} ${CPPFLAGS}"
@@ -91,14 +92,15 @@ LIBS=${SAVE_LIBS}
 
 # moc:
 FORCED_MOC=
-AC_ARG_WITH(moc, [  --with-moc=CMD          override moc command], [
-	QT3_MOC_ERROR="No path given for option --with-moc"
+AC_ARG_WITH([moc],
+	[AS_HELP_STRING([--with-moc=CMD],[override moc command])],
+	[QT3_MOC_ERROR="No path given for option --with-moc"
 	if test ${withval} != yes -a "x${withval}" != x ; then
 		FORCED_MOC=${withval}
 	else
 		AC_MSG_ERROR(${QT3_MOC_ERROR})
-	fi
-], [])
+	fi],
+	[])
 
 QT3_MOC_VERSION_ERROR="\$MOC is not pointing to Moc of Qt3"
 if test "x${FORCED_MOC}" != x ; then
