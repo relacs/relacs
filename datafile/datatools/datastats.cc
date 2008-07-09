@@ -850,7 +850,7 @@ void WriteUsage()
   cerr << "-n: number columns of the key\n";
   cerr << "-d: the number of empty lines that separate blocks of data.\n";
   cerr << "-D: more than one space between data columns required.\n";
-  cerr << "-o: write binned data into file ### instead to standard out\n";
+  cerr << "-o: write results into file ### instead to standard out\n";
   cerr << '\n';
   exit( 1 );
 }

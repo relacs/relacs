@@ -1,0 +1,75 @@
+/*!
+\page bin2dat bin2dat
+
+bin2dat can be used to convert binary data as they are produced
+by RELACS, and especially the IOData::writeBinary() functions,
+into ascii data files.
+
+\section bin2datusage USAGE
+\c bin2dat \a <binfile> \a <datfile> \a <options>
+
+The first argument \a <binfile> is the full specification of the file
+containing the binary data. 
+The second argument is the output file in which the ascii data are written.
+The program tries to guess the data type of the binary file from its extension.
+See IOData::binaryExtension() about the standrd extension.
+The data type as well as the range of data can be specified by several \a options.
+
+\section bin2datoptions OPTIONS
+\arg \c -s 0 : The data are unsigned.
+\arg \c -s 1 : The data are signed.
+\arg \c -d \a x : The size of a single data element is \a x bytes.
+               Only values of 1, 2, 4, 8 are allowed.
+\arg \c -c \a x : Data from \a x channels are multiplexed in the file.
+\arg \c -o \a x : Write data starting from byte offset \a x.
+\arg \c -O \a x : Write data starting from byte offset \a x times the size of a single data element.
+\arg \c -u \a x : Write data up to byte offset \a x.
+\arg \c -U \a x : Write data up to byte offset \a x times the size of a single data element.
+\arg \c -n \a x : Write \a x bytes of data.
+\arg \c -N \a x : Write \a x data elements per channel.
+\arg \c -T \a x : Write \a x divided by the time step (-t) lines of data.\n" );
+\arg \c -t \a x : Add a time column to the ascii file with time step \a x.
+\arg \c -v : Print settings to stderr.
+
+\section bin2datexamples EXAMPLES
+
+To convert the whole binary file \c data.sw1 into the ascii file \c signal.dat use
+\code
+bin2dat data.sw1 signal.dat
+\endcode
+
+To convert only data elements 5 to 10 use
+\code
+bin2dat data.sw1 signal.dat -O 5 -U 10
+\endcode
+
+Data element 5 of a \c sw1 -file (signed word) is at byte offset 10.
+Data element 10 at 20.
+So, alternatively 
+\code
+bin2dat data.sw1 signal.dat -o 10 -u 20
+\endcode
+can be used.
+
+Write the first 100 bytes:
+\code
+bin2dat data.sw1 signal.dat -n 100
+\endcode
+
+Write 50 data elements starting at data element 20:
+\code
+bin2dat data.sw1 signal.dat -O 20 -N 50
+\endcode
+
+Write data elements 14 to 43 and add a time column with time step 0.1:
+\code
+bin2dat data.sw1 signal.dat -O 14 -U 43 -t 0.1
+\endcode
+
+Convert binary data file \c data.dat, which contains signed word (two bytes long)
+data of three multiplexed channels into ascii-file \c signal.dat:
+\code
+bin2dat data.dat signal.dat -s 1 -d 2 -c 3
+\endcode
+
+ */

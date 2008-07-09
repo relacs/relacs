@@ -2,6 +2,9 @@ SUBDIRS = src
 if RELACS_COND_RTAI
 SUBDIRS += module
 endif
+if RELACS_EXAMPLES_COND
+SUBDIRS += examples
+endif
 
 EXTRA_DIST = \
     module/Makefile \

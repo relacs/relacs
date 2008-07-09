@@ -3,6 +3,7 @@ bin_PROGRAMS = \
     datacolumn \
     datainfo \
     datastats \
+    extractdata \
     fixdata \
     mergedata \
     plotdata \
@@ -42,6 +43,13 @@ datastats_LDADD = \
     ../../options/src/librelacsoptions.la \
     ../src/librelacsdatafile.la
 datastats_SOURCES = datastats.cc
+
+
+extractdata_LDADD = \
+    ../../numerics/src/librelacsnumerics.la \
+    ../../options/src/librelacsoptions.la \
+    ../src/librelacsdatafile.la
+extractdata_SOURCES = extractdata.cc
 
 
 fixdata_LDADD = \

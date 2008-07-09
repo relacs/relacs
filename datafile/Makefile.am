@@ -1,5 +1,5 @@
 if RELACS_EXAMPLES_COND
-    EXAMPLES = examples
+    EXAMPLES = examples datatools
 endif
 SUBDIRS = src $(EXAMPLES)
 

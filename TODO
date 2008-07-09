@@ -3,27 +3,8 @@ Plugins:
 
 Autotools:
 - Make datatools a separate project
-- Look through and clean up utils/ folder
-  update & install: bin2wav (--help and --version)
-  update & dist: RELACS.kdelnk
-  update & dist: remotebackup
-  update & install: scaninf scaninf.doc
-  update: stopjobs
-  update: updatefiles
-  move & update: checkao -> comedi/examples
-  move & update: data.c -> datatools (extract a table from metadata)
-  help: svn-*
 - Check m4 macro style
 - Check for C++ requirements (STL, templates)
-- We need GNU make for the moc rules. And therefore test for GNU make.
-  However, can't we use from automake "18.2 Handling new file extensions"
-  something like:
-  SUFFIXES = .h .moc.cc
-  .h.moc.cc :
-	$(MOC) -i -o "$@" "$<"
-  However, the header files are not in the same directory!
-- Add rand55 test and make sure that the dox file PREDEFINED variable gets HAVE_LIBRAND55 define set
-  http://summa.physik.hu-berlin.de/~beule/random/random55.tar.gz
 
 Relacs:
 - Check for missing files from the pre-autotools version - just to make sure.
@@ -77,12 +58,32 @@ Autotools details:
 - Math library check: LT_LIB_M
 - moc3.mk: clean-am should be clean-local, but this is not called from Makefile!
   However, why is this clean-am not overriding the original clean-am?
+- We need GNU make for the moc rules. And therefore test for GNU make.
+  However, can't we use from automake "18.2 Handling new file extensions"
+  something like:
+  SUFFIXES = .h .moc.cc
+  .h.moc.cc :
+	$(MOC) -i -o "$@" "$<"
+  However, the header files are not in the same directory!
+- Add rand55 test and make sure that the dox file PREDEFINED variable gets HAVE_LIBRAND55 define set
+  http://summa.physik.hu-berlin.de/~beule/random/random55.tar.gz
 - upgrade to Automake 1.10.1 and add LZMA support, remove .zip archives
 - uninstall: also remove relacs subdirectories?!
 - Use current version of doxygen for debian,
   update the Doxyfile or remove new/old settings
 - make distcheck: 
   release.sh /home/jan/prj/relacs/relacsinstall --with-qt3=/usr/lib/qt3 --disable-doxygen-dot
+
+Distribution details:
+- Look through and clean up utils/ folder
+  update & install: bin2wav (--help and --version)
+  update & install: uw2sw
+  update & dist: remotebackup
+  update & install: scaninf scaninf.doc
+  update: stopjobs
+  update: updatefiles
+  help: svn-*
+
 
 
 Bug in MetaData Dialog: after opening and closing with ESC, reopening crashes the program

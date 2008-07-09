@@ -43,7 +43,7 @@ if [ -f "$HEADERFILE" ]; then
   DESCRIPTION="${BRIEF##*\\brief }"
 fi
 
-if [ "$EXTENSION" == "h" ] || [ "$EXTENSION" == "cc" ]; then
+if [ "$EXTENSION" == "h" ] || [ "$EXTENSION" == "cc" ] || [ "$EXTENSION" == "c" ]; then
   cat <<EOF | sed -e "s|FILENAME|${FILE##*/}|; s|DESCRIPTION|$DESCRIPTION|" > tmp.txt
 /*****************************************************************************
  *
