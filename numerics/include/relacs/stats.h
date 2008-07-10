@@ -2445,16 +2445,21 @@ void serialCorr( ForwardIterX firstx, ForwardIterX lastx,
     ForwardIterX iterx1 = firstx;
     ForwardIterX iterx2 = firstx2;
     double covar = 0.0;
-    int k = 1;
-    for ( k=1; iterx1 != lastx && iterx2 != lastx; k++ ) {
+    int n = 1;
+    for ( n=1; iterx1 != lastx && iterx2 != lastx; n++ ) {
       double s1 = *iterx1 - a;
       double s2 = *iterx2 - a;
-      covar += ( s1*s2 - covar )/k;
+      covar += ( s1*s2 - covar )/n;
       ++iterx1;
       ++iterx2;
     }
+    n--;
+    if ( n > 1 )
+      covar *= n/(n-1);
+    else
+      covar = 0.0;
 
-    *itery = var > 0.0 ? covar / var : 0.0;
+    *itery = var > 0.0 ? covar / var : itery == firsty ? 1.0 : 0.0;
     ++itery;
 
     ++firstx2;
