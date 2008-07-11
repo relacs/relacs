@@ -689,14 +689,53 @@ void DynClampAnalogInput::take( vector< AnalogInput* > &ais,
 void DynClampAnalogInput::addTraces( vector< TraceSpec > &traces, int deviceid ) const
 {
   struct traceInfoIOCT traceInfo;
-  int channel=1000;
-  while ( 0 == ::ioctl( Modulefile, IOC_GET_INTRACE_INFO, &traceInfo ) ) {
+  traceInfo.traceType = PARAM_IN;
+  int channel = PARAM_CHAN_OFFSET;
+  while ( 0 == ::ioctl( Modulefile, IOC_GET_TRACE_INFO, &traceInfo ) ) {
     traces.push_back( TraceSpec( traces.size(), traceInfo.name,
 				 deviceid, channel++, 1.0, traceInfo.unit ) );
   }
   int ern = errno;
   if ( ern != ERANGE )
-    cerr << "DynClampAnalogOutput::addTraces() -> errno " << errno << endl;
+    cerr << "DynClampAnalogInput::addTraces() -> errno " << ern << endl;
+}
+
+
+int DynClampAnalogInput::matchTraces( InList &traces ) const
+{
+  struct traceInfoIOCT traceInfo;
+  traceInfo.traceType = TRACE_IN;
+  struct traceChannelIOCT traceChannel;
+  traceChannel.traceType = TRACE_IN;
+  string unknowntraces = "";
+  int channel=1000;
+  while ( 0 == ::ioctl( Modulefile, IOC_GET_TRACE_INFO, &traceInfo ) ) {
+    bool notfound = true;
+    for ( int k=0; k<traces.size(); k++ ) {
+      if ( traces[k].ident() == traceInfo.name ) {
+	traceChannel.device = traces[k].device();
+	traceChannel.channel = traces[k].channel();
+	if ( ::ioctl( Modulefile, IOC_SET_TRACE_CHANNEL, &traceChannel ) != 0 ) {
+	  cerr << "DynClampAnalogInput::matchTraces() set channels -> errno " << errno << endl;
+	  return -1;
+	}
+	notfound = false;
+	break;
+      }
+    }
+    if ( notfound )
+      unknowntraces += " " + traceInfo.name;
+  }
+  int ern = errno;
+  if ( ern != ERANGE ) {
+    cerr << "DynClampAnalogInput::matchTraces() get traces -> errno " << ern << endl;
+    return -1;
+  }
+  if ( ! unknowntraces.empty() ) {
+    traces.addErrorStr( "unable to match model input traces" + unknowntraces );
+    return -1;
+  }
+  return 0;
 }
 
 

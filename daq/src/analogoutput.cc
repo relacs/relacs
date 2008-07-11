@@ -105,6 +105,11 @@ void AnalogOutput::addTraces( vector< TraceSpec > &traces, int deviceid ) const
 }
 
 
+string AnalogOutput::matchTraces( vector< TraceSpec > &traces ) const
+{
+}
+
+
 string AnalogOutput::info( void ) const
 {
   ostringstream ss;

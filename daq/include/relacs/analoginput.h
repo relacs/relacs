@@ -196,6 +196,10 @@ public:
         that you should use for initializing the TraceSpec. */
   virtual void addTraces( vector< TraceSpec > &traces, int deviceid ) const;
 
+    /*! May match trace names with driver internal trace names,
+        for example trace names of a dynamic clamp model. */
+  virtual int matchTraces( InList &traces ) const;
+
     /*! The id of the analog input implementation.
         \sa setAnalogInputType(), deviceType(), deviceName(), ident() */
   int analogInputType( void ) const;

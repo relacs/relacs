@@ -139,6 +139,9 @@ public:
         that you should use for initializing the TraceSpec. */
   virtual void addTraces( vector< TraceSpec > &traces, int deviceid ) const;
 
+    /*! Match trace names with model output trace names. */
+  virtual string matchTraces( vector< TraceSpec > &traces ) const;
+
 
 protected:
 

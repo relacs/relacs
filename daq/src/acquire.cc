@@ -319,9 +319,9 @@ void Acquire::inTraces( vector< TraceSpec > &traces )
       name << "device " << k << " channel " << c;
       traces.push_back( TraceSpec( traces.size(), name.str(), k, c ) );
     }
-    // additional input variables:
-    AI[k].AI->addTraces( traces, k );
   }
+  // additional input variables:
+  AI[0].AI->addTraces( traces, 0 );
 }
 
 
@@ -535,6 +535,15 @@ int Acquire::read( InList &data )
     }
   }
 
+  // check model traces:
+  if ( AI[0].AI->matchTraces( data ) < 0 )
+    success = false;
+  string es = AO[0].AO->matchTraces( OutTraces );
+  if ( ! es.empty() ) {
+    data.addErrorStr( "unable to match model output traces" + es );
+    success = false;
+  }
+
   // priority, busy:
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     // multiple priorities?
@@ -588,6 +597,10 @@ int Acquire::read( InList &data )
     return -1;
   }
 
+  // prepare dynamic clamp output:
+  // XXXX OutList sigs = OutTraces; All potential output channels should be initialized!
+  //AO[]->prepareWrite( sigs );
+
   // start reading from daq boards:
   vector< int > aistarted;
   aistarted.reserve( AI.size() );
@@ -615,6 +628,10 @@ int Acquire::read( InList &data )
       AI[i].AI->reset();
     return -1;
   }
+
+
+  // start dynamic clamp output:
+  //AO->startWrite( sigs );
 
   LastDevice = -1;
   LastWrite = -1.0;

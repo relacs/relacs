@@ -81,9 +81,8 @@ struct chanlistIOCT {
   unsigned int subdevID;
   float scalelist[MAXCHANLIST];
   unsigned int chanlist[MAXCHANLIST];
+  unsigned int chanIsUsed[MAXCHANLIST];
   unsigned int chanlistN;
-  // ChanItems after this Index are reserved for Model output:
-  unsigned int lastDataChanIndex; 
 };
 
 struct comediCmdIOCT {
@@ -98,18 +97,21 @@ struct syncCmdIOCT {
   int continuous;
 };
 
-// needed?
-struct traceNameIOCT {
-  char name[DEV_NAME_MAXLEN];
-  int chanNr;
-};
 
 
 //* Trace-data:
+enum traceTypes { TRACE_IN, TRACE_OUT, PARAM_IN, PARAM_OUT };
 
 struct traceInfoIOCT {
+  enum traceTypes traceType;
   char name[PARAM_NAME_MAXLEN];
   char unit[PARAM_NAME_MAXLEN];
+};
+
+struct traceChannelIOCT {
+  enum traceTypes traceType;
+  int device;
+  int channel;
 };
 
 
@@ -138,10 +140,10 @@ struct traceInfoIOCT {
                                                        
 // exchange info:
 
-#define IOC_GET_INTRACE_INFO    _IOR(RTMODULE_MAJOR, 14, int)
-#define IOC_GET_OUTTRACE_INFO   _IOR(RTMODULE_MAJOR, 15, int)
-#define IOC_GETLOOPCNT          _IOR(RTMODULE_MAJOR, 16, int)
-#define IOC_GETAOINDEX          _IOR(RTMODULE_MAJOR, 17, int)
+#define IOC_GET_TRACE_INFO        _IOWR(RTMODULE_MAJOR, 14, int)
+#define IOC_SET_TRACE_CHANNEL     _IOW(RTMODULE_MAJOR, 15, int)
+#define IOC_GETLOOPCNT            _IOR(RTMODULE_MAJOR, 16, int)
+#define IOC_GETAOINDEX            _IOR(RTMODULE_MAJOR, 17, int)
 
 
 #define RTMODULE_IOC_MAXNR 18
