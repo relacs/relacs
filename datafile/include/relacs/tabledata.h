@@ -85,6 +85,8 @@ public:
 
   inline void push( int col, double val ) { Data[col].push( val ); };
 
+  void erase( int row );
+
   const TableData &operator++( void ) { Rows++; return *this; };
   const TableData &operator+=( int r ) { Rows+=r; return *this; };
 

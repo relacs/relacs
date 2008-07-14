@@ -388,8 +388,10 @@ double gammaP( double a, double x )
 {
   if ( x < 0.0 ) 
     cerr << "Invalid arguments in function gammaP: x < 0.0\n";
-  if ( a <= 0.0 ) 
-    cerr << "Invalid arguments in function gammaP: a <= 0.0\n";
+  if ( ::fabs( a ) < 1.0e-8 )
+    return 1.0 - ::exp( -x );
+  if ( a < 0.0 ) 
+    cerr << "Invalid arguments in function gammaP: a < 0.0\n";
 
 #ifdef HAVE_LIBGSL
 
@@ -432,8 +434,10 @@ double gammaQ( double a, double x )
 {
   if ( x < 0.0 ) 
     cerr << "Invalid arguments in function gammaQ: x < 0.0\n";
-  if ( a <= 0.0 ) 
-    cerr << "Invalid arguments in function gammaQ: a <= 0.0\n";
+  if ( ::fabs( a ) < 1.0e-8 )
+    return ::exp( -x );
+  if ( a < 0.0 ) 
+    cerr << "Invalid arguments in function gammaQ: a < 0.0\n";
 
 #ifdef HAVE_LIBGSL
   
@@ -471,6 +475,8 @@ double gammaQ( double a, double x )
 
 }
 
+
+#ifndef HAVE_LIBGSL
 
 double betacf( double a, double b, double x )
 {
@@ -520,12 +526,17 @@ double betacf( double a, double b, double x )
 }
 
 
+#endif
+
+
 double incBeta( double a, double b, double x )
 {
   if ( x < 0.0 || x > 1.0 ) 
     cerr << "Invalid arguments in function incBeta: x < 0.0 || x > 1.0\n";
-  if ( a <= 0.0 ) 
-    cerr << "Invalid arguments in function incBeta: a <= 0.0\n";
+  if ( ::fabs( a ) < 1.0e-8 )
+    return 1.0 - ::pow( 1.0-x, b );
+  if ( a < 0.0 ) 
+    cerr << "Invalid arguments in function incBeta: a < 0.0\n";
   if ( b <= 0.0 ) 
     cerr << "Invalid arguments in function incBeta: b <= 0.0\n";
 

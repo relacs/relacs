@@ -118,6 +118,17 @@ ArrayD TableData::row( int r ) const
 }
 
 
+void TableData::erase( int row )
+{
+  if ( row < 0 || row >= rows() )
+    return;
+
+  for ( int c=0; c<columns(); c++ )
+    Data[c].erase( row );
+  Rows--;
+}
+
+
 TableData &TableData::sort( int scol )
 {
   // get sorted index:

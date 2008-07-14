@@ -91,16 +91,21 @@ double pearsonTest( double r, int n );
 
 
   /*! Compute the complementary normalized incomplete Gamma Function 
-      \f[ P(a,x) = 1/\Gamma(a) \int_0^x dt t^{a-1} \exp(-t) \f] for a > 0, x >= 0 */
+      \f[ P(a,x) = 1/\Gamma(a) \int_0^x t^{a-1} \exp(-t) dt \f] for a > 0, x >= 0.
+      If a = 0, 1-exp(-x) is returned. */
 double gammaP( double a, double x );
   /*! Compute the normalized incomplete Gamma Function 
-      \f[ Q(a,x) = 1/\Gamma(a) \int_x^\infty dt t^{a-1} \exp(-t) \f] for a > 0, x >= 0 */
+      \f[ Q(a,x) = 1/\Gamma(a) \int_x^\infty t^{a-1} \exp(-t) dt \f] for a > 0, x >= 0
+      If a = 0, exp(-x) is returned. */
 double gammaQ( double a, double x );
-  /*! Compute the normalized incomplete Beta function 
-      /f[ B_x(a,b)/B(a,b) \f] for \f$ a > 0\f$, \f$b > 0\f$, and \f$ 0 \le x \le 1\f$,
+  /*! Compute the normalized incomplete beta function 
+      \f[ B_x(a,b)/B(a,b) \f] for \f$ a > 0\f$, \f$b > 0\f$, and \f$ 0 \le x \le 1\f$,
       where
-      \f[ B(a,b) = \Gamma(a)\Gamma(b)/\Gamma(a+b) \f]
-      is the Beta Function. */
+      \f[ B(a,b) = \int_0^1 t^{a-1} (1-t)^{b-1} dt = \frac{\Gamma(a)\Gamma(b)}{\Gamma(a+b)} \f]
+      is the beta function and
+      \f[ B(x;a,b) = \int_0^x t^{a-1} (1-t)^{b-1} dt \f]
+      is the incomplete beta function.
+      If a = 0, \f$ 1-(1-x)^b\f$ is returned. */
 double incBeta( double a, double b, double x );
 
 
