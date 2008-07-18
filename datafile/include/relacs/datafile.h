@@ -262,11 +262,13 @@ public:
   string line( void ) const { return Line; };
     /*! The current line. */
   const string &line( void ) { return Line; };
+    /*! The current line split up in its data items. */
+  void splitLine( StrQueue &items, const string separators=Str::WhiteSpace ) const;
     /*! The number of read in lines. */
   int lineNum( void ) const { return LineNum; };
     /*! The number of data lines read in by the last call of readData(). */
   int dataLines( void ) const { return DataLines; };
-    /*! The number of lines of the last read in block of empty lines. */
+    /*! The number of empty lines following the last read in block of data. */
   int emptyLines( void ) const { return EmptyLines; };
 
     /*! The current table key. */

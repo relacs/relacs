@@ -539,6 +539,21 @@ bool DataFile::dataLine( void ) const
 }
 
 
+void DataFile::splitLine( StrQueue &items, const string separators ) const
+{
+  items.clear();
+  int index = 0;
+  for ( int k=0; index>=0; k++ ) {
+    int word = Line.nextWord( index, separators, Comment );
+    if ( word >= 0 )
+      items.add( Line.mid( word, index-1 ) );
+    else
+      break;
+  }
+
+}
+
+
 const TableKey &DataFile::key( void ) const
 {
   if ( KeyChanged ) {

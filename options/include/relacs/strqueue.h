@@ -140,6 +140,10 @@ class StrQueue : public StrDeque
         is erased from each string. */
   StrQueue strippedComments( const string &comment=Str::comment() ) const;
 
+    /* Returns a string with all the elements of te list 
+       separated by \a separator. */
+  string save( const string &separator=" " ) const;
+
     /*! Read from stream \a str until end of file
         or a line beginning with \a stop is reached. 
 	If \a stop equals the \a StopEmpty string,

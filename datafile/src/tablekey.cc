@@ -423,7 +423,7 @@ ostream &TableKey::saveKey( ostream &str, bool key, bool num, int flags ) const
     str << KeyStart;
     int w = Width[0];
     int n = 0;
-    for ( unsigned int c=1; c<Columns.size(); c++ )
+    for ( unsigned int c=1; c<Columns.size(); c++ ) {
       if ( Columns[c][l] != Columns[c-1][l] ) {
 	if ( flags == 0 || ( (*Columns[c-1][l]).flags() & flags ) ) {
 	  if ( n > 0 )
@@ -435,6 +435,7 @@ ostream &TableKey::saveKey( ostream &str, bool key, bool num, int flags ) const
       }
       else if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) )
 	w += Separator.size() + Width[c];
+    }
     if ( flags == 0 || ( (*Columns.back()[l]).flags() & flags ) ) {
       if ( n > 0 )
 	str << Separator;
@@ -493,6 +494,104 @@ ostream &TableKey::saveKey( ostream &str, bool key, bool num, int flags ) const
     }
     str << '\n';
   }
+
+  return str;  
+}
+
+
+ostream &TableKey::saveKeyLaTeX( ostream &str, bool num, int flags ) const
+{
+  if ( Columns[0].size() < 1 )
+    return str;
+
+  // begin tabular:
+  str << "\\begin{tabular}{";
+  for ( unsigned int c=0; c<Columns.size(); c++ ) {
+    if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) )
+      str << 'r';
+  }
+  str << "}\n";
+  str << "  \\hline\n";
+
+  // groups:
+  for ( unsigned int l=Columns[0].size()-1; l>0; l-- ) {
+    str << "  ";
+    int w = 1;
+    int n = 0;
+    for ( unsigned int c=1; c<Columns.size(); c++ ) {
+      if ( Columns[c][l] != Columns[c-1][l] ) {
+	if ( flags == 0 || ( (*Columns[c-1][l]).flags() & flags ) ) {
+	  if ( n > 0 )
+	    str << " & ";
+	  str << "\\multicolumn{" << w << "}{l}{" << (*Columns[c-1][l]).ident().latex() << "}";
+	  w = 1;
+	  n++;
+	}
+      }
+      else if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) )
+	w ++;
+    }
+    if ( flags == 0 || ( (*Columns.back()[l]).flags() & flags ) ) {
+      if ( n > 0 )
+	str << " & ";
+      str << "\\multicolumn{" << w << "}{l}{" << (*Columns.back()[l]).ident().latex() << "}";
+      n++;
+    }
+    str << " \\\\\n";
+  }
+
+  // ident:
+  int n = 0;
+  str << "  ";
+  for ( unsigned int c=0; c<Columns.size(); c++ ) {
+    if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) ) {
+      if ( n > 0 )
+	str << " & ";
+      str << "\\multicolumn{1}{l}{" << (*Columns[c][0]).ident().ident() << "}";
+      n++;
+    }
+  }
+  str << "\\\\\n";  
+
+  // unit:
+  bool unit = false;
+  for ( unsigned int c=0; c<Columns.size(); c++ ) {
+    if ( ! (*Columns[c][0]).unit().empty() ) {
+      unit = true;
+      break;
+    }
+  }
+  if ( unit ) {
+    n = 0;
+    str << "  ";
+    for ( unsigned int c=0; c<Columns.size(); c++ ) {
+      if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) ) {
+	if ( n > 0 )
+	  str << " & ";
+	str << "\\multicolumn{1}{l}{" << (*Columns[c][0]).unit().latexUnit() << "}";
+	n++;
+      }
+    }
+    str << "\\\\\n";  
+  }
+
+  // number:
+  if ( num ) {
+    n = 0;
+    str << "  ";
+    for ( unsigned int c=0; c<Columns.size(); c++ ) {
+      if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) ) {
+	if ( n > 0 )
+	  str << " & ";
+	str << c+1;
+	n++;
+      }
+    }
+    str << "\\\\\n";
+  }
+
+  // end key:
+  str << "  \\hline\n";
 
   return str;  
 }

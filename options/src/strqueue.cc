@@ -220,6 +220,20 @@ StrQueue StrQueue::strippedComments( const string &comment ) const
 }
 
 
+string StrQueue::save( const string &separator ) const
+{
+  string s = "";
+  int k=0;
+  for ( StrDeque::const_iterator p=begin(); p != end(); ++p ) {
+    if ( k > 0 )
+      s += separator;
+    s += *p;
+    k++;
+  }
+  return s;
+}
+
+
 istream &StrQueue::load( istream &str, const string &stop, string *line )
 {
   string s;

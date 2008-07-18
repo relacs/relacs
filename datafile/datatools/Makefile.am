@@ -1,5 +1,6 @@
 bin_PROGRAMS = \
     bindata \
+    convertdata \
     datacolumn \
     datainfo \
     datastats \
@@ -22,6 +23,12 @@ bindata_LDADD = \
     ../../options/src/librelacsoptions.la \
     ../src/librelacsdatafile.la
 bindata_SOURCES = bindata.cc
+
+
+convertdata_LDADD = \
+    ../../options/src/librelacsoptions.la \
+    ../src/librelacsdatafile.la
+convertdata_SOURCES = convertdata.cc
 
 
 datacolumn_LDADD = \
