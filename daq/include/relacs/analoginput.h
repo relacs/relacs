@@ -197,7 +197,10 @@ public:
   virtual void addTraces( vector< TraceSpec > &traces, int deviceid ) const;
 
     /*! May match trace names with driver internal trace names,
-        for example trace names of a dynamic clamp model. */
+        for example trace names of a dynamic clamp model.
+        \return 0: no traces needed to be matched.
+        \return n: \a n traces have been successfully matched.
+	\return -1: Failed to match a trace. */
   virtual int matchTraces( InList &traces ) const;
 
     /*! The id of the analog input implementation.

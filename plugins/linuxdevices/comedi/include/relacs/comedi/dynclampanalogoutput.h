@@ -140,7 +140,7 @@ public:
   virtual void addTraces( vector< TraceSpec > &traces, int deviceid ) const;
 
     /*! Match trace names with model output trace names. */
-  virtual string matchTraces( vector< TraceSpec > &traces ) const;
+  virtual int matchTraces( vector< TraceSpec > &traces ) const;
 
 
 protected:

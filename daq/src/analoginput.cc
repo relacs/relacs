@@ -130,6 +130,7 @@ void AnalogInput::addTraces( vector< TraceSpec > &traces, int deviceid ) const
 
 int AnalogInput::matchTraces( InList &traces ) const
 {
+  return 0;
 }
 
 

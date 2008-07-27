@@ -105,8 +105,9 @@ void AnalogOutput::addTraces( vector< TraceSpec > &traces, int deviceid ) const
 }
 
 
-string AnalogOutput::matchTraces( vector< TraceSpec > &traces ) const
+int AnalogOutput::matchTraces( vector< TraceSpec > &traces ) const
 {
+  return 0;
 }
 
 

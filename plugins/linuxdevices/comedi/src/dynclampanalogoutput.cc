@@ -704,14 +704,14 @@ void DynClampAnalogOutput::addTraces( vector< TraceSpec > &traces, int deviceid 
 }
 
 
-string DynclampAnalogOutput::matchTraces( vector< TraceSpec > &traces,
-					  OutList &sigs ) const
+int DynclampAnalogOutput::matchTraces( vector< TraceSpec > &traces ) const
 {
   struct traceInfoIOCT traceInfo;
   traceInfo.traceType = TRACE_OUT;
   struct traceChannelIOCT traceChannel;
   traceChannel.traceType = TRACE_OUT;
   string unknowntraces = "";
+  int foundtraces = 0;
   int channel = PARAM_CHAN_OFFSET;
   while ( 0 == ::ioctl( Modulefile, IOC_GET_TRACE_INFO, &traceInfo ) ) {
     bool notfound = true;
@@ -723,9 +723,8 @@ string DynclampAnalogOutput::matchTraces( vector< TraceSpec > &traces,
 	  cerr << "DynClampAnalogOutput::matchTraces() set channels -> errno " << errno << endl;
 	  return -1;
 	}
-	OutData sig;
-	sigs.push( sig );
 	notfound = false;
+	foundtraces++;
 	break;
       }
     }
@@ -737,7 +736,7 @@ string DynclampAnalogOutput::matchTraces( vector< TraceSpec > &traces,
     cerr << "DynClampAnalogOutput::matchTraces() get traces -> errno " << ern << endl;
     return -1;
   }
-  return unknowntraces;
+  return foundtraces;
 }
 
 

@@ -708,6 +708,7 @@ int DynClampAnalogInput::matchTraces( InList &traces ) const
   struct traceChannelIOCT traceChannel;
   traceChannel.traceType = TRACE_IN;
   string unknowntraces = "";
+  int foundtraces = 0;
   int channel=1000;
   while ( 0 == ::ioctl( Modulefile, IOC_GET_TRACE_INFO, &traceInfo ) ) {
     bool notfound = true;
@@ -720,6 +721,7 @@ int DynClampAnalogInput::matchTraces( InList &traces ) const
 	  return -1;
 	}
 	notfound = false;
+	foundtraces++;
 	break;
       }
     }
@@ -735,7 +737,7 @@ int DynClampAnalogInput::matchTraces( InList &traces ) const
     traces.addErrorStr( "unable to match model input traces" + unknowntraces );
     return -1;
   }
-  return 0;
+  return foundtraces;
 }
 
 
