@@ -212,7 +212,7 @@ class SpikingNeuron : public ConfigClass
 
 /*! 
 \class Stimulus
-\brief [lib] Implementation of SpikingNeuron that just returns the stimulus
+\brief [lib] Implementation of %SpikingNeuron that just returns the stimulus
 \author Jan Benda
 */
 

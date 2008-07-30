@@ -135,7 +135,7 @@ private:
 
 /*! 
 \class MiMaPu
-\brief [lib] A single manipulator for MotorControl.
+\brief [lib] A single manipulator for %MotorControl.
 \author Jan Benda
 */
 
