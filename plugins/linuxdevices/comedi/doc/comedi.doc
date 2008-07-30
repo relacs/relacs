@@ -1,0 +1,5 @@
+/*!
+\mainpage Comedi Relacs Plugins
+
+\brief Interface to the comedi data acquisition library.
+*/

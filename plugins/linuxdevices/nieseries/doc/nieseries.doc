@@ -1,0 +1,5 @@
+/*!
+\mainpage NI-ESeries Relacs Plugins
+
+\brief Interface to Jan Benda's driver for NI E-Series data acquisition boards
+*/
