@@ -34,7 +34,7 @@ namespace auditoryprojects {
 
 /*!
 \class IsoResponse 
-\brief Measures f-I-curves for a superposition of two sine waves.
+\brief [RePro] Measures f-I-curves for a superposition of two sine waves.
 \author Alexander Wolf 
 \version 1.1 (Jan 10, 2008)
 -# removed stop() function

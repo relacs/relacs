@@ -34,7 +34,7 @@ namespace misc {
 \class AmplMode
 \author Jan Benda
 \version 1.0
-\brief Control the mode of an amplifier via NIDIO
+\brief [Device] Control the mode of an amplifier via NIDIO
  */
 
 

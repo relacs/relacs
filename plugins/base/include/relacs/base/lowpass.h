@@ -32,7 +32,7 @@ namespace base {
 
 /*! 
 \class LowPass
-\brief A simple first order low pass filter
+\brief [Filter] A simple first order low pass filter
 \author Jan Benda
 \version 0.1
 */

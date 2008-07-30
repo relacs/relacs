@@ -1,5 +1,7 @@
 SUBDIRS = src
 
+EXTRA_DIST = doc/calibration.doc
+
 pkglibdir = $(libdir)/relacs
 pkgincludedir = $(includedir)/relacs
 pkgdatadir=$(datadir)/relacs
@@ -11,7 +13,7 @@ DX_CONFIG = ../../doc/Doxyfile
 DX_INSTALL_SUBDIR = /$(DX_PROJECT)
 DX_DEPENDS = Makefile.am src/Makefile.am
 DX_SETTINGS = PROJECT_NAME='"Calibration Relacs Plugins"'
-DX_SETTINGS += INPUT='include/relacs/calibration src'
+DX_SETTINGS += INPUT='include/relacs/calibration src doc'
 DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'
 DX_SETTINGS += TAGFILES='../../doc/relacsall.tag=..'
 

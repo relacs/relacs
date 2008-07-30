@@ -18,7 +18,7 @@ namespace comedi {
 \class DynClampAnalogInput
 \author Marco Hackenberg
 \version 0.1
-\brief Interface for accessing analog input of a daq-board via a dynamic clamp kernel module.
+\brief [AnalogInput] Interface for accessing analog input of a daq-board via a dynamic clamp kernel module.
 \todo: testReadDevice(): we don't get integer data!!! sigs[k].setGain( 1.0 );
 \bug fix errno usage
 */

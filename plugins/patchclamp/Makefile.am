@@ -1,6 +1,7 @@
 SUBDIRS = src
 
 EXTRA_DIST = \
+    doc/patchclamp.doc \
     relacs.cfg \
     relacsplugins.cfg \
     macros.cfg
@@ -16,7 +17,7 @@ DX_CONFIG = ../../doc/Doxyfile
 DX_INSTALL_SUBDIR = /$(DX_PROJECT)
 DX_DEPENDS = Makefile.am src/Makefile.am
 DX_SETTINGS = PROJECT_NAME='"Patch-clamp Relacs Plugins"'
-DX_SETTINGS += INPUT='include/relacs/patchclamp src'
+DX_SETTINGS += INPUT='include/relacs/patchclamp src doc'
 DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'
 DX_SETTINGS += TAGFILES='../../doc/relacsall.tag=..'
 

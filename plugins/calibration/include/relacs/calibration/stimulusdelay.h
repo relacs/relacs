@@ -31,7 +31,7 @@ namespace calibration {
 
 /*!
 \class StimulusDelay
-\brief Measures delays between actual and reported onset of a stimulus
+\brief [RePro] Measures delays between actual and reported onset of a stimulus
 \author Jan Benda
 \version 1.2 (Feb 8, 2008)
 -# check interrupt() after each sleep

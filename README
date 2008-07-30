@@ -34,28 +34,29 @@ For installation instructions, look at the file INSTALL.
 Documentation
 -------------
 
-RELACS comes with an extensive html-based documentation.
-See the INSTALL file for instructions how to generate
-the documentation. You can read the documentation
-with your favorite web browser / html viewer in
-doc/html/index.html
-You can also access the documentation from the Help->Help
-menu or from the RELACS web page.
+RELACS comes with an extensive html-based documentation.  You can read
+the documentation with your favorite web browser / html viewer in
+doc/html/index.html You can also access the documentation from the
+Help->Help menu or from the RELACS web page.
 
-You also find lot's of information in the RELACS web pages. See
-www.relacs.net
+On the RELACS web pages you find additional and more general
+information. See www.relacs.net
 
 
 More information about RELACS
 -----------------------------
 
-The project home page is http://www.relacs.net.
-RELACS is currently hosted by sourceforge (http://relacs.sourceforge.net).
+The project home page is:
+http://www.relacs.net
+
+RELACS is currently hosted by sourceforge:
+http://relacs.sourceforge.net/projects/relacs
 
 You find a list of all people contributing to RELACS 
 and their email adresses in the file THANKS.
 
-The file AUTHORS lists the people that were and are contributing code to RELACS.
+The file AUTHORS lists the people that were and are contributing code
+to RELACS.
 
 There is also a ChangeLog and a NEWS file.
 

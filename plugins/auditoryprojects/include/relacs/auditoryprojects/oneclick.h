@@ -34,7 +34,7 @@ namespace auditoryprojects {
 
 /*!
 \class OneClick
-\brief A single short click
+\brief [RePro] A single short click
 \author Alexander Wolf
 \version 0.2 (Jan 10, 2008)
 -# removed stop() function

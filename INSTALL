@@ -26,7 +26,7 @@ You may need to specify the location of the Qt3 libraries. For example,
 
 > make
 
-That make take a while
+That takes a while
 
 
 5. Run a demo
@@ -36,7 +36,9 @@ That make take a while
 Press for example 'F1'. More instructions on the demo will follow...
 
 
-6. Don't install this version of RELACS!
+6. If you really want to install this demo version, simply execute
+
+> make install
 
 
 ========================================================================

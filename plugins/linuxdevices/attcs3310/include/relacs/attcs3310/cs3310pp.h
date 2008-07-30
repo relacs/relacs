@@ -32,7 +32,7 @@ namespace attcs3310 {
 \class CS3310PP
 \author Jan Benda
 \version 1.1
-\brief Control the cs3310 attenuator via the Linux ppdev parallel-port device driver.
+\brief [Attenuator] Control the cs3310 attenuator via the Linux ppdev parallel-port device driver.
 
 
 \par Installation

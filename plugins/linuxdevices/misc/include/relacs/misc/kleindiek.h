@@ -36,7 +36,7 @@ namespace misc {
 \class Kleindiek
 \author Jan Benda
 \version 1.0
-\brief The Kleindiek nanotechnik MM3A micromanipulator
+\brief [Manipulator] The Kleindiek nanotechnik MM3A micromanipulator
 */
 
 class Kleindiek : public Manipulator

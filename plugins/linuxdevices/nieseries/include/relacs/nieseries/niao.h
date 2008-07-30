@@ -33,7 +33,7 @@ namespace nieseries {
 \class NIAO
 \author Jan Benda
 \version 1.0
-\brief Implementation of AnalogOutput for National Instruments E-Series
+\brief [AnalogOutput] Implementation of AnalogOutput for National Instruments E-Series
  */
 
 class NIAO: public AnalogOutput

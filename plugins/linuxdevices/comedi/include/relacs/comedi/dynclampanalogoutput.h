@@ -18,7 +18,7 @@ namespace comedi {
 \class DynClampAnalogOutput
 \author Marco Hackenberg
 \version 0.1
-\brief Interface for accessing analog output of a daq-board via a dynamic clamp kernel module.
+\brief [AnalogOutput] Interface for accessing analog output of a daq-board via a dynamic clamp kernel module.
 \bug fix errno usage
 */
 

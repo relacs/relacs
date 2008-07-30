@@ -35,7 +35,7 @@ namespace auditory {
 
 /*! 
 \class SingleStimulus
-\brief Output of a single stimulus stored in a file.
+\brief [RePro] Output of a single stimulus stored in a file.
 \author Jan Benda
 \version 1.2 (Jan 10, 2008)
 -# removed stop() function

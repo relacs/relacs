@@ -33,7 +33,7 @@ namespace ephys {
 \class Traces
 \author Jan Benda
 \version 1.0
-\brief Variables for standard input traces and events in electrophysiology.
+\brief [lib] Variables for standard input traces and events in electrophysiology.
 */
 
 class Traces

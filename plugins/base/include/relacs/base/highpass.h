@@ -32,7 +32,7 @@ namespace base {
 
 /*! 
 \class HighPass
-\brief A simple first order high pass filter
+\brief [Filter] A simple first order high pass filter
 \author Jan Benda
 \version 0.1
 */

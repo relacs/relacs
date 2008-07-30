@@ -1,6 +1,7 @@
 SUBDIRS = src
 
 EXTRA_DIST = \
+    doc/auditory.doc \
     relacs.cfg \
     relacsplugins.cfg \
     macros.cfg \
@@ -18,7 +19,7 @@ DX_CONFIG = ../../doc/Doxyfile
 DX_INSTALL_SUBDIR = /$(DX_PROJECT)
 DX_DEPENDS = Makefile.am src/Makefile.am
 DX_SETTINGS = PROJECT_NAME='"Auditory Relacs Plugins"'
-DX_SETTINGS += INPUT='include/relacs/auditory src'
+DX_SETTINGS += INPUT='include/relacs/auditory src doc'
 DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'
 DX_SETTINGS += TAGFILES='../../doc/relacsall.tag=.. ../acoustic/doc/acoustic.tag=../acoustic ../ephys/doc/ephys.tag=../ephys ../linuxdevices/misc/doc/misc.tag=../misc'
 

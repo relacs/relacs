@@ -34,7 +34,7 @@ namespace nieseries {
 \class NIDIO
 \author Jan Benda
 \version 1.0
-\brief Controls the digital I/O lines of a National Instruments E Series board.
+\brief [Device] Controls the digital I/O lines of a National Instruments E Series board.
  */
 
 class NIDIO : public Device

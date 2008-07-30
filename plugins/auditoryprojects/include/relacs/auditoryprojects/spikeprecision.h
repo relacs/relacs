@@ -35,7 +35,7 @@ namespace auditoryprojects {
 
 /*! 
 \class SpikePrecision
-\brief Assess spike precision in locust auditory receptors
+\brief [RePro] Assess spike precision in locust auditory receptors
 \author Samuel Glauser
 \author Jan Benda
 \version 1.5 (Jan 10, 2008)

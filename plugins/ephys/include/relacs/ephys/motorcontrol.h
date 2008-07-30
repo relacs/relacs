@@ -40,7 +40,7 @@ class MiMaPu;
 
 /*! 
 \class MotorControl
-\brief Control widgets for motorized manipulators.
+\brief [Control] Control widgets for motorized manipulators.
 \author Jan Benda
 \version 1.2
 \bug spikes( int trace ): instead of sessionOpts we should access the spikedtector directly!
@@ -133,6 +133,11 @@ private:
 
 };
 
+/*! 
+\class MiMaPu
+\brief [lib] A single manipulator for MotorControl.
+\author Jan Benda
+*/
 
 class MiMaPu : public QObject, public ConfigClass
 {

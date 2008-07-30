@@ -30,7 +30,7 @@ namespace base {
 
 /*! 
 \class SimpleModel
-\brief A toy model for testing.
+\brief [Model] A toy model for testing.
 \author Jan Benda
 \version 1.1 (Jan 31, 2008)
 -# added model option

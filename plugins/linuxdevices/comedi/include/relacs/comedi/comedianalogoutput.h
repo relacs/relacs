@@ -37,7 +37,7 @@ class ComediAnalogInput;
 \class ComediAnalogOutput
 \author Marco Hackenberg
 \version 0.1
-\brief Interface for accessing analog output of a daq-board via comedi.
+\brief [AnalogOutput] Interface for accessing analog output of a daq-board via comedi.
 \bug fix errno usage
 */
 

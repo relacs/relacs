@@ -32,7 +32,7 @@ namespace nieseries {
 
 /*!
 \class NIPFI
-\brief Controls the "Programmable Function Inputs" (PFI)
+\brief [Device] Controls the "Programmable Function Inputs" (PFI)
 of a National Instruments E Series board.
 \author Jan Benda
 \version 1.0

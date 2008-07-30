@@ -35,7 +35,7 @@ namespace auditory {
 
 /*!
 \class FIField
-\brief Optimized measuring of f-I curves.
+\brief [RePro] Optimized measuring of f-I curves.
 \author Jan Benda
 \version 1.3 (Jan 10, 2008)
 -# removed stop() function

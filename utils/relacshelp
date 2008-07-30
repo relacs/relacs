@@ -82,8 +82,8 @@ for DOXYFILE in $SRCDIR/class*.html; do
   if test "$CLASSNAME" != "es" && test "$CLASSNAME" != "$LASTFILE"; then
     echo "create help file for ${PLUGINSET}${CLASSNAME}..."
     { echo "<html><body>"
-	echo "<h2>$CLASSNAME</h2>"
-	sed -n -e '/<hr><a name="_details"/,/<hr>/p' $DOXYFILE | sed "1d; $d; s/\\(<img.*\\)src=\"\\(.*\\)\"/\\1src=\"${PLUGINSET}\2\"/"
+	echo "<h2>$CLASSNAME [$(sed -n  -e '/^\[.*\]/{s/^\[\(.*\)\].*/\1/; p;}' $DOXYFILE)]</h2>"
+	sed -n -e '/^\[.*\]/s/^\[.*\]\s*//; /<hr><a name="_details"/,/<hr>/p' $DOXYFILE | sed "1d; \$d; s/\\(<img.*\\)src=\"\\(.*\\)\"/\\1src=\"${PLUGINSET}\2\"/"
 	echo "</body></html>"; 
     } > ${HELPDIR}/${PLUGINSET}${CLASSNAME}.html
     LASTFILE="$CLASSNAME"

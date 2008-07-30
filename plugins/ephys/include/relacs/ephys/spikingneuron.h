@@ -33,7 +33,7 @@ namespace ephys {
 
 /*! 
 \class SpikingNeuron
-\brief Base class for a spiking (point-) neuron
+\brief [lib] Base class for a spiking (point-) neuron
 \author Jan Benda
 \author Alexander Wolf
 \version 1.2 (May 7, 2008)
@@ -212,7 +212,7 @@ class SpikingNeuron : public ConfigClass
 
 /*! 
 \class Stimulus
-\brief Implementation of SpikingNeuron that just returns the stimulus
+\brief [lib] Implementation of SpikingNeuron that just returns the stimulus
 \author Jan Benda
 */
 
@@ -243,7 +243,7 @@ class Stimulus : public SpikingNeuron
 
 /*! 
 \class FitzhughNagumo
-\brief The Fitzhugh-Nagumo model
+\brief [lib] The Fitzhugh-Nagumo model
 \author Jan Benda
 \todo verify reference, parameter values, and units
 
@@ -287,7 +287,7 @@ class FitzhughNagumo : public SpikingNeuron
 
 /*! 
 \class MorrisLecar
-\brief The Morris-Lecar model
+\brief [lib] The Morris-Lecar model
 \author Jan Benda
 \todo verify reference, parameter values, and units
 */
@@ -345,7 +345,7 @@ class MorrisLecar : public SpikingNeuron
 
 /*! 
 \class HodgkinHuxley
-\brief The Hodgkin-Huxley (1952) model
+\brief [lib] The Hodgkin-Huxley (1952) model
 \author Jan Benda
 \todo test it!
 
@@ -409,7 +409,7 @@ class HodgkinHuxley : public SpikingNeuron
 
 /*! 
 \class Connor
-\brief The %Connor model with A current.
+\brief [lib] The %Connor model with A current.
 \author Jan Benda
 \todo test it!
 
@@ -470,7 +470,7 @@ class Connor : public HodgkinHuxley
 
 /*! 
 \class RushRinzel
-\brief The Rush-Rinzel model with A current
+\brief [lib] The Rush-Rinzel model with A current
 \author Jan Benda
 \todo test it!
 
@@ -514,7 +514,7 @@ class RushRinzel : public Connor
 
 /*! 
 \class Awiszus
-\brief The %Awiszus model with A current
+\brief [lib] The %Awiszus model with A current
 \author Jan Benda
 \todo verify reference, parameter values, and units
 
@@ -539,7 +539,7 @@ class Awiszus : public Connor
 
 /*! 
 \class FleidervishSI
-\brief The Fleidervish model with slowly inactivating sodium current
+\brief [lib] The Fleidervish model with slowly inactivating sodium current
 \author Jan Benda
 \todo verify reference, parameter values, and units
 
@@ -572,7 +572,7 @@ class FleidervishSI : public HodgkinHuxley
 
 /*! 
 \class TraubHH
-\brief The Traub-Miles (1991) model with the HH currents I_Na, I_K, and I_l only.
+\brief [lib] The Traub-Miles (1991) model with the HH currents I_Na, I_K, and I_l only.
 \author Jan Benda
 \todo verify reference, parameter values, and units
 \note Not working!
@@ -599,7 +599,7 @@ class TraubHH : public HodgkinHuxley
 
 /*! 
 \class TraubMiles
-\brief The soma compartment of the Traub-Miles (1991) model
+\brief [lib] The soma compartment of the Traub-Miles (1991) model
 \author Jan Benda
 \todo unit of calcium concentration
 \todo verify reference, parameter values, and units
@@ -665,7 +665,7 @@ class TraubMiles : public HodgkinHuxley
 
 /*! 
 \class TraubErmentrout
-\brief Modification of the soma compartment Traub-Miles (1991) model
+\brief [lib] Modification of the soma compartment Traub-Miles (1991) model
 \author Jan Benda
 \todo unit of calcium concentration
 \todo verify reference, parameter values, and units
@@ -730,7 +730,7 @@ class TraubErmentrout : public HodgkinHuxley
 
 /*! 
 \class WangBuzsaki
-\brief Wang-Buzsaki (1996) model
+\brief [lib] Wang-Buzsaki (1996) model
 \author Jan Benda
 \todo verify reference, parameter values, and units
 
@@ -763,7 +763,7 @@ class WangBuzsaki : public HodgkinHuxley
 
 /*! 
 \class WangBuzsakiAdapt
-\brief The Wang-Buzsaki model with an additional adaptation current.
+\brief [lib] The Wang-Buzsaki model with an additional adaptation current.
 \author Jan Benda
 \todo verify reference, parameter values, and units
 */
@@ -820,7 +820,7 @@ class WangBuzsakiAdapt : public WangBuzsaki
 
 /*! 
 \class Crook
-\brief The two-compartment %Crook model with adaptation currents.
+\brief [lib] The two-compartment %Crook model with adaptation currents.
 \author Jan Benda
 \todo unit of calcium concentration
 \todo verify reference, parameter values, and units
@@ -882,7 +882,7 @@ class Crook : public HodgkinHuxley
 
 /*! 
 \class MilesDai
-\brief The Miles-Dai model for spinal motoneurones with slowly inactivating sodium current
+\brief [lib] The Miles-Dai model for spinal motoneurones with slowly inactivating sodium current
 \author Jan Benda
 
 The two-compartment model is from 
@@ -952,7 +952,7 @@ class MilesDai : public HodgkinHuxley
 
 /*! 
 \class WangIKNa
-\brief The %Wang et al. 2003 model with a sodium activated potassium current.
+\brief [lib] The %Wang et al. 2003 model with a sodium activated potassium current.
 \author Jan Benda
 \todo unit of calcium and sodium concentration
 \todo verify reference, parameter values, and units
@@ -1014,7 +1014,7 @@ class WangIKNa : public HodgkinHuxley
 
 /*! 
 \class Edman
-\brief The %Edman model for a lobster stretch receptor neurone with a slowly inactivating sodium current.
+\brief [lib] The %Edman model for a lobster stretch receptor neurone with a slowly inactivating sodium current.
 \author Jan Benda
 
 (A. Edman and S. Gestrelius and W. Grampp (1987):

@@ -31,7 +31,7 @@ namespace patchclamp {
 
 /*!
 \class Simple
-\brief Test dynamic clamp
+\brief [RePro] Test dynamic clamp
 \author Jan Benda
 \version 0.0 (Feb 14, 2008)
 

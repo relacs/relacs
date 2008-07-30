@@ -3,6 +3,8 @@ if RELACS_EXAMPLES_COND
 endif
 SUBDIRS = src $(EXAMPLES)
 
+EXTRA_DIST = doc/misc.doc
+
 pkglibdir = $(libdir)/relacs
 pkgincludedir = $(includedir)/relacs
 pkgdatadir=$(datadir)/relacs
@@ -14,7 +16,7 @@ DX_CONFIG = ../../../doc/Doxyfile
 DX_INSTALL_SUBDIR = /$(DX_PROJECT)
 DX_DEPENDS = Makefile.am src/Makefile.am
 DX_SETTINGS = PROJECT_NAME='"Misc Relacs Plugins"'
-DX_SETTINGS += INPUT='include/relacs/misc src'
+DX_SETTINGS += INPUT='include/relacs/misc src doc'
 DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'
 DX_SETTINGS += TAGFILES='../../../doc/relacsall.tag=.. ../nieseries/doc/nieseries.tag=..'
 

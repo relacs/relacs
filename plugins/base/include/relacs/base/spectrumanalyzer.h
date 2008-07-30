@@ -30,7 +30,7 @@ namespace base {
 
 /*! 
 \class SpectrumAnalyzer
-\brief Displays the spectrum of the voltage traces.
+\brief [Control] Displays the spectrum of the voltage traces.
 \author Jan Benda
 \version 1.0 (Mar 1, 2005)
 */

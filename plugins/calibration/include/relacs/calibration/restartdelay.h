@@ -31,7 +31,7 @@ namespace calibration {
 
 /*!
 \class RestartDelay
-\brief Measures delays due to restart of the data acquisition
+\brief [RePro] Measures delays due to restart of the data acquisition
 \author Jan Benda
 \version 1.3 (Feb 8, 2008)
 -# removed subsample option

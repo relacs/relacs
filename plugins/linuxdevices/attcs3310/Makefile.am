@@ -1,5 +1,7 @@
 SUBDIRS = src
 
+EXTRA_DIST = doc/attcs3310.doc
+
 pkglibdir = $(libdir)/relacs
 pkgincludedir = $(includedir)/relacs
 pkgdatadir=$(datadir)/relacs
@@ -11,7 +13,7 @@ DX_CONFIG = ../../../doc/Doxyfile
 DX_INSTALL_SUBDIR = /$(DX_PROJECT)
 DX_DEPENDS = Makefile.am src/Makefile.am
 DX_SETTINGS = PROJECT_NAME='"AttCS3310 Relacs Plugins"'
-DX_SETTINGS += INPUT='include/relacs/attcs3310 src'
+DX_SETTINGS += INPUT='include/relacs/attcs3310 src doc'
 DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'
 DX_SETTINGS += TAGFILES='../../../doc/relacsall.tag=.. ../nieseries/doc/nieseries.tag=../nieseries'
 

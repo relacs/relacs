@@ -30,7 +30,7 @@ namespace base {
 
 /*!
 \class Pause
-\brief Does nothing
+\brief [RePro] Does nothing
 \author Jan Benda
 \version 1.2 (Oct 1, 2004)
 -# updated to new RePro interface

@@ -31,7 +31,7 @@ namespace ephys {
 
 /*! 
 \class NeuronModels
-\brief Various models of spiking (point-) neurons.
+\brief [Model] Various models of spiking (point-) neurons.
 \author Jan Benda
 \author Alexander Wolf
 \version 1.1 (Jan 10, 2006)

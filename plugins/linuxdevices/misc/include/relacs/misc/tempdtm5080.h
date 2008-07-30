@@ -36,7 +36,7 @@ namespace misc {
 \class TempDTM5080
 \author Jan Benda
 \version 1.0
-\brief The DTM 5080 temperature sensor via serial port
+\brief [Temperature] The DTM 5080 temperature sensor via serial port
  */
 
 class TempDTM5080 : public Temperature

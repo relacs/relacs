@@ -36,7 +36,7 @@ namespace auditory {
 
 /*! 
 \class SysLatency
-\brief Measures latency of the whole system, i.e. signal delay, transduction, 
+\brief [RePro] Measures latency of the whole system, i.e. signal delay, transduction, 
 synapses, axonal delay, ...
 \author Jan Benda
 \version 1.5 (Jan 10, 2008)

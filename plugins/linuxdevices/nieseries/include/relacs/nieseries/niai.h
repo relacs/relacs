@@ -33,7 +33,7 @@ namespace nieseries {
 \class NIAI
 \author Jan Benda
 \version 1.0
-\brief Implementation of AnalogInput for National Instruments E-Series.
+\brief [AnalogInput] Implementation of AnalogInput for National Instruments E-Series.
 \todo error(): map error code appropriately
  */
 

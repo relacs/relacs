@@ -37,7 +37,7 @@ namespace ephys {
 
 /*! 
 \class SpikeDetector
-\brief A detector for spikes in single unit recordings.
+\brief [Detector] A detector for spikes in single unit recordings.
 \author Jan Benda
 \version 1.6 (Jan 24, 2008)
 -# fixed bugs in trend indication

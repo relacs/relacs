@@ -34,7 +34,7 @@ namespace attcs3310 {
 \class CS3310NIDIO
 \author Jan Benda
 \version 1.1
-\brief Control the cs3310 attenuator via the nieseries/nidio software timed digital IO
+\brief [Attenuator] Control the cs3310 attenuator via the nieseries/nidio software timed digital IO
 
 \par Technicals by Hartmut Schuetze
 

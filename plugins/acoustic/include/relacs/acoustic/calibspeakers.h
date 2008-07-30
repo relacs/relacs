@@ -34,7 +34,7 @@ namespace acoustic {
 
 /*!
 \class CalibSpeakers
-\brief Calibrating attenuation for loudspeakers.
+\brief [RePro] Calibrating attenuation for loudspeakers.
 \author Jan Benda
 \version 1.1 (Jan 10, 2008)
 -# removed stop() function

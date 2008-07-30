@@ -34,7 +34,7 @@ namespace acoustic {
 
 /*!
 \class LoudSpeaker
-\brief Direct conversion to attenuation level 
+\brief [Attenuate] Direct conversion to attenuation level 
        depending on carrier frequency.
 \author Jan Benda
 \version 1.1

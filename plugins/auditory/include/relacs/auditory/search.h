@@ -35,7 +35,7 @@ namespace auditory {
 
 /*! 
 \class Search
-\brief Periodically emits a search stimulus.
+\brief [RePro] Periodically emits a search stimulus.
 \author Jan Benda
 \author Christian Machens
 \version 2.2 (Jan 10, 2008)

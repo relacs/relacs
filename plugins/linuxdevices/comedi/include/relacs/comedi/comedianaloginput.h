@@ -37,7 +37,7 @@ class ComediAnalogOutput;
 \class ComediAnalogInput
 \author Marco Hackenberg
 \version 0.1
-\brief Interface for accessing analog input of a daq-board via comedi.
+\brief [AnalogInput] Interface for accessing analog input of a daq-board via comedi.
 \bug fix errno usage
 \todo support delays in testReadDevice() and convertData()!
 \todo Fix usage of ErrorState variable (also in readData() )

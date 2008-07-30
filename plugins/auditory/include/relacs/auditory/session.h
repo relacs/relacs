@@ -39,7 +39,7 @@ namespace auditory {
 
 /*! 
 \class Session
-\brief Control recordings from auditory neurons
+\brief [Control] Control recordings from auditory neurons
 \author Jan Benda
 \version 1.3 (Jan 22, 2008)
 */

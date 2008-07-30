@@ -34,7 +34,7 @@ namespace acoustic {
 \class Traces
 \author Jan Benda
 \version 1.0
-\brief Variables for standard output traces of acoustic stimuli
+\brief [lib] Variables for standard output traces of acoustic stimuli
        and recordings from microphones.
 */
 
