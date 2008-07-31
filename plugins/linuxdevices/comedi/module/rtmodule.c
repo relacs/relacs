@@ -12,16 +12,11 @@
 #include <rtai_sched.h>
 #include <rtai_shm.h>
 
-
-
 #include <math.h>
 
-#include "model.h"
 #include "rtmodule.h"
 
-
 MODULE_LICENSE( "GPL" );
-
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -57,7 +52,7 @@ struct chanT {
   float scale;
 };
 
-enum subdevTypes { SUBDEV_OUT=0, SUBDEV_IN, SUBDEV_PARAM };
+enum subdevTypes { SUBDEV_OUT=0, SUBDEV_IN };
 
 struct subdeviceT {
   int subdev;
@@ -637,6 +632,7 @@ void rtDynClamp( long dummy )
 
 
     // DEBUG OUTPUT:
+    /*
     if( dynClampTask.loopCnt % 10 == 0 ) {
       DEBUG_MSG( "%d subdevices registered:\n", subdevN );
       for( iS = 0; iS < subdevN; iS++ ) {
@@ -645,7 +641,7 @@ void rtDynClamp( long dummy )
                    subdev[iS].type, subdev[iS].error, subdev[iS].duration, subdev[iS].continuous  );
       }
     }
-
+    */
 
 
 
@@ -863,17 +859,6 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
 
 //******** SET UP COMEDI: ****************************************************/
 
-  case IOC_GET_PARAM_ID:
-    tmp = getSubdevID();
-    subdev[tmp].type = SUBDEV_PARAM;
-    subdev[tmp].sampleType = SAMPL_FLOAT;
-    subdev[tmp].sampleSize = sizeof(float);
-    if( tmp < 0 )
-      return -ENOSPC;
-    retVal = put_user( tmp, (int __user *)arg );
-    return retVal == 0 ? 0 : -EFAULT;
-
-
   case IOC_GET_SUBDEV_ID:
     tmp = getSubdevID();
     if( tmp < 0 )
@@ -922,6 +907,14 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
     }
     retVal = loadSyncCmd( &syncCmdIOC );
     return retVal;
+
+
+  case IOC_GET_TRACE_INFO:
+    return -ERANGE; // Ende der Liste signalisieren
+
+
+  case IOC_SET_TRACE_CHANNEL:
+    return 0;
 
 
   case IOC_START_SUBDEV:
@@ -1034,10 +1027,6 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
 
 int init_module( void )
 {
-
-  // initialize model-specific variables:
-  initModel();
-
   // register module device file:
   // TODO: adapt to kernel 2.6 convention (see char-device chapter in Linux device drivers 3)
   if(register_chrdev( RTMODULE_MAJOR, moduleName, &fops ) != 0) {

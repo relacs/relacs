@@ -521,7 +521,7 @@ int DynClampAnalogOutput::writeData( OutList &sigs )
        << " - continuous: " << sigs[0].continuous() << endl;
   bool failed = false;
   int elemWritten = 0;
-  int bytesWritten, retVal;
+  int bytesWritten;
 
   if( sigs[0].deviceBufferMaxPop() <= 0 ) {
     //    sigs.addErrorStr( "DynClampAnalogOutput::writeData: " +
@@ -537,7 +537,7 @@ int DynClampAnalogOutput::writeData( OutList &sigs )
 	tryit < 2 && !failed && sigs[0].deviceBufferMaxPop() > 0; 
 	tryit++ ){
 /*    
-    retVal = ::ioctl( Modulefile, IOC_REQ_WRITE, &SubdeviceID );
+    int retVal = ::ioctl( Modulefile, IOC_REQ_WRITE, &SubdeviceID );
     if( retVal < 0 ) {
       cerr << " DynClampAnalogOutput::writeData() -> ioctl command IOC_REQ_WRITE on device "
 	   << Modulename << " failed!" << endl;
@@ -704,7 +704,7 @@ void DynClampAnalogOutput::addTraces( vector< TraceSpec > &traces, int deviceid 
 }
 
 
-int DynclampAnalogOutput::matchTraces( vector< TraceSpec > &traces ) const
+int DynClampAnalogOutput::matchTraces( vector< TraceSpec > &traces ) const
 {
   struct traceInfoIOCT traceInfo;
   traceInfo.traceType = TRACE_OUT;
@@ -712,11 +712,10 @@ int DynclampAnalogOutput::matchTraces( vector< TraceSpec > &traces ) const
   traceChannel.traceType = TRACE_OUT;
   string unknowntraces = "";
   int foundtraces = 0;
-  int channel = PARAM_CHAN_OFFSET;
   while ( 0 == ::ioctl( Modulefile, IOC_GET_TRACE_INFO, &traceInfo ) ) {
     bool notfound = true;
-    for ( int k=0; k<traces.size(); k++ ) {
-      if ( traces[k].ident() == traceInfo.name ) {
+    for ( unsigned int k=0; k<traces.size(); k++ ) {
+      if ( traces[k].traceName() == traceInfo.name ) {
 	traceChannel.device = traces[k].device();
 	traceChannel.channel = traces[k].channel();
 	if ( ::ioctl( Modulefile, IOC_SET_TRACE_CHANNEL, &traceChannel ) != 0 ) {
@@ -728,8 +727,10 @@ int DynclampAnalogOutput::matchTraces( vector< TraceSpec > &traces ) const
 	break;
       }
     }
-    if ( notfound )
-      unknowntraces += " " + traceInfo.name;
+    if ( notfound ) {
+      unknowntraces += " ";
+      unknowntraces += traceInfo.name;
+    }
   }
   int ern = errno;
   if ( ern != ERANGE ) {

@@ -12,7 +12,7 @@ char *inputUnits[INPUT_N] = { "mV" };
 char *outputUnits[OUTPUT_N] = { "mA" };
 
 char *paramInputNames[PARAMINPUT_N] = { "pinput0" };
-char *patamOutputNames[PARAMOUTPUT_N] = { "poutput0" };
+char *paramOutputNames[PARAMOUTPUT_N] = { "poutput0" };
 char *paramInputUnits[PARAMINPUT_N] = { "mV" };
 char *paramOutputUnits[PARAMOUTPUT_N] = { "mA" };
 

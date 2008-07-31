@@ -431,7 +431,7 @@ int DynClampAnalogInput::readData( InList &sigs )
        << " - continuous: " << sigs[0].continuous() << endl;*/
   bool failed = false;
   int elemRead = 0;
-  int bytesRead, retVal;
+  int bytesRead;
   int errnoSave = 0;
 
   if( sigs[0].deviceBufferMaxPush() <= 0 ) {
@@ -448,7 +448,7 @@ int DynClampAnalogInput::readData( InList &sigs )
 	tryit < 2 && !failed && sigs[0].deviceBufferMaxPush() > 0; 
 	tryit++ ){
 /*
-    retVal = ioctl( Modulefile, IOC_REQ_READ, &SubdeviceID );
+    int retVal = ioctl( Modulefile, IOC_REQ_READ, &SubdeviceID );
     if( retVal < 0 ) {
       cerr << " DynClampAnalogInput::readData() -> ioctl command IOC_REQ_READ on device "
 	   << Modulename << " failed!" << endl;
@@ -709,7 +709,6 @@ int DynClampAnalogInput::matchTraces( InList &traces ) const
   traceChannel.traceType = TRACE_IN;
   string unknowntraces = "";
   int foundtraces = 0;
-  int channel=1000;
   while ( 0 == ::ioctl( Modulefile, IOC_GET_TRACE_INFO, &traceInfo ) ) {
     bool notfound = true;
     for ( int k=0; k<traces.size(); k++ ) {
@@ -725,8 +724,10 @@ int DynClampAnalogInput::matchTraces( InList &traces ) const
 	break;
       }
     }
-    if ( notfound )
-      unknowntraces += " " + traceInfo.name;
+    if ( notfound ) {
+      unknowntraces += " ";
+      unknowntraces += traceInfo.name;
+    }
   }
   int ern = errno;
   if ( ern != ERANGE ) {

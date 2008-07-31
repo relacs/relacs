@@ -12,12 +12,9 @@
 #include <rtai_sched.h>
 #include <rtai_shm.h>
 
-
-
 #include <math.h>
 
 #include "rtmodule.h"
-
 
 MODULE_LICENSE( "GPL" );
 
@@ -139,10 +136,10 @@ struct calcTaskT calcTask;
 // for debug:
 
 char *iocNames[RTMODULE_IOC_MAXNR] = {
-        "dummy",
-        "IOC_GET_SUBDEV_ID", "IOC_GET_PARAM_ID", "IOC_OPEN_SUBDEV", "IOC_CHANLIST", "IOC_COMEDI_CMD", "IOC_SYNC_CMD", 
-        "IOC_START_SUBDEV", "IOC_CHK_RUNNING", "IOC_REQ_READ", "IOC_REQ_WRITE", "IOC_REQ_CLOSE", "IOC_STOP_SUBDEV", 
-        "IOC_RELEASE_SUBDEV", "IOC_GET_TRACE_INFO", "IOC_SET_TRACE_CHANNEL", "IOC_GETLOOPCNT", "IOC_GETAOINDEX" 
+  "dummy",
+  "IOC_GET_SUBDEV_ID", "IOC_OPEN_SUBDEV", "IOC_CHANLIST", "IOC_COMEDI_CMD", "IOC_SYNC_CMD", 
+  "IOC_START_SUBDEV", "IOC_CHK_RUNNING", "IOC_REQ_READ", "IOC_REQ_WRITE", "IOC_REQ_CLOSE", "IOC_STOP_SUBDEV", 
+  "IOC_RELEASE_SUBDEV", "IOC_GET_TRACE_INFO", "IOC_SET_TRACE_CHANNEL", "IOC_GETLOOPCNT", "IOC_GETAOINDEX" 
 };
 
 
@@ -155,7 +152,7 @@ void cleanup_rt_task( void );
 int rtmodule_open( struct inode *devFile, struct file *fModule );
 int rtmodule_close( struct inode *devFile, struct file *fModule );
 int rtmodule_ioctl( struct inode *devFile, struct file *fModule, 
-		                unsigned int cmd, unsigned long arg );
+		    unsigned int cmd, unsigned long arg );
 static struct file_operations fops = {                     
   .owner= THIS_MODULE,
   .ioctl= rtmodule_ioctl,
@@ -178,8 +175,8 @@ static struct file_operations fops = {
 static inline float sample_to_value( struct chanT *pChan, lsampl_t sample )
 {
   return 1.0e-6*pChan->scale * ( pChan->minMuVolt + 
-         (pChan->maxMuVolt - pChan->minMuVolt) * 
-         (sample/(float)pChan->maxData) );
+				 (pChan->maxMuVolt - pChan->minMuVolt) * 
+				 (sample/(float)pChan->maxData) );
 }
 
 static inline lsampl_t value_to_sample( struct chanT *pChan, float value )
@@ -243,18 +240,18 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
   // scan device list for either the opened device or a free slot:
   for( i = 0; i < deviceN; i++ ) {
     if( device[i].devP ) {
-        if( strcmp( deviceIOC->devicename, device[i].name ) == 0 ) {
-           DEBUG_MSG( "comediOpenDevice: device %s is already opened...", 
+      if( strcmp( deviceIOC->devicename, device[i].name ) == 0 ) {
+	DEBUG_MSG( "comediOpenDevice: device %s is already opened...", 
     		   device[i].name );
-           iDev = i;
-         	 goto locksubdevice;
-        }
+	iDev = i;
+	goto locksubdevice;
+      }
     }
     else {
-       if( iDev < 0 && !device[i].devP ) {
-           iDev = i;
-           break;
-       }
+      if( iDev < 0 && !device[i].devP ) {
+	iDev = i;
+	break;
+      }
     }
   }
 
@@ -272,7 +269,7 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
   device[iDev].devP = comedi_open( deviceIOC->devicename );
   if( !device[iDev].devP ) {
     ERROR_MSG( "comediOpenDevice: device %s could not be opened!\n",
-	        deviceIOC->devicename );
+	       deviceIOC->devicename );
     comedi_perror( "rtmodule: rtmodule_ioctl" );    
     return -1;
   }
@@ -285,16 +282,16 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
   // TODO: check subdev list whether deviceIOC->subdev is already opened?
   //       => won't happen if acquire works correctly
   if( deviceIOC->subdev >= comedi_get_n_subdevices( device[iDev].devP ) ||
-     comedi_lock( device[iDev].devP, deviceIOC->subdev ) != 0 ) {
+      comedi_lock( device[iDev].devP, deviceIOC->subdev ) != 0 ) {
     ERROR_MSG( "comediOpenDevice: Subdevice %i on device %s could not be locked!\n",
 	       deviceIOC->subdev, device[iDev].name );
     // locking failed => close just opened comedi device:
     if( justOpened ) {
       if( comedi_close( device[iDev].devP ) < 0 )
       	WARN_MSG( "comediOpenDevice WARNING: closing of device %s failed!\n",
-		   device[iDev].name );
+		  device[iDev].name );
       else
-	      DEBUG_MSG( "comediOpenDevice: Closing of device %s was successful!\n",
+	DEBUG_MSG( "comediOpenDevice: Closing of device %s was successful!\n",
 		   device[iDev].name );
 
 
@@ -324,8 +321,6 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
     subdev[iS].userSubdevIndex = outputDeviceIndex++;
   }
 
-
-
   // create FIFO for subdevice:
   subdev[iS].fifo = iS;
   retVal = rtf_create(subdev[iS].fifo, FIFO_SIZE);
@@ -354,48 +349,44 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
 
   if( chanlistIOC->chanlistN > MAXCHANLIST ) {
     ERROR_MSG( "loadChanlist ERROR: Invalid chanlist length for Subdevice %i on device %s. Chanlist not loaded!\n",
-		 iS, device[subdev[iS].devID].name );
+	       iS, device[subdev[iS].devID].name );
     return -1;
   }
 
-
-
   if( subdev[iS].chanlist ) {
-    for( iC = 0; iC < chanlistIOC->chanN; iC++ ) {
+    for( iC = 0; iC < chanlistIOC->chanlistN; iC++ ) {
       for( isC = 0; isC < subdev[iS].chanN; isC++ ) {
         if( CR_CHAN(chanlistIOC->chanlist[iC]) == 
             subdev[iS].chanlist[isC].chan + PARAM_CHAN_OFFSET*subdev[iS].chanlist[isC].isParamChan ) {
-           subdev[iS].chanlist[isC].isUsed = 1;
-           subdev[iS].chanlist[isC].aref = CR_AREF( chanlistIOC->chanlist[iC] );
-           subdev[iS].chanlist[isC].rangeIndex = CR_RANGE( chanlistIOC->chanlist[iC] );
-           subdev[iS].chanlist[isC].maxData = 
-               comedi_get_maxdata( device[iD].devP, subdev[iS].subdev, 
-                                   CR_CHAN( chanlistIOC->chanlist[iC] ) );
-           comedi_get_krange( device[iD].devP, subdev[iS].subdev, 
-                              CR_CHAN( chanlistIOC->chanlist[iC] ),
-                              CR_RANGE( chanlistIOC->chanlist[iC] ), &krange );
-           subdev[iS].chanlist[isC].minMuVolt = krange.min;
-           subdev[iS].chanlist[isC].maxMuVolt = krange.max;
-           subdev[iS].chanlist[isC].scale = chanlistIOC->scalelist[iC];
-           break;
+	  subdev[iS].chanlist[isC].isUsed = 1;
+	  subdev[iS].chanlist[isC].aref = CR_AREF( chanlistIOC->chanlist[iC] );
+	  subdev[iS].chanlist[isC].rangeIndex = CR_RANGE( chanlistIOC->chanlist[iC] );
+	  subdev[iS].chanlist[isC].maxData = 
+	    comedi_get_maxdata( device[iD].devP, subdev[iS].subdev, 
+				CR_CHAN( chanlistIOC->chanlist[iC] ) );
+	  comedi_get_krange( device[iD].devP, subdev[iS].subdev, 
+			     CR_CHAN( chanlistIOC->chanlist[iC] ),
+			     CR_RANGE( chanlistIOC->chanlist[iC] ), &krange );
+	  subdev[iS].chanlist[isC].minMuVolt = krange.min;
+	  subdev[iS].chanlist[isC].maxMuVolt = krange.max;
+	  subdev[iS].chanlist[isC].scale = chanlistIOC->scalelist[iC];
+	  break;
         }
       }
-
     }
-
   }
   else {
-
+    
     // create and initialize chanlist for subdevice:
     subdev[iS].chanlist =  vmalloc( chanlistIOC->chanlistN
                                     *sizeof(struct chanT) );
     if( !subdev[iS].chanlist ) {
       ERROR_MSG( "loadChanlist ERROR: Memory allocation for Subdevice %i on device %s. Chanlist not loaded!\n",
-			 iS, device[subdev[iS].devID].name );
+		 iS, device[subdev[iS].devID].name );
       return -1;
     }
     subdev[iS].chanN = chanlistIOC->chanlistN;
-
+    
     for( iC = 0; iC < subdev[iS].chanN; iC++ ) {
       subdev[iS].chanlist[iC].devP = device[iD].devP;
       subdev[iS].chanlist[iC].subdev = subdev[iS].subdev;
@@ -404,28 +395,28 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
       subdev[iS].chanlist[iC].modelIndex = -1;
       subdev[iS].chanlist[iC].isUsed = chanlistIOC->chanIsUsed[iC];
       if( subdev[iS].chanlist[iC].isParamChan )
-         subdev[iS].chanlist[iC].chan -= PARAM_CHAN_OFFSET;
+	subdev[iS].chanlist[iC].chan -= PARAM_CHAN_OFFSET;
       else {
-         if( subdev[iS].type == SUBDEV_IN ) {
-           for( i = 0; i < INPUT_N; i++ ) {
-             if( inputDevices[i] == subdev[iS].userSubdevIndex && 
-                 inputChannels[i] == subdev[iS].chanlist[iC].chan )
-                subdev[iS].chanlist[iC].modelIndex = i;
-           }
-         }
-         else {
-           for( i = 0; i < OUTPUT_N; i++ ) {
-             if( outputDevices[i] == subdev[iS].userSubdevIndex && 
-                 outputChannels[i] == subdev[iS].chanlist[iC].chan )
-                subdev[iS].chanlist[iC].modelIndex = i;
-           }
-         }
+	if( subdev[iS].type == SUBDEV_IN ) {
+	  for( i = 0; i < INPUT_N; i++ ) {
+	    if( inputDevices[i] == subdev[iS].userSubdevIndex && 
+		inputChannels[i] == subdev[iS].chanlist[iC].chan )
+	      subdev[iS].chanlist[iC].modelIndex = i;
+	  }
+	}
+	else {
+	  for( i = 0; i < OUTPUT_N; i++ ) {
+	    if( outputDevices[i] == subdev[iS].userSubdevIndex && 
+		outputChannels[i] == subdev[iS].chanlist[iC].chan )
+	      subdev[iS].chanlist[iC].modelIndex = i;
+	  }
+	}
       }
       subdev[iS].chanlist[iC].aref = CR_AREF( chanlistIOC->chanlist[iC] );
       subdev[iS].chanlist[iC].rangeIndex = CR_RANGE( chanlistIOC->chanlist[iC] );
       subdev[iS].chanlist[iC].maxData = 
-          comedi_get_maxdata( device[iD].devP, subdev[iS].subdev, 
-                              CR_CHAN( chanlistIOC->chanlist[iC] ) );
+	comedi_get_maxdata( device[iD].devP, subdev[iS].subdev, 
+			    CR_CHAN( chanlistIOC->chanlist[iC] ) );
       comedi_get_krange( device[iD].devP, subdev[iS].subdev, 
                          CR_CHAN( chanlistIOC->chanlist[iC] ),
                          CR_RANGE( chanlistIOC->chanlist[iC] ), &krange );
@@ -433,7 +424,7 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
       subdev[iS].chanlist[iC].maxMuVolt = krange.max;
       subdev[iS].chanlist[iC].scale = chanlistIOC->scalelist[iC];
     }
-
+  }    
   return 0;
 }
 
@@ -448,7 +439,7 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC )
   }
   if( !subdev[iS].chanlist ) {
     ERROR_MSG( "loadSyncCmd ERROR: First load Chanlist for Subdevice %i on device %s. Sync-command not loaded!\n",
-		 iS, device[subdev[iS].devID].name );
+	       iS, device[subdev[iS].devID].name );
     return -EFAULT;
   }
   if( syncCmdIOC->frequency > MAX_FREQUENCY ) {
@@ -466,13 +457,13 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC )
   if( !dynClampTask.reqFreq ) {
     dynClampTask.reqFreq = subdev[iS].frequency;
   }
-  else
+  else {
     if( dynClampTask.reqFreq != subdev[iS].frequency ) {
       ERROR_MSG( "loadSyncCmd ERROR: Requested frequency %u Hz of subdevice %i on device %s is inconsistent to frequency %u Hz of other subdevice. Sync-command not loaded!\n",
 		 subdev[iS].frequency, iS, device[subdev[iS].devID].name, dynClampTask.reqFreq );
       return -EINVAL;
     }
-
+  }
 
   subdev[iS].prepared = 1;
   return 0;
@@ -486,23 +477,23 @@ int startSubdevice( int iS )
 
   if( !subdev[iS].prepared || subdev[iS].running ) {
     ERROR_MSG( "startSubdevice ERROR:  Subdevice ID %i on device %s either not prepared or already running.\n",
-		 iS, device[subdev[iS].devID].name );
+	       iS, device[subdev[iS].devID].name );
     return -EBUSY;
   }
 
   if( dynClampTask.running ) {
     // get current index of dynclamp loop in a thread-save way:
     do { 
-    	firstLoopCnt = dynClampTask.loopCnt;
+      firstLoopCnt = dynClampTask.loopCnt;
       tmpDuration = subdev[iS].duration + dynClampTask.loopCnt;
-  	  dynClampTask.aoIndex = dynClampTask.loopCnt; 
+      dynClampTask.aoIndex = dynClampTask.loopCnt; 
     } 
     while( firstLoopCnt != dynClampTask.loopCnt );
     // set subdevice duration relative to index of dynclamp-Task
     subdev[iS].duration = tmpDuration; 
   }
   else {
-	  dynClampTask.aoIndex = 0;
+    dynClampTask.aoIndex = 0;
     dynClampTask.reqFreq = subdev[iS].frequency;
 
     // start dynamic clamp task: 
@@ -515,7 +506,6 @@ int startSubdevice( int iS )
 
   subdev[iS].running = 1;
   return 0;
-
 }
 
 
@@ -533,15 +523,15 @@ int stopSubdevice( int iS, int kill )
     return 0;
   subdev[iS].running = 0;
   for( i = 0; i < subdev[iS].chanN; i++ )
-    subdev[iS].isUsed = 0;
+    subdev[iS].used = 0;
 
   if( !kill )
-    return;
+    return 0;
 
   // if all subdevices stopped => halt dynclamp task:
   for( i = 0; i < subdevN; i++ )
     if( subdev[i].running )
-    	return 0;
+      return 0;
   cleanup_rt_task();
   return 0;
 }
@@ -605,7 +595,7 @@ void releaseSubdevice( int iS )
   // reset device structure:
   memset( &(device[iD]), 0, sizeof(struct deviceT) );
   if( iD == deviceN-1 )
-      deviceN--;
+    deviceN--;
 }
 
 
@@ -634,63 +624,62 @@ void rtDynClamp( long dummy )
   lsampl_t lsample;
 
   DEBUG_MSG( "rtDynClamp: starting dynamic clamp loop at %u Hz\n", 
-	           1000000000/dynClampTask.periodLengthNs );
+	     1000000000/dynClampTask.periodLengthNs );
 
   rt_sleep( nano2count( 1000000 ) ); // FOR TESTING...
 
   dynClampTask.loopCnt = 0;
   dynClampTask.aoIndex = -1;
   dynClampTask.running = 1;
-
-//****************************************************************************/
-//******** LOOP START: *******************************************************/
-//****************************************************************************/
+  
+  /**************************************************************************/
+  /******** LOOP START: *****************************************************/
+  /**************************************************************************/
   while( subdevRunning ) {
     
     subdevRunning = 0;
 
-
-//******** WRITE TO ANALOG OUTPUT: *******************************************/
-//****************************************************************************/
-    for( iS = 0; iS < subdevN; iS++ )
+    /******** WRITE TO ANALOG OUTPUT: ******************************************/
+    /****************************************************************************/
+    for( iS = 0; iS < subdevN; iS++ ) {
       if( subdev[iS].running && subdev[iS].type == SUBDEV_OUT ) {
 
-          // check duration:
-          if( !subdev[iS].continuous &&
-              subdev[iS].duration <= dynClampTask.loopCnt ) {
-            stopSubdevice(iS, /*kill=*/0 );
-            DEBUG_MSG( "rtDynClamp: ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ loopCnt exceeded duration for subdevice ID %d at loopCnt %lu\n",
-                 iS, dynClampTask.loopCnt );
-      	    continue;
-          }
-      	  else // DEBUG
-	          if( iS == 1 && dynClampTask.loopCnt%100 == 0 )
-          		DEBUG_MSG( " duration = %lu, loopCnt = %lu\n", subdev[iS].duration, dynClampTask.loopCnt );
+	// check duration:
+	if( !subdev[iS].continuous &&
+	    subdev[iS].duration <= dynClampTask.loopCnt ) {
+	  stopSubdevice(iS, /*kill=*/0 );
+	  DEBUG_MSG( "rtDynClamp: ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ loopCnt exceeded duration for subdevice ID %d at loopCnt %lu\n",
+		     iS, dynClampTask.loopCnt );
+	  continue;
+	}
+	else // DEBUG
+	  if( iS == 1 && dynClampTask.loopCnt%100 == 0 )
+	    DEBUG_MSG( " duration = %lu, loopCnt = %lu\n", subdev[iS].duration, dynClampTask.loopCnt );
 
-          subdevRunning = 1;
+	subdevRunning = 1;
          
-          // FOR EVERY CHAN...
-          for( iC = 0; iC < subdev[iS].chanN; iC++ ) {
+	// FOR EVERY CHAN...
+	for( iC = 0; iC < subdev[iS].chanN; iC++ ) {
 
-            if( subdev[iS].chanlist[iC].chanIsUsed[iC] ) {
-              // get data from FIFO:
-              retVal = rtf_get( subdev[iS].fifo, &voltage, sizeof(voltage) );
-              if( retVal != sizeof(voltage) ) {
-                if( retVal == EINVAL ) {
-                  DEBUG_MSG( "rtDynClamp: No open FIFO for subdevice ID %d at loopCnt %lu\n",
-                             iS, dynClampTask.loopCnt );
-                  dynClampTask.running = 0;
-                  dynClampTask.duration = 0;
-                  return;
-                }
-                subdev[iS].error = E_UNDERRUN;
-                DEBUG_MSG( "rtDynClamp: Data buffer underrun for AO subdevice ID %d at loopCnt %lu\n",
-                           iS, dynClampTask.loopCnt );
-                subdev[iS].running = 0;
-                continue;
-              }
-              if( subdev[iS].chanlist[iC].isParamChan ) {
-                paramOutput[subdev[iS].chanlist[iC].chan] = voltage;
+	  if( subdev[iS].chanlist[iC].isUsed ) {
+	    // get data from FIFO:
+	    retVal = rtf_get( subdev[iS].fifo, &voltage, sizeof(voltage) );
+	    if( retVal != sizeof(voltage) ) {
+	      if( retVal == EINVAL ) {
+		DEBUG_MSG( "rtDynClamp: No open FIFO for subdevice ID %d at loopCnt %lu\n",
+			   iS, dynClampTask.loopCnt );
+		dynClampTask.running = 0;
+		dynClampTask.duration = 0;
+		return;
+	      }
+	      subdev[iS].error = E_UNDERRUN;
+	      DEBUG_MSG( "rtDynClamp: Data buffer underrun for AO subdevice ID %d at loopCnt %lu\n",
+			 iS, dynClampTask.loopCnt );
+	      subdev[iS].running = 0;
+	      continue;
+	    }
+	    if( subdev[iS].chanlist[iC].isParamChan ) {
+	      paramOutput[subdev[iS].chanlist[iC].chan] = voltage;
             }
             else
               voltage = 0.0;
@@ -698,7 +687,7 @@ void rtDynClamp( long dummy )
             if( !subdev[iS].chanlist[iC].isParamChan ) {
               // add Model Output to Sample:
               if( subdev[iS].chanlist[iC].modelIndex >= 0 )
-                 voltage += output[subdev[iS].chanlist[iC].modelIndex];
+		voltage += output[subdev[iS].chanlist[iC].modelIndex];
 
               // write out Sample:
               lsample = value_to_sample( &subdev[iS].chanlist[iC], voltage );
@@ -708,121 +697,114 @@ void rtDynClamp( long dummy )
                                           subdev[iS].chanlist[iC].rangeIndex,
                                           subdev[iS].chanlist[iC].aref,
                                           lsample
-                                         );
+					  );
               if( retVal < 1 ) {
                 subdev[iS].running = 0;
                 if( retVal < 0 ) {
                   comedi_perror( "rtmodule: rtDynClamp: comedi_data_write" );
                   subdev[iS].error = E_COMEDI;
- 	 	            subdev[iS].running = 0;
+		  subdev[iS].running = 0;
                   //spin_unlock( &subdev[iS].bData.spinlock );
                   continue;
                 }
                 subdev[iS].error = E_NODATA;
                 DEBUG_MSG( "rtDynClamp: E_NODATA for subdevice ID %d channel %d at loopCnt %lu\n",
-                     iS, iC, dynClampTask.loopCnt );
+			   iS, iC, dynClampTask.loopCnt );
               }
             }
 
-          } // end of chan loop
+	  }
+	} // end of chan loop
 
-      } // end of device loop
+      }
+    } // end of device loop
 
-    
-
-//******** SLEEP FOR NEURON TO REACT TO GIVEN OUTPUT: ************************/
-//****************************************************************************/
+    /******** SLEEP FOR NEURON TO REACT TO GIVEN OUTPUT: ************************/
+    /****************************************************************************/
     //* PROBLEM: rt_sleep is timed using jiffies only (granularity = 1msec)
-    //* int retValSleep = rt_sleep( nano2count( INJECT_RECORD_DELAY ) );
+	//* int retValSleep = rt_sleep( nano2count( INJECT_RECORD_DELAY ) );
     rt_busy_sleep( INJECT_RECORD_DELAY ); // TODO: just default
-
-
 
     // DEBUG OUTPUT:
     if( dynClampTask.loopCnt % 10 == 0 ) {
       DEBUG_MSG( "%d subdevices registered:\n", subdevN );
       for( iS = 0; iS < subdevN; iS++ ) {
-        DEBUG_MSG( "LOOP %lu: fifoPutCnt=%lu readCnt=%lu, subdevID=%d, run=%d, type=%d, error=%d, duration=%lu, contin=%d\n", 
-            		   dynClampTask.loopCnt, fifoPutCnt, readCnt, iS, subdev[iS].running, 
-                   subdev[iS].type, subdev[iS].error, subdev[iS].duration, subdev[iS].continuous  );
+	DEBUG_MSG( "LOOP %lu: fifoPutCnt=%lu readCnt=%lu, subdevID=%d, run=%d, type=%d, error=%d, duration=%lu, contin=%d\n", 
+		   dynClampTask.loopCnt, fifoPutCnt, readCnt, iS, subdev[iS].running, 
+		   subdev[iS].type, subdev[iS].error, subdev[iS].duration, subdev[iS].continuous  );
       }
     }
 
-
-
-
-//******** READ FROM ANALOG INPUT: *******************************************/
-//****************************************************************************/
-    for( iS = 0; iS < subdevN; iS++ )
+    /******** READ FROM ANALOG INPUT: *******************************************/
+    /****************************************************************************/
+    for( iS = 0; iS < subdevN; iS++ ) {
       if( !subdev[iS].asyncMode && subdev[iS].running && 
-            subdev[iS].type == SUBDEV_IN ) {
+	  subdev[iS].type == SUBDEV_IN ) {
           
-          // check duration:
-          if( !subdev[iS].continuous &&
-              subdev[iS].duration <= dynClampTask.loopCnt ) {
-            stopSubdevice(iS, /*kill=*/0 );
-            DEBUG_MSG( "rtDynClamp: loopCnt exceeded duration for subdevice ID %d at loopCnt %lu\n",
-                 iS, dynClampTask.loopCnt );
-          }
-          subdevRunning = 1;
+	// check duration:
+	if( !subdev[iS].continuous &&
+	    subdev[iS].duration <= dynClampTask.loopCnt ) {
+	  stopSubdevice(iS, /*kill=*/0 );
+	  DEBUG_MSG( "rtDynClamp: loopCnt exceeded duration for subdevice ID %d at loopCnt %lu\n",
+		     iS, dynClampTask.loopCnt );
+	}
+	subdevRunning = 1;
 
-          // FOR EVERY CHAN...
-          for( iC = 0; iC < subdev[iS].chanN; iC++ ) {
+	// FOR EVERY CHAN...
+	for( iC = 0; iC < subdev[iS].chanN; iC++ ) {
 
-
-            // acquire sample:
-            if( !subdev[iS].chanlist[iC].isParamChan ) {
-              retVal = comedi_data_read( device[subdev[iS].devID].devP, 
-                                         subdev[iS].subdev, 
-                                         subdev[iS].chanlist[iC].chan,
-                                         subdev[iS].chanlist[iC].rangeIndex,
-                                         subdev[iS].chanlist[iC].aref,
-                                         &lsample );
+	  // acquire sample:
+	  if( !subdev[iS].chanlist[iC].isParamChan ) {
+	    retVal = comedi_data_read( device[subdev[iS].devID].devP, 
+				       subdev[iS].subdev, 
+				       subdev[iS].chanlist[iC].chan,
+				       subdev[iS].chanlist[iC].rangeIndex,
+				       subdev[iS].chanlist[iC].aref,
+				       &lsample );
                
 
-              if( retVal < 0 ) {
-                subdev[iS].running = 0;
-                comedi_perror( "rtmodule: rtDynClamp: comedi_data_write" );
-                subdev[iS].error = E_COMEDI;
-                DEBUG_MSG( "rtDynClamp: E_NODATA for subdevice ID %d channel %d at loopCnt %lu\n",
-                     iS, iC, dynClampTask.loopCnt );
-                continue;
-              }
-              // write to FIFO:
-              voltage = sample_to_value( &subdev[iS].chanlist[iC], lsample );
-              if( subdev[iS].chanlist[iC].modelIndex >= 0 )
-                 input[subdev[iS].chanlist[iC].modelIndex] = voltage;
-            }
-            else {
-              voltage = paramInput[subdev[iS].chanlist[iC].chan];
-            }
+	    if( retVal < 0 ) {
+	      subdev[iS].running = 0;
+	      comedi_perror( "rtmodule: rtDynClamp: comedi_data_write" );
+	      subdev[iS].error = E_COMEDI;
+	      DEBUG_MSG( "rtDynClamp: E_NODATA for subdevice ID %d channel %d at loopCnt %lu\n",
+			 iS, iC, dynClampTask.loopCnt );
+	      continue;
+	    }
+	    // write to FIFO:
+	    voltage = sample_to_value( &subdev[iS].chanlist[iC], lsample );
+	    if( subdev[iS].chanlist[iC].modelIndex >= 0 )
+	      input[subdev[iS].chanlist[iC].modelIndex] = voltage;
+	  }
+	  else {
+	    voltage = paramInput[subdev[iS].chanlist[iC].chan];
+	  }
+
+	  retVal = rtf_put( subdev[iS].fifo, &voltage, sizeof(voltage) );
+	  fifoPutCnt++;
+	  if( retVal != sizeof(voltage) ) {
+	    if( retVal == EINVAL ) {
+	      DEBUG_MSG( "rtDynClamp: No open FIFO for subdevice ID %d at loopCnt %lu\n",
+			 iS, dynClampTask.loopCnt );
+	      dynClampTask.running = 0;
+	      dynClampTask.duration = 0;
+	      return;
+	    }
+	    subdev[iS].error = E_OVERFLOW;
+	    DEBUG_MSG( "rtDynClamp: Data buffer overflow for AI subdevice ID %d at loopCnt %lu\n",
+		       iS, dynClampTask.loopCnt );
+	    subdev[iS].running = 0;
+	    continue;
+	  }
+
+	} // end of chan loop
+	readCnt++; // FOR DEBUG
+      }
+    } // end of device loop
 
 
-            retVal = rtf_put( subdev[iS].fifo, &voltage, sizeof(voltage) );
-            fifoPutCnt++;
-            if( retVal != sizeof(voltage) ) {
-              if( retVal == EINVAL ) {
-                DEBUG_MSG( "rtDynClamp: No open FIFO for subdevice ID %d at loopCnt %lu\n",
-                           iS, dynClampTask.loopCnt );
-                dynClampTask.running = 0;
-                dynClampTask.duration = 0;
-                return;
-              }
-              subdev[iS].error = E_OVERFLOW;
-              DEBUG_MSG( "rtDynClamp: Data buffer overflow for AI subdevice ID %d at loopCnt %lu\n",
-                         iS, dynClampTask.loopCnt );
-              subdev[iS].running = 0;
-              continue;
-            }
-
-          } // end of chan loop
-          readCnt++; // FOR DEBUG
-      } // end of device loop
-
-
-
-//******** WAIT FOR CALCULATION TASK TO COMPUTE RESULT: **********************/
-//****************************************************************************/
+    /******** WAIT FOR CALCULATION TASK TO COMPUTE RESULT: **********************/
+    /****************************************************************************/
     dynClampTask.loopCnt++;
 
     //    start = rt_get_cpu_time_ns();
@@ -830,25 +812,20 @@ void rtDynClamp( long dummy )
 
     // ...as soon as RTAI scheduler wakes us up again:
 
-
-//******** SUSPEND CALCULATION TASK: *****************************************/
-//****************************************************************************/
+    /******** SUSPEND CALCULATION TASK: *****************************************/
+    /****************************************************************************/
     if( calcTask.initialized )
       rt_task_suspend( &calcTask.rtTask );
 
-
-
   } // END OF DYNCLAMP LOOP
-
     
   dynClampTask.running = 0;
   dynClampTask.duration = 0;
-
+  
   DEBUG_MSG( "rtDynClamp: left dynamic clamp loop after %lu cycles\n",
 	     dynClampTask.loopCnt );
 
 }
-
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -962,7 +939,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
   switch( cmd ) {
     
 
-//******** GIVE INFORMATION TO USER SPACE: ***********************************/
+/******** GIVE INFORMATION TO USER SPACE: ***********************************/
 
   case IOC_GETAOINDEX:
     luTmp = dynClampTask.aoIndex;
@@ -979,18 +956,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
     return retVal == 0 ? 0 : -EFAULT;
 
 
-//******** SET UP COMEDI: ****************************************************/
-
-  case IOC_GET_PARAM_ID:
-    tmp = getSubdevID();
-    subdev[tmp].type = SUBDEV_PARAM;
-    subdev[tmp].sampleType = SAMPL_FLOAT;
-    subdev[tmp].sampleSize = sizeof(float);
-    if( tmp < 0 )
-      return -ENOSPC;
-    retVal = put_user( tmp, (int __user *)arg );
-    return retVal == 0 ? 0 : -EFAULT;
-
+/******** SET UP COMEDI: ****************************************************/
 
   case IOC_GET_SUBDEV_ID:
     tmp = getSubdevID();
@@ -1092,7 +1058,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
     return 0;
 
 
-  case IOC_SET_CHANNEL_INFO:
+  case IOC_SET_TRACE_CHANNEL:
     retVal = __copy_from_user( &traceChannel, (void __user *)arg, sizeof(struct traceChannelIOCT) );
     if( retVal ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid user pointer for traceChannelIOCT!\n" );
