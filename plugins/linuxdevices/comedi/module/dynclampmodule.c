@@ -692,37 +692,39 @@ void rtDynClamp( long dummy )
 	    if( subdev[iS].chanlist[iC].isParamChan ) {
 	      paramOutput[subdev[iS].chanlist[iC].chan] = voltage;
             }
-
-            if( !subdev[iS].chanlist[iC].isParamChan ) {
-              // add Model Output to Sample:
-              if( subdev[iS].chanlist[iC].modelIndex >= 0 )
-		voltage += output[subdev[iS].chanlist[iC].modelIndex];
-
-              // write out Sample:
-              lsample = value_to_sample( &subdev[iS].chanlist[iC], voltage );
-              retVal = comedi_data_write( device[subdev[iS].devID].devP, 
-                                          subdev[iS].subdev, 
-                                          subdev[iS].chanlist[iC].chan,
-                                          subdev[iS].chanlist[iC].rangeIndex,
-                                          subdev[iS].chanlist[iC].aref,
-                                          lsample
-					  );
-              if( retVal < 1 ) {
-                subdev[iS].running = 0;
-                if( retVal < 0 ) {
-                  comedi_perror( "rtmodule: rtDynClamp: comedi_data_write" );
-                  subdev[iS].error = E_COMEDI;
-		  subdev[iS].running = 0;
-                  //spin_unlock( &subdev[iS].bData.spinlock );
-                  continue;
-                }
-                subdev[iS].error = E_NODATA;
-                DEBUG_MSG( "rtDynClamp: E_NODATA for subdevice ID %d channel %d at loopCnt %lu\n",
-			   iS, iC, dynClampTask.loopCnt );
-              }
-            }
-
 	  }
+	  else
+	    voltage = 0.0;
+
+	  if( !subdev[iS].chanlist[iC].isParamChan ) {
+	    // add Model Output to Sample:
+	    if( subdev[iS].chanlist[iC].modelIndex >= 0 )
+	      voltage += output[subdev[iS].chanlist[iC].modelIndex];
+	    
+	    // write out Sample:
+	    lsample = value_to_sample( &subdev[iS].chanlist[iC], voltage );
+	    retVal = comedi_data_write( device[subdev[iS].devID].devP, 
+					subdev[iS].subdev, 
+					subdev[iS].chanlist[iC].chan,
+					subdev[iS].chanlist[iC].rangeIndex,
+					subdev[iS].chanlist[iC].aref,
+					lsample
+					);
+	    if( retVal < 1 ) {
+	      subdev[iS].running = 0;
+	      if( retVal < 0 ) {
+		comedi_perror( "rtmodule: rtDynClamp: comedi_data_write" );
+		subdev[iS].error = E_COMEDI;
+		subdev[iS].running = 0;
+		//spin_unlock( &subdev[iS].bData.spinlock );
+		continue;
+	      }
+	      subdev[iS].error = E_NODATA;
+	      DEBUG_MSG( "rtDynClamp: E_NODATA for subdevice ID %d channel %d at loopCnt %lu\n",
+			 iS, iC, dynClampTask.loopCnt );
+	    }
+	  }
+
 	} // end of chan loop
 
       }
