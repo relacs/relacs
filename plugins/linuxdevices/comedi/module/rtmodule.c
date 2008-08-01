@@ -52,8 +52,6 @@ struct chanT {
   float scale;
 };
 
-enum subdevTypes { SUBDEV_OUT=0, SUBDEV_IN };
-
 struct subdeviceT {
   int subdev;
   enum subdevTypes type;
@@ -284,7 +282,7 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
   iS = deviceIOC->subdevID;
   subdev[iS].subdev = deviceIOC->subdev;
   subdev[iS].devID= iDev;
-  subdev[iS].type = deviceIOC->isOutput ? SUBDEV_OUT : SUBDEV_IN;
+  subdev[iS].type = deviceIOC->subdevType;
 
   // create FIFO for subdevice:
   subdev[iS].fifo = iS;
@@ -406,6 +404,8 @@ int startSubdevice( int iS )
     return -EBUSY;
   }
 
+  subdev[iS].running = 1;
+
   if( dynClampTask.running ) {
     // get current index of dynclamp loop in a thread-save way:
     do { 
@@ -429,7 +429,6 @@ int startSubdevice( int iS )
     }
   }
 
-  subdev[iS].running = 1;
   return 0;
 
 }

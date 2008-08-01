@@ -235,7 +235,6 @@ int AnalogInput::testReadData( InList &traces )
     }
     else if( traces[k].channel() >= channels() ) {
       traces[k].addError( DaqError::InvalidChannel );
-      traces[k].setChannel( channels()-1 );
     }
     // check reference:
     if ( traces[k].reference() != InData::RefDifferential &&

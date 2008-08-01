@@ -135,7 +135,7 @@ int DynClampAnalogOutput::open( const string &device, long mode )
   deviceIOC.subdevID = SubdeviceID;
   strcpy( deviceIOC.devicename, deviceFile().c_str() );
   deviceIOC.subdev = Subdevice;
-  deviceIOC.isOutput = 1; // TODO: change for input!!!
+  deviceIOC.subdevType = SUBDEV_OUT;
   retVal = ::ioctl( Modulefile, IOC_OPEN_SUBDEV, &deviceIOC );
   cerr << "open(): IOC_OPEN_SUBDEV request for address done!" /// TEST
        << &deviceIOC << endl;
@@ -238,8 +238,23 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
 
   // ...USER-SPACE DEVICE TESTING STARTING...
 
-  cerr << " DynClampAnalogOutput::testWrite(): 1" << endl;/////TEST/////
+  cerr << " DynClampAnalogOutput::testWrite(): 1" << endl;////TEST////
 
+  // channel configuration:
+  if ( sigs[0].error() == DaqError::InvalidChannel ) {
+    for ( int k=0; k<sigs.size(); k++ ) {
+      sigs[k].delError( DaqError::InvalidChannel );
+      // check channel number:
+      if( sigs[k].channel() < 0 ) {
+	sigs[k].addError( DaqError::InvalidChannel );
+	sigs[k].setChannel( 0 );
+      }
+      else if( sigs[k].channel() >= channels() && sigs[k].channel() < PARAM_CHAN_OFFSET ) {
+	sigs[k].addError( DaqError::InvalidChannel );
+	sigs[k].setChannel( channels()-1 );
+      }
+    }
+  }
 
   memset( ChanList, 0, sizeof( ChanList ) );
   // find ranges for synchronous acquisition:
@@ -276,6 +291,11 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
     double maxvolt = sigs[k].getVoltage( max );
     int index = unipolar ? CAO->UnipolarRangeIndex.size() - 1 
                          :  CAO->BipolarRangeIndex.size() - 1;
+    cerr << unipolar << " " << index << " " << CAO->UnipolarRangeIndex.size() << endl;
+    // XXX if no unipolar ranges are available, then use bipolar ranges!!!!!
+    unipolar = false;
+    index = 0;
+    /*
     for( ; index >= 0; index-- ) {
       cerr << unipolar << " " << index << " " << bipolarRange( index ) << " " << unipolarRange( index ) << endl;
       if( unipolar && unipolarRange( index ) >= maxvolt ) {
@@ -290,9 +310,9 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
     if( index < 0 ) {
       sigs[k].addError( DaqError::InvalidGain );
       cerr << " DynClampAnalogOutput::testWrite(): ERROR - InvalidGain for requested board voltage " 
-           << maxvolt << endl;/////TEST/////
-	}
-
+           << maxvolt << endl;////TEST////
+    }
+    */
     if ( sigs[k].noIntensity() ) {
       /*
       if ( ! extref && externalReference() > 0.0 ) {
@@ -353,6 +373,7 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
       	ChanList[k] = CR_PACK( sigs[k].channel(), CAO->UnipolarRangeIndex[ index ], aref );
       else
       	ChanList[k] = CR_PACK( sigs[k].channel(), CAO->BipolarRangeIndex[ index ], aref );
+    cerr << "DYNCLAMP ChanList channel " << sigs[k].channel() << " packed " << CR_CHAN( ChanList[k] ) << endl;
 
   }
 
@@ -693,7 +714,7 @@ void DynClampAnalogOutput::addTraces( vector< TraceSpec > &traces, int deviceid 
 {
   struct traceInfoIOCT traceInfo;
   traceInfo.traceType = PARAM_OUT;
-  int channel=1000;
+  int channel = PARAM_CHAN_OFFSET;
   while ( 0 == ::ioctl( Modulefile, IOC_GET_TRACE_INFO, &traceInfo ) ) {
     traces.push_back( TraceSpec( traces.size(), traceInfo.name,
 				 deviceid, channel++, 1.0, traceInfo.unit ) );
@@ -735,6 +756,10 @@ int DynClampAnalogOutput::matchTraces( vector< TraceSpec > &traces ) const
   int ern = errno;
   if ( ern != ERANGE ) {
     cerr << "DynClampAnalogOutput::matchTraces() get traces -> errno " << ern << endl;
+    return -1;
+  }
+  if ( ! unknowntraces.empty() ) {
+    //    traces.addErrorStr( "unable to match model input traces" + unknowntraces );
     return -1;
   }
   return foundtraces;

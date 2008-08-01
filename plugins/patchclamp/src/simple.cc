@@ -33,7 +33,7 @@ Simple::Simple( void )
   // add some options:
   addSelection( "intrace", "Input trace", "V-1" );
   addSelection( "outtrace", "Output trace", "Speaker-1" );
-  addNumber( "amplitude", "Amplitude of output signal", 1.0, 0.0, 1000.0, 1.0 );
+  addNumber( "amplitude", "Amplitude of output signal", 1.0, 0.0, 1000.0, 0.1 );
   addNumber( "duration", "Duration of output", 0.1, 0.001, 1.0, 0.001, "sec", "ms" );
   addBoolean( "samerate", "Use sampling rate of input", true );
   addNumber( "rate", "Sampling rate of output", 1000.0, 0.0, 10000000.0, 1000.0, "Hz", "kHz" ).setActivation( "samerate", "false" );
@@ -104,7 +104,6 @@ int Simple::main( void )
 
   OutData signal( duration, 1.0/samplerate );
   signal = amplitude;
-  //  signal[0] = -amplitude;
   signal.back() = 0;
   signal.setTrace( outtrace );
   signal.setIdent( "one" );

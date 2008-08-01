@@ -267,7 +267,6 @@ int AnalogOutput::testWriteData( OutList &sigs )
     }
     else if( sigs[k].channel() >= channels() ) {
       sigs[k].addError( DaqError::InvalidChannel );
-      sigs[k].setChannel( channels()-1 );
     }
   }
   

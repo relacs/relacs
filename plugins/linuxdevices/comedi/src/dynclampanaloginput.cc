@@ -134,7 +134,7 @@ int DynClampAnalogInput::open( const string &device, long mode )
   deviceIOC.subdevID = SubdeviceID;
   strcpy( deviceIOC.devicename, deviceFile().c_str() );
   deviceIOC.subdev = Subdevice;
-  deviceIOC.isOutput = 0;
+  deviceIOC.subdevType = SUBDEV_IN;
   retVal = ::ioctl( Modulefile, IOC_OPEN_SUBDEV, &deviceIOC );
   cerr << " DynClampAnalogInput::open(): IOC_OPEN_SUBDEV request for address done!" /// TEST
        << &deviceIOC << endl;
@@ -228,9 +228,25 @@ int DynClampAnalogInput::testReadDevice( InList &sigs )
     return -1;
   }
   
-  cerr << " DynClampAnalogInput::testRead(): 1" << endl;/////TEST/////
+  cerr << " DynClampAnalogInput::testRead(): 1" << endl;////TEST////
 
-    // XXX check whether channel >=1000 is valid!
+  // XXX check whether channel >=1000 is valid!
+
+  // channel configuration:
+  if ( sigs[0].error() == DaqError::InvalidChannel ) {
+    for ( int k=0; k<sigs.size(); k++ ) {
+      sigs[k].delError( DaqError::InvalidChannel );
+      // check channel number:
+      if( sigs[k].channel() < 0 ) {
+	sigs[k].addError( DaqError::InvalidChannel );
+	sigs[k].setChannel( 0 );
+      }
+      else if( sigs[k].channel() >= channels() && sigs[k].channel() < PARAM_CHAN_OFFSET ) {
+	sigs[k].addError( DaqError::InvalidChannel );
+	sigs[k].setChannel( channels()-1 );
+      }
+    }
+  }
 
   memset( ChanList, 0, sizeof( ChanList ) );
   // find ranges for synchronous acquisition:

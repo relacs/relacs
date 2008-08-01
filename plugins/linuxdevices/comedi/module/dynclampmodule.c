@@ -56,8 +56,6 @@ struct chanT {
   float scale;
 };
 
-enum subdevTypes { SUBDEV_OUT=0, SUBDEV_IN };
-
 struct subdeviceT {
   int subdev;
   int userSubdevIndex;
@@ -312,14 +310,11 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
   iS = deviceIOC->subdevID;
   subdev[iS].subdev = deviceIOC->subdev;
   subdev[iS].devID= iDev;
-  if( deviceIOC->isOutput == SUBDEV_IN) {
-    subdev[iS].type = SUBDEV_IN;
-    subdev[iS].userSubdevIndex = inputDeviceIndex++;
-  }
-  else {
-    subdev[iS].type = SUBDEV_OUT;
+  subdev[iS].type = deviceIOC->subdevType;
+  if( deviceIOC->subdevType == SUBDEV_OUT )
     subdev[iS].userSubdevIndex = outputDeviceIndex++;
-  }
+  else
+    subdev[iS].userSubdevIndex = inputDeviceIndex++;
 
   // create FIFO for subdevice:
   subdev[iS].fifo = iS;
@@ -342,7 +337,7 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
   int iC, i, isC;
   comedi_krange krange;
 
-  if( subdev[iS].subdev < 0 || !subdev[iS].used ) {
+  if( !subdev[iS].used || subdev[iS].subdev < 0 ) {
     ERROR_MSG( "loadChanlist ERROR: First open an appropriate device and subdevice. Chanlist not loaded!\n" );
     return -1;
   }
@@ -351,6 +346,10 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
     ERROR_MSG( "loadChanlist ERROR: Invalid chanlist length for Subdevice %i on device %s. Chanlist not loaded!\n",
 	       iS, device[subdev[iS].devID].name );
     return -1;
+  }
+
+  for( iC = 0; iC < chanlistIOC->chanlistN; iC++ ) {
+    DEBUG_MSG( "loadChanlist subdevice %d, channel nr %d  at %d\n", iS, iC, CR_CHAN( chanlistIOC->chanlist[iC] ) );
   }
 
   if( subdev[iS].chanlist ) {
@@ -481,6 +480,8 @@ int startSubdevice( int iS )
     return -EBUSY;
   }
 
+  subdev[iS].running = 1;
+
   if( dynClampTask.running ) {
     // get current index of dynclamp loop in a thread-save way:
     do { 
@@ -504,7 +505,9 @@ int startSubdevice( int iS )
     }
   }
 
-  subdev[iS].running = 1;
+  DEBUG_MSG( "startSubdevice: successfully started subdevice %d type %s!\n",
+	     iS, subdev[iS].type == SUBDEV_IN ? "AI" : "AO" );
+
   return 0;
 }
 
@@ -523,7 +526,7 @@ int stopSubdevice( int iS, int kill )
     return 0;
   subdev[iS].running = 0;
   for( i = 0; i < subdev[iS].chanN; i++ )
-    subdev[iS].used = 0;
+    subdev[iS].chanlist[i].isUsed = 0;
 
   if( !kill )
     return 0;
@@ -543,7 +546,7 @@ void releaseSubdevice( int iS )
   int i;
 
   if( !subdev[iS].used || subdev[iS].subdev < 0 ) {
-    ERROR_MSG( "releaseSubdevice ERROR: Subdevice with ID %d not in use!\n", 
+    ERROR_MSG( "releaseSubdevice ERROR: Subdevice with ID %d not registered!\n", 
 	       iS );
     return;
   }
@@ -623,10 +626,18 @@ void rtDynClamp( long dummy )
   unsigned long fifoPutCnt = 0;
   lsampl_t lsample;
 
+  DEBUG_MSG( "%d subdevices registered:\n", subdevN );
+  for( iS = 0; iS < subdevN; iS++ ) {
+    DEBUG_MSG( "INIT: fifoPutCnt=%lu readCnt=%lu, subdevID=%d, run=%d, type=%s, error=%d, duration=%lu, contin=%d\n", 
+	       fifoPutCnt, readCnt, iS, subdev[iS].running, 
+	       subdev[iS].type == SUBDEV_IN ? "AI" : "AO", subdev[iS].error,
+	       subdev[iS].duration, subdev[iS].continuous  );
+  }
+
   DEBUG_MSG( "rtDynClamp: starting dynamic clamp loop at %u Hz\n", 
 	     1000000000/dynClampTask.periodLengthNs );
 
-  rt_sleep( nano2count( 1000000 ) ); // FOR TESTING...
+  rt_sleep( nano2count( 1000000 ) ); // XXX FOR TESTING... could be deleted???
 
   dynClampTask.loopCnt = 0;
   dynClampTask.aoIndex = -1;
@@ -641,8 +652,8 @@ void rtDynClamp( long dummy )
 
     /******** WRITE TO ANALOG OUTPUT: ******************************************/
     /****************************************************************************/
-    for( iS = 0; iS < subdevN; iS++ ) {
-      if( subdev[iS].running && subdev[iS].type == SUBDEV_OUT ) {
+    for( iS = 0; iS < subdevN; iS++ ) { // AO Subdevice loop
+      if( subdev[iS].running && subdev[iS].type == SUBDEV_OUT ) {  // AO running test
 
 	// check duration:
 	if( !subdev[iS].continuous &&
@@ -659,9 +670,9 @@ void rtDynClamp( long dummy )
 	subdevRunning = 1;
          
 	// FOR EVERY CHAN...
-	for( iC = 0; iC < subdev[iS].chanN; iC++ ) {
+	for( iC = 0; iC < subdev[iS].chanN; iC++ ) { // AO channel loop
 
-	  if( subdev[iS].chanlist[iC].isUsed ) {
+	  if( subdev[iS].chanlist[iC].isUsed ) { // AO channel used test
 	    // get data from FIFO:
 	    retVal = rtf_get( subdev[iS].fifo, &voltage, sizeof(voltage) );
 	    if( retVal != sizeof(voltage) ) {
@@ -681,8 +692,6 @@ void rtDynClamp( long dummy )
 	    if( subdev[iS].chanlist[iC].isParamChan ) {
 	      paramOutput[subdev[iS].chanlist[iC].chan] = voltage;
             }
-            else
-              voltage = 0.0;
 
             if( !subdev[iS].chanlist[iC].isParamChan ) {
               // add Model Output to Sample:
@@ -726,12 +735,14 @@ void rtDynClamp( long dummy )
     rt_busy_sleep( INJECT_RECORD_DELAY ); // TODO: just default
 
     // DEBUG OUTPUT:
-    if( dynClampTask.loopCnt % 10 == 0 ) {
+    if( dynClampTask.loopCnt % 100 == 0 ) {
       DEBUG_MSG( "%d subdevices registered:\n", subdevN );
       for( iS = 0; iS < subdevN; iS++ ) {
-	DEBUG_MSG( "LOOP %lu: fifoPutCnt=%lu readCnt=%lu, subdevID=%d, run=%d, type=%d, error=%d, duration=%lu, contin=%d\n", 
-		   dynClampTask.loopCnt, fifoPutCnt, readCnt, iS, subdev[iS].running, 
-		   subdev[iS].type, subdev[iS].error, subdev[iS].duration, subdev[iS].continuous  );
+	DEBUG_MSG( "LOOP %lu: fifoPutCnt=%lu readCnt=%lu, subdevID=%d, subdev=%d, run=%d, used=%d, type=%s, error=%d, duration=%lu, contin=%d\n", 
+		   dynClampTask.loopCnt, fifoPutCnt, readCnt, iS, subdev[iS].subdev, 
+		   subdev[iS].running, subdev[iS].used, 
+		   subdev[iS].type == SUBDEV_IN ? "AI" : "AO", subdev[iS].error,
+		   subdev[iS].duration, subdev[iS].continuous  );
       }
     }
 
@@ -803,6 +814,9 @@ void rtDynClamp( long dummy )
     } // end of device loop
 
 
+    /****************************************************************************/
+    computeModel();
+
     /******** WAIT FOR CALCULATION TASK TO COMPUTE RESULT: **********************/
     /****************************************************************************/
     dynClampTask.loopCnt++;
@@ -814,8 +828,10 @@ void rtDynClamp( long dummy )
 
     /******** SUSPEND CALCULATION TASK: *****************************************/
     /****************************************************************************/
+    /*
     if( calcTask.initialized )
       rt_task_suspend( &calcTask.rtTask );
+    */
 
   } // END OF DYNCLAMP LOOP
     

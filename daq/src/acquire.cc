@@ -225,6 +225,11 @@ void Acquire::addOutTraces( void )
   for ( unsigned int k=0; k < AO.size(); k++ ) {
     AO[k].AO->addTraces( OutTraces, k );
   }
+  for ( int i=0; i<OutTraces.size(); i++ ) {
+    cerr << "OUTTRACE " << i << " name " << OutTraces[i].traceName()
+	 << " device=" << OutTraces[i].device()
+	 << " channel=" << OutTraces[i].channel() << endl;
+  }
 }
 
 
@@ -538,6 +543,7 @@ int Acquire::read( InList &data )
   // check model traces:
   if ( AI[0].AI->matchTraces( data ) < 0 ) {
     data.addErrorStr( "unable to match model input traces" );
+    // XXX make sure that relacs does not continue wiht acquisition!!!
     success = false;
   }
   if ( AO[0].AO->matchTraces( OutTraces ) < 0 ) {
@@ -1365,6 +1371,7 @@ int Acquire::write( OutData &signal )
 
   // set trace:
   applyOutTrace( signal );
+  cerr << "WRITE channel " << signal.channel() << endl; 
 
   signal.clearError();
 

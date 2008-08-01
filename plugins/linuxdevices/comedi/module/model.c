@@ -6,8 +6,8 @@ char *moduleName;
 #define OUTPUT_N        1
 #define PARAMINPUT_N    1
 #define PARAMOUTPUT_N   1
-char *inputNames[INPUT_N] = { "input0" };
-char *outputNames[OUTPUT_N] = { "output0" };
+char *inputNames[INPUT_N] = { "V-1" };
+char *outputNames[OUTPUT_N] = { "Current-1" };
 char *inputUnits[INPUT_N] = { "mV" };
 char *outputUnits[OUTPUT_N] = { "mA" };
 
@@ -32,8 +32,7 @@ void initModel( void )
   moduleName = "/dev/dynclamp";
 }
 
-void calcDummyModel( void )
+void computeModel( void )
 {
-//  PARAM(1) = 
-// OUTPUT = -input[0];
+  output[0] = paramOutput[0];
 }

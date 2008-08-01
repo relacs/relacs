@@ -70,11 +70,13 @@
 
 //* DAQ-devices:
 
+enum subdevTypes { SUBDEV_IN=0, SUBDEV_OUT };
+
 struct deviceIOCT {
   unsigned int subdevID;
   char devicename[DEV_NAME_MAXLEN+1];
   unsigned int subdev;
-  int isOutput;
+  enum subdevTypes subdevType;
 };
 
 struct chanlistIOCT {
