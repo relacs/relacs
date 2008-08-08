@@ -42,15 +42,17 @@ class ComediAnalogOutput;
 \todo support delays in testReadDevice() and convertData()!
 \todo Fix usage of ErrorState variable (also in readData() )
 
-insmod /usr/src/kernels/rtai/modules/rtai_hal.ko
-insmod /usr/src/kernels/rtai/modules/rtai_ksched.ko
-modprobe kcomedilib
+\code
+# for NI E-Series PCI daq boards
 modprobe ni_pcimio
-sleep 1
-/usr/src/comedilib/comedi_config/comedi_config /dev/comedi0 ni_pcimio
-sleep 1
-/usr/src/comedilib/comedi_calibrate/comedi_calibrate /dev/comedi0
+comedi_config /dev/comedi0 ni_pcimio
+# for NI E-Series DaqCard
+modprobe ni_mio_cs
+comedi_config /dev/comedi0 ni_mio_cs
 
+# calibrate all ranges, references and channels:
+for C in 0 $(seq 16); do for A in 0 1 2; do for R in 0 $(seq 20); do comedi_calibrate -reset -calibrate -f /dev/comedi0 -r $R -a $A -c $C; done; done; done
+\endcode
 */
 
 
