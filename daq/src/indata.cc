@@ -104,7 +104,7 @@ void InData::construct( void )
   Channel = 0;
   Trace = 0;
   Ident = "";
-  Reference = RefGround;
+  Reference = RefDifferential;
   Dither = false;
   Unipolar = false;
   GainIndex = 0;
@@ -601,9 +601,26 @@ string InData::referenceStr( void ) const
 }
 
 
+string InData::referenceStr( RefType ref )
+{
+  return RefStr[ref];
+}
+
+
 void InData::setReference( InData::RefType ref )
 {
   Reference = ref;
+}
+
+
+void InData::setReference( const string &ref )
+{
+  for ( RefType i=RefDifferential; i<=RefOther; i=RefType(i+1) ) {
+    if ( RefStr[i] == ref ) {
+      Reference = i;
+      break;
+    }
+  }
 }
 
 

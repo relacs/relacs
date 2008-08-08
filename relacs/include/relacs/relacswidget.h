@@ -63,7 +63,6 @@ namespace relacs {
 \version 1.8
 
 \bug what about wroteData?
-\todo setupHardware() addInput: make reference type configurable
 \todo Set ID gain factors before configuring Session
 
 The data are acquired from the DAQ boards and filtered, 

@@ -93,16 +93,16 @@ class InData : public CyclicArray<float>, public DaqError
     /*! Reference types for analog input lines. */
   enum RefType { 
       /*! Differential input. */
-    RefDifferential,
+    RefDifferential=0,
       /*! A "common" reference (the low inputs of all the channels are
   	  tied together, but are isolated from ground).
 	  Also called "nonreferenced single-ended". */
-    RefCommon,
+    RefCommon=1,
       /*! Referenced to ground.
   	  Also called "referenced single-ended". */
-    RefGround,
+    RefGround=2,
       /*! Any reference that does not fit into the above categories. */
-    RefOther
+    RefOther=3
   };
   
     /*! Constructor. */
@@ -315,11 +315,18 @@ class InData : public CyclicArray<float>, public DaqError
     /*! The reference for the input line as a string.
 	\sa reference(), setReference() */
   string referenceStr( void ) const;
+    /*! The reference type \a ref as a string.
+	\sa reference(), setReference() */
+  static string referenceStr( RefType ref );
     /*! Set the reference of the input line to \a ref.
         Possible values are RefDifferential, RefCommon, RefGround, RefOther.
         Defaults to RefDifferential.
 	\sa reference(), referenceStr() */
   void setReference( RefType ref );
+    /*! Set the reference of the input line to \a ref.
+        Possible values are "differential", "common", "ground", "other".
+	\sa reference(), referenceStr() */
+  void setReference( const string &ref );
     /*! Returns \c true if dither is enabled for the input line. */
   bool dither( void ) const;
     /*! Enable dither for the input line if \a dither equals \c true,

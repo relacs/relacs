@@ -139,8 +139,8 @@ int ComediAnalogInput::open( const string &device, long mode )
   int nRanges = comedi_get_n_ranges( DeviceP, SubDevice, 0 );  
   for ( int i = 0; i < nRanges; i++ ) {
     comedi_range *range = comedi_get_range( DeviceP, SubDevice, 0, i );
-    // TODO: if a ranges is not supported but comedi thinks so: set max = -1.0
-    // i.e. NI 6070E PCI: range #8 (0..20V) not supported
+    // XXX: if a ranges is not supported but comedi thinks so: set max = -1.0
+    // i.e. NI 6070E PCI and DAQCard-6062E: range #8 (0..20V) not supported
     if ( range->min < 0.0 ) {
       BipolarRange.push_back( *range );
       BipolarRangeIndex.push_back( i );
@@ -305,7 +305,7 @@ int ComediAnalogInput::setupCommand( InList &traces, comedi_cmd &cmd )
 
   for( int k = 0; k < traces.size(); k++ ) {
 
-    if ( traces[k].delay() > 1.0e-9 ) {
+    if ( traces[k].delay() > 0.0 ) {
       traces[k].addError( DaqError::InvalidDelay );
       traces[k].addErrorStr( "delays are not supported by comedi!" );
       traces[k].setDelay( 0.0 );

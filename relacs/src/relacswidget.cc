@@ -110,13 +110,13 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   addNumber( "inputsamplerate", "Input sampling rate", 20000.0, 1.0, 1000000.0, 1000.0, "Hz", "kHz" ); // Hertz, -> 2.4MB pro minute and channel
   addNumber( "inputtracecapacity", "Ring buffer has capacity for ", 600.0, 1.0, 1000000.0, 1.0, "s" );
   addNumber( "inputtracetime", "Buffer of driver can hold data for ", 1.0, 0.001, 10.0, 0.001, "s", "ms"  );
-  addInteger( "inputstartsource", "Start source for input", 0 );
   addBoolean( "inputunipolar", "Unipolar input", false );
   addText( "inputtraceid", "Input trace identifier", "V-1" );
   addNumber( "inputtracescale", "Input trace scale", 1.0 );
   addText( "inputtraceunit", "Input trace unit", "V" );
-  addInteger( "inputtracechannel", "Input trace channel", 0 );
   addInteger( "inputtracedevice", "Input trace device", 0 );
+  addInteger( "inputtracechannel", "Input trace channel", 0 );
+  addText( "inputtracereference", "Input trace reference", InData::referenceStr( InData::RefGround ) );
   addInteger( "inputtracegain", "Input trace gain", 0 );
   addLabel( "output data", 0, Parameter::TabLabel );
   addNumber( "maxoutputrate", "Default maximum output sampling rate", 100000.0, 1.0, 10000000.0, 1000.0, "Hz", "kHz" );
@@ -641,12 +641,13 @@ void RELACSWidget::setupInTraces( void )
     IL[k].setUnit( number( "inputtracescale", k, 1.0 ),
 		   text( "inputtraceunit", k, "" ) );
     IL[k].setSampleRate( number( "inputsamplerate", 1000.0 ) );
-    IL[k].setStartSource( integer( "inputstartsource", 0, 0 ) );
+    IL[k].setStartSource( 0 );
     IL[k].setUnipolar( boolean( "inputunipolar", false ) );
     IL[k].setChannel( integer( "inputtracechannel", k, k ) );
     IL[k].setDevice( integer( "inputtracedevice", k, 0 ) );
     IL[k].setContinuous();
     IL[k].setMode( SaveFilesMode | PlotTraceMode );
+    IL[k].setReference( text( "inputtracereference", k, InData::referenceStr( InData::RefGround ) ) );
     IL[k].setGainIndex( integer( "inputtracegain", k, 0 ) );
     IL[k].setUpdateTime( number( "inputtracetime", 0, 1.0 ) );
     IL[k].reserve( IL[k].indices( number( "inputtracecapacity", 0, 1000.0 ) ) );
@@ -1321,8 +1322,14 @@ void RELACSWidget::startFirstAcquisition( void )
 
   // start data aquisition:
   int r = AQ->read( IL );
-  if ( r < 0 )
+  if ( r < 0 ) {
     printlog( "! error in starting data acquisition: " + IL.errorText() );
+    MessageBox::warning( "RELACS Warning !",
+			 "error in starting data acquisition: " + IL.errorText(),
+			 true, 0.0, this );
+    startIdle();
+    return;
+  }
   AID->updateMenu();
 
   FD->init( IL, ED );  // init filters/detectors before RePro!
@@ -1399,18 +1406,20 @@ void RELACSWidget::startFirstSimulation( void )
 
   // start data aquisition:
   int r = AQ->read( IL );
-  if ( r < 0 )
-    printlog( "! error in starting data acquisition: " + IL.errorText() );
-  AID->updateMenu();
-
-  // give it a second chance:
-  for ( int k=0; k<IL.size(); k++ ) {
-    if ( IL[k].failed() ) {
-      r = AQ->read( IL );
-      if ( r < 0 )
-	printlog( "! error in starting data acquisition: " + IL.errorText() );
+  if ( r < 0 ) {
+    // give it a second chance with the adjusted input parameter:
+    r = AQ->read( IL );
+    if ( r < 0 ) {
+      printlog( "! error in starting data acquisition: " + IL.errorText() );
+      MessageBox::warning( "RELACS Warning !",
+			   "error in starting data acquisition: " + IL.errorText(),
+			   true, 0.0, this );
+      startIdle();
+      return;
     }
   }
+
+  AID->updateMenu();
 
   // check success:
   for ( int k=0; k<IL.size(); k++ ) {
