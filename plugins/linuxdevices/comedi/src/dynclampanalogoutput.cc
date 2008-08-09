@@ -259,7 +259,7 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
   memset( ChanList, 0, sizeof( ChanList ) );
   // find ranges for synchronous acquisition:
   int aref = AREF_GROUND;
-  int maxrange = 1 << bits();
+  int maxdata = ( 1 << bits() ) - 1;
   for ( int k=0; k<sigs.size(); k++ ) {
     // minimum and maximum values:
     double min = sigs[k].requestedMin();
@@ -288,31 +288,38 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
     }
     // set range:
     double maxboardvolt = -1.0;
+    double minboardvolt = 0.0;
     double maxvolt = sigs[k].getVoltage( max );
-    int index = unipolar ? CAO->UnipolarRangeIndex.size() - 1 
-                         :  CAO->BipolarRangeIndex.size() - 1;
-    cerr << unipolar << " " << index << " " << CAO->UnipolarRangeIndex.size() << endl;
-    // XXX if no unipolar ranges are available, then use bipolar ranges!!!!!
-    unipolar = false;
-    index = 0;
-    /*
-    for( ; index >= 0; index-- ) {
-      cerr << unipolar << " " << index << " " << bipolarRange( index ) << " " << unipolarRange( index ) << endl;
-      if( unipolar && unipolarRange( index ) >= maxvolt ) {
-      	maxboardvolt = unipolarRange( index );
-      	break;
+    int index = -1;
+    for ( int p=0; p<2 && index < 0; p++ ) {
+      if ( unipolar ) {
+	for( index = CAO->UnipolarRange.size() - 1; index >= 0; index-- ) {
+	  if ( unipolarRange( index ) > maxvolt ) {
+	    maxboardvolt = CAO->UnipolarRange[index].max;
+	    minboardvolt = CAO->UnipolarRange[index].min;
+	    break;
+	  }
+	}
       }
-      if( !unipolar && bipolarRange( index ) >= maxvolt ){
-      	maxboardvolt = bipolarRange( index );
-      	break;
+      else {
+	for( index = CAO->BipolarRange.size() - 1; index >= 0; index-- ) {
+	  if ( bipolarRange( index ) > maxvolt ) {
+	    maxboardvolt = CAO->BipolarRange[index].max;
+	    minboardvolt = CAO->BipolarRange[index].min;
+	    break;
+	  }
+	}
       }
+      // try other polarity?
+      if ( index < 0 && p == 0 )
+	unipolar = ! unipolar;
     }
-    if( index < 0 ) {
+    // none of the available ranges contains the requested range:
+    if ( index < 0 ) {
       sigs[k].addError( DaqError::InvalidGain );
-      cerr << " DynClampAnalogOutput::testWrite(): ERROR - InvalidGain for requested board voltage " 
-           << maxvolt << endl;////TEST////
+      break;
     }
-    */
+
     if ( sigs[k].noIntensity() ) {
       /*
       if ( ! extref && externalReference() > 0.0 ) {
@@ -343,7 +350,7 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
 	}
       }
       */
-      sigs[k].setGain( unipolar ? maxrange/maxboardvolt : maxrange/2/maxboardvolt );
+      sigs[k].setGain( maxdata/(maxboardvolt-minboardvolt), -minboardvolt );
     }
     else {
       /*
@@ -353,7 +360,10 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
       	extref = false;
       }
       */
-      sigs[k].setGain( unipolar ? maxrange : maxrange/2 );
+      if ( unipolar )
+	sigs[k].setGain( maxdata, 0.0 );
+      else
+	sigs[k].setGain( maxdata/2.0, 1.0 );
     }
 
     int gainIndex = index;
@@ -364,19 +374,19 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
     
 
     sigs[k].setGainIndex( gainIndex );
-    sigs[k].setMinData( unipolar ? 0 : -maxrange/2 );
-    sigs[k].setMaxData( unipolar ? maxrange - 1 : maxrange/2 - 1 );
+    sigs[k].setMinData( 0 );
+    sigs[k].setMaxData( maxdata );
 
     // set up channel in chanlist:
-    if( !sigs.failed() )
-      if( unipolar )
-      	ChanList[k] = CR_PACK( sigs[k].channel(), CAO->UnipolarRangeIndex[ index ], aref );
-      else
-      	ChanList[k] = CR_PACK( sigs[k].channel(), CAO->BipolarRangeIndex[ index ], aref );
+    if( unipolar )
+      ChanList[k] = CR_PACK( sigs[k].channel(),
+			     CAO->UnipolarRangeIndex[index], aref );
+    else
+      ChanList[k] = CR_PACK( sigs[k].channel(),
+			     CAO->BipolarRangeIndex[index], aref );
     cerr << "DYNCLAMP ChanList channel " << sigs[k].channel() << " packed " << CR_CHAN( ChanList[k] ) << endl;
 
   }
-
 
   if( sigs.failed() )
     return -1;

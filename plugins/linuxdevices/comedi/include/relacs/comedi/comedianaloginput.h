@@ -51,7 +51,7 @@ modprobe ni_mio_cs
 comedi_config /dev/comedi0 ni_mio_cs
 
 # calibrate all ranges, references and channels:
-for C in 0 $(seq 16); do for A in 0 1 2; do for R in 0 $(seq 20); do comedi_calibrate -reset -calibrate -f /dev/comedi0 -r $R -a $A -c $C; done; done; done
+for C in 0 $(seq 16); do for A in 0 1 2; do for R in 0 $(seq 20); do comedi_calibrate -reset -calibrate -f /dev/comedi0 -s 0 -r $R -a $A -c $C; done; done; done
 \endcode
 */
 

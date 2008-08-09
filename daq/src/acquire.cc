@@ -1370,7 +1370,6 @@ int Acquire::write( OutData &signal )
 
   // set trace:
   applyOutTrace( signal );
-  cerr << "WRITE channel " << signal.channel() << endl; 
 
   signal.clearError();
 
@@ -1398,8 +1397,10 @@ int Acquire::write( OutData &signal )
   }
 
   // error?
-  if ( signal.failed() )
+  if ( signal.failed() ) {
+    AO[di].Signals.clear();
     return -1;
+  }
 
   // set intensity:
   for ( unsigned int a=0; a<Att.size(); a++ ) {
@@ -1428,8 +1429,10 @@ int Acquire::write( OutData &signal )
   AO[di].AO->testWrite( ol );
 
   // error?
-  if ( signal.failed() )
+  if ( signal.failed() ) {
+    AO[di].Signals.clear();
     return -1;
+  }
 
   // convert data and prepare writing to daq board:
   if ( signal.autoConvert() || signal.deviceBuffer() == NULL )
@@ -1441,6 +1444,7 @@ int Acquire::write( OutData &signal )
   // error?
   if ( signal.failed() ) {
     AO[di].AO->reset();
+    AO[di].Signals.clear();
     return -1;
   }
 
@@ -1455,8 +1459,11 @@ int Acquire::write( OutData &signal )
     AO[di].AO->startWrite( ol );
 
   // error?
-  if ( signal.failed() )
+  if ( signal.failed() ) {
+    AO[di].AO->reset();
+    AO[di].Signals.clear();
     return -1;
+  }
 
   LastDevice = di;
   //  LastWrite = 0.0; this is set in restartRead
@@ -1536,8 +1543,11 @@ int Acquire::write( OutList &signal )
   }
 
   // error?
-  if ( ! success )
+  if ( ! success ) {
+    for ( unsigned int i=0; i<AO.size(); i++ )
+      AO[i].Signals.clear();
     return -1;
+  }
 
   // set intensities:
   bool usedatt[Att.size()];
@@ -1584,8 +1594,13 @@ int Acquire::write( OutList &signal )
   }
 
   // error?
-  if ( ! success )
+  if ( ! success ) {
+    for ( unsigned int i=0; i<AO.size(); i++ ) {
+      AO[i].AO->reset();
+      AO[i].Signals.clear();
+    }
     return -1;
+  }
 
   // convert data:
   bool ac = signal[0].autoConvert();
@@ -1626,8 +1641,10 @@ int Acquire::write( OutList &signal )
 
   // error?
   if ( ! success ) {
-    for ( unsigned int i=0; i<AO.size(); i++ )
+    for ( unsigned int i=0; i<AO.size(); i++ ) {
       AO[i].AO->reset();
+      AO[i].Signals.clear();
+    }
     return -1;
   }
 
@@ -1648,8 +1665,13 @@ int Acquire::write( OutList &signal )
   }
   
   // error?
-  if ( ! success )
+  if ( ! success ) {
+    for ( unsigned int i=0; i<AO.size(); i++ ) {
+      AO[i].AO->reset();
+      AO[i].Signals.clear();
+    }
     return -1;
+  }
 
   LastDevice = signal[0].device();
   //  LastWrite = 0.0; this is set in restartRead

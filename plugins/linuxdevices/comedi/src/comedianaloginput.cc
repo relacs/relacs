@@ -341,7 +341,7 @@ int ComediAnalogInput::setupCommand( InList &traces, comedi_cmd &cmd )
 	traces[k].addError( DaqError::InvalidGain );
       traces[k].setMaxVoltage( max );
       traces[k].setMinVoltage( 0.0 );
-      traces[k].setGain( (max-min)/comedi_get_maxdata( DeviceP, SubDevice, 0 ),
+      traces[k].setGain( (max-min)/comedi_get_maxdata( DeviceP, SubDevice, traces[k].channel() ),
 			 min );
       chanlist[k] = CR_PACK( traces[k].channel(), 
 			     UnipolarRangeIndex[ traces[k].gainIndex() ],
@@ -354,7 +354,7 @@ int ComediAnalogInput::setupCommand( InList &traces, comedi_cmd &cmd )
 	traces[k].addError( DaqError::InvalidGain );
       traces[k].setMaxVoltage( max );
       traces[k].setMinVoltage( min );
-      traces[k].setGain( (max-min)/comedi_get_maxdata( DeviceP, SubDevice, 0 ),
+      traces[k].setGain( (max-min)/comedi_get_maxdata( DeviceP, SubDevice, traces[k].channel() ),
 			 min );
       chanlist[k] = CR_PACK( traces[k].channel(), 
 			     BipolarRangeIndex[ traces[k].gainIndex() ],
@@ -691,7 +691,6 @@ int ComediAnalogInput::readData( InList &traces )
 
 int ComediAnalogInput::stop( void )
 { 
-  cerr << " ComediAnalogInput::stop()" << endl;/////TEST/////
   if ( !isOpen() )
     return NotOpen;
 

@@ -134,8 +134,9 @@ int ComediAnalogOutput::open( const string &device, long mode )
   // XXXX maybe use an internal maximum as well 
   // (in case comedi max is way too much)?
   int bufSize = comedi_get_max_buffer_size( DeviceP, SubDevice );
-  comedi_set_buffer_size( DeviceP, SubDevice, bufSize );
+  int newBufSize = comedi_set_buffer_size( DeviceP, SubDevice, bufSize );
   // XXX add this to settings?
+  cerr << "NEW BUFFER SIZE " << newBufSize << endl;
 
   // initialize ranges:
   UnipolarRange.clear();
@@ -315,7 +316,7 @@ int ComediAnalogOutput::convert( OutList &sigs )
   ol.sortByChannel();
 
   // set scaling factors:
-  unsigned int iDelay = sigs[0].indices( sigs[0].delay() );
+  int iDelay = sigs[0].indices( sigs[0].delay() );
   double scale[ ol.size() ];
   double offs[ ol.size() ];
   for ( int k=0; k<ol.size(); k++ ) {
@@ -327,15 +328,18 @@ int ComediAnalogOutput::convert( OutList &sigs )
   int nbuffer = ol.size() * ( sigs[0].size() + iDelay );
   T *buffer = new T [nbuffer];
 
-  // convert data and multiplex into buffer:
   T *bp = buffer;
-  for ( int i=-iDelay; i<ol[0].size(); i++ ) {
+  // simulate delay:
+  for ( int i=0; i<iDelay; i++ ) {
     for ( int k=0; k<ol.size(); k++ ) {
-      int v;
-      if ( i < 0 ) // simulate delay
-	v = (T) ::rint( offs[k] );
-      else
-	v = (T) ::rint( ol[k][i] * scale[k] + offs[k] );
+      *bp = (T) ::rint( offs[k] );
+      ++bp;
+    }
+  }
+  // convert data and multiplex into buffer:
+  for ( int i=0; i<ol[0].size(); i++ ) {
+    for ( int k=0; k<ol.size(); k++ ) {
+      int v = (T) ::rint( ol[k][i] * scale[k] + offs[k] );
       if ( v > ol[k].maxData() )
 	v = ol[k].maxData();
       else if ( v < ol[k].minData() ) 
@@ -373,7 +377,6 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd )
   
   // ranges:
   int aref = AREF_GROUND;
-  int maxrange = 1 << bits();
   for ( int k=0; k<sigs.size(); k++ ) {
     // minimum and maximum values:
     double min = sigs[k].requestedMin();
@@ -402,21 +405,39 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd )
     }
     // set range:
     double maxboardvolt = -1.0;
+    double minboardvolt = 0.0;
     double maxvolt = sigs[k].getVoltage( max );
-    int index = unipolar ? UnipolarRangeIndex.size() - 1 
-                         :  BipolarRangeIndex.size() - 1;
-    for( ; index >= 0; index-- ) {
-      if ( unipolar && unipolarRange( index ) > maxvolt ) {
-	maxboardvolt = unipolarRange( index );
-	break;
+    int index = -1;
+    for ( int p=0; p<2 && index < 0; p++ ) {
+      if ( unipolar ) {
+	for( index = UnipolarRange.size() - 1; index >= 0; index-- ) {
+	  if ( unipolarRange( index ) > maxvolt ) {
+	    maxboardvolt = UnipolarRange[index].max;
+	    minboardvolt = UnipolarRange[index].min;
+	    break;
+	  }
+	}
       }
-      if ( !unipolar && bipolarRange( index ) > maxvolt ){
-	maxboardvolt = bipolarRange( index );
-	break;
+      else {
+	for( index = BipolarRange.size() - 1; index >= 0; index-- ) {
+	  if ( bipolarRange( index ) > maxvolt ) {
+	    maxboardvolt = BipolarRange[index].max;
+	    minboardvolt = BipolarRange[index].min;
+	    break;
+	  }
+	}
       }
+      // try other polarity?
+      if ( index < 0 && p == 0 )
+	unipolar = ! unipolar;
     }
-    if ( index < 0 )
-      sigs[k].addError( DaqError::InvalidReference );
+    // none of the available ranges contains the requested range:
+    if ( index < 0 ) {
+      sigs[k].addError( DaqError::InvalidGain );
+      break;
+    }
+
+    int maxdata = comedi_get_maxdata( DeviceP, SubDevice, sigs[k].channel() );
         
     if ( sigs[k].noIntensity() ) {
       if ( ! extref ) {
@@ -438,14 +459,12 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd )
 	    maxboardvolt = 1.0;
 	  else
 	    maxboardvolt = externalReference();
+	  minboardvolt = unipolar ? 0.0 : -maxboardvolt;
 	  index = unipolar ? UnipolarExtRefRangeIndex 
 	                   :  BipolarExtRefRangeIndex;
 	}
       }
-      if ( unipolar )
-	sigs[k].setGain( maxrange/maxboardvolt, 0.0 );
-      else
-	sigs[k].setGain( maxrange/2/maxboardvolt, maxboardvolt );
+      sigs[k].setGain( maxdata/(maxboardvolt-minboardvolt), -minboardvolt );
     }
     else {
       if ( extref && externalReference() < 0.0 ) {
@@ -453,9 +472,9 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd )
 	extref = false;
       }
       if ( unipolar )
-	sigs[k].setGain( maxrange, 0.0 );
+	sigs[k].setGain( maxdata, 0.0 );
       else
-	sigs[k].setGain( maxrange/2, maxrange/2 );
+	sigs[k].setGain( maxdata/2.0, 1.0 );
     }
 
     int gainIndex = index;
@@ -466,7 +485,7 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd )
 
     sigs[k].setGainIndex( gainIndex );
     sigs[k].setMinData( 0 );
-    sigs[k].setMaxData( maxrange - 1 );
+    sigs[k].setMaxData( maxdata );
 
     // set up channel in chanlist:
     if ( unipolar )
@@ -528,13 +547,13 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd )
     
   // set countinous-state
   if ( sigs[0].continuous() ) {
-      cmd.stop_src = TRIG_NONE;
-      cmd.stop_arg = 0;
-    }
+    cmd.stop_src = TRIG_NONE;
+    cmd.stop_arg = 0;
+  }
   if ( !sigs[0].continuous() ) {
-      cmd.stop_src = TRIG_COUNT;
-      // set length of acquisition as number of scans:
-      cmd.stop_arg = sigs[0].size() + sigs[0].indices( sigs[0].delay() );
+    cmd.stop_src = TRIG_COUNT;
+    // set length of acquisition as number of scans:
+    cmd.stop_arg = sigs[0].size() + sigs[0].indices( sigs[0].delay() );
   }
 
   cmd.chanlist = chanlist;
@@ -660,9 +679,8 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   
   Sigs = &sigs;
 
-  int error = setupCommand( ol, Cmd );
-  if ( error )
-    return error;
+  if ( setupCommand( ol, Cmd ) < 0 )
+    return -1;
 
   IsPrepared = ol.success();
 
@@ -677,6 +695,7 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
 
 int ComediAnalogOutput::executeCommand( void )
 {
+  cerr << "execute Cmd.stop_arg: " << Cmd.stop_arg << endl;
   ErrorState = 0;
   if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
     cerr << "AO command failed: " << comedi_strerror( comedi_errno() ) << endl;
@@ -860,7 +879,10 @@ int ComediAnalogOutput::fillWriteBuffer( void )
     int bytesWritten = write( comedi_fileno(DeviceP),
 			      (*Sigs)[0].deviceBufferPopBuffer(),
 			      (*Sigs)[0].deviceBufferMaxPop() * BufferElemSize );
-    //    cerr << " ComediAnalogOutput::writeData():  bytes written:" << bytesWritten << endl;/////TEST/////
+    cerr << " ComediAnalogOutput::fillWriteBuffer(): " << bytesWritten << " bytes from " << (*Sigs)[0].deviceBufferMaxPop() * BufferElemSize << " written\n";/////TEST/////
+      sampl_t *fd = (sampl_t*)(*Sigs)[0].deviceBufferPopBuffer();
+      sampl_t *ld = fd + (*Sigs)[0].deviceBufferMaxPop() - 1;
+      cerr << "first: " << *fd << " last: " << *ld << endl;
 
     if ( bytesWritten < 0 && errno != EAGAIN && errno != EINTR ) {
       (*Sigs).addErrorStr( errno );
