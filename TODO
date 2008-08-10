@@ -7,6 +7,7 @@ Autotools:
 - Check for C++ requirements (STL, templates)
 
 Relacs:
+- The relacslocal scripts should remove any relacs pathes from LD_LIBRARY_PATH!
 - How are plugins (control, repros) found/identified? Possibility of name clashes!
   Use plugin-set name as well.
 - Fix command line arg names from path to dir in relacsmain and RELACSWidget.

@@ -108,7 +108,7 @@ int ComediAnalogInput::open( const string &device, long mode )
   }  
 
   // check for async. command support:
-  if ( ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_CMD ) == 0 ) {
+  if ( ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_CMD_READ ) == 0 ) {
     cerr << "! error: ComediAnalogInput::open() -> "
 	 << "Device "  << device << " not supported! "
 	 << "SubDevice needs to support async. commands!" << endl;
@@ -705,22 +705,11 @@ int ComediAnalogInput::reset( void )
 { 
   int retVal = stop();
 
-  // clear buffers by closing and reopening comedi:
-  int error = comedi_close( DeviceP );
-  if ( error )
-    cerr << "! warning: ComediAnalogInput::reset() -> "
-	 << "Closing of AI subdevice on device " << deviceFile() << "failed.\n";
-  DeviceP = comedi_open( deviceFile().c_str() );
-  if ( DeviceP == NULL ) {
-    cerr << "! error: ComediAnalogInput::reset() -> "
-	 << "Device-file " << deviceFile() << " could not be opened!\n";
-    DeviceP = NULL;
-    SubDevice = 0;
-    if ( Cmd.chanlist != 0 )
-      delete [] Cmd.chanlist;
-    memset( &Cmd, 0, sizeof( comedi_cmd ) );
-    IsPrepared = false;
-    return NotOpen;
+  // clear buffers by reading:
+  while ( comedi_get_buffer_contents( DeviceP, SubDevice ) > 0 ) {
+    // read data:
+    char buffer[4096];
+    read( comedi_fileno( DeviceP ), buffer, 4096 );
   }
 
   clearSettings();

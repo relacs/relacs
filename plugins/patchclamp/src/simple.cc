@@ -35,6 +35,7 @@ Simple::Simple( void )
   addSelection( "outtrace", "Output trace", "Speaker-1" );
   addNumber( "amplitude", "Amplitude of output signal", 1.0, -1000.0, 1000.0, 0.1 );
   addNumber( "duration", "Duration of output", 0.1, 0.001, 1.0, 0.001, "sec", "ms" );
+  addSelection( "stimulus", "Stimulus type", "constant|ramp|sine 1p|sine 2p|zero" );
   addBoolean( "samerate", "Use sampling rate of input", true );
   addNumber( "rate", "Sampling rate of output", 1000.0, 0.0, 10000000.0, 1000.0, "Hz", "kHz" ).setActivation( "samerate", "false" );
   addNumber( "pause", "Duration of pause bewteen outputs", 0.4, 0.001, 1.0, 0.001, "sec", "ms" );
@@ -85,6 +86,7 @@ int Simple::main( void )
   int outtrace = index( "outtrace" );
   string unit = outTrace( outtrace ).unit();
   double amplitude = number( "amplitude" );
+  int stimulustype = index( "stimulus" );
   bool samerate = boolean( "samerate" );
   double samplerate = number( "rate" );
   if ( samerate )
@@ -103,10 +105,23 @@ int Simple::main( void )
   P.setXRange( -1000.0*duration, 1000.0*duration );
 
   OutData signal( duration, 1.0/samplerate );
-  signal = amplitude;
+  if ( stimulustype == 0 )
+    signal = amplitude;
+  else if ( stimulustype == 1 ) {
+    for ( int k=0; k<signal.size(); k++ )
+      signal[k] = amplitude*k/signal.size();
+  }
+  else if ( stimulustype == 2 ) {
+    for ( int k=0; k<signal.size(); k++ )
+      signal[k] = amplitude * ::sin( 2.0*M_PI*k/signal.size() );
+  }
+  else if ( stimulustype == 3 ) {
+    for ( int k=0; k<signal.size(); k++ )
+      signal[k] = amplitude * ::sin( 4.0*M_PI*k/signal.size() );
+  }
+  else
+    signal = 0.0;
   signal.back() = 0.0;
-  for ( int k=0; k<signal.size(); k++ )
-    signal[k] = amplitude*k/signal.size();
   signal.setTrace( outtrace );
   signal.setIdent( "one" );
 

@@ -114,7 +114,7 @@ int ComediAnalogOutput::open( const string &device, long mode )
   }  
 
   // check for async. command support:
-  if ( ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_CMD ) == 0 ) {
+  if ( ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_CMD_WRITE ) == 0 ) {
     cerr << "! error: ComediAnalogOutput::open() -> "
 	 << "Device "  << device << " not supported! "
 	 << "SubDevice needs to support async. commands!" << endl;
@@ -501,7 +501,8 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd )
   
   // try automatic command generation:
   cmd.scan_begin_src = TRIG_TIMER;
-  cmd.flags = TRIG_ROUND_NEAREST;
+  //  cmd.flags = TRIG_ROUND_NEAREST | TRIG_WRITE;
+  //  cmd.flags = TRIG_ROUND_NEAREST | TRIG_WRITE | TRIG_WAKE_EOS;
   unsigned int period = (int)( 1e9 * sigs[0].sampleInterval() );
   int retVal = comedi_get_cmd_generic_timed( DeviceP, SubDevice, &cmd,
 					     sigs.size(), period );
@@ -792,23 +793,9 @@ int ComediAnalogOutput::reset( void )
   if ( comedi_cancel( DeviceP, SubDevice ) < 0 )
     return WriteError;
 
-  // clear buffers by closing and reopening comedi:
-  int error = comedi_close( DeviceP );
-  if ( error )
-    cerr << "! warning: ComediAnalogOutput::reset() -> "
-	 << "Closing of AI subdevice on device " << deviceFile() << "failed.\n";
-  DeviceP = comedi_open( deviceFile().c_str() );
-  if ( DeviceP == NULL ) {
-    cerr << "! error: ComediAnalogOutput::reset() -> "
-	 << "Device-file " << deviceFile() << " could not be opened!\n";
-    DeviceP = NULL;
-    SubDevice = 0;
-    if ( Cmd.chanlist != 0 )
-      delete [] Cmd.chanlist;
-    memset( &Cmd, 0, sizeof( comedi_cmd ) );
-    IsPrepared = false;
-    return NotOpen;
-  }
+  // clear buffers?
+  // by closing and reopening comedi: XXX This closes the whole device, not only the subdevice!
+  // the comedi_cancel seems to be sufficient!
 
   clearSettings();
   ErrorState = 0;
