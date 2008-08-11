@@ -87,8 +87,8 @@ void CalibSpeakers::config( void )
     if ( k<RightSoundTraces )
       its += "|" + trace( RightSoundTrace[k] ).ident();
   }
-  for ( int k=0; k<Loudspeakers; k++ )
-    its += "|" + trace( Loudspeaker[k] ).ident();
+  for ( int k=0; k<SoundTraces; k++ )
+    its += "|" + trace( SoundTrace[k] ).ident();
   its.erase( 0, 1 );
   setText( "intrace", its );
   setToDefault( "intrace" );
