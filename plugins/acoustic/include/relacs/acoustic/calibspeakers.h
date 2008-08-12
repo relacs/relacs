@@ -36,9 +36,8 @@ namespace acoustic {
 \class CalibSpeakers
 \brief [RePro] Calibrating attenuation for loudspeakers.
 \author Jan Benda
-\version 1.1 (Jan 10, 2008)
--# removed stop() function
--# moved class variables to the main() functions
+\version 1.1 (Aug 12, 2008)
+-# calibrates to RMS not PEAK
 \version 1.0 (Sep 1, 2004)
 \bug too many values pushed into Gains and Offsets?
 

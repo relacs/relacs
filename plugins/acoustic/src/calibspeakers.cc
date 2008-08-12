@@ -32,7 +32,7 @@ namespace acoustic {
 
 CalibSpeakers::CalibSpeakers( void )
   : RePro( "CalibSpeakers", "CalibSpeakers", "Acoustic",
-	   "Jan Benda", "1.1", "Jan 10, 2008" ),
+	   "Jan Benda", "1.1", "Aug 12, 2008" ),
     Traces(),
     P( 2, 2, true, this )    
 {
@@ -483,7 +483,11 @@ void CalibSpeakers::analyze( int intrace, double duration, double skip,
     si += wi;
   }
   //  p = trace( intrace ).stdev( si, fi );
-  double amplitude = 20.0 * log10( p * sqrt( 2.0 ) / 2.0e-5 / soundpressurescale );
+
+  // PEAK amplitude:
+  //  double amplitude = 20.0 * log10( p * sqrt( 2.0 ) / 2.0e-5 / soundpressurescale );
+  // RMS amplitude:
+  double amplitude = 20.0 * log10( p / 2.0e-5 / soundpressurescale );
 
   // store data:
   intensities.push( intensity, amplitude );
