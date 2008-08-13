@@ -2,6 +2,7 @@
 
 prefix="@prefix@"
 exec_prefix="@exec_prefix@"
+libdir="@libdir@"
 datarootdir="@datarootdir@"
 docdir="@docdir@"
 
@@ -9,10 +10,14 @@ docdir="@docdir@"
 RELACSEXEC="@libdir@/relacs/relacsgui"
 
 # Pathes to the RELACS libraries that need to be added to LD_LIBRARY_PATH:
-RELACSLIBPATHES="@libdir@"
-# the librarie should be installed in one of the default library pathes and
+RELACSLIBPATHES="$libdir"
+# the libraries should be installed in one of the default library pathes and
 # therefore do not need to be added to LD_LIBRARY_PATH:
 RELACSLIBPATHES=
+
+# Directory where the RELACS libraries are to be installed,
+# and should be removed from the LD_LIBRARY_PATH:
+RELACSLIBINSTALLDIR=""
 
 PLUGINHOME='@libdir@/relacs/plugins'
 PLUGINHELPPATHES='@datadir@/relacs/help'

@@ -652,6 +652,9 @@ private:
 
   string PluginSet;
 
+    /*! Dummy trace. */
+  static const TraceSpec DummyTrace;
+
   string WarningStr;
   double WarningTimeout;
   Options Dummy;

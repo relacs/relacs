@@ -320,7 +320,8 @@ void init_pci( void )
     /* search for a specific board: */
     /*    DPRINT(( "nidaq: about to check for device ID 0x%x\n", deviceid ));*/
     pcidev = NULL;
-    while ( (pcidev = pci_find_device( VENDORID, deviceid, pcidev ) ) ) {
+    /* OLD:    while ( (pcidev = pci_find_device( VENDORID, deviceid, pcidev ) ) ) { */
+    while ( (pcidev = pci_get_device( VENDORID, deviceid, pcidev ) ) ) { /* NEW XXX is  this working? */
       
       /* find an empty space */
       for ( brd=0; brd < MAX_BOARDS; brd++ )

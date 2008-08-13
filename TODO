@@ -7,7 +7,6 @@ Autotools:
 - Check for C++ requirements (STL, templates)
 
 Relacs:
-- The relacslocal scripts should remove any relacs pathes from LD_LIBRARY_PATH!
 - How are plugins (control, repros) found/identified? Possibility of name clashes!
   Use plugin-set name as well.
 - Fix command line arg names from path to dir in relacsmain and RELACSWidget.
@@ -22,7 +21,7 @@ Relacs:
 Documentation:
 - Update doxygen dot settings
 - Update installation and Makefile instructions to autotools
-- Usage of autoreconf: autoreconf -v --install
+- Usage of autoreconf: autoreconf -v -i
 - You may want to use: ./configure --htmldir=DOCDIR/html
 - Static libraries are disabled by default, enable with --enable-static
 - Mention that all m4/ , *.mk , and Doxyfile files are identical and should remain so

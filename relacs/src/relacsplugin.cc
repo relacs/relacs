@@ -30,6 +30,9 @@
 namespace relacs {
 
 
+const TraceSpec RELACSPlugin::DummyTrace;
+
+
 RELACSPlugin::RELACSPlugin( const string &configident, int configgroup,
 			    const string &name, const string &title,
 			    const string &pluginset, const string &author, 
@@ -285,20 +288,23 @@ int RELACSPlugin::eventInputEvent( const string &ident ) const
 
 void RELACSPlugin::setGain( const InData &data, int gainindex )
 {
-  RW->AQ->setGain( data, gainindex );
+  if ( RW->AQ != 0 )
+    RW->AQ->setGain( data, gainindex );
 }
 
 
 void RELACSPlugin::adjustGain( const InData &data, double maxvalue )
 {
-  RW->AQ->adjustGain( data, maxvalue );
+  if ( RW->AQ != 0 )
+    RW->AQ->adjustGain( data, maxvalue );
 }
 
 
 void RELACSPlugin::adjustGain( const InData &data, double minvalue,
 			       double maxvalue )
 {
-  RW->AQ->adjustGain( data, minvalue, maxvalue );
+  if ( RW->AQ != 0 )
+    RW->AQ->adjustGain( data, minvalue, maxvalue );
 }
 
 
@@ -326,42 +332,56 @@ void RELACSPlugin::activateGains( void )
 
 int RELACSPlugin::outTracesSize( void ) const
 {
+  if ( RW->AQ == 0 )
+    return 0;
   return RW->AQ->outTracesSize();
 }
 
 
 int RELACSPlugin::outTraceIndex( const string &name ) const
 {
+  if ( RW->AQ == 0 )
+    return -1;
   return RW->AQ->outTraceIndex( name );
 }
 
 
 string RELACSPlugin::outTraceName( int index ) const
 {
+  if ( RW->AQ == 0 )
+    return "";
   return RW->AQ->outTraceName( index );
 }
 
 
 const TraceSpec &RELACSPlugin::outTrace( int index ) const
 {
+  if ( RW->AQ == 0 )
+    return DummyTrace;
   return RW->AQ->outTrace( index );
 }
 
 
 const TraceSpec &RELACSPlugin::outTrace( const string &name ) const
 {
+  if ( RW->AQ == 0 )
+    return DummyTrace;
   return RW->AQ->outTrace( name );
 }
 
 
 int RELACSPlugin::applyOutTrace( OutData &signal ) const
 {
+  if ( RW->AQ == 0 )
+    return 0;
   return RW->AQ->applyOutTrace( signal );
 }
 
 
 int RELACSPlugin::applyOutTrace( OutList &signal ) const
 {
+  if ( RW->AQ == 0 )
+    return 0;
   return RW->AQ->applyOutTrace( signal );
 }
 

@@ -57,14 +57,15 @@ PLUGINRELATIVE=$(cd "$PLUGINRELATIVE"; pwd)
 dirlist=
 IFS="|"
 # 1) absolute pathes:
-for pattern in $(grep 'pluginpathes' < "${CONFFILE}" | sed -e 's/^[ \t]*pluginpathes:[ \t]*\(.*\)/\1/'); do
-    # absolute path?
-    if test "x${pattern:0:1}" = "/"; then
-	dir=${pattern%/*}
-	dirlist="${dirlist}${dir}|"
-    fi
-
-done
+if test "x${CONFFILE}" != x; then
+    for pattern in $(grep 'pluginpathes' < "${CONFFILE}" | sed -e 's/^[ \t]*pluginpathes:[ \t]*\(.*\)/\1/'); do
+        # absolute path?
+        if test "x${pattern:0:1}" = "/"; then
+	    dir=${pattern%/*}
+	    dirlist="${dirlist}${dir}|"
+        fi
+    done
+fi
 # 2) plugin home pathes:
 for dir in $PLUGINHOME; do
     dirlist="${dirlist}${dir}|"
@@ -85,13 +86,38 @@ done < <(sed "s/|/\n/g" <<< ${dirlist} | sort -u)
 #echo "plugin pathes: >$RELACSPLUGINPATHES<"
 
 # set the library path:
-export LD_LIBRARY_PATH="${RELACSLIBPATHES}${RELACSPLUGINPATHES}${LD_LIBRARY_PATH}"
+NEW_LD_LIBRARY_PATH=""
+if test "x$RELACSLIBINSTALLDIR" = "x"; then
+    # use complete LD_LIBRARY_PATH:
+    NEW_LD_LIBRARY_PATH="${RELACSLIBPATHES}${RELACSPLUGINPATHES}${LD_LIBRARY_PATH}"
+else
+    # remove installation direcoty for libraries from LD_LIBRARY_PATH:
+    NEW_LD_LIBRARY_PATH="${RELACSLIBPATHES}${RELACSPLUGINPATHES}"
+    IFS=":"
+    for dir in $LD_LIBRARY_PATH; do
+	if test "x$dir" != "x$RELACSLIBINSTALLDIR"; then
+            NEW_LD_LIBRARY_PATH="${NEW_LD_LIBRARY_PATH}${dir}:"
+        fi
+    done
+    IFS="$SAVEIFS"
+fi
+# remove trailing ':' and export LD_LIBRARY_PATH:
+LD_LIBRARY_PATH="${NEW_LD_LIBRARY_PATH%:}"
+export LD_LIBRARY_PATH
+
 #IFS=":"
 #echo "LD_LIBRARY_PATH:"
 #for dir in $LD_LIBRARY_PATH; do
 #  echo "  $dir"
 #done
 #IFS="$SAVEIFS"
+
+# check existance of the relacs executable:
+if ! test -f "$RELACSEXEC"; then
+    echo "! error: relacs executable \"${RELACSEXEC}\" does not exist!"
+    echo "! exit now!"
+    exit 1
+fi
 
 # run RELACS:
 if test "x$USELOGFILE" = "xyes" && test "x$LOGFILE" != "x"; then
