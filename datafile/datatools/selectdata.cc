@@ -33,13 +33,15 @@ using namespace relacs;
 int stopempty = 100;
 bool erase = false;
 bool metadata = true;
+bool repeatkey = false;
 string indices;
 Str lines;
 string outfile;
 
 
-void readData( DataFile &sf )
+int readData( DataFile &sf )
 {
+  bool failed = true;
 
   // split indices:
   StrQueue istrs( indices, ":" );
@@ -80,6 +82,7 @@ void readData( DataFile &sf )
     if ( newlevel < sf.newLevels() )
       newlevel = sf.newLevels();
 
+    // select data block:
     bool out = true;
     for ( int k=0; k<n; k++ ) {
       if ( tinx[k] >= 0 ) {
@@ -104,13 +107,21 @@ void readData( DataFile &sf )
       }
     }
 
+    if ( out )
+      failed = false;
+
+    // write out meta data:
     if ( out ) {
+      bool keyprinted = false;
+
       // data key before any new meta data blocks:
       if ( metadata && 
 	   sf.newDataKey() && 
 	   ( newlevel <= 0 ||
-	     sf.dataKeyIndex() == sf.metaDataIndex( newlevel-1 ) - 1 ) )
+	     sf.dataKeyIndex() == sf.metaDataIndex( newlevel-1 ) - 1 ) ) {
 	cout << sf.dataKey() << '\n';
+	keyprinted = true;
+      }
 
       // meta data blocks:
       for ( int k=newlevel-1; k>=0; k-- ) {
@@ -118,20 +129,24 @@ void readData( DataFile &sf )
 	  cout << sf.metaData( k );
 
 	bool key = ( sf.newDataKey() && sf.dataKeyIndex() == sf.metaDataIndex( k )+1 );
-	if ( metadata && ( key || k>0 ) )
+	if ( metadata && ( key || repeatkey || k>0 ) )
 	  cout << '\n';
 
 	// data key block following meta data block:
 	if ( metadata && key ) {
 	  cout << sf.dataKey();
+	  keyprinted = true;
 	  if ( k>0 )
 	    cout << '\n';
 	}
       }
       newlevel = 0;
+
+      if ( repeatkey && ! keyprinted && ! sf.dataKey().empty() )
+	cout << sf.dataKey();
     }
 
-    // read data:
+    // read and probably write data:
     int linenum = 0;
     unsigned int lineinx = 0;
     sf.initData();
@@ -150,6 +165,7 @@ void readData( DataFile &sf )
       }
     } while ( sf.readDataLine( stopempty ) );
 
+    // trailing newlines:
     if ( out ) {
       int se = sf.emptyLines();
       if ( erase )
@@ -158,6 +174,7 @@ void readData( DataFile &sf )
 	cout << '\n';
     }
 
+    // update indices:
     int level = n-(sf.emptyLines()-stopempty)-1;
     if ( level < 0 )
       level = 0;
@@ -193,6 +210,8 @@ void readData( DataFile &sf )
   }
 
   sf.close();
+
+  return failed ? 1 : 0;
 }
 
 
@@ -202,7 +221,7 @@ void WriteUsage()
   cerr << '\n';
   cerr << "usage:\n";
   cerr << '\n';
-  cerr << "selectdata -d # -i xxx -l xxx -e -m -o xxx fname\n";
+  cerr << "selectdata -d # -i xxx -l xxx -e -m -k -o xxx fname\n";
   cerr << '\n';
   cerr << "selects a block of data\n";
   cerr << "-d: the number of empty lines that separate blocks of data.\n";
@@ -216,7 +235,13 @@ void WriteUsage()
   cerr << "-l: select a range of line numbers within the data blocks (first line = 1).\n";
   cerr << "-e: erase empty lines within a data block.\n";
   cerr << "-m: only write out data, no meta data.\n";
+  cerr << "-k: write key in front of each selected data block.\n";
   cerr << "-o: write selected data into file ### instead to standard out\n";
+  cerr << '\n';
+  cerr << "Return values:\n";
+  cerr << "0: Success.\n";
+  cerr << "1: Failed to open files.\n";
+  cerr << "2: Requested data block does not exist.\n";
   cerr << '\n';
   exit( 1 );
 }
@@ -230,7 +255,7 @@ void readArgs( int argc, char *argv[], int &filec )
     WriteUsage();
   optind = 0;
   opterr = 0;
-  while ( (c = getopt( argc, argv, "d:i:l:eo:m" )) >= 0 ) {
+  while ( (c = getopt( argc, argv, "d:i:l:eo:mk" )) >= 0 ) {
     switch ( c ) {
       case 'd': if ( optarg == NULL ||
 		     sscanf( optarg, "%d", &stopempty ) == 0 ||
@@ -246,6 +271,8 @@ void readArgs( int argc, char *argv[], int &filec )
       case 'e': erase = true;
           	break;
       case 'm': metadata = false;
+          	break;
+      case 'k': repeatkey = true;
           	break;
       case 'o': if ( optarg != NULL )
 		  outfile = optarg;
@@ -291,12 +318,12 @@ int main( int argc, char *argv[] )
     cout.rdbuf( sb );
   }
 
-  readData( sf );
+  int r = readData( sf );
 
   if ( coutb != 0 ) {
     df.close();
     cout.rdbuf( coutb );
   }
 
-  return 0;
+  return 2*r;
 }

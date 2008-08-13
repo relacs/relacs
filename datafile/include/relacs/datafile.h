@@ -42,7 +42,6 @@ namespace relacs {
 \brief Reading Ascii Data Files.
 \author Jan Benda
 \version 1.1
-\todo make the special file meta data block a copy of the first (or topmost) meta data block!
 */
 
 
@@ -59,7 +58,7 @@ public:
     DataCommentLevel=-3,
       /*! A key describing the data. */
     DataKeyLevel=-2,
-      /*! A generla description of the data file. */
+      /*! A general description of the data file (the first block of meta data). */
     DataFileLevel=-1
   };
 
@@ -143,9 +142,9 @@ public:
   bool dataLine( void ) const;
 
     /*! The number of meta data blocks in the buffer. */
-  inline int levels( void ) const { return MetaData.size() - LevelOffset; };
+  int levels( void ) const;
     /*! The number of of new meta data blocks. */
-  inline int newLevels( void ) const { return Level - LevelOffset; };
+  int newLevels( void ) const;
 
     /*! Returns a const reference to the metaData of level \a level.
         If the requested level does not exist,
@@ -165,18 +164,18 @@ public:
         If the requested level does not exist,
         an empty Options is returned. */
   Options &metaDataOptions( int level );
-    /*! Return a const reference to the special "file" meta data block. */
-  inline const StrQueue &dataFile( void ) const { return metaData( DataFileLevel ); };
-    /*! Return a const reference to the special "file" meta data block converted to Options. */
-  inline const Options &dataFileOptions( void ) const { return metaDataOptions( DataFileLevel ); };
+    /*! Return a const reference to the special "File" meta data block. */
+  const StrQueue &dataFile( void ) const;
+    /*! Return a const reference to the special "File" meta data block converted to Options. */
+  const Options &dataFileOptions( void ) const;
     /*! Return a const reference to the special "Key" meta data block. */
-  inline const StrQueue &dataKey( void ) const { return metaData( DataKeyLevel ); };
+  const StrQueue &dataKey( void ) const;
     /*! Return a const reference to the special "Key" meta data block converted to Options. */
-  inline const Options &dataKeyOptions( void ) const { return metaDataOptions( DataKeyLevel ); };
+  const Options &dataKeyOptions( void ) const;
     /*! Return a const reference to the meta data which were read within a data block. */
-  inline const StrQueue &dataComments( void ) const { return metaData( DataCommentLevel ); };
+  const StrQueue &dataComments( void ) const;
     /*! Return a const reference to the meta data which were read within a data block converted to Options. */
-  inline const Options &dataCommentsOptions( void ) const { return metaDataOptions( DataCommentLevel ); };
+  const Options &dataCommentsOptions( void ) const;
 
     /*! \c True if new meta data of level \a level where read in since the
         last call of read(). */
@@ -184,13 +183,13 @@ public:
     /*! \c True if new special "file" meta data  where read in since the
         last call of read().
         Should be \c true after the first call to read() only. */
-  inline bool newDataFile( void ) const { return newMetaData( DataFileLevel ); };
+  bool newDataFile( void ) const;
     /*! \c True if new special "key" meta data where read in since the
         last call of read(). */
-  inline bool newDataKey( void ) const { return newMetaData( DataKeyLevel ); };
+  bool newDataKey( void ) const;
     /*! \c True if new meta data within the data block where read in since the
         last call of read(). */
-  inline bool newDataComments( void ) const { return newMetaData( DataCommentLevel ); };
+  bool newDataComments( void ) const;
 
     /*! Each block of data and meta data is numbered in the order
         they are read in from the file.
@@ -202,20 +201,20 @@ public:
     /*! Each block of data and meta data is numbered in the order
         they are read in from the file.
         This function returns the number of the special "file" meta data.
-        The return value should be zero, if these meta data are present,
-        and -1 otherwise.
+        The return value should be zero since the "file" meta data are always 
+        the first meta data, if these meta data are present, and -1 otherwise.
         \sa metaDataIndex() */
-  inline int dataFileIndex( void ) const { return metaDataIndex( DataFileLevel ); };
+  int dataFileIndex( void ) const;
     /*! Each block of data and meta data is numbered in the order
         they are read in from the file.
         This function returns the number of the special "key" meta data.
         \sa metaDataIndex() */
-  inline int dataKeyIndex( void ) const { return metaDataIndex( DataKeyLevel ); };
+  int dataKeyIndex( void ) const;
     /*! Each block of data and meta data is numbered in the order
         they are read in from the file.
         This function returns the number of the special "data comment" meta data.
         \sa metaDataIndex() */
-  inline int dataCommentIndex( void ) const { return metaDataIndex( DataCommentLevel ); };
+  int dataCommentIndex( void ) const;
 
     /*! Returns the number of empty line that followed 
         the block of meta data of level \a level. */
@@ -223,62 +222,62 @@ public:
 
     /*! The number of meta data blocks of level \a level read in after
         the last call of resetMetaDataCount(). */
-  int metaDataCount( int level ) const { return Count[LevelOffset+level]; };
+  int metaDataCount( int level ) const;
     /*! The total number of meta data blocks of level \a level. */
-  int metaDataTotalCount( int level ) const { return TotalCount[LevelOffset+level]; };
+  int metaDataTotalCount( int level ) const;
     /*! Reset the count for all meta data levels. */
   void resetMetaDataCount( void );
 
     /*! Add a line \a line to the meta data of level \a level. */
   void add( int level, const string &line );
     /*! Add a line \a line to the special "file" meta data. */
-  inline void addFile( const string &line ) { add( DataFileLevel, line ); };
+  void addFile( const string &line );
     /*! Add a line \a line to the special "data comments" meta data. */
-  inline void addComment( const string &line ) { add( DataCommentLevel, line ); };
+  void addComment( const string &line );
     /*! Add a line \a line to the special "data comments" meta data,
         and mark them as new. */
-  inline void addNewComment( const string &line ) { add( DataCommentLevel, line ); MetaData[ 0 ].New = true; MetaData[ 0 ].Changed = true; };
+  void addNewComment( const string &line );
     /*! Add several lines of text \a sq to the meta data of level \a level. */
   void add( int level, const StrQueue &sq );
     /*! Add several lines of text \a sq to the special "file" meta data. */
-  inline void addFile( const StrQueue &sq ) { add( DataFileLevel, sq ); };
+  void addFile( const StrQueue &sq );
     /*! Add several lines of text \a sq to the special "data comments" meta data. */
-  inline void addComment( const StrQueue &sq ) { add( DataCommentLevel, sq ); };
+  void addComment( const StrQueue &sq );
 
     /*! Insert a line \a line at the beginning of the meta data of level \a level. */
   void insert( int level, const string &line );
     /*! Insert a line \a line at the beginning of the special "file" meta data. */
-  inline void insertFile( const string &line ) { insert( DataFileLevel, line ); };
+  void insertFile( const string &line );
     /*! Insert a line \a line at the beginning of the special "data comments" meta data. */
-  inline void insertComment( const string &line ) { insert( DataCommentLevel, line ); };
+  void insertComment( const string &line );
     /*! Insert several lines of text \a sq at the beginning of the meta data of level \a level. */
   void insert( int level, const StrQueue &sq );
     /*! Insert several lines of text \a sq at the beginning of the special "file" meta data. */
-  inline void insertFile( const StrQueue &sq ) { insert( DataFileLevel, sq ); };
+  void insertFile( const StrQueue &sq );
     /*! Insert several lines of text \a sq at the beginning of the special "data comments" meta data. */
-  inline void insertComment( const StrQueue &sq ) { insert( DataCommentLevel, sq ); };
+  void insertComment( const StrQueue &sq );
 
     /*! The current line. */
-  string line( void ) const { return Line; };
+  string line( void ) const;
     /*! The current line. */
-  const string &line( void ) { return Line; };
+  const string &line( void );
     /*! The current line split up in its data items. */
   void splitLine( StrQueue &items, const string separators=Str::WhiteSpace ) const;
     /*! The number of read in lines. */
-  int lineNum( void ) const { return LineNum; };
+  int lineNum( void ) const;
     /*! The number of data lines read in by the last call of readData(). */
-  int dataLines( void ) const { return DataLines; };
+  int dataLines( void ) const;
     /*! The number of empty lines following the last read in block of data. */
-  int emptyLines( void ) const { return EmptyLines; };
+  int emptyLines( void ) const;
 
     /*! The current table key. */
   const TableKey &key( void ) const;
     /*! Returns the column index whose identifier string in the key()
         matches \a pattern. The first column is 0. */
-  inline int column( const string &pattern ) const { return key().column( pattern ); };
+  int column( const string &pattern ) const;
 
-  TableData &data( void ) { return Data; };
-  const TableData &data( void ) const { return Data; };
+  inline TableData &data( void ) { return Data; };
+  inline const TableData &data( void ) const { return Data; };
   inline double data( int col, int row ) const { return Data( col, row ); };
   inline double &data( int col, int row ) { return Data( col, row ); };
   inline double data( const string &pattern, int row ) const { int c = key().column( pattern ); return c < 0 ? HUGE_VAL : Data( c, row ); };
@@ -287,22 +286,22 @@ public:
   inline double operator()( const string &pattern, int row ) const { int c = key().column( pattern ); return c < 0 ? HUGE_VAL : Data( c, row ); };
   inline ArrayD &col( int col ) { return Data.col( col ); };
   inline ArrayD &col( const string &pattern ) { int c = key().column( pattern ); if ( c < 0 ) { Dummya.clear(); return Dummya; } else return Data.col( c ); };
-  bool newData( void ) const { return ( DataLines > 0 ); };
+  bool newData( void ) const;
 
     /*! \c True if the state of the file is good for i/o operations. */
-  inline bool good( void ) const { return istream::good(); };
+  bool good( void ) const;
     /*! \c True if the end of the file is reached. */
-  inline bool eof( void ) const { return istream::eof(); };
+  bool eof( void ) const;
     /*! \c True if an error other than an End-Of-File occured. */
-  inline bool fail( void ) const { return istream::fail(); };
+  bool fail( void ) const;
     /*! \c True if the state of the file is bad, 
         i.e. an unrecoverable error has occured. */
-  inline bool bad( void ) const { return istream::bad(); };
+  bool bad( void ) const;
   
     /*! The string indicating a comment. */
-  string comment( void ) const { return Comment; };
+  string comment( void ) const;
     /*! Set the string for indicating comments to \a comment. */
-  void setComment( const string &comment ) { Comment = comment; };
+  void setComment( const string &comment );
 
 
 private:
@@ -319,17 +318,11 @@ private:
 
   struct MetaD
   {
-    MetaD( void ) : Data( 0 ), New( false ), Num( -1 ), Empty( 0 ), 
-		    Opt( 0 ), Changed( false ) {};
-    MetaD( StrQueue *sq, bool n=false, int num=-1, int e=0, bool ch=false ) 
-      : Data( sq ), New( n ), Num( num ), Empty( e ), 
-	Opt( 0 ), Changed( ch ) {};
-    MetaD( const MetaD &md ) 
-      : Data( md.Data ), New( md.New ), Num( md.Num ), Empty( md.Empty ), 
-	Opt( md.Opt ), Changed( md.Changed ) {};
-    ~MetaD( void ) {};
-    void clear( void )
-    { if ( Data != 0 ) Data->clear(); if ( Opt != 0 ) { Opt->clear(); Changed = true; } };
+    MetaD( void );
+    MetaD( StrQueue *sq, bool n=false, int num=-1, int e=0, bool ch=false );
+    MetaD( const MetaD &md );
+    ~MetaD( void );
+    void clear( void );
     StrQueue *Data;
     bool New;
     int Num;

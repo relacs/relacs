@@ -179,14 +179,20 @@ bool DataFile::readBlock( void )
 
   readEmptyLines();
 
-  if ( sq->empty() )
+  if ( sq->empty() ) {
+    delete sq;
     return false;
+  }
 
   string key = "Key";
   int p = sq->front().first() + Comment.size();
   if ( sq->front().substr( p, key.size() ) == key ) {
-    delete MetaData[ LevelOffset + DataKeyLevel ].Data;
+    if ( MetaData[ LevelOffset + DataKeyLevel ].Data != 0 )
+      delete MetaData[ LevelOffset + DataKeyLevel ].Data;
     MetaData[ LevelOffset + DataKeyLevel ].Data = sq;
+    if ( MetaData[ LevelOffset + DataKeyLevel ].Opt != 0 )
+      delete MetaData[ LevelOffset + DataKeyLevel ].Opt;
+    MetaData[ LevelOffset + DataKeyLevel ].Opt = 0;
     MetaData[ LevelOffset + DataKeyLevel ].New = true;
     MetaData[ LevelOffset + DataKeyLevel ].Num = BlockNum;
     MetaData[ LevelOffset + DataKeyLevel ].Empty = EmptyLines;
@@ -195,17 +201,18 @@ bool DataFile::readBlock( void )
     TotalCount[ LevelOffset + DataKeyLevel ]++;
     KeyChanged = true;
   }
-  else if ( BlockNum == 0 && sq->front().find( "file" ) >= 0 ) {
-    MetaData[ LevelOffset + DataFileLevel ].Data->add( *sq );
-    MetaData[ LevelOffset + DataFileLevel ].New = true;
-    MetaData[ LevelOffset + DataFileLevel ].Num = BlockNum;
-    MetaData[ LevelOffset + DataFileLevel ].Empty = EmptyLines;
-    MetaData[ LevelOffset + DataFileLevel ].Changed = true;
-    delete sq;
-    Count[ LevelOffset + DataFileLevel ]++;
-    TotalCount[ LevelOffset + DataFileLevel ]++;
-  }
   else {
+    // the first block of meta data is copied to 
+    // the special "File" meta data block:
+    if ( BlockNum == 0 ) {
+      MetaData[ LevelOffset + DataFileLevel ].Data->add( *sq );
+      MetaData[ LevelOffset + DataFileLevel ].New = true;
+      MetaData[ LevelOffset + DataFileLevel ].Num = BlockNum;
+      MetaData[ LevelOffset + DataFileLevel ].Empty = EmptyLines;
+      MetaData[ LevelOffset + DataFileLevel ].Changed = true;
+      Count[ LevelOffset + DataFileLevel ]++;
+      TotalCount[ LevelOffset + DataFileLevel ]++;
+    }
     // erase same level meta data:
     if ( Level < (int)MetaData.size() ) {
       if ( MetaData[Level].Data != 0 )
@@ -260,39 +267,6 @@ int DataFile::readMetaData( void )
 }
 
 
-void DataFile::resetMetaDataCount( void )
-{
-  for ( int k=Level-1; k >= LevelOffset; k-- )
-    Count[k] = 0;
-  Count[ LevelOffset + DataCommentLevel ] = 0;
-  Count[ LevelOffset + DataKeyLevel ] = 0;
-}
-
-
-void DataFile::scanDataLine( void )
-{
-  if ( Data.maxRows() == 0 ) {
-    Data.resize( Line.words( Str::WhiteSpace, Comment ), 50000 );
-  }
-
-  if ( Data.rows() >= Data.maxRows() ) {
-    Data.reserve( 3*Data.maxRows()/2 );
-  }
-
-  int index = 0, word, k;
-  for ( k=0; k<Data.columns() && index>=0; k++ ) {
-    word = Line.nextWord( index, Str::WhiteSpace, Comment );
-
-    if ( word >= 0 )
-      Data.push( k, Line.number( -1.0, word ) );
-  }
-  for ( ; k<Data.columns(); k++ )
-    Data.push( k, 0.0 );
-
-  ++Data;
-}
-
-
 bool DataFile::initData( void )
 {
   MetaData[ LevelOffset + DataCommentLevel ].clear();
@@ -343,6 +317,30 @@ bool DataFile::readDataLine( int stopempty )
 }
 
 
+void DataFile::scanDataLine( void )
+{
+  if ( Data.maxRows() == 0 ) {
+    Data.resize( Line.words( Str::WhiteSpace, Comment ), 50000 );
+  }
+
+  if ( Data.rows() >= Data.maxRows() ) {
+    Data.reserve( 3*Data.maxRows()/2 );
+  }
+
+  int index = 0, word, k;
+  for ( k=0; k<Data.columns() && index>=0; k++ ) {
+    word = Line.nextWord( index, Str::WhiteSpace, Comment );
+
+    if ( word >= 0 )
+      Data.push( k, Line.number( -1.0, word ) );
+  }
+  for ( ; k<Data.columns(); k++ )
+    Data.push( k, 0.0 );
+
+  ++Data;
+}
+
+
 int DataFile::readData( int stopempty, ScanDataFunc rf )
 {
   if ( ! initData() )
@@ -378,6 +376,38 @@ bool DataFile::getline( void )
     ++LineNum;
 
   return good();
+}
+
+
+bool DataFile::emptyLine( void ) const
+{
+  return Line.empty();
+}
+
+
+bool DataFile::metaLine( void ) const
+{
+  int p = Line.first();
+  return ( p >= 0 && Line.substr( p, Comment.size() ) == Comment );
+}
+
+
+bool DataFile::dataLine( void ) const
+{
+  int p = Line.first();
+  return ( p >= 0 && Line.substr( p, Comment.size() ) != Comment );
+}
+
+
+int DataFile::levels( void ) const
+{
+  return MetaData.size() - LevelOffset;
+}
+
+
+int DataFile::newLevels( void ) const
+{
+  return Level - LevelOffset;
 }
 
 
@@ -444,6 +474,41 @@ Options &DataFile::metaDataOptions( int level )
   return *MetaData[ level ].Opt;
 }
 
+const StrQueue &DataFile::dataFile( void ) const
+{
+  return metaData( DataFileLevel );
+}
+
+
+const Options &DataFile::dataFileOptions( void ) const
+{
+  return metaDataOptions( DataFileLevel );
+}
+
+
+const StrQueue &DataFile::dataKey( void ) const
+{
+  return metaData( DataKeyLevel );
+}
+
+
+const Options &DataFile::dataKeyOptions( void ) const
+{
+  return metaDataOptions( DataKeyLevel );
+}
+
+
+const StrQueue &DataFile::dataComments( void ) const
+{
+  return metaData( DataCommentLevel );
+}
+
+
+const Options &DataFile::dataCommentsOptions( void ) const
+{
+  return metaDataOptions( DataCommentLevel );
+}
+
 
 bool DataFile::newMetaData( int level ) const
 {
@@ -452,6 +517,24 @@ bool DataFile::newMetaData( int level ) const
     return false;
   
   return MetaData[ level ].New;
+}
+
+
+bool DataFile::newDataFile( void ) const
+{
+  return newMetaData( DataFileLevel );
+}
+
+
+bool DataFile::newDataKey( void ) const
+{
+  return newMetaData( DataKeyLevel );
+}
+
+
+bool DataFile::newDataComments( void ) const
+{
+  return newMetaData( DataCommentLevel );
 }
 
 
@@ -465,6 +548,24 @@ int DataFile::metaDataIndex( int level ) const
 }
 
 
+int DataFile::dataFileIndex( void ) const
+{
+  return metaDataIndex( DataFileLevel );
+}
+
+
+int DataFile::dataKeyIndex( void ) const
+{
+  return metaDataIndex( DataKeyLevel );
+}
+
+
+int DataFile::dataCommentIndex( void ) const
+{
+  return metaDataIndex( DataCommentLevel );
+}
+
+
 int DataFile::emptyLines( int level ) const
 {
   level += LevelOffset;
@@ -472,6 +573,27 @@ int DataFile::emptyLines( int level ) const
     return 0;
   
   return MetaData[ level ].Empty;
+}
+
+
+int DataFile::metaDataCount( int level ) const
+{
+  return Count[LevelOffset+level];
+}
+
+
+int DataFile::metaDataTotalCount( int level ) const
+{
+  return TotalCount[LevelOffset+level];
+}
+
+
+void DataFile::resetMetaDataCount( void )
+{
+  for ( int k=Level-1; k >= LevelOffset; k-- )
+    Count[k] = 0;
+  Count[ LevelOffset + DataCommentLevel ] = 0;
+  Count[ LevelOffset + DataKeyLevel ] = 0;
 }
 
 
@@ -486,6 +608,24 @@ void DataFile::add( int level, const string &line )
 }
 
 
+void DataFile::addFile( const string &line )
+{
+  add( DataFileLevel, line );
+}
+
+
+void DataFile::addComment( const string &line )
+{
+  add( DataCommentLevel, line );
+}
+
+
+void DataFile::addNewComment( const string &line )
+{
+  add( DataCommentLevel, line ); MetaData[ 0 ].New = true; MetaData[ 0 ].Changed = true;
+}
+
+
 void DataFile::add( int level, const StrQueue &sq )
 {
   level += LevelOffset;
@@ -494,6 +634,18 @@ void DataFile::add( int level, const StrQueue &sq )
   
   MetaData[ level ].Data->add( sq );
   MetaData[ level ].Changed = true;
+}
+
+
+void DataFile::addFile( const StrQueue &sq )
+{
+  add( DataFileLevel, sq );
+}
+
+
+void DataFile::addComment( const StrQueue &sq )
+{
+  add( DataCommentLevel, sq );
 }
 
 
@@ -508,6 +660,18 @@ void DataFile::insert( int level, const string &line )
 }
 
 
+void DataFile::insertFile( const string &line )
+{
+  insert( DataFileLevel, line );
+}
+
+
+void DataFile::insertComment( const string &line )
+{
+  insert( DataCommentLevel, line );
+}
+
+
 void DataFile::insert( int level, const StrQueue &sq )
 {
   level += LevelOffset;
@@ -519,23 +683,27 @@ void DataFile::insert( int level, const StrQueue &sq )
 }
 
 
-bool DataFile::emptyLine( void ) const
+void DataFile::insertFile( const StrQueue &sq )
 {
-  return Line.empty();
+  insert( DataFileLevel, sq );
 }
 
 
-bool DataFile::metaLine( void ) const
+void DataFile::insertComment( const StrQueue &sq )
 {
-  int p = Line.first();
-  return ( p >= 0 && Line.substr( p, Comment.size() ) == Comment );
+  insert( DataCommentLevel, sq );
 }
 
 
-bool DataFile::dataLine( void ) const
+string DataFile::line( void ) const
 {
-  int p = Line.first();
-  return ( p >= 0 && Line.substr( p, Comment.size() ) != Comment );
+  return Line;
+}
+
+
+const string &DataFile::line( void )
+{
+  return Line;
 }
 
 
@@ -554,6 +722,24 @@ void DataFile::splitLine( StrQueue &items, const string separators ) const
 }
 
 
+int DataFile::lineNum( void ) const
+{
+  return LineNum;
+}
+
+
+int DataFile::dataLines( void ) const
+{
+  return DataLines;
+}
+
+
+int DataFile::emptyLines( void ) const
+{
+  return EmptyLines;
+}
+
+
 const TableKey &DataFile::key( void ) const
 {
   if ( KeyChanged ) {
@@ -564,6 +750,104 @@ const TableKey &DataFile::key( void ) const
     KeyChanged = false;
   }
   return Key;
+}
+
+
+int DataFile::column( const string &pattern ) const
+{
+  return key().column( pattern );
+}
+
+
+bool DataFile::newData( void ) const
+{
+  return ( DataLines > 0 );
+}
+
+
+bool DataFile::good( void ) const
+{
+  return istream::good();
+}
+
+
+bool DataFile::eof( void ) const
+{
+  return istream::eof();
+}
+
+
+bool DataFile::fail( void ) const
+{
+  return istream::fail();
+}
+
+
+bool DataFile::bad( void ) const
+{
+  return istream::bad();
+}
+
+
+string DataFile::comment( void ) const
+{
+  return Comment;
+}
+
+
+void DataFile::setComment( const string &comment )
+{
+  Comment = comment;
+}
+
+
+DataFile::MetaD::MetaD( void )
+  : Data( 0 ),
+    New( false ),
+    Num( -1 ),
+    Empty( 0 ), 
+    Opt( 0 ),
+    Changed( false )
+{
+}
+
+
+DataFile::MetaD::MetaD( StrQueue *sq, bool n, int num,
+			int e, bool ch ) 
+  : Data( sq ),
+    New( n ),
+    Num( num ),
+    Empty( e ), 
+    Opt( 0 ),
+    Changed( ch )
+{
+}
+
+
+DataFile::MetaD::MetaD( const DataFile::MetaD::MetaD &md ) 
+  : Data( md.Data ),
+    New( md.New ),
+    Num( md.Num ),
+    Empty( md.Empty ), 
+    Opt( md.Opt ),
+    Changed( md.Changed )
+{
+}
+
+
+DataFile::MetaD::~MetaD( void )
+{
+}
+
+
+void DataFile::MetaD::clear( void )
+{ 
+  if ( Data != 0 )
+    Data->clear();
+  if ( Opt != 0 ) {
+    Opt->clear();
+    Changed = true;
+  }
 }
 
 
