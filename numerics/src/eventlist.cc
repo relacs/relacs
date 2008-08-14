@@ -23,6 +23,7 @@
 #include <iomanip>
 #include <algorithm>
 #include <relacs/array.h>
+#include <relacs/map.h>
 #include <relacs/sampledata.h>
 #include <relacs/stats.h>
 #include <relacs/kernel.h>
@@ -862,6 +863,34 @@ double EventList::intervalAt( double time, double &sd ) const
 }
 
 
+int EventList::intervals( double tbegin, double tend,
+			  vector<MapD> &intrvls, int pos ) const
+{
+  intrvls.resize( size() );
+  int n = 0;
+  int k = 0;
+  for ( const_iterator i = begin(); i != end(); ++i ) {
+    n += (*i)->intervals( tbegin, tend, intrvls[k++], pos );
+  }
+  return n;
+}
+
+
+ostream &EventList::saveIntervals( double tbegin, double tend, ostream &os,
+				   int pos, double tfac, int width,
+				   int prec, char frmt, int sep,
+				   const string &noevents ) const
+{
+  for ( const_iterator i = begin(); i != end(); ++i ) {
+    (*i)->saveIntervals( tbegin, tend, os, pos, tfac,
+			 width, prec, frmt, noevents );
+    for ( int k=0; k<sep; k++ )
+      os << '\n';
+  }
+  return os;
+}
+
+
 double EventList::frequency( double tbegin, double tend ) const
 {
   double sumisi = 0.0;
@@ -1053,6 +1082,34 @@ double EventList::frequencyAt( double time, double &sd ) const
   sd = meanf * ::sqrt( x );
 
   return meanf;
+}
+
+
+int EventList::frequencies( double tbegin, double tend,
+			    vector<MapD> &freqs, int pos ) const
+{
+  freqs.resize( size() );
+  int n = 0;
+  int k = 0;
+  for ( const_iterator i = begin(); i != end(); ++i ) {
+    n += (*i)->frequencies( tbegin, tend, freqs[k++], pos );
+  }
+  return n;
+}
+
+
+ostream &EventList::saveFrequencies( double tbegin, double tend, ostream &os,
+				     int pos, double tfac, int width,
+				     int prec, char frmt, int sep,
+				     const string &noevents ) const
+{
+  for ( const_iterator i = begin(); i != end(); ++i ) {
+    (*i)->saveFrequencies( tbegin, tend, os, pos, tfac,
+			   width, prec, frmt, noevents );
+    for ( int k=0; k<sep; k++ )
+      os << '\n';
+  }
+  return os;
 }
 
 

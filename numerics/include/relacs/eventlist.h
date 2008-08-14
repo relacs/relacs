@@ -36,6 +36,8 @@ namespace relacs {
 class Kernel;
 template < typename T > class Array;
 typedef Array< double > ArrayD;
+template < typename T > class Map;
+typedef Map< double > MapD;
 template < typename T > class SampleData;
 typedef SampleData< double > SampleDataD;
 
@@ -420,6 +422,34 @@ public:
         In \a sd the standard deviation of the intervals is returned. */
   double intervalAt( double time, double &sd ) const; 
 
+    /*! Returns in \a intrvls[i].x() the position of each interevent interval
+        between \a tbegin and \a tend, and in \a intrvls[i].y() the
+	interevent interval for each trial \a i.
+        The position of the interevent interval is the position of the left
+	event (\pos = -1, default), the position of the right event 
+	(\a pos = 1), or in between the left and the right event
+	(\a pos = 0).
+        \return the number of interevent intervals. */
+  int intervals( double tbegin, double tend,
+		 vector<MapD> &intrvls, int pos=-1 ) const;
+    /*! Write into stream \a os the position of each interevent interval
+        between \a tbegin and \a tend multiplied by \a tfac in the first column,
+	and the interevent interval in the second column.
+        The position of the interevent interval is the position of the left
+	event (\pos = -1, default), the position of the right event 
+	(\a pos = 1), or in between the left and the right event
+	(\a pos = 0).
+	Both the position and the intervals are
+	formatted as specified by \a width, \a prec, and \a frmt.
+        The individual EventData are separated by \a sep blank lines.
+        If there aren't any intervals and \a noevents isn't empty, than
+        \a noevents is printed as the only output once in each column.
+        \return the number of interevent intervals. */
+  ostream &saveIntervals( double tbegin, double tend, ostream &os, int pos=-1,
+			  double tfac=1.0, int width=0, int prec=5,
+			  char frmt='g', int sep=1,
+			  const string &noevents="" ) const;
+
     /*! Mean event frequency (Hz) as the inverse of the mean event interval
         of all event intervals
 	between time \a tbegin and time \a tend seconds. */
@@ -462,6 +492,34 @@ public:
         \a time seconds.
         In \a sd the standard deviation in Hz is returned. */
   double frequencyAt( double time, double &sd ) const; 
+
+    /*! Returns in \a freqs[i].x() the position of each interevent interval
+        between \a tbegin and \a tend, and in \a freqs[i].y() 1 divided by
+	that interevent interval for each trial \a i.
+        The position of the interevent interval is the position of the left
+	event (\pos = -1, default), the position of the right event 
+	(\a pos = 1), or in between the left and the right event
+	(\a pos = 0).
+        \return the number of interevent intervals. */
+  int frequencies( double tbegin, double tend,
+		   vector<MapD> &freqs, int pos=-1 ) const;
+    /*! Write into stream \a os the position of each interevent interval
+        between \a tbegin and \a tend multiplied by \a tfac in the first column,
+	and 1 divided by that interevent interval in the second column.
+        The position of the interevent interval is the position of the left
+	event (\pos = -1, default), the position of the right event 
+	(\a pos = 1), or in between the left and the right event
+	(\a pos = 0).
+	Both the position and the intervals are
+	formatted as specified by \a width, \a prec, and \a frmt.
+        The individual EventData are separated by \a sep blank lines.
+        If there aren't any intervals and \a noevents isn't empty, than
+        \a noevents is printed as the only output once in each column.
+        \return the number of interevent intervals. */
+  ostream &saveFrequencies( double tbegin, double tend, ostream &os,
+			    int pos=-1, double tfac=1.0, int width=0,
+			    int prec=5, char frmt='g', int sep=1,
+			    const string &noevents="" ) const;
 
     /*! Compute a histogram of the event intervals
         between time \a tbegin and time \a tend seconds.

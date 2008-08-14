@@ -34,9 +34,12 @@ using namespace std;
 
 namespace relacs {
 
+template < typename T > class Map;
+typedef Map< double > MapD;
 
 template < typename T > class SampleData;
 typedef SampleData< double > SampleDataD;
+
 class Kernel;
 
 
@@ -745,6 +748,40 @@ public:
   void addCyclicInterval( SampleDataD &intervals, int &trial,
 			  double time=0.0 ) const;
 
+    /*! Returns in \a intrvls.x() the position of each interevent interval
+        between \a tbegin and \a tend, and in \a intrvls.y() the
+	interevent interval.
+        The position of the interevent interval is the position of the left
+	event (\pos = -1, default), the position of the right event 
+	(\a pos = 1), or in between the left and the right event
+	(\a pos = 0).
+        \return the number of interevent intervals. */
+  int intervals( double tbegin, double tend, MapD &intrvls, int pos=-1 ) const;
+    /*! Adds to \a intrvls.x() the position of each interevent interval
+        between \a tbegin and \a tend, and to \a intrvls.y() the
+	interevent interval.
+        The position of the interevent interval is the position of the left
+	event (\pos = -1, default), the position of the right event 
+	(\a pos = 1), or in between the left and the right event
+	(\a pos = 0).
+        \return the number of interevent intervals. */
+  int addIntervals( double tbegin, double tend, MapD &intrvls, int pos=-1 ) const;
+    /*! Write into stream \a os the position of each interevent interval
+        between \a tbegin and \a tend multiplied by \a tfac in the first column,
+	and the interevent interval in the second column.
+        The position of the interevent interval is the position of the left
+	event (\pos = -1, default), the position of the right event 
+	(\a pos = 1), or in between the left and the right event
+	(\a pos = 0).
+	Both the position and the intervals are
+	formatted as specified by \a width, \a prec, and \a frmt.
+        If there aren't any intervals and \a noevents isn't empty, than
+        \a noevents is printed as the only output once in each column.
+        \return the number of interevent intervals. */
+  int saveIntervals( double tbegin, double tend, ostream &os, int pos=-1,
+		     double tfac=1.0, int width=0, int prec=5,
+		     char frmt='g', const string &noevents="" ) const;
+
     /*! Mean event frequency (Hz) as the inverse of the mean event interval
         of all event intervals between time \a tbegin and
 	time \a tend seconds. 
@@ -769,7 +806,7 @@ public:
   double frequency( int n, double *sd=0 ) const;
     /*! Frequency (Hz) as the inverse of the event interval 
         at time \a time (seconds). */
-  double frequencyAt( double time ) const; 
+  double frequencyAt( double time ) const;
 
     /*! The time course of the instantaneous frequency 1/ISI
         is returned in \a rate with \a rate.stepsize() in seconds.
@@ -815,6 +852,41 @@ public:
 	seconds relative to time \a time (seconds) are considered. */
   void addCyclicFrequency( SampleDataD &rate, SampleDataD &period, 
 			   int &trial, double time=0.0 ) const;
+
+    /*! Returns in \a freqs.x() the position of each interevent interval
+        between \a tbegin and \a tend, and in \a freqs.y() 1 divided
+        by that interevent interval (the frequency).
+        The position of the interevent interval is the position of the left
+	event (\pos = -1, default), the position of the right event 
+	(\a pos = 1), or in between the left and the right event
+	(\a pos = 0).
+        \return the number of interevent intervals. */
+  int frequencies( double tbegin, double tend, MapD &freqs, int pos=-1 ) const;
+    /*! Adds to \a freqs.x() the position of each interevent interval
+        between \a tbegin and \a tend, and to \a freqs.y() 1 divided
+        by that interevent interval (the frequency).
+        The position of the interevent interval is the position of the left
+	event (\pos = -1, default), the position of the right event 
+	(\a pos = 1), or in between the left and the right event
+	(\a pos = 0).
+        \return the number of interevent intervals. */
+  int addFrequencies( double tbegin, double tend, MapD &freqs, int pos=-1 ) const;
+    /*! Write into stream \a os the position of each interevent interval
+        between \a tbegin and \a tend multiplied by \a tfac in the first column,
+	and 1 divided by that interevent interval (the frequency) in 
+	the second column.
+        The position of the interevent interval is the position of the left
+	event (\pos = -1, default), the position of the right event 
+	(\a pos = 1), or in between the left and the right event
+	(\a pos = 0).
+	Both the position and the frequency are
+	formatted as specified by \a width, \a prec, and \a frmt.
+        If there aren't any events and \a noevents isn't empty, than
+        \a noevents is printed as the only output once in each column.
+        \return the number of interevent intervals. */
+  int saveFrequencies( double tbegin, double tend, ostream &os, int pos=-1,
+		       double tfac=1.0, int width=0, int prec=5,
+		       char frmt='g', const string &noevents="" ) const;
 
     /*! Compute interval histogram \a hist for the
         event intervals between time \a tbegin and 
@@ -917,7 +989,7 @@ public:
         If there aren't any events and \a noevents isn't empty, than
         \a noevents is printed as the only output. */
   void saveText( ostream &os, double tfac=1.0, int width=0, int prec=5,
-		 char frmt='g', const string &nospikes="" ) const;
+		 char frmt='g', const string &noevents="" ) const;
     /*! Write event times as text in stream \a s.
         Two columns are written.
 	The first column is the event time is multiplied by \a tfac, and is

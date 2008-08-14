@@ -22,6 +22,7 @@
 #include <cmath>
 #include <iomanip>
 #include <relacs/sampledata.h>
+#include <relacs/map.h>
 #include <relacs/kernel.h>
 #include <relacs/stats.h>
 #include <relacs/eventdata.h>
@@ -2336,6 +2337,94 @@ void EventData::addCyclicInterval( SampleDataD &intervals, int &trials,
 }
 
 
+int EventData::intervals( double tbegin, double tend,
+			  MapD &intrvls, int pos ) const
+{
+  intrvls.clear();
+  return addIntervals( tbegin, tend, intrvls, pos );
+}
+
+
+int EventData::addIntervals( double tbegin, double tend,
+			     MapD &intrvls, int pos ) const
+{
+  long n = next( tbegin );
+  long p = previous( tend );
+  
+  if ( p <= n || p < 0 || tend <= tbegin )
+    return 0;
+
+  intrvls.reserve( intrvls.size() + p-n );
+
+  if ( pos < 0 ) {
+    for ( int k=n+1; k<=p; k++ )
+      intrvls.push( (*this)[k-1], (*this)[k]-(*this)[k-1] );
+  }
+  else if ( pos > 0 ) {
+    for ( int k=n+1; k<=p; k++ )
+      intrvls.push( (*this)[k], (*this)[k]-(*this)[k-1] );
+  }
+  else {
+    for ( int k=n+1; k<=p; k++ )
+      intrvls.push( 0.5*((*this)[k-1]+(*this)[k]), (*this)[k]-(*this)[k-1] );
+  }
+
+  return p-n;
+}
+
+
+int EventData::saveIntervals( double tbegin, double tend, ostream &os,
+			      int pos, double tfac, int width,
+			      int prec, char frmt,
+			      const string &noevents ) const
+{
+  long n = next( tbegin );
+  long p = previous( tend );
+
+  if ( width < 0 )
+    os.setf( ios::left, ios::adjustfield );
+  else
+    os.unsetf( ios::adjustfield );
+  width = ::abs( width );
+
+  if ( p <= n || p < 0 || tend <= tbegin ) {
+    os << setw( width ) << noevents << "  "
+       << setw( width ) << noevents << '\n';
+    return 0;
+  }
+
+  if ( frmt == 'f' || frmt == 'F' )
+    os.setf( ios::fixed, ios::floatfield );
+  else if ( frmt == 'e' || frmt == 'E' )
+    os.setf( ios::scientific, ios::floatfield );
+  else
+    os.unsetf( ios::floatfield );
+
+  if ( frmt == 'F' || frmt == 'E' || frmt == 'G' )
+    os.setf( ios::uppercase );
+
+  os << setprecision( prec ); 
+
+  if ( pos < 0 ) {
+    for ( int k=n+1; k<=p; k++ )
+      os << setw( width ) << (*this)[k-1] * tfac << "  "
+	 << setw( width ) << (*this)[k]-(*this)[k-1] << '\n';
+  }
+  else if ( pos > 0 ) {
+    for ( int k=n+1; k<=p; k++ )
+      os << setw( width ) << (*this)[k] * tfac << "  "
+	 << setw( width ) << (*this)[k]-(*this)[k-1] << '\n';
+  }
+  else {
+    for ( int k=n+1; k<=p; k++ )
+      os << setw( width ) << 0.5*((*this)[k-1]+(*this)[k]) * tfac << "  "
+	 << setw( width ) << (*this)[k]-(*this)[k-1] << '\n';
+  }
+
+  return p-n;
+}
+
+
 double EventData::frequency( double tbegin, double tend, 
 			     double *sd ) const
 {
@@ -2501,6 +2590,94 @@ void EventData::addCyclicFrequency( SampleDataD &rate, SampleDataD &period,
     rate[i] += ( 1.0/T - rate[i] )/trials;
     period[i] += ( T - period[i] )/trials;
   }
+}
+
+
+int EventData::frequencies( double tbegin, double tend,
+			    MapD &freqs, int pos ) const
+{
+  freqs.clear();
+  return addFrequencies( tbegin, tend, freqs, pos );
+}
+
+
+int EventData::addFrequencies( double tbegin, double tend,
+			       MapD &freqs, int pos ) const
+{
+  long n = next( tbegin );
+  long p = previous( tend );
+  
+  if ( p <= n || p < 0 || tend <= tbegin )
+    return 0;
+
+  freqs.reserve( freqs.size() + p-n );
+
+  if ( pos < 0 ) {
+    for ( int k=n+1; k<=p; k++ )
+      freqs.push( (*this)[k-1], 1.0/((*this)[k]-(*this)[k-1]) );
+  }
+  else if ( pos > 0 ) {
+    for ( int k=n+1; k<=p; k++ )
+      freqs.push( (*this)[k], 1.0/((*this)[k]-(*this)[k-1]) );
+  }
+  else {
+    for ( int k=n+1; k<=p; k++ )
+      freqs.push( 0.5*((*this)[k-1]+(*this)[k]), 1.0/((*this)[k]-(*this)[k-1]) );
+  }
+
+  return p-n;
+}
+
+
+int EventData::saveFrequencies( double tbegin, double tend, ostream &os,
+				int pos, double tfac, int width,
+				int prec, char frmt,
+				const string &noevents ) const
+{
+  long n = next( tbegin );
+  long p = previous( tend );
+
+  if ( width < 0 )
+    os.setf( ios::left, ios::adjustfield );
+  else
+    os.unsetf( ios::adjustfield );
+  width = ::abs( width );
+
+  if ( p <= n || p < 0 || tend <= tbegin ) {
+    os << setw( width ) << noevents << "  "
+       << setw( width ) << noevents << '\n';
+    return 0;
+  }
+
+  if ( frmt == 'f' || frmt == 'F' )
+    os.setf( ios::fixed, ios::floatfield );
+  else if ( frmt == 'e' || frmt == 'E' )
+    os.setf( ios::scientific, ios::floatfield );
+  else
+    os.unsetf( ios::floatfield );
+
+  if ( frmt == 'F' || frmt == 'E' || frmt == 'G' )
+    os.setf( ios::uppercase );
+
+  os << setprecision( prec ); 
+
+  if ( pos < 0 ) {
+    for ( int k=n+1; k<=p; k++ )
+      os << setw( width ) << (*this)[k-1] * tfac << "  "
+	 << setw( width ) << 1.0/((*this)[k]-(*this)[k-1]) << '\n';
+  }
+  else if ( pos > 0 ) {
+    for ( int k=n+1; k<=p; k++ )
+      os << setw( width ) << (*this)[k] * tfac << "  "
+	 << setw( width ) << 1.0/((*this)[k]-(*this)[k-1]) << '\n';
+  }
+  else {
+    for ( int k=n+1; k<=p; k++ )
+      os << setw( width ) << 0.5*((*this)[k-1]+(*this)[k]) * tfac << "  "
+	 << setw( width ) << 1.0/((*this)[k]-(*this)[k-1]) << '\n';
+  }
+
+  return p-n;
 }
 
 
