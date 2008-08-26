@@ -185,14 +185,47 @@ void analyseCor( ArrayD &xdata, ArrayD &ydata, ArrayD &sig, int page, TableKey &
     lineFit( xdata, ydata, sig, b, bu, m, mu, chisq );
   else
     lineFit( xdata, ydata, b, bu, m, mu, chisq );
+  double q = gammaQ( 0.5*ydata.size(), 0.5*chisq );
 
   if ( outformat.contains( 'b' ) ) {
     statskey.setNumber( "linear regression>b", b ).setUnit( yunit );
-    statskey.setNumber( "linear regression>bsd", bu ).setUnit( yunit );
+    statskey.setNumber( "linear regression>b>sd", bu ).setUnit( yunit );
   }
   if ( outformat.contains( 'm' ) ) {
     statskey.setNumber( "linear regression>m", m ).setUnit( yunit + "/" + xunit );
-    statskey.setNumber( "linear regression>msd", mu ).setUnit( yunit + "/" + xunit );
+    statskey.setNumber( "linear regression>m>sd", mu ).setUnit( yunit + "/" + xunit );
+  }
+  if ( outformat.contains( 'c' ) ) {
+    string unit = "";
+    if ( sig.size() == ydata.size() )
+      unit = "1";
+    else
+      unit = yunit + "^2";
+    statskey.setNumber( "linear regression>chisq", chisq ).setUnit( unit );
+      statskey.setNumber( "linear regression>q", q );
+  }
+
+
+  // proportionality:
+  double p, pu, pchisq;
+  if ( sig.size() == ydata.size() )
+    propFit( xdata, ydata, sig, p, pu, pchisq );
+  else
+    propFit( xdata, ydata, p, pu, pchisq );
+  double pq = gammaQ( 0.5*ydata.size(), 0.5*pchisq );
+
+  if ( outformat.contains( 'o' ) ) {
+    statskey.setNumber( "proportionality>slope", p ).setUnit( yunit + "/" + xunit );
+    statskey.setNumber( "proportionality>slope>sd", pu ).setUnit( yunit + "/" + xunit );
+    if ( outformat.contains( 'c' ) ) {
+      string unit = "";
+      if ( sig.size() == ydata.size() )
+	unit = "1";
+      else
+	unit = yunit + "^2";
+      statskey.setNumber( "proportionality>chisq", pchisq ).setUnit( unit );
+      statskey.setNumber( "proportionality>q", pq );
+    }
   }
 
   // correlation:
@@ -492,6 +525,7 @@ void readData( DataFile &sf )
 	statskey.addNumber( "p", "1", "%7.5f" );
 	break;
       case 'b':
+      case 'o':
       case 'r':
       case 'p': 
       case 'u':
@@ -507,8 +541,9 @@ void readData( DataFile &sf )
   }
   else {
     if ( outformat.empty() )
-      outformat = "mbrzupUFkdn";
+      outformat = "mbocrzupUFkdn";
     bool linearlabel = false;
+    bool proplabel = false;
     bool rlabel = false;
     for ( int k=0; k<outformat.size(); k++ ) {
       switch ( outformat[k] ) {
@@ -527,6 +562,16 @@ void readData( DataFile &sf )
 	}
 	statskey.addNumber( "b", "-", "%10.4g" );
 	statskey.addNumber( "sd", "-", "%10.4g" );
+	break;
+      case 'o':
+	statskey.addLabel( "proportionality" );
+	statskey.addNumber( "slope", "-", "%10.4g" );
+	statskey.addNumber( "sd", "-", "%10.4g" );
+	proplabel = true;
+	break;
+      case 'c':
+	statskey.addNumber( "chisq", "-", "%10.4g" );
+	statskey.addNumber( "q", "1", "%10.4g" );
 	break;
       case 'r':
 	if ( ! rlabel ) {
@@ -589,7 +634,6 @@ void readData( DataFile &sf )
       case 's':
       case 'e':
       case 'v':
-      case 'c':
       case 'q':
       case '<':
       case '>':
@@ -832,8 +876,11 @@ void WriteUsage()
   cerr << "    t: Student's t for difference of mean to threshold value and significance\n";
   cerr << "    n: number of data points\n";
   cerr << "  ...for two variables:\n";
-  cerr << "    m: slope with standard deviation\n";
-  cerr << "    b: offset with standard deviation\n";
+  cerr << "    m: slope with standard deviation of linear regression\n";
+  cerr << "    b: offset with standard deviation of linear regression\n";
+  cerr << "    o: slope with standard deviation of fitted straight line\n";
+  cerr << "       through origin (proportionality)\n";
+  cerr << "    c: adds chi squared for linear regression or proportionality fit\n";
   cerr << "    r: correlation coefficient and significance of r\n";
   cerr << "    z: Fisher's z for the correlation coefficient r\n";
   cerr << "    u: unpaired t-Test (Student's t and significance)\n";
@@ -965,6 +1012,9 @@ void readArgs( int argc, char *argv[], int &filec )
     }
   }
   if ( optind < argc && argv[optind][0] == '?' ) {
+    WriteUsage();
+  }
+  if ( xcol.empty() & xcols.empty() ) {
     WriteUsage();
   }
   filec = optind;

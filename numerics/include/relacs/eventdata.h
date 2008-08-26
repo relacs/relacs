@@ -48,6 +48,7 @@ class Kernel;
 \author Jan Benda
 \version 2.1
 \brief Class for event times that can also be an infinite ring-buffer.
+\bug why does spikes.erase( spikes.begin() ) not compile?
 
 \todo check equal size of input SampleDataD in e.g. rate, etc.
 */
