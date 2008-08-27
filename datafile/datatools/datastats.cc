@@ -404,6 +404,80 @@ void analyseCor( ArrayD &xdata, ArrayD &ydata, ArrayD &sig, int page, TableKey &
 }
 
 
+void extractMetaData( const DataFile &sf, vector<Str> &acols,
+		      vector<int> &acol, vector<Parameter*> &aparam,
+		      vector<int> &amode )
+{
+  // meta data:
+  for ( int l=0; l<sf.levels(); l++ ) {
+    Options opt;
+    for ( unsigned int k=0; k<acols.size(); k++ ) {
+      if ( amode[k] == 2 && ( acol[k] == l || acol[k] < 0 ) ) {
+	if ( opt.empty() )
+	  opt = sf.metaDataOptions( l );
+	Options::iterator p = opt.find( aparam[k]->ident() );
+	if ( p != opt.end() ) {
+	  aparam[k]->setNumber( p->number() );
+	  aparam[k]->setUnit( p->unit() );
+	  amode[k] = 3;
+	}
+      }
+    }
+  }
+  for ( unsigned int k=0; k<amode.size(); k++ ) {
+    if ( amode[k] == 3 )
+      amode[k] = 2;
+  }
+
+  // find data column:
+  if ( sf.newDataKey() ) {
+    // find columns:
+    for ( unsigned int k=0; k<xcols.size(); k++ ) {
+      if ( !xcols[k].empty() ) {
+	int c = sf.column( xcols[k] );
+	if ( c >= 0 )
+	  xcol[k] = c;
+      }
+    }
+    if ( !ycols.empty() ) {
+      int c = sf.column( ycols );
+      if ( c >= 0 )
+	ycol = c;
+    }
+    if ( !scols.empty() ) {
+      int c = sf.column( scols );
+      if ( c >= 0 )
+	scol = c;
+    }
+    // set units:
+    xunit = sf.key().unit( xcol[0] );
+    if ( xunit.empty() )
+      xunit = "-";
+    yunit = sf.key().unit( ycol );
+    if ( yunit.empty() )
+      yunit = "-";
+    // setup additional parameter:
+    if ( !acols.empty() ) {
+      for ( unsigned int k=0; k<acols.size(); k++ ) {
+	if ( amode[k] <= 1 ) {
+	  if ( amode[k] == 1 ) {
+	    int c = sf.column( acols[k] );
+	    if ( c >= 0 )
+	      acol[k] = c;
+	  }
+	  string ts = sf.key().ident( acol[k] );
+	  if ( !ts.empty() )
+	    aparam[k]->setIdent( ts );
+	  string us = sf.key().unit( acol[k] );
+	  if ( !us.empty() )
+	    aparam[k]->setUnit( us );
+	}
+      }
+    }
+  }
+}
+
+
 void readData( DataFile &sf )
 {
   if ( ycol < 0 && ycols.empty() ) {
@@ -646,6 +720,7 @@ void readData( DataFile &sf )
     }
   }
 
+  // set up additional parameter:
   vector<Parameter*> aparam;
   aparam.reserve( acols.size() );
   vector<int> amode; 
@@ -669,9 +744,14 @@ void readData( DataFile &sf )
 	amode[k] = 2;
     }
     if ( amode[k] == 0 && acol[k] > 0 )
-      acol[k] -= 1;
+      acol[k]--;
     aparam[k]->setIdent( acols[k].substr( i ) );
   }
+
+  // read meta data for getting a key:
+  sf.readMetaData();
+  if ( sf.good() )
+    extractMetaData( sf, acols, acol, aparam, amode );
 
   if ( key && keyonly ) {
     statskey.saveKey( cout, true, numbercols );
@@ -680,76 +760,7 @@ void readData( DataFile &sf )
   }
 
   int page = 0;
-
-  sf.readMetaData();
-
   while ( sf.good() ) {
-
-    // meta data:
-    for ( int l=0; l<sf.levels(); l++ ) {
-      Options opt;
-      for ( unsigned int k=0; k<acols.size(); k++ ) {
-	if ( amode[k] == 2 && ( acol[k] == l || acol[k] < 0 ) ) {
-	  if ( opt.empty() )
-	    opt.load( sf.metaData( l ).strippedComments( "-#" ) );
-	  Options::iterator p = opt.find( aparam[k]->ident() );
-	  if ( p != opt.end() ) {
-	    aparam[k]->setNumber( p->number() );
-	    aparam[k]->setUnit( p->unit() );
-	    amode[k] = 3;
-	  }
-	}
-      }
-    }
-    for ( unsigned int k=0; k<amode.size(); k++ )
-      if ( amode[k] == 3 )
-	amode[k] = 2;
-
-    // find data column:
-    if ( sf.newDataKey() ) {
-      TableKey tk;
-      tk.loadKey( sf.dataKey() );
-      // find columns:
-      for ( unsigned int k=0; k<xcols.size(); k++ ) {
-	if ( !xcols[k].empty() ) {
-	  int c = tk.column( xcols[k] );
-	  if ( c >= 0 )
-	    xcol[k] = c;
-	}
-      }
-      if ( !ycols.empty() ) {
-	int c = tk.column( ycols );
-	if ( c >= 0 )
-	  ycol = c;
-      }
-      if ( !scols.empty() ) {
-	int c = tk.column( scols );
-	if ( c >= 0 )
-	  scol = c;
-      }
-      if ( !acols.empty() ) {
-	for ( unsigned int k=0; k<acols.size(); k++ ) {
-	  if ( amode[k] <= 1 ) {
-	    if ( amode[k] == 1 ) {
-	      int c = tk.column( acols[k] );
-	      if ( c >= 0 )
-		acol[k] = c;
-	    }
-	    string ts = tk.ident( acol[k] );
-	    if ( !ts.empty() ) {
-	      aparam[k]->setIdent( ts );
-	    }
-	  }
-	}
-      }
-      // set units:
-      xunit = tk.unit( xcol[0] );
-      if ( xunit.empty() )
-	xunit = "-";
-      yunit = tk.unit( ycol );
-      if ( yunit.empty() )
-	yunit = "-";
-    }
 
     // read data:
     sf.initData();
@@ -823,6 +834,9 @@ void readData( DataFile &sf )
     page++;
     
     sf.readMetaData();
+
+    if ( sf.good() )
+      extractMetaData( sf, acols, acol, aparam, amode );
 
   }
   sf.close();
@@ -1030,19 +1044,16 @@ int main( int argc, char *argv[] )
 
   // redirect cin:
   DataFile sf;
-  if ( ! keyonly ) {
-    if ( argc > filec ) {
-      sf.open( argv[filec] );
-      if ( !sf.good() ) {
-	cerr << "! can't open file " << argv[filec] << " for reading\n";
-	return 1;
-      }
-      filec++;
+  if ( argc > filec ) {
+    sf.open( argv[filec] );
+    if ( !sf.good() && ! keyonly ) {
+      cerr << "! can't open file " << argv[filec] << " for reading\n";
+      return 1;
     }
-    else {
-      sf.open( cin );
-    }
+    filec++;
   }
+  else
+    sf.open( cin );
 
   // redirect cout:
   streambuf *coutb = 0;
