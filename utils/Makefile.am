@@ -6,8 +6,8 @@ EXTRA_DIST = \
     bin2dat.doc \
     bin2wav \
     remotebackup \
-    scaninf scaninf.doc \
-    RELACS.desktop
+    scaninf scaninf.doc
+#    RELACS.desktop
 
 
 bin_PROGRAMS = \
