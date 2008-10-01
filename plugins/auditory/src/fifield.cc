@@ -33,8 +33,8 @@ FIField::FIField( void )
 {
   setName( "FIField" );
   setTitle( "F-I Field" );
-  setVersion( "1.3" );
-  setDate( "Jan 10, 2008" );
+  setVersion( "1.4" );
+  setDate( "Oct 1, 2008" );
 
   // parameter:
   MinFreq = 2500.0;
@@ -63,6 +63,8 @@ FIField::FIField( void )
   insertInteger( "reducedfreqnumber", "Intensities", "Number of frequencies used for the reduced frequency range", ReducedFreqNumber, 0, 1000, 1 );
   insertNumber( "minratefrac", "setbest", "Fraction of maximum rate required for f-I curve analysis", MinRateFrac, 0.0, 1.0, 0.1, "1", "%" );
   Options::erase( "usebestthresh" );
+  Options::erase( "usebestsat" );
+  Options::erase( "manualskip" );
   Options::erase( "waveform" );
   Options::erase( "carrierfreq" );
   Options::erase( "usebestfreq" );

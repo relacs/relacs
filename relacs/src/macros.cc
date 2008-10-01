@@ -885,6 +885,9 @@ QPopupMenu* Macros::menu( void )
 	    s += ": " + ps;
 	  }
 	}
+	else if ( MCs[k]->Commands[j]->Browse ) {
+	  s += "Browse " + MCs[k]->Commands[j]->Params;
+	}
 	else {
 	  s += "RePro " + MCs[k]->Commands[j]->Name;
 	  if ( !MCs[k]->Commands[j]->Params.empty() ) {
@@ -1593,6 +1596,8 @@ ostream &operator<< ( ostream &str, const Macros &macros )
 	if ( macros.MCs[k]->Commands[j]->TimeOut > 0.0 )
 	  str << " (timeout " << macros.MCs[k]->Commands[j]->TimeOut << ")";
       }
+      else if ( macros.MCs[k]->Commands[j]->Browse )
+	str << "Browse";
       else
 	str << "RePro";
       str << ": " << macros.MCs[k]->Commands[j]->Name 

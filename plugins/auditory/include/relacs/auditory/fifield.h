@@ -37,8 +37,10 @@ namespace auditory {
 \class FIField
 \brief [RePro] Optimized measuring of f-I curves.
 \author Jan Benda
+\version 1.4 (Oct 1, 2008)
+-# removed usebestsat and manualskip from the options
 \version 1.3 (Jan 10, 2008)
--# removed stop() function
+-# updated the code
 \version 1.2 (Jan 10, 2004)
 
 Features:

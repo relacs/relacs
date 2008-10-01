@@ -37,8 +37,11 @@ namespace auditory {
 \class FICurve
 \brief [RePro] Optimized measuring of f-I curves.
 \author Jan Benda
+\version 1.4 (Oct 1, 2008)
+-# added manual selection of intensity skip
 \version 1.3 (Jan 10, 2008)
--# removed stop() function
+-# updated code
+-# added usebestsat option
 \version 1.2 (Jan 10, 2006)
 \bug Need to sleep 10ms longer to prevent busy error!
 
@@ -52,13 +55,18 @@ Features:
 \par Files
 \arg \b calibrate.dat : the calibration data (measured versus requested stimulus intensity).
 
-\par Plots
-The plot shows the measured versus the requested stimulus intensity (red circles).
-The yellow line is a fit of a straight line to the data.
-This line should for a successful calibration coincide with the blue 1:1 line.
+\par Plots 
+If you have selected \c manualskip then move the mouse into the top
+part of the f-I curve plot. This brings up a line of red and green
+buttons, each one corresponding to an intensity value.
+Green buttons indicated intensities that are measured,
+red buttons indicate skipped (not measured) intensitties.
+Left click on a button to toggle measurement of the corresponding intensity value.
+Simultaneously holding down the \c shift key toggels all intensities below the 
+selected one.
+Holding down the \c ctrl key toggels all intensities above the selected one.
 
 \par Requirements
-\arg Transdermal EOD recording (\c EODTrace2) and events (\c EODEvents2).
 */
 
 
@@ -76,6 +84,11 @@ public:
   virtual int main( void );
     /*! Initialize on start session. */
   virtual void init( void );
+
+
+protected slots:
+
+  void plotMouseEvent( Plot::MouseEvent &me );
 
 
 protected:
@@ -112,6 +125,7 @@ protected:
   void updateSession( const vector< FIData > &results );
   void save( const vector< FIData > &results );
 
+  void plotIntensitySelection( void );
     /*! Plot data. */
   virtual void plot( const vector< FIData > &results );
     /*! Analyze data. */
@@ -173,6 +187,7 @@ protected:
   double MaxSilentRate;
   double MaxPlotRate;
   MultiPlot P;
+  bool PlotIntensitySelection;
   Options Settings;
   Options Header;
 

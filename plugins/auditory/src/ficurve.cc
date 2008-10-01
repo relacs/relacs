@@ -35,7 +35,7 @@ namespace auditory {
 
 FICurve::FICurve( void )
   : RePro( "FICurve", "F-I Curve", "Auditory",
-	   "Jan Benda", "1.3", "Jan 10, 2008" ),
+	   "Jan Benda", "1.4", "Oct 1, 2008" ),
     P( 2, 2, true, this, "ficurveplot" )    
 {
   // parameter:
@@ -84,6 +84,7 @@ FICurve::FICurve( void )
   addInteger( "singlerepeat", "Number of immediate repetitions of a single stimulus", SingleRepeat, 1, 10000, 1 );
   addInteger( "blockrepeat", "Number of repetitions of a fixed intensity increment", IntBlockRepeat, 1, 10000, 1 );
   addInteger( "repeat", "Number of repetitions of the whole f-I curve measurement", IntRepeat, 1, 10000, 1 );
+  addBoolean( "manualskip", "Show buttons for manual selection of intensities", false );
   addLabel( "Waveform" ).setStyle( OptWidget::TabLabel );
   addSelection( "waveform", "Waveform of stimulus", "sine|noise" );
   addNumber( "carrierfreq", "Frequency of carrier", CarrierFrequency, 0.0, 40000.0, 2000.0, "Hz", "kHz" ).setActivation( "usebestfreq", "false" );
@@ -127,6 +128,7 @@ FICurve::FICurve( void )
   Intensity = 0.0;
   MinCarrierFrequency = 2000.0;
   FICurveStops = 0;
+  PlotIntensitySelection = false;
 
   // plot:
   P.lock();
@@ -188,6 +190,7 @@ int FICurve::main( void )
   SingleRepeat = integer( "singlerepeat" );
   IntBlockRepeat = integer( "blockrepeat" );
   IntRepeat = integer( "repeat" );
+  bool manualskip = boolean( "manualskip" );
   Waveform = index( "waveform" );
   Ramp = number( "ramp" );
   CarrierFrequency = number( "carrierfreq" );
@@ -243,6 +246,12 @@ int FICurve::main( void )
   P[1].setXRange( Plot::AutoMinScale, Plot::AutoMinScale );
   P[1].setYFallBackRange( 0.0, 100.0 );
   P[1].setYRange( 0.0, Plot::AutoScale );
+  if ( manualskip ) {
+    P[1].setMouseTracking( true );
+    connect( &P[1], SIGNAL( userMouseEvent( Plot::MouseEvent& ) ),
+	     this, SLOT( plotMouseEvent( Plot::MouseEvent& ) ) );
+  }
+  PlotIntensitySelection = false;
   P.unlock();
 
   // intensity:
@@ -286,6 +295,11 @@ int FICurve::main( void )
       warning( "Could not establish valid intensity!<br>Signal error: <b>" +
 	       Signal.errorText() + "</b>.<br>Exit now!" );
       Signal.free();
+      if ( manualskip ) {
+	P[1].setMouseTracking( false );
+	disconnect( &P[1], SIGNAL( userMouseEvent( Plot::MouseEvent& ) ),
+		    this, SLOT( plotMouseEvent( Plot::MouseEvent& ) ) );
+      }
       return Failed;
     }
 
@@ -319,6 +333,11 @@ int FICurve::main( void )
   save( results );
   Signal.free();
   writeZero( Speaker[ Side ] );
+  if ( manualskip ) {
+    P[1].setMouseTracking( false );
+    disconnect( &P[1], SIGNAL( userMouseEvent( Plot::MouseEvent& ) ),
+		this, SLOT( plotMouseEvent( Plot::MouseEvent& ) ) );
+  }
   return ds;
 }
 
@@ -781,6 +800,27 @@ void FICurve::save( const vector< FIData > &results )
 }
 
 
+void FICurve::plotIntensitySelection( void )
+{
+  ArrayD sa, ua;
+  for ( int k=0; k<IntensityRange.size(); k++ ) {
+    double x = IntensityRange.value( k );
+    if ( k == 0 )
+      x += 0.01 * IntensityStep;
+    if ( k == IntensityRange.size()-1 )
+      x -= 0.01 * IntensityStep;
+    if ( IntensityRange.skip( k ) )
+      sa.push( x );
+    else
+      ua.push( x);
+  }
+  P[1].plot( ua, 1.0, 0.95, Plot::Graph, 0, Plot::Diamond,
+	     0.7*IntensityStep, Plot::FirstX, Plot::Green, Plot::Green );
+  P[1].plot( sa, 1.0, 0.95, Plot::Graph, 0, Plot::Diamond,
+	     0.7*IntensityStep, Plot::FirstX, Plot::Red, Plot::Red );
+}
+
+
 void FICurve::plot( const vector< FIData > &results )
 {
   const FIData &fid = results[IntensityRange.pos()];
@@ -827,6 +867,9 @@ void FICurve::plot( const vector< FIData > &results )
   am.push( results[c].Intensity, results[c].SSRate );
   am.push( results[c].Intensity, results[c].MeanRate );
   P[1].plot( am, 1.0, Plot::Transparent, 3, Plot::Solid, Plot::Circle, 8, Plot::Yellow, Plot::Transparent );
+
+  if ( PlotIntensitySelection )
+    plotIntensitySelection();
 
   P.unlock();
 
@@ -1076,6 +1119,38 @@ RePro::DoneState FICurve::next( vector< FIData > &results, bool msg )
   }
 
   return Continue;
+}
+
+
+void FICurve::plotMouseEvent( Plot::MouseEvent &me )
+{
+  if ( me.xCoor() == Plot::First && me.yCoor() == Plot::First &&
+       me.yPos() > P[1].yminRange() + 0.9*(P[1].ymaxRange() - P[1].yminRange()) ) {
+    bool changed = false;
+    if ( me.left() && me.released() ) {
+      int inx = (int)::round( ( me.xPos() - MinIntensity ) / IntensityStep );
+      if ( inx >= IntensityRange.size() )
+	inx = IntensityRange.size() - 1;
+      if ( inx < 0 )
+	inx = 0;
+      if ( me.shift() )
+	IntensityRange.setSkipBelow( inx, ! IntensityRange.skip( inx ) );
+      else if ( me.control() )
+	IntensityRange.setSkipAbove( inx, ! IntensityRange.skip( inx ) );
+      else
+	IntensityRange.setSkip( inx, ! IntensityRange.skip( inx ) );
+    }
+    if ( ! PlotIntensitySelection || changed ) {
+      P.lock();
+      plotIntensitySelection();
+      P.unlock();
+      P.draw();
+    }
+    PlotIntensitySelection = true;
+    me.setUsed();
+  }
+  else
+    PlotIntensitySelection = false;
 }
 
 

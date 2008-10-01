@@ -38,6 +38,7 @@ Documentation:
   make sure that nothing is installed in prefix/lib!
   For finalizing a change in the interface the version number of the library
   needs to be changed.
+- For developing: make sure LD_LIBRARY_PATH does not contain pathes to any relacs libraries
 - Links:
   CRCNS - Collaborative Research in Computational Neuroscience - Data sharing activity
   http://www.crcns.org/

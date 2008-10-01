@@ -84,6 +84,7 @@ void Plot::construct( KeepMode keep, bool subwidget, int id, MultiPlot *mp )
   SubWidget = subwidget;
   Id = id;
   MP = mp;
+  setMouseTracking( false );
   MouseMenu = 0;
   MouseMenuClick = false;
   MouseAction = 2;
@@ -864,43 +865,59 @@ void Plot::setFormat( const string &format )
 }
 
 
-void Plot::getPos( const Position &pos, int &x, int &y )
+int Plot::xPixel( double xpos, Plot::Coordinates xcoor ) const
 {
-  // x coordinate:
-  if ( pos.xcoor() == First || pos.xcoor() == FirstX || pos.xcoor() == FirstY )
-    x = (int)::rint( ( pos.xpos() - XMin[0] )*( PlotX2 - PlotX1 )/( XMax[0] - XMin[0] ) + PlotX1 );
-  else if ( pos.xcoor() == Second || pos.xcoor() == SecondX || pos.xcoor() == SecondY )
-    x = (int)::rint( ( pos.xpos() - XMin[1] )*( PlotX2 - PlotX1 )/( XMax[1] - XMin[1] ) + PlotX1 );
-  else if ( pos.xcoor() == Graph || pos.xcoor() == GraphX || pos.xcoor() == GraphY )
-    x = (int)::rint( pos.xpos() * ( PlotX2 - PlotX1 ) + PlotX1 );
-  else if ( pos.xcoor() == Screen )
-    x = (int)::rint( pos.xpos() * ( ScreenX2 - ScreenX1 ) + ScreenX1 );
-  else if ( pos.xcoor() == FirstAxis )
-    x = (int)::rint( pos.xpos() * FontWidth + PlotX1 - BorderStyle.width() - Y1TicsMarg );
-  else if ( pos.xcoor() == SecondAxis )
-    x = (int)::rint( pos.xpos() * FontWidth + PlotX2 + BorderStyle.width() + Y2TicsMarg );
-  else if ( pos.xcoor() == FirstMargin )
-    x = (int)::rint( pos.xpos() * FontWidth + ScreenX1 + ScreenBorder );
-  else if ( pos.xcoor() == SecondMargin )
-    x = (int)::rint( pos.xpos() * FontWidth + ScreenX2 - ScreenBorder );
+  if ( xcoor == First || xcoor == FirstX || xcoor == FirstY )
+    return (int)::rint( ( xpos - XMin[0] )*( PlotX2 - PlotX1 )/( XMax[0] - XMin[0] ) + PlotX1 );
+  else if ( xcoor == Second || xcoor == SecondX || xcoor == SecondY )
+    return (int)::rint( ( xpos - XMin[1] )*( PlotX2 - PlotX1 )/( XMax[1] - XMin[1] ) + PlotX1 );
+  else if ( xcoor == Graph || xcoor == GraphX || xcoor == GraphY )
+    return (int)::rint( xpos * ( PlotX2 - PlotX1 ) + PlotX1 );
+  else if ( xcoor == Screen )
+    return (int)::rint( xpos * ( ScreenX2 - ScreenX1 ) + ScreenX1 );
+  else if ( xcoor == FirstAxis )
+    return (int)::rint( xpos * FontWidth + PlotX1 - BorderStyle.width() - Y1TicsMarg );
+  else if ( xcoor == SecondAxis )
+    return (int)::rint( xpos * FontWidth + PlotX2 + BorderStyle.width() + Y2TicsMarg );
+  else if ( xcoor == FirstMargin )
+    return (int)::rint( xpos * FontWidth + ScreenX1 + ScreenBorder );
+  else if ( xcoor == SecondMargin )
+    return (int)::rint( xpos * FontWidth + ScreenX2 - ScreenBorder );
+  return -1;
+}
 
-  // y coordinate:
-  if ( pos.ycoor() == First || pos.ycoor() == FirstX || pos.ycoor() == FirstY )
-    y = (int)::rint( ( pos.ypos() - YMin[0] )*( PlotY2 - PlotY1 )/( YMax[0] - YMin[0] ) + PlotY1 );
-  else if ( pos.ycoor() == Second || pos.ycoor() == SecondX || pos.ycoor() == SecondY )
-    y = (int)::rint( ( pos.ypos() - YMin[1] )*( PlotY2 - PlotY1 )/( YMax[1] - YMin[1] ) + PlotY1 );
-  else if ( pos.ycoor() == Graph || pos.ycoor() == GraphX || pos.ycoor() == GraphY )
-    y = (int)::rint( pos.ypos() * ( PlotY2 - PlotY1 ) + PlotY1 );
-  else if ( pos.ycoor() == Screen )
-    y = (int)::rint( pos.ypos() * ( ScreenY2 - ScreenY1 ) + ScreenY1 );
-  else if ( pos.ycoor() == FirstAxis )
-    y = (int)::rint( - pos.ypos() * FontHeight + PlotY1 + BorderStyle.width() + X1TicsMarg );
-  else if ( pos.ycoor() == SecondAxis )
-    y = (int)::rint( - pos.ypos() * FontHeight + PlotY2 - BorderStyle.width() - X2TicsMarg );
-  else if ( pos.ycoor() == FirstMargin )
-    y = (int)::rint( - pos.ypos() * FontHeight + ScreenY1 - ScreenBorder );
-  else if ( pos.ycoor() == SecondMargin )
-    y = (int)::rint( - pos.ypos() * FontHeight + ScreenY2 + ScreenBorder );
+
+int Plot::xPixel( const Position &pos ) const
+{
+  return xPixel( pos.xpos(), pos.xcoor() );
+}
+
+
+int Plot::yPixel( double ypos, Plot::Coordinates ycoor ) const
+{
+  if ( ycoor == First || ycoor == FirstX || ycoor == FirstY )
+    return (int)::rint( ( ypos - YMin[0] )*( PlotY2 - PlotY1 )/( YMax[0] - YMin[0] ) + PlotY1 );
+  else if ( ycoor == Second || ycoor == SecondX || ycoor == SecondY )
+    return (int)::rint( ( ypos - YMin[1] )*( PlotY2 - PlotY1 )/( YMax[1] - YMin[1] ) + PlotY1 );
+  else if ( ycoor == Graph || ycoor == GraphX || ycoor == GraphY )
+    return (int)::rint( ypos * ( PlotY2 - PlotY1 ) + PlotY1 );
+  else if ( ycoor == Screen )
+    return (int)::rint( ypos * ( ScreenY2 - ScreenY1 ) + ScreenY1 );
+  else if ( ycoor == FirstAxis )
+    return (int)::rint( - ypos * FontHeight + PlotY1 + BorderStyle.width() + X1TicsMarg );
+  else if ( ycoor == SecondAxis )
+    return (int)::rint( - ypos * FontHeight + PlotY2 - BorderStyle.width() - X2TicsMarg );
+  else if ( ycoor == FirstMargin )
+    return (int)::rint( - ypos * FontHeight + ScreenY1 - ScreenBorder );
+  else if ( ycoor == SecondMargin )
+    return (int)::rint( - ypos * FontHeight + ScreenY2 + ScreenBorder );
+  return -1;
+}
+
+
+int Plot::yPixel( const Position &pos ) const
+{
+  return yPixel( pos.ypos(), pos.ycoor() );
 }
 
 
@@ -1814,8 +1831,8 @@ void Plot::drawAxis( QPainter &paint )
 void Plot::drawLabel( QPainter &paint, const Label &label )
 {
   if ( label.Text.length() > 0 && label.LColor != Transparent ) {
-    int xp, yp;
-    getPos( label, xp, yp );
+    int xp = xPixel( label );
+    int yp = yPixel( label );
     int w = fontMetrics().width( label.Text.c_str() );
     paint.save();
     paint.translate( xp, yp );
@@ -3461,18 +3478,22 @@ void Plot::mouseSelect( int id )
 	MouseYPos.clear();
 	MouseDInx.clear();
 	MousePInx.clear();
-	if ( SubWidget && MP != 0 )
-	  MP->setMouseTracking( false );
-	else
-	  setMouseTracking( false );
+	if ( ! MouseTracking ) {
+	  if ( SubWidget && MP != 0 )
+	    MP->setMouseTracking( false );
+	  else
+	    QWidget::setMouseTracking( false );
+	}
 	draw();
       }
       MouseAction = id;
       if ( MouseAction == 8 ) {
-	if ( SubWidget && MP != 0 )
-	  MP->setMouseTracking( true );
-	else
-	  setMouseTracking( true );
+	if ( ! MouseTracking ) {
+	  if ( SubWidget && MP != 0 )
+	    MP->setMouseTracking( true );
+	  else
+	    QWidget::setMouseTracking( true );
+	}
 	QPoint p = mapFromGlobal( QCursor::pos() );
 	QMouseEvent qme( QEvent::MouseButtonRelease, p, 
 			 Qt::LeftButton, Qt::NoButton );
@@ -3488,6 +3509,10 @@ void Plot::mouseSelect( int id )
 
 void Plot::mouseEvent( MouseEvent &me )
 {
+  emit userMouseEvent( me );
+  if ( me.used() )
+    return;
+
   mouseMenu( me );
   if ( me.used() )
     return;
@@ -3503,6 +3528,16 @@ void Plot::mouseEvent( MouseEvent &me )
     mouseZoomMoveFirstX( me );
     mouseZoomMoveFirstY( me );
   }
+}
+
+
+void Plot::setMouseTracking( bool enable )
+{
+  MouseTracking = enable;
+  if ( SubWidget && MP != 0 )
+    MP->setMouseTracking( MouseTracking );
+  else
+    QWidget::setMouseTracking( MouseTracking );
 }
 
 

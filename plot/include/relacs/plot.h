@@ -384,6 +384,29 @@ public:
         handled by this widget. */
   bool inside( int xpixel, int ypixel );
 
+    /*! Computes the pixel coordinate for the specified x position. 
+        \param[in] xpos the position
+        \param[in] xcoor the coordinate system
+        \return the pixel coordinate
+        \sa yPixel() */
+  int xPixel( double xpos, Coordinates xcoor=FirstX ) const;
+    /*! Computes the x-pixel coordinate for the specified position. 
+        \param[in] pos the position
+        \return the pixel coordinate
+        \sa yPixel() */
+  int xPixel( const Position &pos ) const;
+    /*! Computes the pixel coordinate for the specified y position. 
+        \param[in] ypos the position
+        \param[in] ycoor the coordinate system
+        \return the pixel coordinate
+        \sa xPixel() */
+  int yPixel( double ypos, Plot::Coordinates ycoor=FirstY ) const;
+    /*! Computes the y-pixel coordinate for the specified position. 
+        \param[in] pos the position
+        \return the pixel coordinate
+        \sa xPixel() */
+  int yPixel( const Position &pos ) const;
+
   int addColor( const RGBColor &rgb );
   int addColor( int r, int g, int b );
   RGBColor color( int c );
@@ -789,7 +812,7 @@ public:
         of mouseEvent() */
   void enableMouse( void );
     /*! Disable mouse support as handled by the default implementation
-         of mouseEvent() */
+        of mouseEvent() */
   void disableMouse( void );
     /*! Returns \c true if the user has scaled the x1-range with the mouse. */
   bool zoomedXRange( void );
@@ -811,10 +834,23 @@ public:
   bool mouseGrabbed( void ) const { return MouseGrabbed; };
 
 
+public slots:
+
+    /*! Controls whether mouseEvent() should be called on mouse move events.
+        \param[in] enable set this to \c true if you want to have 
+        mouseEvent() called also on move events. */
+  virtual void setMouseTracking( bool enable );
+
+
 signals:
   
   void changedRange( void );
   void changedRange( int );
+    /*! This signal is emitted whenever a mouse event in the Plot occured.
+        A slot making use of the mouse event should call me.setUsed()
+        to prevent further processing by the default mouse event handling functions.
+        \param[in] me the coordinates and status of the mouse event */
+  void userMouseEvent( Plot::MouseEvent &me );
 
 
 protected:
@@ -930,6 +966,7 @@ private:
   bool SubWidget;
   MultiPlot *MP;
 
+  bool MouseTracking;
   bool MouseDrawRect;
   int MouseX1;
   int MouseX2;
@@ -1066,11 +1103,7 @@ private:
     /*! Line-style of the grids. */
   LineStyle XGridStyle[MaxAxis], YGridStyle[MaxAxis];
 
-    /*! Return in \a x and \a y the position specified in \a pos
-        in the pixel coordinates of the plot. */
-  void getPos( const Position &pos, int &x, int &y );
-
-  /*! A text label. */
+    /*! A text label. */
   struct Label : public Position
   {
       /*! Constructor. */
