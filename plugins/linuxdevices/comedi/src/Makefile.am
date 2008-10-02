@@ -141,9 +141,12 @@ libcomedidynclampanalogoutput_la_include_HEADERS = \
 
 check_PROGRAMS = \
     linktest_libcomedicomedianaloginput_la \
-    linktest_libcomedicomedianalogoutput_la \
+    linktest_libcomedicomedianalogoutput_la
+if RELACS_COND_RTAI
+check_PROGRAMS += \
     linktest_libcomedidynclampanaloginput_la \
     linktest_libcomedidynclampanalogoutput_la
+endif
 
 linktest_libcomedicomedianaloginput_la_SOURCES = linktest.cc
 linktest_libcomedicomedianaloginput_la_LDADD = libcomedicomedianaloginput.la
