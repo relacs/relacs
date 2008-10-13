@@ -17,6 +17,9 @@ sleep 1
 #comedi_calibrate /dev/comedi0
 #sleep 1 
 #comedi_calibrate /dev/comedi1
+sleep 1
+for C in 0 $(seq 16); do for A in 0 1 2; do for R in 0 $(seq 20); do comedi_calibrate -reset -calibrate -f /dev/comedi0 -s 0 -r $R -a $A -c $C; done; done; done
+for C in 0 1; do for A in 0 1 2; do for R in 0 1; do comedi_calibrate -reset -calibrate -f /dev/comedi0 -s 1 -r $R -a $A -c $C; done; done; done
 mknod -m 666 /dev/dynclamp c 227 0
 
 chmod a+rw /dev/comedi0

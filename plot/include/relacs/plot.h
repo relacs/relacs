@@ -705,6 +705,20 @@ public:
   int plot( const EventData &events, const InData &data, int origin, double offset, double tscale, 
 	    int lwidth, Points ptype, double size, Coordinates sizecoor,
 	    int pcolor=Red, int pfill=Transparent );
+
+    /*! Plot the OutData \a data. 
+        The original x-data are scaled by \a xscale. */
+  int plot( const OutData &data, double xscale,
+	    const LineStyle &line, const PointStyle &point=PointStyle() );
+  int plot( const OutData &data, double xscale,
+	    const PointStyle &point, const LineStyle &line=LineStyle() )
+    { return plot( data, xscale, line, point ); };
+  int plot( const OutData &data, double xscale,
+	    int lcolor=Transparent, int lwidth=1, Dash ldash=Solid, 
+	    Points ptype=Circle, int psize=10, int pcolor=Transparent, int pfill=Transparent )
+    { return plot( data, xscale, 
+		   LineStyle( lcolor, lwidth, ldash ), 
+		   PointStyle( ptype, psize, pcolor, pfill ) ); };
 #endif
 
     /*! Reference to the data element \a i. */
@@ -1304,6 +1318,13 @@ private:
     int Origin;
     double Offset;
     double TScale;
+  };
+
+
+  class OutDataElement : public SampleDataElement< float >
+  {
+  public:
+    OutDataElement( const OutData &data, double xscale, bool copy );
   };
 
 

@@ -4088,6 +4088,22 @@ int Plot::plot( const InData &data, int origin, double offset, double tscale,
 }
 
 
+Plot::OutDataElement::OutDataElement( const OutData &data, double tscale,
+				      bool copy )
+  : SampleDataElement< float >( (const SampleData<float>&)data, tscale, copy )
+{
+}
+
+
+int Plot::plot( const OutData &data, double xscale, 
+		const LineStyle &line, const PointStyle &point )
+{
+  OutDataElement *DE = new OutDataElement( data, xscale, Keep == Copy );
+  DE->setStyle( line, point );
+  return addData( DE );
+}
+
+
 Plot::EventInDataElement::EventInDataElement( const EventData &events, 
 					      const InData &data, int origin,
 					      double offset, double tscale, 
