@@ -28,6 +28,7 @@ libpatchclampsession_la_LDFLAGS = \
 
 libpatchclampsession_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/plugins/ephys/src/libephystraces.la \
     $(QT3_LIBS)
 
 $(libpatchclampsession_la_OBJECTS) : moc_session.cc
@@ -54,6 +55,7 @@ libpatchclampsimple_la_CPPFLAGS = \
 
 libpatchclampsimple_la_LDFLAGS = \
     -module -avoid-version \
+    $(top_builddir)/plugins/ephys/src/libephystraces.la \
     $(QT3_LDFLAGS)
 
 libpatchclampsimple_la_LIBADD = \
@@ -84,6 +86,7 @@ libpatchclampsinglestimulus_la_CPPFLAGS = \
 
 libpatchclampsinglestimulus_la_LDFLAGS = \
     -module -avoid-version \
+    $(top_builddir)/plugins/ephys/src/libephystraces.la \
     $(QT3_LDFLAGS)
 
 libpatchclampsinglestimulus_la_LIBADD = \
