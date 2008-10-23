@@ -34,5 +34,5 @@ void initModel( void )
 
 void computeModel( void )
 {
-  output[0] = paramOutput[0];
+  //  output[0] = paramOutput[0];
 }

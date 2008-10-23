@@ -871,18 +871,15 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     if ( WaveForm == Sine || WaveForm == Whitenoise || WaveForm == OUnoise ) {
       if ( WaveForm == Sine ) {
 	PeakAmplitudeFac = 1.0;
-	wave.sin( LinearRange( 0.0, duration, 0.001 ), Frequency );
+	wave.sin( LinearRange( 0.0, duration, signal.minSampleInterval() ), Frequency );
       }
       else {
 	Random rand;
 	unsigned long seed = rand.setSeed( Seed );
-	double deltat = 1.0;
-	while ( deltat >= 1.0/Frequency )
-	  deltat *= 0.1;
 	if ( WaveForm == Whitenoise )
-	  wave.whiteNoise( duration, deltat, 0.0, Frequency, rand );
+	  wave.whiteNoise( duration, signal.minSampleInterval(), 0.0, Frequency, rand );
 	else if ( WaveForm == OUnoise )
-	  wave.ouNoise( duration, deltat, 1.0/Frequency, rand );
+	  wave.ouNoise( duration, signal.minSampleInterval(), 1.0/Frequency, rand );
 	PeakAmplitudeFac = 0.3;
 	header.addInteger( "random seed", int( seed ) );
       }
@@ -890,15 +887,15 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     else {
       PeakAmplitudeFac = 1.0;
       if ( WaveForm == Rectangular ) {
-	wave.rectangle( LinearRange( 0.0, duration, 0.001 ), 1.0/Frequency, DutyCycle/Frequency, Ramp );
+	wave.rectangle( LinearRange( 0.0, duration, signal.minSampleInterval() ), 1.0/Frequency, DutyCycle/Frequency, Ramp );
 	header.addText( "dutycycle", Str( 100.0*DutyCycle ) + "%" );
       }
       else if ( WaveForm == Triangular )
-	wave.triangle( LinearRange( 0.0, duration, 0.001 ), 1.0/Frequency );
+	wave.triangle( LinearRange( 0.0, duration, signal.minSampleInterval() ), 1.0/Frequency );
       else if ( WaveForm == Sawup )
-	wave.sawUp( LinearRange( 0.0, duration, 0.001 ), 1.0/Frequency, Ramp );
+	wave.sawUp( LinearRange( 0.0, duration, signal.minSampleInterval() ), 1.0/Frequency, Ramp );
       else if ( WaveForm == Sawdown )
-	wave.sawDown( LinearRange( 0.0, duration, 0.001 ), 1.0/Frequency, Ramp );
+	wave.sawDown( LinearRange( 0.0, duration, signal.minSampleInterval() ), 1.0/Frequency, Ramp );
       wave = 2.0*wave - 1.0;
     }
 
@@ -910,7 +907,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
   }
   else {
     // constant:
-    wave = SampleDataD( 0.0, duration, 0.001, 0.0 );
+    wave = SampleDataD( 0.0, duration, signal.minSampleInterval(), 0.0 );
     PeakAmplitudeFac = 1.0;
     header.addText( "waveform", "const" );
     if ( StoreLevel == Generated ) 

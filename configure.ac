@@ -14,6 +14,11 @@ AC_PROG_LN_S
 AC_PROG_CXX
 AC_LANG(C++)
 
+#################################################
+## Check for presence of C++ compiler:
+#################################################
+RELACS_CHECK_CXX()
+
 CXXFLAGS="-Wall $CXXFLAGS"
 CFLAGS="-Wall $CFLAGS"
 
@@ -30,6 +35,12 @@ CLEAN_LIBS=${LIBS}
 ## GNU make
 #################################################
 AC_RELACS_GNU_MAKE()
+
+
+#################################################
+## pkg-config
+#################################################
+RELACS_CHECK_PKG_CONFIG()
 
 
 #################################################

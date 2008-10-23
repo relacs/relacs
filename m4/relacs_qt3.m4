@@ -17,12 +17,16 @@ QT3_LDFLAGS=
 QT3_LIBS=
 
 # get flags:
-QT3_CPPFLAGS=`pkg-config --cflags qt-mt`
+if test "x${PKG_CONFIG}" != "x" && ${PKG_CONFIG} --exists qt-mt ; then
+    QT3_CPPFLAGS=`${PKG_CONFIG} --cflags qt-mt`
+    QT3_LDFLAGS=`${PKG_CONFIG} --libs-only-L qt-mt`
+    QT3_LIBS=`${PKG_CONFIG} --libs-only-l qt-mt`
+fi
+
+# default flags:
 if test "x${QT3_CPPFLAGS}" = x ; then
     QT3_CPPFLAGS=-DQT_THREAD_SUPPORT
 fi
-QT3_LDFLAGS=`pkg-config --libs-only-L qt-mt`
-QT3_LIBS=`pkg-config --libs-only-l qt-mt`
 if test "x${QT3_LIBS}" = x ; then
     QT3_LIBS=-lqt-mt
 fi
@@ -32,7 +36,7 @@ EXTRA_MOC_LOCATION=
 AC_ARG_WITH([qt3],
 	[AS_HELP_STRING([--with-qt3=DIR],
 	           	[override Qt3 path ("/lib" and "/include" is appended)])],
-	[QT3_ERROR="No path given for option --with-qt3"
+	[QT3_ERROR="no path given for option --with-qt3"
 	if test ${withval} != yes -a "x${withval}" != x ; then
 		QT3_CPPFLAGS="-I${withval}/include ${QT3_CPPFLAGS}"
 		QT3_LDFLAGS="-L${withval}/lib ${QT3_LDFLAGS}"
@@ -44,7 +48,7 @@ AC_ARG_WITH([qt3],
 
 AC_ARG_WITH([qt3-inc],
 	[AS_HELP_STRING([--with-qt3-inc=DIR],[override Qt3 include path])],
-	[QT3_INC_ERROR="No path given for option --with-qt3-inc"
+	[QT3_INC_ERROR="no path given for option --with-qt3-inc"
 	if test ${withval} != yes -a "x${withval}" != x ; then
 		QT3_CPPFLAGS="-I${withval} ${QT3_CPPFLAGS}"
 	else
@@ -54,7 +58,7 @@ AC_ARG_WITH([qt3-inc],
 
 AC_ARG_WITH([qt3-lib],
 	[AS_HELP_STRING([--with-qt3-lib=DIR],[override Qt3 library path])],
-	[QT3_LIB_ERROR="No path given for option --with-qt3-lib"
+	[QT3_LIB_ERROR="no path given for option --with-qt3-lib"
 	if test ${withval} != yes -a "x${withval}" != x ; then
 		QT3_LDFLAGS="-L${withval} ${QT3_LDFLAGS}"
 	else
@@ -66,12 +70,29 @@ AC_ARG_WITH([qt3-lib],
 CPPFLAGS="${QT3_CPPFLAGS} ${CPPFLAGS}"
 LDFLAGS="${QT3_LDFLAGS} ${LDFLAGS}"
 
-QT3_MISSING="Please install Qt3.
-   On a Debian-based system enter 'sudo apt-get install libqt3-mt-dev'."
-AC_CHECK_HEADERS(qvbox.h qconfig.h,, AC_MSG_ERROR(${QT3_MISSING}))
-AC_CHECK_LIB(qt-mt, main,, AC_MSG_ERROR(${QT3_MISSING}), ${QT3_LDFLAGS})
+QT3_INC_MISSING="cannot find the header files for Qt3!
+   Please provide the path to the Qt3 include directory:
+   e.g. './configure --with-qt3-inc=/usr/lib/qt3/include'
+   or provide the base path to the Qt3 installation:
+   e.g. './configure --with-qt3=/usr/lib/qt3'   
+   or install a Qt3 development package:
+   on a Debian-based system enter 'sudo apt-get install libqt3-mt-dev'."
+AC_CHECK_HEADERS(qvbox.h qconfig.h,, AC_MSG_ERROR(${QT3_INC_MISSING}))
 
-QT3_WRONG_VESION="Qt version 3.3 or higher but not Qt4 is required, you have another version."
+QT3_LIB_MISSING="cannot find the Qt3 libraries!
+   Please provide the path to the Qt3 libraries:
+   e.g. './configure --with-qt3-lib=/usr/lib/qt3/lib'
+   or provide the base path to the Qt3 installation:
+   e.g. './configure --with-qt3=/usr/lib/qt3'   
+   or install a Qt3 development package:
+   on a Debian-based system enter 'sudo apt-get install libqt3-mt-dev'."
+AC_CHECK_LIB(qt-mt, main,, AC_MSG_ERROR(${QT3_LIB_MISSING}), ${QT3_LDFLAGS})
+
+QT3_WRONG_VESION="Qt version 3.3 or higher but not Qt4 is required, you have another version!
+   Please provide the base path to the right Qt3 installation:
+   e.g. './configure --with-qt3=/usr/lib/qt3'   
+   or install a Qt3 development package:
+   on a Debian-based system enter 'sudo apt-get install libqt3-mt-dev'."
 AC_COMPILE_IFELSE([
 #include <qvbox.h>
 #if !defined(QT_VERSION) || (QT_VERSION < 0x030300) || (QT_VERSION >= 0x040000)
@@ -102,7 +123,11 @@ AC_ARG_WITH([moc],
 	fi],
 	[])
 
-QT3_MOC_VERSION_ERROR="\$MOC is not pointing to Moc of Qt3"
+QT3_MOC_VERSION_ERROR="$MOC is not for Qt 3.3 (wrong version)!
+   Please specify the full path to Moc:
+   e.g. './configure --with-moc=/usr/lib/qt3/bin/moc'
+   or provide the base path to the Qt3 installation:
+   e.g. './configure --with-qt3=/usr/lib/qt3'."
 if test "x${FORCED_MOC}" != x ; then
     # Moc command passed to configure
     MOC=${FORCED_MOC}
