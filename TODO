@@ -5,8 +5,6 @@ Autotools:
 - Make datatools a separate project
 - Check m4 macro style
 - Check for C++ requirements (STL, templates)
-- Add to the website that I sent distros upon request if you have
-  trouble with autotools versions
 
 Relacs:
 - How are plugins (control, repros) found/identified? Possibility of name clashes!
@@ -85,7 +83,8 @@ Distribution details:
 
 
 
-Bug in MetaData Dialog: after opening and closing with ESC, reopening crashes the program
+Bug in MetaData Dialog: after opening and closing with ESC, reopening
+crashes the program
 
 Bug somewhere: if session is running, start of repro kills RELACS
 This always exits at savefiles.cc line 373: 

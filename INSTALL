@@ -2,7 +2,9 @@
 1. `cd' to the directory containing the relacs source code.
 
 
-2. In case you downloaded the RELACS source code from the subversion
+2. Create the configure script
+
+In case you downloaded the RELACS source code from the subversion
 repository then you need to run
 
 > autoreconf -v --install
@@ -12,6 +14,11 @@ or alternatively
 > ./bootstrap.sh
 
 first.
+
+If you have problems with this, since you don't have the necessary
+programs installed and you do not know how to proceed, then I can send
+you a tar archive with a complete RELACS distribution upon request
+(j.benda@biologie.hu-berlin.de, subject: RELACS).
 
 
 3. Configure RELACS
@@ -49,9 +56,9 @@ directory.
 
 That takes a while!
 
-In case compilation fails, then please write
-me an email (benda@bio.lmu.de, subject: RELACS) containing the full
-output of ./make.
+In case compilation fails, then please write me an email
+(benda@bio.lmu.de, subject: RELACS) containing the full output of
+./make.
 
 
 5. Optionally run
@@ -81,7 +88,7 @@ related options during the configure step No. 3. See ./configure
 --help and the instructions below for details.
 
 
-========================================================================
+====================================================================
 The following is a general instruction to the GNU configure script:
 
 
