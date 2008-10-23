@@ -10,6 +10,8 @@ PKG_CONFIG_MISSING="pkg-config not found!
    You should install pkg-conig on your system.
    On a Debian-based system enter 'sudo apt-get install pkg-config'."
 
+AC_ARG_VAR( [PKG_CONFIG], [the binary of the existing pkg-config program, otherwise empty] )
+
 AC_CHECK_PROG( [PKG_CONFIG], [pkg-config], [pkg-config] )
 
 if test "x${PKG_CONFIG}" = "x" ; then

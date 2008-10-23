@@ -229,8 +229,6 @@ AM_CONDITIONAL([RELACS_TOP_BUILD], [test 0 = 0])
 #################################################
 
 AC_CONFIG_FILES([
-    build_config_dump
-
     Makefile
 
     numerics/configure.ac

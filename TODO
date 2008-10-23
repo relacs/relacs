@@ -5,7 +5,6 @@ Autotools:
 - Make datatools a separate project
 - Check m4 macro style
 - Check for C++ requirements (STL, templates)
-- Remove the build_config_dump stuff
 - Add to the website that I sent distros upon request if you have
   trouble with autotools versions
 

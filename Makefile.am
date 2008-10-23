@@ -25,6 +25,12 @@ EXTRA_DIST = \
     moc3.mk \
     doxygen.mk \
     \
+    relacs.cfg \
+    relacsplugins.cfg \
+    macros.cfg \
+    calib0-0.cfg \
+    calib0-1.cfg \
+    \
     doc/relacs.1 \
     \
     doc/Doxyfile \
