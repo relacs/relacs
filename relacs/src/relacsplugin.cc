@@ -453,55 +453,55 @@ QMutex *RELACSPlugin::settingsMutex( void )
 
 string RELACSPlugin::path( void ) const
 {
-  return RW->FW->path();
+  return RW->SF->path();
 }
 
 
 string RELACSPlugin::defaultPath( void ) const
 {
-  return RW->FW->defaultPath();
+  return RW->SF->defaultPath();
 }
 
 
 string RELACSPlugin::addPath( const string &file ) const
 {
-  return RW->FW->addPath( file );
+  return RW->SF->addPath( file );
 }
 
 
 string RELACSPlugin::addDefaultPath( const string &file ) const
 {
-  return RW->FW->addDefaultPath( file );
+  return RW->SF->addDefaultPath( file );
 }
 
 
 Options &RELACSPlugin::stimulusData( void )
 {
-  return *RW->FW;
+  return *RW->SF;
 }
 
 
 const Options &RELACSPlugin::stimulusData( void ) const
 {
-  return *RW->FW;
+  return *RW->SF;
 }
 
 
 void RELACSPlugin::lockStimulusData( void ) const
 {
-  RW->FW->lock();
+  RW->SF->lock();
 }
 
 
 void RELACSPlugin::unlockStimulusData( void ) const
 {
-  RW->FW->unlock();
+  RW->SF->unlock();
 }
 
 
 QMutex *RELACSPlugin::stimulusDataMutex( void )
 {
-  return RW->FW->mutex();
+  return RW->SF->mutex();
 }
 
 

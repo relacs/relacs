@@ -32,10 +32,12 @@ namespace relacs {
 \class Settings
 \brief Includes some general Settings into the configure mechanism.
 \author Jan Benda
-\version 1.0
+\version 1.1
+
+\todo add booleans for selecting whether pathformat or defaultpath have to be directories
+and update notify() accordingly
 
 Settings sets the following environment variable:
-- \c RELACSDEFAULTPATH : The default path where RELACS stores data (inbetween sessions).
 - \c RELACSREPROPATH : Base directory for RePros to store some general stuff.
 */
 

@@ -93,7 +93,7 @@ void MetaData::save( void )
   lock();
 
   // update file, date, time
-  setText( "File", Str( RW->FW->path() ).preventSlash() );
+  setText( "File", Str( RW->SF->path() ).preventSlash() );
   setText( "Date", date );
   setText( "Time", time );
   setNumber( "Recording duration", RW->SN->sessionTime()/60.0 );
@@ -104,7 +104,7 @@ void MetaData::save( void )
 
   // write infofile:
   RW->SS.lock();
-  ofstream of( RW->FW->addPath( RW->SS.text( "infofile" ) ).c_str() );
+  ofstream of( RW->SF->addPath( RW->SS.text( "infofile" ) ).c_str() );
   RW->SS.unlock();
   Options::save( of, "# ", -1, saveFlag(), false, true );
 

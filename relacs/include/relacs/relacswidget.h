@@ -332,7 +332,7 @@ private:
   Simulator *SIM;
   Model *MD;
   PlotTrace *PT;
-  SaveFiles *FW;
+  SaveFiles *SF;
   RePros *RP;
   Macros *MC;
   FilterDetectors *FD;

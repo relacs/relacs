@@ -333,8 +333,8 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   //  SN = new Session( this, statusbarheight, this, "RELACSWidget::SN" );
   statusBar()->addWidget( SN, 0, false );
   // SaveFiles:
-  FW = new SaveFiles( this, statusbarheight, statusBar(), "RELACSWidget::FW" );
-  statusBar()->addWidget( FW, 0, false );
+  SF = new SaveFiles( this, statusbarheight, statusBar(), "RELACSWidget::SF" );
+  statusBar()->addWidget( SF, 0, false );
   // Simulation:
   SimLabel = new QLabel( this );
   SimLabel->setTextFormat( PlainText );
@@ -737,9 +737,9 @@ void RELACSWidget::processData( void )
 {
   readLockData();
   for ( int k=0; k<AQ->inputsSize(); k++ ) {
-    // XXX FW->write( AQ->aiData( k ) );
+    // XXX SF->write( AQ->aiData( k ) );
   }
-  FW->write( IL, ED );
+  SF->write( IL, ED );
   IL.clearDeviceBuffer();
   unlockData();
   PT->plot( IL, ED );
@@ -822,7 +822,7 @@ int RELACSWidget::write( OutData &signal )
 {
   int r = AQ->write( signal );
   if ( r == 0 ) {
-    FW->write( signal );
+    SF->write( signal );
     QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
   }
   else
@@ -837,7 +837,7 @@ int RELACSWidget::write( OutList &signal )
 {
   int r = AQ->write( signal );
   if ( r == 0 ) {
-    FW->write( signal );
+    SF->write( signal );
     QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
   }
   else
@@ -850,7 +850,7 @@ int RELACSWidget::write( OutList &signal )
 
 void RELACSWidget::noSaving( void )
 {
-  FW->write( false );
+  SF->write( false );
 }
 
 
@@ -922,9 +922,9 @@ void RELACSWidget::startRePro( RePro *repro, int macroaction, bool saving )
 
   ReProRunning = true;
 
-  FW->write( saving );
-  FW->write( *CurrentRePro );
-  CurrentRePro->setSaving( FW->saving() );
+  SF->write( saving );
+  SF->write( *CurrentRePro );
+  CurrentRePro->setSaving( SF->saving() );
   unlockData();
   CurrentRePro->start();
 }
@@ -1006,8 +1006,7 @@ void RELACSWidget::startSession( bool startmacro )
   printlog( "start new session" );
 
   // open files:
-  FW->openFiles( IL, ED );
-  SN->setSaveDialog( FW->openState() );
+  SF->openFiles( IL, ED );
 
 #if QT_VERSION >= 300
   MainWidget->setEraseColor( QColor( 255, 96, 96 ) );
@@ -1017,13 +1016,13 @@ void RELACSWidget::startSession( bool startmacro )
 
   SS.lock();
   if ( SS.boolean( "saverelacscore" ) )
-    CFG.save( RELACSPlugin::Core, FW->addPath( "relacs.cfg" ) );
+    CFG.save( RELACSPlugin::Core, SF->addPath( "relacs.cfg" ) );
   if ( SS.boolean( "saverelacsplugins" ) )
-    CFG.save( RELACSPlugin::Plugins, FW->addPath( "relacsplugins.cfg" ) );
+    CFG.save( RELACSPlugin::Plugins, SF->addPath( "relacsplugins.cfg" ) );
   if ( SS.boolean( "saveattenuators" ) )
-    ATI->save( FW->path() );
+    ATI->save( SF->path() );
   if ( SS.boolean( "saverelacslog" ) ) {
-    LogFile = new ofstream( FW->addPath( "relacs.log" ).c_str() );
+    LogFile = new ofstream( SF->addPath( "relacs.log" ).c_str() );
     if ( ! LogFile->good() ) {
       printlog( "! warning: LogFile not good" );
       delete LogFile;
@@ -1035,7 +1034,7 @@ void RELACSWidget::startSession( bool startmacro )
   }
   SS.unlock();
 
-  InfoFile = new ofstream( FW->addPath( "repros.dat" ).c_str() );
+  InfoFile = new ofstream( SF->addPath( "repros.dat" ).c_str() );
   if ( ! InfoFile->good() ) {
     printlog( "! warning: InfoFile not good" );
     delete InfoFile;
@@ -1083,9 +1082,9 @@ void RELACSWidget::stopSession( bool saved )
   MTDT.save();
 
   if ( saved )
-    FW->completeFiles();
+    SF->completeFiles();
   else 
-    FW->deleteFiles();
+    SF->deleteFiles();
 
   if ( MD != 0 )
     MD->sessionStopped( saved );
@@ -1094,7 +1093,7 @@ void RELACSWidget::stopSession( bool saved )
     CN[k]->sessionStopped( saved );
   RP->sessionStopped( saved );
 
-  CurrentRePro->setSaving( FW->saving() );
+  CurrentRePro->setSaving( SF->saving() );
 
 #if QT_VERSION >= 300
   MainWidget->setEraseColor( OrgBackground );
@@ -1121,7 +1120,7 @@ void RELACSWidget::stopSession( bool saved )
   if ( MC->stopSessionIndex() >= 0 && saved )
     MC->stopSession( false );
 
-  FW->setPath( FW->defaultPath() );
+  SF->setPath( SF->defaultPath() );
 }
 
 
@@ -1303,7 +1302,7 @@ void RELACSWidget::startFirstAcquisition( void )
   }
 
   // files:
-  FW->setPath( FW->defaultPath() );
+  SF->setPath( SF->defaultPath() );
 
   // plot:
   PT->resize( IL, ED );
@@ -1384,7 +1383,7 @@ void RELACSWidget::startFirstSimulation( void )
   }
 
   // files:
-  FW->setPath( FW->defaultPath() );
+  SF->setPath( SF->defaultPath() );
 
   // plots:
   PT->resize( IL, ED );

@@ -42,26 +42,21 @@ namespace relacs {
 
 class RELACSWidget;
 
-// constants for open() and toggle():
-  /*! create a new path (used only by open). */
-static const int FPath    = 0x0001;
-  /*! write the voltage trace as signed shorts into *.sw1. */
-static const int FTrace   = 0x0002;
-  /*! write a trigger list of stimuli to the trace and the event list into *.trg. */
-static const int FTrigger = 0x0004;
-  /*! write a list of events into *.spk (indexed by *.trg). */
-static const int FEvents  = 0x0008;
-  /*! write all file types. */
-static const int FAll     = 0x00ff;
-
   /*! Flag for the modes of traces or events, indicating that they should be saved. */
 static const int SaveFilesMode = 0x0008;
 
 /*! 
 \class SaveFiles
-\author Jan Benda
-\version 2.1
 \brief Write data to files
+\author Jan Benda
+\version 2.2
+
+is owned by RELACSWidget and used by RELACSPlugin (path() and stimulusData())
+Settings (defaultPath()) and MetaData (path() only)
+
+SaveFile sets the following environment variables:
+- \c RELACSDEFAULTPATH : The default base path where RELACS stores data (inbetween sessions).
+- \c RELACSDATAPATH: The base path where RELACS is currently storing data.
 
 \bug implement saving of trace data
 \bug what about no longer valid pointers in StimulusToWrite and TraceToWrite?
@@ -71,6 +66,7 @@ static const int SaveFilesMode = 0x0008;
 \bug writeTrigger: multi board signal times?
 \bug createTraceFile: needs to be implemented.
 \bug writeTrace: works only if all traces are written.
+\todo platform independent mkdir in openFiles()!
 \todo writeStimulus: adaptive time for calculating the mean rate
 \todo check it carefully!
 \todo warning on Disk full (or even before!)
@@ -89,23 +85,55 @@ public:
 	     QWidget *parent=0, const char *name=0 );
   ~SaveFiles( void );
 
-    /*! Returns true if at least one file type is to be opened. */
-  bool openState( void ) const;
-    /*! Returns true if data are written into files. */
+    /*! The current status of writing data to files.
+        \return \c true if data are currently written into files.
+        \sa saving(), write(bool) */
   bool writing( void ) const;
-    /*! Returns true if files are open. */
+    /*! The current status of having files ready for saving data.
+        \return \c true if files are open.
+        \sa writing() */
   bool saving( void ) const;
 
-    /*! The path where all data of the current session are stored. */
+    /*! \return the base path where data are currently stored.
+        \sa addPath(), setPath(), defaultPath(), pathTemplate() */
   string path( void ) const;
-    /*! Set the path where all data of the current session are stored
-        to \a path. A slash is appended if missing. */
+    /*! Set the base path for all data to be stored and
+        the corresponding environment variable RELACSDATAPATH
+        \param[in] path the base path for storing data.
+        \a path(), setPathTemplate() */
   void setPath( const string &path );
-    /*! Returns \a file added to the current path where data should be stored. */
+    /*! Expand file name by the current base path for storing data.
+        \param[in] file the name of the file
+	\return \a file added to the current path for storing data.
+        \sa path() */
   string addPath( const string &file ) const;
-    /*! The default path where data are stored if no session is running. */
+
+    /*! \return the template for the base path where data are to stored.
+        \sa setPathTemplate(), path() */
+  string pathTemplate( void ) const;
+    /*! Set the template for the base path for all data to be stored.
+        Also adjusts the width of the widget accordingly.
+        \param[in] path the template for the base path.
+	\note The template is only set if \a path is not an empty string.
+        \a pathTemplate() */
+  void setPathTemplate( const string &path );
+
+    /*! \return the default base path where data are stored
+        if no session is running.
+        \sa addDefaultPath(), setDefaultPath(), path() */
   string defaultPath( void ) const;
-    /*! Returns \a file added to the default path. */
+    /*! Set the default base path for all data to be stored and
+        the corresponding environment variable RELACSDEFAULTPATH.
+	If the current path() equals defaultPath() then
+	the current base path is alse set via setPath().
+        \param[in] defaultpath the base path for storing data.
+	\note The pathes are only set if \a defaultpath is not an empty string.
+        \a defaultPath() */
+  void setDefaultPath( const string &defaultpath );
+    /*! Expand file name by the default base path for storing data.
+        \param[in] file the name of the file
+	\return \a file added to the default base path for storing data.
+        \sa defaultPath() */
   string addDefaultPath( const string &file ) const;
 
     /*! React to settings of the stimulus options.
@@ -118,11 +146,7 @@ public:
     /*! The mutex of the stimulus data. */
   QMutex *mutex( void );
 
-    /*! The base name used for the files to be written. */
-  string baseName( void ) const { return FileName; }
-
-    /*! Determines in which file should be written.
-        See constants FTrace, FTrigger... for possible values for \a what. 
+    /*! Switch writing data to file on or off.
         Call this only in or before the initialization of a RePro
         or in RePro::read() *before* any write(). */
   void write( bool on );
@@ -141,7 +165,7 @@ public:
   void openFiles( const InList &data, const EventList &events );
     /*! Close files, delete them and removes the directory. */
   void deleteFiles( void );
-    /*! Close files and add a header. */
+    /*! Close files. */
   void completeFiles( void );
 
 
@@ -151,29 +175,27 @@ public slots:
   void polish( void );
 
 
-signals:
-
-  void newFiles( void );
-
-
 protected:
-
-    /*! should extra directory be created? */
-  bool OpenPath;
-    /*! should trigger to trace files be created? */
-  bool OpenTrigger;
-    /*! should trace data files be created? */
-  bool OpenTrace;
-    /*! should list of event data file be created? */
-  bool OpenEvents;
 
     /*! are there any files open to write in? */
   bool FilesOpen;
     /*! should be written into the files? */
   bool Writing;
 
-    /*! The path where all data of the current session are stored. */
+    /*! The path (directory or common basename)
+        where all data of the current session are stored. */
   string Path;
+    /*! The template from which \a Path is generated. */
+  string PathTemplate;
+    /*! The default path (directory or common basename)
+        where all data are stored. */
+  string DefaultPath;
+
+    /*! Identification number for pathes used to create a base pathes
+        from \a PathFormat. */
+  int  PathNumber;
+    /*! The time used to generate the previous base path. */
+  time_t PathTime;
 
     /*! file with trigger to trace. */
   ofstream *TF;
@@ -221,13 +243,6 @@ protected:
   bool ToggleData;
   void writeToggle( void );
 
-    /*! identification number for files used to create a filename. */
-  int  FileNumber;
-    /*! The time used to generate the file name. */
-  time_t FileTime;
-    /*! basename for files and directory. */
-  Str FileName;
-
     /*! The file \a filename will be removed if the session is not saved. */
   void addRemoveFile( const string &filename );
     /*! Reset the list of files that have to be deleted if the session is not to be saved. */
@@ -237,12 +252,12 @@ protected:
 
   RELACSWidget *RW;
 
-    /*! close all open files */
+    /*! Close all open files */
   void closeFiles( void );
-    /*! Returns true if the file path() + filename exist. */
-  bool tryFile( const string &filename );
     /*! Open the file path() + filename
-        as specified by \a type (ios::out, ios::in, ios::binary, ...). */
+        as specified by \a type (ios::out, ios::in, ios::binary, ...).
+        Add it to the list of files to be removed 
+        and print an error message if opening of the file failed. */
   ofstream *openFile( const string &filename, int type );
 
   void createTriggerFile( const InList &data, const EventList &events );

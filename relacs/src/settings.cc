@@ -94,7 +94,13 @@ void Settings::configure( void )
 
 void Settings::notify( void )
 {
-  setenv( "RELACSDEFAULTPATH", text( "defaultpath" ).c_str(), 1 );
+  Str pathformat = text( "pathformat" );
+  pathformat.provideSlash();
+  RW->SF->setPathTemplate( pathformat );
+
+  Str defaultpath = text( "defaultpath" );
+  defaultpath.provideSlash();
+  RW->SF->setDefaultPath( defaultpath );
 
   Str rp = text( "repropath" );
   rp.provideSlash();

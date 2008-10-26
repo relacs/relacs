@@ -36,13 +36,12 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
     RW( rw ),
     StimulusDataLock( true )
 {
-  setPath( defaultPath() );
-  Path = "";  // XXX ????
+  Path = "";
+  PathTemplate = "%04Y-%02m-%02d-%a2a";
+  DefaultPath = "";
 
-  OpenPath = true;
-  OpenTrigger = true;
-  OpenTrace = true;
-  OpenEvents = true;
+  PathNumber = 0;
+  PathTime = ::time( 0 );
 
   FilesOpen = false;
   Writing = false;
@@ -78,10 +77,6 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
   ReProDate = "";
   ReProSettings.clear();
   ReProData = false;
-  
-  FileNumber = 0;
-  FileName = "";
-  FileTime = ::time( 0 );
 
   setFixedHeight( height );
 
@@ -113,13 +108,6 @@ SaveFiles::~SaveFiles()
 }
 
 
-bool SaveFiles::openState( void ) const
-{
-  return ( OpenTrace || OpenTrigger || 
-	   OpenEvents || OpenPath );
-}
-
-
 bool SaveFiles::writing( void ) const
 {
   return Writing;
@@ -141,8 +129,6 @@ string SaveFiles::path( void ) const
 void SaveFiles::setPath( const string &path )
 {
   Path = path;
-  if ( Path.size() > 0 && Path[Path.size()-1] != '/' )
-    Path += '/';
   setenv( "RELACSDATAPATH", Path.c_str(), 1 );
 }
 
@@ -153,14 +139,43 @@ string SaveFiles::addPath( const string &file ) const
 }
 
 
+string SaveFiles::pathTemplate( void ) const
+{
+  return PathTemplate;
+}
+
+
+void SaveFiles::setPathTemplate( const string &path )
+{
+  if ( path.empty() )
+    return;
+
+  PathTemplate = path;
+
+  Str fn = PathTemplate;
+  fn.format( localtime( &PathTime ) );
+  fn.format( 99, 'n', 'd' );
+  fn.format( "aa", 'a' );
+  fn.format( "AA", 'A' );
+  FileLabel->setFixedWidth( QFontMetrics( HighlightFont ).boundingRect( fn.c_str() ).width() + 8 );
+}
+
+
 string SaveFiles::defaultPath( void ) const
 {
-  RW->SS.lock();
-  string dp = RW->SS.text( "defaultpath" );
-  RW->SS.unlock();
-  if ( dp.size() > 0 && dp[dp.size()-1] != '/' )
-    dp += '/';
-  return dp;
+  return DefaultPath;
+}
+
+
+void SaveFiles::setDefaultPath( const string &defaultpath )
+{
+  if ( defaultpath.empty() )
+    return;
+
+  if ( Path == DefaultPath )
+    setPath( defaultpath );
+  DefaultPath = defaultpath;
+  setenv( "RELACSDEFAULTPATH", DefaultPath.c_str(), 1 );
 }
 
 
@@ -201,10 +216,8 @@ void SaveFiles::polish( void )
   NormalFont = FileLabel->font();
   HighlightFont = QFont( fontInfo().family(), fontInfo().pointSize()*4/3, QFont::Bold );
 
-  RW->SS.lock();
-  Str fn = RW->SS.text( "pathformat" );
-  RW->SS.unlock();
-  fn.format( localtime( &FileTime ) );
+  Str fn = PathTemplate;
+  fn.format( localtime( &PathTime ) );
   fn.format( 99, 'n', 'd' );
   fn.format( "aa", 'a' );
   fn.format( "AA", 'A' );
@@ -452,14 +465,6 @@ void SaveFiles::clearRemoveFiles( void )
 }
 
 
-bool SaveFiles::tryFile( const string &filename )
-{
-  string fs = path() + filename;
-  ifstream f( fs.c_str() );
-  return f.good();
-}
-
-
 ofstream *SaveFiles::openFile( const string &filename, int type )
 {
   string fs = path() + filename;
@@ -467,7 +472,7 @@ ofstream *SaveFiles::openFile( const string &filename, int type )
   ofstream *f = new ofstream( fs.c_str(), ofstream::openmode( type ) );
   if ( ! f->good() ) {
     f = 0;
-    RW->printlog( "SaveFiles::openFile: can't open <" + fs + ">" );
+    RW->printlog( "SaveFiles::openFile: can't open file '" + fs + "'" );
   }
   return f;
 }
@@ -610,10 +615,7 @@ void SaveFiles::createTriggerFile( const InList &data, const EventList &events )
 void SaveFiles::openFiles( const InList &data, const EventList &events )
 {
   // nothing to be done, if files are already open:
-  if ( ( VF != 0 || !OpenTrace ) && 
-       ( TF != 0 || !OpenTrigger ) && 
-       ( !EF.empty() || !OpenEvents ) &&
-       ( path() != defaultPath() || !OpenPath ) )
+  if ( VF != 0 || TF != 0 || !EF.empty() || path() != defaultPath() )
     return;
 
   // close all open files:
@@ -633,90 +635,73 @@ void SaveFiles::openFiles( const InList &data, const EventList &events )
   ReProSettings.clear();
 
   setPath( defaultPath() );
-  
-  // no files need to be opened?
-  if ( !OpenPath && !OpenTrace && !OpenTrigger && !OpenEvents )
-    return;
 
   // get current time:
   time_t currenttime = RW->SN->startSessionTime();
   // time changed?
-  if ( difftime( currenttime, FileTime ) != 0.0  )
-    FileNumber = 0;
-  FileTime = currenttime;
+  if ( difftime( currenttime, PathTime ) != 0.0  )
+    PathNumber = 0;
+  PathTime = currenttime;
 
   // generate unused name for new files/directory:
-  FileNumber++;
+  Str pathname = "";
+  PathNumber++;
   int az = ('z'-'a'+1);
-  for ( ; FileNumber <= az*az; FileNumber++ ) {
+  for ( ; PathNumber <= az*az; PathNumber++ ) {
 
     // create file name:
-    RW->SS.lock();
-    FileName = RW->SS.text( "pathformat" );
-    RW->SS.unlock();
-    FileName.format( localtime( &FileTime ) );
-    FileName.format( FileNumber, 'n', 'd' );
-    int n = FileNumber-1;
+    pathname = PathTemplate;
+    pathname.format( localtime( &PathTime ) );
+    pathname.format( PathNumber, 'n', 'd' );
+    int n = PathNumber-1;
     Str s = char( 'a' + n%az );
     n /= az;
     while ( n > 0 ) {
       s.insert( 0u, 1u, char( 'a' + n%az ) );
       n /= az;
     }
-    FileName.format( s, 'a' );
+    pathname.format( s, 'a' );
     s.upper();
-    FileName.format( s, 'A' );
+    pathname.format( s, 'A' );
 
-    if ( OpenPath ) {
+    if ( pathname[pathname.size()-1] == '/' ) {
       // try to create new directory:
       char s[200];
-      sprintf( s, "%s %s", "mkdir", FileName.c_str() );
+      sprintf( s, "%s %s", "mkdir", pathname.c_str() );
       // success?
-      if ( system( s ) == 0 ) {
-	// set path:
-	setPath( FileName );
+      if ( system( s ) == 0 )
 	break;
-      }
     }
     else {
       // try to open files:
-      int ok = 0;
-      if ( OpenTrigger ) {
-	if ( tryFile( "trigger.dat" ) )
-	  ok |= 1;
-	
-      }
-      if ( OpenEvents ) {
-	if ( tryFile( "events.dat" ) )
-	  ok |= 2;
-      }
+      string fs = path() + "trigger.dat";
+      ifstream f( fs.c_str() );
       // files do not exist?
-      if ( ok == 0 )
+      if ( ! f.good() )
 	break;
     }
   }
   // running out of names?
-  if ( FileNumber > az*az ) {
+  if ( PathNumber > az*az ) {
     RW->printlog( "! panic: SaveFiles::openFiles -> can't create data file!" );
     return;
   }
+  // valid base name found:
+  setPath( pathname );
 
   // open files:
-  if ( OpenTrace )
-    createTraceFile( data );
-  if ( OpenEvents )
-    createEventFiles( events );
-  if ( OpenTrigger )
-    createTriggerFile( data, events );
+  createTraceFile( data );
+  createEventFiles( events );
+  createTriggerFile( data, events );
   FilesOpen = true;
 
   // message:
-  RW->printlog( "save in " + FileName );
+  RW->printlog( "save in " + path() );
 
   // update widget:
   FileLabel->setFont( HighlightFont );
   FileLabel->setPalette( HighlightPalette );
-  FileLabel->setText( FileName.c_str() );
+  FileLabel->setText( path().c_str() );
   SaveLabel->setSpike( true );
 }
 
@@ -748,29 +733,29 @@ void SaveFiles::deleteFiles( void )
 {
   closeFiles();
 
+  // remove files:
+  for ( vector<string>::iterator h = RemoveFiles.begin();
+	h != RemoveFiles.end();
+	++h )
+    remove( h->c_str() );
+  clearRemoveFiles();
+
   if ( path() != defaultPath() && 
-       path() != "" ) {
+       path() != "" &&
+       path()[path().size()-1] == '/' ) {
     // remove the whole directory:
     string s = "rm -f -r " + path();
     system( s.c_str() );
   }
-  else {
-    // remove files:
-    for ( vector<string>::iterator h = RemoveFiles.begin();
-	  h != RemoveFiles.end();
-	  ++h )
-      remove( h->c_str() );
-  }
-  clearRemoveFiles();
 
   // message:
-  RW->printlog( "discarded " + FileName );
-  FileLabel->setFont( NormalFont );
+  RW->printlog( "discarded " + path() );
   FileLabel->setPalette( NormalPalette );
+  FileLabel->setFont( NormalFont );
   FileLabel->setText( "deleted" );
 
   setPath( defaultPath() );
-  FileNumber--;
+  PathNumber--;
 }
 
 
@@ -787,8 +772,8 @@ void SaveFiles::completeFiles( void )
   closeFiles();
 
   // message:
+  RW->printlog( "saved as " + path() );
   FileLabel->setPalette( NormalPalette );
-  RW->printlog( "saved as " + FileName );
 
   setPath( defaultPath() );
 }
