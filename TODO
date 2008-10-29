@@ -5,6 +5,8 @@ Autotools:
 - Make datatools a separate project
 - Check m4 macro style
 - Check for C++ requirements (STL, templates)
+- For running autoreconf you need the following packages:
+  apt-get install autoconf automake libtool 
 
 Relacs:
 - How are plugins (control, repros) found/identified? Possibility of name clashes!
