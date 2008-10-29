@@ -157,6 +157,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   ATI = new AttInterfaces( AOD );
 
   // load config:
+  SF = 0;
   CFG.read( RELACSPlugin::Core );
   CFG.configure( RELACSPlugin::Core );
 
@@ -334,6 +335,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   statusBar()->addWidget( SN, 0, false );
   // SaveFiles:
   SF = new SaveFiles( this, statusbarheight, statusBar(), "RELACSWidget::SF" );
+  SS.notify(); // initialize SF from the Settings
   statusBar()->addWidget( SF, 0, false );
   // Simulation:
   SimLabel = new QLabel( this );
@@ -1006,7 +1008,7 @@ void RELACSWidget::startSession( bool startmacro )
   printlog( "start new session" );
 
   // open files:
-  SF->openFiles( IL, ED );
+  SF->openFiles( *AQ, ED );
 
 #if QT_VERSION >= 300
   MainWidget->setEraseColor( QColor( 255, 96, 96 ) );

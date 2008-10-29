@@ -88,6 +88,26 @@ int Acquire::inputsSize( void ) const
 }
 
 
+const AnalogInput *Acquire::inputDevice( int deviceindex ) const
+{
+  if ( deviceindex < 0 || deviceindex >= (int)AI.size() )
+    return 0;
+
+  return AI[deviceindex].AI;
+}
+
+
+const InList &Acquire::inputTraces( int deviceindex ) const
+{
+  if ( deviceindex < 0 )
+    deviceindex = 0;
+  if ( deviceindex >= (int)AI.size() )
+    deviceindex = AI.size()-1;
+
+  return AI[deviceindex].Traces;
+}
+
+
 void Acquire::clearInputs( void )
 {
   stopRead();

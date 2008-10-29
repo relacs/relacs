@@ -31,7 +31,7 @@
 #include <relacs/str.h>
 #include <relacs/options.h>
 #include <relacs/tablekey.h>
-#include <relacs/inlist.h>
+#include <relacs/acquire.h>
 #include <relacs/outdata.h>
 #include <relacs/eventdata.h>
 #include <relacs/repro.h>
@@ -60,10 +60,10 @@ SaveFile sets the following environment variables:
 
 \bug implement saving of trace data
 \bug what about no longer valid pointers in StimulusToWrite and TraceToWrite?
-\bug createTriggerFile: write sample rate of all traces
-\bug createTriggerFile: write name of trace file
+\bug createStimulusFile: write sample rate of all traces
+\bug createStimulusFile: write name of trace file
 \bug writeTrace: needs to be implemented
-\bug writeTrigger: multi board signal times?
+\bug writeStimulus: multi board signal times?
 \bug createTraceFile: needs to be implemented.
 \bug writeTrace: works only if all traces are written.
 \todo platform independent mkdir in openFiles()!
@@ -161,11 +161,11 @@ public:
   void write( const RePro &RP );
 
     /*! If no file is open: create a new file name, make a directory,
-        open and initialize the data-, index- and event-files. */
-  void openFiles( const InList &data, const EventList &events );
-    /*! Close files, delete them and removes the directory. */
+        open and initialize the data-, event-, and stimulus files. */
+  void openFiles( const Acquire &intracs, const EventList &events );
+    /*! Close files and delete them and/or remove base directory. */
   void deleteFiles( void );
-    /*! Close files. */
+    /*! Close files and keep them. */
   void completeFiles( void );
 
 
@@ -176,6 +176,18 @@ public slots:
 
 
 protected:
+
+    /*! Close all open files */
+  void closeFiles( void );
+    /*! Open the file path() + filename
+        as specified by \a type (ios::out, ios::in, ios::binary, ...).
+        Add it to the list of files to be removed 
+        and print an error message if opening of the file failed. */
+  ofstream *openFile( const string &filename, int type );
+
+  void createTraceFile( const Acquire &intraces );
+  void createEventFiles( const EventList &events );
+  void createStimulusFile( const Acquire &intraces, const EventList &events );
 
     /*! are there any files open to write in? */
   bool FilesOpen;
@@ -197,12 +209,12 @@ protected:
     /*! The time used to generate the previous base path. */
   time_t PathTime;
 
-    /*! file with trigger to trace. */
-  ofstream *TF;
-    /*! file for voltage trace. */
-  ofstream *VF;
-    /*! files for complete list of events. */
+    /*! files for all voltage traces. */
+  vector< ofstream* > VF;
+    /*! files for complete list of events except stimulus events. */
   vector< ofstream* > EF;
+    /*! file with stimuli and indices to traces and events. */
+  ofstream *SF;
 
     /*! The trace data that have to be written into the file. */
   const InList *TraceToWrite;
@@ -228,7 +240,7 @@ protected:
 
   OutList StimulusToWrite;
   bool StimulusData;
-  TableKey TriggerKey;
+  TableKey StimulusKey;
   void writeStimulus( void );
 
   string ReProName;
@@ -243,26 +255,20 @@ protected:
   bool ToggleData;
   void writeToggle( void );
 
-    /*! The file \a filename will be removed if the session is not saved. */
+    /*! The file \a filename will be removed if the session is not
+        saved. */
   void addRemoveFile( const string &filename );
-    /*! Reset the list of files that have to be deleted if the session is not to be saved. */
+    /*! Reset the list of files that have to be deleted if the session
+        is not to be saved. */
   void clearRemoveFiles( void );
-    /*! A list of files which have to be deleted if the session is not to be saved. */
+    /*! Remove all files from the list and clear the list of files
+        that have to be deleted if the session is not to be saved. */
+  void removeFiles( void );
+    /*! A list of files which have to be deleted if the session is not
+        to be saved. */
   vector<string> RemoveFiles; 
 
   RELACSWidget *RW;
-
-    /*! Close all open files */
-  void closeFiles( void );
-    /*! Open the file path() + filename
-        as specified by \a type (ios::out, ios::in, ios::binary, ...).
-        Add it to the list of files to be removed 
-        and print an error message if opening of the file failed. */
-  ofstream *openFile( const string &filename, int type );
-
-  void createTriggerFile( const InList &data, const EventList &events );
-  void createTraceFile( const InList &data );
-  void createEventFiles( const EventList &events );
 
   QLabel *FileLabel;
   QFont NormalFont;

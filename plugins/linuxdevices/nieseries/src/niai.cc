@@ -344,6 +344,7 @@ int NIAI::prepareRead( InList &traces )
     if ( traces[0].deviceBuffer() == NULL )
       traces[0].reserveDeviceBuffer( traces.size() * traces[0].capacity(),
 				     sizeof( signed short ) );
+    traces[0].setDeviceDataType( InData::SignedWord );
   }
   // buffer overflow:
   if ( traces[0].deviceBufferSize() >= traces[0].deviceBufferCapacity() ) {

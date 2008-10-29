@@ -94,13 +94,17 @@ void Settings::configure( void )
 
 void Settings::notify( void )
 {
-  Str pathformat = text( "pathformat" );
-  pathformat.provideSlash();
-  RW->SF->setPathTemplate( pathformat );
+  if ( RW->SF != 0 ) {
 
-  Str defaultpath = text( "defaultpath" );
-  defaultpath.provideSlash();
-  RW->SF->setDefaultPath( defaultpath );
+    Str pathformat = text( "pathformat" );
+    pathformat.provideSlash();
+    RW->SF->setPathTemplate( pathformat );
+    
+    Str defaultpath = text( "defaultpath" );
+    defaultpath.provideSlash();
+    RW->SF->setDefaultPath( defaultpath );
+
+  }
 
   Str rp = text( "repropath" );
   rp.provideSlash();

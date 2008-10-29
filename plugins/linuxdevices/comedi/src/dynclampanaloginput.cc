@@ -343,6 +343,7 @@ int DynClampAnalogInput::prepareRead( InList &sigs )
     if ( sigs[0].deviceBuffer() == NULL )
       sigs[0].reserveDeviceBuffer( sigs.size() * sigs[0].capacity(),
 				     BufferElemSize );
+    traces[0].setDeviceDataType( InData::Float );
   }
   // buffer overflow:
   if ( sigs[0].deviceBufferSize() >= sigs[0].deviceBufferCapacity() ) {

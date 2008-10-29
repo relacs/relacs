@@ -141,23 +141,32 @@ public:
 	- -1: \a ai == 0
 	- -2: \a ai not opened
 	- -3: \a defaulttype not valid
-	\sa inputsSize(), clearInputs(), closeInputs(),
-	addOutput(), addAttenute(), addOutTrace() */
+	\sa inputsSize(), inputDevice(), inputTraces(), clearInputs(),
+	closeInputs(), addOutput(), addAttenute(), addOutTrace() */
   int addInput( AnalogInput *ai, int defaulttype=0 );
     /*! The number of device drivers for analog input
         stored in this Acquire. 
-	\sa addInput(), clearInputs(), closeInputs(),
-	outputsSize(), attLinesSize(), outTracesSize() */
+	\sa addInput(), inputDevice(), inputTraces(), clearInputs(),
+	closeInputs(), outputsSize(), attLinesSize(),
+	outTracesSize() */
   int inputsSize( void ) const;
+    /*! The ananlog input device \a deviceindex.
+	\sa addInput(), inputsSize(), inputTraces(), clearInputs(), closeInputs() */
+  const AnalogInput *inputDevice( int deviceindex ) const;
+    /*! The input traces acquired from ananlog input device \a deviceindex.
+	\sa addInput(), inputsSize(), inputDevice(), clearInputs(),
+	closeInputs() */
+  const InList &inputTraces( int deviceindex ) const;
     /*! Stop analog input, clear the list of analog input devices
         without closing the devices. 
-	\sa addInput(), inputsSize(), closeInputs(),
-	clearOutputs(), clearAttLines(), clearOutTraces() */
+	\sa addInput(), inputsSize(), inputDevice(), inputTraces(),
+	closeInputs(), clearOutputs(), clearAttLines(),
+	clearOutTraces() */
   void clearInputs( void );
-    /*! Stop analog input, close all devices from the list
-        of analog input devices and clear the list.
-	\sa addInput(), inputsSize(), clearInputs(),
-	closeOututs(), closeAttLines() */
+    /*! Stop analog input, close all devices from the list of analog
+	input devices and clear the list.
+	\sa addInput(), inputsSize(), inputDevice(), inputTraces(),
+	clearInputs(), closeOutputs(), closeAttLines() */
   void closeInputs( void );
 
     /*! Add the analog output device \a ao to

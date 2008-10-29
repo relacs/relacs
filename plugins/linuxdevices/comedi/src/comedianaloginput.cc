@@ -530,6 +530,7 @@ int ComediAnalogInput::prepareRead( InList &traces )
     if ( traces[0].deviceBuffer() == NULL )
       traces[0].reserveDeviceBuffer( traces.size() * traces[0].capacity(),
 				     BufferElemSize );
+    traces[0].setDeviceDataType( LongSampleType ? InData::UnsingedDoubleWord : InData::UnsingedWord );
   }
   // buffer overflow:
   if ( traces[0].deviceBufferSize() >= traces[0].deviceBufferCapacity() ) {

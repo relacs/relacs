@@ -32,6 +32,8 @@ const string InData::RefStr[4] =
   { "differential", "common", "ground", "other" };
 int InData::DefaultDevice = 0;
 
+const string InData::DataTypeIds[10] =
+  { "sb", "ub", "sw", "uw", "sd", "ud", "sq", "uq", "f", "d" };
 
 InData::InData( void )
   : CyclicArrayF()

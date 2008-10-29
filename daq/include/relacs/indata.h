@@ -560,6 +560,15 @@ class InData : public CyclicArray<float>, public DaqError
     /*! Write the internal variables to \a str. */
   friend ostream &operator<<( ostream &str, const InData &id );
 
+    /*! Possible data types for the device dependent buffer. */
+  enum DataTypes {
+    SignedByte=0, UnsingedByte,
+    SignedWord, UnsingedWord,
+    SignedDoubleWord, UnsingedDoubleWord,
+    SignedQuadWord, UnsingedQuadWord,
+    Float, Double
+  };
+
     /*! Pointer to the internal buffer that holds the data in a 
         device dependent multiplexed format.
         \sa deviceBufferSize(), deviceBufferCapacity() */
@@ -587,8 +596,17 @@ class InData : public CyclicArray<float>, public DaqError
         \sa deviceBufferSize(), deviceBuffer() */
   inline void deviceBufferPush( int n ) { DeviceBufferSize += n; };
     /*! The size of a single data element of the buffer in Bytes.
-        \sa deviceBufferSize() */
+        \sa deviceDataType(), deviceBufferSize() */
   inline int deviceDataSize( void ) const { return DeviceDataSize; };
+    /*! The type of a single data element of the buffer.
+        \sa deviceDataSize() */
+  inline DataTypes deviceDataType( void ) const { return DeviceDataType; };
+    /*! The type of a single data element of the buffer as a string.
+        \sa deviceDataSize() */
+  inline string deviceDataTypeId( void ) const { return DataTypeIds[DeviceDataType]; };
+    /*! Set the type of a single data element of the buffer.
+        \sa deviceDataType() */
+  inline void setDeviceDataType( DataTypes dt ) { DeviceDataType = dt; };
     /*! The index of the first element of the device depend buffer
         relative to the cyclic buffer. */
   inline int deviceBufferStart( void ) { return DeviceBufferStart; };
@@ -685,6 +703,8 @@ class InData : public CyclicArray<float>, public DaqError
     /*! The source of the data: 0: acquisition, 1: InData, 2: events. */
   int Source;
 
+    /*! Shortcut string corresponding to the DataType enum. */
+  static const string DataTypeIds[10];
     /*! The buffer holding device dependent multiplexed data. */
   char *DeviceBuffer;
     /*! The capacity of the device dependent buffer in Bytes. */
@@ -694,6 +714,8 @@ class InData : public CyclicArray<float>, public DaqError
   int DeviceBufferStart;
     /*! Size in Bytes of a single data element of the device dependent buffer. */
   int DeviceDataSize;
+    /*! The data type of a single data element of the device dependent buffer. */
+  DataTypes DeviceDataType;
     /*! Index to buffer element indicating its current size. */
   int DeviceBufferSize;
     /*! Index to buffer indicating where to start converting data. */

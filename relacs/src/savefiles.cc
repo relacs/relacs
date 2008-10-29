@@ -46,9 +46,9 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
   FilesOpen = false;
   Writing = false;
 
-  TF = 0;
-  VF = 0;
+  VF.clear();
   EF.clear();
+  SF = 0;
 
   clearRemoveFiles();
 
@@ -66,7 +66,7 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
 
   StimulusToWrite.clear();
   StimulusData = false;
-  TriggerKey.clear();
+  StimulusKey.clear();
 
   ToggleOn = false;
   ToggleData = false;
@@ -268,7 +268,7 @@ void SaveFiles::write( const InList &data, const EventList &events )
   TraceToWrite = &data;
   /*
   //      cerr << "writeTrace\n";
-  if ( VF != 0 && Writing ) {
+  if ( ! VF.empty() && Writing ) {
     TraceOffs += TraceToWrite->saveBinary( VF, -1, SaveFilesMode, TraceIndex );
     TraceIndex = TraceToWrite->currentIndex( -1 );
     SignalOffs = TraceOffs - TraceIndex + TraceToWrite->signalIndex( -1 ); // XXX this works only if all traces are written!
@@ -353,49 +353,49 @@ void SaveFiles::writeStimulus( void )
     
     //      cerr << "writeStimulus \n";
     
-    // trigger file:
-    if ( TF != 0 && Writing ) {
-      TriggerKey.save( *TF, SignalOffs, 0 );
+    // stimulus indices file:
+    if ( SF != 0 && Writing ) {
+      StimulusKey.save( *SF, SignalOffs, 0 );
       for ( int k=0; k<TraceToWrite->size(); k++ )
 	if ( (*TraceToWrite)[k].mode() & SaveFilesMode ) {
-	  TriggerKey.save( *TF, (*TraceToWrite)[k].gain() * (*TraceToWrite)[k].scale() );
-	  TriggerKey.save( *TF, (*TraceToWrite)[k].offset() );
+	  StimulusKey.save( *SF, (*TraceToWrite)[k].gain() * (*TraceToWrite)[k].scale() );
+	  StimulusKey.save( *SF, (*TraceToWrite)[k].offset() );
 	}
       for ( unsigned int k=0; k<EF.size(); k++ )
 	if ( EF[k] != 0 ) {
-	  TriggerKey.save( *TF, SignalEvents[k] );
-	  TriggerKey.save( *TF, EventsToWrite[k]->meanRate() );  // XXX adaptive Zeit!
-	  TriggerKey.save( *TF, EventsToWrite[k]->meanSize() );
+	  StimulusKey.save( *SF, SignalEvents[k] );
+	  StimulusKey.save( *SF, EventsToWrite[k]->meanRate() );  // XXX adaptive Zeit!
+	  StimulusKey.save( *SF, EventsToWrite[k]->meanSize() );
 	}
       lock();
       if ( !Options::empty() ) {
 	for( int k=0; k<Options::size(); k++ )
-	  TriggerKey.save( *TF, (*this)[k].number() );
+	  StimulusKey.save( *SF, (*this)[k].number() );
       }
       unlock();
       // XXX this is not really multi board!
-      TriggerKey.save( *TF, (*TraceToWrite)[0].signalTime() - SessionTime );
+      StimulusKey.save( *SF, (*TraceToWrite)[0].signalTime() - SessionTime );
       // StimulusToWrite:
-      TriggerKey.save( *TF, 1000.0*StimulusToWrite[0].delay() );
+      StimulusKey.save( *SF, 1000.0*StimulusToWrite[0].delay() );
       for ( int k=0; k<RW->AQ->outTracesSize(); k++ ) {
 	for ( int j=0; j<StimulusToWrite.size(); j++ ) {
 	  if ( StimulusToWrite[j] == RW->AQ->outTrace( k ) ) {
-	    TriggerKey.save( *TF, 0.001*StimulusToWrite[j].sampleRate() );
-	    TriggerKey.save( *TF, 1000.0*StimulusToWrite[j].length() );
-	    TriggerKey.save( *TF, StimulusToWrite[j].intensity() );
-	    TriggerKey.save( *TF, StimulusToWrite[j].carrierFreq() );
-	    TriggerKey.save( *TF, StimulusToWrite[j].ident() );
+	    StimulusKey.save( *SF, 0.001*StimulusToWrite[j].sampleRate() );
+	    StimulusKey.save( *SF, 1000.0*StimulusToWrite[j].length() );
+	    StimulusKey.save( *SF, StimulusToWrite[j].intensity() );
+	    StimulusKey.save( *SF, StimulusToWrite[j].carrierFreq() );
+	    StimulusKey.save( *SF, StimulusToWrite[j].ident() );
 	  }
 	  else {
-	    TriggerKey.save( *TF, "" );
-	    TriggerKey.save( *TF, "" );
-	    TriggerKey.save( *TF, "" );
-	    TriggerKey.save( *TF, "" );
-	    TriggerKey.save( *TF, "" );
+	    StimulusKey.save( *SF, "" );
+	    StimulusKey.save( *SF, "" );
+	    StimulusKey.save( *SF, "" );
+	    StimulusKey.save( *SF, "" );
+	    StimulusKey.save( *SF, "" );
 	  }
 	}
       }
-      *TF << endl;
+      *SF << endl;
     }
     
     StimulusData = false;
@@ -429,23 +429,23 @@ void SaveFiles::writeRePro( void )
 
   if ( ReProData ) {
     
-    // trigger file:
-    if ( TF != 0 && Writing ) {
-      *TF << '\n';
-      *TF << "# repro: " << ReProName  << '\n';
-      *TF << "# author: " << ReProAuthor << '\n';
-      *TF << "# version: " << ReProVersion << '\n';
-      *TF << "# date: " << ReProDate << '\n';
+    // stimulus indices file:
+    if ( SF != 0 && Writing ) {
+      *SF << '\n';
+      *SF << "# repro: " << ReProName  << '\n';
+      *SF << "# author: " << ReProAuthor << '\n';
+      *SF << "# version: " << ReProVersion << '\n';
+      *SF << "# date: " << ReProDate << '\n';
       if ( ! ReProSettings.empty() ) {
 	ReProSettings.setFlags( 0 );
 	ReProSettings.setTypeFlags( 1, -Parameter::Blank );
-	ReProSettings.save( *TF, "# ", -1, 1, false, true );
+	ReProSettings.save( *SF, "# ", -1, 1, false, true );
       }
       ReProSettings.clear();
 
-      // write TriggerKey:
-      *TF << '\n';
-      TriggerKey.saveKey( *TF, true, true );
+      // write StimulusKey:
+      *SF << '\n';
+      StimulusKey.saveKey( *SF, true, true );
     }
 
     ReProData = false;
@@ -465,6 +465,17 @@ void SaveFiles::clearRemoveFiles( void )
 }
 
 
+void SaveFiles::removeFiles( void )
+{
+  for ( vector<string>::iterator h = RemoveFiles.begin();
+	h != RemoveFiles.end();
+	++h ) {
+    remove( h->c_str() );
+  }
+  clearRemoveFiles();
+}
+
+
 ofstream *SaveFiles::openFile( const string &filename, int type )
 {
   string fs = path() + filename;
@@ -478,21 +489,22 @@ ofstream *SaveFiles::openFile( const string &filename, int type )
 }
 
 
-void SaveFiles::createTraceFile( const InList &data )
+void SaveFiles::createTraceFile( const Acquire &intraces )
 {
   // init trace variables:
-  TraceToWrite = &data;
+  //  TraceToWrite = &data;
   SessionTime = (*TraceToWrite)[0].currentTime();
   TraceIndex = (*TraceToWrite)[0].currentIndex();
   TraceOffs = 0;
   SignalOffs = 0;
 
-  /*
   // create file for trace-data:
-  string filename = "traces." + TraceToWrite->binaryExtension( -1 );
-  VF = openFile( filename, ios::out | ios::binary );
-  */
-  VF = 0;
+  VF.clear();
+  VF.reserve( intraces.inputsSize() );
+  for ( int k=0; k<intraces.inputsSize(); k++ ) {
+    string filename = "traces-" + Str( k+1 ) + "." + intraces.inputTraces( k )[0].deviceDataTypeId() + Str( intraces.inputTraces( k ).size() );
+    VF[k] = openFile( filename, ios::out | ios::binary );
+  }
 }
 
 
@@ -516,15 +528,14 @@ void SaveFiles::createEventFiles( const EventList &events )
     SignalEvents[k] = 0;
 
     // create file:
-    if ( ( events[k].mode() & SaveFilesMode ) &&
-	 !(events[k].mode() & StimulusEventMode) ) {
+    if ( events[k].mode() & SaveFilesMode ) {
       Str fn = events[k].ident();
       EventFileNames[k] = fn.lower() + "-events.dat";
       ofstream *ef = openFile( EventFileNames[k], ios::out );
       EF.push_back( ef );
       if ( ef->good() ) {
 	// write key:
-	*ef << "events: " << events[k].ident() << '\n';
+	*ef << "# events: " << events[k].ident() << '\n';
 	*ef << '\n';
 	*ef << "#Key\n";
 	*ef << "# t\n";
@@ -541,81 +552,92 @@ void SaveFiles::createEventFiles( const EventList &events )
 }
 
 
-void SaveFiles::createTriggerFile( const InList &data, const EventList &events )
+void SaveFiles::createStimulusFile( const Acquire &intraces, const EventList &events )
 {
   // init stimulus variables:
   StimulusData = false;
 
-  // create file for trigger to trace:
-  TF = openFile( "trigger.dat", ios::out );
+  // create file for stimuli:
+  SF = openFile( "stimulus-indices.dat", ios::out );
 
-  if ( (*TF) ) {
+  if ( (*SF) ) {
     // write header:
-    *TF << "# sample interval: " << Str( 1000.0*data[0].sampleInterval(), 0, 2, 'f' ) << "ms\n";
-    //    *TF << "#      trace file: " << "traces." << data.binaryExtension( -1 ) << '\n';
+    *SF << "# analog input devices:\n";
+    for ( int k=0; k<intraces.inputsSize(); k++ ) {
+      *SF << "#      identifier" + Str( k+1 ) + ": " << intraces.inputDevice( k )->deviceIdent() << '\n';
+      *SF << "#            name" + Str( k+1 ) + ": " << intraces.inputDevice( k )->deviceName() << '\n';
+      *SF << "#          vendor" + Str( k+1 ) + ": " << intraces.inputDevice( k )->deviceVendor() << '\n';
+      *SF << "#          device" + Str( k+1 ) + ": " << intraces.inputDevice( k )->deviceFile() << '\n';
+      *SF << "#       data file" + Str( k+1 ) + ": " << "traces-" << Str( k+1 ) << "." << intraces.inputTraces( k )[0].deviceDataTypeId() << Str( intraces.inputTraces( k ).size() ) << '\n';
+      *SF << "#          traces" + Str( k+1 ) + ": " << Str( intraces.inputTraces( k ).size() ) << '\n';
+      *SF << "# sample interval" + Str( k+1 ) + ": " << Str( 1000.0*intraces.inputTraces( k )[0].sampleInterval(), 0, 2, 'f' ) << "ms\n";
+    }
+    *SF << "# event lists:\n";
     for ( unsigned int k=0; k<EventFileNames.size(); k++ ) {
       if ( ! EventFileNames[k].empty() )
-	*TF << "#      event file: " << EventFileNames[k] << '\n';
+	*SF << "#      event file" + Str( k+1 ) + ": " << EventFileNames[k] << '\n';
     }
-    *TF << "# signals:\n";
+    *SF << "# analog output traces:\n";
     for ( int k=0; k<RW->AQ->outTracesSize(); k++ ) {
       TraceSpec trace( RW->AQ->outTrace( k ) );
-      *TF << "#   identifier" + Str( k+1 ) + ": " << trace.traceName() << '\n';
-      *TF << "#       device" + Str( k+1 ) + ": " << trace.device() << '\n';
-      *TF << "#      channel" + Str( k+1 ) + ": " << trace.channel() << '\n';
-      *TF << "# signal delay" + Str( k+1 ) + ": " << 1000.0*trace.signalDelay() << "ms\n";
-      *TF << "# maximum rate" + Str( k+1 ) + ": " << 0.001*trace.maxSampleRate() << "kHz\n";
+      *SF << "#   identifier" + Str( k+1 ) + ": " << trace.traceName() << '\n';
+      *SF << "#       device" + Str( k+1 ) + ": " << trace.device() << '\n';
+      *SF << "#      channel" + Str( k+1 ) + ": " << trace.channel() << '\n';
+      *SF << "# signal delay" + Str( k+1 ) + ": " << 1000.0*trace.signalDelay() << "ms\n";
+      *SF << "# maximum rate" + Str( k+1 ) + ": " << 0.001*trace.maxSampleRate() << "kHz\n";
     }
-    *TF << '\n';
+    *SF << '\n';
 
     // create key:
-    TriggerKey.clear();
-    TriggerKey.addLabel( "traces" );
-    TriggerKey.addLabel( "index" );
-    TriggerKey.addNumber( "index", "word", "%10.0f" );
-    for ( int k=0; k<data.size(); k++ )
-      if ( data[k].mode() & SaveFilesMode ) {
-	TriggerKey.addLabel( data[k].ident() );
-	TriggerKey.addNumber( "factor", "mV", "%9.4g" );
-	TriggerKey.addNumber( "offset", "mV", "%8.3g" );
-      }
-    TriggerKey.addLabel( "events" );
+    StimulusKey.clear();
+    for ( int k=0; k<intraces.inputsSize(); k++ ) {
+      StimulusKey.addLabel( "traces" + Str( k+1 ) + " " + intraces.inputDevice( k )->deviceIdent() );
+      StimulusKey.addLabel( "index" );
+      StimulusKey.addNumber( "index", "word", "%10.0f" );
+      for ( int j=0; j<intraces.inputTraces( k ).size(); j++ )
+	if ( intraces.inputTraces( k )[j].mode() & SaveFilesMode ) {
+	  StimulusKey.addLabel( intraces.inputTraces( k )[j].ident() );
+	  StimulusKey.addNumber( "factor", "mV", "%9.4g" );
+	  StimulusKey.addNumber( "offset", "mV", "%8.3g" );
+	}
+    }
+    StimulusKey.addLabel( "events" );
     for ( unsigned int k=0; k<EF.size(); k++ )
       if ( EF[k] != 0 ) {
-	TriggerKey.addLabel( events[k].ident() );
-	TriggerKey.addNumber( "index", "line", "%10.0f" );
-	TriggerKey.addNumber( "freq", "Hz", "%6.1f" );
-	TriggerKey.addNumber( "size", "mV", "%6.1f" );
+	StimulusKey.addLabel( events[k].ident() );
+	StimulusKey.addNumber( "index", "line", "%10.0f" );
+	StimulusKey.addNumber( "freq", "Hz", "%6.1f" );
+	StimulusKey.addNumber( "size", "mV", "%6.1f" );
       }
     lock();
     if ( !Options::empty() ) {
-      TriggerKey.addLabel( "data" );
-      TriggerKey.addLabel( "data" );
+      StimulusKey.addLabel( "data" );
+      StimulusKey.addLabel( "data" );
       const Options &data = *this;
       for( int k=0; k<data.size(); k++ )
-	TriggerKey.addNumber( data[k].ident(), data[k].outUnit(), data[k].format() );
+	StimulusKey.addNumber( data[k].ident(), data[k].outUnit(), data[k].format() );
     }
     unlock();
-    TriggerKey.addLabel( "stimulus" );
-    TriggerKey.addLabel( "timing" );
-    TriggerKey.addNumber( "time", "s", "%11.5f" );
-    TriggerKey.addNumber( "delay", "ms", "%5.1f" );
+    StimulusKey.addLabel( "stimulus" );
+    StimulusKey.addLabel( "timing" );
+    StimulusKey.addNumber( "time", "s", "%11.5f" );
+    StimulusKey.addNumber( "delay", "ms", "%5.1f" );
     for ( int k=0; k<RW->AQ->outTracesSize(); k++ ) {
-      TriggerKey.addLabel( RW->AQ->outTraceName( k ) );
-      TriggerKey.addNumber( "rate", "kHz", "%8.3f" );
-      TriggerKey.addNumber( "duration", "ms", "%8.0f" );
-      TriggerKey.addNumber( "intensity", "dB", "%9.3f" );
-      TriggerKey.addNumber( "frequency", "Hz", "%9.0f" );
-      TriggerKey.addText( "signal", -30 );
+      StimulusKey.addLabel( RW->AQ->outTraceName( k ) );
+      StimulusKey.addNumber( "rate", "kHz", "%8.3f" );
+      StimulusKey.addNumber( "duration", "ms", "%8.0f" );
+      StimulusKey.addNumber( "intensity", "dB", "%9.3f" );
+      StimulusKey.addNumber( "frequency", "Hz", "%9.0f" );
+      StimulusKey.addText( "signal", -30 );
     }
   }
 }
 
 
-void SaveFiles::openFiles( const InList &data, const EventList &events )
+void SaveFiles::openFiles( const Acquire &intraces, const EventList &events )
 {
   // nothing to be done, if files are already open:
-  if ( VF != 0 || TF != 0 || !EF.empty() || path() != defaultPath() )
+  if ( FilesOpen )
     return;
 
   // close all open files:
@@ -690,9 +712,9 @@ void SaveFiles::openFiles( const InList &data, const EventList &events )
   setPath( pathname );
 
   // open files:
-  createTraceFile( data );
+  createTraceFile( intraces );
   createEventFiles( events );
-  createTriggerFile( data, events );
+  createStimulusFile( intraces, events );
   FilesOpen = true;
 
   // message:
@@ -712,16 +734,19 @@ void SaveFiles::closeFiles( void )
   ToggleOn = false;
   writeStimulus();
 
-  if ( TF != 0 )
-    delete TF;
-  if ( VF != 0 )
-    delete VF;
-  for ( unsigned int k=0; k<EF.size(); k++ )
+  for ( unsigned int k=0; k<VF.size(); k++ ) {
+    if ( VF[k] != 0 )
+      delete VF[k];
+  }
+  VF.clear();
+  for ( unsigned int k=0; k<EF.size(); k++ ) {
     if ( EF[k] != 0 )
       delete EF[k];
-  TF = 0;
-  VF = 0;
+  }
   EF.clear();
+  if ( SF != 0 )
+    delete SF;
+  SF = 0;
 
   FilesOpen = false;
 
@@ -733,12 +758,8 @@ void SaveFiles::deleteFiles( void )
 {
   closeFiles();
 
-  // remove files:
-  for ( vector<string>::iterator h = RemoveFiles.begin();
-	h != RemoveFiles.end();
-	++h )
-    remove( h->c_str() );
-  clearRemoveFiles();
+  // remove all files:
+  removeFiles();
 
   if ( path() != defaultPath() && 
        path() != "" &&
@@ -754,6 +775,7 @@ void SaveFiles::deleteFiles( void )
   FileLabel->setFont( NormalFont );
   FileLabel->setText( "deleted" );
 
+  // back to default path:
   setPath( defaultPath() );
   PathNumber--;
 }
@@ -761,20 +783,16 @@ void SaveFiles::deleteFiles( void )
 
 void SaveFiles::completeFiles( void )
 {
+  closeFiles();
+
   // no files need to be deleted:
   clearRemoveFiles();
-
-  // no files are open:
-  if ( VF == 0 && TF == 0 )
-    return;
-
-  //close all files:
-  closeFiles();
 
   // message:
   RW->printlog( "saved as " + path() );
   FileLabel->setPalette( NormalPalette );
 
+  // back to default path:
   setPath( defaultPath() );
 }
 
