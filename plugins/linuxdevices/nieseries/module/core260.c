@@ -23,7 +23,7 @@ static ssize_t nidaq_write( struct file *file, const char *buffer,
 			    size_t length, loff_t *offset );
 static int nidaq_ioctl( struct inode *inode, struct file *file, 
 			unsigned int cmd, unsigned long arg );
-static int nidaq_interrupt(int irq, void *dev_id, struct pt_regs *regs);
+static int nidaq_interrupt(int irq, void *dev_id);
 
 
 void ai_init( bp dev );
@@ -252,8 +252,8 @@ static int init_device( bp dev )
   if ( dev->irq == 0 )
     dev->irq = -1;
   if ( dev->irq != -1 ) {
-    irq_type = SA_SHIRQ;
-    irq_type |= SA_INTERRUPT;
+    irq_type = IRQF_SHARED;
+    irq_type |= IRQF_DISABLED;
     dev->irq_pin = 0;
     if( request_irq( dev->irq, nidaq_interrupt, irq_type, NIDAQ_NAME, dev ) ) {
       printk( "nidaq: unable to register int no %u\n", dev->irq );
@@ -451,7 +451,6 @@ void __exit cleanup_module( void )
 {
   bp dev;
   int brd;
-  int ret;
 
   DPRINT(( "nidaq: cleanup_module\n" ));
   for( brd=0; brd < MAX_BOARDS; brd++ ) {
@@ -479,13 +478,11 @@ void __exit cleanup_module( void )
     DPRINT(( "nidaq: board %d uninstalled\n", brd ));
   }
 
-  ret = unregister_chrdev( NIDAQ_MAJOR, NIDAQ_NAME );
-  if ( ret < 0 ) 
-    printk( "nidaq: unable to unregister driver\n" );
+  unregister_chrdev( NIDAQ_MAJOR, NIDAQ_NAME );
 }
 
 
-static int nidaq_interrupt( int irq, void *dev_id, struct pt_regs *regs )
+static int nidaq_interrupt( int irq, void *dev_id )
 {
   bp dev;
   int i;

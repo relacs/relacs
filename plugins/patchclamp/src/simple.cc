@@ -124,6 +124,7 @@ int Simple::main( void )
   signal.back() = 0.0;
   signal.setTrace( outtrace );
   signal.setIdent( "one" );
+  convert( signal );
 
   sleep( pause );
 
@@ -136,6 +137,7 @@ int Simple::main( void )
     message( s );
 
     cerr << "signal size " << signal.size() << endl;
+    cerr << "signal sampl rate " << signal.sampleRate() << endl;
     write( signal );
     if ( signal.failed() ) {
       warning( signal.errorText() );

@@ -11,7 +11,7 @@ pluginlib_LTLIBRARIES = \
 
 
 libnieseriesniai_la_CPPFLAGS = \
-    -DNIDAQ_MAJOR=254 \
+    -DNIDAQ_MAJOR=251 \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -39,7 +39,7 @@ libnieseriesniai_la_include_HEADERS = \
 
 
 libnieseriesniao_la_CPPFLAGS = \
-    -DNIDAQ_MAJOR=254 \
+    -DNIDAQ_MAJOR=251 \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -67,7 +67,7 @@ libnieseriesniao_la_include_HEADERS = \
 
 
 libnieseriesnidio_la_CPPFLAGS = \
-    -DNIDAQ_MAJOR=254 \
+    -DNIDAQ_MAJOR=251 \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -95,7 +95,7 @@ libnieseriesnidio_la_include_HEADERS = \
 
 
 libnieseriesnipfi_la_CPPFLAGS = \
-    -DNIDAQ_MAJOR=254 \
+    -DNIDAQ_MAJOR=251 \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \

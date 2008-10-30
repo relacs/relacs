@@ -35,10 +35,10 @@
 #define NI_PXI_6011E            (0x6011 | NI_ESER | NI_PCI)
 #define NI_PCI_6052E            (0x6052 | NI_ESER | NI_PCI)
 #define NI_PCI_6711             (0x6711 | NI_ESER | NI_PCI)
-
+#define NI_PCI_6035E            (0x6035 | NI_ESER | NI_PCI)
 
 /* number of boards in boards.h: */
-#define KNOWN_BOARDS 22
+#define KNOWN_BOARDS 23
 
 /* maximum number of voltage ranges: */
 #define MAXRANGES 10

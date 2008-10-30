@@ -373,12 +373,7 @@ static nidaq_info nidaq_boards[KNOWN_BOARDS] = {
     aomaxspl: 1000000,
     aofifo: 8192,
     dios: 8,
-  }
-};
-
-
-/*
-
+  },
   { name: "PCI-6035E",
     deviceid: 0x2c80,
     type: NI_PCI_6035E,
@@ -392,9 +387,8 @@ static nidaq_info nidaq_boards[KNOWN_BOARDS] = {
     aiindices: { 0, 1, 2, 3, -1, -1, -1, -1, -1, -1 },
     aoch: 2,
     aobits: 12,
-    aomaxspl: 1000,
+    aomaxspl: 1000000,
     aofifo: 0,
     dios: 8,
-  },
-
-*/
+  }
+};

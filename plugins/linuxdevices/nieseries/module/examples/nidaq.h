@@ -35,10 +35,10 @@
 #define NI_PXI_6011E            (0x6011 | NI_ESER | NI_PCI)
 #define NI_PCI_6052E            (0x6052 | NI_ESER | NI_PCI)
 #define NI_PCI_6711             (0x6711 | NI_ESER | NI_PCI)
-
+#define NI_PCI_6035E            (0x6035 | NI_ESER | NI_PCI)
 
 /* number of boards in boards.h: */
-#define KNOWN_BOARDS 22
+#define KNOWN_BOARDS 23
 
 /* maximum number of voltage ranges: */
 #define MAXRANGES 10
@@ -89,6 +89,10 @@ typedef struct {
 #define NIDAQHIGHVALUE _IOW( NIDAQ_MAJOR, 4, int )
 #define NIDAQTRIGGERMODE _IOW( NIDAQ_MAJOR, 5, int )
 #define NIDAQTRIGGERSOURCE _IOW( NIDAQ_MAJOR, 6, int )
+
+
+/* pfi ioctl: */
+
 #define NIDAQPFIOUT _IOW( NIDAQ_MAJOR, 7, int )
 #define NIDAQPFIIN _IOW( NIDAQ_MAJOR, 8, int )
 
@@ -161,7 +165,7 @@ typedef struct {
 #define NIDAQDIOMASK _IOW( NIDAQ_MAJOR, 152, int )  /* which lines to use for digital parallel output */
 #define NIDAQDIOPAROUT _IOW( NIDAQ_MAJOR, 153, char ) /* parallel output */
 #define NIDAQDIOPARIN _IOR( NIDAQ_MAJOR, 154, char )  /* parallel input */
-#define NIDAQDIOCLOCK _IOW( NIDAQ_MAJOR, 155, char )  /* set the EXTSTROBE/SDCLK pin */
+#define NIDAQDIOCLOCK _IOWR( NIDAQ_MAJOR, 155, int )  /* set the EXTSTROBE/SDCLK pin */
 #define NIDAQDIOTIMEDIV2 _IOWR( NIDAQ_MAJOR, 156, int )  /* divide timebase by two for serioal dio. */
 #define NIDAQDIOTIMEBASE _IOWR( NIDAQ_MAJOR, 157, int )  /* use slow timebase for serial dio (default). */
 

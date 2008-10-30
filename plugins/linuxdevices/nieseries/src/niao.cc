@@ -179,6 +179,7 @@ int NIAO::testWriteDevice( OutList &sigs )
 	}
       }
       sigs[k].setGain( unipolar ? maxrange/maxboardvolt : maxrange/2/maxboardvolt, 0.0 );
+    cerr << "signal min " << min << " max " << max << " uni " << unipolar << " extern " << extref << '\n';
     }
     else {
       if ( extref && externalReference() < 0.0 ) {
@@ -192,6 +193,7 @@ int NIAO::testWriteDevice( OutList &sigs )
       index |= 1;
     if ( extref )
       index |= 2;
+    cerr << "signal min " << min << " max " << max << " uni " << unipolar << " extern " << extref << '\n';
     sigs[k].setGainIndex( index );
     sigs[k].setMinData( unipolar ? 0 : -maxrange/2 );
     sigs[k].setMaxData( unipolar ? maxrange - 1 : maxrange/2 - 1 );
@@ -255,9 +257,9 @@ int NIAO::prepareWrite( OutList &sigs )
       unsigned int u = 0;
 
       // polarity:
-      bool unipolar = false;
-      if ( ( ol[k].gainIndex() & 1 ) == 1 ) {
-	unipolar = true;
+      bool unipolar = true;
+      if ( ( ol[k].gainIndex() & 1 ) == 0 ) {
+	unipolar = false;
 	u |= 0x0001;
       }
 

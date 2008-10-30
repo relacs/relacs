@@ -1,26 +1,5 @@
-/*
-  nidaq.h
-  
-
-  RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
-  Copyright (C) 2002-2008 Jan Benda <j.benda@biologie.hu-berlin.de>
-
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 3 of the License, or
-  (at your option) any later version.
-  
-  RELACS is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-  
-  You should have received a copy of the GNU General Public License
-  along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
-#ifndef _RELACS_NIESERIES_NIDAQ_H_
-#define _RELACS_NIESERIES_NIDAQ_H_ 1
+#ifndef _NIDAQIOCTL_H_
+#define _NIDAQIOCTL_H_
 
 #include <asm/ioctl.h>
 
@@ -56,10 +35,10 @@
 #define NI_PXI_6011E            (0x6011 | NI_ESER | NI_PCI)
 #define NI_PCI_6052E            (0x6052 | NI_ESER | NI_PCI)
 #define NI_PCI_6711             (0x6711 | NI_ESER | NI_PCI)
-
+#define NI_PCI_6035E            (0x6035 | NI_ESER | NI_PCI)
 
 /* number of boards in boards.h: */
-#define KNOWN_BOARDS 22
+#define KNOWN_BOARDS 23
 
 /* maximum number of voltage ranges: */
 #define MAXRANGES 10
@@ -190,4 +169,4 @@ typedef struct {
 #define NIDAQDIOTIMEDIV2 _IOWR( NIDAQ_MAJOR, 156, int )  /* divide timebase by two for serioal dio. */
 #define NIDAQDIOTIMEBASE _IOWR( NIDAQ_MAJOR, 157, int )  /* use slow timebase for serial dio (default). */
 
-#endif /* ! _RELACS_NIESERIES_NIDAQ_H_ */
+#endif

@@ -3,7 +3,7 @@
 #  updated to 2.6. July 2005
 #
 
-MAJOR = 254
+MAJOR = 251
 NAME = nidaq
 VERSION = 1.3
 DATE = $(shell date '+%D')

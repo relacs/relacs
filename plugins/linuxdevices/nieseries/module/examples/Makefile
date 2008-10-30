@@ -1,6 +1,6 @@
 
 CC       = gcc
-DEFS     = -DNIDAQ_MAJOR=254
+DEFS     = -DNIDAQ_MAJOR=251
 CFLAGS   = -Wall
 
 BINARIES = opendaq \

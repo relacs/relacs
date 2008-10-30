@@ -27,7 +27,7 @@ int main( int argc, char *argv[] )
     strcpy( device, "/dev/niai0" );
 
   fprintf( stderr, "open %s now...\n", device );
-  ai = open( device, 0 );
+  ai = open( device, O_RDWR );
   if ( ai < 0 )
     {
       perror( "can't open device" );
