@@ -8,7 +8,7 @@ NAME = nidaq
 VERSION = 1.3
 DATE = $(shell date '+%D')
 DIOOUT = 0xEF   # DIO pins that are configure for writing and set to zero at startup
-SUBDEVS = niai niao nidio
+SUBDEVS = niai niao nidio nipfi
 BACKUPFILES = Makefile TODO mkdevices *.h *.c \
               examples/*.h examples/*.c examples/Makefile
 #CC=gcc32

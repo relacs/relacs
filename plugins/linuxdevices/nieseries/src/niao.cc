@@ -141,7 +141,7 @@ int NIAO::testWriteDevice( OutList &sigs )
     }
     // reference and polarity:
     bool unipolar = false;
-    if ( min >= 0.0 )
+    if ( min >= 0.0 && Board.type != NI_PCI_6035E )
       unipolar = true;
     double extref = false;
     if ( max == OutData::ExtRef )
@@ -179,7 +179,6 @@ int NIAO::testWriteDevice( OutList &sigs )
 	}
       }
       sigs[k].setGain( unipolar ? maxrange/maxboardvolt : maxrange/2/maxboardvolt, 0.0 );
-    cerr << "signal min " << min << " max " << max << " uni " << unipolar << " extern " << extref << '\n';
     }
     else {
       if ( extref && externalReference() < 0.0 ) {
@@ -193,7 +192,6 @@ int NIAO::testWriteDevice( OutList &sigs )
       index |= 1;
     if ( extref )
       index |= 2;
-    cerr << "signal min " << min << " max " << max << " uni " << unipolar << " extern " << extref << '\n';
     sigs[k].setGainIndex( index );
     sigs[k].setMinData( unipolar ? 0 : -maxrange/2 );
     sigs[k].setMaxData( unipolar ? maxrange - 1 : maxrange/2 - 1 );
@@ -262,6 +260,7 @@ int NIAO::prepareWrite( OutList &sigs )
 	unipolar = false;
 	u |= 0x0001;
       }
+      u |= 0x0001;
 
       // reglitch:
       if ( ol[k].reglitch() )
