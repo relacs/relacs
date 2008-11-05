@@ -1,15 +1,19 @@
 noinst_PROGRAMS = \
+    ao_nonblocking \
     checkao
 
+noinst_HEADERS = examples.h
 
-AM_CPPFLAGS = \
+ao_nonblocking_LDFLAGS = $(COMEDI_LDFLAGS)
+ao_nonblocking_LDADD = $(COMEDI_LIBS) $(MATH_LIBS)
+ao_nonblocking_SOURCES = ao_nonblocking.c common.c
+
+checkao_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(srcdir)/../include
-
-AM_LDFLAGS = \
+checkao_LDFLAGS = \
     $(QT3_LDFLAGS)
-
 checkao_LDADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     ../src/libcomedicomedianaolginput.la \

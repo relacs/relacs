@@ -26,6 +26,7 @@
 #include <ctime>
 #include <unistd.h>
 #include <fcntl.h>
+#include <relacs/str.h>
 #include <relacs/comedi/comedianaloginput.h>
 #include <relacs/comedi/comedianalogoutput.h>
 using namespace std;
@@ -130,13 +131,12 @@ int ComediAnalogOutput::open( const string &device, long mode )
   setDeviceVendor( comedi_get_driver_name( DeviceP ) );
   setDeviceFile( device );
 
+  // make write calls non blocking:
+  fcntl( comedi_fileno( DeviceP ), F_SETFL, O_NONBLOCK );
+
   // set size of comedi-internal buffer to maximum:
-  // XXXX maybe use an internal maximum as well 
-  // (in case comedi max is way too much)?
   int bufSize = comedi_get_max_buffer_size( DeviceP, SubDevice );
-  int newBufSize = comedi_set_buffer_size( DeviceP, SubDevice, bufSize );
-  // XXX add this to settings?
-  cerr << "NEW BUFFER SIZE " << newBufSize << endl;
+  comedi_set_buffer_size( DeviceP, SubDevice, bufSize );
 
   // initialize ranges:
   UnipolarRange.clear();
@@ -361,6 +361,43 @@ int ComediAnalogOutput::convertData( OutList &sigs )
     return convert<lsampl_t>( sigs );
   else  
     return convert<sampl_t>( sigs );
+}
+
+
+string cmd_src( int src )
+{
+  string buf = "";
+
+  if ( src & TRIG_NONE ) buf += "none|";
+  if ( src & TRIG_NOW ) buf += "now|";
+  if ( src & TRIG_FOLLOW ) buf += "follow|";
+  if ( src & TRIG_TIME ) buf += "time|";
+  if ( src & TRIG_TIMER ) buf += "timer|";
+  if ( src & TRIG_COUNT ) buf += "count|";
+  if ( src & TRIG_EXT ) buf += "ext|";
+  if ( src & TRIG_INT ) buf += "int|";
+#ifdef TRIG_OTHER
+  if ( src & TRIG_OTHER ) buf +=  "other|";
+#endif
+
+  if ( buf.empty() )
+    //    buf = "unknown(" << setw( 8 ) << src ")";
+    buf="unknown";
+  else
+    buf.erase( buf.size()-1 );
+  
+  return buf;
+}
+
+
+void dump_cmd( comedi_cmd *cmd )
+{
+  cerr << "subdevice:      " << cmd->subdev << '\n';
+  cerr << "start:      " << Str( cmd_src(cmd->start_src), 8 ) << "  " << cmd->start_arg << '\n';
+  cerr << "scan_begin: " << Str( cmd_src(cmd->scan_begin_src), 8 ) << "  " << cmd->scan_begin_arg << '\n';
+  cerr << "convert:    " << Str( cmd_src(cmd->convert_src), 8 ) << "  " << cmd->convert_arg << '\n';
+  cerr << "scan_end:   " << Str( cmd_src(cmd->scan_end_src), 8 ) << "  " << cmd->scan_end_arg << '\n';
+  cerr << "stop:       " << Str( cmd_src(cmd->stop_src), 8 ) << "  " << cmd->stop_arg << '\n';
 }
 
 
@@ -642,7 +679,7 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd )
 	  sigs[k].setGainIndex( sigs[0].gainIndex() );
 	}
       }
-      if  (sigs.success() )
+      if ( sigs.success() )
 	sigs.addErrorStr( "invalid chanlist" );
       break;
     }
@@ -696,7 +733,6 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
 
 int ComediAnalogOutput::executeCommand( void )
 {
-  cerr << "execute Cmd.stop_arg: " << Cmd.stop_arg << endl;
   ErrorState = 0;
   if ( comedi_command( DeviceP, &Cmd ) < 0 ) {
     cerr << "AO command failed: " << comedi_strerror( comedi_errno() ) << endl;
@@ -706,7 +742,7 @@ int ComediAnalogOutput::executeCommand( void )
     */
     return -1;
   }
-  fillWriteBuffer();
+  fillWriteBuffer( *Sigs );
   return 0;
 }
 
@@ -780,7 +816,7 @@ int ComediAnalogOutput::writeData( OutList &sigs )
     return 0;/////TEST/////
   }
 
-  return fillWriteBuffer();
+  return fillWriteBuffer( sigs );
 }
 
 
@@ -840,7 +876,7 @@ void ComediAnalogOutput::take( const vector< AnalogOutput* > &aos,
 }
 
 
-int ComediAnalogOutput::fillWriteBuffer( void )
+int ComediAnalogOutput::fillWriteBuffer( OutList &sigs )
 {
   if ( !isOpen() )
     return -1;
@@ -849,79 +885,80 @@ int ComediAnalogOutput::fillWriteBuffer( void )
   bool failed = false;
   int elemWritten = 0;
 
-  if ( (*Sigs)[0].deviceBufferMaxPop() <= 0 ) {
-    //    (*Sigs).addErrorStr( "ComediAnalogOutput::writeData: " +
+  if ( sigs[0].deviceBufferMaxPop() <= 0 ) {
+    //    sigs.addErrorStr( "ComediAnalogOutput::writeData: " +
     //		      deviceFile() + " - buffer-underrun in outlist!" );
-    //    (*Sigs).addError( DaqError::OverflowUnderrun );
-    cerr << "ComediAnalogOutput::writeData: buffer-underrun in outlist!"  
+    //    sigs.addError( DaqError::OverflowUnderrun );
+    cerr << "ComediAnalogOutput::fillWriteBuffer: buffer-underrun in outlist!"  
 	 << endl;/////TEST/////
-    //    (*Sigs)[0].deviceBufferReset();/////TEST////
+    //    sigs[0].deviceBufferReset();/////TEST////
     return -1;/////TEST////
   }
   // try to write twice
   for ( int tryit = 0;
-	tryit < 2 && !failed && (*Sigs)[0].deviceBufferMaxPop() > 0; 
+	tryit < 2 && !failed && sigs[0].deviceBufferMaxPop() > 0; 
 	tryit++ ){
-    
-    int bytesWritten = write( comedi_fileno(DeviceP),
-			      (*Sigs)[0].deviceBufferPopBuffer(),
-			      (*Sigs)[0].deviceBufferMaxPop() * BufferElemSize );
-    cerr << " ComediAnalogOutput::fillWriteBuffer(): " << bytesWritten << " bytes from " << (*Sigs)[0].deviceBufferMaxPop() * BufferElemSize << " written\n";/////TEST/////
-      sampl_t *fd = (sampl_t*)(*Sigs)[0].deviceBufferPopBuffer();
-      sampl_t *ld = fd + (*Sigs)[0].deviceBufferMaxPop() - 1;
-      cerr << "first: " << *fd << " last: " << *ld << endl;
 
-    if ( bytesWritten < 0 && errno != EAGAIN && errno != EINTR ) {
-      (*Sigs).addErrorStr( errno );
-      failed = true;
-      cerr << " ComediAnalogOutput::writeData(): error" << endl;/////TEST/////
+    int bytesWritten = write( comedi_fileno(DeviceP),
+			      sigs[0].deviceBufferPopBuffer(),
+			      sigs[0].deviceBufferMaxPop() * BufferElemSize );
+    /*
+    cerr << " ComediAnalogOutput::fillWriteBuffer(): loop " << tryit << " "
+	 << bytesWritten << " bytes from "
+	 << sigs[0].deviceBufferMaxPop() * BufferElemSize << " requested written\n";
+    */
+      
+    if ( bytesWritten < 0 ) {
+      if ( errno == EAGAIN || errno == EINTR )
+	break;
+      else {
+	sigs.addErrorStr( errno );
+	failed = true;
+	cerr << " ComediAnalogOutput::fillWriteBuffer(): error" << endl;////TEST////
+      }
     }
     else if ( bytesWritten > 0 ) {
-      (*Sigs)[0].deviceBufferPop( bytesWritten / BufferElemSize );
+      sigs[0].deviceBufferPop( bytesWritten / BufferElemSize );
       elemWritten += bytesWritten / BufferElemSize;
     }
-
   }
-
 
   // no more data:
-  if ( (*Sigs)[0].deviceBufferMaxPop() == 0 ) {
-    if ( ! failed )
-      return 0;
-  }
+  if ( sigs[0].deviceBufferMaxPop() == 0 && ! failed )
+    return 0;
 
   if ( failed || errno == EINTR )
     switch( errno ) {
 
     case EPIPE: 
       ErrorState = 1;
-      (*Sigs).addErrorStr( deviceFile() + " - buffer-underrun: "
+      sigs.addErrorStr( deviceFile() + " - buffer-underrun: "
 			+ comedi_strerror( comedi_errno() ) );
-      (*Sigs).addError( DaqError::OverflowUnderrun );
-      cerr << " ComediAnalogOutput::writeData(): buffer-underrun: "
+      sigs.addError( DaqError::OverflowUnderrun );
+      cerr << " ComediAnalogOutput::fillWriteBuffer(): buffer-underrun: "
 	   << comedi_strerror( comedi_errno() ) << endl;/////TEST/////
       return -1;
 
     case EBUSY:
       ErrorState = 2;
-      (*Sigs).addErrorStr( deviceFile() + " - device busy: "
+      sigs.addErrorStr( deviceFile() + " - device busy: "
 			+ comedi_strerror( comedi_errno() ) );
-      (*Sigs).addError( DaqError::Busy );
-      cerr << " ComediAnalogOutput::writeData(): device busy: "
+      sigs.addError( DaqError::Busy );
+      cerr << " ComediAnalogOutput::fillWriteBuffer(): device busy: "
 	   << comedi_strerror( comedi_errno() ) << endl;/////TEST/////
       return -1;
 
     default:
       ErrorState = 2;
-      (*Sigs).addErrorStr( "Error while writing to device-file: " + deviceFile()
+      sigs.addErrorStr( "Error while writing to device-file: " + deviceFile()
 			+ "  comedi: " + comedi_strerror( comedi_errno() )
 			+ "  system: " + strerror( errno ) );
-      cerr << " ComediAnalogOutput::writeData(): buffer-underrun: "
+      cerr << " ComediAnalogOutput::fillWriteBuffer(): buffer-underrun: "
 	   << "  comedi: " << comedi_strerror( comedi_errno() ) 
 	   << "  system: " << strerror( errno )
 	
 	   << endl;/////TEST/////
-      (*Sigs).addError( DaqError::Unknown );
+      sigs.addError( DaqError::Unknown );
       return -1;
     }
   

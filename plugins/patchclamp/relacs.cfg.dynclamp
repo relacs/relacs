@@ -1,11 +1,11 @@
 *Settings
   General
-     updateinterval: 10ms
+     updateinterval: 200ms
     processinterval: 200ms
   Plugins
-       pluginpathes: base*|base*|calibration*|ephys*|patchclamp*|comedi*
+       pluginpathes: base*|calibration*|ephys*|patchclamp*|comedi*
    pluginhelppathes: 
-      controlplugin: Session|Session|SpectrumAnalyzer
+      controlplugin: Session|SpectrumAnalyzer
         modelplugin: NeuronModels
   Pathes
          pathformat: %04Y-%02m-%02d-%a2a
@@ -81,12 +81,12 @@
   fallbackonreload: true
 
 *Analog Input Devices
-  plugin1: ComediAnalogInput
-  device1: /dev/comedi16
+  plugin1: DynClampAnalogInput
+  device1: /dev/comedi0
    ident1: ai-1
 
 *Analog Output Devices
-  plugin1: ComediAnalogOutput
-  device1: /dev/comedi16
+  plugin1: DynClampAnalogOutput
+  device1: /dev/comedi0
    ident1: ao-1
 

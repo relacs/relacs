@@ -1,11 +1,11 @@
 *Settings
   General
-     updateinterval: 10ms
+     updateinterval: 200ms
     processinterval: 200ms
   Plugins
-       pluginpathes: base*|base*|calibration*|ephys*|patchclamp*|comedi*
+       pluginpathes: base*|calibration*|ephys*|patchclamp*|comedi*
    pluginhelppathes: 
-      controlplugin: Session|Session|SpectrumAnalyzer
+      controlplugin: Session|SpectrumAnalyzer
         modelplugin: NeuronModels
   Pathes
          pathformat: %04Y-%02m-%02d-%a2a

@@ -34,7 +34,7 @@ Simple::Simple( void )
   addSelection( "intrace", "Input trace", "V-1" );
   addSelection( "outtrace", "Output trace", "Speaker-1" );
   addNumber( "amplitude", "Amplitude of output signal", 1.0, -1000.0, 1000.0, 0.1 );
-  addNumber( "duration", "Duration of output", 0.1, 0.001, 1.0, 0.001, "sec", "ms" );
+  addNumber( "duration", "Duration of output", 0.1, 0.001, 1000.0, 0.001, "sec", "ms" );
   addSelection( "stimulus", "Stimulus type", "constant|ramp|sine 1p|sine 2p|zero" );
   addBoolean( "samerate", "Use sampling rate of input", true );
   addNumber( "rate", "Sampling rate of output", 1000.0, 0.0, 10000000.0, 1000.0, "Hz", "kHz" ).setActivation( "samerate", "false" );
@@ -136,8 +136,6 @@ int Simple::main( void )
     s += ",  Loop <b>" + Str( count+1 ) + "</b>";
     message( s );
 
-    cerr << "signal size " << signal.size() << endl;
-    cerr << "signal sampl rate " << signal.sampleRate() << endl;
     write( signal );
     if ( signal.failed() ) {
       warning( signal.errorText() );

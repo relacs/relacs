@@ -131,9 +131,11 @@ DOXYGEN_EXTERNAL="${RELACS_DOCLIBS}"
 
 RELACS_PLUGINSET([nieseries],[linuxdevices/nieseries])
 RELACS_PLUGINSET([comedi],[linuxdevices/comedi],[],[test "$RELACS_COMEDI" != no])
+AC_CONFIG_FILES([plugins/linuxdevices/comedi/examples/Makefile])
 AC_CONFIG_FILES([plugins/linuxdevices/comedi/module/Makefile])
 RELACS_PLUGINSET([attcs3310],[linuxdevices/attcs3310])
 RELACS_PLUGINSET([misc],[linuxdevices/misc])
+AC_CONFIG_FILES([plugins/linuxdevices/misc/examples/Makefile])
 RELACS_PLUGINSET([base],[base])
 RELACS_PLUGINSET([calibration],[calibration])
 RELACS_PLUGINSET([ephys],[ephys])
@@ -267,8 +269,6 @@ AC_CONFIG_FILES([
     src/Makefile
 
     plugins/Makefile
-    plugins/linuxdevices/comedi/examples/Makefile
-    plugins/linuxdevices/misc/examples/Makefile
 
     utils/Makefile
 
