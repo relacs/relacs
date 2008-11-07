@@ -543,9 +543,6 @@ int ComediAnalogInput::prepareRead( InList &traces )
 
   IsPrepared = traces.success();
 
-  if ( traces.success() )
-    cerr << " ComediAnalogInput::prepareRead(): success" << endl;/////TEST/////
-
   return traces.success() ? 0 : -1;
 }
 

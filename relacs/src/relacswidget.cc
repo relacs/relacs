@@ -89,6 +89,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     GUILock( 0 ),
     DataMutex( true ),  // recursive, because of activateGains()!
     DataMutexCount( 0 ),
+    SignalMutex( false ),
     DeviceMenu( 0 ),
     Help( false )
 {
@@ -728,8 +729,6 @@ void RELACSWidget::updateData( void )
   ED.setRangeBack( IL[0].currentTime() );
   AQ->readSignal( IL, ED );
   FD->filter( IL, ED );
-  if ( AQ->writeData() < 0 )
-    printlog( "! error in writing data" );
   unlockData();
   DataSleepWait.wakeAll();
 }
@@ -761,9 +760,11 @@ void RELACSWidget::run( void )
 {
   bool rd = true;
   SS.lock();
+  double writeinterval = 0.002;
   double updateinterval = SS.number( "updateinterval", 0.05 );
   double processinterval = SS.number( "processinterval", 0.1 );
   SS.unlock();
+  signed long wi = (unsigned long)::rint( 1000.0*writeinterval );
   signed long ui = (unsigned long)::rint( 1000.0*updateinterval );
   ui -= 1;
   int pmax = (int)::rint( processinterval/updateinterval );
@@ -774,8 +775,15 @@ void RELACSWidget::run( void )
   updatetime.start();
 
   do {
-    int ei = updatetime.restart();
-    QThread::msleep( ui > ei ? ui - ei : 1 );
+    do {
+      QThread::msleep( wi );
+      lockSignals();
+      if ( AQ->writeData() < 0 )
+	printlog( "! error in writing data" );
+      unlockSignals();
+    } while ( updatetime.elapsed() < ui );
+    //    int ei = updatetime.restart();
+    //    QThread::msleep( ui > ei ? ui - ei : 1 );
     updateData();
     QThread::msleep( 1 );
     pc++;
@@ -786,6 +794,7 @@ void RELACSWidget::run( void )
     RunDataMutex.lock();
     rd = RunData;
     RunDataMutex.unlock();
+    updatetime.restart();
   } while( rd );
 }
 
@@ -822,9 +831,13 @@ void RELACSWidget::activateGains( void )
 
 int RELACSWidget::write( OutData &signal )
 {
+  lockSignals();
   int r = AQ->write( signal );
+  unlockSignals();
   if ( r == 0 ) {
+    lockSignals();
     SF->write( signal );
+    unlockSignals();
     QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
   }
   else
@@ -837,9 +850,13 @@ int RELACSWidget::write( OutData &signal )
 
 int RELACSWidget::write( OutList &signal )
 {
+  lockSignals();
   int r = AQ->write( signal );
+  unlockSignals();
   if ( r == 0 ) {
+    lockSignals();
     SF->write( signal );
+    unlockSignals();
     QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
   }
   else
@@ -949,7 +966,9 @@ void RELACSWidget::stopRePro( void )
   }
 
   // stop analog output:
+  lockSignals();
   AQ->stopWrite();                
+  unlockSignals();
 
   ReProRunning = false;
 

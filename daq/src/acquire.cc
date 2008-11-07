@@ -1455,10 +1455,11 @@ int Acquire::write( OutData &signal )
   }
 
   // convert data and prepare writing to daq board:
-  if ( signal.autoConvert() || signal.deviceBuffer() == NULL )
+  if ( signal.autoConvert() || signal.deviceBuffer() == NULL ) {
     AO[di].AO->convertData( ol );
-  else
-    AO[di].Signals[0].deviceBufferReset();
+  }
+  AO[di].Signals[0].deviceBufferReset();
+
   AO[di].AO->prepareWrite( ol );
 
   // error?
@@ -1717,9 +1718,10 @@ int Acquire::writeData( void )
 	}
       }
       else {
-	AO[i].Signals.clear();
-	if ( AO[i].Signals[0].autoConvert() )
+	if ( AO[i].Signals[0].autoConvert() ) {
 	  AO[i].Signals.freeDeviceBuffer();
+	}
+	AO[i].Signals.clear();
       }
     }
   }

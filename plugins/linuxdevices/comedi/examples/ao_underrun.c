@@ -17,7 +17,6 @@ int main(int argc, char *argv[])
   int n,m;
   comedi_t *dev;
   unsigned int chanlist[16];
-  unsigned int maxbuffersize;
   unsigned int maxdata;
   comedi_range *rng;
   int ret;
@@ -50,20 +49,6 @@ int main(int argc, char *argv[])
 
   /*! This is important to make write calls non blocking! */
   fcntl(comedi_fileno(dev), F_SETFL, O_NONBLOCK);
-
-  maxbuffersize = comedi_get_max_buffer_size( dev, options.subdevice );
-  printf( "maximum buffer_size: %d\n", maxbuffersize );
-
-  /* you must be root!
-  ret = comedi_set_max_buffer_size( dev, options.subdevice, 10*maxbuffersize );
-  if ( ret < 0) {
-    comedi_perror("comedi_set_max_buffer_size");
-    exit(1);
-  }
-  */
-
-  comedi_set_buffer_size( dev, options.subdevice, maxbuffersize );
-  printf( "buffer_size: %d\n", comedi_get_buffer_size( dev, options.subdevice ) );
 
   maxdata = comedi_get_maxdata(dev, options.subdevice, options.channel);
   rng = comedi_get_range(dev, options.subdevice, options.channel, options.range);
@@ -130,22 +115,6 @@ int main(int argc, char *argv[])
   }
   printf( "... took %d bytes\n", m );
   n -= m;  
-
-  printf( "buffer_contents: %d\n", comedi_get_buffer_contents( dev, cmd.subdev ) );
-
-  /* A second call to write blocks for ever! If device is opened in blocking mode (default) */
-  printf( "preload analog output buffer with %d bytes...\n", n );  
-  m = write(comedi_fileno(dev), (void *)data+(fn*sizeof( sampl_t )-n), n );
-  if(m < 0){
-    if ( errno != EAGAIN ) {
-      perror("preload write");
-      exit(1);
-    }
-    else
-      fprintf( stderr, "... no more data can be filled! Try later.\n" );
-  }
-  printf( "... took %d bytes\n", m );
-  n -= m;  
   
   ret = comedi_internal_trigger(dev, options.subdevice, 0);
   if(ret < 0){
@@ -154,16 +123,21 @@ int main(int argc, char *argv[])
   }
   
   while( n > 0 ) {
-    printf( "buffer_contents: %d\n", comedi_get_buffer_contents( dev, cmd.subdev ) );
+    usleep( 100000 );
+    printf( "busy: %d\n", ((comedi_get_subdevice_flags( dev, options.subdevice ) & SDF_BUSY) > 0 ) );
+    printf( "running: %d\n", ((comedi_get_subdevice_flags( dev, options.subdevice ) & SDF_RUNNING) > 0 ) );
     m = write(comedi_fileno(dev),(void *)data+(fn*sizeof( sampl_t )-n),n);
     if(m<0){
-      if ( errno != EAGAIN ) {
+      if ( errno == EAGAIN )
+	fprintf( stderr, "... no more data can be filled! Try later.\n" );
+      else if ( errno == EPIPE ) {
+	fprintf( stderr, "... buffer underrun with EPIPE.\n" );
 	perror("write");
 	exit(0);
       }
       else {
-	fprintf( stderr, "... no more data can be filled! Try later.\n" );
-	usleep( 100000 );
+	perror("write");
+	exit(0);
       }
     }
     else {
@@ -173,7 +147,7 @@ int main(int argc, char *argv[])
   }
   
   while ( comedi_get_subdevice_flags( dev, cmd.subdev ) & SDF_RUNNING )
-    usleep( 100000 );
+    usleep( 500000 );
 
   printf( "finished\n" );
 

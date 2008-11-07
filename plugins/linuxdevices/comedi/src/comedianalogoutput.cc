@@ -632,7 +632,7 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd )
       if ( cmd.start_arg != testCmd.start_arg )
 	sigs.addErrorStr( "start_arg out of range" );
       if ( cmd.scan_begin_arg != testCmd.scan_begin_arg ) {
-	cerr << "! warning in ComediAnalogOutput::setupCommand() -> "
+	cerr << "! error in ComediAnalogOutput::setupCommand() -> "
 	     << "requested sampling period of " << testCmd.scan_begin_arg
 	     << "ns smaller than supported! max " << cmd.scan_begin_arg
 	     << "ns sampling interval possible." << endl;
@@ -649,8 +649,14 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd )
     case 4: // adjusted *_arg:
       if ( cmd.start_arg != testCmd.start_arg )
 	sigs.addErrorStr( "start_arg adjusted" );
-      if ( cmd.scan_begin_arg != testCmd.scan_begin_arg )
+      if ( cmd.scan_begin_arg != testCmd.scan_begin_arg ) {
+	cerr << "! warning in ComediAnalogOutput::setupCommand() -> "
+	     << "requested sampling period of " << testCmd.scan_begin_arg
+	     << "ns was adjusted to " << cmd.scan_begin_arg
+	     << "ns." << endl;
+	//	sigs.addError( DaqError::InvalidSampleRate );    
 	sigs.setSampleRate( 1.0e9 / cmd.scan_begin_arg );
+      }
       if ( cmd.convert_arg != testCmd.convert_arg )
 	sigs.addErrorStr( "convert_arg adjusted" );
       if ( cmd.scan_end_arg != testCmd.scan_end_arg )
@@ -682,6 +688,8 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd )
       if ( sigs.success() )
 	sigs.addErrorStr( "invalid chanlist" );
       break;
+    default:
+      cerr << "unknown return code from comedi_command_test\n";
     }
   }
 

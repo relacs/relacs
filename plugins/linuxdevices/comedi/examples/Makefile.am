@@ -1,5 +1,6 @@
 noinst_PROGRAMS = \
     ao_nonblocking \
+    ao_underrun \
     checkao
 
 noinst_HEADERS = examples.h
@@ -7,6 +8,10 @@ noinst_HEADERS = examples.h
 ao_nonblocking_LDFLAGS = $(COMEDI_LDFLAGS)
 ao_nonblocking_LDADD = $(COMEDI_LIBS) $(MATH_LIBS)
 ao_nonblocking_SOURCES = ao_nonblocking.c common.c
+
+ao_underrun_LDFLAGS = $(COMEDI_LDFLAGS)
+ao_underrun_LDADD = $(COMEDI_LIBS) $(MATH_LIBS)
+ao_underrun_SOURCES = ao_underrun.c common.c
 
 checkao_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \

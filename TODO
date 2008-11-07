@@ -83,6 +83,10 @@ Distribution details:
   update: updatefiles
   help: svn-*
 
+Acquisition interface:
+- use dynamic updateinterval and writeinterval in RELACSWidget::run()
+  depending on sampling rates and buffer sizes
+- add single data read and write
 
 
 Bug in MetaData Dialog: after opening and closing with ESC, reopening

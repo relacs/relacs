@@ -73,7 +73,7 @@ public:
 protected:
 
   int createStimulus( OutData &signal, const Str &file,
-		      double &duration, bool storesignal );
+		      double &duration, double deltat, bool storesignal );
 
   string AmplitudeUnit;
   double Amplitude;

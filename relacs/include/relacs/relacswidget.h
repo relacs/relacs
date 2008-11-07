@@ -63,6 +63,7 @@ namespace relacs {
 \version 1.8
 
 \bug what about wroteData?
+\todo use dynamic updateinterval and writeinterval in run() depending on sampling rates and buffer sizes
 \todo Set ID gain factors before configuring Session
 
 The data are acquired from the DAQ boards and filtered, 
@@ -121,14 +122,21 @@ public:
   void updateData( void );
     /*! Writes the data to files and plots it. */
   void processData( void );
-    /*! Locks the data mutex of the data thread for reading. */
+
+    /*! Locks the mutex of the data thread for reading. */
   void readLockData( void ) { DataMutexCount++; DataMutex.lock(); };
     /*! Locks the data mutex of the data thread for writing. */
   void writeLockData( void ) { DataMutexCount++; DataMutex.lock(); };
-    /*! Unlocks the data mutex of the data thread. */
+    /*! Unlocks the mutex of the data thread. */
   void unlockData( void ) { DataMutexCount--; DataMutex.unlock(); };
-    /*! Returns how often the DataMutex is locked. */
+    /*! Returns how often the data mutex is locked. */
   int dataMutexCount( void ) { return DataMutexCount; };
+
+    /*! Locks the mutex of output signals. */
+  void lockSignals( void ) { SignalMutex.lock(); };
+    /*! Unlocks the mutex of output signals. */
+  void unlockSignals( void ) { SignalMutex.unlock(); };
+
     /*! Wakes up all waitconditions. */
   void wakeAll( void );
 
@@ -365,6 +373,7 @@ private:
   QMutex RunDataMutex;
   QMutex DataMutex;
   int DataMutexCount;
+  QMutex SignalMutex;
 
   // Synchronization of Session and Control threads:
   QWaitCondition DataSleepWait;

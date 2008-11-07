@@ -55,7 +55,7 @@ SingleStimulus::SingleStimulus( void )
   addText( "stimfile", "Stimulus file", "" ).setStyle( OptWidget::BrowseExisting ).setActivation( "waveform", "From file" );
   addNumber( "stimampl", "Amplitude factor (standard deviation) of stimulus file", 0.0, 0.0, 1.0, 0.01 ).setActivation( "waveform", "From file" );
   addNumber( "amplitude", "Amplitude of stimulus", Amplitude, 0.0, 130.0, 1.0, AmplitudeUnit ).setActivation( "waveform", "Const", false );;
-  addNumber( "freq", "Frequency of waveform", 10.0, 0.0, 10000.0, 1.0, "Hz" ).setActivation( "waveform", "From file|Const", false );
+  addNumber( "freq", "Frequency of waveform", 10.0, 0.0, 1000000.0, 1.0, "Hz" ).setActivation( "waveform", "From file|Const", false );
   addNumber( "dutycycle", "Duty-cycle of rectangular waveform", 0.5, 0.0, 1.0, 0.05, "1", "%" ).setActivation( "waveform", "Rectangular" );
   addInteger( "seed", "Seed for random number generation", 0 ).setActivation( "waveform", "Whitenoise|OUnoise" );;
   addNumber( "duration", "Maximum duration of stimulus", Duration, 0.0, 1000.0, 0.01, "seconds", "ms" );
@@ -63,7 +63,9 @@ SingleStimulus::SingleStimulus( void )
   addLabel( "Stimulus" ).setStyle( OptWidget::TabLabel );
   addNumber( "offset", "Stimulus mean", Offset, -2000.0, 2000.0, 5.0, AmplitudeUnit );
   addSelection( "offsetbase", "Stimulus mean relative to", "absolute|threshold|previous" );
-  addNumber( "repeats", "Number of stimulus presentations", Repeats, 1, 10000, 1, "times" );
+  addBoolean( "samerate", "Use sampling rate of input", true ).setActivation( "waveform", "From file", false );
+  addNumber( "samplerate", "Sampling rate of output", 1000.0, 0.0, 10000000.0, 1000.0, "Hz", "kHz" ).setActivation( "samerate", "true", false );
+  addNumber( "repeats", "Number of stimulus presentations", Repeats, 0, 10000, 1, "times" );
   addNumber( "pause", "Duration of pause between stimuli", 1.0, 0.0, 1000.0, 0.01, "seconds", "ms" );
   addSelection( "outtrace", "Output trace", "V-1" );
   addLabel( "Offset - search" ).setStyle( OptWidget::TabLabel );
@@ -217,6 +219,8 @@ int SingleStimulus::main( void )
   Amplitude = number( "amplitude" );
   double offset = number( "offset" );
   int offsetbase = index( "offsetbase" );
+  bool samerate = boolean( "samerate" );
+  double samplerate = number( "samplerate" );
   Repeats = integer( "repeats" );
   Duration = number( "duration" );
   double pause = number( "pause" );
@@ -272,6 +276,12 @@ int SingleStimulus::main( void )
   bool storedstimulus = false;
 
   OutData signal;
+  signal.setTrace( outtrace );
+  applyOutTrace( signal );
+  if ( samerate )
+    samplerate = trace( eventInputTrace( SpikeEvents[0] ) ).sampleRate();
+  else if ( samplerate <= 0.0 )
+    samplerate = signal.maxSampleRate();
 
   // search for offset that evokes the target firing rate:
   if ( userate ) {
@@ -279,7 +289,8 @@ int SingleStimulus::main( void )
     // stimulus:
     signal.setTrace( outtrace );
     applyOutTrace( signal );
-    int r = createStimulus( signal, stimfile, searchduration, sameduration );
+    int r = createStimulus( signal, stimfile, searchduration,
+			    1.0/samplerate, sameduration );
     if ( r < 0 )
       return Failed;
     storedstimulus = sameduration;
@@ -574,7 +585,8 @@ int SingleStimulus::main( void )
   if ( ! sameduration || ! storedstimulus ) {
     signal.setTrace( outtrace );
     applyOutTrace( signal );
-    int r = createStimulus( signal, stimfile, Duration, true );
+    int r = createStimulus( signal, stimfile, Duration, 
+			    1.0/samplerate, true );
     if ( r < 0 ) {
       writeZero( outtrace );
       return Failed;
@@ -607,13 +619,15 @@ int SingleStimulus::main( void )
   timeStamp();
 
   // output stimulus:  
-  for ( int counter=0; counter<Repeats; counter++ ) {
+  for ( int counter=0; Repeats == 0 || counter<Repeats; counter++ ) {
     
     // message:
     Str s =  "<b>" + StimulusLabel + "</b>";
     s += ",  Offset: <b>" + Str( Offset, 0, 1, 'f' ) + " " + AmplitudeUnit + "</b>";
     s += ",  Amplitude: <b>" + Str( Amplitude, 0, 1, 'f' ) + " " + AmplitudeUnit + "</b>";
-    s += ",  Loop <b>" + Str( counter+1 ) + "</b> of <b>" + Str( Repeats ) + "</b>";
+    s += ",  Loop <b>" + Str( counter+1 ) + "</b>";
+    if ( Repeats > 0 )
+      s += " of <b>" + Str( Repeats ) + "</b>";
     message( s );
     
     // output:
@@ -813,7 +827,8 @@ void SingleStimulus::analyze( EventList &spikes, SampleDataD &rate1,
 
 
 int SingleStimulus::createStimulus( OutData &signal, const Str &file,
-				    double &duration, bool storesignal )
+				    double &duration, double deltat,
+				    bool storesignal )
 {
   SampleDataD wave;
   string wavename;
@@ -871,15 +886,15 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     if ( WaveForm == Sine || WaveForm == Whitenoise || WaveForm == OUnoise ) {
       if ( WaveForm == Sine ) {
 	PeakAmplitudeFac = 1.0;
-	wave.sin( LinearRange( 0.0, duration, signal.minSampleInterval() ), Frequency );
+	wave.sin( LinearRange( 0.0, duration, deltat ), Frequency );
       }
       else {
 	Random rand;
 	unsigned long seed = rand.setSeed( Seed );
 	if ( WaveForm == Whitenoise )
-	  wave.whiteNoise( duration, signal.minSampleInterval(), 0.0, Frequency, rand );
+	  wave.whiteNoise( duration, deltat, 0.0, Frequency, rand );
 	else if ( WaveForm == OUnoise )
-	  wave.ouNoise( duration, signal.minSampleInterval(), 1.0/Frequency, rand );
+	  wave.ouNoise( duration, deltat, 1.0/Frequency, rand );
 	PeakAmplitudeFac = 0.3;
 	header.addInteger( "random seed", int( seed ) );
       }
@@ -887,15 +902,15 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     else {
       PeakAmplitudeFac = 1.0;
       if ( WaveForm == Rectangular ) {
-	wave.rectangle( LinearRange( 0.0, duration, signal.minSampleInterval() ), 1.0/Frequency, DutyCycle/Frequency, Ramp );
+	wave.rectangle( LinearRange( 0.0, duration, deltat ), 1.0/Frequency, DutyCycle/Frequency, Ramp );
 	header.addText( "dutycycle", Str( 100.0*DutyCycle ) + "%" );
       }
       else if ( WaveForm == Triangular )
-	wave.triangle( LinearRange( 0.0, duration, signal.minSampleInterval() ), 1.0/Frequency );
+	wave.triangle( LinearRange( 0.0, duration, deltat ), 1.0/Frequency );
       else if ( WaveForm == Sawup )
-	wave.sawUp( LinearRange( 0.0, duration, signal.minSampleInterval() ), 1.0/Frequency, Ramp );
+	wave.sawUp( LinearRange( 0.0, duration, deltat ), 1.0/Frequency, Ramp );
       else if ( WaveForm == Sawdown )
-	wave.sawDown( LinearRange( 0.0, duration, signal.minSampleInterval() ), 1.0/Frequency, Ramp );
+	wave.sawDown( LinearRange( 0.0, duration, deltat ), 1.0/Frequency, Ramp );
       wave = 2.0*wave - 1.0;
     }
 
@@ -907,7 +922,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
   }
   else {
     // constant:
-    wave = SampleDataD( 0.0, duration, signal.minSampleInterval(), 0.0 );
+    wave = SampleDataD( 0.0, duration, deltat, 0.0 );
     PeakAmplitudeFac = 1.0;
     header.addText( "waveform", "const" );
     if ( StoreLevel == Generated ) 
