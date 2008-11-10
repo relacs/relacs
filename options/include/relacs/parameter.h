@@ -319,6 +319,7 @@ public:
         %b is a boolean value expressed as true or false.
         %i is the identifier string.
         %r is the request string.
+        %t is the type of the parameter.
  	If \a format is empty, the format set by setFormat() is used.
         If the parameter is a number, then its value is returned
         in the unit specified by \a unit.
@@ -339,6 +340,7 @@ public:
         %b is a boolean value expressed as true or false.
         %i is the identifier string.
         %r is the request string.
+        %t is the type of the parameter.
 	If \a format is empty, the format set by setFormat() is used.
         If the parameter is a number, then its value is returned
         in the unit specified by \a unit.
@@ -374,6 +376,7 @@ public:
         %b is a boolean value expressed as true or false.
         %i is the identifier string.
         %r is the request string.
+        %t is the type of the parameter.
  	If \a format is empty, the format set by setFormat() is used.
         If the parameter is a number, then its value is returned
         in the unit specified by \a unit.
@@ -726,6 +729,12 @@ public:
         If \a detailed equals \c true the request string is written, too. */
   ostream &save( ostream &str, int width=0, bool detailed=false,
 		 bool firstonly=false, const string &pattern="" ) const;
+    /*! Write parameter to stream \a str according to the formats
+        \a textformat, \a numberformat, \a boolformat, \a labelformat,
+	and \a separatorformat. */
+  ostream &save( ostream &str, const string &textformat,
+		 const string &numberformat, const string &boolformat,
+		 const string &labelformat, const string &separatorformat ) const;
     /*! Write parameter to stream \a str using save() */
   friend ostream &operator<< ( ostream &str, const Parameter &p );
 

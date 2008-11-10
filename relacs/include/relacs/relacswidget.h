@@ -155,6 +155,10 @@ public:
     /*! Inform all plugins about changes in the meta data. */
   void notifyMetaData( void );
 
+    /*! Writes out all options of all RELACSPlugins in a format 
+        suitable for the doxygen documentation. */
+  void saveDoxygenOptions( void );
+
     /*! Tells RELACSWidget that a new Session is started. Opens the files of
         SaveFiles and starts the initial macro if \a startmacro is true. */
   void startSession( bool startmacro=true );

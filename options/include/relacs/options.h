@@ -68,12 +68,8 @@ and format().
 The total number of defined options is returned by size().
 To check wether an option with a certain identifier exist use exist().
 
-The function read() analyses a string of the form 
-"parameter1=x; parameter2=y; parameter3=z; ...".
-If the parameters 'parameter1', 'parameter2', ... match the
-identifier of an option, its value is set to x, y, z, ...
-
-Use write() to write all options into a file.
+The read(), readAppend(), load() and save() functions read the values
+of options, load new options, and save options from and to strings or files.
 */
 
 /*
@@ -583,6 +579,7 @@ public:
   Parameter &setMinMax( const string &ident, double minimum=-MAXDOUBLE, 
 			double maximum=MAXDOUBLE, double step=1.0,
 			const string &unit="" );
+
     /*! Returns the largest power of ten smaller or equal to \a v. */
   inline static double floorLog10( double v )
     { return Parameter::floorLog10( v ); };
@@ -600,6 +597,7 @@ public:
         For example with \a scale = 0.1 you get 23.7 -> 24, 1.45 -> 1.5 */
   inline static double ceil10( double v, double scale=1.0 )
     { return Parameter::ceil10( v, scale ); };
+
     /*! Return the internal unit of the option 
         with identifier equal to \a ident. 
         If there is no option with identifier \a ident, or the option is
@@ -934,7 +932,7 @@ public:
     /*! Length of largest identifier. */
   int identWidth( int selectmask=0 ) const;
 
-    /*! Write identifiers and their values to string \a str
+    /*! Write identifiers and their values to a string
         separated by \a separator.
 	Saves only options that have \a selectmask set in their flags().
         If \a selectmask equals zero, all options are saved.
@@ -957,6 +955,14 @@ public:
   ostream &save( ostream &str, const string &start="",
 		 int width=-1, int selectmask=0, bool detailed=false,
 		 bool firstonly=false ) const;
+  /*! Write options to stream \a str und use \a textformat,
+      \a numberformat, \a boolformat, \a labelformat, and \a separatorformat
+      for formatting text, number, boolean, label, and separator parameter,
+      respectively. */
+  ostream &save( ostream &str, const string &textformat,
+		 const string &numberformat, const string &boolformat="%i=%b\n",
+		 const string &labelformat="%i\n", const string &separatorformat="",
+		 int selectmask=0 ) const;
     /*! Write identifiers and their values to stream \a str */
   friend ostream &operator<< ( ostream &str, const Options &o );
 

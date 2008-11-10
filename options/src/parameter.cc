@@ -547,6 +547,21 @@ Str Parameter::text( int index, const string &format, const string &unit ) const
   f.format( Ident, 'i' );
   f.format( Request, 'r' );
 
+  string typestr = "notype";
+  if ( isText() )
+    typestr = "string";
+  else if ( isNumber() )
+    typestr = "number";
+  else if ( isInteger() )
+    typestr = "integer";
+  else if ( isBoolean() )
+    typestr = "boolean";
+  else if ( isLabel() )
+    typestr = "label";
+  else if ( isSeparator() )
+    typestr = "separator";
+  f.format( typestr, 't' );
+
   string u( unit );
   if ( u.empty() )
     u = OutUnit;
@@ -652,6 +667,21 @@ Str Parameter::defaultText( int index, const string &format,
 
   f.format( Ident, 'i' );
   f.format( Request, 'r' );
+
+  string typestr = "notype";
+  if ( isText() )
+    typestr = "string";
+  else if ( isNumber() )
+    typestr = "number";
+  else if ( isInteger() )
+    typestr = "integer";
+  else if ( isBoolean() )
+    typestr = "boolean";
+  else if ( isLabel() )
+    typestr = "label";
+  else if ( isSeparator() )
+    typestr = "separator";
+  f.format( typestr, 't' );
 
   string u( unit );
   if ( u.empty() )
@@ -1611,6 +1641,30 @@ ostream &Parameter::save( ostream &str, int width, bool detailed,
     else
       str << "! unknown type !";
   }
+
+  return str;
+}
+
+
+ostream &Parameter::save( ostream &str, const string &textformat,
+			  const string &numberformat, const string &boolformat,
+			  const string &labelformat,
+			  const string &separatorformat ) const
+{
+  if ( isText() )
+    str << text( textformat );
+  else if ( isNumber() || isInteger() )
+    str << text( numberformat );
+  else if ( isBoolean() )
+    str << text( boolformat );
+  else if ( isLabel() )
+    str << text( labelformat );
+  else if ( isSeparator() )
+    str << text( separatorformat );
+  else if ( isNotype() )
+    str << "! no type !";
+  else
+    str << "! unknown type !";
 
   return str;
 }

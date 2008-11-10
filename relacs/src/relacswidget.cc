@@ -456,6 +456,8 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     RP->setMinimumWidth( w );
   }
 
+  // saveDoxygenOptions();
+
   // miscellaneous:
   setFocusPolicy( QWidget::StrongFocus );
   KeyTime = new KeyTimeOut( topLevelWidget() );
@@ -898,6 +900,37 @@ void RELACSWidget::notifyMetaData( void )
   for ( unsigned int k=0; k<CN.size(); k++ )
     CN[k]->notifyMetaData();
   RP->notifyMetaData();
+}
+
+
+void RELACSWidget::saveDoxygenOptions( void )
+{
+  for ( int k=0; k < Plugins::plugins(); k++ ) {
+    if ( //Plugins::type( k ) == RELACSPlugin::ModelId ||
+	 Plugins::type( k ) == RELACSPlugin::FilterId ||
+	 //Plugins::type( k ) == RELACSPlugin::ControlId ||
+	 Plugins::type( k ) == RELACSPlugin::ReProId ) {
+      cout << "\n";
+      //      cout << Plugins::ident( k ) << "\n";
+      RELACSPlugin *rxp = (RELACSPlugin *)Plugins::create( k );
+      if ( Plugins::type( k ) == RELACSPlugin::ModelId )
+	cout << "Model ";
+      else if ( Plugins::type( k ) == RELACSPlugin::FilterId )
+	cout << "Filter ";
+      else if ( Plugins::type( k ) == RELACSPlugin::ReProId )
+	cout << "RePro ";
+      else if ( Plugins::type( k ) == RELACSPlugin::ControlId )
+	cout << "Control ";
+      cout << rxp->name() << " [" << rxp->pluginSet() << "]\n";
+      cout << "\\author " << rxp->author() << '\n';
+      cout << "\\version " << rxp->version() << " (" << rxp->date() << ")\n";
+      cout << "\\par Options\n";
+      rxp->save( cout, "- \\c %i=%s: %r (\\c %t)\n", "- \\c %i=%g%u: %r (\\c %t)\n", "- \\c %i=%b: %r (\\c %t)\n", "%i\n" );
+      delete rxp;
+      Plugins::destroy( k );
+    }
+  }
+  ::exit( 0 );
 }
 
 

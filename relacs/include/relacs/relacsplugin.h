@@ -172,6 +172,9 @@ public:
     /*! Destruct the RELACSPlugin. */
   virtual ~RELACSPlugin( void );
 
+    /*! The name of the plugin set the class belongs to. */
+  string pluginSet( void ) const;
+
     /*! Called whenever the mode is changed. */
   virtual void modeChanged( void );
     /*! This function is called whenever some values of the meta data
@@ -197,8 +200,6 @@ public:
 
 protected:
 
-    /*! The name of the plugin set the class belongs to. */
-  string pluginSet( void ) const;
     /*! Set the name of the plugin set the class belongs to to \a pluginset. */
   virtual void setPluginSet( const string &pluginset );
 

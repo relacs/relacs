@@ -2328,6 +2328,25 @@ ostream &Options::save( ostream &str, const string &start, int width,
 }
 
 
+ostream &Options::save( ostream &str, const string &textformat,
+			const string &numberformat, const string &boolformat,
+			const string &labelformat,
+			const string &separatorformat, int selectmask ) const
+{
+  Warning = "";
+
+  // write options to file:
+  for ( const_iterator pp = begin(); pp != end(); ++pp ) {
+    if ( (*pp).flags( selectmask ) ) {
+      (*pp).save( str, textformat, numberformat,
+		  boolformat, labelformat, separatorformat );
+    }
+  }
+
+  return str;
+}
+
+
 string Options::save( string separator, 
 		      int selectmask, bool firstonly ) const
 {
