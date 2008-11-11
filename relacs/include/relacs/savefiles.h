@@ -44,6 +44,18 @@ class RELACSWidget;
 
   /*! Flag for the modes of traces or events, indicating that they should be saved. */
 static const int SaveFilesMode = 0x0008;
+  /*! Flag for the modes of events, indicating that their size should be saved. */
+static const int SaveFilesSizeMode = 0x0010;
+  /*! Flag for the modes of events, indicating that their width should be saved. */
+static const int SaveFilesWidthMode = 0x0020;
+  /*! Flag for the modes of events, indicating that their mean rate should be saved. */
+static const int SaveFilesMeanRateMode = 0x0040;
+  /*! Flag for the modes of events, indicating that their mean size should be saved. */
+static const int SaveFilesMeanSizeMode = 0x0080;
+  /*! Flag for the modes of events, indicating that their mean width should be saved. */
+static const int SaveFilesMeanWidthMode = 0x0100;
+  /*! Flag for the modes of events, indicating that their mean quality should be saved. */
+static const int SaveFilesMeanQualityMode = 0x0200;
 
 /*! 
 \class SaveFiles
@@ -70,9 +82,12 @@ SaveFile sets the following environment variables:
 \todo writeStimulus: adaptive time for calculating the mean rate
 \todo check it carefully!
 \todo warning on Disk full (or even before!)
-\todo Save event sizes and widths as well.
-
-\todo File formats: .wav: enough flexibility, compression possible, but file size limited to 2GB has to be known in advance, .au: raw data with unlimited file size und minimal header information
+\todo what is about units and format of event sizes and widths?
+\todo File formats: 
+- .wav: enough flexibility, compression possible,
+  but file size limited to 2GB has to be known in advance, 
+- .au: raw data with unlimited file size und minimal header information
+  allows for float and double
 */
 
 class SaveFiles : public QHBox, public Options
@@ -185,8 +200,14 @@ protected:
         and print an error message if opening of the file failed. */
   ofstream *openFile( const string &filename, int type );
 
+    /*! Open and initialize the files holding the traces from the
+        analog input channels. */
   void createTraceFile( const Acquire &intraces );
+    /*! Open and initialize the files recording the event times. */
   void createEventFiles( const EventList &events );
+    /*! Open and initialize the stimulus file that
+        contains indices to he traces and event files.
+        Call this *after* createEventFiles()! */
   void createStimulusFile( const Acquire &intraces, const EventList &events );
 
     /*! are there any files open to write in? */
@@ -211,8 +232,6 @@ protected:
 
     /*! files for all voltage traces. */
   vector< ofstream* > VF;
-    /*! files for complete list of events except stimulus events. */
-  vector< ofstream* > EF;
     /*! file with stimuli and indices to traces and events. */
   ofstream *SF;
 
@@ -227,16 +246,35 @@ protected:
     /*! Start of stimulus as an index to the written trace data. */
   long SignalOffs;
 
-    /*! The names of the files for the events. */
-  vector<string> EventFileNames;
-    /*! The event data that have to be written into the file. */
-  vector<const EventData*> EventsToWrite;
-    /*! Indices to each event data. */
-  vector<long> EventOffs;
-    /*! Already written lines of events. */
-  vector<long> EventLines;
-    /*! Line index to the signal start in the events files. */
-  vector<long> SignalEvents;
+  struct EventFile {
+      /*! The name of the file for the events. */
+    string FileName;
+      /*! The file stream. */
+    ofstream *Stream;
+      /*! The event data that have to be written into the file. */
+    const EventData *Events;
+      /*! Index to event data. */
+    long Offset;
+      /*! Already written lines. */
+    long Lines;
+      /*! Line index to the signal start in the events files. */
+    long SignalEvent;
+      /*! Save mean rate in the stimulus file. */
+    bool SaveMeanRate;
+      /*! Save mean size in the stimulus file. */
+    bool SaveMeanSize;
+      /*! Save mean width in the stimulus file. */
+    bool SaveMeanWidth;
+      /*! Save mean quality in the stimulus file. */
+    bool SaveMeanQuality;
+      /*! Save size in the event file. */
+    bool SaveSize;
+      /*! Save width in the event file. */
+    bool SaveWidth;
+      /*! The key for the event file. */
+    TableKey Key;
+  };
+  vector< EventFile > EventFiles;
 
   OutList StimulusToWrite;
   bool StimulusData;

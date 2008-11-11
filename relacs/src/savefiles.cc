@@ -47,7 +47,6 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
   Writing = false;
 
   VF.clear();
-  EF.clear();
   SF = 0;
 
   clearRemoveFiles();
@@ -58,11 +57,7 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
   TraceOffs = 0;
   SignalOffs = 0;
 
-  EventsToWrite.clear();
-  EventFileNames.clear();
-  EventOffs.clear();
-  EventLines.clear();
-  SignalEvents.clear();
+  EventFiles.clear();
 
   StimulusToWrite.clear();
   StimulusData = false;
@@ -100,9 +95,7 @@ SaveFiles::~SaveFiles()
 
   TraceToWrite = 0;
 
-  EventsToWrite.clear();
-  EventFileNames.clear();
-  EventOffs.clear();
+  EventFiles.clear();
 
   StimulusToWrite.clear();
 }
@@ -276,25 +269,30 @@ void SaveFiles::write( const InList &data, const EventList &events )
   */
 
   // write event data:
-  for ( int k=0; k<(int)EventsToWrite.size() && k<events.size(); k++ )
-    EventsToWrite[k] = &events[k];
+  for ( int k=0; k<(int)EventFiles.size() && k<events.size(); k++ )
+    EventFiles[k].Events = &events[k];
   //      cerr << "writeEvents\n";
-  if ( ! EF.empty() && Writing ) {
-    for ( unsigned int k=0; k<EventsToWrite.size() && k<EF.size(); k++ ) {
-      if ( EF[k] != 0 ) {
+  if ( Writing ) {
+    for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
+      if ( EventFiles[k].Stream != 0 ) {
 
-	while ( EventOffs[k] < EventsToWrite[k]->size() ) {
-	  double et = (*EventsToWrite[k])[EventOffs[k]];
-	  if ( EventsToWrite[0]->size() > 0 &&
-	       et >= EventsToWrite[0]->back() &&
-	       ( EventOffs[k] == 0 || 
-		 (*EventsToWrite[k])[EventOffs[k]-1] < EventsToWrite[0]->back() ) ) {
-	    SignalEvents[k] = EventLines[k];
-	    *EF[k] << '\n';
+	while ( EventFiles[k].Offset < EventFiles[k].Events->size() ) {
+	  double et = (*EventFiles[k].Events)[EventFiles[k].Offset];
+	  if ( EventFiles[0].Events->size() > 0 &&
+	       et >= EventFiles[0].Events->back() &&
+	       ( EventFiles[k].Offset == 0 || 
+		 (*EventFiles[k].Events)[EventFiles[k].Offset-1] < EventFiles[0].Events->back() ) ) {
+	    EventFiles[k].SignalEvent = EventFiles[k].Lines;
+	    *EventFiles[k].Stream << '\n';
 	  }
-	  *EF[k] << Str( et - SessionTime, 0, 5, 'f' ) << '\n';
-	  EventLines[k]++;
-	  EventOffs[k]++;
+	  EventFiles[k].Key.save( *EventFiles[k].Stream, et - SessionTime, 0 );
+	  if ( EventFiles[k].SaveSize )
+	    EventFiles[k].Key.save( *EventFiles[k].Stream, EventFiles[k].Events->eventSize( EventFiles[k].Offset ) );
+	  if ( EventFiles[k].SaveWidth )
+	    EventFiles[k].Key.save( *EventFiles[k].Stream, EventFiles[k].Events->eventWidth( EventFiles[k].Offset ) );
+	  *EventFiles[k].Stream << '\n';
+	  EventFiles[k].Lines++;
+	  EventFiles[k].Offset++;
 	}
 
       }
@@ -361,11 +359,17 @@ void SaveFiles::writeStimulus( void )
 	  StimulusKey.save( *SF, (*TraceToWrite)[k].gain() * (*TraceToWrite)[k].scale() );
 	  StimulusKey.save( *SF, (*TraceToWrite)[k].offset() );
 	}
-      for ( unsigned int k=0; k<EF.size(); k++ )
-	if ( EF[k] != 0 ) {
-	  StimulusKey.save( *SF, SignalEvents[k] );
-	  StimulusKey.save( *SF, EventsToWrite[k]->meanRate() );  // XXX adaptive Zeit!
-	  StimulusKey.save( *SF, EventsToWrite[k]->meanSize() );
+      for ( unsigned int k=0; k<EventFiles.size(); k++ )
+	if ( EventFiles[k].Stream != 0 ) {
+	  StimulusKey.save( *SF, EventFiles[k].SignalEvent );
+	  if ( EventFiles[k].SaveMeanRate )
+	    StimulusKey.save( *SF, EventFiles[k].Events->meanRate() );  // XXX adaptive Zeit!
+	  if ( EventFiles[k].SaveMeanSize )
+	    StimulusKey.save( *SF, EventFiles[k].Events->meanSize() );
+	  if ( EventFiles[k].SaveMeanWidth )
+	    StimulusKey.save( *SF, EventFiles[k].Events->meanWidth() );
+	  if ( EventFiles[k].SaveMeanQuality )
+	    StimulusKey.save( *SF, 100.0*EventFiles[k].Events->meanQuality() );
 	}
       lock();
       if ( !Options::empty() ) {
@@ -445,7 +449,7 @@ void SaveFiles::writeRePro( void )
 
       // write StimulusKey:
       *SF << '\n';
-      StimulusKey.saveKey( *SF, true, true );
+      StimulusKey.saveKey( *SF );
     }
 
     ReProData = false;
@@ -510,49 +514,53 @@ void SaveFiles::createTraceFile( const Acquire &intraces )
 
 void SaveFiles::createEventFiles( const EventList &events )
 {
-  EF.clear();
-  EF.reserve( events.size() );
-  EventsToWrite.resize( events.size() );
-  EventFileNames.resize( events.size() );
-  EventOffs.resize( events.size() );
-  EventLines.resize( events.size() );
-  SignalEvents.resize( events.size() );
+  EventFiles.resize( events.size() );
 
-  // a file for each event:
   for ( int k=0; k<events.size(); k++ ) {
 
     // init event variables:
-    EventsToWrite[k] = &events[k];
-    EventOffs[k] = events[k].size();
-    EventLines[k] = 0;
-    SignalEvents[k] = 0;
+    EventFiles[k].Events = &events[k];
+    EventFiles[k].Offset = events[k].size();
+    EventFiles[k].Lines = 0;
+    EventFiles[k].SignalEvent = 0;
 
     // create file:
     if ( events[k].mode() & SaveFilesMode ) {
       Str fn = events[k].ident();
-      EventFileNames[k] = fn.lower() + "-events.dat";
-      ofstream *ef = openFile( EventFileNames[k], ios::out );
-      EF.push_back( ef );
-      if ( ef->good() ) {
+      EventFiles[k].FileName = fn.lower() + "-events.dat";
+      EventFiles[k].Stream = openFile( EventFiles[k].FileName, ios::out );
+      if ( EventFiles[k].Stream->good() ) {
+	// write header:
+	*EventFiles[k].Stream << "# events: " << events[k].ident() << '\n';
+	*EventFiles[k].Stream << '\n';
+	// init key:
+	EventFiles[k].Key.clear();
+	EventFiles[k].Key.addNumber( "t", "sec", "%0.5f" );
+	EventFiles[k].SaveSize = ( events[k].sizeBuffer() && (events[k].mode() & SaveFilesSizeMode) );
+	if ( EventFiles[k].SaveSize )
+	  EventFiles[k].Key.addNumber( "size", "mV", "%6.1f" );
+	EventFiles[k].SaveWidth = ( events[k].widthBuffer() && (events[k].mode() & SaveFilesWidthMode) );
+	if ( EventFiles[k].SaveWidth )
+	  EventFiles[k].Key.addNumber( "width", "s", "%7.5f" );
 	// write key:
-	*ef << "# events: " << events[k].ident() << '\n';
-	*ef << '\n';
-	*ef << "#Key\n";
-	*ef << "# t\n";
-	*ef << "# sec\n";
+	EventFiles[k].Key.saveKey( *EventFiles[k].Stream );
       }
-      else
-	EventFileNames[k] = "";
+      else {
+	EventFiles[k].FileName = "";
+	EventFiles[k].Stream->close();
+	EventFiles[k].Stream = 0;
+      }
     }
     else {
-      EF.push_back( 0 );
-      EventFileNames[k] = "";
+      EventFiles[k].FileName = "";
+      EventFiles[k].Stream = 0;
     }
   }
 }
 
 
-void SaveFiles::createStimulusFile( const Acquire &intraces, const EventList &events )
+void SaveFiles::createStimulusFile( const Acquire &intraces,
+				    const EventList &events )
 {
   // init stimulus variables:
   StimulusData = false;
@@ -573,9 +581,9 @@ void SaveFiles::createStimulusFile( const Acquire &intraces, const EventList &ev
       *SF << "# sample interval" + Str( k+1 ) + ": " << Str( 1000.0*intraces.inputTraces( k )[0].sampleInterval(), 0, 2, 'f' ) << "ms\n";
     }
     *SF << "# event lists:\n";
-    for ( unsigned int k=0; k<EventFileNames.size(); k++ ) {
-      if ( ! EventFileNames[k].empty() )
-	*SF << "#      event file" + Str( k+1 ) + ": " << EventFileNames[k] << '\n';
+    for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
+      if ( ! EventFiles[k].FileName.empty() )
+	*SF << "#      event file" + Str( k+1 ) + ": " << EventFiles[k].FileName << '\n';
     }
     *SF << "# analog output traces:\n";
     for ( int k=0; k<RW->AQ->outTracesSize(); k++ ) {
@@ -602,12 +610,22 @@ void SaveFiles::createStimulusFile( const Acquire &intraces, const EventList &ev
 	}
     }
     StimulusKey.addLabel( "events" );
-    for ( unsigned int k=0; k<EF.size(); k++ )
-      if ( EF[k] != 0 ) {
+    for ( unsigned int k=0; k<EventFiles.size(); k++ )
+      if ( EventFiles[k].Stream != 0 ) {
 	StimulusKey.addLabel( events[k].ident() );
 	StimulusKey.addNumber( "index", "line", "%10.0f" );
-	StimulusKey.addNumber( "freq", "Hz", "%6.1f" );
-	StimulusKey.addNumber( "size", "mV", "%6.1f" );
+	EventFiles[k].SaveMeanRate = ( events[k].mode() & SaveFilesMeanRateMode );
+	if ( EventFiles[k].SaveMeanRate )
+	  StimulusKey.addNumber( "freq", "Hz", "%6.1f" );
+	EventFiles[k].SaveMeanSize = ( events[k].mode() & SaveFilesMeanSizeMode );
+	if ( EventFiles[k].SaveMeanSize )
+	  StimulusKey.addNumber( "size", "mV", "%6.1f" );
+	EventFiles[k].SaveMeanWidth = ( events[k].mode() & SaveFilesMeanWidthMode );
+	if ( EventFiles[k].SaveMeanWidth )
+	  StimulusKey.addNumber( "width", "ms", "%6.2f" );
+	EventFiles[k].SaveMeanQuality = ( events[k].mode() & SaveFilesMeanQualityMode );
+	if ( EventFiles[k].SaveMeanQuality )
+	  StimulusKey.addNumber( "quality", "%", "%3.0f" );
       }
     lock();
     if ( !Options::empty() ) {
@@ -739,11 +757,13 @@ void SaveFiles::closeFiles( void )
       delete VF[k];
   }
   VF.clear();
-  for ( unsigned int k=0; k<EF.size(); k++ ) {
-    if ( EF[k] != 0 )
-      delete EF[k];
+  for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
+    if ( EventFiles[k].Stream != 0 ) {
+      EventFiles[k].Stream->close();
+      delete EventFiles[k].Stream;
+    }
   }
-  EF.clear();
+  EventFiles.clear();
   if ( SF != 0 )
     delete SF;
   SF = 0;

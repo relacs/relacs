@@ -82,6 +82,7 @@ InData::InData( const InData &data )
   DeviceBufferCapacity = 0;
   DeviceBufferStart = 0;
   DeviceDataSize = 2;
+  DeviceDataType = SignedWord;
   DeviceBufferSize = 0;
   DeviceBufferConvert = 0;
   DeviceTraceIndex = 0;
@@ -122,6 +123,7 @@ void InData::construct( void )
   DeviceBufferCapacity = 0;
   DeviceBufferStart = 0;
   DeviceDataSize = 2;
+  DeviceDataType = SignedWord;
   DeviceBufferSize = 0;
   DeviceBufferConvert = 0;
   DeviceTraceIndex = 0;
