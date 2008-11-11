@@ -890,7 +890,7 @@ int ComediAnalogOutput::fillWriteBuffer( OutList &sigs )
     return -1;
 
   ErrorState = 0;
-  bool failed = false;
+  int ern = 0;
   int elemWritten = 0;
 
   if ( sigs[0].deviceBufferMaxPop() <= 0 ) {
@@ -904,7 +904,7 @@ int ComediAnalogOutput::fillWriteBuffer( OutList &sigs )
   }
   // try to write twice
   for ( int tryit = 0;
-	tryit < 2 && !failed && sigs[0].deviceBufferMaxPop() > 0; 
+	tryit < 2 && sigs[0].deviceBufferMaxPop() > 0; 
 	tryit++ ){
 
     int bytesWritten = write( comedi_fileno(DeviceP),
@@ -917,11 +917,13 @@ int ComediAnalogOutput::fillWriteBuffer( OutList &sigs )
     */
       
     if ( bytesWritten < 0 ) {
-      if ( errno == EAGAIN || errno == EINTR )
+      ern = errno;
+      if ( ern == EAGAIN || ern == EINTR ) {
+	ern = 0;
 	break;
+      }
       else {
-	sigs.addErrorStr( errno );
-	failed = true;
+	sigs.addErrorStr( ern );
 	cerr << " ComediAnalogOutput::fillWriteBuffer(): error" << endl;////TEST////
       }
     }
@@ -932,11 +934,11 @@ int ComediAnalogOutput::fillWriteBuffer( OutList &sigs )
   }
 
   // no more data:
-  if ( sigs[0].deviceBufferMaxPop() == 0 && ! failed )
+  if ( sigs[0].deviceBufferMaxPop() == 0 && ern == 0 )
     return 0;
 
-  if ( failed || errno == EINTR )
-    switch( errno ) {
+  if ( ern != 0 )
+    switch( ern ) {
 
     case EPIPE: 
       ErrorState = 1;
@@ -963,7 +965,7 @@ int ComediAnalogOutput::fillWriteBuffer( OutList &sigs )
 			+ "  system: " + strerror( errno ) );
       cerr << " ComediAnalogOutput::fillWriteBuffer(): buffer-underrun: "
 	   << "  comedi: " << comedi_strerror( comedi_errno() ) 
-	   << "  system: " << strerror( errno )
+	   << "  system: " << strerror( ern )
 	
 	   << endl;/////TEST/////
       sigs.addError( DaqError::Unknown );

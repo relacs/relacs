@@ -82,8 +82,9 @@ int main(int argc, char *argv[])
     data[n] = (sampl_t)( maxdata*(double)n/fn );
   data[fn-1] = comedi_from_phys(0.0, rng, maxdata);
 
-  dump_cmd(stdout,&cmd);
-  printf( "buffer_size: %d\n", comedi_get_buffer_size( dev, cmd.subdev ) );
+  /* Let's make a small buffer: */
+  comedi_set_buffer_size( dev, cmd.subdev, 10000 );
+  printf( "new buffer size: %d\n\n", comedi_get_buffer_size( dev, cmd.subdev ) );
 
   err = comedi_command_test(dev, &cmd);
   if (err > 0 && err != 4 ) {
@@ -123,27 +124,31 @@ int main(int argc, char *argv[])
   }
   
   while( n > 0 ) {
+    printf( "\nsleep for 1sec...\n" );
     usleep( 100000 );
     printf( "busy: %d\n", ((comedi_get_subdevice_flags( dev, options.subdevice ) & SDF_BUSY) > 0 ) );
     printf( "running: %d\n", ((comedi_get_subdevice_flags( dev, options.subdevice ) & SDF_RUNNING) > 0 ) );
-    m = write(comedi_fileno(dev),(void *)data+(fn*sizeof( sampl_t )-n),n);
-    if(m<0){
-      if ( errno == EAGAIN )
-	fprintf( stderr, "... no more data can be filled! Try later.\n" );
-      else if ( errno == EPIPE ) {
-	fprintf( stderr, "... buffer underrun with EPIPE.\n" );
-	perror("write");
-	exit(0);
+    do {
+      printf( "try to write %d bytes ...\n", n );
+      m = write(comedi_fileno(dev),(void *)data+(fn*sizeof( sampl_t )-n),n);
+      if(m<0){
+	if ( errno == EAGAIN )
+	  fprintf( stderr, "... no more data can be filled! Try later.\n" );
+	else if ( errno == EPIPE ) {
+	  fprintf( stderr, "... buffer underrun with EPIPE.\n" );
+	  perror("write");
+	  exit(0);
+	}
+	else {
+	  perror("write");
+	  exit(0);
+	}
       }
       else {
-	perror("write");
-	exit(0);
+	printf("wrote %d bytes\n",m);
+	n-=m;
       }
-    }
-    else {
-      printf("m=%d\n",m);
-      n-=m;
-    }
+    } while ( m > 0 );
   }
   
   while ( comedi_get_subdevice_flags( dev, cmd.subdev ) & SDF_RUNNING )

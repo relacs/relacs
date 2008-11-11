@@ -38,7 +38,6 @@ class ComediAnalogInput;
 \author Marco Hackenberg
 \version 0.1
 \brief [AnalogOutput] Interface for accessing analog output of a daq-board via comedi.
-\bug fix errno usage
 
 \code
 # calibrate all ranges, references and channels:

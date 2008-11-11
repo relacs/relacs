@@ -122,8 +122,8 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent, const char* name )
   p.setFont( QFont( "Helvetica", s, QFont::Bold ) );
   p.drawText( manualicon.rect(), Qt::AlignCenter, "M" );
   p.end();
-  manualicon.setMask( manualicon.createHeuristicMask() );
-  //manualicon.setMask( manualmask );
+  //  manualicon.setMask( manualicon.createHeuristicMask() );
+  manualicon.setMask( manualmask );
 
   ManualButton = new QPushButton( ButtonBox );
   ManualButton->setToggleButton( true );
