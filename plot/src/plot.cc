@@ -112,6 +112,11 @@ void Plot::construct( KeepMode keep, bool subwidget, int id, MultiPlot *mp )
   XSize = 1.0;
   YSize = 1.0;
 
+  ScreenX1 = 0;
+  ScreenY1 = height() - 1;
+  ScreenX2 = width() - 1;
+  ScreenY2 = 0;
+
   FontSize = fontMetrics().height();
   FontWidth = fontMetrics().width( "00" ) - fontMetrics().width( "0" );
   FontHeight = fontMetrics().ascent();

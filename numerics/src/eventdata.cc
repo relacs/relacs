@@ -99,6 +99,7 @@ EventData::EventData( const EventData &events )
   SizeBuffer = 0;
   WidthBuffer = 0;
   NBuffer = 0;
+  Cyclic = false;
   assign( events );
 }
 
@@ -109,6 +110,7 @@ EventData::EventData( const EventData &events, double tbegin, double tend )
   SizeBuffer = 0;
   WidthBuffer = 0;
   NBuffer = 0;
+  Cyclic = false;
   assign( events, tbegin, tend );
 }
 
@@ -120,6 +122,7 @@ EventData::EventData( const EventData &events, double tbegin, double tend,
   SizeBuffer = 0;
   WidthBuffer = 0;
   NBuffer = 0;
+  Cyclic = false;
   assign( events, tbegin, tend, tref );
 }
 
@@ -131,6 +134,7 @@ EventData::EventData( const ArrayD &times, double tbegin,
   SizeBuffer = 0;
   WidthBuffer = 0;
   NBuffer = 0;
+  Cyclic = false;
   assign( times, tbegin, tend, stepsize );
 }
 

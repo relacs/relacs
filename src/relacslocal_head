@@ -43,6 +43,11 @@ DEBUGRUN="no"
 DEBUGGER="libtool --mode=execute gdb"
 COREFILE=""
 
+# Valgrind:
+VALGRIND="no"
+VALGRINDER="libtool --mode=execute valgrind"
+VALGRINDERARGS=""
+
 # Email address for core dump and bug notifications:
 EMAILADDRESS=""
 
@@ -100,6 +105,14 @@ for i; do
         ulimit -c unlimited 
         USELOGFILE="yes"
         shift ;;
+    -v) VALGRIND="yes"
+        USELOGFILE="no"
+        shift ;;
+    -V) VALGRIND="yes"
+        USELOGFILE="no"
+        shift
+        VALGRINDERARGS="$VALGRINDERARGS $1"
+        shift ;;
     -b) BUGS="yes"
         USELOGFILE="yes"
         shift ;;
@@ -140,6 +153,10 @@ if test "x$HELP" = "xyes"; then
   echo "  -D             Start debugger without running RELACS"
   echo "  -C FILE        Start debugger with core-dump file FILE"
   echo "  -c             Save core dump in directory '$COREDIR' (enables -l)"
+  echo "  -v             Run RELACS from within valgrind (disables logfile)"
+  echo "  -V ARG         Run RELACS from within valgrind with argument ARG passed"
+  echo "                 to valgrind. Multiple specifications of -V are possible"
+  echo "                 (disables logfile)"
   echo "  -b             In case of warnings or errors, save log file in directory"
   echo "                 '$BUGDIR' (enables -l)"
   echo "  -k             In case of core dumps or bugs save the output of dmesg as well"

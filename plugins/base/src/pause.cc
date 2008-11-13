@@ -36,6 +36,11 @@ Pause::Pause( void )
 }
 
 
+Pause::~Pause( void )
+{
+}
+
+
 int Pause::main( void )
 {
   // get options:

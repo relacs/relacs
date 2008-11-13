@@ -58,6 +58,7 @@ class Pause : public RePro
 public:
 
   Pause( void );
+  virtual ~Pause( void );
   virtual int main( void );
 
 };

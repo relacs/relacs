@@ -602,8 +602,7 @@ void Plugins::add( const string &ident, int type, PluginCreator create,
     }
 
   // add plugin:
-  PluginInfo *mi = new PluginInfo( ident, type, create, CurrentFileID );
-  Plugs.push_back( *mi );
+  Plugs.push_back( PluginInfo( ident, type, create, CurrentFileID ) );
 }
 
 

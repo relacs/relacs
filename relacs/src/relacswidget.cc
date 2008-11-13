@@ -456,7 +456,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     RP->setMinimumWidth( w );
   }
 
-  // saveDoxygenOptions();
+  //saveDoxygenOptions();
 
   // miscellaneous:
   setFocusPolicy( QWidget::StrongFocus );

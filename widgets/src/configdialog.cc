@@ -68,6 +68,7 @@ ConfigDialog::ConfigDialog( const string &configident, int configgroup,
 
 ConfigDialog::~ConfigDialog( void )
 {
+  HelpPathes.clear();
 }
 
 
