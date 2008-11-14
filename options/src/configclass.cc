@@ -25,7 +25,6 @@
 namespace relacs {
 
 
-ConfigClassList *ConfigClass::Configs = 0;
 ConfigureClasses *ConfigClass::CFG = 0;
 
 
@@ -54,16 +53,8 @@ ConfigClass::ConfigClass( const ConfigClass &C )
 
 ConfigClass::~ConfigClass( void )
 {
-  if ( Configs != 0 ) {
-    for ( ConfigClassList::iterator cp = Configs->begin();
-	  cp != Configs->end();
-	  ++cp ) {
-      if ( (*cp)->configIdent() == configIdent() ) {
-	Configs->erase( cp );
-	break;
-      }
-    }
-  }
+  if ( CFG != 0 )
+    CFG->eraseConfigClass( this );
 }
 
 
@@ -129,9 +120,8 @@ void ConfigClass::setConfigSelectMask( int flag )
 
 void ConfigClass::addConfig( void )
 {
-  if ( Configs != 0 ) {
-    Configs->push_back( this );
-  }
+  if ( CFG != 0 )
+    CFG->addConfigClass( this );
 }
 
 
@@ -140,12 +130,6 @@ void ConfigClass::readConfig( void )
   if ( CFG != 0 ) {
     CFG->read( *this );
   }
-}
-
-
-void ConfigClass::setConfigClassList( ConfigClassList *cl )
-{
-  Configs = cl;
 }
 
 

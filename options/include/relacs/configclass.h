@@ -65,8 +65,6 @@ after all configuration file have been read in.
 */
 
 class ConfigureClasses;
-class ConfigClass;
-typedef vector<ConfigClass*> ConfigClassList;
 
 class ConfigClass : public Options
 {
@@ -92,7 +90,7 @@ public:
         and \a selectmask is used to select specific items
         to be saved into the configuration file.
 	The new ConfigClass instance is then added to the
-	static list of ConfigClass instances.
+	static list of ConfigClass instances managed by ConfigureClasses.
         \param[in] ident the identifier string of the ConfigClass instance.
 	It is used to specify the right section in a configuration file.
 	\param[in] group the index of the configuration group
@@ -213,10 +211,6 @@ public:
   virtual void config( void );
 
     /*! This function is called by the constructors of ConfigureClasses
-        to make the list of ConfigClass instances \a cl known to 
-        each ConfigClass. */
-  static void setConfigClassList( ConfigClassList *cl );
-    /*! This function is called by the constructors of ConfigureClasses
         to make the ConfigureClasses instance \a cfg known to 
         each ConfigClass. */
   static void setConfigureClasses( ConfigureClasses *cfg );
@@ -234,8 +228,6 @@ private:
   int ConfigMode;
     /*! The mask used for selecting configuration items. */
   int ConfigSelect;
-    /*! The list of ConfigClass instances. */
-  static ConfigClassList *Configs;
     /*! A pointer to the ConfigureClasses instance. */
   static ConfigureClasses *CFG;
 

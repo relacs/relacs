@@ -31,7 +31,8 @@ Model::Model( const string &name, const string &titles,
 	      const string &version, const string &date )
   : RELACSPlugin( "Model: " + name, RELACSPlugin::Plugins,
 		  name, titles, pluginset, author, version, date ),
-    Data()
+    Data( 0 ),
+    Signals( 0 )
 {
   Restarted = false;
   AveragedLoad = 0;

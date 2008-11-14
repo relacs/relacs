@@ -75,6 +75,8 @@ is returned by configFile().
 class ConfigureClasses
 {
 
+  friend class ConfigClass;
+
 public:
 
     /*! Constructs an empty ConfigureClasses (no configuration files)
@@ -315,6 +317,16 @@ public:
   friend ostream &operator<<( ostream &str, const ConfigureClasses &c );
 
 
+protected:
+
+    /*! Adds a class that wants to be configured to the list of classes.
+        \param[in] cfg a pointer to the configureable class. */
+  void addConfigClass( ConfigClass *cfg );
+    /*! Removes a class from the list of classes.
+        \param[in] cfg a pointer to the configureable class. */
+  void eraseConfigClass( ConfigClass *cfg );
+
+
 private:
 
     /*! Returns a string with the current time. 
@@ -325,6 +337,7 @@ private:
   vector < vector < string > > ConfigFile;
     /*! List of pointers to ConfigClass instances 
         that want to be configured. */
+  typedef vector<ConfigClass*> ConfigClassList;
   ConfigClassList Configs;
 
 };

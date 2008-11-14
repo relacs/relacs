@@ -32,7 +32,6 @@ ConfigureClasses::ConfigureClasses( void )
   : ConfigFile(),
     Configs()
 {
-  ConfigClass::setConfigClassList( &Configs );
   ConfigClass::setConfigureClasses( this );
 }
 
@@ -42,7 +41,6 @@ ConfigureClasses::ConfigureClasses( int groups )
     Configs()
 {
   ConfigFile.resize( groups );
-  ConfigClass::setConfigClassList( &Configs );
   ConfigClass::setConfigureClasses( this );
 }
 
@@ -53,16 +51,14 @@ ConfigureClasses::ConfigureClasses( const string &file )
 {
   ConfigFile.resize( 1 );
   setConfigFile( file );
-  ConfigClass::setConfigClassList( &Configs );
   ConfigClass::setConfigureClasses( this );
 }
 
 
 ConfigureClasses::~ConfigureClasses( void )
 {
-  Configs.clear();
-  ConfigClass::setConfigClassList( 0 );
   ConfigClass::setConfigureClasses( 0 );
+  Configs.clear();
 }
 
 
@@ -350,6 +346,25 @@ void ConfigureClasses::save( void )
 {
   for ( unsigned int g = 0; g < ConfigFile.size(); g++ ) {
     save( g );
+  }
+}
+
+
+void ConfigureClasses::addConfigClass( ConfigClass *cfg )
+{
+  Configs.push_back( cfg );
+}
+
+
+void ConfigureClasses::eraseConfigClass( ConfigClass *cfg )
+{
+  for ( ConfigClassList::iterator cp = Configs.begin();
+	cp != Configs.end();
+	++cp ) {
+    if ( (*cp) == cfg ) {
+      Configs.erase( cp );
+      break;
+    }
   }
 }
 

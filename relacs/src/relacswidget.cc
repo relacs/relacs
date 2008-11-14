@@ -456,7 +456,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     RP->setMinimumWidth( w );
   }
 
-  //saveDoxygenOptions();
+  saveDoxygenOptions();
 
   // miscellaneous:
   setFocusPolicy( QWidget::StrongFocus );
@@ -908,10 +908,10 @@ void RELACSWidget::saveDoxygenOptions( void )
   for ( int k=0; k < Plugins::plugins(); k++ ) {
     if ( //Plugins::type( k ) == RELACSPlugin::ModelId ||
 	 Plugins::type( k ) == RELACSPlugin::FilterId ||
-	 //Plugins::type( k ) == RELACSPlugin::ControlId ||
+	 Plugins::type( k ) == RELACSPlugin::ControlId ||
 	 Plugins::type( k ) == RELACSPlugin::ReProId ) {
       cout << "\n";
-      //      cout << Plugins::ident( k ) << "\n";
+      //            cout << Plugins::ident( k ) << "\n";
       RELACSPlugin *rxp = (RELACSPlugin *)Plugins::create( k );
       if ( Plugins::type( k ) == RELACSPlugin::ModelId )
 	cout << "Model ";
@@ -921,6 +921,8 @@ void RELACSWidget::saveDoxygenOptions( void )
 	cout << "RePro ";
       else if ( Plugins::type( k ) == RELACSPlugin::ControlId )
 	cout << "Control ";
+      else
+	cout << "! Invalid Plugin Type ";
       cout << rxp->name() << " [" << rxp->pluginSet() << "]\n";
       cout << "\\author " << rxp->author() << '\n';
       cout << "\\version " << rxp->version() << " (" << rxp->date() << ")\n";

@@ -45,7 +45,7 @@ class SimpleModel : public Model
 public:
 
   SimpleModel( void );
-  ~SimpleModel( void );
+  virtual ~SimpleModel( void );
 
   virtual void main( void );
 

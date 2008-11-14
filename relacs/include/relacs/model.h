@@ -72,7 +72,7 @@ public:
 	 const string &version="unknown",
 	 const string &date=__DATE__ );
     /*! Deconstruct a Model. */
-  ~Model( void );
+  virtual ~Model( void );
 
     /*! Reimplement this function with your own simulation.
         \sa push(), traces(), deltat() */
