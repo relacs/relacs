@@ -287,9 +287,13 @@ void SaveFiles::write( const InList &data, const EventList &events )
 	  }
 	  EventFiles[k].Key.save( *EventFiles[k].Stream, et - SessionTime, 0 );
 	  if ( EventFiles[k].SaveSize )
-	    EventFiles[k].Key.save( *EventFiles[k].Stream, EventFiles[k].Events->eventSize( EventFiles[k].Offset ) );
+	    EventFiles[k].Key.save( *EventFiles[k].Stream,
+				    EventFiles[k].Events->sizeScale() *
+				    EventFiles[k].Events->eventSize( EventFiles[k].Offset ) );
 	  if ( EventFiles[k].SaveWidth )
-	    EventFiles[k].Key.save( *EventFiles[k].Stream, EventFiles[k].Events->eventWidth( EventFiles[k].Offset ) );
+	    EventFiles[k].Key.save( *EventFiles[k].Stream,
+				    EventFiles[k].Events->widthScale() *
+				    EventFiles[k].Events->eventWidth( EventFiles[k].Offset ) );
 	  *EventFiles[k].Stream << '\n';
 	  EventFiles[k].Lines++;
 	  EventFiles[k].Offset++;
@@ -365,9 +369,11 @@ void SaveFiles::writeStimulus( void )
 	  if ( EventFiles[k].SaveMeanRate )
 	    StimulusKey.save( *SF, EventFiles[k].Events->meanRate() );  // XXX adaptive Zeit!
 	  if ( EventFiles[k].SaveMeanSize )
-	    StimulusKey.save( *SF, EventFiles[k].Events->meanSize() );
+	    StimulusKey.save( *SF, EventFiles[k].Events->sizeScale() *
+			      EventFiles[k].Events->meanSize() );
 	  if ( EventFiles[k].SaveMeanWidth )
-	    StimulusKey.save( *SF, EventFiles[k].Events->meanWidth() );
+	    StimulusKey.save( *SF, EventFiles[k].Events->widthScale() *
+			      EventFiles[k].Events->meanWidth() );
 	  if ( EventFiles[k].SaveMeanQuality )
 	    StimulusKey.save( *SF, 100.0*EventFiles[k].Events->meanQuality() );
 	}
@@ -538,10 +544,12 @@ void SaveFiles::createEventFiles( const EventList &events )
 	EventFiles[k].Key.addNumber( "t", "sec", "%0.5f" );
 	EventFiles[k].SaveSize = ( events[k].sizeBuffer() && (events[k].mode() & SaveFilesSizeMode) );
 	if ( EventFiles[k].SaveSize )
-	  EventFiles[k].Key.addNumber( "size", "mV", "%6.1f" );
+	  EventFiles[k].Key.addNumber( events[k].sizeName(), events[k].sizeUnit(),
+				       events[k].sizeFormat() );
 	EventFiles[k].SaveWidth = ( events[k].widthBuffer() && (events[k].mode() & SaveFilesWidthMode) );
 	if ( EventFiles[k].SaveWidth )
-	  EventFiles[k].Key.addNumber( "width", "s", "%7.5f" );
+	  EventFiles[k].Key.addNumber( events[k].widthName(), events[k].widthUnit(),
+				       events[k].widthFormat() );
 	// write key:
 	EventFiles[k].Key.saveKey( *EventFiles[k].Stream );
       }
@@ -619,10 +627,10 @@ void SaveFiles::createStimulusFile( const Acquire &intraces,
 	  StimulusKey.addNumber( "freq", "Hz", "%6.1f" );
 	EventFiles[k].SaveMeanSize = ( events[k].mode() & SaveFilesMeanSizeMode );
 	if ( EventFiles[k].SaveMeanSize )
-	  StimulusKey.addNumber( "size", "mV", "%6.1f" );
+	  StimulusKey.addNumber( events[k].sizeName(), events[k].sizeUnit(), events[k].sizeFormat() );
 	EventFiles[k].SaveMeanWidth = ( events[k].mode() & SaveFilesMeanWidthMode );
 	if ( EventFiles[k].SaveMeanWidth )
-	  StimulusKey.addNumber( "width", "ms", "%6.2f" );
+	  StimulusKey.addNumber( events[k].widthName(), events[k].widthUnit(), events[k].widthFormat() );
 	EventFiles[k].SaveMeanQuality = ( events[k].mode() & SaveFilesMeanQualityMode );
 	if ( EventFiles[k].SaveMeanQuality )
 	  StimulusKey.addNumber( "quality", "%", "%3.0f" );

@@ -328,6 +328,12 @@ SpikeDetector::~SpikeDetector( void )
 int SpikeDetector::init( const InData &data, EventData &outevents,
 			 const EventList &other, const EventData &stimuli )
 {
+  outevents.setSizeScale( 1.0 );
+  outevents.setSizeUnit( data.unit() );
+  outevents.setSizeFormat( "%5.1f" );
+  outevents.setWidthScale( 1000.0 );
+  outevents.setWidthUnit( "ms" );
+  outevents.setWidthFormat( "%4.2f" );
   D.setHistorySize( int( HistoryTime*1000.0 ) );
   LastSpikeSize = 0.0;
   LastTime = 0.0;

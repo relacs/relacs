@@ -99,6 +99,8 @@ public:
 	given in \a indata.
 	The filter and the data are already locked during this function 
 	by lock() and writeLockData(), respectively.
+	Initialize the \a outdata with an appropriate unit using InData::setUnit().
+	Default unit is the unit of \a indata.
         Returns zero on success or one at failure. */
   virtual int init( const InData &indata, InData &outdata ) { return INT_MIN; };
     /*! Reimplement this function to initialize your filter.
@@ -107,6 +109,8 @@ public:
 	given in \a indata.
 	The filter and the data are already locked during this function 
 	by lock() and writeLockData(), respectively.
+	Initialize the \a outdata with an appropriate unit using InData::setUnit().
+	Default unit is the unit of the first trace in \a indata.
         Returns zero on success or one at failure. */
   virtual int init( const InList &indata, InList &outdata ) { return INT_MIN; };
     /*! Reimplement this function to initialize your filter.
@@ -114,6 +118,8 @@ public:
 	that filter the events \a inevents.
 	The filter and the data are already locked during this function 
 	by lock() and writeLockData(), respectively.
+	Initialize the \a outdata with an appropriate unit using InData::setUnit().
+	Default unit is EventData::sizeUnit() of \a inevents.
         Returns zero on success or one at failure. */
   virtual int init( const EventData &inevents, InData &outdata ) { return INT_MIN; };
     /*! Reimplement this function to initialize your filter.
@@ -121,6 +127,8 @@ public:
 	that filter multiple events \a inevents.
 	The filter and the data are already locked during this function 
 	by lock() and writeLockData(), respectively.
+	Initialize the \a outdata with an appropriate unit using InData::setUnit().
+	Default unit is EventData::sizeUnit() of the first EventData in \a inevents.
         Returns zero on success or one at failure. */
   virtual int init( const EventList &inevents, InList &outdata ) { return INT_MIN; };
 
@@ -130,6 +138,12 @@ public:
 	given in \a indata.
 	The detector and the data are already locked during this function 
 	by lock() and writeLockData(), respectively.
+	Initialize the \a outevents with appropriate names, scale factors,
+	units and formats
+        (EventData::setSizeName(), EventData::setSizeScale(),
+	EventData::setSizeUnit(), EventData::setSizeFormat(), 
+	EventData::setWidthName(), EventData::setWidthScale(),
+	EventData::setWidthUnit(), EventData::setWidthFormat())
         Returns zero on success or one at failure. */
   virtual int init( const InData &indata, EventData &outevents,
 		    const EventList &other, const EventData &stimuli ) { return INT_MIN; };
@@ -139,6 +153,12 @@ public:
 	given in \a indata.
 	The detector and the data are already locked during this function 
 	by lock() and writeLockData(), respectively.
+	Initialize the \a outevents with appropriate names, scale factors,
+	units and formats
+        (EventData::setSizeName(), EventData::setSizeScale(),
+	EventData::setSizeUnit(), EventData::setSizeFormat(), 
+	EventData::setWidthName(), EventData::setWidthScale(),
+	EventData::setWidthUnit(), EventData::setWidthFormat())
         Returns zero on success or one at failure. */
   virtual int init( const InList &indata, EventList &outevents,
 		    const EventList &other, const EventData &stimuli ) { return INT_MIN; };
@@ -147,6 +167,12 @@ public:
 	that detect events in the events \a inevents.
 	The detector and the data are already locked during this function 
 	by lock() and writeLockData(), respectively.
+	Initialize the \a outevents with appropriate names, scale factors,
+	units and formats
+        (EventData::setSizeName(), EventData::setSizeScale(),
+	EventData::setSizeUnit(), EventData::setSizeFormat(), 
+	EventData::setWidthName(), EventData::setWidthScale(),
+	EventData::setWidthUnit(), EventData::setWidthFormat())
         Returns zero on success or one at failure. */
   virtual int init( const EventData &inevents, EventData &outevents,
 		    const EventList &other, const EventData &stimuli ) { return INT_MIN; };
@@ -155,6 +181,12 @@ public:
 	that detect events in the multiple events \a inevents.
 	The detector and the data are already locked during this function 
 	by lock() and writeLockData(), respectively.
+	Initialize the \a outevents with appropriate names, scale factors,
+	units and formats
+        (EventData::setSizeName(), EventData::setSizeScale(),
+	EventData::setSizeUnit(), EventData::setSizeFormat(), 
+	EventData::setWidthName(), EventData::setWidthScale(),
+	EventData::setWidthUnit(), EventData::setWidthFormat())
         Returns zero on success or one at failure. */
   virtual int init( const EventList &inevents, EventList &outevents, 
 		    const EventList &other, const EventData &stimuli ) { return INT_MIN; };

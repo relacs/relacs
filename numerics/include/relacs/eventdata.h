@@ -483,6 +483,42 @@ public:
     /*! Set the identifier of the events to \a ident. */
   void setIdent( const string &ident );
 
+    /*! The name for the event sizes.
+        \sa setSizeName(), sizeBuffer(), widthName(), sizeScale(), sizeUnit(),
+	sizeFormat() */
+  const string &sizeName( void ) const;
+    /*! Set the name for the size of the events to \a name.
+        \sa sizeName(), setSizeBuffer(), setWidthName(), setSizeScale(),
+	setSizeUnit(), setSizeFormat() */
+  void setSizeName( const string &name );
+    /*! The scale factor for the event sizes.
+        \sa setSizeScale(), sizeBuffer(), widthScale(), sizeName(), sizeUnit(),
+	sizeFormat() */
+  double sizeScale( void ) const;
+    /*! Set the scale factor for the size of the events to \a scale.
+        \sa sizeScale(), sizeBuffer(), setWidthScale(), setSizeName(),
+	setSizeUnit(), setSizeFormat() */
+  void setSizeScale( double scale );
+    /*! The unit of the event sizes after multiplication with sizeScale().
+        \sa setSizeUnit(), sizeBuffer(), widthUnit(), sizeName(), sizeScale(),
+	sizeFormat() */
+  const string &sizeUnit( void ) const;
+    /*! Set the unit of the size of the eventsafter multiplication
+        with sizeScale() to \a unit.
+        \sa sizeUnit(), sizeBuffer(), setWidthUnit(), setSizeName(),
+	setSizeScale(), setSizeFormat() */
+  void setSizeUnit( const string &unit );
+    /*! The format of the event sizes for writing them as strings
+        after multiplication with sizeScale().
+        \sa setSizeFormat(), sizeBuffer(), widthFormat(), sizeName(),
+	sizeScale(), sizeUnit() */
+  const string &sizeFormat( void ) const;
+    /*! Set the format for the size of the events after multiplication
+        with sizeScale() to \a format.
+        \sa sizeFormat(), sizeBuffer(), setWidthFormat(), setSizeName(),
+	setSizeScale(), setSizeUnit() */
+  void setSizeFormat( const string &format );
+
     /*! Minimum size of events between time \a tbegin and time \a tend seconds.
         If there are no events within this time interval or
         if the event sizes of the events are not stored 
@@ -531,6 +567,42 @@ public:
     /*! Compute a histogram \a hist over the event sizes
         between time \a tbegin and time \a tend seconds. */
   void sizeHist( double tbegin, double tend, SampleDataD &hist ) const;
+
+    /*! The name for the event widths.
+        \sa setWidthName(), widthBuffer(), sizeName(), widthScale(), widthUnit(),
+	widthFormat() */
+  const string &widthName( void ) const;
+    /*! Set the name for the width of the events to \a name.
+        \sa widthName(), setWidthBuffer(), setSizeName(), setWidthScale(),
+	setWidthUnit(), setWidthFormat() */
+  void setWidthName( const string &name );
+    /*! The scale factor for the event widths.
+        \sa setWidthScale(), widthBuffer(), sizeScale(), widthName(), widthUnit(),
+	widthFormat() */
+  double widthScale( void ) const;
+    /*! Set the scale factor for the width of the events to \a scale.
+        \sa widthScale(), widthBuffer(), setSizeScale(), setWidthName(),
+	setWidthUnit(), setWidthFormat() */
+  void setWidthScale( double scale );
+    /*! The unit of the event widths after multiplication with widthScale().
+        \sa setWidthUnit(), widthBuffer(), sizeUnit(), widthName(), widthScale(),
+	widthFormat() */
+  const string &widthUnit( void ) const;
+    /*! Set the unit of the width of the eventsafter multiplication
+        with widthScale() to \a unit.
+        \sa widthUnit(), widthBuffer(), setSizeUnit(), setWidthName(),
+	setWidthScale(), setWidthFormat() */
+  void setWidthUnit( const string &unit );
+    /*! The format of the event widths for writing them as strings
+        after multiplication with widthScale().
+        \sa setWidthFormat(), widthBuffer(), sizeFormat(), widthName(),
+	widthScale(), widthUnit() */
+  const string &widthFormat( void ) const;
+    /*! Set the format for the width of the events after multiplication
+        with widthScale() to \a format.
+        \sa widthFormat(), widthBuffer(), setSizeFormat(), setWidthName(),
+	setWidthScale(), setWidthUnit() */
+  void setWidthFormat( const string &format );
 
     /*! Minimum width of events between time \a tbegin and time \a tend seconds.
         If there are no events within this time interval or
@@ -1078,6 +1150,26 @@ private:
   static const double MaxInterval;
     /*! Mean quality of event-detection. */
   double MeanQuality;
+
+    /*! A name for the event size buffer describing its content. */
+  string SizeName;
+    /*! The scale for converting the sizes to \a SizeUnit. */
+  double SizeScale;
+    /*! The unit for the event sizes multiplied by \a SizeScale. */
+  string SizeUnit;
+    /*! The format to be used for writing the event sizes multiplied
+        by \a SizeScale as strings. */
+  string SizeFormat;
+
+    /*! A name for the event width buffer describing its content. */
+  string WidthName;
+    /*! The scale for converting the widths to \a WidthUnit. */
+  double WidthScale;
+    /*! The unit for the event widths multiplied by \a WidthScale. */
+  string WidthUnit;
+    /*! The format to be used for writing the event widths multiplied
+        by \a WidthScale as strings. */
+  string WidthFormat;
 
     /*! Error message set by check(). */
   mutable string ErrorMessage;

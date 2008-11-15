@@ -72,8 +72,6 @@ SaveFile sets the following environment variables:
 
 \bug implement saving of trace data
 \bug what about no longer valid pointers in StimulusToWrite and TraceToWrite?
-\bug createStimulusFile: write sample rate of all traces
-\bug createStimulusFile: write name of trace file
 \bug writeTrace: needs to be implemented
 \bug writeStimulus: multi board signal times?
 \bug createTraceFile: needs to be implemented.
@@ -82,7 +80,6 @@ SaveFile sets the following environment variables:
 \todo writeStimulus: adaptive time for calculating the mean rate
 \todo check it carefully!
 \todo warning on Disk full (or even before!)
-\todo what is about units and format of event sizes and widths?
 \todo File formats: 
 - .wav: enough flexibility, compression possible,
   but file size limited to 2GB has to be known in advance, 

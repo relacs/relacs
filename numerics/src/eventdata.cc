@@ -45,6 +45,14 @@ EventData::EventData( void )
   UseWidthBuffer = false;
   Mode = 0;
   Ident = "";
+  SizeName = "size";
+  SizeScale = 1.0;
+  SizeUnit = "V";
+  SizeFormat = "%g";
+  WidthName = "width";
+  WidthScale = 1.0;
+  WidthUnit = "s";
+  WidthFormat = "%g";
   Source = -1;
   MeanRatio = 0.03;
   SignalTime = -HUGE_VAL;
@@ -64,6 +72,14 @@ EventData::EventData( int n, bool sizebuffer, bool widthbuffer )
   UseWidthBuffer = widthbuffer;
   Mode = 0;
   Ident = "";
+  SizeName = "size";
+  SizeScale = 1.0;
+  SizeUnit = "V";
+  SizeFormat = "%g";
+  WidthName = "width";
+  WidthScale = 1.0;
+  WidthUnit = "s";
+  WidthFormat = "%g";
   Source = -1;
   MeanRatio = 0.03;
   SignalTime = -HUGE_VAL;
@@ -85,6 +101,14 @@ EventData::EventData( int n, double tbegin, double tend, double stepsize,
   UseWidthBuffer = widthbuffer;
   Mode = 0;
   Ident = "";
+  SizeName = "size";
+  SizeScale = 1.0;
+  SizeUnit = "V";
+  SizeFormat = "%g";
+  WidthName = "width";
+  WidthScale = 1.0;
+  WidthUnit = "s";
+  WidthFormat = "%g";
   Source = -1;
   MeanRatio = 0.03;
   SignalTime = tbegin;
@@ -558,6 +582,14 @@ void EventData::assign( const EventData &events )
   Cycles = events.Cycles;
   Mode = events.Mode;
   Ident = events.Ident;
+  SizeName = events.SizeName;
+  SizeUnit = events.SizeUnit;
+  SizeScale = events.SizeScale;
+  SizeFormat = events.SizeFormat;
+  WidthName = events.WidthName;
+  WidthScale = events.WidthScale;
+  WidthUnit = events.WidthUnit;
+  WidthFormat = events.WidthFormat;
   MeanRatio = events.MeanRatio;
   MeanSize = events.MeanSize;
   MeanWidth = events.MeanWidth;
@@ -612,6 +644,14 @@ void EventData::assign( const EventData &events,
   Cycles = 0;
   Mode = events.Mode;
   Ident = events.Ident;
+  SizeName = events.SizeName;
+  SizeScale = events.SizeScale;
+  SizeUnit = events.SizeUnit;
+  SizeFormat = events.SizeFormat;
+  WidthName = events.WidthName;
+  WidthScale = events.WidthScale;
+  WidthUnit = events.WidthUnit;
+  WidthFormat = events.WidthFormat;
 
   MeanRatio = events.MeanRatio;
   if ( UseSizeBuffer ) {
@@ -686,6 +726,14 @@ void EventData::assign( const EventData &events,
   Cycles = 0;
   Mode = events.Mode;
   Ident = events.Ident;
+  SizeName = events.SizeName;
+  SizeScale = events.SizeScale;
+  SizeUnit = events.SizeUnit;
+  SizeFormat = events.SizeFormat;
+  WidthName = events.WidthName;
+  WidthScale = events.WidthScale;
+  WidthUnit = events.WidthUnit;
+  WidthFormat = events.WidthFormat;
 
   MeanRatio = events.MeanRatio;
   if ( UseSizeBuffer ) {
@@ -1527,6 +1575,54 @@ void EventData::setIdent( const string &ident )
 }
 
 
+const string &EventData::sizeName( void ) const
+{
+  return SizeName;
+}
+
+
+void EventData::setSizeName( const string &name )
+{
+  SizeName = name;
+}
+
+
+double EventData::sizeScale( void ) const
+{
+  return SizeScale;
+}
+
+
+void EventData::setSizeScale( double scale )
+{
+  SizeScale = scale;
+}
+
+
+const string &EventData::sizeUnit( void ) const
+{
+  return SizeUnit;
+}
+
+
+void EventData::setSizeUnit( const string &unit )
+{
+  SizeUnit = unit;
+}
+
+
+const string &EventData::sizeFormat( void ) const
+{
+  return SizeFormat;
+}
+
+
+void EventData::setSizeFormat( const string &format )
+{
+  SizeFormat = format;
+}
+
+
 double EventData::minSize( double tbegin, double tend ) const
 {
   if ( SizeBuffer == 0 )
@@ -1647,6 +1743,54 @@ void EventData::sizeHist( double tbegin, double tend, SampleDataD &hist ) const
     if ( b >= 0 && b < hist.size() )
       hist[b] += 1.0;
   }
+}
+
+
+const string &EventData::widthName( void ) const
+{
+  return WidthName;
+}
+
+
+void EventData::setWidthName( const string &name )
+{
+  WidthName = name;
+}
+
+
+double EventData::widthScale( void ) const
+{
+  return WidthScale;
+}
+
+
+void EventData::setWidthScale( double scale )
+{
+  WidthScale = scale;
+}
+
+
+const string &EventData::widthUnit( void ) const
+{
+  return WidthUnit;
+}
+
+
+void EventData::setWidthUnit( const string &unit )
+{
+  WidthUnit = unit;
+}
+
+
+const string &EventData::widthFormat( void ) const
+{
+  return WidthFormat;
+}
+
+
+void EventData::setWidthFormat( const string &format )
+{
+  WidthFormat = format;
 }
 
 

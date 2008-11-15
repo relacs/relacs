@@ -967,15 +967,15 @@ Parameter &Parameter::addNumber( double number, double error, const string &unit
   }
   
   // check range:
-  if ( number < Minimum ) {
+  if ( number < Minimum - 1.0e-8 ) {
     Warning += "number=" + Str( number ) + " < Minimum=" + Str( Minimum ) + ", ";
     number = Minimum;
   }
-  if ( number != MAXDOUBLE && number > Maximum ) {
+  if ( number != MAXDOUBLE && number > Maximum + 1.0e-8 ) {
     Warning += "number=" + Str( number ) + " > Maximum=" + Str( Maximum ) +", ";
     number = Maximum;
   }
-  if ( error > Maximum ) {
+  if ( error > Maximum + 1.0e-8 ) {
     Warning += "error=" + Str( error ) + " > Maximum=" + Str( Maximum ) +", ";
     error = Maximum;
   }
@@ -1088,11 +1088,11 @@ Parameter &Parameter::addDefaultNumber( double number, const string &unit,
   }
   
   // check range:
-  if ( number < Minimum ) {
+  if ( number < Minimum - 1.0e-8 ) {
     Warning += "number=" + Str( number ) + " < Minimum=" + Str( Minimum ) + ", ";
     number = Minimum;
   }
-  if ( number != MAXDOUBLE && number > Maximum ) {
+  if ( number != MAXDOUBLE && number > Maximum + 1.0e-8 ) {
     Warning += "number=" + Str( number ) + " > Maximum=" + Str( Maximum ) +", ";
     number = Maximum;
   }

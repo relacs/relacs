@@ -321,6 +321,7 @@ string FilterDetectors::createTracesEvents( InList &data, EventList &events,
 
       d->Out = ek;
 
+      // assemble output events:
       d->OutEvents.clear();
       for ( int j=0; j < d->NOut; j++ ) {
 	int intrace = EventInputTrace[ek];
@@ -345,6 +346,7 @@ string FilterDetectors::createTracesEvents( InList &data, EventList &events,
 	eventstyles.back().SizeCoor = Plot::Pixel;
       }
 
+      // assemble other events:
       d->OtherEvents.clear();
       for ( unsigned int j=0; j < d->Other.size(); j++ ) {
 	int oinx = events.index( d->Other[j] );
@@ -357,6 +359,7 @@ string FilterDetectors::createTracesEvents( InList &data, EventList &events,
 	    + "</b> in <b>" + d->FilterDetector->ident() + "</b><br>";
       }
 
+      // setup output events:
       if ( d->FilterDetector->type() & Filter::EventInput ) {
 	// single / multiple event traces -> multiple event traces
 	for ( int i=0; i<d->NOut; i++, ek++ ) {
@@ -369,6 +372,7 @@ string FilterDetectors::createTracesEvents( InList &data, EventList &events,
 	    events[ek].setIdent( d->FilterDetector->ident() + "-" + Str( i+1 ) );
 	  else
 	    events[ek].setIdent( d->FilterDetector->ident() );
+	  events[ek].setSizeUnit( d->InEvents[0].sizeUnit() );
 	}
       }
       else {
@@ -383,6 +387,7 @@ string FilterDetectors::createTracesEvents( InList &data, EventList &events,
 	    events[ek].setIdent( d->FilterDetector->ident() + "-" + Str( i+1 ) );
 	  else
 	    events[ek].setIdent( d->FilterDetector->ident() );
+	  events[ek].setSizeUnit( d->InTraces[0].unit() );
 	}
       }
     }
@@ -391,6 +396,7 @@ string FilterDetectors::createTracesEvents( InList &data, EventList &events,
 
       d->Out = dk;
 
+      // assemble output traces:
       d->OutTraces.clear();
       for ( int j=0; j < d->NOut; j++ ) {
 	int intrace = TraceInputTrace[dk];
@@ -419,6 +425,7 @@ string FilterDetectors::createTracesEvents( InList &data, EventList &events,
 	    data[dk].setIdent( d->FilterDetector->ident() + "-" + Str( i+1 ) );
 	  else
 	    data[dk].setIdent( d->FilterDetector->ident() );
+	  data[dk].setUnit( d->InEvents[0].sizeUnit() );
 	}
       }
       else {
@@ -430,6 +437,7 @@ string FilterDetectors::createTracesEvents( InList &data, EventList &events,
 	    data[dk].setIdent( d->FilterDetector->ident() + "-" + Str( i+1 ) );
 	  else
 	    data[dk].setIdent( d->FilterDetector->ident() );
+	  data[dk].setUnit( d->InTraces[0].unit() );
 	}
       }
 

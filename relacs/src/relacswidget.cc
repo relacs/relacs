@@ -110,7 +110,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   addInteger( "inputtraces", "Number of input-traces", 1 );
   addNumber( "inputsamplerate", "Input sampling rate", 20000.0, 1.0, 1000000.0, 1000.0, "Hz", "kHz" ); // Hertz, -> 2.4MB pro minute and channel
   addNumber( "inputtracecapacity", "Ring buffer has capacity for ", 600.0, 1.0, 1000000.0, 1.0, "s" );
-  addNumber( "inputtracetime", "Buffer of driver can hold data for ", 1.0, 0.001, 10.0, 0.001, "s", "ms"  );
+  addNumber( "inputtracetime", "Buffer of driver can hold data for ", 1.0, 0.001, 1000.0, 0.001, "s", "ms"  );
   addBoolean( "inputunipolar", "Unipolar input", false );
   addText( "inputtraceid", "Input trace identifier", "V-1" );
   addNumber( "inputtracescale", "Input trace scale", 1.0 );
@@ -456,7 +456,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     RP->setMinimumWidth( w );
   }
 
-  saveDoxygenOptions();
+  //  saveDoxygenOptions();
 
   // miscellaneous:
   setFocusPolicy( QWidget::StrongFocus );
