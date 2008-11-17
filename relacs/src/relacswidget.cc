@@ -780,8 +780,11 @@ void RELACSWidget::run( void )
     do {
       QThread::msleep( wi );
       lockSignals();
-      if ( AQ->writeData() < 0 )
-	printlog( "! error in writing data" );
+      if ( AQ->writeData() < 0 ) {
+	printlog( "! error in writing data. Stop analog output." );
+	QApplication::postEvent( this, new QCustomEvent( QEvent::User+3 ) );
+	AQ->stopWrite();
+      }
       unlockSignals();
     } while ( updatetime.elapsed() < ui );
     //    int ei = updatetime.restart();
@@ -1035,6 +1038,9 @@ void RELACSWidget::customEvent( QCustomEvent *qce )
     AOD->updateMenu();
     ATD->updateMenu();
     ATI->updateMenu();
+  }
+  else if ( qce->type() == QEvent::User+3 ) {
+    MessageBox::error( "RELACS Error !", "Transfering stimulus data to hardware driver failed.", this );
   }
 }
 

@@ -1714,7 +1714,7 @@ int Acquire::writeData( void )
 	  rv = r;
 	else {
 	  if ( rv >= 0 )
-	    rv += r;
+	    rv = 1;
 	}
       }
       else {
@@ -1789,11 +1789,14 @@ int Acquire::stopWrite( void )
 {
   bool success = true;
 
-  for ( unsigned int i = 0; i<AO.size(); i++ )
+  for ( unsigned int i = 0; i<AO.size(); i++ ) {
     if ( AO[i].AO->isOpen() ) {
       if ( AO[i].AO->reset() != 0 )
 	success = false;
+      else
+	AO[i].Signals.clear();
     }
+  }
 
   return success ? 0 : -1;
 }

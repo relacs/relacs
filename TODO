@@ -1,12 +1,13 @@
+Acquisition interface:
+- use dynamic updateinterval and writeinterval in RELACSWidget::run()
+  depending on sampling rates and buffer sizes
+- add single data read and write
+- add function for blocked write() and corresponding error checking (buffer underrun)
+- need a DIO device interface
+- need a ComediNIPFI and a ComediNIRTSI device class.
+
 Plugins:
 - Put relacs configuration files in root directory of the plugin sets
-
-Autotools:
-- Make datatools a separate project
-- Check m4 macro style
-- Check for C++ requirements (STL, templates)
-- For running autoreconf you need the following packages:
-  apt-get install autoconf automake libtool 
 
 Relacs:
 - How are plugins (control, repros) found/identified? Possibility of name clashes!
@@ -37,13 +38,57 @@ Documentation:
   make sure that nothing is installed in prefix/lib!
   For finalizing a change in the interface the version number of the library
   needs to be changed.
-- For developing: make sure LD_LIBRARY_PATH does not contain pathes to any relacs libraries
+- For developing: make sure LD_LIBRARY_PATH does not contain pathes to any relacs libraries,
+  best is to set LD_LIBRARY_PATH=""
 - Links:
   CRCNS - Collaborative Research in Computational Neuroscience - Data sharing activity
   http://www.crcns.org/
 - Add brief documentation to the examples! (a README file)
 - update documentation of OutData, TraceSpec
 - RTAI Installation: https://www.rtai.org/RTAILAB/RTAI-Lab-tutorial.pdf
+  patches for 2.6.24 are in rtai/base/arch/x86/patches/ !
+  $ cd /usr/src/linux
+  $ patch -p1 < /usr/src/rtai/base/arch/x86/patches/hal-linux-2.6.24-x86-2.0-07.patch
+  $ cp /boot/configXXX .config
+  $ make xconfig
+  Load the local .config
+
+  Make the changes described in the RTAI pdf:
+  - General setup: select "Prompt for development..."
+  - General setup: set "Local version" to -rtai
+  - Enable loadable module support: select "Enable module support",
+  "Module unloading", and "Automatic module loading". Deselect 
+  "Module versioning support"; RTAI modules are not version
+  dependent.
+  - Processor type and features: Select your Subarchitecture Type
+  (PC-Compatible) and Processor family. Select "Preemption Model
+  (Preemptible kernel (Low-Latency Desktop))". You might need "High
+  Memory Support (4GB)" if you use a PCMCIA data acquisition
+  card. Deselect "Use register arguments (EXPERIMENTAL)". Possibly
+  deselect "Local APIC support on uniprocessors".
+  - Power Management options: Select ACPI Support and features
+  relevant to your hardware. Leave APM deselected. Leave CPU Frequency
+  scaling unselected. Warning: ACPI support may be a problem on
+  laptops that use the "screen closed" button to put the computer
+  into sleep or standby modes.
+
+  Keep all other default selections.
+  Run 
+  $ make
+  $ make modules_install
+  $ make install
+
+  Create a RAM image file:
+  $ cd /boot
+  $ update-initramfs -c -k 2.6.24.7-rtai
+
+  Update grub menu:
+  Add
+title           RTAI kernel 2.6.24.7
+root            (hd0,0)
+kernel          /boot/vmlinuz-2.6.24.7-rtai root=/dev/sda1 ro
+initrd          /boot/initrd.img-2.6.24.7-rtai
+  to /boot/grub/menu.lst
 - RTAI include path: --with-rtai=/usr/src/rtai-3.6/base/include
 
 Libraries:
@@ -53,7 +98,10 @@ Libraries:
   * configure.ac.in AC_CONFIG_MACRO_DIR([m4])
   * Makefile.am: ACLOCAL_AMFLAGS = -I m4
 
-Autotools details:
+Autotools:
+- Make datatools a separate project
+- Check m4 macro style
+- Check for C++ requirements (STL, templates)
 - Math library check: LT_LIB_M
 - moc3.mk: clean-am should be clean-local, but this is not called from Makefile!
   However, why is this clean-am not overriding the original clean-am?
@@ -83,11 +131,6 @@ Distribution details:
   update: updatefiles
   help: svn-*
 
-Acquisition interface:
-- use dynamic updateinterval and writeinterval in RELACSWidget::run()
-  depending on sampling rates and buffer sizes
-- add single data read and write
-
 
 Bug in MetaData Dialog: after opening and closing with ESC, reopening
 crashes the program
@@ -100,9 +143,6 @@ SaveFiles::write( RePro ) -> SaveFiles::writeStimulus() ->
 -> cleanup savefiles! make sure that writing to files is locked!
 
 Bug in xarray.cc: Problems with the pow function (in containerfuncs.h)
-
-
-Start implementing Dynclamp module!
 
 
 new RePro name: ExPro, Protocol, ...
@@ -158,13 +198,13 @@ TARGET="_top"
 
 ---------------------------------
 
-Macros, SpikeDetector, PlotTrace:
-  - check font size on fourier
-
 RePros:
   - use convert( OutData& )!
   - check save() function of all RePros.
   - test all RePros! Especially the files they are saving.
+
+Adjust input range:
+  - outsource this in a control widget.
   - Search/FIField: slower change of input range!
     * option: increase range only
     * decrease range after n stimuli only
@@ -178,6 +218,7 @@ Macros:
     (similar to break, but without softStopRequest).
 
 Devices:
+  - mechanism for passing name=value pairs to open()
   - Add and implement probe() and possibly requires() function
   - implement settings() (AnalogIn/Output, Attenuator, Attenuate already done)
   - implement "dummy (DocDevice)" devices that only get infos from
@@ -186,19 +227,10 @@ Devices:
 Attenuate:
   - a unit for intensity!
   - interaction with gain settings of daq board? Are there boards with
-    many gains for analog output.
-
-Session:
-  - move sessionData() to FileSave (this is the only place where this is used?)
-  - does a session really need to be an plugin? Could that not be just a Control
-    that has the "Cell found" button? Check both Auditory and Efish-Session!
-  - Both Control and RePro should have a sessionStart() and sessionStop() function
-    (not init() and reset()).
+    many gains for analog output?
 
 ConfigDialog:
   - check recursive mutex
-
-Need a ComediNIESeriesPFI and a ComediDIO device class.
 
 Filter/Detectors/PlotTrace:
   Make PlotTrace better configurable!
@@ -211,9 +243,6 @@ Plugins:
 
 OutData, Acquire:
  - handle unset SampleInterval
-
-EventData, FileWrite:
- - units of size don't have to be the unit of the trace!
 
 A virtual I/O Data handler controlling the data flow in RELACS.
  - online data aquisition

@@ -71,28 +71,31 @@ CPPFLAGS="${QT3_CPPFLAGS} ${CPPFLAGS}"
 LDFLAGS="${QT3_LDFLAGS} ${LDFLAGS}"
 
 QT3_INC_MISSING="cannot find the header files for Qt3!
-   Please provide the path to the Qt3 include directory:
-   e.g. './configure --with-qt3-inc=/usr/lib/qt3/include'
-   or provide the base path to the Qt3 installation:
-   e.g. './configure --with-qt3=/usr/lib/qt3'   
-   or install a Qt3 development package:
-   on a Debian-based system enter 'sudo apt-get install libqt3-mt-dev'."
+You either need to
+- install a Qt3 development package (e.g. libqt3-mt-dev,
+  on a Debian-based system enter 'sudo apt-get install libqt3-mt-dev'),
+- or provide the path to the Qt3 include directory:
+  e.g. './configure --with-qt3-inc=/usr/lib/qt3/include'
+- or provide the base path to the Qt3 installation:
+  e.g. './configure --with-qt3=/usr/lib/qt3'."
 AC_CHECK_HEADERS(qvbox.h qconfig.h,, AC_MSG_ERROR(${QT3_INC_MISSING}))
 
 QT3_LIB_MISSING="cannot find the Qt3 libraries!
-   Please provide the path to the Qt3 libraries:
-   e.g. './configure --with-qt3-lib=/usr/lib/qt3/lib'
-   or provide the base path to the Qt3 installation:
-   e.g. './configure --with-qt3=/usr/lib/qt3'   
-   or install a Qt3 development package:
-   on a Debian-based system enter 'sudo apt-get install libqt3-mt-dev'."
+You either need to
+- install a Qt3 development package (e.g. libqt3-mt-dev,
+  on a Debian-based system enter 'sudo apt-get install libqt3-mt-dev'),
+- or provide the path to the Qt3 libraries:
+  e.g. './configure --with-qt3-lib=/usr/lib/qt3/lib'
+- or provide the base path to the Qt3 installation:
+  e.g. './configure --with-qt3=/usr/lib/qt3'."
 AC_CHECK_LIB(qt-mt, main,, AC_MSG_ERROR(${QT3_LIB_MISSING}), ${QT3_LDFLAGS})
 
 QT3_WRONG_VESION="Qt version 3.3 or higher but not Qt4 is required, you have another version!
-   Please provide the base path to the right Qt3 installation:
-   e.g. './configure --with-qt3=/usr/lib/qt3'   
-   or install a Qt3 development package:
-   on a Debian-based system enter 'sudo apt-get install libqt3-mt-dev'."
+You either need to
+- install a Qt3 development package (e.g. libqt3-mt-dev,
+  on a Debian-based system enter 'sudo apt-get install libqt3-mt-dev'),
+- or provide the base path to the right Qt3 installation:
+  e.g. './configure --with-qt3=/usr/lib/qt3'."
 AC_COMPILE_IFELSE([
 #include <qvbox.h>
 #if !defined(QT_VERSION) || (QT_VERSION < 0x030300) || (QT_VERSION >= 0x040000)

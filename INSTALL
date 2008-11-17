@@ -1,3 +1,112 @@
+
+1. `cd' to the directory containing the relacs source code.
+
+
+2. Create the configure script
+
+In case you downloaded the RELACS source code from the subversion
+repository then you need to run
+
+> ./bootstrap.sh
+
+or alternatively
+
+> autoreconf -v -i
+
+first. In case of success, the ./bootstrap.sh script finishes with the
+message "Successfully generated the ./configure script".
+
+For this to work you need to have the autoconf, automake (version 1.10
+or higher), and libtool packages installed on your system. On Debian
+or Ubuntu execute as root:
+./apt-get install autoconf automake libtool 
+
+If you have problems with this and you do not know how to proceed,
+then I can send you a tar archive with a complete RELACS distribution
+upon request (benda@bio.lmu.de, subject: RELACS).
+
+
+3. Configure RELACS
+
+> ./configure
+
+If ./configure finishes with a message like
+"If you can read these lines ./configure finished sucessfully...."
+you can continue with compiling RELACS.
+
+However, if you see a line "Use GSL ... no" towards the end of the
+output of ./configure, you may optionally want to install the GNU
+Scientific library (www.gnu.org/software/gsl/) on your system (package
+libgsl0-dev on Debian) as well.  If you see a line "Generate
+documentation ... no" towards the end of the output of ./configure,
+you may want to install the doxygen program (www.doxygen.org) for
+generating the documentation.
+
+On failure, ./configure prints out a more or less usefull error message.
+Usually ./configure fails because of some missing libraries or programs.
+This means that you either
+- need to install the library or program on your system, or
+- specify a path where to find the library; 
+  see ./configure --help and the instructions below for details.
+
+After installation of new packages you need to run ./configure again.
+
+For example, you may need to specify the location of the Qt3
+libraries: For example, on SuSE you need to call: 
+> ./configure --with-qt3=/usr/lib/qt3
+On Debian and Ubuntu ./configure should work without any argument.
+
+See ./configure --help and the instructions below for details.
+
+In case you really cannot get ./configure to run successfully or it
+fails with an error message that does not help you, then please write
+me an email (benda@bio.lmu.de, subject: RELACS) containing the full
+output of ./configure and all config* files in the RELACS root
+directory.
+
+
+4. Compile RELACS
+
+> make
+
+That takes a while!
+
+In case compilation fails, then please write me an email
+(benda@bio.lmu.de, subject: RELACS) containing the full output of
+./make.
+
+
+5. Optionally run
+
+> make check
+
+for executing some self tests.
+
+In case checking fails, then please write
+me an email (benda@bio.lmu.de, subject: RELACS) containing the full
+output of ./make check.
+
+
+6. Run a demo
+
+> ./relacslocal -3
+
+Press for example 'F1'. More instructions on the demo will follow...
+
+
+7. If you really want to install this demo version, simply execute
+
+> make install
+
+You can specify where RELACS is installed to by the --prefix and
+related options during the configure step No. 3. See ./configure
+--help and the instructions below for details.
+
+
+====================================================================
+The following is a general instruction to the GNU configure script:
+
+
 Installation Instructions
 *************************
 

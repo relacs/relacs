@@ -467,9 +467,9 @@ public:
     /*! After having started an analog output with write()
         repeatedly call this function to fill up the buffer of
 	the hardware driver with data.
-	Returns a negative number on error, otherwise the number
-	of output data elements, and zero if no more data need to be
-	transferred to the hardware driver.
+	Returns a negative number on error, zero if no more data need to be
+	transferred to the hardware driver, and one if some data were
+	successfully transfered to the hardware driver.
         \sa testWrite(), convert(), write(), writeZero(), stopWrite() */
   virtual int writeData( void );
 

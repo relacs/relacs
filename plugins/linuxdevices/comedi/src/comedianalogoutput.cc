@@ -818,10 +818,16 @@ int ComediAnalogOutput::writeData( OutList &sigs )
 {
   //device stopped?
   if ( !running() ) {
-    sigs.addErrorStr( "ComediAnalogOutput::writeData: " +
-		      deviceFile() + " is not running!" );
-    cerr << "ComediAnalogOutput::writeData: device is not running! comedi_strerror: " << comedi_strerror( comedi_errno() ) << endl;/////TEST/////
-    return 0;/////TEST/////
+    if ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_BUSY ) {
+      ErrorState = 1;
+      sigs.addError( DaqError::OverflowUnderrun );
+    }
+    else {
+      sigs.addErrorStr( "ComediAnalogOutput::writeData: " +
+			deviceFile() + " is not running and not busy!" );
+      cerr << "ComediAnalogOutput::writeData: device is not running and not busy! comedi_strerror: " << comedi_strerror( comedi_errno() ) << '\n';
+    }
+    return -1;
   }
 
   return fillWriteBuffer( sigs );
@@ -886,22 +892,21 @@ void ComediAnalogOutput::take( const vector< AnalogOutput* > &aos,
 
 int ComediAnalogOutput::fillWriteBuffer( OutList &sigs )
 {
-  if ( !isOpen() )
+  if ( !isOpen() ) {
+    sigs.setError( DaqError::DeviceNotOpen );
     return -1;
+  }
 
   ErrorState = 0;
+
+  if ( sigs[0].deviceBufferMaxPop() <= 0 ) {
+    sigs.addError( DaqError::NoData );
+    return -1;
+  }
+
   int ern = 0;
   int elemWritten = 0;
 
-  if ( sigs[0].deviceBufferMaxPop() <= 0 ) {
-    //    sigs.addErrorStr( "ComediAnalogOutput::writeData: " +
-    //		      deviceFile() + " - buffer-underrun in outlist!" );
-    //    sigs.addError( DaqError::OverflowUnderrun );
-    cerr << "ComediAnalogOutput::fillWriteBuffer: buffer-underrun in outlist!"  
-	 << endl;/////TEST/////
-    //    sigs[0].deviceBufferReset();/////TEST////
-    return -1;/////TEST////
-  }
   // try to write twice
   for ( int tryit = 0;
 	tryit < 2 && sigs[0].deviceBufferMaxPop() > 0; 
@@ -910,21 +915,12 @@ int ComediAnalogOutput::fillWriteBuffer( OutList &sigs )
     int bytesWritten = write( comedi_fileno(DeviceP),
 			      sigs[0].deviceBufferPopBuffer(),
 			      sigs[0].deviceBufferMaxPop() * BufferElemSize );
-    /*
-    cerr << " ComediAnalogOutput::fillWriteBuffer(): loop " << tryit << " "
-	 << bytesWritten << " bytes from "
-	 << sigs[0].deviceBufferMaxPop() * BufferElemSize << " requested written\n";
-    */
       
     if ( bytesWritten < 0 ) {
       ern = errno;
       if ( ern == EAGAIN || ern == EINTR ) {
 	ern = 0;
 	break;
-      }
-      else {
-	sigs.addErrorStr( ern );
-	cerr << " ComediAnalogOutput::fillWriteBuffer(): error" << endl;////TEST////
       }
     }
     else if ( bytesWritten > 0 ) {
@@ -933,44 +929,32 @@ int ComediAnalogOutput::fillWriteBuffer( OutList &sigs )
     }
   }
 
-  // no more data:
-  if ( sigs[0].deviceBufferMaxPop() == 0 && ern == 0 )
-    return 0;
-
-  if ( ern != 0 )
+  if ( ern == 0 ) {
+    // no more data:
+    if ( sigs[0].deviceBufferMaxPop() == 0 )
+      return 0;
+  }
+  else {
+    // error:
     switch( ern ) {
 
     case EPIPE: 
       ErrorState = 1;
-      sigs.addErrorStr( deviceFile() + " - buffer-underrun: "
-			+ comedi_strerror( comedi_errno() ) );
       sigs.addError( DaqError::OverflowUnderrun );
-      cerr << " ComediAnalogOutput::fillWriteBuffer(): buffer-underrun: "
-	   << comedi_strerror( comedi_errno() ) << endl;/////TEST/////
       return -1;
 
     case EBUSY:
       ErrorState = 2;
-      sigs.addErrorStr( deviceFile() + " - device busy: "
-			+ comedi_strerror( comedi_errno() ) );
       sigs.addError( DaqError::Busy );
-      cerr << " ComediAnalogOutput::fillWriteBuffer(): device busy: "
-	   << comedi_strerror( comedi_errno() ) << endl;/////TEST/////
       return -1;
 
     default:
       ErrorState = 2;
-      sigs.addErrorStr( "Error while writing to device-file: " + deviceFile()
-			+ "  comedi: " + comedi_strerror( comedi_errno() )
-			+ "  system: " + strerror( errno ) );
-      cerr << " ComediAnalogOutput::fillWriteBuffer(): buffer-underrun: "
-	   << "  comedi: " << comedi_strerror( comedi_errno() ) 
-	   << "  system: " << strerror( ern )
-	
-	   << endl;/////TEST/////
+      sigs.addErrorStr( ern );
       sigs.addError( DaqError::Unknown );
       return -1;
     }
+  }
   
   return elemWritten;
 }
