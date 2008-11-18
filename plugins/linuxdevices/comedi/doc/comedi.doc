@@ -2,4 +2,128 @@
 \mainpage Comedi Relacs Plugins
 
 \brief Interface to the comedi data acquisition library.
+
+
+\section installcomedi Install Comedi
+See www.comedi.org
+
+
+\section udev Properly add Comedi to udev
+
+-# Login as root.
+-# Create a new group "comedi":
+\code
+$ addgroup --system comedi
+\endcode
+-# Add udev rules to the /etc/udev/rules.d directory:
+\code
+$ echo 'KERNEL=="comedi*", MODE="0660", GROUP="comedi"' > /etc/udev/rules.d/comedi.rules
+\endcode
+-# run
+\code
+$ udevtrigger
+\endcode
+to apply your new udev rules
+-# Add users to the comedi group:
+\code
+$ adduser <username> comedi
+\endcode
+You need to logout and login again.
+
+
+\section installrtai Install RTAI and Comedi
+
+Chapter 2, Installation, in the RTAI-Lab tutorial at
+https://www.rtai.org/RTAILAB/RTAI-Lab-tutorial.pdf
+explains how to install both comedi and RTAI.
+
+The following is basically a copy of this chapter, with a 
+few updates.
+
+\subsection rtaikernel Linux kernel and RTAI patch
+
+-# Download the latest RTAI version (version 3.6) from www.rtai.org
+-# Unpack RTAI in /usr/src:
+\code
+$ cd /usr/src
+$ tar xjvf rtai-3.6.2.tar.bz2
+$ ln -s rtai-3.6.2 rtai
+\endcode
+-# Check for available patches. Get a list of all patches for all architectures:
+\code
+$ find rtai/base/arch/ -name '*.patch' | sort
+\endcode
+For example, patches for the 2.6.24 kernel are in rtai/base/arch/x86/patches/ !
+Decide for a patch, and remember its version number: \c hal-linux-<kernel-version>-*.patch
+-# Download a 'vanilla' kernel, e.g. \c linux-2.6.xx.xx.tar.gz from http://www.kernel.org
+-# Unpack the kernel
+\code
+$ tar xzvf linux-2.6.24.7.tar.gz
+$ mv /usr/src/linux-2.6.24.7 /usr/src/linux-2.6.24.7-rtai
+$ ln -s /usr/src/linux-2.6.24.7-rtai linux
+\endcode
+-# Patch the kernel
+\code
+$ cd /usr/src/linux
+$ patch -p1 < /usr/src/rtai/base/arch/x86/patches/hal-linux-2.6.24-x86-2.0-07.patch
+\endcode
+-# Configure the kernel
+Get the configuration of you already installed kernel:
+\code
+$ cp /boot/configXXX .config
+\endcode
+Run the kernel configuration GUI:
+\code
+$ make xconfig
+\endcode
+First, load the local .config file.
+Then make the changes described in the RTAI-Lab tutorial:
+  - General setup: select "Prompt for development..."
+  - General setup: set "Local version" to -rtai
+  - Enable loadable module support: select "Enable module support",
+    "Module unloading", and "Automatic module loading". Deselect 
+    "Module versioning support"; RTAI modules are not version
+    dependent.
+  - Processor type and features: Select your Subarchitecture Type
+    (PC-Compatible) and Processor family. Select "Preemption Model
+    (Preemptible kernel (Low-Latency Desktop))". You might need "High
+    Memory Support (4GB)" if you use a PCMCIA data acquisition
+    card. Deselect "Use register arguments (EXPERIMENTAL)". Possibly
+    deselect "Local APIC support on uniprocessors".
+  - Power Management options: Select ACPI Support and features
+    relevant to your hardware. Leave APM deselected. Leave CPU Frequency
+    scaling unselected. Warning: ACPI support may be a problem on
+    laptops that use the "screen closed" button to put the computer
+    into sleep or standby modes.
+  - Keep all other selections.
+-# Compile and install the kernel.
+Run 
+\code
+$ make
+$ make modules_install
+$ make install
+\endcode
+-# You might need to update third party kernel modules as well,
+like for example the ones for your graphics board.
+-# On many systems you also need to create a RAM disk image file:
+\code
+$ cd /boot
+$ update-initramfs -c -k 2.6.24.7-rtai
+\endcode
+This will create \c /boot/initrd.img-2.6.24.7-rtai
+-# Update grub menu.
+Add
+\code
+title           RTAI kernel 2.6.24.7
+root            (hd0,0)
+kernel          /boot/vmlinuz-2.6.24.7-rtai root=/dev/sda1 ro
+initrd          /boot/initrd.img-2.6.24.7-rtai
+\endcode
+to /boot/grub/menu.lst.
+Take the location of your root partition in both the "root" line
+(hd0,0) and the "kernel" line (/dev/sda1) from the corresponding entry
+of the already installed kernel. The "initrd" line is only needed
+if you created a RAM disk image file.
+
+
 */
