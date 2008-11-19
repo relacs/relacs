@@ -35,7 +35,7 @@ LowPass::LowPass( const string &ident, int mode )
   Tau = 1.0;
 
   // options:
-  addNumber( "tau", "Time constant", Tau, 0.0, 10000.0, 0.001, "s", "ms", "%.1f" );
+  addNumber( "tau", "Filter time constant", Tau, 0.0, 10000.0, 0.001, "s", "ms", "%.1f" );
 
   LFW.assign( ((Options*)this), 0, 0, true, 0, mutex() );
   LFW.setSpacing( 4 );

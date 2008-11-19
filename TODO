@@ -188,6 +188,9 @@ Attenuate:
 ConfigDialog:
   - check recursive mutex
 
+Model:
+  - check recursive mutexes
+
 Filter/Detectors/PlotTrace:
   Make PlotTrace better configurable!
 

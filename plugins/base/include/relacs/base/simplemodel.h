@@ -32,9 +32,18 @@ namespace base {
 \class SimpleModel
 \brief [Model] A toy model for testing.
 \author Jan Benda
+
+Records either Gaussian white noise (\c model=Noise) or the stimulus
+(\c model=Stimulu), both multiplied by \c gain.
+
+\par Options
+- \c model=Noise|Stimulus: The model (\c string)
+- \c gain=1: Gain (\c number)
+
 \version 1.1 (Jan 31, 2008)
 -# added model option
 \version 1.0 (Jan 5, 2006)
+
 */
 
 

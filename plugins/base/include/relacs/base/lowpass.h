@@ -34,7 +34,17 @@ namespace base {
 \class LowPass
 \brief [Filter] A simple first order low pass filter
 \author Jan Benda
-\version 0.1
+
+The input \a x(t) is filtered with the ordinary differential equation
+\f[ \tau \frac{dy}{dt} = x - y \f]
+to result in the low-pass filtered output \a y(t).
+The cut-off frequency of the filter is at
+\f[ f_c = \frac{1}{2 \pi \tau} \f]
+ 
+\par Options
+- \c tau=1000ms: Filter time constant (\c number)
+
+\version 0.1 (May 3 2007)
 */
 
 

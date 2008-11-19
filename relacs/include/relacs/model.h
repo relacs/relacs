@@ -52,7 +52,7 @@ namespace relacs {
 \todo Handling of multiple signals.
 */
 
-class Model : public QThread, public RELACSPlugin 
+class Model : public RELACSPlugin, public QThread 
 {
 
   friend class Simulator;

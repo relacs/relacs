@@ -174,6 +174,9 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
       Plugins::openPath( pluginlib, pluginrelative, pluginhomes );
     }
   }
+
+  //  saveDoxygenOptions();
+
   if ( Plugins::empty() ) {
     printlog(  "! error: No valid plugins found. Exit now." );
     MessageBox::error( "RELACS Error !", "No valid plugins found.<br>\nExit now.", this );
@@ -455,8 +458,6 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     PT->setMinimumWidth( w );
     RP->setMinimumWidth( w );
   }
-
-  //  saveDoxygenOptions();
 
   // miscellaneous:
   setFocusPolicy( QWidget::StrongFocus );
@@ -909,12 +910,11 @@ void RELACSWidget::notifyMetaData( void )
 void RELACSWidget::saveDoxygenOptions( void )
 {
   for ( int k=0; k < Plugins::plugins(); k++ ) {
-    if ( //Plugins::type( k ) == RELACSPlugin::ModelId ||
+    if ( Plugins::type( k ) == RELACSPlugin::ModelId ||
 	 Plugins::type( k ) == RELACSPlugin::FilterId ||
 	 Plugins::type( k ) == RELACSPlugin::ControlId ||
 	 Plugins::type( k ) == RELACSPlugin::ReProId ) {
       cout << "\n";
-      //            cout << Plugins::ident( k ) << "\n";
       RELACSPlugin *rxp = (RELACSPlugin *)Plugins::create( k );
       if ( Plugins::type( k ) == RELACSPlugin::ModelId )
 	cout << "Model ";

@@ -33,8 +33,6 @@ SimpleModel::SimpleModel( void )
   // define options:
   addSelection( "model", "The model", "Noise|Stimulus" );
   addNumber( "gain", "Gain", 1.0, 0.0, 100000.0, 1.0, "", "", "%.2f" );
-  cout << this << endl;
-  cout << this->name() << endl;
 }
 
 

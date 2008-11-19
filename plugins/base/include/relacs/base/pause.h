@@ -32,22 +32,27 @@ namespace base {
 \class Pause
 \brief [RePro] Does nothing
 \author Jan Benda
-\version 1.2 (Oct 1, 2004)
--# updated to new RePro interface
+
+The Pause-RePro does not write any stimulus
+and terminates after \c repeats times \c duration ms.
+With the \c savedata option you can switch off saving og the raw data
+recorded during Pause.
 
 \par Options
-\arg \b duration (\c number, \e ms): Width set for the PlotTrace widget.
-\arg \b repeats (\c integer): Number of repetitions (\c repeats=0: infinite). 
-The Pause-RePro terminates after \c repeats times \c duration ms.
+- \c duration=1000ms: Duration (\c number)
+- \c repeats=1: Repeats (\c integer)
+- \c savedata=false: Save Data (\c boolean)
 
 \par Files
-\arg No output files.
+No output files.
 
 \par Plots
-\arg No plot.
+No plot.
 
 \par Requirements
-\arg No requirements.
+No requirements.
+
+\version 1.2 (Oct 1, 2004)
 */
 
 

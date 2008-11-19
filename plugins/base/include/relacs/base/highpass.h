@@ -34,7 +34,11 @@ namespace base {
 \class HighPass
 \brief [Filter] A simple first order high pass filter
 \author Jan Benda
-\version 0.1
+
+\par Options
+- \c tau=1ms: Time constant (\c number)
+
+\version 0.1 (Jan 24 2008)
 */
 
 

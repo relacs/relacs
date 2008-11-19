@@ -32,7 +32,9 @@ Model::Model( const string &name, const string &titles,
   : RELACSPlugin( "Model: " + name, RELACSPlugin::Plugins,
 		  name, titles, pluginset, author, version, date ),
     Data( 0 ),
-    Signals( 0 )
+    Signals( 0 ),
+    SignalMutex( false ),
+    InterruptLock( false )
 {
   Restarted = false;
   AveragedLoad = 0;
