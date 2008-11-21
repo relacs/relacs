@@ -62,6 +62,10 @@ and addOutput() for analog input and output, respectively.
 Attenuators are operated via the Attenuate interface.
 They must be added with the addAttLine() function to Acquire.
 
+The hardware drivers need to know for how long they need to buffer data
+between successive calls to readData() and/or writeData().
+Specify this time by setUpdateTime().
+
 The number of known (added) data acquisition devices 
 can be retrieved by inputsSize(), outputsSize(), and attLinesSize().
 The list of devices can be cleared by clearInputs(), clearOutputs(),
@@ -321,6 +325,17 @@ public:
     /*! A string describing the method that is used
         for synchronizing analog output with analog input. */
   string syncModeStr( void ) const;
+
+    /*! The maximum time in seconds the hardware driver should buffer data. 
+        \sa setUpdateTime() */
+  double updateTime( void ) const;
+    /*! Set the maximum time the hardware driver should be able to
+	buffer the data to \a time seconds. The actually set maximum
+	possible time can be retrieved from InData::updateTime() or
+	OutData::updateTime() after calling read() and write(),
+	respectively. The default update time is 0.1 seconds. \sa
+	updateTime() */
+  void setUpdateTime( double time );
 
     /*! Inform the analog input and output devices
         about the requested input and output traces. */
@@ -584,6 +599,10 @@ protected:
   vector< TraceSpec > OutTraces;
     /*! Dummy trace. */
   static const TraceSpec DummyTrace;
+
+    /*! The time, the buffers of analog input and output drives should
+        be able to buffer data. */
+  double UpdateTime;
 
     /*! True if at the next best opportunity the input buffer Trace 
         should be reset to avoid an index overflow. */

@@ -362,8 +362,8 @@ int NIAI::prepareRead( InList &traces )
 int NIAI::startRead( InList &traces )
 {
   // start analog input:
-  long n = ::read( Handle, traces[0].deviceBuffer(),
-		   traces[0].deviceBufferCapacity()*sizeof( signed short ) );
+  int bufsize = traces.size()*sizeof( signed short )*traces[0].indices( traces[0].updateTime() );
+  long n = ::read( Handle, traces[0].deviceBuffer(), bufsize );
   int ern = errno;
   if ( n < 0 && ern != EAGAIN ) {
     traces.addErrorStr( ern );

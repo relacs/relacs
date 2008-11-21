@@ -124,13 +124,6 @@ int ComediAnalogInput::open( const string &device, long mode )
   setDeviceVendor( comedi_get_driver_name( DeviceP ) );
   setDeviceFile( device );
 
-  // set size of comedi-internal buffer to maximum:
-  // XXXX maybe use an internal maximum as well 
-  // (in case comedi max is way too much)?
-  int bufSize = comedi_get_max_buffer_size( DeviceP, SubDevice );
-  comedi_set_buffer_size( DeviceP, SubDevice, bufSize );
-  // XXX add this to settings?
-
   // initialize ranges:
   UnipolarRange.clear();
   BipolarRange.clear();
@@ -501,11 +494,17 @@ int ComediAnalogInput::testReadDevice( InList &traces )
 {
   comedi_cmd cmd;
   memset( &cmd, 0, sizeof( comedi_cmd ) );
-
   int retVal = setupCommand( traces, cmd );
-
   if ( cmd.chanlist != 0 )
     delete [] cmd.chanlist;
+
+  int bufsize = traces.size()*BufferElemSize*traces[0].indices( traces[0].updateTime() );
+  int maxbufsize = comedi_get_max_buffer_size( DeviceP, SubDevice );
+  if ( bufsize > maxbufsize ) {
+    traces.addError( DaqError::InvalidUpdateTime );
+    traces.setUpdateTime( maxbufsize/traces.size()/BufferElemSize/traces[0].sampleRate() );
+    retVal = -1;
+  }
 
   return retVal;
 }
@@ -537,6 +536,12 @@ int ComediAnalogInput::prepareRead( InList &traces )
     traces.addError( DaqError::BufferOverflow );
     return -1;
   }
+
+  // set size of driver buffer:
+  int bufsize = traces.size()*BufferElemSize*traces[0].indices( traces[0].updateTime() );
+  int newbufsize = comedi_set_buffer_size( DeviceP, SubDevice, bufsize );
+  if ( newbufsize < bufsize )
+    traces.addError( DaqError::InvalidUpdateTime );
   
   if ( traces.success() )
     setSettings( traces );

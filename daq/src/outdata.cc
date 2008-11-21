@@ -77,6 +77,7 @@ OutData::OutData( const OutData  &od )
   Offset = od.Offset;
   Scale = od.Scale;
   Unit = od.Unit;
+  UpdateTime = od.UpdateTime;
   MinData = od.MinData;
   MaxData = od.MaxData;
   SignalDelay = od.SignalDelay;
@@ -118,6 +119,7 @@ void OutData::construct( void )
   Offset = 0.0;
   Scale = 1.0;
   Unit = "V";
+  UpdateTime = 0.0;
   MinData = -1;
   MaxData = +1;
   SignalDelay = 0.0;
@@ -201,6 +203,7 @@ const OutData &OutData::assign( const OutData &od )
   Offset = od.Offset;
   Scale = od.Scale;
   Unit = od.Unit;
+  UpdateTime = od.UpdateTime;
   MinData = od.MinData;
   MaxData = od.MaxData;
   SignalDelay = od.SignalDelay;
@@ -240,6 +243,7 @@ const OutData &OutData::copy( OutData &od ) const
   od.Offset = Offset;
   od.Scale = Scale;
   od.Unit = Unit;
+  od.UpdateTime = UpdateTime;
   od.MinData = MinData;
   od.MaxData = MaxData;
   od.SignalDelay = SignalDelay;
@@ -668,6 +672,18 @@ double OutData::maxValue( void ) const
 }
 
 
+double OutData::updateTime( void ) const
+{
+  return UpdateTime;
+}
+
+
+void OutData::setUpdateTime( double time )
+{
+  UpdateTime = time;
+}
+
+
 double OutData::duration( void ) const
 {
   return length();
@@ -1017,6 +1033,7 @@ ostream &operator<<( ostream &str, const OutData &od )
   str << "Offset: " << od.Offset << '\n';
   str << "Scale: " << od.Scale << '\n';
   str << "Unit: " << od.Unit << '\n';
+  str << "UpdateTime: " << od.UpdateTime << '\n';
   str << "MinData: " << od.MinData << '\n';
   str << "MaxData: " << od.MaxData << '\n';
   str << "SignalDelay: " << od.SignalDelay << '\n';

@@ -134,10 +134,6 @@ int ComediAnalogOutput::open( const string &device, long mode )
   // make write calls non blocking:
   fcntl( comedi_fileno( DeviceP ), F_SETFL, O_NONBLOCK );
 
-  // set size of comedi-internal buffer to maximum:
-  int bufSize = comedi_get_max_buffer_size( DeviceP, SubDevice );
-  comedi_set_buffer_size( DeviceP, SubDevice, bufSize );
-
   // initialize ranges:
   UnipolarRange.clear();
   BipolarRange.clear();
@@ -701,11 +697,17 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
 {
   comedi_cmd cmd;
   memset( &cmd, 0, sizeof( comedi_cmd ) );
-
   int retVal = setupCommand( sigs, cmd );
-
   if ( cmd.chanlist != 0 )
     delete [] cmd.chanlist;
+
+  int bufsize = sigs.size()*BufferElemSize*sigs[0].indices( sigs[0].updateTime() );
+  int maxbufsize = comedi_get_max_buffer_size( DeviceP, SubDevice );
+  if ( bufsize > maxbufsize ) {
+    sigs.addError( DaqError::InvalidUpdateTime );
+    sigs.setUpdateTime( maxbufsize/sigs.size()/BufferElemSize/sigs[0].sampleRate() );
+    retVal = -1;
+  }
 
   return retVal;
 }
@@ -727,6 +729,12 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
 
   if ( setupCommand( ol, Cmd ) < 0 )
     return -1;
+
+  // set size of driver buffer:
+  int bufsize = sigs.size()*BufferElemSize*sigs[0].indices( sigs[0].updateTime() );
+  int newbufsize = comedi_set_buffer_size( DeviceP, SubDevice, bufsize );
+  if ( newbufsize < bufsize )
+    sigs.addError( DaqError::InvalidUpdateTime );
 
   IsPrepared = ol.success();
 

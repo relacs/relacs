@@ -1,4 +1,5 @@
 Acquisition interface:
+- test updateTime settings and handle errors thereof
 - use dynamic updateinterval and writeinterval in RELACSWidget::run()
   depending on sampling rates and buffer sizes
 - add single data read and write

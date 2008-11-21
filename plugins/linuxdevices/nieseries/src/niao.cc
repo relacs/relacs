@@ -359,8 +359,8 @@ int NIAO::prepareWrite( OutList &sigs )
 
 int NIAO::startWrite( OutList &sigs )
 {
-  int r = write( Handle, sigs[0].deviceBuffer(),
-		 sigs[0].deviceBufferSize()*sigs[0].deviceDataSize() );
+  int bufsize = sigs.size()*sizeof( signed short )*sigs[0].indices( sigs[0].updateTime() );
+  int r = write( Handle, sigs[0].deviceBuffer(), bufsize );
 
   if ( r < 0 ) {
     int ern = errno;

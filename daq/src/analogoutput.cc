@@ -200,7 +200,8 @@ int AnalogOutput::testWriteData( OutList &sigs )
       sigs[k].addError( DaqError::NoData );
   }
 
-  // multiple devices, startsource, delay, sampling rate, continuous, buffer sizes:
+  // multiple devices, startsource, delay, sampling rate, continuous,
+  // update times, buffer sizes:
   for ( int k=1; k<sigs.size(); k++ ) {
     if ( sigs[k].device() != sigs[0].device() ) {
       sigs[k].addError( DaqError::MultipleDevices );
@@ -228,6 +229,10 @@ int AnalogOutput::testWriteData( OutList &sigs )
     }
     if ( sigs[k].size() != sigs[0].size() ) {
       sigs[k].addError( DaqError::MultipleBuffersizes );
+    }
+    if ( sigs[k].updateTime() != sigs[0].updateTime() ) {
+      sigs[k].addError( DaqError::MultipleUpdateTimes ); 
+      sigs[k].setUpdateTime( sigs[0].updateTime() );
     }
   }
 

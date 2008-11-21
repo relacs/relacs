@@ -307,6 +307,13 @@ void OutList::setRestart( bool restart )
 }
 
 
+void OutList::setUpdateTime( double time )
+{
+  for ( int k=0; k<size(); k++ )
+    operator[]( k ).setUpdateTime( time );
+}
+
+
 void OutList::freeDeviceBuffer( void )
 {
   for ( int k=0; k<size(); k++ )

@@ -55,6 +55,8 @@ Acquire::Acquire( void )
 
   SyncMode = NoSync;
 
+  UpdateTime = 0.1;
+
   Att.clear();
 }
 
@@ -456,6 +458,19 @@ string Acquire::syncModeStr( void ) const
 }
 
 
+
+double Acquire::updateTime( void ) const
+{
+  return UpdateTime;
+}
+
+
+void Acquire::setUpdateTime( double time )
+{
+  UpdateTime = time;
+}
+
+
 int Acquire::testRead( InList &data )
 {
   //  cerr << "Acquire::testRead( InList& )\n";
@@ -512,6 +527,11 @@ int Acquire::testRead( InList &data )
   // error?
   if ( ! success )
     return -1;
+
+  // request buffer size:
+  for ( unsigned int i=0; i<AI.size(); i++ ) {
+    AI[i].Traces.setUpdateTime( UpdateTime );
+  }
 
   // test reading from daq boards:
   for ( unsigned int i=0; i<AI.size(); i++ ) {
@@ -597,6 +617,11 @@ int Acquire::read( InList &data )
   // error?
   if ( ! success )
     return -1;
+
+  // request buffer size:
+  for ( unsigned int i=0; i<AI.size(); i++ ) {
+    AI[i].Traces.setUpdateTime( UpdateTime );
+  }
 
   // test reading from daq boards:
   for ( unsigned int i=0; i<AI.size(); i++ ) {
@@ -1137,6 +1162,9 @@ int Acquire::testWrite( OutData &signal )
     }
   }
 
+  // request buffer size:
+  signal.setUpdateTime( UpdateTime );
+
   // write to daq board:
   OutList ol( &signal );  
   AO[di].AO->testWrite( ol );
@@ -1283,6 +1311,11 @@ int Acquire::testWrite( OutList &signal )
 	}
       }
     }
+  }
+
+  // request buffer size:
+  for ( unsigned int i=0; i<AO.size(); i++ ) {
+    AO[i].Signals.setUpdateTime( UpdateTime );
   }
 
   // test writing to daq boards:
@@ -1443,6 +1476,9 @@ int Acquire::write( OutData &signal )
     else
       Att[a].Att->mute();
   }
+
+  // request buffer size:
+  signal.setUpdateTime( UpdateTime );
 
   // test writing to daq board:
   OutList ol( &signal );  
@@ -1605,6 +1641,11 @@ int Acquire::write( OutList &signal )
   for ( unsigned int a=0; a<Att.size(); a++ ) {
     if ( ! usedatt[a] )
       Att[a].Att->mute();
+  }
+
+  // request buffer size:
+  for ( unsigned int i=0; i<AO.size(); i++ ) {
+    AO[i].Signals.setUpdateTime( UpdateTime );
   }
 
   // test writing to daq boards:

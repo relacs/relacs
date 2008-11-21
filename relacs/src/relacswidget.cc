@@ -110,7 +110,6 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   addInteger( "inputtraces", "Number of input-traces", 1 );
   addNumber( "inputsamplerate", "Input sampling rate", 20000.0, 1.0, 1000000.0, 1000.0, "Hz", "kHz" ); // Hertz, -> 2.4MB pro minute and channel
   addNumber( "inputtracecapacity", "Ring buffer has capacity for ", 600.0, 1.0, 1000000.0, 1.0, "s" );
-  addNumber( "inputtracetime", "Buffer of driver can hold data for ", 1.0, 0.001, 1000.0, 0.001, "s", "ms"  );
   addBoolean( "inputunipolar", "Unipolar input", false );
   addText( "inputtraceid", "Input trace identifier", "V-1" );
   addNumber( "inputtracescale", "Input trace scale", 1.0 );
@@ -142,6 +141,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   MC = new Macros( this, MainWidget, "RELACSWidget::Macros" );
 
   // data acquisition:
+  AQ = 0;
   AQD = new Acquire();
 
   // simulator:
@@ -655,7 +655,6 @@ void RELACSWidget::setupInTraces( void )
     IL[k].setMode( SaveFilesMode | PlotTraceMode );
     IL[k].setReference( text( "inputtracereference", k, InData::referenceStr( InData::RefGround ) ) );
     IL[k].setGainIndex( integer( "inputtracegain", k, 0 ) );
-    IL[k].setUpdateTime( number( "inputtracetime", 0, 1.0 ) );
     IL[k].reserve( IL[k].indices( number( "inputtracecapacity", 0, 1000.0 ) ) );
     TraceStyles.push_back( PlotTrace::TraceStyle() );
     TraceStyles[k].PlotWindow = integer( "inputtraceplot", k, k );
@@ -765,6 +764,7 @@ void RELACSWidget::run( void )
   SS.lock();
   double writeinterval = 0.002;
   double updateinterval = SS.number( "updateinterval", 0.05 );
+  AQ->setUpdateTime( updateinterval );
   double processinterval = SS.number( "processinterval", 0.1 );
   SS.unlock();
   signed long wi = (unsigned long)::rint( 1000.0*writeinterval );

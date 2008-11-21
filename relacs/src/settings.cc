@@ -94,6 +94,10 @@ void Settings::configure( void )
 
 void Settings::notify( void )
 {
+  if ( RW->AQ != 0 ) {
+    RW->AQ->setUpdateTime( number( "updateinterval" ) );
+  }
+
   if ( RW->SF != 0 ) {
 
     Str pathformat = text( "pathformat" );

@@ -234,7 +234,7 @@ protected:
         DeviceNotOpen, NoData (OutData::size() <= 0), 
 	MultipleDevices, MultipleStartSources,
 	MultipleDelays, MultipleSampleRates, MultipleContinuous, MultipleRestart,
-	MultipleBuffersizes (OutData::size()), 
+	MultipleBuffersizes (OutData::size()), MultipleUpdateTimes, 
 	InvalidStartSource (OutData::startSource() < 0),
 	InvalidDelay (OutData::delay() < 0),
 	InvalidSampleRate (OutData::sampleRate() > maxRate() or < 1.0), 
