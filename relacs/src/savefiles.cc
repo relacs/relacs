@@ -389,18 +389,25 @@ void SaveFiles::writeStimulus( void )
       StimulusKey.save( *SF, 1000.0*StimulusToWrite[0].delay() );
       for ( int k=0; k<RW->AQ->outTracesSize(); k++ ) {
 	for ( int j=0; j<StimulusToWrite.size(); j++ ) {
+	  const Attenuate *att = RW->AQ->outTraceAttenuate( k );
 	  if ( StimulusToWrite[j] == RW->AQ->outTrace( k ) ) {
 	    StimulusKey.save( *SF, 0.001*StimulusToWrite[j].sampleRate() );
 	    StimulusKey.save( *SF, 1000.0*StimulusToWrite[j].length() );
-	    StimulusKey.save( *SF, StimulusToWrite[j].intensity() );
-	    StimulusKey.save( *SF, StimulusToWrite[j].carrierFreq() );
+	    if ( att != 0 ) {
+	      StimulusKey.save( *SF, StimulusToWrite[j].intensity() );
+	      if ( ! att->frequencyName().empty() )
+		StimulusKey.save( *SF, StimulusToWrite[j].carrierFreq() );
+	    }
 	    StimulusKey.save( *SF, StimulusToWrite[j].ident() );
 	  }
 	  else {
 	    StimulusKey.save( *SF, "" );
 	    StimulusKey.save( *SF, "" );
-	    StimulusKey.save( *SF, "" );
-	    StimulusKey.save( *SF, "" );
+	    if ( att != 0 ) {
+	      StimulusKey.save( *SF, "" );
+	      if ( ! att->frequencyName().empty() )
+		StimulusKey.save( *SF, "" );
+	    }
 	    StimulusKey.save( *SF, "" );
 	  }
 	}
@@ -652,8 +659,14 @@ void SaveFiles::createStimulusFile( const Acquire &intraces,
       StimulusKey.addLabel( RW->AQ->outTraceName( k ) );
       StimulusKey.addNumber( "rate", "kHz", "%8.3f" );
       StimulusKey.addNumber( "duration", "ms", "%8.0f" );
-      StimulusKey.addNumber( "intensity", "dB", "%9.3f" );
-      StimulusKey.addNumber( "frequency", "Hz", "%9.0f" );
+      const Attenuate *att = RW->AQ->outTraceAttenuate( k );
+      if ( att != 0 ) {
+	StimulusKey.addNumber( att->intensityName(), att->intensityUnit(),
+			       att->intensityFormat() );
+	if ( ! att->frequencyName().empty() )
+	  StimulusKey.addNumber( att->frequencyName(), att->frequencyUnit(),
+				 att->frequencyFormat() );
+      }
       StimulusKey.addText( "signal", -30 );
     }
   }

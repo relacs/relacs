@@ -36,7 +36,8 @@ namespace acoustic {
 
 
 LoudSpeaker::LoudSpeaker( void )
-  : Attenuate( "LoudSpeaker" ),
+  : Attenuate( "LoudSpeaker", "sound intensity", "dB SPL", "%5.1f",
+	       "carrier frequency", "Hz", "%7.0f" ),
     ConfigClass( "LoudSpeaker", RELACSPlugin::Plugins, ConfigClass::Save )
 {
   // parameter:
@@ -256,7 +257,7 @@ void LoudSpeaker::saveCalibration( const string &file,
   Options::save( df, "#   " );
   df << '\n';
   TableKey key;
-  key.addNumber( "freq", "Hz", "%7.0f" );
+  key.addNumber( frequencyName(), frequencyUnit(), frequencyFormat() );
   key.addNumber( "offset", "dB SPL", "%6.2f" );
   key.addNumber( "gain", "1", "%6.3f" );
   key.saveKey( df, true, false );

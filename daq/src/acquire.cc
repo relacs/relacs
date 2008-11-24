@@ -187,9 +187,6 @@ int Acquire::addAttLine( Attenuate *att, const string &device, int channel )
   if ( ! att->isOpen() )
     return -2;
 
-  if ( channel < 0 )
-    return -3;
-
   if ( ! device.empty() )
     att->setAODevice( device );
   if ( channel >= 0 )
@@ -278,6 +275,19 @@ string Acquire::outTraceName( int index ) const
     return OutTraces[index].traceName();
   else
     return "";
+}
+
+
+const Attenuate *Acquire::outTraceAttenuate( int index ) const
+{
+  if ( index >= 0 && index < outTracesSize() ) {
+    for ( unsigned int a=0; a<Att.size(); a++ ) {
+      if ( ( Att[a].Id == OutTraces[index].device() ) && 
+	 ( Att[a].Att->aoChannel() == OutTraces[index].channel() ) )
+	return Att[a].Att;
+    }
+  }
+  return 0;
 }
 
 

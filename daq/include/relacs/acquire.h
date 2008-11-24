@@ -46,6 +46,7 @@ namespace relacs {
 \brief Read and write data streams from/to data aqcuisition boards.
 \todo Overflow in InData::Index (after 7h!) -> reset InData!
   Implement the setReset() function and the HardReset variable.
+\todo internal list of Attenuate that corresponds to outTraces for faster access.
 \todo write(), testWrite(): check carrier frequency?
 
 Acquire is a general interface to data acquisition boards
@@ -265,6 +266,12 @@ public:
         \sa addOutTrace(), outTracesSize(), outTraceIndex(),
 	outTrace(), applyOutTrace(), clearOutTraces() */
   string outTraceName( int index ) const;
+    /*! Return the Attenuate class that is connected to
+        the output trace with index \a index.
+        If \a index is invalid or no Atenuate class is connected to the 
+	output trace, then 0 is returned.
+        \sa outTraceName() */
+  const Attenuate *outTraceAttenuate( int index ) const;
     /*! Return the output trace with index \a index.
         \sa addOutTrace(), outTracesSize(), outTraceIndex(),
 	outTraceName(), applyOutTrace(), clearOutTraces() */

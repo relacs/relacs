@@ -32,18 +32,36 @@ Attenuate::Attenuate( void )
     Att( 0 ),
     Index( -1 ),
     AODevice( "" ),
-    AOChannel( -1 )
+    AOChannel( -1 ),
+    IntensityName( "intensity" ),
+    IntensityUnit( "dB" ),
+    IntensityFormat( "%6.2f" ),
+    FrequencyName( "" ),
+    FrequencyUnit( "Hz" ),
+    FrequencyFormat( "%7.0f" )
 {
 }
 
 
-Attenuate::Attenuate( const string &deviceclass )
+Attenuate::Attenuate( const string &deviceclass,
+		      const string &intensityname,
+		      const string &intensityunit,
+		      const string &intensityformat,
+		      const string &frequencyname,
+		      const string &frequencyunit,
+		      const string &frequencyformat )
   : Device( deviceclass, Type ),
     Settings( "" ),
     Att( 0 ),
     Index( -1 ),
     AODevice( "" ),
-    AOChannel( -1 )
+    AOChannel( -1 ),
+    IntensityName( intensityname ),
+    IntensityUnit( intensityunit ),
+    IntensityFormat( intensityformat ),
+    FrequencyName( frequencyname ),
+    FrequencyUnit( frequencyunit ),
+    FrequencyFormat( frequencyformat )
 {
 }
 
@@ -197,6 +215,78 @@ int Attenuate::testMute( void )
     return Attenuator::NotOpen;
 
   return Att->testMute( Index );
+}
+
+
+string Attenuate::intensityName( void ) const
+{
+  return IntensityName;
+}
+
+
+void Attenuate::setIntensityName( const string &name )
+{
+  IntensityName = name;
+}
+
+
+string Attenuate::intensityUnit( void ) const
+{
+  return IntensityUnit;
+}
+
+
+void Attenuate::setIntensityUnit( const string &unit )
+{
+  IntensityUnit = unit;
+}
+
+
+string Attenuate::intensityFormat( void ) const
+{
+  return IntensityFormat;
+}
+
+
+void Attenuate::setIntensityFormat( const string &format )
+{
+  IntensityFormat = format;
+}
+
+
+string Attenuate::frequencyName( void ) const
+{
+  return FrequencyName;
+}
+
+
+void Attenuate::setFrequencyName( const string &name )
+{
+  FrequencyName = name;
+}
+
+
+string Attenuate::frequencyUnit( void ) const
+{
+  return FrequencyUnit;
+}
+
+
+void Attenuate::setFrequencyUnit( const string &unit )
+{
+  FrequencyUnit = unit;
+}
+
+
+string Attenuate::frequencyFormat( void ) const
+{
+  return FrequencyFormat;
+}
+
+
+void Attenuate::setFrequencyFormat( const string &format )
+{
+  FrequencyFormat = format;
 }
 
 

@@ -182,7 +182,6 @@ Devices:
     the config file and thus serve as documentation of all the used hardware.
 
 Attenuate:
-  - a unit for intensity!
   - interaction with gain settings of daq board? Are there boards with
     many gains for analog output?
 

@@ -32,9 +32,8 @@ namespace relacs {
 
 /*!
 \class Attenuate
-\author Jan Benda
-\version 1.2
 \brief Attenuates a single output channel.
+\author Jan Benda
 
 This class is an interface for attenuating a single output line.
 It allows to convert a requested intensity into an attenuation level
@@ -42,7 +41,13 @@ for the attenuator device. The carrier frequency of the output signal
 can be used as a parameter for the conversion.
 You have to reimplement decibel() and intensity()
 with the required transformation of the intensity into an attenuation level.
-init() is called before the attenuator is used.
+What physical quantities the intensity and the carrier frequency are
+depends on the specific implementation of the Attenuate class.
+The names, units, and formats of the intensity and the frequency can
+be retrieved by intensityName(), intensityUnit(), intensityFormat(),
+frequencyName(), frequencyUnit(), and frequencyFormat().
+
+THe function init() is called before the attenuator is used.
 You can reimplement this function to load calibration data
 from a file, for example.
 save() may be called to save some (calibration) data into a file.
@@ -69,7 +74,7 @@ the necessary attenuation for getting a specific sound intensity depends on the
 carrierfrequency of your signal.
 
 Attenuators usually can be set to discrete attenuation levels only.
-If you request a specific intensity via write(), than it is very likely
+If you request a specific intensity via write(), then it is very likely
 that the actually set attenuation level results in a slightly different
 intensity.
 To make this intensity known to the user, write() sets the 
@@ -110,9 +115,21 @@ public:
 
     /*! Constructor. */
   Attenuate( void );
-    /*! Construct Attenuate with device class \a deviceclass. 
-        \sa setDeviceClass() */
-  Attenuate( const string &deviceclass );
+    /*! Construct Attenuate with device class \a deviceclass.  The
+        Attenuate implementation defines the intensity as \a intensityname
+	with unit \a intensityunit and format \a intensityformat
+	and uses for the conversion a frequency with name \a frequencyname,
+	unit \a freqencyunit and format \a frequencyformat.
+	An empty \a frequencyname indicates that a frequency is not used for
+	the conversion of intensity to an attenuation level.
+	\sa setDeviceClass() */
+  Attenuate( const string &deviceclass,
+	     const string &intensityname="intensity",
+ 	     const string &intensityunit="dB",
+ 	     const string &intensityformat="%6.2f",
+	     const string &frequencyname="",
+	     const string &frequencyunit="Hz",
+ 	     const string &frequencyformat="%7.0f" );
     /*! Destructor. */
   virtual ~Attenuate( void );
 
@@ -160,6 +177,10 @@ public:
 	attenuation level.
 	In most cases \a frequency might be
 	the carrier frequency of the signal.
+	See intensityName(), intensityUnit(), intensityFormat(),
+	frequencyName(), frequencyUnit(), and frequencyFormat()
+	for the names and the corresponding units and formats of
+	\a intensity and \a frequency.
 	The function decibel() is used to calculate the attenuation level.
 	Since attenuators have a certain resolution, 
 	the actually set intensity may differ from the requested
@@ -186,7 +207,9 @@ public:
 	  In this case, the maximum possible \a intensity is returned.
 	- \c IntensityError: Another error occured during conversion of
 	  an intensity into an attenuation level by the decibel()-function.
-	\sa testWrite(), mute()
+	\sa testWrite(), mute(),
+	intensityName(), intensityUnit(), intensityFormat(),
+	frequencyName(), frequencyUnit(), frequencyFormat()
     */
   int write( double &intensity, double frequency );
     /*! Does the same as write() except setting the attenuator.
@@ -211,7 +234,9 @@ public:
 	  In this case, the maximum possible \a intensity is returned.
 	- \c IntensityError: Another error occured during conversion of
 	  an intensity into an attenuation level by the decibel()-function.
-	\sa write(), testMute()
+	\sa write(), testMute(),
+	intensityName(), intensityUnit(), intensityFormat(),
+	frequencyName(), frequencyUnit(), frequencyFormat()
     */
   int testWrite( double &intensity, double frequency ); 
 
@@ -235,6 +260,41 @@ public:
         \sa mute(), write(), testWrite()
      */
   int testMute( void );
+
+    /*! The name of the intensity the specific implementation of
+        Attenuate is using.
+        \sa setIntensityName(), intensityUnit(), intensityFormat(),
+	frequencyName(), write(), decibel() */
+  string intensityName( void ) const;
+    /*! The unit of the intensity the specific implementation of
+        Attenuate is using.
+        \sa setIntensityUnit(), intensityName(), intensityFormat(),
+	frequencyUnit(), write(), decibel() */
+  string intensityUnit( void ) const;
+    /*! A C-style format string to be used for formatting the intensity
+        the specific implementation of Attenuate is using.
+        \sa setIntensityFormat(), intensityName(), intensityUnit(),
+	frequencyFormat(), write(), decibel() */
+  string intensityFormat( void ) const;
+
+    /*! The name of the frequency the specific implementation of
+        Attenuate is using for computing the intensity.
+	An empty frequencyName() indicates that a frequency is not used for
+	the conversion of intensity in an attenuation level.
+        \sa setFrequencyName(), frequencyUnit(), intensityName(),
+	write(), decibel() */
+  string frequencyName( void ) const;
+    /*! The unit of the frequency the specific implementation of
+        Attenuate is using for computing the intensity.
+        \sa setFrequencyUnit(), frequencyName(), intensityUnit(),
+	write(), decibel() */
+  string frequencyUnit( void ) const;
+    /*! A C-style format string to be used for formatting the frequency
+        the specific implementation of Attenuate is using for computing
+	the intensity.
+        \sa setFrequencyFormat(), frequencyName(), frequencyUnit(),
+	intensityFormat(), write(), decibel() */
+  string frequencyFormat( void ) const;
 
     /*! Returns the channel number of the analog output device
         which is attenuated by this instance of the Attenuate class.
@@ -304,7 +364,9 @@ protected:
 	  maximum possible intensity is returned.
 	- \c IntensityError: Another error occured during conversion of
 	  an intensity into an attenuation level.
-	\sa write(), testWrite(), intensity()
+	\sa write(), testWrite(), intensity(),
+	intensityName(), intensityUnit(), intensityFormat(),
+	frequencyName(), frequencyUnit(), frequencyFormat()
     */
   virtual int decibel( double intensity, double frequency, double &db )=0;
     /*! Transform the attenuation level \a decibel
@@ -313,12 +375,44 @@ protected:
 	This function should be the inverse function of decibel()
 	and is used by write() to return the actually set
 	intensity from the set attenuation level.
-	\sa write(), testWrite(), decibel()
+	\sa write(), testWrite(), decibel(),
+	intensityName(), intensityUnit(), intensityFormat(),
+	frequencyName(), frequencyUnit(), frequencyFormat()
     */
   virtual void intensity( double &intens, double frequency, double decibel )=0;
 
+    /*! Set the name of the intensity the specific implementation of
+        Attenuate is using to \a name.
+        \sa intensityName(), setIntensityUnit(), setIntensityFormat(),
+	setFrequencyName(), write(), decibel() */
+  void setIntensityName( const string &name );
+    /*! Set the unit of the intensity the specific implementation of
+        Attenuate is using to \a unit.
+        \sa intensityUnit(), setIntensityName(), setIntensityFormat(),
+	setFrequencyUnit(), write(), decibel() */
+  void setIntensityUnit( const string &unit );
+    /*! Set the format of the intensity the specific implementation of
+        Attenuate is using to \a format.
+        \sa intensityFormat(), setIntensityName(), setIntensityUnit(),
+	setFrequencyFormat(), write(), decibel() */
+  void setIntensityFormat( const string &format );
 
-protected:
+    /*! Set the name of the frequency the specific implementation of
+        Attenuate is using for computing the intensity to \a name.
+        \sa frequencyName(), setFrequencyUnit(), setIntensityName(),
+	write(), decibel() */
+  void setFrequencyName( const string &name );
+    /*! Set the unit of the frequency the specific implementation of
+        Attenuate is using for computing the intensity to \a unit.
+        \sa frequencyUnit(), setFrequencyName(), setIntensityUnit(),
+	write(), decibel() */
+  void setFrequencyUnit( const string &unit );
+    /*! Set the format of the frequency the specific implementation of
+        Attenuate is using for computing the intensity to \a format.
+        \sa frequencyFormat(), setFrequencyName(), setFrequencyUnit(),
+	setIntensityFormat(), write(), decibel() */
+  void setFrequencyFormat( const string &format );
+
 
     /*! A string describing the current settings of the Attenuate device.
         \sa settings() */
@@ -341,6 +435,20 @@ private:
     /*! The channel number of the analog output device
         which is attenuated by this instance of the Attenuate class. */
   int AOChannel;
+
+    /*! The name for the intensity. Defaults to "intensity". */
+  string IntensityName;
+    /*! The unit of the intensity. Defaults to "dB". */
+  string IntensityUnit;
+    /*! The format of the intensity. Defaults to "%6.2f". */
+  string IntensityFormat;
+    /*! The name for the frequency. Defaults to "". */
+  string FrequencyName;
+    /*! The unit of the frequency. Defaults to "Hz". */
+  string FrequencyUnit;
+    /*! The format of the frequency. Defaults to "%7.0f". */
+  string FrequencyFormat;
+
 };
 
 
