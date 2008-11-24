@@ -93,8 +93,12 @@ FILE* openPlot( const string plotgeo="" )
 }
 
 
-void binData( ArrayD &xdata, ArrayD &ydata, ArrayD &sdata, int page )
+void binData( ArrayD &xdata, ArrayD &ydata, ArrayD &sdata, int page,
+	      string xunit )
 {
+  if ( xunit == "-" )
+    xunit = "";
+
   if ( xdata.size() == 0 ) {
     if ( header ) {
       cout << "# index: " << page << '\n';
@@ -187,20 +191,20 @@ void binData( ArrayD &xdata, ArrayD &ydata, ArrayD &sdata, int page )
 
     cout << "# index: " << page << '\n';
     cout << "#             n = " << n << '\n';
-    cout << "#          mean = " << mean << '\n';
-    cout << "# st. deviation = " << stdev << '\n';
+    cout << "#          mean = " << mean << xunit << '\n';
+    cout << "# st. deviation = " << stdev << xunit << '\n';
     cout << "#            CV = ";
     if ( fabs( mean ) > 1e-10 )
       cout << stdev/mean << '\n';
     else
       cout << "-\n";
-    cout << "#        median = " << median( xdata ) << '\n';
-    cout << "#   1. quartile = " << quantile( 0.25, xdata ) << '\n';
-    cout << "#   3. quartile = " << quantile( 0.75, xdata ) << '\n';
-    cout << "#     1. decile = " << quantile( 0.1, xdata ) << '\n';
-    cout << "#     9. decile = " << quantile( 0.9, xdata ) << '\n';
-    cout << "#       minimum = " << xdata[0] << '\n';
-    cout << "#       maximum = " << xdata.back() << '\n';
+    cout << "#        median = " << median( xdata ) << xunit << '\n';
+    cout << "#   1. quartile = " << quantile( 0.25, xdata ) << xunit << '\n';
+    cout << "#   3. quartile = " << quantile( 0.75, xdata ) << xunit << '\n';
+    cout << "#     1. decile = " << quantile( 0.1, xdata ) << xunit << '\n';
+    cout << "#     9. decile = " << quantile( 0.9, xdata ) << xunit << '\n';
+    cout << "#       minimum = " << xdata[0] << xunit << '\n';
+    cout << "#       maximum = " << xdata.back() << xunit << '\n';
     if ( ! plotmode )
       cout << '\n';
   }
@@ -331,21 +335,75 @@ void binData( ArrayD &xdata, ArrayD &ydata, ArrayD &sdata, int page )
 }
 
 
+void extractUnits( const DataFile &sf, string &xunit,
+		   string &yunit, string &sunit )
+{
+  if ( sf.newDataKey() ) {
+
+    // find columns:
+    if ( !xcols.empty() ) {
+      int c = sf.column( xcols );
+      if ( c >= 0 )
+	xcol = c;
+    }
+    if ( !ycols.empty() ) {
+      int c = sf.column( ycols );
+      if ( c >= 0 )
+	ycol = c;
+    }
+    if ( !scols.empty() ) {
+      int c = sf.column( scols );
+      if ( c >= 0 )
+	scol = c;
+    }
+
+    // set units:
+    xunit = sf.key().unit( xcol );
+    if ( xunit.empty() )
+      xunit = "-";
+    if ( plt != NULL )
+      fprintf( plt, "set xlabel '%s [%s]'\n", 
+	       sf.key().ident( xcol ).c_str(), xunit.c_str() );
+    
+    yunit = sf.key().unit( ycol );
+    if ( yunit.empty() )
+      yunit = "-";
+
+    sunit = sf.key().unit( scol );
+    if ( sunit.empty() )
+      sunit = "-";
+
+  }
+}
+
+
 void readData( DataFile &sf )
 {
-  binkey.addNumber( "bin", "", "%10.4g" );
+  // read meta data and key:
+  sf.readMetaData();
+
+  // get columns and units:
+  string xunit = "-";
+  string yunit = "-";
+  string sunit = "-";
+  if ( sf.good() )
+    extractUnits( sf, xunit, yunit, sunit );
+
+  binkey.addNumber( "bin", xunit, "%10.4g" );
 
   if ( ycol < 0 && ycols.empty() ) {
     if ( outformat.empty() )
       outformat = norm ? "p" : "n";
     for ( int k=0; k<outformat.size(); k++ ) {
       switch ( outformat[k] ) {
-      case 'n': if ( scol < 0 || ycol >= 0 )
-	  binkey.addNumber( "n", "", "%5.0f" );
+      case 'n':
+	if ( scol < 0 )
+	  binkey.addNumber( "n", "1", "%5.0f" );
 	else
-	  binkey.addNumber( "weights", "", "%5.3f" );
+	  binkey.addNumber( "weights", "1/"+sunit+"^2", "%5.3f" );
 	break;
-      case 'p': binkey.addNumber( "p", "", "%5.3f" );
+      case 'p':
+	binkey.addNumber( "p", "1", "%5.3f" );
 	break;
       case 'a':
       case 's':
@@ -367,33 +425,41 @@ void readData( DataFile &sf )
       outformat = norm ? "pas" : "nas";
     for ( int k=0; k<outformat.size(); k++ ) {
       switch ( outformat[k] ) {
-      case 'n': if ( scol < 0 || ycol >= 0 )
-	  binkey.addNumber( "n", "", "%5.0f" );
-	else
-	  binkey.addNumber( "weights", "", "%5.3f" );
+      case 'n':
+	binkey.addNumber( "n", "1", "%5.0f" );
 	break;
-      case 'p': binkey.addNumber( "norm", "", "%5.3f" );
+      case 'p':
+	binkey.addNumber( "norm", "1", "%5.3f" );
 	break;
-      case 'a': binkey.addNumber( "mean", "", "%10.4g" );
+      case 'a':
+	binkey.addNumber( "mean", yunit, "%10.4g" );
 	break;
-      case 's': binkey.addNumber( "s.d.", "", "%10.4g" );
+      case 's':
+	binkey.addNumber( "s.d.", yunit, "%10.4g" );
 	break;
-      case 'e': binkey.addNumber( "sem", "", "%10.4g" );
+      case 'e':
+	binkey.addNumber( "sem", yunit, "%10.4g" );
 	break;
-      case 'v': binkey.addNumber( "var", "", "%10.4g" );
+      case 'v':
+	binkey.addNumber( "var", yunit+"^2", "%10.4g" );
 	break;
-      case 'c': binkey.addNumber( "CV", "", "%10.4g" );
+      case 'c':
+	binkey.addNumber( "CV", "1", "%10.4g" );
 	break;
-      case 'm': binkey.addNumber( "median", "", "%10.4g" );
+      case 'm':
+	binkey.addNumber( "median", yunit, "%10.4g" );
 	break;
-      case 'q': binkey.addNumber( "1.quart", "", "%10.4g" );
-	binkey.addNumber( "3.quart", "", "%10.4g" );
+      case 'q':
+	binkey.addNumber( "1.quart", yunit, "%10.4g" );
+	binkey.addNumber( "3.quart", yunit, "%10.4g" );
 	break;
-      case 'd': binkey.addNumber( "1.dec", "", "%10.4g" );
-	binkey.addNumber( "9.dec", "", "%10.4g" );
+      case 'd':
+	binkey.addNumber( "1.dec", yunit, "%10.4g" );
+	binkey.addNumber( "9.dec", yunit, "%10.4g" );
 	break;
-      case 'x': binkey.addNumber( "min", "", "%10.4g" );
-	binkey.addNumber( "max", "", "%10.4g" );
+      case 'x':
+	binkey.addNumber( "min", yunit, "%10.4g" );
+	binkey.addNumber( "max", yunit, "%10.4g" );
 	break;
       default:
 	cerr << "! warning: unknown output column " << outformat[k] << " !\n";
@@ -435,9 +501,6 @@ void readData( DataFile &sf )
   }
 
   int page = 0;
-
-  sf.readMetaData();
-
   while ( sf.good() ) {
 
     // meta data:
@@ -462,35 +525,15 @@ void readData( DataFile &sf )
 
     // find data column:
     if ( sf.newDataKey() ) {
-      TableKey tk;
-      tk.loadKey( sf.dataKey() );
-      if ( !xcols.empty() ) {
-	int c = tk.column( xcols );
-	if ( c >= 0 )
-	  xcol = c;
-      }
-      if ( plt != NULL )
-	fprintf( plt, "set xlabel '%s [%s]'\n", 
-		 tk.ident( xcol ).c_str(), tk.unit( xcol ).c_str() );
-      if ( !ycols.empty() ) {
-	int c = tk.column( ycols );
-	if ( c >= 0 )
-	  ycol = c;
-      }
-      if ( !scols.empty() ) {
-	int c = tk.column( scols );
-	if ( c >= 0 )
-	  scol = c;
-      }
       if ( !acols.empty() ) {
 	for ( unsigned int k=0; k<acols.size(); k++ ) {
 	  if ( amode[k] <= 1 ) {
 	    if ( amode[k] == 1 ) {
-	      int c = tk.column( acols[k] );
+	      int c = sf.column( acols[k] );
 	      if ( c >= 0 )
 		acol[k] = c;
 	    }
-	    string ts = tk.ident( acol[k] );
+	    string ts = sf.key().ident( acol[k] );
 	    if ( !ts.empty() ) {
 	      aparam[k]->setIdent( ts );
 	    }
@@ -552,7 +595,7 @@ void readData( DataFile &sf )
       }
     } while ( sf.readDataLine( stopempty ) );
 
-    binData( xdata, ydata, sdata, page );
+    binData( xdata, ydata, sdata, page, xunit );
 
     page++;
 

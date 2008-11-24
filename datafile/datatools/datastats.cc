@@ -41,10 +41,8 @@ using namespace relacs;
 const double noval = 1e30;
 vector<int> xcol; 
 vector<string> xcols;
-string xunit = "-";
 int ycol = -1; 
 string ycols = "";
-string yunit = "-";
 int scol = -1; 
 string scols = "";
 double xmin = -DBL_MAX, xmax = DBL_MAX;
@@ -79,17 +77,17 @@ void analyseData( ArrayD &data, ArrayD &sig, int page, TableKey &statskey )
   double sem = stdev / ::sqrt( data.size() );
 
   if ( outformat.contains( 'a' ) )
-    statskey.setNumber( "mean", mean ).setUnit( xunit );
+    statskey.setNumber( "mean", mean );
   if ( outformat.contains( 's' ) )
-    statskey.setNumber( "s.d.", stdev ).setUnit( xunit );
+    statskey.setNumber( "s.d.", stdev );
   if ( outformat.contains( 'v' ) )
-    statskey.setNumber( "var", stdev*stdev ).setUnit( xunit + "^2" );
+    statskey.setNumber( "var", stdev*stdev );
   if ( outformat.contains( 'e' ) )
-    statskey.setNumber( "sem", sem ).setUnit( xunit );
+    statskey.setNumber( "sem", sem );
   if ( outformat.contains( 'c' ) )
     statskey.setNumber( "CV", fabs( mean ) > 1.0e-10 ? fabs( stdev/mean ) : 0.0 );
   if ( outformat.contains( 'z' ) )
-    statskey.setNumber( "sum", sum( data ) ).setUnit( xunit );
+    statskey.setNumber( "sum", sum( data ) );
 
   // t-Test:
   if ( outformat.contains( 't' ) ) {
@@ -122,21 +120,21 @@ void analyseData( ArrayD &data, ArrayD &sig, int page, TableKey &statskey )
   int gt = data.end() - ub;
  
   if ( outformat.contains( 'm' ) )
-    statskey.setNumber( "median", median( data ) ).setUnit( xunit );
+    statskey.setNumber( "median", median( data ) );
   if ( outformat.contains( 'q' ) ) {
-    statskey.setNumber( "1.quart", quantile( 0.25, data ) ).setUnit( xunit );
-    statskey.setNumber( "3.quart", quantile( 0.75, data ) ).setUnit( xunit );
+    statskey.setNumber( "1.quart", quantile( 0.25, data ) );
+    statskey.setNumber( "3.quart", quantile( 0.75, data ) );
   }
   if ( outformat.contains( 'd' ) ) {
-    statskey.setNumber( "1.dec", quantile( 0.1, data ) ).setUnit( xunit );
-    statskey.setNumber( "9.dec", quantile( 0.9, data ) ).setUnit( xunit );
+    statskey.setNumber( "1.dec", quantile( 0.1, data ) );
+    statskey.setNumber( "9.dec", quantile( 0.9, data ) );
   }
   if ( outformat.contains( 'x' ) ) {
-    statskey.setNumber( "min", data[0] ).setUnit( xunit );
-    statskey.setNumber( "max", data[data.size()-1] ).setUnit( xunit );
+    statskey.setNumber( "min", data[0] );
+    statskey.setNumber( "max", data[data.size()-1] );
   }
   if ( outformat.contains( 'w' ) )
-    statskey.setNumber( "width", data[data.size()-1] - data[0] ).setUnit( xunit );
+    statskey.setNumber( "width", data[data.size()-1] - data[0] );
   if ( outformat.contains( '<' ) || outformat.contains( '-' ) )
     statskey.setInteger( "less", lt );
   if ( outformat.contains( '>' ) || outformat.contains( '+' ) )
@@ -188,20 +186,15 @@ void analyseCor( ArrayD &xdata, ArrayD &ydata, ArrayD &sig, int page, TableKey &
   double q = gammaQ( 0.5*ydata.size(), 0.5*chisq );
 
   if ( outformat.contains( 'b' ) ) {
-    statskey.setNumber( "linear regression>b", b ).setUnit( yunit );
-    statskey.setNumber( "linear regression>b>sd", bu ).setUnit( yunit );
+    statskey.setNumber( "linear regression>b", b );
+    statskey.setNumber( "linear regression>b>sd", bu );
   }
   if ( outformat.contains( 'm' ) ) {
-    statskey.setNumber( "linear regression>m", m ).setUnit( yunit + "/" + xunit );
-    statskey.setNumber( "linear regression>m>sd", mu ).setUnit( yunit + "/" + xunit );
+    statskey.setNumber( "linear regression>m", m );
+    statskey.setNumber( "linear regression>m>sd", mu );
   }
   if ( outformat.contains( 'c' ) ) {
-    string unit = "";
-    if ( sig.size() == ydata.size() )
-      unit = "1";
-    else
-      unit = yunit + "^2";
-    statskey.setNumber( "linear regression>chisq", chisq ).setUnit( unit );
+    statskey.setNumber( "linear regression>chisq", chisq );
       statskey.setNumber( "linear regression>q", q );
   }
 
@@ -215,15 +208,10 @@ void analyseCor( ArrayD &xdata, ArrayD &ydata, ArrayD &sig, int page, TableKey &
   double pq = gammaQ( 0.5*ydata.size(), 0.5*pchisq );
 
   if ( outformat.contains( 'o' ) ) {
-    statskey.setNumber( "proportionality>slope", p ).setUnit( yunit + "/" + xunit );
-    statskey.setNumber( "proportionality>slope>sd", pu ).setUnit( yunit + "/" + xunit );
+    statskey.setNumber( "proportionality>slope", p );
+    statskey.setNumber( "proportionality>slope>sd", pu );
     if ( outformat.contains( 'c' ) ) {
-      string unit = "";
-      if ( sig.size() == ydata.size() )
-	unit = "1";
-      else
-	unit = yunit + "^2";
-      statskey.setNumber( "proportionality>chisq", pchisq ).setUnit( unit );
+      statskey.setNumber( "proportionality>chisq", pchisq );
       statskey.setNumber( "proportionality>q", pq );
     }
   }
@@ -384,8 +372,8 @@ void analyseCor( ArrayD &xdata, ArrayD &ydata, ArrayD &sig, int page, TableKey &
     ArrayD diff = ydata - xdata;
     double dmean = diff.mean();
     double dsd = diff.stdev( dmean );
-    statskey.setNumber( "Difference>d", dmean ).setUnit( xunit );
-    statskey.setNumber( "Difference>s.d.", dsd ).setUnit( xunit );
+    statskey.setNumber( "Difference>d", dmean );
+    statskey.setNumber( "Difference>s.d.", dsd );
   }
 
   if ( outformat.contains( 'n' ) )
@@ -400,6 +388,38 @@ void analyseCor( ArrayD &xdata, ArrayD &ydata, ArrayD &sig, int page, TableKey &
 
   if ( datamode ) {
     statskey.saveMetaData( cerr );
+  }
+}
+
+
+void extractUnits( const DataFile &sf, string &xunit, string &yunit )
+{
+  if ( sf.newDataKey() ) {
+    // find columns:
+    for ( unsigned int k=0; k<xcols.size(); k++ ) {
+      if ( !xcols[k].empty() ) {
+	int c = sf.column( xcols[k] );
+	if ( c >= 0 )
+	  xcol[k] = c;
+      }
+    }
+    if ( !ycols.empty() ) {
+      int c = sf.column( ycols );
+      if ( c >= 0 )
+	ycol = c;
+    }
+    if ( !scols.empty() ) {
+      int c = sf.column( scols );
+      if ( c >= 0 )
+	scol = c;
+    }
+    // set units:
+    xunit = sf.key().unit( xcol[0] );
+    if ( xunit.empty() )
+      xunit = "-";
+    yunit = sf.key().unit( ycol );
+    if ( yunit.empty() )
+      yunit = "-";
   }
 }
 
@@ -431,31 +451,6 @@ void extractMetaData( const DataFile &sf, vector<Str> &acols,
 
   // find data column:
   if ( sf.newDataKey() ) {
-    // find columns:
-    for ( unsigned int k=0; k<xcols.size(); k++ ) {
-      if ( !xcols[k].empty() ) {
-	int c = sf.column( xcols[k] );
-	if ( c >= 0 )
-	  xcol[k] = c;
-      }
-    }
-    if ( !ycols.empty() ) {
-      int c = sf.column( ycols );
-      if ( c >= 0 )
-	ycol = c;
-    }
-    if ( !scols.empty() ) {
-      int c = sf.column( scols );
-      if ( c >= 0 )
-	scol = c;
-    }
-    // set units:
-    xunit = sf.key().unit( xcol[0] );
-    if ( xunit.empty() )
-      xunit = "-";
-    yunit = sf.key().unit( ycol );
-    if ( yunit.empty() )
-      yunit = "-";
     // setup additional parameter:
     if ( !acols.empty() ) {
       for ( unsigned int k=0; k<acols.size(); k++ ) {
@@ -480,6 +475,15 @@ void extractMetaData( const DataFile &sf, vector<Str> &acols,
 
 void readData( DataFile &sf )
 {
+  // read meta data and key:
+  sf.readMetaData();
+
+  // get columns and units:
+  string xunit = "-";
+  string yunit = "-";
+  if ( sf.good() )
+    extractUnits( sf, xunit, yunit );
+
   if ( ycol < 0 && ycols.empty() ) {
     if ( outformat.empty() )
       outformat = "asevcmqdx<>ntS";
@@ -493,28 +497,28 @@ void readData( DataFile &sf )
 	  statskey.addLabel( "moments" );
 	  momentslabel = true;
 	}
-	statskey.addNumber( "mean", "-", "%10.4g" );
+	statskey.addNumber( "mean", xunit, "%10.4g" );
 	break;
       case 's':
 	if ( ! momentslabel ) {
 	  statskey.addLabel( "moments" );
 	  momentslabel = true;
 	}
-	statskey.addNumber( "s.d.", "-", "%10.4g" );
+	statskey.addNumber( "s.d.", xunit, "%10.4g" );
 	break;
       case 'e':
 	if ( ! momentslabel ) {
 	  statskey.addLabel( "moments" );
 	  momentslabel = true;
 	}
-	statskey.addNumber( "sem", "-", "%10.4g" );
+	statskey.addNumber( "sem", xunit, "%10.4g" );
 	break;
       case 'v':
 	if ( ! momentslabel ) {
 	  statskey.addLabel( "moments" );
 	  momentslabel = true;
 	}
-	statskey.addNumber( "var", "-", "%10.4g" );
+	statskey.addNumber( "var", xunit+"^2", "%10.4g" );
 	break;
       case 'c':
 	if ( ! momentslabel ) {
@@ -528,45 +532,45 @@ void readData( DataFile &sf )
 	  statskey.addLabel( "moments" );
 	  momentslabel = true;
 	}
-	statskey.addNumber( "sum", "-", "%10.4g" );
+	statskey.addNumber( "sum", xunit, "%10.4g" );
 	break;
       case 'm':
 	if ( ! quantileslabel ) {
 	  statskey.addLabel( "quantiles" );
 	  quantileslabel = true;
 	}
-	statskey.addNumber( "median", "-", "%10.4g" );
+	statskey.addNumber( "median", xunit, "%10.4g" );
 	break;
       case 'q':
 	if ( ! quantileslabel ) {
 	  statskey.addLabel( "quantiles" );
 	  quantileslabel = true;
 	}
-	statskey.addNumber( "1.quart", "-", "%10.4g" );
-	statskey.addNumber( "3.quart", "-", "%10.4g" );
+	statskey.addNumber( "1.quart", xunit, "%10.4g" );
+	statskey.addNumber( "3.quart", xunit, "%10.4g" );
 	break;
       case 'd':
 	if ( ! quantileslabel ) {
 	  statskey.addLabel( "quantiles" );
 	  quantileslabel = true;
 	}
-	statskey.addNumber( "1.dec", "-", "%10.4g" );
-	statskey.addNumber( "9.dec", "-", "%10.4g" );
+	statskey.addNumber( "1.dec", xunit, "%10.4g" );
+	statskey.addNumber( "9.dec", xunit, "%10.4g" );
 	break;
       case 'x':
 	if ( ! quantileslabel ) {
 	  statskey.addLabel( "quantiles" );
 	  quantileslabel = true;
 	}
-	statskey.addNumber( "min", "-", "%10.4g" );
-	statskey.addNumber( "max", "-", "%10.4g" );
+	statskey.addNumber( "min", xunit, "%10.4g" );
+	statskey.addNumber( "max", xunit, "%10.4g" );
 	break;
       case 'w':
 	if ( ! quantileslabel ) {
 	  statskey.addLabel( "quantiles" );
 	  quantileslabel = true;
 	}
-	statskey.addNumber( "width", "-", "%10.4g" );
+	statskey.addNumber( "width", xunit, "%10.4g" );
 	break;
       case '<':
       case '-':
@@ -626,26 +630,33 @@ void readData( DataFile &sf )
 	  statskey.addLabel( "linear regression" );
 	  linearlabel = true;
 	}
-	statskey.addNumber( "m", "-", "%10.4g" );
-	statskey.addNumber( "sd", "-", "%10.4g" );
+	statskey.addNumber( "m", yunit + "/" + xunit, "%10.4g" );
+	statskey.addNumber( "sd", yunit + "/" + xunit, "%10.4g" );
 	break;
       case 'b':
 	if ( ! linearlabel ) {
 	  statskey.addLabel( "linear regression" );
 	  linearlabel = true;
 	}
-	statskey.addNumber( "b", "-", "%10.4g" );
-	statskey.addNumber( "sd", "-", "%10.4g" );
+	statskey.addNumber( "b", yunit, "%10.4g" );
+	statskey.addNumber( "sd", yunit, "%10.4g" );
 	break;
       case 'o':
 	statskey.addLabel( "proportionality" );
-	statskey.addNumber( "slope", "-", "%10.4g" );
-	statskey.addNumber( "sd", "-", "%10.4g" );
+	statskey.addNumber( "slope", yunit + "/" + xunit, "%10.4g" );
+	statskey.addNumber( "sd", yunit + "/" + xunit, "%10.4g" );
 	proplabel = true;
 	break;
       case 'c':
-	statskey.addNumber( "chisq", "-", "%10.4g" );
-	statskey.addNumber( "q", "1", "%10.4g" );
+	{
+	  string unit = "";
+	  if ( scol > 0 )
+	    unit = "1";
+	  else
+	    unit = yunit + "^2";
+	  statskey.addNumber( "chisq", unit, "%10.4g" );
+	  statskey.addNumber( "q", "1", "%10.4g" );
+	}
 	break;
       case 'r':
 	if ( ! rlabel ) {
@@ -695,8 +706,8 @@ void readData( DataFile &sf )
 	break;
       case 'd':
 	statskey.addLabel( "Difference" );
-	statskey.addNumber( "d", "-", "%10.4g" );
-	statskey.addNumber( "s.d.", "-", "%7.5f" );
+	statskey.addNumber( "d", xunit, "%10.4g" );
+	statskey.addNumber( "s.d.", xunit, "%7.5f" );
 	break;
       case 'n':
 	statskey.addLabel( "n" );
@@ -748,8 +759,7 @@ void readData( DataFile &sf )
     aparam[k]->setIdent( acols[k].substr( i ) );
   }
 
-  // read meta data for getting a key:
-  sf.readMetaData();
+  // setup parameter units:
   if ( sf.good() )
     extractMetaData( sf, acols, acol, aparam, amode );
 
@@ -1028,7 +1038,7 @@ void readArgs( int argc, char *argv[], int &filec )
   if ( optind < argc && argv[optind][0] == '?' ) {
     WriteUsage();
   }
-  if ( xcol.empty() & xcols.empty() ) {
+  if ( xcol.empty() && xcols.empty() ) {
     WriteUsage();
   }
   filec = optind;
