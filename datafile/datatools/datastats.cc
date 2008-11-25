@@ -573,7 +573,6 @@ void readData( DataFile &sf )
 	statskey.addNumber( "width", xunit, "%10.4g" );
 	break;
       case '<':
-      case '-':
 	if ( ! threshlabel ) {
 	  statskey.addLabel( "t=" + Str( threshold ) );
 	  threshlabel = true;
@@ -581,7 +580,6 @@ void readData( DataFile &sf )
 	statskey.addNumber( "less", "1", "%5.0f" );
 	break;
       case '>':
-      case '+':
 	if ( ! threshlabel ) {
 	  statskey.addLabel( "t=" + Str( threshold ) );
 	  threshlabel = true;
@@ -602,6 +600,8 @@ void readData( DataFile &sf )
 	statskey.addNumber( "n", "1", "%6.0f" );
 	statskey.addNumber( "p", "1", "%7.5f" );
 	break;
+      case '+':
+      case '-':
       case 'b':
       case 'o':
       case 'r':
@@ -893,12 +893,11 @@ void WriteUsage()
   cerr << "    d: 1. and 9. decile\n";
   cerr << "    x: minimum and maximum\n";
   cerr << "    w: maximum minus minimum\n";
-  cerr << "    < or -: number of data values smaller than threshold\n";
-  cerr << "    > or +: number of data values greater than threshold\n";
+  cerr << "    <: number of data values smaller than threshold\n";
+  cerr << "    >: number of data values greater than threshold\n";
   cerr << "    n: number of data points\n";
-  cerr << "    S: Sign test for difference of median to threshold value and significance\n";
+  cerr << "    S: Sign test for difference of median to threshold value and significance (S,S+,S-)\n";
   cerr << "    t: Student's t for difference of mean to threshold value and significance\n";
-  cerr << "    n: number of data points\n";
   cerr << "  ...for two variables:\n";
   cerr << "    m: slope with standard deviation of linear regression\n";
   cerr << "    b: offset with standard deviation of linear regression\n";
@@ -910,8 +909,8 @@ void WriteUsage()
   cerr << "    u: unpaired t-Test (Student's t and significance)\n";
   cerr << "    p: paired t-Test (Student's t and significance)\n";
   cerr << "    U: Mann-Whitney U-Test for unpaired comparisons of medians\n";
-  cerr << "       (U and significance)\n";
-  cerr << "    W: Wilcoxon-test for paired comparisons of medians (W and significance)\n";
+  cerr << "       (U and significance, (U,U+,U-))\n";
+  cerr << "    W: Wilcoxon-test for paired comparisons of medians (W and significance, (W,W+,W-))\n";
   cerr << "    F: F-test for significantly different variances (F and significance)\n";
   cerr << "    k: Kendall's tau for nonparametric correlation (tau and significance)\n";
   cerr << "    d: mean difference y-x with standard-deviation\n";
