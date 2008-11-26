@@ -296,6 +296,9 @@ C
 
 double pearsonTest( double r, int n )
 {
+  if ( n <= 2 )
+    return 1.0;
+
   double df = n - 2.0;
   const double tiny = 1.0e-20;
   double t = r * ::sqrt( df / ( (1.0-r+tiny) * (1.0+r+tiny) ) );

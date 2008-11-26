@@ -358,7 +358,7 @@ void writeUsage()
   cerr << "  retrieve the corresponding column number via $(k xxx).\n";
   cerr << "  By default, the first column is the column number 0.\n";
   cerr << "  Adding a '+' right after the 'k' sets the first column to\n";
-  cerr << "  column number 1 ( $(k+ xxx) ).\n";
+  cerr << "  column number 1 ( $(k+ xxx) ), as it is needed for gnuplot.\n";
   cerr << "  Adding '+nn' right after the 'k', where nn is an integer,\n";
   cerr << "  sets the first column to column number nn ( $(k+2 xxx) ).\n";
   cerr << "\n";

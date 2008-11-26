@@ -86,7 +86,8 @@ void wilcoxonTest( const ArrayD &xdata, const ArrayD &ydata, int tail,
 		   double &w, double &p );
 
   /*! Returns the significance level of Pearson's correlation coefficient \a r
-      optained from \a n pairs of data. */
+      optained from \a n pairs of data.
+      If n<=2, then 1.0 is returned. */
 double pearsonTest( double r, int n );
 
 

@@ -896,7 +896,8 @@ void WriteUsage()
   cerr << "    <: number of data values smaller than threshold\n";
   cerr << "    >: number of data values greater than threshold\n";
   cerr << "    n: number of data points\n";
-  cerr << "    S: Sign test for difference of median to threshold value and significance (S,S+,S-)\n";
+  cerr << "    S: Sign test for difference of median to threshold value and significance\n";
+  cerr << "       (S, S+, S-)\n";
   cerr << "    t: Student's t for difference of mean to threshold value and significance\n";
   cerr << "  ...for two variables:\n";
   cerr << "    m: slope with standard deviation of linear regression\n";
@@ -910,7 +911,8 @@ void WriteUsage()
   cerr << "    p: paired t-Test (Student's t and significance)\n";
   cerr << "    U: Mann-Whitney U-Test for unpaired comparisons of medians\n";
   cerr << "       (U and significance, (U,U+,U-))\n";
-  cerr << "    W: Wilcoxon-test for paired comparisons of medians (W and significance, (W,W+,W-))\n";
+  cerr << "    W: Wilcoxon-test for paired comparisons of medians\n";
+  cerr << "       (W and significance; W, W+, W-)\n";
   cerr << "    F: F-test for significantly different variances (F and significance)\n";
   cerr << "    k: Kendall's tau for nonparametric correlation (tau and significance)\n";
   cerr << "    d: mean difference y-x with standard-deviation\n";
