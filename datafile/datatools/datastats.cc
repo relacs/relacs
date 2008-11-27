@@ -876,8 +876,9 @@ void WriteUsage()
   cerr << "-m: ### The minimum number of data lines required for analysis\n";
   cerr << "    (default 1 for single variable, 2 for two variables).\n";
   cerr << "-a: value that is added to the table (either column number, column title\n";
-  cerr << "    (takes the value from the last line), 'ident:value', or 'l_ident'\n";
-  cerr << "    (take value of ident in meta data level l, l can be ommited))\n";
+  cerr << "    (takes the value from the last line), 'ident:value' (value can be a\n";
+  cerr << "    number with an unit or a string), or 'l_ident' (take value of ident\n";
+  cerr << "    in meta data level l, l can be ommited))\n";
   cerr << "-q: don't write statistics to standard error\n";
   cerr << "-t: ### threshold value for count statistics (default 0.0)\n";
   cerr << "-f: select output columns...\n";
@@ -994,11 +995,17 @@ void readArgs( int argc, char *argv[], int &filec )
 		    alabel = true;
 		  }
 		  if ( ! aident.empty() && ! val.empty() ) {
-		    double e;
+		    double e = 0.0;
 		    string aunit = "";
-		    double aval = val.number( e, aunit );
-		    statskey.addNumber( aident, aunit, "%7.5g" );
-		    statskey.setNumber( aident, aval );
+		    double aval = val.number( e, aunit, MAXDOUBLE );
+		    if ( aval == MAXDOUBLE ) {
+		      statskey.addText( aident );
+		      statskey.setText( aident, val );
+		    }
+		    else {
+		      statskey.addNumber( aident, aunit, "%7.5g" );
+		      statskey.setNumber( aident, aval );
+		    }
 		  }
 		  else {
 		    acols.push_back( as );

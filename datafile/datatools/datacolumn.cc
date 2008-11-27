@@ -65,7 +65,7 @@ void WriteUsage()
   cerr << '\n';
   cerr << "usage:\n";
   cerr << '\n';
-  cerr << "datacolumn -c ### [-o ###] fname\n";
+  cerr << "datacolumn -c ### [-c ### [-c ### ....]] [-o ###] fname\n";
   cerr << '\n';
   cerr << "prints out the column numbers for the specified column titles\n";
   cerr << "of the data file <fname>.\n";
@@ -73,6 +73,7 @@ void WriteUsage()
   cerr << "-c: ### specifies column (default is first column).\n";
   cerr << "    the column can be either a number (1,2,...)\n";
   cerr << "    or a string containing the column title.\n";
+  cerr << "-o: An offset that is added to the column numbers.\n";
   cerr << '\n';
   exit( 1 );
 }

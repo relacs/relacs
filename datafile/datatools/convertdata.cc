@@ -33,21 +33,26 @@ using namespace std;
 using namespace relacs;
 
 int stopempty = 2;
-bool keyonly = false;
 bool numbercols = false;
-bool storemetadata = false;
+bool bodyonly = false;
 string format = "l";
 string destfile = "";
 
 
-void readData( DataFile &sf )
+void writeLaTeX( DataFile &sf )
 {
-  cout << "\\documentclass{article}\n";
-  cout << "\n";
-  cout << "\\begin{document}\n";
-  cout << "\n";
+  if ( ! bodyonly ) {
+    cout << "\\documentclass{article}\n";
+    cout << "\n";
+    cout << "\\usepackage[margin=15mm,noheadfoot]{geometry}\n";
+    cout << "\n";
+    cout << "\\begin{document}\n";
+    cout << "\n";
+  }
   while ( sf.good() ) {
     sf.readMetaData();
+
+    cout << "\\begin{minipage}{\\textwidth}\n";
 
     // write out new meta data:
     for ( int l=sf.levels()-1; l>=0; l-- ) {
@@ -82,25 +87,141 @@ void readData( DataFile &sf )
 	  int p = ml.findFirstNot( "#" );
 	  if ( p > 0 )
 	    ml.erase( 0, p );
-	  cout << "  \\multicolumn{2}{l}{" << ml << "}\\\\\n";
+	  cout << "  \\multicolumn{2}{l}{" << ml.latex() << "}\\\\\n";
 	}
 	dcs = ndcs;
       }
       StrQueue items;
       sf.splitLine( items );
       StrQueue latexitems;
-      for ( int k=0; k<items.size(); k++ )
-	latexitems.add( items[k].latexNum() );
+      for ( int k=0; k<items.size(); k++ ) {
+	if ( Str::FirstNumber.find( items[k][0] ) >= 0 )
+	  latexitems.add( items[k].latexNum() );
+	else
+	  latexitems.add( "\\multicolumn{1}{l}{" + items[k].latex() + "}" );
+      }
       cout << "  " << latexitems.save( " & " ) << " \\\\\n";
     } while ( sf.readDataLine( stopempty ) );
     cout << "  \\hline\n";
     cout << "\\end{tabular}\n";
+    cout << "\\end{minipage}\n";
     cout << "\\vspace{2ex}\n";
     cout << "\n";
 
   }
-  cout << "\n";
-  cout << "\\end{document}\n";
+  if ( ! bodyonly ) {
+    cout << "\n";
+    cout << "\\end{document}\n";
+  }
+  sf.close();
+}
+
+
+void writeHTML( DataFile &sf )
+{
+  if ( ! bodyonly ) {
+    cout << "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n";
+    cout << "<html>\n";
+    cout << "  <head>\n";
+    cout << "    <title>Data</title>\n";
+    cout << "    <meta http-equiv=\"Content-Type\" content=\"text/html;charset=utf-8\" >\n";
+    cout << "    <style type=\"text/css\">\n";
+    cout << "    <!--\n";
+    cout << "    table.data {\n";
+    cout << "      border-top: 1px solid black;\n";
+    cout << "      border-bottom: 1px solid black;\n";
+    cout << "    }\n";
+    cout << "    table.data thead tr.dataunits {\n";
+    cout << "      border-bottom: 1px solid black;\n";
+    cout << "    }\n";
+    cout << "    table.data th {\n";
+    cout << "      padding-left: 0.5em;\n";
+    cout << "      padding-right: 0.5em;\n";
+    cout << "      white-space: nowrap;\n";
+    cout << "    }\n";
+    cout << "    table.data td {\n";
+    cout << "      padding-left: 0.5em;\n";
+    cout << "      padding-right: 0.5em;\n";
+    cout << "      white-space: nowrap;\n";
+    cout << "    }\n";
+    cout << "    -->\n";
+    cout << "    </style>\n";
+    cout << "  </head>\n";
+    cout << "\n";
+    cout << "  <body>\n";
+    cout << "\n";
+  }
+  while ( sf.good() ) {
+    sf.readMetaData();
+
+    cout << "    <p>\n";
+
+    // write out new meta data:
+    for ( int l=sf.levels()-1; l>=0; l-- ) {
+      if ( sf.newMetaData( l ) ) {
+	cout << "      <table class=\"metadata\">\n";
+	for ( int k=0; k<sf.metaData( l ).size(); k++ ) {
+	  Str ml = sf.metaData( l )[k];
+	  int p = ml.findFirstNot( "#" );
+	  if ( p > 0 )
+	    ml.erase( 0, p );
+	  string ident = ml.ident().html();
+	  string value = ml.value().htmlUnit();
+	  cout << "        <tr>\n";
+	  if ( ident.empty() || value.empty() )
+	    cout << "          <td colspan=\"2\">" << ml.html() << "</td>\n";
+	  else {
+	    cout << "          <td>" << ident << "</td>\n";
+	    cout << "          <td>" << value << "</td>\n";
+	  }
+	  cout << "        </tr>\n";
+	}
+	cout << "      </table>\n\n";
+      }
+    }
+
+    // write out key:
+    sf.key().saveKeyHTML( cout, numbercols );
+
+    // write out data:
+    cout << "        <tbody class=\"data\">\n";
+    int dcs = sf.dataComments().size();
+    do {
+      int ndcs = sf.dataComments().size();
+      if ( ndcs > dcs ) {
+	for ( int k=dcs; k<ndcs; k++ ) {
+	  Str ml = sf.dataComments()[k];
+	  int p = ml.findFirstNot( "#" );
+	  if ( p > 0 )
+	    ml.erase( 0, p );
+	  cout << "          <tr class=\"datacomment\">\n";
+	  cout << "            <td colspan=\"2\" align=\"left\">" << ml.html() << "</td>\n";
+	  cout << "          </tr>\n";
+	}
+	dcs = ndcs;
+      }
+      StrQueue items;
+      sf.splitLine( items );
+      cout << "          <tr class=\"data\">\n";
+      for ( int k=0; k<items.size(); k++ ) {
+	if ( Str::FirstNumber.find( items[k][0] ) >= 0 )
+	  cout << "            <td align=\"right\">" << items[k].htmlUnit() << "</td>\n";
+	else
+	  cout << "            <td align=\"left\">" << items[k].html() << "</td>\n";
+      }
+      cout << "          </tr>\n";
+    } while ( sf.readDataLine( stopempty ) );
+    cout << "        </tbody>\n";
+    cout << "      </table>\n";
+    cout << "    </p>\n";
+    cout << "\n";
+
+  }
+  if ( ! bodyonly ) {
+    cout << "\n";
+    cout << "  </body>\n";
+    cout << "</html>\n";
+  }
   sf.close();
 }
 
@@ -111,15 +232,15 @@ void WriteUsage()
   cerr << '\n';
   cerr << "usage:\n";
   cerr << '\n';
-  cerr << "convertdata -d ### -K -n -m -f ### -o xxx fname\n";
+  cerr << "convertdata [-d ###] [-n] [-f #] [-b] [-o xxx] <fname>\n";
   cerr << '\n';
-  cerr << "Extract values from the metadata in file <fname> and write them into a table.\n";
-  cerr << "-K: just print the key, don't process data\n";
+  cerr << "Convert the data file <fname> into a different format.\n";
   cerr << "-n: number columns of the key\n";
-  cerr << "-m: store meta data in output file\n";
-  cerr << "-d: the number of empty lines that separate blocks of data.\n";
+  cerr << "-d: the number of empty lines that separate blocks of data (default: 2).\n";
   cerr << "-f: format of the converted data:\n";
   cerr << "    l - LaTeX\n";
+  cerr << "    h - HTML\n";
+  cerr << "-b: (body only) omit any headers and footers\n";
   cerr << "-o: write converted data into file ### instead to standard out\n";
   cerr << '\n';
   exit( 1 );
@@ -134,11 +255,8 @@ void readArgs( int argc, char *argv[], int &filec )
     WriteUsage();
   optind = 0;
   opterr = 0;
-  while ( (c = getopt( argc, argv, "d:o:Knm" )) >= 0 ) {
+  while ( (c = getopt( argc, argv, "d:o:f:nb" )) >= 0 ) {
     switch ( c ) {
-    case 'K':
-      keyonly = true;
-      break;
     case 'd':
       if ( optarg == NULL ||
 	   sscanf( optarg, "%d", &stopempty ) == 0 ||
@@ -152,8 +270,8 @@ void readArgs( int argc, char *argv[], int &filec )
     case 'n':
       numbercols = true;
       break;
-    case 'm':
-      storemetadata = true;
+    case 'b':
+      bodyonly = true;
       break;
     case 'f':
       format = optarg;
@@ -201,7 +319,14 @@ int main( int argc, char *argv[] )
     cout.rdbuf( sb );
   }
 
-  readData( sf );
+  if ( format == "l" )
+    writeLaTeX( sf );
+  else if ( format == "h" )
+    writeHTML( sf );
+  else {
+    cerr << "! unknown format !\n";
+    WriteUsage();
+  }
 
   if ( coutb != 0 ) {
     df.close();

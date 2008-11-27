@@ -4752,7 +4752,7 @@ Str Str::htmlUnit( void ) const
 	      ( *sp == 'e' || *sp == 'E' ) && sp+1 != end() && 
 	      ( (*(sp+1) >= '0' && *(sp+1) <= '9') ||
 		*(sp+1) == '+' || *(sp+1) == '-' ) ) {
-      ls.append( "&times; 10<sup>" );
+      ls.append( "&times;10<sup>" );
       for ( sp++;
 	    sp != end() && ((*sp >= '0' && *sp <= '9') ||
 			    *sp == '+' || *sp == '-');

@@ -224,6 +224,9 @@ public:
     /*! Write the table header as a LaTeX table header to \a str.
 	If \ num equals true, a line indicating the column numbers is added. */
   ostream &saveKeyLaTeX( ostream &str, bool num=true, int flags=0 ) const;
+    /*! Write the table header as a HTML table header to \a str.
+	If \ num equals true, a line indicating the column numbers is added. */
+  ostream &saveKeyHTML( ostream &str, bool num=true, int flags=0 ) const;
     /*! Write the table header to \a str using saveKey() with the default settings. */
   friend ostream &operator<< ( ostream &str, const TableKey &tk );
     /*! Load the table header from \a sq. */

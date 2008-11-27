@@ -120,8 +120,10 @@ void WriteUsage()
   cerr << "extractdata -d ### -a aaa -k -K -n -m -o xxx fname\n";
   cerr << '\n';
   cerr << "Extract values from the metadata in file <fname> and write them into a table.\n";
-  cerr << "-a: value that is added to the table (either 'ident:value', or 'l_ident'\n";
-  cerr << "    (take value of ident in meta data level l, l can be ommited))\n";
+  cerr << "-a: value that is added to the table (either column number, column title\n";
+  cerr << "    (takes the value from the last line), 'ident:value' (value can be a\n";
+  cerr << "    number with an unit or a string), or 'l_ident' (take value of ident\n";
+  cerr << "    in meta data level l, l can be ommited))\n";
   cerr << "-k: add key to the output table\n";
   cerr << "-K: just print the key, don't process data\n";
   cerr << "-n: number columns of the key\n";
@@ -151,11 +153,17 @@ void readArgs( int argc, char *argv[], int &filec )
 	if ( ! aident.empty() && ! val.empty() ) {
 	  aunit.push_back( true );
 	  alevel.push_back( -1 );
-	  double e;
+	  double e = 0.0;
 	  string aunit = "";
-	  double aval = val.number( e, aunit );
-	  destkey.addNumber( aident, aunit, "%7.5g" );
-	  destkey.setNumber( aident, aval );
+	  double aval = val.number( e, aunit, MAXDOUBLE );
+	  if ( aval == MAXDOUBLE ) {
+	    destkey.addText( aident );
+	    destkey.setText( aident, val );
+	  }
+	  else {
+	    destkey.addNumber( aident, aunit, "%7.5g" );
+	    destkey.setNumber( aident, aval );
+	  }
 	}
 	else {
 	  aunit.push_back( false );

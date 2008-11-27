@@ -646,8 +646,10 @@ void WriteUsage()
   cerr << "    x: minimum and maximum\n";
   cerr << "-k: add key to the output table\n";
   cerr << "-K: just print the key, don't process data\n";
-  cerr << "-a: value that is added to the table (either column number, column title (takes the value from the last line),\n";
-  cerr << "    'ident:value', or 'l_ident' (take value of ident in meta data level l, l can be ommited))\n";
+  cerr << "-a: value that is added to the table (either column number, column title\n";
+  cerr << "    (takes the value from the last line), 'ident:value' (value can be a\n";
+  cerr << "    number with an unit or a string), or 'l_ident' (take value of ident\n";
+  cerr << "    in meta data level l, l can be ommited))\n";
   cerr << "-m: add header with the statistics to the histogram data.\n";
   cerr << "-d: the number of empty lines that separate blocks of data.\n";
   cerr << "-D: more than one space between data columns required.\n";
@@ -742,11 +744,17 @@ void readArgs( int argc, char *argv[], int &filec )
 		  string aident = as.ident();
 		  Str val = as.value();
 		  if ( ! aident.empty() && ! val.empty() ) {
-		    double e;
+		    double e = 0.0;
 		    string aunit = "";
-		    double aval = val.number( e, aunit );
-		    binkey.addNumber( aident, aunit, "%7.5g" );
-		    binkey.setNumber( aident, aval );
+		    double aval = val.number( e, aunit, MAXDOUBLE );
+		    if ( aval == MAXDOUBLE ) {
+		      binkey.addText( aident );
+		      binkey.setText( aident, val );
+		    }
+		    else {
+		      binkey.addNumber( aident, aunit, "%7.5g" );
+		      binkey.setNumber( aident, aval );
+		    }
 		  }
 		  else {
 		    acols.push_back( as );

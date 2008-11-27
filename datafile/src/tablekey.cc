@@ -547,7 +547,7 @@ ostream &TableKey::saveKeyLaTeX( ostream &str, bool num, int flags ) const
     if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) ) {
       if ( n > 0 )
 	str << " & ";
-      str << "\\multicolumn{1}{l}{" << (*Columns[c][0]).ident().ident() << "}";
+      str << "\\multicolumn{1}{l}{" << (*Columns[c][0]).ident().latex() << "}";
       n++;
     }
   }
@@ -592,6 +592,85 @@ ostream &TableKey::saveKeyLaTeX( ostream &str, bool num, int flags ) const
 
   // end key:
   str << "  \\hline\n";
+
+  return str;  
+}
+
+
+ostream &TableKey::saveKeyHTML( ostream &str, bool num, int flags ) const
+{
+  if ( Columns[0].size() < 1 )
+    return str;
+
+  // begin table:
+  str << "      <table class=\"data\">\n";
+  str << "        <thead class=\"datakey\">\n";
+
+  // groups:
+  for ( unsigned int l=Columns[0].size()-1; l>0; l-- ) {
+    str << "          <tr class=\"group" << l << "\">\n";
+    int w = 1;
+    for ( unsigned int c=1; c<Columns.size(); c++ ) {
+      if ( Columns[c][l] != Columns[c-1][l] ) {
+	if ( flags == 0 || ( (*Columns[c-1][l]).flags() & flags ) ) {
+	  str << "            <th colspan=\"" << w << "\" align=\"left\">"
+	      << (*Columns[c-1][l]).ident().html() << "</th>\n";
+	  w = 1;
+	}
+      }
+      else if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) )
+	w ++;
+    }
+    if ( flags == 0 || ( (*Columns.back()[l]).flags() & flags ) ) {
+      str << "            <th colspan=\"" << w << "\" align=\"left\">"
+	  << (*Columns.back()[l]).ident().html() << "</th>\n";
+    }
+    str << "          </tr>\n";
+  }
+
+  // ident:
+  str << "          <tr class=\"datanames\">\n";
+  for ( unsigned int c=0; c<Columns.size(); c++ ) {
+    if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) ) {
+      str << "            <th align=\"left\">"
+	  << (*Columns[c][0]).ident().html() << "</th>\n";
+    }
+  }
+  str << "          </tr>\n";
+
+  // unit:
+  bool unit = false;
+  for ( unsigned int c=0; c<Columns.size(); c++ ) {
+    if ( ! (*Columns[c][0]).unit().empty() ) {
+      unit = true;
+      break;
+    }
+  }
+  if ( unit ) {
+    str << "          <tr class=\"dataunits\">\n";
+    for ( unsigned int c=0; c<Columns.size(); c++ ) {
+      if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) ) {
+	str << "            <th align=\"left\">"
+	    << (*Columns[c][0]).unit().htmlUnit() << "</th>\n";
+      }
+    }
+    str << "          </tr>\n";
+  }
+
+  // number:
+  if ( num ) {
+    str << "          <tr class=\"datanums\">\n";
+    for ( unsigned int c=0; c<Columns.size(); c++ ) {
+      if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) ) {
+	str << "            <th align=\"right\">"
+	    << c+1 << "</th>\n";
+      }
+    }
+    str << "          </tr>\n";
+  }
+
+  // end key:
+  str << "        </thead>\n";
 
   return str;  
 }
@@ -745,7 +824,15 @@ ostream &TableKey::saveData( ostream &str )
   for ( unsigned int c=0; c<Columns.size(); c++ ) {
     if ( c > 0 )
       str << Separator;
-    str << (*Columns[c][0]).text();
+    Str s = (*Columns[c][0]).text();
+    if ( s.size() >= Width[c] )
+      str << s;
+    else {
+      if ( (*Columns[c][0]).isText() )
+	str << Str( s, -Width[c] );
+      else
+	str << Str( s, Width[c] );
+    }
   }
   str << '\n';
   return str;
@@ -759,7 +846,15 @@ ostream &TableKey::saveData( ostream &str, int from, int to )
       str << Separator;
     else 
       str << DataStart;
-    str << (*Columns[c][0]).text();
+    Str s = (*Columns[c][0]).text();
+    if ( s.size() >= Width[c] )
+      str << s;
+    else {
+      if ( (*Columns[c][0]).isText() )
+	str << Str( s, -Width[c] );
+      else
+	str << Str( s, Width[c] );
+    }
   }
   return str;
 }
@@ -768,7 +863,7 @@ ostream &TableKey::saveData( ostream &str, int from, int to )
 ostream &TableKey::saveMetaData( ostream &str, const string &start,
 				 int width ) const
 {
-  // a separate algorithmen with level dependent indent would be better!
+  // XXX a separate algorithmen with level dependent indent would be better!
   // and different format: ident unit
   // maybe this should be an additional function!
   return Opt.save( str, start, width );
