@@ -218,15 +218,24 @@ public:
 
     /*! Write the table header to \a str.
         If \a key equals true, it is preceded by a line "Key".
-	If \ num equals true, a line indicating the column numbers is added.
+	If \a num equals true, a line indicating the column numbers is added.
+	If \a units equals true, a line indicating the units
+	for the column entries is added.
         Each line is preceded by the \a KeyStart string. */
-  ostream &saveKey( ostream &str, bool key=true, bool num=true, int flags=0 ) const;
+  ostream &saveKey( ostream &str, bool key=true, bool num=true,
+		    bool units=true, int flags=0 ) const;
     /*! Write the table header as a LaTeX table header to \a str.
-	If \ num equals true, a line indicating the column numbers is added. */
-  ostream &saveKeyLaTeX( ostream &str, bool num=true, int flags=0 ) const;
+	If \a num equals true, a line indicating the column numbers is added.
+	If \a units equals true, a line indicating the units
+	for the column entries is added. */
+  ostream &saveKeyLaTeX( ostream &str, bool num=true,
+			 bool units=true, int flags=0 ) const;
     /*! Write the table header as a HTML table header to \a str.
-	If \ num equals true, a line indicating the column numbers is added. */
-  ostream &saveKeyHTML( ostream &str, bool num=true, int flags=0 ) const;
+	If \a num equals true, a line indicating the column numbers is added.
+	If \a units equals true, a line indicating the units
+	for the column entries is added. */
+  ostream &saveKeyHTML( ostream &str, bool num=true, bool units=true,
+			int flags=0 ) const;
     /*! Write the table header to \a str using saveKey() with the default settings. */
   friend ostream &operator<< ( ostream &str, const TableKey &tk );
     /*! Load the table header from \a sq. */

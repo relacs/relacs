@@ -12,7 +12,8 @@ Also see files ChangeLog and THANKS
   Initial setup of the basic structure of RELACS (at that time called "OEL").
 
 * Marco Hackenberg:
-  Interfaces for analog input and output, their implementation for comedi.
+  Interfaces for analog input and output, their initial implementation
+  for comedi and the dynamic clamp modules.
 
 * Sebastian Pipping:
   New build system using the GNU autotools.

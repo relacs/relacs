@@ -31,7 +31,7 @@ namespace patchclamp {
 
 /*! 
 \class Session
-\brief [Control] Session for current-clamp recordings
+\brief [Control] %Session for current-clamp recordings
 \author Jan Benda
 \version 1.0 (Oct 13, 2008)
 */

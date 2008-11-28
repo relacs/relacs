@@ -409,7 +409,8 @@ void TableKey::clear( void )
 }
 
 
-ostream &TableKey::saveKey( ostream &str, bool key, bool num, int flags ) const
+ostream &TableKey::saveKey( ostream &str, bool key, bool num,
+			    bool units, int flags ) const
 {
   if ( Columns[0].size() < 1 )
     return str;
@@ -466,7 +467,7 @@ ostream &TableKey::saveKey( ostream &str, bool key, bool num, int flags ) const
       break;
     }
   }
-  if ( unit ) {
+  if ( units && unit ) {
     n = 0;
     str << KeyStart;
     for ( unsigned int c=0; c<Columns.size(); c++ ) {
@@ -499,7 +500,8 @@ ostream &TableKey::saveKey( ostream &str, bool key, bool num, int flags ) const
 }
 
 
-ostream &TableKey::saveKeyLaTeX( ostream &str, bool num, int flags ) const
+ostream &TableKey::saveKeyLaTeX( ostream &str, bool num, bool units,
+				 int flags ) const
 {
   if ( Columns[0].size() < 1 )
     return str;
@@ -561,7 +563,7 @@ ostream &TableKey::saveKeyLaTeX( ostream &str, bool num, int flags ) const
       break;
     }
   }
-  if ( unit ) {
+  if ( units && unit ) {
     n = 0;
     str << "  ";
     for ( unsigned int c=0; c<Columns.size(); c++ ) {
@@ -597,7 +599,8 @@ ostream &TableKey::saveKeyLaTeX( ostream &str, bool num, int flags ) const
 }
 
 
-ostream &TableKey::saveKeyHTML( ostream &str, bool num, int flags ) const
+ostream &TableKey::saveKeyHTML( ostream &str, bool num, bool units,
+				int flags ) const
 {
   if ( Columns[0].size() < 1 )
     return str;
@@ -646,7 +649,7 @@ ostream &TableKey::saveKeyHTML( ostream &str, bool num, int flags ) const
       break;
     }
   }
-  if ( unit ) {
+  if ( units && unit ) {
     str << "          <tr class=\"dataunits\">\n";
     for ( unsigned int c=0; c<Columns.size(); c++ ) {
       if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) ) {

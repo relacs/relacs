@@ -56,6 +56,7 @@ double threshold = 0.0;
 bool key = false;
 bool keyonly = false;
 bool numbercols = false;
+bool units = true;
 bool dblankmode = false;
 bool datamode = true;
 string statsfile = "";
@@ -143,7 +144,7 @@ void analyseData( ArrayD &data, ArrayD &sig, int page, TableKey &statskey )
     statskey.setNumber( "n>n", double( data.size() ) ); 
 
   if ( key ) {
-    statskey.saveKey( cout, true, numbercols );
+    statskey.saveKey( cout, true, numbercols, units );
     key = false;
   }
   statskey.saveData( cout );
@@ -380,7 +381,7 @@ void analyseCor( ArrayD &xdata, ArrayD &ydata, ArrayD &sig, int page, TableKey &
     statskey.setNumber( "n>n", double( n ) ); 
 
   if ( key ) {
-    statskey.saveKey( cout, true, numbercols );
+    statskey.saveKey( cout, true, numbercols, units );
     key = false;
   }
 
@@ -764,7 +765,7 @@ void readData( DataFile &sf )
     extractMetaData( sf, acols, acol, aparam, amode );
 
   if ( key && keyonly ) {
-    statskey.saveKey( cout, true, numbercols );
+    statskey.saveKey( cout, true, numbercols, units );
     key = false;
     return;
   }
@@ -859,8 +860,8 @@ void WriteUsage()
   cerr << '\n';
   cerr << "usage:\n";
   cerr << '\n';
-  cerr << "datastats -d ### -D -c ### [-y ###] [-s ###] -e ### -E ### -z -m ###\n";
-  cerr << "          -a aaa -q -f ### -t ### -k -K -n -o xxx fname\n";
+  cerr << "datastats -d ### -D -c ### [-y ###] [-s ###] [-e ###] [-E ###] [-z] [-m ###]\n";
+  cerr << "          [-a aaa] [-q] [-f ###] [-t ###] [[-k|-K] [-U] [-n]] [-o xxx] fname\n";
   cerr << '\n';
   cerr << "basic statistics of one column in data file <fname>.\n";
   cerr << "-c: ### specifies column (default is first column).\n";
@@ -911,7 +912,7 @@ void WriteUsage()
   cerr << "    u: unpaired t-Test (Student's t and significance)\n";
   cerr << "    p: paired t-Test (Student's t and significance)\n";
   cerr << "    U: Mann-Whitney U-Test for unpaired comparisons of medians\n";
-  cerr << "       (U and significance, (U,U+,U-))\n";
+  cerr << "       (U and significance, (U, U+, U-))\n";
   cerr << "    W: Wilcoxon-test for paired comparisons of medians\n";
   cerr << "       (W and significance; W, W+, W-)\n";
   cerr << "    F: F-test for significantly different variances (F and significance)\n";
@@ -920,6 +921,7 @@ void WriteUsage()
   cerr << "    n: number of data points\n";
   cerr << "-k: add key to the output table\n";
   cerr << "-K: just print the key, don't process data\n";
+  cerr << "-U: don't print the line with the units in the key\n";
   cerr << "-n: number columns of the key\n";
   cerr << "-d: the number of empty lines that separate blocks of data.\n";
   cerr << "-D: more than one space between data columns required.\n";
@@ -938,109 +940,129 @@ void readArgs( int argc, char *argv[], int &filec )
   optind = 0;
   opterr = 0;
   bool alabel = false;
-  while ( (c = getopt( argc, argv, "d:c:x:y:s:e:E:zm:a:o:f:t:kKDqn" )) >= 0 ) {
+  while ( (c = getopt( argc, argv, "d:c:x:y:s:e:E:zm:a:o:f:t:kKDqnU" )) >= 0 ) {
     switch ( c ) {
-      case 'x':
-      case 'c': if ( optarg != NULL ) {
-                  int xc = 0;
-	          if ( sscanf( optarg, "%d", &xc ) == 0 ) {
-		    xcol.push_back( 0 );
-		    xcols.push_back( optarg );
-		  }
-                  else {
+    case 'x':
+    case 'c':
+      if ( optarg != NULL ) {
+	int xc = 0;
+	if ( sscanf( optarg, "%d", &xc ) == 0 ) {
+	  xcol.push_back( 0 );
+	  xcols.push_back( optarg );
+	}
+	else {
 		    xcol.push_back( xc-1 );
 		    xcols.push_back( "" );
+	}
+      }
+      break;
+    case 'y':
+      if ( optarg != NULL ) {
+	if ( sscanf( optarg, "%d", &ycol ) == 0 )
+	  ycols = optarg;
+	else 
+	  ycol--;
+      }
+      break;
+    case 's':
+      if ( optarg != NULL ) {
+	if ( sscanf( optarg, "%d", &scol ) == 0 )
+	  scols = optarg;
+	else 
+	  scol--;
+      }
+      break;
+    case 'e':
+      if ( optarg != NULL ) {
+	double v = 0.0;
+	if ( sscanf( optarg, "%lf", &v ) > 0 )
+	  xmin = v;
+      }
+      break;
+    case 'E':
+      if ( optarg != NULL ) {
+	double v = 0.0;
+	if ( sscanf( optarg, "%lf", &v ) > 0 )
+	  xmax = v;
+      }
+      break;
+    case 'z':
+      ignorezero = true;
+      break;
+    case 'm':
+      if ( optarg == NULL ||
+	   sscanf( optarg, "%d", &minn ) == 0 ||
+	   minn < 1 )
+	minn = 1;
+      break;
+    case 'a':
+      if ( optarg != NULL ) {
+	Str as = optarg;
+	string aident = as.ident();
+	Str val = as.value();
+	if ( ! alabel ) {
+	  statskey.addLabel( "parameter" );
+	  alabel = true;
+	}
+	if ( ! aident.empty() && ! val.empty() ) {
+	  double e = 0.0;
+	  string aunit = "";
+	  double aval = val.number( e, aunit, MAXDOUBLE );
+	  if ( aval == MAXDOUBLE ) {
+	    statskey.addText( aident );
+	    statskey.setText( aident, val );
+	  }
+	  else {
+	    statskey.addNumber( aident, aunit, "%7.5g" );
+	    statskey.setNumber( aident, aval );
+	  }
+	}
+	else {
+	  acols.push_back( as );
+	  acol.push_back( statskey.columns() );
+	  statskey.addNumber( as, "-", "%7.5g" );
 		  }
-                }
-                break;
-      case 'y': if ( optarg != NULL ) {
-	          if ( sscanf( optarg, "%d", &ycol ) == 0 )
-		    ycols = optarg;
-                  else 
-                    ycol--;
-                }
-                break;
-      case 's': if ( optarg != NULL ) {
-	          if ( sscanf( optarg, "%d", &scol ) == 0 )
-		    scols = optarg;
-                  else 
-                    scol--;
-                }
-                break;
-      case 'e': if ( optarg != NULL ) {
-		  double v = 0.0;
-	          if ( sscanf( optarg, "%lf", &v ) > 0 )
-		    xmin = v;
-                }
-                break;
-      case 'E': if ( optarg != NULL ) {
-		  double v = 0.0;
-	          if ( sscanf( optarg, "%lf", &v ) > 0 )
-		    xmax = v;
-                }
-                break;
-      case 'z': ignorezero = true;
-                break;
-      case 'm': if ( optarg == NULL ||
-		     sscanf( optarg, "%d", &minn ) == 0 ||
-		     minn < 1 )
-		  minn = 1;
-                break;
-      case 'a': if ( optarg != NULL ) {
-                  Str as = optarg;
-		  string aident = as.ident();
-		  Str val = as.value();
-		  if ( ! alabel ) {
-		    statskey.addLabel( "parameter" );
-		    alabel = true;
-		  }
-		  if ( ! aident.empty() && ! val.empty() ) {
-		    double e = 0.0;
-		    string aunit = "";
-		    double aval = val.number( e, aunit, MAXDOUBLE );
-		    if ( aval == MAXDOUBLE ) {
-		      statskey.addText( aident );
-		      statskey.setText( aident, val );
-		    }
-		    else {
-		      statskey.addNumber( aident, aunit, "%7.5g" );
-		      statskey.setNumber( aident, aval );
-		    }
-		  }
-		  else {
-		    acols.push_back( as );
-		    acol.push_back( statskey.columns() );
-		    statskey.addNumber( as, "-", "%7.5g" );
-		  }
-		}
-                break;
-      case 'f': if ( optarg != NULL )
-	          outformat = optarg;
-    	        break;
-      case 't': if ( optarg == NULL ||
-		     sscanf( optarg, "%lg", &threshold ) == 0 )
-		  threshold = 0.0;
-                break;
-      case 'k': key = true;
-                break;
-      case 'K': key = true;
-	        keyonly = true;
-                break;
-      case 'd': if ( optarg == NULL ||
-		     sscanf( optarg, "%d", &stopempty ) == 0 ||
-		     stopempty < 1 )
-		  stopempty = 1;
-                break;
-      case 'D': dblankmode = true;
-                break;
-      case 'o': if ( optarg != NULL )
-		  statsfile = optarg;
-                break;
-      case 'n': numbercols = true;
-                break;
-      case 'q': datamode = false;
-                break;
-      default : WriteUsage();
+      }
+      break;
+    case 'f':
+      if ( optarg != NULL )
+	outformat = optarg;
+      break;
+    case 't':
+      if ( optarg == NULL ||
+	   sscanf( optarg, "%lg", &threshold ) == 0 )
+	threshold = 0.0;
+      break;
+    case 'k':
+      key = true;
+      break;
+    case 'K':
+      key = true;
+      keyonly = true;
+      break;
+    case 'd':
+      if ( optarg == NULL ||
+	   sscanf( optarg, "%d", &stopempty ) == 0 ||
+	   stopempty < 1 )
+	stopempty = 1;
+      break;
+    case 'D':
+      dblankmode = true;
+      break;
+    case 'o':
+      if ( optarg != NULL )
+	statsfile = optarg;
+      break;
+    case 'n':
+      numbercols = true;
+      break;
+    case 'U':
+      units = false;
+      break;
+    case 'q':
+      datamode = false;
+      break;
+    default : WriteUsage();
     }
   }
   if ( optind < argc && argv[optind][0] == '?' ) {

@@ -1,10 +1,11 @@
-Future: Version 0.9.6 release
+December, 2008
+  Working interface to the comedi library supporting many
+  data acquisition boards.
 
 June 14, 2008
   Full autotools support in the subversion repository.
   That is, relacs should compile smoothly on your
   system provided running ./configure was successfull.
-  Still, use this release as a demo only.
   
 Mar 1, 2008
   The new web site goes online.

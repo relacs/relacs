@@ -59,6 +59,7 @@ TableKey binkey;
 bool key = false;
 bool keyonly = false;
 bool numbercols = false;
+bool units = true;
 vector<Str> acols;
 vector<int> acol; 
 bool header = false;
@@ -211,7 +212,7 @@ void binData( ArrayD &xdata, ArrayD &ydata, ArrayD &sdata, int page,
 
   // key:
   if ( key && ! plotmode )
-    binkey.saveKey( cout, true, numbercols );
+    binkey.saveKey( cout, true, numbercols, units );
 
   // save histogram:
   ofstream pd;
@@ -496,7 +497,7 @@ void readData( DataFile &sf )
   }
 
   if ( keyonly ) {
-    binkey.saveKey( cout, true, numbercols );
+    binkey.saveKey( cout, true, numbercols, units );
     return;
   }
 
@@ -612,7 +613,9 @@ void WriteUsage()
   cerr << '\n';
   cerr << "usage:\n";
   cerr << '\n';
-  cerr << "bindata -d ### -D -c xxx -y yyy -s sss -l ### -u ### -b ### -w ### -n -S -e ### -E ### -z -f ### -k -K -a xxx -m -p -o xxx fname\n";
+  cerr << "bindata [-d ###] [-D] [-c xxx] [-y yyy [-s sss]] [-l ###] [-u ###]\n";
+  cerr << "        [-b ###] [-w ###] [-n] [-S] [-e ###] [-E ###] [-z] [-f ###]\n";
+  cerr << "        [-k|-K [-U]] [-a xxx] [-m] [-p] [-o xxx] fname\n";
   cerr << '\n';
   cerr << "makes a frequency histogram from one column in data file <fname>.\n";
   cerr << "-c, -x: ### specifies x column (default is first column).\n";
@@ -646,6 +649,7 @@ void WriteUsage()
   cerr << "    x: minimum and maximum\n";
   cerr << "-k: add key to the output table\n";
   cerr << "-K: just print the key, don't process data\n";
+  cerr << "-U: don't print the line with the units in the key\n";
   cerr << "-a: value that is added to the table (either column number, column title\n";
   cerr << "    (takes the value from the last line), 'ident:value' (value can be a\n";
   cerr << "    number with an unit or a string), or 'l_ident' (take value of ident\n";
@@ -674,110 +678,135 @@ void readArgs( int argc, char *argv[], int &filec )
     WriteUsage();
   optind = 0;
   opterr = 0;
-  while ( (c = getopt( argc, argv, "d:c:x:y:s:o:l:u:b:w:nSe:E:zf:kKa:mDqp" )) >= 0 ) {
+  while ( (c = getopt( argc, argv, "d:c:x:y:s:o:l:u:b:w:nSe:E:zf:kKUa:mDqp" )) >= 0 ) {
     switch ( c ) {
-      case 'x':
-      case 'c': if ( optarg != NULL ) {
-	          if ( sscanf( optarg, "%d", &xcol ) == 0 )
-		    xcols = optarg;
-                  else 
-                    xcol--;
-                }
-                break;
-      case 'y': if ( optarg != NULL ) {
-	          if ( sscanf( optarg, "%d", &ycol ) == 0 )
-		    ycols = optarg;
-                  else 
-                    ycol--;
-                }
-                break;
-      case 's': if ( optarg != NULL ) {
-	          if ( sscanf( optarg, "%d", &scol ) == 0 )
-		    scols = optarg;
-                  else 
-                    scol--;
-                }
-                break;
-      case 'l': if ( optarg == NULL || sscanf( optarg, "%lf", &bmin ) == 0 )
-		  bmin = noval;
-                break;
-      case 'u': if ( optarg == NULL || sscanf( optarg, "%lf", &bmax ) == 0 )
-		  bmax = noval;
-                break;
-      case 'w': if ( optarg == NULL || sscanf( optarg, "%lf", &bsize ) == 0 )
-	          bsize = 0.0;
-                else
-		  nbins = 0;
-                break;
-      case 'b': if ( optarg == NULL || sscanf( optarg, "%d", &nbins ) == 0 )
-		  nbins = 10;
-                else
-                  bsize = 0;
-                break;
-      case 'n': norm = true;
-                break;
-      case 'S': skipemptybins = true;
-                break;
-      case 'e': if ( optarg != NULL ) {
-		  double v = 0.0;
-	          if ( sscanf( optarg, "%lf", &v ) > 0 )
-		    ymin = v;
-                }
-                break;
-      case 'E': if ( optarg != NULL ) {
-		  double v = 0.0;
-	          if ( sscanf( optarg, "%lf", &v ) > 0 )
-		    ymax = v;
-                }
-                break;
-      case 'z': ignorezero = true;
-                break;
-      case 'f': if ( optarg != NULL )
-	          outformat = optarg;
-    	        break;
-      case 'k': key = true;
-                break;
-      case 'K': keyonly = true;
-                break;
-      case 'a': if ( optarg != NULL ) {
-                  Str as = optarg;
-		  string aident = as.ident();
-		  Str val = as.value();
-		  if ( ! aident.empty() && ! val.empty() ) {
-		    double e = 0.0;
-		    string aunit = "";
-		    double aval = val.number( e, aunit, MAXDOUBLE );
-		    if ( aval == MAXDOUBLE ) {
-		      binkey.addText( aident );
-		      binkey.setText( aident, val );
-		    }
-		    else {
-		      binkey.addNumber( aident, aunit, "%7.5g" );
-		      binkey.setNumber( aident, aval );
-		    }
-		  }
-		  else {
-		    acols.push_back( as );
-		    acol.push_back( binkey.columns() );
-		    binkey.addNumber( as, "-", "%7.5g" );
-		  }
-		}
-                break;
-      case 'm': header = true;
-                break;
-      case 'd': if ( optarg == NULL ||
-		     sscanf( optarg, "%d", &stopempty ) == 0 ||
-		     stopempty < 1 )
-		  stopempty = 1;
-                break;
-      case 'D': dblankmode = true;
-                break;
-      case 'o': if ( optarg != NULL )
-		  binfile = optarg;
-                break;
-      case 'p': plotmode = true;
-                break;
-      default : WriteUsage();
+    case 'x':
+    case 'c':
+      if ( optarg != NULL ) {
+	if ( sscanf( optarg, "%d", &xcol ) == 0 )
+	  xcols = optarg;
+	else 
+	  xcol--;
+      }
+      break;
+    case 'y':
+      if ( optarg != NULL ) {
+	if ( sscanf( optarg, "%d", &ycol ) == 0 )
+	  ycols = optarg;
+	else 
+	  ycol--;
+      }
+      break;
+    case 's':
+      if ( optarg != NULL ) {
+	if ( sscanf( optarg, "%d", &scol ) == 0 )
+	  scols = optarg;
+	else 
+	  scol--;
+      }
+      break;
+    case 'l':
+      if ( optarg == NULL || sscanf( optarg, "%lf", &bmin ) == 0 )
+	bmin = noval;
+      break;
+    case 'u':
+      if ( optarg == NULL || sscanf( optarg, "%lf", &bmax ) == 0 )
+	bmax = noval;
+      break;
+    case 'w':
+      if ( optarg == NULL || sscanf( optarg, "%lf", &bsize ) == 0 )
+	bsize = 0.0;
+      else
+	nbins = 0;
+      break;
+    case 'b':
+      if ( optarg == NULL || sscanf( optarg, "%d", &nbins ) == 0 )
+	nbins = 10;
+      else
+	bsize = 0;
+      break;
+    case 'n':
+      norm = true;
+      break;
+    case 'S':
+      skipemptybins = true;
+      break;
+    case 'e':
+      if ( optarg != NULL ) {
+	double v = 0.0;
+	if ( sscanf( optarg, "%lf", &v ) > 0 )
+	  ymin = v;
+      }
+      break;
+    case 'E':
+      if ( optarg != NULL ) {
+	double v = 0.0;
+	if ( sscanf( optarg, "%lf", &v ) > 0 )
+	  ymax = v;
+      }
+      break;
+    case 'z':
+      ignorezero = true;
+      break;
+    case 'f':
+      if ( optarg != NULL )
+	outformat = optarg;
+      break;
+    case 'k':
+      key = true;
+      break;
+    case 'K':
+      keyonly = true;
+      break;
+    case 'U':
+      units = false;
+      break;
+    case 'a':
+      if ( optarg != NULL ) {
+	Str as = optarg;
+	string aident = as.ident();
+	Str val = as.value();
+	if ( ! aident.empty() && ! val.empty() ) {
+	  double e = 0.0;
+	  string aunit = "";
+	  double aval = val.number( e, aunit, MAXDOUBLE );
+	  if ( aval == MAXDOUBLE ) {
+	    binkey.addText( aident );
+	    binkey.setText( aident, val );
+	  }
+	  else {
+	    binkey.addNumber( aident, aunit, "%7.5g" );
+	    binkey.setNumber( aident, aval );
+	  }
+	}
+	else {
+	  acols.push_back( as );
+	  acol.push_back( binkey.columns() );
+	  binkey.addNumber( as, "-", "%7.5g" );
+	}
+      }
+      break;
+    case 'm':
+      header = true;
+      break;
+    case 'd':
+      if ( optarg == NULL ||
+	   sscanf( optarg, "%d", &stopempty ) == 0 ||
+	   stopempty < 1 )
+	stopempty = 1;
+      break;
+    case 'D':
+      dblankmode = true;
+      break;
+    case 'o':
+      if ( optarg != NULL )
+	binfile = optarg;
+      break;
+    case 'p':
+      plotmode = true;
+      break;
+    default :
+      WriteUsage();
     }
   }
   if ( optind < argc && argv[optind][0] == '?' )

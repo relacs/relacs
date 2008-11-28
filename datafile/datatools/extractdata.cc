@@ -39,6 +39,7 @@ int stopempty = 2;
 bool key = false;
 bool keyonly = false;
 bool numbercols = false;
+bool units = true;
 bool storemetadata = false;
 string destfile = "";
 TableKey destkey;
@@ -97,7 +98,7 @@ void readData( DataFile &sf )
 
     // save key:
     if ( key ) {
-      destkey.saveKey( cout, true, numbercols );
+      destkey.saveKey( cout, true, numbercols, units );
       key = false;
       if ( keyonly )
 	break;
@@ -117,7 +118,7 @@ void WriteUsage()
   cerr << '\n';
   cerr << "usage:\n";
   cerr << '\n';
-  cerr << "extractdata -d ### -a aaa -k -K -n -m -o xxx fname\n";
+  cerr << "extractdata [-d ###] [-a aaa] [-k|-K [-U] [-n]] [-m] [-o xxx] fname\n";
   cerr << '\n';
   cerr << "Extract values from the metadata in file <fname> and write them into a table.\n";
   cerr << "-a: value that is added to the table (either column number, column title\n";
@@ -126,6 +127,7 @@ void WriteUsage()
   cerr << "    in meta data level l, l can be ommited))\n";
   cerr << "-k: add key to the output table\n";
   cerr << "-K: just print the key, don't process data\n";
+  cerr << "-U: don't print the line with the units in the key\n";
   cerr << "-n: number columns of the key\n";
   cerr << "-m: store higher level meta data in output file\n";
   cerr << "-d: the number of empty lines that separate blocks of data.\n";
@@ -143,7 +145,7 @@ void readArgs( int argc, char *argv[], int &filec )
     WriteUsage();
   optind = 0;
   opterr = 0;
-  while ( (c = getopt( argc, argv, "d:a:o:kKnm" )) >= 0 ) {
+  while ( (c = getopt( argc, argv, "d:a:o:kKUnm" )) >= 0 ) {
     switch ( c ) {
     case 'a':
       if ( optarg != NULL ) {
@@ -182,6 +184,12 @@ void readArgs( int argc, char *argv[], int &filec )
       key = true;
       keyonly = true;
       break;
+    case 'n':
+      numbercols = true;
+      break;
+    case 'U':
+      units = false;
+      break;
     case 'd':
       if ( optarg == NULL ||
 	   sscanf( optarg, "%d", &stopempty ) == 0 ||
@@ -191,9 +199,6 @@ void readArgs( int argc, char *argv[], int &filec )
     case 'o':
       if ( optarg != NULL )
 	destfile = optarg;
-      break;
-    case 'n':
-      numbercols = true;
       break;
     case 'm':
       storemetadata = true;

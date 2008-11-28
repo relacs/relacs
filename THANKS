@@ -7,17 +7,17 @@ problems, suggesting various improvements or submitting actual
 code. Here is a list of these people. Help me keep it complete and
 exempt of errors.
 
-* Jan Benda <j.benda@biologie.hu-berlin.de>
+* Jan Benda <benda@bio.lmu.de>
 
-* Samuel Glauser <s.glauser@biologie.hu-berlin.de> for being a patient user
+* Samuel Glauser <s.glauser@freemails.ch> for being a patient user
 during the multi-thread test phase.
 
-* Marco Hackenberg <m.hackenberg@biologie.hu-berlin.de> for implementing
+* Marco Hackenberg <marco.ha@gmx.net> for implementing
 the comedi and real-time linux support needed for his Dynamic Clamp routines.
 
-* Christian Machens <machens@cshl.edu>
+* Christian Machens <christian.machens@ens.fr>
 
 * Sebastian Pipping <http://www.hartwork.org> for autoconfiscating relacs.
 
-* Hartmut Schuetze <h.schuetze@itb.biologie.hu-berlin.de> for many suggestions
+* Hartmut Schuetze <hartmut.schuetze@med.ovgu.de> for many suggestions
 and lots of enthusiam. And for the name "RELACS"! 

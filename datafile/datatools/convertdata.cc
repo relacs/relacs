@@ -34,13 +34,19 @@ using namespace relacs;
 
 int stopempty = 2;
 bool numbercols = false;
+bool units = true;
 bool bodyonly = false;
+int sectionlevel = -1;
 string format = "l";
 string destfile = "";
 
 
 void writeLaTeX( DataFile &sf )
 {
+  static const string latexsections[5] = 
+    { "\\section", "\\subsection", "\\subsubsection",
+      "\\paragraph", "\\subparagraph" };
+
   if ( ! bodyonly ) {
     cout << "\\documentclass{article}\n";
     cout << "\n";
@@ -57,7 +63,8 @@ void writeLaTeX( DataFile &sf )
     // write out new meta data:
     for ( int l=sf.levels()-1; l>=0; l-- ) {
       if ( sf.newMetaData( l ) ) {
-	cout << "\\begin{tabular}{ll}\n";
+	bool namevals = false;
+	bool para = false;
 	for ( int k=0; k<sf.metaData( l ).size(); k++ ) {
 	  Str ml = sf.metaData( l )[k];
 	  int p = ml.findFirstNot( "#" );
@@ -65,17 +72,42 @@ void writeLaTeX( DataFile &sf )
 	    ml.erase( 0, p );
 	  string ident = ml.ident().latex();
 	  string value = ml.value().latexUnit();
-	  if ( ident.empty() || value.empty() )
-	    cout << "  \\multicolumn{2}{l}{" << ml.latex() << "}\\\\\n";
-	  else
-	    cout << "  " << ident << " & " << value << " \\\\\n";
+	  if ( ident.empty() || value.empty() ) {
+	    if ( namevals ) {
+	      cout << "\\end{tabular}\n";
+	      namevals = false;
+	    }
+	    if ( sectionlevel >= 0 && k == 0 )
+	      cout << latexsections[sectionlevel+sf.levels()-l-1] << "{"
+		   << ml.latex() << "}\n";
+	    else {
+	      if ( ! para ) {
+		cout << '\n';
+		para = true;
+	      }
+	      cout << ml.latex() << '\n';
+	    }
+	  }
+	  else {
+	    if ( para ) {
+	      cout << '\n';
+	      para = false;
+	    }
+	    if ( ! namevals ) {
+	      cout << "\\begin{tabular}{ll}\n";
+	      namevals = true;
+	    }
+	    cout << "  " << ident << ": & " << value << " \\\\\n";
+	  }
 	}
-	cout << "\\end{tabular}\n\n";
+	if ( namevals )
+	  cout << "\\end{tabular}\n";
+	cout << '\n';
       }
     }
 
     // write out key:
-    sf.key().saveKeyLaTeX( cout, numbercols );
+    sf.key().saveKeyLaTeX( cout, numbercols, units );
 
     // write out data:
     int dcs = sf.dataComments().size();
@@ -154,12 +186,14 @@ void writeHTML( DataFile &sf )
   while ( sf.good() ) {
     sf.readMetaData();
 
-    cout << "    <p>\n";
+    cout << "    <div class=\"datablock\">\n";
 
     // write out new meta data:
     for ( int l=sf.levels()-1; l>=0; l-- ) {
       if ( sf.newMetaData( l ) ) {
-	cout << "      <table class=\"metadata\">\n";
+	cout << "      <div class=\"metalevel" << l+1 << "\">\n";
+	bool namevals = false;
+	bool para = false;
 	for ( int k=0; k<sf.metaData( l ).size(); k++ ) {
 	  Str ml = sf.metaData( l )[k];
 	  int p = ml.findFirstNot( "#" );
@@ -167,21 +201,49 @@ void writeHTML( DataFile &sf )
 	    ml.erase( 0, p );
 	  string ident = ml.ident().html();
 	  string value = ml.value().htmlUnit();
-	  cout << "        <tr>\n";
-	  if ( ident.empty() || value.empty() )
-	    cout << "          <td colspan=\"2\">" << ml.html() << "</td>\n";
-	  else {
-	    cout << "          <td>" << ident << "</td>\n";
-	    cout << "          <td>" << value << "</td>\n";
+	  if ( ident.empty() || value.empty() ) {
+	    if ( namevals ) {
+	      cout << "        </table>\n\n";
+	      namevals = false;
+	    }
+	    if ( sectionlevel >= 0 && k == 0 ) {
+	      int hlevel = sectionlevel+sf.levels()-l;
+	      cout << "        <h" << hlevel << ">"
+		   << ml.html() << "</h" << hlevel << ">\n";
+	    }
+	    else {
+	      if ( ! para ) {
+		cout << "        <p>\n";
+		para = true;
+	      }
+	      cout << "          " << ml.html() << '\n';
+	    }
 	  }
-	  cout << "        </tr>\n";
+	  else {
+	    if ( para ) {
+	      cout << "        </p>\n";
+	      para = false;
+	    }
+	    if ( ! namevals ) {
+	      cout << "        <table class=\"metadata\">\n";
+	      namevals = true;
+	    }
+	    cout << "          <tr>\n";
+	    cout << "            <td>" << ident << ":</td>\n";
+	    cout << "            <td>" << value << "</td>\n";
+	    cout << "          </tr>\n";
+	  }
 	}
-	cout << "      </table>\n\n";
+	if ( namevals )
+	  cout << "        </table>\n";
+	if ( para )
+	  cout << "        </p>\n";
+	cout << "      </div>\n";
       }
     }
 
     // write out key:
-    sf.key().saveKeyHTML( cout, numbercols );
+    sf.key().saveKeyHTML( cout, numbercols, units );
 
     // write out data:
     cout << "        <tbody class=\"data\">\n";
@@ -213,7 +275,7 @@ void writeHTML( DataFile &sf )
     } while ( sf.readDataLine( stopempty ) );
     cout << "        </tbody>\n";
     cout << "      </table>\n";
-    cout << "    </p>\n";
+    cout << "    </div>\n";
     cout << "\n";
 
   }
@@ -232,15 +294,19 @@ void WriteUsage()
   cerr << '\n';
   cerr << "usage:\n";
   cerr << '\n';
-  cerr << "convertdata [-d ###] [-n] [-f #] [-b] [-o xxx] <fname>\n";
+  cerr << "convertdata [-d ###] [-n] [-U] [-s[#]] [-f #] [-b] [-o xxx] <fname>\n";
   cerr << '\n';
   cerr << "Convert the data file <fname> into a different format.\n";
-  cerr << "-n: number columns of the key\n";
-  cerr << "-d: the number of empty lines that separate blocks of data (default: 2).\n";
   cerr << "-f: format of the converted data:\n";
   cerr << "    l - LaTeX\n";
   cerr << "    h - HTML\n";
   cerr << "-b: (body only) omit any headers and footers\n";
+  cerr << "-n: number columns of the key\n";
+  cerr << "-U: don't print the line with the units in the key\n";
+  cerr << "-s: make the first line of each meta-data block that is not\n";
+  cerr << "    a name-value pair a section title\n";
+  cerr << "    The section level can be increased by # (default 0), e.g. -s1.\n";
+  cerr << "-d: the number of empty lines that separate blocks of data (default: 2).\n";
   cerr << "-o: write converted data into file ### instead to standard out\n";
   cerr << '\n';
   exit( 1 );
@@ -255,7 +321,7 @@ void readArgs( int argc, char *argv[], int &filec )
     WriteUsage();
   optind = 0;
   opterr = 0;
-  while ( (c = getopt( argc, argv, "d:o:f:nb" )) >= 0 ) {
+  while ( (c = getopt( argc, argv, "d:o:f:s::nUb" )) >= 0 ) {
     switch ( c ) {
     case 'd':
       if ( optarg == NULL ||
@@ -269,6 +335,14 @@ void readArgs( int argc, char *argv[], int &filec )
       break;
     case 'n':
       numbercols = true;
+      break;
+    case 'U':
+      units = false;
+      break;
+    case 's':
+      if ( optarg == NULL ||
+	   sscanf( optarg, "%d", &sectionlevel ) == 0 )
+	sectionlevel = 0;
       break;
     case 'b':
       bodyonly = true;
