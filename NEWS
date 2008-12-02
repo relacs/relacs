@@ -1,3 +1,5 @@
+Version 0.9.6
+
 December, 2008
   Working interface to the comedi library supporting many
   data acquisition boards.

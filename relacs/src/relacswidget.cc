@@ -129,7 +129,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   addNumber( "outputtracedelay", "Signal delay", 0.0, 0.0, 10.0, 0.00001, "s", "ms" );
 
   // main widget:
-  setCaption( "RELACS - Realtime ELectrophysiological data Acquisition, Control, and Stimulation: Version " + QString( RELACSVERSION ) );
+  setCaption( "RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation: Version " + QString( RELACSVERSION ) );
   MainWidget = new QWidget( this );
   QGridLayout *mainlayout = new QGridLayout( MainWidget, 2, 2, 5, 5, "RELACSWidget::MainLayout" );
   setCentralWidget( MainWidget );
