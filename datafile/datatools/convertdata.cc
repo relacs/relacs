@@ -37,6 +37,7 @@ bool numbercols = false;
 bool units = true;
 bool bodyonly = false;
 int sectionlevel = -1;
+string imagetag = "";
 string format = "l";
 string destfile = "";
 
@@ -51,6 +52,7 @@ void writeLaTeX( DataFile &sf )
     cout << "\\documentclass{article}\n";
     cout << "\n";
     cout << "\\usepackage[margin=15mm,noheadfoot]{geometry}\n";
+    cout << "\\usepackage{graphics}\n";
     cout << "\n";
     cout << "\\begin{document}\n";
     cout << "\n";
@@ -93,11 +95,20 @@ void writeLaTeX( DataFile &sf )
 	      cout << '\n';
 	      para = false;
 	    }
-	    if ( ! namevals ) {
-	      cout << "\\begin{tabular}{ll}\n";
-	      namevals = true;
+	    if ( ! imagetag.empty() && ident == imagetag ) {
+	      if ( namevals ) {
+		cout << "\\end{tabular}\n";
+		namevals = false;
+	      }
+	      cout << "\\includegraphics{" << value << "}\n";
 	    }
-	    cout << "  " << ident << ": & " << value << " \\\\\n";
+	    else {
+	      if ( ! namevals ) {
+		cout << "\\begin{tabular}{ll}\n";
+		namevals = true;
+	      }
+	      cout << "  " << ident << ": & " << value << " \\\\\n";
+	    }
 	  }
 	}
 	if ( namevals )
@@ -159,6 +170,10 @@ void writeHTML( DataFile &sf )
     cout << "    <meta http-equiv=\"Content-Type\" content=\"text/html;charset=utf-8\" >\n";
     cout << "    <style type=\"text/css\">\n";
     cout << "    <!--\n";
+    cout << "    .metaimage {\n";
+    cout << "      padding-top: 5px;\n";
+    cout << "      padding-bottom: 5px;\n";
+    cout << "    }\n";
     cout << "    table.data {\n";
     cout << "      border-top: 1px solid black;\n";
     cout << "      border-bottom: 1px solid black;\n";
@@ -224,14 +239,25 @@ void writeHTML( DataFile &sf )
 	      cout << "        </p>\n";
 	      para = false;
 	    }
-	    if ( ! namevals ) {
-	      cout << "        <table class=\"metadata\">\n";
-	      namevals = true;
+	    if ( ! imagetag.empty() && ident == imagetag ) {
+	      if ( namevals ) {
+		cout << "        </table>\n";
+		namevals = false;
+	      }
+	      cout << "        <div class=\"metaimage\">\n";
+	      cout << "          <img src=\"" << value << ".png\" alt=\"" << value << "\">\n";
+	      cout << "        </div>\n";
 	    }
-	    cout << "          <tr>\n";
-	    cout << "            <td>" << ident << ":</td>\n";
-	    cout << "            <td>" << value << "</td>\n";
-	    cout << "          </tr>\n";
+	    else {
+	      if ( ! namevals ) {
+		cout << "        <table class=\"metadata\">\n";
+		namevals = true;
+	      }
+	      cout << "          <tr>\n";
+	      cout << "            <td>" << ident << ":</td>\n";
+	      cout << "            <td>" << value << "</td>\n";
+	      cout << "          </tr>\n";
+	    }
 	  }
 	}
 	if ( namevals )
@@ -294,7 +320,7 @@ void WriteUsage()
   cerr << '\n';
   cerr << "usage:\n";
   cerr << '\n';
-  cerr << "convertdata [-d ###] [-n] [-U] [-s[#]] [-f #] [-b] [-o xxx] <fname>\n";
+  cerr << "convertdata [-d ###] [-n] [-U] [-s[#]] [-i[#]] [-f #] [-b] [-o xxx] <fname>\n";
   cerr << '\n';
   cerr << "Convert the data file <fname> into a different format.\n";
   cerr << "-f: format of the converted data:\n";
@@ -306,6 +332,7 @@ void WriteUsage()
   cerr << "-s: make the first line of each meta-data block that is not\n";
   cerr << "    a name-value pair a section title\n";
   cerr << "    The section level can be increased by # (default 0), e.g. -s1.\n";
+  cerr << "-i: interpret #  in meta data as image files (default \"image\")\n";
   cerr << "-d: the number of empty lines that separate blocks of data (default: 2).\n";
   cerr << "-o: write converted data into file ### instead to standard out\n";
   cerr << '\n';
@@ -321,7 +348,7 @@ void readArgs( int argc, char *argv[], int &filec )
     WriteUsage();
   optind = 0;
   opterr = 0;
-  while ( (c = getopt( argc, argv, "d:o:f:s::nUb" )) >= 0 ) {
+  while ( (c = getopt( argc, argv, "d:o:f:s::i::nUb" )) >= 0 ) {
     switch ( c ) {
     case 'd':
       if ( optarg == NULL ||
@@ -343,6 +370,12 @@ void readArgs( int argc, char *argv[], int &filec )
       if ( optarg == NULL ||
 	   sscanf( optarg, "%d", &sectionlevel ) == 0 )
 	sectionlevel = 0;
+      break;
+    case 'i':
+      if ( optarg == NULL )
+	imagetag = "image";
+      else
+	imagetag = optarg;
       break;
     case 'b':
       bodyonly = true;

@@ -86,10 +86,18 @@ void readData( const Str &datafile, const string &plotcommandfile,
   //  OpenDataPipes( 1 );
 
   // read in plot commands:
-  ifstream pcf( plotcommandfile.c_str() );
-  if ( ! pcf.good() ) {
-    cerr << "can't open '" << plotcommandfile << "'\n";
-    exit( 1 );
+  ifstream pcf;
+  if ( plotcommandfile == "-" ) {
+    streambuf *sb = cin.rdbuf();
+    pcf.istream::rdbuf( sb );
+    pcf.istream::clear( cin.rdstate() );
+  }
+  else {
+    pcf.open( plotcommandfile.c_str() );
+    if ( ! pcf.good() ) {
+      cerr << "can't open file '" << plotcommandfile << "' for reading plot commands\n";
+      exit( 1 );
+    }
   }
   StrQueue plotcommands;
   plotcommands.load( pcf );
@@ -100,7 +108,8 @@ void readData( const Str &datafile, const string &plotcommandfile,
   if ( !header.empty() ) {
     ifstream phf( header.c_str() );
     if ( ! phf.good() ) {
-      cerr << "can't open '" << header << "'\n";
+      cerr << "can't open file '" << header << "' for reading the header\n";
+      exit( 1 );
     }
     plotheader.load( phf );
     phf.close();
@@ -108,10 +117,14 @@ void readData( const Str &datafile, const string &plotcommandfile,
 
   // open data file:
   DataFile sf;
-  sf.open( datafile );
-  if ( !sf.good() ) {
-    cerr << "can't open '" + datafile + "'\n";
-    return;
+  if ( datafile == "-" )
+    sf.open( cin );
+  else {
+    sf.open( datafile );
+    if ( !sf.good() ) {
+      cerr << "can't open file '" + datafile + "' for reading data\n";
+      exit( 1 );
+    }
   }
 
   FILE *TF = view ? stdout : plt;
@@ -282,6 +295,7 @@ void writeUsage()
   cerr << '\n';
   cerr << "Plot the data contained in <datafile>\n";
   cerr << "using <cmdfile> into <plotfile>\n";
+  cerr << "Either <cmdfile> or <datafile> can be '-' for reading from standard input.\n";
   cerr << "<cmdfile> contains gnuplot commands and can access metadata (see below).\n";
   cerr << '\n';
   cerr << "  -a: plot all pages at once. Exits after first set of data.\n";

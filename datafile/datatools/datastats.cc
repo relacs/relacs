@@ -57,6 +57,7 @@ bool key = false;
 bool keyonly = false;
 bool numbercols = false;
 bool units = true;
+bool verbose = false;
 bool dblankmode = false;
 bool datamode = true;
 string statsfile = "";
@@ -104,13 +105,18 @@ void analyseData( ArrayD &data, ArrayD &sig, int page, TableKey &statskey )
     int sn = 0;
     double p = 0.0;
     int tail = 0;
-    if ( outformat.contains( "S+" ) )
+    string tails = "";
+    if ( outformat.contains( "S+" ) ) {
       tail = 1;
-    else if ( outformat.contains( "S-" ) )
+      tails = " +";
+    }
+    else if ( outformat.contains( "S-" ) ) {
       tail = -1;
+      tails = " -";
+    }
     signTest( data, threshold, tail, sn, p );
-    statskey.setNumber( "Sign-Test>n", sn );
-    statskey.setNumber( "Sign-Test>p", p );
+    statskey.setNumber( "Sign-Test" + tails + ">n", sn );
+    statskey.setNumber( "Sign-Test" + tails + ">p", p );
   }
 
   sort( data.begin(), data.end() );
@@ -291,14 +297,19 @@ void analyseCor( ArrayD &xdata, ArrayD &ydata, ArrayD &sig, int page, TableKey &
     double z = (R1 - n1 * (n1 + n2 + 1.0) / 2.0) / ::sqrt (n1 * n2 * (n1 + n2 + 1.0) / 12.0);
     double cdf = 0.5 * (1.0 + ::erf( z / ::sqrt( 2.0 ) ) );
     double p = 0.0;
-    if ( outformat.contains( "U+" ) )
+    string tails = "";
+    if ( outformat.contains( "U+" ) ) {
       p = cdf;
-    else if ( outformat.contains( "U-" ) )
+      tails = " +";
+    }
+    else if ( outformat.contains( "U-" ) ) {
       p = 1.0 - cdf;
+      tails = " -";
+    }
     else
       p = 2.0 * std::min( cdf, 1.0 - cdf );
-    statskey.setNumber( "Mann-Whitney U-Test>U", U );
-    statskey.setNumber( "Mann-Whitney U-Test>p", p );
+    statskey.setNumber( "Mann-Whitney U-Test" + tails + ">U", U );
+    statskey.setNumber( "Mann-Whitney U-Test" + tails + ">p", p );
   }
 
   // Wilcoxon-Test:
@@ -306,13 +317,18 @@ void analyseCor( ArrayD &xdata, ArrayD &ydata, ArrayD &sig, int page, TableKey &
     double W = 0.0;
     double p = 0.0;
     int tail = 0;
-    if ( outformat.contains( "W+" ) )
+    string tails = "";
+    if ( outformat.contains( "W+" ) ) {
       tail = 1;
-    else if ( outformat.contains( "W-" ) )
+      tails = " +";
+    }
+    else if ( outformat.contains( "W-" ) ) {
       tail = -1;
+      tails = " -";
+    }
     wilcoxonTest( xdata, ydata, tail, W, p );
-    statskey.setNumber( "Wilcoxon-Test>W", W );
-    statskey.setNumber( "Wilcoxon-Test>p", p );
+    statskey.setNumber( "Wilcoxon-Test" + tails + ">W", W );
+    statskey.setNumber( "Wilcoxon-Test" + tails + ">p", p );
   }
 
   // F-Test:
@@ -400,19 +416,29 @@ void extractUnits( const DataFile &sf, string &xunit, string &yunit )
     for ( unsigned int k=0; k<xcols.size(); k++ ) {
       if ( !xcols[k].empty() ) {
 	int c = sf.column( xcols[k] );
-	if ( c >= 0 )
+	if ( c >= 0 ) {
 	  xcol[k] = c;
+	  if ( verbose )
+	    cerr << "found x[" << k << "] column \"" << xcols[k]
+		 << ": " << xcol[k] << '\n';
+	}
       }
     }
     if ( !ycols.empty() ) {
       int c = sf.column( ycols );
-      if ( c >= 0 )
+      if ( c >= 0 ) {
 	ycol = c;
+	if ( verbose )
+	  cerr << "found y column \"" << ycols << ": " << ycol << '\n';
+      }
     }
     if ( !scols.empty() ) {
       int c = sf.column( scols );
-      if ( c >= 0 )
+      if ( c >= 0 ) {
 	scol = c;
+	if ( verbose )
+	  cerr << "found s column \"" << scols << ": " << scol << '\n';
+      }
     }
     // set units:
     xunit = sf.key().unit( xcol[0] );
@@ -458,8 +484,12 @@ void extractMetaData( const DataFile &sf, vector<Str> &acols,
 	if ( amode[k] <= 1 ) {
 	  if ( amode[k] == 1 ) {
 	    int c = sf.column( acols[k] );
-	    if ( c >= 0 )
+	    if ( c >= 0 ) {
 	      acol[k] = c;
+	      if ( verbose )
+		cerr << "found a[" << k << "] column \"" << acols[k]
+		     << ": " << acol[k] << '\n';
+	    }
 	  }
 	  string ts = sf.key().ident( acol[k] );
 	  if ( !ts.empty() )
@@ -597,7 +627,12 @@ void readData( DataFile &sf )
 	statskey.addNumber( "p", "1", "%7.5f" );
 	break;
       case 'S':
-	statskey.addLabel( "Sign-Test" );
+	if ( outformat[k+1] == '+' )
+	  statskey.addLabel( "Sign-Test +" );
+	else if ( outformat[k+1] == '-' )
+	  statskey.addLabel( "Sign-Test -" );
+	else
+	  statskey.addLabel( "Sign-Test" );
 	statskey.addNumber( "n", "1", "%6.0f" );
 	statskey.addNumber( "p", "1", "%7.5f" );
 	break;
@@ -686,12 +721,22 @@ void readData( DataFile &sf )
 	statskey.addNumber( "p", "1", "%7.5f" );
 	break;
       case 'U':
-	statskey.addLabel( "Mann-Whitney U-Test" );
+	if ( outformat[k+1] == '+' )
+	  statskey.addLabel( "Mann-Whitney U-Test +" );
+	else if ( outformat[k+1] == '-' )
+	  statskey.addLabel( "Mann-Whitney U-Test -" );
+	else
+	  statskey.addLabel( "Mann-Whitney U-Test" );
 	statskey.addNumber( "U", "1", "%7.1f" );
 	statskey.addNumber( "p", "1", "%7.5f" );
 	break;
       case 'W':
-	statskey.addLabel( "Wilcoxon-Test" );
+	if ( outformat[k+1] == '+' )
+	  statskey.addLabel( "Wilcoxon-Test +" );
+	else if ( outformat[k+1] == '-' )
+	  statskey.addLabel( "Wilcoxon-Test -" );
+	else
+	  statskey.addLabel( "Wilcoxon-Test" );
 	statskey.addNumber( "W", "1", "%7.1f" );
 	statskey.addNumber( "p", "1", "%7.5f" );
 	break;
@@ -861,7 +906,7 @@ void WriteUsage()
   cerr << "usage:\n";
   cerr << '\n';
   cerr << "datastats -d ### -D -c ### [-y ###] [-s ###] [-e ###] [-E ###] [-z] [-m ###]\n";
-  cerr << "          [-a aaa] [-q] [-f ###] [-t ###] [[-k|-K] [-U] [-n]] [-o xxx] fname\n";
+  cerr << "          [-a aaa] [-q] [-f ###] [-t ###] [[-k|-K] [-U] [-n]] [-v] [-o xxx] fname\n";
   cerr << '\n';
   cerr << "basic statistics of one column in data file <fname>.\n";
   cerr << "-c: ### specifies column (default is first column).\n";
@@ -925,6 +970,7 @@ void WriteUsage()
   cerr << "-n: number columns of the key\n";
   cerr << "-d: the number of empty lines that separate blocks of data.\n";
   cerr << "-D: more than one space between data columns required.\n";
+  cerr << "-v: (verbose) print out number of data columns to stderr.\n";
   cerr << "-o: write results into file ### instead to standard out\n";
   cerr << '\n';
   exit( 1 );
@@ -940,7 +986,7 @@ void readArgs( int argc, char *argv[], int &filec )
   optind = 0;
   opterr = 0;
   bool alabel = false;
-  while ( (c = getopt( argc, argv, "d:c:x:y:s:e:E:zm:a:o:f:t:kKDqnU" )) >= 0 ) {
+  while ( (c = getopt( argc, argv, "d:c:x:y:s:e:E:zm:a:o:f:t:kKDqnUv" )) >= 0 ) {
     switch ( c ) {
     case 'x':
     case 'c':
@@ -1061,6 +1107,9 @@ void readArgs( int argc, char *argv[], int &filec )
       break;
     case 'q':
       datamode = false;
+      break;
+    case 'v':
+      verbose = true;
       break;
     default : WriteUsage();
     }

@@ -35,7 +35,7 @@ namespace base {
 
 The Pause-RePro does not write any stimulus
 and terminates after \c repeats times \c duration ms.
-With the \c savedata option you can switch off saving og the raw data
+With the \c savedata option you can switch off saving of the raw data
 recorded during Pause.
 
 \par Options
