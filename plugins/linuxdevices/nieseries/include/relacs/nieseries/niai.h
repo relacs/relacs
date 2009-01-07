@@ -99,6 +99,9 @@ public:
         for each input channel in \a traces. */
   virtual int testReadDevice( InList &traces );
 
+    /*! Convert \a n data values from the daq board \a buffer and push them into \a traces. */
+  void convert( InList &traces, signed short *buffer, int n );
+
   
  private:
 
@@ -115,6 +118,10 @@ public:
     /*! maximum number of analog input ranges. */
   int MaxRanges;
 
+    /*! Size of the internal buffer used for getting the data from the driver. */
+  int BufferSize;
+    /*! Index to the trace in the internal buffer. */
+  int TraceIndex;
 
 };
 

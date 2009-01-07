@@ -32,8 +32,6 @@ const string InData::RefStr[4] =
   { "differential", "common", "ground", "other" };
 int InData::DefaultDevice = 0;
 
-const string InData::DataTypeIds[10] =
-  { "sb", "ub", "sw", "uw", "sd", "ud", "sq", "uq", "f", "d" };
 
 InData::InData( void )
   : CyclicArrayF()
@@ -78,14 +76,6 @@ InData::InData( const InData &data )
   MaxValue = data.MaxValue;
   Mode = data.Mode;
   Source = data.Source;
-  DeviceBuffer = NULL;
-  DeviceBufferCapacity = 0;
-  DeviceBufferStart = 0;
-  DeviceDataSize = 2;
-  DeviceDataType = SignedWord;
-  DeviceBufferSize = 0;
-  DeviceBufferConvert = 0;
-  DeviceTraceIndex = 0;
 }
 
 
@@ -119,14 +109,6 @@ void InData::construct( void )
   MinValue = -1.0;
   MaxValue = +1.0;
   Source = 0;
-  DeviceBuffer = NULL;
-  DeviceBufferCapacity = 0;
-  DeviceBufferStart = 0;
-  DeviceDataSize = 2;
-  DeviceDataType = SignedWord;
-  DeviceBufferSize = 0;
-  DeviceBufferConvert = 0;
-  DeviceTraceIndex = 0;
 }
 
 
@@ -159,13 +141,6 @@ const InData &InData::operator=( const InData &data )
   MinValue = data.MinValue;
   MaxValue = data.MaxValue;
   Source = data.Source;
-  DeviceBuffer = NULL;
-  DeviceBufferCapacity = 0;
-  DeviceBufferStart = 0;
-  DeviceDataSize = 2;
-  DeviceBufferSize = 0;
-  DeviceBufferConvert = 0;
-  DeviceTraceIndex = 0;
 
   return *this;
 }
@@ -943,63 +918,7 @@ ostream &operator<<( ostream &str, const InData &id )
   str << "MinValue: " << id.MinValue << '\n';
   str << "MaxValue: " << id.MaxValue << '\n';
   str << "Mode: " << id.Mode << '\n';
-  str << "DeviceBuffer: " << id.DeviceBuffer << '\n';
-  str << "DeviceBufferCapacity: " << id.DeviceBufferCapacity << '\n';
-  str << "DeviceBufferStart: " << id.DeviceBufferStart << '\n';
-  str << "DeviceDataSize: " << id.DeviceDataSize << '\n';
-  str << "DeviceBufferSize: " << id.DeviceBufferSize << '\n';
-  str << "DeviceBufferConvert: " << id.DeviceBufferConvert << '\n';
-  str << "DeviceTraceIndex: " << id.DeviceTraceIndex << '\n';
   return str;
-}
-
-
-void InData::reserveDeviceBuffer( int nbuffer, int dsize )
-{
-  if ( DeviceBuffer != NULL )
-    delete [] DeviceBuffer;
-  DeviceBuffer = NULL;
-  DeviceBufferCapacity = 0;
-  if ( nbuffer > 0 && dsize > 0 ) {
-    DeviceDataSize = dsize;
-    DeviceBufferCapacity = nbuffer;
-    DeviceBuffer = new char [ nbuffer*dsize ];
-  }
-  DeviceBufferSize = 0;
-  DeviceBufferConvert = 0;
-  DeviceTraceIndex = 0;
-  DeviceBufferStart = size();
-}
-
-
-void InData::freeDeviceBuffer( void )
-{
-  if ( DeviceBuffer != NULL )
-    delete [] DeviceBuffer;
-  DeviceBuffer = NULL;
-  DeviceBufferCapacity = 0;
-  DeviceBufferSize = 0;
-  DeviceBufferConvert = 0;
-  DeviceTraceIndex = 0;
-}
-
-
-int InData::resizeDeviceBuffer( int ndata )
-{
-  int n = DeviceBufferSize - ndata;
-  DeviceBufferSize = ndata;
-  if ( DeviceBufferConvert > DeviceBufferSize )
-    DeviceBufferConvert = DeviceBufferSize;
-  DeviceTraceIndex = 0;
-  return n;
-}
-
-
-void InData::clearDeviceBuffer( void )
-{
-  DeviceBufferSize = 0;
-  DeviceBufferConvert = 0;
-  DeviceBufferStart = size();
 }
 
 

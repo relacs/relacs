@@ -560,89 +560,6 @@ class InData : public CyclicArray<float>, public DaqError
     /*! Write the internal variables to \a str. */
   friend ostream &operator<<( ostream &str, const InData &id );
 
-    /*! Possible data types for the device dependent buffer. */
-  enum DataTypes {
-    SignedByte=0, UnsingedByte,
-    SignedWord, UnsingedWord,
-    SignedDoubleWord, UnsingedDoubleWord,
-    SignedQuadWord, UnsingedQuadWord,
-    Float, Double
-  };
-
-    /*! Pointer to the internal buffer that holds the data in a 
-        device dependent multiplexed format.
-        \sa deviceBufferSize(), deviceBufferCapacity() */
-  inline char *deviceBuffer( void ) const { return DeviceBuffer; };
-    /*! The capacity of the buffer, i.e. the maximum number of data elements
-        the buffer can hold. 
-	\sa deviceBufferSize(), deviceBuffer() */
-  inline int deviceBufferCapacity( void ) const { return DeviceBufferCapacity; };
-    /*! The size of the buffer, i.e. the number of data elements
-        the bufer currently contains. 
-	\sa deviceBufferPush(), deviceBufferCapacity(), deviceBuffer() */
-  inline int deviceBufferSize( void ) const { return DeviceBufferSize; };
-    /*! Pointer to the end of the internal buffer that holds the data in a 
-        device dependent multiplexed format.
-	Use this pointer to add more data to the buffer.
-        \sa deviceBufferMaxPush(), deviceBufferPush() */
-  inline char *deviceBufferPushBuffer( void ) const
-    { return DeviceBuffer + DeviceBufferSize*DeviceDataSize; };
-    /*! The number of data elements that still can be pushed into the buffer,
-        i.e. deviceBufferCapacity() - deviceBufferSize().
-        \sa deviceBufferPushBuffer(), deviceBufferPush(), deviceBuffer() */
-  inline int deviceBufferMaxPush( void ) const
-    { return DeviceBufferCapacity - DeviceBufferSize; };
-    /*! Increment the size of the buffer by \a n data elements. 
-        \sa deviceBufferSize(), deviceBuffer() */
-  inline void deviceBufferPush( int n ) { DeviceBufferSize += n; };
-    /*! The size of a single data element of the buffer in Bytes.
-        \sa deviceDataType(), deviceBufferSize() */
-  inline int deviceDataSize( void ) const { return DeviceDataSize; };
-    /*! The type of a single data element of the buffer.
-        \sa deviceDataSize() */
-  inline DataTypes deviceDataType( void ) const { return DeviceDataType; };
-    /*! The type of a single data element of the buffer as a string.
-        \sa deviceDataSize() */
-  inline string deviceDataTypeId( void ) const { return DataTypeIds[DeviceDataType]; };
-    /*! Set the type of a single data element of the buffer.
-        \sa deviceDataType() */
-  inline void setDeviceDataType( DataTypes dt ) { DeviceDataType = dt; };
-    /*! The index of the first element of the device depend buffer
-        relative to the cyclic buffer. */
-  inline int deviceBufferStart( void ) { return DeviceBufferStart; };
-    /*! The index to the buffer indicating where to continue to convert data.
-        \sa deviceBufferTrace() */
-  inline int deviceBufferConvert( void ) const { return DeviceBufferConvert; };
-    /*! The index to the buffer indicating where to continue to convert data.
-        \sa deviceBufferTrace() */
-  inline int &deviceBufferConvert( void ) { return DeviceBufferConvert; };
-    /*! The current trace to be converted of the device dependent buffer.
-        \sa deviceBufferConvert() */
-  inline int deviceBufferTrace( void ) const { return DeviceTraceIndex; };
-    /*! The current trace to be converted of the device dependent buffer.
-        \sa deviceBufferConvert() */
-  inline int &deviceBufferTrace( void ) { return DeviceTraceIndex; };
-    /*! Allocate \a nbuffer time \a dsize Bytes of memory for the internal 
-        device dependent buffer.
-	\a dsize is the size in Bytes of a single data element as obtained
-	from the daq board.
-        If there is already a buffer it is freed before. 
-        \sa freeDeviceBuffer(), deviceBuffer(), deviceBufferSize() */
-  void reserveDeviceBuffer( int nbuffer, int dsize );
-    /*! Free the internal buffer that holds the data in a device dependent
-        multiplexed format. 
-        \sa reserveDeviceBuffer() */
-  void freeDeviceBuffer( void );
-    /*! Resize the device buffer such that it contains \a ndata data elements
-        and sets deviceBufferTrace() to zero.
-	Returns the number of data elements that were removed from the buffer.
-        \sa freeDeviceBuffer(), deviceBuffer(), deviceBufferSize() */
-  int resizeDeviceBuffer( int ndata );
-    /*! Clear the internal buffer that holds the data in a device dependent
-        multiplexed format. 
-        \sa freeDeviceBuffer() */
-  void clearDeviceBuffer( void );
-
 
  private:
 
@@ -702,26 +619,6 @@ class InData : public CyclicArray<float>, public DaqError
   int Mode;
     /*! The source of the data: 0: acquisition, 1: InData, 2: events. */
   int Source;
-
-    /*! Shortcut string corresponding to the DataType enum. */
-  static const string DataTypeIds[10];
-    /*! The buffer holding device dependent multiplexed data. */
-  char *DeviceBuffer;
-    /*! The capacity of the device dependent buffer in Bytes. */
-  int DeviceBufferCapacity;
-    /*! Index of the first element of the device dependent buffer
-        relative to cyclic buffer. */
-  int DeviceBufferStart;
-    /*! Size in Bytes of a single data element of the device dependent buffer. */
-  int DeviceDataSize;
-    /*! The data type of a single data element of the device dependent buffer. */
-  DataTypes DeviceDataType;
-    /*! Index to buffer element indicating its current size. */
-  int DeviceBufferSize;
-    /*! Index to buffer indicating where to start converting data. */
-  int DeviceBufferConvert;
-    /*! Index to trace used for demultiplexing the data. */
-  int DeviceTraceIndex;
 
 };
 

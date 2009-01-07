@@ -169,6 +169,10 @@ protected:
     /*! Execute the command that was prepared by prepareRead(). */
   int executeCommand( void );
 
+    /*! Convert \a n data values from the daq board \a buffer and push them into \a traces. */
+  template< typename T >
+    void convert( InList &traces, char *buffer, int n );
+
     /*! Returns the pointer to the comedi device file.
         \sa subdevice() */
   comedi_t* comediDevice( void ) const;
@@ -221,6 +225,11 @@ private:
   bool IsPrepared;
 
   int ErrorState;
+
+    /*! Size of the internal buffer used for getting the data from the driver. */
+  int BufferSize;
+    /*! Index to the trace in the internal buffer. */
+  int TraceIndex;
 
 };
 

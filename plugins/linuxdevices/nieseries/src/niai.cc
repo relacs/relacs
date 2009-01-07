@@ -38,6 +38,8 @@ NIAI::NIAI( void )
   : AnalogInput( "NI E-Series Analog Input", NIAnalogIOType ),
     Handle( -1 )
 {
+  BufferSize = 0;
+  TraceIndex = 0;
 }
 
 
@@ -45,6 +47,8 @@ NIAI::NIAI( const string &device, long mode )
   : AnalogInput( "NI E-Series Analog Input", NIAnalogIOType ),
     Handle( -1 )
 {
+  BufferSize = 0;
+  TraceIndex = 0;
   open( device, mode );
 }
 
@@ -335,22 +339,10 @@ int NIAI::prepareRead( InList &traces )
       traces.addErrorStr( ern );
   }
 
-  // don't free the buffer!
-  // setup the buffer:
-  if ( traces[0].deviceBuffer() == NULL ) {
-    // size of buffer:
-    traces[0].reserveDeviceBuffer( traces.size() * traces[0].indices( traces[0].updateTime() ),
-				   sizeof( signed short ) );
-    if ( traces[0].deviceBuffer() == NULL )
-      traces[0].reserveDeviceBuffer( traces.size() * traces[0].capacity(),
-				     sizeof( signed short ) );
-    traces[0].setDeviceDataType( InData::SignedWord );
-  }
-  // buffer overflow:
-  if ( traces[0].deviceBufferSize() >= traces[0].deviceBufferCapacity() ) {
-    traces.addError( DaqError::BufferOverflow );
-    return -1;
-  }
+  // get buffer size:
+  BufferSize = traces.size() * traces[0].indices( traces[0].updateTime() );
+  if ( BufferSize <= 0 )
+    traces.addError( DaqError::InvalidUpdateTime );
 
   if ( traces.success() )
     setSettings( traces );
@@ -362,8 +354,8 @@ int NIAI::prepareRead( InList &traces )
 int NIAI::startRead( InList &traces )
 {
   // start analog input:
-  int bufsize = traces.size()*sizeof( signed short )*traces[0].indices( traces[0].updateTime() );
-  long n = ::read( Handle, traces[0].deviceBuffer(), bufsize );
+  signed short *buffer[2024];
+  long n = ::read( Handle, buffer, BufferSize );
   int ern = errno;
   if ( n < 0 && ern != EAGAIN ) {
     traces.addErrorStr( ern );
@@ -377,22 +369,63 @@ int NIAI::startRead( InList &traces )
 }
 
 
-int NIAI::readData( InList &traces )
+void NIAI::convert( InList &traces, signed short *buffer, int n )
 {
-  // buffer overflow:
-  if ( traces[0].deviceBufferSize() >= traces[0].deviceBufferCapacity() ) {
-    traces.addError( DaqError::BufferOverflow );
-    return -1;
+  // scale factors and offsets:
+  double scale[traces.size()];
+  double offs[traces.size()];
+  for ( int k=0; k<traces.size(); k++ ) {
+    scale[k] = traces[k].gain() * traces[k].scale();
+    offs[k] = traces[k].offset() * traces[k].scale();
   }
 
-  bool failed = false;
+  // trace buffer pointers and sizes:
+  float *bp[traces.size()];
+  int bm[traces.size()];
+  int bn[traces.size()];
+  for ( int k=0; k<traces.size(); k++ ) {
+    bp[k] = traces[k].pushBuffer();
+    bm[k] = traces[k].maxPush();
+    bn[k] = 0;
+  }
 
-  int n = 0;
+  // pointer for device buffer:
+  signed short *db = buffer;
+
+  for ( int k=0; k<n; k++ ) {
+    // convert:
+    *bp[TraceIndex] = offs[TraceIndex] +
+      scale[TraceIndex] * db[k];
+    // update pointers:
+    bp[TraceIndex]++;
+    bn[TraceIndex]++;
+    if ( bn[TraceIndex] >= bm[TraceIndex] ) {
+      traces[TraceIndex].push( bn[TraceIndex] );
+      bp[TraceIndex] = traces[TraceIndex].pushBuffer();
+      bm[TraceIndex] = traces[TraceIndex].maxPush();
+      bn[TraceIndex] = 0;
+    }
+    // next trace:
+    TraceIndex++;
+    if ( TraceIndex >= traces.size() )
+      TraceIndex = 0;
+  }
+
+  // commit:
+  for ( int c=0; c<traces.size(); c++ )
+    traces[c].push( bn[c] );
+}
+
+
+int NIAI::readData( InList &traces )
+{
+  bool failed = false;
+  signed short buffer[BufferSize];
+  int maxn = BufferSize;
+  int readn = 0;
 
   // try to read twice:
-  for ( int r=0;
-	r<2 && ! failed && traces[0].deviceBufferMaxPush() > 0;
-	r++ ) {
+  for ( int tryit=0; tryit<2 && ! failed && maxn > 0; tryit++ ) {
 
     // data present?
     long nd = 0;
@@ -401,23 +434,24 @@ int NIAI::readData( InList &traces )
       break;
 
     // read data:
-    long m = ::read( Handle, traces[0].deviceBufferPushBuffer(),
-		     traces[0].deviceBufferMaxPush()*sizeof( signed short ) );
+    long m = ::read( Handle, buffer + readn, maxn*sizeof( signed short ) );
+
     int ern = errno;
     if ( m < 0 && ern != EAGAIN ) {
       traces.addErrorStr( ern );
       failed = true;
     }
     else if ( m > 0 ) {
-      traces[0].deviceBufferPush( m );
-      n += m;
+      m /= sizeof( signed short );
+      maxn -= m;
+      readn += m;
     }
 
   }
 
-  convert<signed short>( traces );
+  convert( traces, buffer, readn );
 
-  return failed ? -1 : n;
+  return failed ? -1 : readn;
 }
 
 
@@ -432,6 +466,8 @@ int NIAI::reset( void )
   int r = stop();
   ::ioctl( Handle, NIDAQAIRESETALL, 0 );
   clearSettings();
+  BufferSize = 0;
+  TraceIndex = 0;
   return r;
 }
 

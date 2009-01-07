@@ -743,7 +743,6 @@ void RELACSWidget::processData( void )
     // XXX SF->write( AQ->aiData( k ) );
   }
   SF->write( IL, ED );
-  IL.clearDeviceBuffer();
   unlockData();
   PT->plot( IL, ED );
 }
@@ -1232,8 +1231,6 @@ void RELACSWidget::stopActivity( void )
 
   closeHardware();
 
-  IL.freeDeviceBuffer();
-
   RP->activateRePro( 0 );
 
   AcquisitionAction->setEnabled( true );
@@ -1578,7 +1575,7 @@ void RELACSWidget::about()
 {
   Str info = "<p align=center>This is</p>";
   info += "<p align=center><b>RELACS</b></p>";
-  info += "<p align=center><b>R</b>ealtime <b>El</b>ectrophysiological Data <b>A</b>cquisition, <b>C</b>ontrol, and <b>S</b>timulation</p>\n";
+  info += "<p align=center><b>R</b>elaxed <b>El</b>ectrophysiological Data <b>A</b>cquisition, <b>C</b>ontrol, and <b>S</b>timulation</p>\n";
   info += "<p align=center>Version ";
   info += RELACSVERSION;
   info += "</p>\n";

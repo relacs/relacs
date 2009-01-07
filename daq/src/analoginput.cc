@@ -292,12 +292,13 @@ int AnalogInput::testReadData( InList &traces )
 
 int AnalogInput::truncate( InList &traces, double t )
 {
-  int n = traces[0].indices( t );
-  for ( int k=0; k<traces.size(); k++ )
-    traces[k].resize( n );
+  int m = 0;
 
-  int m = traces[0].resizeDeviceBuffer( traces.size() *
-					( n - traces[0].deviceBufferStart() ) );
+  for ( int k=0; k<traces.size(); k++ ) {
+    int n = traces[k].indices( t );
+    m += traces[k].size() - n;
+    traces[k].resize( n );
+  }
 
   return m;
 }

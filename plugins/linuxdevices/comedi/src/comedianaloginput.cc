@@ -45,6 +45,8 @@ ComediAnalogInput::ComediAnalogInput( void )
   MaxRate = 1000.0;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
+  BufferSize = 0;
+  TraceIndex = 0;
 }
 
 
@@ -59,6 +61,8 @@ ComediAnalogInput::ComediAnalogInput( const string &device, long mode )
   MaxRate = 1000.0;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
+  BufferSize = 0;
+  TraceIndex = 0;
   open( device, mode );
 }
 
@@ -236,6 +240,8 @@ void ComediAnalogInput::close( void )
     delete [] Cmd.chanlist;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
+  BufferSize = 0;
+  TraceIndex = 0;
 }
 
 
@@ -521,26 +527,14 @@ int ComediAnalogInput::prepareRead( InList &traces )
   if ( error )
     return error;
 
-  // setup the buffer (don't free the buffer!):
-  if ( traces[0].deviceBuffer() == NULL ) {
-    // size of buffer:
-    traces[0].reserveDeviceBuffer( traces.size() * traces[0].indices( traces[0].updateTime() ),
-				   BufferElemSize );
-    if ( traces[0].deviceBuffer() == NULL )
-      traces[0].reserveDeviceBuffer( traces.size() * traces[0].capacity(),
-				     BufferElemSize );
-    traces[0].setDeviceDataType( LongSampleType ? InData::UnsingedDoubleWord : InData::UnsingedWord );
-  }
-  // buffer overflow:
-  if ( traces[0].deviceBufferSize() >= traces[0].deviceBufferCapacity() ) {
-    traces.addError( DaqError::BufferOverflow );
-    return -1;
-  }
+  // get buffer size:
+  BufferSize = traces.size() * traces[0].indices( traces[0].updateTime() ) * BufferElemSize;
+  if ( BufferSize <= 0 )
+    traces.addError( DaqError::InvalidUpdateTime );
 
   // set size of driver buffer:
-  int bufsize = traces.size()*BufferElemSize*traces[0].indices( traces[0].updateTime() );
-  int newbufsize = comedi_set_buffer_size( DeviceP, SubDevice, bufsize );
-  if ( newbufsize < bufsize )
+  int newbufsize = comedi_set_buffer_size( DeviceP, SubDevice, BufferSize );
+  if ( newbufsize < BufferSize )
     traces.addError( DaqError::InvalidUpdateTime );
   
   if ( traces.success() )
@@ -563,6 +557,7 @@ int ComediAnalogInput::executeCommand( void )
     */
     return -1;
   }
+  TraceIndex = 0;
   return 0;
 }
 
@@ -622,50 +617,96 @@ int ComediAnalogInput::startRead( InList &traces )
 }
 
 
-int ComediAnalogInput::readData( InList &traces )
+template< typename T >
+void ComediAnalogInput::convert( InList &traces, char *buffer, int n )
 {
-  // buffer overflow:
-  if ( traces[0].deviceBufferSize() >= traces[0].deviceBufferCapacity() ) {
-    cerr << " ComediAnalogInput::readData():  buffer overflow\n";//////TEST/////
-    return -1;
+  // scale factors and offsets:
+  double scale[traces.size()];
+  double offs[traces.size()];
+  for ( int k=0; k<traces.size(); k++ ) {
+    scale[k] = traces[k].gain() * traces[k].scale();
+    offs[k] = traces[k].offset() * traces[k].scale();
   }
 
+  // trace buffer pointers and sizes:
+  float *bp[traces.size()];
+  int bm[traces.size()];
+  int bn[traces.size()];
+  for ( int k=0; k<traces.size(); k++ ) {
+    bp[k] = traces[k].pushBuffer();
+    bm[k] = traces[k].maxPush();
+    bn[k] = 0;
+  }
+
+  // type cast for device buffer:
+  T *db = (T *)buffer;
+
+  for ( int k=0; k<n; k++ ) {
+    // convert:
+    *bp[TraceIndex] = offs[TraceIndex] +
+      scale[TraceIndex] * db[k];
+    // update pointers:
+    bp[TraceIndex]++;
+    bn[TraceIndex]++;
+    if ( bn[TraceIndex] >= bm[TraceIndex] ) {
+      traces[TraceIndex].push( bn[TraceIndex] );
+      bp[TraceIndex] = traces[TraceIndex].pushBuffer();
+      bm[TraceIndex] = traces[TraceIndex].maxPush();
+      bn[TraceIndex] = 0;
+    }
+    // next trace:
+    TraceIndex++;
+    if ( TraceIndex >= traces.size() )
+      TraceIndex = 0;
+  }
+
+  // commit:
+  for ( int c=0; c<traces.size(); c++ )
+    traces[c].push( bn[c] );
+}
+
+
+int ComediAnalogInput::readData( InList &traces )
+{
   ErrorState = 0;
   bool failed = false;
-  int n = 0;
-  
+  char buffer[BufferSize];
+  int maxn = BufferSize;
+  int readn = 0;
+
+  cerr << " ComediAnalogInput::readData(): running " << running() << endl;
+  cerr << " ComediAnalogInput::readData(): busy " << ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_BUSY ) << endl;
+
   // try to read twice:
-  for ( int tryit = 0;
-	tryit < 2 && ! failed && traces[0].deviceBufferMaxPush() > 0;
-	tryit++ ) {
+  for ( int tryit = 0; tryit < 2 && ! failed && maxn > 0; tryit++ ) {
 
     // data present?
     if ( comedi_get_buffer_contents( DeviceP, SubDevice ) <= 0 )
       break;
     
     // read data:
-    ssize_t m = read( comedi_fileno( DeviceP ),
-		      traces[0].deviceBufferPushBuffer(), 
-		      traces[0].deviceBufferMaxPush() * BufferElemSize );
+    ssize_t m = read( comedi_fileno( DeviceP ), buffer + readn, maxn );
+    cerr << " ComediAnalogInput::readData(): " << m << endl;
 
     int ern = errno;
     if ( m < 0 && ern != EAGAIN && ern != EINTR ) {
       traces.addErrorStr( ern );
       failed = true;
-      cerr << " ComediAnalogInput::readData(): error" << endl;/////TEST/////
+      cerr << " ComediAnalogInput::readData(): error" << endl;
     }
     else if ( m > 0 ) {
-      m /= BufferElemSize;
-      traces[0].deviceBufferPush( m );
-      n += m;
+      maxn -= m;
+      readn += m;
     }
 
   }
 
+  readn /= BufferElemSize;
+
   if ( LongSampleType )
-    convert<lsampl_t>( traces );
+    convert<lsampl_t>( traces, buffer, readn );
   else
-    convert<sampl_t>( traces );
+    convert<sampl_t>( traces, buffer, readn );
 
   if ( failed ) {
     /* XXX
@@ -688,7 +729,7 @@ int ComediAnalogInput::readData( InList &traces )
     return -1;   
   }
 
-  return n;
+  return readn;
 }
 
 
@@ -710,9 +751,8 @@ int ComediAnalogInput::reset( void )
 
   // clear buffers by reading:
   while ( comedi_get_buffer_contents( DeviceP, SubDevice ) > 0 ) {
-    // read data:
-    char buffer[4096];
-    read( comedi_fileno( DeviceP ), buffer, 4096 );
+    char buffer[BufferSize];
+    read( comedi_fileno( DeviceP ), buffer, BufferSize );
   }
 
   clearSettings();
@@ -722,6 +762,8 @@ int ComediAnalogInput::reset( void )
     delete [] Cmd.chanlist;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
+  BufferSize = 0;
+  TraceIndex = 0;
 
   return retVal;
 }

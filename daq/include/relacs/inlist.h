@@ -248,13 +248,6 @@ public:
         (for debugging only). */
   friend ostream &operator<< ( ostream &str, const InList &il );
 
-    /*! Free the internal buffers that hold the data in a device dependend
-        multiplexed format of all input traces. */
-  void freeDeviceBuffer( void );
-    /*! Clear the internal buffers that hold the data in a device dependend
-        multiplexed format of all input traces. */
-  void clearDeviceBuffer( void );
-
 
  private:
 

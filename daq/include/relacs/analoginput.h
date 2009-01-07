@@ -40,7 +40,6 @@ class AnalogOutput;
 \author Marco Hackenberg
 \author Jan Benda
 \version 0.2
-\todo what about unipolar traces in convert?
 \todo add probe function that returns a string of possible supported devices.
 \todo add wait function
 */
@@ -115,7 +114,8 @@ public:
         independently of prepareRead() and startRead() with
         different \a traces. */
   virtual int testRead( InList &traces );
-    /*! Prepare analog input of the input traces \a traces on the device.
+    /*! Prepare analog input of the input traces \a traces on the device
+        as much as possible.
 	If an error ocurred in any channel, the corresponding errorflags in the
 	InData structure are filled and a negative value is returned.
 	In addition, according to the InData::gainIndex() of each trace
@@ -133,10 +133,13 @@ public:
 	Also start possible pending acquisition on other devices
 	that are known from take().
         This function is called after a successfull prepareRead()
-	with with exactly the same \a traces
-	or after reading has been stopped via stop(). */
+	with exactly the same \a traces
+	or after reading has been stopped via stop().
+        This function should be as quick as possible. */
   virtual int startRead( InList &traces ) = 0;
-    /*! Read data from a running data acquisition.
+    /*! Read data from a running data acquisition,
+        convert them to the secondary number and store the data
+	in \a traces.
         Returns the number of new data values that were added to the \a traces
 	(sum over all \a traces).
 	If an error ocurred in any channel, the corresponding errorflags in the
@@ -145,12 +148,7 @@ public:
         started by startRead(). The \a traces are exactly the same. */
   virtual int readData( InList &traces ) = 0;
     /*! Truncate all input traces in \a traces at time \a t.
-        The internal device dependend buffer is truncated as well.
-	Returns the number of data elements that were removed from
-	the internal device dependend buffer.
-        The default implementation assumes that the device dependend buffer
-        contains the data from several channels that were 
-	sampled with the same rate. */
+	Returns the number of data elements that were removed. */
   virtual int truncate( InList &traces, double t );
 
     /*! Stop any running ananlog input activity,
@@ -262,11 +260,6 @@ protected:
         \sa settings(), setSettings() */
   void clearSettings( void );
 
-    /*! Add converted data values from the device depend internal data buffer
-        to \a traces. */
-  template< typename T >
-    void convert( InList &traces );
-
     /*! A string describing the current settings of the analog input device.
         \sa setSettings(), settings() */
   string Settings;
@@ -281,57 +274,6 @@ private:
   int AnalogInputType;
 
 };
-
-
-template< typename T >
-void AnalogInput::convert( InList &traces )
-{
-  // scale factors and offsets:
-  double scale[traces.size()];
-  double offs[traces.size()];
-  for ( int k=0; k<traces.size(); k++ ) {
-    scale[k] = traces[k].gain() * traces[k].scale();
-    offs[k] = traces[k].offset() * traces[k].scale();
-  }
-
-  // buffer pointers and sizes:
-  float *bp[traces.size()];
-  int bm[traces.size()];
-  int bn[traces.size()];
-  for ( int k=0; k<traces.size(); k++ ) {
-    bp[k] = traces[k].pushBuffer();
-    bm[k] = traces[k].maxPush();
-    bn[k] = 0;
-  }
-
-  // type cast for device buffer:
-  T *db = (T *)traces[0].deviceBuffer();
-  int c = traces[0].deviceBufferTrace();
-
-  while ( traces[0].deviceBufferConvert() < traces[0].deviceBufferSize() ) {
-    // convert:
-    *bp[c] = offs[c] + scale[c] * db[traces[0].deviceBufferConvert()++];
-    // update pointers:
-    bp[c]++;
-    bn[c]++;
-    if ( bn[c] >= bm[c] ) {
-      traces[c].push( bn[c] );
-      bp[c] = traces[c].pushBuffer();
-      bm[c] = traces[c].maxPush();
-      bn[c] = 0;
-    }
-    // next trace:
-    c++;
-    if ( c >= traces.size() )
-      c = 0;
-  }
-
-  // commit:
-  for ( int k=0; k<traces.size(); k++ )
-    traces[k].push( bn[k] );
-  traces[0].deviceBufferTrace() = c;
-
-}
 
 
 }; /* namespace relacs */

@@ -519,7 +519,7 @@ void SaveFiles::createTraceFile( const Acquire &intraces )
   VF.clear();
   VF.reserve( intraces.inputsSize() );
   for ( int k=0; k<intraces.inputsSize(); k++ ) {
-    string filename = "traces-" + Str( k+1 ) + "." + intraces.inputTraces( k )[0].deviceDataTypeId() + Str( intraces.inputTraces( k ).size() );
+    string filename = "traces-" + Str( k+1 ) + ".f1";  // XXXX we need one file per trace!
     VF[k] = openFile( filename, ios::out | ios::binary );
   }
 }
@@ -591,7 +591,7 @@ void SaveFiles::createStimulusFile( const Acquire &intraces,
       *SF << "#            name" + Str( k+1 ) + ": " << intraces.inputDevice( k )->deviceName() << '\n';
       *SF << "#          vendor" + Str( k+1 ) + ": " << intraces.inputDevice( k )->deviceVendor() << '\n';
       *SF << "#          device" + Str( k+1 ) + ": " << intraces.inputDevice( k )->deviceFile() << '\n';
-      *SF << "#       data file" + Str( k+1 ) + ": " << "traces-" << Str( k+1 ) << "." << intraces.inputTraces( k )[0].deviceDataTypeId() << Str( intraces.inputTraces( k ).size() ) << '\n';
+      *SF << "#       data file" + Str( k+1 ) + ": " << "traces-" << Str( k+1 ) << ".f1" << '\n'; // XXXX we need one file per trace!
       *SF << "#          traces" + Str( k+1 ) + ": " << Str( intraces.inputTraces( k ).size() ) << '\n';
       *SF << "# sample interval" + Str( k+1 ) + ": " << Str( 1000.0*intraces.inputTraces( k )[0].sampleInterval(), 0, 2, 'f' ) << "ms\n";
     }

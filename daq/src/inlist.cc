@@ -521,19 +521,5 @@ ostream &operator<< ( ostream &str, const InList &data )
 }
 
 
-void InList::freeDeviceBuffer( void )
-{
-  for ( int k=0; k<size(); k++ )
-    operator[]( k ).freeDeviceBuffer();
-}
-
-
-void InList::clearDeviceBuffer( void )
-{
-  for ( int k=0; k<size(); k++ )
-    operator[]( k ).clearDeviceBuffer();
-}
-
-
 }; /* namespace relacs */
 
