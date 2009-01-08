@@ -26,6 +26,7 @@
 #include <ctime>
 #include <unistd.h>
 #include <fcntl.h>
+#include <relacs/str.h>
 #include <relacs/comedi/comedianalogoutput.h>
 #include <relacs/comedi/comedianaloginput.h>
 using namespace std;
@@ -127,6 +128,9 @@ int ComediAnalogInput::open( const string &device, long mode )
   setDeviceName( comedi_get_board_name( DeviceP ) );
   setDeviceVendor( comedi_get_driver_name( DeviceP ) );
   setDeviceFile( device );
+
+  // make read calls non blocking:
+  fcntl( comedi_fileno( DeviceP ), F_SETFL, O_NONBLOCK );
 
   // initialize ranges:
   UnipolarRange.clear();
@@ -290,6 +294,43 @@ double ComediAnalogInput::bipolarRange( int index ) const
   return BipolarRange[index].max;
 }
   
+
+string cmd_src( int src )
+{
+  string buf = "";
+
+  if ( src & TRIG_NONE ) buf += "none|";
+  if ( src & TRIG_NOW ) buf += "now|";
+  if ( src & TRIG_FOLLOW ) buf += "follow|";
+  if ( src & TRIG_TIME ) buf += "time|";
+  if ( src & TRIG_TIMER ) buf += "timer|";
+  if ( src & TRIG_COUNT ) buf += "count|";
+  if ( src & TRIG_EXT ) buf += "ext|";
+  if ( src & TRIG_INT ) buf += "int|";
+#ifdef TRIG_OTHER
+  if ( src & TRIG_OTHER ) buf +=  "other|";
+#endif
+
+  if ( buf.empty() )
+    //    buf = "unknown(" << setw( 8 ) << src ")";
+    buf="unknown";
+  else
+    buf.erase( buf.size()-1 );
+  
+  return buf;
+}
+
+
+void dump_cmd( comedi_cmd *cmd )
+{
+  cerr << "subdevice:      " << cmd->subdev << '\n';
+  cerr << "start:      " << Str( cmd_src(cmd->start_src), 8 ) << "  " << cmd->start_arg << '\n';
+  cerr << "scan_begin: " << Str( cmd_src(cmd->scan_begin_src), 8 ) << "  " << cmd->scan_begin_arg << '\n';
+  cerr << "convert:    " << Str( cmd_src(cmd->convert_src), 8 ) << "  " << cmd->convert_arg << '\n';
+  cerr << "scan_end:   " << Str( cmd_src(cmd->scan_end_src), 8 ) << "  " << cmd->scan_end_arg << '\n';
+  cerr << "stop:       " << Str( cmd_src(cmd->stop_src), 8 ) << "  " << cmd->stop_arg << '\n';
+}
+
   
 int ComediAnalogInput::setupCommand( InList &traces, comedi_cmd &cmd )
 {
@@ -424,6 +465,11 @@ int ComediAnalogInput::setupCommand( InList &traces, comedi_cmd &cmd )
 
   cmd.chanlist = chanlist;
   cmd.chanlist_len = traces.size();
+
+  cmd.data = 0;
+  cmd.data_len = 0;
+
+  dump_cmd( &cmd );
   
   // test command:
   memcpy( &testCmd, &cmd, sizeof( comedi_cmd ) ); // store original state
@@ -491,6 +537,8 @@ int ComediAnalogInput::setupCommand( InList &traces, comedi_cmd &cmd )
       break;
     }
   }
+
+  dump_cmd( &cmd );
 
   return retVal == 0 ? 0 : -1;
 }
@@ -571,6 +619,7 @@ int ComediAnalogInput::startRead( InList &traces )
     return -1;
   }
 
+  /*
   // setup instruction list:
   lsampl_t insndata[1];
   insndata[0] = 0;
@@ -614,6 +663,19 @@ int ComediAnalogInput::startRead( InList &traces )
   delete [] insnlist.insns;
 
   return success ? 0 : -1;
+  */
+
+  int ret = executeCommand();
+  if ( ret < 0 )
+    return -1;
+
+  ret = comedi_internal_trigger(DeviceP, SubDevice, 0);
+  if ( ret < 0 ) {
+    cerr << "startRead comedi_internal_trigger failed\n";
+    return -1;
+  }
+
+  return 0;
 }
 
 

@@ -31,7 +31,6 @@
 #include <relacs/str.h>
 #include <relacs/options.h>
 #include <relacs/tablekey.h>
-#include <relacs/acquire.h>
 #include <relacs/outdata.h>
 #include <relacs/eventdata.h>
 #include <relacs/repro.h>
@@ -72,10 +71,7 @@ SaveFile sets the following environment variables:
 
 \bug implement saving of trace data
 \bug what about no longer valid pointers in StimulusToWrite and TraceToWrite?
-\bug writeTrace: needs to be implemented
 \bug writeStimulus: multi board signal times?
-\bug createTraceFile: needs to be implemented.
-\bug writeTrace: works only if all traces are written.
 \todo platform independent mkdir in openFiles()!
 \todo writeStimulus: adaptive time for calculating the mean rate
 \todo check it carefully!
@@ -164,7 +160,7 @@ public:
   void write( bool on );
 
     /*! Write input data to files */
-  void write( const InList &data, const EventList &events );
+  void write( const InList &traces, const EventList &events );
     /*! Write output-meta-data to files. */
   void write( const OutData &signal );
     /*! Write output-meta-data to files. */
@@ -174,7 +170,7 @@ public:
 
     /*! If no file is open: create a new file name, make a directory,
         open and initialize the data-, event-, and stimulus files. */
-  void openFiles( const Acquire &intracs, const EventList &events );
+  void openFiles( const InList &traces, const EventList &events );
     /*! Close files and delete them and/or remove base directory. */
   void deleteFiles( void );
     /*! Close files and keep them. */
@@ -199,17 +195,17 @@ protected:
 
     /*! Open and initialize the files holding the traces from the
         analog input channels. */
-  void createTraceFile( const Acquire &intraces );
+  void createTraceFiles( const InList &traces );
     /*! Open and initialize the files recording the event times. */
   void createEventFiles( const EventList &events );
     /*! Open and initialize the stimulus file that
         contains indices to he traces and event files.
         Call this *after* createEventFiles()! */
-  void createStimulusFile( const Acquire &intraces, const EventList &events );
+  void createStimulusFile( const InList &traces, const EventList &events );
 
-    /*! are there any files open to write in? */
+    /*! Are there any files open to write in? */
   bool FilesOpen;
-    /*! should be written into the files? */
+    /*! Should be written into the files? */
   bool Writing;
 
     /*! The path (directory or common basename)
@@ -221,27 +217,36 @@ protected:
         where all data are stored. */
   string DefaultPath;
 
-    /*! Identification number for pathes used to create a base pathes
+    /*! Identification number for pathes used to create a base path
         from \a PathFormat. */
   int  PathNumber;
     /*! The time used to generate the previous base path. */
   time_t PathTime;
 
-    /*! files for all voltage traces. */
-  vector< ofstream* > VF;
-    /*! file with stimuli and indices to traces and events. */
-  ofstream *SF;
-
-    /*! The trace data that have to be written into the file. */
-  const InList *TraceToWrite;
     /*! Time of start of the session. */
   double SessionTime;
-    /*! Current index to trace data. */
-  long TraceIndex;
-    /*! Number of so far written trace data. */
-  long TraceOffs;
-    /*! Start of stimulus as an index to the written trace data. */
-  long SignalOffs;
+
+    /*! File with stimuli and indices to traces and events. */
+  ofstream *SF;
+
+  struct TraceFile {
+      /*! The name of the file for the trace. */
+    string FileName;
+      /*! The file stream. */
+    ofstream *Stream;
+      /*! The trace data that have to be written into the file. */
+    const InData *Trace;
+      /*! Current index to trace data. */
+    long Index;
+      /*! Number of so far written trace data. */
+    long Offset;
+      /*! Start of stimulus as an index to the written trace data. */
+    long SignalOffset;
+  };
+
+    /*! files for all voltage traces. */
+  vector< TraceFile > TraceFiles;
+
 
   struct EventFile {
       /*! The name of the file for the events. */

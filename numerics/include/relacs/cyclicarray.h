@@ -213,6 +213,10 @@ class CyclicArray
   template< typename S >
   void hist( SampleData< S > &h ) const;
 
+    /*! Save binary data to stream \a os starting at index \a index upto size().
+        \return the number of saved data elements. */
+  int saveBinary( ostream &os, int index ) const;
+
   template < typename TT > 
   friend ostream &operator<<( ostream &str, const CyclicArray<TT> &ca );
 
@@ -869,6 +873,31 @@ void CyclicArray< T >::hist( SampleData< S > &h ) const
     if ( b >= 0  && b < h.size() )
       h[b] += 1;
   }
+}
+
+
+template < class T >
+int CyclicArray< T >::saveBinary( ostream &os, int index ) const
+{
+  // stream not open:
+  if ( !os )
+    return -1;
+
+  assert( ( index >= minIndex() && index < size() ) );
+
+  int buffinx = RCycles * NBuffer;
+  int li = index - buffinx;
+  int ri = R;
+
+  // write buffer:
+  if ( li >= 0 )
+    os.write( (char *)(Buffer+li), sizeof( T )*( ri - li ) );
+  else {
+    os.write( (char *)(Buffer + (li+NBuffer)), sizeof( T )*( -li ) );
+    os.write( (char *)Buffer, sizeof( T )*ri );
+  }
+  os.flush();
+  return ri - li;
 }
 
 

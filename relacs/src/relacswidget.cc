@@ -1067,7 +1067,7 @@ void RELACSWidget::startSession( bool startmacro )
   printlog( "start new session" );
 
   // open files:
-  SF->openFiles( *AQ, ED );
+  SF->openFiles( IL, ED );
 
 #if QT_VERSION >= 300
   MainWidget->setEraseColor( QColor( 255, 96, 96 ) );
