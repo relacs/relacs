@@ -129,6 +129,12 @@ int ComediAnalogInput::open( const string &device, long mode )
   setDeviceVendor( comedi_get_driver_name( DeviceP ) );
   setDeviceFile( device );
 
+  // set size of comedi-internal buffer to maximum:
+  BufferSize = comedi_get_max_buffer_size( DeviceP, SubDevice );
+  comedi_set_buffer_size( DeviceP, SubDevice, BufferSize );
+  BufferSize = comedi_get_buffer_size( DeviceP, SubDevice );
+  // XXX add this to settings?
+
   // make read calls non blocking:
   fcntl( comedi_fileno( DeviceP ), F_SETFL, O_NONBLOCK );
 
@@ -244,7 +250,6 @@ void ComediAnalogInput::close( void )
     delete [] Cmd.chanlist;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
-  BufferSize = 0;
   TraceIndex = 0;
 }
 
@@ -468,8 +473,6 @@ int ComediAnalogInput::setupCommand( InList &traces, comedi_cmd &cmd )
 
   cmd.data = 0;
   cmd.data_len = 0;
-
-  dump_cmd( &cmd );
   
   // test command:
   memcpy( &testCmd, &cmd, sizeof( comedi_cmd ) ); // store original state
@@ -538,8 +541,6 @@ int ComediAnalogInput::setupCommand( InList &traces, comedi_cmd &cmd )
     }
   }
 
-  dump_cmd( &cmd );
-
   return retVal == 0 ? 0 : -1;
 }
 
@@ -575,14 +576,9 @@ int ComediAnalogInput::prepareRead( InList &traces )
   if ( error )
     return error;
 
-  // get buffer size:
-  BufferSize = traces.size() * traces[0].indices( traces[0].updateTime() ) * BufferElemSize;
-  if ( BufferSize <= 0 )
-    traces.addError( DaqError::InvalidUpdateTime );
-
-  // set size of driver buffer:
-  int newbufsize = comedi_set_buffer_size( DeviceP, SubDevice, BufferSize );
-  if ( newbufsize < BufferSize )
+  // check buffer size:
+  int minbufsize = traces.size() * traces[0].indices( traces[0].updateTime() ) * BufferElemSize;
+  if ( minbufsize > BufferSize )
     traces.addError( DaqError::InvalidUpdateTime );
   
   if ( traces.success() )
@@ -619,7 +615,6 @@ int ComediAnalogInput::startRead( InList &traces )
     return -1;
   }
 
-  /*
   // setup instruction list:
   lsampl_t insndata[1];
   insndata[0] = 0;
@@ -663,19 +658,6 @@ int ComediAnalogInput::startRead( InList &traces )
   delete [] insnlist.insns;
 
   return success ? 0 : -1;
-  */
-
-  int ret = executeCommand();
-  if ( ret < 0 )
-    return -1;
-
-  ret = comedi_internal_trigger(DeviceP, SubDevice, 0);
-  if ( ret < 0 ) {
-    cerr << "startRead comedi_internal_trigger failed\n";
-    return -1;
-  }
-
-  return 0;
 }
 
 
@@ -736,9 +718,6 @@ int ComediAnalogInput::readData( InList &traces )
   int maxn = BufferSize;
   int readn = 0;
 
-  cerr << " ComediAnalogInput::readData(): running " << running() << endl;
-  cerr << " ComediAnalogInput::readData(): busy " << ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_BUSY ) << endl;
-
   // try to read twice:
   for ( int tryit = 0; tryit < 2 && ! failed && maxn > 0; tryit++ ) {
 
@@ -748,7 +727,6 @@ int ComediAnalogInput::readData( InList &traces )
     
     // read data:
     ssize_t m = read( comedi_fileno( DeviceP ), buffer + readn, maxn );
-    cerr << " ComediAnalogInput::readData(): " << m << endl;
 
     int ern = errno;
     if ( m < 0 && ern != EAGAIN && ern != EINTR ) {
@@ -824,7 +802,6 @@ int ComediAnalogInput::reset( void )
     delete [] Cmd.chanlist;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
-  BufferSize = 0;
   TraceIndex = 0;
 
   return retVal;

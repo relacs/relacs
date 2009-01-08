@@ -49,6 +49,7 @@ ComediAnalogOutput::ComediAnalogOutput( void )
   BipolarExtRefRangeIndex = -1;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
+  BufferSize = 0;
 }
 
 
@@ -67,6 +68,7 @@ ComediAnalogOutput::ComediAnalogOutput(  const string &device, long mode )
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   open( device, mode );
   IsPrepared = false;
+  BufferSize = 0;
 }
 
 
@@ -130,6 +132,12 @@ int ComediAnalogOutput::open( const string &device, long mode )
   setDeviceName( comedi_get_board_name( DeviceP ) );
   setDeviceVendor( comedi_get_driver_name( DeviceP ) );
   setDeviceFile( device );
+
+  // set size of comedi-internal buffer to maximum:
+  BufferSize = comedi_get_max_buffer_size( DeviceP, SubDevice );
+  comedi_set_buffer_size( DeviceP, SubDevice, BufferSize );
+  BufferSize = comedi_get_buffer_size( DeviceP, SubDevice );
+  // XXX add this to settings?
 
   // make write calls non blocking:
   fcntl( comedi_fileno( DeviceP ), F_SETFL, O_NONBLOCK );
@@ -730,10 +738,9 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   if ( setupCommand( ol, Cmd ) < 0 )
     return -1;
 
-  // set size of driver buffer:
-  int bufsize = sigs.size()*BufferElemSize*sigs[0].indices( sigs[0].updateTime() );
-  int newbufsize = comedi_set_buffer_size( DeviceP, SubDevice, bufsize );
-  if ( newbufsize < bufsize )
+  // check buffer size:
+  int minbufsize = sigs.size()*BufferElemSize*sigs[0].indices( sigs[0].updateTime() ) * BufferElemSize;
+  if ( minbufsize > BufferSize )
     sigs.addError( DaqError::InvalidUpdateTime );
 
   IsPrepared = ol.success();

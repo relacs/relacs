@@ -235,6 +235,9 @@ private:
   
   OutList *Sigs;
 
+    /*! Size of the internal buffer used for getting the data from the driver. */
+  int BufferSize;
+
 };
 
 

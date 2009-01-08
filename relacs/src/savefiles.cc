@@ -245,7 +245,7 @@ void SaveFiles::write( const InList &traces, const EventList &events )
   // indicate the new RePro:
   writeRePro();
 
-  if ( !writing() )
+  if ( !saving() || !writing() )
     return;
 
   // write trace data:
@@ -346,7 +346,7 @@ void SaveFiles::writeStimulus( void )
     //      cerr << "writeStimulus \n";
     
     // stimulus indices file:
-    if ( SF != 0 && Writing ) {
+    if ( SF != 0 && saving() && writing() ) {
       for ( unsigned int k=0; k<TraceFiles.size(); k++ )
 	if ( TraceFiles[k].Stream != 0 ) {
 	  StimulusKey.save( *SF, TraceFiles[k].SignalOffset );
@@ -434,7 +434,7 @@ void SaveFiles::writeRePro( void )
   if ( ReProData ) {
     
     // stimulus indices file:
-    if ( SF != 0 && Writing ) {
+    if ( SF != 0 && saving() && writing() ) {
       *SF << '\n';
       *SF << "# repro: " << ReProName  << '\n';
       *SF << "# author: " << ReProAuthor << '\n';
