@@ -31,6 +31,29 @@ $ adduser <username> comedi
 You need to logout and login again.
 
 
+\section buffer Resize Comedi buffer
+
+To set the comedi internal buffers to 640kB do as root:
+\code
+comedi_config -r /dev/comedi16
+comedi_config --read-buffer 640 --write-buffer 640 /dev/comedi16 ni_pcimio
+\endcode
+Maybe this should go in \c /etc/rc.local or to some \c udev postprocessing rule.
+
+
+\section calibration Calibrating your DAQ board
+
+For software calibrated boards (like NI M-Series boards) do as root
+\code
+comedi_soft_calibrate -f /dev/comedi16
+\endcode
+This calibrates all channels for all ranges.
+A file is written to \c /usr/var/lib/comedi/calibrations that contains the calibration
+parameter. The ComediAnalogInput and ComediAnalogOutput plugins read this file.
+
+I still need to check hardware calibrated boards (NI E-Series).
+
+
 \section installrtai Install RTAI and Comedi
 
 Chapter 2, Installation, in the RTAI-Lab tutorial at

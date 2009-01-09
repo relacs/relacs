@@ -52,8 +52,10 @@ int main(int argc, char *argv[])
   /*! This is important to make read calls non blocking! */
   fcntl(comedi_fileno(dev), F_SETFL, O_NONBLOCK);
 
+  /*
   maxbuffersize = comedi_get_max_buffer_size( dev, options.subdevice );
   fprintf( stderr, "maximum buffer_size: %d\n", maxbuffersize );
+  */
 
   /* you must be root!
   ret = comedi_set_max_buffer_size( dev, options.subdevice, 10*maxbuffersize );
@@ -63,7 +65,7 @@ int main(int argc, char *argv[])
   }
   */
 
-  comedi_set_buffer_size( dev, options.subdevice, maxbuffersize );
+  comedi_set_buffer_size( dev, options.subdevice, fn );
   fprintf( stderr, "buffer_size: %d\n", comedi_get_buffer_size( dev, options.subdevice ) );
 
   maxdata = comedi_get_maxdata(dev, options.subdevice, options.channel);

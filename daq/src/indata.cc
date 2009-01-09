@@ -67,8 +67,7 @@ InData::InData( const InData &data )
   Dither = data.Dither;
   Unipolar = data.Unipolar;
   GainIndex = data.GainIndex;
-  Gain = data.Gain;
-  Offset = data.Offset;
+  GainData = NULL;
   Scale = data.Scale;
   Unit = data.Unit;
   UpdateTime = data.UpdateTime;
@@ -81,6 +80,8 @@ InData::InData( const InData &data )
 
 InData::~InData( void )
 {
+  if ( GainData != NULL )
+    delete [] GainData;
 }
 
 
@@ -101,8 +102,7 @@ void InData::construct( void )
   Dither = false;
   Unipolar = false;
   GainIndex = 0;
-  Gain = 1.0;
-  Offset = 0.0;
+  GainData = NULL;
   Scale = 1.0;
   Unit = "V";
   UpdateTime = 0.0;
@@ -133,8 +133,7 @@ const InData &InData::operator=( const InData &data )
   Dither = data.Dither;
   Unipolar = data.Unipolar;
   GainIndex = data.GainIndex;
-  Gain = data.Gain;
-  Offset = data.Offset;
+  GainData = NULL;
   Scale = data.Scale;
   Unit = data.Unit;
   UpdateTime = data.UpdateTime;
@@ -627,37 +626,6 @@ void InData::setUnipolar( bool unipolar )
 }
 
 
-double InData::gain( void ) const
-{
-  return Gain;
-}
-
-
-void InData::setGain( double gain )
-{
-  Gain = gain;
-}
-
-
-void InData::setGain( double gain, double offset )
-{
-  Gain = gain;
-  Offset = offset;
-}
-
-
-double InData::offset( void ) const
-{
-  return Offset;
-}
-
-
-void InData::setOffset( double offset )
-{
-  Offset = offset;
-}
-
-
 int InData::gainIndex( void ) const
 {
   return GainIndex;
@@ -667,6 +635,18 @@ int InData::gainIndex( void ) const
 void InData::setGainIndex( int gainindex )
 {
   GainIndex = gainindex;
+}
+
+
+char *InData::gainData( void ) const
+{
+  return GainData;
+}
+
+
+void InData::setGainData( char *data )
+{
+  GainData = data;
 }
 
 
@@ -909,8 +889,7 @@ ostream &operator<<( ostream &str, const InData &id )
   str << "Dither: " << id.Dither << '\n';
   str << "Unipolar: " << id.Unipolar << '\n';
   str << "GainIndex: " << id.GainIndex << '\n';
-  str << "Gain: " << id.Gain << '\n';
-  str << "Offset: " << id.Offset << '\n';
+  str << "GainData: " << id.GainData << '\n';
   str << "Scale: " << id.Scale << '\n';
   str << "Unit: " << id.Unit << '\n';
   str << "Source: " << id.Source << '\n';

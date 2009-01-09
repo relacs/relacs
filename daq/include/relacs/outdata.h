@@ -46,12 +46,11 @@ interface class depends on whether an attenuator is connected to the
 output line and on the type of external reference. For normal operation
 without a connected attenuator, the data values are given in units \a unit.
 The hardware driver interface class converts the data values
-multiplying with \a scale() to the voltage that is put out by the daq board. 
-The intensity() is ignored. Further addition of offset()
-and multiplication with gain() results in the integer number 
-that needs to be transferred to the daq board.
-Which gain is used can be controlled by request().
-A constant voltage external reference is used as an additionally 
+by multiplying with \a scale() to the voltage that is put out by the daq board. 
+The intensity() is ignored.
+Which gain is used for converting the voltage to integer values that are transferred to the DAQ board
+can be controlled by request().
+A constant-voltage external reference is used as an additionally 
 available gain factor.
 If a non-constant external reference is used by explicitely requesting
 it with setExtRef() or request( min, ExtRef ),
@@ -62,7 +61,7 @@ This range can be modified by scale().
 In case of an attenuator connected to the output line,
 the  values from 0 to 1 (unipolar mode) or -1 to 1 (bipolar mode)
 are mapped to the full output range of the daq board.
-This range can be modified by scale().
+scale() might be used internally by AnalogOutput for proper scaling.
 The resulting voltage is then attenuated by additional hardware
 according to the requested intensity().
 */
@@ -305,7 +304,7 @@ class OutData : public SampleData< float >, public DaqError
 	signal trace should be used.
 	If ExtRef is returned, then the external reference should be used
 	regardless of the signal's minimum and maximum values.
-	\sa requestedMax(), request(), gainIndex(), gain() */
+	\sa requestedMax(), request(), gainIndex() */
   double requestedMin( void ) const;
     /*! Returns the maximum value of the
         signal trace that should be used for determining the appropriate gain
@@ -314,7 +313,7 @@ class OutData : public SampleData< float >, public DaqError
 	signal trace should be used.
 	If ExtRef is returned, then the external reference should be used
 	regardless of the signal's minimum and maximum values.
-	\sa requestedMin(), request(), gainIndex(), gain() */
+	\sa requestedMin(), request(), gainIndex() */
   double requestedMax( void ) const;
     /*! Set the minimum and maximum value of the
         signal trace that should be used for determining the appropriate gain
@@ -325,30 +324,13 @@ class OutData : public SampleData< float >, public DaqError
 	that the external reference should be used
 	regardless of the signal's minimum and maximum values.
 	In this case the value of \a min then still determines the polarity.
-	\sa setExtRef(), requestedMin(), requestedMax(), gainIndex(), gain() */
+	\sa setExtRef(), requestedMin(), requestedMax(), gainIndex() */
   void request( double min, double max );
     /*! Force the hardware driver to use the external reference
         in bipolar output mode,
         regardless of the signal's minimum and maximum values. 
         Same as request( -1.0, ExtRef ). */
   void setExtRef( void );
-
-    /*! Minimum possible raw data value for the preset gain of the daq board.
-        This function is internally used by the hardware driver class.
-        \sa maxData(), minVoltage(), minValue(), setMinData() */
-  inline int minData( void ) const { return MinData; };
-    /*! Maximum possible raw data value for the preset gain of the daq board.
-        This function is internally used by the hardware driver class.
-        \sa minData(), maxVoltage(), maxValue(), setMaxData() */
-  inline int maxData( void ) const { return MaxData; };
-    /*! Set the minimum possible raw data value to \a min.
-        This function is internally used by the hardware driver class.
-        \sa setMaxData(), minData() */
-  void setMinData( int min );
-    /*! Set the maximum possible raw data value to \a max.
-        This function is internally used by the hardware driver class.
-        \sa setMinData(), maxData() */
-  void setMaxData( int max );
 
     /*! Returns an integer encoding the output gain, polarity, and reference. 
         This function is internally used by the hardware driver class. */
@@ -357,39 +339,14 @@ class OutData : public SampleData< float >, public DaqError
         to \a index. 
         This function is internally used by the hardware driver class. */
   void setGainIndex( int index );
-    /*! The gain factor for the signal.
-        This factor is used to scale the voltage values that should be
-	put out by the daq board to the appropriate device dependent
-	integer values after offset() has been added.
-        \sa setGain(), offset(), setOffset(), gainIndex(),
-	requestedMin(), requestedMax(), request(), 
-	scale(), setScale(), unit(), setUnit() */
-  double gain( void ) const;
-    /*! Set the gain factor to \a gain.
-        The gain factor is used to scale the voltage values that should be
-	put out by the daq board to the appropriate device dependent
-	integer values after offset() has been added.
-        \sa gain(), offset(), setOffset(), gainIndex(),
-	requestedMin(), requestedMax(), request(),
-	scale(), setScale(), unit(), setUnit() */
-  void setGain( double gain );
-    /*! Set the gain factor to \a gain
-        and the offset to \a offset.
-        The \a gain factor is used to scale the voltage values that should be
-	put out by the daq board to the appropriate device dependent
-	integer values after \a offset has been added.
-        \sa gain(), offset(), setOffset(), gainIndex(),
-	requestedMin(), requestedMax(), request(),
-	scale(), setScale(), unit(), setUnit() */
-  void setGain( double gain, double offset );
-    /*! The offset that is added to the output voltage before it is
-        scaled by gain() to the raw integer data that is put out 
-	by the analog output device.
-        \sa setOffset(), gain(), setGain() */
-  double offset( void ) const;
-    /*! Set the offset that is added to the output voltage to \a offset.
-        \sa offset(), gain(), setGain() */
-  void setOffset( double offset );
+    /*! Returns the data to be used by AnalogOutput for converting
+        voltage to raw data.
+        \sa setGainData(), gainIndex() */
+  char *gainData( void ) const;
+    /*! Set the data to be used by AnalogOutput for converting
+        voltage to raw data to \a data.
+        \sa gainData(), setGainIndex() */
+  void setGainData( char *data );
 
     /*! Get the voltage of the \a index -th element in Volt.
 	\a index must be a valid index. */
@@ -402,6 +359,12 @@ class OutData : public SampleData< float >, public DaqError
     /*! Maximum possible voltage value for the preset gain of the daq board.
         \sa minVoltage(), maxValue() */
   double maxVoltage( void ) const;
+    /*! Set the minimum possible voltage value to \a minv.
+        \sa setMaxVoltage(), setMinValue(), minValue() */
+  void setMinVoltage( double minv );
+    /*! Set the maximum possible votlage value to \a maxv.
+        \sa setMinVoltage(), setMaxValue(), maxValue() */
+  void setMaxVoltage( double maxv );
 
     /*! The scale factor used for scaling the output signal to the voltage
         that is put out by the analog output device.
@@ -724,20 +687,19 @@ class OutData : public SampleData< float >, public DaqError
   double RequestMaxValue;
     /*! Encodes gain, polarity, and reference. */
   int GainIndex;
-     /*! Gain to voltage in Volt. */
-  double Gain;
-    /*! Offset which is added to the voltage before scaling by Gain. */
-  double Offset;
+    /*! Some data used by AnalogOutput to convert voltage to
+        raw integer data for the data acquisition board. */
+  char *GainData;
     /*! Scale from signal to voltage. */
   double Scale;
     /*! The unit of the signal. */
   string Unit;
     /*! The maximum time in seconds the hardware should buffer data. */
   double UpdateTime;
-    /*! The minimum possible raw data value for the preset gain of the daq board. */
-  int MinData;
-    /*! The maximum possible raw data value for the preset gain of the daq board. */
-  int MaxData;
+    /*! The minimum possible voltage for the preset gain of the daq board. */
+  double MinVoltage;
+    /*! The maximum possible voltage for the preset gain of the daq board. */
+  double MaxVoltage;
     /*! The delay of the signal from emmision to its destination. */
   double SignalDelay;
     /*! Output intensity. */

@@ -38,8 +38,7 @@ class ComediAnalogOutput;
 \author Marco Hackenberg
 \version 0.1
 \brief [AnalogInput] Interface for accessing analog input of a daq-board via comedi.
-\bug fix errno usage
-\todo support delays in testReadDevice() and convertData()!
+\todo Support delays in testReadDevice() and convertData()!
 \todo Fix usage of ErrorState variable (also in readData() )
 
 \code
@@ -225,6 +224,9 @@ private:
   bool IsPrepared;
 
   int ErrorState;
+
+    /*! Calibration info. */
+  comedi_calibration_t *Calibration;
 
     /*! Size of the internal buffer used for getting the data from the driver. */
   int BufferSize;

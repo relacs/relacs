@@ -177,26 +177,21 @@ int Simulator::read( InList &data )
   for ( int k=0; k<data.size(); k++ ) {
     if ( data[k].device() >= 0 ) {
       AIData &ai = AI[ data[k].device() ];
-      long v = 1 << ai.AI->bits();
       if ( data[k].unipolar() ) {
 	double max = ai.AI->unipolarRange( data[k].gainIndex() );
 	data[k].setMaxVoltage( max );
 	data[k].setMinVoltage( 0.0 );
-	data[k].setGain( max / v );
       }
       else {
 	double max = ai.AI->bipolarRange( data[k].gainIndex() );
 	data[k].setMaxVoltage( max );
 	data[k].setMinVoltage( -max );
-	data[k].setGain( 2.0 * max / v );
       }
       long bs = data[k].indices( data[k].updateTime() );
       if ( bs <= 0 || bs > data[k].capacity() )
 	bs = data[k].capacity();
       Sim->add( data[k].device(), data[k].channel(), 
-		data[k].sampleInterval(), data[k].offset(),
-		data[k].scale(), data[k].gain(),
-		bs );
+		data[k].sampleInterval(), data[k].scale(), bs );
     }
   }
 
@@ -274,20 +269,16 @@ int Simulator::restartRead( vector< AnalogOutput* > &aos, bool updategains )
 	    ai.Traces[k].addMode( AdjustFlag );
 	  ai.Gains[k] = -1;
 	  // set gain:
-	  long v = 1 << ai.AI->bits();
 	  if ( ai.Traces[k].unipolar() ) {
 	    double max = ai.AI->unipolarRange( ai.Traces[k].gainIndex() );
 	    ai.Traces[k].setMaxVoltage( max );
 	    ai.Traces[k].setMinVoltage( 0.0 );
-	    ai.Traces[k].setGain( max / v );
 	  }
 	  else {
 	    double max = ai.AI->bipolarRange( ai.Traces[k].gainIndex() );
 	    ai.Traces[k].setMaxVoltage( max );
 	    ai.Traces[k].setMinVoltage( -max );
-	    ai.Traces[k].setGain( 2.0 * max / v );
 	  }
-	  Sim->Data[t].Gain = ai.Traces[k].gain();
 	  t++;
 	}
       }

@@ -77,21 +77,9 @@ double Model::time( int trace ) const
 }
 
 
-float Model::gain( int trace ) const
-{
-  return trace >=0 && trace < (int)Data.size() ? Data[trace].Gain : 1.0;
-}
-
-
 float Model::scale( int trace ) const
 {
   return trace >=0 && trace < (int)Data.size() ? Data[trace].Scale : 1.0;
-}
-
-
-float Model::offset( int trace ) const
-{
-  return trace >=0 && trace < (int)Data.size() ? Data[trace].Offset : 0.0;
 }
 
 
@@ -113,9 +101,9 @@ void Model::setDeltat( int trace, double deltat )
 
 
 void Model::add( int device, int channel, double deltat, 
-		 double offs, double scale, double gain, int nbuffer )
+		 double scale, int nbuffer )
 {
-  Data.push_back( InTrace( device, channel, deltat, offs, scale, gain, nbuffer ) );
+  Data.push_back( InTrace( device, channel, deltat, scale, nbuffer ) );
 }
 
 

@@ -42,6 +42,8 @@ class AnalogOutput;
 \version 0.2
 \todo add probe function that returns a string of possible supported devices.
 \todo add wait function
+\todo add directread function for single point acquisition
+\todo add a flag for indicating whether device is capable of streaming input
 */
 
 class AnalogInput : public Device

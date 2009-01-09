@@ -76,23 +76,24 @@ class DaqError
   static const long long MultipleReglitch = 1LL<<25;
   static const long long InvalidGain = 1LL<<26;
   static const long long MultipleGains = 1LL<<27;
-  static const long long InvalidChannelType = 1LL<<28;
-  static const long long InvalidChannelSequence = 1LL<<29;
+  static const long long CalibrationFailed = 1LL<<28;
+  static const long long InvalidChannelType = 1LL<<29;
+  static const long long InvalidChannelSequence = 1LL<<30;
 
-  static const long long Busy = 1LL<<30;
-  static const long long BufferOverflow = 1LL<<31;
-  static const long long OverflowUnderrun = 1LL<<32;
-  static const long long Unknown  = 1LL<<33;
+  static const long long Busy = 1LL<<31;
+  static const long long BufferOverflow = 1LL<<32;
+  static const long long OverflowUnderrun = 1LL<<33;
+  static const long long Unknown  = 1LL<<34;
 
-  static const long long NoIntensity = 1LL<<34;
-  static const long long AttNotOpen = 1LL<<35;
-  static const long long AttInvalidDevice = 1LL<<36;
-  static const long long AttFailed = 1LL<<37;
-  static const long long AttUnderflow = 1LL<<38;
-  static const long long AttOverflow = 1LL<<39;
-  static const long long AttIntensityUnderflow = 1LL<<40;
-  static const long long AttIntensityOverflow = 1LL<<41;
-  static const long long AttIntensityFailed = 1LL<<42;
+  static const long long NoIntensity = 1LL<<35;
+  static const long long AttNotOpen = 1LL<<36;
+  static const long long AttInvalidDevice = 1LL<<37;
+  static const long long AttFailed = 1LL<<38;
+  static const long long AttUnderflow = 1LL<<39;
+  static const long long AttOverflow = 1LL<<40;
+  static const long long AttIntensityUnderflow = 1LL<<41;
+  static const long long AttIntensityOverflow = 1LL<<42;
+  static const long long AttIntensityFailed = 1LL<<43;
 
     /*! \var NoDevice
         %Device for requested operation does not exist. */
@@ -252,7 +253,7 @@ private:
     /*! State of last output operation. */
   long long State;
     /*! Number of last implemented error-code. */
-  static const int LastState = 43;
+  static const int LastState = 44;
     /*! Plain text error codes. */
   static string ErrorText[LastState];
     /*! Additional error string for messages 

@@ -73,13 +73,12 @@ OutData::OutData( const OutData  &od )
   RequestMinValue = od.RequestMinValue;
   RequestMaxValue = od.RequestMaxValue;
   GainIndex = od.GainIndex;
-  Gain = od.Gain;
-  Offset = od.Offset;
+  GainData = NULL;
   Scale = od.Scale;
   Unit = od.Unit;
   UpdateTime = od.UpdateTime;
-  MinData = od.MinData;
-  MaxData = od.MaxData;
+  MinVoltage = od.MinVoltage;
+  MaxVoltage = od.MaxVoltage;
   SignalDelay = od.SignalDelay;
   Intensity = od.Intensity;
   CarrierFreq = od.CarrierFreq;
@@ -95,6 +94,8 @@ OutData::OutData( const OutData  &od )
 OutData::~OutData( void )
 {
   freeDeviceBuffer();
+  if ( GainData != NULL )
+    delete [] GainData;
 }
 
 
@@ -115,13 +116,12 @@ void OutData::construct( void )
   RequestMinValue = AutoRange;
   RequestMaxValue = AutoRange;
   GainIndex = 0;
-  Gain = 1.0;
-  Offset = 0.0;
+  GainData = NULL;
   Scale = 1.0;
   Unit = "V";
   UpdateTime = 0.0;
-  MinData = -1;
-  MaxData = +1;
+  MinVoltage = -1.0;
+  MaxVoltage = +1.0;
   SignalDelay = 0.0;
   Intensity = NoIntensity;
   CarrierFreq = 0.0;
@@ -199,13 +199,12 @@ const OutData &OutData::assign( const OutData &od )
   RequestMinValue = od.RequestMinValue;
   RequestMaxValue = od.RequestMaxValue;
   GainIndex = od.GainIndex;
-  Gain = od.Gain;
-  Offset = od.Offset;
+  GainData = NULL;
   Scale = od.Scale;
   Unit = od.Unit;
   UpdateTime = od.UpdateTime;
-  MinData = od.MinData;
-  MaxData = od.MaxData;
+  MinVoltage = od.MinVoltage;
+  MaxVoltage = od.MaxVoltage;
   SignalDelay = od.SignalDelay;
   Intensity = od.Intensity;
   CarrierFreq = od.CarrierFreq;
@@ -239,13 +238,12 @@ const OutData &OutData::copy( OutData &od ) const
   od.RequestMinValue = RequestMinValue;
   od.RequestMaxValue = RequestMaxValue;
   od.GainIndex = GainIndex;
-  od.Gain = Gain;
-  od.Offset = Offset;
+  od.GainData = NULL;
   od.Scale = Scale;
   od.Unit = Unit;
   od.UpdateTime = UpdateTime;
-  od.MinData = MinData;
-  od.MaxData = MaxData;
+  od.MinVoltage = MinVoltage;
+  od.MaxVoltage = MaxVoltage;
   od.SignalDelay = SignalDelay;
   od.Intensity = Intensity;
   od.CarrierFreq = CarrierFreq;
@@ -538,18 +536,6 @@ void OutData::setExtRef( void )
 }
 
 
-void OutData::setMinData( int min )
-{
-  MinData = min;
-}
-
-
-void OutData::setMaxData( int max )
-{
-  MaxData = max;
-}
-
-
 int OutData::gainIndex( void ) const
 {
   return GainIndex;
@@ -562,34 +548,15 @@ void OutData::setGainIndex( int index )
 }
 
 
-double OutData::gain( void ) const
+char *OutData::gainData( void ) const
 {
-  return Gain;
+  return GainData;
 }
 
 
-void OutData::setGain( double gain )
+void OutData::setGainData( char *data )
 {
-  Gain = gain;
-}
-
-
-void OutData::setGain( double gain, double offset )
-{
-  Gain = gain;
-  Offset = offset;
-}
-
-
-double OutData::offset( void ) const
-{
-  return Offset;
-}
-
-
-void OutData::setOffset( double offset )
-{
-  Offset = offset;
+  GainData = data;
 }
 
 
@@ -607,13 +574,25 @@ double OutData::getVoltage( double val ) const
 
 double OutData::minVoltage( void ) const
 {
-  return MinData / gain();
+  return MinVoltage;
 }
 
 
 double OutData::maxVoltage( void ) const
 {
-  return MaxData / gain();
+  return MaxVoltage;
+}
+
+
+void OutData::setMinVoltage( double minv )
+{
+  MinVoltage = minv;
+}
+
+
+void OutData::setMaxVoltage( double maxv )
+{
+  MaxVoltage = maxv;
 }
 
 
@@ -657,7 +636,7 @@ void OutData::setUnit( double scale, const string &unit )
 double OutData::minValue( void ) const
 {
   if ( noIntensity() )
-    return ( MinData/Gain - Offset )/Scale;
+    return MinVoltage/Scale;
   else
     return -1.0;
 }
@@ -666,7 +645,7 @@ double OutData::minValue( void ) const
 double OutData::maxValue( void ) const
 {
   if ( noIntensity() )
-    return ( MaxData/Gain - Offset )/Scale;
+    return MaxVoltage/Scale;
   else
     return 1.0;
 }
@@ -1029,13 +1008,12 @@ ostream &operator<<( ostream &str, const OutData &od )
   str << "RequestMinValue: " << od.RequestMinValue << '\n';
   str << "RequestMaxValue: " << od.RequestMaxValue << '\n';
   str << "GainIndex: " << od.GainIndex << '\n';
-  str << "Gain: " << od.Gain << '\n';
-  str << "Offset: " << od.Offset << '\n';
+  str << "GainData: " << od.GainData << '\n';
   str << "Scale: " << od.Scale << '\n';
   str << "Unit: " << od.Unit << '\n';
   str << "UpdateTime: " << od.UpdateTime << '\n';
-  str << "MinData: " << od.MinData << '\n';
-  str << "MaxData: " << od.MaxData << '\n';
+  str << "MinVoltage: " << od.MinVoltage << '\n';
+  str << "MaxVoltage: " << od.MaxVoltage << '\n';
   str << "SignalDelay: " << od.SignalDelay << '\n';
   str << "Intensity: " << od.Intensity << '\n';
   str << "CarrierFreq: " << od.CarrierFreq << '\n';

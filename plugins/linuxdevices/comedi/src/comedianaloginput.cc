@@ -46,6 +46,7 @@ ComediAnalogInput::ComediAnalogInput( void )
   MaxRate = 1000.0;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
+  Calibration = 0;
   BufferSize = 0;
   TraceIndex = 0;
 }
@@ -62,6 +63,7 @@ ComediAnalogInput::ComediAnalogInput( const string &device, long mode )
   MaxRate = 1000.0;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
+  Calibration = 0;
   BufferSize = 0;
   TraceIndex = 0;
   open( device, mode );
@@ -137,6 +139,17 @@ int ComediAnalogInput::open( const string &device, long mode )
 
   // make read calls non blocking:
   fcntl( comedi_fileno( DeviceP ), F_SETFL, O_NONBLOCK );
+
+  // get calibration:
+  {
+    char *calibpath = comedi_get_default_calibration_path( DeviceP );
+    ifstream cf( calibpath );
+    if ( cf.good() )
+      Calibration = comedi_parse_calibration_file( calibpath );
+    else
+      Calibration = 0;
+    delete [] calibpath;
+  }
 
   // initialize ranges:
   UnipolarRange.clear();
@@ -228,6 +241,11 @@ void ComediAnalogInput::close( void )
     return;
 
   reset();
+
+  // cleanup calibration:
+  if ( Calibration != 0 )
+    comedi_cleanup_calibration( Calibration );
+  Calibration = 0;
 
   // unlock:
   int error = comedi_unlock( DeviceP,  SubDevice );
@@ -342,20 +360,26 @@ int ComediAnalogInput::setupCommand( InList &traces, comedi_cmd &cmd )
   if ( !isOpen() )
     return -1;
 
+  // channels:
   if ( cmd.chanlist != 0 )
     delete [] cmd.chanlist;
   unsigned int *chanlist = new unsigned int[512];
   memset( chanlist, 0, sizeof( chanlist ) );
   memset( &cmd, 0, sizeof( comedi_cmd ) );
 
+  bool softcal = ( ( comedi_get_subdevice_flags( DeviceP, SubDevice ) &
+		     SDF_SOFT_CALIBRATED ) > 0 );
+
   for( int k = 0; k < traces.size(); k++ ) {
 
+    // delay:
     if ( traces[k].delay() > 0.0 ) {
       traces[k].addError( DaqError::InvalidDelay );
       traces[k].addErrorStr( "delays are not supported by comedi!" );
       traces[k].setDelay( 0.0 );
     }
 
+    // reference:
     int aref = -1;
     int subdeviceflags = comedi_get_subdevice_flags( DeviceP, SubDevice );
     switch ( traces[k].reference() ) {
@@ -379,6 +403,15 @@ int ComediAnalogInput::setupCommand( InList &traces, comedi_cmd &cmd )
     if ( aref == -1 )
       traces[k].addError( DaqError::InvalidReference );
 
+    // allocate gain factor:
+    char *gaindata = traces[k].gainData();
+    if ( gaindata != NULL )
+      delete [] gaindata;
+    gaindata = new char[sizeof(comedi_polynomial_t)];
+    traces[k].setGainData( gaindata );
+    comedi_polynomial_t *gainp = (comedi_polynomial_t *)gaindata;
+
+    // ranges:
     if ( traces[k].unipolar() ) {
       double max = UnipolarRange[traces[k].gainIndex()].max;
       double min = UnipolarRange[traces[k].gainIndex()].min;
@@ -386,8 +419,14 @@ int ComediAnalogInput::setupCommand( InList &traces, comedi_cmd &cmd )
 	traces[k].addError( DaqError::InvalidGain );
       traces[k].setMaxVoltage( max );
       traces[k].setMinVoltage( 0.0 );
-      traces[k].setGain( (max-min)/comedi_get_maxdata( DeviceP, SubDevice, traces[k].channel() ),
-			 min );
+      if ( softcal && Calibration != 0 )
+	comedi_get_softcal_converter( SubDevice, traces[k].channel(),
+				      UnipolarRangeIndex[ traces[k].gainIndex() ],
+				      COMEDI_TO_PHYSICAL, Calibration, gainp );
+      else
+	comedi_get_hardcal_converter( DeviceP, SubDevice, traces[k].channel(),
+				      UnipolarRangeIndex[ traces[k].gainIndex() ],
+				      COMEDI_TO_PHYSICAL, gainp );
       chanlist[k] = CR_PACK( traces[k].channel(), 
 			     UnipolarRangeIndex[ traces[k].gainIndex() ],
 			     aref );
@@ -399,13 +438,18 @@ int ComediAnalogInput::setupCommand( InList &traces, comedi_cmd &cmd )
 	traces[k].addError( DaqError::InvalidGain );
       traces[k].setMaxVoltage( max );
       traces[k].setMinVoltage( min );
-      traces[k].setGain( (max-min)/comedi_get_maxdata( DeviceP, SubDevice, traces[k].channel() ),
-			 min );
+      if ( softcal && Calibration != 0 )
+	comedi_get_softcal_converter( SubDevice, traces[k].channel(),
+				      BipolarRangeIndex[ traces[k].gainIndex() ],
+				      COMEDI_TO_PHYSICAL, Calibration, gainp );
+      else
+	comedi_get_hardcal_converter( DeviceP, SubDevice, traces[k].channel(),
+				      BipolarRangeIndex[ traces[k].gainIndex() ],
+				      COMEDI_TO_PHYSICAL, gainp );
       chanlist[k] = CR_PACK( traces[k].channel(), 
 			     BipolarRangeIndex[ traces[k].gainIndex() ],
 			     aref );
     }
-
   }
 
   if ( traces.failed() )
@@ -547,6 +591,25 @@ int ComediAnalogInput::setupCommand( InList &traces, comedi_cmd &cmd )
 
 int ComediAnalogInput::testReadDevice( InList &traces )
 {
+  for ( int k=0; k<traces.size(); k++ ) {
+    if ( traces[k].gainIndex() < 0 ) {
+      traces[k].addError( DaqError::InvalidGain );
+      traces[k].setGainIndex( 0 );
+    }
+    if ( traces[k].unipolar() ) {
+      if ( traces[k].gainIndex() >= (int)UnipolarRange.size() ) {
+	traces[k].addError( DaqError::InvalidGain );
+	traces[k].setGainIndex( UnipolarRange.size()-1 );
+      }
+    }
+    else {
+      if ( traces[k].gainIndex() >= (int)BipolarRange.size() ) {
+	traces[k].addError( DaqError::InvalidGain );
+	traces[k].setGainIndex( BipolarRange.size()-1 );
+      }
+    }
+  }
+
   comedi_cmd cmd;
   memset( &cmd, 0, sizeof( comedi_cmd ) );
   int retVal = setupCommand( traces, cmd );
@@ -580,6 +643,18 @@ int ComediAnalogInput::prepareRead( InList &traces )
   int minbufsize = traces.size() * traces[0].indices( traces[0].updateTime() ) * BufferElemSize;
   if ( minbufsize > BufferSize )
     traces.addError( DaqError::InvalidUpdateTime );
+
+  // apply calibration:
+  if ( Calibration != 0 ) {
+    for( int k=0; k < traces.size(); k++ ) {
+      unsigned int channel = CR_CHAN( Cmd.chanlist[k] );
+      unsigned int range = CR_RANGE( Cmd.chanlist[k] );
+      unsigned int aref = CR_AREF( Cmd.chanlist[k] );
+      if ( comedi_apply_parsed_calibration( DeviceP, SubDevice, channel,
+					    range, aref, Calibration ) < 0 )
+	traces[k].addError( DaqError::CalibrationFailed );
+    }
+  }
   
   if ( traces.success() )
     setSettings( traces );
@@ -664,12 +739,12 @@ int ComediAnalogInput::startRead( InList &traces )
 template< typename T >
 void ComediAnalogInput::convert( InList &traces, char *buffer, int n )
 {
-  // scale factors and offsets:
+  // conversion polynomials and scale factors:
   double scale[traces.size()];
-  double offs[traces.size()];
+  const comedi_polynomial_t* polynomial[traces.size()];
   for ( int k=0; k<traces.size(); k++ ) {
-    scale[k] = traces[k].gain() * traces[k].scale();
-    offs[k] = traces[k].offset() * traces[k].scale();
+    scale[k] = traces[k].scale();
+    polynomial[k] = (const comedi_polynomial_t *)traces[k].gainData();
   }
 
   // trace buffer pointers and sizes:
@@ -687,8 +762,8 @@ void ComediAnalogInput::convert( InList &traces, char *buffer, int n )
 
   for ( int k=0; k<n; k++ ) {
     // convert:
-    *bp[TraceIndex] = offs[TraceIndex] +
-      scale[TraceIndex] * db[k];
+    *bp[TraceIndex] = comedi_to_physical( db[k], polynomial[TraceIndex] );
+    *bp[TraceIndex] *= scale[TraceIndex];
     // update pointers:
     bp[TraceIndex]++;
     bn[TraceIndex]++;

@@ -41,8 +41,9 @@ class AnalogInput;
 \version 0.5
 \brief Interface for accessing analog output of a data-aquisition board.
 \todo add wait function for blocked writes. Returns an error code in the signals.
-\todo add 
 \todo add probe function that returns a string of possible supported devices.
+\todo add directwrite function for single point output
+\todo add a flag for indicating whether device is capable of streaming output
 */
 
 class AnalogOutput : public Device
@@ -128,7 +129,7 @@ public:
         This should be good for most 12 or 16 bit daq boards.
         The buffer is attached to the first signal in \a sigs.
         This function is called before prepareWrite(). */
-  virtual int convertData( OutList &sigs );
+  virtual int convertData( OutList &sigs ) = 0;
     /*! Prepare analog output of the output signals \a sigs on the device.
 	If an error ocurred in any signal, the corresponding errorflags in
 	OutData are set and a negative value is returned.
@@ -261,16 +262,6 @@ protected:
         This function is called by testWrite(). */
   virtual int testWriteDevice( OutList &sigs ) = 0;
 
-    /*! A template function that you can use for the implementation
-        of the convertData() function.
-	This function first sorts the output signals by channel number
-	and then multiplexes the signals in a buffer of type \a T
-	after appropriate scaling.
-        Data values exceeding the range of the daq board are truncated.
-        The buffer is attached to the first signal in \a sigs. */
-  template < typename T >
-    int convert( OutList &sigs );
-
     /*! Set id of the analog output implementation to \a aotype.
 	This function should be called in the constructor
 	of an implementation of AnalogOutput.
@@ -300,46 +291,6 @@ private:
   double ExternalReference;
 
 };
-
-
-template < typename T >
-int AnalogOutput::convert( OutList &sigs )
-{
-  // copy and sort signal pointers:
-  OutList ol;
-  ol.add( sigs );
-  ol.sortByChannel();
-
-  // set scaling factors:
-  double scale[ ol.size() ];
-  double offs[ ol.size() ];
-  for ( int k=0; k<ol.size(); k++ ) {
-    scale[k] = ol[k].scale() * ol[k].gain();
-    offs[k] = ol[k].offset() * ol[k].gain();
-  }
-
-  // allocate buffer:
-  int nbuffer = ol.size()*ol[0].size();
-  T *buffer = new T [nbuffer];
-
-  // convert data and multiplex into buffer:
-  T *bp = buffer;
-  for ( int i=0; i<ol[0].size(); i++ ) {
-    for ( int k=0; k<ol.size(); k++ ) {
-      int v = (T) ::rint( ol[k][i] * scale[k] + offs[k] );
-      if ( v > ol[k].maxData() )
-	v = ol[k].maxData();
-      else if ( v < ol[k].minData() ) 
-	v = ol[k].minData();
-      *bp = v;
-      ++bp;
-    }
-  }
-
-  sigs[0].setDeviceBuffer( (char *)buffer, nbuffer, sizeof( T ) );
-
-  return 0;
-}
 
 
 }; /* namespace relacs */

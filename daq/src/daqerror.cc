@@ -38,7 +38,7 @@ string DaqError::ErrorText[LastState] =
     "invalid reference", "multiple references",
     "dither not supported", "multiple dither settings",
     "reglitch not supported", "multiple reglitch settings",
-    "invalid gain", "multiple gains",
+    "invalid gain", "multiple gains", "calibration failed",
     "invalid channel type", "invalid channel sequence", 
     "busy", "buffer overflow", "overflow/underrun", "unknown",
     "Intensity not set",

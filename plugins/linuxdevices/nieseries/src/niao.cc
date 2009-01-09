@@ -152,6 +152,15 @@ int NIAO::testWriteDevice( OutList &sigs )
       if ( min > max )
 	max = min;
     }
+
+    // allocate gain factor:
+    char *gaindata = sigs[k].gainData();
+    if ( gaindata != NULL )
+      delete [] gaindata;
+    gaindata = new char[sizeof(double)];
+    sigs[k].setGainData( gaindata );
+    double *gainp = (double *)gaindata;
+
     // set range:
     double maxboardvolt = 10.0;
     if ( sigs[k].noIntensity() ) {
@@ -178,14 +187,14 @@ int NIAO::testWriteDevice( OutList &sigs )
 	    maxboardvolt = externalReference();
 	}
       }
-      sigs[k].setGain( unipolar ? maxrange/maxboardvolt : maxrange/2/maxboardvolt, 0.0 );
+      *gainp = unipolar ? maxrange/maxboardvolt : maxrange/2/maxboardvolt;
     }
     else {
       if ( extref && externalReference() < 0.0 ) {
 	sigs[k].addError( DaqError::InvalidReference );
 	extref = false;
       }
-      sigs[k].setGain( unipolar ? maxrange : maxrange/2, 0.0 );
+      *gainp = unipolar ? maxrange : maxrange/2;
     }
     int index = 0;
     if ( unipolar )
@@ -193,8 +202,8 @@ int NIAO::testWriteDevice( OutList &sigs )
     if ( extref )
       index |= 2;
     sigs[k].setGainIndex( index );
-    sigs[k].setMinData( unipolar ? 0 : -maxrange/2 );
-    sigs[k].setMaxData( unipolar ? maxrange - 1 : maxrange/2 - 1 );
+    sigs[k].setMinVoltage( unipolar ? 0.0 : -maxboardvolt );
+    sigs[k].setMaxVoltage( maxboardvolt );
   }
     
   // continuous analog output not suppported:
@@ -227,6 +236,48 @@ int NIAO::testWriteDevice( OutList &sigs )
   sigs.setSampleRate( bf / double( sc ) );
 
   return sigs.failed() ? -1 : 0;
+}
+
+
+int NIAO::convertData( OutList &sigs )
+{
+  // copy and sort signal pointers:
+  OutList ol;
+  ol.add( sigs );
+  ol.sortByChannel();
+
+  // set scaling factors:
+  double scale[ ol.size() ];
+  double minval[ ol.size() ];
+  double maxval[ ol.size() ];
+  for ( int k=0; k<ol.size(); k++ ) {
+    double *gainp = (double *)ol[k].gainData();
+    scale[k] = (*gainp) * ol[k].scale();
+    minval[k] = ol[k].minValue();
+    maxval[k] = ol[k].maxValue();
+  }
+
+  // allocate buffer:
+  int nbuffer = ol.size()*ol[0].size();
+  signed short *buffer = new signed short[nbuffer];
+
+  // convert data and multiplex into buffer:
+  signed short *bp = buffer;
+  for ( int i=0; i<ol[0].size(); i++ ) {
+    for ( int k=0; k<ol.size(); k++ ) {
+      float v = ol[k][i];
+      if ( v > maxval[k] )
+	v = maxval[k];
+      else if ( v < minval[k] ) 
+	v = minval[k];
+      *bp = (signed short) ::rint( v * scale[k] );
+      ++bp;
+    }
+  }
+
+  sigs[0].setDeviceBuffer( (char *)buffer, nbuffer, sizeof( signed short ) );
+
+  return 0;
 }
 
 
@@ -278,17 +329,25 @@ int NIAO::prepareWrite( OutList &sigs )
 	u |= 0x0004;
       }
 
+      // allocate gain factor:
+      char *gaindata = ol[k].gainData();
+      if ( gaindata != NULL )
+	delete [] gaindata;
+      gaindata = new char[sizeof(double)];
+      ol[k].setGainData( gaindata );
+      double *gainp = (double *)gaindata;
+
       // range:
+      double maxboardvolt = 10.0;
       if ( ol[k].noIntensity() ) {
-	double maxboardvolt = 10.0;
 	if ( extref )
 	  maxboardvolt = externalReference();
-	ol[k].setGain( unipolar ? maxrange/maxboardvolt : maxrange/2/maxboardvolt, 0.0 );
+	*gainp = unipolar ? maxrange/maxboardvolt : maxrange/2/maxboardvolt;
       }
       else
-	ol[k].setGain( unipolar ? maxrange : maxrange/2, 0.0 );
-      ol[k].setMinData( unipolar ? 0 : -maxrange/2 );
-      ol[k].setMaxData( unipolar ? maxrange - 1 : maxrange/2 - 1 );
+	*gainp = unipolar ? maxrange : maxrange/2;
+      ol[k].setMinVoltage( unipolar ? 0.0 : -maxboardvolt );
+      ol[k].setMaxVoltage( maxboardvolt );
 
       // add channel:
       if ( ::ioctl( Handle, NIDAQAOADDCHANNEL, u ) != 0 ) {

@@ -3,8 +3,7 @@ echo "please wait..."
 modprobe ni_pcimio
 comedi_config -r /dev/comedi16
 comedi_config --read-buffer 640 --write-buffer 640 /dev/comedi16 ni_pcimio
-
-
+comedi_soft_calibrate -f /dev/comedi16
 
 #modprobe ni_mio_cs
 #sleep 1

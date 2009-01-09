@@ -60,11 +60,9 @@ signalIndex() returns the index of the output of the last signal
 and restartIndex() the index where the data acquisition was restarted.
 
 The data are stored as floats in a secondary unit.
-Multiplication of the raw integer data by gain() and adding offset()
-results in the voltage in Volts measured by the data-acquisition board.
-Further multiplication with scale()
-results in the data value stored in the InData buffer with
-an unit returned by unit().
+Multiplication of the voltage obtained from the data acquisition board
+with scale() results in the data value stored in the InData buffer
+with an unit returned by unit().
 
 The acquisition of the data is specified by sampleRate(), delay(),
 startSource(), priority(), continuous(), device(), channel(),
@@ -72,11 +70,11 @@ reference(), dither(), unipolar(), gainIndex(), and updateTime().
 Further, the InData has an identifier string ident(),
 a unique trace number trace() and mode() flags.
 
-InputData inherits an error flag from the class DaqError.
-The error flag can be read with error() where errors of 
-the last input operation are coded.
-With success() it can be checked whether the last input/output operation
-was successful.
+InputData inherits an error flag from the class DaqError.  The error
+flag can be read with error() where errors of the last input operation
+are coded.
+With success() it can be checked whether the last input/output
+operation was successful.
 For more details, see DaqError.
 */
 
@@ -342,76 +340,43 @@ class InData : public CyclicArray<float>, public DaqError
 	if it is false positive and negative values are acquired.
         By default acquisition is bipolar. */
   void setUnipolar( bool unipolar );
-    /*! The gain factor for the data.
-        To compute the voltage in Volt 
-	that was actually measured by the DAQ board
-        the raw integer data are first multiplied by gain() and
-	then offset by offset().
-        \sa setGain(), gainIndex(), setGainIndex(),
-	offset(), setOffset(), scale(), setScale(), unit(), setUnit() */
-  double gain( void ) const;
-    /*! Set the gain factor to \a gain.
-        To compute the voltage in Volt 
-	that was actually measured by the DAQ board
-        the raw integer data are first multiplied by gain() and
-	then offset by offset().
-        \sa gain(), gainIndex(), setGainIndex(),
-	offset(), setOffset(), scale(), setScale(), unit(), setUnit() */
-  void setGain( double gain );
-    /*! Set the gain factor to \a gain, and the offset to \a offset.
-        To compute the voltage in Volt 
-	that was actually measured by the DAQ board
-        the raw integer data are first multiplied by \a gain and
-	then offset by \a offset.
-        \sa gain(), gainIndex(), setGainIndex(),
-	offset(), setOffset(), scale(), setScale(), unit(), setUnit() */
-  void setGain( double gain, double offset );
-    /*! The offset that is added to the raw integer data
-        after multiplication with gain().
-        \sa setOffset(), gain(), setGain(), scale(), setScale(),
-	unit(), setUnit() */
-  double offset( void ) const;
-    /*! Set the offset that is added to the raw integer data
-        after multiplication with gain() to \a offset.
-        \sa offset(), scale(), setScale(), unit(), setUnit(),
-        gain(), setGain() */
-  void setOffset( double offset );
     /*! Returns the gain index that is used to select the gain of 
         the input trace on the data acquisition board.
-        \sa setGainIndex(), gain(), setGain(),
-	offset(), setOffset(), scale(), setScale(), unit(), setUnit() */
+        \sa setGainIndex(), scale(), setScale(), unit(), setUnit() */
   int gainIndex( void ) const;
     /*! Set the gain index to \a gainindex.
 	The gain index selects the gain of the input trace on the
 	data acquisition board.
-        \sa gainIndex(), gain(), setGain(),
-	offset(), setOffset(), scale(), setScale(), unit(), setUnit() */
+        \sa gainIndex(), scale(), setScale(), unit(), setUnit() */
   void setGainIndex( int gainindex );
+    /*! Returns the data to be used by AnalogInput for converting
+        raw data to voltage.
+        \sa setGainData(), gainIndex() */
+  char *gainData( void ) const;
+    /*! Set the data to be used by AnalogInput for converting
+        raw data to voltage to \a data.
+        \sa gainData(), setGainIndex() */
+  void setGainData( char *data );
 
     /*! The scale factor used for scaling the voltage data 
         to a secondary unit.
-        \sa setScale(), unit(), setUnit(),
-        gain(), setGain(), offset(), setOffset() */
+        \sa setScale(), unit(), setUnit() */
   double scale( void ) const;
     /*! Set the scale factor to \a scale.
 	The scale factor \a scale is used to scale the voltage data to
 	a secondary unit.
-        \sa scale(), unit(), setUnit(),
-        gain(), setGain(), offset(), setOffset() */
+        \sa scale(), unit(), setUnit() */
   void setScale( double scale );
     /*! The secondary unit.
-        \sa setUnit(), scale(), setScale(),
-        gain(), setGain(), offset(), setOffset() */
+        \sa setUnit(), scale(), setScale() */
   string unit( void ) const;
     /*! Set the secondary unit to \a unit.
-        \sa unit(), scale(), setScale(),
-        gain(), setGain(), offset(), setOffset() */
+        \sa unit(), scale(), setScale() */
   void setUnit( const string &unit );
     /*! Set the specifications of a secondary unit.
 	The voltage data are scaled by \a scale
 	to get the data in the secondary unit \a unit.
-        \sa unit(), scale(), setScale(),
-        gain(), setGain(), offset(), setOffset() */
+        \sa unit(), scale(), setScale() */
   void setUnit( double scale, const string &unit );
 
     /*! Returns 0 if the data are acquired,
@@ -601,10 +566,9 @@ class InData : public CyclicArray<float>, public DaqError
   bool Unipolar;
     /*! Index determining the gain on the daq board. */
   int GainIndex;
-    /*! Gain to voltage in Volt. */
-  double Gain;
-    /*! Offset which is added to the scaled voltage. */
-  double Offset;
+    /*! Some data used by AnalogInput to convert raw data from the data acquisition board to
+        voltage */
+  char *GainData;
     /*! Scale from voltage to a secondary unit. */
   double Scale;
     /*! The secondary unit. */

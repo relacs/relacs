@@ -151,21 +151,26 @@ int NIAI::testReadDevice( InList &traces )
     if ( gaincode < 0 )
       traces[k].addError( DaqError::InvalidGain );
     else {
+      // allocate gain factor:
+      char *gaindata = traces[k].gainData();
+      if ( gaindata != NULL )
+	delete [] gaindata;
+      gaindata = new char[sizeof(double)];
+      traces[k].setGainData( gaindata );
+      double *gainp = (double *)gaindata;
       // ranges:
       long v = 1 << bits();
       if ( traces[k].unipolar() ) {
 	double max = unipolarRange( traces[k].gainIndex() );
 	traces[k].setMaxVoltage( max );
 	traces[k].setMinVoltage( 0.0 );
-	traces[k].setGain( max / v );
-	traces[k].setOffset( 0.0 );
+	*gainp = max / v;
       }
       else {
 	double max = bipolarRange( traces[k].gainIndex() );
 	traces[k].setMaxVoltage( max );
 	traces[k].setMinVoltage( -max );
-	traces[k].setGain( 2.0 * max / v );
-	traces[k].setOffset( 0.0 );
+	*gainp = 2.0 * max / v;
       }
     }
   }
@@ -251,21 +256,26 @@ int NIAI::prepareRead( InList &traces )
 	break;
       };
 
+      // allocate gain factor:
+      char *gaindata = traces[k].gainData();
+      if ( gaindata != NULL )
+	delete [] gaindata;
+      gaindata = new char[sizeof(double)];
+      traces[k].setGainData( gaindata );
+      double *gainp = (double *)gaindata;
       // ranges:
       long v = 1 << bits();
       if ( traces[k].unipolar() ) {
 	double max = unipolarRange( traces[k].gainIndex() );
 	traces[k].setMaxVoltage( max );
 	traces[k].setMinVoltage( 0.0 );
-	traces[k].setGain( max / v );
-	traces[k].setOffset( 0.0 );
+	*gainp = max / v;
       }
       else {
 	double max = bipolarRange( traces[k].gainIndex() );
 	traces[k].setMaxVoltage( max );
 	traces[k].setMinVoltage( -max );
-	traces[k].setGain( 2.0 * max / v );
-	traces[k].setOffset( 0.0 );
+	*gainp = 2.0 * max / v;
       }
 
     }
@@ -371,12 +381,11 @@ int NIAI::startRead( InList &traces )
 
 void NIAI::convert( InList &traces, signed short *buffer, int n )
 {
-  // scale factors and offsets:
+  // scale factors:
   double scale[traces.size()];
-  double offs[traces.size()];
   for ( int k=0; k<traces.size(); k++ ) {
-    scale[k] = traces[k].gain() * traces[k].scale();
-    offs[k] = traces[k].offset() * traces[k].scale();
+    double *gainp = (double *)traces[k].gainData();
+    scale[k] = (*gainp) * traces[k].scale();
   }
 
   // trace buffer pointers and sizes:
@@ -394,8 +403,7 @@ void NIAI::convert( InList &traces, signed short *buffer, int n )
 
   for ( int k=0; k<n; k++ ) {
     // convert:
-    *bp[TraceIndex] = offs[TraceIndex] +
-      scale[TraceIndex] * db[k];
+    *bp[TraceIndex] = scale[TraceIndex] * db[k];
     // update pointers:
     bp[TraceIndex]++;
     bn[TraceIndex]++;

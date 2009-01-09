@@ -154,16 +154,6 @@ protected:
         The channels in \a sigs are not sorted.
         This function is called by testWrite(). */
   virtual int testWriteDevice( OutList &sigs );
-  
-    /*! A template function that is used for the implementation
-        of the convertData() function.
-	This function first sorts the output signals by channel number
-	and then multiplexes the signals in a buffer of type \a T
-	after appropriate scaling.
-        Data values exceeding the range of the daq board are truncated.
-        The buffer is attached to the first signal in \a sigs. */
-  template < typename T >
-    int convert( OutList &sigs );
 
     /*! Write data to a running data acquisition.
         Returns the number of data values that were popped from the \a trace- 
@@ -193,6 +183,10 @@ protected:
 
 
 private:
+  
+    /*! Converts the signal traces to raw integer values for the DAQ board. */
+  template < typename T >
+    int convert( OutList &sigs );
 
     /*! Unique analog I/O device type id for all 
         Comedi DAQ devices. */
@@ -234,6 +228,9 @@ private:
   int ErrorState;
   
   OutList *Sigs;
+
+    /*! Calibration info. */
+  comedi_calibration_t *Calibration;
 
     /*! Size of the internal buffer used for getting the data from the driver. */
   int BufferSize;

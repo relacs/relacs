@@ -289,11 +289,5 @@ int AnalogOutput::testWriteData( OutList &sigs )
 }
 
 
-int AnalogOutput::convertData( OutList &sigs )
-{
-  return convert<signed short>( sigs );
-}
-
-
 }; /* namespace relacs */
 

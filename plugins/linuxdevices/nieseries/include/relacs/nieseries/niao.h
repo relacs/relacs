@@ -62,6 +62,13 @@ public:
     /*! Maximum sampling rate in Hz of analog output. */
   virtual double maxRate( void ) const;
 
+    /*! Convert data of the output signals \a sigs.
+	If an error ocurred in any channel, the corresponding errorflags in the
+	OutData structure are filled and a negative value is returned.
+	The output signals are sorted by channel number first
+        and are then multiplexed into a buffer of signed short's (2 byte).
+        The buffer is attached to the first signal in \a sigs. */
+  virtual int convertData( OutList &sigs );
     /*! Prepare analog output of the output signals \a sigs on the device. */
   virtual int prepareWrite( OutList &sigs );
     /*! Start analog output of the output signals \a sigs

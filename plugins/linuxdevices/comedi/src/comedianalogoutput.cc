@@ -49,6 +49,7 @@ ComediAnalogOutput::ComediAnalogOutput( void )
   BipolarExtRefRangeIndex = -1;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
+  Calibration = 0;
   BufferSize = 0;
 }
 
@@ -68,6 +69,7 @@ ComediAnalogOutput::ComediAnalogOutput(  const string &device, long mode )
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   open( device, mode );
   IsPrepared = false;
+  Calibration = 0;
   BufferSize = 0;
 }
 
@@ -139,6 +141,17 @@ int ComediAnalogOutput::open( const string &device, long mode )
   BufferSize = comedi_get_buffer_size( DeviceP, SubDevice );
   // XXX add this to settings?
 
+  // get calibration:
+  {
+    char *calibpath = comedi_get_default_calibration_path( DeviceP );
+    ifstream cf( calibpath );
+    if ( cf.good() )
+      Calibration = comedi_parse_calibration_file( calibpath );
+    else
+      Calibration = 0;
+    delete [] calibpath;
+  }
+
   // make write calls non blocking:
   fcntl( comedi_fileno( DeviceP ), F_SETFL, O_NONBLOCK );
 
@@ -152,8 +165,6 @@ int ComediAnalogOutput::open( const string &device, long mode )
   int nRanges = comedi_get_n_ranges( DeviceP, SubDevice, 0 );  
   for ( int i = 0; i < nRanges; i++ ) {
     comedi_range *range = comedi_get_range( DeviceP, SubDevice, 0, i );
-    // TODO: if a ranges is not supported but comedi thinks so: set max = -1.0
-    // i.e. NI 6070E PCI: range #3&4 (-1..1V, 0..1V) not supported
     if ( range->min < 0.0 ) {
       if ( range->unit & RF_EXTERNAL )
 	BipolarExtRefRangeIndex = i;
@@ -242,6 +253,11 @@ void ComediAnalogOutput::close( void )
 
   reset();
 
+  // cleanup calibration:
+  if ( Calibration != 0 )
+    comedi_cleanup_calibration( Calibration );
+  Calibration = 0;
+
   // unlock:
   int error = comedi_unlock( DeviceP, SubDevice );
   if ( error < 0 )
@@ -319,36 +335,42 @@ int ComediAnalogOutput::convert( OutList &sigs )
   ol.add( sigs );
   ol.sortByChannel();
 
-  // set scaling factors:
-  int iDelay = sigs[0].indices( sigs[0].delay() );
+  // conversion polynomials and scale factors:
+  int delayinx = ol[0].indices( sigs[0].delay() );
+  double minval[ ol.size() ];
+  double maxval[ ol.size() ];
   double scale[ ol.size() ];
-  double offs[ ol.size() ];
+  const comedi_polynomial_t* polynomial[ol.size()];
   for ( int k=0; k<ol.size(); k++ ) {
-    scale[k] = ol[k].scale() * ol[k].gain();
-    offs[k] = ol[k].offset() * ol[k].gain();
+    minval[k] = ol[k].minValue();
+    maxval[k] = ol[k].maxValue();
+    scale[k] = ol[k].scale();
+    polynomial[k] = (const comedi_polynomial_t *)ol[k].gainData();
   }
 
   // allocate buffer:
-  int nbuffer = ol.size() * ( sigs[0].size() + iDelay );
+  int nbuffer = ol.size() * ( ol[0].size() + delayinx );
   T *buffer = new T [nbuffer];
-
   T *bp = buffer;
+
   // simulate delay:
-  for ( int i=0; i<iDelay; i++ ) {
+  for ( int i=0; i<delayinx; i++ ) {
     for ( int k=0; k<ol.size(); k++ ) {
-      *bp = (T) ::rint( offs[k] );
+      *bp = comedi_from_physical( 0.0, polynomial[k] );
       ++bp;
     }
   }
+
   // convert data and multiplex into buffer:
   for ( int i=0; i<ol[0].size(); i++ ) {
     for ( int k=0; k<ol.size(); k++ ) {
-      int v = (T) ::rint( ol[k][i] * scale[k] + offs[k] );
-      if ( v > ol[k].maxData() )
-	v = ol[k].maxData();
-      else if ( v < ol[k].minData() ) 
-	v = ol[k].minData();
-      *bp = v;
+      float v = ol[k][i];
+      if ( v > maxval[k] )
+	v = maxval[k];
+      else if ( v < minval[k] ) 
+	v = minval[k];
+      v *= scale[k];
+      *bp = comedi_from_physical( v, polynomial[k] );
       ++bp;
     }
   }
@@ -410,13 +432,16 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd )
   if ( !isOpen() )
     return -1;
 
+  // channels:
   if ( cmd.chanlist != 0 )
     delete [] cmd.chanlist;
   unsigned int *chanlist = new unsigned int[512];
   memset( chanlist, 0, sizeof( chanlist ) );
   memset( &cmd, 0, sizeof( comedi_cmd ) );
+
+  bool softcal = ( ( comedi_get_subdevice_flags( DeviceP, SubDevice ) &
+		     SDF_SOFT_CALIBRATED ) > 0 );
   
-  // ranges:
   int aref = AREF_GROUND;
   for ( int k=0; k<sigs.size(); k++ ) {
     // minimum and maximum values:
@@ -444,42 +469,57 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd )
       if ( min > max )
 	max = min;
     }
+
+    // allocate gain factor:
+    char *gaindata = sigs[k].gainData();
+    if ( gaindata != NULL )
+      delete [] gaindata;
+    gaindata = new char[sizeof(comedi_polynomial_t)];
+    sigs[k].setGainData( gaindata );
+    comedi_polynomial_t *gainp = (comedi_polynomial_t *)gaindata;
+
     // set range:
-    double maxboardvolt = -1.0;
-    double minboardvolt = 0.0;
     double maxvolt = sigs[k].getVoltage( max );
     int index = -1;
-    for ( int p=0; p<2 && index < 0; p++ ) {
-      if ( unipolar ) {
-	for( index = UnipolarRange.size() - 1; index >= 0; index-- ) {
-	  if ( unipolarRange( index ) > maxvolt ) {
-	    maxboardvolt = UnipolarRange[index].max;
-	    minboardvolt = UnipolarRange[index].min;
-	    break;
+    if ( sigs[k].noIntensity() ) {
+      for ( int p=0; p<2 && index < 0; p++ ) {
+	if ( unipolar ) {
+	  for( index = UnipolarRange.size() - 1; index >= 0; index-- ) {
+	    if ( unipolarRange( index ) > maxvolt )
+	      break;
 	  }
 	}
-      }
-      else {
-	for( index = BipolarRange.size() - 1; index >= 0; index-- ) {
-	  if ( bipolarRange( index ) > maxvolt ) {
-	    maxboardvolt = BipolarRange[index].max;
-	    minboardvolt = BipolarRange[index].min;
-	    break;
+	else {
+	  for( index = BipolarRange.size() - 1; index >= 0; index-- ) {
+	    if ( bipolarRange( index ) > maxvolt )
+	      break;
 	  }
 	}
+	// try other polarity?
+	if ( index < 0 && p == 0 )
+	  unipolar = ! unipolar;
       }
-      // try other polarity?
-      if ( index < 0 && p == 0 )
-	unipolar = ! unipolar;
     }
+    else {
+      index = 0;
+      if ( unipolar && index > (int)UnipolarRange.size() )
+	unipolar = false;
+      if ( ! unipolar && index > (int)BipolarRange.size() )
+	unipolar = true;
+      if ( index >= unipolar ? (int)UnipolarRange.size() : (int)BipolarRange.size() )
+	index = -1;
+    }
+
     // none of the available ranges contains the requested range:
     if ( index < 0 ) {
       sigs[k].addError( DaqError::InvalidGain );
       break;
     }
 
-    int maxdata = comedi_get_maxdata( DeviceP, SubDevice, sigs[k].channel() );
-        
+    double maxboardvolt = unipolar ? UnipolarRange[index].max : BipolarRange[index].max;
+    double minboardvolt = unipolar ? UnipolarRange[index].min : BipolarRange[index].min;
+
+    // external reference:
     if ( sigs[k].noIntensity() ) {
       if ( ! extref ) {
 	if ( externalReference() < maxboardvolt ) {
@@ -505,18 +545,23 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd )
 	                   :  BipolarExtRefRangeIndex;
 	}
       }
-      sigs[k].setGain( maxdata/(maxboardvolt-minboardvolt), -minboardvolt );
     }
     else {
       if ( extref && externalReference() < 0.0 ) {
 	sigs[k].addError( DaqError::InvalidReference );
 	extref = false;
       }
-      if ( unipolar )
-	sigs[k].setGain( maxdata, 0.0 );
-      else
-	sigs[k].setGain( maxdata/2.0, 1.0 );
+      sigs[k].setScale( maxboardvolt );
     }
+
+    if ( softcal && Calibration != 0 )
+      comedi_get_softcal_converter( SubDevice, sigs[k].channel(),
+				    unipolar ? UnipolarRangeIndex[ index ] : BipolarRangeIndex[ index ],
+				    COMEDI_FROM_PHYSICAL, Calibration, gainp );
+    else
+      comedi_get_hardcal_converter( DeviceP, SubDevice, sigs[k].channel(),
+				    unipolar ? UnipolarRangeIndex[ index ] : BipolarRangeIndex[ index ],
+				    COMEDI_FROM_PHYSICAL, gainp );
 
     int gainIndex = index;
     if ( unipolar )
@@ -525,8 +570,8 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd )
       gainIndex |= 1<<15;
 
     sigs[k].setGainIndex( gainIndex );
-    sigs[k].setMinData( 0 );
-    sigs[k].setMaxData( maxdata );
+    sigs[k].setMinVoltage( minboardvolt );
+    sigs[k].setMaxVoltage( maxboardvolt );
 
     // set up channel in chanlist:
     if ( unipolar )
@@ -742,6 +787,18 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   int minbufsize = sigs.size()*BufferElemSize*sigs[0].indices( sigs[0].updateTime() ) * BufferElemSize;
   if ( minbufsize > BufferSize )
     sigs.addError( DaqError::InvalidUpdateTime );
+
+  // apply calibration:
+  if ( Calibration != 0 ) {
+    for( int k=0; k < ol.size(); k++ ) {
+      unsigned int channel = CR_CHAN( Cmd.chanlist[k] );
+      unsigned int range = CR_RANGE( Cmd.chanlist[k] );
+      unsigned int aref = CR_AREF( Cmd.chanlist[k] );
+      if ( comedi_apply_parsed_calibration( DeviceP, SubDevice, channel,
+					    range, aref, Calibration ) < 0 )
+	ol[k].addError( DaqError::CalibrationFailed );
+    }
+  }
 
   IsPrepared = ol.success();
 

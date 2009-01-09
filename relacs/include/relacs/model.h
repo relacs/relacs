@@ -131,22 +131,12 @@ public:
     /*! The current time of trace \a trace. 
         This is the number of so far pushed data elements times deltat(). */
   double time( int trace ) const;
-    /*! The currently effective gain of the daq-board
-        of trace \a trace of the simulated data.
-        \sa scale(), offset() */
-  float gain( int trace ) const;
     /*! The scale for scaling the voltage into a seconday unit
         of trace \a trace of the simulated data.
 	The value in the secondary unit is \a scale times the voltage at
 	the daq board plus the \a offset.
         \sa gain(), offset() */
   float scale( int trace ) const;
-    /*! The offset for the seconday unit
-        of trace \a trace of the simulated data.
-	The value in the secondary unit is \a scale times the voltage at
-	the daq board plus the \a offset.
-        \sa gain(), scale() */
-  float offset( int trace ) const;
 
     /*! Returns the averaged load of the simulation process. */
   double load( void ) const;
@@ -178,12 +168,11 @@ private:
 
     /*! Add trace of device \a device, channel no. \a channel
         with sampling interval \a deltat seconds,
-	offset \a offs, voltage to secondary unit gain \a gain,
-	gain of the daq channel \a gain, and
+	voltage to secondary unit factor \a scale,
 	a buffer with \a nbuffer elements.
 	\sa clear() */
   void add( int device, int channel, double deltat, 
-	    double offs, double scale, double gain, int nbuffer );
+	    double scale, int nbuffer );
     /*! Clear trace buffers. 
         \sa add() */
   void clear( void );
@@ -216,26 +205,22 @@ private:
 
   struct InTrace {
     InTrace( void ) : Device( 0 ), Channel( 0 ), DeltaT( 0.0 ), 
-		      Offset( 0.0 ), Scale( 1.0 ), Gain( 1.0 ),
+		      Scale( 1.0 ),
 		      Buffer() {};
     InTrace( int device, int channel, double deltat, 
-	     float offs, float scale, float gain, int nbuffer )
+	     float scale, int nbuffer )
       : Device( device ), Channel( channel ), DeltaT( deltat ), 
-	Offset( offs ), Scale( scale ), Gain( gain ), 
-	Buffer( nbuffer )
+	Scale( scale ),	Buffer( nbuffer )
       {};
     InTrace( const InTrace &td )
       : Device( td.Device ), Channel( td.Channel ), DeltaT( td.DeltaT ), 
-	Offset( td.Offset ), Scale( td.Scale ), Gain( td.Gain ),
-	Buffer( td.Buffer )
+	Scale( td.Scale ), Buffer( td.Buffer )
       {};
     void clear( void ) { Buffer.clear(); };
     int Device;
     int Channel;
     double DeltaT;
-    float Offset;
     float Scale;
-    float Gain;
     CyclicArrayF Buffer;
   };
   vector< InTrace > Data;

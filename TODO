@@ -1,4 +1,5 @@
 Acquisition interface:
+- check whether test, prepare, and start can be used simulataneously with read/write
 - test updateTime settings and handle errors thereof
 - use dynamic updateinterval and writeinterval in RELACSWidget::run()
   depending on sampling rates and buffer sizes
@@ -6,6 +7,7 @@ Acquisition interface:
 - add function for blocked write() and corresponding error checking (buffer underrun)
 - need a DIO device interface
 - need a ComediNIPFI and a ComediNIRTSI device class.
+- check output through attenuator (the AnalogOutput part)
 
 Plugins:
 - Put relacs configuration files in root directory of the plugin sets
