@@ -22,6 +22,7 @@
 #ifndef _RELACS_DAQERROR_H_
 #define _RELACS_DAQERROR_H_ 1
  
+#include <cerrno>
 #include <iostream>
 #include <string>
 using namespace std;
