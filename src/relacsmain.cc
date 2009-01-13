@@ -30,7 +30,7 @@ using namespace std;
 
 int main( int argc, char **argv )
 {
-  int mode = relacs::RELACSWidget::AcquisitionMode;
+  relacs::RELACSWidget::ModeTypes mode = relacs::RELACSWidget::AcquisitionMode;
   bool fullscreen = false;
   string pluginrelative = "./";
   string pluginhomes = "";

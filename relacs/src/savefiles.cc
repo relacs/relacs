@@ -235,9 +235,9 @@ void SaveFiles::writeToggle( void )
 }
 
 
-void SaveFiles::write( const InList &traces, const EventList &events )
+void SaveFiles::write( const InList &traces )
 {
-  //  cerr << "SaveFiles::write( InList &traces, EventList &events )\n";
+  //  cerr << "SaveFiles::write( InList &traces )\n";
 
   // update write status:
   writeToggle();
@@ -261,6 +261,22 @@ void SaveFiles::write( const InList &traces, const EventList &events )
 	+ traces[k].signalIndex();
     }
   }
+
+}
+
+
+void SaveFiles::write( const EventList &events )
+{
+  //  cerr << "SaveFiles::write( EventList &events )\n";
+
+  // update write status:
+  writeToggle();
+
+  // indicate the new RePro:
+  writeRePro();
+
+  if ( !saving() || !writing() )
+    return;
 
   // write event data:
   for ( int k=0; k<(int)EventFiles.size() && k<events.size(); k++ ) {
@@ -408,18 +424,18 @@ void SaveFiles::writeStimulus( void )
 }
 
 
-void SaveFiles::write( const RePro &RP )
+void SaveFiles::write( const RePro &rp )
 {
-  //  cerr << "SaveFiles::write( const RePro &RP ) \n";
+  //  cerr << "SaveFiles::write( const RePro &rp ) \n";
 
   if ( ReProData )
     RW->printlog( "! warning: SaveFiles::write( RePro & ) -> already RePro data there." );
   ReProData = true;
-  ReProName =  RP.name();
-  ReProAuthor =  RP.author();
-  ReProVersion =  RP.version();
-  ReProDate =  RP.date();
-  ReProSettings = RP;
+  ReProName =  rp.name();
+  ReProAuthor =  rp.author();
+  ReProVersion =  rp.version();
+  ReProDate =  rp.date();
+  ReProSettings = rp;
 
   // write last stimulus here!
   // it is the probably unfinished one of the previous RePro.
@@ -514,7 +530,7 @@ void SaveFiles::createTraceFiles( const InList &traces )
     TraceFiles[k].SignalOffset = 0;
 
     // create file:
-    if ( traces[k].mode() & SaveFilesMode ) {
+    if ( traces[k].mode() & SaveTrace ) {
       Str fn = traces[k].ident();
       TraceFiles[k].FileName = "trace-" + Str( format, k+1 ) + ".f1";
       TraceFiles[k].Stream = openFile( TraceFiles[k].FileName, ios::out | ios::binary );
@@ -546,7 +562,7 @@ void SaveFiles::createEventFiles( const EventList &events )
     EventFiles[k].SignalEvent = 0;
 
     // create file:
-    if ( events[k].mode() & SaveFilesMode ) {
+    if ( events[k].mode() & SaveTrace ) {
       Str fn = events[k].ident();
       EventFiles[k].FileName = fn.lower() + "-events.dat";
       EventFiles[k].Stream = openFile( EventFiles[k].FileName, ios::out );
@@ -557,11 +573,11 @@ void SaveFiles::createEventFiles( const EventList &events )
 	// init key:
 	EventFiles[k].Key.clear();
 	EventFiles[k].Key.addNumber( "t", "sec", "%0.5f" );
-	EventFiles[k].SaveSize = ( events[k].sizeBuffer() && (events[k].mode() & SaveFilesSizeMode) );
+	EventFiles[k].SaveSize = ( events[k].sizeBuffer() && (events[k].mode() & SaveSize) );
 	if ( EventFiles[k].SaveSize )
 	  EventFiles[k].Key.addNumber( events[k].sizeName(), events[k].sizeUnit(),
 				       events[k].sizeFormat() );
-	EventFiles[k].SaveWidth = ( events[k].widthBuffer() && (events[k].mode() & SaveFilesWidthMode) );
+	EventFiles[k].SaveWidth = ( events[k].widthBuffer() && (events[k].mode() & SaveWidth) );
 	if ( EventFiles[k].SaveWidth )
 	  EventFiles[k].Key.addNumber( events[k].widthName(), events[k].widthUnit(),
 				       events[k].widthFormat() );
@@ -632,16 +648,16 @@ void SaveFiles::createStimulusFile( const InList &traces,
       if ( EventFiles[k].Stream != 0 ) {
 	StimulusKey.addLabel( events[k].ident() );
 	StimulusKey.addNumber( "index", "line", "%10.0f" );
-	EventFiles[k].SaveMeanRate = ( events[k].mode() & SaveFilesMeanRateMode );
+	EventFiles[k].SaveMeanRate = ( events[k].mode() & SaveMeanRate );
 	if ( EventFiles[k].SaveMeanRate )
 	  StimulusKey.addNumber( "freq", "Hz", "%6.1f" );
-	EventFiles[k].SaveMeanSize = ( events[k].mode() & SaveFilesMeanSizeMode );
+	EventFiles[k].SaveMeanSize = ( events[k].mode() & SaveMeanSize );
 	if ( EventFiles[k].SaveMeanSize )
 	  StimulusKey.addNumber( events[k].sizeName(), events[k].sizeUnit(), events[k].sizeFormat() );
-	EventFiles[k].SaveMeanWidth = ( events[k].mode() & SaveFilesMeanWidthMode );
+	EventFiles[k].SaveMeanWidth = ( events[k].mode() & SaveMeanWidth );
 	if ( EventFiles[k].SaveMeanWidth )
 	  StimulusKey.addNumber( events[k].widthName(), events[k].widthUnit(), events[k].widthFormat() );
-	EventFiles[k].SaveMeanQuality = ( events[k].mode() & SaveFilesMeanQualityMode );
+	EventFiles[k].SaveMeanQuality = ( events[k].mode() & SaveMeanQuality );
 	if ( EventFiles[k].SaveMeanQuality )
 	  StimulusKey.addNumber( "quality", "%", "%3.0f" );
       }

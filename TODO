@@ -91,16 +91,6 @@ Distribution details:
   help: svn-*
 
 
-Bug in MetaData Dialog: after opening and closing with ESC, reopening
-crashes the program
-
-Bug somewhere: if session is running, start of repro kills RELACS
-This always exits at savefiles.cc line 373: 
-RelacsWidget::startRePro() ->
-SaveFiles::write( RePro ) -> SaveFiles::writeStimulus() -> 
-	    TriggerKey.save( *TF, StimulusToWrite[j].ident() );
--> cleanup savefiles! make sure that writing to files is locked!
-
 Bug in xarray.cc: Problems with the pow function (in containerfuncs.h)
 
 
@@ -163,7 +153,7 @@ RePros:
   - test all RePros! Especially the files they are saving.
 
 Adjust input range:
-  - outsource this in a control widget.
+  - outsource this in a control widget or to the PlotTrace widget.
   - Search/FIField: slower change of input range!
     * option: increase range only
     * decrease range after n stimuli only

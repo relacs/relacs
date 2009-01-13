@@ -41,21 +41,6 @@ namespace relacs {
 
 class RELACSWidget;
 
-  /*! Flag for the modes of traces or events, indicating that they should be saved. */
-static const int SaveFilesMode = 0x0008;
-  /*! Flag for the modes of events, indicating that their size should be saved. */
-static const int SaveFilesSizeMode = 0x0010;
-  /*! Flag for the modes of events, indicating that their width should be saved. */
-static const int SaveFilesWidthMode = 0x0020;
-  /*! Flag for the modes of events, indicating that their mean rate should be saved. */
-static const int SaveFilesMeanRateMode = 0x0040;
-  /*! Flag for the modes of events, indicating that their mean size should be saved. */
-static const int SaveFilesMeanSizeMode = 0x0080;
-  /*! Flag for the modes of events, indicating that their mean width should be saved. */
-static const int SaveFilesMeanWidthMode = 0x0100;
-  /*! Flag for the modes of events, indicating that their mean quality should be saved. */
-static const int SaveFilesMeanQualityMode = 0x0200;
-
 /*! 
 \class SaveFiles
 \brief Write data to files
@@ -88,6 +73,21 @@ class SaveFiles : public QHBox, public Options
   Q_OBJECT
 
 public:
+
+    /*! Flag for the modes of traces or events, indicating that they should be saved. */
+  static const int SaveTrace = 0x0008;
+    /*! Flag for the modes of events, indicating that their size should be saved. */
+  static const int SaveSize = 0x0010;
+    /*! Flag for the modes of events, indicating that their width should be saved. */
+  static const int SaveWidth = 0x0020;
+    /*! Flag for the modes of events, indicating that their mean rate should be saved. */
+  static const int SaveMeanRate = 0x0040;
+    /*! Flag for the modes of events, indicating that their mean size should be saved. */
+  static const int SaveMeanSize = 0x0080;
+    /*! Flag for the modes of events, indicating that their mean width should be saved. */
+  static const int SaveMeanWidth = 0x0100;
+    /*! Flag for the modes of events, indicating that their mean quality should be saved. */
+  static const int SaveMeanQuality = 0x0200;
 
   SaveFiles( RELACSWidget *rw, int height,
 	     QWidget *parent=0, const char *name=0 );
@@ -159,14 +159,16 @@ public:
         or in RePro::read() *before* any write(). */
   void write( bool on );
 
-    /*! Write input data to files */
-  void write( const InList &traces, const EventList &events );
+    /*! Write data traces to files */
+  void write( const InList &traces );
+    /*! Write events to files */
+  void write( const EventList &events );
     /*! Write output-meta-data to files. */
   void write( const OutData &signal );
     /*! Write output-meta-data to files. */
   void write( const OutList &signal );
     /*! Write RePro meta data to files. */
-  void write( const RePro &RP );
+  void write( const RePro &rp );
 
     /*! If no file is open: create a new file name, make a directory,
         open and initialize the data-, event-, and stimulus files. */

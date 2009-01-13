@@ -92,6 +92,20 @@ class RELACSWidget : public QMainWindow, public QThread, public ConfigClass
 
 public:
 
+    /*! The different working modes. */
+  enum ModeTypes {
+      /*! Do nothing, i.e. wait for a selection from the user. */
+    IdleMode = 0,
+      /*! Acquiring real data from a data acquisition board. */
+    AcquisitionMode = 1,
+      /*! Simulate data using a Model. */
+    SimulationMode = 2,
+      /*! Browse previously recorded or simulated data. */
+    BrowseMode = 3,
+      /*! Reanalyse previously recorded or simulated data. */
+    AnalysisMode = 4
+  };
+
   RELACSWidget( const string &pluginrelative,
 		const string &pluginhome,
 		const string &pluginhelp,
@@ -99,7 +113,7 @@ public:
 		const string &pluginconfigfiles,
 		const string &docpath,
 		const string &iconpath,
-		int mode,
+		ModeTypes mode,
 		QWidget *parent=0, const char *name=0 );
   ~RELACSWidget( void );
 
@@ -174,42 +188,33 @@ public:
   void startedMacro( const string &ident, const string &param );
 
     /*! The current working mode.
-        Can be AcquisitionMode, SimulationMode, AnalysisMode, or IdleMode. 
-        \sa acquisition(), simulation(), analysis(), idle() */
-  int mode( void ) const;
+        Can be AcquisitionMode, SimulationMode, BrowseMode, AnalysisMode, or IdleMode. 
+        \sa acquisition(), simulation(), browsing(), analysis(), idle() */
+  ModeTypes mode( void ) const;
     /*! Return a string describing the current working mode.
-        \sa mode(), acquisition(), simulation(), analysis(), idle() */
+        \sa mode(), acquisition(), simulation(), brwosing(), analysis(), idle() */
   string modeStr( void ) const;
-    /*! Acquiring real data from a data acquisition board. 
-        \sa mode(), aquisition() */
-  const static int AcquisitionMode = 1;
-    /*! Simulate data using a Model. 
-        \sa mode(), simulation() */
-  const static int SimulationMode = 2;
-    /*! Reanalyse previously recorded or simulated data. 
-        \sa mode(), analysis() */
-  const static int AnalysisMode = 4;
-    /*! Do nothing, i.e. wait for a selection from the user.
-        \sa mode(), idle() */
-  const static int IdleMode = 0;
     /*! True if the current working mode is to
         acquiring real data from a data acquisition board. 
-	\sa mode(), simulation(), analysis(), idle() */
+	\sa mode(), simulation(), analysis(), browsing(), idle() */
   bool acquisition( void ) const;
-    /*! True if the current working mode is to
-        simulate data using a Model. 
-	\sa mode(), aquisition(), analysis(), idle() */
+    /*! True if the current working mode is to simulate data using a Model. 
+	\sa mode(), aquisition(), browsing(), analysis(), idle() */
   bool simulation( void ) const;
     /*! True if the current working mode is to
+        browse previously recorded or simulated data. 
+	\sa mode(), acquisition(), simulation(), analysis(), idle() */
+  bool browsing( void ) const;
+    /*! True if the current working mode is to
         reanalyse previously recorded or simulated data. 
-	\sa mode(), acquisition(), simulation(), idle() */
+	\sa mode(), acquisition(), simulation(), browsing(), idle() */
   bool analysis( void ) const;
     /*! True if the current working mode is to
         nothing, i.e. to wait for a selection from the user. 
 	\sa mode(), acquisition(), simulation(), analysis() */
   bool idle( void ) const;
     /*! Set the mode to \a mode. */
-  void setMode( int mode );
+  void setMode( ModeTypes mode );
 
     /*! Activates the new gain settings for analog input
         set by the adjustGain() functions. */
@@ -317,7 +322,7 @@ private:
   void setupInTraces( void );
   void setupOutTraces( void );
 
-  int Mode;
+  ModeTypes Mode;
   static const string ModeStr[5];
 
   // Internal classes

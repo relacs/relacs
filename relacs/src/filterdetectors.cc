@@ -103,19 +103,19 @@ string FilterDetectors::createFilters( void )
       // filter parameter:
       int mode = 0;
       if ( boolean( label + "save", false ) )
-	mode |= SaveFilesMode;
+	mode |= SaveFiles::SaveTrace;
       if ( boolean( label + "savesize", false ) )
-	mode |= SaveFilesSizeMode;
+	mode |= SaveFiles::SaveSize;
       if ( boolean( label + "savewidth", false ) )
-	mode |= SaveFilesWidthMode;
+	mode |= SaveFiles::SaveWidth;
       if ( boolean( label + "savemeanrate", false ) )
-	mode |= SaveFilesMeanRateMode;
+	mode |= SaveFiles::SaveMeanRate;
       if ( boolean( label + "savemeansize", false ) )
-	mode |= SaveFilesMeanSizeMode;
+	mode |= SaveFiles::SaveMeanSize;
       if ( boolean( label + "savemeanwidth", false ) )
-	mode |= SaveFilesMeanWidthMode;
+	mode |= SaveFiles::SaveMeanWidth;
       if ( boolean( label + "savemeanquality", false ) )
-	mode |= SaveFilesMeanQualityMode;
+	mode |= SaveFiles::SaveMeanQuality;
       if ( boolean( label + "plot", true ) )
 	mode |= PlotTraceMode;
       vector< string > intrace;
@@ -195,7 +195,7 @@ void FilterDetectors::createStimulusEvents( InList &data, EventList &events,
 	       false, true );  // as the width we store the signal durations
   e.setCyclic();
   e.setSource( 0 );
-  e.setMode( SaveFilesMode | SaveFilesWidthMode | PlotTraceMode | StimulusEventMode );
+  e.setMode( SaveFiles::SaveTrace | SaveFiles::SaveWidth | PlotTraceMode | StimulusEventMode );
   e.setIdent( "Stimulus" );
   events.push( e );
   StimulusEvents = &events.back();
@@ -223,7 +223,7 @@ void FilterDetectors::createRestartEvents( InList &data, EventList &events,
 	       false, false );
   e.setCyclic();
   e.setSource( 0 );
-  e.setMode( SaveFilesMode | PlotTraceMode | RestartEventMode );
+  e.setMode( SaveFiles::SaveTrace | PlotTraceMode | RestartEventMode );
   e.setIdent( "Restart" );
   events.push( e );
 

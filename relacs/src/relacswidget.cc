@@ -47,7 +47,7 @@
 namespace relacs {
 
 
-const string RELACSWidget::ModeStr[5] = { "Idle", "Acquisition", "Simulation", "", "Analysis" };
+const string RELACSWidget::ModeStr[5] = { "Idle", "Acquisition", "Simulation", "Browsing", "Analysis" };
 
 
 void* createAISim( void )
@@ -75,7 +75,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
 			    const string &pluginconfigfiles,
 			    const string &docpath,
 			    const string &iconpath,
-			    int mode, QWidget *parent, const char *name )
+			    ModeTypes mode, QWidget *parent, const char *name )
   : QMainWindow( parent, name ),
     ConfigClass( "RELACS", RELACSPlugin::Core ),
     Mode( mode ),
@@ -554,7 +554,7 @@ int RELACSWidget::setupHardware( int n )
     }
     ws += warnings + "</ul>";
     if ( Fatal ) {
-      ws += "Can't switch to <b>" + ModeStr[mode()] + "</b>-mode!";
+      ws += "Can't switch to <b>" + modeStr() + "</b>-mode!";
       printlog( "! warning: " + ws.erasedMarkup() );
       MessageBox::warning( "RELACS Warning !", ws, true, 0.0, this );
     }
@@ -652,7 +652,7 @@ void RELACSWidget::setupInTraces( void )
     IL[k].setChannel( integer( "inputtracechannel", k, k ) );
     IL[k].setDevice( integer( "inputtracedevice", k, 0 ) );
     IL[k].setContinuous();
-    IL[k].setMode( SaveFilesMode | PlotTraceMode );
+    IL[k].setMode( SaveFiles::SaveTrace | PlotTraceMode );
     IL[k].setReference( text( "inputtracereference", k, InData::referenceStr( InData::RefGround ) ) );
     IL[k].setGainIndex( integer( "inputtracegain", k, 0 ) );
     IL[k].reserve( IL[k].indices( number( "inputtracecapacity", 0, 1000.0 ) ) );
@@ -739,10 +739,8 @@ void RELACSWidget::updateData( void )
 void RELACSWidget::processData( void )
 {
   readLockData();
-  for ( int k=0; k<AQ->inputsSize(); k++ ) {
-    // XXX SF->write( AQ->aiData( k ) );
-  }
-  SF->write( IL, ED );
+  SF->write( IL );
+  SF->write( ED );
   unlockData();
   PT->plot( IL, ED );
 }
@@ -1219,7 +1217,7 @@ void RELACSWidget::stopThreads( void )
 
 void RELACSWidget::stopActivity( void )
 {
-  printlog( "Stopping " + ModeStr[ mode() ] + "-mode" );
+  printlog( "Stopping " + modeStr() + "-mode" );
 
   // finish session and repro:
   SN->stopTheSession();
@@ -1258,7 +1256,7 @@ void RELACSWidget::closeEvent( QCloseEvent *ce )
 
 ///// working mode: ////////////////////////////////////////////////////////
 
-int RELACSWidget::mode( void ) const
+RELACSWidget::ModeTypes RELACSWidget::mode( void ) const
 {
   return Mode;
 }
@@ -1266,16 +1264,7 @@ int RELACSWidget::mode( void ) const
 
 string RELACSWidget::modeStr( void ) const
 {
-  string ms = "";
-  if ( acquisition() )
-    ms = "acquisition";
-  else if ( simulation() )
-    ms = "simulation";
-  else if ( analysis() )
-    ms = "analysis";
-  else if ( idle() )
-    ms = "idle";
-  return ms;
+  return ModeStr[mode()];
 }
 
 
@@ -1291,6 +1280,12 @@ bool RELACSWidget::simulation( void ) const
 }
 
 
+bool RELACSWidget::browsing( void ) const
+{
+  return ( Mode == BrowseMode );
+}
+
+
 bool RELACSWidget::analysis( void ) const
 {
   return ( Mode == AnalysisMode );
@@ -1303,7 +1298,7 @@ bool RELACSWidget::idle( void ) const
 }
 
 
-void RELACSWidget::setMode( int mode )
+void RELACSWidget::setMode( ModeTypes mode )
 {
   Mode = mode;
   if ( MD != 0 )
