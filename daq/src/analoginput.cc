@@ -19,6 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <cmath>
 #include <sstream>
 #include <relacs/indata.h>
 #include <relacs/analoginput.h>
@@ -180,7 +181,7 @@ int AnalogInput::testReadData( InList &traces )
       traces[k].addError( DaqError::MultipleDelays ); 
       traces[k].setDelay( traces[0].delay() );
     }
-    if ( traces[k].sampleRate() != traces[0].sampleRate() ) {
+    if ( fabs( traces[k].sampleRate() - traces[0].sampleRate() ) > 1.0e-8 ) {
       traces[k].addError( DaqError::MultipleSampleRates ); 
       traces[k].setSampleRate( traces[0].sampleRate() );
     }
@@ -287,20 +288,6 @@ int AnalogInput::testReadData( InList &traces )
   }
 
   return traces.failed() ? -1 : 0;
-}
-
-
-int AnalogInput::truncate( InList &traces, double t )
-{
-  int m = 0;
-
-  for ( int k=0; k<traces.size(); k++ ) {
-    int n = traces[k].indices( t );
-    m += traces[k].size() - n;
-    traces[k].resize( n );
-  }
-
-  return m;
 }
 
 

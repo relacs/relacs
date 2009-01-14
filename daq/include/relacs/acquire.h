@@ -569,6 +569,8 @@ protected:
   };
     /*! All devices for analog output. */
   vector < AOData > AO;
+    /*! OutList Dummy for single channel signals. */
+  OutList Signal;
     /*! Index of last output device. */
   int LastDevice;
     /*! Time of last signal output. */

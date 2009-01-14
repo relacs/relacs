@@ -100,20 +100,19 @@ public:
 	This function assumes that \a sigs successfully passed testWrite().
         The channels in \a sigs are not sorted. */
   virtual int prepareWrite( OutList &sigs );
-    /*! Start analog output of the output signals \a sigs
+    /*! Start analog output of the output signals
         after they were prepared by prepareWrite().
 	If an error ocurred in any signal, the corresponding errorflags in
 	OutData are set and a negative value is returned.
-        The channels in \a sigs are not sorted.
 	Also start possible pending acquisition on other devices
 	that are known from take(). */
-  virtual int startWrite( OutList &sigs );
+  virtual int startWrite( void );
     /*! Write data to a running data acquisition.
-        Returns the number of data values that were popped from the \a trace- 
-	device-buffer (sum over all \a traces).
+        Returns the number of data values that were popped from the signal 
+	device-buffers (sum over all signals).
 	If an error ocurred in any channel, the corresponding errorflags in the
 	OutList structure are filled and a negative value is returned.  */
-  virtual int writeData( OutList &sigs );
+  virtual int writeData( void );
 
     /*! Stop any running ananlog output activity and reset the device.
         Returns zero on success, otherwise one of the flags 
@@ -226,12 +225,12 @@ private:
   bool IsPrepared;
 
   int ErrorState;
-  
-  OutList *Sigs;
 
     /*! Calibration info. */
   comedi_calibration_t *Calibration;
 
+    /*! The output signals that were prepared by prepareWrite(). */
+  OutList *Sigs;
     /*! Size of the internal buffer used for getting the data from the driver. */
   int BufferSize;
 

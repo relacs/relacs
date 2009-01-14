@@ -149,13 +149,19 @@ int AISim::prepareRead( InList &traces )
 }
 
 
-int AISim::startRead( InList &traces )
+int AISim::startRead( void )
 {
   return 0;
 }
 
 
-int AISim::readData( InList &traces )
+int AISim::readData( void )
+{
+  return 0;
+}
+
+
+int AISim::convertData( void )
 {
   return 0;
 }

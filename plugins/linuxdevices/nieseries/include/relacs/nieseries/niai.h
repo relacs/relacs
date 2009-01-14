@@ -74,10 +74,12 @@ public:
 
     /*! Prepare analog input of the input traces \a traces on the device. */
   virtual int prepareRead( InList &traces );
-    /*! Start analog input of the inpput traces \a traces on the device. */
-  virtual int startRead( InList &traces );
+    /*! Start analog input. */
+  virtual int startRead( void );
     /*! Read data from a running data acquisition. */
-  virtual int readData( InList &traces );
+  virtual int readData( void );
+    /*! Convert data and push them to the traces. */
+  virtual int convertData( void );
 
     /*! Stop any running ananlog input activity,
         but preserve all so far read in data.
@@ -118,6 +120,8 @@ public:
     /*! maximum number of analog input ranges. */
   int MaxRanges;
 
+    /*! The input traces that were prepared by prepareRead(). */
+  InList *Traces;
     /*! Size of the internal buffer used for getting the data from the driver. */
   int BufferSize;
     /*! Index to the trace in the internal buffer. */

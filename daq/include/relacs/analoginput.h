@@ -127,31 +127,33 @@ public:
 	This function assumes that \a traces successfully passed testRead().
         The channels in \a traces are not sorted. */
   virtual int prepareRead( InList &traces ) = 0;
-    /*! Start non-blocking analog input of the input traces \a traces 
-        on the device.
+    /*! Start non-blocking analog input for the input traces that were passed 
+        to the previous call of prepareRead().
 	If an error ocurred in any channel, the corresponding errorflags in the
 	InData structure are filled and a negative value is returned.
-        The channels in \a traces are not sorted.
 	Also start possible pending acquisition on other devices
 	that are known from take().
-        This function is called after a successfull prepareRead()
-	with exactly the same \a traces
-	or after reading has been stopped via stop().
+        This function is called after a successfull prepareRead().
         This function should be as quick as possible. */
-  virtual int startRead( InList &traces ) = 0;
-    /*! Read data from a running data acquisition,
-        convert them to the secondary number and store the data
-	in \a traces.
-        Returns the number of new data values that were added to the \a traces
-	(sum over all \a traces).
+  virtual int startRead( void ) = 0;
+    /*! Read data from a running data acquisition
+        and store them in an internal buffer.
+        Returns the total number of read data values.
 	If an error ocurred in any channel, the corresponding errorflags in the
 	InData structure are filled and a negative value is returned.
         This function is called periodically after reading has been successfully
-        started by startRead(). The \a traces are exactly the same. */
-  virtual int readData( InList &traces ) = 0;
-    /*! Truncate all input traces in \a traces at time \a t.
-	Returns the number of data elements that were removed. */
-  virtual int truncate( InList &traces, double t );
+        started by startRead().
+        This function does not modify the traces passed to prepareRead()! */
+  virtual int readData( void ) = 0;
+    /*! Convert the acquired data from the internal buffer
+        to numbers in the secondary unit and store the data
+	in the traces that were passed to the previous call of prepareRead().
+        Returns the number of data values that were added to the traces
+	(sum over all traces).
+	If an error ocurred in any channel, the corresponding errorflags in the
+	InData structure are filled and a negative value is returned.
+        This function is called periodically after one or several calls to readData(). */
+  virtual int convertData( void ) = 0;
 
     /*! Stop any running ananlog input activity,
         but preserve all so far read in data.

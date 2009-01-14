@@ -47,6 +47,7 @@ ComediAnalogInput::ComediAnalogInput( void )
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
   Calibration = 0;
+  Traces = 0;
   BufferSize = 0;
   TraceIndex = 0;
 }
@@ -64,6 +65,7 @@ ComediAnalogInput::ComediAnalogInput( const string &device, long mode )
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
   Calibration = 0;
+  Traces = 0;
   BufferSize = 0;
   TraceIndex = 0;
   open( device, mode );
@@ -357,8 +359,10 @@ void dump_cmd( comedi_cmd *cmd )
   
 int ComediAnalogInput::setupCommand( InList &traces, comedi_cmd &cmd )
 {
-  if ( !isOpen() )
+  if ( !isOpen() ) {
+    traces.addError( DaqError::DeviceNotOpen );
     return -1;
+  }
 
   // channels:
   if ( cmd.chanlist != 0 )
@@ -656,8 +660,10 @@ int ComediAnalogInput::prepareRead( InList &traces )
     }
   }
   
-  if ( traces.success() )
+  if ( traces.success() ) {
     setSettings( traces );
+    Traces = &traces;
+  }
 
   IsPrepared = traces.success();
 
@@ -681,12 +687,12 @@ int ComediAnalogInput::executeCommand( void )
 }
 
 
-int ComediAnalogInput::startRead( InList &traces )
+int ComediAnalogInput::startRead( void )
 {
   //  cerr << " ComediAnalogInput::startRead(): begin" << endl;/////TEST/////
 
-  if ( !prepared() ) {
-    cerr << "AI not prepared!\n";
+  if ( !prepared() || Traces == 0 ) {
+    cerr << "AI not prepared or no traces!\n";
     return -1;
   }
 
@@ -785,8 +791,11 @@ void ComediAnalogInput::convert( InList &traces, char *buffer, int n )
 }
 
 
-int ComediAnalogInput::readData( InList &traces )
+int ComediAnalogInput::readData( void )
 {
+  if ( Traces == 0 )
+    return -1;
+
   ErrorState = 0;
   bool failed = false;
   char buffer[BufferSize];
@@ -805,7 +814,7 @@ int ComediAnalogInput::readData( InList &traces )
 
     int ern = errno;
     if ( m < 0 && ern != EAGAIN && ern != EINTR ) {
-      traces.addErrorStr( ern );
+      Traces->addErrorStr( ern );
       failed = true;
       cerr << " ComediAnalogInput::readData(): error" << endl;
     }
@@ -819,25 +828,25 @@ int ComediAnalogInput::readData( InList &traces )
   readn /= BufferElemSize;
 
   if ( LongSampleType )
-    convert<lsampl_t>( traces, buffer, readn );
+    convert<lsampl_t>( *Traces, buffer, readn );
   else
-    convert<sampl_t>( traces, buffer, readn );
+    convert<sampl_t>( *Traces, buffer, readn );
 
   if ( failed ) {
     /* XXX
     // check buffer underrun:
     if ( errno == EPIPE ) {
       ErrorState = 1;
-      traces.addErrorStr( deviceFile() + " - buffer-overflow: "
+      Traces->addErrorStr( deviceFile() + " - buffer-overflow: "
 			  + comedi_strerror( comedi_errno() ) );
-      traces.addError( DaqError::OverflowUnderrun );
+      Traces->addError( DaqError::OverflowUnderrun );
     }    
     else {
       ErrorState = 2;
-      traces.addErrorStr( "Error while reading from device-file: " + deviceFile()
+      Traces->addErrorStr( "Error while reading from device-file: " + deviceFile()
 			  + "  comedi: " + comedi_strerror( comedi_errno() ) 
 			  + "  system: " + strerror( errno ) );
-      traces.addError( DaqError::Unknown );
+      Traces->addError( DaqError::Unknown );
     }
     cerr << "ComediAnalogInput::readData(): Errorstate = " << ErrorState << endl;
     */
@@ -845,6 +854,15 @@ int ComediAnalogInput::readData( InList &traces )
   }
 
   return readn;
+}
+
+
+int ComediAnalogInput::convertData( void )
+{
+  if ( Traces == 0 )
+    return -1;
+
+  return 0; // number of data points
 }
 
 
@@ -877,6 +895,7 @@ int ComediAnalogInput::reset( void )
     delete [] Cmd.chanlist;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
+  Traces = 0;
   TraceIndex = 0;
 
   return retVal;

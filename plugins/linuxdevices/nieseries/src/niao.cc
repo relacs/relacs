@@ -41,6 +41,7 @@ NIAO::NIAO( void )
   : AnalogOutput( "NI E-Series Analog Output", NIAnalogIOType ),
     Handle( -1 )
 {
+  Sigs = 0;
 }
 
 
@@ -48,6 +49,7 @@ NIAO::NIAO( const string &device, long mode )
   : AnalogOutput( "NI E-Series Analog Output", NIAnalogIOType ),
     Handle( -1 )
 {
+  Sigs = 0;
   open( device, mode );
 }
 
@@ -409,34 +411,39 @@ int NIAO::prepareWrite( OutList &sigs )
     }
   }
 
-  if ( ol.success() )
+  if ( ol.success() ) {
     setSettings( ol );
+    Sigs = &sigs;
+  }
 
   return ol.failed() ? -1 : 0;
 }
 
 
-int NIAO::startWrite( OutList &sigs )
+int NIAO::startWrite( void )
 {
-  int bufsize = sigs.size()*sizeof( signed short )*sigs[0].indices( sigs[0].updateTime() );
-  int r = write( Handle, sigs[0].deviceBuffer(), bufsize );
+  if ( Sigs == 0 )
+    return -1;
+
+  int bufsize = Sigs->size()*sizeof( signed short )*(*Sigs)[0].indices( (*Sigs)[0].updateTime() );
+  int r = write( Handle, (*Sigs)[0].deviceBuffer(), bufsize );
 
   if ( r < 0 ) {
     int ern = errno;
     if ( ern == EBUSY )
-      sigs.addError( DaqError::Busy );
+      Sigs->addError( DaqError::Busy );
     else
-      sigs.addErrorStr( ern );
+      Sigs->addErrorStr( ern );
   }
-  else if ( r < sigs[0].deviceBufferSize()*sigs[0].deviceDataSize() )
-    sigs.addError( DaqError::Unknown );
-  // add errno!
+  else if ( r < (*Sigs)[0].deviceBufferSize()*(*Sigs)[0].deviceDataSize() )
+    Sigs->addError( DaqError::Unknown );
+  // add errno! XXX
 
-  return sigs.failed() ? -1 : 0;
+  return Sigs->failed() ? -1 : 0;
 }
 
 
-int NIAO::writeData( OutList &sigs )
+int NIAO::writeData( void )
 {
   return 0;
 }
@@ -445,6 +452,8 @@ int NIAO::writeData( OutList &sigs )
 int NIAO::reset( void )
 {
   int r = ::ioctl( Handle, NIDAQAORESETALL, 0 );
+
+  Sigs = 0;
 
   clearSettings();
 

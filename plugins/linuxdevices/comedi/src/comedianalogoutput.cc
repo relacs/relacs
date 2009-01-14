@@ -44,12 +44,12 @@ ComediAnalogOutput::ComediAnalogOutput( void )
   LongSampleType = false;
   BufferElemSize = 0;
   MaxRate = 1000.0;
-  Sigs = NULL;
   UnipolarExtRefRangeIndex = -1;
   BipolarExtRefRangeIndex = -1;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
   Calibration = 0;
+  Sigs = 0;
   BufferSize = 0;
 }
 
@@ -63,13 +63,13 @@ ComediAnalogOutput::ComediAnalogOutput(  const string &device, long mode )
   LongSampleType = false;
   BufferElemSize = 0;
   MaxRate = 1000.0;
-  Sigs = NULL;
   UnipolarExtRefRangeIndex = -1;
   BipolarExtRefRangeIndex = -1;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   open( device, mode );
   IsPrepared = false;
   Calibration = 0;
+  Sigs = 0;
   BufferSize = 0;
 }
 
@@ -429,8 +429,10 @@ void dump_cmd( comedi_cmd *cmd )
 
 int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd )
 {
-  if ( !isOpen() )
+  if ( !isOpen() ) {
+    sigs.addError( DaqError::DeviceNotOpen );
     return -1;
+  }
 
   // channels:
   if ( cmd.chanlist != 0 )
@@ -777,8 +779,6 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   OutList ol;
   ol.add( sigs );
   ol.sortByChannel();
-  
-  Sigs = &sigs;
 
   if ( setupCommand( ol, Cmd ) < 0 )
     return -1;
@@ -802,8 +802,10 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
 
   IsPrepared = ol.success();
 
-  if ( ol.success() )
+  if ( ol.success() ) {
     setSettings( ol );
+    Sigs = &sigs;
+  }
 
   //  cerr << " ComediAnalogOutput::prepareWrite(): success" << endl;//////TEST/////
 
@@ -839,12 +841,12 @@ void ComediAnalogOutput::clearCommand( void )
 }
 
 
-int ComediAnalogOutput::startWrite( OutList &sigs )
+int ComediAnalogOutput::startWrite( void )
 {
   //  cerr << " ComediAnalogOutput::startWrite(): begin" << endl;/////TEST/////
 
-  if ( !prepared() ) {
-    cerr << "AO not prepared!\n";
+  if ( !prepared() || Sigs == 0 ) {
+    cerr << "AO not prepared or no signals!\n";
     return -1;
   }
 
@@ -886,23 +888,26 @@ int ComediAnalogOutput::startWrite( OutList &sigs )
 }
 
 
-int ComediAnalogOutput::writeData( OutList &sigs )
+int ComediAnalogOutput::writeData( void )
 {
+  if ( Sigs == 0 )
+    return -1;
+
   //device stopped?
   if ( !running() ) {
     if ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_BUSY ) {
       ErrorState = 1;
-      sigs.addError( DaqError::OverflowUnderrun );
+      Sigs->addError( DaqError::OverflowUnderrun );
     }
     else {
-      sigs.addErrorStr( "ComediAnalogOutput::writeData: " +
+      Sigs->addErrorStr( "ComediAnalogOutput::writeData: " +
 			deviceFile() + " is not running and not busy!" );
       cerr << "ComediAnalogOutput::writeData: device is not running and not busy! comedi_strerror: " << comedi_strerror( comedi_errno() ) << '\n';
     }
     return -1;
   }
 
-  return fillWriteBuffer( sigs );
+  return fillWriteBuffer( *Sigs );
 }
 
 
@@ -910,8 +915,11 @@ int ComediAnalogOutput::reset( void )
 { 
   //  cerr << " ComediAnalogOutput::reset()" << endl;/////TEST/////
 
+  Sigs = 0;
+
   if ( !isOpen() )
     return NotOpen;
+
   if ( comedi_cancel( DeviceP, SubDevice ) < 0 )
     return WriteError;
 

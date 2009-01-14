@@ -102,20 +102,24 @@ public:
 	This function assumes that \a traces successfully passed testRead().
         The channels in \a traces are not sorted. */
   virtual int prepareRead( InList &traces );
-    /*! Start analog input of the input traces \a traces on the device
+    /*! Start analog input of the input traces on the device
         after they were prepared by prepareRead().
 	If an error ocurred in any channel, the corresponding errorflags in the
 	InData structure are filled and a negative value is returned.
-        The channels in \a traces are not sorted.
 	Also start possible pending acquisition on other devices
 	that are known from take(). */
-  virtual int startRead( InList &sigs );
+  virtual int startRead( void );
     /*! Read data from a running data acquisition.
-        Returns the number of new data values that were added to the \a traces
-	(sum over all \a traces).
+        Returns the total number of read data values.
 	If an error ocurred in any channel, the corresponding errorflags in the
 	InList structure are filled and a negative value is returned. */
-  virtual int readData( InList &sigs );
+  virtual int readData( void );
+    /*! Convert data from and push them to the traces.
+        Returns the number of new data values that were added to the traces
+	(sum over all traces).
+	If an error ocurred in any channel, the corresponding errorflags in the
+	InList structure are filled and a negative value is returned. */
+  virtual int convertData( void );
 
     /*! Stop any running ananlog input activity on the device.
         Returns zero on success, otherwise one of the flags 
@@ -228,6 +232,8 @@ private:
     /*! Calibration info. */
   comedi_calibration_t *Calibration;
 
+    /*! The input traces that were prepared by prepareRead(). */
+  InList *Traces;
     /*! Size of the internal buffer used for getting the data from the driver. */
   int BufferSize;
     /*! Index to the trace in the internal buffer. */

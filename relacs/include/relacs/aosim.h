@@ -67,11 +67,10 @@ public:
   virtual int prepareWrite( OutList &sigs );
     /*! Convert data of the output signals \a sigs. */
   virtual int convertData( OutList &sigs );
-    /*! Start analog output of the output signals \a sigs
-        after they were prepared by prepareWrite(). */
-  virtual int startWrite( OutList &sigs );
-    /*! Write data of the output signals \a sigs to the analog output device. */
-  virtual int writeData( OutList &sigs );
+    /*! Start analog output. */
+  virtual int startWrite( void );
+    /*! Write data of the output signals to the analog output device. */
+  virtual int writeData( void );
 
     /*! Reset the analog output device simulation. */
   virtual int reset( void );

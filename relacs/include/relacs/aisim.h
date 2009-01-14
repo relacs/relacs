@@ -74,10 +74,12 @@ public:
 
     /*! Prepare analog input of the input traces \a traces on the device. */
   virtual int prepareRead( InList &traces );
-    /*! Start analog input of the inpput traces \a traces on the device. */
-  virtual int startRead( InList &traces );
+    /*! Start analog input. */
+  virtual int startRead( void );
     /*! Read data from a running data acquisition. */
-  virtual int readData( InList &traces );
+  virtual int readData( void );
+    /*! Convert data. */
+  virtual int convertData( void );
 
     /*! Reset the analog input device simulation. */
   virtual int stop( void );

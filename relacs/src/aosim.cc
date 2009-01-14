@@ -118,13 +118,13 @@ int AOSim::convertData( OutList &sigs )
 }
 
 
-int AOSim::startWrite( OutList &sigs )
+int AOSim::startWrite( void )
 {
   return 0;
 }
 
 
-int AOSim::writeData( OutList &sigs )
+int AOSim::writeData( void )
 {
   return 0;
 }

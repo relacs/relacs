@@ -163,7 +163,7 @@ int Simulator::read( InList &data )
   // start reading from daq boards:
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     if ( AI[i].Traces.size() > 0 && 
-	 AI[i].AI->startRead( AI[i].Traces ) != 0 )
+	 AI[i].AI->startRead() != 0 )
       success = false;
   }
 
@@ -362,7 +362,7 @@ int Simulator::write( OutData &signal )
     restartRead( aos, true );
   }
   else
-    AO[di].AO->startWrite( ol );
+    AO[di].AO->startWrite();
 
   // error?
   if ( signal.failed() )

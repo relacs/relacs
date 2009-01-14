@@ -38,6 +38,7 @@ NIAI::NIAI( void )
   : AnalogInput( "NI E-Series Analog Input", NIAnalogIOType ),
     Handle( -1 )
 {
+  Traces = 0;
   BufferSize = 0;
   TraceIndex = 0;
 }
@@ -47,6 +48,7 @@ NIAI::NIAI( const string &device, long mode )
   : AnalogInput( "NI E-Series Analog Input", NIAnalogIOType ),
     Handle( -1 )
 {
+  Traces = 0;
   BufferSize = 0;
   TraceIndex = 0;
   open( device, mode );
@@ -354,25 +356,30 @@ int NIAI::prepareRead( InList &traces )
   if ( BufferSize <= 0 )
     traces.addError( DaqError::InvalidUpdateTime );
 
-  if ( traces.success() )
+  if ( traces.success() ) {
     setSettings( traces );
+    Traces = &traces;
+  }
 
   return traces.failed() ? -1 : 0;
 }
 
 
-int NIAI::startRead( InList &traces )
+int NIAI::startRead( void )
 {
+  if ( Traces == 0 )
+    return -1;
+
   // start analog input:
   signed short *buffer[2024];
   long n = ::read( Handle, buffer, BufferSize );
   int ern = errno;
   if ( n < 0 && ern != EAGAIN ) {
-    traces.addErrorStr( ern );
+    Traces->addErrorStr( ern );
     return -1;
   }
   if ( n > 0 ) {
-    traces.addErrorStr( "start read added data" );
+    Traces->addErrorStr( "start read added data" );
     return -1;
   }
   return 0;
@@ -425,8 +432,11 @@ void NIAI::convert( InList &traces, signed short *buffer, int n )
 }
 
 
-int NIAI::readData( InList &traces )
+int NIAI::readData( void )
 {
+  if ( Traces == 0 )
+    return -1;
+
   bool failed = false;
   signed short buffer[BufferSize];
   int maxn = BufferSize;
@@ -446,7 +456,7 @@ int NIAI::readData( InList &traces )
 
     int ern = errno;
     if ( m < 0 && ern != EAGAIN ) {
-      traces.addErrorStr( ern );
+      Traces->addErrorStr( ern );
       failed = true;
     }
     else if ( m > 0 ) {
@@ -457,9 +467,15 @@ int NIAI::readData( InList &traces )
 
   }
 
-  convert( traces, buffer, readn );
+  convert( *Traces, buffer, readn );
 
   return failed ? -1 : readn;
+}
+
+
+int NIAI::convertData( void )
+{
+  return 0; // number of data points
 }
 
 
@@ -474,6 +490,7 @@ int NIAI::reset( void )
   int r = stop();
   ::ioctl( Handle, NIDAQAIRESETALL, 0 );
   clearSettings();
+  Traces = 0;
   BufferSize = 0;
   TraceIndex = 0;
   return r;

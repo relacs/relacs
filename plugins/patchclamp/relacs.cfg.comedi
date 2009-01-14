@@ -1,6 +1,6 @@
 *Settings
   General
-     updateinterval: 200ms
+     updateinterval: 50ms
     processinterval: 200ms
   Plugins
        pluginpathes: base*|calibration*|ephys*|patchclamp*|comedi*
@@ -44,7 +44,6 @@
           inputtraces: 1
       inputsamplerate: 20kHz
    inputtracecapacity: 600s
-       inputtracetime: 10000ms
         inputunipolar: false
          inputtraceid: V-1
       inputtracescale: 100

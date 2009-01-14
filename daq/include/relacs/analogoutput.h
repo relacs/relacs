@@ -142,24 +142,23 @@ public:
 	and that convertData() was already called.
         The channels in \a sigs are not sorted. */
   virtual int prepareWrite( OutList &sigs ) = 0;
-    /*! Start analog output of the output signals \a sigs
-        after they were prepared by prepareWrite().
+    /*! Start analog output of the output signals that were passed to the previous call
+        of prepareWrite().
 	If an error ocurred in any signal, the corresponding errorflags in
 	OutData are set and a negative value is returned.
-        The channels in \a sigs are not sorted.
 	Also start possible pending acquisition on other devices
 	that are known from take().
-        This function is always called after a successfull prepareRead()
-        with with exactly the same \a sigs. */
-  virtual int startWrite( OutList &sigs ) = 0;
-    /*! Write data of the output signals \a sigs to the analog output device.
+        This function is always called after a successfull prepareRead(). */
+  virtual int startWrite( void ) = 0;
+    /*! Write data of the output signals that were passed to the previous call
+        of prepareWrite() to the analog output device.
         Returns the number of transferred data elements.
 	Returns zero if all data are transferred.
 	If an error ocurred in any channel, the corresponding errorflags in the
 	InData structure are filled and a negative value is returned.
         This function is called periodically after writing has been successfully
-        started by startWrite(). The \a sigs are exactly the same. */
-  virtual int writeData( OutList &sigs ) = 0;
+        started by startWrite(). */
+  virtual int writeData( void ) = 0;
 
     /*! Stop any running ananlog output activity and reset the device,
         i.e. clear all buffers.
