@@ -32,7 +32,8 @@ Device::Device( int type )
     DeviceIdent( "" ),
     DeviceFile( "" ),
     DeviceName( "" ),
-    DeviceVendor( "" )
+    DeviceVendor( "" ),
+    Settings( "" )
 {
 }
 
@@ -43,7 +44,8 @@ Device::Device( const string &deviceclass, int type )
     DeviceIdent( "" ),
     DeviceFile( "" ),
     DeviceName( "" ),
-    DeviceVendor( "" )
+    DeviceVendor( "" ),
+    Settings( "" )
 {
 }
 
@@ -96,7 +98,19 @@ string Device::info( void ) const
 
 string Device::settings( void ) const
 {
-  return "";
+  return Settings;
+}
+
+
+void Device::setSettings( const string &settings )
+{
+  Settings = settings;
+}
+
+
+void Device::clearSettings( void )
+{
+  Settings = "";
 }
 
 

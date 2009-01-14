@@ -86,8 +86,6 @@ public:
         This should include the names of possible writeable parameter
         (see addTraces()). */
   virtual string info( void ) const;
-    /*! The current settings for analog output (channels, sampling rate, etc. */
-  virtual string settings( void ) const;
 
     /*! Number of analog output channels. */
   virtual int channels( void ) const = 0;
@@ -234,7 +232,7 @@ protected:
         DeviceNotOpen, NoData (OutData::size() <= 0), 
 	MultipleDevices, MultipleStartSources,
 	MultipleDelays, MultipleSampleRates, MultipleContinuous, MultipleRestart,
-	MultipleBuffersizes (OutData::size()), MultipleUpdateTimes, 
+	MultipleBuffersizes (OutData::size()), MultipleBufferTimes, 
 	InvalidStartSource (OutData::startSource() < 0),
 	InvalidDelay (OutData::delay() < 0),
 	InvalidSampleRate (OutData::sampleRate() > maxRate() or < 1.0), 
@@ -267,17 +265,12 @@ protected:
         \sa analogOutputType(), setDeviceType(), setDeviceName(), setIdent() */
   void setAnalogOutputType( int aotype );
 
-    /*! Set's the settings() string for \a sigs.
+    /*! Set the settings() string for \a sigs.
         Call this function from within a successful prepareWrite().
-        \sa settings(), clearSettings() */
-  void setSettings( const OutList &sigs );
-    /*! Clear the settings() string. 
-        \sa settings(), setSettings() */
-  void clearSettings( void );
-
-    /*! A string describing the current settings of the analog output device.
-        \sa setSettings(), settings() */
-  string Settings;
+	\param[in] elemsize is the size of a single data element in the
+	drivers data buffer in bytes.
+        \sa settings() */
+  void setSettings( const OutList &sigs, int elemsize );
 
 
 private:

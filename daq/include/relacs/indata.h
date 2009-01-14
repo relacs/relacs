@@ -389,13 +389,26 @@ class InData : public CyclicArray<float>, public DaqError
   void setSource( int source );
 
     /*! The maximum time in seconds the hardware driver can buffer data. 
-        \sa setUpdateTime() */
-  double updateTime( void ) const;
+        \sa setReadTime(), updateTime() */
+  double readTime( void ) const;
     /*! Set the maximum time the hardware driver should buffer the data
-        before they are written into the InData buffer to \a time seconds.
+        before they are transferred to the AnalogInput implementation
+	to \a time seconds.
+	If \a time is zero or negative, the default buffer time of the driver
+	is used	for the size of the driver's buffer.
+        \sa readTime(), setUpdateTime() */
+  void setReadTime( double time );
+    /*! The maximum time in seconds the AnalogInput implementation
+        buffers data internally before they are converted to
+	the secondary unit and written to the InData buffer. 
+        \sa setUpdateTime(), readTime() */
+  double updateTime( void ) const;
+    /*! Set the maximum time the AnalogInput implementaion should buffer
+        the data internally before they are converted to the secondary unit
+	and written into the InData buffer to \a time seconds.
 	If \a time is zero or negative, the capacity() is used
-	for the size of the driver's buffer.
-        \sa updateTime() */
+	for the size of this buffer.
+        \sa updateTime(), setReadTime() */
   void setUpdateTime( double time );
 
     /*! Return mode flags.
@@ -574,6 +587,9 @@ class InData : public CyclicArray<float>, public DaqError
     /*! The secondary unit. */
   string Unit;
     /*! The maximum time in seconds the hardware driver can buffer data. */
+  double ReadTime;
+    /*! The maximum time in seconds the AnalogInput implementation
+        can buffer data. */
   double UpdateTime;
     /*! The minimum possible value. */
   double MinValue;

@@ -76,7 +76,7 @@ OutData::OutData( const OutData  &od )
   GainData = NULL;
   Scale = od.Scale;
   Unit = od.Unit;
-  UpdateTime = od.UpdateTime;
+  WriteTime = od.WriteTime;
   MinVoltage = od.MinVoltage;
   MaxVoltage = od.MaxVoltage;
   SignalDelay = od.SignalDelay;
@@ -119,7 +119,7 @@ void OutData::construct( void )
   GainData = NULL;
   Scale = 1.0;
   Unit = "V";
-  UpdateTime = 0.0;
+  WriteTime = 0.0;
   MinVoltage = -1.0;
   MaxVoltage = +1.0;
   SignalDelay = 0.0;
@@ -202,7 +202,7 @@ const OutData &OutData::assign( const OutData &od )
   GainData = NULL;
   Scale = od.Scale;
   Unit = od.Unit;
-  UpdateTime = od.UpdateTime;
+  WriteTime = od.WriteTime;
   MinVoltage = od.MinVoltage;
   MaxVoltage = od.MaxVoltage;
   SignalDelay = od.SignalDelay;
@@ -241,7 +241,7 @@ const OutData &OutData::copy( OutData &od ) const
   od.GainData = NULL;
   od.Scale = Scale;
   od.Unit = Unit;
-  od.UpdateTime = UpdateTime;
+  od.WriteTime = WriteTime;
   od.MinVoltage = MinVoltage;
   od.MaxVoltage = MaxVoltage;
   od.SignalDelay = SignalDelay;
@@ -651,15 +651,15 @@ double OutData::maxValue( void ) const
 }
 
 
-double OutData::updateTime( void ) const
+double OutData::writeTime( void ) const
 {
-  return UpdateTime;
+  return WriteTime;
 }
 
 
-void OutData::setUpdateTime( double time )
+void OutData::setWriteTime( double time )
 {
-  UpdateTime = time;
+  WriteTime = time;
 }
 
 
@@ -1011,7 +1011,7 @@ ostream &operator<<( ostream &str, const OutData &od )
   str << "GainData: " << od.GainData << '\n';
   str << "Scale: " << od.Scale << '\n';
   str << "Unit: " << od.Unit << '\n';
-  str << "UpdateTime: " << od.UpdateTime << '\n';
+  str << "WriteTime: " << od.WriteTime << '\n';
   str << "MinVoltage: " << od.MinVoltage << '\n';
   str << "MaxVoltage: " << od.MaxVoltage << '\n';
   str << "SignalDelay: " << od.SignalDelay << '\n';

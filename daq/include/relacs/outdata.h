@@ -402,13 +402,13 @@ class OutData : public SampleData< float >, public DaqError
   double maxValue( void ) const;
 
     /*! The maximum time in seconds the hardware driver should buffer data. 
-        \sa setUpdateTime() */
-  double updateTime( void ) const;
+        \sa setWriteTime() */
+  double writeTime( void ) const;
     /*! Set the maximum time the hardware driver should be able to
         buffer the data to \a time seconds.  If \a time is zero or
-        negative, the capacity() is used for the size of the driver's
-        buffer.  \sa updateTime() */
-  void setUpdateTime( double time );
+        negative, the default size of the driver's buffer is used.
+        \sa writeTime() */
+  void setWriteTime( double time );
 
     /*! Peak intensity of the signal.
         If MuteIntensity is returned, the attenuator is muted.
@@ -695,7 +695,7 @@ class OutData : public SampleData< float >, public DaqError
     /*! The unit of the signal. */
   string Unit;
     /*! The maximum time in seconds the hardware should buffer data. */
-  double UpdateTime;
+  double WriteTime;
     /*! The minimum possible voltage for the preset gain of the daq board. */
   double MinVoltage;
     /*! The maximum possible voltage for the preset gain of the daq board. */

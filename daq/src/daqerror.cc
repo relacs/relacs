@@ -34,6 +34,7 @@ string DaqError::ErrorText[LastState] =
     "continuous mode not supported", "multiple continuous modes",
     "multiple restart requests", "no data", "multiple buffer sizes", 
     "invalid size for the driver's buffer", "multiple sizes for the driver's buffer", 
+    "invalid size for the update buffer", "multiple sizes for the update buffer", 
     "invalid trace specification", "invalid channel", "multiple channels",
     "invalid reference", "multiple references",
     "dither not supported", "multiple dither settings",
@@ -108,9 +109,9 @@ void DaqError::addAttError( int ae )
 
   // map error code:
   if ( ae >= Attenuate::ReadError )
-    addError( 1LL<<(35 - ae - 1) );
+    addError( 1LL<<(37 - ae - 1) );
   else if ( ae >= Attenuate::IntensityError )
-    addError( 1LL<<(35 - ae - 2) );
+    addError( 1LL<<(37 - ae - 2) );
   else
     addError( AttIntensityFailed );
 }

@@ -162,7 +162,7 @@ public:
   void setRestart( bool restart=true );
     /*! Set the maximum time the hardware driver should buffer the data
         to \a time seconds. */
-  void setUpdateTime( double time );
+  void setWriteTime( double time );
 
     /*! Free the internal buffers holding the data in a 
         device dependend multiplexed format. */

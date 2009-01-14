@@ -30,7 +30,6 @@ namespace relacs {
 
 AnalogOutput::AnalogOutput( void )
   : Device( Type ),
-    Settings( "" ),
     AnalogOutputType( 0 ),
     ExternalReference( -1.0 )
 {
@@ -39,7 +38,6 @@ AnalogOutput::AnalogOutput( void )
 
 AnalogOutput::AnalogOutput( int aotype )
   : Device( Type ),
-    Settings( "" ),
     AnalogOutputType( aotype ),
     ExternalReference( -1.0 )
 {
@@ -48,7 +46,6 @@ AnalogOutput::AnalogOutput( int aotype )
 
 AnalogOutput::AnalogOutput( const string &deviceclass, int aotype )
   : Device( deviceclass, Type ),
-    Settings( "" ),
     AnalogOutputType( aotype ),
     ExternalReference( -1.0 )
 {
@@ -122,17 +119,9 @@ string AnalogOutput::info( void ) const
 }
 
 
-string AnalogOutput::settings( void ) const
-{
-  return Settings;
-}
-
-
-void AnalogOutput::setSettings( const OutList &sigs )
+void AnalogOutput::setSettings( const OutList &sigs, int elemsize )
 {
   ostringstream ss;
-  Settings = "";
-
   for ( int k=0; k<sigs.size(); k++ ) {
     ss << "channel: " << sigs[k].channel() << ';';
   }
@@ -140,14 +129,10 @@ void AnalogOutput::setSettings( const OutList &sigs )
   ss << ";startsource: " << sigs[0].startSource();
   ss << ";delay: " << 1000.0*sigs[0].delay() << "ms";
   ss << ";sampling rate: " << 0.001*sigs[0].sampleRate() << "kHz";
+  ss << ";write buffer time: " << sigs[0].writeTime() << "s";
+  ss << ";write buffer size: " << sigs.size()*sigs[0].indices( sigs[0].writeTime() )*elemsize/1000 << "kB";
 
-  Settings += ss.str();
-}
-
-
-void AnalogOutput::clearSettings( void )
-{
-  Settings = "";
+  Device::setSettings( ss.str() );
 }
 
 
@@ -230,9 +215,9 @@ int AnalogOutput::testWriteData( OutList &sigs )
     if ( sigs[k].size() != sigs[0].size() ) {
       sigs[k].addError( DaqError::MultipleBuffersizes );
     }
-    if ( sigs[k].updateTime() != sigs[0].updateTime() ) {
-      sigs[k].addError( DaqError::MultipleUpdateTimes ); 
-      sigs[k].setUpdateTime( sigs[0].updateTime() );
+    if ( sigs[k].writeTime() != sigs[0].writeTime() ) {
+      sigs[k].addError( DaqError::MultipleBufferTimes ); 
+      sigs[k].setWriteTime( sigs[0].writeTime() );
     }
   }
 

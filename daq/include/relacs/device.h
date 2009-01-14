@@ -44,8 +44,9 @@ two open() functions.
 
 Reimplement the info() function to return some usefull information
 about the capabilities of the specific device.
-The settings() functions is ment to return information about the current
-settings of the specific device.
+The settings() functions returns information about the current
+settings of the specific device. This string can be set by setSettings()
+and cleared by clearSettings().
 
 A subclass of Device can be identified by its \a deviceType().
 For example, the Temperature class provides a uniqe interface for measuring
@@ -142,9 +143,8 @@ public:
     /*! Returns a string with some information about the current settings 
         of the device (for example, the currently used sampling rate).
         The string is a series of 'name: value' pairs separated by semicolons ';'.
-	This implementation returns an empty string.
-        \sa info() */
-  virtual string settings( void ) const;
+        \sa setSettings(), clearSettings(), info() */
+  string settings( void ) const;
 
     /*! The id of the device class.
         \sa setDeviceType(), deviceClass(), deviceFile(), deviceIdent(),
@@ -213,6 +213,14 @@ protected:
 	setDeviceFile(), setDeviceName() */
   void setDeviceVendor( const string &devicevendor );
 
+    /*! Set the string describing the settings of the dvice to \a settings.
+        The string is a series of 'name: value' pairs separated by semicolons ';'.
+        \sa settings(), clearSettings() */
+  void setSettings( const string &settings );
+    /*! Clear the settings() string. 
+        \sa settings(), setSettings() */
+  void clearSettings( void );
+
 
 private:
   
@@ -222,6 +230,7 @@ private:
   string DeviceFile;
   string DeviceName;
   string DeviceVendor;
+  string Settings;
 
 };
 

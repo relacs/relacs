@@ -28,7 +28,6 @@ namespace relacs {
 
 Attenuate::Attenuate( void )
   : Device( Type ),
-    Settings( "" ),
     Att( 0 ),
     Index( -1 ),
     AODevice( "" ),
@@ -51,7 +50,6 @@ Attenuate::Attenuate( const string &deviceclass,
 		      const string &frequencyunit,
 		      const string &frequencyformat )
   : Device( deviceclass, Type ),
-    Settings( "" ),
     Att( 0 ),
     Index( -1 ),
     AODevice( "" ),
@@ -74,7 +72,7 @@ Attenuate::~Attenuate( void )
 
 int Attenuate::open( Device &att, long index )
 {
-  Settings = "";
+  clearSettings();
   Att = &dynamic_cast<Attenuator&>( att );
   Index = index;
   if ( Att == NULL )
@@ -90,7 +88,7 @@ int Attenuate::open( Device &att, long index )
 
 int Attenuate::open( const string &device, long index )
 {
-  Settings = "";
+  clearSettings();
   return InvalidDevice;
 }
 
@@ -108,7 +106,7 @@ void Attenuate::close( void )
     Att->close();
   Att = 0;
   Index = -1;
-  Settings = "";
+  clearSettings();
 }
 
 
@@ -116,7 +114,7 @@ void Attenuate::clear( void )
 {
   Att = 0;
   Index = -1;
-  Settings = "";
+  clearSettings();
 }
 
 
@@ -129,12 +127,6 @@ string Attenuate::info( void ) const
   ss << ";attenuator line: " << Index;
   ss << ends;
   return Device::info() + ss.str();
-}
-
-
-string Attenuate::settings( void ) const
-{
-  return Settings;
 }
 
 
@@ -169,7 +161,7 @@ int Attenuate::write( double &intens, double frequency )
   ostringstream ss;
   ss << "intensity: " << intens
      << ";frequency: " << frequency << ends;
-  Settings = ss.str();
+  setSettings( ss.str() );
 
   return r;
 }
@@ -203,7 +195,7 @@ int Attenuate::mute( void )
   // settings:
   ostringstream ss;
   ss << "intensity: muted" << ends;
-  Settings = ss.str();
+  setSettings( ss.str() );
 
   return Att->mute( Index );
 }

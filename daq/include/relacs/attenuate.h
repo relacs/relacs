@@ -155,8 +155,6 @@ public:
 
     /*! Returns a string with some information about the Attenuate device. */
   virtual string info( void ) const;
-    /*! Returns a string with the current settings of the Attenuate device. */
-  virtual string settings( void ) const;
 
   /*! This function is called after an attenuator is assigned to this class
       and before the attenuator is used.
@@ -412,11 +410,6 @@ protected:
         \sa frequencyFormat(), setFrequencyName(), setFrequencyUnit(),
 	setIntensityFormat(), write(), decibel() */
   void setFrequencyFormat( const string &format );
-
-
-    /*! A string describing the current settings of the Attenuate device.
-        \sa settings() */
-  string Settings;
 
 
 private:

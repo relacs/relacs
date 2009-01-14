@@ -86,8 +86,6 @@ public:
         This should include the names of possible readable internal variables
         (see addTraces()). */
   virtual string info( void ) const;
-    /*! The current settings for analog input (channels, sampling rate, etc. */
-  virtual string settings( void ) const;
 
     /*! Number of analog input channels. */
   virtual int channels( void ) const = 0;
@@ -219,7 +217,8 @@ protected:
         DeviceNotOpen, NoData (InData::capacity() <= 0), 
 	MultipleDevices, MultipleStartSources,
 	MultipleDelays, MultipleSampleRates, MultipleContinuous, 
-	MultipleBuffersizes (InData::capacity()), MultipleUpdateTimes, 
+	MultipleBuffersizes (InData::capacity()),
+	MultipleBufferTimes, MultipleUpdateTimes, 
 	InvalidStartSource (InData::startSource() < 0),
 	InvalidDelay (InData::delay() < 0),
 	InvalidSampleRate (InData::sampleRate() > maxRate() or < 1.0), 
@@ -256,17 +255,12 @@ protected:
 	setDeviceFile(), setIdent() */
   void setAnalogInputType( int aitype );
 
-    /*! Set's the settings() string for \a traces.
+    /*! Set the settings() string for \a traces.
         Call this function from within a successful prepareRead().
-        \sa settings(), clearSettings() */
-  void setSettings( const InList &traces );
-    /*! Clear the settings() string. 
-        \sa settings(), setSettings() */
-  void clearSettings( void );
-
-    /*! A string describing the current settings of the analog input device.
-        \sa setSettings(), settings() */
-  string Settings;
+	\param[in] elemsize is the size of a single data element in the
+	drivers data buffer in bytes.
+        \sa settings() */
+  void setSettings( const InList &traces, int elemsize );
 
 
 private:

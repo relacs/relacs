@@ -307,10 +307,10 @@ void OutList::setRestart( bool restart )
 }
 
 
-void OutList::setUpdateTime( double time )
+void OutList::setWriteTime( double time )
 {
   for ( int k=0; k<size(); k++ )
-    operator[]( k ).setUpdateTime( time );
+    operator[]( k ).setWriteTime( time );
 }
 
 

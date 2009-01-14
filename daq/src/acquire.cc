@@ -55,6 +55,7 @@ Acquire::Acquire( void )
 
   SyncMode = NoSync;
 
+  BufferTime = 0.01;
   UpdateTime = 0.1;
 
   Att.clear();
@@ -468,6 +469,17 @@ string Acquire::syncModeStr( void ) const
 }
 
 
+double Acquire::bufferTime( void ) const
+{
+  return BufferTime;
+}
+
+
+void Acquire::setBufferTime( double time )
+{
+  BufferTime = time;
+}
+
 
 double Acquire::updateTime( void ) const
 {
@@ -538,8 +550,9 @@ int Acquire::testRead( InList &data )
   if ( ! success )
     return -1;
 
-  // request buffer size:
+  // request buffer sizes:
   for ( unsigned int i=0; i<AI.size(); i++ ) {
+    AI[i].Traces.setReadTime( BufferTime );
     AI[i].Traces.setUpdateTime( UpdateTime );
   }
 
@@ -630,6 +643,7 @@ int Acquire::read( InList &data )
 
   // request buffer size:
   for ( unsigned int i=0; i<AI.size(); i++ ) {
+    AI[i].Traces.setReadTime( BufferTime );
     AI[i].Traces.setUpdateTime( UpdateTime );
   }
 
@@ -1178,7 +1192,7 @@ int Acquire::testWrite( OutData &signal )
   }
 
   // request buffer size:
-  signal.setUpdateTime( UpdateTime );
+  signal.setWriteTime( BufferTime );
 
   // write to daq board:
   OutList ol( &signal );  
@@ -1330,7 +1344,7 @@ int Acquire::testWrite( OutList &signal )
 
   // request buffer size:
   for ( unsigned int i=0; i<AO.size(); i++ ) {
-    AO[i].Signals.setUpdateTime( UpdateTime );
+    AO[i].Signals.setWriteTime( BufferTime );
   }
 
   // test writing to daq boards:
@@ -1492,7 +1506,7 @@ int Acquire::write( OutData &signal )
   }
 
   // request buffer size:
-  signal.setUpdateTime( UpdateTime );
+  signal.setWriteTime( BufferTime );
 
   // test writing to daq board:
   Signal.clear();
@@ -1672,9 +1686,8 @@ int Acquire::write( OutList &signal )
   }
 
   // request buffer size:
-  for ( unsigned int i=0; i<AO.size(); i++ ) {
-    AO[i].Signals.setUpdateTime( UpdateTime );
-  }
+  for ( unsigned int i=0; i<AO.size(); i++ )
+    AO[i].Signals.setWriteTime( BufferTime );
 
   // test writing to daq boards:
   for ( unsigned int i=0; i<AO.size(); i++ ) {

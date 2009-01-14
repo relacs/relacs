@@ -31,7 +31,6 @@ namespace relacs {
 
 AnalogInput::AnalogInput( void )
   : Device( Type ),
-    Settings( "" ),
     AnalogInputType( 0 )
 {
 }
@@ -39,7 +38,6 @@ AnalogInput::AnalogInput( void )
 
 AnalogInput::AnalogInput( int aitype )
   : Device( Type ),
-    Settings( "" ),
     AnalogInputType( aitype )
 {
 }
@@ -47,7 +45,6 @@ AnalogInput::AnalogInput( int aitype )
 
 AnalogInput::AnalogInput( const string &deviceclass, int aitype )
   : Device( deviceclass, Type ),
-    Settings( "" ),
     AnalogInputType( aitype )
 {
 }
@@ -92,16 +89,9 @@ string AnalogInput::info( void ) const
 }
 
 
-string AnalogInput::settings( void ) const
-{
-  return Settings;
-}
-
-
-void AnalogInput::setSettings( const InList &traces )
+void AnalogInput::setSettings( const InList &traces, int elemsize )
 {
   ostringstream ss;
-  Settings = "";
 
   for ( int k=0; k<traces.size(); k++ ) {
     ss << "channel: " << traces[k].channel()
@@ -113,14 +103,12 @@ void AnalogInput::setSettings( const InList &traces )
   ss << ";startsource: " << traces[0].startSource();
   ss << ";delay: " << 1000.0*traces[0].delay() << "ms";
   ss << ";sampling rate: " << 0.001*traces[0].sampleRate() << "kHz";
+  ss << ";read buffer time: " << traces[0].readTime() << "s";
+  ss << ";read buffer size: " << traces.size()*traces[0].indices( traces[0].readTime() )*elemsize/1000 << "kB";
+  ss << ";update buffer time: " << traces[0].updateTime() << "s";
+  ss << ";update buffer size: " << traces.size()*traces[0].indices( traces[0].updateTime() )*elemsize/1000 << "kB";
 
-  Settings += ss.str();
-}
-
-
-void AnalogInput::clearSettings( void )
-{
-  Settings = "";
+  Device::setSettings( ss.str() );
 }
 
 
@@ -191,6 +179,10 @@ int AnalogInput::testReadData( InList &traces )
     }
     if ( traces[k].capacity() != traces[0].capacity() ) {
       traces[k].addError( DaqError::MultipleBuffersizes );
+    }
+    if ( traces[k].updateTime() != traces[0].readTime() ) {
+      traces[k].addError( DaqError::MultipleBufferTimes ); 
+      traces[k].setReadTime( traces[0].readTime() );
     }
     if ( traces[k].updateTime() != traces[0].updateTime() ) {
       traces[k].addError( DaqError::MultipleUpdateTimes ); 
