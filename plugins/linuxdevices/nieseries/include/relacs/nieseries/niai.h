@@ -122,8 +122,14 @@ public:
 
     /*! The input traces that were prepared by prepareRead(). */
   InList *Traces;
+    /*! Size of the driver buffer used for getting the data from the daq board. */
+  int ReadBufferSize;
     /*! Size of the internal buffer used for getting the data from the driver. */
   int BufferSize;
+    /*! The number of bytes written so far to the internal buffer. */
+  int BufferN;
+    /*! The internal buffer used for getting the data from the driver. */
+  signed short *Buffer;
     /*! Index to the trace in the internal buffer. */
   int TraceIndex;
 

@@ -138,6 +138,11 @@ int Simulator::read( InList &data )
   if ( ! success )
     return -1;
 
+  for ( unsigned int i=0; i<AI.size(); i++ ) {
+    AI[i].Traces.setReadTime( BufferTime );
+    AI[i].Traces.setUpdateTime( UpdateTime );
+  }
+
   // test reading from daq boards:
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     if ( AI[i].Traces.size() > 0 &&
@@ -190,6 +195,8 @@ int Simulator::read( InList &data )
       long bs = data[k].indices( data[k].updateTime() );
       if ( bs <= 0 || bs > data[k].capacity() )
 	bs = data[k].capacity();
+      else
+	bs *= 2;
       Sim->add( data[k].device(), data[k].channel(), 
 		data[k].sampleInterval(), data[k].scale(), bs );
     }
@@ -213,6 +220,12 @@ int Simulator::read( InList &data )
 
 
 int Simulator::readData( void )
+{
+  return 0;
+}
+
+
+int Simulator::convertData( void )
 {
   for ( int k=0; k<Data.size(); k++ ) {
     if ( Data[k].device() >= 0 ) {

@@ -67,9 +67,11 @@ public:
 	Returns 0 on success, negative numbers otherwise.
         Possible errors are indicated by the error state of \a data. */
   virtual int read( InList &data );
+    /*! Simply returns 0. */
+  virtual int readData( void );
     /*! Transfer simulated data to the data from the last call of read().
 	Returns 0 on success, negative numbers otherwise. */
-  virtual int readData( void );
+  virtual int convertData( void );
     /*! Returns pointer to the raw data buffer in \a buffer
         of the analog input device \a ai
         and its current size in \a n (in bytes). */

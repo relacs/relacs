@@ -412,7 +412,7 @@ int NIAO::prepareWrite( OutList &sigs )
   }
 
   if ( ol.success() ) {
-    setSettings( ol );
+    setSettings( ol, sizeof( signed short ) );
     Sigs = &sigs;
   }
 
@@ -425,7 +425,7 @@ int NIAO::startWrite( void )
   if ( Sigs == 0 )
     return -1;
 
-  int bufsize = Sigs->size()*sizeof( signed short )*(*Sigs)[0].indices( (*Sigs)[0].updateTime() );
+  int bufsize = Sigs->size()*sizeof( signed short )*(*Sigs)[0].indices( (*Sigs)[0].writeTime() );
   int r = write( Handle, (*Sigs)[0].deviceBuffer(), bufsize );
 
   if ( r < 0 ) {

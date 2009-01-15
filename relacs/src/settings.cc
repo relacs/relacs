@@ -37,7 +37,7 @@ Settings::Settings( RELACSWidget* rw )
     RW( rw )
 {
   addLabel( "General" );
-  addNumber( "updateinterval", "Interval for periodic acquisition of data", 0.05, 0.001, 1000.0, 0.001, "seconds", "ms" );
+  addNumber( "readinterval", "Interval for periodic acquisition of data", 0.01, 0.001, 1000.0, 0.001, "seconds", "ms" );
   addNumber( "processinterval", "Interval for periodic processing of data", 0.10, 0.001, 1000.0, 0.001, "seconds", "ms" );
   addLabel( "Plugins" );
   addText( "pluginpathes", "Plugin pathes", "" );

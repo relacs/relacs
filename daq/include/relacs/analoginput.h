@@ -131,7 +131,7 @@ public:
 	InData structure are filled and a negative value is returned.
 	Also start possible pending acquisition on other devices
 	that are known from take().
-        This function is called after a successfull prepareRead().
+        This function is called after a successfull prepareRead() or after stop().
         This function should be as quick as possible. */
   virtual int startRead( void ) = 0;
     /*! Read data from a running data acquisition
@@ -139,6 +139,8 @@ public:
         Returns the total number of read data values.
 	If an error ocurred in any channel, the corresponding errorflags in the
 	InData structure are filled and a negative value is returned.
+	If no acquisition is running and therefore no more data are to be expected,
+	a negative number is returned without setting an errorflag of the InData.
         This function is called periodically after reading has been successfully
         started by startRead().
         This function does not modify the traces passed to prepareRead()! */

@@ -129,8 +129,10 @@ void AnalogOutput::setSettings( const OutList &sigs, int elemsize )
   ss << ";startsource: " << sigs[0].startSource();
   ss << ";delay: " << 1000.0*sigs[0].delay() << "ms";
   ss << ";sampling rate: " << 0.001*sigs[0].sampleRate() << "kHz";
-  ss << ";write buffer time: " << sigs[0].writeTime() << "s";
-  ss << ";write buffer size: " << sigs.size()*sigs[0].indices( sigs[0].writeTime() )*elemsize/1000 << "kB";
+  if ( sigs[0].writeTime() ) {
+    ss << ";write buffer time: " << sigs[0].writeTime() << "s";
+    ss << ";write buffer size: " << sigs.size()*sigs[0].indices( sigs[0].writeTime() )*elemsize/1000 << "kB";
+  }
 
   Device::setSettings( ss.str() );
 }

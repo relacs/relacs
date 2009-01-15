@@ -723,7 +723,8 @@ int Acquire::readData( void )
 {
   //  cerr << "Acquire::readData( void )\n";
 
-  bool success = true;
+  bool error = false;
+  bool finished = true;
 
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     if ( AI[i].Traces.size() > 0 ) {
@@ -734,25 +735,47 @@ int Acquire::readData( void )
       int aie = AI[i].AI->error();
       if ( aie != 0 ) {
 	AI[i].Traces.addDaqError( aie );
-	success = false;
+	error = true;
       }
 
       // read data from daq boards:
-      if ( AI[i].AI->readData() < 0 )
-	success = false;
+      if ( AI[i].AI->readData() < 0 ) {
+	if ( AI[i].Traces.failed() )
+	  error = true;
+      }
+      else
+	finished = false;
  
     }
   }
 
   // restart:    
-  if ( ! success ) {
+  if ( error ) {
     vector< AOData* > aod( 0 );
     restartRead( aod, false );
     return -1;
   }
 
   //  cerr << "Acquire::readData( void ) finished\n";
-  return 0;
+  return finished ? 0 : 1;
+}
+
+
+int Acquire::convertData( void )
+{
+  //  cerr << "Acquire::convertData( void )\n";
+
+  bool success = true;
+
+  for ( unsigned int i=0; i<AI.size(); i++ ) {
+    if ( AI[i].Traces.size() > 0 ) {
+      int r = AI[i].AI->convertData();
+      if ( r < 0 )
+	success = false;
+     }
+  }
+
+  return success ? 0 : -1;
 }
 
 
@@ -786,7 +809,7 @@ int Acquire::restartRead( vector< AOData* > &aod, bool updategains )
 
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     int n = AI[i].AI->readData();
-    if ( n < 0 )
+    if ( n < 0 && AI[i].Traces.failed() )
       success = false;
   }
 
@@ -798,8 +821,9 @@ int Acquire::restartRead( vector< AOData* > &aod, bool updategains )
   double t = -1.0;
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     int n = AI[i].AI->readData();
-    if ( n < 0 )
+    if ( n < 0 && AI[i].Traces.failed() )
       success = false;
+    AI[i].AI->convertData();
     for ( int k=0; k<AI[i].Traces.size(); k++ ) {
       if ( t < 0.0 || AI[i].Traces[k].length() < t )
 	t = AI[i].Traces[k].length();
@@ -1787,17 +1811,15 @@ int Acquire::write( OutList &signal )
 
 int Acquire::writeData( void )
 {
-  int rv = 0;
+  bool finished = true;
+  bool error = false;
   for ( unsigned int i=0; i<AO.size(); i++ ) {
     if ( ! AO[i].Signals.empty() ) {
       if ( AO[i].Signals[0].deviceBufferMaxPop() > 0 && AO[i].AO->running() ) {
+	finished = false;
 	int r = AO[i].AO->writeData();
 	if ( r < 0 )
-	  rv = r;
-	else {
-	  if ( rv >= 0 )
-	    rv = 1;
-	}
+	  error = true;
       }
       else {
 	if ( AO[i].Signals[0].autoConvert() ) {
@@ -1807,7 +1829,7 @@ int Acquire::writeData( void )
       }
     }
   }
-  return rv;
+  return error ? -1 : ( finished ? 0 : 1 );
 }
 
 
@@ -1926,8 +1948,8 @@ void Acquire::readSignal( InList &data, EventList &events )
       cerr << currentTime()
 	   << " ! error in Acquire::readSignal() -> signalTime " << sigtime
 	   << " < back() " << events[k].back() 
-	   << " Current " << data[0].currentIndex()
-	   << " Restart " << data[0].restartIndex() << '\n';
+	   << ", current time = " << data[0].currentTime()
+	   << ", restart time = " << data[0].restartTime() << '\n';
     }
   }
 
@@ -1944,10 +1966,10 @@ void Acquire::readSignal( InList &data, EventList &events )
       }
       else if ( ! events[k].empty() && events[k].back() > restarttime ) {
 	cerr << currentTime()
-	     << " ! error in Simulator::readSignal() -> restartTime " << restarttime
+	     << " ! error in Acquire::readSignal() -> restartTime " << restarttime
 	     << " < back() " << events[k].back() 
-	     << " Current " << data[0].currentIndex()
-	     << " Restart " << data[0].restartIndex() << '\n';
+	     << ", current time = " << data[0].currentTime()
+	     << ", restart time = " << data[0].restartTime() << '\n';
       }
       break;
     }

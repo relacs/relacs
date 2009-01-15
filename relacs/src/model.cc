@@ -207,7 +207,7 @@ void Model::start( void )
   SignalEnd = -1.0;
   SignalMutex.lock();
   SimTime.start();
-  QThread::start();
+  QThread::start( QThread::HighestPriority );
 }
 
 

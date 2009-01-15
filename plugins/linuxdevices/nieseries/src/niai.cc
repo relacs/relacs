@@ -39,7 +39,10 @@ NIAI::NIAI( void )
     Handle( -1 )
 {
   Traces = 0;
+  ReadBufferSize = 0;
   BufferSize = 0;
+  BufferN = 0;
+  Buffer = NULL;
   TraceIndex = 0;
 }
 
@@ -49,7 +52,10 @@ NIAI::NIAI( const string &device, long mode )
     Handle( -1 )
 {
   Traces = 0;
+  ReadBufferSize = 0;
   BufferSize = 0;
+  BufferN = 0;
+  Buffer = NULL;
   TraceIndex = 0;
   open( device, mode );
 }
@@ -185,13 +191,26 @@ int NIAI::testReadDevice( InList &traces )
   }
   double bf = double( f );
 
-  // set delay
+  // delay
   long dc = long( ::rint( traces[0].delay() * bf ) );
   traces.setDelay( double( dc ) / bf );
 
-  // set scan rate:
+  // scan rate:
   long sc = long( ::rint( bf / traces[0].sampleRate() ) );
   traces.setSampleRate( bf / double( sc ) );
+
+  // check read buffer size:
+  int readbufsize = traces.size() * traces[0].indices( traces[0].readTime() );
+  if ( readbufsize <= 0 ) {
+    traces.addError( DaqError::InvalidBufferTime );
+    traces.setReadTime( 0.01 );
+    readbufsize = traces.size() * traces[0].indices( traces[0].readTime() );
+  }
+
+  // check update buffer size:
+  int bufsize = traces.size() * traces[0].indices( traces[0].updateTime() );
+  if ( bufsize < readbufsize )
+    traces.addError( DaqError::InvalidUpdateTime );
 
   return traces.failed() ? -1 : 0;
 }
@@ -351,13 +370,22 @@ int NIAI::prepareRead( InList &traces )
       traces.addErrorStr( ern );
   }
 
-  // get buffer size:
-  BufferSize = traces.size() * traces[0].indices( traces[0].updateTime() );
+  // size of driver buffer:
+  ReadBufferSize = 5 * traces.size() * traces[0].indices( traces[0].readTime() );
+
+  // init internal buffer:
+  if ( Buffer != 0 )
+    delete [] Buffer;
+  Buffer = NULL;
+  BufferSize = 2 * traces.size() * traces[0].indices( traces[0].updateTime() );
   if ( BufferSize <= 0 )
     traces.addError( DaqError::InvalidUpdateTime );
+  else
+    Buffer = new signed short[BufferSize];
+  BufferN = 0;
 
   if ( traces.success() ) {
-    setSettings( traces );
+    setSettings( traces, sizeof( signed short ) );
     Traces = &traces;
   }
 
@@ -372,7 +400,7 @@ int NIAI::startRead( void )
 
   // start analog input:
   signed short *buffer[2024];
-  long n = ::read( Handle, buffer, BufferSize );
+  long n = ::read( Handle, buffer, ReadBufferSize );
   int ern = errno;
   if ( n < 0 && ern != EAGAIN ) {
     Traces->addErrorStr( ern );
@@ -434,13 +462,11 @@ void NIAI::convert( InList &traces, signed short *buffer, int n )
 
 int NIAI::readData( void )
 {
-  if ( Traces == 0 )
+  if ( Traces == 0 || Buffer == 0 )
     return -1;
 
   bool failed = false;
-  signed short buffer[BufferSize];
-  int maxn = BufferSize;
-  int readn = 0;
+  int maxn = BufferSize - BufferN;
 
   // try to read twice:
   for ( int tryit=0; tryit<2 && ! failed && maxn > 0; tryit++ ) {
@@ -452,7 +478,7 @@ int NIAI::readData( void )
       break;
 
     // read data:
-    long m = ::read( Handle, buffer + readn, maxn*sizeof( signed short ) );
+    long m = ::read( Handle, Buffer + BufferN, maxn*sizeof( signed short ) );
 
     int ern = errno;
     if ( m < 0 && ern != EAGAIN ) {
@@ -462,20 +488,33 @@ int NIAI::readData( void )
     else if ( m > 0 ) {
       m /= sizeof( signed short );
       maxn -= m;
-      readn += m;
+      BufferN += m;
     }
 
   }
 
-  convert( *Traces, buffer, readn );
+  if ( failed )
+    return -1;
 
-  return failed ? -1 : readn;
+  // no more data to be read:
+  if ( BufferN <= 0 && !running() )
+    return -1;
+
+  return BufferN;
 }
 
 
 int NIAI::convertData( void )
 {
-  return 0; // number of data points
+  if ( Traces == 0 || Buffer == 0 )
+    return -1;
+
+  convert( *Traces, Buffer, BufferN );
+
+  int n = BufferN;
+  BufferN = 0;
+
+  return n;
 }
 
 
@@ -489,10 +528,20 @@ int NIAI::reset( void )
 {
   int r = stop();
   ::ioctl( Handle, NIDAQAIRESETALL, 0 );
+
+
+  // free internal buffer:
+  if ( Buffer != 0 )
+    delete [] Buffer;
+  Buffer = NULL;
+  BufferSize = 0;
+  BufferN = 0;
+
   clearSettings();
   Traces = 0;
-  BufferSize = 0;
+  ReadBufferSize = 0;
   TraceIndex = 0;
+
   return r;
 }
 

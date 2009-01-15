@@ -1,7 +1,7 @@
 *Settings
   General
-     updateinterval: 50ms
-    processinterval: 200ms
+       readinterval: 10ms
+    processinterval: 50ms
   Plugins
        pluginpathes: base*|calibration*|ephys*|patchclamp*|comedi*
    pluginhelppathes: 

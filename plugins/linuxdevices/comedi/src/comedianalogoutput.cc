@@ -139,7 +139,6 @@ int ComediAnalogOutput::open( const string &device, long mode )
   BufferSize = comedi_get_max_buffer_size( DeviceP, SubDevice );
   comedi_set_buffer_size( DeviceP, SubDevice, BufferSize );
   BufferSize = comedi_get_buffer_size( DeviceP, SubDevice );
-  // XXX add this to settings?
 
   // get calibration:
   {
@@ -756,11 +755,11 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
   if ( cmd.chanlist != 0 )
     delete [] cmd.chanlist;
 
-  int bufsize = sigs.size()*BufferElemSize*sigs[0].indices( sigs[0].updateTime() );
+  int bufsize = sigs.size()*BufferElemSize*sigs[0].indices( sigs[0].writeTime() );
   int maxbufsize = comedi_get_max_buffer_size( DeviceP, SubDevice );
   if ( bufsize > maxbufsize ) {
-    sigs.addError( DaqError::InvalidUpdateTime );
-    sigs.setUpdateTime( maxbufsize/sigs.size()/BufferElemSize/sigs[0].sampleRate() );
+    sigs.addError( DaqError::InvalidBufferTime );
+    sigs.setWriteTime( maxbufsize/sigs.size()/BufferElemSize/sigs[0].sampleRate() );
     retVal = -1;
   }
 
@@ -784,9 +783,9 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
     return -1;
 
   // check buffer size:
-  int minbufsize = sigs.size()*BufferElemSize*sigs[0].indices( sigs[0].updateTime() ) * BufferElemSize;
+  int minbufsize = sigs.size()*BufferElemSize*sigs[0].indices( sigs[0].writeTime() ) * BufferElemSize;
   if ( minbufsize > BufferSize )
-    sigs.addError( DaqError::InvalidUpdateTime );
+    sigs.addError( DaqError::InvalidBufferTime );
 
   // apply calibration:
   if ( Calibration != 0 ) {
@@ -803,7 +802,7 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   IsPrepared = ol.success();
 
   if ( ol.success() ) {
-    setSettings( ol );
+    setSettings( ol, BufferElemSize );
     Sigs = &sigs;
   }
 

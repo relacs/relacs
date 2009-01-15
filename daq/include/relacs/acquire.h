@@ -57,7 +57,7 @@ data acquisition boards are communicated via the high level
 classes InData and OutData.
 
 For communication with the data acquisition boards the 
-AnanlogInput and AnalogOutput interfaces are used.
+AnalogInput and AnalogOutput interfaces are used.
 Acquisition devices must be added to Acquire with the functions addInput()
 and addOutput() for analog input and output, respectively.
 Attenuators are operated via the Attenuate interface.
@@ -84,7 +84,10 @@ It takes an InList as argument. The settings of the individual
 InData specify the parameter (sampling rate, channels, ...)
 to be used for the analog input operation.
 Before calling read(), testRead() can be used to check if all parameter are valid.
-With readData() data from the data acquisition board are transfered to the InList.
+With readData() data from the data acquisition board are transfered to 
+and internal buffer of the AnalogInput interface.
+convertData() converts the data from the internal buffer to the secondary unit
+and transfers them to the InList.
 stopRead() stops any activity related to analog input.
 inTraces() returns a list of all available analog input traces.
 
@@ -370,26 +373,33 @@ public:
         Possible errors are indicated by the error state of \a data.
         If some parameters in \a data are invalid there are set to valid values
 	so that a following call of read( InList &data ) will succeed. 
-        \sa read(), readData(), stopRead() */
+        \sa read(), readData(), convertData(), stopRead() */
   virtual int testRead( InList &data );
     /*! Start analog input with the settings given by \a data. 
 	Returns 0 on success, negative numbers otherwise.
         Possible errors are indicated by the error state of \a data. 
-        \sa testRead(), readData(), stopRead() */
+        \sa testRead(), readData(), convertData(), stopRead() */
   virtual int read( InList &data );
-    /*! Read data from data aquisition board and transfer them to the data
-        from the last call of read() that initiated the acquisition.
+    /*! Read data from data aquisition board and store them in an internal buffer.
 	In case of an error, acquisition is restarted.
 	Input gains are not updated.
-	Returns 0 on success, negative numbers otherwise.
+	Returns -1 on error, 0 if no more data are to be
+	expected from the hardware driver, and 1 if some data were read.
         Possible errors are indicated by the error state of the traces.
-        See InList for details about handling the data. 
-        \sa testRead(), read(), stopRead() */
+        \sa testRead(), read(), convertData(), stopRead() */
   virtual int readData( void );
+    /*! Convert data from the internal buffer to the secondary unit
+        and transfer them to the InList data from the last call of read()
+	that initiated the acquisition.
+	Returns 0 on success, negative numbers otherwise.
+        Possible errors are indicated by the error state of the traces (very unlikely).
+        See InList for details about handling the data. 
+        \sa testRead(), read(), readData(), stopRead() */
+  virtual int convertData( void );
     /*! Stop analog input of all analog input devices.
         Remaining data can be still obtained with readData().
 	Returns 0 on success, negative numbers otherwise. 
-        \sa testRead(), read(), readData() */
+        \sa testRead(), read(), readData(), convertData() */
   virtual int stopRead( void );
 
     /*! The flag that is used to mark traces whose gain was changed. 
@@ -506,8 +516,8 @@ public:
     /*! After having started an analog output with write()
         repeatedly call this function to fill up the buffer of
 	the hardware driver with data.
-	Returns a negative number on error, zero if no more data need to be
-	transferred to the hardware driver, and one if some data were
+	Returns -1 on error, 0 if no more data need to be
+	transferred to the hardware driver, and 1 if some data were
 	successfully transfered to the hardware driver.
         \sa testWrite(), convert(), write(), writeZero(), stopWrite() */
   virtual int writeData( void );

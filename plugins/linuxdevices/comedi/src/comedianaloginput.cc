@@ -48,7 +48,10 @@ ComediAnalogInput::ComediAnalogInput( void )
   IsPrepared = false;
   Calibration = 0;
   Traces = 0;
+  ReadBufferSize = 0;
   BufferSize = 0;
+  BufferN = 0;
+  Buffer = NULL;
   TraceIndex = 0;
 }
 
@@ -66,7 +69,10 @@ ComediAnalogInput::ComediAnalogInput( const string &device, long mode )
   IsPrepared = false;
   Calibration = 0;
   Traces = 0;
+  ReadBufferSize = 0;
   BufferSize = 0;
+  BufferN = 0;
+  Buffer = NULL;
   TraceIndex = 0;
   open( device, mode );
 }
@@ -134,10 +140,9 @@ int ComediAnalogInput::open( const string &device, long mode )
   setDeviceFile( device );
 
   // set size of comedi-internal buffer to maximum:
-  BufferSize = comedi_get_max_buffer_size( DeviceP, SubDevice );
-  comedi_set_buffer_size( DeviceP, SubDevice, BufferSize );
-  BufferSize = comedi_get_buffer_size( DeviceP, SubDevice );
-  // XXX add this to settings?
+  ReadBufferSize = comedi_get_max_buffer_size( DeviceP, SubDevice );
+  comedi_set_buffer_size( DeviceP, SubDevice, ReadBufferSize );
+  ReadBufferSize = comedi_get_buffer_size( DeviceP, SubDevice );
 
   // make read calls non blocking:
   fcntl( comedi_fileno( DeviceP ), F_SETFL, O_NONBLOCK );
@@ -620,13 +625,18 @@ int ComediAnalogInput::testReadDevice( InList &traces )
   if ( cmd.chanlist != 0 )
     delete [] cmd.chanlist;
 
-  int bufsize = traces.size()*BufferElemSize*traces[0].indices( traces[0].updateTime() );
-  int maxbufsize = comedi_get_max_buffer_size( DeviceP, SubDevice );
-  if ( bufsize > maxbufsize ) {
-    traces.addError( DaqError::InvalidUpdateTime );
-    traces.setUpdateTime( maxbufsize/traces.size()/BufferElemSize/traces[0].sampleRate() );
+  // check read buffer size:
+  int readbufsize = traces.size() * traces[0].indices( traces[0].readTime() ) * BufferElemSize;
+  if ( readbufsize > ReadBufferSize ) {
+    traces.addError( DaqError::InvalidBufferTime );
+    traces.setReadTime( ReadBufferSize/traces.size()/BufferElemSize/traces[0].sampleRate() );
     retVal = -1;
   }
+
+  // check update buffer size:
+  int bufsize = traces.size() * traces[0].indices( traces[0].updateTime() ) * BufferElemSize;
+  if ( bufsize < readbufsize )
+    traces.addError( DaqError::InvalidUpdateTime );
 
   return retVal;
 }
@@ -643,10 +653,12 @@ int ComediAnalogInput::prepareRead( InList &traces )
   if ( error )
     return error;
 
-  // check buffer size:
-  int minbufsize = traces.size() * traces[0].indices( traces[0].updateTime() ) * BufferElemSize;
-  if ( minbufsize > BufferSize )
-    traces.addError( DaqError::InvalidUpdateTime );
+  // init internal buffer:
+  if ( Buffer != 0 )
+    delete [] Buffer;
+  BufferSize = 2 * traces.size() * traces[0].indices( traces[0].updateTime() ) * BufferElemSize;
+  Buffer = new char[BufferSize];
+  BufferN = 0;
 
   // apply calibration:
   if ( Calibration != 0 ) {
@@ -661,7 +673,7 @@ int ComediAnalogInput::prepareRead( InList &traces )
   }
   
   if ( traces.success() ) {
-    setSettings( traces );
+    setSettings( traces, BufferElemSize );
     Traces = &traces;
   }
 
@@ -793,14 +805,14 @@ void ComediAnalogInput::convert( InList &traces, char *buffer, int n )
 
 int ComediAnalogInput::readData( void )
 {
-  if ( Traces == 0 )
+  cerr << "Comedi::readData() start\n";
+  if ( Traces == 0 || Buffer == 0 )
     return -1;
 
   ErrorState = 0;
   bool failed = false;
-  char buffer[BufferSize];
-  int maxn = BufferSize;
-  int readn = 0;
+  int readn = BufferN*BufferElemSize;
+  int maxn = BufferSize - readn;
 
   // try to read twice:
   for ( int tryit = 0; tryit < 2 && ! failed && maxn > 0; tryit++ ) {
@@ -810,7 +822,7 @@ int ComediAnalogInput::readData( void )
       break;
     
     // read data:
-    ssize_t m = read( comedi_fileno( DeviceP ), buffer + readn, maxn );
+    ssize_t m = read( comedi_fileno( DeviceP ), Buffer + readn, maxn );
 
     int ern = errno;
     if ( m < 0 && ern != EAGAIN && ern != EINTR ) {
@@ -825,12 +837,7 @@ int ComediAnalogInput::readData( void )
 
   }
 
-  readn /= BufferElemSize;
-
-  if ( LongSampleType )
-    convert<lsampl_t>( *Traces, buffer, readn );
-  else
-    convert<sampl_t>( *Traces, buffer, readn );
+  BufferN = readn / BufferElemSize;
 
   if ( failed ) {
     /* XXX
@@ -853,16 +860,30 @@ int ComediAnalogInput::readData( void )
     return -1;   
   }
 
-  return readn;
+  // no more data to be read:
+  if ( BufferN <= 0 && !running() )
+    return -1;
+
+  cerr << "Comedi::readData() end " << BufferN << "\n";
+
+  return BufferN;
 }
 
 
 int ComediAnalogInput::convertData( void )
 {
-  if ( Traces == 0 )
+  if ( Traces == 0 || Buffer == 0 )
     return -1;
 
-  return 0; // number of data points
+  if ( LongSampleType )
+    convert<lsampl_t>( *Traces, Buffer, BufferN );
+  else
+    convert<sampl_t>( *Traces, Buffer, BufferN );
+
+  int n = BufferN;
+  BufferN = 0;
+
+  return n;
 }
 
 
@@ -884,9 +905,16 @@ int ComediAnalogInput::reset( void )
 
   // clear buffers by reading:
   while ( comedi_get_buffer_contents( DeviceP, SubDevice ) > 0 ) {
-    char buffer[BufferSize];
-    read( comedi_fileno( DeviceP ), buffer, BufferSize );
+    char buffer[ReadBufferSize];
+    read( comedi_fileno( DeviceP ), buffer, ReadBufferSize );
   }
+
+  // free internal buffer:
+  if ( Buffer != 0 )
+    delete [] Buffer;
+  Buffer = NULL;
+  BufferSize = 0;
+  BufferN = 0;
 
   clearSettings();
 

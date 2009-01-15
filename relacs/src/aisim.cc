@@ -125,10 +125,16 @@ int AISim::testReadDevice( InList &traces )
   // sample rate:
   double maxrate = maxRate()/traces.size();
   if( traces[0].sampleRate() > maxrate ) {
-    for ( int k=0; k<traces.size(); k++ ) {
-      traces[k].addError( DaqError::InvalidSampleRate );
-      traces[k].setSampleRate( maxrate );
-    }
+    traces.addError( DaqError::InvalidSampleRate );
+    traces.setSampleRate( maxrate );
+  }
+
+  long bs = traces[0].indices( traces[0].updateTime() );
+  if ( bs <= 0 || bs > traces[0].capacity() ) {
+    if ( bs > traces[0].capacity() )
+      traces.addError( DaqError::InvalidUpdateTime );
+    bs = traces[0].capacity();
+    traces.setUpdateTime( traces[0].interval( bs ) );
   }
 
   return traces.failed() ? -1 : 0;
@@ -144,7 +150,8 @@ int AISim::prepareRead( InList &traces )
   }
 
   // success:
-  setSettings( traces );
+  setSettings( traces, sizeof( float ) );
+
   return 0;
 }
 

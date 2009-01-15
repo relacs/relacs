@@ -41,6 +41,7 @@
 #include <relacs/metadata.h>
 #include <relacs/plottrace.h>
 #include <relacs/acquire.h>
+#include <relacs/datathreads.h>
 #include <relacs/simulator.h>
 #include <relacs/savefiles.h>
 #include <relacs/filterdetectors.h>
@@ -146,6 +147,10 @@ public:
     /*! Returns how often the data mutex is locked. */
   int dataMutexCount( void ) { return DataMutexCount; };
 
+    /*! Locks the mutex for analog input. */
+  void lockAI( void ) { AIMutex.lock(); };
+    /*! Unlocks the mutex for analog input. */
+  void unlockAI( void ) { AIMutex.unlock(); };
     /*! Locks the mutex of output signals. */
   void lockSignals( void ) { SignalMutex.lock(); };
     /*! Unlocks the mutex of output signals. */
@@ -231,8 +236,6 @@ public slots:
         and call the readRePro functions of the Session and Control plugins.  */
   void updateRePro( void );
 
-    /*! Starts the thread responsible for updating data.  */
-  void startDataThread( void );
     /*! Contains the UpateDataThread loop, continuously updates and 
         processes data. */    
   void run( void );
@@ -302,6 +305,8 @@ private:
 
   friend class Settings;
   friend class MetaData;
+  friend class ReadThread;
+  friend class WriteThread;
   friend class RELACSPlugin;
   friend class Session;
   friend class Model;
@@ -361,6 +366,9 @@ private:
   vector<PlotTrace::TraceStyle> TraceStyles;
   vector<PlotTrace::EventStyle> EventStyles;
 
+  ReadThread ReadLoop;
+  WriteThread WriteLoop;
+
   // Research Program = RePros
   RePro *CurrentRePro;      // always the current program
   bool ReProRunning;
@@ -378,11 +386,12 @@ private:
   int GUILock;
 
     /*! Controls the data reading thread. */
-  bool RunData;
-  QMutex RunDataMutex;
   QMutex DataMutex;
   int DataMutexCount;
+  QMutex AIMutex;
   QMutex SignalMutex;
+  bool RunData;
+  QMutex RunDataMutex;
 
   // Synchronization of Session and Control threads:
   QWaitCondition DataSleepWait;

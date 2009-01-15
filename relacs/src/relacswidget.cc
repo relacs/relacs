@@ -82,6 +82,8 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     SS( this ),
     MTDT( this ),
     Setup( &MTDT ),
+    ReadLoop( this ),
+    WriteLoop( this ),
     LogFile( 0 ),
     InfoFile( 0 ),
     InfoFileMacro( "" ),
@@ -89,7 +91,10 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     GUILock( 0 ),
     DataMutex( true ),  // recursive, because of activateGains()!
     DataMutexCount( 0 ),
+    AIMutex( true ),  // recursive, because of activateGains()???
     SignalMutex( false ),
+    RunData( false ),
+    RunDataMutex( false ),
     DeviceMenu( 0 ),
     Help( false )
 {
@@ -475,6 +480,28 @@ RELACSWidget::~RELACSWidget( void )
 }
 
 
+void RELACSWidget::lockGUI( void )
+{
+  qApp->lock(); 
+}
+
+
+void RELACSWidget::unlockGUI( void )
+{
+  qApp->unlock(); 
+}
+
+
+void RELACSWidget::printlog( const string &message ) const
+{
+  cerr << QTime::currentTime().toString() << " "
+       << message << endl;
+  if ( LogFile != 0 )
+    *LogFile << QTime::currentTime().toString() << " "
+	     << message << endl;
+}
+
+
 void RELACSWidget::init ( void )
 {
   MC->warning();
@@ -701,38 +728,15 @@ void RELACSWidget::setupOutTraces( void )
 
 ///// Data thread ///////////////////////////////////////////////////////////
 
-void RELACSWidget::lockGUI( void )
-{
-  qApp->lock(); 
-}
-
-
-void RELACSWidget::unlockGUI( void )
-{
-  qApp->unlock(); 
-}
-
-
-void RELACSWidget::printlog( const string &message ) const
-{
-  cerr << QTime::currentTime().toString() << " "
-       << message << endl;
-  if ( LogFile != 0 )
-    *LogFile << QTime::currentTime().toString() << " "
-	     << message << endl;
-}
-
-
 void RELACSWidget::updateData( void )
 {
   writeLockData();
-  if ( AQ->readData() < 0 )
-    printlog( "! error in reading acquired data: " + IL.errorText() );
+  lockAI();
+  AQ->convertData();
+  unlockAI();
   ED.setRangeBack( IL[0].currentTime() );
-  AQ->readSignal( IL, ED );
   FD->filter( IL, ED );
   unlockData();
-  DataSleepWait.wakeAll();
 }
 
 
@@ -741,59 +745,26 @@ void RELACSWidget::processData( void )
   readLockData();
   SF->write( IL );
   SF->write( ED );
-  unlockData();
   PT->plot( IL, ED );
-}
-
-
-void RELACSWidget::startDataThread( void )
-{
-  RunDataMutex.lock();
-  RunData = true;
-  RunDataMutex.unlock();
-  QThread::start();
+  unlockData();
+  DataSleepWait.wakeAll();
 }
 
 
 void RELACSWidget::run( void )
 {
   bool rd = true;
-  SS.lock();
-  double writeinterval = 0.002;
-  double updateinterval = SS.number( "updateinterval", 0.05 );
-  AQ->setUpdateTime( updateinterval );
-  double processinterval = SS.number( "processinterval", 0.1 );
-  SS.unlock();
-  signed long wi = (unsigned long)::rint( 1000.0*writeinterval );
+  double updateinterval = IL[0].updateTime();
   signed long ui = (unsigned long)::rint( 1000.0*updateinterval );
   ui -= 1;
-  int pmax = (int)::rint( processinterval/updateinterval );
-  if ( pmax < 1 )
-    pmax = 1;
-  int pc = 0;
   QTime updatetime;
   updatetime.start();
 
   do {
-    do {
-      QThread::msleep( wi );
-      lockSignals();
-      if ( AQ->writeData() < 0 ) {
-	printlog( "! error in writing data. Stop analog output." );
-	QApplication::postEvent( this, new QCustomEvent( QEvent::User+3 ) );
-	AQ->stopWrite();
-      }
-      unlockSignals();
-    } while ( updatetime.elapsed() < ui );
-    //    int ei = updatetime.restart();
-    //    QThread::msleep( ui > ei ? ui - ei : 1 );
+    int ei = updatetime.restart();
+    QThread::msleep( ui > ei ? ui - ei : 1 );
     updateData();
-    QThread::msleep( 1 );
-    pc++;
-    if ( pc >= pmax ) {
-      processData();
-      pc = 0;
-    }
+    processData();
     RunDataMutex.lock();
     rd = RunData;
     RunDataMutex.unlock();
@@ -826,7 +797,9 @@ void RELACSWidget::simLoadMessage( void )
 void RELACSWidget::activateGains( void )
 {
   writeLockData();
+  lockAI();
   AQ->activateGains();
+  unlockAI();
   FD->adjust( IL, ED, AQ->adjustFlag() );
   unlockData();
 }
@@ -835,12 +808,20 @@ void RELACSWidget::activateGains( void )
 int RELACSWidget::write( OutData &signal )
 {
   lockSignals();
+  lockAI();
   int r = AQ->write( signal );
+  unlockAI();
   unlockSignals();
   if ( r == 0 ) {
+    lockAI();
+    // XXX wait for the signal!!!!
+    AQ->readSignal( IL, ED );
+    unlockAI();
+    WriteLoop.start( signal.writeTime() );
     lockSignals();
     SF->write( signal );
     unlockSignals();
+    // update device menu:
     QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
   }
   else
@@ -854,12 +835,20 @@ int RELACSWidget::write( OutData &signal )
 int RELACSWidget::write( OutList &signal )
 {
   lockSignals();
+  lockAI();
   int r = AQ->write( signal );
+  unlockAI();
   unlockSignals();
   if ( r == 0 ) {
+    lockAI();
+    // XXX wait for the signal!!!!
+    AQ->readSignal( IL, ED );
+    unlockAI();
+    WriteLoop.start( signal[0].writeTime() );
     lockSignals();
     SF->write( signal );
     unlockSignals();
+    // update device menu:
     QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
   }
   else
@@ -980,7 +969,7 @@ void RELACSWidget::startRePro( RePro *repro, int macroaction, bool saving )
   SF->write( *CurrentRePro );
   CurrentRePro->setSaving( SF->saving() );
   unlockData();
-  CurrentRePro->start();
+  CurrentRePro->start( HighPriority );
 }
 
 
@@ -1001,6 +990,7 @@ void RELACSWidget::stopRePro( void )
   }
 
   // stop analog output:
+  WriteLoop.stop();
   lockSignals();
   AQ->stopWrite();                
   unlockSignals();
@@ -1201,17 +1191,26 @@ void RELACSWidget::stopThreads( void )
   for ( unsigned int k=0; k<CN.size(); k++ )
     CN[k]->requestStop();
 
-  // stop simulation and data acquisition:
-  SimLoad.stop();
-  if ( AQ != 0 )
-    AQ->stop();
-
-  // stop data thread:
+  // stop data threads:
+  ReadLoop.stop();
+  WriteLoop.stop();
   RunDataMutex.lock();
   RunData = false;
   RunDataMutex.unlock();
   QThread::wait();
-  qApp->processEvents();  // process pending events posted from threads.
+
+  // stop simulation and data acquisition:
+  SimLoad.stop();
+  if ( AQ != 0 ) {
+    lockAI();
+    lockSignals();
+    AQ->stop();
+    unlockSignals();
+    unlockAI();
+  }
+
+  // process pending events posted from threads.
+  qApp->processEvents();
 }
 
 
@@ -1374,7 +1373,11 @@ void RELACSWidget::startFirstAcquisition( void )
     CN[k]->initDevices();
 
   // start data aquisition:
+  lockAI();
+  AQ->setBufferTime( SS.number( "readinterval", 0.01 ) );
+  AQ->setUpdateTime( SS.number( "processinterval", 0.1 ) );
   int r = AQ->read( IL );
+  unlockAI();
   if ( r < 0 ) {
     printlog( "! error in starting data acquisition: " + IL.errorText() );
     MessageBox::warning( "RELACS Warning !",
@@ -1387,7 +1390,11 @@ void RELACSWidget::startFirstAcquisition( void )
 
   FD->init( IL, ED );  // init filters/detectors before RePro!
 
-  startDataThread();
+  ReadLoop.start();
+  RunDataMutex.lock();
+  RunData = true;
+  RunDataMutex.unlock();
+  QThread::start( HighPriority );
 
   for ( unsigned int k=0; k<CN.size(); k++ )
     CN[k]->start();
@@ -1458,10 +1465,16 @@ void RELACSWidget::startFirstSimulation( void )
     CN[k]->initDevices();
 
   // start data aquisition:
+  lockAI();
+  AQ->setBufferTime( SS.number( "readinterval", 0.01 ) );
+  AQ->setUpdateTime( SS.number( "processinterval", 0.1 ) );
   int r = AQ->read( IL );
+  unlockAI();
   if ( r < 0 ) {
     // give it a second chance with the adjusted input parameter:
+    lockAI();
     r = AQ->read( IL );
+    unlockAI();
     if ( r < 0 ) {
       printlog( "! error in starting data acquisition: " + IL.errorText() );
       MessageBox::warning( "RELACS Warning !",
@@ -1486,7 +1499,10 @@ void RELACSWidget::startFirstSimulation( void )
 
   FD->init( IL, ED );  // init filters/detectors before RePro!
 
-  startDataThread();
+  RunDataMutex.lock();
+  RunData = true;
+  RunDataMutex.unlock();
+  QThread::start( HighPriority );
 
   for ( unsigned int k=0; k<CN.size(); k++ )
     CN[k]->start();
