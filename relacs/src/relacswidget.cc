@@ -745,8 +745,8 @@ void RELACSWidget::processData( void )
   readLockData();
   SF->write( IL );
   SF->write( ED );
-  PT->plot( IL, ED );
   unlockData();
+  PT->plot( IL, ED );
   DataSleepWait.wakeAll();
 }
 
@@ -756,19 +756,19 @@ void RELACSWidget::run( void )
   bool rd = true;
   double updateinterval = IL[0].updateTime();
   signed long ui = (unsigned long)::rint( 1000.0*updateinterval );
-  ui -= 1;
   QTime updatetime;
   updatetime.start();
+  QThread::msleep( 1 );
 
   do {
-    int ei = updatetime.restart();
+    int ei = updatetime.elapsed();
     QThread::msleep( ui > ei ? ui - ei : 1 );
+    updatetime.restart();
     updateData();
     processData();
     RunDataMutex.lock();
     rd = RunData;
     RunDataMutex.unlock();
-    updatetime.restart();
   } while( rd );
 }
 
@@ -807,6 +807,8 @@ void RELACSWidget::activateGains( void )
 
 int RELACSWidget::write( OutData &signal )
 {
+  // XXX if necessary (SF->signalPending()):
+  // updateData() and SF->write( IL, EL );
   lockSignals();
   lockAI();
   int r = AQ->write( signal );
@@ -834,6 +836,8 @@ int RELACSWidget::write( OutData &signal )
 
 int RELACSWidget::write( OutList &signal )
 {
+  // XXX if necessary (SF->signalPending()):
+  // updateData() and SF->write( IL, EL );
   lockSignals();
   lockAI();
   int r = AQ->write( signal );
@@ -1591,22 +1595,8 @@ void RELACSWidget::about()
   info += RELACSVERSION;
   info += "</p>\n";
   info += "<p align=center>(c) by Jan Benda</p>\n";
-  info += "<p align=center>Institute for Theoretical Biology,<br>\n";
-  info += "   Humboldt-University Berlin.</p>\n";
-  /*
-  info += "<p>Using the following Research Programs:</p>\n<ul>\n";			
-  for (int k=0; k<RP->size(); k++ )
-    {
-      info += "<li>";
-      info += "<b>" + RP->repro( k )->name() + "</b>";
-      info += ", Version ";
-      info += RP->repro( k )->version();
-      info += ", by ";
-      info += RP->repro( k )->author();
-      info += "</li>\n";
-    }
-  info += "</ul>\n";
-  */
+  info += "<p align=center>Department Biology II,<br>\n";
+  info += "   Ludwig-Maximilian University Munich.</p>\n";
   MessageBox::information( "About RELACS", info, this ); 
 }
 

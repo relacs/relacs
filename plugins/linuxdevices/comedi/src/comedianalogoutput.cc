@@ -802,7 +802,7 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   IsPrepared = ol.success();
 
   if ( ol.success() ) {
-    setSettings( ol, BufferElemSize );
+    setSettings( ol, BufferSize );
     Sigs = &sigs;
   }
 

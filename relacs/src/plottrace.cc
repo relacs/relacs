@@ -164,14 +164,19 @@ void PlotTrace::resize( InList &data, const EventList &events )
   EL = &events;
 
   // count plots:
+  lockData();
   int plots = 0;
   for ( int c=0; c<data.size(); c++ )
     if ( data[c].mode() & PlotTraceMode )
       plots++;
+  unlockData();
 
   lock();
 
   // setup plots:
+  int columns = 1;
+  if ( plots > 6 )
+    columns = 2;
   MultiPlot::resize( plots, 1, true, Plot::Pointer );
   setCommonXRange();
   PlotElements.resize( plots, -1 );
@@ -214,9 +219,13 @@ void PlotTrace::resize( InList &data, const EventList &events )
 
 void PlotTrace::toggle( int i )
 {
-  if ( IL == 0 || i < 0 || i >= IL->size() )
+  lockData();
+  bool nodata = ( IL == 0 || i < 0 || i >= IL->size() );
+  unlockData();
+  if ( nodata )
     return;
 
+  lockData();
   int m = (*IL)[i].mode();
   if ( m & PlotTraceMode ) {
     for ( int k=0; k<IL->size(); k++ ) {
@@ -232,6 +241,7 @@ void PlotTrace::toggle( int i )
     Menu->setItemChecked( i, true );
   }
   (*IL)[i].setMode( m );
+  unlockData();
   resize( *IL, *EL );
   plot( *IL, *EL );
 }
@@ -239,11 +249,12 @@ void PlotTrace::toggle( int i )
 
 void PlotTrace::init( const InList &data, const EventList &events )
 {
+  lock();
+  lockData();
+
   int origin = OffsetMode < 0 ? 3 : 2;
   double tfac = 1000.0;
   string tunit = "ms";
-
-  lock();
 
   int plots = 0;
   for ( int c=0; c<data.size(); c++ )
@@ -336,6 +347,7 @@ void PlotTrace::init( const InList &data, const EventList &events )
   // set xlabel:
   back().setXLabel( tunit );
 
+  unlockData();
   unlock();
 	
 }
@@ -352,6 +364,7 @@ void PlotTrace::plot( const InList &data, const EventList &events )
   }
 
   lock();
+  lockData();
 
   // set left- and rightmargin:
   double tfac = 1000.0;
@@ -403,6 +416,7 @@ void PlotTrace::plot( const InList &data, const EventList &events )
       
     }
 
+  unlockData();
   unlock();
 
   // plot:
@@ -479,13 +493,18 @@ void PlotTrace::updateMenu( void )
 
 void PlotTrace::setState( bool on, bool fixed, double length, double offs )
 {
+  lock();
   AutoOn = on;
   AutoFixed = fixed;
   AutoTime = length;
   AutoOffs = offs;
+  bool man = Manual;
+  unlock();
 
-  if ( Manual )
+  if ( man )
     return;
+
+  lock();
 
   // toggle plot:
   Plotting = on;
@@ -501,6 +520,7 @@ void PlotTrace::setState( bool on, bool fixed, double length, double offs )
   TimeOffs = offs;
 
   // pointstyle:
+  lockData();
   int plots=0;
   for ( int c=0; c<IL->size(); c++ ) {
     if ( PlotElements[plots] >= 0 ) {
@@ -515,6 +535,8 @@ void PlotTrace::setState( bool on, bool fixed, double length, double offs )
 	break;
     }
   }
+  unlockData();
+  unlock();
 }
 
 
@@ -527,6 +549,8 @@ void PlotTrace::zoomOut( void )
   if ( RW->idle() )
     plot( *IL, *EL );
   else {
+    lock();
+    lockData();
     int plots=0;
     for ( int c=0; c<IL->size(); c++ ) {
       if ( PlotElements[plots] >= 0 ) {
@@ -538,6 +562,8 @@ void PlotTrace::zoomOut( void )
 	  break;
       }
     }
+    unlockData();
+    unlock();
   }
 }
 
@@ -551,6 +577,8 @@ void PlotTrace::zoomIn( void )
   if ( RW->idle() )
     plot( *IL, *EL );
   else {
+    lock();
+    lockData();
     int plots=0;
     for ( int c=0; c<IL->size(); c++ ) {
       if ( PlotElements[plots] >= 0 ) {
@@ -562,19 +590,20 @@ void PlotTrace::zoomIn( void )
 	  break;
       }
     }
+    unlockData();
+    unlock();
   }
 }
 
 
 void PlotTrace::moveLeft( void )
 {
+  lock();
   if ( OffsetMode >= 0 )
     setOffset( -1 );
-  else {
-    lock();
+  else
     LeftTime -= 0.5 * TimeWindow;
-    unlock();
-  }
+  unlock();
   if ( RW->idle() )
     plot( *IL, *EL );
 }
@@ -582,13 +611,12 @@ void PlotTrace::moveLeft( void )
 
 void PlotTrace::moveRight( void )
 {
+  lock();
   if ( OffsetMode >= 0 )
     setOffset( -1 );
-  else {
-    lock();
+  else
     LeftTime += 0.5 * TimeWindow;
-    unlock();
-  }
+  unlock();
   if ( RW->idle() )
     plot( *IL, *EL );
 }
@@ -596,9 +624,9 @@ void PlotTrace::moveRight( void )
 
 void PlotTrace::moveStart( void )
 {
+  lock();
   if ( OffsetMode >= 0 )
     setOffset( -1 );
-  lock();
   LeftTime = 0.0;
   unlock();
   if ( RW->idle() )
@@ -608,10 +636,12 @@ void PlotTrace::moveStart( void )
 
 void PlotTrace::moveEnd( void )
 {
+  lock();
   if ( OffsetMode >= 0 )
     setOffset( -1 );
-  lock();
+  lockData();
   LeftTime = IL == 0 ? 0.0 : (*IL)[0].currentTime() - TimeWindow;
+  unlockData();
   unlock();
   if ( RW->idle() )
     plot( *IL, *EL );
@@ -620,18 +650,17 @@ void PlotTrace::moveEnd( void )
 
 void PlotTrace::moveSignal( void )
 {
-  if ( OffsetMode == 0 ) {
-    lock();
+  lock();
+  if ( OffsetMode == 0 )
     TimeOffs = 0.0;
-    unlock();
-  }
   else {
     if ( OffsetMode >= 0 )
       setOffset( -1 );
-    lock();
+    lockData();
     LeftTime = IL == 0 ? 0.0 : (*IL)[0].signalTime();
-    unlock();
+    unlockData();
   }
+  unlock();
   if ( RW->idle() )
     plot( *IL, *EL );
 }
@@ -639,7 +668,9 @@ void PlotTrace::moveSignal( void )
 
 void PlotTrace::fixedSignal( void )
 {
+  lock();
   setOffset( 0 );
+  unlock();
   if ( RW->idle() )
     plot( *IL, *EL );
 }
@@ -647,13 +678,12 @@ void PlotTrace::fixedSignal( void )
 
 void PlotTrace::moveOffsLeft( void )
 {
+  lock();
   if ( OffsetMode != 0 )
     setOffset( 0 );
-  else {
-    lock();
+  else
     TimeOffs += 0.5 * TimeWindow;
-    unlock();
-  }
+  unlock();
   if ( RW->idle() )
     plot( *IL, *EL );
 }
@@ -661,13 +691,12 @@ void PlotTrace::moveOffsLeft( void )
 
 void PlotTrace::moveOffsRight( void )
 {
+    lock();
   if ( OffsetMode != 0 )
     setOffset( 0 );
-  else {
-    lock();
+  else
     TimeOffs -= 0.5 * TimeWindow;
-    unlock();
-  }
+  unlock();
   if ( RW->idle() )
     plot( *IL, *EL );
 }
@@ -675,7 +704,9 @@ void PlotTrace::moveOffsRight( void )
 
 void PlotTrace::continuousEnd( void )
 {
+  lock();
   setOffset( 1 );
+  unlock();
   if ( RW->idle() )
     plot( *IL, *EL );
 }
@@ -685,15 +716,19 @@ void PlotTrace::plotOnOff( )
 {
   lock();
   Plotting = ! Plotting;
+  int p = Plotting;
   unlock();
   if ( OnOffButton != 0 )
-    OnOffButton->setOn( ! Plotting );
+    OnOffButton->setOn( ! p );
 }
 
 
 void PlotTrace::toggleManual( void )
 {
-  if ( Manual ) 
+  lock();
+  bool man = Manual;
+  unlock();
+  if ( man ) 
     autoRange();
   else
     manualRange();
@@ -702,27 +737,33 @@ void PlotTrace::toggleManual( void )
 
 void PlotTrace::manualRange( void )
 {
+  lock();
   Manual = true;
   if ( ManualButton != 0 )
     ManualButton->setOn( Manual );
+  unlock();
 }
 
 
 void PlotTrace::autoRange( void )
 {
+  lock();
   Manual = false;
   if ( ManualButton != 0 )
     ManualButton->setOn( Manual );
   setState( AutoOn, AutoFixed, AutoTime, AutoOffs );
+  unlock();
 }
 
 
 void PlotTrace::offsetToggle( void )
 {
+  lock();
   int mode = OffsetMode + 1;
   if ( mode > 1 )
     mode = 0;
   setOffset( mode );
+  unlock();
 }
 
 
@@ -733,11 +774,13 @@ void PlotTrace::setOffset( int mode )
   if ( mode < -1 )
     mode = 1;
 
+  lock();
   if ( OffsetMode != mode ) {
     OffsetMode = mode;
     PlotChanged = true;
     QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
   }
+  unlock();
 }
 
 

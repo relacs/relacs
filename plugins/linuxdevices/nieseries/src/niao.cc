@@ -412,7 +412,7 @@ int NIAO::prepareWrite( OutList &sigs )
   }
 
   if ( ol.success() ) {
-    setSettings( ol, sizeof( signed short ) );
+    setSettings( ol, sigs[0].deviceBufferSize() );
     Sigs = &sigs;
   }
 

@@ -132,6 +132,20 @@ void MultiPlot::setDataMutex( QMutex *mutex )
 }
 
 
+void MultiPlot::lockData( void )
+{
+  if ( DMutex != 0 )
+    DMutex->lock();
+}
+
+
+void MultiPlot::unlockData( void )
+{
+  if ( DMutex != 0 )
+    DMutex->unlock();
+}
+
+
 int MultiPlot::size( void ) const
 {
   return PlotList.size();

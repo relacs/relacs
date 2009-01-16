@@ -196,7 +196,7 @@ int Simulator::read( InList &data )
       if ( bs <= 0 || bs > data[k].capacity() )
 	bs = data[k].capacity();
       else
-	bs *= 2;
+	bs *= 6;
       Sim->add( data[k].device(), data[k].channel(), 
 		data[k].sampleInterval(), data[k].scale(), bs );
     }

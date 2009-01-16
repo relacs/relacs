@@ -385,7 +385,8 @@ int NIAI::prepareRead( InList &traces )
   BufferN = 0;
 
   if ( traces.success() ) {
-    setSettings( traces, sizeof( signed short ) );
+    setSettings( traces, ReadBufferSize*sizeof( signed short ),
+		 BufferSize*sizeof( signed short ) );
     Traces = &traces;
   }
 

@@ -259,10 +259,11 @@ protected:
 
     /*! Set the settings() string for \a traces.
         Call this function from within a successful prepareRead().
-	\param[in] elemsize is the size of a single data element in the
-	drivers data buffer in bytes.
+	\param[in] readbuffer is the size of the driver's buffer in bytes.
+	\param[in] updatebuffer is the size of the internal buffer in bytes.
         \sa settings() */
-  void setSettings( const InList &traces, int elemsize );
+  void setSettings( const InList &traces, int readbuffer=0,
+		    int updatebuffer=0 );
 
 
 private:

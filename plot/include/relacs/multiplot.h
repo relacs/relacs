@@ -73,8 +73,13 @@ public:
 
     /*! Provide a mutex that is used by the individual plots to lock
         access to data while they are plotted. 
-        Passing a '0' disabled the data mutex. */
+        Passing a '0' disabled the data mutex.
+        \a lockData(), unlockData() */
   void setDataMutex( QMutex *mutex );
+    /*! Lock the data mutex. \sa setDataMutex() */
+  void lockData( void );
+    /*! Unlock the data mutex. \sa setDataMutex() */
+  void unlockData( void );
 
     /*! The number of Plots in the MultiPlot widget. */
   int size( void ) const;

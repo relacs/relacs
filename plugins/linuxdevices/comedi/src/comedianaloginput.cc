@@ -673,7 +673,7 @@ int ComediAnalogInput::prepareRead( InList &traces )
   }
   
   if ( traces.success() ) {
-    setSettings( traces, BufferElemSize );
+    setSettings( traces, BufferSize, ReadBufferSize );
     Traces = &traces;
   }
 

@@ -89,7 +89,8 @@ string AnalogInput::info( void ) const
 }
 
 
-void AnalogInput::setSettings( const InList &traces, int elemsize )
+void AnalogInput::setSettings( const InList &traces, 
+			       int readbuffer, int updatebuffer )
 {
   ostringstream ss;
 
@@ -103,14 +104,14 @@ void AnalogInput::setSettings( const InList &traces, int elemsize )
   ss << ";startsource: " << traces[0].startSource();
   ss << ";delay: " << 1000.0*traces[0].delay() << "ms";
   ss << ";sampling rate: " << 0.001*traces[0].sampleRate() << "kHz";
-  if ( traces[0].readTime() > 0.0 ) {
-    ss << ";read buffer time: " << traces[0].readTime() << "s";
-    ss << ";read buffer size: " << traces.size()*traces[0].indices( traces[0].readTime() )*elemsize/1000 << "kB";
-  }
-  if ( traces[0].updateTime() > 0.0 ) {
-    ss << ";update buffer time: " << traces[0].updateTime() << "s";
-    ss << ";update buffer size: " << traces.size()*traces[0].indices( traces[0].updateTime() )*elemsize/1000 << "kB";
-  }
+  if ( traces[0].readTime() > 0.0 && readbuffer >= 0 )
+    ss << ";read buffer time: " << 1000.0*traces[0].readTime() << "ms";
+  if ( readbuffer > 0 )
+    ss << ";read buffer size: " << readbuffer << "Byte";
+  if ( traces[0].updateTime() > 0.0 && updatebuffer >= 0 )
+    ss << ";update buffer time: " << 1000.0*traces[0].updateTime() << "ms";
+  if ( updatebuffer > 0 )
+    ss << ";update buffer size: " << updatebuffer << "Byte";
 
   Device::setSettings( ss.str() );
 }

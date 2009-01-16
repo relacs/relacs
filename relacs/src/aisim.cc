@@ -150,7 +150,16 @@ int AISim::prepareRead( InList &traces )
   }
 
   // success:
-  setSettings( traces, sizeof( float ) );
+  int buffersize = 0;
+  for ( int k=0; k<traces.size(); k++ ) {
+    int bs = traces[k].indices( traces[k].updateTime() );
+    if ( bs <= 0 || bs > traces[k].capacity() )
+      bs = traces[k].capacity();
+    else
+      bs *= 6;
+    buffersize += bs;
+  }
+  setSettings( traces, -1, buffersize*sizeof( signed short ) );
 
   return 0;
 }

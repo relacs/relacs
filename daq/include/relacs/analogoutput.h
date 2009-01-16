@@ -267,10 +267,9 @@ protected:
 
     /*! Set the settings() string for \a sigs.
         Call this function from within a successful prepareWrite().
-	\param[in] elemsize is the size of a single data element in the
-	drivers data buffer in bytes.
+	\param[in] writebuffer is the size of the driver's buffer in bytes.
         \sa settings() */
-  void setSettings( const OutList &sigs, int elemsize );
+  void setSettings( const OutList &sigs, int writebuffer=0 );
 
 
 private:

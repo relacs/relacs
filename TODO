@@ -1,8 +1,6 @@
 Acquisition interface:
+- improve the readSignal function in RELACSWidget::write()
 - check whether test, prepare, and start can be used simulataneously with read/write
-- test updateTime settings and handle errors thereof
-- use dynamic updateinterval and writeinterval in RELACSWidget::run()
-  depending on sampling rates and buffer sizes
 - add single data read and write
 - add function for blocked write() and corresponding error checking (buffer underrun)
 - need a DIO device interface

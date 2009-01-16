@@ -107,7 +107,7 @@ int AOSim::prepareWrite( OutList &sigs )
   }
 
   // success:
-  setSettings( sigs, 0 );
+  setSettings( sigs, -1 );
   return 0;
 }
 
