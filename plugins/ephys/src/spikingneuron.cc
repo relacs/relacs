@@ -2,8 +2,8 @@
   ephys/spikingneuron.cc
   Base class for a spiking (point-) neuron.
 
-  RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
-  Copyright (C) 2002-2008 Jan Benda <j.benda@biologie.hu-berlin.de>
+  RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
+  Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by

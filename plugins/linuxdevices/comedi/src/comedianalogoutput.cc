@@ -2,7 +2,7 @@
   comedi/comedianalogoutput.cc
   Interface for accessing analog output of a daq-board via comedi.
 
-  RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
+  RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2007 Jan Benda <j.benda@biologie.hu-berlin.de>
 
   This program is free software; you can redistribute it and/or modify
