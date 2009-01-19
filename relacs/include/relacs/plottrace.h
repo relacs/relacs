@@ -139,6 +139,7 @@ public slots:
 
 protected:
 
+  virtual void resizeLayout( void );
   virtual void resizeEvent( QResizeEvent *qre );
   virtual void customEvent( QCustomEvent *qce );
 

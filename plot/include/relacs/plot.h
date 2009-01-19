@@ -406,6 +406,10 @@ public:
         \return the pixel coordinate
         \sa xPixel() */
   int yPixel( const Position &pos ) const;
+    /*! The number of pixels corresponding to \a w times the current font  width
+        as used by setLMarg(), setRMarg(), setTMarg(), setBMarg() 
+        and the axis coordinates. */
+  int fontPixel( double w ) const;
 
   int addColor( const RGBColor &rgb );
   int addColor( int r, int g, int b );

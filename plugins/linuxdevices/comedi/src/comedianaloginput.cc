@@ -805,7 +805,7 @@ void ComediAnalogInput::convert( InList &traces, char *buffer, int n )
 
 int ComediAnalogInput::readData( void )
 {
-  cerr << "Comedi::readData() start\n";
+  //  cerr << "Comedi::readData() start\n";
   if ( Traces == 0 || Buffer == 0 )
     return -1;
 
@@ -864,7 +864,7 @@ int ComediAnalogInput::readData( void )
   if ( BufferN <= 0 && !running() )
     return -1;
 
-  cerr << "Comedi::readData() end " << BufferN << "\n";
+  //  cerr << "Comedi::readData() end " << BufferN << "\n";
 
   return BufferN;
 }
@@ -879,6 +879,8 @@ int ComediAnalogInput::convertData( void )
     convert<lsampl_t>( *Traces, Buffer, BufferN );
   else
     convert<sampl_t>( *Traces, Buffer, BufferN );
+
+  //  cerr << "Comedi::convertData() " << BufferN << "\n";
 
   int n = BufferN;
   BufferN = 0;

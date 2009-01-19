@@ -926,6 +926,12 @@ int Plot::yPixel( const Position &pos ) const
 }
 
 
+int Plot::fontPixel( double w ) const
+{
+  return (int)::rint( FontWidth*w );
+}
+
+
 Plot::Label::Label( void )
 {
   Just = Plot::Left;
@@ -1399,11 +1405,15 @@ void Plot::initTics( void )
       double ph = double( screenHeight() );
       ph -= BMargAutoScale ? X1TicsMarg : BMarg;
       ph -= TMargAutoScale ? X2TicsMarg : TMarg;
-      double miny1ticsincr = ( YMax[k] - YMin[k] ) * FontSize * TicsLabelSize / ph;
-      if ( YTicsIncrAutoScale[k] == AutoScale )
-	YTicsIncr[k] = autoTics( ( YMax[k] - YMin[k] )/10.0, miny1ticsincr );
+      if ( ph > FontHeight ) {
+	double miny1ticsincr = ( YMax[k] - YMin[k] ) * FontSize * TicsLabelSize / ph;
+	if ( YTicsIncrAutoScale[k] == AutoScale )
+	  YTicsIncr[k] = autoTics( ( YMax[k] - YMin[k] )/10.0, miny1ticsincr );
+	else
+	  YTicsIncr[k] = autoTics( 1.2*miny1ticsincr, miny1ticsincr );
+      }
       else
-	YTicsIncr[k] = autoTics( 1.2*miny1ticsincr, miny1ticsincr );
+	YTicsIncr[k] = 10.0*(YMax[k] - YMin[k]);  // no room for tic marks!
       if ( YTicsMinIncr[k] > 0.0 && YTicsMinIncr[k] < AnyScale &&
 	   YTicsIncr[k] < YTicsMinIncr[k] )
 	YTicsIncr[k] = YTicsMinIncr[k];

@@ -174,41 +174,50 @@ void PlotTrace::resize( InList &data, const EventList &events )
   lock();
 
   // setup plots:
-  int columns = 1;
-  if ( plots > 6 )
-    columns = 2;
-  MultiPlot::resize( plots, 1, true, Plot::Pointer );
+  MultiPlot::resize( plots, Plot::Pointer );
   setCommonXRange();
   PlotElements.resize( plots, -1 );
 
-  double lmarg = 11.0;
-  if ( plots == 1 )
-    lmarg = 8.0;
-  int o = 0;
-  if ( plots > 1 && plots % 2 == 1 )
-    o = 1;
-
-  for ( int c=0; c<plots; c++ ) {
-    (*this)[c].clear();
-    (*this)[c].setLMarg( lmarg );
-    (*this)[c].setRMarg( 2.0 );
-    (*this)[c].setTMarg( 0.2 );
-    (*this)[c].setBMarg( 0.2 );
-    (*this)[c].noXTics();
-    (*this)[c].setXLabel( "" );
-    (*this)[c].setYTics();
-    (*this)[c].setYLabelPos( 2.0 + ((c+o)%2)*3.0, Plot::FirstMargin,
-			     0.5, Plot::Graph, 
-			     Plot::Center, -90.0 );
-  }
-
   if ( plots > 0 ) {
+
+    double lmarg = 11.0;
+    if ( plots == 1 )
+      lmarg = 8.0;
+    int o = 0;
+    if ( plots > 1 && plots % 2 == 1 )
+      o = 1;
+    
+    for ( int c=0; c<plots; c++ ) {
+      (*this)[c].clear();
+      (*this)[c].setLMarg( lmarg );
+      (*this)[c].setRMarg( 2.0 );
+      (*this)[c].setTMarg( 0.2 );
+      (*this)[c].setBMarg( 0.2 );
+      (*this)[c].noXTics();
+      (*this)[c].setXLabel( "" );
+      (*this)[c].setYTics();
+      (*this)[c].setYLabelPos( 2.0 + ((c+o)%2)*3.0, Plot::FirstMargin,
+			       0.5, Plot::Graph, 
+			       Plot::Center, -90.0 );
+    }
+    
     (*this)[0].setTMarg( 1.0 );
     (*this)[plots-1].setXTics();
     (*this)[plots-1].setXLabel( "msec" );
     (*this)[plots-1].setXLabelPos( 1.0, Plot::FirstMargin, 0.0, Plot::FirstAxis, 
 				   Plot::Left, 0.0 );
-    (*this)[plots-1].setBMarg( 3.0 );
+    (*this)[plots-1].setBMarg( 2.5 );
+
+    if ( plots > 6 ) {
+      (*this)[(plots+1)/2].setTMarg( 1.0 );
+      (*this)[(plots-1)/2].setXTics();
+      (*this)[(plots-1)/2].setXLabel( "msec" );
+      (*this)[(plots-1)/2].setXLabelPos( 1.0, Plot::FirstMargin, 0.0, Plot::FirstAxis, 
+				     Plot::Left, 0.0 );
+      (*this)[(plots-1)/2].setBMarg( 2.5 );
+    }
+    
+    resizeLayout();
   }
 
   unlock();
@@ -839,8 +848,53 @@ void PlotTrace::keyPressEvent( QKeyEvent* e )
 }
 
 
+void PlotTrace::resizeLayout( void )
+{
+  int plots = MultiPlot::size();
+
+  if ( plots == 1 ) {
+    (*this)[0].setOrigin( 0.0, 0.0 );
+    (*this)[0].setSize( 1.0, 1.0 );
+    return;
+  }
+
+  int columns = 1;
+  if ( plots > 6 )
+    columns = 2;
+  int rows = plots/columns;
+  double xsize = 1.0/columns;
+  double yboffs = double( (*this)[0].fontPixel( 2.3 ) ) / double( height() );
+  double ytoffs = double( (*this)[0].fontPixel( 0.8 ) ) / double( height() );
+  double yheight = (1.0-yboffs-ytoffs)/rows;
+    
+  int c = 0;
+  int r = 0;
+  for ( int k=0; k<plots; k++ ) {
+    (*this)[k].setOrigin( c*xsize, yboffs+(rows-r-1)*yheight );
+    (*this)[k].setSize( xsize, yheight );
+    r++;
+    if ( r >= rows ) {
+      c++;
+      r = 0;
+    }
+  }
+  (*this)[0].setSize( xsize, yheight+ytoffs );
+  (*this)[plots-1].setOrigin( xsize, 0.0 );
+  (*this)[plots-1].setSize( xsize, yheight+yboffs );
+  if ( columns > 1 ) {
+    (*this)[(plots+1)/2].setSize( xsize, yheight+ytoffs );
+    (*this)[(plots-1)/2].setOrigin( 0.0, 0.0 );
+    (*this)[(plots-1)/2].setSize( xsize, yheight+yboffs );
+  }
+}
+
+
 void PlotTrace::resizeEvent( QResizeEvent *qre )
 {
+  lock();
+  resizeLayout();
+  unlock();
+
   MultiPlot::resizeEvent( qre );
 
   if ( ButtonBox == 0 )
