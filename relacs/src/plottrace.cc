@@ -861,7 +861,7 @@ void PlotTrace::resizeLayout( void )
   int columns = 1;
   if ( plots > 6 )
     columns = 2;
-  int rows = plots/columns;
+  int rows = (plots+1)/columns;
   double xsize = 1.0/columns;
   double yboffs = double( (*this)[0].fontPixel( 2.3 ) ) / double( height() );
   double ytoffs = double( (*this)[0].fontPixel( 0.8 ) ) / double( height() );
