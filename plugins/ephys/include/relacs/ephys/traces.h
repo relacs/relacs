@@ -46,12 +46,12 @@ public:
 
   static int StimulusEvents;
 
-  static const int MaxSpikeTraces = 10;
+  static const int MaxSpikeTraces = 100;
   static int SpikeTraces;
   static int SpikeTrace[MaxSpikeTraces];
   static int SpikeEvents[MaxSpikeTraces];
 
-  static const int MaxNerveTraces = 10;
+  static const int MaxNerveTraces = 100;
   static int NerveTraces;
   static int NerveTrace[MaxNerveTraces];
   static int NerveEvents[MaxNerveTraces];
