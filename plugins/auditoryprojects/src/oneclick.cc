@@ -65,8 +65,10 @@ OneClick::OneClick( void )
   Intensity = 0.0;
 
   // plot:
+  P.lock();
   P[0].setXLabel( "Amplitude [dB SPL]" );
   P[0].setYLabel( "Spike Probability [%]" );
+  P.unlock();
 }
 
 
@@ -98,9 +100,11 @@ int OneClick::main( void )
   plotToggle( true, true, Duration+Pause, 0 );
 
   // plot:
+  P.lock();
   P[0].clear();
   P[0].setXRange( MinIntensity-IntensityStep, MaxIntensity+IntensityStep);
   P[0].setYRange( 0.0, 1.1 );
+  P.unlock();
 
   // stimulus:
   OutData signal( Duration, 10000.0 );

@@ -296,9 +296,11 @@ int FICurve::main( void )
 	       Signal.errorText() + "</b>.<br>Exit now!" );
       Signal.free();
       if ( manualskip ) {
+	P.lock();
 	P[1].setMouseTracking( false );
 	disconnect( &P[1], SIGNAL( userMouseEvent( Plot::MouseEvent& ) ),
 		    this, SLOT( plotMouseEvent( Plot::MouseEvent& ) ) );
+	P.unlock();
       }
       return Failed;
     }
@@ -334,9 +336,11 @@ int FICurve::main( void )
   Signal.free();
   writeZero( Speaker[ Side ] );
   if ( manualskip ) {
+    P.lock();
     P[1].setMouseTracking( false );
     disconnect( &P[1], SIGNAL( userMouseEvent( Plot::MouseEvent& ) ),
 		this, SLOT( plotMouseEvent( Plot::MouseEvent& ) ) );
+    P.unlock();
   }
   return ds;
 }
@@ -1124,6 +1128,7 @@ RePro::DoneState FICurve::next( vector< FIData > &results, bool msg )
 
 void FICurve::plotMouseEvent( Plot::MouseEvent &me )
 {
+  lock();
   if ( me.xCoor() == Plot::First && me.yCoor() == Plot::First &&
        me.yPos() > P[1].yminRange() + 0.9*(P[1].ymaxRange() - P[1].yminRange()) ) {
     bool changed = false;
@@ -1151,6 +1156,7 @@ void FICurve::plotMouseEvent( Plot::MouseEvent &me )
   }
   else
     PlotIntensitySelection = false;
+  unlock();
 }
 
 

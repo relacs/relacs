@@ -261,8 +261,10 @@ int SingleStimulus::main( void )
     
     P.hide();
     SP.show();
+    SP.lock();
     SP.clearPlots();
     SP[0].setTitle( "Search target firing rate " + Str( targetrate ) + " Hz" );
+    SP.unlock();
     SP.draw();
 
     MapD rates;

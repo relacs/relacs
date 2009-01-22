@@ -250,8 +250,10 @@ int SpikePrecision::main( void )
     // setup plot:
     P.hide();
     SP.show();
+    SP.lock();
     SP.clearPlots();
     SP[0].setTitle( "Search target firing rate " + Str( targetrate ) + " Hz" );
+    SP.unlock();
     SP.draw();
 
     MapD rates;
@@ -457,8 +459,10 @@ int SpikePrecision::main( void )
   // setup plots:
   SP.hide();
   P.show();
+  P.lock();
   P.clearPlots();
   P[0].setTitle( "Mean firing rate =    Hz" );
+  P.unlock();
   P.draw();
 
   // loop through frequencies:

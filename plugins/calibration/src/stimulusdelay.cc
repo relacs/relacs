@@ -88,7 +88,9 @@ int StimulusDelay::main( void )
   plotToggle( true, true, 2.0*duration, 1.0*duration );
 
   // plot:
+  P.lock();
   P.setXRange( -1000.0*duration, 1000.0*duration );
+  P.unlock();
 
   OutData signal( duration, 1.0/samplerate );
   signal = 1.0;

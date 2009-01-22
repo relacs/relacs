@@ -300,10 +300,12 @@ int SingleStimulus::main( void )
     
     P.hide();
     SP.show();
+    SP.lock();
     SP.clearPlots();
     SP[0].setTitle( "Search target firing rate " + Str( targetrate ) + " Hz" );
     SP[1].setYLabel( "Stimulus [" + AmplitudeUnit + "]" );
     SP[2].setXLabel( "Offset [" + AmplitudeUnit + "]" );
+    SP.unlock();
     SP.draw();
 
     MapD rates;
