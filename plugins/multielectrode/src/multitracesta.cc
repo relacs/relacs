@@ -1,6 +1,6 @@
 /*
-  multielectrode/multista.cc
-  Computes spike-triggered averages for many spike traces and a common to be averaged waveform
+  multielectrode/multitracesta.cc
+  Computes spike-triggered averages from all recorded input traces
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
@@ -20,19 +20,19 @@
 */
 
 #include <relacs/stats.h>
-#include <relacs/multielectrode/multista.h>
+#include <relacs/multielectrode/multitracesta.h>
 using namespace relacs;
 
 namespace multielectrode {
 
 
-MultiSTA::MultiSTA( void )
-  : RePro( "MultiSTA", "Multiple STA", "Multi-electrode",
+MultiTraceSTA::MultiTraceSTA( void )
+  : RePro( "MultiTraceSTA", "Multiple Traces STA", "Multi-electrode",
 	   "Jan Benda, Michael Pfizenmaier", "0.1", "Jan 21, 2009" ),
-    P( this, "multistaplot" )
+    P( this, "multitracestaplot" )
 {
   // add some options:
-  addSelection( "averagetrace", "Input trace to be averaged", "V-1" );
+  addSelection( "inspikes", "Input spike train", "Spikes-1" );
   addNumber( "interval", "Averaging interval", 1.0, 0.001, 100000.0, 0.001, "sec" );
   addInteger( "repeats", "Repeats", 100, 0, 10000, 1 );
   addNumber( "stamint", "Minimum STA time", -0.1, -1000.0, 1000.0, 0.01, "sec", "ms" );
@@ -41,10 +41,10 @@ MultiSTA::MultiSTA( void )
 }
 
 
-int MultiSTA::main( void )
+int MultiTraceSTA::main( void )
 {
   // get options:
-  int intrace = traceIndex( text( "averagetrace", 0 ) );
+  int inspikes = index( "inspikes", 0 );
   double interval = number( "interval" );
   int repeats = integer( "repeats" );
   double stamint = number( "stamint" );
@@ -52,7 +52,7 @@ int MultiSTA::main( void )
   bool plotsnippets = boolean( "plotsnippets" );
 
   // init STAs:
-  STAs.resize( SpikeTraces );   // SpikeTraces is the number of available traces with spikes (from plugins/ephys/include/relacs/ephys/traces.h)
+  STAs.resize( traces().size() );
   for ( unsigned int k=0; k<STAs.size(); k++ ) {
     STAs[k].Snippets.clear();                               // we have no data yet
     STAs[k].Snippets.reserve( (int)floor( interval*500 ) ); // reserve enough memory (assumes 500Hz spike rate)
@@ -66,9 +66,9 @@ int MultiSTA::main( void )
   P.clear();
   P.resize( STAs.size(), 4, true );  // set the number of plots and arrange them in 4 columns
   for ( int k=0; k<P.size(); k++ ) {
-    if ( SpikeTrace[k] == intrace )
+    if ( SpikeTrace[inspikes] == k )
       P[k].setPlotColor( Plot::Gray );
-    P[k].setLabel( events( SpikeEvents[k] ).ident(), 0.05, Plot::Graph, 0.8, Plot::Graph );
+    P[k].setLabel( trace( SpikeTrace[k] ).ident(), 0.05, Plot::Graph, 0.8, Plot::Graph );
     P[k].setXRange( 1000.0*stamint, 1000.0*stamaxt );
     /*
     P[k].setXLabel( "msec" );
@@ -96,7 +96,7 @@ int MultiSTA::main( void )
       return count > 2 ? Completed : Aborted;
     }
 
-    analyze( trace( intrace ), interval );
+    analyze( events( SpikeEvents[inspikes] ), interval );
 
     plot( plotsnippets );
 
@@ -109,24 +109,26 @@ int MultiSTA::main( void )
 }
 
 
-void MultiSTA::analyze( const InData &intrace, double interval )
+void MultiTraceSTA::analyze( const EventData &spiketrain, double interval )
 {
-  // room to leave at the end of the input trace:
+  cerr << "spikes " << spiketrain.ident() << endl;
+
+  // room to leave at the end of the input traces:
   double skip = 2.0*STAs[0].Average.rangeBack();
 
-  // go through the spike trains:
+  // go through the traces:
   for ( unsigned int k=0; k<STAs.size(); k++ ) {
     STAs[k].Snippets.clear();
-    // for each spike find corresponding snippet in intrace:
-    const EventData &spikes = events( SpikeEvents[k] ); //  numerics/include/relacs/eventdata.h
-    int n = spikes.next( intrace.currentTime() - skip - interval ); // index to first spike in interval
-    int p = spikes.previous( intrace.currentTime() - skip ); // index to last spike in interval
+    // for each spike find corresponding snippet in the input trace:
+    const InData &intrace = trace( SpikeTrace[k] );  // numerics/include/relacs/eventdata.h
+    int n = spiketrain.next( intrace.currentTime() - skip - interval ); // index to first spike in interval
+    int p = spiketrain.previous( intrace.currentTime() - skip ); // index to last spike in interval
     for ( int i=n; i<=p; i++ ) {
       STAs[k].Snippets.push_back( SampleDataF( STAs[k].Average.range(), 0.0 ) );
       SampleDataF &snippet = STAs[k].Snippets.back();
       // copy data from trace into snippet:
       for ( int j=0; j<snippet.size(); j++ )
-	snippet[j] = intrace[ intrace.index( spikes[i] + snippet.pos( j ) ) ];
+	snippet[j] = intrace[ intrace.index( spiketrain[i] + snippet.pos( j ) ) ];
     }
 
     // compute the average (from numerics/include/relacs/stats.h):
@@ -136,7 +138,7 @@ void MultiSTA::analyze( const InData &intrace, double interval )
 }
 
 
-void MultiSTA::plot( bool snippets )
+void MultiTraceSTA::plot( bool snippets )
 {
   P.lock();
   for ( unsigned int k=0; k<STAs.size(); k++ ) {
@@ -154,25 +156,24 @@ void MultiSTA::plot( bool snippets )
 }
 
 
-void MultiSTA::config( void )
+void MultiTraceSTA::config( void )
 {
-  // collect names of all input traces ...
-  string its = text( "averagetrace" );
-  const InList &il = traces();
-  for ( int k=0; k<il.size(); k++ ) {
-    if ( ! its.empty() )
-      its += '|';
-    its += il[k].ident();
+  // collect names of all input spike trains ...
+  string ss = text( "inspikes" );
+  for ( int k=0; k<SpikeTraces; k++ ) {
+    if ( ! ss.empty() )
+      ss += '|';
+    ss += events( SpikeEvents[k] ).ident();
   }
   // ... and store them in the inspikes option:
-  setText( "averagetrace", its );
-  setToDefault( "averagetrace" );
+  setText( "inspikes", ss );
+  setToDefault( "inspikes" );
 }
 
 
-addRePro( MultiSTA );
+addRePro( MultiTraceSTA );
 
 }; /* namespace multielectrode */
 
-#include "moc_multista.cc"
+#include "moc_multitracesta.cc"
 

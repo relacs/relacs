@@ -5,6 +5,7 @@ noinst_PROGRAMS = \
     generatepairs \
     linearfit \
     marquardtfit \
+    maxreturnval \
     randtiming \
     simplexfit \
     syncevents \
@@ -42,6 +43,10 @@ generatepairs_SOURCES = generatepairs.cc
 linearfit_LDADD = \
     ../src/librelacsnumerics.la
 linearfit_SOURCES = linearfit.cc
+
+maxreturnval_LDADD = \
+    ../src/librelacsnumerics.la
+maxreturnval_SOURCES = maxreturnval.cc
 
 marquardtfit_LDADD = \
     ../src/librelacsnumerics.la

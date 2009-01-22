@@ -897,7 +897,7 @@ class SampleData : public Array< T >
 
     /*! The minimum value of the data elements between position
         \a first (inclusively) and \a last (exclusively). */
-  double min( double first, double last ) const;
+  T min( double first, double last ) const;
     /*! The index of the element with the minimum value of the data elements between position
         \a first (inclusively) and \a last (exclusively). */
   int minIndex( double first, double last ) const;
@@ -905,11 +905,11 @@ class SampleData : public Array< T >
         of the data elements between position
         \a first (inclusively) and \a last (exclusively).
         The value of the minimum element is returned in \a min. */
-  int minIndex( double &min, double first, double last ) const;
+  int minIndex( T &min, double first, double last ) const;
 
     /*! The maximum value of the data elements between position
         \a first (inclusively) and \a last (exclusively). */
-  double max( double first, double last ) const;
+  T max( double first, double last ) const;
     /*! The index of the element with the maximum value of the data elements between position
         \a first (inclusively) and \a last (exclusively). */
   int maxIndex( double first, double last ) const;
@@ -917,12 +917,12 @@ class SampleData : public Array< T >
         of the data elements between position
 	\a first (inclusively) and \a last (exclusively).
 	The value of the maximum element is returned in \a max. */
-  int maxIndex( double &max, double first, double last ) const;
+  int maxIndex( T &max, double first, double last ) const;
 
     /*! The minimum value \a min and maximum value \a max
         of the data elements between position
         \a first (inclusively) and \a last (exclusively). */
-  void minMax( double &min, double &max, double first, double last ) const;
+  void minMax( T &min, T &max, double first, double last ) const;
     /*! The indices \a minindex and \a maxindex of the elements
         with the minimum and the maximum value of the data elements between position
         \a first (inclusively) and \a last (exclusively). */
@@ -931,7 +931,7 @@ class SampleData : public Array< T >
         with the minimum value \a min and the maximum value \a max
         of the data elements between position
 	\a first (inclusively) and \a last (exclusively). */
-  void minMaxIndex( double &min, int &minindex, double &max, int &maxindex,
+  void minMaxIndex( T &min, int &minindex, T &max, int &maxindex,
 		    double first, double last ) const;
 
     /*! The mean \<x\> of the data elements between position 
@@ -2569,7 +2569,7 @@ SampleData< T > &SampleData< T >::freqFilter( const SampleData< TT > &g,
 
 
 template < typename T >
-double SampleData< T >::min( double first, double last ) const
+T SampleData< T >::min( double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -2601,7 +2601,7 @@ int SampleData< T >::minIndex( double first, double last ) const
 
 
 template < typename T >
-int SampleData< T >::minIndex( double &min, double first, double last ) const
+int SampleData< T >::minIndex( T &min, double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -2622,7 +2622,7 @@ int SampleData< T >::minIndex( double &min, double first, double last ) const
 
 
 template < typename T >
-double SampleData< T >::max( double first, double last ) const
+T SampleData< T >::max( double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -2654,7 +2654,7 @@ int SampleData< T >::maxIndex( double first, double last ) const
 
 
 template < typename T >
-int SampleData< T >::maxIndex( double &max, double first, double last ) const
+int SampleData< T >::maxIndex( T &max, double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -2675,7 +2675,7 @@ int SampleData< T >::maxIndex( double &max, double first, double last ) const
 
 
 template < typename T >
-void SampleData< T >::minMax( double &min, double &max, double first, double last ) const
+void SampleData< T >::minMax( T &min, T &max, double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -2714,7 +2714,7 @@ void SampleData< T >::minMaxIndex( int &minindex, int &maxindex, double first, d
 
 
 template < typename T >
-void SampleData< T >::minMaxIndex( double &min, int &minindex, double &max, int &maxindex,
+void SampleData< T >::minMaxIndex( T &min, int &minindex, T &max, int &maxindex,
 				   double first, double last ) const
 {
   int fi = index( first );

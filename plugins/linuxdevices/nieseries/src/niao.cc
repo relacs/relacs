@@ -133,8 +133,8 @@ int NIAO::testWriteDevice( OutList &sigs )
     double min = sigs[k].requestedMin();
     double max = sigs[k].requestedMax();
     if ( min == OutData::AutoRange || max == OutData::AutoRange ) {
-      double smin = 0.0;
-      double smax = 0.0;
+      float smin = 0.0;
+      float smax = 0.0;
       relacs::minMax( smin, smax, sigs[k] );
       if ( min == OutData::AutoRange )
 	min = smin;

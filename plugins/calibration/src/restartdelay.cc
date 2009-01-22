@@ -78,7 +78,9 @@ int RestartDelay::main( void )
   plotToggle( true, true, 2.0*duration, 1.0*duration );
 
   // plot:
+  P.lock();
   P.setXRange( -1000.0*duration, 1000.0*duration );
+  P.unlock();
 
   OutData signal( 2, 1.0/samplerate );
   signal = 0.0;
@@ -124,8 +126,8 @@ int RestartDelay::analyze( const InData &data, double duration,
   }
 
   // estimate parameter:
-  double min = 0.0;
-  double max = 0.0;
+  float min = 0.0;
+  float max = 0.0;
   minMax( min, max, d );
   double offs = 0.5*(min+max);
   double ampl = 0.5*(max-min);

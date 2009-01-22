@@ -452,7 +452,7 @@ class Array
         \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  double min( int first=0, int last=-1 ) const;
+  T min( int first=0, int last=-1 ) const;
     /*! The index of the element with the minimum value of the data elements between indices
         \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
@@ -464,13 +464,13 @@ class Array
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered.
         The value of the minimum element is returned in \a min. */
-  int minIndex( double &min, int first=0, int last=-1 ) const;
+  int minIndex( T &min, int first=0, int last=-1 ) const;
 
     /*! The maximum value of the data elements between indices
         \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  double max( int first=0, int last=-1 ) const;
+  T max( int first=0, int last=-1 ) const;
     /*! The index of the element with the maximum value of the data elements between indices
         \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
@@ -482,14 +482,14 @@ class Array
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered.
 	The value of the maximum element is returned in \a max. */
-  int maxIndex( double &max, int first=0, int last=-1 ) const;
+  int maxIndex( T &max, int first=0, int last=-1 ) const;
 
     /*! The minimum value \a min and maximum value \a max
         of the data elements between indices
         \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  void minMax( double &min, double &max, int first=0, int last=-1 ) const;
+  void minMax( T &min, T &max, int first=0, int last=-1 ) const;
     /*! The indices \a minindex and \a maxindex of the elements
         with the minimum and the maximum value of the data elements between indices
         \a first (inclusively) and \a last (exclusively). 
@@ -502,7 +502,7 @@ class Array
 	\a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  void minMaxIndex( double &min, int &minindex, double &max, int &maxindex,
+  void minMaxIndex( T &min, int &minindex, T &max, int &maxindex,
 		    int first=0, int last=-1 ) const;
 
     /*! The mean \<x\> of the data elements between indices 
@@ -1591,7 +1591,7 @@ Array<T> &Array<T>::linear( double level )
 
 
 template < typename T >
-double Array<T>::min( int first, int last ) const
+T Array<T>::min( int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
@@ -1615,7 +1615,7 @@ int Array<T>::minIndex( int first, int last ) const
 
 
 template < typename T >
-int Array<T>::minIndex( double &min, int first, int last ) const
+int Array<T>::minIndex( T &min, int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
@@ -1629,7 +1629,7 @@ int Array<T>::minIndex( double &min, int first, int last ) const
 
 
 template < typename T >
-double Array<T>::max( int first, int last ) const
+T Array<T>::max( int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
@@ -1653,7 +1653,7 @@ int Array<T>::maxIndex( int first, int last ) const
 
 
 template < typename T >
-int Array<T>::maxIndex( double &max, int first, int last ) const
+int Array<T>::maxIndex( T &max, int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
@@ -1667,7 +1667,7 @@ int Array<T>::maxIndex( double &max, int first, int last ) const
 
 
 template < typename T >
-void Array<T>::minMax( double &min, double &max, int first, int last ) const
+void Array<T>::minMax( T &min, T &max, int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
@@ -1691,7 +1691,7 @@ void Array<T>::minMaxIndex( int &minindex, int &maxindex, int first, int last ) 
 
 
 template < typename T >
-void Array<T>::minMaxIndex( double &min, int &minindex, double &max, int &maxindex,
+void Array<T>::minMaxIndex( T &min, int &minindex, T &max, int &maxindex,
 			    int first, int last ) const
 {
   if ( first < 0 )

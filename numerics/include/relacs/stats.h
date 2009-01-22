@@ -33,24 +33,28 @@ namespace relacs {
       \a RandomIter is a random access iterator
       that points to a number. */
 template < typename RandomIter >
-double median( RandomIter first, RandomIter last );
+typename iterator_traits<RandomIter>::value_type
+  median( RandomIter first, RandomIter last );
   /*! The median of the sorted container \a vec.
       \a Container holds an array of numbers
       that can be accessed via standard STL const_iterators. */
 template < typename Container >
-double median( const Container &vec );
+typename Container::value_type
+  median( const Container &vec );
   /*! Returns the quantile \a f of the sorted range \a first, \a last.
       \a f is a number ranging from 0 to 1.
       \a RandomIter is a random access iterator
       that points to a number. */
 template < typename RandomIter >
-double quantile( double f, RandomIter first, RandomIter last );
+typename iterator_traits<RandomIter>::value_type
+  quantile( double f, RandomIter first, RandomIter last );
   /*! The quantile \a f of the sorted container \a vec.
       \a f is a number ranging from 0 to 1.
       \a Container holds an array of numbers
       that can be accessed via standard STL const_iterators. */
 template < typename Container >
-double quantile( double f, const Container &vec );
+typename Container::value_type
+  quantile( double f, const Container &vec );
   /*! Replace each element of the sorted range \a first, \a last
       by its rank, including midranking of ties,
       and returns the sum of f^3-f, 
@@ -68,24 +72,28 @@ double rank( Container &vec );
       \a ForwardIter is a forward iterator
       that points to a number. */
 template < typename ForwardIter >
-double min( ForwardIter first, ForwardIter last );
+typename iterator_traits<ForwardIter>::value_type
+  min( ForwardIter first, ForwardIter last );
   /*! The minimum value of all elements of the container \a vec.
       \a Container holds an array of numbers
       that can be accessed via standard STL const_iterators. */
 template < typename Container >
-double min( const Container &vec );
+typename Container::value_type
+  min( const Container &vec );
   /*! The minimum value of the range \a first, \a last.
       In \a index the index of the element with the minimum value is returned.
       \a ForwardIter is a forward iterator
       that points to a number. */
 template < typename ForwardIter >
-double min( int &index, ForwardIter first, ForwardIter last );
+typename iterator_traits<ForwardIter>::value_type
+  min( int &index, ForwardIter first, ForwardIter last );
   /*! The minimum value of all elements of the container \a vec.
       In \a index the index of the element with the minimum value is returned.
       \a Container holds an array of numbers
       that can be accessed via standard STL const_iterators. */
 template < typename Container >
-double min( int &index, const Container &vec );
+typename Container::value_type
+  min( int &index, const Container &vec );
   /*! The index of the element with the minimum value of the range \a first, \a last.
       \a ForwardIter is a forward iterator
       that points to a number. */
@@ -101,24 +109,28 @@ int minIndex( const Container &vec );
       \a ForwardIter is a forward iterator
       that points to a number. */
 template < typename ForwardIter >
-double max( ForwardIter first, ForwardIter last );
+typename iterator_traits<ForwardIter>::value_type
+  max( ForwardIter first, ForwardIter last );
   /*! The maximum value of all elements of the container \a vec.
       \a Container holds an array of numbers
       that can be accessed via standard STL const_iterators. */
 template < typename Container >
-double max( const Container &vec );
+typename Container::value_type
+  max( const Container &vec );
   /*! The maximum value of the range \a first, \a last.
       In \a index the index of the element with the maximum value is returned.
       \a ForwardIter is a forward iterator
       that points to a number. */
 template < typename ForwardIter >
-double max( int &index, ForwardIter first, ForwardIter last );
+typename iterator_traits<ForwardIter>::value_type
+  max( int &index, ForwardIter first, ForwardIter last );
   /*! The maximum value of all elements of the container \a vec.
       In \a index the index of the element with the maximum value is returned.
       \a Container holds an array of numbers
       that can be accessed via standard STL const_iterators. */
 template < typename Container >
-double max( int &index, const Container &vec );
+typename Container::value_type
+  max( int &index, const Container &vec );
   /*! The index of the element with the maximum value of the range \a first, \a last.
       \a ForwardIter is a forward iterator
       that points to a number. */
@@ -135,13 +147,16 @@ int maxIndex( const Container &vec );
       \a ForwardIter is a forward iterator
       that points to a number. */
 template < typename ForwardIter >
-void minMax( double &min, double &max, ForwardIter first, ForwardIter last );
+void minMax( typename iterator_traits<ForwardIter>::value_type &min,
+	     typename iterator_traits<ForwardIter>::value_type &max,
+	     ForwardIter first, ForwardIter last );
   /*! The minimum value \a min and maximum value \a max
       of all elements of the container \a vec.
       \a Container holds an array of numbers
       that can be accessed via standard STL const_iterators. */
 template < typename Container >
-void minMax( double &min, double &max, const Container &vec );
+void minMax( typename Container::value_type &min,
+	     typename Container::value_type &max, const Container &vec );
   /*! The minimum value \a min and maximum value \a max
       of the range \a first, \a last.
       In \a minindex and \a maxindex the indices of the elements
@@ -149,7 +164,8 @@ void minMax( double &min, double &max, const Container &vec );
       \a ForwardIter is a forward iterator
       that points to a number. */
 template < typename ForwardIter >
-void minMax( double &min, int &minindex, double &max, int &maxindex,
+void minMax( typename iterator_traits<ForwardIter>::value_type &min, int &minindex,
+	     typename iterator_traits<ForwardIter>::value_type &max, int &maxindex,
 	     ForwardIter first, ForwardIter last );
   /*! The minimum value \a min and maximum value \a max
       of all elements of the container \a vec.
@@ -158,7 +174,8 @@ void minMax( double &min, int &minindex, double &max, int &maxindex,
       \a Container holds an array of numbers
       that can be accessed via standard STL const_iterators. */
 template < typename Container >
-void minMax( double &min, int &minindex, double &max, int &maxindex,
+void minMax( typename Container::value_type &min, int &minindex,
+	     typename Container::value_type &max, int &maxindex,
 	     const Container &vec );
   /*! The indices \a minindex and \a maxindex of the elements
       with the minimum and maximum value of the range \a first, \a last.
@@ -177,23 +194,27 @@ void minMaxIndex( int &minindex, int &maxindex, const Container &vec );
       \a ForwardIter is a forward iterator
       that points to a number. */
 template < typename ForwardIter >
-double minAbs( ForwardIter first, ForwardIter last );
+typename iterator_traits<ForwardIter>::value_type
+  minAbs( ForwardIter first, ForwardIter last );
   /*! The minimum absolute value of all elements of the container \a vec.
       \a Container holds an array of numbers
       that can be accessed via standard STL const_iterators. */
 template < typename Container >
-double minAbs( const Container &vec );
+typename Container::value_type
+  minAbs( const Container &vec );
 
   /*! The maximum absolute value of the range \a first, \a last.
       \a ForwardIter is a forward iterator
       that points to a number. */
 template < typename ForwardIter >
-double maxAbs( ForwardIter first, ForwardIter last );
+typename iterator_traits<ForwardIter>::value_type
+  maxAbs( ForwardIter first, ForwardIter last );
   /*! The maximum absolute value of all elements of the container \a vec.
       \a Container holds an array of numbers
       that can be accessed via standard STL const_iterators. */
 template < typename Container >
-double maxAbs( const Container &vec );
+typename Container::value_type
+  maxAbs( const Container &vec );
 
   /*! Clips the elements of the range \a first, \a last
       at \a min and \a max.
@@ -201,14 +222,18 @@ double maxAbs( const Container &vec );
       \a ForwardIter is a forward iterator
       that points to a number. */
 template < typename ForwardIter >
-int clip( double min, double max, ForwardIter first, ForwardIter last );
+int clip( typename iterator_traits<ForwardIter>::value_type min,
+	  typename iterator_traits<ForwardIter>::value_type max,
+	  ForwardIter first, ForwardIter last );
   /*! Clips the elements of the container \a vec
       at \a min and \a max.
       Returns the number of clipped data elements.
       \a Container contains numbers
       \c float 's, \c double 's, or \c long \c double 's.). */
 template < typename Container >
-int clip( double min, double max, Container &vec );
+int clip( typename Container::value_type min,
+	  typename Container::value_type max,
+	  Container &vec );
 
   /*! The arithmetic mean 
       \f[ \bar x = \frac{1}{N} \sum_{i=1}^N x_i \f] 
@@ -942,7 +967,8 @@ void detrend( ContainerX &vecx );
 
 
 template < typename RandomIter >
-double median( RandomIter first, RandomIter last )
+typename iterator_traits<RandomIter>::value_type
+  median( RandomIter first, RandomIter last )
 {
   if ( first == last )
     return 0.0;
@@ -959,14 +985,16 @@ double median( RandomIter first, RandomIter last )
 
 
 template < typename Container >
-double median( const Container &vec )
+typename Container::value_type
+  median( const Container &vec )
 {
   return median( vec.begin(), vec.end() );
 }
 
 
 template < typename RandomIter >
-double quantile( double f, RandomIter first, RandomIter last )
+typename iterator_traits<RandomIter>::value_type
+  quantile( double f, RandomIter first, RandomIter last )
 {
   if ( first == last )
     return 0.0;
@@ -974,11 +1002,11 @@ double quantile( double f, RandomIter first, RandomIter last )
   const int n = last - first;
   const double index = f * (n - 1);
   const int lindex = (int)::floor( index );
-  const double delta = index - lindex;
   RandomIter iter1 = first + lindex;
   if ( lindex == n-1 )
     return *iter1;
   else {
+    const double delta = index - lindex;
     RandomIter iter2 = iter1 + 1;
     return (1.0 - delta) * (*iter1) + delta * (*iter2);
   }
@@ -986,7 +1014,8 @@ double quantile( double f, RandomIter first, RandomIter last )
 
 
 template < typename Container >
-double quantile( double f, const Container &vec )
+typename Container::value_type
+  quantile( double f, const Container &vec )
 {
   return quantile( f, vec.begin(), vec.end() );
 }
@@ -1036,12 +1065,13 @@ double rank( Container &vec )
 
 
 template < typename ForwardIter >
-double min( ForwardIter first, ForwardIter last )
+typename iterator_traits<ForwardIter>::value_type
+  min( ForwardIter first, ForwardIter last )
 {
   if ( first == last )
     return 0.0;
 
-  double min = *first;
+  typename iterator_traits<ForwardIter>::value_type min = *first;
   while ( ++first != last ) {
     if ( min > *first )
       min = *first;
@@ -1051,20 +1081,22 @@ double min( ForwardIter first, ForwardIter last )
 
 
 template < typename Container >
-double min( const Container &vec )
+typename Container::value_type
+  min( const Container &vec )
 {
   return min( vec.begin(), vec.end() );
 }
 
 
 template < typename ForwardIter >
-double min( int &index, ForwardIter first, ForwardIter last )
+typename iterator_traits<ForwardIter>::value_type
+  min( int &index, ForwardIter first, ForwardIter last )
 {
   index = -1;
   if ( first == last )
     return 0.0;
 
-  double min = *first;
+  typename iterator_traits<ForwardIter>::value_type min = *first;
   index = 0;
   for ( int i=1; ++first != last; ++i ) {
     if ( min > *first ) {
@@ -1077,7 +1109,8 @@ double min( int &index, ForwardIter first, ForwardIter last )
 
 
 template < typename Container >
-double min( int &index, const Container &vec )
+typename Container::value_type
+  min( int &index, const Container &vec )
 {
   return min( index, vec.begin(), vec.end() );
 }
@@ -1089,7 +1122,7 @@ int minIndex( ForwardIter first, ForwardIter last )
   if ( first == last )
     return -1;
 
-  double min = *first;
+  typename iterator_traits<ForwardIter>::value_type min = *first;
   int mini = 0;
   for ( int i=1; ++first != last; ++i ) {
     if ( min > *first ) {
@@ -1109,12 +1142,13 @@ int minIndex( const Container &vec )
 
 
 template < typename ForwardIter >
-double max( ForwardIter first, ForwardIter last )
+typename iterator_traits<ForwardIter>::value_type
+  max( ForwardIter first, ForwardIter last )
 {
   if ( first == last )
     return 0.0;
 
-  double max = *first;
+  typename iterator_traits<ForwardIter>::value_type max = *first;
   while ( ++first != last ) {
     if ( max < *first )
       max = *first;
@@ -1124,20 +1158,22 @@ double max( ForwardIter first, ForwardIter last )
 
 
 template < typename Container >
-double max( const Container &vec )
+typename Container::value_type
+  max( const Container &vec )
 {
   return max( vec.begin(), vec.end() );
 }
 
 
 template < typename ForwardIter >
-double max( int &index, ForwardIter first, ForwardIter last )
+typename iterator_traits<ForwardIter>::value_type
+  max( int &index, ForwardIter first, ForwardIter last )
 {
   index = -1;
   if ( first == last )
     return 0.0;
 
-  double max = *first;
+  typename iterator_traits<ForwardIter>::value_type max = *first;
   index = 0;
   for ( int i=1; ++first != last; ++i ) {
     if ( max < *first ) {
@@ -1150,7 +1186,8 @@ double max( int &index, ForwardIter first, ForwardIter last )
 
 
 template < typename Container >
-double max( int &index, const Container &vec )
+typename Container::value_type
+  max( int &index, const Container &vec )
 {
   return max( index, vec.begin(), vec.end() );
 }
@@ -1162,7 +1199,7 @@ int maxIndex( ForwardIter first, ForwardIter last )
   if ( first == last )
     return -1;
 
-  double max = *first;
+  typename iterator_traits<ForwardIter>::value_type max = *first;
   int maxi = 0;
   for ( int i=1; ++first != last; ++i ) {
     if ( max < *first ) {
@@ -1182,7 +1219,9 @@ int maxIndex( const Container &vec )
 
 
 template < typename ForwardIter >
-void minMax( double &min, double &max, ForwardIter first, ForwardIter last )
+void minMax( typename iterator_traits<ForwardIter>::value_type &min,
+	     typename iterator_traits<ForwardIter>::value_type &max,
+	     ForwardIter first, ForwardIter last )
 {
   if ( first == last ) {
     min = 0.0;
@@ -1202,14 +1241,16 @@ void minMax( double &min, double &max, ForwardIter first, ForwardIter last )
 
 
 template < typename Container >
-void minMax( double &min, double &max, const Container &vec )
+void minMax( typename Container::value_type &min,
+	     typename Container::value_type &max, const Container &vec )
 {
   minMax( min, max, vec.begin(), vec.end() );
 }
 
 
 template < typename ForwardIter >
-void minMax( double &min, int &minindex, double &max, int &maxindex,
+void minMax( typename iterator_traits<ForwardIter>::value_type &min, int &minindex,
+	     typename iterator_traits<ForwardIter>::value_type &max, int &maxindex,
 	     ForwardIter first, ForwardIter last )
 {
   if ( first == last ) {
@@ -1238,7 +1279,8 @@ void minMax( double &min, int &minindex, double &max, int &maxindex,
 
 
 template < typename Container >
-void minMax( double &min, int &minindex, double &max, int &maxindex,
+void minMax( typename Container::value_type &min, int &minindex,
+	     typename Container::value_type &max, int &maxindex,
 	     const Container &vec )
 {
   minMax( min, minindex, max, maxindex, vec.begin(), vec.end() );
@@ -1255,8 +1297,8 @@ void minMaxIndex( int &minindex, int &maxindex,
     return;
   }
 
-  double min = *first;
-  double max = *first;
+  typename iterator_traits<ForwardIter>::value_type min = *first;
+  typename iterator_traits<ForwardIter>::value_type max = *first;
   minindex = 0;
   maxindex = 0;
   for ( int i=1; ++first != last; ++i ) {
@@ -1280,12 +1322,13 @@ void minMaxIndex( int &minindex, int &maxindex, const Container &vec )
 
 
 template < typename ForwardIter >
-double minAbs( ForwardIter first, ForwardIter last )
+typename iterator_traits<ForwardIter>::value_type
+  minAbs( ForwardIter first, ForwardIter last )
 {
   if ( first == last )
     return 0.0;
 
-  double min = ::fabs( *first );
+  typename iterator_traits<ForwardIter>::value_type min = ::fabs( *first );
   while ( ++first != last ) {
     if ( min > ::fabs( *first ) )
       min = ::fabs( *first );
@@ -1295,19 +1338,21 @@ double minAbs( ForwardIter first, ForwardIter last )
 
 
 template < typename Container >
-double minAbs( const Container &vec )
+typename Container::value_type
+  minAbs( const Container &vec )
 {
   return minAbs( vec.begin(), vec.end() );
 }
 
 
 template < typename ForwardIter >
-double maxAbs( ForwardIter first, ForwardIter last )
+typename iterator_traits<ForwardIter>::value_type
+  maxAbs( ForwardIter first, ForwardIter last )
 {
   if ( first == last )
     return 0.0;
 
-  double max = ::fabs( *first );
+  typename iterator_traits<ForwardIter>::value_type max = ::fabs( *first );
   while ( ++first != last ) {
     if ( max < ::fabs( *first ) )
       max = ::fabs( *first );
@@ -1317,15 +1362,17 @@ double maxAbs( ForwardIter first, ForwardIter last )
 
 
 template < typename Container >
-double maxAbs( const Container &vec )
+typename Container::value_type
+  maxAbs( const Container &vec )
 {
   return maxAbs( vec.begin(), vec.end() );
 }
 
 
 template < typename ForwardIter >
-int clip( double min, double max,
-	   ForwardIter first, ForwardIter last )
+int clip( typename iterator_traits<ForwardIter>::value_type min,
+	  typename iterator_traits<ForwardIter>::value_type max,
+	  ForwardIter first, ForwardIter last )
 {
   int c = 0;
   for ( ; first != last; ++first ) {
@@ -1343,7 +1390,9 @@ int clip( double min, double max,
 
 
 template < typename Container >
-int clip( double min, double max, Container &vec  )
+int clip( typename Container::value_type min,
+	  typename Container::value_type max,
+	  Container &vec  )
 {
   return clip( min, max, vec.begin(), vec.end() );
 }

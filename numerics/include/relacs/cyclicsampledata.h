@@ -169,43 +169,43 @@ template < class T = double >
 
     /*! Return the maximum value of the data between index \a from inclusively
         and index \a upto exclusively. */
-  double max( long from, long upto ) const;
+  T max( long from, long upto ) const;
     /*! Return the maximum value of the data during \a duration seconds
         starting at time \a time seconds. */
-  double max( double time, double duration ) const
+  T max( double time, double duration ) const
     { return max( indices( time ), indices( time + duration ) ); };
     /*! Return the maximum value of the data since time \a time seconds. */
-  double max( double time ) const
+  T max( double time ) const
     { return max( indices( time ), size() ); };
     /*! Return the minimum value of the data between index \a from inclusively
         and index \a upto exclusively. */
-  double min( long from, long upto ) const;
+  T min( long from, long upto ) const;
     /*! Return the minimum value of the data during \a duration seconds
         starting at time \a time seconds. */
-  double min( double time, double duration ) const
+  T min( double time, double duration ) const
     { return min( indices( time ), indices( time + duration ) ); };
     /*! Return the minimum value of the data since time \a time seconds. */
-  double min( double time ) const
+  T min( double time ) const
     { return min( indices( time ), size() ); };
     /*! Return the maximum absolute value of the data between index \a from inclusively
         and index \a upto exclusively. */
-  double maxAbs( long from, long upto ) const;
+  T maxAbs( long from, long upto ) const;
     /*! Return the maximum absolute value of the data during \a duration seconds
         starting at time \a time seconds. */
-  double maxAbs( double time, double duration ) const
+  T maxAbs( double time, double duration ) const
     { return maxAbs( indices( time ), indices( time + duration ) ); };
     /*! Return the maximum absolute value of the data since time \a time seconds. */
-  double maxAbs( double time ) const
+  T maxAbs( double time ) const
     { return maxAbs( indices( time ), size() ); };
     /*! Return the minimum absolute value of the data between index \a from inclusively
         and index \a upto exclusively. */
-  double minAbs( long from, long upto ) const;
+  T minAbs( long from, long upto ) const;
     /*! Return the minimum absolute value of the data during \a duration seconds
         starting at time \a time seconds. */
-  double minAbs( double time, double duration ) const
+  T minAbs( double time, double duration ) const
     { return minAbs( indices( time ), indices( time + duration ) ); };
     /*! Return the minimum absolute value of the data since time \a time seconds. */
-  double minAbs( double time ) const
+  T minAbs( double time ) const
     { return minAbs( indices( time ), size() ); };
 
     /*! Return the mean value of the data between index \a from inclusively
@@ -377,7 +377,7 @@ double CyclicSampleData< T >::max( long from, long upto ) const
 }
 
 
-double CyclicSampleData< T >::min( long from, long upto ) const
+T CyclicSampleData< T >::min( long from, long upto ) const
 {
   if ( from < minIndex() )
     from = minIndex();
@@ -391,7 +391,7 @@ double CyclicSampleData< T >::min( long from, long upto ) const
 }
 
 
-double CyclicSampleData< T >::maxAbs( long from, long upto ) const
+T CyclicSampleData< T >::maxAbs( long from, long upto ) const
 {
   if ( from < minIndex() )
     from = minIndex();
@@ -405,7 +405,7 @@ double CyclicSampleData< T >::maxAbs( long from, long upto ) const
 }
 
 
-double CyclicSampleData< T >::minAbs( long from, long upto ) const
+T CyclicSampleData< T >::minAbs( long from, long upto ) const
 {
   if ( from < minIndex() )
     from = minIndex();

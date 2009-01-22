@@ -1,6 +1,6 @@
 /*
-  multielectrode/multista.h
-  Computes spike-triggered averages for many spike traces and a common to be averaged waveform
+  multielectrode/multitracesta.h
+  Computes spike-triggered averages from all recorded input traces
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _RELACS_MULTIELECTRODE_MULTISTA_H_
-#define _RELACS_MULTIELECTRODE_MULTISTA_H_ 1
+#ifndef _RELACS_MULTIELECTRODE_MULTITRACESTA_H_
+#define _RELACS_MULTIELECTRODE_MULTITRACESTA_H_ 1
 
 #include <vector>
 #include <relacs/multiplot.h>
@@ -33,13 +33,13 @@ namespace multielectrode {
 
 
 /*!
-\class MultiSTA
-\brief [RePro] Computes spike-triggered averages for many spike traces and a common to be averaged waveform
+\class MultiTraceSTA
+\brief [RePro] Computes spike-triggered averages from all recorded input traces
 \author Jan Benda, Michael Pfizenmaier
 \version 0.1 (Jan 21, 2009)
 
 \par Options
-- \c averagetrace=V-1: Input trace to be averaged (\c string)
+- \c inspikes=Spikes-1: Input spike train (\c string)
 - \c interval=1sec: Averaging interval (\c number)
 - \c repeats=100: Repeats (\c integer)
 - \c stamint=-100ms: Minimum STA time (\c number)
@@ -53,19 +53,19 @@ No output files.
 The STAs. All snippets in red, the STA (blue) and the standard deviation (cyan).
 
 \par Requirements
-- One voltage trace
-- At least one spike trace
+- At least one voltage trace
+- One spike trace
 */
 
 
-class MultiSTA : public RePro, public ephys::Traces
+class MultiTraceSTA : public RePro, public ephys::Traces
 {
   Q_OBJECT
 
 public:
 
     /*! Constructor. Defines all options. */
-  MultiSTA( void );
+  MultiTraceSTA( void );
 
     /*! This is what the RePro is doing. */
   virtual int main( void );
@@ -74,7 +74,7 @@ public:
   virtual void config( void );
 
     /*! Analyze the data. */
-  void analyze( const InData &intrace, double interval );
+  void analyze( const EventData &spiketrain, double interval );
     /*! Plot the results. */
   void plot( bool snippets );
 
@@ -100,5 +100,5 @@ protected:
 
 }; /* namespace multielectrode */
 
-#endif /* ! _RELACS_MULTIELECTRODE_MULTISTA_H_ */
+#endif /* ! _RELACS_MULTIELECTRODE_MULTITRACESTA_H_ */
 

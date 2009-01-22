@@ -336,13 +336,13 @@ class Map : public Array < T >
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered.
 	In \a y the corresponding value of the y-data array is returned. */
-  double minX( double &y, int first=0, int last=-1 ) const;
+  T minX( T &y, int first=0, int last=-1 ) const;
     /*! The minimum value of the elements of the y-data array between indices
         \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered.
 	In \a x the corresponding value of the x-data array is returned. */
-  double minY( double &x, int first=0, int last=-1 ) const;
+  T minY( T &x, int first=0, int last=-1 ) const;
     /*! The index of the element with the minimum value 
         of the elements of the x-data array between indices
         \a first (inclusively) and \a last (exclusively). 
@@ -350,7 +350,7 @@ class Map : public Array < T >
         Called with no arguments all data elements are considered.
         The value of the minimum element is returned in \a min
         and the corresponding value of the y-data array is returned in \a y. */
-  int minXIndex( double &min, double &y, int first=0, int last=-1 ) const;
+  int minXIndex( T &min, T &y, int first=0, int last=-1 ) const;
     /*! The index of the element with the minimum value 
         of the elements of the y-data array between indices
         \a first (inclusively) and \a last (exclusively). 
@@ -358,20 +358,20 @@ class Map : public Array < T >
         Called with no arguments all data elements are considered.
         The value of the minimum element is returned in \a min
         and the corresponding value of the x-data array is returned in \a x. */
-  int minYIndex( double &min, double &x, int first=0, int last=-1 ) const;
+  int minYIndex( T &min, T &x, int first=0, int last=-1 ) const;
 
     /*! The maximum value of the elements of the x-data array between indices
         \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered.
 	In \a y the corresponding value of the y-data array is returned. */
-  double maxX( double &y, int first=0, int last=-1 ) const;
+  T maxX( T &y, int first=0, int last=-1 ) const;
     /*! The maximum value of the elements of the y-data array between indices
         \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered.
 	In \a x the corresponding value of the x-data array is returned. */
-  double maxY( double &x, int first=0, int last=-1 ) const;
+  T maxY( T &x, int first=0, int last=-1 ) const;
     /*! The index of the element with the maximum value 
         of the elements of the x-data array between indices
 	\a first (inclusively) and \a last (exclusively). 
@@ -379,7 +379,7 @@ class Map : public Array < T >
         Called with no arguments all data elements are considered.
 	The value of the maximum element is returned in \a max
         and the corresponding value of the y-data array is returned in \a y. */
-  int maxXIndex( double &max, double &x, int first=0, int last=-1 ) const;
+  int maxXIndex( T &max, T &x, int first=0, int last=-1 ) const;
     /*! The index of the element with the maximum value 
         of the elements of the y-data array between indices
 	\a first (inclusively) and \a last (exclusively). 
@@ -387,7 +387,7 @@ class Map : public Array < T >
         Called with no arguments all data elements are considered.
 	The value of the maximum element is returned in \a max
         and the corresponding value of the x-data array is returned in \a x. */
-  int maxYIndex( double &max, double &x, int first=0, int last=-1 ) const;
+  int maxYIndex( T &max, T &x, int first=0, int last=-1 ) const;
 
     /*! The minimum value \a min and the maximum value \a max
         of the elements of the x-data array between indices
@@ -396,7 +396,7 @@ class Map : public Array < T >
         Called with no arguments all data elements are considered.
 	In \a miny and \a maxy the corresponding values of the y-data array 
 	are returned. */
-  void minMaxX( double &min, double &miny, double &max, double &maxy,
+  void minMaxX( T &min, T &miny, T &max, T &maxy,
 		int first=0, int last=-1 ) const;
     /*! The minimum value \a min and the maximum value \a max
         of the elements of the y-data array between indices
@@ -405,7 +405,7 @@ class Map : public Array < T >
         Called with no arguments all data elements are considered.
 	In \a minx and \a maxx the corresponding values of the x-data array
 	are returned. */
-  void minMaxY( double &min, double &minx, double &max, double &maxx,
+  void minMaxY( T &min, T &minx, T &max, T &maxx,
 		int first=0, int last=-1 ) const;
     /*! The indices \a minindex and \a maxindex of the elements
         with the minimum value \a min and maximum value \a max
@@ -415,8 +415,8 @@ class Map : public Array < T >
         Called with no arguments all data elements are considered.
         The corresponding values of the y-data array are returned 
 	in \a ymin and \a ymax. */
-  void minMaxXIndex( double &min, int &minindex, double &miny,
-		     double &max, int &maxindex, double &maxy,
+  void minMaxXIndex( T &min, int &minindex, T &miny,
+		     T &max, int &maxindex, T &maxy,
 		     int first=0, int last=-1 ) const;
     /*! The indices \a minindex and \a maxindex of the elements
         with the minimum value \a min and the maximum value \a max 
@@ -425,8 +425,8 @@ class Map : public Array < T >
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered.
 	The corresponding values of the x-data array are returned in \a minx and \a maxx. */
-  void minMaxYIndex( double &min, int &minindex, double &minx,
-		     double &max, int &maxindex, double &maxx,
+  void minMaxYIndex( T &min, int &minindex, T &minx,
+		     T &max, int &maxindex, T &maxx,
 		     int first=0, int last=-1 ) const;
 
     /*! The covariance cov(x,y) = \<(x-\<x\>)(y-\<y\>)\> 
@@ -992,47 +992,47 @@ Map<T> &Map<T>::identity( void )
 
 
 template < typename T > 
-double Map<T>::minX( double &yy, int first, int last ) const
+T Map<T>::minX( T &yy, int first, int last ) const
 {
   int index = -1;
-  double min = XData.min( index, first, last );
+  T min = XData.min( index, first, last );
   yy = y( index );
   return min;
 }
 
 
 template < typename T > 
-double Map<T>::minY( double &xx, int first, int last ) const
+T Map<T>::minY( T &xx, int first, int last ) const
 {
   int index = -1;
-  double min = Array<T>::min( index, first, last );
+  T min = Array<T>::min( index, first, last );
   xx = x( index );
   return min;
 }
 
 
 template < typename T > 
-double Map<T>::maxX( double &yy, int first, int last ) const
+T Map<T>::maxX( T &yy, int first, int last ) const
 {
   int index = -1;
-  double max = XData.max( index, first, last );
+  T max = XData.max( index, first, last );
   yy = y( index );
   return max;
 }
 
 
 template < typename T > 
-double Map<T>::maxY( double &xx, int first, int last ) const
+T Map<T>::maxY( T &xx, int first, int last ) const
 {
   int index = -1;
-  double max = Array<T>::max( index, first, last );
+  T max = Array<T>::max( index, first, last );
   xx = x( index );
   return max;
 }
 
 
 template < typename T > 
-int Map<T>::minXIndex( double &min, double &yy, int first, int last ) const
+int Map<T>::minXIndex( T &min, T &yy, int first, int last ) const
 {
   int index = -1;
   min = XData.min( index, first, last );
@@ -1042,7 +1042,7 @@ int Map<T>::minXIndex( double &min, double &yy, int first, int last ) const
 
 
 template < typename T > 
-int Map<T>::minYIndex( double &min, double &xx, int first, int last ) const
+int Map<T>::minYIndex( T &min, T &xx, int first, int last ) const
 {
   int index = -1;
   min = Array<T>::min( index, first, last );
@@ -1052,7 +1052,7 @@ int Map<T>::minYIndex( double &min, double &xx, int first, int last ) const
 
 
 template < typename T > 
-int Map<T>::maxXIndex( double &max, double &yy, int first, int last ) const
+int Map<T>::maxXIndex( T &max, T &yy, int first, int last ) const
 {
   int index = -1;
   max = XData.max( index, first, last );
@@ -1062,7 +1062,7 @@ int Map<T>::maxXIndex( double &max, double &yy, int first, int last ) const
 
 
 template < typename T > 
-int Map<T>::maxYIndex( double &max, double &xx, int first, int last ) const
+int Map<T>::maxYIndex( T &max, T &xx, int first, int last ) const
 {
   int index = -1;
   max = Array<T>::max( index, first, last );
@@ -1072,7 +1072,7 @@ int Map<T>::maxYIndex( double &max, double &xx, int first, int last ) const
 
 
 template < typename T > 
-void Map<T>::minMaxX( double &min, double &miny, double &max, double &maxy,
+void Map<T>::minMaxX( T &min, T &miny, T &max, T &maxy,
 		      int first, int last ) const
 {
   int minindex = -1;
@@ -1084,7 +1084,7 @@ void Map<T>::minMaxX( double &min, double &miny, double &max, double &maxy,
 
 
 template < typename T > 
-void Map<T>::minMaxY( double &min, double &minx, double &max, double &maxx,
+void Map<T>::minMaxY( T &min, T &minx, T &max, T &maxx,
 		      int first, int last ) const
 {
   int minindex = -1;
@@ -1096,8 +1096,8 @@ void Map<T>::minMaxY( double &min, double &minx, double &max, double &maxx,
 		    
 
 template < typename T > 
-void Map<T>::minMaxXIndex( double &min, int &minindex, double &miny,
-			   double &max, int &maxindex, double &maxy,
+void Map<T>::minMaxXIndex( T &min, int &minindex, T &miny,
+			   T &max, int &maxindex, T &maxy,
 			   int first, int last ) const
 {
   XData.minMaxIndex( min, minindex, max, maxindex, first, last );
@@ -1107,8 +1107,8 @@ void Map<T>::minMaxXIndex( double &min, int &minindex, double &miny,
 
 
 template < typename T > 
-void Map<T>::minMaxYIndex( double &min, int &minindex, double &minx,
-			   double &max, int &maxindex, double &maxx,
+void Map<T>::minMaxYIndex( T &min, int &minindex, T &minx,
+			   T &max, int &maxindex, T &maxx,
 			   int first, int last ) const
 {
   Array<T>::minMaxIndex( min, minindex, max, maxindex, first, last );
