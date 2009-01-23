@@ -31,6 +31,7 @@
 #include <qthread.h>
 #include <qmutex.h>
 #include <qwaitcondition.h>
+#include <qsplashscreen.h>
 #include <qapplication.h>
 #include <vector>
 #include <relacs/strqueue.h>
@@ -114,6 +115,7 @@ public:
 		const string &pluginconfigfiles,
 		const string &docpath,
 		const string &iconpath,
+		QSplashScreen *splash,
 		ModeTypes mode,
 		QWidget *parent=0, const char *name=0 );
   ~RELACSWidget( void );

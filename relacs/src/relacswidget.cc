@@ -75,6 +75,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
 			    const string &pluginconfigfiles,
 			    const string &docpath,
 			    const string &iconpath,
+			    QSplashScreen *splash,
 			    ModeTypes mode, QWidget *parent, const char *name )
   : QMainWindow( parent, name ),
     ConfigClass( "RELACS", RELACSPlugin::Core ),
@@ -463,6 +464,9 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     PT->setMinimumWidth( w );
     RP->setMinimumWidth( w );
   }
+
+  if ( splash != 0 )
+    msleep( 2000 );
 
   // miscellaneous:
   setFocusPolicy( QWidget::StrongFocus );

@@ -173,6 +173,7 @@ if test "x$HELP" = "xyes"; then
   echo "                 settings (configuration) files (i.e. BASE.cfg"
   echo "                 and BASEplugins.cfg)"
   echo "  -f             Run RELACS in fullscreen mode"
+  echo "  -p             Use splash screen on startup"
   echo
   echo "  --help         Print this help message and exit."
   echo "  --version      Print the version number of RELACS and exit."

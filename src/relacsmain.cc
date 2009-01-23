@@ -21,8 +21,8 @@
 
 #include <string>
 #include <getopt.h>
-#include <qdatetime.h>
 #include <qapplication.h>
+#include <qsplashscreen.h>
 #include <relacs/relacswidget.h>
 
 using namespace std;
@@ -32,6 +32,7 @@ int main( int argc, char **argv )
 {
   relacs::RELACSWidget::ModeTypes mode = relacs::RELACSWidget::AcquisitionMode;
   bool fullscreen = false;
+  bool splashscreen = false;
   string pluginrelative = "./";
   string pluginhomes = "";
   string pluginhelp = "";
@@ -56,12 +57,12 @@ int main( int argc, char **argv )
   opterr = 0;
   int longindex = 0;
   char c;
-  while ( (c = getopt_long( argc, argv, "f3", longoptions, &longindex )) >= 0 ) {
+  while ( (c = getopt_long( argc, argv, "f3p", longoptions, &longindex )) >= 0 ) {
     switch ( c ) {
     case 0: switch ( longindex ) {
       case 0:
 	cout << "RELACS " << RELACSVERSION << endl;
-	cout << "Copyright (C) 2008 Jan Benda\n";
+	cout << "Copyright (C) 2002-2009 Jan Benda\n";
 	exit( 0 );
 	break;
       case 1:
@@ -104,6 +105,10 @@ int main( int argc, char **argv )
       fullscreen = true;
       break;
 
+    case 'p':
+      splashscreen = true;
+      break;
+
     case '3':
       mode = relacs::RELACSWidget::SimulationMode;
       break;
@@ -114,19 +119,35 @@ int main( int argc, char **argv )
   }
 
   QApplication::setColorSpec( QApplication::CustomColor );
-  QApplication a( argc, argv );
+  QApplication app( argc, argv );
+  
+  QPixmap pixmap( string( iconpath + "/relacssplash.png" ).c_str() );
+  QSplashScreen *splash = 0;
+  if ( splashscreen ) {
+    splash = new QSplashScreen( pixmap );
+    splash->setFont( QFont( "Helvetica", 18, QFont::Bold ) );
+    splash->show();
+    splash->message( "Loading ...", Qt::AlignLeft | Qt::AlignBottom );
+  }
 
   relacs::RELACSWidget relacs( pluginrelative, pluginhomes, pluginhelp,
 			       coreconfigfiles, pluginconfigfiles, 
-			       docpath, iconpath, mode );
+			       docpath, iconpath, splash, mode );
+
+  if ( splashscreen )
+    splash->message( "Finished ...", Qt::AlignLeft | Qt::AlignBottom );
 
   if ( fullscreen )
     relacs.fullScreen();
 
+  app.setMainWidget( &relacs );
   relacs.show();
   relacs.init();
 
-  a.setMainWidget( &relacs );
+  if ( splashscreen ) {
+    splash->finish( &relacs );
+    delete splash;
+  }
 
-  return a.exec();
+  return app.exec();
 }
