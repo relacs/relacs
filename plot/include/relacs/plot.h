@@ -374,8 +374,22 @@ public:
 
     /*! Provide a mutex that is used by Plot to lock
         access to data while they are plotted. 
-        Passing a '0' disabled the data mutex. */
-  void setDataMutex( QMutex *mutex ) { DMutex = mutex; };
+        Passing a '0' disables the data mutex.
+        If you want to change the mutex, you have first to
+        disable the mutex by passing '0' or calling clearDataMutex().
+	\note If this Plot is part of a MultiPlot, then you should set a
+	common data lock using MutiPlot::setDataLock().
+	This data lock is used by MultiPlot to lock the data for all Subplots
+	while drawing,
+	the individual data locks are not used in this situation. */
+  void setDataMutex( QMutex *mutex );
+    /*! Disables the data mutex. \sa setDataMutex() */
+  void clearDataMutex( void );
+
+    /*! Lock the data mutex if it was set by setDataMutex() before. */
+  void lockData( void );
+    /*! Unlock the data mutex if it was set by setDataMutex() before. */
+  void unlockData( void );
 
   void setOrigin( double x, double y ) { XOrigin = x; YOrigin = y; };
   void setSize( double w, double h ) { XSize = w; YSize = h; };

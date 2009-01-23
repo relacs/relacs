@@ -90,7 +90,7 @@ You either need to
   e.g. './configure --with-qt3=/usr/lib/qt3'."
 AC_CHECK_LIB(qt-mt, main,, AC_MSG_ERROR(${QT3_LIB_MISSING}), ${QT3_LDFLAGS})
 
-QT3_WRONG_VESION="Qt version 3.3 or higher but not Qt4 is required, you have another version!
+QT3_WRONG_VESION="Qt3 version 3.3.1 or higher but not Qt4 is required, you have another version!
 You either need to
 - install a Qt3 development package (e.g. libqt3-mt-dev,
   on a Debian-based system enter 'sudo apt-get install libqt3-mt-dev'),
@@ -98,7 +98,7 @@ You either need to
   e.g. './configure --with-qt3=/usr/lib/qt3'."
 AC_COMPILE_IFELSE([
 #include <qvbox.h>
-#if !defined(QT_VERSION) || (QT_VERSION < 0x030300) || (QT_VERSION >= 0x040000)
+#if !defined(QT_VERSION) || (QT_VERSION < 0x030301) || (QT_VERSION >= 0x040000)
 # error Wrong Qt version
 #endif
 ],,AC_MSG_ERROR(${QT3_WRONG_VESION}))

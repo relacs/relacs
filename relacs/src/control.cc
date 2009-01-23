@@ -174,8 +174,6 @@ bool Control::waitOnSessionStop( double time )
 
 bool Control::sleep( double t )
 {
-#ifdef USEWAITCONDITION
-
   // sleep:
   unlockAll();
   if ( t > 0.0 ) {
@@ -190,32 +188,6 @@ bool Control::sleep( double t )
 
   // interrupt Control:
   return interrupt();
-
-#else
-
-  // interrupt Control:
-  InterruptLock.lock();
-  bool ir = Interrupt; 
-  InterruptLock.unlock();
-  if ( ir )
-    return true;
-
-  unlockAll();
-
-  if ( t > 0.0 ) {
-    if ( t < 0.001 )
-      QThread::usleep( (unsigned long)(1.0e6*t) );
-    else if ( t < 1000.0 )
-      QThread::msleep( (unsigned long)(1.0e3*t) );
-    else
-      QThread::sleep( (unsigned long)(t) );
-  }
-
-  lockAll();
-  return interrupt();
-
-#endif
-
 }
 
 
@@ -246,12 +218,8 @@ void Control::requestStop( void )
     Interrupt = true;
     InterruptLock.unlock();
 
-#ifdef USEWAITCONDITION
-
     // wake up the Control from sleeping:
     SleepWait.wakeAll();
-
-#endif
 
     RW->wakeAll();
     wait( 500 );

@@ -23,17 +23,12 @@
 #define _RELACS_CONTROL_H_ 1
 
 #include <qglobal.h>
-#if QT_VERSION >= 0x030301
-#define USEWAITCONDITION
-#endif
 #include <string>
 #include <values.h>
 #include <qdatetime.h>
 #include <qpopupmenu.h>
 #include <qthread.h>
-#ifdef USEWAITCONDITION
 #include <qwaitcondition.h>
-#endif
 #include <relacs/relacsplugin.h>
 using namespace std;
 
@@ -267,9 +262,7 @@ private:
 
   bool Interrupt;
   mutable QMutex InterruptLock;
-#ifdef USEWAITCONDITION
   QWaitCondition SleepWait;
-#endif
   QTime SleepTime;
 
 };

@@ -132,6 +132,14 @@ void MultiPlot::setDataMutex( QMutex *mutex )
 }
 
 
+void MultiPlot::clearDataMutex( void )
+{
+  DMutex = 0;
+  for ( unsigned int k=0; k<PlotList.size(); k++ )
+    PlotList[k]->clearDataMutex();
+}
+
+
 void MultiPlot::lockData( void )
 {
   if ( DMutex != 0 )
@@ -353,18 +361,24 @@ void MultiPlot::draw( void )
 
 void MultiPlot::paintEvent( QPaintEvent *qpe )
 {
+  // the order of locking is important here!
+  // if the data are not available there is no need to lock the plot.
+  lockData();
   PMutex.lock();
+
   PixMap->fill( paletteBackgroundColor() );
 
   for ( PlotListType::iterator p = PlotList.begin(); 
 	p != PlotList.end(); 
 	++p ) {
-    (**p).setDataMutex( DMutex );
     (**p).scale( width(), height() );
-    (**p).draw( PixMap );
+    (**p).draw( PixMap ); // this will not lock the data again!
   }
+
   bitBlt( this, 0, 0, PixMap, 0, 0, PixMap->width(), PixMap->height() );
+
   PMutex.unlock();
+  unlockData();
 }
 
 

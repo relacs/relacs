@@ -23,13 +23,8 @@
 #define _RELACS_REPRO_H_ 1
 
 #include <qglobal.h>
-#if QT_VERSION >= 0x030301
-#define USEWAITCONDITION
-#endif
 #include <qmutex.h>
-#ifdef USEWAITCONDITION
 #include <qwaitcondition.h>
-#endif
 #include <qthread.h>
 #include <qdatetime.h>
 #include <relacs/outlist.h>
@@ -106,10 +101,8 @@ public:
 	and stimulus data are already locked (via lockAll()).
 	Access to those data is unlocked during sleep() and sleepOn().
 	Beware that main() is executed in a thread different from the GUI thread.
-	Either use lockGUI() and unlockGUI() to lock and unlock the GUI thread
-	while calling some functions that eventually paint something on the screen,
-	or use postCustomEvent().
-	The later is to be preferred over the lockGUI().
+	Use postCustomEvent() to call some functions that eventually
+	paint something on the screen.
 	The function should return one of the \a DoneStates except Continue.
 	After main() terminated
         a message is written ( "Repro succesfully completed",
@@ -117,6 +110,12 @@ public:
         and RELACS is informed. 
 	You need to return from main() if the sleep(), sleepOn(),
 	or interrupt() functions return \c true.
+	Also, if you lock() and unlock() the RePro manually,
+	you should check interrupt() directly after each unlock().
+	If interrupt() returns \c true, you should be careful with
+	posting custom events via postCustomEvent, since they might be executed
+	after the RePro terminated. This includes calling message() and
+	Plot::draw() or MultiPlot::draw().
         \sa interrupt(), sleep(), timeStamp(), sleepOn() */
   virtual int main( void ) = 0;
 
@@ -361,9 +360,7 @@ private:
 
   bool Interrupt;
   mutable QMutex InterruptLock;
-#ifdef USEWAITCONDITION
   QWaitCondition SleepWait;
-#endif
   QTime SleepTime;
 
   int LastState;

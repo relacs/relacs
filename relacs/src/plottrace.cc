@@ -175,6 +175,7 @@ void PlotTrace::resize( InList &data, const EventList &events )
 
   // setup plots:
   MultiPlot::resize( plots, Plot::Pointer );
+  setDataMutex( &RW->DataMutex );
   setCommonXRange();
   PlotElements.resize( plots, -1 );
 

@@ -149,12 +149,8 @@ void RePro::requestStop( void )
   Interrupt = true;
   InterruptLock.unlock();
 
-#ifdef USEWAITCONDITION
-
   // wake up the RePro from sleeping:
   SleepWait.wakeAll();
-
-#endif
 }
 
 
@@ -171,8 +167,6 @@ bool RePro::sleep( double t )
 
   unlockAll();
 
-#ifdef USEWAITCONDITION
-
   // sleep:
   if ( t > 0.0 ) {
     unsigned long ms = (unsigned long)::rint(1.0e3*t);
@@ -181,19 +175,6 @@ bool RePro::sleep( double t )
     else
       SleepWait.wait( ms );
   }
-
-#else
-
-  if ( t > 0.0 ) {
-    if ( t < 0.001 )
-      QThread::usleep( (unsigned long)::rint(1.0e6*t) );
-    else if ( t < 1000.0 )
-      QThread::msleep( (unsigned long)::rint(1.0e3*t) );
-    else
-      QThread::sleep( (unsigned long)::rint(t) );
-  }
-
-#endif
 
   RW->updateData();
 

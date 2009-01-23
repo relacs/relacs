@@ -25,13 +25,8 @@
 #include <vector>
 #include <string>
 #include <qpopupmenu.h>
-#if QT_VERSION >= 0x030301
-#define USEWAITCONDITION
-#endif
 #include <qmutex.h>
-#ifdef USEWAITCONDITION
 #include <qwaitcondition.h>
-#endif
 #include <qthread.h>
 #include <qdatetime.h>
 #include <relacs/cyclicarray.h>
@@ -240,9 +235,7 @@ private:
 
   bool InterruptModel;
   mutable QMutex InterruptLock;
-#ifdef USEWAITCONDITION
   QWaitCondition SleepWait;
-#endif
 
 };
 

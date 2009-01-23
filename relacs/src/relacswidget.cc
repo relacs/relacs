@@ -949,8 +949,6 @@ void RELACSWidget::checkPlugin( void* plugin, const string &ident )
 
 void RELACSWidget::startRePro( RePro *repro, int macroaction, bool saving )
 {
-  readLockData();
-
   // start new RePro:
   CurrentRePro = repro;
   RP->activateRePro( CurrentRePro, macroaction );
@@ -969,6 +967,7 @@ void RELACSWidget::startRePro( RePro *repro, int macroaction, bool saving )
 
   ReProRunning = true;
 
+  readLockData();
   SF->write( saving );
   SF->write( *CurrentRePro );
   CurrentRePro->setSaving( SF->saving() );
@@ -984,12 +983,18 @@ void RELACSWidget::stopRePro( void )
 
   // wait on RePro to stop:
   if ( CurrentRePro->running() ) {
-    CurrentRePro->requestStop();
+    // wait for the RePro to leave sensible code:
+    CurrentRePro->lock();
 
-    // process all posted events (that usually paint the RePro...) really needed?
-    //  QApplication::sendPostedEvents();
-    
-    // waiting for the RePro to properly terminate:
+    // dispatch all posted events (that usually paint the RePro...)
+    // as long as the RePro is normally running, so that it has
+    // still all internal variables available:
+    QApplication::sendPostedEvents();
+    qApp->processEvents( 100 );
+
+    // request and wait for the RePro to properly terminate:
+    CurrentRePro->requestStop();
+    CurrentRePro->unlock();
     CurrentRePro->wait();
   }
 

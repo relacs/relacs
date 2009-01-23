@@ -234,12 +234,8 @@ void Model::stop( void )
     InterruptModel = true;
     InterruptLock.unlock();
     
-#ifdef USEWAITCONDITION
-    
     // wake up the Model from sleeping:
     SleepWait.wakeAll();
-    
-#endif
 
     wait();
 

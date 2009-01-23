@@ -302,6 +302,33 @@ void Plot::unlock( void )
 }
 
 
+void Plot::setDataMutex( QMutex *mutex )
+{
+  if ( DMutex == 0 )
+    DMutex = mutex;
+}
+
+
+void Plot::clearDataMutex( void )
+{
+  DMutex = 0;
+}
+
+
+void Plot::lockData( void )
+{
+  if ( DMutex != 0 )
+    DMutex->lock();
+}
+
+
+void Plot::unlockData( void )
+{
+  if ( DMutex != 0 )
+    DMutex->unlock();
+}
+
+
 void Plot::scale( int width, int height )
 {
   if ( ! SubWidget )
@@ -2628,9 +2655,11 @@ void Plot::drawMouse( QPainter &paint )
 
 void Plot::draw( QPaintDevice *qpm )
 {
+  // the order of locking is important here!
+  // if the data are not available there is no need to lock the plot.
+  if ( ! SubWidget )
+    lockData();
   PMutex.lock();
-  if ( DMutex != 0 )
-    DMutex->lock();
 
   initRange();
   initTics();
@@ -2646,9 +2675,9 @@ void Plot::draw( QPaintDevice *qpm )
   drawLabels( paint );
   drawMouse( paint );
 
-  if ( DMutex != 0 )
-    DMutex->unlock();
   PMutex.unlock();
+  if ( ! SubWidget )
+    unlockData();
 }
 
 
@@ -3350,8 +3379,7 @@ void Plot::mouseAnalyse( MouseEvent &me )
 
     if ( ! me.alt() && ( ! me.control() || ! me.shift() ) ) {
       // find data set:
-      if ( DMutex != 0 )
-	DMutex->lock();
+      lockData();
       double mindd = ( PlotX2 - PlotX1 + 1 ) + ( PlotY1 - PlotY2 + 1 );
       for ( unsigned int k=0; k<PData.size(); k++ ) {
         // axis:
@@ -3392,8 +3420,7 @@ void Plot::mouseAnalyse( MouseEvent &me )
 	  pinx = minpinx;
 	}
       }
-      if ( DMutex != 0 )
-	DMutex->unlock();
+      unlockData();
       if ( ! me.shift() )
 	xpos = AutoScale;
       if ( ! me.control() )
