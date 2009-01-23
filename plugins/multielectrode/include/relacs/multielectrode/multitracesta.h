@@ -86,8 +86,8 @@ protected:
         vector is from the STL */
   struct STA {
     vector< SampleDataF > Snippets;
-    SampleDataD Average;
-    SampleDataD StDev;
+    SampleDataF Average;
+    SampleDataF StDev;
   };
     /*! The STA data for all input traces. */
   vector< STA > STAs;

@@ -197,16 +197,19 @@ class CyclicArray
 
     /*! Return the mean value of the array between index \a from inclusively
         and index \a upto exclusively. */
-  T mean( int from, int upto ) const;
+  typename numerical_traits< T >::mean_type mean( int from, int upto ) const;
     /*! Return the variance of the array between index \a from inclusively
         and index \a upto exclusively. */
-  T variance( int from, int upto ) const;
+  typename numerical_traits< T >::variance_type
+  variance( int from, int upto ) const;
     /*! Return the standard deviation of the array between index \a from inclusively
         and index \a upto exclusively. */
-  T stdev( int from, int upto ) const;
+  typename numerical_traits< T >::variance_type
+  stdev( int from, int upto ) const;
     /*! Return the root-mean-square of the array between index \a from inclusively
         and index \a upto exclusively. */
-  T rms( int from, int upto ) const;
+  typename numerical_traits< T >::variance_type
+  rms( int from, int upto ) const;
 
     /*! Compute histogram \a h of all data elements currently
         stored in the array. */
@@ -675,7 +678,7 @@ T CyclicArray< T >::min( int from, int upto ) const
     upto = size();
 
   if ( from >= upto )
-    return 0.0;
+    return 0;
 
   T m = operator[]( from );
   for ( int k=from+1; k<upto; k++ )
@@ -695,7 +698,7 @@ T CyclicArray< T >::max( int from, int upto ) const
     upto = size();
 
   if ( from >= upto )
-    return 0.0;
+    return 0;
 
   T m = operator[]( from );
   for ( int k=from+1; k<upto; k++ )
@@ -715,7 +718,7 @@ T CyclicArray< T >::maxAbs( int from, int upto ) const
     upto = size();
 
   if ( from >= upto )
-    return 0.0;
+    return 0;
 
   T m = ::fabs( operator[]( from ) );
   for ( int k=from+1; k<upto; k++ )
@@ -735,7 +738,7 @@ T CyclicArray< T >::minAbs( int from, int upto ) const
     upto = size();
 
   if ( from >= upto )
-    return 0.0;
+    return 0;
 
   T m = ::fabs( operator[]( from ) );
   for ( int k=from+1; k<upto; k++ )
@@ -747,7 +750,8 @@ T CyclicArray< T >::minAbs( int from, int upto ) const
 
 
 template < class T >
-T CyclicArray< T >::mean( int from, int upto ) const
+typename numerical_traits< T >::mean_type
+CyclicArray< T >::mean( int from, int upto ) const
 {
   if ( from < minIndex() )
     from = minIndex();
@@ -755,10 +759,10 @@ T CyclicArray< T >::mean( int from, int upto ) const
     upto = size();
 
   if ( from >= upto )
-    return 0.0;
+    return 0;
 
   // mean:
-  T mean = 0.0;
+  typename numerical_traits< T >::mean_type mean = 0.0;
   int n = 0;
   for ( int k=from; k<upto; k++ )
     mean += ( operator[]( k ) - mean ) / (++n);
@@ -768,7 +772,8 @@ T CyclicArray< T >::mean( int from, int upto ) const
 
 
 template < class T >
-T CyclicArray< T >::variance( int from, int upto ) const
+typename numerical_traits< T >::variance_type
+CyclicArray< T >::variance( int from, int upto ) const
 {
   if ( from < minIndex() )
     from = minIndex();
@@ -776,20 +781,20 @@ T CyclicArray< T >::variance( int from, int upto ) const
     upto = size();
 
   if ( from >= upto )
-    return 0.0;
+    return 0;
 
   // mean:
-  T mean = 0.0;
+  typename numerical_traits< T >::mean_type mean = 0;
   int n = 0;
   for ( int k=from; k<upto; k++ )
     mean += ( operator[]( k ) - mean ) / (++n);
 
   // mean squared diffference from mean:
-  T var = 0.0;
+  typename numerical_traits< T >::variance_type var = 0;
   n = 0;
   for ( int k=from; k<upto; k++ ) {
     // subtract mean:
-    T d = operator[]( k ) - mean;
+    typename numerical_traits< T >::mean_type d = operator[]( k ) - mean;
     // average over squares:
     var += ( d*d - var ) / (++n);
   }
@@ -800,7 +805,8 @@ T CyclicArray< T >::variance( int from, int upto ) const
 
 
 template < class T >
-T CyclicArray< T >::stdev( int from, int upto ) const
+typename numerical_traits< T >::variance_type
+CyclicArray< T >::stdev( int from, int upto ) const
 {
   if ( from < minIndex() )
     from = minIndex();
@@ -808,20 +814,20 @@ T CyclicArray< T >::stdev( int from, int upto ) const
     upto = size();
 
   if ( from >= upto )
-    return 0.0;
+    return 0;
 
   // mean:
-  T mean = 0.0;
+  typename numerical_traits< T >::mean_type mean = 0;
   int n = 0;
   for ( int k=from; k<upto; k++ )
     mean += ( operator[]( k ) - mean ) / (++n);
 
   // mean squared diffference from mean:
-  T var = 0.0;
+  typename numerical_traits< T >::variance_type var = 0;
   n = 0;
   for ( int k=from; k<upto; k++ ) {
     // subtract mean:
-    T d = operator[]( k ) - mean;
+    typename numerical_traits< T >::mean_type d = operator[]( k ) - mean;
     // average over squares:
     var += ( d*d - var ) / (++n);
   }
@@ -832,7 +838,8 @@ T CyclicArray< T >::stdev( int from, int upto ) const
 
 
 template < class T >
-T CyclicArray< T >::rms( int from, int upto ) const
+typename numerical_traits< T >::variance_type
+CyclicArray< T >::rms( int from, int upto ) const
 {
   if ( from < minIndex() )
     from = minIndex();
@@ -840,10 +847,10 @@ T CyclicArray< T >::rms( int from, int upto ) const
     upto = size();
 
   if ( from >= upto )
-    return 0.0;
+    return 0;
 
   // mean squared values:
-  T var = 0.0;
+  typename numerical_traits< T >::variance_type var = 0;
   int n = 0;
   for ( int k=from; k<upto; k++ ) {
     T d = operator[]( k );

@@ -936,71 +936,95 @@ class SampleData : public Array< T >
 
     /*! The mean \<x\> of the data elements between position 
         \a first (inclusively) and \a last (exclusively). */
-  double mean( double first, double last ) const;
+  typename numerical_traits< T >::mean_type
+  mean( double first, double last ) const;
     /*! The mean \<x\> of the data elements between position 
         \a first (inclusively) and \a last (exclusively).
         In \a stdev the standard deviation is returned. */
-  double mean( double &stdev, double first, double last ) const;
+  typename numerical_traits< T >::mean_type
+  mean( typename numerical_traits< T >::variance_type &stdev,
+	double first, double last ) const;
     /*! The unbiased variance var(x)=\<(x-\<x\>)^2\> of the data elements between
         position \a first (inclusively) and \a last (exclusively). */
-  double variance( double first, double last ) const;
+  typename numerical_traits< T >::variance_type
+  variance( double first, double last ) const;
     /*! The unbiased variance var(x)=\<(x-mean)^2\> of the data elements between
         position \a first (inclusively) and \a last (exclusively) for known \a mean. */
-  double variance( double mean, double first, double last ) const;
+  typename numerical_traits< T >::variance_type
+  variance( typename numerical_traits< T >::mean_type mean,
+	    double first, double last ) const;
     /*! The variance var(x)=\<(x-mean)^2\> of the data elements between
         position \a first (inclusively) and \a last (exclusively) for fixed \a mean. */
-  double varianceFixed( double fixedmean, double first, double last ) const;
+  typename numerical_traits< T >::variance_type
+  varianceFixed( typename numerical_traits< T >::mean_type fixedmean,
+		 double first, double last ) const;
     /*! The unbiased standard deviation sqrt(var(x)) 
         of the data elements between
         position \a first (inclusively) and \a last (exclusively). */
-  double stdev( double first, double last ) const;
+  typename numerical_traits< T >::variance_type
+  stdev( double first, double last ) const;
     /*! The unbiased standard deviation sqrt(var(x)) 
         of the data elements between
         position \a first (inclusively) and \a last (exclusively) for known \a mean. */
-  double stdev( double mean, double first, double last ) const;
+  typename numerical_traits< T >::variance_type
+  stdev( typename numerical_traits< T >::mean_type mean,
+	 double first, double last ) const;
     /*! The standard deviation sqrt(var(x)) 
         of the data elements between
         position \a first (inclusively) and \a last (exclusively) for fixed \a mean. */
-  double stdevFixed( double fixedmean, double first, double last ) const;
+  typename numerical_traits< T >::variance_type
+  stdevFixed( typename numerical_traits< T >::mean_type fixedmean,
+	      double first, double last ) const;
     /*! The unbiased standard error mean sqrt(var(x)/N) 
         of the data elements between
         position \a first (inclusively) and \a last (exclusively). */
-  double sem( double first, double last ) const;
+  typename numerical_traits< T >::variance_type sem( double first, double last ) const;
     /*! The unbiased standard error mean sqrt(var(x)/N) 
         of the data elements between
         position \a first (inclusively) and \a last (exclusively) for known \a mean. */
-  double sem( double mean, double first, double last ) const;
+  typename numerical_traits< T >::variance_type
+  sem( typename numerical_traits< T >::mean_type mean,
+       double first, double last ) const;
     /*! The standard deviation sqrt(var(x)/N) 
         of the data elements between
         position \a first (inclusively) and \a last (exclusively) for fixed \a mean. */
-  double semFixed( double fixedmean, double first, double last ) const;
+  typename numerical_traits< T >::variance_type
+  semFixed( typename numerical_traits< T >::mean_type fixedmean,
+	    double first, double last ) const;
     /*! The absolute deviation <|x-mu|> 
         of the data elements between
         position \a first (inclusively) and \a last (exclusively). */
-  double absdev( double first, double last ) const;
+  typename numerical_traits< T >::variance_type
+  absdev( double first, double last ) const;
     /*! The absolute deviation <|x-mu|> 
         of the data elements between
         position \a first (inclusively) and \a last (exclusively) for known \a mean. */
-  double absdev( double mean, double first, double last ) const;
+  typename numerical_traits< T >::variance_type
+  absdev( typename numerical_traits< T >::mean_type mean,
+	  double first, double last ) const;
     /*! The root-mean-square
         of the data elements between
         position \a first (inclusively) and \a last (exclusively). */
-  double rms( double first, double last ) const;
+  typename numerical_traits< T >::variance_type rms( double first, double last ) const;
     /*! The skewness of the data elements between
         position \a first (inclusively) and \a last (exclusively). */
-  double skewness( double first, double last ) const;
+  typename numerical_traits< T >::variance_type
+  skewness( double first, double last ) const;
     /*! The kurtosis of the data elements between
         position \a first (inclusively) and \a last (exclusively). */
-  double kurtosis( double first, double last ) const;
+  typename numerical_traits< T >::variance_type
+  kurtosis( double first, double last ) const;
     /*! The sum of all elements of the data elements between
         position \a first (inclusively) and \a last (exclusively). */
-  double sum( double first, double last ) const;
+  T sum( double first, double last ) const;
     /*! The sum of the square of all elements of the data elements between
         position \a first (inclusively) and \a last (exclusively). */
-  double squaredSum( double first, double last ) const;
+  typename numerical_traits< T >::variance_type
+  squaredSum( double first, double last ) const;
     /*! The power \<x^2\> of all elements of the data elements between
         position \a first (inclusively) and \a last (exclusively). */
-  double power( double first, double last ) const;
+  typename numerical_traits< T >::variance_type
+  power( double first, double last ) const;
 
     /*! Compute power \a p of the half-complex sequence in \a hc.
 	\a TT and \a SS are real numbers. */
@@ -2738,7 +2762,8 @@ void SampleData< T >::minMaxIndex( T &min, int &minindex, T &max, int &maxindex,
 
 
 template < typename T >
-double SampleData< T >::mean( double first, double last ) const
+typename numerical_traits< T >::mean_type
+  SampleData< T >::mean( double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -2747,14 +2772,16 @@ double SampleData< T >::mean( double first, double last ) const
   if ( li > size() )
     li = size();
   if ( li <= fi )
-    return 0.0;
+    return 0;
   else
     return ::relacs::mean( begin()+fi, begin()+li );
 }
 
 
 template < typename T >
-double SampleData< T >::mean( double &stdev, double first, double last ) const
+typename numerical_traits< T >::mean_type
+  SampleData< T >::mean( typename numerical_traits< T >::variance_type &stdev,
+			 double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -2763,8 +2790,8 @@ double SampleData< T >::mean( double &stdev, double first, double last ) const
   if ( li > size() )
     li = size();
   if ( li <= fi ) {
-    stdev = 0.0;
-    return 0.0;
+    stdev = 0;
+    return 0;
   }
   else
     return ::relacs::meanStdev( stdev, begin()+fi, begin()+li );
@@ -2772,7 +2799,8 @@ double SampleData< T >::mean( double &stdev, double first, double last ) const
 
 
 template < typename T >
-double SampleData< T >::variance( double first, double last ) const
+typename numerical_traits< T >::variance_type
+  SampleData< T >::variance( double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -2781,14 +2809,16 @@ double SampleData< T >::variance( double first, double last ) const
   if ( li > size() )
     li = size();
   if ( li <= fi )
-    return 0.0;
+    return 0;
   else
     return ::relacs::variance( begin()+fi, begin()+li );
 }
 
 
 template < typename T >
-double SampleData< T >::variance( double mean, double first, double last ) const
+typename numerical_traits< T >::variance_type
+  SampleData< T >::variance( typename numerical_traits< T >::mean_type mean,
+			     double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -2797,14 +2827,16 @@ double SampleData< T >::variance( double mean, double first, double last ) const
   if ( li > size() )
     li = size();
   if ( li <= fi )
-    return 0.0;
+    return 0;
   else
     return ::relacs::variance( mean, begin()+fi, begin()+li );
 }
 
 
 template < typename T >
-double SampleData< T >::varianceFixed( double fixedmean, double first, double last ) const
+typename numerical_traits< T >::variance_type
+  SampleData< T >::varianceFixed( typename numerical_traits< T >::mean_type fixedmean,
+				  double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -2813,14 +2845,15 @@ double SampleData< T >::varianceFixed( double fixedmean, double first, double la
   if ( li > size() )
     li = size();
   if ( li <= fi )
-    return 0.0;
+    return 0;
   else
     return ::relacs::varianceFixed( fixedmean, begin()+fi, begin()+li );
 }
 
 
 template < typename T >
-double SampleData< T >::stdev( double first, double last ) const
+typename numerical_traits< T >::variance_type
+  SampleData< T >::stdev( double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -2829,14 +2862,16 @@ double SampleData< T >::stdev( double first, double last ) const
   if ( li > size() )
     li = size();
   if ( li <= fi )
-    return 0.0;
+    return 0;
   else
     return ::relacs::stdev( begin()+fi, begin()+li );
 }
 
 
 template < typename T >
-double SampleData< T >::stdev( double mean, double first, double last ) const
+typename numerical_traits< T >::variance_type
+  SampleData< T >::stdev( typename numerical_traits< T >::mean_type mean,
+			  double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -2845,14 +2880,16 @@ double SampleData< T >::stdev( double mean, double first, double last ) const
   if ( li > size() )
     li = size();
   if ( li <= fi )
-    return 0.0;
+    return 0;
   else
     return ::relacs::stdev( mean, begin()+fi, begin()+li );
 }
 
 
 template < typename T >
-double SampleData< T >::stdevFixed( double fixedmean, double first, double last ) const
+typename numerical_traits< T >::variance_type
+  SampleData< T >::stdevFixed( typename numerical_traits< T >::mean_type fixedmean,
+			       double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -2861,14 +2898,15 @@ double SampleData< T >::stdevFixed( double fixedmean, double first, double last 
   if ( li > size() )
     li = size();
   if ( li <= fi )
-    return 0.0;
+    return 0;
   else
     return ::relacs::stdevFixed( fixedmean, begin()+fi, begin()+li );
 }
 
 
 template < typename T >
-double SampleData< T >::sem( double first, double last ) const
+typename numerical_traits< T >::variance_type
+  SampleData< T >::sem( double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -2877,14 +2915,16 @@ double SampleData< T >::sem( double first, double last ) const
   if ( li > size() )
     li = size();
   if ( li <= fi )
-    return 0.0;
+    return 0;
   else
     return ::relacs::sem( begin()+fi, begin()+li );
 }
 
 
 template < typename T >
-double SampleData< T >::sem( double mean, double first, double last ) const
+typename numerical_traits< T >::variance_type
+  SampleData< T >::sem( typename numerical_traits< T >::mean_type mean,
+			double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -2893,14 +2933,16 @@ double SampleData< T >::sem( double mean, double first, double last ) const
   if ( li > size() )
     li = size();
   if ( li <= fi )
-    return 0.0;
+    return 0;
   else
     return ::relacs::sem( mean, begin()+fi, begin()+li );
 }
 
 
 template < typename T >
-double SampleData< T >::semFixed( double fixedmean, double first, double last ) const
+typename numerical_traits< T >::variance_type
+  SampleData< T >::semFixed( typename numerical_traits< T >::mean_type fixedmean,
+			     double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -2909,14 +2951,15 @@ double SampleData< T >::semFixed( double fixedmean, double first, double last ) 
   if ( li > size() )
     li = size();
   if ( li <= fi )
-    return 0.0;
+    return 0;
   else
     return ::relacs::semFixed( fixedmean, begin()+fi, begin()+li );
 }
 
 
 template < typename T >
-double SampleData< T >::absdev( double first, double last ) const
+typename numerical_traits< T >::variance_type
+  SampleData< T >::absdev( double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -2925,14 +2968,16 @@ double SampleData< T >::absdev( double first, double last ) const
   if ( li > size() )
     li = size();
   if ( li <= fi )
-    return 0.0;
+    return 0;
   else
     return ::relacs::absdev( begin()+fi, begin()+li );
 }
 
 
 template < typename T >
-double SampleData< T >::absdev( double mean, double first, double last ) const
+typename numerical_traits< T >::variance_type
+  SampleData< T >::absdev( typename numerical_traits< T >::mean_type mean,
+			   double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -2941,14 +2986,15 @@ double SampleData< T >::absdev( double mean, double first, double last ) const
   if ( li > size() )
     li = size();
   if ( li <= fi )
-    return 0.0;
+    return 0;
   else
     return ::relacs::absdev( mean, begin()+fi, begin()+li );
 }
 
 
 template < typename T >
-double SampleData< T >::rms( double first, double last ) const
+typename numerical_traits< T >::variance_type
+  SampleData< T >::rms( double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -2957,14 +3003,15 @@ double SampleData< T >::rms( double first, double last ) const
   if ( li > size() )
     li = size();
   if ( li <= fi )
-    return 0.0;
+    return 0;
   else
     return ::relacs::rms( begin()+fi, begin()+li );
 }
 
 
 template < typename T >
-double SampleData< T >::skewness( double first, double last ) const
+typename numerical_traits< T >::variance_type
+  SampleData< T >::skewness( double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -2973,14 +3020,15 @@ double SampleData< T >::skewness( double first, double last ) const
   if ( li > size() )
     li = size();
   if ( li <= fi )
-    return 0.0;
+    return 0;
   else
     return ::relacs::skewness( begin()+fi, begin()+li );
 }
 
 
 template < typename T >
-double SampleData< T >::kurtosis( double first, double last ) const
+typename numerical_traits< T >::variance_type
+  SampleData< T >::kurtosis( double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -2989,14 +3037,14 @@ double SampleData< T >::kurtosis( double first, double last ) const
   if ( li > size() )
     li = size();
   if ( li <= fi )
-    return 0.0;
+    return 0;
   else
     return ::relacs::kurtosis( begin()+fi, begin()+li );
 }
 
 
 template < typename T >
-double SampleData< T >::sum( double first, double last ) const
+T SampleData< T >::sum( double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -3005,14 +3053,15 @@ double SampleData< T >::sum( double first, double last ) const
   if ( li > size() )
     li = size();
   if ( li <= fi )
-    return 0.0;
+    return 0;
   else
     return ::relacs::sum( begin()+fi, begin()+li );
 }
 
 
 template < typename T >
-double SampleData< T >::squaredSum( double first, double last ) const
+typename numerical_traits< T >::variance_type
+  SampleData< T >::squaredSum( double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -3021,14 +3070,15 @@ double SampleData< T >::squaredSum( double first, double last ) const
   if ( li > size() )
     li = size();
   if ( li <= fi )
-    return 0.0;
+    return 0;
   else
     return ::relacs::squaredSum( begin()+fi, begin()+li );
 }
 
 
 template < typename T >
-double SampleData< T >::power( double first, double last ) const
+typename numerical_traits< T >::variance_type
+  SampleData< T >::power( double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -3037,7 +3087,7 @@ double SampleData< T >::power( double first, double last ) const
   if ( li > size() )
     li = size();
   if ( li <= fi )
-    return 0.0;
+    return 0;
   else
     return ::relacs::power( begin()+fi, begin()+li );
 }

@@ -210,10 +210,12 @@ template < class T = double >
 
     /*! Return the mean value of the data between index \a from inclusively
         and index \a upto exclusively. */
-  double mean( long from, long upto ) const;
+  typename numerical_traits< T >::mean_type
+  mean( long from, long upto ) const;
     /*! Return the mean value of the data during \a duration seconds
         starting at time \a time seconds. */
-  double mean( double time, double duration ) const
+  typename numerical_traits< T >::mean_type
+  mean( double time, double duration ) const
     { return mean( indices( time ), indices( time + duration ) ); };
     /*! Returns in \a md the mean values of the data calculated during
         \a width long time windows starting at the times
@@ -223,10 +225,12 @@ template < class T = double >
 
     /*! Return the variance of the data between index \a from inclusively
         and index \a upto exclusively. */
-  double variance( long from, long upto ) const;
+  typename numerical_traits< T >::variance_type
+  variance( long from, long upto ) const;
     /*! Return the variance of the data during \a duration seconds
         starting at time \a time seconds. */
-  double variance( double time, double duration ) const
+  typename numerical_traits< T >::variance_type
+  variance( double time, double duration ) const
     { return variance( indices( time ), indices( time + duration ) ); };
     /*! Returns in \a vd the variance calculated during
         \a width long time windows starting at the times
@@ -236,10 +240,12 @@ template < class T = double >
 
     /*! Return the standard deviation of the data between index \a from inclusively
         and index \a upto exclusively. */
-  double stdev( long from, long upto ) const;
+  typename numerical_traits< T >::variance_type
+  stdev( long from, long upto ) const;
     /*! Return the standard deviation of the data during \a duration seconds
         starting at time \a time seconds. */
-  double stdev( double time, double duration ) const
+  typename numerical_traits< T >::variance_type
+  stdev( double time, double duration ) const
     { return stdev( indices( time ), indices( time + duration ) ); };
     /*! Returns in \a sd the standard deviation calculated during
         \a width long time windows starting at the times
@@ -249,10 +255,12 @@ template < class T = double >
 
     /*! Return the root-mean-square of the data between index \a from inclusively
         and index \a upto exclusively. */
-  double rms( long from, long upto ) const;
+  typename numerical_traits< T >::variance_type
+  rms( long from, long upto ) const;
     /*! Return the root-mean-square of the data during \a duration seconds
         starting at time \a time seconds. */
-  double rms( double time, double duration ) const
+  typename numerical_traits< T >::variance_type
+  rms( double time, double duration ) const
     { return rms( indices( time ), indices( time + duration ) ); };
     /*! Returns in \a rd the root-mean-square calculated during
         \a width long time windows starting at the times
@@ -419,7 +427,8 @@ T CyclicSampleData< T >::minAbs( long from, long upto ) const
 }
 
 
-double CyclicSampleData< T >::mean( long from, long upto ) const
+typename numerical_traits< T >::mean_type
+CyclicSampleData< T >::mean( long from, long upto ) const
 {
   if ( from < minIndex() )
     from = minIndex();
@@ -427,13 +436,14 @@ double CyclicSampleData< T >::mean( long from, long upto ) const
     upto = size();
 
   if ( from >= upto )
-    return 0.0;
+    return 0;
 
   return ::relacs::mean( begin()+from, begin()+upto );
 }
 
 
-double CyclicSampleData< T >::variance( long from, long upto ) const
+typename numerical_traits< T >::variance_type
+  CyclicSampleData< T >::variance( long from, long upto ) const
 {
   if ( from < minIndex() )
     from = minIndex();
@@ -441,13 +451,14 @@ double CyclicSampleData< T >::variance( long from, long upto ) const
     upto = size();
 
   if ( from >= upto )
-    return 0.0;
+    return 0;
 
   return ::relacs::variance( begin()+from, begin()+upto );
 }
 
 
-double CyclicSampleData< T >::stdev( long from, long upto ) const
+typename numerical_traits< T >::variance_type
+  CyclicSampleData< T >::stdev( long from, long upto ) const
 {
   if ( from < minIndex() )
     from = minIndex();
@@ -455,13 +466,14 @@ double CyclicSampleData< T >::stdev( long from, long upto ) const
     upto = size();
 
   if ( from >= upto )
-    return 0.0;
+    return 0;
 
   return ::relacs::stdev( begin()+from, begin()+upto );
 }
 
 
-double CyclicSampleData< T >::rms( long from, long upto ) const
+typename numerical_traits< T >::variance_type
+  CyclicSampleData< T >::rms( long from, long upto ) const
 {
   if ( from < minIndex() )
     from = minIndex();
@@ -469,7 +481,7 @@ double CyclicSampleData< T >::rms( long from, long upto ) const
     upto = size();
 
   if ( from >= upto )
-    return 0.0;
+    return 0;
 
   return ::relacs::rms( begin()+from, begin()+upto );
 }

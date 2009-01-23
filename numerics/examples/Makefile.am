@@ -6,6 +6,7 @@ noinst_PROGRAMS = \
     linearfit \
     marquardtfit \
     maxreturnval \
+    meanreturnval \
     randtiming \
     simplexfit \
     syncevents \
@@ -47,6 +48,10 @@ linearfit_SOURCES = linearfit.cc
 maxreturnval_LDADD = \
     ../src/librelacsnumerics.la
 maxreturnval_SOURCES = maxreturnval.cc
+
+meanreturnval_LDADD = \
+    ../src/librelacsnumerics.la
+meanreturnval_SOURCES = meanreturnval.cc
 
 marquardtfit_LDADD = \
     ../src/librelacsnumerics.la

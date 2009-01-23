@@ -509,107 +509,125 @@ class Array
         \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  double mean( int first=0, int last=-1 ) const;
+  typename numerical_traits< T >::mean_type
+  mean( int first=0, int last=-1 ) const;
     /*! The mean \<x\> of the data elements between indices 
         \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered.
         In \a stdev the standard deviation is returned. */
-  double mean( double &stdev, int first=0, int last=-1 ) const;
+  typename numerical_traits< T >::mean_type
+  mean( typename numerical_traits< T >::variance_type &stdev,
+	int first=0, int last=-1 ) const;
     /*! The unbiased variance var(x)=\<(x-\<x\>)^2\> of the data elements between
         indices \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  double variance( int first=0, int last=-1 ) const;
+  typename numerical_traits< T >::variance_type
+  variance( int first=0, int last=-1 ) const;
     /*! The unbiased variance var(x)=\<(x-mean)^2\> of the data elements between
         indices \a first (inclusively) and \a last (exclusively) for known \a mean. 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  double variance( double mean, int first=0, int last=-1 ) const;
+  typename numerical_traits< T >::variance_type
+  variance( typename numerical_traits< T >::mean_type mean,
+	    int first=0, int last=-1 ) const;
     /*! The variance var(x)=\<(x-mean)^2\> of the data elements between
         indices \a first (inclusively) and \a last (exclusively) for fixed \a mean. 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  double varianceFixed( double fixedmean, int first=0, int last=-1 ) const;
+  typename numerical_traits< T >::variance_type
+  varianceFixed( typename numerical_traits< T >::mean_type fixedmean,
+		 int first=0, int last=-1 ) const;
     /*! The unbiased standard deviation sqrt(var(x)) 
         of the data elements between
         indices \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  double stdev( int first=0, int last=-1 ) const;
+  typename numerical_traits< T >::variance_type stdev( int first=0, int last=-1 ) const;
     /*! The unbiased standard deviation sqrt(var(x)) 
         of the data elements between
         indices \a first (inclusively) and \a last (exclusively) for known \a mean. 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  double stdev( double mean, int first=0, int last=-1 ) const;
+  typename numerical_traits< T >::variance_type
+  stdev( typename numerical_traits< T >::mean_type mean,
+	 int first=0, int last=-1 ) const;
     /*! The standard deviation sqrt(var(x)) 
         of the data elements between
         indices \a first (inclusively) and \a last (exclusively) for fixed \a mean. 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  double stdevFixed( double fixedmean, int first=0, int last=-1 ) const;
+  typename numerical_traits< T >::variance_type
+  stdevFixed( typename numerical_traits< T >::mean_type fixedmean,
+	      int first=0, int last=-1 ) const;
     /*! The unbiased standard error mean sqrt(var(x)/N) 
         of the data elements between
         indices \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  double sem( int first=0, int last=-1 ) const;
+  typename numerical_traits< T >::variance_type sem( int first=0, int last=-1 ) const;
     /*! The unbiased standard error mean sqrt(var(x)/N) 
         of the data elements between
         indices \a first (inclusively) and \a last (exclusively) for known \a mean. 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  double sem( double mean, int first=0, int last=-1 ) const;
+  typename numerical_traits< T >::variance_type
+  sem( typename numerical_traits< T >::mean_type mean,
+       int first=0, int last=-1 ) const;
     /*! The standard deviation sqrt(var(x)/N) 
         of the data elements between
         indices \a first (inclusively) and \a last (exclusively) for fixed \a mean. 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  double semFixed( double fixedmean, int first=0, int last=-1 ) const;
+  typename numerical_traits< T >::variance_type
+  semFixed( typename numerical_traits< T >::mean_type fixedmean,
+	    int first=0, int last=-1 ) const;
     /*! The absolute deviation <|x-mu|> 
         of the data elements between
         indices \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  double absdev( int first=0, int last=-1 ) const;
+  typename numerical_traits< T >::variance_type absdev( int first=0, int last=-1 ) const;
     /*! The absolute deviation <|x-mu|> 
         of the data elements between
         indices \a first (inclusively) and \a last (exclusively) for known \a mean. 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  double absdev( double mean, int first=0, int last=-1 ) const;
+  typename numerical_traits< T >::variance_type
+  absdev( typename numerical_traits< T >::mean_type mean,
+	  int first=0, int last=-1 ) const;
     /*! The root-mean-square
         of the data elements between
         indices \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  double rms( int first=0, int last=-1 ) const;
+  typename numerical_traits< T >::variance_type rms( int first=0, int last=-1 ) const;
     /*! The skewness of the data elements between
         indices \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  double skewness( int first=0, int last=-1 ) const;
+  typename numerical_traits< T >::variance_type skewness( int first=0, int last=-1 ) const;
     /*! The kurtosis of the data elements between
         indices \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  double kurtosis( int first=0, int last=-1 ) const;
+  typename numerical_traits< T >::variance_type kurtosis( int first=0, int last=-1 ) const;
     /*! The sum of all elements of the data elements between
         indices \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  double sum( int first=0, int last=-1 ) const;
+  T sum( int first=0, int last=-1 ) const;
     /*! The sum of the square of all elements of the data elements between
         indices \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  double squaredSum( int first=0, int last=-1 ) const;
+  typename numerical_traits< T >::variance_type squaredSum( int first=0, int last=-1 ) const;
     /*! The power \<x^2\> of all elements of the data elements between
         indices \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  double power( int first=0, int last=-1 ) const;
+  typename numerical_traits< T >::variance_type power( int first=0, int last=-1 ) const;
 
      /*! Return the convolution of \a x with the container \a y.
          \a y can be shifted by \a offs indices.
@@ -1704,7 +1722,8 @@ void Array<T>::minMaxIndex( T &min, int &minindex, T &max, int &maxindex,
 
 
 template < typename T >
-double Array<T>::mean( int first, int last ) const
+typename numerical_traits< T >::mean_type
+  Array<T>::mean( int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
@@ -1716,7 +1735,9 @@ double Array<T>::mean( int first, int last ) const
 
 
 template < typename T >
-double Array<T>::mean( double &stdev, int first, int last ) const
+typename numerical_traits< T >::mean_type
+  Array<T>::mean( typename numerical_traits< T >::variance_type &stdev,
+		  int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
@@ -1728,7 +1749,8 @@ double Array<T>::mean( double &stdev, int first, int last ) const
 
 
 template < typename T >
-double Array<T>::variance( int first, int last ) const
+typename numerical_traits< T >::variance_type
+  Array<T>::variance( int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
@@ -1740,7 +1762,9 @@ double Array<T>::variance( int first, int last ) const
 
 
 template < typename T >
-double Array<T>::variance( double mean, int first, int last ) const
+typename numerical_traits< T >::variance_type
+  Array<T>::variance( typename numerical_traits< T >::mean_type mean,
+		      int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
@@ -1752,7 +1776,9 @@ double Array<T>::variance( double mean, int first, int last ) const
 
 
 template < typename T >
-double Array<T>::varianceFixed( double fixedmean, int first, int last ) const
+typename numerical_traits< T >::variance_type
+  Array<T>::varianceFixed( typename numerical_traits< T >::mean_type fixedmean,
+			   int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
@@ -1764,7 +1790,8 @@ double Array<T>::varianceFixed( double fixedmean, int first, int last ) const
 
 
 template < typename T >
-double Array<T>::stdev( int first, int last ) const
+typename numerical_traits< T >::variance_type
+  Array<T>::stdev( int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
@@ -1776,7 +1803,9 @@ double Array<T>::stdev( int first, int last ) const
 
 
 template < typename T >
-double Array<T>::stdev( double mean, int first, int last ) const
+typename numerical_traits< T >::variance_type
+  Array<T>::stdev( typename numerical_traits< T >::mean_type mean,
+		   int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
@@ -1788,7 +1817,9 @@ double Array<T>::stdev( double mean, int first, int last ) const
 
 
 template < typename T >
-double Array<T>::stdevFixed( double fixedmean, int first, int last ) const
+typename numerical_traits< T >::variance_type
+  Array<T>::stdevFixed( typename numerical_traits< T >::mean_type fixedmean,
+			int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
@@ -1800,7 +1831,8 @@ double Array<T>::stdevFixed( double fixedmean, int first, int last ) const
 
 
 template < typename T >
-double Array<T>::sem( int first, int last ) const
+typename numerical_traits< T >::variance_type
+  Array<T>::sem( int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
@@ -1812,7 +1844,9 @@ double Array<T>::sem( int first, int last ) const
 
 
 template < typename T >
-double Array<T>::sem( double mean, int first, int last ) const
+typename numerical_traits< T >::variance_type
+  Array<T>::sem( typename numerical_traits< T >::mean_type mean,
+		 int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
@@ -1824,7 +1858,9 @@ double Array<T>::sem( double mean, int first, int last ) const
 
 
 template < typename T >
-double Array<T>::semFixed( double fixedmean, int first, int last ) const
+typename numerical_traits< T >::variance_type
+  Array<T>::semFixed( typename numerical_traits< T >::mean_type fixedmean,
+		      int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
@@ -1836,7 +1872,8 @@ double Array<T>::semFixed( double fixedmean, int first, int last ) const
 
 
 template < typename T >
-double Array<T>::absdev( int first, int last ) const
+typename numerical_traits< T >::variance_type
+  Array<T>::absdev( int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
@@ -1848,7 +1885,9 @@ double Array<T>::absdev( int first, int last ) const
 
 
 template < typename T >
-double Array<T>::absdev( double mean, int first, int last ) const
+typename numerical_traits< T >::variance_type
+  Array<T>::absdev( typename numerical_traits< T >::mean_type mean,
+		    int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
@@ -1860,7 +1899,8 @@ double Array<T>::absdev( double mean, int first, int last ) const
 
 
 template < typename T >
-double Array<T>::rms( int first, int last ) const
+typename numerical_traits< T >::variance_type
+  Array<T>::rms( int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
@@ -1872,7 +1912,8 @@ double Array<T>::rms( int first, int last ) const
 
 
 template < typename T >
-double Array<T>::skewness( int first, int last ) const
+typename numerical_traits< T >::variance_type
+  Array<T>::skewness( int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
@@ -1884,7 +1925,8 @@ double Array<T>::skewness( int first, int last ) const
 
 
 template < typename T >
-double Array<T>::kurtosis( int first, int last ) const
+typename numerical_traits< T >::variance_type
+  Array<T>::kurtosis( int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
@@ -1896,7 +1938,7 @@ double Array<T>::kurtosis( int first, int last ) const
 
 
 template < typename T >
-double Array<T>::sum( int first, int last ) const
+T Array<T>::sum( int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
@@ -1908,7 +1950,8 @@ double Array<T>::sum( int first, int last ) const
 
 
 template < typename T >
-double Array<T>::squaredSum( int first, int last ) const
+typename numerical_traits< T >::variance_type
+  Array<T>::squaredSum( int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
@@ -1920,7 +1963,8 @@ double Array<T>::squaredSum( int first, int last ) const
 
 
 template < typename T >
-double Array<T>::power( int first, int last ) const
+typename numerical_traits< T >::variance_type
+  Array<T>::power( int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
