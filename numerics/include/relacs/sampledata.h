@@ -951,8 +951,8 @@ class SampleData : public Array< T >
     /*! The unbiased variance var(x)=\<(x-mean)^2\> of the data elements between
         position \a first (inclusively) and \a last (exclusively) for known \a mean. */
   typename numerical_traits< T >::variance_type
-  variance( typename numerical_traits< T >::mean_type mean,
-	    double first, double last ) const;
+  varianceKnown( typename numerical_traits< T >::mean_type mean,
+		 double first, double last ) const;
     /*! The variance var(x)=\<(x-mean)^2\> of the data elements between
         position \a first (inclusively) and \a last (exclusively) for fixed \a mean. */
   typename numerical_traits< T >::variance_type
@@ -967,8 +967,8 @@ class SampleData : public Array< T >
         of the data elements between
         position \a first (inclusively) and \a last (exclusively) for known \a mean. */
   typename numerical_traits< T >::variance_type
-  stdev( typename numerical_traits< T >::mean_type mean,
-	 double first, double last ) const;
+  stdevKnown( typename numerical_traits< T >::mean_type mean,
+	      double first, double last ) const;
     /*! The standard deviation sqrt(var(x)) 
         of the data elements between
         position \a first (inclusively) and \a last (exclusively) for fixed \a mean. */
@@ -978,13 +978,14 @@ class SampleData : public Array< T >
     /*! The unbiased standard error mean sqrt(var(x)/N) 
         of the data elements between
         position \a first (inclusively) and \a last (exclusively). */
-  typename numerical_traits< T >::variance_type sem( double first, double last ) const;
+  typename numerical_traits< T >::variance_type
+  sem( double first, double last ) const;
     /*! The unbiased standard error mean sqrt(var(x)/N) 
         of the data elements between
         position \a first (inclusively) and \a last (exclusively) for known \a mean. */
   typename numerical_traits< T >::variance_type
-  sem( typename numerical_traits< T >::mean_type mean,
-       double first, double last ) const;
+  semKnown( typename numerical_traits< T >::mean_type mean,
+	    double first, double last ) const;
     /*! The standard deviation sqrt(var(x)/N) 
         of the data elements between
         position \a first (inclusively) and \a last (exclusively) for fixed \a mean. */
@@ -1000,8 +1001,8 @@ class SampleData : public Array< T >
         of the data elements between
         position \a first (inclusively) and \a last (exclusively) for known \a mean. */
   typename numerical_traits< T >::variance_type
-  absdev( typename numerical_traits< T >::mean_type mean,
-	  double first, double last ) const;
+  absdevKnown( typename numerical_traits< T >::mean_type mean,
+	       double first, double last ) const;
     /*! The root-mean-square
         of the data elements between
         position \a first (inclusively) and \a last (exclusively). */
@@ -2817,8 +2818,8 @@ typename numerical_traits< T >::variance_type
 
 template < typename T >
 typename numerical_traits< T >::variance_type
-  SampleData< T >::variance( typename numerical_traits< T >::mean_type mean,
-			     double first, double last ) const
+  SampleData< T >::varianceKnown( typename numerical_traits< T >::mean_type mean,
+				  double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -2829,7 +2830,7 @@ typename numerical_traits< T >::variance_type
   if ( li <= fi )
     return 0;
   else
-    return ::relacs::variance( mean, begin()+fi, begin()+li );
+    return ::relacs::varianceKnown( mean, begin()+fi, begin()+li );
 }
 
 
@@ -2870,8 +2871,8 @@ typename numerical_traits< T >::variance_type
 
 template < typename T >
 typename numerical_traits< T >::variance_type
-  SampleData< T >::stdev( typename numerical_traits< T >::mean_type mean,
-			  double first, double last ) const
+  SampleData< T >::stdevKnown( typename numerical_traits< T >::mean_type mean,
+			       double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -2882,7 +2883,7 @@ typename numerical_traits< T >::variance_type
   if ( li <= fi )
     return 0;
   else
-    return ::relacs::stdev( mean, begin()+fi, begin()+li );
+    return ::relacs::stdevKnown( mean, begin()+fi, begin()+li );
 }
 
 
@@ -2923,8 +2924,8 @@ typename numerical_traits< T >::variance_type
 
 template < typename T >
 typename numerical_traits< T >::variance_type
-  SampleData< T >::sem( typename numerical_traits< T >::mean_type mean,
-			double first, double last ) const
+  SampleData< T >::semKnown( typename numerical_traits< T >::mean_type mean,
+			     double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -2976,8 +2977,8 @@ typename numerical_traits< T >::variance_type
 
 template < typename T >
 typename numerical_traits< T >::variance_type
-  SampleData< T >::absdev( typename numerical_traits< T >::mean_type mean,
-			   double first, double last ) const
+  SampleData< T >::absdevKnown( typename numerical_traits< T >::mean_type mean,
+				double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -2988,7 +2989,7 @@ typename numerical_traits< T >::variance_type
   if ( li <= fi )
     return 0;
   else
-    return ::relacs::absdev( mean, begin()+fi, begin()+li );
+    return ::relacs::absdevKnown( mean, begin()+fi, begin()+li );
 }
 
 

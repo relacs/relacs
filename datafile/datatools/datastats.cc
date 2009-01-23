@@ -244,8 +244,8 @@ void analyseCor( ArrayD &xdata, ArrayD &ydata, ArrayD &sig, int page, TableKey &
 
   double ax = mean( xdata );  
   double ay = mean( ydata );
-  double vx = variance( ax, xdata );
-  double vy = variance( ay, ydata );
+  double vx = varianceKnown( ax, xdata );
+  double vy = varianceKnown( ay, ydata );
 
   // unpaired t-Test:
   if ( outformat.contains( 'u' ) ) {
@@ -388,7 +388,7 @@ void analyseCor( ArrayD &xdata, ArrayD &ydata, ArrayD &sig, int page, TableKey &
   if ( outformat.contains( 'd' ) ) {
     ArrayD diff = ydata - xdata;
     double dmean = diff.mean();
-    double dsd = diff.stdev( dmean );
+    double dsd = diff.stdevKnown( dmean );
     statskey.setNumber( "Difference>d", dmean );
     statskey.setNumber( "Difference>s.d.", dsd );
   }

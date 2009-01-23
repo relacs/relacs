@@ -114,6 +114,7 @@ struct numerical_traits< unsigned long >
 template < typename Iterator >
 struct numerical_iterator_traits
 {
+  typedef typename iterator_traits< Iterator >::value_type value_type;
   typedef typename numerical_traits< typename iterator_traits< Iterator >::value_type >::mean_type mean_type;
   typedef typename numerical_traits< typename iterator_traits< Iterator >::value_type >::variance_type variance_type;
 };
@@ -124,6 +125,7 @@ struct numerical_iterator_traits
 template < typename Container >
 struct numerical_container_traits
 {
+  typedef typename Container::value_type value_type;
   typedef typename numerical_traits< typename Container::value_type >::mean_type mean_type;
   typedef typename numerical_traits< typename Container::value_type >::variance_type variance_type;
 };
@@ -468,7 +470,7 @@ typename numerical_iterator_traits<ForwardIterX>::mean_type
       is returned. */
 template < typename ContainerX, typename ContainerS >
 typename numerical_container_traits<ContainerX>::mean_type
-  smeanStdev( typename numerical_iterator_traits<ContainerX>::variance_type &stdev,
+  smeanStdev( typename numerical_container_traits<ContainerX>::variance_type &stdev,
 	      const ContainerX &vecx, const ContainerS &vecs );
 
   /*! The unbiased variance 
@@ -494,8 +496,8 @@ typename numerical_container_traits<ContainerX>::variance_type
       \a ForwardIterX is a forward iterator that points to a number. */
 template < typename ForwardIterX >
 typename numerical_iterator_traits<ForwardIterX>::variance_type
-  variance( typename numerical_iterator_traits<ForwardIterX>::mean_type mean,
-	    ForwardIterX firstx, ForwardIterX lastx );
+  varianceKnown( typename numerical_iterator_traits<ForwardIterX>::mean_type mean,
+		 ForwardIterX firstx, ForwardIterX lastx );
   /*! The unbiased variance
       \f[ \sigma^2 = \frac{1}{N-1}\sum_{i=1}^N (x_i - \mu)^2 \f]
       of all elements \a x of the container \a vecx
@@ -504,8 +506,8 @@ typename numerical_iterator_traits<ForwardIterX>::variance_type
       that can be accessed via standard STL const_iterators. */
 template < typename ContainerX >
 typename numerical_container_traits<ContainerX>::variance_type
-  variance( typename numerical_container_traits<ContainerX>::mean_type mean,
-	    const ContainerX &vecx );
+  varianceKnown( typename numerical_container_traits<ContainerX>::mean_type mean,
+		 const ContainerX &vecx );
   /*! The variance 
       \f[ \sigma^2 = \frac{1}{N}\sum_{i=1}^N (x_i - \mu)^2 \f]
       over the range of \a x - values \a firstx, \a lastx
@@ -535,7 +537,7 @@ typename numerical_container_traits<ContainerX>::variance_type
 template < typename ForwardIterX, typename ForwardIterW >
 typename numerical_iterator_traits<ForwardIterX>::variance_type
   wvariance( ForwardIterX firstx, ForwardIterX lastx,
-		  ForwardIterW firstw, ForwardIterW lastw );
+	     ForwardIterW firstw, ForwardIterW lastw );
   /*! The weighted unbiased variance 
       \f[ \sigma^2 = \frac{\sum_{i=1}^N w_i (x_i - \bar x)^2}{\sum_{i=1}^N w_i} \f]
       of all elements \a x of the container \a vecx
@@ -554,9 +556,9 @@ typename numerical_container_traits<ContainerX>::variance_type
       that point to a number. */
 template < typename ForwardIterX, typename ForwardIterW >
 typename numerical_iterator_traits<ForwardIterX>::variance_type
-  wvariance( typename numerical_iterator_traits<ForwardIterX>::mean_type mean,
-	     ForwardIterX firstx, ForwardIterX lastx, 
-	     ForwardIterW firstw, ForwardIterW lastw );
+  wvarianceKnown( typename numerical_iterator_traits<ForwardIterX>::mean_type mean,
+		  ForwardIterX firstx, ForwardIterX lastx, 
+		  ForwardIterW firstw, ForwardIterW lastw );
   /*! The weighted variance 
       \f[ \sigma^2 = \frac{\sum_{i=1}^N w_i (x_i - \mu)^2}{\sum_{i=1}^N w_i} \f]
       of all elements \a x of the container \a vecx
@@ -566,8 +568,8 @@ typename numerical_iterator_traits<ForwardIterX>::variance_type
       that can be accessed via standard STL const_iterators. */
 template < typename ContainerX, typename ContainerW >
 typename numerical_container_traits<ContainerX>::variance_type
-  wvariance( typename numerical_container_traits<ContainerX>::mean_type mean,
-	     const ContainerX &vecx, const ContainerW &vecw );
+  wvarianceKnown( typename numerical_container_traits<ContainerX>::mean_type mean,
+		  const ContainerX &vecx, const ContainerW &vecw );
 
   /*! The unbiased standard deviation
       \f[ \sigma = \sqrt{\frac{1}{N-1}\sum_{i=1}^N (x_i - \bar x)^2} \f]
@@ -583,7 +585,7 @@ typename numerical_iterator_traits<ForwardIterX>::variance_type
       \a ContainerX holds an array of numbers
       that can be accessed via standard STL const_iterators. */
 template < typename ContainerX >
-typename numerical_container_traits<ContainerX>::variance_type
+typename numerical_container_traits< ContainerX >::variance_type
   stdev( const ContainerX &vec );
   /*! The unbiased standard deviation 
       \f[ \sigma = \sqrt{\frac{1}{N-1}\sum_{i=1}^N (x_i - \mu)^2} \f]
@@ -591,8 +593,8 @@ typename numerical_container_traits<ContainerX>::variance_type
       \a ForwardIterX is a forward iterator that points to a number. */
 template < typename ForwardIterX >
 typename numerical_iterator_traits<ForwardIterX>::variance_type
-  stdev( typename numerical_iterator_traits<ForwardIterX>::mean_type mean,
-	 ForwardIterX firstx, ForwardIterX lastx );
+  stdevKnown( typename numerical_iterator_traits<ForwardIterX>::mean_type mean,
+	      ForwardIterX firstx, ForwardIterX lastx );
   /*! The unbiased standard deviation 
       \f[ \sigma = \sqrt{\frac{1}{N-1}\sum_{i=1}^N (x_i - \mu)^2} \f]
       of all elements of the container \a vec for known mean.
@@ -600,8 +602,8 @@ typename numerical_iterator_traits<ForwardIterX>::variance_type
       that can be accessed via standard STL const_iterators. */
 template < typename ContainerX >
 typename numerical_container_traits<ContainerX>::variance_type
-  stdev( typename numerical_container_traits<ContainerX>::mean_type mean,
-	 const ContainerX &vec );
+  stdevKnown( typename numerical_container_traits<ContainerX>::mean_type mean,
+	      const ContainerX &vec );
   /*! The standard deviation 
       \f[ \sigma = \sqrt{\frac{1}{N}\sum_{i=1}^N (x_i - \mu)^2} \f]
       over the range of \a x - values \a firstx, \a lastx for fixed mean.
@@ -648,9 +650,9 @@ typename numerical_container_traits<ContainerX>::variance_type
       that point to a number. */
 template < typename ForwardIterX, typename ForwardIterW >
 typename numerical_iterator_traits<ForwardIterX>::variance_type
-  wstdev( typename numerical_iterator_traits<ForwardIterX>::mean_type mean,
-	  ForwardIterX firstx, ForwardIterX lastx, 
-	  ForwardIterW firstw, ForwardIterW lastw );
+  wstdevKnown( typename numerical_iterator_traits<ForwardIterX>::mean_type mean,
+	       ForwardIterX firstx, ForwardIterX lastx, 
+	       ForwardIterW firstw, ForwardIterW lastw );
   /*! The weighted standard deviation
       \f[ \sigma = \sqrt{\frac{\sum_{i=1}^N w_i (x_i - \mu)^2}{\sum_{i=1}^N w_i}} \f]
       of all elements of the container \a vecx
@@ -660,8 +662,8 @@ typename numerical_iterator_traits<ForwardIterX>::variance_type
       that can be accessed via standard STL const_iterators. */
 template < typename ContainerX, typename ContainerW >
 typename numerical_container_traits<ContainerX>::variance_type
-  wstdev( typename numerical_container_traits<ContainerX>::mean_type mean,
-	  const ContainerX &vecx, const ContainerW &vecw );
+  wstdevKnown( typename numerical_container_traits<ContainerX>::mean_type mean,
+	       const ContainerX &vecx, const ContainerW &vecw );
 
   /*! The unbiased standard error mean
       \f[ s.e.m. = \sqrt{\frac{1}{N-1}\sum_{i=1}^N (x_i - \bar x)^2} / \sqrt{N} \f]
@@ -685,8 +687,8 @@ typename numerical_container_traits<Container>::variance_type
       \a ForwardIterX is a forward iterator that points to a number. */
 template < typename ForwardIterX >
 typename numerical_iterator_traits<ForwardIterX>::variance_type
-  sem( typename numerical_iterator_traits<ForwardIterX>::mean_type mean,
-       ForwardIterX firstx, ForwardIterX lastx );
+  semKnown( typename numerical_iterator_traits<ForwardIterX>::mean_type mean,
+	    ForwardIterX firstx, ForwardIterX lastx );
   /*! The unbiased standard error mean 
       \f[ \sigma = \sqrt{\frac{1}{N-1}\sum_{i=1}^N (x_i - \mu)^2} / \sqrt{N} \f]
       of all elements of the container \a vec for known mean.
@@ -694,8 +696,8 @@ typename numerical_iterator_traits<ForwardIterX>::variance_type
       that can be accessed via standard STL const_iterators. */
 template < typename ContainerX >
 typename numerical_container_traits<ContainerX>::variance_type
-  sem( typename numerical_container_traits<ContainerX>::mean_type mean,
-       const ContainerX &vec );
+  semKnown( typename numerical_container_traits<ContainerX>::mean_type mean,
+	    const ContainerX &vec );
   /*! The standard error mean 
       \f[ \sigma = \sqrt{\frac{1}{N}\sum_{i=1}^N (x_i - \mu)^2} / \sqrt{N} \f]
       over the range of \a x - values \a firstx, \a lastx for fixed mean.
@@ -736,8 +738,8 @@ typename numerical_container_traits<ContainerX>::variance_type
       \a ForwardIterX is a forward iterator that points to a number. */
 template < typename ForwardIterX >
 typename numerical_iterator_traits<ForwardIterX>::variance_type
-  absdev( typename numerical_iterator_traits<ForwardIterX>::mean_type mean,
-	  ForwardIterX firstx, ForwardIterX lastx );
+  absdevKnown( typename numerical_iterator_traits<ForwardIterX>::mean_type mean,
+	       ForwardIterX firstx, ForwardIterX lastx );
   /*! The absolute deviation from the mean
       \f[ s = \frac{1}{N}\sum_{i=1}^N |x_i - \mu| \f]
       of all elements of the container \a vec for known mean.
@@ -745,8 +747,8 @@ typename numerical_iterator_traits<ForwardIterX>::variance_type
       that can be accessed via standard STL const_iterators. */
 template < typename ContainerX >
 typename numerical_container_traits<ContainerX>::variance_type
-  absdev( typename numerical_container_traits<ContainerX>::mean_type mean,
-	  const ContainerX &vec );
+  absdevKnown( typename numerical_container_traits<ContainerX>::mean_type mean,
+	       const ContainerX &vec );
 
   /*! The weighted absolute deviation from the mean
       \f[ s = \frac{\sum_{i=1}^N w_i |x_i - \bar x|}{\sum_{i=1}^N w_i} \f]
@@ -776,9 +778,9 @@ typename numerical_container_traits<ContainerX>::variance_type
       that point to a number. */
 template < typename ForwardIterX, typename ForwardIterW >
 typename numerical_iterator_traits<ForwardIterX>::variance_type
-  wabsdev( typename numerical_iterator_traits<ForwardIterX>::mean_type mean,
-	   ForwardIterX firstx, ForwardIterX lastx, 
-	   ForwardIterW firstw, ForwardIterW lastw );
+  wabsdevKnown( typename numerical_iterator_traits<ForwardIterX>::mean_type mean,
+		ForwardIterX firstx, ForwardIterX lastx, 
+		ForwardIterW firstw, ForwardIterW lastw );
   /*! The weighted absolute deviation from the mean
       \f[ s = \frac{\sum_{i=1}^N w_i |x_i - \mu|}{\sum_{i=1}^N w_i} \f]
       of all elements of the container \a vecx
@@ -788,8 +790,8 @@ typename numerical_iterator_traits<ForwardIterX>::variance_type
       that can be accessed via standard STL const_iterators. */
 template < typename ContainerX, typename ContainerW >
 typename numerical_container_traits<ContainerX>::variance_type
-  wabsdev( typename numerical_container_traits<ContainerX>::mean_type mean,
-	   const ContainerX &vecx, const ContainerW &vecw );
+  wabsdevKnown( typename numerical_container_traits<ContainerX>::mean_type mean,
+		const ContainerX &vecx, const ContainerW &vecw );
 
   /*! The root-mean-square
       over the range \a first, \a last.
@@ -1271,7 +1273,7 @@ template < typename Container >
 typename Container::value_type
   min( const Container &vec )
 {
-  return min( vec.begin(), vec.end() );
+  return ::relacs::min( vec.begin(), vec.end() );
 }
 
 
@@ -1348,7 +1350,7 @@ template < typename Container >
 typename Container::value_type
   max( const Container &vec )
 {
-  return max( vec.begin(), vec.end() );
+  return ::relacs::max( vec.begin(), vec.end() );
 }
 
 
@@ -1815,8 +1817,8 @@ typename numerical_container_traits<ContainerX>::variance_type
 
 template < typename ForwardIterX >
 typename numerical_iterator_traits<ForwardIterX>::variance_type
-  variance( typename numerical_iterator_traits<ForwardIterX>::mean_type mean,
-	    ForwardIterX firstx, ForwardIterX lastx )
+  varianceKnown( typename numerical_iterator_traits<ForwardIterX>::mean_type mean,
+		 ForwardIterX firstx, ForwardIterX lastx )
 {
   typename numerical_iterator_traits<ForwardIterX>::variance_type v = 0;
   int k=1;
@@ -1834,10 +1836,10 @@ typename numerical_iterator_traits<ForwardIterX>::variance_type
 
 template < typename ContainerX >
 typename numerical_container_traits<ContainerX>::variance_type
-  variance( typename numerical_container_traits<ContainerX>::mean_type mean,
-	    const ContainerX &vec )
+  varianceKnown( typename numerical_container_traits<ContainerX>::mean_type mean,
+		 const ContainerX &vec )
 {
-  return variance( mean, vec.begin(), vec.end() );
+  return varianceKnown( mean, vec.begin(), vec.end() );
 }
 
 
@@ -1903,9 +1905,9 @@ typename numerical_container_traits<ContainerX>::variance_type
 
 template < typename ForwardIterX, typename ForwardIterW >
 typename numerical_iterator_traits<ForwardIterX>::variance_type
-  wvariance( typename numerical_iterator_traits<ForwardIterX>::mean_type mean,
-	     ForwardIterX firstx, ForwardIterX lastx,
-	     ForwardIterW firstw, ForwardIterW lastw )
+  wvarianceKnown( typename numerical_iterator_traits<ForwardIterX>::mean_type mean,
+		  ForwardIterX firstx, ForwardIterX lastx,
+		  ForwardIterW firstw, ForwardIterW lastw )
 {
   typename numerical_iterator_traits<ForwardIterX>::variance_type vs = 0;
   typename iterator_traits<ForwardIterW>::value_type w = 0;
@@ -1920,10 +1922,10 @@ typename numerical_iterator_traits<ForwardIterX>::variance_type
 
 template < typename ContainerX, typename ContainerW >
 typename numerical_container_traits<ContainerX>::variance_type
-  wvariance( typename numerical_container_traits<ContainerX>::mean_type mean,
-	     const ContainerX &vecx, const ContainerW &vecw )
+  wvarianceKnown( typename numerical_container_traits<ContainerX>::mean_type mean,
+		  const ContainerX &vecx, const ContainerW &vecw )
 {
-  return wvariance( mean, vecx.begin(), vecx.end(), vecw.begin(), vecw.end() );
+  return wvarianceKnown( mean, vecx.begin(), vecx.end(), vecw.begin(), vecw.end() );
 }
 
 
@@ -1952,7 +1954,7 @@ typename numerical_iterator_traits<ForwardIterX>::variance_type
 
 
 template < typename ContainerX >
-typename numerical_container_traits<ContainerX>::variance_type
+typename numerical_container_traits< ContainerX >::variance_type
   stdev( const ContainerX &vecx )
 {
   return stdev( vecx.begin(), vecx.end() );
@@ -1961,8 +1963,8 @@ typename numerical_container_traits<ContainerX>::variance_type
 
 template < typename ForwardIterX >
 typename numerical_iterator_traits<ForwardIterX>::variance_type
-  stdev( typename numerical_iterator_traits<ForwardIterX>::mean_type mean,
-	 ForwardIterX firstx, ForwardIterX lastx )
+  stdevKnown( typename numerical_iterator_traits<ForwardIterX>::mean_type mean,
+	      ForwardIterX firstx, ForwardIterX lastx )
 {
   typename numerical_iterator_traits<ForwardIterX>::variance_type v = 0;
   int k=1;
@@ -1980,10 +1982,10 @@ typename numerical_iterator_traits<ForwardIterX>::variance_type
 
 template < typename ContainerX >
 typename numerical_container_traits<ContainerX>::variance_type
-  stdev( typename numerical_container_traits<ContainerX>::mean_type mean,
-	 const ContainerX &vecx )
+  stdevKnown( typename numerical_container_traits<ContainerX>::mean_type mean,
+	      const ContainerX &vecx )
 {
-  return stdev( mean, vecx.begin(), vecx.end() );
+  return stdevKnown( mean, vecx.begin(), vecx.end() );
 }
 
 
@@ -2049,9 +2051,9 @@ typename numerical_container_traits<ContainerX>::variance_type
 
 template < typename ForwardIterX, typename ForwardIterW >
 typename numerical_iterator_traits<ForwardIterX>::variance_type
-  wstdev( typename numerical_iterator_traits<ForwardIterX>::mean_type mean,
-	  ForwardIterX firstx, ForwardIterX lastx,
-	  ForwardIterW firstw, ForwardIterW lastw )
+  wstdevKnown( typename numerical_iterator_traits<ForwardIterX>::mean_type mean,
+	       ForwardIterX firstx, ForwardIterX lastx,
+	       ForwardIterW firstw, ForwardIterW lastw )
 {
   typename numerical_iterator_traits<ForwardIterX>::variance_type vs = 0;
   typename iterator_traits<ForwardIterW>::value_type w = 0;
@@ -2066,10 +2068,10 @@ typename numerical_iterator_traits<ForwardIterX>::variance_type
 
 template < typename ContainerX, typename ContainerW >
 typename numerical_container_traits<ContainerX>::variance_type
-  wstdev( typename numerical_container_traits<ContainerX>::mean_type mean,
-	  const ContainerX &vecx, const ContainerW &vecw )
+  wstdevKnown( typename numerical_container_traits<ContainerX>::mean_type mean,
+	       const ContainerX &vecx, const ContainerW &vecw )
 {
-  return wstdev( mean, vecx.begin(), vecx.end(), vecw.begin(), vecw.end() );
+  return wstdevKnown( mean, vecx.begin(), vecx.end(), vecw.begin(), vecw.end() );
 }
 
 
@@ -2107,8 +2109,8 @@ typename numerical_container_traits<ContainerX>::variance_type
 
 template < typename ForwardIterX >
 typename numerical_iterator_traits<ForwardIterX>::variance_type
-  sem( typename numerical_iterator_traits<ForwardIterX>::mean_type mean,
-       ForwardIterX firstx, ForwardIterX lastx )
+  semKnown( typename numerical_iterator_traits<ForwardIterX>::mean_type mean,
+	    ForwardIterX firstx, ForwardIterX lastx )
 {
   typename numerical_iterator_traits<ForwardIterX>::variance_type v = 0;
   int k=1;
@@ -2126,10 +2128,10 @@ typename numerical_iterator_traits<ForwardIterX>::variance_type
 
 template < typename ContainerX >
 typename numerical_container_traits<ContainerX>::variance_type
-  sem( typename numerical_container_traits<ContainerX>::mean_type mean,
-       const ContainerX &vecx )
+  semKnown( typename numerical_container_traits<ContainerX>::mean_type mean,
+	    const ContainerX &vecx )
 {
-  return sem( mean, vecx.begin(), vecx.end() );
+  return semKnown( mean, vecx.begin(), vecx.end() );
 }
 
 
@@ -2191,8 +2193,8 @@ typename numerical_container_traits<ContainerX>::variance_type
 
 template < typename ForwardIterX >
 typename numerical_iterator_traits<ForwardIterX>::variance_type
-  absdev( typename numerical_iterator_traits<ForwardIterX>::mean_type mean,
-	  ForwardIterX firstx, ForwardIterX lastx )
+  absdevKnown( typename numerical_iterator_traits<ForwardIterX>::mean_type mean,
+	       ForwardIterX firstx, ForwardIterX lastx )
 {
   typename numerical_iterator_traits<ForwardIterX>::variance_type v = 0;
   for ( int k=1; firstx != lastx; ++firstx, ++k ) {
@@ -2205,10 +2207,10 @@ typename numerical_iterator_traits<ForwardIterX>::variance_type
 
 template < typename ContainerX >
 typename numerical_container_traits<ContainerX>::variance_type
-  absdev( typename numerical_container_traits<ContainerX>::mean_type mean,
-	  const ContainerX &vecx )
+  absdevKnown( typename numerical_container_traits<ContainerX>::mean_type mean,
+	       const ContainerX &vecx )
 {
-  return absdev( mean, vecx.begin(), vecx.end() );
+  return absdevKnown( mean, vecx.begin(), vecx.end() );
 }
 
 
@@ -2247,9 +2249,9 @@ typename numerical_container_traits<ContainerX>::variance_type
 
 template < typename ForwardIterX, typename ForwardIterW >
 typename numerical_iterator_traits<ForwardIterX>::variance_type
-  wabsdev( typename numerical_iterator_traits<ForwardIterX>::mean_type mean,
-	   ForwardIterX firstx, ForwardIterX lastx,
-	   ForwardIterW firstw, ForwardIterW lastw )
+  wabsdevKnown( typename numerical_iterator_traits<ForwardIterX>::mean_type mean,
+		ForwardIterX firstx, ForwardIterX lastx,
+		ForwardIterW firstw, ForwardIterW lastw )
 {
   typename numerical_iterator_traits<ForwardIterX>::variance_type vs = 0;
   typename iterator_traits<ForwardIterW>::value_type w = 0;
@@ -2264,10 +2266,10 @@ typename numerical_iterator_traits<ForwardIterX>::variance_type
 
 template < typename ContainerX, typename ContainerW >
 typename numerical_container_traits<ContainerX>::variance_type
-  wabsdev( typename numerical_container_traits<ContainerX>::mean_type mean,
-	   const ContainerX &vecx, const ContainerW &vecw )
+  wabsdevKnown( typename numerical_container_traits<ContainerX>::mean_type mean,
+		const ContainerX &vecx, const ContainerW &vecw )
 {
-  return wabsdev( mean, vecx.begin(), vecx.end(), vecw.begin(), vecw.end() );
+  return wabsdevKnown( mean, vecx.begin(), vecx.end(), vecw.begin(), vecw.end() );
 }
 
 
@@ -2426,9 +2428,10 @@ typename numerical_container_traits<ContainerX>::variance_type
 
 
 template < typename ForwardIterX >
-double power( ForwardIterX first, ForwardIterX last )
+typename numerical_iterator_traits<ForwardIterX>::variance_type
+  power( ForwardIterX first, ForwardIterX last )
 {
-  double a = 0.0;
+  typename numerical_iterator_traits<ForwardIterX>::variance_type a = 0;
   for ( int k=1; first != last; ++first, ++k ) {
     a += ( (*first)*(*first) - a ) / k;
   }
@@ -2437,7 +2440,8 @@ double power( ForwardIterX first, ForwardIterX last )
 
 
 template < typename Container >
-double power( const Container &vec )
+typename numerical_container_traits<Container>::variance_type
+  power( const Container &vec )
 {
   return power( vec.begin(), vec.end() );
 }

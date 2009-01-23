@@ -530,8 +530,8 @@ class Array
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
   typename numerical_traits< T >::variance_type
-  variance( typename numerical_traits< T >::mean_type mean,
-	    int first=0, int last=-1 ) const;
+  varianceKnown( typename numerical_traits< T >::mean_type mean,
+		 int first=0, int last=-1 ) const;
     /*! The variance var(x)=\<(x-mean)^2\> of the data elements between
         indices \a first (inclusively) and \a last (exclusively) for fixed \a mean. 
         If \a last is negative it is set behind the last data element. 
@@ -544,15 +544,16 @@ class Array
         indices \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  typename numerical_traits< T >::variance_type stdev( int first=0, int last=-1 ) const;
+  typename numerical_traits< T >::variance_type
+  stdev( int first=0, int last=-1 ) const;
     /*! The unbiased standard deviation sqrt(var(x)) 
         of the data elements between
         indices \a first (inclusively) and \a last (exclusively) for known \a mean. 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
   typename numerical_traits< T >::variance_type
-  stdev( typename numerical_traits< T >::mean_type mean,
-	 int first=0, int last=-1 ) const;
+  stdevKnown( typename numerical_traits< T >::mean_type mean,
+	      int first=0, int last=-1 ) const;
     /*! The standard deviation sqrt(var(x)) 
         of the data elements between
         indices \a first (inclusively) and \a last (exclusively) for fixed \a mean. 
@@ -566,15 +567,16 @@ class Array
         indices \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  typename numerical_traits< T >::variance_type sem( int first=0, int last=-1 ) const;
+  typename numerical_traits< T >::variance_type
+  sem( int first=0, int last=-1 ) const;
     /*! The unbiased standard error mean sqrt(var(x)/N) 
         of the data elements between
         indices \a first (inclusively) and \a last (exclusively) for known \a mean. 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
   typename numerical_traits< T >::variance_type
-  sem( typename numerical_traits< T >::mean_type mean,
-       int first=0, int last=-1 ) const;
+  semKnown( typename numerical_traits< T >::mean_type mean,
+	    int first=0, int last=-1 ) const;
     /*! The standard deviation sqrt(var(x)/N) 
         of the data elements between
         indices \a first (inclusively) and \a last (exclusively) for fixed \a mean. 
@@ -588,31 +590,35 @@ class Array
         indices \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  typename numerical_traits< T >::variance_type absdev( int first=0, int last=-1 ) const;
+  typename numerical_traits< T >::variance_type
+  absdev( int first=0, int last=-1 ) const;
     /*! The absolute deviation <|x-mu|> 
         of the data elements between
         indices \a first (inclusively) and \a last (exclusively) for known \a mean. 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
   typename numerical_traits< T >::variance_type
-  absdev( typename numerical_traits< T >::mean_type mean,
-	  int first=0, int last=-1 ) const;
+  absdevKnown( typename numerical_traits< T >::mean_type mean,
+	       int first=0, int last=-1 ) const;
     /*! The root-mean-square
         of the data elements between
         indices \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  typename numerical_traits< T >::variance_type rms( int first=0, int last=-1 ) const;
+  typename numerical_traits< T >::variance_type
+  rms( int first=0, int last=-1 ) const;
     /*! The skewness of the data elements between
         indices \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  typename numerical_traits< T >::variance_type skewness( int first=0, int last=-1 ) const;
+  typename numerical_traits< T >::variance_type
+  skewness( int first=0, int last=-1 ) const;
     /*! The kurtosis of the data elements between
         indices \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  typename numerical_traits< T >::variance_type kurtosis( int first=0, int last=-1 ) const;
+  typename numerical_traits< T >::variance_type
+  kurtosis( int first=0, int last=-1 ) const;
     /*! The sum of all elements of the data elements between
         indices \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
@@ -622,12 +628,14 @@ class Array
         indices \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  typename numerical_traits< T >::variance_type squaredSum( int first=0, int last=-1 ) const;
+  typename numerical_traits< T >::variance_type
+  squaredSum( int first=0, int last=-1 ) const;
     /*! The power \<x^2\> of all elements of the data elements between
         indices \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered. */
-  typename numerical_traits< T >::variance_type power( int first=0, int last=-1 ) const;
+  typename numerical_traits< T >::variance_type
+  power( int first=0, int last=-1 ) const;
 
      /*! Return the convolution of \a x with the container \a y.
          \a y can be shifted by \a offs indices.
@@ -1763,15 +1771,15 @@ typename numerical_traits< T >::variance_type
 
 template < typename T >
 typename numerical_traits< T >::variance_type
-  Array<T>::variance( typename numerical_traits< T >::mean_type mean,
-		      int first, int last ) const
+  Array<T>::varianceKnown( typename numerical_traits< T >::mean_type mean,
+			   int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return ::relacs::variance( mean, begin()+first, end() );
+    return ::relacs::varianceKnown( mean, begin()+first, end() );
   else
-    return ::relacs::variance( mean, begin()+first, begin()+last );
+    return ::relacs::varianceKnown( mean, begin()+first, begin()+last );
 }
 
 
@@ -1804,15 +1812,15 @@ typename numerical_traits< T >::variance_type
 
 template < typename T >
 typename numerical_traits< T >::variance_type
-  Array<T>::stdev( typename numerical_traits< T >::mean_type mean,
-		   int first, int last ) const
+  Array<T>::stdevKnown( typename numerical_traits< T >::mean_type mean,
+			int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return ::relacs::stdev( mean, begin()+first, end() );
+    return ::relacs::stdevKnown( mean, begin()+first, end() );
   else
-    return ::relacs::stdev( mean, begin()+first, begin()+last );
+    return ::relacs::stdevKnown( mean, begin()+first, begin()+last );
 }
 
 
@@ -1845,15 +1853,15 @@ typename numerical_traits< T >::variance_type
 
 template < typename T >
 typename numerical_traits< T >::variance_type
-  Array<T>::sem( typename numerical_traits< T >::mean_type mean,
-		 int first, int last ) const
+  Array<T>::semKnown( typename numerical_traits< T >::mean_type mean,
+		      int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return ::relacs::sem( mean, begin()+first, end() );
+    return ::relacs::semKnown( mean, begin()+first, end() );
   else
-    return ::relacs::sem( mean, begin()+first, begin()+last );
+    return ::relacs::semKnown( mean, begin()+first, begin()+last );
 }
 
 
@@ -1886,15 +1894,15 @@ typename numerical_traits< T >::variance_type
 
 template < typename T >
 typename numerical_traits< T >::variance_type
-  Array<T>::absdev( typename numerical_traits< T >::mean_type mean,
-		    int first, int last ) const
+  Array<T>::absdevKnown( typename numerical_traits< T >::mean_type mean,
+			 int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
   if ( last < 0 )
-    return ::relacs::absdev( mean, begin()+first, end() );
+    return ::relacs::absdevKnown( mean, begin()+first, end() );
   else
-    return ::relacs::absdev( mean, begin()+first, begin()+last );
+    return ::relacs::absdevKnown( mean, begin()+first, begin()+last );
 }
 
 
