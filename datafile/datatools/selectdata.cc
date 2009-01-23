@@ -30,14 +30,19 @@
 using namespace std;
 using namespace relacs;
 
-int stopempty = 100;
+int stopempty = 2;
 bool erase = false;
 bool metadata = true;
 bool repeatkey = false;
 string indices;
 Str lines;
+vector< Str > selectcols;
+vector< int > selectcol;
+vector< int > selectop;
+vector< double > selectval;
 string outfile;
 
+string opcodes[7] = { "==", "=", ">=", ">", "<=", "<", "!=" };
 
 int readData( DataFile &sf )
 {
@@ -77,7 +82,9 @@ int readData( DataFile &sf )
 
   int newlevel = 0;
 
-  while ( sf.readMetaData() > 0 && sf.good() ) {
+  sf.readMetaData();
+
+  while ( sf.good() ) {
 
     if ( newlevel < sf.newLevels() )
       newlevel = sf.newLevels();
@@ -146,6 +153,14 @@ int readData( DataFile &sf )
 	cout << sf.dataKey();
     }
 
+    // update selectcol:
+    if ( sf.newDataKey() ) {
+      for ( unsigned int k=0; k<selectcols.size(); k++ ) {
+	if ( ! selectcols[k].empty() )
+	  selectcol[k] = sf.column( selectcols[k] );
+      }
+    }
+
     // read and probably write data:
     int linenum = 0;
     unsigned int lineinx = 0;
@@ -158,8 +173,34 @@ int readData( DataFile &sf )
 	}
 	if ( liner.empty() || 
 	     ( lineinx < liner.size() && liner[lineinx] == linenum ) ) {
-	  cout << sf.line() << '\n';
-	  lineinx++;
+	  bool lout = true;
+	  if ( ! selectcols.empty() ) {
+	    sf.scanDataLine();
+	    int row = sf.data().rows()-1;
+	    for ( unsigned int k=0; k<selectcols.size(); k++ ) {
+	      double val = sf.data( selectcol[k], row );
+	      double thresh = selectval[k];
+	      bool comp = true;
+	      switch ( selectop[k] ) {
+		case 0: comp = ( fabs( val - thresh ) < 1.0e-8 ); break;
+		case 1: comp = ( fabs( val - thresh ) < 1.0e-8 ); break;
+		case 2: comp = ( val >= thresh - 1.0e-8 ); break;
+		case 3: comp = ( val > thresh ); break;
+		case 4: comp = ( val <= thresh + 1.0e-8 ); break;
+		case 5: comp = ( val < thresh ); break;
+		case 6: comp = ( fabs( val - thresh ) >= 1.0e-8 ); break;
+	      default: break;
+	      }
+	      if ( ! comp ) {
+		lout = false;
+		break;
+	      }
+	    }
+	  }
+	  if ( lout ) {
+	    cout << sf.line() << '\n';
+	    lineinx++;
+	  }
 	}
 	linenum++;
       }
@@ -168,7 +209,7 @@ int readData( DataFile &sf )
     // trailing newlines:
     if ( out ) {
       int se = sf.emptyLines();
-      if ( erase )
+      if ( erase || ! sf.good() )
 	se = stopempty;
       for ( int k=0; k<se; k++ )
 	cout << '\n';
@@ -207,6 +248,8 @@ int readData( DataFile &sf )
 	tinx[k] = linx[k].size() > 0 ? linx[k][tlinx[k]] : -1;
     }
 
+    sf.readMetaData();
+
   }
 
   sf.close();
@@ -221,9 +264,9 @@ void WriteUsage()
   cerr << '\n';
   cerr << "usage:\n";
   cerr << '\n';
-  cerr << "selectdata -d # -i xxx -l xxx -e -m -k -o xxx fname\n";
+  cerr << "selectdata -d # -i xxx -l xxx -s cc:oovv -e -m -k -o xxx fname\n";
   cerr << '\n';
-  cerr << "selects a block of data\n";
+  cerr << "selects blocks and lines of data\n";
   cerr << "-d: the number of empty lines that separate blocks of data.\n";
   cerr << "-i: the indices of the selected blocks of data\n";
   cerr << "    or name-value pairs to be used to select data based on the meta data.\n";
@@ -238,6 +281,13 @@ void WriteUsage()
   cerr << "    matching 'cutoff=50Hz' and 'stdev=5' within the next level blocks\n";
   cerr << "    with indices 3, 4, 5\n";
   cerr << "-l: select a range of line numbers within the data blocks (first line = 0).\n";
+  cerr << "-s: select lines based on their data values:\n";
+  cerr << "    cc:oovv defines the column cc, an operand oo, and a comparison value vvv.\n";
+  cerr << "    The column is either a number (first column = 0) or a string.\n";
+  cerr << "    The operand can be one of ==, >=, >, <=, <, != .\n";
+  cerr << "    Several -s options have to be true together for a line to be selected.\n";
+  cerr << "    For example 'temperature:>20' selects all lines with the\n";
+  cerr << "    data value in the 'temperature' column greater than 20.\n";
   cerr << "-e: erase empty lines within a data block.\n";
   cerr << "-m: only write out data, no meta data.\n";
   cerr << "-k: write key in front of each selected data block.\n";
@@ -260,29 +310,56 @@ void readArgs( int argc, char *argv[], int &filec )
     WriteUsage();
   optind = 0;
   opterr = 0;
-  while ( (c = getopt( argc, argv, "d:i:l:eo:mk" )) >= 0 ) {
+  while ( (c = getopt( argc, argv, "d:i:l:s:eo:mk" )) >= 0 ) {
     switch ( c ) {
-      case 'd': if ( optarg == NULL ||
-		     sscanf( optarg, "%d", &stopempty ) == 0 ||
-		     stopempty < 1 )
-		  stopempty = 1;
-                break;
-      case 'i': if ( optarg != NULL )
-		  indices = optarg;
-                break;
-      case 'l': if ( optarg != NULL )
-		  lines = optarg;
-                break;
-      case 'e': erase = true;
-          	break;
-      case 'm': metadata = false;
-          	break;
-      case 'k': repeatkey = true;
-          	break;
-      case 'o': if ( optarg != NULL )
-		  outfile = optarg;
-                break;
-      default : WriteUsage();
+    case 'd':
+      if ( optarg == NULL ||
+	   sscanf( optarg, "%d", &stopempty ) == 0 ||
+	   stopempty < 1 )
+	stopempty = 1;
+      break;
+    case 'i':
+      if ( optarg != NULL )
+	indices = optarg;
+      break;
+    case 'l':
+      if ( optarg != NULL )
+	lines = optarg;
+      break;
+    case 's':
+      if ( optarg != NULL ) {
+	Str s( optarg );
+	selectcols.push_back( s.ident() );
+	selectcol.push_back( (int)::rint( selectcols.back().number( -1.0 ) ) );
+	if ( selectcol.back() >= 0 )
+	  selectcols.back() = "";
+	Str op = s.value();
+	selectop.push_back( -1 );
+	for ( int k=0; k<7; k++ ) {
+	  if ( op.find( opcodes[k] ) == 0 ) {
+	    op.erase( 0, opcodes[k].size() );
+	    selectop.back() = k;
+	    break;
+	  }
+	}
+	selectval.push_back( op.number( 0.0 ) );
+      }
+      break;
+    case 'e':
+      erase = true;
+      break;
+    case 'm':
+      metadata = false;
+      break;
+    case 'k':
+      repeatkey = true;
+      break;
+    case 'o':
+      if ( optarg != NULL )
+	outfile = optarg;
+      break;
+    default :
+      WriteUsage();
     }
   }
   if ( optind < argc && argv[optind][0] == '?' )
