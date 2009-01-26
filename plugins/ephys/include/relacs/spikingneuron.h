@@ -19,16 +19,15 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _RELACS_EPHYS_SPIKINGNEURON_H_
-#define _RELACS_EPHYS_SPIKINGNEURON_H_ 1
+#ifndef _RELACS_SPIKINGNEURON_H_
+#define _RELACS_SPIKINGNEURON_H_ 1
 
 #include <string>
 #include <vector>
 #include <relacs/configclass.h>
 using namespace std;
-using namespace relacs;
 
-namespace ephys {
+namespace relacs {
 
 
 /*!
@@ -729,6 +728,53 @@ class TraubErmentrout : public HodgkinHuxley
 
 
 /*! 
+\class SimplifiedTraub
+\brief [ModelLib] Simplified 3-dimensional version of the soma compartment Traub-Miles (1991) model
+\author Jan Benda
+
+This is a simplified version of the
+soma compartment of the Traub-Miles model (Roger D. Traub and Robert
+K. S. Wong and Richard Miles and Hillary Michelson (1991): A model of
+a CA3 hippocampal pyramidal neuron incorporating voltage-clamp data on
+intrinsic conductances. J. Neurophysiol. 66, pp. 635-650).
+There are no Calcium, M-type and AHP-type currents.
+The \a n variable is mapped to \a 1-h and thus the dimension reduced 
+to 3.
+*/
+
+class SimplifiedTraub : public HodgkinHuxley
+{
+ public:
+  SimplifiedTraub( void );
+
+    /*! \copydoc SpikingNeuron::name() */
+  virtual string name( void ) const;
+    /*! \copydoc SpikingNeuron::dimension()  */
+  virtual int dimension( void ) const;
+    /*! \copydoc SpikingNeuron::variables() */
+  virtual void variables( vector< string > &varnames ) const;
+    /*! \copydoc SpikingNeuron::units() */
+  virtual void units( vector< string > &u ) const;
+    /*! Computes the derivative \a dxdt at time \a t
+        with stimulus \a s given the state \a x. */
+  virtual void operator()(  double t, double s, double *x, double *dxdt, int n );
+    /*! Initialize the state \a x with usefull inital conditions. */
+  virtual void init( double *x ) const;
+
+    /*! Add parameters as options. */
+  virtual void add( void );
+    /*! Read out the current values from the list of Options. */
+  virtual void notify( void );
+
+ protected:
+
+  double MV0, MDV;
+  double HV0, HDV, HTDV, HTOffs;
+
+};
+
+
+/*! 
 \class WangBuzsaki
 \brief [ModelLib] Wang-Buzsaki (1996) model
 \author Jan Benda
@@ -1089,6 +1135,6 @@ class Edman : public SpikingNeuron
 };
 
 
-}; /* namespace ephys */
+}; /* namespace relacs */
 
-#endif /* ! _RELACS_EPHYS_NEURONMODELS_H_ */
+#endif /* ! _RELACS_NEURONMODELS_H_ */

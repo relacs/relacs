@@ -22,8 +22,8 @@
 #ifndef _RELACS_EPHYS_NEURONMODELS_H_
 #define _RELACS_EPHYS_NEURONMODELS_H_ 1
 
-#include <relacs/ephys/spikingneuron.h>
 #include <relacs/model.h>
+#include <relacs/spikingneuron.h>
 using namespace relacs;
 
 namespace ephys {

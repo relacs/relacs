@@ -1,14 +1,33 @@
 HEADER_PATH = ../include/relacs/ephys
 include ${top_srcdir}/moc3.mk
 
+lib_LTLIBRARIES = \
+    librelacsspikingneuron.la
+
+
 pluginlibdir = $(pkglibdir)/plugins
 
 pluginlib_LTLIBRARIES = \
     libephystraces.la \
-    libephysspikingneuron.la \
     libephysneuronmodels.la \
     libephysspikedetector.la \
     libephysmotorcontrol.la
+
+
+
+librelacsspikingneuron_la_CPPFLAGS = \
+    -I$(top_srcdir)/options/include \
+    -I$(srcdir)/../include
+
+librelacsspikingneuron_la_LDFLAGS = -version-info=0:0:0
+
+librelacsspikingneuron_la_LIBADD = $(top_builddir)/options/src/librelacsoptions.la
+
+librelacsspikingneuron_la_SOURCES = spikingneuron.cc
+
+librelacsspikingneuron_la_includedir = $(pkgincludedir)
+
+librelacsspikingneuron_la_include_HEADERS = ../include/relacs/spikingneuron.h
 
 
 
@@ -30,21 +49,6 @@ libephystraces_la_include_HEADERS = $(HEADER_PATH)/traces.h
 
 
 
-libephysspikingneuron_la_CPPFLAGS = \
-    -I$(top_srcdir)/options/include \
-    -I$(srcdir)/../include
-
-libephysspikingneuron_la_LDFLAGS = -version-info=0:0:0
-
-libephysspikingneuron_la_LIBADD = $(top_builddir)/options/src/librelacsoptions.la
-
-libephysspikingneuron_la_SOURCES = spikingneuron.cc
-
-libephysspikingneuron_la_includedir = $(pkgincludedir)/ephys
-
-libephysspikingneuron_la_include_HEADERS = $(HEADER_PATH)/spikingneuron.h
-
-
 
 libephysneuronmodels_la_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
@@ -60,7 +64,7 @@ libephysneuronmodels_la_LDFLAGS = \
     $(QT3_LDFLAGS)
 
 libephysneuronmodels_la_LIBADD = \
-    libephysspikingneuron.la \
+    librelacsspikingneuron.la \
     $(top_builddir)/relacs/src/librelacs.la \
     $(QT3_LIBS)
 
@@ -131,17 +135,17 @@ libephysmotorcontrol_la_include_HEADERS = $(HEADER_PATH)/motorcontrol.h
 
 
 check_PROGRAMS = \
+    linktest_librelacsspikingneuron_la \
     linktest_libephystraces_la \
-    linktest_libephysspikingneuron_la \
     linktest_libephysneuronmodels_la \
     linktest_libephysspikedetector_la \
     linktest_libephysmotorcontrol_la
 
+linktest_librelacsspikingneuron_la_SOURCES = linktest.cc
+linktest_librelacsspikingneuron_la_LDADD = librelacsspikingneuron.la
+
 linktest_libephystraces_la_SOURCES = linktest.cc
 linktest_libephystraces_la_LDADD = libephystraces.la
-
-linktest_libephysspikingneuron_la_SOURCES = linktest.cc
-linktest_libephysspikingneuron_la_LDADD = libephysspikingneuron.la
 
 linktest_libephysneuronmodels_la_SOURCES = linktest.cc
 linktest_libephysneuronmodels_la_LDADD = libephysneuronmodels.la

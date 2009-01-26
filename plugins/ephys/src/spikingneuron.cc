@@ -20,9 +20,9 @@
 */
 
 #include <cmath>
-#include <relacs/ephys/spikingneuron.h>
+#include <relacs/spikingneuron.h>
 
-namespace ephys {
+namespace relacs {
 
 
 SpikingNeuron::SpikingNeuron( void )
@@ -1523,6 +1523,136 @@ void TraubErmentrout::notify( void )
 }
 
 
+SimplifiedTraub::SimplifiedTraub( void )
+  : HodgkinHuxley()
+{
+  GNa = 200.0;
+  GK = 100.0;
+  GL = 0.2;
+
+  ENa = +48.0;
+  EK = -82.0;
+  EL = -82.49;
+
+  C = 1.0;
+  PT = 1.0;
+
+  // type I:
+  MV0 = -43.0;
+  MDV = 9.0;
+  HV0 = -43.0;
+  HDV = 9.0;
+  HTDV = 14.0;
+  HTOffs = 0.4;
+
+  /*
+  // type II:
+  MV0 = -43.0;
+  MDV = 9.0;
+  HV0 = -59.5;
+  HDV = 9.0;
+  HTDV = 14.0;
+  HTOffs = 0.4;
+  */
+
+  GNaGates = GNa;
+  GKGates = GK;
+
+  INa = 0.0;
+  IK = 0.0;
+  IL = 0.0;
+}
+
+
+string SimplifiedTraub::name( void ) const
+{
+  return "Simplified Traub-Miles";
+}
+
+
+int SimplifiedTraub::dimension( void ) const
+{
+  return 3;
+}
+
+
+void SimplifiedTraub::variables( vector< string > &varnames ) const
+{
+  varnames.clear();
+  varnames.reserve( dimension() );
+  varnames.push_back( "V" );
+  varnames.push_back( "m" );
+  varnames.push_back( "h" );
+}
+
+
+void SimplifiedTraub::units( vector< string > &u ) const
+{
+  u.clear();
+  u.reserve( dimension() );
+  u.push_back( "mV" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+}
+
+
+void SimplifiedTraub::operator()(  double t, double s, double *x, double *dxdt, int n )
+{
+  double V = x[0];
+
+  double m0 = 1.0/(1.0+exp(-(V-MV0)/MDV));
+
+  double h0 = 1.0/(1.0+exp((V-HV0)/HDV));
+  double ht = 10.0*exp(-((V-HV0)/HTDV)*((V-HV0)/HTDV))+HTOffs;
+
+  GNaGates = GNa*x[1]*x[1]*x[1]*x[2];
+  double ng = 1.0 - x[2];
+  GKGates = GK*ng*ng*ng*ng;
+
+  INa = GNaGates*(V-ENa);
+  IK = GKGates*(V-EK);
+  IL = GL*(V-EL);
+
+  /* V */ dxdt[0] = ( - INa - IK - IL + s )/C;
+  /* m */ dxdt[1] = ( m0 - x[1] )/0.1;
+  /* h */ dxdt[2] = ( h0 - x[2] )/ht;
+}
+
+
+void SimplifiedTraub::init( double *x ) const
+{
+  x[0] = -82.231;
+  x[1] = 0.0126297;
+  x[2] = 0.98737;
+}
+
+
+void SimplifiedTraub::add( void )
+{
+  HodgkinHuxley::add();
+
+  insertNumber( "mv0", "Potassium current", "Midpoint potential m-gate", MV0, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
+  insertNumber( "mdv", "Potassium current", "Width m-gate", MDV, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
+  insertNumber( "hv0", "Potassium current", "Midpoint potential h-gate", HV0, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
+  insertNumber( "hdv", "Potassium current", "Width h-gate", HDV, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
+  insertNumber( "htdv", "Potassium current", "Width h-gate time constant", HTDV, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
+  insertNumber( "htoffs", "Potassium current", "Minimum time constant of h-gate", HTOffs, 0.0, 100.0, 0.1, "ms" ).setFlags( ModelFlag );
+}
+
+
+void SimplifiedTraub::notify( void )
+{
+  HodgkinHuxley::notify();
+
+  MV0 = number( "mv0" );
+  MDV = number( "mdv" );
+  HV0 = number( "hv0" );
+  HDV = number( "hdv" );
+  HTDV = number( "htdv" );
+  HTOffs = number( "htoffs" );
+}
+
+
 WangBuzsaki::WangBuzsaki( void )
   : HodgkinHuxley()
 {
@@ -2854,4 +2984,4 @@ void Edman::notify( void )
 }
 
 
-}; /* namespace ephys */
+}; /* namespace relacs */
