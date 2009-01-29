@@ -53,7 +53,8 @@ at time \a pos given in seconds.
 
 Since the buffer is cyclic it cannot contain all data, but only the
 last accessibleSize() read in data values.
-The index of the first accessible data element is returned by minIndex().
+The index of the first accessible data element is returned by minIndex()
+and an iterator by minBegin().
 The index behind the most recent data element is returned by
 currentIndex() and equals the size() of the buffer.
 signalIndex() returns the index of the output of the last signal
@@ -224,6 +225,8 @@ class InData : public CyclicArray<float>, public DaqError
   const_iterator begin( void ) const;
     /*! Returns an iterator pointing to the element at time \a time seconds. */
   const_iterator begin( double time ) const;
+    /*! Returns an iterator pointing to the first accessible element \sa minIndex(). */
+  const_iterator minBegin( void ) const;
     /*! Returns an iterator pointing behind the last element. */
   const_iterator end( void ) const;
     /*! Returns an iterator for the time associated with the data elements 
@@ -232,6 +235,9 @@ class InData : public CyclicArray<float>, public DaqError
     /*! Returns an iterator for the time associated with the data elements 
         pointing to the element at time \a time seconds. */
   InDataTimeIterator timeBegin( double time ) const;
+    /*! Returns an iterator for the time associated with the data elements
+        pointing to the first accessible element \sa minIndex(). */
+  InDataTimeIterator minTimeBegin( void ) const;
     /*! Returns an iterator for the time associated with the data elements 
         pointing behind the last element. */
   InDataTimeIterator timeEnd( void ) const;

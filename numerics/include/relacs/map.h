@@ -231,7 +231,7 @@ class Map : public Array < T >
   T &operator()( int i, int j ) { return (*A[i])[j]; };
 
     /*! Add the data pair \a xval, \a yval to the map. */
-  void push( const T &xval, const T &yval );
+ inline void push( const T &xval, const T &yval );
     /*! Add the data pairs from the containers \a x and \a y to the map. */
   template < typename R >
   void push( const R &xval, const R &yval );

@@ -406,6 +406,12 @@ InData::const_iterator InData::begin( double time ) const
 }
 
 
+InData::const_iterator InData::minBegin( void ) const
+{
+  return const_iterator( *this, minIndex() );
+}
+
+
 InData::const_iterator InData::end( void ) const
 {
   return const_iterator( *this, size() );
@@ -421,6 +427,12 @@ InDataTimeIterator InData::timeBegin( void ) const
 InDataTimeIterator InData::timeBegin( double time ) const
 {
   return InDataTimeIterator( *this, index( time ) );
+}
+
+
+InDataTimeIterator InData::minTimeBegin( void ) const
+{
+  return InDataTimeIterator( *this, minIndex() );
 }
 
 

@@ -1282,7 +1282,10 @@ T &Array<T>::back( void )
 template < typename T > 
 void Array<T>::push( const T &val )
 {
-  resize( NSize+1, val );
+  if ( NBuffer < NSize+1 )
+    reserve( NBuffer >= 10 ? 3*NBuffer/2 : 10 );
+  Buffer[NSize] = val;
+  NSize++;
 }
 
 

@@ -492,7 +492,7 @@ class SampleData : public Array< T >
   T &back( void ) { return Array<T>::back(); };
 
     /*! Add \a val as a new element to the array. */
-  void push( const T &val );
+  inline void push( const T &val );
     /*! Remove the last element of the array
         and return its value. */
   T pop( void );
@@ -1954,7 +1954,7 @@ template < typename T >
 void SampleData< T >::push( const T &val )
 {
   Array<T>::push( val );
-  // via resize() this also resizes Samples!
+  // XXX via resize() this also resizes Samples! but you want to be efficient!
 }
 
 

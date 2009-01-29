@@ -48,6 +48,11 @@ public:
     /*! Destructor. */
   ~Detector( void );
 
+    /*! Init the detector.
+        \param[in] first iterator pointing to the first data element.
+        \param[in] last iterator pointing behind the last data element,
+	           if there aren't any data yet, then \a last should equal \a first.
+        \param[in] firsttime iterator pointing to the time of the first data element. */
   void init( const DataIter &first, const DataIter &last,
 	     const TimeIter &firsttime );
 
@@ -59,7 +64,10 @@ public:
 	to the following minimum.
 	A trough is detected if it is lower than \a threshold relative
 	to the following maximum. 
-	All thresholds have to be positive numbers! */
+	All thresholds (\a threshold \a minthresh, \a maxthresh) 
+	have to be positive numbers!
+        \param[in] first iterator pointing to the first *accessible* data element.
+        \param[in] last iterator pointing behind the last data element. */
   template < class Check >
   void peakTrough( const DataIter &first, const DataIter &last,
 		   EventList &outevents,
@@ -323,8 +331,8 @@ void Detector< DataIter, TimeIter >::init( const DataIter &first,
 
 template < typename DataIter, typename TimeIter >
 void Detector< DataIter, TimeIter >::checkThresh( double &threshold,
-					double minthresh,
-					double maxthresh )
+						  double minthresh,
+						  double maxthresh )
 {
   if ( minthresh < maxthresh ) {
     if ( threshold > maxthresh )
@@ -344,13 +352,13 @@ void Detector< DataIter, TimeIter >::checkThresh( double &threshold,
 template < typename DataIter, typename TimeIter >
 template < class Check >
 void Detector< DataIter, TimeIter >::peakTrough( const DataIter &first,
-				       const DataIter &last,
-				       EventList &outevents,
-				       double &threshold,
-				       double minthresh,
-				       double maxthresh,
-				       Check &check )
-{
+						 const DataIter &last,
+						 EventList &outevents,
+						 double &threshold,
+						 double minthresh,
+						 double maxthresh,
+						 Check &check )
+  {
   if ( Index < first || Index >= last )
     return;
 
@@ -533,12 +541,12 @@ void Detector< DataIter, TimeIter >::peakTrough( const DataIter &first,
 template < typename DataIter, typename TimeIter >
 template < class Check >
 void Detector< DataIter, TimeIter >::peakTroughHist( const DataIter &first,
-					 const DataIter &last,
-					 EventList &outevents,
-					 double &threshold,
-					 double minthresh,
-					 double maxthresh,
-					 Check &check )
+						     const DataIter &last,
+						     EventList &outevents,
+						     double &threshold,
+						     double minthresh,
+						     double maxthresh,
+						     Check &check )
 {
   if ( Index < first || Index >= last )
     return;
@@ -754,12 +762,12 @@ void Detector< DataIter, TimeIter >::peakTroughHist( const DataIter &first,
 template < typename DataIter, typename TimeIter >
 template < class Check >
 void Detector< DataIter, TimeIter >::peak( const DataIter &first,
-			       const DataIter &last,
-			       EventData &outevents,
-			       double &threshold,
-			       double minthresh,
-			       double maxthresh,
-			       Check &check )
+					   const DataIter &last,
+					   EventData &outevents,
+					   double &threshold,
+					   double minthresh,
+					   double maxthresh,
+					   Check &check )
 {
   if ( Index < first || Index >= last )
     return;
@@ -887,12 +895,12 @@ void Detector< DataIter, TimeIter >::peak( const DataIter &first,
 template < typename DataIter, typename TimeIter >
 template < class Check >
 void Detector< DataIter, TimeIter >::peakHist( const DataIter &first,
-				   const DataIter &last,
-				   EventData &outevents,
-				   double &threshold,
-				   double minthresh,
-				   double maxthresh,
-				   Check &check )
+					       const DataIter &last,
+					       EventData &outevents,
+					       double &threshold,
+					       double minthresh,
+					       double maxthresh,
+					       Check &check )
 {
   if ( Index < first || Index >= last )
     return;
@@ -1036,11 +1044,11 @@ void Detector< DataIter, TimeIter >::peakHist( const DataIter &first,
 template < typename DataIter, typename TimeIter >
 template < class Check >
 void Detector< DataIter, TimeIter >::trough( const DataIter &first,
-				 const DataIter &last,
-				 EventData &outevents,
-				 double &threshold,
-				 double minthresh, double maxthresh,
-				 Check &check )
+					     const DataIter &last,
+					     EventData &outevents,
+					     double &threshold,
+					     double minthresh, double maxthresh,
+					     Check &check )
 {
   if ( Index < first || Index >= last )
     return;
@@ -1168,11 +1176,11 @@ void Detector< DataIter, TimeIter >::trough( const DataIter &first,
 template < typename DataIter, typename TimeIter >
 template < class Check >
 void Detector< DataIter, TimeIter >::troughHist( const DataIter &first,
-				     const DataIter &last,
-				     EventData &outevents,
-				     double &threshold,
-				     double minthresh, double maxthresh,
-				     Check &check )
+						 const DataIter &last,
+						 EventData &outevents,
+						 double &threshold,
+						 double minthresh, double maxthresh,
+						 Check &check )
 {
   if ( Index < first || Index >= last )
     return;
@@ -1316,14 +1324,14 @@ void Detector< DataIter, TimeIter >::troughHist( const DataIter &first,
 template < typename DataIter, typename TimeIter >
 template < class Check >
 void Detector< DataIter, TimeIter >::dynamicPeakTrough( const DataIter &first,
-					    const DataIter &last,
-					    EventList &outevents,
-					    double &threshold,
-					    double minthresh,
-					    double maxthresh,
-					    double delay,
-					    double decay,
-					    Check &check )
+							const DataIter &last,
+							EventList &outevents,
+							double &threshold,
+							double minthresh,
+							double maxthresh,
+							double delay,
+							double decay,
+							Check &check )
 {
   if ( Index < first || Index >= last )
     return;
@@ -1534,14 +1542,14 @@ void Detector< DataIter, TimeIter >::dynamicPeakTrough( const DataIter &first,
 template < typename DataIter, typename TimeIter >
 template < class Check >
 void Detector< DataIter, TimeIter >::dynamicPeakTroughHist( const DataIter &first,
-						  const DataIter &last,
-						  EventList &outevents,
-						  double &threshold,
-						  double minthresh,
-						  double maxthresh,
-						  double delay,
-						  double decay,
-						  Check &check )
+							    const DataIter &last,
+							    EventList &outevents,
+							    double &threshold,
+							    double minthresh,
+							    double maxthresh,
+							    double delay,
+							    double decay,
+							    Check &check )
 {
   if ( Index < first || Index >= last )
     return;
@@ -1784,14 +1792,14 @@ void Detector< DataIter, TimeIter >::dynamicPeakTroughHist( const DataIter &firs
 template < typename DataIter, typename TimeIter >
 template < class Check >
 void Detector< DataIter, TimeIter >::dynamicPeak( const DataIter &first,
-				      const DataIter &last,
-				      EventData &outevents,
-				      double &threshold,
-				      double minthresh,
-				      double maxthresh,
-				      double delay,
-				      double decay,
-				      Check &check )
+						  const DataIter &last,
+						  EventData &outevents,
+						  double &threshold,
+						  double minthresh,
+						  double maxthresh,
+						  double delay,
+						  double decay,
+						  Check &check )
 {
   if ( Index < first || Index >= last )
     return;
@@ -1943,14 +1951,14 @@ void Detector< DataIter, TimeIter >::dynamicPeak( const DataIter &first,
 template < typename DataIter, typename TimeIter >
 template < class Check >
 void Detector< DataIter, TimeIter >::dynamicPeakHist( const DataIter &first,
-					  const DataIter &last,
-					  EventData &outevents,
-					  double &threshold,
-					  double minthresh,
-					  double maxthresh,
-					  double delay,
-					  double decay,
-					  Check &check )
+						      const DataIter &last,
+						      EventData &outevents,
+						      double &threshold,
+						      double minthresh,
+						      double maxthresh,
+						      double delay,
+						      double decay,
+						      Check &check )
 {
   if ( Index < first || Index >= last )
     return;
@@ -2119,13 +2127,13 @@ void Detector< DataIter, TimeIter >::dynamicPeakHist( const DataIter &first,
 template < typename DataIter, typename TimeIter >
 template < class Check >
 void Detector< DataIter, TimeIter >::dynamicTrough( const DataIter &first,
-					const DataIter &last,
-					EventData &outevents,
-					double &threshold,
-					double minthresh,
-					double maxthresh,
-					double delay, double decay,
-					Check &check )
+						    const DataIter &last,
+						    EventData &outevents,
+						    double &threshold,
+						    double minthresh,
+						    double maxthresh,
+						    double delay, double decay,
+						    Check &check )
 {
   if ( Index < first || Index >= last )
     return;
@@ -2277,13 +2285,13 @@ void Detector< DataIter, TimeIter >::dynamicTrough( const DataIter &first,
 template < typename DataIter, typename TimeIter >
 template < class Check >
 void Detector< DataIter, TimeIter >::dynamicTroughHist( const DataIter &first,
-					    const DataIter &last,
-					    EventData &outevents,
-					    double &threshold,
-					    double minthresh,
-					    double maxthresh,
-					    double delay, double decay,
-					    Check &check )
+							const DataIter &last,
+							EventData &outevents,
+							double &threshold,
+							double minthresh,
+							double maxthresh,
+							double delay, double decay,
+							Check &check )
 {
   if ( Index < first || Index >= last )
     return;
@@ -2451,12 +2459,12 @@ void Detector< DataIter, TimeIter >::dynamicTroughHist( const DataIter &first,
 template < typename DataIter, typename TimeIter >
 template < class Check >
 void Detector< DataIter, TimeIter >::rising( const DataIter &first,
-				 const DataIter &last,
-				 EventData &outevents,
-				 double &threshold,
-				 double minthresh, double maxthresh,
-				 Check &check )
-{
+					     const DataIter &last,
+					     EventData &outevents,
+					     double &threshold,
+					     double minthresh, double maxthresh,
+					     Check &check )
+  {
   if ( Index < first || Index >= last )
     return;
 
@@ -2540,11 +2548,11 @@ void Detector< DataIter, TimeIter >::rising( const DataIter &first,
 template < typename DataIter, typename TimeIter >
 template < class Check >
 void Detector< DataIter, TimeIter >::falling( const DataIter &first,
-				  const DataIter &last,
-				  EventData &outevents,
-				  double &threshold,
-				  double minthresh, double maxthresh,
-				  Check &check )
+					      const DataIter &last,
+					      EventData &outevents,
+					      double &threshold,
+					      double minthresh, double maxthresh,
+					      Check &check )
 {
   if ( Index < first || Index >= last )
     return;
@@ -2629,13 +2637,13 @@ void Detector< DataIter, TimeIter >::falling( const DataIter &first,
 template < typename DataIter, typename TimeIter >
 template < class Check >
 void Detector< DataIter, TimeIter >::dynamicRising( const DataIter &first,
-					const DataIter &last,
-					EventData &outevents,
-					double &threshold,
-					double minthresh,
-					double maxthresh,
-					double delay, double decay,
-					Check &check )
+						    const DataIter &last,
+						    EventData &outevents,
+						    double &threshold,
+						    double minthresh,
+						    double maxthresh,
+						    double delay, double decay,
+						    Check &check )
 {
   if ( Index < first || Index >= last )
     return;
@@ -2743,13 +2751,13 @@ void Detector< DataIter, TimeIter >::dynamicRising( const DataIter &first,
 template < typename DataIter, typename TimeIter >
 template < class Check >
 void Detector< DataIter, TimeIter >::dynamicFalling( const DataIter &first,
-					 const DataIter &last,
-					 EventData &outevents,
-					 double &threshold,
-					 double minthresh,
-					 double maxthresh,
-					 double delay, double decay,
-					 Check &check )
+						     const DataIter &last,
+						     EventData &outevents,
+						     double &threshold,
+						     double minthresh,
+						     double maxthresh,
+						     double delay, double decay,
+						     Check &check )
 {
   if ( Index < first || Index >= last )
     return;
@@ -2855,14 +2863,21 @@ void Detector< DataIter, TimeIter >::dynamicFalling( const DataIter &first,
 
 
 template < typename DataIter, typename TimeIter >
-int AcceptEvent<DataIter,TimeIter>::checkEvent( 
-      const DataIter &first, const DataIter &last,
-      DataIter &event, TimeIter &eventtime,
-      DataIter &index, TimeIter &indextime,
-      DataIter &prevevent, TimeIter &prevtime,
-      EventData &outevents,
-      double &threshold, double &minthresh, double &maxthresh,
-      double &time, double &size, double &width )
+int AcceptEvent<DataIter,TimeIter>::checkEvent( const DataIter &first,
+						const DataIter &last,
+						DataIter &event,
+						TimeIter &eventtime,
+						DataIter &index,
+						TimeIter &indextime,
+						DataIter &prevevent,
+						TimeIter &prevtime,
+						EventData &outevents,
+						double &threshold,
+						double &minthresh, 
+						double &maxthresh,
+						double &time,
+						double &size,
+						double &width )
 { 
   time = *eventtime;
   size = *event;
@@ -2872,14 +2887,21 @@ int AcceptEvent<DataIter,TimeIter>::checkEvent(
 
 
 template < typename DataIter, typename TimeIter >
-int AcceptEvent<DataIter,TimeIter>::checkPeak(
-      const DataIter &first, const DataIter &last,
-      DataIter &event, TimeIter &eventtime,
-      DataIter &index, TimeIter &indextime,
-      DataIter &prevevent, TimeIter &prevtime,
-      EventList &outevents,
-      double &threshold, double &minthresh, double &maxthresh,
-      double &time, double &size, double &width )
+int AcceptEvent<DataIter,TimeIter>::checkPeak( const DataIter &first,
+					       const DataIter &last,
+					       DataIter &event,
+					       TimeIter &eventtime,
+					       DataIter &index,
+					       TimeIter &indextime,
+					       DataIter &prevevent,
+					       TimeIter &prevtime,
+					       EventList &outevents,
+					       double &threshold,
+					       double &minthresh,
+					       double &maxthresh,
+					       double &time,
+					       double &size,
+					       double &width )
 { 
   time = *eventtime;
   size = *event;
@@ -2889,14 +2911,21 @@ int AcceptEvent<DataIter,TimeIter>::checkPeak(
 
 
 template < typename DataIter, typename TimeIter >
-int AcceptEvent<DataIter,TimeIter>::checkTrough(
-      const DataIter &first, const DataIter &last,
-      DataIter &event, TimeIter &eventtime,
-      DataIter &index, TimeIter &indextime,
-      DataIter &prevevent, TimeIter &prevtime,
-      EventList &outevents,
-      double &threshold, double &minthresh, double &maxthresh,
-      double &time, double &size, double &width )
+int AcceptEvent<DataIter,TimeIter>::checkTrough( const DataIter &first,
+						 const DataIter &last,
+						 DataIter &event,
+						 TimeIter &eventtime,
+						 DataIter &index,
+						 TimeIter &indextime,
+						 DataIter &prevevent,
+						 TimeIter &prevtime,
+						 EventList &outevents,
+						 double &threshold,
+						 double &minthresh,
+						 double &maxthresh,
+						 double &time,
+						 double &size,
+						 double &width )
 { 
   time = *eventtime;
   size = *event;

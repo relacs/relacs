@@ -463,7 +463,7 @@ void SpikeDetector::save( void )
 int SpikeDetector::detect( const InData &data, EventData &outevents,
 			   const EventList &other, const EventData &stimuli )
 {
-  D.dynamicPeakHist( data.begin(), data.end(), outevents,
+  D.dynamicPeakHist( data.minBegin(), data.end(), outevents,
 		     Threshold, MinThresh, MaxThresh,
 		     Delay, Decay, *this );
 
