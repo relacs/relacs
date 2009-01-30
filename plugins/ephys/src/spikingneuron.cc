@@ -510,17 +510,30 @@ void HodgkinHuxley::units( vector< string > &u ) const
 
 void HodgkinHuxley::operator()(  double t, double s, double *x, double *dxdt, int n )
 {
+  double V = x[0];
+
+  double z = 0.1*(V+40.0);
+  double am = fabs( z ) < 1e-4 ? 1.0 : z/(1.0-exp(-z));
+  double bm = 4.0*exp(-(V+65.0)/18.0);
+
+  double ah = 0.07*exp(-(V+65)/20.0);
+  double bh = 1.0/(1.0+exp(-(V+35.0)/10.0));
+
+  z = 0.1*(V+55.0);
+  double an = fabs( z ) < 1e-4 ? 0.1 : 0.1*z/(1.0-exp(-z));
+  double bn = 0.125*exp(-(V+65.0)/80.0);
+
   GNaGates = GNa*x[1]*x[1]*x[1]*x[2];
   GKGates = GK*x[3]*x[3]*x[3]*x[3];
 
-  INa = GNaGates*(x[0]-ENa);
-  IK = GKGates*(x[0]-EK);
-  IL = GL*(x[0]-EL);
+  INa = GNaGates*(V-ENa);
+  IK = GKGates*(V-EK);
+  IL = GL*(V-EL);
 
   /* V */ dxdt[0] = (-INa-IK-IL+s)/C;
-  /* m */ dxdt[1] = PT*( 0.1*(x[0]+40.0)/(1.0-exp(-(x[0]+40.0)/10.0))*(1.0-x[1]) - x[1]*4.0*exp(-(x[0]+65.0)/18.0) );
-  /* h */ dxdt[2] = PT*( 0.07*exp(-(x[0]+65)/20.0)*(1.0-x[2]) - x[2]*1.0/(1.0+exp(-(x[0]+35.0)/10.0)) );
-  /* n */ dxdt[3] = PT*( 0.01*(x[0]+55.0)/(1.0-exp(-(x[0]+55.0)/10.0))*(1.0-x[3]) - x[3]*0.125*exp(-(x[0]+65.0)/80.0) );
+  /* m */ dxdt[1] = PT*( am*(1.0-x[1]) - x[1]*bm );
+  /* h */ dxdt[2] = PT*( ah*(1.0-x[2]) - x[2]*bh );
+  /* n */ dxdt[3] = PT*( an*(1.0-x[3]) - x[3]*bn );
 }
 
 
@@ -662,6 +675,23 @@ void Connor::operator()(  double t, double s, double *x, double *dxdt, int n )
 {
   double V = x[0];
 
+  double z = 0.1*(V+40.0);
+  double am = fabs( z ) < 1e-4 ? 1.0 : z/(1.0-exp(-z));
+  double bm = 4.0*exp(-(V+65.0)/18.0);
+
+  double ah = 0.07*exp(-(V+65)/20.0);
+  double bh = 1.0/(1.0+exp(-(V+35.0)/10.0));
+
+  z = 0.1*(V+55.0);
+  double an = fabs( z ) < 1e-4 ? 0.1 : 0.1*z/(1.0-exp(-z));
+  double bn = 0.125*exp(-(V+65.0)/80.0);
+
+  double as = pow(0.0761*exp((V+99.22)/31.84)/(1.0+exp((V+6.17)/28.93)),1.0/3.0);
+  double at = (0.3632+1.158/(1.0+exp((V+60.96)/20.12)));
+
+  double bs = 1.0/(pow(1.0+exp((V+58.3)/14.54),4.0));
+  double bt = (1.24+2.678/(1.0+exp((V+55.0)/16.072)));
+
   GNaGates = GNa*x[1]*x[1]*x[1]*x[2];
   GKGates = GK*x[3]*x[3]*x[3]*x[3];
   GKAGates = GKA*x[4]*x[4]*x[4]*x[5];
@@ -672,11 +702,11 @@ void Connor::operator()(  double t, double s, double *x, double *dxdt, int n )
   IL = GL*(V-EL);
 
   /* V */ dxdt[0] = (-INa-IK-IKA-IL+s)/C;
-  /* m */ dxdt[1] = PT*( 0.1*(V+40.0)/(1.0-exp(-(V+40.0)/10.0))*(1.0-x[1]) - x[1]*4.0*exp(-(V+65.0)/18.0) );
-  /* h */ dxdt[2] = PT*( 0.07*exp(-(V+65)/20.0)*(1.0-x[2]) - x[2]*1.0/(1.0+exp(-(V+35.0)/10.0)) );
-  /* n */ dxdt[3] = PT*( 0.01*(V+55.0)/(1.0-exp(-(V+55.0)/10.0))*(1.0-x[3]) - x[3]*0.125*exp(-(V+65.0)/80.0) );
-  /* a */ dxdt[4] = (pow(0.0761*exp((V+99.22)/31.84)/(1.0+exp((V+6.17)/28.93)),1.0/3.0)-x[4])/(0.3632+1.158/(1.0+exp((V+60.96)/20.12)));
-  /* b */ dxdt[5] = (1.0/(pow(1.0+exp((V+58.3)/14.54),4.0))-x[5])/(1.24+2.678/(1.0+exp((V+55.0)/16.072)));
+  /* m */ dxdt[1] = PT*( am*(1.0-x[1]) - x[1]*bm );
+  /* h */ dxdt[2] = PT*( ah*(1.0-x[2]) - x[2]*bh );
+  /* n */ dxdt[3] = PT*( an*(1.0-x[3]) - x[3]*bn );
+  /* a */ dxdt[4] = (as-x[4])/at;
+  /* b */ dxdt[5] = (bs-x[5])/bt;
 }
 
 
@@ -821,11 +851,13 @@ void RushRinzel::operator()(  double t, double s, double *x, double *dxdt, int n
 {
   double V = x[0];
 
-  double am = 0.1*(V+35.0)/(1.0-exp(-0.1*(V+35)));
+  double z = 0.1*(V+35);
+  double am = fabs( z ) < 1e-4 ? 1.0 : z/(1.0-exp(-z));
   double bm = 4.0*exp(-0.05*(V+60.0));
   double m0 = am/(am+bm);
 
-  double an = 0.01*(V+50.01)/(1.0-exp(-0.1*(V+50.01)));
+  z = 0.1*(V+50.01);
+  double an = fabs( z ) < 1e-4 ? 0.1 : 0.1*z/(1.0-exp(-z));
   double bn = 0.125*exp( -0.0125*(V+60));
   double n0 = an/(an+bn);
   double tn = 1.0/(an+bn);
@@ -923,8 +955,19 @@ void Awiszus::operator()(  double t, double s, double *x, double *dxdt, int n )
   double am = fabs( z ) < 1e-4 ? 11.3 : 11.3*z/(exp(z)-1.0);
   z = (57.0+V)/9.0;
   double bm = fabs( z ) < 1e-4 ? 37.4 : 37.4*z/(exp(z)-1.0);
+
   z = (V+106.0)/9.0;
   double ah = fabs( z ) < 1e-4 ? 5.0 : 5.0*z/(exp(z)-1.0);
+  double bh = 22.6/(exp(-(V+22.0)/12.5)+1.0);
+
+  double ns = 1.0/(1.0+exp((1.7-V)/11.4));
+  double nt = (0.24+0.7/(1.0+exp((V+12.0)/16.4)));
+
+  double as = 1.0/(1.0+exp(-(55+V)/13.8));
+  double at = (0.12+0.6/(1.0+exp((V+24)/16.5)));
+
+  double bs = 1.0/(1.0+exp((77.0+V)/7.8));
+  double bt = (2.1+1.8/(1.0+exp((V-18.0)/5.7)));
 
   GNaGates = GNa*x[1]*x[1]*x[1]*x[2];
   GKGates = GK*x[3]*x[3]*x[3];
@@ -937,10 +980,10 @@ void Awiszus::operator()(  double t, double s, double *x, double *dxdt, int n )
 
   /* V */ dxdt[0] = (-INa-IK-IKA-IL+s)/C;
   /* m */ dxdt[1] = (1-x[1])*am-x[1]*bm;
-  /* h */ dxdt[2] = (1-x[2])*ah-x[2]*22.6/(exp(-(V+22.0)/12.5)+1.0);
-  /* n */ dxdt[3] = (1.0/(1.0+exp((1.7-V)/11.4))-x[3])/(0.24+0.7/(1.0+exp((V+12.0)/16.4)));
-  /* a */ dxdt[4] = (1.0/(1.0+exp(-(55+V)/13.8))-x[4])/(0.12+0.6/(1.0+exp((V+24)/16.5)));
-  /* b */ dxdt[5] = (1.0/(1.0+exp((77.0+V)/7.8))-x[5])/(2.1+1.8/(1.0+exp((V-18.0)/5.7)));
+  /* h */ dxdt[2] = (1-x[2])*ah-x[2]*bh;
+  /* n */ dxdt[3] = (ns-x[3])/nt;
+  /* a */ dxdt[4] = (as-x[4])/at;
+  /* b */ dxdt[5] = (bs-x[5])/bt;
 }
 
 
@@ -1013,6 +1056,20 @@ void FleidervishSI::operator()(  double t, double s, double *x, double *dxdt, in
 {
   double V = x[0];
 
+  double z = (V+40.0)/5.0;
+  double am = fabs( z ) < 1e-4 ? 0.091*5.0 : 0.091*5.0*z/(1.0-exp(-z));
+  double bm = fabs( z ) < 1e-4 ? 0.062*5.0 : -0.062*5.0*z/(1.0-exp(z));
+
+  double ah = 0.06*exp(-(V+55.0)/15.0);
+  double bh = 6.01/(1.0+exp(-(V-17.0)/21.0));
+
+  z = (V+45.0)/5.0;
+  double an = fabs( z ) < 1e-4 ? 0.034*5.0 : 0.034*5.0*z/(1.0-exp(-z));
+  double bn = 0.54*exp(-(V+75.0)/40);
+
+  double as = 0.001*exp(-(V+85.0)/30.0);
+  double bs = 0.0034/(1.0+exp(-(V+17.0)/10.0));
+
   GNaGates = GNa*x[1]*x[1]*x[1]*x[2]*x[4];
   GKGates = GK*x[3]*x[3]*x[3]*x[3];
 
@@ -1021,10 +1078,10 @@ void FleidervishSI::operator()(  double t, double s, double *x, double *dxdt, in
   IL = GL*(V-EL);
 
   /* V */ dxdt[0] = ( - INa - IK - IL + s )/C;
-  /* m */ dxdt[1] = (1-x[1])*0.091*(V+40.0)/(1.0-exp(-(V+40.0)/5.0))-x[1]*(-0.062)*(V+40.0)/(1.0-exp((V+40)/5.0));
-  /* h */ dxdt[2] = (1-x[2])*0.06*exp(-(55.0+V)/15.0)-x[2]*6.01/(exp((17.0-V)/21.0)+1.0);
-  /* n */ dxdt[3] = (1-x[3])*0.034*(V+45)/(1.0-exp(-(V+45.0)/5.0))-x[3]*0.54*exp(-(75+V)/40);
-  /* s */ dxdt[4] = (1-x[4])*0.001*exp(-(85.0+V)/30.0)-x[4]*0.0034/(exp(-(17.0+V)/10.0)+1.0);
+  /* m */ dxdt[1] = (1-x[1])*am-x[1]*bm;
+  /* h */ dxdt[2] = (1-x[2])*ah-x[2]*bh;
+  /* n */ dxdt[3] = (1-x[3])*an-x[3]*bn;
+  /* s */ dxdt[4] = (1-x[4])*as-x[4]*bs;
 }
 
 
@@ -1071,13 +1128,16 @@ void TraubHH::operator()(  double t, double s, double *x, double *dxdt, int n )
 {
   double V = x[0];
 
-  double am = 0.32*(V+54.0)/(1.0-exp(-(V+54.0)/4));
-  double bm = 0.28*(V+27.0)/(exp((V+27.0)/5.0)-1.0);
+  double z = (V+54.0)/4.0;
+  double am = fabs( z ) < 1e-4 ? 0.32*4.0 : 0.32*4.0*z/(1.0-exp(-z));
+  z = (V+27.0)/5.0;
+  double bm = fabs( z ) < 1e-4 ? 0.28*5.0 : 0.28*5.0*z/(exp(z)-1.0);
 
   double ah = 0.128*exp(-(V+50.0)/18.0);
   double bh = 4.0/(1.0+exp(-(V+27.0)/5.0));
   
-  double an = 0.032*(V+52.0)/(1-exp(-(V+52.0)/5.0));
+  z = (V+52.0)/5.0;
+  double an = fabs( z ) < 1e-4 ? 0.032*5.0 : 0.032*5.0*z/(1.0-exp(-z));
   double bn = 0.5*exp(-(V+57.0)/40.0);
 
   GNaGates = GNa*x[1]*x[1]*x[1]*x[2];
@@ -1183,25 +1243,31 @@ void TraubMiles::operator()(  double t, double s, double *x, double *dxdt, int n
   double V = x[0];
   double Ca = x[8];
 
-  double am = 0.32*(V+54.0)/(1.0-exp(-(V+54.0)/4.0));
-  double bm = 0.28*(V+27.0)/(exp((V+27.0)/5.0)-1.0);
+  double z = (V+54.0)/4.0;
+  double am = fabs( z ) < 1e-4 ? 0.32*4.0 : 0.32*4.0*z/(1.0-exp(-z));
+  z = (V+27.0)/5.0;
+  double bm = fabs( z ) < 1e-4 ? 0.28*5.0 : 0.28*5.0*z/(exp(z)-1.0);
 
   double ah = 0.128*exp(-(V+50.0)/18.0);
   double bh = 4.0/(1.0+exp(-(V+27.0)/5.0));
   
-  double an = 0.032*(V+52.0)/(1-exp(-(V+52.0)/5.0));
+  z = (V+52.0)/5.0;
+  double an = fabs( z ) < 1e-4 ? 0.032*5.0 : 0.032*5.0*z/(1.0-exp(-z));
   double bn = 0.5*exp(-(V+57.0)/40.0);
 
   double ay = 0.028*exp(-(V+52.0)/15.0)+2.0/(1.0+exp(-0.1*(V-18.0)));
   double by = 0.4/(1.0+exp(-0.1*(V+27.0)));
 
-  double as = 0.04*(V+7.0)/(1.0-exp(-0.1*(V+7.0)));
-  double bs = 0.005*(V+22.0)/(exp(0.1*(V+22.0))-1.0);
+  z = 0.1*(V+7.0);
+  double as = fabs( z ) < 1e-4 ? 0.4 : 0.4*z/(1.0-exp(-z));
+  z = 0.1*(V+22.0);
+  double bs = fabs( z ) < 1e-4 ? 0.05 : 0.05*z/(exp(z)-1.0);
 
   double ar = 0.005;
-  double br = 0.025*(200.0-Ca)/(exp((200.0-Ca)/20.0)-1.0);
+  z = (200.0-Ca)/20.0;
+  double br = fabs( z ) < 1e-4 ? 0.025*20.0 : 0.025*20.0*z/(exp(z)-1.0);
 
-  double aq = exp((V+67.0)/27.0)*0.005*(200.0-Ca)/(exp((200.0-Ca)/20.0)-1.0);
+  double aq = exp((V+67.0)/27.0)*0.005*20.0*(fabs( z ) < 1e-4 ? 1.0 : z/(exp(z)-1.0) );
   double bq = 0.002;
 
   GNaGates = GNa*x[1]*x[1]*x[1]*x[2];
@@ -1393,13 +1459,16 @@ void TraubErmentrout::operator()(  double t, double s, double *x, double *dxdt, 
   double V = x[0];
   double Ca = x[7];
 
-  double am = 0.32*(V+54.0)/(1.0-exp(-(V+54.0)/4));
-  double bm = 0.28*(V+27.0)/(exp((V+27.0)/5.0)-1.0);
+  double z = (V+54.0)/4.0;
+  double am = fabs( z ) < 1e-4 ? 0.32*4.0 : 0.32*4.0*z/(1.0-exp(-z));
+  z = (V+27.0)/5.0;
+  double bm = fabs( z ) < 1e-4 ? 0.28*5.0 : 0.28*5.0*z/(exp(z)-1.0);
 
   double ah = 0.128*exp(-(V+50.0)/18.0);
   double bh = 4.0/(1.0+exp(-(V+27.0)/5.0));
   
-  double an = 0.032*(V+52.0)/(1-exp(-(V+52.0)/5.0));
+  z = (V+52.0)/5.0;
+  double an = fabs( z ) < 1e-4 ? 0.032*5.0 : 0.032*5.0*z/(1.0-exp(-z));
   double bn = 0.5*exp(-(V+57.0)/40.0);
 
   x[4] = 1.0/(1.0+exp(-(V+25.0)/5.0));
@@ -1710,18 +1779,28 @@ void WangBuzsaki::units( vector< string > &u ) const
 
 void WangBuzsaki::operator()(  double t, double s, double *x, double *dxdt, int n )
 {
-  double ms = 1.0/(1.0+4.0*exp(-(x[0]+60.0)/18.0)*(exp(-0.1*(x[0]+35.0))-1.0)/(-0.1*(x[0]+35.0)));
+  double V = x[0];
+
+  double z = 0.1*(V+35.0);
+  double ms = 1.0/(1.0+4.0*exp(-(V+60.0)/18.0)*(fabs( z ) < 1e-4 ? 1.0 : (exp(-z)-1.0)/(-z) ) );
+
+  double ah = 0.07*exp(-(V+58.0)/20.0);
+  double bh = 1.0/(exp(-0.1*(V+28.0))+1.0);
+
+  z = 0.1*(V+34.0);
+  double an = fabs( z ) < 1e-4 ? 0.1 : -0.1*z/(exp(-z)-1.0);
+  double bn = 0.125*exp(-(V+44.0)/80.0);
 
   GNaGates = GNa*ms*ms*ms*x[1];
   GKGates = GK*x[2]*x[2]*x[2]*x[2];
 
-  INa = GNaGates*(x[0]-ENa);
-  IK = GKGates*(x[0]-EK);
-  IL = GL*(x[0]-EL);
+  INa = GNaGates*(V-ENa);
+  IK = GKGates*(V-EK);
+  IL = GL*(V-EL);
 
   /* V */ dxdt[0] = (-INa-IK-IL+s)/C;
-  /* h */ dxdt[1] = PT*(0.07*exp(-(x[0]+58)/20)*(1.0-x[1])-x[1]/(exp(-0.1*(x[0]+28))+1));
-  /* n */ dxdt[2] = PT*(-0.01*(x[0]+34.0)*(1.0-x[2])/(exp(-0.1*(x[0]+34.0))-1)-0.125*exp(-(x[0]+44.0)/80.0)*x[2]);
+  /* h */ dxdt[1] = PT*(ah*(1.0-x[1])-bh*x[1]);
+  /* n */ dxdt[2] = PT*(an*(1.0-x[2])-bn*x[2]);
 }
 
 
@@ -1775,7 +1854,18 @@ void WangBuzsakiAdapt::units( vector< string > &u ) const
 
 void WangBuzsakiAdapt::operator()(  double t, double s, double *x, double *dxdt, int n )
 {
-  double ms = 1.0/(1.0+4.0*exp(-(x[0]+60.0)/18.0)*(exp(-0.1*(x[0]+35.0))-1.0)/(-0.1*(x[0]+35.0)));
+  double V = x[0];
+
+  double z = 0.1*(V+35.0);
+  double ms = 1.0/(1.0+4.0*exp(-(V+60.0)/18.0)*(fabs( z ) < 1e-4 ? 1.0 : (exp(-z)-1.0)/(-z) ) );
+
+  double ah = 0.07*exp(-(V+58.0)/20.0);
+  double bh = 1.0/(exp(-0.1*(V+28.0))+1.0);
+
+  z = 0.1*(V+34.0);
+  double an = fabs( z ) < 1e-4 ? 0.1 : -0.1*z/(exp(-z)-1.0);
+  double bn = 0.125*exp(-(V+44.0)/80.0);
+
   double w0 = 1.0/(exp(-(x[0]+35.0)/10.0)+1.0);
 
   GNaGates = GNa*ms*ms*ms*x[1];
@@ -1788,8 +1878,8 @@ void WangBuzsakiAdapt::operator()(  double t, double s, double *x, double *dxdt,
   IL = GL*(x[0]-EL);
 
   /* V */ dxdt[0] = (-INa-IK-IL-IA+s)/C;
-  /* h */ dxdt[1] = PT*(0.07*exp(-(x[0]+58)/20)*(1.0-x[1])-x[1]/(exp(-0.1*(x[0]+28))+1));
-  /* n */ dxdt[2] = PT*(-0.01*(x[0]+34.0)*(1.0-x[2])/(exp(-0.1*(x[0]+34.0))-1)-0.125*exp(-(x[0]+44.0)/80.0)*x[2]);
+  /* h */ dxdt[1] = PT*(ah*(1.0-x[1])-bh*x[1]);
+  /* n */ dxdt[2] = PT*(an*(1.0-x[2])-bn*x[2]);
   /* a */ dxdt[3] = ( w0 - x[3] )/Atau;
 }
 
@@ -1939,19 +2029,24 @@ void Crook::operator()(  double t, double s, double *x, double *dxdt, int n )
   double VD = x[9];
   double Ca = x[8];
 
-  double am = 0.32*(-47.1-VS)/(exp(0.25*(-47.1-VS))-1.0);
-  double bm = 0.28*(VS+20.1)/(exp((VS+20.1)/5.0)-1.0);
+  double z = 0.25*(-47.1-VS);
+  double am = fabs( z ) < 1e-4 ? 0.32*4.0 : 0.32*4.0*z/(exp(z)-1.0);
+  z = (VS+20.1)/5.0;
+  double bm = fabs( z ) < 1e-4 ? 0.28*5.0 : 0.28*5.0*z/(exp(z)-1.0);
 
   double ah = 0.128*exp((-43.0-VS)/18.0);
   double bh = 4.0/(exp((-20.0-VS)/5.0)+1.0);
 
-  double an = 0.59*(-25.1-VS)/(exp((-25.1-VS)/5.0)-1.0);
+  z = (-25.1-VS)/5.0;
+  double an = fabs( z ) < 1e-4 ? 0.59*5.0 : 0.59*5.0*z/(exp(z)-1.0);
   double bn = 0.925*exp(0.925-0.025*(VS+77));
 
   double as = 0.912/(exp(-0.072*(VS-5.0))+1.0);
-  double bs = 0.0114*(VS+8.9)/(exp((VS+8.9)/5.0)-1.0);
-
-  double r0 = (exp(-(VS+60.0)/20.0))<1.0 ? (exp(-(VS+60.0)/20.0)) : 1.0;
+  z = (VS+8.9)/5.0;
+  double bs = fabs( z ) < 1e-4 ? 0.0114*5.0 : 0.0114*5.0*z/(exp(z)-1.0);
+  
+  z = exp(-(VS+60.0)/20.0);
+  double r0 = z<1.0 ? z : 1.0;
   double tr = 1.0/0.005;
 
   double q0 = (0.0005*Ca)*(0.0005*Ca);
@@ -2212,7 +2307,8 @@ void MilesDai::operator()(  double t, double s, double *x, double *dxdt, int n )
   double betas = 0.0077/(1.0+exp(-(VS+42.0)/9.0));
   // tau_s = 129.9
 
-  double alphan = 0.02*(VS+38.0)/(1.0-exp(-(VS+38.0)/10.0));
+  double z = (VS+38.0)/10.0;
+  double alphan = fabs( z ) < 1e-4 ? 0.2 : 0.2*z/(1.0-exp(-z));
   double betan = 0.25*exp(-(VS+55.0)/80.0);
 
   double alphamn = 0.2*exp((VS+20.0)/6.13);
@@ -2496,8 +2592,17 @@ void WangIKNa::operator()(  double t, double s, double *x, double *dxdt, int n )
   double CaD = x[10];
   double VD = x[8];
 
-  double ms = 1.0/(1.0+4.0*exp(-(VS+58.0)/12.0)*(exp(-0.1*(VS+33.0))-1.0)/(-0.1*(VS+33.0)));
+  double z = -0.1*(VS+33.0);
+  double ms = 1.0/(1.0+4.0*exp(-(VS+58.0)/12.0)*( fabs( z ) < 1e-4 ? 1.0 : (exp(z)-1.0)/z ) );
   x[1] = ms;
+
+  double ah = 0.07*exp(-(VS+50.0)/10.0);
+  double bh = 1.0/(exp(-0.1*(VS+20.0))+1.0);
+
+  z = -0.1*(VS+34.0);
+  double an = fabs( z ) < 1e-4 ? 0.1 : 0.1*z/(exp(z)-1.0);
+  double bn = 0.125*exp(-(VS+44.0)/25.0);
+
   double vs = 1.0/(1.0+exp(-(VS+20.0)/9.0));
   x[4] = vs;
   double ws = 0.37/(1.0+pow(38.7/Na,3.5));
@@ -2529,8 +2634,8 @@ void WangIKNa::operator()(  double t, double s, double *x, double *dxdt, int n )
 
   /* VS */  dxdt[0] = ( - INa - IK - IL - ICaS - IKCaS - IKNa - IDS + s )/C;
   /* m */   dxdt[1] = 0.0;
-  /* h */   dxdt[2] = PT*(0.07*exp(-(VS+50.0)/10.0)*(1.0-x[2])-x[2]/(exp(-0.1*(VS+20.0))+1.0));
-  /* n */   dxdt[3] = PT*(-0.01*(VS+34.0)*(1.0-x[3])/(exp(-0.1*(VS+34.0))-1.0)-0.125*exp(-(VS+44.0)/25.0)*x[3]);
+  /* h */   dxdt[2] = PT*(ah*(1.0-x[2])-x[2]*bh);
+  /* n */   dxdt[3] = PT*(an*(1.0-x[3])-x[3]*bn);
   /* vs */  dxdt[4] = 0.0;
   /* CaS */ dxdt[5] = -CaSA*ICaS - x[5]/CaSTau;
   /* ws */  dxdt[6] = 0.0;
