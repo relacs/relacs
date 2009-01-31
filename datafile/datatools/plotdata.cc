@@ -199,7 +199,7 @@ void readData( const Str &datafile, const string &plotcommandfile,
 	      pf += ".eps";
 	  }
 	  else {
-	    if ( pf.find( '%' ) < 0 ) {
+	    if ( plotfile.find( '%' ) < 0 && plotfile.find( "$(" ) < 0 ) {
 	      pf += "%" + format + "n.eps";
 	    }
 	    pf.format( pindex+1, 'n', 'd' );
@@ -314,13 +314,12 @@ void writeUsage()
   cerr << "  -h: A file containing plot commands for printing a header.\n";
   cerr << '\n';
   cerr << "Output terminal and files:\n";
-  cerr << "  If <plotfile> does not contain a '%', then an integer formatted\n";
+  cerr << "  If <plotfile> does not contain a '%' or '$(', then an integer formatted\n";
   cerr << "  according to the -f option and the extension '.eps' are appended.\n";
   cerr << "  Otherwise a '%n' printf - type format specifier is replaced by the plot\n";
   cerr << "  number. This is usefull if you specify a terminal (-t) that does not\n";
-  cerr << "  produce .eps files.\n";
-  cerr << "  In both cases every occurence of '$(xxx)' is replaced by the value\n";
-  cerr << "  of the metadata xxx found in the datafile.\n";
+  cerr << "  produce .eps files. Additionally, every occurence of '$(xxx)' is replaced\n";
+  cerr << "  by the value of the metadata xxx found in the datafile.\n";
   cerr << "  $(l xxx) specifies the level l of meta data where xxx should be searched.\n";
   cerr << "  $(l%guu xxx) allows to format the found value with a printf-style\n";
   cerr << "  format specifier %g. Numerical values may be converted to the (optional)\n";

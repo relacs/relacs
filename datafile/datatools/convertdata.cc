@@ -73,7 +73,8 @@ void writeLaTeX( DataFile &sf )
 	  if ( p > 0 )
 	    ml.erase( 0, p );
 	  string ident = ml.ident().latex();
-	  string value = ml.value().latexUnit();
+	  Str valueplain = ml.value();
+	  string value = valueplain.latexUnit();
 	  if ( ident.empty() || value.empty() ) {
 	    if ( namevals ) {
 	      cout << "\\end{tabular}\n";
@@ -100,7 +101,7 @@ void writeLaTeX( DataFile &sf )
 		cout << "\\end{tabular}\n";
 		namevals = false;
 	      }
-	      cout << "\\includegraphics{" << value << "}\n";
+	      cout << "\\includegraphics{" << valueplain << "}\n";
 	    }
 	    else {
 	      if ( ! namevals ) {
@@ -215,7 +216,8 @@ void writeHTML( DataFile &sf )
 	  if ( p > 0 )
 	    ml.erase( 0, p );
 	  string ident = ml.ident().html();
-	  string value = ml.value().htmlUnit();
+	  Str valueplain = ml.value();
+	  string value = valueplain.htmlUnit();
 	  if ( ident.empty() || value.empty() ) {
 	    if ( namevals ) {
 	      cout << "        </table>\n\n";
@@ -245,7 +247,7 @@ void writeHTML( DataFile &sf )
 		namevals = false;
 	      }
 	      cout << "        <div class=\"metaimage\">\n";
-	      cout << "          <img src=\"" << value << ".png\" alt=\"" << value << "\">\n";
+	      cout << "          <img src=\"" << valueplain << ".png\" alt=\"" << value << "\">\n";
 	      cout << "        </div>\n";
 	    }
 	    else {
