@@ -43,6 +43,7 @@ class MiMaPu;
 \brief [Control] Control widgets for motorized manipulators.
 \author Jan Benda
 \version 1.2
+\bug reimplement as thread and avoid use of QTimer!
 \bug spikes( int trace ): instead of sessionOpts we should access the spikedtector directly!
 \bug check locking!
 

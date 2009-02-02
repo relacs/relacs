@@ -556,13 +556,16 @@ protected:
 protected slots:
 
     /*! Start a new session, if it is not already running,
-        and calls the startsession - macro. */
+        and calls the startsession - macro.
+	\note This function must not be called from a non GUI thread! */
   void startTheSession( void );
-    /*! Stop a running session. */
+    /*! Stop a running session.
+	\note This function must not be called from a non GUI thread! */
   void stopTheSession( void );
     /*! Toggles the status of the session:
         stops a running session or start a new session
-	if no session is running. */
+	if no session is running.
+	\note This function must not be called from a non GUI thread! */
   void toggleSession( void );
 
 
@@ -658,6 +661,8 @@ private:
 
   string WarningStr;
   double WarningTimeout;
+  string InfoStr;
+  double InfoTimeout;
   Options Dummy;
 
 };

@@ -96,8 +96,8 @@ void RELACSPlugin::info( const string &s, double timeout )
   ws.eraseMarkup();
   printlog( ws );
 
-  WarningStr = s;
-  WarningTimeout = timeout;
+  InfoStr = s;
+  InfoTimeout = timeout;
   postCustomEvent( 4 );
 }
 
@@ -120,7 +120,7 @@ void RELACSPlugin::customEvent( QCustomEvent *qce )
   case QEvent::User+4: {
     string ss = "RELACS: ";
     ss += name();
-    MessageBox::information( ss, WarningStr, WarningTimeout, this );
+    MessageBox::information( ss, InfoStr, InfoTimeout, this );
     break;
   }
   case QEvent::User+5: {

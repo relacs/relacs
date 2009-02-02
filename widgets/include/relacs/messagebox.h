@@ -88,6 +88,7 @@ public:
 	A time \a timeout seconds can be specified
 	after which the window is closed automatically.
         This feature works only with a non-blocking message.
+	\note This function must not be called from a non GUI thread!
 	\sa warning(), error() */
   static MessageBox *information( const string &caption,
 				  const string &message,
@@ -98,6 +99,7 @@ public:
 	The message is of type information.
 	After time \a timeout seconds the window is closed automatically.
 	This function is non-blocking, i.e. it returns immediately.
+	\note This function must not be called from a non GUI thread!
 	\sa warning(), error() */
   static inline MessageBox *information( const string &caption,
 					 const string &message,
@@ -110,6 +112,7 @@ public:
 	The message is of type information.
 	This function is blocking,
 	i.e. it returns after the user pressed the 'Ok' button.
+	\note This function must not be called from a non GUI thread!
 	\sa warning(), error() */
   static inline MessageBox *information( const string &caption,
 					 const string &message,
@@ -128,6 +131,7 @@ public:
 	A time \a timeout seconds can be specified
 	after which the window is closed automatically.
         This feature works only with a non-blocking message.
+	\note This function must not be called from a non GUI thread!
         \sa information(), error() */
   static MessageBox *warning( const string &caption, const string &message,
 			      bool blocking=false, double timeout=0.0, 
@@ -138,6 +142,7 @@ public:
 	does not prevent the program from continuing.
 	After time \a timeout seconds the window is closed automatically.
 	This function is non-blocking, i.e. it returns immediately.
+	\note This function must not be called from a non GUI thread!
         \sa information(), error() */
   static inline MessageBox *warning( const string &caption,
 				     const string &message,
@@ -150,6 +155,7 @@ public:
 	does not prevent the program from continuing.
 	This function is blocking,
 	i.e. it returns after the user pressed the 'Ok' button.
+	\note This function must not be called from a non GUI thread!
         \sa information(), error() */
   static inline MessageBox *warning( const string &caption,
 				     const string &message,
@@ -168,6 +174,7 @@ public:
 	A time \a timeout seconds can be specified
 	after which the window is closed automatically.
         This feature works only with a non-blocking message.
+	\note This function must not be called from a non GUI thread!
         \sa information(), warning() */
   static MessageBox *error( const string &caption, const string &message,
 			    bool blocking=false, double timeout=0.0, 
@@ -179,6 +186,7 @@ public:
 	displaying this message.
 	After time \a timeout seconds the window is closed automatically.
 	This function is non-blocking, i.e. it returns immediately.
+	\note This function must not be called from a non GUI thread!
         \sa information(), warning() */
   static inline MessageBox *error( const string &caption,
 				   const string &message,
@@ -192,6 +200,7 @@ public:
 	displaying this message.
 	This function is blocking,
 	i.e. it returns after the user pressed the 'Ok' button.
+	\note This function must not be called from a non GUI thread!
         \sa information(), warning() */
   static inline MessageBox *error( const string &caption,
 				   const string &message,

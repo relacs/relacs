@@ -64,8 +64,9 @@ namespace relacs {
 \author Christian Machens
 \version 1.8
 
+\todo make sure startFirstAcquisition() and startFirstSimulation() are only called from the GUI thread
+      (because of MessageBox calls).
 \bug what about wroteData?
-\todo use dynamic updateinterval and writeinterval in run() depending on sampling rates and buffer sizes
 \todo Set ID gain factors before configuring Session
 
 The data are acquired from the DAQ boards and filtered, 

@@ -1,3 +1,12 @@
+Thread safety:
+- make sure that any QWidget does not move, resize, show or hide
+  (i.e. calls a function that triggers an Qt event) outside the GUI thread!
+- make sure that all RePro, Macro, and Session starting and stopping is
+  done from the GUI thread only!
+- disentangle start and stopSession calls?
+- what is qApp->syncX and flushX all about?
+
+
 Acquisition interface:
 - improve the readSignal function in RELACSWidget::write()
 - check whether test, prepare, and start can be used simulataneously with read/write

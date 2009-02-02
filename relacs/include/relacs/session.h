@@ -117,16 +117,20 @@ public:
 public slots:
 
     /*! Start a new session, if it is not already running.
-        If \a startmacro is \c true the startsession - macro is called. */
+        If \a startmacro is \c true the startsession - macro is called.
+	\note This function must not be called from a non GUI thread! */
   void startTheSession( bool startmacro );
     /*! Start a new session, if it is not already running,
-        and calls the startsession - macro. */
+        and calls the startsession - macro.
+	\note This function must not be called from a non GUI thread! */
   void startTheSession( void );
-    /*! Stop a running session. */
+    /*! Stop a running session.
+	\note This function must not be called from a non GUI thread! */
   void stopTheSession( void );
     /*! Toggles the status of the session:
         stops a running session or start a new session
-	if no session is running. */
+	if no session is running.
+	\note This function must not be called from a non GUI thread! */
   void toggleSession( void );
 
     /*! Doing some late initialization, i.e. setting fonts and palette. */
