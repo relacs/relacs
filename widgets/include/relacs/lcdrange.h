@@ -22,7 +22,11 @@
 #ifndef _RELACS_LCDRANGE_H_
 #define _RELACS_LCDRANGE_H_ 1
 
+#include <string>
 #include <qwidget.h>
+
+using namespace std;
+
 
 class QScrollBar;
 class QLCDNumber;
@@ -41,7 +45,9 @@ namespace relacs {
 class LCDRange : public QWidget
 {
   Q_OBJECT
+
 public:
+
   LCDRange( QWidget *parent=0, const char *name=0,
 	    int nodigits=2, int minval=0, int maxval=99,
 	    int linestep=5, int pagestep=10, int initval=0);
@@ -49,31 +55,40 @@ public:
 	    int nodigits=2, int minval=0, int maxval=99,
 	    int linestep=5, int pagestep=10, int initval=0);
   
-  int         value() const;
-  const char *text()  const;
-  QSize sizeHint ( void ) const;
-  QSize minimumSizeHint ( void ) const;
-  QSizePolicy sizePolicy( void ) const;
+    /*! The (integer) value that is currently displayed. */
+  int value( void ) const;
+    /*! The text that is displayed below the LCD display. */
+  string text( void ) const;
+
   
 public slots:
-  void setValue( int );
-  void setRange( int minVal, int maxVal );
-  void setText( const char * );
-  void setSteps( int, int );
+
+    /*! Set the (integer) value that is displayed to \a val . */
+  void setValue( int val );
+    /*! Set the maximum range of allowed values to \a minval to \a maxval . */
+  void setRange( int minval, int maxval );
+    /*! Set the text that is displayed below the LCD display to \a text . */
+  void setText( const string &text );
+    /*! Set the step increments to \a linestep and \a pagestep. */
+  void setSteps( int linestep, int pagestep );
+
 
 signals:
-  void valueChanged( int );
 
-protected:
-  void resizeEvent( QResizeEvent * );
+    /*! This signal is emmited whenever a new value is displayed.
+        \a val is the new value. */
+  void valueChanged( int val );
+
 
 private:
-  void init(int nodigits, int minval, int maxval,
-	    int linestep, int pagestep, int initval);
+
+  void init( int nodigits, int minval, int maxval,
+	     int linestep, int pagestep, int initval );
   
-  QScrollBar  *sBar;
-  QLCDNumber  *lcd;
-  QLabel      *label;
+  QScrollBar *SBar;
+  QLCDNumber *LCD;
+  QLabel *Label;
+
 };
 
 

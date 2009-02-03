@@ -760,13 +760,7 @@ public:
     /*! Give a hint for the minimum size of this widget. */
   QSize minimumSizeHint( void ) const;
 
-  void draw( QPaintDevice *qpm );
   void draw( void );
-
-    /*! Handles the resize event. */
-  void resizeEvent( QResizeEvent *qre );
-    /*! Paints the entire plot. */
-  void paintEvent( QPaintEvent *qpe );
 
   /*!
     \class MouseEvent
@@ -886,6 +880,13 @@ signals:
 
 
 protected:
+
+    /*! Redraws the plot widget. */
+  void draw( QPaintDevice *qpm );
+    /*! Handles the resize event. */
+  void resizeEvent( QResizeEvent *qre );
+    /*! Paints the entire plot. */
+  void paintEvent( QPaintEvent *qpe );
 
     /*! Handles all kinds of mouse events.
         The current implementation supports

@@ -125,10 +125,6 @@ public:
     /*! Draw the Plots. */
   void draw( void );
 
-    /*! Paints the entire plot. */
-  void paintEvent( QPaintEvent *qpe );
-  void resizeEvent( QResizeEvent *qre );
-
     /*! Clear each Plot from data, i.e. call Plot::clear() for each Plot. */
   void clearPlots( void );
 
@@ -146,6 +142,10 @@ signals:
 
 
 protected:
+
+    /*! Paints the entire plot. */
+  void paintEvent( QPaintEvent *qpe );
+  void resizeEvent( QResizeEvent *qre );
 
     /*! The Qt mouse event handler for a mouse press event.
         Dispatches the event to the appropriate Plot. */

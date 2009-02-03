@@ -2661,6 +2661,9 @@ void Plot::draw( QPaintDevice *qpm )
     lockData();
   PMutex.lock();
 
+  QColor pbc = paletteBackgroundColor();
+  Colors[WidgetBackground] = RGBColor( pbc.red(), pbc.green(), pbc.blue() );
+
   initRange();
   initTics();
   initBorder();
@@ -2696,8 +2699,6 @@ void Plot::draw( void )
 void Plot::paintEvent( QPaintEvent *qpe )
 {
   if ( !SubWidget ) {
-    QColor pbc = paletteBackgroundColor();
-    Colors[WidgetBackground] = RGBColor( pbc.red(), pbc.green(), pbc.blue() );
     draw( PixMap );
     PMutex.lock();
     bitBlt( this, 0, 0, PixMap, 0, 0, PixMap->width(), PixMap->height() );

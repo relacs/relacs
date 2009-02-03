@@ -1,9 +1,12 @@
 Thread safety:
-- make sure that any QWidget does not move, resize, show or hide
+- make sure that any QWidget does not show or hide, raise, lower, close, update, repaint, erase, 
   (i.e. calls a function that triggers an Qt event) outside the GUI thread!
 - make sure that all RePro, Macro, and Session starting and stopping is
   done from the GUI thread only!
 - disentangle start and stopSession calls?
+- OptWidget::assign is not thread safe
+- shouldn't the draw() function in Plot and MultiPlot not just be QWidget::update()?
+- (Multi)Plot::draw() can be called from within the locks!
 - what is qApp->syncX and flushX all about?
 
 

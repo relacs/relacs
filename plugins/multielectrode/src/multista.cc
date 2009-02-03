@@ -149,8 +149,8 @@ void MultiSTA::plot( bool snippets )
     P[k].plot( STAs[k].Average, 1000.0, Plot::Blue, 4, Plot::Solid );
     P[k].plot( STAs[k].StDev, 1000.0, Plot::Cyan, 2, Plot::Solid );
   }
-  P.unlock();
   P.draw();
+  P.unlock();
 }
 
 

@@ -23,6 +23,7 @@
 #include <qscrollbar.h>
 #include <qlcdnumber.h>
 #include <qlabel.h>
+#include <qlayout.h>
 #include <relacs/lcdrange.h>
 
 namespace relacs {
@@ -36,6 +37,7 @@ LCDRange::LCDRange( QWidget *parent, const char *name ,
   init(nodigits, minval, maxval, linestep, pagestep, initval);
 }
 
+
 LCDRange::LCDRange( const char *s, QWidget *parent, const char *name,
 		    int nodigits, int minval, int maxval,
 		    int linestep, int pagestep, int initval )
@@ -45,85 +47,65 @@ LCDRange::LCDRange( const char *s, QWidget *parent, const char *name,
   setText( s );
 }
 
+
 void LCDRange::init(int nodigits, int minval, int maxval,
 		    int linestep, int pagestep, int initval)
 {
-  lcd  = new QLCDNumber( nodigits, this, "lcd"  );
-  lcd->move( 0, 0 );
-  lcd->setSegmentStyle( QLCDNumber::Filled );
-  sBar = new QScrollBar( minval, maxval, linestep, pagestep, initval,
+  QBoxLayout *bl = new QBoxLayout( this, QBoxLayout::TopToBottom );
+  bl->setAutoAdd( true );
+  LCD  = new QLCDNumber( nodigits, this, "LCD"  );
+  LCD->setSegmentStyle( QLCDNumber::Filled );
+  SBar = new QScrollBar( minval, maxval, linestep, pagestep, initval,
 			 QScrollBar::Horizontal, this, "scrollbar" );
-  label  = new QLabel( this, "label"  );
-  label->setAlignment( AlignCenter );
-  connect( sBar, SIGNAL(valueChanged(int)), lcd, SLOT(display(int)) );
-  connect( sBar, SIGNAL(valueChanged(int)), SIGNAL(valueChanged(int)) );
-  
+  SBar->setFixedHeight( SBar->sizeHint().height() );
+  Label  = new QLabel( this, "Label"  );
+  Label->setAlignment( AlignCenter );
+  Label->setFixedHeight( Label->sizeHint().height() + 8 );
+  connect( SBar, SIGNAL(valueChanged(int)), LCD, SLOT(display(int)) );
+  connect( SBar, SIGNAL(valueChanged(int)), SIGNAL(valueChanged(int)) );
 }
 
-int LCDRange::value() const
+
+int LCDRange::value( void ) const
 {
-  return sBar->value();
+  return SBar->value();
 }
 
-const char *LCDRange::text() const
+
+string LCDRange::text( void ) const
 {
-  return label->text();
-}
-
-QSize LCDRange::sizeHint( void ) const
-{
-  QSize s = label->sizeHint();
-  s += QSize( 0, 100 );
-  return s;
-}
-
-
-QSize LCDRange::minimumSizeHint( void ) const 
-{ 
-  QSize QS( 50, 50 ); 
-  return QS; 
-}
-
-
-QSizePolicy LCDRange::sizePolicy( void ) const 
-{ 
-  QSizePolicy QSP( QSizePolicy::Expanding, QSizePolicy::Expanding ); 
-  return QSP; 
+  return Label->text();
 }
 
 
 void LCDRange::setValue( int value )
 {
-  sBar->setValue( value );
+  SBar->setValue( value );
 }
 
-void LCDRange::setRange( int minVal, int maxVal )
+
+void LCDRange::setRange( int minval, int maxval )
 {
-  if ( minVal < 0 || minVal > maxVal ) {
+  if ( minval < 0 || minval > maxval ) {
     warning( "LCDRange::setRange(%d,%d)\n"
 	     "\tRange must start with zero\n"
 	     "\tand minVal must not be greater than maxVal",
-	     minVal, maxVal );
+	     minval, maxval );
     return;
   }
-  sBar->setRange( minVal, maxVal );
+  SBar->setRange( minval, maxval );
 }
 
-void LCDRange::setText( const char *s )
+
+void LCDRange::setText( const string &s )
 {
-  label->setText( s );
+  Label->setText( s.c_str() );
 }
+
 
 void LCDRange::setSteps( int lstep, int pstep )
 {
-  sBar->setSteps(lstep,pstep);
-}
-
-void LCDRange::resizeEvent( QResizeEvent * )
-{
-  lcd->resize( width(), height() - 41 - 5 );
-  sBar->setGeometry( 0, lcd->height() + 5, width(), 16 );
-  label->setGeometry( 0, lcd->height() + 21, width(), 20 );
+  SBar->setSteps( lstep, pstep );
 }
 
 
