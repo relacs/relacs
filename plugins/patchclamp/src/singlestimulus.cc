@@ -298,8 +298,7 @@ int SingleStimulus::main( void )
     // plot trace:
     plotToggle( true, true, searchduration, 0.0 );
     
-    P.hide();
-    SP.show();
+    QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
     SP.lock();
     SP.clearPlots();
     SP[0].setTitle( "Search target firing rate " + Str( targetrate ) + " Hz" );
@@ -603,8 +602,7 @@ int SingleStimulus::main( void )
   plotToggle( true, true, Duration, 0.0 );
 
   // setup plots:
-  SP.hide();
-  P.show();
+  QApplication::postEvent( this, new QCustomEvent( QEvent::User+1 ) );
   P.lock();
   P.clearPlots();
   P[0].setTitle( "Mean firing rate =    Hz" );
@@ -979,6 +977,19 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
   }
   
   return 0;
+}
+
+
+void SingleStimulus::customEvent( QCustomEvent *qce )
+{
+  if ( qce->type() == QEvent::User+1 ) {
+    SP.hide();
+    P.show();
+  }
+  else if ( qce->type() == QEvent::User+2 ) {
+    P.hide();
+    SP.show();
+  }
 }
 
 

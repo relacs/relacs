@@ -90,6 +90,8 @@ protected:
   int createStimulus( OutData &signal, SampleDataD &amdb,
 		      double frequency, const Str &file, bool store=true );
 
+  void customEvent( QCustomEvent *qce );
+
   double CarrierFrequency;
   double Amplitude;
   double PeakAmplitude;

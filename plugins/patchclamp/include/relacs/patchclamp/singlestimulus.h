@@ -75,6 +75,8 @@ protected:
   int createStimulus( OutData &signal, const Str &file,
 		      double &duration, double deltat, bool storesignal );
 
+  void customEvent( QCustomEvent *qce );
+
   string AmplitudeUnit;
   double Amplitude;
   double PeakAmplitude;
