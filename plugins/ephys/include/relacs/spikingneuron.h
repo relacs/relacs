@@ -38,7 +38,7 @@ namespace relacs {
 \version 1.2 (May 7, 2008)
 -# SpikingNeuron inherits Options
 -# Added interface for accessing the values 
-   of the iionic currents and conductances
+   of the ionic currents and conductances
 \version 1.1 (Jan 10, 2006)
 
 Each model of a spiking neuron has a name().
@@ -49,20 +49,23 @@ The model is implemented as a set of differential equations
                             \vdots \\ f_n(x_1, x_2, \ldots, x_n, s) \end{array} \right) \f]
 The state of the model is described by the state vector \f$ \vec x = (x_1, x_2, \ldots, x_n)\f$
 of dimension \a n = dimension().
-operator() computes the derivatives \f$ d\vec x/dt\f$ with respect to time \a t
+operator()() computes the derivatives \f$ d\vec x/dt\f$ with respect to time \a t
 for the current state \a x and the stimulus \a s.
 The variables() function returns names for each of the state variables \a x,
 units() returns the corrsponding units,
 and init() sets the state variables \a x to useful initial conditions.
-The unit of the input is given by inputUnit().
+The unit of the input \a s is given by inputUnit().
 
-While integrating the model, the current values and the names
-of the ionic currents and their corresponding conductances can be 
-retrieved by the currents() and conductances() functions.
-The units of the currents and conductances are returned
-by conductanceUnits() and currentUnit().
+While integrating the model, the current values of the ionic currents
+and their corresponding conductances can be retrieved by the
+currents(double*) const and conductances(double*) const functions.
+The corresponding names of the currents and conductances are returned
+by conductances(vector<string>&) const and currents(vector<string>&) const,
+respectively.
+The unit of the conductances is conductanceUnit() and
+the the one of the currents is currentUnit().
 
-Parameter values of the model can be made accessible by adding them to
+%Parameter values of the model can be made accessible by adding them to
 the Options in add().
 Changed parameter values are read out from the Options by notify().
 The parameter values are classified as either scalingFlag(), modelFlag(), 
@@ -71,7 +74,7 @@ or descriptionFlag().
 SpikingNeuron defines two parameters offset() and gain() with default values
 0 and 1, respectively, that should be applied to whatever input before
 it is passed on as the stimulus \a s for computing the derivatives
-via operator().
+via operator()().
 */
 
 class SpikingNeuron : public ConfigClass
@@ -88,17 +91,17 @@ class SpikingNeuron : public ConfigClass
 
     /*! \return the name of the model. */
   virtual string name( void ) const;
-    /*! \return the dimension of the system. \sa variables, operator() */
+    /*! \return the dimension of the system. \sa variables(), operator()() */
   virtual int dimension( void ) const = 0;
     /*! \param[out] varnames the names of each of the dimension() variables.
         Gating variables (ranging between 0 and 1) should be a 
         single lower-case character, potentials and equivalent potentials
 	a single upper-case character, and concentrations should be in 
 	brackets (e.g. [Ca]).
-        \sa dimension(), units(), operator() */
+        \sa dimension(), units(), operator()() */
   virtual void variables( vector< string > &varnames ) const = 0;
     /*! \param[out] u the units of the variables returned by variables().
-        \sa dimension(), operator() */
+        \sa dimension(), operator()() */
   virtual void units( vector< string > &u ) const = 0;
     /*! Computes the derivative \a dxdt at time \a t
         with stimulus \a s given the state \a x.
@@ -107,53 +110,53 @@ class SpikingNeuron : public ConfigClass
         \param[in] s the stimulus.
         \param[in,out] x the state vector.
         \param[out] dxdt the derivative with respect to time.
-        \param[in] n the number of variables, usually equalt to dimension().
+        \param[in] n the number of variables, usually equal to dimension().
         \sa dimension(), init(), variables(), inputUnit() */
   virtual void operator()(  double t, double s, double *x, double *dxdt, int n ) = 0;
     /*! Initialize the state \a x with useful inital conditions.
         \param[out] x the dimension() state variables of the model.
-        \sa dimension(), operator() */
+        \sa dimension(), operator()() */
   virtual void init( double *x ) const = 0;
     /*! Implement this function to return the names of the individual
-        ionic conductances that conductances(double*) would return.
+        ionic conductances that conductances(double*) const would return.
         The default implementation returns an empty vector.
         \param[out] conductancenames the names of the individual 
 	ionic conductances.
-        \sa currents() */
+        \sa currents(double*) const */
   virtual void conductances( vector< string > &conductancenames ) const;
     /*! Implement this function to return in \a g the values of the individual
         ionic conductances. The number of conductances is defined by the size
-	of \a conductancenames the function conductances(vector<string>&)
+	of \a conductancenames the function conductances(vector<string>&) const
 	returns. The default implementation returns nothing.
         \param[out] g the current values of the individual ionic conductances.
-        \sa currents() */
+        \sa currents(double*) const */
   virtual void conductances( double *g ) const;
-    /*! Returns the unit of the conductances returned by conductances().
+    /*! Returns the unit of the conductances returned by conductances(double*) const.
         The default implementation returns \c mS/cm^2. */
   virtual string conductanceUnit( void ) const;
     /*! Implement this function to return in \a currentnames the names of the
-        individual ionic currents that currents(double*) would return.
+        individual ionic currents that currents(double*) const would return.
         The default implementation returns an empty vector.
 	\param[out] currentnames the names of the individual ionic currents.
-        \sa conductances */
+        \sa conductances(double*) const */
   virtual void currents( vector< string > &currentnames ) const;
     /*! Implement this function to return in \a c the values of the individual
         ionic currents. The number of currents is defined by the size of
-	\a currentnames the function currents(vector<string>&) returns.
+	\a currentnames the function currents(vector<string>&) const returns.
         The default implementation returns nothing.
         \param[out] c the values of the individual ionic currents.
-        \sa conductances */
+        \sa conductances(double*) const */
   virtual void currents( double *c ) const;
-    /*! Returns the unit of the currents returned by currents().
+    /*! Returns the unit of the currents returned by currents(double*) const.
         The default implementation returns \c uA/cm^2. */
   virtual string currentUnit( void ) const;
     /*! Returns the unit of the input (the stimulus).
         The default implementation returns \c uA/cm^2.
-        \sa operator() */
+        \sa operator()() */
   virtual string inputUnit( void ) const;
 
     /*! Implement this function to add all necessary options.
-        Use the flags of each option to either one of
+        Set the flags of each option to either one of
 	ScalingFlag, ModelFlag, or DescriptionFlag.
         For example:
         \code
@@ -184,10 +187,10 @@ class SpikingNeuron : public ConfigClass
         \sa add() */
   virtual void notify( void );
 
-    /*! \return a gain that should be applied to the input.
+    /*! \return the gain that should be applied to the input.
         \sa offset() */
   double gain( void ) const;
-    /*! \return an offset that should be applied to the input.
+    /*! \return the offset that should be applied to the input.
         \sa gain() */
   double offset( void ) const;
 
@@ -311,18 +314,18 @@ class MorrisLecar : public SpikingNeuron
   virtual void init( double *x ) const;
 
     /*! Returns in \a conductancenames the names of the individual 
-        ionic conductances that conductances( double * ) would return. */
+        ionic conductances that conductances(double*) const would return. */
   virtual void conductances( vector< string > &conductancenames ) const;
     /*! Returns in \a g the values of the individual ionic conductances.
         The number of conductances is defined by the size of 
         \a conductancenames the function conductances() returns. */
   virtual void conductances( double *g ) const;
     /*! Returns in \a currentnames the names of the individual ionic currents
-        that currents( double * ) would return. */
+        that currents(double*) const would return. */
   virtual void currents( vector< string > &currentnames ) const;
     /*! Returns in \a c the values of the individual ionic currents.
         The number of currents is defined by the size of \a currentnames
-        the function currents() returns. */
+        the function currents(vector<string>&) const returns. */
   virtual void currents( double *c ) const;
 
     /*! Add parameters as options. */
@@ -377,18 +380,18 @@ class HodgkinHuxley : public SpikingNeuron
   virtual void init( double *x ) const;
 
     /*! Returns in \a conductancenames the names of the individual 
-        ionic conductances that conductances( double * ) would return. */
+        ionic conductances that conductances(double*) const would return. */
   virtual void conductances( vector< string > &conductancenames ) const;
     /*! Returns in \a g the values of the individual ionic conductances.
         The number of conductances is defined by the size of 
-        \a conductancenames the function conductances() returns. */
+        \a conductancenames the function conductances(vector<string>&) const returns. */
   virtual void conductances( double *g ) const;
     /*! Returns in \a currentnames the names of the individual ionic currents
-        that currents( double * ) would return. */
+        that currents(double*) const would return. */
   virtual void currents( vector< string > &currentnames ) const;
     /*! Returns in \a c the values of the individual ionic currents.
         The number of currents is defined by the size of \a currentnames
-        the function currents() returns. */
+        the function currents(vector<string>&) const returns. */
   virtual void currents( double *c ) const;
 
     /*! Add parameters as options. */
@@ -438,18 +441,18 @@ class Connor : public HodgkinHuxley
   virtual void init( double *x ) const;
 
     /*! Returns in \a conductancenames the names of the individual 
-        ionic conductances that conductances( double * ) would return. */
+        ionic conductances that conductances(double*) const would return. */
   virtual void conductances( vector< string > &conductancenames ) const;
     /*! Returns in \a g the values of the individual ionic conductances.
         The number of conductances is defined by the size of 
-        \a conductancenames the function conductances() returns. */
+        \a conductancenames the function conductances(vector<string>&) const returns. */
   virtual void conductances( double *g ) const;
     /*! Returns in \a currentnames the names of the individual ionic currents
-        that currents( double * ) would return. */
+        that currents(double*) const would return. */
   virtual void currents( vector< string > &currentnames ) const;
     /*! Returns in \a c the values of the individual ionic currents.
         The number of currents is defined by the size of \a currentnames
-        the function currents() returns. */
+        the function currents(vector<string>&) const returns. */
   virtual void currents( double *c ) const;
 
     /*! Add parameters as options. */
@@ -633,18 +636,18 @@ class TraubMiles : public HodgkinHuxley
   virtual void init( double *x ) const;
 
     /*! Returns in \a conductancenames the names of the individual 
-        ionic conductances that conductances( double * ) would return. */
+        ionic conductances that conductances(double*) const would return. */
   virtual void conductances( vector< string > &conductancenames ) const;
     /*! Returns in \a g the values of the individual ionic conductances.
         The number of conductances is defined by the size of 
-        \a conductancenames the function conductances() returns. */
+        \a conductancenames the function conductances(vector<string>&) const returns. */
   virtual void conductances( double *g ) const;
     /*! Returns in \a currentnames the names of the individual ionic currents
-        that currents( double * ) would return. */
+        that currents(double*) const would return. */
   virtual void currents( vector< string > &currentnames ) const;
     /*! Returns in \a c the values of the individual ionic currents.
         The number of currents is defined by the size of \a currentnames
-        the function currents() returns. */
+        the function currents(vector<string>&) const returns. */
   virtual void currents( double *c ) const;
 
     /*! Add parameters as options. */
@@ -697,18 +700,18 @@ class TraubErmentrout : public HodgkinHuxley
   virtual void init( double *x ) const;
 
     /*! Returns in \a conductancenames the names of the individual 
-        ionic conductances that conductances( double * ) would return. */
+        ionic conductances that conductances(double*) const would return. */
   virtual void conductances( vector< string > &conductancenames ) const;
     /*! Returns in \a g the values of the individual ionic conductances.
         The number of conductances is defined by the size of 
-        \a conductancenames the function conductances() returns. */
+        \a conductancenames the function conductances(vector<string>&) const returns. */
   virtual void conductances( double *g ) const;
     /*! Returns in \a currentnames the names of the individual ionic currents
-        that currents( double * ) would return. */
+        that currents(double*) const would return. */
   virtual void currents( vector< string > &currentnames ) const;
     /*! Returns in \a c the values of the individual ionic currents.
         The number of currents is defined by the size of \a currentnames
-        the function currents() returns. */
+        the function currents(vector<string>&) const returns. */
   virtual void currents( double *c ) const;
 
     /*! Add parameters as options. */
@@ -834,18 +837,18 @@ class WangBuzsakiAdapt : public WangBuzsaki
   virtual void init( double *x ) const;
 
     /*! Returns in \a conductancenames the names of the individual 
-        ionic conductances that conductances( double * ) would return. */
+        ionic conductances that conductances(double*) const would return. */
   virtual void conductances( vector< string > &conductancenames ) const;
     /*! Returns in \a g the values of the individual ionic conductances.
         The number of conductances is defined by the size of 
-        \a conductancenames the function conductances() returns. */
+        \a conductancenames the function conductances(vector<string>&) const returns. */
   virtual void conductances( double *g ) const;
     /*! Returns in \a currentnames the names of the individual ionic currents
-        that currents( double * ) would return. */
+        that currents(double*) const would return. */
   virtual void currents( vector< string > &currentnames ) const;
     /*! Returns in \a c the values of the individual ionic currents.
         The number of currents is defined by the size of \a currentnames
-        the function currents() returns. */
+        the function currents(vector<string>&) const returns. */
   virtual void currents( double *c ) const;
 
     /*! Add parameters as options. */
@@ -896,18 +899,18 @@ class Crook : public HodgkinHuxley
   virtual void init( double *x ) const;
 
     /*! Returns in \a conductancenames the names of the individual 
-        ionic conductances that conductances( double * ) would return. */
+        ionic conductances that conductances(double*) const would return. */
   virtual void conductances( vector< string > &conductancenames ) const;
     /*! Returns in \a g the values of the individual ionic conductances.
         The number of conductances is defined by the size of 
-        \a conductancenames the function conductances() returns. */
+        \a conductancenames the function conductances(vector<string>&) const returns. */
   virtual void conductances( double *g ) const;
     /*! Returns in \a currentnames the names of the individual ionic currents
-        that currents( double * ) would return. */
+        that currents(double*) const would return. */
   virtual void currents( vector< string > &currentnames ) const;
     /*! Returns in \a c the values of the individual ionic currents.
         The number of currents is defined by the size of \a currentnames
-        the function currents() returns. */
+        the function currents(vector<string>&) const returns. */
   virtual void currents( double *c ) const;
 
     /*! Add parameters as options. */
@@ -959,23 +962,23 @@ class MilesDai : public HodgkinHuxley
   virtual void init( double *x ) const;
 
     /*! Returns in \a conductancenames the names of the individual 
-        ionic conductances that conductances( double * ) would return. */
+        ionic conductances that conductances(double*) const would return. */
   virtual void conductances( vector< string > &conductancenames ) const;
     /*! Returns in \a g the values of the individual ionic conductances.
         The number of conductances is defined by the size of 
-        \a conductancenames the function conductances() returns. */
+        \a conductancenames the function conductances(vector<string>&) const returns. */
   virtual void conductances( double *g ) const;
-    /*! Returns the unit of the conductances returned by conductances(),
+    /*! Returns the unit of the conductances returned by conductances(double*) const,
         i.e. muS */
   virtual string conductanceUnit( void ) const;
     /*! Returns in \a currentnames the names of the individual ionic currents
-        that currents( double * ) would return. */
+        that currents(double*) const would return. */
   virtual void currents( vector< string > &currentnames ) const;
     /*! Returns in \a c the values of the individual ionic currents.
         The number of currents is defined by the size of \a currentnames
-        the function currents() returns. */
+        the function currents(vector<string>&) const returns. */
   virtual void currents( double *c ) const;
-    /*! Returns the unit of the currents returned by currents(), i.e. uA. */
+    /*! Returns the unit of the currents returned by currents(double*) const, i.e. uA. */
   virtual string currentUnit( void ) const;
     /*! Returns the unit of the input (the stimulus), i.e. nA. */
   virtual string inputUnit( void ) const;
@@ -1028,18 +1031,18 @@ class WangIKNa : public HodgkinHuxley
   virtual void init( double *x ) const;
 
     /*! Returns in \a conductancenames the names of the individual 
-        ionic conductances that conductances( double * ) would return. */
+        ionic conductances that conductances(double*) const would return. */
   virtual void conductances( vector< string > &conductancenames ) const;
     /*! Returns in \a g the values of the individual ionic conductances.
         The number of conductances is defined by the size of 
-        \a conductancenames the function conductances() returns. */
+        \a conductancenames the function conductances(vector<string>&) const returns. */
   virtual void conductances( double *g ) const;
     /*! Returns in \a currentnames the names of the individual ionic currents
-        that currents( double * ) would return. */
+        that currents(double*) const would return. */
   virtual void currents( vector< string > &currentnames ) const;
     /*! Returns in \a c the values of the individual ionic currents.
         The number of currents is defined by the size of \a currentnames
-        the function currents() returns. */
+        the function currents(vector<string>&) const returns. */
   virtual void currents( double *c ) const;
 
     /*! Add parameters as options. */
@@ -1089,23 +1092,23 @@ class Edman : public SpikingNeuron
   virtual void init( double *x ) const;
 
     /*! Returns in \a conductancenames the names of the individual 
-        ionic conductances that conductances( double * ) would return. */
+        ionic conductances that conductances(double*) const would return. */
   virtual void conductances( vector< string > &conductancenames ) const;
     /*! Returns in \a g the values of the individual ionic conductances.
         The number of conductances is defined by the size of 
-        \a conductancenames the function conductances() returns. */
+        \a conductancenames the function conductances(vector<string>&) const returns. */
   virtual void conductances( double *g ) const;
-    /*! Returns the unit of the conductances returned by conductances(),
+    /*! Returns the unit of the conductances returned by conductances(double*) const,
         i.e. cm^3/s. */
   virtual string conductanceUnit( void ) const;
     /*! Returns in \a currentnames the names of the individual ionic currents
-        that currents( double * ) would return. */
+        that currents(double*) const would return. */
   virtual void currents( vector< string > &currentnames ) const;
     /*! Returns in \a c the values of the individual ionic currents.
         The number of currents is defined by the size of \a currentnames
-        the function currents() returns. */
+        the function currents(vector<string>&) const returns. */
   virtual void currents( double *c ) const;
-    /*! Returns the unit of the currents returned by currents(), i.e. uA. */
+    /*! Returns the unit of the currents returned by currents(double*) const, i.e. uA. */
   virtual string currentUnit( void ) const;
     /*! Returns the unit of the input (the stimulus), i.e. nA. */
   virtual string inputUnit( void ) const;
