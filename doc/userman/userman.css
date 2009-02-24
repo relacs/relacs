@@ -1,0 +1,225 @@
+body { 
+  font-family: arial, helvetica, sans-serif;
+  font-size: 100%;
+  font-weight: normal;
+  margin: 0px;
+  padding-top: 0ex;
+  padding-left: 1ex;
+  padding-right: 1ex;
+}
+
+p { 
+  text-align: justify;
+  margin-top: 0ex;
+  margin-bottom: 0ex;
+  padding-top: 0ex;
+  padding-bottom: 0.5ex;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+hr { 
+  color: #000000;
+  background-color: #000000;
+  height: 0px;
+  width: 100%;
+  border: none;
+}
+
+
+ul, ol {
+  margin-top: 0ex;
+  margin-bottom: 0ex;
+  padding-top: 0ex;
+  padding-bottom: 0.5ex;
+  padding-left: 5ex;
+  padding-right: 10px;
+}
+
+dl {
+  margin-top: 0ex;
+  margin-bottom: 0ex;
+  padding-top: 0ex;
+  padding-bottom: 0.5ex;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+li {
+  margin-top: 0ex;
+  margin-bottom: 0ex;
+  padding-top: 0ex;
+  padding-bottom: 0ex;
+  text-align: justify;
+}
+
+li p {
+  margin-top: 0ex;
+  margin-bottom: 0ex;
+  padding-top: 0ex;
+  padding-bottom: 0ex;
+  text-align: justify;
+}
+
+.book .titlepage .title { 
+  padding-top: 1ex;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.book .titlepage .subtitle, .book .titlepage .author { 
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.book .titlepage p { 
+  padding-left: 0px;
+  padding-right: 0px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.toc p { 
+  color: #000000;
+  text-shadow: #888888 0.2em 0.2em 4px;
+  background-color: #EEEEFF;
+  font-weight: bold;
+  padding-top: 0.8ex;
+  padding-bottom: 0.6ex;
+  padding-left: 10px;
+  padding-right: 10px;
+  margin: 0;
+  margin-top: 1ex;
+  margin-bottom: 1ex;
+  border-width: 0px;
+  border-top-width: 1px;
+  border-style: solid;
+  border-color: #AAAAFF;
+  clear: both;
+  font-size: 150%;
+  margin-top: 0px;
+}
+
+.toc dl { 
+  margin-left: 0px;
+  padding-left: 10px;
+}
+
+.toc dt .chapter, .toc dt .appendix { 
+  font-weight: bold;
+}
+
+.navheader, .navfooter { 
+  margin-top: 0px;
+  padding-top: 0px;
+  background-color: #EEEEFF;
+  border-width: 0px;
+  border-top-width: 1px;
+  border-bottom-width: 1px;
+  border-style: solid;
+  border-color: #AAAAFF;
+}
+
+.navheader { 
+  margin-top: 0ex;
+}
+
+.navfooter { 
+  margin-top: 1ex;
+}
+
+.navheader hr, .navfooter hr {
+  padding: 0px;
+  margin: 0px; 
+}
+
+.navfooter table, .navfooter table tr, .navfooter table tr th { 
+  padding-top: 0px;
+}
+
+.chapter .titlepage h2, .section .titlepage h2, .section .titlepage h3, .section .titlepage h4, .section .titlepage h5, .section .titlepage h6 {
+  color: #000000;
+  text-shadow: #888888 0.2em 0.2em 4px;
+  background-color: #EEEEFF;
+  font-weight: bold;
+  padding-top: 0.8ex;
+  padding-bottom: 0.6ex;
+  padding-left: 10px;
+  padding-right: 10px;
+  margin: 0;
+  margin-top: 1ex;
+  margin-bottom: 0.5ex;
+  border-width: 0px;
+  border-top-width: 1px;
+  border-style: solid;
+  border-color: #AAAAFF;
+  clear: both;
+}
+
+.chapter .titlepage h2 {
+  font-size: 180%;
+}
+
+.section .titlepage h2 {
+  font-size: 150%;
+}
+
+.section .titlepage h3 {
+  font-size: 120%;
+}
+
+.section .titlepage h4 {
+  font-size: 100%;
+  text-shadow: none;
+}
+
+.section .titlepage h5 {
+  font-size: 100%;
+  text-shadow: none;
+}
+
+.section .titlepage h6 {
+  font-size: 100%;
+  text-shadow: none;
+}
+
+.programlisting
+{
+  background-color: #EEEEFF;
+  padding-top: 1ex;
+  padding-bottom: 1ex;
+  padding-left: 10px;
+  padding-right: 10px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #AAAAFF;
+}
+
+.variablelist dl dt {
+  padding-left: 0px;
+  padding-right: 0px;
+  font-weight: bold;
+}
+
+.variablelist dl dd {
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+.variablelist dl dd .itemizedlist ul {
+  margin-left: 0px;
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+.variablelist dl dd .itemizedlist ul ul {
+  padding-left: 5ex;
+}
+
+.guimenu {
+  font-style: italic;
+}
+
+.guimenuitem {
+  font-style: italic;
+}

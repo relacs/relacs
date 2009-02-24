@@ -108,7 +108,7 @@ RELACS_EXAMPLES()
 #################################################
 ## Docbook user manual
 #################################################
-RELACS_DOCBOOK( userman, doc/userman )
+RELACS_DOCBOOK()
 
 
 #################################################
@@ -284,6 +284,8 @@ AC_CONFIG_FILES([
     examples/src/Makefile
 
     doc/relacsall.doc
+
+    doc/userman/Makefile
 ])
 
 

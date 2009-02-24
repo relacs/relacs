@@ -15,7 +15,7 @@ pkgdatadir=$(datadir)/relacs
 docdir = $(datarootdir)/doc/relacs
 
 DX_PROJECT = options
-DX_INSTALL_SUBDIR = /$(DX_PROJECT)
+DX_INSTALL_SUBDIR = /api/$(DX_PROJECT)
 DX_DEPENDS = Makefile.am
 DX_SETTINGS = PROJECT_NAME='"Relacs Options Library"'
 DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'

@@ -51,7 +51,7 @@ This means that you either
 
 After installation of new packages you need to run ./configure again.
 
-For example, you may need to specify the location of the Qt3
+In particular, you may need to specify the location of the Qt3
 libraries: For example, on SuSE you need to call: 
 > ./configure --with-qt3=/usr/lib/qt3
 On Debian and Ubuntu ./configure should work without any argument.
@@ -67,13 +67,15 @@ directory.
 
 4. Compile RELACS
 
+Run
+
 > make
 
 That takes a while!
 
 In case compilation fails, then please write me an email
 (benda@bio.lmu.de, subject: RELACS) containing the full output of
-./make.
+./make (run "./make &> make.log" and send the file "make.log").
 
 
 5. Optionally run
@@ -94,7 +96,7 @@ output of ./make check.
 Press for example 'F1'. More instructions on the demo will follow...
 
 
-7. If you really want to install this demo version, simply execute
+7. If you want to install RELACS, simply execute
 
 > make install
 

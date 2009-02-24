@@ -1,0 +1,11 @@
+<chapter xml:id='utilities'><title xml:id='relacsutilitiestitle'>Utilities</title>
+
+<para>There are a few utility programs (in <filename>utils/</filename>):</para>
+
+	<para><itemizedlist>
+		<listitem><para><link linkend='bin2dat.html'>bin2dat</link>: Convert binary data, such as the <filename>*.sw1</filename> files, into ascii-files.</para></listitem>
+		<listitem><para><link linkend='scaninf.html'>scaninf</link>: Scan the <filename>info.dat</filename> files which contain general information 
+  about a recording.</para></listitem>
+	</itemizedlist></para>
+
+</chapter>

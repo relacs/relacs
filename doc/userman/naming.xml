@@ -1,0 +1,232 @@
+<chapter xml:id='naming'><title xml:id='namingtitle'>Naming Conventions</title>
+
+	<para>The following naming conventions for files, classes, function, variables, etc.
+	intend to simplify the usage of RELACS-related libraries.</para>
+
+	<section xml:id='filenames'><title>File names</title>
+
+		<para>It is a generally accepted standard to use lowercase file names
+		for all source code and header files
+		and to use the extensions <filename>.cc</filename> and <filename>.h</filename>, respectively.
+		Ideally, each source code file contains just one class.
+		The source code files should have the same name as the class they contain.</para>
+
+		<para>Example: If the class is named <classname>MyClass</classname>, then the source code and the header file
+		are named
+		<programlisting>
+myclass.h
+myclass.cc
+		</programlisting></para>
+
+		<para>The standard name for makefiles is 
+		<programlisting>
+Makefile
+		</programlisting></para>
+	</section>
+
+	<section xml:id='compoundnames'><title>Classes, functions, and variables</title> 
+
+		<para>In naming classes, function, variables, etc. we follow the convention
+		used by the Qt library.
+		No underscores '_' are used.</para>
+
+		<para>For example, use
+		<programlisting>
+ThisIsMyVariable
+		</programlisting>
+		instead of
+		<programlisting>
+this_is_my_variable
+		</programlisting></para>
+
+		<para>The only exception is <type>const_iterator</type> to conform with the STL
+		(http://www.sgi.com/tech/stl/).</para>
+
+
+		<section xml:id='typenames'><title>Classes, structs, typedefs, enums</title>
+
+		<para>Class, struct, and typedef names start with an uppercase letter.</para>
+
+		<para>Example:
+		<programlisting>
+class MyClass;
+		</programlisting></para>
+
+		<para>Enum types as well as their members also start with an uppercase letter.</para>
+
+		<para>Example:
+		<programlisting>
+enum Color { Transparent=-1, Black=0, White, Red, Green, Blue };
+		</programlisting></para>
+		</section>
+
+
+		<section xml:id='functionnames'><title>Member Functions</title>
+
+		<para>Member functions have a lowercase first letter.
+		Their arguments and local variables are all lowercase.
+		Use the <type>const</type> keyword for the arguments and the function 
+		whenever it is appropriate.
+		Functions that set variables of a class are named <function>setXXX()</function>.
+		Functions retrieving data from a class <emphasis>don't</emphasis> start with <function>get</function> (<function>getXXX()</function>),
+		instead they are just named <function>xxx()</function> to keep the code better readable.</para>
+
+		<para>Examples:
+		<programlisting>
+<![CDATA[void setText( const string &text, int flag );  // set some text to text]]>
+double width( void ) const;                    // returns a width
+
+if ( width() > 0 ) ...        // reads better than: if ( getWidth() > 0 )
+		</programlisting></para>
+		</section>
+
+		<section xml:id='variablenames'><title>Member Variables</title>
+
+		<para>Member variables are <emphasis>never</emphasis> public!
+		Use (inline) member functions to provide acsess to member variables.
+		Use an uppercase first letter for member variables
+		to avoid conflicts with the corresponding member function
+		and local variables.</para>
+
+		<para>Example:
+		<programlisting>
+class MyClass
+{
+public:
+  // Return the value of the member variable Number:
+  inline double number( void ) const { return Number; };
+  // Set the value of the member variable Number to number:
+  inline void setNumber( double number ) { Number = number; };
+
+private:
+
+  // A member variable:
+  double Number;
+};
+		</programlisting></para>
+		</section>
+	</section>
+
+	<section xml:id='functionstandard'><title>Standard function names</title>
+
+		<para>For reading and writing files use
+		<programlisting>
+void load( ... );
+void save( ... );
+		</programlisting>
+		respectively.</para>
+
+		<para>For reading and writing to devices use
+		<programlisting>
+void read( ... );
+void write( ... );
+		</programlisting></para>
+
+
+		<section xml:id='containerstandard'><title>Standard container member functions</title>
+
+		<para>A container is a class which organizes an array of some data type <type>T</type>.
+		For these classes the following standard functions are usefull
+		and should be provided if possible.
+		They conform to the STL (http://www.sgi.com/tech/stl/).</para>
+
+		<para><programlisting>
+int size( void ) const;
+		</programlisting>
+		Returns the number of data elements the container currently holds.</para>
+
+		<para><programlisting>
+bool empty( void ) const;
+		</programlisting>
+		Returns true if there aren't any data elements stored in the container.
+		Equivalent to <literal>(size()== 0)</literal>.</para>
+
+		<para><programlisting>
+void resize( int newsize, T dflt=0 );
+		</programlisting>
+		Changes the number of data elements to <varname>newsize</varname>. If this number is larger
+		than the size of the container, then the new data elements are initialized with
+		<parameter>dflt</parameter>.</para>
+
+		<para><programlisting>
+void clear( void );
+		</programlisting>
+		Removes all data elements from the container.
+		Equivalent to <literal>resize( 0 ) </literal>.</para>
+
+
+		<para><programlisting>
+int capacity( void ) const;
+		</programlisting>
+		The maximum number of data elements the container can hold
+		without reallocating memory.</para>
+
+		<para><programlisting>
+void reserve( int newsize );
+		</programlisting>
+		Allocates memory so that the container can hold at minimum <varname>newsize</varname>
+		data elements.
+		If <varname>newsize</varname> is larger than the size of the container
+		all data elements are kept and the size does not change.
+		If <varname>newsize</varname> is smaller, then nothing is done,
+		the container will keep its previous capacity().</para>
+
+
+		<para><programlisting>
+T operator[]( int index ) const;
+<![CDATA[T &operator[]( int index );]]>
+		</programlisting>
+		Read and set the data element specified by <varname>index</varname>.
+		No range checking is performed in order to optimize performance speed.
+		You have to make sure that <varname>index</varname> specifies an existing data element.</para>
+
+		<para><programlisting>
+T at( int index ) const;
+<![CDATA[T &at( int index );]]>
+		</programlisting>
+		Read and set the data element specified by <varname>index</varname>.
+		In contrast to <function>operator[]</function> these functions first check the validity
+		of <varname>index</varname>.</para>
+
+		<para><programlisting>
+T front( void ) const;
+<![CDATA[T &front( void );]]>
+T back( void ) const;
+<![CDATA[T &back( void );]]>
+		</programlisting>
+		Read and set the first or last data element, respectively.
+		You have to make sure that they really exist, i.e. that the container is not
+		empty().</para>
+
+		<para><programlisting>
+void copy( int range, T *data ) const;
+<![CDATA[void copy( int range, vector< T > &data ) const;]]>
+		</programlisting>
+		The <function>copy</function> functions allow to copy a range of data elements of the container
+		to different types of container <varname>data</varname>.</para>
+
+		<para><programlisting>
+void assign( T *data, int range );
+<![CDATA[void assign( vector< T > &data, int range );]]>
+		</programlisting>
+		The <function>assign</function> functions allow to copy a range of data elements from
+		different types of containers <varname>data</varname> into the container.
+		Before copying data all data elements of the container are removed.</para>
+
+		<para><programlisting>
+void append( T *data, int range );
+<![CDATA[void append( vector< T > &data, int range );]]>
+		</programlisting>
+		The <function>append</function> functions allow to append a range of data elements from
+		different types of containers <varname>data</varname> to the already existing data elements
+		of the container.</para>
+
+		<para><programlisting>
+const_iterator begin( void ) const;
+const_iterator end( void ) const;
+		</programlisting>
+		Return an iterator to the first and behind the last element of the container,
+		respectively.</para>
+		</section>
+	</section>
+</chapter>

@@ -35,9 +35,10 @@ Documentation
 -------------
 
 RELACS comes with an extensive html-based documentation.  You can read
-the documentation with your favorite web browser / html viewer in
-doc/html/index.html You can also access the documentation from the
-Help->Help menu or from the RELACS web page.
+the documentation with your favorite web browser / html viewer. You
+find the user manual in doc/userman/html/index.html and the API
+reference in doc/html/index.html. You can also access the user manual
+from the Help->Help menu or from the RELACS web page.
 
 On the RELACS web pages you find additional and more general
 information. See www.relacs.net

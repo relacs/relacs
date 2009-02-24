@@ -21,7 +21,7 @@ pkgdatadir=$(datadir)/relacs
 docdir = $(datarootdir)/doc/relacs
 
 DX_PROJECT = widgets
-DX_INSTALL_SUBDIR = /$(DX_PROJECT)
+DX_INSTALL_SUBDIR = /api/$(DX_PROJECT)
 DX_DEPENDS = Makefile.am
 DX_SETTINGS = PROJECT_NAME='"Relacs Widgets Library"'
 DX_SETTINGS += INPUT='src include/relacs doc'

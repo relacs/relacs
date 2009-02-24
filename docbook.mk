@@ -6,17 +6,18 @@ if RELACS_DOCBOOK_COND
 
 if RELACS_DOCBOOK_HTML_COND
 
-DOCBOOK_CLEAN_HTML = $(DOCBOOK_DIR)/html
+DOCBOOK_CLEAN_HTML = html
 
-docbook-html: $(DOCBOOK_DIR)/html/index.html
+docbook-html: html/index.html
 
-$(DOCBOOK_DIR)/html/index.html : $(DOCBOOK_DOCDIR)/$(DOCBOOK_BASE).xml $(DOCBOOK_DOCDIR)/$(DOCBOOK_BASE).xls $(DOCBOOK_SOURCES)
-	xmlto -m userman.xsl --skip-validation html userman.xml
-	test -f userman.fls && for p in $(<userman.fls); do sed -e 's|^.*</pre|</pre|' $p > tmp.html; mv tmp.html $p; done
+html/index.html: $(DOCBOOK_BASE).xml $(DOCBOOK_BASE).xsl $(DOCBOOK_FILES)
+	xmlto -o html -m $(DOCBOOK_BASE).xsl --skip-validation html $(DOCBOOK_BASE).xml
+	cp $(DOCBOOK_HTML_EXTRA) html/
+	test -f $(DOCBOOK_BASE).fls && for p in $$(<$(DOCBOOK_BASE).fls); do sed -e 's|^.*</pre|</pre|' $$p > tmp.html; mv tmp.html $$p; done || true
 
 docbook-install-html:
-	test -z "$(DOCBOOK_DOCDIR)/html" || $(MKDIR_P) "$(DESTDIR)$(htmldir)$(DOCBOOK_INSTALL_SUBDIR)"
-	$(INSTALL_DATA) $(DOCBOOK_DOCDIR)/html/*.* "$(DESTDIR)$(htmldir)$(DOCBOOK_INSTALL_SUBDIR)"
+	test -z "$(htmldir)" || $(MKDIR_P) "$(DESTDIR)$(htmldir)$(DOCBOOK_INSTALL_SUBDIR)"
+	$(INSTALL_DATA) html/*.* "$(DESTDIR)$(htmldir)$(DOCBOOK_INSTALL_SUBDIR)"
 
 docbook-uninstall-html:
 	rm -f -r "$(DESTDIR)$(htmldir)$(DOCBOOK_INSTALL_SUBDIR)"
@@ -25,36 +26,47 @@ endif RELACS_DOCBOOK_HTML_COND
 
 
 ## ------------------------------ ##
+## Rules specific for PS output. ##
+## ------------------------------ ##
+
+if RELACS_DOCBOOK_PS_COND
+
+DOCBOOK_CLEAN_PS = $(DOCBOOK_BASE).ps
+
+docbook-ps: $(DOCBOOK_BASE).ps
+
+$(DOCBOOK_BASE).ps: $(DOCBOOK_BASE).xml $(DOCBOOK_BASE).xsl $(DOCBOOK_FILES)
+	xmlto -m $(DOCBOOK_BASE).xsl --skip-validation ps $(DOCBOOK_BASE).xml
+
+docbook-install-ps:
+	test -z "$(psdir)" || $(MKDIR_P) "$(DESTDIR)$(psdir)$(DOCBOOK_INSTALL_SUBDIR)"
+	$(INSTALL_DATA) "$(DOCBOOK_BASE).ps" "$(DESTDIR)$(psdir)$(DOCBOOK_INSTALL_SUBDIR)/"
+
+docbook-uninstall-ps:
+	rm -f "$(DESTDIR)$(psdir)$(DOCBOOK_INSTALL_SUBDIR)/$(DOCBOOK_BASE).ps"
+
+endif RELACS_DOCBOOK_PS_COND
+
+
+## ------------------------------ ##
 ## Rules specific for PDF output. ##
 ## ------------------------------ ##
 
 if RELACS_DOCBOOK_PDF_COND
 
-DOCBOOK_CLEAN_PDF = $(DOCBOOK_DOCDIR)/$(DOCBOOK_PROJECT).pdf
+DOCBOOK_CLEAN_PDF = $(DOCBOOK_BASE).pdf
 
-docbook-pdf: $(DOCBOOK_DOCDIR)/$(DOCBOOK_PROJECT).pdf
+docbook-pdf: $(DOCBOOK_BASE).pdf
 
-$(DOCBOOK_DOCDIR)/$(DOCBOOK_PROJECT).pdf: $(DOCBOOK_DOCDIR)/$(DOCBOOK_PROJECT).tag
-	cd $(DOCBOOK_DOCDIR)/latex; \
-	rm -f *.aux *.toc *.idx *.ind *.ilg *.log *.out; \
-	$(DOCBOOK_PDFLATEX) refman.tex; \
-	$(DOCBOOK_MAKEINDEX) refman.idx; \
-	$(DOCBOOK_PDFLATEX) refman.tex; \
-	countdown=5; \
-	while $(DOCBOOK_EGREP) 'Rerun (LaTeX|to get cross-references right)' \
-		refman.log > /dev/null 2>&1 \
-		&& test $$countdown -gt 0; do \
-		$(DOCBOOK_PDFLATEX) refman.tex; \
-		countdown=`expr $$countdown - 1`; \
-	done; \
-	mv refman.pdf ../$(DOCBOOK_PROJECT).pdf
+$(DOCBOOK_BASE).pdf: $(DOCBOOK_BASE).xml $(DOCBOOK_BASE).xsl $(DOCBOOK_FILES)
+	xmlto -m $(DOCBOOK_BASE).xsl --skip-validation pdf $(DOCBOOK_BASE).xml
 
 docbook-install-pdf:
-	test -z "$(pdfdir)" || $(MKDIR_P) "$(DESTDIR)$(pdfdir)"
-	$(INSTALL_DATA) "$(DOCBOOK_DOCDIR)/$(DOCBOOK_PROJECT).pdf" "$(DESTDIR)$(pdfdir)/$(DOCBOOK_PROJECT).pdf"
+	test -z "$(pdfdir)" || $(MKDIR_P) "$(DESTDIR)$(pdfdir)$(DOCBOOK_INSTALL_SUBDIR)"
+	$(INSTALL_DATA) "$(DOCBOOK_BASE).pdf" "$(DESTDIR)$(pdfdir)$(DOCBOOK_INSTALL_SUBDIR)/"
 
 docbook-uninstall-pdf:
-	rm -f "$(DESTDIR)$(pdfdir)/$(DOCBOOK_PROJECT).pdf"
+	rm -f "$(DESTDIR)$(pdfdir)$(DOCBOOK_INSTALL_SUBDIR)/$(DOCBOOK_BASE).pdf"
 
 endif RELACS_DOCBOOK_PDF_COND
 
@@ -65,18 +77,21 @@ endif RELACS_DOCBOOK_PDF_COND
 
 .PHONY: docbook-run docbook-doc \
         docbook-install-html docbook-uninstall-html \
+        docbook-ps docbook-install-ps docbook-uninstall-ps \
         docbook-pdf docbook-install-pdf docbook-uninstall-pdf \
 	docbook-install docbook-uninstall docbook-clean
 
-docbook-run: docbook-html docbook-pdf
+docbook-run: docbook-html docbook-ps docbook-pdf
 
 docbook-doc: docbook-clean docbook-run
 
-docbook-install: docbook-run docbook-install-html docbook-install-pdf
+docbook-install: docbook-run docbook-install-html docbook-install-ps docbook-install-pdf
 
-docbook-uninstall: docbook-uninstall-html docbook-uninstall-pdf
+docbook-uninstall: docbook-uninstall-html docbook-uninstall-ps docbook-uninstall-pdf
 
 DOCBOOK_CLEANFILES = \
+    $(DOCBOOK_BASE).fls \
+    $(DOCBOOK_CLEAN_PS) \
     $(DOCBOOK_CLEAN_PDF) \
     -r \
     $(DOCBOOK_CLEAN_HTML)

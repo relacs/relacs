@@ -10,7 +10,7 @@ docdir = $(datarootdir)/doc/relacs
 PLUGINSET = NIESeries
 DX_PROJECT = nieseries
 DX_CONFIG = ../../../doc/Doxyfile
-DX_INSTALL_SUBDIR = /$(DX_PROJECT)
+DX_INSTALL_SUBDIR = /api/$(DX_PROJECT)
 DX_DEPENDS = Makefile.am src/Makefile.am
 DX_SETTINGS = PROJECT_NAME='"NI-ESeries Relacs Plugins"'
 DX_SETTINGS += INPUT='include/relacs/nieseries src doc'

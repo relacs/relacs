@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
+        "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd" [
+<!ENTITY intro SYSTEM "introduction.xml">
+<!ENTITY gui SYSTEM "gui.xml">
+<!ENTITY macros SYSTEM "macros.xml">
+<!ENTITY repros SYSTEM "repros.xml">
+<!ENTITY utilities SYSTEM "utilities.xml">
+<!ENTITY naming SYSTEM "naming.xml">
+<!ENTITY program SYSTEM "program.xml">
+<!ENTITY cpp SYSTEM "cpp.xml">
+]>
+<book lang="en">
+  <title>RELACS User Manual</title> 
+  <subtitle>Relaxed ELectrophysiological data Acquisition, Control, and Stimulation</subtitle> 
+
+<bookinfo>
+  <author>
+    <firstname>Jan</firstname><surname>Benda</surname>
+    <affiliation><orgname>Department Biology II, LMU Munich</orgname></affiliation>
+    <email>benda@bio.lmu.de</email>
+  </author> 
+  <copyright><year>2008</year><holder>Jan Benda</holder></copyright>
+  <abstract>
+  <para>RELACS is a user interface for data aquisition.
+  It is controllable and customizable to your specific
+  experimental setup by C++ based plugins.
+  The RePro-plugins ("Research Programs") allow you to
+  analyze the acquired data and to generate stimuli online
+  in closed loop.</para>
+  </abstract>
+</bookinfo>
+
+&intro;
+&gui;
+&macros;
+&repros;
+&utilities;
+&naming;
+&program;
+&cpp;
+
+</book>
+
+<!--
+Debian/Ubuntu:
+xsltproc - -stringparam admon.graphics 1 /usr/share/xml/docbook/stylesheet/nwalsh/html/docbook.xsl userman.xml > userman.html 
+SuSE:
+xsltproc - -stringparam admon.graphics 1 /usr/share/xml/docbook/stylesheet/nwalsh5/current/html/docbook.xsl userman.xml > userman.html 
+
+xmlto - -skip-validation -x /usr/share/xml/docbook/stylesheet/nwalsh5/current/html/docbook.xsl html-nochunks userman.xml
+
+This is it: (nochunks)
+xmlto -m userman.xsl - -skip-validation html-nochunks userman.xml
+Fix the <pre> issue:
+sed -e 's|^.*</pre|</pre|' userman.html > tmp.html; mv tmp.html userman.html
+
+This is it: (chunks)
+xmlto -m userman.xsl - -skip-validation html userman.xml
+Fix the <pre> issue:
+for p in $(<userman.fls); do sed -e 's|^.*</pre|</pre|' $p > tmp.html; mv tmp.html $p; done
+
+See comedilib/doc for custom css stylesheet and formatting
+
+Validation:
+xmllint  - -valid  - -noout  userman.xml &> valid.txt
+
+http://www.docbook.org/tdg5/en/html/docbook.html
+
+http://www.movementarian.org/docs/docbook-autotools/index.html
+-->

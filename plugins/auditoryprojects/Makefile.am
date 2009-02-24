@@ -10,7 +10,7 @@ docdir = $(datarootdir)/doc/relacs
 PLUGINSET = Auditoryprojects
 DX_PROJECT = auditoryprojects
 DX_CONFIG = ../../doc/Doxyfile
-DX_INSTALL_SUBDIR = /$(DX_PROJECT)
+DX_INSTALL_SUBDIR = /api/$(DX_PROJECT)
 DX_DEPENDS = Makefile.am src/Makefile.am
 DX_SETTINGS = PROJECT_NAME='"Auditory-Projects Relacs Plugins"'
 DX_SETTINGS += INPUT='include/relacs/auditoryprojects src doc'

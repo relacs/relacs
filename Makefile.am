@@ -17,13 +17,14 @@ SUBDIRS = \
     \
     utils \
     \
-    examples
+    examples \
+    \
+    doc/userman
 
 EXTRA_DIST = \
-    m4/relacs_gnu_make.m4 \
-    m4/relacs_qt3.m4 \
-    moc3.mk \
+    docbook.mk \
     doxygen.mk \
+    moc3.mk \
     \
     relacs.cfg \
     relacsplugins.cfg \
@@ -34,26 +35,12 @@ EXTRA_DIST = \
     doc/relacs.1 \
     \
     doc/Doxyfile \
-    doc/c++.doc \
-    doc/macros.doc \
-    doc/naming.doc \
-    doc/program.doc \
-    doc/relacsall.doc \
-    doc/repros.doc \
-    \
-    doc/continuousbutton.png \
-    doc/fixedbutton.png \
-    doc/relacs1.png \
-    doc/relacs2.png
+    doc/relacsall.doc
 
 DISTCLEANFILES = relacs.log relacs.log.old
 
 
-DOCBOOK_SOURCES = cpp.xml introduction.xml naming.xml repros.xml utilities.xml gui.xml macros.xml program.xml
-
-#include docbook.mk
-
-
+DX_INSTALL_SUBDIR = /api
 DX_DEPENDS = Makefile.am
 DX_SETTINGS = PROJECT_NAME='Relacs'
 DX_SETTINGS += INPUT='$(DOXYGEN_INPUT) $(abs_builddir)'

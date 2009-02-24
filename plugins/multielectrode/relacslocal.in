@@ -38,7 +38,7 @@ CONFCOREFILES='@abs_srcdir@/relacs.cfg'
 CONFPLUGINSFILES='@abs_srcdir@/relacsplugins.cfg'
 
 # Path to the documentation:
-DOCPATH="@abs_top_builddir@/doc/html"
+DOCPATH="@abs_top_builddir@/doc/userman/html"
 
 # Path to the icons:
 ICONPATH="@top_srcdir@/src"

@@ -1,0 +1,496 @@
+<chapter xml:id="gui"><title xml:id="guititle">User Interface</title>
+	
+	<section xml:id='startrelacs'><title>Starting RELACS</title>
+	
+	<para>
+	Simply type in
+	<programlisting>
+<![CDATA[$> relacs]]>
+	</programlisting>
+	to start RELACS.
+	RELACS then tries to find the hardware drivers for the data-acquisition board
+	and the attenuators.
+	If all necessary drivers are found, RELACS immediately starts
+	reading in data from the data-acquisition board.
+	If at least one driver is missing or cannot be opened
+	(maybe the device is switched off?)
+	RELACS opens in idle mode.</para>
+
+	<para>If you want to force RELACS to start in the simulation mode use the "-3"
+	option
+	<programlisting>
+<![CDATA[$> relacs -3]]>
+	</programlisting>
+	(the "3" is in german pronounced almost like "dry"
+	which stands for the simulation mode as the opposite of the "wet" mode
+	for acquiring real data from a wet biological experiment).</para>
+
+	<para><application>relacs</application> is a small shell script. Its main purpose is to set
+	the environment variable <envar>LD_LIBRARY_PATH</envar> to the directories
+	where the RePros and other plugins are, so that RELACS can find them.
+	It is created from the file <filename>utils/relacsscript</filename> whenever you compile RELACS.
+	You can also specify a logfile by setting the variable <varname>LOGFILE</varname> in <command>relacsscript</command>
+	in order to store all messages and warnings that are usually written to 
+	<constant>stdout</constant> and <constant>stderr</constant> into a file.
+	For more details, try
+	<programlisting>
+<![CDATA[$> relacs --help]]>
+	</programlisting></para>
+	
+		<section xml:id='commandlineoptions'><title>Command Line Options</title>
+		<para>
+		<itemizedlist>
+			<listitem><para><option>-3</option>: Start RELACS in simulation mode</para></listitem>
+			<listitem><para><option>-f</option>: Show RELACS in full-screen mode 
+			(be careful when using older Qt version (Version &lt; 3.0)!)</para></listitem>
+		</itemizedlist></para>
+
+		<para>See <command>relacs --help</command> for more options.</para>
+		</section>
+	</section>
+
+	<section xml:id='interface'><title>Graphical User Interface</title>
+
+	<section xml:id='widgets'><title>Main Widgets</title>
+
+	<para>There are four main widgets (from left to right, top to bottom)</para>
+	<para><itemizedlist>	
+	<listitem><para>Filters and Detectors</para></listitem>
+	<listitem><para>PlotTrace</para></listitem>
+	<listitem><para>Control</para></listitem>
+	<listitem><para>RePros</para></listitem>
+	</itemizedlist></para>
+
+	<para>The buttons at the bottom are the</para>
+	<para><itemizedlist>
+	<listitem><para>Macros</para></listitem>
+	</itemizedlist></para>
+	
+		<section xml:id='plottracewidget'><title>The PlotTrace widget</title>
+		<para>This widget in the upper right
+		shows the recorded voltage traces (green solid lines)
+		together with the detected events (red vertical lines, all sorts of points).
+		The vertical white lines mark the time of a stimulus output.
+		The time axis is in milliseconds relative to the last stimulus.
+		There are three display modes:
+		<itemizedlist>
+		  <listitem><para><parameter>fixed</parameter>: The time axis is fixed relative to the last stimulus.
+		  This mode can be activated by pressing <keycap>Home / Pos1</keycap> 
+		  or clicking the
+			   <mediaobject>
+					<imageobject>
+					<imagedata fileref="fixedbutton.png" align="center"/>
+					</imageobject>
+			   </mediaobject>
+		  button.</para></listitem>
+		  <listitem><para><parameter class='command'>continuous</parameter>: The time axis moves to the left and the most recent data is always
+		  shown to the very right.
+		  This mode can be activated by pressing <keycap>End</keycap> or clicking the
+			   <mediaobject>
+					<imageobject>
+					<imagedata fileref="continuousbutton.png" align="center"/>
+					</imageobject>
+			   </mediaobject>
+		  button.</para></listitem>
+		  <listitem><para><parameter class='command'>view</parameter>: The time axis is fixed and will not be shifted by a new stimulus
+		  (as it is the case for the "fixed" mode).
+		  This mode can be activated by pressing <keycap>PageUp</keycap>, <keycap>PageDown</keycap>,
+		  <keycap>Ctrl+PageUp</keycap>, <keycap>Ctrl+PageDown</keycap>, <keycap>Ctrl+Home</keycap>, and <keycap>Ctrl+End</keycap>.
+		  Use these keys to shift the time axis to the left, to the right, 
+		  to the first data, to the most recent data, 
+		  to the beginning of the most recent stimulus, and
+		  to the most recent data, respectively.</para></listitem>
+		  </itemizedlist></para>
+		
+		<para>In all modes, the <keycap>-</keycap> and <keycap>+</keycap> keys expand and shrink the visible time range,
+		respectively.</para>
+
+		<para>
+		The plots for each voltage trace can be closed by pressing <keycap>1</keycap>, <keycap>2</keycap>, ...
+		according to the number of the trace (<keycap>1</keycap> is the first, topmost trace).
+		A closed plot can be made visible again by pressing the number again.</para>
+		</section>
+
+		<section xml:id='filterdetectorswidget'><title>The FilterDetectors widget</title><para>
+		This widget in the upper left gives you access to the most important
+		parameters of the filters and event detectors.</para>
+		</section>
+
+		<section xml:id='filterdetectorsdialog'><title>The Filter/Detector dialogs</title><para>
+		You get a dialog for all parameters of each of the filters and event detectors
+		from the  Detectors/Filters menu.
+		Clicking the buttons of the dialog does the following:
+		<itemizedlist>
+		<listitem><para><guibutton>Ok</guibutton>: Applies the new parameter values to the filter/detector and closes the dialog.</para></listitem>
+		<listitem><para><guibutton>Apply</guibutton>: Applies the new parameter values to the filter/detector without closing the dialog.</para></listitem>
+		<listitem><para><guibutton>Reset</guibutton>: Resets the input values to the last accepted values.</para></listitem>
+		<listitem><para><guibutton>Cancel</guibutton>: Closes the dialog without accepting the input.</para></listitem>
+		</itemizedlist></para>
+		</section>
+
+		<section xml:id='reproswidget'><title>The RePros widget</title><para>
+		This widget in the lower right displays the currently running RePro.
+		From the <guimenu>RePros</guimenu> menu you can start (<guimenuitem>Run</guimenuitem>) a RePro, 
+		set the options of a RePro (<guimenuitem>Options</guimenuitem>),
+		view the display of a RePro (<guimenuitem>View</guimenuitem>),
+		load a new version of the RePro (<guimenuitem>Load</guimenuitem>),
+		or read the RePro's documentation (<guimenuitem>Help</guimenuitem>).
+		RePros displays messages in the status bar.</para>
+		</section>
+
+		<section xml:id='reprosdialog'><title>The RePro dialogs</title><para>
+		The Options menu item of both the <guimenu>RePros</guimenu> and the <guimenu>Macros</guimenu> menus
+		and the macros buttons launches a dialog to edit parameter values of
+		a RePro.
+		Clicking the buttons of the dialog does the following:</para>
+	        <para><itemizedlist>
+ 		  <listitem><para>
+		    <guibutton>Ok</guibutton>: Applies the new parameter values to the RePro and closes the dialog.
+ 		  </para></listitem>
+ 		  <listitem><para>
+		    <guibutton>Apply</guibutton>: Applies the new parameter values to the RePro without closing the dialog.
+			 It is up to the implementation of the RePro whether it uses the new settings immediately.
+			 In any case the new settings take in effect on the next run of the RePro.     
+ 		  </para></listitem>
+ 		  <listitem><para>
+		    <guibutton>Run</guibutton>: Applies the new parameter values and immediately starts the RePro without closing the dialog.
+ 		  </para></listitem>
+ 		  <listitem><para>
+		    <guibutton>Defaults</guibutton>: Resets the input values to their default values.
+ 		  </para></listitem>
+ 		  <listitem><para>
+		    <guibutton>Close</guibutton>: Closes the dialog without accepting the input.
+ 		  </para></listitem>
+    	        </itemizedlist></para>
+	
+		<para>A RePro can be started from the RePros menu, or from a macro.
+		Each RePro called by a macro gets specific parameter settings
+		as specified in the macros configuration file (see <xref linkend='macros' endterm='macrostitle'/>).
+		The instance of a RePro for which the dialog was opened
+		will get exactly the values that were entered by the dialog.
+		The two check boxes at the bottom of the dialog determine
+		how the new parameter settings are applied to other instances of the RePro.
+		If none of the check boxes is set, then only the instance of the RePro
+		for which the dialog was called will receive the new parameter settings.
+		If the first check box is set ("Set values as default") then
+		the new parameter settings are used as the default values for all
+		instances of this RePro. If this RePro is started from the 
+		RePros menu it will have these values set. 
+		If it is started from a macro then the parameters defined in the
+		macros configuration file will overwrite the default settings.
+		If the second check box is set ("Changes overwrite macro options")
+		then the parameter settings which differ from the initial settings
+		will overwrite the parameter settings defined in the macros configuration file
+		of all other instances of this RePro.
+		For a RePro started from a macro 
+		think of all this as parameters with different priorities.
+		The parameter settings are applied to the RePro in the folloowing order:
+			<orderedlist numeration="arabic">
+			<listitem><para>
+			All parameter values are set to their default settings.
+			</para></listitem>
+			<listitem><para>
+			The parameters defined in the macros configuration file are read.
+		   These parameters are marked blue in the dialogs.
+			</para></listitem>
+			<listitem><para>
+			The parameters specified as overwrite-macro parameter (second check box) are read.
+		   These parameters are marked green in the dialogs.
+			</para></listitem>
+			<listitem><para>
+			If a dialog was opened for this instance of the RePro, 
+		   all parameter values are set according to the dialog.
+		   Parameter values that differ from their default setting
+		   are marked red in the dialogs.
+			</para></listitem>
+			</orderedlist></para>
+		</section>
+	
+		<section xml:id='controlwidget'><title>The Control widgets</title><para>
+		The optional Control widgets in the lower left display
+		some general information about the ongoing recording or
+		alllow you to control some hardware.</para>
+		</section>
+
+
+		<section xml:id='macroswidget'><title>The Macros widget</title>
+		<para>Pressing one of the macro buttons or hitting the specified function or escape key
+		initiates a macro.
+		A macro is a sequence of RePros, shell scripts, message windows, and other macros	.
+		The macros can be specified in the macros configuration file
+		(see <xref linkend='macros' endterm='macrostitle'/>).
+		This file can be edited and it can be reloaded during runtime
+		by the Macros-Reload menu.
+		Single RePros can be started, configured, viewed, or loaded from the Macros menu
+		or by pressing <keycap>Shift</keycap> + the specified function key or escape key.
+		A running RePro of a macro can be skipped by pressing <keycap>Alt+S</keycap>.</para>
+		</section>
+
+                </section>
+
+		<section xml:id='recording'><title>A Recording</title><para>
+		A recording is started by pressing <keycap>Enter</keycap> or <keycap>Return</keycap>, by selecting
+		the File->Start Session menu, or
+		by clicking on the corresponding button provided by a Control widget.</para>
+
+		<para>If a recording is started, then the background color of RELACS turns red,
+		and the recorded traces and events are written into files.
+		Stopping a recording first launches a dialog where some meta-data can be
+		specified.
+		After the recording is stoppped, none of the raw data is saved on disk anymore.
+		At the very left of the status bar the elapsed time of the session in minutes
+		is displayed. Further to the right the name of the directory where the data
+		of the current session are stored is shown.</para>
+
+		<section xml:id='recordingdialog'><title>The recording meta-data dialog</title>
+		<para>This dialog which is launched at the end of a recording gives you
+		the possibility to enter usefull meta data which are stored 
+		together with the recorded data.
+		The dialog can be customized by simply editing the <filename>relacsplugins.cfg</filename>
+		config file.
+		This dialog can also be opened from the menu to enter some data in advance
+		(File->Session Info).
+		Clicking the buttons of the dialog does the following:
+		<itemizedlist>
+		<listitem><para><guibutton>Save</guibutton>: Stop the recording and save all data. </para></listitem>
+		<listitem><para><guibutton>Discard</guibutton>: Stop the recording and erase all data of this recording. </para></listitem>
+		<listitem><para><guibutton>Reset</guibutton>:  Resets the input values to their default values on RELACS startup.</para></listitem>
+		<listitem><para><guibutton>Close</guibutton>: Closes the dialog without accepting the input and continue the recording.</para></listitem>
+		</itemizedlist></para>
+		</section>
+
+		</section>
+
+	</section>
+
+
+
+
+	<section xml:id='keys'><title xml:id='keystitle'>Key Shortcuts</title>
+
+            <variablelist>
+
+                  <varlistentry>
+                    <term>General:</term>
+                    <listitem>
+       	              <itemizedlist>
+                        <listitem><para><keycap>Enter, Return</keycap>: Start/stop recording.</para></listitem>
+		        <listitem><para><keycap>Shift+Ctrl+O</keycap>: Switch to online (data acquisition) mode.</para></listitem>
+		        <listitem><para><keycap>Shift+Ctrl+S</keycap>: Switch to simulation mode.</para></listitem>
+		        <listitem><para><keycap>Shift+Ctrl+I</keycap>: Stop all activity (idle mode).</para></listitem>
+		        <listitem><para><keycap>Alt+I</keycap>: Meta-data dialog.</para></listitem>
+		        <listitem><para><keycap>Alt+Q</keycap>: Quit RELACS.</para></listitem>
+		        <listitem><para><keycap>Shift+Ctrl+F</keycap>: Toggle full-screen mode
+			(be careful when using older Qt version (Version &lt; 3.0)!).</para></listitem>
+	              </itemizedlist>
+                    </listitem>
+                  </varlistentry>
+
+                  <varlistentry>
+                    <term>Macros:</term>
+                    <listitem>
+			<itemizedlist>
+			<listitem><para><keycap>ESC</keycap>: Start the fallback macro.
+			 You can continue within the interrupted macro by hitting <keycap>R</keycap> or <keycap>N</keycap> (see below).
+			 If RELACS does not have the key focus, <keycap>ESC</keycap> transfers the key focus to RELACS.
+			 In this situation press <keycap>ESC</keycap> twice to start the fallback macro.
+			 The keyfocus is, however, automatically returned to RELACS within 15 seconds.</para></listitem>
+			<listitem><para><keycap>F1-F12</keycap>: Start a macro.</para></listitem>
+			<listitem><para><keycap>Shift+ESC</keycap>: Open menu of fallback macro.</para></listitem>
+			<listitem><para><keycap>Shift+F1-F12</keycap>: Open macro menu.</para></listitem>
+			<listitem><para><keycap>S</keycap>: Skip current RePro and start the next RePro of the current macro.</para></listitem>
+			<listitem><para><keycap>B</keycap>: ("Break") Pause current macro by starting the fallback macro after the current RePro finished.</para></listitem>
+			<listitem><para><keycap>R</keycap>: ("Resume") Resume macro with the RePro where it was interrupted by either <keycap>ESC</keycap> or <keycap>B</keycap>.</para></listitem>
+			<listitem><para><keycap>N</keycap>: ("Resume Next") Resume macro with the RePro following the one where the macro was interrupted
+			by either <keycap>ESC</keycap> or <keycap>B</keycap>.</para></listitem>
+			</itemizedlist>
+                    </listitem>
+                  </varlistentry>
+
+                  <varlistentry>
+                    <term>RePros:</term>
+                    <listitem>
+			<itemizedlist>
+			<listitem><para><keycap>Ctrl+O</keycap>: If the current RePro is not the fall-back RePro 
+					 of an explicitly marked fallback macro
+					 then launch options dialog of the current RePro,
+				 otherwise launch options dialog of the previously run RePro.</para></listitem>
+			<listitem><para><keycap>Ctrl+V</keycap>: View previously shown RePro</para></listitem>
+			<listitem><para><keycap>Ctrl+H</keycap>: Show the help text of the currrently running RePro</para></listitem>
+		        </itemizedlist>
+                    </listitem>
+                  </varlistentry>
+
+                  <varlistentry>
+                    <term>Plots:</term>
+                    <listitem>
+			<itemizedlist>
+			<listitem><para><keycap>+</keycap>: Zoom in by dividing time axis by a factor two.</para></listitem>
+			<listitem><para><keycap>-</keycap>: Zoom out by enlarging time axis by a factor two.</para></listitem>
+			<listitem><para><keycap>PageUp</keycap>: Move plot window to the left.</para></listitem>
+			<listitem><para><keycap>PageDown</keycap>: Move plot window to the right.</para></listitem>
+			<listitem><para><keycap>Home</keycap>: Fixed mode, show traces from the last stimulus on 
+			 (only if RELACS has the key focus, see <keycap>ESC</keycap>).</para></listitem>			
+			<listitem><para><keycap>Ctrl+F</keycap>: Fixed mode, show traces from the last stimulus on (independent of key focus).</para></listitem>
+			<listitem><para><keycap>End</keycap>: Continuous mode, show always recent data to the very right of the plot window 
+			 (only if RELACS has the key focus, see <keycap>ESC</keycap>).</para></listitem>
+			<listitem><para><keycap>Ctrl+C</keycap>: Continuous mode, show always recent data to the very right of the plot window 
+			 (independent of key focus).</para></listitem>
+			<listitem><para><keycap>Ctrl+M</keycap>: Manual settings are not overidden by RePro settings.</para></listitem>
+			<listitem><para><keycap>Ctrl+A</keycap>: The RePro automatically sets a suitable range.</para></listitem>
+			<listitem><para><keycap>Ctrl+1, Ctrl+2, ..Ctrl+9</keycap>: Toggle plot of the corresponding trace number on or off 
+			 (independent of key focus, as long as no plugin is using these keys as well).</para></listitem>
+			<listitem><para><keycap>1, 2, ..9</keycap>: Toggle plot of the corresponding trace number on or off 
+			 (only if RELACS has the key focus, see <keycap>ESC</keycap>).</para></listitem>
+			<listitem><para><keycap>Ctrl+PageUp</keycap>: Move plot window to the first data</para></listitem>
+			<listitem><para><keycap>Ctrl+PageDown</keycap>: Move plot window to the most recent data.</para></listitem>
+			<listitem><para><keycap>Ctrl+Home</keycap>: Move plot window to the most recent stimulus.</para></listitem>
+			<listitem><para><keycap>Ctrl+End</keycap>: Move plot window to the most recent data.</para></listitem>
+			<listitem><para><keycap>Shift+PageUp</keycap>: Move plot window to the left relative to the current stimulus.</para></listitem>
+			<listitem><para><keycap>Shift+PageDown</keycap>: Move plot window to the right relative to the current stimulus.</para></listitem>
+		        </itemizedlist>
+                    </listitem>
+                  </varlistentry>
+
+                </variablelist>
+	
+		</section>
+
+
+		<section xml:id='menus'><title>Menus</title>
+		<para>
+		A short description of the RELACS menu:</para>
+                <variablelist>
+                  <varlistentry><term><guimenu>File</guimenu></term>
+                  <listitem>
+ 		    <itemizedlist>
+			<listitem><para><guimenuitem>Online</guimenuitem>: Switch to online (data acquisition) mode.</para></listitem>
+			<listitem><para><guimenuitem>Simulate</guimenuitem>: Switch to simulation mode.</para></listitem>
+			<listitem><para><guimenuitem>Idle</guimenuitem>: Stop all activity.</para></listitem>
+			<listitem><para><guimenuitem>Start Session</guimenuitem>: Start a recording, 
+		   i.e. recording data to disk, by executing the  startsession macro
+		   (see <xref linkend='macros' endterm='macrostitle'/> for details).</para></listitem>
+			<listitem><para><guimenuitem>Stop Session</guimenuitem>: Stop a recording.</para></listitem>
+			<listitem><para><guimenuitem>Session Info</guimenuitem>: Show the dialog that is usually
+		   launched when stoppping a recording.</para></listitem>
+			<listitem><para><guimenuitem>Quit</guimenuitem>: Quit RELACS.</para></listitem>		
+		    </itemizedlist>
+                  </listitem>
+                  </varlistentry>
+
+                  <varlistentry><term><guimenu>Plugins</guimenu></term>
+                  <listitem>
+		    <itemizedlist>
+			<listitem><para><guimenuitem>Control Dialog</guimenuitem>: Show the dialog to edit options of the Control widget.</para></listitem>
+			<listitem><para><guimenuitem>Control Help</guimenuitem>: Display help text for the Control widget.</para></listitem>
+			<listitem><para><guimenuitem>Model Dialog</guimenuitem>: Show the dialog to edit options of the Model.</para></listitem>
+			<listitem><para><guimenuitem>Model Help</guimenuitem>: Display help text for the Model.</para></listitem>
+		    </itemizedlist>
+                  </listitem>
+                  </varlistentry>
+
+                  <varlistentry><term><guimenu>Devices</guimenu></term>
+                  <listitem>
+		    <para>Simply a list of the used devices with some of their properties
+		    and current settings.</para>
+                  </listitem>
+                  </varlistentry>
+
+                  <varlistentry><term><guimenu>Detectors/Filters</guimenu></term>
+                  <listitem>
+		    <itemizedlist>
+			<listitem><para><guimenuitem>Options</guimenuitem>: Launch a dialog that allows you to 
+			 set parameters of the filter/detector.</para></listitem>
+			<listitem><para><guimenuitem>Help</guimenuitem>: Show the help text of the filter/detector (if available).</para></listitem>
+		    </itemizedlist>
+                  </listitem>
+                  </varlistentry>
+
+                  <varlistentry><term><guimenu>RePros</guimenu></term>
+                  <listitem>
+		    <itemizedlist>
+			<listitem><para><guimenuitem>Options</guimenuitem>: If the current RePro is not the fall-back RePro 
+					 of an explicitly marked fallback macro
+					 then launch options dialog of the current RePro,
+				 otherwise launch options dialog of the previously run RePro.</para></listitem>
+			<listitem><para><guimenuitem>View</guimenuitem>: View previously shown RePro.</para></listitem>
+			<listitem><para><guimenuitem>Help</guimenuitem>: Show the help text of the currently running RePro.</para></listitem>
+                        <listitem>
+		        <para>
+		        Then there is list of all loaded RePros.
+		        Each has the following submenu:</para>
+		        <itemizedlist>
+			  <listitem><para><guimenuitem>Run</guimenuitem>: Run the RePro.</para></listitem>
+			  <listitem><para><guimenuitem>Options</guimenuitem>: Launch the options dialog.</para></listitem>
+			  <listitem><para><guimenuitem>View</guimenuitem>: View the RePro.</para></listitem>
+			  <listitem><para><guimenuitem>Load</guimenuitem>: Reload the RePro.</para></listitem>
+			  <listitem><para><guimenuitem>Help</guimenuitem>: Show the help text.</para></listitem>
+		        </itemizedlist>
+                      </listitem>
+		    </itemizedlist>
+                  </listitem>
+                  </varlistentry>
+
+                  <varlistentry><term><guimenu>Marcros</guimenu></term>
+                  <listitem>
+		    <itemizedlist>
+			<listitem><para><guimenuitem>Reload</guimenuitem>: Reload the current macro configuration file (see <xref linkend='macros' endterm='macrostitle'/>).</para></listitem>
+			<listitem><para><guimenuitem>Load</guimenuitem>: Load a macro configuration file selected from a file browser (see <xref linkend='macros' endterm='macrostitle'/>).</para></listitem>
+			<listitem><para><guimenuitem>Switch</guimenuitem>: Switch to another macro configuration file.</para></listitem>
+			<listitem><para><guimenuitem>Skip RePro</guimenuitem>: Skip current RePro and start the next RePro of the current macro.</para></listitem>
+			<listitem><para><guimenuitem>Break</guimenuitem>: Pause current macro by starting the fallback macro after the current RePro finished.</para></listitem>
+			<listitem><para><guimenuitem>Resume</guimenuitem>: Resume macro with the RePro where it was interrupted by either <keycap>ESC</keycap> or <keycap>B</keycap> (break).</para></listitem>
+			<listitem><para><guimenuitem>Resume Next</guimenuitem>: Resume macro with the RePro following the one where the macro was interrupted
+			by either <keycap>ESC</keycap> or <keycap>B</keycap> (break).</para></listitem>
+                        <listitem>
+		    <para>These general commands are followed by a list of available macros
+		    with the following submenu:</para>
+		    <itemizedlist>
+			<listitem><para><guimenuitem>Run</guimenuitem>: Run the macro.</para></listitem>
+			<listitem><para><guimenuitem>Options</guimenuitem>: Launch the dialog to set the macro's variables.</para></listitem>
+		    </itemizedlist>
+		    <para>Then there is a list with the macros commands.
+		    A green circle indicates that the command is enabled
+		    (it will be executed from the macro),
+		    a command marked with a red circle is disabled and 
+		    won't be executed from the macro.
+		    Each command has its own submenu:</para>
+		    <itemizedlist>
+			<listitem><para><guimenuitem>Start macro here</guimenuitem>: Start the macro with the selected command.</para></listitem>
+			<listitem><para><guimenuitem>Run only this</guimenuitem>: Run only the selected command.</para></listitem>
+			<listitem><para><guimenuitem>Options</guimenuitem>: Launch the options dialog for the selected RePro or macro (RePros and macros only).</para></listitem>
+			<listitem><para><guimenuitem>View</guimenuitem>: View the RePro (RePros only).</para></listitem>
+			<listitem><para><guimenuitem>Load</guimenuitem>: Reload the RePro (RePros only).</para></listitem>
+			<listitem><para><guimenuitem>Help</guimenuitem>: Show the help text of the RePro (RePros only).</para></listitem>
+			<listitem><para><guimenuitem>Disable</guimenuitem>: Disable the execution of this command.</para></listitem>
+			<listitem><para><guimenuitem>Enable</guimenuitem>: Enable the execution of this command.</para></listitem>
+		    </itemizedlist>
+                     </listitem>
+
+		    </itemizedlist>
+                  </listitem>
+                  </varlistentry>
+
+                  <varlistentry><term><guimenu>View</guimenu></term>
+                  <listitem>
+		    <itemizedlist>
+			<listitem><para><emphasis>Traces</emphasis>: Various commands for customizing the PlotTrace widget.</para></listitem>
+			<listitem><para><guimenuitem>Fullscreen Mode:</guimenuitem>: Toggle fullscreen mode.</para></listitem>
+		    </itemizedlist>	
+                  </listitem>
+                  </varlistentry>
+
+                  <varlistentry><term><guimenu>Help</guimenu></term>
+                  <listitem>
+		    <itemizedlist>
+			<listitem><para><guimenuitem>Help</guimenuitem>: Show this documentation.</para></listitem>
+			<listitem><para><guimenuitem>About</guimenuitem>: The RELACS version and the authors.</para></listitem>
+		    </itemizedlist>
+                  </listitem>
+                  </varlistentry>
+
+                </variablelist>
+
+		</section>
+
+</chapter>

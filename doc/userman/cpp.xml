@@ -1,0 +1,137 @@
+<appendix xml:id='cppintro'><title xml:id='cppintrotitle'>A short Introduction to C++</title>
+	
+	<section xml:id='cpplinks'><title>Links to C++ Resources</title>
+	
+		<section xml:id='cpptutorialslinks'><title>Tutorials</title>
+		
+		
+			<para><itemizedlist>
+				<listitem>C++ Language Tutorial
+                                  <ulink url="http://www.cplusplus.com/doc/tutorial/"></ulink>
+                                </listitem>
+				<listitem>C++ Made Easy (includes STL and OpenGL)
+                                  <ulink url="http://www.cprogramming.com/tutorial.html"></ulink>
+                                </listitem>
+				<listitem>Online C++ Tutorial
+                                  <ulink url="http://www.intap.net/~drw/cpp/"></ulink>
+                                </listitem>
+				<listitem>Thinking in C++
+                                  <ulink url="http://www.codeguru.com/cpp/tic/tic_c.shtml"></ulink>
+                                </listitem>
+				<listitem>C++ Templates Tutorial
+                                  <ulink url="http://www.is.pku.edu.cn/~qzy/cpp/vc-stl/templates.htm"></ulink>
+                                </listitem>
+				<listitem>A Modest STL Tutorial
+                                  <ulink url="http://www.cs.brown.edu/people/jak/proglang/cpp/stltut/"></ulink>
+                                </listitem>
+				<listitem>The Code Project - some C++ algorithms with good explantions
+                                  <ulink url="http://www.codeproject.com/cpp/"></ulink>
+                                </listitem>
+				</itemizedlist></para>
+		</section>  
+		  
+		<section xml:id='cppreferenceslinks'><title>C++ References</title>  
+
+			<para><itemizedlist>
+				<listitem>C/C++ Reference
+                                  <ulink url="http://www.cppreference.com/"></ulink>
+                                </listitem>
+				<listitem>C++ Reference: iostream library
+                                  <ulink url="http://www.cplusplus.com/ref/iostream/"></ulink>
+                                </listitem>
+				<listitem>C++ Language Reference
+                                  <ulink url="http://www.m0rph.com/c++/reference.shtml"></ulink>
+                                </listitem>
+				<listitem>C++ Reference Guide
+                                  <ulink url="http://www.informit.com/isapi/guide~cplusplus/topics/index.asp"></ulink>
+                                </listitem>
+				<listitem>IBM C and C++ References
+                                  <ulink url="http://www.lnf.infn.it/computing/doc/aixcxx/html/hgref.htm"></ulink>
+                                </listitem>
+				<listitem>Bjarne Stroustrup
+                                  <ulink url="http://www.research.att.com/~bs/C++.html"></ulink>
+                                </listitem>
+				<listitem>Standard Template Library (STL)
+                                  <ulink url="http://www.sgi.com/tech/stl/"></ulink>
+                                </listitem>
+				</itemizedlist></para>
+		</section>
+
+
+		<section xml:id='creferenceslinks'><title>C References</title>
+			
+			<para><itemizedlist>
+				<listitem>C Library Refernce Guide
+                                  <ulink url="http://www.acm.uiuc.edu/webmonkeys/book/c_guide/"></ulink>
+                                </listitem>
+			</itemizedlist></para>
+		</section>
+
+		<section xml:id='cppdebugger'><title>Debugger</title>
+			
+			<para><itemizedlist>
+				<listitem>GDB - The GNU Debugger
+                                  <ulink url="http://www.delorie.com/gnu/docs/gdb/gdb_toc.html"></ulink>
+                                </listitem>
+			</itemizedlist></para>
+		</section>
+	</section>
+
+	<section xml:id='stl'><title>The Standard Template Library STL</title>
+
+		<para>The memory of a <type>vector</type> can only grow
+		(at least in the SGI implementation of the STL):</para>
+		
+		<para><programlisting>
+<![CDATA[vector< double > a;    // a.capacity() == 0
+a.resize( 10 );        // a.capacity() == 10
+a.clear();             // a.capacity() == 10
+a.reserve( 45 );       // a.capacity() == 45
+a.reserve( 20 );       // a.capacity() == 45
+a.reserve( 0 );        // a.capacity() == 45]]>
+		</programlisting></para>
+	</section>
+
+	<section xml:id='qthread'><title>Threads in Qt</title>
+
+		<section xml:id='qthreadpix'><title>QPixmap and Threads</title>
+
+		<para>On Linux a QPixmap is associated directly with the X Server.
+		Therefore, you cannot manipulate a QPixmap from within a thread
+		without crashing the programm or 
+		at least getting some error messages from Xlib,
+		since this interferes with drawing operations from the GUI thread. </para>
+
+		<para>Move all QPixmap manipulations (namely drawing on it with a QPainter)
+		into the paintEvent() and call paintEvent() asynchronously via
+		QThread::postEvent( this, new QPaintEvent( rect(), false ) );</para>
+
+		<para>If you still get warnings like "Xlib: unexpected async reply"
+		try calling QPainter::flush() a few times in between your drawing operations.</para>
+
+		<para>If necessary and possible, try to replace the QPixmap by QImage.
+		An QImage is device independent and does not interfere with X.</para>
+
+		<section xml:id='qtapplock'><title>The Qt Library Mutex</title>
+
+		<para>Using the Qt library mutex allows for calling Qt methods from threads other than the event thread
+		(qApp->lock() and qApp->unlock()).
+		However, the Qt library mutex seems not to be recursive.
+		Therefore, you must avoid nested calls of qApp->lock() from within a thread.
+		Otherwise the program hangs up.</para>
+
+		<para>The functions lockGUI() and unlockGUI() defined in RELACSPlugin
+		and thus availbale for the classes RePro, EventDetector, Session, and Control
+		wrap the calls to qApp->lock() and qApp->unlock():
+		<programlisting>
+lockGUI();
+doSomethingOnTheGUI()
+unlockGUI();
+		</programlisting></para>
+
+		<para>If possible avoid using the Qt library mutex. 
+		Posting an event is the much saver and cleaner method.</para>
+		</section>
+	</section>
+</section>
+</appendix>

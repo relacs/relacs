@@ -37,11 +37,8 @@ Relacs:
     use @...@ for this (prefix?)
 
 Documentation:
-- Move api reference installation to api subdir:
-  for i in $(find -name 'Makefile.am'); do sed -e 's|/$(DX_PROJECT)|/api/$(DX_PROJECT)|' ./plot/Makefile.am > tmp.am; mv tmp.am $i; done
 - Update doxygen dot settings
-- Update installation and Makefile instructions to autotools
-- Usage of autoreconf: autoreconf -v -i
+- Update Makefile instructions to autotools
 - You may want to use: ./configure --htmldir=DOCDIR/html
 - Static libraries are disabled by default, enable with --enable-static
 - Mention that all m4/ , *.mk , and Doxyfile files are identical and should remain so

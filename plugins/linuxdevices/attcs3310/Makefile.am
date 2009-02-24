@@ -10,7 +10,7 @@ docdir = $(datarootdir)/doc/relacs
 PLUGINSET = AttCS3310
 DX_PROJECT = attcs3310
 DX_CONFIG = ../../../doc/Doxyfile
-DX_INSTALL_SUBDIR = /$(DX_PROJECT)
+DX_INSTALL_SUBDIR = /api/$(DX_PROJECT)
 DX_DEPENDS = Makefile.am src/Makefile.am
 DX_SETTINGS = PROJECT_NAME='"AttCS3310 Relacs Plugins"'
 DX_SETTINGS += INPUT='include/relacs/attcs3310 src doc'

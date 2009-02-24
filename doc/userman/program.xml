@@ -1,0 +1,169 @@
+<chapter xml:id='relacsprogram'><title xml:id='relacsprogramtitle'>RELACS for Programmers</title>
+
+<para>This is an introduction about the RELACS internals
+that you need if you want to improve RELACS.</para>
+
+	<section xml:id='relacsdirectories'><title>Directory Structure</title>
+			<para><itemizedlist>
+				<listitem><para><filename>numerics</filename>: Source code for dealing with arrays of numbers and events.</para></listitem>
+				<listitem><para><filename>daq</filename>: Source code of classes closely related to the data acquisition:
+							data classes for analog input and output, 
+							base classes for daq-drivers, attenuators and other devices.</para></listitem>
+				<listitem><para><filename>options</filename>: Source code for dealing with strings and options.</para></listitem>
+				<listitem><para><filename>datafile</filename>: Source code for dealing with ascii data files.</para></listitem>
+				<listitem><para><filename>plot</filename>: Source code for plot widgets.</para></listitem>
+				<listitem><para><filename>widgets</filename>: Source code for other widgets, mainly related to the options dialog.</para></listitem>
+				<listitem><para><filename>relacs</filename>: Source code specific for RELACS.</para></listitem>
+				<listitem><para><filename>src</filename>: The remaining RELACS source code.</para></listitem>
+
+				<listitem><para><filename>plugins</filename>: RELACS plugins.</para></listitem>
+				<listitem><para><filename>doc</filename>: Main documentation for RELACS and doxygen configuration file.</para></listitem>
+				<listitem><para><filename>doc</filename>/html: The documentation of RELACS.</para></listitem>
+				<listitem><para><filename>examples</filename>: Some example code for RELACS plugins (RePros).</para></listitem>
+				<listitem><para><filename>utils</filename>: Some utility programs for RELACS.</para></listitem>
+				<listitem><para><filename>dry</filename>: The directory used to store data from RePro's that are executed
+							while no Session is started.</para></listitem>
+				<listitem><para><filename>m4</filename>: Autoconf macros.</para></listitem>
+				<listitem><para><filename>debian</filename>: Files needed for building a debian package.</para></listitem>
+			</itemizedlist></para>
+	</section>
+	
+	<section xml:id='relacsmakefile'><title>The RELACS Makefiles</title>
+
+		<para>Each directory containing some source code has its own <filename>Makefile</filename>.
+		You have the following options to invoke <command>make</command>:
+		<itemizedlist>
+			<listitem><para><command>make</command>: Compile.</para></listitem>
+			<listitem><para><command>make install</command>: Install RELACS.</para></listitem>
+			<listitem><para><command>make dist</command>: Make a tar archive with a source code distribution.</para></listitem>
+			<listitem><para><command>make distcheck</command>: Check a source code distro.</para></listitem>
+			<listitem><para><command>make clean</command>: Clean up.</para></listitem>
+		</itemizedlist></para>
+	</section>
+
+	<section xml:id='namingconv'><title>Naming Conventions</title>
+
+		<para>For conventions used for naming files, classes, functions, variables, etc.
+		see <xref linkend='naming' endterm='namingtitle'/>.</para>
+	</section>
+
+	<section xml:id='relacsstructure'><title>The Structure of RELACS</title>
+
+		<para>See the <link linkend='kinherits.html'>inheritance graph</link>!</para>
+
+		<section xml:id='analoginputstruct'><title>Analog Input</title>
+
+		<para>Through the AnalogInput interface <function>Acquire::read()</function> initializes
+		analog input of the data acquisition devices.
+		<function>Acquire::readData()</function> copies the acquired data
+		from the hardware driver into instances of InData.
+		Each InData describes and contains data fom a single analog input line.
+		InList is a container for InData.</para>
+		</section>
+
+		<section xml:id='eventdetectionsstruct'><title>Events</title>
+		<para>After reading analog data, an EventDetector can be applied to each of the
+		analog input traces in order to extract events (e.g. spikes).
+		An event is a time relative to the beginning of data acquisition 
+		measured in seconds.
+		It is also possible to associate a size and a width with each event.
+		Events are stored in an EventData.
+		All instances of EventData are accesible by EventList.
+		The detectors are organized by the Detectors class.
+		An EventDetector gets the analog data or a list of events as input
+		from which it extracts the events.
+		Some template functions for detecting events are defined in <filename>detector.h</filename> .
+		They operate via iterators on the data (InputDataIterator, InputDiffIterator,
+		OutputDataIterator, EventIterator, EventFrequencyIterator, EventSizeIterator).</para>
+		</section>
+
+		<section xml:id='analogoutputstruct'><title>Analog Output</title>
+		<para>An OutData specifies a stimulus for analog output.
+		OutList is a container for OutData.
+		<function>Acquire::write()</function> sends the stimulus to the data acquisition board via the
+		AnalogOutput interface.
+		It is possible in OutData to specify a stimulus intensity which is used to
+		attenuate the voltage signal generated by the data acquisition board.
+		Attenuation is implemented in a two step process.
+		First, a class derived from Attenuate computes the desired attenuation level
+		from the requested intensity.
+		This class defines the units in which an intensity is given.
+		Then a class derived from Attenuator gets the attenuation level
+		and sets the attenuator device appropriately.
+		This class serves as an interface to the hardware driver of an attenuator.
+		The Attenuator devices are organized by the AttDevices class,
+		all Attenuate interfaces are organized by the AttInterfaces class.</para>
+		</section>
+
+		<section xml:id='optionsstruct'><title>Options</title>
+		<para>Whenever variables (parameters) should be set by the user via a dialog
+		(OptDialog, OptWidget) or a configuration file (Config, Configure),
+		Options are used.
+		A single option (Parameter) stores the value of the variable together
+		with its name (identifier) and a default value.
+		In addition, numbers have an error (e.g. standard deviation),
+		a format string, minimum and maximum values, a step size, 
+		and an internal and an external unit;
+		the latter is used for communication with the user.
+		The Str class is an extension of the standard string class.
+		It provides a lot of functions for manipulating strings,
+		especially for handling numbers.</para>
+
+		<section xml:id='datafilestruct'><title>Datafile</title>
+		<para>TableKey defines a key to the columns of a table, 
+		TableData holds the content of table,
+		and DataFile reads in data and metadata from a file.
+		In translate.h functions are defined that replace tags in a string
+		with the content of metadata or a table key.</para>
+		</section>
+
+		<section xml:id='numericsstruct'><title>Numerics</title>
+		<para>For handling arrays of numbers there are the template classes 
+		Array, Map, SampleData.
+		Some basic algorithms can be found in <filename>stats.h</filename>, 
+		fourier transform algorithms in <filename>spectrum.h</filename> .</para>
+		</section>
+
+
+		<section xml:id='mplotstruct'><title>Plots</title>
+		<para>Plot displays data in a single plot.
+		Multiple plots can be handled with MultiPlot.</para>
+		</section>
+
+		<section xml:id='widgetsstruct'><title>Widgets</title>
+		<para>A few new widgets are defined in <filename>widgets/</filename>.
+		For communication with the user to set data values
+		there are the classes DoubleSpinBox, LCDRange, OptWidget and OptDialog.
+		MessageBox opens a new window which displays a message.</para>
+		</section>
+
+		<section xml:id='configstruct'><title>Configuration</title>
+		<para>The Config class is the base class of all classes
+		which contain Options that should be set by the user via the
+		relacs config files or by dialogs (ConfigDialog).
+		The configuration of the Config classes is managed by Configure.</para>
+		</section>
+
+		<section xml:id='relacsclassesstruct'><title>RELACS Specific Classes</title>
+
+		<para>Plugins loads shared object files into the running programm.
+		Special types of plugins are defined in <filename>relacsplugins.h</filename> 
+		(see also <xref linkend='pluginconcept' endterm='pluginconcepttitle'/>).</para>
+
+		<para>PlotTrace displays the read in data from the data acquisition board and the
+		detected events.</para>
+
+		<para>RePro is the base class for all research programs which are organized
+		by the RePros class.
+		Several RePros can be summarized to a macro, which is handled by the Macros class.</para>
+
+		<para>User supplied widgets derived from Control control hardware, analyze data
+		in parallel to the RePros, or display some general information
+		about the recording.</para>
+
+		<para>RELACSWidget holds everything together.</para>
+		
+		</section>
+	</section>
+</section>
+</chapter>

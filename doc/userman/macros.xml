@@ -1,0 +1,364 @@
+<chapter xml:id='macros'><title xml:id='macrostitle'>Macros</title>
+
+<section xml:id='macrofile'><title>Defining Macros</title>
+
+	<para>In the macros configuration file (defaults to <filename>macros.cfg</filename>)
+	you can specify macros for RELACS.
+	A macro is a sequence
+	of RePros, filters, event detectors, messages, text browsers,
+	shell commands, and other macros. 
+	Each macro
+	is accesible by a button on the bottom of the RELACS GUI, by one of the function
+	keys <keycap>ESC, F1, F2, ... F10</keycap>, and from within the Macros menu.</para>
+
+	<para>Each line starting with '<literal>#</literal>' is ignored (comments).</para>
+
+		<section xml:id='macrofilemacro'>
+                        <title xml:id='macrofilemacrotitle'>A Macro</title>
+
+			<para>A new macro is defined by a line starting with '$' as the first character.
+			The word following the '$' character is the name of the macro as it appears
+			on the macro button and in the Macros menu. The name can be followed
+			by one of the following keywords:
+			<itemizedlist>
+				<listitem><para><emphasis>startup</emphasis>: this macro is the first one executed on startup of RELACS.</para></listitem>
+				<listitem><para><emphasis>shutdown</emphasis>: if you quit RELACS, this macro is called.</para></listitem>
+				<listitem><para><emphasis>startsession</emphasis>: on start of a new session this macro is executed.</para></listitem>
+				<listitem><para><emphasis>stopsession</emphasis>: stopping a session calls this macro.</para></listitem>
+				<listitem><para><emphasis>fallback</emphasis>: whenever a macro is finished, this macro is called.</para></listitem>
+				<listitem><para><emphasis>nokey</emphasis>: no function key is assigned to this macro.</para></listitem>
+				<listitem><para><emphasis>nobutton</emphasis>: this macro does not appear as a button 
+							and does not get a function key.</para></listitem>
+				<listitem><para><emphasis>nomenu</emphasis>: this macro is not listed in the macros menu, 
+						  does not get a function key, and does not appear as a button.</para></listitem>
+				<listitem><para><emphasis>keep</emphasis>: if a new macro configuration file is loaded
+					this macro is not deleted.</para></listitem>
+				<listitem><para><emphasis>overwrite</emphasis>: if a new macro configuration file is loaded
+						 this macro overwrites a kept macro with the same name.</para></listitem>
+				</itemizedlist>
+                        </para>
+
+			<para>The fallback macro gets the <keycap>ESC</keycap> key assigned, all other macros
+			get the function keys <keycap>F1 - F10</keycap> in the order they are defined.
+			The shutdown macro does not execute RePros.</para>
+
+			<para>A macro can have variables which are defined after a colon as ident=value pairs
+			separated by semicolons.</para>
+
+			<para>For example
+			<programlisting>
+$Search startup fallback: duration=40ms; pause=260ms
+			</programlisting>
+			defines a macro "Search" which is called as the first macro on
+			startup and whenever another macro is finished (usually you will
+			call a RePro within such a macro that does not terminate itself).
+			It appears as a button with label "Search" and can be executed
+			by hitting the <keycap>ESC</keycap> key.
+			It has a single variable <varname>duration</varname> 
+                        with default value <parameter>4s</parameter>.</para>
+
+			<para>Variables of a macro may be defined on several succeeding lines.
+			Each line following the macro definition 
+			containing a '=' and not a colon ':' is interpreted as a variable
+			that is added to the macro.
+			<programlisting>
+$Search startup fallback
+duration=40ms
+pause=260ms
+			</programlisting>
+			is identical to the previous example.
+			The white space in front of the parameter may be ommited as well.</para>
+		</section>
+
+		<section xml:id='macrofileaction'><title>Actions</title>
+			<para>Each line following the macro definition specifies 
+			one of the following actions:</para>
+			
+			<para><itemizedlist>
+				<listitem><para>call a RePro (<xref linkend='macrofileactionrepro' endterm='macrofileactionreprotitle'/>)</para></listitem>
+				<listitem><para>save data of a filter or event detector (<xref linkend='macrofileactionfilter' endterm='macrofileactionfiltertitle'/>)</para></listitem>
+				<listitem><para>display a message (<xref linkend='macrofileactionmessage' endterm='macrofileactionmessagetitle'/>)</para></listitem>
+				<listitem><para>open a text-browser (<xref linkend='macrofileactionbrowse' endterm='macrofileactionbrowsetitle'/>)</para></listitem>
+				<listitem><para>execute a shell command (<xref linkend='macrofileactionshell' endterm='macrofileactionshelltitle'/>)</para></listitem>
+				<listitem><para>call another macro (<xref linkend='macrofileactionmacro' endterm='macrofileactionmacrotitle'/>)</para></listitem>
+				<listitem><para> switch to a different macro configuration (<xref linkend='macrofileactionswitch' endterm='macrofileactionswitchtitle'/>)</para></listitem>
+				<listitem><para>start a session (<xref linkend='macrofileactionstartsession' endterm='macrofileactionstartsessiontitle'/>)</para></listitem>
+				</itemizedlist></para>
+			
+			<para>A macro can contain any number of actions.</para>
+
+		<section xml:id='macrofileactiondisable'>
+                        <title xml:id='macrofileactiondisabletitle'>Disable</title>
+			<para>A '!' as the first letter disables the action.
+			It can later on be enabled from the macros menu.</para>
+                </section>
+
+		<section xml:id='macrofileactionrepro'>
+                        <title xml:id='macrofileactionreprotitle'>RePro</title>
+			<para>RePros are specified by the optional keyword <token>repro</token> 
+			and their name (identifier).
+			Optionally, the RePro name is followed by a colon and a list
+			of parameter that are separated by semicolons or new lines.
+			The values of the parameter are passed to the RePro's options.</para>
+
+			<para>Example:
+			<programlisting>
+repro ResearchProgram1: parameter11=10ms; parameter12=20; 
+ResearchProgram2
+parameter21=10ms
+parameter22=20; 
+			</programlisting></para>
+
+			<para>You can use the Macro's variables for defining values of the RePro's options
+			like this:
+                        <programlisting>
+ResearchProgram1: parameter1=$duration
+			</programlisting>
+			where <varname>duration</varname> is a macro variable.</para>
+
+			<para>You can define a whole range of values for a parameter in parenthesis.
+			For example
+			<programlisting>
+ResearchProgram1: parameter1=(4..10)ms;
+			</programlisting>
+			results in seven calls of the RePro "ResearchProgram1" with 
+			parameter1 getting the values 4, 5, 6, 7, 8, 9, and 10 ms.
+			In order to obtain the values 4, 6, 8, and 10 ms,
+			an increment different from one can be specified like this:
+			<programlisting>
+ResearchProgram1: parameter1=(4..10..2)ms;
+			</programlisting>
+			An arbitrary sequence of values is separated by commas and 
+			can be intermixed with ranges:
+			(4,6..8,10) is expanded to 4,6,7,8,10.</para>
+
+			<para>You can specify in which order you want the sequence to be generated.
+			The default is 'up'. Alternatively you can specify 'down', 'alternate', 
+			or 'random' like this:
+			<programlisting>
+ResearchProgram1: parameter1=(4..10..2,down)ms;
+			</programlisting>
+			generates 10, 8, 6, 4, 2.</para>
+
+			<para>Finally, you can specify an initial resolution.
+			The default resolution is one.
+			For example, defining an initial resolution of two
+			<programlisting>
+ResearchProgram1: parameter1=(4..10..2,down,r:2)ms;
+			</programlisting>
+			produces the sequence 10, 6, 2, 8, 4.</para>
+		</section>
+
+		<section xml:id='macrofileactionfilter'>
+                        <title xml:id='macrofileactionfiltertitle'>Filter/Detector</title>
+			<para>Specifying a filter like this
+			<programlisting>
+filter LcoalField-1: some parameter
+			</programlisting>
+			or a detector like this
+			<programlisting>
+detector Spikes-1: some parameter
+			</programlisting>
+			executes the save() function of the filter/event detector for the trace/events
+			with name "LocalField-1"/"Spikes-1" and passes the string "some parameter" to this function.
+			This is ment to write some usefull information of the performance of the
+			filter or event detection into a file.
+			The parameter string may span multiple lines as long as each line contains a '='.
+			See the documentation of the Filter for more details.</para>
+		</section>
+
+
+		<section xml:id='macrofileactionmessage'>
+                        <title xml:id='macrofileactionmessagetitle'>Message</title>
+			<para>Messages are simple popup windows that display a text. 
+			They are specified by the <token>message</token> keyword. You can define
+			an optional timeout (in seconds) after which the window
+			is closed automatically.
+			An optional caption is displayed in the windows title bar.</para>
+			
+			<para>For example
+			<programlisting>
+message 5 Hello: This is the message text.
+			</programlisting>
+			opens a window with "Hello" in the title bar, 
+			displaying "This is amessage text.". The window is closed
+			after 5 seconds.</para>
+
+			<para>Any text enclosed by '$(' and ')' is interpreted as a command.
+			The command is executed in a shell and its standard output replaces
+			the command text. See also <xref linkend='macrofileactionshell' endterm='macrofileactionshelltitle'/>.
+			The message text may extend over several lines, provided
+			each new line starts with at least one character of white space.</para>
+
+			<para>For example
+			<programlisting>
+message The time is $(date).
+			</programlisting>
+			<command>date</command> is executed and <literal>$(date)</literal> is replaced by its output.
+			As a result, the following text is displayed in the window:
+			<programlisting>
+The time is Wed Aug 10 13:59:06 CEST 2005.
+			</programlisting></para>
+
+			<para>If the message text is empty, then no window is opened.</para>
+
+			<para>The following example macro displays a message after a session is stopped
+			only if the free disk space is less than 1000MB:
+			<programlisting> 
+<![CDATA[$DISKSPACE stopsession nobutton
+message $(DS=$(df -B 1M . | tail -n 1 | awk '{ print $4 }'); 
+[ $DS -lt 1000 ] && echo "<h1>! Warning !</h1><h2>Less than <b>${DS}MB</b> of free disk space left!</h2>
+Please make backups and clean up to make room for the next recording!")]]>
+			</programlisting></para>
+		</section>
+		
+		<section xml:id='macrofileactionbrowse'>
+                        <title xml:id='macrofileactionbrowsetitle'>Browse</title>
+
+			<para>A text browser displays text from a file in a simple html capable browser.
+			The text browser is specified by the <token>browse</token> keyword.
+			An optional caption is displayed in the windows title bar.</para>
+
+			<para>For example
+			<programlisting>
+browse RELACS Macros: doc/html/macros.html
+			</programlisting>
+			opens a text browser with "RELACS Macros" in the title bar, 
+			displaying the content of the file <filename>doc/html/macros.html</filename>.</para>
+
+			<para>Any text enclosed by '$(' and ')' is interpreted as a command.
+			The command is executed in a shell and its standard output replaces
+			the command text.
+			See also <xref linkend='macrofileactionshell' endterm='macrofileactionshelltitle'/>.</para>
+			<note><para><token>browse</token> takes a file name as argument
+			and not the text it should display as <token>message</token> does.</para></note>
+		</section>
+
+		<section xml:id='macrofileactionshell'>
+                        <title xml:id='macrofileactionshelltitle'>Shell</title>
+			<para>Shell comands are introduced by the <token>shell</token> keyword.</para>
+
+			<para>Example:
+			<programlisting>
+shell cp foo.dat foo.dat.bak
+			</programlisting></para>
+
+			<para>The following environment variables can be used from within a shell command:
+			<itemizedlist>
+				<listitem><para><envar>RELACSDATAPATH</envar>The path where RELACS stores data.</para></listitem>
+				<listitem><para><envar>RELACSDEFAULTPATH</envar>The default path where RELACS stores data (inbetween sessions).</para></listitem>
+				<listitem><para><envar>RELACSSESSIONTIME</envar>The elapsed time of the current session formatted as a string.</para></listitem>
+				<listitem><para><envar>RELACSSESSIONSECONDS</envar>The elapsed time of the current session in seconds.</para></listitem>
+				<listitem><para><envar>RELACSSESSIONSAVED</envar>Equals "1" if the session gets saved.</para></listitem>
+			</itemizedlist></para>
+
+			<para>The shell command may span several lines provided
+			each new line starts with at least one character of white space.</para>
+		</section>
+
+		<section xml:id='macrofileactionmacro'>
+                        <title xml:id='macrofileactionmacrotitle'>Macro</title>
+			
+			<para>You can call another macro from within a macro.
+			Just give the name of the macro you want to call after
+			the keyword <token>macro</token>.</para>
+
+			<para>For example
+			<programlisting>
+macro SAMs
+			</programlisting>
+			calls the macro "SAMs".</para>
+
+			<para>If the macro that is called has variables you can set the values
+			of those variables like this:
+			<programlisting>
+macro SAMs: duration=42s
+			</programlisting>
+			Like for a RePro, several line can be used for the variables.</para>
+		</section>
+		
+		<section xml:id='macrofileactionswitch'>
+                        <title xml:id='macrofileactionswitchtitle'>Switch</title>
+
+			<para>A different set of macros can be loaded from a file.
+			Write the name of the file behind the keyword <token>switch</token>.</para>
+
+			<para>For example
+			<programlisting>
+switch newmacros.cfg
+			</programlisting>
+			loads the macros defined in the file <filename>newmacros.cfg</filename>.</para>
+
+			<para>>By default, all current macros are removed when loading / switiching to a
+			new macro configuration file.
+			However, individual macros can be excluded from being removed
+			by marking them with <token>keep</token> (see <xref linkend='macrofilemacro' endterm='macrofilemacrotitle'/>
+			and the <token>overwrite</token> keyword as well).</para>
+		</section>
+
+		<section xml:id='macrofileactionstartsession'>
+                        <title xml:id='macrofileactionstartsessiontitle'>Start Session</title>
+
+			<para>An action containing simply the keyword <token>startsession</token>
+			<programlisting>
+startsession
+			</programlisting>
+			starts a new session, but without calling the <token>startsession</token> - macro
+			(see <xref linkend='macrofilemacro' endterm='macrofilemacrotitle'/>).</para>
+		</section>
+
+		</section>
+		
+		
+		<section xml:id='macrofileactionexample'><title>Example</title>
+
+		<para>Finally, here is an example of a complete Macro definition:
+		<programlisting>
+$SAMs: repeats=10
+SAM: deltaf=5Hz; repeats=$repeats
+SAM: deltaf=10Hz; repeats=$repeats
+FICurve
+message 4: You did it!
+			</programlisting>
+			The macro is called "SAMs" (for "Sinusoidal Amplitude Modulations").
+			It is an ordinary macro, since none of the keywords is specified
+			behind the name. Therefore it will get a button labeled "SAMs"
+			and one of the function keys <keycap>F1 - F10</keycap>.
+			It has a single variable <varname>repeats</varname> that is set by default to <parameter>10</parameter>.
+			The macro calls subsequently twice the RePro SAM with the <varname>deltaf</varname> option
+			set to 5 and 10Hz and the <varname>repeats</varname> option set to the value of the macro's
+			<varname>repeat</varname> variable.
+			The the RePro FICurve is called with default parameter settings.
+			After the FICurve RePro is finished the message "You did it!" is displayed
+			in a window that closes automatically after 4 seconds, and
+			the fallback Macro is called.</para>
+		</section>
+</section>
+
+<section xml:id='usingmacros'><title>Using Macros</title>
+
+       <para>Menu and buttons: to be written</para>
+
+       <para>
+          The following shortcut keys control the macros:
+			<itemizedlist>
+			<listitem><para><keycap>ESC</keycap>: Start the fallback macro.
+			 You can continue within the interrupted macro by hitting <keycap>R</keycap> or <keycap>N</keycap> (see below).
+			 If RELACS does not have the key focus, <keycap>ESC</keycap> transfers the key focus to RELACS.
+			 In this situation press <keycap>ESC</keycap> twice to start the fallback macro.
+			 The keyfocus is, however, automatically returned to RELACS within 15 seconds.</para></listitem>
+			<listitem><para><keycap>F1-F12</keycap>: Start a macro.</para></listitem>
+			<listitem><para><keycap>Shift+ESC</keycap>: Open menu of fallback macro.</para></listitem>
+			<listitem><para><keycap>Shift+F1-F12</keycap>: Open macro menu.</para></listitem>
+			<listitem><para><keycap>S</keycap>: Skip current RePro and start the next RePro of the current macro.</para></listitem>
+			<listitem><para><keycap>B</keycap>: ("Break") Pause current macro by starting the fallback macro after the current RePro finished.</para></listitem>
+			<listitem><para><keycap>R</keycap>: ("Resume") Resume macro with the RePro where it was interrupted by either <keycap>ESC</keycap> or <keycap>B</keycap>.</para></listitem>
+			<listitem><para><keycap>N</keycap>: ("Resume Next") Resume macro with the RePro following the one where the macro was interrupted
+			by either <keycap>ESC</keycap> or <keycap>B</keycap>.</para></listitem>
+			</itemizedlist>
+       </para>
+
+  <para>See <xref linkend='keys' endterm='keystitle'/> for a complete list of shortcut keys.</para>
+</section>
+
+</chapter>
