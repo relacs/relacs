@@ -106,7 +106,13 @@ RELACS_EXAMPLES()
 
 
 #################################################
-## Documentation directories
+## Docbook user manual
+#################################################
+RELACS_DOCBOOK( userman, doc/userman )
+
+
+#################################################
+## API documentation directories
 #################################################
 
 # list of libraries that should go 
@@ -150,7 +156,7 @@ AC_SUBST([RELACS_PLUGINS_DIST_SUBDIRS])
 
 
 #################################################
-## Doxygen
+## Doxygen API documentation
 #################################################
 
 # assemble input pathes from the Makefile.am of the RELACS_DOCLIBS list:
@@ -290,11 +296,12 @@ AC_OUTPUT
 
 cat <<SUMMARY
 
-    Use GSL .................... ${RELACS_GSL}
-    Use Comedi ................. ${RELACS_COMEDI}
-    Use RTAI ................... ${RELACS_RTAI}
-    Generate documentation ..... ${DX_SUMMARY}
-    Compile example programs ... ${RELACS_COMPILE_EXAMPLES}
+    Use GSL ...................... ${RELACS_GSL}
+    Use Comedi ................... ${RELACS_COMEDI}
+    Use RTAI ..................... ${RELACS_RTAI}
+    Generate user manual ......... ${RELACS_GENERATE_DOCBOOK}
+    Generate API documentation ... ${DX_SUMMARY}
+    Compile example programs ..... ${RELACS_COMPILE_EXAMPLES}
     Compile the following plugin sets:
 SUMMARY
 

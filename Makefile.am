@@ -48,6 +48,12 @@ EXTRA_DIST = \
 
 DISTCLEANFILES = relacs.log relacs.log.old
 
+
+DOCBOOK_SOURCES = cpp.xml introduction.xml naming.xml repros.xml utilities.xml gui.xml macros.xml program.xml
+
+#include docbook.mk
+
+
 DX_DEPENDS = Makefile.am
 DX_SETTINGS = PROJECT_NAME='Relacs'
 DX_SETTINGS += INPUT='$(DOXYGEN_INPUT) $(abs_builddir)'

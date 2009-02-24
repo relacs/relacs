@@ -385,7 +385,7 @@
 # COPYLEFT
 #
 #   Copyright (c) 2007 Oren Ben-Kiki <oren@ben-kiki.org>
-#   Fixed and modified 2008 by Jan Benda <j.benda@biologie.hu-berlin.de>
+#   Fixed and modified 2008 by Jan Benda <benda@biologie.uni-muenchen.de>
 #
 #   Copying and distribution of this file, with or without
 #   modification, are permitted in any medium without royalty provided
