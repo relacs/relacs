@@ -292,12 +292,10 @@ protected:
   TableKey StimulusKey;
   void writeStimulus( void );
 
-  string ReProName;
-  string ReProAuthor;
-  string ReProVersion;
-  string ReProDate;
+  Options ReProInfo;
   Options ReProSettings;
   bool ReProData;
+  bool ExperimentOpen;
   void writeRePro( void );
 
   bool ToggleOn;

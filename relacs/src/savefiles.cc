@@ -60,12 +60,14 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
   ToggleOn = false;
   ToggleData = false;
 
-  ReProName = "";
-  ReProAuthor = "";
-  ReProVersion = "";
-  ReProDate = "";
+  ReProInfo.clear();
+  ReProInfo.addText( "repro" );
+  ReProInfo.addText( "author" );
+  ReProInfo.addText( "version" );
+  ReProInfo.addText( "date" );
   ReProSettings.clear();
   ReProData = false;
+  ExperimentOpen = false;
 
   setFixedHeight( height );
 
@@ -364,11 +366,12 @@ void SaveFiles::writeStimulus( void )
     
     // stimulus indices file:
     if ( SF != 0 && saving() && writing() ) {
+      StimulusKey.setSaveColumn( -1 );
       for ( unsigned int k=0; k<TraceFiles.size(); k++ )
 	if ( TraceFiles[k].Stream != 0 ) {
 	  StimulusKey.save( *SF, TraceFiles[k].SignalOffset );
 	}
-      for ( unsigned int k=0; k<EventFiles.size(); k++ )
+      for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
 	if ( EventFiles[k].Stream != 0 ) {
 	  StimulusKey.save( *SF, EventFiles[k].SignalEvent );
 	  if ( EventFiles[k].SaveMeanRate )
@@ -382,6 +385,8 @@ void SaveFiles::writeStimulus( void )
 	  if ( EventFiles[k].SaveMeanQuality )
 	    StimulusKey.save( *SF, 100.0*EventFiles[k].Events->meanQuality() );
 	}
+      }
+
       lock();
       if ( !Options::empty() ) {
 	for( int k=0; k<Options::size(); k++ )
@@ -419,6 +424,86 @@ void SaveFiles::writeStimulus( void )
       *SF << endl;
     }
     
+    // xml metadata file:
+    if ( XF != 0 && saving() && writing() ) {
+      *XF << "      <section>\n";
+      *XF << "        <name>stimulus</name>\n";
+      *XF << "        <section>\n";
+      *XF << "          <name>analoginput</name>\n";
+      int col = 0;
+      for ( unsigned int k=0; k<TraceFiles.size(); k++ )
+	if ( TraceFiles[k].Stream != 0 ) {
+	  *XF << "          <section>\n";
+	  *XF << "            <name>trace</name>\n";
+	  Parameter p( "file", "file", TraceFiles[k].FileName );
+	  p.saveXML( *XF, 6 );
+	  StimulusKey[col++].setInteger( TraceFiles[k].SignalOffset ).saveXML( *XF, 6 );
+	  *XF << "          </section>\n";
+	}
+      *XF << "        </section>\n";
+      *XF << "        <section>\n";
+      *XF << "          <name>events</name>\n";
+      for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
+	if ( EventFiles[k].Stream != 0 ) {
+	  *XF << "          <section>\n";
+	  *XF << "            <name>trace</name>\n";
+	  Parameter p( "file", "file", EventFiles[k].FileName );
+	  p.saveXML( *XF, 6 );
+	  StimulusKey[col++].setInteger( EventFiles[k].SignalEvent ).saveXML( *XF, 6 );
+	  if ( EventFiles[k].SaveMeanRate )
+	    StimulusKey[col++].setNumber( EventFiles[k].Events->meanRate() ).saveXML( *XF, 6 );
+	  if ( EventFiles[k].SaveMeanSize )
+	    StimulusKey[col++].setNumber( EventFiles[k].Events->sizeScale() *
+					  EventFiles[k].Events->meanSize() ).saveXML( *XF, 6 );
+	  if ( EventFiles[k].SaveMeanWidth )
+	    StimulusKey[col++].setNumber( EventFiles[k].Events->widthScale() *
+					  EventFiles[k].Events->meanWidth() ).saveXML( *XF, 6 );
+	  if ( EventFiles[k].SaveMeanQuality )
+	    StimulusKey[col++].setNumber( 100.0*EventFiles[k].Events->meanQuality() ).saveXML( *XF, 6 );
+	  *XF << "          </section>\n";
+	}
+      }
+      *XF << "        </section>\n";
+      lock();
+      if ( !Options::empty() ) {
+	*XF << "        <section>\n";
+	*XF << "          <name>data</name>\n";
+	for( int k=0; k<Options::size(); k++ )
+	  StimulusKey[col++].setNumber( (*this)[k].number() ).saveXML( *XF, 6 );
+	*XF << "        </section>\n";
+      }
+      unlock();
+      StimulusKey[col++].setNumber( TraceFiles[0].Trace->signalTime() - SessionTime ).saveXML( *XF, 4 );
+      // StimulusToWrite:
+      StimulusKey[col++].setNumber( 1000.0*StimulusToWrite[0].delay() ).saveXML( *XF, 4 );
+      for ( int k=0; k<RW->AQ->outTracesSize(); k++ ) {
+	for ( int j=0; j<StimulusToWrite.size(); j++ ) {
+	  const Attenuate *att = RW->AQ->outTraceAttenuate( k );
+	  if ( StimulusToWrite[j] == RW->AQ->outTrace( k ) ) {
+	    Parameter p( "identifier", "identifier", RW->AQ->outTraceName( k ) );
+	    p.saveXML( *XF, 4 );
+	    StimulusKey[col++].setNumber( 0.001*StimulusToWrite[j].sampleRate() ).saveXML( *XF, 4 );
+	    StimulusKey[col++].setNumber( 1000.0*StimulusToWrite[j].length() );
+	    if ( att != 0 ) {
+	      StimulusKey[col++].setNumber( StimulusToWrite[j].intensity() ).saveXML( *XF, 4 );
+	      if ( ! att->frequencyName().empty() )
+		StimulusKey[col++].setNumber( StimulusToWrite[j].carrierFreq() ).saveXML( *XF, 4 );
+	    }
+	    StimulusKey[col++].setText( StimulusToWrite[j].ident() ).saveXML( *XF, 4 );
+	  }
+	  else {
+	    col += 3;
+	    if ( att != 0 ) {
+	      col++;
+	      if ( ! att->frequencyName().empty() )
+		col++;
+	    }
+	  }
+	}
+      }
+      *XF << "      </section>\n";
+    }
+    
     StimulusData = false;
     StimulusToWrite.clear();
   }
@@ -432,10 +517,10 @@ void SaveFiles::write( const RePro &rp )
   if ( ReProData )
     RW->printlog( "! warning: SaveFiles::write( RePro & ) -> already RePro data there." );
   ReProData = true;
-  ReProName =  rp.name();
-  ReProAuthor =  rp.author();
-  ReProVersion =  rp.version();
-  ReProDate =  rp.date();
+  ReProInfo.setText( "repro", rp.name() );
+  ReProInfo.setText( "author", rp.author() );
+  ReProInfo.setText( "version", rp.version() );
+  ReProInfo.setText( "date", rp.date() );
   ReProSettings = rp;
 
   // write last stimulus here!
@@ -449,27 +534,45 @@ void SaveFiles::writeRePro( void )
   //  cerr << "write RePro\n";
 
   if ( ReProData ) {
+
+    ReProSettings.setFlags( 0 );
+    ReProSettings.setTypeFlags( 1, -Parameter::Blank );
     
     // stimulus indices file:
     if ( SF != 0 && saving() && writing() ) {
       *SF << '\n';
-      *SF << "# repro: " << ReProName  << '\n';
-      *SF << "# author: " << ReProAuthor << '\n';
-      *SF << "# version: " << ReProVersion << '\n';
-      *SF << "# date: " << ReProDate << '\n';
+      ReProInfo.save( *SF, "# ", -1, 0, false, true );
       if ( ! ReProSettings.empty() ) {
-	ReProSettings.setFlags( 0 );
-	ReProSettings.setTypeFlags( 1, -Parameter::Blank );
 	ReProSettings.save( *SF, "# ", -1, 1, false, true );
       }
-      ReProSettings.clear();
 
       // write StimulusKey:
       *SF << '\n';
       StimulusKey.saveKey( *SF );
     }
+    
+    // xml metadata file:
+    if ( XF != 0 && saving() && writing() ) {
+      if ( ExperimentOpen ) {
+	*XF << "    </section>\n";
+	*XF << "  </section>\n";
+      }
+      *XF << "  <section>\n";
+      *XF << "    <name>experiment</name>\n";
+      ReProInfo.saveXML( *XF, 0, 2 );
+      if ( ! ReProSettings.empty() ) {
+	*XF << "    <section>\n";
+        *XF << "      <name>settings</name>\n";
+	ReProSettings.saveXML( *XF, 1, 3 );
+	*XF << "    </section>\n";
+      }
+      *XF << "    <section>\n";
+      *XF << "      <name>stimuli</name>\n";
+      ExperimentOpen = true;
+    }
 
     ReProData = false;
+    ReProSettings.clear();
   }
 }
 
@@ -533,7 +636,7 @@ void SaveFiles::createTraceFiles( const InList &traces )
     // create file:
     if ( traces[k].mode() & SaveTrace ) {
       Str fn = traces[k].ident();
-      TraceFiles[k].FileName = "trace-" + Str( format, k+1 ) + ".f1";
+      TraceFiles[k].FileName = "trace-" + Str( k+1, format ) + ".f1";
       TraceFiles[k].Stream = openFile( TraceFiles[k].FileName, ios::out | ios::binary );
       if ( ! TraceFiles[k].Stream->good() ) {
 	TraceFiles[k].FileName = "";
@@ -705,41 +808,79 @@ void SaveFiles::createXMLFile( const InList &traces,
     *XF << "  xmlns:dc=\"http://purl.org/metadata/dublin_core#\"\n";
     *XF << "  xmlns:md=\"http://www.g-node.org/md-syntax-ns#\">\n";
 
-    *XF << "  <settings>\n";
-    *XF << "    <analoginput>\n";
+    *XF << "  <section>\n";
+    *XF << "    <name>hardware</name>\n";
+    for ( int k=0; k<RW->ADV->size(); k++ ) {
+      const Device &dev = (*RW->ADV)[k];
+      *XF << "    <section>\n";
+      *XF << "      <name>device</name>\n";
+      Options opts;
+      opts.load( dev.info() );
+      opts.saveXML( *XF, 0, 3 ); 
+      *XF << "    </section>\n";
+    }
+    *XF << "  </section>\n";
+
+    *XF << "  <section>\n";
+    *XF << "    <name>recording</name>\n";
+    *XF << "    <section>\n";
+    *XF << "      <name>analoginput></name>\n";
+    Options opts;
+    opts.addText( "identifier" );
+    opts.addText( "file" );
+    opts.addNumber( "sampleinterval", "ms", "%g" );
+    opts.addNumber( "samplingrate", "Hz", "%g" );
+    opts.addText( "unit" );
     for ( int k=0; k<traces.size(); k++ ) {
       if ( ! TraceFiles[k].FileName.empty() ) {
-	*XF << "      <trace>\n";
-	*XF << "        <identifier>" << traces[k].ident() << "</identifier>\n";
-	*XF << "        <file>" << TraceFiles[k].FileName << "</file>\n";
-	*XF << "        <sampleinterval>" << Str( 1000.0*traces[k].sampleInterval(), 0, 2, 'f' ) << "ms" << "</sampleinterval>\n";
-	*XF << "        <unit>" << traces[k].unit() << "</unit>\n";
-	*XF << "      </trace>\n";
+	opts.setText( "identifier", traces[k].ident() );
+	opts.setText( "file", TraceFiles[k].FileName );
+	opts.setNumber( "sampleinterval", 1000.0*traces[k].sampleInterval() );
+	opts.setNumber( "samplingrate", traces[k].sampleRate() );
+	opts.setText( "unit", traces[k].unit() );
+	*XF << "      <section>\n";
+	*XF << "        <name>trace</name>\n";
+	opts.saveXML( *XF, 0, 4 );
+	*XF << "      </section>\n";
       }
     }
-    *XF << "    </analoginput>\n";
-    *XF << "    <events>\n";
+    *XF << "    </section>\n";
+    *XF << "    <section>\n";
+    *XF << "      <name>events</name>\n";
+    opts.clear();
+    opts.addText( "file" );
     for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
       if ( ! EventFiles[k].FileName.empty() )
-	*XF << "      <trace>\n";
-	*XF << "        <file>" << EventFiles[k].FileName << "</file>\n";
-	*XF << "      </trace>\n";
+	opts.setText( "file", EventFiles[k].FileName );
+	*XF << "      <section>\n";
+	*XF << "        <name>trace</name>\n";
+	opts.saveXML( *XF, 0, 4 );
+	*XF << "      </section>\n";
     }
-    *XF << "    </events>\n";
-    *XF << "    <analogoutput>\n";
+    *XF << "    </section>\n";
+    *XF << "    <section>\n";
+    *XF << "      <name>analogoutput</name>\n";
+    opts.clear();
+    opts.addText( "identifier" );
+    opts.addInteger( "device" );
+    opts.addInteger( "channel" );
+    opts.addNumber( "signaldelay", "ms", "%g" );
+    opts.addNumber( "maximumrate", "kHz", "%g" );
     for ( int k=0; k<RW->AQ->outTracesSize(); k++ ) {
       TraceSpec trace( RW->AQ->outTrace( k ) );
-      *XF << "      <trace>\n";
-      *XF << "        <identifier>" << trace.traceName() << "</identifier>\n";
-      *XF << "        <device>" << trace.device() << "</device>\n";
-      *XF << "        <channel>" << trace.channel() << "</channel>\n";
-      *XF << "        <signal delay>" << 1000.0*trace.signalDelay() << "ms" << "</signal delay>\n";
-      *XF << "        <maximum rate>" << 0.001*trace.maxSampleRate() << "kHz" << "</maximum rate>\n";
-      *XF << "      </trace>\n";
+      opts.setText( "identifier", trace.traceName() );
+      opts.setInteger( "device", trace.device() );
+      opts.setInteger( "channel", trace.channel() );
+      opts.setNumber( "signaldelay", 1000.0*trace.signalDelay() );
+      opts.setNumber( "maximumrate", 0.001*trace.maxSampleRate() );
+	*XF << "      <section>\n";
+	*XF << "        <name>trace</name>\n";
+      opts.saveXML( *XF, 0, 4 );
+      *XF << "      </section>\n";
     }
-    *XF << "    </analogoutput>\n";
+    *XF << "    </section>\n";
   }
-  *XF << "  </settings>\n";
+  *XF << "  </section>\n";
 }
 
 
@@ -759,11 +900,8 @@ void SaveFiles::openFiles( const InList &traces, const EventList &events )
   Writing = false;
 
   ReProData = false;
-  ReProName = "";
-  ReProAuthor = "";
-  ReProVersion = "";
-  ReProDate = "";
   ReProSettings.clear();
+  ExperimentOpen = false;
 
   setPath( defaultPath() );
 
@@ -864,6 +1002,15 @@ void SaveFiles::closeFiles( void )
     delete SF;
   SF = 0;
   if ( XF != 0 ) {
+    if ( ExperimentOpen ) {
+      *XF << "    </section>\n";
+      *XF << "  </section>\n";
+      ExperimentOpen = false;
+    }
+    *XF << "  <section>\n";
+    *XF << "    <name>session</name>\n";
+    RW->MTDT.saveXML( *XF, 0, 2 );
+    *XF << "  </section>\n";
     *XF << "</ephysmetadata>\n";
     delete XF;
   }

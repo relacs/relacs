@@ -1690,9 +1690,9 @@ ostream &Parameter::saveXML( ostream &str, int level, int indent ) const
     str << indstr1 << "<property>\n";
     str << indstr2 << "<name>" << ident() << "</name>\n";
     if ( isNumber() || isInteger() ) {
-      str << indstr2 << "<numvalue>" << Str( number( 0 ), format() ) << "</numvalue>\n";
+      str << indstr2 << "<numvalue>" << Str( number( 0 ), format() ).strip() << "</numvalue>\n";
       if ( error( 0 ) >= 0.0 )
-	str << indstr2 << "<errorvalue>" << Str( error( 0 ), format() ) << "</errorvalue>\n";
+	str << indstr2 << "<errorvalue>" << Str( error( 0 ), format() ).strip() << "</errorvalue>\n";
       if ( outUnit() != "1" )
 	str << indstr2 << "<unit>" << unit() << "</unit>\n";
     }
@@ -1700,7 +1700,7 @@ ostream &Parameter::saveXML( ostream &str, int level, int indent ) const
       str << indstr2 << "<boolvalue>" << ( boolean( 0 ) ? "true" : "false" ) << "</boolvalue>\n";
     }
     else if ( isText() ) {
-      str << indstr2 << "<textvalue>" << text() << "</textvalue>\n";
+      str << indstr2 << "<textvalue>" << text().strip() << "</textvalue>\n";
     }
     str << indstr1 << "</property>\n";
   }
