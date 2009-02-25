@@ -738,6 +738,14 @@ public:
     /*! Write parameter to stream \a str using save() */
   friend ostream &operator<< ( ostream &str, const Parameter &p );
 
+    /*! Write parameter in XML format to output stream.
+        \param[in] str the output stream
+        \param[in] level the level of indentation
+        \param[in] indent the indentation depth, 
+                   i.e. number of white space characters per level
+        \return the output stream \a str */
+  ostream &saveXML( ostream &str, int level=0, int indent=2 ) const;
+
     /*! Load parameter from string \a s.
         The warning message is set if \a s is invalid.
         The changedFlag() is set. */

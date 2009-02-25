@@ -204,6 +204,10 @@ protected:
         contains indices to he traces and event files.
         Call this *after* createEventFiles()! */
   void createStimulusFile( const InList &traces, const EventList &events );
+    /*! Open and initialize the XML file that
+        contains all information.
+        Call this *after* createEventFiles()! */
+  void createXMLFile( const InList &traces, const EventList &events );
 
     /*! Are there any files open to write in? */
   bool FilesOpen;
@@ -230,6 +234,9 @@ protected:
 
     /*! File with stimuli and indices to traces and events. */
   ofstream *SF;
+
+    /*! XML file containing all data. */
+  ofstream *XF;
 
   struct TraceFile {
       /*! The name of the file for the trace. */

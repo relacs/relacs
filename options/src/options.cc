@@ -2381,6 +2381,17 @@ ostream &operator<< ( ostream &str, const Options &o )
 }
 
 
+ostream &Options::saveXML( ostream &str, int selectmask, int level, int indent ) const
+{
+  for ( const_iterator pp = begin(); pp != end(); ++pp ) {
+    if ( (*pp).flags( selectmask ) ) {
+      (*pp).saveXML( str, level, indent );
+    }
+  }
+  return str;
+}
+
+
 Options &Options::read( const string &opttxt, int flag,
 			const string &assignment, const string &separator,
 			string *pattern )

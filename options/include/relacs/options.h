@@ -966,6 +966,16 @@ public:
     /*! Write identifiers and their values to stream \a str */
   friend ostream &operator<< ( ostream &str, const Options &o );
 
+    /*! Write options in XML format to output stream.
+        \param[in] str the output stream
+        \param[in] selectmask selects options that have \a selectmask set in their flags().
+                   See Parameter::flags(int) for details.
+        \param[in] level the level of indentation
+        \param[in] indent the indentation depth, 
+                   i.e. number of white space characters per level
+        \return the output stream \a str */
+  ostream &saveXML( ostream &str, int selectmask=0, int level=0, int indent=2 ) const;
+
     /*! Read options from string \a opttxt of the form 
         "parameter1=x; parameter2=y; parameter3=z; ...".
         If the parameters 'parameter1', 'parameter2', ... match the

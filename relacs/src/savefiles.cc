@@ -47,6 +47,7 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
   Writing = false;
 
   SF = 0;
+  XF = 0;
   TraceFiles.clear();
   EventFiles.clear();
 
@@ -692,6 +693,56 @@ void SaveFiles::createStimulusFile( const InList &traces,
 }
 
 
+void SaveFiles::createXMLFile( const InList &traces,
+			       const EventList &events )
+{
+  // create xml file for all data:
+  XF = openFile( "metadata.xml", ios::out );
+
+  if ( (*XF) ) {
+    *XF << "<?xml version=\"1.0\"?>\n";
+    *XF << "<ephysmetadata\n";
+    *XF << "  xmlns:dc=\"http://purl.org/metadata/dublin_core#\"\n";
+    *XF << "  xmlns:md=\"http://www.g-node.org/md-syntax-ns#\">\n";
+
+    *XF << "  <settings>\n";
+    *XF << "    <analoginput>\n";
+    for ( int k=0; k<traces.size(); k++ ) {
+      if ( ! TraceFiles[k].FileName.empty() ) {
+	*XF << "      <trace>\n";
+	*XF << "        <identifier>" << traces[k].ident() << "</identifier>\n";
+	*XF << "        <file>" << TraceFiles[k].FileName << "</file>\n";
+	*XF << "        <sampleinterval>" << Str( 1000.0*traces[k].sampleInterval(), 0, 2, 'f' ) << "ms" << "</sampleinterval>\n";
+	*XF << "        <unit>" << traces[k].unit() << "</unit>\n";
+	*XF << "      </trace>\n";
+      }
+    }
+    *XF << "    </analoginput>\n";
+    *XF << "    <events>\n";
+    for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
+      if ( ! EventFiles[k].FileName.empty() )
+	*XF << "      <trace>\n";
+	*XF << "        <file>" << EventFiles[k].FileName << "</file>\n";
+	*XF << "      </trace>\n";
+    }
+    *XF << "    </events>\n";
+    *XF << "    <analogoutput>\n";
+    for ( int k=0; k<RW->AQ->outTracesSize(); k++ ) {
+      TraceSpec trace( RW->AQ->outTrace( k ) );
+      *XF << "      <trace>\n";
+      *XF << "        <identifier>" << trace.traceName() << "</identifier>\n";
+      *XF << "        <device>" << trace.device() << "</device>\n";
+      *XF << "        <channel>" << trace.channel() << "</channel>\n";
+      *XF << "        <signal delay>" << 1000.0*trace.signalDelay() << "ms" << "</signal delay>\n";
+      *XF << "        <maximum rate>" << 0.001*trace.maxSampleRate() << "kHz" << "</maximum rate>\n";
+      *XF << "      </trace>\n";
+    }
+    *XF << "    </analogoutput>\n";
+  }
+  *XF << "  </settings>\n";
+}
+
+
 void SaveFiles::openFiles( const InList &traces, const EventList &events )
 {
   // nothing to be done, if files are already open:
@@ -773,6 +824,7 @@ void SaveFiles::openFiles( const InList &traces, const EventList &events )
   createTraceFiles( traces );
   createEventFiles( events );
   createStimulusFile( traces, events );
+  createXMLFile( traces, events );
   FilesOpen = true;
 
   // message:
@@ -811,6 +863,11 @@ void SaveFiles::closeFiles( void )
   if ( SF != 0 )
     delete SF;
   SF = 0;
+  if ( XF != 0 ) {
+    *XF << "</ephysmetadata>\n";
+    delete XF;
+  }
+  XF = 0;
 
   FilesOpen = false;
 
