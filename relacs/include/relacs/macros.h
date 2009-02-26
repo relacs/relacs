@@ -80,6 +80,7 @@ public:
   Macro( const Macro &macro ) 
     : Name( macro.Name ), 
     Variables( macro.Variables ),
+    Project( macro.Project ),
     Action( macro.Action ), 
     Button( macro.Button ), Menu( macro.Menu ), Key( macro.Key ),
     Keep( false ), Overwrite( false ),
@@ -135,10 +136,16 @@ public:
     /*! Replaces macro variables in \a params by their value. */
   string expandParams( const Str &params ) const;
 
+    /*! Forms a string for the menu consisting of the macro name
+        and its variables. */
+  string menuStr( void ) const;
+
       /*! The name of the Macro. */
   string Name;
     /*! Macro variables */
   Options Variables;
+    /*! Macro project/experiment identifiers */
+  Options Project;
 
     /*! The key code launching this macro. */
   int KeyCode;
@@ -393,22 +400,16 @@ private:
     */
   struct MacroPos
   {
-    MacroPos( void )
-      : MacroID( -1 ), CommandID( -1 ), MacroVariables() {};
-    MacroPos( int macro, int command, Options &var )
-      : MacroID( macro ), CommandID( command ),
-        MacroVariables( var ) {};
-    MacroPos( const MacroPos &mp )
-      : MacroID( mp.MacroID ), CommandID( mp.CommandID ), 
-	MacroVariables( mp.MacroVariables ) {};
-    void set( int macro, int command, Options &var ) 
-      { MacroID = macro; CommandID = command; MacroVariables = var; };
-    void clear( void ) 
-      { MacroID = -1; CommandID = -1; MacroVariables.clear(); };
-    bool defined( void ) { return ( MacroID >= 0 && CommandID >= 0 ); };
+    MacroPos( void );
+    MacroPos( int macro, int command, Options &var, Options &prj );
+    MacroPos( const MacroPos &mp );
+    void set( int macro, int command, Options &var, Options &prj );
+    void clear( void );
+    bool defined( void );
     int MacroID;
     int CommandID;
     Options MacroVariables;
+    Options MacroProject;
   };
     /*! A stack of macro commands. */  
   vector< MacroPos > Stack;

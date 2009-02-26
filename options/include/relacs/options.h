@@ -849,6 +849,8 @@ public:
         only options with this identifier are processed. */
   Options &combineLast( const string &ident="" );
 
+    /*! Remove the option where a p points to. */
+  Options &erase( iterator &p );
     /*! Remove all options whose identifier match \a ident from options list. */
   Options &erase( const string &ident );
     /*! Remove all options whose flag matches \a selectflag from options list. */

@@ -890,7 +890,11 @@ int CyclicArray< T >::saveBinary( ostream &os, int index ) const
   if ( !os )
     return -1;
 
-  assert( ( index >= minIndex() && index < size() ) );
+  // nothing to be saved:
+  if ( index >= size() )
+    return -1;
+
+  assert( index >= minIndex() );
 
   int buffinx = RCycles * NBuffer;
   int li = index - buffinx;

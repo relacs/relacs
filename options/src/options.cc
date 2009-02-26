@@ -2051,6 +2051,14 @@ Options &Options::combineLast( const string &ident )
 }
 
 
+Options &Options::erase( Options::iterator &p )
+{
+  if ( p != end() )
+    Opt.erase( p );
+  return *this;
+}
+
+
 Options &Options::erase( const string &ident )
 {
   Warning = "";

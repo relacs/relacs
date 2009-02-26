@@ -426,27 +426,22 @@ void SaveFiles::writeStimulus( void )
     
     // xml metadata file:
     if ( XF != 0 && saving() && writing() ) {
-      *XF << "      <section>\n";
-      *XF << "        <name>stimulus</name>\n";
-      *XF << "        <section>\n";
-      *XF << "          <name>analoginput</name>\n";
+      *XF << "      <section name=\"stimulus\">\n";
+      *XF << "        <section name=\"analoginput\">\n";
       int col = 0;
       for ( unsigned int k=0; k<TraceFiles.size(); k++ )
 	if ( TraceFiles[k].Stream != 0 ) {
-	  *XF << "          <section>\n";
-	  *XF << "            <name>trace</name>\n";
+	  *XF << "          <section name=\"trace\">\n";
 	  Parameter p( "file", "file", TraceFiles[k].FileName );
 	  p.saveXML( *XF, 6 );
 	  StimulusKey[col++].setInteger( TraceFiles[k].SignalOffset ).saveXML( *XF, 6 );
 	  *XF << "          </section>\n";
 	}
       *XF << "        </section>\n";
-      *XF << "        <section>\n";
-      *XF << "          <name>events</name>\n";
+      *XF << "        <section name=\"events\">\n";
       for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
 	if ( EventFiles[k].Stream != 0 ) {
-	  *XF << "          <section>\n";
-	  *XF << "            <name>trace</name>\n";
+	  *XF << "          <section name=\"trace\">\n";
 	  Parameter p( "file", "file", EventFiles[k].FileName );
 	  p.saveXML( *XF, 6 );
 	  StimulusKey[col++].setInteger( EventFiles[k].SignalEvent ).saveXML( *XF, 6 );
@@ -466,8 +461,7 @@ void SaveFiles::writeStimulus( void )
       *XF << "        </section>\n";
       lock();
       if ( !Options::empty() ) {
-	*XF << "        <section>\n";
-	*XF << "          <name>data</name>\n";
+	*XF << "        <section name=\"data\">\n";
 	for( int k=0; k<Options::size(); k++ )
 	  StimulusKey[col++].setNumber( (*this)[k].number() ).saveXML( *XF, 6 );
 	*XF << "        </section>\n";
@@ -557,17 +551,14 @@ void SaveFiles::writeRePro( void )
 	*XF << "    </section>\n";
 	*XF << "  </section>\n";
       }
-      *XF << "  <section>\n";
-      *XF << "    <name>experiment</name>\n";
+      *XF << "  <section name=\"experiment\">\n";
       ReProInfo.saveXML( *XF, 0, 2 );
       if ( ! ReProSettings.empty() ) {
-	*XF << "    <section>\n";
-        *XF << "      <name>settings</name>\n";
+	*XF << "    <section name=\"settings\">\n";
 	ReProSettings.saveXML( *XF, 1, 3 );
 	*XF << "    </section>\n";
       }
-      *XF << "    <section>\n";
-      *XF << "      <name>stimuli</name>\n";
+      *XF << "    <section name=\"stimuli\">\n";
       ExperimentOpen = true;
     }
 
@@ -808,12 +799,10 @@ void SaveFiles::createXMLFile( const InList &traces,
     *XF << "  xmlns:dc=\"http://purl.org/metadata/dublin_core#\"\n";
     *XF << "  xmlns:md=\"http://www.g-node.org/md-syntax-ns#\">\n";
 
-    *XF << "  <section>\n";
-    *XF << "    <name>hardware</name>\n";
+    *XF << "  <section name=\"hardware\">\n";
     for ( int k=0; k<RW->ADV->size(); k++ ) {
       const Device &dev = (*RW->ADV)[k];
-      *XF << "    <section>\n";
-      *XF << "      <name>device</name>\n";
+      *XF << "    <section name=\"device\">\n";
       Options opts;
       opts.load( dev.info() );
       opts.saveXML( *XF, 0, 3 ); 
@@ -821,10 +810,8 @@ void SaveFiles::createXMLFile( const InList &traces,
     }
     *XF << "  </section>\n";
 
-    *XF << "  <section>\n";
-    *XF << "    <name>recording</name>\n";
-    *XF << "    <section>\n";
-    *XF << "      <name>analoginput></name>\n";
+    *XF << "  <section name=\"recording\">\n";
+    *XF << "    <section name=\"analoginput\">\n";
     Options opts;
     opts.addText( "identifier" );
     opts.addText( "file" );
@@ -838,28 +825,24 @@ void SaveFiles::createXMLFile( const InList &traces,
 	opts.setNumber( "sampleinterval", 1000.0*traces[k].sampleInterval() );
 	opts.setNumber( "samplingrate", traces[k].sampleRate() );
 	opts.setText( "unit", traces[k].unit() );
-	*XF << "      <section>\n";
-	*XF << "        <name>trace</name>\n";
+	*XF << "      <section name=\"trace\">\n";
 	opts.saveXML( *XF, 0, 4 );
 	*XF << "      </section>\n";
       }
     }
     *XF << "    </section>\n";
-    *XF << "    <section>\n";
-    *XF << "      <name>events</name>\n";
+    *XF << "    <section name=\"events\">\n";
     opts.clear();
     opts.addText( "file" );
     for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
       if ( ! EventFiles[k].FileName.empty() )
 	opts.setText( "file", EventFiles[k].FileName );
-	*XF << "      <section>\n";
-	*XF << "        <name>trace</name>\n";
+	*XF << "      <section name=\"trace\">\n";
 	opts.saveXML( *XF, 0, 4 );
 	*XF << "      </section>\n";
     }
     *XF << "    </section>\n";
-    *XF << "    <section>\n";
-    *XF << "      <name>analogoutput</name>\n";
+    *XF << "    <section name=\"analogoutput\">\n";
     opts.clear();
     opts.addText( "identifier" );
     opts.addInteger( "device" );
@@ -873,8 +856,7 @@ void SaveFiles::createXMLFile( const InList &traces,
       opts.setInteger( "channel", trace.channel() );
       opts.setNumber( "signaldelay", 1000.0*trace.signalDelay() );
       opts.setNumber( "maximumrate", 0.001*trace.maxSampleRate() );
-	*XF << "      <section>\n";
-	*XF << "        <name>trace</name>\n";
+      *XF << "      <section name=\"trace\">\n";
       opts.saveXML( *XF, 0, 4 );
       *XF << "      </section>\n";
     }
@@ -1007,8 +989,7 @@ void SaveFiles::closeFiles( void )
       *XF << "  </section>\n";
       ExperimentOpen = false;
     }
-    *XF << "  <section>\n";
-    *XF << "    <name>session</name>\n";
+    *XF << "  <section name=\"session\">\n";
     RW->MTDT.saveXML( *XF, 0, 2 );
     *XF << "  </section>\n";
     *XF << "</ephysmetadata>\n";
