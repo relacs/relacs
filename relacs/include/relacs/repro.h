@@ -71,7 +71,7 @@ public:
     /*! Constructs a RePro with name \a name (has to be identical
         to the class name), widget title \a title,
 	that belongs to the set of plugins named \a pluginset.
-	The implementation of a class derived from Model
+	The implementation of a class derived from RePro
 	has the version \a version and was written
 	by \a author on \a date.
         The date defaults to the date of compilation. */
@@ -84,7 +84,7 @@ public:
     /*! Destructs a RePro. */
   virtual ~RePro( void );
 
-    /*! */
+    /*! Set the name of the RePro to \a name. */
   virtual void setName( const string &name );
 
     /*! Read the RePro's default settings from the config file. */
@@ -326,13 +326,23 @@ public:
   virtual void dialog( void );
     /*! Options of the RePro that overwrite macro options. */
   Options &overwriteOptions( void );
+    /*! Options of the RePro specifying the experiment and the project
+        this run of the RePro belongs to (for documentation purposes only). */
+  Options &projectOptions( void );
+    /*! Options of the RePro specifying the experiment and the project
+        this run of the RePro belongs to (for documentation purposes only). */
+  const Options &projectOptions( void ) const;
+    /*! Store the projectOptions() so that they are written
+        into the config file. */
+  void setProjectOptions( void );
+    /*! Retrieve the projectOptions() that were previously
+        stored by setProjectOptions(). */
+  void getProjectOptions( void );
 
-    /*! This function is evoked to check for valid options.
-	If \a opttxt is empty,
-	then all options are set to their default values.
-	Otherwise \a opttxt is read in.
-        An error message is returned. */
-  string setOptions( const string &opttxt );
+    /*! Check for valid options.
+        \param[in] opttxt string with options that are tesed for validity
+	\return error message */
+  string checkOptions( const string &opttxt );
 
   bool saving( void ) const;
   virtual void setSaving( bool saving );
@@ -372,6 +382,8 @@ private:
   bool Saving;
 
   Options OverwriteOpt;
+  Options ProjectOpt;
+  Options MyProjectOpt;
 
   int SoftStop;
   int SoftStopKey;

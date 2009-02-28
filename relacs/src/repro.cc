@@ -40,7 +40,9 @@ RePro::RePro( const string &name, const string &titles,
 	      const string &version, const string &date )
   : RELACSPlugin( "RePro: " + name, RELACSPlugin::Plugins,
 		  name, titles, pluginset, author, version, date ),
-    OverwriteOpt()
+    OverwriteOpt(),
+    ProjectOpt(),
+    MyProjectOpt()
 {
   LastState = Continue;
   CompleteRuns = 0;
@@ -48,6 +50,11 @@ RePro::RePro( const string &name, const string &titles,
   AllRuns = 0;
   FailedRuns = 0;
   Saving = false;
+
+  ProjectOpt.addText( "project", "Project", "" );
+  ProjectOpt.addText( "experiment", "Experiment", "" );
+  MyProjectOpt = ProjectOpt;
+
   SoftStop = 0;
   SoftStopKey = Key_Space;
 
@@ -73,6 +80,20 @@ void RePro::setName( const string &name )
 
 void RePro::readConfig( StrQueue &sq )
 {
+  for ( int k=0; k<sq.size(); k++ ) {
+    if ( sq[k].find( "project:" ) >= 0 ) {
+      MyProjectOpt.read( sq[k] );
+      sq.erase( k );
+      break;
+    }
+  }
+  for ( int k=0; k<sq.size(); k++ ) {
+    if ( sq[k].find( "experiment:" ) >= 0 ) {
+      MyProjectOpt.read( sq[k] );
+      sq.erase( k );
+      break;
+    }
+  }
   ConfigClass::readConfig( sq );
   setToDefaults();
 }
@@ -82,6 +103,7 @@ void RePro::saveConfig( ofstream &str )
 {
   setDefaults();
   ConfigClass::saveConfig( str );
+  MyProjectOpt.save( str, "  ", -1 );
 }
 
 
@@ -472,6 +494,7 @@ void RePro::dialog( void )
 				     dialogReadOnlyMask(), dialogStyle(),
 				     mutex() );
     od->addOptions( reprosDialogOpts() );
+    od->addOptions( projectOptions() );
     od->setSpacing( int(9.0*exp(-double(row->lines())/14.0))+1 );
     od->setMargin( 10 );
     // buttons:
@@ -508,17 +531,37 @@ Options &RePro::overwriteOptions( void )
 }
 
 
-string RePro::setOptions( const string &opttxt )
-{ 
-  string error;
-  if ( opttxt.empty() )
-    setDefaults();
-  else {
-    ConfigClass::read( opttxt ); 
-    error = ConfigClass::warning();
-  }
+Options &RePro::projectOptions( void )
+{
+  return ProjectOpt;
+}
 
-  return error;
+
+const Options &RePro::projectOptions( void ) const
+{
+  return ProjectOpt;
+}
+
+
+void RePro::setProjectOptions( void )
+{
+  MyProjectOpt = ProjectOpt;
+}
+
+
+void RePro::getProjectOptions( void )
+{
+  ProjectOpt = MyProjectOpt;
+}
+
+
+string RePro::checkOptions( const string &opttxt )
+{ 
+  Options opt = *(Options*)(this);
+  opt.erase( "project" );
+  opt.erase( "experiment" );
+  opt.read( opttxt ); 
+  return opt.warning();
 }
 
 

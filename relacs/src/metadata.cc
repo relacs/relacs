@@ -261,7 +261,7 @@ void MetaData::addActions( QPopupMenu *menu )
 
 SetupData::SetupData( Options *md )
   : ConfigClass( "Setup", RELACSPlugin::Core, 
-		 Save, SetupFlag ),
+		 Save, MetaData::setupFlag() ),
     MD( md )
 {
 }
@@ -278,26 +278,26 @@ void SetupData::readConfig( StrQueue &sq )
   addLabel( "Set&up", 0, Parameter::TabLabel );
   addText( "Name", "Name", "Setup1" );
   readAppend( sq );
-  addFlags( SetupFlag );
+  addFlags( MetaData::setupFlag() );
 }
 
 
 void SetupData::saveConfig( ofstream &str )
 {
   if ( MD != 0 )
-    MD->save( str, "  ", -1, SetupFlag, true, false );
+    MD->save( str, "  ", -1, MetaData::setupFlag(), true, false );
 }
 
 
 int SetupData::configSize( void ) const
 {
-  return MD != 0 ? MD->size( SetupFlag ) : 0;
+  return MD != 0 ? MD->size( MetaData::setupFlag() ) : 0;
 }
 
 
 int SetupData::setupFlag( void )
 {
-  return SetupFlag;
+  return MetaData::setupFlag();
 }
 
 

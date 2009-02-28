@@ -61,6 +61,8 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
   ToggleData = false;
 
   ReProInfo.clear();
+  ReProInfo.addText( "project" );
+  ReProInfo.addText( "experiment" );
   ReProInfo.addText( "repro" );
   ReProInfo.addText( "author" );
   ReProInfo.addText( "version" );
@@ -511,6 +513,8 @@ void SaveFiles::write( const RePro &rp )
   if ( ReProData )
     RW->printlog( "! warning: SaveFiles::write( RePro & ) -> already RePro data there." );
   ReProData = true;
+  ReProInfo.setText( "project", rp.projectOptions().text( "project" ) );
+  ReProInfo.setText( "experiment", rp.projectOptions().text( "experiment" ) );
   ReProInfo.setText( "repro", rp.name() );
   ReProInfo.setText( "author", rp.author() );
   ReProInfo.setText( "version", rp.version() );

@@ -133,8 +133,10 @@ public:
 
     /*! Add parameter from \a param to the macros variables. */
   void addParams( const Str &param );
-    /*! Replaces macro variables in \a params by their value. */
-  string expandParams( const Str &params ) const;
+    /*! Replaces macro variables in \a params by their value.
+        The project options, "project" and "experiment" are deleted from
+        the string and loaded into \a prjopt. */
+  string expandParams( const Str &params, Options &prjopt ) const;
 
     /*! Forms a string for the menu consisting of the macro name
         and its variables. */
@@ -315,8 +317,12 @@ public:
   Options &variables( int macro );
     /*! Returns the macro variables of macro \a macro as a string. */
   string variablesStr( int macro );
-    /*! Replaces variables of macro \a macro in \a params by their value. */
-  string expandParams( int macro, const Str &params ) const;
+    /*! Returns the project variables of macro \a macro. */
+  Options &project( int macro );
+    /*! Replaces variables of macro \a macro in \a params by their value.
+        The project options, "project" and "experiment" are deleted from
+        the string and loaded into \a prjopt. */
+  string expandParams( int macro, const Str &params, Options &prjopt ) const;
 
   virtual void saveConfig( ofstream &str );
 
@@ -501,6 +507,8 @@ public:
   RePro *RP;
     /*! The current options for this RePro that differ from the default. */
   Options CO;
+    /*! The project options for this RePro. */
+  Options PO;
     /*! The additional dialog options from RePros. */
   Options *DO;
     /*! If the command refers to a macro (\a Macro >= 0)
@@ -534,6 +542,8 @@ public:
   bool DialogOpen;
     /*! Options for a Macro-variable dialog. */
   Options MacroVars;
+    /*! Options for a Macro-project dialog. */
+  Options MacroProject;
     /*! The shortcut key for the menu entry. */
   string MenuShortcut;
   string MenuText;

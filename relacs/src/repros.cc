@@ -424,8 +424,9 @@ void ReProData::start( void )
 {
   emit stopRePro();
 
-  ((Options *)RP)->setDefaults();
-  ((Options *)RP)->read( CO );
+  RP->Options::setDefaults();
+  RP->Options::read( CO );
+  RP->getProjectOptions();
 
   emit noMacro( RP );
   emit startRePro( RP, Macro::NoMacro, true );
@@ -437,8 +438,9 @@ void ReProData::dialog( void )
   if ( RP->dialogOpen() )
     return;
 
-  ((Options*)RP)->setDefaults();
-  ((Options*)RP)->read( CO, 0, RePro::CurrentFlag );
+  RP->Options::setDefaults();
+  RP->Options::read( CO, 0, RePro::CurrentFlag );
+  RP->getProjectOptions();
 
   RP->dialog();
 
@@ -461,12 +463,13 @@ void ReProData::acceptDialog( void )
     RP->overwriteOptions().clear();
   }
   if ( DO->boolean( "default" ) ) {
-    ((Options*)RP)->setToDefaults();
+    RP->Options::setToDefaults();
     CO.clear();
   }
   else {
     CO.readAppend( newopt );
   }
+  RP->setProjectOptions();
 }
 
 

@@ -61,8 +61,8 @@ Control::initialize() by doing something like
 All standard options have the standardFlag() set.
 The values of the standard options are set appropriately in save()
 right before they are saved to the info file of the session.
-Never add info() options within the %Control constructor!
-With the infoDialogFlag() and the presetDialogFlag() Options
+Never add options to MetaData within a Control constructor!
+With the dialogFlag() and the presetDialogFlag() Options
 can be selected that are displayed in the dialog() or presetDialog().
 */
 
@@ -79,13 +79,13 @@ public:
   virtual void readConfig( StrQueue &sq );
     /*! Save the meta data Options from the configuration file. */
   virtual void saveConfig( ofstream &str );
-    /*! React to settings of the session info options.
+    /*! React to changes of the meta data.
         This function calls notifyMetaData() in all RELACSPlugins. */
   virtual void notify( void );
 
     /*! Saves the meta data into the info file of the session. */
   void save( void );
-    /*! Clear the info options. */
+    /*! Clear the meta data. */
   void clear( void );
 
     /*! Lock the meta data. */
@@ -104,7 +104,7 @@ public:
   static int presetDialogFlag( void );
     /*! The flag that is used to mark options loaded from the config file. */
   static int configFlag( void );
-    /*! The flag that is used to mark info standard options. */
+    /*! The flag that is used to mark the standard options. */
   static int standardFlag( void );
     /*! The flag that is used to mark the meta data about
         the experimental setup. */
@@ -167,7 +167,7 @@ private:
 \version 1.0
 
 The SetupData options are loaded from the relacs.cfg file and get
-the setupFlag() set.
+the MetaData::setupFlag() set.
 They are saved from their copy in MetaData.
 */
 
@@ -181,9 +181,9 @@ public:
 
     /*! Load the SetupData options from relacs.cfg and set setupFlag(). */
   virtual void readConfig( StrQueue &sq );
-    /*! Save the SetupData options from Session::info(). */
+    /*! Save the SetupData options from MetaData. */
   virtual void saveConfig( ofstream &str );
-    /*! The size of the SetupData options within Session::info(). */
+    /*! The size of the SetupData options within MetaData. */
   virtual int configSize( void ) const;
 
     /*! The flag that is used to mark the meta data about
@@ -193,9 +193,7 @@ public:
 
 private:
 
-  static const int SetupFlag = 2048;
   Options *MD;
-
 
 };
 
