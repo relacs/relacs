@@ -85,6 +85,15 @@ void MetaDataSection::save( ofstream &str )
 }
 
 
+ostream &MetaDataSection::saveXML( ostream &str, int level, int indent ) const
+{
+  string indstr1( level*indent, ' ' );
+  str << indstr1 << "<section name=\"" << configIdent() << "\">\n";
+  Options::saveXML( str, MD->saveFlag(), level+1, indent );
+  str << indstr1 << "</section>\n";
+}
+
+
 bool MetaDataSection::ownTab( void ) const
 {
   return Tab;
@@ -219,6 +228,18 @@ void MetaData::save( void )
   RW->SS.unlock();
   for ( unsigned int k=0; k<MetaDataSections.size(); k++ )
     MetaDataSections[k]->save( of );
+
+  unlock();
+}
+
+
+ostream &MetaData::saveXML( ostream &str, int level, int indent ) const
+{
+  lock();
+
+  // write XML:
+  for ( unsigned int k=0; k<MetaDataSections.size(); k++ )
+    MetaDataSections[k]->saveXML( str, level, indent );
 
   unlock();
 }

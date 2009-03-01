@@ -993,9 +993,7 @@ void SaveFiles::closeFiles( void )
       *XF << "  </section>\n";
       ExperimentOpen = false;
     }
-    *XF << "  <section name=\"session\">\n";
-    RW->MTDT.saveXML( *XF, RW->MTDT.saveFlag(), 2 );
-    *XF << "  </section>\n";
+    RW->MTDT.saveXML( *XF, 1 );
     *XF << "</ephysmetadata>\n";
     delete XF;
   }

@@ -29,7 +29,7 @@ namespace auditory {
 
 Session::Session( void )
   : Control( "Session", "Info", "Auditory",
-	     "Jan Benda", "1.3", "Jan 22, 2008" ),
+	     "Jan Benda", "1.4", "Mar 1, 2009" ),
     P( 2, 1, true, Plot::Pointer, this, "sessionplot" )
 
 {
@@ -145,14 +145,14 @@ void Session::initialize( void )
 
   mo.addNumber( "silent rate", "Silent rate", -1.0, "Hz", "%.1f", MetaDataReset );
 
-  mo.addLabel( "plugins" );
+  // XXX  mo.addLabel( "plugins" );
 
-  mo.addLabel( "metadata", MetaDataSave );
+  // XXX  mo.addLabel( "metadata", MetaDataSave );
 
   mo.addStyle( OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack, MetaDataDisplay );
 
-  mo.setSaveFlag( metaData().standardFlag() + metaData().configFlag()
-		  + metaData().setupFlag() + MetaDataSave );
+  // XXX  mo.setSaveFlag( MetaData::standardFlag() + MetaData::configFlag()
+		  + MetaData::setupFlag() + MetaDataSave );
   
   if ( simulation() ) {
     mo.selectText( "best side", "left" );
@@ -176,11 +176,12 @@ void Session::initDevices( void )
   //  Temp = dynamic_cast< Temperature* >( device( Temperature::Type, 0 ) );
   if ( Temp != 0 ) {
     lockMetaData();
-    metaData().unsetNotify();
-    metaData().erase( "temp-1" );
-    metaData().insertNumber( "temp-1", "metadata", "Temperature", 0.0, "°C", "%.1f", MetaDataReadOnly+MetaDataDisplay, 
-			 OptWidget::ValueBold + OptWidget::ValueRed + OptWidget::ValueBackBlack );
-    metaData().setNotify();
+    Options &mo = metaData( "Recording" );
+    mo.unsetNotify();
+    mo.erase( "temp-1" );
+    mo.addNumber( "temp-1", "Temperature", 0.0, "°C", "%.1f", MetaDataReadOnly+MetaDataDisplay, 
+		  OptWidget::ValueBold + OptWidget::ValueRed + OptWidget::ValueBackBlack );
+    mo.setNotify();
     unlockMetaData();
     lockStimulusData();
     stimulusData().addNumber( "temp-1", 0.0, "°C", "%.1f" );
@@ -191,9 +192,10 @@ void Session::initDevices( void )
   Ampl = dynamic_cast< misc::AmplMode* >( device( "ampl-1" ) );
   if ( Ampl != 0 ) {
     lockMetaData();
-    metaData().unsetNotify();
-    metaData().insertNumber( "resistance", "metadata", "Resistance", 0.0, "MOhm", "%.0f", MetaDataReadOnly+MetaDataDisplay );
-    metaData().setNotify();
+    Options &mo = metaData( "Recording" );
+    mo.unsetNotify();
+    mo.addNumber( "resistance", "Resistance", 0.0, "MOhm", "%.0f", MetaDataReadOnly+MetaDataDisplay );
+    mo.setNotify();
     unlockMetaData();
     AmplBox->show();
     if ( ResistanceButton == 0 && BuzzerButton == 0 ) {
@@ -215,7 +217,7 @@ void Session::initDevices( void )
     AmplBox->hide();
     //  }
 
-  ASW->assign( &metaData(), MetaDataDisplay, MetaDataReadOnly, true, 
+  ASW->assign( &metaData( "Cell" ), MetaDataDisplay, MetaDataReadOnly, true, 
 	       OptWidget::BreakLinesStyle + OptWidget::ExtraSpaceStyle,
 	       metaDataMutex() );
   ASW->setSpacing( 2 );
@@ -229,8 +231,10 @@ void Session::startSession( void )
 
   // reset values of metaData() options:
   lockMetaData();
-  metaData().setDefaults( MetaDataReset );
-  metaData().delFlags( MetaDataSave + Parameter::changedFlag(), MetaDataReset );
+  metaData( "Cell" ).setDefaults( MetaDataReset );
+  metaData( "Cell" ).delFlags( MetaDataSave + Parameter::changedFlag(), MetaDataReset );
+  metaData( "Recording" ).setDefaults( MetaDataReset );
+  metaData( "Recording" ).delFlags( MetaDataSave + Parameter::changedFlag(), MetaDataReset );
   unlockMetaData();
 
   lock();
@@ -274,7 +278,7 @@ void Session::main( void )
   while ( ! interrupt() ) {
     double temp = Temp->temperature();
     lockMetaData();
-    metaData().setNumber( "temp-1", temp );
+    metaData( "Recording" ).setNumber( "temp-1", temp );
     unlockMetaData();
     lockStimulusData();
     stimulusData().setNumber( "temp-1", temp );
@@ -310,7 +314,7 @@ void Session::measureResistance( void )
     unlockData();
     r *= ResistanceScale;
     lockMetaData();
-    metaData().setNumber( "resistance", r );
+    metaData( "Recording" ).setNumber( "resistance", r );
     unlockMetaData();
   }
   */
@@ -397,7 +401,7 @@ void Session::keyReleaseEvent( QKeyEvent *e )
 
 void Session::notifyMetaData( void )
 {
-  metaData().addFlags( MetaDataSave, Parameter::changedFlag() );
+  metaData( "Cell" ).addFlags( MetaDataSave, Parameter::changedFlag() );
   ASW->updateValues( OptWidget::changedFlag() );
 }
 
@@ -406,7 +410,7 @@ MapD Session::threshCurve( int side ) const
 {
   if ( side > 1 ) {
     lockMetaData();
-    side = metaData().index( "best side" );
+    side = metaData( "Cell" ).index( "best side" );
     unlockMetaData();
   }
   MapD tc( 0 );
@@ -431,7 +435,7 @@ MapD Session::fICurve( int side ) const
 {
   if ( side > 1 ) {
     lockMetaData();
-    side = metaData().index( "best side" );
+    side = metaData( "Cell" ).index( "best side" );
     unlockMetaData();
   }
   MapD fi( 0 );
@@ -456,7 +460,7 @@ MapD Session::onFICurve( int side ) const
 {
   if ( side > 1 ) {
     lockMetaData();
-    side = metaData().index( "best side" );
+    side = metaData( "Cell" ).index( "best side" );
     unlockMetaData();
   }
   MapD ofi( 0 );
@@ -481,7 +485,7 @@ MapD Session::ssFICurve( int side ) const
 {
   if ( side > 1 ) {
     lockMetaData();
-    side = metaData().index( "best side" );
+    side = metaData( "Cell" ).index( "best side" );
     unlockMetaData();
   }
   MapD sfi( 0 );
@@ -505,27 +509,28 @@ void Session::addSSFICurve( const MapD &ssficurve, int side )
 void Session::updateBestSide( void )
 {
   lockMetaData();
+  Options &mo = metaData( "Cell" );
   int bestnoise = -1;
-  double left = metaData().number( "left noise threshold" );
-  double right = metaData().number( "right noise threshold" );
+  double left = mo.number( "left noise threshold" );
+  double right = mo.number( "right noise threshold" );
   if ( left > 0.0 && right > 0.0 )
     bestnoise = left < right ? 0 : 1;
   else
     bestnoise = left > 0.0 ? 0 : ( right > 0.0 ? 1 : -1 );
 
   int bestsine = -1;
-  left = metaData().number( "left threshold" );
-  right = metaData().number( "right threshold" );
+  left = mo.number( "left threshold" );
+  right = mo.number( "right threshold" );
   if ( left > 0.0 && right > 0.0 )
     bestsine = left < right ? 0 : 1;
   else
     bestsine = left > 0.0 ? 0 : ( right > 0.0 ? 1 : -1 );
 
   if ( bestsine >= 0 ) {
-    metaData().selectText( "best side", bestsine == 0 ? "left" : "right" );
+    mo.selectText( "best side", bestsine == 0 ? "left" : "right" );
   }
   else if ( bestnoise >= 0 )
-    metaData().selectText( "best side", bestnoise == 0 ? "left" : "right" );
+    mo.selectText( "best side", bestnoise == 0 ? "left" : "right" );
   unlockMetaData();
 }
 
@@ -536,8 +541,10 @@ void Session::plot( void )
   lockMetaData();
   P.lock();
 
+  Options &mo = metaData( "Cell" );
+
   P[0].clear();
-  double bf = metaData().number( "best frequency" );
+  double bf = mo.number( "best frequency" );
   if ( bf > 0.0 )
     P[0].plotVLine( 0.001*bf, Plot::White, 2 );
   P[0].plot( OldThreshCurve[0], 0.001, Plot::Gray, 2, Plot::LongDash );
@@ -552,10 +559,10 @@ void Session::plot( void )
     P[0].plot( ThreshCurve[1].back(), 0.001, Plot::Yellow, 3, Plot::Solid );
 
   P[1].clear();
-  double bt = metaData().number( "best threshold" );
+  double bt = mo.number( "best threshold" );
   if ( bt > 0.0 )
     P[1].plotVLine( bt, Plot::White, 2 );
-  double bs = metaData().number( "best saturation" );
+  double bs = mo.number( "best saturation" );
   if ( bs > 0.0 )
     P[1].plotVLine( bs, Plot::White, 2 );
   P[1].plot( OldFICurve[0], 1.0, Plot::White, 2, Plot::LongDash );

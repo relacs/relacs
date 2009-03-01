@@ -34,7 +34,7 @@ using namespace std;
 namespace relacs {
 
 
-  class MetaData;
+class MetaData;
 class RELACSWidget;
 
 
@@ -76,8 +76,17 @@ public:
     /*! Clear the options. */
   virtual void clear( void );
     /*! Save the name of the section and the options 
-        that have MetaData::saveFlag() set into info file \a str. */
+        that have MetaData::saveFlag() set in their flags()
+	into info file \a str. */
   virtual void save( ofstream &str );
+    /*! Write meta data that have MetaData::saveFlag() set in their flags()
+        in XML format to output stream.
+        \param[in] str the output stream
+        \param[in] level the level of indentation
+        \param[in] indent the indentation depth, 
+                   i.e. number of white space characters per level
+        \return the output stream \a str */
+  ostream &saveXML( ostream &str, int level=0, int indent=2 ) const;
 
     /*! Returns \c true if this section shold get its own tab in the dialog. */
   bool ownTab( void ) const;
@@ -125,7 +134,9 @@ public:
     /*! Clear the options and preset them with standard options. */
   virtual void clear( void );
     /*! Set the values of the standard options and 
-        save the options into info file \a str. */
+        save the name of the section and the options 
+        that have MetaData::saveFlag() set in their flags()
+	into info file \a str. */
   virtual void save( ofstream &str );
 
 };
@@ -137,10 +148,12 @@ public:
 \author Jan Benda
 \version 1.0
 
-MetaData contains the meta data for a recording session.
-They are loaded from the "MetaData" section of the \c relacsplugins.cfg file
-(after Control::initialize() and before Contrl::initDevices() is called).
-The MetaData-Options contain a few standard parameter:
+MetaData contains several sections of meta data for a recording session.
+The sections are defined in the \c relacs.cfg file and are
+typically loaded from the \c relacsplugins.cfg file
+(after Control::initialize() and before Control::initDevices() is called).
+
+The "Recording" section is always used and contains a few standard parameter:
 (the name of the directory where the data are saved ("File"),
 date ("Date") and time ("Time") of the session start, 
 the duration of the session ("Recording duration"), 
@@ -150,13 +163,14 @@ the version of the software ("Software version").
 You can remove individual standard options in 
 Control::initialize() by doing something like
 \code
-  metaData().erase( "File" );
+  metaData( "Recording" ).erase( "File" );
 \endcode
 All standard options have the standardFlag() set.
 The values of the standard options are set appropriately in save()
 right before they are saved to the info file of the session.
-Never add options to MetaData within a Control constructor!
-With the dialogFlag() and the presetDialogFlag() Options
+
+Never add options to a MetaDataSection within a Control constructor!
+With the dialogFlag() and the presetDialogFlag() meta data
 can be selected that are displayed in the dialog() or presetDialog().
 */
 
@@ -179,6 +193,14 @@ public:
 
     /*! Saves the meta data into the info file of the session. */
   void save( void );
+    /*! Write meta data that have saveFlag() set in their flags()
+        in XML format to output stream.
+        \param[in] str the output stream
+        \param[in] level the level of indentation
+        \param[in] indent the indentation depth, 
+                   i.e. number of white space characters per level
+        \return the output stream \a str */
+  ostream &saveXML( ostream &str, int level=0, int indent=2 ) const;
     /*! Clear the meta data. */
   void clear( void );
 
