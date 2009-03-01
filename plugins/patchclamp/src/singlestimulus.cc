@@ -264,9 +264,9 @@ int SingleStimulus::main( void )
   StoreFile = "";
 
   if ( offsetbase == 1 )
-    Offset = offset + metaData().number( "best threshold" );	// get "best thresh" from FICurve (via the session widget)
+    Offset = offset + metaData( "Cell" ).number( "best threshold" );	// get "best thresh" from FICurve (via the session widget)
   else if ( offsetbase == 2 )
-    Offset = offset + metaData().number( "best offset" );	// get "best offset" from FICurve (via the session widget)
+    Offset = offset + metaData( "Cell" ).number( "best offset" );	// get "best offset" from FICurve (via the session widget)
   else if ( offsetbase == 3 )
     Offset += 0.0;
   else
@@ -399,7 +399,7 @@ int SingleStimulus::main( void )
 	  SP[0].plot( rate2, 1000.0, Plot::Orange, 2, Plot::Solid );
 
 	  // stimulus:
-	  double threshold = metaData().number( "best threshold" );
+	  double threshold = metaData( "Cell" ).number( "best threshold" );
 	  double ymin = Offset - PeakAmplitude;
 	  double ymax = Offset + PeakAmplitude;
 	  if ( threshold > 0.0 ) {
@@ -777,7 +777,7 @@ void SingleStimulus::plot( const EventList &spikes, const SampleDataD &rate1,
   P[0].plot( rate2, 1000.0, Plot::Orange, 2, Plot::Solid );
 
   // stimulus:
-  double threshold = metaData().number( "best threshold" );
+  double threshold = metaData( "Cell" ).number( "best threshold" );
   double ymin = Offset - PeakAmplitude;
   double ymax = Offset + PeakAmplitude;
   if ( threshold > 0.0 ) {

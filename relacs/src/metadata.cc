@@ -23,8 +23,7 @@
 #include <cmath>
 #include <ctime>
 #include <qdatetime.h>
-#include <qtimer.h>
-#include <qdatetime.h>
+#include <relacs/str.h>
 #include <relacs/optdialog.h>
 #include <relacs/relacswidget.h>
 #include <relacs/metadata.h>
@@ -32,9 +31,132 @@
 namespace relacs {
 
 
+MetaDataSection::MetaDataSection( const string &name, int group, bool tab,
+				  MetaData *md, RELACSWidget *rw )
+  : ConfigClass( name, group, Save ),
+    MD( md ),
+    RW( rw ),
+    Tab( tab )
+{
+}
+
+
+MetaDataSection::~MetaDataSection( void )
+{
+}
+
+
+void MetaDataSection::readConfig( StrQueue &sq )
+{
+  MD->lock();
+  clear();
+  int n = Options::size();
+  Options::load( sq );
+  for ( int k=n; k<Options::size(); k++ )
+    Options::operator[]( k ).addFlags( MD->dialogFlag() | MD->configFlag() );
+  MD->unlock();
+}
+
+
+void MetaDataSection::saveConfig( ofstream &str )
+{
+  MD->lock();
+  Options::save( str, "  ", -1, MD->configFlag(), true, false );
+  MD->unlock();
+}
+
+
+void MetaDataSection::notify( void )
+{
+  MD->notifyMetaData();
+}
+
+
+void MetaDataSection::clear( void )
+{
+  Options::clear();
+}
+
+
+void MetaDataSection::save( ofstream &str )
+{
+  str << "# " << configIdent() << '\n';
+  Options::save( str, "# ", -1, MD->saveFlag(), false, true );
+}
+
+
+bool MetaDataSection::ownTab( void ) const
+{
+  return Tab;
+}
+
+  
+void MetaDataSection::setOwnTab( bool tab )
+{
+  Tab = tab;
+}
+
+
+MetaDataRecordingSection::MetaDataRecordingSection( bool tab,
+						    MetaData *md,
+						    RELACSWidget *rw )
+  : MetaDataSection( "Recording", RELACSPlugin::Plugins, tab, md, rw )
+{
+  clear();
+}
+
+
+MetaDataRecordingSection::~MetaDataRecordingSection( void )
+{
+}
+
+
+int MetaDataRecordingSection::configSize( void ) const
+{
+  return ( Options::size() - Options::size( MD->standardFlag() ) );
+}
+
+
+void MetaDataRecordingSection::clear( void )
+{
+  Options::clear();
+  addText( "File", "", MD->standardFlag() );
+  addText( "Date", "", MD->standardFlag() );
+  addText( "Time", "", MD->standardFlag() );
+  addNumber( "Recording duration", "", MD->standardFlag() );
+  addText( "Mode", RW->modeStr(), MD->standardFlag() );
+  addText( "Software", "RELACS", MD->standardFlag() );
+  addText( "Software version", RELACSVERSION, MD->standardFlag() );
+}
+
+
+void MetaDataRecordingSection::save( ofstream &str )
+{
+  // set the <date> and <time> strings:
+  RW->SS.lock();
+  Str date = RW->SS.text( "dateformat" );
+  time_t tt = RW->SN->startSessionTime();
+  date.format( localtime( &tt ) );
+  Str time = RW->SS.text( "timeformat" );
+  time.format( localtime( &tt ) );
+  RW->SS.unlock();
+
+  // update file, date, time
+  setText( "File", Str( RW->SF->path() ).preventSlash() );
+  setText( "Date", date );
+  setText( "Time", time );
+  setNumber( "Recording duration", RW->SN->sessionTime()/60.0 );
+  setUnit( "Recording duration", "min", "min" );
+  setFormat( "Recording duration", "%.2f" );
+  setText( "Mode", RW->modeStr() );
+
+  str << "# " << configIdent() << '\n';
+  Options::save( str, "# ", -1, MD->saveFlag(), false, true );
+}
+
+
 MetaData::MetaData( RELACSWidget *rw )
-  : ConfigClass( "MetaData", RELACSPlugin::Plugins, 
-		 Save, DialogFlag + PresetDialogFlag ),
+  : ConfigClass( "MetaData", RELACSPlugin::Core, Save ),
     SaveFlag( 0 ),
     Dialog( false ),
     PresetDialog( false ),
@@ -51,29 +173,37 @@ MetaData::~MetaData( void )
 
 void MetaData::readConfig( StrQueue &sq )
 {
+  Options::clear();
+  Options::load( sq );
+
+  // read out options and create meta data sections:
+  // (this cannot go into configure, since we also want to add things
+  // to the same configureation file)
   lock();
-  int n = Options::size();
-  Options::readAppend( sq );
-  for ( int k=n; k<Options::size(); k++ ) {
-    Options::operator[]( k ).addFlags( dialogFlag() | configFlag() );
-  }
-  if ( RW->Setup.size() > 0 ) {
-    Options::append( RW->Setup );
+  MetaDataSections.clear();
+  MetaDataSections.reserve( 10 );
+  MetaDataSections.push_back( new MetaDataRecordingSection( false, this, RW ) );
+  int max = 10;
+  for ( int k=0; k<max; k++ ) {
+    string num = Str( k );
+    string name = text( "section" + num );
+    if ( ! name.empty() ) {
+      int group = ( text( "config" + num ) == "core" ? RELACSPlugin::Core : RELACSPlugin::Plugins );
+      bool tab = boolean( "tab" + num );
+      if ( name == "Recording" ) {
+	MetaDataSections[0]->setConfigGroup( group );
+	MetaDataSections[0]->setOwnTab( tab );
+      }
+      else
+	MetaDataSections.push_back( new MetaDataSection( name, group, tab, this, RW ) );
+      max = k+10;
+    }
   }
   unlock();
 }
 
 
-void MetaData::saveConfig( ofstream &str )
-{
-  lock();
-  Options::save( str, "  ", 0, dialogFlag() + presetDialogFlag(),
-		 true, false );
-  unlock();
-}
-
-
-void MetaData::notify( void )
+void MetaData::notifyMetaData( void )
 {
   RW->notifyMetaData();
 }
@@ -81,32 +211,14 @@ void MetaData::notify( void )
 
 void MetaData::save( void )
 {
-  // set the <date> and <time> strings:
-  RW->SS.lock();
-  Str date = RW->SS.text( "dateformat" );
-  time_t tt = RW->SN->startSessionTime();
-  date.format( localtime( &tt ) );
-  Str time = RW->SS.text( "timeformat" );
-  time.format( localtime( &tt ) );
-  RW->SS.unlock();
-
   lock();
-
-  // update file, date, time
-  setText( "File", Str( RW->SF->path() ).preventSlash() );
-  setText( "Date", date );
-  setText( "Time", time );
-  setNumber( "Recording duration", RW->SN->sessionTime()/60.0 );
-  setUnit( "Recording duration", "min", "min" );
-  setFormat( "Recording duration", "%.2f" );
-  setText( "Mode", RW->modeStr() );
-  setText( "Software version", RELACSVERSION );
 
   // write infofile:
   RW->SS.lock();
   ofstream of( RW->SF->addPath( RW->SS.text( "infofile" ) ).c_str() );
   RW->SS.unlock();
-  Options::save( of, "# ", -1, saveFlag(), false, true );
+  for ( unsigned int k=0; k<MetaDataSections.size(); k++ )
+    MetaDataSections[k]->save( of );
 
   unlock();
 }
@@ -115,16 +227,33 @@ void MetaData::save( void )
 void MetaData::clear( void )
 {
   lock();
-  Options::clear();
-  addLabel( "Experiment", standardFlag() + dialogFlag(), Parameter::TabLabel );
-  addText( "File", "", standardFlag() );
-  addText( "Date", "", standardFlag() );
-  addText( "Time", "", standardFlag() );
-  addNumber( "Recording duration", "", standardFlag() );
-  addText( "Mode", RW->modeStr(), standardFlag() );
-  addText( "Software", "RELACS", standardFlag() );
-  addText( "Software version", RELACSVERSION, standardFlag() );
+  for ( unsigned int k=0; k<MetaDataSections.size(); k++ ) {
+    if ( MetaDataSections[k]->configGroup() != RELACSPlugin::Core )
+      MetaDataSections[k]->clear();
+  }
   unlock();
+}
+
+
+Options &MetaData::section( const string &section )
+{
+  for ( unsigned int k=0; k<MetaDataSections.size(); k++ ) {
+    if ( MetaDataSections[k]->configIdent() == section )
+      return *MetaDataSections[k];
+  }
+  DummyOpts.clear();
+  return DummyOpts;
+}
+
+
+const Options &MetaData::section( const string &section ) const
+{
+  for ( unsigned int k=0; k<MetaDataSections.size(); k++ ) {
+    if ( MetaDataSections[k]->configIdent() == section )
+      return *MetaDataSections[k];
+  }
+  DummyOpts.clear();
+  return DummyOpts;
 }
 
 
@@ -193,11 +322,32 @@ int MetaData::dialog( void )
   if ( Dialog )
     return 0;
 
+  // setup options:
+  DialogOpts.clear();
+  bool dflttab = false;
+  lock();
+  for ( unsigned int k=0; k<MetaDataSections.size(); k++ ) {
+    if ( ! MetaDataSections[k]->ownTab() && ! MetaDataSections[k]->empty() ) {
+      if ( ! dflttab ) {
+	DialogOpts.addLabel( "Meta Data", LabelFlag, OptWidget::TabLabel );
+	dflttab = true;
+      }
+      DialogOpts.addLabel( MetaDataSections[k]->configIdent(), LabelFlag, OptWidget::Bold );
+      DialogOpts.append( *MetaDataSections[k], dialogFlag() );
+    }
+  }
+  for ( unsigned int k=0; k<MetaDataSections.size(); k++ ) {
+    if ( MetaDataSections[k]->ownTab() && ! MetaDataSections[k]->empty() ) {
+      DialogOpts.addLabel( MetaDataSections[k]->configIdent(), LabelFlag, OptWidget::TabLabel );
+      DialogOpts.append( *MetaDataSections[k], dialogFlag() );
+    }
+  }
+  unlock();
+
   // create and exec dialog:
   Dialog = true;
-
   OptDialog *od = new OptDialog( this );
-  od->addOptions( *this, dialogFlag() | setupFlag(), 0, 0, &MetaDataLock );
+  od->addOptions( DialogOpts );
   od->setSpacing( 10 );
   od->setMargin( 10 );
   od->setCaption( "Stop Session Dialog" );
@@ -206,6 +356,8 @@ int MetaData::dialog( void )
   od->addButton( "&Discard", OptDialog::NoAction, 0 );
   od->addButton( "&Reset", OptDialog::Defaults );
   od->addButton( "&Cancel" );
+  connect( od, SIGNAL( valuesChanged() ),
+	   this, SLOT( dialogChanged() ) );
   connect( od, SIGNAL( dialogClosed( int ) ),
 	   this, SLOT( dialogClosed( int ) ) );
   return od->exec();
@@ -214,7 +366,35 @@ int MetaData::dialog( void )
 
 void MetaData::dialogClosed( int r )
 {
+  DialogOpts.clear();
   Dialog = false;
+}
+
+
+void MetaData::dialogChanged( void )
+{
+  lock();
+  bool changed = false;
+  int secinx = -1;
+  for ( int k=0; k<DialogOpts.size(); k++ ) {
+    if ( DialogOpts[k].flags() & LabelFlag ) {
+      // find section:
+      for ( unsigned int j=0; j<MetaDataSections.size(); j++ ) {
+	if ( DialogOpts[k].label() == MetaDataSections[j]->configIdent() ) {
+	  secinx = j;
+	  break;
+	}
+      }
+    }
+    else if ( secinx >= 0 && DialogOpts[k].flags() & Parameter::changedFlag() ) {
+      // set parameter:
+      MetaDataSections[ secinx ]->read( DialogOpts[k], Parameter::changedFlag() );
+      changed = true;
+    }
+  }
+  if ( changed )
+    notifyMetaData();
+  unlock();
 }
 
 
@@ -223,12 +403,33 @@ void MetaData::presetDialog( void )
   if ( PresetDialog )
     return;
 
+  // setup options:
+  PresetDialogOpts.clear();
+  bool dflttab = false;
+  lock();
+  for ( unsigned int k=0; k<MetaDataSections.size(); k++ ) {
+    if ( ! MetaDataSections[k]->ownTab() && ! MetaDataSections[k]->empty() ) {
+      if ( ! dflttab ) {
+	PresetDialogOpts.addLabel( "Meta Data", LabelFlag, OptWidget::TabLabel );
+	dflttab = true;
+      }
+      PresetDialogOpts.addLabel( MetaDataSections[k]->configIdent(), LabelFlag, OptWidget::Bold );
+      PresetDialogOpts.append( *MetaDataSections[k], dialogFlag() | presetDialogFlag() );
+    }
+  }
+  for ( unsigned int k=0; k<MetaDataSections.size(); k++ ) {
+    if ( MetaDataSections[k]->ownTab() && ! MetaDataSections[k]->empty() ) {
+      PresetDialogOpts.addLabel( MetaDataSections[k]->configIdent(), LabelFlag, OptWidget::TabLabel );
+      PresetDialogOpts.append( *MetaDataSections[k], dialogFlag() | presetDialogFlag() );
+    }
+  }
+  unlock();
+
   // create and exec dialog:
   PresetDialog = true;
 
   OptDialog *od = new OptDialog( this );
-  od->addOptions( *this, dialogFlag() | presetDialogFlag() | setupFlag(),
-		  0, 0, &MetaDataLock );
+  od->addOptions( PresetDialogOpts );
   od->setSpacing( 10 );
   od->setMargin( 10 );
   od->setCaption( "Stop Session Dialog" );
@@ -236,6 +437,8 @@ void MetaData::presetDialog( void )
   od->addButton( "&Ok", OptDialog::Accept, 1 );
   od->addButton( "&Reset", OptDialog::Defaults );
   od->addButton( "&Cancel" );
+  connect( od, SIGNAL( valuesChanged() ),
+	   this, SLOT( presetDialogChanged() ) );
   connect( od, SIGNAL( dialogClosed( int ) ),
 	   this, SLOT( presetDialogClosed( int ) ) );
   od->exec();
@@ -244,7 +447,35 @@ void MetaData::presetDialog( void )
 
 void MetaData::presetDialogClosed( int r )
 {
+  PresetDialogOpts.clear();
   PresetDialog = false;
+}
+
+
+void MetaData::presetDialogChanged( void )
+{
+  lock();
+  bool changed = false;
+  int secinx = -1;
+  for ( int k=0; k<PresetDialogOpts.size(); k++ ) {
+    if ( PresetDialogOpts[k].flags() & LabelFlag ) {
+      // find section:
+      for ( unsigned int j=0; j<MetaDataSections.size(); j++ ) {
+	if ( PresetDialogOpts[k].label() == MetaDataSections[j]->configIdent() ) {
+	  secinx = j;
+	  break;
+	}
+      }
+    }
+    else if ( secinx >= 0 && PresetDialogOpts[k].flags() & Parameter::changedFlag() ) {
+      // set parameter:
+      MetaDataSections[ secinx ]->read( PresetDialogOpts[k], Parameter::changedFlag() );
+      changed = true;
+    }
+  }
+  if ( changed )
+    notifyMetaData();
+  unlock();
 }
 
 
@@ -257,49 +488,6 @@ void MetaData::addActions( QPopupMenu *menu )
 	   this, SLOT( presetDialog() ) );
   action->addTo( menu );
 }
-
-
-SetupData::SetupData( Options *md )
-  : ConfigClass( "Setup", RELACSPlugin::Core, 
-		 Save, MetaData::setupFlag() ),
-    MD( md )
-{
-}
-
-
-SetupData::~SetupData( void )
-{
-}
-
-
-void SetupData::readConfig( StrQueue &sq )
-{
-  clear();
-  addLabel( "Set&up", 0, Parameter::TabLabel );
-  addText( "Name", "Name", "Setup1" );
-  readAppend( sq );
-  addFlags( MetaData::setupFlag() );
-}
-
-
-void SetupData::saveConfig( ofstream &str )
-{
-  if ( MD != 0 )
-    MD->save( str, "  ", -1, MetaData::setupFlag(), true, false );
-}
-
-
-int SetupData::configSize( void ) const
-{
-  return MD != 0 ? MD->size( MetaData::setupFlag() ) : 0;
-}
-
-
-int SetupData::setupFlag( void )
-{
-  return MetaData::setupFlag();
-}
-
 
 
 }; /* namespace relacs */

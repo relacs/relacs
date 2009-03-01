@@ -104,66 +104,67 @@ void Session::initialize( void )
   // XXX important: the following must be called AFTER metaData() is cleared
   // and BEFORE the configuration file is read in!!!!!
   lockMetaData();
-  metaData().unsetNotify();
-  metaData().addLabel( "Cell properties", MetaDataSave );
+  Options &mo = metaData( "Cell" );
+  mo.unsetNotify();
+  mo.addLabel( "Cell properties", MetaDataSave );
 
-  metaData().addSelection( "best side", "Best side", "left|right", MetaDataReadOnly+MetaDataDisplay ).setUnit( "speaker" );
-  metaData().addNumber( "best frequency", "Best frequency", -1000.0, -1000.0, 100000.0, 500.0, "Hz", "kHz", "%.1f", MetaDataDisplay+MetaDataReset );
-  metaData().addNumber( "best threshold", "Best threshold", -1.0, -1.0, 200.0, 1.0, "dB SPL", "dB SPL", "%.1f", MetaDataDisplay+MetaDataReset );
-  metaData().addNumber( "best slope", "Best slope", -1.0, "Hz/dB", "%.1f", MetaDataReset );
-  metaData().addNumber( "best intensity", "Best intensity", -1.0, "dB SPL", "%.1f", MetaDataReset );
-  metaData().addNumber( "best rate", "Best rate", 100.0, "Hz", "%.1f", metaData().presetDialogFlag() + MetaDataSave );
-  metaData().addNumber( "best saturation", "Best saturation", -1.0, "dB SPL", "%.1f", MetaDataReset );
-  metaData().addNumber( "best maxrate", "Best maximum rate", -1.0, "Hz", "%.1f", MetaDataReset );
+  mo.addSelection( "best side", "Best side", "left|right", MetaDataReadOnly+MetaDataDisplay ).setUnit( "speaker" );
+  mo.addNumber( "best frequency", "Best frequency", -1000.0, -1000.0, 100000.0, 500.0, "Hz", "kHz", "%.1f", MetaDataDisplay+MetaDataReset );
+  mo.addNumber( "best threshold", "Best threshold", -1.0, -1.0, 200.0, 1.0, "dB SPL", "dB SPL", "%.1f", MetaDataDisplay+MetaDataReset );
+  mo.addNumber( "best slope", "Best slope", -1.0, "Hz/dB", "%.1f", MetaDataReset );
+  mo.addNumber( "best intensity", "Best intensity", -1.0, "dB SPL", "%.1f", MetaDataReset );
+  mo.addNumber( "best rate", "Best rate", 100.0, "Hz", "%.1f", mo.presetDialogFlag() + MetaDataSave );
+  mo.addNumber( "best saturation", "Best saturation", -1.0, "dB SPL", "%.1f", MetaDataReset );
+  mo.addNumber( "best maxrate", "Best maximum rate", -1.0, "Hz", "%.1f", MetaDataReset );
 
-  metaData().addNumber( "left frequency", "Left frequency", -1000.0, "Hz", "%.1f", MetaDataReset ).setUnit( "Hz", "kHz" );
-  metaData().addNumber( "left threshold", "Left threshold", -1.0, "dB SPL", "%.1f", MetaDataReset );
-  metaData().addNumber( "left slope", "Left slope", -1.0, "Hz/dB", "%.1f", MetaDataReset );
-  metaData().addNumber( "left intensity", "Left intensity", -1.0, "dB SPL", "%.1f", MetaDataReset );
-  metaData().addNumber( "left saturation", "Left saturation", -1.0, "dB SPL", "%.1f", MetaDataReset );
-  metaData().addNumber( "left maxrate", "Left maximum rate", -1.0, "Hz", "%.1f", MetaDataReset );
+  mo.addNumber( "left frequency", "Left frequency", -1000.0, "Hz", "%.1f", MetaDataReset ).setUnit( "Hz", "kHz" );
+  mo.addNumber( "left threshold", "Left threshold", -1.0, "dB SPL", "%.1f", MetaDataReset );
+  mo.addNumber( "left slope", "Left slope", -1.0, "Hz/dB", "%.1f", MetaDataReset );
+  mo.addNumber( "left intensity", "Left intensity", -1.0, "dB SPL", "%.1f", MetaDataReset );
+  mo.addNumber( "left saturation", "Left saturation", -1.0, "dB SPL", "%.1f", MetaDataReset );
+  mo.addNumber( "left maxrate", "Left maximum rate", -1.0, "Hz", "%.1f", MetaDataReset );
 
-  metaData().addNumber( "right frequency", "Right frequency", -1000.0, "Hz", "%.1f", MetaDataReset ).setUnit( "Hz", "kHz" );
-  metaData().addNumber( "right threshold", "Right threshold", -1.0, "dB SPL", "%.1f", MetaDataReset );
-  metaData().addNumber( "right slope", "Right slope", -1.0, "Hz/dB", "%.1f", MetaDataReset );
-  metaData().addNumber( "right intensity", "Right intensity", -1.0, "dB SPL", "%.1f", MetaDataReset );
-  metaData().addNumber( "right saturation", "Right saturation", -1.0, "dB SPL", "%.1f", MetaDataReset );
-  metaData().addNumber( "right maxrate", "Right maximum rate", -1.0, "Hz", "%.1f", MetaDataReset );
+  mo.addNumber( "right frequency", "Right frequency", -1000.0, "Hz", "%.1f", MetaDataReset ).setUnit( "Hz", "kHz" );
+  mo.addNumber( "right threshold", "Right threshold", -1.0, "dB SPL", "%.1f", MetaDataReset );
+  mo.addNumber( "right slope", "Right slope", -1.0, "Hz/dB", "%.1f", MetaDataReset );
+  mo.addNumber( "right intensity", "Right intensity", -1.0, "dB SPL", "%.1f", MetaDataReset );
+  mo.addNumber( "right saturation", "Right saturation", -1.0, "dB SPL", "%.1f", MetaDataReset );
+  mo.addNumber( "right maxrate", "Right maximum rate", -1.0, "Hz", "%.1f", MetaDataReset );
 
-  metaData().addNumber( "left noise threshold", "Left threshold", -1.0, "dB SPL", "%.1f", MetaDataReset );
-  metaData().addNumber( "left noise slope", "Left slope", -1.0, "Hz/dB", "%.1f", MetaDataReset );
-  metaData().addNumber( "left noise intensity", "Left intensity", -1.0, "dB SPL", "%.1f", MetaDataReset );
-  metaData().addNumber( "left noise saturation", "Left saturation", -1.0, "dB SPL", "%.1f", MetaDataReset );
-  metaData().addNumber( "left noise maxrate", "Left maximum rate", -1.0, "Hz", "%.1f", MetaDataReset );
+  mo.addNumber( "left noise threshold", "Left threshold", -1.0, "dB SPL", "%.1f", MetaDataReset );
+  mo.addNumber( "left noise slope", "Left slope", -1.0, "Hz/dB", "%.1f", MetaDataReset );
+  mo.addNumber( "left noise intensity", "Left intensity", -1.0, "dB SPL", "%.1f", MetaDataReset );
+  mo.addNumber( "left noise saturation", "Left saturation", -1.0, "dB SPL", "%.1f", MetaDataReset );
+  mo.addNumber( "left noise maxrate", "Left maximum rate", -1.0, "Hz", "%.1f", MetaDataReset );
 
-  metaData().addNumber( "right noise threshold", "Left threshold", -1.0, "dB SPL", "%.1f", MetaDataReset );
-  metaData().addNumber( "right noise slope", "Left slope", -1.0, "Hz/dB", "%.1f", MetaDataReset );
-  metaData().addNumber( "right noise intensity", "Left intensity", -1.0, "dB SPL", "%.1f", MetaDataReset );
-  metaData().addNumber( "right noise saturation", "Left saturation", -1.0, "dB SPL", "%.1f", MetaDataReset );
-  metaData().addNumber( "right noise maxrate", "Left maximum rate", -1.0, "Hz", "%.1f", MetaDataReset );
+  mo.addNumber( "right noise threshold", "Left threshold", -1.0, "dB SPL", "%.1f", MetaDataReset );
+  mo.addNumber( "right noise slope", "Left slope", -1.0, "Hz/dB", "%.1f", MetaDataReset );
+  mo.addNumber( "right noise intensity", "Left intensity", -1.0, "dB SPL", "%.1f", MetaDataReset );
+  mo.addNumber( "right noise saturation", "Left saturation", -1.0, "dB SPL", "%.1f", MetaDataReset );
+  mo.addNumber( "right noise maxrate", "Left maximum rate", -1.0, "Hz", "%.1f", MetaDataReset );
 
-  metaData().addNumber( "silent rate", "Silent rate", -1.0, "Hz", "%.1f", MetaDataReset );
+  mo.addNumber( "silent rate", "Silent rate", -1.0, "Hz", "%.1f", MetaDataReset );
 
-  metaData().addLabel( "plugins" );
+  mo.addLabel( "plugins" );
 
-  metaData().addLabel( "metadata", MetaDataSave );
+  mo.addLabel( "metadata", MetaDataSave );
 
-  metaData().addStyle( OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack, MetaDataDisplay );
+  mo.addStyle( OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack, MetaDataDisplay );
 
-  metaData().setSaveFlag( metaData().standardFlag() + metaData().configFlag()
-			  + metaData().setupFlag() + MetaDataSave );
-
+  mo.setSaveFlag( metaData().standardFlag() + metaData().configFlag()
+		  + metaData().setupFlag() + MetaDataSave );
+  
   if ( simulation() ) {
-    metaData().selectText( "best side", "left" );
-    metaData().setNumber( "best frequency", 6000.0 );
-    metaData().setNumber( "best threshold", 45.0 );
-    metaData().setNumber( "best slope", 25.0 );
-    metaData().setNumber( "best intensity", 49.0 );
-    metaData().setNumber( "best rate", 100.0 );
-    metaData().setNumber( "best saturation", 58.0 );
-    metaData().setNumber( "best maxrate", 325.0 );
+    mo.selectText( "best side", "left" );
+    mo.setNumber( "best frequency", 6000.0 );
+    mo.setNumber( "best threshold", 45.0 );
+    mo.setNumber( "best slope", 25.0 );
+    mo.setNumber( "best intensity", 49.0 );
+    mo.setNumber( "best rate", 100.0 );
+    mo.setNumber( "best saturation", 58.0 );
+    mo.setNumber( "best maxrate", 325.0 );
   }
-  metaData().setNotify();
+  mo.setNotify();
   unlockMetaData();
 }
 

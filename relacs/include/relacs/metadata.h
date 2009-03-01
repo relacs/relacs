@@ -24,7 +24,7 @@
 
 #include <iostream>
 #include <fstream>
-#include <qobject.h>
+#include <vector>
 #include <qpopupmenu.h>
 #include <qmutex.h>
 #include <relacs/configclass.h>
@@ -34,7 +34,101 @@ using namespace std;
 namespace relacs {
 
 
+  class MetaData;
 class RELACSWidget;
+
+
+/*! 
+\class MetaDataSection
+\brief A section of MetaData
+\author Jan Benda
+\version 1.0
+*/
+
+class MetaDataSection : public ConfigClass
+{
+
+public:
+  
+  /*! Construct a section of meta data.
+      \param[in] name the section title
+      \param[in] group the group of the configuration file
+                 where the configuration of this section is stored.
+		 See ConfigClass for details.
+      \param[in] tab does this section request an own tab in the dialog?
+      \param[in] md pointer to the MetaData that created this section.
+      \param[in] rw pointer to the main RELACSWidget.
+  */
+  MetaDataSection( const string &name, int group, bool tab,
+		   MetaData *md, RELACSWidget *rw );
+  virtual ~MetaDataSection( void );
+
+    /*! Calls clear(), then loads the options from the config file
+        and set their flags to MetaData::dialogFlag() and
+	MetaData::configFlag(). */
+  virtual void readConfig( StrQueue &sq );
+    /*! Save the options that have the MetaData::configFlag() set
+        to the configuration file. */
+  virtual void saveConfig( ofstream &str );
+    /*! React to changes of the meta data.
+        This function calls notifyMetaData() in all RELACSPlugins. */
+  virtual void notify( void );
+    /*! Clear the options. */
+  virtual void clear( void );
+    /*! Save the name of the section and the options 
+        that have MetaData::saveFlag() set into info file \a str. */
+  virtual void save( ofstream &str );
+
+    /*! Returns \c true if this section shold get its own tab in the dialog. */
+  bool ownTab( void ) const;
+  /*! Determines whether this section should get its own tab
+      in the dialog (\a tab = \c true). */
+  void setOwnTab( bool tab );
+
+
+protected:
+
+  MetaData *MD;
+  RELACSWidget *RW;
+
+
+private:
+
+  bool Tab;
+
+};
+
+
+/*! 
+\class MetaDataRecordingSection
+\brief The general Recording section of MetaData
+\author Jan Benda
+\version 1.0
+*/
+
+class MetaDataRecordingSection : public MetaDataSection
+{
+
+public:
+  
+  /*! Construct a "recording" section of meta data.
+      \param[in] tab does this section request an own tab in the dialog?
+      \param[in] md pointer to the MetaData that created this section.
+      \param[in] rw pointer to the main RELACSWidget.
+  */
+  MetaDataRecordingSection( bool tab, MetaData *md, RELACSWidget *rw );
+  virtual ~MetaDataRecordingSection( void );
+
+    /*! The number of options to be save in the configuration file. */
+  virtual int configSize( void ) const;
+
+    /*! Clear the options and preset them with standard options. */
+  virtual void clear( void );
+    /*! Set the values of the standard options and 
+        save the options into info file \a str. */
+  virtual void save( ofstream &str );
+
+};
 
 
 /*! 
@@ -75,18 +169,23 @@ public:
   MetaData( RELACSWidget *rw );
   ~MetaData( void );
 
-    /*! Load the meta data Options from the configuration file. */
+    /*! Load the meta data Options from the configuration file
+        and immediately create the requested MetaDataSections. */
   virtual void readConfig( StrQueue &sq );
-    /*! Save the meta data Options from the configuration file. */
-  virtual void saveConfig( ofstream &str );
-    /*! React to changes of the meta data.
+
+    /*! React to changes in the meta data sections.
         This function calls notifyMetaData() in all RELACSPlugins. */
-  virtual void notify( void );
+  void notifyMetaData( void );
 
     /*! Saves the meta data into the info file of the session. */
   void save( void );
     /*! Clear the meta data. */
   void clear( void );
+
+    /*! Return the MetaData options from section \a section. */
+  Options &section( const string &section );
+    /*! Return the MetaData options from section \a section. */
+  const Options &section( const string &section ) const;
 
     /*! Lock the meta data. */
   void lock( void ) const;
@@ -110,7 +209,8 @@ public:
         the experimental setup. */
   static int setupFlag( void );
     /*! The flag that is used to select meta-data Options to be saved 
-        in the info file of the session (default (=0) selects all). */
+        in the info file of the session 
+	(default (=0) selects all). */
   int saveFlag( void ) const;
     /*! Set the flag that is used to select meta-data Options to be saved 
         in the info file of the session to \a flag.
@@ -134,66 +234,37 @@ protected slots:
 
     /*! Informs MetaData that the dialog window is closed. */
   void dialogClosed( int r );
+    /*! Apply changes made in the dialog to the MetaDataSections. */
+  void dialogChanged( void );
     /*! Informs MetaData that the preset dialog window is closed. */
   void presetDialogClosed( int r );
+    /*! Apply changes made in the preset dialog to the MetaDataSections. */
+  void presetDialogChanged( void );
 
 
 private:
-
-  int Flags;
 
   static const int DialogFlag = 128;
   static const int PresetDialogFlag = 256;
   static const int ConfigFlag = 512;
   static const int StandardFlag = 1024;
-  static const int SetupFlag = 2048;
+  static const int LabelFlag = 2048;
+  static const int SetupFlag = 4096;
   int SaveFlag;
+
+  vector< MetaDataSection* > MetaDataSections;
+
+  mutable Options DummyOpts;
 
   bool Dialog;
   bool PresetDialog;
+
+  Options DialogOpts;
+  Options PresetDialogOpts;
   
   mutable QMutex MetaDataLock;
 
   RELACSWidget *RW;
-
-};
-
-
-
-/*! 
-\class SetupData
-\brief Includes data about the experimental setup into the configure mechanism.
-\author Jan Benda
-\version 1.0
-
-The SetupData options are loaded from the relacs.cfg file and get
-the MetaData::setupFlag() set.
-They are saved from their copy in MetaData.
-*/
-
-class SetupData : public ConfigClass
-{
-
-public:
-  
-  SetupData( Options *md );
-  virtual ~SetupData( void );
-
-    /*! Load the SetupData options from relacs.cfg and set setupFlag(). */
-  virtual void readConfig( StrQueue &sq );
-    /*! Save the SetupData options from MetaData. */
-  virtual void saveConfig( ofstream &str );
-    /*! The size of the SetupData options within MetaData. */
-  virtual int configSize( void ) const;
-
-    /*! The flag that is used to mark the meta data about
-        the experimental setup. */
-  static int setupFlag( void );
-
-
-private:
-
-  Options *MD;
 
 };
 

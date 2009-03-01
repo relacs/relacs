@@ -31,7 +31,6 @@
 #include <relacs/eventlist.h>
 #include <relacs/outdata.h>
 #include <relacs/outlist.h>
-#include <relacs/metadata.h>
 #include <relacs/plugins.h>
 #include <relacs/configdialog.h>
 
@@ -464,12 +463,12 @@ protected:
     /*! The mutex for the stimulus data. */
   QMutex *stimulusDataMutex( void );
 
-    /*! Return the MetaData options.
+    /*! Return the MetaData options from section \a section.
         These options are stored in the info file of the session. */
-  MetaData &metaData( void );
-    /*! Return the MetaData options.
+  Options &metaData( const string &section );
+    /*! Return the MetaData options from section \a section.
         These options are stored in the info file of the session. */
-  const MetaData &metaData( void ) const;
+  const Options &metaData( const string &section ) const;
     /*! Lock the meta data mutex. */
   void lockMetaData( void ) const;
     /*! Unlock the meta data mutex. */

@@ -72,12 +72,6 @@ The read(), readAppend(), load() and save() functions read the values
 of options, load new options, and save options from and to strings or files.
 */
 
-/*
-XXX An interactive dialog is launched by dialog().
-The \a request - strings with the corresponding values of the options
-are displayed and can be changed or set to their default values.
-*/
-
 
 class Options
 {
@@ -130,7 +124,15 @@ public:
 	are copied.
         If \a flags equals NonDefault, all options whose values differ
 	from their default value are copied. */
-  Options &copy( Options &o, int flags=0 );
+  Options &copy( Options &o, int flags );
+    /*! Append all options to \a that have flags() & \a flags greater than zero.
+        If \a flags equals zero, all options are appended.
+	If \a flags is negative, only options whose values differ
+	from the default value and have abs(\a flags) set in their flags()
+	are copied.
+        If \a flags equals NonDefault, all options whose values differ
+	from their default value are copied. */
+  Options &append( const Options &o, int flags );
 
     /*! Set the value of an existing option 
         with identifier \a ident to \a value.
@@ -1015,7 +1017,8 @@ public:
 		 const string &assignment=":=" );
 
     /*! Read options from the parameter \a p.
-        Returns \c true if \a p was read. */
+        Returns \c true if \a p was read and
+        ad \a flag to the flags of the Options that read it. */
   bool read( const Parameter &p, int flag=0 );
     /*! Read options from the options \a o.
         A subset of the options can be selected by \a flags. 

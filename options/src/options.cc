@@ -164,6 +164,21 @@ Options &Options::copy( Options &o, int flags )
 }
 
 
+Options &Options::append( const Options &o, int flags )
+{
+  Warning = "";
+  if ( this == &o ) 
+    return *this;
+
+  for ( const_iterator pp = o.begin(); pp != o.end(); ++pp ) {
+    if ( (*pp).flags( flags ) )
+      Opt.push_back( *pp );
+  }
+
+  return *this;
+}
+
+
 Parameter *Options::assign( const string &ident, const string &value )
 {
   iterator pp = find( ident );

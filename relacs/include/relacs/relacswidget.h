@@ -308,6 +308,8 @@ private:
 
   friend class Settings;
   friend class MetaData;
+  friend class MetaDataSection;
+  friend class MetaDataRecordingSection;
   friend class ReadThread;
   friend class WriteThread;
   friend class RELACSPlugin;
@@ -343,7 +345,6 @@ private:
 
   Settings SS;
   MetaData MTDT;
-  SetupData Setup;
 
   AllDevices *ADV;
   Devices *DV;

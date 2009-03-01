@@ -510,15 +510,15 @@ void RELACSPlugin::notifyStimulusData( void )
 }
 
 
-MetaData &RELACSPlugin::metaData( void )
+Options &RELACSPlugin::metaData( const string &section )
 {
-  return RW->MTDT;
+  return RW->MTDT.section( section );
 }
 
 
-const MetaData &RELACSPlugin::metaData( void ) const
+const Options &RELACSPlugin::metaData( const string &section ) const
 {
-  return RW->MTDT;
+  return RW->MTDT.section( section );
 }
 
 
