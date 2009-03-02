@@ -42,6 +42,7 @@ namespace auditory {
 \brief [Control] Control recordings from auditory neurons
 \author Jan Benda
 \version 1.3 (Jan 22, 2008)
+\todo Temperature and Resistance need also to be displayed in the widget.
 */
 
 
@@ -55,6 +56,7 @@ public:
   ~Session( void );
 
   virtual void initialize( void );
+  virtual void configure( void );
   virtual void initDevices( void );
   virtual void startSession( void );
   virtual void stopSession( bool saved );
@@ -62,7 +64,7 @@ public:
   virtual void keyReleaseEvent( QKeyEvent *e );
 
     /*! Notify about changes in the meta data. */
-  virtual void notifyMetaData( void );
+  virtual void notifyMetaData( const string &section );
 
     /*! Return the most recently measured threshold curve
         of side \a side.

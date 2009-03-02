@@ -192,7 +192,7 @@ int Search::main( void )
   bool keepchanges = boolean( "keep" );
 
   if ( side > 1 )
-    side = metaData().index( "best side" );
+    side = metaData( "Cell" ).index( "best side" );
   SearchLeft = ( side == 0 );
 
   // update widgets:
@@ -203,7 +203,7 @@ int Search::main( void )
     noMessage();
 
   if ( SetBestSide + ( sessionRunning() ? 0 : 1 ) > 1 )
-    metaData().selectText( "best side", SearchLeft ? "left" : "right" );
+    metaData( "Cell" ).selectText( "best side", SearchLeft ? "left" : "right" );
 
   // Header:
   Options header;
@@ -514,7 +514,7 @@ void Search::setSpeakerLeft( void )
 {
   SearchLeft = true;
   if ( SetBestSide + ( sessionRunning() ? 0 : 1 ) > 1 )
-    metaData().selectText( "best side", "left" );
+    metaData( "Cell" ).selectText( "best side", "left" );
   LeftButton->setChecked( true );
   RightButton->setChecked( false );
   selectText( "side", "left" );
@@ -525,7 +525,7 @@ void Search::setSpeakerRight( void )
 {
   SearchLeft = false;
   if ( SetBestSide + ( sessionRunning() ? 0 : 1 ) > 1 )
-    metaData().selectText( "best side", "right" );
+    metaData( "Cell" ).selectText( "best side", "right" );
   LeftButton->setChecked( false );
   RightButton->setChecked( true );
   selectText( "side", "right" );
@@ -564,7 +564,7 @@ void Search::dialogAccepted( void )
   emit waveformChanged( index( "waveform" ) );
   int side = index( "side" );
   if ( side > 1 )
-    side = metaData().index( "best side" );
+    side = metaData( "Cell" ).index( "best side" );
   setSpeaker( ( side == 0 ) );
 }
 
@@ -579,7 +579,7 @@ void Search::customEvent( QCustomEvent *qce )
     emit waveformChanged( Waveform );
     int side = index( "side" );
     if ( side > 1 )
-      side = metaData().index( "best side" );
+      side = metaData( "Cell" ).index( "best side" );
     setSpeaker( ( side == 0 ) );
   }
 

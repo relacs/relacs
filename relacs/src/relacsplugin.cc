@@ -522,6 +522,18 @@ const Options &RELACSPlugin::metaData( const string &section ) const
 }
 
 
+MetaData &RELACSPlugin::metaData( void )
+{
+  return RW->MTDT;
+}
+
+
+const MetaData &RELACSPlugin::metaData( void ) const
+{
+  return RW->MTDT;
+}
+
+
 void RELACSPlugin::lockMetaData( void ) const
 {
   RW->MTDT.lock();
@@ -540,7 +552,7 @@ QMutex *RELACSPlugin::metaDataMutex( void )
 }
 
 
-void RELACSPlugin::notifyMetaData( void )
+void RELACSPlugin::notifyMetaData( const string &section )
 {
 }
 

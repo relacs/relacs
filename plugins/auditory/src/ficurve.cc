@@ -215,20 +215,20 @@ int FICurve::main( void )
 
   double ith = 0.0;
   if ( UseBestThresh )
-    ith = metaData().number( "best threshold" );
+    ith = metaData( "Cell" ).number( "best threshold" );
   double isat = ith;
   if ( UseBestSaturation )
-    isat = metaData().number( "best saturation" );
+    isat = metaData( "Cell" ).number( "best saturation" );
   MinIntensity += ith;
   MaxIntensity += isat;
 
   if ( UseBestFreq ) {
-    double cf = metaData().number( "best frequency" );
+    double cf = metaData( "Cell" ).number( "best frequency" );
     if ( cf > 0.0 )
       CarrierFrequency = cf;
   }
   if ( Side > 1 )
-    Side = metaData().index( "best side" );
+    Side = metaData( "Cell" ).index( "best side" );
   if ( SSWidth > Duration )
     SSWidth = Duration;
 
@@ -681,7 +681,7 @@ void FICurve::analyzeFICurve( const vector< FIData > &results, double minrate )
       Threshold.ThresholdSD = ( SilentRateSD + ub + fabs( Threshold.Threshold * us ) ) / as;
       Threshold.Threshold += shift;
       // intensity at rate:
-      Threshold.RateIntensity = ( metaData().number( "best rate" ) - b ) / s;
+      Threshold.RateIntensity = ( metaData( "Cell" ).number( "best rate" ) - b ) / s;
       Threshold.RateIntensitySD = ( ub + fabs( Threshold.RateIntensity * us ) ) / as;
       Threshold.RateIntensity += shift;
       // saturation:
@@ -714,7 +714,7 @@ void FICurve::setHeader( void )
   Header.setNumber( "threshold", Threshold.Threshold, Threshold.ThresholdSD );
   Header.setNumber( "slope", Threshold.Slope, Threshold.SlopeSD );
   Header.setNumber( "intensity", Threshold.RateIntensity, Threshold.RateIntensitySD );
-  Header.setNumber( "rate", metaData().number( "best rate" ) );
+  Header.setNumber( "rate", metaData( "Cell" ).number( "best rate" ) );
   Header.setNumber( "saturation", Threshold.Saturation, Threshold.SaturationSD );
   Header.setNumber( "maxrate", Threshold.MaxRate, Threshold.MaxRateSD );
   Header.setInteger( "nfit", Threshold.N );
@@ -727,25 +727,26 @@ void FICurve::updateSession( const vector< FIData > &results )
 {
   if ( SetBest ) {
     auditory::Session *as = dynamic_cast<auditory::Session*>( control( "Session" ) );
+    Options &mo = metaData( "Cell" );
     string ss = Side == 1 ? "right" : "left";
 
     // f-I curve parameter:
     if ( Waveform == 1 ) {
       string ns = ss + " noise";
-      metaData().setNumber( ns + " threshold", Threshold.Threshold, Threshold.ThresholdSD );
-      metaData().setNumber( ns + " slope", Threshold.Slope, Threshold.SlopeSD );
-      metaData().setNumber( ns + " intensity", Threshold.RateIntensity, Threshold.RateIntensitySD );
-      metaData().setNumber( ns + " saturation", Threshold.Saturation, Threshold.SaturationSD );
-      metaData().setNumber( ns + " maxrate", Threshold.MaxRate, Threshold.MaxRateSD );
+      mo.setNumber( ns + " threshold", Threshold.Threshold, Threshold.ThresholdSD );
+      mo.setNumber( ns + " slope", Threshold.Slope, Threshold.SlopeSD );
+      mo.setNumber( ns + " intensity", Threshold.RateIntensity, Threshold.RateIntensitySD );
+      mo.setNumber( ns + " saturation", Threshold.Saturation, Threshold.SaturationSD );
+      mo.setNumber( ns + " maxrate", Threshold.MaxRate, Threshold.MaxRateSD );
     }
     else if ( Waveform == 0 ) {
       if ( UseBestFreq ||
-	   fabs( CarrierFrequency - metaData().number( ss + " frequency" ) ) < 5.0 ) {
-	metaData().setNumber( ss + " threshold", Threshold.Threshold, Threshold.ThresholdSD );
-	metaData().setNumber( ss + " slope", Threshold.Slope, Threshold.SlopeSD );
-	metaData().setNumber( ss + " intensity", Threshold.RateIntensity, Threshold.RateIntensitySD );
-	metaData().setNumber( ss + " saturation", Threshold.Saturation, Threshold.SaturationSD );
-	metaData().setNumber( ss + " maxrate", Threshold.MaxRate, Threshold.MaxRateSD );
+	   fabs( CarrierFrequency - mo.number( ss + " frequency" ) ) < 5.0 ) {
+	mo.setNumber( ss + " threshold", Threshold.Threshold, Threshold.ThresholdSD );
+	mo.setNumber( ss + " slope", Threshold.Slope, Threshold.SlopeSD );
+	mo.setNumber( ss + " intensity", Threshold.RateIntensity, Threshold.RateIntensitySD );
+	mo.setNumber( ss + " saturation", Threshold.Saturation, Threshold.SaturationSD );
+	mo.setNumber( ss + " maxrate", Threshold.MaxRate, Threshold.MaxRateSD );
       }
     }
 
@@ -754,23 +755,23 @@ void FICurve::updateSession( const vector< FIData > &results )
     as->updateBestSide();
 
     // best side parameter:
-    if ( Side == metaData().index( "best side" ) &&
+    if ( Side == mo.index( "best side" ) &&
 	 ( ( Waveform == 1 ) ||
 	   ( Waveform == 0 &&
 	     ( UseBestFreq ||
-	       fabs( CarrierFrequency - metaData().number( "best frequency" ) ) < 5.0 ) ) ) ) {
-      metaData().setNumber( "best threshold", Threshold.Threshold, Threshold.ThresholdSD );
-      metaData().setNumber( "best slope", Threshold.Slope, Threshold.SlopeSD );
-      metaData().setNumber( "best intensity", Threshold.RateIntensity, Threshold.RateIntensitySD );
-      metaData().setNumber( "best saturation", Threshold.Saturation, Threshold.SaturationSD );
-      metaData().setNumber( "best maxrate", Threshold.MaxRate, Threshold.MaxRateSD );
+	       fabs( CarrierFrequency - mo.number( "best frequency" ) ) < 5.0 ) ) ) ) {
+      mo.setNumber( "best threshold", Threshold.Threshold, Threshold.ThresholdSD );
+      mo.setNumber( "best slope", Threshold.Slope, Threshold.SlopeSD );
+      mo.setNumber( "best intensity", Threshold.RateIntensity, Threshold.RateIntensitySD );
+      mo.setNumber( "best saturation", Threshold.Saturation, Threshold.SaturationSD );
+      mo.setNumber( "best maxrate", Threshold.MaxRate, Threshold.MaxRateSD );
     }
 
     // f-I curves:
     if ( ( Waveform == 1 ) ||
 	 ( Waveform == 0 && 
 	   ( UseBestFreq ||
-	     fabs( CarrierFrequency - metaData().number( ss + " frequency" ) ) < 5.0 ) ) ) {
+	     fabs( CarrierFrequency - mo.number( ss + " frequency" ) ) < 5.0 ) ) ) {
       MapD om, sm, fm;
       for ( unsigned int k=0; 
 	    k<results.size(); 
@@ -920,7 +921,7 @@ void FICurve::silentActivity( void )
   MaxSilentRate = SilentRate + SilentFactor*SilentRateSD;
 
   // update session:
-  metaData().setNumber( "silent rate", SilentRate, SilentRateSD );
+  metaData( "Cell" ).setNumber( "silent rate", SilentRate, SilentRateSD );
 }
 
 

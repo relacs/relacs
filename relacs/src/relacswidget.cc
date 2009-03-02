@@ -889,14 +889,14 @@ void RELACSWidget::notifyStimulusData( void )
 }
 
 
-void RELACSWidget::notifyMetaData( void )
+void RELACSWidget::notifyMetaData( const string &section )
 {
   if ( MD != 0 )
-    MD->notifyMetaData();
-  FD->notifyMetaData();
+    MD->notifyMetaData( section );
+  FD->notifyMetaData( section );
   for ( unsigned int k=0; k<CN.size(); k++ )
-    CN[k]->notifyMetaData();
-  RP->notifyMetaData();
+    CN[k]->notifyMetaData( section );
+  RP->notifyMetaData( section );
 }
 
 

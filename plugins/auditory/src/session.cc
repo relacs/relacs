@@ -99,10 +99,15 @@ void Session::initialize( void )
   // get trace indices:
   ephys::Traces::initialize( traces(), events() );
   acoustic::Traces::initialize( this, traces(), events() );
+}
 
-  // additional header data:
-  // XXX important: the following must be called AFTER metaData() is cleared
-  // and BEFORE the configuration file is read in!!!!!
+
+void Session::configure( void )
+{
+  // additional meta data properties:
+  if ( ! metaData().exist( "Cell" ) )
+    metaData().add( "Cell" );
+
   lockMetaData();
   Options &mo = metaData( "Cell" );
   mo.unsetNotify();
@@ -113,7 +118,7 @@ void Session::initialize( void )
   mo.addNumber( "best threshold", "Best threshold", -1.0, -1.0, 200.0, 1.0, "dB SPL", "dB SPL", "%.1f", MetaDataDisplay+MetaDataReset );
   mo.addNumber( "best slope", "Best slope", -1.0, "Hz/dB", "%.1f", MetaDataReset );
   mo.addNumber( "best intensity", "Best intensity", -1.0, "dB SPL", "%.1f", MetaDataReset );
-  mo.addNumber( "best rate", "Best rate", 100.0, "Hz", "%.1f", mo.presetDialogFlag() + MetaDataSave );
+  mo.addNumber( "best rate", "Best rate", 100.0, "Hz", "%.1f", MetaData::presetDialogFlag() + MetaDataSave );
   mo.addNumber( "best saturation", "Best saturation", -1.0, "dB SPL", "%.1f", MetaDataReset );
   mo.addNumber( "best maxrate", "Best maximum rate", -1.0, "Hz", "%.1f", MetaDataReset );
 
@@ -145,14 +150,10 @@ void Session::initialize( void )
 
   mo.addNumber( "silent rate", "Silent rate", -1.0, "Hz", "%.1f", MetaDataReset );
 
-  // XXX  mo.addLabel( "plugins" );
-
-  // XXX  mo.addLabel( "metadata", MetaDataSave );
-
   mo.addStyle( OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack, MetaDataDisplay );
 
-  // XXX  mo.setSaveFlag( MetaData::standardFlag() + MetaData::configFlag()
-		  + MetaData::setupFlag() + MetaDataSave );
+  metaData().delSaveFlags( MetaData::dialogFlag() + MetaData::presetDialogFlag() );
+  metaData().addSaveFlags( MetaDataSave );
   
   if ( simulation() ) {
     mo.selectText( "best side", "left" );
@@ -399,10 +400,12 @@ void Session::keyReleaseEvent( QKeyEvent *e )
 }
 
 
-void Session::notifyMetaData( void )
+void Session::notifyMetaData( const string &section )
 {
-  metaData( "Cell" ).addFlags( MetaDataSave, Parameter::changedFlag() );
-  ASW->updateValues( OptWidget::changedFlag() );
+  if ( section == "Cell" ) {
+    metaData( "Cell" ).addFlags( MetaDataSave, Parameter::changedFlag() );
+    ASW->updateValues( OptWidget::changedFlag() );
+  }
 }
 
 

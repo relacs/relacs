@@ -330,7 +330,7 @@ int IsoResponse::main( void )
 {  
   Settings = *this;
 
-  BestFreq = metaData().number( "best frequency" );
+  BestFreq = metaData( "Cell" ).number( "best frequency" );
   // get options:
   UseBestFrequency = index( "use_best_freq" );
   if( UseBestFrequency==0 ) {
@@ -386,7 +386,7 @@ int IsoResponse::main( void )
   FIso.resize( IrsNumber );
 
   if ( Side > 1 )
-    Side = metaData().index( "best side" );
+    Side = metaData( "Cell" ).index( "best side" );
 
   // Warnings
   if ( Switch_high && Switch_low && FRlow_fix>=FRhigh_fix ) {

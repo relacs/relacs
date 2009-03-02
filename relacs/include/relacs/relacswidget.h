@@ -174,8 +174,8 @@ public:
 
     /*! Inform all plugins about changes in the stimulus data. */
   void notifyStimulusData( void );
-    /*! Inform all plugins about changes in the meta data. */
-  void notifyMetaData( void );
+    /*! Inform all plugins about changes in the meta data section \a section. */
+  void notifyMetaData( const string &section );
 
     /*! Writes out all options of all RELACSPlugins in a format 
         suitable for the doxygen documentation. */

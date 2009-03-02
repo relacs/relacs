@@ -25,6 +25,7 @@
 #include <qdatetime.h>
 #include <relacs/str.h>
 #include <relacs/optdialog.h>
+#include <relacs/relacsplugin.h>
 #include <relacs/relacswidget.h>
 #include <relacs/metadata.h>
 
@@ -68,7 +69,7 @@ void MetaDataSection::saveConfig( ofstream &str )
 
 void MetaDataSection::notify( void )
 {
-  MD->notifyMetaData();
+  MD->notifyMetaData( configIdent() );
 }
 
 
@@ -81,7 +82,7 @@ void MetaDataSection::clear( void )
 void MetaDataSection::save( ofstream &str )
 {
   str << "# " << configIdent() << '\n';
-  Options::save( str, "# ", -1, MD->saveFlag(), false, true );
+  Options::save( str, "# ", -1, MD->saveFlags(), false, true );
 }
 
 
@@ -89,8 +90,9 @@ ostream &MetaDataSection::saveXML( ostream &str, int level, int indent ) const
 {
   string indstr1( level*indent, ' ' );
   str << indstr1 << "<section name=\"" << configIdent() << "\">\n";
-  Options::saveXML( str, MD->saveFlag(), level+1, indent );
+  Options::saveXML( str, MD->saveFlags(), level+1, indent );
   str << indstr1 << "</section>\n";
+  return str;
 }
 
 
@@ -111,6 +113,7 @@ MetaDataRecordingSection::MetaDataRecordingSection( bool tab,
 						    RELACSWidget *rw )
   : MetaDataSection( "Recording", RELACSPlugin::Plugins, tab, md, rw )
 {
+  MD->addSaveFlags( standardFlag() );
   clear();
 }
 
@@ -122,20 +125,20 @@ MetaDataRecordingSection::~MetaDataRecordingSection( void )
 
 int MetaDataRecordingSection::configSize( void ) const
 {
-  return ( Options::size() - Options::size( MD->standardFlag() ) );
+  return ( Options::size() - Options::size( standardFlag() ) );
 }
 
 
 void MetaDataRecordingSection::clear( void )
 {
   Options::clear();
-  addText( "File", "", MD->standardFlag() );
-  addText( "Date", "", MD->standardFlag() );
-  addText( "Time", "", MD->standardFlag() );
-  addNumber( "Recording duration", "", MD->standardFlag() );
-  addText( "Mode", RW->modeStr(), MD->standardFlag() );
-  addText( "Software", "RELACS", MD->standardFlag() );
-  addText( "Software version", RELACSVERSION, MD->standardFlag() );
+  addText( "File", "", standardFlag() );
+  addText( "Date", "", standardFlag() );
+  addText( "Time", "", standardFlag() );
+  addNumber( "Recording duration", "", standardFlag() );
+  addText( "Mode", RW->modeStr(), standardFlag() );
+  addText( "Software", "RELACS", standardFlag() );
+  addText( "Software version", RELACSVERSION, standardFlag() );
 }
 
 
@@ -160,13 +163,19 @@ void MetaDataRecordingSection::save( ofstream &str )
   setText( "Mode", RW->modeStr() );
 
   str << "# " << configIdent() << '\n';
-  Options::save( str, "# ", -1, MD->saveFlag(), false, true );
+  Options::save( str, "# ", -1, MD->saveFlags(), false, true );
+}
+
+
+int MetaDataRecordingSection::standardFlag( void )
+{
+  return StandardFlag;
 }
 
 
 MetaData::MetaData( RELACSWidget *rw )
   : ConfigClass( "MetaData", RELACSPlugin::Core, Save ),
-    SaveFlag( 0 ),
+    SaveFlags( 0 ),
     Dialog( false ),
     PresetDialog( false ),
     MetaDataLock( true ),
@@ -177,6 +186,13 @@ MetaData::MetaData( RELACSWidget *rw )
 
 MetaData::~MetaData( void )
 {
+}
+
+
+void MetaData::add( const string &name, bool tab )
+{
+  MetaDataSections.push_back( new MetaDataSection( name, RELACSPlugin::Plugins, tab,
+						   this, RW ) );
 }
 
 
@@ -212,9 +228,9 @@ void MetaData::readConfig( StrQueue &sq )
 }
 
 
-void MetaData::notifyMetaData( void )
+void MetaData::notifyMetaData( const string &section )
 {
-  RW->notifyMetaData();
+  RW->notifyMetaData( section );
 }
 
 
@@ -242,6 +258,7 @@ ostream &MetaData::saveXML( ostream &str, int level, int indent ) const
     MetaDataSections[k]->saveXML( str, level, indent );
 
   unlock();
+  return str;
 }
 
 
@@ -253,6 +270,16 @@ void MetaData::clear( void )
       MetaDataSections[k]->clear();
   }
   unlock();
+}
+
+
+bool MetaData::exist( const string &section ) const
+{
+  for ( unsigned int k=0; k<MetaDataSections.size(); k++ ) {
+    if ( MetaDataSections[k]->configIdent() == section )
+      return true;
+  }
+  return false;
 }
 
 
@@ -314,27 +341,27 @@ int MetaData::configFlag( void )
 }
 
 
-int MetaData::standardFlag( void )
+int MetaData::saveFlags( void ) const
 {
-  return StandardFlag;
+  return SaveFlags;
 }
 
 
-int MetaData::setupFlag( void )
+void MetaData::setSaveFlags( int flags )
 {
-  return SetupFlag;
+  SaveFlags = flags;
 }
 
 
-int MetaData::saveFlag( void ) const
+void MetaData::addSaveFlags( int flags )
 {
-  return SaveFlag;
+  SaveFlags |= flags;
 }
 
 
-void MetaData::setSaveFlag( int flag )
+void MetaData::delSaveFlags( int flags )
 {
-  SaveFlag = flag;
+  SaveFlags &= ~flags;
 }
 
 
@@ -363,6 +390,7 @@ int MetaData::dialog( void )
       DialogOpts.append( *MetaDataSections[k], dialogFlag() );
     }
   }
+  DialogOpts.setToDefaults();
   unlock();
 
   // create and exec dialog:
@@ -402,7 +430,10 @@ void MetaData::dialogChanged( void )
       // find section:
       for ( unsigned int j=0; j<MetaDataSections.size(); j++ ) {
 	if ( DialogOpts[k].label() == MetaDataSections[j]->configIdent() ) {
+	  if ( secinx >= 0 && changed )
+	    notifyMetaData( MetaDataSections[secinx]->configIdent() );
 	  secinx = j;
+	  changed = false;
 	  break;
 	}
       }
@@ -413,8 +444,8 @@ void MetaData::dialogChanged( void )
       changed = true;
     }
   }
-  if ( changed )
-    notifyMetaData();
+  if ( secinx >= 0 && changed )
+    notifyMetaData( MetaDataSections[secinx]->configIdent() );
   unlock();
 }
 
@@ -444,6 +475,7 @@ void MetaData::presetDialog( void )
       PresetDialogOpts.append( *MetaDataSections[k], dialogFlag() | presetDialogFlag() );
     }
   }
+  PresetDialogOpts.setToDefaults();
   unlock();
 
   // create and exec dialog:
@@ -483,7 +515,10 @@ void MetaData::presetDialogChanged( void )
       // find section:
       for ( unsigned int j=0; j<MetaDataSections.size(); j++ ) {
 	if ( PresetDialogOpts[k].label() == MetaDataSections[j]->configIdent() ) {
+	  if ( secinx >= 0 && changed )
+	    notifyMetaData( MetaDataSections[secinx]->configIdent() );
 	  secinx = j;
+	  changed = false;
 	  break;
 	}
       }
@@ -494,8 +529,8 @@ void MetaData::presetDialogChanged( void )
       changed = true;
     }
   }
-  if ( changed )
-    notifyMetaData();
+  if ( secinx >= 0 && changed )
+    notifyMetaData( MetaDataSections[secinx]->configIdent() );
   unlock();
 }
 

@@ -225,20 +225,20 @@ int SingleStimulus::main( void )
   StoreFile = "";
 
   if ( intensitybase == 1 )
-    Intensity = intensity + metaData().number( "best threshold" );	// get "best thresh" from FICurve (via the session widget)
+    Intensity = intensity + metaData( "Cell" ).number( "best threshold" );	// get "best thresh" from FICurve (via the session widget)
   else if ( intensitybase == 2 )
-    Intensity = intensity + metaData().number( "best intensity" );	// get "best intensity" from FICurve (via the session widget)
+    Intensity = intensity + metaData( "Cell" ).number( "best intensity" );	// get "best intensity" from FICurve (via the session widget)
   else if ( intensitybase == 3 )
     Intensity += 0.0;
   else
     Intensity = intensity;
   if ( usebestfreq ) {
-    double cf = metaData().number( "best frequency" );
+    double cf = metaData( "Cell" ).number( "best frequency" );
     if ( cf > 0.0 )
       CarrierFreq = cf;
   }
   if ( Side > 1 )
-    Side = metaData().index( "best side" );
+    Side = metaData( "Cell" ).index( "best side" );
 
   string wavetypes[3] = { "Wave", "Envelope", "AM" };
 
@@ -354,7 +354,7 @@ int SingleStimulus::main( void )
 	  SP[0].plot( rate2, 1000.0, Plot::Orange, 2, Plot::Solid );
 
 	  // stimulus:
-	  double threshold = metaData().number( "best threshold" );
+	  double threshold = metaData( "Cell" ).number( "best threshold" );
 	  double ymin = Intensity - PeakAmplitude;
 	  double ymax = Intensity + PeakAmplitude;
 	  if ( threshold > 0.0 ) {
@@ -729,7 +729,7 @@ void SingleStimulus::plot( const EventList &spikes, const SampleDataD &rate1,
   P[0].plot( rate2, 1000.0, Plot::Orange, 2, Plot::Solid );
 
   // stimulus:
-  double threshold = metaData().number( "best threshold" );
+  double threshold = metaData( "Cell" ).number( "best threshold" );
   double ymin = Intensity - PeakAmplitude;
   double ymax = Intensity + PeakAmplitude;
   if ( WaveType == Envelope )

@@ -76,10 +76,10 @@ public:
     /*! Clear the options. */
   virtual void clear( void );
     /*! Save the name of the section and the options 
-        that have MetaData::saveFlag() set in their flags()
+        that have MetaData::saveFlags() set in their flags()
 	into info file \a str. */
   virtual void save( ofstream &str );
-    /*! Write meta data that have MetaData::saveFlag() set in their flags()
+    /*! Write meta data that have MetaData::saveFlags() set in their flags()
         in XML format to output stream.
         \param[in] str the output stream
         \param[in] level the level of indentation
@@ -113,6 +113,25 @@ private:
 \brief The general Recording section of MetaData
 \author Jan Benda
 \version 1.0
+
+A couple of predifined properties are defined set in the Recording section:
+- File: the base path for all the files saved by the recording session
+- Date: the date of the recording session
+- Time: the time when the recording session ended
+- Recording duration: the duration of the recording session
+- Mode: "experiment" or "simulation"
+- Software: "RELACS"
+- Software version: the RELACS version number
+All these standard options have the standardFlag() set.
+
+The values of the standard options are set appropriately in save()
+right before they are saved to the info file of the session.
+
+You can remove individual standard options in 
+Control::configure() by doing something like
+\code
+  metaData( "Recording" ).erase( "File" );
+\endcode
 */
 
 class MetaDataRecordingSection : public MetaDataSection
@@ -120,58 +139,55 @@ class MetaDataRecordingSection : public MetaDataSection
 
 public:
   
-  /*! Construct a "recording" section of meta data.
-      \param[in] tab does this section request an own tab in the dialog?
-      \param[in] md pointer to the MetaData that created this section.
-      \param[in] rw pointer to the main RELACSWidget.
-  */
+    /*! Construct a "recording" section of meta data
+        and adds its standradFlag() to the MetaData::saveFlags().
+        \param[in] tab does this section request an own tab in the dialog?
+        \param[in] md pointer to the MetaData that created this section.
+        \param[in] rw pointer to the main RELACSWidget.
+    */
   MetaDataRecordingSection( bool tab, MetaData *md, RELACSWidget *rw );
   virtual ~MetaDataRecordingSection( void );
 
-    /*! The number of options to be save in the configuration file. */
+    /*! The number of options to be saved in the configuration file. */
   virtual int configSize( void ) const;
 
     /*! Clear the options and preset them with standard options. */
   virtual void clear( void );
     /*! Set the values of the standard options and 
         save the name of the section and the options 
-        that have MetaData::saveFlag() set in their flags()
+        that have MetaData::saveFlags() set in their flags()
 	into info file \a str. */
   virtual void save( ofstream &str );
+
+    /*! The flag that is used to mark the standard options. */
+  static int standardFlag( void );
+
+
+private:
+
+  static const int StandardFlag = 1024;
 
 };
 
 
 /*! 
 \class MetaData
-\brief Manages meta data for a recording session
+\brief Manages sections of meta data describing a recording session
 \author Jan Benda
 \version 1.0
 
-MetaData contains several sections of meta data for a recording session.
-The sections are defined in the \c relacs.cfg file and are
+Usually, meta data sections are defined in the \c relacs.cfg file and are
 typically loaded from the \c relacsplugins.cfg file
 (after Control::initialize() and before Control::initDevices() is called).
 
-The "Recording" section is always used and contains a few standard parameter:
-(the name of the directory where the data are saved ("File"),
-date ("Date") and time ("Time") of the session start, 
-the duration of the session ("Recording duration"), 
-the operation mode ("Mode", idle, acquisition, simulation, or analysis),
-the name of the software ("Software: RELACS"), and
-the version of the software ("Software version").
-You can remove individual standard options in 
-Control::initialize() by doing something like
-\code
-  metaData( "Recording" ).erase( "File" );
-\endcode
-All standard options have the standardFlag() set.
-The values of the standard options are set appropriately in save()
-right before they are saved to the info file of the session.
+Never add options to a MetaDataSection within a Control constructor,
+since these get cleared right before the meta data are loaded from the configuration file!
 
-Never add options to a MetaDataSection within a Control constructor!
 With the dialogFlag() and the presetDialogFlag() meta data
-can be selected that are displayed in the dialog() or presetDialog().
+can be selected that are displayed in the dialog() or presetDialog(), respectively.
+
+The "Recording" section (MetaDataRecordingSection)
+is always used and contains a few standard properties.
 */
 
 class MetaData : public QObject, public ConfigClass
@@ -183,17 +199,24 @@ public:
   MetaData( RELACSWidget *rw );
   ~MetaData( void );
 
+    /*! Add a new section to the meta data.
+        \param[in] name the section title
+        \param[in] tab does this section request an own tab in the dialog?
+    */
+  void add( const string &name, bool tab=false );
+
     /*! Load the meta data Options from the configuration file
         and immediately create the requested MetaDataSections. */
   virtual void readConfig( StrQueue &sq );
 
     /*! React to changes in the meta data sections.
-        This function calls notifyMetaData() in all RELACSPlugins. */
-  void notifyMetaData( void );
+        This function calls notifyMetaData() in all RELACSPlugins.
+        \param[in] section the name of the MetaDataSection in which the change occured. */
+  void notifyMetaData( const string &section );
 
     /*! Saves the meta data into the info file of the session. */
   void save( void );
-    /*! Write meta data that have saveFlag() set in their flags()
+    /*! Write meta data that have saveFlags() set in their flags()
         in XML format to output stream.
         \param[in] str the output stream
         \param[in] level the level of indentation
@@ -204,6 +227,8 @@ public:
     /*! Clear the meta data. */
   void clear( void );
 
+    /*! \return \c true if a meta data section with name \a section exist. */
+  bool exist( const string &section ) const;
     /*! Return the MetaData options from section \a section. */
   Options &section( const string &section );
     /*! Return the MetaData options from section \a section. */
@@ -219,25 +244,28 @@ public:
     /*! Add actions to the RELACS menu. */
   void addActions( QPopupMenu *menu );
 
-    /*! The flag that is used to mark options for the dialog. */
+    /*! The flag that is used to mark meta data options for the dialog. */
   static int dialogFlag( void );
-    /*! The flag that is used to mark options for the preset dialog. */
+    /*! The flag that is used to mark meta data options for the preset dialog. */
   static int presetDialogFlag( void );
-    /*! The flag that is used to mark options loaded from the config file. */
+    /*! The flag that is used by MetaDataSection::readConfig()
+        to mark meta data options loaded from the config file. */
   static int configFlag( void );
-    /*! The flag that is used to mark the standard options. */
-  static int standardFlag( void );
-    /*! The flag that is used to mark the meta data about
-        the experimental setup. */
-  static int setupFlag( void );
-    /*! The flag that is used to select meta-data Options to be saved 
+
+    /*! The flags that are used to select meta-data Options to be saved 
         in the info file of the session 
 	(default (=0) selects all). */
-  int saveFlag( void ) const;
-    /*! Set the flag that is used to select meta-data Options to be saved 
-        in the info file of the session to \a flag.
-	Setting \a flag to 0 selects all (default). */
-  void setSaveFlag( int flag );
+  int saveFlags( void ) const;
+    /*! Set the flags that are used to select meta-data Options to be saved 
+        in the info file of the session to \a flags.
+	Setting \a flags to 0 selects all (default). */
+  void setSaveFlags( int flags );
+    /*! Add \a flags to the flags that are used to select meta-data Options to be saved 
+        in the info file of the session. */
+  void addSaveFlags( int flags );
+    /*! Delete the bits set in \a flags from the flags that are used to select 
+        meta-data Options to be saved in the info file of the session. */
+  void delSaveFlags( int flags );
 
 
 public slots:
@@ -269,10 +297,8 @@ private:
   static const int DialogFlag = 128;
   static const int PresetDialogFlag = 256;
   static const int ConfigFlag = 512;
-  static const int StandardFlag = 1024;
-  static const int LabelFlag = 2048;
-  static const int SetupFlag = 4096;
-  int SaveFlag;
+  static const int LabelFlag = 4096;
+  int SaveFlags;
 
   vector< MetaDataSection* > MetaDataSections;
 

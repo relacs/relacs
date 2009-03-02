@@ -868,10 +868,10 @@ void FilterDetectors::modeChanged( void )
 }
 
 
-void FilterDetectors::notifyMetaData( void )
+void FilterDetectors::notifyMetaData( const string &section )
 {
   for ( FilterList::iterator fp = FL.begin(); fp != FL.end(); ++fp )
-    (*fp).FilterDetector->notifyMetaData();
+    (*fp).FilterDetector->notifyMetaData( section );
 }
 
 

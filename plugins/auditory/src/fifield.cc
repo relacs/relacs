@@ -170,7 +170,7 @@ int FIField::main( void )
   if ( PreWidth > Pause )
     Pause = PreWidth;
   if ( Side > 1 )
-    Side = metaData().index( "best side" );
+    Side = metaData( "Cell" ).index( "best side" );
   if ( SSWidth > Duration )
     SSWidth = Duration;
 
@@ -339,7 +339,7 @@ void FIField::saveThreshold( const string &file )
   key.saveKey( df, true, true );
 
   // write data:
-  double rate = metaData().number( "best rate" );
+  double rate = metaData( "Cell" ).number( "best rate" );
   for ( unsigned int k=0; k<FieldData.size(); k++ ) {
     if ( FieldData[k].Measured ) {
       key.save( df, 0.001*FieldData[k].Frequency, 0 );
@@ -367,29 +367,31 @@ void FIField::save( void )
     FieldData[FrequencyRange.pos()].Measured = false;
   }
 
+  Options &mo = metaData( "Cell" );
+
   if ( SetBest && BestIndex >= 0 ) {
     auditory::Session *as = dynamic_cast<auditory::Session*>( control( "Session" ) );
     string ss = Side == 1 ? "right" : "left";
 
     // f-I curve parameter:
-    metaData().setNumber( ss + " frequency", FieldData[BestIndex].Frequency );
-    metaData().setNumber( ss + " threshold", FieldData[BestIndex].Threshold, FieldData[BestIndex].ThresholdSD );
-    metaData().setNumber( ss + " slope", FieldData[BestIndex].Slope, FieldData[BestIndex].SlopeSD );
-    metaData().setNumber( ss + " intensity", FieldData[BestIndex].RateIntensity, FieldData[BestIndex].RateIntensitySD );
-    metaData().setNumber( ss + " saturation", FieldData[BestIndex].Saturation, FieldData[BestIndex].SaturationSD );
-    metaData().setNumber( ss + " maxrate", FieldData[BestIndex].MaxRate, FieldData[BestIndex].MaxRateSD );
+    mo.setNumber( ss + " frequency", FieldData[BestIndex].Frequency );
+    mo.setNumber( ss + " threshold", FieldData[BestIndex].Threshold, FieldData[BestIndex].ThresholdSD );
+    mo.setNumber( ss + " slope", FieldData[BestIndex].Slope, FieldData[BestIndex].SlopeSD );
+    mo.setNumber( ss + " intensity", FieldData[BestIndex].RateIntensity, FieldData[BestIndex].RateIntensitySD );
+    mo.setNumber( ss + " saturation", FieldData[BestIndex].Saturation, FieldData[BestIndex].SaturationSD );
+    mo.setNumber( ss + " maxrate", FieldData[BestIndex].MaxRate, FieldData[BestIndex].MaxRateSD );
 
     // best side:
     as->updateBestSide();    
 
     // best side parameter:
-    if ( Side == metaData().index( "best side" ) ) {
-      metaData().setNumber( "best frequency", FieldData[BestIndex].Frequency );
-      metaData().setNumber( "best threshold", FieldData[BestIndex].Threshold, FieldData[BestIndex].ThresholdSD );
-      metaData().setNumber( "best slope", FieldData[BestIndex].Slope, FieldData[BestIndex].SlopeSD );
-      metaData().setNumber( "best intensity", FieldData[BestIndex].RateIntensity, FieldData[BestIndex].RateIntensitySD );
-      metaData().setNumber( "best maxrate", FieldData[BestIndex].MaxRate, FieldData[BestIndex].MaxRateSD );
-      metaData().setNumber( "best saturation", FieldData[BestIndex].Saturation, FieldData[BestIndex].SaturationSD );
+    if ( Side == mo.index( "best side" ) ) {
+      mo.setNumber( "best frequency", FieldData[BestIndex].Frequency );
+      mo.setNumber( "best threshold", FieldData[BestIndex].Threshold, FieldData[BestIndex].ThresholdSD );
+      mo.setNumber( "best slope", FieldData[BestIndex].Slope, FieldData[BestIndex].SlopeSD );
+      mo.setNumber( "best intensity", FieldData[BestIndex].RateIntensity, FieldData[BestIndex].RateIntensitySD );
+      mo.setNumber( "best maxrate", FieldData[BestIndex].MaxRate, FieldData[BestIndex].MaxRateSD );
+      mo.setNumber( "best saturation", FieldData[BestIndex].Saturation, FieldData[BestIndex].SaturationSD );
     }
 
     // threshold curve:
@@ -413,7 +415,7 @@ void FIField::save( void )
 
   FIFieldHeader.setInteger( "index2", totalRuns()-1 );
   FIFieldHeader.setInteger( "side", Side );
-  FIFieldHeader.setInteger( "best side", metaData().index( "best side" ) );
+  FIFieldHeader.setInteger( "best side", mo.index( "best side" ) );
   if ( BestIndex >= 0 ) {
     FIFieldHeader.setNumber( "best frequency", FieldData[BestIndex].Frequency );
     FIFieldHeader.setNumber( "best threshold", FieldData[BestIndex].Threshold, FieldData[BestIndex].ThresholdSD );
@@ -423,7 +425,7 @@ void FIField::save( void )
     FIFieldHeader.setNumber( "best maximum rate", FieldData[BestIndex].MaxRate, FieldData[BestIndex].MaxRateSD );
     FIFieldHeader.setInteger( "best nfit", FieldData[BestIndex].N );
   }
-  FIFieldHeader.setNumber( "best rate", metaData().number( "best rate" ) );
+  FIFieldHeader.setNumber( "best rate", mo.number( "best rate" ) );
   FIFieldHeader.setText( "session time", sessionTimeStr() );
 
   saveThreshold( "fifield.dat" );
