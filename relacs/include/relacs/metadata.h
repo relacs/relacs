@@ -128,7 +128,7 @@ The values of the standard options are set appropriately in save()
 right before they are saved to the info file of the session.
 
 You can remove individual standard options in 
-Control::configure() by doing something like
+Control::config() by doing something like
 \code
   metaData( "Recording" ).erase( "File" );
 \endcode

@@ -56,7 +56,7 @@ public:
   ~Session( void );
 
   virtual void initialize( void );
-  virtual void configure( void );
+  virtual void config( void );
   virtual void initDevices( void );
   virtual void startSession( void );
   virtual void stopSession( bool saved );

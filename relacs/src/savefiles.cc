@@ -428,64 +428,34 @@ void SaveFiles::writeStimulus( void )
     
     // xml metadata file:
     if ( XF != 0 && saving() && writing() ) {
-      *XF << "      <section name=\"stimulus\">\n";
-      *XF << "        <section name=\"analoginput\">\n";
-      int col = 0;
-      for ( unsigned int k=0; k<TraceFiles.size(); k++ )
-	if ( TraceFiles[k].Stream != 0 ) {
-	  *XF << "          <section name=\"trace\">\n";
-	  Parameter p( "file", "file", TraceFiles[k].FileName );
-	  p.saveXML( *XF, 6 );
-	  StimulusKey[col++].setInteger( TraceFiles[k].SignalOffset ).saveXML( *XF, 6 );
-	  *XF << "          </section>\n";
-	}
-      *XF << "        </section>\n";
-      *XF << "        <section name=\"events\">\n";
-      for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
-	if ( EventFiles[k].Stream != 0 ) {
-	  *XF << "          <section name=\"trace\">\n";
-	  Parameter p( "file", "file", EventFiles[k].FileName );
-	  p.saveXML( *XF, 6 );
-	  StimulusKey[col++].setInteger( EventFiles[k].SignalEvent ).saveXML( *XF, 6 );
-	  if ( EventFiles[k].SaveMeanRate )
-	    StimulusKey[col++].setNumber( EventFiles[k].Events->meanRate() ).saveXML( *XF, 6 );
-	  if ( EventFiles[k].SaveMeanSize )
-	    StimulusKey[col++].setNumber( EventFiles[k].Events->sizeScale() *
-					  EventFiles[k].Events->meanSize() ).saveXML( *XF, 6 );
-	  if ( EventFiles[k].SaveMeanWidth )
-	    StimulusKey[col++].setNumber( EventFiles[k].Events->widthScale() *
-					  EventFiles[k].Events->meanWidth() ).saveXML( *XF, 6 );
-	  if ( EventFiles[k].SaveMeanQuality )
-	    StimulusKey[col++].setNumber( 100.0*EventFiles[k].Events->meanQuality() ).saveXML( *XF, 6 );
-	  *XF << "          </section>\n";
-	}
-      }
-      *XF << "        </section>\n";
+      *XF << "    <section name=\"stimulus\">\n";
       lock();
       if ( !Options::empty() ) {
-	*XF << "        <section name=\"data\">\n";
+	int col = StimulusKey.column( "data>" + (*this)[0].ident() );
+	*XF << "      <section name=\"data\">\n";
 	for( int k=0; k<Options::size(); k++ )
-	  StimulusKey[col++].setNumber( (*this)[k].number() ).saveXML( *XF, 6 );
-	*XF << "        </section>\n";
+	  StimulusKey[col++].setNumber( (*this)[k].number() ).saveXML( *XF, 5 );
+	*XF << "      </section>\n";
       }
       unlock();
-      StimulusKey[col++].setNumber( TraceFiles[0].Trace->signalTime() - SessionTime ).saveXML( *XF, 4 );
+      int col = StimulusKey.column( "stimulus>timing>time" );
+      StimulusKey[col++].setNumber( TraceFiles[0].Trace->signalTime() - SessionTime ).saveXML( *XF, 3 );
       // StimulusToWrite:
-      StimulusKey[col++].setNumber( 1000.0*StimulusToWrite[0].delay() ).saveXML( *XF, 4 );
+      StimulusKey[col++].setNumber( 1000.0*StimulusToWrite[0].delay() ).saveXML( *XF, 3 );
       for ( int k=0; k<RW->AQ->outTracesSize(); k++ ) {
 	for ( int j=0; j<StimulusToWrite.size(); j++ ) {
 	  const Attenuate *att = RW->AQ->outTraceAttenuate( k );
 	  if ( StimulusToWrite[j] == RW->AQ->outTrace( k ) ) {
 	    Parameter p( "identifier", "identifier", RW->AQ->outTraceName( k ) );
-	    p.saveXML( *XF, 4 );
-	    StimulusKey[col++].setNumber( 0.001*StimulusToWrite[j].sampleRate() ).saveXML( *XF, 4 );
+	    p.saveXML( *XF, 3 );
+	    StimulusKey[col++].setNumber( 0.001*StimulusToWrite[j].sampleRate() ).saveXML( *XF, 3 );
 	    StimulusKey[col++].setNumber( 1000.0*StimulusToWrite[j].length() );
 	    if ( att != 0 ) {
-	      StimulusKey[col++].setNumber( StimulusToWrite[j].intensity() ).saveXML( *XF, 4 );
+	      StimulusKey[col++].setNumber( StimulusToWrite[j].intensity() ).saveXML( *XF, 3 );
 	      if ( ! att->frequencyName().empty() )
-		StimulusKey[col++].setNumber( StimulusToWrite[j].carrierFreq() ).saveXML( *XF, 4 );
+		StimulusKey[col++].setNumber( StimulusToWrite[j].carrierFreq() ).saveXML( *XF, 3 );
 	    }
-	    StimulusKey[col++].setText( StimulusToWrite[j].ident() ).saveXML( *XF, 4 );
+	    StimulusKey[col++].setText( StimulusToWrite[j].ident() ).saveXML( *XF, 3 );
 	  }
 	  else {
 	    col += 3;
@@ -497,7 +467,7 @@ void SaveFiles::writeStimulus( void )
 	  }
 	}
       }
-      *XF << "      </section>\n";
+      *XF << "    </section>\n";
     }
     
     StimulusData = false;
@@ -552,17 +522,15 @@ void SaveFiles::writeRePro( void )
     // xml metadata file:
     if ( XF != 0 && saving() && writing() ) {
       if ( ExperimentOpen ) {
-	*XF << "    </section>\n";
 	*XF << "  </section>\n";
       }
-      *XF << "  <section name=\"experiment\">\n";
+      *XF << "  <section name=\"dataset\">\n";
       ReProInfo.saveXML( *XF, 0, 2 );
       if ( ! ReProSettings.empty() ) {
 	*XF << "    <section name=\"settings\">\n";
 	ReProSettings.saveXML( *XF, 1, 3 );
 	*XF << "    </section>\n";
       }
-      *XF << "    <section name=\"stimuli\">\n";
       ExperimentOpen = true;
     }
 
@@ -989,7 +957,6 @@ void SaveFiles::closeFiles( void )
   SF = 0;
   if ( XF != 0 ) {
     if ( ExperimentOpen ) {
-      *XF << "    </section>\n";
       *XF << "  </section>\n";
       ExperimentOpen = false;
     }

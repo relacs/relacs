@@ -1690,17 +1690,20 @@ ostream &Parameter::saveXML( ostream &str, int level, int indent ) const
     str << indstr1 << "<property>\n";
     str << indstr2 << "<name>" << ident() << "</name>\n";
     if ( isNumber() || isInteger() ) {
-      str << indstr2 << "<numvalue>" << Str( number( 0 ), format() ).strip() << "</numvalue>\n";
+      string vtype = "float";
+      if ( isInteger() )
+	vtype = "integer";
+      str << indstr2 << "<value type=\"" << vtype << "\">" << Str( number( 0 ), format() ).strip() << "</value>\n";
       if ( error( 0 ) >= 0.0 )
-	str << indstr2 << "<errorvalue>" << Str( error( 0 ), format() ).strip() << "</errorvalue>\n";
+	str << indstr2 << "<errorvalue type=\"" << vtype << "\">" << Str( error( 0 ), format() ).strip() << "</errorvalue>\n";
       if ( outUnit() != "1" )
 	str << indstr2 << "<unit>" << unit() << "</unit>\n";
     }
     else if ( isBoolean() ) {
-      str << indstr2 << "<boolvalue>" << ( boolean( 0 ) ? "true" : "false" ) << "</boolvalue>\n";
+      str << indstr2 << "<value type=\"boolean\">" << ( boolean( 0 ) ? "true" : "false" ) << "</boolvalue>\n";
     }
     else if ( isText() ) {
-      str << indstr2 << "<textvalue>" << text().strip() << "</textvalue>\n";
+      str << indstr2 << "<value type=\"string\">" << text().strip() << "</textvalue>\n";
     }
     str << indstr1 << "</property>\n";
   }

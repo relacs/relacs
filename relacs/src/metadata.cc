@@ -202,8 +202,8 @@ void MetaData::readConfig( StrQueue &sq )
   Options::load( sq );
 
   // read out options and create meta data sections:
-  // (this cannot go into configure, since we also want to add things
-  // to the same configureation file)
+  // (this cannot go into config(), since we also want to add things
+  // to the same configuration file)
   lock();
   MetaDataSections.clear();
   MetaDataSections.reserve( 10 );

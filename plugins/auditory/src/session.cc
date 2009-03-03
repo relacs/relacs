@@ -102,7 +102,7 @@ void Session::initialize( void )
 }
 
 
-void Session::configure( void )
+void Session::config( void )
 {
   // additional meta data properties:
   if ( ! metaData().exist( "Cell" ) )
@@ -153,7 +153,7 @@ void Session::configure( void )
   mo.addStyle( OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack, MetaDataDisplay );
 
   metaData().delSaveFlags( MetaData::dialogFlag() + MetaData::presetDialogFlag() );
-  metaData().addSaveFlags( MetaDataSave );
+  metaData().addSaveFlags( MetaData::configFlag() + MetaDataRecordingSection::standardFlag() + MetaDataSave );
   
   if ( simulation() ) {
     mo.selectText( "best side", "left" );
