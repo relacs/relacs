@@ -47,7 +47,6 @@ string Attenuator::info( void ) const
 {
   ostringstream ss;
   ss << ";lines: " << lines();
-  ss << ends;
   return Device::info() + ss.str();
 }
 

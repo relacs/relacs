@@ -238,7 +238,7 @@ string CS3310SerialNIDIO::settings( void ) const
 {
   ostringstream ss;
   ss << "level1: " << (int)Level[0]
-     << ";level2: " << (int)Level[1] << ends;
+     << ";level2: " << (int)Level[1];
   return ss.str();
 }
 

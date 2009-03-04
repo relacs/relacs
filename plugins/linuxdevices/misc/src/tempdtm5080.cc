@@ -136,7 +136,7 @@ string TempDTM5080::settings( void ) const
   if ( ! s.empty() )
     s += ';';
   ostringstream ss;
-  ss << "probe: " << Probe << ends;
+  ss << "probe: " << Probe;
   s += ss.str();
   return s;
 }

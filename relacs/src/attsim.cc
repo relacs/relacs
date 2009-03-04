@@ -71,7 +71,7 @@ string AttSim::settings( void ) const
 {
   ostringstream ss;
   ss << "level1: " << Decibel[0]
-     << ";level2: " << Decibel[1] << ends;
+     << ";level2: " << Decibel[1];
   return ss.str();
 }
 

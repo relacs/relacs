@@ -766,7 +766,7 @@ void SaveFiles::createXMLFile( const InList &traces,
   XF = openFile( "metadata.xml", ios::out );
 
   if ( (*XF) ) {
-    *XF << "<?xml version=\"1.0\"?>\n";
+    *XF << "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n";
     *XF << "<ephysmetadata\n";
     *XF << "  xmlns:dc=\"http://purl.org/metadata/dublin_core#\"\n";
     *XF << "  xmlns:md=\"http://www.g-node.org/md-syntax-ns#\">\n";

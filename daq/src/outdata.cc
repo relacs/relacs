@@ -282,7 +282,7 @@ string OutData::errorMessage( void ) const
   ss << "\"" << ident()
      << "\", channel " << channel() 
      << " on device " << device()
-     << ": " << errorStr() << ends;
+     << ": " << errorStr();
   return ss.str();
 }
 

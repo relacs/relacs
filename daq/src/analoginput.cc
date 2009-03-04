@@ -84,7 +84,6 @@ string AnalogInput::info( void ) const
   ss << ";channels: " << channels();
   ss << ";bits: " << bits();
   ss << ";max sampling rate: " << 0.001*maxRate() << " kHz";
-  ss << ends;
   return Device::info() + ss.str();
 }
 

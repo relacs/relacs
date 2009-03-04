@@ -1696,14 +1696,14 @@ ostream &Parameter::saveXML( ostream &str, int level, int indent ) const
       str << indstr2 << "<value type=\"" << vtype << "\">" << Str( number( 0 ), format() ).strip() << "</value>\n";
       if ( error( 0 ) >= 0.0 )
 	str << indstr2 << "<errorvalue type=\"" << vtype << "\">" << Str( error( 0 ), format() ).strip() << "</errorvalue>\n";
-      if ( outUnit() != "1" )
+      if ( ! outUnit().empty() && outUnit() != "1" )
 	str << indstr2 << "<unit>" << unit() << "</unit>\n";
     }
     else if ( isBoolean() ) {
-      str << indstr2 << "<value type=\"boolean\">" << ( boolean( 0 ) ? "true" : "false" ) << "</boolvalue>\n";
+      str << indstr2 << "<value type=\"boolean\">" << ( boolean( 0 ) ? "true" : "false" ) << "</value>\n";
     }
     else if ( isText() ) {
-      str << indstr2 << "<value type=\"string\">" << text().strip() << "</textvalue>\n";
+      str << indstr2 << "<value type=\"string\">" << text().strip() << "</value>\n";
     }
     str << indstr1 << "</property>\n";
   }

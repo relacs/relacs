@@ -79,7 +79,7 @@ string Device::info( void ) const
 {
   string s = "";
   ostringstream ss;
-  ss << "type: " << deviceType() << ends;
+  ss << "type: " << deviceType();
   s += ss.str();
   s += ";class: " + deviceClass();
   s += ";ident: " + deviceIdent();

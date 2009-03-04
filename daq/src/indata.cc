@@ -213,7 +213,7 @@ string InData::errorMessage( void ) const
   ostringstream ss;
   ss << "Channel " << channel() 
      << " on device " << device()
-     << ": " << errorStr() << ends;
+     << ": " << errorStr();
   return ss.str();
 }
 

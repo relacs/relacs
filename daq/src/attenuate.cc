@@ -125,7 +125,6 @@ string Attenuate::info( void ) const
   ss << ";analog output channel: " << aoChannel();
   ss << ";attenuator device: " << ( Att != 0 ? Att->deviceIdent() : "" );
   ss << ";attenuator line: " << Index;
-  ss << ends;
   return Device::info() + ss.str();
 }
 
@@ -160,7 +159,7 @@ int Attenuate::write( double &intens, double frequency )
   // settings:
   ostringstream ss;
   ss << "intensity: " << intens
-     << ";frequency: " << frequency << ends;
+     << ";frequency: " << frequency;
   setSettings( ss.str() );
 
   return r;
@@ -194,7 +193,7 @@ int Attenuate::mute( void )
 
   // settings:
   ostringstream ss;
-  ss << "intensity: muted" << ends;
+  ss << "intensity: muted";
   setSettings( ss.str() );
 
   return Att->mute( Index );
