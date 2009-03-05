@@ -132,7 +132,8 @@ int MetaDataRecordingSection::configSize( void ) const
 void MetaDataRecordingSection::clear( void )
 {
   Options::clear();
-  addText( "File", "", standardFlag() );
+  addText( "Name", "", standardFlag() );
+  addText( "Folder", "", standardFlag() );
   addText( "Date", "", standardFlag() );
   addText( "Time", "", standardFlag() );
   addNumber( "Recording duration", "", standardFlag() );
@@ -154,7 +155,8 @@ void MetaDataRecordingSection::save( ofstream &str )
   RW->SS.unlock();
 
   // update file, date, time
-  setText( "File", Str( RW->SF->path() ).preventSlash() );
+  setText( "Name", Str( RW->SF->path() ).preventedSlash().name() );
+  setText( "Folder", Str( RW->SF->path() ).preventedSlash().expandedPath() );
   setText( "Date", date );
   setText( "Time", time );
   setNumber( "Recording duration", RW->SN->sessionTime()/60.0 );

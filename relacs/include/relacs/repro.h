@@ -280,6 +280,10 @@ public:
         \sa setMessage(), noMessage() */
   void message( const string &msg );
 
+    /*! Stores \a file in the list of files for this run of the RePro.
+        \return \a file added to the base path for the current session. */
+  string addPath( const string &file ) const;
+
     /*! Reimplement this function to handle key events. */
   virtual void keyPressEvent( QKeyEvent *e );
     /*! Reimplement this function to handle key events. */

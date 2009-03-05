@@ -147,9 +147,13 @@ public:
   string settings( void ) const;
 
     /*! The id of the device class.
-        \sa setDeviceType(), deviceClass(), deviceFile(), deviceIdent(),
+        \sa deviceTypeStr() setDeviceType(), deviceClass(), deviceFile(), deviceIdent(),
 	deviceName(), deviceVendor() */
   int deviceType( void ) const;
+    /*! \return the number of known device types. \sa deviceTypeStr(), deviceType() */
+  static int deviceTypes( void );
+    /*! \return a string naming the device type \a type. \sa deviceType(), \a deviecTypes() */ 
+  static string deviceTypeStr( int type );
     /*! The name for the device(s) a particular implementation
         of the Device class is handling.
         \sa setDeviceClass(), deviceIdent(), deviceType(), deviceFile(),
@@ -223,6 +227,9 @@ protected:
 
 
 private:
+
+  static const int MaxDeviceTypeStrs = 7;
+  static const string DeviceTypeStrs[MaxDeviceTypeStrs];
   
   int DeviceType;
   string DeviceClass;

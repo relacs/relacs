@@ -115,6 +115,8 @@ public:
 	\return \a file added to the current path for storing data.
         \sa path() */
   string addPath( const string &file ) const;
+    /*! Stores \a file in the list of files of the currently running RePro. */
+  void storeFile( const string &file ) const;
 
     /*! \return the template for the base path where data are to stored.
         \sa setPathTemplate(), path() */
@@ -294,8 +296,9 @@ protected:
 
   Options ReProInfo;
   Options ReProSettings;
+  mutable vector< string > ReProFiles;
   bool ReProData;
-  bool ExperimentOpen;
+  bool DatasetOpen;
   void writeRePro( void );
 
   bool ToggleOn;

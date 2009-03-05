@@ -379,6 +379,13 @@ void RePro::message( const string &msg )
 }
 
 
+string RePro::addPath( const string &file ) const
+{
+  RW->SF->storeFile( file );
+  return RW->SF->addPath( file );
+}
+
+
 void RePro::keyPressEvent( QKeyEvent *e )
 {
   if ( e->key() == SoftStopKey )

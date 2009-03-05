@@ -11,6 +11,11 @@ Thread safety:
 - (Multi)Plot::draw() can be called from within the locks!
 - what is qApp->syncX and flushX all about?
 
+Metadata:
+- stimulus section needs a name, a file (if available) and properties
+- Options needs a Date and a Time type
+- All dates and times must go into the XML file with a standard format
+- Parameter::label should get a level that is used to make sections in the XML file
 
 Acquisition interface:
 - improve the readSignal function in RELACSWidget::write()

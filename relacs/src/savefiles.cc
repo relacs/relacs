@@ -68,8 +68,9 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
   ReProInfo.addText( "version" );
   ReProInfo.addText( "date" );
   ReProSettings.clear();
+  ReProFiles.clear();
   ReProData = false;
-  ExperimentOpen = false;
+  DatasetOpen = false;
 
   setFixedHeight( height );
 
@@ -125,6 +126,16 @@ void SaveFiles::setPath( const string &path )
 string SaveFiles::addPath( const string &file ) const
 {
   return path() + file;
+}
+
+
+void SaveFiles::storeFile( const string &file ) const
+{
+  for ( vector<string>::const_iterator sp = ReProFiles.begin(); sp != ReProFiles.end(); ++sp ) {
+    if ( *sp == file )
+      return;
+  }
+  ReProFiles.push_back( file );
 }
 
 
@@ -521,17 +532,25 @@ void SaveFiles::writeRePro( void )
     
     // xml metadata file:
     if ( XF != 0 && saving() && writing() ) {
-      if ( ExperimentOpen ) {
+      if ( DatasetOpen ) {
+	for ( unsigned int k=0; k<ReProFiles.size(); k++ ) {
+	  Parameter p( "file", "file", ReProFiles[k] );
+	  p.saveXML( *XF, 2 );
+	}
+	ReProFiles.clear();
 	*XF << "  </section>\n";
       }
       *XF << "  <section name=\"dataset\">\n";
+      Parameter p( "name", "name", ReProInfo.text( "experiment" ) + "-" +
+		   ReProInfo.text( "repro" ) + "-" + Str( path() ).preventedSlash().name() );
+      p.saveXML( *XF, 2 );
       ReProInfo.saveXML( *XF, 0, 2 );
       if ( ! ReProSettings.empty() ) {
 	*XF << "    <section name=\"settings\">\n";
 	ReProSettings.saveXML( *XF, 1, 3 );
 	*XF << "    </section>\n";
       }
-      ExperimentOpen = true;
+      DatasetOpen = true;
     }
 
     ReProData = false;
@@ -565,6 +584,8 @@ void SaveFiles::removeFiles( void )
 
 ofstream *SaveFiles::openFile( const string &filename, int type )
 {
+  Options &opt = RW->MTDT.section( "Recording" );
+  opt.insertText( "File", "Date", filename, MetaDataRecordingSection::standardFlag() );
   string fs = path() + filename;
   addRemoveFile( fs );
   ofstream *f = new ofstream( fs.c_str(), ofstream::openmode( type ) );
@@ -774,67 +795,21 @@ void SaveFiles::createXMLFile( const InList &traces,
     *XF << "  <section name=\"hardware\">\n";
     for ( int k=0; k<RW->ADV->size(); k++ ) {
       const Device &dev = (*RW->ADV)[k];
-      *XF << "    <section name=\"device\">\n";
       Options opts;
       opts.load( dev.info() );
+      int dt = opts.integer( "type" );
+      if ( dt == 4 ) // Attenuate
+	continue;
+      opts.erase( "type" );
+      string dts = Device::deviceTypeStr( dt );
+      if ( dts.empty() )
+	dts = "Unknown Device";
+      *XF << "    <section name=\"" << dts << "\">\n";
       opts.saveXML( *XF, 0, 3 ); 
       *XF << "    </section>\n";
     }
     *XF << "  </section>\n";
-
-    *XF << "  <section name=\"recording\">\n";
-    *XF << "    <section name=\"analoginput\">\n";
-    Options opts;
-    opts.addText( "identifier" );
-    opts.addText( "file" );
-    opts.addNumber( "sampleinterval", "ms", "%g" );
-    opts.addNumber( "samplingrate", "Hz", "%g" );
-    opts.addText( "unit" );
-    for ( int k=0; k<traces.size(); k++ ) {
-      if ( ! TraceFiles[k].FileName.empty() ) {
-	opts.setText( "identifier", traces[k].ident() );
-	opts.setText( "file", TraceFiles[k].FileName );
-	opts.setNumber( "sampleinterval", 1000.0*traces[k].sampleInterval() );
-	opts.setNumber( "samplingrate", traces[k].sampleRate() );
-	opts.setText( "unit", traces[k].unit() );
-	*XF << "      <section name=\"trace\">\n";
-	opts.saveXML( *XF, 0, 4 );
-	*XF << "      </section>\n";
-      }
-    }
-    *XF << "    </section>\n";
-    *XF << "    <section name=\"events\">\n";
-    opts.clear();
-    opts.addText( "file" );
-    for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
-      if ( ! EventFiles[k].FileName.empty() )
-	opts.setText( "file", EventFiles[k].FileName );
-	*XF << "      <section name=\"trace\">\n";
-	opts.saveXML( *XF, 0, 4 );
-	*XF << "      </section>\n";
-    }
-    *XF << "    </section>\n";
-    *XF << "    <section name=\"analogoutput\">\n";
-    opts.clear();
-    opts.addText( "identifier" );
-    opts.addInteger( "device" );
-    opts.addInteger( "channel" );
-    opts.addNumber( "signaldelay", "ms", "%g" );
-    opts.addNumber( "maximumrate", "kHz", "%g" );
-    for ( int k=0; k<RW->AQ->outTracesSize(); k++ ) {
-      TraceSpec trace( RW->AQ->outTrace( k ) );
-      opts.setText( "identifier", trace.traceName() );
-      opts.setInteger( "device", trace.device() );
-      opts.setInteger( "channel", trace.channel() );
-      opts.setNumber( "signaldelay", 1000.0*trace.signalDelay() );
-      opts.setNumber( "maximumrate", 0.001*trace.maxSampleRate() );
-      *XF << "      <section name=\"trace\">\n";
-      opts.saveXML( *XF, 0, 4 );
-      *XF << "      </section>\n";
-    }
-    *XF << "    </section>\n";
   }
-  *XF << "  </section>\n";
 }
 
 
@@ -855,7 +830,8 @@ void SaveFiles::openFiles( const InList &traces, const EventList &events )
 
   ReProData = false;
   ReProSettings.clear();
-  ExperimentOpen = false;
+  ReProFiles.clear();
+  DatasetOpen = false;
 
   setPath( defaultPath() );
 
@@ -897,7 +873,7 @@ void SaveFiles::openFiles( const InList &traces, const EventList &events )
     }
     else {
       // try to open files:
-      string fs = path() + "trigger.dat";
+      string fs = path() + "stimulus-indices.dat";
       ifstream f( fs.c_str() );
       // files do not exist?
       if ( ! f.good() )
@@ -956,9 +932,14 @@ void SaveFiles::closeFiles( void )
     delete SF;
   SF = 0;
   if ( XF != 0 ) {
-    if ( ExperimentOpen ) {
+    if ( DatasetOpen ) {
+      for ( unsigned int k=0; k<ReProFiles.size(); k++ ) {
+	Parameter p( "file", "file", ReProFiles[k] );
+	p.saveXML( *XF, 2 );
+	}
+      ReProFiles.clear();
       *XF << "  </section>\n";
-      ExperimentOpen = false;
+      DatasetOpen = false;
     }
     RW->MTDT.saveXML( *XF, 1 );
     *XF << "</ephysmetadata>\n";
@@ -966,7 +947,10 @@ void SaveFiles::closeFiles( void )
   }
   XF = 0;
 
-  FilesOpen = false;
+  if ( FilesOpen ) {
+    RW->MTDT.section( "Recording" ).erase( "File" );
+    FilesOpen = false;
+  }
 
   SaveLabel->setSpike( false );
 }
