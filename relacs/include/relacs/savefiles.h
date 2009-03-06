@@ -55,7 +55,6 @@ SaveFile sets the following environment variables:
 - \c RELACSDATAPATH: The base path where RELACS is currently storing data.
 
 \bug implement saving of trace data
-\bug what about no longer valid pointers in StimulusToWrite and TraceToWrite?
 \bug writeStimulus: multi board signal times?
 \todo platform independent mkdir in openFiles()!
 \todo writeStimulus: adaptive time for calculating the mean rate
@@ -289,7 +288,20 @@ protected:
   };
   vector< EventFile > EventFiles;
 
-  OutList StimulusToWrite;
+  struct Stimulus {
+    Stimulus( void );
+    Stimulus( const Stimulus &signal );
+    Stimulus( const OutData &signal );
+    int Device;
+    int Channel;
+    double Delay;
+    double SampleRate;
+    double Length;
+    double Intensity;
+    double CarrierFreq;
+    string Ident;
+  };
+  vector< Stimulus > Stimuli;
   bool StimulusData;
   TableKey StimulusKey;
   void writeStimulus( void );

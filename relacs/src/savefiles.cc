@@ -51,7 +51,7 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
   TraceFiles.clear();
   EventFiles.clear();
 
-  StimulusToWrite.clear();
+  Stimuli.clear();
   StimulusData = false;
   StimulusKey.clear();
 
@@ -94,7 +94,7 @@ SaveFiles::~SaveFiles()
 
   EventFiles.clear();
 
-  StimulusToWrite.clear();
+  Stimuli.clear();
 }
 
 
@@ -341,11 +341,13 @@ void SaveFiles::write( const OutData &signal )
   if ( signal.error() != 0 )
     return;
 
-  if ( StimulusData )
+  if ( StimulusData ) {
     RW->printlog( "! warning: SaveFiles::write( OutData & ) -> already stimulus data there" );
+    Stimuli.clear();
+  }
 
   StimulusData = true;
-  StimulusToWrite.add( &signal );
+  Stimuli.push_back( Stimulus( signal ) );
 }
 
 
@@ -362,12 +364,14 @@ void SaveFiles::write( const OutList &signal )
   if ( signal.empty() || signal[0].failed() )
     return;
 
-  if ( StimulusData )
+  if ( StimulusData ) {
     RW->printlog( "! warning: SaveFiles::write( OutList& ) -> already stimulus data there" );
+    Stimuli.clear();
+  }
 
   StimulusData = true;
   for ( int k=0; k<signal.size(); k++ )
-    StimulusToWrite.add( &signal[k] );
+    Stimuli.push_back( signal[k] );
 }
 
 
@@ -407,20 +411,21 @@ void SaveFiles::writeStimulus( void )
       }
       unlock();
       StimulusKey.save( *SF, TraceFiles[0].Trace->signalTime() - SessionTime );
-      // StimulusToWrite:
-      StimulusKey.save( *SF, 1000.0*StimulusToWrite[0].delay() );
+      // stimulus:
+      StimulusKey.save( *SF, 1000.0*Stimuli[0].Delay );
       for ( int k=0; k<RW->AQ->outTracesSize(); k++ ) {
-	for ( int j=0; j<StimulusToWrite.size(); j++ ) {
+	for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
 	  const Attenuate *att = RW->AQ->outTraceAttenuate( k );
-	  if ( StimulusToWrite[j] == RW->AQ->outTrace( k ) ) {
-	    StimulusKey.save( *SF, 0.001*StimulusToWrite[j].sampleRate() );
-	    StimulusKey.save( *SF, 1000.0*StimulusToWrite[j].length() );
+	  if ( Stimuli[j].Device == RW->AQ->outTrace( k ).device() &&
+	       Stimuli[j].Channel == RW->AQ->outTrace( k ).channel() ) {
+	    StimulusKey.save( *SF, 0.001*Stimuli[j].SampleRate );
+	    StimulusKey.save( *SF, 1000.0*Stimuli[j].Length );
 	    if ( att != 0 ) {
-	      StimulusKey.save( *SF, StimulusToWrite[j].intensity() );
+	      StimulusKey.save( *SF, Stimuli[j].Intensity );
 	      if ( ! att->frequencyName().empty() )
-		StimulusKey.save( *SF, StimulusToWrite[j].carrierFreq() );
+		StimulusKey.save( *SF, Stimuli[j].CarrierFreq );
 	    }
-	    StimulusKey.save( *SF, StimulusToWrite[j].ident() );
+	    StimulusKey.save( *SF, Stimuli[j].Ident );
 	  }
 	  else {
 	    StimulusKey.save( *SF, "" );
@@ -451,22 +456,23 @@ void SaveFiles::writeStimulus( void )
       unlock();
       int col = StimulusKey.column( "stimulus>timing>time" );
       StimulusKey[col++].setNumber( TraceFiles[0].Trace->signalTime() - SessionTime ).saveXML( *XF, 3 );
-      // StimulusToWrite:
-      StimulusKey[col++].setNumber( 1000.0*StimulusToWrite[0].delay() ).saveXML( *XF, 3 );
+      // Stimulus:
+      StimulusKey[col++].setNumber( 1000.0*Stimuli[0].Delay ).saveXML( *XF, 3 );
       for ( int k=0; k<RW->AQ->outTracesSize(); k++ ) {
-	for ( int j=0; j<StimulusToWrite.size(); j++ ) {
+	for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
 	  const Attenuate *att = RW->AQ->outTraceAttenuate( k );
-	  if ( StimulusToWrite[j] == RW->AQ->outTrace( k ) ) {
+	  if ( Stimuli[j].Device == RW->AQ->outTrace( k ).device() &&
+	       Stimuli[j].Channel == RW->AQ->outTrace( k ).channel() ) {
 	    Parameter p( "identifier", "identifier", RW->AQ->outTraceName( k ) );
 	    p.saveXML( *XF, 3 );
-	    StimulusKey[col++].setNumber( 0.001*StimulusToWrite[j].sampleRate() ).saveXML( *XF, 3 );
-	    StimulusKey[col++].setNumber( 1000.0*StimulusToWrite[j].length() );
+	    StimulusKey[col++].setNumber( 0.001*Stimuli[j].SampleRate ).saveXML( *XF, 3 );
+	    StimulusKey[col++].setNumber( 1000.0*Stimuli[j].Length );
 	    if ( att != 0 ) {
-	      StimulusKey[col++].setNumber( StimulusToWrite[j].intensity() ).saveXML( *XF, 3 );
+	      StimulusKey[col++].setNumber( Stimuli[j].Intensity ).saveXML( *XF, 3 );
 	      if ( ! att->frequencyName().empty() )
-		StimulusKey[col++].setNumber( StimulusToWrite[j].carrierFreq() ).saveXML( *XF, 3 );
+		StimulusKey[col++].setNumber( Stimuli[j].CarrierFreq ).saveXML( *XF, 3 );
 	    }
-	    StimulusKey[col++].setText( StimulusToWrite[j].ident() ).saveXML( *XF, 3 );
+	    StimulusKey[col++].setText( Stimuli[j].Ident ).saveXML( *XF, 3 );
 	  }
 	  else {
 	    col += 3;
@@ -482,7 +488,7 @@ void SaveFiles::writeStimulus( void )
     }
     
     StimulusData = false;
-    StimulusToWrite.clear();
+    Stimuli.clear();
   }
 }
 
@@ -691,6 +697,7 @@ void SaveFiles::createStimulusFile( const InList &traces,
 {
   // init stimulus variables:
   StimulusData = false;
+  Stimuli.clear();
 
   // create file for stimuli:
   SF = openFile( "stimulus-indices.dat", ios::out );
@@ -996,6 +1003,46 @@ void SaveFiles::completeFiles( void )
 
   // back to default path:
   setPath( defaultPath() );
+}
+
+
+SaveFiles::Stimulus::Stimulus( void )
+  : Device( 0 ),
+    Channel( 0 ),
+    Delay( 0.0 ),
+    SampleRate( 0.0 ),
+    Length( 0.0 ),
+    Intensity( 0.0 ),
+    CarrierFreq( 0.0 ),
+    Ident( "" )
+{
+}
+
+
+
+SaveFiles::Stimulus::Stimulus( const Stimulus &signal )
+  : Device( signal.Device ),
+    Channel( signal.Channel ),
+    Delay( signal.Delay ),
+    SampleRate( signal.SampleRate ),
+    Length( signal.Length ),
+    Intensity( signal.Intensity ),
+    CarrierFreq( signal.CarrierFreq ),
+    Ident( signal.Ident )
+{
+}
+
+
+SaveFiles::Stimulus::Stimulus( const OutData &signal )
+{
+  Device = signal.device();
+  Channel = signal.channel();
+  Delay = signal.delay();
+  SampleRate = signal.sampleRate();
+  Length = signal.length();
+  Intensity = signal.intensity();
+  CarrierFreq = signal.carrierFreq();
+  Ident = signal.ident();
 }
 
 
