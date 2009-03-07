@@ -740,14 +740,14 @@ void RELACSWidget::updateData( void )
   ED.setRangeBack( IL[0].currentTime() );
   FD->filter( IL, ED );
   unlockData();
+  StimulusDataWait.wakeAll();
 }
 
 
 void RELACSWidget::processData( void )
 {
   readLockData();
-  SF->write( IL );
-  SF->write( ED );
+  SF->write( IL, ED );
   unlockData();
   PT->plot( IL, ED );
   DataSleepWait.wakeAll();
@@ -812,6 +812,14 @@ int RELACSWidget::write( OutData &signal )
 {
   // XXX if necessary (SF->signalPending()):
   // updateData() and SF->write( IL, EL );
+  /*
+  while ( SF->signalPending() ) {
+    StimulusDataWait.wait();
+    readLockData();
+    SF->write( IL, ED );
+    unlockData();
+  }
+  */
   lockSignals();
   lockAI();
   int r = AQ->write( signal );
@@ -820,6 +828,10 @@ int RELACSWidget::write( OutData &signal )
   if ( r == 0 ) {
     lockAI();
     // XXX wait for the signal!!!!
+    // XXX what about cases where the signal start can only be get
+    // XXX after its possible delay?????
+    // XXX AQ->readSignal does only fetch the most recent known signal start
+    // XXX from the driver. So this can also be the previous signal!
     AQ->readSignal( IL, ED );
     unlockAI();
     WriteLoop.start( signal.writeTime() );

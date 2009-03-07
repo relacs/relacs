@@ -160,16 +160,18 @@ public:
         or in RePro::read() *before* any write(). */
   void write( bool on );
 
-    /*! Write data traces to files */
-  void write( const InList &traces );
-    /*! Write events to files */
-  void write( const EventList &events );
+    /*! Write data traces and events to files */
+  void write( const InList &traces, const EventList &events );
     /*! Write output-meta-data to files. */
   void write( const OutData &signal );
     /*! Write output-meta-data to files. */
   void write( const OutList &signal );
     /*! Write RePro meta data to files. */
   void write( const RePro &rp );
+
+  /*! \return \c true if there is still a stimulus pending 
+      that needs to be written into the index files. */
+  bool signalPending( void ) const;
 
     /*! If no file is open: create a new file name, make a directory,
         open and initialize the data-, event-, and stimulus files. */
@@ -187,6 +189,11 @@ public slots:
 
 
 protected:
+
+    /*! Write data traces to files */
+  void write( const InList &traces );
+    /*! Write events to files */
+  void write( const EventList &events );
 
     /*! Close all open files */
   void closeFiles( void );

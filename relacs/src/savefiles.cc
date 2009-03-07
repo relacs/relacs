@@ -251,15 +251,24 @@ void SaveFiles::writeToggle( void )
 }
 
 
-void SaveFiles::write( const InList &traces )
+void SaveFiles::write( const InList &traces, const EventList &events )
 {
-  //  cerr << "SaveFiles::write( InList &traces )\n";
-
   // update write status:
   writeToggle();
 
   // indicate the new RePro:
   writeRePro();
+
+  write( traces );
+  write( events );
+
+  writeStimulus();
+}
+
+
+void SaveFiles::write( const InList &traces )
+{
+  //  cerr << "SaveFiles::write( InList &traces )\n";
 
   if ( !saving() || !writing() )
     return;
@@ -284,12 +293,6 @@ void SaveFiles::write( const InList &traces )
 void SaveFiles::write( const EventList &events )
 {
   //  cerr << "SaveFiles::write( EventList &events )\n";
-
-  // update write status:
-  writeToggle();
-
-  // indicate the new RePro:
-  writeRePro();
 
   if ( !saving() || !writing() )
     return;
@@ -332,12 +335,6 @@ void SaveFiles::write( const OutData &signal )
 {
   //  cerr << "SaveFiles::write( OutData &signal )\n";
 
-  // write last trial data here!
-  // we know that trace and events were written just before RePro::read
-  // was called (from which the write( signal ) originates. 
-  // Therefore all indices are known for writing the data of the last signal.
-  writeStimulus();
-
   if ( signal.error() != 0 )
     return;
 
@@ -354,12 +351,6 @@ void SaveFiles::write( const OutData &signal )
 void SaveFiles::write( const OutList &signal )
 {
   //  cerr << "SaveFiles::write( OutList &signal )\n";
-
-  // write last trial data here!
-  // we know that trace and events were written just before RePro::read
-  // was called (from which the write( signal ) originates. 
-  // Therefore all indices are known for writing the data of the last signal.
-  writeStimulus();
 
   if ( signal.empty() || signal[0].failed() )
     return;
@@ -562,6 +553,12 @@ void SaveFiles::writeRePro( void )
     ReProData = false;
     ReProSettings.clear();
   }
+}
+
+
+bool SaveFiles::signalPending( void ) const
+{
+  return StimulusData;
 }
 
 
