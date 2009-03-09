@@ -1231,7 +1231,7 @@ void Macros::startNextRePro( bool saving )
   if ( repro->projectOptions().text( "project" ).empty() ) {
     string ps = MCs[CurrentMacro]->Project.text( "project" );
     if ( ps.empty() ) {
-      for ( int k=(int)Stack.size()-1; k>=0; k++ ) {
+      for ( int k=(int)Stack.size()-1; k>=0; k-- ) {
 	ps = Stack[k].MacroProject.text( "project" );
 	if ( ! ps.empty() )
 	  break;
@@ -1240,7 +1240,7 @@ void Macros::startNextRePro( bool saving )
     repro->projectOptions().setText( "project", ps );
     string es = MCs[CurrentMacro]->Project.text( "experiment" );
     if ( es.empty() ) {
-      for ( int k=(int)Stack.size()-1; k>=0; k++ ) {
+      for ( int k=(int)Stack.size()-1; k>=0; k-- ) {
 	es = Stack[k].MacroProject.text( "experiment" );
 	if ( ! es.empty() )
 	  break;
