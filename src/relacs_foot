@@ -161,6 +161,9 @@ else
       if test "x$DEBUGRUN" = "xyes"; then
         # start debugger with RELACS:
         $DEBUGGER --args "$RELACSEXEC" "--plugin-relative-dir=${PLUGINRELATIVE}" "--plugin-home-dirs=${PLUGINHOME}" "--plugin-help-dirs=${PLUGINHELPPATHES}" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" "--doc-path=${DOCPATH}" "--icon-path=${ICONPATH}" $@
+      elif test "x$DEBUGATTACH" != "xno"; then
+        # attach debugger to running RELACS:
+        $DEBUGGER "$RELACSEXEC" "$DEBUGATTACH" $@
       else
         # run RELACS from within debugger:
         DEBUGCOM=relacsdebug$$

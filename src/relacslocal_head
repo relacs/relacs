@@ -40,6 +40,7 @@ USETEE="no"
 # Debug:
 DEBUG="no"
 DEBUGRUN="no"
+DEBUGATTACH="no"
 DEBUGGER="libtool --mode=execute gdb"
 COREFILE=""
 
@@ -88,10 +89,18 @@ for i; do
         shift ;;
     -d) DEBUG="yes"
         DEBUGRUN="no"
+        DEBUGATTACH="no"
         USELOGFILE="no"
         shift ;;
     -D) DEBUG="yes"
         DEBUGRUN="yes"
+        DEBUGATTACH="no"
+        USELOGFILE="no"
+        shift ;;
+    -a) DEBUG="yes"
+        DEBUGRUN="no"
+        shift
+        DEBUGATTACH="$1"
         USELOGFILE="no"
         shift ;;
     -C) shift
@@ -151,6 +160,8 @@ if test "x$HELP" = "xyes"; then
   echo "  -t             Use log file but also write messages to stdout "
   echo "  -d             Run RELACS from within a debugger (disables logfile)"
   echo "  -D             Start debugger without running RELACS"
+  echo "  -a PID         Attach debugger to running RELACS with process id PID"
+  echo "                 Get the pid via 'ps -C lt-relacsgui'"
   echo "  -C FILE        Start debugger with core-dump file FILE"
   echo "  -c             Save core dump in directory '$COREDIR' (enables -l)"
   echo "  -v             Run RELACS from within valgrind (disables logfile)"

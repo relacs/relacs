@@ -259,8 +259,8 @@ void PlotTrace::toggle( int i )
 
 void PlotTrace::init( const InList &data, const EventList &events )
 {
-  lock();
   lockData();
+  lock();
 
   int origin = OffsetMode < 0 ? 3 : 2;
   double tfac = 1000.0;
@@ -357,8 +357,8 @@ void PlotTrace::init( const InList &data, const EventList &events )
   // set xlabel:
   back().setXLabel( tunit );
 
-  unlockData();
   unlock();
+  unlockData();
 	
 }
 
@@ -373,8 +373,8 @@ void PlotTrace::plot( const InList &data, const EventList &events )
     PlotChanged = false;
   }
 
-  lock();
   lockData();
+  lock();
 
   // set left- and rightmargin:
   double tfac = 1000.0;
@@ -426,8 +426,8 @@ void PlotTrace::plot( const InList &data, const EventList &events )
       
     }
 
-  unlockData();
   unlock();
+  unlockData();
 
   // plot:
   draw();
@@ -514,6 +514,7 @@ void PlotTrace::setState( bool on, bool fixed, double length, double offs )
   if ( man )
     return;
 
+  lockData();
   lock();
 
   // toggle plot:
@@ -530,7 +531,6 @@ void PlotTrace::setState( bool on, bool fixed, double length, double offs )
   TimeOffs = offs;
 
   // pointstyle:
-  lockData();
   int plots=0;
   for ( int c=0; c<IL->size(); c++ ) {
     if ( PlotElements[plots] >= 0 ) {
@@ -545,8 +545,8 @@ void PlotTrace::setState( bool on, bool fixed, double length, double offs )
 	break;
     }
   }
-  unlockData();
   unlock();
+  unlockData();
 }
 
 
@@ -559,8 +559,8 @@ void PlotTrace::zoomOut( void )
   if ( RW->idle() )
     plot( *IL, *EL );
   else {
-    lock();
     lockData();
+    lock();
     int plots=0;
     for ( int c=0; c<IL->size(); c++ ) {
       if ( PlotElements[plots] >= 0 ) {
@@ -572,8 +572,8 @@ void PlotTrace::zoomOut( void )
 	  break;
       }
     }
-    unlockData();
     unlock();
+    unlockData();
   }
 }
 
@@ -587,8 +587,8 @@ void PlotTrace::zoomIn( void )
   if ( RW->idle() )
     plot( *IL, *EL );
   else {
-    lock();
     lockData();
+    lock();
     int plots=0;
     for ( int c=0; c<IL->size(); c++ ) {
       if ( PlotElements[plots] >= 0 ) {
@@ -600,8 +600,8 @@ void PlotTrace::zoomIn( void )
 	  break;
       }
     }
-    unlockData();
     unlock();
+    unlockData();
   }
 }
 
@@ -646,13 +646,13 @@ void PlotTrace::moveStart( void )
 
 void PlotTrace::moveEnd( void )
 {
+  lockData();
   lock();
   if ( OffsetMode >= 0 )
     setOffset( -1 );
-  lockData();
   LeftTime = IL == 0 ? 0.0 : (*IL)[0].currentTime() - TimeWindow;
-  unlockData();
   unlock();
+  unlockData();
   if ( RW->idle() )
     plot( *IL, *EL );
 }
@@ -660,17 +660,17 @@ void PlotTrace::moveEnd( void )
 
 void PlotTrace::moveSignal( void )
 {
+  lockData();
   lock();
   if ( OffsetMode == 0 )
     TimeOffs = 0.0;
   else {
     if ( OffsetMode >= 0 )
       setOffset( -1 );
-    lockData();
     LeftTime = IL == 0 ? 0.0 : (*IL)[0].signalTime();
-    unlockData();
   }
   unlock();
+  unlockData();
   if ( RW->idle() )
     plot( *IL, *EL );
 }
@@ -701,7 +701,7 @@ void PlotTrace::moveOffsLeft( void )
 
 void PlotTrace::moveOffsRight( void )
 {
-    lock();
+  lock();
   if ( OffsetMode != 0 )
     setOffset( 0 );
   else
