@@ -11,8 +11,9 @@ DOCBOOK_CLEAN_HTML = html
 docbook-html: html/index.html
 
 html/index.html: $(DOCBOOK_BASE).xml $(DOCBOOK_BASE).xsl $(DOCBOOK_FILES)
-	xmlto -o html -m $(DOCBOOK_BASE).xsl --skip-validation html $(DOCBOOK_BASE).xml
-	cp $(DOCBOOK_HTML_EXTRA) html/
+	cd $(srcdir); \
+	xmlto -o $(abs_builddir)/html -m $(DOCBOOK_BASE).xsl --skip-validation html $(DOCBOOK_BASE).xml; \
+	cp $(DOCBOOK_HTML_EXTRA) $(abs_builddir)/html/ ; \
 	test -f $(DOCBOOK_BASE).fls && for p in $$(<$(DOCBOOK_BASE).fls); do sed -e 's|^.*</pre|</pre|' $$p > tmp.html; mv tmp.html $$p; done || true
 
 docbook-install-html:
@@ -36,7 +37,8 @@ DOCBOOK_CLEAN_PS = $(DOCBOOK_BASE).ps
 docbook-ps: $(DOCBOOK_BASE).ps
 
 $(DOCBOOK_BASE).ps: $(DOCBOOK_BASE).xml $(DOCBOOK_BASE).xsl $(DOCBOOK_FILES)
-	xmlto -m $(DOCBOOK_BASE).xsl --skip-validation ps $(DOCBOOK_BASE).xml
+	cd $(srcdir); \
+	xmlto -m $(abs_builddir)/$(DOCBOOK_BASE).xsl --skip-validation ps $(abs_builddir)/$(DOCBOOK_BASE).xml
 
 docbook-install-ps:
 	test -z "$(psdir)" || $(MKDIR_P) "$(DESTDIR)$(psdir)$(DOCBOOK_INSTALL_SUBDIR)"
@@ -59,7 +61,8 @@ DOCBOOK_CLEAN_PDF = $(DOCBOOK_BASE).pdf
 docbook-pdf: $(DOCBOOK_BASE).pdf
 
 $(DOCBOOK_BASE).pdf: $(DOCBOOK_BASE).xml $(DOCBOOK_BASE).xsl $(DOCBOOK_FILES)
-	xmlto -m $(DOCBOOK_BASE).xsl --skip-validation pdf $(DOCBOOK_BASE).xml
+	cd $(srcdir); \
+	xmlto -m $(abs_builddir)/$(DOCBOOK_BASE).xsl --skip-validation pdf $(abs_builddir)/$(DOCBOOK_BASE).xml
 
 docbook-install-pdf:
 	test -z "$(pdfdir)" || $(MKDIR_P) "$(DESTDIR)$(pdfdir)$(DOCBOOK_INSTALL_SUBDIR)"
