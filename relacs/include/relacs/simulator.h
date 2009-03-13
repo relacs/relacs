@@ -87,8 +87,9 @@ public:
   virtual int writeData( void );
     /*! Stop current stimulus. */
   virtual int stopWrite( void );
-    /*! Add signal events to \a events. */
-  virtual void readSignal( InList &data, EventList &events );
+    /*! Check for a new signal event and add it to \a events.
+        \return \c true if there was a new signal event. */
+  virtual bool readSignal( InList &data, EventList &events );
 
     /*! Stop all activity. */
   virtual void stop( void );

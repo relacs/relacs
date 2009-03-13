@@ -737,10 +737,11 @@ void RELACSWidget::updateData( void )
   lockAI();
   AQ->convertData();
   unlockAI();
+  AQ->readSignal( IL, ED ); // we probably get the latest signal start here
+  AQ->readRestart( IL, ED );
   ED.setRangeBack( IL[0].currentTime() );
   FD->filter( IL, ED );
   unlockData();
-  StimulusDataWait.wakeAll();
 }
 
 
@@ -765,7 +766,7 @@ void RELACSWidget::run( void )
 
   do {
     int ei = updatetime.elapsed();
-    QThread::msleep( ui > ei ? ui - ei : 1 );
+    ThreadSleepWait.wait( ui > ei ? ui - ei : 1 );
     updatetime.restart();
     updateData();
     processData();
@@ -784,6 +785,7 @@ void RELACSWidget::wakeAll( void )
   SessionStartWait.wakeAll();
   SessionStopWait.wakeAll();
   SessionPrestopWait.wakeAll();
+  ThreadSleepWait.wakeAll();
 }
 
 
@@ -803,6 +805,7 @@ void RELACSWidget::activateGains( void )
   lockAI();
   AQ->activateGains();
   unlockAI();
+  AQ->readRestart( IL, ED );
   FD->adjust( IL, ED, AQ->adjustFlag() );
   unlockData();
 }
@@ -810,34 +813,33 @@ void RELACSWidget::activateGains( void )
 
 int RELACSWidget::write( OutData &signal )
 {
-  // XXX if necessary (SF->signalPending()):
-  // updateData() and SF->write( IL, EL );
-  /*
-  while ( SF->signalPending() ) {
-    StimulusDataWait.wait();
-    readLockData();
+  if ( AQ->readSignal( IL, ED ) ) // we should get the start time of the latest signal here
     SF->write( IL, ED );
+  // last stimulus still not saved?
+  if ( SF->signalPending() ) {
     unlockData();
+    // force data updates:
+    ThreadSleepWait.wakeAll();
+    {
+      // wait for data updates:
+      DataSleepWait.wait();
+    } while ( SF->signalPending() );
+    readLockData();
   }
-  */
   lockSignals();
   lockAI();
   int r = AQ->write( signal );
   unlockAI();
   unlockSignals();
   if ( r == 0 ) {
-    lockAI();
-    // XXX wait for the signal!!!!
-    // XXX what about cases where the signal start can only be get
-    // XXX after its possible delay?????
-    // XXX AQ->readSignal does only fetch the most recent known signal start
-    // XXX from the driver. So this can also be the previous signal!
-    AQ->readSignal( IL, ED );
-    unlockAI();
     WriteLoop.start( signal.writeTime() );
     lockSignals();
     SF->write( signal );
     unlockSignals();
+    lockAI();
+    AQ->readSignal( IL, ED ); // if acquisition was restarted we here get the signal start
+    unlockAI();
+    AQ->readRestart( IL, ED );
     // update device menu:
     QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
   }
@@ -851,22 +853,33 @@ int RELACSWidget::write( OutData &signal )
 
 int RELACSWidget::write( OutList &signal )
 {
-  // XXX if necessary (SF->signalPending()):
-  // updateData() and SF->write( IL, EL );
+  if ( AQ->readSignal( IL, ED ) ) // we should get the start time of the latest signal here
+    SF->write( IL, ED );
+  // last stimulus still not saved?
+  if ( SF->signalPending() ) {
+    unlockData();
+    // force data updates:
+    ThreadSleepWait.wakeAll();
+    {
+      // wait for data updates:
+      DataSleepWait.wait();
+    } while ( SF->signalPending() );
+    readLockData();
+  }
   lockSignals();
   lockAI();
   int r = AQ->write( signal );
   unlockAI();
   unlockSignals();
   if ( r == 0 ) {
-    lockAI();
-    // XXX wait for the signal!!!!
-    AQ->readSignal( IL, ED );
-    unlockAI();
     WriteLoop.start( signal[0].writeTime() );
     lockSignals();
     SF->write( signal );
     unlockSignals();
+    lockAI();
+    AQ->readSignal( IL, ED ); // if acquisition was restarted we here get the signal start
+    unlockAI();
+    AQ->readRestart( IL, ED );
     // update device menu:
     QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
   }
@@ -1410,6 +1423,7 @@ void RELACSWidget::startFirstAcquisition( void )
     startIdle();
     return;
   }
+  AQ->readRestart( IL, ED );
   AID->updateMenu();
 
   FD->init( IL, ED );  // init filters/detectors before RePro!
@@ -1508,6 +1522,7 @@ void RELACSWidget::startFirstSimulation( void )
       return;
     }
   }
+  AQ->readRestart( IL, ED );
 
   AID->updateMenu();
 

@@ -259,6 +259,8 @@ protected:
     long Offset;
       /*! Start of stimulus as an index to the written trace data. */
     long SignalOffset;
+      /*! Start of previous stimulus as an index to the written trace data. */
+    long PrevSignalOffset;
   };
 
     /*! files for all voltage traces. */

@@ -672,6 +672,10 @@ int Acquire::read( InList &data )
     return -1;
   }
 
+  // mark restart:
+  for ( unsigned int i=0; i<AI.size(); i++ )
+    AI[i].Traces.setRestart();
+
   // prepare dynamic clamp output:
   // XXXX OutList sigs = OutTraces; All potential output channels should be initialized!
   //AO[]->prepareWrite( sigs );
@@ -705,7 +709,7 @@ int Acquire::read( InList &data )
   }
 
 
-  // start dynamic clamp output:
+  // XXX start dynamic clamp output:
   //AO->startWrite();
 
   LastDevice = -1;
@@ -1752,8 +1756,10 @@ int Acquire::write( OutList &signal )
 	success = false;
     }
   }
-  // XXX hier muss noch was passieren:
-  //    AO[di].Signals[0].deviceBufferReset();
+  for ( unsigned int i=0; i<AO.size(); i++ ) {
+    if ( AO[i].Signals.size() > 0 )
+      AO[i].Signals.deviceBufferReset();
+  }
 
   // prepare writing to daq boards:
   vector< AOData* > aod;
@@ -1802,7 +1808,7 @@ int Acquire::write( OutList &signal )
 
   LastDevice = signal[0].device();
   //  LastWrite = 0.0; this is set in restartRead
-  LastDuration = signal[0].duration();// XXX
+  LastDuration = signal[0].duration();
   LastDelay = signal[0].delay();
 
   return 0;
@@ -1907,7 +1913,7 @@ int Acquire::stopWrite( void )
 }
 
 
-void Acquire::readSignal( InList &data, EventList &events )
+bool Acquire::readSignal( InList &data, EventList &events )
 {
   double sigtime = -1.0;
 
@@ -1915,20 +1921,23 @@ void Acquire::readSignal( InList &data, EventList &events )
 
   if ( SyncMode == CounterSync || SyncMode == AISync ) {
     if ( LastDevice < 0 )
-      return;
+      return false;
     // get signal time:
     long inx = AO[LastDevice].AO->index();
     if ( inx < 0 )
-      return;
+      return false;
     int d = AO[LastDevice].AISyncDevice;
     if ( d < 0 || AI[d].Traces.empty() )
-      return;
+      return false;
+    double prevsigtime = AI[d].Traces[0].signalTime();
     AI[d].Traces[0].setSignalIndex( inx );
     sigtime = AI[d].Traces[0].signalTime();
+    if ( sigtime <= prevsigtime ) // got no new signal start yet
+      return false;
   }
   else {
     if ( LastWrite < 0.0 )
-      return;
+      return false;
     sigtime = LastWrite + LastDelay;
   }
 
@@ -1956,13 +1965,19 @@ void Acquire::readSignal( InList &data, EventList &events )
   LastDevice = -1;
   LastWrite = -1.0;
 
+  return true;
+}
 
-  // restart time:
+
+bool Acquire::readRestart( InList &data, EventList &events )
+{
+  double found = false;
   double restarttime = data[0].restartTime();
   for ( int k=0; k<events.size(); k++ ) {
     if ( (events[k].mode() & RestartEventMode) > 0 ) {
       if ( events[k].empty() || events[k].back() < restarttime ) {
 	events[k].push( restarttime );
+	found = true;
       }
       else if ( ! events[k].empty() && events[k].back() > restarttime ) {
 	cerr << currentTime()
@@ -1974,6 +1989,7 @@ void Acquire::readSignal( InList &data, EventList &events )
       break;
     }
   }
+  return found;
 }
 
 

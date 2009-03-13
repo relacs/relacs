@@ -419,10 +419,10 @@ int Simulator::stopWrite( void )
 }
 
 
-void Simulator::readSignal( InList &data, EventList &events )
+bool Simulator::readSignal( InList &data, EventList &events )
 {
   if ( LastWrite < 0.0 )
-    return;
+    return false;
 
   double sigtime = LastWrite + LastDelay;
 
@@ -449,24 +449,7 @@ void Simulator::readSignal( InList &data, EventList &events )
 
   LastWrite = -1.0;
 
-  // restart time:
-  double restarttime = data[0].restartTime();
-  for ( int k=0; k<events.size(); k++ ) {
-    if ( (events[k].mode() & RestartEventMode) > 0 ) {
-      if ( events[k].empty() || events[k].back() < restarttime ) {
-	events[k].push( restarttime );
-      }
-      else if ( ! events[k].empty() && events[k].back() > restarttime ) {
-	cerr << currentTime()
-	     << " ! error in Simulator::readSignal() -> restartTime " << restarttime
-	     << " < back() " << events[k].back() 
-	     << " Current " << data[0].currentIndex()
-	     << " Restart " << data[0].restartIndex() << '\n';
-      }
-      break;
-    }
-  }
-  
+  return true;
 }
 
 

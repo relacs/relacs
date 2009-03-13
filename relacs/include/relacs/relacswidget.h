@@ -398,7 +398,7 @@ private:
   QMutex RunDataMutex;
 
   // wait for stimulus data to be writte:
-  QWaitCondition StimulusDataWait;
+  QWaitCondition ThreadSleepWait;
 
   // synchronization of Session and Control threads:
   QWaitCondition DataSleepWait;

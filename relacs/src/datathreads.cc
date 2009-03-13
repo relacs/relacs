@@ -68,7 +68,6 @@ void ReadThread::run( void )
     RW->unlockAI();
     if ( r < 0 ) {
       RW->printlog( "! error in reading acquired data: " + RW->IL.errorText() );
-    //    if ( r == 0 ) {
       RunMutex.lock();
       Run = false;
       RunMutex.unlock();

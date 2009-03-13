@@ -314,6 +314,13 @@ void OutList::setWriteTime( double time )
 }
 
 
+void OutList::deviceBufferReset( void )
+{
+  for ( int k=0; k<size(); k++ )
+    operator[]( k ).deviceBufferReset();
+}
+
+
 void OutList::freeDeviceBuffer( void )
 {
   for ( int k=0; k<size(); k++ )

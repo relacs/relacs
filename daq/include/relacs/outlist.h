@@ -164,6 +164,9 @@ public:
         to \a time seconds. */
   void setWriteTime( double time );
 
+    /*! Reset the number of bytes that have been transferred to the hardware driver
+        to zero. */
+  void deviceBufferReset( void );
     /*! Free the internal buffers holding the data in a 
         device dependend multiplexed format. */
   void freeDeviceBuffer( void );
