@@ -1,8 +1,6 @@
 Save files:
-- how to deal with the pre-first stimulus? What does signalTime return?
-- why is Control::requesStop calling RW->wakeAll()? Where should this really go?
-  Should ThreadSleepWait really be included?
 - check on hardware and with short stimuli!
+- add an EventData for recording interruptions of saving raw data (saveToggle!)
 
 Thread safety:
 - make sure that any QWidget does not raise, lower, close, update, repaint, erase, 

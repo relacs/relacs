@@ -1580,7 +1580,6 @@ int Acquire::write( OutData &signal )
   }
 
   LastDevice = di;
-  //  LastWrite = 0.0; this is set in restartRead
   LastDuration = signal.duration();
   LastDelay = signal.delay();
 
@@ -1807,7 +1806,6 @@ int Acquire::write( OutList &signal )
   }
 
   LastDevice = signal[0].device();
-  //  LastWrite = 0.0; this is set in restartRead
   LastDuration = signal[0].duration();
   LastDelay = signal[0].delay();
 
@@ -1932,7 +1930,8 @@ bool Acquire::readSignal( InList &data, EventList &events )
     double prevsigtime = AI[d].Traces[0].signalTime();
     AI[d].Traces[0].setSignalIndex( inx );
     sigtime = AI[d].Traces[0].signalTime();
-    if ( sigtime <= prevsigtime ) // got no new signal start yet
+    if ( prevsigtime >= 0.0 &&
+	 sigtime <= prevsigtime ) // got no new signal start yet
       return false;
   }
   else {

@@ -1,6 +1,6 @@
 /*
   savefiles.h
-  Write data to files
+  Save data to files
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
@@ -43,7 +43,7 @@ class RELACSWidget;
 
 /*! 
 \class SaveFiles
-\brief Write data to files
+\brief Save data to files
 \author Jan Benda
 \version 2.2
 
@@ -54,10 +54,8 @@ SaveFile sets the following environment variables:
 - \c RELACSDEFAULTPATH : The default base path where RELACS stores data (inbetween sessions).
 - \c RELACSDATAPATH: The base path where RELACS is currently storing data.
 
-\bug implement saving of trace data
-\bug writeStimulus: multi board signal times?
 \todo platform independent mkdir in openFiles()!
-\todo writeStimulus: adaptive time for calculating the mean rate
+\todo saveStimulus: adaptive time for calculating the mean rate
 \todo check it carefully!
 \todo warning on Disk full (or even before!)
 \todo File formats: 
@@ -94,7 +92,7 @@ public:
 
     /*! The current status of writing data to files.
         \return \c true if data are currently written into files.
-        \sa saving(), write(bool) */
+        \sa saving(), save(bool) */
   bool writing( void ) const;
     /*! The current status of having files ready for saving data.
         \return \c true if files are open.
@@ -157,21 +155,23 @@ public:
 
     /*! Switch writing data to file on or off.
         Call this only in or before the initialization of a RePro
-        or in RePro::read() *before* any write(). */
-  void write( bool on );
+        or in RePro::read() *before* any save(). */
+  void save( bool on );
 
-    /*! Write data traces and events to files */
-  void write( const InList &traces, const EventList &events );
-    /*! Write output-meta-data to files. */
-  void write( const OutData &signal );
-    /*! Write output-meta-data to files. */
-  void write( const OutList &signal );
-    /*! Write RePro meta data to files. */
-  void write( const RePro &rp );
+    /*! Save data traces and events to files */
+  void save( const InList &traces, const EventList &events );
+    /*! Save output-meta-data to files. */
+  void save( const OutData &signal );
+    /*! Save output-meta-data to files. */
+  void save( const OutList &signal );
+    /*! Save RePro meta data to files. */
+  void save( const RePro &rp );
 
-  /*! \return \c true if there is still a stimulus pending 
-      that needs to be written into the index files. */
+    /*! \return \c true if there is still a stimulus pending 
+        that needs to be written into the index files. */
   bool signalPending( void ) const;
+    /*! Clear a pending signal. */
+  void clearSignal( void );
 
     /*! If no file is open: create a new file name, make a directory,
         open and initialize the data-, event-, and stimulus files. */
@@ -190,10 +190,10 @@ public slots:
 
 protected:
 
-    /*! Write data traces to files */
-  void write( const InList &traces );
-    /*! Write events to files */
-  void write( const EventList &events );
+    /*! Save data traces to files */
+  void save( const InList &traces );
+    /*! Save events to files */
+  void save( const EventList &events );
 
     /*! Close all open files */
   void closeFiles( void );
@@ -217,7 +217,7 @@ protected:
         Call this *after* createEventFiles()! */
   void createXMLFile( const InList &traces, const EventList &events );
 
-    /*! Are there any files open to write in? */
+    /*! Are there any files open to save in? */
   bool FilesOpen;
     /*! Should be written into the files? */
   bool Writing;
@@ -259,8 +259,6 @@ protected:
     long Offset;
       /*! Start of stimulus as an index to the written trace data. */
     long SignalOffset;
-      /*! Start of previous stimulus as an index to the written trace data. */
-    long PrevSignalOffset;
   };
 
     /*! files for all voltage traces. */
@@ -297,6 +295,11 @@ protected:
   };
   vector< EventFile > EventFiles;
 
+    /*! Start of current stimulus. */
+  double SignalTime;
+    /*! Start of previous stimulus. */
+  double PrevSignalTime;
+
   struct Stimulus {
     Stimulus( void );
     Stimulus( const Stimulus &signal );
@@ -313,18 +316,18 @@ protected:
   vector< Stimulus > Stimuli;
   bool StimulusData;
   TableKey StimulusKey;
-  void writeStimulus( void );
+  void saveStimulus( void );
 
   Options ReProInfo;
   Options ReProSettings;
   mutable vector< string > ReProFiles;
   bool ReProData;
   bool DatasetOpen;
-  void writeRePro( void );
+  void saveRePro( void );
 
   bool ToggleOn;
   bool ToggleData;
-  void writeToggle( void );
+  bool saveToggle( void );
 
     /*! The file \a filename will be removed if the session is not
         saved. */

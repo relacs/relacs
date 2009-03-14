@@ -198,7 +198,9 @@ bool RePro::sleep( double t )
       SleepWait.wait( ms );
   }
 
-  RW->updateData();
+  // force data updates:
+  RW->ThreadSleepWait.wakeAll();
+  RW->DataSleepWait.wait();
 
   lockAll();
 

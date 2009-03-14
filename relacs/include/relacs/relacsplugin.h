@@ -247,15 +247,6 @@ protected:
         \sa lockGUI(), postCustomEvent() */
   void unlockGUI( void );
 
-    /*! Lock the RELACSPlugin (via lock()), the input data and events
-        (via lockData()), the meta data (via lockMetaData()),
-        and the stimulus data (via lockStimulusData()). */
-  virtual void lockAll( void );
-    /*! Unlock the RELACSPlugin (via unlock()), the input data and events
-        (via unlockData()), the meta data (via unlockMetaData()),
-	and the stimulus data (via unlockStimulusData()). */
-  virtual void unlockAll( void );
-
     /*! Lock the input data and events for reading. */
   void readLockData( void );
     /*! Lock the input data and events for writing. */
@@ -268,6 +259,15 @@ protected:
 
 
  public:
+
+    /*! Lock the RELACSPlugin (via lock()), the input data and events
+        (via lockData()), the meta data (via lockMetaData()),
+        and the stimulus data (via lockStimulusData()). */
+  virtual void lockAll( void );
+    /*! Unlock the RELACSPlugin (via unlock()), the input data and events
+        (via unlockData()), the meta data (via unlockMetaData()),
+	and the stimulus data (via unlockStimulusData()). */
+  virtual void unlockAll( void );
 
     /*! Return the list of all input traces.
         \sa trace(), traceIndex(), events(), traceInputTrace(),

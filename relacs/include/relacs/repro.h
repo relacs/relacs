@@ -41,7 +41,6 @@ namespace relacs {
 \brief Parent class of all research programs.
 \todo ~RePro: auto remove from RePros?
 \todo addPath: something with a format string giving the RePro's name, totalRuns, etc.
-\bug What is that saving(), setSaving(), noSaving() all about?
 */
 
 class RePro : public RELACSPlugin, public QThread
@@ -348,9 +347,11 @@ public:
 	\return error message */
   string checkOptions( const string &opttxt );
 
+    /*! \return \c true if data of this run of the RePro are saved to disk. */
   bool saving( void ) const;
+    /*! Determine whether data of this run of the RePro should be saved to disk. */
   virtual void setSaving( bool saving );
-    /*! Indicate that the data of this RePro don't have to be saved. */
+    /*! Indicate that the data of this RePro don't have to be saved to disk. */
   void noSaving( void );
 
 

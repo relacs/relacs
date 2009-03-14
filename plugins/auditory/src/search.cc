@@ -83,6 +83,7 @@ Search::Search( void )
   addSelection( "side", "Speaker", "left|right|best" );
   addInteger( "repeats", "Number of repetitions", 0, 0, 10000, 2 );
   addBoolean( "adjust", "Adjust input gains", true );
+  addBoolean( "saving", "Save raw data", true );
   addSelection( "setbestside", "Set the sessions's best side", "never|no session|always" );
   addBoolean( "keep", "Keep changes", true );
 
@@ -177,6 +178,8 @@ Search::~Search( void )
 int Search::main( void )
 {
   // get options:
+  if ( ! boolean( "saving" ) )
+    noSaving();
   Intensity = int( number( "intensity" ) );
   Mute = boolean( "mute" );
   Duration = number( "duration" );

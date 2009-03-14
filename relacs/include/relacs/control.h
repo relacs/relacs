@@ -138,11 +138,8 @@ public:
     /*! Start execution of the %Control thread. 
         Reimplement main() to make the thread do something. */
   void start( void );
-    /*! Kindly ask the Control thread to stop. 
-        Blocks until the thread has terminated. 
-        This implementation sets interrupt() to \c true,
-        wakes up all wait-condidions and sleeps,
-        and finally waits for the thread to terminate. */
+    /*! Kindly ask the Control thread to stop by setting interrupt()
+        to \c true and interrupt a possible sleep(). */
   virtual void requestStop( void );
 
     /*! Add specific actions to the RELACS File-menu.

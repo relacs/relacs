@@ -748,10 +748,9 @@ void RELACSWidget::updateData( void )
 void RELACSWidget::processData( void )
 {
   readLockData();
-  SF->write( IL, ED );
+  SF->save( IL, ED );
   unlockData();
   PT->plot( IL, ED );
-  DataSleepWait.wakeAll();
 }
 
 
@@ -770,6 +769,7 @@ void RELACSWidget::run( void )
     updatetime.restart();
     updateData();
     processData();
+    DataSleepWait.wakeAll();
     RunDataMutex.lock();
     rd = RunData;
     RunDataMutex.unlock();
@@ -785,7 +785,6 @@ void RELACSWidget::wakeAll( void )
   SessionStartWait.wakeAll();
   SessionStopWait.wakeAll();
   SessionPrestopWait.wakeAll();
-  ThreadSleepWait.wakeAll();
 }
 
 
@@ -814,17 +813,17 @@ void RELACSWidget::activateGains( void )
 int RELACSWidget::write( OutData &signal )
 {
   if ( AQ->readSignal( IL, ED ) ) // we should get the start time of the latest signal here
-    SF->write( IL, ED );
+    SF->save( IL, ED );
   // last stimulus still not saved?
   if ( SF->signalPending() ) {
-    unlockData();
+    CurrentRePro->unlockAll();
     // force data updates:
     ThreadSleepWait.wakeAll();
-    {
+    do {
       // wait for data updates:
       DataSleepWait.wait();
     } while ( SF->signalPending() );
-    readLockData();
+    CurrentRePro->lockAll();
   }
   lockSignals();
   lockAI();
@@ -834,7 +833,7 @@ int RELACSWidget::write( OutData &signal )
   if ( r == 0 ) {
     WriteLoop.start( signal.writeTime() );
     lockSignals();
-    SF->write( signal );
+    SF->save( signal );
     unlockSignals();
     lockAI();
     AQ->readSignal( IL, ED ); // if acquisition was restarted we here get the signal start
@@ -854,17 +853,17 @@ int RELACSWidget::write( OutData &signal )
 int RELACSWidget::write( OutList &signal )
 {
   if ( AQ->readSignal( IL, ED ) ) // we should get the start time of the latest signal here
-    SF->write( IL, ED );
+    SF->save( IL, ED );
   // last stimulus still not saved?
   if ( SF->signalPending() ) {
-    unlockData();
+    CurrentRePro->unlockAll();
     // force data updates:
     ThreadSleepWait.wakeAll();
-    {
+    do {
       // wait for data updates:
       DataSleepWait.wait();
     } while ( SF->signalPending() );
-    readLockData();
+    CurrentRePro->lockAll();
   }
   lockSignals();
   lockAI();
@@ -874,7 +873,7 @@ int RELACSWidget::write( OutList &signal )
   if ( r == 0 ) {
     WriteLoop.start( signal[0].writeTime() );
     lockSignals();
-    SF->write( signal );
+    SF->save( signal );
     unlockSignals();
     lockAI();
     AQ->readSignal( IL, ED ); // if acquisition was restarted we here get the signal start
@@ -893,7 +892,7 @@ int RELACSWidget::write( OutList &signal )
 
 void RELACSWidget::noSaving( void )
 {
-  SF->write( false );
+  SF->save( false );
 }
 
 
@@ -996,8 +995,8 @@ void RELACSWidget::startRePro( RePro *repro, int macroaction, bool saving )
   ReProRunning = true;
 
   readLockData();
-  SF->write( saving );
-  SF->write( *CurrentRePro );
+  SF->save( saving );
+  SF->save( *CurrentRePro );
   CurrentRePro->setSaving( SF->saving() );
   unlockData();
   CurrentRePro->start( HighPriority );
@@ -1034,7 +1033,15 @@ void RELACSWidget::stopRePro( void )
 
   ReProRunning = false;
 
-  updateData();
+  if ( AQ->readSignal( IL, ED ) ) // we should get the start time of the latest signal here
+    SF->save( IL, ED );
+  // last stimulus still not saved?
+  if ( SF->signalPending() ) {
+    // force data updates:
+    ThreadSleepWait.wakeAll();
+    DataSleepWait.wait();
+    SF->clearSignal();
+  }
 
   // update Session:
   ReProAfterWait.wakeAll();
@@ -1227,6 +1234,9 @@ void RELACSWidget::stopThreads( void )
   // stop control threads:
   for ( unsigned int k=0; k<CN.size(); k++ )
     CN[k]->requestStop();
+  wakeAll();
+  for ( unsigned int k=0; k<CN.size(); k++ )
+    CN[k]->QThread::wait( 200 );
 
   // stop data threads:
   ReadLoop.stop();

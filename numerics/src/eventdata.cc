@@ -111,7 +111,7 @@ EventData::EventData( int n, double tbegin, double tend, double stepsize,
   WidthFormat = "%g";
   Source = -1;
   MeanRatio = 0.03;
-  SignalTime = tbegin;
+  SignalTime = -HUGE_VAL;
   clear();
   reserve( n );
 }
@@ -468,8 +468,6 @@ double EventData::offset( void ) const
 void EventData::setOffset( double offset )
 {
   Range.setOffset( offset );
-  if ( SignalTime == -HUGE_VAL )
-    SignalTime = offset;
 }
 
 
@@ -506,8 +504,6 @@ double EventData::rangeFront( void ) const
 void EventData::setRangeFront( double front )
 {
   Range.setFront( front );
-  if ( SignalTime == -HUGE_VAL )
-    SignalTime = front;
 }
 
 
@@ -678,7 +674,7 @@ void EventData::assign( const EventData &events,
   Range.setOffset( 0.0 );
   Range.setLength( tend - tbegin );
   Source = events.Source;
-  SignalTime = events.SignalTime - tbegin;
+  SignalTime = events.SignalTime > -HUGE_VAL ? events.SignalTime - tbegin : -HUGE_VAL;
   ErrorMessage = "";
   Dummy = 0.0;
 }
@@ -760,7 +756,7 @@ void EventData::assign( const EventData &events,
   Range.setOffset( tbegin - tref );
   Range.setLength( tend - tref );
   Source = events.Source;
-  SignalTime = events.SignalTime - tref;
+  SignalTime = events.SignalTime > -HUGE_VAL ? events.SignalTime - tref : -HUGE_VAL;
   ErrorMessage = "";
   Dummy = 0.0;
 }
@@ -797,7 +793,7 @@ void EventData::assign( const ArrayD &times,
     tend = back();
   Range = LinearRange( tbegin, tend, stepsize );
   Source = 0;
-  SignalTime = tbegin;
+  SignalTime = -HUGE_VAL;
   ErrorMessage = "";
 }
 
@@ -889,7 +885,7 @@ void EventData::copy( double tbegin, double tend, double tref,
   for ( long k=n; k<=p; k++ )
     events.push( (*this)[k] - tref, eventSize( k ), eventWidth( k ) );
   events.Range = LinearRange( tbegin - tref, tend - tref, stepsize() );
-  events.SignalTime = 0.0;
+  events.SignalTime = -HUGE_VAL;
 }
 
 
@@ -1420,7 +1416,8 @@ const EventData &EventData::operator+=( double x )
     TimeBuffer[k] += x;
 
   Range += x;
-  SignalTime += x;
+  if ( SignalTime > -HUGE_VAL )
+    SignalTime += x;
 
   return *this;
 }
@@ -1436,7 +1433,8 @@ const EventData &EventData::operator-=( double x )
     TimeBuffer[k] -= x;
 
   Range -= x;
-  SignalTime -= x;
+  if ( SignalTime > -HUGE_VAL )
+    SignalTime -= x;
 
   return *this;
 }
@@ -1452,7 +1450,8 @@ const EventData &EventData::operator*=( double x )
     TimeBuffer[k] *= x;
 
   Range *= x;
-  SignalTime *= x;
+  if ( SignalTime > -HUGE_VAL )
+    SignalTime *= x;
 
   return *this;
 }
@@ -1468,7 +1467,8 @@ const EventData &EventData::operator/=( double x )
     TimeBuffer[k] /= x;
 
   Range /= x;
-  SignalTime /= x;
+  if ( SignalTime > -HUGE_VAL )
+    SignalTime /= x;
 
   return *this;
 }

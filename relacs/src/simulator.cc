@@ -165,6 +165,10 @@ int Simulator::read( InList &data )
   if ( ! success )
     return -1;
 
+  // mark restart:
+  for ( unsigned int i=0; i<AI.size(); i++ )
+    AI[i].Traces.setRestart();
+
   // start reading from daq boards:
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     if ( AI[i].Traces.size() > 0 && 

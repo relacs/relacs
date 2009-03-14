@@ -220,9 +220,6 @@ void Control::requestStop( void )
 
     // wake up the Control from sleeping:
     SleepWait.wakeAll();
-
-    RW->wakeAll();
-    wait( 500 );
   }
 }
 

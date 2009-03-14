@@ -222,7 +222,8 @@ public:
         such that the last range element equals \a back. */
   void setRangeBack( double back );
 
-    /*! Returns the time of the signal. */
+    /*! Returns the time of the signal.
+        If there wasn't any signal yet, -HUGE_VAL is returned. */
   double signalTime( void ) const;
     /*! Set the time of the signal to \a s. */
   void setSignalTime( double s );

@@ -89,7 +89,7 @@ InData::~InData( void )
 void InData::construct( void )
 {
   RestartIndex = 0;
-  SignalIndex = 0;
+  SignalIndex = -1;
   Stepsize = 1.0;
   Delay = 0.0;
   StartSource = 0;
@@ -252,7 +252,7 @@ void InData::clearBuffer( void )
 {
   resize( 0 );
   RestartIndex = 0;
-  SignalIndex = 0;
+  SignalIndex = -1;
 }
 
 
@@ -300,7 +300,7 @@ int InData::signalIndex( void ) const
 
 double InData::signalTime( void ) const
 {
-  return pos( SignalIndex );
+  return SignalIndex < 0 ? -1.0 : pos( SignalIndex );
 }
 
 

@@ -1,6 +1,6 @@
 /*
   savefiles.cc
-  Write data to files
+  Save data to files
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
@@ -54,6 +54,8 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
   Stimuli.clear();
   StimulusData = false;
   StimulusKey.clear();
+  SignalTime = -1.0;
+  PrevSignalTime = -1.0;
 
   clearRemoveFiles();
 
@@ -230,82 +232,90 @@ void SaveFiles::polish( void )
 }
 
 
-void SaveFiles::write( bool on )
+void SaveFiles::save( bool on )
 {
-  //  cerr << "write toggle: " << on << '\n';
+  //  cerr << "save toggle: " << on << '\n';
   ToggleData = true;
   ToggleOn = on;
 }
 
 
-void SaveFiles::writeToggle( void )
+bool SaveFiles::saveToggle( void )
 {
-  //  cerr << "writeToggle(): " << ToggleData << ", on=" << ToggleOn << '\n';
+  //  cerr << "saveToggle(): " << ToggleData << ", on=" << ToggleOn << '\n';
 
   if ( ToggleData ) {
-    Writing = ToggleOn;
-    SaveLabel->setPause( !writing() );
-    ToggleData = false;
+    if ( RW->CurrentRePro == 0 ||
+	 RW->CurrentRePro->reproTime() > 0.01 ||
+	 StimulusData ) {
+      Writing = ToggleOn;
+      SaveLabel->setPause( !writing() );
+      ToggleData = false;
+    }
+    else
+      return true;
   }
 
+  return false;
 }
 
 
-void SaveFiles::write( const InList &traces, const EventList &events )
+void SaveFiles::save( const InList &traces, const EventList &events )
 {
-  // update write status:
-  writeToggle();
+  // update save status:
+  if ( saveToggle() )
+    return;
 
   // indicate the new RePro:
-  writeRePro();  // XXX what if the last stimulus before RePro start is not saved yet?
+  saveRePro();
 
-  if ( saving() && writing() ) {
-    write( traces );
-    write( events );
+  if ( events[0].size() > 0 ) {
+    double st = events[0].back();
+    if ( st > PrevSignalTime )
+      SignalTime = st;
   }
 
-  writeStimulus();
+  if ( saving() ) {
+    save( traces );
+    save( events );
+  }
+
+  saveStimulus();
 }
 
 
-void SaveFiles::write( const InList &traces )
+void SaveFiles::save( const InList &traces )
 {
-  //  cerr << "SaveFiles::write( InList &traces )\n";
+  //  cerr << "SaveFiles::save( InList &traces )\n";
 
-  // write trace data:
+  // save trace data:
   if ( (int)TraceFiles.size() != traces.size() )
-    cerr << "! error in SaveFiles::write( InList ) -> TraceFiles.size() != traces.size() !\n";
+    cerr << "! error in SaveFiles::save( InList ) -> TraceFiles.size() != traces.size() !\n";
   for ( int k=0; k<(int)TraceFiles.size() && k<traces.size(); k++ ) {
     TraceFiles[k].Trace = &traces[k];
     if ( TraceFiles[k].Stream != 0 ) {
-      TraceFiles[k].Offset += traces[k].saveBinary( *TraceFiles[k].Stream,
-						    TraceFiles[k].Index );
+      if ( writing() )
+	TraceFiles[k].Offset += traces[k].saveBinary( *TraceFiles[k].Stream,
+						      TraceFiles[k].Index );
       TraceFiles[k].Index = traces[k].currentIndex();
-      if ( StimulusData ) {
-	long offset = TraceFiles[k].Offset - TraceFiles[k].Index
+      if ( traces[k].signalIndex() >= 0 )
+	TraceFiles[k].SignalOffset = TraceFiles[k].Offset - TraceFiles[k].Index
 	  + traces[k].signalIndex();
-	if ( offset > TraceFiles[k].PrevSignalOffset )
-	  TraceFiles[k].SignalOffset = offset;
-      }
     }
   }
 
 }
 
 
-void SaveFiles::write( const EventList &events )
+void SaveFiles::save( const EventList &events )
 {
-  //  cerr << "SaveFiles::write( EventList &events )\n";
+  //  cerr << "SaveFiles::save( EventList &events )\n";
 
   // wait for availability of signal start time:
-  if ( StimulusData ) {
-    for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
-      if ( TraceFiles[k].SignalOffset < 0 )
-	return;
-    }
-  }
+  if ( StimulusData && SignalTime < 0.0 )
+    return;
 
-  // write event data:
+  // save event data:
   double st = EventFiles[0].Events->size() > 0 ? EventFiles[0].Events->back() : EventFiles[0].Events->rangeBack();
   for ( int k=0; k<(int)EventFiles.size() && k<events.size(); k++ ) {
     EventFiles[k].Events = &events[k];
@@ -313,23 +323,27 @@ void SaveFiles::write( const EventList &events )
 
       while ( EventFiles[k].Offset < EventFiles[k].Events->size() ) {
 	double et = (*EventFiles[k].Events)[EventFiles[k].Offset];
-	if ( et >= st &&
-	     ( EventFiles[k].Offset == 0 || 
-	       (*EventFiles[k].Events)[EventFiles[k].Offset-1] < st ) ) {
+	if ( et < st )
 	  EventFiles[k].SignalEvent = EventFiles[k].Lines;
-	  *EventFiles[k].Stream << '\n';
+	else if ( EventFiles[k].Offset == 0 || 
+		  (*EventFiles[k].Events)[EventFiles[k].Offset-1] < st ) {
+	  EventFiles[k].SignalEvent = EventFiles[k].Lines;
+	  if ( writing() )
+	    *EventFiles[k].Stream << '\n';
 	}
-	EventFiles[k].Key.save( *EventFiles[k].Stream, et - SessionTime, 0 );
-	if ( EventFiles[k].SaveSize )
-	  EventFiles[k].Key.save( *EventFiles[k].Stream,
-				  EventFiles[k].Events->sizeScale() *
-				  EventFiles[k].Events->eventSize( EventFiles[k].Offset ) );
-	if ( EventFiles[k].SaveWidth )
-	  EventFiles[k].Key.save( *EventFiles[k].Stream,
-				  EventFiles[k].Events->widthScale() *
-				  EventFiles[k].Events->eventWidth( EventFiles[k].Offset ) );
-	*EventFiles[k].Stream << '\n';
-	EventFiles[k].Lines++;
+	if ( writing() ) {
+	  EventFiles[k].Key.save( *EventFiles[k].Stream, et - SessionTime, 0 );
+	  if ( EventFiles[k].SaveSize )
+	    EventFiles[k].Key.save( *EventFiles[k].Stream,
+				    EventFiles[k].Events->sizeScale() *
+				    EventFiles[k].Events->eventSize( EventFiles[k].Offset ) );
+	  if ( EventFiles[k].SaveWidth )
+	    EventFiles[k].Key.save( *EventFiles[k].Stream,
+				    EventFiles[k].Events->widthScale() *
+				    EventFiles[k].Events->eventWidth( EventFiles[k].Offset ) );
+	  *EventFiles[k].Stream << '\n';
+	  EventFiles[k].Lines++;
+	}
 	EventFiles[k].Offset++;
       }
       
@@ -339,15 +353,15 @@ void SaveFiles::write( const EventList &events )
 }
 
 
-void SaveFiles::write( const OutData &signal )
+void SaveFiles::save( const OutData &signal )
 {
-  //  cerr << "SaveFiles::write( OutData &signal )\n";
+  //  cerr << "SaveFiles::save( OutData &signal )\n";
 
   if ( signal.error() != 0 )
     return;
 
   if ( StimulusData ) {
-    RW->printlog( "! warning: SaveFiles::write( OutData & ) -> already stimulus data there" );
+    RW->printlog( "! warning: SaveFiles::save( OutData & ) -> already stimulus data there" );
     Stimuli.clear();
   }
 
@@ -355,26 +369,21 @@ void SaveFiles::write( const OutData &signal )
   StimulusData = true;
   Stimuli.push_back( Stimulus( signal ) );
 
-  // reset stimulus offsets:
-  for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
-    TraceFiles[k].PrevSignalOffset = TraceFiles[k].SignalOffset;
-    TraceFiles[k].SignalOffset = -1;
-  }
-  for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
-    EventFiles[k].SignalEvent = -1;
-  }
+  // reset stimulus offset:
+  PrevSignalTime = SignalTime;
+  SignalTime = -1.0;
 }
 
 
-void SaveFiles::write( const OutList &signal )
+void SaveFiles::save( const OutList &signal )
 {
-  //  cerr << "SaveFiles::write( OutList &signal )\n";
+  //  cerr << "SaveFiles::save( OutList &signal )\n";
 
   if ( signal.empty() || signal[0].failed() )
     return;
 
   if ( StimulusData ) {
-    RW->printlog( "! warning: SaveFiles::write( OutList& ) -> already stimulus data there" );
+    RW->printlog( "! warning: SaveFiles::save( OutList& ) -> already stimulus data there" );
     Stimuli.clear();
   }
 
@@ -383,33 +392,22 @@ void SaveFiles::write( const OutList &signal )
   for ( int k=0; k<signal.size(); k++ )
     Stimuli.push_back( signal[k] );
 
-  // reset stimulus offsets:
-  for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
-    TraceFiles[k].PrevSignalOffset = TraceFiles[k].SignalOffset;
-    TraceFiles[k].SignalOffset = -1;
-  }
-  for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
-    EventFiles[k].SignalEvent = -1;
-  }
+  // reset stimulus offset:
+  PrevSignalTime = SignalTime;
+  SignalTime = -1.0;
 }
 
 
-void SaveFiles::writeStimulus( void )
+void SaveFiles::saveStimulus( void )
 {
-  //      cerr << "writeStimulus \n";
+  //      cerr << "saveStimulus \n";
   
   if ( ! StimulusData )
     return;
 
-  for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
-    if ( TraceFiles[k].Stream != 0 && TraceFiles[k].SignalOffset < 0 )
-      return;
-  }
-
-  for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
-    if ( EventFiles[k].Stream != 0 && EventFiles[k].SignalEvent < 0 )
-      return;
-  }
+  // no stimulus yet:
+  if ( SignalTime < 0.0 )
+    return;
     
   // stimulus indices file:
   if ( SF != 0 && saving() && writing() ) {
@@ -522,12 +520,12 @@ void SaveFiles::writeStimulus( void )
 }
 
 
-void SaveFiles::write( const RePro &rp )
+void SaveFiles::save( const RePro &rp )
 {
-  //  cerr << "SaveFiles::write( const RePro &rp ) \n";
+  //  cerr << "SaveFiles::save( const RePro &rp ) \n";
 
   if ( ReProData )
-    RW->printlog( "! warning: SaveFiles::write( RePro & ) -> already RePro data there." );
+    RW->printlog( "! warning: SaveFiles::save( RePro & ) -> already RePro data there." );
   ReProData = true;
   ReProInfo.setText( "project", rp.projectOptions().text( "project" ) );
   ReProInfo.setText( "experiment", rp.projectOptions().text( "experiment" ) );
@@ -539,9 +537,9 @@ void SaveFiles::write( const RePro &rp )
 }
 
 
-void SaveFiles::writeRePro( void )
+void SaveFiles::saveRePro( void )
 {
-  //  cerr << "write RePro\n";
+  //  cerr << "save RePro\n";
 
   if ( ReProData ) {
 
@@ -556,7 +554,7 @@ void SaveFiles::writeRePro( void )
 	ReProSettings.save( *SF, "# ", -1, 1, false, true );
       }
 
-      // write StimulusKey:
+      // save StimulusKey:
       *SF << '\n';
       StimulusKey.saveKey( *SF );
     }
@@ -593,6 +591,13 @@ void SaveFiles::writeRePro( void )
 bool SaveFiles::signalPending( void ) const
 {
   return StimulusData;
+}
+
+
+void SaveFiles::clearSignal( void )
+{
+  StimulusData = false;
+  Stimuli.clear();
 }
 
 
@@ -653,7 +658,6 @@ void SaveFiles::createTraceFiles( const InList &traces )
     TraceFiles[k].Index = traces[k].currentIndex();
     TraceFiles[k].Offset = 0;
     TraceFiles[k].SignalOffset = -1;
-    TraceFiles[k].PrevSignalOffset = -1;
 
     // create file:
     if ( traces[k].mode() & SaveTrace ) {
@@ -685,7 +689,7 @@ void SaveFiles::createEventFiles( const EventList &events )
     EventFiles[k].Events = &events[k];
     EventFiles[k].Offset = events[k].size();
     EventFiles[k].Lines = 0;
-    EventFiles[k].SignalEvent = -1;
+    EventFiles[k].SignalEvent = 0;
 
     // create file:
     if ( events[k].mode() & SaveTrace ) {
@@ -693,7 +697,7 @@ void SaveFiles::createEventFiles( const EventList &events )
       EventFiles[k].FileName = fn.lower() + "-events.dat";
       EventFiles[k].Stream = openFile( EventFiles[k].FileName, ios::out );
       if ( EventFiles[k].Stream->good() ) {
-	// write header:
+	// save header:
 	*EventFiles[k].Stream << "# events: " << events[k].ident() << '\n';
 	*EventFiles[k].Stream << '\n';
 	// init key:
@@ -707,7 +711,7 @@ void SaveFiles::createEventFiles( const EventList &events )
 	if ( EventFiles[k].SaveWidth )
 	  EventFiles[k].Key.addNumber( events[k].widthName(), events[k].widthUnit(),
 				       events[k].widthFormat() );
-	// write key:
+	// save key:
 	EventFiles[k].Key.saveKey( *EventFiles[k].Stream );
       }
       else {
@@ -730,12 +734,14 @@ void SaveFiles::createStimulusFile( const InList &traces,
   // init stimulus variables:
   StimulusData = false;
   Stimuli.clear();
+  SignalTime = -1.0;
+  PrevSignalTime = -1.0;
 
   // create file for stimuli:
   SF = openFile( "stimulus-indices.dat", ios::out );
 
   if ( (*SF) ) {
-    // write header:
+    // save header:
     *SF << "# analog input traces:\n";
     for ( int k=0; k<traces.size(); k++ ) {
       if ( ! TraceFiles[k].FileName.empty() ) {

@@ -168,10 +168,12 @@ class InData : public CyclicArray<float>, public DaqError
     /*! Time in seconds corresponding to the maximum possible index.
         \sa maxIndex() */
   double maxTime( void ) const;
-    /*! Index of start of last signal. 
+    /*! Index of start of last signal.
+        If there wasn't any signal yet, -1 is returned.
         \sa signalTime(), setSignalIndex(), setSignalTime() */
   int signalIndex( void ) const;
     /*! Time in seconds of start of last signal. 
+        If there wasn't any signal yet, -1.0 is returned.
         \sa signalIndex(), setSignalIndex(), setSignalTime() */
   double signalTime( void ) const;
     /*! Set index of start of last signal to restart() + \a index.
