@@ -244,9 +244,36 @@ void FilterDetectors::createRestartEvents( InList &data, EventList &events,
 }
 
 
+void FilterDetectors::createRecordingEvents( InList &data, EventList &events,
+					     vector< PlotTrace::EventStyle > &eventstyles )
+{
+  EventData e( 6000, 0.0, 0.0, data[0].sampleInterval(),
+	       false, false );
+  e.setCyclic();
+  e.setSource( 0 );
+  e.setMode( SaveFiles::SaveTrace | PlotTraceMode | RecordingEventMode );
+  e.setIdent( "Recording" );
+  events.push( e );
+
+  eventstyles.push_back( PlotTrace::EventStyle() );
+  eventstyles.back().PlotWindow = -2;
+  eventstyles.back().Line.setColor( Plot::Red );
+  eventstyles.back().Line.setWidth( 4 );
+  eventstyles.back().Point.setType( Plot::StrokeUp );
+  eventstyles.back().Point.setColor( Plot::Red );
+  eventstyles.back().YPos = 0.0;
+  eventstyles.back().YCoor = Plot::Graph;
+  eventstyles.back().Size = 1.0;
+  eventstyles.back().SizeCoor = Plot::GraphY;
+
+  EventInputTrace.resize( EventInputTrace.size() + 1, -1 );
+  EventInputEvent.resize( EventInputEvent.size() + 1, -1 );
+}
+
+
 string FilterDetectors::createTracesEvents( InList &data, EventList &events,
-			     vector< PlotTrace::TraceStyle > &tracestyles,
-			     vector< PlotTrace::EventStyle > &eventstyles )
+					    vector< PlotTrace::TraceStyle > &tracestyles,
+					    vector< PlotTrace::EventStyle > &eventstyles )
 {
   string warning = "";
 

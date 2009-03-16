@@ -200,7 +200,7 @@ int Simulator::read( InList &data )
       if ( bs <= 0 || bs > data[k].capacity() )
 	bs = data[k].capacity();
       else
-	bs *= 6;
+	bs *= 10;
       Sim->add( data[k].device(), data[k].channel(), 
 		data[k].sampleInterval(), data[k].scale(), bs );
     }
@@ -438,16 +438,17 @@ bool Simulator::readSignal( InList &data, EventList &events )
   
   // add signal time to stimulus events:
   for ( int k=0; k<events.size(); k++ ) {
-    if ( (events[k].mode() & StimulusEventMode) == 0 )
+    if ( (events[k].mode() & StimulusEventMode) > 0 ) {
+      if ( events[k].empty() || events[k].back() < sigtime )
+	events[k].push( sigtime, 0.0, LastDuration );
+      else if ( ! events[k].empty() && events[k].back() >= sigtime ) {
+	cerr << currentTime()
+	     << " ! error in Simulator::readSignal() -> signalTime " << sigtime
+	     << " < back() " << events[k].back() 
+	     << " Current " << data[0].currentIndex()
+	     << " Restart " << data[0].restartIndex() << '\n';
+      }
       break;
-    if ( events[k].empty() || events[k].back() < sigtime )
-      events[k].push( sigtime, 0.0, LastDuration );
-    else if ( ! events[k].empty() && events[k].back() >= sigtime ) {
-      cerr << currentTime()
-	   << " ! error in Simulator::readSignal() -> signalTime " << sigtime
-	   << " < back() " << events[k].back() 
-	   << " Current " << data[0].currentIndex()
-	   << " Restart " << data[0].restartIndex() << '\n';
     }
   }
 

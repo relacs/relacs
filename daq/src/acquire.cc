@@ -1948,16 +1948,17 @@ bool Acquire::readSignal( InList &data, EventList &events )
   
   // add signal time to stimulus events:
   for ( int k=0; k<events.size(); k++ ) {
-    if ( (events[k].mode() & StimulusEventMode) == 0 )
+    if ( (events[k].mode() & StimulusEventMode) > 0 ) {
+      if ( events[k].empty() || events[k].back() < sigtime )
+	events[k].push( sigtime, 0.0, LastDuration );
+      else if ( ! events[k].empty() && events[k].back() >= sigtime ) {
+	cerr << currentTime()
+	     << " ! error in Acquire::readSignal() -> signalTime " << sigtime
+	     << " < back() " << events[k].back() 
+	     << ", current time = " << data[0].currentTime()
+	     << ", restart time = " << data[0].restartTime() << '\n';
+      }
       break;
-    if ( events[k].empty() || events[k].back() < sigtime )
-      events[k].push( sigtime, 0.0, LastDuration );
-    else if ( ! events[k].empty() && events[k].back() >= sigtime ) {
-      cerr << currentTime()
-	   << " ! error in Acquire::readSignal() -> signalTime " << sigtime
-	   << " < back() " << events[k].back() 
-	   << ", current time = " << data[0].currentTime()
-	   << ", restart time = " << data[0].restartTime() << '\n';
     }
   }
 

@@ -59,6 +59,9 @@ static const int StimulusEventMode = 0x0001;
   /*! Flag for the mode() of EventData, indicating that the events 
       are restart times of the data acquisition. */
 static const int RestartEventMode = 0x0002;
+  /*! Flag for the mode() of EventData, indicating that the events 
+      are times of interruptions of the recording. */
+static const int RecordingEventMode = 0x0004;
 
 class EventIterator;
 

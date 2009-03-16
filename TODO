@@ -1,6 +1,6 @@
 Save files:
 - check on hardware and with short stimuli!
-- add an EventData for recording interruptions of saving raw data (saveToggle!)
+- check saveToggle, i.e. event times and stimuli indices!
 
 Thread safety:
 - make sure that any QWidget does not raise, lower, close, update, repaint, erase, 
@@ -14,6 +14,13 @@ Thread safety:
 - shouldn't the draw() function in Plot and MultiPlot not just be QWidget::update()?
 - (Multi)Plot::draw() can be called from within the locks!
 - what is qApp->syncX and flushX all about?
+  From Qt interest archive:
+  - bitblt + flushX
+  - In X, obviously the flush makes sure all request go out 
+    to the server, and sync waits until the server finishes processing them.
+  - Why not try calling QApplication::flushX() before going into the
+    blocking read.  This should force the screen update to complete before
+    the application freezes.
 
 Metadata:
 - stimulus section needs a name, a file (if available) and properties

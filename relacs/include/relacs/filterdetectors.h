@@ -76,9 +76,12 @@ public:
     /*! Initialize stimulus events. */
   void createStimulusEvents( InList &data, EventList &events,
 			     vector< PlotTrace::EventStyle > &eventstyles );
-    /*! Initialize restart  events. */
+    /*! Initialize restart events. */
   void createRestartEvents( InList &data, EventList &events,
 			    vector< PlotTrace::EventStyle > &eventstyles );
+    /*! Initialize file recording events. */
+  void createRecordingEvents( InList &data, EventList &events,
+			      vector< PlotTrace::EventStyle > &eventstyles );
     /*! Initialize the traces and events and assign them to the Filter. */
   string createTracesEvents( InList &data, EventList &events,
 			     vector< PlotTrace::TraceStyle > &tracestyles,

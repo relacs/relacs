@@ -45,7 +45,7 @@ class RELACSWidget;
 */
 
   /*! Flag for the modes of traces or events, indicating that they should be plotted. */
-static const int PlotTraceMode = 0x0004;
+static const int PlotTraceMode = 0x0008;
 
 class PlotTrace : public MultiPlot
 {

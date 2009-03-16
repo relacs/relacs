@@ -892,7 +892,7 @@ int RELACSWidget::write( OutList &signal )
 
 void RELACSWidget::noSaving( void )
 {
-  SF->save( false );
+  SF->save( false, IL, ED );
 }
 
 
@@ -995,7 +995,7 @@ void RELACSWidget::startRePro( RePro *repro, int macroaction, bool saving )
   ReProRunning = true;
 
   readLockData();
-  SF->save( saving );
+  SF->save( saving, IL, ED );
   SF->save( *CurrentRePro );
   CurrentRePro->setSaving( SF->saving() );
   unlockData();
@@ -1395,6 +1395,7 @@ void RELACSWidget::startFirstAcquisition( void )
   FD->clearIndices();
   FD->createStimulusEvents( IL, ED, EventStyles );
   FD->createRestartEvents( IL, ED, EventStyles );
+  FD->createRecordingEvents( IL, ED, EventStyles );
   Str fdw = FD->createTracesEvents( IL, ED, TraceStyles, EventStyles );
   if ( !fdw.empty() ) {
     printlog( "! error: " + fdw.erasedMarkup() );
@@ -1485,6 +1486,7 @@ void RELACSWidget::startFirstSimulation( void )
   FD->clearIndices();
   FD->createStimulusEvents( IL, ED, EventStyles );
   FD->createRestartEvents( IL, ED, EventStyles );
+  FD->createRecordingEvents( IL, ED, EventStyles );
   Str fdw = FD->createTracesEvents( IL, ED, TraceStyles, EventStyles );
   if ( !fdw.empty() ) {
     printlog( "! error: " + fdw.erasedMarkup() );

@@ -72,19 +72,19 @@ class SaveFiles : public QHBox, public Options
 public:
 
     /*! Flag for the modes of traces or events, indicating that they should be saved. */
-  static const int SaveTrace = 0x0008;
+  static const int SaveTrace = 0x0010;
     /*! Flag for the modes of events, indicating that their size should be saved. */
-  static const int SaveSize = 0x0010;
+  static const int SaveSize = 0x0020;
     /*! Flag for the modes of events, indicating that their width should be saved. */
-  static const int SaveWidth = 0x0020;
+  static const int SaveWidth = 0x0040;
     /*! Flag for the modes of events, indicating that their mean rate should be saved. */
-  static const int SaveMeanRate = 0x0040;
+  static const int SaveMeanRate = 0x0080;
     /*! Flag for the modes of events, indicating that their mean size should be saved. */
-  static const int SaveMeanSize = 0x0080;
+  static const int SaveMeanSize = 0x0100;
     /*! Flag for the modes of events, indicating that their mean width should be saved. */
-  static const int SaveMeanWidth = 0x0100;
+  static const int SaveMeanWidth = 0x0200;
     /*! Flag for the modes of events, indicating that their mean quality should be saved. */
-  static const int SaveMeanQuality = 0x0200;
+  static const int SaveMeanQuality = 0x0400;
 
   SaveFiles( RELACSWidget *rw, int height,
 	     QWidget *parent=0, const char *name=0 );
@@ -154,12 +154,12 @@ public:
   QMutex *mutex( void );
 
     /*! Switch writing data to file on or off.
-        Call this only in or before the initialization of a RePro
-        or in RePro::read() *before* any save(). */
-  void save( bool on );
+        Call this only at the very beginning of your RePro::main() code,
+	i.e. before writing any stimulus. */
+  void save( bool on, const InList &traces, const EventList &events );
 
     /*! Save data traces and events to files */
-  void save( const InList &traces, const EventList &events );
+  void save( const InList &traces, EventList &events );
     /*! Save output-meta-data to files. */
   void save( const OutData &signal );
     /*! Save output-meta-data to files. */
@@ -175,7 +175,7 @@ public:
 
     /*! If no file is open: create a new file name, make a directory,
         open and initialize the data-, event-, and stimulus files. */
-  void openFiles( const InList &traces, const EventList &events );
+  void openFiles( const InList &traces, EventList &events );
     /*! Close files and delete them and/or remove base directory. */
   void deleteFiles( void );
     /*! Close files and keep them. */
@@ -253,8 +253,10 @@ protected:
     ofstream *Stream;
       /*! The trace data that have to be written into the file. */
     const InData *Trace;
-      /*! Current index to trace data. */
+      /*! Current index to trace data from where on to save data. */
     long Index;
+      /*! Index to trace data that were written so far. */
+    long LastIndex;
       /*! Number of so far written trace data. */
     long Offset;
       /*! Start of stimulus as an index to the written trace data. */
@@ -327,7 +329,7 @@ protected:
 
   bool ToggleOn;
   bool ToggleData;
-  bool saveToggle( void );
+  bool saveToggle( const InList &traces, EventList &events );
 
     /*! The file \a filename will be removed if the session is not
         saved. */

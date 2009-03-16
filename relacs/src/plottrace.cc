@@ -280,11 +280,13 @@ void PlotTrace::init( const InList &data, const EventList &events )
       // plot stimulus events:
       for ( int s=0; s<events.size(); s++ ) {
 	if ( (events[s].mode() & PlotTraceMode) &&
-	     (events[s].mode() & StimulusEventMode) )
+	     (events[s].mode() & StimulusEventMode) ) {
 	  (*this)[plots].plot( events[s], origin, Offset, tfac,
 			       0.0, Plot::Graph, 2,
 			       Plot::StrokeUp, 1.0, Plot::GraphY,
 			       Plot::White );
+	  break;
+	}
       }
       // plot restart events:
       for ( int s=0; s<events.size(); s++ ) {
@@ -294,6 +296,18 @@ void PlotTrace::init( const InList &data, const EventList &events )
 			       1.0, Plot::Graph, 1,
 			       Plot::TriangleNorth, 0.07, Plot::GraphY,
 			       Plot::Orange, Plot::Orange );
+	  break;
+	}
+      }
+      // plot recording events:
+      for ( int s=0; s<events.size(); s++ ) {
+	if ( (events[s].mode() & PlotTraceMode) &&
+	     (events[s].mode() & RecordingEventMode) ) {
+	  (*this)[plots].plot( events[s], origin, Offset, tfac,
+			       0.0, Plot::Graph, 4,
+			       Plot::StrokeUp, 1.0, Plot::GraphY,
+			       Plot::Red );
+	  break;
 	}
       }
 
@@ -302,7 +316,8 @@ void PlotTrace::init( const InList &data, const EventList &events )
       for ( int s=0; s<events.size(); s++ ) 
 	if ( (events[s].mode() & PlotTraceMode) &&
 	     !(events[s].mode() & StimulusEventMode) &&
-	     !(events[s].mode() & RestartEventMode) ) {
+	     !(events[s].mode() & RestartEventMode) &&
+	     !(events[s].mode() & RecordingEventMode) ) {
 	  
 	  if ( RW->FD->eventInputTrace( s ) == int( c ) ) {
 

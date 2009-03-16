@@ -232,15 +232,25 @@ void SaveFiles::polish( void )
 }
 
 
-void SaveFiles::save( bool on )
+void SaveFiles::save( bool on, const InList &traces, const EventList &events  )
 {
   //  cerr << "save toggle: " << on << '\n';
+
+  // switch on writing?
+  if ( on && ! Writing ) {
+    // update offsets:
+    for ( unsigned int k=0; k<TraceFiles.size(); k++ )
+      TraceFiles[k].Index = traces[k].currentIndex();
+    for ( unsigned int k=0; k<EventFiles.size(); k++ )
+      EventFiles[k].Offset = events[k].size();
+  }
+
   ToggleData = true;
   ToggleOn = on;
 }
 
 
-bool SaveFiles::saveToggle( void )
+bool SaveFiles::saveToggle( const InList &traces, EventList &events )
 {
   //  cerr << "saveToggle(): " << ToggleData << ", on=" << ToggleOn << '\n';
 
@@ -248,6 +258,18 @@ bool SaveFiles::saveToggle( void )
     if ( RW->CurrentRePro == 0 ||
 	 RW->CurrentRePro->reproTime() > 0.01 ||
 	 StimulusData ) {
+      if ( ToggleOn && ! Writing ) {
+	// add recording event:
+	for ( int k=0; k<events.size(); k++ ) {
+	  if ( ( events[k].mode() & RecordingEventMode ) > 0 ) {
+	    events[k].push( traces[0].pos( TraceFiles[0].Index ) );
+	    break;
+	  }
+	}
+	// update SessionTime to deal with the non written data:
+	SessionTime += traces[0].interval( TraceFiles[0].Index - TraceFiles[0].LastIndex );
+	TraceFiles[0].LastIndex = TraceFiles[0].Index;
+      }
       Writing = ToggleOn;
       SaveLabel->setPause( !writing() );
       ToggleData = false;
@@ -260,10 +282,10 @@ bool SaveFiles::saveToggle( void )
 }
 
 
-void SaveFiles::save( const InList &traces, const EventList &events )
+void SaveFiles::save( const InList &traces, EventList &events )
 {
   // update save status:
-  if ( saveToggle() )
+  if ( saveToggle( traces, events ) )
     return;
 
   // indicate the new RePro:
@@ -294,9 +316,11 @@ void SaveFiles::save( const InList &traces )
   for ( int k=0; k<(int)TraceFiles.size() && k<traces.size(); k++ ) {
     TraceFiles[k].Trace = &traces[k];
     if ( TraceFiles[k].Stream != 0 ) {
-      if ( writing() )
+      if ( writing() ) {
 	TraceFiles[k].Offset += traces[k].saveBinary( *TraceFiles[k].Stream,
 						      TraceFiles[k].Index );
+	TraceFiles[k].LastIndex = traces[k].currentIndex();
+      }
       TraceFiles[k].Index = traces[k].currentIndex();
       if ( traces[k].signalIndex() >= 0 )
 	TraceFiles[k].SignalOffset = TraceFiles[k].Offset - TraceFiles[k].Index
@@ -319,8 +343,8 @@ void SaveFiles::save( const EventList &events )
   double st = EventFiles[0].Events->size() > 0 ? EventFiles[0].Events->back() : EventFiles[0].Events->rangeBack();
   for ( int k=0; k<(int)EventFiles.size() && k<events.size(); k++ ) {
     EventFiles[k].Events = &events[k];
-    if ( EventFiles[k].Stream != 0 ) {
 
+    if ( EventFiles[k].Stream != 0 ) {
       while ( EventFiles[k].Offset < EventFiles[k].Events->size() ) {
 	double et = (*EventFiles[k].Events)[EventFiles[k].Offset];
 	if ( et < st )
@@ -346,8 +370,8 @@ void SaveFiles::save( const EventList &events )
 	}
 	EventFiles[k].Offset++;
       }
-      
     }
+
   }
 
 }
@@ -738,7 +762,7 @@ void SaveFiles::createStimulusFile( const InList &traces,
   PrevSignalTime = -1.0;
 
   // create file for stimuli:
-  SF = openFile( "stimulus-indices.dat", ios::out );
+  SF = openFile( "stimuli.dat", ios::out );
 
   if ( (*SF) ) {
     // save header:
@@ -858,7 +882,7 @@ void SaveFiles::createXMLFile( const InList &traces,
 }
 
 
-void SaveFiles::openFiles( const InList &traces, const EventList &events )
+void SaveFiles::openFiles( const InList &traces, EventList &events )
 {
   // nothing to be done, if files are already open:
   if ( FilesOpen )
@@ -871,7 +895,7 @@ void SaveFiles::openFiles( const InList &traces, const EventList &events )
   // reset variables:
   ToggleData = false;
   ToggleOn = true;
-  Writing = false;
+  Writing = true;
 
   ReProData = false;
   ReProSettings.clear();
@@ -918,7 +942,7 @@ void SaveFiles::openFiles( const InList &traces, const EventList &events )
     }
     else {
       // try to open files:
-      string fs = path() + "stimulus-indices.dat";
+      string fs = path() + "stimuli.dat";
       ifstream f( fs.c_str() );
       // files do not exist?
       if ( ! f.good() )
@@ -939,6 +963,14 @@ void SaveFiles::openFiles( const InList &traces, const EventList &events )
   createStimulusFile( traces, events );
   createXMLFile( traces, events );
   FilesOpen = true;
+
+  // add recording event:
+  for ( int k=0; k<events.size(); k++ ) {
+    if ( (events[k].mode() & RecordingEventMode) > 0 ) {
+      events[k].push( traces[0].currentTime() );
+      break;
+    }
+  }
 
   // message:
   RW->printlog( "save in " + path() );
