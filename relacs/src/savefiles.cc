@@ -686,13 +686,46 @@ void SaveFiles::createTraceFiles( const InList &traces )
     // create file:
     if ( traces[k].mode() & SaveTrace ) {
       Str fn = traces[k].ident();
-      TraceFiles[k].FileName = "trace-" + Str( k+1, format ) + ".f1";
+      TraceFiles[k].FileName = "trace-" + Str( k+1, format ) + ".raw";
+      // TraceFiles[k].FileName = "trace-" + Str( k+1, format ) + ".au";
       TraceFiles[k].Stream = openFile( TraceFiles[k].FileName, ios::out | ios::binary );
       if ( ! TraceFiles[k].Stream->good() ) {
 	TraceFiles[k].FileName = "";
 	TraceFiles[k].Stream->close();
 	TraceFiles[k].Stream = 0;
       }
+      /*
+      else {
+	// write .au header:
+	union {
+	  char buffer[4];
+	  unsigned long data;
+	} d;
+	d.data = 0x2e736e64;
+	for ( int j=3; j>=0; j-- )
+	  TraceFiles[k].Stream->write( &d.buffer[j], 1 );
+	// data offset:
+	d.data = 24;
+	for ( int j=3; j>=0; j-- )
+	  TraceFiles[k].Stream->write( &d.buffer[j], 1 );
+	// data size:
+	d.data = 0xffffffff;  // unknown
+	for ( int j=3; j>=0; j-- )
+	  TraceFiles[k].Stream->write( &d.buffer[j], 1 );
+	// encoding:
+	d.data = 6;  // float
+	for ( int j=3; j>=0; j-- )
+	  TraceFiles[k].Stream->write( &d.buffer[j], 1 );
+	// sampling rate:
+	d.data = (long)::rint( traces[k].sampleRate() );
+	for ( int j=3; j>=0; j-- )
+	  TraceFiles[k].Stream->write( &d.buffer[j], 1 );
+	// channels:
+	d.data = 1;
+	for ( int j=3; j>=0; j-- )
+	  TraceFiles[k].Stream->write( &d.buffer[j], 1 );
+      }
+      */
     }
     else {
       TraceFiles[k].FileName = "";
