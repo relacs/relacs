@@ -1039,12 +1039,6 @@ int ComediAnalogOutput::fillWriteBuffer( OutList &sigs )
 }
 
 
-comedi_t* ComediAnalogOutput::comediDevice( void ) const
-{
-  return DeviceP;
-}
-
-
 int ComediAnalogOutput::comediSubdevice( void ) const
 {
   if ( !isOpen() )

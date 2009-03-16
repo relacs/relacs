@@ -3,7 +3,7 @@
   Interface for accessing analog input of a daq-board via comedi.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
-  Copyright (C) 2002-2007 Jan Benda <j.benda@biologie.hu-berlin.de>
+  Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ namespace comedi {
 
 
 ComediAnalogInput::ComediAnalogInput( void ) 
-  : AnalogInput( "Comedi Analog Input", ComediAnalogIOType )
+  : AnalogInput( "ComediAnalogInput", ComediAnalogIOType )
 {
   ErrorState = 0;
   DeviceP = NULL;
@@ -57,7 +57,7 @@ ComediAnalogInput::ComediAnalogInput( void )
 
 
 ComediAnalogInput::ComediAnalogInput( const string &device, long mode ) 
-  : AnalogInput( "Comedi Analog Input", ComediAnalogIOType )
+  : AnalogInput( "ComediAnalogInput", ComediAnalogIOType )
 {
   ErrorState = 0;
   DeviceP = NULL;
@@ -635,8 +635,10 @@ int ComediAnalogInput::testReadDevice( InList &traces )
 
   // check update buffer size:
   int bufsize = traces.size() * traces[0].indices( traces[0].updateTime() ) * BufferElemSize;
-  if ( bufsize < readbufsize )
+  if ( bufsize < readbufsize ) {
     traces.addError( DaqError::InvalidUpdateTime );
+    retVal = -1;
+  }
 
   return retVal;
 }
@@ -974,12 +976,6 @@ void ComediAnalogInput::take( const vector< AnalogInput* > &ais,
       ComediAOs.push_back( dynamic_cast< ComediAnalogOutput* >( aos[k] ) );
     }
   }
-}
-
-
-comedi_t* ComediAnalogInput::comediDevice( void ) const
-{
-  return DeviceP;
 }
 
 

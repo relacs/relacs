@@ -79,8 +79,16 @@ struct deviceIOCT {
   enum subdevTypes subdevType;
 };
 
+#define MAX_CONVERSION_COEFFICIENTS 4
+struct converterT {
+  double coefficients[MAX_CONVERSION_COEFFICIENTS];
+  double expansion_origin;
+  unsigned order;
+};
+
 struct chanlistIOCT {
   unsigned int subdevID;
+  struct converterT conversionlist[MAXCHANLIST];
   float scalelist[MAXCHANLIST];
   unsigned int chanlist[MAXCHANLIST];
   unsigned int chanIsUsed[MAXCHANLIST];

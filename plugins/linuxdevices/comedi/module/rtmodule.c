@@ -47,8 +47,7 @@ struct chanT {
   unsigned int chan;
   int aref;
   int rangeIndex;
-  lsampl_t maxData;
-  int minMuVolt, maxMuVolt;
+  struct converterT converter;
   float scale;
 };
 
@@ -148,16 +147,30 @@ static struct file_operations fops = {
 
 static inline float sample_to_value( struct chanT *pChan, lsampl_t sample )
 {
-  return 1.0e-6*pChan->scale * ( pChan->minMuVolt + 
-         (pChan->maxMuVolt - pChan->minMuVolt) * 
-         (sample/(float)pChan->maxData) );
+  double value = 0.0;
+  double term = 1.0;
+  unsigned i;
+  for( i=0; i <= pChan->converter.order; ++i ) {
+    value += pChan->converter.coefficients[i] * term;
+    term *= sample - pChan->converter.expansion_origin;
+  }
+  return value*pChan->scale;
 }
+
 
 static inline lsampl_t value_to_sample( struct chanT *pChan, float value )
 {
-  return (lsampl_t)( pChan->maxData * (value/pChan->scale*1.0e6 - pChan->minMuVolt) /
-                     (pChan->maxMuVolt - pChan->minMuVolt) );
+  double sample = 0.0;
+  double term = 1.0;
+  unsigned i;
+  value *= pChan->scale;
+  for( i=0; i <= pChan->converter.order; ++i ) {
+    sample += pChan->converter.coefficients[i] * term;
+    term *= value - pChan->converter.expansion_origin;
+  }
+  return (lsampl_t)rint(sample);
 }
+
 
 void init_globals( void ) {
   deviceN = 0;
@@ -303,7 +316,6 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
   int iS = chanlistIOC->subdevID;
   int iD = subdev[iS].devID;
   int iC;
-  comedi_krange krange;
 
   if( subdev[iS].subdev < 0 || !subdev[iS].used ) {
     ERROR_MSG( "loadChanlist ERROR: First open an appropriate device and subdevice. Chanlist not loaded!\n" );
@@ -335,14 +347,7 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
     subdev[iS].chanlist[iC].chan = CR_CHAN( chanlistIOC->chanlist[iC] );
     subdev[iS].chanlist[iC].aref = CR_AREF( chanlistIOC->chanlist[iC] );
     subdev[iS].chanlist[iC].rangeIndex = CR_RANGE( chanlistIOC->chanlist[iC] );
-    subdev[iS].chanlist[iC].maxData = 
-        comedi_get_maxdata( device[iD].devP, subdev[iS].subdev, 
-                            CR_CHAN( chanlistIOC->chanlist[iC] ) );
-    comedi_get_krange( device[iD].devP, subdev[iS].subdev, 
-                       CR_CHAN( chanlistIOC->chanlist[iC] ),
-                       CR_RANGE( chanlistIOC->chanlist[iC] ), &krange );
-    subdev[iS].chanlist[iC].minMuVolt = krange.min;
-    subdev[iS].chanlist[iC].maxMuVolt = krange.max;
+    memcpy( &subdev[iS].chanlist[iC].converter, &chanlistIOC->conversionlist[iC], sizeof(struct converterT) );
     subdev[iS].chanlist[iC].scale = chanlistIOC->scalelist[iC];
   }
 
@@ -833,7 +838,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
   if (_IOC_NR(cmd) > RTMODULE_IOC_MAXNR) return -ENOTTY;
 
 
-  // TODO: use access_ok for verifying userspace mem. 
+  // TODO: use access_ok for verifying userspace mem and __copy_from_user. 
   //       => (see Linux-Device-Drivers-3-Book, Chapter 6)
 
   switch( cmd ) {

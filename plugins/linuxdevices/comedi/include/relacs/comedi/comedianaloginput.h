@@ -3,7 +3,7 @@
   Interface for accessing analog input of a daq-board via comedi.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
-  Copyright (C) 2002-2007 Jan Benda <j.benda@biologie.hu-berlin.de>
+  Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -36,7 +36,6 @@ class ComediAnalogOutput;
 /*! 
 \class ComediAnalogInput
 \author Marco Hackenberg
-\version 0.1
 \brief [AnalogInput] Interface for accessing analog input of a daq-board via comedi.
 \todo Support delays in testReadDevice() and convertData()!
 \todo Fix usage of ErrorState variable (also in readData() )
@@ -176,9 +175,6 @@ protected:
   template< typename T >
     void convert( InList &traces, char *buffer, int n );
 
-    /*! Returns the pointer to the comedi device file.
-        \sa subdevice() */
-  comedi_t* comediDevice( void ) const;
     /*! Comedi internal index of analog input subdevice. */
   int comediSubdevice( void ) const;
 

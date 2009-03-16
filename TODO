@@ -1,3 +1,7 @@
+Dynamic clamp:
+- kernel modules ioctl: use access_ok for verifying userspace mem and __copy_from_user
+- update AnanologOutput
+
 Save files:
 - check on hardware and with short stimuli!
 - check saveToggle, i.e. event times and stimuli indices!
