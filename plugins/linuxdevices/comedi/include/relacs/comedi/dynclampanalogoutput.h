@@ -1,3 +1,25 @@
+/*
+  coemdi/dynclampanalogoutput.h
+  Interface for accessing analog output of a daq-board via the dynamic clamp 
+  kernel module.
+
+  RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
+  Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 3 of the License, or
+  (at your option) any later version.
+  
+  RELACS is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #ifndef _COMEDI_DYNCLAMPANALOGOUTPUT_H_
 #define _COMEDI_DYNCLAMPANALOGOUTPUT_H_
 
@@ -5,8 +27,6 @@
 #include <comedilib.h>
 #include <relacs/daqerror.h>
 #include <relacs/analogoutput.h>
-#include <relacs/analoginput.h>
-#include <relacs/comedi/comedianalogoutput.h>
 #include <relacs/comedi/moduledef.h>
 using namespace std;
 using namespace relacs;
@@ -14,9 +34,11 @@ using namespace relacs;
 namespace comedi {
 
 
+class ComediAnalogOutput;
+
 /*! 
 \class DynClampAnalogOutput
-\author Marco Hackenberg
+\author Marco Hackenberg, Jan Benda
 \version 0.1
 \brief [AnalogOutput] Interface for accessing analog output of a daq-board via a dynamic clamp kernel module.
 \bug fix errno usage
@@ -81,18 +103,20 @@ public:
 	This function assumes that \a sigs successfully passed testWrite().
         The channels in \a sigs are not sorted. */
   virtual int prepareWrite( OutList &sigs );
-    /*! Start analog output of the output signals \a sigs
-        after they were prepared by prepareWrite().
+    /*! Start analog output of the output signals that were passed to the previous call
+        of prepareWrite().
 	If an error ocurred in any signal, the corresponding errorflags in
-	OutData are set and a negative value is returned.
-        The channels in \a sigs are not sorted. */
-  virtual int startWrite( OutList &sigs );
-    /*! Write data to a running data acquisition.
-        Returns the number of data values that were popped from the \a trace- 
-	device-buffer (sum over all \a traces).
+	OutData are set and a negative value is returned. */
+  virtual int startWrite( void );
+    /*! Write data of the output signals that were passed to the previous call
+        of prepareWrite() to the analog output device.
+        Returns the number of transferred data elements.
+	Returns zero if all data are transferred.
 	If an error ocurred in any channel, the corresponding errorflags in the
-	OutList structure are filled and a negative value is returned.  */
-  virtual int writeData( OutList &sigs );
+	InData structure are filled and a negative value is returned.
+        This function is called periodically after writing has been successfully
+        started by startWrite(). */
+  virtual int writeData( void );
 
     /*! Stop any running ananlog output activity and reset the device.
         Returns zero on success, otherwise one of the flags 
@@ -109,25 +133,11 @@ public:
         other: unknown */
   virtual int error( void ) const;
 
-    /*! Index of signal start.
-        The defualt implemetation returns -1, indicating that
-        no index is available.
-        If the analog output driver can return
-        an index into the data stream of a running analog input
-        where the last analog output started,
-        then this function should return the this index.
-        You also need to reimplement getAISyncDevice()
-        to let the user know about this property. */
+    /*! Index of signal start relative to the data stream of a running analog input. */
   virtual long index( void ) const;
   
-    /*! This function is called once after opening the device
-        and before any IO operation.
-        In case the analog output driver can return
-        an index (via the index() function)
-        into the data stream of a running analog input
-        where the last analog output started,
-        then this function should return the index
-        of the corresponding analog input device in \a ais. */
+    /*! Returns the index of the corresponding analog input device in \a ais
+        from which the index of a signal start is taken. */
   virtual int getAISyncDevice( const vector< AnalogInput* > &ais ) const;
 
     /*! If the analog output device supports outputs that
@@ -157,20 +167,19 @@ protected:
         This function is called by testWrite(). */
   virtual int testWriteDevice( OutList &sigs );
 
-    /*! Comedi internal index of analog output subdevice. */
-  int subdevice( void ) const;
+    /*! Initializes the \a chanlist from \a sigs. */
+  int setupChanList( OutList &sigs, unsigned int *chanlist, int maxchanlist );
 
-    /* True, if configuration command for acquisition is successfully loaded
-       into the registers of the hardware.
-       For internal usage.
-       \sa running(), reload() */
-  bool loaded( void ) const;
+    /*! Write data to a running data acquisition.
+        Returns the number of data values that were popped from the \a trace- 
+	device-buffer (sum over all \a traces).
+	If an error ocurred in any channel, the corresponding errorflags in the
+	OutList structure are filled and a negative value is returned.  
+	For internal usage! */
+  int fillWriteBuffer( OutList &sigs );
 
     /*! True if analog output was prepared using testWriteDevice() and prepareWrite() */
   bool prepared( void ) const;
-
-    /* Sets the running status and unsets the prepared status. */
-  void setRunning( void );
 
 
 private:
@@ -179,32 +188,45 @@ private:
         DynClamp DAQ devices. */
   static const int DynClampAnalogIOType = 2;
 
+    /*! Pointer to the user space comedi interface. */
   ComediAnalogOutput *CAO;
+    /*! Subdevice flags of the comedi analog output subdevice. */
+  unsigned int CAOSubDevFlags;
 
-  // needed by DynClamp class e.g. for assigning TraceInfo strings to channels
+    /*! needed for assigning TraceInfo strings to channels. */
   int SubdeviceID;
-  bool IsLoaded;
-  bool IsKernelDaqOpened;
 
-  string Modulename;
-  int Modulefile;
+    /*! Name of the kernel module device file. */
+  string ModuleDevice;
+    /*! File descriptor for the kernel module. */
+  int ModuleFd;
+    /*! FIFO file descriptor for data exchange with kernel module. */
   int FifoFd;
 
-  unsigned int Subdevice;
-  int Channels;
-  int Bits;
-  double MaxRate;
-  int ComediBufferSize;
+    /*! The comedi subdevice number. */
+  unsigned int SubDevice;
+    /*! The size of a single sample in bytes. */
   unsigned int BufferElemSize;  
+    /*! Number of channels available on the device. */
+  int Channels;
+    /*! Resolution in bits of each channel. */
+  int Bits;
+    /*! Maximum sampling rate. */
+  double MaxRate;
+    /*! Conversion polynomials for all channels and unipolar gains. */
+  comedi_polynomial_t **UnipConverter;
+    /*! Conversion polynomials for all channels and bipolar gains. */
+  comedi_polynomial_t **BipConverter;
 
   unsigned int ChanList[MAXCHANLIST];
-
-  OutList *Sigs;
-
-  mutable int ErrorState;
-  mutable bool IsRunning;
   bool IsPrepared;
+  mutable bool IsRunning;
+  mutable int ErrorState;
 
+    /*! The output signals that were prepared by prepareWrite(). */
+  OutList *Sigs;
+    /*! Size of the internal buffer used for getting the data from the driver. */
+  int BufferSize;
 
 };
 

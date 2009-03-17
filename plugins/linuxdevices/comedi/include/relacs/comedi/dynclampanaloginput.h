@@ -19,7 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
- #ifndef _COMEDI_DYNCLAMPANALOGINPUT_H_
+#ifndef _COMEDI_DYNCLAMPANALOGINPUT_H_
 #define _COMEDI_DYNCLAMPANALOGINPUT_H_
 
 #include <vector>
@@ -173,6 +173,10 @@ protected:
         This function is called by testRead(). */
   virtual int testReadDevice( InList &traces );
 
+    /*! Initializes the \a chanlist from \a traces. */
+  int setupChanList( InList &traces, unsigned int *chanlist, int maxchanlist );
+
+
     /*! True if analog input was prepared using testReadDevice() and prepareRead() */
   bool prepared( void ) const;
 
@@ -191,8 +195,10 @@ private:
     /*! needed by for assigning TraceInfo strings to channels. */
   int SubdeviceID;
 
-  string Modulename;
-  int Modulefile;
+    /*! Name of the kernel module device file. */
+  string ModuleDevice;
+    /*! File descriptor for the kernel module. */
+  int ModuleFd;
     /*! FIFO file descriptor for data exchange with kernel module. */
   int FifoFd;
 

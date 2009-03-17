@@ -3,7 +3,7 @@
   Interface for accessing analog output of a daq-board via comedi.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
-  Copyright (C) 2002-2007 Jan Benda <j.benda@biologie.hu-berlin.de>
+  Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -543,7 +543,7 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd )
 	    maxboardvolt = externalReference();
 	  minboardvolt = unipolar ? 0.0 : -maxboardvolt;
 	  index = unipolar ? UnipolarExtRefRangeIndex 
-	                   :  BipolarExtRefRangeIndex;
+	    :  BipolarExtRefRangeIndex;
 	}
       }
     }

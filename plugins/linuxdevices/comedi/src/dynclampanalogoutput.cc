@@ -4,7 +4,7 @@
   kernel module.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
-  Copyright (C) 2002-2007 Jan Benda <j.benda@biologie.hu-berlin.de>
+  Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -23,15 +23,16 @@
 #include <iostream>
 #include <sstream>
 #include <cstdio>
+#include <cstring>
 #include <cmath>
 #include <ctime>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
-//#include <relacs/comedi/comedianaloginput.h>
+#include <relacs/analoginput.h>
+#include <relacs/comedi/comedianalogoutput.h>
 #include <relacs/comedi/dynclampanalogoutput.h>
-#include <relacs/comedi/dynclampanaloginput.h>
 #include <rtai_fifos.h>
 using namespace std;
 using namespace relacs;
@@ -40,46 +41,51 @@ namespace comedi {
 
 
 DynClampAnalogOutput::DynClampAnalogOutput( void ) 
-  : AnalogOutput( "Dyn Clamp Analog Output", DynClampAnalogIOType )
+  : AnalogOutput( "DynClampAnalogOutput", DynClampAnalogIOType )
 {
-  ErrorState = 0;
-  IsPrepared = false;
-  IsRunning = false;
-  IsLoaded = false;
-  IsKernelDaqOpened = false;
-  Sigs = NULL;
-  Channels = -1;
- 
-  BufferElemSize = sizeof(float);
-  Modulename = "";
+  CAO = new ComediAnalogOutput;
+  CAOSubDevFlags = 0;
+  SubdeviceID = -1;
+  ModuleDevice = "";
+  ModuleFd = -1;
   FifoFd = -1;
+  SubDevice = -1;
+  BufferElemSize = sizeof(float);
   Channels = 0;
   Bits = 0;
   MaxRate = 50000.0;
-  ComediBufferSize = 0;
-  CAO = new ComediAnalogOutput;
+  IsPrepared = false;
+  IsRunning = false;
+  ErrorState = 0;
+  UnipConverter = 0;
+  BipConverter = 0;
+  Sigs = 0;
+  BufferSize = 0;
 }
 
 
 DynClampAnalogOutput::DynClampAnalogOutput( const string &device, long mode ) 
-  : AnalogOutput( "Dyn Clamp Analog Output", DynClampAnalogIOType )
+  : AnalogOutput( "DynClampAnalogOutput", DynClampAnalogIOType )
 {
-  ErrorState = 0;
-  IsPrepared = false;
-  IsLoaded = false;
-  IsKernelDaqOpened = false;
-  IsRunning = false;
-  Sigs = NULL;
-  Channels = -1;
-
-  BufferElemSize = sizeof(float);
-  Modulename = "";
-  FifoFd = -1;
-  Channels = 0;
-  Bits =  0;
-  MaxRate = 50000.0;
-  ComediBufferSize = 0;
   CAO = new ComediAnalogOutput;
+  CAOSubDevFlags = 0;
+  SubdeviceID = -1;
+  ModuleDevice = "";
+  ModuleFd = -1;
+  FifoFd = -1;
+  SubDevice = -1;
+  BufferElemSize = sizeof(float);
+  Channels = 0;
+  Bits = 0;
+  MaxRate = 50000.0;
+  IsPrepared = false;
+  IsRunning = false;
+  ErrorState = 0;
+  UnipConverter = 0;
+  BipConverter = 0;
+  Sigs = 0;
+  BufferSize = 0;
+
   open( device, mode );
 }
 
@@ -97,25 +103,83 @@ int DynClampAnalogOutput::open( const string &device, long mode )
     return InvalidDevice;
   setDeviceFile( device );
 
-  int retVal = CAO->open( device );
+  // open user space coemdi:
+  int retval = CAO->open( device );
+  if ( retval != 0 )
+    return retval;
   
   // copy information not available after CAO->close()
-  Subdevice = CAO->comediSubdevice();
+  SubDevice = CAO->comediSubdevice();
   Channels = CAO->channels();
   Bits =  CAO->bits();
   MaxRate = CAO->maxRate();  // XXX This is not the max freq of the real time loop!
   MaxRate = 50000.0;
-  ComediBufferSize = CAO->bufferSize();
+
+  CAOSubDevFlags = comedi_get_subdevice_flags( CAO->DeviceP, SubDevice );
+
+  // set basic device infos:
+  setDeviceName( CAO->deviceName() );
+  setDeviceVendor( CAO->deviceVendor() );
+  setDeviceFile( device );
+
+  // get calibration:
+  comedi_calibration_t *calibration;
+  {
+    char *calibpath = comedi_get_default_calibration_path( CAO->DeviceP );
+    ifstream cf( calibpath );
+    if ( cf.good() )
+      calibration = comedi_parse_calibration_file( calibpath );
+    else
+      calibration = 0;
+    delete [] calibpath;
+  }
+
+  // get conversion polynomials:
+  bool softcal = ( ( CAOSubDevFlags & SDF_SOFT_CALIBRATED ) > 0 );
+  UnipConverter = new comedi_polynomial_t* [Channels];
+  BipConverter = new comedi_polynomial_t* [Channels];
+  for ( int c=0; c<channels(); c++ ) {
+    UnipConverter[c] = new comedi_polynomial_t[CAO->UnipolarRangeIndex.size()];
+    for ( unsigned int r=0; r<CAO->UnipolarRangeIndex.size(); r++ ) {
+      if ( softcal && calibration != 0 ) {
+	comedi_get_softcal_converter( SubDevice, c, CAO->UnipolarRangeIndex[r],
+				      COMEDI_FROM_PHYSICAL, calibration,
+				      &UnipConverter[c][r] );
+      }
+      else {
+	comedi_get_hardcal_converter( CAO->DeviceP, SubDevice, c,
+				      CAO->UnipolarRangeIndex[r],
+				      COMEDI_FROM_PHYSICAL,
+				      &UnipConverter[c][r] );
+      }
+    }
+    BipConverter[c] = new comedi_polynomial_t[CAO->BipolarRangeIndex.size()];
+    for ( unsigned int r=0; r<CAO->BipolarRangeIndex.size(); r++ ) {
+      if ( softcal && calibration != 0 ) {
+	comedi_get_softcal_converter( SubDevice, c, CAO->BipolarRangeIndex[r],
+				      COMEDI_FROM_PHYSICAL, calibration,
+				      &BipConverter[c][r] );
+      }
+      else {
+	comedi_get_hardcal_converter( CAO->DeviceP, SubDevice, c,
+				      CAO->BipolarRangeIndex[r],
+				      COMEDI_FROM_PHYSICAL, 
+				      &BipConverter[c][r] );
+      }
+    }
+  }
+  
+  // cleanup calibration:
+  if ( calibration != 0 )
+    comedi_cleanup_calibration( calibration );
  
+  // close user space comedi:
   CAO->close();
 
-  if ( retVal != 0 )
-    return retVal;
-
   // open kernel module:
-  Modulename = "/dev/dynclamp";
-  Modulefile = ::open( Modulename.c_str(), O_WRONLY ); //O_RDONLY
-  if( Modulefile == -1 ) {
+  ModuleDevice = "/dev/dynclamp";
+  ModuleFd = ::open( ModuleDevice.c_str(), O_WRONLY ); //O_RDONLY
+  if( ModuleFd == -1 ) {
     cerr << " DynClampAnalogOutput::open(): opening dynclamp-module failed" 
        << endl;/////TEST/////
     return -1;
@@ -123,10 +187,10 @@ int DynClampAnalogOutput::open( const string &device, long mode )
   cerr << " DynClampAnalogOutput::open() success\n" ;
 
   // get subdevice ID from module:
-  retVal = ::ioctl( Modulefile, IOC_GET_SUBDEV_ID, &SubdeviceID );
-  if( retVal < 0 ) {
+  retval = ::ioctl( ModuleFd, IOC_GET_SUBDEV_ID, &SubdeviceID );
+  if( retval < 0 ) {
     cerr << " DynClampAnalogOutput::open -> ioctl command IOC_GET_SUBDEV_ID on device "
-	 << Modulename << " failed!" << endl;
+	 << ModuleDevice << " failed!" << endl;
     return -1;
   }
 
@@ -134,17 +198,30 @@ int DynClampAnalogOutput::open( const string &device, long mode )
   struct deviceIOCT deviceIOC;
   deviceIOC.subdevID = SubdeviceID;
   strcpy( deviceIOC.devicename, deviceFile().c_str() );
-  deviceIOC.subdev = Subdevice;
+  deviceIOC.subdev = SubDevice;
   deviceIOC.subdevType = SUBDEV_OUT;
-  retVal = ::ioctl( Modulefile, IOC_OPEN_SUBDEV, &deviceIOC );
+  retval = ::ioctl( ModuleFd, IOC_OPEN_SUBDEV, &deviceIOC );
   cerr << "open(): IOC_OPEN_SUBDEV request for address done!" /// TEST
        << &deviceIOC << endl;
-  if( retVal < 0 ) {
+  if( retval < 0 ) {
     cerr << " DynClampAnalogOutput::open -> ioctl command IOC_OPEN_SUBDEV on device "
-	 << Modulename << " failed!" << endl;
+	 << ModuleDevice << " failed!" << endl;
     return -1;
   }
-  IsKernelDaqOpened = 1;
+
+  // initialize Connection to RTAI-FIFO:
+  char fifoName[] = "/dev/rtf1";
+  FifoFd = ::open( fifoName, O_WRONLY | O_NONBLOCK );
+  if( FifoFd < 0 ) {
+    cerr << " DynClampAnalogOutput::startWrite -> oping RTAI-FIFO " 
+         << fifoName << " failed!" << endl;
+    return -1;
+  }
+
+  // XXX this should be whatever the FIFO can hold:
+  BufferSize=64*1024;
+
+  IsPrepared = false;
 
   return 0;
 }
@@ -152,30 +229,29 @@ int DynClampAnalogOutput::open( const string &device, long mode )
 
 bool DynClampAnalogOutput::isOpen( void ) const 
 { 
-  return ( Modulefile >= 0 );
+  return ( ModuleFd >= 0 );
 }
 
 
 void DynClampAnalogOutput::close( void )
 { 
-  reset();
-  if( CAO->isOpen() ) {
-    CAO->close();
+  if ( ! isOpen() )
     return;
-  }
-  ::ioctl( Modulefile, IOC_REQ_CLOSE, &SubdeviceID );
-  ::close( FifoFd );
-  if( ::close( Modulefile ) < 0 )
-    cerr << "Close of module file failed!" << endl;
-  Channels = -1;
-  Modulefile = -1;
 
+  reset();
+
+  ::ioctl( ModuleFd, IOC_REQ_CLOSE, &SubdeviceID );
+  ::close( FifoFd );
+  if( ::close( ModuleFd ) < 0 )
+    cerr << "Close of module file failed!" << endl;
+
+  ModuleFd = -1;
 }
 
 
 int DynClampAnalogOutput::setModuleName( string modulename )
 {
-  Modulename = modulename;
+  ModuleDevice = modulename;
   // TODO: test opening here?
   return 0;
 }
@@ -183,7 +259,7 @@ int DynClampAnalogOutput::setModuleName( string modulename )
 
 string DynClampAnalogOutput::moduleName( void ) const
 {
-  return Modulename;
+  return ModuleDevice;
 }
 
 
@@ -226,47 +302,21 @@ double DynClampAnalogOutput::bipolarRange( int index ) const
 }
 
 
-int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
+int DynClampAnalogOutput::setupChanList( OutList &sigs,
+					 unsigned int *chanlist,
+					 int maxchanlist )
 {
-
-  ErrorState = 0;
- 
-  if( Modulefile < 0 ) {
-    sigs.setError( DaqError::DeviceNotOpen );
-    return -1;
-  }
-
-  // ...USER-SPACE DEVICE TESTING STARTING...
-
-  cerr << " DynClampAnalogOutput::testWrite(): 1" << endl;////TEST////
-
-  // channel configuration:
-  if ( sigs[0].error() == DaqError::InvalidChannel ) {
-    for ( int k=0; k<sigs.size(); k++ ) {
-      sigs[k].delError( DaqError::InvalidChannel );
-      // check channel number:
-      if( sigs[k].channel() < 0 ) {
-	sigs[k].addError( DaqError::InvalidChannel );
-	sigs[k].setChannel( 0 );
-      }
-      else if( sigs[k].channel() >= channels() && sigs[k].channel() < PARAM_CHAN_OFFSET ) {
-	sigs[k].addError( DaqError::InvalidChannel );
-	sigs[k].setChannel( channels()-1 );
-      }
-    }
-  }
-
-  memset( ChanList, 0, sizeof( ChanList ) );
+  memset( chanlist, 0, maxchanlist * sizeof( unsigned int ) );
   // find ranges for synchronous acquisition:
   int aref = AREF_GROUND;
-  int maxdata = ( 1 << bits() ) - 1;
-  for ( int k=0; k<sigs.size(); k++ ) {
+
+  for ( int k=0; k<sigs.size() && k < maxchanlist; k++ ) {
     // minimum and maximum values:
     double min = sigs[k].requestedMin();
     double max = sigs[k].requestedMax();
     if ( min == OutData::AutoRange || max == OutData::AutoRange ) {
-      double smin = 0.0;
-      double smax = 0.0;
+      float smin = 0.0;
+      float smax = 0.0;
       minMax( smin, smax, sigs[k] );
       if ( min == OutData::AutoRange )
 	min = smin;
@@ -286,84 +336,89 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
       if ( min > max )
 	max = min;
     }
+
+    // allocate gain factor:
+    char *gaindata = sigs[k].gainData();
+    if ( gaindata != NULL )
+      delete [] gaindata;
+    gaindata = new char[sizeof(comedi_polynomial_t)];
+    sigs[k].setGainData( gaindata );
+    comedi_polynomial_t *gainp = (comedi_polynomial_t *)gaindata;
+
     // set range:
-    double maxboardvolt = -1.0;
-    double minboardvolt = 0.0;
     double maxvolt = sigs[k].getVoltage( max );
     int index = -1;
-    for ( int p=0; p<2 && index < 0; p++ ) {
-      if ( unipolar ) {
-	for( index = CAO->UnipolarRange.size() - 1; index >= 0; index-- ) {
-	  if ( unipolarRange( index ) > maxvolt ) {
-	    maxboardvolt = CAO->UnipolarRange[index].max;
-	    minboardvolt = CAO->UnipolarRange[index].min;
-	    break;
+    if ( sigs[k].noIntensity() ) {
+      for ( int p=0; p<2 && index < 0; p++ ) {
+	if ( unipolar ) {
+	  for( index = CAO->UnipolarRange.size() - 1; index >= 0; index-- ) {
+	    if ( unipolarRange( index ) > maxvolt )
+	      break;
 	  }
 	}
-      }
-      else {
-	for( index = CAO->BipolarRange.size() - 1; index >= 0; index-- ) {
-	  if ( bipolarRange( index ) > maxvolt ) {
-	    maxboardvolt = CAO->BipolarRange[index].max;
-	    minboardvolt = CAO->BipolarRange[index].min;
-	    break;
+	else {
+	  for( index = CAO->BipolarRange.size() - 1; index >= 0; index-- ) {
+	    if ( bipolarRange( index ) > maxvolt )
+	      break;
 	  }
 	}
+	// try other polarity?
+	if ( index < 0 && p == 0 )
+	  unipolar = ! unipolar;
       }
-      // try other polarity?
-      if ( index < 0 && p == 0 )
-	unipolar = ! unipolar;
     }
+    else {
+      index = 0;
+      if ( unipolar && index > (int)CAO->UnipolarRange.size() )
+	unipolar = false;
+      if ( ! unipolar && index > (int)CAO->BipolarRange.size() )
+	unipolar = true;
+      if ( index >= unipolar ? (int)CAO->UnipolarRange.size() : (int)CAO->BipolarRange.size() )
+	index = -1;
+    }
+
     // none of the available ranges contains the requested range:
     if ( index < 0 ) {
       sigs[k].addError( DaqError::InvalidGain );
       break;
     }
 
+    double maxboardvolt = unipolar ? CAO->UnipolarRange[index].max : CAO->BipolarRange[index].max;
+    double minboardvolt = unipolar ? CAO->UnipolarRange[index].min : CAO->BipolarRange[index].min;
+
+    // external reference:
     if ( sigs[k].noIntensity() ) {
-      /*
-      if ( ! extref && externalReference() > 0.0 ) {
-      	if ( externalReference() < maxboardvolt ) {
-      	  if ( maxvolt < externalReference() )
-      	    extref = true;
-      	}
-      	else {
-      	  if ( maxboardvolt == -1.0 )
-      	    extref = true;
+      if ( ! extref ) {
+	if ( externalReference() < maxboardvolt ) {
+	  if ( maxvolt < externalReference() )
+	    extref = true;
 	}
+	else
+	  if ( maxboardvolt == -1.0 )
+	    extref = true;
       }
       if ( extref ) {
-      	if ( externalReference() < 0.0 ) {
-      	  sigs[k].addError( DaqError::InvalidReference );
-          cerr << " DynClampAnalogOutput::testWrite(): ERROR - InvalidRef" 
-               << " => external reference is not connected to the daq board"
-               << endl;/////TEST/////
-      	  extref = false;
-      	}
-      	else {
-      	  if ( externalReference() == 0.0 )
-	          maxboardvolt = 1.0;
-      	  else
-      	    maxboardvolt = externalReference();
-      	  index = unipolar ? CAO->UnipolarExtRefRangeIndex 
-	                         :  CAO->BipolarExtRefRangeIndex;
+	if ( externalReference() < 0.0 ) {
+	  sigs[k].addError( DaqError::InvalidReference );
+	  extref = false;
+	}
+	else {
+	  if ( externalReference() == 0.0 )
+	    maxboardvolt = 1.0;
+	  else
+	    maxboardvolt = externalReference();
+	  minboardvolt = unipolar ? 0.0 : -maxboardvolt;
+	  index = unipolar ? CAO->UnipolarExtRefRangeIndex 
+	    : CAO->BipolarExtRefRangeIndex;
 	}
       }
-      */
-      sigs[k].setGain( maxdata/(maxboardvolt-minboardvolt), -minboardvolt );
     }
     else {
-      /*
       if ( extref && externalReference() < 0.0 ) {
-      	sigs[k].addError( DaqError::InvalidReference );
-        cerr << " DynClampAnalogOutput::testWrite(): ERROR - InvalidRef 2" << endl;/////TEST/////
-      	extref = false;
+	sigs[k].addError( DaqError::InvalidReference );
+	extref = false;
       }
-      */
-      if ( unipolar )
-	sigs[k].setGain( maxdata, 0.0 );
-      else
-	sigs[k].setGain( maxdata/2.0, 1.0 );
+      sigs[k].setScale( maxboardvolt );
     }
 
     int gainIndex = index;
@@ -371,22 +426,57 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
       gainIndex |= 1<<14;
     if ( extref )
       gainIndex |= 1<<15;
-    
 
     sigs[k].setGainIndex( gainIndex );
-    sigs[k].setMinData( 0 );
-    sigs[k].setMaxData( maxdata );
+    sigs[k].setMinVoltage( minboardvolt );
+    sigs[k].setMaxVoltage( maxboardvolt );
 
     // set up channel in chanlist:
-    if( unipolar )
-      ChanList[k] = CR_PACK( sigs[k].channel(),
-			     CAO->UnipolarRangeIndex[index], aref );
-    else
-      ChanList[k] = CR_PACK( sigs[k].channel(),
-			     CAO->BipolarRangeIndex[index], aref );
+    int gi = unipolar ? CAO->UnipolarRangeIndex[ index ] : CAO->BipolarRangeIndex[ index ];
+    if ( unipolar ) {
+      memcpy( gainp, &UnipConverter[sigs[k].channel()][gi], sizeof(comedi_polynomial_t) );
+      chanlist[k] = CR_PACK( sigs[k].channel(), gi, aref );
+    }
+    else {
+      memcpy( gainp, &BipConverter[sigs[k].channel()][gi], sizeof(comedi_polynomial_t) );
+      chanlist[k] = CR_PACK( sigs[k].channel(), gi, aref );
+    }
+
     cerr << "DYNCLAMP ChanList channel " << sigs[k].channel() << " packed " << CR_CHAN( ChanList[k] ) << endl;
 
   }
+
+  return 0;
+}
+
+
+int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
+{
+  ErrorState = 0;
+ 
+  if( ! isOpen() ) {
+    sigs.setError( DaqError::DeviceNotOpen );
+    return -1;
+  }
+
+  // channel configuration:
+  if ( sigs[0].error() == DaqError::InvalidChannel ) {
+    for ( int k=0; k<sigs.size(); k++ ) {
+      sigs[k].delError( DaqError::InvalidChannel );
+      // check channel number:
+      if( sigs[k].channel() < 0 ) {
+	sigs[k].addError( DaqError::InvalidChannel );
+	sigs[k].setChannel( 0 );
+      }
+      else if( sigs[k].channel() >= channels() && sigs[k].channel() < PARAM_CHAN_OFFSET ) {
+	sigs[k].addError( DaqError::InvalidChannel );
+	sigs[k].setChannel( channels()-1 );
+      }
+    }
+  }
+
+  unsigned int chanlist[MAXCHANLIST];
+  setupChanList( sigs, chanlist, MAXCHANLIST );
 
   if( sigs.failed() )
     return -1;
@@ -400,20 +490,15 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
 
 int DynClampAnalogOutput::convertData( OutList &sigs )
 {
-  // copy and sort signal pointers:
-  OutList ol;
-  ol.add( sigs );
-  ol.sortByChannel();
-
   // allocate buffer:
-  int nbuffer = ol.size()*ol[0].size();
+  int nbuffer = sigs.size()*sigs[0].size();
   float *buffer = new float [nbuffer];
 
   // multiplex data into buffer:
   float *bp = buffer;
-  for ( int i=0; i<ol[0].size(); i++ ) {
-    for ( int k=0; k<ol.size(); k++ ) {
-      *bp = ol[k][i];
+  for ( int i=0; i<sigs[0].size(); i++ ) {
+    for ( int k=0; k<sigs.size(); k++ ) {
+      *bp = sigs[k][i];
       ++bp;
     }
   }
@@ -428,238 +513,245 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
 {
   cerr << " DynClampAnalogOutput::prepareWrite(): 1" << endl;/////TEST/////
 
-  // copy and sort signal pointers:
-  OutList ol;
-  ol.add( sigs );
-  ol.sortByChannel();
-
-  int error = testWriteDevice( ol );
-  if( error )
-    return error;
-
-  cerr << " DynClampAnalogOutput::prepareWrite(): 2" << endl;/////TEST/////
-  if ( ol.success() )
-    setSettings( ol );
-  else 
+  if ( !isOpen() )
     return -1;
 
-  cerr << " DynClampAnalogOutput::prepareWrite(): 3" << endl;////TEST/////
+  reset();
 
-  Sigs = &sigs;
-
-  struct chanlistIOCT chanlistIOC;
-  struct syncCmdIOCT syncCmdIOC;
-  int retVal;
-  int errorFlag = -2;
+  setupChanList( sigs, ChanList, MAXCHANLIST );
 
   // set chanlist:
+  struct chanlistIOCT chanlistIOC;
   chanlistIOC.subdevID = SubdeviceID;
   for( int k = 0; k < sigs.size(); k++ ){
     chanlistIOC.chanlist[k] = ChanList[k];
+    const comedi_polynomial_t* poly = 
+      (const comedi_polynomial_t *)sigs[k].gainData();
+    chanlistIOC.conversionlist[k].order = poly->order;
+    if ( poly->order >= MAX_CONVERSION_COEFFICIENTS )
+      cerr << "ERROR in DynClampAnalogInput::prepareRea -> invalid order in converion polynomial!\n";
+    chanlistIOC.conversionlist[k].expansion_origin = poly->expansion_origin;
+    for ( int c=0; c<MAX_CONVERSION_COEFFICIENTS; c++ )
+      chanlistIOC.conversionlist[k].coefficients[c] = poly->coefficients[c];
     chanlistIOC.scalelist[k] = sigs[k].scale();
   }
   chanlistIOC.chanlistN = sigs.size();
-  retVal = ::ioctl( Modulefile, IOC_CHANLIST, &chanlistIOC );
+  int retval = ::ioctl( ModuleFd, IOC_CHANLIST, &chanlistIOC );
   cerr << "prepareWrite(): IOC_CHANLIST done!" << endl; /// TEST
-  if( retVal < 0 ) {
+  if( retval < 0 ) {
     cerr << " DynClampAnalogOutput::prepareWrite -> ioctl command IOC_CHANLIST on device "
-	 << Modulename << " failed!" << endl;
-    return errorFlag;
+	 << ModuleDevice << " failed!" << endl;
+    return -1;
   }
 
   // set up synchronous command:
+  struct syncCmdIOCT syncCmdIOC;
   syncCmdIOC.subdevID = SubdeviceID;
   syncCmdIOC.frequency = (unsigned int)sigs[0].sampleRate();
   syncCmdIOC.duration = sigs[0].size() + sigs[0].indices( sigs[0].delay());
   syncCmdIOC.continuous = sigs[0].continuous();
-  retVal = ::ioctl( Modulefile, IOC_SYNC_CMD, &syncCmdIOC );
+  retval = ::ioctl( ModuleFd, IOC_SYNC_CMD, &syncCmdIOC );
   cerr << "prepareWrite(): IOC_SYNC_CMD done!" << endl; /// TEST
-  if( retVal < 0 ) {
+  if( retval < 0 ) {
     cerr << " DynClampAnalogOutput::prepareWrite -> ioctl command IOC_SYNC_CMD on device "
-	 << Modulename << " failed!" << endl;
+	 << ModuleDevice << " failed!" << endl;
     if ( errno == EINVAL )
       sigs.addError( DaqError::InvalidSampleRate );
     else
       sigs.addErrorStr( errno );
-    return errorFlag;
+    return -1;
   }
 
-  // initialize Connection to RTAI-FIFO:
-  char fifoName[] = "/dev/rtf1";
-  FifoFd = ::open( fifoName, O_WRONLY | O_NONBLOCK );
-  if( FifoFd < 0 ) {
-    cerr << " DynClampAnalogOutput::startWrite -> oping RTAI-FIFO " 
-         << fifoName << " failed!" << endl;
-    return errorFlag;
+  // check buffer size:
+  int minbufsize = sigs.size()*BufferElemSize*sigs[0].indices( sigs[0].writeTime() ) * BufferElemSize;
+  if ( minbufsize > BufferSize )
+    sigs.addError( DaqError::InvalidBufferTime );
+
+  // apply calibration:
+  /*
+  XXX this requires user space comedi!
+  if ( Calibration != 0 ) {
+    for( int k=0; k < sigs.size(); k++ ) {
+      unsigned int channel = CR_CHAN( Cmd.chanlist[k] );
+      unsigned int range = CR_RANGE( Cmd.chanlist[k] );
+      unsigned int aref = CR_AREF( Cmd.chanlist[k] );
+      if ( comedi_apply_parsed_calibration( DeviceP, SubDevice, channel,
+					    range, aref, Calibration ) < 0 )
+	sigs[k].addError( DaqError::CalibrationFailed );
+    }
+  }
+  */
+
+  IsPrepared = sigs.success();
+
+  if ( sigs.success() ) {
+    setSettings( sigs, BufferSize );
+    Sigs = &sigs;
   }
 
-  IsLoaded = true;
-  IsPrepared = true;
+  //  cerr << " ComediAnalogOutput::prepareWrite(): success" << endl;//////TEST/////
 
-  cerr << " DynClampAnalogOutput::prepareWrite(): success" << endl;/////TEST/////
-
-  return 0; //elemWritten;
+  return sigs.success() ? 0 : -1;
 }
 
 
-int DynClampAnalogOutput::startWrite( OutList &sigs )
+int DynClampAnalogOutput::fillWriteBuffer( OutList &sigs )
 {
-  cerr << " DynClampAnalogOutput::startWrite(): 1" << endl;/////TEST/////
-
-  if( !prepared() ) {
-    sigs.addError( DaqError::Unknown );
+  if ( !isOpen() ) {
+    sigs.setError( DaqError::DeviceNotOpen );
     return -1;
   }
 
   ErrorState = 0;
 
-  // fill buffer with initial data:
-  int retVal = writeData( sigs );
-
-  if(retVal < 1 ) {
-    return -2;
+  if( sigs[0].deviceBufferMaxPop() <= 0 ) {
+    sigs.addError( DaqError::NoData );
+    return -1;
   }
 
-  // start subdevice:
-  retVal = ::ioctl( Modulefile, IOC_START_SUBDEV, &SubdeviceID );
-  if( retVal < 0 ) {
-    cerr << " DynClampAnalogOutput::startWrite -> ioctl command IOC_START_SUBDEV on device "
-	 << Modulename << " failed!" << endl;
-    return -2;
-  }
-  
-  return 0;
-}
-
-
-int DynClampAnalogOutput::writeData( OutList &sigs )
-{
-  cerr << " DynClampAnalogOutput::writeData(): in" << endl;/////TEST/////
-
-  //device stopped?
-    /* // AO does not have to run in order to push data
-  if( !running() ) {
-    sigs.addErrorStr( "DynClampAnalogOutput::writeData: " +
-		      deviceFile() + " is not running!" );
-    cerr << "DynClampAnalogOutput::writeData: device is not running!"  << endl;/////TEST/////
-    return 0;/////TEST/////
-  }
-    */
-
-  ErrorState = 0;
   cerr << "DynClampAnalogOutput::writeData: size of device buffer: " 
        << sigs[0].deviceBufferSize() << " - size of outdata: " << sigs[0].size() 
        << " - continuous: " << sigs[0].continuous() << endl;
-  bool failed = false;
-  int elemWritten = 0;
-  int bytesWritten;
 
-  if( sigs[0].deviceBufferMaxPop() <= 0 ) {
-    //    sigs.addErrorStr( "DynClampAnalogOutput::writeData: " +
-    //		      deviceFile() + " - buffer-underrun in outlist!" );
-    //    sigs.addError( DaqError::OverflowUnderrun );
-    cerr << "DynClampAnalogOutput::writeData: buffer-underrun in outlist!"  
-	 << endl;/////TEST/////
-    //    sigs[0].deviceBufferReset();/////TEST////
-    return 0;/////TEST////
-  }
+  int ern = 0;
+  int elemWritten = 0;
+
   // try to write twice
   for ( int tryit = 0;
-	tryit < 2 && !failed && sigs[0].deviceBufferMaxPop() > 0; 
+	tryit < 2 && sigs[0].deviceBufferMaxPop() > 0; 
 	tryit++ ){
-/*    
-    int retVal = ::ioctl( Modulefile, IOC_REQ_WRITE, &SubdeviceID );
-    if( retVal < 0 ) {
-      cerr << " DynClampAnalogOutput::writeData() -> ioctl command IOC_REQ_WRITE on device "
-	   << Modulename << " failed!" << endl;
-      return -2;
-    }
-*/
-    bytesWritten = ::write( FifoFd, sigs[0].deviceBufferPopBuffer(),
-			                      sigs[0].deviceBufferMaxPop() * BufferElemSize );
+
+    int bytesWritten = ::write( FifoFd, sigs[0].deviceBufferPopBuffer(),
+				sigs[0].deviceBufferMaxPop() * BufferElemSize );
     cerr << " DynClampAnalogOutput::writeData(): " << bytesWritten << " of "
          << sigs[0].deviceBufferMaxPop() * BufferElemSize << "bytes written:"
          << endl;/////TEST/////
-
-    if( bytesWritten < 0 && errno != EAGAIN && errno != EINTR ) {
-      sigs.addErrorStr( errno );
-      failed = true;
-      cerr << " DynClampAnalogOutput::writeData(): error" << endl;/////TEST/////
+      
+    if ( bytesWritten < 0 ) {
+      ern = errno;
+      if ( ern == EAGAIN || ern == EINTR ) {
+	ern = 0;
+	break;
+      }
     }
     else if ( bytesWritten > 0 ) {
       sigs[0].deviceBufferPop( bytesWritten / BufferElemSize );
       elemWritten += bytesWritten / BufferElemSize;
     }
-
   }
 
-  if( failed || errno == EINTR )
-    switch( errno ) {
+  if ( ern == 0 ) {
+    // no more data:
+    if ( sigs[0].deviceBufferMaxPop() == 0 )
+      return 0;
+  }
+  else {
+    // error:
+    switch( ern ) {
 
     case EPIPE: 
       ErrorState = 1;
-      sigs.addErrorStr( deviceFile() + " - buffer-underrun: "
-			+ strerror( errno ) );
       sigs.addError( DaqError::OverflowUnderrun );
-      cerr << " DynClampAnalogOutput::writeData(): buffer-underrun: "
-      	   << strerror( errno ) << endl;/////TEST/////
       return -1;
 
     case EBUSY:
       ErrorState = 2;
-      sigs.addErrorStr( deviceFile() + " - device busy: "
-			+ strerror( errno ) );
       sigs.addError( DaqError::Busy );
-      cerr << " DynClampAnalogOutput::writeData(): device busy: "
-	         << strerror( errno ) << endl;/////TEST/////
       return -1;
 
     default:
       ErrorState = 2;
-      sigs.addErrorStr( "Error while writing to device-file: " + deviceFile()
-			+ "  system: " + strerror( errno ) );
-      cerr << " DynClampAnalogOutput::writeData(): buffer-underrun: "
-	   << "  system: " << strerror( errno )
-	
-	   << endl;/////TEST/////
+      sigs.addErrorStr( ern );
       sigs.addError( DaqError::Unknown );
       return -1;
     }
-  
-  cerr << " DynClampAnalogOutput::writeData(): out" << endl;/////TEST/////
+  }
   
   return elemWritten;
 }
 
 
+int DynClampAnalogOutput::startWrite( void )
+{
+  cerr << " DynClampAnalogOutput::startWrite(): 1" << endl;/////TEST/////
+
+  if( !prepared() || Sigs == 0 ) {
+    cerr << "AO not prepared or no signals!\n";
+    return -1;
+  }
+
+  // fill buffer with initial data:
+  int retval = fillWriteBuffer( *Sigs );
+
+  if(retval < 1 )
+    return -1;
+
+  // start subdevice:
+  retval = ::ioctl( ModuleFd, IOC_START_SUBDEV, &SubdeviceID );
+  if( retval < 0 ) {
+    cerr << " DynClampAnalogOutput::startWrite -> ioctl command IOC_START_SUBDEV on device "
+	 << ModuleDevice << " failed!" << endl;
+    int ern = errno;
+    if ( ern == ENOMEM )
+      cerr << " !!! No stack for kernel task !!!" << endl;
+    Sigs->addErrorStr( ern );
+    return -1;
+  }
+
+  ErrorState = 0;
+  
+  return 0;
+}
+
+
+int DynClampAnalogOutput::writeData( void )
+{
+  cerr << " DynClampAnalogOutput::writeData(): in" << endl;/////TEST/////
+
+  if ( Sigs == 0 )
+    return -1;
+
+  //device stopped?
+  if( !running() ) {
+    Sigs->addErrorStr( "DynClampAnalogOutput::writeData: " +
+		      deviceFile() + " is not running!" );
+    cerr << "DynClampAnalogOutput::writeData: device is not running!"  << endl;/////TEST/////
+    return -1;
+  }
+
+  return fillWriteBuffer( *Sigs );
+}
+
+
 int DynClampAnalogOutput::reset( void )
 { 
+  Sigs = 0;
+
   clearSettings();
   ErrorState = 0;
 
-  if( !IsLoaded )
+  if( !IsPrepared )
     return 0;
 
   int running = SubdeviceID;
-  int retVal = ::ioctl( Modulefile, IOC_CHK_RUNNING, &running );
-  if( retVal < 0 ) {
+  int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
+  if( retval < 0 ) {
     cerr << " DynClampAnalogOutput::running -> ioctl command IOC_CHK_RUNNING on device "
-	 << Modulename << " failed!" << endl;
+	 << ModuleDevice << " failed!" << endl;
     return -1;
   }
 
   if ( running > 0 ) {
-    retVal = ::ioctl( Modulefile, IOC_STOP_SUBDEV, &SubdeviceID );
-    if( retVal < 0 ) {
+    retval = ::ioctl( ModuleFd, IOC_STOP_SUBDEV, &SubdeviceID );
+    if( retval < 0 ) {
       cerr << " DynClampAnalogOutput::stop -> ioctl command IOC_STOP_SUBDEV on device "
-	   << Modulename << " failed!" << endl;
+	   << ModuleDevice << " failed!" << endl;
       return -1;
     }
     rtf_reset( FifoFd );
   }
 
   IsPrepared = false;
-  IsLoaded = false;
   IsRunning = false;
 
   return 0;
@@ -668,19 +760,19 @@ int DynClampAnalogOutput::reset( void )
 
 bool DynClampAnalogOutput::running( void ) const
 {
-  if( !IsLoaded )
+  if( !IsPrepared )
     return false;
 
-  int exchangeVal = SubdeviceID;
-  int retVal = ::ioctl( Modulefile, IOC_CHK_RUNNING, &exchangeVal );
-  if( retVal < 0 ) {
+  int running = SubdeviceID;
+  int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
+  if( retval < 0 ) {
     cerr << " DynClampAnalogOutput::running -> ioctl command IOC_CHK_RUNNING on device "
-	 << Modulename << " failed!" << endl;
+	 << ModuleDevice << " failed!" << endl;
     return false;
   }
-  cerr << "DynClampAnalogOutput::running returned " << exchangeVal << endl;
+  cerr << "DynClampAnalogOutput::running returned " << running << endl;
 
-  return exchangeVal;
+  return running;
 }
 
 
@@ -699,12 +791,12 @@ int DynClampAnalogOutput::error( void ) const
 long DynClampAnalogOutput::index( void ) const
 {
   long index = 0;
-  int retVal = ::ioctl( Modulefile, IOC_GETAOINDEX, &index );
+  int retval = ::ioctl( ModuleFd, IOC_GETAOINDEX, &index );
     cerr << " DynClampAnalogOutput::index() -> " << index << endl;
-  if( retVal < 0 ) {
+  if( retval < 0 ) {
     cerr << " DynClampAnalogOutput::index() -> ioctl command IOC_GETLOOPCNT on device "
-	   << Modulename << " failed!" << endl;
-    return -2;
+	   << ModuleDevice << " failed!" << endl;
+    return -1;
   }
   return index;
 }
@@ -725,7 +817,7 @@ void DynClampAnalogOutput::addTraces( vector< TraceSpec > &traces, int deviceid 
   struct traceInfoIOCT traceInfo;
   traceInfo.traceType = PARAM_OUT;
   int channel = PARAM_CHAN_OFFSET;
-  while ( 0 == ::ioctl( Modulefile, IOC_GET_TRACE_INFO, &traceInfo ) ) {
+  while ( 0 == ::ioctl( ModuleFd, IOC_GET_TRACE_INFO, &traceInfo ) ) {
     traces.push_back( TraceSpec( traces.size(), traceInfo.name,
 				 deviceid, channel++, 1.0, traceInfo.unit ) );
   }
@@ -743,13 +835,13 @@ int DynClampAnalogOutput::matchTraces( vector< TraceSpec > &traces ) const
   traceChannel.traceType = TRACE_OUT;
   string unknowntraces = "";
   int foundtraces = 0;
-  while ( 0 == ::ioctl( Modulefile, IOC_GET_TRACE_INFO, &traceInfo ) ) {
+  while ( 0 == ::ioctl( ModuleFd, IOC_GET_TRACE_INFO, &traceInfo ) ) {
     bool notfound = true;
     for ( unsigned int k=0; k<traces.size(); k++ ) {
       if ( traces[k].traceName() == traceInfo.name ) {
 	traceChannel.device = traces[k].device();
 	traceChannel.channel = traces[k].channel();
-	if ( ::ioctl( Modulefile, IOC_SET_TRACE_CHANNEL, &traceChannel ) != 0 ) {
+	if ( ::ioctl( ModuleFd, IOC_SET_TRACE_CHANNEL, &traceChannel ) != 0 ) {
 	  cerr << "DynClampAnalogOutput::matchTraces() set channels -> errno " << errno << endl;
 	  return -1;
 	}
@@ -776,27 +868,9 @@ int DynClampAnalogOutput::matchTraces( vector< TraceSpec > &traces ) const
 }
 
 
-int DynClampAnalogOutput::subdevice( void ) const
-{
-  return Subdevice;
-}
-
-
-bool DynClampAnalogOutput::loaded( void ) const 
-{
-  return IsLoaded;
-}
-
-
 bool DynClampAnalogOutput::prepared( void ) const 
 { 
   return IsPrepared;
-}
-
-
-void DynClampAnalogOutput::setRunning( void )
-{
-  IsRunning = true;
 }
 
 

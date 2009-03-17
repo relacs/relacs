@@ -58,7 +58,6 @@ struct subdeviceT {
   
   unsigned int fifo;
 
-  unsigned int sampleType;  // SAMPL_COMEDI or SAMPL_FLOAT
   unsigned int sampleSize;
   
   int asyncMode;
@@ -207,8 +206,7 @@ int getSubdevID( void )
   subdev[i].used = 1;
   subdev[i].subdev = -1;
   subdev[i].devID = -1;
-  subdev[i].sampleType = SAMPL_FLOAT; //SAMPL_COMEDI;
-  subdev[i].sampleSize = sizeof(float); //sizeof(lsampl_t);
+  subdev[i].sampleSize = sizeof(float);
   return i;
 }
 
@@ -578,7 +576,7 @@ void rtDynClamp( long dummy )
 
           subdevRunning = 1;
          
-          // FOR EVERY CHAN...
+          // for every chan...
           for( iC = 0; iC < subdev[iS].chanN; iC++ ) {
 
             // get data from FIFO:
@@ -612,7 +610,7 @@ void rtDynClamp( long dummy )
               if( retVal < 0 ) {
                 comedi_perror( "rtmodule: rtDynClamp: comedi_data_write" );
                 subdev[iS].error = E_COMEDI;
-		            subdev[iS].running = 0;
+		subdev[iS].running = 0;
                 //spin_unlock( &subdev[iS].bData.spinlock );
                 continue;
               }
@@ -665,7 +663,7 @@ void rtDynClamp( long dummy )
           }
           subdevRunning = 1;
 
-          // FOR EVERY CHAN...
+          // for every chan...
           for( iC = 0; iC < subdev[iS].chanN; iC++ ) {
 
             // acquire sample:

@@ -44,7 +44,8 @@ DynClampAnalogInput::DynClampAnalogInput( void )
   CAI = new ComediAnalogInput;
   CAISubDevFlags = 0;
   SubdeviceID = -1;
-  Modulename = "";
+  ModuleDevice = "";
+  ModuleFd = -1;
   FifoFd = -1;
   SubDevice = -1;
   BufferElemSize = sizeof(float);
@@ -72,7 +73,8 @@ DynClampAnalogInput::DynClampAnalogInput( const string &device, long mode )
   CAI = new ComediAnalogInput;
   CAISubDevFlags = 0;
   SubdeviceID = -1;
-  Modulename = "";
+  ModuleDevice = "";
+  ModuleFd = -1;
   FifoFd = -1;
   SubDevice = -1;
   BufferElemSize = sizeof(float);
@@ -108,7 +110,10 @@ int DynClampAnalogInput::open( const string &device, long mode )
     return InvalidDevice;
   setDeviceFile( device );
 
+  // open user space coemdi:
   int retval = CAI->open( device );
+  if ( retval != 0 )
+    return retval;
   
   // copy information not available after CAI->close()
   SubDevice = CAI->comediSubdevice();
@@ -118,6 +123,11 @@ int DynClampAnalogInput::open( const string &device, long mode )
   MaxRate = 50000.0;
 
   CAISubDevFlags = comedi_get_subdevice_flags( CAI->DeviceP, SubDevice );
+
+  // set basic device infos:
+  setDeviceName( CAI->deviceName() );
+  setDeviceVendor( CAI->deviceVendor() );
+  setDeviceFile( device );
 
   // get calibration:
   comedi_calibration_t *calibration;
@@ -173,24 +183,20 @@ int DynClampAnalogInput::open( const string &device, long mode )
   // close user space comedi:
   CAI->close();
 
-  if ( retval != 0 )
-    return retval;
-
   // open kernel module:
-  Modulename = "/dev/dynclamp";
-  Modulefile = ::open( Modulename.c_str(), O_RDONLY );
-  if( Modulefile == -1 ) {
+  ModuleDevice = "/dev/dynclamp";
+  ModuleFd = ::open( ModuleDevice.c_str(), O_RDONLY );
+  if( ModuleFd == -1 ) {
   cerr << " DynClampAnalogInput::open(): opening dynclamp-module failed" 
        << endl;/////TEST/////
     return -1;
   }
 
-
   // get subdevice ID from module:
-  retval = ::ioctl( Modulefile, IOC_GET_SUBDEV_ID, &SubdeviceID );
+  retval = ::ioctl( ModuleFd, IOC_GET_SUBDEV_ID, &SubdeviceID );
   if( retval < 0 ) {
     cerr << " DynClampAnalogInput::open -> ioctl command IOC_GET_SUBDEV_ID on device "
-	 << Modulename << " failed!" << endl;
+	 << ModuleDevice << " failed!" << endl;
     return -1;
   }
 
@@ -200,17 +206,28 @@ int DynClampAnalogInput::open( const string &device, long mode )
   strcpy( deviceIOC.devicename, deviceFile().c_str() );
   deviceIOC.subdev = SubDevice;
   deviceIOC.subdevType = SUBDEV_IN;
-  retval = ::ioctl( Modulefile, IOC_OPEN_SUBDEV, &deviceIOC );
+  retval = ::ioctl( ModuleFd, IOC_OPEN_SUBDEV, &deviceIOC );
   cerr << " DynClampAnalogInput::open(): IOC_OPEN_SUBDEV request for address done!" /// TEST
        << &deviceIOC << endl;
   if( retval < 0 ) {
     cerr << " DynClampAnalogInput::open -> ioctl command IOC_OPEN_SUBDEV on device "
-	 << Modulename << " failed!" << endl;
+	 << ModuleDevice << " failed!" << endl;
+    return -1;
+  }
+
+  // initialize connection to RTAI-FIFO:
+  char fifoName[] = "/dev/rtf0";
+  FifoFd = ::open( fifoName, O_RDONLY | O_NONBLOCK );
+  if( FifoFd < 0 ) {
+    cerr << " DynClampAnalogOutput::prepareRead -> oping RTAI-FIFO " 
+         << fifoName << " failed!" << endl;
     return -1;
   }
 
   // XXX this should be whatever the FIFO can hold:
   ReadBufferSize=64*1024;
+
+  IsPrepared = false;
 
   return 0;
 }
@@ -218,19 +235,24 @@ int DynClampAnalogInput::open( const string &device, long mode )
 
 bool DynClampAnalogInput::isOpen( void ) const 
 { 
-  return ( Channels >= 0 );
+  return ( ModuleFd >= 0 );
 }
 
 
 void DynClampAnalogInput::close( void )
 { 
+  if ( ! isOpen() )
+    return;
+
   reset();
 
-  ::ioctl( Modulefile, IOC_REQ_CLOSE, &SubdeviceID );
+  ::ioctl( ModuleFd, IOC_REQ_CLOSE, &SubdeviceID );
   ::close( FifoFd );
   FifoFd = -1;
-  if( ::close( Modulefile ) < 0 )
+  if( ::close( ModuleFd ) < 0 )
     cerr << "Close of module file failed!" << endl;
+
+  ModuleFd = -1;
 
   // cleanup converters:
   for ( int c=0; c<channels(); c++ ) {
@@ -246,7 +268,7 @@ void DynClampAnalogInput::close( void )
 
 int DynClampAnalogInput::setModuleName( string modulename )
 {
-  Modulename = modulename;
+  ModuleDevice = modulename;
   // TODO: test opening here?
   return 0;
 }
@@ -254,7 +276,7 @@ int DynClampAnalogInput::setModuleName( string modulename )
 
 string DynClampAnalogInput::moduleName( void ) const
 {
-  return Modulename;
+  return ModuleDevice;
 }
 
 
@@ -294,45 +316,14 @@ double DynClampAnalogInput::bipolarRange( int index ) const
 }
 
 
-int DynClampAnalogInput::testReadDevice( InList &traces )
+int DynClampAnalogInput::setupChanList( InList &traces,
+					unsigned int *chanlist,
+					int maxchanlist )
 {
+  memset( chanlist, 0, maxchanlist*sizeof( unsigned int ) );
 
-  ErrorState = 0;
- 
-  if( Modulefile < 0 ) {
-    traces.setError( DaqError::DeviceNotOpen );
-    return -1;
-  }
-  
-  cerr << " DynClampAnalogInput::testRead(): 1" << endl;////TEST////
-
-  // XXX check whether channel >=1000 is valid!
-
-  // channel configuration:
-  if ( traces[0].error() == DaqError::InvalidChannel ) {
-    for ( int k=0; k<traces.size(); k++ ) {
-      traces[k].delError( DaqError::InvalidChannel );
-      // check channel number:
-      if( traces[k].channel() < 0 ) {
-	traces[k].addError( DaqError::InvalidChannel );
-	traces[k].setChannel( 0 );
-      }
-      else if( traces[k].channel() >= channels() && traces[k].channel() < PARAM_CHAN_OFFSET ) {
-	traces[k].addError( DaqError::InvalidChannel );
-	traces[k].setChannel( channels()-1 );
-      }
-    }
-  }
-
-  memset( ChanList, 0, sizeof( ChanList ) );
   // find ranges for synchronous acquisition:
-  for( int k = 0; k < traces.size(); k++ ) {
-
-    if( traces[k].delay() > 0.0 ) {
-      traces[k].addError( DaqError::InvalidDelay );
-      traces[k].addErrorStr( "delays are not supported by comedi!" );
-      traces[k].setDelay( 0.0 );
-    }
+  for( int k = 0; k < traces.size() && k < maxchanlist; k++ ) {
 
     int aref = -1;
     switch( traces[k].reference() ) {
@@ -360,9 +351,9 @@ int DynClampAnalogInput::testReadDevice( InList &traces )
     char *gaindata = traces[k].gainData();
     if ( gaindata != NULL )
       delete [] gaindata;
-    gaindata = new char[sizeof(converterT)];
+    gaindata = new char[sizeof(comedi_polynomial_t)];
     traces[k].setGainData( gaindata );
-    converterT *gainp = (converterT *)gaindata;
+    comedi_polynomial_t *gainp = (comedi_polynomial_t *)gaindata;
 
     // ranges:
     if ( traces[k].unipolar() ) {
@@ -373,8 +364,8 @@ int DynClampAnalogInput::testReadDevice( InList &traces )
       traces[k].setMaxVoltage( max );
       traces[k].setMinVoltage( 0.0 );
       int gi = CAI->UnipolarRangeIndex[ traces[k].gainIndex() ];
-      memcpy( gainp, &UnipConverter[traces[k].channel()][gi], sizeof(converterT) );
-      ChanList[k] = CR_PACK( traces[k].channel(), gi, aref );
+      memcpy( gainp, &UnipConverter[traces[k].channel()][gi], sizeof(comedi_polynomial_t) );
+      chanlist[k] = CR_PACK( traces[k].channel(), gi, aref );
     }
     else {
       double max = CAI->BipolarRange[traces[k].gainIndex()].max;
@@ -384,11 +375,60 @@ int DynClampAnalogInput::testReadDevice( InList &traces )
       traces[k].setMaxVoltage( max );
       traces[k].setMinVoltage( min );
       int gi = CAI->BipolarRangeIndex[ traces[k].gainIndex() ];
-      memcpy( gainp, &BipConverter[traces[k].channel()][gi], sizeof(converterT) );
-      ChanList[k] = CR_PACK( traces[k].channel(), gi, aref );
+      memcpy( gainp, &BipConverter[traces[k].channel()][gi], sizeof(comedi_polynomial_t) );
+      chanlist[k] = CR_PACK( traces[k].channel(), gi, aref );
     }
 
   }
+
+  return 0;
+}
+
+
+int DynClampAnalogInput::testReadDevice( InList &traces )
+{
+
+  ErrorState = 0;
+ 
+  if( ! isOpen() ) {
+    traces.setError( DaqError::DeviceNotOpen );
+    return -1;
+  }
+  
+  cerr << " DynClampAnalogInput::testRead(): 1" << endl;////TEST////
+
+  // XXX check whether channel >=1000 is valid!
+
+  // channel configuration:
+  if ( traces[0].error() == DaqError::InvalidChannel ) {
+    for ( int k=0; k<traces.size(); k++ ) {
+      traces[k].delError( DaqError::InvalidChannel );
+      // check channel number:
+      if( traces[k].channel() < 0 ) {
+	traces[k].addError( DaqError::InvalidChannel );
+	traces[k].setChannel( 0 );
+      }
+      else if( traces[k].channel() >= channels() && traces[k].channel() < PARAM_CHAN_OFFSET ) {
+	traces[k].addError( DaqError::InvalidChannel );
+	traces[k].setChannel( channels()-1 );
+      }
+    }
+  }
+
+  for( int k = 0; k < traces.size(); k++ ) {
+
+    // check delays:
+    if( traces[k].delay() > 0.0 ) {
+      traces[k].addError( DaqError::InvalidDelay );
+      traces[k].addErrorStr( "delays are not supported by comedi!" );
+      traces[k].setDelay( 0.0 );
+    }
+
+  }
+
+  unsigned int chanlist[MAXCHANLIST];
+  setupChanList( traces, chanlist, MAXCHANLIST );
+
   if( traces.failed() )
     return -1;
 
@@ -422,6 +462,8 @@ int DynClampAnalogInput::prepareRead( InList &traces )
 
   reset();
 
+  setupChanList( traces, ChanList, MAXCHANLIST );
+
   // set chanlist:
   struct chanlistIOCT chanlistIOC;
   chanlistIOC.subdevID = SubdeviceID;
@@ -438,11 +480,11 @@ int DynClampAnalogInput::prepareRead( InList &traces )
     chanlistIOC.scalelist[k] = traces[k].scale();
   }
   chanlistIOC.chanlistN = traces.size();
-  int retval = ::ioctl( Modulefile, IOC_CHANLIST, &chanlistIOC );
+  int retval = ::ioctl( ModuleFd, IOC_CHANLIST, &chanlistIOC );
   cerr << "prepareRead(): IOC_CHANLIST done!" << endl; /// TEST
   if( retval < 0 ) {
     cerr << " DynClampAnalogInput::prepareRead -> ioctl command IOC_CHANLIST on device "
-	 << Modulename << " failed!" << endl;
+	 << ModuleDevice << " failed!" << endl;
     return -1;
   }
 
@@ -452,11 +494,11 @@ int DynClampAnalogInput::prepareRead( InList &traces )
   syncCmdIOC.frequency = (unsigned int)traces[0].sampleRate();
   syncCmdIOC.duration = traces[0].capacity() + traces[0].indices( traces[0].delay());
   syncCmdIOC.continuous = traces[0].continuous();
-  retval = ::ioctl( Modulefile, IOC_SYNC_CMD, &syncCmdIOC );
+  retval = ::ioctl( ModuleFd, IOC_SYNC_CMD, &syncCmdIOC );
   cerr << "prepareRead(): IOC_SYNC_CMD done!" << endl; /// TEST
   if( retval < 0 ) {
     cerr << " DynClampAnalogInput::prepareRead -> ioctl command IOC_SYNC_CMD on device "
-	 << Modulename << " failed!" << endl;
+	 << ModuleDevice << " failed!" << endl;
     return -1;
   }
 
@@ -482,15 +524,6 @@ int DynClampAnalogInput::prepareRead( InList &traces )
     }
   }
   */
-
-  // initialize connection to RTAI-FIFO:
-  char fifoName[] = "/dev/rtf0";
-  FifoFd = ::open( fifoName, O_RDONLY | O_NONBLOCK );
-  if( FifoFd < 0 ) {
-    cerr << " DynClampAnalogOutput::prepareRead -> oping RTAI-FIFO " 
-         << fifoName << " failed!" << endl;
-    return -1;
-  }
   
   if ( traces.success() ) {
     setSettings( traces, BufferSize, ReadBufferSize );
@@ -513,15 +546,18 @@ int DynClampAnalogInput::startRead( void )
   }
 
   // start subdevice:
-  int retval = ::ioctl( Modulefile, IOC_START_SUBDEV, &SubdeviceID );
+  int retval = ::ioctl( ModuleFd, IOC_START_SUBDEV, &SubdeviceID );
   if( retval < 0 ) {
     cerr << " DynClampAnalogInput::startRead -> ioctl command IOC_START_SUBDEV on device "
-	 << Modulename << " failed!" << endl;
-    if ( errno == ENOMEM )
+	 << ModuleDevice << " failed!" << endl;
+    int ern = errno;
+    if ( ern == ENOMEM )
       cerr << " !!! No stack for kernel task !!!" << endl;
-    Traces->addErrorStr( errno );
+    Traces->addErrorStr( ern );
     return -1;
   }
+
+  ErrorState = 0;
   
   return 0;
 }
@@ -552,10 +588,10 @@ int DynClampAnalogInput::readData( void )
   // try to read twice
   for ( int tryit = 0; tryit < 2 && ! failed && maxn > 0; tryit++ ) {
 /*
-    int retval = ioctl( Modulefile, IOC_REQ_READ, &SubdeviceID );
+    int retval = ioctl( ModuleFd, IOC_REQ_READ, &SubdeviceID );
     if( retval < 0 ) {
       cerr << " DynClampAnalogInput::readData() -> ioctl command IOC_REQ_READ on device "
-	   << Modulename << " failed!" << endl;
+	   << ModuleDevice << " failed!" << endl;
       return -2;
     }
 */
@@ -604,7 +640,7 @@ int DynClampAnalogInput::readData( void )
       ErrorState = 2;
       cerr << " DynClampAnalogInput::readData(): buffer-underrun: "
 	   << "  system: " << strerror( errnoSave )
-	   << " (device file descriptor " << Modulefile
+	   << " (device file descriptor " << ModuleFd
 	   << endl;/////TEST/////
 //      traces.addErrorStr( "Error while reading from device-file: " + deviceFile()
 //			+ "  system: " + strerror( errnoSave ) );
@@ -674,18 +710,18 @@ int DynClampAnalogInput::stop( void )
     return 0;
 
   int running = SubdeviceID;
-  int retval = ::ioctl( Modulefile, IOC_CHK_RUNNING, &running );
+  int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
   if( retval < 0 ) {
     cerr << " DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
-	 << Modulename << " failed!" << endl;
+	 << ModuleDevice << " failed!" << endl;
     return -1;
   }
 
   if ( running  > 0 ) {
-    retval = ::ioctl( Modulefile, IOC_STOP_SUBDEV, &SubdeviceID );
+    retval = ::ioctl( ModuleFd, IOC_STOP_SUBDEV, &SubdeviceID );
     if( retval < 0 ) {
       cerr << " DynClampAnalogInput::stop -> ioctl command IOC_STOP_SUBDEV on device "
-	   << Modulename << " failed!" << endl;
+	   << ModuleDevice << " failed!" << endl;
       return -1;
     }
   }
@@ -723,14 +759,14 @@ bool DynClampAnalogInput::running( void ) const
     return false;
 
   int exchangeVal = SubdeviceID;
-  int retval = ::ioctl( Modulefile, IOC_CHK_RUNNING, &exchangeVal );
+  int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &exchangeVal );
 
   cerr << " DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
-       << Modulename << " " << exchangeVal << endl;
+       << ModuleDevice << " " << exchangeVal << endl;
 
   if( retval < 0 ) {
     cerr << " DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
-	 << Modulename << " failed!" << endl;
+	 << ModuleDevice << " failed!" << endl;
     return false;
   }
 
@@ -764,7 +800,7 @@ void DynClampAnalogInput::addTraces( vector< TraceSpec > &traces, int deviceid )
   struct traceInfoIOCT traceInfo;
   traceInfo.traceType = PARAM_IN;
   int channel = PARAM_CHAN_OFFSET;
-  while ( 0 == ::ioctl( Modulefile, IOC_GET_TRACE_INFO, &traceInfo ) ) {
+  while ( 0 == ::ioctl( ModuleFd, IOC_GET_TRACE_INFO, &traceInfo ) ) {
     traces.push_back( TraceSpec( traces.size(), traceInfo.name,
 				 deviceid, channel++, 1.0, traceInfo.unit ) );
   }
@@ -782,13 +818,13 @@ int DynClampAnalogInput::matchTraces( InList &traces ) const
   traceChannel.traceType = TRACE_IN;
   string unknowntraces = "";
   int foundtraces = 0;
-  while ( 0 == ::ioctl( Modulefile, IOC_GET_TRACE_INFO, &traceInfo ) ) {
+  while ( 0 == ::ioctl( ModuleFd, IOC_GET_TRACE_INFO, &traceInfo ) ) {
     bool notfound = true;
     for ( int k=0; k<traces.size(); k++ ) {
       if ( traces[k].ident() == traceInfo.name ) {
 	traceChannel.device = traces[k].device();
 	traceChannel.channel = traces[k].channel();
-	if ( ::ioctl( Modulefile, IOC_SET_TRACE_CHANNEL, &traceChannel ) != 0 ) {
+	if ( ::ioctl( ModuleFd, IOC_SET_TRACE_CHANNEL, &traceChannel ) != 0 ) {
 	  cerr << "DynClampAnalogInput::matchTraces() set channels -> errno " << errno << endl;
 	  return -1;
 	}

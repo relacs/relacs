@@ -63,7 +63,6 @@ struct subdeviceT {
   
   unsigned int fifo;
 
-  unsigned int sampleType;  // SAMPL_COMEDI or SAMPL_FLOAT
   unsigned int sampleSize;
   
   int asyncMode;
@@ -235,8 +234,7 @@ int getSubdevID( void )
   subdev[i].used = 1;
   subdev[i].subdev = -1;
   subdev[i].devID = -1;
-  subdev[i].sampleType = SAMPL_FLOAT; //SAMPL_COMEDI;
-  subdev[i].sampleSize = sizeof(float); //sizeof(lsampl_t);
+  subdev[i].sampleSize = sizeof(float);
   return i;
 }
 

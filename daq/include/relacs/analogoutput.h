@@ -175,7 +175,7 @@ public:
   virtual int error( void ) const = 0;
 
     /*! Index of signal start.
-        The defualt implemetation returns -1, indicating that
+        The default implemetation returns -1, indicating that
         no index is available.
         If the analog output driver can return
         an index into the data stream of a running analog input
