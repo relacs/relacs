@@ -235,6 +235,8 @@ void SaveFiles::polish( void )
 void SaveFiles::save( bool on, const InList &traces, const EventList &events  )
 {
   //  cerr << "save toggle: " << on << '\n';
+  if ( ! FilesOpen )
+    return;
 
   // switch on writing?
   if ( on && ! Writing ) {
