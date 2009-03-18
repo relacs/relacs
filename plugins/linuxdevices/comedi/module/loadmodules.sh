@@ -4,9 +4,10 @@ insmod /usr/realtime/modules/rtai_hal.ko
 insmod /usr/realtime/modules/rtai_ksched.ko
 insmod /usr/realtime/modules/rtai_sem.ko
 insmod /usr/realtime/modules/rtai_fifos.ko
+modprobe comedi comedi_num_legacy_minors=4 
 modprobe kcomedilib
-modprobe ni_pcimio
-#modprobe ni_mio_cs
+#modprobe ni_pcimio
+modprobe ni_mio_cs
 sleep 1
 #comedi_config /dev/comedi0 ni_pcimio
 #comedi_config /dev/comedi0 ni_mio_cs

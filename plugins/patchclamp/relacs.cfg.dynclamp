@@ -1,7 +1,7 @@
 *Settings
   General
-     updateinterval: 200ms
-    processinterval: 200ms
+       readinterval: 10ms
+    processinterval: 50ms
   Plugins
        pluginpathes: base*|calibration*|ephys*|patchclamp*|comedi*
    pluginhelppathes: 
@@ -24,27 +24,25 @@
   sessiontimeformat: %Hh%02Mmin%02Ssec
     reprotimeformat: %Mmin%02Ssec
 
-*Setup
-  ----- Set&up ---------------------------------------------------------
-        Name: Setup1
-  Maintainer: Jan Benda
-     Creator: Hartmut Schuetze
-        Room: 1305
-         Lab: Prof. Andreas Herz
-   Institute: ITB
-  University: Humboldt University, Berlin
-     Address: Invalidenstr. 43, 10115 Berlin, Germany
-  ----- Hardware -------------------------------------------------------
-  Amplifier1: ampl1
-     Device1: BRAMP-01
-     Vendor1: NPI Tamm
+*MetaData
+  section1: Recording
+   config1: plugins
+      tab1: false
+  section2: Cell
+   config2: plugins
+      tab2: false
+  section3: Subject
+   config3: plugins
+      tab3: false
+  section4: Setup
+   config4: core
+      tab4: true
 
 *RELACS
   ----- input data -----------------------------------------------------
           inputtraces: 1
       inputsamplerate: 20kHz
    inputtracecapacity: 600s
-       inputtracetime: 10000ms
         inputunipolar: false
          inputtraceid: V-1
       inputtracescale: 100
@@ -89,4 +87,14 @@
   plugin1: DynClampAnalogOutput
   device1: /dev/comedi0
    ident1: ao-1
+
+*Setup
+        Name: Setup1
+  Maintainer: Jan Benda
+     Creator: Jan Benda
+        Room: virtual
+         Lab: Jan Benda
+   Institute: Department Biology II
+  University: Ludwig-Maximilian University, Munich
+     Address: Grosshaderner Str. 2, 82152 Planegg-Martinsried, Germany
 

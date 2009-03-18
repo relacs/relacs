@@ -4,7 +4,7 @@ EXTRA_CFLAGS += @RTAI_CPPFLAGS@ -I/usr/include/ -ffast-math -mhard-float
 
 EXTRA_CFLAGS += -Wall
 
-obj-m := dynclampmodule.o rtmodule.o
+obj-m := rtmodule.o dynclampmodule.o
 
 else
 

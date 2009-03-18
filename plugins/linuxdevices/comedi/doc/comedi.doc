@@ -48,6 +48,12 @@ $ make dev
 
 
 \subsection installcomedidriver Comedi
+-# Make sure that you are really running the kernel
+  for which you want to install %Comedi!
+   You can check with
+\code
+$ uname -r
+\endcode
 -# Change to the \c %comedi directory:
 \code
 $ cd /usr/local/src/comedi
@@ -65,6 +71,17 @@ $ ./configure --with-linuxdir=/usr/src/linux --enable-kbuild
 \code
 $ make
 $ make install
+\endcode
+-# For some strange reason, the include files for kcomedilib \c linux/comedilib.h and 
+\c linux/comedi.h are not installed by %Comedi to \c [prefix]/include/linux .
+These files are needed for compiling the kernel modules that use %Comedi.
+Also, RTAI expects %comedi include files in \c [prefix]/include/linux.
+Therefore you need to copy the %comedi include files 
+to \c [prefix]/include/linux yourself:
+\code
+$ cd /usr/local/src/comedi
+$ cp include/linux/comedi.h /usr/include/linux/
+$ cp include/linux/comedilib.h /usr/include/linux/
 \endcode
 
 
@@ -239,6 +256,11 @@ Follow the instructions above for installing
 
 \subsection rtaifirst RTAI 1st pass
 
+-# Make sure that you are really running on your RTAI kernel!
+   You can check with
+\code
+$ uname -r
+\endcode
 -# Change to the RTAI directory
 \code
 $ cd /usr/src/rtai
@@ -259,7 +281,9 @@ Check the following settings:
  - General -> Build RTAI testsuite: select
  - Machine -> Number of CPUs: set to the rigth value. The default is often right.
    If in doubt, look into the file \c /proc/cpuinfo .
+ - Machine -> Enable FPU support: select
  - Add-ons -> Comedi support over LXRT: leave unselected
+ .
 Then exit and save configuration.
 Watch the output while RTAI is configured for possible warnings and errors.
 -# Compile and install (as root)
@@ -285,14 +309,6 @@ For configuring Comedi you should use
 \code
 $ cd /usr/src/rtai
 \endcode
--# RTAI expects %comedi include files in \c [prefix]/include/linux,
-but comedilib installs them in \c [prefix]/include
-and %comedi installs no include files.
-Therefore you need to copy the %comedi include files to \c [prefix]/include/linux yourself:
-\code
-$ cp /usr/local/src/comedi/include/linux/comedi.h /usr/include/linux/
-$ cp /usr/local/src/comedi/include/linux/comedilib.h /usr/include/linux/
-\endcode
 -# Configure RTAI by calling
 \code
 $ make menuconfig
@@ -303,7 +319,7 @@ $ make xconfig
 \endcode
 Check the following settings:
  - Add-ons -> Comedi support over LXRT: select
- - Add-ons -> Comedi installation directory: enter the path that was used as the prefix for configuring comedilib.
+ - Add-ons -> Comedi installation directory: enter the path that was used as the prefix for configuring comedilib, e.g. \c /usr .
 Then exit and save configuration.
 Watch the output while RTAI is configured for possible warnings and errors.
 -# Compile and install (as root)
