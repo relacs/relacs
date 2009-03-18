@@ -14,10 +14,9 @@
 
 #include <math.h>
 
-#include "rtmodule.h"
+#include "dynclampmodule.h"
 
 MODULE_LICENSE( "GPL" );
-
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -67,7 +66,6 @@ struct subdeviceT {
   
   int asyncMode;
   
-  comedi_cmd *cmdP;
   unsigned int chanN;
   struct chanT *chanlist;
 
@@ -94,6 +92,7 @@ struct dynClampTaskT {
   unsigned long loopCnt;
   long aoIndex;
 };
+
 
 struct calcTaskT {
   RT_TASK rtTask;
@@ -191,7 +190,7 @@ static inline lsampl_t value_to_sample( struct chanT *pChan, float value )
     sample += pChan->converter.coefficients[i] * term;
     term *= value - pChan->converter.expansion_origin;
   }
-  return (lsampl_t)rint(sample);
+  return (lsampl_t)sample;
 }
 
 
@@ -221,8 +220,7 @@ int getSubdevID( void )
 {
   int i = 0;
   //* find free slot in subdev[]:
-  for( i = 0; i < subdevN && subdev[i].used; i++ )
-    ; // increment...
+  for( i = 0; i < subdevN && subdev[i].used; i++ );
   if( i == subdevN ) {
     if( subdevN >= MAXSUBDEV ) {
       ERROR_MSG( "getSubdevID ERROR: number of requested subdevices exceeds MAXSUBDEV!\n" );
@@ -270,6 +268,7 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
       ERROR_MSG( "comediOpenDevice ERROR: number of requested devices exceeds MAXDEV!\n" );
       return -1;
     }
+    deviceN++;
   }
 
   DEBUG_MSG( "openComediDevice: found device slot..\n" );
@@ -284,12 +283,12 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
   }
   justOpened = 1;
 
-  DEBUG_MSG( "openComediDevice: opened device %s\n",  deviceIOC->devicename );
+  DEBUG_MSG( "openComediDevice opened device %s\n",  deviceIOC->devicename );
 
   // lock requested subdevice:
  locksubdevice:
   // TODO: check subdev list whether deviceIOC->subdev is already opened?
-  //       => won't happen if acquire works correctly
+  //       => won't happen if userspace works correctly
   if( deviceIOC->subdev >= comedi_get_n_subdevices( device[iDev].devP ) ||
       comedi_lock( device[iDev].devP, deviceIOC->subdev ) != 0 ) {
     ERROR_MSG( "comediOpenDevice: Subdevice %i on device %s could not be locked!\n",
@@ -302,8 +301,6 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
       else
 	DEBUG_MSG( "comediOpenDevice: Closing of device %s was successful!\n",
 		   device[iDev].name );
-
-
       device[iDev].devP = NULL;
     }    
     return -1;
@@ -311,8 +308,6 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
 
   // initialize device structure:
   strncpy( device[iDev].name, deviceIOC->devicename, DEV_NAME_MAXLEN );
-  if( iDev == deviceN )
-    deviceN++;
 
   DEBUG_MSG( "openComediDevice: locked subdevice %i on device %s\n", 
              deviceIOC->subdev, device[iDev].name );
@@ -322,6 +317,7 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
   subdev[iS].subdev = deviceIOC->subdev;
   subdev[iS].devID= iDev;
   subdev[iS].type = deviceIOC->subdevType;
+  // XXX check this
   if( deviceIOC->subdevType == SUBDEV_OUT )
     subdev[iS].userSubdevIndex = outputDeviceIndex++;
   else
@@ -329,13 +325,18 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
 
   // create FIFO for subdevice:
   subdev[iS].fifo = iS;
-  retVal = rtf_create(subdev[iS].fifo, FIFO_SIZE);
-  if( retVal )
+  retVal = rtf_create( subdev[iS].fifo, FIFO_SIZE );
+  if( retVal ) {
     ERROR_MSG( "loadSyncCmd ERROR: Creating FIFO with %d bytes buffer failed for subdevice %i, device %s\n",
                FIFO_SIZE, iS, device[subdev[iS].devID].name );
+    return -1;
+  }
   else
     DEBUG_MSG( "loadSyncCmd: Created FIFO with %d bytes buffer size for subdevice %i, device %s\n",
                FIFO_SIZE, iS, device[subdev[iS].devID].name );
+
+  deviceIOC->fifoIndex = subdev[iS].fifo;
+  deviceIOC->fifoSize = FIFO_SIZE;
 
   return 0;
 }
@@ -347,7 +348,7 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
   int iD = subdev[iS].devID;
   int iC, i, isC;
 
-  if( !subdev[iS].used || subdev[iS].subdev < 0 ) {
+  if( subdev[iS].subdev < 0 || !subdev[iS].used ) {
     ERROR_MSG( "loadChanlist ERROR: First open an appropriate device and subdevice. Chanlist not loaded!\n" );
     return -1;
   }
@@ -508,17 +509,11 @@ int startSubdevice( int iS )
 }
 
 
-int subdevRunning( int iS )
-{
-  return subdev[iS].running;
-}
-
-
 int stopSubdevice( int iS, int kill )
 { 
   int i;
 
-  if( !subdevRunning( iS ) )
+  if( !subdev[iS].running )
     return 0;
   subdev[iS].running = 0;
   for( i = 0; i < subdev[iS].chanN; i++ )
@@ -561,8 +556,6 @@ void releaseSubdevice( int iS )
 
   if(  subdev[iS].chanlist )
     vfree(  subdev[iS].chanlist );
-  if(  subdev[iS].cmdP )
-    vfree(  subdev[iS].cmdP );
 
   // delete FIFO and reset subdevice structure:
   rtf_destroy( subdev[iS].fifo );
@@ -860,12 +853,12 @@ int init_rt_task( int algorithm )
 
   DEBUG_MSG( "init_rt_task: Trying to initialize dynamic clamp RTAI task...\n" );
 
- //* test if dynamic clamp frequency is valid:
+  //* test if dynamic clamp frequency is valid:
   if( dynClampTask.reqFreq <= 0 || dynClampTask.reqFreq > MAX_FREQUENCY )
     ERROR_MSG( "init_rt_task ERROR: %dHz -> invalid dynamic clamp frequency. Valid range is 1 .. %dHz\n", 
 	       dynClampTask.reqFreq, dynClampTask.reqFreq );
 
- //* initializing rt-task for dynamic clamp with high priority:
+  //* initializing rt-task for dynamic clamp with high priority:
   priority = 1;
   retVal = rt_task_init( &dynClampTask.rtTask, rtDynClamp, dummy, stackSize, 
 			 priority, usesFPU, signal );
@@ -910,7 +903,7 @@ void cleanup_rt_task( void )
   stop_rt_timer();
   DEBUG_MSG( "cleanup_rt_task: stopped periodic task\n" );
 
-  rt_task_delete( &calcTask.rtTask );
+  /*  rt_task_delete( &calcTask.rtTask );*/
   calcTask.initialized = 0;
   rt_task_delete( &dynClampTask.rtTask );
   memset( &dynClampTask, 0, sizeof(struct dynClampTaskT) );
@@ -953,7 +946,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
   switch( cmd ) {
     
 
-/******** GIVE INFORMATION TO USER SPACE: ***********************************/
+    /******** GIVE INFORMATION TO USER SPACE: ***********************************/
 
   case IOC_GETAOINDEX:
     luTmp = dynClampTask.aoIndex;
@@ -970,7 +963,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
     return retVal == 0 ? 0 : -EFAULT;
 
 
-/******** SET UP COMEDI: ****************************************************/
+    /******** SET UP COMEDI: ****************************************************/
 
   case IOC_GET_SUBDEV_ID:
     tmp = getSubdevID();
@@ -979,7 +972,6 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
     retVal = put_user( tmp, (int __user *)arg );
     return retVal == 0 ? 0 : -EFAULT;
 
-    
   case IOC_OPEN_SUBDEV:
     retVal = copy_from_user( &deviceIOC, (void __user *)arg, sizeof(struct deviceIOCT) );
     if( retVal ) {
@@ -991,8 +983,14 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
       return -EFAULT;
     }
     retVal = openComediDevice( &deviceIOC );
-    return retVal == 0 ? 0 : -EFAULT;
-
+    if ( retVal != 0 )
+      return -EFAULT;
+    retVal = copy_to_user( (void __user *)arg, &deviceIOC, sizeof(struct deviceIOCT) );
+    if( retVal ) {
+      ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to deviceIOCT-struct!\n" );
+      return -EFAULT;
+    }
+    return 0;
 
   case IOC_CHANLIST:
     retVal = copy_from_user( &chanlistIOC, (void __user *)arg, sizeof(struct chanlistIOCT) );
@@ -1124,7 +1122,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID for running-query!\n" );
       return -EFAULT;
     }
-    tmp = subdevRunning( subdevID );
+    tmp = subdev[subdevID].running;
     DEBUG_MSG( "rtmodule_ioctl: running = %d for subdevID %d\n", tmp, subdevID );
     retVal = put_user( tmp, (int __user *)arg );
     return retVal == 0 ? 0 : -EFAULT;
@@ -1212,12 +1210,12 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
 int init_module( void )
 {
 
-  // initialize model-specific variables:
+  // initialize model-specific variables (this also sets the modulename):
   initModel();
 
   // register module device file:
   // TODO: adapt to kernel 2.6 convention (see char-device chapter in Linux device drivers 3)
-  if(register_chrdev( RTMODULE_MAJOR, moduleName, &fops ) != 0) {
+  if ( register_chrdev( RTMODULE_MAJOR, moduleName, &fops ) != 0 ) {
     WARN_MSG( "init_module: couldn't register driver's major number\n" );
     // return -1;
   }
@@ -1228,6 +1226,7 @@ int init_module( void )
 
   // initialize global variables:
   init_globals();
+
   return 0;
 }
 
@@ -1235,6 +1234,9 @@ int init_module( void )
 int rtmodule_open( struct inode *devFile, struct file *fModule )
 {
   DEBUG_MSG( "open: user opened device file\n" );
+
+  // initialize model-specific variables:
+  initModel();
   
   return 0;
 }

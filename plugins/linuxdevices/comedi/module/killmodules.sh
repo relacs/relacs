@@ -1,8 +1,9 @@
 #! /bin/bash
 rmmod dynclampmodule
+rmmod rtmodule
 sleep 0.1
-#rmmod ni_pcimio
-rmmod -f ni_mio_cs
+rmmod ni_pcimio
+#rmmod -f ni_mio_cs
 sleep 0.1
 rmmod ni_tiocmd
 sleep 0.1

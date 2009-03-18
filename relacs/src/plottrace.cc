@@ -395,19 +395,22 @@ void PlotTrace::plot( const InList &data, const EventList &events )
   double tfac = 1000.0;
   double leftwin = 0.0;
   double rightwin = tfac * TimeWindow;
+  double sigtime = data[0].signalTime();
+  if ( sigtime < 0.0 )
+    sigtime = 0.0;
   if ( OffsetMode == 0 ) {
     // offset fixed at signalTime():
     leftwin = -tfac * TimeOffs;
     rightwin = leftwin + tfac * TimeWindow;
-    LeftTime = 0.001 * leftwin + data[0].signalTime();
-    Offset = data[0].signalTime();
+    LeftTime = 0.001 * leftwin + sigtime;
+    Offset = sigtime;
   }
   else if ( OffsetMode > 0 ) {
     // offset continuous at currentTime():
-    rightwin = tfac * ( data[0].currentTime() - data[0].signalTime() );
+    rightwin = tfac * ( data[0].currentTime() - sigtime );
     leftwin = rightwin - tfac * TimeWindow;
-    LeftTime = 0.001 * leftwin + data[0].signalTime();
-    Offset = data[0].signalTime();
+    LeftTime = 0.001 * leftwin + sigtime;
+    Offset = sigtime;
   }
   else {
     // offset fixed at LeftTime:
@@ -682,7 +685,10 @@ void PlotTrace::moveSignal( void )
   else {
     if ( OffsetMode >= 0 )
       setOffset( -1 );
-    LeftTime = IL == 0 ? 0.0 : (*IL)[0].signalTime();
+    double sigtime = IL == 0 ? 0.0 : (*IL)[0].signalTime();
+    if ( sigtime < 0.0 )
+      sigtime = 0.0;
+    LeftTime = sigtime;
   }
   unlock();
   unlockData();

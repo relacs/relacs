@@ -77,6 +77,8 @@ struct deviceIOCT {
   char devicename[DEV_NAME_MAXLEN+1];
   unsigned int subdev;
   enum subdevTypes subdevType;
+  unsigned int fifoIndex;
+  unsigned int fifoSize;
 };
 
 #define MAX_CONVERSION_COEFFICIENTS 4
@@ -135,7 +137,7 @@ struct traceChannelIOCT {
 // control devices:
 
 #define IOC_GET_SUBDEV_ID       _IOR(RTMODULE_MAJOR,  1, int)
-#define IOC_OPEN_SUBDEV         _IOW(RTMODULE_MAJOR,  2, int)
+#define IOC_OPEN_SUBDEV         _IOWR(RTMODULE_MAJOR,  2, int)
 #define IOC_CHANLIST            _IOW(RTMODULE_MAJOR,  3, int)
 #define IOC_COMEDI_CMD          _IOW(RTMODULE_MAJOR,  4, int)
 #define IOC_SYNC_CMD            _IOW(RTMODULE_MAJOR,  5, int)

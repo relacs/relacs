@@ -3888,7 +3888,7 @@ long Plot::EventDataElement::first( double x1, double y1, double x2, double y2 )
   if ( Origin == 1 )
     t += ED->rangeBack(); 
   else if ( Origin == 2 )
-    t += ED->signalTime(); 
+    t += ( ED->signalTime() < 0.0 ? 0.0 : ED->signalTime() ); 
   else if ( Origin == 3 )
     t += Offset; 
 
@@ -3903,7 +3903,7 @@ long Plot::EventDataElement::last( double x1, double y1, double x2, double y2 ) 
   if ( Origin == 1 )
     t += ED->rangeBack(); 
   else if ( Origin == 2 )
-    t += ED->signalTime();
+    t += ( ED->signalTime() < 0.0 ? 0.0 : ED->signalTime() );
   else if ( Origin == 3 )
     t += Offset; 
 
@@ -3918,7 +3918,7 @@ void Plot::EventDataElement::point( long index, double &x, double &y ) const
     x = ( ED->operator[]( index ) - ED->rangeBack() ) * TScale;
     break;
   case 2:
-    x = ( ED->operator[]( index ) - ED->signalTime() ) * TScale;
+    x = ( ED->operator[]( index ) - ( ED->signalTime() < 0.0 ? 0.0 : ED->signalTime() ) ) * TScale;
     break;
   case 3:
     x = ( ED->operator[]( index ) - Offset ) * TScale;
@@ -3945,8 +3945,10 @@ void Plot::EventDataElement::xminmax( double &xmin, double &xmax,
     tmax -= ED->rangeBack();
     break;
   case 2:
-    tmin -= ED->signalTime();
-    tmax -= ED->signalTime(); 
+    if ( ED->signalTime() > 0.0 ) {
+      tmin -= ED->signalTime();
+      tmax -= ED->signalTime(); 
+    }
     break;
   case 3:
     tmin -= Offset;
@@ -4006,7 +4008,7 @@ long Plot::InDataElement::first( double x1, double y1, double x2, double y2 ) co
   if ( Origin == 1 )
     t += ID->currentTime(); 
   else if ( Origin == 2 )
-    t += ID->signalTime(); 
+    t += ( ID->signalTime() < 0.0 ? 0.0 : ID->signalTime() ); 
   else if ( Origin == 3 )
     t += Offset; 
 
@@ -4026,7 +4028,7 @@ long Plot::InDataElement::last( double x1, double y1, double x2, double y2 ) con
   if ( Origin == 1 )
     t += ID->currentTime(); 
   else if ( Origin == 2 )
-    t += ID->signalTime();
+    t += ( ID->signalTime() < 0.0 ? 0.0 : ID->signalTime() );
   else if ( Origin == 3 )
     t += Offset; 
 
@@ -4046,7 +4048,7 @@ void Plot::InDataElement::point( long index, double &x, double &y ) const
     x = ID->interval( index - ID->currentIndex() ) * TScale;
     break;
   case 2:
-    x = ID->interval( index - ID->signalIndex() ) * TScale;
+    x = ID->interval( index - ( ID->signalIndex() < 0 ? 0 : ID->signalIndex() ) ) * TScale;
     break;
   case 3:
     x = ( ID->interval( index ) - Offset ) * TScale;
@@ -4070,8 +4072,10 @@ void Plot::InDataElement::xminmax( double &xmin, double &xmax,
     tmin -= ID->currentTime();
     tmax -= ID->currentTime(); 
   case 2:
-    tmin -= ID->signalTime();
-    tmax -= ID->signalTime(); 
+    if ( ID->signalTime() > 0.0 ) {
+      tmin -= ID->signalTime();
+      tmax -= ID->signalTime(); 
+    }
   case 3:
     tmin -= Offset;
     tmax -= Offset; 
@@ -4083,7 +4087,7 @@ void Plot::InDataElement::xminmax( double &xmin, double &xmax,
 
 
 void Plot::InDataElement::yminmax( double xmin, double xmax, 
-				      double &ymin, double &ymax ) const
+				   double &ymin, double &ymax ) const
 {
   double tmin = xmin/TScale;
   double tmax = xmax/TScale;
@@ -4093,8 +4097,10 @@ void Plot::InDataElement::yminmax( double xmin, double xmax,
     tmin += ID->currentTime();
     tmax += ID->currentTime(); 
   case 2:
-    tmin += ID->signalTime();
-    tmax += ID->signalTime(); 
+    if ( ID->signalTime() > 0.0 ) {
+      tmin += ID->signalTime();
+      tmax += ID->signalTime(); 
+    }
   case 3:
     tmin += Offset;
     tmax += Offset; 
@@ -4203,7 +4209,7 @@ void Plot::EventInDataElement::point( long index, double &x, double &y ) const
     x = ( time - ID->currentTime() ) * TScale;
     break;
   case 2:
-    x = ( time - ID->signalTime() ) * TScale;
+    x = ( time - ( ID->signalTime() < 0.0 ? 0.0 : ID->signalTime() ) ) * TScale;
     break;
   case 3:
     x = ( time - Offset ) * TScale;
@@ -4233,8 +4239,10 @@ void Plot::EventInDataElement::xminmax( double &xmin, double &xmax,
     tmax -= ID->currentTime();
     break;
   case 2:
-    tmin -= ID->signalTime();
-    tmax -= ID->signalTime(); 
+    if ( ID->signalTime() > 0.0 ) {
+      tmin -= ID->signalTime();
+      tmax -= ID->signalTime(); 
+    }
     break;
   case 3:
     tmin -= Offset;

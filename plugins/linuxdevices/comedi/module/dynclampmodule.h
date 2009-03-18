@@ -1,9 +1,7 @@
-#ifndef _RTMODUL_H_
-#define _RTMODULE_H_
+#ifndef _DYNCLAMPMODUL_H_
+#define _DYNCLAMPMODULE_H_
 
 #include "moduledef.h"
-
-
 
 
 struct pIndexT {
@@ -24,9 +22,6 @@ extern struct pIndexT pIndexIn[MAXCHANLIST*MAXSUBDEV];
 
 #define INPUT(INDEX) INDATA( subdev[pIndexIn[INDEX].iS].bData, \
                              pIndexIn[INDEX].chan )
-
-
-
 
 
 // *** DECLARATION OF VARIABLES ***
@@ -75,13 +70,6 @@ int dynClampOutTraceN = 0;
 /*! Dynamic clamp output value at current cycle for each channel calculated 
     by model. */
 float *dynClampOut;
-
-
-
-
-
-
-
 
 
 // *** KERNEL LOGGING STYLE ***

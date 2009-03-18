@@ -206,6 +206,7 @@ int DynClampAnalogInput::open( const string &device, long mode )
   strcpy( deviceIOC.devicename, deviceFile().c_str() );
   deviceIOC.subdev = SubDevice;
   deviceIOC.subdevType = SUBDEV_IN;
+  deviceIOC.fifoSize = 0;
   retval = ::ioctl( ModuleFd, IOC_OPEN_SUBDEV, &deviceIOC );
   cerr << " DynClampAnalogInput::open(): IOC_OPEN_SUBDEV request for address done!" /// TEST
        << &deviceIOC << endl;
@@ -216,16 +217,15 @@ int DynClampAnalogInput::open( const string &device, long mode )
   }
 
   // initialize connection to RTAI-FIFO:
-  char fifoName[] = "/dev/rtf0";
+  char fifoName[] = "/dev/rtfxxx";
+  sprintf( fifoName, "/dev/rtf%u", deviceIOC.fifoIndex );
   FifoFd = ::open( fifoName, O_RDONLY | O_NONBLOCK );
   if( FifoFd < 0 ) {
-    cerr << " DynClampAnalogOutput::prepareRead -> oping RTAI-FIFO " 
+    cerr << " DynClampAnalogInput::prepareRead -> oping RTAI-FIFO " 
          << fifoName << " failed!" << endl;
     return -1;
   }
-
-  // XXX this should be whatever the FIFO can hold:
-  ReadBufferSize=64*1024;
+  ReadBufferSize = deviceIOC.fifoSize;
 
   IsPrepared = false;
 

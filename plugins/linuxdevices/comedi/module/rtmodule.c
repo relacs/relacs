@@ -62,7 +62,6 @@ struct subdeviceT {
   
   int asyncMode;
   
-  comedi_cmd *cmdP;
   unsigned int chanN;
   struct chanT *chanlist;
 
@@ -82,19 +81,12 @@ struct subdeviceT {
 struct dynClampTaskT {
   RT_TASK rtTask;
   unsigned int periodLengthNs;
-  int aquireMode;
   unsigned int reqFreq;
   unsigned long duration;
   int continuous;
   int running;
   unsigned long loopCnt;
   long aoIndex;
-};
-
-struct calcTaskT {
-  RT_TASK rtTask;
-  int algo;
-  int initialized;
 };
 
 
@@ -117,20 +109,30 @@ int reqCloseSubdevID = -1;
 //* RTAI TASK:
 
 struct dynClampTaskT dynClampTask;
-struct calcTaskT calcTask;
 
 char *moduleName = "/dev/dynclamp";
+
+
+// for debug:
+
+char *iocNames[RTMODULE_IOC_MAXNR] = {
+  "dummy",
+  "IOC_GET_SUBDEV_ID", "IOC_OPEN_SUBDEV", "IOC_CHANLIST", "IOC_COMEDI_CMD", "IOC_SYNC_CMD", 
+  "IOC_START_SUBDEV", "IOC_CHK_RUNNING", "IOC_REQ_READ", "IOC_REQ_WRITE", "IOC_REQ_CLOSE", "IOC_STOP_SUBDEV", 
+  "IOC_RELEASE_SUBDEV", "IOC_GET_TRACE_INFO", "IOC_SET_TRACE_CHANNEL", "IOC_GETLOOPCNT", "IOC_GETAOINDEX" 
+};
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // *** PROTOTYPES ***
 ///////////////////////////////////////////////////////////////////////////////
 
-int init_rt_task( int algorithm );
+int init_rt_task( void );
 void cleanup_rt_task( void );
 int rtmodule_open( struct inode *devFile, struct file *fModule );
 int rtmodule_close( struct inode *devFile, struct file *fModule );
 int rtmodule_ioctl( struct inode *devFile, struct file *fModule, 
-		                unsigned int cmd, unsigned long arg );
+		    unsigned int cmd, unsigned long arg );
 static struct file_operations fops = {                     
   .owner= THIS_MODULE,
   .ioctl= rtmodule_ioctl,
@@ -167,7 +169,7 @@ static inline lsampl_t value_to_sample( struct chanT *pChan, float value )
     sample += pChan->converter.coefficients[i] * term;
     term *= value - pChan->converter.expansion_origin;
   }
-  return (lsampl_t)rint(sample);
+  return (lsampl_t)sample;
 }
 
 
@@ -179,8 +181,6 @@ void init_globals( void ) {
   memset( device, 0, sizeof(device) );
   memset( subdev, 0, sizeof(subdev) );
   memset( &dynClampTask, 0, sizeof(struct dynClampTaskT ) );
-  memset( &calcTask, 0, sizeof(struct calcTaskT ) );
-  calcTask.algo = ALGO_PRESET;
 }
 
 
@@ -193,8 +193,7 @@ int getSubdevID( void )
 {
   int i = 0;
   //* find free slot in subdev[]:
-  for( i = 0; i < subdevN && subdev[i].used; i++ )
-    ; // increment...
+  for( i = 0; i < subdevN && subdev[i].used; i++ );
   if( i == subdevN ) {
     if( subdevN >= MAXSUBDEV ) {
       ERROR_MSG( "getSubdevID ERROR: number of requested subdevices exceeds MAXSUBDEV!\n" );
@@ -242,6 +241,7 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
       ERROR_MSG( "comediOpenDevice ERROR: number of requested devices exceeds MAXDEV!\n" );
       return -1;
     }
+    deviceN++;
   }
 
   DEBUG_MSG( "openComediDevice: found device slot..\n" );
@@ -274,8 +274,6 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
       else
 	DEBUG_MSG( "comediOpenDevice: Closing of device %s was successful!\n",
 		   device[iDev].name );
-
-
       device[iDev].devP = NULL;
     }    
     return -1;
@@ -283,8 +281,6 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
 
   // initialize device structure:
   strncpy( device[iDev].name, deviceIOC->devicename, DEV_NAME_MAXLEN );
-  if( iDev == deviceN )
-    deviceN++;
 
   DEBUG_MSG( "openComediDevice: locked subdevice %i on device %s\n", 
              deviceIOC->subdev, device[iDev].name );
@@ -297,13 +293,18 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
 
   // create FIFO for subdevice:
   subdev[iS].fifo = iS;
-  retVal = rtf_create(subdev[iS].fifo, FIFO_SIZE);
-  if( retVal )
+  retVal = rtf_create( subdev[iS].fifo, FIFO_SIZE );
+  if( retVal ) {
     ERROR_MSG( "loadSyncCmd ERROR: Creating FIFO with %d bytes buffer failed for subdevice %i, device %s\n",
                FIFO_SIZE, iS, device[subdev[iS].devID].name );
+    return -1;
+  }
   else
     DEBUG_MSG( "loadSyncCmd: Created FIFO with %d bytes buffer size for subdevice %i, device %s\n",
                FIFO_SIZE, iS, device[subdev[iS].devID].name );
+
+  deviceIOC->fifoIndex = subdev[iS].fifo;
+  deviceIOC->fifoSize = FIFO_SIZE;
 
   return 0;
 }
@@ -378,22 +379,20 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC )
   subdev[iS].continuous = syncCmdIOC->continuous;
 
   // test requested sampling-rate and set frequency for dynamic clamp task:
-  if( !dynClampTask.reqFreq || !dynClampTask.aquireMode ) {
+  if( !dynClampTask.reqFreq ) {
     dynClampTask.reqFreq = subdev[iS].frequency;
-    dynClampTask.aquireMode = 1;
   }
-  else
+  else {
     if( dynClampTask.reqFreq != subdev[iS].frequency ) {
       ERROR_MSG( "loadSyncCmd ERROR: Requested frequency %u Hz of subdevice %i on device %s is inconsistent to frequency %u Hz of other subdevice. Sync-command not loaded!\n",
 		 subdev[iS].frequency, iS, device[subdev[iS].devID].name, dynClampTask.reqFreq );
       return -EINVAL;
     }
-
+  }
 
   subdev[iS].prepared = 1;
   return 0;
 }
-
 
 
 int startSubdevice( int iS )
@@ -425,7 +424,7 @@ int startSubdevice( int iS )
     dynClampTask.reqFreq = subdev[iS].frequency;
 
     // start dynamic clamp task: 
-    retVal = init_rt_task( calcTask.algo );
+    retVal = init_rt_task();
     if( retVal < 0 ) {
       subdev[iS].running = 0;
       return -ENOMEM;
@@ -433,7 +432,6 @@ int startSubdevice( int iS )
   }
 
   return 0;
-
 }
 
 
@@ -447,7 +445,7 @@ int stopSubdevice( int iS )
 { 
   int i;
 
-  if( !subdevRunning( iS ) )
+  if( !subdev[iS].running )
     return 0;
   subdev[iS].running = 0;
 
@@ -485,8 +483,6 @@ void releaseSubdevice( int iS )
 
   if(  subdev[iS].chanlist )
     vfree(  subdev[iS].chanlist );
-  if(  subdev[iS].cmdP )
-    vfree(  subdev[iS].cmdP );
 
   // delete FIFO and reset subdevice structure:
   rtf_destroy( subdev[iS].fifo );
@@ -522,13 +518,6 @@ void releaseSubdevice( int iS )
 ///////////////////////////////////////////////////////////////////////////////
 // *** REAL-TIME TASKS *** 
 ///////////////////////////////////////////////////////////////////////////////
-
-
-/*! Calcuclation task for Euler */
-void rtEulerCalc( long dummy )
-{
-  // TODO: Aus Quellcode von Diplomarbeit rausholen...
-}
 
 
 /*! Dynamic clamp task */
@@ -706,22 +695,11 @@ void rtDynClamp( long dummy )
 
 
 
-	//******** WAIT FOR CALCULATION TASK TO COMPUTE RESULT: **********************/
 	  //****************************************************************************/
 	  dynClampTask.loopCnt++;
 
 	  //    start = rt_get_cpu_time_ns();
 	  rt_task_wait_period();
-
-	  // ...as soon as RTAI scheduler wakes us up again:
-
-
-	  //******** SUSPEND CALCULATION TASK: *****************************************/
-	    //****************************************************************************/
-	    if( calcTask.initialized )
-	      rt_task_suspend( &calcTask.rtTask );
-
-
 
   } // END OF DYNCLAMP LOOP
 
@@ -742,7 +720,7 @@ void rtDynClamp( long dummy )
 
 
 // TODO: seperate into init and start?
-int init_rt_task( int algorithm )
+int init_rt_task( void )
 {
   int stackSize = 20000;
   int priority;
@@ -770,16 +748,6 @@ int init_rt_task( int algorithm )
   }
   DEBUG_MSG( "init_rt_task: Initialized dynamic clamp RTAI task. Trying to make it periodic...\n" );
 
-  //* initializing rt-task for calculation with lower:
-  /*  priority = 2;
-      retVal = rt_task_init( &calcTask.rtTask, rtEulerCalc, dummy, stackSize, 
-      priority, usesFPU, signal );
-      if( retVal ) {
-      ERROR_MSG( "init_rt_task ERROR: failed to initialize real-time task for calculation! stacksize was set to %d bytes.\n", 
-      stackSize );
-      return -2;
-      }
-  */
     //* START rt-task for dynamic clamp as periodic:
   periodTicks = start_rt_timer( nano2count( 1000000000/dynClampTask.reqFreq ) );  
   if( rt_task_make_periodic( &dynClampTask.rtTask, rt_get_time(), periodTicks ) 
@@ -804,11 +772,8 @@ void cleanup_rt_task( void )
   stop_rt_timer();
   DEBUG_MSG( "cleanup_rt_task: stopped periodic task\n" );
 
-  rt_task_delete( &calcTask.rtTask );
-  calcTask.initialized = 0;
   rt_task_delete( &dynClampTask.rtTask );
   memset( &dynClampTask, 0, sizeof(struct dynClampTaskT) );
-  memset( &calcTask, 0, sizeof(struct calcTaskT) );
 }
 
 
@@ -830,7 +795,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
   int retVal;
   unsigned long luTmp;
 
-  DEBUG_MSG( "ioctl: user triggered ioctl with id: %d\n", _IOC_NR( cmd ) );
+  DEBUG_MSG( "ioctl: user triggered ioctl %d %s\n",_IOC_NR( cmd ), iocNames[_IOC_NR( cmd )] );
 
   if (_IOC_TYPE(cmd) != RTMODULE_MAJOR) return -ENOTTY;
   if (_IOC_NR(cmd) > RTMODULE_IOC_MAXNR) return -ENOTTY;
@@ -879,8 +844,14 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
       return -EFAULT;
     }
     retVal = openComediDevice( &deviceIOC );
-    return retVal == 0 ? 0 : -EFAULT;
-
+    if ( retVal != 0 )
+      return -EFAULT;
+    retVal = copy_to_user( (void __user *)arg, &deviceIOC, sizeof(struct deviceIOCT) );
+    if( retVal ) {
+      ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to deviceIOCT-struct!\n" );
+      return -EFAULT;
+    }
+    return 0;
 
   case IOC_CHANLIST:
     retVal = copy_from_user( &chanlistIOC, (void __user *)arg, sizeof(struct chanlistIOCT) );
@@ -942,7 +913,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID for running-query!\n" );
       return -EFAULT;
     }
-    tmp = subdevRunning( subdevID );
+    tmp = subdev[ subdevID].running;
     DEBUG_MSG( "rtmodule_ioctl: running = %d for subdevID %d\n", tmp, subdevID );
     retVal = put_user( tmp, (int __user *)arg );
     return retVal == 0 ? 0 : -EFAULT;
@@ -1016,6 +987,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
   }
 
 
+  ERROR_MSG( "rtmodule_ioctl ERROR - Invalid IOCTL!\n" );
 
   return -EINVAL;
 }

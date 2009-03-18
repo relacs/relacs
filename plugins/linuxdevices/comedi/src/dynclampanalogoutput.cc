@@ -210,16 +210,16 @@ int DynClampAnalogOutput::open( const string &device, long mode )
   }
 
   // initialize Connection to RTAI-FIFO:
-  char fifoName[] = "/dev/rtf1";
+  char fifoName[] = "/dev/rtfxxx";
+  sprintf( fifoName, "/dev/rtf%u", deviceIOC.fifoIndex );
   FifoFd = ::open( fifoName, O_WRONLY | O_NONBLOCK );
   if( FifoFd < 0 ) {
     cerr << " DynClampAnalogOutput::startWrite -> oping RTAI-FIFO " 
          << fifoName << " failed!" << endl;
     return -1;
   }
+  BufferSize = deviceIOC.fifoSize;
 
-  // XXX this should be whatever the FIFO can hold:
-  BufferSize=64*1024;
 
   IsPrepared = false;
 
@@ -609,7 +609,7 @@ int DynClampAnalogOutput::fillWriteBuffer( OutList &sigs )
     return -1;
   }
 
-  cerr << "DynClampAnalogOutput::writeData: size of device buffer: " 
+  cerr << "DynClampAnalogOutput::fillWriteBuffer: size of device buffer: " 
        << sigs[0].deviceBufferSize() << " - size of outdata: " << sigs[0].size() 
        << " - continuous: " << sigs[0].continuous() << endl;
 
@@ -623,7 +623,7 @@ int DynClampAnalogOutput::fillWriteBuffer( OutList &sigs )
 
     int bytesWritten = ::write( FifoFd, sigs[0].deviceBufferPopBuffer(),
 				sigs[0].deviceBufferMaxPop() * BufferElemSize );
-    cerr << " DynClampAnalogOutput::writeData(): " << bytesWritten << " of "
+    cerr << " DynClampAnalogOutput::fillWriteBuffer(): " << bytesWritten << " of "
          << sigs[0].deviceBufferMaxPop() * BufferElemSize << "bytes written:"
          << endl;/////TEST/////
       
@@ -652,19 +652,20 @@ int DynClampAnalogOutput::fillWriteBuffer( OutList &sigs )
     case EPIPE: 
       ErrorState = 1;
       sigs.addError( DaqError::OverflowUnderrun );
-      return -1;
+      break;
 
     case EBUSY:
       ErrorState = 2;
       sigs.addError( DaqError::Busy );
-      return -1;
+      break;
 
     default:
       ErrorState = 2;
       sigs.addErrorStr( ern );
       sigs.addError( DaqError::Unknown );
-      return -1;
+      break;
     }
+    return -1;
   }
   
   return elemWritten;
@@ -682,8 +683,9 @@ int DynClampAnalogOutput::startWrite( void )
 
   // fill buffer with initial data:
   int retval = fillWriteBuffer( *Sigs );
+  cerr << " DynClampAnalogOutput::startWrite -> fillWriteBuffer returned " << retval << endl;
 
-  if(retval < 1 )
+  if ( retval < 0 )
     return -1;
 
   // start subdevice:

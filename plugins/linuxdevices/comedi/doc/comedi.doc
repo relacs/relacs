@@ -1,11 +1,93 @@
 /*!
 \mainpage Comedi Relacs Plugins
 
-\brief Interfaces to the comedi data acquisition library for normal analog input and output as well as for dynamic clamp.
+\brief Interfaces to the %comedi data acquisition library for normal analog input and output as well as for dynamic clamp.
 
 
 \section installcomedi Install Comedi
 See www.comedi.org
+
+
+\subsection installcomedilib Comedilib
+
+-# Download the %comedi sources from the current CVS snapshot to \c /usr/local/src .
+When prompted for a password, hit enter.
+\code
+$ cd /usr/local/src
+$ cvs -d :pserver:anonymous@cvs.comedi.org:/cvs/comedi login
+$ cvs -d :pserver:anonymous@cvs.comedi.org:/cvs/comedi co comedi
+$ cvs -d :pserver:anonymous@cvs.comedi.org:/cvs/comedi co comedilib
+$ cvs -d :pserver:anonymous@cvs.comedi.org:/cvs/comedi co comedilib
+$ cvs -d :pserver:anonymous@cvs.comedi.org:/cvs/comedi co comedi_calibrate
+\endcode
+-# Change to the \c comedilib directory:
+\code
+$ cd comedilib
+\endcode
+-# Generate the configuration script by calling
+\code
+$ ./autogen.sh
+\endcode
+You may ignore warnings and reminders.
+-# Configure Comedilib to be installed in \c /usr/lib and \c /usr/include
+\code
+$ ./configure --prefix=/usr --sysconfdir=/etc
+\endcode
+If you want to have Comedlib to be installed somewhere else, specify another \c prefix.
+You may want to read \c ./configure \c --help as well.
+Pay attention to warnings and errors! You might need to install additional software first.
+-# Compile and install (as root)
+\code
+$ make
+$ make install
+\endcode
+-# Create the device files \c /dev/comedi*
+\code
+$ make dev
+\endcode
+
+
+\subsection installcomedidriver Comedi
+-# Change to the \c %comedi directory:
+\code
+$ cd /usr/local/src/comedi
+\endcode
+-# Generate the configuration script by calling
+\code
+$ ./autogen.sh
+\endcode
+You may ignore warnings and reminders.
+-# Configure
+\code
+$ ./configure --with-linuxdir=/usr/src/linux --enable-kbuild
+\endcode
+-# Compile and install (as root)
+\code
+$ make
+$ make install
+\endcode
+
+
+\subsection installcomedicalib Comedi_calibrate
+-# Change to the \c comedi_calibrate directory:
+\code
+$ cd /usr/local/src/comedi_calibrate
+\endcode
+-# Generate the configuration script by calling
+\code
+$ autoreconv -v -i
+\endcode
+You may ignore warnings and reminders.
+-# Configure
+\code
+$ ./configure --prefix=/usr --sysconfdir=/etc
+\endcode
+-# Compile and install (as root)
+\code
+$ make
+$ make install
+\endcode
+
 
 
 \section udev Properly add Comedi to udev
@@ -24,7 +106,7 @@ $ echo 'KERNEL=="comedi*", MODE="0660", GROUP="comedi"' > /etc/udev/rules.d/come
 $ udevtrigger
 \endcode
 to apply your new udev rules
--# Add users to the comedi group:
+-# Add users to the "comedi" group:
 \code
 $ adduser <username> comedi
 \endcode
@@ -33,10 +115,10 @@ You need to logout and login again.
 
 \section buffer Resize Comedi buffer
 
-To set the comedi internal buffers to 640kB do as root:
+To set the %comedi internal buffers to 640kB do as root:
 \code
-comedi_config -r /dev/comedi16
-comedi_config --read-buffer 640 --write-buffer 640 /dev/comedi16 ni_pcimio
+$ comedi_config -r /dev/comedi16
+$ comedi_config --read-buffer 640 --write-buffer 640 /dev/comedi16 ni_pcimio
 \endcode
 Maybe this should go in \c /etc/rc.local or to some \c udev postprocessing rule.
 
@@ -45,7 +127,7 @@ Maybe this should go in \c /etc/rc.local or to some \c udev postprocessing rule.
 
 For software calibrated boards (like NI M-Series boards) do as root
 \code
-comedi_soft_calibrate -f /dev/comedi16
+$ comedi_soft_calibrate -f /dev/comedi16
 \endcode
 This calibrates all channels for all ranges.
 A file is written to \c /usr/var/lib/comedi/calibrations that contains the calibration
@@ -58,10 +140,10 @@ I still need to check hardware calibrated boards (NI E-Series).
 
 Chapter 2, Installation, in the RTAI-Lab tutorial at
 https://www.rtai.org/RTAILAB/RTAI-Lab-tutorial.pdf
-explains how to install both comedi and RTAI.
+explains how to install both Comedi and RTAI.
 
 The following is basically a copy of this chapter, with a 
-few updates.
+few updates and additions.
 
 \subsection rtaikernel Linux kernel and RTAI patch
 
@@ -147,6 +229,88 @@ Take the location of your root partition in both the "root" line
 (hd0,0) and the "kernel" line (/dev/sda1) from the corresponding entry
 of the already installed kernel. The "initrd" line is only needed
 if you created a RAM disk image file.
+
+\subsection rtaicomedilib Comedilib
+
+Follow the instructions above for installing 
+-# \ref installcomedilib
+-# \ref installcomedicalib
+
+
+\subsection rtaifirst RTAI 1st pass
+
+-# Change to the RTAI directory
+\code
+$ cd /usr/src/rtai
+\endcode
+-# Configure RTAI by calling
+\code
+$ make menuconfig
+\endcode
+for a text based configuration menu or
+\code
+$ make xconfig
+\endcode
+for a graphical configuration menu.
+Check the following settings:
+ - General -> Installation directory: should be set tp \c /usr/realtime
+ - General -> Linux source tree: must be set to \c /usr/src/linux
+ - General -> RTAI Documentation: select the documentation you want
+ - General -> Build RTAI testsuite: select
+ - Machine -> Number of CPUs: set to the rigth value. The default is often right.
+   If in doubt, look into the file \c /proc/cpuinfo .
+ - Add-ons -> Comedi support over LXRT: leave unselected
+Then exit and save configuration.
+Watch the output while RTAI is configured for possible warnings and errors.
+-# Compile and install (as root)
+\code
+$ make
+$ make install
+\endcode
+
+
+\subsection rtaicomedi Comedi
+
+Follow the instructions above for installing 
+\ref installcomedidriver .
+For configuring Comedi you should use
+\code
+./configure --with-linuxdir=/usr/src/linux --enable-kbuild --with-rtaidir=/usr/realtime
+\endcode
+
+
+\subsection rtaisecond RTAI 2nd pass
+
+-# Change to the RTAI directory
+\code
+$ cd /usr/src/rtai
+\endcode
+-# RTAI expects %comedi include files in \c [prefix]/include/linux,
+but comedilib installs them in \c [prefix]/include
+and %comedi installs no include files.
+Therefore you need to copy the %comedi include files to \c [prefix]/include/linux yourself:
+\code
+$ cp /usr/local/src/comedi/include/linux/comedi.h /usr/include/linux/
+$ cp /usr/local/src/comedi/include/linux/comedilib.h /usr/include/linux/
+\endcode
+-# Configure RTAI by calling
+\code
+$ make menuconfig
+\endcode
+or
+\code
+$ make xconfig
+\endcode
+Check the following settings:
+ - Add-ons -> Comedi support over LXRT: select
+ - Add-ons -> Comedi installation directory: enter the path that was used as the prefix for configuring comedilib.
+Then exit and save configuration.
+Watch the output while RTAI is configured for possible warnings and errors.
+-# Compile and install (as root)
+\code
+$ make
+$ make install
+\endcode
 
 
 */
