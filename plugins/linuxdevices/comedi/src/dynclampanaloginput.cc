@@ -221,7 +221,7 @@ int DynClampAnalogInput::open( const string &device, long mode )
   sprintf( fifoName, "/dev/rtf%u", deviceIOC.fifoIndex );
   FifoFd = ::open( fifoName, O_RDONLY | O_NONBLOCK );
   if( FifoFd < 0 ) {
-    cerr << " DynClampAnalogInput::prepareRead -> oping RTAI-FIFO " 
+    cerr << " DynClampAnalogInput::open() -> oping RTAI-FIFO " 
          << fifoName << " failed!" << endl;
     return -1;
   }
@@ -322,26 +322,32 @@ int DynClampAnalogInput::setupChanList( InList &traces,
 {
   memset( chanlist, 0, maxchanlist*sizeof( unsigned int ) );
 
-  // find ranges for synchronous acquisition:
   for( int k = 0; k < traces.size() && k < maxchanlist; k++ ) {
 
+    // parameter traces don't have references and gains:
+    if ( traces[k].channel() >= PARAM_CHAN_OFFSET ) {
+      chanlist[k] = CR_PACK( traces[k].channel(), 0, 0 );
+      continue;
+    }
+
+    // reference:
     int aref = -1;
     switch( traces[k].reference() ) {
     case InData::RefCommon: 
       if( CAISubDevFlags & SDF_COMMON )
-      	aref = AREF_COMMON;
+	aref = AREF_COMMON;
       break;
     case InData::RefDifferential:
       if( CAISubDevFlags & SDF_DIFF )
-      	aref = AREF_DIFF; 
+	aref = AREF_DIFF; 
       break;
     case InData::RefGround:
       if( CAISubDevFlags & SDF_GROUND )
-      	aref = AREF_GROUND; 
+	aref = AREF_GROUND; 
       break;
     case InData::RefOther: 
       if( CAISubDevFlags & SDF_OTHER )
-      	aref = AREF_OTHER;
+	aref = AREF_OTHER;
       break;
     }
     if( aref == -1 )
@@ -462,6 +468,9 @@ int DynClampAnalogInput::prepareRead( InList &traces )
 
   reset();
 
+  if ( traces.size() <= 0 )
+    return -1;
+
   setupChanList( traces, ChanList, MAXCHANLIST );
 
   // set chanlist:
@@ -469,16 +478,19 @@ int DynClampAnalogInput::prepareRead( InList &traces )
   chanlistIOC.subdevID = SubdeviceID;
   for( int k = 0; k < traces.size(); k++ ) {
     chanlistIOC.chanlist[k] = ChanList[k];
-    const comedi_polynomial_t* poly = 
-      (const comedi_polynomial_t *)traces[k].gainData();
-    chanlistIOC.conversionlist[k].order = poly->order;
-    if ( poly->order >= MAX_CONVERSION_COEFFICIENTS )
-      cerr << "ERROR in DynClampAnalogInput::prepareRea -> invalid order in converion polynomial!\n";
-    chanlistIOC.conversionlist[k].expansion_origin = poly->expansion_origin;
-    for ( int c=0; c<MAX_CONVERSION_COEFFICIENTS; c++ )
-      chanlistIOC.conversionlist[k].coefficients[c] = poly->coefficients[c];
-    chanlistIOC.scalelist[k] = traces[k].scale();
+    if ( traces[k].channel() < PARAM_CHAN_OFFSET ) {
+      const comedi_polynomial_t* poly = 
+	(const comedi_polynomial_t *)traces[k].gainData();
+      chanlistIOC.conversionlist[k].order = poly->order;
+      if ( poly->order >= MAX_CONVERSION_COEFFICIENTS )
+	cerr << "ERROR in DynClampAnalogInput::prepareRead -> invalid order in converion polynomial!\n";
+      chanlistIOC.conversionlist[k].expansion_origin = poly->expansion_origin;
+      for ( int c=0; c<MAX_CONVERSION_COEFFICIENTS; c++ )
+	chanlistIOC.conversionlist[k].coefficients[c] = poly->coefficients[c];
+      chanlistIOC.scalelist[k] = traces[k].scale();
+    }
   }
+  chanlistIOC.userDeviceIndex = traces[0].device();
   chanlistIOC.chanlistN = traces.size();
   int retval = ::ioctl( ModuleFd, IOC_CHANLIST, &chanlistIOC );
   cerr << "prepareRead(): IOC_CHANLIST done!" << endl; /// TEST
@@ -818,10 +830,14 @@ int DynClampAnalogInput::matchTraces( InList &traces ) const
   traceChannel.traceType = TRACE_IN;
   string unknowntraces = "";
   int foundtraces = 0;
-  while ( 0 == ::ioctl( ModuleFd, IOC_GET_TRACE_INFO, &traceInfo ) ) {
+  while ( ::ioctl( ModuleFd, IOC_GET_TRACE_INFO, &traceInfo ) == 0 ) {
     bool notfound = true;
     for ( int k=0; k<traces.size(); k++ ) {
       if ( traces[k].ident() == traceInfo.name ) {
+	if ( traces[k].unit() != traceInfo.unit ) {
+	  cerr << "DynClampAnalogInput::matchTraces() -> units do not match for trace " << traceInfo.name << endl;
+	  return -1;
+	}
 	traceChannel.device = traces[k].device();
 	traceChannel.channel = traces[k].channel();
 	if ( ::ioctl( ModuleFd, IOC_SET_TRACE_CHANNEL, &traceChannel ) != 0 ) {

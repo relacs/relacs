@@ -311,6 +311,13 @@ int DynClampAnalogOutput::setupChanList( OutList &sigs,
   int aref = AREF_GROUND;
 
   for ( int k=0; k<sigs.size() && k < maxchanlist; k++ ) {
+
+    // parameter signals don't have references and gains:
+    if ( sigs[k].channel() >= PARAM_CHAN_OFFSET ) {
+      chanlist[k] = CR_PACK( sigs[k].channel(), 0, 0 );
+      continue;
+    }
+
     // minimum and maximum values:
     double min = sigs[k].requestedMin();
     double max = sigs[k].requestedMax();
@@ -518,6 +525,9 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
 
   reset();
 
+  if ( sigs.size() <= 0 )
+    return -1;
+
   setupChanList( sigs, ChanList, MAXCHANLIST );
 
   // set chanlist:
@@ -525,16 +535,19 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
   chanlistIOC.subdevID = SubdeviceID;
   for( int k = 0; k < sigs.size(); k++ ){
     chanlistIOC.chanlist[k] = ChanList[k];
-    const comedi_polynomial_t* poly = 
-      (const comedi_polynomial_t *)sigs[k].gainData();
-    chanlistIOC.conversionlist[k].order = poly->order;
-    if ( poly->order >= MAX_CONVERSION_COEFFICIENTS )
-      cerr << "ERROR in DynClampAnalogInput::prepareRea -> invalid order in converion polynomial!\n";
-    chanlistIOC.conversionlist[k].expansion_origin = poly->expansion_origin;
-    for ( int c=0; c<MAX_CONVERSION_COEFFICIENTS; c++ )
-      chanlistIOC.conversionlist[k].coefficients[c] = poly->coefficients[c];
-    chanlistIOC.scalelist[k] = sigs[k].scale();
+    if ( sigs[k].channel() < PARAM_CHAN_OFFSET ) {
+      const comedi_polynomial_t* poly = 
+	(const comedi_polynomial_t *)sigs[k].gainData();
+      chanlistIOC.conversionlist[k].order = poly->order;
+      if ( poly->order >= MAX_CONVERSION_COEFFICIENTS )
+	cerr << "ERROR in DynClampAnalogInput::prepareWrite -> invalid order in converion polynomial!\n";
+      chanlistIOC.conversionlist[k].expansion_origin = poly->expansion_origin;
+      for ( int c=0; c<MAX_CONVERSION_COEFFICIENTS; c++ )
+	chanlistIOC.conversionlist[k].coefficients[c] = poly->coefficients[c];
+      chanlistIOC.scalelist[k] = sigs[k].scale();
+    }
   }
+  chanlistIOC.userDeviceIndex = sigs[0].device();
   chanlistIOC.chanlistN = sigs.size();
   int retval = ::ioctl( ModuleFd, IOC_CHANLIST, &chanlistIOC );
   cerr << "prepareWrite(): IOC_CHANLIST done!" << endl; /// TEST
@@ -837,7 +850,7 @@ int DynClampAnalogOutput::matchTraces( vector< TraceSpec > &traces ) const
   traceChannel.traceType = TRACE_OUT;
   string unknowntraces = "";
   int foundtraces = 0;
-  while ( 0 == ::ioctl( ModuleFd, IOC_GET_TRACE_INFO, &traceInfo ) ) {
+  while ( ::ioctl( ModuleFd, IOC_GET_TRACE_INFO, &traceInfo ) == 0 ) {
     bool notfound = true;
     for ( unsigned int k=0; k<traces.size(); k++ ) {
       if ( traces[k].traceName() == traceInfo.name ) {

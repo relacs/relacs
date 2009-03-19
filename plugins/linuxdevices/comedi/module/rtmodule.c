@@ -29,10 +29,6 @@ MODULE_LICENSE( "GPL" );
 #define E_UNDERRUN  -3
 #define E_OVERFLOW  -4
 
-// data types for buffer:
-#define SAMPL_COMEDI 1
-#define SAMPL_FLOAT  2
-
 
 //* DAQ-DEVICES:
 
@@ -151,7 +147,7 @@ static inline float sample_to_value( struct chanT *pChan, lsampl_t sample )
   double value = 0.0;
   double term = 1.0;
   unsigned i;
-  for( i=0; i <= pChan->converter.order; ++i ) {
+  for ( i=0; i <= pChan->converter.order; ++i ) {
     value += pChan->converter.coefficients[i] * term;
     term *= sample - pChan->converter.expansion_origin;
   }
@@ -165,7 +161,7 @@ static inline lsampl_t value_to_sample( struct chanT *pChan, float value )
   double term = 1.0;
   unsigned i;
   value *= pChan->scale;
-  for( i=0; i <= pChan->converter.order; ++i ) {
+  for ( i=0; i <= pChan->converter.order; ++i ) {
     sample += pChan->converter.coefficients[i] * term;
     term *= value - pChan->converter.expansion_origin;
   }
@@ -193,9 +189,9 @@ int getSubdevID( void )
 {
   int i = 0;
   //* find free slot in subdev[]:
-  for( i = 0; i < subdevN && subdev[i].used; i++ );
-  if( i == subdevN ) {
-    if( subdevN >= MAXSUBDEV ) {
+  for ( i = 0; i < subdevN && subdev[i].used; i++ );
+  if ( i == subdevN ) {
+    if ( subdevN >= MAXSUBDEV ) {
       ERROR_MSG( "getSubdevID ERROR: number of requested subdevices exceeds MAXSUBDEV!\n" );
       return -1;
     }
@@ -215,29 +211,31 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
   int iS, retVal;
   int i = 0;
   int iDev = -1;
+  int openDev = 1;
   int justOpened = 0;
 
   // scan device list for either the opened device or a free slot:
-  for( i = 0; i < deviceN; i++ ) {
-    if( device[i].devP ) {
-      if( strcmp( deviceIOC->devicename, device[i].name ) == 0 ) {
+  for ( i = 0; i < deviceN; i++ ) {
+    if ( device[i].devP ) {
+      if ( strcmp( deviceIOC->devicename, device[i].name ) == 0 ) {
 	DEBUG_MSG( "comediOpenDevice: device %s is already opened...", 
     		   device[i].name );
 	iDev = i;
-	goto locksubdevice;
+	openDev = 0;
+	break;
       }
     }
     else {
-      if( iDev < 0 && !device[i].devP ) {
+      if ( iDev < 0 && !device[i].devP ) {
 	iDev = i;
 	break;
       }
     }
   }
 
-  if( i == deviceN ) {
+  if ( i == deviceN ) {
     iDev = deviceN;
-    if( deviceN >= MAXDEV ) {
+    if ( deviceN >= MAXDEV ) {
       ERROR_MSG( "comediOpenDevice ERROR: number of requested devices exceeds MAXDEV!\n" );
       return -1;
     }
@@ -246,29 +244,27 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
 
   DEBUG_MSG( "openComediDevice: found device slot..\n" );
 
-  // open comedi device:
-  device[iDev].devP = comedi_open( deviceIOC->devicename );
-  if( !device[iDev].devP ) {
-    ERROR_MSG( "comediOpenDevice: device %s could not be opened!\n",
-	       deviceIOC->devicename );
-    comedi_perror( "rtmodule: rtmodule_ioctl" );    
-    return -1;
+  if ( openDev ) {
+    // open comedi device:
+    device[iDev].devP = comedi_open( deviceIOC->devicename );
+    if ( !device[iDev].devP ) {
+      ERROR_MSG( "comediOpenDevice: device %s could not be opened!\n",
+		 deviceIOC->devicename );
+      comedi_perror( "rtmodule: rtmodule_ioctl" );    
+      return -1;
+    }
+    justOpened = 1;
+    DEBUG_MSG( "openComediDevice: opened device %s\n",  deviceIOC->devicename );
   }
-  justOpened = 1;
-
-  DEBUG_MSG( "openComediDevice: opened device %s\n",  deviceIOC->devicename );
 
   // lock requested subdevice:
- locksubdevice:
-  // TODO: check subdev list whether deviceIOC->subdev is already opened?
-  //       => won't happen if userspace works correctly
-  if( deviceIOC->subdev >= comedi_get_n_subdevices( device[iDev].devP ) ||
-      comedi_lock( device[iDev].devP, deviceIOC->subdev ) != 0 ) {
+  if ( deviceIOC->subdev >= comedi_get_n_subdevices( device[iDev].devP ) ||
+       comedi_lock( device[iDev].devP, deviceIOC->subdev ) != 0 ) {
     ERROR_MSG( "comediOpenDevice: Subdevice %i on device %s could not be locked!\n",
 	       deviceIOC->subdev, device[iDev].name );
     // locking failed => close just opened comedi device:
-    if( justOpened ) {
-      if( comedi_close( device[iDev].devP ) < 0 )
+    if ( justOpened ) {
+      if ( comedi_close( device[iDev].devP ) < 0 )
       	WARN_MSG( "comediOpenDevice WARNING: closing of device %s failed!\n",
 		  device[iDev].name );
       else
@@ -294,15 +290,16 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
   // create FIFO for subdevice:
   subdev[iS].fifo = iS;
   retVal = rtf_create( subdev[iS].fifo, FIFO_SIZE );
-  if( retVal ) {
-    ERROR_MSG( "loadSyncCmd ERROR: Creating FIFO with %d bytes buffer failed for subdevice %i, device %s\n",
+  if ( retVal ) {
+    ERROR_MSG( "openComediDevice ERROR: Creating FIFO with %d bytes buffer failed for subdevice %i, device %s\n",
                FIFO_SIZE, iS, device[subdev[iS].devID].name );
     return -1;
   }
   else
-    DEBUG_MSG( "loadSyncCmd: Created FIFO with %d bytes buffer size for subdevice %i, device %s\n",
+    DEBUG_MSG( "openComediDevice: Created FIFO with %d bytes buffer size for subdevice %i, device %s\n",
                FIFO_SIZE, iS, device[subdev[iS].devID].name );
 
+  // pass FIFO properties to user:
   deviceIOC->fifoIndex = subdev[iS].fifo;
   deviceIOC->fifoSize = FIFO_SIZE;
 
@@ -316,31 +313,33 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
   int iD = subdev[iS].devID;
   int iC;
 
-  if( subdev[iS].subdev < 0 || !subdev[iS].used ) {
+  if ( subdev[iS].subdev < 0 || !subdev[iS].used ) {
     ERROR_MSG( "loadChanlist ERROR: First open an appropriate device and subdevice. Chanlist not loaded!\n" );
     return -1;
   }
 
-  if( chanlistIOC->chanlistN > MAXCHANLIST ) {
+  if ( chanlistIOC->chanlistN > MAXCHANLIST ) {
     ERROR_MSG( "loadChanlist ERROR: Invalid chanlist length for Subdevice %i on device %s. Chanlist not loaded!\n",
 	       iS, device[subdev[iS].devID].name );
     return -1;
   }
 
-  if( subdev[iS].chanlist )
+  if ( subdev[iS].chanlist ) {
     vfree( subdev[iS].chanlist );
+    subdev[iS].chanlist = 0;
+  }
 
   // create and initialize chanlist for subdevice:
-  subdev[iS].chanlist =  vmalloc( chanlistIOC->chanlistN
-                                  *sizeof(struct chanT) );
-  if( !subdev[iS].chanlist ) {
+  subdev[iS].chanlist = vmalloc( chanlistIOC->chanlistN
+				 *sizeof(struct chanT) );
+  if ( !subdev[iS].chanlist ) {
     ERROR_MSG( "loadChanlist ERROR: Memory allocation for Subdevice %i on device %s. Chanlist not loaded!\n",
 	       iS, device[subdev[iS].devID].name );
     return -1;
   }
   subdev[iS].chanN = chanlistIOC->chanlistN;
 
-  for( iC = 0; iC < subdev[iS].chanN; iC++ ) {
+  for ( iC = 0; iC < subdev[iS].chanN; iC++ ) {
     subdev[iS].chanlist[iC].devP = device[iD].devP;
     subdev[iS].chanlist[iC].subdev = subdev[iS].subdev;
     subdev[iS].chanlist[iC].chan = CR_CHAN( chanlistIOC->chanlist[iC] );
@@ -358,16 +357,16 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC )
 {
   int iS = syncCmdIOC->subdevID;
 
-  if( subdev[iS].subdev < 0 || !subdev[iS].used ) {
+  if ( subdev[iS].subdev < 0 || !subdev[iS].used ) {
     ERROR_MSG( "loadSyncCmd ERROR: First open an appropriate device and subdevice. Sync-command not loaded!\n" );
     return -EFAULT;
   }
-  if( !subdev[iS].chanlist ) {
+  if ( !subdev[iS].chanlist ) {
     ERROR_MSG( "loadSyncCmd ERROR: First load Chanlist for Subdevice %i on device %s. Sync-command not loaded!\n",
 	       iS, device[subdev[iS].devID].name );
     return -EFAULT;
   }
-  if( syncCmdIOC->frequency > MAX_FREQUENCY ) {
+  if ( syncCmdIOC->frequency > MAX_FREQUENCY ) {
     ERROR_MSG( "LOAdSyncCmd ERROR: Requested frequency is above MAX_FREQUENCY (%d Hz). Sync-command not loaded!\n",
 	       MAX_FREQUENCY );
     return -EINVAL;
@@ -379,11 +378,11 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC )
   subdev[iS].continuous = syncCmdIOC->continuous;
 
   // test requested sampling-rate and set frequency for dynamic clamp task:
-  if( !dynClampTask.reqFreq ) {
+  if ( !dynClampTask.reqFreq ) {
     dynClampTask.reqFreq = subdev[iS].frequency;
   }
   else {
-    if( dynClampTask.reqFreq != subdev[iS].frequency ) {
+    if ( dynClampTask.reqFreq != subdev[iS].frequency ) {
       ERROR_MSG( "loadSyncCmd ERROR: Requested frequency %u Hz of subdevice %i on device %s is inconsistent to frequency %u Hz of other subdevice. Sync-command not loaded!\n",
 		 subdev[iS].frequency, iS, device[subdev[iS].devID].name, dynClampTask.reqFreq );
       return -EINVAL;
@@ -400,7 +399,7 @@ int startSubdevice( int iS )
   int retVal = 0;
   unsigned long firstLoopCnt, tmpDuration;
 
-  if( !subdev[iS].prepared || subdev[iS].running ) {
+  if ( !subdev[iS].prepared || subdev[iS].running ) {
     ERROR_MSG( "startSubdevice ERROR:  Subdevice ID %i on device %s either not prepared or already running.\n",
 	       iS, device[subdev[iS].devID].name );
     return -EBUSY;
@@ -408,7 +407,7 @@ int startSubdevice( int iS )
 
   subdev[iS].running = 1;
 
-  if( dynClampTask.running ) {
+  if ( dynClampTask.running ) {
     // get current index of dynclamp loop in a thread-save way:
     do { 
       firstLoopCnt = dynClampTask.loopCnt;
@@ -425,7 +424,7 @@ int startSubdevice( int iS )
 
     // start dynamic clamp task: 
     retVal = init_rt_task();
-    if( retVal < 0 ) {
+    if ( retVal < 0 ) {
       subdev[iS].running = 0;
       return -ENOMEM;
     }
@@ -435,23 +434,17 @@ int startSubdevice( int iS )
 }
 
 
-int subdevRunning( int iS )
-{
-  return subdev[iS].running;
-}
-
-
 int stopSubdevice( int iS )
 { 
   int i;
 
-  if( !subdev[iS].running )
+  if ( !subdev[iS].running )
     return 0;
   subdev[iS].running = 0;
 
   // if all subdevices stopped => halt dynclamp task:
-  for( i = 0; i < subdevN; i++ )
-    if( subdev[i].running )
+  for ( i = 0; i < subdevN; i++ )
+    if ( subdev[i].running )
       return 0;
   cleanup_rt_task();
   return 0;
@@ -463,44 +456,46 @@ void releaseSubdevice( int iS )
   int iD = subdev[iS].devID;
   int i;
 
-  if( !subdev[iS].used || subdev[iS].subdev < 0 ) {
+  if ( !subdev[iS].used || subdev[iS].subdev < 0 ) {
     ERROR_MSG( "releaseSubdevice ERROR: Subdevice with ID %d not in use!\n", 
 	       iS );
     return;
   }
 
   // stop subdevice:
-  if( subdev[iS].running )
+  if ( subdev[iS].running )
     stopSubdevice( iS );
   
   // unlock subdevice:
-  if( device[iD].devP && comedi_unlock( device[iD].devP, subdev[iS].subdev ) < 0 )
+  if ( device[iD].devP && comedi_unlock( device[iD].devP, subdev[iS].subdev ) < 0 )
     WARN_MSG( "releaseSubdevice WARNING: unlocking of subdevice %s failed!\n",
 	      device[iD].name );
   else
     DEBUG_MSG( "releaseSubdevice: Unlocking of subdevice %s was successful!\n",
 	       device[iD].name );
 
-  if(  subdev[iS].chanlist )
-    vfree(  subdev[iS].chanlist );
+  if ( subdev[iS].chanlist ) {
+    vfree( subdev[iS].chanlist );
+    subdev[iS].chanlist = 0;
+  }
 
   // delete FIFO and reset subdevice structure:
   rtf_destroy( subdev[iS].fifo );
   memset( &(subdev[iS]), 0, sizeof(struct subdeviceT) );
-  if( iS == subdevN - 1 )
+  if ( iS == subdevN - 1 )
     subdevN--;
   subdev[iS].devID = -1;
  
   // check if comedi device for subdevice is still in use:
-  for( i = 0; i < subdevN; i++ ) {
-    if( subdev[i].devID == iD )
+  for ( i = 0; i < subdevN; i++ ) {
+    if ( subdev[i].devID == iD )
       // device is still used by another subdevice => leave here:
       return;
   }
 
   // close comedi device:
   DEBUG_MSG( "YYYYYYY releaseSubdevice: released device for last subdev-ID %d\n", iS );
-  if( device[iD].devP && comedi_close( device[iD].devP ) < 0 )
+  if ( device[iD].devP && comedi_close( device[iD].devP ) < 0 )
     WARN_MSG( "releaseSubdevice WARNING: closing of device %s failed!\n",
 	      device[iD].name );
   else
@@ -509,7 +504,7 @@ void releaseSubdevice( int iS )
 
   // reset device structure:
   memset( &(device[iD]), 0, sizeof(struct deviceT) );
-  if( iD == deviceN-1 )
+  if ( iD == deviceN-1 )
     deviceN--;
 }
 
@@ -548,30 +543,31 @@ void rtDynClamp( long dummy )
     //******** WRITE TO ANALOG OUTPUT: *******************************************/
       //****************************************************************************/
       // TODO: implement efficiently as frequently updated chanT-list of used traces
-      for( iS = 0; iS < subdevN; iS++ )
-	if( subdev[iS].running && subdev[iS].type == SUBDEV_OUT ) {
+      for ( iS = 0; iS < subdevN; iS++ )
+	if ( subdev[iS].running && subdev[iS].type == SUBDEV_OUT ) {
 
           // check duration:
-          if( !subdev[iS].continuous &&
+          if ( !subdev[iS].continuous &&
               subdev[iS].duration <= dynClampTask.loopCnt ) {
+	    rtf_reset( subdev[iS].fifo );
             subdev[iS].running = 0;
             DEBUG_MSG( "rtDynClamp: ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ loopCnt exceeded duration for subdevice ID %d at loopCnt %lu\n",
 		       iS, dynClampTask.loopCnt );
       	    continue;
           }
       	  else // DEBUG
-	    if( iS == 1 && dynClampTask.loopCnt%100 == 0 )
+	    if ( iS == 1 && dynClampTask.loopCnt%100 == 0 )
 	      DEBUG_MSG( " duration = %lu, loopCnt = %lu\n", subdev[iS].duration, dynClampTask.loopCnt );
 
           subdevRunning = 1;
          
           // for every chan...
-          for( iC = 0; iC < subdev[iS].chanN; iC++ ) {
+          for ( iC = 0; iC < subdev[iS].chanN; iC++ ) {
 
             // get data from FIFO:
             retVal = rtf_get( subdev[iS].fifo, &voltage, sizeof(voltage) );
-            if( retVal != sizeof(voltage) ) {
-              if( retVal == EINVAL ) {
+            if ( retVal != sizeof(voltage) ) {
+              if ( retVal == EINVAL ) {
                 DEBUG_MSG( "rtDynClamp: No open FIFO for subdevice ID %d at loopCnt %lu\n",
                            iS, dynClampTask.loopCnt );
                 dynClampTask.running = 0;
@@ -594,9 +590,9 @@ void rtDynClamp( long dummy )
                                         subdev[iS].chanlist[iC].aref,
                                         lsample
 					);
-            if( retVal < 1 ) {
+            if ( retVal < 1 ) {
               subdev[iS].running = 0;
-              if( retVal < 0 ) {
+              if ( retVal < 0 ) {
                 comedi_perror( "rtmodule: rtDynClamp: comedi_data_write" );
                 subdev[iS].error = E_COMEDI;
 		subdev[iS].running = 0;
@@ -624,9 +620,9 @@ void rtDynClamp( long dummy )
 
       // DEBUG OUTPUT:
       /*
-	if( dynClampTask.loopCnt % 10 == 0 ) {
+	if ( dynClampTask.loopCnt % 10 == 0 ) {
 	DEBUG_MSG( "%d subdevices registered:\n", subdevN );
-	for( iS = 0; iS < subdevN; iS++ ) {
+	for ( iS = 0; iS < subdevN; iS++ ) {
         DEBUG_MSG( "LOOP %lu: fifoPutCnt=%lu readCnt=%lu, subdevID=%d, run=%d, type=%d, error=%d, duration=%lu, contin=%d\n", 
 	dynClampTask.loopCnt, fifoPutCnt, readCnt, iS, subdev[iS].running, 
 	subdev[iS].type, subdev[iS].error, subdev[iS].duration, subdev[iS].continuous  );
@@ -639,12 +635,12 @@ void rtDynClamp( long dummy )
 	//******** READ FROM ANALOG INPUT: *******************************************/
 	//****************************************************************************/
 	// TODO: implement efficiently as frequently updated chanT-list of used traces
-	for( iS = 0; iS < subdevN; iS++ )
-	  if( !subdev[iS].asyncMode && subdev[iS].running && 
+	for ( iS = 0; iS < subdevN; iS++ )
+	  if ( !subdev[iS].asyncMode && subdev[iS].running && 
 	      subdev[iS].type == SUBDEV_IN ) {
           
 	    // check duration:
-	    if( !subdev[iS].continuous &&
+	    if ( !subdev[iS].continuous &&
 		subdev[iS].duration <= dynClampTask.loopCnt ) {
 	      subdev[iS].running = 0;
 	      DEBUG_MSG( "rtDynClamp: loopCnt exceeded duration for subdevice ID %d at loopCnt %lu\n",
@@ -653,7 +649,7 @@ void rtDynClamp( long dummy )
 	    subdevRunning = 1;
 
 	    // for every chan...
-	    for( iC = 0; iC < subdev[iS].chanN; iC++ ) {
+	    for ( iC = 0; iC < subdev[iS].chanN; iC++ ) {
 
 	      // acquire sample:
 	      retVal = comedi_data_read( device[subdev[iS].devID].devP, 
@@ -662,7 +658,7 @@ void rtDynClamp( long dummy )
 					 subdev[iS].chanlist[iC].rangeIndex,
 					 subdev[iS].chanlist[iC].aref,
 					 &lsample );
-	      if( retVal < 0 ) {
+	      if ( retVal < 0 ) {
 		subdev[iS].running = 0;
 		comedi_perror( "rtmodule: rtDynClamp: comedi_data_write" );
 		subdev[iS].error = E_COMEDI;
@@ -674,8 +670,8 @@ void rtDynClamp( long dummy )
 	      voltage = sample_to_value( &subdev[iS].chanlist[iC], lsample );
 	      retVal = rtf_put( subdev[iS].fifo, &voltage, sizeof(voltage) );
 	      fifoPutCnt++;
-	      if( retVal != sizeof(voltage) ) {
-		if( retVal == EINVAL ) {
+	      if ( retVal != sizeof(voltage) ) {
+		if ( retVal == EINVAL ) {
 		  DEBUG_MSG( "rtDynClamp: No open FIFO for subdevice ID %d at loopCnt %lu\n",
 			     iS, dynClampTask.loopCnt );
 		  dynClampTask.running = 0;
@@ -733,7 +729,7 @@ int init_rt_task( void )
   DEBUG_MSG( "init_rt_task: Trying to initialize dynamic clamp RTAI task...\n" );
 
   //* test if dynamic clamp frequency is valid:
-  if( dynClampTask.reqFreq <= 0 || dynClampTask.reqFreq > MAX_FREQUENCY )
+  if ( dynClampTask.reqFreq <= 0 || dynClampTask.reqFreq > MAX_FREQUENCY )
     ERROR_MSG( "init_rt_task ERROR: %dHz -> invalid dynamic clamp frequency. Valid range is 1 .. %dHz\n", 
 	       dynClampTask.reqFreq, dynClampTask.reqFreq );
 
@@ -741,7 +737,7 @@ int init_rt_task( void )
   priority = 1;
   retVal = rt_task_init( &dynClampTask.rtTask, rtDynClamp, dummy, stackSize, 
 			 priority, usesFPU, signal );
-  if( retVal ) {
+  if ( retVal ) {
     ERROR_MSG( "init_rt_task ERROR: failed to initialize real-time task for dynamic clamp! stacksize was set to %d bytes.\n", 
 	       stackSize );
     return -1;
@@ -750,7 +746,7 @@ int init_rt_task( void )
 
     //* START rt-task for dynamic clamp as periodic:
   periodTicks = start_rt_timer( nano2count( 1000000000/dynClampTask.reqFreq ) );  
-  if( rt_task_make_periodic( &dynClampTask.rtTask, rt_get_time(), periodTicks ) 
+  if ( rt_task_make_periodic( &dynClampTask.rtTask, rt_get_time(), periodTicks ) 
       != 0 ) {
     printk( "init_rt_task ERROR: failed to start periodic real-time task for data acquisition! loading of module failed!\n" );
     return -3;
@@ -795,14 +791,10 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
   int retVal;
   unsigned long luTmp;
 
-  DEBUG_MSG( "ioctl: user triggered ioctl %d %s\n",_IOC_NR( cmd ), iocNames[_IOC_NR( cmd )] );
-
   if (_IOC_TYPE(cmd) != RTMODULE_MAJOR) return -ENOTTY;
   if (_IOC_NR(cmd) > RTMODULE_IOC_MAXNR) return -ENOTTY;
 
-
-  // TODO: use access_ok for verifying userspace mem and __copy_from_user. 
-  //       => (see Linux-Device-Drivers-3-Book, Chapter 6)
+  DEBUG_MSG( "ioctl: user triggered ioctl %d %s\n",_IOC_NR( cmd ), iocNames[_IOC_NR( cmd )] );
 
   switch( cmd ) {
     
@@ -811,14 +803,14 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
 
   case IOC_GETAOINDEX:
     luTmp = dynClampTask.aoIndex;
-    if( luTmp < 0 )
+    if ( luTmp < 0 )
       return -ENOSPC;
     retVal = put_user( luTmp, (unsigned long __user *)arg );
     return retVal == 0 ? 0 : -EFAULT;
 
   case IOC_GETLOOPCNT:
     luTmp = dynClampTask.loopCnt;
-    if( luTmp < 0 )
+    if ( luTmp < 0 )
       return -ENOSPC;
     retVal = put_user( luTmp, (unsigned long __user *)arg );
     return retVal == 0 ? 0 : -EFAULT;
@@ -828,18 +820,18 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
 
   case IOC_GET_SUBDEV_ID:
     tmp = getSubdevID();
-    if( tmp < 0 )
+    if ( tmp < 0 )
       return -ENOSPC;
     retVal = put_user( tmp, (int __user *)arg );
     return retVal == 0 ? 0 : -EFAULT;
 
   case IOC_OPEN_SUBDEV:
     retVal = copy_from_user( &deviceIOC, (void __user *)arg, sizeof(struct deviceIOCT) );
-    if( retVal ) {
+    if ( retVal ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to deviceIOCT-struct!\n" );
       return -EFAULT;
     }
-    if( deviceIOC.subdevID >= subdevN ) {
+    if ( deviceIOC.subdevID >= subdevN ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID in deviceIOCT-struct!\n" );
       return -EFAULT;
     }
@@ -847,7 +839,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
     if ( retVal != 0 )
       return -EFAULT;
     retVal = copy_to_user( (void __user *)arg, &deviceIOC, sizeof(struct deviceIOCT) );
-    if( retVal ) {
+    if ( retVal ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to deviceIOCT-struct!\n" );
       return -EFAULT;
     }
@@ -855,11 +847,11 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
 
   case IOC_CHANLIST:
     retVal = copy_from_user( &chanlistIOC, (void __user *)arg, sizeof(struct chanlistIOCT) );
-    if( retVal ) {
+    if ( retVal ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to chanlistIOCT-struct!\n" );
       return -EFAULT;
     }
-    if( chanlistIOC.subdevID >= subdevN ) {
+    if ( chanlistIOC.subdevID >= subdevN ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID in chanlistIOCT-struct!\n" );
       return -EFAULT;
     }
@@ -869,11 +861,11 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
 
   case IOC_SYNC_CMD:
     retVal = copy_from_user( &syncCmdIOC, (void __user *)arg, sizeof(struct syncCmdIOCT) );
-    if( retVal ) {
+    if ( retVal ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to syncCmdIOCT-struct!\n" );
       return -EFAULT;
     }
-    if( syncCmdIOC.subdevID >= subdevN ) {
+    if ( syncCmdIOC.subdevID >= subdevN ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID in syncCmdIOCT-struct!\n" );
       return -EFAULT;
     }
@@ -891,11 +883,11 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
 
   case IOC_START_SUBDEV:
     retVal = get_user( subdevID, (int __user *)arg );
-    if( retVal ) {
+    if ( retVal ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to subdevice ID for start-query!" );
       return -EFAULT;
     }
-    if( subdevID >= subdevN ) {
+    if ( subdevID >= subdevN ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID for start-query!\n" );
       return -EFAULT;
     }
@@ -905,11 +897,11 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
 
   case IOC_CHK_RUNNING:
     retVal = get_user( subdevID, (int __user *)arg );
-    if( retVal ) {
+    if ( retVal ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to subdevice ID for running-query!" );
       return -EFAULT;
     }
-    if( subdevID >= subdevN ) {
+    if ( subdevID >= subdevN ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID for running-query!\n" );
       return -EFAULT;
     }
@@ -921,15 +913,15 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
 
   case IOC_REQ_CLOSE:
     retVal = get_user( subdevID, (int __user *)arg );
-    if( retVal ) {
+    if ( retVal ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to subdevice ID for close-request!" );
       return -EFAULT;
     }
-    if( subdevID >= subdevN ) {
+    if ( subdevID >= subdevN ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID for close-request!\n" );
       return -EFAULT;
     }
-    if( reqCloseSubdevID >= 0 ) {
+    if ( reqCloseSubdevID >= 0 ) {
       ERROR_MSG( "rtmodule_ioctl IOC_REQ_CLOSE ERROR: Another close-request in progress!\n" );
       return -EAGAIN;
     }
@@ -938,15 +930,15 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
 
   case IOC_REQ_READ: // Noch wichtig fuer tracename-List?
     retVal = get_user( subdevID, (int __user *)arg );
-    if( retVal ) {
+    if ( retVal ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to subdevice ID for read-request!" );
       return -EFAULT;
     }
-    if( subdevID >= subdevN ) {
+    if ( subdevID >= subdevN ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID for read-request!\n" );
       return -EFAULT;
     }
-    if( reqTraceSubdevID >= 0 ) {
+    if ( reqTraceSubdevID >= 0 ) {
       ERROR_MSG( "rtmodule_ioctl IOC_REQ_READ ERROR: Another read-request in progress! (reqTraceSubdevID=%d)\n", reqTraceSubdevID );
       return -EAGAIN;
     }
@@ -957,11 +949,11 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
 
   case IOC_STOP_SUBDEV:
     retVal = get_user( subdevID, (int __user *)arg );
-    if( retVal ) {
+    if ( retVal ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to subdevice ID for stop-query!" );
       return -EFAULT;
     }
-    if( subdevID >= subdevN ) {
+    if ( subdevID >= subdevN ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID for stop-query!\n" );
       return -EFAULT;
     }
@@ -972,11 +964,11 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
 
   case IOC_RELEASE_SUBDEV:
     retVal = get_user( subdevID, (int __user *)arg );
-    if( retVal ) {
+    if ( retVal ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to subdevice ID for release-query!" );
       return -EFAULT;
     }
-    if( subdevID >= subdevN ) {
+    if ( subdevID >= subdevN ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID for release-query!\n" );
       return -EFAULT;
     }
@@ -1030,10 +1022,10 @@ int rtmodule_close( struct inode *devFile, struct file *fModule )
 {
   int iS;
   // no subdevice specified? => stop & close all subdevices & comedi-devices:
-  if( reqCloseSubdevID < 0 ) {
+  if ( reqCloseSubdevID < 0 ) {
     DEBUG_MSG( "close: no IOC_REQ_CLOSE request received - closing all subdevices...\n" );
-    for( iS = 0; iS < subdevN; iS++ ) {
-      if( stopSubdevice( iS ) )
+    for ( iS = 0; iS < subdevN; iS++ ) {
+      if ( stopSubdevice( iS ) )
         WARN_MSG( "cleanup_module: Stopping subdevice with ID %d failed\n", iS );
       releaseSubdevice( iS );
     }
@@ -1042,11 +1034,11 @@ int rtmodule_close( struct inode *devFile, struct file *fModule )
   }
 
   // stop & close specified subdevice (and device):
-  if( stopSubdevice( reqCloseSubdevID ) )
+  if ( stopSubdevice( reqCloseSubdevID ) )
     WARN_MSG( "cleanup_module: Stopping subdevice with ID %d failed\n", reqCloseSubdevID );
   releaseSubdevice( reqCloseSubdevID );
 
-  if( deviceN == 0 )
+  if ( deviceN == 0 )
     init_globals();
   reqCloseSubdevID = -1;
 
@@ -1060,12 +1052,9 @@ void cleanup_module( void )
   int iS;
   INFO_MSG( "cleanup_module: dynamic clamp module %s unloaded\n", moduleName );
 
-  //if( paramValues )
-  //  vfree( paramValues );
-
   // stop and release all subdevices & comedi-devices:
-  for( iS = 0; iS < subdevN; iS++ ) {
-    if( stopSubdevice( iS ) )
+  for ( iS = 0; iS < subdevN; iS++ ) {
+    if ( stopSubdevice( iS ) )
       WARN_MSG( "cleanup_module: Stopping subdevice with ID %d failed\n", iS );
     releaseSubdevice( iS );
   }

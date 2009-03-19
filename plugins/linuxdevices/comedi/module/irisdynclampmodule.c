@@ -90,6 +90,13 @@ struct dynClampTaskT {
 };
 
 
+struct calcTaskT {
+  RT_TASK rtTask;
+  int algo;
+  int initialized;
+};
+
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // *** GLOBAL VARIABLES ***
@@ -112,6 +119,7 @@ int chanIndex = 0;
 //* RTAI TASK:
 
 struct dynClampTaskT dynClampTask;
+struct calcTaskT calcTask;
 
 
 // for debug:
@@ -128,7 +136,7 @@ char *iocNames[RTMODULE_IOC_MAXNR] = {
 // *** PROTOTYPES ***
 ///////////////////////////////////////////////////////////////////////////////
 
-int init_rt_task( void );
+int init_rt_task( int algorithm );
 void cleanup_rt_task( void );
 int rtmodule_open( struct inode *devFile, struct file *fModule );
 int rtmodule_close( struct inode *devFile, struct file *fModule );
@@ -190,6 +198,8 @@ void init_globals( void ) {
   memset( device, 0, sizeof(device) );
   memset( subdev, 0, sizeof(subdev) );
   memset( &dynClampTask, 0, sizeof(struct dynClampTaskT ) );
+  memset( &calcTask, 0, sizeof(struct calcTaskT ) );
+  calcTask.algo = ALGO_PRESET;
 }
 
 
@@ -483,7 +493,7 @@ int startSubdevice( int iS )
     dynClampTask.reqFreq = subdev[iS].frequency;
 
     // start dynamic clamp task: 
-    retVal = init_rt_task();
+    retVal = init_rt_task( calcTask.algo );
     if ( retVal < 0 ) {
       subdev[iS].running = 0;
       return -ENOMEM;
@@ -583,6 +593,13 @@ void releaseSubdevice( int iS )
 ///////////////////////////////////////////////////////////////////////////////
 
 
+/*! Calcuclation task for Euler */
+void rtEulerCalc( long dummy )
+{
+  // TODO: Aus Quellcode von Diplomarbeit rausholen...
+}
+
+
 /*! Dynamic clamp task */
 void rtDynClamp( long dummy )
 {
@@ -594,10 +611,18 @@ void rtDynClamp( long dummy )
   unsigned long fifoPutCnt = 0;
   lsampl_t lsample;
 
+  DEBUG_MSG( "%d subdevices registered:\n", subdevN );
+  for ( iS = 0; iS < subdevN; iS++ ) {
+    DEBUG_MSG( "INIT: fifoPutCnt=%lu readCnt=%lu, subdevID=%d, run=%d, type=%s, error=%d, duration=%lu, contin=%d\n", 
+	       fifoPutCnt, readCnt, iS, subdev[iS].running, 
+	       subdev[iS].type == SUBDEV_IN ? "AI" : "AO", subdev[iS].error,
+	       subdev[iS].duration, subdev[iS].continuous  );
+  }
+
   DEBUG_MSG( "rtDynClamp: starting dynamic clamp loop at %u Hz\n", 
 	     1000000000/dynClampTask.periodLengthNs );
 
-  rt_sleep( nano2count( 1000000 ) ); // FOR TESTING...
+  rt_sleep( nano2count( 1000000 ) ); // XXX FOR TESTING... could be deleted???
 
   dynClampTask.loopCnt = 0;
   dynClampTask.aoIndex = -1;
@@ -618,7 +643,6 @@ void rtDynClamp( long dummy )
 	// check duration:
 	if ( !subdev[iS].continuous &&
 	    subdev[iS].duration <= dynClampTask.loopCnt ) {
-	  rtf_reset( subdev[iS].fifo );
 	  stopSubdevice(iS, /*kill=*/0 );
 	  DEBUG_MSG( "rtDynClamp: ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ loopCnt exceeded duration for subdevice ID %d at loopCnt %lu\n",
 		     iS, dynClampTask.loopCnt );
@@ -787,6 +811,14 @@ void rtDynClamp( long dummy )
     //    start = rt_get_cpu_time_ns();
     rt_task_wait_period();
 
+    // ...as soon as RTAI scheduler wakes us up again:
+
+    /******** SUSPEND CALCULATION TASK: *****************************************/
+    /****************************************************************************/
+    /*
+    if ( calcTask.initialized )
+      rt_task_suspend( &calcTask.rtTask );
+    */
 
   } // END OF DYNCLAMP LOOP
     
@@ -805,7 +837,7 @@ void rtDynClamp( long dummy )
 
 
 // TODO: seperate into init and start?
-int init_rt_task( void )
+int init_rt_task( int algorithm )
 {
   int stackSize = 20000;
   int priority;
@@ -833,7 +865,17 @@ int init_rt_task( void )
   }
   DEBUG_MSG( "init_rt_task: Initialized dynamic clamp RTAI task. Trying to make it periodic...\n" );
 
-    //* START rt-task for dynamic clamp as periodic:
+ //* initializing rt-task for calculation with lower:
+/*  priority = 2;
+  retVal = rt_task_init( &calcTask.rtTask, rtEulerCalc, dummy, stackSize, 
+			 priority, usesFPU, signal );
+  if ( retVal ) {
+    ERROR_MSG( "init_rt_task ERROR: failed to initialize real-time task for calculation! stacksize was set to %d bytes.\n", 
+	       stackSize );
+    return -2;
+  }
+*/
+ //* START rt-task for dynamic clamp as periodic:
   periodTicks = start_rt_timer( nano2count( 1000000000/dynClampTask.reqFreq ) );  
   if ( rt_task_make_periodic( &dynClampTask.rtTask, rt_get_time(), periodTicks ) 
       != 0 ) {
@@ -857,8 +899,11 @@ void cleanup_rt_task( void )
   stop_rt_timer();
   DEBUG_MSG( "cleanup_rt_task: stopped periodic task\n" );
 
+  /*  rt_task_delete( &calcTask.rtTask );*/
+  calcTask.initialized = 0;
   rt_task_delete( &dynClampTask.rtTask );
   memset( &dynClampTask, 0, sizeof(struct dynClampTaskT) );
+  memset( &calcTask, 0, sizeof(struct calcTaskT) );
 }
 
 

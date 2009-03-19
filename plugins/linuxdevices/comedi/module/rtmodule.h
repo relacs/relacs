@@ -1,4 +1,4 @@
-#ifndef _RTMODUL_H_
+#ifndef _RTMODULE_H_
 #define _RTMODULE_H_
 
 #include "moduledef.h"

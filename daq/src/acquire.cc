@@ -676,10 +676,6 @@ int Acquire::read( InList &data )
   for ( unsigned int i=0; i<AI.size(); i++ )
     AI[i].Traces.setRestart();
 
-  // prepare dynamic clamp output:
-  // XXXX OutList sigs = OutTraces; All potential output channels should be initialized!
-  //AO[]->prepareWrite( sigs );
-
   // start reading from daq boards:
   vector< int > aistarted;
   aistarted.reserve( AI.size() );
@@ -709,8 +705,27 @@ int Acquire::read( InList &data )
   }
 
 
-  // XXX start dynamic clamp output:
-  //AO->startWrite();
+  // prepare dynamic clamp output:
+  /* XXX
+     It should be completely sufficient if this is done by relacs right after the read.
+     Or we call write( signals ) at the end of this read function.
+     And actually, it does not hurt, if this is done in any case (non dynamic clamp!) as well.
+     At least if this a continuous acquisition type.
+     How should we handle Attenuator signals?
+  OutList sigs;
+  for ( unsigned int i=0; i<OutTraces.size(); i++ ) {
+    // this is a real output channel:
+    if ( OutTraces[i].channel() < 1000 ) {
+      OutData sig( 1, 0.001 );
+      sig.setTrace( OutTraces[i].trace() );
+      if ( OutTraces[i].apply( sig ) < 0 )
+	cerr << "WRONG MATCH\n";
+      sig = 0.0;
+      sig.setIdent( "init" );
+    }
+  }
+  write( sigs );
+  */
 
   LastDevice = -1;
   LastWrite = -1.0;
