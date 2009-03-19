@@ -67,7 +67,7 @@ public:
   StimulusDelay( void );
   virtual void config( void );
   virtual int main( void );
-  int analyze( const InData &data, double duration, int count,
+  int analyze( const InData &data, double duration, double pause, int count,
 	       double &deltat );
 
 protected:

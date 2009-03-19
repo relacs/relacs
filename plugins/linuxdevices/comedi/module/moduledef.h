@@ -106,7 +106,8 @@ struct comediCmdIOCT {
 struct syncCmdIOCT {
   unsigned int subdevID;
   unsigned int frequency;
-  unsigned int duration;
+  unsigned long delay;
+  unsigned long duration;
   int continuous;
 };
 

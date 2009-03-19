@@ -128,8 +128,6 @@ int Simple::main( void )
   signal.setIdent( "one" );
   convert( signal );
 
-  sleep( pause );
-
   for ( int count=0;
 	( repeats <= 0 || count < repeats ) && softStop() == 0;
 	count++ ) {

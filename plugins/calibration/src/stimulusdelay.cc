@@ -37,6 +37,7 @@ StimulusDelay::StimulusDelay( void )
   addSelection( "outtrace", "Output trace", "Speaker-1" );
   addNumber( "samplerate", "Sampling rate of output", 10000.0, 1000.0, 1000000.0, 1000.0, "Hz", "kHz" );
   addNumber( "duration", "Duration of output", 0.01, 0.001, 1.0, 0.001, "sec", "ms" );
+  addNumber( "pause", "Pause between outputs", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
   addInteger( "repeats", "Repeats", 100, 0, 10000, 1 );
 
   // plot:
@@ -77,6 +78,7 @@ int StimulusDelay::main( void )
   int outtrace = index( "outtrace" );
   double samplerate = number( "samplerate" );
   double duration = number( "duration" );
+  double pause = number( "pause" );
   int repeats = integer( "repeats" );
 
   double deltat = 0.0;
@@ -85,11 +87,11 @@ int StimulusDelay::main( void )
   noMessage();
 
   // plot trace:
-  plotToggle( true, true, 2.0*duration, 1.0*duration );
+  plotToggle( true, true, 2.0*duration, 0.6*duration );
 
   // plot:
   P.lock();
-  P.setXRange( -1000.0*duration, 1000.0*duration );
+  P.setXRange( -500.0*pause, 1000.0*duration+500.0*pause );
   P.unlock();
 
   OutData signal( duration, 1.0/samplerate );
@@ -99,7 +101,8 @@ int StimulusDelay::main( void )
   //  signal.mute();
   signal.setIdent( "one" );
 
-  sleep( duration );
+  sleep( pause );
+  timeStamp();
 
   for ( int count=0;
 	( repeats <= 0 || count < repeats ) && softStop() == 0;
@@ -109,11 +112,11 @@ int StimulusDelay::main( void )
       warning( signal.errorText() );
       return Failed;
     }
-    sleep( duration );
+    sleepOn( duration+pause );
     if ( interrupt() )
       return count > 2 ? Completed : Aborted;
-    analyze( trace( intrace ), duration, count, deltat );
-    sleep( duration );
+    timeStamp();
+    analyze( trace( intrace ), duration, pause, count, deltat );
     if ( interrupt() )
       return count > 2 ? Completed : Aborted;
   }
@@ -123,10 +126,10 @@ int StimulusDelay::main( void )
 
 
 int StimulusDelay::analyze( const InData &data, double duration,
-			    int count, double &deltat )
+			    double pause, int count, double &deltat )
 {
   // get data:
-  SampleDataF d( -duration, duration, data.sampleInterval() );
+  SampleDataF d( -0.5*pause, duration+0.5*pause, data.sampleInterval() );
   int d2 = d.index( 0.0 );
   for ( int k=0, j=data.signalIndex()-d2;
 	k<d.size() && j<data.size();

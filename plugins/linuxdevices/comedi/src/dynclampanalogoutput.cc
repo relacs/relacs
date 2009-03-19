@@ -561,7 +561,8 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
   struct syncCmdIOCT syncCmdIOC;
   syncCmdIOC.subdevID = SubdeviceID;
   syncCmdIOC.frequency = (unsigned int)sigs[0].sampleRate();
-  syncCmdIOC.duration = sigs[0].size() + sigs[0].indices( sigs[0].delay());
+  syncCmdIOC.delay = sigs[0].indices( sigs[0].delay() );
+  syncCmdIOC.duration = sigs[0].size();
   syncCmdIOC.continuous = sigs[0].continuous();
   retval = ::ioctl( ModuleFd, IOC_SYNC_CMD, &syncCmdIOC );
   cerr << "prepareWrite(): IOC_SYNC_CMD done!" << endl; /// TEST

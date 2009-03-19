@@ -426,7 +426,7 @@ int DynClampAnalogInput::testReadDevice( InList &traces )
     // check delays:
     if( traces[k].delay() > 0.0 ) {
       traces[k].addError( DaqError::InvalidDelay );
-      traces[k].addErrorStr( "delays are not supported by comedi!" );
+      traces[k].addErrorStr( "delays are not supported for analog input!" );
       traces[k].setDelay( 0.0 );
     }
 

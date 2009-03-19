@@ -66,6 +66,7 @@ struct subdeviceT {
   struct chanT *chanlist;
 
   unsigned int frequency;
+  long delay;
   long duration;           // => relative to index of dynclamp-Task
   int continuous;
 
@@ -434,6 +435,7 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC )
 
   // initialize sampling parameters for subdevice:
   subdev[iS].frequency= syncCmdIOC->frequency;
+  subdev[iS].delay = syncCmdIOC->delay;
   subdev[iS].duration = syncCmdIOC->duration;
   subdev[iS].continuous = syncCmdIOC->continuous;
 
@@ -457,7 +459,7 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC )
 int startSubdevice( int iS )
 { 
   int retVal = 0;
-  unsigned long firstLoopCnt, tmpDuration;
+  unsigned long firstLoopCnt, tmpDelay, tmpDuration;
 
   if ( !subdev[iS].prepared || subdev[iS].running ) {
     ERROR_MSG( "startSubdevice ERROR:  Subdevice ID %i on device %s either not prepared or already running.\n",
@@ -471,12 +473,14 @@ int startSubdevice( int iS )
     // get current index of dynclamp loop in a thread-save way:
     do { 
       firstLoopCnt = dynClampTask.loopCnt;
-      tmpDuration = subdev[iS].duration + dynClampTask.loopCnt;
-      dynClampTask.aoIndex = dynClampTask.loopCnt; 
+      tmpDelay = subdev[iS].delay + dynClampTask.loopCnt;
+      tmpDuration = tmpDelay + subdev[iS].duration;
+      dynClampTask.aoIndex = tmpDelay; 
     } 
     while( firstLoopCnt != dynClampTask.loopCnt );
     // set subdevice duration relative to index of dynclamp-Task
-    subdev[iS].duration = tmpDuration; 
+    subdev[iS].delay = tmpDelay; 
+    subdev[iS].duration = tmpDuration;
   }
   else {
     dynClampTask.aoIndex = 0;
@@ -597,8 +601,6 @@ void rtDynClamp( long dummy )
   DEBUG_MSG( "rtDynClamp: starting dynamic clamp loop at %u Hz\n", 
 	     1000000000/dynClampTask.periodLengthNs );
 
-  rt_sleep( nano2count( 1000000 ) ); // FOR TESTING...
-
   dynClampTask.loopCnt = 0;
   dynClampTask.aoIndex = -1;
   dynClampTask.running = 1;
@@ -633,7 +635,8 @@ void rtDynClamp( long dummy )
 	// FOR EVERY CHAN...
 	for ( iC = 0; iC < subdev[iS].chanN; iC++ ) { // AO channel loop
 
-	  if ( subdev[iS].chanlist[iC].isUsed ) { // AO channel used test
+	  if ( subdev[iS].chanlist[iC].isUsed &&
+	       dynClampTask.loopCnt >= subdev[iS].delay ) { // AO channel used test
 	    // get data from FIFO:
 	    retVal = rtf_get( subdev[iS].fifo, &voltage, sizeof(voltage) );
 	    if ( retVal != sizeof(voltage) ) {

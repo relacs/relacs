@@ -62,6 +62,7 @@ struct subdeviceT {
   struct chanT *chanlist;
 
   unsigned int frequency;
+  long delay;
   long duration;           // => relative to index of dynclamp-Task
   int continuous;
 
@@ -374,6 +375,7 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC )
 
   // initialize sampling parameters for subdevice:
   subdev[iS].frequency= syncCmdIOC->frequency;
+  subdev[iS].delay = syncCmdIOC->delay;
   subdev[iS].duration = syncCmdIOC->duration;
   subdev[iS].continuous = syncCmdIOC->continuous;
 
@@ -397,7 +399,7 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC )
 int startSubdevice( int iS )
 { 
   int retVal = 0;
-  unsigned long firstLoopCnt, tmpDuration;
+  unsigned long firstLoopCnt, tmpDelay, tmpDuration;
 
   if ( !subdev[iS].prepared || subdev[iS].running ) {
     ERROR_MSG( "startSubdevice ERROR:  Subdevice ID %i on device %s either not prepared or already running.\n",
@@ -411,12 +413,14 @@ int startSubdevice( int iS )
     // get current index of dynclamp loop in a thread-save way:
     do { 
       firstLoopCnt = dynClampTask.loopCnt;
-      tmpDuration = subdev[iS].duration + dynClampTask.loopCnt;
-      dynClampTask.aoIndex = dynClampTask.loopCnt; 
+      tmpDelay = subdev[iS].delay + dynClampTask.loopCnt;
+      tmpDuration = tmpDelay + subdev[iS].duration;
+      dynClampTask.aoIndex = tmpDelay; 
     } 
     while( firstLoopCnt != dynClampTask.loopCnt );
     // set subdevice duration relative to index of dynclamp-Task
-    subdev[iS].duration = tmpDuration; 
+    subdev[iS].delay = tmpDelay; 
+    subdev[iS].duration = tmpDuration;
   }
   else {
     dynClampTask.aoIndex = 0;
@@ -529,8 +533,6 @@ void rtDynClamp( long dummy )
   DEBUG_MSG( "rtDynClamp: starting dynamic clamp loop at %u Hz\n", 
 	     1000000000/dynClampTask.periodLengthNs );
 
-  rt_sleep( nano2count( 1000000 ) ); // FOR TESTING...
-
   dynClampTask.loopCnt = 0;
   dynClampTask.aoIndex = -1;
   dynClampTask.running = 1;
@@ -548,7 +550,7 @@ void rtDynClamp( long dummy )
 
           // check duration:
           if ( !subdev[iS].continuous &&
-              subdev[iS].duration <= dynClampTask.loopCnt ) {
+	       subdev[iS].duration <= dynClampTask.loopCnt ) {
 	    rtf_reset( subdev[iS].fifo );
             subdev[iS].running = 0;
             DEBUG_MSG( "rtDynClamp: ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ loopCnt exceeded duration for subdevice ID %d at loopCnt %lu\n",
@@ -560,51 +562,54 @@ void rtDynClamp( long dummy )
 	      DEBUG_MSG( " duration = %lu, loopCnt = %lu\n", subdev[iS].duration, dynClampTask.loopCnt );
 
           subdevRunning = 1;
-         
-          // for every chan...
-          for ( iC = 0; iC < subdev[iS].chanN; iC++ ) {
 
-            // get data from FIFO:
-            retVal = rtf_get( subdev[iS].fifo, &voltage, sizeof(voltage) );
-            if ( retVal != sizeof(voltage) ) {
-              if ( retVal == EINVAL ) {
-                DEBUG_MSG( "rtDynClamp: No open FIFO for subdevice ID %d at loopCnt %lu\n",
-                           iS, dynClampTask.loopCnt );
-                dynClampTask.running = 0;
-                dynClampTask.duration = 0;
-                return;
-              }
-              subdev[iS].error = E_UNDERRUN;
-              DEBUG_MSG( "rtDynClamp: Data buffer underrun for AO subdevice ID %d at loopCnt %lu\n",
-                         iS, dynClampTask.loopCnt );
-              subdev[iS].running = 0;
-              continue;
-            }
+	  if ( dynClampTask.loopCnt >= subdev[iS].delay ) {
 
-            // write out Sample:
-            lsample = value_to_sample( &subdev[iS].chanlist[iC], voltage );
-            retVal = comedi_data_write( device[subdev[iS].devID].devP, 
-                                        subdev[iS].subdev, 
-                                        subdev[iS].chanlist[iC].chan,
-                                        subdev[iS].chanlist[iC].rangeIndex,
-                                        subdev[iS].chanlist[iC].aref,
-                                        lsample
-					);
-            if ( retVal < 1 ) {
-              subdev[iS].running = 0;
-              if ( retVal < 0 ) {
-                comedi_perror( "rtmodule: rtDynClamp: comedi_data_write" );
-                subdev[iS].error = E_COMEDI;
+	    // for every chan...
+	    for ( iC = 0; iC < subdev[iS].chanN; iC++ ) {
+	      
+	      // get data from FIFO:
+	      retVal = rtf_get( subdev[iS].fifo, &voltage, sizeof(voltage) );
+	      if ( retVal != sizeof(voltage) ) {
+		if ( retVal == EINVAL ) {
+		  DEBUG_MSG( "rtDynClamp: No open FIFO for subdevice ID %d at loopCnt %lu\n",
+			     iS, dynClampTask.loopCnt );
+		  dynClampTask.running = 0;
+		  dynClampTask.duration = 0;
+		  return;
+		}
+		subdev[iS].error = E_UNDERRUN;
+		DEBUG_MSG( "rtDynClamp: Data buffer underrun for AO subdevice ID %d at loopCnt %lu\n",
+			   iS, dynClampTask.loopCnt );
 		subdev[iS].running = 0;
-                //spin_unlock( &subdev[iS].bData.spinlock );
-                continue;
-              }
-              subdev[iS].error = E_NODATA;
-              DEBUG_MSG( "rtDynClamp: E_NODATA for subdevice ID %d channel %d at loopCnt %lu\n",
-			 iS, iC, dynClampTask.loopCnt );
-            }
+		continue;
+	      }
+	      
+	      // write out Sample:
+	      lsample = value_to_sample( &subdev[iS].chanlist[iC], voltage );
+	      retVal = comedi_data_write( device[subdev[iS].devID].devP, 
+					  subdev[iS].subdev, 
+					  subdev[iS].chanlist[iC].chan,
+					  subdev[iS].chanlist[iC].rangeIndex,
+					  subdev[iS].chanlist[iC].aref,
+					  lsample );
+	      if ( retVal < 1 ) {
+		subdev[iS].running = 0;
+		if ( retVal < 0 ) {
+		  comedi_perror( "rtmodule: rtDynClamp: comedi_data_write" );
+		  subdev[iS].error = E_COMEDI;
+		  subdev[iS].running = 0;
+		  //spin_unlock( &subdev[iS].bData.spinlock );
+		  continue;
+		}
+		subdev[iS].error = E_NODATA;
+		DEBUG_MSG( "rtDynClamp: E_NODATA for subdevice ID %d channel %d at loopCnt %lu\n",
+			   iS, iC, dynClampTask.loopCnt );
+	      }
+	      
+	    } // end of chan loop
 
-          } // end of chan loop
+	  }
 
 	} // end of device loop
 
