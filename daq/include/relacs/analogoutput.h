@@ -42,7 +42,6 @@ class AnalogInput;
 \brief Interface for accessing analog output of a data-aquisition board.
 \todo add wait function for blocked writes. Returns an error code in the signals.
 \todo add probe function that returns a string of possible supported devices.
-\todo add directwrite function for single point output
 \todo add a flag for indicating whether device is capable of streaming output
 */
 
@@ -106,6 +105,10 @@ public:
         Set \a extr to zero if the external reference 
 	is a non-constant voltage. */
   void setExternalReference( double extr );
+
+    /*! Directly writes from each signal in \a sigs the first data value
+        to the data acquisition board. */
+  virtual int directWrite( OutList &sigs ) = 0;
 
     /*! Test settings for analog output on the device
         for each output signal in \a sigs.

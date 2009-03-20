@@ -90,6 +90,10 @@ public:
         If -1 is returned this range is not supported. */
   virtual double bipolarRange( int index ) const;
 
+    /*! Directly writes from each signal in \a sigs the first data value
+        to the data acquisition board. */
+  virtual int directWrite( OutList &sigs );
+
     /*! Convert data of the output signals \a sigs.
 	If an error ocurred in any channel, the corresponding errorflags in the
 	OutData structure are filled and a negative value is returned.
@@ -218,7 +222,6 @@ private:
     /*! Conversion polynomials for all channels and bipolar gains. */
   comedi_polynomial_t **BipConverter;
 
-  unsigned int ChanList[MAXCHANLIST];
   bool IsPrepared;
   mutable bool IsRunning;
   mutable int ErrorState;

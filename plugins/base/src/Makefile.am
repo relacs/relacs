@@ -8,6 +8,7 @@ pluginlib_LTLIBRARIES = \
     libbaselowpass.la \
     libbasespectrumanalyzer.la \
     libbasepause.la \
+    libbasesetoutput.la \
     libbasesimplemodel.la
 
 
@@ -121,6 +122,33 @@ libbasepause_la_include_HEADERS = $(HEADER_PATH)/pause.h
 
 
 
+libbasesetoutput_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT3_CPPFLAGS)
+
+libbasesetoutput_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT3_LDFLAGS)
+
+libbasesetoutput_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(QT3_LIBS)
+
+$(libbasesetoutput_la_OBJECTS) : moc_setoutput.cc
+
+libbasesetoutput_la_SOURCES = setoutput.cc
+
+libbasesetoutput_la_includedir = $(pkgincludedir)/base
+
+libbasesetoutput_la_include_HEADERS = $(HEADER_PATH)/setoutput.h
+
+
+
 libbasesimplemodel_la_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
@@ -153,6 +181,7 @@ check_PROGRAMS = \
     linktest_libbaselowpass_la \
     linktest_libbasespectrumanalyzer_la \
     linktest_libbasepause_la \
+    linktest_libbasesetoutput_la \
     linktest_libbasesimplemodel_la
 
 linktest_libbasehighpass_la_SOURCES = linktest.cc
@@ -166,6 +195,9 @@ linktest_libbasespectrumanalyzer_la_LDADD = libbasespectrumanalyzer.la
 
 linktest_libbasepause_la_SOURCES = linktest.cc
 linktest_libbasepause_la_LDADD = libbasepause.la
+
+linktest_libbasesetoutput_la_SOURCES = linktest.cc
+linktest_libbasesetoutput_la_LDADD = libbasesetoutput.la
 
 linktest_libbasesimplemodel_la_SOURCES = linktest.cc
 linktest_libbasesimplemodel_la_LDADD = libbasesimplemodel.la

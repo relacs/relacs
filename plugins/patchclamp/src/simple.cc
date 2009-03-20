@@ -107,25 +107,31 @@ int Simple::main( void )
   P.unlock();
 
   OutData signal( duration, 1.0/samplerate );
-  if ( stimulustype == 0 )
+  if ( stimulustype == 0 ) {
     signal = amplitude;
+    signal.setIdent( "const" );
+  }
   else if ( stimulustype == 1 ) {
     for ( int k=0; k<signal.size(); k++ )
       signal[k] = amplitude*k/signal.size();
+    signal.setIdent( "ramp" );
   }
   else if ( stimulustype == 2 ) {
     for ( int k=0; k<signal.size(); k++ )
       signal[k] = amplitude * ::sin( 2.0*M_PI*k/signal.size() );
+    signal.setIdent( "sin1p" );
   }
   else if ( stimulustype == 3 ) {
     for ( int k=0; k<signal.size(); k++ )
       signal[k] = amplitude * ::sin( 4.0*M_PI*k/signal.size() );
+    signal.setIdent( "sin2p" );
   }
-  else
+  else {
     signal = 0.0;
+    signal.setIdent( "zero" );
+  }
   signal.back() = 0.0;
   signal.setTrace( outtrace );
-  signal.setIdent( "one" );
   convert( signal );
 
   for ( int count=0;

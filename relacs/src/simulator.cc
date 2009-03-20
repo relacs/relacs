@@ -423,6 +423,82 @@ int Simulator::stopWrite( void )
 }
 
 
+int Simulator::writeReset( bool channels, bool params )
+{
+  int retval = 0;
+
+  Sim->stopSignal();
+
+  for ( unsigned int i=0; i<AO.size(); i++ ) {
+
+    AO[i].AO->reset();
+
+    OutList sigs;
+    for ( unsigned int k=0; k<OutTraces.size(); k++ ) {
+      // this is a channel at the device that should be reset:
+      if ( OutTraces[k].device() == (int)i &&
+	   ( ( channels && OutTraces[k].channel() < 1000 ) ||
+	     ( params &&  OutTraces[k].channel() >= 1000 ) ) ) {
+	OutData sig( 1, 0.0001 );
+	sig.setTrace( OutTraces[k].trace() );
+	if ( OutTraces[k].apply( sig ) < 0 )
+	  cerr << "! error: Acquire::writeReset() -> wrong match\n";
+	sig = 0.0;
+	sig.setIdent( "init" );
+	sigs.push( sig );
+      }
+    }
+
+    if ( sigs.size() > 0 ) {
+      // the following should be a direct write!
+      AO[i].AO->directWrite( sigs );
+
+      double st = Sim->add( sigs[0] );
+
+      // error?
+      if ( ! sigs.success() ) {
+	cerr << currentTime() << " ! error in Acquire::writeReset() -> "
+	     << sigs.errorText() << "\n";
+	retval = -1;
+      }
+    }
+    
+  }
+
+  return retval;
+}
+
+
+int Simulator::writeZero( int channel, int device )
+{
+  // check ao device:
+  if ( device < 0 || device >= (int)AO.size() )
+    return -1;
+
+  // device still busy?
+  Sim->stopSignal();
+  AO[device].AO->reset();
+
+  OutData signal( 1, 0.0001 );
+  signal.setChannel( channel, device );
+  signal[0] = 0.0;
+  OutList sigs( signal );
+
+  // write to daq board:
+  AO[device].AO->directWrite( sigs );
+  double st = Sim->add( sigs[0] );
+
+  // error?
+  if ( ! signal.success() ) {
+    cerr << currentTime() << " ! error in Acquire::writeZero( int, int ) -> "
+	 << signal.errorStr() << "\n";
+    return -signal.error();
+  }
+
+  return 0;
+}
+
+
 bool Simulator::readSignal( InList &data, EventList &events )
 {
   if ( LastWrite < 0.0 )

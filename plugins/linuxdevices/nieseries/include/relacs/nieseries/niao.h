@@ -62,6 +62,10 @@ public:
     /*! Maximum sampling rate in Hz of analog output. */
   virtual double maxRate( void ) const;
 
+    /*! Directly writes from each signal in \a sigs the first data value
+        to the data acquisition board. */
+  virtual int directWrite( OutList &sigs );
+
     /*! Convert data of the output signals \a sigs.
 	If an error ocurred in any channel, the corresponding errorflags in the
 	OutData structure are filled and a negative value is returned.

@@ -93,7 +93,6 @@ struct chanlistIOCT {
   struct converterT conversionlist[MAXCHANLIST];
   float scalelist[MAXCHANLIST];
   unsigned int chanlist[MAXCHANLIST];
-  unsigned int chanIsUsed[MAXCHANLIST];
   int userDeviceIndex;
   unsigned int chanlistN;
 };

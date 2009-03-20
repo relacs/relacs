@@ -704,29 +704,6 @@ int Acquire::read( InList &data )
     return -1;
   }
 
-
-  // prepare dynamic clamp output:
-  /* XXX
-     It should be completely sufficient if this is done by relacs right after the read.
-     Or we call write( signals ) at the end of this read function.
-     And actually, it does not hurt, if this is done in any case (non dynamic clamp!) as well.
-     At least if this a continuous acquisition type.
-     How should we handle Attenuator signals?
-  OutList sigs;
-  for ( unsigned int i=0; i<OutTraces.size(); i++ ) {
-    // this is a real output channel:
-    if ( OutTraces[i].channel() < 1000 ) {
-      OutData sig( 1, 0.001 );
-      sig.setTrace( OutTraces[i].trace() );
-      if ( OutTraces[i].apply( sig ) < 0 )
-	cerr << "WRONG MATCH\n";
-      sig = 0.0;
-      sig.setIdent( "init" );
-    }
-  }
-  write( sigs );
-  */
-
   LastDevice = -1;
   LastWrite = -1.0;
 
@@ -1852,34 +1829,64 @@ int Acquire::writeData( void )
 }
 
 
+int Acquire::writeReset( bool channels, bool params )
+{
+  int retval = 0;
+
+  for ( unsigned int i=0; i<AO.size(); i++ ) {
+
+    AO[i].AO->reset();
+
+    OutList sigs;
+    for ( unsigned int k=0; k<OutTraces.size(); k++ ) {
+      // this is a channel at the device that should be reset:
+      if ( OutTraces[k].device() == (int)i &&
+	   ( ( channels && OutTraces[k].channel() < 1000 ) ||
+	     ( params &&  OutTraces[k].channel() >= 1000 ) ) ) {
+	OutData sig( 1, 0.0001 );
+	sig.setTrace( OutTraces[k].trace() );
+	if ( OutTraces[k].apply( sig ) < 0 )
+	  cerr << "! error: Acquire::writeReset() -> wrong match\n";
+	sig = 0.0;
+	sig.setIdent( "init" );
+	sigs.push( sig );
+      }
+    }
+
+    if ( sigs.size() > 0 ) {
+      // write out data;
+      AO[i].AO->directWrite( sigs );
+      // error?
+      if ( ! sigs.success() ) {
+	cerr << currentTime() << " ! error in Acquire::writeReset() -> "
+	     << sigs.errorText() << "\n";
+	retval = -1;
+      }
+    }
+    
+  }
+
+  return retval;
+}
+
+
 int Acquire::writeZero( int channel, int device )
 {
+  // check ao device:
+  if ( device < 0 || device >= (int)AO.size() )
+    return -1;
+
+  // device still busy?
+  if ( AO[device].AO->running() )
+    AO[device].AO->reset();
+
   OutData signal( 1, 0.0001 );
   signal.setChannel( channel, device );
   signal[0] = 0.0;
-
-  // get ao device:
-  int di = signal.device();
-  if ( di < 0 || di >= (int)AO.size() )
-    signal.addError( DaqError::NoDevice );
-
-  // device still busy?
-  if ( AO[di].AO->running() )
-    AO[di].AO->reset();
-
-  // error?
-  if ( ! signal.success() ) {
-    cerr << currentTime() << " ! error in Acquire::writeZero( int, int ) -> "
-	 << signal.errorStr() << "\n";
-    return -signal.error();
-  }
+  OutList sigs( signal );
 
   // write to daq board:
-  Signal.clear();
-  Signal.add( &signal );
-  AO[di].AO->convertData( Signal );
-  AO[di].AO->prepareWrite( Signal );
-  AO[di].AO->startWrite();
+  AO[device].AO->directWrite( sigs );
 
   // error?
   if ( ! signal.success() ) {

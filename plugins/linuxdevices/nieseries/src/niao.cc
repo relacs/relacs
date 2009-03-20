@@ -110,6 +110,13 @@ double NIAO::maxRate( void ) const
 }
 
 
+int NIAO::directWrite( OutList &sigs )
+{
+  cerr << "NIAO::directWrite() is not yet implemented!\n";
+  return 0;
+}
+
+
 int NIAO::testWriteDevice( OutList &sigs )
 {
   // check channel ordering:

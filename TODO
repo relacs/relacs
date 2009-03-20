@@ -1,6 +1,11 @@
 Dynamic clamp:
-- kernel modules ioctl: use access_ok for verifying userspace mem and __copy_from_user
-- update AnanologOutput
+- write back real time loop frequency to InList and OutList samplerate.
+- rewrite analog input part of the dynamic clamp loop in dynclampmodul
+  similar to the analog output part
+- shouldn't it be better if the model would get the parameter first,
+  then computes, and then analog output takes place?
+- WriteDataThread should not be started if the whole stimulus is already transfered.
+- expose directWrite to both RePro and Control.
 
 Save files:
 - check on hardware and with short stimuli!

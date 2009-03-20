@@ -326,6 +326,45 @@ double ComediAnalogOutput::bipolarRange( int index ) const
 }
 
 
+int ComediAnalogOutput::directWrite( OutList &sigs )
+{
+  // setup channel ranges:
+  unsigned int *chanlist = new unsigned int[512];
+  memset( chanlist, 0, sizeof( chanlist ) );
+  setupChanList( sigs, chanlist, 512 );
+
+  for ( int k=0; k<sigs.size(); k++ ) {
+
+    // get range values:
+    double minval = sigs[k].minValue();
+    double maxval = sigs[k].maxValue();
+    double scale = sigs[k].scale();
+    const comedi_polynomial_t * polynomial = (const comedi_polynomial_t *)sigs[k].gainData();
+
+    // apply range:
+    float v = sigs[k].size() > 0 ? sigs[k][0] : 0.0;
+    if ( v > maxval )
+      v = maxval;
+    else if ( v < minval ) 
+      v = minval;
+    v *= scale;
+    lsampl_t data = comedi_from_physical( v, polynomial );
+
+    // write data:
+    int retval = comedi_data_write( DeviceP, SubDevice, CR_CHAN( chanlist[k] ),
+				    CR_RANGE( chanlist[k] ), CR_AREF( chanlist[k] ), data );
+    if ( retval < 1 ) {
+      string emsg = "comedi_direct_write failed: ";
+      emsg += comedi_strerror( comedi_errno() );
+      sigs[k].addErrorStr( emsg );
+    }
+
+  }
+
+  return ( sigs.success() ? 0 : -1 );
+}
+
+
 template < typename T >
 int ComediAnalogOutput::convert( OutList &sigs )
 {
@@ -382,6 +421,9 @@ int ComediAnalogOutput::convert( OutList &sigs )
 
 int ComediAnalogOutput::convertData( OutList &sigs )
 {
+  if ( sigs.size() <= 0 )
+    return -1;
+
   if ( LongSampleType )
     return convert<lsampl_t>( sigs );
   else  
@@ -426,25 +468,14 @@ void dump_cmd( comedi_cmd *cmd )
 }
 
 
-int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd )
+void ComediAnalogOutput::setupChanList( OutList &sigs, unsigned int *chanlist,
+					int maxchanlist )
 {
-  if ( !isOpen() ) {
-    sigs.addError( DaqError::DeviceNotOpen );
-    return -1;
-  }
-
-  // channels:
-  if ( cmd.chanlist != 0 )
-    delete [] cmd.chanlist;
-  unsigned int *chanlist = new unsigned int[512];
-  memset( chanlist, 0, sizeof( chanlist ) );
-  memset( &cmd, 0, sizeof( comedi_cmd ) );
-
   bool softcal = ( ( comedi_get_subdevice_flags( DeviceP, SubDevice ) &
 		     SDF_SOFT_CALIBRATED ) > 0 );
   
   int aref = AREF_GROUND;
-  for ( int k=0; k<sigs.size(); k++ ) {
+  for ( int k=0; k<sigs.size() && k<maxchanlist; k++ ) {
     // minimum and maximum values:
     double min = sigs[k].requestedMin();
     double max = sigs[k].requestedMax();
@@ -582,6 +613,24 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd )
       chanlist[k] = CR_PACK( sigs[k].channel(),
 			     BipolarRangeIndex[index], aref );
   }
+}
+
+
+int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd )
+{
+  if ( !isOpen() ) {
+    sigs.addError( DaqError::DeviceNotOpen );
+    return -1;
+  }
+
+  // channels:
+  if ( cmd.chanlist != 0 )
+    delete [] cmd.chanlist;
+  unsigned int *chanlist = new unsigned int[512];
+  memset( chanlist, 0, sizeof( chanlist ) );
+  memset( &cmd, 0, sizeof( comedi_cmd ) );
+
+  setupChanList( sigs, chanlist, 512 );
 
   if ( sigs.failed() )
     return -1;

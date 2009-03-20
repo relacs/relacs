@@ -98,6 +98,12 @@ int AOSim::testWriteDevice( OutList &sigs )
 }
 
 
+int AOSim::directWrite( OutList &sigs )
+{
+  return 0;  
+}
+
+
 int AOSim::prepareWrite( OutList &sigs )
 {
   // ao still running:

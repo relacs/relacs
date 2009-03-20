@@ -63,6 +63,10 @@ public:
     /*! Maximum sampling rate in Hz of analog output. */
   virtual double maxRate( void ) const;
 
+    /*! Directly writes from each signal in \a sigs the first data value
+        to the data acquisition board. */
+  virtual int directWrite( OutList &sigs );
+
     /*! Prepare analog output of the output signals \a sigs on the device. */
   virtual int prepareWrite( OutList &sigs );
     /*! Convert data of the output signals \a sigs. */

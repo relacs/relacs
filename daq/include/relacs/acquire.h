@@ -522,6 +522,11 @@ public:
         \sa testWrite(), convert(), write(), writeZero(), stopWrite() */
   virtual int writeData( void );
 
+    /*! Write a zero to all analog output channels. 
+        \param[in] channels resets all physical output channels. 
+        \param[in] params resets parameter channels. */
+  virtual int writeReset( bool channels=true, bool params=true );
+
     /*! Set the output of channel \a channel on device \a device to zero.
         Returns 0 on success or a negative number on error. 
         \sa testWrite(), convert(), write(), writeData(), stopWrite() */

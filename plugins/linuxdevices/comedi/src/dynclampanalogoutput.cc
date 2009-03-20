@@ -307,8 +307,6 @@ int DynClampAnalogOutput::setupChanList( OutList &sigs,
 					 int maxchanlist )
 {
   memset( chanlist, 0, maxchanlist * sizeof( unsigned int ) );
-  // find ranges for synchronous acquisition:
-  int aref = AREF_GROUND;
 
   for ( int k=0; k<sigs.size() && k < maxchanlist; k++ ) {
 
@@ -438,6 +436,9 @@ int DynClampAnalogOutput::setupChanList( OutList &sigs,
     sigs[k].setMinVoltage( minboardvolt );
     sigs[k].setMaxVoltage( maxboardvolt );
 
+    // reference:
+    int aref = AREF_GROUND;
+
     // set up channel in chanlist:
     int gi = unipolar ? CAO->UnipolarRangeIndex[ index ] : CAO->BipolarRangeIndex[ index ];
     if ( unipolar ) {
@@ -449,10 +450,116 @@ int DynClampAnalogOutput::setupChanList( OutList &sigs,
       chanlist[k] = CR_PACK( sigs[k].channel(), gi, aref );
     }
 
-    cerr << "DYNCLAMP ChanList channel " << sigs[k].channel() << " packed " << CR_CHAN( ChanList[k] ) << endl;
+    cerr << "DYNCLAMP ChanList channel " << sigs[k].channel() << " packed " << CR_CHAN( chanlist[k] ) << endl;
 
   }
 
+  return 0;
+}
+
+
+int DynClampAnalogOutput::directWrite( OutList &sigs )
+{
+  if ( sigs.size() <= 0 )
+    return -1;
+
+  if ( !isOpen() )
+    return -1;
+
+  // XXX make sure that all signal have size 1!
+
+  reset();
+
+  convertData( sigs );
+
+  // copy and sort signal pointers:
+  OutList ol;
+  ol.add( sigs );
+  ol.sortByChannel();
+
+  unsigned int chanlist[MAXCHANLIST];
+  setupChanList( ol, chanlist, MAXCHANLIST );
+
+  // set chanlist:
+  struct chanlistIOCT chanlistIOC;
+  chanlistIOC.subdevID = SubdeviceID;
+  for( int k = 0; k < ol.size(); k++ ){
+    chanlistIOC.chanlist[k] = chanlist[k];
+    if ( ol[k].channel() < PARAM_CHAN_OFFSET ) {
+      const comedi_polynomial_t* poly = 
+	(const comedi_polynomial_t *)ol[k].gainData();
+      chanlistIOC.conversionlist[k].order = poly->order;
+      if ( poly->order >= MAX_CONVERSION_COEFFICIENTS )
+	cerr << "ERROR in DynClampAnalogInput::prepareWrite -> invalid order in converion polynomial!\n";
+      chanlistIOC.conversionlist[k].expansion_origin = poly->expansion_origin;
+      for ( int c=0; c<MAX_CONVERSION_COEFFICIENTS; c++ )
+	chanlistIOC.conversionlist[k].coefficients[c] = poly->coefficients[c];
+      chanlistIOC.scalelist[k] = ol[k].scale();
+    }
+  }
+  chanlistIOC.userDeviceIndex = ol[0].device();
+  chanlistIOC.chanlistN = ol.size();
+  int retval = ::ioctl( ModuleFd, IOC_CHANLIST, &chanlistIOC );
+  if( retval < 0 ) {
+    cerr << " DynClampAnalogOutput::directWrite -> ioctl command IOC_CHANLIST on device "
+	 << ModuleDevice << " failed!" << endl;
+    return -1;
+  }
+
+  // set up synchronous command:
+  struct syncCmdIOCT syncCmdIOC;
+  syncCmdIOC.subdevID = SubdeviceID;
+  syncCmdIOC.frequency = 0;
+  syncCmdIOC.delay = 0;
+  syncCmdIOC.duration = 1;
+  syncCmdIOC.continuous = 0;
+  retval = ::ioctl( ModuleFd, IOC_SYNC_CMD, &syncCmdIOC );
+  if( retval < 0 ) {
+    cerr << " DynClampAnalogOutput::directWrite -> ioctl command IOC_SYNC_CMD on device "
+	 << ModuleDevice << " failed!" << endl;
+    if ( errno == EINVAL )
+      ol.addError( DaqError::InvalidSampleRate );
+    else
+      ol.addErrorStr( errno );
+    return -1;
+  }
+
+  // apply calibration:
+  /*
+  XXX this requires user space comedi!
+  if ( Calibration != 0 ) {
+    for( int k=0; k < ol.size(); k++ ) {
+      unsigned int channel = CR_CHAN( Cmd.chanlist[k] );
+      unsigned int range = CR_RANGE( Cmd.chanlist[k] );
+      unsigned int aref = CR_AREF( Cmd.chanlist[k] );
+      if ( comedi_apply_parsed_calibration( DeviceP, SubDevice, channel,
+					    range, aref, Calibration ) < 0 )
+	ol[k].addError( DaqError::CalibrationFailed );
+    }
+  }
+  */
+
+  if ( ol.failed() )
+    return -1;
+
+  // fill buffer with data:
+  retval = fillWriteBuffer( sigs );
+  cerr << " DynClampAnalogOutput::directWrite -> fillWriteBuffer returned " << retval << endl;
+  if ( retval < 0 )
+    return -1;
+
+  // start subdevice:
+  retval = ::ioctl( ModuleFd, IOC_START_SUBDEV, &SubdeviceID );
+  if( retval < 0 ) {
+    cerr << " DynClampAnalogOutput::directWrite -> ioctl command IOC_START_SUBDEV on device "
+	 << ModuleDevice << " failed!" << endl;
+    int ern = errno;
+    if ( ern == ENOMEM )
+      cerr << " !!! No stack for kernel task !!!" << endl;
+    sigs.addErrorStr( ern );
+    return -1;
+  }
+  
   return 0;
 }
 
@@ -466,26 +573,31 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
     return -1;
   }
 
+  // copy and sort signal pointers:
+  OutList ol;
+  ol.add( sigs );
+  ol.sortByChannel();
+
   // channel configuration:
-  if ( sigs[0].error() == DaqError::InvalidChannel ) {
-    for ( int k=0; k<sigs.size(); k++ ) {
-      sigs[k].delError( DaqError::InvalidChannel );
+  if ( ol[0].error() == DaqError::InvalidChannel ) {
+    for ( int k=0; k<ol.size(); k++ ) {
+      ol[k].delError( DaqError::InvalidChannel );
       // check channel number:
-      if( sigs[k].channel() < 0 ) {
-	sigs[k].addError( DaqError::InvalidChannel );
-	sigs[k].setChannel( 0 );
+      if( ol[k].channel() < 0 ) {
+	ol[k].addError( DaqError::InvalidChannel );
+	ol[k].setChannel( 0 );
       }
-      else if( sigs[k].channel() >= channels() && sigs[k].channel() < PARAM_CHAN_OFFSET ) {
-	sigs[k].addError( DaqError::InvalidChannel );
-	sigs[k].setChannel( channels()-1 );
+      else if( ol[k].channel() >= channels() && ol[k].channel() < PARAM_CHAN_OFFSET ) {
+	ol[k].addError( DaqError::InvalidChannel );
+	ol[k].setChannel( channels()-1 );
       }
     }
   }
 
   unsigned int chanlist[MAXCHANLIST];
-  setupChanList( sigs, chanlist, MAXCHANLIST );
+  setupChanList( ol, chanlist, MAXCHANLIST );
 
-  if( sigs.failed() )
+  if( ol.failed() )
     return -1;
 
   cerr << " DynClampAnalogOutput::testWrite(): success" << endl;/////TEST/////
@@ -497,15 +609,23 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
 
 int DynClampAnalogOutput::convertData( OutList &sigs )
 {
+  if ( sigs.size() <= 0 )
+    return -1;
+
+  // copy and sort signal pointers:
+  OutList ol;
+  ol.add( sigs );
+  ol.sortByChannel();
+
   // allocate buffer:
-  int nbuffer = sigs.size()*sigs[0].size();
+  int nbuffer = ol.size()*ol[0].size();
   float *buffer = new float [nbuffer];
 
   // multiplex data into buffer:
   float *bp = buffer;
-  for ( int i=0; i<sigs[0].size(); i++ ) {
-    for ( int k=0; k<sigs.size(); k++ ) {
-      *bp = sigs[k][i];
+  for ( int i=0; i<ol[0].size(); i++ ) {
+    for ( int k=0; k<ol.size(); k++ ) {
+      *bp = ol[k][i];
       ++bp;
     }
   }
@@ -528,27 +648,33 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
   if ( sigs.size() <= 0 )
     return -1;
 
-  setupChanList( sigs, ChanList, MAXCHANLIST );
+  // copy and sort signal pointers:
+  OutList ol;
+  ol.add( sigs );
+  ol.sortByChannel();
+
+  unsigned int chanlist[MAXCHANLIST];
+  setupChanList( ol, chanlist, MAXCHANLIST );
 
   // set chanlist:
   struct chanlistIOCT chanlistIOC;
   chanlistIOC.subdevID = SubdeviceID;
-  for( int k = 0; k < sigs.size(); k++ ){
-    chanlistIOC.chanlist[k] = ChanList[k];
-    if ( sigs[k].channel() < PARAM_CHAN_OFFSET ) {
+  for( int k = 0; k < ol.size(); k++ ){
+    chanlistIOC.chanlist[k] = chanlist[k];
+    if ( ol[k].channel() < PARAM_CHAN_OFFSET ) {
       const comedi_polynomial_t* poly = 
-	(const comedi_polynomial_t *)sigs[k].gainData();
+	(const comedi_polynomial_t *)ol[k].gainData();
       chanlistIOC.conversionlist[k].order = poly->order;
       if ( poly->order >= MAX_CONVERSION_COEFFICIENTS )
 	cerr << "ERROR in DynClampAnalogInput::prepareWrite -> invalid order in converion polynomial!\n";
       chanlistIOC.conversionlist[k].expansion_origin = poly->expansion_origin;
       for ( int c=0; c<MAX_CONVERSION_COEFFICIENTS; c++ )
 	chanlistIOC.conversionlist[k].coefficients[c] = poly->coefficients[c];
-      chanlistIOC.scalelist[k] = sigs[k].scale();
+      chanlistIOC.scalelist[k] = ol[k].scale();
     }
   }
-  chanlistIOC.userDeviceIndex = sigs[0].device();
-  chanlistIOC.chanlistN = sigs.size();
+  chanlistIOC.userDeviceIndex = ol[0].device();
+  chanlistIOC.chanlistN = ol.size();
   int retval = ::ioctl( ModuleFd, IOC_CHANLIST, &chanlistIOC );
   cerr << "prepareWrite(): IOC_CHANLIST done!" << endl; /// TEST
   if( retval < 0 ) {
@@ -560,46 +686,46 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
   // set up synchronous command:
   struct syncCmdIOCT syncCmdIOC;
   syncCmdIOC.subdevID = SubdeviceID;
-  syncCmdIOC.frequency = (unsigned int)sigs[0].sampleRate();
-  syncCmdIOC.delay = sigs[0].indices( sigs[0].delay() );
-  syncCmdIOC.duration = sigs[0].size();
-  syncCmdIOC.continuous = sigs[0].continuous();
+  syncCmdIOC.frequency = (unsigned int)ol[0].sampleRate();
+  syncCmdIOC.delay = ol[0].indices( ol[0].delay() );
+  syncCmdIOC.duration = ol[0].size();
+  syncCmdIOC.continuous = ol[0].continuous();
   retval = ::ioctl( ModuleFd, IOC_SYNC_CMD, &syncCmdIOC );
   cerr << "prepareWrite(): IOC_SYNC_CMD done!" << endl; /// TEST
   if( retval < 0 ) {
     cerr << " DynClampAnalogOutput::prepareWrite -> ioctl command IOC_SYNC_CMD on device "
 	 << ModuleDevice << " failed!" << endl;
     if ( errno == EINVAL )
-      sigs.addError( DaqError::InvalidSampleRate );
+      ol.addError( DaqError::InvalidSampleRate );
     else
-      sigs.addErrorStr( errno );
+      ol.addErrorStr( errno );
     return -1;
   }
 
   // check buffer size:
-  int minbufsize = sigs.size()*BufferElemSize*sigs[0].indices( sigs[0].writeTime() ) * BufferElemSize;
+  int minbufsize = ol.size()*BufferElemSize*ol[0].indices( ol[0].writeTime() ) * BufferElemSize;
   if ( minbufsize > BufferSize )
-    sigs.addError( DaqError::InvalidBufferTime );
+    ol.addError( DaqError::InvalidBufferTime );
 
   // apply calibration:
   /*
   XXX this requires user space comedi!
   if ( Calibration != 0 ) {
-    for( int k=0; k < sigs.size(); k++ ) {
+    for( int k=0; k < ol.size(); k++ ) {
       unsigned int channel = CR_CHAN( Cmd.chanlist[k] );
       unsigned int range = CR_RANGE( Cmd.chanlist[k] );
       unsigned int aref = CR_AREF( Cmd.chanlist[k] );
       if ( comedi_apply_parsed_calibration( DeviceP, SubDevice, channel,
 					    range, aref, Calibration ) < 0 )
-	sigs[k].addError( DaqError::CalibrationFailed );
+	ol[k].addError( DaqError::CalibrationFailed );
     }
   }
   */
 
-  IsPrepared = sigs.success();
+  IsPrepared = ol.success();
 
-  if ( sigs.success() ) {
-    setSettings( sigs, BufferSize );
+  if ( ol.success() ) {
+    setSettings( ol, BufferSize );
     Sigs = &sigs;
   }
 
