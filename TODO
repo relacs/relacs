@@ -5,7 +5,9 @@ Dynamic clamp:
 - shouldn't it be better if the model would get the parameter first,
   then computes, and then analog output takes place?
 - WriteDataThread should not be started if the whole stimulus is already transfered.
-- expose directWrite to both RePro and Control.
+- check and improve writeReset and writeZero interfaces and implementations.
+- directWrite implementation should take care about synchronization as well!
+  ComediAnalogOutput should use instruction lists for this.
 
 Save files:
 - check on hardware and with short stimuli!

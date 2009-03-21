@@ -41,15 +41,22 @@ OutData::OutData( void )
 }
 
 
-OutData::OutData( int n, const double stepsize ) 
+OutData::OutData( int n, double stepsize ) 
   : SampleDataF( n, 0.0, stepsize, 0.0 )
 {
   construct();
 }
 
 
-OutData::OutData( const double duration, const double stepsize ) 
+OutData::OutData( double duration, double stepsize ) 
   : SampleDataF( 0.0, duration, stepsize, 0.0 )
+{
+  construct();
+}
+
+
+OutData::OutData( double value ) 
+  : SampleDataF( 1, 0.0, 0.01, value )
 {
   construct();
 }

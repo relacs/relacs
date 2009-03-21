@@ -88,22 +88,25 @@ class OutData : public SampleData< float >, public DaqError
   OutData( void );
     /*! Create an OutData-object with \a n data elements sampled with
         \a stepsize seconds. */
-  OutData( int n, const double stepsize );
+  OutData( int n, double stepsize );
     /*! Create an OutData-object for data elements sampled with
         \a stepsize for \a duration seconds. */
-  OutData( const double duration, const double stepsize );
+  OutData( double duration, double stepsize );
+    /*! Create an OutData-object with a single data element
+        with value \a value. */
+  OutData( double value );
    /*! Create an OutData-object with \a n data elements sampled with
        \a stepsize and initialzes them with the values given in \a a. */
   template < typename R >
-  OutData( const R *a, int n, const double stepsize=1.0 );
+  OutData( const R *a, int n, double stepsize=1.0 );
     /*! Create an OutData-object with the same size and content
         as the vector \a a, sampled with \a stepsize. */
   template < typename R >
-  OutData( const vector< R > &a, const double stepsize=1.0 );
+  OutData( const vector< R > &a, double stepsize=1.0 );
     /*! Create an OutData-object with the same size and content
         as the array \a a, sampled with \a stepsize. */
   template < typename R >
-  OutData( const Array< R > &a, const double stepsize=1.0 );
+  OutData( const Array< R > &a, double stepsize=1.0 );
     /*! Create an OutData-object with the same size and content
         as the array \a sa.
         sa.offset() is set to zero. */

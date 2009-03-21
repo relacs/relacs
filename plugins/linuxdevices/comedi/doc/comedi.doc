@@ -83,7 +83,25 @@ $ cd /usr/local/src/comedi
 $ cp include/linux/comedi.h /usr/include/linux/
 $ cp include/linux/comedilib.h /usr/include/linux/
 \endcode
-
+-# If the comedi drivers for your daq-board are not autoconfiguring yet,
+then you need to create the file \c /etc/modprobe.d/comedi
+and write the following line into it
+\code
+options comedi comedi_num_legacy_minors=4
+\endcode
+This tell \c modprobe to pass the 'comedi_num_legacy_minors=4' option
+to the \c comedi kernel module when iti is loaded. This option tells
+\c comedi to create the first four device files \c /dev/comedi[0-3]
+and leave them for manual configuration.
+You also might want to add the following line to \c /etc/init.d/boot.local
+\code
+comedi_config /dev/comedi0 ni_mio_cs
+\endcode
+so that your comedi device is automatically configure during startup.
+Read the man page of \c comedi_config first!
+\code
+man comedi_config
+\endcode
 
 \subsection installcomedicalib Comedi_calibrate
 -# Change to the \c comedi_calibrate directory:
@@ -326,6 +344,11 @@ Watch the output while RTAI is configured for possible warnings and errors.
 \code
 $ make
 $ make install
+\endcode
+-# Make the RTAI kernel modules known to modprobe:
+\code
+$ ln -s /usr/realtime/modules /lib/modules/`uname -r`/rtai
+$ depmod -a
 \endcode
 
 

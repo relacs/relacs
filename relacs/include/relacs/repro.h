@@ -254,6 +254,25 @@ public:
 	the output operation. */
   int write( OutList &signal );
 
+    /*! Direct output of a single data value as specified by \a signal
+        to the DAQ board.
+	Only the output trace ( OutData::setTrace() ) or the the name of the
+	output trace ( OutData::setTraceName() ), as well as the
+	single data value need to be specified.
+	\return 0 on success, a negative number if the output of the signal
+	failed. The reason for the failure is specified in the error state
+	of \a signal. */
+  int directWrite( OutData &signal );
+    /*! Direct output of single data values as specified by \a signal
+        to different channels of the DAQ board.
+	Only the output traces ( OutData::setTrace() ) or the the name of the
+	output traces ( OutData::setTraceName() ), as well as the
+	single data values need to be specified.
+	\return 0 on success, a negative number if the output of the signals
+	failed. The reason for the failure is specified in the error state
+	of \a signal. */
+  int directWrite( OutList &signal );
+
     /*! Set the output of channel \a channel on device \a device to zero.
         Returns 0 on success or a negative number on error. 
         If \a device is negative, the default device is used. */

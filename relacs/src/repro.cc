@@ -338,6 +338,18 @@ int RePro::write( OutList &signal )
 }
 
 
+int RePro::directWrite( OutData &signal )
+{
+  return RW->directWrite( signal );
+}
+
+
+int RePro::directWrite( OutList &signal )
+{
+  return RW->directWrite( signal );
+}
+
+
 int RePro::writeZero( int channel, int device )
 {
   return RW->AQ->writeZero( channel, device );

@@ -40,6 +40,7 @@ possible gain factors, maximum attenuation).
 Maybe via a single DAQ simulator that stores this information
 in a simulation config file.
 \todo readBuffer implementation
+\todo support of multiple inputs and outputs
 */
 
 class Model;
@@ -91,6 +92,13 @@ public:
         \return \c true if there was a new signal event. */
   virtual bool readSignal( InList &data, EventList &events );
 
+    /*! Direct output of a single data value as specified by \a signal
+        to the DAQ boards. */
+  virtual int directWrite( OutData &signal );
+    /*! Direct output of single data values as specified by \a signal
+        to different channels of the DAQ boards. */
+  virtual int directWrite( OutList &signal );
+
     /*! Write a zero to all analog output channels. 
         \param[in] channels resets all physical output channels. 
         \param[in] params resets parameter channels. */
@@ -108,8 +116,10 @@ public:
     /*! Restart data aquisition and write signals 
         pending on devices in \a aos.
         If still running, stop analog input first.
+	If \a directao, then the analog output signals are scheduled for direct outut.
         If \a updategains, the input gains are updated as well. */
-  virtual int restartRead( vector< AnalogOutput* > &aos, bool updategains );
+  virtual int restartRead( vector< AnalogOutput* > &aos, bool directao,
+			   bool updategains );
 
 
 private:

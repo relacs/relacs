@@ -521,6 +521,24 @@ public:
 	successfully transfered to the hardware driver.
         \sa testWrite(), convert(), write(), writeZero(), stopWrite() */
   virtual int writeData( void );
+    /*! Direct output of a single data value as specified by \a signal
+        to the DAQ boards.
+	Only the output trace ( OutData::setTrace() ) or the the name of the
+	output trace ( OutData::setTraceName() ), as well as the
+	single data value need to be specified.
+	\return 0 on success, a negative number if the output of the signal
+	failed. The reason for the failure is specified in the error state
+	of \a signal. */
+  virtual int directWrite( OutData &signal );
+    /*! Direct output of single data values as specified by \a signal
+        to different channels of the DAQ boards.
+	Only the output traces ( OutData::setTrace() ) or the the name of the
+	output traces ( OutData::setTraceName() ), as well as the
+	single data values need to be specified.
+	\return 0 on success, a negative number if the output of the signals
+	failed. The reason for the failure is specified in the error state
+	of \a signal. */
+  virtual int directWrite( OutList &signal );
 
     /*! Write a zero to all analog output channels. 
         \param[in] channels resets all physical output channels. 
@@ -619,8 +637,10 @@ protected:
     /*! Restart data aquisition and write signals 
         pending on devices in \a aos.
         If still running, stop analog input first.
+	If \a directao, then the analog output signals are scheduled for direct outut.
         If \a updategains, the input gains are updated as well. */
-  virtual int restartRead( vector< AOData* > &aod, bool updategains );
+  virtual int restartRead( vector< AOData* > &aod, bool directao,
+			   bool updategains );
 
     /*! The currently used synchronization method. */
   SyncModes SyncMode;

@@ -890,6 +890,84 @@ int RELACSWidget::write( OutList &signal )
 }
 
 
+int RELACSWidget::directWrite( OutData &signal )
+{
+  if ( AQ->readSignal( IL, ED ) ) // we should get the start time of the latest signal here
+    SF->save( IL, ED );
+  // last stimulus still not saved?
+  if ( SF->signalPending() ) {
+    CurrentRePro->unlockAll();
+    // force data updates:
+    ThreadSleepWait.wakeAll();
+    do {
+      // wait for data updates:
+      DataSleepWait.wait();
+    } while ( SF->signalPending() );
+    CurrentRePro->lockAll();
+  }
+  lockSignals();
+  lockAI();
+  int r = AQ->directWrite( signal );
+  unlockAI();
+  unlockSignals();
+  if ( r == 0 ) {
+    lockSignals();
+    SF->save( signal );
+    unlockSignals();
+    lockAI();
+    AQ->readSignal( IL, ED ); // if acquisition was restarted we here get the signal start
+    unlockAI();
+    AQ->readRestart( IL, ED );
+    // update device menu:
+    QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
+  }
+  else
+    printlog( "! failed to write signal: " + signal.errorText() );
+  if ( IL.failed() )
+    printlog( "! error in restarting analog input: " + IL.errorText() );
+  return r;
+}
+
+
+int RELACSWidget::directWrite( OutList &signal )
+{
+  if ( AQ->readSignal( IL, ED ) ) // we should get the start time of the latest signal here
+    SF->save( IL, ED );
+  // last stimulus still not saved?
+  if ( SF->signalPending() ) {
+    CurrentRePro->unlockAll();
+    // force data updates:
+    ThreadSleepWait.wakeAll();
+    do {
+      // wait for data updates:
+      DataSleepWait.wait();
+    } while ( SF->signalPending() );
+    CurrentRePro->lockAll();
+  }
+  lockSignals();
+  lockAI();
+  int r = AQ->directWrite( signal );
+  unlockAI();
+  unlockSignals();
+  if ( r == 0 ) {
+    lockSignals();
+    SF->save( signal );
+    unlockSignals();
+    lockAI();
+    AQ->readSignal( IL, ED ); // if acquisition was restarted we here get the signal start
+    unlockAI();
+    AQ->readRestart( IL, ED );
+    // update device menu:
+    QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
+  }
+  else
+    printlog( "! failed to write signals: " + signal.errorText() );
+  if ( IL.failed() )
+    printlog( "! error in restarting analog input: " + IL.errorText() );
+  return r;
+}
+
+
 void RELACSWidget::noSaving( void )
 {
   SF->save( false, IL, ED );

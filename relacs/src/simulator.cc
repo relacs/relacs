@@ -260,7 +260,8 @@ int Simulator::stopRead( void )
 }
 
 
-int Simulator::restartRead( vector< AnalogOutput* > &aos, bool updategains )
+int Simulator::restartRead( vector< AnalogOutput* > &aos, bool directao,
+			    bool updategains )
 {
   bool success = true;
 
@@ -376,7 +377,7 @@ int Simulator::write( OutData &signal )
        signal.restart() ||
        SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
     vector< AnalogOutput* > aos( 1, AO[di].AO );
-    restartRead( aos, true );
+    restartRead( aos, false, true );
   }
   else
     AO[di].AO->startWrite();
@@ -423,47 +424,140 @@ int Simulator::stopWrite( void )
 }
 
 
+int Simulator::directWrite( OutData &signal )
+{
+  // set trace:
+  applyOutTrace( signal );
+
+  signal.clearError();
+
+  // get ao device:
+  int di = signal.device();
+  if ( di < 0 ) {
+    signal.addError( DaqError::NoDevice );
+    signal.setDevice( 0 );
+  }
+  else if ( di >= (int)AO.size() ) {
+    signal.addError( DaqError::NoDevice );
+    signal.setDevice( AO.size()-1 );
+  }
+
+  // device still busy?
+  if ( AO[di].AO->running() ) {
+    if ( signal.priority() )
+      AO[di].AO->reset();
+    else
+      signal.addError( DaqError::Busy );
+  }
+
+  // error?
+  if ( signal.failed() ) {
+    AO[di].Signals.clear();
+    return -1;
+  }
+
+  // clear device datas:
+  for ( unsigned int i=0; i<AO.size(); i++ )
+    AO[i].Signals.clear();
+
+  // add data to device:
+  AO[di].Signals.add( &signal );
+
+  // set intensity:
+  for ( unsigned int a=0; a<Att.size(); a++ ) {
+    if ( ( Att[a].Id == di ) && 
+	 ( Att[a].Att->aoChannel() == signal.channel() ) ) {
+      if ( signal.noIntensity() )
+	signal.addError( DaqError::NoIntensity );
+      else {
+	double intens = signal.intensity();
+	int ra = 0;
+	if ( intens == OutData::MuteIntensity )
+	  ra = Att[a].Att->mute();
+	else {
+	  ra = Att[a].Att->write( intens, signal.carrierFreq() );
+	  signal.setIntensity( intens );
+	}
+	signal.addAttError( ra );
+      }
+    }
+    else
+      Att[a].Att->mute();
+  }
+
+  // start writing to daq board:
+  if ( gainChanged() ||
+       signal.restart() ||
+       SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
+    vector< AnalogOutput* > aos( 1, AO[di].AO );
+    restartRead( aos, true, true );
+  }
+  else
+    AO[di].AO->directWrite( AO[di].Signals );
+
+  // error?
+  if ( signal.failed() )
+    return -1;
+
+  double st = Sim->add( signal );
+  // device still busy?
+  if ( st < 0.0 ) {
+    if ( signal.priority() ) {
+      Sim->stopSignal();
+      st = Sim->add( signal );
+    }
+    else
+      signal.addError( OutData::Busy );
+  }
+  if ( st >= 0.0 ) {
+    LastWrite = st;
+    LastDuration = signal.duration();
+    LastDelay = 0.0;  // this is already contained in st!
+  }
+
+  // error?
+  if ( signal.failed() )
+    return -1;
+
+  return 0;
+}
+
+
+int Simulator::directWrite( OutList &signal )
+{
+  return 0;
+}
+
+
 int Simulator::writeReset( bool channels, bool params )
 {
   int retval = 0;
 
   Sim->stopSignal();
 
+  OutList sigs;
+
   for ( unsigned int i=0; i<AO.size(); i++ ) {
 
     AO[i].AO->reset();
 
-    OutList sigs;
     for ( unsigned int k=0; k<OutTraces.size(); k++ ) {
       // this is a channel at the device that should be reset:
       if ( OutTraces[k].device() == (int)i &&
 	   ( ( channels && OutTraces[k].channel() < 1000 ) ||
 	     ( params &&  OutTraces[k].channel() >= 1000 ) ) ) {
-	OutData sig( 1, 0.0001 );
+	OutData sig( 0.0 );
 	sig.setTrace( OutTraces[k].trace() );
 	if ( OutTraces[k].apply( sig ) < 0 )
 	  cerr << "! error: Acquire::writeReset() -> wrong match\n";
-	sig = 0.0;
 	sig.setIdent( "init" );
 	sigs.push( sig );
       }
     }
-
-    if ( sigs.size() > 0 ) {
-      // the following should be a direct write!
-      AO[i].AO->directWrite( sigs );
-
-      double st = Sim->add( sigs[0] );
-
-      // error?
-      if ( ! sigs.success() ) {
-	cerr << currentTime() << " ! error in Acquire::writeReset() -> "
-	     << sigs.errorText() << "\n";
-	retval = -1;
-      }
-    }
     
   }
+
+  directWrite( sigs );
 
   return retval;
 }
@@ -486,7 +580,7 @@ int Simulator::writeZero( int channel, int device )
 
   // write to daq board:
   AO[device].AO->directWrite( sigs );
-  double st = Sim->add( sigs[0] );
+  Sim->add( sigs[0] );
 
   // error?
   if ( ! signal.success() ) {

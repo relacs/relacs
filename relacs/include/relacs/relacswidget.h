@@ -167,6 +167,15 @@ public:
   int write( OutData &signal );
   int write( OutList &signal );
 
+    /*! Direct output of a single data value as specified by \a signal
+        to the DAQ board.
+        Passing infos to SaveFiles. */
+  int directWrite( OutData &signal );
+    /*! Direct output of single data values as specified by \a signal
+        to different channels of the DAQ board.
+        Passing infos to SaveFiles. */
+  int directWrite( OutList &signal );
+
     /*! Data recorded during runtime of the current RePro don't have to be saved. */
   void noSaving( void );
     /*! */

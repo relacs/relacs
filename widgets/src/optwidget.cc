@@ -133,6 +133,7 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
   QWidget *parent = this;
   QTabWidget *tabwidget = 0;
   bool tabs = false;
+  bool focus = true;
   for ( ; pp != Opt->end(); ++pp ) {
     if ( selectmask <= 0 || ( (*pp).flags() & selectmask ) ) {
       tabs = ( (*pp).isLabel() && 
@@ -247,6 +248,10 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
 	}
 	if ( (*pp).size() <= 1 ) {
 	  OptWidgetText *t = new OptWidgetText( pp, l, Opt, this, parent, OMutex );
+	  if ( t->Editable && focus ) {
+	    setFocusProxy( t->W );
+	    focus = false;
+	  }
 	  if ( style & BreakLinesStyle ) {
 	    row++;
 	    if ( ul != 0 || t->browseButton() != 0 )
@@ -268,6 +273,10 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
 	}
 	else {
 	  OptWidgetMultiText *t = new OptWidgetMultiText( pp, l, Opt, this, parent, OMutex );
+	  if ( t->Editable && focus ) {
+	    setFocusProxy( t->W );
+	    focus = false;
+	  }
 	  if ( style & BreakLinesStyle ) {
 	    row++;
 	    if ( ul != 0 )
@@ -291,6 +300,10 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
 	  Layout.back()->addWidget( l, row, 1,
 				    Qt::AlignLeft | Qt::AlignVCenter );
 	OptWidgetNumber *n = new OptWidgetNumber( pp, l, Opt, this, parent, OMutex );
+	if ( n->Editable && focus ) {
+	  setFocusProxy( n->W );
+	  focus = false;
+	}
 	if ( style & BreakLinesStyle ) {
 	  row++;
 	  Layout.back()->addWidget( n->W, row, 1 );
@@ -310,6 +323,10 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
       // boolean:
       else if ( (*pp).isBoolean() ) {
 	OptWidgetBoolean *b = new OptWidgetBoolean( pp, Opt, this, parent, rs, OMutex );
+	if ( b->Editable && focus ) {
+	  setFocusProxy( b->W );
+	  focus = false;
+	}
 	if ( style & BreakLinesStyle )
 	  Layout.back()->addMultiCellWidget( b->W, row, row, 1, 2,
 					     Qt::AlignLeft | Qt::AlignVCenter );
@@ -1293,6 +1310,7 @@ OptWidgetBoolean::OptWidgetBoolean( Options::iterator op, Options *oo,
   OptWidget::setLabelStyle( label, (*OP).style() );
   reset();
   if ( Editable ) {
+    label->setFocusProxy( EW );
     Value = (*OP).boolean();
     connect( EW, SIGNAL( toggled( bool ) ),
 	     this, SLOT( valueChanged( bool ) ) );

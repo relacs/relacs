@@ -19,6 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <relacs/tablekey.h>
+#include <relacs/base/setoutput.h>
 #include <relacs/patchclamp/simple.h>
 using namespace relacs;
 
@@ -40,6 +42,7 @@ Simple::Simple( void )
   addNumber( "samplerate", "Sampling rate of output", 1000.0, 0.0, 10000000.0, 1000.0, "Hz", "kHz" ).setActivation( "samerate", "false" );
   addNumber( "pause", "Duration of pause bewteen outputs", 0.4, 0.001, 1.0, 0.001, "sec", "ms" );
   addInteger( "repeats", "Repeats", 100, 0, 10000, 1 );
+  addBoolean( "save", "Save recorded traces", false );
 
   // plot:
   P.lock();
@@ -94,6 +97,7 @@ int Simple::main( void )
   double duration = number( "duration" );
   double pause = number( "pause" );
   int repeats = integer( "repeats" );
+  bool save = boolean( "save" );
 
   // don't print repro message:
   noMessage();
@@ -106,6 +110,7 @@ int Simple::main( void )
   P.setXRange( -1000.0*duration, 1000.0*duration );
   P.unlock();
 
+  // signal:
   OutData signal( duration, 1.0/samplerate );
   if ( stimulustype == 0 ) {
     signal = amplitude;
@@ -134,6 +139,38 @@ int Simple::main( void )
   signal.setTrace( outtrace );
   convert( signal );
 
+  // save:
+  ofstream df;
+  TableKey key;
+  if ( save ) {
+    df.open( addPath( "simpletrace.dat" ).c_str(),
+	     ofstream::out | ofstream::app );
+    if ( ! df.good() )
+      save = false;
+    else {
+      // write header and key:
+      Options header;
+      header.addInteger( "index", totalRuns()-1 );
+      RePro *r = repro( "SetOutput" );
+      if ( r != 0 ) {
+	base::SetOutput *so = dynamic_cast<base::SetOutput*>( r );
+	if ( so != 0 && so->outTraces().size( 2 ) > 0 ) {
+	  header.addLabel( "model parameter:" );
+	  header.readAppend( so->outTraces(), 2 );
+	}
+      }
+      header.addText( "session time", sessionTimeStr() ); 
+      header.addLabel( "settings:" );
+      header.save( df, "# " );
+      Options::save( df, "#   ", -1, 0, false, true );
+      df << '\n';
+      key.addNumber( "t", "ms", "%7.2f" );
+      key.addNumber( trace( intrace ).ident(), trace( intrace ).unit(), "%7.2f" );
+      key.saveKey( df, true, false );
+    }
+  }
+
+  // write stimulus:
   for ( int count=0;
 	( repeats <= 0 || count < repeats ) && softStop() == 0;
 	count++ ) {
@@ -153,15 +190,36 @@ int Simple::main( void )
       return count > 2 ? Completed : Aborted;
     }
 
-    //    analyze( trace( intrace ), duration, count, deltat );
+    //    analyze( trace( intrace ), duration, count );
     sleep( pause );
+
+    if ( save ) {
+      const InData &data = trace( intrace );
+      int si = data.signalIndex();
+      int di = data.indices( duration );
+      for ( int k=si-di/2; k<si+3*di/2; k++ ) {
+	key.save( df, 1000.0*(data.pos( k ) - data.signalTime()), 0 );
+	key.save( df, data[k] );
+	df << '\n';
+      }
+      df << '\n';
+    }
+
     if ( interrupt() ) {
+      if ( save ) {
+	df << '\n';
+	df.close();
+      }
       //      writeZero( outtrace );
       return count > 2 ? Completed : Aborted;
     }
 
   }
 
+  if ( save ) {
+    df << '\n';
+    df.close();
+  }
   //  writeZero( outtrace );
   return Completed;
 }

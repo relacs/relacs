@@ -22,6 +22,8 @@
 #ifndef _RELACS_BASE_SETOUTPUT_H_
 #define _RELACS_BASE_SETOUTPUT_H_ 1
 
+#include <qwaitcondition.h>
+#include <relacs/optwidget.h>
 #include <relacs/repro.h>
 using namespace relacs;
 
@@ -31,9 +33,9 @@ namespace base {
 /*!
 \class SetOutput
 \brief [RePro] Set an output to a specified value
-
+\bug Wait should wake up if requestStop was called! Use RePro::SleepWait
 \author Jan Benda
-\version 0.0 (Mar 20, 2009)
+\version 1.0 (Mar 21, 2009)
 
 \par Options
 \arg \b outtrace (\c text): Name of the output trace. 
@@ -51,6 +53,24 @@ public:
   virtual void config( void );
   virtual void notify( void );
   virtual int main( void );
+
+  const Options &outTraces( void ) const;
+
+
+public slots:
+
+  void setValues( void );
+  void keepValues( void );
+
+
+protected:
+
+  OptWidget STW;
+  Options OutOpts;
+  QWaitCondition Wait;
+  bool Change;
+  static const int ChannelFlag = 1;
+  static const int ParameterFlag = 2;
 
 };
 

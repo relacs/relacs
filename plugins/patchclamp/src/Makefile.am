@@ -49,6 +49,7 @@ libpatchclampsimple_la_CPPFLAGS = \
     -I$(top_srcdir)/options/include \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/plugins/base/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)

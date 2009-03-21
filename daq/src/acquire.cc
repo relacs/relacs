@@ -748,7 +748,7 @@ int Acquire::readData( void )
   // restart:    
   if ( error ) {
     vector< AOData* > aod( 0 );
-    restartRead( aod, false );
+    restartRead( aod, false, false );
     return -1;
   }
 
@@ -797,7 +797,8 @@ int Acquire::stopRead( void )
 }
 
 
-int Acquire::restartRead( vector< AOData* > &aod, bool updategains )
+int Acquire::restartRead( vector< AOData* > &aod, bool directao,
+			  bool updategains )
 {
   //  cerr << currentTime() << " Acquire::restartRead() begin \n";
 
@@ -887,6 +888,14 @@ int Acquire::restartRead( vector< AOData* > &aod, bool updategains )
     }
   }
 
+  // direct analog output:
+  if ( directao ) {
+    for ( unsigned int i=0; i<aod.size(); i++ ) {
+      if ( aod[i]->AO->directWrite( aod[i]->Signals ) != 0 )
+	success = false;
+    }
+  }
+
   // start reading from daq boards:
   vector< int > aistarted;
   aistarted.reserve( AI.size() );
@@ -911,30 +920,32 @@ int Acquire::restartRead( vector< AOData* > &aod, bool updategains )
   if ( ! success )
     return -1;
     
-  // start writing signals:
-  vector< int > aostarted;
-  aostarted.reserve( aod.size() );
-  for ( unsigned int i=0; i<aod.size(); i++ ) {
-    bool started = false;
-    for ( unsigned int k=0; k<aistarted.size(); k++ ) {
-      if ( aistarted[k] == aod[i]->AIDevice ) {
-	started = true;
-	break;
-      }
-    }
-    if ( ! started ) {
-      for ( unsigned int k=0; k<aostarted.size(); k++ ) {
-	if ( aostarted[k] == aod[i]->AODevice ) {
+  // start writing streaming signals:
+  if ( ! directao ) {
+    vector< int > aostarted;
+    aostarted.reserve( aod.size() );
+    for ( unsigned int i=0; i<aod.size(); i++ ) {
+      bool started = false;
+      for ( unsigned int k=0; k<aistarted.size(); k++ ) {
+	if ( aistarted[k] == aod[i]->AIDevice ) {
 	  started = true;
 	  break;
 	}
       }
-    }
-    if ( ! started ) {
-      if ( aod[i]->AO->startWrite() != 0 )
-	success = false;
+      if ( ! started ) {
+	for ( unsigned int k=0; k<aostarted.size(); k++ ) {
+	  if ( aostarted[k] == aod[i]->AODevice ) {
+	    started = true;
+	    break;
+	  }
+	}
+      }
+      if ( ! started ) {
+	if ( aod[i]->AO->startWrite() != 0 )
+	  success = false;
       else
 	aostarted.push_back( aoinx[ i ] );
+      }
     }
   }
 
@@ -1154,7 +1165,7 @@ int Acquire::activateGains( void )
     return 0;
 
   vector< AOData* > aod( 0 );
-  return restartRead( aod, true );
+  return restartRead( aod, false, true );
 }
 
 
@@ -1559,7 +1570,7 @@ int Acquire::write( OutData &signal )
        signal.restart() ||
        SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
     vector< AOData* > aod( 1, &AO[di] );
-    restartRead( aod, true );
+    restartRead( aod, false, true );
   }
   else
     AO[di].AO->startWrite();
@@ -1776,7 +1787,7 @@ int Acquire::write( OutList &signal )
   if ( gainChanged() ||
        signal[0].restart() ||
        SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
-    if ( restartRead( aod, true ) != 0 )
+    if ( restartRead( aod, false, true ) != 0 )
       success = false;
   }
   else {
@@ -1829,41 +1840,297 @@ int Acquire::writeData( void )
 }
 
 
+int Acquire::directWrite( OutData &signal )
+{
+  // set trace:
+  applyOutTrace( signal );
+
+  signal.clearError();
+
+  // get ao device:
+  int di = signal.device();
+  if ( di < 0 ) {
+    signal.addError( DaqError::NoDevice );
+    signal.setDevice( 0 );
+  }
+  else if ( di >= (int)AO.size() ) {
+    signal.addError( DaqError::NoDevice );
+    signal.setDevice( AO.size()-1 );
+  }
+
+  // device still busy?
+  if ( AO[di].AO->running() ) {
+    if ( signal.priority() )
+      AO[di].AO->reset();
+    else
+      signal.addError( DaqError::Busy );
+  }
+
+  // error?
+  if ( signal.failed() ) {
+    AO[di].Signals.clear();
+    return -1;
+  }
+
+  // clear device datas:
+  for ( unsigned int i=0; i<AO.size(); i++ )
+    AO[i].Signals.clear();
+
+  // add data to device:
+  AO[di].Signals.add( &signal );
+
+  // set intensity:
+  for ( unsigned int a=0; a<Att.size(); a++ ) {
+    if ( ( Att[a].Id == di ) && 
+	 ( Att[a].Att->aoChannel() == signal.channel() ) ) {
+      if ( signal.noIntensity() )
+	signal.addError( DaqError::NoIntensity );
+      else {
+	double intens = signal.intensity();
+	int ra = 0;
+	if ( intens == OutData::MuteIntensity )
+	  ra = Att[a].Att->mute();
+	else {
+	  ra = Att[a].Att->write( intens, signal.carrierFreq() );
+	  signal.setIntensity( intens );
+	}
+	signal.addAttError( ra );
+      }
+    }
+    else
+      Att[a].Att->mute();
+  }
+
+  // start writing to daq board:
+  if ( gainChanged() ||
+       signal.restart() ||
+       SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
+    vector< AOData* > aod( 1, &AO[di] );
+    restartRead( aod, true, true );
+  }
+  else
+    AO[di].AO->directWrite( AO[di].Signals );
+
+  // error?
+  if ( signal.failed() ) {
+    AO[di].AO->reset();
+    AO[di].Signals.clear();
+    return -1;
+  }
+
+  LastDevice = di;
+  LastDuration = signal.duration();
+  LastDelay = signal.delay();
+
+  //  cerr << "Acquire::write( OutData& ) end\n";
+
+  return 0;
+}
+
+
+int Acquire::directWrite( OutList &signal )
+{
+  if ( signal.size() <= 0 )
+    return 0;
+
+  bool success = true;
+
+  // set trace:
+  applyOutTrace( signal );
+
+  signal.clearError();
+
+  // get device ids and sort signal per device:
+  for ( int k=0; k<signal.size(); k++ ) {
+    // no device?
+    if ( signal[k].device() < 0 ) {
+      signal[k].addError( DaqError::NoDevice );
+      signal[k].setDevice( 0 );
+      success = false;
+    }
+    else if ( signal[k].device() >= (int)AO.size() ) {
+      signal[k].addError( DaqError::NoDevice );
+      signal[k].setDevice( AO.size()-1 );
+      success = false;
+    }
+  }
+
+  // busy:
+  for ( int i=0; i<(int)AO.size(); i++ ) {
+    // multiple priorities?
+    int k0 = -1;
+    for ( int k=0; k<signal.size(); k++ ) {
+      if ( signal[k].device() == i ) {
+	k0 = k;
+      }
+    }
+    if ( k0 >= 0 ) {
+      for ( int k=k0+1; k<signal.size(); k++ ) {
+	if ( signal[k].device() == i &&
+	     ( signal[k].priority() != signal[k0].priority() ) ) {
+	  signal[k0].addError( DaqError::MultiplePriorities );
+	  signal[k].addError( DaqError::MultiplePriorities );
+	  signal[k].setPriority( signal[k0].priority() );
+	  success = false;
+	}
+      }
+      // device still busy?
+      if ( AO[i].AO->running() ) {
+	if ( signal[k0].priority() )
+	  AO[i].AO->reset();
+	else {
+	  for ( int k=k0; k<signal.size(); k++ ) {
+	    if ( signal[k].device() == i )
+	      signal[k].addError( DaqError::Busy );
+	  }
+	  success = false;
+	}
+      }
+    }
+  }
+
+  // clear device datas:
+  for ( unsigned int i=0; i<AO.size(); i++ )
+    AO[i].Signals.clear();
+
+  // add signals:
+  for ( int k=0; k<signal.size(); k++ )
+    AO[signal[k].device()].Signals.add( &signal[k] );
+
+  // multiple delays:
+  for ( int k=0; k<signal.size(); k++ ) {
+    if ( signal[k].delay() != 
+	 signal[0].delay() ) {
+      signal[0].addError( DaqError::MultipleDelays );
+      signal[k].addError( DaqError::MultipleDelays );
+      signal[k].setDelay( signal[0].delay() );
+      success = false;
+    }
+    if ( signal[k].delay() > 0 ) {
+      signal[k].addError( DaqError::InvalidDelay );
+      signal[k].setDelay( 0.0 );
+      success = false;
+    }
+  }
+
+  // error?
+  if ( ! success ) {
+    for ( unsigned int i=0; i<AO.size(); i++ )
+      AO[i].Signals.clear();
+    return -1;
+  }
+
+  // set intensities:
+  bool usedatt[Att.size()];
+  for ( unsigned int a=0; a<Att.size(); a++ )
+    usedatt[a] = false;
+  for ( unsigned int i=0; i<AO.size(); i++ ) {
+    for ( int k=0; k<AO[i].Signals.size(); k++ ) {
+      for ( unsigned int a=0; a<Att.size(); a++ ) {
+	if ( Att[a].Id == (int)i &&
+	     Att[a].Att->aoChannel() == AO[i].Signals[k].channel() ) {
+	  usedatt[a] = true;
+	  if ( AO[i].Signals[k].noIntensity() ) {
+	    AO[i].Signals[k].addError( DaqError::NoIntensity );
+	    success = false;
+	  }
+	  else {
+	    double intens = AO[i].Signals[k].intensity();
+	    int ra = 0;
+	    if ( intens == OutData::MuteIntensity )
+	      ra = Att[a].Att->mute();
+	    else {
+	      ra = Att[a].Att->write( intens, AO[i].Signals[k].carrierFreq() );
+	      AO[i].Signals[k].setIntensity( intens );
+	    }
+	    if ( ra != 0 ) {
+	      AO[i].Signals[k].addAttError( ra );
+	      success = false;
+	    }
+	  }
+	}
+      }
+    }
+  }
+  for ( unsigned int a=0; a<Att.size(); a++ ) {
+    if ( ! usedatt[a] )
+      Att[a].Att->mute();
+  }
+
+  // start writing to daq boards:
+  if ( gainChanged() ||
+       signal[0].restart() ||
+       SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
+    vector< AOData* > aod;
+    aod.reserve( AO.size() );
+    for ( unsigned int i=0; i<AO.size(); i++ ) {
+      if ( AO[i].Signals.size() > 0 )
+	aod.push_back( &AO[i] );
+    }
+    if ( restartRead( aod, true, true ) != 0 )
+      success = false;
+  }
+  else {
+    for ( unsigned int i=0; i<AO.size(); i++ ) {
+      if ( AO[i].Signals.size() > 0 ) {
+	if ( AO[i].AO->directWrite( AO[i].Signals ) != 0 )
+	  success = false;
+      }
+    }
+  }
+  
+  // error?
+  if ( ! success ) {
+    for ( unsigned int i=0; i<AO.size(); i++ ) {
+      AO[i].AO->reset();
+      AO[i].Signals.clear();
+    }
+    return -1;
+  }
+
+  LastDevice = signal[0].device();
+  LastDuration = signal[0].duration();
+  LastDelay = signal[0].delay();
+
+  return 0;
+}
+
+
 int Acquire::writeReset( bool channels, bool params )
 {
   int retval = 0;
+
+  OutList sigs;
 
   for ( unsigned int i=0; i<AO.size(); i++ ) {
 
     AO[i].AO->reset();
 
-    OutList sigs;
     for ( unsigned int k=0; k<OutTraces.size(); k++ ) {
       // this is a channel at the device that should be reset:
       if ( OutTraces[k].device() == (int)i &&
 	   ( ( channels && OutTraces[k].channel() < 1000 ) ||
 	     ( params &&  OutTraces[k].channel() >= 1000 ) ) ) {
-	OutData sig( 1, 0.0001 );
+	OutData sig( 0.0 );
 	sig.setTrace( OutTraces[k].trace() );
 	if ( OutTraces[k].apply( sig ) < 0 )
 	  cerr << "! error: Acquire::writeReset() -> wrong match\n";
-	sig = 0.0;
 	sig.setIdent( "init" );
 	sigs.push( sig );
       }
     }
-
-    if ( sigs.size() > 0 ) {
-      // write out data;
-      AO[i].AO->directWrite( sigs );
-      // error?
-      if ( ! sigs.success() ) {
-	cerr << currentTime() << " ! error in Acquire::writeReset() -> "
-	     << sigs.errorText() << "\n";
-	retval = -1;
-      }
-    }
     
+  }
+
+  if ( sigs.size() > 0 ) {
+    // write out data;
+    directWrite( sigs );
+    // error?
+    if ( ! sigs.success() ) {
+      cerr << currentTime() << " ! error in Acquire::writeReset() -> "
+	   << sigs.errorText() << "\n";
+      retval = -1;
+    }
   }
 
   return retval;
