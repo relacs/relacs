@@ -1,5 +1,8 @@
 Version 0.9.6
 
+March, 2009
+  First working version of the dynamic clamp modules.
+
 December, 2008
   Working interface to the comedi library supporting many
   data acquisition boards.
