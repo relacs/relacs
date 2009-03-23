@@ -103,7 +103,7 @@ int Simple::main( void )
   noMessage();
 
   // plot trace:
-  plotToggle( true, true, 2.0*duration, 0.5*duration );
+  plotToggle( true, true, 2.5*duration, 0.5*duration );
 
   // plot:
   P.lock();
@@ -197,7 +197,7 @@ int Simple::main( void )
       const InData &data = trace( intrace );
       int si = data.signalIndex();
       int di = data.indices( duration );
-      for ( int k=si-di/2; k<si+3*di/2; k++ ) {
+      for ( int k=si-di/2; k<si+2*di; k++ ) {
 	key.save( df, 1000.0*(data.pos( k ) - data.signalTime()), 0 );
 	key.save( df, data[k] );
 	df << '\n';

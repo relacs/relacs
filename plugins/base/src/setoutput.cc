@@ -78,7 +78,8 @@ void SetOutput::config( void )
   OutOpts.clear();
   for ( int k=0; k<outTracesSize(); k++ ) {
     int flag = outTrace( k ).channel() < 1000 ? ChannelFlag : ParameterFlag;
-    OutOpts.addNumber( outTraceName( k ), 0.0, outTrace( k ).unit() ).setFlags( flag );
+    OutOpts.addNumber( outTraceName( k ), outTraceName( k ), 0.0,
+		       -1.0e10, 1.0e10, 0.0001, outTrace( k ).unit() ).setFlags( flag );
   }
 
   // display values:
@@ -120,13 +121,13 @@ int SetOutput::main( void )
 
   if ( interactive ) {
     OutOpts.delFlags( Parameter::changedFlag() );
-    STW.setFocus();
+    postCustomEvent( 1 ); // STW.setFocus();
     // wait for input:
     Change = false;
     unlockAll();
     Wait.wait();
     lockAll();
-    STW.clearFocus();
+    postCustomEvent( 2 ); // STW.clearFocus();
     // set new values:
     if ( Change ) {
       OutList sigs;
@@ -174,6 +175,17 @@ int SetOutput::main( void )
 const Options &SetOutput::outTraces( void ) const
 {
   return OutOpts;
+}
+
+
+void SetOutput::customEvent( QCustomEvent *qce )
+{
+  if ( qce->type() == QEvent::User+1 ) {
+    STW.setFocus();
+  }
+  else if ( qce->type() == QEvent::User+2 ) {
+    STW.clearFocus();
+  }
 }
 
 

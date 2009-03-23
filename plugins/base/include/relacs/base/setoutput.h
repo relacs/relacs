@@ -65,6 +65,8 @@ public slots:
 
 protected:
 
+  virtual void customEvent( QCustomEvent *qce );
+
   OptWidget STW;
   Options OutOpts;
   QWaitCondition Wait;

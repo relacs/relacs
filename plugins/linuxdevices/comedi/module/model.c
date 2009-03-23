@@ -2,6 +2,11 @@
   /*! Name, by which this module is known inside Linux: */
 char *moduleName;
 
+  /*! The period length of the realtime periodic task in seconds. */
+float loopInterval;
+  /*! One overt the period length of the realtime periodic task in Hertz. */
+float loopRate;
+
   /*! Analog input that is read from the DAQ board. */
 #define INPUT_N 1
   /*! The \a inputNames are used to match the \a input variables with
@@ -29,18 +34,30 @@ char *paramInputUnits[PARAMINPUT_N] = { "mV" };
 float paramInput[PARAMINPUT_N] = { 0.0 };
 
   /*! Parameter that are read by the model and are written to the model. */
-#define PARAMOUTPUT_N 1
-char *paramOutputNames[PARAMOUTPUT_N] = { "poutput0" };
-char *paramOutputUnits[PARAMOUTPUT_N] = { "mA" };
-float paramOutput[PARAMOUTPUT_N] = { 0.0 };
+#define PARAMOUTPUT_N 2
+char *paramOutputNames[PARAMOUTPUT_N] = { "g", "C" };
+char *paramOutputUnits[PARAMOUTPUT_N] = { "nS", "pF" };
+float paramOutput[PARAMOUTPUT_N] = { 0.0, 0.0 };
 
+  /*! Variables used by the model. */
+#define MAXPREVINPUTS 1
+float previnputs[MAXPREVINPUTS];
 
 void initModel( void )
 {
-  moduleName = "/dev/dynclamp";
+   int k;
+   moduleName = "/dev/dynclamp";
+   for ( k=0; k<MAXPREVINPUTS; k++ )
+     previnputs[k] = 0.0;
 }
 
 void computeModel( void )
 {
-  output[0] = paramOutput[0];
+   int k;
+   output[0] = -0.001*paramOutput[0]*input[0] - 1e-6*paramOutput[1]*(input[0]-previnputs[0])*loopRate;
+   for ( k=0; k<MAXPREVINPUTS-1; k++ )
+     previnputs[k] = previnputs[k+1];
+   previnputs[MAXPREVINPUTS-1] = input[0];
+
+   //   output[0] = paramOutput[0];
 }

@@ -869,6 +869,8 @@ int init_rt_task( void )
     return -3;
   }
   dynClampTask.periodLengthNs = count2nano( periodTicks );
+  loopInterval = 1.0e-9*dynClampTask.periodLengthNs;
+  loopRate = 1.0e9/dynClampTask.periodLengthNs;
   INFO_MSG( "init_rt_task: periodic task successfully started... requested freq: %d , accepted freq: ~%u (period=%uns)\n", 
 	    dynClampTask.reqFreq, 1000000000 / dynClampTask.periodLengthNs, 
 	    dynClampTask.periodLengthNs );
