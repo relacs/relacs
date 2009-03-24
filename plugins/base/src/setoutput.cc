@@ -99,14 +99,14 @@ void SetOutput::setValues( void )
 {
   Change = true;
   STW.accept( false );
-  Wait.wakeAll();
+  wake();
 }
 
 
 void SetOutput::keepValues( void )
 {
   Change = false;
-  Wait.wakeAll();
+  wake();
 }
 
 
@@ -125,7 +125,7 @@ int SetOutput::main( void )
     // wait for input:
     Change = false;
     unlockAll();
-    Wait.wait();
+    wait();
     lockAll();
     postCustomEvent( 2 ); // STW.clearFocus();
     // set new values:

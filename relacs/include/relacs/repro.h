@@ -135,7 +135,7 @@ public:
     /*! Kindly ask the RePro to stop. 
         Sets interrupt() to \c true and terminates all sleeps.
         You still need to wait on the RePro thread to finish. */
-  void requestStop( void );
+  virtual void requestStop( void );
 
     /*! Sleep for \a t seconds.
         Right before returning, the data and event buffers are updated.
@@ -151,6 +151,15 @@ public:
         Returns \a true if the main() thread needs to be stopped.
         \sa sleep(), timeStamp(), interrupt() */
   bool sleepOn( double t );
+
+    /*! Wait on the RePro's waitcondition for sleeping.
+        \param[in] time the maximum time to be waiting for.
+        If \a time is smaller than zero, wait() waits forever.
+        \return \c false if wait() timed out, i.e. was not signalled a wakeAll()
+        \sa wake() */
+  bool wait( double time=-1.0 );
+    /*! Wake all threads that wait on the RePro's waitcondition for sleeping. \sa wait() */
+  void wake( void );
 
     /*! Reimplement this function to reset or initialize your RePro
         when a new session is started.

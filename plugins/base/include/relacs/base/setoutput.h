@@ -22,7 +22,6 @@
 #ifndef _RELACS_BASE_SETOUTPUT_H_
 #define _RELACS_BASE_SETOUTPUT_H_ 1
 
-#include <qwaitcondition.h>
 #include <relacs/optwidget.h>
 #include <relacs/repro.h>
 using namespace relacs;
@@ -69,7 +68,6 @@ protected:
 
   OptWidget STW;
   Options OutOpts;
-  QWaitCondition Wait;
   bool Change;
   static const int ChannelFlag = 1;
   static const int ParameterFlag = 2;

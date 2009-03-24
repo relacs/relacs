@@ -13,8 +13,8 @@ EXTRA_DIST = \
     module/model.c \
     module/rtmodule.h \
     module/rtmodule.c \
-    module/dynclampmodule.h \
     module/dynclampmodule.c \
+    module/irisdynclampmodule.c \
     module/moduledef.h \
     module/loadmodules.sh \
     module/killmodules.sh

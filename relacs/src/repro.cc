@@ -226,6 +226,23 @@ bool RePro::sleepOn( double t )
 }
 
 
+bool RePro::wait( double time )
+{
+  if ( time <= 0.0 )
+    return SleepWait.wait();
+  else {
+    unsigned long ms = (unsigned long)::rint(1.0e3*time);
+    return SleepWait.wait( ms );
+  }
+}
+
+
+void RePro::wake( void )
+{
+  SleepWait.wakeAll();
+}
+
+
 void RePro::sessionStarted( void )
 {
   CompleteRuns = 0;
