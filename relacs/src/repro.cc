@@ -226,7 +226,7 @@ bool RePro::sleepOn( double t )
 }
 
 
-bool RePro::wait( double time )
+bool RePro::sleepWait( double time )
 {
   if ( time <= 0.0 )
     return SleepWait.wait();

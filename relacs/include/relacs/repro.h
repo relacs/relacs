@@ -157,8 +157,9 @@ public:
         If \a time is smaller than zero, wait() waits forever.
         \return \c false if wait() timed out, i.e. was not signalled a wakeAll()
         \sa wake() */
-  bool wait( double time=-1.0 );
-    /*! Wake all threads that wait on the RePro's waitcondition for sleeping. \sa wait() */
+  bool sleepWait( double time=-1.0 );
+    /*! Wake all threads that wait on the RePro's waitcondition for sleeping. 
+        \sa sleepWait() */
   void wake( void );
 
     /*! Reimplement this function to reset or initialize your RePro
