@@ -12,9 +12,9 @@ PKG_CONFIG_MISSING="pkg-config not found!
 
 AC_ARG_VAR( [PKG_CONFIG], [the binary of the existing pkg-config program, otherwise empty] )
 
-AC_CHECK_PROG( [PKG_CONFIG], [pkg-config], [pkg-config] )
+AC_PATH_PROG( [PKG_CONFIG], [pkg-config], [no] )
 
-if test "x${PKG_CONFIG}" = "x" ; then
+if test $PKG_CONFIG = "no" ; then
     AC_MSG_WARN( [ $PKG_CONFIG_MISSING ] )
 fi
 

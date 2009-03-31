@@ -19,8 +19,8 @@ AC_ARG_ENABLE([docbook],
 
 # check for presence of xmlto program:
 if test "x$RELACS_GENERATE_DOCBOOK" == "xyes"; then
-    AC_PATH_PROG( XMLTO, xmlto, no )
-    if test "x$XMLTO" = "xno" ; then
+    AC_PATH_PROG( [XMLTO], [xmlto], [no] )
+    if test $XMLTO = "no" ; then
         AC_MSG_WARN([xmlto not found, will not be able to rebuild documentation])
 	RELACS_GENERATE_DOCBOOK="no"
 	RELACS_GENERATE_DOCBOOK_HTML="no"
