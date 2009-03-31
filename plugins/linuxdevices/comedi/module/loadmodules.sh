@@ -6,6 +6,6 @@ modprobe kcomedilib
 
 test -c /dev/dynclamp || mknod -m 666 /dev/dynclamp c 227 0
 
-insmod rtmodule.ko
+#insmod rtmodule.ko
 
-#insmod dynclampmodule.ko
+insmod dynclampmodule.ko

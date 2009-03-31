@@ -34,10 +34,10 @@ char *paramInputUnits[PARAMINPUT_N] = { "mV" };
 float paramInput[PARAMINPUT_N] = { 0.0 };
 
   /*! Parameter that are read by the model and are written to the model. */
-#define PARAMOUTPUT_N 2
-char *paramOutputNames[PARAMOUTPUT_N] = { "g", "C" };
-char *paramOutputUnits[PARAMOUTPUT_N] = { "nS", "pF" };
-float paramOutput[PARAMOUTPUT_N] = { 0.0, 0.0 };
+#define PARAMOUTPUT_N 3
+char *paramOutputNames[PARAMOUTPUT_N] = { "g", "C", "I" };
+char *paramOutputUnits[PARAMOUTPUT_N] = { "nS", "pF", "nA" };
+float paramOutput[PARAMOUTPUT_N] = { 0.0, 0.0, 0.0 };
 
   /*! Variables used by the model. */
 #define MAXPREVINPUTS 1
@@ -54,7 +54,7 @@ void initModel( void )
 void computeModel( void )
 {
    int k;
-   output[0] = -0.001*paramOutput[0]*input[0] - 1e-6*paramOutput[1]*(input[0]-previnputs[0])*loopRate;
+   output[0] = -0.001*paramOutput[0]*input[0] - 1e-6*paramOutput[1]*(input[0]-previnputs[0])*loopRate + paramOutput[2];
    for ( k=0; k<MAXPREVINPUTS-1; k++ )
      previnputs[k] = previnputs[k+1];
    previnputs[MAXPREVINPUTS-1] = input[0];
