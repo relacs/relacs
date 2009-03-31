@@ -54,8 +54,6 @@ libacousticloudspeaker_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(QT3_LIBS)
 
-$(libacousticloudspeaker_la_OBJECTS) : moc_loudspeaker.cc
-
 libacousticloudspeaker_la_SOURCES = loudspeaker.cc
 
 libacousticloudspeaker_la_includedir = $(pkgincludedir)/acoustic

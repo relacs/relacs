@@ -19,6 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <iostream>
 #include <iomanip>
 #include <algorithm>
 #include <relacs/strqueue.h>
@@ -106,7 +107,7 @@ bool operator==( const StrQueue &sq1, const StrQueue &sq2 )
 int StrQueue::find( const string &strg, int index ) const
 {
   for ( int k=index; k<size(); k++ ) {
-    if ( operator[]( k ).empty() && strg.empty() ||
+    if ( ( operator[]( k ).empty() && strg.empty() ) ||
 	 operator[]( k ) == strg )
       return k;
   }

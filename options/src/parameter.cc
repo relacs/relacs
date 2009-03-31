@@ -1415,8 +1415,8 @@ Parameter &Parameter::setActivation( const string &name, const string &value,
     else
       ActivationComparison |= 4;
     if ( ActivationValues.front().size() > 1 &&
-	 ActivationValues.front()[1] == '=' ||
-	 ActivationValues.front()[1] == '>' ) {
+	 ( ActivationValues.front()[1] == '=' ||
+	   ActivationValues.front()[1] == '>' ) ) {
       if ( ActivationValues.front()[1] == '=' )
 	ActivationComparison |= 1;
       else

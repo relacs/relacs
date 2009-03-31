@@ -451,7 +451,7 @@ void ConfigDialog::dialogButtons( OptDialog *od )
 
 void ConfigDialog::dialog( void )
 {
-  if ( dialogOpen() || ( configMode() & ConfigClass::Dialog == 0 ) )
+  if ( dialogOpen() || ( configMode() & ConfigClass::Dialog ) == 0 )
     return;
   setDialogOpen();
 

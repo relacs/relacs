@@ -1100,8 +1100,8 @@ int Acquire::adjustGain( const InData &data,
     // overflow:
     for ( gainindex--; 
 	  gainindex >= 0 &&
-	    ( data.unipolar() && ai.AI->unipolarRange( gainindex ) <= 0.0 ) || 
-	    ( !data.unipolar() && ai.AI->bipolarRange( gainindex ) <= 0.0 ); 
+	    ( ( data.unipolar() && ai.AI->unipolarRange( gainindex ) <= 0.0 ) || 
+	      ( !data.unipolar() && ai.AI->bipolarRange( gainindex ) <= 0.0 ) ); 
 	  gainindex-- );
     if ( gainindex >= 0 )
       newindex = gainindex;

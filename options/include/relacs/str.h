@@ -25,6 +25,7 @@
 #include <string>
 #include <vector>
 #include <ctime>
+#include <cstdlib>
 using namespace std;
 
 namespace relacs {
@@ -561,25 +562,25 @@ public:
 
   // manipulation:
   Str &truncate( int len ) 
-    { if ( len < (int)size() && len >= 0 ) string::resize( len ); return *this; };
+    { if ( len < size() && len >= 0 ) string::resize( len ); return *this; };
   Str &resize( int len ) 
-    { if ( len < (int)size() && len >= 0 ) string::resize( len ); return *this; };
+    { if ( len < size() && len >= 0 ) string::resize( len ); return *this; };
   Str &resize( int len, char ch ) 
     { if ( len >= 0 ) string::resize( len, ch ); return *this; };
 
   Str left( int len ) const 
     { if ( len >= 0 ) return string::substr( 0, len ); else return *this; };
   Str right( int len ) const 
-    { if ( len >= 0 && len <= (int)size() ) return string::substr( size()-len, len ); else return *this; };
+    { if ( len >= 0 && len <= size() ) return string::substr( size()-len, len ); else return *this; };
   Str mid( int pos, int upto=-1 ) const 
-    { if ( upto < 0 || upto >= (int)size() ) upto = (int)size()-1; if ( pos < 0 || pos >= (int)size() || upto < pos ) return ""; return string::substr( pos, upto-pos+1 ); };
+    { if ( upto < 0 || upto >= size() ) upto = size()-1; if ( pos < 0 || pos >= size() || upto < pos ) return ""; return string::substr( pos, upto-pos+1 ); };
   Str substr( int pos, int len=-1 ) const 
-    { if ( pos < 0 || pos >= (int)size() ) return ""; if ( len < 0 || len > (int)size()-pos ) len = (int)size() - pos; return string::substr( pos, len ); };
+    { if ( pos < 0 || pos >= size() ) return ""; if ( len < 0 || len > size()-pos ) len = size() - pos; return string::substr( pos, len ); };
 
 
     /*! Erase substring at \a pos with length \a n. */
   Str &erase( int pos, int n=-1 ) 
-    { if ( n < 0 ) n = npos; string::erase( pos, n ); return *this; };
+    { string::size_type nn = n < 0 ? npos : n; string::erase( pos, nn ); return *this; };
     /*! Remove all sequences in the string which equal \a s. 
         Returns the number of removed sequences. */
   int erase( const string &s );
@@ -613,7 +614,7 @@ public:
 
     /*! Replace substring at \a pos with length \a n by \a rs. */
   Str &replace( int pos, int n, const string &rs ) 
-    { if ( n < 0 ) n = npos; string::replace( pos, n, rs ); return *this; };
+    { string::size_type nn = n < 0 ? npos : n; string::replace( pos, nn, rs ); return *this; };
     /*! Replace all sequences in the string which equal \a s by \a rs. 
         Returns the number of replaced sequences. */
   int replace( const string &s, const string &rs );

@@ -31,7 +31,6 @@ librelacs_la_LIBADD = \
 
 $(librelacs_la_OBJECTS) : \
     moc_control.cc \
-    moc_datathreads.cc \
     moc_defaultrepro.cc \
     moc_defaultsession.cc \
     moc_filter.cc \

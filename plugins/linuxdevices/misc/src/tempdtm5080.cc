@@ -24,6 +24,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <cstdlib>
+#include <cstring>
 #include <cmath>
 #include <iostream>
 #include <sstream>

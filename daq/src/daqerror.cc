@@ -215,19 +215,19 @@ bool DaqError::busy( void ) const
 
 bool DaqError::overflow( void ) const
 {
-  return ( State & AttOverflow | State & AttIntensityOverflow );
+  return ( ( State & AttOverflow ) > 0 || ( State & AttIntensityOverflow ) > 0 );
 }
 
 
 bool DaqError::underflow( void ) const
 {
-  return ( State & AttUnderflow | State & AttIntensityUnderflow );
+  return ( ( State & AttUnderflow ) > 0 || ( State & AttIntensityUnderflow ) > 0 );
 }
 
 
 bool DaqError::attenuatorFailed( void ) const
 {
-  return ( State & AttFailed | State & AttIntensityFailed );
+  return ( ( State & AttFailed ) > 0 || ( State & AttIntensityFailed ) > 0 );
 }
 
 

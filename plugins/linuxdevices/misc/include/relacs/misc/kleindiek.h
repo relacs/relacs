@@ -100,15 +100,15 @@ public:
     /*! Set the amplitude of a step of the x-axis to \a posampl.
         If \a negampl >= 0.0 set the negative amplitude to \a negampl,
         otherwise set it equal to \a posampl. */
-  virtual int setAmplX( double negampl, double negampl=-1.0 );
+  virtual int setAmplX( double posampl, double negampl=-1.0 );
     /*! Set the amplitude of a step of the y-axis to \a posampl.
         If \a negampl >= 0.0 set the negative amplitude to \a negampl,
         otherwise set it equal to \a posampl. */
-  virtual int setAmplY( double negampl, double negampl=-1.0 );
+  virtual int setAmplY( double posampl, double negampl=-1.0 );
     /*! Set the amplitude of a step of the z-axis to \a posampl.
         If \a negampl >= 0.0 set the negative amplitude to \a negampl,
         otherwise set it equal to \a posampl. */
-  virtual int setAmplZ( double negampl, double negampl=-1.0 );
+  virtual int setAmplZ( double posampl, double negampl=-1.0 );
 
     /*! The minimum possible amplitude for the x-axis. */
   virtual double minAmplX( void ) const;
