@@ -56,6 +56,7 @@ echo "Check relacs:"
 ./bootstrap.sh || exit 1
 echo "./configure $CONFIGUREPREFIX $CONFIGUREFLAGS"
 ./configure $CONFIGUREPREFIX $CONFIGUREFLAGS # Also creates configure.ac files of libraries
+make uninstall
 ${MAKE} distcheck || exit 1
 echo ""
 if test $DISTCHECKONLY = no; then

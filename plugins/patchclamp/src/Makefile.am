@@ -56,6 +56,7 @@ libpatchclampsimple_la_CPPFLAGS = \
 
 libpatchclampsimple_la_LDFLAGS = \
     -module -avoid-version \
+    $(top_builddir)/plugins/base/src/libbasesetoutput.la \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
     $(QT3_LDFLAGS)
 

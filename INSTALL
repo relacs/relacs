@@ -105,6 +105,15 @@ related options during the configure step No. 3. See ./configure
 --help and the instructions below for details.
 
 
+8. Run RELACS
+
+> relacs
+
+Note, that RELACS requires the configuration files relacs.cfg and
+macros.cfg in the current directory. For configuring RELACS please
+contact me (benda@bio.lmu.de, subject: RELACS).
+
+
 ====================================================================
 The following is a general instruction to the GNU configure script:
 

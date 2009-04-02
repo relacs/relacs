@@ -144,6 +144,4 @@ void WriteThread::stop( void )
 
 }; /* namespace relacs */
 
-#include "moc_datathreads.cc"
-
 
