@@ -20,6 +20,7 @@ $ cvs -d :pserver:anonymous@cvs.comedi.org:/cvs/comedi co comedilib
 $ cvs -d :pserver:anonymous@cvs.comedi.org:/cvs/comedi co comedilib
 $ cvs -d :pserver:anonymous@cvs.comedi.org:/cvs/comedi co comedi_calibrate
 \endcode
+-# You may need to install the packages: \c autoconf, \c libtool, \c libgsl0-dev, \c libboost-dev.
 -# Change to the \c comedilib directory:
 \code
 $ cd comedilib
@@ -50,10 +51,52 @@ $ make dev
 \subsection installcomedidriver Comedi
 -# Make sure that you are really running the kernel
   for which you want to install %Comedi!
-   You can check with
+  You can check with
 \code
 $ uname -r
 \endcode
+-# You almost certainly need to compile a new kernel.
+Either get a vanilla kernel from \c www.kernel.org
+or get the soure that matches your kernel. 
+Place the kernel source in \c /usr/src.
+On Debian you get the kernel source matching your kernel image by executing
+\code
+$ apt-get source kernel-image-package
+\endcode
+in the \c /usr/src directory.
+Create the softlink
+\code
+$ cd /usr/src
+$ ln -s new-kernel-source-dir linux
+\endcode
+Clean the kernel source
+\code
+$ cd linux
+$ make mrproper
+\endcode
+Edit the \c Makefile by specifying an appropriate \c EXTRAVERSION.
+Then configure the kernel with
+\code
+$ make config
+\endcode
+or reuse your current configuration by
+\code
+$ cp /boot/config-your-kernel ./config
+$ make oldconfig
+\endcode
+Then compile and install the kernel
+\code
+$ make
+$ make modules
+$ make modules_install
+$ make install
+\endcode
+Finally you might need to create a RAM disk image file:
+\code
+$ cd /boot
+$ update-initramfs -c -k 2.6.24.7-extra version name
+\endcode
+Reboot the computer into the new kernel.
 -# Change to the \c %comedi directory:
 \code
 $ cd /usr/local/src/comedi
@@ -110,7 +153,7 @@ $ cd /usr/local/src/comedi_calibrate
 \endcode
 -# Generate the configuration script by calling
 \code
-$ autoreconv -v -i
+$ autoreconf -v -i
 \endcode
 You may ignore warnings and reminders.
 -# Configure

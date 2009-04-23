@@ -20,7 +20,7 @@ RELACSLIBPATHES="@abs_top_builddir@/daq/src/.libs\
 RELACSLIBINSTALLDIR="$libdir"
 
 # Base pathes for relacs plugins and help files:
-PLUGINPATHES='base|calibration|ephys|acoustic|auditory|auditoryprojects|patchclamp|multielectrode|linuxdevices/comedi|linuxdevices/nieseries|linuxdevices/attcs3310|linuxdevices/misc'
+PLUGINPATHES='base|calibration|ephys|acoustic|auditory|auditoryprojects|efield|patchclamp|linuxdevices/comedi|linuxdevices/nieseries|linuxdevices/attcs3310|linuxdevices/misc'
 PLUGINHOME=""
 PLUGINHELPPATHES=""
 SAVEIFS="$IFS"

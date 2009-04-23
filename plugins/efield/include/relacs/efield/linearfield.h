@@ -1,6 +1,6 @@
 /*
-  base/setoutput.h
-  Set an output to a specified value
+  efield/linearfield.h
+  Measure the electric field manually with a single electrode in one direction
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
@@ -19,62 +19,53 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _RELACS_BASE_SETOUTPUT_H_
-#define _RELACS_BASE_SETOUTPUT_H_ 1
+#ifndef _RELACS_EFIELD_LINEARFIELD_H_
+#define _RELACS_EFIELD_LINEARFIELD_H_ 1
 
-#include <relacs/optwidget.h>
+#include <relacs/plot.h>
+#include <relacs/doublespinbox.h>
 #include <relacs/repro.h>
 using namespace relacs;
 
-namespace base {
+namespace efield {
 
 
 /*!
-\class SetOutput
-\brief [RePro] Set an output to a specified value
+\class LinearField
+\brief [RePro] Measure the electric field manually with a single electrode in one direction
 \author Jan Benda
-\version 1.0 (Mar 21, 2009)
-
-\par Options
-\arg \b outtrace (\c text): Name of the output trace. 
-\arg \b value (\c number): Value to be writen to output trace.
+\version 1.0 (Apr 23, 2009)
 */
 
 
-class SetOutput : public RePro
+class LinearField : public RePro
 {
   Q_OBJECT
 
 public:
 
-  SetOutput( void );
-  virtual void config( void );
-  virtual void notify( void );
+  LinearField( void );
   virtual int main( void );
-
-  const Options &outTraces( void ) const;
 
 
 public slots:
 
-  void setValues( void );
-  void keepValues( void );
+  void measure( void );
+  void quit( void );
 
 
 protected:
 
   virtual void customEvent( QCustomEvent *qce );
 
-  OptWidget STW;
-  Options OutOpts;
-  bool Change;
-  static const int ChannelFlag = 1;
-  static const int ParameterFlag = 2;
+  Plot P;
+  DoubleSpinBox *DSB;
+  bool Measure;
 
 };
 
 
-}; /* namespace base */
+}; /* namespace efield */
 
-#endif /* ! _RELACS_BASE_SETOUTPUT_H_ */
+#endif /* ! _RELACS_EFIELD_LINEARFIELD_H_ */
 

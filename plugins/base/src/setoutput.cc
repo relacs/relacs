@@ -29,7 +29,7 @@ namespace base {
 
 SetOutput::SetOutput( void )
   : RePro( "SetOutput", "SetOutput", "Base",
-	   "Jan Benda", "0.0", "Mar 20, 2009" ),
+	   "Jan Benda", "1.0", "Mar 21, 2009" ),
     STW( (QWidget*)this )
 {
   // add some options:

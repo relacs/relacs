@@ -10,7 +10,7 @@ RELACSEXEC="@abs_top_builddir@/src/relacsgui"
 # Pathes to the RELACS libraries that need to be added to LD_LIBRARY_PATH:
 RELACSLIBPATHES="@abs_top_builddir@/daq/src/.libs\
 :@abs_top_builddir@/datafile/src/.libs\
-:@abs_top_builddir@/mplot/src/.libs\
+:@abs_top_builddir@/plot/src/.libs\
 :@abs_top_builddir@/numerics/src/.libs\
 :@abs_top_builddir@/options/src/.libs\
 :@abs_top_builddir@/widgets/src/.libs:"
