@@ -22,8 +22,9 @@
 #ifndef _RELACS_EFIELD_LINEARFIELD_H_
 #define _RELACS_EFIELD_LINEARFIELD_H_ 1
 
+#include <qvbox.h>
 #include <relacs/plot.h>
-#include <relacs/doublespinbox.h>
+#include <relacs/optwidget.h>
 #include <relacs/repro.h>
 using namespace relacs;
 
@@ -51,15 +52,18 @@ public:
 public slots:
 
   void measure( void );
-  void quit( void );
+  void finish( void );
 
 
 protected:
 
   virtual void customEvent( QCustomEvent *qce );
 
+  QVBox B;
+  OptWidget O;
   Plot P;
-  DoubleSpinBox *DSB;
+
+  Options GUIOpts;
   bool Measure;
 
 };

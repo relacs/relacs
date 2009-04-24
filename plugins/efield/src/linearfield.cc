@@ -19,7 +19,6 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <qvbox.h>
 #include <qlabel.h>
 #include <qpushbutton.h>
 #include <relacs/efield/linearfield.h>
@@ -31,37 +30,46 @@ namespace efield {
 LinearField::LinearField( void )
   : RePro( "LinearField", "LinearField", "Efield",
 	   "Jan Benda", "1.0", "Apr 23, 2009" ),
+    B( (QWidget*)this ),
+    O( &B ),
     P( (QWidget*)this )
 {
   // add some options:
+  //  addNumber( "value", "Value to be writen to output trace", 0.0, -100000.0, 100000.0, 0.1 );
 
-  QVBox *bb = new QVBox( this );
-  bb->setSpacing( 4 );
+  // layout:
+  boxLayout()->setDirection( QBoxLayout::LeftToRight );
 
-  // distance input:
-  QLabel *l = new QLabel( "Distance", bb );
-  DSB = new DoubleSpinBox( 0.0, -10000.0, 10000.0, 1.0, "%g", bb );
+  // user interaction:
+  GUIOpts.addNumber( "conductivity", "Water conductivity", 0.0, 0.0, 100000.0, 1.0, "uS/cm" );
+  GUIOpts.addNumber( "distance", "Distance", 0.0, -100000.0, 100000.0, 1.0, "cm" );
+  O.assign( &GUIOpts, 0, 0, true, OptWidget::BreakLinesStyle + OptWidget::ExtraSpaceStyle );
+  //	       metaDataMutex() );
+  O.setSpacing( 2 );
 
-  // Measure button:
-  QPushButton *measurebutton = new QPushButton( "&Measure", bb, "MeasureButton" );
+  // measure button:
+  QPushButton *measurebutton = new QPushButton( "&Measure", &B, "MeasureButton" );
   connect( measurebutton, SIGNAL( clicked() ),
 	   this, SLOT( measure() ) );
 
-  // Quit button:
-  QPushButton *quitbutton = new QPushButton( "&Quit", bb, "QuitButton" );
-  connect( quitbutton, SIGNAL( clicked() ),
-	   this, SLOT( quit() ) );
+  // finish button:
+  QPushButton *finishbutton = new QPushButton( "&Finish", &B, "FinishButton" );
+  connect( finishbutton, SIGNAL( clicked() ),
+	   this, SLOT( finish() ) );
+
+  updateGeometry();
 }
 
 
 void LinearField::measure( void )
 {
   Measure = true;
+  O.accept( false );
   wake();
 }
 
 
-void LinearField::quit( void )
+void LinearField::finish( void )
 {
   Measure = false;
   wake();
@@ -74,7 +82,11 @@ int LinearField::main( void )
 
   noMessage();
 
-  postCustomEvent( 1 ); // DSB->setFocus();
+  // plot:
+  P.setXLabel( "Distance [cm]" );
+  P.setYLabel( "RMS Amplitude [V]" );
+
+  postCustomEvent( 1 ); // O.setFocus();
   do {
     // wait for input:
     Measure = false;
@@ -82,7 +94,8 @@ int LinearField::main( void )
     sleepWait();
     lockAll();
     if ( Measure ) {
-      message( "measure" );
+      double d = GUIOpts.number( "distance" );
+      message( "measure at " + Str( d ) + "cm" );
       // analyse:
       /*
       OutList sigs;
@@ -104,8 +117,8 @@ int LinearField::main( void )
       }
       */
     }
-  } while ( Measure );
-  postCustomEvent( 2 ); // DSB->clearFocus();
+  } while ( Measure && ! interrupt() );
+  postCustomEvent( 2 ); // O.clearFocus();
   return Completed;
 }
 
@@ -113,10 +126,10 @@ int LinearField::main( void )
 void LinearField::customEvent( QCustomEvent *qce )
 {
   if ( qce->type() == QEvent::User+1 ) {
-    DSB->setFocus();
+    O.setFocus();
   }
   else if ( qce->type() == QEvent::User+2 ) {
-    DSB->clearFocus();
+    O.clearFocus();
   }
 }
 
