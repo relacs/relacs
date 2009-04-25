@@ -1,19 +1,19 @@
 SUBDIRS = src
 
-EXTRA_DIST = doc/skel.doc
+EXTRA_DIST = doc/efield.doc
 
 pkglibdir = $(libdir)/relacs
 pkgincludedir = $(includedir)/relacs
 pkgdatadir=$(datadir)/relacs
 docdir = $(datarootdir)/doc/relacs
 
-PLUGINSET = Skel
-DX_PROJECT = skel
+PLUGINSET = EField
+DX_PROJECT = efield
 DX_CONFIG = ../../doc/Doxyfile
 DX_INSTALL_SUBDIR = /api/$(DX_PROJECT)
 DX_DEPENDS = Makefile.am src/Makefile.am
-DX_SETTINGS = PROJECT_NAME='"Skeleton for Relacs Plugins"'
-DX_SETTINGS += INPUT='include/relacs/skel src doc'
+DX_SETTINGS = PROJECT_NAME='"Electric Field Measurement Relacs Plugins"'
+DX_SETTINGS += INPUT='include/relacs/efield src doc'
 DX_SETTINGS += PREDEFINED='$(DOXYGEN_PREDEF)'
 DX_SETTINGS += TAGFILES='../../doc/relacsall.tag=..'
 
