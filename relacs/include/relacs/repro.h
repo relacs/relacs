@@ -308,20 +308,32 @@ public:
         \sa setMessage(), noMessage() */
   void message( const string &msg );
 
+    /*! Stores \a file in the list of files for this run of the RePro.
+        \return \a file added to the base path for the current session. */
+  string addPath( const string &file ) const;
+
     /*! Call this function in the beginning of the main() function,
         if your implementation includes some interactive widgets
 	and you do not want RELACS to automatically remove the keyboard focus
 	from these widgets after some timeout. */
   void keepFocus( void );
 
-    /*! Stores \a file in the list of files for this run of the RePro.
-        \return \a file added to the base path for the current session. */
-  string addPath( const string &file ) const;
-
     /*! Reimplement this function to handle key events. */
   virtual void keyPressEvent( QKeyEvent *e );
     /*! Reimplement this function to handle key events. */
   virtual void keyReleaseEvent( QKeyEvent *e );
+
+    /*! Add \a key to the list of keys that are forced to be passed
+        to keyPressEvent().
+        You need to handle this key event in a reimplementation 
+        of keyPressEvent(). */
+  void grabKey( int key );
+    /*! Remove \a key from the list of keys that are forced to be passed
+        to keyPressEvent(). */
+  void releaseKey( int key );
+    /*! Empty the list of keys that are forced to be passed
+        to keyPressEvent(). */
+  void releaseKeys( void );
 
     /*! How many requests to stop the repro are there
         since the RePro was started?
@@ -389,6 +401,9 @@ public:
     /*! Indicate that the data of this RePro don't have to be saved to disk. */
   void noSaving( void );
 
+    /*! The eventfilter that is used to grab keys. \sa grabKey() */
+  virtual bool eventFilter( QObject *watched, QEvent *e );
+
 
 signals:
 
@@ -408,6 +423,9 @@ private:
         It calls main(). */
   virtual void run( void );
 
+    /*! Install the event filter for grabbing keys. */
+  void grabKeys( void );
+
   bool Interrupt;
   mutable QMutex InterruptLock;
   QWaitCondition SleepWait;
@@ -424,6 +442,14 @@ private:
   Options OverwriteOpt;
   Options ProjectOpt;
   Options MyProjectOpt;
+
+  vector< int > GrabKeys;
+  vector< int > GrabKeysModifier;
+  int GrabKeysBaseSize;
+  bool GrabKeysAlt;
+  bool GrabKeysInstalled;
+  bool GrabKeysAllowed;
+  mutable QMutex GrabKeyLock;
 
   int SoftStop;
   int SoftStopKey;

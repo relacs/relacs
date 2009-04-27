@@ -58,6 +58,15 @@ RePro::RePro( const string &name, const string &titles,
   SoftStop = 0;
   SoftStopKey = Key_Space;
 
+  GrabKeys.clear();
+  GrabKeys.reserve( 20 );
+  GrabKeysModifier.clear();
+  GrabKeysModifier.reserve( 20 );
+  GrabKeysBaseSize = 0;
+  GrabKeysAlt = false;
+  GrabKeysInstalled = false;
+  GrabKeysAllowed = false;
+
   // start timer:
   ReProTime.start();
   
@@ -119,6 +128,9 @@ void RePro::run( void )
 
   // init:
   SoftStop = 0;
+  GrabKeysAllowed = true;
+  GrabKeysBaseSize = GrabKeys.size();
+  grabKeys();
   InterruptLock.lock();
   Interrupt = false;
   InterruptLock.unlock();
@@ -137,6 +149,10 @@ void RePro::run( void )
     FailedRuns++;
 
   unlockAll();
+
+  RW->KeyTime->unsetNoFocusWidget();
+  GrabKeysAllowed = false;
+  releaseKeys();
 
   // write message:
   if ( PrintMessage ) {
@@ -410,14 +426,6 @@ void RePro::message( const string &msg )
 }
 
 
-void RePro::keepFocus( void )
-{
-#warning keepFocus not yet implemented!
-  // this must be specific to the RePro!!!
-  // Other input (e.g. spike detector) should still time out.
-}
-
-
 string RePro::addPath( const string &file ) const
 {
   RW->SF->storeFile( file );
@@ -425,10 +433,18 @@ string RePro::addPath( const string &file ) const
 }
 
 
+void RePro::keepFocus( void )
+{
+  RW->KeyTime->setNoFocusWidget( this );
+}
+
+
 void RePro::keyPressEvent( QKeyEvent *e )
 {
-  if ( e->key() == SoftStopKey )
+  if ( e->key() == SoftStopKey ) {
     SoftStop++;
+    e->accept();
+  }
   else
     e->ignore();
 }
@@ -437,6 +453,135 @@ void RePro::keyPressEvent( QKeyEvent *e )
 void RePro::keyReleaseEvent( QKeyEvent *e )
 {
   e->ignore();
+}
+
+
+void RePro::grabKey( int key )
+{
+  int modifier = 0;
+  switch ( key & MODIFIER_MASK ) {
+  case META : modifier = MetaButton; break;
+  case SHIFT : modifier = ShiftButton; break;
+  case CTRL : modifier = ControlButton; break;
+  case ALT : modifier = AltButton; GrabKeysAlt = true; break;
+  default: modifier = 0; break;
+  }
+  GrabKeyLock.lock();
+  GrabKeys.push_back( key & ~MODIFIER_MASK );
+  GrabKeysModifier.push_back( modifier );
+  GrabKeyLock.unlock();
+  grabKeys();
+}
+
+
+void RePro::grabKeys( void )
+{
+  GrabKeyLock.lock();
+  bool r = GrabKeys.empty() || GrabKeysInstalled || ! GrabKeysAllowed;
+  GrabKeyLock.unlock();
+  if ( r )
+    return;
+
+  GrabKeyLock.lock();
+  qApp->installEventFilter( this );
+  GrabKeysInstalled = true;
+  GrabKeyLock.unlock();
+}
+
+
+void RePro::releaseKey( int key )
+{
+  int modifier = 0;
+  switch ( key & MODIFIER_MASK ) {
+  case META : modifier = MetaButton; break;
+  case SHIFT : modifier = ShiftButton; break;
+  case CTRL : modifier = ControlButton; break;
+  case ALT : modifier = AltButton; break;
+  default: modifier = 0; break;
+  }
+  int keycode = key & ~ MODIFIER_MASK;
+
+  GrabKeyLock.lock();
+  int inx = 0;
+  vector<int>::iterator kp = GrabKeys.begin();
+  vector<int>::iterator mp = GrabKeysModifier.begin();
+  while ( kp != GrabKeys.end() ) {
+    if ( *kp == keycode && *mp == modifier ) {
+      kp = GrabKeys.erase( kp );
+      mp = GrabKeysModifier.erase( mp );
+      if ( inx < GrabKeysBaseSize )
+	GrabKeysBaseSize--;
+    }
+    else {
+      ++kp;
+      ++mp;
+      ++inx;
+    }
+  }
+  GrabKeysAlt = false;
+  for ( mp = GrabKeysModifier.begin(); mp != GrabKeysModifier.end(); ++mp ) {
+    if ( *mp == AltButton ) {
+      GrabKeysAlt = true;
+      break;
+    }
+  }
+  int empty = GrabKeys.empty();
+  GrabKeyLock.unlock();
+  if ( empty )
+    releaseKeys();
+}
+
+
+void RePro::releaseKeys( void )
+{
+  GrabKeyLock.lock();
+  GrabKeys.resize( GrabKeysBaseSize );
+  GrabKeysModifier.resize( GrabKeysBaseSize );
+  GrabKeysAlt = false;
+  for ( vector<int>::iterator mp = GrabKeysModifier.begin();
+	mp != GrabKeysModifier.end();
+	++mp ) {
+    if ( *mp == AltButton ) {
+      GrabKeysAlt = true;
+      break;
+    }
+  }
+  if ( GrabKeysInstalled ) {
+    qApp->removeEventFilter( this );
+    GrabKeysInstalled = false;
+  }
+  GrabKeyLock.unlock();
+}
+
+
+bool RePro::eventFilter( QObject *watched, QEvent *e )
+{
+  if ( e->type() == QEvent::KeyPress ||
+       e->type() == QEvent::KeyRelease ||
+       e->type() == QEvent::Accel ||
+       e->type() == QEvent::AccelOverride ) {
+    QKeyEvent *k = (QKeyEvent*)e;
+    // no Alt-release event:
+    if ( e->type() == QEvent::KeyRelease &&
+	 GrabKeysAlt &&
+	 k->key() == Key_Alt )
+      return true;
+    // check for grabbed keys:
+    vector<int>::iterator kp = GrabKeys.begin();
+    vector<int>::iterator mp = GrabKeysModifier.begin();
+    while ( kp != GrabKeys.end() ) {
+      if ( *kp == k->key() && *mp == k->state() ) {
+	if ( e->type() == QEvent::KeyRelease )
+	  keyReleaseEvent( k );
+	else
+	  keyPressEvent( k );
+	return true;
+      }
+      ++kp;
+      ++mp;
+    }
+  }
+  return RELACSPlugin::eventFilter( watched, e );
 }
 
 

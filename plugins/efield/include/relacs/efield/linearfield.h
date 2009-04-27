@@ -23,6 +23,7 @@
 #define _RELACS_EFIELD_LINEARFIELD_H_ 1
 
 #include <qvbox.h>
+#include <qpushbutton.h>
 #include <relacs/plot.h>
 #include <relacs/optwidget.h>
 #include <relacs/repro.h>
@@ -57,6 +58,7 @@ public slots:
 
 protected:
 
+  virtual void keyPressEvent( QKeyEvent *e );
   virtual void customEvent( QCustomEvent *qce );
 
   QVBox B;
@@ -65,6 +67,9 @@ protected:
 
   Options GUIOpts;
   bool Measure;
+
+  QPushButton *MeasureButton;
+  QPushButton *FinishButton;
 
 };
 

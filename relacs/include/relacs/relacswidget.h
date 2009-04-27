@@ -442,17 +442,21 @@ public:
 
   KeyTimeOut( QWidget *tlw );
   virtual ~KeyTimeOut( void );
+  void setNoFocusWidget( QWidget *w );
+  void unsetNoFocusWidget( void );
 
 
 protected:
 
   virtual bool eventFilter( QObject *o, QEvent *e );
   virtual void timerEvent( QTimerEvent *e );
+  bool noFocusWidget( void ) const;
 
 
 private:
 
-  QWidget *TLW;
+  QWidget *TopLevelWidget;
+  QWidget *NoFocusWidget;
 
 };
 

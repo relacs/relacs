@@ -20,7 +20,6 @@
 */
 
 #include <qlabel.h>
-#include <qpushbutton.h>
 #include <relacs/efield/linearfield.h>
 using namespace relacs;
 
@@ -47,21 +46,23 @@ LinearField::LinearField( void )
   O.setSpacing( 2 );
 
   // measure button:
-  QPushButton *measurebutton = new QPushButton( "&Measure", &B, "MeasureButton" );
-  connect( measurebutton, SIGNAL( clicked() ),
+  MeasureButton = new QPushButton( "&Measure", &B, "MeasureButton" );
+  connect( MeasureButton, SIGNAL( clicked() ),
 	   this, SLOT( measure() ) );
+  grabKey( ALT+Key_M );
 
   // finish button:
-  QPushButton *finishbutton = new QPushButton( "&Finish", &B, "FinishButton" );
-  connect( finishbutton, SIGNAL( clicked() ),
+  FinishButton = new QPushButton( "&Finish", &B, "FinishButton" );
+  connect( FinishButton, SIGNAL( clicked() ),
 	   this, SLOT( finish() ) );
+  grabKey( ALT+Key_F );
 
   updateGeometry();
 
   // setting the right tab order (seems not really to be needed!)
   if ( O.lastWidget() != 0 )
-    setTabOrder( O.lastWidget(), measurebutton );
-  setTabOrder( measurebutton, finishbutton );
+    setTabOrder( O.lastWidget(), MeasureButton );
+  setTabOrder( MeasureButton, FinishButton );
 }
 
 
@@ -85,6 +86,7 @@ int LinearField::main( void )
   // get options:
 
   noMessage();
+  keepFocus();
 
   // plot:
   P.setXLabel( "Distance [cm]" );
@@ -124,6 +126,21 @@ int LinearField::main( void )
   } while ( Measure && ! interrupt() );
   postCustomEvent( 2 ); // O.clearFocus();
   return Completed;
+}
+
+
+void LinearField::keyPressEvent( QKeyEvent *e )
+{
+  if ( e->key() == Key_M && ( e->state() & AltButton )  ) {
+    MeasureButton->animateClick();
+    e->accept();
+  }
+  else if ( e->key() == Key_F && ( e->state() & AltButton )  ) {
+    FinishButton->animateClick();
+    e->accept();
+  }
+  else
+    RePro::keyPressEvent( e );
 }
 
 

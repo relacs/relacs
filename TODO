@@ -23,6 +23,7 @@ Thread safety:
 - disentangle start and stopSession calls?
 - OptWidget::assign is not thread safe
 - shouldn't the draw() function in Plot and MultiPlot not just be QWidget::update()?
+  update() calls postEvent() !
 - (Multi)Plot::draw() can be called from within the locks!
 - what is qApp->syncX and flushX all about?
   From Qt interest archive:

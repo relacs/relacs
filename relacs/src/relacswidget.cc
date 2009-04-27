@@ -470,7 +470,6 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   // miscellaneous:
   setFocusPolicy( QWidget::StrongFocus );
   KeyTime = new KeyTimeOut( topLevelWidget() );
-  qApp->installEventFilter( KeyTime );
 
 }
 
@@ -1685,7 +1684,6 @@ void RELACSWidget::keyPressEvent( QKeyEvent* e)
   MC->keyPressEvent( e );
   for ( unsigned int k=0; k<CN.size(); k++ )
     CN[k]->keyPressEvent( e );
-  e->ignore();
 }
 
 
@@ -1697,7 +1695,6 @@ void RELACSWidget::keyReleaseEvent( QKeyEvent* e)
   MC->keyReleaseEvent( e );
   for ( unsigned int k=0; k<CN.size(); k++ )
     CN[k]->keyReleaseEvent( e );
-  e->ignore();
 }
 
 
@@ -1766,19 +1763,35 @@ void RELACSWidget::helpClosed( int r )
 
 
 KeyTimeOut::KeyTimeOut( QWidget *tlw )
-  : TLW( tlw )
+  : TopLevelWidget( tlw ),
+    NoFocusWidget( 0 )
 {
+  qApp->installEventFilter( this );
 }
 
 
 KeyTimeOut::~KeyTimeOut( void )
 {
+  qApp->removeEventFilter( this );
+}
+
+
+void KeyTimeOut::setNoFocusWidget( QWidget *w )
+{
+  NoFocusWidget = w;
+}
+
+
+void KeyTimeOut::unsetNoFocusWidget( void )
+{
+  NoFocusWidget = 0;
 }
 
 
 bool KeyTimeOut::eventFilter( QObject *o, QEvent *e )
 {
-  if ( qApp->focusWidget() != TLW &&
+  if ( qApp->focusWidget() != TopLevelWidget &&
+       noFocusWidget() &&
        ( e->type() == QEvent::KeyPress ||
 	 e->type() == QEvent::MouseButtonPress ||
 	 e->type() == QEvent::FocusIn ) ) {
@@ -1791,12 +1804,27 @@ bool KeyTimeOut::eventFilter( QObject *o, QEvent *e )
 
 void KeyTimeOut::timerEvent( QTimerEvent *e )
 {
-  if ( qApp->focusWidget() != TLW ) {
-    TLW->setFocus();
+  if ( qApp->focusWidget() != TopLevelWidget &&
+       noFocusWidget() ) {
+    TopLevelWidget->setFocus();
   }
   killTimers();
 }
 
+
+bool KeyTimeOut::noFocusWidget( void ) const
+{
+  if ( NoFocusWidget != 0 ) {
+    QWidget *fw = qApp->focusWidget();
+    while ( fw != 0 && fw != NoFocusWidget ) {
+      fw = fw->parentWidget( true );
+    }
+    if ( fw != 0 && fw == NoFocusWidget )
+      return false;
+  }
+
+  return true;
+}
 
 
 }; /* namespace relacs */
