@@ -306,6 +306,15 @@ public:
         to \a pixel pixel. */
   void setMargin( int pixel );
 
+    /*! A pointer to the first editable widget in OptWidget.
+        Is null, if there isn't any editable widget.
+        Can be used to set the tab order. */
+  QWidget *firstWidget( void ) const;
+    /*! A pointer to the last editable widget in OptWidget.
+        Is null, if there isn't any editable widget.
+        Can be used to set the tab order. */
+  QWidget *lastWidget( void ) const;
+
     /*! The mask that was used to select single options.
 	\sa assign(), readOnlyMask() */
   int selectMask( void ) const { return SelectMask; };
@@ -441,6 +450,8 @@ private:
   Options *Opt;
 
   QWidget *MainWidget;
+  QWidget *FirstWidget;
+  QWidget *LastWidget;
 
   QMutex *OMutex;
 

@@ -36,6 +36,8 @@ OptWidget::OptWidget( QWidget *parent, const char *name, WFlags f )
   : QWidget( parent, name, f ),
     Opt( 0 ),
     MainWidget( 0 ),
+    FirstWidget( 0 ),
+    LastWidget( 0 ),
     OMutex( 0 ),
     MaxLines( 0 ),
     Widgets(),
@@ -52,6 +54,8 @@ OptWidget::OptWidget( Options *o, QMutex *mutex,
   : QWidget( parent, name, f ),
     Opt( 0 ),
     MainWidget( 0 ),
+    FirstWidget( 0 ),
+    LastWidget( 0 ),
     OMutex( mutex ),
     MaxLines( 0 ),
     Widgets(),
@@ -70,6 +74,8 @@ OptWidget::OptWidget( Options *o, int selectmask, int romask,
   : QWidget( parent, name, f ),
     Opt( 0 ),
     MainWidget( 0 ),
+    FirstWidget( 0 ),
+    LastWidget( 0 ),
     OMutex( mutex ),
     MaxLines( 0 ),
     Widgets(),
@@ -109,6 +115,8 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
     delete MainWidget;
     delete layout();
   }
+  FirstWidget = 0;
+  LastWidget = 0;
 
   Opt = o;
   Widgets.clear();
@@ -133,7 +141,6 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
   QWidget *parent = this;
   QTabWidget *tabwidget = 0;
   bool tabs = false;
-  bool focus = true;
   for ( ; pp != Opt->end(); ++pp ) {
     if ( selectmask <= 0 || ( (*pp).flags() & selectmask ) ) {
       tabs = ( (*pp).isLabel() && 
@@ -248,9 +255,10 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
 	}
 	if ( (*pp).size() <= 1 ) {
 	  OptWidgetText *t = new OptWidgetText( pp, l, Opt, this, parent, OMutex );
-	  if ( t->Editable && focus ) {
-	    setFocusProxy( t->W );
-	    focus = false;
+	  if ( t->Editable ) {
+	    if ( FirstWidget == 0 )
+	      FirstWidget = t->W;
+	    LastWidget = t->W;
 	  }
 	  if ( style & BreakLinesStyle ) {
 	    row++;
@@ -273,9 +281,10 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
 	}
 	else {
 	  OptWidgetMultiText *t = new OptWidgetMultiText( pp, l, Opt, this, parent, OMutex );
-	  if ( t->Editable && focus ) {
-	    setFocusProxy( t->W );
-	    focus = false;
+	  if ( t->Editable ) {
+	    if ( FirstWidget == 0 )
+	      FirstWidget = t->W;
+	    LastWidget = t->W;
 	  }
 	  if ( style & BreakLinesStyle ) {
 	    row++;
@@ -300,9 +309,10 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
 	  Layout.back()->addWidget( l, row, 1,
 				    Qt::AlignLeft | Qt::AlignVCenter );
 	OptWidgetNumber *n = new OptWidgetNumber( pp, l, Opt, this, parent, OMutex );
-	if ( n->Editable && focus ) {
-	  setFocusProxy( n->W );
-	  focus = false;
+	if ( n->Editable ) {
+	  if ( FirstWidget == 0 )
+	    FirstWidget = n->W;
+	  LastWidget = n->W;
 	}
 	if ( style & BreakLinesStyle ) {
 	  row++;
@@ -323,9 +333,10 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
       // boolean:
       else if ( (*pp).isBoolean() ) {
 	OptWidgetBoolean *b = new OptWidgetBoolean( pp, Opt, this, parent, rs, OMutex );
-	if ( b->Editable && focus ) {
-	  setFocusProxy( b->W );
-	  focus = false;
+	if ( b->Editable ) {
+	  if ( FirstWidget == 0 )
+	    FirstWidget = b->W;
+	  LastWidget = b->W;
 	}
 	if ( style & BreakLinesStyle )
 	  Layout.back()->addMultiCellWidget( b->W, row, row, 1, 2,
@@ -412,6 +423,18 @@ void OptWidget::setMargin( int pixel )
 {
   for ( unsigned int k=0; k<Layout.size(); k++ )
     Layout[k]->setMargin( pixel );
+}
+
+
+QWidget *OptWidget::firstWidget( void ) const
+{
+  return FirstWidget;
+}
+
+
+QWidget *OptWidget::lastWidget( void ) const
+{
+  return LastWidget;
 }
 
 

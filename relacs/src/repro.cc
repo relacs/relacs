@@ -410,6 +410,14 @@ void RePro::message( const string &msg )
 }
 
 
+void RePro::keepFocus( void )
+{
+#warning keepFocus not yet implemented!
+  // this must be specific to the RePro!!!
+  // Other input (e.g. spike detector) should still time out.
+}
+
+
 string RePro::addPath( const string &file ) const
 {
   RW->SF->storeFile( file );

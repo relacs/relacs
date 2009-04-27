@@ -43,8 +43,7 @@ LinearField::LinearField( void )
   // user interaction:
   GUIOpts.addNumber( "conductivity", "Water conductivity", 0.0, 0.0, 100000.0, 1.0, "uS/cm" );
   GUIOpts.addNumber( "distance", "Distance", 0.0, -100000.0, 100000.0, 1.0, "cm" );
-  O.assign( &GUIOpts, 0, 0, true, OptWidget::BreakLinesStyle + OptWidget::ExtraSpaceStyle );
-  //	       metaDataMutex() );
+  O.assign( &GUIOpts, 0, 0, false, OptWidget::BreakLinesStyle + OptWidget::ExtraSpaceStyle );
   O.setSpacing( 2 );
 
   // measure button:
@@ -58,6 +57,11 @@ LinearField::LinearField( void )
 	   this, SLOT( finish() ) );
 
   updateGeometry();
+
+  // setting the right tab order (seems not really to be needed!)
+  if ( O.lastWidget() != 0 )
+    setTabOrder( O.lastWidget(), measurebutton );
+  setTabOrder( measurebutton, finishbutton );
 }
 
 
@@ -126,10 +130,11 @@ int LinearField::main( void )
 void LinearField::customEvent( QCustomEvent *qce )
 {
   if ( qce->type() == QEvent::User+1 ) {
-    O.setFocus();
+    if ( O.firstWidget() != 0 )
+      O.firstWidget()->setFocus();
   }
   else if ( qce->type() == QEvent::User+2 ) {
-    O.clearFocus();
+    clearFocus();
   }
 }
 

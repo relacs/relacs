@@ -20,7 +20,6 @@
 */
 
 #include <qhbox.h>
-#include <qpushbutton.h>
 #include <relacs/base/setoutput.h>
 using namespace relacs;
 
@@ -45,20 +44,16 @@ SetOutput::SetOutput( void )
   bb->setSpacing( 4 );
 
   // Ok button:
-  QPushButton *okbutton = new QPushButton( "&Ok", bb, "OkButton" );
-  connect( okbutton, SIGNAL( clicked() ),
+  QPushButton *OKButton = new QPushButton( "&Ok", bb, "OkButton" );
+  connect( OKButton, SIGNAL( clicked() ),
 	   this, SLOT( setValues() ) );
 
   // Cancel button:
-  QPushButton *cancelbutton = new QPushButton( "&Cancel", bb, "CancelButton" );
-  connect( cancelbutton, SIGNAL( clicked() ),
+  QPushButton *CancelButton = new QPushButton( "&Cancel", bb, "CancelButton" );
+  connect( CancelButton, SIGNAL( clicked() ),
 	   this, SLOT( keepValues() ) );
 
-  bb->setFixedHeight( okbutton->sizeHint().height() );
-
-  setTabOrder( this, &STW );
-  setTabOrder( &STW, okbutton );
-  setTabOrder( okbutton, cancelbutton );
+  bb->setFixedHeight( OKButton->sizeHint().height() );
 }
 
 
@@ -85,6 +80,9 @@ void SetOutput::config( void )
   // display values:
   STW.assign( &OutOpts, ParameterFlag, 0, false, 0, mutex() );
   updateGeometry();
+  if ( STW.lastWidget() != 0 )
+    setTabOrder( STW.lastWidget(), OKButton );
+  setTabOrder( OKButton, CancelButton );
 }
 
 
@@ -181,10 +179,11 @@ const Options &SetOutput::outTraces( void ) const
 void SetOutput::customEvent( QCustomEvent *qce )
 {
   if ( qce->type() == QEvent::User+1 ) {
-    STW.setFocus();
+    if ( STW.firstWidget() != 0 )
+      STW.firstWidget()->setFocus();
   }
   else if ( qce->type() == QEvent::User+2 ) {
-    STW.clearFocus();
+    clearFocus();
   }
 }
 

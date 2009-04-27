@@ -308,6 +308,12 @@ public:
         \sa setMessage(), noMessage() */
   void message( const string &msg );
 
+    /*! Call this function in the beginning of the main() function,
+        if your implementation includes some interactive widgets
+	and you do not want RELACS to automatically remove the keyboard focus
+	from these widgets after some timeout. */
+  void keepFocus( void );
+
     /*! Stores \a file in the list of files for this run of the RePro.
         \return \a file added to the base path for the current session. */
   string addPath( const string &file ) const;
