@@ -50,12 +50,15 @@ LinearField::LinearField( void )
   connect( MeasureButton, SIGNAL( clicked() ),
 	   this, SLOT( measure() ) );
   grabKey( ALT+Key_M );
+  grabKey( Key_Return );
+  grabKey( Key_Enter );
 
   // finish button:
   FinishButton = new QPushButton( "&Finish", &B, "FinishButton" );
   connect( FinishButton, SIGNAL( clicked() ),
 	   this, SLOT( finish() ) );
   grabKey( ALT+Key_F );
+  grabKey( Key_Escape );
 
   updateGeometry();
 
@@ -131,11 +134,19 @@ int LinearField::main( void )
 
 void LinearField::keyPressEvent( QKeyEvent *e )
 {
-  if ( e->key() == Key_M && ( e->state() & AltButton )  ) {
+  if ( e->key() == Key_M && ( e->state() & AltButton ) ) {
     MeasureButton->animateClick();
     e->accept();
   }
-  else if ( e->key() == Key_F && ( e->state() & AltButton )  ) {
+  else if ( e->key() == Key_F && ( e->state() & AltButton ) ) {
+    FinishButton->animateClick();
+    e->accept();
+  }
+  else if ( ( e->key() == Key_Return || e->key() == Key_Enter ) && ( e->state() & KeyButtonMask ) == 0 ) {
+    MeasureButton->animateClick();
+    e->accept();
+  }
+  else if ( e->key() == Key_Escape && ( e->state() & KeyButtonMask ) == 0 ) {
     FinishButton->animateClick();
     e->accept();
   }
