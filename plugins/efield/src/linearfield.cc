@@ -20,6 +20,7 @@
 */
 
 #include <qlabel.h>
+#include <relacs/tablekey.h>
 #include <relacs/efield/linearfield.h>
 using namespace relacs;
 
@@ -34,13 +35,13 @@ LinearField::LinearField( void )
     P( (QWidget*)this )
 {
   // add some options:
-  //  addNumber( "value", "Value to be writen to output trace", 0.0, -100000.0, 100000.0, 0.1 );
+  addNumber( "duration", "Duration of measurement", 1.0, 0.01, 1000000.0, 1.0, "s" );
 
   // layout:
   boxLayout()->setDirection( QBoxLayout::LeftToRight );
 
   // user interaction:
-  GUIOpts.addNumber( "conductivity", "Water conductivity", 0.0, 0.0, 100000.0, 1.0, "uS/cm" );
+  GUIOpts.addText( "comment", "Comment", "" );
   GUIOpts.addNumber( "distance", "Distance", 0.0, -100000.0, 100000.0, 1.0, "cm" );
   O.assign( &GUIOpts, 0, 0, false, OptWidget::BreakLinesStyle + OptWidget::ExtraSpaceStyle );
   O.setSpacing( 2 );
@@ -66,69 +67,157 @@ LinearField::LinearField( void )
   if ( O.lastWidget() != 0 )
     setTabOrder( O.lastWidget(), MeasureButton );
   setTabOrder( MeasureButton, FinishButton );
+
+  Input = false;
 }
 
 
 void LinearField::measure( void )
 {
-  Measure = true;
-  O.accept( false );
-  wake();
+  lock();
+  if ( Input ) {
+    Measure = true;
+    O.accept( false );
+    wake();
+  }
+  unlock();
 }
 
 
 void LinearField::finish( void )
 {
-  Measure = false;
-  wake();
+  lock();
+  if ( Input ) {
+    Measure = false;
+    wake();
+  }
+  unlock();
 }
 
 
 int LinearField::main( void )
 {
   // get options:
+  double duration = number( "duration" );
+  Settings = *this;
 
+  // init:
   noMessage();
   keepFocus();
 
+  Amplitude.clear();
+  Amplitude.reserve( 1000 );
+
   // plot:
   P.setXLabel( "Distance [cm]" );
-  P.setYLabel( "RMS Amplitude [V]" );
+  P.setYLabel( "RMS Amplitude [" + trace( 0 ).unit() + "]" );
+  P.setYRange( 0.0, Plot::AutoScale );
 
   postCustomEvent( 1 ); // O.setFocus();
   do {
     // wait for input:
     Measure = false;
+    Input = true;
     unlockAll();
     sleepWait();
     lockAll();
+    Input = false;
     if ( Measure ) {
-      double d = GUIOpts.number( "distance" );
-      message( "measure at " + Str( d ) + "cm" );
+      double distance = GUIOpts.number( "distance" );
+      message( "measure at " + Str( distance ) + "cm" );
+      // get data:
+      sleep( duration+0.1 );
+      SampleDataF data( 0.0, duration, trace( 0 ).sampleInterval() );
+      trace( 0 ).copy( trace( 0 ).currentTime()-duration-0.1, data );
       // analyse:
-      /*
-      OutList sigs;
-      for ( int k=0; k<OutOpts.size(); k++ ) {
-	if ( OutOpts[k].changed() ) {
-	  double value = OutOpts[k].number();
-	  OutData sig( value );
-	  sig.setTraceName( OutOpts[k].ident() );
-	  sig.setIdent( "value=" + Str( value ) );
-	  sigs.push( sig );
-	}
-      }
-      if ( sigs.size() > 0 ) {
-	directWrite( sigs );
-	if ( sigs.failed() ) {
-	  warning( sigs.errorText() );
-	  return Failed;
-	}
-      }
-      */
+      analyze( distance, data );
+      // plot:
+      plot();
+      // save:
+      saveTrace( data );
     }
   } while ( Measure && ! interrupt() );
+  saveAmplitude();
   postCustomEvent( 2 ); // O.clearFocus();
   return Completed;
+}
+
+
+void LinearField::analyze( double distance, const SampleDataF &data )
+{
+  double ampl = variance( data );
+  Amplitude.push( distance, ampl );
+}
+
+
+void LinearField::plot( void )
+{
+  P.lock();
+  P.clear();
+  P.plot( Amplitude, 1.0, Plot::Transparent, 0, Plot::Solid, Plot::Circle, 10, Plot::Yellow, Plot::Yellow );
+  if ( Amplitude.size() > 0 ) {
+    MapD p;
+    p.push( Amplitude.x().back(), Amplitude.y().back() );
+    P.plot( p, 1.0, Plot::Transparent, 0, Plot::Solid, Plot::Circle, 10, Plot::Red, Plot::Yellow );
+  }
+  P.draw();
+  P.unlock();
+}
+
+
+void LinearField::saveTrace( const SampleDataF &data )
+{
+  // create file:
+  ofstream df( addPath( "linearfield-traces.dat" ).c_str(),
+	       ofstream::out | ofstream::app );
+  if ( ! df.good() )
+    return;
+
+  // write header and key:
+  Settings.save( df, "# " );
+  GUIOpts.save( df, "# " );
+  df << '\n';
+  TableKey key;
+  key.addNumber( "t", "ms", "%6.2f" );
+  key.addNumber( "V", trace( 0 ).unit(), "%6.2f" );
+  key.saveKey( df, true, false );
+
+  // write data:
+  for ( int k=0; k<data.size(); k++ ) {
+    key. save( df, data.pos( k )*1000.0, 0 );
+    key. save( df, data[k] );
+    df << '\n';
+  }
+  df << "\n\n";
+}
+
+
+void LinearField::saveAmplitude( void )
+{
+  if ( Amplitude.empty() )
+    return;
+
+  // create file:
+  ofstream df( addPath( "linearfield.dat" ).c_str(),
+	       ofstream::out | ofstream::app );
+  if ( ! df.good() )
+    return;
+
+  // write header and key:
+  Settings.save( df, "# " );
+  df << '\n';
+  TableKey key;
+  key.addNumber( "x", "cm", "%6.1f" );
+  key.addNumber( "A", trace( 0 ).unit(), "%6.2f" );
+  key.saveKey( df, true, false );
+
+  // write data:
+  for ( int k=0; k<Amplitude.size(); k++ ) {
+    key. save( df, Amplitude.x( k ), 0 );
+    key. save( df, Amplitude.y( k ) );
+    df << '\n';
+  }
+  df << "\n\n";
 }
 
 

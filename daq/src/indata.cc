@@ -176,15 +176,29 @@ void InData::copy( double time, double duration, OutData &data ) const
 void InData::copy( double time, SampleDataF &trace ) const
 {
   int inx = index( time + trace.rangeFront() );
-  for ( int k=0; k < trace.size(); k++ ) {
-    double t = time + trace.pos( k );
-    for ( ; inx < size() && pos( inx ) < t; inx++ );
-    if ( inx < size() - 1 ) {
-      double m = ( operator[]( inx+1 ) - operator[]( inx ) ) / sampleInterval();
-      trace[k] = m * ( t - pos( inx ) ) + operator[]( inx );
+  if ( fabs( sampleInterval() - trace.stepsize() ) < 1.0e-8 ) {
+    for ( int k=0; k < trace.size(); k++ ) {
+      if ( inx < size() )
+	trace[k] = operator[]( inx+k );
+      else {
+	trace.resize( k );
+	break;
+      }
     }
-    else
-      trace[k] = operator[]( size() - 1 );
+  }
+  else {
+    for ( int k=0; k < trace.size(); k++ ) {
+      double t = time + trace.pos( k );
+      for ( ; inx < size() && pos( inx ) < t; inx++ );
+      if ( inx < size() - 1 ) {
+	double m = ( operator[]( inx+1 ) - operator[]( inx ) ) / sampleInterval();
+	trace[k] = m * ( t - pos( inx ) ) + operator[]( inx );
+      }
+      else {
+	trace.resize( k );
+	break;
+      }
+    }
   }
 }
 
@@ -192,15 +206,29 @@ void InData::copy( double time, SampleDataF &trace ) const
 void InData::copy( double time, SampleDataD &trace ) const
 {
   int inx = index( time + trace.rangeFront() );
-  for ( int k=0; k < trace.size(); k++ ) {
-    double t = time + trace.pos( k );
-    for ( ; inx < size() && pos( inx ) < t; inx++ );
-    if ( inx < size() - 1 ) {
-      double m = ( operator[]( inx+1 ) - operator[]( inx ) ) / sampleInterval();
-      trace[k] = m * ( t - pos( inx ) ) + operator[]( inx );
+  if ( fabs( sampleInterval() - trace.stepsize() ) < 1.0e-8 ) {
+    for ( int k=0; k < trace.size(); k++ ) {
+      if ( inx < size() )
+	trace[k] = operator[]( inx+k );
+      else {
+	trace.resize( k );
+	break;
+      }
     }
-    else
-      trace[k] = operator[]( size() - 1 );
+  }
+  else {
+    for ( int k=0; k < trace.size(); k++ ) {
+      double t = time + trace.pos( k );
+      for ( ; inx < size() && pos( inx ) < t; inx++ );
+      if ( inx < size() - 1 ) {
+	double m = ( operator[]( inx+1 ) - operator[]( inx ) ) / sampleInterval();
+	trace[k] = m * ( t - pos( inx ) ) + operator[]( inx );
+      }
+      else {
+	trace.resize( k );
+	break;
+      }
+    }
   }
 }
 

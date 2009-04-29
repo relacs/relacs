@@ -24,6 +24,7 @@
 
 #include <qvbox.h>
 #include <qpushbutton.h>
+#include <relacs/map.h>
 #include <relacs/plot.h>
 #include <relacs/optwidget.h>
 #include <relacs/repro.h>
@@ -48,6 +49,10 @@ public:
 
   LinearField( void );
   virtual int main( void );
+  void analyze( double distance, const SampleDataF &data );
+  void plot( void );
+  void saveTrace( const SampleDataF &data );
+  void saveAmplitude( void );
 
 
 public slots:
@@ -65,11 +70,16 @@ protected:
   OptWidget O;
   Plot P;
 
+  Options Settings;
+
   Options GUIOpts;
   bool Measure;
+  bool Input;
 
   QPushButton *MeasureButton;
   QPushButton *FinishButton;
+
+  MapD Amplitude;
 
 };
 

@@ -124,12 +124,18 @@ class InData : public CyclicArray<float>, public DaqError
     /*! Copy the data values from \a time + \a trace.leftMargin()
         to \a time + \a trace.rightMargin() to \a trace.
         The sample interval given by \a trace is used.
-        The values are obtained by linear interpolation. */
+        If the sample intervals differ
+	the values are obtained by linear interpolation.
+        If \a time + \a trace.rightMargin() is larger than length()
+        \a trace is appropriately truncated. */
   void copy( double time, SampleDataF &trace ) const;
     /*! Copy the data values from \a time + \a trace.leftMargin()
         to \a time + \a trace.rightMargin() to \a trace.
         The sample interval given by \a trace is used.
-        The values are obtained by linear interpolation. */
+        If the sample intervals differ
+	the values are obtained by linear interpolation.
+        If \a time + \a trace.rightMargin() is larger than length()
+        \a trace is appropriately truncated. */
   void copy( double time, SampleDataD &trace ) const;
 
     /*! Return string with an error message: 
