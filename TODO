@@ -1,3 +1,6 @@
+Installation:
+- Check to run relacs from installation (config files and plugin pathes)
+
 Dynamic clamp:
 - write back real time loop frequency to InList and OutList samplerate.
 - rewrite analog input part of the dynamic clamp loop in dynclampmodul

@@ -883,7 +883,9 @@ void PlotTrace::resizeLayout( void )
   int columns = 1;
   if ( plots > 6 )
     columns = 2;
-  int rows = (plots+1)/columns;
+  int rows = plots/columns;
+  if ( plots%columns > 0 )
+    rows++;
   double xsize = 1.0/columns;
   double yboffs = double( (*this)[0].fontPixel( 2.3 ) ) / double( height() );
   double ytoffs = double( (*this)[0].fontPixel( 0.8 ) ) / double( height() );
@@ -901,7 +903,7 @@ void PlotTrace::resizeLayout( void )
     }
   }
   (*this)[0].setSize( xsize, yheight+ytoffs );
-  (*this)[plots-1].setOrigin( xsize, 0.0 );
+  (*this)[plots-1].setOrigin( (columns-1)*xsize, 0.0 );
   (*this)[plots-1].setSize( xsize, yheight+yboffs );
   if ( columns > 1 ) {
     (*this)[(plots+1)/2].setSize( xsize, yheight+ytoffs );
