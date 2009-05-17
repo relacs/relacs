@@ -19,8 +19,8 @@ RELACSLIBPATHES=
 # and should be removed from the LD_LIBRARY_PATH:
 RELACSLIBINSTALLDIR=""
 
-PLUGINHOME='@libdir@/relacs/plugins'
-PLUGINHELPPATHES='@datadir@/relacs/help'
+PLUGINHOME="@libdir@/relacs/plugins"
+PLUGINHELPPATHES="@datadir@/relacs/help"
 PLUGINRELATIVE=""
 
 # Possible config files separated by '|':
@@ -38,6 +38,6 @@ ICONPATH="@datadir@/relacs"
 RELACSSCRIPTPATH=""
 
 # Path to the relacs runner script that is to be installed:
-RELACSRUNNERPATH='@abs_top_builddir@/src/relacs'
+RELACSRUNNERPATH="@abs_top_builddir@/src/relacs"
 
 @RELACS_FOOT@

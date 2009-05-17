@@ -4,8 +4,8 @@
 #
 # relacs
 #
-# RELACS - RealTime ELectrophysiological data Acquisition, Control, and Stimulation
-# Copyright (C) 2002-2008 Jan Benda <j.benda@biologie.hu-berlin.de>
+# RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
+# Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,8 +26,8 @@
 # Default working path:
 WORKPATH="."
 
-# Base of the config files (as passed to relacs by -s):
-CONFIGBASE=""
+# Default base of the config files (as passed to relacs by -s):
+CONFIGBASE="relacs"
 
 # Default name of the log-file:
 LOGFILE="relacs.log"
