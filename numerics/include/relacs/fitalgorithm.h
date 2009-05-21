@@ -20,7 +20,7 @@
 */
 
 #ifndef _RELACS_FITALGORITHM_H_
-#define _FITALGORITHM_H
+#define _RELACS_FITALGORITHM_H_
 
 #include <cmath>
 #include <vector>

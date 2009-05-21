@@ -286,6 +286,12 @@ int RELACSPlugin::eventInputEvent( const string &ident ) const
 }
 
 
+double RELACSPlugin::signalTime( void ) const
+{
+  return RW->SignalTime;
+}
+
+
 void RELACSPlugin::setGain( const InData &data, int gainindex )
 {
   if ( RW->AQ != 0 )

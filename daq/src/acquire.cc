@@ -2200,7 +2200,7 @@ int Acquire::stopWrite( void )
 }
 
 
-bool Acquire::readSignal( InList &data, EventList &events )
+bool Acquire::readSignal( double &signaltime, InList &data, EventList &events )
 {
   double sigtime = -1.0;
 
@@ -2228,6 +2228,8 @@ bool Acquire::readSignal( InList &data, EventList &events )
       return false;
     sigtime = LastWrite + LastDelay;
   }
+
+  signaltime = sigtime;
 
   // set signal time in input traces:
   data.setSignalTime( sigtime );

@@ -1,3 +1,9 @@
+SignalTime: finish this update (RELACSPlugin::signalTime()
+- test ficurve RePro: does not work!
+- update all other RePros
+- remove from InData and EventData?
+- update Acquire::readSignal()
+
 Dynamic clamp:
 - write back real time loop frequency to InList and OutList samplerate.
 - rewrite analog input part of the dynamic clamp loop in dynclampmodul

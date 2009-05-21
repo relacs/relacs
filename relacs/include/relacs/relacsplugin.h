@@ -341,6 +341,9 @@ protected:
 	eventInputTrace(), traceInputTrace(), traceInputEvent() */
   int eventInputEvent( const string &ident ) const;
 
+    /*! \return the time of the last signal. */
+  double signalTime( void ) const;
+
 
  protected:
 

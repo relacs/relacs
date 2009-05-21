@@ -87,8 +87,10 @@ public:
 			     vector< PlotTrace::TraceStyle > &tracestyles,
 			     vector< PlotTrace::EventStyle > &eventstyles );
 
-    /*! Initialize the Filter. */
-  void init( const InList &data, EventList &events );
+    /*! Initialize the Filter.
+        \return in case of errors (init() not implemented) 
+	an appropriate message. */
+  string init( const InList &data, EventList &events );
     /*! Notice input signal gain changes so that adjust() is called
         on the next invokation of filter(). */
   void adjust( const InList &data, const EventList &events, int flag );
@@ -96,8 +98,10 @@ public:
         Calls the adjust() function of each filter/detector if the gain of its
         input data was adjusted. */
   void adjust( const InList &data, const EventList &events );
-    /*! Filter or detect events. The Filter is initialized at its first call. */
-  void filter( const InList &data, EventList &events );
+    /*! Filter or detect events. The Filter is initialized at its first call.
+        \return in case of errors (filter() not implemented) 
+	an appropriate message. */
+  string filter( const InList &data, EventList &events );
 
     /*! Return filter of the \a index trace in an InList. */
   Filter *filter( int index );

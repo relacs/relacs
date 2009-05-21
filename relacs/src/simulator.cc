@@ -593,12 +593,14 @@ int Simulator::writeZero( int channel, int device )
 }
 
 
-bool Simulator::readSignal( InList &data, EventList &events )
+bool Simulator::readSignal( double &signaltime, InList &data, EventList &events )
 {
   if ( LastWrite < 0.0 )
     return false;
 
   double sigtime = LastWrite + LastDelay;
+
+  signaltime = sigtime;
 
   // set signal time in input traces:
   data.setSignalTime( sigtime );

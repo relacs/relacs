@@ -82,6 +82,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     Mode( mode ),
     SS( this ),
     MTDT( this ),
+    SignalTime( -1.0 ),
     ReadLoop( this ),
     WriteLoop( this ),
     LogFile( 0 ),
@@ -736,10 +737,12 @@ void RELACSWidget::updateData( void )
   lockAI();
   AQ->convertData();
   unlockAI();
-  AQ->readSignal( IL, ED ); // we probably get the latest signal start here
+  AQ->readSignal( SignalTime, IL, ED ); // we probably get the latest signal start here
   AQ->readRestart( IL, ED );
   ED.setRangeBack( IL[0].currentTime() );
-  FD->filter( IL, ED );
+  Str fdw = FD->filter( IL, ED );
+  if ( !fdw.empty() )
+    printlog( "! error: " + fdw.erasedMarkup() );
   unlockData();
 }
 
@@ -811,7 +814,7 @@ void RELACSWidget::activateGains( void )
 
 int RELACSWidget::write( OutData &signal )
 {
-  if ( AQ->readSignal( IL, ED ) ) // we should get the start time of the latest signal here
+  if ( AQ->readSignal( SignalTime, IL, ED ) ) // we should get the start time of the latest signal here
     SF->save( IL, ED );
   // last stimulus still not saved?
   if ( SF->signalPending() ) {
@@ -835,7 +838,7 @@ int RELACSWidget::write( OutData &signal )
     SF->save( signal );
     unlockSignals();
     lockAI();
-    AQ->readSignal( IL, ED ); // if acquisition was restarted we here get the signal start
+    AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     unlockAI();
     AQ->readRestart( IL, ED );
     // update device menu:
@@ -851,7 +854,7 @@ int RELACSWidget::write( OutData &signal )
 
 int RELACSWidget::write( OutList &signal )
 {
-  if ( AQ->readSignal( IL, ED ) ) // we should get the start time of the latest signal here
+  if ( AQ->readSignal( SignalTime, IL, ED ) ) // we should get the start time of the latest signal here
     SF->save( IL, ED );
   // last stimulus still not saved?
   if ( SF->signalPending() ) {
@@ -875,7 +878,7 @@ int RELACSWidget::write( OutList &signal )
     SF->save( signal );
     unlockSignals();
     lockAI();
-    AQ->readSignal( IL, ED ); // if acquisition was restarted we here get the signal start
+    AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     unlockAI();
     AQ->readRestart( IL, ED );
     // update device menu:
@@ -891,7 +894,7 @@ int RELACSWidget::write( OutList &signal )
 
 int RELACSWidget::directWrite( OutData &signal )
 {
-  if ( AQ->readSignal( IL, ED ) ) // we should get the start time of the latest signal here
+  if ( AQ->readSignal( SignalTime, IL, ED ) ) // we should get the start time of the latest signal here
     SF->save( IL, ED );
   // last stimulus still not saved?
   if ( SF->signalPending() ) {
@@ -914,7 +917,7 @@ int RELACSWidget::directWrite( OutData &signal )
     SF->save( signal );
     unlockSignals();
     lockAI();
-    AQ->readSignal( IL, ED ); // if acquisition was restarted we here get the signal start
+    AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     unlockAI();
     AQ->readRestart( IL, ED );
     // update device menu:
@@ -930,7 +933,7 @@ int RELACSWidget::directWrite( OutData &signal )
 
 int RELACSWidget::directWrite( OutList &signal )
 {
-  if ( AQ->readSignal( IL, ED ) ) // we should get the start time of the latest signal here
+  if ( AQ->readSignal( SignalTime, IL, ED ) ) // we should get the start time of the latest signal here
     SF->save( IL, ED );
   // last stimulus still not saved?
   if ( SF->signalPending() ) {
@@ -953,7 +956,7 @@ int RELACSWidget::directWrite( OutList &signal )
     SF->save( signal );
     unlockSignals();
     lockAI();
-    AQ->readSignal( IL, ED ); // if acquisition was restarted we here get the signal start
+    AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     unlockAI();
     AQ->readRestart( IL, ED );
     // update device menu:
@@ -1110,7 +1113,7 @@ void RELACSWidget::stopRePro( void )
 
   ReProRunning = false;
 
-  if ( AQ->readSignal( IL, ED ) ) // we should get the start time of the latest signal here
+  if ( AQ->readSignal( SignalTime, IL, ED ) ) // we should get the start time of the latest signal here
     SF->save( IL, ED );
   // last stimulus still not saved?
   if ( SF->signalPending() ) {
@@ -1465,6 +1468,7 @@ void RELACSWidget::startFirstAcquisition( void )
   }
 
   // analog input and output traces:
+  SignalTime = -1.0;
   setupInTraces();
   setupOutTraces();
 
@@ -1477,6 +1481,8 @@ void RELACSWidget::startFirstAcquisition( void )
   if ( !fdw.empty() ) {
     printlog( "! error: " + fdw.erasedMarkup() );
     MessageBox::error( "RELACS Error !", fdw, this );
+    startIdle();
+    return;
   }
 
   // files:
@@ -1522,7 +1528,15 @@ void RELACSWidget::startFirstAcquisition( void )
   AQ->readRestart( IL, ED );
   AID->updateMenu();
 
-  FD->init( IL, ED );  // init filters/detectors before RePro!
+  fdw = FD->init( IL, ED );  // init filters/detectors before RePro!
+  if ( ! fdw.empty() ) {
+    printlog( "! error in initializing filter: " + fdw.erasedMarkup() );
+    MessageBox::warning( "RELACS Warning !",
+			 "error in initializing filter: " + fdw,
+			 true, 0.0, this );
+    startIdle();
+    return;
+  }
 
   ReadLoop.start();
   RunDataMutex.lock();
@@ -1564,6 +1578,7 @@ void RELACSWidget::startFirstSimulation( void )
   }
 
   // analog input and output traces:
+  SignalTime = -1.0;
   setupInTraces();
   setupOutTraces();
 
@@ -1576,6 +1591,8 @@ void RELACSWidget::startFirstSimulation( void )
   if ( !fdw.empty() ) {
     printlog( "! error: " + fdw.erasedMarkup() );
     MessageBox::error( "RELACS Error !", fdw, this );
+    startIdle();
+    return;
   }
 
   // files:
@@ -1633,7 +1650,15 @@ void RELACSWidget::startFirstSimulation( void )
     }
   }
 
-  FD->init( IL, ED );  // init filters/detectors before RePro!
+  fdw = FD->init( IL, ED );  // init filters/detectors before RePro!
+  if ( ! fdw.empty() ) {
+    printlog( "! error in initializing filter: " + fdw.erasedMarkup() );
+    MessageBox::warning( "RELACS Warning !",
+			 "error in initializing filter: " + fdw,
+			 true, 0.0, this );
+    startIdle();
+    return;
+  }
 
   RunDataMutex.lock();
   RunData = true;

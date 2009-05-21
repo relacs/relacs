@@ -89,8 +89,9 @@ public:
     /*! Stop current stimulus. */
   virtual int stopWrite( void );
     /*! Check for a new signal event and add it to \a events.
+        \param[out] signaltime is set to the time of the most recent signal.
         \return \c true if there was a new signal event. */
-  virtual bool readSignal( InList &data, EventList &events );
+  virtual bool readSignal( double &signaltime, InList &data, EventList &events );
 
     /*! Direct output of a single data value as specified by \a signal
         to the DAQ boards. */

@@ -20,7 +20,7 @@
 */
 
 #ifndef _RELACS_STATSTESTS_H_
-#define _STATSTESTS_H
+#define _RELACS_STATSTESTS_H_
 
 #include <relacs/array.h>
 
