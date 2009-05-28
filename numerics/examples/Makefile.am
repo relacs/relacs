@@ -18,6 +18,7 @@ noinst_PROGRAMS = \
     xsampledata \
     xspectrum \
     xstats \
+    xmoments \
     xstatstests \
     xwhitenoise
 
@@ -105,6 +106,10 @@ xstatstests_SOURCES = xstatstests.cc
 xstats_LDADD = \
     ../src/librelacsnumerics.la
 xstats_SOURCES = xstats.cc
+
+xmoments_LDADD = \
+    ../src/librelacsnumerics.la
+xmoments_SOURCES = xmoments.cc
 
 xwhitenoise_LDADD = \
     ../src/librelacsnumerics.la
