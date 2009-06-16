@@ -1,0 +1,285 @@
+#! /bin/bash
+
+if test "$1" = "--help"; then
+    cat <<EOF
+
+newplugin
+
+Adds an entry in src/Makefile.am and
+creates a skeleton .cc and .h file
+for a new plugin.
+
+EOF
+    exit 0
+fi
+
+# get plugin type:
+echo "Select the type of the new plugin:"
+select TYPE in RePro Control Filter Detector Model; do
+# AnalogInput AnalogOutput Attenuator Attenuate Device
+    test -n "$TYPE" && break
+done
+TYPECLASS=$TYPE
+test "$TYPECLASS" = "Detector" && TYPECLASS="Filter"
+TYPEINCLUDE=$(echo "$TYPECLASS" | tr [:upper:] [:lower:])
+
+
+# get input name of plugin:
+until test -n "$PLUGINNAME"; do
+    read -e -p "Name of the new plugin: " PLUGINNAME
+    test -z "$PLUGINNAME" && echo "! Error! You need to privide a name for the plugin!"
+done
+PLUGINFILE=$(echo "$PLUGINNAME" | tr [:upper:] [:lower:])
+
+
+# get input path to plugin set:
+until test -n "$PLUGINSETPATH"; do
+    read -e -p "Path to the plugin set: " PLUGINSETPATH
+    if test -z "$PLUGINSETPATH" || ! test -d "$PLUGINSETPATH"; then
+	echo "! Error! You need to provide a valid path to the plugin set!"
+    fi
+done
+
+PLUGINSETPATH="${PLUGINSETPATH%/}"
+PLUGINSET="${PLUGINSETPATH##*/}"
+PLUGINSETDEFAULTNAME="${PLUGINSET}"
+
+if ! test -f "$PLUGINSETPATH/src/Makefile.am"; then
+    echo "Error! '$PLUGINSETPATH/src/Makefile.am' does not exist."
+    exit 1
+fi
+
+PLUGINLIB="$PLUGINSET$PLUGINFILE"
+
+
+# get name of plugin set:
+read -e -p "Name of the plugin set [${PLUGINSETDEFAULTNAME}]: " PLUGINSETNAME
+test -z "$PLUGINSETNAME" && PLUGINSETNAME="$PLUGINSETDEFAULTNAME"
+
+
+# get name of the author:
+until test -n "$AUTHOR"; do
+    read -e -p "Author of the plugin: " AUTHOR
+done
+
+# get brief description:
+until test -n "$BRIEF"; do
+    read -e -p "Brief description: " BRIEF
+done
+
+echo
+
+
+echo "update $PLUGINSETPATH/src/Makefile.am ..."
+{
+    ORGIFS="$IFS"
+    IFS=""
+    while read -r LINE; do
+	test "$LINE" = "pluginlib_LTLIBRARIES = \\" && break
+	echo "$LINE"
+    done
+# append pluginlib_LTLIBRARIES:
+    PREVLINE="$LINE"
+    while read -r LINE; do
+	if test -z "$LINE"; then
+	    echo "$PREVLINE \\"
+	    echo "    lib${PLUGINLIB}.la"
+	    echo
+	    break;
+	fi
+	echo "$PREVLINE"
+	PREVLINE="$LINE"
+    done
+    while read -r LINE; do
+	test "$LINE" = "check_PROGRAMS = \\" && break
+	echo "$LINE"
+    done
+# make rules:
+    cat <<EOF
+lib${PLUGINLIB}_la_CPPFLAGS = \\
+    -I\$(top_srcdir)/daq/include \\
+    -I\$(top_srcdir)/numerics/include \\
+    -I\$(top_srcdir)/options/include \\
+    -I\$(top_srcdir)/datafile/include \\
+    -I\$(top_srcdir)/plot/include \\
+    -I\$(top_srcdir)/widgets/include \\
+    -I\$(top_srcdir)/relacs/include \\
+    -I\$(srcdir)/../include \\
+    \$(QT3_CPPFLAGS)
+
+lib${PLUGINLIB}_la_LDFLAGS = \\
+    -module -avoid-version \\
+    \$(QT3_LDFLAGS)
+
+lib${PLUGINLIB}_la_LIBADD = \\
+    \$(top_builddir)/relacs/src/librelacs.la \\
+    \$(QT3_LIBS)
+
+\$(lib${PLUGINLIB}_la_OBJECTS) : moc_${PLUGINFILE}.cc
+
+lib${PLUGINLIB}_la_SOURCES = ${PLUGINFILE}.cc
+
+lib${PLUGINLIB}_la_includedir = \$(pkgincludedir)/${PLUGINSET}
+
+lib${PLUGINLIB}_la_include_HEADERS = \$(HEADER_PATH)/${PLUGINFILE}.h
+
+
+
+EOF
+# append check_PROGRAMS:
+    PREVLINE="$LINE"
+    while read -r LINE; do
+	if test -z "$LINE"; then
+	    echo "$PREVLINE \\"
+	    echo "    linktest_lib${PLUGINLIB}_la"
+	    echo
+	    break;
+	fi
+	echo "$PREVLINE"
+	PREVLINE="$LINE"
+    done
+    while read -r LINE; do
+	test "$LINE" = "TESTS = \$(check_PROGRAMS)" && break
+	echo "$LINE"
+    done
+# linktest rules:
+    echo "linktest_lib${PLUGINLIB}_la_SOURCES = linktest.cc"
+    echo "linktest_lib${PLUGINLIB}_la_LDADD = lib${PLUGINLIB}.la"
+    echo
+    echo "$LINE"
+    while read -r LINE; do
+	echo "$LINE"
+    done
+    IFS="$ORGIFS"
+} < "$PLUGINSETPATH/src/Makefile.am" > tmp$$.am
+
+mv tmp$$.am "$PLUGINSETPATH/src/Makefile.am"
+#cat tmp$$.am
+#rm tmp$$.am
+
+
+
+################################################################################
+echo "create $PLUGINSETPATH/src/${PLUGINFILE}.cc ..."
+cat <<EOF > $PLUGINSETPATH/src/${PLUGINFILE}.cc
+/*
+  ${PLUGINSET}/${PLUGINFILE}.cc
+  $BRIEF
+
+  RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
+  Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 3 of the License, or
+  (at your option) any later version.
+  
+  RELACS is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#include <relacs/${PLUGINSET}/${PLUGINFILE}.h>
+using namespace relacs;
+
+namespace ${PLUGINSET} {
+
+
+${PLUGINNAME}::${PLUGINNAME}( void )
+  : ${TYPECLASS}( "${PLUGINNAME}", "${PLUGINNAME}", "${PLUGINSETNAME}",
+	   "${AUTHOR}", "1.0", "$(date '+%b %d, %Y')" )
+{
+  // add some options:
+//  addNumber( "duration", "Stimulus duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
+}
+
+
+int ${PLUGINNAME}::main( void )
+{
+  // get options:
+//  double duration = number( "duration" );
+  return Completed;
+}
+
+
+add${TYPE}( ${PLUGINNAME} );
+
+}; /* namespace ${PLUGINSET} */
+
+#include "moc_${PLUGINFILE}.cc"
+EOF
+
+
+
+################################################################################
+echo "create $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h ..."
+cat <<EOF > $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h
+/*
+  ${PLUGINSET}/${PLUGINFILE}.cc
+  $BRIEF
+
+  RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
+  Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 3 of the License, or
+  (at your option) any later version.
+  
+  RELACS is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#ifndef _RELACS_$(echo "$PLUGINSET" | tr [:lower:] [:upper:])_$(echo "$PLUGINFILE" | tr [:lower:] [:upper:])_H_
+#define _RELACS_$(echo "$PLUGINSET" | tr [:lower:] [:upper:])_$(echo "$PLUGINFILE" | tr [:lower:] [:upper:])_H_ 1
+
+#include <relacs/${TYPEINCLUDE}.h>
+using namespace relacs;
+
+namespace ${PLUGINSET} {
+
+
+/*!
+\class ${PLUGINNAME}
+\brief [${TYPE}] $BRIEF
+\author $AUTHOR
+\version 1.0 ($(date '+%b %d, %Y'))
+*/
+
+
+class ${PLUGINNAME} : public ${TYPECLASS}
+{
+  Q_OBJECT
+
+public:
+
+  ${PLUGINNAME}( void );
+  virtual int main( void );
+
+};
+
+
+}; /* namespace ${PLUGINSET} */
+
+#endif /* ! _RELACS_$(echo "$PLUGINSET" | tr [:lower:] [:upper:])_$(echo "$PLUGINFILE" | tr [:lower:] [:upper:])_H_ */
+EOF
+
+
+#svn add 
+echo "svn add $PLUGINSETPATH/src/${PLUGINFILE}.cc ..."
+svn add "$PLUGINSETPATH/src/${PLUGINFILE}.cc"
+echo "svn add $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h ..."
+svn add "$PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h"
+echo "finished!"
+
+
+
