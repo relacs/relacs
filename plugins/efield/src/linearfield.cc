@@ -28,7 +28,7 @@ namespace efield {
 
 
 LinearField::LinearField( void )
-  : RePro( "LinearField", "LinearField", "Efield",
+  : RePro( "LinearField", "LinearField", "EField",
 	   "Jan Benda", "1.0", "Apr 23, 2009" ),
     B( (QWidget*)this ),
     O( &B ),

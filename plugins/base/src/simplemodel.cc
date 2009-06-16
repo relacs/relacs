@@ -31,8 +31,9 @@ SimpleModel::SimpleModel( void )
 	   "Jan Benda", "1.1", "Jan 31, 2008" )
 {
   // define options:
-  addSelection( "model", "The model", "Noise|Stimulus" );
+  addSelection( "model", "The model", "Noise|Sine|Stimulus" );
   addNumber( "gain", "Gain", 1.0, 0.0, 100000.0, 1.0, "", "", "%.2f" );
+  addNumber( "freq", "Frequency", 1000.0, 0.0, 10000000.0, 10.0, "Hz", "Hz", "%.1f" ).setActivation( "model", "Sine", true );
 }
 
 
@@ -46,9 +47,15 @@ void SimpleModel::main( void )
   // read out options:
   int model = index( "model" );
   double gain = number( "gain" );
+  double freq = number( "freq" );
 
   // integrate:
   if ( model == 1 ) {
+    while ( ! interrupt() ) {
+      push( 0, gain * ::sin( 6.28318530717959*freq*time( 0 ) ) );
+    }
+  }
+  else if ( model == 2 ) {
     while ( ! interrupt() ) {
       push( 0, gain*signalInterpolated( time( 0 ) ) );
     }

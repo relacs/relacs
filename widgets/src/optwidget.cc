@@ -844,7 +844,7 @@ void OptWidgetText::resetDefault( void )
 
 void OptWidgetText::update( void )
 {
-  if ( Editable && UnitLabel != 0 ) {
+  if ( UnitLabel != 0 ) {
     InternChanged = true;
     UnitLabel->setText( (*OP).outUnit().c_str() );
     InternChanged = false;
@@ -1056,7 +1056,7 @@ void OptWidgetMultiText::resetDefault( void )
 
 void OptWidgetMultiText::update( void )
 {
-  if ( Editable && UnitLabel != 0 ) {
+  if ( UnitLabel != 0 ) {
     InternChanged = true;
     UnitLabel->setText( (*OP).outUnit().c_str() );
     InternChanged = false;
@@ -1242,8 +1242,10 @@ void OptWidgetNumber::resetDefault( void )
 
 void OptWidgetNumber::update( void )
 {
+  InternChanged = true;
+  if ( UnitLabel != 0 )
+    UnitLabel->setText( (*OP).outUnit().c_str() );
   if ( Editable ) {
-    InternChanged = true;
     double val = (*OP).number( (*OP).outUnit() );
     double min = (*OP).minimum( (*OP).outUnit() );
     double max = (*OP).maximum( (*OP).outUnit() );
@@ -1254,10 +1256,8 @@ void OptWidgetNumber::update( void )
     EW->setRange( min, max, step, prec );
     EW->setFormat( (*OP).format() );
     EW->setValue( val );
-    if ( UnitLabel != 0 )
-      UnitLabel->setText( (*OP).outUnit().c_str() );
-    InternChanged = false;
   }
+  InternChanged = false;
 }
 
 
