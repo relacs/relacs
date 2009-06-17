@@ -57,9 +57,9 @@ Single input traces and events can be accessed with
 trace( int ), trace( const string &),
 events( int ), and events( const string & ), respectively.
 The index of the trace or events that was filtered to obtain an input trace
-can be retrieved with the traceInTrace() and traceInEvent() functions.
+can be retrieved with the traceInputTrace() and traceInputEvent() functions.
 The index of the trace or events of which some events were detected
-can be retrieved with the eventInTrace() and eventInEvent() functions.
+can be retrieved with the eventInputTrace() and eventInputEvent() functions.
 
 The gains for the input channels of the data acquisition board can be set
 with setGain(), adjustGain(), adjust(), activateGains().
@@ -282,7 +282,7 @@ protected:
 	eventInputTrace(), eventInputEvent() */
   const InData &trace( const string &ident ) const;
     /*! Return the index of the input trace with identifier \a ident.
-        \sa events(), traceInTrace(), traceInputEvent(), eventInputTrace(),
+        \sa events(), traceInputTrace(), traceInputEvent(), eventInputTrace(),
 	eventInputEvent() */
   int traceIndex( const string &ident ) const;
 

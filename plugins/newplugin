@@ -219,7 +219,7 @@ EOF
 echo "create $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h ..."
 cat <<EOF > $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h
 /*
-  ${PLUGINSET}/${PLUGINFILE}.cc
+  ${PLUGINSET}/${PLUGINFILE}.h
   $BRIEF
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation

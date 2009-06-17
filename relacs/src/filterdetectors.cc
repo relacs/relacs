@@ -769,7 +769,6 @@ string FilterDetectors::filter( const InList &data, EventList &events )
       if ( d->FilterDetector->type() & Filter::EventInput ) {
 	// singel event trace -> single event trace
 	if ( d->FilterDetector->type() == Filter::SingleEventDetector ) {
-	  d->FilterDetector->lock();
 	  if ( d->Init ) {
 	    d->Init = false;
 	    d->FilterDetector->init( d->InEvents[0], d->OutEvents[0], 

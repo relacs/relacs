@@ -38,6 +38,10 @@ namespace efield {
 \brief [RePro] Measure the electric field manually with a single electrode in one direction
 \author Jan Benda
 \version 1.0 (Apr 23, 2009)
+
+\par Options
+- \c duration=1s: Duration of measurement (\c number)
+
 */
 
 

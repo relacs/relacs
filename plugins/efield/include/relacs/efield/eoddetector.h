@@ -1,5 +1,5 @@
 /*
-  efield/eoddetector.cc
+  efield/eoddetector.h
   A detector for EOD cycles of weakly electric fish
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
@@ -35,6 +35,24 @@ namespace efield {
 \brief [Detector] A detector for EOD cycles of weakly electric fish
 \author Jan Benda
 \version 1.3 (Jun 16, 2009)
+
+Detects each cycle of a periodic input waveform, like the EOD of a wave-type
+weakly electric fish.
+
+The detection threshold is automatically set to \a ratio times the maximum input range.
+If the a previous peak of similar size is more than \a maxperiod away,
+then this peak is not regarded as an EOD cycle.
+
+\par Input
+A single voltage trace of the periodic input waveform
+
+\par Output
+The times of the EOD peaks and their amplitude.
+
+\par Options
+- \c ratio=40%: Ratio (\c number)
+- \c maxperiod=10ms: Maximum EOD period (\c number)
+
 */
 
 
