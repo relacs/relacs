@@ -313,70 +313,79 @@ class SampleData : public Array< T >
 	are initialized with \a val.
         If the capacity() is smaller than \a n
         new memory is allocated with reserve().
-        The offset() and the stepsize() are preserved. */
-  virtual void resize( int n, const T &val=0 );
+        The offset() and the stepsize() are preserved.
+        \return the new size() (might be smaller than \a n). */
+  virtual int resize( int n, const T &val=0 );
     /*! Resize the array to \a n data elements
         such that the size() of the array equals \a n.
         Data values are preserved and new data values
 	are initialized with \a val.
         If the capacity() is smaller than \a n
         new memory is allocated with reserve().
-        The offset() and the stepsize() are preserved. */
-  void resize( long n, const T &val=0 );
+        The offset() and the stepsize() are preserved.
+        \return the new size() (might be smaller than \a n). */
+  int resize( long n, const T &val=0 );
     /*! Resize the array to \a n data elements
         such that the size() of the array equals \a n.
         Data values are preserved and new data values
 	are initialized with \a val.
         If the capacity() is smaller than \a n
         new memory is allocated with reserve().
-        The stepsize is set to \a stepsize while the offset is preserved. */
-  void resize( int n, double stepsize, const T &val );
+        The stepsize is set to \a stepsize while the offset is preserved.
+        \return the new size() (might be smaller than \a n). */
+  int resize( int n, double stepsize, const T &val );
     /*! Resize the array to \a n data elements
         such that the size() of the array equals \a n.
         Data values are preserved and new data values
 	are initialized with \a val.
         If the capacity() is smaller than \a n
         new memory is allocated with reserve().
-        The stepsize is set to \a stepsize while the offset is preserved. */
-  void resize( long n, double stepsize, const T &val );
+        The stepsize is set to \a stepsize while the offset is preserved.
+        \return the new size() (might be smaller than \a n). */
+  int resize( long n, double stepsize, const T &val );
     /*! Resize the array to \a n data elements
         such that the size() of the array equals \a n.
         Data values are preserved and new data values
 	are initialized with \a val.
         If the capacity() is smaller than \a n
         new memory is allocated with reserve().
-        The stepsize is set to \a stepsize and the offset to \a offset. */
-  void resize( int n, double offset, double stepsize, const T &val );
+        The stepsize is set to \a stepsize and the offset to \a offset.
+        \return the new size() (might be smaller than \a n). */
+  int resize( int n, double offset, double stepsize, const T &val );
     /*! Resize the array to \a n data elements
         such that the size() of the array equals \a n.
         Data values are preserved and new data values
 	are initialized with \a val.
         If the capacity() is smaller than \a n
         new memory is allocated with reserve().
-        The stepsize is set to \a stepsize and the offset to \a offset. */
-  void resize( long n, double offset, double stepsize, const T &val );
+        The stepsize is set to \a stepsize and the offset to \a offset.
+        \return the new size() (might be smaller than \a n). */
+  int resize( long n, double offset, double stepsize, const T &val );
     /*! Resize the array to the length() \a r.
         Data values are preserved and new data values
 	are initialized with \a val.
         If the capacity() is smaller than \a n
         new memory is allocated with reserve().
-        The stepsize is set to \a stepsize and the offset set to 0. */
-  void resize( double r, double stepsize, const T &val );
+        The stepsize is set to \a stepsize and the offset set to 0.
+        \return the new size() (might be smaller than \a n). */
+  int resize( double r, double stepsize, const T &val );
     /*! Resize the array to the length() \a r - \a l.
         Data values are preserved and new data values
 	are initialized with \a val.
         If the capacity() is smaller than \a n
         new memory is allocated with reserve().
-        The stepsize is set to \a stepsize and the offset to \a l. */
-  void resize( double l,  double r, double stepsize, const T &val );
+        The stepsize is set to \a stepsize and the offset to \a l.
+        \return the new size() (might be smaller than \a n). */
+  int resize( double l,  double r, double stepsize, const T &val );
     /*! Resize the array to the size of \a range.
         Data values are preserved and new data values
 	are initialized with \a val.
         If the capacity() is smaller than \a n
         new memory is allocated with reserve().
         The stepsize and the offset are set to 
-	the stepsize and the offset of \a range, respectively. */
-  void resize( const LinearRange &range, const T &val=0 );
+	the stepsize and the offset of \a range, respectively.
+        \return the new size() (might be smaller than \a n). */
+  int resize( const LinearRange &range, const T &val=0 );
 
     /*! Resize the array to zero length.
         The capacity() remains unchanged. */
@@ -394,8 +403,9 @@ class SampleData : public Array< T >
 	then capacity() is greater than or equal to \a n; 
 	otherwise, capacity() is unchanged. 
 	In either case, size() is unchanged and the content
-	of the array is preserved. */
-  virtual void reserve( int n );
+	of the array is preserved.
+        \return the new capacity. */
+  virtual int reserve( int n );
     /*! In contrast to the reserve() function, this function
         frees or allocates memory, such that capacity()
 	equals exactly \a n.
@@ -491,8 +501,9 @@ class SampleData : public Array< T >
 	a reference to a variable set to zero is returned. */
   T &back( void ) { return Array<T>::back(); };
 
-    /*! Add \a val as a new element to the array. */
-  inline void push( const T &val );
+    /*! Add \a val as a new element to the array.
+        \return the number of added elements (0 or 1). */
+  inline int push( const T &val );
     /*! Remove the last element of the array
         and return its value. */
   T pop( void );
@@ -1731,7 +1742,7 @@ template < typename T > template < typename R >
   int n = k2 - k1 + 1;
   if ( n <= 0 )
     return *this;
-  sa.reserve( n );
+  n = sa.reserve( n );
   sa.setRange( x1, stepsize() );
   for ( int k=0; k<n; k++ )
     sa.push( static_cast< R >( operator[]( k1+k ) ) );
@@ -1753,7 +1764,7 @@ template < typename T > template < typename R >
   int n = k2 - k1 + 1;
   if ( n <= 0 )
     return *this;
-  m.reserve( n );
+  n = m.reserve( n );
   for ( int k=0; k<n; k++ )
     m.push( pos( k1+k ), static_cast< R >( operator[]( k1+k ) ) );
   return *this;
@@ -1774,7 +1785,7 @@ template < typename T > template < typename R >
   int n = k2 - k1 + 1;
   if ( n <= 0 )
     return *this;
-  a.reserve( n );
+  n = a.reserve( n );
   for ( int k=0; k<n; k++ )
     a.push( static_cast< R >( operator[]( k1+k ) ) );
   return *this;
@@ -1795,7 +1806,7 @@ template < typename T > template < typename R >
   int n = k2 - k1 + 1;
   if ( n <= 0 )
     return *this;
-  v.reserve( n );
+  n = v.reserve( n );
   for ( int k=0; k<n; k++ )
     v.push( static_cast< R >( operator[]( k1+k ) ) );
   return *this;
@@ -1839,6 +1850,7 @@ const SampleData< T > &SampleData< T >::append( const SampleData< R > &sa )
   else {
     int n = int( sa.length() / stepsize() );
     reserve( size() + n );
+    n = capacity() - size();
     for ( int k=0; k<n; k++ )
       push( static_cast< T >( sa.interpolate( sa.offset() + k*stepsize() ) ) );
   }
@@ -1847,76 +1859,82 @@ const SampleData< T > &SampleData< T >::append( const SampleData< R > &sa )
 
 
 template < typename T > 
-void SampleData< T >::resize( int n, const T &val )
+int SampleData< T >::resize( int n, const T &val )
 {
-  Array<T>::resize( n, val );
+  n =  Array<T>::resize( n, val );
   Samples.resize( n );
+  return n;
 }
 
 
 template < typename T > 
-void SampleData< T >::resize( long n, const T &val )
+int SampleData< T >::resize( long n, const T &val )
 {
-  Array<T>::resize( n, val );
+  n = Array<T>::resize( n, val );
   Samples.resize( n );
+  return n;
 }
 
 
 template < typename T > 
-void SampleData< T >::resize( int n, double stepsize, const T &val )
+int SampleData< T >::resize( int n, double stepsize, const T &val )
 {
-  Array<T>::resize( n, val );
+  n = Array<T>::resize( n, val );
   Samples.assign( n, offset(), stepsize );
+  return n;
 }
 
 
 template < typename T > 
-void SampleData< T >::resize( long n, double stepsize, const T &val )
+int SampleData< T >::resize( long n, double stepsize, const T &val )
 {
-  Array<T>::resize( n, val );
+  n = Array<T>::resize( n, val );
   Samples.assign( n, offset(), stepsize );
+  return n;
 }
 
 
 template < typename T > 
-void SampleData< T >::resize( int n, double offset, double stepsize,
+int SampleData< T >::resize( int n, double offset, double stepsize,
+			     const T &val )
+{
+  n = Array<T>::resize( n, val );
+  Samples.assign( n, offset, stepsize );
+  return n;
+}
+
+
+template < typename T > 
+int SampleData< T >::resize( long n, double offset, double stepsize,
 			      const T &val )
 {
-  Array<T>::resize( n, val );
+  n = Array<T>::resize( n, val );
   Samples.assign( n, offset, stepsize );
+  return n;
 }
 
 
 template < typename T > 
-void SampleData< T >::resize( long n, double offset, double stepsize,
-			      const T &val )
-{
-  Array<T>::resize( n, val );
-  Samples.assign( n, offset, stepsize );
-}
-
-
-template < typename T > 
-void SampleData< T >::resize( double r, double stepsize, const T &val )
+int SampleData< T >::resize( double r, double stepsize, const T &val )
 {
   Samples.assign( r, stepsize );
-  Array<T>::resize( Samples.size(), val );
+  return Array<T>::resize( Samples.size(), val );
 }
 
 
 template < typename T > 
-void SampleData< T >::resize( double l,  double r, double stepsize, const T &val )
+int SampleData< T >::resize( double l,  double r, double stepsize, const T &val )
 {
   Samples.assign( l, r, stepsize );
-  Array<T>::resize( Samples.size(), val );
+  return Array<T>::resize( Samples.size(), val );
 }
 
 
 template < typename T > 
-void SampleData< T >::resize( const LinearRange &range, const T &val )
+int SampleData< T >::resize( const LinearRange &range, const T &val )
 {
   Samples.assign( range );
-  Array<T>::resize( Samples.size(), val );
+  return Array<T>::resize( Samples.size(), val );
 }
 
 
@@ -1929,9 +1947,9 @@ void SampleData< T >::clear( void )
 
 
 template < typename T > 
-void SampleData< T >::reserve( int n )
+int SampleData< T >::reserve( int n )
 {
-  Array<T>::reserve( n );
+  return Array<T>::reserve( n );
 }
 
 
@@ -1951,10 +1969,10 @@ void SampleData< T >::setLength( double l )
 
 
 template < typename T > 
-void SampleData< T >::push( const T &val )
+int SampleData< T >::push( const T &val )
 {
-  Array<T>::push( val );
-  // XXX via resize() this also resizes Samples! but you want to be efficient!
+  return Array<T>::push( val );
+  // XXX this does not resize Samples! but you want to be efficient!
 }
 
 
@@ -3531,7 +3549,7 @@ istream &SampleData< T >::load( istream &str, const string &stop,
     if ( ep > fp ) {
       fp = ep;
       double y = strtod( fp, &ep );
-      if ( ep > fp )
+      if ( ep > fp && size() < capacity() )
 	push( y );
     }
 

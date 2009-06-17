@@ -161,13 +161,15 @@ class Map : public Array < T >
     /*! Resize the map to \a n data elements
         such that both the size() and the capacity of
 	the map equals \a n.
-        Data values are preserved. */
-  void resize( int n, const T &val=0 );
+        Data values are preserved.
+        \return the new size of the map (might be smaller than \a n) */
+  int resize( int n, const T &val=0 );
     /*! Resize the map to \a n data elements
         such that both the size() and the capacity of
 	the map equals \a n.
-        Data values are preserved. */
-  void resize( int n, const T &xval, const T &yval );
+        Data values are preserved.
+        \return the new size of the map (might be smaller than \a n) */
+  int resize( int n, const T &xval, const T &yval );
     /*! Resize the map to zero length and free all memory. */
   void clear( void );
 
@@ -183,8 +185,9 @@ class Map : public Array < T >
 	then capacity() is greater than or equal to \a n; 
 	otherwise, capacity() is unchanged. 
 	In either case, size() is unchanged and the content
-	of the array is preserved. */
-  void reserve( int n );
+	of the array is preserved.
+	\return the new capacity (might be smaller than \a n ). */
+  int reserve( int n );
     /*! In contrast to the reserve() function, this function
         frees or allocates memory, such that capacity()
 	equals exactly \a n.
@@ -230,11 +233,13 @@ class Map : public Array < T >
         No range checking is performed. */
   T &operator()( int i, int j ) { return (*A[i])[j]; };
 
-    /*! Add the data pair \a xval, \a yval to the map. */
- inline void push( const T &xval, const T &yval );
-    /*! Add the data pairs from the containers \a x and \a y to the map. */
+    /*! Add the data pair \a xval, \a yval to the map.
+        \return the number of added elements (0 or 1). */
+ inline int push( const T &xval, const T &yval );
+    /*! Add the data pairs from the containers \a x and \a y to the map.
+        \return the number of added elements (0 or 1). */
   template < typename R >
-  void push( const R &xval, const R &yval );
+  int push( const R &xval, const R &yval );
     /*! Remove the last element of the map. */
   void pop( void );
 
@@ -825,18 +830,18 @@ const Map<T> &Map<T>::append( const Map<T> &a )
 
 
 template < typename T > 
-void Map<T>::resize( int n, const T &val )
+int Map<T>::resize( int n, const T &val )
 {
-  XData.resize( n, val );
-  Array<T>::resize( n, val );
+  n = XData.resize( n, val );
+  return Array<T>::resize( n, val );
 }
 
 
 template < typename T > 
-void Map<T>::resize( int n, const T &xval, const T &yval )
+int Map<T>::resize( int n, const T &xval, const T &yval )
 {
-  XData.resize( n, xval );
-  Array<T>::resize( n, yval );
+  n = XData.resize( n, xval );
+  return Array<T>::resize( n, yval );
 }
 
 
@@ -849,10 +854,10 @@ void Map<T>::clear( void )
 
 
 template < typename T > 
-void Map<T>::reserve( int n )
+int Map<T>::reserve( int n )
 {
-  XData.reserve( n );
-  Array<T>::reserve( n );
+  n = XData.reserve( n );
+  return Array<T>::reserve( n );
 }
 
 
@@ -865,18 +870,22 @@ void Map<T>::free( int n )
 
 
 template < typename T > 
-void Map<T>::push( const T &xval, const T &yval )
+int Map<T>::push( const T &xval, const T &yval )
 {
-  XData.push( xval );
-  Array<T>::push( yval );
+  if ( XData.push( xval ) > 0 )
+    return Array<T>::push( yval );
+  else
+    return 0;
 }
 
 
 template < typename T > template < typename R > 
-void Map<T>::push( const R &x, const R &y )
+int Map<T>::push( const R &x, const R &y )
 {
-  XData.push( x );
-  Array<T>::push( y );
+  if ( XData.push( x ) > 0 )
+    return Array<T>::push( y );
+  else
+    return 0;
 }
 
 
@@ -1389,7 +1398,7 @@ istream &Map<T>::load( istream &str, const string &stop, string *line )
     if ( ep > fp ) {
       fp = ep;
       double y = strtod( fp, &ep );
-      if ( ep > fp )
+      if ( ep > fp && size() < capacity() )
 	push( x, y );
     }
   }

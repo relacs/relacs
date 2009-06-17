@@ -26,6 +26,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <cmath>
+#include <climits>
 #include <vector>
 #include <algorithm>
 #include <fstream>
@@ -193,16 +194,19 @@ class Array
         Data values are preserved and new data values
 	are initialized with \a val.
         If the capacity() is smaller than \a n
-        new memory is allocated with reserve(). */
-  virtual void resize( int n, const T &val=0 );
+        new memory is allocated with reserve().
+        \return the new size of the array (might be smaller than \a n) */
+  virtual int resize( int n, const T &val=0 );
     /*! Resize the array to zero length.
         The capacity() remains unchanged. */
   virtual void clear( void );
 
     /*! The capacity of the array, i.e. the number of data
         elements for which memory has been allocated. 
-        capacity() is always greater than or equal to size(). */
+        capacity() is always greater than or equal to size(). \sa maxCapacity() */
   int capacity( void ) const;
+    /*! The maximum possible capacity of the array. \sa capacity() */
+  int maxCapacity( void ) const;
     /*! If \a n is less than or equal to capacity(), 
         this call has no effect. 
 	Otherwise, it is a request for allocation 
@@ -211,8 +215,10 @@ class Array
 	then capacity() is greater than or equal to \a n; 
 	otherwise, capacity() is unchanged. 
 	In either case, size() is unchanged and the content
-	of the array is preserved. */
-  virtual void reserve( int n );
+	of the array is preserved.
+	\return the new capacity (might be smaller than \a n ).
+        \sa capacity(), maxCapacity() */
+  virtual int reserve( int n );
     /*! In contrast to the reserve() function, this function
         frees or allocates memory, such that capacity()
 	equals exactly \a n.
@@ -252,11 +258,17 @@ class Array
 	a reference to a variable set to zero is returned. */
   T &back( void );
 
-    /*! Add \a val as a new element to the array. */
-  inline void push( const T &val );
-    /*! Add the content of the container \a x as a new elements to the array. */
+    /*! Add \a val as a new element to the array. 
+        If necessary, the capacity of the array is increased first.
+        If the capacity cannot increased any more,
+        then \a val is not added to the array.
+        \return the number of added elements (0 or 1). */
+  inline int push( const T &val );
+    /*! Add the content of the container \a x as a new elements to the array.
+        If necessary, the capacity of the array is increased first.
+        \return the number of added elements (can be smaller than x.size()) */
   template < typename R >
-  void push( const R &x );
+  int push( const R &x );
     /*! Remove the last element of the array
         and return its value. */
   T pop( void );
@@ -675,6 +687,7 @@ class Array
   T *Buffer;
   int NBuffer;
   int NSize;
+  int MaxBuffer;
   mutable T Dummy;
 
 };
@@ -690,6 +703,7 @@ Array<T>::Array( void )
   : Buffer( 0 ),
     NBuffer( 0 ),
     NSize( 0 ),
+    MaxBuffer( INT_MAX/sizeof( T ) ),
     Dummy( 0 )
 {
 }
@@ -700,10 +714,15 @@ Array<T>::Array( int n )
   : Buffer( 0 ),
     NBuffer( 0 ),
     NSize( 0 ),
+    MaxBuffer( INT_MAX/sizeof( T ) ),
     Dummy( 0 )
 {
   if ( n > 0 ) {
+    if ( n > MaxBuffer )
+      n = MaxBuffer;
     Buffer = new T[ n ];
+    if ( Buffer == 0 )
+      n = 0;
     NBuffer = n;
     NSize = n;
   }
@@ -715,10 +734,15 @@ Array<T>::Array( int n, const T &val )
   : Buffer( 0 ),
     NBuffer( 0 ),
     NSize( 0 ),
+    MaxBuffer( INT_MAX/sizeof( T ) ),
     Dummy( 0 )
 {
   if ( n > 0 ) {
+    if ( n > MaxBuffer )
+      n = MaxBuffer;
     Buffer = new T[ n ];
+    if ( Buffer == 0 )
+      n = 0;
     NBuffer = n;
     NSize = n;
     for ( int k=0; k<n; k++ )
@@ -732,10 +756,15 @@ Array<T>::Array( const S *a, int n )
   : Buffer( 0 ),
     NBuffer( 0 ),
     NSize( 0 ),
+    MaxBuffer( INT_MAX/sizeof( T ) ),
     Dummy( 0 )
 {
   if ( n > 0 && a != 0 ) {
+    if ( n > MaxBuffer )
+      n = MaxBuffer;
     Buffer = new T[ n ];
+    if ( Buffer == 0 )
+      n = 0;
     NBuffer = n;
     NSize = n;
     for ( int k=0; k<n; k++ )
@@ -749,10 +778,15 @@ Array<T>::Array( const T *a, int n )
   : Buffer( 0 ),
     NBuffer( 0 ),
     NSize( 0 ),
+    MaxBuffer( INT_MAX/sizeof( T ) ),
     Dummy( 0 )
 {
   if ( n > 0 && a != 0 ) {
+    if ( n > MaxBuffer )
+      n = MaxBuffer;
     Buffer = new T[ n ];
+    if ( Buffer == 0 )
+      n = 0;
     NBuffer = n;
     NSize = n;
     memcpy( Buffer, a, NSize * sizeof( T ) );
@@ -765,6 +799,7 @@ Array<T>::Array( const vector< S > &a, int first, int last )
   : Buffer( 0 ),
     NBuffer( 0 ),
     NSize( 0 ),
+    MaxBuffer( INT_MAX/sizeof( T ) ),
     Dummy( 0 )
 {
   if ( first < 0 )
@@ -773,7 +808,11 @@ Array<T>::Array( const vector< S > &a, int first, int last )
     last = a.size();
   int n = last - first;
   if ( n > 0 ) {
+    if ( n > MaxBuffer )
+      n = MaxBuffer;
     Buffer = new T[ n ];
+    if ( Buffer == 0 )
+      n = 0;
     NBuffer = n;
     NSize = n;
     for ( unsigned k=0; k < n; k++ )
@@ -787,6 +826,7 @@ Array<T>::Array( const Array< S > &a, int first, int last )
   : Buffer( 0 ),
     NBuffer( 0 ),
     NSize( 0 ),
+    MaxBuffer( INT_MAX/sizeof( T ) ),
     Dummy( 0 )
 {
   if ( first < 0 )
@@ -795,7 +835,11 @@ Array<T>::Array( const Array< S > &a, int first, int last )
     last = a.size();
   int n = last - first;
   if ( n > 0 ) {
+    if ( n > MaxBuffer )
+      n = MaxBuffer;
     Buffer = new T[ n ];
+    if ( Buffer == 0 )
+      n = 0;
     NBuffer = n;
     NSize = n;
     for ( int k=0; k < n; k++ )
@@ -809,12 +853,18 @@ Array<T>::Array( const Array< T > &a )
   : Buffer( 0 ),
     NBuffer( 0 ),
     NSize( 0 ),
+    MaxBuffer( INT_MAX/sizeof( T ) ),
     Dummy( 0 )
 {
   if ( a.size() > 0 ) {
-    Buffer = new T[ a.size() ];
-    NBuffer = a.size();
-    NSize = a.size();
+    int n = a.size();
+    if ( n > MaxBuffer )
+      n = MaxBuffer;
+    Buffer = new T[ n ];
+    if ( Buffer == 0 )
+      n = 0;
+    NBuffer = n;
+    NSize = n;
     memcpy( Buffer, a.Buffer, NSize * sizeof( T ) );
   }
 }
@@ -852,7 +902,11 @@ const Array<T> &Array<T>::assign( const S *a, int n )
   NSize = 0;
 
   if ( n > 0 && a != 0 ) {
+    if ( n > MaxBuffer )
+      n = MaxBuffer;
     Buffer = new T[ n ];
+    if ( Buffer == 0 )
+      n = 0;
     NBuffer = n;
     NSize = n;
     for ( int k=0; k<n; k++ )
@@ -873,10 +927,15 @@ const Array<T> &Array<T>::assign( const T *a, int n )
   NSize = 0;
 
   if ( n > 0 && a != 0 ) {
+    if ( n > MaxBuffer )
+      n = MaxBuffer;
     Buffer = new T[ n ];
+    if ( Buffer == 0 )
+      n = 0;
     NBuffer = n;
     NSize = n;
-    memcpy( Buffer, a, NSize * sizeof( T ) );
+    if ( NSize > 0 )
+      memcpy( Buffer, a, NSize * sizeof( T ) );
   }
 
   return *this;
@@ -893,9 +952,14 @@ const Array<T> &Array<T>::assign( const S &a )
   NSize = 0;
 
   if ( a.size() > 0 ) {
-    Buffer = new T[ a.size() ];
-    NBuffer = a.size();
-    NSize = a.size();
+    int n = a.size();
+    if ( n > MaxBuffer )
+      n = MaxBuffer;
+    Buffer = new T[ n ];
+    if ( Buffer == 0 )
+      n = 0;
+    NBuffer = n;
+    NSize = n;
     iterator iter1 = begin();
     iterator end1 = end();
     typename S::const_iterator iter2 = a.begin();
@@ -924,10 +988,16 @@ const Array<T> &Array<T>::assign( const Array<T> &a )
   NSize = 0;
 
   if ( a.size() > 0 ) {
-    Buffer = new T[ a.size() ];
-    NBuffer = a.size();
-    NSize = a.size();
-    memcpy( Buffer, a.data(), NSize * sizeof( T ) );
+    int n = a.size();
+    if ( n > MaxBuffer )
+      n = MaxBuffer;
+    Buffer = new T[ n ];
+    if ( Buffer == 0 )
+      n = 0;
+    NBuffer = n;
+    NSize = n;
+    if( NSize > 0 )
+      memcpy( Buffer, a.data(), NSize * sizeof( T ) );
   }
 
   return *this;
@@ -1028,6 +1098,8 @@ template < typename T >
 const Array<T> &Array<T>::append( T a, int n )
 {
   if ( n > 0 ) {
+    if ( NSize + n > MaxBuffer )
+      n = MaxBuffer - NSize;
     reserve( NSize + n );
     for ( int k=0; k<n; k++ )
       Buffer[NSize++] = a;
@@ -1041,6 +1113,8 @@ template < typename T > template < typename S >
 const Array<T> &Array<T>::append( const S *a, int n )
 {
   if ( n > 0 ) {
+    if ( NSize + n > MaxBuffer )
+      n = MaxBuffer - NSize;
     reserve( NSize + n );
     for ( int k=0; k<n; k++ )
       Buffer[NSize++] = static_cast< T >( a[k] );
@@ -1054,6 +1128,8 @@ template < typename T >
 const Array<T> &Array<T>::append( const T *a, int n )
 {
   if ( n > 0 ) {
+    if ( NSize + n > MaxBuffer )
+      n = MaxBuffer - NSize;
     reserve( NSize + n );
     memcpy( Buffer + NSize, a, n * sizeof( T ) );
     NSize += n;
@@ -1067,7 +1143,10 @@ template < typename T > template < typename S >
 const Array<T> &Array<T>::append( const S &a )
 {
   if ( a.size() > 0 ) {
-    reserve( NSize + a.size() );
+    int n = a.size();
+    if ( NSize + n > MaxBuffer )
+      n = MaxBuffer - NSize;
+    reserve( NSize + n );
     typename S::const_iterator iter1 = a.begin();
     typename S::const_iterator end1 = a.end();
     while ( iter1 != end1 ) {
@@ -1084,9 +1163,12 @@ template < typename T >
 const Array<T> &Array<T>::append( const Array<T> &a )
 {
   if ( a.size() > 0 ) {
-    reserve( NSize + a.size() );
-    memcpy( Buffer + NSize, a.Buffer, a.size() * sizeof( T ) );
-    NSize += a.size();
+    int n = a.size();
+    if ( NSize + n > MaxBuffer )
+      n = MaxBuffer - NSize;
+    reserve( NSize + n );
+    memcpy( Buffer + NSize, a.Buffer, n * sizeof( T ) );
+    NSize += n;
   }
 
   return *this;
@@ -1108,14 +1190,17 @@ bool Array<T>::empty( void ) const
 
 
 template < typename T > 
-void Array<T>::resize( int n, const T &val )
+int Array<T>::resize( int n, const T &val )
 {
+  if ( n > MaxBuffer )
+    n = MaxBuffer;
   reserve( n );
   if ( Buffer != 0 ) {
     for ( int k=NSize; k<n; k++ )
       Buffer[k] = val;
   }
   NSize = n;
+  return NSize;
 }
 
 
@@ -1134,19 +1219,31 @@ int Array<T>::capacity( void ) const
 
 
 template < typename T > 
-void Array<T>::reserve( int n )
+int Array<T>::maxCapacity( void ) const
 {
+  return MaxBuffer;
+}
+
+
+template < typename T > 
+int Array<T>::reserve( int n )
+{
+  if ( n > MaxBuffer )
+    n = MaxBuffer;
   if ( n > NBuffer ) {
     T *newbuf = new T[ n ];
-    int k=0;
-    if ( Buffer != 0 ) {
-      for ( k=0; k<NBuffer; k++ )
-	newbuf[k] = Buffer[k];
-      delete [] Buffer;
+    if ( newbuf != 0 ) {
+      int k=0;
+      if ( Buffer != 0 ) {
+	for ( k=0; k<NBuffer; k++ )
+	  newbuf[k] = Buffer[k];
+	delete [] Buffer;
+      }
+      Buffer = newbuf;
+      NBuffer = n;
     }
-    Buffer = newbuf;
-    NBuffer = n;
   }
+  return NBuffer;
 }
 
 
@@ -1280,22 +1377,34 @@ T &Array<T>::back( void )
 
 
 template < typename T > 
-void Array<T>::push( const T &val )
+int Array<T>::push( const T &val )
 {
-  if ( NBuffer < NSize+1 )
-    reserve( NBuffer >= 10 ? 3*NBuffer/2 : 10 );
+  if ( NBuffer < NSize+1 ) {
+    int newsize = NBuffer >= 10 ? 3*NBuffer/2 : 10;
+    if ( newsize < 0 )
+      newsize = maxCapacity();
+    reserve( newsize );
+    if ( NBuffer < NSize+1 )
+      return 0;
+  }
   Buffer[NSize] = val;
   NSize++;
+  return 1;
 }
 
 
 template < typename T > template < typename R > 
-void Array<T>::push( const R &x )
+int Array<T>::push( const R &x )
 {
   int n = x.end() - x.begin();
+  if ( NSize + n > MaxBuffer )
+    n = MaxBuffer - NSize;
   reserve( NSize + n );
-  for ( typename R::const_iterator iter = x.begin(); iter != x.end(); ++iter )
+  for ( typename R::const_iterator iter = x.begin(), n=0; 
+	iter != x.end() && NSize < NBuffer;
+	++iter, ++n )
     Buffer[NSize++] = *iter;
+  return n;
 }
 
 
@@ -2078,7 +2187,7 @@ istream &Array<T>::load( istream &str, const string &stop, string *line )
   long n = 0;
   if ( line != 0 && ! line->empty() )
     n++;
-  while ( getline( str, s ) ) {
+  while ( getline( str, s ) && n < MaxBuffer ) {
 
     // stop line reached:
     if ( ( !stop.empty() && s.find( stop ) == 0 ) ||
@@ -2119,7 +2228,7 @@ istream &Array<T>::load( istream &str, const string &stop, string *line )
     // load string:
     char *ep;
     double v = strtod( s.c_str(), &ep );
-    if ( ep > s.c_str() )
+    if ( ep > s.c_str() && NSize < NBuffer )
       push( v );
   }
 

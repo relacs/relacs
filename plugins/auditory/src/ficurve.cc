@@ -807,7 +807,8 @@ void FICurve::save( const vector< FIData > &results )
 
 void FICurve::plotIntensitySelection( void )
 {
-  ArrayD sa, ua;
+  ArrayD sa; sa.reserve( IntensityRange.size() );
+  ArrayD ua; ua.reserve( IntensityRange.size() );
   for ( int k=0; k<IntensityRange.size(); k++ ) {
     double x = IntensityRange.value( k );
     if ( k == 0 )

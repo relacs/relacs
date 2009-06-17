@@ -1,5 +1,13 @@
 
-1. `cd' to the directory containing the relacs source code.
+1. Change to the directory containing the relacs source code.
+
+> cd relacs-x.x.x
+
+If you have already installed an older version of RELACS it is best to
+uninstall it first, before you unpack a newer version:
+
+> make uninstall
+> make clean
 
 
 2. Create the configure script
@@ -13,7 +21,7 @@ or alternatively
 
 > autoreconf -v -i
 
-first. In case of success, the ./bootstrap.sh script finishes with the
+first. On success, the ./bootstrap.sh script finishes with the
 message "Successfully generated the ./configure script".
 
 For this to work you need to have the autoconf, automake (version 1.10
