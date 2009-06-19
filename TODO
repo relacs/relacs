@@ -1,3 +1,9 @@
+Date and Time for Parameter:
+- finish up implementation of Parameter (XXX, transfer some stuff to Str)
+- extend Options
+- extend OptWidget
+- adapt RELACS
+
 SignalTime: finish this update (RELACSPlugin::signalTime()
 - test ficurve RePro: does not work!
 - update all other RePros
@@ -43,7 +49,7 @@ Thread safety:
 Metadata:
 - stimulus section needs a name, a file (if available) and properties
 - Options needs a Date and a Time type
-- All dates and times must go into the XML file with a standard format
+- All dates and times must go into the XML file with a standard format YYY-MM-DD hh:mm:ss
 - Parameter::label should get a level that is used to make sections in the XML file
 
 Acquisition interface:

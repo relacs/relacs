@@ -959,12 +959,14 @@ public:
   ostream &save( ostream &str, const string &start="",
 		 int width=-1, int selectmask=0, bool detailed=false,
 		 bool firstonly=false ) const;
-  /*! Write options to stream \a str und use \a textformat,
-      \a numberformat, \a boolformat, \a labelformat, and \a separatorformat
-      for formatting text, number, boolean, label, and separator parameter,
-      respectively. */
+    /*! Write options to stream \a str und use \a textformat,
+        \a numberformat, \a boolformat, \a dateformat, 
+	\a timeformat, \a labelformat, and \a separatorformat
+	for formatting text, number, boolean, label, and separator parameter,
+	respectively. */
   ostream &save( ostream &str, const string &textformat,
 		 const string &numberformat, const string &boolformat="%i=%b\n",
+		 const string &dateformat="%04Y-%02m-%02d", const string &timeformat="%02H:%02M:%02S",
 		 const string &labelformat="%i\n", const string &separatorformat="",
 		 int selectmask=0 ) const;
     /*! Write identifiers and their values to stream \a str */

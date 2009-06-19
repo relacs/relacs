@@ -2353,6 +2353,7 @@ ostream &Options::save( ostream &str, const string &start, int width,
 
 ostream &Options::save( ostream &str, const string &textformat,
 			const string &numberformat, const string &boolformat,
+			const string &dateformat, const string &timeformat,
 			const string &labelformat,
 			const string &separatorformat, int selectmask ) const
 {
@@ -2361,8 +2362,8 @@ ostream &Options::save( ostream &str, const string &textformat,
   // write options to file:
   for ( const_iterator pp = begin(); pp != end(); ++pp ) {
     if ( (*pp).flags( selectmask ) ) {
-      (*pp).save( str, textformat, numberformat,
-		  boolformat, labelformat, separatorformat );
+      (*pp).save( str, textformat, numberformat, boolformat,
+		  dateformat, timeformat, labelformat, separatorformat );
     }
   }
 

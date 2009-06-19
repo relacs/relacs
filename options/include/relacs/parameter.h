@@ -73,12 +73,16 @@ public:
       /*! The parameter's value is a floating point number,
 	  an integer, or a boolean. */
     AnyNumber=14, 
+      /*! The parameter's value is a date that contains year, month, and day. */
+    Date=16,
+      /*! The parameter's value is a time that contains hour, minutes, and seconds. */
+    Time=32,
       /*! The parameter is a label. */
-    Label=16,
+    Label=64,
       /*! The parameter is a separator. */
-    Separator=32,
+    Separator=128,
       /*! The parameter is a label or a separator. */
-    Blank=48
+    Blank=64+128
   };
 
   static const int ChangedFlag = 16384;
@@ -149,9 +153,15 @@ public:
 	     const string &internunit="", const string &outputunit="", 
 	     int width=0, int flags=0, int style=0 );
     /*! Construct and initialize a single Parameter of type Boolean.
-        Its value an its default value are set to \a dflt. */
+        Its value and its default value are set to \a dflt. */
   Parameter( const string &ident, const string &request,
 	     bool dflt, int flags=0, int style=0 );
+    /*! Construct and initialize a single Parameter of \a type Date or Time.
+        Its value and its default value are set to 
+	\a yearhour, \a monthminutes and \a dayseconds. */
+  Parameter( const string &ident, const string &request, Type type,
+	     int yearhour, int monthminutes, int dayseconds,
+	     int flags=0, int style=0 );
     /*! Construct and initialize a single Parameter of type Label or
         Separator. If \a ident is empty, a Separator is constructed.
 	otherwise a label with label \a ident is constructed.
@@ -280,20 +290,22 @@ public:
 
     /*! Returns the format string. */
   Str format( void ) const;
-    /*! Set format string to have a width of \a width and 
+    /*! Set format string for numbers to have a width of \a width and 
         precision of \a prec.
 	The width \a width can be negative to indicate left aligned output.
 	The type is set to \a fmt which can be either 'f',
 	'g' or 'e', according to the ANSI C printf double formats
 	or 's' for text.
 	The default is 'g' for numbers and 's' for strings.
-        The warning message is set if \a w, \a prec or \a fmt are invalid. */
+        The warning message is set if \a w, \a prec or \a fmt are invalid.
+        Does nothing if the parameter is a date or time. */
   Parameter &setFormat( int width, int prec=-1, char fmt='-' );
     /*! Set format string to \a format
         (ANSI C printf() syntax, only 'g', 'f', 'e' formats are allowed, 
         since the number is a double).
 	For example, "%5.1f" is an valid format string.
-        The warning message is set if \a format is invalid. */
+        The warning message is set if \a format is invalid.
+        See text() for an detailed description of formats. */
   Parameter &setFormat( const string &format="" );
     /*! Returns the width of the expanded format string. */
   int formatWidth( void ) const;
@@ -312,14 +324,23 @@ public:
         %d is the full file name (e.g. data.tar.gz),
         %n is the basename of the file name (e.g. data), and
 	%x is the extension (e.g. tar.gz).
-	If the parameter is a number, then
+	If the parameter is a number (float, integer, boolean), then
         %f, %g, %e is the number value,
-        %F, %G, %E is the number error,
-        %u is the unit string, and
+        %F, %G, %E is the number error, and
         %b is a boolean value expressed as true or false.
-        %i is the identifier string.
+	If the parameter is a time, then
+        %S: second (0..59),
+        %M: minute (0..59),
+        %H: hour (0..23).
+	If the parameter is a date, then
+	%d: day of month (1..31),
+	%m: month (1..12),
+	%y: last two digits of year (0..99),
+	%Y: year (1970...).
+        %u is the unit string,
+        %i is the identifier string, and
         %r is the request string.
-        %t is the type of the parameter.
+        %T is the type of the parameter.
  	If \a format is empty, the format set by setFormat() is used.
         If the parameter is a number, then its value is returned
         in the unit specified by \a unit.
@@ -327,24 +348,10 @@ public:
   Str text( int index, const string &format="", const string &unit="" ) const;
     /*! Returns the first value of a parameter.
         It is formatted as specified by the \a format string.
-        %s is the text string.
-	If the text string is a file path (e.g. example/data.tar.gz), then
-	%p is the path of the file (e.g. example/),
-        %d is the full file name (e.g. data.tar.gz),
-        %n is the basename of the file name (e.g. data), and
-	%x is the extension (e.g. tar.gz).
-	If the parameter is a number, then
-        %f, %g, %e is the number value,
-        %F, %G, %E is the number error,
-        %u is the unit string, and
-        %b is a boolean value expressed as true or false.
-        %i is the identifier string.
-        %r is the request string.
-        %t is the type of the parameter.
-	If \a format is empty, the format set by setFormat() is used.
+	See text() for more details.
         If the parameter is a number, then its value is returned
         in the unit specified by \a unit.
-        If \a unit is empty, the outUnit() is used. */ 
+        If \a unit is empty, then outUnit() is used. */ 
   inline Str text( const string &format="",
 		   const string &unit="" ) const
     { return text( 0, format, unit ); };
@@ -363,24 +370,7 @@ public:
   Parameter &addText( const string &strg, bool clear=false );
     /*! Returns the default text value.
         It is formatted as specified by the \a format string.
-        %s is the default text string.
-	If the text string is a file path (e.g. example/data.tar.gz), then
-	%p is the path of the file (e.g. example/),
-        %d is the full file name (e.g. data.tar.gz),
-        %n is the basename of the file name (e.g. data), and
-	%x is the extension (e.g. tar.gz).
-	If the parameter is a number, then
-        %f, %g, %e is the number value,
-        %F, %G, %E is the number error,
-        %u is the unit string, and
-        %b is a boolean value expressed as true or false.
-        %i is the identifier string.
-        %r is the request string.
-        %t is the type of the parameter.
- 	If \a format is empty, the format set by setFormat() is used.
-        If the parameter is a number, then its value is returned
-        in the unit specified by \a unit.
-        If \a unit is empty, the outUnit() is used. */ 
+	See text() for details. */ 
   Str defaultText( int index, const string &format="", const string &unit="" ) const;
   inline Str defaultText( const string &format="", const string &unit="" ) const
     { return defaultText( 0, format, unit ); };
@@ -646,6 +636,70 @@ public:
     /*! Set default boolean value to \a dflt. */
   Parameter &setDefaultBoolean( bool dflt );
 
+    /*! True if parameter is of type date. */
+  bool isDate( void ) const;
+    /*! \return the year. \sa month(), day(), text() */ 
+  int year( void ) const;
+    /*! \return the month. \sa year(), day(), text() */ 
+  int month( void ) const;
+    /*! \return the day of the month. \sa year(), month(), text() */ 
+  int day( void ) const;
+    /*! Set date of date parameter to \a year, \a month, and \a day.
+        If the value of the parameter is changing 
+	then the changedFlag() is set. */
+  Parameter &setDate( int year, int month, int day );
+    /*! Set date of date parameter to \a date.
+        \a date has to be in the format YYYY-MM-DD.
+        If the value of the parameter is changing 
+	then the changedFlag() is set. */
+  Parameter &setDate( const string &date, bool settext=true );
+    /*! \return the default year. 
+        \sa defaultMonth(), defaultDay(), defaultText() */ 
+  int defaultYear( void ) const;
+    /*! \return the default month. 
+        \sa defaultYear(), defaultDay(), defaultText() */ 
+  int defaultMonth( void ) const;
+    /*! \return the default day of the month. 
+        \sa defaultYear(), defaultMonth(), defaultText() */ 
+  int defaultDay( void ) const;
+    /*! Set default date of date parameter to \a year, \a month, and \a day. */
+  Parameter &setDefaultDate( int year, int month, int day );
+    /*! Set default date of date parameter to \a date.
+        \a date has to be in the format YYYY-MM-DD. */
+  Parameter &setDefaultDate( const string &date, bool settext=true );
+
+    /*! True if parameter is of type time. */
+  bool isTime( void ) const;
+    /*! \return the hour. \sa minutes(), seconds(), text() */ 
+  int hour( void ) const;
+    /*! \return the minutes. \sa hour(), seconds(), text() */ 
+  int minutes( void ) const;
+    /*! \return the seconds. \sa hour(), minutes(), text() */ 
+  int seconds( void ) const;
+    /*! Set time of time parameter to \a hour, \a minutes, and \a seconds.
+        If the value of the parameter is changing 
+	then the changedFlag() is set. */
+  Parameter &setTime( int hour, int minutes, int seconds );
+    /*! Set time of time parameter to \a time.
+        \a time has to be in the format HH:MM:SS.
+        If the value of the parameter is changing 
+	then the changedFlag() is set. */
+  Parameter &setTime( const string &time, bool settext=true );
+    /*! \return the default hour. 
+        \sa defaultMinutes(), defaultSeconds(), defaultText() */ 
+  int defaultHour( void ) const;
+    /*! \return the default minutes. 
+        \sa defaultHour(), defaultSeconds(), defaultText() */ 
+  int defaultMinutes( void ) const;
+    /*! \return the default seconds. 
+        \sa defaultHour(), defaultMinutes(), defaultText() */ 
+  int defaultSeconds( void ) const;
+    /*! Set default time of time parameter to \a hour, \a minutes, and \a seconds. */
+  Parameter &setDefaultTime( int hour, int minutes, int seconds );
+    /*! Set default time of time parameter to \a time.
+        \a time has to be in the format HH:MM:SS. */
+  Parameter &setDefaultTime( const string &time, bool settext=true );
+
     /*! True if parameter is of type label (parameter without value). */
   bool isLabel( void ) const;
     /*! True if parameter is of type separator (parameter without identity and value). */
@@ -730,10 +784,11 @@ public:
   ostream &save( ostream &str, int width=0, bool detailed=false,
 		 bool firstonly=false, const string &pattern="" ) const;
     /*! Write parameter to stream \a str according to the formats
-        \a textformat, \a numberformat, \a boolformat, \a labelformat,
-	and \a separatorformat. */
+        \a textformat, \a numberformat, \a boolformat, \a dateformat, 
+	\a timeformat, \a labelformat, and \a separatorformat. */
   ostream &save( ostream &str, const string &textformat,
 		 const string &numberformat, const string &boolformat,
+		 const string &dateformat, const string &timeformat,
 		 const string &labelformat, const string &separatorformat ) const;
     /*! Write parameter to stream \a str using save() */
   friend ostream &operator<< ( ostream &str, const Parameter &p );
@@ -813,6 +868,42 @@ private:
   double Maximum;
     /*! Step size for number parameter. */
   double Step;
+  union {
+      /*! Year */
+    int Year;
+      /*! Hour */
+    int Hour;
+  };
+  union {
+      /*! Month */
+    int DefaultYear;
+      /*! Minutes */
+    int DefaultHour;
+  };
+  union {
+      /*! Month */
+    int Month;
+      /*! Minutes */
+    int Minutes;
+  };
+  union {
+      /*! Default month */
+    int DefaultMonth;
+      /*! Default minutes */
+    int DefaultMinutes;
+  };
+  union {
+      /*! Day */
+    int Day;
+      /*! Seconds */
+    int Seconds;
+  };
+  union {
+      /*! Default day */
+    int DefaultDay;
+      /*! Default seconds */
+    int DefaultSeconds;
+  };
     /*! Internal unit of the parameter. */
   Str InternUnit;
     /*! Unit used for output. */
