@@ -3,6 +3,7 @@ noinst_PROGRAMS = \
     xparameter \
     xstring \
     xstrnum \
+    xstrdatetime \
     xunit
 
 
@@ -26,6 +27,10 @@ xstring_SOURCES = xstring.cc
 xstrnum_LDADD = \
     ../src/librelacsoptions.la
 xstrnum_SOURCES = xstrnum.cc
+
+xstrdatetime_LDADD = \
+    ../src/librelacsoptions.la
+xstrdatetime_SOURCES = xstrdatetime.cc
 
 xunit_LDADD = \
     ../src/librelacsoptions.la

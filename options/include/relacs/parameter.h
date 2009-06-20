@@ -40,11 +40,10 @@ namespace relacs {
 \author Jan Benda
 \version 1.0
 \brief A Parameter has a name, value and unit.
-\bug formatWidth() works only with plain formats!
 
 
 A single parameter has a value, which can be of different types
-(numbers, booleans, text, etc., see setType() ).
+(numbers, booleans, dates, times, text, etc., see setType() ).
 The parameter is uniquely identified by its ident-string.
 Number parameters have in addition a unit and a format string,
 which is used to generate pretty formated output.
@@ -471,7 +470,11 @@ public:
         A text value is added according to the specified format.
         The warning message is set if \a number is invalid.
         If the value of the parameter is changing 
-	then the changedFlag() is set. */
+	then the changedFlag() is set.
+        \a settext determines whether the string representation 
+	should be updated as well (for internal use).
+        \a clear clears all values before adding the number
+        (for internal use) */
   Parameter &addNumber( double number, double error, const string &unit="",
 			bool settext=true, bool clear=false );
     /*! Add \a number to the number values.
@@ -484,10 +487,11 @@ public:
     /*! Interpret \a s as a number and add it to the number values.
         The warning message is set if \a s is invalid.
         If the value of the parameter is changing 
-	then the changedFlag() is set. */
+	then the changedFlag() is set.
+        \a settext determines whether the string representation 
+	should be updated as well (for internal use). */
   Parameter &addNumber( const Str &s, const string &unit="",
 			bool settext=true );
-
   
     /*! True if parameter is of type Integer,
         i.e. its value is a integer number. */
@@ -535,11 +539,17 @@ public:
   Parameter &setDefaultNumber( double number, const string &unit="" );
     /*! Add \a number to the default number values.
         A text value is added according to the specified format.
-        The warning message is set if \a number is invalid. */
+        The warning message is set if \a number is invalid.
+        \a settext determines whether the default string representation 
+	should be updated as well (for internal use). */
   Parameter &addDefaultNumber( double number, const string &unit="",
 			       bool settext=true );
     /*! Interpret \a s as a number and add it to the default number values.
-        The warning message is set if \a s is invalid. */
+        The warning message is set if \a s is invalid.
+        \a settext determines whether the default string representation 
+	should be updated as well (for internal use).
+        \a settext determines whether the default string representation 
+	should be updated as well (for internal use). */
   Parameter &addDefaultNumber( const Str &s, const string &unit="",
 			       bool settext=true );
 
@@ -555,7 +565,9 @@ public:
   Parameter &setDefaultInteger( long dflt, const string &unit="" );
     /*! Add \a number to the default integer values.
         A text value is added according to the specified format.
-        The warning message is set if \a number is invalid. */
+        The warning message is set if \a number is invalid
+        \a settext determines whether the default string representation 
+	should be updated as well (for internal use). */
   Parameter &addDefaultInteger( double number, const string &unit="",
 				bool settext=true );
   
@@ -646,12 +658,16 @@ public:
   int day( void ) const;
     /*! Set date of date parameter to \a year, \a month, and \a day.
         If the value of the parameter is changing 
-	then the changedFlag() is set. */
-  Parameter &setDate( int year, int month, int day );
+	then the changedFlag() is set.
+        \a settext determines whether the string representation 
+	should be updated as well (for internal use). */
+  Parameter &setDate( int year, int month, int day, bool settext=true );
     /*! Set date of date parameter to \a date.
-        \a date has to be in the format YYYY-MM-DD.
+        See Str::date() for valid date strings.
         If the value of the parameter is changing 
-	then the changedFlag() is set. */
+	then the changedFlag() is set.
+        \a settext determines whether the string representation 
+	should be updated as well (for internal use). */
   Parameter &setDate( const string &date, bool settext=true );
     /*! \return the default year. 
         \sa defaultMonth(), defaultDay(), defaultText() */ 
@@ -662,10 +678,14 @@ public:
     /*! \return the default day of the month. 
         \sa defaultYear(), defaultMonth(), defaultText() */ 
   int defaultDay( void ) const;
-    /*! Set default date of date parameter to \a year, \a month, and \a day. */
-  Parameter &setDefaultDate( int year, int month, int day );
+    /*! Set default date of date parameter to \a year, \a month, and \a day.
+        \a settext determines whether the default string representation 
+	should be updated as well (for internal use). */
+  Parameter &setDefaultDate( int year, int month, int day, bool settext=true );
     /*! Set default date of date parameter to \a date.
-        \a date has to be in the format YYYY-MM-DD. */
+        See Str::date() for valid date strings.
+        \a settext determines whether the default string representation 
+	should be updated as well (for internal use). */
   Parameter &setDefaultDate( const string &date, bool settext=true );
 
     /*! True if parameter is of type time. */
@@ -678,12 +698,16 @@ public:
   int seconds( void ) const;
     /*! Set time of time parameter to \a hour, \a minutes, and \a seconds.
         If the value of the parameter is changing 
-	then the changedFlag() is set. */
-  Parameter &setTime( int hour, int minutes, int seconds );
+	then the changedFlag() is set.
+        \a settext determines whether the string representation 
+	should be updated as well (for internal use). */
+  Parameter &setTime( int hour, int minutes, int seconds, bool settext=true );
     /*! Set time of time parameter to \a time.
-        \a time has to be in the format HH:MM:SS.
+        See Str::time() for valid date strings.
         If the value of the parameter is changing 
-	then the changedFlag() is set. */
+	then the changedFlag() is set.
+        \a settext determines whether the string representation 
+	should be updated as well (for internal use). */
   Parameter &setTime( const string &time, bool settext=true );
     /*! \return the default hour. 
         \sa defaultMinutes(), defaultSeconds(), defaultText() */ 
@@ -694,10 +718,15 @@ public:
     /*! \return the default seconds. 
         \sa defaultHour(), defaultMinutes(), defaultText() */ 
   int defaultSeconds( void ) const;
-    /*! Set default time of time parameter to \a hour, \a minutes, and \a seconds. */
-  Parameter &setDefaultTime( int hour, int minutes, int seconds );
+    /*! Set default time of time parameter to \a hour,
+        \a minutes, and \a seconds.
+        \a settext determines whether the default string representation 
+	should be updated as well (for internal use). */
+  Parameter &setDefaultTime( int hour, int minutes, int seconds, bool settext=true );
     /*! Set default time of time parameter to \a time.
-        \a time has to be in the format HH:MM:SS. */
+        See Str::time() for valid date strings.
+        \a settext determines whether the default string representation 
+	should be updated as well (for internal use). */
   Parameter &setDefaultTime( const string &time, bool settext=true );
 
     /*! True if parameter is of type label (parameter without value). */

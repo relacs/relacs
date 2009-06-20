@@ -976,27 +976,80 @@ int Str::readFormat( int pos, int &width, int &precision,
 
 int Str::formatWidth( int pos ) const
 {
+  if ( pos >= size() )
+    return 0;
+
+  int fwidth = 0;
+
+  const_iterator p = begin() + pos;
+
+  if ( *p == '%' ) {
+    // skip '%':
+    ++p;
+    
+    // get sign or pad:
+    if ( p != end() && 
+	 ( *p == '-' || *p == '+' || 
+	   ( *p != '.' && 
+	     ( *p < '1' || *p > '9' ) ) ) ) {
+      p++;
+    }
+    
+    // read width of format:
+    for ( ; p != end() && isdigit( *p ); p++ ) {
+      int num = *p - '0';
+      fwidth = 10*fwidth+num;
+    }
+  }
+
+  return fwidth;
+}
+
+
+int Str::totalWidth( void ) const
+{
   int width = 0;
 
-  // skip '%':
-  if ( pos < int( size() ) && operator[]( pos ) == '%' )
-    pos++;
+  const_iterator p = begin();
+  while ( p != end() ) {
 
-  // get sign or pad:
-  if ( pos < int( size() ) && 
-       ( operator[]( pos ) == '-' || operator[]( pos ) == '+' || 
-	 ( operator[]( pos ) != '.' && 
-	   ( operator[]( pos ) < '1' || operator[]( pos ) > '9' ) ) ) ) {
-    pos++;
-  }
-  
-  // read width:
-  for ( ; 
-	pos < int( size() ) && 
-	  ( operator[]( pos ) >= '0' && operator[]( pos ) <= '9' );
-	pos++ ) {
-    int num = operator[]( pos ) - '0';
-    width = 10*width+num;
+    if ( *p == '%' ) {
+      // skip '%':
+      ++p;
+    
+      // get sign or pad:
+      if ( p != end() && 
+	   ( *p == '-' || *p == '+' || 
+	     ( *p != '.' && 
+	       ( *p < '1' || *p > '9' ) ) ) ) {
+	p++;
+      }
+      
+      // read width of format:
+      int fwidth = 0;
+      bool nowidth = true;
+      for ( ; p != end() && isdigit( *p ); p++ ) {
+	int num = *p - '0';
+	fwidth = 10*fwidth+num;
+	nowidth = false;
+      }
+      
+      // skip format character:
+      if ( p != end() ) {
+	if ( nowidth ) {
+	  char format = *p;
+	  if ( strchr( "SMHdmy", format ) != 0 )
+	    fwidth = 2;
+	  else if ( format == 'Y' )
+	    fwidth = 4;
+	}
+	++p;
+      }
+      width += fwidth;
+
+    }
+    else
+      width++;
   }
 
   return width;
@@ -1761,6 +1814,180 @@ Str Str::unit( const string &dflt, int index, int *next,
     *next = n + c;
 
   return substr( n, c );
+}
+
+
+///// read date/time ////////////////////////////////////////////////////////
+
+int Str::date( int &year, int &month, int &day ) const
+{
+  year = 0;
+  month = 0;
+  day = 0;
+
+  const_iterator p = begin();
+
+  // first number:
+  char numstr[100];
+  int n = 0;
+  while ( p != end() && isdigit( *p ) ) {
+    numstr[n++] = *p;
+    ++p;
+  }
+  numstr[n] = '\0';
+  bool longdate = false;
+  bool yearfirst = true;
+  if ( n == 0 ) {
+    // May 15, 2008:
+    longdate = true;
+    yearfirst = false;
+    int n = 0;
+    while ( p != end() && isalpha( *p ) ) {
+      numstr[n++] = ::tolower( *p );
+      ++p;
+    }
+    numstr[n] = '\0';
+    if ( n < 3 )
+      return -1;
+    numstr[3] = '\0';
+    const char monthstr[12][4] = { "jan", "feb", "mar", "apr", "may", "jun",
+				   "jul", "aug", "sep", "oct", "nov", "dec" };
+    int m = 0;
+    for ( ; m<12; m++ ) {
+      if  ( strcmp( numstr, monthstr[m] ) == 0 )
+	break;
+    }
+    if ( m < 12 )
+      month = m+1;
+    else
+      return -1;
+    if ( *p != ' ' )
+      return -1;
+    ++p;
+  }
+  else {
+    // 2008-05-15 or 05/15/2008:
+    int num = strtol( numstr, 0, 10 );
+    if ( n <= 2 && num > 0 && *p == '/' )
+      yearfirst = false;
+    if ( *p != '/' && *p != '-' )
+      return -1;
+    ++p;
+    if ( yearfirst )
+      year = num;
+    else
+      month = num;
+  }
+
+  // second number:
+  n = 0;
+  while ( p != end() && isdigit( *p ) ) {
+    numstr[n++] = *p;
+    ++p;
+  }
+  numstr[n] = '\0';
+  if ( n == 0 || n > 2 )
+    return -1;
+  int num = strtol( numstr, 0, 10 );
+  if ( yearfirst )
+    month = num;
+  else
+    day = num;
+  if ( longdate ) {
+    if ( *p != ',' )
+      return -1;
+    ++p;
+    while ( *p == ' ' )
+      ++p;
+  }
+  else {
+    if ( *p != '/' && *p != '-' )
+      return -1;
+    ++p;
+  }
+  
+  // third number:
+  n = 0;
+  while ( p != end() && isdigit( *p ) ) {
+    numstr[n++] = *p;
+    ++p;
+  }
+  numstr[n] = '\0';
+  if ( n == 0 )
+    return -1;
+  num = strtol( numstr, 0, 10 );
+  if ( yearfirst )
+    day = num;
+  else
+    year = num;
+
+  // check ranges:
+  if ( month < 1 || month > 12 )
+    return -4;
+  if ( day < 1 || day > 31 )
+    return -8;
+
+  return 0;
+}
+
+
+int Str::time( int &hour, int &minutes, int &seconds ) const
+{
+  hour = 0;
+  minutes = 0;
+  seconds = 0;
+
+  const_iterator p = begin();
+
+  // first number:
+  char numstr[100];
+  int n = 0;
+  while ( p != end() && isdigit( *p ) ) {
+    numstr[n++] = *p;
+    ++p;
+  }
+  numstr[n] = '\0';
+  if ( n == 0 )
+    return -1;
+  hour = strtol( numstr, 0, 10 );
+  if ( *p != ':' )
+    return -1;
+  ++p;
+
+  // second number:
+  n = 0;
+  while ( p != end() && isdigit( *p ) ) {
+    numstr[n++] = *p;
+    ++p;
+  }
+  numstr[n] = '\0';
+  if ( n == 0 )
+    return -1;
+  minutes = strtol( numstr, 0, 10 );
+  if ( *p != ':' )
+    return -1;
+  ++p;
+  
+  // third number:
+  n = 0;
+  while ( p != end() && isdigit( *p ) ) {
+    numstr[n++] = *p;
+    ++p;
+  }
+  numstr[n] = '\0';
+  if ( n == 0 )
+    return -1;
+  seconds = strtol( numstr, 0, 10 );
+
+  // check ranges:
+  if ( hour < 0 || hour > 24 )
+    return -2;
+  if ( minutes < 0 || minutes > 59 )
+    return -4;
+  if ( seconds < 0 || seconds > 59 )
+    return -8;
+
+  return 0;
 }
 
 

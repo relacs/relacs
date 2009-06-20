@@ -1,5 +1,4 @@
 Date and Time for Parameter:
-- finish up implementation of Parameter (XXX, transfer some stuff to Str)
 - extend Options
 - extend OptWidget
 - adapt RELACS

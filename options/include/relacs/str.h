@@ -285,6 +285,9 @@ public:
     /*! Returns the width specified by the ANSI-C like format string 
         where \a pos points to. */
   int formatWidth( int pos=0 ) const;
+    /*! Returns the width of the string taking expanded ANSI-C like format
+        strings into account. */
+  int totalWidth( void ) const;
 
     /*! Replaces the first format specifier with type \a type 
         by the formatted string \a s.
@@ -443,6 +446,25 @@ public:
         of the characters specified in \a a. */
   Str value( int index=0, const string &a=":=",
 	     const string &space=Space ) const;
+
+    /*! Reads the \a year, \a month, and \a day of a date string.
+        The string should be formatted as "YYYY-MM-DD", "MM/DD/YYYY"
+	or "MMM DD, YYYY"
+        \return 0 on success
+        \return -1 the string is not a date
+        \return -2 invalid year
+        \return -4 invalid month
+        \return -8 invalid day */
+  int date( int &year, int &month, int &day ) const;
+
+    /*! Reads the \a hour, \a minutes, and \a seconds of a time string.
+        The string should be formatted as "HH:MM:SS".
+        \return 0 on success
+        \return -1 the string is not a time
+        \return -2 invalid hour
+        \return -4 invalid minutes
+        \return -8 invalid seconds */
+  int time( int &hour, int &minutes, int &seconds ) const;
 
   // find value of identifier:
 
