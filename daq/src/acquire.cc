@@ -245,11 +245,6 @@ void Acquire::addOutTraces( void )
   for ( unsigned int k=0; k < AO.size(); k++ ) {
     AO[k].AO->addTraces( OutTraces, k );
   }
-  for ( unsigned int i=0; i<OutTraces.size(); i++ ) {
-    cerr << "OUTTRACE " << i << " name " << OutTraces[i].traceName()
-	 << " device=" << OutTraces[i].device()
-	 << " channel=" << OutTraces[i].channel() << endl;
-  }
 }
 
 

@@ -29,23 +29,26 @@ void print( const Parameter &p )
 {
   cout << "   p.text(): " << p.text( 0 );
   for ( int k=1; k<p.size(); k++ )
-    cout << ", " << p.text( k );
+    cout << "|" << p.text( k );
   cout << endl;
 
-  cout << " p.number(): " << p.number( 0 );
-  for ( int k=1; k<p.size(); k++ )
-    cout << ", " << p.number( k );
-  cout << endl;
+  if ( p.isAnyNumber() ) {
+    cout << " p.number(): " << p.number( 0 );
+    for ( int k=1; k<p.size(); k++ )
+      cout << "|" << p.number( k );
+    cout << endl;
 
-  cout << "  p.error(): " << p.error( 0 );
-  for ( int k=1; k<p.size(); k++ )
-    cout << ", " << p.error( k );
-  cout << endl;
+    cout << "  p.error(): " << p.error( 0 );
+    for ( int k=1; k<p.size(); k++ )
+      cout << "|" << p.error( k );
+    cout << endl;
+  }
 
   cout << "   p.unit(): " << p.unit() << endl;
   cout << "p.outUnit(): " << p.outUnit() << endl;
   cout << " p.format(): " << p.format() << endl;
-  cout << "   p.text(): " << p.text( "r='%r', i=%i, s=%s, n=%g, e=%G, u=%u" ) << endl;
+  cout << "   p.type(): " << p.type() << endl;
+  cout << "   p.text(): " << p.text( "r='%r', i=%i, s=%s, n=%g, e=%G, u=%u, date=%Y-%m-%d, time=%H:%M:%S" ) << endl;
   cout << "          p: ";
   p.save( cout, 0, false );
   cout << endl;
@@ -58,8 +61,6 @@ int main( int argc, char *argv[] )
 
   cout << endl;
   cout << "Text-Parameter set to: " << "char_text" << endl;
-  cout << "p.format(): " << tp.format() << endl;
-  cout << "p.type(): " << tp.type() << endl;
   print( tp );
 
   cout << endl;
@@ -68,13 +69,13 @@ int main( int argc, char *argv[] )
   print( tp );
 
   cout << endl;
-  cout << "Text-Parameter set to: " << "aa,bb,,cc" << endl;
-  tp.setText( "aa,bb,,cc" );
+  cout << "Text-Parameter set to: " << "aa|bb||cc" << endl;
+  tp.setText( "aa|bb||cc" );
   print( tp );
 
   cout << endl;
-  cout << "Text-Parameter set to: " << "2,0.4kHz,(43+-5)" << endl;
-  tp.setText( "2,0.4kHz,(43+-5)" );
+  cout << "Text-Parameter set to: " << "2|0.4kHz|(43+-5)" << endl;
+  tp.setText( "2|0.4kHz|(43+-5)" );
   print( tp );
 
   cout << endl;
@@ -112,6 +113,14 @@ int main( int argc, char *argv[] )
   Parameter ip( "integerid", "enter integer", 4L, -1L, 0L, 100L, 2L, "", "", -1 );
   cout << endl;
   print( ip );
+
+  Parameter dp( "dateid", "enter date", Parameter::Date, 2009, 6, 20 );
+  cout << endl;
+  print( dp );
+
+  Parameter tip( "timeid", "enter time", Parameter::Time, 23, 59, 3 );
+  cout << endl;
+  print( tip );
 
   while ( true ) {
     cout << endl;

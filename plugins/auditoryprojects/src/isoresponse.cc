@@ -45,10 +45,10 @@ IsoResponse::IsoResponse( void )
   // parameter:
 
   UseBestFrequency = 0;
-  DistBestFrequency = 1.0;
-  DistFrequencies = 2.0;
-  Frequency1 = 4.0;
-  Frequency2 = 10.0;
+  DistBestFrequency = 1000.0;
+  DistFrequencies = 2000.0;
+  Frequency1 = 4000.0;
+  Frequency2 = 10000.0;
   MinIntensity = 30.0;
   MaxIntensity = 100.0;
   FinalResolution = 1.0;
@@ -65,10 +65,10 @@ IsoResponse::IsoResponse( void )
 
   IntensityUp = 5;    
   Switch_high = 0;    //switch=0 => percentage
-  FRhigh_per  = 5.0;          //MaxFrequency-5%
+  FRhigh_per  = 0.05;          //MaxFrequency-5%
   FRhigh_fix  = 500.0;
   Switch_low  = 0;     //switch=1 => fixed value
-  FRlow_per   = 50.0;
+  FRlow_per   = 0.5;
   FRlow_fix   = 150.0;             //150 Hz
   MinFR = 30.0;
 

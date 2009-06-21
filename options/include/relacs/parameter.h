@@ -113,6 +113,10 @@ public:
         Its value an its default value are set to \a strg. */
   Parameter( const string &ident, const string &request,
 	     const string &strg, int flags=0, int style=0 );
+    /*! Construct and initialize a single Parameter of type Text.
+        Its value an its default value are set to \a strg. */
+  Parameter( const string &ident, const string &request,
+	     const char *strg, int flags=0, int style=0 );
     /*! Construct and initialize a single Parameter of type Number. 
         Its value and its default value are set to \a number,
 	its standard deviation to \a error.
@@ -185,7 +189,7 @@ public:
     /*! Copy content of parameter \a p to this.
         If the value of the parameter is changing 
 	then the changedFlag() is set. */
-  inline Parameter &operator=( const Parameter &p ) { return assign( p ); };
+  Parameter &operator=( const Parameter &p );
     /*! Copy content of parameter \a p to this.
         If the value of the parameter is changing 
 	then the changedFlag() is set. */
@@ -203,7 +207,7 @@ public:
         The warning message is set if \a value is invalid.
         If the value of the parameter is changing 
 	then the changedFlag() is set. */
-  inline Parameter &operator=( const string &value ) { return assign( value ); };
+  Parameter &operator=( const string &value );
     /*! Set the value of a parameter depending on its type to
         the content of the string \a value.
 	If the type of the parameter is Number, Integer, or Boolean,
@@ -339,7 +343,6 @@ public:
         %u is the unit string,
         %i is the identifier string, and
         %r is the request string.
-        %T is the type of the parameter.
  	If \a format is empty, the format set by setFormat() is used.
         If the parameter is a number, then its value is returned
         in the unit specified by \a unit.
@@ -351,9 +354,7 @@ public:
         If the parameter is a number, then its value is returned
         in the unit specified by \a unit.
         If \a unit is empty, then outUnit() is used. */ 
-  inline Str text( const string &format="",
-		   const string &unit="" ) const
-    { return text( 0, format, unit ); };
+  Str text( const string &format="", const string &unit="" ) const;
     /*! Set value of text parameter to \a strg.
         The text is splitted into several strings at each '|'.
         Each of the strings is also converted into numbers.
@@ -371,8 +372,7 @@ public:
         It is formatted as specified by the \a format string.
 	See text() for details. */ 
   Str defaultText( int index, const string &format="", const string &unit="" ) const;
-  inline Str defaultText( const string &format="", const string &unit="" ) const
-    { return defaultText( 0, format, unit ); };
+  Str defaultText( const string &format="", const string &unit="" ) const;
     /*! Set default value of text parameter to \a strg.
         The text is splitted into several strings at each '|'.
         Each of the strings is also converted into numbers. */
@@ -471,12 +471,10 @@ public:
         The warning message is set if \a number is invalid.
         If the value of the parameter is changing 
 	then the changedFlag() is set.
-        \a settext determines whether the string representation 
-	should be updated as well (for internal use).
         \a clear clears all values before adding the number
         (for internal use) */
   Parameter &addNumber( double number, double error, const string &unit="",
-			bool settext=true, bool clear=false );
+			bool clear=false );
     /*! Add \a number to the number values.
         A text value is added according to the specified format.
         The warning message is set if \a number is invalid.
@@ -487,11 +485,8 @@ public:
     /*! Interpret \a s as a number and add it to the number values.
         The warning message is set if \a s is invalid.
         If the value of the parameter is changing 
-	then the changedFlag() is set.
-        \a settext determines whether the string representation 
-	should be updated as well (for internal use). */
-  Parameter &addNumber( const Str &s, const string &unit="",
-			bool settext=true );
+	then the changedFlag() is set. */
+  Parameter &addNumber( const Str &s, const string &unit="" );
   
     /*! True if parameter is of type Integer,
         i.e. its value is a integer number. */
@@ -539,19 +534,11 @@ public:
   Parameter &setDefaultNumber( double number, const string &unit="" );
     /*! Add \a number to the default number values.
         A text value is added according to the specified format.
-        The warning message is set if \a number is invalid.
-        \a settext determines whether the default string representation 
-	should be updated as well (for internal use). */
-  Parameter &addDefaultNumber( double number, const string &unit="",
-			       bool settext=true );
+        The warning message is set if \a number is invalid. */
+  Parameter &addDefaultNumber( double number, const string &unit="" );
     /*! Interpret \a s as a number and add it to the default number values.
-        The warning message is set if \a s is invalid.
-        \a settext determines whether the default string representation 
-	should be updated as well (for internal use).
-        \a settext determines whether the default string representation 
-	should be updated as well (for internal use). */
-  Parameter &addDefaultNumber( const Str &s, const string &unit="",
-			       bool settext=true );
+        The warning message is set if \a s is invalid. */
+  Parameter &addDefaultNumber( const Str &s, const string &unit="" );
 
     /*! Returns the default ineger value in
         the unit \a unit or in the internal standard unit, 
@@ -565,11 +552,8 @@ public:
   Parameter &setDefaultInteger( long dflt, const string &unit="" );
     /*! Add \a number to the default integer values.
         A text value is added according to the specified format.
-        The warning message is set if \a number is invalid
-        \a settext determines whether the default string representation 
-	should be updated as well (for internal use). */
-  Parameter &addDefaultInteger( double number, const string &unit="",
-				bool settext=true );
+        The warning message is set if \a number is invalid. */
+  Parameter &addDefaultInteger( double number, const string &unit="" );
   
     /*! Returns the minimum value allowed for number 
         or integer parameter values in 
@@ -650,84 +634,81 @@ public:
 
     /*! True if parameter is of type date. */
   bool isDate( void ) const;
-    /*! \return the year. \sa month(), day(), text() */ 
-  int year( void ) const;
-    /*! \return the month. \sa year(), day(), text() */ 
-  int month( void ) const;
-    /*! \return the day of the month. \sa year(), month(), text() */ 
-  int day( void ) const;
+    /*! \return the \a index-th year. \sa month(), day(), text() */ 
+  int year( int index=0 ) const;
+    /*! \return the \a index-th month. \sa year(), day(), text() */ 
+  int month( int index=0 ) const;
+    /*! \return the \a index-th day of the month.
+        \sa year(), month(), text() */ 
+  int day( int index=0 ) const;
     /*! Set date of date parameter to \a year, \a month, and \a day.
         If the value of the parameter is changing 
-	then the changedFlag() is set.
-        \a settext determines whether the string representation 
-	should be updated as well (for internal use). */
-  Parameter &setDate( int year, int month, int day, bool settext=true );
+	then the changedFlag() is set. */
+  Parameter &setDate( int year, int month, int day );
+    /*! Add date \a year, \a month, and \a day to date parameter.
+        If the value of the parameter is changing 
+	then the changedFlag() is set. */
+  Parameter &addDate( int year, int month, int day );
     /*! Set date of date parameter to \a date.
         See Str::date() for valid date strings.
         If the value of the parameter is changing 
-	then the changedFlag() is set.
-        \a settext determines whether the string representation 
-	should be updated as well (for internal use). */
-  Parameter &setDate( const string &date, bool settext=true );
-    /*! \return the default year. 
+	then the changedFlag() is set. */
+  Parameter &setDate( const string &date );
+    /*! \return the \a index-th default year. 
         \sa defaultMonth(), defaultDay(), defaultText() */ 
-  int defaultYear( void ) const;
-    /*! \return the default month. 
+  int defaultYear( int index ) const;
+    /*! \return the \a index-th default month. 
         \sa defaultYear(), defaultDay(), defaultText() */ 
-  int defaultMonth( void ) const;
-    /*! \return the default day of the month. 
+  int defaultMonth( int index ) const;
+    /*! \return the \a index-th default day of the month. 
         \sa defaultYear(), defaultMonth(), defaultText() */ 
-  int defaultDay( void ) const;
-    /*! Set default date of date parameter to \a year, \a month, and \a day.
-        \a settext determines whether the default string representation 
-	should be updated as well (for internal use). */
-  Parameter &setDefaultDate( int year, int month, int day, bool settext=true );
+  int defaultDay( int index ) const;
+    /*! Set default date of date parameter to \a year, \a month, and \a day. */
+  Parameter &setDefaultDate( int year, int month, int day );
+    /*! Add \a year, \a month, and \a day to default date of date parameter. */
+  Parameter &addDefaultDate( int year, int month, int day );
     /*! Set default date of date parameter to \a date.
-        See Str::date() for valid date strings.
-        \a settext determines whether the default string representation 
-	should be updated as well (for internal use). */
-  Parameter &setDefaultDate( const string &date, bool settext=true );
+        See Str::date() for valid date strings. */
+  Parameter &setDefaultDate( const string &date );
 
     /*! True if parameter is of type time. */
   bool isTime( void ) const;
-    /*! \return the hour. \sa minutes(), seconds(), text() */ 
-  int hour( void ) const;
-    /*! \return the minutes. \sa hour(), seconds(), text() */ 
-  int minutes( void ) const;
-    /*! \return the seconds. \sa hour(), minutes(), text() */ 
-  int seconds( void ) const;
+    /*! \return the \a index-th hour. \sa minutes(), seconds(), text() */ 
+  int hour( int index=0 ) const;
+    /*! \return the \a index-th minutes. \sa hour(), seconds(), text() */ 
+  int minutes( int index=0 ) const;
+    /*! \return the \a index-th seconds. \sa hour(), minutes(), text() */ 
+  int seconds( int index=0 ) const;
     /*! Set time of time parameter to \a hour, \a minutes, and \a seconds.
         If the value of the parameter is changing 
-	then the changedFlag() is set.
-        \a settext determines whether the string representation 
-	should be updated as well (for internal use). */
-  Parameter &setTime( int hour, int minutes, int seconds, bool settext=true );
+	then the changedFlag() is set. */
+  Parameter &setTime( int hour, int minutes, int seconds );
+    /*! Add time \a hour, \a minutes, and \a seconds to time parameter.
+        If the value of the parameter is changing 
+	then the changedFlag() is set. */
+  Parameter &addTime( int hour, int minutes, int seconds );
     /*! Set time of time parameter to \a time.
         See Str::time() for valid date strings.
         If the value of the parameter is changing 
-	then the changedFlag() is set.
-        \a settext determines whether the string representation 
-	should be updated as well (for internal use). */
-  Parameter &setTime( const string &time, bool settext=true );
-    /*! \return the default hour. 
+	then the changedFlag() is set. */
+  Parameter &setTime( const string &time );
+    /*! \return the \a index-th default hour. 
         \sa defaultMinutes(), defaultSeconds(), defaultText() */ 
-  int defaultHour( void ) const;
-    /*! \return the default minutes. 
+  int defaultHour( int index=0 ) const;
+    /*! \return the \a index-th default minutes. 
         \sa defaultHour(), defaultSeconds(), defaultText() */ 
-  int defaultMinutes( void ) const;
-    /*! \return the default seconds. 
+  int defaultMinutes( int index=0 ) const;
+    /*! \return the \a index-th default seconds. 
         \sa defaultHour(), defaultMinutes(), defaultText() */ 
-  int defaultSeconds( void ) const;
+  int defaultSeconds( int index=0 ) const;
     /*! Set default time of time parameter to \a hour,
-        \a minutes, and \a seconds.
-        \a settext determines whether the default string representation 
-	should be updated as well (for internal use). */
-  Parameter &setDefaultTime( int hour, int minutes, int seconds, bool settext=true );
+        \a minutes, and \a seconds. */
+  Parameter &setDefaultTime( int hour, int minutes, int seconds );
+    /*! Add time \a hour, \a minutes, and \a seconds to default of time parameter to. */
+  Parameter &addDefaultTime( int hour, int minutes, int seconds );
     /*! Set default time of time parameter to \a time.
-        See Str::time() for valid date strings.
-        \a settext determines whether the default string representation 
-	should be updated as well (for internal use). */
-  Parameter &setDefaultTime( const string &time, bool settext=true );
+        See Str::time() for valid date strings. */
+  Parameter &setDefaultTime( const string &time );
 
     /*! True if parameter is of type label (parameter without value). */
   bool isLabel( void ) const;
@@ -897,42 +878,30 @@ private:
   double Maximum;
     /*! Step size for number parameter. */
   double Step;
-  union {
-      /*! Year */
-    int Year;
-      /*! Hour */
-    int Hour;
-  };
-  union {
-      /*! Month */
-    int DefaultYear;
-      /*! Minutes */
-    int DefaultHour;
-  };
-  union {
-      /*! Month */
-    int Month;
-      /*! Minutes */
-    int Minutes;
-  };
-  union {
-      /*! Default month */
-    int DefaultMonth;
-      /*! Default minutes */
-    int DefaultMinutes;
-  };
-  union {
-      /*! Day */
-    int Day;
-      /*! Seconds */
-    int Seconds;
-  };
-  union {
-      /*! Default day */
-    int DefaultDay;
-      /*! Default seconds */
-    int DefaultSeconds;
-  };
+    /*! Year */
+  vector< int > Year;
+    /*! Month */
+  vector< int > Month;
+    /*! Day */
+  vector< int > Day;
+    /*! Default year */
+  vector< int > DefaultYear;
+    /*! Default month */
+  vector< int > DefaultMonth;
+    /*! Default day */
+  vector< int > DefaultDay;
+    /*! Hour */
+  vector< int > Hour;
+    /*! Minutes */
+  vector< int > Minutes;
+    /*! Seconds */
+  vector< int > Seconds;
+    /*! Default hour */
+  vector< int > DefaultHour;
+    /*! Default minutes */
+  vector< int > DefaultMinutes;
+    /*! Default seconds */
+  vector< int > DefaultSeconds;
     /*! Internal unit of the parameter. */
   Str InternUnit;
     /*! Unit used for output. */
