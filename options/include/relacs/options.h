@@ -790,6 +790,248 @@ public:
         with identifier \a ident to \a dflt. */
   Parameter &setDefaultBoolean( const string &ident, bool dflt );
 
+    /*! Add a date option at the end of the options list. 
+        \param[in] ident the identifier string of the new option
+        \param[in] request the request string of the new option
+	\param[in] year the default value for the year
+	\param[in] month the default value for the month
+	\param[in] day the default value for the dat
+	\param[in] flags some flags
+	\param[in] style defines the style in a GUI.
+	\return a reference to the new option
+	\sa insertDate(), setDate(), date() */
+  Parameter &addDate( const string &ident, const string &request,  
+		      int year=0, int month=0, int day=0, int flags=0, int style=0 );
+    /*! Add a date option at the end of the options list. 
+        \param[in] ident the identifier and request string of the new option
+	\param[in] year the default value for the year
+	\param[in] month the default value for the month
+	\param[in] day the default value for the dat
+	\param[in] flags some flags
+	\param[in] style defines the style in a GUI.
+	\return a reference to the new option
+	\sa insertDate(), setDate(), date() */
+  inline Parameter &addDate( const string &ident, int year, int month, int day,
+			     int flags=0, int style=0 )
+    { return addDate( ident, ident, year, month, day, flags, style ); };
+    /*! Add a date option at the end of the options list
+        with year, month and day set to zero. 
+        \param[in] ident the identifier and request string of the new option
+	\param[in] flags some flags
+	\param[in] style defines the style in a GUI.
+	\return a reference to the new option
+	\sa insertDate(), setDate(), date() */
+  inline Parameter &addDate( const string &ident, int flags=0, int style=0 )
+    { return addDate( ident, ident, 0, 0, 0, flags, style ); };
+    /*! Insert a new date option at the beginning of the options list
+        (\a atindent == "") or at the position of the option with
+        identity \a atident. If the option with identity \a atident
+        does not exist, the option is appended to the end of the list.
+        \param[in] ident the identifier string of the new option
+        \param[in] atident the identifier string of the existing option
+	where the new options should be inserted. If left empty,
+	the new option is inserted at the beginning of the option list.
+        \param[in] request the request string of the new option
+	\param[in] year the default value for the year
+	\param[in] month the default value for the month
+	\param[in] day the default value for the dat
+	\param[in] flags some flags
+	\param[in] style defines the style in a GUI.
+	\return a reference to the new option
+	\sa addDate(), setDate(), date() */
+  Parameter &insertDate( const string &ident, const string &atident="", 
+			 const string &request="", int year=0, int month=0, int day=0,
+			 int flags=0, int style=0 );
+    /*! Insert a new date option at the beginning of the options list
+        (\a atindent == "") or at the position of the option with
+        identity \a atident. If the option with identity \a atident
+        does not exist, the option is appended to the end of the list.
+        \param[in] ident the identifier and request string of the new option
+        \param[in] atident the identifier string of the existing option
+	where the new options should be inserted. If left empty,
+	the new option is inserted at the beginning of the option list.
+	\param[in] year the default value for the year
+	\param[in] month the default value for the month
+	\param[in] day the default value for the dat
+	\param[in] flags some flags
+	\param[in] style defines the style in a GUI.
+	\return a reference to the new option
+	\sa addDate(), setDate(), date() */
+  Parameter &insertDate( const string &ident, const string &atident, 
+			 int year=0, int month=0, int day=0, int flags=0, int style=0 )
+    { return insertDate( ident, atident, ident, year, month, day, flags, style ); };
+    /*! Insert a new date option at the beginning of the options list
+        (\a atindent == "") or at the position of the option with
+        identity \a atident. If the option with identity \a atident
+        does not exist, the option is appended to the end of the list.
+        The year, month and day are set to zero. 
+        \param[in] ident the identifier and request string of the new option
+        \param[in] atident the identifier string of the existing option
+	where the new options should be inserted. If left empty,
+	the new option is inserted at the beginning of the option list.
+	\param[in] flags some flags
+	\param[in] style defines the style in a GUI.
+	\return a reference to the new option
+	\sa addDate(), setDate(), date() */
+  Parameter &insertDate( const string &ident, const string &atident, 
+			 int flags=0, int style=0 )
+    { return insertDate( ident, atident, ident, 0, 0, 0, flags, style ); };
+    /*! Get the date from a date option.
+	\param[in] ident the identifier string of the option
+	\param[in] index the index of the date
+	\param[out] year the year of the specified date
+	\param[out] month the month of the specified date
+	\param[out] day the day of the specified date
+	\return the reference of the option
+        \sa defaultDate(), setDate(), addDate(), insertDate() */
+  Parameter &date( const string &ident, int index, int &year, int &month, int &day ) const;
+    /*! Set the value of an existing date option.
+	\param[in] ident the identifier string of the option
+	\param[in] year the new value for the year
+	\param[in] month the new value for the month
+	\param[in] day the new value for the day
+	\return a reference to the option.
+        \sa setDefaultDate(), addDate(), insertDate(), date() */
+  Parameter &setDate( const string &ident, int year, int month, int day );
+    /*! Get the default date from a date option.
+	\param[in] ident the identifier string of the option
+	\param[in] index the index of the default date
+	\param[out] year the year of the specified default date
+	\param[out] month the month of the specified default date
+	\param[out] day the day of the specified default date
+	\return the reference of the option
+        \sa date(), setDate(), addDate(), insertDate() */
+  Parameter &defaultDate( const string &ident, int index, int &year, int &month, int &day ) const;
+    /*! Set the default value of an existing date option.
+	\param[in] ident the identifier string of the option
+	\param[in] year the new value for the default year
+	\param[in] month the new value for the default month
+	\param[in] day the new value for the default day
+	\return a reference to the option.
+        \sa setDate(), addDate(), insertDate(), defaultDate() */
+  Parameter &setDefaultDate( const string &ident, int year, int month, int day );
+
+    /*! Add a time option at the end of the options list. 
+        \param[in] ident the identifier string of the new option
+        \param[in] request the request string of the new option
+	\param[in] hour the default value for the hour
+	\param[in] minutes the default value for the minutes
+	\param[in] seconds the default value for the dat
+	\param[in] flags some flags
+	\param[in] style defines the style in a GUI.
+	\return a reference to the new option
+	\sa insertTime(), setTime(), time() */
+  Parameter &addTime( const string &ident, const string &request,  
+		      int hour=0, int minutes=0, int seconds=0, int flags=0, int style=0 );
+    /*! Add a time option at the end of the options list. 
+        \param[in] ident the identifier and request string of the new option
+	\param[in] hour the default value for the hour
+	\param[in] minutes the default value for the minutes
+	\param[in] seconds the default value for the dat
+	\param[in] flags some flags
+	\param[in] style defines the style in a GUI.
+	\return a reference to the new option
+	\sa insertTime(), setTime(), time() */
+  inline Parameter &addTime( const string &ident, int hour, int minutes, int seconds,
+			     int flags=0, int style=0 )
+    { return addTime( ident, ident, hour, minutes, seconds, flags, style ); };
+    /*! Add a time option at the end of the options list
+        with hour, minutes and seconds set to zero. 
+        \param[in] ident the identifier and request string of the new option
+	\param[in] flags some flags
+	\param[in] style defines the style in a GUI.
+	\return a reference to the new option
+	\sa insertTime(), setTime(), time() */
+  inline Parameter &addTime( const string &ident, int flags=0, int style=0 )
+    { return addTime( ident, ident, 0, 0, 0, flags, style ); };
+    /*! Insert a new time option at the beginning of the options list
+        (\a atindent == "") or at the position of the option with
+        identity \a atident. If the option with identity \a atident
+        does not exist, the option is appended to the end of the list.
+        \param[in] ident the identifier string of the new option
+        \param[in] atident the identifier string of the existing option
+	where the new options should be inserted. If left empty,
+	the new option is inserted at the beginning of the option list.
+        \param[in] request the request string of the new option
+	\param[in] hour the default value for the hour
+	\param[in] minutes the default value for the minutes
+	\param[in] seconds the default value for the dat
+	\param[in] flags some flags
+	\param[in] style defines the style in a GUI.
+	\return a reference to the new option
+	\sa addTime(), setTime(), time() */
+  Parameter &insertTime( const string &ident, const string &atident="", 
+			 const string &request="", int hour=0, int minutes=0, int seconds=0,
+			 int flags=0, int style=0 );
+    /*! Insert a new time option at the beginning of the options list
+        (\a atindent == "") or at the position of the option with
+        identity \a atident. If the option with identity \a atident
+        does not exist, the option is appended to the end of the list.
+        \param[in] ident the identifier and request string of the new option
+        \param[in] atident the identifier string of the existing option
+	where the new options should be inserted. If left empty,
+	the new option is inserted at the beginning of the option list.
+	\param[in] hour the default value for the hour
+	\param[in] minutes the default value for the minutes
+	\param[in] seconds the default value for the dat
+	\param[in] flags some flags
+	\param[in] style defines the style in a GUI.
+	\return a reference to the new option
+	\sa addTime(), setTime(), time() */
+  Parameter &insertTime( const string &ident, const string &atident, 
+			 int hour=0, int minutes=0, int seconds=0, int flags=0, int style=0 )
+    { return insertTime( ident, atident, ident, hour, minutes, seconds, flags, style ); };
+    /*! Insert a new time option at the beginning of the options list
+        (\a atindent == "") or at the position of the option with
+        identity \a atident. If the option with identity \a atident
+        does not exist, the option is appended to the end of the list.
+        The hour, minutes and seconds are set to zero. 
+        \param[in] ident the identifier and request string of the new option
+        \param[in] atident the identifier string of the existing option
+	where the new options should be inserted. If left empty,
+	the new option is inserted at the beginning of the option list.
+	\param[in] flags some flags
+	\param[in] style defines the style in a GUI.
+	\return a reference to the new option
+	\sa addTime(), setTime(), time() */
+  Parameter &insertTime( const string &ident, const string &atident, 
+			 int flags=0, int style=0 )
+    { return insertTime( ident, atident, ident, 0, 0, 0, flags, style ); };
+    /*! Get the time from a time option.
+	\param[in] ident the identifier string of the option
+	\param[in] index the index of the time
+	\param[out] hour the hour of the specified time
+	\param[out] minutes the minutes of the specified time
+	\param[out] seconds the seconds of the specified time
+	\return the reference of the option
+        \sa defaultTime(), setTime(), addTime(), insertTime() */
+  Parameter &time( const string &ident, int index, int &hour, int &minutes, int &seconds ) const;
+    /*! Set the value of an existing time option.
+	\param[in] ident the identifier string of the option
+	\param[in] hour the new value for the hour
+	\param[in] minutes the new value for the minutes
+	\param[in] seconds the new value for the seconds
+	\return a reference to the option.
+        \sa setDefaultTime(), addTime(), insertTime(), time() */
+  Parameter &setTime( const string &ident, int hour, int minutes, int seconds );
+    /*! Get the default time from a time option.
+	\param[in] ident the identifier string of the option
+	\param[in] index the index of the default time
+	\param[out] hour the hour of the specified default time
+	\param[out] minutes the minutes of the specified default time
+	\param[out] seconds the seconds of the specified default time
+	\return the reference of the option
+        \sa time(), setTime(), addTime(), insertTime() */
+  Parameter &defaultTime( const string &ident, int index, int &hour, int &minutes, int &seconds ) const;
+    /*! Set the default value of an existing time option.
+	\param[in] ident the identifier string of the option
+	\param[in] hour the new value for the default hour
+	\param[in] minutes the new value for the default minutes
+	\param[in] seconds the new value for the default seconds
+	\return a reference to the option.
+        \sa setTime(), addTime(), insertTime(), defaultTime() */
+  Parameter &setDefaultTime( const string &ident, int hour, int minutes, int seconds );
+
     /*! Add a label \a ident at the end of the options list. */
   Parameter &addLabel( const string &ident, int flags=0, int style=0 );
     /*! Insert a new label \a ident at the beginning of the options list
