@@ -1830,7 +1830,7 @@ int Str::date( int &year, int &month, int &day ) const
   // first number:
   char numstr[100];
   int n = 0;
-  while ( p != end() && isdigit( *p ) ) {
+  while ( p != end() && ( isdigit( *p ) || ( n==0 && *p == '-' ) ) ) {
     numstr[n++] = *p;
     ++p;
   }

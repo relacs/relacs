@@ -627,8 +627,8 @@ public:
         If the value of the parameter is changing 
 	then the changedFlag() is set. */
   Parameter &setBoolean( bool b );
-    /*! Returns the default boolean value. */
-  bool defaultBoolean( void ) const;
+    /*! Returns the \a index-th default boolean value. */
+  bool defaultBoolean( int index=0 ) const;
     /*! Set default boolean value to \a dflt. */
   Parameter &setDefaultBoolean( bool dflt );
 
@@ -641,6 +641,14 @@ public:
     /*! \return the \a index-th day of the month.
         \sa year(), month(), text() */ 
   int day( int index=0 ) const;
+    /*! Returns the \a index-th date.
+        \param[out] year. If Parameter is not a Date or \a index is invalid, 0 is returned. 
+        \param[out] month. If Parameter is not a Date or \a index is invalid, 0 is returned. 
+        \param[out] day. If Parameter is not a Date or \a index is invalid, 0 is returned. 
+        \param[in] index determines which one of the size() stored
+	date values is returned in \a year, \a month, and \a day.
+	\sa year(), month(), day(), setDate() */
+  void date( int &year, int &month, int &day, int index=0 ) const;
     /*! Set date of date parameter to \a year, \a month, and \a day.
         If the value of the parameter is changing 
 	then the changedFlag() is set. */
@@ -663,6 +671,14 @@ public:
     /*! \return the \a index-th default day of the month. 
         \sa defaultYear(), defaultMonth(), defaultText() */ 
   int defaultDay( int index ) const;
+    /*! Returns the \a index-th default date.
+        \param[out] year. If Parameter is not a Date or \a index is invalid, 0 is returned. 
+        \param[out] month. If Parameter is not a Date or \a index is invalid, 0 is returned. 
+        \param[out] day. If Parameter is not a Date or \a index is invalid, 0 is returned. 
+        \param[in] index determines which one of the size() stored
+	default date values is returned in \a year, \a month, and \a day.
+	\sa defaultYear(), defaultMonth(), defaultDay(), setDefaultDate() */
+  void defaultDate( int &year, int &month, int &day, int index=0 ) const;
     /*! Set default date of date parameter to \a year, \a month, and \a day. */
   Parameter &setDefaultDate( int year, int month, int day );
     /*! Add \a year, \a month, and \a day to default date of date parameter. */
@@ -679,6 +695,14 @@ public:
   int minutes( int index=0 ) const;
     /*! \return the \a index-th seconds. \sa hour(), minutes(), text() */ 
   int seconds( int index=0 ) const;
+    /*! Returns the \a index-th time.
+        \param[out] hour. If Parameter is not a Time or \a index is invalid, 0 is returned.
+        \param[out] minutes. If Parameter is not a Time or \a index is invalid, 0 is returned. 
+        \param[out] seconds. If Parameter is not a Time or \a index is invalid, 0 is returned. 
+        \param[in] index determines which one of the size() stored
+	time values is returned in \a hour, \a minutes, and \a seconds.
+	\sa hour(), minutes(), seconds(), setTime() */
+  void time( int &hour, int &minutes, int &seconds, int index=0 ) const;
     /*! Set time of time parameter to \a hour, \a minutes, and \a seconds.
         If the value of the parameter is changing 
 	then the changedFlag() is set. */
@@ -701,6 +725,14 @@ public:
     /*! \return the \a index-th default seconds. 
         \sa defaultHour(), defaultMinutes(), defaultText() */ 
   int defaultSeconds( int index=0 ) const;
+    /*! Returns the \a index-th default time.
+        \param[out] hour. If Parameter is not a Time or \a index is invalid, 0 is returned.
+        \param[out] minutes. If Parameter is not a Time or \a index is invalid, 0 is returned. 
+        \param[out] seconds. If Parameter is not a Time or \a index is invalid, 0 is returned. 
+        \param[in] index determines which one of the size() stored
+	default time values is returned in \a hour, \a minutes, and \a seconds.
+	\sa defaultHour(), defaultMinutes(), defaultSeconds(), setDefaultTime() */
+  void defaultTime( int &hour, int &minutes, int &seconds, int index=0 ) const;
     /*! Set default time of time parameter to \a hour,
         \a minutes, and \a seconds. */
   Parameter &setDefaultTime( int hour, int minutes, int seconds );

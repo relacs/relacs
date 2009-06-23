@@ -1739,7 +1739,7 @@ Parameter &Parameter::setBoolean( bool b )
 }
 
 
-bool Parameter::defaultBoolean( void ) const
+bool Parameter::defaultBoolean( int index ) const
 { 
   Warning = "";
   if ( ! isAnyNumber() && ! isText() ) {
@@ -1747,7 +1747,14 @@ bool Parameter::defaultBoolean( void ) const
       Ident + "' is not of type number!";
     return false;
   }
-  return ( DefaultValue[0] != 0.0 ); 
+
+  if ( index < 0 || index >= (int)Value.size() ) {
+    Warning = "Parameter::defaultBoolean -> invalid index " +
+      Str( index ) + " requested for parameter '" + Ident + "' !";
+    return false;
+  }
+
+  return ( DefaultValue[index] != 0.0 ); 
 }
 
   
@@ -1813,6 +1820,27 @@ int Parameter::day( int index ) const
     return -1;
   }
   return Day[index];
+}
+
+
+void Parameter::date( int &year, int &month, int &day, int index ) const
+{
+  year = 0;
+  month = 0;
+  day = 0;
+  if ( ! isDate() ) {
+    Warning = "Parameter::date -> parameter '" + 
+      Ident + "' is not of type date!";
+    return;
+  }
+  if ( index < 0 || index >= (int)Year.size() ) {
+    Warning = "Parameter::date -> invalid index " +
+      Str( index ) + " requested for parameter '" + Ident + "' !";
+    return;
+  }
+  year = Year[index];
+  month = Month[index];
+  day = Day[index];
 }
 
 
@@ -1930,6 +1958,27 @@ int Parameter::defaultDay( int index ) const
 }
 
 
+void Parameter::defaultDate( int &year, int &month, int &day, int index ) const
+{
+  year = 0;
+  month = 0;
+  day = 0;
+  if ( ! isDate() ) {
+    Warning = "Parameter::defaultDate -> parameter '" + 
+      Ident + "' is not of type date!";
+    return;
+  }
+  if ( index < 0 || index >= (int)DefaultYear.size() ) {
+    Warning = "Parameter::defaultDate -> invalid index " +
+      Str( index ) + " requested for parameter '" + Ident + "' !";
+    return;
+  }
+  year = DefaultYear[index];
+  month = DefaultMonth[index];
+  day = DefaultDay[index];
+}
+
+
 Parameter &Parameter::setDefaultDate( int year, int month, int day )
 {
   if ( ! isDate() ) {
@@ -2038,6 +2087,27 @@ int Parameter::seconds( int index ) const
     return -1;
   }
   return Seconds[index];
+}
+
+
+void Parameter::time( int &hour, int &minutes, int &seconds, int index ) const
+{
+  hour = 0;
+  minutes = 0;
+  seconds = 0;
+  if ( ! isDate() ) {
+    Warning = "Parameter::time -> parameter '" + 
+      Ident + "' is not of type date!";
+    return;
+  }
+  if ( index < 0 || index >= (int)Hour.size() ) {
+    Warning = "Parameter::time -> invalid index " +
+      Str( index ) + " requested for parameter '" + Ident + "' !";
+    return;
+  }
+  hour = Hour[index];
+  minutes = Minutes[index];
+  seconds = Seconds[index];
 }
 
 
@@ -2152,6 +2222,27 @@ int Parameter::defaultSeconds( int index ) const
     return -1;
   }
   return DefaultSeconds[index];
+}
+
+
+void Parameter::defaultTime( int &hour, int &minutes, int &seconds, int index ) const
+{
+  hour = 0;
+  minutes = 0;
+  seconds = 0;
+  if ( ! isDate() ) {
+    Warning = "Parameter::defaultTime -> parameter '" + 
+      Ident + "' is not of type date!";
+    return;
+  }
+  if ( index < 0 || index >= (int)DefaultHour.size() ) {
+    Warning = "Parameter::defaultTime -> invalid index " +
+      Str( index ) + " requested for parameter '" + Ident + "' !";
+    return;
+  }
+  hour = DefaultHour[index];
+  minutes = DefaultMinutes[index];
+  seconds = DefaultSeconds[index];
 }
 
 

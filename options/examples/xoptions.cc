@@ -30,11 +30,13 @@ int main( int argc, char *argv[] )
   Options opt;
   string s;
 
+  opt.addText( "comment", "this is a special stimulus" );
   opt.addNumber( "duration", "Duration of Signal",
 		 0.2, 0.01, 1000.0, 0.01, "seconds", "ms" );
-  //  opt.addInteger( "repeats", "Repeats", 10, 0, 100000, 2 );
   opt.addInteger( "repeats", "Repeats", 10 );
   opt.addBoolean( "sinewave", "Use Sine Wave", true );
+  opt.addDate( "recordingdate", 2009, 6, 20 );
+  opt.addTime( "recordingtime", 16, 42, 13 );
   opt.insertNumber( "pause", "repeats", "Pause between Signals",
 		    0.1, 0.01, 1000.0, 0.01, "seconds", "ms", "%5.1f" );
   cout << opt;

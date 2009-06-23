@@ -1753,6 +1753,262 @@ Parameter &Options::setDefaultBoolean( const string &ident, bool dflt )
 }
 
 
+Parameter &Options::addDate( const string &ident, const string &request,  
+			     int year, int month, int day,
+			     int flags, int style )
+{
+  // new parameter:
+  Parameter np( ident, request, Parameter::Date,
+		year, month, day, flags, style );
+  // add option:
+  Parameter &pp = add( np );
+  // error?
+  Warning += np.warning();
+#ifndef NDEBUG
+  if ( !Warning.empty() )
+    cerr << "!warning in Options::addDate( " << ident << " ) -> " << Warning << endl;
+#endif
+  return pp;
+}
+
+
+Parameter &Options::insertDate( const string &ident, const string &atident, 
+				const string &request,
+				int year, int month, int day,
+				int flags, int style )
+{
+  // new parameter:
+  Parameter np( ident, request, Parameter::Date,
+		year, month, day, flags, style );
+  // insert option:
+  Parameter &pp = insert( np, atident );
+  // error?
+  Warning += np.warning();
+#ifndef NDEBUG
+  if ( !Warning.empty() )
+    cerr << "!warning in Options::insertDate( " << ident << " ) -> " << Warning << endl;
+#endif
+  return pp;
+}
+
+
+const Parameter &Options::date( const string &ident, int index,
+				int &year, int &month, int &day ) const
+{
+  year = 0;
+  month = 0;
+  day = 0;
+  const_iterator pp = find( ident );
+  if ( pp != end() ) {
+    (*pp).date( year, month, day, index );
+    Warning += (*pp).warning();
+#ifndef NDEBUG
+    if ( ! Warning.empty() )
+      cerr << "!warning in Options::date( " << ident << " ) -> " << Warning << endl;
+#endif
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
+}
+
+
+Parameter &Options::setDate( const string &ident,
+			     int year, int month, int day )
+{
+  iterator pp = find( ident );
+  // set value:
+  if ( pp != end() ) {
+    (*pp).setDate( year, month, day );
+    Warning += (*pp).warning();
+  }
+#ifndef NDEBUG
+  if ( ! Warning.empty() ) {
+    // error?
+    cerr << "!warning in Options::setDate( " << ident << " ) -> " << Warning << endl;
+  }
+#endif
+
+  // notify the change:
+  if ( CallNotify && ! Notified ) {
+    Notified = true;
+    notify();
+    Notified = false;
+  }
+
+  return *pp;
+}
+
+
+const Parameter &Options::defaultDate( const string &ident, int index,
+				       int &year, int &month, int &day ) const
+{
+  const_iterator pp = find( ident );
+  if ( pp != end() ) {
+    (*pp).defaultDate( year, month, day, index );
+    Warning += (*pp).warning();
+#ifndef NDEBUG
+    if ( ! Warning.empty() )
+      cerr << "!warning in Options::defaultDate( " << ident << " ) -> " << Warning << endl;
+#endif
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
+}
+
+
+Parameter &Options::setDefaultDate( const string &ident,
+				    int year, int month, int day )
+{
+  iterator pp = find( ident );
+  // set value:
+  if ( pp != end() ) {
+    (*pp).setDefaultDate( year, month, day );
+    Warning += (*pp).warning();
+  }
+#ifndef NDEBUG
+  if ( ! Warning.empty() ) {
+    // error?
+    cerr << "!warning in Options::setDefaultDate( " << ident << " ) -> " << Warning << endl;
+  }
+#endif
+  return *pp;
+}
+
+
+Parameter &Options::addTime( const string &ident, const string &request,  
+			     int hour, int minutes, int seconds,
+			     int flags, int style )
+{
+  // new parameter:
+  Parameter np( ident, request, Parameter::Time,
+		hour, minutes, seconds, flags, style );
+  // add option:
+  Parameter &pp = add( np );
+  // error?
+  Warning += np.warning();
+#ifndef NDEBUG
+  if ( !Warning.empty() )
+    cerr << "!warning in Options::addTime( " << ident << " ) -> " << Warning << endl;
+#endif
+  return pp;
+}
+
+
+Parameter &Options::insertTime( const string &ident, const string &atident, 
+				const string &request,
+				int hour, int minutes, int seconds,
+				int flags, int style )
+{
+  // new parameter:
+  Parameter np( ident, request, Parameter::Time,
+		hour, minutes, seconds, flags, style );
+  // insert option:
+  Parameter &pp = insert( np, atident );
+  // error?
+  Warning += np.warning();
+#ifndef NDEBUG
+  if ( !Warning.empty() )
+    cerr << "!warning in Options::insertTime( " << ident << " ) -> " << Warning << endl;
+#endif
+  return pp;
+}
+
+
+const Parameter &Options::time( const string &ident, int index,
+				int &hour, int &minutes, int &seconds ) const
+{
+  hour = 0;
+  minutes = 0;
+  seconds = 0;
+  const_iterator pp = find( ident );
+  if ( pp != end() ) {
+    (*pp).time( hour, minutes, seconds, index );
+    Warning += (*pp).warning();
+#ifndef NDEBUG
+    if ( ! Warning.empty() )
+      cerr << "!warning in Options::time( " << ident << " ) -> " << Warning << endl;
+#endif
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
+}
+
+
+Parameter &Options::setTime( const string &ident,
+			     int hour, int minutes, int seconds )
+{
+  iterator pp = find( ident );
+  // set value:
+  if ( pp != end() ) {
+    (*pp).setTime( hour, minutes, seconds );
+    Warning += (*pp).warning();
+  }
+#ifndef NDEBUG
+  if ( ! Warning.empty() ) {
+    // error?
+    cerr << "!warning in Options::setTime( " << ident << " ) -> " << Warning << endl;
+  }
+#endif
+
+  // notify the change:
+  if ( CallNotify && ! Notified ) {
+    Notified = true;
+    notify();
+    Notified = false;
+  }
+
+  return *pp;
+}
+
+
+const Parameter &Options::defaultTime( const string &ident, int index,
+				       int &hour, int &minutes, int &seconds ) const
+{
+  const_iterator pp = find( ident );
+  if ( pp != end() ) {
+    (*pp).defaultTime( hour, minutes, seconds, index );
+    Warning += (*pp).warning();
+#ifndef NDEBUG
+    if ( ! Warning.empty() )
+      cerr << "!warning in Options::defaultTime( " << ident << " ) -> " << Warning << endl;
+#endif
+    return *pp;
+  }
+  else {
+    Dummy = Parameter();
+    return Dummy;
+  }
+}
+
+
+Parameter &Options::setDefaultTime( const string &ident,
+				    int hour, int minutes, int seconds )
+{
+  iterator pp = find( ident );
+  // set value:
+  if ( pp != end() ) {
+    (*pp).setDefaultTime( hour, minutes, seconds );
+    Warning += (*pp).warning();
+  }
+#ifndef NDEBUG
+  if ( ! Warning.empty() ) {
+    // error?
+    cerr << "!warning in Options::setDefaultTime( " << ident << " ) -> " << Warning << endl;
+  }
+#endif
+  return *pp;
+}
+
+
 Parameter &Options::addLabel( const string &ident, int flags, int style )
 {
   // new parameter:
