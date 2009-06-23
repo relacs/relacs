@@ -45,6 +45,8 @@ MainWidget::MainWidget( QWidget *parent, const char *name )
   Opt2.addSeparator();
   Opt2.addBoolean( "sinewave", "Use Sine Wave", false );
   Opt2.addBoolean( "loop", "Loop", true, 1 ).setStyle( OptWidget::LabelSmall +  OptWidget::ValueRed );
+  Opt2.addDate( "date", "Date", 2009, 6, 20 );
+  Opt2.addTime( "time", "Time", 16, 42, 13 );
 
   QPushButton *dialogButton = new QPushButton( "&Dialog", this );
   QPushButton *quitButton = new QPushButton( "&Quit", this );

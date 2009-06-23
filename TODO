@@ -1,8 +1,3 @@
-Date and Time for Parameter:
-- extend Options
-- extend OptWidget
-- adapt RELACS
-
 SignalTime: finish this update (RELACSPlugin::signalTime()
 - test ficurve RePro: does not work!
 - update all other RePros
@@ -47,8 +42,6 @@ Thread safety:
 
 Metadata:
 - stimulus section needs a name, a file (if available) and properties
-- Options needs a Date and a Time type
-- All dates and times must go into the XML file with a standard format YYY-MM-DD hh:mm:ss
 - Parameter::label should get a level that is used to make sections in the XML file
 
 Acquisition interface:
@@ -66,6 +59,7 @@ Plugins:
 Relacs:
 - How are plugins (control, repros) found/identified? Possibility of name clashes!
   Use plugin-set name as well.
+- Parameter/Options/OptWidget: generalize selectText() and index() to all types
 - Fix command line arg names from path to dir in relacsmain and RELACSWidget.
 - The right name for dlopen can be found in the dlname field of the *.la file!
   Use this approach for loading the plugins?

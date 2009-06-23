@@ -25,7 +25,8 @@
 
 #include <limits.h>
 #include <values.h>
-#include <string>
+#include <cstring>
+#include <ctime>
 #include <iostream>
 #include <vector>
 #include <relacs/str.h>
@@ -662,15 +663,23 @@ public:
         If the value of the parameter is changing 
 	then the changedFlag() is set. */
   Parameter &setDate( const string &date );
+    /*! Set date of date parameter to \a date.
+        If the value of the parameter is changing 
+	then the changedFlag() is set. */
+  Parameter &setDate( const struct tm &date );
+    /*! Set date of date parameter to the date of \a time.
+        If the value of the parameter is changing 
+	then the changedFlag() is set. */
+  Parameter &setDate( const time_t &time );
     /*! \return the \a index-th default year. 
         \sa defaultMonth(), defaultDay(), defaultText() */ 
-  int defaultYear( int index ) const;
+  int defaultYear( int index=0 ) const;
     /*! \return the \a index-th default month. 
         \sa defaultYear(), defaultDay(), defaultText() */ 
-  int defaultMonth( int index ) const;
+  int defaultMonth( int index=0 ) const;
     /*! \return the \a index-th default day of the month. 
         \sa defaultYear(), defaultMonth(), defaultText() */ 
-  int defaultDay( int index ) const;
+  int defaultDay( int index=0 ) const;
     /*! Returns the \a index-th default date.
         \param[out] year. If Parameter is not a Date or \a index is invalid, 0 is returned. 
         \param[out] month. If Parameter is not a Date or \a index is invalid, 0 is returned. 
@@ -716,6 +725,14 @@ public:
         If the value of the parameter is changing 
 	then the changedFlag() is set. */
   Parameter &setTime( const string &time );
+    /*! Set time of time parameter to \a time.
+        If the value of the parameter is changing 
+	then the changedFlag() is set. */
+  Parameter &setTime( const struct tm &time );
+    /*! Set time of time parameter to \a time.
+        If the value of the parameter is changing 
+	then the changedFlag() is set. */
+  Parameter &setTime( const time_t &time );
     /*! \return the \a index-th default hour. 
         \sa defaultMinutes(), defaultSeconds(), defaultText() */ 
   int defaultHour( int index=0 ) const;

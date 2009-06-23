@@ -898,6 +898,24 @@ public:
 	\return a reference to the option.
         \sa setDefaultDate(), addDate(), insertDate(), date() */
   Parameter &setDate( const string &ident, int year, int month, int day );
+    /*! Set the value of an existing date option.
+	\param[in] ident the identifier string of the option
+	\param[in] date the new value for the date
+	\return a reference to the option.
+        \sa setDefaultDate(), addDate(), insertDate(), date() */
+  Parameter &setDate( const string &ident, const string &date );
+    /*! Set the value of an existing date option.
+	\param[in] ident the identifier string of the option
+	\param[in] date the new value for the date
+	\return a reference to the option.
+        \sa setDefaultDate(), addDate(), insertDate(), date() */
+  Parameter &setDate( const string &ident, const struct tm &date );
+    /*! Set the value of an existing date option.
+	\param[in] ident the identifier string of the option
+	\param[in] time the new value for the date
+	\return a reference to the option.
+        \sa setDefaultDate(), addDate(), insertDate(), date() */
+  Parameter &setDate( const string &ident, const time_t &time );
     /*! Get the default date from a date option.
 	\param[in] ident the identifier string of the option
 	\param[in] index the index of the default date
@@ -1027,6 +1045,24 @@ public:
         \sa setDefaultTime(), addTime(), insertTime(), time() */
   Parameter &setTime( const string &ident,
 		      int hour, int minutes, int seconds );
+    /*! Set the value of an existing time option.
+	\param[in] ident the identifier string of the option
+	\param[in] time the new value for the time
+	\return a reference to the option.
+        \sa setDefaultTime(), addTime(), insertTime(), time() */
+  Parameter &setTime( const string &ident, const string &time );
+    /*! Set the value of an existing time option.
+	\param[in] ident the identifier string of the option
+	\param[in] time the new value for the time
+	\return a reference to the option.
+        \sa setDefaultTime(), addTime(), insertTime(), time() */
+  Parameter &setTime( const string &ident, const struct tm &time );
+    /*! Set the value of an existing time option.
+	\param[in] ident the identifier string of the option
+	\param[in] time the new value for the time
+	\return a reference to the option.
+        \sa setDefaultTime(), addTime(), insertTime(), time() */
+  Parameter &setTime( const string &ident, const time_t &time );
     /*! Get the default time from a time option.
 	\param[in] ident the identifier string of the option
 	\param[in] index the index of the default time

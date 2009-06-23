@@ -1910,6 +1910,27 @@ Parameter &Parameter::setDate( const string &date )
 }
 
 
+Parameter &Parameter::setDate( const struct tm &date )
+{
+  // read date:
+  int year = date.tm_year + 1900;
+  int month = date.tm_mon + 1;
+  int day = date.tm_mday;
+
+  setDate( year, month, day );
+
+  return *this;
+}
+
+
+Parameter &Parameter::setDate( const time_t &time )
+{
+  setDate( *localtime( &time ) );
+
+  return *this;
+}
+
+
 int Parameter::defaultYear( int index ) const
 {
   if ( ! isDate() ) {
@@ -2172,6 +2193,27 @@ Parameter &Parameter::setTime( const string &time )
   }
 
   setTime( hour, minutes, seconds );
+
+  return *this;
+}
+
+
+Parameter &Parameter::setTime( const struct tm &time )
+{
+  // read time:
+  int hour = time.tm_hour;
+  int minutes = time.tm_min;
+  int seconds = time.tm_sec;
+
+  setTime( hour, minutes, seconds );
+
+  return *this;
+}
+
+
+Parameter &Parameter::setTime( const time_t &time )
+{
+  setTime( *localtime( &time ) );
 
   return *this;
 }

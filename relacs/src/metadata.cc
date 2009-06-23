@@ -134,8 +134,8 @@ void MetaDataRecordingSection::clear( void )
   Options::clear();
   addText( "Name", "", standardFlag() );
   addText( "Folder", "", standardFlag() );
-  addText( "Date", "", standardFlag() );
-  addText( "Time", "", standardFlag() );
+  addDate( "Date", standardFlag() );
+  addTime( "Time", standardFlag() );
   addNumber( "Recording duration", "", standardFlag() );
   addText( "Mode", RW->modeStr(), standardFlag() );
   addText( "Software", "RELACS", standardFlag() );
@@ -145,20 +145,11 @@ void MetaDataRecordingSection::clear( void )
 
 void MetaDataRecordingSection::save( ofstream &str )
 {
-  // set the <date> and <time> strings:
-  RW->SS.lock();
-  Str date = RW->SS.text( "dateformat" );
-  time_t tt = RW->SN->startSessionTime();
-  date.format( localtime( &tt ) );
-  Str time = RW->SS.text( "timeformat" );
-  time.format( localtime( &tt ) );
-  RW->SS.unlock();
-
   // update file, date, time
   setText( "Name", Str( RW->SF->path() ).preventedSlash().name() );
   setText( "Folder", Str( RW->SF->path() ).preventedSlash().expandedPath() );
-  setText( "Date", date );
-  setText( "Time", time );
+  setDate( "Date", RW->SN->startSessionTime() );
+  setTime( "Time", RW->SN->startSessionTime() );
   setNumber( "Recording duration", RW->SN->sessionTime()/60.0 );
   setUnit( "Recording duration", "min", "min" );
   setFormat( "Recording duration", "%.2f" );

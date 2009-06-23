@@ -68,7 +68,7 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
   ReProInfo.addText( "repro" );
   ReProInfo.addText( "author" );
   ReProInfo.addText( "version" );
-  ReProInfo.addText( "date" );
+  ReProInfo.addDate( "date" );
   ReProSettings.clear();
   ReProFiles.clear();
   ReProData = false;

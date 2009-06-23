@@ -1048,8 +1048,10 @@ int Str::totalWidth( void ) const
       width += fwidth;
 
     }
-    else
+    else {
+      ++p;
       width++;
+    }
   }
 
   return width;

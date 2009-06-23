@@ -1842,6 +1842,84 @@ Parameter &Options::setDate( const string &ident,
 }
 
 
+Parameter &Options::setDate( const string &ident, const string &date )
+{
+  iterator pp = find( ident );
+  // set value:
+  if ( pp != end() ) {
+    (*pp).setDate( date );
+    Warning += (*pp).warning();
+  }
+#ifndef NDEBUG
+  if ( ! Warning.empty() ) {
+    // error?
+    cerr << "!warning in Options::setDate( " << ident << " ) -> " << Warning << endl;
+  }
+#endif
+
+  // notify the change:
+  if ( CallNotify && ! Notified ) {
+    Notified = true;
+    notify();
+    Notified = false;
+  }
+
+  return *pp;
+}
+
+
+Parameter &Options::setDate( const string &ident, const struct tm &date )
+{
+  iterator pp = find( ident );
+  // set value:
+  if ( pp != end() ) {
+    (*pp).setDate( date );
+    Warning += (*pp).warning();
+  }
+#ifndef NDEBUG
+  if ( ! Warning.empty() ) {
+    // error?
+    cerr << "!warning in Options::setDate( " << ident << " ) -> " << Warning << endl;
+  }
+#endif
+
+  // notify the change:
+  if ( CallNotify && ! Notified ) {
+    Notified = true;
+    notify();
+    Notified = false;
+  }
+
+  return *pp;
+}
+
+
+Parameter &Options::setDate( const string &ident, const time_t &time )
+{
+  iterator pp = find( ident );
+  // set value:
+  if ( pp != end() ) {
+    (*pp).setDate( time );
+    Warning += (*pp).warning();
+  }
+#ifndef NDEBUG
+  if ( ! Warning.empty() ) {
+    // error?
+    cerr << "!warning in Options::setDate( " << ident << " ) -> " << Warning << endl;
+  }
+#endif
+
+  // notify the change:
+  if ( CallNotify && ! Notified ) {
+    Notified = true;
+    notify();
+    Notified = false;
+  }
+
+  return *pp;
+}
+
+
 const Parameter &Options::defaultDate( const string &ident, int index,
 				       int &year, int &month, int &day ) const
 {
@@ -1950,6 +2028,84 @@ Parameter &Options::setTime( const string &ident,
   // set value:
   if ( pp != end() ) {
     (*pp).setTime( hour, minutes, seconds );
+    Warning += (*pp).warning();
+  }
+#ifndef NDEBUG
+  if ( ! Warning.empty() ) {
+    // error?
+    cerr << "!warning in Options::setTime( " << ident << " ) -> " << Warning << endl;
+  }
+#endif
+
+  // notify the change:
+  if ( CallNotify && ! Notified ) {
+    Notified = true;
+    notify();
+    Notified = false;
+  }
+
+  return *pp;
+}
+
+
+Parameter &Options::setTime( const string &ident, const string &time )
+{
+  iterator pp = find( ident );
+  // set value:
+  if ( pp != end() ) {
+    (*pp).setTime( time );
+    Warning += (*pp).warning();
+  }
+#ifndef NDEBUG
+  if ( ! Warning.empty() ) {
+    // error?
+    cerr << "!warning in Options::setTime( " << ident << " ) -> " << Warning << endl;
+  }
+#endif
+
+  // notify the change:
+  if ( CallNotify && ! Notified ) {
+    Notified = true;
+    notify();
+    Notified = false;
+  }
+
+  return *pp;
+}
+
+
+Parameter &Options::setTime( const string &ident, const struct tm &time )
+{
+  iterator pp = find( ident );
+  // set value:
+  if ( pp != end() ) {
+    (*pp).setTime( time );
+    Warning += (*pp).warning();
+  }
+#ifndef NDEBUG
+  if ( ! Warning.empty() ) {
+    // error?
+    cerr << "!warning in Options::setTime( " << ident << " ) -> " << Warning << endl;
+  }
+#endif
+
+  // notify the change:
+  if ( CallNotify && ! Notified ) {
+    Notified = true;
+    notify();
+    Notified = false;
+  }
+
+  return *pp;
+}
+
+
+Parameter &Options::setTime( const string &ident, const time_t &time )
+{
+  iterator pp = find( ident );
+  // set value:
+  if ( pp != end() ) {
+    (*pp).setTime( time );
     Warning += (*pp).warning();
   }
 #ifndef NDEBUG

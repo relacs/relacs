@@ -31,6 +31,7 @@
 #include <qlineedit.h>
 #include <qcombobox.h>
 #include <qcheckbox.h>
+#include <qdatetimeedit.h>
 #include <qpushbutton.h>
 #include <relacs/doublespinbox.h>
 #include <relacs/options.h>
@@ -160,6 +161,48 @@ public slots:
 private:
   QCheckBox *EW;
   bool Value;
+};
+
+
+class OptWidgetDate : public OptWidgetBase
+{
+  Q_OBJECT
+public:
+  OptWidgetDate( Options::iterator op, Options *oo, OptWidget *ow,
+		 QWidget *parent, const string &request, QMutex *mutex=0 );
+  virtual void get( void );
+  virtual void reset( void );
+  virtual void resetDefault( void );
+  virtual void initActivation( void );
+public slots:
+  void valueChanged( const QDate &date );
+private:
+  QDateEdit *DE;
+  QLabel *LW;
+  int Year;
+  int Month;
+  int Day;
+};
+
+
+class OptWidgetTime : public OptWidgetBase
+{
+  Q_OBJECT
+public:
+  OptWidgetTime( Options::iterator op, Options *oo, OptWidget *ow,
+		 QWidget *parent, const string &request, QMutex *mutex=0 );
+  virtual void get( void );
+  virtual void reset( void );
+  virtual void resetDefault( void );
+  virtual void initActivation( void );
+public slots:
+  void valueChanged( const QTime &time );
+private:
+  QTimeEdit *TE;
+  QLabel *LW;
+  int Hour;
+  int Minutes;
+  int Seconds;
 };
 
 

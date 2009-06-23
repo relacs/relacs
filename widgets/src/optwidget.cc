@@ -345,6 +345,52 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
 	  Layout.back()->addMultiCellWidget( b->W, row, row, 1, 3,
 					     Qt::AlignLeft | Qt::AlignVCenter );
       }
+      // date:
+      else if ( (*pp).isDate() ) {
+	l = new QLabel( rs.c_str(), parent );
+	setLabelStyle( l, (*pp).style() );
+	if ( style & BreakLinesStyle )
+	  Layout.back()->addMultiCellWidget( l, row, row, 1, 2,
+					     Qt::AlignLeft | Qt::AlignVCenter );
+	else
+	  Layout.back()->addWidget( l, row, 1,
+				    Qt::AlignLeft | Qt::AlignVCenter );
+	OptWidgetDate *d = new OptWidgetDate( pp, Opt, this, parent, rs, OMutex );
+	if ( d->Editable ) {
+	  if ( FirstWidget == 0 )
+	    FirstWidget = d->W;
+	  LastWidget = d->W;
+	}
+	if ( style & BreakLinesStyle ) {
+	  row++;
+	  Layout.back()->addWidget( d->W, row, 1 );
+	}
+	else
+	  Layout.back()->addWidget( d->W, row, 2 );
+      }
+      // time:
+      else if ( (*pp).isTime() ) {
+	l = new QLabel( rs.c_str(), parent );
+	setLabelStyle( l, (*pp).style() );
+	if ( style & BreakLinesStyle )
+	  Layout.back()->addMultiCellWidget( l, row, row, 1, 2,
+					     Qt::AlignLeft | Qt::AlignVCenter );
+	else
+	  Layout.back()->addWidget( l, row, 1,
+				    Qt::AlignLeft | Qt::AlignVCenter );
+	OptWidgetTime *t = new OptWidgetTime( pp, Opt, this, parent, rs, OMutex );
+	if ( t->Editable ) {
+	  if ( FirstWidget == 0 )
+	    FirstWidget = t->W;
+	  LastWidget = t->W;
+	}
+	if ( style & BreakLinesStyle ) {
+	  row++;
+	  Layout.back()->addWidget( t->W, row, 1 );
+	}
+	else
+	  Layout.back()->addWidget( t->W, row, 2 );
+      }
       // label:
       else if ( (*pp).isLabel() ) {
 	OptWidgetLabel *l = new OptWidgetLabel( pp, Opt, this, parent, OMutex );
@@ -1418,6 +1464,240 @@ void OptWidgetBoolean::dontToggle( bool t )
   reset();
   if ( OMutex != 0 )
     OMutex->unlock();
+}
+
+
+OptWidgetDate::OptWidgetDate( Options::iterator op, Options *oo,
+			      OptWidget *ow, QWidget *parent,
+			      const string &request, QMutex *mutex )
+  : OptWidgetBase( op, 0, oo, ow, mutex ),
+    DE( 0 ),
+    LW( 0 ),
+    Year( 0 ),
+    Month( 0 ),
+    Day( 0 )
+{
+  if ( Editable ) {
+    Year = (*OP).year( 0 );
+    Month = (*OP).month( 0 );
+    Day = (*OP).day( 0 );
+    W = DE = new QDateEdit( QDate( Year, Month, Day ), parent );
+    OptWidget::setValueStyle( W, (*OP).style(), false, true );
+    DE->setAutoAdvance( true );
+    DE->setOrder( QDateEdit::YMD );
+    DE->setSeparator( "-" );
+    connect( DE, SIGNAL( valueChanged( const QDate& ) ),
+	     this, SLOT( valueChanged( const QDate& ) ) );
+  }
+  else {
+    LW = new QLabel( (*OP).text().c_str(), parent );
+    OptWidget::setValueStyle( LW, (*OP).style() );
+    //    LW->setBackgroundMode( QWidget::PaletteMid );
+    LW->setFrameStyle( QFrame::Panel | QFrame::Sunken );
+    LW->setLineWidth( 2 );
+    W = LW;
+  }
+}
+
+
+void OptWidgetDate::get( void )
+{
+  if ( Editable ) {
+    bool cn = OO->notifying();
+    OO->unsetNotify();
+    (*OP).setDate( DE->date().year(), DE->date().month(), DE->date().day() );
+    if ( (*OP).year( 0 ) != Year ||
+	 (*OP).month( 0 ) != Month ||
+	 (*OP).day( 0 ) != Day )
+      (*OP).addFlags( OW->changedFlag() );
+    Year = (*OP).year( 0 );
+    Month = (*OP).month( 0 );
+    Day = (*OP).day( 0 );
+    OO->setNotify( cn );
+  }
+}
+
+
+void OptWidgetDate::reset( void )
+{
+  InternChanged = true;
+  DE->setDate( QDate( (*OP).year(), (*OP).month(), (*OP).day() ) );
+  InternChanged = false;
+}
+
+
+void OptWidgetDate::resetDefault( void )
+{
+  if ( Editable ) {
+    InternChanged = true;
+    DE->setDate( QDate( (*OP).defaultYear(),
+			(*OP).defaultMonth(),
+			(*OP).defaultDay() ) );
+    InternChanged = false;
+  }
+}
+
+
+void OptWidgetDate::valueChanged( const QDate &date )
+{
+  if ( ContUpdate && Editable ) {
+    if ( OMutex != 0 && ! InternChanged )
+      OMutex->lock();
+    OW->DisableUpdate = true;
+    bool cn = OO->notifying();
+    OO->unsetNotify();
+    (*OP).setDate( date.year(), date.month(), date.day() );
+    if ( (*OP).year( 0 ) != Year ||
+	 (*OP).month( 0 ) != Month ||
+	 (*OP).day( 0 ) != Day )
+      (*OP).addFlags( OW->changedFlag() );
+    Year = (*OP).year( 0 );
+    Month = (*OP).month( 0 );
+    Day = (*OP).day( 0 );
+    if ( cn )
+      OO->notify();
+    (*OP).delFlags( OW->changedFlag() );
+    OO->setNotify( cn );
+    OW->DisableUpdate = false;
+    if ( OMutex != 0 && ! InternChanged )
+      OMutex->unlock();
+  }
+  string s = "";
+  if ( DE != 0 )
+    s = DE->date().toString( Qt::ISODate ).latin1();
+  else
+    s = LW->text().latin1();
+  for ( unsigned int k=0; k<Widgets.size(); k++ ) {
+    Widgets[k]->activateOption( (*Widgets[k]->OP).testActivation( s ) );
+  }
+}
+
+
+void OptWidgetDate::initActivation( void )
+{
+  string s = "";
+  if ( DE != 0 )
+    s = DE->date().toString( Qt::ISODate ).latin1();
+  else
+    s = LW->text().latin1();
+  Widgets.back()->activateOption( (*Widgets.back()->OP).testActivation( s ) );
+}
+
+
+OptWidgetTime::OptWidgetTime( Options::iterator op, Options *oo,
+			      OptWidget *ow, QWidget *parent,
+			      const string &request, QMutex *mutex )
+  : OptWidgetBase( op, 0, oo, ow, mutex ),
+    TE( 0 ),
+    LW( 0 ),
+    Hour( 0 ),
+    Minutes( 0 ),
+    Seconds( 0 )
+{
+  if ( Editable ) {
+    Hour = (*OP).hour( 0 );
+    Minutes = (*OP).minutes( 0 );
+    Seconds = (*OP).seconds( 0 );
+    W = TE = new QTimeEdit( QTime( Hour, Minutes, Seconds ), parent );
+    OptWidget::setValueStyle( W, (*OP).style(), false, true );
+    TE->setAutoAdvance( true );
+    TE->setDisplay( QTimeEdit::Hours | QTimeEdit::Minutes | QTimeEdit::Seconds );
+    TE->setSeparator( ":" );
+    connect( TE, SIGNAL( valueChanged( const QTime& ) ),
+	     this, SLOT( valueChanged( const QTime& ) ) );
+  }
+  else {
+    LW = new QLabel( (*OP).text().c_str(), parent );
+    OptWidget::setValueStyle( LW, (*OP).style() );
+    //    LW->setBackgroundMode( QWidget::PaletteMid );
+    LW->setFrameStyle( QFrame::Panel | QFrame::Sunken );
+    LW->setLineWidth( 2 );
+    W = LW;
+  }
+}
+
+
+void OptWidgetTime::get( void )
+{
+  if ( Editable ) {
+    bool cn = OO->notifying();
+    OO->unsetNotify();
+    (*OP).setTime( TE->time().hour(), TE->time().minute(), TE->time().second() );
+    if ( (*OP).hour( 0 ) != Hour ||
+	 (*OP).minutes( 0 ) != Minutes ||
+	 (*OP).seconds( 0 ) != Seconds )
+      (*OP).addFlags( OW->changedFlag() );
+    Hour = (*OP).hour( 0 );
+    Minutes = (*OP).minutes( 0 );
+    Seconds = (*OP).seconds( 0 );
+    OO->setNotify( cn );
+  }
+}
+
+
+void OptWidgetTime::reset( void )
+{
+  InternChanged = true;
+  TE->setTime( QTime( (*OP).hour(), (*OP).minutes(), (*OP).seconds() ) );
+  InternChanged = false;
+}
+
+
+void OptWidgetTime::resetDefault( void )
+{
+  if ( Editable ) {
+    InternChanged = true;
+    TE->setTime( QTime( (*OP).defaultHour(),
+			(*OP).defaultMinutes(),
+			(*OP).defaultSeconds() ) );
+    InternChanged = false;
+  }
+}
+
+
+void OptWidgetTime::valueChanged( const QTime &time )
+{
+  if ( ContUpdate && Editable ) {
+    if ( OMutex != 0 && ! InternChanged )
+      OMutex->lock();
+    OW->DisableUpdate = true;
+    bool cn = OO->notifying();
+    OO->unsetNotify();
+    (*OP).setTime( time.hour(), time.minute(), time.second() );
+    if ( (*OP).hour( 0 ) != Hour ||
+	 (*OP).minutes( 0 ) != Minutes ||
+	 (*OP).seconds( 0 ) != Seconds )
+      (*OP).addFlags( OW->changedFlag() );
+    Hour = (*OP).hour( 0 );
+    Minutes = (*OP).minutes( 0 );
+    Seconds = (*OP).seconds( 0 );
+    if ( cn )
+      OO->notify();
+    (*OP).delFlags( OW->changedFlag() );
+    OO->setNotify( cn );
+    OW->DisableUpdate = false;
+    if ( OMutex != 0 && ! InternChanged )
+      OMutex->unlock();
+  }
+  string s = "";
+  if ( TE != 0 )
+    s = TE->time().toString( Qt::ISODate ).latin1();
+  else
+    s = LW->text().latin1();
+  for ( unsigned int k=0; k<Widgets.size(); k++ ) {
+    Widgets[k]->activateOption( (*Widgets[k]->OP).testActivation( s ) );
+  }
+}
+
+
+void OptWidgetTime::initActivation( void )
+{
+  string s = "";
+  if ( TE != 0 )
+    s = TE->time().toString( Qt::ISODate ).latin1();
+  else
+    s = LW->text().latin1();
+  Widgets.back()->activateOption( (*Widgets.back()->OP).testActivation( s ) );
 }
 
 

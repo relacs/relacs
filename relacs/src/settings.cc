@@ -67,8 +67,6 @@ Settings::Settings( RELACSWidget* rw )
   addBoolean( "saverelacslog", "Save log of RELACS to session", true );
   addBoolean( "saveattenuators", "Save calibration files for attenuators to session", true );
   addLabel( "Date/time formats" );
-  addText( "dateformat", "Format for date", "%d.%m.%02y" );
-  addText( "timeformat", "Format for time", "%H:%02M" );
   addText( "elapsedformat", "Format for elapsed time", "%02H:%02M" );
   addText( "sessiontimeformat", "Format for session runtime", "%Hh%02Mmin%02Ssec" );
   addText( "reprotimeformat", "Format for repro runtime", "%Mmin%02Ssec" );

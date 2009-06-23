@@ -39,6 +39,7 @@ namespace relacs {
 \author Jan Benda
 \version 1.0
 \brief A Widget for modifying Options.
+\bug OptWidgetDate input widget is crashing. Error in QDateEdit?
 
 This widget is an input form for Options that can be used
 to interactively edit the values of Options.
@@ -434,6 +435,8 @@ private:
   friend class OptWidgetMultiText;
   friend class OptWidgetNumber;
   friend class OptWidgetBoolean;
+  friend class OptWidgetDate;
+  friend class OptWidgetTime;
   friend class OptWidgetLabel;
   friend class OptWidgetSeparator;
 
