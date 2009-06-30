@@ -50,7 +50,7 @@ ConfigureClasses::ConfigureClasses( const string &file )
     Configs()
 {
   ConfigFile.resize( 1 );
-  setConfigFile( file );
+  addConfigFile( file );
   ConfigClass::setConfigureClasses( this );
 }
 
@@ -95,10 +95,11 @@ string ConfigureClasses::configFile( int group, int level ) const
 void ConfigureClasses::setConfigFile( const string &file, int group, int level )
 {
   if ( group < 0 || group >= (int)ConfigFile.size() ||
-       level < 0 || level >= (int)ConfigFile[group].size() )
+       level < 0 || level >= (int)ConfigFile[group].size() ||
+       file.empty() )
     return;
-  else if ( ! file.empty() )
-    ConfigFile[group][level] = file;
+
+  ConfigFile[group][level] = file;
 }
 
 
@@ -121,8 +122,8 @@ void ConfigureClasses::addConfigFile( const string &file, int group )
   if ( group < 0 || group >= (int)ConfigFile.size() ||
        file.empty() )
     return;
-  else
-    ConfigFile[group].push_back( file );
+
+  ConfigFile[group].push_back( file );
 }
 
 

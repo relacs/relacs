@@ -140,7 +140,7 @@ public:
 	\a file is an empty string, this function has no effect.
 	The configuration group must have been created before
 	via the constructor or addGroup().
-	The level must have been created begore by addConfigFile().
+	The level must have been created before by addConfigFile().
         \param[in] file the name (full path) of the configuration file.
         \param[in] group the index of the configuration group. 
         \param[in] level the level index. 
