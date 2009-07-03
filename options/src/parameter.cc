@@ -1279,7 +1279,7 @@ Parameter &Parameter::addNumber( double number, double error,
 
   // unit:
   if ( InternUnit.empty() && OutUnit.empty() ) {
-    if ( number != MAXDOUBLE && ! isBoolean() )
+    if ( number != MAXDOUBLE && ! isBoolean() && ! isText() )
       setUnit( unit );
   }
   else if ( number != MAXDOUBLE ) {

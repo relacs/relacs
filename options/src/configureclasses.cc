@@ -30,15 +30,20 @@ namespace relacs {
 
 ConfigureClasses::ConfigureClasses( void )
   : ConfigFile(),
-    Configs()
+    Configs(),
+    Detailed( false ),
+    FirstOnly( false )
 {
+  ConfigFile.resize( 1 );
   ConfigClass::setConfigureClasses( this );
 }
 
 
 ConfigureClasses::ConfigureClasses( int groups )
   : ConfigFile(),
-    Configs()
+    Configs(),
+    Detailed( false ),
+    FirstOnly( false )
 {
   ConfigFile.resize( groups );
   ConfigClass::setConfigureClasses( this );
@@ -47,7 +52,9 @@ ConfigureClasses::ConfigureClasses( int groups )
 
 ConfigureClasses::ConfigureClasses( const string &file )
   : ConfigFile(),
-    Configs()
+    Configs(),
+    Detailed( false ),
+    FirstOnly( false )
 {
   ConfigFile.resize( 1 );
   addConfigFile( file );
@@ -367,6 +374,13 @@ void ConfigureClasses::eraseConfigClass( ConfigClass *cfg )
       break;
     }
   }
+}
+
+
+void ConfigureClasses::setSaveStyle( bool detailed, bool firstonly )
+{
+  Detailed = detailed;
+  FirstOnly = firstonly;
 }
 
 

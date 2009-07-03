@@ -190,7 +190,7 @@ public:
   virtual void readConfig( StrQueue &sq );
     /*! Save the configuration settings to \a str.
         The default implementation simply calls 
-	Options::save( str, "  ", -1, configSelectMask() )
+	Options::save( str, "  ", -1, configSelectMask(), CFG->Detailed, CFG->FirstOnly )
 	to directly save the selected Options to \a str.
 	This function is called from the ConfigureClasses::save() functions
 	only if configMode() has the Save flag set.

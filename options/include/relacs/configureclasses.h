@@ -79,11 +79,13 @@ class ConfigureClasses
 
 public:
 
-    /*! Constructs an empty ConfigureClasses (no configuration files)
+    /*! Constructs a ConfigureClasses with a single but empty
+        (no configuration files) group of configuration files
         and makes itself and the list of configureable classes
 	known to the ConfigClass (ConfigClass::setConfigureClasses()
 	and ConfigClass::setConfigClassList() ).
-        You need to create a configuration group by calling addGroup(). */
+	You need to add configuration files to the group by calling addConfigFile().
+        You can add further configuration groups by calling addGroup(). */
   ConfigureClasses( void );
     /*! Constructs an empty ConfigureClasses (no configuration files)
         that is set up for \a groups of configuration files
@@ -277,7 +279,7 @@ public:
 	in their ConfigClass::configMode() set.
         \param[in] group the configuration group index.
         \param[in] file the name (full path) of the file.
-        \sa read(), configure() */
+        \sa setSaveStyle(), read(), configure() */
   void save( int group, const string &file );
     /*! Save the configuration of all ConfigClass instances of the 
         configuration group with index \a group to the
@@ -288,7 +290,7 @@ public:
 	in their ConfigClass::configMode() set.
         \param[in] group the configuration group index.
         \param[in] level the level of the requested configuration file.
-        \sa read(), configure() */
+        \sa setSaveStyle(), read(), configure() */
   void save( int group, int level );
     /*! Save the configuration of all ConfigClass instances of the 
         configuration group with index \a group to the 
@@ -298,7 +300,7 @@ public:
 	that have the ConfigClass::Save flag 
 	in their ConfigClass::configMode() set.
         \param[in] group the configuration group index.
-        \sa read(), configure() */
+        \sa setSaveStyle(), read(), configure() */
   void save( int group );
     /*! Save the configuration of all ConfigClass instances to the 
 	respective top-level configuration file of each configuration group
@@ -306,8 +308,15 @@ public:
 	Only the settings of those ConfigClass instances are saved
 	that have the ConfigClass::Save flag 
 	in their ConfigClass::configMode() set.
-        \sa read(), configure() */
+        \sa setSaveStyle(), read(), configure() */
   void save( void );
+
+    /*! Set the way how the configuration is saved for the default implementation
+        of COnfigClass::saveConfig().
+        \param[in] detailed if \c true the identifier together with the request string are saved
+        \param[in] firstonly if \c true only the first value of each option is saved
+        \sa save() */
+  void setSaveStyle( bool detailed, bool firstonly );
 
     /*! Write the names of all configuration files to \a str.
         The file names of each configuration group are written
@@ -339,6 +348,11 @@ private:
         that want to be configured. */
   typedef vector<ConfigClass*> ConfigClassList;
   ConfigClassList Configs;
+
+    /*! Save identifier string together with request string to configuration file. */
+  bool Detailed;
+    /*! Save only the first value of each configuration option. */
+  bool FirstOnly;
 
 };
 
