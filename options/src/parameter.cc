@@ -1925,7 +1925,15 @@ Parameter &Parameter::setDate( const struct tm &date )
 
 Parameter &Parameter::setDate( const time_t &time )
 {
-  setDate( *localtime( &time ) );
+  setDate( *::localtime( &time ) );
+
+  return *this;
+}
+
+
+Parameter &Parameter::setCurrentDate( void )
+{
+  setDate( ::time( 0 ) );
 
   return *this;
 }
@@ -2213,7 +2221,15 @@ Parameter &Parameter::setTime( const struct tm &time )
 
 Parameter &Parameter::setTime( const time_t &time )
 {
-  setTime( *localtime( &time ) );
+  setTime( *::localtime( &time ) );
+
+  return *this;
+}
+
+
+Parameter &Parameter::setCurrentTime( void )
+{
+  setTime( ::time( 0 ) );
 
   return *this;
 }

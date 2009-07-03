@@ -1920,6 +1920,32 @@ Parameter &Options::setDate( const string &ident, const time_t &time )
 }
 
 
+Parameter &Options::setCurrentDate( const string &ident )
+{
+  iterator pp = find( ident );
+  // set value:
+  if ( pp != end() ) {
+    (*pp).setCurrentDate();
+    Warning += (*pp).warning();
+  }
+#ifndef NDEBUG
+  if ( ! Warning.empty() ) {
+    // error?
+    cerr << "!warning in Options::setCurrentDate( " << ident << " ) -> " << Warning << endl;
+  }
+#endif
+
+  // notify the change:
+  if ( CallNotify && ! Notified ) {
+    Notified = true;
+    notify();
+    Notified = false;
+  }
+
+  return *pp;
+}
+
+
 const Parameter &Options::defaultDate( const string &ident, int index,
 				       int &year, int &month, int &day ) const
 {
@@ -2112,6 +2138,32 @@ Parameter &Options::setTime( const string &ident, const time_t &time )
   if ( ! Warning.empty() ) {
     // error?
     cerr << "!warning in Options::setTime( " << ident << " ) -> " << Warning << endl;
+  }
+#endif
+
+  // notify the change:
+  if ( CallNotify && ! Notified ) {
+    Notified = true;
+    notify();
+    Notified = false;
+  }
+
+  return *pp;
+}
+
+
+Parameter &Options::setCurrentTime( const string &ident )
+{
+  iterator pp = find( ident );
+  // set value:
+  if ( pp != end() ) {
+    (*pp).setCurrentTime();
+    Warning += (*pp).warning();
+  }
+#ifndef NDEBUG
+  if ( ! Warning.empty() ) {
+    // error?
+    cerr << "!warning in Options::setCurrentTime( " << ident << " ) -> " << Warning << endl;
   }
 #endif
 

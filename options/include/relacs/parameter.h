@@ -671,6 +671,10 @@ public:
         If the value of the parameter is changing 
 	then the changedFlag() is set. */
   Parameter &setDate( const time_t &time );
+    /*! Set date of date parameter to the current date.
+        If the value of the parameter is changing 
+	then the changedFlag() is set. */
+  Parameter &setCurrentDate( void );
     /*! \return the \a index-th default year. 
         \sa defaultMonth(), defaultDay(), defaultText() */ 
   int defaultYear( int index=0 ) const;
@@ -733,6 +737,10 @@ public:
         If the value of the parameter is changing 
 	then the changedFlag() is set. */
   Parameter &setTime( const time_t &time );
+    /*! Set time of time parameter to the current time.
+        If the value of the parameter is changing 
+	then the changedFlag() is set. */
+  Parameter &setCurrentTime( void );
     /*! \return the \a index-th default hour. 
         \sa defaultMinutes(), defaultSeconds(), defaultText() */ 
   int defaultHour( int index=0 ) const;

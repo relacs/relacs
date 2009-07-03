@@ -896,26 +896,31 @@ public:
 	\param[in] month the new value for the month
 	\param[in] day the new value for the day
 	\return a reference to the option.
-        \sa setDefaultDate(), addDate(), insertDate(), date() */
+        \sa setCurrentDate(), setDefaultDate(), addDate(), insertDate(), date() */
   Parameter &setDate( const string &ident, int year, int month, int day );
     /*! Set the value of an existing date option.
 	\param[in] ident the identifier string of the option
 	\param[in] date the new value for the date
 	\return a reference to the option.
-        \sa setDefaultDate(), addDate(), insertDate(), date() */
+        \sa setCurrentDate(), setDefaultDate(), addDate(), insertDate(), date() */
   Parameter &setDate( const string &ident, const string &date );
     /*! Set the value of an existing date option.
 	\param[in] ident the identifier string of the option
 	\param[in] date the new value for the date
 	\return a reference to the option.
-        \sa setDefaultDate(), addDate(), insertDate(), date() */
+        \sa setCurrentDate(), setDefaultDate(), addDate(), insertDate(), date() */
   Parameter &setDate( const string &ident, const struct tm &date );
     /*! Set the value of an existing date option.
 	\param[in] ident the identifier string of the option
 	\param[in] time the new value for the date
 	\return a reference to the option.
-        \sa setDefaultDate(), addDate(), insertDate(), date() */
+        \sa setCurrentDate(), setDefaultDate(), addDate(), insertDate(), date() */
   Parameter &setDate( const string &ident, const time_t &time );
+    /*! Set the value of an existing date option to the current date.
+	\param[in] ident the identifier string of the option
+	\return a reference to the option.
+        \sa setDate(), setDefaultDate(), addDate(), insertDate(), date() */
+  Parameter &setCurrentDate( const string &ident );
     /*! Get the default date from a date option.
 	\param[in] ident the identifier string of the option
 	\param[in] index the index of the default date
@@ -1042,27 +1047,32 @@ public:
 	\param[in] minutes the new value for the minutes
 	\param[in] seconds the new value for the seconds
 	\return a reference to the option.
-        \sa setDefaultTime(), addTime(), insertTime(), time() */
+        \sa setCurrentTime(), setDefaultTime(), addTime(), insertTime(), time() */
   Parameter &setTime( const string &ident,
 		      int hour, int minutes, int seconds );
     /*! Set the value of an existing time option.
 	\param[in] ident the identifier string of the option
 	\param[in] time the new value for the time
 	\return a reference to the option.
-        \sa setDefaultTime(), addTime(), insertTime(), time() */
+        \sa setCurrentTime(), setDefaultTime(), addTime(), insertTime(), time() */
   Parameter &setTime( const string &ident, const string &time );
     /*! Set the value of an existing time option.
 	\param[in] ident the identifier string of the option
 	\param[in] time the new value for the time
 	\return a reference to the option.
-        \sa setDefaultTime(), addTime(), insertTime(), time() */
+        \sa setCurrentTime(), setDefaultTime(), addTime(), insertTime(), time() */
   Parameter &setTime( const string &ident, const struct tm &time );
     /*! Set the value of an existing time option.
 	\param[in] ident the identifier string of the option
 	\param[in] time the new value for the time
 	\return a reference to the option.
-        \sa setDefaultTime(), addTime(), insertTime(), time() */
+        \sa setCurrentTime(), setDefaultTime(), addTime(), insertTime(), time() */
   Parameter &setTime( const string &ident, const time_t &time );
+    /*! Set the value of an existing time option to the current time.
+	\param[in] ident the identifier string of the option
+	\return a reference to the option.
+        \sa setTime(), setDefaultTime(), addTime(), insertTime(), time() */
+  Parameter &setCurrentTime( const string &ident );
     /*! Get the default time from a time option.
 	\param[in] ident the identifier string of the option
 	\param[in] index the index of the default time
