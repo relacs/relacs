@@ -164,17 +164,13 @@ void ConfigureClasses::clearConfigFiles( void )
 }
 
 
-void ConfigureClasses::read( int group, int level )
+void ConfigureClasses::read( int group, const string &file )
 {
-  if ( group < 0 || group >= (int)ConfigFile.size() ||
-       level < 0 || level >= (int)ConfigFile[group].size() )
-    return;
-
   // open the requested configuration file:
-  ifstream sf( ConfigFile[group][level].c_str() );
+  ifstream sf( file.c_str() );
   if ( ! sf.good() ) {
     cerr << currentTime()
-	 << " failed to open configuration file " << ConfigFile[group][level] << endl;
+	 << " failed to open configuration file " << file << endl;
     return;
   }
 
@@ -184,12 +180,12 @@ void ConfigureClasses::read( int group, int level )
 	  getline( sf, line ).good() );
   if ( ! sf.good() ) {
     cerr << currentTime()
-	 << " cannot read configuration from " << ConfigFile[group][level] << endl;
+	 << " cannot read configuration from " << file << endl;
     return;
   }
 
   cerr << currentTime()
-       << " read configuration from " << ConfigFile[group][level] << endl;
+       << " read configuration from " << file << endl;
 
   // read in configuration sections:
   while ( sf.good() ) {
@@ -210,6 +206,16 @@ void ConfigureClasses::read( int group, int level )
   }
 
   sf.close();
+}
+
+
+void ConfigureClasses::read( int group, int level )
+{
+  if ( group < 0 || group >= (int)ConfigFile.size() ||
+       level < 0 || level >= (int)ConfigFile[group].size() )
+    return;
+
+  read( group, ConfigFile[group][level].c_str() );
 }
 
 

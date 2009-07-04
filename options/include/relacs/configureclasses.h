@@ -200,6 +200,13 @@ public:
 	addConfigFile(), addConfigFiles() */
   void clearConfigFiles( void );
 
+    /*! Read in the configuration of the configuration group with
+        index \a group from file \a file and pass each section to
+	the corresponding ConfigClass instances via ConfigClass::readConfig().
+        \param[in] group the configuration group index.
+        \param[in] file the file from which the configuration is read in.
+        \sa read( int, int), save(), configure() */
+  void read( int group, const string &file );
     /*! Read in the configuration file of the configuration group with
         index \a group and the level \a level and pass each section to
 	the corresponding ConfigClass instances via ConfigClass::readConfig().
