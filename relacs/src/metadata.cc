@@ -32,12 +32,14 @@
 namespace relacs {
 
 
-MetaDataSection::MetaDataSection( const string &name, int group, bool tab,
+MetaDataSection::MetaDataSection( const string &name, const string &prefix,
+				  int group, bool tab,
 				  MetaData *md, RELACSWidget *rw )
   : ConfigClass( name, group, Save ),
     MD( md ),
     RW( rw ),
-    Tab( tab )
+    Tab( tab ),
+    Prefix( prefix )
 {
 }
 
@@ -89,8 +91,11 @@ void MetaDataSection::save( ofstream &str )
 ostream &MetaDataSection::saveXML( ostream &str, int level, int indent ) const
 {
   string indstr1( level*indent, ' ' );
+  string prefix = Prefix;
+  if ( ! prefix.empty() )
+    prefix += '.';
   str << indstr1 << "<section name=\"" << configIdent() << "\">\n";
-  Options::saveXML( str, MD->saveFlags(), level+1, indent );
+  Options::saveXML( str, MD->saveFlags(), level+1, prefix, indent );
   str << indstr1 << "</section>\n";
   return str;
 }
@@ -108,10 +113,22 @@ void MetaDataSection::setOwnTab( bool tab )
 }
 
 
+string MetaDataSection::prefix( void ) const
+{
+  return Prefix;
+}
+
+  
+void MetaDataSection::setPrefix( const string &prefix )
+{
+  Prefix = prefix;
+}
+
+
 MetaDataRecordingSection::MetaDataRecordingSection( bool tab,
 						    MetaData *md,
 						    RELACSWidget *rw )
-  : MetaDataSection( "Recording", RELACSPlugin::Plugins, tab, md, rw )
+  : MetaDataSection( "Recording", "Rec", RELACSPlugin::Plugins, tab, md, rw )
 {
   MD->addSaveFlags( standardFlag() );
   clear();
@@ -182,9 +199,10 @@ MetaData::~MetaData( void )
 }
 
 
-void MetaData::add( const string &name, bool tab )
+void MetaData::add( const string &name, const string &prefix, bool tab )
 {
-  MetaDataSections.push_back( new MetaDataSection( name, RELACSPlugin::Plugins, tab,
+  MetaDataSections.push_back( new MetaDataSection( name, prefix,
+						   RELACSPlugin::Plugins, tab,
 						   this, RW ) );
 }
 
@@ -206,14 +224,16 @@ void MetaData::readConfig( StrQueue &sq )
     string num = Str( k );
     string name = text( "section" + num );
     if ( ! name.empty() ) {
+      string prefix = text( "prefix" + num );
       int group = ( text( "config" + num ) == "core" ? RELACSPlugin::Core : RELACSPlugin::Plugins );
       bool tab = boolean( "tab" + num );
       if ( name == "Recording" ) {
 	MetaDataSections[0]->setConfigGroup( group );
 	MetaDataSections[0]->setOwnTab( tab );
+	MetaDataSections[0]->setPrefix( prefix );
       }
       else
-	MetaDataSections.push_back( new MetaDataSection( name, group, tab, this, RW ) );
+	MetaDataSections.push_back( new MetaDataSection( name, prefix, group, tab, this, RW ) );
       max = k+10;
     }
   }

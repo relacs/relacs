@@ -2869,11 +2869,12 @@ ostream &operator<< ( ostream &str, const Options &o )
 }
 
 
-ostream &Options::saveXML( ostream &str, int selectmask, int level, int indent ) const
+ostream &Options::saveXML( ostream &str, int selectmask, int level,
+			   const string &prefix, int indent ) const
 {
   for ( const_iterator pp = begin(); pp != end(); ++pp ) {
     if ( (*pp).flags( selectmask ) ) {
-      (*pp).saveXML( str, level, indent );
+      (*pp).saveXML( str, level, prefix, indent );
     }
   }
   return str;

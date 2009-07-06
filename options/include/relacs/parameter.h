@@ -863,10 +863,11 @@ public:
     /*! Write parameter in XML format to output stream.
         \param[in] str the output stream
         \param[in] level the level of indentation
+        \param[in] prefix a prefix prepended to the Paramter's ident()
         \param[in] indent the indentation depth, 
                    i.e. number of white space characters per level
         \return the output stream \a str */
-  ostream &saveXML( ostream &str, int level=0, int indent=2 ) const;
+  ostream &saveXML( ostream &str, int level=0, const string &prefix="", int indent=2 ) const;
 
     /*! Load parameter from string \a s.
         The warning message is set if \a s is invalid.

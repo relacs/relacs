@@ -106,7 +106,7 @@ void Session::config( void )
 {
   // additional meta data properties:
   if ( ! metaData().exist( "Cell" ) )
-    metaData().add( "Cell" );
+    metaData().add( "Cell", "Cell" );
 
   lockMetaData();
   Options &mo = metaData( "Cell" );
