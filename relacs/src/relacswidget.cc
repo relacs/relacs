@@ -102,6 +102,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   printlog( "this is RELACS, version " + string( RELACSVERSION ) );
 
   // setup configuration files:
+  CFG.clearGroups();
   CFG.addGroup( coreconfigfiles );
   CFG.addGroup( pluginconfigfiles );
   DocPath = docpath;
