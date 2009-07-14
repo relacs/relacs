@@ -54,7 +54,7 @@ public:
  private:
 
     /*! Device type id for Temperature devices. */
-  static const int Type = 6;
+  static const int Type = 7;
 
 };
 

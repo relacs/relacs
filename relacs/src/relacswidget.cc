@@ -159,6 +159,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   DV = new Devices();
   AID = new AIDevices();
   AOD = new AODevices();
+  DIOD = new DIODevices();
 
   // attenuators:
   ATD = new AttDevices();

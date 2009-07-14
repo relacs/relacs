@@ -37,6 +37,7 @@ pkginclude_HEADERS = \
     ../include/relacs/attenuator.h \
     ../include/relacs/daqerror.h \
     ../include/relacs/device.h \
+    ../include/relacs/digitalio.h \
     ../include/relacs/indata.h \
     ../include/relacs/inlist.h \
     ../include/relacs/manipulator.h \
@@ -53,6 +54,7 @@ librelacsdaq_la_SOURCES = \
     attenuator.cc \
     daqerror.cc \
     device.cc \
+    digitalio.cc \
     indata.cc \
     inlist.cc \
     manipulator.cc \

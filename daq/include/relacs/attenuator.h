@@ -180,7 +180,7 @@ public:
  private:
 
     /*! Device type id for all Attenuator devices. */
-  static const int Type = 3;
+  static const int Type = 4;
 
 };
 

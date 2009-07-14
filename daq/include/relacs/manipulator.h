@@ -127,7 +127,7 @@ public:
  private:
 
     /*! Device type id for all Manipulator devices. */
-  static const int Type = 5;
+  static const int Type = 6;
 
 };
 

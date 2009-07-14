@@ -117,6 +117,7 @@ class Model;
 class Device;
 class AllDevices;
 class Devices;
+class DigitalIO;
 class Attenuate;
 class AttInterfaces;
 class RELACSWidget;
@@ -134,18 +135,20 @@ public:
   static const int AnalogInputId = 2;
     /*! The identifier for plugins derived from the AnalogOutput-class. */
   static const int AnalogOutputId = 4;
+    /*! The identifier for plugins derived from the AnalogOutput-class. */
+  static const int DigitalIOId = 8;
     /*! The identifier for plugins derived from the Attenuator-class. */
-  static const int AttenuatorId = 8;
+  static const int AttenuatorId = 16;
     /*! The identifier for plugins derived from the Attenuate-class. */
-  static const int AttenuateId = 16;
+  static const int AttenuateId = 32;
     /*! The identifier for plugins derived from the Model-class. */
-  static const int ModelId = 32;
+  static const int ModelId = 64;
     /*! The identifier for plugins derived from the Filter-class. */
-  static const int FilterId = 64;
+  static const int FilterId = 128;
     /*! The identifier for plugins derived from the RePro-class. */
-  static const int ReProId = 128;
+  static const int ReProId = 256;
     /*! The identifier for plugins derived from the Control-class. */
-  static const int ControlId = 256;
+  static const int ControlId = 512;
 
     /*! Config-File group for RELACS core classes. */
   static const int Core = 0;
@@ -497,6 +500,9 @@ protected:
 	the device menu. */
   void updateDeviceMenu( void );
 
+    /*! Return the digital I/O device with identifier \a ident. */
+  DigitalIO *digitalIO( const string &ident );
+
     /*! Return the attenuator for output device
         \a device at channel \a channel. */
   Attenuate *attenuator( const string &device, int channel );
@@ -690,6 +696,10 @@ addPlugin( aiClass, RELACSPlugin::AnalogInputId )
       derived from the AnalogOutput-class available as a plugin. */
 #define addAnalogOutput( aoClass ) \
 addPlugin( aoClass, RELACSPlugin::AnalogOutputId )
+  /*! A macro to make the class \a dioClass
+      derived from the DigitalIO-class available as a plugin. */
+#define addDigitalIO( dioClass ) \
+addPlugin( dioClass, RELACSPlugin::DigitalIOId )
   /*! A macro to make the class \a attenuatorClass
       derived from the Attenuator-class available as a plugin. */
 #define addAttenuator( attenuatorClass ) \

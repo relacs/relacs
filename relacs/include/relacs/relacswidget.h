@@ -359,6 +359,7 @@ private:
   Devices *DV;
   AIDevices *AID;
   AODevices *AOD;
+  DIODevices *DIOD;
   AttDevices *ATD;
   AttInterfaces *ATI;
 

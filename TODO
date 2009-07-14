@@ -4,16 +4,18 @@ SignalTime: finish this update (RELACSPlugin::signalTime()
 - remove from InData and EventData?
 - update Acquire::readSignal()
 
+Analog Input/Output:
+- WriteDataThread should not be started if the whole stimulus is already transfered.
+- check and improve writeReset and writeZero interfaces and implementations.
+- directWrite implementation should take care about synchronization as well!
+  ComediAnalogOutput should use instruction lists for this.
+
 Dynamic clamp:
 - write back real time loop frequency to InList and OutList samplerate.
 - rewrite analog input part of the dynamic clamp loop in dynclampmodul
   similar to the analog output part
 - shouldn't it be better if the model would get the parameter first,
   then computes, and then analog output takes place?
-- WriteDataThread should not be started if the whole stimulus is already transfered.
-- check and improve writeReset and writeZero interfaces and implementations.
-- directWrite implementation should take care about synchronization as well!
-  ComediAnalogOutput should use instruction lists for this.
 
 Save files:
 - check on hardware and with short stimuli!
@@ -32,6 +34,7 @@ Thread safety:
   update() calls postEvent() !
 - (Multi)Plot::draw() can be called from within the locks!
 - what is qApp->syncX and flushX all about?
+  It is removed from Qt4!
   From Qt interest archive:
   - bitblt + flushX
   - In X, obviously the flush makes sure all request go out 
@@ -41,8 +44,11 @@ Thread safety:
     the application freezes.
 
 Metadata:
+- Devices should get and use Options for their settings
+- OutData should get and use Options for stimulus metadata
 - stimulus section needs a name, a file (if available) and properties
-- Parameter::label should get a level that is used to make sections in the XML file
+- A new metadatawriter class instead of saveXML functions
+- Parameter::label should get a level that is used to make sections in the XML file ?
 
 Acquisition interface:
 - improve the readSignal function in RELACSWidget::write()

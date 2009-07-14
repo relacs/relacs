@@ -581,6 +581,12 @@ void RELACSPlugin::updateDeviceMenu( void )
 }
 
 
+DigitalIO *RELACSPlugin::digitalIO( const string &ident )
+{
+  return RW->DIOD == 0 ? 0 : RW->DIOD->device( ident );
+}
+
+
 Attenuate *RELACSPlugin::attenuator( const string &device, int channel )
 {
   return RW->ATI == 0 ? 0 : RW->ATI->attenuate( device, channel );

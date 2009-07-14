@@ -1,6 +1,6 @@
 /*
   relacsdevices.h
-  
+  Implementations of the DeviceLists
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
@@ -26,11 +26,17 @@
 #include <relacs/device.h>
 #include <relacs/analoginput.h>
 #include <relacs/analogoutput.h>
+#include <relacs/digitalio.h>
 #include <relacs/attenuator.h>
 #include <relacs/attenuate.h>
 
 namespace relacs {
 
+
+/*!
+\class Devices
+\brief A container for all devices
+*/
 
 class AllDevices : public DeviceList< Device, 0 >
 {
@@ -53,6 +59,11 @@ public:
 };
 
 
+/*!
+\class Devices
+\brief A container for miscellaneous devices
+*/
+
 class Devices : public DeviceList< Device, RELACSPlugin::DeviceId >
 {
 public:
@@ -61,6 +72,11 @@ public:
 };
 
 
+/*!
+\class AIDevices
+\brief A container for analog input devices
+*/
+
 class AIDevices : public DeviceList< AnalogInput, RELACSPlugin::AnalogInputId >
 {
 public:
@@ -68,6 +84,11 @@ public:
     : DeviceList< AnalogInput, RELACSPlugin::AnalogInputId >( "Analog Input Device", "Analog Input Devices" ) {};
 };
 
+
+/*!
+\class AODevices
+\brief A container for analog output devices
+*/
 
 class AODevices : public DeviceList< AnalogOutput, RELACSPlugin::AnalogOutputId >
 {
@@ -83,6 +104,24 @@ protected:
 };
 
 
+/*!
+\class DIODevices
+\brief A container for digital I/O devices
+*/
+
+class DIODevices : public DeviceList< DigitalIO, RELACSPlugin::DigitalIOId >
+{
+public:
+  DIODevices( void )
+    : DeviceList< DigitalIO, RELACSPlugin::DigitalIOId >( "Digital I/O Device", "Digital I/O Devices" ) {};
+};
+
+
+/*!
+\class AttDevices
+\brief A container for attenuator devices
+*/
+
 class AttDevices : public DeviceList< Attenuator, RELACSPlugin::AttenuatorId >
 {
 public:
@@ -94,6 +133,11 @@ protected:
     { return 0; };
 };
 
+
+/*!
+\class AttInterfaces
+\brief A container for attenuator interfaces
+*/
 
 class AttInterfaces : public DeviceList< Attenuate, RELACSPlugin::AttenuateId >
 {
