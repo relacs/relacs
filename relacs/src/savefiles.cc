@@ -432,8 +432,10 @@ void SaveFiles::saveStimulus( void )
     return;
 
   // no stimulus yet:
-  if ( SignalTime < 0.0 )
+  if ( SignalTime < 0.0 ) {
+    StimulusData = false;
     return;
+  }
     
   // stimulus indices file:
   if ( SF != 0 && saving() && writing() ) {

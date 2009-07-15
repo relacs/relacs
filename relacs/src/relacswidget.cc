@@ -770,7 +770,10 @@ void RELACSWidget::run( void )
 
   do {
     int ei = updatetime.elapsed();
-    ThreadSleepWait.wait( ui > ei ? ui - ei : 1 );
+    int di = ui - ei;
+    if ( di < 2 )
+      di = 2;
+    ThreadSleepWait.wait( di );
     updatetime.restart();
     updateData();
     processData();
