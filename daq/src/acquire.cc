@@ -1837,6 +1837,7 @@ int Acquire::writeData( void )
 
 int Acquire::directWrite( OutData &signal )
 {
+  cerr << "DIRECT\n";
   // set trace:
   applyOutTrace( signal );
 
@@ -1897,14 +1898,16 @@ int Acquire::directWrite( OutData &signal )
   }
 
   // start writing to daq board:
-  if ( gainChanged() ||
-       signal.restart() ||
-       SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
-    vector< AOData* > aod( 1, &AO[di] );
-    restartRead( aod, true, true );
+  if ( ! signal.failed() ) {
+    if ( gainChanged() ||
+	 signal.restart() ||
+	 SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
+      vector< AOData* > aod( 1, &AO[di] );
+      restartRead( aod, true, true );
+    }
+    else
+      AO[di].AO->directWrite( AO[di].Signals );
   }
-  else
-    AO[di].AO->directWrite( AO[di].Signals );
 
   // error?
   if ( signal.failed() ) {
@@ -2053,23 +2056,25 @@ int Acquire::directWrite( OutList &signal )
   }
 
   // start writing to daq boards:
-  if ( gainChanged() ||
-       signal[0].restart() ||
-       SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
-    vector< AOData* > aod;
-    aod.reserve( AO.size() );
-    for ( unsigned int i=0; i<AO.size(); i++ ) {
-      if ( AO[i].Signals.size() > 0 )
-	aod.push_back( &AO[i] );
+  if ( ! success ) {
+    if ( gainChanged() ||
+	 signal[0].restart() ||
+	 SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
+      vector< AOData* > aod;
+      aod.reserve( AO.size() );
+      for ( unsigned int i=0; i<AO.size(); i++ ) {
+	if ( AO[i].Signals.size() > 0 )
+	  aod.push_back( &AO[i] );
+      }
+      if ( restartRead( aod, true, true ) != 0 )
+	success = false;
     }
-    if ( restartRead( aod, true, true ) != 0 )
-      success = false;
-  }
-  else {
-    for ( unsigned int i=0; i<AO.size(); i++ ) {
-      if ( AO[i].Signals.size() > 0 ) {
-	if ( AO[i].AO->directWrite( AO[i].Signals ) != 0 )
-	  success = false;
+    else {
+      for ( unsigned int i=0; i<AO.size(); i++ ) {
+	if ( AO[i].Signals.size() > 0 ) {
+	  if ( AO[i].AO->directWrite( AO[i].Signals ) != 0 )
+	    success = false;
+	}
       }
     }
   }
@@ -2111,6 +2116,7 @@ int Acquire::writeReset( bool channels, bool params )
 	if ( OutTraces[k].apply( sig ) < 0 )
 	  cerr << "! error: Acquire::writeReset() -> wrong match\n";
 	sig.setIdent( "init" );
+	sig.mute();
 	sigs.push( sig );
       }
     }

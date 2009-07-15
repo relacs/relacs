@@ -333,6 +333,9 @@ int ComediAnalogOutput::directWrite( OutList &sigs )
   memset( chanlist, 0, sizeof( chanlist ) );
   setupChanList( sigs, chanlist, 512 );
 
+  if ( sigs.failed() )
+    return -1;
+
   for ( int k=0; k<sigs.size(); k++ ) {
 
     // get range values:

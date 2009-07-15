@@ -560,6 +560,10 @@ int RELACSWidget::setupHardware( int n )
     warnings += "No analog output device opened!\n";
   }
 
+  // activate digital I/O devices:
+  DIOD->create( *ADV, n );
+  warnings += DIOD->warnings();
+
   // activate attenuators:
   if ( n == 0 )
     ATD->create( *ADV, n );

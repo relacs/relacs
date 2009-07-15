@@ -256,12 +256,12 @@ int Search::main( void )
 	  meanintensity = 3.0103;
 	}
       }
-      signal.setIntensity( Intensity > 0 ? Intensity + meanintensity : -100.0 );
-      convert( signal );
+      signal.setIntensity( Intensity > 0 && ! Mute ? Intensity + meanintensity : OutData::MuteIntensity );
+      //      convert( signal );
       NewSignal = false;
     }
     else {
-      signal.setIntensity( Intensity > 0 ? Intensity + meanintensity : -100.0 );
+      signal.setIntensity( Intensity > 0 ? Intensity + meanintensity : OutData::MuteIntensity );
       signal.setTrace( SearchLeft ? LeftSpeaker[0] : RightSpeaker[0]  );
     }
 

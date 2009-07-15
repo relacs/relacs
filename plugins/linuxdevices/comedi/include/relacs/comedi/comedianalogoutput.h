@@ -36,8 +36,10 @@ class ComediAnalogInput;
 /*! 
 \class ComediAnalogOutput
 \author Marco Hackenberg
-\version 0.1
+\author Jan Benda
+\version 0.2
 \brief [AnalogOutput] Interface for accessing analog output of a daq-board via comedi.
+\todo manual convert of signals does not work, because it needs the comedi_polynomial
 
 \code
 # calibrate all ranges, references and channels:

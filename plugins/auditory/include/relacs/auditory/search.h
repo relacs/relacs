@@ -43,6 +43,7 @@ namespace auditory {
 \version 2.1 (Jul 1, 2005)
 \todo Use mutex to protect stimulus creation.
 \bug sampling rate is only 10 kHz?!
+\todo reanable manual convert of signal
 
 The following options are supported:
 - \c intensity=80dB: Peak intensity of the search stimulus (\c number)

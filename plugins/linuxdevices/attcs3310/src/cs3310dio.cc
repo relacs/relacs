@@ -53,25 +53,27 @@ CS3310DIO::~CS3310DIO( void )
 int CS3310DIO::open( DigitalIO &dio, long mode )
 {
   DIO = &dio;
+
+  cerr << "OPEN CS3310 " << DIO->deviceFile() << endl;
   
   if ( isOpen() ) {
     DIOId = DIO->allocateLine( CS );
-    if (DIOId > 0 ) {
+    if (DIOId <= 0 ) {
       cerr << "! warning: CS3310DIO::open( DigitalIO ) -> cannot allocate CS pin.\n";
       DIO = 0;
       return InvalidDevice;
     }
     else {
       bool failed = false;
-      if ( DIO->allocateLine( MUTE, DIOId ) < 0 )
+      if ( DIO->allocateLine( MUTE, DIOId ) <= 0 )
 	failed = true;
-      if ( DIO->allocateLine( ZCEN, DIOId ) < 0 )
+      if ( DIO->allocateLine( ZCEN, DIOId ) <= 0 )
 	failed = true;
-      if ( DIO->allocateLine( DATAOUT, DIOId ) < 0 )
+      if ( DIO->allocateLine( DATAOUT, DIOId ) <= 0 )
 	failed = true;
-      if ( DIO->allocateLine( DATAIN, DIOId ) < 0 )
+      if ( DIO->allocateLine( DATAIN, DIOId ) <= 0 )
 	failed = true;
-      if ( DIO->allocateLine( STROBE, DIOId ) < 0 )
+      if ( DIO->allocateLine( STROBE, DIOId ) <= 0 )
 	failed = true;
       if ( failed ) {
 	DIO->freeLines( DIOId );
