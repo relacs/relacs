@@ -85,7 +85,7 @@ public:
   virtual string info( void ) const;
 
     /*! \return the number of digital I/O lines the device supports */
-  virtual int lines( void ) const;
+  virtual int lines( void ) const = 0;
 
     /*! Allocate the lines \a lines of the digital I/O device.
         \return the id, a positive number, of the allocated lines

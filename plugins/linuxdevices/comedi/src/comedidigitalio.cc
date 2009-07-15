@@ -154,9 +154,8 @@ int ComediDigitalIO::configureLine( int line, bool output ) const
   if ( comedi_dio_config( DeviceP, SubDevice, line, direction ) != 0 ) {
     cerr << "! error: ComediDigitalIO::configure() -> "
 	 << "Configuring DIO line " << line
-	 << " on subdevice " << SubDevice
-	 << " failed on device " << device
-	 << " for direction " <<direction << '\n';
+	 << " failed on subdevice " << SubDevice
+	 << " for direction " << direction << '\n';
     return WriteError;
   }
   return 0;
@@ -174,9 +173,8 @@ int ComediDigitalIO::configureLines( unsigned long lines, unsigned long output )
       if ( comedi_dio_config( DeviceP, SubDevice, channel, direction ) != 0 ) {
 	cerr << "! error: ComediDigitalIO::configure() -> "
 	     << "Configuring DIO line " << channel
-	     << " on subdevice " << SubDevice
-	     << " failed on device " << device
-	     << " for direction " <<direction << '\n';
+	     << " failed on subdevice " << SubDevice
+	     << " for direction " << direction << '\n';
 	return WriteError;
       }
     }
@@ -188,11 +186,10 @@ int ComediDigitalIO::configureLines( unsigned long lines, unsigned long output )
 
 int ComediDigitalIO::write( int line, bool val )
 {
-  if ( comedi_dio_write( DeviceP, SubDevice, line, val ) != 0 ) {
+  if ( comedi_dio_write( DeviceP, SubDevice, line, val ) != 1 ) {
     cerr << "! error: ComediDigitalIO::write() -> "
 	 << "Writing on DIO line " << line
-	 << " on subdevice " << SubDevice
-	 << " failed on device " << device << '\n';
+	 << " failed on subdevice " << SubDevice << '\n';
     return WriteError;
   }
   return 0;
@@ -201,12 +198,11 @@ int ComediDigitalIO::write( int line, bool val )
 
 int ComediDigitalIO::read( int line, bool &val ) const
 {
-  int bit = 0;
-  if ( comedi_dio_read( DeviceP, SubDevice, line, &bit ) != 0 ) {
+  unsigned int bit = 0;
+  if ( comedi_dio_read( DeviceP, SubDevice, line, &bit ) != 1 ) {
     cerr << "! error: ComediDigitalIO::read() -> "
 	 << "Reading from DIO line " << line
-	 << " on subdevice " << SubDevice
-	 << " failed on device " << device << '\n';
+	 << " failed on subdevice " << SubDevice << '\n';
     return ReadError;
   }
   val = ( bit > 0 );
@@ -216,10 +212,10 @@ int ComediDigitalIO::read( int line, bool &val ) const
 
 int ComediDigitalIO::write( unsigned long lines, unsigned long val )
 {
-  if ( comedi_dio_bitfield2( DeviceP, SubDevice, lines, &val ) != 0 ) {
+  unsigned int ival = val;
+  if ( comedi_dio_bitfield2( DeviceP, SubDevice, lines, &ival, 0 ) != 0 ) {
     cerr << "! error: ComediDigitalIO::write() -> "
-	 << "Writing on DIO subdevice " << SubDevice
-	 << " failed on device " << device << '\n';
+	 << "Writing on DIO subdevice " << SubDevice << " failed\n";
     return WriteError;
   }
   return 0;
@@ -228,12 +224,14 @@ int ComediDigitalIO::write( unsigned long lines, unsigned long val )
 
 int ComediDigitalIO::read( unsigned long &val ) const
 {
-  if ( comedi_dio_bitfield2( DeviceP, SubDevice, 0, &val ) != 0 ) {
+  unsigned int ival = 0;
+  if ( comedi_dio_bitfield2( DeviceP, SubDevice, 0, &ival, 0 ) != 0 ) {
     cerr << "! error: ComediDigitalIO::read() -> "
 	 << "Reading from DIO subdevice " << SubDevice
-	 << " failed on device " << device << '\n';
+	 << " failed\n";
     return ReadError;
   }
+  val = ival;
   return 0;
 }
 
