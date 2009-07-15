@@ -35,7 +35,19 @@ namespace relacs {
 \author Jan Benda
 \version 1.0
 \brief Interface for accessing digital input and output lines of a data-aquisition board.
- */
+
+A digital I/O device has lines() of input or output lines that can be high or low.
+There a two ways to access the digital I/O lines.
+Either individually by their line (channel) number,
+or in groups by a bit pattern, where ech bit represents a single line (channel).
+
+After opening the device by open(), the digitial I/) lines that you are going to use
+should be allocated by allocateLines() or allocateLine().
+Then the digital I/O lines should be configured for input or output using 
+configureLines() or configureLine().
+
+Bits can be read from or written to the digitial I/O lines by the read() and write() functions.
+*/
 
 class DigitalIO : public Device
 {
@@ -50,16 +62,18 @@ public:
   virtual ~DigitalIO( void );
 
     /*! Open the digital I/O device specified by \a device.
- 	Returns zero on success, or InvalidDevice (or any other negative number
+ 	\return zero on success, or InvalidDevice (or any other negative number
 	indicating the error).
+	You should call freeLines() somewhere in the reimplmentation of this function.
         \sa isOpen(), close() */
   virtual int open( const string &device, long mode=0 );
     /*! Open the digital I/O device specified by \a device.
-	Returns zero on success, or InvalidDevice (or any other negative number
+	You should call freeLines() somewhere in the reimplmentation of this function.
+	\return zero on success, or InvalidDevice (or any other negative number
 	indicating the error).
         \sa isOpen(), close() */
   virtual int open( Device &device, long mode=0 );
-    /*! Returns true if the device is open.
+    /*! \return \c true if the device is open.
         \sa open(), close() */
   virtual bool isOpen( void ) const = 0;
     /*! Close the device.
@@ -74,45 +88,77 @@ public:
   virtual int lines( void ) const;
 
     /*! Allocate the lines \a lines of the digital I/O device.
-        \return 0 if all lines have been allocated
-        \return WriteError if some of the lines have been already allocated */
+        \return the id, a positive number, of the allocated lines
+        \return WriteError if some of the lines have been already allocated
+        \sa freeLines(), allocated() */
   int allocateLines( unsigned long lines );
-    /*! Free the previously allocated digital I/O lines \a lines. */
-  void freeLines( unsigned long lines );
+    /*! Allocate the single digital I/O line \a line of the digital I/O device.
+        Further lines can be allocated by calling allocateLine( int, int ).
+        \return the id, a positive number, of the allocated line
+        \return WriteError if the line has been already allocated
+        \sa freeLines(), allocated() */
+  int allocateLine( int line );
+    /*! Allocate one more digital I/O line \a line of the digital I/O device for id \a id.
+        The \a id should be the returned value of a previous call to
+	allocateLine( int ).
+        \return the id, a positive number, of the allocated line (same as \a id)
+        \return WriteError if the line has been already allocated
+        \sa freeLines(), allocated() */
+  int allocateLine( int line, int id );
+    /*! Free the previously allocated digital I/O lines with id \a id.
+        \sa allocatedLines() */
+  void freeLines( int id );
+    /*! \return \c true if digitial I/O line \a line was allocated under id \a id.
+        \sa allocateLines() */
+  bool allocated( int line, int id );
+    /*! \return \c true if digitial I/O line \a line is allocated, independent of the id.
+        \sa allocateLines() */
+  bool allocated( int line );
 
-    /*! Configure digital I/O lines specified by \a mask for input (0) or output (1).
+    /*! Configure digital I/O line \a line for input (\a output = \c false) or output 
+        (\a output = \c true).
         \return 0 on success, otherwise a negative number indicating the error */
-  virtual int configure( unsigned long dios, unsigned long mask ) const = 0;
+  virtual int configureLine( int line, bool output ) const = 0;
+    /*! Configure digital I/O lines specified by \a lines for input (0) or output (1)
+        according to \a output.
+        \return 0 on success, otherwise a negative number indicating the error */
+  virtual int configureLines( unsigned long lines, unsigned long output ) const = 0;
 
     /*! Write \a val to the digital I/O line \a line.
         \return 0 on success, otherwise a negative number indicating the error
         \sa read() */
-  virtual int write( unsigned long line, bool val ) = 0;
+  virtual int write( int line, bool val ) = 0;
     /*! Read from digital I/O line \a line and return value in \a val.
         \return 0 on success, otherwise a negative number indicating the error
         \sa write() */
-  virtual int read( unsigned long line, bool &val ) const = 0;
+  virtual int read( int line, bool &val ) const = 0;
 
-    /*! Write \a dios to the digital I/O lines defined in \a mask.
+    /*! Write \a val to the digital I/O lines defined in \a lines.
         \return 0 on success, otherwise a negative number indicating the error
         \sa read() */
-  virtual int write( unsigned long dios, unsigned long mask ) = 0;
-    /*! Read digital I/O lines and return them in \a dios.
+  virtual int write( unsigned long lines, unsigned long val ) = 0;
+    /*! Read digital I/O lines and return them in \a val.
         \return 0 on success, otherwise a negative number indicating the error
         \sa write() */
-  virtual int read( unsigned long &dios ) const = 0;
+  virtual int read( unsigned long &val ) const = 0;
 
 
 protected:
 
-    /*! The allocated digitial I/O lines. */
-  unsigned long Lines;
+    /*! Free all allocated digital I/O lines.
+        \sa freeLines() */
+  void freeLines( void );
 
 
 private:
 
    /*! Device type id for all digital I/O devices. */
   static const int Type = 3;
+
+    /*! The maximum number of digital I/O lines. */
+  static const int MaxDIOLines = 32;
+    /*! The ids of allocated digitial I/O lines. */
+  int DIOLines[32];
 
 
 };

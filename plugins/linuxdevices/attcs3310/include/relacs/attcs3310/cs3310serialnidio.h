@@ -35,6 +35,7 @@ namespace attcs3310 {
 \author Jan Benda
 \version 1.1
 \brief [Attenuator] Control the cs3310 attenuator via the nieseries/nidio serial digital IO
+\note This plugin is as obsolete as the plugins from the nieseries plugin set.
 
 \par Technicals by Hartmut Schuetze
 

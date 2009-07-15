@@ -64,6 +64,7 @@ int ComediDigitalIO::open( const string &device, long mode )
   if ( isOpen() )
     return -5;
 
+  freeLines();
   clearSettings();
   if ( device.empty() )
     return InvalidDevice;
@@ -147,13 +148,28 @@ int ComediDigitalIO::lines( void ) const
 }
 
 
-int ComediDigitalIO::configure( unsigned long dios, unsigned long mask ) const
+int ComediDigitalIO::configureLine( int line, bool output ) const
+{
+  int direction = output ? COMEDI_OUTPUT : COMEDI_INPUT;
+  if ( comedi_dio_config( DeviceP, SubDevice, line, direction ) != 0 ) {
+    cerr << "! error: ComediDigitalIO::configure() -> "
+	 << "Configuring DIO line " << line
+	 << " on subdevice " << SubDevice
+	 << " failed on device " << device
+	 << " for direction " <<direction << '\n';
+    return WriteError;
+  }
+  return 0;
+}
+
+
+int ComediDigitalIO::configureLines( unsigned long lines, unsigned long output ) const
 {
   int bit = 1;
   for ( int channel=0; channel<32; channel++ ) {
-    if ( ( dios & bit ) > 0 ) {
+    if ( ( lines & bit ) > 0 ) {
       int direction = COMEDI_INPUT;
-      if ( ( mask & bit ) > 0 )
+      if ( ( output & bit ) > 0 )
 	direction = COMEDI_OUTPUT;
       if ( comedi_dio_config( DeviceP, SubDevice, channel, direction ) != 0 ) {
 	cerr << "! error: ComediDigitalIO::configure() -> "
@@ -170,7 +186,7 @@ int ComediDigitalIO::configure( unsigned long dios, unsigned long mask ) const
 }
 
 
-int ComediDigitalIO::write( unsigned long line, bool val )
+int ComediDigitalIO::write( int line, bool val )
 {
   if ( comedi_dio_write( DeviceP, SubDevice, line, val ) != 0 ) {
     cerr << "! error: ComediDigitalIO::write() -> "
@@ -183,7 +199,7 @@ int ComediDigitalIO::write( unsigned long line, bool val )
 }
 
 
-int ComediDigitalIO::read( unsigned long line, bool &val ) const
+int ComediDigitalIO::read( int line, bool &val ) const
 {
   int bit = 0;
   if ( comedi_dio_read( DeviceP, SubDevice, line, &bit ) != 0 ) {
@@ -198,9 +214,9 @@ int ComediDigitalIO::read( unsigned long line, bool &val ) const
 }
 
 
-int ComediDigitalIO::write( unsigned long dios, unsigned long mask )
+int ComediDigitalIO::write( unsigned long lines, unsigned long val )
 {
-  if ( comedi_dio_bitfield2( DeviceP, SubDevice, mask, &dios ) != 0 ) {
+  if ( comedi_dio_bitfield2( DeviceP, SubDevice, lines, &val ) != 0 ) {
     cerr << "! error: ComediDigitalIO::write() -> "
 	 << "Writing on DIO subdevice " << SubDevice
 	 << " failed on device " << device << '\n';
@@ -210,9 +226,9 @@ int ComediDigitalIO::write( unsigned long dios, unsigned long mask )
 }
 
 
-int ComediDigitalIO::read( unsigned long &dios ) const
+int ComediDigitalIO::read( unsigned long &val ) const
 {
-  if ( comedi_dio_bitfield2( DeviceP, SubDevice, 0, &dios ) != 0 ) {
+  if ( comedi_dio_bitfield2( DeviceP, SubDevice, 0, &val ) != 0 ) {
     cerr << "! error: ComediDigitalIO::read() -> "
 	 << "Reading from DIO subdevice " << SubDevice
 	 << " failed on device " << device << '\n';

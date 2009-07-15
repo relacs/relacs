@@ -28,9 +28,9 @@ namespace relacs {
 
 
 DigitalIO::DigitalIO( const string &deviceclass )
-  : Device( deviceclass, Type ),
-    Lines( 0 )
+  : Device( deviceclass, Type )
 {
+  freeLines();
 }
 
 
@@ -41,7 +41,7 @@ DigitalIO::~DigitalIO( void )
 
 int DigitalIO::open( const string &device, long mode )
 {
-  Lines = 0;
+  freeLines();
   clearSettings();
   setDeviceFile( device );
   return InvalidDevice;
@@ -50,7 +50,7 @@ int DigitalIO::open( const string &device, long mode )
 
 int DigitalIO::open( Device &device, long mode )
 {
-  Lines = 0;
+  freeLines();
   clearSettings();
   setDeviceFile( device.deviceIdent() );
   return InvalidDevice;
@@ -67,17 +67,104 @@ string DigitalIO::info( void ) const
 
 int DigitalIO::allocateLines( unsigned long lines )
 {
-  if ( ( Lines & lines ) > 0 )
-    return WriteError;
+  // find unused id:
+  int id = 0;
+  int k=0;
+  do {
+    id++;
+    int bit = 1;
+    for ( k=0; k<MaxDIOLines; k++ ) {
+      if ( (lines & bit) > 0 && DIOLines[k] > 0 )
+	return WriteError;
+      if ( DIOLines[k] == id )
+	break;
+      bit *= 2;
+    }
+  } while ( k<MaxDIOLines );
 
-  Lines |= lines;
-  return 0;
+  // allocated lines:
+  int bit = 1;
+  for ( k=0; k<MaxDIOLines;  k++ ) {
+    if ( (lines & bit) > 0 )
+      DIOLines[k] = id;
+    bit *= 2;
+  }
+
+  return id;
 }
 
 
-void DigitalIO::freeLines( unsigned long lines )
+int DigitalIO::allocateLine( int line )
 {
-  Lines &= ~lines;
+  if ( line < 0 || line >= MaxDIOLines )
+    return WriteError;
+
+  // find unused id:
+  int id = 0;
+  int k=0;
+  do {
+    id++;
+    for ( k=0; k<MaxDIOLines; k++ ) {
+      if ( k == line && DIOLines[k] > 0 )
+	return WriteError;
+      if ( DIOLines[k] == id )
+	break;
+    }
+  } while ( k<MaxDIOLines );
+
+  // allocated line:
+  DIOLines[line] = id;
+
+  return id;
+}
+
+
+int DigitalIO::allocateLine( int line, int id )
+{
+  if ( line < 0 || line >= MaxDIOLines )
+    return WriteError;
+
+  if ( DIOLines[line] > 0 )
+    return WriteError;
+
+  // allocated line:
+  DIOLines[line] = id;
+
+  return id;
+}
+
+
+void DigitalIO::freeLines( int id )
+{
+  for ( int k=0; k<MaxDIOLines;  k++ ) {
+    if ( DIOLines[k] == id )
+      DIOLines[k] = 0;
+  }
+}
+
+
+void DigitalIO::freeLines( void )
+{
+  for ( int k=0; k<MaxDIOLines;  k++ )
+    DIOLines[k] = 0;
+}
+
+
+bool DigitalIO::allocated( int line, int id )
+{
+  if ( line < 0 || line >= MaxDIOLines )
+    return false;
+
+  return ( DIOLines[line] == id );
+}
+
+
+bool DigitalIO::allocated( int line )
+{
+  if ( line < 0 || line >= MaxDIOLines )
+    return false;
+
+  return ( DIOLines[line] > 0 );
 }
 
 

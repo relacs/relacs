@@ -65,27 +65,32 @@ public:
     /*! \return the number of digital I/O lines the device supports */
   virtual int lines( void ) const;
 
-    /*! Configure digital I/O lines specified by \a mask for input (0) or output (1).
+    /*! Configure digital I/O line \a line for input (\a output = \c false) or output 
+        (\a output = \c true).
         \return 0 on success, otherwise a negative number indicating the error */
-  virtual int configure( unsigned long dios, unsigned long mask ) const;
+  virtual int configureLine( int line, bool output ) const;
+    /*! Configure digital I/O lines specified by \a lines for input (0) or output (1)
+        according to \a output.
+        \return 0 on success, otherwise a negative number indicating the error */
+  virtual int configureLines( unsigned long lines, unsigned long output ) const;
 
     /*! Write \a val to the digital I/O line \a line.
         \return 0 on success, otherwise a negative number indicating the error
         \sa read() */
-  virtual int write( unsigned long line, bool val );
+  virtual int write( int line, bool val );
     /*! Read from digital I/O line \a line and return value in \a val.
         \return 0 on success, otherwise a negative number indicating the error
         \sa write() */
-  virtual int read( unsigned long line, bool &val ) const;
+  virtual int read( int line, bool &val ) const;
 
-    /*! Write \a dios to the digital I/O lines defined in \a mask.
+    /*! Write \a val to the digital I/O lines defined in \a lines.
         \return 0 on success, otherwise a negative number indicating the error
         \sa read() */
-  virtual int write( unsigned long dios, unsigned long mask );
-    /*! Read digital I/O lines and return them in \a dios.
+  virtual int write( unsigned long lines, unsigned long val );
+    /*! Read digital I/O lines and return them in \a val.
         \return 0 on success, otherwise a negative number indicating the error
         \sa write() */
-  virtual int read( unsigned long &dios ) const;
+  virtual int read( unsigned long &val ) const;
 
 
 private:
