@@ -537,11 +537,11 @@ void ComediAnalogOutput::setupChanList( OutList &sigs, unsigned int *chanlist,
     }
     else {
       index = 0;
-      if ( unipolar && index > (int)UnipolarRange.size() )
+      if ( unipolar && index >= (int)UnipolarRange.size() )
 	unipolar = false;
-      if ( ! unipolar && index > (int)BipolarRange.size() )
+      if ( ! unipolar && index >= (int)BipolarRange.size() )
 	unipolar = true;
-      if ( index >= unipolar ? (int)UnipolarRange.size() : (int)BipolarRange.size() )
+      if ( index >= ( unipolar ? (int)UnipolarRange.size() : (int)BipolarRange.size() ) )
 	index = -1;
     }
 
