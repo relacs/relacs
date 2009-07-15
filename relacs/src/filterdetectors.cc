@@ -82,6 +82,7 @@ string FilterDetectors::createFilters( void )
   string warning="";
   int n=10;
   for ( int k=0; k<n; k++ ) {
+
     // another filter?
     string label = "Filter" + Str( k );
     if ( Options::exist( label ) ) {
@@ -146,7 +147,7 @@ string FilterDetectors::createFilters( void )
 	InList indata;
 	indata.resize( 2, 10, 0.001 );
 	InList outdata;
-	indata.resize( 2, 10, 0.001 );
+	outdata.resize( 2, 10, 0.001 );
 	EventList inevents( 2, 10 );
 	EventList outevents( 2, 10 );
 	EventList otherevents( 2, 10 );
