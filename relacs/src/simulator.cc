@@ -403,8 +403,10 @@ int Simulator::write( OutData &signal )
   }
 
   // error?
-  if ( signal.failed() )
+  if ( signal.failed() ) {
+    LastWrite = -1.0;
     return -1;
+  }
 
   return 0;
 }
@@ -516,8 +518,10 @@ int Simulator::directWrite( OutData &signal )
   }
 
   // error?
-  if ( signal.failed() )
+  if ( signal.failed() ) {
+    LastWrite = -1.0;
     return -1;
+  }
 
   return 0;
 }

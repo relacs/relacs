@@ -383,7 +383,7 @@ void SaveFiles::save( const OutData &signal )
 {
   //  cerr << "SaveFiles::save( OutData &signal )\n";
 
-  if ( signal.error() != 0 )
+  if ( signal.failed() )
     return;
 
   if ( StimulusData ) {
@@ -405,7 +405,7 @@ void SaveFiles::save( const OutList &signal )
 {
   //  cerr << "SaveFiles::save( OutList &signal )\n";
 
-  if ( signal.empty() || signal[0].failed() )
+  if ( signal.empty() || signal.failed() )
     return;
 
   if ( StimulusData ) {
@@ -432,10 +432,8 @@ void SaveFiles::saveStimulus( void )
     return;
 
   // no stimulus yet:
-  if ( SignalTime < 0.0 ) {
-    StimulusData = false;
+  if ( SignalTime < 0.0 )
     return;
-  }
     
   // stimulus indices file:
   if ( SF != 0 && saving() && writing() ) {

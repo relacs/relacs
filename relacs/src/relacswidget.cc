@@ -820,8 +820,10 @@ void RELACSWidget::activateGains( void )
 
 int RELACSWidget::write( OutData &signal )
 {
-  if ( AQ->readSignal( SignalTime, IL, ED ) ) // we should get the start time of the latest signal here
+  if ( AQ->readSignal( SignalTime, IL, ED ) || // we should get the start time of the latest signal here
+       SF->signalPending() )                   // the signal time might not have been transferred to SF
     SF->save( IL, ED );
+  /*
   // last stimulus still not saved?
   if ( SF->signalPending() ) {
     CurrentRePro->unlockAll();
@@ -833,6 +835,9 @@ int RELACSWidget::write( OutData &signal )
     } while ( SF->signalPending() );
     CurrentRePro->lockAll();
   }
+  */
+  if ( SF->signalPending() )
+    printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
   lockSignals();
   lockAI();
   int r = AQ->write( signal );
@@ -860,8 +865,10 @@ int RELACSWidget::write( OutData &signal )
 
 int RELACSWidget::write( OutList &signal )
 {
-  if ( AQ->readSignal( SignalTime, IL, ED ) ) // we should get the start time of the latest signal here
+  if ( AQ->readSignal( SignalTime, IL, ED ) || // we should get the start time of the latest signal here
+       SF->signalPending() )                   // the signal time might not have been transferred to SF
     SF->save( IL, ED );
+  /*
   // last stimulus still not saved?
   if ( SF->signalPending() ) {
     CurrentRePro->unlockAll();
@@ -873,6 +880,9 @@ int RELACSWidget::write( OutList &signal )
     } while ( SF->signalPending() );
     CurrentRePro->lockAll();
   }
+  */
+  if ( SF->signalPending() )
+    printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
   lockSignals();
   lockAI();
   int r = AQ->write( signal );
@@ -900,8 +910,10 @@ int RELACSWidget::write( OutList &signal )
 
 int RELACSWidget::directWrite( OutData &signal )
 {
-  if ( AQ->readSignal( SignalTime, IL, ED ) ) // we should get the start time of the latest signal here
+  if ( AQ->readSignal( SignalTime, IL, ED ) || // we should get the start time of the latest signal here
+       SF->signalPending() )                   // the signal time might not have been transferred to SF
     SF->save( IL, ED );
+  /*
   // last stimulus still not saved?
   if ( SF->signalPending() ) {
     CurrentRePro->unlockAll();
@@ -913,6 +925,9 @@ int RELACSWidget::directWrite( OutData &signal )
     } while ( SF->signalPending() );
     CurrentRePro->lockAll();
   }
+  */
+  if ( SF->signalPending() )
+    printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
   lockSignals();
   lockAI();
   int r = AQ->directWrite( signal );
@@ -939,8 +954,10 @@ int RELACSWidget::directWrite( OutData &signal )
 
 int RELACSWidget::directWrite( OutList &signal )
 {
-  if ( AQ->readSignal( SignalTime, IL, ED ) ) // we should get the start time of the latest signal here
+  if ( AQ->readSignal( SignalTime, IL, ED ) || // we should get the start time of the latest signal here
+       SF->signalPending() )                   // the signal time might not have been transferred to SF
     SF->save( IL, ED );
+  /*
   // last stimulus still not saved?
   if ( SF->signalPending() ) {
     CurrentRePro->unlockAll();
@@ -952,6 +969,9 @@ int RELACSWidget::directWrite( OutList &signal )
     } while ( SF->signalPending() );
     CurrentRePro->lockAll();
   }
+  */
+  if ( SF->signalPending() )
+    printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
   lockSignals();
   lockAI();
   int r = AQ->directWrite( signal );

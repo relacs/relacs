@@ -868,8 +868,10 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
     }
   }
 
-  if ( ! success )
+  if ( ! success ) {
+    LastWrite = -1.0;
     return -1;
+  }
 
   // map aod devices to AO devices:
   vector< int > aoinx;
@@ -912,8 +914,10 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
     }
   }
     
-  if ( ! success )
+  if ( ! success ) {
+    LastWrite = -1.0;
     return -1;
+  }
     
   // start writing streaming signals:
   if ( ! directao ) {
@@ -943,10 +947,15 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
       }
     }
   }
+    
+  if ( ! success ) {
+    LastWrite = -1.0;
+    return -1;
+  }
 
   //  cerr << currentTime() << " Acquire::restartRead() -> acquisition restarted " << success << "\n";
 
-  return success ? 0 : -1;
+  return 0;
 }
 
 
