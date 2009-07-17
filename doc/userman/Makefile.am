@@ -10,6 +10,7 @@ DOCBOOK_FILES = \
     repros.xml \
     utilities.xml \
     gui.xml \
+    configuration.xml \
     macros.xml \
     program.xml
 

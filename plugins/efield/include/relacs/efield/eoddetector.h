@@ -34,7 +34,6 @@ namespace efield {
 \class EODDetector
 \brief [Detector] A detector for EOD cycles of weakly electric fish
 \author Jan Benda
-\version 1.3 (Jun 16, 2009)
 
 Detects each cycle of a periodic input waveform, like the EOD of a wave-type
 weakly electric fish.
@@ -53,6 +52,7 @@ The times of the EOD peaks and their amplitude.
 - \c ratio=40%: Ratio (\c number)
 - \c maxperiod=10ms: Maximum EOD period (\c number)
 
+\version 1.3 (Jun 16, 2009)
 */
 
 

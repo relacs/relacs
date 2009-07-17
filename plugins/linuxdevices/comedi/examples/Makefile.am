@@ -27,7 +27,7 @@ dio_write_LDFLAGS = $(COMEDI_LDFLAGS)
 dio_write_LDADD = \
     $(COMEDI_LIBS) \
     $(top_builddir)/relacs/src/librelacs.la \
-    ../src/libcomedicomedidigitalio.la \
+    ../src/libcomedicomedidigitalio.la
 dio_write_SOURCES = dio_write.cc
 
 checkao_CPPFLAGS = \

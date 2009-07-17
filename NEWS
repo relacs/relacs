@@ -1,5 +1,9 @@
 Version 0.9.6
 
+July, 2009
+  Introduced DigitalIO device interface and 
+  got attenuator back into RELACS
+
 March, 2009
   First working version of the dynamic clamp modules.
 

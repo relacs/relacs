@@ -35,8 +35,7 @@ namespace multielectrode {
 /*!
 \class MultiSTA
 \brief [RePro] Computes spike-triggered averages for many spike traces and a common to be averaged waveform
-\author Jan Benda, Michael Pfizenmaier
-\version 0.1 (Jan 21, 2009)
+\author Jan Benda
 
 \par Options
 - \c averagetrace=V-1: Input trace to be averaged (\c string)
@@ -55,6 +54,8 @@ The STAs. All snippets in red, the STA (blue) and the standard deviation (cyan).
 \par Requirements
 - One voltage trace
 - At least one spike trace
+
+\version 0.1 (Jan 21, 2009)
 */
 
 

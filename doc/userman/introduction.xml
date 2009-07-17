@@ -1,7 +1,9 @@
 <chapter xml:id="introduction"><title>Introduction</title>
 
-<note>Right now this is not an introduction, but a random collection of topics that does not fit yet in the current document structure.
-Sorry for that!</note>
+<para>
+I nice introduction still needs to be written. What follows are
+some short random topics...
+</para>
 
 		<section xml:id='macrossub'><title>Defining and Using Macros</title>
 
@@ -35,19 +37,6 @@ Sorry for that!</note>
 		Those files are usually used for further data analysis.
 		See the documentation of the RePro for further information
 		(<guimenuitem>Help</guimenuitem> in the RePro's submenu).</para>
-		</section>
-
-		<section xml:id='relacsconfig'><title>RELACS configuration files</title>
-		<para>There a two configuration files:</para>
-
-		<para><itemizedlist>
-			<listitem><para><emphasis>relacs.cfg</emphasis>: Basic configuration of RELACS.
-		Setup of the  data acquisition (channels, sampling rate, etc.),
-		filters, event detectors, attenuators, manipulators, and other devices.</para></listitem>
-			<listitem><para><emphasis>relacsplugins.cfg</emphasis>: In this configuration file the options of all plugins including RePros are stored.
-		The first section defines the meta-data dialog.</para></listitem>
-		</itemizedlist></para>
-
 		</section>
 		
 <section xml:id='pluginconcept'><title xml:id='pluginconcepttitle'>RELACS Plugins</title>

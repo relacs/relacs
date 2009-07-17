@@ -118,8 +118,8 @@ related options during the configure step No. 3. See ./configure
 > relacs
 
 Note, that RELACS requires the configuration files relacs.cfg and
-macros.cfg in the current directory. For configuring RELACS please
-contact me (benda@bio.lmu.de, subject: RELACS).
+macros.cfg in the current directory. For configuring RELACS 
+see the user manual.
 
 
 ====================================================================

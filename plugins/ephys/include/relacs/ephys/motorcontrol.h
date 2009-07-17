@@ -42,7 +42,6 @@ class MiMaPu;
 \class MotorControl
 \brief [Control] Control widgets for motorized manipulators.
 \author Jan Benda
-\version 1.2
 \bug reimplement as thread and avoid use of QTimer!
 \bug spikes( int trace ): instead of sessionOpts we should access the spikedtector directly!
 \bug check locking!
@@ -92,6 +91,12 @@ Key-Shortcuts for Manipulator 1:
 - \c Ctrl+ \c Left: Increase interval of manipulator 2.
 - \c Ctrl+ \c Right: Decrease interval of manipulator 2.
 - \c H: Toggel go/stop for manipulator 2.
+
+\par Options
+- \c minrate=20Hz: Minimum Rate (\c number)
+- \c minsize=20mV: Minimum Size (\c number)
+
+\version 1.0 (Jul 1 2004)
 */
 
 

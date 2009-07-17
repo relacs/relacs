@@ -1,6 +1,6 @@
 /*
   auditory/fifield.cc
-  Optimized measuring of f-I curves.
+  Optimized measuring of f-I curves for a range of carrier frequencies.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>

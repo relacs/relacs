@@ -33,19 +33,14 @@ namespace calibration {
 \class StimulusDelay
 \brief [RePro] Measures delays between actual and reported onset of a stimulus
 \author Jan Benda
-\version 1.2 (Feb 8, 2008)
--# check interrupt() after each sleep
-\version 1.1 (Jan 10, 2008)
--# removed stop() function
--# moved class variables to the main() functions
-\version 1.0 (Dec 20, 2007)
 
 \par Options
-\arg \b intrace (\c text): Name of the input trace. 
-\arg \b outtrace (\c text): Name of the output trace. 
-\arg \b samplerate (\c number, \e kHz): Sampling rate used for output of stimulus.
-\arg \b duration (\c number, \e ms): Duration of stimulus.
-\arg \b repeats (\c integer): Number of repetitions. 
+- \c intrace=V-1: Input trace (\c string)
+- \c outtrace=Speaker-1: Output trace (\c string)
+- \c samplerate=10kHz: Sampling rate of output (\c number)
+- \c duration=10ms: Duration of output (\c number)
+- \c pause=50ms: Pause between outputs (\c number)
+- \c repeats=100: Repeats (\c integer)
 
 \par Files
 \arg No output files.
@@ -55,6 +50,8 @@ namespace calibration {
 
 \par Requirements
 \arg The output must be connected to the input.
+
+\version 1.2 (Feb 8, 2008)
 */
 
 

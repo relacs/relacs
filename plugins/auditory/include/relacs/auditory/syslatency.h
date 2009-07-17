@@ -39,16 +39,28 @@ namespace auditory {
 \brief [RePro] Measures latency of the whole system, i.e. signal delay, transduction, 
 synapses, axonal delay, ...
 \author Jan Benda
+
+\par Options
+- Stimulus
+- \c rate=100Hz: Target firing rate (\c number)
+- \c pwaves=10: Number of cycles of pertubation (\c integer)
+- \c pintensity=10dB: Intensity of pertubations (\c number)
+- \c minpintensity=4dB: Minimum intensity of pertubations (\c number)
+- \c carrierfreq=5kHz: Frequency of carrier (\c number)
+- \c usebestfreq=true: Use the cell's best frequency (\c boolean)
+- \c ramp=2ms: Ramp of stimulus (\c number)
+- \c duration=600ms: Duration of stimulus (\c number)
+- \c pause=600ms: Pause (\c number)
+- \c repeats=10: Number of stimulus repetitions (\c integer)
+- \c side=left: Speaker (\c string)
+- Analysis
+- \c skipwin=100ms: Initial portion of stimulus not used for analysis (\c number)
+- \c analysewin=10ms: Window used for ISI analysis (\c number)
+- \c maxlat=10ms: Maximum latency (\c number)
+- \c latstep=0.1ms: Resolution of latency (\c number)
+- \c coincwin=0.5ms: Window width for coincident spikes (\c number)
+
 \version 1.5 (Jan 10, 2008)
--# removed stop() function
--# moved class variables to the main() functions
--# changed offset in coincidentSpikes() from spikewidth to 0.5*(spikewidth+pduration)
-\version 1.4 (Mar 9, 2006)
--# Fixed algorithm for finding the right intensity in f-I curve (maxIndex).
--# Added mean firing rate to plot and files.
-\version 1.3 (Feb 27, 2006)
--# Fixed some bugs regarding the calculation of coincident spikes (especially spike width).
--# Added plot showing number of coincident spikes.
 */
 
 

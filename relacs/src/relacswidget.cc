@@ -184,10 +184,10 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     }
   }
 
-  /*
+ 
   saveDoxygenOptions();
   ::exit( 0 );
-  */
+ 
 
   if ( Plugins::empty() ) {
     printlog(  "! error: No valid plugins found. Exit now." );
@@ -1078,7 +1078,12 @@ void RELACSWidget::saveDoxygenOptions( void )
       cout << "\\author " << rxp->author() << '\n';
       cout << "\\version " << rxp->version() << " (" << rxp->date() << ")\n";
       cout << "\\par Options\n";
-      rxp->save( cout, "- \\c %i=%s: %r (\\c %t)\n", "- \\c %i=%g%u: %r (\\c %t)\n", "- \\c %i=%b: %r (\\c %t)\n", "%i\n" );
+      rxp->save( cout, "- \\c %i=%s: %r (\\c %T)\n",
+		 "- \\c %i=%g%u: %r (\\c %T)\n",
+		 "- \\c %i=%b: %r (\\c %T)\n",
+		 "- \\c %i=%04Y-%02m-%02d: %r (\\c %T)\n",
+		 "- \\c %i=%02H:%02M:%02S: %r (\\c %T)\n",
+		 "- %i\n" );
       delete rxp;
       Plugins::destroy( k );
     }

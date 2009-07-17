@@ -36,9 +36,6 @@ namespace auditoryprojects {
 \class IsoResponse 
 \brief [RePro] Measures f-I-curves for a superposition of two sine waves.
 \author Alexander Wolf 
-\version 1.1 (Jan 10, 2008)
--# removed stop() function
-\version 1.0 (Oct 1, 2005)
 
 IsoResponse extrapolates Iso-Response-Sets (IRSs) for two sine
 amplitudes A1 and A2, i.e.  for several combinations of A1 and A2
@@ -89,43 +86,51 @@ The IRSs are determined in 'plotIsoSets' for 'isonumber' firing
 rates 'FIso'. The extrapolation is only linear using two points.
 It is therefore strongly recommended to analyze the data offline.
 
+\par Options
 The following options are supported (brief description of each
 option with default values and data type): 
-- \c use_best_freq=0: Select method of determining stimulus frequencies (\c integer)
-- \c dist_best_freq=1kHz: Distance of f1 and f2  from best frequency (if use_best_freq=1)  (\c number)
-- \c dist_freq=2kHz: Distance between f1 and f2 (if use_best_freq=2)  (\c number)
-- \c f1= 4kHz: First stimulus frequeny (\c number)
-- \c f2=10kHz: Second stimulus frequeny (\c number)
-- \c intmin= 30dB: Minimum stimulus intensity (\c number) 
-- \c intmax=100dB: Maximum stimulus intensity (\c number) 
-- \c intres=1dB: Final intensity resolution (\c number)
-- \c estres=5dB: Intensity resolution for estimation of f-I-curve (\c number)
-- \c intshuffle: Order in which intensities are measured (\c RangeLoop)
-- \c short_stim=true: Measure onset-response only (\c boolean)
-- \c duration=0.2ms: Stimulus duration (\c number)
-- \c pause=0.3ms: %Pause length in between stimuli (\c number)
-- \c onwidth=0.01ms: Time from start of stimulus to estimate onset response (\c number)
-- \c sswidth=0.10ms: Time after which steady state response determined (\c number)
-- \c repeats=12: Number of repetitions of each stimulus (\c integer)
-- \c estrepeats=3: Number of repetitions for estimation of f-I-curve (\c integer)
-- \c intup=5dB: Increases determined intensity where max firing rate is reached (\c number)
-- \c switch_high=false: Higher bound firing rate has fixed value (\c boolean) 
-- \c per_high=5%: Decreases max firing rate by ... percent (\c number) 
-- \c fix_high=500Hz: Fixed max firing rate (\c number)
-- \c switch_low=false: Lower bound firing rate has fixed value (\c boolean) 
-- \c per_low=50%: Decreases max firing rate by ... percent (\c number) 
-- \c fix_low=150Hz: Fixed lower firing rate (\c number)
-- \c minfr = 30Hz: Skip all points with firing rates below minfr (\c number)
-- \c isonumber=5: Number of IRSs evaluated (for graph only) (\c integer)
-- \c isopoints=9: Number of f-I-curves measured (resolution in amplitude space) (\c  integer)
+- Stimulus
+- Frequencies
+- \c use_best_freq=absolute: Frequency reference (\c string)
+- \c dist_best_freq=1kHz*3/pi: Distance of f1 and f2 from best Frequency (for 'best') (\c number)
+- \c dist_freq=2kHz*3/pi: Distance between f1 and f2 (for 'isothresh') (\c number)
+- \c f1=4kHz: 1st Frequency (\c number)
+- \c f2=10kHz*3/pi: 2nd Frequency (\c number)
+- Intensities
+- \c intmin=30dB SPL: Minimum stimulus intensity (\c number)
+- \c intmax=100dB SPL: Maximum stimulus intensity (\c number)
+- \c intres=1dB SPL: Final intensity resolution (\c number)
+- \c estres=5dB SPL: Resolution for estimation of FR-range (\c number)
+- \c intshuffle=Up: Order of intensities (\c string)
+- Stimulus Structure
+- \c short_stim=true: Measure Onset Response only (\c boolean)
+- \c duration=200ms: Stimulus duration (\c number)
+- \c pause=300ms: Pause between stimuli (\c number)
+- \c onwidth=10ms: Window length for onset firing rate (\c number)
+- \c sswidth=100ms: Window length for steady-state firing rate (\c number)
+- Analysis
+- \c repeats=12: Number of repeats for each stimulus (\c integer)
+- \c estrepeats=3: Repeats for stimulus while estimating f-I-curve (\c integer)
+- \c side=best: Speaker (\c string)
+- Analysis Bounds
+- \c intup=5dB SPL: Increases upper intensity bound by:  (\c number)
+- \c switch_high=false: Higher bound FR fixed (\c boolean)
+- \c per_high=5%: Percentage of max FR (\c number)
+- \c fix_high=500Hz: Absolute value for bound of upper FR (\c number)
+- \c switch_low=false: Lower bound FR fixed (\c boolean)
+- \c per_low=50%: Percentage of max FR (\c number)
+- \c fix_low=150Hz: Absolute value for lower bound of FR (\c number)
+- \c minfr=30Hz: Minimum firing rater response (\c number)
+- Iso-Response-Sets
+- \c isonumber=5: Number of Iso-Response-Sets evaluated (\c integer)
+- \c isopoints=33: Number of data points on each IRS (\c integer)
 
-Keyboard shortcuts:
+\par Keyboard shortcuts:
 - \c Space: Pressing space twice aborts IsoResponse
 after finishing up measuring the curent f-I curve.
 
-Output files:
+\par Files:
 - \c isoresponsespikes.dat: The spike trains...
-
 - \c isoresponserates.dat: Continuous recording of measured
 f-I-curves. Before each f-I-curve the header data is recorded. The
 'run' number marks the experiment. In the table you find the
@@ -136,6 +141,7 @@ deviation, and the number of repetitions:
 
 I(dB SPL) I_t(dB SPL) A1(mPa) A2(mPa) f_on(Hz) sd(Hz) f_s(Hz) sd(Hz) f_m(Hz) sd(Hz) trials
 
+\version 1.1 (Jan 10, 2008)
 */
 
 

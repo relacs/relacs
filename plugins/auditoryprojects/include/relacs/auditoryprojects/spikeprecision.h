@@ -38,15 +38,44 @@ namespace auditoryprojects {
 \brief [RePro] Assess spike precision in locust auditory receptors
 \author Samuel Glauser
 \author Jan Benda
+
+\par Options
+- Stimulus
+- \c freqrange=: Frequency range (\c string)
+- \c amplitude=4dB: Amplitude of envelope (\c number)
+- \c intensity=80dB SPL: Stimulus intensity (\c number)
+- \c intensitybase=SPL: Stimulus intensity relative to (\c string)
+- \c repeats=10times: Number of stimulus presentations (\c number)
+- \c duration=500ms: Duration of stimulus (\c number)
+- \c pause=1000ms: Duration of pause between stimuli (\c number)
+- \c carrierfreq=5kHz: Carrier frequency (\c number)
+- \c usebestfreq=true: Use the cell's best frequency (\c boolean)
+- \c side=left: Speaker (\c string)
+- Waveform
+- \c waveform=sine: Type of amplitude modulation (\c string)
+- \c dutycycle=50%: Duty-cycle of rectangular waveform (\c number)
+- \c stimfile=: Stimulus file (\c string)
+- \c stimampl=0: Amplitude factor (standard deviation) of stimulus file (\c number)
+- \c relfreqgap=20%: Relative width of frequency gap (\c number)
+- \c absfreqgap=10Hz: Absolute width of frequency gap (\c number)
+- \c rescale=true: Rescale filtered noise-gap stimuli (\c boolean)
+- \c ramp2=0ms: Ramp for rectangles and saw tooths (\c number)
+- \c ramp=2ms: Ramp at beginning and end of stimulus (\c number)
+- Intensity - search
+- \c userate=true: Search intensity for target firing rate (\c boolean)
+- \c rate=100Hz: Target firing rate (\c number)
+- \c ratetol=5Hz: Tolerance for target firing rate (\c number)
+- \c intensitystep=8dB: Initial intensity step (\c number)
+- \c searchrepeats=2times: Number of search stimulus presentations (\c number)
+- Analysis
+- \c skipwin=200ms: Initial portion of stimulus not used for analysis (\c number)
+- \c sigma1=1ms: Standard deviation of rate smoothing kernel 1 (\c number)
+- \c sigma2=20ms: Standard deviation of rate smoothing kernel 2 (\c number)
+- Save stimuli
+- \c storemode=session: Save stimuli in (\c string)
+- \c storepath=: Save stimuli in custom directory (\c string)
+
 \version 1.5 (Jan 10, 2008)
--# removed stop() function
--# Introduced separate plot widget for intensity search
-\version 1.4 (Feb 28, 2006)
--# Rescale cutoff in any case. Only noise gap has this as an option.
--# New ramp2 parameter for rectangular and saw tooth stimuli.
--# Changed "Clipped" warning to info.
-\version 1.3 (Feb ??, 2006)
--# Rescale affects only the stimulus but not its amplitude.
 */
 
 

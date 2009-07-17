@@ -32,18 +32,21 @@ namespace acoustic {
 
 
 /*!
-  \class CalibMicrophone
-  \brief Determine calibration factor for a microphone using a calibration sound source.
-  \author Jan Benda
-  \version 1.0
+\class CalibMicrophone
+\brief Determine calibration factor for a microphone using a calibration sound source.
+\author Jan Benda
 
-  \par Options
+\par Options
+- \c intensity=114dB SPL: Intensity of the sound source (\c number)
+- \c frequency=1000Hz: Frequency of the sound source (\c number)
+- \c intrace=Sound-1: Input trace (\c string)
+- \c duration=1seconds: Duration of a single measurement (\c number)
+- \c repeat=10: Number of measurements (\c integer)
+- \c amplitude=0V: rms amplitude (\c number)
+- \c amplitudestdev=0V: rms amplitude stdev (\c number)
+- \c scale=0V/Pa: Scale factor (\c number)
 
-  \par Files
-
-  \par Plots
-
-  \par Requirements
+\version 1.0 (Aug 11 2008)
 */
 
 

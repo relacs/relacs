@@ -34,7 +34,6 @@ namespace efield {
 \class ChirpDetector
 \brief [Detector] Detects chirps of wave-type weakly electric fish
 \author Jan Benda
-\version 1.2 (Jun 17, 2009)
 
 Chirps are transient increases of the EOD frequency of wave-type weakly electric fish.
 A chirp is detected if the EOD frequency increases by more than \a threshold Hz.
@@ -53,6 +52,7 @@ The times, sizes, and widths of chirps.
 - \c minwidth=3ms: Minimum width (\c number)
 - \c maxwidth=50ms: Maximum width (\c number)
 
+\version 1.2 (Jun 17, 2009)
 */
 
 

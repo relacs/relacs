@@ -344,6 +344,7 @@ public:
         %u is the unit string,
         %i is the identifier string, and
         %r is the request string.
+        %T is the type of the parameter as a human readable string.
  	If \a format is empty, the format set by setFormat() is used.
         If the parameter is a number, then its value is returned
         in the unit specified by \a unit.

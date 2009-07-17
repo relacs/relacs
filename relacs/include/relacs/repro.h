@@ -98,7 +98,7 @@ public:
         This function is executed as a thread.
 	Within this thread the RePro, all input data, events, meta data,
 	and stimulus data are already locked (via lockAll()).
-	Access to those data is unlocked during sleep() and sleepOn().
+	Access to those data is unlocked during sleep(), sleepOn(), and sleepWait().
 	Beware that main() is executed in a thread different from the GUI thread.
 	Use postCustomEvent() to call some functions that eventually
 	paint something on the screen.
@@ -115,7 +115,7 @@ public:
 	posting custom events via postCustomEvent, since they might be executed
 	after the RePro terminated. This includes calling message() and
 	Plot::draw() or MultiPlot::draw().
-        \sa interrupt(), sleep(), timeStamp(), sleepOn() */
+        \sa interrupt(), sleep(), timeStamp(), sleepOn(), sleepWait() */
   virtual int main( void ) = 0;
 
     /*! Returns \c true if the RePro thread should be stopped immediately.
@@ -139,28 +139,38 @@ public:
 
     /*! Sleep for some time.
         Right before returning, the data and event buffers are updated.
+	During this function all data are unlocked by unlockAll().
 	\param[in] t the time to sleep in seconds.
 	\param[in] tracetime the size the input data should have after the sleep.
+	For internal use only!
         \return \a true if the main() thread needs to be stopped.
-        \sa sleepOn(), timeStamp(), interrupt() */
+        \sa sleepOn(), timeStamp(), sleepWait(), interrupt() */
   bool sleep( double t, double tracetime=-1.0 );
     /*! Memorize the current time. 
         This time is used by sleepOn() to calculate the remaining
 	time to sleep. 
-        \sa sleepOn(), sleep() */
+        \sa sleepOn(), sleep(), sleepWait() */
   void timeStamp( void );
     /*! Sleep for \a t seconds relative to the last call of timeStamp(). 
-        Returns \a true if the main() thread needs to be stopped.
-        \sa sleep(), timeStamp(), interrupt() */
+        Right before returning, the data and event buffers are updated.
+	During this function all data are unlocked by unlockAll().
+	\param[in] t the time to sleep since the last call to timeStamp() in seconds.
+        \return \a true if the main() thread needs to be stopped.
+        \sa sleep(), sleepWait(), timeStamp(), interrupt() */
   bool sleepOn( double t );
-
-    /*! Wait on the RePro's waitcondition for sleeping.
-        \param[in] time the maximum time to be waiting for.
-        If \a time is smaller than zero, wait() waits forever.
-        \return \c false if wait() timed out, i.e. was not signalled a wakeAll()
+    /*! Wait on the RePro's waitcondition for sleeping
+        or sleep for the specified time.
+	During this function all data are unlocked by unlockAll().
+        The data and event buffers are NOT updated after sleeping.
+        \param[in] time the maximum time to be waiting for,
+	i.e. the time to sleep in seconds.
+        If \a time is smaller than zero, sleepWait() waits forever.
+        \return \c false if sleepWait() slept for the specified time,
+	\c true if sleeping was interrupted by wake().
         \sa wake() */
   bool sleepWait( double time=-1.0 );
-    /*! Wake all threads that wait on the RePro's waitcondition for sleeping. 
+    /*! Wake all threads that wait on the RePro's waitcondition for sleeping.
+        In particular, interrupt a sleep(), sleepOn(), or sleepWait().
         \sa sleepWait() */
   void wake( void );
 

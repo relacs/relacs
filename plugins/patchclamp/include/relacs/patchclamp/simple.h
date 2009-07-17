@@ -33,24 +33,23 @@ namespace patchclamp {
 \class Simple
 \brief [RePro] Test dynamic clamp
 \author Jan Benda
-\version 0.0 (Feb 14, 2008)
 
 \par Options
-\arg \b intrace (\c text): Name of the input trace. 
-\arg \b outtrace (\c text): Name of the output trace. 
-\arg \b amplitude (\c number): Amplitude of output signal.
-\arg \b duration (\c number, \e ms): Duration of stimulus.
-\arg \b pause (\c number, \e ms): Duration of pause bewteen outputs.
-\arg \b repeats (\c integer): Number of repetitions. 
+- \c intrace=V-1: Input trace (\c string)
+- \c outtrace=Speaker-1: Output trace (\c string)
+- \c amplitude=1: Amplitude of output signal (\c number)
+- \c duration=100ms: Duration of output (\c number)
+- \c stimulus=constant: Stimulus type (\c string)
+- \c samerate=true: Use sampling rate of input (\c boolean)
+- \c samplerate=1kHz: Sampling rate of output (\c number)
+- \c pause=400ms: Duration of pause bewteen outputs (\c number)
+- \c repeats=100: Repeats (\c integer)
+- \c save=false: Save recorded traces (\c boolean)
 
 \par Files
-\arg No output files.
+\arg No output files yet.
 
-\par Plots
-\arg 
-
-\par Requirements
-\arg 
+\version 0.0 (Feb 14, 2008)
 */
 
 

@@ -33,17 +33,16 @@ namespace base {
 \brief [Model] A toy model for testing.
 \author Jan Benda
 
-Records either Gaussian white noise (\c model=Noise) or the stimulus
-(\c model=Stimulu), both multiplied by \c gain.
+Records either Gaussian white noise (\c model=Noise),
+a sine wave with the specified frequency (\c model=Sine),
+or the stimulus (\c model=Stimulus), multiplied by \c gain.
 
 \par Options
-- \c model=Noise|Stimulus: The model (\c string)
+- \c model=Noise: The model (\c string)
 - \c gain=1: Gain (\c number)
+- \c freq=1000Hz: Frequency (\c number)
 
 \version 1.1 (Jan 31, 2008)
--# added model option
-\version 1.0 (Jan 5, 2006)
-
 */
 
 

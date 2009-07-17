@@ -35,8 +35,7 @@ namespace multielectrode {
 /*!
 \class MultiTraceSTA
 \brief [RePro] Computes spike-triggered averages from all recorded input traces
-\author Jan Benda, Michael Pfizenmaier
-\version 0.1 (Jan 21, 2009)
+\author Jan Benda
 
 \par Options
 - \c inspikes=Spikes-1: Input spike train (\c string)
@@ -55,6 +54,8 @@ The STAs. All snippets in red, the STA (blue) and the standard deviation (cyan).
 \par Requirements
 - At least one voltage trace
 - One spike trace
+
+\version 0.1 (Jan 21, 2009)
 */
 
 

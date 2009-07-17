@@ -34,11 +34,17 @@ namespace base {
 \class SetOutput
 \brief [RePro] Set an output to a specified value
 \author Jan Benda
-\version 1.0 (Mar 21, 2009)
+
+Either sets the value of a single output trace or
+shows a dialog, where the values of all output parameter
+can be specified and set.
 
 \par Options
-\arg \b outtrace (\c text): Name of the output trace. 
-\arg \b value (\c number): Value to be writen to output trace.
+- \c outtrace=V-1: Output trace (\c string)
+- \c value=0: Value to be writen to output trace (\c number)
+- \c interactive=false: Set values interactively (\c boolean)
+
+\version 1.0 (Mar 21, 2009)
 */
 
 

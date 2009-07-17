@@ -38,28 +38,27 @@ namespace auditory {
 \brief [RePro] Periodically emits a search stimulus.
 \author Jan Benda
 \author Christian Machens
-\version 2.2 (Jan 10, 2008)
--# removed stop() function
-\version 2.1 (Jul 1, 2005)
 \todo Use mutex to protect stimulus creation.
 \bug sampling rate is only 10 kHz?!
 \todo reanable manual convert of signal
 
-The following options are supported:
-- \c intensity=80dB: Peak intensity of the search stimulus (\c number)
-- \c duration=50ms: Duration of the search stimulus (\c number)
-- \c pause=500ms: Duration of the pause between two succeeding stimuli (\c number)
-- \c prepause=100ms: Part of the pause before stimulus (\c number)
-- \c frequency=5kHz: Frequency of the stimulus (\c number)
-- \c waveform=sine|noise: Sine-wave or white-noise stimulus (\c text)
-- \c ramp=2ms: Ramp for stimulus onset and offset (\c number)
-- \c side=left|right|best: Loudspeaker used for output of the stimulus (\c text)
-- \c repeats=0: Number of repetitions of the search stimulus. 0 = infinitely (\c integer)
-- \c adjust=true: Adjust input gains? (\c boolean)
-- \c setbestside=never|no session|alwayse: Set the "best side" variable of the session to the current used speaker (\c text)
-- \c keep=true: Keep changes that have been entered through the RePro's GUI (\c boolean)
+\par Options
+- \c intensity=80dB: Intensity (\c number)
+- \c mute=false: No stimulus (\c boolean)
+- \c duration=50ms: Duration of stimulus (\c number)
+- \c pause=500ms: Duration of pause (\c number)
+- \c prepause=50ms: Part of pause before stimulus (\c number)
+- \c frequency=5kHz: Frequency of stimulus (\c number)
+- \c waveform=sine: Waveform of stimulus (\c string)
+- \c ramp=2ms: Ramp (\c number)
+- \c side=left: Speaker (\c string)
+- \c repeats=0: Number of repetitions (\c integer)
+- \c adjust=true: Adjust input gains (\c boolean)
+- \c saving=true: Save raw data (\c boolean)
+- \c setbestside=never: Set the sessions's best side (\c string)
+- \c keep=true: Keep changes (\c boolean)
 
-Keyboard shortcuts:
+\par Keyboard shortcuts:
 - \c Left: Left speaker
 - \c Right: Right speaker
 - \c M, \c %Pause: Toggle mute
@@ -71,6 +70,8 @@ Keyboard shortcuts:
 - \c Alt+Down: Decrease frequency by 1kHz
 - \c Alt+Shift+Up: Increase frequency by 5kHz
 - \c Alt+Shift+Down: Decrease frequency by 5kHz
+
+\version 2.2 (Jan 10, 2008)
  */
 
 

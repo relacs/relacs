@@ -36,10 +36,20 @@ namespace auditoryprojects {
 \class OneClick
 \brief [RePro] A single short click
 \author Alexander Wolf
+
+\par Options
+- Intensities
+- \c intmin=30dB SPL: Minimum Click intensity (\c number)
+- \c intmax=100dB SPL: Maximum Click intensity (\c number)
+- \c intstep=5dB SPL: Click intensity step (\c number)
+- \c repeat=15: Number of repetitions of the whole f-I curve measurement (\c integer)
+- Waveform
+- \c duration=2000microsec: Duration of stimulus (\c number)
+- \c latency=2ms: Latency after stimulus (\c number)
+- \c pause=400ms: Pause (\c number)
+- \c side=left: Speaker (\c string)
+
 \version 0.2 (Jan 10, 2008)
--# removed stop() function
-\version 0.1
-\brief 
 */
 
 

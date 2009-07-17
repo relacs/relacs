@@ -39,13 +39,35 @@ namespace ephys {
 \class SpikeDetector
 \brief [Detector] A detector for spikes in single unit recordings.
 \author Jan Benda
-\version 1.6 (Jan 24, 2008)
--# fixed bugs in trend indication
--# added options testwidth and testinterval
-\version 1.5 (Jul 1, 2005)
-\bug dynamicPeakTrough should get minIndex and not begin() as first!
 
-Sorry! No documentation.
+\par Options
+- Detector
+- \c minthresh=10mV: Minimum threshold (\c number)
+- \c threshold=10mV: Threshold (\c number)
+- \c delay=1sec: Delay time (\c number)
+- \c decay=10sec: Decay time constant (\c number)
+- \c ratio=50%: Ratio threshold / size (\c number)
+- \c testwidth=true: Test spike width (\c boolean)
+- \c maxwidth=1.5ms: Maximum spike width (\c number)
+- \c testisi=true: Test interspike interval (\c boolean)
+- \c minisi=1ms: Minimum interspike interval (\c number)
+- Running average
+- \c nospike=100ms: Interval for no spike (\c number)
+- \c considerstimulus=false: Expect spikes during stimuli only (\c boolean)
+- Indicators
+- \c resolution=0.5mV: Resolution of spike size (\c number)
+- \c log=false: Logarithmic histograms (\c boolean)
+- \c update=1sec: Update time interval (\c number)
+- \c history=10sec: Maximum history time (\c number)
+- \c qualitythresh=5%: Quality threshold (\c number)
+- \c trendthresh=1%: Trend threshold (\c number)
+- \c trendtime=1sec: Trend timescale (\c number)
+- \c rate=0Hz: Rate (\c number)
+- \c size=0mV: Spike size (\c number)
+- \c trend=0: Trend (\c integer)
+- \c quality=0: Quality (\c integer)
+
+\version 1.6 (Jan 24, 2008)
 */
 
 

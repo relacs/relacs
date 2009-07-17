@@ -33,20 +33,13 @@ namespace calibration {
 \class RestartDelay
 \brief [RePro] Measures delays due to restart of the data acquisition
 \author Jan Benda
-\version 1.3 (Feb 8, 2008)
--# removed subsample option
--# check interrupt() after each sleep
-\version 1.2 (Jan 10, 2008)
--# removed stop() function
--# moved class variables to the main() functions
-\version 1.1 (Dec 20, 2007)
 
 \par Options
-\arg \b duration (\c number, \e ms): Length of analysis window
-to the left and right of the restart event.
-\arg \b repeats (\c integer): Number of repetitions. 
-\arg \b intrace (\c text): Name of the input trace. 
-\arg \b samplerate (\c number, \e kHz): Sampling rate used for output of the zero stimulus.
+\par Options
+- \c duration=100ms: Duration of analysis window (\c number)
+- \c repeats=100: Repeats (\c integer)
+- \c intrace=V-1: Input trace (\c string)
+- \c samplerate=10kHz: Sampling rate of zero output (\c number)
 
 \par Files
 \arg No output files.
@@ -56,6 +49,8 @@ to the left and right of the restart event.
 
 \par Requirements
 \arg A sine wave generator connected to the selected input channel.
+
+\version 1.3 (Feb 8, 2008)
 */
 
 

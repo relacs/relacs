@@ -34,7 +34,6 @@ namespace efield {
 \class BeatDetector
 \brief [Detector] Detects beats in EODs of wave-type weakly electric fish
 \author Jan Benda
-\version 1.2 (Jun 17, 2009)
 
 Detects the peaks and troughs of EOD beats.
 The dynamic threshold is set to \a ratio times the amplitude of the beat
@@ -53,6 +52,7 @@ The times and amplitudes of beat peaks and troughs.
 - \c decay=10sec: Decay time constant (\c number)
 - \c ratio=50%: Ratio threshold / size (\c number)
 
+\version 1.2 (Jun 17, 2009)
 */
 
 

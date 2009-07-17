@@ -41,8 +41,8 @@ namespace auditory {
 \class Session
 \brief [Control] Control recordings from auditory neurons
 \author Jan Benda
-\version 1.3 (Jan 22, 2008)
 \todo Temperature and Resistance need also to be displayed in the widget.
+\version 1.4 (Mar 1, 2009)
 */
 
 

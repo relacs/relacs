@@ -28,7 +28,7 @@ namespace multielectrode {
 
 MultiTraceSTA::MultiTraceSTA( void )
   : RePro( "MultiTraceSTA", "Multiple Traces STA", "Multi-electrode",
-	   "Jan Benda, Michael Pfizenmaier", "0.1", "Jan 21, 2009" ),
+	   "Jan Benda", "0.1", "Jan 21, 2009" ),
     P( this, "multitracestaplot" )
 {
   // add some options:

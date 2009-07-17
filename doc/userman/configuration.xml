@@ -1,0 +1,179 @@
+<chapter xml:id='configuration'><title xml:id='configurationtitle'>Configuration</title>
+<para>
+The following is going to be a complete description of the RELACS configuration files.
+Right now, this is not finished yet.
+If you have questions regarding the configuration of RELACS,
+please contact me (benda@bio.lmu.de, subject: RELACS).
+</para>
+<para>
+RELACS is controlled by three configuration files
+</para>
+<variablelist>
+  <varlistentry><term><filename>relacs.cfg</filename></term>
+    <listitem><para>
+      This configuration file defines the basic, more or less hardware dependent
+      settings for RELACS, e.g. input devices and channels, output devices and channels,
+      filter, detectors, etc.
+    </para></listitem>
+  </varlistentry>
+  <varlistentry><term><filename>relacsplugin.cfg</filename></term>
+    <listitem><para>
+      Here, all default parameter for experimental protocols,
+      filter, detectors, and controls are stored.
+    </para></listitem>
+  </varlistentry>
+  <varlistentry><term><filename>macros.cfg</filename></term>
+    <listitem><para>
+      Specifies macros, i.e. lists of experimental protocols.
+      The format of this file is described in detail in the following chapter
+      (<xref linkend='macros' endterm='macrostitle'/>).
+    </para></listitem>
+  </varlistentry>
+</variablelist>
+
+<section xml:id='relacscfg'><title>The <filename>relacs.cfg</filename> configuration file</title>
+<para>
+The configuration file consists of several sections.
+Each section starts with a '*' followed by the name of the section.
+Within each section the configuration settings are specified as name-value pairs.
+In the following, the settings are described for each section.
+</para>
+  <section xml:id='relacscfgsettings'><title>Settings</title>
+    <para>
+    Some general settings.
+    </para>
+    <itemizedlist>
+	<listitem><para><varname></varname>: .</para></listitem>
+    </itemizedlist>
+  </section>
+
+  <section xml:id='relacscfgmetadata'><title>MetaData</title>
+    <para>
+    Defines sections in the stop session dialog.
+    </para>
+    <itemizedlist>
+	<listitem><para><varname></varname>: .</para></listitem>
+    </itemizedlist>
+  </section>
+
+  <section xml:id='relacscfgrelacs'><title>RELACS</title>
+    <para>
+    Defines the input and output traces.
+    </para>
+    <itemizedlist>
+	<listitem><para><varname>input data</varname>: The input traces.</para></listitem>
+	<listitem><para><varname></varname>: .</para></listitem>
+	<listitem><para><varname>output data</varname>: The output traces.</para></listitem>
+	<listitem><para><varname></varname>: .</para></listitem>
+    </itemizedlist>
+  </section>
+
+  <section xml:id='relacscfgfilter'><title>FilterDetectors</title>
+    <para>
+    The list of filter and detectors.
+    </para>
+    <itemizedlist>
+	<listitem><para><varname>FilterN</varname>: Introduces a new filter/detector.</para></listitem>
+	<listitem><para><varname>name</varname>: A name for this particular filter that is used for its output.</para></listitem>
+	<listitem><para><varname>filter</varname>: The name of the filter plugin.</para></listitem>
+	<listitem><para><varname>inputtrace</varname>: The name of the input trace.</para></listitem>
+	<listitem><para><varname></varname>: .</para></listitem>
+    </itemizedlist>
+  </section>
+
+  <section xml:id='relacscfgmacros'><title>Macros</title>
+    <para>
+    The name and behavior of macro configuration files.
+    </para>
+    <itemizedlist>
+	<listitem><para><varname></varname>: .</para></listitem>
+    </itemizedlist>
+  </section>
+
+  <section xml:id='relacscfgdevices'><title>Devices</title>
+    <para>
+    A list of all devices,
+    that do not fit into the following categories.
+    </para>
+    <itemizedlist>
+	<listitem><para><varname>pluginN</varname>: The name of the plugin for controlling the device.</para></listitem>
+	<listitem><para><varname>deviceN</varname>: The name of the device file.</para></listitem>
+	<listitem><para><varname>identN</varname>: A short and unique name for this device.</para></listitem>
+    </itemizedlist>
+  </section>
+
+  <section xml:id='relacscfgai'><title>Analog Input Devices</title>
+    <para>
+    A list of all used analog input devices,
+    probably part of data acquisition boards.
+    </para>
+    <itemizedlist>
+	<listitem><para><varname>pluginN</varname>: The name of the plugin for controlling the device.</para></listitem>
+	<listitem><para><varname>deviceN</varname>: The name of the device file, e.g. <filename>/dev/comedi0</filename>.</para></listitem>
+	<listitem><para><varname>identN</varname>: A short and unique name for this device.</para></listitem>
+    </itemizedlist>
+  </section>
+
+  <section xml:id='relacscfgao'><title>Analog Output Devices</title>
+    <para>
+    A list of all used analog output devices,
+    probably part of data acquisition boards.
+    </para>
+    <itemizedlist>
+	<listitem><para><varname>pluginN</varname>: The name of the plugin for controlling the device.</para></listitem>
+	<listitem><para><varname>deviceN</varname>: The name of the device file, e.g. <filename>/dev/comedi0</filename>.</para></listitem>
+	<listitem><para><varname>identN</varname>: A short and unique name for this device.</para></listitem>
+    </itemizedlist>
+  </section>
+
+  <section xml:id='relacscfgdio'><title>Digital I/O Devices</title>
+    <para>
+    A list of all used digital I/O devices,
+    probably part of data acquisition boards.
+    </para>
+    <itemizedlist>
+	<listitem><para><varname>pluginN</varname>: The name of the plugin for controlling the device.</para></listitem>
+	<listitem><para><varname>deviceN</varname>: The name of the device file, e.g. <filename>/dev/comedi0</filename>.</para></listitem>
+	<listitem><para><varname>identN</varname>: A short and unique name for this device.</para></listitem>
+    </itemizedlist>
+  </section>
+
+  <section xml:id='relacscfgattenuator'><title>Attenuator Devices</title>
+    <para>
+    A list of all used attenuators, that are connected to
+    analog output lines.
+    </para>
+    <itemizedlist>
+	<listitem><para><varname>pluginN</varname>: The name of the plugin for controlling the device.</para></listitem>
+	<listitem><para><varname>deviceN</varname>: The name of the device file.</para></listitem>
+	<listitem><para><varname>identN</varname>: A short and unique name for this device.</para></listitem>
+    </itemizedlist>
+  </section>
+
+  <section xml:id='relacscfginterfaces'><title>Attenuator Interfaces</title>
+    <para>
+    The plugins that define how the intensity value of an output signal
+    is translated into an attenuation via an attenuator device.
+    </para>
+    <itemizedlist>
+	<listitem><para><varname>pluginN</varname>: The name of the attenuator interface plugin.</para></listitem>
+	<listitem><para><varname>deviceN</varname>: The identifier of the attenuator device.</para></listitem>
+	<listitem><para><varname>lineN</varname>: The line ofthe attenuator device.</para></listitem>
+	<listitem><para><varname>aoN</varname>: The identifier of the analog output device.</para></listitem>
+	<listitem><para><varname>channelN</varname>: The channel number on the analog output device.</para></listitem>
+	<listitem><para><varname>identN</varname>: A short and unique identifier for the attenuator interface.</para></listitem>
+    </itemizedlist>
+  </section>
+
+  <section xml:id='relacscfgsetup'><title>Setup</title>
+    <para>
+    Some specifications of the recording setup.
+    </para>
+    <itemizedlist>
+	<listitem><para><varname></varname>: .</para></listitem>
+    </itemizedlist>
+  </section>
+
+</section>
+
+</chapter>

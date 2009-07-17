@@ -708,6 +708,25 @@ Str Parameter::text( int index, const string &format, const string &unit ) const
   f.format( Ident, 'i' );
   f.format( Request, 'r' );
 
+  string typestr = "notype";
+  if ( isText() )
+    typestr = "string";
+  else if ( isNumber() )
+    typestr = "number";
+  else if ( isInteger() )
+    typestr = "integer";
+  else if ( isBoolean() )
+    typestr = "boolean";
+  else if ( isDate() )
+    typestr = "date";
+  else if ( isTime() )
+    typestr = "time";
+  else if ( isLabel() )
+    typestr = "label";
+  else if ( isSeparator() )
+    typestr = "separator";
+  f.format( typestr, 'T' );
+
   string u( unit );
   if ( u.empty() )
     u = OutUnit;
@@ -879,6 +898,25 @@ Str Parameter::defaultText( int index, const string &format,
 
   f.format( Ident, 'i' );
   f.format( Request, 'r' );
+
+  string typestr = "notype";
+  if ( isText() )
+    typestr = "string";
+  else if ( isNumber() )
+    typestr = "number";
+  else if ( isInteger() )
+    typestr = "integer";
+  else if ( isBoolean() )
+    typestr = "boolean";
+  else if ( isDate() )
+    typestr = "date";
+  else if ( isTime() )
+    typestr = "time";
+  else if ( isLabel() )
+    typestr = "label";
+  else if ( isSeparator() )
+    typestr = "separator";
+  f.format( typestr, 'T' );
 
   string u( unit );
   if ( u.empty() )

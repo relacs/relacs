@@ -37,23 +37,52 @@ namespace auditory {
 \class FICurve
 \brief [RePro] Optimized measuring of f-I curves.
 \author Jan Benda
-\version 1.4 (Oct 1, 2008)
--# added manual selection of intensity skip
-\version 1.3 (Jan 10, 2008)
--# updated code
--# added usebestsat option
-\version 1.2 (Jan 10, 2006)
 \bug Need to sleep 10ms longer to prevent busy error!
 
 Features:
 - Shorter pauses when there is no response.
 
 \par Options
-\arg \b duration (\c number, \e ms): Duration of calibration stimulus.
-\arg \b repeats (\c integer): Maximum repetitions of the calibration protocol.
-
-\par Files
-\arg \b calibrate.dat : the calibration data (measured versus requested stimulus intensity).
+- Intensities
+- \c intmin=30dB SPL: Minimum stimulus intensity (\c number)
+- \c intmax=100dB SPL: Maximum stimulus intensity (\c number)
+- \c intstep=1dB SPL: Sound intensity step (\c number)
+- \c usebestthresh=false: Relative to the cell's best threshold (\c boolean)
+- \c usebestsat=false: Maximum intensity relative to the cell's best saturation (\c boolean)
+- \c intshuffle=Up: Order of intensities (\c string)
+- \c intincrement=0: Initial increment for intensities (\c integer)
+- \c singlerepeat=6: Number of immediate repetitions of a single stimulus (\c integer)
+- \c blockrepeat=1: Number of repetitions of a fixed intensity increment (\c integer)
+- \c repeat=1: Number of repetitions of the whole f-I curve measurement (\c integer)
+- \c manualskip=false: Show buttons for manual selection of intensities (\c boolean)
+- Waveform
+- \c waveform=sine: Waveform of stimulus (\c string)
+- \c carrierfreq=5kHz: Frequency of carrier (\c number)
+- \c usebestfreq=false: Use the cell's best frequency (\c boolean)
+- \c ramp=2ms: Ramp of stimulus (\c number)
+- \c duration=400ms: Duration of stimulus (\c number)
+- \c pause=400ms: Pause (\c number)
+- \c side=left: Speaker (\c string)
+- Optimization
+- Baseline activity
+- \c maxsilent=100: Maximum trials used for baseline activity (\c integer)
+- \c silentfactor=3: Weight for standard deviation of baseline activity (\c number)
+- \c resetsilent=Never: Reset estimation of baseline activity at (\c string)
+- No response
+- \c skippause=true: Skip pause if there is no response (\c boolean)
+- \c silentintincrement=1: Skip all stimuli below not responding ones<br> at intensity increments below (\c integer)
+- Slope
+- \c slopeintincrement=2: Optimize slopes at intensity increments below (\c integer)
+- \c minrateslope=0Hz/dB: Minimum slope of firing rate (\c number)
+- \c maxratefrac=100%: Fraction of maximum firing rate above which slopes are optimized (\c number)
+- \c extint=0dB SPL: Extend intensity range by (\c number)
+- Analysis
+- \c ratedt=1ms: Bin width for firing rate (\c number)
+- \c prewidth=50ms: Window length for baseline firing rate (\c number)
+- \c peakwidth=100ms: Window length for peak firing rate (\c number)
+- \c sswidth=50ms: Window length for steady-state firing rate (\c number)
+- \c setbest=true: Set results to the session variables (\c boolean)
+- \c setcurves=none: F-I curves to be passed to session (\c string)
 
 \par Plots 
 If you have selected \c manualskip then move the mouse into the top
@@ -66,7 +95,7 @@ Simultaneously holding down the \c shift key toggels all intensities below the
 selected one.
 Holding down the \c ctrl key toggels all intensities above the selected one.
 
-\par Requirements
+\version 1.4 (Oct 1, 2008)
 */
 
 

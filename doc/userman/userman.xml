@@ -3,6 +3,7 @@
         "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd" [
 <!ENTITY intro SYSTEM "introduction.xml">
 <!ENTITY gui SYSTEM "gui.xml">
+<!ENTITY config SYSTEM "configuration.xml">
 <!ENTITY macros SYSTEM "macros.xml">
 <!ENTITY repros SYSTEM "repros.xml">
 <!ENTITY utilities SYSTEM "utilities.xml">
@@ -33,6 +34,7 @@
 
 &intro;
 &gui;
+&config;
 &macros;
 &repros;
 &utilities;

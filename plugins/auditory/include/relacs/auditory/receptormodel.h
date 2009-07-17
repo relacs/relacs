@@ -33,7 +33,6 @@ namespace auditory {
 \brief [Model] Spiking neuron model stimulated through an auditory transduction chain.
 \author Alexander Wolf
 \author Jan Benda
-\version 1.1 (Jan 15, 2006)
 
 %ReceptorModel simulates the auditory transduction chain of Locusta
 migratoria. It is designed to work with RELACS in the dry mode (relacs
@@ -78,25 +77,39 @@ selected (in order of increasing complexity):
 - \c Runge-Kutta \c 4th \c order
 .
 
+\par Options
 The following options are supported (brief description of each
 option with default values and data type): 
-- \c tymp=Scaling: Select model for tympanum (1.) (\c integer)
-- \c freq=5.0kHz: Eigenfrequency of the tympanal membrane (\c number)
-- \c tdec=0.154ms: Damping time constant of tympanal membrane (\c number)
-- \c nl=Square saturated: Select model for mechano-electrical transduction (2.) (\c integer)
-- \c imax=60.0: Saturation = maximum current (\c number)
-- \c imin=0.0: Minimum = Zeron point current(\c number)
-- \c cut=0.02mPa: Amplitude where \c imax is reached (\c number)
-- \c slope=3000mPa^-1: Slope of linear Boltzman (\c number)
-- \c matchslope=1: Match slope of Boltzman to that of Square (\c boolean)
-- \c slope2=600000: Slope of square Boltzman (\c number)
-- \c matchslope2=1: Match slope of square Boltzman to that of Square (\c boolean)
-- \c spikemodel=: Select spikemodel (3.) (\c integer)
-- \c noise=0.0: Standard deviation of current noise (\c number)
-- \c deltat: Integration time constant (step size) (\c number)
-- \c integrator=Euler: Method of integration (4.) (\c integer)
+- Transduction chain
+- \c tymp=Scaling: Tympanum model (\c string)
+- \c freq=5kHz: Eigenfrequency (\c number)
+- \c tdec=0.154ms: Decay constant (\c number)
+- \c nl=Square saturated: Static nonlinearity (\c string)
+- Spike generator
+- \c spikemodel=Stimulus: Spike model (\c string)
+- \c noise=0: Standard deviation of current noise (\c number)
+- \c deltat=0.005ms: Delta t (\c number)
+- \c integrator=Euler: Method of integration (\c string)
+- Square = ax^2+imin, a=(imax-imin)/cut^2
+- Square saturated = imax, for |x|>=cut
+- Linear = b|x|+imin, b=(imax-imin)/cut
+- Linear saturated = imax, for |x|>=cut
+- Box = imin, for |x|<cut, = imax else
+- None = ax, a=(imax-imin)/cut
+- \c imax=60muA/cm^2: Maximum current (\c number)
+- \c imin=0muA/cm^2: Minimum current (zero point current) (\c number)
+- \c cut=0.02mPa: Amplitude of tympanum where imax is reached (\c number)
+- Boltzmann, (imax/(1-f_0))*(1/(1+exp[-slope*(x-x0)])+1/(1+exp[slope*(x+x0)])-f_0)+imin
+- \c slope=3000mPa^-1: Slope of Boltzmann (\c number)
+- \c matchslope=true: Set slope of Boltzmann to match square (\c boolean)
+- \c x0=0.01mPa: 1/2 of Imax-Imin is reached (\c number)
+- Boltzmann, 2(imax-imin)(1/(1+exp[-slope2*x^2])-1/2)+imin
+- \c slope2=6e+05mPa^-2: Slope of square Boltzmann (\c number)
+- \c matchslope2=true: Set slope of square Boltzmann to match square (\c boolean)
 -  Many more options for spike generators.
 .
+
+\version 1.1 (Jan 15, 2006)
 */
 
 

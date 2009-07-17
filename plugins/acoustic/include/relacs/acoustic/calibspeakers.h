@@ -36,9 +36,6 @@ namespace acoustic {
 \class CalibSpeakers
 \brief [RePro] Calibrating attenuation for loudspeakers.
 \author Jan Benda
-\version 1.1 (Aug 12, 2008)
--# calibrates to RMS not PEAK
-\version 1.0 (Sep 1, 2004)
 \bug too many values pushed into Gains and Offsets?
 
 Calibrates attenuators such that a full amplitude sine wave
@@ -48,16 +45,18 @@ The sound pressure level is base on
 the root mean square of the sound waveform!
 
 \par Options
-\arg \b reset (\c boolean): Reset calibration, i.e. do not use old calibration results.
-\arg \b am (\c boolean): Use amplitude modulation signal instead of sine wave.
-\arg \b frequency (\c number, \e Hz): If there is no fish EOD, then use sine wave with this frequency as a calibration stimulus.
-\arg \b beatfreq (\c number, \e Hz): If there is a fish EOD, then use calibration stimulus that results in this beat frequency.
-\arg \b duration (\c number, \e ms): Duration of calibration stimulus.
-\arg \b pause (\c number, \e ms): %Pause between successive stimuli.
-\arg \b maxcontrast (\c number, \e %): Maximum contrast (beat amplitude / EOD amplitude) to be used.
-\arg \b maxint (\c integer): Maximum number of test intensities.
-\arg \b minintensity (\c number, \e %): Minimum stimulus intensity relative to EOD amplitude.
-\arg \b repeats (\c integer): Maximum repetitions of the calibration protocol.
+- \c frequencyrange=2000..40000..1000: Frequency range (Hz) (\c string)
+- \c intmin=60dB SPL: Minimum sound intensity (\c number)
+- \c intrange=40dB SPL: Sound intensity range (\c number)
+- \c intstep=5dB SPL: Sound intensity step (\c number)
+- \c outtrace=Speaker-1: Output trace (\c string)
+- \c intrace=Sound-1: Input trace (\c string)
+- \c reset=false: Reset calibration for each frequency? (\c boolean)
+- \c clear=true: Clear calibration table? (\c boolean)
+- \c duration=400ms: Duration of stimulus (\c number)
+- \c skip=10ms: Skip initial stimulus (\c number)
+- \c pause=0ms: Pause (\c number)
+- \c scale=1: Scale for V/Pa (\c number)
 
 \par Files
 \arg \b calibrate.dat : the calibration data (measured versus requested stimulus intensity).
@@ -69,6 +68,8 @@ This line should for a successful calibration coincide with the blue 1:1 line.
 
 \par Requirements
 \arg Transdermal EOD recording (\c EODTrace2) and events (\c EODEvents2).
+
+\version 1.1 (Aug 12, 2008)
 */
 
 
