@@ -159,6 +159,9 @@ public:
     /*! Unlocks the mutex of output signals. */
   void unlockSignals( void ) { SignalMutex.unlock(); };
 
+    /*! set the minimum time the traces should have after updateData() to \a t. */
+  void setMinTraceTime( double t );
+
     /*! Wakes up all waitconditions. */
   void wakeAll( void );
 
@@ -409,8 +412,12 @@ private:
   bool RunData;
   QMutex RunDataMutex;
 
-  // wait for stimulus data to be writte:
+    /*! wait for stimulus data to be written */
   QWaitCondition ThreadSleepWait;
+    /*! Minimum size the input trace must have after updateData. */
+  double MinTraceTime;
+  QMutex MinTraceMutex;
+  QWaitCondition ReadDataWait;
 
   // synchronization of Session and Control threads:
   QWaitCondition DataSleepWait;

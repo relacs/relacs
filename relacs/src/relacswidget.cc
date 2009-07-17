@@ -96,6 +96,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     SignalMutex( false ),
     RunData( false ),
     RunDataMutex( false ),
+    MinTraceTime( 0.0 ),
     DeviceMenu( 0 ),
     Help( false )
 {
@@ -736,10 +737,26 @@ void RELACSWidget::setupOutTraces( void )
 
 void RELACSWidget::updateData( void )
 {
+  // read data:
   writeLockData();
   lockAI();
   AQ->convertData();
   unlockAI();
+  // do we need to wait for more data?
+  MinTraceMutex.lock();
+  double mintime = MinTraceTime;
+  MinTraceMutex.unlock();
+  while ( IL.success() && IL[0].currentTime() < mintime ) {
+    if ( acquisition() )
+      ReadDataWait.wait();
+    else
+      ReadDataWait.wait( 1 );
+    lockAI();
+    AQ->convertData();
+    unlockAI();
+  }
+  setMinTraceTime( 0.0 );
+  // update derived data:
   AQ->readSignal( SignalTime, IL, ED ); // we probably get the latest signal start here
   AQ->readRestart( IL, ED );
   ED.setRangeBack( IL[0].currentTime() );
@@ -782,6 +799,14 @@ void RELACSWidget::run( void )
     rd = RunData;
     RunDataMutex.unlock();
   } while( rd );
+}
+
+
+void RELACSWidget::setMinTraceTime( double t )
+{
+  MinTraceMutex.lock();
+  MinTraceTime = t;
+  MinTraceMutex.unlock();
 }
 
 
@@ -1530,6 +1555,7 @@ void RELACSWidget::startFirstAcquisition( void )
     CN[k]->initDevices();
 
   // start data aquisition:
+  setMinTraceTime( 0.0 );
   lockAI();
   AQ->setBufferTime( SS.number( "readinterval", 0.01 ) );
   AQ->setUpdateTime( SS.number( "processinterval", 0.1 ) );
@@ -1643,6 +1669,7 @@ void RELACSWidget::startFirstSimulation( void )
     CN[k]->initDevices();
 
   // start data aquisition:
+  setMinTraceTime( 0.0 );
   lockAI();
   AQ->setBufferTime( SS.number( "readinterval", 0.01 ) );
   AQ->setUpdateTime( SS.number( "processinterval", 0.1 ) );

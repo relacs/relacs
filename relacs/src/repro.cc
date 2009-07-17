@@ -192,8 +192,11 @@ void RePro::requestStop( void )
 }
 
 
-bool RePro::sleep( double t )
+bool RePro::sleep( double t, double tracetime )
 {
+  if ( tracetime < 0.0 )
+    tracetime = trace( 0 ).currentTime() + t;
+
   RW->updateRePro();
 
   // interrupt RePro:
@@ -215,6 +218,7 @@ bool RePro::sleep( double t )
   }
 
   // force data updates:
+  RW->setMinTraceTime( tracetime );
   RW->ThreadSleepWait.wakeAll();
   RW->DataSleepWait.wait();
 
@@ -232,13 +236,14 @@ bool RePro::sleep( double t )
 void RePro::timeStamp( void )
 {
   SleepTime.start();
+  TraceTime = trace( 0 ).currentTime();
 }
 
 
 bool RePro::sleepOn( double t )
 {
   double st = 0.001 * SleepTime.elapsed();
-  return RePro::sleep( t - st );
+  return RePro::sleep( t - st, TraceTime + t );
 }
 
 

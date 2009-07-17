@@ -137,11 +137,13 @@ public:
         You still need to wait on the RePro thread to finish. */
   virtual void requestStop( void );
 
-    /*! Sleep for \a t seconds.
+    /*! Sleep for some time.
         Right before returning, the data and event buffers are updated.
-        Returns \a true if the main() thread needs to be stopped.
+	\param[in] t the time to sleep in seconds.
+	\param[in] tracetime the size the input data should have after the sleep.
+        \return \a true if the main() thread needs to be stopped.
         \sa sleepOn(), timeStamp(), interrupt() */
-  bool sleep( double t );
+  bool sleep( double t, double tracetime=-1.0 );
     /*! Memorize the current time. 
         This time is used by sleepOn() to calculate the remaining
 	time to sleep. 
@@ -430,6 +432,7 @@ private:
   mutable QMutex InterruptLock;
   QWaitCondition SleepWait;
   QTime SleepTime;
+  double TraceTime;
 
   int LastState;
   int CompleteRuns;
