@@ -184,10 +184,10 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     }
   }
 
- 
+  /*
   saveDoxygenOptions();
   ::exit( 0 );
- 
+  */
 
   if ( Plugins::empty() ) {
     printlog(  "! error: No valid plugins found. Exit now." );
