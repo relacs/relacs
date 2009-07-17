@@ -112,6 +112,7 @@ int StimulusDelay::main( void )
       warning( signal.errorText() );
       return Failed;
     }
+    sleepWait( duration );
     sleepOn( duration+pause );
     if ( interrupt() )
       return count > 2 ? Completed : Aborted;

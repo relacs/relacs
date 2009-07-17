@@ -118,9 +118,7 @@ int LinearField::main( void )
     // wait for input:
     Measure = false;
     Input = true;
-    unlockAll();
     sleepWait();
-    lockAll();
     Input = false;
     if ( Measure ) {
       double distance = GUIOpts.number( "distance" );

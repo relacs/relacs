@@ -122,9 +122,7 @@ int SetOutput::main( void )
     postCustomEvent( 1 ); // STW.setFocus();
     // wait for input:
     Change = false;
-    unlockAll();
     sleepWait();
-    lockAll();
     postCustomEvent( 2 ); // STW.clearFocus();
     // set new values:
     if ( Change ) {

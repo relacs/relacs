@@ -104,7 +104,7 @@ int RestartDelay::main( void )
     if ( interrupt() )
       return count > 2 ? Completed : Aborted;
     analyze( trace( intrace ), duration, count, deltat );
-    sleep( duration );
+    sleepWait( duration );
     if ( interrupt() )
       return count > 2 ? Completed : Aborted;
   }

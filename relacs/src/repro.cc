@@ -244,12 +244,16 @@ bool RePro::sleepOn( double t )
 
 bool RePro::sleepWait( double time )
 {
+  unlockAll();
+  bool r = false;
   if ( time <= 0.0 )
-    return SleepWait.wait();
+    r = SleepWait.wait();
   else {
     unsigned long ms = (unsigned long)::rint(1.0e3*time);
-    return SleepWait.wait( ms );
+    r = SleepWait.wait( ms );
   }
+  lockAll();
+  return r;
 }
 
 
