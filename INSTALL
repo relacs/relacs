@@ -36,6 +36,12 @@ upon request (benda@bio.lmu.de, subject: RELACS).
 
 3. Configure RELACS
 
+If you want to use the comedi data acquisition interface (www.comedi.org)
+for acquiring real data, then you need to install comedi first.
+For a demo running in simulation mode, this is not necessary.
+
+Then run
+
 > ./configure
 
 If ./configure finishes with a message like
