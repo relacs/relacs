@@ -176,12 +176,6 @@ public:
         i.e. the requested signal amplitude is too large. */
   static const int Overflow = -6;
 
-
- private:
-
-    /*! Device type id for all Attenuator devices. */
-  static const int Type = 4;
-
 };
 
 

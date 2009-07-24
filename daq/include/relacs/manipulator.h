@@ -123,12 +123,6 @@ public:
     /*! The maximum possible amplitude for the z-axis. */
   virtual double maxAmplZ( void ) const;
 
-
- private:
-
-    /*! Device type id for all Manipulator devices. */
-  static const int Type = 6;
-
 };
 
 

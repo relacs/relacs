@@ -27,7 +27,7 @@ namespace relacs {
 
 
 Attenuate::Attenuate( void )
-  : Device( Type ),
+  : Device( AttenuateType ),
     Att( 0 ),
     Index( -1 ),
     AODevice( "" ),
@@ -49,7 +49,7 @@ Attenuate::Attenuate( const string &deviceclass,
 		      const string &frequencyname,
 		      const string &frequencyunit,
 		      const string &frequencyformat )
-  : Device( deviceclass, Type ),
+  : Device( deviceclass, AttenuateType ),
     Att( 0 ),
     Index( -1 ),
     AODevice( "" ),

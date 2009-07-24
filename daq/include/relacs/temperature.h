@@ -50,12 +50,6 @@ public:
     /*! The current temperature in degree celsius. */
   virtual double temperature( void ) = 0;
 
-
- private:
-
-    /*! Device type id for Temperature devices. */
-  static const int Type = 7;
-
 };
 
 

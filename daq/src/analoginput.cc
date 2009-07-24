@@ -30,22 +30,22 @@ namespace relacs {
 
 
 AnalogInput::AnalogInput( void )
-  : Device( Type ),
-    AnalogInputType( 0 )
+  : Device( AnalogInputType ),
+    AnalogInputSubType( 0 )
 {
 }
 
 
 AnalogInput::AnalogInput( int aitype )
-  : Device( Type ),
-    AnalogInputType( aitype )
+  : Device( AnalogInputType ),
+    AnalogInputSubType( aitype )
 {
 }
 
 
 AnalogInput::AnalogInput( const string &deviceclass, int aitype )
-  : Device( deviceclass, Type ),
-    AnalogInputType( aitype )
+  : Device( deviceclass, AnalogInputType ),
+    AnalogInputSubType( aitype )
 {
 }
 
@@ -129,13 +129,13 @@ int AnalogInput::matchTraces( InList &traces ) const
 
 int AnalogInput::analogInputType( void ) const
 {
-  return AnalogInputType;
+  return AnalogInputSubType;
 }
 
 
 void AnalogInput::setAnalogInputType( int aitype )
 {
-  AnalogInputType = aitype;
+  AnalogInputSubType = aitype;
 }
 
 

@@ -27,13 +27,13 @@ namespace relacs {
 
 
 Attenuator::Attenuator( void )
-  : Device( Type )
+  : Device( AttenuatorType )
 {
 }
 
 
 Attenuator::Attenuator( const string &deviceclass )
-  : Device( deviceclass, Type )
+  : Device( deviceclass, AttenuatorType )
 {
 }
 

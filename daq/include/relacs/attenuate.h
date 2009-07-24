@@ -414,9 +414,6 @@ protected:
 
 private:
 
-    /*! Device type id for all Attenuate devices. */
-  static const int Type = 5;
-
     /*! The attenuator device. */
   Attenuator *Att;
     /*! The device index for \a Att. */

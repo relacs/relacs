@@ -52,7 +52,6 @@ public:
   
   /*! Construct a section of meta data.
       \param[in] name the section title
-      \param[in] prefix the prefix to be used for this section
       \param[in] group the group of the configuration file
                  where the configuration of this section is stored.
 		 See ConfigClass for details.
@@ -60,7 +59,7 @@ public:
       \param[in] md pointer to the MetaData that created this section.
       \param[in] rw pointer to the main RELACSWidget.
   */
-  MetaDataSection( const string &name, const string &prefix, int group, bool tab,
+  MetaDataSection( const string &name, int group, bool tab,
 		   MetaData *md, RELACSWidget *rw );
   virtual ~MetaDataSection( void );
 
@@ -95,11 +94,6 @@ public:
       in the dialog (\a tab = \c true). */
   void setOwnTab( bool tab );
 
-    /*! \return the prefix used for XML output. */ 
-  string prefix( void ) const;
-    /*! Set the prefix used for XML output ti \a prefix. */ 
-  void setPrefix( const string &prefix );
-
 
 protected:
 
@@ -110,7 +104,6 @@ protected:
 private:
 
   bool Tab;
-  string Prefix;
 
 };
 
@@ -208,9 +201,8 @@ public:
 
     /*! Add a new section to the meta data.
         \param[in] name the section title
-        \param[in] prefix a prefix to be used for XML output
         \param[in] tab does this section request an own tab in the dialog? */
-  void add( const string &name, const string &prefix, bool tab=false );
+  void add( const string &name, bool tab=false );
 
     /*! Load the meta data Options from the configuration file
         and immediately create the requested MetaDataSections. */

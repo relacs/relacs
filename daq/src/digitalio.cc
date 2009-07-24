@@ -28,7 +28,7 @@ namespace relacs {
 
 
 DigitalIO::DigitalIO( const string &deviceclass )
-  : Device( deviceclass, Type )
+  : Device( deviceclass, DigitalIOType )
 {
   freeLines();
 }

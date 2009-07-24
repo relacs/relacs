@@ -25,13 +25,13 @@ namespace relacs {
 
 
 Temperature::Temperature( void ) 
-  : Device( Type )
+  : Device( TemperatureType )
 {
 }
 
 
 Temperature::Temperature( const string &deviceclass )
-  : Device( deviceclass, Type )
+  : Device( deviceclass, TemperatureType )
 {
 }
 

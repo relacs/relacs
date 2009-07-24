@@ -82,6 +82,18 @@ class Device
 
 public:
 
+    /*! Predefined device types. \sa deviceType(), setDeviceType() */
+  enum {
+    MiscellaneousType = 0,
+    AnalogInputType = 1,
+    AnalogOutputType = 2,
+    DigitalIOType = 3,
+    AttenuatorType = 4,
+    AttenuateType = 5,
+    ManipulatorType = 6,
+    TemperatureType = 7
+  } DeviceTypes;
+
     /*! Return code indicating that the device driver is not opened. */
   static const int NotOpen = -1;
     /*! Return code indicating an invalid device or subdevice. */
@@ -93,10 +105,10 @@ public:
 
     /*! Construct a Device of type \a type.
         \sa setDeviceType() */
-  Device( int type=0 );
+  Device( int type=MiscellaneousType );
     /*! Construct a Device with class-name \a deviceclass and type \a type.
         \sa setDeviceClass(), setDeviceType() */
-  Device( const string &deviceclass, int type=0 );
+  Device( const string &deviceclass, int type=MiscellaneousType );
     /*! Destroy a Device. In case the associated device is open, close it. */
   virtual ~Device( void );
 
@@ -146,10 +158,14 @@ public:
         \sa setSettings(), clearSettings(), info() */
   string settings( void ) const;
 
-    /*! The id of the device class.
+    /*! The id of the device type.
         \sa deviceTypeStr() setDeviceType(), deviceClass(), deviceFile(), deviceIdent(),
 	deviceName(), deviceVendor() */
   int deviceType( void ) const;
+    /*! \return a string naming the device type.
+        \sa deviceType() setDeviceType(), deviceClass(), deviceFile(), deviceIdent(),
+	deviceName(), deviceVendor() */
+  string deviceTypeStr( void ) const;
     /*! \return the number of known device types. \sa deviceTypeStr(), deviceType() */
   static int deviceTypes( void );
     /*! \return a string naming the device type \a type. \sa deviceType(), \a deviecTypes() */ 
@@ -228,7 +244,7 @@ protected:
 
 private:
 
-  static const int MaxDeviceTypeStrs = 7;
+  static const int MaxDeviceTypeStrs = 8;
   static const string DeviceTypeStrs[MaxDeviceTypeStrs];
   
   int DeviceType;

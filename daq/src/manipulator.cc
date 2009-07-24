@@ -25,13 +25,13 @@ namespace relacs {
 
 
 Manipulator::Manipulator( void ) 
-  : Device( Type )
+  : Device( ManipulatorType )
 {
 }
 
 
 Manipulator::Manipulator( const string &deviceclass )
-  : Device( deviceclass, Type )
+  : Device( deviceclass, ManipulatorType )
 {
 }
 

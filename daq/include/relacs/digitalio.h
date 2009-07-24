@@ -152,9 +152,6 @@ protected:
 
 private:
 
-   /*! Device type id for all digital I/O devices. */
-  static const int Type = 3;
-
     /*! The maximum number of digital I/O lines. */
   static const int MaxDIOLines = 32;
     /*! The ids of allocated digitial I/O lines. */

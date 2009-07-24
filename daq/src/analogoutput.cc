@@ -29,24 +29,24 @@ namespace relacs {
 
 
 AnalogOutput::AnalogOutput( void )
-  : Device( Type ),
-    AnalogOutputType( 0 ),
+  : Device( AnalogOutputType ),
+    AnalogOutputSubType( 0 ),
     ExternalReference( -1.0 )
 {
 }
 
 
 AnalogOutput::AnalogOutput( int aotype )
-  : Device( Type ),
-    AnalogOutputType( aotype ),
+  : Device( AnalogOutputType ),
+    AnalogOutputSubType( aotype ),
     ExternalReference( -1.0 )
 {
 }
 
 
 AnalogOutput::AnalogOutput( const string &deviceclass, int aotype )
-  : Device( deviceclass, Type ),
-    AnalogOutputType( aotype ),
+  : Device( deviceclass, AnalogOutputType ),
+    AnalogOutputSubType( aotype ),
     ExternalReference( -1.0 )
 {
 }
@@ -139,13 +139,13 @@ void AnalogOutput::setSettings( const OutList &sigs, int writebuffer )
 
 int AnalogOutput::analogOutputType( void ) const
 {
-  return AnalogOutputType;
+  return AnalogOutputSubType;
 }
 
 
 void AnalogOutput::setAnalogOutputType( int aotype )
 {
-  AnalogOutputType = aotype;
+  AnalogOutputSubType = aotype;
 }
 
 

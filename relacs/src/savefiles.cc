@@ -498,35 +498,35 @@ void SaveFiles::saveStimulus( void )
     
   // xml metadata file:
   if ( XF != 0 && saving() && writing() ) {
-    *XF << "    <section name=\"stimulus\">\n";
+    *XF << "    <section name=\"Stimulus\">\n";
     lock();
     if ( !Options::empty() ) {
       int col = StimulusKey.column( "data>" + (*this)[0].ident() );
-      *XF << "      <section name=\"data\">\n";
+      *XF << "      <section name=\"Data\">\n";
       for( int k=0; k<Options::size(); k++ )
-	StimulusKey[col++].setNumber( (*this)[k].number() ).saveXML( *XF, 5, "Dataset." );
+	StimulusKey[col++].setNumber( (*this)[k].number() ).saveXML( *XF, 5, "Stimulus.Data." );
       *XF << "      </section>\n";
     }
     unlock();
     int col = StimulusKey.column( "stimulus>timing>time" );
-    StimulusKey[col++].setNumber( TraceFiles[0].Trace->signalTime() - SessionTime ).saveXML( *XF, 3, "Stim." );
+    StimulusKey[col++].setNumber( TraceFiles[0].Trace->signalTime() - SessionTime ).saveXML( *XF, 3, "Stimulus." );
     // Stimulus:
-    StimulusKey[col++].setNumber( 1000.0*Stimuli[0].Delay ).saveXML( *XF, 3, "Stim." );
+    StimulusKey[col++].setNumber( 1000.0*Stimuli[0].Delay ).saveXML( *XF, 3, "Stimulus." );
     for ( int k=0; k<RW->AQ->outTracesSize(); k++ ) {
       for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
 	const Attenuate *att = RW->AQ->outTraceAttenuate( k );
 	if ( Stimuli[j].Device == RW->AQ->outTrace( k ).device() &&
 	     Stimuli[j].Channel == RW->AQ->outTrace( k ).channel() ) {
 	  Parameter p( "identifier", "identifier", RW->AQ->outTraceName( k ) );
-	  p.saveXML( *XF, 3, "Stim." );
-	  StimulusKey[col++].setNumber( 0.001*Stimuli[j].SampleRate ).saveXML( *XF, 3, "Stim." );
+	  p.saveXML( *XF, 3, "Stimulus." );
+	  StimulusKey[col++].setNumber( 0.001*Stimuli[j].SampleRate ).saveXML( *XF, 3, "Stimulus." );
 	  StimulusKey[col++].setNumber( 1000.0*Stimuli[j].Length );
 	  if ( att != 0 ) {
-	    StimulusKey[col++].setNumber( Stimuli[j].Intensity ).saveXML( *XF, 3, "Stim." );
+	    StimulusKey[col++].setNumber( Stimuli[j].Intensity ).saveXML( *XF, 3, "Stimulus." );
 	    if ( ! att->frequencyName().empty() )
-	      StimulusKey[col++].setNumber( Stimuli[j].CarrierFreq ).saveXML( *XF, 3, "Stim." );
+	      StimulusKey[col++].setNumber( Stimuli[j].CarrierFreq ).saveXML( *XF, 3, "Stimulus." );
 	  }
-	  StimulusKey[col++].setText( Stimuli[j].Ident ).saveXML( *XF, 3, "Stim." );
+	  StimulusKey[col++].setText( Stimuli[j].Ident ).saveXML( *XF, 3, "Stimulus." );
 	}
 	else {
 	  col += 3;
@@ -595,13 +595,13 @@ void SaveFiles::saveRePro( void )
 	ReProFiles.clear();
 	*XF << "  </section>\n";
       }
-      *XF << "  <section name=\"dataset\">\n";
+      *XF << "  <section name=\"Dataset\">\n";
       Parameter p( "name", "name", ReProInfo.text( "experiment" ) + "-" +
 		   ReProInfo.text( "repro" ) + "-" + Str( path() ).preventedSlash().name() );
       p.saveXML( *XF, 2, "Dataset." );
       ReProInfo.saveXML( *XF, 0, 2, "Dataset." );
       if ( ! ReProSettings.empty() ) {
-	*XF << "    <section name=\"settings\">\n";
+	*XF << "    <section name=\"Settings\">\n";
 	ReProSettings.saveXML( *XF, 1, 3, "" );
 	*XF << "    </section>\n";
       }
@@ -892,24 +892,29 @@ void SaveFiles::createXMLFile( const InList &traces,
 
   if ( (*XF) ) {
     *XF << "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n";
-    *XF << "<ephysmetadata\n";
-    *XF << "  xmlns:dc=\"http://purl.org/metadata/dublin_core#\"\n";
-    *XF << "  xmlns:md=\"http://www.g-node.org/md-syntax-ns#\">\n";
+    *XF << "<odML>\n";
 
-    *XF << "  <section name=\"hardware\">\n";
+    *XF << "  <section name=\"HardwareSettings\">\n";
     for ( int k=0; k<RW->ADV->size(); k++ ) {
       const Device &dev = (*RW->ADV)[k];
+      int dt = dev.deviceType();
+      if ( dt == Device::AttenuateType )
+	continue;
+      string dts = dev.deviceTypeStr();
+      cerr << "DEVICETYPE " << dt << " " << dts << '\n';
+      if ( dt == Device::AnalogInputType )
+	dts = "DataAcquisition";
+      else if ( dt == Device::AnalogOutputType )
+	dts = "DataAcquisition";
+      else if ( dt == Device::DigitalIOType )
+	dts = "DigitialIO";
+      else if ( dt == Device::AttenuateType )
+	dts = "Attenuation";
       Options opts;
       opts.load( dev.info() );
-      int dt = opts.integer( "type" );
-      if ( dt == 4 ) // Attenuate
-	continue;
       opts.erase( "type" );
-      string dts = Device::deviceTypeStr( dt );
-      if ( dts.empty() )
-	dts = "Unknown Device";
       *XF << "    <section name=\"" << dts << "\">\n";
-      opts.saveXML( *XF, 0, 3, "Hardware." ); 
+      opts.saveXML( *XF, 0, 3, dts+"." ); 
       *XF << "    </section>\n";
     }
     *XF << "  </section>\n";
@@ -1053,7 +1058,7 @@ void SaveFiles::closeFiles( void )
       DatasetOpen = false;
     }
     RW->MTDT.saveXML( *XF, 1 );
-    *XF << "</ephysmetadata>\n";
+    *XF << "</odML>\n";
     delete XF;
   }
   XF = 0;

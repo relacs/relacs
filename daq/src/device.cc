@@ -27,7 +27,7 @@ namespace relacs {
 
 
 const string Device::DeviceTypeStrs[Device::MaxDeviceTypeStrs] =
-  { "Miscellaneous", "Analog Input", "Analog Output", "Attenuator",
+  { "Miscellaneous", "Analog Input", "Analog Output", "Digital I/O", "Attenuator",
     "Attenuate Interface", "Manipulator", "Temperature" };
 
 
@@ -125,6 +125,12 @@ int Device::deviceType( void ) const
 }
 
 
+string Device::deviceTypeStr( void ) const
+{
+  return deviceTypeStr( DeviceType );
+}
+
+
 void Device::setDeviceType( int type )
 {
   DeviceType = type;
@@ -142,7 +148,7 @@ string Device::deviceTypeStr( int type )
   if ( type >=0 && type < MaxDeviceTypeStrs )
     return DeviceTypeStrs[ type ];
   else
-    return "";
+    return "Unknown";
 }
 
 
