@@ -58,7 +58,6 @@ void ReadThread::run( void )
 {
   bool rd = true;
 
-  QTime time;
   double readinterval = RW->IL[0].readTime();
   signed long ri = (unsigned long)::rint( 1000.0*readinterval );
   QThread::msleep( ri/4 );

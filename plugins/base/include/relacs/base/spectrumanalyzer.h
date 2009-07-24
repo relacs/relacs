@@ -35,7 +35,8 @@ namespace base {
 
 \par Options
 - \c trace=0: Input trace number (\c number)
-- \c offset=-1000ms: Offset of analysis window relativ to signal (\c number)
+- \c origin=before end of data: Analysis window (\c text)
+- \c offset=-1000ms: Offset of analysis window (\c number)
 - \c duration=1000ms: Width of analysis window (\c number)
 - \c size=1024: Number of data points for FFT (\c string)
 - \c overlap=true: Overlap FFT windows (\c boolean)
@@ -44,7 +45,7 @@ namespace base {
 - \c decibel=true: Plot decibel relative to maximum (\c boolean)
 - \c pmin=-50dB: Minimum power (\c number)
 
-\version 1.0 (Mar 1, 2005)
+\version 1.1 (Jul 24, 2009)
 */
 
 
@@ -67,6 +68,7 @@ public:
 private:
 
   int Trace;
+  int Origin;
   double Offset;
   double Duration;
   int SpecSize;

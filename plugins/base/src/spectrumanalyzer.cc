@@ -19,6 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <qdatetime.h>
 #include <relacs/sampledata.h>
 #include <relacs/stats.h>
 #include <relacs/spectrum.h>
@@ -30,12 +31,13 @@ namespace base {
 
 SpectrumAnalyzer::SpectrumAnalyzer( void )
   : Control( "SpectrumAnalyzer", "Spectrum", "Base",
-	     "Jan Benda", "1.0", "Mar 1, 2005" ),
+	     "Jan Benda", "1.1", "Jul 24, 2009" ),
     P( this )
 {
   // parameter:
   Trace = 0;
-  Offset = -1.0;
+  Origin = 0;
+  Offset = 0.0;
   Duration = 1.0;
   SpecSize = 1024;
   Overlap = true;
@@ -45,8 +47,9 @@ SpectrumAnalyzer::SpectrumAnalyzer( void )
   PMin = -50.0;
 
   // options:
-  addNumber( "trace", "Input trace number", Trace, 0, 1000 );
-  addNumber( "offset", "Offset of analysis window relativ to signal", Offset, -1000.0, 1000.0, 0.1, "s", "ms" );
+  addSelection( "trace", "Input trace", "V-1" );
+  addSelection( "origin", "Analysis window", "before end of data|before signal|after signal" );
+  addNumber( "offset", "Offset of analysis window", Offset, -10000.0, 10000.0, 0.1, "s", "ms" );
   addNumber( "duration", "Width of analysis window", Duration, 0.0, 100.0, 0.1, "s", "ms" );
   addSelection( "size", "Number of data points for FFT", "1024|64|128|256|512|1024|2048|4096|8192|16384|32768|65536|131072|262144|524288|1048576" );
   addBoolean( "overlap", "Overlap FFT windows", Overlap );
@@ -75,6 +78,16 @@ SpectrumAnalyzer::~SpectrumAnalyzer( void )
 
 void SpectrumAnalyzer::config( void )
 {
+  string its = "";
+  const InList &il = traces();
+  for ( int k=0; k<il.size(); k++ ) {
+    if ( k > 0 )
+      its += '|';
+    its += il[k].ident();
+  }
+  setText( "trace", its );
+  setToDefault( "trace" );
+
   lock();
   P.lock();
   if ( Decibel )
@@ -88,7 +101,8 @@ void SpectrumAnalyzer::config( void )
 
 void SpectrumAnalyzer::notify( void )
 {
-  Trace = integer( "trace" );
+  Trace = traceIndex( text( "trace", 0 ) );
+  Origin = index( "origin" );
   Offset = number( "offset" );
   Duration = number( "duration" );
   SpecSize = integer( "size" );
@@ -127,8 +141,7 @@ void SpectrumAnalyzer::notify( void )
 
 void SpectrumAnalyzer::main( void )
 {
-  double offs = Offset;
-  sleep( -offs );
+  sleep( Duration );
 
   do { 
 
@@ -137,12 +150,18 @@ void SpectrumAnalyzer::main( void )
       return;
     }
 
-    int offsinx = trace( Trace ).signalIndex() + trace( Trace ).indices( Offset );
+    int n = trace( Trace ).indices( Duration );
+    int offsinx = 0;
+    if ( Origin == 1 )
+      offsinx = trace( Trace ).signalIndex() - trace( Trace ).indices( Offset ) - n;
+    else if ( Origin == 2 )
+      offsinx = trace( Trace ).signalIndex() + trace( Trace ).indices( Offset );
+    else
+      offsinx = trace( Trace ).currentIndex() - trace( Trace ).indices( Offset ) - n;
     if ( offsinx < trace( Trace ).minIndex() )
       offsinx = trace( Trace ).minIndex();
-    int maxinx = trace( Trace ).currentIndex() - offsinx - 1;
-    int durinx = trace( Trace ).indices( Duration );
-    int n = durinx < maxinx ? durinx : maxinx;
+    if ( offsinx + n > trace( Trace ).currentIndex() )
+      n = trace( Trace ).currentIndex() - offsinx;
 
     if ( n < 64 ) {
       printlog( "Not enough data points (n=" + Str( n ) + ")!" );
@@ -152,7 +171,16 @@ void SpectrumAnalyzer::main( void )
       P.setLabel( 0, "Not enough data points (n=" + Str( n ) + ")!" );
       P.unlock();
       P.draw();
-      if ( waitOnReProSleep() )
+      if ( Origin > 0 )
+	waitOnReProSleep();
+      else {
+	QTime time;
+	time.start();
+	do {
+	  waitOnData();
+	} while ( 0.001*time.elapsed() < Duration && ! interrupt() );
+      }
+      if ( interrupt() )
 	return;
       else
 	continue;
@@ -178,7 +206,15 @@ void SpectrumAnalyzer::main( void )
     P.unlock();
     P.draw();
 
-    waitOnReProSleep();
+    if ( Origin > 0 )
+      waitOnReProSleep();
+    else {
+      QTime time;
+      time.start();
+      do {
+	waitOnData();
+      } while ( 0.001*time.elapsed() < Duration && ! interrupt() );
+    }
 
   } while ( ! interrupt() );
 
