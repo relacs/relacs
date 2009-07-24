@@ -51,7 +51,6 @@ Metadata:
 - Parameter::label should get a level that is used to make sections in the XML file ?
 
 Acquisition interface:
-- improve the readSignal function in RELACSWidget::write()
 - check whether test, prepare, and start can be used simulataneously with read/write
 - add single data read and write
 - add function for blocked write() and corresponding error checking (buffer underrun)
