@@ -5,7 +5,8 @@ pluginlibdir = $(pkglibdir)/plugins
 pluginlib_LTLIBRARIES = \
     libcomedicomedianaloginput.la \
     libcomedicomedianalogoutput.la \
-    libcomedicomedidigitalio.la
+    libcomedicomedidigitalio.la \
+    libcomedicomedinipfi.la
 if RELACS_COND_RTAI
 pluginlib_LTLIBRARIES += \
     libcomedidynclampanaloginput.la \
@@ -90,7 +91,6 @@ libcomedicomedidigitalio_la_LDFLAGS = \
 
 libcomedicomedidigitalio_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    libcomedicomedianalogoutput.la \
     $(COMEDI_LIBS) \
     $(QT3_LIBS)
 
@@ -102,6 +102,36 @@ libcomedicomedidigitalio_la_includedir = $(pkgincludedir)/comedi
 
 libcomedicomedidigitalio_la_include_HEADERS = \
     $(HEADER_PATH)/comedidigitalio.h
+
+
+
+libcomedicomedinipfi_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(srcdir)/../include \
+    $(QT3_CPPFLAGS)
+
+libcomedicomedinipfi_la_LDFLAGS = \
+    -module -avoid-version \
+    $(COMEDI_LDFLAGS) \
+    $(QT3_LDFLAGS)
+
+libcomedicomedinipfi_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(COMEDI_LIBS) \
+    $(QT3_LIBS)
+
+libcomedicomedinipfi_la_SOURCES = \
+    comedinipfi.cc \
+    comedinipfidevice.cc
+
+libcomedicomedinipfi_la_includedir = $(pkgincludedir)/comedi
+
+libcomedicomedinipfi_la_include_HEADERS = \
+    $(HEADER_PATH)/comedinipfi.h
 
 
 
@@ -174,7 +204,8 @@ libcomedidynclampanalogoutput_la_include_HEADERS = \
 check_PROGRAMS = \
     linktest_libcomedicomedianaloginput_la \
     linktest_libcomedicomedianalogoutput_la \
-    linktest_libcomedicomedidigitalio_la
+    linktest_libcomedicomedidigitalio_la \
+    linktest_libcomedicomedinipfi_la
 if RELACS_COND_RTAI
 check_PROGRAMS += \
     linktest_libcomedidynclampanaloginput_la \
@@ -189,6 +220,9 @@ linktest_libcomedicomedianalogoutput_la_LDADD = libcomedicomedianalogoutput.la
 
 linktest_libcomedicomedidigitalio_la_SOURCES = linktest.cc
 linktest_libcomedicomedidigitalio_la_LDADD = libcomedicomedidigitalio.la
+
+linktest_libcomedicomedinipfi_la_SOURCES = linktest.cc
+linktest_libcomedicomedinipfi_la_LDADD = libcomedicomedinipfi.la
 
 linktest_libcomedidynclampanaloginput_la_SOURCES = linktest.cc
 linktest_libcomedidynclampanaloginput_la_LDADD = libcomedidynclampanaloginput.la

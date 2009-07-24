@@ -54,7 +54,7 @@ Acquisition interface:
 - check whether test, prepare, and start can be used simulataneously with read/write
 - add single data read and write
 - add function for blocked write() and corresponding error checking (buffer underrun)
-- need a ComediNIPFI and a ComediNIRTSI device class.
+- need a ComediNIRTSI device class.
 - manual convert of signals does not work, because some gain settings are needed in advance!
 
 Plugins:

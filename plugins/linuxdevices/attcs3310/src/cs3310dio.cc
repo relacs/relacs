@@ -53,8 +53,6 @@ CS3310DIO::~CS3310DIO( void )
 int CS3310DIO::open( DigitalIO &dio, long mode )
 {
   DIO = &dio;
-
-  cerr << "OPEN CS3310 " << DIO->deviceFile() << endl;
   
   if ( isOpen() ) {
     DIOId = DIO->allocateLine( CS );

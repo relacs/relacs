@@ -35,6 +35,9 @@ namespace comedi {
 \class ComediNIPFI
 \author Jan Benda
 \brief [Device] Controlling the PFI pins of a NI daq-board via comedi.
+
+Right now this routes the AO_START signal to PFI6
+\todo make this configurabel
 */
 
 

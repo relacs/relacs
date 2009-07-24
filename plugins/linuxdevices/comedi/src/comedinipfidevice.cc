@@ -24,6 +24,6 @@
 
 namespace comedi {
 
-addNipfi( ComediNIPFI );
+addDevice( ComediNIPFI );
 
 };

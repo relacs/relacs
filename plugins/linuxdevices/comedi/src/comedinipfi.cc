@@ -74,9 +74,9 @@ int ComediNIPFI::open( const string &device, long mode )
     return NotOpen;
   }
 
-  // check PFI subdevice:
-  int subdev = 10;
-  int subdevtype = comedi_get_subdevice_by_type( DeviceP, subdev );
+  // check PFI subdevice:  7: 16 (PFI), 10: 8 (RTSI)
+  int subdev = 7;
+  int subdevtype = comedi_get_subdevice_type( DeviceP, subdev );
   if ( subdevtype != COMEDI_SUBD_DIO ) {
     cerr << "! error: ComediNIPFI::open() -> "
 	 << "Subdevice " << subdev << " on device "  << device
@@ -97,14 +97,32 @@ int ComediNIPFI::open( const string &device, long mode )
     return NotOpen;
   }  
 
+  // set routing:
+  if ( comedi_set_routing( DeviceP, SubDevice, 6, NI_PFI_OUTPUT_AO_START1 ) != 0 ) {
+    cerr << "! error: ComediNIPFI::open() -> "
+	 << "Routing failed on device " << device << '\n';
+    comedi_unlock( DeviceP,  SubDevice );
+    comedi_close( DeviceP );
+    DeviceP = NULL;
+    SubDevice = 0;
+    return WriteError;
+  }
+
+  // configure pins:
+  if ( comedi_dio_config( DeviceP, SubDevice, 6, COMEDI_OUTPUT ) != 0 ) {
+    cerr << "! error: ComediNIPFI::open() -> "
+	 << "DIO_CONFIG failed on device " << device << '\n';
+    comedi_unlock( DeviceP,  SubDevice );
+    comedi_close( DeviceP );
+    DeviceP = NULL;
+    SubDevice = 0;
+    return WriteError;
+  }
+
   // set basic device infos:
   setDeviceName( comedi_get_board_name( DeviceP ) );
   setDeviceVendor( comedi_get_driver_name( DeviceP ) );
   setDeviceFile( device );
-
-  // configure pins:
-
-  // set routing:
   
   return 0;
 }
