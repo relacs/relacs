@@ -1433,8 +1433,8 @@ void Plot::VectorElement<T,R>::xminmax( double &xmin, double &xmax,
     xmax *= XScale;
   }
   else {
-    xmin = 0.0;
-    xmax = 0.0;
+    xmin = AutoScale;
+    xmax = AutoScale;
   }
 }
 
@@ -1673,8 +1673,8 @@ void Plot::EventsElement<T>::xminmax( double &xmin, double &xmax,
 					double ymin, double ymax ) const
 {
   if ( ED->empty() ) {
-    xmin = 0.0;
-    xmax = 0.0;
+    xmin = AutoScale;
+    xmax = AutoScale;
   }
   else {
     xmin = ED->front() * TScale;

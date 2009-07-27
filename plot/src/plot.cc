@@ -1263,7 +1263,7 @@ void Plot::initXRange( int axis )
     }
     if ( XMaxRange[axis] >= AnyScale ) {
       if ( XMaxRange[axis] == AutoScale || XMaxRange[axis] == ExactScale ||
-	   xmax > XMaxFB[axis] )
+	   ( xmax > XMaxFB[axis] && xmax < AnyScale ) )
 	XMax[axis] = xmax;
       else
 	XMax[axis] = XMaxFB[axis];
@@ -2835,45 +2835,61 @@ void Plot::readMouse( QMouseEvent *qme, MouseEvent &me, bool move )
 
 void Plot::mousePressEvent( QMouseEvent *qme )
 {
+  if ( ! SubWidget )
+    lockData();
   PMutex.lock();
   MouseEvent me;
   readMouse( qme, me, false );
   me.Mode |= 64;
   mouseEvent( me );
   PMutex.unlock();
+  if ( ! SubWidget )
+    unlockData();
 }
 
 
 void Plot::mouseReleaseEvent( QMouseEvent *qme )
 {
+  if ( ! SubWidget )
+    lockData();
   PMutex.lock();
   MouseEvent me;
   readMouse( qme, me, false );
   me.Mode |= 128;
   mouseEvent( me );
   PMutex.unlock();
+  if ( ! SubWidget )
+    unlockData();
 }
 
 
 void Plot::mouseMoveEvent( QMouseEvent *qme )
 {
+  if ( ! SubWidget )
+    lockData();
   PMutex.lock();
   MouseEvent me;
   readMouse( qme, me, true );
   me.Mode |= 256;
   mouseEvent( me );
   PMutex.unlock();
+  if ( ! SubWidget )
+    unlockData();
 }
 
 
 void Plot::mouseDoubleClickEvent( QMouseEvent *qme )
 {
+  if ( ! SubWidget )
+    lockData();
   PMutex.lock();
   MouseEvent me;
   readMouse( qme, me, false );
   me.Mode |= 512;
   mouseEvent( me );
   PMutex.unlock();
+  if ( ! SubWidget )
+    unlockData();
 }
 
 
@@ -3380,7 +3396,6 @@ void Plot::mouseAnalyse( MouseEvent &me )
 
     if ( ! me.alt() && ( ! me.control() || ! me.shift() ) ) {
       // find data set:
-      lockData();
       double mindd = ( PlotX2 - PlotX1 + 1 ) + ( PlotY1 - PlotY2 + 1 );
       for ( unsigned int k=0; k<PData.size(); k++ ) {
         // axis:
@@ -3421,7 +3436,6 @@ void Plot::mouseAnalyse( MouseEvent &me )
 	  pinx = minpinx;
 	}
       }
-      unlockData();
       if ( ! me.shift() )
 	xpos = AutoScale;
       if ( ! me.control() )
@@ -3509,14 +3523,18 @@ void Plot::mouseMenu( MouseEvent &me )
 
 void Plot::mouseSelect( int id )
 {
-  if ( id < 0 )
+  if ( id < 0 ) {
+    PMutex.lock();
     MouseMenuClick = true;
+    PMutex.unlock();
+  }
   else {
     MouseMenuClick = false;
     if ( id != MouseAction ) {
       MouseMenu->setItemChecked( MouseAction, false );
       MouseMenu->setItemChecked( id, true );
       if ( MouseAction == 8 ) {
+	PMutex.lock();
 	MouseXPos.clear();
 	MouseYPos.clear();
 	MouseDInx.clear();
@@ -3527,6 +3545,7 @@ void Plot::mouseSelect( int id )
 	  else
 	    QWidget::setMouseTracking( false );
 	}
+	PMutex.unlock();
 	draw();
       }
       MouseAction = id;
@@ -3541,9 +3560,15 @@ void Plot::mouseSelect( int id )
 	QMouseEvent qme( QEvent::MouseButtonRelease, p, 
 			 Qt::LeftButton, Qt::NoButton );
 	MouseEvent nme;
+	if ( ! SubWidget )
+	  lockData();
+	PMutex.lock();
 	readMouse( &qme, nme, false );
 	nme.setInit();
 	mouseAnalyse( nme );
+	if ( ! SubWidget )
+	  unlockData();
+	PMutex.unlock();
       }
     }
   }

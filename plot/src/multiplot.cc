@@ -439,17 +439,21 @@ void MultiPlot::mousePressEvent( QMouseEvent *qme )
 {
   for ( unsigned int k=0; k<PlotList.size(); k++ ) {
     if ( PlotList[k]->mouseGrabbed() ) {
+      lockData();
       PMutex.lock();
       PlotList[k]->mousePressEvent( qme );
       PMutex.unlock();
+      unlockData();
       return;
     }
   }
   for ( unsigned int k=0; k<PlotList.size(); k++ ) {
     if ( PlotList[k]->inside( qme->x(), qme->y() ) ) {
+      lockData();
       PMutex.lock();
       PlotList[k]->mousePressEvent( qme );
       PMutex.unlock();
+      unlockData();
       return;
     }
   }
@@ -460,17 +464,21 @@ void MultiPlot::mouseReleaseEvent( QMouseEvent *qme )
 {
   for ( unsigned int k=0; k<PlotList.size(); k++ ) {
     if ( PlotList[k]->mouseGrabbed() ) {
+      lockData();
       PMutex.lock();
       PlotList[k]->mouseReleaseEvent( qme );
       PMutex.unlock();
+      unlockData();
       return;
     }
   }
   for ( unsigned int k=0; k<PlotList.size(); k++ ) {
     if ( PlotList[k]->inside( qme->x(), qme->y() ) ) {
+      lockData();
       PMutex.lock();
       PlotList[k]->mouseReleaseEvent( qme );
       PMutex.unlock();
+      unlockData();
       return;
     }
   }
@@ -481,17 +489,21 @@ void MultiPlot::mouseDoubleClickEvent( QMouseEvent *qme )
 {
   for ( unsigned int k=0; k<PlotList.size(); k++ ) {
     if ( PlotList[k]->mouseGrabbed() ) {
+      lockData();
       PMutex.lock();
       PlotList[k]->mouseDoubleClickEvent( qme );
       PMutex.unlock();
+      unlockData();
       return;
     }
   }
   for ( unsigned int k=0; k<PlotList.size(); k++ ) {
     if ( PlotList[k]->inside( qme->x(), qme->y() ) ) {
+      lockData();
       PMutex.lock();
       PlotList[k]->mouseDoubleClickEvent( qme );
       PMutex.unlock();
+      unlockData();
       return;
     }
   }
@@ -502,17 +514,21 @@ void MultiPlot::mouseMoveEvent( QMouseEvent *qme )
 {
   for ( unsigned int k=0; k<PlotList.size(); k++ ) {
     if ( PlotList[k]->mouseGrabbed() ) {
+      lockData();
       PMutex.lock();
       PlotList[k]->mouseMoveEvent( qme );
       PMutex.unlock();
+      unlockData();
       return;
     }
   }
   for ( unsigned int k=0; k<PlotList.size(); k++ ) {
     if ( PlotList[k]->inside( qme->x(), qme->y() ) ) {
+      lockData();
       PMutex.lock();
       PlotList[k]->mouseMoveEvent( qme );
       PMutex.unlock();
+      unlockData();
       return;
     }
   }

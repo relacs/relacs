@@ -131,6 +131,7 @@ FICurve::FICurve( void )
   PlotIntensitySelection = false;
 
   // plot:
+  P.setDataMutex( mutex() );
   P.lock();
   P[0].setLMarg( 5.0 );
   P[0].setRMarg( 1.0 );
@@ -1130,7 +1131,6 @@ RePro::DoneState FICurve::next( vector< FIData > &results, bool msg )
 
 void FICurve::plotMouseEvent( Plot::MouseEvent &me )
 {
-  lock();
   if ( me.xCoor() == Plot::First && me.yCoor() == Plot::First &&
        me.yPos() > P[1].yminRange() + 0.9*(P[1].ymaxRange() - P[1].yminRange()) ) {
     bool changed = false;
@@ -1146,6 +1146,7 @@ void FICurve::plotMouseEvent( Plot::MouseEvent &me )
 	IntensityRange.setSkipAbove( inx, ! IntensityRange.skip( inx ) );
       else
 	IntensityRange.setSkip( inx, ! IntensityRange.skip( inx ) );
+      changed = true;
     }
     if ( ! PlotIntensitySelection || changed ) {
       P.lock();
@@ -1158,7 +1159,6 @@ void FICurve::plotMouseEvent( Plot::MouseEvent &me )
   }
   else
     PlotIntensitySelection = false;
-  unlock();
 }
 
 
