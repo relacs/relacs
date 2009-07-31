@@ -870,7 +870,7 @@ int Acquire::restartRead( void )
 int Acquire::restartRead( vector< AOData* > &aod, bool directao,
 			  bool updategains )
 {
-  cerr << currentTime() << " Acquire::restartRead() begin \n";
+  //  cerr << currentTime() << " Acquire::restartRead() begin \n";
 
   bool success = true;
 
@@ -883,8 +883,6 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
   // stop reading:
   if ( stopRead() != 0 )
     success = false;
-
-  cerr << "RESTARTREAD stopread returned " << success << '\n';
 
   // get data and shortest recording:
   double t = -1.0;
@@ -945,8 +943,6 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
     }
   }
 
-  cerr << "RESTARTREAD prepareRead returned " << success << '\n';
-
   if ( ! success ) {
     LastWrite = -1.0;
     return -1;
@@ -992,8 +988,6 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
       }
     }
   }
-
-  cerr << "RESTARTREAD startRead returned " << success << '\n';
     
   if ( ! success ) {
     LastWrite = -1.0;
@@ -1034,7 +1028,7 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
     return -1;
   }
 
- cerr << currentTime() << " Acquire::restartRead() -> acquisition restarted " << success << "\n";
+  // cerr << currentTime() << " Acquire::restartRead() -> acquisition restarted " << success << "\n";
 
   return 0;
 }
