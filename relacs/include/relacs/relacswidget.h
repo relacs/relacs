@@ -437,6 +437,7 @@ private:
 
   QPopupMenu *DeviceMenu;
 
+  string AIErrorMsg;
   bool Help;
 
   class KeyTimeOut *KeyTime;

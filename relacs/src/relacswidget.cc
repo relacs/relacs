@@ -737,8 +737,14 @@ void RELACSWidget::setupOutTraces( void )
 
 void RELACSWidget::updateData( void )
 {
-  // read data:
   writeLockData();
+  // check data:
+  if ( IL.failed() ) {
+    AIErrorMsg = "Error in acquisition: " + IL.errorText();
+    //    QApplication::postEvent( this, new QCustomEvent( QEvent::User+4 ) ); // this causes a lot of trouble!
+    IL.clearError();    
+  }
+  // read data:
   lockAI();
   AQ->convertData();
   unlockAI();
@@ -747,8 +753,14 @@ void RELACSWidget::updateData( void )
   double mintime = MinTraceTime;
   MinTraceMutex.unlock();
   while ( IL.success() && IL[0].currentTime() < mintime ) {
-    if ( acquisition() )
+    RunDataMutex.lock();
+    bool rd = RunData;
+    RunDataMutex.unlock();
+    if ( ! rd )
+      break;
+    if ( acquisition() ) {
       ReadDataWait.wait();
+    }
     else
       ReadDataWait.wait( 1 );
     lockAI();
@@ -793,8 +805,8 @@ void RELACSWidget::run( void )
     ThreadSleepWait.wait( di );
     updatetime.restart();
     updateData();
-    processData();
     DataSleepWait.wakeAll();
+    processData();
     RunDataMutex.lock();
     rd = RunData;
     RunDataMutex.unlock();
@@ -1209,6 +1221,9 @@ void RELACSWidget::customEvent( QCustomEvent *qce )
   else if ( qce->type() == QEvent::User+3 ) {
     MessageBox::error( "RELACS Error !", "Transfering stimulus data to hardware driver failed.", this );
   }
+  else if ( qce->type() == QEvent::User+4 ) {
+    MessageBox::warning( "RELACS Error !", AIErrorMsg, 2.0, this );
+  }
 }
 
 
@@ -1380,6 +1395,8 @@ void RELACSWidget::stopThreads( void )
   RunDataMutex.lock();
   RunData = false;
   RunDataMutex.unlock();
+  ThreadSleepWait.wakeAll();
+  ReadDataWait.wakeAll();
   QThread::wait();
 
   // stop simulation and data acquisition:

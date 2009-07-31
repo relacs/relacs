@@ -830,7 +830,7 @@ int ComediAnalogInput::readData( void )
     if ( m < 0 && ern != EAGAIN && ern != EINTR ) {
       Traces->addErrorStr( ern );
       failed = true;
-      cerr << " ComediAnalogInput::readData(): error" << endl;
+      cerr << " ComediAnalogInput::readData(): error\n";
     }
     else if ( m > 0 ) {
       maxn -= m;
@@ -842,7 +842,7 @@ int ComediAnalogInput::readData( void )
   BufferN = readn / BufferElemSize;
 
   if ( failed ) {
-    /* XXX
+    /* the following does not work:
     // check buffer underrun:
     if ( errno == EPIPE ) {
       ErrorState = 1;
@@ -863,8 +863,15 @@ int ComediAnalogInput::readData( void )
   }
 
   // no more data to be read:
-  if ( BufferN <= 0 && !running() )
+  if ( BufferN <= 0 && !running() ) {
+    if ( (*Traces)[0].continuous() ) {
+      Traces->addErrorStr( deviceFile() + " - buffer-overflow: "
+			  + comedi_strerror( comedi_errno() ) );
+      Traces->addError( DaqError::OverflowUnderrun );
+      cerr << " ComediAnalogInput::readData(): no data and not running\n";
+    }
     return -1;
+  }
 
   //  cerr << "Comedi::readData() end " << BufferN << "\n";
 

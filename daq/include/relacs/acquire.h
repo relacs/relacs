@@ -401,6 +401,8 @@ public:
 	Returns 0 on success, negative numbers otherwise. 
         \sa testRead(), read(), readData(), convertData() */
   virtual int stopRead( void );
+    /*! Restart data aquisition in case of an error returned by readData(). */
+  virtual int restartRead( void );
 
     /*! The flag that is used to mark traces whose gain was changed. 
         \sa setAdjustFlag(), setGain(), adjustGain(),

@@ -35,7 +35,7 @@ USELOGFILE="yes"
 
 # Dublicate log messages to stdout?
 TEE="tee -a"
-USETEE="no"
+USETEE="yes"
 
 # Debug:
 DEBUG="no"
@@ -53,17 +53,17 @@ VALGRINDERARGS=""
 EMAILADDRESS=""
 
 # Core dumps?
-COREDUMP="no"
+COREDUMP="yes"
 COREDIR="coredumps"
 COREMAILSUBJ="RELACS coredump"
 
 # Bugs?
-BUGS="no"
+BUGS="yes"
 BUGDIR="bugs"
 BUGMAILSUBJ="RELACS bug"
 
 # Kernel messages (from dmesg)?
-KERNELMESSAGES="no"
+KERNELMESSAGES="yes"
 
 
 # Read arguments:

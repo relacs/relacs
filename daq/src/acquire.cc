@@ -740,14 +740,10 @@ int Acquire::readData( void )
     }
   }
 
-  // restart:    
-  if ( error ) {
-    vector< AOData* > aod( 0 );
-    restartRead( aod, false, false );
-    return -1;
-  }
-
   //  cerr << "Acquire::readData( void ) finished\n";
+
+  if ( error )
+    return -1;
   return finished ? 0 : 1;
 }
 
@@ -792,10 +788,89 @@ int Acquire::stopRead( void )
 }
 
 
+int Acquire::restartRead( void )
+{
+  bool success = true;
+
+  vector< vector< long long > > errorflags( AI.size() );
+
+  // get error flags, data and shortest recording:
+  double t = -1.0;
+  for ( unsigned int i=0; i<AI.size(); i++ ) {
+    AI[i].AI->convertData();
+    errorflags[i].resize( AI[i].Traces.size(), 0 );
+    for ( int k=0; k<AI[i].Traces.size(); k++ ) {
+      errorflags[i][k] = AI[i].Traces[k].error();
+      AI[i].Traces[k].clearError();
+      if ( t < 0.0 || AI[i].Traces[k].length() < t )
+	t = AI[i].Traces[k].length();
+    }
+  }
+
+  // make all data the same length and set restart time:
+  for ( unsigned int i=0; i<AI.size(); i++ ) {
+    int m = 0;
+    for ( int k=0; k<AI[i].Traces.size(); k++ ) {
+      int n = AI[i].Traces[k].indices( t );
+      m += AI[i].Traces[k].size() - n;
+      AI[i].Traces[k].resize( n );
+    }
+    cerr << "truncated " << m << '\n';
+    AI[i].Traces.setRestart();
+  }
+
+  // reset and prepare reading from daq boards:
+  for ( unsigned int i=0; i<AI.size(); i++ ) {
+    if ( AI[i].Traces.size() > 0 &&
+	 AI[i].AI->prepareRead( AI[i].Traces ) != 0 )
+      success = false;
+  }
+
+  // error?
+  if ( ! success ) {
+    for ( unsigned int i=0; i<AI.size(); i++ )
+      AI[i].AI->reset();
+    return -1;
+  }
+
+  // start reading from daq boards:
+  vector< int > aistarted;
+  aistarted.reserve( AI.size() );
+  for ( unsigned int i=0; i<AI.size(); i++ ) {
+    if ( AI[i].Traces.size() > 0 ) {
+      bool started = false;
+      for ( unsigned int k=0; k<aistarted.size(); k++ ) {
+	if ( aistarted[k] == AI[i].AIDevice ) {
+	  started = true;
+	  break;
+	}
+      }
+      if ( ! started ) {
+	if ( AI[i].AI->startRead() != 0 )
+	  success = false;
+	else
+	  aistarted.push_back( i );
+      }
+    }
+  }
+    
+  if ( ! success )
+    return -1;
+
+  // restore errorflags:
+  for ( unsigned int i=0; i<AI.size(); i++ ) {
+    for ( int k=0; k<AI[i].Traces.size(); k++ )
+      AI[i].Traces[k].setError( errorflags[i][k] );
+  }
+
+  return 0;
+}
+
+
 int Acquire::restartRead( vector< AOData* > &aod, bool directao,
 			  bool updategains )
 {
-  //  cerr << currentTime() << " Acquire::restartRead() begin \n";
+  cerr << currentTime() << " Acquire::restartRead() begin \n";
 
   bool success = true;
 
@@ -808,6 +883,8 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
   // stop reading:
   if ( stopRead() != 0 )
     success = false;
+
+  cerr << "RESTARTREAD stopread returned " << success << '\n';
 
   // get data and shortest recording:
   double t = -1.0;
@@ -868,6 +945,8 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
     }
   }
 
+  cerr << "RESTARTREAD prepareRead returned " << success << '\n';
+
   if ( ! success ) {
     LastWrite = -1.0;
     return -1;
@@ -913,6 +992,8 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
       }
     }
   }
+
+  cerr << "RESTARTREAD startRead returned " << success << '\n';
     
   if ( ! success ) {
     LastWrite = -1.0;
@@ -953,7 +1034,7 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
     return -1;
   }
 
-  //  cerr << currentTime() << " Acquire::restartRead() -> acquisition restarted " << success << "\n";
+ cerr << currentTime() << " Acquire::restartRead() -> acquisition restarted " << success << "\n";
 
   return 0;
 }
