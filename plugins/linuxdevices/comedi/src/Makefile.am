@@ -3,18 +3,14 @@ HEADER_PATH = ../include/relacs/comedi
 pluginlibdir = $(pkglibdir)/plugins
 
 pluginlib_LTLIBRARIES = \
-    libcomedicomedianaloginput.la \
-    libcomedicomedianalogoutput.la \
-    libcomedicomedidigitalio.la \
-    libcomedicomedinipfi.la
+    libcomedistreaming.la
 if RELACS_COND_RTAI
 pluginlib_LTLIBRARIES += \
-    libcomedidynclampanaloginput.la \
-    libcomedidynclampanalogoutput.la
+    libcomedidynclamp.la
 endif
 
 
-libcomedicomedianaloginput_la_CPPFLAGS = \
+libcomedistreaming_la_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -23,119 +19,34 @@ libcomedicomedianaloginput_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
-libcomedicomedianaloginput_la_LDFLAGS = \
+libcomedistreaming_la_LDFLAGS = \
     -module -avoid-version \
     $(COMEDI_LDFLAGS) \
     $(QT3_LDFLAGS)
 
-libcomedicomedianaloginput_la_LIBADD = \
+libcomedistreaming_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    libcomedicomedianalogoutput.la \
     $(COMEDI_LIBS) \
     $(QT3_LIBS)
 
-libcomedicomedianaloginput_la_SOURCES = \
+libcomedistreaming_la_SOURCES = \
     comedianaloginput.cc \
-    comedianaloginputdevice.cc
-
-libcomedicomedianaloginput_la_includedir = $(pkgincludedir)/comedi
-
-libcomedicomedianaloginput_la_include_HEADERS = \
-    $(HEADER_PATH)/comedianaloginput.h
-
-
-
-libcomedicomedianalogoutput_la_CPPFLAGS = \
-    -I$(top_srcdir)/daq/include \
-    -I$(top_srcdir)/numerics/include \
-    -I$(top_srcdir)/options/include \
-    -I$(top_srcdir)/relacs/include \
-    -I$(top_srcdir)/widgets/include \
-    -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
-
-libcomedicomedianalogoutput_la_LDFLAGS = \
-    -module -avoid-version \
-    $(COMEDI_LDFLAGS) \
-    $(QT3_LDFLAGS)
-
-libcomedicomedianalogoutput_la_LIBADD = \
-    $(top_builddir)/relacs/src/librelacs.la \
-    $(COMEDI_LIBS) \
-    $(QT3_LIBS)
-
-libcomedicomedianalogoutput_la_SOURCES = \
     comedianalogoutput.cc \
-    comedianalogoutputdevice.cc
-
-libcomedicomedianalogoutput_la_includedir = $(pkgincludedir)/comedi
-
-libcomedicomedianalogoutput_la_include_HEADERS = \
-    $(HEADER_PATH)/comedianalogoutput.h
-
-
-
-libcomedicomedidigitalio_la_CPPFLAGS = \
-    -I$(top_srcdir)/daq/include \
-    -I$(top_srcdir)/numerics/include \
-    -I$(top_srcdir)/options/include \
-    -I$(top_srcdir)/relacs/include \
-    -I$(top_srcdir)/widgets/include \
-    -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
-
-libcomedicomedidigitalio_la_LDFLAGS = \
-    -module -avoid-version \
-    $(COMEDI_LDFLAGS) \
-    $(QT3_LDFLAGS)
-
-libcomedicomedidigitalio_la_LIBADD = \
-    $(top_builddir)/relacs/src/librelacs.la \
-    $(COMEDI_LIBS) \
-    $(QT3_LIBS)
-
-libcomedicomedidigitalio_la_SOURCES = \
     comedidigitalio.cc \
-    comedidigitaliodevice.cc
-
-libcomedicomedidigitalio_la_includedir = $(pkgincludedir)/comedi
-
-libcomedicomedidigitalio_la_include_HEADERS = \
-    $(HEADER_PATH)/comedidigitalio.h
-
-
-
-libcomedicomedinipfi_la_CPPFLAGS = \
-    -I$(top_srcdir)/daq/include \
-    -I$(top_srcdir)/numerics/include \
-    -I$(top_srcdir)/options/include \
-    -I$(top_srcdir)/relacs/include \
-    -I$(top_srcdir)/widgets/include \
-    -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
-
-libcomedicomedinipfi_la_LDFLAGS = \
-    -module -avoid-version \
-    $(COMEDI_LDFLAGS) \
-    $(QT3_LDFLAGS)
-
-libcomedicomedinipfi_la_LIBADD = \
-    $(top_builddir)/relacs/src/librelacs.la \
-    $(COMEDI_LIBS) \
-    $(QT3_LIBS)
-
-libcomedicomedinipfi_la_SOURCES = \
     comedinipfi.cc \
-    comedinipfidevice.cc
+    comedistreaming.cc
 
-libcomedicomedinipfi_la_includedir = $(pkgincludedir)/comedi
+libcomedistreaming_la_includedir = $(pkgincludedir)/comedi
 
-libcomedicomedinipfi_la_include_HEADERS = \
+libcomedistreaming_la_include_HEADERS = \
+    $(HEADER_PATH)/comedianaloginput.h \
+    $(HEADER_PATH)/comedianalogoutput.h \
+    $(HEADER_PATH)/comedidigitalio.h \
     $(HEADER_PATH)/comedinipfi.h
 
 
 
-libcomedidynclampanaloginput_la_CPPFLAGS = \
+libcomedidynclamp_la_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -145,89 +56,42 @@ libcomedidynclampanaloginput_la_CPPFLAGS = \
     $(RTAI_CPPFLAGS) \
     $(QT3_CPPFLAGS)
 
-libcomedidynclampanaloginput_la_LDFLAGS = \
+libcomedidynclamp_la_LDFLAGS = \
     -module -avoid-version \
     $(COMEDI_LDFLAGS) \
     $(QT3_LDFLAGS)
 
-libcomedidynclampanaloginput_la_LIBADD = \
+libcomedidynclamp_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    libcomedicomedianaloginput.la \
+    libcomedistreaming.la \
     $(COMEDI_LIBS) \
     $(QT3_LIBS)
 
-libcomedidynclampanaloginput_la_SOURCES = \
+libcomedidynclamp_la_SOURCES = \
     dynclampanaloginput.cc \
-    dynclampanaloginputdevice.cc
-
-libcomedidynclampanaloginput_la_includedir = $(pkgincludedir)/comedi
-
-libcomedidynclampanaloginput_la_include_HEADERS = \
-    $(HEADER_PATH)/moduledef.h \
-    $(HEADER_PATH)/dynclampanaloginput.h
-
-
-
-libcomedidynclampanalogoutput_la_CPPFLAGS = \
-    -I$(top_srcdir)/daq/include \
-    -I$(top_srcdir)/numerics/include \
-    -I$(top_srcdir)/options/include \
-    -I$(top_srcdir)/relacs/include \
-    -I$(top_srcdir)/widgets/include \
-    -I$(srcdir)/../include \
-    $(RTAI_CPPFLAGS) \
-    $(QT3_CPPFLAGS)
-
-libcomedidynclampanalogoutput_la_LDFLAGS = \
-    -module -avoid-version \
-    $(COMEDI_LDFLAGS) \
-    $(QT3_LDFLAGS)
-
-libcomedidynclampanalogoutput_la_LIBADD = \
-    $(top_builddir)/relacs/src/librelacs.la \
-    libcomedicomedianalogoutput.la \
-    $(COMEDI_LIBS) \
-    $(QT3_LIBS)
-
-libcomedidynclampanalogoutput_la_SOURCES = \
     dynclampanalogoutput.cc \
-    dynclampanalogoutputdevice.cc
+    dynclamp.cc
 
-libcomedidynclampanalogoutput_la_includedir = $(pkgincludedir)/comedi
+libcomedidynclamp_la_includedir = $(pkgincludedir)/comedi
 
-libcomedidynclampanalogoutput_la_include_HEADERS = \
+libcomedidynclamp_la_include_HEADERS = \
     $(HEADER_PATH)/moduledef.h \
+    $(HEADER_PATH)/dynclampanaloginput.h \
     $(HEADER_PATH)/dynclampanalogoutput.h
 
 
 
 check_PROGRAMS = \
-    linktest_libcomedicomedianaloginput_la \
-    linktest_libcomedicomedianalogoutput_la \
-    linktest_libcomedicomedidigitalio_la \
-    linktest_libcomedicomedinipfi_la
+    linktest_libcomedistreaming_la
 if RELACS_COND_RTAI
 check_PROGRAMS += \
-    linktest_libcomedidynclampanaloginput_la \
-    linktest_libcomedidynclampanalogoutput_la
+    linktest_libcomedidynclamp_la
 endif
 
-linktest_libcomedicomedianaloginput_la_SOURCES = linktest.cc
-linktest_libcomedicomedianaloginput_la_LDADD = libcomedicomedianaloginput.la
+linktest_libcomedistreaming_la_SOURCES = linktest.cc
+linktest_libcomedistreaming_la_LDADD = libcomedistreaming.la
 
-linktest_libcomedicomedianalogoutput_la_SOURCES = linktest.cc
-linktest_libcomedicomedianalogoutput_la_LDADD = libcomedicomedianalogoutput.la
-
-linktest_libcomedicomedidigitalio_la_SOURCES = linktest.cc
-linktest_libcomedicomedidigitalio_la_LDADD = libcomedicomedidigitalio.la
-
-linktest_libcomedicomedinipfi_la_SOURCES = linktest.cc
-linktest_libcomedicomedinipfi_la_LDADD = libcomedicomedinipfi.la
-
-linktest_libcomedidynclampanaloginput_la_SOURCES = linktest.cc
-linktest_libcomedidynclampanaloginput_la_LDADD = libcomedidynclampanaloginput.la
-
-linktest_libcomedidynclampanalogoutput_la_SOURCES = linktest.cc
-linktest_libcomedidynclampanalogoutput_la_LDADD = libcomedidynclampanalogoutput.la
+linktest_libcomedidynclamp_la_SOURCES = linktest.cc
+linktest_libcomedidynclamp_la_LDADD = libcomedidynclamp.la
 
 TESTS = $(check_PROGRAMS)

@@ -434,43 +434,6 @@ int ComediAnalogOutput::convertData( OutList &sigs )
 }
 
 
-string cmd_src( int src )
-{
-  string buf = "";
-
-  if ( src & TRIG_NONE ) buf += "none|";
-  if ( src & TRIG_NOW ) buf += "now|";
-  if ( src & TRIG_FOLLOW ) buf += "follow|";
-  if ( src & TRIG_TIME ) buf += "time|";
-  if ( src & TRIG_TIMER ) buf += "timer|";
-  if ( src & TRIG_COUNT ) buf += "count|";
-  if ( src & TRIG_EXT ) buf += "ext|";
-  if ( src & TRIG_INT ) buf += "int|";
-#ifdef TRIG_OTHER
-  if ( src & TRIG_OTHER ) buf +=  "other|";
-#endif
-
-  if ( buf.empty() )
-    //    buf = "unknown(" << setw( 8 ) << src ")";
-    buf="unknown";
-  else
-    buf.erase( buf.size()-1 );
-  
-  return buf;
-}
-
-
-void dump_cmd( comedi_cmd *cmd )
-{
-  cerr << "subdevice:      " << cmd->subdev << '\n';
-  cerr << "start:      " << Str( cmd_src(cmd->start_src), 8 ) << "  " << cmd->start_arg << '\n';
-  cerr << "scan_begin: " << Str( cmd_src(cmd->scan_begin_src), 8 ) << "  " << cmd->scan_begin_arg << '\n';
-  cerr << "convert:    " << Str( cmd_src(cmd->convert_src), 8 ) << "  " << cmd->convert_arg << '\n';
-  cerr << "scan_end:   " << Str( cmd_src(cmd->scan_end_src), 8 ) << "  " << cmd->scan_end_arg << '\n';
-  cerr << "stop:       " << Str( cmd_src(cmd->stop_src), 8 ) << "  " << cmd->stop_arg << '\n';
-}
-
-
 void ComediAnalogOutput::setupChanList( OutList &sigs, unsigned int *chanlist,
 					int maxchanlist )
 {

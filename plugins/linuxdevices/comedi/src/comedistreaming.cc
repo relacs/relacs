@@ -1,6 +1,6 @@
 /*
-  comedi/comedinipfidevice.cc
-  Makes comedinipfi a relacs plugin
+  comedi/comedistreaming.cc
+  Makes comedi streaming devices a relacs plugin
   
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
@@ -20,10 +20,16 @@
 */
 
 #include <relacs/relacsplugin.h>
+#include <relacs/comedi/comedianaloginput.h>
+#include <relacs/comedi/comedianalogoutput.h>
+#include <relacs/comedi/comedidigitalio.h>
 #include <relacs/comedi/comedinipfi.h>
 
 namespace comedi {
 
+addAnalogInput( ComediAnalogInput );
+addAnalogOutput( ComediAnalogOutput );
+addDigitalIO( ComediDigitalIO );
 addDevice( ComediNIPFI );
 
 };

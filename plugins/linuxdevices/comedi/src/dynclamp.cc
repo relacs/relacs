@@ -1,6 +1,6 @@
 /*
-  comedi/dynclampanalogoutputdevice.cc
-  Makes dynclampanalogoutput a relacs plugin
+  comedi/dynclamp.cc
+  Makes dynclamp devices a relacs plugin
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
@@ -20,10 +20,12 @@
 */
 
 #include <relacs/relacsplugin.h>
+#include <relacs/comedi/dynclampanaloginput.h>
 #include <relacs/comedi/dynclampanalogoutput.h>
 
 namespace comedi {
 
+addAnalogInput( DynClampAnalogInput );
 addAnalogOutput( DynClampAnalogOutput );
 
 };
