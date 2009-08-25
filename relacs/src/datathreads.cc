@@ -70,7 +70,7 @@ void ReadThread::run( void )
       RW->printlog( "! error in reading acquired data: " + RW->IL.errorText() );
       RW->writeLockData();
       RW->lockAI();
-      int r = RW->AQ->restartRead();
+      RW->AQ->restartRead();
       RW->unlockAI();
       RW->unlockData();
     }

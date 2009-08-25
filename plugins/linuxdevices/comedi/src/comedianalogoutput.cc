@@ -714,14 +714,8 @@ int ComediAnalogOutput::setupCommand( OutList &sigs, comedi_cmd &cmd )
     case 4: // adjusted *_arg:
       if ( cmd.start_arg != testCmd.start_arg )
 	sigs.addErrorStr( "start_arg adjusted" );
-      if ( cmd.scan_begin_arg != testCmd.scan_begin_arg ) {
-	cerr << "! warning in ComediAnalogOutput::setupCommand() -> "
-	     << "requested sampling period of " << testCmd.scan_begin_arg
-	     << "ns was adjusted to " << cmd.scan_begin_arg
-	     << "ns." << endl;
-	//	sigs.addError( DaqError::InvalidSampleRate );    
+      if ( cmd.scan_begin_arg != testCmd.scan_begin_arg )
 	sigs.setSampleRate( 1.0e9 / cmd.scan_begin_arg );
-      }
       if ( cmd.convert_arg != testCmd.convert_arg )
 	sigs.addErrorStr( "convert_arg adjusted" );
       if ( cmd.scan_end_arg != testCmd.scan_end_arg )

@@ -89,6 +89,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     InfoFile( 0 ),
     InfoFileMacro( "" ),
     IsFullScreen( false ),
+    IsMaximized( false ),
     GUILock( 0 ),
     DataMutex( true ),  // recursive, because of activateGains()!
     DataMutexCount( 0 ),
@@ -426,6 +427,12 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   // view:
   QPopupMenu *viewmenu = new QPopupMenu;
 
+  MaximizedAction = new QAction( this );
+  MaximizedAction->setMenuText( "&Maximize window" );
+  MaximizedAction->setAccel( CTRL+SHIFT+Key_M );
+  connect( MaximizedAction, SIGNAL( activated() ), this, SLOT( maximizeScreen() ) );
+  MaximizedAction->addTo( viewmenu );
+
   FullscreenAction = new QAction( this );
   FullscreenAction->setMenuText( "&Full-Screen Mode" );
   FullscreenAction->setAccel( CTRL+SHIFT+Key_F );
@@ -748,11 +755,13 @@ void RELACSWidget::updateData( void )
   lockAI();
   AQ->convertData();
   unlockAI();
+  double currenttime = IL[0].currentTime();
+  unlockData();
   // do we need to wait for more data?
   MinTraceMutex.lock();
   double mintime = MinTraceTime;
   MinTraceMutex.unlock();
-  while ( IL.success() && IL[0].currentTime() < mintime ) {
+  while ( IL.success() && currenttime < mintime ) {
     RunDataMutex.lock();
     bool rd = RunData;
     RunDataMutex.unlock();
@@ -763,12 +772,16 @@ void RELACSWidget::updateData( void )
     }
     else
       ReadDataWait.wait( 1 );
+    writeLockData();
     lockAI();
     AQ->convertData();
     unlockAI();
+    currenttime = IL[0].currentTime();
+    unlockData();
   }
   setMinTraceTime( 0.0 );
   // update derived data:
+  writeLockData();
   AQ->readSignal( SignalTime, IL, ED ); // we probably get the latest signal start here
   AQ->readRestart( IL, ED );
   ED.setRangeBack( IL[0].currentTime() );
@@ -1804,6 +1817,21 @@ void RELACSWidget::fullScreen( void )
     showFullScreen();
     IsFullScreen = true;
     FullscreenAction->setMenuText( "Exit &Full-Screen Mode" );
+  }
+}
+
+
+void RELACSWidget::maximizeScreen( void )
+{
+  if ( IsMaximized ) {
+    showNormal();
+    IsMaximized = false;
+    MaximizedAction->setMenuText( "&Maximize window" );
+  }
+  else {
+    showMaximized();
+    IsMaximized = true;
+    MaximizedAction->setMenuText( "Exit &Maximize window" );
   }
 }
 

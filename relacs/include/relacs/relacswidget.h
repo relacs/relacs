@@ -280,6 +280,8 @@ public slots:
 
     /*! Toggles full screen mode. */
   void fullScreen( void );
+    /*! Toggles maximized screen mode. */
+  void maximizeScreen( void );
 
     /*! Displays highly relevant information about the culprits that
         wrote this piece of software.*/
@@ -397,6 +399,7 @@ private:
   string InfoFileMacro;
   QColor OrgBackground;
   bool IsFullScreen;
+  bool IsMaximized;
 
   QTimer SimLoad;
   QLabel *SimLabel;
@@ -434,6 +437,7 @@ private:
   QAction *IdleAction;
 
   QAction *FullscreenAction;
+  QAction *MaximizedAction;
 
   QPopupMenu *DeviceMenu;
 
