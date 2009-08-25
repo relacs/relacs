@@ -885,9 +885,7 @@ int RELACSWidget::write( OutData &signal )
     lockSignals();
     SF->save( signal );
     unlockSignals();
-    lockAI();
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
-    unlockAI();
     AQ->readRestart( IL, ED );
     // update device menu:
     QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
@@ -930,9 +928,7 @@ int RELACSWidget::write( OutList &signal )
     lockSignals();
     SF->save( signal );
     unlockSignals();
-    lockAI();
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
-    unlockAI();
     AQ->readRestart( IL, ED );
     // update device menu:
     QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
@@ -974,9 +970,7 @@ int RELACSWidget::directWrite( OutData &signal )
     lockSignals();
     SF->save( signal );
     unlockSignals();
-    lockAI();
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
-    unlockAI();
     AQ->readRestart( IL, ED );
     // update device menu:
     QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
@@ -1018,9 +1012,7 @@ int RELACSWidget::directWrite( OutList &signal )
     lockSignals();
     SF->save( signal );
     unlockSignals();
-    lockAI();
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
-    unlockAI();
     AQ->readRestart( IL, ED );
     // update device menu:
     QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );

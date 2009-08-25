@@ -131,7 +131,7 @@ public:
         \sa close(), open(), isOpen() */
   virtual int reset( void );
   
-    /*! True if analog input is running. */
+    /*! True if the analog input driver is running. */
   virtual bool running( void ) const;
 
     /*! Get error status of the device. 
@@ -223,6 +223,10 @@ private:
     /*! True if the command is prepared. */
   bool IsPrepared;
 
+    /*! True if a command is supposed to be running.
+        \note this differs from running(), which indicated that the driver is still running. */
+  bool IsRunning;
+
   int ErrorState;
 
     /*! Calibration info. */
@@ -234,12 +238,17 @@ private:
   int ReadBufferSize;
     /*! Size of the internal buffer used for getting the data from the driver. */
   int BufferSize;
-    /*! The number of bytes written so far to the internal buffer. */
+    /*! The number of samples written so far to the internal buffer. */
   int BufferN;
     /*! The internal buffer used for getting the data from the driver. */
   char *Buffer;
     /*! Index to the trace in the internal buffer. */
   int TraceIndex;
+
+    /*! The total number of samples to be acquired, 0 for continuous acquisition. */
+  int TotalSamples;
+    /*! The number of samples so far read in by readData(). */
+  int CurrentSamples;
 
 };
 

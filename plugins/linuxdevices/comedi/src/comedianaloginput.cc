@@ -46,6 +46,7 @@ ComediAnalogInput::ComediAnalogInput( void )
   MaxRate = 1000.0;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
+  IsRunning = false;
   Calibration = 0;
   Traces = 0;
   ReadBufferSize = 0;
@@ -53,6 +54,8 @@ ComediAnalogInput::ComediAnalogInput( void )
   BufferN = 0;
   Buffer = NULL;
   TraceIndex = 0;
+  TotalSamples = 0;
+  CurrentSamples = 0;
 }
 
 
@@ -67,6 +70,7 @@ ComediAnalogInput::ComediAnalogInput( const string &device, long mode )
   MaxRate = 1000.0;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
+  IsRunning = false;
   Calibration = 0;
   Traces = 0;
   ReadBufferSize = 0;
@@ -74,6 +78,8 @@ ComediAnalogInput::ComediAnalogInput( const string &device, long mode )
   BufferN = 0;
   Buffer = NULL;
   TraceIndex = 0;
+  TotalSamples = 0;
+  CurrentSamples = 0;
   open( device, mode );
 }
 
@@ -231,6 +237,9 @@ int ComediAnalogInput::open( const string &device, long mode )
   ComediAOs.clear();
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
+  IsRunning = false;
+  TotalSamples = 0;
+  CurrentSamples = 0;
   
   return 0;
 }
@@ -276,6 +285,8 @@ void ComediAnalogInput::close( void )
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
   TraceIndex = 0;
+  TotalSamples = 0;
+  CurrentSamples = 0;
 }
 
 
@@ -512,14 +523,14 @@ int ComediAnalogInput::setupCommand( InList &traces, comedi_cmd &cmd )
     
   // set countinous-state:
   if ( traces[0].continuous() ) {
-      cmd.stop_src = TRIG_NONE;
-      cmd.stop_arg = 0;
-    }
-  if ( !traces[0].continuous() ) {
-      cmd.stop_src = TRIG_COUNT;
-      // set length of acquisition as number of scans:
-      cmd.stop_arg = traces[0].size();
-    }
+    cmd.stop_src = TRIG_NONE;
+    cmd.stop_arg = 0;
+  }
+  else {
+    cmd.stop_src = TRIG_COUNT;
+    // set length of acquisition as number of scans:
+    cmd.stop_arg = traces[0].size();
+  }
 
   cmd.chanlist = chanlist;
   cmd.chanlist_len = traces.size();
@@ -662,6 +673,9 @@ int ComediAnalogInput::prepareRead( InList &traces )
   Buffer = new char[BufferSize];
   BufferN = 0;
 
+  TotalSamples = Cmd.stop_arg * Cmd.chanlist_len;
+  CurrentSamples = 0;
+
   // apply calibration:
   if ( Calibration != 0 ) {
     for( int k=0; k < traces.size(); k++ ) {
@@ -697,6 +711,7 @@ int ComediAnalogInput::executeCommand( void )
     return -1;
   }
   TraceIndex = 0;
+  IsRunning = true;
   return 0;
 }
 
@@ -808,13 +823,14 @@ void ComediAnalogInput::convert( InList &traces, char *buffer, int n )
 int ComediAnalogInput::readData( void )
 {
   //  cerr << "Comedi::readData() start\n";
-  if ( Traces == 0 || Buffer == 0 )
+  if ( Traces == 0 || Buffer == 0 || ! IsRunning )
     return -1;
 
   ErrorState = 0;
   bool failed = false;
-  int readn = BufferN*BufferElemSize;
-  int maxn = BufferSize - readn;
+  int readn = 0;
+  int buffern = BufferN*BufferElemSize;
+  int maxn = BufferSize - buffern;
 
   // try to read twice:
   for ( int tryit = 0; tryit < 2 && ! failed && maxn > 0; tryit++ ) {
@@ -824,7 +840,7 @@ int ComediAnalogInput::readData( void )
       break;
     
     // read data:
-    ssize_t m = read( comedi_fileno( DeviceP ), Buffer + readn, maxn );
+    ssize_t m = read( comedi_fileno( DeviceP ), Buffer + buffern, maxn );
 
     int ern = errno;
     if ( m < 0 && ern != EAGAIN && ern != EINTR ) {
@@ -834,12 +850,15 @@ int ComediAnalogInput::readData( void )
     }
     else if ( m > 0 ) {
       maxn -= m;
+      buffern += m;
       readn += m;
     }
 
   }
 
-  BufferN = readn / BufferElemSize;
+  BufferN = buffern / BufferElemSize;
+  readn /= BufferElemSize;
+  CurrentSamples += readn;
 
   if ( failed ) {
     /* the following does not work:
@@ -863,8 +882,8 @@ int ComediAnalogInput::readData( void )
   }
 
   // no more data to be read:
-  if ( BufferN <= 0 && !running() ) {
-    if ( (*Traces)[0].continuous() ) {
+  if ( readn <= 0 && !running() ) {
+    if ( IsRunning && ( TotalSamples <=0 || CurrentSamples < TotalSamples ) ) {
       Traces->addErrorStr( deviceFile() + " - buffer-overflow: "
 			  + comedi_strerror( comedi_errno() ) );
       Traces->addError( DaqError::OverflowUnderrun );
@@ -875,7 +894,7 @@ int ComediAnalogInput::readData( void )
 
   //  cerr << "Comedi::readData() end " << BufferN << "\n";
 
-  return BufferN;
+  return readn;
 }
 
 
@@ -906,6 +925,8 @@ int ComediAnalogInput::stop( void )
   if ( comedi_cancel( DeviceP, SubDevice ) < 0 )
     return ReadError;
 
+  IsRunning = false;
+
   return 0;
 }
 
@@ -926,6 +947,8 @@ int ComediAnalogInput::reset( void )
   Buffer = NULL;
   BufferSize = 0;
   BufferN = 0;
+  TotalSamples = 0;
+  CurrentSamples = 0;
 
   clearSettings();
 

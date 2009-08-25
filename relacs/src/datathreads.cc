@@ -119,7 +119,7 @@ void WriteThread::stop( void )
 }
 
 
-  void WriteThread::run( void )
+void WriteThread::run( void )
 {
   bool rd = true;
 
