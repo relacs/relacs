@@ -57,7 +57,7 @@ OneClick::OneClick( void )
 
   addLabel( "Waveform" ).setStyle( OptWidget::Bold );
   addNumber( "duration", "Duration of stimulus", Duration, 0.0, 0.1, 0.000001, "seconds", "microsec" );
-  addNumber( "latency", "Latency after stimulus", Latency, 0.0, 10.0, 0.05, "seconds", "ms" );
+  //  addNumber( "latency", "Latency after stimulus", Latency, 0.0, 10.0, 0.05, "seconds", "ms" );
   addNumber( "pause", "Pause", Pause, 0.0, 10.0, 0.05, "seconds", "ms" );
   addText( "side", "Speaker", "left|right|best" ).setStyle( Parameter::SelectText );
 
@@ -79,11 +79,12 @@ OneClick::~OneClick( void )
 
 int OneClick::main( void )
 {
+   /*
   if ( SpikeEvents[0] < 0 || SpikeTrace[0] < 0 ) {
     warning( "No spike trace!" );
     return Failed;
   }
-
+*/
   // get options:
 
   MinIntensity = number( "intmin" );
@@ -92,7 +93,7 @@ int OneClick::main( void )
   IntRepeat = integer( "repeat" );
 
   Duration = number( "duration" );
-  Latency = number( "latency" );
+  //  Latency = number( "latency" );
   Pause = number( "pause" );
   Side = index( "side" );
 
@@ -107,8 +108,7 @@ int OneClick::main( void )
   P.unlock();
 
   // stimulus:
-  OutData signal( Duration, 10000.0 );
-  //		  OutData::traceRate( Speaker[ Side ] ) );
+  OutData signal( Duration, 0.00001 );
   signal.setTrace( Speaker[ Side ] );
   int hw = signal.size()/2;
   int j=0;
@@ -118,7 +118,7 @@ int OneClick::main( void )
     signal[j] = 1.0 - double( j - hw  ) / hw;
   signal.back() = 0;
   signal.setDelay( 0 );
-  //  signal.saveText( "signal.dat" );
+  //  signal.save( "signal.dat" );
 
   /*
     if ( signal.underflow() ) {
