@@ -667,17 +667,23 @@ class TraubMiles : public HodgkinHuxley
 
 /*! 
 \class TraubErmentrout
-\brief [ModelLib] Modification of the soma compartment Traub-Miles (1991) model
+\brief [ModelLib] Base class for Traub-Miles (1991) based models with M-type, calcium, and AHP-type currents
 \author Jan Benda
-\todo unit of calcium concentration
-\todo verify reference, parameter values, and units
 
-This is a modified version (Bard Ermentrout (1998): Linearization of
-f-I curves by adaptation. Neural. Comput. 10, pp. 1721-1729) of the
-soma compartment of the Traub-Miles model (Roger D. Traub and Robert
-K. S. Wong and Richard Miles and Hillary Michelson (1991): A model of
-a CA3 hippocampal pyramidal neuron incorporating voltage-clamp data on
-intrinsic conductances. J. Neurophysiol. 66, pp. 635-650).
+This is the base class for the models used in Ermentrout (1998) and
+Ermentrout et al. (2001) that are based on Traub's 1991 model for
+spiking dynamics with M-type, calcium, and AHP-type currents.
+
+Bard Ermentrout (1998): Linearization of f-I curves by
+adaptation. Neural. Comput. 10, pp. 1721-1729
+
+Bard Ermentrout, Matthew Pascal, and Boris Gutkin (2001): The effects
+of spike frequency adaptation and negative feedback on the
+synchronization of neural osscillators. Neural. Comput. 13,
+pp. 1285-1310
+
+Roger D. Traub and Richard Miles (1991): Neural networks of the
+hippocampus. Cambridge: Cambridge University Press
 */
 
 class TraubErmentrout : public HodgkinHuxley
@@ -685,19 +691,12 @@ class TraubErmentrout : public HodgkinHuxley
  public:
   TraubErmentrout( void );
 
-    /*! \copydoc SpikingNeuron::name() */
-  virtual string name( void ) const;
     /*! \copydoc SpikingNeuron::dimension()  */
   virtual int dimension( void ) const;
     /*! \copydoc SpikingNeuron::variables() */
   virtual void variables( vector< string > &varnames ) const;
     /*! \copydoc SpikingNeuron::units() */
   virtual void units( vector< string > &u ) const;
-    /*! Computes the derivative \a dxdt at time \a t
-        with stimulus \a s given the state \a x. */
-  virtual void operator()(  double t, double s, double *x, double *dxdt, int n );
-    /*! Initialize the state \a x with usefull inital conditions. */
-  virtual void init( double *x ) const;
 
     /*! Returns in \a conductancenames the names of the individual 
         ionic conductances that conductances(double*) const would return. */
@@ -725,7 +724,79 @@ class TraubErmentrout : public HodgkinHuxley
   double GCaGates, GMGates, GAHPGates;
   double ECa, EM, EAHP;
   double ICa, IM, IAHP;
+
+};
+
+
+/*! 
+\class TraubErmentrout1998
+\brief [ModelLib] The single compartment model with adaptation currents as used in Ermentrout (1998)
+\author Jan Benda
+
+This is Traub's 1991 model for spiking dynamics with M-type, calcium,
+and AHP-type currents as used in Ermentrout (1998).
+
+Roger D. Traub and Richard Miles (1991): Neural networks of the
+hippocampus. Cambridge: Cambridge University Press
+
+Bard Ermentrout (1998): Linearization of f-I curves by
+adaptation. Neural. Comput. 10, pp. 1721-1729
+*/
+
+class TraubErmentrout1998 : public TraubErmentrout
+{
+ public:
+  TraubErmentrout1998( void );
+
+    /*! \copydoc SpikingNeuron::name() */
+  virtual string name( void ) const;
+    /*! Computes the derivative \a dxdt at time \a t
+        with stimulus \a s given the state \a x. */
+  virtual void operator()(  double t, double s, double *x, double *dxdt, int n );
+    /*! Initialize the state \a x with usefull inital conditions. */
+  virtual void init( double *x ) const;
+
+    /*! Add parameters as options. */
+  virtual void add( void );
+    /*! Read out the current values from the list of Options. */
+  virtual void notify( void );
+
+ protected:
+
   double TauW;
+
+};
+
+
+/*! 
+\class TraubErmentrout2001
+\brief [ModelLib] The single compartment model with adaptation currents as used in Ermentrout et al. (2001)
+\author Jan Benda
+
+This is Traub's 1991 model for spiking dynamics with an Calcium,
+M-type, and AHP-type current as used in Ermentrout et al. (2001).
+
+Roger D. Traub and Richard Miles (1991): Neural networks of the
+hippocampus. Cambridge: Cambridge University Press
+
+Bard Ermentrout, Matthew Pascal, and Boris Gutkin (2001): The effects
+of spike frequency adaptation and negative feedback on the
+synchronization of neural osscillators. Neural. Comput. 13,
+pp. 1285-1310
+*/
+
+class TraubErmentrout2001 : public TraubErmentrout
+{
+ public:
+  TraubErmentrout2001( void );
+
+    /*! \copydoc SpikingNeuron::name() */
+  virtual string name( void ) const;
+    /*! Computes the derivative \a dxdt at time \a t
+        with stimulus \a s given the state \a x. */
+  virtual void operator()(  double t, double s, double *x, double *dxdt, int n );
+    /*! Initialize the state \a x with usefull inital conditions. */
+  virtual void init( double *x ) const;
 
 };
 

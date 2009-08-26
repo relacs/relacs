@@ -1382,9 +1382,9 @@ TraubErmentrout::TraubErmentrout( void )
   GNa = 100.0;
   GK = 80.0;
   GL = 0.1;
-  GCa = 5.0;
-  GM = 8.0;
-  GAHP = 4.0;
+  GCa = 1.0;
+  GM = 5.0;
+  GAHP = 5.0;
 
   ENa = +50.0;
   EK = -100.0;
@@ -1393,7 +1393,6 @@ TraubErmentrout::TraubErmentrout( void )
   EM = -100.0;
   EAHP = -100.0;
 
-  TauW = 100.0;
   C = 1.0;
   PT = 1.0;
 
@@ -1409,12 +1408,6 @@ TraubErmentrout::TraubErmentrout( void )
   ICa = 0.0;
   IM = 0.0;
   IAHP = 0.0;
-}
-
-
-string TraubErmentrout::name( void ) const
-{
-  return "Traub-Miles-Ermentrout";
 }
 
 
@@ -1451,63 +1444,6 @@ void TraubErmentrout::units( vector< string > &u ) const
   u.push_back( "1" );
   u.push_back( "1" );
   u.push_back( "mM" );
-}
-
-
-void TraubErmentrout::operator()(  double t, double s, double *x, double *dxdt, int n )
-{
-  double V = x[0];
-  double Ca = x[7];
-
-  double z = (V+54.0)/4.0;
-  double am = fabs( z ) < 1e-4 ? 0.32*4.0 : 0.32*4.0*z/(1.0-exp(-z));
-  z = (V+27.0)/5.0;
-  double bm = fabs( z ) < 1e-4 ? 0.28*5.0 : 0.28*5.0*z/(exp(z)-1.0);
-
-  double ah = 0.128*exp(-(V+50.0)/18.0);
-  double bh = 4.0/(1.0+exp(-(V+27.0)/5.0));
-  
-  z = (V+52.0)/5.0;
-  double an = fabs( z ) < 1e-4 ? 0.032*5.0 : 0.032*5.0*z/(1.0-exp(-z));
-  double bn = 0.5*exp(-(V+57.0)/40.0);
-
-  x[4] = 1.0/(1.0+exp(-(V+25.0)/5.0));
-  x[6] = Ca/(30.0+Ca);
-
-  GNaGates = GNa*x[1]*x[1]*x[1]*x[2];
-  GKGates = GK*x[3]*x[3]*x[3]*x[3];
-  GCaGates = GCa*x[4];
-  GMGates = GM*x[5];
-  GAHPGates = GAHP*x[6];
-
-  INa = GNaGates*(V-ENa);
-  IK = GKGates*(V-EK);
-  IL = GL*(V-EL);
-  ICa = GCaGates*(V-ECa);
-  IM = GMGates*(V-EM);
-  IAHP = GAHPGates*(V-EAHP);
-
-  /* V */ dxdt[0] = ( - INa - IK - IL - ICa - IM - IAHP + s )/C;
-  /* m */ dxdt[1] = am*(1.0-x[1]) - x[1]*bm;
-  /* h */ dxdt[2] = ah*(1.0-x[2]) - x[2]*bh;
-  /* n */ dxdt[3] = an*(1.0-x[3]) - x[3]*bn;
-  /* s */ dxdt[4] = 0.0;
-  /* w */ dxdt[5] = (1.0/(1.0+exp(-(V+20.0)/5.0)) - x[5])/TauW;
-  /* q */ dxdt[6] = 0.0;
-  /* Ca */ dxdt[7] = -0.002*ICa - 0.0125*Ca;
-}
-
-
-void TraubErmentrout::init( double *x ) const
-{
-  x[0] = -66.01;
-  x[1] = 0.018030;
-  x[2] = 0.994788;
-  x[3] = 0.044163;
-  x[4] = 0.000274;
-  x[5] = 0.000137;
-  x[6] = 0.001291;
-  x[7] = 0.038781;
 }
 
 
@@ -1570,7 +1506,6 @@ void TraubErmentrout::add( void )
   insertLabel( "M-type current", "Input", ModelFlag );
   insertNumber( "gm", "Input", "M conductivity", GM, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
   insertNumber( "em", "Input", "M reversal potential", EM, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
-  insertNumber( "tauw", "Input", "W time constant", TauW, 0.0, 1000.0, 1.0, "ms" ).setFlags( ModelFlag );
 
   insertLabel( "AHP-type current", "Input", ModelFlag );
   insertNumber( "gahp", "Input", "AHP conductivity", GAHP, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
@@ -1586,9 +1521,227 @@ void TraubErmentrout::notify( void )
   GCa = number( "gca" );
   EM = number( "em" );
   GM = number( "gm" );
-  TauW = number( "tauw" );
   EAHP = number( "eahp" );
   GAHP = number( "gahp" );
+}
+
+
+TraubErmentrout1998::TraubErmentrout1998( void )
+  : TraubErmentrout()
+{
+  GNa = 100.0;
+  GK = 80.0;
+  GL = 0.1;
+  GCa = 1.0;
+  GM = 5.0;
+  GAHP = 5.0;
+
+  ENa = +50.0;
+  EK = -100.0;
+  EL = -67.0;
+  ECa = +120.0;
+  EM = -100.0;
+  EAHP = -100.0;
+
+  TauW = 100.0;
+  C = 1.0;
+  PT = 1.0;
+
+  GNaGates = GNa;
+  GKGates = GK;
+  GCaGates = GCa;
+  GMGates = GM;
+  GAHPGates = GAHP;
+
+  INa = 0.0;
+  IK = 0.0;
+  IL = 0.0;
+  ICa = 0.0;
+  IM = 0.0;
+  IAHP = 0.0;
+}
+
+
+string TraubErmentrout1998::name( void ) const
+{
+  return "Traub-Miles-Ermentrout 1998";
+}
+
+
+void TraubErmentrout1998::operator()(  double t, double s, double *x, double *dxdt, int n )
+{
+  double V = x[0];
+  double Ca = x[7];
+
+  double z = (V+54.0)/4.0;
+  double am = fabs( z ) < 1e-4 ? 0.32*4.0 : 0.32*4.0*z/(1.0-exp(-z));
+  z = (V+27.0)/5.0;
+  double bm = fabs( z ) < 1e-4 ? 0.28*5.0 : 0.28*5.0*z/(exp(z)-1.0);
+
+  double ah = 0.128*exp(-(V+50.0)/18.0);
+  double bh = 4.0/(1.0+exp(-(V+27.0)/5.0));
+  
+  z = (V+52.0)/5.0;
+  double an = fabs( z ) < 1e-4 ? 0.032*5.0 : 0.032*5.0*z/(1.0-exp(-z));
+  double bn = 0.5*exp(-(V+57.0)/40.0);
+
+  x[4] = 1.0/(1.0+exp(-(V+25.0)/5.0));
+
+  double ws = 1.0/(1.0+exp(-(V+20.0)/5.0));
+
+  x[6] = Ca/(30.0+Ca);
+
+  GNaGates = GNa*x[1]*x[1]*x[1]*x[2];
+  GKGates = GK*x[3]*x[3]*x[3]*x[3];
+  GCaGates = GCa*x[4];
+  GMGates = GM*x[5];
+  GAHPGates = GAHP*x[6];
+
+  INa = GNaGates*(V-ENa);
+  IK = GKGates*(V-EK);
+  IL = GL*(V-EL);
+  ICa = GCaGates*(V-ECa);
+  IM = GMGates*(V-EM);
+  IAHP = GAHPGates*(V-EAHP);
+
+  /* V */ dxdt[0] = ( - INa - IK - IL - ICa - IM - IAHP + s )/C;
+  /* m */ dxdt[1] = am*(1.0-x[1]) - x[1]*bm;
+  /* h */ dxdt[2] = ah*(1.0-x[2]) - x[2]*bh;
+  /* n */ dxdt[3] = an*(1.0-x[3]) - x[3]*bn;
+  /* s */ dxdt[4] = 0.0;
+  /* w */ dxdt[5] = (ws - x[5])/TauW;
+  /* q */ dxdt[6] = 0.0;
+  /* Ca */ dxdt[7] = -0.002*ICa - 0.0125*Ca;
+}
+
+
+void TraubErmentrout1998::init( double *x ) const
+{
+  x[0] = -66.71572;
+  x[1] = 0.01564;
+  x[2] = 0.99564;
+  x[3] = 0.03947;
+  x[4] = 0.00024;
+  x[5] = 0.00009;
+  x[6] = 0.00024;
+  x[7] = 0.00711;
+}
+
+
+void TraubErmentrout1998::add( void )
+{
+  TraubErmentrout::add();
+  insertNumber( "tauw", "AHP-type current", "W time constant", TauW, 0.0, 1000.0, 1.0, "ms" ).setFlags( ModelFlag );
+}
+
+
+void TraubErmentrout1998::notify( void )
+{
+  TraubErmentrout::notify();
+  TauW = number( "tauw" );
+}
+
+
+TraubErmentrout2001::TraubErmentrout2001( void )
+  : TraubErmentrout()
+{
+  GNa = 100.0;
+  GK = 80.0;
+  GL = 0.2;
+  GCa = 1.0;
+  GM = 1.5;
+  GAHP = 1.5;
+
+  ENa = +50.0;
+  EK = -100.0;
+  EL = -67.0;
+  ECa = +120.0;
+  EM = -100.0;
+  EAHP = -100.0;
+
+  C = 1.0;
+  PT = 1.0;
+
+  GNaGates = GNa;
+  GKGates = GK;
+  GCaGates = GCa;
+  GMGates = GM;
+  GAHPGates = GAHP;
+
+  INa = 0.0;
+  IK = 0.0;
+  IL = 0.0;
+  ICa = 0.0;
+  IM = 0.0;
+  IAHP = 0.0;
+}
+
+
+string TraubErmentrout2001::name( void ) const
+{
+  return "Traub-Miles-Ermentrout 2001";
+}
+
+
+void TraubErmentrout2001::operator()(  double t, double s, double *x, double *dxdt, int n )
+{
+  double V = x[0];
+  double Ca = x[7];
+
+  double z = (V+54.0)/4.0;
+  double am = fabs( z ) < 1e-4 ? 0.32*4.0 : 0.32*4.0*z/(1.0-exp(-z));
+  z = (V+27.0)/5.0;
+  double bm = fabs( z ) < 1e-4 ? 0.28*5.0 : 0.28*5.0*z/(exp(z)-1.0);
+
+  double ah = 0.128*exp(-(V+50.0)/18.0);
+  double bh = 4.0/(1.0+exp(-(V+27.0)/5.0));
+  
+  z = (V+52.0)/5.0;
+  double an = fabs( z ) < 1e-4 ? 0.032*5.0 : 0.032*5.0*z/(1.0-exp(-z));
+  double bn = 0.5*exp(-(V+57.0)/40.0);
+
+  x[4] = 1.0/(1.0+exp(-(V+25.0)/2.5));
+
+  double ws = 1.0/(1.0+exp(-(V+35.0)/10.0));
+  z = (V+35.0)/20.0;
+  double tauw = 100.0/(3.3*exp(z) + exp(-z));
+
+  x[6] = Ca/(Ca+1.0);
+
+  GNaGates = GNa*x[1]*x[1]*x[1]*x[2];
+  GKGates = GK*x[3]*x[3]*x[3]*x[3];
+  GCaGates = GCa*x[4];
+  GMGates = GM*x[5];
+  GAHPGates = GAHP*x[6];
+
+  INa = GNaGates*(V-ENa);
+  IK = GKGates*(V-EK);
+  IL = GL*(V-EL);
+  ICa = GCaGates*(V-ECa);
+  IM = GMGates*(V-EM);
+  IAHP = GAHPGates*(V-EAHP);
+
+  /* V */ dxdt[0] = ( - INa - IK - IL - ICa - IM - IAHP + s )/C;
+  /* m */ dxdt[1] = am*(1.0-x[1]) - x[1]*bm;
+  /* h */ dxdt[2] = ah*(1.0-x[2]) - x[2]*bh;
+  /* n */ dxdt[3] = an*(1.0-x[3]) - x[3]*bn;
+  /* s */ dxdt[4] = 0.0;
+  /* w */ dxdt[5] = (ws - x[5])/tauw;
+  /* q */ dxdt[6] = 0.0;
+  /* Ca */ dxdt[7] = -0.002*ICa - 0.0125*Ca;
+}
+
+
+void TraubErmentrout2001::init( double *x ) const
+{
+  x[0] = -72.94663;
+  x[1] = 0.00415;
+  x[2] = 0.99911;
+  x[3] = 0.01366;
+  x[4] = 0.00000;
+  x[5] = 0.02200;
+  x[6] = 0.00000;
+  x[7] = 0.00000;
 }
 
 
