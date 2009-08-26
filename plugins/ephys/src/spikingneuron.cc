@@ -249,20 +249,22 @@ void FitzhughNagumo::notify( void )
 MorrisLecar::MorrisLecar( void )
   : SpikingNeuron()
 {
-  // source??
-  GCa = 4.0;
+  // Parameter values are from Rinzel & Ermentrout (1998), type-1.
+  // As a comment, the values for type-2 are given.
+  GCa = 4.0;  // 4.4
   GK = 8.0;
   GL = 2.0;
 
   ECa = +120.0;
-  EK = -80.0;
+  EK = -84.0;
   EL = -60.0;
 
   MVCa = -1.2;
   MKCa = 18.0;
-  MVK = 12.0;
-  MKK = 17.4;
-  MPhiK = 0.067;
+  MVK = 12.0;  // 2.0
+  MKK = 17.4;  // 30.0
+
+  MPhiK = 0.067;  // 0.04
 
   C = 20.0;
   TimeScale = 10.0;
@@ -310,25 +312,27 @@ void MorrisLecar::units( vector< string > &u ) const
 
 void MorrisLecar::operator()(  double t, double s, double *x, double *dxdt, int n )
 {
-  double m = 1.0/(1.0+exp(-2.0*(x[0]-MVCa)/MKCa));
-  double w = 1.0/(1.0+exp(-2.0*(x[0]-MVK)/MKK));
-  double tau = 1.0/(MPhiK*cosh((x[0]-MVK)/MKK));
+  double V = x[0];
 
-  GCaGates = GCa*m;
+  double ms = 1.0/(1.0+exp(-2.0*(V-MVCa)/MKCa)); // same as 0.5*(1.0+tanh((V-MVCa)/MKCa))
+  double ws = 1.0/(1.0+exp(-2.0*(V-MVK)/MKK));   // same as 0.5*(1.0+tanh((V-MVK)/MKK))
+  double tauw = 1.0/(MPhiK*cosh(0.5*(V-MVK)/MKK));
+
+  GCaGates = GCa*ms;
   GKGates = GK*x[1];
 
-  ICa = GCaGates*(x[0]-ECa);
-  IK = GKGates*(x[0]-EK);
-  IL = GL*(x[0]-EL);
+  ICa = GCaGates*(V-ECa);
+  IK = GKGates*(V-EK);
+  IL = GL*(V-EL);
 
   /* V */ dxdt[0] = TimeScale*(-ICa-IK-IL+s)/C;
-  /* w */ dxdt[1] = TimeScale*(w-x[1])/tau;
+  /* w */ dxdt[1] = TimeScale*(ws-x[1])/tauw;
 }
 
 
 void MorrisLecar::init( double *x ) const
 {
-  x[0] = -59.469;
+  x[0] = -59.474;
   x[1] = 0.00027;
 }
 
@@ -445,6 +449,240 @@ void MorrisLecar::notify( void )
     MPhiK = number( "mphik" );
     EL = number( "el" );
     GL = number( "gl" );
+    C = number( "c" );
+  }
+  TimeScale = number( "timescale" );
+}
+
+
+MorrisLecarPrescott::MorrisLecarPrescott( void )
+  : MorrisLecar()
+{
+  // I_M (I_AHP as comments):
+
+  GCa = 20.0;
+  GK = 20.0;
+  GL = 2.0;
+  GA = 0.5;   // 5.0
+
+  ECa = +50.0;
+  EK = -100.0;
+  EL = -70.0;
+  EA = -100.0;
+
+  MVCa = -1.2;
+  MKCa = 18.0;
+
+  MVK = 0.0;
+  MKK = 10.0;
+  MPhiK = 0.15;
+
+  MVA = -35.0; // 0.0
+  MKA = 4.0;
+  TauA = 100.0;
+
+  C = 2.0;
+  TimeScale = 1.0;
+  Gain = 1.0;
+  Offset = 0.0;
+
+  GCaGates = GCa;
+  GKGates = GK;
+  GAGates = GA;
+
+  ICa = 0.0;
+  IK = 0.0;
+  IL = 0.0;
+  IA = 0.0;
+}
+
+
+string MorrisLecarPrescott::name( void ) const
+{
+  return "Morris-Lecar-Prescott";
+}
+
+
+int MorrisLecarPrescott::dimension( void ) const
+{
+  return 3;
+}
+
+
+void MorrisLecarPrescott::variables( vector< string > &varnames ) const
+{
+  varnames.clear();
+  varnames.reserve( dimension() );
+  varnames.push_back( "V" );
+  varnames.push_back( "w" );
+  varnames.push_back( "z" );
+}
+
+
+void MorrisLecarPrescott::units( vector< string > &u ) const
+{
+  u.clear();
+  u.reserve( dimension() );
+  u.push_back( "mV" );
+  u.push_back( "1" );
+  u.push_back( "1" );
+}
+
+
+void MorrisLecarPrescott::operator()(  double t, double s, double *x, double *dxdt, int n )
+{
+  double V = x[0];
+
+  double ms = 1.0/(1.0+exp(-2.0*(V-MVCa)/MKCa)); // same as 0.5*(1.0+tanh((V-MVCa)/MKCa))
+  double ws = 1.0/(1.0+exp(-2.0*(V-MVK)/MKK));   // same as 0.5*(1.0+tanh((V-MVK)/MKK))
+  double tauw = 1.0/(MPhiK*cosh(0.5*(V-MVK)/MKK));
+  double zs = 1.0/(1.0+exp(-(V-MVA)/MKA));
+
+  GCaGates = GCa*ms;
+  GKGates = GK*x[1];
+  GAGates = GA*x[2];
+
+  ICa = GCaGates*(V-ECa);
+  IK = GKGates*(V-EK);
+  IL = GL*(V-EL);
+  IA = GAGates*(V-EA);
+
+  /* V */ dxdt[0] = TimeScale*(-ICa-IK-IL-IA+s)/C;
+  /* w */ dxdt[1] = TimeScale*(ws-x[1])/tauw;
+  /* z */ dxdt[2] = TimeScale*(zs-x[2])/TauA;
+}
+
+
+void MorrisLecarPrescott::init( double *x ) const
+{
+  x[0] = -69.39045;
+  x[1] = 0.0;
+  x[2] = 0.00018;
+}
+
+
+void MorrisLecarPrescott::conductances( vector< string > &conductancenames ) const
+{
+  conductancenames.clear();
+  conductancenames.reserve( 4 );
+  conductancenames.push_back( "g_Ca" );
+  conductancenames.push_back( "g_K" );
+  conductancenames.push_back( "g_l" );
+  conductancenames.push_back( "g_A" );
+}
+
+
+void MorrisLecarPrescott::conductances( double *g ) const
+{
+  g[0] = GCaGates;
+  g[1] = GKGates;
+  g[2] = GL;
+  g[3] = GAGates;
+}
+
+
+void MorrisLecarPrescott::currents( vector< string > &currentnames ) const
+{
+  currentnames.clear();
+  currentnames.reserve( 4 );
+  currentnames.push_back( "I_Ca" );
+  currentnames.push_back( "I_K" );
+  currentnames.push_back( "I_l" );
+  currentnames.push_back( "I_A" );
+}
+
+
+void MorrisLecarPrescott::currents( double *c ) const
+{
+  c[0] = ICa;
+  c[1] = IK;
+  c[2] = IL;
+  c[3] = IA;
+}
+
+
+void MorrisLecarPrescott::add( void )
+{
+  unsetNotify();
+
+  MorrisLecar::add();
+
+  setText( "params", "Custom|I_M|I_AHP" );
+
+  insertLabel( "Adaptation current", "Input", ModelFlag );
+  insertNumber( "ga", "Input", "Adaptation conductivity", GA, 0.0, 10000.0, 0.1, "nS" ).setFlags( ModelFlag ).setActivation( "params", "Custom" );
+  insertNumber( "ea", "Input", "Adaptation reversal potential", EA, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag ).setActivation( "params", "Custom" );
+  insertNumber( "mva", "Input", "Midpoint potential of adaptation activation", MVA, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag ).setActivation( "params", "Custom" );
+  insertNumber( "mka", "Input", "Width of adaptation activation", MKA, 0.0, 1000.0, 1.0, "mV" ).setFlags( ModelFlag ).setActivation( "params", "Custom" );
+  insertNumber( "taua", "Input", "Adaptation time-constant", TauA, 0.0, 1000.0, 1.0, "ms" ).setFlags( ModelFlag ).setActivation( "params", "Custom" );
+
+  setNotify();
+}
+
+
+void MorrisLecarPrescott::notify( void )
+{
+  SpikingNeuron::notify();
+
+  int params = index( "params" );
+
+  if ( params == 1 ) {
+    // I_M:
+    ECa = +50.0;
+    GCa = 20.0;
+    MVCa = -1.2;
+    MKCa = 18.0;
+    EK = -100.0;
+    GK = 20.0;
+    MVK = 0.0;
+    MKK = 10.0;
+    MPhiK = 0.15;
+    EL = -70.0;
+    GL = 2.0;
+    EA = -100.0;
+    GA = 0.5;
+    MVA = -35.0;
+    MKA = 4.0;
+    TauA = 100.0;
+    C = 2.0;
+  }
+  else if ( params == 2 ) {
+    // I_AHP:
+    ECa = +50.0;
+    GCa = 20.0;
+    MVCa = -1.2;
+    MKCa = 18.0;
+    EK = -100.0;
+    GK = 20.0;
+    MVK = 0.0;
+    MKK = 10.0;
+    MPhiK = 0.15;
+    EL = -70.0;
+    GL = 2.0;
+    EA = -100.0;
+    GA = 5.0;
+    MVA = 0.0;
+    MKA = 4.0;
+    TauA = 100.0;
+    C = 2.0;
+  }
+  else {
+    ECa = number( "eca" );
+    GCa = number( "gca" );
+    MVCa = number( "mvca" );
+    MKCa = number( "mkca" );
+    EK = number( "ek" );
+    GK = number( "gk" );
+    MVK = number( "mvk" );
+    MKK = number( "mkk" );
+    MPhiK = number( "mphik" );
+    EL = number( "el" );
+    GL = number( "gl" );
+    EA = number( "ea" );
+    GA = number( "ga" );
+    MVA = number( "mva" );
+    MKA = number( "mka" );
+    TauA = number( "taua" );
     C = number( "c" );
   }
   TimeScale = number( "timescale" );

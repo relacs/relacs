@@ -291,7 +291,11 @@ class FitzhughNagumo : public SpikingNeuron
 \class MorrisLecar
 \brief [ModelLib] The Morris-Lecar model
 \author Jan Benda
-\todo verify reference, parameter values, and units
+
+The Morris-Lecar model as specified by Rinzel & Ermentrout (1998).
+
+John Rinzel and Bard Ermentrout (1998): Analysis of neural excitability and oscillations.
+in: Methods in neural modeling, by Christof Koch and Idan Segev, MIT, pp. 251-292.
 */
 
 class MorrisLecar : public SpikingNeuron
@@ -341,6 +345,69 @@ class MorrisLecar : public SpikingNeuron
   double ICa, IK, IL;
   double MVCa, MKCa, MVK, MKK, MPhiK;
   double C, TimeScale;
+
+};
+
+
+/*! 
+\class MorrisLecarPrescott
+\brief [ModelLib] The Morris-Lecar model with adaptation current as in Prescott & Sejnowski (2008)
+\author Jan Benda
+
+The standard parameter set is that for the M-type adaptation current.
+
+Steven A. Prescott and Terrence J. Sejnowski (2008): Spike-rate coding
+and spike-time coding are affected oppositely by different adaptation
+mechanisms.  J. Neurosci. (28), pp. 13649-13661.
+*/
+
+class MorrisLecarPrescott : public MorrisLecar
+{
+ public:
+  MorrisLecarPrescott( void );
+
+    /*! \copydoc SpikingNeuron::name() */
+  virtual string name( void ) const;
+    /*! \copydoc SpikingNeuron::dimension()  */
+  virtual int dimension( void ) const;
+    /*! \copydoc SpikingNeuron::variables() */
+  virtual void variables( vector< string > &varnames ) const;
+    /*! \copydoc SpikingNeuron::units() */
+  virtual void units( vector< string > &u ) const;
+    /*! Computes the derivative \a dxdt at time \a t
+        with stimulus \a s given the state \a x. */
+  virtual void operator()(  double t, double s, double *x, double *dxdt, int n );
+    /*! Initialize the state \a x with usefull inital conditions. */
+  virtual void init( double *x ) const;
+
+    /*! Returns in \a conductancenames the names of the individual 
+        ionic conductances that conductances(double*) const would return. */
+  virtual void conductances( vector< string > &conductancenames ) const;
+    /*! Returns in \a g the values of the individual ionic conductances.
+        The number of conductances is defined by the size of 
+        \a conductancenames the function conductances() returns. */
+  virtual void conductances( double *g ) const;
+    /*! Returns in \a currentnames the names of the individual ionic currents
+        that currents(double*) const would return. */
+  virtual void currents( vector< string > &currentnames ) const;
+    /*! Returns in \a c the values of the individual ionic currents.
+        The number of currents is defined by the size of \a currentnames
+        the function currents(vector<string>&) const returns. */
+  virtual void currents( double *c ) const;
+
+    /*! Add parameters as options. */
+  virtual void add( void );
+    /*! Read out the current values from the list of Options. */
+  virtual void notify( void );
+
+ protected:
+
+  double EA;
+  double GA;
+  double GAGates;
+  double IA;
+  double MVA, MKA;
+  double TauA;
 
 };
 
