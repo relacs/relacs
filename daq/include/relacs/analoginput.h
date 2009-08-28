@@ -259,6 +259,7 @@ protected:
 
     /*! Set the settings() string for \a traces.
         Call this function from within a successful prepareRead().
+	\param[in] traces the input traces for which the settings string should be constructed.
 	\param[in] readbuffer is the size of the driver's buffer in bytes.
 	\param[in] updatebuffer is the size of the internal buffer in bytes.
         \sa settings() */

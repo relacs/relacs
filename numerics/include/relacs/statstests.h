@@ -65,7 +65,7 @@ double rankSumWilcoxon( const ArrayD &xdata, const ArrayD &ydata, int &n );
       is standard normal distributed and
       alphaNormal( zWilcoxon( w, n ) ) is therefore a good approximation
       for alphaWilcoxon(). 
-      Note, however, that for a perfect separation of the pairs (\w = 0)
+      Note, however, that for a perfect separation of the pairs (\a w = 0)
       the significance is given by \f$ \alpha_{min} = 2^{-n} \f$, i.e.
       a sample size of at least 5 is needed for an 0.05 significance level.
       The following symmetry holds: 

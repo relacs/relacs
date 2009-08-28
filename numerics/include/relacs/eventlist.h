@@ -426,7 +426,7 @@ public:
         between \a tbegin and \a tend, and in \a intrvls[i].y() the
 	interevent interval for each trial \a i.
         The position of the interevent interval is the position of the left
-	event (\pos = -1, default), the position of the right event 
+	event (\a pos = -1, default), the position of the right event 
 	(\a pos = 1), or in between the left and the right event
 	(\a pos = 0).
         \return the number of interevent intervals. */
@@ -436,7 +436,7 @@ public:
         between \a tbegin and \a tend multiplied by \a tfac in the first column,
 	and the interevent interval in the second column.
         The position of the interevent interval is the position of the left
-	event (\pos = -1, default), the position of the right event 
+	event (\a pos = -1, default), the position of the right event 
 	(\a pos = 1), or in between the left and the right event
 	(\a pos = 0).
 	Both the position and the intervals are
@@ -497,7 +497,7 @@ public:
         between \a tbegin and \a tend, and in \a freqs[i].y() 1 divided by
 	that interevent interval for each trial \a i.
         The position of the interevent interval is the position of the left
-	event (\pos = -1, default), the position of the right event 
+	event (\a pos = -1, default), the position of the right event 
 	(\a pos = 1), or in between the left and the right event
 	(\a pos = 0).
         \return the number of interevent intervals. */
@@ -507,7 +507,7 @@ public:
         between \a tbegin and \a tend multiplied by \a tfac in the first column,
 	and 1 divided by that interevent interval in the second column.
         The position of the interevent interval is the position of the left
-	event (\pos = -1, default), the position of the right event 
+	event (\a pos = -1, default), the position of the right event 
 	(\a pos = 1), or in between the left and the right event
 	(\a pos = 0).
 	Both the position and the intervals are

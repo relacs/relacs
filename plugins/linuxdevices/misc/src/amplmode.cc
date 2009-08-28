@@ -27,6 +27,7 @@
 #include <sys/soundcard.h>
 #include <relacs/misc/amplmode.h>
 using namespace relacs;
+using namespace nieseries;
 
 namespace misc {
 

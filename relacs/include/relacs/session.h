@@ -56,7 +56,7 @@ and sessionTimeStr() return the time the current session is running.
 totalTime() returns the time RELACS is running.
 
 Session sets the following environment variables
-that can be used from within a shell command (see \ref macros):
+that can be used from within a shell command:
 
 - \c RELACSSESSIONTIME : The elapsed time of the current session formatted as a string.
 - \c RELACSSESSIONSECONDS : The elapsed time of the current session in seconds.

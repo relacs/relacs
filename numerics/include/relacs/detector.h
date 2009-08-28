@@ -67,7 +67,14 @@ public:
 	All thresholds (\a threshold \a minthresh, \a maxthresh) 
 	have to be positive numbers!
         \param[in] first iterator pointing to the first *accessible* data element.
-        \param[in] last iterator pointing behind the last data element. */
+        \param[in] last iterator pointing behind the last data element.
+        \param[out] outevents \a outevents[0] gets the peak times and \a outevents[1] the troughs. 
+	\param threshold the current value of the threshold
+	\param[in] minthresh the minimum value for the threshold
+	\param[in] maxthresh the maximum value for the threshold
+	\param check a clas that implements a checkPeak() and a checkTrough() function.
+	For details see the AcceptEvent implementation.
+    */
   template < class Check >
   void peakTrough( const DataIter &first, const DataIter &last,
 		   EventList &outevents,

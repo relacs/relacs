@@ -194,6 +194,7 @@ $(DX_DOCDIR)/$(DX_PROJECT).tag: $(DX_CONFIG) $(pkginclude_HEADERS) $(DX_DEPENDS)
 	  for DX_ENV_LINE in $(DX_SETTINGS); do echo $$DX_ENV_LINE; done; \
         } \
 	| tee $(abs_builddir)/tmp.dox | $(DX_DOXYGEN) -; \
+	rm -f $(abs_builddir)/$(DX_CONFIG).all; \
 	mv $(abs_builddir)/tmp.dox $(abs_builddir)/$(DX_CONFIG).all
 
 DX_INSTALL_FILES = \

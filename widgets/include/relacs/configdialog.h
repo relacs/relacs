@@ -137,23 +137,23 @@ public:
   virtual void setDate( const string &date );
 
     /*! \return background color of the dialog header
-        as a hex string (#rrggbb).
+        as a hex string (\#rrggbb).
         \sa setHeaderBackgroundColor(), headerForegroundColor(),
 	headerImageFile(), dialogHeaderWidget() */
   string headerBackgroundColor( void ) const;
     /*! Set the background color of the dialog header.
-        \param[in] color the background color as a hex string (#rrggbb).
+        \param[in] color the background color as a hex string (\#rrggbb).
         \sa headerBackgroundColor(), setHeaderForegroundColor(),
 	setHeaderImageFile(), dialogHeaderWidget() */
   void setHeaderBackgroundColor( const string &color );
     /*! \return foreground color of the dialog header
-        for the labels as a hex string (#rrggbb).
+        for the labels as a hex string (\#rrggbb).
         \sa setHeaderForegroundColor(), headerBackgroundColor(),
 	headerImageFile(), dialogHeaderWidget() */
   string headerForegroundColor( void ) const;
     /*! Set the foreground color of the dialog header 
         that is used for the labels.
-        \param[in] color the foreground color as a hex string (#rrggbb).
+        \param[in] color the foreground color as a hex string (\#rrggbb).
         \sa headerForegroundColor(), setHeaderBackgroundColor(),
 	setHeaderImageFile(), dialogHeaderWidget() */
   void setHeaderForegroundColor( const string &color );
@@ -315,8 +315,8 @@ protected:
         \param od the dialog to which the header widget is added.
 	\sa dialog() */
   virtual void dialogHeaderWidget( OptDialog *od );
-    /*! Adds a message indicating that this class does not have any options
-        for this dialog as well as an <Ok> button to the dialog.
+    /*! Adds a message, indicating that this class does not have any options
+        for this dialog, and an \<Ok\> button to the dialog.
         \param od the dialog to which the message is added.
 	\sa dialog() */
   virtual void dialogEmptyMessage( OptDialog *od );
@@ -325,7 +325,7 @@ protected:
         \param od the dialog to which the options are added.
 	\sa dialog() */
   virtual void dialogOptions( OptDialog *od );
-    /*! Add an <Ok>, <Apply>, <Reset>, and <Close> button to the dialog.
+    /*! Add an \<Ok\>, \<Apply\>, \<Reset\>, and \<Close\> button to the dialog.
         \param od the dialog to which the buttons are added.
 	\sa dialog() */
   virtual void dialogButtons( OptDialog *od );

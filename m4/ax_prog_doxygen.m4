@@ -385,7 +385,7 @@
 # COPYLEFT
 #
 #   Copyright (c) 2007 Oren Ben-Kiki <oren@ben-kiki.org>
-#   Fixed and modified 2008 by Jan Benda <benda@biologie.uni-muenchen.de>
+#   Fixed and modified 2008 by Jan Benda <benda@bio.lmu.de>
 #
 #   Copying and distribution of this file, with or without
 #   modification, are permitted in any medium without royalty provided
@@ -540,7 +540,7 @@ AC_SUBST([DX_DOCDIR], [ifelse([$3], [], doxygen-doc, [$3])])
 
 # Environment variables used inside doxygen.cfg:
 DX_ENV_APPEND(PROJECT_NAME, $DX_PROJECT)
-DX_ENV_APPEND(PROJECT_VERSION, $PACKAGE_VERSION)
+DX_ENV_APPEND(PROJECT_NUMBER, $PACKAGE_VERSION)
 
 # Doxygen itself:
 DX_ARG_ABLE(doc, [generate any doxygen documentation],

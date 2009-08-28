@@ -824,7 +824,7 @@ DataFile::MetaD::MetaD( StrQueue *sq, bool n, int num,
 }
 
 
-DataFile::MetaD::MetaD( const DataFile::MetaD::MetaD &md ) 
+DataFile::MetaD::MetaD( const DataFile::MetaD &md ) 
   : Data( md.Data ),
     New( md.New ),
     Num( md.Num ),

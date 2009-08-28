@@ -32,18 +32,17 @@ void eulerStep( double x, double *y, double *dydx, int n,
 		double deltax, Derivs &f );
   /*! Calculates a single Euler forward step for the set of ordinary
       differential equations dy/dx = f(y(x),x).
-      \parameter \a YVector an array type containing numbers.
-                 needs int YVector::size(),
-                 YVector::iterator, YVector::const_iterator
-      \parameter \a Derivs a functor with a function 
+      \param \a Derivs a functor with a function 
                  f( XValue x, const YVector &y, YVector &dydx )
                  returning the derivative f(y,x) in \a dydx.
-      \parameter \a x 
-      \parameter \a y, the size of \a y determines the dimension of the system.
-      \parameter \a dydx workspace for keeping the derivative.
-      \parameter \a deltax the step size
-      \parameter \a f the class calculating the derivative
-      \return \a y is updated.
+      \param[in] x the current value of \a x
+      \param y the current value of the state vector \a y
+      \param dydx workspace for keeping the derivative
+      \param[in] n the size of the \a y and \a dydx arrays
+      \param[in] deltax the step size
+      \param[in] f the functor calculating the derivative with a function
+                 f( x, y, dydx, n ) that computes the derivative \a dydx
+                 for the current state vector \a y at \a x.
    */
 template < class YVector, class Derivs >
 void eulerStep( double x, YVector &y, YVector &dydx,

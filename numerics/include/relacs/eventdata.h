@@ -829,7 +829,7 @@ public:
         between \a tbegin and \a tend, and in \a intrvls.y() the
 	interevent interval.
         The position of the interevent interval is the position of the left
-	event (\pos = -1, default), the position of the right event 
+	event (\a pos = -1, default), the position of the right event 
 	(\a pos = 1), or in between the left and the right event
 	(\a pos = 0).
         \return the number of interevent intervals. */
@@ -838,7 +838,7 @@ public:
         between \a tbegin and \a tend, and to \a intrvls.y() the
 	interevent interval.
         The position of the interevent interval is the position of the left
-	event (\pos = -1, default), the position of the right event 
+	event (\a pos = -1, default), the position of the right event 
 	(\a pos = 1), or in between the left and the right event
 	(\a pos = 0).
         \return the number of interevent intervals. */
@@ -847,7 +847,7 @@ public:
         between \a tbegin and \a tend multiplied by \a tfac in the first column,
 	and the interevent interval in the second column.
         The position of the interevent interval is the position of the left
-	event (\pos = -1, default), the position of the right event 
+	event (\a pos = -1, default), the position of the right event 
 	(\a pos = 1), or in between the left and the right event
 	(\a pos = 0).
 	Both the position and the intervals are
@@ -934,7 +934,7 @@ public:
         between \a tbegin and \a tend, and in \a freqs.y() 1 divided
         by that interevent interval (the frequency).
         The position of the interevent interval is the position of the left
-	event (\pos = -1, default), the position of the right event 
+	event (\a pos = -1, default), the position of the right event 
 	(\a pos = 1), or in between the left and the right event
 	(\a pos = 0).
         \return the number of interevent intervals. */
@@ -943,7 +943,7 @@ public:
         between \a tbegin and \a tend, and to \a freqs.y() 1 divided
         by that interevent interval (the frequency).
         The position of the interevent interval is the position of the left
-	event (\pos = -1, default), the position of the right event 
+	event (\a pos = -1, default), the position of the right event 
 	(\a pos = 1), or in between the left and the right event
 	(\a pos = 0).
         \return the number of interevent intervals. */
@@ -953,7 +953,7 @@ public:
 	and 1 divided by that interevent interval (the frequency) in 
 	the second column.
         The position of the interevent interval is the position of the left
-	event (\pos = -1, default), the position of the right event 
+	event (\a pos = -1, default), the position of the right event 
 	(\a pos = 1), or in between the left and the right event
 	(\a pos = 0).
 	Both the position and the frequency are

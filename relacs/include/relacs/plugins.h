@@ -135,7 +135,7 @@ public:
 	relative to \a relativepath, provided \a relativepath is not empty.
 	If \a path is a pure filename (no directory, but may contain wildcards)
 	then it is assumed to be found in one of the \a pluginhomes directories.
-	If \a pluginhome is an empty string, then pure filenames are also interpreted
+	If \a pluginhomes is an empty string, then pure filenames are also interpreted
 	relative to \a relativepath, provided \a relativepath is not empty.
 	\param[in] path the file pattern (can include wildcard characters)
 	selecting the libraries to be loaded. 
@@ -144,12 +144,12 @@ public:
 	is added.
 	If the filename of \a path does not start with "lib",
 	the filename is prefixed with "lib".
-	\param[in] relativepah the path to be used for relative pathes. 
+	\param[in] relativepath the path to be used for relative pathes. 
 	\param[in] pluginhomes default pathes for the plugin files.
         \return the number of the successfully loaded libraries. 
         \sa open(), openFile(), close(), erase(), clear(), reopen() */
   static int openPath( const string &path, const string &relativepath,
-		       const StrQueue &pluginhome );
+		       const StrQueue &pluginhomes );
     /*! Load all libraries listed in the file \a file into the program.
         \param[in] file the name of a text file that contains in each line
 	the file name of a library that is to be loaded.
@@ -283,9 +283,10 @@ public:
         \sa destroy(), plugins() */
   static void *create( int index );
     /*! Constructs a new instance of the plugin specified by its 
-        identifier string \a plugin. 
+        identifier string \a plugin and its type \a type. 
         \return a pointer to the new instance of the plugin.
 	\param[in] plugin the name of the plugin to be created.
+	\param[in] type the type of the plugin.
         \sa destroy(), plugins() */
   static void *create( const string &plugin, int type );
     /*! If you delete a plugin which has been created

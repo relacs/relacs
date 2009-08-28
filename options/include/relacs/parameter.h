@@ -644,9 +644,9 @@ public:
         \sa year(), month(), text() */ 
   int day( int index=0 ) const;
     /*! Returns the \a index-th date.
-        \param[out] year. If Parameter is not a Date or \a index is invalid, 0 is returned. 
-        \param[out] month. If Parameter is not a Date or \a index is invalid, 0 is returned. 
-        \param[out] day. If Parameter is not a Date or \a index is invalid, 0 is returned. 
+        \param[out] year If Parameter is not a Date or \a index is invalid, 0 is returned. 
+        \param[out] month If Parameter is not a Date or \a index is invalid, 0 is returned. 
+        \param[out] day If Parameter is not a Date or \a index is invalid, 0 is returned. 
         \param[in] index determines which one of the size() stored
 	date values is returned in \a year, \a month, and \a day.
 	\sa year(), month(), day(), setDate() */
@@ -686,9 +686,9 @@ public:
         \sa defaultYear(), defaultMonth(), defaultText() */ 
   int defaultDay( int index=0 ) const;
     /*! Returns the \a index-th default date.
-        \param[out] year. If Parameter is not a Date or \a index is invalid, 0 is returned. 
-        \param[out] month. If Parameter is not a Date or \a index is invalid, 0 is returned. 
-        \param[out] day. If Parameter is not a Date or \a index is invalid, 0 is returned. 
+        \param[out] year If Parameter is not a Date or \a index is invalid, 0 is returned. 
+        \param[out] month If Parameter is not a Date or \a index is invalid, 0 is returned. 
+        \param[out] day If Parameter is not a Date or \a index is invalid, 0 is returned. 
         \param[in] index determines which one of the size() stored
 	default date values is returned in \a year, \a month, and \a day.
 	\sa defaultYear(), defaultMonth(), defaultDay(), setDefaultDate() */
@@ -710,9 +710,9 @@ public:
     /*! \return the \a index-th seconds. \sa hour(), minutes(), text() */ 
   int seconds( int index=0 ) const;
     /*! Returns the \a index-th time.
-        \param[out] hour. If Parameter is not a Time or \a index is invalid, 0 is returned.
-        \param[out] minutes. If Parameter is not a Time or \a index is invalid, 0 is returned. 
-        \param[out] seconds. If Parameter is not a Time or \a index is invalid, 0 is returned. 
+        \param[out] hour If Parameter is not a Time or \a index is invalid, 0 is returned.
+        \param[out] minutes If Parameter is not a Time or \a index is invalid, 0 is returned. 
+        \param[out] seconds If Parameter is not a Time or \a index is invalid, 0 is returned. 
         \param[in] index determines which one of the size() stored
 	time values is returned in \a hour, \a minutes, and \a seconds.
 	\sa hour(), minutes(), seconds(), setTime() */
@@ -752,9 +752,9 @@ public:
         \sa defaultHour(), defaultMinutes(), defaultText() */ 
   int defaultSeconds( int index=0 ) const;
     /*! Returns the \a index-th default time.
-        \param[out] hour. If Parameter is not a Time or \a index is invalid, 0 is returned.
-        \param[out] minutes. If Parameter is not a Time or \a index is invalid, 0 is returned. 
-        \param[out] seconds. If Parameter is not a Time or \a index is invalid, 0 is returned. 
+        \param[out] hour If Parameter is not a Time or \a index is invalid, 0 is returned.
+        \param[out] minutes If Parameter is not a Time or \a index is invalid, 0 is returned. 
+        \param[out] seconds If Parameter is not a Time or \a index is invalid, 0 is returned. 
         \param[in] index determines which one of the size() stored
 	default time values is returned in \a hour, \a minutes, and \a seconds.
 	\sa defaultHour(), defaultMinutes(), defaultSeconds(), setDefaultTime() */
