@@ -27,10 +27,10 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <qwidget.h>
-#include <qpixmap.h>
-#include <qmutex.h>
-#include <qpopupmenu.h>
+#include <QWidget>
+#include <QMutex>
+#include <QAction>
+#include <QMenu>
 #include <relacs/array.h>
 #include <relacs/map.h>
 #include <relacs/sampledata.h>
@@ -357,10 +357,9 @@ public:
 	you are using multible threads, then
 	you need to provide a mutex for locking the data
 	via setDataMutex(). */
-  Plot( KeepMode keep, QWidget *parent, const char *name=0 );
-  Plot( QWidget *parent, const char *name=0 );
-  Plot( KeepMode keep, bool subwidget=false, int id=0, 
-	MultiPlot *mp=0, const char *name=0 );
+  Plot( KeepMode keep, QWidget *parent );
+  Plot( QWidget *parent );
+  Plot( KeepMode keep, bool subwidget=false, int id=0, MultiPlot *mp=0 );
   ~Plot( void );
 
   void keepData( void ) { Keep = Copy; };
@@ -424,6 +423,9 @@ public:
         as used by setLMarg(), setRMarg(), setTMarg(), setBMarg() 
         and the axis coordinates. */
   int fontPixel( double w ) const;
+
+    /*! Set the size of the standard fontb to \a pixel pixels. */
+  void setFontSize( double pixel );
 
   int addColor( const RGBColor &rgb );
   int addColor( int r, int g, int b );
@@ -604,6 +606,10 @@ public:
 		Fonts font=DefaultF, int bcolor=Transparent, 
 		int fwidth=0, int fcolor=Transparent );
   int setLabel( int index, const string &label );
+    /*! Remove all labels from the plot. */
+  void clearLabels( void );
+    /*! Remove label with index \a index from the plot. */
+  void clearLabel( int index );
 
     /*! Plot data point \a x, \a y. */
   int plotPoint( double x, Coordinates xcoor, 
@@ -752,13 +758,18 @@ public:
     /*! Const reference to the first data element in the list. */
   const DataElement &front( void ) const { return *PData.front(); };
 
+    /*! Remove all plot data from the plot. */
+  void clearData( void );
+    /*! Remove plot data with index \a index from the plot. */
+  void clearData( int index );
+
+    /*!  Remove all plot data and labels from the plot. */
   void clear( void );
-  void clear( int index );
 
     /*! Give a hint for the prefered size of this widget. */
-  QSize sizeHint( void ) const;
+  virtual QSize sizeHint( void ) const;
     /*! Give a hint for the minimum size of this widget. */
-  QSize minimumSizeHint( void ) const;
+  virtual QSize minimumSizeHint( void ) const;
 
   void draw( void );
 
@@ -777,6 +788,7 @@ public:
   public:
 
     MouseEvent( void );
+    MouseEvent( int mode );
 
     int xPixel( void ) const { return XPixel; };
     int yPixel( void ) const { return YPixel; };
@@ -911,7 +923,7 @@ protected:
 
     /*! Translates \a qme into \a me. 
         Used by the reimplementations of the Qt mouse event handlers. */
-  void readMouse( QMouseEvent *qme, MouseEvent &me, bool move );
+  void readMouse( QMouseEvent *qme, MouseEvent &me );
 
     /*! The Qt mouse event handler for a mouse press event.
         Translates the event via readMouse() and calls mouseEvent(). */
@@ -926,9 +938,13 @@ protected:
         Translates the event via readMouse() and calls mouseEvent(). */
   virtual void mouseMoveEvent( QMouseEvent *qme );
 
-  QPopupMenu *MouseMenu;
+  QMenu *MouseMenu;
+  QAction *MouseZoom;
+  QAction *MouseMove;
+  QAction *MouseAnalyse;
+  QAction *MouseDisable;
+  QAction *MouseAction;  // the current mouse action mode
   bool MouseMenuClick;
-  int MouseAction;
 
   MouseEvent LastMouseEvent;
   bool MouseGrabbed;
@@ -967,7 +983,7 @@ protected:
 
 protected slots:
 
-  void mouseSelect( int id );
+  void mouseSelect( QAction *action );
 
 
 private:
@@ -1376,8 +1392,6 @@ private:
   void drawLine( QPainter &paint, DataElement *d );
   void drawPoints( QPainter &paint, DataElement *d );
 
-  QPixmap *PixMap;
-
 };
 
 
@@ -1433,8 +1447,8 @@ void Plot::VectorElement<T,R>::xminmax( double &xmin, double &xmax,
     xmax *= XScale;
   }
   else {
-    xmin = AutoScale;
-    xmax = AutoScale;
+    xmin = 0.0;
+    xmax = 0.0;
   }
 }
 
@@ -1673,8 +1687,8 @@ void Plot::EventsElement<T>::xminmax( double &xmin, double &xmax,
 					double ymin, double ymax ) const
 {
   if ( ED->empty() ) {
-    xmin = AutoScale;
-    xmax = AutoScale;
+    xmin = 0.0;
+    xmax = 0.0;
   }
   else {
     xmin = ED->front() * TScale;

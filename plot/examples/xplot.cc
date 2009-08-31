@@ -19,8 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <qgroupbox.h>
-#include <qapplication.h>
+#include <QApplication>
 #include <relacs/map.h>
 #include <relacs/plot.h>
 using namespace relacs;
@@ -30,9 +29,7 @@ int main( int argc, char **argv )
 {
   QApplication a( argc, argv );
 
-  QGroupBox g( 1, Qt::Horizontal, "My Plot" );
-  a.setMainWidget( &g );
-  Plot p( &g );
+  Plot p( 0 );
 
   const int n = 19;
   vector< double > xd( n ), yd( n );
@@ -77,7 +74,7 @@ int main( int argc, char **argv )
   p.plotHLine( -2.0, Plot::LineStyle( Plot::Blue, 2, Plot::Solid ) );
   p.plotLine( -2.0, -4.0, 0, 0 );
 
-  g.show();
+  p.show();
 
   return a.exec();
 }

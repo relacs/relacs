@@ -23,11 +23,12 @@
 #define _RELACS_OPTWIDGET_H_ 1
 
 #include <vector>
-#include <qwidget.h>
-#include <qevent.h>
-#include <qmutex.h>
-#include <qlabel.h>
-#include <qlayout.h>
+#include <QWidget>
+#include <QEvent>
+#include <QMutex>
+#include <QLabel>
+#include <QLayout>
+#include <QEvent>
 #include <relacs/options.h>
 using namespace std;
 
@@ -253,12 +254,12 @@ public:
 
     /*! Constructs an empty OptWidget.
         To add Options to the widget use assign(). */
-  OptWidget( QWidget *parent=0, const char *name=0, WFlags f=0 );
+  OptWidget( QWidget *parent=0, Qt::WindowFlags f=0 );
     /*! Constructs an OptWidget for the Options \a o. 
         All Options are displayed and are editable.
         \sa assign() */
   OptWidget( Options *o, QMutex *mutex=0, 
-	     QWidget *parent=0, const char *name=0, WFlags f=0 );
+	     QWidget *parent=0, Qt::WindowFlags f=0 );
     /*! Constructs an OptWidget for the Options \a o. 
         Only Options with their flags() & \a selectmask > 0 are displayed.
 	If \a selectmask ist less or equal to zero,
@@ -271,7 +272,7 @@ public:
         Otherwise, accept() has to be called in order
 	to apply the changes to the Options \a o. */
   OptWidget( Options *o, int selectmask, int romask, bool contupdate, int style,
-	     QMutex *mutex=0, QWidget *parent=0, const char *name=0, WFlags f=0 );
+	     QMutex *mutex=0, QWidget *parent=0, Qt::WindowFlags f=0 );
     /*! Destructs the OptWidget. */
   ~OptWidget( void );
 
@@ -425,7 +426,7 @@ signals:
 
 protected:
 
-  virtual void customEvent( QCustomEvent *e );
+  virtual void customEvent( QEvent *e );
 
 
 private:
@@ -471,18 +472,18 @@ private:
   static const int ChangedFlag = Parameter::ChangedFlag;
   static const int UpdateFlag = Parameter::ChangedFlag >> 1;
 
-  class UpdateEvent : public QCustomEvent
+  class UpdateEvent : public QEvent
   {
   public:
     UpdateEvent( int type )
-      : QCustomEvent( QEvent::User+type ) {};
+      : QEvent( QEvent::Type( QEvent::User+type ) ) {};
   };
 
-  class UpdateIdentEvent : public QCustomEvent
+  class UpdateIdentEvent : public QEvent
   {
   public:
     UpdateIdentEvent( int type, const string &ident )
-      : QCustomEvent( QEvent::User+type ), Ident( ident ) {};
+      : QEvent( QEvent::Type( QEvent::User+type ) ), Ident( ident ) {};
     string ident( void ) const { return Ident; };
   private:
     string Ident;

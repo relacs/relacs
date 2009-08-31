@@ -20,14 +20,13 @@
 */
 
 #include <cmath>
-#include <qgroupbox.h>
-#include <qthread.h>
-#include <qimage.h>
-#include <qlabel.h>
-#include <qpushbutton.h>
-#include <qmime.h>
-#include <qstringlist.h>
-#include <qtextbrowser.h>
+#include <QGroupBox>
+#include <QImage>
+#include <QPixmap>
+#include <QLabel>
+#include <QPushButton>
+#include <QStringList>
+#include <QTextBrowser>
 #include <relacs/configdialog.h>
 
 using namespace std;
@@ -42,12 +41,11 @@ ConfigDialog::ConfigDialog( const string &configident, int configgroup,
   : QWidget(),
     ConfigClass( configident, configgroup ),
     HelpPathes( 0 ),
-    CDMutex( false )
+    CDMutex()
 {
-  BoxLayout = new QBoxLayout( this, QBoxLayout::TopToBottom );
-  BoxLayout->setAutoAdd( true );
+  BoxLayout = new QBoxLayout( QBoxLayout::TopToBottom );
+  setLayout( BoxLayout );
   Name = name.empty() ? configident : name;
-  QObject::setName( Name.c_str() );
   Prefix = "";
   Title = title.empty() ? Name : title;
   Author = author;
@@ -380,19 +378,24 @@ void ConfigDialog::dialogHeaderWidget( OptDialog *od )
 {
   if ( UseHeader ) {
     // frame:
-    QGroupBox *gb = new QGroupBox( 1, Qt::Vertical, this );
+    QFrame *frm = new QFrame;
+    QHBoxLayout *hb = new QHBoxLayout;
+    frm->setLayout( hb );
     if ( ! headerBackgroundColor().empty() ) {
       int r = hextodec( headerBackgroundColor()[1], headerBackgroundColor()[2] );
       int g = hextodec( headerBackgroundColor()[3], headerBackgroundColor()[4] );
       int b = hextodec( headerBackgroundColor()[5], headerBackgroundColor()[6] );
-      gb->setPaletteBackgroundColor( QColor( r, g, b ) );
+      QPalette p = frm->palette();
+      p.setColor( QPalette::Window, QColor( r, g, b ) );
+      frm->setPalette( p );
     }
     // background image:
     if ( ! headerImageFile().empty() ) {
       int h = fontMetrics().height()*11/2;
       QImage image( headerImageFile().c_str() );
-      QLabel *pic = new QLabel( gb );
-      pic->setPixmap( QPixmap( image.scale( h, h, QImage::ScaleMin ) ) );
+      QLabel *pic = new QLabel;
+      hb->addWidget( pic );
+      pic->setPixmap( QPixmap::fromImage( image.scaled( h, h, Qt::KeepAspectRatio ) ) );
     }
     // infos:
     string s = "<p align=\"center\">";
@@ -405,24 +408,28 @@ void ConfigDialog::dialogHeaderWidget( OptDialog *od )
     if ( ! author().empty() )
       s += "by <b>" + author() + "</b>";
     s += "</p>";
-    QLabel *rt = new QLabel( gb );
+    QLabel *rt = new QLabel;
+    hb->addWidget( rt );
     rt->setText( s.c_str() );
     rt->setSizePolicy( QSizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::Fixed ) );
     if ( ! headerForegroundColor().empty() ) {
       int r = hextodec( headerForegroundColor()[1], headerForegroundColor()[2] );
       int g = hextodec( headerForegroundColor()[3], headerForegroundColor()[4] );
       int b = hextodec( headerForegroundColor()[5], headerForegroundColor()[6] );
-      rt->setPaletteForegroundColor( QColor( r, g, b ) );
+      QPalette p = rt->palette();
+      p.setColor( QPalette::WindowText, QColor( r, g, b ) );
+      rt->setPalette( p );
     }
     // help button:
     if ( dialogHelp() ) {
-      QPushButton *pb = new QPushButton( "&Help", gb );
+      QPushButton *pb = new QPushButton( "&Help" );
+      hb->addWidget( pb );
       pb->setFixedSize( pb->sizeHint() );
       connect( pb, SIGNAL( clicked( void ) ), this, SLOT( help( void ) ) );
     }
 
-    gb->setFrameStyle( QFrame::Box | QFrame::Sunken );
-    od->addWidget( gb );
+    frm->setFrameStyle( QFrame::Box | QFrame::Sunken );
+    od->addWidget( frm );
   }
 }
 
@@ -430,7 +437,7 @@ void ConfigDialog::dialogHeaderWidget( OptDialog *od )
 void ConfigDialog::dialogEmptyMessage( OptDialog *od )
 {
   QLabel *ml = new QLabel( string( "There are <b>no</b> options for <b>" +
-				   name() + "</b>!" ).c_str(), this );
+				   name() + "</b>!" ).c_str() );
   od->addWidget( ml );
   od->addButton( "&Ok" );
   connect( od, SIGNAL( dialogClosed( int ) ),
@@ -502,10 +509,10 @@ void ConfigDialog::help( void )
   QStringList fpl;
   for ( int k=0; k<helpPathes(); k++ )
     fpl.push_back( helpPath( k ).c_str() );
-  hb->mimeSourceFactory()->setFilePath( fpl );
+  hb->setSearchPaths( fpl );
   string helpfile = helpFileName();
-  hb->setSource( helpfile.c_str() );
-  if ( hb->mimeSourceFactory()->data( helpfile.c_str() ) == 0 ) {
+  hb->setSource( QUrl::fromLocalFile( helpfile.c_str() ) );
+  if ( hb->toHtml().isEmpty() ) {
     string helptext = "Sorry, can't find any help text for <br><h2>"
       + name() + "</h2><br><br>No file <code>" + helpfile
       + "</code> found in any of the directories<br>";

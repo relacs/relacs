@@ -20,16 +20,17 @@
 */
 
 #include <iostream>
-#include <qapplication.h>
-#include <qpushbutton.h>
-#include <qlabel.h>
+#include <QApplication>
+#include <QVBoxLayout>
+#include <QPushButton>
+#include <QLabel>
 #include <relacs/optdialog.h>
 #include "mainwidget.h"
 using namespace relacs;
 
 
-MainWidget::MainWidget( QWidget *parent, const char *name )
-  : QVBox( parent, name )
+MainWidget::MainWidget( void )
+  : QWidget()
 {
   Opt1.addLabel( "Timing", 0, OptWidget::Bold );
   Opt1.addNumber( "duration", "Duration of Signal",
@@ -48,12 +49,17 @@ MainWidget::MainWidget( QWidget *parent, const char *name )
   Opt2.addDate( "date", "Date", 2009, 6, 20 );
   Opt2.addTime( "time", "Time", 16, 42, 13 );
 
-  QPushButton *dialogButton = new QPushButton( "&Dialog", this );
-  QPushButton *quitButton = new QPushButton( "&Quit", this );
+  QPushButton *dialogButton = new QPushButton( "&Dialog" );
+  QPushButton *quitButton = new QPushButton( "&Quit" );
   connect( dialogButton, SIGNAL( clicked() ),
            this, SLOT( dialog() ) );
   connect( quitButton, SIGNAL( clicked() ),
            qApp, SLOT( quit() ) );
+
+  QVBoxLayout *l = new QVBoxLayout;
+  l->addWidget( dialogButton );
+  l->addWidget( quitButton );
+  setLayout( l );
 }
 
 
@@ -106,7 +112,6 @@ int main( int argc, char **argv )
 {
   QApplication a( argc, argv );
   MainWidget w;
-  a.setMainWidget( &w );
   w.show();
   return a.exec();
 }

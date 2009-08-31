@@ -20,20 +20,18 @@
 */
 
 #include <cmath>
-#include <qwidget.h>
-#include <qapplication.h>
-#include <qobjectlist.h>
-#include <qhbox.h>
-#include <qtabwidget.h>
-#include <qfiledialog.h>
+#include <QApplication>
+#include <QHBoxLayout>
+#include <QTabWidget>
+#include <QFileDialog>
 #include <relacs/optwidget.h>
 #include <relacs/optwidgetbase.h>
 
 namespace relacs {
 
 
-OptWidget::OptWidget( QWidget *parent, const char *name, WFlags f )
-  : QWidget( parent, name, f ),
+OptWidget::OptWidget( QWidget *parent, Qt::WindowFlags f )
+  : QWidget( parent, f ),
     Opt( 0 ),
     MainWidget( 0 ),
     FirstWidget( 0 ),
@@ -50,8 +48,8 @@ OptWidget::OptWidget( QWidget *parent, const char *name, WFlags f )
 
 
 OptWidget::OptWidget( Options *o, QMutex *mutex, 
-		      QWidget *parent, const char *name, WFlags f )
-  : QWidget( parent, name, f ),
+		      QWidget *parent, Qt::WindowFlags f )
+  : QWidget( parent, f ),
     Opt( 0 ),
     MainWidget( 0 ),
     FirstWidget( 0 ),
@@ -70,8 +68,8 @@ OptWidget::OptWidget( Options *o, QMutex *mutex,
 
 OptWidget::OptWidget( Options *o, int selectmask, int romask,
 		      bool contupdate, int style, QMutex *mutex, 
-		      QWidget *parent, const char *name, WFlags f )
-  : QWidget( parent, name, f ),
+		      QWidget *parent, Qt::WindowFlags f )
+  : QWidget( parent, f ),
     Opt( 0 ),
     MainWidget( 0 ),
     FirstWidget( 0 ),
@@ -110,7 +108,7 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
     OMutex = mutex;
 
   if ( MainWidget != 0 ) {
-    layout()->remove( MainWidget );
+    layout()->removeWidget( MainWidget );
     MainWidget->hide();
     delete MainWidget;
     delete layout();
@@ -187,22 +185,10 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
       }
     }
 
-    if ( style & BreakLinesStyle ) {
-      int r = 2 * lines;
-      if ( style & ExtraSpaceStyle )
-	r += lines - 1;
-      if ( tabs )
-	r++;
-      Layout.push_back( new QGridLayout( parent, r, 4, 10 ) );
-    }
-    else {
-      int r = lines;
-      if ( style & ExtraSpaceStyle )
-	r += lines - 1;
-      if ( tabs )
-	r++;
-      Layout.push_back( new QGridLayout( parent, r, 5, 10 ) );
-    }
+    if ( style & BreakLinesStyle )
+      Layout.push_back( new QGridLayout( parent ) );
+    else
+      Layout.push_back( new QGridLayout( parent ) );
     QLabel *l;
 
     int row = 0;
@@ -237,8 +223,8 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
 	l = new QLabel( rs.c_str(), parent );
 	setLabelStyle( l, (*pp).style() );
 	if ( style & BreakLinesStyle )
-	  Layout.back()->addMultiCellWidget( l, row, row, 1, 2,
-					     Qt::AlignLeft | Qt::AlignVCenter );
+	  Layout.back()->addWidget( l, row, 1, 1, 2,
+				    Qt::AlignLeft | Qt::AlignVCenter );
 	else
 	  Layout.back()->addWidget( l, row, 1,
 				    Qt::AlignLeft | Qt::AlignVCenter );
@@ -265,7 +251,7 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
 	    if ( ul != 0 || t->browseButton() != 0 )
 	      Layout.back()->addWidget( t->W, row, 1 );
 	    else
-	      Layout.back()->addMultiCellWidget( t->W, row, row, 1, 2 );
+	      Layout.back()->addWidget( t->W, row, 1, 1, 2 );
 	  }
 	  else
 	    Layout.back()->addWidget( t->W, row, 2 );
@@ -291,7 +277,7 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
 	    if ( ul != 0 )
 	      Layout.back()->addWidget( t->W, row, 1 );
 	    else
-	      Layout.back()->addMultiCellWidget( t->W, row, row, 1, 2 );
+	      Layout.back()->addWidget( t->W, row, 1, 1, 2 );
 	  }
 	  else
 	    Layout.back()->addWidget( t->W, row, 2 );
@@ -303,8 +289,8 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
 	l = new QLabel( rs.c_str(), parent );
 	setLabelStyle( l, (*pp).style() );
 	if ( style & BreakLinesStyle )
-	  Layout.back()->addMultiCellWidget( l, row, row, 1, 2,
-					     Qt::AlignLeft | Qt::AlignVCenter );
+	  Layout.back()->addWidget( l, row, 1, 1, 2,
+				    Qt::AlignLeft | Qt::AlignVCenter );
 	else
 	  Layout.back()->addWidget( l, row, 1,
 				    Qt::AlignLeft | Qt::AlignVCenter );
@@ -339,19 +325,19 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
 	  LastWidget = b->W;
 	}
 	if ( style & BreakLinesStyle )
-	  Layout.back()->addMultiCellWidget( b->W, row, row, 1, 2,
-					     Qt::AlignLeft | Qt::AlignVCenter );
+	  Layout.back()->addWidget( b->W, row, 1, 1, 2,
+				    Qt::AlignLeft | Qt::AlignVCenter );
 	else
-	  Layout.back()->addMultiCellWidget( b->W, row, row, 1, 3,
-					     Qt::AlignLeft | Qt::AlignVCenter );
+	  Layout.back()->addWidget( b->W, row, 1, 1, 3,
+				    Qt::AlignLeft | Qt::AlignVCenter );
       }
       // date:
       else if ( (*pp).isDate() ) {
 	l = new QLabel( rs.c_str(), parent );
 	setLabelStyle( l, (*pp).style() );
 	if ( style & BreakLinesStyle )
-	  Layout.back()->addMultiCellWidget( l, row, row, 1, 2,
-					     Qt::AlignLeft | Qt::AlignVCenter );
+	  Layout.back()->addWidget( l, row, 1, 1, 2,
+				    Qt::AlignLeft | Qt::AlignVCenter );
 	else
 	  Layout.back()->addWidget( l, row, 1,
 				    Qt::AlignLeft | Qt::AlignVCenter );
@@ -373,8 +359,8 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
 	l = new QLabel( rs.c_str(), parent );
 	setLabelStyle( l, (*pp).style() );
 	if ( style & BreakLinesStyle )
-	  Layout.back()->addMultiCellWidget( l, row, row, 1, 2,
-					     Qt::AlignLeft | Qt::AlignVCenter );
+	  Layout.back()->addWidget( l, row, 1, 1, 2,
+				    Qt::AlignLeft | Qt::AlignVCenter );
 	else
 	  Layout.back()->addWidget( l, row, 1,
 				    Qt::AlignLeft | Qt::AlignVCenter );
@@ -395,21 +381,21 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
       else if ( (*pp).isLabel() ) {
 	OptWidgetLabel *l = new OptWidgetLabel( pp, Opt, this, parent, OMutex );
 	if ( style & BreakLinesStyle ) {
-	  Layout.back()->addMultiCellWidget( l->W, row, row, 0, 3,
-					     Qt::AlignLeft | Qt::AlignBottom );
+	  Layout.back()->addWidget( l->W, row, 0, 1, 4,
+				    Qt::AlignLeft | Qt::AlignBottom );
 	}
 	else
-	  Layout.back()->addMultiCellWidget( l->W, row, row, 0, 4,
-					     Qt::AlignLeft | Qt::AlignBottom );
-	Layout.back()->addColSpacing( 0, 20 );
+	  Layout.back()->addWidget( l->W, row, 0, 1, 5,
+				    Qt::AlignLeft | Qt::AlignBottom );
+	Layout.back()->setColumnMinimumWidth( 0, 20 );
       }
       // separator:
       else if ( (*pp).isSeparator() ) {
 	OptWidgetSeparator *s = new OptWidgetSeparator( pp, Opt, this, parent, OMutex );
 	if ( style & BreakLinesStyle )
-	  Layout.back()->addMultiCellWidget( s->W, row, row, 0, 3 );
+	  Layout.back()->addWidget( s->W, row, 0, 1, 4 );
 	else
-	  Layout.back()->addMultiCellWidget( s->W, row, row, 0, 4 );
+	  Layout.back()->addWidget( s->W, row, 0, 1, 5 );
       }
       // nothing:
       else {
@@ -502,14 +488,15 @@ void OptWidget::addWidget( OptWidgetBase *owb )
 void OptWidget::setLabelFontStyle( QWidget *w, long style )
 {
   QFont nf( w->font() );
+  QFontInfo fi( w->fontInfo() );
 
   // size:
   if ( ( style & LabelHuge ) == LabelHuge )
-    nf.setPointSizeFloat( 1.6 * nf.pointSizeFloat() );
+    nf.setPointSizeF( 1.6 * fi.pointSizeF() );
   else if ( style & LabelLarge )
-    nf.setPointSizeFloat( 1.3 * nf.pointSizeFloat() );
+    nf.setPointSizeF( 1.3 * fi.pointSizeF() );
   else if ( style & LabelSmall )
-    nf.setPointSizeFloat( 0.8 * nf.pointSizeFloat() );
+    nf.setPointSizeF( 0.8 * fi.pointSizeF() );
 
   // style:
   if ( style & LabelBold )
@@ -523,23 +510,23 @@ void OptWidget::setLabelFontStyle( QWidget *w, long style )
 
 void OptWidget::setLabelColorStyle( QWidget *w, long style, bool palette, bool base, bool button )
 {
-  QColorGroup::ColorRole bcr = base ? QColorGroup::Base : QColorGroup::Background;
-  QColorGroup::ColorRole fcr = base ? QColorGroup::Text : QColorGroup::Foreground;
+  QPalette::ColorRole bcr = base ? QPalette::Base : QPalette::Background;
+  QPalette::ColorRole fcr = base ? QPalette::Text : QPalette::Foreground;
 
   QColor bg( w->palette().color( QPalette::Active, bcr ) );
   QColor fg( w->palette().color( QPalette::Active, fcr ) );
   
   if ( ( style & LabelBlue ) == LabelBlue )
-    fg = blue;
+    fg = Qt::blue;
   else if ( style & LabelRed )
-    fg = red;
+    fg = Qt::red;
   else if ( style & LabelGreen )
-    fg = green;
+    fg = Qt::green;
   
   if ( style & LabelBackBlack )
-    bg = black;
+    bg = Qt::black;
   else if ( style & LabelBackWhite )
-    bg = white;
+    bg = Qt::white;
   
   if ( palette ) {
     w->setPalette( QPalette( fg, bg ) );
@@ -547,7 +534,7 @@ void OptWidget::setLabelColorStyle( QWidget *w, long style, bool palette, bool b
   else {
     QPalette qp( w->palette() );
     if ( button )
-      qp.setColor( QPalette::Active, QColorGroup::Button, bg );
+      qp.setColor( QPalette::Active, QPalette::Button, bg );
     qp.setColor( bcr, bg );
     qp.setColor( fcr, fg );
     w->setPalette( qp );
@@ -584,7 +571,8 @@ QLabel* OptWidget::unitLabel( const Parameter &p, QWidget *parent )
 {
   QLabel *l = new QLabel( p.outUnit().htmlUnit().c_str(), parent );
   l->setTextFormat( Qt::RichText );
-  l->setAlignment( Qt::AlignLeft | Qt::SingleLine );
+  l->setAlignment( Qt::AlignLeft );
+  l->setWordWrap( false );
   return l;
 }
 
@@ -702,7 +690,7 @@ void OptWidget::updateSettings( int flag )
 }
 
 
-void OptWidget::customEvent( QCustomEvent *e )
+void OptWidget::customEvent( QEvent *e )
 {
   if ( e->type() >= QEvent::User+1 && e->type() <= QEvent::User+6 ) {
     if ( OMutex != 0 )
@@ -856,7 +844,7 @@ void OptWidgetText::get( void )
   if ( Editable ) {
     bool cn = OO->notifying();
     OO->unsetNotify();
-    (*OP).setText( EW->text().latin1() );
+    (*OP).setText( EW->text().toLatin1().data() );
     if ( (*OP).text( 0 ) != Value )
       (*OP).addFlags( OW->changedFlag() );
     Value = (*OP).text( 0 );
@@ -906,7 +894,7 @@ void OptWidgetText::textChanged( const QString &s )
     OW->DisableUpdate = true;
     bool cn = OO->notifying();
     OO->unsetNotify();
-    (*OP).setText( s.latin1() );
+    (*OP).setText( s.toLatin1().data() );
     if ( (*OP).text( 0 ) != Value )
       (*OP).addFlags( OW->changedFlag() );
     Value = (*OP).text( 0 );
@@ -919,7 +907,7 @@ void OptWidgetText::textChanged( const QString &s )
       OMutex->unlock();
   }
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
-    Widgets[k]->activateOption( (*Widgets[k]->OP).testActivation( s.latin1() ) );
+    Widgets[k]->activateOption( (*Widgets[k]->OP).testActivation( s.toLatin1().data() ) );
   }
 }
 
@@ -928,9 +916,9 @@ void OptWidgetText::initActivation( void )
 {
   string s = "";
   if ( EW != 0 )
-    s = EW->text().latin1();
+    s = EW->text().toLatin1().data();
   else
-    s = LW->text().latin1();
+    s = LW->text().toLatin1().data();
   Widgets.back()->activateOption( (*Widgets.back()->OP).testActivation( s ) );
 }
 
@@ -939,21 +927,21 @@ void OptWidgetText::browse( void )
 {
   if ( OMutex != 0 )
     OMutex->lock();
-  QFileDialog* fd = new QFileDialog( 0, "file dialog", TRUE );
+  QFileDialog* fd = new QFileDialog( 0 );
   if ( (*OP).style() & OptWidget::BrowseExisting ) {
-    fd->setMode( QFileDialog::ExistingFile );
-    fd->setCaption( "Open File" );
-    fd->setDir( Str( (*OP).text( 0 ) ).dir().c_str() );
+    fd->setFileMode( QFileDialog::ExistingFile );
+    fd->setWindowTitle( "Open File" );
+    fd->setDirectory( Str( (*OP).text( 0 ) ).dir().c_str() );
   }
   else if ( (*OP).style() & OptWidget::BrowseAny ) {
-    fd->setMode( QFileDialog::AnyFile );
-    fd->setCaption( "Save File" );
-    fd->setDir( Str( (*OP).text( 0 ) ).dir().c_str() );
+    fd->setFileMode( QFileDialog::AnyFile );
+    fd->setWindowTitle( "Save File" );
+    fd->setDirectory( Str( (*OP).text( 0 ) ).dir().c_str() );
   }
   else if ( (*OP).style() & OptWidget::BrowseDirectory ) {
-    fd->setMode( QFileDialog::Directory );
-    fd->setCaption( "Choose directory" );
-    fd->setDir( Str( (*OP).text( 0 ) ).preventSlash().dir().c_str() );
+    fd->setFileMode( QFileDialog::Directory );
+    fd->setWindowTitle( "Choose directory" );
+    fd->setDirectory( Str( (*OP).text( 0 ) ).preventSlash().dir().c_str() );
   }
   fd->setFilter( "All (*)" );
   fd->setViewMode( QFileDialog::List );
@@ -962,7 +950,10 @@ void OptWidgetText::browse( void )
   if ( fd->exec() == QDialog::Accepted ) {
     if ( OMutex != 0 )
       OMutex->lock();
-    Str filename = fd->selectedFile().latin1();
+    Str filename = "";
+    QStringList qsl = fd->selectedFiles();
+    if ( qsl.size() > 0 )
+      Str filename = qsl[0].toLatin1().data();
     if ( ( (*OP).style() & OptWidget::BrowseAbsolute ) == 0 )
       filename.stripWorkingPath( 3 );
     if ( ( (*OP).style() & OptWidget::BrowseDirectory ) )
@@ -1014,16 +1005,18 @@ OptWidgetMultiText::OptWidgetMultiText( Options::iterator op, QWidget *label,
     UnitLabel( 0 )
 {
   if ( Editable ) {
-    W = EW = new QComboBox( ((*OP).style() & OptWidget::SelectText) == 0, parent );
+    W = EW = new QComboBox( parent );
+    EW->setEditable( ((*OP).style() & OptWidget::SelectText) == 0 );
     OptWidget::setValueStyle( W, (*OP).style(), false, true, true );
-    EW->setInsertionPolicy( QComboBox::AtTop );
+    EW->setInsertPolicy( QComboBox::InsertAtTop );
     EW->setDuplicatesEnabled( false );
-    EW->setAutoCompletion( (*OP).style() & OptWidget::ComboAutoCompletion );
+    if ( (*OP).style() & OptWidget::ComboAutoCompletion == 0 )
+      EW->setCompleter( 0 );
     reset();
-    connect( EW, SIGNAL( textChanged( const QString & ) ),
+    connect( EW, SIGNAL( editTextChanged( const QString& ) ),
 	     this, SLOT( insertText( const QString & ) ) );
     Value = (*OP).text( 0 );
-    connect( EW, SIGNAL( textChanged( const QString& ) ),
+    connect( EW, SIGNAL( currentIndexChanged( const QString& ) ),
 	     this, SLOT( textChanged( const QString& ) ) );
     connect( EW, SIGNAL( activated( const QString& ) ),
 	     this, SLOT( textChanged( const QString& ) ) );
@@ -1044,9 +1037,9 @@ void OptWidgetMultiText::get( void )
   if ( Editable ) {
     bool cn = OO->notifying();
     OO->unsetNotify();
-    (*OP).setText( EW->currentText().latin1() );
+    (*OP).setText( EW->currentText().toLatin1().data() );
     for ( int k=0; k<EW->count(); k++ )
-      (*OP).addText( EW->text( k ).latin1() );
+      (*OP).addText( EW->itemText( k ).toLatin1().data() );
     if ( (*OP).text( 0 ) != Value )
       (*OP).addFlags( OW->changedFlag() );
     Value = (*OP).text( 0 );
@@ -1066,16 +1059,16 @@ void OptWidgetMultiText::reset( void )
       int firstindex = 0;
       for ( int k=0; k<(*OP).size(); k++ ) {
 	string s = (*OP).text( k );
-	EW->insertItem( s.c_str() );
+	EW->addItem( s.c_str() );
 	if ( s == first )
 	  firstindex = k;
       }
       if ( firstindex > 0 ) {
 	EW->removeItem( 0 );
-	EW->setCurrentItem( firstindex-1 );
+	EW->setCurrentIndex( firstindex-1 );
       }
       else
-	EW->setCurrentItem( 0 );
+	EW->setCurrentIndex( 0 );
     }
     CI = 0;
     Inserted = false;
@@ -1112,15 +1105,15 @@ void OptWidgetMultiText::update( void )
 
 void OptWidgetMultiText::textChanged( const QString &s )
 {
-  if ( ContUpdate && Editable && Update) {
+  if ( ContUpdate && Editable && Update ) {
     if ( OMutex != 0 && ! InternChanged )
       OMutex->lock();
     OW->DisableUpdate = true;
     bool cn = OO->notifying();
     OO->unsetNotify();
-    (*OP).setText( s.latin1() );
+    (*OP).setText( s.toLatin1().data() );
     for ( int k=0; k<EW->count(); k++ )
-      (*OP).addText( EW->text( k ).latin1() );
+      (*OP).addText( EW->itemText( k ).toLatin1().data() );
     if ( (*OP).text( 0 ) != Value )
       (*OP).addFlags( OW->changedFlag() );
     Value = (*OP).text( 0 );
@@ -1133,7 +1126,7 @@ void OptWidgetMultiText::textChanged( const QString &s )
       OMutex->unlock();
   }
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
-    Widgets[k]->activateOption( (*Widgets[k]->OP).testActivation( s.latin1() ) );
+    Widgets[k]->activateOption( (*Widgets[k]->OP).testActivation( s.toLatin1().data() ) );
   }
 }
 
@@ -1142,9 +1135,9 @@ void OptWidgetMultiText::initActivation( void )
 {
   string s = "";
   if ( EW != 0 )
-    s = EW->currentText().latin1();
+    s = EW->currentText().toLatin1().data();
   else
-    s = LW->text().latin1();
+    s = LW->text().toLatin1().data();
   Widgets.back()->activateOption( (*Widgets.back()->OP).testActivation( s ) );
 }
 
@@ -1156,24 +1149,24 @@ void OptWidgetMultiText::insertText( const QString &text )
 
   if ( OMutex != 0 )
     OMutex->lock();
-  if ( CI == EW->currentItem() &&
-       ( CI > 0 || EW->currentText() != EW->text( 0 ) ) ) {
+  if ( CI == EW->currentIndex() &&
+       ( CI > 0 || EW->currentText() != EW->itemText( 0 ) ) ) {
     if ( ! Inserted ) {
-      EW->insertItem( EW->currentText(), 0 );
-      EW->setCurrentItem( 0 );
+      EW->insertItem( 0, EW->currentText() );
+      EW->setCurrentIndex( 0 );
       CI = 0;
       Inserted = true;
     }
     else
-      EW->changeItem( EW->currentText(), 0 );
+      EW->setItemText( 0, EW->currentText() );
   }
   else {
-    CI = EW->currentItem();
+    CI = EW->currentIndex();
     if ( Inserted ) {
       if ( EW->count() > 0 ) {
 	EW->removeItem( 0 );
-	EW->setCurrentItem( CI-1 );
-	CI = EW->currentItem();
+	EW->setCurrentIndex( CI-1 );
+	CI = EW->currentIndex();
       }
       Inserted = false;
     }
@@ -1207,10 +1200,25 @@ OptWidgetNumber::OptWidgetNumber( Options::iterator op, QWidget *label,
     double min = (*OP).minimum( (*OP).outUnit() );
     double max = (*OP).maximum( (*OP).outUnit() );
     double step = (*OP).step( (*OP).outUnit() );
-    double prec = 1.0;
-    if ( (*OP).isNumber() )
-      prec = pow( 10.0, floor( log10( 0.1*step ) ) );
-    W = EW = new DoubleSpinBox( val, min, max, step, prec, (*OP).format(), parent );
+    int prec = 0;
+    if ( (*OP).isNumber() ) {
+      int width=0;
+      int precision=0;
+      char type='g';
+      char pad='0';
+      Str frmt = (*OP).format();
+      frmt.readFormat( 0, width, precision, type, pad );
+      int stepprec = (int)-floor( log10( 0.1*step ) );
+      if ( precision > stepprec || ( precision >= 0 && type == 'f' ) )
+	prec = precision;
+      else
+	prec = stepprec;
+    }
+    W = EW = new QDoubleSpinBox( parent );
+    EW->setRange( min, max );
+    EW->setSingleStep( step );
+    EW->setDecimals( prec );
+    EW->setValue( val );
     OptWidget::setValueStyle( W, (*OP).style(), false, true );
     Value = (*OP).number();
     connect( EW, SIGNAL( valueChanged( double ) ),
@@ -1234,7 +1242,7 @@ OptWidgetNumber::OptWidgetNumber( Options::iterator op, QWidget *label,
     else {
       LW = new QLabel( (*OP).text().c_str(), parent );
       //    LW->setBackgroundMode( QWidget::PaletteMid );
-      LW->setAlignment( AlignRight | AlignVCenter );
+      LW->setAlignment( Qt::AlignRight | Qt::AlignVCenter );
       LW->setFrameStyle( QFrame::Panel | QFrame::Sunken );
       LW->setLineWidth( 2 );
       OptWidget::setValueStyle( LW, (*OP).style() );
@@ -1296,11 +1304,23 @@ void OptWidgetNumber::update( void )
     double min = (*OP).minimum( (*OP).outUnit() );
     double max = (*OP).maximum( (*OP).outUnit() );
     double step = (*OP).step( (*OP).outUnit() );
-    double prec = 1.0;
-    if ( (*OP).isNumber() )
-      prec = pow( 10.0, floor( log10( 0.1*step ) ) );
-    EW->setRange( min, max, step, prec );
-    EW->setFormat( (*OP).format() );
+    int prec = 0;
+    if ( (*OP).isNumber() ) {
+      int width=0;
+      int precision=0;
+      char type='g';
+      char pad='0';
+      Str frmt = (*OP).format();
+      frmt.readFormat( 0, width, precision, type, pad );
+      int stepprec = (int)-floor( log10( 0.1*step ) );
+      if ( precision > stepprec || ( precision >= 0 && type == 'f' ) )
+	prec = precision;
+      else
+	prec = stepprec;
+    }
+    EW->setRange( min, max );
+    EW->setSingleStep( step );
+    EW->setDecimals( prec );
     EW->setValue( val );
   }
   InternChanged = false;
@@ -1372,10 +1392,14 @@ OptWidgetBoolean::OptWidgetBoolean( Options::iterator op, Options *oo,
     EW( 0 ),
     Value( false )
 {
-  QHBox *hb = new QHBox( parent );
+  QWidget *hb = new QWidget( parent );
+  QHBoxLayout *layout = new QHBoxLayout;
+  hb->setLayout( layout );
   W = hb;
-  EW = new QCheckBox( " ", hb );
-  QLabel *label = new QLabel( request.c_str(), hb );
+  EW = new QCheckBox( " " );
+  layout->addWidget( EW );
+  QLabel *label = new QLabel( request.c_str() );
+  layout->addWidget( label );
   OptWidget::setLabelStyle( label, (*OP).style() );
   reset();
   if ( Editable ) {
@@ -1385,7 +1409,7 @@ OptWidgetBoolean::OptWidgetBoolean( Options::iterator op, Options *oo,
 	     this, SLOT( valueChanged( bool ) ) );
   }
   else {
-    EW->setFocusPolicy( QWidget::NoFocus );
+    EW->setFocusPolicy( Qt::NoFocus );
     connect( EW, SIGNAL( toggled( bool ) ), this, SLOT( dontToggle( bool ) ) );
   }
 }
@@ -1483,9 +1507,7 @@ OptWidgetDate::OptWidgetDate( Options::iterator op, Options *oo,
     Day = (*OP).day( 0 );
     W = DE = new QDateEdit( QDate( Year, Month, Day ), parent );
     OptWidget::setValueStyle( W, (*OP).style(), false, true );
-    DE->setAutoAdvance( true );
-    DE->setOrder( QDateEdit::YMD );
-    DE->setSeparator( "-" );
+    DE->setDisplayFormat( "yyyy-MM-dd" );
     connect( DE, SIGNAL( valueChanged( const QDate& ) ),
 	     this, SLOT( valueChanged( const QDate& ) ) );
   }
@@ -1564,9 +1586,9 @@ void OptWidgetDate::valueChanged( const QDate &date )
   }
   string s = "";
   if ( DE != 0 )
-    s = DE->date().toString( Qt::ISODate ).latin1();
+    s = DE->date().toString( Qt::ISODate ).toLatin1().data();
   else
-    s = LW->text().latin1();
+    s = LW->text().toLatin1().data();
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
     Widgets[k]->activateOption( (*Widgets[k]->OP).testActivation( s ) );
   }
@@ -1577,9 +1599,9 @@ void OptWidgetDate::initActivation( void )
 {
   string s = "";
   if ( DE != 0 )
-    s = DE->date().toString( Qt::ISODate ).latin1();
+    s = DE->date().toString( Qt::ISODate ).toLatin1().data();
   else
-    s = LW->text().latin1();
+    s = LW->text().toLatin1().data();
   Widgets.back()->activateOption( (*Widgets.back()->OP).testActivation( s ) );
 }
 
@@ -1600,9 +1622,7 @@ OptWidgetTime::OptWidgetTime( Options::iterator op, Options *oo,
     Seconds = (*OP).seconds( 0 );
     W = TE = new QTimeEdit( QTime( Hour, Minutes, Seconds ), parent );
     OptWidget::setValueStyle( W, (*OP).style(), false, true );
-    TE->setAutoAdvance( true );
-    TE->setDisplay( QTimeEdit::Hours | QTimeEdit::Minutes | QTimeEdit::Seconds );
-    TE->setSeparator( ":" );
+    TE->setDisplayFormat( "hh:mm:ss" );
     connect( TE, SIGNAL( valueChanged( const QTime& ) ),
 	     this, SLOT( valueChanged( const QTime& ) ) );
   }
@@ -1681,9 +1701,9 @@ void OptWidgetTime::valueChanged( const QTime &time )
   }
   string s = "";
   if ( TE != 0 )
-    s = TE->time().toString( Qt::ISODate ).latin1();
+    s = TE->time().toString( Qt::ISODate ).toLatin1().data();
   else
-    s = LW->text().latin1();
+    s = LW->text().toLatin1().data();
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
     Widgets[k]->activateOption( (*Widgets[k]->OP).testActivation( s ) );
   }
@@ -1694,9 +1714,9 @@ void OptWidgetTime::initActivation( void )
 {
   string s = "";
   if ( TE != 0 )
-    s = TE->time().toString( Qt::ISODate ).latin1();
+    s = TE->time().toString( Qt::ISODate ).toLatin1().data();
   else
-    s = LW->text().latin1();
+    s = LW->text().toLatin1().data();
   Widgets.back()->activateOption( (*Widgets.back()->OP).testActivation( s ) );
 }
 
@@ -1709,7 +1729,8 @@ OptWidgetLabel::OptWidgetLabel( Options::iterator op, Options *oo,
     (*OP).ident().htmlUnit() : (*OP).ident().html();
   QLabel *l = new QLabel( id.c_str(), parent );
   l->setTextFormat( Qt::RichText );
-  l->setAlignment( Qt::AlignLeft | Qt::SingleLine );
+  l->setAlignment( Qt::AlignLeft );
+  l->setWordWrap( false );
   W = l;
   OptWidget::setLabelStyle( W, (*OP).style() );
 }
@@ -1719,10 +1740,13 @@ OptWidgetSeparator::OptWidgetSeparator( Options::iterator op, Options *oo,
 					OptWidget *ow, QWidget *parent, QMutex *mutex )
   : OptWidgetBase( op, 0, oo, ow, mutex )
 {
-  QHBox *h = new QHBox( parent );
+  QWidget *h = new QWidget( parent );
+  QHBoxLayout *layout = new QHBoxLayout;
+  h->setLayout( layout );
   W = h;
   if ( (*OP).ident().empty() ) {
-    QLabel *line = new QLabel( h );
+    QLabel *line = new QLabel;
+    layout->addWidget( line );
     line->setFrameStyle( QFrame::HLine | QFrame::Sunken );
     line->setLineWidth( 1 );
     line->setMidLineWidth( 0 );
@@ -1730,24 +1754,27 @@ OptWidgetSeparator::OptWidgetSeparator( Options::iterator op, Options *oo,
   }
   else {
     QLabel *line;
-    line = new QLabel( h );
+    line = new QLabel;
+    layout->addWidget( line );
     line->setFrameStyle( QFrame::HLine | QFrame::Sunken );
     line->setLineWidth( 1 );
     line->setMidLineWidth( 0 );
     line->setFixedHeight( 4 );
-    h->setStretchFactor( line, 10 );
-    QLabel *label = new QLabel( (*OP).ident().c_str(), h );
+    layout->setStretchFactor( line, 10 );
+    QLabel *label = new QLabel( (*OP).ident().c_str() );
+    layout->addWidget( label );
     OptWidget::setLabelStyle( label, (*OP).style() );
     label->setAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
     int w = label->sizeHint().width();
     label->setFixedWidth( w + 4*w/(*OP).ident().size() );
-    h->setStretchFactor( label, 1 );
-    line = new QLabel( h );
+    layout->setStretchFactor( label, 1 );
+    line = new QLabel;
+    layout->addWidget( line );
     line->setFrameStyle( QFrame::HLine | QFrame::Sunken );
     line->setLineWidth( 1 );
     line->setMidLineWidth( 0 );
     line->setFixedHeight( 4 );
-    h->setStretchFactor( line, 30 );
+    layout->setStretchFactor( line, 30 );
   }
 }
 

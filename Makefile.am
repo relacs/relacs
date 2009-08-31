@@ -24,7 +24,7 @@ SUBDIRS = \
 EXTRA_DIST = \
     docbook.mk \
     doxygen.mk \
-    moc3.mk \
+    moc4.mk \
     \
     relacs.cfg \
     relacsplugins.cfg \

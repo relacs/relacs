@@ -19,8 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <qgroupbox.h>
-#include <qapplication.h>
+#include <QApplication>
 #include <relacs/multiplot.h>
 using namespace relacs;
 
@@ -29,9 +28,7 @@ int main( int argc, char **argv )
 {
   QApplication a( argc, argv );
 
-  QGroupBox g( 1, Qt::Horizontal, "My Plots" );
-  a.setMainWidget( &g );
-  MultiPlot p( 3, &g );
+  MultiPlot p( 3 );
 
   const int n = 19;
   vector< double > xd( n ), yd( n );
@@ -69,7 +66,7 @@ int main( int argc, char **argv )
   p[2].setOrigin( 0.0, 0.0 );
   p[2].setSize( 1.0, 0.33 );
 
-  g.show();
+  p.show();
 
   return a.exec();
 }

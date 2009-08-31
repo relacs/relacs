@@ -22,13 +22,13 @@
 #ifndef _RELACS_OPTDIALOG_H_
 #define _RELACS_OPTDIALOG_H_ 1
 
-#include <qdialog.h>
-#include <qmutex.h>
-#include <qtabwidget.h>
-#include <qhbox.h>
-#include <qvbox.h>
+#include <QDialog>
+#include <QMutex>
+#include <QTabWidget>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
 #include <relacs/options.h>
-#include <relacs/optwidget.h>
+#include "optwidget.h"
 
 namespace relacs {
 
@@ -173,25 +173,25 @@ public:
     /*! Construct an empty modal dialog.
         This dialog will block input to the program.
         \note You still have to call exec() in order to launch the dialog. */
-  OptDialog( QWidget *parent=0, char *name=0 );
+  OptDialog( QWidget *parent=0 );
     /*! Construct an empty dialog with modality \a modal.
         If \a modal is \c true,
 	this dialog will block input to the program.
         \note You still have to call exec() in order to launch the dialog. */
-  OptDialog( bool modal, QWidget *parent=0, char *name=0 );
+  OptDialog( bool modal, QWidget *parent=0 );
     /*! Construct a modal dialog for editing the Options \a o.
         The caption of the dialog window is set to \a title.
         This dialog will block input to the program.
         \note You still have to call exec() in order to launch the dialog. */
   OptDialog( Options &opt, const string &title,
-	     QMutex *mutex=0, QWidget *parent=0, char *name=0 );
+	     QMutex *mutex=0, QWidget *parent=0 );
     /*! Construct a dialog for editing the Options \a o with modality \a modal.
         The caption of the dialog window is set to \a title.
 	If \a modal is \c true,
 	this dialog will block input to the program.
         \note You still have to call exec() in order to launch the dialog. */
   OptDialog( Options &opt, const string &title, bool modal,
-	     QMutex *mutex=0, QWidget *parent=0, char *name=0 );
+	     QMutex *mutex=0, QWidget *parent=0 );
     /*! Destructs the OptDialog. */
   ~OptDialog( void );
 
@@ -345,8 +345,8 @@ private:
   void construct( void );
   void createButtons( void );
 
-  QVBox *DialogBox;
-  QHBox *ButtonBox;
+  QVBoxLayout *DialogBox;
+  QHBoxLayout *ButtonBox;
 
   vector< OptWidget* > OWs;
 

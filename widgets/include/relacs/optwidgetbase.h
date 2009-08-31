@@ -23,19 +23,19 @@
 #define _RELACS_OPTWIDGETBASE_H_ 1
 
 #include <vector>
-#include <qobject.h>
-#include <qwidget.h>
-#include <qmutex.h>
-#include <qlabel.h>
-#include <qlcdnumber.h>
-#include <qlineedit.h>
-#include <qcombobox.h>
-#include <qcheckbox.h>
-#include <qdatetimeedit.h>
-#include <qpushbutton.h>
-#include <relacs/doublespinbox.h>
+#include <QObject>
+#include <QWidget>
+#include <QMutex>
+#include <QLabel>
+#include <QLCDNumber>
+#include <QLineEdit>
+#include <QComboBox>
+#include <QCheckBox>
+#include <QDateTimeEdit>
+#include <QPushButton>
+#include <QDoubleSpinBox>
 #include <relacs/options.h>
-#include <relacs/optwidget.h>
+#include "optwidget.h"
 using namespace std;
 
 namespace relacs {
@@ -137,7 +137,7 @@ public:
 public slots:
   void valueChanged( double v );
 private:
-  DoubleSpinBox *EW;
+  QDoubleSpinBox *EW;
   double Value;
   QLabel *LW;
   QLCDNumber *LCDW;

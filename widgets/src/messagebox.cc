@@ -19,12 +19,12 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <qlayout.h>
-#include <qhbox.h>
-#include <qlabel.h>
-#include <qpushbutton.h>
-#include <qtimer.h>
-#include <qmessagebox.h>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QLabel>
+#include <QPushbutton>
+#include <QTimer>
+#include <QMessagebox>
 #include <relacs/messagebox.h>
 
 namespace relacs {
@@ -37,47 +37,42 @@ MessageBox::MessageBox( const string &caption, const string &message,
 {
   setCaption( caption.c_str() );
 
-  QVBoxLayout *l = new QVBoxLayout( this, 4, 10 );
-  l->setAutoAdd( true );
+  QVBoxLayout *l = new QVBoxLayout;
+  l->setMargin( 4 );
+  l->setSpacing( 10 );
+  setLayout( l );
 
   QLabel *label;
-  QHBox *space;
 
-  space = new QHBox( this );
+  l->addSpace( 10 );
 
-  QHBox *upper = new QHBox( this );
+  QHBoxLayout *upper = new QHBoxLayout;
+  l->addLayout( upper );
   upper->setSpacing( 7 );
-  label = new QLabel( upper );
-  label = new QLabel( upper );
-#if QT_VERSION >= 300
+  upper->addSpacing( 10 );
   if ( type == Information )
     label->setPixmap( QMessageBox::standardIcon( QMessageBox::Information ) );
   else if ( type == Warning )
     label->setPixmap( QMessageBox::standardIcon( QMessageBox::Warning ) );
   else
     label->setPixmap( QMessageBox::standardIcon( QMessageBox::Critical ) );
-#else
-  if ( type == Information )
-    label->setPixmap( QMessageBox::standardIcon( QMessageBox::Information, style().guiStyle() ) );
-  else if ( type == Warning )
-    label->setPixmap( QMessageBox::standardIcon( QMessageBox::Warning, style().guiStyle() ) );
-  else
-    label->setPixmap( QMessageBox::standardIcon( QMessageBox::Critical, style().guiStyle() ) );
-#endif
-  label = new QLabel( upper );
+  upper->addSpacing( 5 );
+
   label = new QLabel( "", upper );
   label->setTextFormat( RichText );
   label->setText( message.c_str() );
-  label = new QLabel( upper );
+  upper->addSpacing( 5 );
 
-  QHBox *lower = new QHBox( this );
-  label = new QLabel( lower );
-  QPushButton *button = new QPushButton( "OK", lower );
+  QHBoxLayout *lower = new QHBoxLayout( this );
+  l->addLayout( lower );
+  lower->addSpacing( 5 );
+  QPushButton *button = new QPushButton( "OK" );
+  lower->addWidget( button );
   button->setFocus();
   connect( button, SIGNAL( clicked( void ) ), this, SLOT( accept( void ) ) );
-  label = new QLabel( lower );
+  lower->addSpacing( 5 );
 
-  space = new QHBox( this );
+  l->addSpace( 10 );
 
   setActiveWindow();
 }

@@ -23,7 +23,7 @@
 #define _RELACS_MESSAGEBOX_H_ 1
 
 #include <string>
-#include <qdialog.h>
+#include <QDialog>
 using namespace std;
 
 namespace relacs {

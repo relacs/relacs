@@ -19,54 +19,55 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <qlayout.h>
-#include <qlabel.h>
-#include <qpushbutton.h>
+#include <QLayout>
+#include <QLabel>
+#include <QPushButton>
 #include <relacs/optdialog.h>
 #include <relacs/optdialogbutton.h>
 
 namespace relacs {
 
 
-OptDialog::OptDialog( QWidget *parent, char *name )
-  : QDialog( parent, name, TRUE,
-	     WStyle_Customize | WStyle_NormalBorder | WStyle_Title | WStyle_SysMenu ),
+OptDialog::OptDialog( QWidget *parent )
+  : QDialog( parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint ),
     OWs( 0 ), Tabs( 0 )
+		    // WStyle_Customize | WStyle_NormalBorder | WStyle_Title | WStyle_SysMenu
 {
   construct();
+  setModal( true );
   setCaption( "Dialog" );
 }
 
 
-OptDialog::OptDialog( bool modal, QWidget *parent, char *name )
-  : QDialog( parent, name, modal,
-	     WStyle_Customize | WStyle_NormalBorder | WStyle_Title | WStyle_SysMenu ),
+OptDialog::OptDialog( bool modal, QWidget *parent )
+  : QDialog( parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint ),
     OWs( 0 ), Tabs( 0 )
 {
   construct();
+  setModal( modal );
   setCaption( "Dialog" );
 }
 
 
 OptDialog::OptDialog( Options &opt, const string &title,
-		      QMutex *mutex, QWidget *parent, char *name )
-  : QDialog( parent, name, TRUE,
-	     WStyle_Customize | WStyle_NormalBorder | WStyle_Title | WStyle_SysMenu ),
+		      QMutex *mutex, QWidget *parent )
+  : QDialog( parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint ),
     OWs( 0 ), Tabs( 0 )
 {
   construct();
+  setModal( true );
   setCaption( title );
   addOptions( opt, 0, 0, 0, mutex );
 }
 
 
 OptDialog::OptDialog( Options &opt, const string &title, bool modal,
-		      QMutex *mutex, QWidget *parent, char *name )
-  : QDialog( parent, name, modal,
-	     WStyle_Customize | WStyle_NormalBorder | WStyle_Title | WStyle_SysMenu ),
+		      QMutex *mutex, QWidget *parent )
+  : QDialog( parent, Qt::WindowTitleHint | Qt::WindowSystemMenuHint ),
     OWs( 0 ), Tabs( 0 )
 {
   construct();
+  setModal( modal );
   setCaption( title );
   addOptions( opt, 0, 0, 0, mutex );
 }
@@ -83,11 +84,12 @@ OptDialog::~OptDialog( void )
 
 void OptDialog::construct( void )
 {
-  QVBoxLayout *l = new QVBoxLayout( this, 4, 10 );
-  l->setAutoAdd( true );
-  //  l->setResizeMode( QLayout::Fixed );
-  DialogBox = new QVBox( this );
-  ButtonBox = new QHBox( this );
+  QVBoxLayout *l = new QVBoxLayout;
+  setLayout( l );
+  DialogBox = new QVBoxLayout;
+  l->addLayout( DialogBox );
+  ButtonBox = new QHBoxLayout;
+  l->addLayout( ButtonBox );
   DefaultButtons = false;
   addButton( "&Ok", Accept, 1 );
   addButton( "&Reset", Reset );
@@ -100,7 +102,7 @@ void OptDialog::construct( void )
 
 void OptDialog::setCaption( const string &title )
 {
-  QDialog::setCaption( title.c_str() );
+  QDialog::setWindowTitle( title.c_str() );
 }
 
 
@@ -110,8 +112,9 @@ OptWidget *OptDialog::addOptions( Options &opt, int selectmask, int romask,
   Tabs = 0;
 
   OptWidget *ow = new OptWidget( &opt, selectmask, romask, false,
-				 style, mutex, DialogBox );
+				 style, mutex );
   OWs.push_back( ow );
+  DialogBox->addWidget( ow );
 
   return ow;
 }
@@ -121,20 +124,16 @@ OptWidget *OptDialog::addTabOptions( const string &label, Options &opt,
 				     int selectmask, int romask, int style,
 				     QMutex *mutex )
 {
-  QWidget *w = new QWidget( DialogBox );
-  QVBoxLayout *l = new QVBoxLayout( w );
-
   OptWidget *ow = new OptWidget( &opt, selectmask, romask, false,
-				 style, mutex, w );
+				 style, mutex );
   OWs.push_back( ow );
 
-  l->addWidget( ow );
-  l->addStretch( 10 );
+  if ( Tabs == 0 ) {
+    Tabs = new QTabWidget;
+    DialogBox->addWidget( Tabs );
+  }
 
-  if ( Tabs == 0 )
-    Tabs = new QTabWidget( DialogBox );
-
-  Tabs->addTab( w, label.c_str() );
+  Tabs->addTab( ow, label.c_str() );
 
   return ow;
 
@@ -144,14 +143,16 @@ OptWidget *OptDialog::addTabOptions( const string &label, Options &opt,
 void OptDialog::addWidget( QWidget *widget )
 {
   Tabs = 0;
-  widget->reparent( DialogBox, QPoint( 0, 0 ) );
+  DialogBox->addWidget( widget );
 }
 
 
 void OptDialog::addTabWidget( const string &label, QWidget *widget )
 {
-  if ( Tabs == 0 )
-    Tabs = new QTabWidget( DialogBox );
+  if ( Tabs == 0 ) {
+    Tabs = new QTabWidget;
+    DialogBox->addWidget( Tabs );
+  }
 
   Tabs->addTab( widget, label.c_str() );
 }
@@ -230,14 +231,18 @@ void OptDialog::createButtons( void )
   QLabel *label;
 
   if ( Buttons.size() == 1 ) {
-    label = new QLabel( ButtonBox );
+    label = new QLabel;
+    ButtonBox->addWidget( label );
     Buttons[0]->create( OWs, RejectCode, ButtonBox );
-    label = new QLabel( ButtonBox );
+    label = new QLabel;
+    ButtonBox->addWidget( label );
   }
   else {
     for ( unsigned int k=0; k<Buttons.size(); k++ ) {
-      if ( k > 0 )  // just some stretchable space
-	label = new QLabel( ButtonBox );
+      if ( k > 0 ) {  // just some stretchable space
+	label = new QLabel;
+	ButtonBox->addWidget( label );
+      }
       Buttons[k]->create( OWs, RejectCode, ButtonBox );
     }
   }
@@ -330,10 +335,11 @@ bool OptDialogButton::accept( void ) const
 
 
 void OptDialogButton::create( vector<OptWidget*> ows, int rejectc,
-			      QWidget *parent, char *name )
+			      QHBoxLayout *layout )
 {
   OWs = ows;
-  PB = new QPushButton( Title.c_str(), parent, name );
+  PB = new QPushButton( Title.c_str() );
+  layout->addWidget( PB );
   PB->setDefault( Default );
   connect( PB, SIGNAL( clicked() ), 
 	   this, SLOT( clicked() ) );
