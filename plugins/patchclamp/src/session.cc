@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <qvbox.h>
-#include <qlabel.h>
+#include <QWidget>
+#include <QLabel>
 #include <relacs/patchclamp/session.h>
 using namespace relacs;
 

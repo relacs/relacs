@@ -19,10 +19,10 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <qhbox.h>
-#include <qvbox.h>
-#include <qlabel.h>
-#include <qkeycode.h>
+#include <QWidget>
+#include <QWidget>
+#include <QLabel>
+#include <QKeyCode>
 #include <relacs/tablekey.h>
 #include <relacs/lcdrange.h>
 #include <relacs/auditory/search.h>

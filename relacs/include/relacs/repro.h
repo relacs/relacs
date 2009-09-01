@@ -22,11 +22,11 @@
 #ifndef _RELACS_REPRO_H_
 #define _RELACS_REPRO_H_ 1
 
-#include <qglobal.h>
-#include <qmutex.h>
-#include <qwaitcondition.h>
-#include <qthread.h>
-#include <qdatetime.h>
+#include <QGlobal>
+#include <QMutex>
+#include <QWaitCondition>
+#include <QThread>
+#include <QDateTime>
 #include <relacs/outlist.h>
 #include <relacs/relacsplugin.h>
 

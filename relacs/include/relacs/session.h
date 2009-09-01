@@ -24,13 +24,13 @@
 
 #include <ctime>
 #include <string>
-#include <qhbox.h>
-#include <qlabel.h>
-#include <qdatetime.h>
-#include <qtimer.h>
-#include <qlabel.h>
-#include <qpopupmenu.h>
-#include <qaction.h>
+#include <QWidget>
+#include <QLabel>
+#include <QDateTime>
+#include <QTimer>
+#include <QLabel>
+#include <QMenu>
+#include <QAction>
 #include <relacs/options.h>
 
 namespace relacs {

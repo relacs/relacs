@@ -22,8 +22,8 @@
 #ifndef _RELACS_EFIELD_LINEARFIELD_H_
 #define _RELACS_EFIELD_LINEARFIELD_H_ 1
 
-#include <qvbox.h>
-#include <qpushbutton.h>
+#include <QWidget>
+#include <QPushButton>
 #include <relacs/map.h>
 #include <relacs/plot.h>
 #include <relacs/optwidget.h>

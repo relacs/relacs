@@ -21,12 +21,12 @@
 
 #include <ctype.h>
 #include <cmath>
-#include <qdir.h>
-#include <qlabel.h>
-#include <qgroupbox.h>
-#include <qpushbutton.h>
-#include <qtextbrowser.h>
-#include <qapplication.h>
+#include <QDir>
+#include <QLabel>
+#include <QGroupBox>
+#include <QPushButton>
+#include <QTextBrowser>
+#include <QApplication>
 #include <relacs/str.h>
 #include <relacs/optdialog.h>
 #include <relacs/relacswidget.h>

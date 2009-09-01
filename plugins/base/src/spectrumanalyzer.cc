@@ -19,7 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <qdatetime.h>
+#include <QDateTime>
 #include <relacs/sampledata.h>
 #include <relacs/stats.h>
 #include <relacs/spectrum.h>

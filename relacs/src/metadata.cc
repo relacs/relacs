@@ -22,7 +22,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <ctime>
-#include <qdatetime.h>
+#include <QDateTime>
 #include <relacs/str.h>
 #include <relacs/optdialog.h>
 #include <relacs/relacsplugin.h>

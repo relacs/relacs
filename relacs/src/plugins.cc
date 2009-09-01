@@ -23,8 +23,8 @@
 #include <dlfcn.h>
 #include <fstream>
 #include <iostream>
-#include <qdir.h>
-#include <qfileinfo.h>
+#include <QDir>
+#include <QFileInfo>
 #include <relacs/str.h>
 #include <relacs/plugins.h>
 using namespace std;

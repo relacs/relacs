@@ -21,8 +21,8 @@
 
 #include <cstdlib>
 #include <cmath>
-#include <qdatetime.h>
-#include <qtooltip.h>
+#include <QDateTime>
+#include <QToolTip>
 #include <relacs/str.h>
 #include <relacs/relacswidget.h>
 #include <relacs/session.h>

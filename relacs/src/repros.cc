@@ -19,10 +19,10 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <qdatetime.h>
-#include <qlabel.h>
-#include <qtooltip.h>
-#include <qapplication.h>
+#include <QDateTime>
+#include <QLabel>
+#include <QToolTip>
+#include <QApplication>
 #include <relacs/messagebox.h>
 #include <relacs/optdialog.h>
 #include <relacs/relacswidget.h>

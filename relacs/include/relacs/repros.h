@@ -22,10 +22,10 @@
 #ifndef _RELACS_REPROS_H_
 #define _RELACS_REPROS_H_ 1
 
-#include <qobject.h>
-#include <qtabwidget.h>
-#include <qpopupmenu.h> 
-#include <qlabel.h>
+#include <QObject>
+#include <QTabWidget>
+#include <QMenu> 
+#include <QLabel>
 #include <vector>
 #include <relacs/options.h>
 #include <relacs/relacsplugin.h>

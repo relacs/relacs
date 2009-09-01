@@ -22,7 +22,7 @@
 #ifndef _RELACS_DEFAULTSESSION_H_
 #define _RELACS_DEFAULTSESSION_H_ 1
 
-#include <qpushbutton.h>
+#include <QPushButton>
 #include <relacs/control.h>
 
 namespace relacs {

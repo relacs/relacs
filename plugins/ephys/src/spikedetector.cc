@@ -20,12 +20,12 @@
 */
 
 #include <cmath>
-#include <qhbox.h>
-#include <qvbox.h>
-#include <qgrid.h>
-#include <qpainter.h>
-#include <qpushbutton.h>
-#include <qapplication.h>
+#include <QWidget>
+#include <QWidget>
+#include <QGrid>
+#include <QPainter>
+#include <QPushButton>
+#include <QApplication>
 #include <relacs/str.h>
 #include <relacs/tablekey.h>
 #include <relacs/ephys/spikedetector.h>

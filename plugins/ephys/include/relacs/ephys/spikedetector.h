@@ -22,9 +22,9 @@
 #ifndef _RELACS_EPHYS_SPIKEDETECTOR_H_
 #define _RELACS_EPHYS_SPIKEDETECTOR_H_ 1
 
-#include <qpixmap.h>
-#include <qlabel.h>
-#include <qdatetime.h>
+#include <QPixmap>
+#include <QLabel>
+#include <QDateTime>
 #include <relacs/optwidget.h>
 #include <relacs/sampledata.h>
 #include <relacs/plot.h>

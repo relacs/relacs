@@ -23,7 +23,7 @@
 #define _RELACS_RELACSPLUGIN_H_ 1
 
 
-#include <qapplication.h>
+#include <QApplication>
 #include <relacs/tracespec.h>
 #include <relacs/indata.h>
 #include <relacs/inlist.h>

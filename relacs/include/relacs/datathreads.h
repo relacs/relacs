@@ -22,8 +22,8 @@
 #ifndef _RELACS_DATATHREADS_H_
 #define _RELACS_DATATHREADS_H_ 1
 
-#include <qthread.h>
-#include <qmutex.h>
+#include <QThread>
+#include <QMutex>
 
 using namespace std;
 

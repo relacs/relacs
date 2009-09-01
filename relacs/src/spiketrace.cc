@@ -22,9 +22,9 @@
 #include <cstdlib>
 #include <iostream>
 #include <cmath>
-#include <qapplication.h>
-#include <qpainter.h>
-#include <qapplication.h>
+#include <QApplication>
+#include <QPainter>
+#include <QApplication>
 #include <relacs/spiketrace.h>
 
 namespace relacs {

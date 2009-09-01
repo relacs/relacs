@@ -21,8 +21,8 @@
 
 #include <string>
 #include <getopt.h>
-#include <qapplication.h>
-#include <qsplashscreen.h>
+#include <QApplication>
+#include <QSplashScreen>
 #include <relacs/relacswidget.h>
 
 using namespace std;

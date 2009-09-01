@@ -20,13 +20,13 @@
 */
 
 #include <cstdio>
-#include <qdatetime.h>
-#include <qapplication.h>
-#include <qkeycode.h>
-#include <qpainter.h>
-#include <qbitmap.h>
-#include <qtextbrowser.h>
-#include <qfiledialog.h>
+#include <QDateTime>
+#include <QApplication>
+#include <QKeyCode>
+#include <QPainter>
+#include <QBitmap>
+#include <QTextBrowser>
+#include <QFileDialog>
 #include <relacs/str.h>
 #include <relacs/strqueue.h>
 #include <relacs/optdialog.h>

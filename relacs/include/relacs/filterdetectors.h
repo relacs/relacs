@@ -24,8 +24,8 @@
 
 #include <string>
 #include <vector>
-#include <qtabwidget.h>
-#include <qpopupmenu.h> 
+#include <QTabWidget>
+#include <QMenu> 
 #include <relacs/configclass.h>
 #include <relacs/inlist.h>
 #include <relacs/eventlist.h>

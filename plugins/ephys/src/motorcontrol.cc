@@ -21,11 +21,11 @@
 
 #include <unistd.h>
 #include <cmath>
-#include <qapplication.h>
-#include <qgroupbox.h>
-#include <qhbox.h>
-#include <qvbox.h>
-#include <qpainter.h>
+#include <QApplication>
+#include <QGroupBox>
+#include <QWidget>
+#include <QWidget>
+#include <QPainter>
 #include <relacs/manipulator.h>
 #include <relacs/ephys/motorcontrol.h>
 using namespace relacs;

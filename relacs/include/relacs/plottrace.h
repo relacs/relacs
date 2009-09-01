@@ -22,9 +22,9 @@
 #ifndef _RELACS_PLOTTRACE_H_
 #define _RELACS_PLOTTRACE_H_ 1
 
-#include <qhbox.h>
-#include <qpushbutton.h>
-#include <qpopupmenu.h> 
+#include <QWidget>
+#include <QPushButton>
+#include <QMenu> 
 #include <vector>
 #include <relacs/inlist.h>
 #include <relacs/eventlist.h>

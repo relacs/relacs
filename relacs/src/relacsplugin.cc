@@ -19,7 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <qdatetime.h>
+#include <QDateTime>
 #include <relacs/messagebox.h>
 #include <relacs/metadata.h>
 #include <relacs/model.h>

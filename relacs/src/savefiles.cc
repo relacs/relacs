@@ -20,9 +20,9 @@
 */
 
 #include <cstdio>
-#include <qdatetime.h>
-#include <qpainter.h>
-#include <qtooltip.h>
+#include <QDateTime>
+#include <QPainter>
+#include <QToolTip>
 #include <relacs/relacswidget.h>
 #include <relacs/savefiles.h>
 

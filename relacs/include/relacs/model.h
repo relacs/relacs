@@ -24,11 +24,11 @@
 
 #include <vector>
 #include <string>
-#include <qpopupmenu.h>
-#include <qmutex.h>
-#include <qwaitcondition.h>
-#include <qthread.h>
-#include <qdatetime.h>
+#include <QMenu>
+#include <QMutex>
+#include <QWaitCondition>
+#include <QThread>
+#include <QDateTime>
 #include <relacs/cyclicarray.h>
 #include <relacs/outdata.h>
 #include <relacs/relacsplugin.h>

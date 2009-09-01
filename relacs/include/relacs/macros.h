@@ -25,13 +25,13 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <qobject.h>
-#include <qwidget.h>
-#include <qpopupmenu.h> 
-#include <qlayout.h>
-#include <qpushbutton.h>
-#include <qpixmap.h>
-#include <qaccel.h>
+#include <QObject>
+#include <QWidget>
+#include <QMenu> 
+#include <QLayout>
+#include <QPushButton>
+#include <QPixmap>
+#include <QAccel>
 #include <relacs/str.h>
 #include <relacs/configclass.h>
 using namespace std;

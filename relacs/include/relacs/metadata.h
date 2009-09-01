@@ -25,8 +25,8 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <qpopupmenu.h>
-#include <qmutex.h>
+#include <QMenu>
+#include <QMutex>
 #include <relacs/configclass.h>
 
 using namespace std;

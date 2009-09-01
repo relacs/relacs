@@ -20,15 +20,15 @@
 */
 
 #include <iostream>
-#include <qpixmap.h>
-#include <qbitmap.h>
-#include <qpainter.h>
-#include <qpointarray.h>
-#include <qdatetime.h>
-#include <qlabel.h>
-#include <qkeycode.h>
-#include <qtooltip.h>
-#include <qapplication.h>
+#include <QPixmap>
+#include <QBitmap>
+#include <QPainter>
+#include <QPointArray>
+#include <QDateTime>
+#include <QLabel>
+#include <QKeyCode>
+#include <QToolTip>
+#include <QApplication>
 #include <relacs/str.h>
 #include <relacs/relacswidget.h>
 #include <relacs/plottrace.h>

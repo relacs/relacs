@@ -25,9 +25,9 @@
 
 #include <relacs/repro.h>
 #include <relacs/acoustic/traces.h>
-#include <qpushbutton.h>
-#include <qradiobutton.h>
-#include <qbuttongroup.h>
+#include <QPushButton>
+#include <QRadioButton>
+#include <QButtonGroup>
 using namespace relacs;
 
 namespace auditory {

@@ -19,7 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <qlabel.h>
+#include <QLabel>
 #include <relacs/tablekey.h>
 #include <relacs/efield/linearfield.h>
 using namespace relacs;

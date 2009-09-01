@@ -25,9 +25,9 @@
 #include <vector>
 #include <fstream>
 #include <ctime>
-#include <qhbox.h>
-#include <qlabel.h>
-#include <qmutex.h>
+#include <QWidget>
+#include <QLabel>
+#include <QMutex>
 #include <relacs/str.h>
 #include <relacs/options.h>
 #include <relacs/tablekey.h>

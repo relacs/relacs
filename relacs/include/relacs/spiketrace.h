@@ -22,8 +22,8 @@
 #ifndef _RELACS_SPIKETRACE_H_
 #define _RELACS_SPIKETRACE_H_ 1
 
-#include <qwidget.h>
-#include <qthread.h>
+#include <QWidget>
+#include <QThread>
 
 namespace relacs {
 
