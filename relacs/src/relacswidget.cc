@@ -364,9 +364,9 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   statusBar()->addWidget( SimLabel, 0, false );
   
   // menubar:
-  QPopupMenu* popup;
+  QMenu* popup;
   // file:
-  QPopupMenu *filemenu = new QPopupMenu;
+  QMenu *filemenu = new QMenu;
 
   AcquisitionAction = new QAction( this );
   AcquisitionAction->setMenuText( "&Online (acquire)" );
@@ -400,7 +400,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   menuBar()->insertItem( "&File", filemenu );
 
   // plugins:
-  QPopupMenu *pluginmenu = new QPopupMenu( this );
+  QMenu *pluginmenu = new QMenu( this );
   if ( MD != 0 ) {
     MD->addActions( pluginmenu );
     pluginmenu->insertSeparator();
@@ -412,7 +412,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   menuBar()->insertItem( "&Plugins", pluginmenu );
 
   // devices:
-  DeviceMenu = new QPopupMenu( this );
+  DeviceMenu = new QMenu( this );
   menuBar()->insertItem( "De&vices", DeviceMenu );
 
   // filters:
@@ -425,7 +425,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   menuBar()->insertItem( "&Macros", MC->menu() );
 
   // view:
-  QPopupMenu *viewmenu = new QPopupMenu;
+  QMenu *viewmenu = new QMenu;
 
   MaximizedAction = new QAction( this );
   MaximizedAction->setMenuText( "&Maximize window" );
@@ -445,7 +445,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   menuBar()->insertItem( "&View", viewmenu );
 
   // help:
-  popup = new QPopupMenu;
+  popup = new QMenu;
   popup->insertItem( "&Help...", this, SLOT( help() ) );
   popup->insertItem( "&About...", this, SLOT( about() ) );
   menuBar()->insertItem( "&Help", popup );

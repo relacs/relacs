@@ -137,7 +137,7 @@ public:
   double load( void ) const;
 
     /*! Add specific actions to the menu. */
-  virtual void addActions( QPopupMenu *menu );
+  virtual void addActions( QMenu *menu );
 
 
 private:

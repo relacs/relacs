@@ -529,7 +529,7 @@ void MetaData::presetDialogChanged( void )
 }
 
 
-void MetaData::addActions( QPopupMenu *menu )
+void MetaData::addActions( QMenu *menu )
 {
   QAction *action = new QAction( RW, "MetaDataAction" );
   action->setMenuText( "Session &Info..." );

@@ -113,7 +113,7 @@ public slots:
     /*! Initialize the plots with the data \a data and \a events. */
   void init( const InList &data, const EventList &events );
     /*! Add menu entries controlling the time window to \a menu. */
-  void addMenu( QPopupMenu *menu );
+  void addMenu( QMenu *menu );
     /*! Update menu entries toggeling the traces. */
   void updateMenu( void );
 
@@ -183,7 +183,7 @@ private:
 
   RELACSWidget *RW;
 
-  QPopupMenu *Menu;
+  QMenu *Menu;
 
 };
 

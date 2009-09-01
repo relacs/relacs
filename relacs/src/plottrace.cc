@@ -469,7 +469,7 @@ void PlotTrace::updateRanges( int id )
 }
 
 
-void PlotTrace::addMenu( QPopupMenu *menu )
+void PlotTrace::addMenu( QMenu *menu )
 {
   Menu = menu;
 

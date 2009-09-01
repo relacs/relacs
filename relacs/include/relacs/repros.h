@@ -64,7 +64,7 @@ public:
     /*! The display for RePro messages. */
   QLabel *display( QWidget *parent=0, const char *name=0 );
     /*! The popup menu from which each RePro can be started and configured. */
-  QPopupMenu *menu( void );
+  QMenu *menu( void );
 
     /*! The index of the RePro with class name \a name. */
   int index( const string &name ) const;
@@ -154,7 +154,7 @@ private:
   RePro *CurrentView;
   RePro *PreviousView;
 
-  QPopupMenu *Menu;
+  QMenu *Menu;
   QLabel *Message;
   string MessageStr;
 

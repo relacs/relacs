@@ -364,21 +364,20 @@ template < class T, int PluginID >
     s += " ";
     s += DVs[k]->deviceIdent();
     if ( Menus[k] == NULL )
-      Menus[k] = new QMenu( menu );
+      Menus[k] = menu->addMenu(s.c_str());
     Menus[k]->clear();
     StrQueue sq1( DVs[k]->info(), ";" );
     for ( int j=0; j<sq1.size(); j++ ) {
       if ( ! sq1[j].empty() )
-	Menus[k]->insertItem( sq1[j].c_str() );
+	Menus[k]->addAction( sq1[j].c_str() );
     }
     StrQueue sq2( DVs[k]->settings(), ";" );
     if ( ! sq2.empty() && ! sq2[0].empty() )
-      Menus[k]->insertSeparator();
+      Menus[k]->addSeparator();
     for ( int j=0; j<sq2.size(); j++ ) {
       if ( ! sq2[j].empty() )
-	Menus[k]->insertItem( sq2[j].c_str() );
+	Menus[k]->addAction( sq2[j].c_str() );
     }
-    menu->insertItem( s.c_str(), Menus[k] );
   }
 }
 
@@ -395,14 +394,14 @@ template < class T, int PluginID >
     StrQueue sq1( DVs[k]->info(), ";" );
     for ( int j=0; j<sq1.size(); j++ ) {
       if ( ! sq1[j].empty() )
-	Menus[k]->insertItem( sq1[j].c_str() );
+	Menus[k]->addAction( sq1[j].c_str() );
     }
     StrQueue sq2( DVs[k]->settings(), ";" );
     if ( ! sq2.empty() && ! sq2[0].empty() )
-      Menus[k]->insertSeparator();
+      Menus[k]->addSeparator();
     for ( int j=0; j<sq2.size(); j++ ) {
       if ( ! sq2[j].empty() )
-	Menus[k]->insertItem( sq2[j].c_str() );
+	Menus[k]->addAction( sq2[j].c_str() );
     }
   }
 }

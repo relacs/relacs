@@ -173,7 +173,7 @@ public:
   QPushButton *PushButton;
   int AccelId;
     /*! The popup menu of the Macro . */
-  QPopupMenu *PMenu;
+  QMenu *PMenu;
   int PMenuId;
   int MacroNum;
     /*! Pointer to Macros. */
@@ -261,7 +261,7 @@ public:
     /*! Create the button aray for the macros. */
   void buttons( void );
     /*! The popup menu starting and configuring Macros. */
-  QPopupMenu* menu( void );
+  QMenu* menu( void );
 
     /*! Stops the currently running repro.
         Then executes commands of the current macro until the next repro.
@@ -451,8 +451,8 @@ private:
 
   string MacroFile;
 
-  QPopupMenu *Menu;
-  QPopupMenu *SwitchMenu;
+  QMenu *Menu;
+  QMenu *SwitchMenu;
   QGridLayout *ButtonLayout;
   QAccel *ButtonMenuKeys;
 
@@ -547,9 +547,9 @@ public:
     /*! The shortcut key for the menu entry. */
   string MenuShortcut;
   string MenuText;
-  QPopupMenu *Menu;
+  QMenu *Menu;
   int MenuId;
-  QPopupMenu *SubMenu;
+  QMenu *SubMenu;
 
 public slots:
 

@@ -94,7 +94,7 @@ public:
   double totalTime( void ) const;
 
     /*! Add actions to the menu. */
-  virtual void addActions( QPopupMenu *menu );
+  virtual void addActions( QMenu *menu );
 
     /*! Returns \c true if the data currently recorded should
         be saved on disc, returns false otherwise. */

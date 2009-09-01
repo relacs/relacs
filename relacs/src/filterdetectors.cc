@@ -1003,16 +1003,16 @@ int FilterDetectors::eventInputEvent( const string &ident ) const
 }
 
 
-QPopupMenu* FilterDetectors::menu( void )
+QMenu* FilterDetectors::menu( void )
 {
   if ( Menu == 0 )
-    Menu = new QPopupMenu( this );
+    Menu = new QMenu( this );
   else
     Menu->clear();
 
   for ( unsigned int k=0; k<FL.size(); k++ ) {
 
-    QPopupMenu *pop = new QPopupMenu( this );
+    QMenu *pop = new QMenu( this );
     pop->insertItem( "&Options...", ( k << 3 ) | 1 );
     pop->insertItem( "&Help...", ( k << 3 ) | 4 );
     connect( pop, SIGNAL( activated( int ) ),

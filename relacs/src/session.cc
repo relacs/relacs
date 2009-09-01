@@ -221,7 +221,7 @@ void Session::timeMessage( void )
 }
 
 
-void Session::addActions( QPopupMenu *menu )
+void Session::addActions( QMenu *menu )
 {
   StartSessionAction = new QAction( this, "SessionAction" );
   StartSessionAction->setMenuText( "Start Session" );

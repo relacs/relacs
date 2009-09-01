@@ -169,16 +169,16 @@ void RePros::customEvent( QEvent *qce )
 }
 
 
-QPopupMenu *RePros::menu( void )
+QMenu *RePros::menu( void )
 {
   if ( Menu == 0 ) {
-    Menu = new QPopupMenu( this );
+    Menu = new QMenu( this );
     Menu->insertItem( "&Options...", this, SLOT( dialog( void ) ), CTRL + Key_O );
     Menu->insertItem( "&View", this, SLOT( raise( void ) ), CTRL + Key_V );
     Menu->insertItem( "&Help...", this, SLOT( help( void ) ), CTRL + Key_H );
     Menu->insertSeparator();
     for ( unsigned int k=0; k<RPs.size(); k++ ) {
-      QPopupMenu *pop = new QPopupMenu( this );
+      QMenu *pop = new QMenu( this );
       pop->insertItem( "&Run", k << 3 );
       pop->insertItem( "&Options...", ( k << 3 ) | 1 );
       pop->insertItem( "&View", ( k << 3 ) | 2 );

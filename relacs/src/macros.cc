@@ -774,12 +774,12 @@ void Macros::buttons( void )
 }
 
 
-QPopupMenu* Macros::menu( void )
+QMenu* Macros::menu( void )
 {
   string s;
 
   if ( Menu == 0 )
-    Menu = new QPopupMenu( this );
+    Menu = new QMenu( this );
   else {
     Menu->clear();
     SwitchMenu = 0;
@@ -788,7 +788,7 @@ QPopupMenu* Macros::menu( void )
   Menu->insertItem( "&Reload", this, SLOT( reload( void ) ) );
   Menu->insertItem( "&Load...", this, SLOT( selectMacros( void ) ) );
   if ( Options::size( "file" ) > 1 ) {
-    SwitchMenu = new QPopupMenu( Menu );
+    SwitchMenu = new QMenu( Menu );
     for ( int k=0; k<Options::size( "file" ); k++ )
       SwitchMenu->insertItem( text( "file", k ).c_str(), k );
     connect( SwitchMenu, SIGNAL( activated( int ) ), 
@@ -804,8 +804,8 @@ QPopupMenu* Macros::menu( void )
   Menu->insertSeparator();
   for ( unsigned int k=0; k<MCs.size(); k++ ) {
     if ( MCs[k]->Menu ) {
-      QPopupMenu *firstpop = new QPopupMenu( Menu );
-      QPopupMenu *pop = firstpop;
+      QMenu *firstpop = new QMenu( Menu );
+      QMenu *pop = firstpop;
       s = MCs[k]->menuStr();
       firstpop->insertItem( s.c_str(), k << 10 );
       if ( MCs[k]->Key )
@@ -887,7 +887,7 @@ QPopupMenu* Macros::menu( void )
 	  }
 	}
 
-	QPopupMenu *subpop = new QPopupMenu( pop );
+	QMenu *subpop = new QMenu( pop );
 	if ( j+1 < MCs[k]->Commands.size() ) {
 	  subpop->insertItem( "&Start macro here", ( k << 10 ) | (j+1) << 3 );
 	  subpop->insertItem( "&Run only this", ( k << 10 ) | ( (j+1) << 3 ) | 1 );
@@ -917,7 +917,7 @@ QPopupMenu* Macros::menu( void )
 	MCs[k]->Commands[j]->SubMenu = subpop;
 
 	if ( n > 20 ) {
-	  QPopupMenu *nextpop = new QPopupMenu( pop );
+	  QMenu *nextpop = new QMenu( pop );
 	  pop->insertSeparator();
 	  pop->insertItem( "More...", nextpop );
 	  connect( pop, SIGNAL( activated( int ) ),

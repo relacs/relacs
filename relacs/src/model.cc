@@ -318,7 +318,7 @@ bool Model::restarted( void )
 }
 
 
-void Model::addActions( QPopupMenu *menu )
+void Model::addActions( QMenu *menu )
 {
   QAction *action;
 

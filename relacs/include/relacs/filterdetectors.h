@@ -141,7 +141,7 @@ public:
   int eventInputEvent( const string &ident ) const;
 
     /*! The popup menu for configuring %FilterDetectors. */
-  QPopupMenu* menu( void );
+  QMenu* menu( void );
 
     /*! Calles modeChanged() of each Filter
         whenever the mode is changed. */
@@ -208,7 +208,7 @@ private:
 
   EventData *StimulusEvents;
 
-  QPopupMenu *Menu;
+  QMenu *Menu;
 
   bool NeedAdjust;
   int AdjustFlag;
