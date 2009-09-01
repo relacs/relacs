@@ -166,7 +166,7 @@ void RePro::run( void )
 
   // start next RePro:
   if ( ! interrupt() ) {
-    QApplication::postEvent( RW, new QCustomEvent( QEvent::User+1 ) );
+    QApplication::postEvent( RW, new QEvent( QEvent::User+1 ) );
   }
 }
 

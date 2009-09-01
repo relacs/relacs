@@ -70,7 +70,7 @@ public slots:
 
 protected:
 
-  virtual void customEvent( QCustomEvent *qce );
+  virtual void customEvent( QEvent *qce );
 
   OptWidget STW;
   Options OutOpts;

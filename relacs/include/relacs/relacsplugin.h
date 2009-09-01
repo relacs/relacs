@@ -665,7 +665,7 @@ protected slots:
         If you reimplement this event handler,
         don't forget to call this implementation
         via RELACSPlugin::customEvent(). */
-  virtual void customEvent( QCustomEvent *qce );
+  virtual void customEvent( QEvent *qce );
 
 
 private:

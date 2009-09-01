@@ -159,11 +159,11 @@ void RePros::message( const string &msg )
   RW->printlog( ( CurrentRePro >= 0 ? RPs[CurrentRePro]->RP->name() + ": " : "" ) + s );
 
   MessageStr = msg;
-  QApplication::postEvent( this, new QCustomEvent( QEvent::User+3 ) );
+  QApplication::postEvent( this, new QEvent( QEvent::User+3 ) );
 }
 
 
-void RePros::customEvent( QCustomEvent *qce )
+void RePros::customEvent( QEvent *qce )
 {
   Message->setText( MessageStr.c_str() );
 }

@@ -706,7 +706,7 @@ int SpikeDetector::checkEvent( const InData::const_iterator &first,
 }
 
 
-void SpikeDetector::customEvent( QCustomEvent *qce )
+void SpikeDetector::customEvent( QEvent *qce )
 {
   if ( qce->type() == QEvent::User+1 ) {
     lock();

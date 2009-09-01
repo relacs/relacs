@@ -113,7 +113,7 @@ public:
 
 public slots:
 
-  void customEvent( QCustomEvent *qce );
+  void customEvent( QEvent *qce );
 
 
 protected:

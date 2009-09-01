@@ -174,7 +174,7 @@ const Options &SetOutput::outTraces( void ) const
 }
 
 
-void SetOutput::customEvent( QCustomEvent *qce )
+void SetOutput::customEvent( QEvent *qce )
 {
   if ( qce->type() == QEvent::User+1 ) {
     if ( STW.firstWidget() != 0 )

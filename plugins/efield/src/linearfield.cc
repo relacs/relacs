@@ -242,7 +242,7 @@ void LinearField::keyPressEvent( QKeyEvent *e )
 }
 
 
-void LinearField::customEvent( QCustomEvent *qce )
+void LinearField::customEvent( QEvent *qce )
 {
   if ( qce->type() == QEvent::User+1 ) {
     if ( O.firstWidget() != 0 )

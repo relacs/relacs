@@ -248,7 +248,7 @@ int SpikePrecision::main( void )
   // search for intensity that evokes the target firing rate:
   if ( userate ) {
     // setup plot:
-    QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
+    QApplication::postEvent( this, new QEvent( QEvent::User+2 ) );
     SP.lock();
     SP.clearPlots();
     SP[0].setTitle( "Search target firing rate " + Str( targetrate ) + " Hz" );
@@ -456,7 +456,7 @@ int SpikePrecision::main( void )
   results.resize( FreqRange.size(), EnvelopeFrequencyData( Duration, 0.0005 ) );
 
   // setup plots:
-  QApplication::postEvent( this, new QCustomEvent( QEvent::User+1 ) );
+  QApplication::postEvent( this, new QEvent( QEvent::User+1 ) );
   P.lock();
   P.clearPlots();
   P[0].setTitle( "Mean firing rate =    Hz" );
@@ -924,7 +924,7 @@ int SpikePrecision::createStimulus( OutData &signal, SampleDataD &amdb,
 }
 
 
-void SpikePrecision::customEvent( QCustomEvent *qce )
+void SpikePrecision::customEvent( QEvent *qce )
 {
   if ( qce->type() == QEvent::User+1 ) {
     SP.hide();

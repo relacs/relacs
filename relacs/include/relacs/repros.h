@@ -174,7 +174,7 @@ private slots:
         as specified by \a id. 
         This function is called from the RePros menu. */
   void select( int id );
-  void customEvent( QCustomEvent *qce );
+  void customEvent( QEvent *qce );
 
 };
 

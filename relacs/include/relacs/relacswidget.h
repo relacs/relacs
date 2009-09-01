@@ -309,7 +309,7 @@ protected:
   virtual void closeEvent( QCloseEvent* );
   virtual void keyPressEvent( QKeyEvent* );
   virtual void keyReleaseEvent( QKeyEvent* );
-  virtual void customEvent( QCustomEvent *qce );
+  virtual void customEvent( QEvent *qce );
 
 
 protected slots:

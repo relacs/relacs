@@ -572,7 +572,7 @@ void Search::dialogAccepted( void )
 }
 
 
-void Search::customEvent( QCustomEvent *qce )
+void Search::customEvent( QEvent *qce )
 {
   emit intensityChanged( int(Intensity) );
   if ( qce->type() - QEvent::User == 1  ) {

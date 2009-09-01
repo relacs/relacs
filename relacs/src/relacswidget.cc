@@ -748,7 +748,7 @@ void RELACSWidget::updateData( void )
   // check data:
   if ( IL.failed() ) {
     AIErrorMsg = "Error in acquisition: " + IL.errorText();
-    //    QApplication::postEvent( this, new QCustomEvent( QEvent::User+4 ) ); // this causes a lot of trouble!
+    //    QApplication::postEvent( this, new QEvent( QEvent::User+4 ) ); // this causes a lot of trouble!
     IL.clearError();    
   }
   // read data:
@@ -901,7 +901,7 @@ int RELACSWidget::write( OutData &signal )
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     AQ->readRestart( IL, ED );
     // update device menu:
-    QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
+    QApplication::postEvent( this, new QEvent( QEvent::User+2 ) );
   }
   else
     printlog( "! failed to write signal: " + signal.errorText() );
@@ -944,7 +944,7 @@ int RELACSWidget::write( OutList &signal )
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     AQ->readRestart( IL, ED );
     // update device menu:
-    QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
+    QApplication::postEvent( this, new QEvent( QEvent::User+2 ) );
   }
   else
     printlog( "! failed to write signals: " + signal.errorText() );
@@ -986,7 +986,7 @@ int RELACSWidget::directWrite( OutData &signal )
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     AQ->readRestart( IL, ED );
     // update device menu:
-    QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
+    QApplication::postEvent( this, new QEvent( QEvent::User+2 ) );
   }
   else
     printlog( "! failed to write signal: " + signal.errorText() );
@@ -1028,7 +1028,7 @@ int RELACSWidget::directWrite( OutList &signal )
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     AQ->readRestart( IL, ED );
     // update device menu:
-    QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
+    QApplication::postEvent( this, new QEvent( QEvent::User+2 ) );
   }
   else
     printlog( "! failed to write signals: " + signal.errorText() );
@@ -1213,7 +1213,7 @@ void RELACSWidget::stopRePro( void )
 }
 
 
-void RELACSWidget::customEvent( QCustomEvent *qce )
+void RELACSWidget::customEvent( QEvent *qce )
 {
   if ( qce->type() == QEvent::User+1 ) {
     MC->startNextRePro( true );

@@ -119,7 +119,7 @@ protected:
   int createStimulus( OutData &signal, const Str &file,
 		      double &duration, double deltat, bool storesignal );
 
-  void customEvent( QCustomEvent *qce );
+  void customEvent( QEvent *qce );
 
   string AmplitudeUnit;
   double Amplitude;

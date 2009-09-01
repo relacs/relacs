@@ -537,7 +537,7 @@ void PlotTrace::setState( bool on, bool fixed, double length, double offs )
 
   // toggle plot:
   Plotting = on;
-  QApplication::postEvent( this, new QCustomEvent( QEvent::User+1 ) );
+  QApplication::postEvent( this, new QEvent( QEvent::User+1 ) );
 
   // toggle fixed offset:
   setOffset( fixed ? 0 : 1 );
@@ -809,7 +809,7 @@ void PlotTrace::setOffset( int mode )
   if ( OffsetMode != mode ) {
     OffsetMode = mode;
     PlotChanged = true;
-    QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
+    QApplication::postEvent( this, new QEvent( QEvent::User+2 ) );
   }
   unlock();
 }
@@ -930,7 +930,7 @@ void PlotTrace::resizeEvent( QResizeEvent *qre )
 }
 
 
-void PlotTrace::customEvent( QCustomEvent *qce )
+void PlotTrace::customEvent( QEvent *qce )
 {
   switch ( qce->type() - QEvent::User ) {
   case 1 : {

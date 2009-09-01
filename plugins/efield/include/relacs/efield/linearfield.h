@@ -68,7 +68,7 @@ public slots:
 protected:
 
   virtual void keyPressEvent( QKeyEvent *e );
-  virtual void customEvent( QCustomEvent *qce );
+  virtual void customEvent( QEvent *qce );
 
   QVBox B;
   OptWidget O;

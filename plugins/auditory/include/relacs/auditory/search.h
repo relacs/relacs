@@ -137,7 +137,7 @@ protected:
 
     /*! Handle keyboard events. */
   void keyPressEvent( QKeyEvent *qke );
-  virtual void customEvent( QCustomEvent *qce );
+  virtual void customEvent( QEvent *qce );
 
   bool NewSignal;
   int SetBestSide;

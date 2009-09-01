@@ -104,11 +104,11 @@ void RELACSPlugin::info( const string &s, double timeout )
 
 void RELACSPlugin::postCustomEvent( int type )
 {
-  QApplication::postEvent( this, new QCustomEvent( QEvent::User+type ) );
+  QApplication::postEvent( this, new QEvent( QEvent::User+type ) );
 }
 
 
-void RELACSPlugin::customEvent( QCustomEvent *qce )
+void RELACSPlugin::customEvent( QEvent *qce )
 {
   switch ( qce->type() ) {
   case QEvent::User+3: {

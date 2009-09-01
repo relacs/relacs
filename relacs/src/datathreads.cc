@@ -135,7 +135,7 @@ void WriteThread::run( void )
       RW->unlockSignals();
       RW->printlog( "! error in writing data. Stop analog output." );
       // error message:
-      QApplication::postEvent( RW, new QCustomEvent( QEvent::User+3 ) );
+      QApplication::postEvent( RW, new QEvent( QEvent::User+3 ) );
     }
     if ( r <= 0 ) {
       RunMutex.lock();
