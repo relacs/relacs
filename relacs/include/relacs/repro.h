@@ -22,7 +22,7 @@
 #ifndef _RELACS_REPRO_H_
 #define _RELACS_REPRO_H_ 1
 
-#include <QGlobal>
+//#include <QGlobal>
 #include <QMutex>
 #include <QWaitCondition>
 #include <QThread>
