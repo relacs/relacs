@@ -66,7 +66,7 @@ that can be used from within a shell command:
 
 class RELACSWidget;
 
-class Session : public QHBox, public Options
+class Session : public QWidget, public Options
 {
   Q_OBJECT
 
@@ -166,6 +166,7 @@ private:
   QTimer *MessageTimer;
 
   QLabel *TimeLabel;
+  QHBoxLayout *TimeLabelLayout;
 
   QAction *StartSessionAction;
 

@@ -162,11 +162,15 @@ void MotorControl::initDevices( void )
     }
   }
 
-  QHBox *h = new QHBox( this );
+  QWidget *h = new QWidget( this );
+  QHBoxLayout *h_layout = new QHBoxLayout( this );
   QPushButton *db = new QPushButton( "Dialog", h );
+  h_layout->addWidget( db );
   connect( db, SIGNAL( clicked( void ) ), this, SLOT( dialog( void ) ) );
   QPushButton *hb = new QPushButton( "Help", h );
+  h_layout->addWidget( hb );
   connect( hb, SIGNAL( clicked( void ) ), this, SLOT( help( void ) ) );
+  h->setLayout( h_layout );
 }
 
 
@@ -257,7 +261,7 @@ MiMaPu::MiMaPu( Manipulator *m,	int trace, const string &title,
 
   // manipulator:
   if ( M != 0 ) {
-    QHBox *h = new QHBox( g );
+    QWidget *h = new QWidget( g );
     addNumber( "pos", "Pos", 0.0, -100000.0, 100000.0, 1.0, "um", "um", "%6.1f",
 	       1+2, OptWidget::ValueBold + OptWidget::ValueRed + OptWidget::ValueBackBlack );
     addInteger( "steps", "Steps", Steps, 1, 10000, 1 ).setFlags( 1 );
@@ -267,7 +271,7 @@ MiMaPu::MiMaPu( Manipulator *m,	int trace, const string &title,
     addNumber( "interval", "Interval", Interval, 0.0, 5.0, 0.05, "sec", "ms", "%.0f", 1 );
     M->setAmplZ( Amplitude, AmplAsymm*Amplitude );
     OW = new OptWidget( (Options*)this, 1, 2, true, 0, 0, h );
-    QVBox *v = new QVBox( h );
+    QWidget *v = new QWidget( h );
     QPushButton *b;
     b = new QPushButton( "clear", v );
     connect( b, SIGNAL( clicked( void ) ), this, SLOT( clear( void ) ) );
@@ -279,7 +283,7 @@ MiMaPu::MiMaPu( Manipulator *m,	int trace, const string &title,
   }
   
   // spike detector:
-  QHBox *h = new QHBox( g );
+  QWidget *h = new QWidget( g );
   h->setSpacing( 6 );
   new QLabel( "", h );
   QualityIndicator = new QLabel( h );

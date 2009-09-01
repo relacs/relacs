@@ -70,7 +70,8 @@ protected:
   virtual void keyPressEvent( QKeyEvent *e );
   virtual void customEvent( QEvent *qce );
 
-  QVBox B;
+  QWidget B;
+  QVBoxLayout B_layout;
   OptWidget O;
   Plot P;
 

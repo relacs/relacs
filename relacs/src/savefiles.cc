@@ -31,7 +31,7 @@ namespace relacs {
 
 SaveFiles::SaveFiles( RELACSWidget *rw, int height,
 		      QWidget *parent, const char *name )
-  : QHBox( parent, name ),
+  : QWidget( parent, name ),
     Options(),
     RW( rw ),
     StimulusDataLock( true )
@@ -76,15 +76,21 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
 
   setFixedHeight( height );
 
+  StatusInfoLayout = new QHBoxLayout(this);
+
   FileLabel = new QLabel( "no files open", this );
   FileLabel->setTextFormat( PlainText );
   FileLabel->setIndent( 2 );
   FileLabel->setAlignment( AlignLeft | AlignVCenter );
   QToolTip::add( FileLabel, "The directory where files are currently stored" );
+  StatusInfoLayout->addWidget( FileLabel );
 
   SaveLabel = new SpikeTrace( 0.8, 8, 3, this );
   SaveLabel->setFixedWidth( SaveLabel->minimumSizeHint().width() );
   QToolTip::add( SaveLabel, "An animation indicating that raw data are stored on disk" );
+  StatusInfoLayout->addWidget( SaveLabel );
+  
+  setLayout( StatusInfoLayout );
 }
 
 

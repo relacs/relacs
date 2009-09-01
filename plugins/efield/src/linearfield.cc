@@ -31,6 +31,7 @@ LinearField::LinearField( void )
   : RePro( "LinearField", "LinearField", "EField",
 	   "Jan Benda", "1.0", "Apr 23, 2009" ),
     B( (QWidget*)this ),
+    B_layout( this ),
     O( &B ),
     P( (QWidget*)this )
 {
@@ -48,6 +49,7 @@ LinearField::LinearField( void )
 
   // measure button:
   MeasureButton = new QPushButton( "&Measure", &B, "MeasureButton" );
+  B_layout.addWidget( MeasureButton );
   connect( MeasureButton, SIGNAL( clicked() ),
 	   this, SLOT( measure() ) );
   grabKey( ALT+Key_M );
@@ -56,10 +58,13 @@ LinearField::LinearField( void )
 
   // finish button:
   FinishButton = new QPushButton( "&Finish", &B, "FinishButton" );
+  B_layout.addWidget( FinishButton );
   connect( FinishButton, SIGNAL( clicked() ),
 	   this, SLOT( finish() ) );
   grabKey( ALT+Key_F );
   grabKey( Key_Escape );
+
+  B->setLayout( &B_layout );
 
   updateGeometry();
 

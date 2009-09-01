@@ -36,21 +36,30 @@ Session::Session( void )
   //  setColumnLayout( 2, Horizontal );
   boxLayout()->setDirection( QBoxLayout::LeftToRight );
 
-  QVBox *bb = new QVBox( this );
-  bb->setSpacing( 0 );
+  QVBoxLayout *bb_layout = new QVBoxLayout( this );
+  bb_layout->setSpacing( 0 );
 
-  ASW = new OptWidget( bb );
+  QWidget *bb = new QWidget( this );
+
+  ASW = new OptWidget;
   ASW->setSpacing( 4 );
   ASW->setMargin( 4 );
+  bb_layout->addWidget( ASW );
 
-  AmplBox = new QHBox( bb );
+  AmplBox = new QWidget;
+  AmplBox->setLayout( AmplBoxLayout );
+  bb_layout->addWidget( AmplBox );
   ResistanceButton = 0;
   BuzzerButton = 0;
 
-  SessionButton = new QPushButton( "Cell Found", bb, "SessionButton" );
+  SessionButton = new QPushButton;
+  SessionButton->setText( "Cell Found" );
   SessionButton->setMinimumSize( SessionButton->sizeHint() );
+  bb_layout->addWidget( SessionButton );
   connect( SessionButton, SIGNAL( clicked() ),
 	   this, SLOT( toggleSession() ) );
+
+  bb->setLayout( bb_layout );
 
   P.lock();
   P.setDataMutex( mutex() );

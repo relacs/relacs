@@ -143,7 +143,8 @@ protected:
   virtual void resizeEvent( QResizeEvent *qre );
   virtual void customEvent( QEvent *qce );
 
-  QHBox *ButtonBox;
+  QWidget *ButtonBox;
+  QHBoxLayout *ButtonBoxLayout;
   QPushButton *OnOffButton;
   QPushButton *OffsetButton;
   QPushButton *ManualButton;

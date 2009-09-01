@@ -65,7 +65,7 @@ SaveFile sets the following environment variables:
   allows for float and double
 */
 
-class SaveFiles : public QHBox, public Options
+class SaveFiles : public QWidget, public Options
 {
   Q_OBJECT
 
@@ -352,6 +352,7 @@ protected:
   QPalette NormalPalette;
   QPalette HighlightPalette;
   SpikeTrace *SaveLabel;
+  QHBoxLayout *StatusInfoLayout;
 
   mutable QMutex StimulusDataLock;
 

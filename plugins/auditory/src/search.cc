@@ -107,14 +107,17 @@ Search::Search( void )
   connect( this, SIGNAL( intensityChanged( int ) ), 
 	   lcd, SLOT( setValue( int ) ) );
 
-  QVBox *vbox = new QVBox( this );
+  QWidget *vbox = new QWidget;
+  QVBoxLayout *vbox_layout = new QVBoxLayout( this );
 
-  QHBox *hbox = new QHBox( vbox );
+  QWidget *hbox = new QWidget;
+  QHBoxLayout *hbox_layout = new QHBoxLayout( vbox );
   // Duration Settings:
   lcd = new LCDRange( "Stimulus (msec)", hbox, "Noise", 4 );
   lcd->setRange( int(1000.0*MinDuration), int(1000.0*MaxDuration) );
   lcd->setValue( int(1000.0*Duration) );
   lcd->setSteps( int(1000.0*ShortDurationStep), int(1000.0*LongDurationStep) );
+  hbox_layout->addWidget( lcd );
   connect( lcd, SIGNAL( valueChanged( int ) ), 
 	   this, SLOT( setDuration( int ) ) );
   connect( this, SIGNAL( durationChanged( int ) ), 
@@ -125,17 +128,21 @@ Search::Search( void )
   lcd->setRange( int(1000.0*MinPause), int(1000.0*MaxPause) );
   lcd->setValue( int(1000.0*Pause) );
   lcd->setSteps( int(1000.0*ShortPauseStep), int(1000.0*LongPauseStep) );
+  hbox_layout->addWidget( lcd );
   connect( lcd, SIGNAL( valueChanged( int ) ), 
 	   this, SLOT( setPause( int ) ) );
   connect( this,  SIGNAL( pauseChanged( int ) ), 
 	   lcd, SLOT( setValue( int ) ) );
+  hbox->setLayout( hbox_layout );
 
-  hbox = new QHBox( vbox );
+  hbox = new QWidget;
+  hbox_layout = new QHBoxLayout( vbox );
   // Waveform:
   WaveformButtons = new QButtonGroup( 1, Qt::Horizontal, "Waveform", hbox );
   new QRadioButton( "Sine", WaveformButtons );
   new QRadioButton( "Noise", WaveformButtons );
   WaveformButtons->setButton( 0 );
+  hbox_layout->addWidget( WaveformButtons );
   connect( WaveformButtons, SIGNAL( clicked( int ) ), 
 	   this, SLOT( setWaveform( int ) ) );
   connect( this, SIGNAL( waveformChanged( int ) ), 
@@ -146,6 +153,7 @@ Search::Search( void )
   lcd->setRange( int(MinFrequency), int(MaxFrequency) );
   lcd->setValue( int(Frequency) );
   lcd->setSteps( int(ShortFrequencyStep), int(LongFrequencyStep) );
+  hbox_layout->addWidget( lcd );
   connect( lcd, SIGNAL( valueChanged( int ) ), 
 	   this, SLOT( setFrequency( int ) ) );
   connect( this,  SIGNAL( frequencyChanged( int ) ), 
@@ -158,15 +166,21 @@ Search::Search( void )
   connect( MuteButton, SIGNAL( clicked() ), 
 	   this, SLOT( toggleMute() ) ); 
 
+  hbox->setLayout( hbox_layout );
+
   // SearchSide Settings:
-  hbox = new QHBox( this );
-  new QLabel( "Speaker:", hbox );
+  hbox = new QWidget( this );
+  hbox_layout = new QHBoxLayout( this );
+  QLabel *speaker_label = new QLabel( "Speaker:", hbox );
+  hbox_layout->addWidget( speaker_label );
   LeftButton = new QRadioButton( "left", hbox );
   RightButton = new QRadioButton( "right", hbox );
   connect( LeftButton, SIGNAL( clicked() ), 
 	   this, SLOT( setSpeakerLeft() ) ); 
   connect( RightButton, SIGNAL( clicked() ), 
 	   this, SLOT( setSpeakerRight() ) ); 
+
+  hbox->setLayout( hbox_layout );
 }
 
 

@@ -105,7 +105,7 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   LastTime = 0.0;
   Update.start();
 
-  QHBox *hb = new QHBox( this );
+  QWidget *hb = new QWidget( this );
   hb->setSpacing( 4 );
 
   P = new Plot( Plot::Copy, hb );
@@ -122,7 +122,7 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   P->unlock();
 
   // key to histogram plot:  XXX provide a function in Plot!
-  QVBox *vb = new QVBox( hb );
+  QWidget *vb = new QWidget( hb );
 
   QGrid *gl = new QGrid( 4, vb );
   gl->setSpacing( 0 );

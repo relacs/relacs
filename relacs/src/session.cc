@@ -32,7 +32,7 @@ namespace relacs {
 
 Session::Session( RELACSWidget *rw, int height,
 		  QWidget *parent, const char *name )
-  : QHBox( parent, name ),
+  : QWidget( parent, name ),
     Options(),
     RW( rw )
 {
@@ -46,12 +46,17 @@ Session::Session( RELACSWidget *rw, int height,
   MessageTimer = new QTimer( this );
   connect( MessageTimer, SIGNAL( timeout() ), this, SLOT( timeMessage() ) );
 
+  TimeLabelLayout = new QHBoxLayout( this );
+
   TimeLabel = new QLabel( "-", this );
   TimeLabel->setTextFormat( PlainText );
   TimeLabel->setAlignment( AlignRight | AlignVCenter );
   TimeLabel->setIndent( 2 );
   TimeLabel->setFixedHeight( height );
   QToolTip::add( TimeLabel, "The elapsed time of a session in minutes" );
+  TimeLabelLayout->addWidget( TimeLabel );
+  
+  setLayout( TimeLabelLayout );
 }
 
 

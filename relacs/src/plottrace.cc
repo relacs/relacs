@@ -68,8 +68,9 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent, const char* name )
   ManualButton = 0;
   OnOffButton = 0;
 
-  ButtonBox = new QHBox( this );
-  ButtonBox->setBackgroundMode( Qt::NoBackground );
+  ButtonBox = new QWidget( this );
+  ButtonBoxLayout = new QHBoxLayout(this);
+  //  ButtonBox->setBackgroundMode( Qt::NoBackground );  // obsolete as of QT4
 
   int s = fontInfo().pixelSize();
   FixedOffsetIcon.resize( s, s );
@@ -102,7 +103,7 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent, const char* name )
   p.end();
   ContinuousOffsetIcon.setMask( ContinuousOffsetIcon.createHeuristicMask() );
 
-  OffsetButton = new QPushButton ( ButtonBox );
+  OffsetButton = new QPushButton;
   OffsetButton->setPixmap( FixedOffsetIcon );
   QToolTip::add( OffsetButton, "F: fixed (Pos1), C: continous (End)" );
   connect( OffsetButton, SIGNAL( clicked() ), this, SLOT( offsetToggle() ) );
@@ -125,7 +126,8 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent, const char* name )
   //  manualicon.setMask( manualicon.createHeuristicMask() );
   manualicon.setMask( manualmask );
 
-  ManualButton = new QPushButton( ButtonBox );
+  ManualButton = new QPushButton;
+  ButtonBoxLayout->addWidget( ManualButton );
   ManualButton->setToggleButton( true );
   ManualButton->setPixmap( manualicon );
   ManualButton->setOn( Manual );
@@ -143,13 +145,16 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent, const char* name )
   p.end();
   onofficon.setMask( onofficon.createHeuristicMask() );
 
-  OnOffButton = new QPushButton( ButtonBox );
+  OnOffButton = new QPushButton;
+  ButonBoxLayout->addWidget( OnOffButton );
   OnOffButton->setToggleButton( true );
   OnOffButton->setPixmap( onofficon );
   OnOffButton->setOn( ! Plotting );
   QToolTip::add( OnOffButton, "Switch the plot on or off" );
   connect( OnOffButton, SIGNAL( clicked() ), this, SLOT( plotOnOff() ) );
   */
+
+  ButtonBox->setLayout( ButtonBoxLayout );
 }
 
 

@@ -40,7 +40,7 @@ SetOutput::SetOutput( void )
   STW.setSpacing( 2 );
   STW.setMargin( 4 );
 
-  QHBox *bb = new QHBox( this );
+  QWidget *bb = new QWidget( this );
   bb->setSpacing( 4 );
 
   // Ok button:

@@ -149,7 +149,7 @@ private:
   int DGain;
   double MaxResistance;
   double ResistanceScale;
-  QHBox *AmplBox;
+  QWidget *AmplBox;
   QPushButton *ResistanceButton;
   QPushButton *BuzzerButton;
 
