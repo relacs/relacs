@@ -22,7 +22,7 @@
 #ifndef _RELACS_DEVICELIST_H_
 #define _RELACS_DEVICELIST_H_ 1
 
-#include <qpopupmenu.h> 
+#include <QMenu> 
 #include <vector>
 #include <relacs/str.h>
 #include <relacs/configclass.h>
@@ -102,7 +102,7 @@ public:
   virtual void saveConfig( ofstream &str );
 
     /*! Add devices to the popup window. */
-  virtual void addMenu( QPopupMenu *menu, int &index );
+  virtual void addMenu( QMenu *menu, int &index );
     /*! Update device infos in the menu. */
   virtual void updateMenu( void );
 
@@ -120,7 +120,7 @@ protected:
     /*! The list of Devices. */
   vector < T* > DVs;
     /*! The list of corresponding menus. */
-  vector < QPopupMenu* > Menus;
+  vector < QMenu* > Menus;
     /*! Name of the device list used for error messages. */
   string Name;
     /*! Warning messages. */
@@ -350,7 +350,7 @@ void DeviceList<T,PluginID>::saveConfig( ofstream &str )
 
 
 template < class T, int PluginID >
-  void DeviceList<T,PluginID>::addMenu( QPopupMenu *menu, int &index )
+  void DeviceList<T,PluginID>::addMenu( QMenu *menu, int &index )
 {
   for ( unsigned int k=0; k<DVs.size(); k++, index++ ) {
 
@@ -364,7 +364,7 @@ template < class T, int PluginID >
     s += " ";
     s += DVs[k]->deviceIdent();
     if ( Menus[k] == NULL )
-      Menus[k] = new QPopupMenu( menu );
+      Menus[k] = new QMenu( menu );
     Menus[k]->clear();
     StrQueue sq1( DVs[k]->info(), ";" );
     for ( int j=0; j<sq1.size(); j++ ) {

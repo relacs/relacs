@@ -2,7 +2,6 @@ HEADER_PATH = .
 include ${top_srcdir}/moc4.mk
 
 noinst_PROGRAMS = \
-    dsb \
     xoptwidget
 
 
@@ -14,12 +13,6 @@ AM_CPPFLAGS = \
 AM_LDFLAGS = \
     $(QT4_LDFLAGS)
 
-dsb_LDADD = \
-    ../../options/src/librelacsoptions.la \
-    ../src/librelacswidgets.la \
-    $(QT4_LIBS) \
-    $(MATH_LIBS)
-dsb_SOURCES = dsb.cc
 
 xoptwidget_LDADD = \
     ../../options/src/librelacsoptions.la \

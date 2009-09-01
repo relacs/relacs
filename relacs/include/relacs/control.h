@@ -22,13 +22,12 @@
 #ifndef _RELACS_CONTROL_H_
 #define _RELACS_CONTROL_H_ 1
 
-#include <qglobal.h>
 #include <string>
 #include <values.h>
-#include <qdatetime.h>
-#include <qpopupmenu.h>
-#include <qthread.h>
-#include <qwaitcondition.h>
+#include <QDateTime>
+#include <QMenu>
+#include <QThread>
+#include <QWaitCondition>
 #include <relacs/relacsplugin.h>
 using namespace std;
 
@@ -144,7 +143,7 @@ public:
 
     /*! Add specific actions to the RELACS File-menu.
         This implementation adds a "Dialog" and a "Help" menu entry. */
-  virtual void addActions( QPopupMenu *menu );
+  virtual void addActions( QMenu *menu );
 
     /*! You may reimplement this function to handle key-press events. */
   virtual void keyPressEvent( QKeyEvent *e );

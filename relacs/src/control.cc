@@ -19,7 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <qaction.h>
+#include <QAction>
 #include <relacs/str.h>
 #include <relacs/relacswidget.h>
 #include <relacs/control.h>
@@ -59,7 +59,7 @@ void Control::initDevices( void )
 }
 
 
-void Control::addActions( QPopupMenu *menu )
+void Control::addActions( QMenu *menu )
 {
   QAction *action;
 

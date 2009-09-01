@@ -22,17 +22,17 @@
 #ifndef _RELACS_RELACSWIDGET_H_
 #define _RELACS_RELACSWIDGET_H_ 1
 
-#include <qmainwindow.h>
-#include <qpopupmenu.h>
-#include <qaction.h>
-#include <qstring.h>
-#include <qdatetime.h>
-#include <qtimer.h>
-#include <qthread.h>
-#include <qmutex.h>
-#include <qwaitcondition.h>
-#include <qsplashscreen.h>
-#include <qapplication.h>
+#include <QMainWindow>
+#include <QMenu>
+#include <QAction>
+#include <QString>
+#include <QDateTime>
+#include <QTimer>
+#include <QThread>
+#include <QMutex>
+#include <QWaitCondition>
+#include <QSplashScreen>
+#include <QApplication>
 #include <vector>
 #include <relacs/strqueue.h>
 #include <relacs/configclass.h>
@@ -439,7 +439,7 @@ private:
   QAction *FullscreenAction;
   QAction *MaximizedAction;
 
-  QPopupMenu *DeviceMenu;
+  QMenu *DeviceMenu;
 
   string AIErrorMsg;
   bool Help;

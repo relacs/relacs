@@ -23,7 +23,7 @@
 #define _RELACS_MESSAGEBOX_H_ 1
 
 #include <string>
-#include <QDialog>
+#include <QMessageBox>
 using namespace std;
 
 namespace relacs {
@@ -50,7 +50,7 @@ is closed automatically.
 */
 
 
-class MessageBox : public QDialog
+class MessageBox : public QMessageBox
 {
   Q_OBJECT
 
@@ -74,9 +74,16 @@ public:
         \sa information(), warning(), error() */
   MessageBox( const string &caption, const string &message,
 	      MessageType type=Warning, bool blocking=false,
-	      QWidget *parent=0, const char *name=0 );
+	      QWidget *parent=0 );
     /*! Destroys a message box. */
   ~MessageBox( void );
+
+    /*! Opens the message box window.
+        If the message box is blocking, exec() blocks until the dialog
+        is finished.
+	Otherwise exec() returns immediately.
+	\param[in] timeout the dialog is automatically closed after \a timeout seconds */
+  void exec( double timeout );
 
     /*! Creates and executes a message window with \a caption
         in the title bar displaying the message \a message.
@@ -93,7 +100,7 @@ public:
   static MessageBox *information( const string &caption,
 				  const string &message,
 				  bool blocking=false, double timeout=0.0, 
-				  QWidget *parent=0, const char *name=0 );
+				  QWidget *parent=0 );
     /*! Creates and executes a message window with \a caption
         in the title bar displaying the message \a message.
 	The message is of type information.
@@ -104,9 +111,8 @@ public:
   static inline MessageBox *information( const string &caption,
 					 const string &message,
 					 double timeout,
-					 QWidget *parent=0,
-					 const char *name=0 )
-    { return information( caption, message, false, timeout, parent, name ); };
+					 QWidget *parent=0 )
+    { return information( caption, message, false, timeout, parent ); };
     /*! Creates and executes a message window with \a caption
         in the title bar displaying the message \a message.
 	The message is of type information.
@@ -116,9 +122,8 @@ public:
 	\sa warning(), error() */
   static inline MessageBox *information( const string &caption,
 					 const string &message,
-					 QWidget *parent=0,
-					 const char *name=0 )
-    { return information( caption, message, true, 0.0, parent, name ); };
+					 QWidget *parent=0 )
+    { return information( caption, message, true, 0.0, parent ); };
 
     /*! Creates and executes a message window with \a caption
         in the title bar displaying the message \a message.
@@ -135,7 +140,7 @@ public:
         \sa information(), error() */
   static MessageBox *warning( const string &caption, const string &message,
 			      bool blocking=false, double timeout=0.0, 
-			      QWidget *parent=0, const char *name=0 );
+			      QWidget *parent=0 );
     /*! Creates and executes a message window with \a caption
         in the title bar displaying the message \a message.
 	The message is of type warning, which is an error which
@@ -147,8 +152,8 @@ public:
   static inline MessageBox *warning( const string &caption,
 				     const string &message,
 				     double timeout,
-				     QWidget *parent=0, const char *name=0 )
-    { return warning( caption, message, false, timeout, parent, name ); };
+				     QWidget *parent=0 )
+    { return warning( caption, message, false, timeout, parent ); };
     /*! Creates and executes a message window with \a caption
         in the title bar displaying the message \a message.
 	The message is of type warning, which is an error which
@@ -159,8 +164,8 @@ public:
         \sa information(), error() */
   static inline MessageBox *warning( const string &caption,
 				     const string &message,
-				     QWidget *parent=0, const char *name=0 )
-    { return warning( caption, message, true, 0.0, parent, name ); };
+				     QWidget *parent=0 )
+    { return warning( caption, message, true, 0.0, parent ); };
 
     /*! Creates and executes a message window with \a caption
         in the title bar displaying the message \a message.
@@ -178,7 +183,7 @@ public:
         \sa information(), warning() */
   static MessageBox *error( const string &caption, const string &message,
 			    bool blocking=false, double timeout=0.0, 
-			    QWidget *parent=0, const char *name=0 );
+			    QWidget *parent=0 );
     /*! Creates and executes a message window with \a caption
         in the title bar displaying the message \a message.
 	The message is of type error.
@@ -191,8 +196,8 @@ public:
   static inline MessageBox *error( const string &caption,
 				   const string &message,
 				   double timeout,
-				   QWidget *parent=0, const char *name=0 )
-    { return error( caption, message, false, timeout, parent, name ); };
+				   QWidget *parent=0 )
+    { return error( caption, message, false, timeout, parent ); };
     /*! Creates and executes a message window with \a caption
         in the title bar displaying the message \a message.
 	The message is of type error.
@@ -204,8 +209,8 @@ public:
         \sa information(), warning() */
   static inline MessageBox *error( const string &caption,
 				   const string &message,
-				   QWidget *parent=0, const char *name=0 )
-    { return error( caption, message, true, 0.0, parent, name ); };
+				   QWidget *parent=0 )
+    { return error( caption, message, true, 0.0, parent ); };
 
 
 private slots:

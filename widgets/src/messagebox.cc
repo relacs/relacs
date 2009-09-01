@@ -19,12 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <QHBoxLayout>
-#include <QVBoxLayout>
-#include <QLabel>
-#include <QPushbutton>
 #include <QTimer>
-#include <QMessagebox>
 #include <relacs/messagebox.h>
 
 namespace relacs {
@@ -32,49 +27,30 @@ namespace relacs {
 
 MessageBox::MessageBox( const string &caption, const string &message,
 			MessageType type, bool blocking,
-			QWidget *parent, const char *name )
-  : QDialog( parent, name, blocking )
+			QWidget *parent )
+  : QMessageBox( parent )
 {
-  setCaption( caption.c_str() );
+  setWindowTitle( caption.c_str() );
 
-  QVBoxLayout *l = new QVBoxLayout;
-  l->setMargin( 4 );
-  l->setSpacing( 10 );
-  setLayout( l );
+  switch ( type ) {
+  case Information:
+    setIcon( QMessageBox::Information );
+    break;
+  case Warning:
+    setIcon( QMessageBox::Warning );
+    break;
+  case Error:
+    setIcon( QMessageBox::Critical );
+    break;
+  default:
+    setIcon( QMessageBox::NoIcon );
+    break;
+  }
 
-  QLabel *label;
+  setText( message.c_str() );
+  setTextFormat( Qt::RichText );
 
-  l->addSpace( 10 );
-
-  QHBoxLayout *upper = new QHBoxLayout;
-  l->addLayout( upper );
-  upper->setSpacing( 7 );
-  upper->addSpacing( 10 );
-  if ( type == Information )
-    label->setPixmap( QMessageBox::standardIcon( QMessageBox::Information ) );
-  else if ( type == Warning )
-    label->setPixmap( QMessageBox::standardIcon( QMessageBox::Warning ) );
-  else
-    label->setPixmap( QMessageBox::standardIcon( QMessageBox::Critical ) );
-  upper->addSpacing( 5 );
-
-  label = new QLabel( "", upper );
-  label->setTextFormat( RichText );
-  label->setText( message.c_str() );
-  upper->addSpacing( 5 );
-
-  QHBoxLayout *lower = new QHBoxLayout( this );
-  l->addLayout( lower );
-  lower->addSpacing( 5 );
-  QPushButton *button = new QPushButton( "OK" );
-  lower->addWidget( button );
-  button->setFocus();
-  connect( button, SIGNAL( clicked( void ) ), this, SLOT( accept( void ) ) );
-  lower->addSpacing( 5 );
-
-  l->addSpace( 10 );
-
-  setActiveWindow();
+  setStandardButtons( QMessageBox::Ok );
 }
 
 
@@ -83,20 +59,26 @@ MessageBox::~MessageBox( void )
 }
 
 
+
+void MessageBox::exec( double timeout )
+{
+  if ( timeout > 0.0 )
+    QTimer::singleShot( int( 1000.0 * timeout ), this, SLOT( closeMessage() ) );
+  if ( isModal() )
+    QMessageBox::exec();
+  else
+    QMessageBox::show();
+}
+
+
+
 MessageBox *MessageBox::information( const string &caption, 
 				     const string &message,
 				     bool blocking, double timeout, 
-				     QWidget *parent, const char *name )
+				     QWidget *parent )
 {
-  MessageBox *w = new MessageBox( caption, message, Information, blocking,
-				  parent, name );
-  if ( blocking )
-    w->exec();
-  else {
-    w->show();
-    if ( timeout > 0.0 )
-      QTimer::singleShot( int( 1000.0 * timeout ), w, SLOT( closeMessage() ) );
-  }
+  MessageBox *w = new MessageBox( caption, message, Information, blocking, parent );
+  w->exec( timeout );
   return w;
 }
 
@@ -104,17 +86,10 @@ MessageBox *MessageBox::information( const string &caption,
 MessageBox *MessageBox::warning( const string &caption, 
 				 const string &message,
 				 bool blocking, double timeout, 
-				 QWidget *parent, const char *name )
+				 QWidget *parent )
 {
-  MessageBox *w = new MessageBox( caption, message, Warning, blocking,
-				  parent, name );
-  if ( blocking )
-    w->exec();
-  else {
-    w->show();
-    if ( timeout > 0.0 )
-      QTimer::singleShot( int( 1000.0 * timeout ), w, SLOT( closeMessage() ) );
-  }
+  MessageBox *w = new MessageBox( caption, message, Warning, blocking, parent );
+  w->exec( timeout );
   return w;
 }
 
@@ -122,24 +97,17 @@ MessageBox *MessageBox::warning( const string &caption,
 MessageBox *MessageBox::error( const string &caption, 
 			       const string &message,
 			       bool blocking, double timeout, 
-			       QWidget *parent, const char *name )
+			       QWidget *parent )
 {
-  MessageBox *w = new MessageBox( caption, message, Error, blocking,
-				  parent, name );
-  if ( blocking )
-    w->exec();
-  else {
-    w->show();
-    if ( timeout > 0.0 )
-      QTimer::singleShot( int( 1000.0 * timeout ), w, SLOT( closeMessage() ) );
-  }
+  MessageBox *w = new MessageBox( caption, message, Error, blocking, parent );
+  w->exec( timeout );
   return w;
 }
 
 
 void MessageBox::closeMessage( void )
 {
-  delete this;
+  done( 0 );
 }
 
 
