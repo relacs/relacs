@@ -768,9 +768,7 @@ OptWidgetBase::OptWidgetBase( Options::iterator op, QWidget *label,
   if ( OW->readOnlyMask() < 0 ||
        ( OW->readOnlyMask() > 0 && ( (*op).flags() & OW->readOnlyMask() ) ) )
     Editable = false;
-  else {
-    (*OP).delFlags( OW->changedFlag() );
-  }
+  (*OP).delFlags( OW->changedFlag() );
   ow->addWidget( this );
 }
 

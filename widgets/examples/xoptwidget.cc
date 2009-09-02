@@ -83,10 +83,8 @@ void MainWidget::dialog( void )
   connect( &d, SIGNAL( buttonClicked( int ) ), this, SLOT( action( int ) ) );
   connect( &d, SIGNAL( valuesChanged( void ) ), this, SLOT( accepted( void ) ) );
   int r = d.exec();
-  cerr << "dialog: " << r << endl << Opt1 << Opt2 << endl;
-  Options co;
-  co.assign( Opt1, Parameter::changedFlag() );
-  cerr << "changed: " << endl << co << endl;
+  cerr << "dialog: " << r << endl;
+  cerr << Opt1 << Opt2 << endl;
 }
 
 
@@ -105,6 +103,11 @@ void MainWidget::action( int r )
 void MainWidget::accepted( void )
 {
   cerr << "dialog accepted" << endl;
+  Options co1;
+  co1.assign( Opt1, Parameter::changedFlag() );
+  Options co2;
+  co2.assign( Opt2, Parameter::changedFlag() );
+  cerr << "changed: " << endl << co1 << endl << co2 << endl;
 }
 
 
