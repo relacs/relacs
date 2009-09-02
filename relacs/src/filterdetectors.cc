@@ -1012,12 +1012,6 @@ QMenu* FilterDetectors::menu( void )
     Menu->clear();
 
   for ( unsigned int k=0; k<FL.size(); k++ ) {
-
-    QMenu *pop = new QMenu( this );
-    pop->insertItem( "&Options...", ( k << 3 ) | 1 );
-    pop->insertItem( "&Help...", ( k << 3 ) | 4 );
-    connect( pop, SIGNAL( activated( int ) ),
-	     this, SLOT( select( int ) ) );
     string s = "&";
     if ( k == 0 )
       s += '0';
@@ -1027,25 +1021,12 @@ QMenu* FilterDetectors::menu( void )
       s += ( 'a' + k - 10 );
     s += " ";
     s += FL[k].FilterDetector->ident();
-    Menu->insertItem( s.c_str(), pop );
+    QMenu *pop = Menu->addMenu( s.c_str() );
+    pop->addAction( "&Options...", FL[k].FilterDetector, SLOT( dialog() ) );
+    pop->addAction( "&Help...", FL[k].FilterDetector, SLOT( help() ) );
   }
 
   return Menu;
-}
-
-
-void FilterDetectors::select( int id )
-{
-  int index = id >> 3;
-  if ( index < 0 || index >= (int)FL.size() )
-    return;
-
-  int action = id & 7;
-
-  if ( action == 1 )
-    FL[index].FilterDetector->dialog();
-  else if ( action == 4 )
-    FL[index].FilterDetector->help();
 }
 
 

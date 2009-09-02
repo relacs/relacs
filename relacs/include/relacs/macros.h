@@ -28,6 +28,7 @@
 #include <QObject>
 #include <QWidget>
 #include <QMenu> 
+#include <QAction> 
 #include <QLayout>
 #include <QPushButton>
 #include <QPixmap>
@@ -454,6 +455,8 @@ private:
 
   QMenu *Menu;
   QMenu *SwitchMenu;
+  QAction *ResumeAction;
+  QAction *ResumeNextAction;
   QGridLayout *ButtonLayout;
 
 

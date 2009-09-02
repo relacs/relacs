@@ -215,14 +215,6 @@ private:
 
   RELACSWidget *RW;
 
-
-private slots:
-
-    /*! Launches the option dialog of the event detector
-        as specified by \a id. 
-        This function is called from the Filterdetectors menu. */
-  void select( int id );
-
 };
 
 

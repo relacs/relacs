@@ -795,23 +795,27 @@ QMenu* Macros::menu( void )
     SwitchMenu = 0;
   }
 
-  Menu->insertItem( "&Reload", this, SLOT( reload( void ) ) );
-  Menu->insertItem( "&Load...", this, SLOT( selectMacros( void ) ) );
+  Menu->addAction( "&Reload", this, SLOT( reload( void ) ) );
+  Menu->addAction( "&Load...", this, SLOT( selectMacros( void ) ) );
   if ( Options::size( "file" ) > 1 ) {
-    SwitchMenu = new QMenu( Menu );
+    SwitchMenu = Menu->addMenu( "&Switch" );
     for ( int k=0; k<Options::size( "file" ); k++ )
       SwitchMenu->insertItem( text( "file", k ).c_str(), k );
     connect( SwitchMenu, SIGNAL( activated( int ) ), 
 	     this, SLOT( switchMacro( int ) ) );
-    Menu->insertItem( "&Switch", SwitchMenu );
   }
-  Menu->insertItem( "&Skip RePro", this, SLOT( startNextRePro( void ) ), Key_S );
-  Menu->insertItem( "&Break", this, SLOT( softBreak( void ) ), Key_B );
-  Menu->insertItem( "Resume", this, SLOT( resume( void ) ), Key_R, 3 );
-  Menu->insertItem( "Resume Next", this, SLOT( resumeNext( void ) ), Key_N, 4 );
-  Menu->setItemEnabled( 3, false );
-  Menu->setItemEnabled( 4, false );
-  Menu->insertSeparator();
+  Menu->addAction( "&Skip RePro", this, SLOT( startNextRePro( void ) ),
+		   QKeySequence( Qt::Key_S ) );
+  Menu->addAction( "&Break", this, SLOT( softBreak( void ) ),
+		   QKeySequence( Qt::Key_B ) );
+  ResumeAction = Menu->addAction( "Resume", this, SLOT( resume( void ) ),
+				  QKeySequence( Qt::Key_R ) );
+  ResumeNextAction = Menu->addAction( "Resume Next", this,
+				      SLOT( resumeNext( void ) ),
+				      QKeySequence( Qt::Key_N ) );
+  ResumeAction->setEnabled( false );
+  ResumeNextAction->setEnabled( false );
+  Menu->addSeparator();
   for ( unsigned int k=0; k<MCs.size(); k++ ) {
     if ( MCs[k]->Menu ) {
       QMenu *firstpop = new QMenu( Menu );
@@ -1414,8 +1418,8 @@ void Macros::store( void )
 		   MCs[CurrentMacro]->Variables, MCs[CurrentMacro]->Project );
     ResumeStack = Stack;
     ResumeMacroOnly = ThisMacroOnly;
-    Menu->setItemEnabled( 3, true );
-    Menu->setItemEnabled( 4, true );
+    ResumeAction->setEnabled( true );
+    ResumeNextAction->setEnabled( true );
   }
 }
 
@@ -1460,8 +1464,8 @@ void Macros::resume( void )
 
     // clear resume:
     ResumePos.clear();
-    Menu->setItemEnabled( 3, false );
-    Menu->setItemEnabled( 4, false );
+    ResumeAction->setEnabled( false );
+    ResumeNextAction->setEnabled( false );
   }
 }
 
@@ -1482,8 +1486,8 @@ void Macros::resumeNext( void )
 
     // clear resume:
     ResumePos.clear();
-    Menu->setItemEnabled( 3, false );
-    Menu->setItemEnabled( 4, false );
+    ResumeAction->setEnabled( false );
+    ResumeNextAction->setEnabled( false );
   }
 }
 
