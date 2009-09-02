@@ -61,11 +61,9 @@ void Control::initDevices( void )
 
 void Control::addActions( QMenu *menu )
 {
-  QAction *action;
-
-  action = new QAction( this );
+  QAction* action = new QAction( this );
   action->setMenuText( string( title() + " Dialog..." ).c_str() );
-  connect( action, SIGNAL( activated() ),
+  QWidget::connect( action, SIGNAL( activated() ),
 	   this, SLOT( dialog() ) );
   action->addTo( menu );
 

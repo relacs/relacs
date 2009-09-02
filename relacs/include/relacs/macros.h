@@ -31,7 +31,7 @@
 #include <QLayout>
 #include <QPushButton>
 #include <QPixmap>
-#include <QAccel>
+#include <QAction>
 #include <relacs/str.h>
 #include <relacs/configclass.h>
 using namespace std;
@@ -74,7 +74,7 @@ public:
   Macro( void ) : Name( "" ), Action( 0 ), 
     Button( true ), Menu( true ), Key( true ),
     Keep( false ), Overwrite( false ),
-    PushButton( 0 ), AccelId( -1 ), PMenu( 0 ), PMenuId( -1 ), MacroNum( -1 ),
+    PushButton( 0 ), AccelAction( NULL ), PMenu( 0 ), PMenuId( -1 ), MacroNum( -1 ),
     MC( 0 ), Commands(), DialogOpen( false ) {};
   Macro( Str name, Macros *mc );
   Macro( const Macro &macro ) 
@@ -84,7 +84,7 @@ public:
     Action( macro.Action ), 
     Button( macro.Button ), Menu( macro.Menu ), Key( macro.Key ),
     Keep( false ), Overwrite( false ),
-    PushButton( macro.PushButton ), AccelId( macro.AccelId ), 
+    PushButton( macro.PushButton ), AccelAction( macro.AccelAction ), 
     PMenu( macro.PMenu ), PMenuId( macro.PMenuId ), MacroNum( macro.MacroNum ),
     MC( macro.MC ), Commands( macro.Commands ),
     DialogOpen( macro.DialogOpen ) {};
@@ -171,7 +171,8 @@ public:
   bool Overwrite;
     /*! A pointer to the macro's button. */
   QPushButton *PushButton;
-  int AccelId;
+    /*! A pointer to the action trigerred by a key shortcut. */
+  QAction *AccelAction;
     /*! The popup menu of the Macro . */
   QMenu *PMenu;
   int PMenuId;
@@ -454,7 +455,7 @@ private:
   QMenu *Menu;
   QMenu *SwitchMenu;
   QGridLayout *ButtonLayout;
-  QAccel *ButtonMenuKeys;
+
 
   bool Fatal;
 

@@ -65,7 +65,7 @@ Macros::Macros( RELACSWidget *rw, QWidget *parent, const char *name )
     StartUpIndex( 0 ), ShutDownIndex( -1 ), FallBackIndex( 0 ), 
     StartSessionIndex( 1 ), StopSessionIndex( -1 ),
     MacroFile( "" ),
-    Menu( 0 ), SwitchMenu( 0 ), ButtonLayout( 0 ), ButtonMenuKeys( 0 ),
+    Menu( 0 ), SwitchMenu( 0 ), ButtonLayout( 0 ),/* ButtonMenuKeys( 0 ),*/
     Fatal( false )
 {
   addText( "file", "Configuration file", "macros.cfg" );
@@ -168,13 +168,16 @@ void Macros::clear( bool keep )
   for ( unsigned int k=0; k<MCs.size(); k++ ) {
     if ( MCs[k]->PushButton != 0 ) {
       if ( MCs[k]->Key ) {
-	ButtonMenuKeys->setItemEnabled( MCs[k]->AccelId, false );
+	MCs[k]->AccelAction->setDisabled(true);
+	delete MCs[k]->AccelAction;
+
+/*	ButtonMenuKeys->setItemEnabled( MCs[k]->AccelId, false );
 	ButtonMenuKeys->disconnectItem( MCs[k]->AccelId,
 				    MCs[k]->PushButton,
 				    SLOT( wasRightClicked( void ) ) );
 	ButtonMenuKeys->removeItem( MCs[k]->AccelId );
 	MCs[k]->AccelId = -1;
-      }
+*/      }
       ButtonLayout->remove( MCs[k]->PushButton );
       MCs[k]->PushButton->hide();
       delete MCs[k]->PushButton;
@@ -182,7 +185,7 @@ void Macros::clear( bool keep )
     }
   }
   delete ButtonLayout;
-  delete ButtonMenuKeys;
+//  delete ButtonMenuKeys;
 
   // clear macros:
   MacrosType::iterator mp = MCs.begin();
@@ -714,7 +717,7 @@ void Macros::buttons( void )
   int rows = ( nb - 1 ) / cols + 1;
 
   ButtonLayout = new QGridLayout( this, rows, cols );
-  ButtonMenuKeys = new QAccel( this );
+//  ButtonMenuKeys = new QAccel( this );
 
   // create buttons:
   int fkc = 0;
@@ -753,10 +756,17 @@ void Macros::buttons( void )
       connect( button, SIGNAL( rightClicked( int ) ),
 	       this, SLOT( popup( int ) ) );
       if ( MCs[k]->Key ) {
+
+	QAction* newAction = new QAction(this);
+	newAction->setShortCuts(MCs[k]->KeyCode + SHIFT);
+	connect(newAction, SIGNAL(triggered()), button, SLOT( wasRightClicked( void ) ));
+	MCs[k]->AccelAction = newAction;
+
+/*	MCs[k]->AccelAction->
 	MCs[k]->AccelId = ButtonMenuKeys->insertItem( MCs[k]->KeyCode + SHIFT );
  	ButtonMenuKeys->connectItem( MCs[k]->AccelId,
 				     button, SLOT( wasRightClicked( void ) ) );
-      }
+*/      }
       MCs[k]->PushButton = button;
       col++;
       if ( col >= cols ) {
@@ -1597,9 +1607,11 @@ ostream &operator<< ( ostream &str, const Macros &macros )
 	<< ( macros.MCs[k]->stopSession() ? " stopsession" : "" )
 	<< ( macros.MCs[k]->Button ? "" : " nobutton" )
 	<< ( macros.MCs[k]->Menu ? "" : " nomenu" );
-    if ( macros.MCs[k]->AccelId >= 0 )
+    if ( macros.MCs[k]->AccelAction != NULL )
+      str << " accel: " << macros.MCs[k]->AccelAction->shortcut.toString;
+/*    if ( macros.MCs[k]->AccelId >= 0 )
       str << " accel: " << macros.MCs[k]->AccelId;
-    str << " -> " << macros.MCs[k]->Variables.save() << '\n';
+*/    str << " -> " << macros.MCs[k]->Variables.save() << '\n';
     for ( unsigned int j=0; j<macros.MCs[k]->Commands.size(); j++ ) {
       str << "  " << j+1 << " ";
       if ( macros.MCs[k]->Commands[j]->Macro >= 0 )
@@ -1687,7 +1699,7 @@ bool Macros::MacroPos::defined( void )
 Macro::Macro( Str name, Macros *mc ) 
   : Action( 0 ), Button( true ), Menu( true ), Key( true ), 
     Keep( false ), Overwrite( false ),
-    PushButton( 0 ), AccelId( -1 ), PMenu( 0 ), PMenuId( -1 ), MacroNum( -1 ),
+    PushButton( 0 ), /*AccelId( -1 )*/ AccelAction( NULL ), PMenu( 0 ), PMenuId( -1 ), MacroNum( -1 ),
     MC( mc ), Commands(), DialogOpen( false )
 {
   Project.clear();
