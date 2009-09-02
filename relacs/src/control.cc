@@ -61,17 +61,17 @@ void Control::initDevices( void )
 
 void Control::addActions( QMenu *menu )
 {
-  QAction* action = new QAction( this );
-  action->setMenuText( string( title() + " Dialog..." ).c_str() );
+  QAction* action = new QAction( (QWidget*)this );
+  action->setText( string( title() + " Dialog..." ).c_str() );
   QWidget::connect( action, SIGNAL( activated() ),
-	   this, SLOT( dialog() ) );
-  action->addTo( menu );
+		    (QWidget*)this, SLOT( dialog() ) );
+  menu->addAction( action );
 
-  action = new QAction( this );
-  action->setMenuText( string( title() + " Help..." ).c_str() );
-  connect( action, SIGNAL( activated() ),
-	   this, SLOT( help() ) );
-  action->addTo( menu );
+  action = new QAction( (QWidget*)this );
+  action->setText( string( title() + " Help..." ).c_str() );
+  QWidget::connect( action, SIGNAL( activated() ),
+		    (QWidget*)this, SLOT( help() ) );
+  menu->addAction( action );
 }
 
 
@@ -112,60 +112,84 @@ bool Control::interrupt( void ) const
 
 bool Control::waitOnData( double time )
 {
-  unlockAll();
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
-  RW->DataSleepWait.wait( t );
-  lockAll();
+  unlockStimulusData();
+  unlockMetaData();
+  unlockData();
+  RW->DataSleepWait.wait( mutex(), t );
+  readLockData();
+  lockMetaData();
+  lockStimulusData();
   return interrupt();
 }
 
 
 bool Control::waitOnReProSleep( double time )
 {
-  unlockAll();
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
-  RW->ReProSleepWait.wait( t );
-  lockAll();
+  unlockStimulusData();
+  unlockMetaData();
+  unlockData();
+  RW->ReProSleepWait.wait( mutex(), t );
+  readLockData();
+  lockMetaData();
+  lockStimulusData();
   return interrupt();
 }
 
 
 bool Control::waitOnReProFinished( double time )
 {
-  unlockAll();
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
-  RW->ReProAfterWait.wait( t );
-  lockAll();
+  unlockStimulusData();
+  unlockMetaData();
+  unlockData();
+  RW->ReProAfterWait.wait( mutex(), t );
+  readLockData();
+  lockMetaData();
+  lockStimulusData();
   return interrupt();
 }
 
 
 bool Control::waitOnSessionStart( double time )
 {
-  unlockAll();
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
-  RW->SessionStartWait.wait( t );
-  lockAll();
+  unlockStimulusData();
+  unlockMetaData();
+  unlockData();
+  RW->SessionStartWait.wait( mutex(), t );
+  readLockData();
+  lockMetaData();
+  lockStimulusData();
   return interrupt();
 }
 
 
 bool Control::waitOnSessionPrestop( double time )
 {
-  unlockAll();
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
-  RW->SessionPrestopWait.wait( t );
-  lockAll();
+  unlockStimulusData();
+  unlockMetaData();
+  unlockData();
+  RW->SessionPrestopWait.wait( mutex(), t );
+  readLockData();
+  lockMetaData();
+  lockStimulusData();
   return interrupt();
 }
 
 
 bool Control::waitOnSessionStop( double time )
 {
-  unlockAll();
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
-  RW->SessionStopWait.wait( t );
-  lockAll();
+  unlockStimulusData();
+  unlockMetaData();
+  unlockData();
+  RW->SessionStopWait.wait( mutex(), t );
+  readLockData();
+  lockMetaData();
+  lockStimulusData();
   return interrupt();
 }
 
@@ -173,16 +197,22 @@ bool Control::waitOnSessionStop( double time )
 bool Control::sleep( double t )
 {
   // sleep:
-  unlockAll();
+  unlockStimulusData();
+  unlockMetaData();
+  unlockData();
   if ( t > 0.0 ) {
     unsigned long ms = (unsigned long)(1.0e3*t);
-    if ( t < 0.001 || ms < 1 )
+    if ( t < 0.001 || ms < 1 ) {
+      lock();
       QThread::usleep( (unsigned long)(1.0e6*t) );
+      unlock();
+    }
     else
-      SleepWait.wait( ms );
+      SleepWait.wait( mutex(), ms );
   }
-
-  lockAll();
+  readLockData();
+  lockMetaData();
+  lockStimulusData();
 
   // interrupt Control:
   return interrupt();
@@ -211,7 +241,7 @@ void Control::start( void )
 void Control::requestStop( void )
 {
   // terminate thread:
-  if ( running() ) {
+  if ( isRunning() ) {
     InterruptLock.lock();
     Interrupt = true;
     InterruptLock.unlock();

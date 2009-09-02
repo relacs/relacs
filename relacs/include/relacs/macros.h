@@ -241,7 +241,7 @@ public:
     /*! Maximum number of characters for menu entry. */
   static const int MenuWidth = 40;
 
-  Macros( RELACSWidget *rw, QWidget *parent=0, const char *name=0 );
+  Macros( RELACSWidget *rw, QWidget *parent=0 );
   ~Macros( void );
 
     /*! The number of macros. */
@@ -577,7 +577,7 @@ class MacroButton : public QPushButton
 public:
     
   MacroButton( int number, const string &title,
-	       QWidget *parent = 0, const char *name = 0 );
+	       QWidget *parent = 0 );
     
 signals:
     

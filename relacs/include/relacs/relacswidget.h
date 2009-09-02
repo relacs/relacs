@@ -118,7 +118,7 @@ public:
 		const string &iconpath,
 		QSplashScreen *splash,
 		ModeTypes mode,
-		QWidget *parent=0, const char *name=0 );
+		QWidget *parent=0 );
   ~RELACSWidget( void );
 
     /*! Start data aquisition and first RePro. */

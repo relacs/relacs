@@ -90,7 +90,7 @@ public:
   };
 
     /*! Construct a PlotTrace. */
-  PlotTrace( RELACSWidget *ow, QWidget* parent=0, const char* name=0 );
+  PlotTrace( RELACSWidget *ow, QWidget* parent=0 );
     /*! Destruct a PlotTrace. */
   ~PlotTrace( );
 

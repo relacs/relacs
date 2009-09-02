@@ -54,8 +54,8 @@ const string Macro::KeepIdent = "keep";
 const string Macro::OverwriteIdent = "overwrite";
 
 
-Macros::Macros( RELACSWidget *rw, QWidget *parent, const char *name )
-  : QWidget( parent, name ),
+Macros::Macros( RELACSWidget *rw, QWidget *parent )
+  : QWidget( parent ),
     ConfigClass( "Macros", RELACSPlugin::Core ),
     RW( rw ), RP( 0 ), MCs(),
     CurrentMacro( -1 ), CurrentCommand( 0 ),
@@ -2186,8 +2186,8 @@ void MacroCommand::dialogClosed( int r )
 
 
 MacroButton::MacroButton( int number, const string &title,
-			  QWidget *parent, const char *name )
-  : QPushButton( title.c_str(), parent, name ), Number( number )
+			  QWidget *parent )
+  : QPushButton( title.c_str(), parent ), Number( number )
 {
   connect( this, SIGNAL( clicked() ), this, SLOT( wasLeftClicked() ) );
 }

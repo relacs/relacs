@@ -73,8 +73,7 @@ class Session : public QWidget, public Options
 public:
 
     /*! Construct a session. */
-  Session( RELACSWidget *rw, int height,
-	   QWidget *parent, const char *name );
+  Session( RELACSWidget *rw, int height, QWidget *parent );
     /*! Deconstruct the Session. */
   ~Session( void );
 

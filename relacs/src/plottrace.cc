@@ -36,7 +36,7 @@
 namespace relacs {
 
 
-PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent, const char* name )
+PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
   : MultiPlot( 1, Plot::Pointer, parent, "PlotTrace::Plot" ),
     IL( 0 ),
     EL( 0 ),

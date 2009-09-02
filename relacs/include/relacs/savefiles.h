@@ -87,7 +87,7 @@ public:
   static const int SaveMeanQuality = 0x0400;
 
   SaveFiles( RELACSWidget *rw, int height,
-	     QWidget *parent=0, const char *name=0 );
+	     QWidget *parent=0 );
   ~SaveFiles( void );
 
     /*! The current status of writing data to files.

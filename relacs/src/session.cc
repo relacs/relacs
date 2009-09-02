@@ -30,9 +30,8 @@
 namespace relacs {
 
 
-Session::Session( RELACSWidget *rw, int height,
-		  QWidget *parent, const char *name )
-  : QWidget( parent, name ),
+Session::Session( RELACSWidget *rw, int height, QWidget *parent )
+  : QWidget( parent ),
     Options(),
     RW( rw )
 {

@@ -30,8 +30,8 @@ namespace relacs {
 
 
 SaveFiles::SaveFiles( RELACSWidget *rw, int height,
-		      QWidget *parent, const char *name )
-  : QWidget( parent, name ),
+		      QWidget *parent )
+  : QWidget( parent ),
     Options(),
     RW( rw ),
     StimulusDataLock( true )

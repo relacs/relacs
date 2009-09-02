@@ -59,9 +59,9 @@ public:
 	the radius of the ball set to \a radius pixels,
 	and the width of the trace set to \a linewidth pixels. */
   SpikeTrace( double spikewidth=1.0, int radius=6, int tracewidth=1,
-		QWidget *parent=0, const char *name=0 );
+		QWidget *parent=0 );
     /*! Constructs the SpikeTrace-widget with default parameters. */
-  SpikeTrace( QWidget *parent=0, const char *name=0 );
+  SpikeTrace( QWidget *parent=0 );
     /*! Destructs the SpikeTrace-widget. */
   ~SpikeTrace( void );
 

@@ -55,7 +55,7 @@ class FilterDetectors : public QTabWidget, public ConfigClass
 
 public:
 
-  FilterDetectors( RELACSWidget *rw, QWidget *parent=0, const char *name=0 );
+  FilterDetectors( RELACSWidget *rw, QWidget *parent=0 );
   ~FilterDetectors( void );
 
   void clear( void );

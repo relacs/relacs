@@ -34,8 +34,8 @@
 namespace relacs {
 
 
-RePros::RePros( RELACSWidget *rw, QWidget *parent, const char *name )
-  : QTabWidget( parent, name ), Menu( 0 )
+RePros::RePros( RELACSWidget *rw, QWidget *parent )
+  : QTabWidget( parent ), Menu( 0 )
 {
   create( rw );
 }
@@ -139,10 +139,10 @@ string RePros::macroParam( void ) const
 }
 
 
-QLabel *RePros::display( QWidget *parent, const char *name )
+QLabel *RePros::display( QWidget *parent )
 {
   MessageStr = "No Cell";
-  Message = new QLabel( "Xg", parent, name );
+  Message = new QLabel( "Xg", parent );
   Message->setFixedHeight( 2*Message->sizeHint().height() );
   Message->setTextFormat( AutoText );
   Message->setIndent( 14 );

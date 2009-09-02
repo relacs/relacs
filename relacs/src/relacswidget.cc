@@ -76,8 +76,8 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
 			    const string &docpath,
 			    const string &iconpath,
 			    QSplashScreen *splash,
-			    ModeTypes mode, QWidget *parent, const char *name )
-  : QMainWindow( parent, name ),
+			    ModeTypes mode, QWidget *parent )
+  : QMainWindow( parent ),
     ConfigClass( "RELACS", RELACSPlugin::Core ),
     Mode( mode ),
     SS( this ),

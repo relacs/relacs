@@ -31,8 +31,8 @@ namespace relacs {
 
 
 SpikeTrace::SpikeTrace( double spikewidth, int radius, int tracewidth, 
-			QWidget *parent, const char *name )
-  : QWidget( parent, name ), QThread()
+			QWidget *parent )
+  : QWidget( parent ), QThread()
 {
   SpikeWidth = spikewidth;
   Radius = radius;
@@ -48,8 +48,8 @@ SpikeTrace::SpikeTrace( double spikewidth, int radius, int tracewidth,
 }
 
 
-SpikeTrace::SpikeTrace( QWidget *parent, const char *name )
-  : QWidget( parent, name )
+SpikeTrace::SpikeTrace( QWidget *parent )
+  : QWidget( parent )
 {
   SpikeWidth = 1.0;
   Radius = 6;

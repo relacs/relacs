@@ -30,8 +30,8 @@ DefaultSession::DefaultSession( void )
 {
   SessionButton = new QPushButton( "Start", this );
   SessionButton->setMinimumSize( SessionButton->sizeHint() );
-  connect( SessionButton, SIGNAL( clicked() ),
-	   this, SLOT( toggleSession() ) );
+  QWidget::connect( SessionButton, SIGNAL( clicked() ),
+		    (QWidget*)this, SLOT( toggleSession() ) );
 }
 
 

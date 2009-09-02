@@ -20,6 +20,7 @@
 */
 
 #include <cmath>
+#include <QKeyEvent>
 #include <relacs/str.h>
 #include <relacs/repros.h>
 #include <relacs/filter.h>
@@ -31,8 +32,8 @@
 namespace relacs {
 
 
-FilterDetectors::FilterDetectors( RELACSWidget *rw, QWidget *parent, const char *name )
-  : QTabWidget( parent, name ),
+FilterDetectors::FilterDetectors( RELACSWidget *rw, QWidget *parent )
+  : QTabWidget( parent ),
     ConfigClass( "FilterDetectors", RELACSPlugin::Core ),
     FL(),
     TraceInputTrace( 0 ),
@@ -268,7 +269,7 @@ string FilterDetectors::createFilters( void )
 	continue;
 
       // take and setup filter:
-      fp->reparent( this, QPoint( 0, 0 ) );
+      fp->setParent( this );
       fp->setIdent( ident );
       fp->setMode( mode );
       
@@ -1156,7 +1157,7 @@ ostream &operator<<( ostream &str, const FilterDetectors &fd )
 
 void FilterDetectors::keyPressEvent( QKeyEvent *e )
 {
-  if ( e->key() != Key_Return )
+  if ( e->key() != Qt::Key_Return )
     e->ignore();
 }
 

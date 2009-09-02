@@ -52,7 +52,7 @@ class RePros : public QTabWidget
 
 public:
 
-  RePros( RELACSWidget *rw=0, QWidget *parent=0, const char *name=0 );
+  RePros( RELACSWidget *rw=0, QWidget *parent=0 );
   ~RePros( void );
 
     /*! Initializes RePros and create all available repros from \a plugins. 
@@ -62,7 +62,7 @@ public:
     /*! Displays the message \a msg of a RePro. */
   void message( const string &msg );
     /*! The display for RePro messages. */
-  QLabel *display( QWidget *parent=0, const char *name=0 );
+  QLabel *display( QWidget *parent=0 );
     /*! The popup menu from which each RePro can be started and configured. */
   QMenu *menu( void );
 
