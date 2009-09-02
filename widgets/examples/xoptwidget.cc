@@ -85,7 +85,7 @@ void MainWidget::dialog( void )
   int r = d.exec();
   cerr << "dialog: " << r << endl << Opt1 << Opt2 << endl;
   Options co;
-  co.assign( Opt1, 8 );
+  co.assign( Opt1, Parameter::changedFlag() );
   cerr << "changed: " << endl << co << endl;
 }
 

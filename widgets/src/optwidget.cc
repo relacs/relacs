@@ -1508,7 +1508,7 @@ OptWidgetDate::OptWidgetDate( Options::iterator op, Options *oo,
     W = DE = new QDateEdit( QDate( Year, Month, Day ), parent );
     OptWidget::setValueStyle( W, (*OP).style(), false, true );
     DE->setDisplayFormat( "yyyy-MM-dd" );
-    connect( DE, SIGNAL( valueChanged( const QDate& ) ),
+    connect( DE, SIGNAL( dateChanged( const QDate& ) ),
 	     this, SLOT( valueChanged( const QDate& ) ) );
   }
   else {
@@ -1623,7 +1623,7 @@ OptWidgetTime::OptWidgetTime( Options::iterator op, Options *oo,
     W = TE = new QTimeEdit( QTime( Hour, Minutes, Seconds ), parent );
     OptWidget::setValueStyle( W, (*OP).style(), false, true );
     TE->setDisplayFormat( "hh:mm:ss" );
-    connect( TE, SIGNAL( valueChanged( const QTime& ) ),
+    connect( TE, SIGNAL( timeChanged( const QTime& ) ),
 	     this, SLOT( valueChanged( const QTime& ) ) );
   }
   else {

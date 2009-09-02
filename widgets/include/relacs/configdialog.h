@@ -199,7 +199,7 @@ public:
   QMutex *mutex( void );
 
     /*! Write name() and options in XML format to output stream.
-        The identifiers of the options are prependend by prefix().
+        If prefix() is not empty, it is prepended to the identifier of each option.
         \param[in] str the output stream
         \param[in] selectmask selects options that have \a selectmask set in their flags().
                    See Parameter::flags(int) for details.
@@ -314,8 +314,8 @@ protected:
         \param od the dialog to which the header widget is added.
 	\sa dialog() */
   virtual void dialogHeaderWidget( OptDialog *od );
-    /*! Adds a message indicating that this class does not have any options
-        for this dialog as well as an  \c Ok button to the dialog.
+    /*! Adds a message, indicating that this class does not have any options
+        for this dialog, and an \<Ok\> button to the dialog.
         \param od the dialog to which the message is added.
 	\sa dialog() */
   virtual void dialogEmptyMessage( OptDialog *od );
@@ -324,7 +324,7 @@ protected:
         \param od the dialog to which the options are added.
 	\sa dialog() */
   virtual void dialogOptions( OptDialog *od );
-    /*! Add an \c Ok, \c Apply, \c Reset, and \c Close button to the dialog.
+    /*! Add an \<Ok\>, \<Apply\>, \<Reset\>, and \<Close\> button to the dialog.
         \param od the dialog to which the buttons are added.
 	\sa dialog() */
   virtual void dialogButtons( OptDialog *od );

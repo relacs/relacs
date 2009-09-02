@@ -47,6 +47,7 @@ ConfigDialog::ConfigDialog( const string &configident, int configgroup,
   setLayout( BoxLayout );
   Name = name.empty() ? configident : name;
   Prefix = "";
+  Prefix = "";
   Title = title.empty() ? Name : title;
   Author = author;
   Version = version;
