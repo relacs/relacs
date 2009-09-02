@@ -364,7 +364,7 @@ template < class T, int PluginID >
     s += " ";
     s += DVs[k]->deviceIdent();
     if ( Menus[k] == NULL )
-      Menus[k] = menu->addMenu(s.c_str());
+      Menus[k] = menu.addMenu( s.c_str() );
     Menus[k]->clear();
     StrQueue sq1( DVs[k]->info(), ";" );
     for ( int j=0; j<sq1.size(); j++ ) {
