@@ -73,6 +73,21 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
   //  ButtonBox->setBackgroundMode( Qt::NoBackground );  // obsolete as of QT4
 
   int s = fontInfo().pixelSize();
+
+/*Qt4*/
+	QRect rectFixedOffsetIcon(0, 0, s, s);
+  QPainter p;
+	p.begin(this);
+	p.eraseRect( rectFixedOffsetIcon);
+	p.setPen( QPen() );
+	p.setBrush( Qt::black );
+	QPolygon pa( 3 );
+ 	pa.setPoint( 0, s-3, 2 );
+  pa.setPoint( 1, s-3, s-2 );
+  pa.setPoint( 2, 4, s/2 );
+	p.drawPolygon( pa );
+  p.setPen( QPen( Qt::black, 2 ) );
+/*Qt3
   FixedOffsetIcon.resize( s, s );
   QPainter p;
   p.begin( &FixedOffsetIcon, this );
@@ -85,10 +100,24 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
   pa.setPoint( 2, 4, s/2 );
   p.drawPolygon( pa );
   p.setPen( QPen( black, 2 ) );
+*/
+
   p.drawLine( 3, 2, 3, s-1 );
   p.end();
   FixedOffsetIcon.setMask( FixedOffsetIcon.createHeuristicMask() );
 
+/*Qt4*/
+	QRect rectContinuousOffsetIcon(0, 0, s, s);
+	p.begin(this);
+	p.eraseRect( rectContinuousOffsetIcon);
+	p.setPen( QPen() );
+	p.setBrush( Qt::black );
+  pa.setPoint( 0, 3, 2 );
+  pa.setPoint( 1, 3, s-2 );
+  pa.setPoint( 2, s-4, s/2 );
+  p.drawPolygon( pa );
+  p.setPen( QPen( Qt::black, 2 ) );
+/*Qt3
   ContinuousOffsetIcon.resize( s, s );
   p.begin( &ContinuousOffsetIcon, this );
   p.eraseRect( ContinuousOffsetIcon.rect() );
@@ -99,6 +128,7 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
   pa.setPoint( 2, s-4, s/2 );
   p.drawPolygon( pa );
   p.setPen( QPen( black, 2 ) );
+*/
   p.drawLine( s-2, 2, s-2, s-1 );
   p.end();
   ContinuousOffsetIcon.setMask( ContinuousOffsetIcon.createHeuristicMask() );
@@ -115,10 +145,18 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
   p.setFont( QFont( "Helvetica", s, QFont::Bold ) );
   p.drawText( manualmask.rect(), Qt::AlignCenter, "M" );
   p.end();
+
+/*Qt4*/
+	QRect rectManualIcon(0, 0, s, s);
+	p.begin(this );
+	p.eraseRect(rectManualIcon);
+	p.setPen( QPen( Qt::black ) );
+/*Qt3
   QPixmap manualicon( s, s );
   p.begin( &manualicon, this );
   p.eraseRect( manualicon.rect() );
   p.setPen( QPen( black ) );
+*/
   p.setBrush( QBrush() );
   p.setFont( QFont( "Helvetica", s, QFont::Bold ) );
   p.drawText( manualicon.rect(), Qt::AlignCenter, "M" );

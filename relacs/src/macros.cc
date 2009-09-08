@@ -95,6 +95,15 @@ void Macros::createIcons( void )
   int my = fontInfo().pixelSize() - 2;
   int mx = my;
 
+/*Qt4*/
+	QRect rectSessionIcon( 0,0,mx+2, my+2 );
+	QPainter p;
+	p.begin(this);
+	p.eraseRect( rectSessionIcon );
+  p.setPen( QPen( Qt::black, 1 ) );
+  p.setBrush( Qt::black );
+  QPolygon pa( 3 );
+/*QT3
   SessionIcon.resize( mx+2, my+2 );
   QPainter p;
   p.begin( &SessionIcon, this );
@@ -102,60 +111,107 @@ void Macros::createIcons( void )
   p.setPen( QPen( black, 1 ) );
   p.setBrush( black );
   QPointArray pa( 3 );
-  pa.setPoint( 0, mx/3, 0 );
+*/
+	pa.setPoint( 0, mx/3, 0 );
   pa.setPoint( 1, mx/3, my );
   pa.setPoint( 2, mx, my/2 );
   p.drawPolygon( pa );
   p.end();
   SessionIcon.setMask( SessionIcon.createHeuristicMask() );
 
+/*Qt4*/
+	QRect rectBaseIcon( 0,0,mx+2, my+2 );
+	p.begin(this );
+	p.eraseRect( rectBaseIcon);
+	p.setPen( QPen( Qt::black, 1 ) );
+	p.setBrush( Qt::red );
+/*QT3
   BaseIcon.resize( mx+2, my+2 );
   p.begin( &BaseIcon, this );
   p.eraseRect( BaseIcon.rect() );
   p.setPen( QPen( black, 1 ) );
   p.setBrush( red );
+*/
   p.drawEllipse( mx/4, (my-mx*3/4)/2, mx*3/4, mx*3/4 );
   p.end();
   BaseIcon.setMask( BaseIcon.createHeuristicMask() );
 
+/*Qt4*/
+	QRect rectStackIcon( 0,0,mx+2, my+2 );
+	p.begin(this);
+	p.eraseRect( rectStackIcon);
+	p.setPen( QPen( Qt::black, 1 ) );
+	p.setBrush( Qt::yellow );
+/*QT3
   StackIcon.resize( mx+2, my+2 );
   p.begin( &StackIcon, this );
   p.eraseRect( StackIcon.rect() );
   p.setPen( QPen( black, 1 ) );
   p.setBrush( yellow );
+*/
   p.drawEllipse( mx/4, (my-mx*3/4)/2, mx*3/4, mx*3/4 );
   p.end();
   StackIcon.setMask( StackIcon.createHeuristicMask() );
 
+/*Qt4*/
+	QRect rectRunningIcon( 0,0,mx+2, my+2 );
+	p.begin(this);
+	p.eraseRect(rectRunningIcon);
+	p.setPen( QPen( Qt::black, 1 ) );
+	p.setBrush( Qt::green );
+/*QT3
   RunningIcon.resize( mx+2, my+2 );
   p.begin( &RunningIcon, this );
   p.eraseRect( RunningIcon.rect() );
   p.setPen( QPen( black, 1 ) );
   p.setBrush( green );
+*/
   p.drawEllipse( mx/4, (my-mx*3/4)/2, mx*3/4, mx*3/4 );
   p.end();
   RunningIcon.setMask( RunningIcon.createHeuristicMask() );
 
+/*Qt4*/
+	QRect rectIdleIcon( 0,0,mx+2, my+2 );
+	p.begin(this);
+	p.eraseRect(rectIdleIcon);
+/*Qt3
   IdleIcon.resize( mx+2, my+2 );
   p.begin( &IdleIcon, this );
   p.eraseRect( IdleIcon.rect() );
+*/
   p.end();
   IdleIcon.setMask( IdleIcon.createHeuristicMask() );
 
+/*Qt4*/
+	QRect rectEnabledIcon( 0,0,mx+2, my+2 );
+	p.begin(this);
+	p.eraseRect(rectEnabledIcon);
+	p.setPen( QPen( Qt::black, 1 ) );
+	p.setBrush( Qt::green );
+/*Qt3
   EnabledIcon.resize( mx, mx );
   p.begin( &EnabledIcon, this );
   p.eraseRect( EnabledIcon.rect() );
   p.setPen( QPen( black, 1 ) );
   p.setBrush( green );
+*/
   p.drawEllipse( 0, 0, mx-1, mx-1 );
   p.end();
   EnabledIcon.setMask( EnabledIcon.createHeuristicMask() );
 
+/*Qt4*/
+	QRect rectDisabledIcon( 0,0,mx+2, my+2 );
+	p.begin(this);
+	p.eraseRect(rectDisabledIcon);
+	p.setPen( QPen( Qt::black, 1 ) );
+	p.setBrush( Qt::red );
+/*Qt3
   DisabledIcon.resize( mx, mx );
   p.begin( &DisabledIcon, this );
   p.eraseRect( DisabledIcon.rect() );
   p.setPen( QPen( black, 1 ) );
   p.setBrush( red );
+*/
   p.drawEllipse( 0, 0, mx-1, mx-1 );
   p.end();
   DisabledIcon.setMask( DisabledIcon.createHeuristicMask() );

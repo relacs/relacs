@@ -54,42 +54,87 @@ MotorControl::MotorControl( void )
   int is = fontInfo().pointSize() * 2;
   QPainter p;
   QColor orange( 255, 165, 0 );
+/*Qt4*/
+	GoodCircle = QPixmap( is, is );
+  p.begin( &GoodCircle );
+  p.setBackgroundMode( OpaqueMode );
+  p.fillRect( GoodCircle.rect(), Qt::black );
+  p.setPen( QPen( Qt::black, 1 ) );
+  p.setBrush( Qt::green );
+/*Qt3
   GoodCircle.resize( is, is );
   p.begin( &GoodCircle );
   p.setBackgroundMode( OpaqueMode );
   p.fillRect( GoodCircle.rect(), black );
   p.setPen( QPen( black, 1 ) );
   p.setBrush( green );
+*/
   p.drawEllipse( 0, 0, is, is );
   p.end();
 
+/*Qt4*/
+	OkCircle= QPixmap( is, is );
+  p.begin( &OkCircle );
+  p.setBackgroundMode( OpaqueMode );
+  p.fillRect( OkCircle.rect(), Qt::black );
+  p.setPen( QPen( Qt::black, 1 ) );
+  p.setBrush( Qt::yellow );
+/*Qt3
   OkCircle.resize( is, is );
   p.begin( &OkCircle );
   p.setBackgroundMode( OpaqueMode );
   p.fillRect( OkCircle.rect(), black );
   p.setPen( QPen( black, 1 ) );
   p.setBrush( yellow );
+*/
   p.drawEllipse( 0, 0, is, is );
   p.end();
 
+/*Qt4*/
+	PotentialCircle= QPixmap( is, is );
+  p.begin( &PotentialCircle );
+  p.setBackgroundMode( OpaqueMode );
+  p.fillRect( PotentialCircle.rect(), Qt::black );
+  p.setPen( QPen( Qt::black, 1 ) );
+  p.setBrush( Qt::orange );
+/*Qt3
   PotentialCircle.resize( is, is );
   p.begin( &PotentialCircle );
   p.setBackgroundMode( OpaqueMode );
   p.fillRect( PotentialCircle.rect(), black );
   p.setPen( QPen( black, 1 ) );
   p.setBrush( orange );
+*/
   p.drawEllipse( 0, 0, is, is );
   p.end();
 
+/*Qt4*/
+	BadCircle= QPixmap( is, is );
+  p.begin( &BadCircle );
+  p.setBackgroundMode( OpaqueMode );
+  p.fillRect( BadCircle.rect(), Qt::black );
+  p.setPen( QPen( Qt::black, 1 ) );
+  p.setBrush( Qt::red );
+/*Qt3
   BadCircle.resize( is, is );
   p.begin( &BadCircle );
   p.setBackgroundMode( OpaqueMode );
   p.fillRect( BadCircle.rect(), black );
   p.setPen( QPen( black, 1 ) );
   p.setBrush( red );
+*/
   p.drawEllipse( 0, 0, is, is );
   p.end();
 
+/*Qt4*/
+	QPolygon pa( 7 );
+  GoodArrow= QPixmap( is, is );
+  p.begin( &GoodArrow );
+  p.setBackgroundMode( OpaqueMode );
+  p.fillRect( GoodArrow.rect(), Qt::black );
+  p.setPen( QPen( Qt::black, 1 ) );
+  p.setBrush( Qt::green );
+/*Qt3
   QPointArray pa( 7 );
   GoodArrow.resize( is, is );
   p.begin( &GoodArrow );
@@ -97,6 +142,7 @@ MotorControl::MotorControl( void )
   p.fillRect( GoodArrow.rect(), black );
   p.setPen( QPen( black, 1 ) );
   p.setBrush( green );
+*/
   pa.setPoint( 0, is/4, is-1 );
   pa.setPoint( 1, 3*is/4, is-1 );
   pa.setPoint( 2, 3*is/4, is/3 );
@@ -107,12 +153,21 @@ MotorControl::MotorControl( void )
   p.drawPolygon( pa );
   p.end();
 
+/*Qt4*/
+	BadArrow= QPixmap( is, is );
+  p.begin( &BadArrow );
+  p.setBackgroundMode( OpaqueMode );
+  p.fillRect( BadArrow.rect(), Qt::black );
+  p.setPen( QPen( Qt::black, 1 ) );
+  p.setBrush( Qt::red );
+/*Qt3
   BadArrow.resize( is, is );
   p.begin( &BadArrow );
   p.setBackgroundMode( OpaqueMode );
   p.fillRect( BadArrow.rect(), black );
   p.setPen( QPen( black, 1 ) );
   p.setBrush( red );
+*/
   pa.setPoint( 0, is/4, 0 );
   pa.setPoint( 1, 3*is/4, 0 );
   pa.setPoint( 2, 3*is/4, 2*is/3 );

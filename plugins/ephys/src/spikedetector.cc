@@ -132,7 +132,11 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   p.begin( &pm );
   p.setBackgroundMode( OpaqueMode );
   p.fillRect( pm.rect(), this->backgroundColor() );
-  p.setPen( QPen( green, 4 ) );
+/*Qt4*/
+  p.setPen( QPen( Qt::green, 4 ) );
+/*Qt3
+  p.setPen( QPen( Qt::green, 4 ) );
+*/
   p.drawLine( 0, 5, pm.width(), 5 );
   p.end();
   QLabel *key = new QLabel( gl );
@@ -142,7 +146,11 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   key = new QLabel( "detected", gl );
 
   p.begin( &pm );
+/*Qt4*/
+  p.setPen( QPen( Qt::red, 4 ) );
+/*Qt3
   p.setPen( QPen( red, 4 ) );
+*/
   p.drawLine( 0, 5, pm.width(), 5 );
   p.end();
   key = new QLabel( gl );
@@ -152,7 +160,11 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   key = new QLabel( "not detected", gl );
 
   p.begin( &pm );
+/*Qt4*/
+  p.setPen( QPen( Qt::white, 4 ) );
+/*Qt3
   p.setPen( QPen( white, 4 ) );
+*/ 
   p.drawLine( 0, 5, pm.width(), 5 );
   p.end();
   key = new QLabel( gl );
@@ -162,6 +174,11 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   key = new QLabel( "threshold", gl );
 
   p.begin( &pm );
+/*Qt4*/
+  p.setPen( QPen( Qt::yellow, 4 ) );
+/*Qt3
+  p.setPen( QPen( yellow, 4 ) );
+*/ 
   p.setPen( QPen( yellow, 4 ) );
   p.drawLine( 0, 5, pm.width(), 5 );
   p.end();
@@ -179,7 +196,11 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   p.setBackgroundMode( OpaqueMode );
   p.fillRect( GoodQuality.rect(), black );
   p.setPen( Qt::NoPen );
+/*Qt4*/
+  p.setBrush( Qt::green );
+/*Qt3
   p.setBrush( green );
+*/
   p.drawEllipse( 1, 1, is-2, is-2 );
   p.setPen( QPen( green.light( 160 ), is/8 > 0 ? is/8 : 1 ) );
   p.drawEllipse( is/5, is/5, 3*is/5+1, 3*is/5+1 );
@@ -191,7 +212,11 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   p.setBackgroundMode( OpaqueMode );
   p.fillRect( OkQuality.rect(), black );
   p.setPen( Qt::NoPen );
+/*Qt4*/
+  p.setBrush( Qt::yellow )
+/*Qt3
   p.setBrush( yellow );
+*/
   p.drawEllipse( 1, 1, is-2, is-2 );
   p.setPen( QPen( yellow.light( 160 ), is/8 > 0 ? is/8 : 1 ) );
   p.drawEllipse( is/5, is/5, 3*is/5, 3*is/5 );
@@ -203,7 +228,11 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   p.setBackgroundMode( OpaqueMode );
   p.fillRect( PotentialQuality.rect(), black );
   p.setPen( Qt::NoPen );
+/*Qt4*/
+  p.setBrush( Qt::orange )
+/*Qt3
   p.setBrush( orange );
+*/
   p.drawEllipse( 1, 1, is-2, is-2 );
   p.setPen( QPen( orange.light( 160 ), is/8 > 0 ? is/8 : 1 ) );
   p.drawEllipse( is/5, is/5, 3*is/5, 3*is/5 );
@@ -215,7 +244,11 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   p.setBackgroundMode( OpaqueMode );
   p.fillRect( BadQuality.rect(), black );
   p.setPen( Qt::NoPen );
+/*Qt4*/
+  p.setBrush( Qt::red )
+/*Qt3
   p.setBrush( red );
+*/
   p.drawEllipse( 1, 1, is-2, is-2 );
   p.setPen( QPen( red.light( 160 ), is/8 > 0 ? is/8 : 1 ) );
   p.drawEllipse( is/5, is/5, 3*is/5, 3*is/5 );
@@ -227,8 +260,13 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   p.begin( &BadArrow );
   p.setBackgroundMode( OpaqueMode );
   p.fillRect( BadArrow.rect(), black );
-  p.setPen( QPen( black, 1 ) );
+/*Qt4*/
+	p.setPen( QPen( Qt::black, 1 ) );
+  p.setBrush( Qt::red )
+/*Qt3
+	p.setPen( QPen( black, 1 ) );
   p.setBrush( red );
+*/
   pa.setPoint( 0, is/4, 0 );
   pa.setPoint( 1, 3*is/4, 0 );
   pa.setPoint( 2, 3*is/4, 2*is/3 );
@@ -244,7 +282,11 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   p.setBackgroundMode( OpaqueMode );
   p.fillRect( BadTrend.rect(), black );
   p.setPen( Qt::NoPen );
+/*Qt4*/
+  p.setBrush( Qt::red )
+/*Qt3
   p.setBrush( red );
+*/
   p.drawEllipse( 1, 1, is-2, is-2 );
   p.setPen( QPen( red.light( 160 ), is/8 > 0 ? is/8 : 1 ) );
   p.drawLine( is/2, is/4, is/2, 3*is/4 );
@@ -256,7 +298,11 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   p.setBackgroundMode( OpaqueMode );
   p.fillRect( OkTrend.rect(), black );
   p.setPen( Qt::NoPen );
+/*Qt4*/
+  p.setBrush( Qt::yellow )
+/*Qt3
   p.setBrush( yellow );
+*/
   p.drawEllipse( 1, 1, is-2, is-2 );
   p.setPen( QPen( yellow.light( 160 ), is/8 > 0 ? is/8 : 1 ) );
   p.drawLine( is/2, is/4, is/2, 3*is/4 );
@@ -268,7 +314,11 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   p.setBackgroundMode( OpaqueMode );
   p.fillRect( GoodTrend.rect(), black );
   p.setPen( Qt::NoPen );
+/*Qt4*/
+  p.setBrush( Qt::green )
+/*Qt3
   p.setBrush( green );
+*/
   p.drawEllipse( 1, 1, is-2, is-2 );
   p.setPen( QPen( green.light( 160 ), is/8 > 0 ? is/8 : 1 ) );
   p.drawLine( is/2, is/4, is/2, 3*is/4 );
@@ -278,9 +328,15 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   GoodArrow.resize( is, is );
   p.begin( &GoodArrow );
   p.setBackgroundMode( OpaqueMode );
-  p.fillRect( GoodArrow.rect(), black );
-  p.setPen( QPen( black, 1 ) );
+/*Qt4*/
+  p.fillRect( GoodArrow.rect(), Qt::black );
+ 	p.setPen( QPen( Qt::black, 1 ) );
+  p.setBrush( Qt::green );
+/*Qt3
+	p.fillRect( GoodArrow.rect(), black );
+ 	p.setPen( QPen( black, 1 ) );
   p.setBrush( green );
+*/
   pa.setPoint( 0, is/4, is-1 );
   pa.setPoint( 1, 3*is/4, is-1 );
   pa.setPoint( 2, 3*is/4, is/3 );
