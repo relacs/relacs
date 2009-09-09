@@ -54,7 +54,7 @@ Plot::RGBColor Plot::RGBColor::lighten( double f ) const
 
 
 Plot::Plot( KeepMode keep, QWidget *parent, const char *name )
-  : QWidget( parent, name, WRepaintNoErase | WResizeNoErase ),
+  : QWidget( parent, name, WNoAutoErase ),
     PMutex( true )
 {
   construct( keep );
@@ -62,7 +62,7 @@ Plot::Plot( KeepMode keep, QWidget *parent, const char *name )
 
 
 Plot::Plot( QWidget *parent, const char *name )
-  : QWidget( parent, name, WRepaintNoErase | WResizeNoErase ),
+  : QWidget( parent, name, WNoAutoErase ),
     PMutex( true )
 {
   construct( Copy );
@@ -134,6 +134,10 @@ void Plot::construct( KeepMode keep, bool subwidget, int id, MultiPlot *mp )
     XMaxFB[k] = 10.0;
     YMinFB[k] = -10.0;
     YMaxFB[k] = 10.0;
+    XMinPrev[k] = -10.0;
+    XMaxPrev[k] = 10.0;
+    YMinPrev[k] = -10.0;
+    YMaxPrev[k] = 10.0;
 
     XTics[k] = 0;
     YTics[k] = 0;
@@ -270,6 +274,8 @@ void Plot::construct( KeepMode keep, bool subwidget, int id, MultiPlot *mp )
   setSizePolicy( QSizePolicy( QSizePolicy::Expanding, 
 			      QSizePolicy::Expanding ) );
 
+  NewData = true;
+
   if ( SubWidget )
     PixMap = 0;
   else
@@ -326,6 +332,24 @@ void Plot::unlockData( void )
 {
   if ( DMutex != 0 )
     DMutex->unlock();
+}
+
+
+void Plot::setOrigin( double x, double y )
+{
+  XOrigin = x;
+  YOrigin = y;
+  if ( SubWidget && MP != 0 )
+    MP->setDrawBackground();
+}
+
+
+void Plot::setSize( double w, double h )
+{
+  XSize = w;
+  YSize = h;
+  if ( SubWidget && MP != 0 )
+    MP->setDrawBackground();
 }
 
 
@@ -1205,6 +1229,10 @@ QSize Plot::minimumSizeHint( void ) const
 
 void Plot::resizeEvent( QResizeEvent *qre )
 {
+  PMutex.lock();
+  NewData = true;
+  PMutex.unlock();
+
   if ( SubWidget )
     return;
 
@@ -1218,6 +1246,15 @@ void Plot::resizeEvent( QResizeEvent *qre )
   PixMap->resize( ScreenX2 - ScreenX1, ScreenY1 - ScreenY2 );
 
   PMutex.unlock();
+}
+
+
+void Plot::init( void )
+{
+  for ( PDataType::iterator d = PData.begin(); d != PData.end(); ++d ) {
+    if ( (*d)->init() )
+      NewData = true;
+  }
 }
 
 
@@ -1659,9 +1696,8 @@ void Plot::initBorder( void )
 
 void Plot::initLines( void )
 {
-  for ( PDataType::iterator d = PData.begin(); d != PData.end(); ++d ) {
+  for ( PDataType::iterator d = PData.begin(); d != PData.end(); ++d )
     (*d)->setRange( XMin, XMax, YMin, YMax, PlotX1, PlotX2, PlotY1, PlotY2 );
-  }
 }
 
 
@@ -1940,7 +1976,6 @@ void Plot::drawLabels( QPainter &paint )
 
 void Plot::drawLine( QPainter &paint, DataElement *d )
 {
-
   if ( d->Line.color() != Transparent && d->Line.width() > 0 ) {
     // set pen:
     RGBColor c = color( d->Line.color() );
@@ -1955,6 +1990,8 @@ void Plot::drawLine( QPainter &paint, DataElement *d )
     // init data:
     long f = d->first( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
     long l = d->last( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+    if ( ! NewData )
+      f = d->lineIndex();
     if ( f >= l )
       return;
     long k = f;
@@ -2117,8 +2154,9 @@ void Plot::drawLine( QPainter &paint, DataElement *d )
 	previn = true;
       }
     }
+    paint.flush();
+    d->setLineIndex( l );
   }
-  paint.flush();
 }
 
 
@@ -2169,11 +2207,15 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
     int xaxis = d->XAxis;
     int yaxis = d->YAxis;
 
+    // index range:
+    long f = d->first( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+    long l = d->last( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+    if ( ! NewData )
+      f = d->pointIndex();
+
     // draw Box:
     if ( d->Point.type() == Box ) {
       // XXX improve single point plot!
-      long f = d->first( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
-      long l = d->last( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
       if ( l-f >= 2 ) {
 	double x, y;
 	int WP = d->Point.size();
@@ -2507,8 +2549,6 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
       point.setMask( mask );
 
       // draw points:
-      long f = d->first( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
-      long l = d->last( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
       for ( long k=f; k<l; k++ ) {
 	double x, y;
 	d->point( k, x, y );
@@ -2520,8 +2560,9 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
       }
 
     }
+    paint.flush();
+    d->setPointIndex( l );
   }
-  paint.flush();
 }
 
 
@@ -2664,19 +2705,44 @@ void Plot::draw( QPaintDevice *qpm )
   QColor pbc = paletteBackgroundColor();
   Colors[WidgetBackground] = RGBColor( pbc.red(), pbc.green(), pbc.blue() );
 
+  init();
   initRange();
   initTics();
   initBorder();
   initLines();
 
+  // check for changes:
+  for ( int k=0; k<MaxAxis; k++ ) {
+    if ( XMin[k] != XMinPrev[k] )
+      NewData = true;
+    if ( XMax[k] != XMaxPrev[k] )
+      NewData = true;
+    if ( YMin[k] != YMinPrev[k] )
+      NewData = true;
+    if ( YMax[k] != YMaxPrev[k] )
+      NewData = true;
+  }
+
   QPainter paint( qpm );
   // the painter coordinate system has its origin in 
   // the upper left corner of the widget!
-  drawBorder( paint );
-  drawAxis( paint );
+  if ( NewData ) {
+    drawBorder( paint );
+    drawAxis( paint );
+  }
   drawData( paint );
-  drawLabels( paint );
+  if ( NewData )
+    drawLabels( paint );
   drawMouse( paint );
+
+  // remember current ranges:
+  for ( int k=0; k<MaxAxis; k++ ) {
+    XMinPrev[k] = XMin[k];
+    XMaxPrev[k] = XMax[k];
+    YMinPrev[k] = YMin[k];
+    YMaxPrev[k] = YMax[k];
+  }
+  NewData = false;
 
   PMutex.unlock();
   if ( ! SubWidget )
@@ -3668,6 +3734,7 @@ void Plot::setYShrinkFactor( double f )
 
 int Plot::addData( DataElement *d )
 {
+  NewData = true;
   PData.push_back( d );
   return PData.size() - 1;
 }
@@ -3676,6 +3743,8 @@ Plot::DataElement::DataElement( DataTypes dt )
   : Own( false ), 
     XAxis( 0 ),
     YAxis( 0 ),
+    LineIndex( 0 ),
+    PointIndex( 0 ),
     DataType( dt ),
     Line(),
     Point()  
@@ -3699,6 +3768,30 @@ void Plot::DataElement::setAxis( int xaxis, int yaxis )
 {
   XAxis = xaxis;
   YAxis = yaxis;
+}
+
+
+void Plot::DataElement::setLineIndex( long inx )
+{
+  LineIndex = inx;
+}
+
+
+long Plot::DataElement::lineIndex() const
+{
+  return LineIndex;
+}
+
+
+void Plot::DataElement::setPointIndex( long inx )
+{
+  PointIndex = inx;
+}
+
+
+long Plot::DataElement::pointIndex() const
+{
+  return PointIndex;
 }
 
 
@@ -3766,9 +3859,9 @@ void Plot::PointElement::point( long index, double &x, double &y ) const
 
 
 void Plot::PointElement::setRange( double xmin[MaxAxis], double xmax[MaxAxis], 
-				  double ymin[MaxAxis], double ymax[MaxAxis],
-				  int xpmin, int xpmax, 
-				  int ypmin, int ypmax )
+				   double ymin[MaxAxis], double ymax[MaxAxis],
+				   int xpmin, int xpmax, 
+				   int ypmin, int ypmax )
 {
   if ( P.xcoor() == Plot::Graph )
     X = P.xpos()*( xmax[XAxis] - xmin[XAxis] ) + xmin[XAxis];
@@ -3898,6 +3991,7 @@ Plot::EventDataElement::EventDataElement( const EventData &x, int origin,
 {
   Origin = origin;
   Offset = offset;
+  Reference = 0.0;
 }
 
 
@@ -3908,51 +4002,36 @@ Plot::EventDataElement::~EventDataElement( void )
 
 long Plot::EventDataElement::first( double x1, double y1, double x2, double y2 ) const
 {
-  double t = x1/TScale;
-
-  if ( Origin == 1 )
-    t += ED->rangeBack(); 
-  else if ( Origin == 2 )
-    t += ( ED->signalTime() < 0.0 ? 0.0 : ED->signalTime() ); 
-  else if ( Origin == 3 )
-    t += Offset; 
-
-  return ED->next( t );
+  return ED->next( x1/TScale + Reference );
 }
 
 
 long Plot::EventDataElement::last( double x1, double y1, double x2, double y2 ) const
 {
-  double t = x2/TScale;
-
-  if ( Origin == 1 )
-    t += ED->rangeBack(); 
-  else if ( Origin == 2 )
-    t += ( ED->signalTime() < 0.0 ? 0.0 : ED->signalTime() );
-  else if ( Origin == 3 )
-    t += Offset; 
-
-  return ED->next( t );
+  return ED->next( x2/TScale + Reference );
 }
 
 
 void Plot::EventDataElement::point( long index, double &x, double &y ) const
 {
-  switch ( Origin ) {
-  case 1:
-    x = ( ED->operator[]( index ) - ED->rangeBack() ) * TScale;
-    break;
-  case 2:
-    x = ( ED->operator[]( index ) - ( ED->signalTime() < 0.0 ? 0.0 : ED->signalTime() ) ) * TScale;
-    break;
-  case 3:
-    x = ( ED->operator[]( index ) - Offset ) * TScale;
-    break;
-  default:
-    x = ( ED->operator[]( index ) ) * TScale;
-    break;
-  }
+  x = ( ED->operator[]( index ) - Reference ) * TScale;
   y = Y;
+}
+
+
+bool Plot::EventDataElement::init( void )
+{
+  double prevref = Reference;
+
+  Reference = 0.0;
+  if ( Origin == 1 )
+    Reference = ED->rangeBack(); 
+  else if ( Origin == 2 )
+    Reference = ( ED->signalTime() < 0.0 ? 0.0 : ED->signalTime() ); 
+  else if ( Origin == 3 )
+    Reference = Offset; 
+
+  return ( ::fabs( Reference - prevref ) > 1.0e-8 );
 }
 
 
@@ -3964,22 +4043,8 @@ void Plot::EventDataElement::xminmax( double &xmin, double &xmax,
     tmin = ED->minTime();
   double tmax = ED->rangeBack();
 
-  switch ( Origin ) {
-  case 1:
-    tmin -= ED->rangeBack();
-    tmax -= ED->rangeBack();
-    break;
-  case 2:
-    if ( ED->signalTime() > 0.0 ) {
-      tmin -= ED->signalTime();
-      tmax -= ED->signalTime(); 
-    }
-    break;
-  case 3:
-    tmin -= Offset;
-    tmax -= Offset; 
-    break;
-  }
+  tmin -= Reference;
+  tmax -= Reference; 
 
   xmin = tmin * TScale;
   xmax = tmax * TScale;
@@ -4015,6 +4080,7 @@ Plot::InDataElement::InDataElement( const InData &data, int origin,
   Origin = origin;
   Offset = offset;
   TScale = tscale;
+  Reference = 0.0;
 }
 
 
@@ -4028,15 +4094,7 @@ Plot::InDataElement::~InDataElement( void )
 
 long Plot::InDataElement::first( double x1, double y1, double x2, double y2 ) const
 {
-  double t = x1/TScale;
-
-  if ( Origin == 1 )
-    t += ID->currentTime(); 
-  else if ( Origin == 2 )
-    t += ( ID->signalTime() < 0.0 ? 0.0 : ID->signalTime() ); 
-  else if ( Origin == 3 )
-    t += Offset; 
-
+  double t = x1/TScale + Reference; 
   long x1i = long( ::floor( t/ID->sampleInterval() ) );
   if ( x1i > ID->currentIndex() )
     return ID->currentIndex();
@@ -4048,15 +4106,7 @@ long Plot::InDataElement::first( double x1, double y1, double x2, double y2 ) co
 
 long Plot::InDataElement::last( double x1, double y1, double x2, double y2 ) const
 {
-  double t = x2/TScale;
-
-  if ( Origin == 1 )
-    t += ID->currentTime(); 
-  else if ( Origin == 2 )
-    t += ( ID->signalTime() < 0.0 ? 0.0 : ID->signalTime() );
-  else if ( Origin == 3 )
-    t += Offset; 
-
+  double t = x2/TScale + Reference; 
   long x2i = long( ::ceil( t/ID->sampleInterval() ) ) + 1;
   if ( x2i > ID->currentIndex() )
     return ID->currentIndex();
@@ -4068,21 +4118,24 @@ long Plot::InDataElement::last( double x1, double y1, double x2, double y2 ) con
 
 void Plot::InDataElement::point( long index, double &x, double &y ) const
 {
-  switch ( Origin ) {
-  case 1:
-    x = ID->interval( index - ID->currentIndex() ) * TScale;
-    break;
-  case 2:
-    x = ID->interval( index - ( ID->signalIndex() < 0 ? 0 : ID->signalIndex() ) ) * TScale;
-    break;
-  case 3:
-    x = ( ID->interval( index ) - Offset ) * TScale;
-    break;
-  default:
-    x = ID->interval( index ) * TScale;
-    break;
-  }
+  x = ( ID->interval( index ) - Reference ) * TScale;
   y = (*ID)[index];
+}
+
+
+bool Plot::InDataElement::init( void )
+{
+  double prevref = Reference;
+
+  Reference = 0.0;
+  if ( Origin == 1 )
+    Reference = ID->currentTime(); 
+  else if ( Origin == 2 )
+    Reference = ( ID->signalTime() < 0.0 ? 0.0 : ID->signalTime() ); 
+  else if ( Origin == 3 )
+    Reference = Offset; 
+
+  return ( ::fabs( Reference - prevref ) > 1.0e-8 );
 }
 
 
@@ -4092,19 +4145,8 @@ void Plot::InDataElement::xminmax( double &xmin, double &xmax,
   double tmin = ID->minTime();
   double tmax = ID->currentTime();
 
-  switch ( Origin ) {
-  case 1:
-    tmin -= ID->currentTime();
-    tmax -= ID->currentTime(); 
-  case 2:
-    if ( ID->signalTime() > 0.0 ) {
-      tmin -= ID->signalTime();
-      tmax -= ID->signalTime(); 
-    }
-  case 3:
-    tmin -= Offset;
-    tmax -= Offset; 
-  }
+  tmin -= Reference;
+  tmax -= Reference; 
 
   xmin = tmin * TScale;
   xmax = tmax * TScale;
@@ -4117,19 +4159,8 @@ void Plot::InDataElement::yminmax( double xmin, double xmax,
   double tmin = xmin/TScale;
   double tmax = xmax/TScale;
 
-  switch ( Origin ) {
-  case 1:
-    tmin += ID->currentTime();
-    tmax += ID->currentTime(); 
-  case 2:
-    if ( ID->signalTime() > 0.0 ) {
-      tmin += ID->signalTime();
-      tmax += ID->signalTime(); 
-    }
-  case 3:
-    tmin += Offset;
-    tmax += Offset; 
-  }
+  tmin += Reference;
+  tmax += Reference; 
 
   long x1i = ID->indices( tmin );
   long x2i = ID->indices( tmax );
@@ -4229,20 +4260,7 @@ long Plot::EventInDataElement::last( double x1, double y1, double x2, double y2 
 void Plot::EventInDataElement::point( long index, double &x, double &y ) const
 {
   double time = ED->operator[]( index ); 
-  switch ( Origin ) {
-  case 1:
-    x = ( time - ID->currentTime() ) * TScale;
-    break;
-  case 2:
-    x = ( time - ( ID->signalTime() < 0.0 ? 0.0 : ID->signalTime() ) ) * TScale;
-    break;
-  case 3:
-    x = ( time - Offset ) * TScale;
-    break;
-  default:
-    x = ( time ) * TScale;
-    break;
-  }
+  x = ( time - Reference ) * TScale;
   int inx = ID->index( time );
   y = (*ID)[inx];
 }
@@ -4258,22 +4276,8 @@ void Plot::EventInDataElement::xminmax( double &xmin, double &xmax,
     tmin = ID->minTime();
   double tmax = ID->currentTime();
 
-  switch ( Origin ) {
-  case 1:
-    tmin -= ID->currentTime();
-    tmax -= ID->currentTime();
-    break;
-  case 2:
-    if ( ID->signalTime() > 0.0 ) {
-      tmin -= ID->signalTime();
-      tmax -= ID->signalTime(); 
-    }
-    break;
-  case 3:
-    tmin -= Offset;
-    tmax -= Offset; 
-    break;
-  }
+  tmin -= Reference;
+  tmax -= Reference; 
 
   xmin = tmin * TScale;
   xmax = tmax * TScale;
@@ -4298,6 +4302,7 @@ void Plot::clear( void )
   for ( PDataType::iterator d = PData.begin(); d != PData.end(); ++d )
     delete (*d);
   PData.clear();
+  NewData = true;
 }
 
 
@@ -4310,6 +4315,7 @@ void Plot::clear( int index )
     delete (*d);
     PData.erase( d );
   }
+  NewData = true;
 }
 
 

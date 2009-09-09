@@ -125,6 +125,9 @@ public:
     /*! Draw the Plots. */
   void draw( void );
 
+    /*! To be called from a Plot to request to redraw the background. */
+  void setDrawBackground( void );
+
     /*! Clear each Plot from data, i.e. call Plot::clear() for each Plot. */
   void clearPlots( void );
 
@@ -184,6 +187,7 @@ private:
   bool Horizontal;
 
   QPixmap *PixMap;
+  bool DrawBackground;
 
 };
 
