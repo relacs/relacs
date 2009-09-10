@@ -1401,6 +1401,9 @@ private:
   typedef vector<DataElement*> PDataType;
   PDataType PData;
   bool NewData;
+  bool ShiftData;
+  int ShiftXPix;
+  double ShiftX[MaxAxis];
   QMutex PMutex;
   QMutex *DMutex;
 

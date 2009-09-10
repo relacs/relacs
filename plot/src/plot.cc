@@ -275,6 +275,8 @@ void Plot::construct( KeepMode keep, bool subwidget, int id, MultiPlot *mp )
 			      QSizePolicy::Expanding ) );
 
   NewData = true;
+  ShiftData = false;
+  ShiftXPix = 0;
 
   if ( SubWidget )
     PixMap = 0;
@@ -339,6 +341,7 @@ void Plot::setOrigin( double x, double y )
 {
   XOrigin = x;
   YOrigin = y;
+  NewData = true;
   if ( SubWidget && MP != 0 )
     MP->setDrawBackground();
 }
@@ -348,6 +351,7 @@ void Plot::setSize( double w, double h )
 {
   XSize = w;
   YSize = h;
+  NewData = true;
   if ( SubWidget && MP != 0 )
     MP->setDrawBackground();
 }
@@ -1713,50 +1717,66 @@ void Plot::drawBorder( QPainter &paint )
     paint.fillRect( PlotX1, ScreenY2, PlotX2 - PlotX1 + 1, PlotY2 - ScreenY2, qcolor );
   }
 
-  // draw plot background:
-  if ( PlotColor != Transparent ) {
-    RGBColor c = color( PlotColor );
-    QColor qcolor( c.red(), c.green(), c.blue() );
-    paint.fillRect( PlotX1, PlotY2, PlotX2-PlotX1+1, PlotY1-PlotY2+1, qcolor );
+  if ( ! NewData && ShiftData ) {
+
+    // draw plot background:
+    if ( PlotColor != Transparent ) {
+      RGBColor c = color( PlotColor );
+      QColor qcolor( c.red(), c.green(), c.blue() );
+      if ( ShiftXPix > 0 )
+	paint.fillRect( PlotX2-ShiftXPix, PlotY2, ShiftXPix, PlotY1-PlotY2+1, qcolor );
+      else
+	paint.fillRect( PlotX1, PlotY2, -ShiftXPix, PlotY1-PlotY2+1, qcolor );
+    }
+
   }
+  else {
 
-  // grid:
-  for ( int k=0; k<MaxAxis; k++ ) {
-
-    // draw horizontal grid lines:
-    if ( YGrid[k] && YGridStyle[k].width() > 0 && 
-	 YGridStyle[k].color() != Transparent ) {
-      RGBColor c = color( YGridStyle[k].color() );
+    // draw plot background:
+    if ( PlotColor != Transparent ) {
+      RGBColor c = color( PlotColor );
       QColor qcolor( c.red(), c.green(), c.blue() );
-      Qt::PenStyle dash = QtDash.find( YGridStyle[k].dash() )->second;
-      paint.setPen( QPen( qcolor, YGridStyle[k].width(), dash ) );
-      for ( double y=YTicsStart[k]; y<=YMax[k]; y+=YTicsIncr[k] ) {
-	if ( ::fabs( y ) < 0.001*YTicsIncr[k] )
-	  y = 0.0;
-	int yp = PlotY1 + (int)::rint( double(PlotY2-PlotY1)/(YMax[k]-YMin[k])*(y-YMin[k]) );
-	if ( ::abs( PlotY1 - yp ) > YGridStyle[k].width() &&
-	     ::abs( PlotY2 - yp ) > YGridStyle[k].width() )
-	  paint.drawLine( PlotX1, yp, PlotX2, yp );
-      }
+      paint.fillRect( PlotX1, PlotY2, PlotX2-PlotX1+1, PlotY1-PlotY2+1, qcolor );
     }
 
-    // draw vertical grid lines:
-    if ( XGrid[k] && XGridStyle[k].width() > 0 && 
-	 XGridStyle[k].color() != Transparent ) {
-      RGBColor c = color( XGridStyle[k].color() );
-      QColor qcolor( c.red(), c.green(), c.blue() );
-      Qt::PenStyle dash = QtDash.find( XGridStyle[k].dash() )->second;
-      paint.setPen( QPen( qcolor, XGridStyle[k].width(), dash ) );
-      for ( double x=XTicsStart[k]; x<=XMax[k]; x+=XTicsIncr[k] ) {
-	if ( ::fabs( x ) < 0.001*XTicsIncr[k] )
-	  x = 0.0;
-	int xp = PlotX1 + (int)::rint( double(PlotX2-PlotX1)/(XMax[k]-XMin[k])*(x-XMin[k]) );
-	if ( ::abs( PlotX1 - xp ) > XGridStyle[k].width() &&
-	     ::abs( PlotX2 - xp ) > XGridStyle[k].width() )
-	  paint.drawLine( xp, PlotY1, xp, PlotY2 );
+    // grid:
+    for ( int k=0; k<MaxAxis; k++ ) {
+      
+      // draw horizontal grid lines:
+      if ( YGrid[k] && YGridStyle[k].width() > 0 && 
+	   YGridStyle[k].color() != Transparent ) {
+	RGBColor c = color( YGridStyle[k].color() );
+	QColor qcolor( c.red(), c.green(), c.blue() );
+	Qt::PenStyle dash = QtDash.find( YGridStyle[k].dash() )->second;
+	paint.setPen( QPen( qcolor, YGridStyle[k].width(), dash ) );
+	for ( double y=YTicsStart[k]; y<=YMax[k]; y+=YTicsIncr[k] ) {
+	  if ( ::fabs( y ) < 0.001*YTicsIncr[k] )
+	    y = 0.0;
+	  int yp = PlotY1 + (int)::rint( double(PlotY2-PlotY1)/(YMax[k]-YMin[k])*(y-YMin[k]) );
+	  if ( ::abs( PlotY1 - yp ) > YGridStyle[k].width() &&
+	       ::abs( PlotY2 - yp ) > YGridStyle[k].width() )
+	    paint.drawLine( PlotX1, yp, PlotX2, yp );
+	}
       }
+      
+      // draw vertical grid lines:
+      if ( XGrid[k] && XGridStyle[k].width() > 0 && 
+	   XGridStyle[k].color() != Transparent ) {
+	RGBColor c = color( XGridStyle[k].color() );
+	QColor qcolor( c.red(), c.green(), c.blue() );
+	Qt::PenStyle dash = QtDash.find( XGridStyle[k].dash() )->second;
+	paint.setPen( QPen( qcolor, XGridStyle[k].width(), dash ) );
+	for ( double x=XTicsStart[k]; x<=XMax[k]; x+=XTicsIncr[k] ) {
+	  if ( ::fabs( x ) < 0.001*XTicsIncr[k] )
+	    x = 0.0;
+	  int xp = PlotX1 + (int)::rint( double(PlotX2-PlotX1)/(XMax[k]-XMin[k])*(x-XMin[k]) );
+	  if ( ::abs( PlotX1 - xp ) > XGridStyle[k].width() &&
+	       ::abs( PlotX2 - xp ) > XGridStyle[k].width() )
+	    paint.drawLine( xp, PlotY1, xp, PlotY2 );
+	}
+      }
+      
     }
-
   }
   
   // draw border:
@@ -1988,10 +2008,29 @@ void Plot::drawLine( QPainter &paint, DataElement *d )
     int yaxis = d->YAxis;
     
     // init data:
-    long f = d->first( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
-    long l = d->last( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
-    if ( ! NewData )
-      f = d->lineIndex();
+    // XXX needs to be replicated in drawPoints()!
+    long f = 0;
+    long l = 0;
+    if ( NewData ) {
+      f = d->first( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+      l = d->last( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+    }
+    else {
+      if ( ShiftData ) {
+	if ( ShiftX[xaxis] > 0.0 ) {
+	  f = d->first( XMax[xaxis]-ShiftX[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+	  l = d->last( XMax[xaxis]-ShiftX[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+	}
+	else {
+	  f = d->first( XMin[xaxis], YMin[yaxis], XMin[xaxis]-ShiftX[xaxis], YMax[yaxis] );
+	  l = d->last( XMin[xaxis], YMin[yaxis], XMin[xaxis]-ShiftX[xaxis], YMax[yaxis] );
+	}
+      }
+      else {
+	f = d->lineIndex();
+	l = d->last( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+      }
+    }
     if ( f >= l )
       return;
     long k = f;
@@ -2712,26 +2751,90 @@ void Plot::draw( QPaintDevice *qpm )
   initLines();
 
   // check for changes:
+  ShiftData = false;
+  ShiftXPix = 0;
   for ( int k=0; k<MaxAxis; k++ ) {
-    if ( XMin[k] != XMinPrev[k] )
+    ShiftX[k] = 0.0;
+    // check whether axis is in use:
+    bool havexaxis = false;
+    bool haveyaxis = false;
+    for ( PDataType::iterator d = PData.begin(); d != PData.end(); ++d ) {
+      if ( (*d)->XAxis == k ) {
+	havexaxis = true;
+	if ( haveyaxis )
+	  break;
+      }
+      if ( (*d)->YAxis == k ) {
+	haveyaxis = true;
+	if ( havexaxis )
+	  break;
+      }
+    }
+
+    if ( havexaxis ) {
+      if ( ::fabs( ::fabs( XMax[k] - XMin[k] ) - ::fabs( XMaxPrev[k] - XMinPrev[k] ) ) > 1.0e-8 )
+	NewData = true;
+      else {
+	if ( XMin[k] != XMinPrev[k] ) {
+	  ShiftData = true;
+	  int dx = (int)::rint( double(PlotX2-PlotX1)/(XMax[k]-XMin[k])*(XMin[k]-XMinPrev[k]) );
+	  if ( ShiftXPix == 0 )
+	    ShiftXPix = dx;
+	  else if ( dx != ShiftXPix )
+	    NewData = true;
+	  ShiftX[k] = XMin[k]-XMinPrev[k];
+	}
+	else {
+	  if ( ShiftData )
+	    NewData = true;
+	}
+      }
+    }
+
+    if ( haveyaxis ) {
+      if ( YMin[k] != YMinPrev[k] )
+	NewData = true;
+      if ( YMax[k] != YMaxPrev[k] )
+	NewData = true;
+    }
+  }
+
+  ShiftData = false; // XXX remove, once thi is working
+
+  if ( ! NewData && ShiftData ) {
+    if ( ShiftXPix >= PlotX2 - PlotX1 )
       NewData = true;
-    if ( XMax[k] != XMaxPrev[k] )
-      NewData = true;
-    if ( YMin[k] != YMinPrev[k] )
-      NewData = true;
-    if ( YMax[k] != YMaxPrev[k] )
-      NewData = true;
+    else {
+      if ( ShiftX > 0 ) {
+	QPixmap pxm( PlotX2-PlotX1+1-ShiftXPix, PlotY2-PlotY1 );
+	bitBlt( &pxm, 0, 0,
+		qpm, PlotX1+ShiftXPix, PlotY1, PlotX2-PlotX1+1-ShiftXPix, PlotY2-PlotY1,
+		CopyROP, true );
+	bitBlt( qpm, PlotX1, PlotY1,
+		&pxm, 0, 0, PlotX2-PlotX1+1-ShiftXPix, PlotY2-PlotY1,
+		CopyROP, true );
+      }
+      else {
+	QPixmap pxm( PlotX2-PlotX1+1+ShiftXPix, PlotY2-PlotY1 );
+	bitBlt( &pxm, 0, 0,
+		qpm, PlotX1, PlotY1, PlotX2-PlotX1+1+ShiftXPix, PlotY2-PlotY1,
+		CopyROP, true );
+	bitBlt( qpm, PlotX1-ShiftXPix, PlotY1,
+		&pxm, 0, 0, PlotX2-PlotX1+1+ShiftXPix, PlotY2-PlotY1,
+		CopyROP, true );
+      }
+    }
   }
 
   QPainter paint( qpm );
   // the painter coordinate system has its origin in 
   // the upper left corner of the widget!
-  if ( NewData ) {
+  if ( NewData || ShiftData ) {
     drawBorder( paint );
     drawAxis( paint );
   }
   drawData( paint );
-  if ( NewData )
+  if ( NewData || ShiftData )
     drawLabels( paint );
   drawMouse( paint );
 
