@@ -32,7 +32,7 @@
 #include <QLayout>
 #include <QPushButton>
 #include <QPixmap>
-#include <QAction>
+#include <QMouseEvent>
 #include <relacs/str.h>
 #include <relacs/configclass.h>
 using namespace std;
@@ -75,7 +75,7 @@ public:
   Macro( void ) : Name( "" ), Action( 0 ), 
     Button( true ), Menu( true ), Key( true ),
     Keep( false ), Overwrite( false ),
-    PushButton( 0 ), AccelAction( NULL ), PMenu( 0 ), PMenuId( -1 ), MacroNum( -1 ),
+    PushButton( 0 ), MAction( NULL ), PMenu( 0 ), PMenuId( -1 ), MacroNum( -1 ),
     MC( 0 ), Commands(), DialogOpen( false ) {};
   Macro( Str name, Macros *mc );
   Macro( const Macro &macro ) 
@@ -85,7 +85,7 @@ public:
     Action( macro.Action ), 
     Button( macro.Button ), Menu( macro.Menu ), Key( macro.Key ),
     Keep( false ), Overwrite( false ),
-    PushButton( macro.PushButton ), AccelAction( macro.AccelAction ), 
+    PushButton( macro.PushButton ), MAction( macro.MAction ), 
     PMenu( macro.PMenu ), PMenuId( macro.PMenuId ), MacroNum( macro.MacroNum ),
     MC( macro.MC ), Commands( macro.Commands ),
     DialogOpen( macro.DialogOpen ) {};
@@ -172,8 +172,8 @@ public:
   bool Overwrite;
     /*! A pointer to the macro's button. */
   QPushButton *PushButton;
-    /*! A pointer to the action trigerred by a key shortcut. */
-  QAction *AccelAction;
+    /*! A pointer to the macro's action that might have a key shortcut. */
+  QAction *MAction;
     /*! The popup menu of the Macro . */
   QMenu *PMenu;
   int PMenuId;
@@ -345,9 +345,9 @@ public slots:
     /*! Open file dialog and load macros from selected file,
         check them and create buttons and menu. */
   void selectMacros( void );
-    /*! Load macros from file with id \a id,
+    /*! Load macros from file associated with \a action,
         check them and create buttons and menu. */
-  void switchMacro( int id );
+  void switchMacro( QAction *action );
     /*! Reload the macros from the current macro file. */
   void reload( void );
     /*! Updates the macros if the repro \a name was reloaded. */
@@ -455,6 +455,7 @@ private:
 
   QMenu *Menu;
   QMenu *SwitchMenu;
+  vector< QAction* > SwitchActions;
   QAction *ResumeAction;
   QAction *ResumeNextAction;
   QGridLayout *ButtonLayout;
