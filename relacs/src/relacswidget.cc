@@ -327,7 +327,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   MC->load( "", true );
   MC->load();
   MC->check();
-  MC->buttons();
+  MC->create();
   connect( MC, SIGNAL( stopRePro( void ) ), 
 	   this, SLOT( stopRePro( void ) ) );
   connect( MC, SIGNAL( startRePro( RePro*, int, bool ) ), 

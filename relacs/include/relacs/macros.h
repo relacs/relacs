@@ -45,6 +45,7 @@ class RePro;
 class RePros;
 class Macros;
 class MacroCommand;
+class MacroButton;
 
 /*!
   \class Macro
@@ -54,6 +55,9 @@ class MacroCommand;
 class Macro : public QObject
 {
   Q_OBJECT
+
+  friend class Macros;
+  friend class MacroCommand;
 
 public:
 
@@ -72,23 +76,12 @@ public:
     /*! This is no Macro. */
   static const int NoMacro = 0x40;
 
-  Macro( void ) : Name( "" ), Action( 0 ), 
-    Button( true ), Menu( true ), Key( true ),
-    Keep( false ), Overwrite( false ),
-    PushButton( 0 ), MAction( NULL ), PMenu( 0 ), PMenuId( -1 ), MacroNum( -1 ),
-    MC( 0 ), Commands(), DialogOpen( false ) {};
+  Macro( void );
   Macro( Str name, Macros *mc );
-  Macro( const Macro &macro ) 
-    : Name( macro.Name ), 
-    Variables( macro.Variables ),
-    Project( macro.Project ),
-    Action( macro.Action ), 
-    Button( macro.Button ), Menu( macro.Menu ), Key( macro.Key ),
-    Keep( false ), Overwrite( false ),
-    PushButton( macro.PushButton ), MAction( macro.MAction ), 
-    PMenu( macro.PMenu ), PMenuId( macro.PMenuId ), MacroNum( macro.MacroNum ),
-    MC( macro.MC ), Commands( macro.Commands ),
-    DialogOpen( macro.DialogOpen ) {};
+  Macro( const Macro &macro );
+
+    /*! The name of the macro. */
+  string name( void ) const;
 
     /*! True if this Macro requests to be the startup Macro. */
   bool startUp( void ) const { return ( Action & StartUp ); };
@@ -129,8 +122,8 @@ public:
     /*! Delete the stop-session flag. */
   void noStopSession( void ) { Action &= ~StopSession; };
 
-    /*! Opens a macro dialog. */
-  void dialog( Macros *macros );
+    /*! True if this Macro is not to be cleared. */
+  bool keep( void ) const;
 
     /*! Add parameter from \a param to the macros variables. */
   void addParams( const Str &param );
@@ -139,9 +132,38 @@ public:
         the string and loaded into \a prjopt. */
   string expandParams( const Str &params, Options &prjopt ) const;
 
+    /*! Add menu for the macro and its commands to \a menu. */
+  void addMenu( QMenu *menu );
     /*! Forms a string for the menu consisting of the macro name
         and its variables. */
   string menuStr( void ) const;
+    /*! Add button for the macro and its commands to \a menu. */
+  void addButton( const string &keys );
+    /*! The button of this macro. */
+  MacroButton *button( void );
+    /*! Clear menu and button. */
+  void clear( void );
+
+  friend ostream &operator<< ( ostream &str, const Macro &macro );
+
+
+public slots:
+
+    /*! Opens a macro dialog. */
+  void dialog( void );
+  void acceptDialog( void );
+  void dialogAction( int r );
+  void dialogClosed( int r );
+    /*! Runs this macro. */
+  void run( void );
+
+    /*! Stops the currently running repro and starts this macro. */
+  void launch( void );
+    /*! Open the popup menu right above the macro's button. */
+  void popup( void );
+
+
+private:
 
       /*! The name of the Macro. */
   string Name;
@@ -171,28 +193,19 @@ public:
     /*! True if this Macro should overwrite an exisitng macro. */
   bool Overwrite;
     /*! A pointer to the macro's button. */
-  QPushButton *PushButton;
+  MacroButton *PushButton;
     /*! A pointer to the macro's action that might have a key shortcut. */
   QAction *MAction;
     /*! The popup menu of the Macro . */
   QMenu *PMenu;
-  int PMenuId;
+  QAction *RunAction;
+  QAction *BottomAction;
   int MacroNum;
     /*! Pointer to Macros. */
   Macros *MC;
 
     /*! The list of commands associated with the Macro. */
   vector< MacroCommand* > Commands;
-
-
-public slots:
-
-  void acceptDialog( void );
-  void dialogAction( int r );
-  void dialogClosed( int r );
-
-
-private:
 
   const static string StartUpIdent;
   const static string ShutDownIdent;
@@ -230,6 +243,7 @@ class Macros : public QWidget, public ConfigClass
 
   friend class RELACSWidget;
   friend class Macro;
+  friend class MacroCommand;
 
 
 private:
@@ -260,8 +274,8 @@ public:
   bool fatal( void ) const { return Fatal; };
     /*! Displays warning messages from load and check if there are any. */
   void warning( void );
-    /*! Create the button aray for the macros. */
-  void buttons( void );
+    /*! Create the button aray and the menu for the macros. */
+  void create( void );
     /*! The popup menu starting and configuring Macros. */
   QMenu* menu( void );
 
@@ -312,7 +326,7 @@ public:
     /*! The index of the macro with name \a macro. */
   int index( const string &macro ) const;
     /*! The name of the current Macro. */
-  const string &macro( void ) const { return MCs[CurrentMacro]->Name; };
+  string macro( void ) const { return MCs[CurrentMacro]->name(); };
     /*! Returns the options of the current RePro. */
   string options( void ) const;
     /*! Returns the macro variables of macro \a macro. */
@@ -366,10 +380,6 @@ public slots:
     /*! Starts the previously memorized
         macro at the repro following the memorized repro. */
   void resumeNext( void );
-    /*! Stops the currently running repro and starts the macro \a number. */
-  void launch( int number );
-    /*! Open the popup menu right above the macro's button. */
-  void popup( int number );
     /*! Inform macros that a repro is started that is not part of a macro. */
   void noMacro( RePro *repro );
 
@@ -385,6 +395,7 @@ signals:
 
 private:
 
+  void createIcons( void );
   void clearButton( void );
   void runButton( void );
   void stackButton( void );
@@ -460,23 +471,7 @@ private:
   QAction *ResumeNextAction;
   QGridLayout *ButtonLayout;
 
-
   bool Fatal;
-
-private slots:
-
-    /*! This function is called from the macros menu. 
-        Depending on \id it starts a macro via launch( int ),
-        starts a specific repro within a macro,
-        opens the repros options dialog or help window,
-        reloads the repro or views the repro. */
-  void select( int id );
-
-
-private:
-
-  int dialog( RePro *repro, const string &options, Options &co );
-  void createIcons( void );
 
 };
 
@@ -493,6 +488,9 @@ class MacroCommand : public QObject
 {
   Q_OBJECT
 
+  friend class Macros;
+  friend class Macro;
+
 public:
 
   MacroCommand( void );
@@ -502,7 +500,36 @@ public:
 		bool browse, Macros *mc );
   MacroCommand( RePro *repro, const string &params, Macros *mc );
   MacroCommand( const MacroCommand &com );
-  void dialog( int macro, int command, Options &dopt );
+
+    /*! Adds the submenu for this command to \a menu. */
+  void addMenu( QMenu *menu );
+
+  friend ostream &operator<< ( ostream &str, const MacroCommand &command );
+
+
+public slots:
+
+    /*! Start macro at this command. */
+  void start( void );
+    /*! Run only this command. */
+  void run( void );
+    /*! Launch the dialog of the command. */
+  void dialog( void );
+    /*! View the RePro. */
+  void view( void );
+    /*! Reload the RePro plugin. */
+  void reload( void );
+    /*! Display the RePro's help text. */
+  void help( void );
+    /*! Enable/disable the command. */
+  void enable( void );
+
+  void acceptDialog( void );
+  void dialogAction( int r );
+  void dialogClosed( int r );
+
+
+ private:
 
     /*! The name of the requested repro, macro, or shell script. */
   string Name;
@@ -537,30 +564,24 @@ public:
   bool Browse;
     /*! True if this command is enabled. */
   bool Enabled;
+    /*! The menu entry for enabling/disabling the command. */
+  QAction *EnabledAction;
     /*! The index of the macro this command belongs to. */
   int MacroNum;
     /*! The index of this command withing its Macro. */
   int CommandNum;
     /*! Pointer to Macros. */
-  Macros *MC;
+  Macros *MCs;
     /*! True if dialog for this command is open. */
   bool DialogOpen;
     /*! Options for a Macro-variable dialog. */
   Options MacroVars;
     /*! Options for a Macro-project dialog. */
   Options MacroProject;
-    /*! The shortcut key for the menu entry. */
+    /*! The shortcut key for the menu entry (e.g. "&2 "). */
   string MenuShortcut;
-  string MenuText;
-  QMenu *Menu;
-  int MenuId;
+    /*! The menu offering various actions for the command. */
   QMenu *SubMenu;
-
-public slots:
-
-  void acceptDialog( void );
-  void dialogAction( int r );
-  void dialogClosed( int r );
 
 };
 
@@ -568,10 +589,8 @@ public slots:
 /*! 
   \class MacroButton
   \author Christian Machens, Jan Benda
-  \version 1.1
-  \brief Gives a push button a number.
-  \note Cannot be private to Macros, since this doesn't work
-  with the signals and other QObject components.
+  \version 2.0
+  \brief Adds a rightClock signal to a push button.
 */
   
 class MacroButton : public QPushButton
@@ -580,28 +599,16 @@ class MacroButton : public QPushButton
     
 public:
     
-  MacroButton( int number, const string &title,
-	       QWidget *parent = 0 );
+  MacroButton( const string &title, QWidget *parent = 0 );
     
 signals:
     
-  void leftClicked( int number );
-  void rightClicked( int number );
+  void rightClicked( void );
     
     
 protected:
     
   void mouseReleaseEvent( QMouseEvent *qme );  
-    
-    
-private:
-    
-  int Number;
-    
-private slots:
-
-  void wasLeftClicked( void );
-  void wasRightClicked( void );
     
 };
 
