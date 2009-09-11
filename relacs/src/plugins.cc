@@ -178,9 +178,9 @@ int Plugins::openPath( const string &path, const string &relativepath,
     if ( filename.substr( 0, 3 ) != "lib" )
       filename = "lib" + filename;
     // look for files in directory:
-    QDir files( file.dir(), filename );
+    QDir files( file.dir().c_str(), filename.c_str() );
     for ( unsigned int k=0; k < files.count(); k++ ) {
-      Str libfile = files.absFilePath( files[k], false ).latin1();
+      Str libfile = files.absoluteFilePath( files[k] ).toLatin1().data();
       QFileInfo qfi( libfile.c_str() );
       if ( qfi.exists() ) {
 	int r = open( libfile );

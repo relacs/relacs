@@ -33,8 +33,8 @@ Model::Model( const string &name, const string &titles,
 		  name, titles, pluginset, author, version, date ),
     Data( 0 ),
     Signals( 0 ),
-    SignalMutex( false ),
-    InterruptLock( false )
+    SignalMutex(),
+    InterruptLock()
 {
   Restarted = false;
   AveragedLoad = 0;
@@ -155,7 +155,7 @@ void Model::process( const OutData &source, OutData &dest )
 
 void Model::notify( void )
 {
-  if ( running() ) {
+  if ( isRunning() ) {
     stop();
     restart();
   }
@@ -228,7 +228,7 @@ void Model::run( void )
 
 void Model::stop( void )
 {
-  if ( running() ) {
+  if ( isRunning() ) {
     // tell the Model to interrupt:
     InterruptLock.lock();
     InterruptModel = true;
@@ -320,20 +320,10 @@ bool Model::restarted( void )
 
 void Model::addActions( QMenu *menu )
 {
-  QAction *action;
-
-  action = new QAction( this );
-  action->setMenuText( string( title() + " Dialog..." ).c_str() );
-  //  action->setAccel( ALT + Key_S );
-  connect( action, SIGNAL( activated() ),
-	   this, SLOT( dialog() ) );
-  action->addTo( menu );
-
-  action = new QAction( this );
-  action->setMenuText( string( title() + " Help..." ).c_str() );
-  connect( action, SIGNAL( activated() ),
-	   this, SLOT( help() ) );
-  action->addTo( menu );
+  menu->addAction( string( title() + " Dialog..." ).c_str(),
+		   (RELACSPlugin*)this, SLOT( dialog() ) );
+  menu->addAction( string( title() + " Help..." ).c_str(),
+		   (RELACSPlugin*)this, SLOT( help() ) );
 }
 
 

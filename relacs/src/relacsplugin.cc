@@ -71,7 +71,7 @@ string RELACSPlugin::helpFileName( void ) const
 void RELACSPlugin::printlog( const string &s ) const
 {
   if ( RW == 0 )
-    cerr << QTime::currentTime().toString() << " "
+    cerr << QTime::currentTime().toString().toLatin1().data() << " "
 	 << name() << ": " << s << endl;
   else
     RW->printlog( name() + ": " + s );
@@ -104,7 +104,7 @@ void RELACSPlugin::info( const string &s, double timeout )
 
 void RELACSPlugin::postCustomEvent( int type )
 {
-  QApplication::postEvent( this, new QEvent( QEvent::User+type ) );
+  QApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+type ) ) );
 }
 
 

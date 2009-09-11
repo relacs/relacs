@@ -23,10 +23,9 @@
 #include <QPixmap>
 #include <QBitmap>
 #include <QPainter>
-#include <QPointArray>
+#include <QPolygon>
 #include <QDateTime>
 #include <QLabel>
-#include <QKeyCode>
 #include <QToolTip>
 #include <QApplication>
 #include <relacs/str.h>
@@ -37,7 +36,7 @@ namespace relacs {
 
 
 PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
-  : MultiPlot( 1, Plot::Pointer, parent, "PlotTrace::Plot" ),
+  : MultiPlot( 1, Plot::Pointer, parent ),
     IL( 0 ),
     EL( 0 ),
     PlotElements( 1, -1 ),
@@ -70,106 +69,67 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
 
   ButtonBox = new QWidget( this );
   ButtonBoxLayout = new QHBoxLayout(this);
-  //  ButtonBox->setBackgroundMode( Qt::NoBackground );  // obsolete as of QT4
 
   int s = fontInfo().pixelSize();
 
-/*Qt4*/
-	QRect rectFixedOffsetIcon(0, 0, s, s);
+  FixedOffsetIcon = QPixmap( s, s );
   QPainter p;
-	p.begin(this);
-	p.eraseRect( rectFixedOffsetIcon);
-	p.setPen( QPen() );
-	p.setBrush( Qt::black );
-	QPolygon pa( 3 );
- 	pa.setPoint( 0, s-3, 2 );
-  pa.setPoint( 1, s-3, s-2 );
-  pa.setPoint( 2, 4, s/2 );
-	p.drawPolygon( pa );
-  p.setPen( QPen( Qt::black, 2 ) );
-/*Qt3
-  FixedOffsetIcon.resize( s, s );
-  QPainter p;
-  p.begin( &FixedOffsetIcon, this );
+  p.begin( &FixedOffsetIcon );
   p.eraseRect( FixedOffsetIcon.rect() );
   p.setPen( QPen() );
-  p.setBrush( black );
-  QPointArray pa( 3 );
+  p.setBrush( Qt::black );
+  QPolygon pa( 3 );
   pa.setPoint( 0, s-3, 2 );
   pa.setPoint( 1, s-3, s-2 );
   pa.setPoint( 2, 4, s/2 );
   p.drawPolygon( pa );
-  p.setPen( QPen( black, 2 ) );
-*/
-
+  p.setPen( QPen( Qt::black, 2 ) );
   p.drawLine( 3, 2, 3, s-1 );
   p.end();
   FixedOffsetIcon.setMask( FixedOffsetIcon.createHeuristicMask() );
 
-/*Qt4*/
-	QRect rectContinuousOffsetIcon(0, 0, s, s);
-	p.begin(this);
-	p.eraseRect( rectContinuousOffsetIcon);
-	p.setPen( QPen() );
-	p.setBrush( Qt::black );
+  ContinuousOffsetIcon = QPixmap( s, s );
+  p.begin( &ContinuousOffsetIcon );
+  p.eraseRect( ContinuousOffsetIcon.rect() );
+  p.setPen( QPen() );
+  p.setBrush( Qt::black );
   pa.setPoint( 0, 3, 2 );
   pa.setPoint( 1, 3, s-2 );
   pa.setPoint( 2, s-4, s/2 );
   p.drawPolygon( pa );
   p.setPen( QPen( Qt::black, 2 ) );
-/*Qt3
-  ContinuousOffsetIcon.resize( s, s );
-  p.begin( &ContinuousOffsetIcon, this );
-  p.eraseRect( ContinuousOffsetIcon.rect() );
-  p.setPen( QPen() );
-  p.setBrush( black );
-  pa.setPoint( 0, 3, 2 );
-  pa.setPoint( 1, 3, s-2 );
-  pa.setPoint( 2, s-4, s/2 );
-  p.drawPolygon( pa );
-  p.setPen( QPen( black, 2 ) );
-*/
   p.drawLine( s-2, 2, s-2, s-1 );
   p.end();
   ContinuousOffsetIcon.setMask( ContinuousOffsetIcon.createHeuristicMask() );
 
   OffsetButton = new QPushButton;
-  OffsetButton->setPixmap( FixedOffsetIcon );
-  QToolTip::add( OffsetButton, "F: fixed (Pos1), C: continous (End)" );
+  OffsetButton->setIcon( FixedOffsetIcon );
+  OffsetButton->setToolTip( "F: fixed (Pos1), C: continous (End)" );
   connect( OffsetButton, SIGNAL( clicked() ), this, SLOT( offsetToggle() ) );
 
-  QBitmap manualmask( s, s, true );
-  p.begin( &manualmask, this );
-  p.setPen( QPen( color1 ) );
+  QBitmap manualmask( s, s );
+  p.begin( &manualmask );
+  p.setPen( QPen( Qt::color1 ) );
   p.setBrush( QBrush() );
   p.setFont( QFont( "Helvetica", s, QFont::Bold ) );
   p.drawText( manualmask.rect(), Qt::AlignCenter, "M" );
   p.end();
-
-/*Qt4*/
-	QRect rectManualIcon(0, 0, s, s);
-	p.begin(this );
-	p.eraseRect(rectManualIcon);
-	p.setPen( QPen( Qt::black ) );
-/*Qt3
   QPixmap manualicon( s, s );
-  p.begin( &manualicon, this );
+  p.begin( &manualicon );
   p.eraseRect( manualicon.rect() );
-  p.setPen( QPen( black ) );
-*/
+  p.setPen( QPen( Qt::black ) );
   p.setBrush( QBrush() );
   p.setFont( QFont( "Helvetica", s, QFont::Bold ) );
   p.drawText( manualicon.rect(), Qt::AlignCenter, "M" );
   p.end();
-  //  manualicon.setMask( manualicon.createHeuristicMask() );
   manualicon.setMask( manualmask );
 
   ManualButton = new QPushButton;
   ButtonBoxLayout->addWidget( ManualButton );
-  ManualButton->setToggleButton( true );
-  ManualButton->setPixmap( manualicon );
-  ManualButton->setOn( Manual );
-  QToolTip::add( ManualButton, "Manual or Auto" );
+  ManualButton->setCheckable( true );
+  ManualButton->setIcon( manualicon );
+  ManualButton->setDown( Manual );
+  ManualButton->setToolTip( "Manual or Auto" );
   connect( ManualButton, SIGNAL( clicked() ), this, SLOT( toggleManual() ) );
 
   /*
@@ -217,6 +177,7 @@ void PlotTrace::resize( InList &data, const EventList &events )
   lock();
 
   // setup plots:
+  PlotActions.clear();
   MultiPlot::resize( plots, Plot::Pointer );
   setDataMutex( &RW->DataMutex );
   setCommonXRange();
@@ -270,28 +231,34 @@ void PlotTrace::resize( InList &data, const EventList &events )
 }
 
 
-void PlotTrace::toggle( int i )
+void PlotTrace::toggle( QAction *trace )
 {
-  lockData();
-  bool nodata = ( IL == 0 || i < 0 || i >= IL->size() );
-  unlockData();
+  // check for valid trace:
+  bool nodata = true;
+  unsigned i=0;
+  for ( i=0; i<PlotActions.size(); i++ ) {
+    if ( PlotActions[i] == trace ) {
+      nodata = false;
+      break;
+    }
+  }
   if ( nodata )
     return;
 
   lockData();
   int m = (*IL)[i].mode();
   if ( m & PlotTraceMode ) {
-    for ( int k=0; k<IL->size(); k++ ) {
+    for ( unsigned int k=0; (int)k<IL->size(); k++ ) {
       if ( k != i && ( (*IL)[k].mode() & PlotTraceMode ) ) {
 	m &= ~PlotTraceMode;
-	Menu->setItemChecked( i, false );
+	PlotActions[i]->setChecked( false );
 	break;
       }
     }
   }
   else {
     m |= PlotTraceMode;
-    Menu->setItemChecked( i, true );
+    PlotActions[i]->setChecked( true );
   }
   (*IL)[i].setMode( m );
   unlockData();
@@ -511,33 +478,35 @@ void PlotTrace::addMenu( QMenu *menu )
 {
   Menu = menu;
 
-  Menu->insertItem( "Zoom &in", this, SLOT( zoomIn( void ) ), Key_Plus );
-  Menu->insertItem( "Zoom &out", this, SLOT( zoomOut( void ) ), Key_Minus );
-  Menu->insertItem( "Move &left", this, SLOT( moveLeft( void ) ), Key_PageUp );
-  Menu->insertItem( "Move &right", this, SLOT( moveRight( void ) ), Key_PageDown );
-  Menu->insertItem( "&Begin", this, SLOT( moveStart( void ) ), CTRL+Key_PageUp );
-  Menu->insertItem( "&End", this, SLOT( moveEnd( void ) ), CTRL+Key_PageDown );
-  Menu->insertItem( "&Signal", this, SLOT( moveSignal( void ) ), CTRL+Key_Home );
-  Menu->insertItem( "&Fixed", this, SLOT( fixedSignal( void ) ), CTRL+Key_F );
-  Menu->insertItem( "Move offset left", this, SLOT( moveOffsLeft( void ) ), SHIFT+Key_PageUp );
-  Menu->insertItem( "Move offset right", this, SLOT( moveOffsRight( void ) ), SHIFT+Key_PageDown );
-  Menu->insertItem( "&Continuous", this, SLOT( continuousEnd( void ) ), CTRL+Key_C );
-  Menu->insertItem( "&Manual", this, SLOT( manualRange( void ) ), CTRL + Key_M );
-  Menu->insertItem( "&Auto", this, SLOT( autoRange( void ) ), CTRL + Key_A );
-  Menu->insertItem( "&Toggle Plot", this, SLOT( plotOnOff( void ) ) );
+  Menu->addAction( "Zoom &in", this, SLOT( zoomIn() ), Qt::Key_Plus );
+  Menu->addAction( "Zoom &out", this, SLOT( zoomOut() ), Qt::Key_Minus );
+  Menu->addAction( "Move &left", this, SLOT( moveLeft() ), Qt::Key_PageUp );
+  Menu->addAction( "Move &right", this, SLOT( moveRight() ), Qt::Key_PageDown );
+  Menu->addAction( "&Begin", this, SLOT( moveStart() ), Qt::CTRL + Qt::Key_PageUp );
+  Menu->addAction( "&End", this, SLOT( moveEnd() ), Qt::CTRL + Qt::Key_PageDown );
+  Menu->addAction( "&Signal", this, SLOT( moveSignal() ), Qt::CTRL + Qt::Key_Home );
+  Menu->addAction( "&Fixed", this, SLOT( fixedSignal() ), Qt::CTRL + Qt::Key_F );
+  Menu->addAction( "Move offset left", this, SLOT( moveOffsLeft() ), Qt::SHIFT + Qt::Key_PageUp );
+  Menu->addAction( "Move offset right", this, SLOT( moveOffsRight() ), Qt::SHIFT + Qt::Key_PageDown );
+  Menu->addAction( "&Continuous", this, SLOT( continuousEnd() ), Qt::CTRL + Qt::Key_C );
+  Menu->addAction( "&Manual", this, SLOT( manualRange() ), Qt::CTRL + Qt::Key_M );
+  Menu->addAction( "&Auto", this, SLOT( autoRange() ), Qt::CTRL + Qt::Key_A );
+  Menu->addAction( "&Toggle Plot", this, SLOT( plotOnOff() ) );
 
-  Menu->insertSeparator();
+  Menu->addSeparator();
+
+  PlotActions.clear();
   if ( IL != 0 ) {
     for ( int k=0; k<IL->size(); k++ ) {
       string s = "&" + Str( k+1 );
       s += " ";
       s += (*IL)[k].ident();
-      Menu->insertItem( s.c_str(), k );
-      Menu->setItemChecked( k, true );
+      PlotActions.push_back( Menu->addAction( s.c_str() ) );
+      PlotActions.back()->setChecked( true );
     }
   }
-  connect( Menu, SIGNAL( activated( int ) ),
-	   this, SLOT( toggle( int ) ) );
+  connect( Menu, SIGNAL( triggered( QAction* ) ),
+	   this, SLOT( toggle( QAction* ) ) );
 }
 
 
@@ -546,17 +515,17 @@ void PlotTrace::updateMenu( void )
   if ( Menu != 0 ) {
 
     // remove old traces:
-    for ( int k=0; k<Menu->idAt( Menu->count()-1 ); k++ ) {
-      Menu->removeItem( k );
-    }
+    for ( unsigned int k=0; k<PlotActions.size(); k++ )
+      Menu->removeAction( PlotActions[k] );
+    PlotActions.clear();
 
     // add new traces:
     for ( int k=0; k<IL->size(); k++ ) {
       string s = "&" + Str( k+1 );
       s += " ";
       s += (*IL)[k].ident();
-      Menu->insertItem( s.c_str(), k );
-      Menu->setItemChecked( k, true );
+      PlotActions.push_back( Menu->addAction( s.c_str() ) );
+      PlotActions.back()->setChecked( true );
     }
   }
 }
@@ -580,7 +549,7 @@ void PlotTrace::setState( bool on, bool fixed, double length, double offs )
 
   // toggle plot:
   Plotting = on;
-  QApplication::postEvent( this, new QEvent( QEvent::User+1 ) );
+  QApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+1 ) ) );
 
   // toggle fixed offset:
   setOffset( fixed ? 0 : 1 );
@@ -793,7 +762,7 @@ void PlotTrace::plotOnOff( )
   int p = Plotting;
   unlock();
   if ( OnOffButton != 0 )
-    OnOffButton->setOn( ! p );
+    OnOffButton->setDown( ! p );
 }
 
 
@@ -814,7 +783,7 @@ void PlotTrace::manualRange( void )
   lock();
   Manual = true;
   if ( ManualButton != 0 )
-    ManualButton->setOn( Manual );
+    ManualButton->setDown( Manual );
   unlock();
 }
 
@@ -824,7 +793,7 @@ void PlotTrace::autoRange( void )
   lock();
   Manual = false;
   if ( ManualButton != 0 )
-    ManualButton->setOn( Manual );
+    ManualButton->setDown( Manual );
   setState( AutoOn, AutoFixed, AutoTime, AutoOffs );
   unlock();
 }
@@ -852,7 +821,7 @@ void PlotTrace::setOffset( int mode )
   if ( OffsetMode != mode ) {
     OffsetMode = mode;
     PlotChanged = true;
-    QApplication::postEvent( this, new QEvent( QEvent::User+2 ) );
+    QApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
   }
   unlock();
 }
@@ -862,45 +831,47 @@ void PlotTrace::keyPressEvent( QKeyEvent* e )
 {
   switch ( e->key() ) {
 
-  case Key_1: case Key_2: case Key_3: case Key_4: case Key_5: 
-  case Key_6: case Key_7: case Key_8: case Key_9: {
-    toggle( e->key() - Key_1 );
+  case Qt::Key_1: case Qt::Key_2: case Qt::Key_3: case Qt::Key_4: case Qt::Key_5: 
+  case Qt::Key_6: case Qt::Key_7: case Qt::Key_8: case Qt::Key_9: {
+    int n = e->key() - Qt::Key_1;
+    if ( n >=0 && n < (int)PlotActions.size() )
+      toggle( PlotActions[n] );
     break;
   }
 
-  case Key_Minus:
+  case Qt::Key_Minus:
     zoomOut();
     break;
-  case Key_Plus:
-  case Key_Equal:
+  case Qt::Key_Plus:
+  case Qt::Key_Equal:
     zoomIn();
     break;
 
-  case Key_End:
-    if ( e->state() & ControlButton )
+  case Qt::Key_End:
+    if ( e->modifiers() & Qt::ControlModifier )
       moveEnd();
     else
       continuousEnd();
     break;
-  case Key_Home:
-    if ( e->state() & ControlButton )
+  case Qt::Key_Home:
+    if ( e->modifiers() & Qt::ControlModifier )
       moveSignal();
     else 
       fixedSignal();
     break;
 
-  case Key_PageUp:
-    if ( e->state() & ControlButton ) 
+  case Qt::Key_PageUp:
+    if ( e->modifiers() & Qt::ControlModifier ) 
       moveStart();
-    else if ( e->state() & ShiftButton ) 
+    else if ( e->modifiers() & Qt::ShiftModifier ) 
       moveOffsLeft();
     else 
       moveLeft();
     break;
-  case Key_PageDown:
-    if ( e->state() & ControlButton )
+  case Qt::Key_PageDown:
+    if ( e->modifiers() & Qt::ControlModifier )
       moveEnd();
-    else if ( e->state() & ShiftButton ) 
+    else if ( e->modifiers() & Qt::ShiftModifier ) 
       moveOffsRight();
     else
       moveRight();
@@ -982,18 +953,18 @@ void PlotTrace::customEvent( QEvent *qce )
       bool plotting = Plotting;
       unlock();
       if ( plotting )
-	OnOffButton->setOn( false );
+	OnOffButton->setDown( false );
       else
-	OnOffButton->setOn( true );
+	OnOffButton->setDown( true );
       break;
     }
   }
   case 2: {
     if ( OffsetButton != 0 ) {
       if ( OffsetMode == 0 )
-	OffsetButton->setPixmap( FixedOffsetIcon );
+	OffsetButton->setIcon( FixedOffsetIcon );
       else
-	OffsetButton->setPixmap( ContinuousOffsetIcon );
+	OffsetButton->setIcon( ContinuousOffsetIcon );
     }
     break;
   }

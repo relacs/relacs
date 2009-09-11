@@ -94,11 +94,6 @@ public:
     /*! Destruct a PlotTrace. */
   ~PlotTrace( );
 
-  void keyPressEvent( QKeyEvent* e);
-
-
-public slots:
-
     /*! Plot voltage traces and spike trains. */
   void plot( const InList &data, const EventList &events );
     /*! Specify some properties of PlotTrace. 
@@ -106,8 +101,6 @@ public slots:
 	and part preceeding stimulus to \a offs seconds. */
   void setState( bool on, bool fixed, double length, double offs );
 
-    /*! Toggle plot of trace \a i. */
-  void toggle( int i );
     /*! Set the number of plots necessary for \a data and \a events. */
   void resize( InList &data, const EventList &events );
     /*! Initialize the plots with the data \a data and \a events. */
@@ -116,6 +109,14 @@ public slots:
   void addMenu( QMenu *menu );
     /*! Update menu entries toggeling the traces. */
   void updateMenu( void );
+
+  virtual void keyPressEvent( QKeyEvent* e);
+
+
+public slots:
+
+    /*! Toggle plot of trace \a trace. */
+  void toggle( QAction *trace );
 
   void zoomOut( void );
   void zoomIn( void );
@@ -180,6 +181,8 @@ private:
   const EventList *EL;
 
   vector< int > PlotElements;
+
+  vector< QAction* > PlotActions;
 
   RELACSWidget *RW;
 

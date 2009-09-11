@@ -172,7 +172,7 @@ MetaData::MetaData( RELACSWidget *rw )
     SaveFlags( 0 ),
     Dialog( false ),
     PresetDialog( false ),
-    MetaDataLock( true ),
+    MetaDataLock( QMutex::Recursive ),
     RW( rw )
 {
 }
@@ -531,12 +531,8 @@ void MetaData::presetDialogChanged( void )
 
 void MetaData::addActions( QMenu *menu )
 {
-  QAction *action = new QAction( RW, "MetaDataAction" );
-  action->setMenuText( "Session &Info..." );
-  action->setAccel( ALT+Key_I );
-  connect( action, SIGNAL( activated() ),
-	   this, SLOT( presetDialog() ) );
-  action->addTo( menu );
+  menu->addAction( "Session &Info...",
+		   this, SLOT( presetDialog() ), Qt::ALT + Qt::Key_I );
 }
 
 
