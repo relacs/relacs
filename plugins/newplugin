@@ -105,15 +105,15 @@ lib${PLUGINLIB}_la_CPPFLAGS = \\
     -I\$(top_srcdir)/widgets/include \\
     -I\$(top_srcdir)/relacs/include \\
     -I\$(srcdir)/../include \\
-    \$(QT3_CPPFLAGS)
+    \$(QT4_CPPFLAGS)
 
 lib${PLUGINLIB}_la_LDFLAGS = \\
     -module -avoid-version \\
-    \$(QT3_LDFLAGS)
+    \$(QT4_LDFLAGS)
 
 lib${PLUGINLIB}_la_LIBADD = \\
     \$(top_builddir)/relacs/src/librelacs.la \\
-    \$(QT3_LIBS)
+    \$(QT4_LIBS)
 
 \$(lib${PLUGINLIB}_la_OBJECTS) : moc_${PLUGINFILE}.cc
 

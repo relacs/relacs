@@ -34,7 +34,7 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
   : QWidget( parent ),
     Options(),
     RW( rw ),
-    StimulusDataLock( true )
+    StimulusDataLock( QMutex::Recursive )
 {
   Path = "";
   PathTemplate = "%04Y-%02m-%02d-%a2a";
@@ -79,18 +79,32 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
   StatusInfoLayout = new QHBoxLayout(this);
 
   FileLabel = new QLabel( "no files open", this );
-  FileLabel->setTextFormat( PlainText );
+  // XXX  ensurePolished(); produces SIGSEGV
+  NormalFont = FileLabel->font();
+  HighlightFont = QFont( fontInfo().family(), fontInfo().pointSize()*4/3, QFont::Bold );
+  FileLabel->setTextFormat( Qt::PlainText );
   FileLabel->setIndent( 2 );
-  FileLabel->setAlignment( AlignLeft | AlignVCenter );
-  QToolTip::add( FileLabel, "The directory where files are currently stored" );
+  FileLabel->setAlignment( Qt::AlignLeft | Qt::AlignVCenter );
+  FileLabel->setToolTip( "The directory where files are currently stored" );
+  Str fn = PathTemplate;
+  fn.format( localtime( &PathTime ) );
+  fn.format( 99, 'n', 'd' );
+  fn.format( "aa", 'a' );
+  fn.format( "AA", 'A' );
+  FileLabel->setFixedWidth( QFontMetrics( HighlightFont ).boundingRect( fn.c_str() ).width() + 8 );
   StatusInfoLayout->addWidget( FileLabel );
 
   SaveLabel = new SpikeTrace( 0.8, 8, 3, this );
   SaveLabel->setFixedWidth( SaveLabel->minimumSizeHint().width() );
-  QToolTip::add( SaveLabel, "An animation indicating that raw data are stored on disk" );
+  SaveLabel->setToolTip( "An animation indicating that raw data are stored on disk" );
   StatusInfoLayout->addWidget( SaveLabel );
   
   setLayout( StatusInfoLayout );
+
+  NormalPalette = FileLabel->palette();
+  HighlightPalette = FileLabel->palette();
+  HighlightPalette.setColor( QPalette::Normal, QPalette::Foreground, Qt::red );
+  HighlightPalette.setColor( QPalette::Inactive, QPalette::Foreground, Qt::red );
 }
 
 
@@ -214,27 +228,6 @@ void SaveFiles::unlock( void ) const
 QMutex *SaveFiles::mutex( void )
 {
   return &StimulusDataLock;
-}
-
-
-void SaveFiles::polish( void )
-{
-  QWidget::polish();
-
-  NormalFont = FileLabel->font();
-  HighlightFont = QFont( fontInfo().family(), fontInfo().pointSize()*4/3, QFont::Bold );
-
-  Str fn = PathTemplate;
-  fn.format( localtime( &PathTime ) );
-  fn.format( 99, 'n', 'd' );
-  fn.format( "aa", 'a' );
-  fn.format( "AA", 'A' );
-  FileLabel->setFixedWidth( QFontMetrics( HighlightFont ).boundingRect( fn.c_str() ).width() + 8 );
-
-  NormalPalette = FileLabel->palette();
-  HighlightPalette = FileLabel->palette();
-  HighlightPalette.setColor( QPalette::Normal, QColorGroup::Foreground, red );
-  HighlightPalette.setColor( QPalette::Inactive, QColorGroup::Foreground, red );
 }
 
 

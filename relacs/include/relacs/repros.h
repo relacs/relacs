@@ -63,8 +63,9 @@ public:
   void message( const string &msg );
     /*! The display for RePro messages. */
   QLabel *display( QWidget *parent=0 );
-    /*! The popup menu from which each RePro can be started and configured. */
-  QMenu *menu( void );
+    /*! Add the menu from which each RePro can be started and
+        configured to \a menu. */
+  void addMenu( QMenu *menu );
 
     /*! The index of the RePro with class name \a name. */
   int index( const string &name ) const;
@@ -74,10 +75,10 @@ public:
   void raise( int index );
     /*! Makes the repro \a repro visible. */
   void raise( RePro *repro );
-    /*! Reloads the research program \a repro. */
-  void reload( RePro *repro ) { reload( index( repro ) ); };
-    /*! Display help text for research program \a repro. */
-  void help( RePro *repro ) { help( index( repro ) ); };
+    /*! Reloads the plugin of the repro \a repro. */
+  void reload( RePro *repro );
+    /*! Display the help text of the repro \a repro. */
+  void help( RePro *repro );
     /*! The number of repros. */
   int size( void ) const { return RPs.size(); };
     /*! The RePro with index \a index. */
@@ -88,6 +89,8 @@ public:
   int nameIndex( const string &name ) const;
     /*! The RePro with name \a name. */
   RePro *nameRepro( const string &name ) const { return repro( nameIndex( name ) ); };
+    /*! \return The index of the currently active RePro. */
+  int currentRePro( void ) const;
 
     /*! Makes \a repro the current RePro and raises its widget. */
   void activateRePro( RePro *repro, int macroaction=0 );
@@ -123,7 +126,7 @@ public slots:
     /*! Launches the options dialog of the current RePro. */
   void dialog( void );
     /*! Raise the widget of the previous RePro. */
-  void raise( void ) { raise( PreviousView ); };
+  void raise( void );
     /*! Displays help for the current RePro. */
   void help( void );
 
@@ -140,6 +143,11 @@ signals:
   void reloadRePro( const string &name );
 
 
+private slots:
+
+  void customEvent( QEvent *qce );
+
+
 private:
   
   typedef vector<ReProData*> ReProsList;
@@ -154,27 +162,12 @@ private:
   RePro *CurrentView;
   RePro *PreviousView;
 
-  QMenu *Menu;
   QLabel *Message;
   string MessageStr;
 
   Options DialogOpt;
 
   RELACSWidget *RW;
-
-    /*! Reloads the research program \a index. */
-  void reload( int index );
-    /*! Display help text for research program \a index. */
-  void help( int index );
-
-
-private slots:
-
-    /*! Starts or launches the option dialog of the research program
-        as specified by \a id. 
-        This function is called from the RePros menu. */
-  void select( int id );
-  void customEvent( QEvent *qce );
 
 };
 
@@ -192,21 +185,27 @@ class ReProData : public QObject
 
 public:
 
-  ReProData( const string &name, RePro *repro, Options &dopt );
-  void start( void );
-  void dialog( void );
+  ReProData( const string &name, RePro *repro, Options &dopt,
+	     RePros *rps, RELACSWidget *rw );
 
-  string Name;
-  int ID;
-  RePro *RP;
-  Options CO;
-  Options *DO;
+    /*! Adds the submenu for this RePro with inex \a inx to \a menu. */
+  void addMenu( QMenu *menu, int inx );
+
+    /*! \return the name of the RePro. */
+  string name( void ) const;
+    /*! \return a pointer to the RePro. */
+  RePro *repro( void );
 
 public slots:
 
+  void start( void );
+  void dialog( void );
   void acceptDialog( void );
   void dialogAction( int r );
   void dialogClosed( int r );
+  void raise( void );
+  void reload( void );
+  void help( void );
 
 signals:
 
@@ -217,6 +216,18 @@ signals:
     /*! This is emitted right before startRePro() in order to indicate
         that the repro was not started from a macro. */
   void noMacro( RePro *repro );
+    /*! The repro \a name was reloaded. */
+  void reloadRePro( const string &name );
+
+ private:
+
+  string Name;
+  RePro *RP;
+  Options CO;
+  Options *DO;
+
+  RePros *RPs;
+  RELACSWidget *RW;
 
 };
 

@@ -276,8 +276,8 @@ public:
   void warning( void );
     /*! Create the button aray and the menu for the macros. */
   void create( void );
-    /*! The popup menu starting and configuring Macros. */
-  QMenu* menu( void );
+    /*! The menu starting and configuring Macros should be added to \a menu. */
+  void setMenu( QMenu *menu );
 
     /*! Stops the currently running repro.
         Then executes commands of the current macro until the next repro.
@@ -342,7 +342,7 @@ public:
 
   virtual void saveConfig( ofstream &str );
 
-  void setRePros( RePros *repros ) { RP = repros; };
+  void setRePros( RePros *repros ) { RPs = repros; };
   
   friend ostream &operator<< ( ostream &str, const Macros &macros );
 
@@ -403,7 +403,7 @@ private:
   void clearStackButtons( void );
 
   RELACSWidget *RW;
-  RePros *RP;
+  RePros *RPs;
 
     /*! The list of all Macros. */
   typedef vector< Macro* > MacrosType;

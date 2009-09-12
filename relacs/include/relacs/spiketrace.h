@@ -24,6 +24,7 @@
 
 #include <QWidget>
 #include <QThread>
+#include <QMutex>
 
 namespace relacs {
 
@@ -89,6 +90,12 @@ public slots:
 
 protected:
 
+  virtual void run( void );
+
+    /*! Animates the spike trace by increasing the position of the ball
+        and replace the spike on a new run. */
+  void animate( void );
+
     /*! A function providing the shape of the trace. 
         For a given position \a x in pixels it returns the 
         corresponding y-value (in pixels). */
@@ -115,14 +122,8 @@ protected:
     /*! The width of the spike. */
   double SpikeWidth;
 
-
-protected:
-
-  virtual void run( void );
-
-    /*! Animates the spike trace by increasing the position of the ball
-        and replace the spike on a new run. */
-  void animate( void );
+    /*! Locks the widget's variables. */
+  QMutex SMutex;
 
 };
 

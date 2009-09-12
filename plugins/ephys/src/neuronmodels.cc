@@ -194,5 +194,3 @@ void NeuronModels::dialogOptions( OptDialog *od )
 addModel( NeuronModels );
 
 }; /* namespace ephys */
-
-#include "moc_neuronmodels.cc"

@@ -178,17 +178,18 @@ protected:
   SampleDataD BadSpikesHist;
   SampleDataD AllSpikesHist;
 
-  QPixmap GoodQuality;
-  QPixmap OkQuality;
-  QPixmap PotentialQuality;
   QPixmap BadQuality;
+  QPixmap PotentialQuality;
+  QPixmap OkQuality;
+  QPixmap GoodQuality;
   QPixmap *QualityPixs[4];
   int Quality;
   QLabel *QualityIndicator;
+
+  QPixmap BadArrow;
   QPixmap BadTrend;
   QPixmap OkTrend;
   QPixmap GoodTrend;
-  QPixmap BadArrow;
   QPixmap GoodArrow;
   QPixmap *TrendPixs[5];
   int Trend;

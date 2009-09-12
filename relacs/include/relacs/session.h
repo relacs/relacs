@@ -132,9 +132,6 @@ public slots:
 	\note This function must not be called from a non GUI thread! */
   void toggleSession( void );
 
-    /*! Doing some late initialization, i.e. setting fonts and palette. */
-  void polish( void );
-
 
 private:
 

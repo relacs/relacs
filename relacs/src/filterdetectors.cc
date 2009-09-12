@@ -1004,12 +1004,11 @@ int FilterDetectors::eventInputEvent( const string &ident ) const
 }
 
 
-QMenu* FilterDetectors::menu( void )
+void FilterDetectors::addMenu( QMenu *menu )
 {
   if ( Menu == 0 )
-    Menu = new QMenu( this );
-  else
-    Menu->clear();
+    Menu = menu;
+  Menu->clear();
 
   for ( unsigned int k=0; k<FL.size(); k++ ) {
     string s = "&";
@@ -1025,8 +1024,6 @@ QMenu* FilterDetectors::menu( void )
     pop->addAction( "&Options...", FL[k].FilterDetector, SLOT( dialog() ) );
     pop->addAction( "&Help...", FL[k].FilterDetector, SLOT( help() ) );
   }
-
-  return Menu;
 }
 
 

@@ -124,15 +124,6 @@ public:
     /*! Start data aquisition and first RePro. */
   void init( void );
 
-    /*! Locks the GUI thread. 
-        Use it whenever you call a function from within run()
-	that directly or indirectly draws on the screen.
-        \sa unlockGUI() */
-  void lockGUI( void );
-    /*! Unlocks the GUI thread.. 
-        \sa lockGUI() */
-  void unlockGUI( void );
-
     /*! Write current time and \a message to stderr and into a log file. */
   void printlog( const string &message ) const;
 
@@ -291,12 +282,8 @@ public slots:
   void help( void );
 
 
-signals:
+  //signals:
 
-    /*! Data signal for Plot and SaveFiles. */
-  void data( const InList &data, const EventList &events );
-    /*! Data signal for RePro. */
-  void dataRePro( const InList &data, const EventList &events );
     /*! After a signal is written to the daq-board for output
         the function write( OData &OD ) emits this signal.
         It can be used to check the success of the output operation.
@@ -470,6 +457,7 @@ protected:
 
 private:
 
+  int TimerId;
   QWidget *TopLevelWidget;
   QWidget *NoFocusWidget;
 

@@ -22,14 +22,14 @@ relacsgui_CPPFLAGS = \
     -I$(srcdir)/../options/include \
     -I$(srcdir)/../widgets/include \
     -I$(srcdir)/../relacs/include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 relacsgui_LDFLAGS = \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 relacsgui_LDADD = \
     ../relacs/src/librelacs.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 relacsgui_SOURCES = \
     relacsmain.cc

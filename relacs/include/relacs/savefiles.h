@@ -182,12 +182,6 @@ public:
   void completeFiles( void );
 
 
-public slots:
-
-    /*! Doing some late initialization, i.e. setting fonts and palette. */
-  void polish( void );
-
-
 protected:
 
     /*! Save data traces to files */

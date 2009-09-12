@@ -56,7 +56,7 @@ RePro::RePro( const string &name, const string &titles,
   MyProjectOpt = ProjectOpt;
 
   SoftStop = 0;
-  SoftStopKey = Key_Space;
+  SoftStopKey = Qt::Key_Space;
 
   GrabKeys.clear();
   GrabKeys.reserve( 20 );
@@ -166,7 +166,7 @@ void RePro::run( void )
 
   // start next RePro:
   if ( ! interrupt() ) {
-    QApplication::postEvent( RW, new QEvent( QEvent::User+1 ) );
+    QApplication::postEvent( (QWidget*)RW, new QEvent( QEvent::Type( QEvent::User+1 ) ) );
   }
 }
 
@@ -213,14 +213,23 @@ bool RePro::sleep( double t, double tracetime )
     unsigned long ms = (unsigned long)::rint(1.0e3*t);
     if ( t < 0.001 || ms < 1 )
       QThread::usleep( (unsigned long)::rint(1.0e6*t) );
-    else
-      SleepWait.wait( ms );
+    else {
+      // XXX wait requires a mutex!
+      QMutex mutex;
+      mutex.lock();
+      SleepWait.wait( &mutex, ms );
+      mutex.unlock();
+    }
   }
 
   // force data updates:
   RW->setMinTraceTime( tracetime );
   RW->ThreadSleepWait.wakeAll();
-  RW->DataSleepWait.wait();
+  // XXX wait requires a mutex!
+  QMutex mutex;
+  mutex.lock();
+  RW->DataSleepWait.wait( &mutex );
+  mutex.unlock();
 
   lockAll();
 
@@ -250,13 +259,17 @@ bool RePro::sleepOn( double t )
 bool RePro::sleepWait( double time )
 {
   unlockAll();
+  // XXX wait requires a mutex!
+  QMutex mutex;
+  mutex.lock();
   bool r = false;
   if ( time <= 0.0 )
-    r = SleepWait.wait();
+    r = SleepWait.wait( &mutex );
   else {
     unsigned long ms = (unsigned long)::rint(1.0e3*time);
-    r = SleepWait.wait( ms );
+    r = SleepWait.wait( &mutex, ms );
   }
+  mutex.unlock();
   lockAll();
   return r;
 }
@@ -467,16 +480,17 @@ void RePro::keyReleaseEvent( QKeyEvent *e )
 
 void RePro::grabKey( int key )
 {
+  int mask = Qt::META | Qt::SHIFT | Qt::CTRL | Qt::ALT;
   int modifier = 0;
-  switch ( key & MODIFIER_MASK ) {
-  case META : modifier = MetaButton; break;
-  case SHIFT : modifier = ShiftButton; break;
-  case CTRL : modifier = ControlButton; break;
-  case ALT : modifier = AltButton; GrabKeysAlt = true; break;
+  switch ( key & mask ) {
+  case Qt::META : modifier = Qt::META; break;
+  case Qt::SHIFT : modifier = Qt::SHIFT; break;
+  case Qt::CTRL : modifier = Qt::CTRL; break;
+  case Qt::ALT : modifier = Qt::ALT; GrabKeysAlt = true; break;
   default: modifier = 0; break;
   }
   GrabKeyLock.lock();
-  GrabKeys.push_back( key & ~MODIFIER_MASK );
+  GrabKeys.push_back( key & ~mask );
   GrabKeysModifier.push_back( modifier );
   GrabKeyLock.unlock();
   grabKeys();
@@ -492,7 +506,7 @@ void RePro::grabKeys( void )
     return;
 
   GrabKeyLock.lock();
-  qApp->installEventFilter( this );
+  qApp->installEventFilter( (QWidget*)this );
   GrabKeysInstalled = true;
   GrabKeyLock.unlock();
 }
@@ -500,15 +514,16 @@ void RePro::grabKeys( void )
 
 void RePro::releaseKey( int key )
 {
+  int mask = Qt::META | Qt::SHIFT | Qt::CTRL | Qt::ALT;
   int modifier = 0;
-  switch ( key & MODIFIER_MASK ) {
-  case META : modifier = MetaButton; break;
-  case SHIFT : modifier = ShiftButton; break;
-  case CTRL : modifier = ControlButton; break;
-  case ALT : modifier = AltButton; break;
+  switch ( key & mask ) {
+  case Qt::META : modifier = Qt::META; break;
+  case Qt::SHIFT : modifier = Qt::SHIFT; break;
+  case Qt::CTRL : modifier = Qt::CTRL; break;
+  case Qt::ALT : modifier = Qt::ALT; GrabKeysAlt = true; break;
   default: modifier = 0; break;
   }
-  int keycode = key & ~ MODIFIER_MASK;
+  int keycode = key & ~mask;
 
   GrabKeyLock.lock();
   int inx = 0;
@@ -529,7 +544,7 @@ void RePro::releaseKey( int key )
   }
   GrabKeysAlt = false;
   for ( mp = GrabKeysModifier.begin(); mp != GrabKeysModifier.end(); ++mp ) {
-    if ( *mp == AltButton ) {
+    if ( *mp == Qt::ALT ) {
       GrabKeysAlt = true;
       break;
     }
@@ -550,13 +565,13 @@ void RePro::releaseKeys( void )
   for ( vector<int>::iterator mp = GrabKeysModifier.begin();
 	mp != GrabKeysModifier.end();
 	++mp ) {
-    if ( *mp == AltButton ) {
+    if ( *mp == Qt::ALT ) {
       GrabKeysAlt = true;
       break;
     }
   }
   if ( GrabKeysInstalled ) {
-    qApp->removeEventFilter( this );
+    qApp->removeEventFilter( (QWidget*)this );
     GrabKeysInstalled = false;
   }
   GrabKeyLock.unlock();
@@ -567,19 +582,19 @@ bool RePro::eventFilter( QObject *watched, QEvent *e )
 {
   if ( e->type() == QEvent::KeyPress ||
        e->type() == QEvent::KeyRelease ||
-       e->type() == QEvent::Accel ||
-       e->type() == QEvent::AccelOverride ) {
+       e->type() == QEvent::Shortcut ||
+       e->type() == QEvent::ShortcutOverride ) {
     QKeyEvent *k = (QKeyEvent*)e;
     // no Alt-release event:
     if ( e->type() == QEvent::KeyRelease &&
 	 GrabKeysAlt &&
-	 k->key() == Key_Alt )
+	 k->key() == Qt::Key_Alt )
       return true;
     // check for grabbed keys:
     vector<int>::iterator kp = GrabKeys.begin();
     vector<int>::iterator mp = GrabKeysModifier.begin();
     while ( kp != GrabKeys.end() ) {
-      if ( *kp == k->key() && *mp == k->state() ) {
+      if ( *kp == k->key() && *mp == k->QInputEvent::modifiers() ) {
 	if ( e->type() == QEvent::KeyRelease )
 	  keyReleaseEvent( k );
 	else
@@ -704,12 +719,12 @@ void RePro::dialog( void )
     od->addButton( "&Run", OptDialog::Accept, 2, false );
     od->addButton( "&Defaults", OptDialog::Defaults, 3, false );
     od->addButton( "&Close" );
-    connect( od, SIGNAL( dialogClosed( int ) ),
-	     this, SLOT( dClosed( int ) ) );
-    connect( od, SIGNAL( buttonClicked( int ) ),
-	     this, SIGNAL( dialogAction( int ) ) );
-    connect( od, SIGNAL( valuesChanged( void ) ),
-	     this, SIGNAL( dialogAccepted( void ) ) );
+    QWidget::connect( od, SIGNAL( dialogClosed( int ) ),
+		      (QWidget*)this, SLOT( dClosed( int ) ) );
+    QWidget::connect( od, SIGNAL( buttonClicked( int ) ),
+		      (QWidget*)this, SIGNAL( dialogAction( int ) ) );
+    QWidget::connect( od, SIGNAL( valuesChanged( void ) ),
+		      (QWidget*)this, SIGNAL( dialogAccepted( void ) ) );
   }
   od->exec();
 }

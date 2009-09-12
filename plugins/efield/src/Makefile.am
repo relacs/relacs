@@ -1,5 +1,5 @@
 HEADER_PATH = ../include/relacs/efield
-include ${top_srcdir}/moc3.mk
+include ${top_srcdir}/moc4.mk
 
 pluginlibdir = $(pkglibdir)/plugins
 
@@ -20,15 +20,15 @@ libefieldlinearfield_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libefieldlinearfield_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libefieldlinearfield_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libefieldlinearfield_la_OBJECTS) : moc_linearfield.cc
 
@@ -50,15 +50,15 @@ libefieldeoddetector_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libefieldeoddetector_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libefieldeoddetector_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libefieldeoddetector_la_OBJECTS) : moc_eoddetector.cc
 
@@ -79,15 +79,15 @@ libefieldchirpdetector_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libefieldchirpdetector_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libefieldchirpdetector_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libefieldchirpdetector_la_OBJECTS) : moc_chirpdetector.cc
 
@@ -108,15 +108,15 @@ libefieldbeatdetector_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libefieldbeatdetector_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libefieldbeatdetector_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libefieldbeatdetector_la_OBJECTS) : moc_beatdetector.cc
 

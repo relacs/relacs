@@ -1,5 +1,5 @@
 HEADER_PATH = ../include/relacs/acoustic
-include ${top_srcdir}/moc3.mk
+include ${top_srcdir}/moc4.mk
 
 pluginlibdir = $(pkglibdir)/plugins
 
@@ -18,15 +18,15 @@ libacoustictraces_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libacoustictraces_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libacoustictraces_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 libacoustictraces_la_SOURCES = traces.cc
 
@@ -44,15 +44,15 @@ libacousticloudspeaker_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libacousticloudspeaker_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libacousticloudspeaker_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 libacousticloudspeaker_la_SOURCES = loudspeaker.cc
 
@@ -71,17 +71,17 @@ libacousticcalibspeakers_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libacousticcalibspeakers_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libacousticcalibspeakers_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     libacoustictraces.la \
     libacousticloudspeaker.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libacousticcalibspeakers_la_OBJECTS) : moc_calibspeakers.cc
 
@@ -101,16 +101,16 @@ libacousticcalibmicrophone_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libacousticcalibmicrophone_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libacousticcalibmicrophone_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     libacoustictraces.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libacousticcalibmicrophone_la_OBJECTS) : moc_calibmicrophone.cc
 

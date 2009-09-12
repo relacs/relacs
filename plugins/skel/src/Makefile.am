@@ -1,5 +1,5 @@
 HEADER_PATH = ../include/relacs/skel
-include ${top_srcdir}/moc3.mk
+include ${top_srcdir}/moc4.mk
 
 pluginlibdir = $(pkglibdir)/plugins
 
@@ -17,15 +17,15 @@ libskelnewrepro_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libskelnewrepro_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libskelnewrepro_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libskelnewrepro_la_OBJECTS) : moc_newrepro.cc
 

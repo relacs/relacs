@@ -97,8 +97,7 @@ already locked.
 
 addPath() prepends the current directory for data storage to a filename.
 
-Use postCustomEvent() or - if this is not possible -
-lockGUI() and unlockGUI() for thread save drawing 
+Use update() or postCustomEvent() for thread save drawing 
 and other interactions with the GUI.
 
 Some integers for identifying the type of the RELACS plugin are defined
@@ -217,14 +216,14 @@ protected:
 	is also written to standard error as a warning.
         If \a timeout is greater than zero, the message window is
         closed automatically after \a timeout seconds.
-        You do NOT need to wrap this function with lockGUI() and unlockGUI(). */
+	Can be called directly from a non GUI thread. */
   void warning( const string &s, double timeout=0.0 );
     /*! Opens an info window with the message \a s.
         The message together with the current time and the name of the plugin
 	is also written to standard error.
         If \a timeout is greater than zero, the message window is
         closed automatically after \a timeout seconds.
-        You do NOT need to wrap this function with lockGUI() and unlockGUI(). */
+	Can be called directly from a non GUI thread. */
   void info( const string &s, double timeout=0.0 );
 
     /*! Post a custom event for thread save manipulations of the GUI.
@@ -232,23 +231,8 @@ protected:
 	\code
 	QApplication::postEvent( this, new QCustomEvent( QEvent::User+type ) );
 	\endcode
-	For your own events use values greater than 10 for \a type.
-        \sa lockGUI(), unlockGUI() */
+	For your own events use values greater than 10 for \a type. */
   void postCustomEvent( int type=0 );
-    /*! Locks the GUI thread. 
-        Use it whenever you call a function from a thread
-	that directly or indirectly draws on the screen.
-	Don't forget to unlock the GUI thread afterwards!
-	\code
-	lockGUI();
-	updateWidgetContent(); // whatever this is
-	unlockGUI();
-	\endcode
-        \sa unlockGUI(), postCustomEvent() */
-  void lockGUI( void );
-    /*! Unlocks the GUI thread.. 
-        \sa lockGUI(), postCustomEvent() */
-  void unlockGUI( void );
 
     /*! Lock the input data and events for reading. */
   void readLockData( void );

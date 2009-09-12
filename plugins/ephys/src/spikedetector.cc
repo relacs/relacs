@@ -22,8 +22,8 @@
 #include <cmath>
 #include <QWidget>
 #include <QWidget>
-#include <QGrid>
 #include <QPainter>
+#include <QPolygon>
 #include <QPushButton>
 #include <QApplication>
 #include <relacs/str.h>
@@ -96,6 +96,7 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   SDW.assign( ((Options*)this), 2, 4, true, 0, mutex() );
   SDW.setSpacing( 4 );
   SDW.setMargin( 4 );
+  boxLayout()->addWidget( &SDW );
 
   setDialogSelectMask( 8 );
   setDialogReadOnlyMask( 16 );
@@ -105,10 +106,11 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   LastTime = 0.0;
   Update.start();
 
-  QWidget *hb = new QWidget( this );
+  QHBoxLayout *hb = new QHBoxLayout;
+  boxLayout()->addLayout( hb );
   hb->setSpacing( 4 );
 
-  P = new Plot( Plot::Copy, hb );
+  P = new Plot( Plot::Copy );
   P->lock();
   P->noGrid();
   P->setTMarg( 1 );
@@ -120,153 +122,115 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   P->setYLabel( "" );
   P->setLMarg( 5 );
   P->unlock();
+  hb->addWidget( P );
 
   // key to histogram plot:  XXX provide a function in Plot!
-  QWidget *vb = new QWidget( hb );
-
-  QGrid *gl = new QGrid( 4, vb );
+  QGridLayout *gl = new QGridLayout;
   gl->setSpacing( 0 );
+  hb->addLayout( gl );
 
   QPixmap pm( 20, 10 );
   QPainter p;
   p.begin( &pm );
-  p.setBackgroundMode( OpaqueMode );
-  p.fillRect( pm.rect(), this->backgroundColor() );
-/*Qt4*/
+  p.setBackgroundMode( Qt::OpaqueMode );
+  p.fillRect( pm.rect(), palette().color( QPalette::Background ) );
   p.setPen( QPen( Qt::green, 4 ) );
-/*Qt3
-  p.setPen( QPen( Qt::green, 4 ) );
-*/
   p.drawLine( 0, 5, pm.width(), 5 );
   p.end();
-  QLabel *key = new QLabel( gl );
-  key = new QLabel( gl );
+  QLabel *key = new QLabel;
   key->setPixmap( pm );
-  key = new QLabel( "  ", gl );
-  key = new QLabel( "detected", gl );
+  gl->addWidget( key, 0, 0, Qt::AlignRight );
+  key = new QLabel( "detected" );
+  gl->addWidget( key, 0, 1, Qt::AlignLeft );
 
   p.begin( &pm );
-/*Qt4*/
   p.setPen( QPen( Qt::red, 4 ) );
-/*Qt3
-  p.setPen( QPen( red, 4 ) );
-*/
   p.drawLine( 0, 5, pm.width(), 5 );
   p.end();
-  key = new QLabel( gl );
-  key = new QLabel( gl );
+  key = new QLabel;
   key->setPixmap( pm );
-  key = new QLabel( "  ", gl );
-  key = new QLabel( "not detected", gl );
+  gl->addWidget( key, 1, 0, Qt::AlignRight );
+  key = new QLabel( "not detected" );
+  gl->addWidget( key, 1, 1, Qt::AlignLeft );
 
   p.begin( &pm );
-/*Qt4*/
   p.setPen( QPen( Qt::white, 4 ) );
-/*Qt3
-  p.setPen( QPen( white, 4 ) );
-*/ 
   p.drawLine( 0, 5, pm.width(), 5 );
   p.end();
-  key = new QLabel( gl );
-  key = new QLabel( gl );
+  key = new QLabel;
   key->setPixmap( pm );
-  key = new QLabel( "  ", gl );
-  key = new QLabel( "threshold", gl );
+  gl->addWidget( key, 2, 0, Qt::AlignRight );
+  key = new QLabel( "threshold" );
+  gl->addWidget( key, 2, 1, Qt::AlignLeft );
 
   p.begin( &pm );
-/*Qt4*/
   p.setPen( QPen( Qt::yellow, 4 ) );
-/*Qt3
-  p.setPen( QPen( yellow, 4 ) );
-*/ 
-  p.setPen( QPen( yellow, 4 ) );
   p.drawLine( 0, 5, pm.width(), 5 );
   p.end();
-  key = new QLabel( gl );
-  key = new QLabel( gl );
+  key = new QLabel;
   key->setPixmap( pm );
-  key = new QLabel( "  ", gl );
-  key = new QLabel( "min thresh", gl );
+  gl->addWidget( key, 3, 0, Qt::AlignRight );
+  key = new QLabel( "min thresh" );
+  gl->addWidget( key, 3, 1, Qt::AlignLeft );
 
   // indicators:
   int is = fontInfo().pixelSize() * 2;
   QColor orange( 255, 165, 0 );
-  GoodQuality.resize( is, is );
+  GoodQuality = QPixmap( is, is );
   p.begin( &GoodQuality );
-  p.setBackgroundMode( OpaqueMode );
-  p.fillRect( GoodQuality.rect(), black );
+  p.setBackgroundMode( Qt::OpaqueMode );
+  p.fillRect( GoodQuality.rect(), Qt::black );
   p.setPen( Qt::NoPen );
-/*Qt4*/
   p.setBrush( Qt::green );
-/*Qt3
-  p.setBrush( green );
-*/
   p.drawEllipse( 1, 1, is-2, is-2 );
-  p.setPen( QPen( green.light( 160 ), is/8 > 0 ? is/8 : 1 ) );
+  p.setPen( QPen( QColor( Qt::green ).lighter( 160 ), is/8 > 0 ? is/8 : 1 ) );
   p.drawEllipse( is/5, is/5, 3*is/5+1, 3*is/5+1 );
   p.drawLine( 6*is/10, 6*is/10, 4*is/5, 4*is/5 );
   p.end();
 
-  OkQuality.resize( is, is );
+  OkQuality = QPixmap( is, is );
   p.begin( &OkQuality );
-  p.setBackgroundMode( OpaqueMode );
-  p.fillRect( OkQuality.rect(), black );
+  p.setBackgroundMode( Qt::OpaqueMode );
+  p.fillRect( OkQuality.rect(), Qt::black );
   p.setPen( Qt::NoPen );
-/*Qt4*/
-  p.setBrush( Qt::yellow )
-/*Qt3
-  p.setBrush( yellow );
-*/
+  p.setBrush( Qt::yellow );
   p.drawEllipse( 1, 1, is-2, is-2 );
-  p.setPen( QPen( yellow.light( 160 ), is/8 > 0 ? is/8 : 1 ) );
+  p.setPen( QPen( QColor( Qt::yellow ).lighter( 160 ), is/8 > 0 ? is/8 : 1 ) );
   p.drawEllipse( is/5, is/5, 3*is/5, 3*is/5 );
   p.drawLine( is/2, is/2, 4*is/5, 4*is/5 );
   p.end();
 
-  PotentialQuality.resize( is, is );
+  PotentialQuality = QPixmap( is, is );
   p.begin( &PotentialQuality );
-  p.setBackgroundMode( OpaqueMode );
-  p.fillRect( PotentialQuality.rect(), black );
+  p.setBackgroundMode( Qt::OpaqueMode );
+  p.fillRect( PotentialQuality.rect(), Qt::black );
   p.setPen( Qt::NoPen );
-/*Qt4*/
-  p.setBrush( Qt::orange )
-/*Qt3
   p.setBrush( orange );
-*/
   p.drawEllipse( 1, 1, is-2, is-2 );
-  p.setPen( QPen( orange.light( 160 ), is/8 > 0 ? is/8 : 1 ) );
+  p.setPen( QPen( QColor( orange ).lighter( 160 ), is/8 > 0 ? is/8 : 1 ) );
   p.drawEllipse( is/5, is/5, 3*is/5, 3*is/5 );
   p.drawLine( is/2, is/2, 4*is/5, 4*is/5 );
   p.end();
 
-  BadQuality.resize( is, is );
+  BadQuality = QPixmap( is, is );
   p.begin( &BadQuality );
-  p.setBackgroundMode( OpaqueMode );
-  p.fillRect( BadQuality.rect(), black );
+  p.setBackgroundMode( Qt::OpaqueMode );
+  p.fillRect( BadQuality.rect(), Qt::black );
   p.setPen( Qt::NoPen );
-/*Qt4*/
-  p.setBrush( Qt::red )
-/*Qt3
-  p.setBrush( red );
-*/
+  p.setBrush( Qt::red );
   p.drawEllipse( 1, 1, is-2, is-2 );
-  p.setPen( QPen( red.light( 160 ), is/8 > 0 ? is/8 : 1 ) );
+  p.setPen( QPen( QColor( Qt::red ).lighter( 160 ), is/8 > 0 ? is/8 : 1 ) );
   p.drawEllipse( is/5, is/5, 3*is/5, 3*is/5 );
   p.drawLine( is/2, is/2, 4*is/5, 4*is/5 );
   p.end();
 
-  QPointArray pa( 7 );
-  BadArrow.resize( is, is );
+  QPolygon pa( 7 );
+  QPixmap BadArrow( is, is );
   p.begin( &BadArrow );
-  p.setBackgroundMode( OpaqueMode );
-  p.fillRect( BadArrow.rect(), black );
-/*Qt4*/
-	p.setPen( QPen( Qt::black, 1 ) );
-  p.setBrush( Qt::red )
-/*Qt3
-	p.setPen( QPen( black, 1 ) );
-  p.setBrush( red );
-*/
+  p.setBackgroundMode( Qt::OpaqueMode );
+  p.fillRect( BadArrow.rect(), Qt::black );
+  p.setPen( QPen( Qt::black, 1 ) );
+  p.setBrush( Qt::red );
   pa.setPoint( 0, is/4, 0 );
   pa.setPoint( 1, 3*is/4, 0 );
   pa.setPoint( 2, 3*is/4, 2*is/3 );
@@ -277,66 +241,48 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   p.drawPolygon( pa );
   p.end();
 
-  BadTrend.resize( is, is );
+  BadTrend = QPixmap( is, is );
   p.begin( &BadTrend );
-  p.setBackgroundMode( OpaqueMode );
-  p.fillRect( BadTrend.rect(), black );
+  p.setBackgroundMode( Qt::OpaqueMode );
+  p.fillRect( BadTrend.rect(), Qt::black );
   p.setPen( Qt::NoPen );
-/*Qt4*/
-  p.setBrush( Qt::red )
-/*Qt3
-  p.setBrush( red );
-*/
+  p.setBrush( Qt::red );
   p.drawEllipse( 1, 1, is-2, is-2 );
-  p.setPen( QPen( red.light( 160 ), is/8 > 0 ? is/8 : 1 ) );
+  p.setPen( QPen( QColor( Qt::red ).lighter( 160 ), is/8 > 0 ? is/8 : 1 ) );
   p.drawLine( is/2, is/4, is/2, 3*is/4 );
   p.drawLine( is/4, is/4, 3*is/4, is/4 );
   p.end();
 
-  OkTrend.resize( is, is );
+  OkTrend = QPixmap( is, is );
   p.begin( &OkTrend );
-  p.setBackgroundMode( OpaqueMode );
-  p.fillRect( OkTrend.rect(), black );
+  p.setBackgroundMode( Qt::OpaqueMode );
+  p.fillRect( OkTrend.rect(), Qt::black );
   p.setPen( Qt::NoPen );
-/*Qt4*/
-  p.setBrush( Qt::yellow )
-/*Qt3
-  p.setBrush( yellow );
-*/
+  p.setBrush( Qt::yellow );
   p.drawEllipse( 1, 1, is-2, is-2 );
-  p.setPen( QPen( yellow.light( 160 ), is/8 > 0 ? is/8 : 1 ) );
+  p.setPen( QPen( QColor( Qt::yellow ).lighter( 160 ), is/8 > 0 ? is/8 : 1 ) );
   p.drawLine( is/2, is/4, is/2, 3*is/4 );
   p.drawLine( is/4, is/4, 3*is/4, is/4 );
   p.end();
 
-  GoodTrend.resize( is, is );
+  GoodTrend = QPixmap( is, is );
   p.begin( &GoodTrend );
-  p.setBackgroundMode( OpaqueMode );
-  p.fillRect( GoodTrend.rect(), black );
+  p.setBackgroundMode( Qt::OpaqueMode );
+  p.fillRect( GoodTrend.rect(), Qt::black );
   p.setPen( Qt::NoPen );
-/*Qt4*/
-  p.setBrush( Qt::green )
-/*Qt3
-  p.setBrush( green );
-*/
+  p.setBrush( Qt::green );
   p.drawEllipse( 1, 1, is-2, is-2 );
-  p.setPen( QPen( green.light( 160 ), is/8 > 0 ? is/8 : 1 ) );
+  p.setPen( QPen( QColor( Qt::green ).lighter( 160 ), is/8 > 0 ? is/8 : 1 ) );
   p.drawLine( is/2, is/4, is/2, 3*is/4 );
   p.drawLine( is/4, is/4, 3*is/4, is/4 );
   p.end();
 
-  GoodArrow.resize( is, is );
+  GoodArrow = QPixmap( is, is );
   p.begin( &GoodArrow );
-  p.setBackgroundMode( OpaqueMode );
-/*Qt4*/
+  p.setBackgroundMode( Qt::OpaqueMode );
   p.fillRect( GoodArrow.rect(), Qt::black );
- 	p.setPen( QPen( Qt::black, 1 ) );
+  p.setPen( QPen( Qt::black, 1 ) );
   p.setBrush( Qt::green );
-/*Qt3
-	p.fillRect( GoodArrow.rect(), black );
- 	p.setPen( QPen( black, 1 ) );
-  p.setBrush( green );
-*/
   pa.setPoint( 0, is/4, is-1 );
   pa.setPoint( 1, 3*is/4, is-1 );
   pa.setPoint( 2, 3*is/4, is/3 );
@@ -347,19 +293,15 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   p.drawPolygon( pa );
   p.end();
 
-  gl = new QGrid( 2, vb );
-
   // quality indicator:
   Quality = 0;
   QualityPixs[0] = &BadQuality;
   QualityPixs[1] = &PotentialQuality;
   QualityPixs[2] = &OkQuality;
   QualityPixs[3] = &GoodQuality;
-  QualityIndicator = new QLabel( gl );
-
-  // the complete dialog:
-  QPushButton *pb = new QPushButton( "Dialog", gl );
-  connect( pb, SIGNAL( clicked( void ) ), this, SLOT( dialog( void ) ) );
+  QualityIndicator = new QLabel;
+  QualityIndicator->setPixmap( *QualityPixs[Quality] );
+  gl->addWidget( QualityIndicator, 4, 0, Qt::AlignLeft );
 
   // trend indicator:
   Trend = 2;
@@ -368,10 +310,18 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   TrendPixs[2] = &OkTrend;
   TrendPixs[3] = &GoodTrend;
   TrendPixs[4] = &GoodArrow;
-  TrendIndicator = new QLabel( gl );
+  TrendIndicator = new QLabel;
+  TrendIndicator->setPixmap( *TrendPixs[Trend] );
+  gl->addWidget( TrendIndicator, 5, 0, Qt::AlignLeft );
+
+  // dialog:
+  QPushButton *pb = new QPushButton( "Dialog" );
+  gl->addWidget( pb, 4, 1, Qt::AlignRight );
+  connect( pb, SIGNAL( clicked( void ) ), this, SLOT( dialog( void ) ) );
 
   // help:
-  pb = new QPushButton( "Help", gl );
+  pb = new QPushButton( "Help" );
+  gl->addWidget( pb, 5, 1, Qt::AlignRight );
   connect( pb, SIGNAL( clicked( void ) ), this, SLOT( help( void ) ) );
 }
 
@@ -446,7 +396,7 @@ void SpikeDetector::notify( void )
     AllSpikesHist = SampleDataD( 0.0, 200.0, SizeResolution );
   }
   SDW.updateValues( OptWidget::changedFlag() );
-  postCustomEvent( 1 );
+  postCustomEvent( 10 );
 }
 
 
@@ -652,7 +602,7 @@ int SpikeDetector::detect( const InData &data, EventData &outevents,
     setInteger( "quality", Quality );
     setNotify();
     SDW.updateValues( OptWidget::changedFlag() );
-    postCustomEvent( 1 );
+    postCustomEvent( 10 );
     return 0;
   }
 
@@ -679,7 +629,7 @@ int SpikeDetector::detect( const InData &data, EventData &outevents,
   setInteger( "quality", Quality );
   setNotify();
   SDW.updateValues( OptWidget::changedFlag() );
-  postCustomEvent( 1 );
+  postCustomEvent( 10 );
   return 0;
 }
 
@@ -764,12 +714,14 @@ int SpikeDetector::checkEvent( const InData::const_iterator &first,
 
 void SpikeDetector::customEvent( QEvent *qce )
 {
-  if ( qce->type() == QEvent::User+1 ) {
+  if ( qce->type() == QEvent::User+10 ) {
     lock();
     QualityIndicator->setPixmap( *QualityPixs[Quality] );
     TrendIndicator->setPixmap( *TrendPixs[Trend] );
     unlock();
   }
+  else
+    RELACSPlugin::customEvent( qce );
 }
 
 

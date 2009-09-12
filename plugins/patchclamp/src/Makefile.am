@@ -1,5 +1,5 @@
 HEADER_PATH = ../include/relacs/patchclamp
-include ${top_srcdir}/moc3.mk
+include ${top_srcdir}/moc4.mk
 
 pluginlibdir = $(pkglibdir)/plugins
 
@@ -20,16 +20,16 @@ libpatchclampsession_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libpatchclampsession_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libpatchclampsession_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libpatchclampsession_la_OBJECTS) : moc_session.cc
 
@@ -52,17 +52,17 @@ libpatchclampsimple_la_CPPFLAGS = \
     -I$(top_srcdir)/plugins/base/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libpatchclampsimple_la_LDFLAGS = \
     -module -avoid-version \
     $(top_builddir)/plugins/base/src/libbasesetoutput.la \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libpatchclampsimple_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libpatchclampsimple_la_OBJECTS) : moc_simple.cc
 
@@ -84,16 +84,16 @@ libpatchclampsinglestimulus_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libpatchclampsinglestimulus_la_LDFLAGS = \
     -module -avoid-version \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libpatchclampsinglestimulus_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libpatchclampsinglestimulus_la_OBJECTS) : moc_singlestimulus.cc
 

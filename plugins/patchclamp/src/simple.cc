@@ -30,7 +30,7 @@ namespace patchclamp {
 Simple::Simple( void )
   : RePro( "Simple", "Simple", "Patch-clamp",
 	   "Jan Benda", "0.0", "Feb 14, 2008" ),
-    P( this, "simpleplot" )
+    P( this )
 {
   // add some options:
   addSelection( "intrace", "Input trace", "V-1" );

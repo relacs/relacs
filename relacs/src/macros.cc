@@ -56,7 +56,7 @@ const string Macro::OverwriteIdent = "overwrite";
 Macros::Macros( RELACSWidget *rw, QWidget *parent )
   : QWidget( parent ),
     ConfigClass( "Macros", RELACSPlugin::Core ),
-    RW( rw ), RP( 0 ), MCs(),
+    RW( rw ), RPs( 0 ), MCs(),
     CurrentMacro( -1 ), CurrentCommand( 0 ),
     Stack(), ResumePos(), ResumeMacroOnly( false ),
     ThisCommandOnly( false ), ThisMacroOnly( false ), Enable( false ),
@@ -69,8 +69,6 @@ Macros::Macros( RELACSWidget *rw, QWidget *parent )
 {
   ButtonLayout = new QGridLayout( this );
   setLayout( ButtonLayout );
-
-  Menu = new QMenu( this );
 
   addText( "file", "Configuration file", "macros.cfg" );
   addText( "mainfile", "Main configuration file", "" );
@@ -169,7 +167,8 @@ void Macros::clear( bool keep )
   }
 
   // clear menu:
-  Menu->clear();
+  if ( Menu != 0 )
+    Menu->clear();
   SwitchMenu = 0;
   SwitchActions.clear();
 
@@ -420,7 +419,7 @@ bool Macros::check( void )
 	
 	else {
 	  // find RePro:
-	  RePro *repro = RP->nameRepro( (*cp)->Name );
+	  RePro *repro = RPs->nameRepro( (*cp)->Name );
 	  if ( repro == 0 ) {
 	    Warnings += "Removed unknown RePro \"<b>";
 	    Warnings += (*cp)->Name;
@@ -556,8 +555,8 @@ bool Macros::check( void )
 	(*cp)->Macro = index( (*cp)->Name );
   
   // set RePros back to default values:
-  for ( int k=0; k<RP->size(); k++ )
-    RP->repro( k )->setDefaults();
+  for ( int k=0; k<RPs->size(); k++ )
+    RPs->repro( k )->setDefaults();
 
   // no macros?
   if ( MCs.empty() ) {
@@ -566,9 +565,9 @@ bool Macros::check( void )
       Warnings += "\n";
     Warnings += "No Macros specified! Trying to create Macros from RePros...\n";
 
-    for ( int k=0; k<RP->size(); k++ ) {
-      MCs.push_back( new Macro( RP->repro( k )->name(), this ) );
-      MCs.back()->Commands.push_back( new MacroCommand( RP->repro( k ),
+    for ( int k=0; k<RPs->size(); k++ ) {
+      MCs.push_back( new Macro( RPs->repro( k )->name(), this ) );
+      MCs.back()->Commands.push_back( new MacroCommand( RPs->repro( k ),
 							"", this ) );
     }
 
@@ -794,9 +793,9 @@ void Macros::create( void )
 }
 
 
-QMenu* Macros::menu( void )
+void Macros::setMenu( QMenu *menu )
 {
-  return Menu;
+  Menu = menu;
 }
 
 
@@ -1183,7 +1182,7 @@ void Macros::reload( void )
 void Macros::reloadRePro( const string &name )
 {
   // find RePro:
-  RePro *repro = RP->nameRepro( name );
+  RePro *repro = RPs->nameRepro( name );
   if ( repro == 0 ) {
     RW->printlog( "! warning: Macros::reloadRePro() -> RePro " +
 		  name + " not found!" );
@@ -2065,7 +2064,7 @@ void MacroCommand::dialog( void )
     return;
 
   DialogOpen = true;
-  DO = &MCs->RP->dialogOptions();
+  DO = &MCs->RPs->dialogOptions();
 
   if ( Macro >= 0 ) {
     // Macro dialog:
@@ -2192,19 +2191,19 @@ void MacroCommand::dialogClosed( int r )
 
 void MacroCommand::view( void )
 {
-  MCs->RP->raise( RP );
+  MCs->RPs->raise( RP );
 }
 
 
 void MacroCommand::reload( void )
 {
-  MCs->RP->reload( RP );
+  MCs->RPs->reload( RP );
 }
 
 
 void MacroCommand::help( void )
 {
-  MCs->RP->help( RP );
+  MCs->RPs->help( RP );
 }
 
 

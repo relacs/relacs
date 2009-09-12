@@ -128,13 +128,17 @@ private:
   double MinRate;
   double MinSize;
 
-  QPixmap GoodCircle;
-  QPixmap OkCircle;
-  QPixmap PotentialCircle;
-  QPixmap BadCircle;
+  QPixmap BadQuality;
+  QPixmap PotentialQuality;
+  QPixmap OkQuality;
+  QPixmap GoodQuality;
   QPixmap *QualityPixs[4];
-  QPixmap GoodArrow;
+
   QPixmap BadArrow;
+  QPixmap BadTrend;
+  QPixmap OkTrend;
+  QPixmap GoodTrend;
+  QPixmap GoodArrow;
   QPixmap *TrendPixs[5];
 
 };

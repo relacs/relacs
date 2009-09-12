@@ -23,6 +23,7 @@
 #include <cmath>
 #include <QDateTime>
 #include <QToolTip>
+#include <QShortcut>
 #include <relacs/str.h>
 #include <relacs/relacswidget.h>
 #include <relacs/session.h>
@@ -47,12 +48,16 @@ Session::Session( RELACSWidget *rw, int height, QWidget *parent )
 
   TimeLabelLayout = new QHBoxLayout( this );
 
+  // XXX  ensurePolished(); produces SIGSEGV
   TimeLabel = new QLabel( "-", this );
-  TimeLabel->setTextFormat( PlainText );
-  TimeLabel->setAlignment( AlignRight | AlignVCenter );
+  QFont f( fontInfo().family(), fontInfo().pointSize()*4/3, QFont::Bold );
+  TimeLabel->setFont( f );
+  TimeLabel->setFixedWidth( QFontMetrics( f ).boundingRect( "00:00" ).width() + 8 );
+  TimeLabel->setTextFormat( Qt::PlainText );
+  TimeLabel->setAlignment( Qt::AlignRight | Qt::AlignVCenter );
   TimeLabel->setIndent( 2 );
   TimeLabel->setFixedHeight( height );
-  QToolTip::add( TimeLabel, "The elapsed time of a session in minutes" );
+  TimeLabel->setToolTip( "The elapsed time of a session in minutes" );
   TimeLabelLayout->addWidget( TimeLabel );
   
   setLayout( TimeLabelLayout );
@@ -119,22 +124,12 @@ double Session::totalTime( void ) const
 }
 
 
-void Session::polish( void )
-{
-  QWidget::polish();
-
-  QFont f( fontInfo().family(), fontInfo().pointSize()*4/3, QFont::Bold );
-  TimeLabel->setFont( f );
-  TimeLabel->setFixedWidth( QFontMetrics( f ).boundingRect( "00:00" ).width() + 8 );
-}
-
-
 void Session::startTheSession( bool startmacro )
 {
   if ( Running )
     return;
 
-  StartSessionAction->setMenuText( "Stop Session" );
+  StartSessionAction->setText( "Stop Session" );
 
   SessionCounter++;
   StartSessionTime = ::time( 0 );
@@ -145,10 +140,10 @@ void Session::startTheSession( bool startmacro )
   RW->startSession( startmacro );
 
   QPalette p = palette();
-  p.setColor( QPalette::Normal, QColorGroup::Foreground, red );
-  p.setColor( QPalette::Inactive, QColorGroup::Foreground, red );
+  p.setColor( QPalette::Normal, QPalette::Foreground, Qt::red );
+  p.setColor( QPalette::Inactive, QPalette::Foreground, Qt::red );
   setPalette( p );
-  MessageTimer->start( 1000, false );
+  MessageTimer->start( 1000 );
 
   Running = true;
 }
@@ -188,13 +183,13 @@ void Session::stopTheSession( void )
   MessageTimer->stop();
 
   QPalette p = palette();
-  p.setColor( QPalette::Normal, QColorGroup::Foreground, black );
-  p.setColor( QPalette::Inactive, QColorGroup::Foreground, black );
+  p.setColor( QPalette::Normal, QPalette::Foreground, Qt::black );
+  p.setColor( QPalette::Inactive, QPalette::Foreground, Qt::black );
   setPalette( p );
 
   timeMessage();
 
-  StartSessionAction->setMenuText( "Start Session" );
+  StartSessionAction->setText( "Start Session" );
 
   RW->stopSession( SaveData );
 
@@ -222,16 +217,10 @@ void Session::timeMessage( void )
 
 void Session::addActions( QMenu *menu )
 {
-  StartSessionAction = new QAction( this, "SessionAction" );
-  StartSessionAction->setMenuText( "Start Session" );
-  StartSessionAction->setAccel( Key_Enter );
-  connect( StartSessionAction, SIGNAL( activated() ), 
-	   this, SLOT( toggleSession() ) );
-  StartSessionAction->addTo( menu );
-
-  QAccel *sa = new QAccel( this, "SessionAccel" );
-  sa->connectItem( sa->insertItem( Key_Return ),
-		   this, SLOT( toggleSession() ) );
+  StartSessionAction = menu->addAction( "Start Session",
+					this, SLOT( toggleSession() ),
+					Qt::Key_Enter );
+  new QShortcut( Qt::Key_Return, this, SLOT( toggleSession() ) );
 }
 
 

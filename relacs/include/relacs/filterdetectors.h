@@ -140,8 +140,8 @@ public:
         events of the EventData with identifier \a ident were detected. */
   int eventInputEvent( const string &ident ) const;
 
-    /*! The popup menu for configuring %FilterDetectors. */
-  QMenu* menu( void );
+    /*! Add the menu for configuring %FilterDetectors to \a menu. */
+  void addMenu( QMenu *menu );
 
     /*! Calles modeChanged() of each Filter
         whenever the mode is changed. */

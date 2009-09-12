@@ -134,21 +134,6 @@ void RELACSPlugin::customEvent( QEvent *qce )
 }
 
 
-
-void RELACSPlugin::lockGUI( void )
-{
-  if ( RW != 0 )
-    RW->lockGUI();
-}
-
-
-void RELACSPlugin::unlockGUI( void )
-{
-  if ( RW != 0 )
-    RW->unlockGUI(); 
-}
-
-
 void RELACSPlugin::lockAll( void )
 {
   lock();

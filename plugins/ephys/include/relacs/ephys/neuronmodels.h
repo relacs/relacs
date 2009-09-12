@@ -48,7 +48,6 @@ namespace ephys {
 
 class NeuronModels : public Model
 {
-  Q_OBJECT
 
 public:
 

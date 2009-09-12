@@ -71,5 +71,3 @@ void SimpleModel::main( void )
 addModel( SimpleModel );
 
 }; /* namespace base */
-
-#include "moc_simplemodel.cc"

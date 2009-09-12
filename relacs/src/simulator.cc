@@ -120,7 +120,7 @@ int Simulator::read( InList &data )
       }
     }
     // device still busy?
-    if ( Sim->running() &&
+    if ( Sim->isRunning() &&
 	 AI[i].Traces.size() > 0 ) {
       if ( AI[i].Traces[0].priority() ) {
 	Sim->stop();

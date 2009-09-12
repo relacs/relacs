@@ -40,20 +40,25 @@ SetOutput::SetOutput( void )
   STW.setSpacing( 2 );
   STW.setMargin( 4 );
 
-  QWidget *bb = new QWidget( this );
-  bb->setSpacing( 4 );
-
   // Ok button:
-  QPushButton *OKButton = new QPushButton( "&Ok", bb, "OkButton" );
-  connect( OKButton, SIGNAL( clicked() ),
-	   this, SLOT( setValues() ) );
+  QPushButton *OKButton = new QPushButton( "&Ok" );
+  OKButton->setFixedHeight( OKButton->sizeHint().height() );
+  QWidget::connect( OKButton, SIGNAL( clicked() ),
+		    (QWidget*)this, SLOT( setValues() ) );
 
   // Cancel button:
-  QPushButton *CancelButton = new QPushButton( "&Cancel", bb, "CancelButton" );
-  connect( CancelButton, SIGNAL( clicked() ),
-	   this, SLOT( keepValues() ) );
+  QPushButton *CancelButton = new QPushButton( "&Cancel" );
+  CancelButton->setFixedHeight( OKButton->sizeHint().height() );
+  QWidget::connect( CancelButton, SIGNAL( clicked() ),
+		    (QWidget*)this, SLOT( keepValues() ) );
 
-  bb->setFixedHeight( OKButton->sizeHint().height() );
+  // layout:
+  QHBoxLayout *hb = new QHBoxLayout;
+  hb->setSpacing( 4 );
+  hb->addWidget( OKButton );
+  hb->addWidget( CancelButton );
+
+  boxLayout()->addLayout( hb );
 }
 
 

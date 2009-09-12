@@ -1,5 +1,5 @@
 HEADER_PATH = ../include/relacs/multielectrode
-include ${top_srcdir}/moc3.mk
+include ${top_srcdir}/moc4.mk
 
 pluginlibdir = $(pkglibdir)/plugins
 
@@ -18,16 +18,16 @@ libmultielectrodemultista_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libmultielectrodemultista_la_LDFLAGS = \
     -module -avoid-version \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libmultielectrodemultista_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libmultielectrodemultista_la_OBJECTS) : moc_multista.cc
 
@@ -48,16 +48,16 @@ libmultielectrodemultitracesta_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libmultielectrodemultitracesta_la_LDFLAGS = \
     -module -avoid-version \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libmultielectrodemultitracesta_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libmultielectrodemultitracesta_la_OBJECTS) : moc_multitracesta.cc
 

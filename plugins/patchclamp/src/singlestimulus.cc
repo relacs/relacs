@@ -298,7 +298,7 @@ int SingleStimulus::main( void )
     // plot trace:
     plotToggle( true, true, searchduration, 0.0 );
     
-    QApplication::postEvent( this, new QEvent( QEvent::User+2 ) );
+    postCustomEvent( 11 );
     SP.lock();
     SP.clearPlots();
     SP[0].setTitle( "Search target firing rate " + Str( targetrate ) + " Hz" );
@@ -602,7 +602,7 @@ int SingleStimulus::main( void )
   plotToggle( true, true, Duration, 0.0 );
 
   // setup plots:
-  QApplication::postEvent( this, new QEvent( QEvent::User+1 ) );
+  postCustomEvent( 10 );
   P.lock();
   P.clearPlots();
   P[0].setTitle( "Mean firing rate =    Hz" );
@@ -982,14 +982,16 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
 
 void SingleStimulus::customEvent( QEvent *qce )
 {
-  if ( qce->type() == QEvent::User+1 ) {
+  if ( qce->type() == QEvent::User+10 ) {
     SP.hide();
     P.show();
   }
-  else if ( qce->type() == QEvent::User+2 ) {
+  else if ( qce->type() == QEvent::User+11 ) {
     P.hide();
     SP.show();
   }
+  else
+    RELACSPlugin::customEvent( qce );
 }
 
 
