@@ -172,14 +172,12 @@ MotorControl::MotorControl( void )
   p.end();
 
   // quality indicator:
-  Quality = 0;
   QualityPixs[0] = &BadQuality;
   QualityPixs[1] = &PotentialQuality;
   QualityPixs[2] = &OkQuality;
   QualityPixs[3] = &GoodQuality;
 
   // trend indicator:
-  Trend = 2;
   TrendPixs[0] = &BadArrow;
   TrendPixs[1] = &BadTrend;
   TrendPixs[2] = &OkTrend;

@@ -46,10 +46,13 @@ Session::Session( RELACSWidget *rw, int height, QWidget *parent )
   MessageTimer = new QTimer( this );
   connect( MessageTimer, SIGNAL( timeout() ), this, SLOT( timeMessage() ) );
 
-  TimeLabelLayout = new QHBoxLayout( this );
+  TimeLabelLayout = new QHBoxLayout;
+  TimeLabelLayout->setContentsMargins( 0, 0, 0, 0 );
+  TimeLabelLayout->setSpacing( 4 );
+  setLayout( TimeLabelLayout );
 
   // XXX  ensurePolished(); produces SIGSEGV
-  TimeLabel = new QLabel( "-", this );
+  TimeLabel = new QLabel( "-" );
   QFont f( fontInfo().family(), fontInfo().pointSize()*4/3, QFont::Bold );
   TimeLabel->setFont( f );
   TimeLabel->setFixedWidth( QFontMetrics( f ).boundingRect( "00:00" ).width() + 8 );
@@ -59,8 +62,6 @@ Session::Session( RELACSWidget *rw, int height, QWidget *parent )
   TimeLabel->setFixedHeight( height );
   TimeLabel->setToolTip( "The elapsed time of a session in minutes" );
   TimeLabelLayout->addWidget( TimeLabel );
-  
-  setLayout( TimeLabelLayout );
 }
 
 

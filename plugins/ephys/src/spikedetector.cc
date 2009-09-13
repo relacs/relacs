@@ -126,7 +126,9 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
 
   // key to histogram plot:  XXX provide a function in Plot!
   QGridLayout *gl = new QGridLayout;
-  gl->setSpacing( 0 );
+  gl->setContentsMargins( 4, 4, 4, 4 );
+  gl->setVerticalSpacing( 0 );
+  gl->setHorizontalSpacing( 6 );
   hb->addLayout( gl );
 
   QPixmap pm( 20, 10 );

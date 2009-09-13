@@ -25,7 +25,6 @@
 #include <iostream>
 #include <fstream>
 #include <QLabel>
-#include <QTabWidget>
 #include <QMenuBar>
 #include <QStatusBar>
 #include <QToolTip>
@@ -138,18 +137,20 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
 
   // main widget:
   setWindowTitle( "RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation: Version " + QString( RELACSVERSION ) );
-  MainWidget = new QWidget( this );
-  QGridLayout *mainlayout = new QGridLayout( MainWidget );
-  mainlayout->setContentsMargins( 0, 0, 0, 0 );
-  mainlayout->setSpacing( 0 );
+  MainWidget = new QWidget;
+  QGridLayout *mainlayout = new QGridLayout;
+  mainlayout->setContentsMargins( 4, 4, 4, 4 );
+  mainlayout->setSpacing( 4 );
   MainWidget->setLayout( mainlayout );
+  MainWidget->setBackgroundRole( QPalette::Window );
+  MainWidget->setAutoFillBackground( true );
   setCentralWidget( MainWidget );
 
   // filter and detectors:
-  FD = new FilterDetectors( this, MainWidget );
+  FD = new FilterDetectors( this );
 
   // macros:
-  MC = new Macros( this, MainWidget );
+  MC = new Macros( this );
 
   // data acquisition:
   AQ = 0;
@@ -250,9 +251,9 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     HelpPathes[k].preventSlash();
 
   // session, control tabwidget:
-  QTabWidget *cw = new QTabWidget( MainWidget );
+  CW = new QTabWidget;
 
-  OrgBackground = palette().color( QPalette::Background );
+  OrgBackground = palette().color( QPalette::Window );
 
   // Control plugins:
   CN.clear();
@@ -269,7 +270,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
 			     this );
       }
       else {
-	cw->addTab( cn, cn->title().c_str() );
+	CW->addTab( cn, cn->title().c_str() );
 	cn->setRELACSWidget( this );
 	CN.push_back( cn );
       }
@@ -307,7 +308,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
 
   // setup RePros:
   ReProRunning = false;
-  RP = new RePros( this, MainWidget );
+  RP = new RePros( this );
   if ( RP->size() <= 0 ) {
     printlog( "! error: No RePros found! Exit now!" );
     MessageBox::error( "RELACS Error !", "No RePros found!<br>Exit now!", this );
@@ -320,12 +321,12 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   CurrentRePro = 0;
 
   // setup PlotTrace:
-  PT = new PlotTrace( this, MainWidget );
+  PT = new PlotTrace( this );
   PT->setDataMutex( &DataMutex );
 
   // status bar:
   // RePro message:
-  QLabel *rl = RP->display( statusBar() );
+  QLabel *rl = RP->display();
   statusBar()->addPermanentWidget( rl, 200 );
   int statusbarheight = rl->height();
   // Session message:
@@ -423,16 +424,16 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   // layout:
   /*
   int wd = FD->minimumSizeHint().width();
-  int wc = cw->minimumSizeHint().width();
+  int wc = CW->minimumSizeHint().width();
   */
   int wd = FD->sizeHint().width();
-  int wc = cw->sizeHint().width();
+  int wc = CW->sizeHint().width();
   int w = wc > wd ? wc : wd;
   FD->setMaximumWidth( w );
-  cw->setMaximumWidth( w );
+  CW->setMaximumWidth( w );
   mainlayout->addWidget( FD, 0, 0 );
   mainlayout->addWidget( PT, 0, 1 );
-  mainlayout->addWidget( cw, 1, 0 );
+  mainlayout->addWidget( CW, 1, 0 );
   mainlayout->addWidget( RP, 1, 1 );
   mainlayout->addWidget( MC, 2, 0, 1, 2 );
   mainlayout->setColumnStretch( 0, 1 );
@@ -440,7 +441,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   mainlayout->setRowStretch( 0, 2 );
   mainlayout->setRowStretch( 1, 3 );
   wd = FD->width();
-  wc = cw->width();
+  wc = CW->width();
   w = wc > wd ? wc : wd;
   w = 3*w/2;
   if ( PT->minimumWidth() < w || RP->minimumWidth() < w ) {
@@ -1232,9 +1233,15 @@ void RELACSWidget::startSession( bool startmacro )
   // open files:
   SF->openFiles( IL, ED );
 
-  QPalette palette;
-  palette.setColor( MainWidget->backgroundRole(), QColor( 255, 96, 96 ) );
-  MainWidget->setPalette( palette );
+  QPalette p( palette() );
+  p.setColor( QPalette::Window, QColor( 255, 96, 96 ) );
+  MainWidget->setPalette( p );
+  p.setColor( QPalette::Window, OrgBackground );
+  FD->setPalette( p );
+  PT->setPalette( p );
+  CW->setPalette( p );
+  RP->setPalette( p );
+  MC->setPalette( p );
 
   SS.lock();
   if ( SS.boolean( "saverelacscore" ) )
@@ -1317,9 +1324,9 @@ void RELACSWidget::stopSession( bool saved )
 
   CurrentRePro->setSaving( SF->saving() );
 
-  QPalette palette;
-  palette.setColor( MainWidget->backgroundRole(), OrgBackground );
-  MainWidget->setPalette( palette );
+  QPalette p( palette() );
+  p.setColor( QPalette::Window, OrgBackground );
+  MainWidget->setPalette( p );
 
   if ( LogFile != 0 ) {
     delete LogFile;

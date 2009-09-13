@@ -23,6 +23,7 @@
 #define _RELACS_RELACSWIDGET_H_ 1
 
 #include <QMainWindow>
+#include <QTabWidget>
 #include <QMenu>
 #include <QAction>
 #include <QString>
@@ -361,6 +362,7 @@ private:
   Model *MD;
   PlotTrace *PT;
   SaveFiles *SF;
+  QTabWidget *CW;
   RePros *RP;
   Macros *MC;
   FilterDetectors *FD;

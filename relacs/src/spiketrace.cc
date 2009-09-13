@@ -29,6 +29,9 @@
 #include <QResizeEvent>
 #include <relacs/spiketrace.h>
 
+using namespace std;
+
+
 namespace relacs {
 
 
@@ -47,8 +50,7 @@ SpikeTrace::SpikeTrace( double spikewidth, int radius, int tracewidth,
   Show = false;
   Pause = false;
   Pos = Radius/2;
-  pPos = Pos;
-  dPos = 4;
+  dPos = 2;
 }
 
 
@@ -125,19 +127,8 @@ void SpikeTrace::paintEvent( QPaintEvent *qpe )
 
     int b = height() - Radius/2;
     
-    // clear widget:
-    /* XXX The widget is always erased!
-    if ( !qpe->erased() && Pos == Radius/2 )
-      erase();
-    else
-      // clear ball:
-      paint.eraseRect( pPos - Radius/2, b - trace( pPos ) - Radius/2, 
-		       Radius, Radius );
-    */
-    
     // draw line:
     QPainterPath path;
-    //    x = qpe->erased() ? 0 : pPos-Radius/2-1;
     int x = 0;
     path.moveTo( x, b - trace( x ) );
     for ( x++; x<Pos; x++ )
@@ -153,10 +144,6 @@ void SpikeTrace::paintEvent( QPaintEvent *qpe )
     paint.drawEllipse( Pos - Radius/2, b - trace( Pos ) - Radius/2, 
 		       Radius, Radius );
   }
-  /* The widget is always erased!
-  else
-    paint.eraseRect( rect() );
-  */
 
   SMutex.unlock();
 }
@@ -188,13 +175,12 @@ void SpikeTrace::animate( void )
 {
   pPos = Pos;
   Pos += dPos;
-  if ( Pos >= width()-Radius/2 )
-    {
-      Pos = Radius/2;
-      double r = rand();
-      r /= RAND_MAX;
-      SpikePos = rint( 2*SpikeWidth + ( width() - 4*SpikeWidth ) * r );
-    }
+  if ( Pos >= width()-Radius/2 ) {
+    Pos = Radius/2;
+    double r = rand();
+    r /= RAND_MAX;
+    SpikePos = rint( 2*SpikeWidth + ( width() - 4*SpikeWidth ) * r );
+  }
 }
 
 
@@ -203,14 +189,14 @@ void SpikeTrace::run( void )
   bool showw = true;
   do {
     update();
-    bool pause = true;
+    bool pausew = true;
     do {
-      msleep( 100 );
+      msleep( 50 );
       SMutex.lock();
       showw = Show;
-      pause = Pause;
+      pausew = Pause;
       SMutex.unlock();
-    } while ( showw && pause );
+    } while ( showw && pausew );
   } while ( showw );
   update();
 }

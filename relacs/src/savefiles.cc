@@ -76,9 +76,12 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
 
   setFixedHeight( height );
 
-  StatusInfoLayout = new QHBoxLayout(this);
+  StatusInfoLayout = new QHBoxLayout;
+  StatusInfoLayout->setContentsMargins( 0, 0, 0, 0 );
+  StatusInfoLayout->setSpacing( 4 );
+  setLayout( StatusInfoLayout );
 
-  FileLabel = new QLabel( "no files open", this );
+  FileLabel = new QLabel( "no files open" );
   // XXX  ensurePolished(); produces SIGSEGV
   NormalFont = FileLabel->font();
   HighlightFont = QFont( fontInfo().family(), fontInfo().pointSize()*4/3, QFont::Bold );
@@ -94,17 +97,16 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
   FileLabel->setFixedWidth( QFontMetrics( HighlightFont ).boundingRect( fn.c_str() ).width() + 8 );
   StatusInfoLayout->addWidget( FileLabel );
 
-  SaveLabel = new SpikeTrace( 0.8, 8, 3, this );
+  SaveLabel = new SpikeTrace( 0.8, 8, 3 );
   SaveLabel->setFixedWidth( SaveLabel->minimumSizeHint().width() );
   SaveLabel->setToolTip( "An animation indicating that raw data are stored on disk" );
   StatusInfoLayout->addWidget( SaveLabel );
-  
-  setLayout( StatusInfoLayout );
+
+  setMinimumWidth( FileLabel->width() + 4 + SaveLabel->width() );
 
   NormalPalette = FileLabel->palette();
   HighlightPalette = FileLabel->palette();
-  HighlightPalette.setColor( QPalette::Normal, QPalette::Foreground, Qt::red );
-  HighlightPalette.setColor( QPalette::Inactive, QPalette::Foreground, Qt::red );
+  HighlightPalette.setColor( QPalette::Foreground, Qt::red );
 }
 
 

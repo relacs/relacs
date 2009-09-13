@@ -44,6 +44,8 @@ ConfigDialog::ConfigDialog( const string &configident, int configgroup,
     CDMutex()
 {
   BoxLayout = new QBoxLayout( QBoxLayout::TopToBottom );
+  BoxLayout->setContentsMargins( 0, 0, 0, 0 );
+  BoxLayout->setSpacing( 0 );
   setLayout( BoxLayout );
   Name = name.empty() ? configident : name;
   Prefix = "";

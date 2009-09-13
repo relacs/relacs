@@ -68,7 +68,6 @@ SpectrumAnalyzer::SpectrumAnalyzer( void )
 	      0.0, Plot::Red, 5.0 );
   P.unlock();
   boxLayout()->addWidget( &P );
-
 }
 
 

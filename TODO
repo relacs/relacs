@@ -8,6 +8,8 @@ Qt4:
 - how to use enurePolished() in SaveFiles and Session
 - check all postEvents and postCustomEvents in plugins: User+10 or more, custemEvent should also call RELACSPlugin::customEvent
 - OptWidget: check the usage of layouts and widgets therein (parent classes).
+- What about the autoAdd functionality of Layouts?
+- QPalette::Background is obsolete, use QPalette::Window instead
 
 SignalTime: finish this update (RELACSPlugin::signalTime()
 - test ficurve RePro: does not work!
