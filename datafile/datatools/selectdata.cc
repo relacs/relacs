@@ -59,10 +59,23 @@ int readData( DataFile &sf )
   // read in index ranges:
   vector< vector< int > > linx( n );
   vector< Options > optinx( n );
+  vector< vector< int > > optops( n );
   for ( int k=0; k<n; k++ ) {
     istrs[k].range( linx[k], ",", "-" );
-    if ( linx[k].empty() )
-      optinx[k].load( istrs[k], "=", ";" );
+    if ( linx[k].empty() ) {
+      optinx[k].load( istrs[k], "=<>!", ";" );
+      StrQueue os( istrs[k], ";" );
+      for ( int j=0; j<os.size(); j++ ) {
+	if ( os[j].find( '<' ) > 0 )
+	  optops[k].push_back( 1 );
+	else if ( os[j].find( '>' ) > 0 )
+	  optops[k].push_back( 2 );
+	else if ( os[j].find( '!' ) > 0 )
+	  optops[k].push_back( 3 );
+	else
+	  optops[k].push_back( 0 );
+      }
+    }
   }
 
   int cinx[ n ];  // current indices for the levels
@@ -102,11 +115,20 @@ int readData( DataFile &sf )
 	for ( int j=0; j<optinx[k].size(); j++ ) {
 	  // XXX: match k with metaData levels!
 	  Parameter p = sf.metaDataOptions( k )[ optinx[k][j].ident() ];
-	  if ( p.isNotype() ||
-	       ( p.isAnyNumber() && 
-		 p.number( optinx[k][j].unit() ) != optinx[k][j].number() ) ||
-	       ( !p.isAnyNumber() &&
-		 p.text() != optinx[k][j].text() ) ) {
+	  if ( p.isAnyNumber() ) {
+	    double v1 = p.number( optinx[k][j].unit() );
+	    double v2 = optinx[k][j].number();
+	    if ( ( optops[k][j] == 0 && fabs( v1 - v2 ) > 1.0e-8 ) ||
+		 ( optops[k][j] == 1 && v1 > v2 ) ||
+		 ( optops[k][j] == 2 && v1 < v2 ) ||
+		 ( optops[k][j] == 3 && fabs( v1 - v2 ) < 1.0e-8 ) ) {
+	      out = false;
+	      break;
+	    }
+	  }
+	  else if ( p.isNotype() ||
+		    ( !p.isAnyNumber() &&
+		      p.text() != optinx[k][j].text() ) ) {
 	    out = false;
 	    break;
 	  }
@@ -271,14 +293,14 @@ void WriteUsage()
   cerr << "-i: the indices of the selected blocks of data\n";
   cerr << "    or name-value pairs to be used to select data based on the meta data.\n";
   cerr << "    Separate different levels with a colon ':'\n";
-  cerr << "    and values from their names by '='.\n";
+  cerr << "    and values from their names by '=', '<', '>', or '!'.\n";
   cerr << "    Multiple name-value pairs on the same level are separated\n";
   cerr << "    by a semi-colon ';'.\n";
   cerr << "    Examples:\n";
   cerr << "    -i '2:1,5-8' selects blocks 1, 5, 6, 7, 8\n";
   cerr << "    within the next level block with index 2 only.\n";
-  cerr << "    -i '3-5:cutoff=50Hz;stdev=5' selects all blocks with their meta data\n";
-  cerr << "    matching 'cutoff=50Hz' and 'stdev=5' within the next level blocks\n";
+  cerr << "    -i '3-5:cutoff=50Hz;stdev>5' selects all blocks with their meta data\n";
+  cerr << "    matching 'cutoff=50Hz' and 'stdev' greater than 5 within the next level blocks\n";
   cerr << "    with indices 3, 4, 5\n";
   cerr << "-l: select a range of line numbers within the data blocks (first line = 0).\n";
   cerr << "-s: select lines based on their data values:\n";
