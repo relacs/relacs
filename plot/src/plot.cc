@@ -2799,7 +2799,11 @@ void Plot::draw( QPaintDevice *qpm )
     }
   }
 
-  ShiftData = false; // XXX remove, once thi is working
+  // XXX remove, once thes optimiziation for shifted data is working:
+  if ( ShiftData ) {
+    ShiftData = false;
+    NewData = true;
+  }
 
   if ( ! NewData && ShiftData ) {
     if ( ShiftXPix >= PlotX2 - PlotX1 )
