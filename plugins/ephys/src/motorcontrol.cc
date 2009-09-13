@@ -54,10 +54,10 @@ MotorControl::MotorControl( void )
   QPainter p;
   int is = fontInfo().pixelSize() * 2;
   QColor orange( 255, 165, 0 );
-  QPixmap goodquality( is, is );
-  p.begin( &goodquality );
+  GoodQuality = QPixmap( is, is );
+  p.begin( &GoodQuality );
   p.setBackgroundMode( Qt::OpaqueMode );
-  p.fillRect( goodquality.rect(), Qt::black );
+  p.fillRect( GoodQuality.rect(), Qt::black );
   p.setPen( Qt::NoPen );
   p.setBrush( Qt::green );
   p.drawEllipse( 1, 1, is-2, is-2 );
@@ -66,10 +66,10 @@ MotorControl::MotorControl( void )
   p.drawLine( 6*is/10, 6*is/10, 4*is/5, 4*is/5 );
   p.end();
 
-  QPixmap okquality( is, is );
-  p.begin( &okquality );
+  OkQuality = QPixmap( is, is );
+  p.begin( &OkQuality );
   p.setBackgroundMode( Qt::OpaqueMode );
-  p.fillRect( okquality.rect(), Qt::black );
+  p.fillRect( OkQuality.rect(), Qt::black );
   p.setPen( Qt::NoPen );
   p.setBrush( Qt::yellow );
   p.drawEllipse( 1, 1, is-2, is-2 );
@@ -78,10 +78,10 @@ MotorControl::MotorControl( void )
   p.drawLine( is/2, is/2, 4*is/5, 4*is/5 );
   p.end();
 
-  QPixmap potentialquality( is, is );
-  p.begin( &potentialquality );
+  PotentialQuality = QPixmap( is, is );
+  p.begin( &PotentialQuality );
   p.setBackgroundMode( Qt::OpaqueMode );
-  p.fillRect( potentialquality.rect(), Qt::black );
+  p.fillRect( PotentialQuality.rect(), Qt::black );
   p.setPen( Qt::NoPen );
   p.setBrush( orange );
   p.drawEllipse( 1, 1, is-2, is-2 );
@@ -90,10 +90,10 @@ MotorControl::MotorControl( void )
   p.drawLine( is/2, is/2, 4*is/5, 4*is/5 );
   p.end();
 
-  QPixmap badquality( is, is );
-  p.begin( &badquality );
+  BadQuality = QPixmap( is, is );
+  p.begin( &BadQuality );
   p.setBackgroundMode( Qt::OpaqueMode );
-  p.fillRect( badquality.rect(), Qt::black );
+  p.fillRect( BadQuality.rect(), Qt::black );
   p.setPen( Qt::NoPen );
   p.setBrush( Qt::red );
   p.drawEllipse( 1, 1, is-2, is-2 );
@@ -103,10 +103,10 @@ MotorControl::MotorControl( void )
   p.end();
 
   QPolygon pa( 7 );
-  QPixmap badarrow( is, is );
-  p.begin( &badarrow );
+  QPixmap BadArrow( is, is );
+  p.begin( &BadArrow );
   p.setBackgroundMode( Qt::OpaqueMode );
-  p.fillRect( badarrow.rect(), Qt::black );
+  p.fillRect( BadArrow.rect(), Qt::black );
   p.setPen( QPen( Qt::black, 1 ) );
   p.setBrush( Qt::red );
   pa.setPoint( 0, is/4, 0 );
@@ -119,10 +119,10 @@ MotorControl::MotorControl( void )
   p.drawPolygon( pa );
   p.end();
 
-  QPixmap badtrend( is, is );
-  p.begin( &badtrend );
+  BadTrend = QPixmap( is, is );
+  p.begin( &BadTrend );
   p.setBackgroundMode( Qt::OpaqueMode );
-  p.fillRect( badtrend.rect(), Qt::black );
+  p.fillRect( BadTrend.rect(), Qt::black );
   p.setPen( Qt::NoPen );
   p.setBrush( Qt::red );
   p.drawEllipse( 1, 1, is-2, is-2 );
@@ -131,10 +131,10 @@ MotorControl::MotorControl( void )
   p.drawLine( is/4, is/4, 3*is/4, is/4 );
   p.end();
 
-  QPixmap oktrend( is, is );
-  p.begin( &oktrend );
+  OkTrend = QPixmap( is, is );
+  p.begin( &OkTrend );
   p.setBackgroundMode( Qt::OpaqueMode );
-  p.fillRect( oktrend.rect(), Qt::black );
+  p.fillRect( OkTrend.rect(), Qt::black );
   p.setPen( Qt::NoPen );
   p.setBrush( Qt::yellow );
   p.drawEllipse( 1, 1, is-2, is-2 );
@@ -143,10 +143,10 @@ MotorControl::MotorControl( void )
   p.drawLine( is/4, is/4, 3*is/4, is/4 );
   p.end();
 
-  QPixmap goodtrend( is, is );
-  p.begin( &goodtrend );
+  GoodTrend = QPixmap( is, is );
+  p.begin( &GoodTrend );
   p.setBackgroundMode( Qt::OpaqueMode );
-  p.fillRect( goodtrend.rect(), Qt::black );
+  p.fillRect( GoodTrend.rect(), Qt::black );
   p.setPen( Qt::NoPen );
   p.setBrush( Qt::green );
   p.drawEllipse( 1, 1, is-2, is-2 );
@@ -155,10 +155,10 @@ MotorControl::MotorControl( void )
   p.drawLine( is/4, is/4, 3*is/4, is/4 );
   p.end();
 
-  QPixmap goodarrow( is, is );
-  p.begin( &goodarrow );
+  GoodArrow = QPixmap( is, is );
+  p.begin( &GoodArrow );
   p.setBackgroundMode( Qt::OpaqueMode );
-  p.fillRect( goodarrow.rect(), Qt::black );
+  p.fillRect( GoodArrow.rect(), Qt::black );
   p.setPen( QPen( Qt::black, 1 ) );
   p.setBrush( Qt::green );
   pa.setPoint( 0, is/4, is-1 );
@@ -172,17 +172,19 @@ MotorControl::MotorControl( void )
   p.end();
 
   // quality indicator:
-  QualityPixs[0] = &badquality;
-  QualityPixs[1] = &potentialquality;
-  QualityPixs[2] = &okquality;
-  QualityPixs[3] = &goodquality;
+  Quality = 0;
+  QualityPixs[0] = &BadQuality;
+  QualityPixs[1] = &PotentialQuality;
+  QualityPixs[2] = &OkQuality;
+  QualityPixs[3] = &GoodQuality;
 
   // trend indicator:
-  TrendPixs[0] = &badarrow;
-  TrendPixs[1] = &badtrend;
-  TrendPixs[2] = &oktrend;
-  TrendPixs[3] = &goodtrend;
-  TrendPixs[4] = &goodarrow;
+  Trend = 2;
+  TrendPixs[0] = &BadArrow;
+  TrendPixs[1] = &BadTrend;
+  TrendPixs[2] = &OkTrend;
+  TrendPixs[3] = &GoodTrend;
+  TrendPixs[4] = &GoodArrow;
 }
 
 

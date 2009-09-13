@@ -68,7 +68,10 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
   OnOffButton = 0;
 
   ButtonBox = new QWidget( this );
-  ButtonBoxLayout = new QHBoxLayout(this);
+  ButtonBoxLayout = new QHBoxLayout;
+  ButtonBoxLayout->setContentsMargins( 0, 0, 0, 0 );
+  ButtonBoxLayout->setSpacing( 0 );
+  ButtonBox->setLayout( ButtonBoxLayout );
 
   int s = fontInfo().pixelSize();
 
@@ -103,6 +106,7 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
   ContinuousOffsetIcon.setMask( ContinuousOffsetIcon.createHeuristicMask() );
 
   OffsetButton = new QPushButton;
+  ButtonBoxLayout->addWidget( OffsetButton );
   OffsetButton->setIcon( FixedOffsetIcon );
   OffsetButton->setToolTip( "F: fixed (Pos1), C: continous (End)" );
   connect( OffsetButton, SIGNAL( clicked() ), this, SLOT( offsetToggle() ) );
@@ -151,8 +155,6 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
   QToolTip::add( OnOffButton, "Switch the plot on or off" );
   connect( OnOffButton, SIGNAL( clicked() ), this, SLOT( plotOnOff() ) );
   */
-
-  ButtonBox->setLayout( ButtonBoxLayout );
 }
 
 

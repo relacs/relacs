@@ -123,6 +123,7 @@ SingleStimulus::SingleStimulus( void )
   SP[2].setYLabelPos( 2.3, Plot::FirstMargin, 0.5, Plot::Graph,
 		      Plot::Center, -90.0 );
   SP.unlock();
+  boxLayout()->addWidget( &SP );
 
   P.show();
   P.lock();
@@ -143,6 +144,7 @@ SingleStimulus::SingleStimulus( void )
   P[1].setYLabelPos( 2.3, Plot::FirstMargin, 0.5, Plot::Graph,
 		     Plot::Center, -90.0 );
   P.unlock();
+  boxLayout()->addWidget( &P );
 
 }
 

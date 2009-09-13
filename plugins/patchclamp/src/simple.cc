@@ -49,6 +49,7 @@ Simple::Simple( void )
   P.setXLabel( "Time [ms]" );
   P.setYLabel( "" );
   P.unlock();
+  boxLayout()->addWidget( &P );
 }
 
 

@@ -185,10 +185,9 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
       }
     }
 
-    if ( style & BreakLinesStyle )
-      Layout.push_back( new QGridLayout( parent ) );
-    else
-      Layout.push_back( new QGridLayout( parent ) );
+    Layout.push_back( new QGridLayout( parent ) );
+    Layout.back()->setContentsMargins( 0, 0, 0, 0 );
+    Layout.back()->setSpacing( 0 );
     QLabel *l;
 
     int row = 0;
@@ -454,7 +453,7 @@ void OptWidget::setSpacing( int pixel )
 void OptWidget::setMargin( int pixel )
 {
   for ( unsigned int k=0; k<Layout.size(); k++ )
-    Layout[k]->setMargin( pixel );
+    Layout[k]->setContentsMargins( pixel, pixel, pixel, pixel );
 }
 
 

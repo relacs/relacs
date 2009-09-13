@@ -39,6 +39,7 @@ SetOutput::SetOutput( void )
   // display output variables:
   STW.setSpacing( 2 );
   STW.setMargin( 4 );
+  boxLayout()->addWidget( &STW );
 
   // Ok button:
   QPushButton *OKButton = new QPushButton( "&Ok" );

@@ -140,6 +140,8 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   setWindowTitle( "RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation: Version " + QString( RELACSVERSION ) );
   MainWidget = new QWidget( this );
   QGridLayout *mainlayout = new QGridLayout( MainWidget );
+  mainlayout->setContentsMargins( 0, 0, 0, 0 );
+  mainlayout->setSpacing( 0 );
   MainWidget->setLayout( mainlayout );
   setCentralWidget( MainWidget );
 

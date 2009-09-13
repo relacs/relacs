@@ -1984,13 +1984,14 @@ void Plot::drawLabels( QPainter &paint )
 
 void Plot::drawLine( QPainter &paint, DataElement *d )
 {
-
   if ( d->Line.color() != Transparent && d->Line.width() > 0 ) {
     // set pen:
     RGBColor c = color( d->Line.color() );
     QColor qcolor( c.red(), c.green(), c.blue() );
     Qt::PenStyle dash = QtDash.find( d->Line.dash() )->second;
     paint.setPen( QPen( qcolor, d->Line.width(), dash ) );
+    // no brush:
+    paint.setBrush( QBrush( Qt::black, Qt::NoBrush ) );
 
     // axis:
     int xaxis = d->XAxis;

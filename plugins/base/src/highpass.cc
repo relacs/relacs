@@ -40,6 +40,7 @@ HighPass::HighPass( const string &ident, int mode )
   LFW.assign( ((Options*)this), 0, 0, true, 0, mutex() );
   LFW.setSpacing( 4 );
   LFW.setMargin( 4 );
+  boxLayout()->addWidget( &LFW );
 }
 
 

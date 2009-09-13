@@ -68,6 +68,8 @@ Macros::Macros( RELACSWidget *rw, QWidget *parent )
     Fatal( false )
 {
   ButtonLayout = new QGridLayout( this );
+  ButtonLayout->setContentsMargins( 0, 0, 0, 0 );
+  ButtonLayout->setSpacing( 0 );
   setLayout( ButtonLayout );
 
   addText( "file", "Configuration file", "macros.cfg" );

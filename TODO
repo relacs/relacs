@@ -1,12 +1,13 @@
 Qt4:
 - check the use of mutexes in wait() (e.g. in Control, RePro, RELACSWidget, ReadLoop(?))
-- do wee need the createHeuristicMap for drawing icons?
+- do wee need the createHeuristicMap for drawing icons? Yes! see setMask() docu.
 - further improve Macros
   (get rid of the friends, split startNextRepRro onto Macro and
   MacroCommand, etc)
 - what is the difference between RePro::name() and ReProData::Name???
 - how to use enurePolished() in SaveFiles and Session
 - check all postEvents and postCustomEvents in plugins: User+10 or more, custemEvent should also call RELACSPlugin::customEvent
+- OptWidget: check the usage of layouts and widgets therein (parent classes).
 
 SignalTime: finish this update (RELACSPlugin::signalTime()
 - test ficurve RePro: does not work!
