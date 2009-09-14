@@ -385,11 +385,13 @@ void ConfigDialog::dialogHeaderWidget( OptDialog *od )
     QHBoxLayout *hb = new QHBoxLayout;
     frm->setLayout( hb );
     if ( ! headerBackgroundColor().empty() ) {
+      frm->setAutoFillBackground( true );
       int r = hextodec( headerBackgroundColor()[1], headerBackgroundColor()[2] );
       int g = hextodec( headerBackgroundColor()[3], headerBackgroundColor()[4] );
       int b = hextodec( headerBackgroundColor()[5], headerBackgroundColor()[6] );
       QPalette p = frm->palette();
       p.setColor( QPalette::Window, QColor( r, g, b ) );
+      frm->setBackgroundRole( QPalette::Window );
       frm->setPalette( p );
     }
     // background image:
