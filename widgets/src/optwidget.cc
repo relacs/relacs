@@ -509,8 +509,8 @@ void OptWidget::setLabelFontStyle( QWidget *w, long style )
 
 void OptWidget::setLabelColorStyle( QWidget *w, long style, bool palette, bool base, bool button )
 {
-  QPalette::ColorRole bcr = base ? QPalette::Base : QPalette::Background;
-  QPalette::ColorRole fcr = base ? QPalette::Text : QPalette::Foreground;
+  QPalette::ColorRole bcr = base ? QPalette::Base : QPalette::Window;
+  QPalette::ColorRole fcr = base ? QPalette::Text : QPalette::WindowText;
 
   QColor bg( w->palette().color( QPalette::Active, bcr ) );
   QColor fg( w->palette().color( QPalette::Active, fcr ) );

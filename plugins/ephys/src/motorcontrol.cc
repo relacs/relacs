@@ -360,8 +360,8 @@ MiMaPu::MiMaPu( Manipulator *m,	int trace, const string &title,
   nf.setBold( true );
   SpikeSize->setFont( nf );
   QPalette qp( SpikeSize->palette() );
-  qp.setColor( QPalette::Active, QPalette::Background, Qt::black );
-  qp.setColor( QPalette::Active, QPalette::Foreground, Qt::green );
+  qp.setColor( QPalette::Active, QPalette::Window, Qt::black );
+  qp.setColor( QPalette::Active, QPalette::WindowText, Qt::green );
   SpikeSize->setPalette( qp );
   SpikeSize->setFixedSize( SpikeSize->sizeHint() );
   hbox->addWidget( SpikeSize );

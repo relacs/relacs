@@ -205,7 +205,6 @@ void Model::start( void )
   Signals.reserve( 10 );
   Signals.clear();
   SignalEnd = -1.0;
-  SignalMutex.lock();
   SimTime.start();
   QThread::start( QThread::HighestPriority );
 }
@@ -222,7 +221,9 @@ void Model::restart( void )
 
 void Model::run( void )
 {
+  SignalMutex.lock();
   main();
+  SignalMutex.unlock();
 }
 
 
@@ -238,8 +239,6 @@ void Model::stop( void )
     SleepWait.wakeAll();
 
     wait();
-
-    SignalMutex.unlock();
   }
 }
 

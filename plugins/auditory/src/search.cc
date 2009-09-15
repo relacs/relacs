@@ -599,7 +599,8 @@ void Search::customEvent( QEvent *qce )
       side = metaData( "Cell" ).index( "best side" );
     setSpeaker( ( side == 0 ) );
   }
-
+  else
+    RELACSPlugin::customEvent( qce );
 }
 
 

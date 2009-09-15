@@ -229,9 +229,27 @@ protected:
     /*! Post a custom event for thread save manipulations of the GUI.
         This is just a shortcut for
 	\code
-	QApplication::postEvent( this, new QCustomEvent( QEvent::User+type ) );
+	QApplication::postEvent( this, new QCustomEvent( QEvent::Type( QEvent::User+type ) ) );
 	\endcode
-	For your own events use values greater than 10 for \a type. */
+	For your own events use values greater than 10 for \a type.
+	To handle posted events, reimplement customEvent( QEvent* ).
+	Don't forget to call RELACSPlugin::customEvent() from your reimplemented customEvent().
+	If, for example, you want to hide a widget, you call
+        \code
+	postCustomEvent( 10 );
+	\endcode
+	Then yuo reimplement customEvent() like this:
+	\code
+	void MyPlugin::customEvent( QEvent *qce )
+	{
+  	  if ( qce->type() == QEvent::User+10 ) {
+	     // hide the widget here
+ 	  }
+	  else
+	    RELACSPlugin::customEvent( qce );
+	}
+	\endcode
+        \sa customEvent() */
   void postCustomEvent( int type=0 );
 
     /*! Lock the input data and events for reading. */
@@ -648,7 +666,8 @@ protected slots:
     /*! Called from warning(), info(), updateDeviceMenu().
         If you reimplement this event handler,
         don't forget to call this implementation
-        via RELACSPlugin::customEvent(). */
+        via RELACSPlugin::customEvent().
+        \sa postCustomEvent() */
   virtual void customEvent( QEvent *qce );
 
 

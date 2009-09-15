@@ -135,7 +135,7 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   QPainter p;
   p.begin( &pm );
   p.setBackgroundMode( Qt::OpaqueMode );
-  p.fillRect( pm.rect(), palette().color( QPalette::Background ) );
+  p.fillRect( pm.rect(), palette().color( QPalette::Window ) );
   p.setPen( QPen( Qt::green, 4 ) );
   p.drawLine( 0, 5, pm.width(), 5 );
   p.end();

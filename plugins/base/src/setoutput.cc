@@ -88,7 +88,7 @@ void SetOutput::config( void )
   updateGeometry();
   if ( STW.lastWidget() != 0 )
     setTabOrder( STW.lastWidget(), OKButton );
-  setTabOrder( OKButton, CancelButton );
+  //  setTabOrder( OKButton, CancelButton );
 }
 
 
@@ -125,11 +125,11 @@ int SetOutput::main( void )
 
   if ( interactive ) {
     OutOpts.delFlags( Parameter::changedFlag() );
-    postCustomEvent( 1 ); // STW.setFocus();
+    postCustomEvent( 10 ); // STW.setFocus();
     // wait for input:
     Change = false;
     sleepWait();
-    postCustomEvent( 2 ); // STW.clearFocus();
+    postCustomEvent( 11 ); // STW.clearFocus();
     // set new values:
     if ( Change ) {
       OutList sigs;
@@ -182,13 +182,15 @@ const Options &SetOutput::outTraces( void ) const
 
 void SetOutput::customEvent( QEvent *qce )
 {
-  if ( qce->type() == QEvent::User+1 ) {
+  if ( qce->type() == QEvent::User+10 ) {
     if ( STW.firstWidget() != 0 )
       STW.firstWidget()->setFocus();
   }
-  else if ( qce->type() == QEvent::User+2 ) {
+  else if ( qce->type() == QEvent::User+11 ) {
     clearFocus();
   }
+  else
+    RELACSPlugin::customEvent( qce );
 }
 
 

@@ -106,7 +106,7 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
 
   NormalPalette = FileLabel->palette();
   HighlightPalette = FileLabel->palette();
-  HighlightPalette.setColor( QPalette::Foreground, Qt::red );
+  HighlightPalette.setColor( QPalette::WindowText, Qt::red );
 }
 
 

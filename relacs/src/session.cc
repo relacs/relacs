@@ -141,8 +141,7 @@ void Session::startTheSession( bool startmacro )
   RW->startSession( startmacro );
 
   QPalette p = palette();
-  p.setColor( QPalette::Normal, QPalette::Foreground, Qt::red );
-  p.setColor( QPalette::Inactive, QPalette::Foreground, Qt::red );
+  p.setColor( QPalette::WindowText, Qt::red );
   setPalette( p );
   MessageTimer->start( 1000 );
 
@@ -184,8 +183,7 @@ void Session::stopTheSession( void )
   MessageTimer->stop();
 
   QPalette p = palette();
-  p.setColor( QPalette::Normal, QPalette::Foreground, Qt::black );
-  p.setColor( QPalette::Inactive, QPalette::Foreground, Qt::black );
+  p.setColor( QPalette::WindowText, Qt::black );
   setPalette( p );
 
   timeMessage();
