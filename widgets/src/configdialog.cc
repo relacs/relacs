@@ -453,7 +453,7 @@ void ConfigDialog::dialogEmptyMessage( OptDialog *od )
 void ConfigDialog::dialogOptions( OptDialog *od )
 {
   od->addOptions( *this, DialogSelectMask, DialogROMask, DialogStyle, mutex() );
-  od->setSpacing( int(9.0*::exp(-double(Options::size())/14.0))+1 );
+  od->setVerticalSpacing( int(9.0*::exp(-double(Options::size())/14.0))+1 );
   od->setMargin( 10 );
 }
 

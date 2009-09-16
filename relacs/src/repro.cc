@@ -710,7 +710,7 @@ void RePro::dialog( void )
 				     mutex() );
     od->addOptions( reprosDialogOpts() );
     od->addOptions( projectOptions() );
-    od->setSpacing( int(9.0*exp(-double(row->lines())/14.0))+1 );
+    od->setVerticalSpacing( int(9.0*exp(-double(row->lines())/14.0))+1 );
     od->setMargin( 10 );
     // buttons:
     od->setRejectCode( 0 );

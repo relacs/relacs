@@ -94,7 +94,7 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   addTypeStyle( OptWidget::Bold, Parameter::Label );
 
   SDW.assign( ((Options*)this), 2, 4, true, 0, mutex() );
-  SDW.setSpacing( 4 );
+  SDW.setVerticalSpacing( 4 );
   SDW.setMargin( 4 );
   boxLayout()->addWidget( &SDW );
 

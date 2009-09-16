@@ -45,19 +45,22 @@ class OptWidgetBase : public QObject
 {
   Q_OBJECT
 public:
-  OptWidgetBase( Options::iterator op, QWidget *label,
+  OptWidgetBase( Options::iterator param, QWidget *label,
 		 Options *oo, OptWidget *ow, QMutex *mutex );
   virtual ~OptWidgetBase( void );
-  virtual void get( void ) {};
-  virtual void reset( void ) {};
-  virtual void resetDefault( void ) {};
-  virtual void update( void ) { reset(); };
-  void setMutex( QMutex *mutex ) { OMutex = mutex; };
-  void setUnitBrowseW( QWidget *w ) { UnitBrowseW = w; };
+  virtual void get( void );
+  virtual void reset( void );
+  virtual void resetDefault( void );
+  virtual void update( void );
+  void setMutex( QMutex *mutex );
   void addActivation( OptWidgetBase *w );
-  virtual void initActivation( void );
   void activateOption( bool eq );
-  Options::iterator OP;
+  QWidget *valueWidget( void );
+  bool editable( void ) const;
+  Parameter &param( void );
+ protected:
+  virtual void initActivation( void );
+  Options::iterator Param;
   Options *OO;
   OptWidget *OW;
   QWidget *LabelW;
@@ -67,7 +70,7 @@ public:
   bool Editable;
   bool ContUpdate;
   bool InternChanged;
-  vector< OptWidgetBase* > Widgets;
+  vector< OptWidgetBase* > ActivateWidgets;
 };
 
 
@@ -75,8 +78,8 @@ class OptWidgetText : public OptWidgetBase
 {
   Q_OBJECT
 public:
-  OptWidgetText( Options::iterator op, QWidget *label, Options *oo,
-		 OptWidget *ow, QWidget *parent, QMutex *mutex=0 );
+  OptWidgetText( Options::iterator param, QWidget *label, Options *oo,
+		 OptWidget *ow, QMutex *mutex=0, QWidget *parent=0 );
   virtual void get( void );
   virtual void reset( void );
   virtual void resetDefault( void );
@@ -100,8 +103,8 @@ class OptWidgetMultiText : public OptWidgetBase
 {
   Q_OBJECT
 public:
-  OptWidgetMultiText( Options::iterator op, QWidget *label, Options *oo,
-		      OptWidget *ow, QWidget *parent, QMutex *mutex=0 );
+  OptWidgetMultiText( Options::iterator param, QWidget *label, Options *oo,
+		      OptWidget *ow, QMutex *mutex=0, QWidget *parent=0 );
   virtual void get( void );
   virtual void reset( void );
   virtual void resetDefault( void );
@@ -126,8 +129,8 @@ class OptWidgetNumber : public OptWidgetBase
 {
   Q_OBJECT
 public:
-  OptWidgetNumber( Options::iterator op, QWidget *label, Options *oo,
-		   OptWidget *ow, QWidget *parent, QMutex *mutex=0 );
+  OptWidgetNumber( Options::iterator param, QWidget *label, Options *oo,
+		   OptWidget *ow, QMutex *mutex=0, QWidget *parent=0 );
   virtual void get( void );
   virtual void reset( void );
   virtual void resetDefault( void );
@@ -149,8 +152,8 @@ class OptWidgetBoolean : public OptWidgetBase
 {
   Q_OBJECT
 public:
-  OptWidgetBoolean( Options::iterator op, Options *oo, OptWidget *ow,
-		    QWidget *parent, const string &request, QMutex *mutex=0 );
+  OptWidgetBoolean( Options::iterator param, Options *oo, OptWidget *ow,
+		    const string &request, QMutex *mutex=0, QWidget *parent=0 );
   virtual void get( void );
   virtual void reset( void );
   virtual void resetDefault( void );
@@ -168,8 +171,8 @@ class OptWidgetDate : public OptWidgetBase
 {
   Q_OBJECT
 public:
-  OptWidgetDate( Options::iterator op, Options *oo, OptWidget *ow,
-		 QWidget *parent, const string &request, QMutex *mutex=0 );
+  OptWidgetDate( Options::iterator param, Options *oo, OptWidget *ow,
+		 QMutex *mutex=0, QWidget *parent=0 );
   virtual void get( void );
   virtual void reset( void );
   virtual void resetDefault( void );
@@ -189,8 +192,8 @@ class OptWidgetTime : public OptWidgetBase
 {
   Q_OBJECT
 public:
-  OptWidgetTime( Options::iterator op, Options *oo, OptWidget *ow,
-		 QWidget *parent, const string &request, QMutex *mutex=0 );
+  OptWidgetTime( Options::iterator param, Options *oo, OptWidget *ow,
+		 QMutex *mutex=0, QWidget *parent=0 );
   virtual void get( void );
   virtual void reset( void );
   virtual void resetDefault( void );
@@ -210,8 +213,8 @@ class OptWidgetLabel : public OptWidgetBase
 {
   Q_OBJECT
 public:
-  OptWidgetLabel( Options::iterator op, Options *oo, OptWidget *ow,
-		  QWidget *parent, QMutex *mutex=0 );
+  OptWidgetLabel( Options::iterator param, Options *oo, OptWidget *ow,
+		  QMutex *mutex=0, QWidget *parent=0 );
 };
 
 
@@ -219,8 +222,8 @@ class OptWidgetSeparator : public OptWidgetBase
 {
   Q_OBJECT
 public:
-  OptWidgetSeparator( Options::iterator op, Options *oo, OptWidget *ow,
-		      QWidget *parent, QMutex *mutex=0 );
+  OptWidgetSeparator( Options::iterator param, Options *oo, OptWidget *ow,
+		      QMutex *mutex=0, QWidget *parent=0 );
 };
 
 

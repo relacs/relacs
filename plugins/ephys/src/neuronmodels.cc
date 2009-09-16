@@ -186,7 +186,7 @@ void NeuronModels::dialogOptions( OptDialog *od )
   od->addTabOptions( "General", *this, dialogSelectMask(),
 		     dialogReadOnlyMask(), dialogStyle(), mutex() );
   dialogModelOptions( od );
-  od->setSpacing( 1 );
+  od->setVerticalSpacing( 1 );
   od->setMargin( 10 );
 }
 

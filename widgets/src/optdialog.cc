@@ -158,10 +158,17 @@ void OptDialog::addTabWidget( const string &label, QWidget *widget )
 }
 
 
-void OptDialog::setSpacing( int pixel )
+void OptDialog::setVerticalSpacing( int pixel )
 {
   for ( unsigned int k=0; k<OWs.size(); k++ )
-    OWs[k]->setSpacing( pixel );
+    OWs[k]->setVerticalSpacing( pixel );
+}
+
+
+void OptDialog::setHorizontalSpacing( int pixel )
+{
+  for ( unsigned int k=0; k<OWs.size(); k++ )
+    OWs[k]->setHorizontalSpacing( pixel );
 }
 
 

@@ -391,7 +391,6 @@ int MetaData::dialog( void )
   Dialog = true;
   OptDialog *od = new OptDialog( this );
   od->addOptions( DialogOpts );
-  od->setSpacing( 10 );
   od->setMargin( 10 );
   od->setCaption( "Stop Session Dialog" );
   od->setRejectCode( -1 );
@@ -477,7 +476,6 @@ void MetaData::presetDialog( void )
 
   OptDialog *od = new OptDialog( this );
   od->addOptions( PresetDialogOpts );
-  od->setSpacing( 10 );
   od->setMargin( 10 );
   od->setCaption( "Stop Session Dialog" );
   od->setRejectCode( -1 );

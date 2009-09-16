@@ -73,8 +73,8 @@ void MainWidget::dialog( void )
   d.addWidget( l );
   d.addOptions( Opt1, 0, 1, 1 );
   d.addOptions( Opt2 );
-  d.setSpacing( 4 );
-  d.setMargin( 10 );
+  //  d.setSpacing( 4 );
+  //  d.setMargin( 10 );
   d.addButton( "&Ok", OptDialog::Accept, 1 );
   d.addButton( "&Apply", OptDialog::Accept, 2, false );
   d.addButton( "&Reset", OptDialog::Reset );

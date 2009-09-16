@@ -37,7 +37,7 @@ SetOutput::SetOutput( void )
   addBoolean( "interactive", "Set values interactively", false );
 
   // display output variables:
-  STW.setSpacing( 2 );
+  STW.setVerticalSpacing( 2 );
   STW.setMargin( 4 );
   boxLayout()->addWidget( &STW );
 

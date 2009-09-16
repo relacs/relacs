@@ -76,7 +76,7 @@ opt.addText( "comment", "Comments", "no comment" );
 
 OptWidget ow( this );
 ow.assign( opt, 0, 1 );
-ow.setSpacing( 4 );
+ow.setVerticalSpacing( 4 );
 ow.setMargin( 10 );
 
 ...
@@ -113,7 +113,7 @@ to update the input form of the OptWidget.
 Options whose values were changed via the OptWidget get the changedFlag()
 in their flags() set.
 
-The spacing between two input lines can be adjusted with setSpacing().
+The spacing between two input lines can be adjusted with setVerticalSpacing().
 The spacing between the widget margins and its content are set with
 setMargin().
 
@@ -301,11 +301,16 @@ public:
 		     QMutex *mutex=0 );
 
     /*! The maximum number of lines in a single tab. */
-  int lines( void ) const { return MaxLines; };
-    /*! Set the spacing between the lines to \a pixel pixel. */
-  void setSpacing( int pixel );
+  int lines( void ) const;
+    /*! Set the spacing between the lines to \a pixel pixel.
+        \sa setHorizontalSpacing(), setMargin() */
+  void setVerticalSpacing( int pixel );
+    /*! Set the horizontal spacing to \a pixel pixel.
+        \sa setVerticalSpacing(), setMargin() */
+  void setHorizontalSpacing( int pixel );
     /*! Set the spacing between the widget margins and its content
-        to \a pixel pixel. */
+        to \a pixel pixel.
+        \sa setVerticalSpacing(), setHorizontalSpacing() */
   void setMargin( int pixel );
 
     /*! A pointer to the first editable widget in OptWidget.
@@ -319,28 +324,39 @@ public:
 
     /*! The mask that was used to select single options.
 	\sa assign(), readOnlyMask() */
-  int selectMask( void ) const { return SelectMask; };
+  int selectMask( void ) const;
     /*! The mask that was used to decide whether
         an option should be editable or not.
 	\sa assign(), selectMask(). */
-  int readOnlyMask( void ) const { return ReadOnlyMask; };
+  int readOnlyMask( void ) const;
     /*! \c True if changes by the user are immediately applied to the
         Options values.
         \sa assign(). */
-  bool continuousUpdate( void ) const { return ContinuousUpdate; };
+  bool continuousUpdate( void ) const;
     /*! The flag that is used to mark options whose value were changed
         by or-ing their flags with this flag.
         It is preset to a constant value (16384) and
 	cannot be changed by the user. */
-  static int changedFlag( void ) { return ChangedFlag; };
+  static int changedFlag( void );
 
     /*! Returns a pointer to the Options on which this widgets works on. */
-  Options *options( void ) const { return Opt; };
+  Options *options( void ) const;
 
     /*! Provide a mutex that is used by OptWidget to lock
         access to the options while they are accessed. 
         Passing a '0' disables the mutex. */
   void setMutex( QMutex *mutex );
+
+    /*! For internal use only. */
+  void addWidget( OptWidgetBase *owb );
+    /*! For internal use only. */
+  void disableUpdate( void );
+    /*! For internal use only. */
+  void enableUpdate( void );
+    /*! For internal use only. */
+  static void setLabelStyle( QWidget *w, long style, bool palette=false, bool base=false, bool button=false );
+    /*! For internal use only. */
+  static void setValueStyle( QWidget *w, long style, bool palette=false, bool base=false, bool button=false );
 
 
 public slots:
@@ -431,25 +447,9 @@ protected:
 
 private:
 
-  friend class OptWidgetBase;
-  friend class OptWidgetText;
-  friend class OptWidgetMultiText;
-  friend class OptWidgetNumber;
-  friend class OptWidgetBoolean;
-  friend class OptWidgetDate;
-  friend class OptWidgetTime;
-  friend class OptWidgetLabel;
-  friend class OptWidgetSeparator;
-
-    /*! For internal use only. */
-  void addWidget( OptWidgetBase *owb );
   static void setLabelFontStyle( QWidget *w, long style );
   static void setLabelColorStyle( QWidget *w, long style, bool palette=false, bool base=false, bool button=false );
-  static void setLabelStyle( QWidget *w, long style, bool palette=false, bool base=false, bool button=false );
-  static void setValueFontStyle( QWidget *w, long style );
-  static void setValueColorStyle( QWidget *w, long style, bool palette=false, bool base=false, bool button=false );
-  static void setValueStyle( QWidget *w, long style, bool palette=false, bool base=false, bool button=false );
-  static QLabel* unitLabel( const Parameter &p, QWidget *parent );
+  static QLabel* unitLabel( const Parameter &p, QWidget *parent=0 );
 
   Options *Opt;
 

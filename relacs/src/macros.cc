@@ -1750,7 +1750,7 @@ void Macro::dialog( void )
   if ( ! Variables.empty() )
     od->addOptions( Variables );
   od->addOptions( Project );
-  od->setSpacing( int(9.0*exp(-double(Variables.size())/14.0))+1 );
+  od->setVerticalSpacing( int(9.0*exp(-double(Variables.size())/14.0))+1 );
   od->setMargin( 10 );
   od->setRejectCode( 0 );
   od->addButton( "&Ok", OptDialog::Accept, 1 );
@@ -2081,7 +2081,7 @@ void MacroCommand::dialog( void )
     od->setCaption( "Macro " + Name + " Variables" );
     od->addOptions( MacroVars );
     od->addOptions( MacroProject );
-    od->setSpacing( int(9.0*exp(-double(MacroVars.size())/14.0))+1 );
+    od->setVerticalSpacing( int(9.0*exp(-double(MacroVars.size())/14.0))+1 );
     od->setMargin( 10 );
     od->setRejectCode( 0 );
     od->addButton( "&Ok", OptDialog::Accept, 1 );
