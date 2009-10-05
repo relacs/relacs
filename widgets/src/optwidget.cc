@@ -197,13 +197,8 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
 
       if ( tabs && (*pp).isLabel() &&
 	   ( (style & TabLabelStyle ) || ( (*pp).style() & TabLabel ) ) ) {
-	/*
-	QWidget *ll = new QWidget;
-	ll->setMinimumHeight( 0 );
-	ll->setSizePolicy( QSizePolicy( QSizePolicy::Fixed, QSizePolicy::Expanding ) );
-	Layout.back()->addWidget( ll, row, 1 );
-	*/
-	Layout.back()->addItem( new QSpacerItem( 10, 0, QSizePolicy::Minimum, QSizePolicy::Expanding ), row, 1 );
+	if ( (style & ExtraSpaceStyle) == 0 )
+	  Layout.back()->addItem( new QSpacerItem( 10, 0, QSizePolicy::Minimum, QSizePolicy::Expanding ), row, 2 );
 	break;
       }
 
@@ -331,9 +326,14 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
 	if ( style & BreakLinesStyle )
 	  Layout.back()->addWidget( b->valueWidget(), row, 1, 1, 2,
 				    Qt::AlignLeft | Qt::AlignVCenter );
-	else
+	else {
 	  Layout.back()->addWidget( b->valueWidget(), row, 1, 1, 3,
 				    Qt::AlignLeft | Qt::AlignVCenter );
+	  // the following is necessary to eliminate expanding space on top of the boolean:
+	  QLabel *spacer = new QLabel;
+	  spacer->setFixedHeight( b->valueWidget()->sizeHint().height() );
+	  Layout.back()->addWidget( spacer, row, 2 );
+	}
       }
       // date:
       else if ( (*pp).isDate() ) {
@@ -388,9 +388,14 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
 	  Layout.back()->addWidget( l->valueWidget(), row, 0, 1, 4,
 				    Qt::AlignLeft | Qt::AlignBottom );
 	}
-	else
+	else {
 	  Layout.back()->addWidget( l->valueWidget(), row, 0, 1, 5,
 				    Qt::AlignLeft | Qt::AlignBottom );
+	  // the following is necessary to eliminate expanding space on top of the label:
+	  QLabel *spacer = new QLabel;
+	  spacer->setFixedHeight( l->valueWidget()->sizeHint().height() );
+	  Layout.back()->addWidget( spacer, row, 2 );
+	}
 	Layout.back()->setColumnMinimumWidth( 0, 20 );
       }
       // separator:
@@ -409,10 +414,7 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
       // extra space:
       if ( (style & ExtraSpaceStyle) > 0 && added ) {
 	row++;
-	QWidget *ll = new QWidget;
-	ll->setMinimumHeight( 0 );
-	ll->setSizePolicy( QSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding ) );
-	Layout.back()->addWidget( ll, row, 1 );
+	Layout.back()->addItem( new QSpacerItem( 10, 0, QSizePolicy::Minimum, QSizePolicy::Expanding ), row, 2 );
       }
       row++;
       // max line count:
@@ -425,6 +427,9 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
 	  break;
 
     }
+
+    if ( row > 0 && (style & ExtraSpaceStyle) == 0 && pp == Opt->end() )
+      Layout.back()->addItem( new QSpacerItem( 10, 0, QSizePolicy::Minimum, QSizePolicy::Expanding ), row, 2 );
 
   }
 
@@ -582,18 +587,24 @@ void OptWidget::setLabelColorStyle( QWidget *w, long style, bool palette, bool b
   else if ( style & LabelGreen )
     fg = Qt::green;
   
-  if ( style & LabelBackBlack )
+  if ( style & LabelBackBlack ) {
+    w->setAutoFillBackground( true );
     bg = Qt::black;
-  else if ( style & LabelBackWhite )
+  }
+  else if ( style & LabelBackWhite ) {
+    w->setAutoFillBackground( true );
     bg = Qt::white;
+  }
   
   if ( palette ) {
     w->setPalette( QPalette( fg, bg ) );
   }
   else {
     QPalette qp( w->palette() );
-    if ( button )
-      qp.setColor( QPalette::Active, QPalette::Button, bg );
+    if ( button ) {
+      qp.setColor( QPalette::Button, bg );
+      qp.setColor( QPalette::ButtonText, fg );
+    }
     qp.setColor( bcr, bg );
     qp.setColor( fcr, fg );
     w->setPalette( qp );

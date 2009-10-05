@@ -719,6 +719,7 @@ OptWidgetBoolean::OptWidgetBoolean( Options::iterator param, Options *oo,
   W->setLayout( hb );
   EW = new QCheckBox( " " );
   hb->addWidget( EW );
+  OptWidget::setValueStyle( EW, (*Param).style(), false, true );
   QLabel *label = new QLabel( request.c_str() );
   OptWidget::setLabelStyle( label, (*Param).style() );
   hb->addWidget( label );

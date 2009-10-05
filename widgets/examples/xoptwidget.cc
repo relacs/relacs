@@ -32,16 +32,30 @@ using namespace relacs;
 MainWidget::MainWidget( void )
   : QWidget()
 {
-  Opt1.addLabel( "Timing", 0, OptWidget::Bold );
+  Opt1.addLabel( "Timing", 0, OptWidget::Bold + OptWidget::TabLabel );
   Opt1.addNumber( "duration", "Duration of Signal",
 		  0.3, 0.01, 1.0, 0.000001, "seconds", "ms" ).setStyle( OptWidget::Huge + OptWidget::Italic + OptWidget::Green );
   Opt1.addNumber( "pause", "Pause between Signals",
 		 0.2, 0.0, 1.0, 0.01, "seconds", "ms", "%g", 3 ).setStyle( OptWidget::LabelNormal + OptWidget::ValueItalic + OptWidget::LabelBold +  OptWidget::ValueGreen + OptWidget::ValueBackBlack + OptWidget::ValueLCD );
   Opt1.setNumber( "pause", 0.180 );
   Opt1.addInteger( "repeats", "Repeats", 8, 0, 100 );
-  Opt1.addLabel( "Settings", 0,  OptWidget::Large + OptWidget::Bold +  OptWidget::Red );
+  Opt1.addLabel( "Settings", 0,  OptWidget::Bold );
+  Opt1.setNumber( "pause", 0.180 );
+  Opt1.addInteger( "repeats", "Repeats", 8, 0, 100 );
+
+  Opt1.addLabel( "Settings", 0,  OptWidget::Large + OptWidget::Bold +  OptWidget::Red  );
   Opt1.addText( "color", "Color", "red|green|blue");
   Opt1.addText( "comment", "Comments", "no comment" );
+
+  Opt1.addLabel( "Analysis" ).setStyle( OptWidget::TabLabel );
+  Opt1.addNumber( "skipwin", "Initial portion of stimulus not used for analysis", 1.0, 0.0, 100.0, 0.01, "seconds", "ms" );
+  Opt1.addNumber( "sigma1", "Standard deviation of rate smoothing kernel 1", 0.001, 0.0, 1.0, 0.0001, "seconds", "ms" );
+  Opt1.addNumber( "sigma2", "Standard deviation of rate smoothing kernel 2", 0.005, 0.0, 1.0, 0.001, "seconds", "ms" );
+  Opt1.addBoolean( "adjust", "Adjust input gain", true );
+  Opt1.addLabel( "Save stimuli" ).setStyle( OptWidget::Bold );
+  Opt1.addSelection( "storemode", "Save stimuli in", "session|repro|custom" ).setUnit( "path" );
+  Opt1.addText( "storepath", "Save stimuli in custom directory", "" ).setStyle( OptWidget::BrowseDirectory ).setActivation( "storemode", "custom" );
+  Opt1.addSelection( "storelevel", "Save", "all|generated|noise|none" ).setUnit( "stimuli" );
 
   Opt2.addSeparator();
   Opt2.addBoolean( "sinewave", "Use Sine Wave", false );
@@ -71,10 +85,10 @@ void MainWidget::dialog( void )
   OptDialog d( this );
   d.setCaption( "Example Dialog" );
   d.addWidget( l );
-  d.addOptions( Opt1, 0, 1, 1 );
+  d.addOptions( Opt1, 0, 1, OptWidget::BreakLinesStyle );
   d.addOptions( Opt2 );
-  //  d.setSpacing( 4 );
-  //  d.setMargin( 10 );
+  d.setVerticalSpacing( 4 );
+  d.setMargin( 10 );
   d.addButton( "&Ok", OptDialog::Accept, 1 );
   d.addButton( "&Apply", OptDialog::Accept, 2, false );
   d.addButton( "&Reset", OptDialog::Reset );
