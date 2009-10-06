@@ -328,7 +328,7 @@ OptWidgetMultiText::OptWidgetMultiText( Options::iterator param, QWidget *label,
   if ( Editable ) {
     W = EW = new QComboBox( parent );
     EW->setEditable( ((*Param).style() & OptWidget::SelectText) == 0 );
-    OptWidget::setValueStyle( W, (*Param).style(), false, true, true );
+    OptWidget::setValueStyle( W, (*Param).style(), false, true );
     EW->setInsertPolicy( QComboBox::InsertAtTop );
     EW->setDuplicatesEnabled( false );
     if ( (*Param).style() & OptWidget::ComboAutoCompletion == 0 )
@@ -548,16 +548,17 @@ OptWidgetNumber::OptWidgetNumber( Options::iterator param, QWidget *label,
   else {
     if ( (*Param).style() & OptWidget::ValueLCD ) {
       LCDW = new QLCDNumber( parent );
+      LCDW->setSegmentStyle( QLCDNumber::Filled );
       LCDW->setSmallDecimalPoint( true );
       LCDW->display( (*Param).text().c_str() );	
       OptWidget::setValueStyle( LCDW, (*Param).style(), true );
-      // size: XXX ??
+      // size:
       if ( ( (*Param).style() & OptWidget::ValueHuge ) == OptWidget::ValueHuge )
-	LCDW->setMinimumHeight( int( 2.0 * LCDW->height() ) );
+	LCDW->setFixedHeight( 16 * LCDW->sizeHint().height() / 10 );
       else if ( (*Param).style() & OptWidget::ValueLarge )
-	LCDW->setMinimumHeight( int( 1.5 * LCDW->height() ) );
+	LCDW->setFixedHeight( 13 * LCDW->sizeHint().height() / 10 );
       else if ( (*Param).style() & OptWidget::ValueSmall )
-	LCDW->setMinimumHeight( int( 0.8 * LCDW->height() ) );
+	LCDW->setFixedHeight( 8 * LCDW->sizeHint().height() / 10 );
       W = LCDW;
     }
     else {

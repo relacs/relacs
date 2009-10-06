@@ -6,7 +6,7 @@ Qt4:
 - what is the difference between RePro::name() and ReProData::Name???
 - how to use enurePolished() in SaveFiles and Session
 - OptWidgetBase: check usage of UnitBrowseW and UnitLabel and setUnitLabel.
-- OptWidget: check color settings (setLabelColor) of all types of widgets.
+- OptWidget: check readonly styles and combobox (not editable) styles
 - there are some connect errors on startup!
 - What about the autoAdd functionality of Layouts?
 - base:setOutput: what is wrong with the setTabOrder() call? Do we really need it?

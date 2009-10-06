@@ -347,17 +347,6 @@ public:
         Passing a '0' disables the mutex. */
   void setMutex( QMutex *mutex );
 
-    /*! For internal use only. */
-  void addWidget( OptWidgetBase *owb );
-    /*! For internal use only. */
-  void disableUpdate( void );
-    /*! For internal use only. */
-  void enableUpdate( void );
-    /*! For internal use only. */
-  static void setLabelStyle( QWidget *w, long style, bool palette=false, bool base=false, bool button=false );
-    /*! For internal use only. */
-  static void setValueStyle( QWidget *w, long style, bool palette=false, bool base=false, bool button=false );
-
 
 public slots:
 
@@ -447,8 +436,23 @@ protected:
 
 private:
 
+  friend class OptWidgetBase;
+  friend class OptWidgetText;
+  friend class OptWidgetMultiText;
+  friend class OptWidgetNumber;
+  friend class OptWidgetBoolean;
+  friend class OptWidgetDate;
+  friend class OptWidgetTime;
+  friend class OptWidgetLabel;
+  friend class OptWidgetSeparator;
+
+  void addWidget( OptWidgetBase *owb );
+  void disableUpdate( void );
+  void enableUpdate( void );
+  static void setLabelStyle( QWidget *w, long style, bool palette=false, bool base=false );
+  static void setValueStyle( QWidget *w, long style, bool palette=false, bool base=false );
   static void setLabelFontStyle( QWidget *w, long style );
-  static void setLabelColorStyle( QWidget *w, long style, bool palette=false, bool base=false, bool button=false );
+  static void setLabelColorStyle( QWidget *w, long style, bool palette=false, bool base=false );
   static QLabel* unitLabel( const Parameter &p, QWidget *parent=0 );
 
   Options *Opt;
