@@ -63,13 +63,13 @@ void Control::addActions( QMenu *menu )
 {
   QAction* action = new QAction( (QWidget*)this );
   action->setText( string( title() + " Dialog..." ).c_str() );
-  QWidget::connect( action, SIGNAL( activated() ),
+  QWidget::connect( action, SIGNAL( triggered() ),
 		    (QWidget*)this, SLOT( dialog() ) );
   menu->addAction( action );
 
   action = new QAction( (QWidget*)this );
   action->setText( string( title() + " Help..." ).c_str() );
-  QWidget::connect( action, SIGNAL( activated() ),
+  QWidget::connect( action, SIGNAL( triggered() ),
 		    (QWidget*)this, SLOT( help() ) );
   menu->addAction( action );
 }

@@ -302,7 +302,7 @@ void OptWidgetText::setUnitLabel( QLabel *l )
 {
   if ( l != 0 ) {
     UnitLabel = l;
-    UnitBrowseW = l;
+    UnitBrowseW = 0;
   }
 }
 
@@ -504,7 +504,7 @@ void OptWidgetMultiText::setUnitLabel( QLabel *l )
 {
   if ( l != 0 ) {
     UnitLabel = l;
-    UnitBrowseW = l;
+    UnitBrowseW = 0;
   }
 }
 
@@ -705,7 +705,7 @@ void OptWidgetNumber::setUnitLabel( QLabel *l )
 {
   if ( l != 0 ) {
     UnitLabel = l;
-    UnitBrowseW = l;
+    UnitBrowseW = 0;
   }
 }
 

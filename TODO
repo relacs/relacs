@@ -5,8 +5,8 @@ Qt4:
   MacroCommand, etc)
 - what is the difference between RePro::name() and ReProData::Name???
 - how to use enurePolished() in SaveFiles and Session
-- OptWidgetBase: check usage of UnitBrowseW and UnitLabel and setUnitLabel.
-- there are some connect errors on startup!
+- Startup error: QEventDispatcherUNIX::unregisterTimer: invalid argument
+- Settings dialog: default paht for dry/ - mkdir dry/!
 - What about the autoAdd functionality of Layouts?
 - base:setOutput: what is wrong with the setTabOrder() call? Do we really need it?
 
