@@ -160,7 +160,6 @@ public:
   virtual void initActivation( void );
 public slots:
   void valueChanged( bool t );
-  void dontToggle( bool t );
 private:
   QCheckBox *EW;
   bool Value;

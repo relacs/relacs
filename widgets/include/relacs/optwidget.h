@@ -449,10 +449,10 @@ private:
   void addWidget( OptWidgetBase *owb );
   void disableUpdate( void );
   void enableUpdate( void );
-  static void setLabelStyle( QWidget *w, long style, bool palette=false, bool base=false );
-  static void setValueStyle( QWidget *w, long style, bool palette=false, bool base=false );
+  static void setLabelStyle( QWidget *w, long style, bool palette=false, bool base=false, bool button=false );
+  static void setValueStyle( QWidget *w, long style, bool palette=false, bool base=false, bool button=false );
   static void setLabelFontStyle( QWidget *w, long style );
-  static void setLabelColorStyle( QWidget *w, long style, bool palette=false, bool base=false );
+  static void setLabelColorStyle( QWidget *w, long style, bool palette=false, bool base=false, bool button=false );
   static QLabel* unitLabel( const Parameter &p, QWidget *parent=0 );
 
   Options *Opt;

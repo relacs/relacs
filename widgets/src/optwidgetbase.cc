@@ -328,7 +328,10 @@ OptWidgetMultiText::OptWidgetMultiText( Options::iterator param, QWidget *label,
   if ( Editable ) {
     W = EW = new QComboBox( parent );
     EW->setEditable( ((*Param).style() & OptWidget::SelectText) == 0 );
-    OptWidget::setValueStyle( W, (*Param).style(), false, true );
+    if ( ((*Param).style() & OptWidget::SelectText) > 0 )
+      OptWidget::setValueStyle( W, (*Param).style(), false, true, true );
+    else
+      OptWidget::setValueStyle( W, (*Param).style(), false, true );
     EW->setInsertPolicy( QComboBox::InsertAtTop );
     EW->setDuplicatesEnabled( false );
     if ( (*Param).style() & OptWidget::ComboAutoCompletion == 0 )
@@ -718,7 +721,7 @@ OptWidgetBoolean::OptWidgetBoolean( Options::iterator param, Options *oo,
   QHBoxLayout *hb = new QHBoxLayout;
   hb->setContentsMargins( 0, 0, 0, 0 );
   W->setLayout( hb );
-  EW = new QCheckBox( " " );
+  EW = new QCheckBox;
   hb->addWidget( EW );
   OptWidget::setValueStyle( EW, (*Param).style(), false, true );
   QLabel *label = new QLabel( request.c_str() );
@@ -726,14 +729,13 @@ OptWidgetBoolean::OptWidgetBoolean( Options::iterator param, Options *oo,
   hb->addWidget( label );
   reset();
   if ( Editable ) {
-    label->setFocusProxy( EW );
+    EW->setEnabled( true );
     Value = (*Param).boolean();
     connect( EW, SIGNAL( toggled( bool ) ),
 	     this, SLOT( valueChanged( bool ) ) );
   }
   else {
-    EW->setFocusPolicy( Qt::NoFocus );
-    connect( EW, SIGNAL( toggled( bool ) ), this, SLOT( dontToggle( bool ) ) );
+    EW->setEnabled( false );
   }
 }
 
@@ -801,16 +803,6 @@ void OptWidgetBoolean::initActivation( void )
 {
   string b( EW->isChecked() ? "true" : "false" );
   ActivateWidgets.back()->activateOption( ActivateWidgets.back()->param().testActivation( b ) );
-}
-
-
-void OptWidgetBoolean::dontToggle( bool t )
-{
-  if ( OMutex != 0 )
-    OMutex->lock();
-  reset();
-  if ( OMutex != 0 )
-    OMutex->unlock();
 }
 
 

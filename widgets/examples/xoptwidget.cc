@@ -32,18 +32,20 @@ using namespace relacs;
 MainWidget::MainWidget( void )
   : QWidget()
 {
+  //int testflag = OptWidget::BackBlack | OptWidget::Blue;
   int testflag = 0;
-  Opt1.addLabel( "Timing", 0, OptWidget::Bold + OptWidget::TabLabel + testflag );
+  Opt1.addLabel( "Timing", 0, OptWidget::Bold + OptWidget::TabLabel | testflag );
   Opt1.addNumber( "duration", "Duration of Signal",
-		  0.3, 0.01, 1.0, 0.000001, "seconds", "ms" ).setStyle( OptWidget::Huge + OptWidget::Italic + OptWidget::Green + testflag );
+		  0.3, 0.01, 1.0, 0.000001, "seconds", "ms" ).setStyle( OptWidget::Huge | OptWidget::Italic | OptWidget::Green | testflag );
   Opt1.addNumber( "pause", "Pause between Signals",
-		  0.2, 0.0, 1.0, 0.01, "seconds", "ms", "%g", 3 ).setStyle( OptWidget::ValueGreen + OptWidget::ValueBackBlack + OptWidget::ValueLCD + OptWidget::ValueHuge );
+		  0.2, 0.0, 1.0, 0.01, "seconds", "ms", "%g", 3 ).setStyle( OptWidget::ValueGreen | OptWidget::ValueBackBlack | OptWidget::ValueLCD | OptWidget::ValueHuge | testflag );
   Opt1.addInteger( "repeats", "Repeats", 8, 0, 100 ).setStyle( testflag );
-  Opt1.addLabel( "Settings", 0,  OptWidget::Bold + testflag );
+  Opt1.addLabel( "Settings", 0,  OptWidget::Bold | testflag );
   Opt1.addInteger( "repeats", "Repeats", 8, 0, 100 ).setStyle( testflag );
 
-  Opt1.addLabel( "Settings", 0,  OptWidget::Large + OptWidget::Bold +  OptWidget::Red + testflag );
-  Opt1.addText( "color", "Color", "red|green|blue" ).setStyle( testflag );
+  Opt1.addLabel( "Settings", 0,  OptWidget::Large | OptWidget::Bold |  OptWidget::Red | testflag );
+  Opt1.addText( "fgcolor", "Foreground color", "red|green|blue" ).setStyle( OptWidget::SelectText | testflag );
+  Opt1.addText( "bgcolor", "Background color", "red|green|blue" ).setStyle( testflag );
   Opt1.addText( "comment", "Comments", "no comment" ).setStyle( testflag );
   Opt1.addBoolean( "adjust", "Adjust input gain", true ).setStyle( testflag );
 
@@ -60,7 +62,7 @@ MainWidget::MainWidget( void )
 
   Opt2.addSeparator();
   Opt2.addBoolean( "sinewave", "Use Sine Wave", false );
-  Opt2.addBoolean( "loop", "Loop", true, 1 ).setStyle( OptWidget::LabelSmall +  OptWidget::ValueRed );
+  Opt2.addBoolean( "loop", "Loop", true, 1 ).setStyle( OptWidget::LabelSmall |  OptWidget::ValueRed );
   Opt2.addDate( "date", "Date", 2009, 6, 20 );
   Opt2.addTime( "time", "Time", 16, 42, 13 );
 

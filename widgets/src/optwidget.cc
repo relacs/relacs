@@ -572,7 +572,7 @@ void OptWidget::setLabelFontStyle( QWidget *w, long style )
 }
 
 
-void OptWidget::setLabelColorStyle( QWidget *w, long style, bool palette, bool base )
+void OptWidget::setLabelColorStyle( QWidget *w, long style, bool palette, bool base, bool button )
 {
   // set color roles:
   QPalette::ColorRole bcr = base ? QPalette::Base : QPalette::Window;
@@ -625,6 +625,10 @@ void OptWidget::setLabelColorStyle( QWidget *w, long style, bool palette, bool b
   }
   else {
     QPalette qp( w->palette() );
+    if ( button ) {
+      qp.setColor( QPalette::Button, bg );
+      qp.setColor( QPalette::ButtonText, fg );
+    }
     qp.setColor( bcr, bg );
     qp.setColor( fcr, fg );
     w->setPalette( qp );
@@ -632,16 +636,16 @@ void OptWidget::setLabelColorStyle( QWidget *w, long style, bool palette, bool b
 }
 
 
-void OptWidget::setLabelStyle( QWidget *w, long style, bool palette, bool base )
+void OptWidget::setLabelStyle( QWidget *w, long style, bool palette, bool base, bool button )
 {
   setLabelFontStyle( w, style );
-  setLabelColorStyle( w, style, palette, base );
+  setLabelColorStyle( w, style, palette, base, button );
 }
 
 
-void OptWidget::setValueStyle( QWidget *w, long style, bool palette, bool base )
+void OptWidget::setValueStyle( QWidget *w, long style, bool palette, bool base, bool button )
 {
-  setLabelStyle( w, style >> 12, palette, base );
+  setLabelStyle( w, style >> 12, palette, base, button );
 }
 
 
