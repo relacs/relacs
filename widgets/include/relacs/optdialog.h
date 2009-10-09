@@ -74,7 +74,7 @@ d.setCaption( "Example Dialog" );
 d.addOptions( opt1, 0, 1 );
 d.addOptions( opt2 );
 d.setVerticalSpacing( 4 );
-d.setMargin( 10 );
+d.setMargins( 10 );
 d.addButton( "&Ok", OptDialog::Accept, 1 );
 d.addButton( "&Reset", OptDialog::Reset );
 d.addButton( "&Close" );
@@ -132,7 +132,7 @@ The last two signals are especially important for modeless dialogs.
 The caption of the dialog can be set by setCaption().
 The spacing between two input lines can be adjusted with setVerticalSpacing().
 The spacing between the widget margins and its content are set with
-setMargin().
+setMargins().
 */
 
 
@@ -242,19 +242,25 @@ public:
     /*! Set the spacing between the lines to \a pixel pixel.
         Call this function after you added all Options to the dialog
         with addOptions().
-        \sa setHorizontalSpacing(), setMargin() */
+        \sa setHorizontalSpacing(), setMargins() */
   void setVerticalSpacing( int pixel );
     /*! Set the horizontal spacing to \a pixel pixel.
         Call this function after you added all Options to the dialog
         with addOptions().
-        \sa setVerticalSpacing(), setMargin() */
+        \sa setVerticalSpacing(), setMargins() */
   void setHorizontalSpacing( int pixel );
     /*! Set the spacing between the widget margins and its content
         to \a pixel pixel.
         Call this function after you added all Options to the dialog
         with addOptions().
         \sa setVerticalSpacing(), setHorizontalSpacing() */
-  void setMargin( int pixel );
+  void setMargins( int pixel );
+    /*! Set the spacing between the widget margins and its content
+        to all sides individually.
+        Call this function after you added all Options to the dialog
+        with addOptions().
+        \sa setVerticalSpacing(), setHorizontalSpacing() */
+  void setMargins( int left, int top, int right, int bottom );
 
     /*! The code exec() returns if the dialog is closed by entering "ESC"
         or by closing the window.

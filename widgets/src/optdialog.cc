@@ -87,6 +87,8 @@ void OptDialog::construct( void )
   QVBoxLayout *l = new QVBoxLayout;
   setLayout( l );
   DialogBox = new QVBoxLayout;
+  DialogBox->setSpacing( 0 );
+  DialogBox->setContentsMargins( 0, 0, 0, 0 );
   l->addLayout( DialogBox );
   ButtonBox = new QHBoxLayout;
   l->addLayout( ButtonBox );
@@ -172,10 +174,17 @@ void OptDialog::setHorizontalSpacing( int pixel )
 }
 
 
-void OptDialog::setMargin( int pixel )
+void OptDialog::setMargins( int pixel )
 {
   for ( unsigned int k=0; k<OWs.size(); k++ )
-    OWs[k]->setMargin( pixel );
+    OWs[k]->setMargins( pixel );
+}
+
+
+void OptDialog::setMargins( int left, int top, int right, int bottom )
+{
+  for ( unsigned int k=0; k<OWs.size(); k++ )
+    OWs[k]->setMargins( left, top, right, bottom );
 }
 
 

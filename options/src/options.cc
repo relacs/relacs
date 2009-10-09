@@ -2612,19 +2612,6 @@ int Options::size( void ) const
 }
 
 
-int Options::size( int flags ) const
-{
-  Warning = "";
-  int n=0;
-  for ( const_iterator pp = begin(); pp != end(); ++pp ) {
-    if ( (*pp).flags( flags ) ) {
-      n++;
-    }
-  }
-  return n;
-}
-
-
 bool Options::empty( void ) const
 {
   Warning = "";
@@ -2670,6 +2657,19 @@ Options &Options::delFlags( int flags, int selectflag )
     }
   }
   return *this;
+}
+
+
+int Options::size( int flags ) const
+{
+  Warning = "";
+  int n=0;
+  for ( const_iterator pp = begin(); pp != end(); ++pp ) {
+    if ( (*pp).flags( flags ) ) {
+      n++;
+    }
+  }
+  return n;
 }
 
 
@@ -2733,6 +2733,19 @@ Options &Options::delStyle( int style, int selectflag )
       (*pp).delStyle( style );
     }
   return *this;
+}
+
+
+int Options::styleSize( int style ) const
+{
+  Warning = "";
+  int n=0;
+  for ( const_iterator pp = begin(); pp != end(); ++pp ) {
+    if ( ( (*pp).style() & style ) == style ) {
+      n++;
+    }
+  }
+  return n;
 }
 
 

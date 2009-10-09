@@ -56,15 +56,27 @@ const string Macro::OverwriteIdent = "overwrite";
 Macros::Macros( RELACSWidget *rw, QWidget *parent )
   : QWidget( parent ),
     ConfigClass( "Macros", RELACSPlugin::Core ),
-    RW( rw ), RPs( 0 ), MCs(),
-    CurrentMacro( -1 ), CurrentCommand( 0 ),
-    Stack(), ResumePos(), ResumeMacroOnly( false ),
-    ThisCommandOnly( false ), ThisMacroOnly( false ), Enable( false ),
+    RW( rw ), 
+    RPs( 0 ), 
+    MCs(),
+    CurrentMacro( -1 ), 
+    CurrentCommand( 0 ),
+    Stack(), 
+    ResumePos(), 
+    ResumeMacroOnly( false ),
+    ThisCommandOnly( false ), 
+    ThisMacroOnly( false ), 
+    Enable( false ),
     Warnings( "" ), 
-    StartUpIndex( 0 ), ShutDownIndex( -1 ), FallBackIndex( 0 ), 
-    StartSessionIndex( 1 ), StopSessionIndex( -1 ),
+    StartUpIndex( 0 ), 
+    ShutDownIndex( -1 ), 
+    FallBackIndex( 0 ), 
+    StartSessionIndex( 1 ), 
+    StopSessionIndex( -1 ),
     MacroFile( "" ),
-    Menu( 0 ), SwitchMenu( 0 ), ButtonLayout( 0 ),
+    Menu( 0 ), 
+    SwitchMenu( 0 ), 
+    ButtonLayout( 0 ),
     Fatal( false )
 {
   ButtonLayout = new QGridLayout( this );
@@ -1751,7 +1763,6 @@ void Macro::dialog( void )
     od->addOptions( Variables );
   od->addOptions( Project );
   od->setVerticalSpacing( int(9.0*exp(-double(Variables.size())/14.0))+1 );
-  od->setMargin( 10 );
   od->setRejectCode( 0 );
   od->addButton( "&Ok", OptDialog::Accept, 1 );
   od->addButton( "&Apply", OptDialog::Accept, 1, false );
@@ -2036,7 +2047,8 @@ void MacroCommand::addMenu( QMenu *menu )
 	    ! Params.empty() ) {
     SubMenu->addAction( "&Options...", this, SLOT( dialog() ) );
   }
-  SubMenu->addAction( Enabled ? "&Disable" : "&Enable", this, SLOT( enable() ) );
+  EnabledAction = SubMenu->addAction( Enabled ? "&Disable" : "&Enable",
+				      this, SLOT( enable() ) );
 }
 
 
@@ -2082,7 +2094,6 @@ void MacroCommand::dialog( void )
     od->addOptions( MacroVars );
     od->addOptions( MacroProject );
     od->setVerticalSpacing( int(9.0*exp(-double(MacroVars.size())/14.0))+1 );
-    od->setMargin( 10 );
     od->setRejectCode( 0 );
     od->addButton( "&Ok", OptDialog::Accept, 1 );
     od->addButton( "&Apply", OptDialog::Accept, 1, false );

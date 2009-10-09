@@ -58,6 +58,7 @@ public:
   QWidget *valueWidget( void );
   bool editable( void ) const;
   Parameter &param( void );
+  void setUnitLabel( QLabel *l );
  protected:
   virtual void initActivation( void );
   Options::iterator Param;
@@ -65,6 +66,7 @@ public:
   OptWidget *OW;
   QWidget *LabelW;
   QWidget *W;
+  QLabel *UnitLabel;
   QWidget *UnitBrowseW;
   QMutex *OMutex;
   bool Editable;
@@ -84,7 +86,6 @@ public:
   virtual void reset( void );
   virtual void resetDefault( void );
   virtual void update( void );
-  void setUnitLabel( QLabel *l );
   QPushButton *browseButton( void );
   virtual void initActivation( void );
 public slots:
@@ -94,7 +95,6 @@ private:
   QLineEdit *EW;
   string Value;
   QLabel *LW;
-  QLabel *UnitLabel;
   QPushButton *BrowseButton;
 };
 
@@ -109,7 +109,6 @@ public:
   virtual void reset( void );
   virtual void resetDefault( void );
   virtual void update( void );
-  void setUnitLabel( QLabel *l );
   virtual void initActivation( void );
 public slots:
   void textChanged( const QString &s );
@@ -121,7 +120,6 @@ private:
   bool Update;
   string Value;
   QLabel *LW;
-  QLabel *UnitLabel;
 };
 
 
@@ -135,7 +133,6 @@ public:
   virtual void reset( void );
   virtual void resetDefault( void );
   virtual void update( void );
-  void setUnitLabel( QLabel *l );
   virtual void initActivation( void );
 public slots:
   void valueChanged( double v );
@@ -144,7 +141,6 @@ private:
   double Value;
   QLabel *LW;
   QLCDNumber *LCDW;
-  QLabel *UnitLabel;
 };
 
 

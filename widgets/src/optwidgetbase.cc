@@ -39,6 +39,7 @@ OptWidgetBase::OptWidgetBase( Options::iterator param, QWidget *label,
     OW( ow ),
     LabelW( label ),
     W( 0 ),
+    UnitLabel( 0 ),
     UnitBrowseW( 0 ),
     OMutex( mutex ),
     Editable( true ),
@@ -101,6 +102,15 @@ Parameter &OptWidgetBase::param( void )
 }
 
 
+void OptWidgetBase::setUnitLabel( QLabel *l )
+{
+  if ( l != 0 ) {
+    UnitLabel = l;
+    UnitBrowseW = 0;
+  }
+}
+
+
 void OptWidgetBase::initActivation( void )
 {
 }
@@ -121,6 +131,8 @@ void OptWidgetBase::activateOption( bool eq )
     LabelW->setEnabled( ac );
   if ( W != 0 )
     W->setEnabled( ac );
+  if ( UnitLabel != 0 )
+    UnitLabel->setEnabled( ac );
   if ( UnitBrowseW != 0 )
     UnitBrowseW->setEnabled( ac );
 }
@@ -133,7 +145,6 @@ OptWidgetText::OptWidgetText( Options::iterator param, QWidget *label,
     EW( 0 ),
     Value( "" ),
     LW( 0 ),
-    UnitLabel( 0 ),
     BrowseButton( 0 )
 {
   if ( Editable ) {
@@ -298,15 +309,6 @@ void OptWidgetText::browse( void )
 }
 
 
-void OptWidgetText::setUnitLabel( QLabel *l )
-{
-  if ( l != 0 ) {
-    UnitLabel = l;
-    UnitBrowseW = 0;
-  }
-}
-
-
 QPushButton *OptWidgetText::browseButton( void )
 {
   return BrowseButton;
@@ -322,8 +324,7 @@ OptWidgetMultiText::OptWidgetMultiText( Options::iterator param, QWidget *label,
     Inserted( false ),
     Update( true ),
     Value( "" ),
-    LW( 0 ),
-    UnitLabel( 0 )
+    LW( 0 )
 {
   if ( Editable ) {
     W = EW = new QComboBox( parent );
@@ -500,15 +501,6 @@ void OptWidgetMultiText::insertText( const QString &text )
 }
 
 
-void OptWidgetMultiText::setUnitLabel( QLabel *l )
-{
-  if ( l != 0 ) {
-    UnitLabel = l;
-    UnitBrowseW = 0;
-  }
-}
-
-
 OptWidgetNumber::OptWidgetNumber( Options::iterator param, QWidget *label,
 				  Options *oo, OptWidget *ow,
 				  QMutex *mutex, QWidget *parent )
@@ -516,8 +508,7 @@ OptWidgetNumber::OptWidgetNumber( Options::iterator param, QWidget *label,
     EW( 0 ),
     Value( 0.0 ),
     LW( 0 ),
-    LCDW( 0 ),
-    UnitLabel( 0 )
+    LCDW( 0 )
 {
   if ( Editable ) {
     double val = (*Param).number( (*Param).outUnit() );
@@ -698,15 +689,6 @@ void OptWidgetNumber::initActivation( void )
   if ( (*Param).isNumber() )
     tol = 0.01*(*Param).step();
   ActivateWidgets.back()->activateOption( ActivateWidgets.back()->param().testActivation( v, tol ) );
-}
-
-
-void OptWidgetNumber::setUnitLabel( QLabel *l )
-{
-  if ( l != 0 ) {
-    UnitLabel = l;
-    UnitBrowseW = 0;
-  }
 }
 
 

@@ -473,10 +473,17 @@ void OptWidget::setHorizontalSpacing( int pixel )
 }
 
 
-void OptWidget::setMargin( int pixel )
+void OptWidget::setMargins( int pixel )
 {
   for ( unsigned int k=0; k<Layout.size(); k++ )
     Layout[k]->setContentsMargins( pixel, pixel, pixel, pixel );
+}
+
+
+void OptWidget::setMargins( int left, int top, int right, int bottom )
+{
+  for ( unsigned int k=0; k<Layout.size(); k++ )
+    Layout[k]->setContentsMargins( left, top, right, bottom );
 }
 
 

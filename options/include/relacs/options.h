@@ -1169,14 +1169,6 @@ public:
 
     /*! Total number of options. */
   int size( void ) const;
-    /*! Total number of options that have \a selectflag set in their flags().
-        If \a selectflag equals zero, all options are counted.
-	If \a selectflag is negative, only options whose values differ
-	from the default value and have abs(\a selectflag) set in their flags
-	are counted.
-        If \a selectflag equals NonDefault, all options whose values differ
-	from their default value are counted. */
-  int size( int selectflag ) const;
     /*! True if there are no options. */
   bool empty( void ) const;
     /*! True if option with identifier \a ident exist. */
@@ -1208,6 +1200,14 @@ public:
         If \a selectflag equals NonDefault, all options whose values differ
 	from their default value are considered. */
   Options &delFlags( int flags, int selectflag=0 );
+    /*! Total number of options that have \a selectflag set in their flags().
+        If \a selectflag equals zero, all options are counted.
+	If \a selectflag is negative, only options whose values differ
+	from the default value and have abs(\a selectflag) set in their flags
+	are counted.
+        If \a selectflag equals NonDefault, all options whose values differ
+	from their default value are counted. */
+  int size( int selectflag ) const;
 
     /*! Set flags of all options whose type matches \a typemask 
         (see Parameter::types() ) to \a flags. */
@@ -1225,6 +1225,8 @@ public:
   Options &addStyle( int style, int selectflag=0 );
     /*! Clear the bits specified by \a style of the style of all options. */
   Options &delStyle( int style, int selectflag=0 );
+    /*! Total number of options that have the style \a style set in their style(). */
+  int styleSize( int style ) const;
 
     /*! Set style of all options whose type matches \a typemask 
         (see Parameter::types() ) to \a style. */

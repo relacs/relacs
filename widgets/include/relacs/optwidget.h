@@ -77,7 +77,7 @@ opt.addText( "comment", "Comments", "no comment" );
 OptWidget ow( this );
 ow.assign( opt, 0, 1 );
 ow.setVerticalSpacing( 4 );
-ow.setMargin( 10 );
+ow.setMargins( 10 );
 
 ...
 \endcode
@@ -115,7 +115,7 @@ in their flags() set.
 
 The spacing between two input lines can be adjusted with setVerticalSpacing().
 The spacing between the widget margins and its content are set with
-setMargin().
+setMargins().
 
 
 */
@@ -303,15 +303,19 @@ public:
     /*! The maximum number of lines in a single tab. */
   int lines( void ) const;
     /*! Set the spacing between the lines to \a pixel pixel.
-        \sa setHorizontalSpacing(), setMargin() */
+        \sa setHorizontalSpacing(), setMargins() */
   void setVerticalSpacing( int pixel );
     /*! Set the horizontal spacing to \a pixel pixel.
-        \sa setVerticalSpacing(), setMargin() */
+        \sa setVerticalSpacing(), setMargins() */
   void setHorizontalSpacing( int pixel );
     /*! Set the spacing between the widget margins and its content
         to \a pixel pixel.
         \sa setVerticalSpacing(), setHorizontalSpacing() */
-  void setMargin( int pixel );
+  void setMargins( int pixel );
+    /*! Set the spacing between the widget margins and its content
+        to all sides individually.
+        \sa setVerticalSpacing(), setHorizontalSpacing() */
+  void setMargins( int left, int top, int right, int bottom );
 
     /*! A pointer to the first editable widget in OptWidget.
         Is null, if there isn't any editable widget.

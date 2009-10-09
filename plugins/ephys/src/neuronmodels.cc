@@ -187,7 +187,6 @@ void NeuronModels::dialogOptions( OptDialog *od )
 		     dialogReadOnlyMask(), dialogStyle(), mutex() );
   dialogModelOptions( od );
   od->setVerticalSpacing( 1 );
-  od->setMargin( 10 );
 }
 
 
