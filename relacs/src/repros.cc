@@ -63,7 +63,6 @@ int RePros::create( RELACSWidget *rw )
   CurrentView = 0;
   PreviousView = 0;
 
-  DialogOpt.addSeparator();
   DialogOpt.addBoolean( "default", "Set values as default", true, 1 );
   DialogOpt.addBoolean( "overwrite", "Changes overwrite macro options", false, 1 );
 

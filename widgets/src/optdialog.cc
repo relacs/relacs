@@ -160,6 +160,17 @@ void OptDialog::addTabWidget( const string &label, QWidget *widget )
 }
 
 
+void OptDialog::addSeparator( void )
+{
+  QLabel *line = new QLabel;
+  line->setFrameStyle( QFrame::HLine | QFrame::Sunken );
+  line->setLineWidth( 1 );
+  line->setMidLineWidth( 0 );
+  line->setFixedHeight( 4 );
+  DialogBox->addWidget( line, 0, Qt::AlignVCenter );
+}
+
+
 void OptDialog::setVerticalSpacing( int pixel )
 {
   for ( unsigned int k=0; k<OWs.size(); k++ )

@@ -705,19 +705,18 @@ void RePro::dialog( void )
     Options::addStyle( OptWidget::LabelGreen, OverwriteFlag );
     Options::delStyle( OptWidget::LabelGreen, CurrentFlag );
     Options::addStyle( OptWidget::LabelRed, CurrentFlag );
-    OptWidget *row = od->addOptions( *this, dialogSelectMask(), 
-				     dialogReadOnlyMask(), dialogStyle(),
-				     mutex() );
-    //    od->setVerticalSpacing( int(9.0*exp(-double(row->lines())/14.0))+1 );
-    //    od->setMargin( 0 );
-    int sf = 0;
-    if ( Options::styleSize( OptWidget::TabLabel ) > 1 ||
-	 ( dialogStyle() & OptWidget::TabLabelStyle ) > 0 )
-      sf = 1;
-    OptWidget *roptw = od->addOptions( reprosDialogOpts(), sf );
+    OptWidget *roptw = od->addOptions( *this, dialogSelectMask(), 
+				       dialogReadOnlyMask(), dialogStyle(),
+				       mutex() );
+    if ( Options::styleSize( OptWidget::TabLabel ) == 0 &&
+	 ( dialogStyle() & OptWidget::TabLabelStyle ) == 0 ) {
+      roptw->setMargins( 2 );
+      od->addSeparator();
+    }
+    OptWidget *doptw = od->addOptions( reprosDialogOpts() );
+    doptw->setMargins( 2 );
+    doptw->setVerticalSpacing ( 4 );
     OptWidget *poptw = od->addOptions( projectOptions() );
-    roptw->setMargins( 2 );
-    roptw->setVerticalSpacing ( 4 );
     poptw->setMargins( 2 );
     poptw->setVerticalSpacing ( 4 );
     // buttons:

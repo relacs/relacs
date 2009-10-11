@@ -210,7 +210,7 @@ public:
         The standard layout \a style = 0 puts each option into a separate line.
         If \a style = 1 then the option's identifier is in one line
         and the options value and unit is in the following line.
-	\sa addTabOptions(), addWidget(), addTabWidget(), addButton() */
+	\sa addTabOptions(), addWidget(), addTabWidget(), addSeparator(), addButton() */
   OptWidget *addOptions( Options &opt, int selectmask=0,
 			 int romask=0, int style=0, QMutex *mutex=0 );
     /*! Assigns Options \a o as a page of a TabWidget with label \a label
@@ -224,7 +224,7 @@ public:
         The standard layout \a style = 0 puts each option into a separate line.
         If \a style = 1 then the option's identifier is in one line
         and the options value and unit is in the following line.
-	\sa addOptions(), addWidget(), addTabWidget(), addButton() */
+	\sa addOptions(), addWidget(), addTabWidget(), addSeparator(), addButton() */
   OptWidget *addTabOptions( const string &label, Options &opt,
 			    int selectmask=0, int romask=0, int style=0,
 			    QMutex *mutex=0 );
@@ -236,8 +236,12 @@ public:
     /*! Add some widget as a page of a TabWidget with label \a label
         to the dialog. 
         The widget is deleted when the dialog is closed.
-        \sa addOptions(), addTabOptions(), addWidget(), addButton() */
+        \sa addOptions(), addTabOptions(), addWidget(), addSeparator(), addButton() */
   void addTabWidget( const string &label, QWidget *widget );
+
+    /*! Add a separator line to the dialog. 
+        \sa addOptions(), addTabOptions(), addWidget(), addTabWidget(), addButton() */
+  void addSeparator( void );
 
     /*! Set the spacing between the lines to \a pixel pixel.
         Call this function after you added all Options to the dialog
