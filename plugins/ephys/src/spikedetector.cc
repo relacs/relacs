@@ -94,7 +94,9 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   addTypeStyle( OptWidget::Bold, Parameter::Label );
 
   SDW.assign( ((Options*)this), 2, 4, true, 0, mutex() );
-  boxLayout()->addWidget( &SDW );
+  SDW.setMargins( 4, 2, 4, 0 );
+  SDW.setVerticalSpacing( 1 );
+  boxLayout()->addWidget( &SDW, 0, Qt::AlignHCenter );
 
   setDialogSelectMask( 8 );
   setDialogReadOnlyMask( 16 );
@@ -106,12 +108,14 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
 
   QHBoxLayout *hb = new QHBoxLayout;
   boxLayout()->addLayout( hb );
+  hb->setContentsMargins( 4, 4, 4, 4 );
   hb->setSpacing( 4 );
 
   P = new Plot( Plot::Copy );
   P->lock();
   P->noGrid();
-  P->setTMarg( 1 );
+  P->setTMarg( 0.5 );
+  P->setBMarg( 2.3 );
   P->setRMarg( 1 );
   P->setXLabel( "mV" );
   P->setXLabelPos( 1.0, Plot::FirstMargin, 0.0, Plot::FirstAxis, Plot::Left, 0.0 );
@@ -124,59 +128,50 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
 
   // key to histogram plot:  XXX provide a function in Plot!
   QGridLayout *gl = new QGridLayout;
-  gl->setContentsMargins( 4, 4, 4, 4 );
+  gl->setContentsMargins( 0, 0, 0, 0 );
   gl->setVerticalSpacing( 0 );
-  gl->setHorizontalSpacing( 6 );
+  gl->setHorizontalSpacing( 4 );
   hb->addLayout( gl );
 
-  QPixmap pm( 20, 10 );
-  QPainter p;
-  p.begin( &pm );
-  p.setBackgroundMode( Qt::OpaqueMode );
-  p.fillRect( pm.rect(), palette().color( QPalette::Window ) );
-  p.setPen( QPen( Qt::green, 4 ) );
-  p.drawLine( 0, 5, pm.width(), 5 );
-  p.end();
+  int is = fontInfo().pixelSize();
+  QPixmap pm( is*2, is/3 );
+  pm.fill( Qt::green );
   QLabel *key = new QLabel;
   key->setPixmap( pm );
-  gl->addWidget( key, 0, 0, Qt::AlignRight );
+  gl->addWidget( key, 0, 0, Qt::AlignRight | Qt::AlignVCenter );
   key = new QLabel( "detected" );
+  key->setFixedHeight( is );
   gl->addWidget( key, 0, 1, Qt::AlignLeft );
 
-  p.begin( &pm );
-  p.setPen( QPen( Qt::red, 4 ) );
-  p.drawLine( 0, 5, pm.width(), 5 );
-  p.end();
+  pm.fill( Qt::red );
   key = new QLabel;
   key->setPixmap( pm );
-  gl->addWidget( key, 1, 0, Qt::AlignRight );
+  gl->addWidget( key, 1, 0, Qt::AlignRight | Qt::AlignVCenter );
   key = new QLabel( "not detected" );
+  key->setFixedHeight( is );
   gl->addWidget( key, 1, 1, Qt::AlignLeft );
 
-  p.begin( &pm );
-  p.setPen( QPen( Qt::white, 4 ) );
-  p.drawLine( 0, 5, pm.width(), 5 );
-  p.end();
+  pm.fill( Qt::white );
   key = new QLabel;
   key->setPixmap( pm );
-  gl->addWidget( key, 2, 0, Qt::AlignRight );
+  gl->addWidget( key, 2, 0, Qt::AlignRight | Qt::AlignVCenter );
   key = new QLabel( "threshold" );
+  key->setFixedHeight( is );
   gl->addWidget( key, 2, 1, Qt::AlignLeft );
 
-  p.begin( &pm );
-  p.setPen( QPen( Qt::yellow, 4 ) );
-  p.drawLine( 0, 5, pm.width(), 5 );
-  p.end();
+  pm.fill( Qt::yellow );
   key = new QLabel;
   key->setPixmap( pm );
-  gl->addWidget( key, 3, 0, Qt::AlignRight );
+  gl->addWidget( key, 3, 0, Qt::AlignRight | Qt::AlignVCenter );
   key = new QLabel( "min thresh" );
+  key->setFixedHeight( is );
   gl->addWidget( key, 3, 1, Qt::AlignLeft );
 
   // indicators:
-  int is = fontInfo().pixelSize() * 2;
   QColor orange( 255, 165, 0 );
+  is *= 2;
   GoodQuality = QPixmap( is, is );
+  QPainter p;
   p.begin( &GoodQuality );
   p.setBackgroundMode( Qt::OpaqueMode );
   p.fillRect( GoodQuality.rect(), Qt::black );

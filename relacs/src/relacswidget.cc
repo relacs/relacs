@@ -440,15 +440,11 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   mainlayout->setColumnStretch( 1, 100 );
   mainlayout->setRowStretch( 0, 2 );
   mainlayout->setRowStretch( 1, 3 );
-  wd = FD->width();
-  wc = CW->width();
-  w = wc > wd ? wc : wd;
-  w = 3*w/2;
+  w *= 3/2;
   if ( PT->minimumWidth() < w || RP->minimumWidth() < w ) {
     PT->setMinimumWidth( w );
     RP->setMinimumWidth( w );
   }
-
   if ( splash != 0 )
     msleep( 2000 );
 

@@ -1234,14 +1234,14 @@ void Plot::clearLabel( int index )
 
 QSize Plot::sizeHint( void ) const
 {
-  QSize qs( LMarg+RMarg+180, TMarg+BMarg+150 );
+  QSize qs( LMarg+RMarg+200, TMarg+BMarg+150 );
   return qs;
 }
 
 
 QSize Plot::minimumSizeHint( void ) const
 {
-  QSize qs( LMarg+RMarg+120, TMarg+BMarg+100 );
+  QSize qs( LMarg+RMarg+120, TMarg+BMarg+90 );
   return qs;
 }
 
