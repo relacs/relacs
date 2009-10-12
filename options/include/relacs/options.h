@@ -246,7 +246,7 @@ public:
     /*! Set format string of an existing number option 
         with identifier \a ident to have a width of \a width, 
 	precision of \a prec and type \a fmt. */
-  Parameter &setFormat( const string &ident, int width=-1, int prec=-1,
+  Parameter &setFormat( const string &ident, int width=0, int prec=-1,
 			char fmt='g' );
     /*! Set the format of an existing number option 
         with identifier \a ident to \a format. */
@@ -626,13 +626,13 @@ public:
 			 long dflt, long minimum=LONG_MIN,
 			 long maximum=LONG_MAX, long step=1,
 			 const string &unit="", const string &outputunit="", 
-			 int width=-1, int flags=0, int style=0 );
+			 int width=0, int flags=0, int style=0 );
     /*! Add a new integer option at the end of the options list. 
         Its identifier string and request string is set to \a ident.
         The option has a default value \a dflt, a unit \a unit,
 	and a width of output format \a width. */
   inline Parameter &addInteger( const string &ident, long dflt,
-				const string &unit="", int width=-1, int flags=0, int style=0 )
+				const string &unit="", int width=0, int flags=0, int style=0 )
     { return addInteger( ident, ident, dflt, LONG_MIN, LONG_MAX, 1,
 			 unit, unit, width, flags, style ); };
     /*! Add a new integer option at the end of the options list. 
@@ -656,7 +656,7 @@ public:
 			    long minimum=LONG_MIN, long maximum=LONG_MAX,
 			    long step=1,
 			    const string &unit="", const string &outputunit="", 
-			    int width=-1, int flags=0, int style=0 );
+			    int width=0, int flags=0, int style=0 );
     /*! Insert a new integer option at the beginning of the options list
         (\a atindent == "") or at the position of the option with
         identity \a atident. If the option with identity \a atident
@@ -666,7 +666,7 @@ public:
 	and a width of output format \a width. */
   Parameter &insertInteger( const string &ident, const string &atident, 
 			    long dflt, const string &unit="", 
-			    int width=-1, int flags=0, int style=0 )
+			    int width=0, int flags=0, int style=0 )
     { return insertInteger( ident, atident, ident, dflt, LONG_MIN, LONG_MAX,
 			    1, unit, unit, width, flags, style ); };
     /*! Insert a new integer option at the beginning of the options list
@@ -678,7 +678,7 @@ public:
 	and a width of output format \a width. */
   Parameter &insertInteger( const string &ident, const string &atident, 
 			    const string &unit="", 
-			    int width=-1, int flags=0, int style=0 )
+			    int width=0, int flags=0, int style=0 )
     { return insertInteger( ident, atident, ident, 0, LONG_MIN, LONG_MAX,
 			    1, unit, unit, width, flags, style ); };
     /*! Return the \a index-th integer number of the option 

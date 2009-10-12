@@ -141,10 +141,6 @@ Str translate( const Str &s, vector< Options > &opt,
       // identifier:
       string ident = bts.substr( bp - bts.begin() );
 
-      // default format:
-      if ( format.empty() )
-	format = "%s";
-
       // search value:
       if ( t < 0 ) {
 	// search in all options:
