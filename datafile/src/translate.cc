@@ -117,6 +117,9 @@ Str translate( const Str &s, vector< Options > &opt,
 	  unit.push_back( *bp++ );
       }
 
+      if ( format.empty() )
+	format = "%s";
+
       // default:
       string dfltstr = dflt;
       if ( *bp == ':' ) {

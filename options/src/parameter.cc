@@ -391,9 +391,12 @@ Parameter &Parameter::assign( const string &value )
 	else {
 	  // check for numbers:
 	  bool num = true;
-	  // XXX setText() should already have set the numbers?
 	  for ( int k=0; num && k<String.size(); k++ ) {
-	    if ( String[k].number( MAXDOUBLE ) == MAXDOUBLE )
+	    double error=-1.0;
+	    string unit = "";
+	    int next = 0;
+	    if ( String[k].number( error, unit, MAXDOUBLE, 0, &next ) == MAXDOUBLE ||
+		 next < String[k].size() )
 	      num = false;
 	  }
 	  if ( num ) {
@@ -426,8 +429,9 @@ Parameter &Parameter::assign( const string &value )
 		Value.push_back( String[k] == "true" ? 1.0 : 0.0 );
 	      String.clear();
 	    }
-	    else
+	    else {
 	      setType( Text );
+	    }
 	  }
 	}
       }
@@ -731,15 +735,32 @@ Str Parameter::text( int index, const string &format, const string &unit ) const
   if ( u.empty() )
     u = OutUnit;
 
-  if ( isAnyNumber() || isText() ) {
+  if ( isAnyNumber() ) {
+
     double uv = changeUnit( 1.0, InternUnit, u );
 
     double v = index < (int)Value.size() ? Value[index] : 0.0;
     double e = index < (int)Error.size() ? Error[index] : 0.0;
-    if ( e < 0 )
-      e = 0.0;
     v *= uv;
     e *= uv;
+
+    if ( f == "%s" ) {
+      if ( isBoolean() )
+	f = "%b";
+      else if ( isInteger() )
+	if ( e >= 0.0 )
+	  f = "(%.0f+-%.0F)%u";
+	else
+	  f = "%.0f%u";
+      else
+	if ( e >= 0.0 )
+	  f = "(%g+-%G)%u";
+	else
+	  f = "%g%u";
+    }
+
+    if ( e < 0 )
+      e = 0.0;
     
     f.format( v, "fge" );
     f.format( e, "FGE" );
@@ -748,6 +769,8 @@ Str Parameter::text( int index, const string &format, const string &unit ) const
     f.format( b, 'b' );
   }
   else if ( isDate() ) {
+    if ( f == "%s" )
+      f = "%04Y-%02m-%02d";
     struct tm time;
     memset( &time, 0, sizeof( time ) );
     time.tm_year = Year[index] - 1900;
@@ -756,6 +779,8 @@ Str Parameter::text( int index, const string &format, const string &unit ) const
     f.format( &time );
   }
   else if ( isTime() ) {
+    if ( f == "%s" )
+      f = "%02H:%02M:%02S";
     struct tm time;
     memset( &time, 0, sizeof( time ) );
     time.tm_hour = Hour[index];
