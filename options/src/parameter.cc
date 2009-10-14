@@ -364,7 +364,6 @@ Parameter &Parameter::assign( const string &value )
 	  Str( String[k] ).date( year, month, day );
 	  addDate( year, month, day );
 	}
-	String.clear();
 	setUnit( "" );
       }
       else {
@@ -385,7 +384,6 @@ Parameter &Parameter::assign( const string &value )
 	    Str( String[k] ).time( hour, minutes, seconds );
 	    addTime( hour, minutes, seconds );
 	  }
-	  String.clear();
 	  setUnit( "" );
 	}
 	else {
@@ -405,7 +403,6 @@ Parameter &Parameter::assign( const string &value )
 	    Error.clear();
 	    for ( int k=0; k<String.size(); k++ )
 	      addNumber( String[ k ], "" );
-	    String.clear();
 	    bool integer = true;
 	    if ( ! InternUnit.empty() && InternUnit != "L" )
 	      integer = false;
@@ -427,7 +424,6 @@ Parameter &Parameter::assign( const string &value )
 	      setUnit( "" );
 	      for ( int k=0; k<String.size(); k++ )
 		Value.push_back( String[k] == "true" ? 1.0 : 0.0 );
-	      String.clear();
 	    }
 	    else {
 	      setType( Text );
@@ -731,7 +727,11 @@ Str Parameter::text( int index, const string &format, const string &unit ) const
     typestr = "separator";
   f.format( typestr, 'T' );
 
-  string u( unit );
+  Str s( "" );
+  if ( index < String.size() )
+    s = String[index];
+
+  Str u( unit );
   if ( u.empty() )
     u = OutUnit;
 
@@ -744,7 +744,7 @@ Str Parameter::text( int index, const string &format, const string &unit ) const
     v *= uv;
     e *= uv;
 
-    if ( f == "%s" ) {
+    if ( s.empty() && f == "%s" ) {
       if ( isBoolean() )
 	f = "%b";
       else if ( isInteger() )
@@ -769,7 +769,7 @@ Str Parameter::text( int index, const string &format, const string &unit ) const
     f.format( b, 'b' );
   }
   else if ( isDate() ) {
-    if ( f == "%s" )
+    if ( s.empty() && f == "%s" )
       f = "%04Y-%02m-%02d";
     struct tm time;
     memset( &time, 0, sizeof( time ) );
@@ -779,7 +779,7 @@ Str Parameter::text( int index, const string &format, const string &unit ) const
     f.format( &time );
   }
   else if ( isTime() ) {
-    if ( f == "%s" )
+    if ( s.empty() && f == "%s" )
       f = "%02H:%02M:%02S";
     struct tm time;
     memset( &time, 0, sizeof( time ) );
@@ -791,20 +791,16 @@ Str Parameter::text( int index, const string &format, const string &unit ) const
 
   if ( u == "1" )
     u == "";
-  int up = f.format( u, 'u' );
-  if ( up > 0 && u.find( '%' ) != string::npos ) {
-    // unit string was replaced and contains a '%': no more formatting!
-    return f;
-  }
+  u.replace( "%", "%%" );
+  f.format( u, 'u' );
 
-  Str s( "" );
-  if ( index < String.size() )
-    s = String[index];
   f.format( s.dir(), 'p' );
   f.format( s.notdir(), 'd' );
   f.format( s.name(), 'n' );
   f.format( s.extension(), 'x' );
   f.format( s, 's' );
+
+  f.replace( "%%", "%" );
 
   return f;
 }

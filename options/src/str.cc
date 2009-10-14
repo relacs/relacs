@@ -3071,6 +3071,7 @@ int Str::replace( const string &s, const string &rs )
 	p != npos; 
 	p = string::find( s, p ) ) {
     string::replace( p, s.size(), rs );
+    p += rs.size();
     n++;
   }
 
@@ -3089,6 +3090,7 @@ int Str::replace( const string &s, const string &rs, int index, bool cs,
 	p >= 0; 
 	p = find( s, p, cs, word, space ) ) {
     string::replace( p, s.size(), rs );
+    p += rs.size();
     n++;
   }
 
@@ -3107,6 +3109,7 @@ Str Str::replaced( const string &s, const string &rs ) const
 	p != npos; 
 	p = ss.find( s, p ) ) {
     ss.replace( p, s.size(), rs );
+    p += rs.size();
   }
 
   return ss;
