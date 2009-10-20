@@ -393,7 +393,8 @@ Parameter &Parameter::assign( const string &value )
 	    double error=-1.0;
 	    string unit = "";
 	    int next = 0;
-	    if ( String[k].number( error, unit, MAXDOUBLE, 0, &next ) == MAXDOUBLE ||
+	    if ( String[k].number( error, unit, MAXDOUBLE, 0, &next,
+				   Str::DoubleWhiteSpace ) == MAXDOUBLE ||
 		 next < String[k].size() )
 	      num = false;
 	  }
@@ -1521,7 +1522,7 @@ Parameter &Parameter::addDefaultNumber( const Str &s, const string &unit )
   }
   double e = -1.0;
   string u=unit;
-  double v = s.number( e, u, MAXDOUBLE );
+  double v = s.number( e, u, MAXDOUBLE, 0, 0, Str::DoubleWhiteSpace );
   if ( u.empty() )
     u = OutUnit;
   if ( v == MAXDOUBLE ) {
