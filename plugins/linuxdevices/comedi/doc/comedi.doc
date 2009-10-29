@@ -4,12 +4,112 @@
 \brief Interfaces to the %comedi data acquisition library for normal analog input and output as well as for dynamic clamp.
 
 
+Comedi (linux control and measurement device interface) provides hardware drivers
+to many data acquisition boards with a common library interface.
+The comedi plugins access data acquisition boards by means of the comedi library.
+
+For general information about comedi and a list of supported devices
+see www.comedi.org
+
+
 \section installcomedi Install Comedi
-See www.comedi.org
+
+You should install the comedi drivers and library prior to configuring RELACS,
+so that ./configure can detect the presence of the comedi library.
+This requires to compile a kernel first.
 
 
-\subsection installcomedilib Comedilib
+\subsection installkernel Linux kernel
+-# You almost certainly need to compile a new kernel.
+Either get a vanilla kernel from \c www.kernel.org,
+e.g. \c www.kernel.org/pub/linux/kernel/v2.6/linux-2.6.28.9.tar.bz2,
+place the tar file in /usr/src and unpack it with
+\code
+$ cd /usr/src
+$ tar xjvf linux-2.6.28.9.tar.bz2
+\endcode
+Or get the soure that matches your kernel. 
+On Debian you get the kernel source matching your kernel image by executing
+\code
+$ apt-get source kernel-image-package
+\endcode
+in the \c /usr/src directory.
+In any case, create a softlink to your kernel source 
+\code
+$ cd /usr/src
+$ ln -s linux-2.6.28.9 linux
+\endcode
+(replace \c linux-2.6.28.9 by the directory name of your new kernel source).
+-# Reuse your current configuration (replace \c XXX by the name of your running kernel):
+\code
+$ cp /boot/config-XXX ./config
+$ make oldconfig
+\endcode
+Hit \c enter to all the (probably many) questions.
+-# You might want to configure your kernel by calling
+\code
+$ make menuconfig
+\endcode
+Possible settings you might want to change are:
+  - Enable loadable module support: 
+    - Select "Enable module support".
+    - Deselect "Module versioning support", this simplifies building external modules.
+  - Processor type and features: 
+    - Select your Subarchitecture Type (PC-Compatible)
+    - Select the right Processor family
+    - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"
+  - Power Management options:
+    - Deselect "CPU Frequency scaling"
+    .
+    Warning: ACPI support may be a problem on
+    laptops that use the "screen closed" button to put the computer
+    into sleep or standby modes.
+  .
+Leave the configuration dialog by pressing "Exit" until you are asked "Save kernel config?".
+Select "Yes".
+-# Then compile and install the kernel
+\code
+$ make && make modules && make modules_install && make install
+\endcode
+This takes quite a while.
+-# You might need to update third party kernel modules as well,
+like for example the ones for your graphics board.
+-# Finally you might need to create a RAM disk image file:
+\code
+$ cd /boot
+$ update-initramfs -c -k 2.6.24.7-extra version name
+\endcode
+-# Check the grub menu in \c /boot/grub/menu.lst
+whether your new kernel was added:
+\code
+title           Debian GNU/Linux, kernel 2.6.28.9
+root            (hd0,0)
+kernel          /boot/vmlinuz-2.6.28.9 root=/dev/sda1 ro quiet
+initrd          /boot/initrd.img-2.6.28.9
+\endcode
+-# Reboot the computer into the new kernel.
+\code
+$ reboot
+\endcode
+-# On a Debian system there is an alternative to steps 3. - 6. for compiling a linux kernel:
+   -# Get the kernel-package
+   \code
+$ apt-get install kernel-package
+   \endcode
+   -# Configure and build the kernel:
+   \code
+$ make-kpkg --initrd --config menuconfig kernel-image
+   \endcode
+   See 2. for hints on the configuration options.
+   -# Install the kernel
+   \code
+$ cd ..
+$ dpkg -i linux-image-2.6.28.9_2.6.28.9-10.00.Custom_amd64.deb
+   \endcode
+   -# continue with 7.
 
+
+\subsection installcomedidriver Comedi
 -# Download the %comedi sources from the current CVS snapshot to \c /usr/local/src .
 When prompted for a password, hit enter.
 \code
@@ -17,13 +117,82 @@ $ cd /usr/local/src
 $ cvs -d :pserver:anonymous@cvs.comedi.org:/cvs/comedi login
 $ cvs -d :pserver:anonymous@cvs.comedi.org:/cvs/comedi co comedi
 $ cvs -d :pserver:anonymous@cvs.comedi.org:/cvs/comedi co comedilib
-$ cvs -d :pserver:anonymous@cvs.comedi.org:/cvs/comedi co comedilib
 $ cvs -d :pserver:anonymous@cvs.comedi.org:/cvs/comedi co comedi_calibrate
 \endcode
 -# You may need to install the packages: \c autoconf, \c libtool, \c libgsl0-dev, \c libboost-dev.
+-# Make sure that you are really running the kernel
+  for which you want to install %Comedi!
+  You can check with
+\code
+$ uname -r
+\endcode
+-# Change to the \c %comedi directory:
+\code
+$ cd /usr/local/src/comedi
+\endcode
+-# Generate the configuration script by calling
+\code
+$ ./autogen.sh
+\endcode
+You may ignore warnings and reminders.
+-# Configure
+\code
+$ ./configure --with-linuxdir=/usr/src/linux
+\endcode
+-# Compile and install (as root)
+\code
+$ make && make install
+$ depmod -a
+\endcode
+-# For some strange reason, the include files for kcomedilib \c linux/comedilib.h and 
+\c linux/comedi.h are not installed by %Comedi to \c [prefix]/include/linux .
+These files are needed for compiling the kernel modules that use %Comedi.
+Also, RTAI expects %comedi include files in \c [prefix]/include/linux.
+Therefore you need to copy the %comedi include files 
+to \c [prefix]/include/linux yourself:
+\code
+$ cd /usr/local/src/comedi
+$ cp include/linux/comedi.h /usr/include/linux/
+$ cp include/linux/comedilib.h /usr/include/linux/
+\endcode
+-# Check %comedi module:
+\code
+modprobe comedi
+\endcode
+If you do not get any error message, then the %comedi kernel modules were
+successfully compiled.
+-# Check autodetection of your data acquisition board:
+\code
+$ udevadm trigger
+$ ls /dev/comedi*
+\endcode
+In case the \c ls command shows something like
+\code
+/dev/comedi0        /dev/comedi0_subd1   /dev/comedi0_subd12
+/dev/comedi0_subd0  /dev/comedi0_subd11  /dev/comedi0_subd2
+\endcode
+your board was detected. Run
+\code
+$ comedi_test -t info -f /dev/comedi0
+\endcode
+to see more details about your data acquisition board.
+In case, no \c /dev/comedi0$ device file shows up, your data acquisition board
+needs to be configured manually, using something like
+\code
+comedi_config /dev/comedi0 ni_mio_cs
+\endcode
+that can be put into the \c /etc/init.d/boot.local file, so that
+the board is configured during startup of the system.
+Read the man page of \c comedi_config first!
+\code
+man comedi_config
+\endcode
+
+
+\subsection installcomedilib Comedilib
 -# Change to the \c comedilib directory:
 \code
-$ cd comedilib
+$ cd /usr/local/src/comedilib
 \endcode
 -# Generate the configuration script by calling
 \code
@@ -39,112 +208,9 @@ You may want to read \c ./configure \c --help as well.
 Pay attention to warnings and errors! You might need to install additional software first.
 -# Compile and install (as root)
 \code
-$ make
-$ make install
-\endcode
--# Create the device files \c /dev/comedi*
-\code
-$ make dev
+$ make && make install
 \endcode
 
-
-\subsection installcomedidriver Comedi
--# Make sure that you are really running the kernel
-  for which you want to install %Comedi!
-  You can check with
-\code
-$ uname -r
-\endcode
--# You almost certainly need to compile a new kernel.
-Either get a vanilla kernel from \c www.kernel.org
-or get the soure that matches your kernel. 
-Place the kernel source in \c /usr/src.
-On Debian you get the kernel source matching your kernel image by executing
-\code
-$ apt-get source kernel-image-package
-\endcode
-in the \c /usr/src directory.
-Create the softlink
-\code
-$ cd /usr/src
-$ ln -s new-kernel-source-dir linux
-\endcode
-Clean the kernel source
-\code
-$ cd linux
-$ make mrproper
-\endcode
-Edit the \c Makefile by specifying an appropriate \c EXTRAVERSION.
-Then configure the kernel with
-\code
-$ make config
-\endcode
-or reuse your current configuration by
-\code
-$ cp /boot/config-your-kernel ./config
-$ make oldconfig
-\endcode
-Then compile and install the kernel
-\code
-$ make
-$ make modules
-$ make modules_install
-$ make install
-\endcode
-Finally you might need to create a RAM disk image file:
-\code
-$ cd /boot
-$ update-initramfs -c -k 2.6.24.7-extra version name
-\endcode
-Reboot the computer into the new kernel.
--# Change to the \c %comedi directory:
-\code
-$ cd /usr/local/src/comedi
-\endcode
--# Generate the configuration script by calling
-\code
-$ ./autogen.sh
-\endcode
-You may ignore warnings and reminders.
--# Configure
-\code
-$ ./configure --with-linuxdir=/usr/src/linux --enable-kbuild
-\endcode
--# Compile and install (as root)
-\code
-$ make
-$ make install
-\endcode
--# For some strange reason, the include files for kcomedilib \c linux/comedilib.h and 
-\c linux/comedi.h are not installed by %Comedi to \c [prefix]/include/linux .
-These files are needed for compiling the kernel modules that use %Comedi.
-Also, RTAI expects %comedi include files in \c [prefix]/include/linux.
-Therefore you need to copy the %comedi include files 
-to \c [prefix]/include/linux yourself:
-\code
-$ cd /usr/local/src/comedi
-$ cp include/linux/comedi.h /usr/include/linux/
-$ cp include/linux/comedilib.h /usr/include/linux/
-\endcode
--# If the comedi drivers for your daq-board are not autoconfiguring yet,
-then you need to create the file \c /etc/modprobe.d/comedi
-and write the following line into it
-\code
-options comedi comedi_num_legacy_minors=4
-\endcode
-This tell \c modprobe to pass the 'comedi_num_legacy_minors=4' option
-to the \c comedi kernel module when iti is loaded. This option tells
-\c comedi to create the first four device files \c /dev/comedi[0-3]
-and leave them for manual configuration.
-You also might want to add the following line to \c /etc/init.d/boot.local
-\code
-comedi_config /dev/comedi0 ni_mio_cs
-\endcode
-so that your comedi device is automatically configure during startup.
-Read the man page of \c comedi_config first!
-\code
-man comedi_config
-\endcode
 
 \subsection installcomedicalib Comedi_calibrate
 -# Change to the \c comedi_calibrate directory:
@@ -162,10 +228,8 @@ $ ./configure --prefix=/usr --sysconfdir=/etc
 \endcode
 -# Compile and install (as root)
 \code
-$ make
-$ make install
+$ make && make install
 \endcode
-
 
 
 \section udev Properly add Comedi to udev
@@ -181,14 +245,15 @@ $ echo 'KERNEL=="comedi*", MODE="0660", GROUP="comedi"' > /etc/udev/rules.d/come
 \endcode
 -# run
 \code
-$ udevtrigger
+$ udevadm trigger
 \endcode
 to apply your new udev rules
 -# Add users to the "comedi" group:
 \code
 $ adduser <username> comedi
 \endcode
-You need to logout and login again.
+After your next login, \c <username> is memeber of the comedi group
+and can access the data acquisition boards through comedi.
 
 
 \section buffer Resize Comedi buffer
@@ -205,138 +270,83 @@ Maybe this should go in \c /etc/rc.local or to some \c udev postprocessing rule.
 
 For software calibrated boards (like NI M-Series boards) do as root
 \code
-$ comedi_soft_calibrate -f /dev/comedi16
+$ comedi_soft_calibrate -f /dev/comedi0
 \endcode
 This calibrates all channels for all ranges.
 A file is written to \c /usr/var/lib/comedi/calibrations that contains the calibration
 parameter. The ComediAnalogInput and ComediAnalogOutput plugins read this file.
 
-I still need to check hardware calibrated boards (NI E-Series).
+I still need to check how to calibrate hardware calibrated boards (NI E-Series).
 
 
 \section installrtai Install RTAI and Comedi
 
-Chapter 2, Installation, in the RTAI-Lab tutorial at
-https://www.rtai.org/RTAILAB/RTAI-Lab-tutorial.pdf
-explains how to install both Comedi and RTAI.
-
-The following is basically a copy of this chapter, with a 
-few updates and additions.
+For dynamic clamp you need an RTAI patched linux kernel and %comedi.
 
 \subsection rtaikernel Linux kernel and RTAI patch
 
--# Download the latest RTAI version (version 3.6) from www.rtai.org
--# Unpack RTAI in /usr/src:
+-# Download the latest RTAI version (version 3.7.1) from www.rtai.org
+-# Unpack RTAI in /usr/local/src:
 \code
-$ cd /usr/src
-$ tar xjvf rtai-3.6.2.tar.bz2
-$ ln -s rtai-3.6.2 rtai
+$ cd /usr/local/src
+$ tar xjvf rtai-3.7.1.tar.bz2
+$ ln -s rtai-3.7.1 rtai
 \endcode
 -# Check for available patches. Get a list of all patches for all architectures:
 \code
 $ find rtai/base/arch/ -name '*.patch' | sort
 \endcode
-For example, patches for the 2.6.24 kernel are in rtai/base/arch/x86/patches/ !
+The most recent patches for intel and amd 32 and 64-bit systems are in the x86 directory.
 Decide for a patch, and remember its version number: \c hal-linux-<kernel-version>-*.patch
--# Download a 'vanilla' kernel, e.g. \c linux-2.6.xx.xx.tar.gz from http://www.kernel.org
--# Unpack the kernel
+  -# Currently, the 2.6.28.9 works, the patch for the 2.6.29 kernel is broken.
+  -# Download a 'vanilla' kernel, e.g. \c linux-<kernel-version>.tar.gz from http://www.kernel.org
+  -# Unpack the kernel
 \code
-$ tar xzvf linux-2.6.24.7.tar.gz
+$ tar xzvf linux-2.6.24.7.tar.bz2
 $ mv /usr/src/linux-2.6.24.7 /usr/src/linux-2.6.24.7-rtai
 $ ln -s /usr/src/linux-2.6.24.7-rtai linux
 \endcode
 -# Patch the kernel
 \code
 $ cd /usr/src/linux
-$ patch -p1 < /usr/src/rtai/base/arch/x86/patches/hal-linux-2.6.24-x86-2.0-07.patch
+$ patch -p1 < /usr/local/src/rtai/base/arch/x86/patches/hal-linux-2.6.28.9-x86-2.2-07.patch
 \endcode
--# Configure the kernel
-Get the configuration of you already installed kernel:
-\code
-$ cp /boot/configXXX .config
-\endcode
-Run the kernel configuration GUI:
-\code
-$ make xconfig
-\endcode
-First, load the local .config file.
-Then make the changes described in the RTAI-Lab tutorial:
-  - General setup: select "Prompt for development..."
-  - General setup: set "Local version" to -rtai
-  - Enable loadable module support: select "Enable module support",
-    "Module unloading", and "Automatic module loading". Deselect 
-    "Module versioning support"; RTAI modules are not version
-    dependent.
-  - Processor type and features: Select your Subarchitecture Type
-    (PC-Compatible) and Processor family. Select "Preemption Model
-    (Preemptible kernel (Low-Latency Desktop))". You might need "High
-    Memory Support (4GB)" if you use a PCMCIA data acquisition
-    card. Deselect "Use register arguments (EXPERIMENTAL)". Possibly
-    deselect "Local APIC support on uniprocessors".
-  - Power Management options: Select ACPI Support and features
-    relevant to your hardware. Leave APM deselected. Leave CPU Frequency
-    scaling unselected. Warning: ACPI support may be a problem on
-    laptops that use the "screen closed" button to put the computer
-    into sleep or standby modes.
-  - Keep all other selections.
--# Compile and install the kernel.
-Run 
-\code
-$ make
-$ make modules_install
-$ make install
-\endcode
--# You might need to update third party kernel modules as well,
-like for example the ones for your graphics board.
--# On many systems you also need to create a RAM disk image file:
-\code
-$ cd /boot
-$ update-initramfs -c -k 2.6.24.7-rtai
-\endcode
-This will create \c /boot/initrd.img-2.6.24.7-rtai
--# Update grub menu.
-Add
-\code
-title           RTAI kernel 2.6.24.7
-root            (hd0,0)
-kernel          /boot/vmlinuz-2.6.24.7-rtai root=/dev/sda1 ro
-initrd          /boot/initrd.img-2.6.24.7-rtai
-\endcode
-to /boot/grub/menu.lst.
-Take the location of your root partition in both the "root" line
-(hd0,0) and the "kernel" line (/dev/sda1) from the corresponding entry
-of the already installed kernel. The "initrd" line is only needed
-if you created a RAM disk image file.
-
-\subsection rtaicomedilib Comedilib
-
-Follow the instructions above for installing 
--# \ref installcomedilib
--# \ref installcomedicalib
+-# Configure, compile, and install the kernel.
+Follow the intructions given in \ref installkernel, starting at step 2.
+In the kernel configuration dialog you should do the following settings:
+  - General setup: set "Local version" to -rtai (not needed if you are using \c make-kpkg)
+  - Enable loadable module support: 
+    - Select "Enable module support".
+    - Deselect "Module versioning support"
+  - Processor type and features: 
+    - Select your Subarchitecture Type (PC-Compatible)
+    - Select the right Processor family
+    - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"
+  - Power Management options:
+    - Deselect "CPU Frequency scaling"
+    .
+  .
+-# Reboot into your new RTAI real time kernel.
 
 
-\subsection rtaifirst RTAI 1st pass
 
--# Make sure that you are really running on your RTAI kernel!
+\subsection rtaiinstall RTAI modules
+
+-# Make sure that you are really running your RTAI kernel!
    You can check with
 \code
 $ uname -r
 \endcode
 -# Change to the RTAI directory
 \code
-$ cd /usr/src/rtai
+$ cd /usr/local/src/rtai
 \endcode
 -# Configure RTAI by calling
 \code
 $ make menuconfig
 \endcode
-for a text based configuration menu or
-\code
-$ make xconfig
-\endcode
-for a graphical configuration menu.
 Check the following settings:
- - General -> Installation directory: should be set tp \c /usr/realtime
+ - General -> Installation directory: should be set t\o \c /usr/realtime
  - General -> Linux source tree: must be set to \c /usr/src/linux
  - General -> RTAI Documentation: select the documentation you want
  - General -> Build RTAI testsuite: select
@@ -349,8 +359,12 @@ Then exit and save configuration.
 Watch the output while RTAI is configured for possible warnings and errors.
 -# Compile and install (as root)
 \code
-$ make
-$ make install
+$ make && make install
+\endcode
+-# Make the RTAI kernel modules known to modprobe:
+\code
+$ ln -s /usr/realtime/modules /lib/modules/`uname -r`/rtai
+$ depmod -a
 \endcode
 
 
@@ -360,39 +374,12 @@ Follow the instructions above for installing
 \ref installcomedidriver .
 For configuring Comedi you should use
 \code
-./configure --with-linuxdir=/usr/src/linux --enable-kbuild --with-rtaidir=/usr/realtime
+./configure --with-linuxdir=/usr/src/linux --with-rtaidir=/usr/realtime
 \endcode
 
-
-\subsection rtaisecond RTAI 2nd pass
-
--# Change to the RTAI directory
-\code
-$ cd /usr/src/rtai
-\endcode
--# Configure RTAI by calling
-\code
-$ make menuconfig
-\endcode
-or
-\code
-$ make xconfig
-\endcode
-Check the following settings:
- - Add-ons -> Comedi support over LXRT: select
- - Add-ons -> Comedi installation directory: enter the path that was used as the prefix for configuring comedilib, e.g. \c /usr .
-Then exit and save configuration.
-Watch the output while RTAI is configured for possible warnings and errors.
--# Compile and install (as root)
-\code
-$ make
-$ make install
-\endcode
--# Make the RTAI kernel modules known to modprobe:
-\code
-$ ln -s /usr/realtime/modules /lib/modules/`uname -r`/rtai
-$ depmod -a
-\endcode
+Then follow the instructions above for installing 
+-# \ref installcomedilib
+-# \ref installcomedicalib
 
 
 */
