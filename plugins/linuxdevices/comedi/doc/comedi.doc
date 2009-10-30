@@ -306,6 +306,8 @@ $ tar xzvf linux-2.6.24.7.tar.bz2
 $ mv /usr/src/linux-2.6.24.7 /usr/src/linux-2.6.24.7-rtai
 $ ln -s /usr/src/linux-2.6.24.7-rtai linux
 \endcode
+Currently, for compiling the dynclamp module RELACS assumes that 
+\c /usr/src/linux points to your rtai patched kernel.
 -# Patch the kernel
 \code
 $ cd /usr/src/linux

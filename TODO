@@ -11,6 +11,9 @@ Analog Input/Output:
   ComediAnalogOutput should use instruction lists for this.
 
 Dynamic clamp:
+- relacs_rtai.m4: provide good default location
+- include of asm-offsets.h in src/Makefile.am could be made part of a
+   linux kernel source detection macro.
 - write back real time loop frequency to InList and OutList samplerate.
 - rewrite analog input part of the dynamic clamp loop in dynclampmodul
   similar to the analog output part

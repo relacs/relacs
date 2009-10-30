@@ -11,8 +11,7 @@
 #include <rtai_fifos.h>
 #include <rtai_sched.h>
 #include <rtai_shm.h>
-
-#include <math.h>
+#include <rtai_math.h>
 
 #include "rtmodule.h"
 
@@ -154,6 +153,9 @@ static struct file_operations fops = {
 // *** HELPER FUNCTIONS ***
 ///////////////////////////////////////////////////////////////////////////////
 
+/*
+This function throws a "SSE register return with SSE disabled" error on compiltion!
+It is inlined in the code to avoid this problem.
 static inline float sample_to_value( struct chanT *pChan, lsampl_t sample )
 {
   double value = 0.0;
@@ -165,7 +167,7 @@ static inline float sample_to_value( struct chanT *pChan, lsampl_t sample )
   }
   return value*pChan->scale;
 }
-
+*/
 
 static inline lsampl_t value_to_sample( struct chanT *pChan, float value )
 {
@@ -601,6 +603,9 @@ void rtDynClamp( long dummy )
   float voltage[MAXCHANLIST];
   unsigned long fifoPutCnt = 0;
   lsampl_t lsample;
+  struct chanT *pChan;
+  unsigned ci;
+  double term;
   int vi, oi, pi; /// DEBUG
 
   DEBUG_MSG( "rtDynClamp: starting dynamic clamp loop at %u Hz\n", 
@@ -756,13 +761,16 @@ void rtDynClamp( long dummy )
 	// FOR EVERY CHAN...
 	for ( iC = 0; iC < subdev[iS].chanN; iC++ ) {
 
+	  pChan = &subdev[iS].chanlist[iC];
+
 	  // acquire sample:
 	  if ( !subdev[iS].chanlist[iC].isParamChan ) {
+
 	    retVal = comedi_data_read( device[subdev[iS].devID].devP, 
 				       subdev[iS].subdev, 
-				       subdev[iS].chanlist[iC].chan,
-				       subdev[iS].chanlist[iC].rangeIndex,
-				       subdev[iS].chanlist[iC].aref,
+				       pChan->chan,
+				       pChan->rangeIndex,
+				       pChan->aref,
 				       &lsample );
                
 	    if ( retVal < 0 ) {
@@ -773,13 +781,21 @@ void rtDynClamp( long dummy )
 			 iS, iC, dynClampTask.loopCnt );
 	      continue;
 	    }
+	    // convert to voltage:
+	    voltage[iC] = 0.0;
+	    term = 1.0;
+	    for ( ci=0; ci <= pChan->converter.order; ++ci ) {
+	      voltage[iC] += pChan->converter.coefficients[ci] * term;
+	      term *= lsample - pChan->converter.expansion_origin;
+	    }
+	    voltage[iC] *= pChan->scale;
 	    // write to FIFO:
-	    voltage[iC] = sample_to_value( &subdev[iS].chanlist[iC], lsample );
-	    if ( subdev[iS].chanlist[iC].modelIndex >= 0 )
-	      input[subdev[iS].chanlist[iC].modelIndex] = voltage[iC];
+	    // voltage[iC] = sample_to_value( &subdev[iS].chanlist[iC], lsample );
+	    if ( pChan->modelIndex >= 0 )
+	      input[pChan->modelIndex] = voltage[iC];
 	  }
 	  else {
-	    voltage[iC] = paramInput[subdev[iS].chanlist[iC].chan];
+	    voltage[iC] = paramInput[pChan->chan];
 	  }
 
 	  retVal = rtf_put( subdev[iS].fifo, &voltage[iC], sizeof(float) );
