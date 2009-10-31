@@ -6,13 +6,20 @@
 
 Comedi (linux control and measurement device interface) provides hardware drivers
 to many data acquisition boards with a common library interface.
-The comedi plugins access data acquisition boards by means of the comedi library.
+The RELACS %comedi plugins access data acquisition boards by means of the %comedi library.
 
-For general information about comedi and a list of supported devices
-see www.comedi.org
+For general information about %comedi and a list of supported devices
+see http://www.comedi.org
+
+\section comedicontent Content
+- \ref installcomedi
+- \ref installrtai
+- \ref udev
+- \ref buffer
+- \ref calibration
 
 
-\section installcomedi Install Comedi
+\section installcomedi Install comedi
 
 You should install the comedi drivers and library prior to configuring RELACS,
 so that ./configure can detect the presence of the comedi library.
@@ -28,6 +35,7 @@ place the tar file in /usr/src and unpack it with
 $ cd /usr/src
 $ tar xjvf linux-2.6.28.9.tar.bz2
 \endcode
+(replace \c linux-2.6.28.9 by the directory name of your new kernel source).
 Or get the soure that matches your kernel. 
 On Debian you get the kernel source matching your kernel image by executing
 \code
@@ -38,15 +46,18 @@ In any case, create a softlink to your kernel source
 \code
 $ cd /usr/src
 $ ln -s linux-2.6.28.9 linux
+$ cd linux
 \endcode
-(replace \c linux-2.6.28.9 by the directory name of your new kernel source).
 -# Reuse your current configuration (replace \c XXX by the name of your running kernel):
 \code
-$ cp /boot/config-XXX ./config
+$ cp /boot/config-XXX .config
 $ make oldconfig
 \endcode
 Hit \c enter to all the (probably many) questions.
--# You might want to configure your kernel by calling
+-# Steps 3. to 6. describe the normal way to compile a linux kernel.
+On Debian systems there is an elegant alternative that is described
+in step 9. below.
+First, you configure your kernel by calling
 \code
 $ make menuconfig
 \endcode
@@ -80,7 +91,8 @@ $ cd /boot
 $ update-initramfs -c -k 2.6.24.7-extra version name
 \endcode
 -# Check the grub menu in \c /boot/grub/menu.lst
-whether your new kernel was added:
+whether your new kernel was added.
+There should be an entry like this:
 \code
 title           Debian GNU/Linux, kernel 2.6.28.9
 root            (hd0,0)
@@ -100,17 +112,17 @@ $ apt-get install kernel-package
    \code
 $ make-kpkg --initrd --config menuconfig kernel-image
    \endcode
-   See 2. for hints on the configuration options.
+   See step 3. for hints on the configuration options.
    -# Install the kernel
    \code
 $ cd ..
 $ dpkg -i linux-image-2.6.28.9_2.6.28.9-10.00.Custom_amd64.deb
    \endcode
-   -# continue with 7.
+   -# continue with step 7.
 
 
 \subsection installcomedidriver Comedi
--# Download the %comedi sources from the current CVS snapshot to \c /usr/local/src .
+-# Download the current %comedi sources from the CVS repository to \c /usr/local/src .
 When prompted for a password, hit enter.
 \code
 $ cd /usr/local/src
@@ -119,9 +131,17 @@ $ cvs -d :pserver:anonymous@cvs.comedi.org:/cvs/comedi co comedi
 $ cvs -d :pserver:anonymous@cvs.comedi.org:/cvs/comedi co comedilib
 $ cvs -d :pserver:anonymous@cvs.comedi.org:/cvs/comedi co comedi_calibrate
 \endcode
+Or download the current	CVS snapshots from http://www.comedi.org/download.html 
+to \c /usr/local/src and unpack them
+\code
+$ cd /usr/local/src
+$ tar xzvf comedi.tar.gz
+$ tar xzvf comedilib.tar.gz
+$ tar xzvf comedi_calibrate.tar.gz
+\endcode
 -# You may need to install the packages: \c autoconf, \c libtool, \c libgsl0-dev, \c libboost-dev.
 -# Make sure that you are really running the kernel
-  for which you want to install %Comedi!
+  for which you want to install %comedi!
   You can check with
 \code
 $ uname -r
@@ -145,17 +165,16 @@ $ make && make install
 $ depmod -a
 \endcode
 -# For some strange reason, the include files for kcomedilib \c linux/comedilib.h and 
-\c linux/comedi.h are not installed by %Comedi to \c [prefix]/include/linux .
-These files are needed for compiling the kernel modules that use %Comedi.
+\c linux/comedi.h are not installed by %comedi to \c [prefix]/include/linux .
+These files are needed for compiling the kernel modules that use %comedi.
 Also, RTAI expects %comedi include files in \c [prefix]/include/linux.
 Therefore you need to copy the %comedi include files 
 to \c [prefix]/include/linux yourself:
 \code
-$ cd /usr/local/src/comedi
 $ cp include/linux/comedi.h /usr/include/linux/
 $ cp include/linux/comedilib.h /usr/include/linux/
 \endcode
--# Check %comedi module:
+-# Check loading the %comedi module:
 \code
 modprobe comedi
 \endcode
@@ -171,12 +190,12 @@ In case the \c ls command shows something like
 /dev/comedi0        /dev/comedi0_subd1   /dev/comedi0_subd12
 /dev/comedi0_subd0  /dev/comedi0_subd11  /dev/comedi0_subd2
 \endcode
-your board was detected. Run
+i.e. some \c comedi* character device files, your board was detected. Run
 \code
 $ comedi_test -t info -f /dev/comedi0
 \endcode
 to see more details about your data acquisition board.
-In case, no \c /dev/comedi0$ device file shows up, your data acquisition board
+In case, no \c /dev/comedi* device file shows up, your data acquisition board
 needs to be configured manually, using something like
 \code
 comedi_config /dev/comedi0 ni_mio_cs
@@ -199,7 +218,7 @@ $ cd /usr/local/src/comedilib
 $ ./autogen.sh
 \endcode
 You may ignore warnings and reminders.
--# Configure Comedilib to be installed in \c /usr/lib and \c /usr/include
+-# Configure comedilib to be installed in \c /usr/lib and \c /usr/include
 \code
 $ ./configure --prefix=/usr --sysconfdir=/etc
 \endcode
@@ -232,60 +251,14 @@ $ make && make install
 \endcode
 
 
-\section udev Properly add Comedi to udev
-
--# Login as root.
--# Create a new group "comedi":
-\code
-$ addgroup --system comedi
-\endcode
--# Add udev rules to the /etc/udev/rules.d directory:
-\code
-$ echo 'KERNEL=="comedi*", MODE="0660", GROUP="comedi"' > /etc/udev/rules.d/comedi.rules
-\endcode
--# run
-\code
-$ udevadm trigger
-\endcode
-to apply your new udev rules
--# Add users to the "comedi" group:
-\code
-$ adduser <username> comedi
-\endcode
-After your next login, \c <username> is memeber of the comedi group
-and can access the data acquisition boards through comedi.
-
-
-\section buffer Resize Comedi buffer
-
-To set the %comedi internal buffers to 640kB do as root:
-\code
-$ comedi_config -r /dev/comedi16
-$ comedi_config --read-buffer 640 --write-buffer 640 /dev/comedi16 ni_pcimio
-\endcode
-Maybe this should go in \c /etc/rc.local or to some \c udev postprocessing rule.
-
-
-\section calibration Calibrating your DAQ board
-
-For software calibrated boards (like NI M-Series boards) do as root
-\code
-$ comedi_soft_calibrate -f /dev/comedi0
-\endcode
-This calibrates all channels for all ranges.
-A file is written to \c /usr/var/lib/comedi/calibrations that contains the calibration
-parameter. The ComediAnalogInput and ComediAnalogOutput plugins read this file.
-
-I still need to check how to calibrate hardware calibrated boards (NI E-Series).
-
-
-\section installrtai Install RTAI and Comedi
+\section installrtai Install RTAI and comedi
 
 For dynamic clamp you need an RTAI patched linux kernel and %comedi.
 
 \subsection rtaikernel Linux kernel and RTAI patch
 
--# Download the latest RTAI version (version 3.7.1) from www.rtai.org
+-# Download the latest RTAI version (version 3.7.1) from http://www.rtai.org
+and put into \c /usr/local/src .
 -# Unpack RTAI in /usr/local/src:
 \code
 $ cd /usr/local/src
@@ -299,14 +272,15 @@ $ find rtai/base/arch/ -name '*.patch' | sort
 The most recent patches for intel and amd 32 and 64-bit systems are in the x86 directory.
 Decide for a patch, and remember its version number: \c hal-linux-<kernel-version>-*.patch
   -# Currently, the 2.6.28.9 works, the patch for the 2.6.29 kernel is broken.
-  -# Download a 'vanilla' kernel, e.g. \c linux-<kernel-version>.tar.gz from http://www.kernel.org
+  -# Download a 'vanilla' kernel, e.g. \c linux-<kernel-version>.tar.gz from
+  http://www.kernel.org to \c /usr/src
   -# Unpack the kernel
 \code
 $ tar xzvf linux-2.6.24.7.tar.bz2
 $ mv /usr/src/linux-2.6.24.7 /usr/src/linux-2.6.24.7-rtai
 $ ln -s /usr/src/linux-2.6.24.7-rtai linux
 \endcode
-Currently, for compiling the dynclamp module RELACS assumes that 
+Currently, for compiling the DynClamp plugin RELACS assumes that 
 \c /usr/src/linux points to your rtai patched kernel.
 -# Patch the kernel
 \code
@@ -383,5 +357,56 @@ Then follow the instructions above for installing
 -# \ref installcomedilib
 -# \ref installcomedicalib
 
+
+\section udev Set up udev permissions for comedi device files
+
+-# Login as root.
+-# Create a new group "comedi":
+\code
+$ addgroup --system comedi
+\endcode
+-# Add udev rules to the /etc/udev/rules.d directory:
+\code
+$ echo 'KERNEL=="comedi*", MODE="0660", GROUP="comedi"' > /etc/udev/rules.d/comedi.rules
+\endcode
+-# Run
+\code
+$ udevadm trigger
+\endcode
+to apply your new udev rules
+-# Add users to the "comedi" group:
+\code
+$ adduser <username> comedi
+\endcode
+After the next login, \c <username> is a member of the %comedi group
+and and has sufficient permissions to access the data acquisition boards through %comedi.
+
+
+\section buffer Resize comedi buffer
+
+To set the %comedi internal buffers to 640kB do as root:
+\code
+$ comedi_config -r /dev/comedi0
+$ comedi_config --read-buffer 640 --write-buffer 640 /dev/comedi0 ni_pcimio
+\endcode
+Maybe this should go in \c /etc/rc.local or to some \c udev postprocessing rule.
+
+
+\section calibration Calibrating analog input and output
+
+For software calibrated boards (like NI M-Series boards) do (as root?)
+\code
+$ comedi_soft_calibrate -f /dev/comedi0
+\endcode
+This calibrates all channels for all ranges.
+A file is written to \c /usr/var/lib/comedi/calibrations that contains the calibration
+parameter. The ComediAnalogInput and ComediAnalogOutput plugins read this file.
+
+For calibrating all ranges, references, and channels of hardware calibrated
+boards (e.g. NI E-Series) do
+\code
+for C in 0 $(seq 16); do for A in 0 1 2; do for R in 0 $(seq 20); do comedi_calibrate -reset -calibrate -f /dev/comedi0 -s 0 -r $R -a $A -c $C; done; done; done
+for C in 0 1; do for A in 0 1 2; do for R in 0 1; do comedi_calibrate -reset -calibrate -f /dev/comedi0 -s 1 -r $R -a $A -c $C; done; done; done
+\endcode
 
 */

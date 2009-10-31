@@ -18,8 +18,6 @@
       saverelacslog: true
     saveattenuators: true
   Date/time formats
-         dateformat: %d.%m.%02y
-         timeformat: %H:%02M
       elapsedformat: %02H:%02M
   sessiontimeformat: %Hh%02Mmin%02Ssec
     reprotimeformat: %Mmin%02Ssec
@@ -57,21 +55,27 @@
    outputtracechannel: 0
     outputtracedevice: ao-1
      outputtracescale: 1
-      outputtraceunit: mA
+      outputtraceunit: nA
    outputtracemaxrate: 20kHz
      outputtracedelay: 0ms
 
 *FilterDetectors
   Filter1
-        name: Spikes-1
-      filter: SpikeDetector
-  inputtrace: V-1
-        save: true
-        plot: true
-  buffersize: 300000
-   storesize: false
-  storewidth: false
-  othertrace: 
+             name: Spikes-1
+           filter: SpikeDetector
+       inputtrace: V-1
+             save: true
+         savesize: true
+        savewidth: true
+     savemeanrate: true
+     savemeansize: true
+    savemeanwidth: true
+  savemeanquality: true
+             plot: true
+       buffersize: 300000
+        storesize: true
+       storewidth: false
+       othertrace: 
 
 *Macros
               file: macros.cfg
