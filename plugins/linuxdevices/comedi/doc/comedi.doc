@@ -17,6 +17,7 @@ see http://www.comedi.org
 - \ref udev
 - \ref buffer
 - \ref calibration
+- \ref rtailinks
 
 
 \section installcomedi Install comedi
@@ -83,12 +84,13 @@ Select "Yes".
 $ make && make modules && make modules_install && make install
 \endcode
 This takes quite a while.
--# You might need to update third party kernel modules as well,
+-# Now you shhould update third party kernel modules as well,
 like for example the ones for your graphics board.
--# Finally you might need to create a RAM disk image file:
+-# Finally you might need to create a RAM disk image file,
+if there isn't already a \c /boot/initrd-2.6.28.9 file:
 \code
 $ cd /boot
-$ update-initramfs -c -k 2.6.24.7-extra version name
+$ update-initramfs -c -k 2.6.28.9
 \endcode
 -# Check the grub menu in \c /boot/grub/menu.lst
 whether your new kernel was added.
@@ -110,13 +112,13 @@ $ apt-get install kernel-package
    \endcode
    -# Configure and build the kernel:
    \code
-$ make-kpkg --initrd --config menuconfig kernel-image
+$ make-kpkg --initrd --revision r1 --config menuconfig kernel-image
    \endcode
    See step 3. for hints on the configuration options.
    -# Install the kernel
    \code
 $ cd ..
-$ dpkg -i linux-image-2.6.28.9_2.6.28.9-10.00.Custom_amd64.deb
+$ dpkg -i linux-image-2.6.28.9_2.6.28.9-r1_amd64.deb
    \endcode
    -# continue with step 7.
 
@@ -176,10 +178,10 @@ $ cp include/linux/comedilib.h /usr/include/linux/
 \endcode
 -# Check loading the %comedi module:
 \code
-modprobe comedi
+$ modprobe comedi
 \endcode
 If you do not get any error message, then the %comedi kernel modules were
-successfully compiled.
+successfully compiled and can be loaded into the kernel.
 -# Check autodetection of your data acquisition board:
 \code
 $ udevadm trigger
@@ -190,21 +192,22 @@ In case the \c ls command shows something like
 /dev/comedi0        /dev/comedi0_subd1   /dev/comedi0_subd12
 /dev/comedi0_subd0  /dev/comedi0_subd11  /dev/comedi0_subd2
 \endcode
-i.e. some \c comedi* character device files, your board was detected. Run
+i.e. some \c comedi* character device files, your board probably was detected. Run
 \code
 $ comedi_test -t info -f /dev/comedi0
 \endcode
 to see more details about your data acquisition board.
-In case, no \c /dev/comedi* device file shows up, your data acquisition board
-needs to be configured manually, using something like
+In case no \c /dev/comedi* device file shows up
+or \c comedi_test reported an error (E: comedi_open("/dev/comedi0"): No such device),
+your data acquisition board needs to be configured manually, using something like
 \code
-comedi_config /dev/comedi0 ni_mio_cs
+$ comedi_config /dev/comedi0 ni_mio_cs
 \endcode
 that can be put into the \c /etc/init.d/boot.local file, so that
 the board is configured during startup of the system.
 Read the man page of \c comedi_config first!
 \code
-man comedi_config
+$ man comedi_config
 \endcode
 
 
@@ -276,9 +279,9 @@ Decide for a patch, and remember its version number: \c hal-linux-<kernel-versio
   http://www.kernel.org to \c /usr/src
   -# Unpack the kernel
 \code
-$ tar xzvf linux-2.6.24.7.tar.bz2
-$ mv /usr/src/linux-2.6.24.7 /usr/src/linux-2.6.24.7-rtai
-$ ln -s /usr/src/linux-2.6.24.7-rtai linux
+$ tar xzvf linux-2.6.28.9.tar.bz2
+$ mv /usr/src/linux-2.6.28.9 /usr/src/linux-2.6.28.9-rtai
+$ ln -s /usr/src/linux-2.6.28.9-rtai linux
 \endcode
 Currently, for compiling the DynClamp plugin RELACS assumes that 
 \c /usr/src/linux points to your rtai patched kernel.
@@ -292,18 +295,22 @@ Follow the intructions given in \ref installkernel, starting at step 2.
 In the kernel configuration dialog you should do the following settings:
   - General setup: set "Local version" to -rtai (not needed if you are using \c make-kpkg)
   - Enable loadable module support: 
-    - Select "Enable module support".
+    - Select "Enable module support"
     - Deselect "Module versioning support"
   - Processor type and features: 
-    - Select your Subarchitecture Type (PC-Compatible)
+    - Deselect "Tickless System"
+    - Select your "Subarchitecture Type" (PC-Compatible)
     - Select the right Processor family
     - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"
   - Power Management options:
     - Deselect "CPU Frequency scaling"
     .
   .
+On Debian, the make-kpkg command should be
+\code
+make-kpkg --initrd --append-to-version -rtai --revision r1 --config menuconfig kernel-image
+\endcode
 -# Reboot into your new RTAI real time kernel.
-
 
 
 \subsection rtaiinstall RTAI modules
@@ -322,14 +329,21 @@ $ cd /usr/local/src/rtai
 $ make menuconfig
 \endcode
 Check the following settings:
- - General -> Installation directory: should be set t\o \c /usr/realtime
- - General -> Linux source tree: must be set to \c /usr/src/linux
- - General -> RTAI Documentation: select the documentation you want
- - General -> Build RTAI testsuite: select
- - Machine -> Number of CPUs: set to the rigth value. The default is often right.
-   If in doubt, look into the file \c /proc/cpuinfo .
- - Machine -> Enable FPU support: select
- - Add-ons -> Comedi support over LXRT: leave unselected
+ - General
+   - Installation directory: should be set t\o \c /usr/realtime
+   - Linux source tree: must be set to \c /usr/src/linux
+   - RTAI Documentation: select the documentation you want
+   - Build RTAI testsuite: select
+ - Machine
+    - Number of CPUs: set to the rigth value. The default is often right.
+      If in doubt, look into the file \c /proc/cpuinfo .
+    - Enable FPU support: select
+ - Base system
+   - Other features
+     - Mathfuns support in kernel: select
+     - C99 standard support: select
+ - Add-ons
+   - Real Time COMEDI support in user space: leave unselected
  .
 Then exit and save configuration.
 Watch the output while RTAI is configured for possible warnings and errors.
@@ -342,21 +356,86 @@ $ make && make install
 $ ln -s /usr/realtime/modules /lib/modules/`uname -r`/rtai
 $ depmod -a
 \endcode
+-# Test RTAI by loading the \c rtai_sched module:
+\code
+$ modprobe rtai_sched
+\endcode
+If this fails:
+XXX add \c lapic to the kernel parameter in the \c kernel line of the
+\c grub menu in \c /boot/grub/menu.lst .
 
 
 \subsection rtaicomedi Comedi
 
-Follow the instructions above for installing 
+-# Follow the instructions above for installing 
 \ref installcomedidriver .
 For configuring Comedi you should use
 \code
-./configure --with-linuxdir=/usr/src/linux --with-rtaidir=/usr/realtime
+$ ./configure --with-linuxdir=/usr/src/linux --with-rtaidir=/usr/realtime
 \endcode
+-# Check loading the %comedi module:
+\code
+$ modprobe comedi
+\endcode
+On failure, call 
+\code
+$ dmesg
+\endcode
+to get more details. If it says "unknown symbol", then you might have forgotten
+to deselect the "Module versioning support" in the "loadable module support"
+section of the kernel configuration. Either recompile your kernel with the 
+"Module versioning support" deselected, or
+\code
+$ cp /lib/modules/`uname -r`/rtai/Module.symvers /usr/local/src/comedi/comedi
+$ make clean
+$ make && make install
+$ cp /usr/local/src/comedi/comedi/Module.symvers /lib/modules/`uname -r`/comedi
+\endcode
+-# Then follow the instructions above for installing (if not already done, this is independent of the kernel used)
+  - \ref installcomedilib
+  - \ref installcomedicalib
 
-Then follow the instructions above for installing 
--# \ref installcomedilib
--# \ref installcomedicalib
 
+\subsection testrelacs Test RELACS
+-# If you haven't compiled RELACS yet, then follow the instructions in
+the top-level \c INSTALL file (the final \c make \c install is not necessary for testing).
+Otherwise, \c cd into the RELACS top-level directory and do
+\code
+$ ./configure --with-rtai=/usr/realtime/include
+$ cd plugins/linuxdevices/comedi
+$ make clean
+$ make
+\endcode
+-# Load the dynamic clamp kernel module (as root):
+\code
+$ cd plugins/linuxdevices/comedi/module
+$ ./loadmodules.sh
+\endcode
+-# Run RELACS
+\code
+$ cd - # cd back into the top-level directory of RELACS
+$ cd plugins/patchclamp
+$ cp relacs.cfg.dynclamp relacs.cfg
+$ ./relacslocal
+\endcode
+-# Possible problems are:
+  - Data acquisition does not start:
+    - You might not have 
+      sufficient permissions for reading and writing to the 
+      \c /dev/comedi* devices. For a quick fix do
+      as root
+      \code
+$ chmod a+rw /dev/comedi*
+      \endcode
+      See \ref udev below for a better solution.
+    - The %comedi and rtai modules are not properly loaded.
+    - The %comedi device is not configured yet.
+    .
+  - Performance is bad / RELACS regularly hangs for a few seconds / RELACS seems to be slowed down dramatically.
+    - Disable APM and ACPI by adding \c "apm=off" and \c acpi=off to the kernel parameter in the \c kernel line of the
+      \c grub menu in \c /boot/grub/menu.lst .
+    .
+  .
 
 \section udev Set up udev permissions for comedi device files
 
@@ -405,8 +484,16 @@ parameter. The ComediAnalogInput and ComediAnalogOutput plugins read this file.
 For calibrating all ranges, references, and channels of hardware calibrated
 boards (e.g. NI E-Series) do
 \code
-for C in 0 $(seq 16); do for A in 0 1 2; do for R in 0 $(seq 20); do comedi_calibrate -reset -calibrate -f /dev/comedi0 -s 0 -r $R -a $A -c $C; done; done; done
-for C in 0 1; do for A in 0 1 2; do for R in 0 1; do comedi_calibrate -reset -calibrate -f /dev/comedi0 -s 1 -r $R -a $A -c $C; done; done; done
+$ for C in 0 $(seq 16); do for A in 0 1 2; do for R in 0 $(seq 20); do comedi_calibrate -reset -calibrate -f /dev/comedi0 -s 0 -r $R -a $A -c $C; done; done; done
+$ for C in 0 1; do for A in 0 1 2; do for R in 0 1; do comedi_calibrate -reset -calibrate -f /dev/comedi0 -s 1 -r $R -a $A -c $C; done; done; done
 \endcode
+
+\section rtailinks Links
+- http://www.comedi.org
+- http://www.rtai.org
+- http://wiki.linuxcnc.org/cgi-bin/emcinfo.pl?Debian_Lenny_Compile_RTAI
+- http://www.captain.at/programming/kernel/
+- http://www.lara.unb.br/~phsantana/data/files/technotes/HowTo_RTAI_Linux.pdf
+- http://rt-fsm.googlecode.com/svn/trunk/INSTALL
 
 */

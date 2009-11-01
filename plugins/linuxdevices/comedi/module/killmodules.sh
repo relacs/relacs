@@ -7,5 +7,5 @@ sleep 0.1
 modprobe -r rtai_fifos
 sleep 0.1
 modprobe -r ni_pcimio
-#modprobe -r -f ni_mio_cs
+modprobe -r ni_mio_cs
 
