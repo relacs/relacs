@@ -63,19 +63,10 @@ First, you configure your kernel by calling
 $ make menuconfig
 \endcode
 Possible settings you might want to change are:
-  - Enable loadable module support: 
-    - Select "Enable module support".
-    - Deselect "Module versioning support", this simplifies building external modules.
   - Processor type and features: 
     - Select your Subarchitecture Type (PC-Compatible)
     - Select the right Processor family
     - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"
-  - Power Management options:
-    - Deselect "CPU Frequency scaling"
-    .
-    Warning: ACPI support may be a problem on
-    laptops that use the "screen closed" button to put the computer
-    into sleep or standby modes.
   .
 Leave the configuration dialog by pressing "Exit" until you are asked "Save kernel config?".
 Select "Yes".
@@ -84,10 +75,8 @@ Select "Yes".
 $ make && make modules && make modules_install && make install
 \endcode
 This takes quite a while.
--# Now you shhould update third party kernel modules as well,
-like for example the ones for your graphics board.
 -# Finally you might need to create a RAM disk image file,
-if there isn't already a \c /boot/initrd-2.6.28.9 file:
+if \c make \c install did not create a \c /boot/initrd-2.6.28.9 file already:
 \code
 $ cd /boot
 $ update-initramfs -c -k 2.6.28.9
@@ -105,6 +94,20 @@ initrd          /boot/initrd.img-2.6.28.9
 \code
 $ reboot
 \endcode
+-# Install third party kernel modules as well,
+like for example the ones for your graphics board.
+For your nvidia graphics board, download the driver from
+http://www.nvidia.com/Download/index.aspx?lang=en-us.
+Install it by calling
+\code
+$ sh NVIDIA-Linux-x86_64-190.42-pkg2.run
+\endcode
+If you want to install the nvidia driver for a second kernel, then call
+\code
+$ sh NVIDIA-Linux-x86_64-190.42-pkg2.run -k 2.6.28.9-rtai -K
+\endcode
+(replace 2.6.28.9-rtai by the name of the kernel where you want to install the nvidia driver,
+i.e. the string '\c uname \c -r' would return if that kernel is running).
 -# On a Debian system there is an alternative to steps 3. - 6. for compiling a linux kernel:
    -# Get the kernel-package
    \code
