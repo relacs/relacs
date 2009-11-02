@@ -2,6 +2,8 @@ noinst_PROGRAMS = \
     ao_nonblocking \
     ao_underrun \
     ai_nonblocking \
+    ai_maxrate \
+    ai_multiboard \
     dio_write \
     checkao
 
@@ -18,6 +20,14 @@ ao_underrun_SOURCES = ao_underrun.c common.c
 ai_nonblocking_LDFLAGS = $(COMEDI_LDFLAGS)
 ai_nonblocking_LDADD = $(COMEDI_LIBS) $(MATH_LIBS)
 ai_nonblocking_SOURCES = ai_nonblocking.c common.c
+
+ai_maxrate_LDFLAGS = $(COMEDI_LDFLAGS)
+ai_maxrate_LDADD = $(COMEDI_LIBS) $(MATH_LIBS)
+ai_maxrate_SOURCES = ai_maxrate.c common.c
+
+ai_multiboard_LDFLAGS = $(COMEDI_LDFLAGS)
+ai_multiboard_LDADD = $(COMEDI_LIBS) $(MATH_LIBS)
+ai_multiboard_SOURCES = ai_multiboard.c common.c
 
 dio_write_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
