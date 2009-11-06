@@ -179,7 +179,6 @@ void PlotTrace::resize( InList &data, const EventList &events )
   lock();
 
   // setup plots:
-  PlotActions.clear();
   MultiPlot::resize( plots, Plot::Pointer );
   setDataMutex( &RW->DataMutex );
   setCommonXRange();
@@ -502,6 +501,7 @@ void PlotTrace::addMenu( QMenu *menu )
       s += " ";
       s += (*IL)[k].ident();
       PlotActions.push_back( Menu->addAction( s.c_str() ) );
+      PlotActions.back()->setCheckable( true );
       PlotActions.back()->setChecked( true );
     }
   }
@@ -525,6 +525,7 @@ void PlotTrace::updateMenu( void )
       s += " ";
       s += (*IL)[k].ident();
       PlotActions.push_back( Menu->addAction( s.c_str() ) );
+      PlotActions.back()->setCheckable( true );
       PlotActions.back()->setChecked( true );
     }
   }

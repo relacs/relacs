@@ -29,7 +29,7 @@ namespace multielectrode {
 MultiTraceSTA::MultiTraceSTA( void )
   : RePro( "MultiTraceSTA", "Multiple Traces STA", "Multi-electrode",
 	   "Jan Benda", "0.1", "Jan 21, 2009" ),
-    P( this, "multitracestaplot" )
+    P( this )
 {
   // add some options:
   addSelection( "inspikes", "Input spike train", "Spikes-1" );
@@ -38,6 +38,9 @@ MultiTraceSTA::MultiTraceSTA( void )
   addNumber( "stamint", "Minimum STA time", -0.1, -1000.0, 1000.0, 0.01, "sec", "ms" );
   addNumber( "stamaxt", "Maximum STA time", 0.01, -1000.0, 1000.0, 0.01, "sec", "ms" );
   addBoolean( "plotsnippets", "Plot the individual snippets", true );
+
+  // plot:
+  boxLayout()->addWidget( &P );
 }
 
 

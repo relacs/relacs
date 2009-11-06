@@ -1753,7 +1753,7 @@ void Plot::drawBorder( QPainter &paint )
   if ( BackgroundColor != Transparent ) {
     RGBColor c = color( BackgroundColor );
     QColor qcolor( c.red(), c.green(), c.blue() );
-    paint.fillRect( ScreenX1, ScreenY2, PlotX1, ScreenY1 - ScreenY2 + 1, qcolor ); // left
+    paint.fillRect( ScreenX1, ScreenY2, PlotX1 - ScreenX1, ScreenY1 - ScreenY2 + 1, qcolor ); // left
     paint.fillRect( PlotX2 + 1, ScreenY2, ScreenX2 - PlotX2, ScreenY1 - ScreenY2 + 1, qcolor ); // right
     paint.fillRect( PlotX1, PlotY1+1, PlotX2 - PlotX1 + 1, ScreenY1 - PlotY1, qcolor );  // bottom
     paint.fillRect( PlotX1, ScreenY2, PlotX2 - PlotX1 + 1, PlotY2 - ScreenY2, qcolor );  // top

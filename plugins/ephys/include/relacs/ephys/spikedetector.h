@@ -182,7 +182,7 @@ protected:
   QPixmap PotentialQuality;
   QPixmap OkQuality;
   QPixmap GoodQuality;
-  QPixmap *QualityPixs[4];
+  const QPixmap *QualityPixs[4];
   int Quality;
   QLabel *QualityIndicator;
 
@@ -191,7 +191,7 @@ protected:
   QPixmap OkTrend;
   QPixmap GoodTrend;
   QPixmap GoodArrow;
-  QPixmap *TrendPixs[5];
+  const QPixmap *TrendPixs[5];
   int Trend;
   QLabel *TrendIndicator;
   double LastSpikeSize;

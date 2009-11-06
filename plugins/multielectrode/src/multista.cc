@@ -29,7 +29,7 @@ namespace multielectrode {
 MultiSTA::MultiSTA( void )
   : RePro( "MultiSTA", "Multiple STA", "Multi-electrode",
 	   "Jan Benda", "0.1", "Jan 21, 2009" ),
-    P( this, "multistaplot" )
+    P( this )
 {
   // add some options:
   addSelection( "averagetrace", "Input trace to be averaged", "V-1" );
@@ -38,6 +38,9 @@ MultiSTA::MultiSTA( void )
   addNumber( "stamint", "Minimum STA time", -0.1, -1000.0, 1000.0, 0.01, "sec", "ms" );
   addNumber( "stamaxt", "Maximum STA time", 0.01, -1000.0, 1000.0, 0.01, "sec", "ms" );
   addBoolean( "plotsnippets", "Plot the individual snippets", true );
+
+  // plot:
+  boxLayout()->addWidget( &P );
 }
 
 
@@ -77,6 +80,7 @@ int MultiSTA::main( void )
     */
     P[k].setBMarg( 2.5 );
   }
+  P.setCommonXRange();
   P.unlock();
 
   for ( int count=0;

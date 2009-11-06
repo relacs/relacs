@@ -103,7 +103,7 @@ MotorControl::MotorControl( void )
   p.end();
 
   QPolygon pa( 7 );
-  QPixmap BadArrow( is, is );
+  BadArrow = QPixmap( is, is );
   p.begin( &BadArrow );
   p.setBackgroundMode( Qt::OpaqueMode );
   p.fillRect( BadArrow.rect(), Qt::black );
