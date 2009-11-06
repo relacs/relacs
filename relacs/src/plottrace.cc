@@ -322,7 +322,6 @@ void PlotTrace::init( const InList &data, const EventList &events )
 	  break;
 	}
       }
-
       // plot events:
       int sn = 0;
       for ( int s=0; s<events.size(); s++ ) 
@@ -365,7 +364,6 @@ void PlotTrace::init( const InList &data, const EventList &events )
 	    sn++;
 	  }
 	}
-
       // plot voltage trace:
       int inx = -1;
       if ( data[c].indices( TimeWindow ) > 80 )
@@ -941,8 +939,11 @@ void PlotTrace::resizeEvent( QResizeEvent *qre )
     return;
 
   QSize bs = ButtonBox->sizeHint();
+  /*
   ButtonBox->setGeometry( width() - bs.width(), 0,
 			  bs.width(), bs.height() );
+  */
+  ButtonBox->setGeometry( 0, 0, bs.width(), bs.height() );
 }
 
 

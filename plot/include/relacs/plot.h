@@ -318,6 +318,10 @@ public:
 
     void setAxis( Plot::Axis axis );
     void setAxis( int xaxis, int yaxis );
+    void setLineIndex( long inx );
+    long lineIndex() const;
+    void setPointIndex( long inx );
+    long pointIndex() const;
     void setLine( const Plot::LineStyle &style );
     void setLine( int lcolor=Transparent, int lwidth=1,
 		  Plot::Dash ldash=Solid );
@@ -330,13 +334,29 @@ public:
 		   Plot::Dash ldash=Solid, 
 		   Points ptype=Circle, int psize=10,
 		   int pcolor=Transparent, int pfill=Transparent );
+      /*! The index of the first data point in the x-range \a x1, \a x2
+          and the y-range \a y1, \a y2. */
     virtual long first( double x1, double y1, double x2, double y2 ) const =0;
+      /*! The index of the last data point in the x-range \a x1, \a x2
+          and the y-range \a y1, \a y2. */
     virtual long last( double x1, double y1, double x2, double y2 ) const =0;
+      /*! Returns the \a x coordinate and \a y coordinate of the
+          data point at index\ a index. */
     virtual void point( long index, double &x, double &y ) const =0;
     virtual void errors( long index, double &up, double &down ) const {};
     virtual void vector( long index, double &a, double &l ) const {};
+      /*! Can be reimplemented for some initialization
+	  before initializing and drawing the plot.
+          \return \c true if the data changed */
+    virtual bool init( void ) { return false; };
+      /*! Returns a sensible x-range \a xmin and \a xmax for
+	  a given y-range \a ymin, \a ymax. */
     virtual void xminmax( double &xmin, double &xmax, double ymin, double ymax ) const { xmin=-10.0; xmax=10.0; };
+      /*! Returns a sensible y-range \a ymin and \a ymax for
+	  a given x-range \a xmin, \a xmax. */
     virtual void yminmax( double xmin, double xmax, double &ymin, double &ymax ) const { ymin=-10.0; ymax=10.0; };
+      /*! Passes the current ranges and pixel positions to the data element
+          after initializing but before drawing the plot. */
     virtual void setRange( double xmin[MaxAxis], double xmax[MaxAxis], double ymin[MaxAxis], double ymax[MaxAxis],
 			   int xpmin, int xpmax, int ypmin, int ypmax ) {};
 
@@ -345,6 +365,8 @@ public:
     bool Own;
     int XAxis;
     int YAxis;
+    int LineIndex;
+    int PointIndex;
     DataTypes DataType;
     Plot::LineStyle Line;
     Plot::PointStyle Point;
@@ -390,8 +412,8 @@ public:
     /*! Unlock the data mutex if it was set by setDataMutex() before. */
   void unlockData( void );
 
-  void setOrigin( double x, double y ) { XOrigin = x; YOrigin = y; };
-  void setSize( double w, double h ) { XSize = w; YSize = h; };
+  void setOrigin( double x, double y );
+  void setSize( double w, double h );
   void scale( int width, int height );
     /*! True if \a xpixel, \a ypixel is inside the plot screen
         handled by this widget. */
@@ -994,6 +1016,7 @@ private:
   int screenWidth( void ) const { return ScreenX2 - ScreenX1 + 1; };
   int screenHeight( void ) const { return ScreenY1 - ScreenY2 + 1; };
 
+  void init( void );
   void initXRange( int axis );
   void initYRange( int axis );
   void initRange( void );
@@ -1080,6 +1103,10 @@ private:
   double XMinFB[MaxAxis], XMaxFB[MaxAxis];
     /*! fall back y-ranges of the plot. */
   double YMinFB[MaxAxis], YMaxFB[MaxAxis];
+    /*! previously used x-ranges of the plot. */
+  double XMinPrev[MaxAxis], XMaxPrev[MaxAxis];
+    /*! previously used y-ranges of the plot. */
+  double YMinPrev[MaxAxis], YMaxPrev[MaxAxis];
 
     /*! Draw tics? 0: don't draw, 
         1: on the corresponding axis only, 2: on both axis. */
@@ -1326,11 +1353,13 @@ private:
     virtual long first( double x1, double y1, double x2, double y2 ) const;
     virtual long last( double x1, double y1, double x2, double y2 ) const;
     virtual void point( long index, double &x, double &y ) const;
+    virtual bool init( void );
     virtual void xminmax( double &xmin, double &xmax, double ymin, double ymax ) const;
 
   protected:
     int Origin;
     double Offset;
+    double Reference;
   };
 
 
@@ -1342,17 +1371,19 @@ private:
     InDataElement( const InData &data, int origin, double offset, double tscale, bool copy );
     ~InDataElement( void );
 
-    long first( double x1, double y1, double x2, double y2 ) const;
-    long last( double x1, double y1, double x2, double y2 ) const;
-    void point( long index, double &x, double &y ) const;
-    void xminmax( double &xmin, double &xmax, double ymin, double ymax ) const;
-    void yminmax( double xmin, double xmax, double &ymin, double &ymax ) const;
+    virtual long first( double x1, double y1, double x2, double y2 ) const;
+    virtual long last( double x1, double y1, double x2, double y2 ) const;
+    virtual void point( long index, double &x, double &y ) const;
+    virtual bool init( void );
+    virtual void xminmax( double &xmin, double &xmax, double ymin, double ymax ) const;
+    virtual void yminmax( double xmin, double xmax, double &ymin, double &ymax ) const;
 
   protected:
     const InData *ID;
     int Origin;
     double Offset;
     double TScale;
+    double Reference;
   };
 
 
@@ -1385,6 +1416,10 @@ private:
 
   typedef vector<DataElement*> PDataType;
   PDataType PData;
+  bool NewData;
+  bool ShiftData;
+  int ShiftXPix;
+  double ShiftX[MaxAxis];
   QMutex PMutex;
   QMutex *DMutex;
 

@@ -22,6 +22,7 @@
 #include <cmath>
 #include <iostream>
 #include <QApplication>
+#include <QPainter>
 #include <QMouseEvent>
 #include <relacs/str.h>
 #include <relacs/multiplot.h>
@@ -30,7 +31,7 @@ namespace relacs {
 
 
 MultiPlot::MultiPlot( int plots, int columns, bool horizontal, Plot::KeepMode keep,
-	      QWidget *parent )
+		      QWidget *parent )
   : QWidget( parent ),
     PMutex( QMutex::Recursive )
 {
@@ -82,6 +83,8 @@ MultiPlot::~MultiPlot( void )
 
 void MultiPlot::construct( int plots, int columns, bool horizontal, Plot::KeepMode keep )
 {
+  setAttribute( Qt::WA_OpaquePaintEvent );
+
   Columns = columns;
   Horizontal = horizontal;
 
@@ -91,12 +94,13 @@ void MultiPlot::construct( int plots, int columns, bool horizontal, Plot::KeepMo
   
   for ( int k=0; k<plots; k++ ) {
     PlotList.push_back( new Plot( keep, true, k, this ) );
-    PlotList.back()->setBackgroundColor( Plot::Transparent );
+    //    PlotList.back()->setBackgroundColor( Plot::Transparent );
     connect( PlotList.back(), SIGNAL( changedRange( int ) ),
 	     this, SLOT( setRanges( int ) ) );
     CommonXRange.push_back( vector< int >( 0 ) );
     CommonYRange.push_back( vector< int >( 0 ) );
   }
+  DrawBackground = true;
 
   layout();
 
@@ -105,9 +109,7 @@ void MultiPlot::construct( int plots, int columns, bool horizontal, Plot::KeepMo
   
   PMutex.unlock();
 
-  setAutoFillBackground( true );
-
-  // draw() ??
+  // XXX draw() ??
 }
 
 
@@ -172,7 +174,7 @@ void MultiPlot::resize( int plots, Plot::KeepMode keep )
   else if ( plots > size() ) {
     for ( int k=size(); k<plots; k++ ) {
       PlotList.push_back( new Plot( keep, true, k, this ) );
-      PlotList.back()->setBackgroundColor( Plot::Transparent );
+      //      PlotList.back()->setBackgroundColor( Plot::Transparent );
       connect( PlotList.back(), SIGNAL( changedRange( int ) ),
 	       this, SLOT( setRanges( int ) ) );
       CommonXRange.push_back( vector< int >( 0 ) );
@@ -188,6 +190,7 @@ void MultiPlot::resize( int plots, Plot::KeepMode keep )
       CommonYRange.pop_back();
     }
   }
+  DrawBackground = true;
 }
 
 
@@ -212,6 +215,7 @@ void MultiPlot::clear( void )
   PlotList.clear();
   CommonXRange.clear();
   CommonYRange.clear();
+  DrawBackground = true;
 }
 
 
@@ -229,6 +233,7 @@ void MultiPlot::clear( int index )
     CommonXRange.erase( cx );
     CommonYRange.erase( cy );
   }
+  DrawBackground = true;
 }
 
 
@@ -282,6 +287,7 @@ void MultiPlot::layout( void )
       }
     }
   }
+  DrawBackground = true;
 }
 
 
@@ -357,6 +363,11 @@ void MultiPlot::paintEvent( QPaintEvent *qpe )
   lockData();
   PMutex.lock();
 
+  if ( DrawBackground ) {
+    QPainter p( this );
+    p.eraseRect( rect() );
+  }
+
   for ( PlotListType::iterator p = PlotList.begin(); 
 	p != PlotList.end(); 
 	++p ) {
@@ -364,8 +375,29 @@ void MultiPlot::paintEvent( QPaintEvent *qpe )
     (**p).draw( this ); // this will not lock the data again!
   }
 
+  DrawBackground = false;
+
   PMutex.unlock();
   unlockData();
+}
+
+
+void MultiPlot::resizeEvent( QResizeEvent *qre )
+{
+  PMutex.lock();
+  for ( PlotListType::iterator p = PlotList.begin(); 
+	p != PlotList.end(); 
+	++p ) {
+    (**p).resizeEvent( qre );
+  }
+  DrawBackground = true;
+  PMutex.unlock();
+}
+
+
+void MultiPlot::setDrawBackground( void )
+{
+  DrawBackground = true;
 }
 
 

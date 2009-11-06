@@ -84,6 +84,7 @@ Plot::Plot( KeepMode keep, bool subwidget, int id,
 
 void Plot::construct( KeepMode keep, bool subwidget, int id, MultiPlot *mp )
 {
+  setAttribute( Qt::WA_OpaquePaintEvent );
   Keep = keep;
   SubWidget = subwidget;
   Id = id;
@@ -155,6 +156,10 @@ void Plot::construct( KeepMode keep, bool subwidget, int id, MultiPlot *mp )
     XMaxFB[k] = 10.0;
     YMinFB[k] = -10.0;
     YMaxFB[k] = 10.0;
+    XMinPrev[k] = -10.0;
+    XMaxPrev[k] = 10.0;
+    YMinPrev[k] = -10.0;
+    YMaxPrev[k] = 10.0;
 
     XTics[k] = 0;
     YTics[k] = 0;
@@ -291,6 +296,10 @@ void Plot::construct( KeepMode keep, bool subwidget, int id, MultiPlot *mp )
   setSizePolicy( QSizePolicy( QSizePolicy::Expanding, 
 			      QSizePolicy::Expanding ) );
 
+  NewData = true;
+  ShiftData = false;
+  ShiftXPix = 0;
+
   DMutex = 0;
 }
 
@@ -341,6 +350,26 @@ void Plot::unlockData( void )
 {
   if ( DMutex != 0 )
     DMutex->unlock();
+}
+
+
+void Plot::setOrigin( double x, double y )
+{
+  XOrigin = x;
+  YOrigin = y;
+  NewData = true;
+  if ( SubWidget && MP != 0 )
+    MP->setDrawBackground();
+}
+
+
+void Plot::setSize( double w, double h )
+{
+  XSize = w;
+  YSize = h;
+  NewData = true;
+  if ( SubWidget && MP != 0 )
+    MP->setDrawBackground();
 }
 
 
@@ -1248,6 +1277,10 @@ QSize Plot::minimumSizeHint( void ) const
 
 void Plot::resizeEvent( QResizeEvent *qre )
 {
+  PMutex.lock();
+  NewData = true;
+  PMutex.unlock();
+
   if ( SubWidget )
     return;
 
@@ -1259,6 +1292,15 @@ void Plot::resizeEvent( QResizeEvent *qre )
   ScreenY2 = 0;
 
   PMutex.unlock();
+}
+
+
+void Plot::init( void )
+{
+  for ( PDataType::iterator d = PData.begin(); d != PData.end(); ++d ) {
+    if ( (*d)->init() )
+      NewData = true;
+  }
 }
 
 
@@ -1700,9 +1742,8 @@ void Plot::initBorder( void )
 
 void Plot::initLines( void )
 {
-  for ( PDataType::iterator d = PData.begin(); d != PData.end(); ++d ) {
+  for ( PDataType::iterator d = PData.begin(); d != PData.end(); ++d )
     (*d)->setRange( XMin, XMax, YMin, YMax, PlotX1, PlotX2, PlotY1, PlotY2 );
-  }
 }
 
 
@@ -1712,58 +1753,121 @@ void Plot::drawBorder( QPainter &paint )
   if ( BackgroundColor != Transparent ) {
     RGBColor c = color( BackgroundColor );
     QColor qcolor( c.red(), c.green(), c.blue() );
-    paint.fillRect( ScreenX1, ScreenY2, PlotX1, ScreenY1 - ScreenY2 + 1, qcolor );
-    paint.fillRect( PlotX2 + 1, ScreenY2, ScreenX2 - PlotX2, ScreenY1 - ScreenY2 + 1, qcolor );
-    paint.fillRect( PlotX1, ScreenY1, PlotX2 - PlotX1 + 1, PlotY1 - ScreenY1, qcolor );
-    paint.fillRect( PlotX1, ScreenY2, PlotX2 - PlotX1 + 1, PlotY2 - ScreenY2, qcolor );
+    paint.fillRect( ScreenX1, ScreenY2, PlotX1, ScreenY1 - ScreenY2 + 1, qcolor ); // left
+    paint.fillRect( PlotX2 + 1, ScreenY2, ScreenX2 - PlotX2, ScreenY1 - ScreenY2 + 1, qcolor ); // right
+    paint.fillRect( PlotX1, PlotY1+1, PlotX2 - PlotX1 + 1, ScreenY1 - PlotY1, qcolor );  // bottom
+    paint.fillRect( PlotX1, ScreenY2, PlotX2 - PlotX1 + 1, PlotY2 - ScreenY2, qcolor );  // top
   }
 
-  // draw plot background:
-  if ( PlotColor != Transparent ) {
-    RGBColor c = color( PlotColor );
-    QColor qcolor( c.red(), c.green(), c.blue() );
-    paint.fillRect( PlotX1, PlotY2, PlotX2-PlotX1+1, PlotY1-PlotY2+1, qcolor );
-  }
+  if ( ! NewData && ShiftData ) {
 
-  // grid:
-  for ( int k=0; k<MaxAxis; k++ ) {
-
-    // draw horizontal grid lines:
-    if ( YGrid[k] && YGridStyle[k].width() > 0 && 
-	 YGridStyle[k].color() != Transparent ) {
-      RGBColor c = color( YGridStyle[k].color() );
+    // draw plot background:
+    if ( PlotColor != Transparent ) {
+      RGBColor c = color( PlotColor );
       QColor qcolor( c.red(), c.green(), c.blue() );
-      Qt::PenStyle dash = QtDash.find( YGridStyle[k].dash() )->second;
-      paint.setPen( QPen( qcolor, YGridStyle[k].width(), dash ) );
-      for ( double y=YTicsStart[k]; y<=YMax[k]; y+=YTicsIncr[k] ) {
-	if ( ::fabs( y ) < 0.001*YTicsIncr[k] )
-	  y = 0.0;
-	int yp = PlotY1 + (int)::rint( double(PlotY2-PlotY1)/(YMax[k]-YMin[k])*(y-YMin[k]) );
-	if ( ::abs( PlotY1 - yp ) > YGridStyle[k].width() &&
-	     ::abs( PlotY2 - yp ) > YGridStyle[k].width() )
-	  paint.drawLine( PlotX1, yp, PlotX2, yp );
-      }
+      if ( ShiftXPix > 0 )
+	paint.fillRect( PlotX2-ShiftXPix+1, PlotY2, ShiftXPix, PlotY1-PlotY2+1, qcolor );
+      else
+	paint.fillRect( PlotX1, PlotY2, -ShiftXPix, PlotY1-PlotY2+1, qcolor );
     }
 
-    // draw vertical grid lines:
-    if ( XGrid[k] && XGridStyle[k].width() > 0 && 
-	 XGridStyle[k].color() != Transparent ) {
-      RGBColor c = color( XGridStyle[k].color() );
-      QColor qcolor( c.red(), c.green(), c.blue() );
-      Qt::PenStyle dash = QtDash.find( XGridStyle[k].dash() )->second;
-      paint.setPen( QPen( qcolor, XGridStyle[k].width(), dash ) );
-      for ( double x=XTicsStart[k]; x<=XMax[k]; x+=XTicsIncr[k] ) {
-	if ( ::fabs( x ) < 0.001*XTicsIncr[k] )
-	  x = 0.0;
-	int xp = PlotX1 + (int)::rint( double(PlotX2-PlotX1)/(XMax[k]-XMin[k])*(x-XMin[k]) );
-	if ( ::abs( PlotX1 - xp ) > XGridStyle[k].width() &&
-	     ::abs( PlotX2 - xp ) > XGridStyle[k].width() )
-	  paint.drawLine( xp, PlotY1, xp, PlotY2 );
+    // grid:
+    for ( int k=0; k<MaxAxis; k++ ) {
+      
+      // draw horizontal grid lines:
+      if ( YGrid[k] && YGridStyle[k].width() > 0 && 
+	   YGridStyle[k].color() != Transparent ) {
+	RGBColor c = color( YGridStyle[k].color() );
+	QColor qcolor( c.red(), c.green(), c.blue() );
+	Qt::PenStyle dash = QtDash.find( YGridStyle[k].dash() )->second;
+	paint.setPen( QPen( qcolor, YGridStyle[k].width(), dash ) );
+	for ( double y=YTicsStart[k]; y<=YMax[k]; y+=YTicsIncr[k] ) {
+	  if ( ::fabs( y ) < 0.001*YTicsIncr[k] )
+	    y = 0.0;
+	  int yp = PlotY1 + (int)::rint( double(PlotY2-PlotY1)/(YMax[k]-YMin[k])*(y-YMin[k]) );
+	  if ( ::abs( PlotY1 - yp ) > YGridStyle[k].width() &&
+	       ::abs( PlotY2 - yp ) > YGridStyle[k].width() ) {
+	    if ( ShiftXPix > 0 )
+	      paint.drawLine( PlotX2-ShiftXPix, yp, PlotX2, yp );
+	    else
+	      paint.drawLine( PlotX1, yp, PlotX1-ShiftXPix, yp );
+	  }
+	}
       }
+      
+      // draw vertical grid lines:
+      if ( XGrid[k] && XGridStyle[k].width() > 0 && 
+	   XGridStyle[k].color() != Transparent ) {
+	RGBColor c = color( XGridStyle[k].color() );
+	QColor qcolor( c.red(), c.green(), c.blue() );
+	Qt::PenStyle dash = QtDash.find( XGridStyle[k].dash() )->second;
+	paint.setPen( QPen( qcolor, XGridStyle[k].width(), dash ) );
+	for ( double x=XTicsStart[k]; x<=XMax[k]; x+=XTicsIncr[k] ) {
+	  if ( ( ShiftX[k] > 0.0 && x >= XMax[k] - ShiftX[k] - 1.e-3*(XMax[k]-XMin[k]) ) ||
+	       ( ShiftX[k] < 0.0 && x <= XMin[k] - ShiftX[k] + 1.e-3*(XMax[k]-XMin[k]) ) ) {
+	    if ( ::fabs( x ) < 0.001*XTicsIncr[k] )
+	      x = 0.0;
+	    int xp = PlotX1 + (int)::rint( double(PlotX2-PlotX1)/(XMax[k]-XMin[k])*(x-XMin[k]) );
+	    if ( ::abs( PlotX1 - xp ) > XGridStyle[k].width() &&
+	       ::abs( PlotX2 - xp ) > XGridStyle[k].width() )
+	      paint.drawLine( xp, PlotY1, xp, PlotY2 );
+	  }
+	}
+      }
+
     }
 
   }
-  
+  else {
+
+    // draw plot background:
+    if ( PlotColor != Transparent ) {
+      RGBColor c = color( PlotColor );
+      QColor qcolor( c.red(), c.green(), c.blue() );
+      paint.fillRect( PlotX1, PlotY2, PlotX2-PlotX1+1, PlotY1-PlotY2+1, qcolor );
+    }
+
+    // grid:
+    for ( int k=0; k<MaxAxis; k++ ) {
+      
+      // draw horizontal grid lines:
+      if ( YGrid[k] && YGridStyle[k].width() > 0 && 
+	   YGridStyle[k].color() != Transparent ) {
+	RGBColor c = color( YGridStyle[k].color() );
+	QColor qcolor( c.red(), c.green(), c.blue() );
+	Qt::PenStyle dash = QtDash.find( YGridStyle[k].dash() )->second;
+	paint.setPen( QPen( qcolor, YGridStyle[k].width(), dash ) );
+	for ( double y=YTicsStart[k]; y<=YMax[k]; y+=YTicsIncr[k] ) {
+	  if ( ::fabs( y ) < 0.001*YTicsIncr[k] )
+	    y = 0.0;
+	  int yp = PlotY1 + (int)::rint( double(PlotY2-PlotY1)/(YMax[k]-YMin[k])*(y-YMin[k]) );
+	  if ( ::abs( PlotY1 - yp ) > YGridStyle[k].width() &&
+	       ::abs( PlotY2 - yp ) > YGridStyle[k].width() )
+	    paint.drawLine( PlotX1, yp, PlotX2, yp );
+	}
+      }
+      
+      // draw vertical grid lines:
+      if ( XGrid[k] && XGridStyle[k].width() > 0 && 
+	   XGridStyle[k].color() != Transparent ) {
+	RGBColor c = color( XGridStyle[k].color() );
+	QColor qcolor( c.red(), c.green(), c.blue() );
+	Qt::PenStyle dash = QtDash.find( XGridStyle[k].dash() )->second;
+	paint.setPen( QPen( qcolor, XGridStyle[k].width(), dash ) );
+	for ( double x=XTicsStart[k]; x<=XMax[k]; x+=XTicsIncr[k] ) {
+	  if ( ::fabs( x ) < 0.001*XTicsIncr[k] )
+	    x = 0.0;
+	  int xp = PlotX1 + (int)::rint( double(PlotX2-PlotX1)/(XMax[k]-XMin[k])*(x-XMin[k]) );
+	  if ( ::abs( PlotX1 - xp ) > XGridStyle[k].width() &&
+	       ::abs( PlotX2 - xp ) > XGridStyle[k].width() )
+	    paint.drawLine( xp, PlotY1, xp, PlotY2 );
+	}
+      }
+      
+    }
+
+  }
+
   // draw border:
   if ( Border > 0 && BorderStyle.width() > 0 && 
        BorderStyle.color() != Transparent ) {
@@ -1998,8 +2102,29 @@ void Plot::drawLine( QPainter &paint, DataElement *d )
     int yaxis = d->YAxis;
     
     // init data:
-    long f = d->first( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
-    long l = d->last( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+    // XXX needs to be replicated in drawPoints()!
+    long f = 0;
+    long l = 0;
+    if ( NewData ) {
+      f = d->first( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+      l = d->last( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+    }
+    else {
+      if ( ShiftData ) {
+	if ( ShiftX[xaxis] > 0.0 ) {
+	  f = d->first( XMax[xaxis]-ShiftX[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+	  l = d->last( XMax[xaxis]-ShiftX[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+	}
+	else {
+	  f = d->first( XMin[xaxis], YMin[yaxis], XMin[xaxis]-ShiftX[xaxis], YMax[yaxis] );
+	  l = d->last( XMin[xaxis], YMin[yaxis], XMin[xaxis]-ShiftX[xaxis], YMax[yaxis] );
+	}
+      }
+      else {
+	f = d->lineIndex();
+	l = d->last( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+      }
+    }
     if ( f >= l )
       return;
     long k = f;
@@ -2164,6 +2289,7 @@ void Plot::drawLine( QPainter &paint, DataElement *d )
       }
     }
     paint.drawPath( path );
+    d->setLineIndex( l );
   }
 }
 
@@ -2215,11 +2341,15 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
     int xaxis = d->XAxis;
     int yaxis = d->YAxis;
 
+    // index range:
+    long f = d->first( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+    long l = d->last( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+    if ( ! NewData )
+      f = d->pointIndex();
+
     // draw Box:
     if ( d->Point.type() == Box ) {
       // XXX improve single point plot!
-      long f = d->first( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
-      long l = d->last( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
       if ( l-f >= 2 ) {
 	double x, y;
 	int WP = d->Point.size();
@@ -2555,8 +2685,6 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
       point.setMask( mask );
 
       // draw points:
-      long f = d->first( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
-      long l = d->last( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
       for ( long k=f; k<l; k++ ) {
 	double x, y;
 	d->point( k, x, y );
@@ -2568,6 +2696,7 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
       }
 
     }
+    d->setPointIndex( l );
   }
 }
 
@@ -2705,19 +2834,112 @@ void Plot::draw( QPaintDevice *qpm )
   QColor pbc = palette().color( QPalette::Window );
   Colors[WidgetBackground] = RGBColor( pbc.red(), pbc.green(), pbc.blue() );
 
+  init();
   initRange();
   initTics();
   initBorder();
   initLines();
 
+  // check for changes:
+  ShiftData = false;
+  ShiftXPix = 0;
+  for ( int k=0; k<MaxAxis; k++ ) {
+    ShiftX[k] = 0.0;
+    // check whether axis is in use:
+    bool havexaxis = false;
+    bool haveyaxis = false;
+    for ( PDataType::iterator d = PData.begin(); d != PData.end(); ++d ) {
+      if ( (*d)->XAxis == k ) {
+	havexaxis = true;
+	if ( haveyaxis )
+	  break;
+      }
+      if ( (*d)->YAxis == k ) {
+	haveyaxis = true;
+	if ( havexaxis )
+	  break;
+      }
+    }
+
+    if ( havexaxis ) {
+      if ( ::fabs( ::fabs( XMax[k] - XMin[k] ) - ::fabs( XMaxPrev[k] - XMinPrev[k] ) ) > 1.0e-8 )
+	NewData = true;
+      else {
+	if ( XMin[k] != XMinPrev[k] ) {
+	  ShiftData = true;
+	  int dx = (int)::rint( double(PlotX2-PlotX1+1)/(XMax[k]-XMin[k])*(XMin[k]-XMinPrev[k]) );
+	  if ( ShiftXPix == 0 )
+	    ShiftXPix = dx;
+	  else if ( dx != ShiftXPix )
+	    NewData = true;
+	  ShiftX[k] = XMin[k]-XMinPrev[k];
+	}
+	else {
+	  if ( ShiftData )
+	    NewData = true;
+	}
+      }
+    }
+
+    if ( haveyaxis ) {
+      if ( YMin[k] != YMinPrev[k] )
+	NewData = true;
+      if ( YMax[k] != YMaxPrev[k] )
+	NewData = true;
+    }
+  }
+
+  // XXX remove, once thes optimiziation for shifted data is working:
+  /*
+  if ( ShiftData ) {
+    ShiftData = false;
+    NewData = true;
+  }
+  */
+  if ( ! NewData && ShiftData ) {
+    if ( ShiftXPix >= PlotX2 - PlotX1 )
+      NewData = true;
+    else {
+      // align coordinates with pixel shift:
+      for ( int k=0; k<MaxAxis; k++ ) {
+	ShiftX[k] = ShiftXPix*(XMaxPrev[k]-XMinPrev[k])/double(PlotX2-PlotX1+1);
+	XMin[k] = XMinPrev[k] + ShiftX[k];
+	XMax[k] = XMaxPrev[k] + ShiftX[k];
+      }
+      // get widget:
+      QWidget *w = this;
+      if ( SubWidget && MP != 0 )
+	w = MP;
+      // scroll widget:
+      if ( ShiftXPix > 0 )
+	w->scroll( -ShiftXPix, 0,
+		   QRect( PlotX1, PlotY2, PlotX2-PlotX1+1, PlotY1-PlotY2+1 ) );
+      else
+	w->scroll( -ShiftXPix, 0,
+		   QRect( PlotX1, PlotY2, PlotX2-PlotX1+1, PlotY1-PlotY2+1 ) );
+    }
+  }
+
   QPainter paint( qpm );
   // the painter coordinate system has its origin in 
   // the upper left corner of the widget!
-  drawBorder( paint );
-  drawAxis( paint );
+  if ( NewData || ShiftData ) {
+    drawBorder( paint );
+    drawAxis( paint );
+  }
   drawData( paint );
-  drawLabels( paint );
+  if ( NewData || ShiftData )
+    drawLabels( paint );
   drawMouse( paint );
+
+  // remember current ranges:
+  for ( int k=0; k<MaxAxis; k++ ) {
+    XMinPrev[k] = XMin[k];
+    XMaxPrev[k] = XMax[k];
+    YMinPrev[k] = YMin[k];
+    YMaxPrev[k] = YMax[k];
+  }
+  NewData = false;
 
   PMutex.unlock();
   if ( ! SubWidget )
@@ -3271,6 +3493,7 @@ void Plot::mouseZoomMovePlot( MouseEvent &me, bool move )
 	MouseY2 = me.yPixel();
       MouseXMax = me.control();
       MouseYMax = me.shift();
+      NewData = true;
       draw();
       me.setUsed();
     }
@@ -3706,6 +3929,7 @@ void Plot::setYShrinkFactor( double f )
 
 int Plot::addData( DataElement *d )
 {
+  NewData = true;
   PData.push_back( d );
   return PData.size() - 1;
 }
@@ -3714,6 +3938,8 @@ Plot::DataElement::DataElement( DataTypes dt )
   : Own( false ), 
     XAxis( 0 ),
     YAxis( 0 ),
+    LineIndex( 0 ),
+    PointIndex( 0 ),
     DataType( dt ),
     Line(),
     Point()  
@@ -3737,6 +3963,30 @@ void Plot::DataElement::setAxis( int xaxis, int yaxis )
 {
   XAxis = xaxis;
   YAxis = yaxis;
+}
+
+
+void Plot::DataElement::setLineIndex( long inx )
+{
+  LineIndex = inx;
+}
+
+
+long Plot::DataElement::lineIndex() const
+{
+  return LineIndex;
+}
+
+
+void Plot::DataElement::setPointIndex( long inx )
+{
+  PointIndex = inx;
+}
+
+
+long Plot::DataElement::pointIndex() const
+{
+  return PointIndex;
 }
 
 
@@ -3804,9 +4054,9 @@ void Plot::PointElement::point( long index, double &x, double &y ) const
 
 
 void Plot::PointElement::setRange( double xmin[MaxAxis], double xmax[MaxAxis], 
-				  double ymin[MaxAxis], double ymax[MaxAxis],
-				  int xpmin, int xpmax, 
-				  int ypmin, int ypmax )
+				   double ymin[MaxAxis], double ymax[MaxAxis],
+				   int xpmin, int xpmax, 
+				   int ypmin, int ypmax )
 {
   if ( P.xcoor() == Plot::Graph )
     X = P.xpos()*( xmax[XAxis] - xmin[XAxis] ) + xmin[XAxis];
@@ -3936,6 +4186,7 @@ Plot::EventDataElement::EventDataElement( const EventData &x, int origin,
 {
   Origin = origin;
   Offset = offset;
+  Reference = 0.0;
 }
 
 
@@ -3946,51 +4197,36 @@ Plot::EventDataElement::~EventDataElement( void )
 
 long Plot::EventDataElement::first( double x1, double y1, double x2, double y2 ) const
 {
-  double t = x1/TScale;
-
-  if ( Origin == 1 )
-    t += ED->rangeBack(); 
-  else if ( Origin == 2 )
-    t += ( ED->signalTime() < 0.0 ? 0.0 : ED->signalTime() ); 
-  else if ( Origin == 3 )
-    t += Offset; 
-
-  return ED->next( t );
+  return ED->next( x1/TScale + Reference );
 }
 
 
 long Plot::EventDataElement::last( double x1, double y1, double x2, double y2 ) const
 {
-  double t = x2/TScale;
-
-  if ( Origin == 1 )
-    t += ED->rangeBack(); 
-  else if ( Origin == 2 )
-    t += ( ED->signalTime() < 0.0 ? 0.0 : ED->signalTime() );
-  else if ( Origin == 3 )
-    t += Offset; 
-
-  return ED->next( t );
+  return ED->next( x2/TScale + Reference );
 }
 
 
 void Plot::EventDataElement::point( long index, double &x, double &y ) const
 {
-  switch ( Origin ) {
-  case 1:
-    x = ( ED->operator[]( index ) - ED->rangeBack() ) * TScale;
-    break;
-  case 2:
-    x = ( ED->operator[]( index ) - ( ED->signalTime() < 0.0 ? 0.0 : ED->signalTime() ) ) * TScale;
-    break;
-  case 3:
-    x = ( ED->operator[]( index ) - Offset ) * TScale;
-    break;
-  default:
-    x = ( ED->operator[]( index ) ) * TScale;
-    break;
-  }
+  x = ( ED->operator[]( index ) - Reference ) * TScale;
   y = Y;
+}
+
+
+bool Plot::EventDataElement::init( void )
+{
+  double prevref = Reference;
+
+  Reference = 0.0;
+  if ( Origin == 1 )
+    Reference = ED->rangeBack(); 
+  else if ( Origin == 2 )
+    Reference = ( ED->signalTime() < 0.0 ? 0.0 : ED->signalTime() ); 
+  else if ( Origin == 3 )
+    Reference = Offset; 
+
+  return ( ::fabs( Reference - prevref ) > 1.0e-8 );
 }
 
 
@@ -4002,22 +4238,8 @@ void Plot::EventDataElement::xminmax( double &xmin, double &xmax,
     tmin = ED->minTime();
   double tmax = ED->rangeBack();
 
-  switch ( Origin ) {
-  case 1:
-    tmin -= ED->rangeBack();
-    tmax -= ED->rangeBack();
-    break;
-  case 2:
-    if ( ED->signalTime() > 0.0 ) {
-      tmin -= ED->signalTime();
-      tmax -= ED->signalTime(); 
-    }
-    break;
-  case 3:
-    tmin -= Offset;
-    tmax -= Offset; 
-    break;
-  }
+  tmin -= Reference;
+  tmax -= Reference; 
 
   xmin = tmin * TScale;
   xmax = tmax * TScale;
@@ -4053,6 +4275,7 @@ Plot::InDataElement::InDataElement( const InData &data, int origin,
   Origin = origin;
   Offset = offset;
   TScale = tscale;
+  Reference = 0.0;
 }
 
 
@@ -4066,15 +4289,7 @@ Plot::InDataElement::~InDataElement( void )
 
 long Plot::InDataElement::first( double x1, double y1, double x2, double y2 ) const
 {
-  double t = x1/TScale;
-
-  if ( Origin == 1 )
-    t += ID->currentTime(); 
-  else if ( Origin == 2 )
-    t += ( ID->signalTime() < 0.0 ? 0.0 : ID->signalTime() ); 
-  else if ( Origin == 3 )
-    t += Offset; 
-
+  double t = x1/TScale + Reference; 
   long x1i = long( ::floor( t/ID->sampleInterval() ) );
   if ( x1i > ID->currentIndex() )
     return ID->currentIndex();
@@ -4086,15 +4301,7 @@ long Plot::InDataElement::first( double x1, double y1, double x2, double y2 ) co
 
 long Plot::InDataElement::last( double x1, double y1, double x2, double y2 ) const
 {
-  double t = x2/TScale;
-
-  if ( Origin == 1 )
-    t += ID->currentTime(); 
-  else if ( Origin == 2 )
-    t += ( ID->signalTime() < 0.0 ? 0.0 : ID->signalTime() );
-  else if ( Origin == 3 )
-    t += Offset; 
-
+  double t = x2/TScale + Reference; 
   long x2i = long( ::ceil( t/ID->sampleInterval() ) ) + 1;
   if ( x2i > ID->currentIndex() )
     return ID->currentIndex();
@@ -4106,21 +4313,24 @@ long Plot::InDataElement::last( double x1, double y1, double x2, double y2 ) con
 
 void Plot::InDataElement::point( long index, double &x, double &y ) const
 {
-  switch ( Origin ) {
-  case 1:
-    x = ID->interval( index - ID->currentIndex() ) * TScale;
-    break;
-  case 2:
-    x = ID->interval( index - ( ID->signalIndex() < 0 ? 0 : ID->signalIndex() ) ) * TScale;
-    break;
-  case 3:
-    x = ( ID->interval( index ) - Offset ) * TScale;
-    break;
-  default:
-    x = ID->interval( index ) * TScale;
-    break;
-  }
+  x = ( ID->interval( index ) - Reference ) * TScale;
   y = (*ID)[index];
+}
+
+
+bool Plot::InDataElement::init( void )
+{
+  double prevref = Reference;
+
+  Reference = 0.0;
+  if ( Origin == 1 )
+    Reference = ID->currentTime(); 
+  else if ( Origin == 2 )
+    Reference = ( ID->signalTime() < 0.0 ? 0.0 : ID->signalTime() ); 
+  else if ( Origin == 3 )
+    Reference = Offset; 
+
+  return ( ::fabs( Reference - prevref ) > 1.0e-8 );
 }
 
 
@@ -4130,19 +4340,8 @@ void Plot::InDataElement::xminmax( double &xmin, double &xmax,
   double tmin = ID->minTime();
   double tmax = ID->currentTime();
 
-  switch ( Origin ) {
-  case 1:
-    tmin -= ID->currentTime();
-    tmax -= ID->currentTime(); 
-  case 2:
-    if ( ID->signalTime() > 0.0 ) {
-      tmin -= ID->signalTime();
-      tmax -= ID->signalTime(); 
-    }
-  case 3:
-    tmin -= Offset;
-    tmax -= Offset; 
-  }
+  tmin -= Reference;
+  tmax -= Reference; 
 
   xmin = tmin * TScale;
   xmax = tmax * TScale;
@@ -4155,19 +4354,8 @@ void Plot::InDataElement::yminmax( double xmin, double xmax,
   double tmin = xmin/TScale;
   double tmax = xmax/TScale;
 
-  switch ( Origin ) {
-  case 1:
-    tmin += ID->currentTime();
-    tmax += ID->currentTime(); 
-  case 2:
-    if ( ID->signalTime() > 0.0 ) {
-      tmin += ID->signalTime();
-      tmax += ID->signalTime(); 
-    }
-  case 3:
-    tmin += Offset;
-    tmax += Offset; 
-  }
+  tmin += Reference;
+  tmax += Reference; 
 
   long x1i = ID->indices( tmin );
   long x2i = ID->indices( tmax );
@@ -4267,20 +4455,7 @@ long Plot::EventInDataElement::last( double x1, double y1, double x2, double y2 
 void Plot::EventInDataElement::point( long index, double &x, double &y ) const
 {
   double time = ED->operator[]( index ); 
-  switch ( Origin ) {
-  case 1:
-    x = ( time - ID->currentTime() ) * TScale;
-    break;
-  case 2:
-    x = ( time - ( ID->signalTime() < 0.0 ? 0.0 : ID->signalTime() ) ) * TScale;
-    break;
-  case 3:
-    x = ( time - Offset ) * TScale;
-    break;
-  default:
-    x = ( time ) * TScale;
-    break;
-  }
+  x = ( time - Reference ) * TScale;
   int inx = ID->index( time );
   y = (*ID)[inx];
 }
@@ -4296,22 +4471,8 @@ void Plot::EventInDataElement::xminmax( double &xmin, double &xmax,
     tmin = ID->minTime();
   double tmax = ID->currentTime();
 
-  switch ( Origin ) {
-  case 1:
-    tmin -= ID->currentTime();
-    tmax -= ID->currentTime();
-    break;
-  case 2:
-    if ( ID->signalTime() > 0.0 ) {
-      tmin -= ID->signalTime();
-      tmax -= ID->signalTime(); 
-    }
-    break;
-  case 3:
-    tmin -= Offset;
-    tmax -= Offset; 
-    break;
-  }
+  tmin -= Reference;
+  tmax -= Reference; 
 
   xmin = tmin * TScale;
   xmax = tmax * TScale;
@@ -4336,6 +4497,7 @@ void Plot::clearData( void )
   for ( PDataType::iterator d = PData.begin(); d != PData.end(); ++d )
     delete (*d);
   PData.clear();
+  NewData = true;
 }
 
 
@@ -4348,6 +4510,7 @@ void Plot::clearData( int index )
     delete (*d);
     PData.erase( d );
   }
+  NewData = true;
 }
 
 
