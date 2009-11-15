@@ -27,7 +27,8 @@ message "Successfully generated the ./configure script".
 For this to work you need to have the autoconf, automake (version 1.10
 or higher), and libtool packages installed on your system. On Debian
 or Ubuntu execute as root:
-./apt-get install autoconf automake libtool 
+
+> apt-get install autoconf automake libtool 
 
 If you have problems with this and you do not know how to proceed,
 then I can send you a tar archive with a complete RELACS distribution
@@ -38,6 +39,7 @@ upon request (benda@bio.lmu.de, subject: RELACS).
 
 If you want to use the comedi data acquisition interface (www.comedi.org)
 for acquiring real data, then you need to install comedi first.
+See www.relacs.net/plugins/comedi for more instructions.
 For a demo running in simulation mode, this is not necessary.
 
 Then run

@@ -6,7 +6,8 @@ pluginlibdir = $(pkglibdir)/plugins
 pluginlib_LTLIBRARIES = \
     libpatchclampsession.la \
     libpatchclampsimple.la \
-    libpatchclampsinglestimulus.la
+    libpatchclampsinglestimulus.la \
+    libpatchclampmembraneresistance.la
 
 
 
@@ -105,10 +106,40 @@ libpatchclampsinglestimulus_la_include_HEADERS = $(HEADER_PATH)/singlestimulus.h
 
 
 
+libpatchclampmembraneresistance_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT3_CPPFLAGS)
+
+libpatchclampmembraneresistance_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT3_LDFLAGS)
+
+libpatchclampmembraneresistance_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(QT3_LIBS)
+
+$(libpatchclampmembraneresistance_la_OBJECTS) : moc_membraneresistance.cc
+
+libpatchclampmembraneresistance_la_SOURCES = membraneresistance.cc
+
+libpatchclampmembraneresistance_la_includedir = $(pkgincludedir)/patchclamp
+
+libpatchclampmembraneresistance_la_include_HEADERS = $(HEADER_PATH)/membraneresistance.h
+
+
+
 check_PROGRAMS = \
     linktest_libpatchclampsession_la \
     linktest_libpatchclampsimple_la \
-    linktest_libpatchclampsinglestimulus_la
+    linktest_libpatchclampsinglestimulus_la \
+    linktest_libpatchclampmembraneresistance_la
 
 linktest_libpatchclampsession_la_SOURCES = linktest.cc
 linktest_libpatchclampsession_la_LDADD = libpatchclampsession.la
@@ -118,6 +149,9 @@ linktest_libpatchclampsimple_la_LDADD = libpatchclampsimple.la
 
 linktest_libpatchclampsinglestimulus_la_SOURCES = linktest.cc
 linktest_libpatchclampsinglestimulus_la_LDADD = libpatchclampsinglestimulus.la
+
+linktest_libpatchclampmembraneresistance_la_SOURCES = linktest.cc
+linktest_libpatchclampmembraneresistance_la_LDADD = libpatchclampmembraneresistance.la
 
 TESTS = $(check_PROGRAMS)
 

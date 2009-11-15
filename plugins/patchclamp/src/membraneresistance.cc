@@ -1,0 +1,341 @@
+/*
+  patchclamp/membraneresistance.cc
+  Measures membrane resistance, capacitance, and time constant with current pulses
+
+  RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
+  Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 3 of the License, or
+  (at your option) any later version.
+  
+  RELACS is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+#include <fstream>
+#include <relacs/fitalgorithm.h>
+#include <relacs/tablekey.h>
+#include <relacs/patchclamp/membraneresistance.h>
+using namespace relacs;
+
+namespace patchclamp {
+
+
+MembraneResistance::MembraneResistance( void )
+  : RePro( "MembraneResistance", "MembraneResistance", "Patch-clamp",
+	   "Jan Benda", "1.0", "Nov 12, 2009" ),
+    P( this ),
+    InUnit( "mV" ),
+    OutUnit( "nA" )
+{
+  // add some options:
+  addSelection( "intrace", "Input trace", "V-1" );
+  addSelection( "outtrace", "Output trace", "Speaker-1" );
+  addNumber( "amplitude", "Amplitude of output signal", -1.0, -1000.0, 1000.0, 0.1 );
+  addNumber( "duration", "Duration of output", 0.1, 0.001, 1000.0, 0.001, "sec", "ms" );
+  addNumber( "pause", "Duration of pause bewteen outputs", 0.4, 0.001, 1.0, 0.001, "sec", "ms" );
+  addInteger( "repeats", "Repeats", 100, 0, 10000, 1 );
+  addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
+
+  // plot:
+  P.lock();
+  P.setDataMutex( mutex() );
+  P.setXLabel( "Time [ms]" );
+  P.setYLabel( "" );
+  P.unlock();
+}
+
+
+void MembraneResistance::config( void )
+{
+  string its = "";
+  const InList &il = traces();
+  for ( int k=0; k<il.size(); k++ ) {
+    if ( k > 0 )
+      its += '|';
+    its += il[k].ident();
+  }
+  setText( "intrace", its );
+  setToDefault( "intrace" );
+
+  string ots = "";
+  for ( int k=0; k<outTracesSize(); k++ ) {
+    if ( k > 0 )
+      ots += '|';
+    ots += outTraceName( k );
+  }
+  setText( "outtrace", ots );
+  setToDefault( "outtrace" );
+}
+
+
+void MembraneResistance::notify( void )
+{
+  int outtrace = index( "outtrace" );
+  OutUnit = outTrace( outtrace ).unit();
+  setUnit( "amplitude", OutUnit );
+  int intrace = index( "intrace" );
+  InUnit = trace( intrace ).unit();
+}
+
+
+int MembraneResistance::main( void )
+{
+  // get options:
+  int intrace = traceIndex( text( "intrace", 0 ) );
+  int outtrace = index( "outtrace" );
+  Amplitude = number( "amplitude" );
+  double duration = number( "duration" );
+  double pause = number( "pause" );
+  int repeats = integer( "repeats" );
+  double sswidth = number( "sswidth" );
+  if ( pause < 2.0*duration ) {
+    warning( "Pause must be at least two times the stimulus duration!" );
+    return Failed;
+  }
+
+  double samplerate = trace( intrace ).sampleRate();
+
+  // don't print repro message:
+  noMessage();
+
+  // init:
+  MeanTrace = SampleDataD( -0.5*duration, 2.0*duration, 1/samplerate, 0.0 );
+  SquareTrace = MeanTrace;
+  StdevTrace = MeanTrace;
+  VRest = 0.0;
+  VRestsd = 0.0;
+  VSS = 0.0;
+  VSSsd = 0.0;
+  VPeak = 0.0;
+  VPeaksd = 0.0;
+  VPeakTime = 0.0;
+  RMss = 0.0;
+  RMOn = 0.0;
+  CMOn = 0.0;
+  TauMOn = 0.0;
+  RMOff = 0.0;
+  CMOff = 0.0;
+  TauMOff = 0.0;
+  ExpOn = SampleDataD( 0.0, duration, 1/samplerate, 0.0 );
+  ExpOff = SampleDataD( duration, 2.0*duration, 1/samplerate, 0.0 );
+
+  // plot trace:
+  plotToggle( true, true, 2.0*duration, 0.5*duration );
+
+  // plot:
+  P.lock();
+  P.setXRange( -500.0*duration, 2000.0*duration );
+  P.unlock();
+
+  // signal:
+  OutData signal( duration, 1.0/samplerate );
+  signal = Amplitude;
+  signal.setIdent( "const" );
+  signal.back() = 0.0;
+  signal.setTrace( outtrace );
+
+  // write stimulus:
+  sleep( pause );
+  timeStamp();
+  for ( int count=0;
+	( repeats <= 0 || count < repeats ) && softStop() == 0;
+	count++ ) {
+
+    Str s = "Amplitude <b>" + Str( Amplitude ) + " " + OutUnit +"</b>";
+    s += ",  Loop <b>" + Str( count+1 ) + "</b>";
+    message( s );
+
+    write( signal );
+    if ( signal.failed() ) {
+      warning( signal.errorText() );
+      return Failed;
+    }
+
+    sleepOn( duration + pause );
+    if ( interrupt() ) {
+      if ( count > 0 )
+	break;
+      else
+	return Aborted;
+    }
+
+    timeStamp();
+    analyze( trace( intrace ), duration, count, sswidth );
+    plot( duration );
+  }
+
+  save();
+
+  return Completed;
+}
+
+
+void MembraneResistance::analyze( const InData &trace, 
+				  double duration, int count,
+				  double sswidth )
+{
+  // update averages:
+  int inx = trace.signalIndex() - MeanTrace.index( 0.0 );
+  for ( int k=0; k<MeanTrace.size(); k++ ) {
+    double v = trace[inx+k];
+    MeanTrace[k] += (v - MeanTrace[k])/(count+1);
+    SquareTrace[k] += (v*v - SquareTrace[k])/(count+1);
+    StdevTrace = sqrt( SquareTrace[k] - MeanTrace[k]*MeanTrace[k] );
+  }
+
+  // resting potential:
+  VRest = MeanTrace.mean( -duration, 0.0 );
+  VRestsd = MeanTrace.stdev( -duration, 0.0 );
+
+  // steady-state potential:
+  VSS = MeanTrace.mean( duration-sswidth, duration );
+  VSSsd = MeanTrace.stdev( duration-sswidth, duration );
+
+  // membrane resitance:
+  RMss = ::fabs( (VSS - VRest)/Amplitude );
+
+  // peak potential:
+  VPeak = VRest;
+  int vpeakinx = 0;
+  if ( VSS > VRest )
+    vpeakinx = MeanTrace.maxIndex( VPeak, 0.0, duration-sswidth );
+  else
+    vpeakinx = MeanTrace.minIndex( VPeak, 0.0, duration-sswidth );
+  VPeaksd = StdevTrace[vpeakinx];
+  if ( fabs( VPeak - VSS ) <= VSSsd ) {
+    VPeak = VSS;
+    VPeaksd = VSSsd;
+    vpeakinx = MeanTrace.index( duration );
+    VPeakTime = 0.0;
+  }
+  else
+    VPeakTime = MeanTrace.pos( vpeakinx );
+
+  // fit exponential to onset:
+  int inx0 = MeanTrace.index( 0.0 );
+  ArrayD p( 3, 1.0 );
+  p[0] = VRest-VSS;
+  p[1] = -0.01;
+  p[2] = VSS;
+  ArrayI pi( 3, 1 );
+  ArrayD u( 3, 1.0 );
+  double ch = 0.0;
+  marquardtFit( MeanTrace.range().begin()+inx0, MeanTrace.range().begin()+vpeakinx,
+		MeanTrace.begin()+inx0, MeanTrace.begin()+vpeakinx,
+		StdevTrace.begin()+inx0, StdevTrace.begin()+vpeakinx,
+		expFuncDerivs, p, pi, u, ch );
+  TauMOn = -1000.0*p[1];
+  RMOn = ::fabs( (p[2] - VRest)/Amplitude );
+  CMOn = TauMOn/RMOn;
+  for ( int k=0; k<ExpOn.size(); k++ )
+    ExpOn[k] = expFunc( ExpOn.pos( k ), p );
+
+  // fit exponential to offset:
+  int inx1 = vpeakinx - inx0;
+  inx0 = MeanTrace.index( duration );
+  inx1 += inx0;
+  if ( inx1 > MeanTrace.size() )
+    inx1 = MeanTrace.size();
+  p[0] = VSS-VRest;
+  p[1] = -0.01;
+  p[2] = VRest;
+  u = 1.0;
+  ch = 0.0;
+  marquardtFit( MeanTrace.range().begin()+inx0, MeanTrace.range().begin()+inx1,
+		MeanTrace.begin()+inx0, MeanTrace.begin()+inx1,
+		StdevTrace.begin()+inx0, StdevTrace.begin()+inx1,
+		expFuncDerivs, p, pi, u, ch );
+  TauMOff = -1000.0*p[1];
+  RMOff = ::fabs( (VSS - p[2])/Amplitude );
+  CMOff = TauMOff/RMOff;
+  for ( int k=0; k<ExpOff.size(); k++ )
+    ExpOff[k] = expFunc( ExpOff.pos( k ), p );
+
+}
+
+
+void MembraneResistance::plot( double duration )
+{
+  P.lock();
+  P.clear();
+  P.setTitle( "Rm=" + Str( RMOn, 0, 1, 'f' ) + ", Cm=" + Str( CMOn, 0, 1, 'f' ) + ", tau=" + Str( TauMOn, 0, 1, 'f' ) + "ms" );
+  P.plotVLine( 0, Plot::White, 2 );
+  P.plotVLine( 1000.0*duration, Plot::White, 2 );
+  P.plot( MeanTrace, 1000.0, Plot::Red, 3, Plot::Solid );
+  P.plot( MeanTrace+StdevTrace, 1000.0, Plot::Orange, 1, Plot::Solid );
+  P.plot( MeanTrace-StdevTrace, 1000.0, Plot::Orange, 1, Plot::Solid );
+  P.plot( ExpOn, 1000.0, Plot::Yellow, 2, Plot::Solid );
+  P.plot( ExpOff, 1000.0, Plot::Yellow, 2, Plot::Solid );
+  P.unlock();
+  P.draw();
+}
+
+
+void MembraneResistance::save( void )
+{
+  TableKey datakey;
+  datakey.addLabel( "Stimulus" );
+  datakey.addNumber( "I", OutUnit, "%6.1f" );
+  datakey.addLabel( "Rest" );
+  datakey.addNumber( "Vrest", InUnit, "%6.1f" );
+  datakey.addNumber( "s.d.", InUnit, "%6.1f" );
+  datakey.addLabel( "Steady-state" );
+  datakey.addNumber( "Vss", InUnit, "%6.1f" );
+  datakey.addNumber( "s.d.", InUnit, "%6.1f" );
+  datakey.addNumber( "R", "MOhm", "%6.1f" );
+  datakey.addLabel( "Peak" );
+  datakey.addNumber( "Vpeak", InUnit, "%6.1f" );
+  datakey.addNumber( "s.d.", InUnit, "%6.1f" );
+  datakey.addNumber( "tpeak", "ms", "%6.1f" );
+  datakey.addLabel( "Onset time constant" );
+  datakey.addNumber( "R", "MOhm", "%6.1f" );
+  datakey.addNumber( "C", "pF", "%6.1f" );
+  datakey.addNumber( "tau", "ms", "%6.1f" );
+  datakey.addLabel( "Offset time constant" );
+  datakey.addNumber( "R", "MOhm", "%6.1f" );
+  datakey.addNumber( "C", "pF", "%6.1f" );
+  datakey.addNumber( "tau", "ms", "%6.1f" );
+
+  ofstream df;
+  if ( completeRuns() <= 0 ) {
+    df.open( addPath( "membraneresistance.dat" ).c_str() );
+    Options::save( df );
+    df << '\n';
+    datakey.saveKey( df );
+  }
+  else
+    df.open( addPath( "stimulusspikes.dat" ).c_str(),
+	     ofstream::out | ofstream::app );
+
+  datakey.save( df, Amplitude, 0 );
+  datakey.save( df, VRest );
+  datakey.save( df, VRestsd );
+  datakey.save( df, VSS );
+  datakey.save( df, VSSsd );
+  datakey.save( df, RMss );
+  datakey.save( df, VPeak );
+  datakey.save( df, VPeaksd );
+  datakey.save( df, 1000.0*VPeakTime );
+  datakey.save( df, RMOn );
+  datakey.save( df, CMOn );
+  datakey.save( df, TauMOn );
+  datakey.save( df, RMOff );
+  datakey.save( df, CMOff );
+  datakey.save( df, TauMOff );
+  df << '\n';
+}
+
+
+addRePro( MembraneResistance );
+
+}; /* namespace patchclamp */
+
+#include "moc_membraneresistance.cc"
