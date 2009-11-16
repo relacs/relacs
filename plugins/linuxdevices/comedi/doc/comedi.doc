@@ -29,8 +29,8 @@ This requires to compile a kernel first.
 
 \subsection installkernel Linux kernel
 -# You almost certainly need to compile a new kernel.
-Either get a vanilla kernel from \c www.kernel.org,
-e.g. \c www.kernel.org/pub/linux/kernel/v2.6/linux-2.6.28.9.tar.bz2,
+Either get a vanilla kernel from http://www.kernel.org,
+e.g. http://www.kernel.org/pub/linux/kernel/v2.6/linux-2.6.28.9.tar.bz2,
 place the tar file in /usr/src and unpack it with
 \code
 $ cd /usr/src
@@ -487,8 +487,20 @@ parameter. The ComediAnalogInput and ComediAnalogOutput plugins read this file.
 For calibrating all ranges, references, and channels of hardware calibrated
 boards (e.g. NI E-Series) do
 \code
-$ for C in 0 $(seq 16); do for A in 0 1 2; do for R in 0 $(seq 20); do comedi_calibrate -reset -calibrate -f /dev/comedi0 -s 0 -r $R -a $A -c $C; done; done; done
-$ for C in 0 1; do for A in 0 1 2; do for R in 0 1; do comedi_calibrate -reset -calibrate -f /dev/comedi0 -s 1 -r $R -a $A -c $C; done; done; done
+$ for C in 0 $(seq 16); do
+    for A in 0 1 2; do
+      for R in 0 $(seq 20); do
+        comedi_calibrate -reset -calibrate -f /dev/comedi0 -s 0 -r $R -a $A -c $C;
+      done;
+    done;
+  done
+$ for C in 0 1; do
+    for A in 0 1 2; do
+      for R in 0 1; do
+        comedi_calibrate -reset -calibrate -f /dev/comedi0 -s 1 -r $R -a $A -c $C;
+      done;
+    done;
+  done
 \endcode
 
 \section rtailinks Links
@@ -498,5 +510,6 @@ $ for C in 0 1; do for A in 0 1 2; do for R in 0 1; do comedi_calibrate -reset -
 - http://www.captain.at/programming/kernel/
 - http://www.lara.unb.br/~phsantana/data/files/technotes/HowTo_RTAI_Linux.pdf
 - http://rt-fsm.googlecode.com/svn/trunk/INSTALL
+- http://www.cyberciti.biz/faq/howto-install-kernel-headers-package/
 
 */

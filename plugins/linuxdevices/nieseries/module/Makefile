@@ -66,4 +66,14 @@ clean:
 	rm -f *.o *.ko *~ *.tgz
 
 
+distclean: clean
+dvi:
+html:
+info:
+distdir:
+mostlyclean: clean
+check:
+uninstall:
+installcheck:
+
 endif

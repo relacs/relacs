@@ -2937,7 +2937,7 @@ bool Parameter::read( const Parameter &p )
   if ( ident() == p.ident() ) {
     if ( isDate() && p.isDate() ) {
       if ( ! Year.empty() && ! p.Year.empty() &&
-	   Year[0] != p.Year[0] || Month[0] != p.Month[0] || Day[0] != p.Day[0] )
+	   ( Year[0] != p.Year[0] || Month[0] != p.Month[0] || Day[0] != p.Day[0] ) )
 	Flags |= ChangedFlag;
       Year = p.Year;
       Month = p.Month;
@@ -2945,7 +2945,7 @@ bool Parameter::read( const Parameter &p )
     }
     else if ( isTime() && p.isTime() ) {
       if ( ! Hour.empty() && ! p.Hour.empty() &&
-	   Hour[0] != p.Hour[0] || Minutes[0] != p.Minutes[0] || Seconds[0] != p.Seconds[0] )
+	   ( Hour[0] != p.Hour[0] || Minutes[0] != p.Minutes[0] || Seconds[0] != p.Seconds[0] ) )
 	Flags |= ChangedFlag;
       Hour = p.Hour;
       Minutes = p.Minutes;

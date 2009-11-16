@@ -9,23 +9,38 @@ obj-m := rtmodule.o dynclampmodule.o
 else
 
 LINUXDIR := /lib/modules/`uname -r`/build
-PWD     := $(shell pwd)
 CC := gcc
 
 all: module
 
 module:
-	$(MAKE) -C $(LINUXDIR) CC=$(CC) SUBDIRS=$(PWD) modules
+# if builddir is not srcdir, make symbolic links in the builddir to the
+# source files so the kernel's build system doesn't get lost
+# (from comedi).
+	if test "$(srcdir)" != "."; then \
+	  for file in `ls @abs_srcdir@/*\.[ch] | grep -v \.mod\.c`; do \
+	    LINK_NAME=`basename "$$file"`; \
+	    if test ! -e $$LINK_NAME; then ln -vs $$file $$LINK_NAME; fi; \
+	  done; \
+	fi
+# invoke kernel's build system:
+	$(MAKE) -C $(LINUXDIR) CC=$(CC) M=@abs_builddir@ modules
 
 clean:
-	-rm -f *.ko *.o *.mod.c logdata
+	$(MAKE) -C $(LINUXDIR) CC=$(CC) M=@abs_builddir@ clean
 
 distclean: clean
+	rm -f modules.order
+
+dvi:
+html:
+info:
 distdir:
 mostlyclean: clean
 check:
 install:
 uninstall:
+installcheck:
 
 endif
 

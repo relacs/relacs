@@ -48,9 +48,19 @@ TableKey::~TableKey( void )
 
 
 Parameter &TableKey::addNumber( const string &ident, const string &unit, 
-				const string &format, int flags )
+				const string &format, int flags, double value )
 {
-  Parameter &p = Opt.addNumber( ident, ident, 0.0, -MAXDOUBLE, MAXDOUBLE, 1.0,
+  Parameter &p = Opt.addNumber( ident, ident, value, -MAXDOUBLE, MAXDOUBLE, 1.0,
+				unit, unit, format, flags );
+  init();
+  return p;
+}
+
+
+Parameter &TableKey::addNumber( const string &ident, const string &unit, 
+				const string &format, double value, int flags )
+{
+  Parameter &p = Opt.addNumber( ident, ident, value, -MAXDOUBLE, MAXDOUBLE, 1.0,
 				unit, unit, format, flags );
   init();
   return p;
@@ -84,9 +94,9 @@ Parameter &TableKey::setInteger( const string &ident, long number,
 
 
 Parameter &TableKey::addText( const string &ident, const string &format,
-			      int flags )
+			      int flags, const string &value )
 {
-  Parameter &p = Opt.addText( ident, ident, "", flags );
+  Parameter &p = Opt.addText( ident, ident, value, flags );
   p.setFormat( format );
   p.setUnit( "-" );
   init();
@@ -94,9 +104,32 @@ Parameter &TableKey::addText( const string &ident, const string &format,
 }
 
 
-Parameter &TableKey::addText( const string &ident, int width, int flags )
+Parameter &TableKey::addText( const string &ident, const string &format,
+			      const string &value, int flags )
 {
-  Parameter &p = Opt.addText( ident, ident, "", flags );
+  Parameter &p = Opt.addText( ident, ident, value, flags );
+  p.setFormat( format );
+  p.setUnit( "-" );
+  init();
+  return p;
+}
+
+
+Parameter &TableKey::addText( const string &ident, int width, int flags,
+			      const string &value )
+{
+  Parameter &p = Opt.addText( ident, ident, value, flags );
+  p.setFormat( width );
+  p.setUnit( "-" );
+  init();
+  return p;
+}
+
+
+Parameter &TableKey::addText( const string &ident, int width, const string &value,
+			      int flags )
+{
+  Parameter &p = Opt.addText( ident, ident, value, flags );
   p.setFormat( width );
   p.setUnit( "-" );
   init();

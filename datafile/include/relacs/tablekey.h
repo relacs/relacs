@@ -49,13 +49,20 @@ public:
   TableKey( void );
   ~TableKey( void );
 
-    /*! Add a new number option at the end of the options list. 
+    /*! Add a new number option with value \a value to the end of the options list. 
         Its identifier string and request string is set to \a ident.
         The option has a unit \a unit and a format string \a format 
 	(ANSI C printf() syntax, only %%g, %%f, %%e are allowed, 
 	since the number is a double). */
   Parameter &addNumber( const string &ident, const string &unit="", 
-			const string &format="", int flags=0 );
+			const string &format="", int flags=0, double value=0.0 );
+    /*! Add a new number option with value \a value to the end of the options list. 
+        Its identifier string and request string is set to \a ident.
+        The option has a unit \a unit and a format string \a format 
+	(ANSI C printf() syntax, only %%g, %%f, %%e are allowed, 
+	since the number is a double). */
+  Parameter &addNumber( const string &ident, const string &unit, 
+			const string &format, double value, int flags=0 );
     /*! Insert a new number option at the beginning of the options list
         (\a atindent == "") or at the position of the option with
         identity \a atident. If the option with identity \a atident
@@ -76,19 +83,34 @@ public:
   Parameter &setInteger( const string &ident, long number,
 			 const string &unit="" );
 
-    /*! Add a new text option at the end of the options list. 
+    /*! Add a new text option with value \a value to the end of the options list. 
         Its identifier string and request string is set to \a ident,
 	the unit to "-".
         The option has format string \a format (%s). */
   Parameter &addText( const string &ident, const string &format="",
-		      int flags=0 );
-    /*! Add a new text option at the end of the options list. 
+		      int flags=0, const string &value="" );
+    /*! Add a new text option with value \a value to the end of the options list. 
+        Its identifier string and request string is set to \a ident,
+	the unit to "-".
+        The option has format string \a format (%s). */
+  Parameter &addText( const string &ident, const string &format,
+		      const string &value, int flags=0 );
+    /*! Add a new text option with value \a value to the end of the options list. 
         Its identifier string and request string is set to \a ident,
 	the unit to "-".
         The option is formatted to a \c abs( \c width \c ) long string.
         If \a width is positive then the string is aligned to the right,
         if \a width is positive it is aligned to the left. */
-  Parameter &addText( const string &ident, int width, int flags=0 );
+  Parameter &addText( const string &ident, int width, int flags=0,
+		      const string &value="" );
+    /*! Add a new text option with value \a value to the end of the options list. 
+        Its identifier string and request string is set to \a ident,
+	the unit to "-".
+        The option is formatted to a \c abs( \c width \c ) long string.
+        If \a width is positive then the string is aligned to the right,
+        if \a width is positive it is aligned to the left. */
+  Parameter &addText( const string &ident, int width, const string &value,
+		      int flags=0 );
     /*! Insert a new text option at the beginning of the options list
         (\a atindent == "") or at the position of the option with
         identity \a atident. If the option with identity \a atident

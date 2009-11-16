@@ -368,11 +368,13 @@ int MetaData::dialog( void )
   DialogOpts.clear();
   bool dflttab = false;
   lock();
+  Str usedtabs = "sdrc";
   for ( unsigned int k=0; k<MetaDataSections.size(); k++ ) {
     if ( ! MetaDataSections[k]->ownTab() && ! MetaDataSections[k]->empty() ) {
       if ( ! dflttab ) {
-	DialogOpts.addLabel( "Meta Data", LabelFlag, OptWidget::TabLabel );
+	DialogOpts.addLabel( "&Meta Data", LabelFlag, OptWidget::TabLabel );
 	dflttab = true;
+	usedtabs += 'm';
       }
       DialogOpts.addLabel( MetaDataSections[k]->configIdent(), LabelFlag, OptWidget::Bold );
       DialogOpts.append( *MetaDataSections[k], dialogFlag() );
@@ -380,7 +382,19 @@ int MetaData::dialog( void )
   }
   for ( unsigned int k=0; k<MetaDataSections.size(); k++ ) {
     if ( MetaDataSections[k]->ownTab() && ! MetaDataSections[k]->empty() ) {
-      DialogOpts.addLabel( MetaDataSections[k]->configIdent(), LabelFlag, OptWidget::TabLabel );
+      // find unique accelerator key:
+      Str label = MetaDataSections[k]->configIdent();
+      string labellow = label.low();
+      if ( ! label.contains( '&' ) ) {
+	for ( int k=0; k<label.size(); k++ ) {
+	  if ( ! usedtabs.contains( labellow[k] ) ) {
+	    label.insert( k, "&" );
+	    usedtabs += labellow[k];
+	    break;
+	  }
+	}
+      }
+      DialogOpts.addLabel( label, LabelFlag, OptWidget::TabLabel );
       DialogOpts.append( *MetaDataSections[k], dialogFlag() );
     }
   }

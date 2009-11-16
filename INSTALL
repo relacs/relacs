@@ -3,8 +3,10 @@
 
 > cd relacs-x.x.x
 
-If you have already installed an older version of RELACS it is best to
-uninstall it first, before you unpack a newer version:
+Note: if you have already installed an older version of RELACS it is best to
+uninstall it first, before you unpack a newer version.
+For this, execute the following commands from the 
+root directory of the older version:
 
 > make uninstall
 > make clean

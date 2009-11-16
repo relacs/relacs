@@ -50,10 +50,15 @@ public:
   virtual void config( void );
   virtual void notify( void );
   virtual int main( void );
-  void analyze( const InData &trace, double duration, int count,
-		double sswidth );
-  void plot( double duration );
+  void analyzeOn( const InData &trace, double duration, int count,
+		  double sswidth, bool nossfit );
+  void analyzeOff( const InData &trace, double duration, int count,
+		   double sswidth, bool nossfit );
+  void plot( void );
   void save( void );
+  void saveData( void );
+  void saveTrace( void );
+  void saveExpFit( void );
 
 
 protected:
@@ -65,12 +70,14 @@ protected:
   SampleDataD SquareTrace;
   SampleDataD StdevTrace;
   double Amplitude;
+  double Duration;
   double VRest;
   double VRestsd;
   double VSS;
   double VSSsd;
   double VPeak;
   double VPeaksd;
+  int VPeakInx;
   double VPeakTime;
   double RMss;
   double RMOn;
