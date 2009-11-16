@@ -158,15 +158,7 @@ void MultiTraceSTA::plot( bool snippets )
 
 void MultiTraceSTA::config( void )
 {
-  // collect names of all input spike trains ...
-  string ss = text( "inspikes" );
-  for ( int k=0; k<SpikeTraces; k++ ) {
-    if ( ! ss.empty() )
-      ss += '|';
-    ss += events( SpikeEvents[k] ).ident();
-  }
-  // ... and store them in the inspikes option:
-  setText( "inspikes", ss );
+  setText( "inspikes", spikeEventNames() );
   setToDefault( "inspikes" );
 }
 

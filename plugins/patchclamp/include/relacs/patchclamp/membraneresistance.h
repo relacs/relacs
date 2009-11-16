@@ -26,6 +26,7 @@
 #include <relacs/sampledata.h>
 #include <relacs/plot.h>
 #include <relacs/repro.h>
+#include <relacs/ephys/traces.h>
 using namespace std;
 using namespace relacs;
 
@@ -40,7 +41,7 @@ namespace patchclamp {
 */
 
 
-class MembraneResistance : public RePro
+class MembraneResistance : public RePro, public ephys::Traces
 {
   Q_OBJECT
 
@@ -64,8 +65,10 @@ public:
 protected:
 
   Plot P;
-  string InUnit;
-  string OutUnit;
+  string VUnit;
+  string IUnit;
+  double VFac;
+  double IFac;
   SampleDataD MeanTrace;
   SampleDataD SquareTrace;
   SampleDataD StdevTrace;

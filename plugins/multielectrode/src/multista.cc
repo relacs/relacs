@@ -156,16 +156,7 @@ void MultiSTA::plot( bool snippets )
 
 void MultiSTA::config( void )
 {
-  // collect names of all input traces ...
-  string its = text( "averagetrace" );
-  const InList &il = traces();
-  for ( int k=0; k<il.size(); k++ ) {
-    if ( ! its.empty() )
-      its += '|';
-    its += il[k].ident();
-  }
-  // ... and store them in the inspikes option:
-  setText( "averagetrace", its );
+  setText( "averagetrace", spikeTraceNames() );
   setToDefault( "averagetrace" );
 }
 

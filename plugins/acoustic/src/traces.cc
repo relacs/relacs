@@ -28,7 +28,9 @@ namespace acoustic {
 
 
 string Traces::LoudspeakerName = "Speaker";
+string Traces::LoudspeakerNames = "";
 string Traces::SoundTraceName = "Sound";
+string Traces::SoundTraceNames = "";
 
 int Traces::Loudspeakers = 0;
 int Traces::Loudspeaker[Traces::MaxLoudspeakers] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
@@ -52,8 +54,8 @@ Traces::Traces( void )
 
 
 void Traces::initialize( const RELACSPlugin *rp,
-				 const InList &data, 
-				 const EventList &events )
+			 const InList &data, 
+			 const EventList &events )
 {
   Loudspeakers = 0;
   Loudspeaker[0] = rp->outTraceIndex( LoudspeakerName );
@@ -88,6 +90,18 @@ void Traces::initialize( const RELACSPlugin *rp,
   Speaker[0] = LeftSpeaker[0];
   Speaker[1] = RightSpeaker[0];
 
+  LoudspeakerNames = "";
+  for ( int k=0; k<MaxLoudspeakers; k++ ) {
+    if ( k<LeftSpeakers )
+      LoudspeakerNames += "|" + rp->outTraceName( LeftSpeaker[k] );
+    if ( k<RightSpeakers )
+      LoudspeakerNames += "|" + rp->outTraceName( RightSpeaker[k] );
+  }
+  for ( int k=0; k<Loudspeakers; k++ )
+    LoudspeakerNames += "|" + rp->outTraceName( Loudspeaker[k] );
+  LoudspeakerNames.erase( 0, 1 );
+
+
   SoundTraces = 0;
   SoundTrace[0] = data.index( SoundTraceName );
   if ( SoundTrace[0] >= 0 )
@@ -118,6 +132,17 @@ void Traces::initialize( const RELACSPlugin *rp,
       RightSoundTraces++;
   }
 
+  SoundTraceNames = "";
+  for ( int k=0; k<MaxSoundTraces; k++ ) {
+    if ( k<LeftSoundTraces )
+      SoundTraceNames += "|" + data[LeftSoundTrace[k]].ident();
+    if ( k<RightSoundTraces )
+      SoundTraceNames += "|" + data[RightSoundTrace[k]].ident();
+  }
+  for ( int k=0; k<SoundTraces; k++ )
+    SoundTraceNames += "|" + data[SoundTrace[k]].ident();
+  SoundTraceNames.erase( 0, 1 );
+
 }
 
 
@@ -133,6 +158,12 @@ void Traces::setLoudspeakerName( const string &name )
 }
 
 
+string Traces::loudspeakerTraceNames( void )
+{
+  return LoudspeakerNames;
+}
+
+
 string Traces::soundTraceName( void )
 {
   return SoundTraceName;
@@ -142,6 +173,12 @@ string Traces::soundTraceName( void )
 void Traces::setSoundTraceName( const string &name )
 {
   SoundTraceName = name;
+}
+
+
+string Traces::soundTraceNames( void )
+{
+  return SoundTraceNames;
 }
 
 

@@ -220,6 +220,18 @@ int RELACSPlugin::traceIndex( const string &ident ) const
 }
 
 
+string RELACSPlugin::traceNames( void ) const
+{
+  string its = "";
+  for ( int k=0; k<RW->IL.size(); k++ ) {
+    if ( k > 0 )
+      its += '|';
+    its += RW->IL[k].ident();
+  }
+  return its;
+}
+
+
 const EventList &RELACSPlugin::events( void ) const
 {
   return RW->ED;
@@ -357,6 +369,20 @@ string RELACSPlugin::outTraceName( int index ) const
   if ( RW->AQ == 0 )
     return "";
   return RW->AQ->outTraceName( index );
+}
+
+
+string RELACSPlugin::outTraceNames( void ) const
+{
+  if ( RW->AQ == 0 )
+    return "";
+  string ots = "";
+  for ( int k=0; k<RW->AQ->outTracesSize(); k++ ) {
+    if ( k > 0 )
+      ots += '|';
+    ots += RW->AQ->outTraceName( k );
+  }
+  return ots;
 }
 
 

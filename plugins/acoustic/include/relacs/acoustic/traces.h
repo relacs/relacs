@@ -81,15 +81,23 @@ public:
 
   static string loudspeakerName( void );
   static void setLoudspeakerName( const string &name );
+    /*! Returns the names of all output traces connected to loudspeakers,
+        separated by '|'. Can be passed to a text Parameter. */
+  static string loudspeakerTraceNames( void );
 
   static string soundTraceName( void );
   static void setSoundTraceName( const string &name );
+    /*! Returns the names of all input traces connected to microphones,
+        separated by '|'. Can be passed to a text Parameter. */
+  static string soundTraceNames( void );
 
 
 private:
 
   static string LoudspeakerName;
+  static string LoudspeakerNames;
   static string SoundTraceName;
+  static string SoundTraceNames;
 
 };
 

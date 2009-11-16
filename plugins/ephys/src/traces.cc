@@ -30,6 +30,8 @@ int Traces::StimulusEvents = 0;
 
 string Traces::SpikeTraceName = "V";
 string Traces::SpikeEventsName = "Spikes";
+string Traces::SpikeTraceNames = "";
+string Traces::SpikeEventsNames = "";
 
 int Traces::SpikeTraces = 0;
 int Traces::SpikeTrace[Traces::MaxSpikeTraces] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
@@ -37,6 +39,8 @@ int Traces::SpikeEvents[Traces::MaxSpikeTraces] = { -1, -1, -1, -1, -1, -1, -1, 
 
 string Traces::NerveTraceName = "Nerve";
 string Traces::NerveEventsName = "Nerve";
+string Traces::NerveTraceNames = "";
+string Traces::NerveEventsNames = "";
 
 int Traces::NerveTraces = 0;
 int Traces::NerveTrace[Traces::MaxNerveTraces] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
@@ -55,22 +59,110 @@ void Traces::initialize( const InList &data,
   StimulusEvents = events.index( "Stimulus" );
 
   SpikeTraces = 0;
+  SpikeTraceNames = "";
+  SpikeEventsNames = "";
   for ( int k=0; k<MaxSpikeTraces; k++ ) {
     Str ns( k+1 );
     SpikeTrace[k] = data.index( SpikeTraceName + "-" + ns );
     SpikeEvents[k] = events.index( SpikeEventsName + "-" + ns );
-    if ( SpikeTrace[k] >= 0 && SpikeEvents[k] >= 0 )
+    if ( SpikeTrace[k] >= 0 || SpikeEvents[k] >= 0 )
       SpikeTraces++;
+    if ( SpikeTrace[k] >= 0 )
+      SpikeTraceNames += '|' + SpikeTraceName + "-" + ns;
+    if ( SpikeEvents[k] >= 0 )
+      SpikeEventsNames += '|' + SpikeEventsName + "-" + ns;
   }
+  SpikeTraceNames.erase( 0, 1 );
+  SpikeEventsNames.erase( 0, 1 );
 
   NerveTraces = 0;
+  NerveTraceNames = "";
+  NerveEventsNames = "";
   for ( int k=0; k<MaxNerveTraces; k++ ) {
     Str ns( k+1 );
     NerveTrace[k] = data.index( NerveTraceName + "-" + ns );
     NerveEvents[k] = events.index( NerveEventsName + "-" + ns );
-    if ( NerveTrace[k] >= 0 && NerveEvents[k] >= 0 )
+    if ( NerveTrace[k] >= 0 || NerveEvents[k] >= 0 )
       NerveTraces++;
+    if ( NerveTrace[k] >= 0 )
+      NerveTraceNames += '|' + NerveTraceName + "-" + ns;
+    if ( NerveEvents[k] >= 0 )
+      NerveEventsNames += '|' + NerveEventsName + "-" + ns;
   }
+  NerveTraceNames.erase( 0, 1 );
+  NerveEventsNames.erase( 0, 1 );
+}
+
+
+string Traces::spikeTraceName( void )
+{
+  return SpikeTraceName;
+}
+
+
+void Traces::setSpikeTraceName( const string &name )
+{
+  SpikeTraceName = name;
+}
+
+
+string Traces::spikeTraceNames( void )
+{
+  return SpikeTraceNames;
+}
+
+
+string Traces::spikeEventsName( void )
+{
+  return SpikeEventsName;
+}
+
+
+void Traces::setSpikeEventsName( const string &name )
+{
+  SpikeEventsName = name;
+}
+
+
+string Traces::spikeEventNames( void )
+{
+  return SpikeEventsNames;
+}
+
+
+string Traces::nerveTraceName( void )
+{
+  return NerveTraceName;
+}
+
+
+void Traces::setNerveTraceName( const string &name )
+{
+  NerveTraceName = name;
+}
+
+
+string Traces::nerveTraceNames( void )
+{
+  return NerveTraceNames;
+}
+
+
+string Traces::nerveEventsName( void )
+{
+  return NerveEventsName;
+}
+
+
+void Traces::setNerveEventsName( const string &name )
+{
+  NerveEventsName = name;
+}
+
+
+string Traces::nerveEventNames( void )
+{
+  return NerveEventsNames;
 }
 
 

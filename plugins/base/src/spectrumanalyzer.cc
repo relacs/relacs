@@ -78,14 +78,7 @@ SpectrumAnalyzer::~SpectrumAnalyzer( void )
 
 void SpectrumAnalyzer::config( void )
 {
-  string its = "";
-  const InList &il = traces();
-  for ( int k=0; k<il.size(); k++ ) {
-    if ( k > 0 )
-      its += '|';
-    its += il[k].ident();
-  }
-  setText( "trace", its );
+  setText( "trace", traceNames() );
   setToDefault( "trace" );
 
   lock();

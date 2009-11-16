@@ -32,8 +32,10 @@ MembraneResistance::MembraneResistance( void )
   : RePro( "MembraneResistance", "MembraneResistance", "Patch-clamp",
 	   "Jan Benda", "1.0", "Nov 12, 2009" ),
     P( this ),
-    InUnit( "mV" ),
-    OutUnit( "nA" )
+    VUnit( "mV" ),
+    IUnit( "nA" ),
+    VFac( 1.0 ),
+    IFac( 1.0 )
 {
   // add some options:
   addSelection( "intrace", "Input trace", "V-1" );
@@ -50,30 +52,15 @@ MembraneResistance::MembraneResistance( void )
   P.lock();
   P.setDataMutex( mutex() );
   P.setXLabel( "Time [ms]" );
-  P.setYLabel( "" );
   P.unlock();
 }
 
 
 void MembraneResistance::config( void )
 {
-  string its = "";
-  const InList &il = traces();
-  for ( int k=0; k<il.size(); k++ ) {
-    if ( k > 0 )
-      its += '|';
-    its += il[k].ident();
-  }
-  setText( "intrace", its );
+  setText( "intrace", spikeTraceNames() );
   setToDefault( "intrace" );
-
-  string ots = "";
-  for ( int k=0; k<outTracesSize(); k++ ) {
-    if ( k > 0 )
-      ots += '|';
-    ots += outTraceName( k );
-  }
-  setText( "outtrace", ots );
+  setText( "outtrace", outTraceNames() );
   setToDefault( "outtrace" );
 }
 
@@ -81,10 +68,13 @@ void MembraneResistance::config( void )
 void MembraneResistance::notify( void )
 {
   int outtrace = index( "outtrace" );
-  OutUnit = outTrace( outtrace ).unit();
-  setUnit( "amplitude", OutUnit );
+  IUnit = outTrace( outtrace ).unit();
+  setUnit( "amplitude", IUnit );
+  IFac = Parameter::changeUnit( 1.0, IUnit, "nA" );
+
   int intrace = index( "intrace" );
-  InUnit = trace( intrace ).unit();
+  VUnit = trace( intrace ).unit();
+  VFac = Parameter::changeUnit( 1.0, VUnit, "mV" );
 }
 
 
@@ -137,6 +127,11 @@ int MembraneResistance::main( void )
   // plot:
   P.lock();
   P.setXRange( -500.0*Duration, 2000.0*Duration );
+  P.setYLabel( trace( intrace ).ident() + " [" + VUnit + "]" );
+  /*
+  P.setYLabelPos( 2.3, Plot::FirstMargin, 0.5, Plot::Graph,
+		  Plot::Center, -90.0 );
+  */
   P.unlock();
 
   // signal:
@@ -152,7 +147,7 @@ int MembraneResistance::main( void )
 	( repeats <= 0 || count < repeats ) && softStop() == 0;
 	count++ ) {
 
-    Str s = "Amplitude <b>" + Str( Amplitude ) + " " + OutUnit +"</b>";
+    Str s = "Amplitude <b>" + Str( Amplitude ) + " " + IUnit +"</b>";
     s += ",  Loop <b>" + Str( count+1 ) + "</b>";
     message( s );
 
@@ -221,7 +216,7 @@ void MembraneResistance::analyzeOn( const InData &trace,
   VSSsd = MeanTrace.stdev( duration-sswidth, duration );
 
   // membrane resitance:
-  RMss = ::fabs( (VSS - VRest)/Amplitude );
+  RMss = ::fabs( (VSS - VRest)/Amplitude )*VFac/IFac;
 
   // peak potential:
   VPeak = VRest;
@@ -259,8 +254,8 @@ void MembraneResistance::analyzeOn( const InData &trace,
 		StdevTrace.begin()+inxon0, StdevTrace.begin()+inxon1,
 		expFuncDerivs, p, pi, u, ch );
   TauMOn = -1000.0*p[1];
-  RMOn = ::fabs( (p[2] - VRest)/Amplitude );
-  CMOn = TauMOn/RMOn;
+  RMOn = ::fabs( (p[2] - VRest)/Amplitude )*VFac/IFac;
+  CMOn = TauMOn/RMOn*1000.0;
   for ( int k=0; k<ExpOn.size(); k++ )
     ExpOn[k] = expFunc( ExpOn.pos( k ), p );
 }
@@ -302,8 +297,8 @@ void MembraneResistance::analyzeOff( const InData &trace,
 		StdevTrace.begin()+inxoff0, StdevTrace.begin()+inxoff1,
 		expFuncDerivs, p, pi, u, ch );
   TauMOff = -1000.0*p[1];
-  RMOff = ::fabs( (VSS - p[2])/Amplitude );
-  CMOff = TauMOff/RMOff;
+  RMOff = ::fabs( (VSS - p[2])/Amplitude )*VFac/IFac;
+  CMOff = TauMOff/RMOff*1000.0;
   for ( int k=0; k<ExpOff.size(); k++ )
     ExpOff[k] = expFunc( ExpOff.pos( k ) - duration, p );
 
@@ -314,7 +309,9 @@ void MembraneResistance::plot( void )
 {
   P.lock();
   P.clear();
-  P.setTitle( "Rm=" + Str( RMOn, 0, 1, 'f' ) + ", Cm=" + Str( CMOn, 0, 1, 'f' ) + ", tau=" + Str( TauMOn, 0, 1, 'f' ) + "ms" );
+  P.setTitle( "R=" + Str( RMOn, 0, 1, 'f' ) +
+	      " MOhm,  C=" + Str( CMOn, 0, 1, 'f' ) +
+	      " pF,  tau=" + Str( TauMOn, 0, 1, 'f' ) + " ms" );
   P.plotVLine( 0, Plot::White, 2 );
   P.plotVLine( 1000.0*Duration, Plot::White, 2 );
   P.plot( MeanTrace, 1000.0, Plot::Red, 3, Plot::Solid );
@@ -341,18 +338,18 @@ void MembraneResistance::saveData( void )
 {
   TableKey datakey;
   datakey.addLabel( "Stimulus" );
-  datakey.addNumber( "I", OutUnit, "%6.1f", Amplitude );
+  datakey.addNumber( "I", IUnit, "%6.1f", Amplitude );
   datakey.addNumber( "duration", "ms", "%6.1f", 1000.0*Duration );
   datakey.addLabel( "Rest" );
-  datakey.addNumber( "Vrest", InUnit, "%6.1f", VRest );
-  datakey.addNumber( "s.d.", InUnit, "%6.1f", VRestsd );
+  datakey.addNumber( "Vrest", VUnit, "%6.1f", VRest );
+  datakey.addNumber( "s.d.", VUnit, "%6.1f", VRestsd );
   datakey.addLabel( "Steady-state" );
-  datakey.addNumber( "Vss", InUnit, "%6.1f", VSS );
-  datakey.addNumber( "s.d.", InUnit, "%6.1f", VSSsd );
+  datakey.addNumber( "Vss", VUnit, "%6.1f", VSS );
+  datakey.addNumber( "s.d.", VUnit, "%6.1f", VSSsd );
   datakey.addNumber( "R", "MOhm", "%6.1f", RMss );
   datakey.addLabel( "Peak" );
-  datakey.addNumber( "Vpeak", InUnit, "%6.1f", VPeak );
-  datakey.addNumber( "s.d.", InUnit, "%6.1f", VPeaksd );
+  datakey.addNumber( "Vpeak", VUnit, "%6.1f", VPeak );
+  datakey.addNumber( "s.d.", VUnit, "%6.1f", VPeaksd );
   datakey.addNumber( "tpeak", "ms", "%6.1f", 1000.0*VPeakTime );
   datakey.addLabel( "Onset" );
   datakey.addNumber( "R", "MOhm", "%6.1f", RMOn );
@@ -386,8 +383,8 @@ void MembraneResistance::saveTrace( void )
 
   TableKey datakey;
   datakey.addNumber( "t", "ms", "%6.1f" );
-  datakey.addNumber( "V", InUnit, "%6.2f" );
-  datakey.addNumber( "s.d.", InUnit, "%6.2f" );
+  datakey.addNumber( "V", VUnit, "%6.2f" );
+  datakey.addNumber( "s.d.", VUnit, "%6.2f" );
   datakey.saveKey( df );
 
   for ( int k=0; k<MeanTrace.size(); k++ ) {
@@ -412,10 +409,10 @@ void MembraneResistance::saveExpFit( void )
   TableKey datakey;
   datakey.addLabel( "Onset" );
   datakey.addNumber( "t", "ms", "%6.1f" );
-  datakey.addNumber( "V", InUnit, "%6.2f" );
+  datakey.addNumber( "V", VUnit, "%6.2f" );
   datakey.addLabel( "Offset" );
   datakey.addNumber( "t", "ms", "%6.1f" );
-  datakey.addNumber( "V", InUnit, "%6.2f" );
+  datakey.addNumber( "V", VUnit, "%6.2f" );
   datakey.saveKey( df );
 
   for ( int k=0; k<ExpOn.size() &&  k<ExpOff.size(); k++ ) {

@@ -63,17 +63,7 @@ CalibMicrophone::~CalibMicrophone( void )
 
 void CalibMicrophone::config( void )
 {
-  string its = "";
-  for ( int k=0; k<MaxSoundTraces; k++ ) {
-    if ( k<LeftSoundTraces )
-      its += "|" + trace( LeftSoundTrace[k] ).ident();
-    if ( k<RightSoundTraces )
-      its += "|" + trace( RightSoundTrace[k] ).ident();
-  }
-  for ( int k=0; k<SoundTraces; k++ )
-    its += "|" + trace( SoundTrace[k] ).ident();
-  its.erase( 0, 1 );
-  setText( "intrace", its );
+  setText( "intrace", soundTraceNames() );
   setToDefault( "intrace" );
 }
 

@@ -288,6 +288,9 @@ protected:
         \sa events(), traceInputTrace(), traceInputEvent(), eventInputTrace(),
 	eventInputEvent() */
   int traceIndex( const string &ident ) const;
+    /*! Returns the names of all input traces separated by '|'.
+        This string can be used for a text Parameter. */
+  string traceNames( void ) const;
 
     /*! Return the list of all events.
         \sa traces(), traceIndex(), traceInputTrace(), traceInputEvent(),
@@ -402,6 +405,9 @@ protected:
     /*! Return the name of the output trace with index \a index.
         If \a index is invalid, an empty string is returned. */
   string outTraceName( int index ) const;
+    /*! Returns the names of all output traces separated by '|'.
+        This string can be used for a text Parameter. */
+  string outTraceNames( void ) const;
     /*! Return the output trace with index \a index. */
   const TraceSpec &outTrace( int index ) const;
     /*! Return the output trace with name \a name. */

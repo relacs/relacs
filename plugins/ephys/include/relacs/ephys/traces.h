@@ -57,26 +57,42 @@ public:
   static int NerveEvents[MaxNerveTraces];
 
 
-  static string spikeTraceName( void ) { return SpikeTraceName; };
-  static void setSpikeTraceName( const string &name ) { SpikeTraceName = name; };
+  static string spikeTraceName( void );
+  static void setSpikeTraceName( const string &name );
+    /*! Returns the names of all input traces with voltages of neurons,
+        separated by '|'. Can be passed to a text Parameter. */
+  static string spikeTraceNames( void );
 
-  static string spikeEventsName( void ) { return SpikeEventsName; };
-  static void setSpikeEventsName( const string &name ) { SpikeEventsName = name; };
+  static string spikeEventsName( void );
+  static void setSpikeEventsName( const string &name );
+    /*! Returns the names of all event traces with spikes of neurons,
+        separated by '|'. Can be passed to a text Parameter. */
+  static string spikeEventNames( void );
 
-  static string nerveTraceName( void ) { return NerveTraceName; };
-  static void setNerveTraceName( const string &name ) { NerveTraceName = name; };
+  static string nerveTraceName( void );
+  static void setNerveTraceName( const string &name );
+    /*! Returns the names of all input traces with voltages of whole nerves,
+        separated by '|'. Can be passed to a text Parameter. */
+  static string nerveTraceNames( void );
 
-  static string nerveEventsName( void ) { return NerveEventsName; };
-  static void setNerveEventsName( const string &name ) { NerveEventsName = name; };
+  static string nerveEventsName( void );
+  static void setNerveEventsName( const string &name );
+    /*! Returns the names of all event traces with events detected in nerves,
+        separated by '|'. Can be passed to a text Parameter. */
+  static string nerveEventNames( void );
 
 
 private:
 
   static string SpikeTraceName;
   static string SpikeEventsName;
+  static string SpikeTraceNames;
+  static string SpikeEventsNames;
 
   static string NerveTraceName;
   static string NerveEventsName;
+  static string NerveTraceNames;
+  static string NerveEventsNames;
 
 };
 

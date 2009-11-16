@@ -24,6 +24,7 @@
 
 #include <relacs/plot.h>
 #include <relacs/repro.h>
+#include <relacs/ephys/traces.h>
 using namespace relacs;
 
 namespace patchclamp {
@@ -53,7 +54,7 @@ namespace patchclamp {
 */
 
 
-class Simple : public RePro
+class Simple : public RePro, public ephys::Traces
 {
   Q_OBJECT
 

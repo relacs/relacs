@@ -59,14 +59,7 @@ SetOutput::SetOutput( void )
 
 void SetOutput::config( void )
 {
-  // assemble output traces:
-  string ots = "";
-  for ( int k=0; k<outTracesSize(); k++ ) {
-    if ( k > 0 )
-      ots += '|';
-    ots += outTraceName( k );
-  }
-  setText( "outtrace", ots );
+  setText( "outtrace", outTraceNames() );
   setToDefault( "outtrace" );
 
   // assemble output traces to OutOpts:

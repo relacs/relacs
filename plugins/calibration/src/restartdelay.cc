@@ -49,14 +49,7 @@ RestartDelay::RestartDelay( void )
 
 void RestartDelay::config( void )
 {
-  string its = "";
-  const InList &il = traces();
-  for ( int k=0; k<il.size(); k++ ) {
-    if ( k > 0 )
-      its += '|';
-    its += il[k].ident();
-  }
-  setText( "intrace", its );
+  setText( "intrace", traceNames() );
   setToDefault( "intrace" );
 }
 

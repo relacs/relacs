@@ -50,23 +50,9 @@ StimulusDelay::StimulusDelay( void )
 
 void StimulusDelay::config( void )
 {
-  string its = "";
-  const InList &il = traces();
-  for ( int k=0; k<il.size(); k++ ) {
-    if ( k > 0 )
-      its += '|';
-    its += il[k].ident();
-  }
-  setText( "intrace", its );
+  setText( "intrace", traceNames() );
   setToDefault( "intrace" );
-
-  string ots = "";
-  for ( int k=0; k<outTracesSize(); k++ ) {
-    if ( k > 0 )
-      ots += '|';
-    ots += outTraceName( k );
-  }
-  setText( "outtrace", ots );
+  setText( "outtrace", outTraceNames() );
   setToDefault( "outtrace" );
 }
 
