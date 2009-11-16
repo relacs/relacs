@@ -2617,33 +2617,34 @@ void Plot::drawData( QPainter &paint )
 void Plot::drawMouse( QPainter &paint )
 {
   if ( MouseDrawRect ) {
-    int x = MouseX1;
-    int w = MouseX2 - MouseX1 + 1;
-    if ( MouseX2 < MouseX1 ) {
-      x = MouseX2;
-      w = MouseX1 - MouseX2 + 1;
-    }
-    int y = MouseY1;
-    int h = MouseY2 - MouseY1 + 1;
-    if ( MouseY2 < MouseY1 ) {
-      y = MouseY2;
-      h = MouseY1 - MouseY2 + 1;
-    }
-    if ( MouseXMax ) {
-      x = PlotX1;
-      w = PlotX2 - PlotX1 + 1;
-    }
-    if ( MouseYMax ) {
-      y = PlotY2;
-      h = PlotY1 - PlotY2  + 1;
-    }
-    /*
     QColor qcolor( 192, 192, 192 ); // 75% gray
     paint.setPen( QPen( qcolor, 1, Qt::DotLine ) );
     paint.setBrush( QBrush( Qt::black, Qt::NoBrush ) );
-    paint.drawRect( x, y, w, h );
-    */
-    paint.drawWinFocusRect( x, y, w, h );
+    if ( MouseXMax ) {
+      paint.drawLine( PlotX1, MouseY1, PlotX2, MouseY1 );
+      paint.drawLine( PlotX1, MouseY2, PlotX2, MouseY2 );
+      paint.drawLine( MouseX1, MouseY1, MouseX1, MouseY2 );
+    }
+    else if ( MouseYMax ) {
+      paint.drawLine( MouseX1, PlotY1, MouseX1, PlotY2 );
+      paint.drawLine( MouseX2, PlotY1, MouseX2, PlotY2 );
+      paint.drawLine( MouseX1, MouseY1, MouseX2, MouseY1 );
+    }
+    else {
+      int x = MouseX1;
+      int w = MouseX2 - MouseX1 + 1;
+      if ( MouseX2 < MouseX1 ) {
+	x = MouseX2;
+	w = MouseX1 - MouseX2 + 1;
+      }
+      int y = MouseY1;
+      int h = MouseY2 - MouseY1 + 1;
+      if ( MouseY2 < MouseY1 ) {
+	y = MouseY2;
+	h = MouseY1 - MouseY2 + 1;
+      }
+      paint.drawRect( x, y, w, h );
+    }
     paint.flush();
   }
   else if ( ! MouseXPos.empty() ) {
@@ -3364,8 +3365,8 @@ void Plot::mouseZoomMovePlot( MouseEvent &me, bool move )
     LastMouseEvent = me;
     MouseX1 = MouseX2 = me.xPixel();
     MouseY1 = MouseY2 = me.yPixel();
-    MouseXMax = me.control();
-    MouseYMax = me.shift();
+    MouseXMax = false;
+    MouseYMax = false;
     me.setUsed();
   }
   if ( me.moved() && me.left() ) {
@@ -3392,8 +3393,17 @@ void Plot::mouseZoomMovePlot( MouseEvent &me, bool move )
 	MouseX2 = me.xPixel();
       if ( me.yCoor() == First )
 	MouseY2 = me.yPixel();
-      MouseXMax = me.control();
-      MouseYMax = me.shift();
+      MouseXMax = false;
+      MouseYMax = false;
+      if ( ::abs( MouseX2 - MouseX1 ) < ::abs( MouseY2 - MouseY1 ) ) {
+	if ( ::abs( MouseX2 - MouseX1 ) < 10 )
+	  MouseXMax = true;
+      }
+      else {
+	if ( ::abs( MouseY2 - MouseY1 ) < 10 )
+	  MouseYMax = true;
+      }
+      NewData = true;
       draw();
       me.setUsed();
     }
