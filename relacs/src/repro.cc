@@ -189,6 +189,9 @@ void RePro::requestStop( void )
 
   // wake up the RePro from sleeping:
   SleepWait.wakeAll();
+
+  // don't wait for the requested data:
+  RW->setMinTraceTime( 0.0 );
 }
 
 
@@ -217,8 +220,13 @@ bool RePro::sleep( double t, double tracetime )
       SleepWait.wait( ms );
   }
 
+  // interrupt RePro:
+  InterruptLock.lock();
+  ir = Interrupt; 
+  InterruptLock.unlock();
+
   // force data updates:
-  RW->setMinTraceTime( tracetime );
+  RW->setMinTraceTime( ir ? 0.0 : tracetime );
   RW->ThreadSleepWait.wakeAll();
   RW->DataSleepWait.wait();
 

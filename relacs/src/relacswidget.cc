@@ -1163,8 +1163,13 @@ void RELACSWidget::stopRePro( void )
 
   // wait on RePro to stop:
   if ( CurrentRePro->running() ) {
+    /*
     // wait for the RePro to leave sensible code:
     CurrentRePro->lock();
+    // RePro needs to be unlocked here,
+    // so that sendPostedEvents() does not wait on the RePro to unlock()!
+    CurrentRePro->unlock();
+    */
 
     // dispatch all posted events (that usually paint the RePro...)
     // as long as the RePro is normally running, so that it has
@@ -1174,17 +1179,16 @@ void RELACSWidget::stopRePro( void )
 
     // request and wait for the RePro to properly terminate:
     CurrentRePro->requestStop();
-    CurrentRePro->unlock();
     CurrentRePro->wait();
   }
+
+  ReProRunning = false;
 
   // stop analog output:
   WriteLoop.stop();
   lockSignals();
   AQ->stopWrite();                
   unlockSignals();
-
-  ReProRunning = false;
 
   if ( AQ->readSignal( SignalTime, IL, ED ) ) // we should get the start time of the latest signal here
     SF->save( IL, ED );

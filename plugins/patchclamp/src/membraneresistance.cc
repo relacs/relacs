@@ -50,7 +50,6 @@ MembraneResistance::MembraneResistance( void )
 
   // plot:
   P.lock();
-  P.setDataMutex( mutex() );
   P.setXLabel( "Time [ms]" );
   P.unlock();
 }
