@@ -2682,8 +2682,10 @@ void Plot::drawMouse( QPainter &paint )
       }
       int xpix = (int)::rint( double( PlotX2 - PlotX1 ) / ( XMax[xaxis] - XMin[xaxis] ) * ( xpos[k] - XMin[xaxis] ) + PlotX1 );
       int ypix = (int)::rint( double( PlotY2 - PlotY1 ) / ( YMax[yaxis] - YMin[yaxis] ) * ( ypos[k] - YMin[yaxis] ) + PlotY1 );
-      paint.drawLine( xpix, PlotY1, xpix, PlotY2 );
-      paint.drawLine( PlotX1, ypix, PlotX2, ypix );
+      if ( xpix >= PlotX1 && xpix <= PlotX2 )
+	paint.drawLine( xpix, PlotY1, xpix, PlotY2 );
+      if ( ypix >= PlotY2 && ypix <= PlotY1 )
+	paint.drawLine( PlotX1, ypix, PlotX2, ypix );
     }
     RGBColor pc = color( PlotColor );
     QColor qpcolor( pc.red(), pc.green(), pc.blue() );
@@ -2968,9 +2970,8 @@ void Plot::MouseEvent::clear( void )
 }
 
 
-void Plot::readMouse( QMouseEvent *qme, MouseEvent &me, bool move )
+void Plot::setMouseCoordinates( MouseEvent &me )
 {
-  me.XPixel = qme->x();
   for ( int k=0; k<MaxAxis; k++ )
     me.XPos[k] = double( me.XPixel - PlotX1 ) / double( PlotX2 - PlotX1 ) * ( XMax[k] - XMin[k] ) + XMin[k];
   if ( me.XPixel < PlotX1 )
@@ -2980,7 +2981,6 @@ void Plot::readMouse( QMouseEvent *qme, MouseEvent &me, bool move )
   else
     me.XCoor = First;
 
-  me.YPixel = qme->y();
   for ( int k=0; k<MaxAxis; k++ )
     me.YPos[k] = double( me.YPixel - PlotY1 ) / double( PlotY2 - PlotY1 ) * ( YMax[k] - YMin[k] ) + YMin[k];
   if ( me.YPixel > PlotY1 )
@@ -2989,6 +2989,14 @@ void Plot::readMouse( QMouseEvent *qme, MouseEvent &me, bool move )
     me.YCoor = SecondMargin;    
   else
     me.YCoor = First;
+}
+
+
+void Plot::readMouse( QMouseEvent *qme, MouseEvent &me, bool move )
+{
+  me.XPixel = qme->x();
+  me.YPixel = qme->y();
+  setMouseCoordinates( me );
 
   me.Mode = 0;
   ButtonState button = move ? qme->state() : qme->button();
@@ -3572,6 +3580,9 @@ void Plot::mouseAnalyse( MouseEvent &me )
 {
   if ( me.xCoor() == First && me.yCoor() == First ) {
 
+    LastMouseEvent = me;
+    LastMouseEvent.clearMouseButtons();
+
     double xpos = me.xPos();
     double ypos = me.yPos();
     int dinx = -1;
@@ -3630,6 +3641,7 @@ void Plot::mouseAnalyse( MouseEvent &me )
       MouseYPos.push_back( ypos );
       MouseDInx.push_back( dinx );
       MousePInx.push_back( pinx );
+      NewData = true;
       draw();
       me.setUsed();
     }
@@ -3642,6 +3654,7 @@ void Plot::mouseAnalyse( MouseEvent &me )
       MouseYPos.push_back( ypos );
       MouseDInx.push_back( dinx );
       MousePInx.push_back( pinx );
+      NewData = true;
       draw();
       me.setUsed();
     }
@@ -3652,6 +3665,7 @@ void Plot::mouseAnalyse( MouseEvent &me )
 	MouseYPos.pop_back();
 	MouseDInx.pop_back();
 	MousePInx.pop_back();
+	NewData = true;
 	draw();
 	me.setUsed();
       }
@@ -3663,6 +3677,7 @@ void Plot::mouseAnalyse( MouseEvent &me )
 	MouseYPos.back() = ypos;
 	MouseDInx.back() = dinx;
 	MousePInx.back() = pinx;
+	NewData = true;
 	draw();
 	me.setUsed();
       }
@@ -3713,6 +3728,7 @@ void Plot::mouseSelect( int id )
   }
   else {
     MouseMenuClick = false;
+    LastMouseEvent.clear();
     if ( id != MouseAction ) {
       MouseMenu->setItemChecked( MouseAction, false );
       MouseMenu->setItemChecked( id, true );
