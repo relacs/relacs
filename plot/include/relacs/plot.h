@@ -844,6 +844,8 @@ public:
     bool moved( void ) const { return ( ( Mode & 256 ) > 0 ); };
     bool doubleClicked( void ) const { return ( ( Mode & 512 ) > 0 ); };
 
+    void clearMouseButtons( void ) { Mode &= ~(1+2+4+64+128+256+512); };
+
     bool init( void ) const { return Init; };
     void setInit( void ) { Init = true; };
 
@@ -943,6 +945,9 @@ protected:
     /*! Analyse plot. */
   void mouseAnalyse( MouseEvent &me );
 
+    /*! Calculates the mouse coordinates from the pixel position
+        of the mouse. */
+  void setMouseCoordinates( MouseEvent &me );
     /*! Translates \a qme into \a me. 
         Used by the reimplementations of the Qt mouse event handlers. */
   void readMouse( QMouseEvent *qme, MouseEvent &me );
