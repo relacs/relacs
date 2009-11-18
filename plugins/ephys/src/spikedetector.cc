@@ -682,12 +682,16 @@ int SpikeDetector::checkEvent( const InData::const_iterator &first,
   InDataIterator linx = event;
   InDataTimeIterator linxtime = eventtime;
   for ( --linx, --linxtime; linx >= left; --linx, --linxtime ) {
+    if ( left <= first )
+      return 0;
     if ( *linx <= minval )
       break;
   }
   InDataIterator rinx = event;
   InDataTimeIterator rinxtime = eventtime;
   for ( ++rinx, ++rinxtime; rinx < right; ++rinx, ++rinxtime ) {
+    if ( right >= last )
+      return -1;
     if ( *rinx <= minval )
       break;
   }
