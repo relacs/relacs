@@ -5,7 +5,6 @@ Qt4:
   MacroCommand, etc)
 - what is the difference between RePro::name() and ReProData::Name???
 - how to use enurePolished() in SaveFiles and Session
-- Startup error: QEventDispatcherUNIX::unregisterTimer: invalid argument
 - Settings dialog: default paht for dry/ - mkdir dry/!
 - What about the autoAdd functionality of Layouts?
 - base:setOutput: what is wrong with the setTabOrder() call? Do we really need it?
@@ -46,15 +45,6 @@ Thread safety:
 - shouldn't the draw() function in Plot and MultiPlot not just be QWidget::update()?
   update() calls postEvent() !
 - (Multi)Plot::draw() can be called from within the locks!
-- what is qApp->syncX and flushX all about?
-  It is removed from Qt4!
-  From Qt interest archive:
-  - bitblt + flushX
-  - In X, obviously the flush makes sure all request go out 
-    to the server, and sync waits until the server finishes processing them.
-  - Why not try calling QApplication::flushX() before going into the
-    blocking read.  This should force the screen update to complete before
-    the application freezes.
 
 Metadata:
 - Devices should get and use Options for their settings

@@ -1891,7 +1891,8 @@ bool KeyTimeOut::eventFilter( QObject *o, QEvent *e )
        ( e->type() == QEvent::KeyPress ||
 	 e->type() == QEvent::MouseButtonPress ||
 	 e->type() == QEvent::FocusIn ) ) {
-    killTimer( TimerId );
+    if ( TimerId != 0 )
+      killTimer( TimerId );
     TimerId = startTimer( 15000 );
   }
   return false;
@@ -1904,7 +1905,9 @@ void KeyTimeOut::timerEvent( QTimerEvent *e )
        noFocusWidget() ) {
     TopLevelWidget->setFocus();
   }
-  killTimer( TimerId );
+  if ( TimerId != 0 )
+    killTimer( TimerId );
+  TimerId = 0;
 }
 
 
