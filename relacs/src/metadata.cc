@@ -137,7 +137,7 @@ void MetaDataRecordingSection::clear( void )
   addText( "Folder", "", standardFlag() );
   addDate( "Date", standardFlag() );
   addTime( "Time", standardFlag() );
-  addNumber( "Recording duration", "", standardFlag() );
+  addNumber( "Recording duration", 0.0, "min" ).setFlags( standardFlag() );
   addText( "Mode", RW->modeStr(), standardFlag() );
   addText( "Software", "RELACS", standardFlag() );
   addText( "Software version", RELACSVERSION, standardFlag() );
