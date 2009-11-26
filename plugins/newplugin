@@ -75,7 +75,7 @@ echo "update $PLUGINSETPATH/src/Makefile.am ..."
     ORGIFS="$IFS"
     IFS=""
     while read -r LINE; do
-	test "$LINE" = "pluginlib_LTLIBRARIES = \\" && break
+	test "${LINE% \\}" = "pluginlib_LTLIBRARIES =" && break
 	echo "$LINE"
     done
 # append pluginlib_LTLIBRARIES:
@@ -91,7 +91,7 @@ echo "update $PLUGINSETPATH/src/Makefile.am ..."
 	PREVLINE="$LINE"
     done
     while read -r LINE; do
-	test "$LINE" = "check_PROGRAMS = \\" && break
+	test "${LINE% \\}" = "check_PROGRAMS =" && break
 	echo "$LINE"
     done
 # make rules:

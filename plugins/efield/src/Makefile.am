@@ -7,7 +7,8 @@ pluginlib_LTLIBRARIES = \
     libefieldlinearfield.la \
     libefieldeoddetector.la \
     libefieldchirpdetector.la \
-    libefieldbeatdetector.la
+    libefieldbeatdetector.la \
+    libefieldtraces.la
 
 
 
@@ -128,11 +129,41 @@ libefieldbeatdetector_la_include_HEADERS = $(HEADER_PATH)/beatdetector.h
 
 
 
+libefieldtraces_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT3_CPPFLAGS)
+
+libefieldtraces_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT3_LDFLAGS)
+
+libefieldtraces_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(QT3_LIBS)
+
+$(libefieldtraces_la_OBJECTS) : moc_traces.cc
+
+libefieldtraces_la_SOURCES = traces.cc
+
+libefieldtraces_la_includedir = $(pkgincludedir)/efield
+
+libefieldtraces_la_include_HEADERS = $(HEADER_PATH)/traces.h
+
+
+
 check_PROGRAMS = \
     linktest_libefieldlinearfield_la \
     linktest_libefieldeoddetector_la \
     linktest_libefieldchirpdetector_la \
-    linktest_libefieldbeatdetector_la
+    linktest_libefieldbeatdetector_la \
+    linktest_libefieldtraces_la
 
 linktest_libefieldlinearfield_la_SOURCES = linktest.cc
 linktest_libefieldlinearfield_la_LDADD = libefieldlinearfield.la
@@ -145,5 +176,8 @@ linktest_libefieldchirpdetector_la_LDADD = libefieldchirpdetector.la
 
 linktest_libefieldbeatdetector_la_SOURCES = linktest.cc
 linktest_libefieldbeatdetector_la_LDADD = libefieldbeatdetector.la
+
+linktest_libefieldtraces_la_SOURCES = linktest.cc
+linktest_libefieldtraces_la_LDADD = libefieldtraces.la
 
 TESTS = $(check_PROGRAMS)

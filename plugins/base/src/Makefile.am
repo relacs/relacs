@@ -4,12 +4,66 @@ include ${top_srcdir}/moc3.mk
 pluginlibdir = $(pkglibdir)/plugins
 
 pluginlib_LTLIBRARIES = \
+    libbaselinearattenuate.la \
+    libbasedecibelattenuate.la \
     libbasehighpass.la \
     libbaselowpass.la \
     libbasespectrumanalyzer.la \
     libbasepause.la \
     libbasesetoutput.la \
     libbasesimplemodel.la
+
+
+
+libbaselinearattenuate_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(srcdir)/../include \
+    $(QT3_CPPFLAGS)
+
+libbaselinearattenuate_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT3_LDFLAGS)
+
+libbaselinearattenuate_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(QT3_LIBS)
+
+libbaselinearattenuate_la_SOURCES = linearattenuate.cc
+
+libbaselinearattenuate_la_includedir = $(pkgincludedir)/base
+
+libbaselinearattenuate_la_include_HEADERS = $(HEADER_PATH)/linearattenuate.h
+
+
+
+libbasedecibelattenuate_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(srcdir)/../include \
+    $(QT3_CPPFLAGS)
+
+libbasedecibelattenuate_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT3_LDFLAGS)
+
+libbasedecibelattenuate_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(QT3_LIBS)
+
+libbasedecibelattenuate_la_SOURCES = decibelattenuate.cc
+
+libbasedecibelattenuate_la_includedir = $(pkgincludedir)/base
+
+libbasedecibelattenuate_la_include_HEADERS = $(HEADER_PATH)/decibelattenuate.h
 
 
 
@@ -177,12 +231,20 @@ libbasesimplemodel_la_include_HEADERS = $(HEADER_PATH)/simplemodel.h
 
 
 check_PROGRAMS = \
+    linktest_libbaselinearattenuate_la \
+    linktest_libbasedecibelattenuate_la \
     linktest_libbasehighpass_la \
     linktest_libbaselowpass_la \
     linktest_libbasespectrumanalyzer_la \
     linktest_libbasepause_la \
     linktest_libbasesetoutput_la \
     linktest_libbasesimplemodel_la
+
+linktest_libbaselinearattenuate_la_SOURCES = linktest.cc
+linktest_libbaselinearattenuate_la_LDADD = libbaselinearattenuate.la
+
+linktest_libbasedecibelattenuate_la_SOURCES = linktest.cc
+linktest_libbasedecibelattenuate_la_LDADD = libbasedecibelattenuate.la
 
 linktest_libbasehighpass_la_SOURCES = linktest.cc
 linktest_libbasehighpass_la_LDADD = libbasehighpass.la

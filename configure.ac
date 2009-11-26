@@ -151,6 +151,7 @@ RELACS_PLUGINSET([auditoryprojects],[auditoryprojects],[ephys acoustic auditory 
 RELACS_PLUGINSET([efield],[efield],[base])
 RELACS_PLUGINSET([patchclamp],[patchclamp],[ephys])
 RELACS_PLUGINSET([multielectrode],[multielectrode],[ephys])
+RELACS_PLUGINSET([efish],[efish],[base])
 
 AC_SUBST([RELACS_PLUGINS_SUBDIRS])
 AC_SUBST([RELACS_PLUGINS_DIST_SUBDIRS])
@@ -218,6 +219,7 @@ AC_CONFIG_FILES([plugins/auditoryprojects/relacslocal], [chmod a+x plugins/audit
 AC_CONFIG_FILES([plugins/efield/relacslocal], [chmod a+x plugins/efield/relacslocal])
 AC_CONFIG_FILES([plugins/patchclamp/relacslocal], [chmod a+x plugins/patchclamp/relacslocal])
 AC_CONFIG_FILES([plugins/multielectrode/relacslocal], [chmod a+x plugins/multielectrode/relacslocal])
+AC_CONFIG_FILES([plugins/efish/relacslocal], [chmod a+x plugins/efish/relacslocal])
 
 
 #################################################

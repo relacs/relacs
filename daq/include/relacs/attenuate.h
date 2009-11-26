@@ -47,7 +47,7 @@ The names, units, and formats of the intensity and the frequency can
 be retrieved by intensityName(), intensityUnit(), intensityFormat(),
 frequencyName(), frequencyUnit(), and frequencyFormat().
 
-THe function init() is called before the attenuator is used.
+The function init() is called before the attenuator is used.
 You can reimplement this function to load calibration data
 from a file, for example.
 save() may be called to save some (calibration) data into a file.
