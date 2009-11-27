@@ -94,5 +94,3 @@ void Traces::initialize( const RELACSPlugin *rp,
 
 
 }; /* namespace efield */
-
-#include "moc_traces.cc"
