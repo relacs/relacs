@@ -1,6 +1,6 @@
 /*
   efield/traces.cc
-  Variables for standard input traces and events of electric fish.
+  Variables for standard output traces of electric fields and standard input traces and events of electric fish.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
@@ -25,17 +25,24 @@ using namespace relacs;
 namespace efield {
 
 
-int Traces::EODTrace1 = -1;
-int Traces::EODEvents1 = -1;
-int Traces::ChirpEvents1 = -1;
-int Traces::EODTrace2 = -1;
-int Traces::EODEvents2 = -1;
-int Traces::ChirpEvents2 = -1;
-int Traces::BeatPeakEvents2 = -1;
-int Traces::BeatTroughEvents2 = -1;
+int Traces::GlobalEField = -1;
+int Traces::LocalEFields = 0;
+int Traces::LocalEField[MaxEFields] = { -1, -1, -1, -1, -1, -1 };
 
-int Traces::SignalTrace1 = -1;
-int Traces::SignalEvents1 = -1;
+int Traces::EODTrace = -1;
+int Traces::EODEvents = -1;
+int Traces::ChirpEvents = -1;
+
+int Traces::LocalEODTraces = 0;
+int Traces::LocalEODTrace[MaxEFields] = { -1, -1, -1, -1, -1, -1 };
+int Traces::LocalEODEvents[MaxEFields] = { -1, -1, -1, -1, -1, -1 };
+int Traces::LocalChirpEvents[MaxEFields] = { -1, -1, -1, -1, -1, -1 };
+int Traces::LocalBeatPeakEvents[MaxEFields] = { -1, -1, -1, -1, -1, -1 };
+int Traces::LocalBeatTroughEvents[MaxEFields] = { -1, -1, -1, -1, -1, -1 };
+
+int Traces::EFieldSignalTraces = 0;
+int Traces::EFieldSignalTrace[MaxEFields] = { -1, -1, -1, -1, -1, -1 };
+int Traces::EFieldSignalEvents[MaxEFields] = { -1, -1, -1, -1, -1, -1 };
 
 
 Traces::Traces( void )
@@ -43,19 +50,46 @@ Traces::Traces( void )
 }
 
 
-void Traces::initialize( const InList &data, const EventList &events )
+void Traces::initialize( const RELACSPlugin *rp,
+			 const InList &data,
+			 const EventList &events )
 {
-  // get trace indices:
-  EODTrace1 = data.index( "EOD-1" );
-  EODTrace2 = data.index( "EOD-2" );
-  EODEvents1 = events.index( "EOD-1" );
-  ChirpEvents1 = events.index( "Chirps-1" );
-  EODEvents2 = events.index( "EOD-2" );
-  ChirpEvents2 = events.index( "Chirps-2" );
-  BeatPeakEvents2 = events.index( "Beat-2-1" );
-  BeatTroughEvents2 = BeatPeakEvents2 + 1;
-  SignalTrace1 = data.index( "Signal-1" );
-  SignalEvents1 = events.index( "Signal-1" );
+  // global stimulation electrode:
+  GlobalEField = rp->outTraceIndex( "EField-global" );
+
+  // local stimulation electrodes:
+  LocalEFields = 0;
+  for ( int k=0; k<MaxEFields; k++ ) {
+    LocalEField[LocalEFields] = rp->outTraceIndex( "EField-local-" + Str( k ) );
+    if ( LocalEField[LocalEFields] >= 0 )
+      LocalEFields++;
+  }
+				    
+  // global EOD:
+  EODTrace = data.index( "EOD" );
+  EODEvents = events.index( "EOD" );
+  ChirpEvents = events.index( "Chirps" );
+
+  // local EODs:
+  LocalEODTraces = 0;
+  for ( int k=0; k<MaxEFields; k++ ) {
+    LocalEODTrace[LocalEODTraces] = data.index( "EOD-" + Str( k ) );
+    LocalEODEvents[LocalEODTraces] = events.index( "EOD-" + Str( k ) );
+    LocalChirpEvents[LocalEODTraces] = events.index( "Chirps-" + Str( k ) );
+    LocalBeatPeakEvents[LocalEODTraces] = events.index( "BeatPeaks-" + Str( k ) );
+    LocalBeatTroughEvents[LocalEODTraces] = events.index( "BeatTroughs-" + Str( k ) );
+    if ( LocalEODTrace[LocalEODTraces] >= 0 )
+      LocalEODTraces++;
+  }
+
+  // signals:
+  EFieldSignalTraces = 0;
+  for ( int k=0; k<MaxEFields; k++ ) {
+    EFieldSignalTrace[EFieldSignalTraces] = data.index( "EFieldSignal-" + Str( k ) );
+    EFieldSignalEvents[EFieldSignalTraces] = events.index( "EFieldSignal-" + Str( k ) );
+    if ( EFieldSignalTrace[EFieldSignalTraces] >= 0 )
+      EFieldSignalTraces++;
+  }
 }
 
 

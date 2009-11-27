@@ -47,7 +47,7 @@ Session::Session( void )
   ResistanceButton = 0;
   BuzzerButton = 0;
 
-  SessionButton = new QPushButton( "Cell Found", bb, "SessionButton" );
+  SessionButton = new QPushButton( "Cell found", bb, "SessionButton" );
   SessionButton->setMinimumSize( SessionButton->sizeHint() );
   connect( SessionButton, SIGNAL( clicked() ),
 	   this, SLOT( toggleSession() ) );
@@ -226,9 +226,9 @@ void Session::initDevices( void )
 }
 
 
-void Session::startSession( void )
+void Session::sessionStarted( void )
 {
-  SessionButton->setText( "Cell Lost" );
+  SessionButton->setText( "Cell lost" );
 
   // reset values of metaData() options:
   lockMetaData();
@@ -263,10 +263,10 @@ void Session::startSession( void )
 }
 
 
-void Session::stopSession( bool saved )
+void Session::sessionStopped( bool saved )
 {
   lock();
-  SessionButton->setText( "Cell Found" );
+  SessionButton->setText( "Cell found" );
   unlock();
 }
 

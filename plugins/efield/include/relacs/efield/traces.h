@@ -1,6 +1,6 @@
 /*
   efield/traces.h
-  Variables for standard input traces and events of electric fish.
+  Variables for standard output traces of electric fields and standard input traces and events of electric fish.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
@@ -24,6 +24,7 @@
 
 #include <relacs/inlist.h>
 #include <relacs/eventlist.h>
+#include <relacs/relacsplugin.h>
 using namespace relacs;
 
 namespace efield {
@@ -31,7 +32,8 @@ namespace efield {
 
 /*!
 \class Traces
-\brief [lib] Variables for standard input traces and events of electric fish.
+\brief [lib] Variables for standard output traces of electric fields and
+       standard input traces and events of electric fish.
 \author Jan Benda
 \version 1.0 (Nov 26, 2009)
 */
@@ -44,21 +46,47 @@ public:
 
   Traces( void );
 
-  static void initialize( const InList &data, const EventList &events );
+  static void initialize( const RELACSPlugin *rp,
+			  const InList &data, const EventList &events );
 
 
 protected:
 
-  static int EODTrace1;
-  static int EODEvents1;
-  static int ChirpEvents1;
-  static int EODTrace2;
-  static int EODEvents2;
-  static int ChirpEvents2;
-  static int BeatPeakEvents2;
-  static int BeatTroughEvents2;
-  static int SignalTrace1;
-  static int SignalEvents1;
+    /*! Maximum number of supported electric field stimulus channels. */
+  static const int MaxEFields = 6;
+    /*! The index of a global electric field stimulus channel. */
+  static int GlobalEField;
+    /*! The number of available local electric field stimulus channels. */
+  static int LocalEFields;
+    /*! The indices of local electric field stimulus channels. */
+  static int LocalEField[MaxEFields];
+
+    /*! The index of the trace recording the EOD of a fish. */
+  static int EODTrace;
+    /*! The index of the events recording the zero crossings of the EOD of a fish. */
+  static int EODEvents;
+    /*! The index of the events recording the chirps of the EOD of a fish. */
+  static int ChirpEvents;
+
+    /*! The number of available recorded local EOD measurements of a fish. */
+  static int LocalEODTraces;
+    /*! The indices of traces recording local EOD measurements of a fish. */
+  static int LocalEODTrace[MaxEFields];
+    /*! The indices of events recording the zero crossings of local EOD measurements of a fish. */
+  static int LocalEODEvents[MaxEFields];
+    /*! The indices of events recording the chirps of local EOD measurements of a fish. */
+  static int LocalChirpEvents[MaxEFields];
+    /*! The indices of events recording the beat peaks of local EOD measurements of a fish. */
+  static int LocalBeatPeakEvents[MaxEFields];
+    /*! The indices of events recording the beat troughs of local EOD measurements of a fish. */
+  static int LocalBeatTroughEvents[MaxEFields];
+
+    /*! The number of available recorded electric field stimuli. */
+  static int EFieldSignalTraces;
+    /*! The indices of traces of recorded electric field stimuli. */
+  static int EFieldSignalTrace[MaxEFields];
+    /*! The indices of events of zero crossings of recorded electric field stimuli. */
+  static int EFieldSignalEvents[MaxEFields];
 
 };
 

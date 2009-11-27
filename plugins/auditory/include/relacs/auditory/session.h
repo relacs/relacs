@@ -58,8 +58,8 @@ public:
   virtual void initialize( void );
   virtual void config( void );
   virtual void initDevices( void );
-  virtual void startSession( void );
-  virtual void stopSession( bool saved );
+  virtual void sessionStarted( void );
+  virtual void sessionStopped( bool saved );
   virtual void keyPressEvent( QKeyEvent *e );
   virtual void keyReleaseEvent( QKeyEvent *e );
 

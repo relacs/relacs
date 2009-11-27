@@ -29,6 +29,7 @@
 #include <relacs/detector.h>
 #include <relacs/ephys/traces.h>
 #include <relacs/efield/traces.h>
+#include <relacs/efield/eodtools.h>
 #include <relacs/repro.h>
 using namespace relacs;
 
@@ -74,7 +75,11 @@ namespace efish {
 */
 
 
-  class BaselineActivity : public RePro, public ephys::Traces, public efield::Traces
+class BaselineActivity
+  : public RePro,
+    public ephys::Traces,
+    public efield::Traces,
+    public efield::EODTools
 {
   Q_OBJECT
 
@@ -113,8 +118,6 @@ private:
 
   double FirstSignal;
   double SearchDuration;
-
-  QMutex DataMutex;
 
   SampleDataD *ISIH[MaxSpikeTraces];
   double ISIMax;
