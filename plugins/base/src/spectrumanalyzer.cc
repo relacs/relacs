@@ -30,9 +30,7 @@ namespace base {
 
 
 SpectrumAnalyzer::SpectrumAnalyzer( void )
-  : Control( "SpectrumAnalyzer", "Spectrum", "Base",
-	     "Jan Benda", "1.1", "Jul 24, 2009" ),
-    P( this )
+  : Control( "SpectrumAnalyzer", "Base", "Jan Benda", "1.1", "Jul 24, 2009" )
 {
   // parameter:
   Trace = 0;
@@ -67,7 +65,7 @@ SpectrumAnalyzer::SpectrumAnalyzer( void )
   P.setLabel( "", 0.1, Plot::Graph, 0.5, Plot::Graph, Plot::Left,
 	      0.0, Plot::Red, 5.0 );
   P.unlock();
-  boxLayout()->addWidget( &P );
+  setWidget( &P );
 }
 
 

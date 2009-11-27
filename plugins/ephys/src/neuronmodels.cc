@@ -30,8 +30,7 @@ namespace ephys {
 
 
 NeuronModels::NeuronModels( void )
-  : Model( "NeuronModels", "Neuron-Models", "EPhys",
-	   "Jan Benda", "1.0", "Jan 10, 2006" )
+  : Model( "NeuronModels", "EPhys", "Jan Benda", "1.0", "Jan 10, 2006" )
 {
   addOptions();
   addTypeStyle( OptWidget::Bold, Parameter::Label );
@@ -40,12 +39,11 @@ NeuronModels::NeuronModels( void )
 
 
 NeuronModels::NeuronModels( const string &name,
-			    const string &title, 
 			    const string &pluginset,
 			    const string &author, 
 			    const string &version,
 			    const string &date )
-  : Model( name, title, pluginset, author, version, date )
+  : Model( name, pluginset, author, version, date )
 {
 }
 

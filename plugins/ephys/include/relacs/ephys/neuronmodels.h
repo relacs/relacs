@@ -53,7 +53,6 @@ public:
 
   NeuronModels( void );
   NeuronModels( const string &name,
-		const string &title="", 
 		const string &pluginset="", 
 		const string &author="unknown", 
 		const string &version="unknown",

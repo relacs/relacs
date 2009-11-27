@@ -35,25 +35,9 @@ namespace relacs {
 
 
 RePros::RePros( RELACSWidget *rw, QWidget *parent )
-  : QTabWidget( parent )
+  : QTabWidget( parent ),
+    RW( rw )
 {
-  create( rw );
-}
-
-
-RePros::~RePros( void )
-{
-  // XXX das ist noch nicht alles ???
-  for ( unsigned int k=0; k<RPs.size(); k++ )
-    delete RPs[k];
-  RPs.clear();
-}
-
-
-int RePros::create( RELACSWidget *rw )
-{
-  RW = rw;
-
   CurrentRePro = -1;
   ActionRePro = -1;
 
@@ -72,7 +56,9 @@ int RePros::create( RELACSWidget *rw )
       void *mp = Plugins::create( k );
       RePro *rp = (RePro*)mp;
       rp->setRELACSWidget( RW );
-      addTab( rp, rp->title().c_str() );
+      if ( rp->widget() == 0 )
+	rp->setWidget( new QWidget );
+      addTab( rp->widget(), rp->name().c_str() );
       ReProData *rd = new ReProData( Plugins::ident( k ), rp, DialogOpt,
 				     this, RW );
       RPs.push_back( rd );
@@ -89,7 +75,7 @@ int RePros::create( RELACSWidget *rw )
     MessageBox::warning( "RELACS Warning !", "No RePros found!<br>Activating Default RePro.", 4.0, this );
     RePro *rp = new DefaultRePro();
     rp->setRELACSWidget( RW );
-    addTab( rp, rp->title().c_str() );
+    addTab( rp->widget(), rp->name().c_str() );
     ReProData *rd = new ReProData( rp->name(), rp, DialogOpt, this, RW );
     RPs.push_back( rd );
     connect( rd, SIGNAL( stopRePro( void ) ),
@@ -101,7 +87,24 @@ int RePros::create( RELACSWidget *rw )
     n++;
   }
 
-  return n;
+  setTabPosition( North );         // tab bar on top
+  setElideMode( Qt::ElideRight );  // ellipses at the right
+  //  setUseScrollButtons( false );
+  setElideMode( Qt::ElideNone );   // no ellipses
+  setUsesScrollButtons( true );
+}
+
+
+RePros::~RePros( void )
+{
+  for ( unsigned int k=0; k<RPs.size(); k++ ) {
+    if ( RPs[k]->repro() != 0 ) {
+      Plugins::destroy( RPs[k]->name(), RELACSPlugin::ReProId );
+      delete RPs[k]->repro();
+    }
+    delete RPs[k];
+  }
+  RPs.clear();
 }
 
 
@@ -274,6 +277,12 @@ RePro *RePros::repro( int index ) const
 }
 
 
+RePro *RePros::repro( const string &name ) const
+{
+  return repro( index( name ) );
+}
+
+
 int RePros::nameIndex( const string &name ) const
 {
   if ( name.empty() )
@@ -293,6 +302,12 @@ int RePros::nameIndex( const string &name ) const
 }
 
 
+RePro *RePros::nameRepro( const string &name ) const
+{
+  return repro( nameIndex( name ) );
+}
+
+
 void RePros::raise( int index )
 {
   if ( index >= 0 )
@@ -305,7 +320,9 @@ void RePros::raise( RePro *repro )
   if ( repro != CurrentView )
     PreviousView = CurrentView;
   CurrentView = repro;
-  setCurrentWidget( repro );
+  removeTab( indexOf( repro->widget() ) );
+  insertTab( 0, repro->widget(), repro->name().c_str() );
+  setCurrentWidget( repro->widget() );
 }
 
 
@@ -324,6 +341,12 @@ void RePros::reload( RePro *repro )
 void RePros::help( RePro *repro )
 {
   RPs[ index( repro ) ]->help();
+}
+
+
+Options &RePros::dialogOptions( void )
+{
+  return DialogOpt;
 }
 
 
@@ -475,7 +498,7 @@ void ReProData::reload( void )
   // and then reload it.
 
   // remove repro from repros list:
-  int index = RPs->indexOf( RP );
+  int index = RPs->indexOf( RP->widget() );
   RPs->removeTab( index );
   delete RP;
 
@@ -488,7 +511,9 @@ void ReProData::reload( void )
   if ( mp != 0 ) {
     RP = (RePro*)mp;
     RP->setRELACSWidget( RW );
-    RPs->insertTab( index, RP, RP->title().c_str() );
+    if ( RP->widget() == 0 )
+      RP->setWidget( new QWidget );
+    RPs->insertTab( index, RP->widget(), RP->name().c_str() );
     emit reloadRePro( Name );
     RW->printlog( "ReProData::reload() -> loaded repro " + RP->name() );
   }

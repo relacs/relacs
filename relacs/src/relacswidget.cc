@@ -88,7 +88,6 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     InfoFileMacro( "" ),
     IsFullScreen( false ),
     IsMaximized( false ),
-    GUILock( 0 ),
     DataMutex( QMutex::Recursive ),  // recursive, because of activateGains()!
     DataMutexCount( 0 ),
     AIMutex( QMutex::Recursive ),  // recursive, because of activateGains()???
@@ -97,7 +96,8 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     RunDataMutex(),
     MinTraceTime( 0.0 ),
     DeviceMenu( 0 ),
-    Help( false )
+    Help( false ),
+    HandlingEvent( false )
 {
   printlog( "this is RELACS, version " + string( RELACSVERSION ) );
 
@@ -270,7 +270,8 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
 			     this );
       }
       else {
-	CW->addTab( cn, cn->title().c_str() );
+	if ( cn->widget() != 0 )
+	  CW->addTab( cn->widget(), cn->name().c_str() );
 	cn->setRELACSWidget( this );
 	CN.push_back( cn );
       }
@@ -322,7 +323,6 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
 
   // setup PlotTrace:
   PT = new PlotTrace( this );
-  PT->setDataMutex( &DataMutex );
 
   // status bar:
   // RePro message:
@@ -458,7 +458,17 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
 RELACSWidget::~RELACSWidget( void )
 {
   stopThreads();
-  saveConfig();
+  clearActivity();
+  if ( MD != 0 ) {
+    Plugins::destroy( MD->name(), RELACSPlugin::ModelId );
+    delete MD;
+  }
+  delete FD;
+  for ( unsigned int k=0; k<CN.size(); k++ ) {
+    Plugins::destroy( CN[k]->name(), RELACSPlugin::ControlId );
+    delete CN[k];
+  }
+  delete RP;
   Plugins::close();
 }
 
@@ -1755,25 +1765,49 @@ void RELACSWidget::startIdle( void )
 
 //-------------------------Keyboard Interaction----------------------------//
 
-void RELACSWidget::keyPressEvent( QKeyEvent* e)
+void RELACSWidget::keyPressEvent( QKeyEvent *event )
 {
-  if ( CurrentRePro != 0 )
-    CurrentRePro->keyPressEvent( e );
-  PT->keyPressEvent( e );
-  MC->keyPressEvent( e );
-  for ( unsigned int k=0; k<CN.size(); k++ )
-    CN[k]->keyPressEvent( e );
+  // unused events are propagated back to parent widgets,
+  // therefore we have to prevent this additional call:
+  if ( HandlingEvent )
+    return;
+  HandlingEvent = true;
+  QApplication::sendEvent( PT, event );
+  if ( CurrentRePro != 0 && CurrentRePro->widget() != 0  )
+    QApplication::sendEvent( CurrentRePro->widget(), event );
+  if ( ! event->isAccepted() )
+    QApplication::sendEvent( CW, event );
+  for ( unsigned int k=0; k<CN.size() && ! event->isAccepted(); k++ ) {
+    if ( CN[k]->globalKeyEvents() && CN[k]->widget() != 0 )
+    QApplication::sendEvent( CN[k]->widget(), event );
+  }
+  if ( ! event->isAccepted() )
+    QApplication::sendEvent( FD, event );
+  HandlingEvent = false;
 }
 
 
-void RELACSWidget::keyReleaseEvent( QKeyEvent* e)
+void RELACSWidget::keyReleaseEvent( QKeyEvent *event )
 {
-  if ( CurrentRePro != 0 )
-    CurrentRePro->keyReleaseEvent( e );
-  PT->keyReleaseEvent( e );
-  MC->keyReleaseEvent( e );
-  for ( unsigned int k=0; k<CN.size(); k++ )
-    CN[k]->keyReleaseEvent( e );
+  // unused events are propagated back to parent widgets,
+  // therefore we have to prevent this additional call:
+  if ( HandlingEvent )
+    return;
+  HandlingEvent = true;
+  QApplication::sendEvent( PT, event );
+  if ( ! event->isAccepted() &&
+       CurrentRePro != 0 &&
+       CurrentRePro->widget() != 0  )
+    QApplication::sendEvent( CurrentRePro->widget(), event );
+  if ( ! event->isAccepted() )
+    QApplication::sendEvent( CW, event );
+  for ( unsigned int k=0; k<CN.size() && ! event->isAccepted(); k++ ) {
+    if ( CN[k]->globalKeyEvents() && CN[k]->widget() != 0 )
+      QApplication::sendEvent( CN[k]->widget(), event );
+  }
+  if ( ! event->isAccepted() )
+    QApplication::sendEvent( FD, event );
+  HandlingEvent = false;
 }
 
 

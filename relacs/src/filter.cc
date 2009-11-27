@@ -26,11 +26,11 @@ namespace relacs {
 
 Filter::Filter( const string &ident, int mode,
 		FilterType type, int outtraces, 
-		const string &name, const string &title,
-		const string &pluginset, const string &author, 
+		const string &name, const string &pluginset,
+		const string &author, 
 		const string &version, const string &date )
   : RELACSPlugin( "Filter: " + ident, RELACSPlugin::Plugins,
-		  name, title, pluginset, author, version, date )
+		  name, pluginset, author, version, date )
 {
   if ( type == SingleAnalogDetector ||
        type == MultipleAnalogDetector ||

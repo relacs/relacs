@@ -2102,7 +2102,6 @@ void Plot::drawLine( QPainter &paint, DataElement *d )
     int yaxis = d->YAxis;
     
     // init data:
-    // XXX needs to be replicated in drawPoints()!
     long f = 0;
     long l = 0;
     if ( NewData ) {
@@ -2299,6 +2298,38 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
   if ( ( d->Point.color() != Transparent || 
 	 d->Point.fillColor() != Transparent ) && 
        ( d->Point.size() > 0 || d->Point.type() == Box ) ) {
+
+    // axis:
+    int xaxis = d->XAxis;
+    int yaxis = d->YAxis;
+
+    // index range:
+    long f = 0;
+    long l = 0;
+    if ( NewData ) {
+      f = d->first( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+      l = d->last( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+    }
+    else {
+      if ( ShiftData ) {
+	double px = d->Point.size()*(XMax[xaxis]-XMin[xaxis])/double(PlotX2-PlotX1+1);
+	if ( ShiftX[xaxis] > 0.0 ) {
+	  f = d->first( XMax[xaxis]-ShiftX[xaxis]-px, YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+	  l = d->last( XMax[xaxis]-ShiftX[xaxis]-px, YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+	}
+	else {
+	  f = d->first( XMin[xaxis], YMin[yaxis], XMin[xaxis]-ShiftX[xaxis]+px, YMax[yaxis] );
+	  l = d->last( XMin[xaxis], YMin[yaxis], XMin[xaxis]-ShiftX[xaxis]+px, YMax[yaxis] );
+	}
+      }
+      else {
+	f = d->pointIndex();
+	l = d->last( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+      }
+    }
+    if ( f >= l )
+      return;
+
     // single point pixmap:
     int offs = d->Point.size();
     if ( offs <= 0 )
@@ -2336,16 +2367,6 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
       ppaint.setBrush( QBrush( Qt::black, Qt::NoBrush ) );
       mpaint.setBrush( QBrush( Qt::color0 ) );
     }
-
-    // axis:
-    int xaxis = d->XAxis;
-    int yaxis = d->YAxis;
-
-    // index range:
-    long f = d->first( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
-    long l = d->last( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
-    if ( ! NewData )
-      f = d->pointIndex();
 
     // draw Box:
     if ( d->Point.type() == Box ) {
@@ -2849,49 +2870,51 @@ void Plot::draw( QPaintDevice *qpm )
   // check for changes:
   ShiftData = false;
   ShiftXPix = 0;
-  for ( int k=0; k<MaxAxis; k++ ) {
-    ShiftX[k] = 0.0;
-    // check whether axis is in use:
-    bool havexaxis = false;
-    bool haveyaxis = false;
-    for ( PDataType::iterator d = PData.begin(); d != PData.end(); ++d ) {
-      if ( (*d)->XAxis == k ) {
-	havexaxis = true;
-	if ( haveyaxis )
-	  break;
-      }
-      if ( (*d)->YAxis == k ) {
-	haveyaxis = true;
-	if ( havexaxis )
-	  break;
-      }
-    }
-
-    if ( havexaxis ) {
-      if ( ::fabs( ::fabs( XMax[k] - XMin[k] ) - ::fabs( XMaxPrev[k] - XMinPrev[k] ) ) > 1.0e-8 )
-	NewData = true;
-      else {
-	if ( XMin[k] != XMinPrev[k] ) {
-	  ShiftData = true;
-	  int dx = (int)::rint( double(PlotX2-PlotX1+1)/(XMax[k]-XMin[k])*(XMin[k]-XMinPrev[k]) );
-	  if ( ShiftXPix == 0 )
-	    ShiftXPix = dx;
-	  else if ( dx != ShiftXPix )
-	    NewData = true;
-	  ShiftX[k] = XMin[k]-XMinPrev[k];
+  if ( ! NewData ) {
+    for ( int k=0; k<MaxAxis; k++ ) {
+      ShiftX[k] = 0.0;
+      // check whether axis is in use:
+      bool havexaxis = false;
+      bool haveyaxis = false;
+      for ( PDataType::iterator d = PData.begin(); d != PData.end(); ++d ) {
+	if ( (*d)->XAxis == k ) {
+	  havexaxis = true;
+	  if ( haveyaxis )
+	    break;
 	}
+	if ( (*d)->YAxis == k ) {
+	  haveyaxis = true;
+	  if ( havexaxis )
+	    break;
+	}
+      }
+      
+      if ( havexaxis ) {
+	if ( ::fabs( ::fabs( XMax[k] - XMin[k] ) - ::fabs( XMaxPrev[k] - XMinPrev[k] ) ) > 1.0e-8 )
+	  NewData = true;
 	else {
-	  if ( ShiftData )
-	    NewData = true;
+	  if ( ::fabs( XMin[k] - XMinPrev[k] ) > 1.0e-8 ) {
+	    ShiftData = true;
+	    int dx = (int)::rint( double(PlotX2-PlotX1+1)/(XMax[k]-XMin[k])*(XMin[k]-XMinPrev[k]) );
+	    if ( ShiftXPix == 0 )
+	      ShiftXPix = dx;
+	    else if ( dx != ShiftXPix )
+	      NewData = true;
+	    ShiftX[k] = XMin[k]-XMinPrev[k];
+	  }
+	  else {
+	    if ( ShiftData )
+	      NewData = true;
+	  }
 	}
       }
-    }
-
-    if ( haveyaxis ) {
-      if ( YMin[k] != YMinPrev[k] )
-	NewData = true;
-      if ( YMax[k] != YMaxPrev[k] )
-	NewData = true;
+      
+      if ( haveyaxis ) {
+	if ( YMin[k] != YMinPrev[k] )
+	  NewData = true;
+	if ( YMax[k] != YMaxPrev[k] )
+	  NewData = true;
+      }
     }
   }
 
@@ -2917,10 +2940,7 @@ void Plot::draw( QPaintDevice *qpm )
       if ( SubWidget && MP != 0 )
 	w = MP;
       // scroll widget:
-      if ( ShiftXPix > 0 )
-	w->scroll( -ShiftXPix, 0,
-		   QRect( PlotX1, PlotY2, PlotX2-PlotX1+1, PlotY1-PlotY2+1 ) );
-      else
+      if ( ShiftXPix != 0 )
 	w->scroll( -ShiftXPix, 0,
 		   QRect( PlotX1, PlotY2, PlotX2-PlotX1+1, PlotY1-PlotY2+1 ) );
     }

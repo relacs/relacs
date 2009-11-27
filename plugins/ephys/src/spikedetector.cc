@@ -20,8 +20,8 @@
 */
 
 #include <cmath>
-#include <QWidget>
-#include <QWidget>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
 #include <QPainter>
 #include <QPolygon>
 #include <QPushButton>
@@ -36,9 +36,7 @@ namespace ephys {
 
 SpikeDetector::SpikeDetector( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogDetector, 1,
-	    "SpikeDetector", "SpikeDetector", "EPhys",
-	    "Jan Benda", "1.6", "Jan 24, 2008" ),
-    SDW( (QWidget*)this ),
+	    "SpikeDetector", "EPhys", "Jan Benda", "1.6", "Jan 24, 2008" ),
     GoodSpikesHist( 0.0, 200.0, 0.5 ),
     BadSpikesHist( 0.0, 200.0, 0.5 ),
     AllSpikesHist( 0.0, 200.0, 0.5 )
@@ -93,10 +91,17 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   addInteger( "quality", "Quality", 0, 0, 3 );
   addTypeStyle( OptWidget::Bold, Parameter::Label );
 
+  // main layout:
+  QVBoxLayout *vb = new QVBoxLayout;
+  vb->setContentsMargins( 0, 0, 0, 0 );
+  vb->setSpacing( 0 );
+  setLayout( vb );
+
+  // parameter widgets:
   SDW.assign( ((Options*)this), 2, 4, true, 0, mutex() );
   SDW.setMargins( 4, 2, 4, 0 );
   SDW.setVerticalSpacing( 1 );
-  boxLayout()->addWidget( &SDW, 0, Qt::AlignHCenter );
+  vb->addWidget( &SDW, 0, Qt::AlignHCenter );
 
   setDialogSelectMask( 8 );
   setDialogReadOnlyMask( 16 );
@@ -107,7 +112,7 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   Update.start();
 
   QHBoxLayout *hb = new QHBoxLayout;
-  boxLayout()->addLayout( hb );
+  vb->addLayout( hb );
   hb->setContentsMargins( 4, 4, 4, 4 );
   hb->setSpacing( 4 );
 
@@ -133,7 +138,7 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   gl->setHorizontalSpacing( 4 );
   hb->addLayout( gl );
 
-  int is = fontInfo().pixelSize();
+  int is = widget()->fontInfo().pixelSize();
   QPixmap pm( is*2, is/3 );
   pm.fill( Qt::green );
   QLabel *key = new QLabel;

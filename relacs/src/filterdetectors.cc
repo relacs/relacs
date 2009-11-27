@@ -57,6 +57,12 @@ FilterDetectors::~FilterDetectors( void )
 
 void FilterDetectors::clear( void )
 {
+  for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d ) {
+    if ( d->FilterDetector != 0 ) {
+      Plugins::destroy( d->PluginName, RELACSPlugin::FilterId );
+      delete d->FilterDetector;
+    }
+  }
   FL.clear();
   clearIndices();
 }
@@ -274,12 +280,13 @@ string FilterDetectors::createFilters( void )
       fp->setMode( mode );
       
       // insert detector in list:
-      FL.push_back( FilterData( fp, intrace, othertrace,
+      FL.push_back( FilterData( fp, filter, intrace, othertrace,
 				buffersize, storesize, storewidth ) );
 
 
       // add detector to widget:
-      addTab( fp, fp->ident().c_str() );
+      if ( fp->widget() != 0 )
+	addTab( fp->widget(), fp->ident().c_str() );
 
     }
   }
@@ -1133,18 +1140,40 @@ ostream &operator<<( ostream &str, const FilterDetectors &fd )
 }
 
 
-void FilterDetectors::keyPressEvent( QKeyEvent *e )
+void FilterDetectors::keyPressEvent( QKeyEvent *event )
 {
-  if ( e->key() != Qt::Key_Return )
-    e->ignore();
+  if ( event->key() != Qt::Key_Return )
+    event->ignore();
+  for ( FilterList::iterator d = FL.begin();
+	d != FL.end() && ! event->isAccepted();
+	++d ) {
+    if ( d->FilterDetector != 0 &&
+	 d->FilterDetector->globalKeyEvents() &&
+	 d->FilterDetector->widget() != 0 )
+      d->FilterDetector->widget()->QObject::event( event );
+  }
 }
 
 
-FilterDetectors::FilterData::FilterData( Filter *filter, 
+void FilterDetectors::keyReleaseEvent( QKeyEvent *event )
+{
+  for ( FilterList::iterator d = FL.begin();
+	d != FL.end() && ! event->isAccepted();
+	++d ) {
+    if ( d->FilterDetector != 0 &&
+	 d->FilterDetector->globalKeyEvents() &&
+	 d->FilterDetector->widget() != 0 )
+      d->FilterDetector->widget()->QObject::event( event );
+  }
+}
+
+
+FilterDetectors::FilterData::FilterData( Filter *filter,
+					 const string &pluginname,
 					 const vector<string> &in,
 					 const vector<string> &other,
 					 long n, bool size, bool width )
-  : In( in ), Other( other ), 
+  : PluginName( pluginname ), In( in ), Other( other ), 
     InTraces(), InEvents(), OutTraces(), OutEvents(), OtherEvents(),
     NBuffer( n ), SizeBuffer( size ), WidthBuffer( width ), Init( true )
 {
@@ -1156,7 +1185,7 @@ FilterDetectors::FilterData::FilterData( Filter *filter,
 
 
 FilterDetectors::FilterData::FilterData( const FilterData &fd )
-  : In( fd.In ), Other( fd.Other ), 
+  : PluginName( fd.PluginName ), In( fd.In ), Other( fd.Other ), 
     InTraces(), InEvents( fd.InEvents ), OutTraces( fd.OutTraces ),
     OutEvents( fd.OutEvents ), OtherEvents( fd.OtherEvents ),
     NBuffer( fd.NBuffer ), SizeBuffer( fd.SizeBuffer ),
@@ -1176,6 +1205,7 @@ FilterDetectors::FilterData::~FilterData( void )
 void FilterDetectors::FilterData::print( ostream &str ) const
 {
   str << "      ident: " << FilterDetector->ident() << '\n'
+      << " pluginname: " << PluginName << '\n'
       << "         in: " << In[0];
   for ( unsigned int k=1; k<In.size(); k++ )
     str << ", " << In[k];

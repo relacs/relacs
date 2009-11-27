@@ -34,8 +34,7 @@ namespace ephys {
 
 
 MotorControl::MotorControl( void )
-  : Control( "MotorControl", "Control", "EPhys",
-	     "Jan Benda", "1.0", "Jul 1 2004" )
+  : Control( "MotorControl", "EPhys", "Jan Benda", "1.0", "Jul 1 2004" )
 {
   MM.clear();
 
@@ -50,9 +49,15 @@ MotorControl::MotorControl( void )
   // variables:
   SpikeEvents.clear();
 
+  // main layout:
+  MainLayout = new QVBoxLayout;
+  MainLayout->setContentsMargins( 0, 0, 0, 0 );
+  MainLayout->setSpacing( 0 );
+  setLayout( MainLayout );
+
   // indicators:
   QPainter p;
-  int is = fontInfo().pixelSize() * 2;
+  int is = widget()->fontInfo().pixelSize() * 2;
   QColor orange( 255, 165, 0 );
   GoodQuality = QPixmap( is, is );
   p.begin( &GoodQuality );
@@ -211,7 +216,7 @@ void MotorControl::initDevices( void )
   }
 
   QHBoxLayout *h = new QHBoxLayout;
-  boxLayout()->addLayout( h );
+  MainLayout->addLayout( h );
   QPushButton *db = new QPushButton( "Dialog" );
   h->addWidget( db );
   QWidget::connect( db, SIGNAL( clicked() ), (QWidget*)this, SLOT( dialog() ) );
@@ -282,8 +287,14 @@ XXXX instead of sessionOpts we should access the spikedtector directly!
 }
 
 
+QVBoxLayout *MotorControl::mainLayout( void )
+{
+  return MainLayout;
+}
+
+
 MiMaPu::MiMaPu( Manipulator *m,	int trace, const string &title,
-		const Options &detect,MotorControl *parent )
+		const Options &detect, MotorControl *parent )
   : QObject( (QWidget*)parent ), 
     ConfigClass( "MiMaPu", RELACSPlugin::Plugins, Save, 0 ), 
     MC( parent ), 
@@ -306,7 +317,7 @@ MiMaPu::MiMaPu( Manipulator *m,	int trace, const string &title,
   setConfigIdent( "MiMaPu-" + Str( trace+1, 0 ) );
 
   QGroupBox *g = new QGroupBox( title.c_str() );
-  MC->boxLayout()->addWidget( g );
+  MC->mainLayout()->addWidget( g );
   QVBoxLayout *mbox = new QVBoxLayout;
   g->setLayout( mbox );
 

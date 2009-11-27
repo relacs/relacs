@@ -27,9 +27,7 @@ namespace multielectrode {
 
 
 MultiSTA::MultiSTA( void )
-  : RePro( "MultiSTA", "Multiple STA", "Multi-electrode",
-	   "Jan Benda", "0.1", "Jan 21, 2009" ),
-    P( this )
+  : RePro( "MultiSTA", "Multi-electrode", "Jan Benda", "0.1", "Jan 21, 2009" )
 {
   // add some options:
   addSelection( "averagetrace", "Input trace to be averaged", "V-1" );
@@ -40,7 +38,7 @@ MultiSTA::MultiSTA( void )
   addBoolean( "plotsnippets", "Plot the individual snippets", true );
 
   // plot:
-  boxLayout()->addWidget( &P );
+  setWidget( &P );
 }
 
 

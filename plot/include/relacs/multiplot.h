@@ -23,10 +23,10 @@
 #define _RELACS_MULTIPLOT_H_ 1
 
 
-#include "plot.h"
 #include <vector>
 #include <QWidget>
 #include <QMutex>
+#include <relacs/plot.h>
 
 namespace relacs {
 

@@ -45,8 +45,8 @@ public:
   DefaultSession( void );
   ~DefaultSession( void );
 
-  void sessionStarted( void );
-  void sessionStopped( bool saved );
+  virtual void sessionStarted( void );
+  virtual void sessionStopped( bool saved );
 
 
 private:

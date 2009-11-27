@@ -28,8 +28,7 @@ namespace patchclamp {
 
 
 Session::Session( void )
-  : Control( "Session", "Info", "Patch-clamp",
-	     "Jan Benda", "1.0", "Oct 13, 2008" )
+  : Control( "Session", "Patch-clamp", "Jan Benda", "1.0", "Oct 13, 2008" )
 
 {
 }

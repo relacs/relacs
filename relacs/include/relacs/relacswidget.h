@@ -393,9 +393,6 @@ private:
   QTimer SimLoad;
   QLabel *SimLabel;
 
-    /*! Take care of the qApp->lock() */
-  int GUILock;
-
     /*! Controls the data reading thread. */
   QMutex DataMutex;
   int DataMutexCount;
@@ -433,6 +430,7 @@ private:
   string AIErrorMsg;
   bool Help;
 
+  bool HandlingEvent;
   class KeyTimeOut *KeyTime;
 
 };

@@ -110,8 +110,6 @@ public:
     /*! Update menu entries toggeling the traces. */
   void updateMenu( void );
 
-  virtual void keyPressEvent( QKeyEvent* e);
-
 
 public slots:
 
@@ -124,34 +122,34 @@ public slots:
   void moveRight( void );
   void moveStart( void );
   void moveEnd( void );
-  void moveSignal( void );
-  void fixedSignal( void );
-  void moveOffsLeft( void );
-  void moveOffsRight( void );
-  void continuousEnd( void );
+  void moveToSignal( void );
+  void viewSignal( void );
+  void moveSignalOffsLeft( void );
+  void moveSignalOffsRight( void );
+  void viewEnd( void );
   void manualRange( void );
   void autoRange( void );
 
   void plotOnOff( void );
-  void offsetToggle( void );
+  void viewToggle( void );
   void toggleManual( void );
-  void setOffset( int mode );
 
 
 protected:
 
   virtual void resizeLayout( void );
   virtual void resizeEvent( QResizeEvent *qre );
+  virtual void keyPressEvent( QKeyEvent *event );
   virtual void customEvent( QEvent *qce );
 
   QWidget *ButtonBox;
   QHBoxLayout *ButtonBoxLayout;
   QPushButton *OnOffButton;
-  QPushButton *OffsetButton;
+  QPushButton *ViewButton;
   QPushButton *ManualButton;
 
-  QPixmap FixedOffsetIcon;
-  QPixmap ContinuousOffsetIcon;
+  QPixmap SignalViewIcon;
+  QPixmap EndViewIcon;
 
 
 protected slots:
@@ -161,10 +159,22 @@ protected slots:
 
 private:
 
+    /*! Different view modes. */
+  enum Views { 
+      /*! Keep the display fixed. */
+    FixedView,
+      /*! Show the traces relative to the current signal time. */
+    SignalView,
+      /*! Show the traces relative to the current data. */
+    EndView,
+  };
+
+  void setView( Views mode );
+
   double TimeWindow;
   double TimeOffs;
 
-  int OffsetMode;
+  Views ViewMode;
   bool PlotChanged;
   double LeftTime;
   double Offset;

@@ -27,11 +27,11 @@
 namespace relacs {
 
 
-Control::Control( const string &name, const string &title,
-		  const string &pluginset, const string &author, 
-		  const string &version, const string &date )
+Control::Control( const string &name, const string &pluginset,
+		  const string &author, const string &version, 
+		  const string &date )
   : RELACSPlugin( "Control: " + name, RELACSPlugin::Plugins,
-		  name, title, pluginset, author, version, date )
+		  name, pluginset, author, version, date )
 {
   Interrupt = false;
 }
@@ -62,28 +62,16 @@ void Control::initDevices( void )
 void Control::addActions( QMenu *menu )
 {
   QAction* action = new QAction( (QWidget*)this );
-  action->setText( string( title() + " Dialog..." ).c_str() );
+  action->setText( string( name() + " Dialog..." ).c_str() );
   QWidget::connect( action, SIGNAL( triggered() ),
 		    (QWidget*)this, SLOT( dialog() ) );
   menu->addAction( action );
 
   action = new QAction( (QWidget*)this );
-  action->setText( string( title() + " Help..." ).c_str() );
+  action->setText( string( name() + " Help..." ).c_str() );
   QWidget::connect( action, SIGNAL( triggered() ),
 		    (QWidget*)this, SLOT( help() ) );
   menu->addAction( action );
-}
-
-
-void Control::keyPressEvent( QKeyEvent *e )
-{
-  QWidget::keyPressEvent( e );
-}
-
-
-void Control::keyReleaseEvent( QKeyEvent *e )
-{
-  QWidget::keyReleaseEvent( e );
 }
 
 

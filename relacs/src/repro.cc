@@ -35,11 +35,11 @@
 namespace relacs {
 
 
-RePro::RePro( const string &name, const string &titles,
-	      const string &pluginset, const string &author,
+RePro::RePro( const string &name, const string &pluginset,
+	      const string &author,
 	      const string &version, const string &date )
   : RELACSPlugin( "RePro: " + name, RELACSPlugin::Plugins,
-		  name, titles, pluginset, author, version, date ),
+		  name, pluginset, author, version, date ),
     OverwriteOpt(),
     ProjectOpt(),
     MyProjectOpt()
@@ -124,7 +124,7 @@ void RePro::run( void )
 
   // write message:
   if ( PrintMessage )
-    message( "Running <b>" + title() + "</b> ..." );
+    message( "Running <b>" + name() + "</b> ..." );
 
   // init:
   SoftStop = 0;
@@ -157,11 +157,11 @@ void RePro::run( void )
   // write message:
   if ( PrintMessage ) {
     if ( completed() )
-      message( "<b>" + title() + "</b> succesfully completed after <b>" + reproTimeStr() + "</b>" );
+      message( "<b>" + name() + "</b> succesfully completed after <b>" + reproTimeStr() + "</b>" );
     else if ( failed() )
-      message( "<b>" + title() + "</b> stopped after <b>" + reproTimeStr() + "</b>" );
+      message( "<b>" + name() + "</b> stopped after <b>" + reproTimeStr() + "</b>" );
     else
-      message( "<b>" + title() + "</b> aborted after <b>" + reproTimeStr() + "</b>" );
+      message( "<b>" + name() + "</b> aborted after <b>" + reproTimeStr() + "</b>" );
   }
 
   // start next RePro:
@@ -457,24 +457,24 @@ string RePro::addPath( const string &file ) const
 
 void RePro::keepFocus( void )
 {
-  RW->KeyTime->setNoFocusWidget( this );
+  RW->KeyTime->setNoFocusWidget( widget() );
 }
 
 
-void RePro::keyPressEvent( QKeyEvent *e )
+void RePro::keyPressEvent( QKeyEvent *event )
 {
-  if ( e->key() == SoftStopKey ) {
+  if ( event->key() == SoftStopKey ) {
     SoftStop++;
-    e->accept();
+    event->accept();
   }
   else
-    e->ignore();
+    event->ignore();
 }
 
 
-void RePro::keyReleaseEvent( QKeyEvent *e )
+void RePro::keyReleaseEvent( QKeyEvent *event )
 {
-  e->ignore();
+  event->ignore();
 }
 
 
@@ -693,7 +693,7 @@ void RePro::dialog( void )
     return;
   setDialogOpen();
 
-  OptDialog *od = new OptDialog( false, this );
+  OptDialog *od = new OptDialog( false, RW );
   od->setCaption( dialogCaption() );
   dialogHeaderWidget( od );
   if ( Options::size( dialogSelectMask() ) <= 0 )

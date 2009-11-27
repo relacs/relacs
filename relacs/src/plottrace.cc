@@ -1,6 +1,6 @@
 /*
   plottrace.cc
-  Plot trace and spikes.
+  Plot traces and events.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
@@ -45,8 +45,8 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
 {
   setDataMutex( &RW->DataMutex );
 
-  OffsetMode = 0;
-  setOffset( 1 );
+  ViewMode = SignalView;
+  setView( EndView );
   Manual = false;
   Plotting = true;
 
@@ -63,7 +63,7 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
   AutoOffs = 0.0;
 
   ButtonBox = 0;
-  OffsetButton = 0;
+  ViewButton = 0;
   ManualButton = 0;
   OnOffButton = 0;
 
@@ -75,10 +75,10 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
 
   int s = fontInfo().pixelSize();
 
-  FixedOffsetIcon = QPixmap( s, s );
+  SignalViewIcon = QPixmap( s, s );
   QPainter p;
-  p.begin( &FixedOffsetIcon );
-  p.eraseRect( FixedOffsetIcon.rect() );
+  p.begin( &SignalViewIcon );
+  p.eraseRect( SignalViewIcon.rect() );
   p.setPen( QPen() );
   p.setBrush( Qt::black );
   QPolygon pa( 3 );
@@ -89,11 +89,11 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
   p.setPen( QPen( Qt::black, 2 ) );
   p.drawLine( 3, 2, 3, s-1 );
   p.end();
-  FixedOffsetIcon.setMask( FixedOffsetIcon.createHeuristicMask() );
+  SignalViewIcon.setMask( SignalViewIcon.createHeuristicMask() );
 
-  ContinuousOffsetIcon = QPixmap( s, s );
-  p.begin( &ContinuousOffsetIcon );
-  p.eraseRect( ContinuousOffsetIcon.rect() );
+  EndViewIcon = QPixmap( s, s );
+  p.begin( &EndViewIcon );
+  p.eraseRect( EndViewIcon.rect() );
   p.setPen( QPen() );
   p.setBrush( Qt::black );
   pa.setPoint( 0, 3, 2 );
@@ -103,13 +103,13 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
   p.setPen( QPen( Qt::black, 2 ) );
   p.drawLine( s-2, 2, s-2, s-1 );
   p.end();
-  ContinuousOffsetIcon.setMask( ContinuousOffsetIcon.createHeuristicMask() );
+  EndViewIcon.setMask( EndViewIcon.createHeuristicMask() );
 
-  OffsetButton = new QPushButton;
-  ButtonBoxLayout->addWidget( OffsetButton );
-  OffsetButton->setIcon( FixedOffsetIcon );
-  OffsetButton->setToolTip( "F: fixed (Pos1), C: continous (End)" );
-  connect( OffsetButton, SIGNAL( clicked() ), this, SLOT( offsetToggle() ) );
+  ViewButton = new QPushButton;
+  ButtonBoxLayout->addWidget( ViewButton );
+  ViewButton->setIcon( SignalViewIcon );
+  ViewButton->setToolTip( "F: fixed (Pos1), C: continous (End)" );
+  connect( ViewButton, SIGNAL( clicked() ), this, SLOT( viewToggle() ) );
 
   QBitmap manualmask( s, s );
   p.begin( &manualmask );
@@ -273,7 +273,7 @@ void PlotTrace::init( const InList &data, const EventList &events )
   lockData();
   lock();
 
-  int origin = OffsetMode < 0 ? 3 : 2;
+  int origin = ViewMode == FixedView ? 3 : 2;
   double tfac = 1000.0;
   string tunit = "ms";
 
@@ -407,14 +407,14 @@ void PlotTrace::plot( const InList &data, const EventList &events )
   double sigtime = data[0].signalTime();
   if ( sigtime < 0.0 )
     sigtime = 0.0;
-  if ( OffsetMode == 0 ) {
+  if ( ViewMode == SignalView ) {
     // offset fixed at signalTime():
     leftwin = -tfac * TimeOffs;
     rightwin = leftwin + tfac * TimeWindow;
     LeftTime = 0.001 * leftwin + sigtime;
     Offset = sigtime;
   }
-  else if ( OffsetMode > 0 ) {
+  else if ( ViewMode == EndView ) {
     // offset continuous at currentTime():
     rightwin = tfac * ( data[0].currentTime() - sigtime );
     leftwin = rightwin - tfac * TimeWindow;
@@ -483,11 +483,11 @@ void PlotTrace::addMenu( QMenu *menu )
   Menu->addAction( "Move &right", this, SLOT( moveRight() ), Qt::Key_PageDown );
   Menu->addAction( "&Begin", this, SLOT( moveStart() ), Qt::CTRL + Qt::Key_PageUp );
   Menu->addAction( "&End", this, SLOT( moveEnd() ), Qt::CTRL + Qt::Key_PageDown );
-  Menu->addAction( "&Signal", this, SLOT( moveSignal() ), Qt::CTRL + Qt::Key_Home );
-  Menu->addAction( "&Fixed", this, SLOT( fixedSignal() ), Qt::CTRL + Qt::Key_F );
-  Menu->addAction( "Move offset left", this, SLOT( moveOffsLeft() ), Qt::SHIFT + Qt::Key_PageUp );
-  Menu->addAction( "Move offset right", this, SLOT( moveOffsRight() ), Qt::SHIFT + Qt::Key_PageDown );
-  Menu->addAction( "&Continuous", this, SLOT( continuousEnd() ), Qt::CTRL + Qt::Key_C );
+  Menu->addAction( "Move to signal", this, SLOT( moveToSignal() ), Qt::CTRL + Qt::Key_Home );
+  Menu->addAction( "&Signal view", this, SLOT( viewSignal() ), Qt::Key_Home );
+  Menu->addAction( "Move offset left", this, SLOT( moveSignalOffsLeft() ), Qt::SHIFT + Qt::Key_PageUp );
+  Menu->addAction( "Move offset right", this, SLOT( moveSignalOffsRight() ), Qt::SHIFT + Qt::Key_PageDown );
+  Menu->addAction( "&End view", this, SLOT( viewEnd() ), Qt::Key_End );
   Menu->addAction( "&Manual", this, SLOT( manualRange() ), Qt::CTRL + Qt::Key_M );
   Menu->addAction( "&Auto", this, SLOT( autoRange() ), Qt::CTRL + Qt::Key_A );
   Menu->addAction( "&Toggle Plot", this, SLOT( plotOnOff() ) );
@@ -553,12 +553,12 @@ void PlotTrace::setState( bool on, bool fixed, double length, double offs )
   QApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+1 ) ) );
 
   // toggle fixed offset:
-  setOffset( fixed ? 0 : 1 );
+  setView( fixed ? SignalView : EndView );
 
   // length of total time window:
   TimeWindow = length;
 
-  // left offset tot signal:
+  // left offset to signal:
   TimeOffs = offs;
 
   // pointstyle:
@@ -640,8 +640,8 @@ void PlotTrace::zoomIn( void )
 void PlotTrace::moveLeft( void )
 {
   lock();
-  if ( OffsetMode >= 0 )
-    setOffset( -1 );
+  if ( ViewMode != FixedView )
+    setView( FixedView );
   else
     LeftTime -= 0.5 * TimeWindow;
   unlock();
@@ -653,8 +653,8 @@ void PlotTrace::moveLeft( void )
 void PlotTrace::moveRight( void )
 {
   lock();
-  if ( OffsetMode >= 0 )
-    setOffset( -1 );
+  if ( ViewMode != FixedView )
+    setView( FixedView );
   else
     LeftTime += 0.5 * TimeWindow;
   unlock();
@@ -666,8 +666,8 @@ void PlotTrace::moveRight( void )
 void PlotTrace::moveStart( void )
 {
   lock();
-  if ( OffsetMode >= 0 )
-    setOffset( -1 );
+  if ( ViewMode != FixedView )
+    setView( FixedView );
   LeftTime = 0.0;
   unlock();
   if ( RW->idle() )
@@ -679,8 +679,8 @@ void PlotTrace::moveEnd( void )
 {
   lockData();
   lock();
-  if ( OffsetMode >= 0 )
-    setOffset( -1 );
+  if ( ViewMode != FixedView )
+    setView( FixedView );
   LeftTime = IL == 0 ? 0.0 : (*IL)[0].currentTime() - TimeWindow;
   unlock();
   unlockData();
@@ -689,15 +689,15 @@ void PlotTrace::moveEnd( void )
 }
 
 
-void PlotTrace::moveSignal( void )
+void PlotTrace::moveToSignal( void )
 {
   lockData();
   lock();
-  if ( OffsetMode == 0 )
+  if ( ViewMode == SignalView )
     TimeOffs = 0.0;
   else {
-    if ( OffsetMode >= 0 )
-      setOffset( -1 );
+    if ( ViewMode != FixedView )
+      setView( FixedView );
     double sigtime = IL == 0 ? 0.0 : (*IL)[0].signalTime();
     if ( sigtime < 0.0 )
       sigtime = 0.0;
@@ -710,21 +710,21 @@ void PlotTrace::moveSignal( void )
 }
 
 
-void PlotTrace::fixedSignal( void )
+void PlotTrace::viewSignal( void )
 {
   lock();
-  setOffset( 0 );
+  setView( SignalView );
   unlock();
   if ( RW->idle() )
     plot( *IL, *EL );
 }
 
 
-void PlotTrace::moveOffsLeft( void )
+void PlotTrace::moveSignalOffsLeft( void )
 {
   lock();
-  if ( OffsetMode != 0 )
-    setOffset( 0 );
+  if ( ViewMode != SignalView )
+    setView( SignalView );
   else
     TimeOffs += 0.5 * TimeWindow;
   unlock();
@@ -733,11 +733,11 @@ void PlotTrace::moveOffsLeft( void )
 }
 
 
-void PlotTrace::moveOffsRight( void )
+void PlotTrace::moveSignalOffsRight( void )
 {
   lock();
-  if ( OffsetMode != 0 )
-    setOffset( 0 );
+  if ( ViewMode != SignalView )
+    setView( SignalView );
   else
     TimeOffs -= 0.5 * TimeWindow;
   unlock();
@@ -746,10 +746,10 @@ void PlotTrace::moveOffsRight( void )
 }
 
 
-void PlotTrace::continuousEnd( void )
+void PlotTrace::viewEnd( void )
 {
   lock();
-  setOffset( 1 );
+  setView( EndView );
   unlock();
   if ( RW->idle() )
     plot( *IL, *EL );
@@ -800,27 +800,19 @@ void PlotTrace::autoRange( void )
 }
 
 
-void PlotTrace::offsetToggle( void )
+void PlotTrace::viewToggle( void )
 {
   lock();
-  int mode = OffsetMode + 1;
-  if ( mode > 1 )
-    mode = 0;
-  setOffset( mode );
+  setView( ViewMode == EndView ? SignalView : EndView );
   unlock();
 }
 
 
-void PlotTrace::setOffset( int mode )
+void PlotTrace::setView( Views mode )
 {
-  if ( mode > 1 )
-    mode = -1;
-  if ( mode < -1 )
-    mode = 1;
-
   lock();
-  if ( OffsetMode != mode ) {
-    OffsetMode = mode;
+  if ( ViewMode != mode ) {
+    ViewMode = mode;
     PlotChanged = true;
     QApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
   }
@@ -828,58 +820,25 @@ void PlotTrace::setOffset( int mode )
 }
 
 
-void PlotTrace::keyPressEvent( QKeyEvent* e )
+void PlotTrace::keyPressEvent( QKeyEvent *event )
 {
-  switch ( e->key() ) {
+  event->accept();
+  switch ( event->key() ) {
 
   case Qt::Key_1: case Qt::Key_2: case Qt::Key_3: case Qt::Key_4: case Qt::Key_5: 
   case Qt::Key_6: case Qt::Key_7: case Qt::Key_8: case Qt::Key_9: {
-    int n = e->key() - Qt::Key_1;
+    int n = event->key() - Qt::Key_1;
     if ( n >=0 && n < (int)PlotActions.size() )
       toggle( PlotActions[n] );
     break;
   }
 
-  case Qt::Key_Minus:
-    zoomOut();
-    break;
-  case Qt::Key_Plus:
   case Qt::Key_Equal:
     zoomIn();
     break;
 
-  case Qt::Key_End:
-    if ( e->modifiers() & Qt::ControlModifier )
-      moveEnd();
-    else
-      continuousEnd();
-    break;
-  case Qt::Key_Home:
-    if ( e->modifiers() & Qt::ControlModifier )
-      moveSignal();
-    else 
-      fixedSignal();
-    break;
-
-  case Qt::Key_PageUp:
-    if ( e->modifiers() & Qt::ControlModifier ) 
-      moveStart();
-    else if ( e->modifiers() & Qt::ShiftModifier ) 
-      moveOffsLeft();
-    else 
-      moveLeft();
-    break;
-  case Qt::Key_PageDown:
-    if ( e->modifiers() & Qt::ControlModifier )
-      moveEnd();
-    else if ( e->modifiers() & Qt::ShiftModifier ) 
-      moveOffsRight();
-    else
-      moveRight();
-    break;
-
   default:
-    e->ignore();
+    event->ignore();
 
   }
 }
@@ -951,7 +910,8 @@ void PlotTrace::resizeEvent( QResizeEvent *qre )
 void PlotTrace::customEvent( QEvent *qce )
 {
   switch ( qce->type() - QEvent::User ) {
-  case 1 : {
+
+  case 1 :
     if ( OnOffButton != 0 ) {
       lock();
       bool plotting = Plotting;
@@ -960,18 +920,18 @@ void PlotTrace::customEvent( QEvent *qce )
 	OnOffButton->setDown( false );
       else
 	OnOffButton->setDown( true );
-      break;
-    }
-  }
-  case 2: {
-    if ( OffsetButton != 0 ) {
-      if ( OffsetMode == 0 )
-	OffsetButton->setIcon( FixedOffsetIcon );
-      else
-	OffsetButton->setIcon( ContinuousOffsetIcon );
     }
     break;
-  }
+
+  case 2:
+    if ( ViewButton != 0 ) {
+      if ( ViewMode == SignalView )
+	ViewButton->setIcon( SignalViewIcon );
+      else
+	ViewButton->setIcon( EndViewIcon );
+    }
+    break;
+
   }
 }
 

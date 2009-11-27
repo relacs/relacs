@@ -233,9 +233,10 @@ int Plugins::close( int id )
     return -InvalidFile;
 
   // check for still used plugins:
-  for ( unsigned int k=0; k<Plugs.size(); k++ )
+  for ( unsigned int k=0; k<Plugs.size(); k++ ) {
     if ( Plugs[k].FileID == id && Plugs[k].UseCount > 0 )
       return -LibraryInUse;
+  }
 
   // remove plugins:
   for ( PluginsType::iterator p = Plugs.begin(); p != Plugs.end(); )

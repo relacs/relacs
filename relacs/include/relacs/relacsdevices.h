@@ -45,8 +45,10 @@ public:
     : DeviceList< Device, 0 >( "Device", "All Devices" ) {};
   void clear( void )
     {
-      for ( int k=DVs.size()-1; k>=0; k-- )
+      for ( int k=DVs.size()-1; k>=0; k-- ) {
+	Plugins::destroy( DVs[k]->deviceClass(), -1 );
 	delete DVs[k];
+      }
       DVs.clear();
       for ( unsigned int k=0; k<Menus.size(); k++ ) {
 	if ( Menus[k] != 0 )

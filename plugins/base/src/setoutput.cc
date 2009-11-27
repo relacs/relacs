@@ -19,7 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <QWidget>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
 #include <relacs/base/setoutput.h>
 using namespace relacs;
 
@@ -27,17 +28,12 @@ namespace base {
 
 
 SetOutput::SetOutput( void )
-  : RePro( "SetOutput", "SetOutput", "Base",
-	   "Jan Benda", "1.0", "Mar 21, 2009" ),
-    STW( (QWidget*)this )
+  : RePro( "SetOutput", "Base", "Jan Benda", "1.0", "Mar 21, 2009" )
 {
   // add some options:
   addSelection( "outtrace", "Output trace", "V-1" );
   addNumber( "value", "Value to be writen to output trace", 0.0, -100000.0, 100000.0, 0.1 );
   addBoolean( "interactive", "Set values interactively", false );
-
-  // display output variables:
-  boxLayout()->addWidget( &STW );
 
   // Ok button:
   QPushButton *OKButton = new QPushButton( "&Ok" );
@@ -57,7 +53,10 @@ SetOutput::SetOutput( void )
   hb->addWidget( OKButton );
   hb->addWidget( CancelButton );
 
-  boxLayout()->addLayout( hb );
+  QVBoxLayout *l = new QVBoxLayout;
+  setLayout( l );
+  l->addWidget( &STW );
+  l->addLayout( hb );
 }
 
 
@@ -83,9 +82,9 @@ void SetOutput::config( void )
 
   // display values:
   STW.assign( &OutOpts, ParameterFlag, 0, false, 0, mutex() );
-  updateGeometry();
+  widget()->updateGeometry();
   if ( STW.lastWidget() != 0 )
-    setTabOrder( STW.lastWidget(), OKButton );
+    widget()->setTabOrder( STW.lastWidget(), OKButton );
   //  setTabOrder( OKButton, CancelButton );
 }
 
@@ -185,7 +184,7 @@ void SetOutput::customEvent( QEvent *qce )
       STW.firstWidget()->setFocus();
   }
   else if ( qce->type() == QEvent::User+11 ) {
-    clearFocus();
+    widget()->clearFocus();
   }
   else
     RELACSPlugin::customEvent( qce );

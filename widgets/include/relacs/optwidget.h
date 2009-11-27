@@ -55,8 +55,9 @@ Here is an example:
 \image html optwidget.png
 It was created with the following code:
 \code
-#include <options.h>
-#include <optwidget.h>
+#include <relacs/options.h>
+#include <relacs/optwidget.h>
+using namespace relacs;
 
 ...
 

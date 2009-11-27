@@ -100,6 +100,12 @@ addPath() prepends the current directory for data storage to a filename.
 Use update() or postCustomEvent() for thread save drawing 
 and other interactions with the GUI.
 
+You can handle key press and release events of a RELACSPlugin that has a widget
+by reimplementing keyPressEvent() and keyReleaseEvent().
+Usually, the events are only delivered, if the corresponding widget() is
+visible. If you want he key event handlers to be called irrespective
+of the widgets visibility, then call setGlobalKeyEvents().
+
 Some integers for identifying the type of the RELACS plugin are defined
 and are used by the addDevice, addAttenuate, addAttuator,
 addAnalogInput, addAnalofOutput, addModel, addFilter, addDetector,
@@ -159,21 +165,32 @@ public:
         The identifier \a configident is used for identifying this class
 	in the configuration file of group \a configgroup.
         \a name has to be exactly the name of the class.
-	The class has a widget \a title and
-	belongs to the set of plugins named \a pluginset.
+	The class belongs to the set of plugins named \a pluginset.
 	The implementation of a class derived from %RELACSPlugin
 	has a \a version and was written by \a author on \a date.
         \sa setConfigIdent(), setConfigGroup(),
 	setName(), setTitle(), setAuthor(), setDate(), setVersion() */
   RELACSPlugin( const string &configident="", int configgroup=0,
 		const string &name="", 
-		const string &title="",
 		const string &pluginset="",
 		const string &author="unknown",
 		const string &version="unknown",
 		const string &date=__DATE__ );
     /*! Destruct the RELACSPlugin. */
   virtual ~RELACSPlugin( void );
+
+    /*! \return the widget of this plugin., or NULL if it does not have one.
+        \sa setWidget(), setLayout() */
+  QWidget *widget( void );
+    /*! Declare \a widget as the main widget of this class.
+        \note call this function only once in the constructor.
+        \sa widget(), setLayout() */
+  void setWidget( QWidget *widget );
+    /*! Declare \a layout as the main layout of this class.
+        A container widget for the layout is created automatically.
+        \note call this function only once in the constructor.
+        \sa widget(), setWidget() */
+  void setLayout( QLayout *layout );
 
     /*! The name of the plugin set the class belongs to. */
   string pluginSet( void ) const;
@@ -660,6 +677,34 @@ protected:
     /*! Pointer to the main RELACSWidget. */
   RELACSWidget *RW;
 
+    /*! Reimplement this function in case you need 
+        to handle key-press events.
+        \note this RELACSPlugin needs to have a widget,
+	set by setWidget() or setLayout(), in order 
+        to have keyPressEvent() called. */
+  virtual void keyPressEvent( QKeyEvent *event );
+    /*! Reimplement this function in case you need 
+        to handle key-release events.
+        \note this RELACSPlugin needs to have a widget,
+	set by setWidget() or setLayout(), in order 
+        to have keyPressEvent() called. */
+  virtual void keyReleaseEvent( QKeyEvent *event );
+    /*! This function calls keyPressEvent() and keyReleaseEvent()
+        by listening to the events the widget() is receiving. */
+  virtual bool eventFilter( QObject *obj, QEvent *event );
+
+
+public:
+
+    /*! \return \c true if the key event handlers should be called
+        irrespective of the visibility of the corresponding widget.
+	\sa setGlobalKeyEvents(), keyPressEvent(), keyReleaseEvent(), setWidget() */
+  bool globalKeyEvents( void );
+    /*! Set \a global to \c true in order to make the key event handlers to
+        be called irrespective of the visibility of the corresponding widget().
+	\sa globalKeyEvents(), keyPressEvent(), keyReleaseEvent(), setWidget() */
+  void setGlobalKeyEvents( bool global=true );
+
 
 protected slots:
 
@@ -670,10 +715,17 @@ protected slots:
         \sa postCustomEvent() */
   virtual void customEvent( QEvent *qce );
 
+    /*! Informs the plugin that the associated widget is going
+        to be destroyed. */
+  void widgetDestroyed( QObject *obj );
+
 
 private:
 
   string PluginSet;
+
+  bool GlobalKeyEvents;
+  QWidget *Widget;
 
     /*! Dummy trace. */
   static const TraceSpec DummyTrace;

@@ -161,7 +161,8 @@ public:
 
 protected:
 
-  void keyPressEvent( QKeyEvent *e );
+  void keyPressEvent( QKeyEvent *event );
+  void keyReleaseEvent( QKeyEvent *event );
 
 
 private:
@@ -169,7 +170,8 @@ private:
   class FilterData
   {
   public:
-    FilterData( Filter *filter, const vector<string> &in, 
+    FilterData( Filter *filter, const string &pluginname,
+		const vector<string> &in, 
 		const vector<string> &other,
 		long n, bool size, bool width );
     FilterData( const FilterData &fd );
@@ -178,6 +180,7 @@ private:
     void print( ostream &str ) const;
 
     Filter *FilterDetector;
+    string PluginName;
     int Out;
     int NOut;
     vector<string> In;

@@ -1,6 +1,6 @@
 /*
   configdialog.h
-  ConfigClass widget with dialogs.
+  A dialog for a ConfigClass.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
@@ -24,11 +24,11 @@
 
 #include <string>
 #include <vector>
+#include <QObject>
 #include <QWidget>
 #include <QMutex>
-#include <QLayout>
 #include <relacs/configclass.h>
-#include "optdialog.h"
+#include <relacs/optdialog.h>
 
 using namespace std;
 
@@ -37,9 +37,9 @@ namespace relacs {
 
 /*! 
 \class ConfigDialog
-\brief ConfigClass widget with dialogs.
+\brief A dialog for a ConfigClass.
 \author Jan Benda
-\version 1.1
+\version 1.2
 
 ConfigDialog adds a dialog for editing the configuration Options
 of a ConfigClass.
@@ -72,16 +72,17 @@ These files are searched in directories as specified in the list of
 default search pathes that can be accessed with helpPathes(), helpPath()
 and manipulated with clearHelpPathes(), setHelpPath(), addHelpPath().
 
-A %ConfigDialog widget has a name() and a title(),
+A %ConfigDialog has a name(),
 the last version() was written by author() on date().
 This information is set either by the constructor or by
-setName(), setTitle(), setAuthor(), setVersion(), and setDate().
+setName(), setAuthor(), setVersion(), and setDate().
 The name() and selected Options can be saved in XML format
 via saveXML().
+A main widget for the dialogs can be set via setMainWidget().
 */
 
 
-class ConfigDialog : public QWidget, public ConfigClass
+class ConfigDialog : public QObject, public ConfigClass
 {
   Q_OBJECT
 
@@ -91,24 +92,18 @@ public:
     /*! Construct a %ConfigDialog.
         The identifier \a configident is used for identifying this class
 	in the configuration file of group \a configgroup.
-	The class has a unique \a name and a widget \a title.
+	The class has a unique \a name.
 	The implementation of a class derived from %ConfigDialog
 	has a \a version and was written by \a author on \a date.
-        \sa setConfigIdent(), setConfigGroup(),
-	setName(), setPrefix(), setTitle(), setAuthor(), setDate(), setVersion() */
+        \sa setConfigIdent(), setConfigGroup(), setParent(),
+	setName(), setPrefix(), setAuthor(), setDate(), setVersion() */
   ConfigDialog( const string &configident="", int configgroup=0,
 		const string &name="", 
-		const string &title="",
 		const string &author="",
 		const string &version="",
 		const string &date=__DATE__ );
     /*! Destruct the ConfigDialog. */
   virtual ~ConfigDialog( void );
-
-    /*! Return the default BoxLayout that is managing the widget's geometry. 
-        It is empty, so therefore ou might delete it and attach 
-	a different layout to the widget. */
-  QBoxLayout *boxLayout( void );
 
     /*! The name of the class. */
   string name( void ) const;
@@ -118,10 +113,6 @@ public:
   string prefix( void ) const;
     /*! Set the prefix identifying the class to \a prefix. \sa saveXML() */
   virtual void setPrefix( const string &prefix );
-    /*! The title of the class as it appears above the widget. */
-  string title( void ) const;
-    /*! Set the title of the class to \a title. */
-  virtual void setTitle( const string &title );
     /*! The author of the class. */ 
   string author( void ) const;
     /*! Set the author of the class to \a author. */
@@ -187,6 +178,13 @@ public:
   bool dialogOpen( void ) const;
     /*! True if the help window is open. */
   bool helpOpen( void ) const;
+
+    /*! \return the main widget for the dialogs. Can be NULL.
+        \sa setMainWidget() */
+  QWidget *mainWidget( void );
+    /*! Set the main widget for the dialogs to \a widget.
+        \sa mainWidget() */
+  virtual void setMainWidget( QWidget *widget );
 
     /*! Lock the mutex of the ConfigDialog.
         \sa unlock(), mutex() */
@@ -349,11 +347,10 @@ protected slots:
 
 private:
 
-  QBoxLayout *BoxLayout;
+  QWidget *MainWidget;
 
   string Name;
   string Prefix;
-  string Title;
   string Author;
   string Version;
   string Date;

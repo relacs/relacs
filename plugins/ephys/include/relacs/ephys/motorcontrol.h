@@ -115,6 +115,7 @@ public:
   virtual void keyPressEvent( QKeyEvent *e );
 
   int spikes( int trace );
+  QVBoxLayout *mainLayout( void );
 
   friend class MiMaPu;
 
@@ -127,6 +128,8 @@ private:
 
   double MinRate;
   double MinSize;
+
+  QVBoxLayout *MainLayout;
 
   QPixmap BadQuality;
   QPixmap PotentialQuality;

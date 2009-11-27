@@ -1,14 +1,20 @@
 Qt4:
+- PatchClamp: PlotTrace missing NewData Plot refresh when switching
+  from continuous mode to fixed mode with SingleStimulus within the
+  stimulus duration
+- PlotTrace: morph it into a Control and think about the buttons
 - check the use of mutexes in wait() (e.g. in Control, RePro, RELACSWidget, ReadLoop(?))
 - further improve Macros
   (get rid of the friends, split startNextRepRro onto Macro and
   MacroCommand, etc)
-- what is the difference between RePro::name() and ReProData::Name???
 - how to use enurePolished() in SaveFiles and Session
 - Settings dialog: default paht for dry/ - mkdir dry/!
-- What about the autoAdd functionality of Layouts?
 - base:setOutput: what is wrong with the setTabOrder() call? Do we really need it?
-
+- DefaultSession might not be needed any more (it provides simply a "start" button).
+- Plugins: FileID is wrong (for non plugin AISim), update to QLibrary!
+- what is the difference between RePro::name() and ReProData::Name???
+  The latter is the Plugin name and is used for reloading the plugin
+  Get rid of it after refactoring Plugins
 
 SignalTime: finish this update (RELACSPlugin::signalTime()
 - test ficurve RePro: does not work!

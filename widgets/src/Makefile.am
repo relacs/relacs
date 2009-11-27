@@ -44,7 +44,6 @@ pkginclude_HEADERS = \
     ../include/relacs/configdialog.h \
     ../include/relacs/optdialog.h \
     ../include/relacs/optwidget.h \
-    ../include/relacs/optdialogbutton.h \
     ../include/relacs/messagebox.h
 
 librelacswidgets_la_SOURCES = \
@@ -53,6 +52,7 @@ librelacswidgets_la_SOURCES = \
     optwidget.cc \
     ../include/relacs/optwidgetbase.h \
     optwidgetbase.cc \
+    ../include/relacs/optdialogbutton.h \
     optdialogbutton.cc \
     messagebox.cc
 

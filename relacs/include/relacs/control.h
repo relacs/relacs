@@ -45,10 +45,10 @@ independently and in parallel to the RePros.
 Use it to implement things that do not fit in the RePro,
 Session, or EventDetector concepts.
 
-A %Control widget has a name() and a title(),
+A %Control widget has a name(),
 the last version() was written by author() on date().
 This information is set either by the constructor or by
-setName(), setTitle(), setAuthor(), setVersion(), and setDate().
+setName(), setAuthor(), setVersion(), and setDate().
 
 The Control is initialized by reimplementing initialize(), config(),
 and initDevices().
@@ -67,8 +67,6 @@ If you want the thread to be stopped in a different way,
 reimplement requestStop().
 Use lockGUI() and unlockGUI() to encapsulate code that directly or
 indirectly draws something on the screen.
-
-Reimplement keyPressEvent() and/or keyReleaseEvent() for keybord-based control.
 
 A separate window displaying a warning message can be opened with
 warning(), a window displaying some information with info().
@@ -106,13 +104,12 @@ class Control : public RELACSPlugin, protected QThread
 public:
 
     /*! Construct a control widget with name \a name (has to be identical
-        to the class name) and widget title \a title that
+        to the class name) that
 	belongs to the set of plugins named \a pluginset.
 	The implementation of a class derived from Control
 	has the version \a version and was written
 	by \a author on \a date. */
   Control( const string &name, 
-	   const string &title="",
 	   const string &pluginset="",
 	   const string &author="unknown",
 	   const string &version="unknown",
@@ -144,11 +141,6 @@ public:
     /*! Add specific actions to the RELACS File-menu.
         This implementation adds a "Dialog" and a "Help" menu entry. */
   virtual void addActions( QMenu *menu );
-
-    /*! You may reimplement this function to handle key-press events. */
-  virtual void keyPressEvent( QKeyEvent *e );
-    /*! You may reimplement this function to handle key-release events. */
-  virtual void keyReleaseEvent( QKeyEvent *e );
 
 
 protected:

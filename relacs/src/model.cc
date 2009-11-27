@@ -26,11 +26,11 @@
 namespace relacs {
 
 
-Model::Model( const string &name, const string &titles, 
-	      const string &pluginset, const string &author,
+Model::Model( const string &name, const string &pluginset,
+	      const string &author,
 	      const string &version, const string &date )
   : RELACSPlugin( "Model: " + name, RELACSPlugin::Plugins,
-		  name, titles, pluginset, author, version, date ),
+		  name, pluginset, author, version, date ),
     Data( 0 ),
     Signals( 0 ),
     SignalMutex(),
@@ -319,9 +319,9 @@ bool Model::restarted( void )
 
 void Model::addActions( QMenu *menu )
 {
-  menu->addAction( string( title() + " Dialog..." ).c_str(),
+  menu->addAction( string( name() + " Dialog..." ).c_str(),
 		   (RELACSPlugin*)this, SLOT( dialog() ) );
-  menu->addAction( string( title() + " Help..." ).c_str(),
+  menu->addAction( string( name() + " Help..." ).c_str(),
 		   (RELACSPlugin*)this, SLOT( help() ) );
 }
 

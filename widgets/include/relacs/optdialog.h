@@ -28,7 +28,7 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <relacs/options.h>
-#include "optwidget.h"
+#include <relacs/optwidget.h>
 
 namespace relacs {
 
@@ -47,8 +47,9 @@ Here is an example:
 \image html optdialog.png
 This example was created with the following code:
 \code
-#include <options.h>
-#include <optdialog.h>
+#include <relacs/options.h>
+#include <relacs/optdialog.h>
+using namespace relacs;
 
 ...
 

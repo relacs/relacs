@@ -42,7 +42,6 @@ class RELACSWidget;
 \author Jan Benda
 \version 1.0
 \brief Container handling RePros
-\bug ~RePros: is that all?
 */
 
 
@@ -52,12 +51,9 @@ class RePros : public QTabWidget
 
 public:
 
+    /*! Initializes RePros and create all available repros. */ 
   RePros( RELACSWidget *rw=0, QWidget *parent=0 );
   ~RePros( void );
-
-    /*! Initializes RePros and create all available repros from \a plugins. 
-        Returns the number of repros. */ 
-  int create( RELACSWidget *rw=0 );
 
     /*! Displays the message \a msg of a RePro. */
   void message( const string &msg );
@@ -84,11 +80,11 @@ public:
     /*! The RePro with index \a index. */
   RePro *repro( int index ) const;
     /*! The RePro with class name \a name. */
-  RePro *repro( const string &name ) const { return repro( index( name ) ); };
+  RePro *repro( const string &name ) const;
     /*! The index of the RePro with name \a name. */
   int nameIndex( const string &name ) const;
     /*! The RePro with name \a name. */
-  RePro *nameRepro( const string &name ) const { return repro( nameIndex( name ) ); };
+  RePro *nameRepro( const string &name ) const;
     /*! \return The index of the currently active RePro. */
   int currentRePro( void ) const;
 
@@ -116,7 +112,7 @@ public:
   void sessionStopped( bool saved );
 
     /*! The additional options needed for RePro Dialogs. */
-  Options &dialogOptions( void ) { return DialogOpt; };
+  Options &dialogOptions( void );
 
   friend ostream &operator<< ( ostream &str, const RePros &repros );
 

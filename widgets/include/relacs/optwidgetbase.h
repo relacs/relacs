@@ -35,7 +35,7 @@
 #include <QPushButton>
 #include <QDoubleSpinBox>
 #include <relacs/options.h>
-#include "optwidget.h"
+#include <relacs/optwidget.h>
 using namespace std;
 
 namespace relacs {

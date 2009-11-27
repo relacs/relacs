@@ -1,6 +1,6 @@
 /*
   configdialog.cc
-  Config widget with dialogs.
+  A dialog for a ConfigClass.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
@@ -20,7 +20,7 @@
 */
 
 #include <cmath>
-#include <QGroupBox>
+#include <QLayout>
 #include <QImage>
 #include <QPixmap>
 #include <QLabel>
@@ -35,22 +35,15 @@ namespace relacs {
 
 
 ConfigDialog::ConfigDialog( const string &configident, int configgroup,
-			    const string &name, 
-			    const string &title, const string &author, 
+			    const string &name, const string &author, 
 			    const string &version, const string &date )
-  : QWidget(),
-    ConfigClass( configident, configgroup ),
+  : ConfigClass( configident, configgroup ),
+    MainWidget( 0 ),
     HelpPathes( 0 ),
     CDMutex()
 {
-  BoxLayout = new QBoxLayout( QBoxLayout::TopToBottom );
-  BoxLayout->setContentsMargins( 0, 0, 0, 0 );
-  BoxLayout->setSpacing( 0 );
-  setLayout( BoxLayout );
   Name = name.empty() ? configident : name;
   Prefix = "";
-  Prefix = "";
-  Title = title.empty() ? Name : title;
   Author = author;
   Version = version;
   Date = date;
@@ -71,12 +64,6 @@ ConfigDialog::ConfigDialog( const string &configident, int configgroup,
 ConfigDialog::~ConfigDialog( void )
 {
   HelpPathes.clear();
-}
-
-
-QBoxLayout *ConfigDialog::boxLayout( void )
-{ 
-  return BoxLayout;
 }
 
 
@@ -101,18 +88,6 @@ string ConfigDialog::prefix( void ) const
 void ConfigDialog::setPrefix( const string &prefix )
 {
   Prefix = prefix;
-}
-
-
-string ConfigDialog::title( void ) const
-{
-  return Title;
-}
-
-
-void ConfigDialog::setTitle( const string &title )
-{
-  Title = title;
 }
 
 
@@ -167,7 +142,7 @@ void ConfigDialog::setDialogHeader( bool d )
 string ConfigDialog::dialogCaption( void ) const
 {
   if ( DialogCaption.empty() )
-    return title() + " Settings";
+    return name() + " Settings";
   else
     return DialogCaption;
 }
@@ -345,7 +320,7 @@ void ConfigDialog::setDialogOpen( bool open )
 string ConfigDialog::helpCaption( void ) const
 {
   if ( HelpCaption.empty() )
-    return title() + " Help";
+    return name() + " Help";
   else
     return HelpCaption;
 }
@@ -396,7 +371,7 @@ void ConfigDialog::dialogHeaderWidget( OptDialog *od )
     }
     // background image:
     if ( ! headerImageFile().empty() ) {
-      int h = fontMetrics().height()*11/2;
+      int h = od->fontMetrics().height()*11/2;
       QImage image( headerImageFile().c_str() );
       QLabel *pic = new QLabel;
       hb->addWidget( pic );
@@ -479,7 +454,7 @@ void ConfigDialog::dialog( void )
     return;
   setDialogOpen();
 
-  OptDialog *od = new OptDialog( false, this );
+  OptDialog *od = new OptDialog( false, mainWidget() );
   od->setCaption( dialogCaption() );
   dialogHeaderWidget( od );
   if ( Options::size( DialogSelectMask ) <= 0 )
@@ -507,9 +482,9 @@ void ConfigDialog::help( void )
   Help = true;
 
   // create and exec dialog:
-  OptDialog *od = new OptDialog( false, this );
+  OptDialog *od = new OptDialog( false, mainWidget() );
   od->setCaption( helpCaption() );
-  QTextBrowser *hb = new QTextBrowser( this );
+  QTextBrowser *hb = new QTextBrowser( mainWidget() );
   QStringList fpl;
   for ( int k=0; k<helpPathes(); k++ )
     fpl.push_back( helpPath( k ).c_str() );
@@ -536,6 +511,18 @@ void ConfigDialog::help( void )
 void ConfigDialog::hClosed( int r )
 {
   Help = false;
+}
+
+
+QWidget *ConfigDialog::mainWidget( void )
+{
+  return MainWidget;
+}
+
+
+void ConfigDialog::setMainWidget( QWidget *widget )
+{
+  MainWidget = widget;
 }
 
 

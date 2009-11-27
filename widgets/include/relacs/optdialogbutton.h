@@ -24,7 +24,7 @@
 
 #include <vector>
 #include <QPushButton>
-#include "optdialog.h"
+#include <relacs/optdialog.h>
 using namespace std;
 
 namespace relacs {

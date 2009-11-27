@@ -27,9 +27,7 @@ namespace base {
 
 HighPass::HighPass( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogFilter, 1,
-	    "HighPass", "HighPass", "Base",
-	    "Jan Benda", "0.1", "Jan 24 2008" ),
-    LFW( (QWidget*)this )
+	    "HighPass", "Base", "Jan Benda", "0.1", "Jan 24 2008" )
 {
   // parameter:
   Tau = 0.001;
@@ -38,7 +36,7 @@ HighPass::HighPass( const string &ident, int mode )
   addNumber( "tau", "Time constant", Tau, 0.0, 10000.0, 0.0001, "s", "ms", "%.1f" );
 
   LFW.assign( ((Options*)this), 0, 0, true, 0, mutex() );
-  boxLayout()->addWidget( &LFW );
+  setWidget( &LFW );
 }
 
 

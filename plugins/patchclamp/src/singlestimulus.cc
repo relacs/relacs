@@ -35,10 +35,7 @@ namespace patchclamp {
 
 
 SingleStimulus::SingleStimulus( void )
-  : RePro( "SingleStimulus", "Single Stimulus", "Patch-clamp",
-	   "Jan Benda", "1.2", "Oct 13, 2008" ),
-    SP( 3, this ),
-    P( 2, this )
+  : RePro( "SingleStimulus", "Patch-clamp", "Jan Benda", "1.2", "Oct 13, 2008" )
 {
   AmplitudeUnit = "nA";
   Offset = 0.0;
@@ -94,9 +91,13 @@ SingleStimulus::SingleStimulus( void )
 
   addTypeStyle( OptWidget::Bold, Parameter::Label );
 
+  // layout:
+  StackLayout = new QStackedLayout;
+  setLayout( StackLayout );
+
   // setup plots:
-  SP.hide();
   SP.lock();
+  SP.resize( 3 );
   SP.setCommonXRange( 0, 1 );
   SP[0].setOrigin( 0.0, 0.5 );
   SP[0].setSize( 0.7, 0.5 );
@@ -123,10 +124,11 @@ SingleStimulus::SingleStimulus( void )
   SP[2].setYLabelPos( 2.3, Plot::FirstMargin, 0.5, Plot::Graph,
 		      Plot::Center, -90.0 );
   SP.unlock();
-  boxLayout()->addWidget( &SP );
+  StackLayout->addWidget( &SP );
 
   P.show();
   P.lock();
+  P.resize( 2 );
   P.setCommonXRange( 0, 1 );
   P[0].setOrigin( 0.0, 0.5 );
   P[0].setSize( 1.0, 0.5 );
@@ -144,8 +146,9 @@ SingleStimulus::SingleStimulus( void )
   P[1].setYLabelPos( 2.3, Plot::FirstMargin, 0.5, Plot::Graph,
 		     Plot::Center, -90.0 );
   P.unlock();
-  boxLayout()->addWidget( &P );
+  StackLayout->addWidget( &P );
 
+  StackLayout->setCurrentWidget( &P );
 }
 
 
@@ -984,14 +987,10 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
 
 void SingleStimulus::customEvent( QEvent *qce )
 {
-  if ( qce->type() == QEvent::User+10 ) {
-    SP.hide();
-    P.show();
-  }
-  else if ( qce->type() == QEvent::User+11 ) {
-    P.hide();
-    SP.show();
-  }
+  if ( qce->type() == QEvent::User+10 )
+    StackLayout->setCurrentWidget( &P );
+  else if ( qce->type() == QEvent::User+11 )
+    StackLayout->setCurrentWidget( &SP );
   else
     RELACSPlugin::customEvent( qce );
 }

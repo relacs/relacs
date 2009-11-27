@@ -77,15 +77,14 @@ public:
         If \a outtraces == 0, then the number of output traces
         equals the number of input traces.
         The %Filter is named \a name (has to be identical
-        to the class name), has a widget title \a title,
-	and belongs to the set of plugins named \a pluginset.
+        to the class name) and belongs to the set of plugins
+	named \a pluginset.
 	The implementation of a class derived from Filter
 	has the version \a version and was written
 	by \a author on \a date. */
   Filter( const string &ident, int mode,
 	  FilterType type, int outtraces=0, 
 	  const string &name="",
-	  const string &title="",
 	  const string &pluginset="",
 	  const string &author="unknown",
 	  const string &version="unknown",

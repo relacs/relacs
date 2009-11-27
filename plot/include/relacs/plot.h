@@ -379,9 +379,9 @@ public:
 	you are using multible threads, then
 	you need to provide a mutex for locking the data
 	via setDataMutex(). */
-  Plot( KeepMode keep, QWidget *parent );
-  Plot( QWidget *parent );
-  Plot( KeepMode keep, bool subwidget=false, int id=0, MultiPlot *mp=0 );
+  Plot( KeepMode keep, QWidget *parent=0 );
+  Plot( QWidget *parent=0 );
+  Plot( KeepMode keep, bool subwidget, int id=0, MultiPlot *mp=0 );
   ~Plot( void );
 
   void keepData( void ) { Keep = Copy; };
