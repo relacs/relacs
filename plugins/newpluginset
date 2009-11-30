@@ -1,0 +1,114 @@
+#! /bin/bash
+
+if test "$1" = "--help"; then
+    cat <<EOF
+newpluginset
+
+Creates a new plugin set.
+EOF
+    exit 0
+fi
+
+# get path name for new plugin:
+while test -z "$PLUGINPATH"; do
+    read -e -p "Path name of the new plugin: " PLUGINPATH
+    test -z "$PLUGINPATH" && echo "! Error! You need to provide a path name for the plugin!"
+done
+PLUGINPATH="${PLUGINPATH%/}"
+PLUGINNAME="${PLUGINPATH##*/}"
+
+PLUGINDEPTH=""
+PSTR1="$PLUGINPATH"
+PSTR2="${PSTR1#*/}"
+while test "$PSTR1" != "$PSTR2"; do
+    PLUGINDEPTH="${PLUGINDEPTH}../"
+    PSTR1="$PSTR2"
+    PSTR2="${PSTR1#*/}"
+done
+
+# get brief description for new plugin:
+while test -z "$PLUGINBRIEF"; do
+    read -e -p "One line description of the new plugin: " PLUGINBRIEF
+    test -z "$PLUGINBRIEF" && echo "! Error! You need to provide a one line description for the plugin!"
+done
+
+
+# make directories:
+echo
+echo "make directories for $PLUGINNAME ... "
+mkdir $PLUGINPATH
+mkdir $PLUGINPATH/src
+mkdir $PLUGINPATH/doc
+mkdir $PLUGINPATH/include
+mkdir $PLUGINPATH/include/relacs
+mkdir $PLUGINPATH/include/relacs/$PLUGINNAME
+
+# copy the skeleton files:
+echo
+echo "copy files ... "
+for F in $(find skel -name '*' -not -type d | grep -v .svn); do
+    DEST=${F#skel/}
+    DEST=${DEST/skel/$PLUGINNAME}
+    sed -e "s|PLUGINNAME|$PLUGINNAME|g; s|PLUGINBRIEF|$PLUGINBRIEF|; s|PLUGINDEPTH|$PLUGINDEPTH|g;" $F > $PLUGINPATH/$DEST
+done
+
+# add all to svn:
+svn add $PLUGINPATH
+
+# edit configure.ac:
+echo "update ../configure.ac ..."
+cp ../configure.ac ../configure.ac.bak
+{
+    ORGIFS="$IFS"
+    IFS=""
+    PREVLINE=""
+    while read -r LINE; do
+	test -z "$LINE" && test "${PREVLINE%%(*}" = "RELACS_PLUGINSET" && break
+	echo "$LINE"
+	PREVLINE="$LINE"
+    done
+# append new plugin set:
+    echo "RELACS_PLUGINSET([$PLUGINNAME],[$PLUGINPATH],[base])"
+    echo "$LINE"
+
+    while read -r LINE; do
+	test -z "$LINE" && test "${PREVLINE%%/*}" = "AC_CONFIG_FILES([plugins" && break
+	echo "$LINE"
+	PREVLINE="$LINE"
+    done
+# append local runner script:
+    echo "AC_CONFIG_FILES([plugins/$PLUGINPATH/relacslocal], [chmod a+x plugins/$PLUGINPATH/relacslocal])"
+    echo "$LINE"
+
+    while read -r LINE; do
+	echo "$LINE"
+    done
+
+    IFS="$ORGIFS"
+} < "../configure.ac.bak" > ../configure.ac
+
+rm -f ../doc/doclinkstamp
+
+echo "finished!"
+echo
+echo "You may want to edit the following files:"
+echo "- $PLUGINPATH/doc/$PLUGINNAME.doc"
+echo "  Replace the string \"Sorry, no documentation\""
+echo "  by some appropriate documentation."
+echo "- $PLUGINPATH/relacs.cfg"
+echo "  Edit all the settings."
+echo "- $PLUGINPATH/relacsplugins.cfg"
+echo "  Edit the meta data sections by adding appropriate properties."
+echo "- $PLUGINPATH/macros.cfg"
+echo "  Add some usefull macros."
+echo
+echo "Now add a new plugin to your plugin set by calling"
+echo "$ ./newplugin"
+echo
+echo "Then you need to run"
+echo "$ bootstrap.sh"
+echo "$ ./configure"
+echo "from the relacs root directory."
+echo
+
+
