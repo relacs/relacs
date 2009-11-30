@@ -384,6 +384,7 @@ void MultiPlot::paintEvent( QPaintEvent *qpe )
 
 void MultiPlot::resizeEvent( QResizeEvent *qre )
 {
+  emit resizePlots( qre );
   PMutex.lock();
   for ( PlotListType::iterator p = PlotList.begin(); 
 	p != PlotList.end(); 
@@ -392,6 +393,7 @@ void MultiPlot::resizeEvent( QResizeEvent *qre )
   }
   DrawBackground = true;
   PMutex.unlock();
+  QWidget::resizeEvent( qre );
 }
 
 

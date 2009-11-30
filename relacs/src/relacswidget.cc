@@ -432,7 +432,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   FD->setMaximumWidth( w );
   CW->setMaximumWidth( w );
   mainlayout->addWidget( FD, 0, 0 );
-  mainlayout->addWidget( PT, 0, 1 );
+  mainlayout->addWidget( PT->widget(), 0, 1 );
   mainlayout->addWidget( CW, 1, 0 );
   mainlayout->addWidget( RP, 1, 1 );
   mainlayout->addWidget( MC, 2, 0, 1, 2 );
@@ -441,8 +441,8 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   mainlayout->setRowStretch( 0, 2 );
   mainlayout->setRowStretch( 1, 3 );
   w *= 3/2;
-  if ( PT->minimumWidth() < w || RP->minimumWidth() < w ) {
-    PT->setMinimumWidth( w );
+  if ( PT->widget()->minimumWidth() < w || RP->minimumWidth() < w ) {
+    PT->widget()->setMinimumWidth( w );
     RP->setMinimumWidth( w );
   }
   if ( splash != 0 )
@@ -469,6 +469,7 @@ RELACSWidget::~RELACSWidget( void )
     delete CN[k];
   }
   delete RP;
+  delete PT;
   Plugins::close();
 }
 
@@ -767,7 +768,7 @@ void RELACSWidget::processData( void )
   readLockData();
   SF->save( IL, ED );
   unlockData();
-  PT->plot( IL, ED );
+  PT->plot();
 }
 
 
@@ -1244,7 +1245,7 @@ void RELACSWidget::startSession( bool startmacro )
   MainWidget->setPalette( p );
   p.setColor( QPalette::Window, OrgBackground );
   FD->setPalette( p );
-  PT->setPalette( p );
+  PT->widget()->setPalette( p );
   CW->setPalette( p );
   RP->setPalette( p );
   MC->setPalette( p );
@@ -1551,7 +1552,7 @@ void RELACSWidget::startFirstAcquisition( void )
   SF->setPath( SF->defaultPath() );
 
   // plot:
-  PT->resize( IL, ED );
+  PT->resize();
   PT->updateMenu();
 
   for ( unsigned int k=0; k<CN.size(); k++ )
@@ -1662,7 +1663,7 @@ void RELACSWidget::startFirstSimulation( void )
   SF->setPath( SF->defaultPath() );
 
   // plots:
-  PT->resize( IL, ED );
+  PT->resize();
   PT->updateMenu();
 
   SimLabel->setText( "" );

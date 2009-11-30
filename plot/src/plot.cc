@@ -1284,6 +1284,8 @@ void Plot::resizeEvent( QResizeEvent *qre )
   if ( SubWidget )
     return;
 
+  emit resizePlot( qre );
+
   PMutex.lock();
 
   ScreenX1 = 0;
@@ -1292,6 +1294,8 @@ void Plot::resizeEvent( QResizeEvent *qre )
   ScreenY2 = 0;
 
   PMutex.unlock();
+
+  QWidget::resizeEvent( qre );
 }
 
 

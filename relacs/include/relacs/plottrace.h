@@ -26,8 +26,7 @@
 #include <QPushButton>
 #include <QMenu> 
 #include <vector>
-#include <relacs/inlist.h>
-#include <relacs/eventlist.h>
+#include <relacs/relacsplugin.h>
 #include <relacs/multiplot.h>
 
 namespace relacs {
@@ -47,7 +46,7 @@ class RELACSWidget;
   /*! Flag for the modes of traces or events, indicating that they should be plotted. */
 static const int PlotTraceMode = 0x0008;
 
-class PlotTrace : public MultiPlot
+class PlotTrace : public RELACSPlugin
 {
   Q_OBJECT
 
@@ -90,21 +89,21 @@ public:
   };
 
     /*! Construct a PlotTrace. */
-  PlotTrace( RELACSWidget *ow, QWidget* parent=0 );
+  PlotTrace( RELACSWidget *rw, QWidget* parent=0 );
     /*! Destruct a PlotTrace. */
   ~PlotTrace( );
 
     /*! Plot voltage traces and spike trains. */
-  void plot( const InList &data, const EventList &events );
+  void plot( void );
     /*! Specify some properties of PlotTrace. 
         Set total time window to \a length seconds
 	and part preceeding stimulus to \a offs seconds. */
   void setState( bool on, bool fixed, double length, double offs );
 
-    /*! Set the number of plots necessary for \a data and \a events. */
-  void resize( InList &data, const EventList &events );
+    /*! Set the number of plots necessary for the input traces and events. */
+  void resize( void );
     /*! Initialize the plots with the data \a data and \a events. */
-  void init( const InList &data, const EventList &events );
+  void init( void );
     /*! Add menu entries controlling the time window to \a menu. */
   void addMenu( QMenu *menu );
     /*! Update menu entries toggeling the traces. */
@@ -155,6 +154,7 @@ protected:
 protected slots:
 
   void updateRanges( int id );
+  void resizePlots( QResizeEvent *qre );
 
 
 private:
@@ -187,16 +187,13 @@ private:
   double AutoTime;
   double AutoOffs;
 
-  InList *IL;
-  const EventList *EL;
-
   vector< int > PlotElements;
 
   vector< QAction* > PlotActions;
 
-  RELACSWidget *RW;
-
   QMenu *Menu;
+
+  MultiPlot P;
 
 };
 

@@ -908,6 +908,9 @@ signals:
   
   void changedRange( void );
   void changedRange( int );
+    /*! This signal is emitted whenever the Plot widget receives
+        a resizeEvent() before processing it. */
+  void resizePlot( QResizeEvent *qre );
     /*! This signal is emitted whenever a mouse event in the Plot occured.
         A slot making use of the mouse event should call me.setUsed()
         to prevent further processing by the default mouse event handling functions.

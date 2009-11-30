@@ -2,7 +2,7 @@ Qt4:
 - PatchClamp: PlotTrace missing NewData Plot refresh when switching
   from continuous mode to fixed mode with SingleStimulus within the
   stimulus duration
-- PlotTrace: morph it into a Control and think about the buttons
+- PlotTrace: think about the buttons
 - check the use of mutexes in wait() (e.g. in Control, RePro, RELACSWidget, ReadLoop(?))
 - further improve Macros
   (get rid of the friends, split startNextRepRro onto Macro and
