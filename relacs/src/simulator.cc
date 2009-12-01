@@ -260,7 +260,7 @@ int Simulator::stopRead( void )
 }
 
 
-int Simulator::restartRead( vector< AnalogOutput* > &aos, bool directao,
+int Simulator::restartRead( vector< AOData* > &aos, bool directao,
 			    bool updategains )
 {
   bool success = true;
@@ -376,7 +376,7 @@ int Simulator::write( OutData &signal )
   if ( gainChanged() ||
        signal.restart() ||
        SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
-    vector< AnalogOutput* > aos( 1, AO[di].AO );
+    vector< AOData* > aos( 1, &AO[di] );
     restartRead( aos, false, true );
   }
   else
@@ -491,7 +491,7 @@ int Simulator::directWrite( OutData &signal )
   if ( gainChanged() ||
        signal.restart() ||
        SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
-    vector< AnalogOutput* > aos( 1, AO[di].AO );
+    vector< AOData* > aos( 1, &AO[di] );
     restartRead( aos, true, true );
   }
   else

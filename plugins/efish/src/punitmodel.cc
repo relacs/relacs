@@ -122,7 +122,6 @@ void PUnitModel::main( void )
 
     t += timeStep();
   }
-
 }
 
 

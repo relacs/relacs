@@ -2397,7 +2397,7 @@ double EventData::interval( double tbegin, double tend,
 
 double EventData::interval( double time, double *sd ) const
 {
-  return interval( time, Range.back() - time, sd );
+  return interval( time, Range.back(), sd );
 }
 
 
@@ -2409,7 +2409,7 @@ double EventData::interval( int n, double *sd ) const
     return 0.0;
   }
 
-  return interval( back( n ), Range.back() - back( n ), sd );
+  return interval( back( n ), back(), sd );
 }
 
 
@@ -2603,7 +2603,7 @@ double EventData::frequency( double tbegin, double tend,
 
 double EventData::frequency( double time, double *sd ) const
 {
-  return frequency( time, Range.back() - time, sd );
+  return frequency( time, Range.back(), sd );
 }
 
 
@@ -2615,7 +2615,7 @@ double EventData::frequency( int n, double *sd ) const
     return 0.0;
   }
 
-  return frequency( back( n ), Range.back() - back( n ), sd );
+  return frequency( back( n ), back(), sd );
 }
 
 

@@ -73,11 +73,11 @@ void Traces::initialize( const RELACSPlugin *rp,
   // local EODs:
   LocalEODTraces = 0;
   for ( int k=0; k<MaxEFields; k++ ) {
-    LocalEODTrace[LocalEODTraces] = data.index( "EOD-" + Str( k ) );
-    LocalEODEvents[LocalEODTraces] = events.index( "EOD-" + Str( k ) );
-    LocalChirpEvents[LocalEODTraces] = events.index( "Chirps-" + Str( k ) );
-    LocalBeatPeakEvents[LocalEODTraces] = events.index( "BeatPeaks-" + Str( k ) );
-    LocalBeatTroughEvents[LocalEODTraces] = events.index( "BeatTroughs-" + Str( k ) );
+    LocalEODTrace[LocalEODTraces] = data.index( "LocalEOD-" + Str( k ) );
+    LocalEODEvents[LocalEODTraces] = events.index( "LocalEOD-" + Str( k ) );
+    LocalChirpEvents[LocalEODTraces] = events.index( "LocalChirps-" + Str( k ) );
+    LocalBeatPeakEvents[LocalEODTraces] = events.index( "LocalBeat-" + Str( k ) + "-1" );
+    LocalBeatTroughEvents[LocalEODTraces] = events.index( "LocalBeat-" + Str( k ) + "-2" );
     if ( LocalEODTrace[LocalEODTraces] >= 0 )
       LocalEODTraces++;
   }

@@ -268,7 +268,7 @@ void Session::plot( void )
 
   // EOD amplitude:
   EODPlot[1].clear();
-  EODPlot[1].setYLabel( "A [" + EODUnit + "]" );
+  EODPlot[1].setYLabel( "Ampl. [" + EODUnit + "]" );
   if ( ! EODPlot[0].zoomedXRange() && ! EODPlot[1].zoomedXRange() )
     EODPlot[1].setXRange( xmin, xmax );
   EODPlot[1].plot( EODAmplitudes, xfac, Plot::Red, 2 );

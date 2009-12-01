@@ -121,7 +121,7 @@ public:
         If still running, stop analog input first.
 	If \a directao, then the analog output signals are scheduled for direct outut.
         If \a updategains, the input gains are updated as well. */
-  virtual int restartRead( vector< AnalogOutput* > &aos, bool directao,
+  virtual int restartRead( vector< AOData* > &aos, bool directao,
 			   bool updategains );
 
 

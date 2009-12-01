@@ -184,6 +184,9 @@ class Array
     /*! Append \a a to the array. */
   const Array<T> &append( const Array<T> &a );
 
+    /*! Repeat the current content of the array \a n times. */
+  const Array<T> &repeat( int n );
+
     /*! The size of the array, 
         i.e. the number of data elements. */
   inline int size( void ) const;
@@ -1171,6 +1174,20 @@ const Array<T> &Array<T>::append( const Array<T> &a )
     NSize += n;
   }
 
+  return *this;
+}
+
+
+template < typename T > 
+const Array<T> &Array<T>::repeat( int n )
+{
+  if ( n <= 1 )
+    return *this;
+
+  int m = size();
+  resize( n*m );
+  for ( int i=1; i<n; i++ )
+    memcpy( Buffer+i*m, Buffer, m * sizeof( T ) );
   return *this;
 }
 
