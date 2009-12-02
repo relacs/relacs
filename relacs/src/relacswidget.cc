@@ -1773,7 +1773,7 @@ void RELACSWidget::keyPressEvent( QKeyEvent *event )
   if ( HandlingEvent )
     return;
   HandlingEvent = true;
-  QApplication::sendEvent( PT, event );
+  QApplication::sendEvent( PT->widget(), event );
   if ( CurrentRePro != 0 && CurrentRePro->widget() != 0  )
     QApplication::sendEvent( CurrentRePro->widget(), event );
   if ( ! event->isAccepted() )
@@ -1795,7 +1795,7 @@ void RELACSWidget::keyReleaseEvent( QKeyEvent *event )
   if ( HandlingEvent )
     return;
   HandlingEvent = true;
-  QApplication::sendEvent( PT, event );
+  QApplication::sendEvent( PT->widget(), event );
   if ( ! event->isAccepted() &&
        CurrentRePro != 0 &&
        CurrentRePro->widget() != 0  )
