@@ -42,36 +42,36 @@ namespace efish {
 \author Jan Benda
 \version 1.0 (Nov 26, 2009)
 
-  \par Options
-  \arg \b duration (\c number, \e ms): Duration of single sweep.
-  \arg \b repeats (\c integer): Maximum number of sweeps (\c repeats=0: infinite).
-  \arg \b isimax (\c number, \e ms): Maximum ISI length displayed in the ISIH plot.
-  \arg \b isistep (\c number, \e ms): Resolution of the ISI histogram.
-  \arg \b ratedt (\c number, \e ms): Resolution of the firing rate.
-  \arg \b ratemax (\c number, \e ms): Maximum time for measuring firing frequency for each EOD cycle.
-  \arg \b eodduration (\c number, \e ms): Duration of EOD stored into file.
-  \arg \b saveeodtimes (\c boolean): Save EOD times in a file.
-  \arg \b auto (\c integer): 1) Adjust detector parameter automatically, 2) + reset beat and chirp detector.
-  \arg \b adjust (\c boolean): Adjust input gains.
+\par Options
+- \b duration (\c number, \e ms): Duration of single sweep.
+- \b repeats (\c integer): Maximum number of sweeps (\c repeats=0: infinite).
+- \b isimax (\c number, \e ms): Maximum ISI length displayed in the ISIH plot.
+- \b isistep (\c number, \e ms): Resolution of the ISI histogram.
+- \b ratedt (\c number, \e ms): Resolution of the firing rate.
+- \b ratemax (\c number, \e ms): Maximum time for measuring firing frequency for each EOD cycle.
+- \b eodduration (\c number, \e ms): Duration of EOD stored into file.
+- \b saveeodtimes (\c boolean): Save EOD times in a file.
+- \b auto (\c integer): 1) Adjust detector parameter automatically, 2) + reset beat and chirp detector.
+- \b adjust (\c boolean): Adjust input gains.
 
-  \par Files
-  PUnitSearch writes some information about baseline activity if \c repeats>0.
-  \arg \b basespikes#.dat : the spiketrain of trace #.
-  \arg \b baseisih#.dat : the interspike-interval histogram of trace #.
-  \arg \b baserate#.dat : the cyclic firing rate for a single EOD period of trace #.
-  \arg \b basenerveampl.dat : the nerve potential.
-  \arg \b baseeodtrace.dat : \c eodduration ms of the EOD.
-  \arg \b baseeodtimes.dat : times of the eod peaks, saved only if \c saveeodtimes is true.
+\par Files
+PUnitSearch writes some information about baseline activity if \c repeats>0.
+- \b basespikes#.dat : the spiketrain of trace #.
+- \b baseisih#.dat : the interspike-interval histogram of trace #.
+- \b baserate#.dat : the cyclic firing rate for a single EOD period of trace #.
+- \b basenerveampl.dat : the nerve potential.
+- \b baseeodtrace.dat : \c eodduration ms of the EOD.
+- \b baseeodtimes.dat : times of the eod peaks, saved only if \c saveeodtimes is true.
 
-  \par Plots
-  \arg \b ISI \b Histogram: The interspike-interval histogram. 
-        The vertical lines are multiple of the EOD period.
-  \arg \b EOD \b Firing \b Rate: Spikes (red) and cyclic firing rate (yellow)
-        in comparision with one EOD period (green).
+\par Plots
+- \b ISI \b Histogram: The interspike-interval histogram. 
+      The vertical lines are multiple of the EOD period.
+- \b EOD \b Firing \b Rate: Spikes (red) and cyclic firing rate (yellow)
+      in comparision with one EOD period (green).
 
-  \par Requirements
-  \arg Transdermal EOD recording (\c EODTrace2) and events (\c EODEvents2).
-  \arg One or more spike events (\c SpikeEvents[*]) or nerve recordings (\c NerveTrace1).
+\par Requirements
+- Transdermal EOD recording (\c EODTrace2) and events (\c EODEvents2).
+- One or more spike events (\c SpikeEvents[*]) or nerve recordings (\c NerveTrace1).
 */
 
 

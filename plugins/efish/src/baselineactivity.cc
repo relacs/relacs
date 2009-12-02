@@ -335,20 +335,22 @@ int BaselineActivity::main( void )
 
     // adjust gain of daq board:
     if ( Adjust ) {
-      for ( int k=0; k<MaxSpikeTraces; k++ )
+      for ( int k=0; k<MaxSpikeTraces; k++ ) {
 	if ( SpikeTrace[k] >= 0 )
 	  adjust( trace( SpikeTrace[k] ), Duration, 0.8 );
+      }
       if ( NerveTrace[0] >= 0 )
 	adjust( trace( NerveTrace[0] ), Duration, 0.8 );
       if ( EODTrace >= 0 ) {
-	double val1 = trace( EODTrace ).maxAbs( trace( EODTrace ).signalTime(), 0.1 );
+	double val1 = trace( EODTrace ).maxAbs( trace( EODTrace ).signalTime(),
+						trace( EODTrace ).signalTime()+0.1 );
 	if ( val1 > 0.0 )
 	  adjustGain( trace( EODTrace ), val1 );
       }
-      double val2 = trace( LocalEODTrace[0] ).maxAbs( trace( LocalEODTrace[0] ).signalTime(), 0.1 );
+      double val2 = trace( LocalEODTrace[0] ).maxAbs( trace( LocalEODTrace[0] ).signalTime(),
+						      trace( LocalEODTrace[0] ).signalTime()+0.1 );
       if ( val2 > 0.0 )
 	adjustGain( trace( LocalEODTrace[0] ), 1.25 * val2 );
-      activateGains();
     }
 
     // analyze:

@@ -1108,14 +1108,13 @@ int Acquire::adjustGain( const InData &data, double maxvalue )
   AIData &ai = AI[di];
 
   // find appropriate gain:
-  int maxindex = -1;
+  int minindex = -1;
   int newindex = -1;
-  for ( int k = ai.AI->maxRanges() - 1; k > 0; k-- ) {
+  for ( int k = ai.AI->maxRanges() - 1; k >= 0; k-- ) {
     // this gain exist?
     if ( ( data.unipolar() && ai.AI->unipolarRange( k ) > 0 ) || 
 	 ( !data.unipolar() && ai.AI->bipolarRange( k ) > 0 ) ) {
-      if ( maxindex < 0 )
-	maxindex = k;
+      minindex = k;
       // check it:
       if ( data.unipolar() ) {
 	if ( ai.AI->unipolarRange( k ) * data.scale() >= maxvalue ) {
@@ -1134,7 +1133,7 @@ int Acquire::adjustGain( const InData &data, double maxvalue )
 
   // no gain:
   if ( newindex < 0 )
-    newindex = maxindex;
+    newindex = minindex;
   if ( newindex < 0 )
     return DaqError::InvalidGain;
 

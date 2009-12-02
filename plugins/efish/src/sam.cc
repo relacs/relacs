@@ -323,10 +323,8 @@ int SAM::main( void )
 
   // adjust transdermal EOD:
   double val2 = trace( LocalEODTrace[0] ).maxAbs( trace( LocalEODTrace[0] ).currentTime()-0.1, 0.1 );
-  if ( val2 > 0.0 ) {
+  if ( val2 > 0.0 )
     adjustGain( trace( LocalEODTrace[0] ), ( 1.0 + Contrast ) * val2 );
-    activateGains();
-  }
 
   // create signal:
   if ( createSignal( trace( LocalEODTrace[0] ), events( LocalEODEvents[0] ) ) )
@@ -415,14 +413,21 @@ int SAM::main( void )
     timeStamp();
 
     // adjust input gains:
-    for ( int k=0; k<MaxSpikeTraces; k++ )
+    for ( int k=0; k<MaxSpikeTraces; k++ ) {
       if ( SpikeTrace[k] >= 0 )
-	adjust( trace( SpikeTrace[k] ), trace( SpikeTrace[k] ).signalTime()+Duration, Pause, 0.8 );
+	adjust( trace( SpikeTrace[k] ),
+		trace( SpikeTrace[k] ).signalTime()+Duration,
+		trace( SpikeTrace[k] ).signalTime()+Duration+Pause,
+		0.8 );
+    }
     if ( NerveTrace[0] >= 0 )
-      adjust( trace( NerveTrace[0] ), trace( NerveTrace[0] ).signalTime()+Duration, Pause, 0.8 );
+      adjust( trace( NerveTrace[0] ),
+	      trace( NerveTrace[0] ).signalTime()+Duration,
+	      trace( NerveTrace[0] ).signalTime()+Duration+Pause,
+	      0.8 );
     if ( EFieldSignalTrace[0] >= 0 )
-      adjustGain( trace( EFieldSignalTrace[0] ), 1.05 * trace( EFieldSignalTrace[0] ).maxAbs( trace( EFieldSignalTrace[0] ).signalTime(), Duration ) );
-    activateGains();
+      adjustGain( trace( EFieldSignalTrace[0] ),
+		  1.05 * trace( EFieldSignalTrace[0] ).maxAbs( trace( EFieldSignalTrace[0] ).signalTime(), trace( EFieldSignalTrace[0] ).signalTime()+Duration ) );
 
     // analyze:
     analyze();
