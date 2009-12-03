@@ -266,13 +266,13 @@ int BaselineActivity::main( void )
       }
     }
     // setup Beat detector:
-    if ( LocalBeatPeakEvents[1] >= 0 && 
+    if ( LocalBeatPeakEvents[0] >= 0 && 
 	 ( totalRuns() <= 0 || AutoDetect > 1 ) ) {
-      double beatthresh = BeatStep * trace( LocalEODTrace[1] ).maxValue();
-      lockDetectorEvents( LocalBeatPeakEvents[1] );
-      detectorEventsOpts( LocalBeatPeakEvents[1] ).setNumber( "minthresh", beatthresh );
-      detectorEventsOpts( LocalBeatPeakEvents[1] ).setNumber( "threshold", beatthresh );
-      unlockDetectorEvents( LocalBeatPeakEvents[1] );
+      double beatthresh = BeatStep * trace( LocalEODTrace[0] ).maxValue();
+      lockDetectorEvents( LocalBeatPeakEvents[0] );
+      detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "minthresh", beatthresh );
+      detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", beatthresh );
+      unlockDetectorEvents( LocalBeatPeakEvents[0] );
     }
     // setup Chirp detector:
     if ( ChirpEvents >= 0 &&
@@ -814,22 +814,22 @@ void BaselineActivity::analyze( void )
 
   if ( AutoDetect > 1 && Repeats <= 0 ) {
     // setup Beat detector:
-    lockDetectorEvents( LocalBeatPeakEvents[1] );
-    if ( events( LocalBeatPeakEvents[1] ).count( trace( LocalEODTrace[0] ).currentTime() - 0.1 ) > 0 ) {
-      double beatthresh = detectorEventsOpts( LocalBeatPeakEvents[1] ).number( "minthresh" );
+    lockDetectorEvents( LocalBeatPeakEvents[0] );
+    if ( events( LocalBeatPeakEvents[0] ).count( trace( LocalEODTrace[0] ).currentTime() - 0.1 ) > 0 ) {
+      double beatthresh = detectorEventsOpts( LocalBeatPeakEvents[0] ).number( "minthresh" );
       beatthresh += BeatStep * eodt2.maxValue();
-      detectorEventsOpts( LocalBeatPeakEvents[1] ).setNumber( "minthresh", beatthresh );
-      beatthresh = detectorEventsOpts( LocalBeatPeakEvents[1] ).number( "threshold" );
+      detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "minthresh", beatthresh );
+      beatthresh = detectorEventsOpts( LocalBeatPeakEvents[0] ).number( "threshold" );
       beatthresh += BeatStep * eodt2.maxValue();
-      detectorEventsOpts( LocalBeatPeakEvents[1] ).setNumber( "threshold", beatthresh );
+      detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", beatthresh );
     }
     else {
-      double beatthresh = detectorEventsOpts( LocalBeatPeakEvents[1] ).number( "minthresh" );
+      double beatthresh = detectorEventsOpts( LocalBeatPeakEvents[0] ).number( "minthresh" );
       beatthresh -= BeatStep * eodt2.maxValue();
       if ( beatthresh >= BeatStep * eodt2.maxValue() )
-	detectorEventsOpts( LocalBeatPeakEvents[1] ).setNumber( "minthresh", beatthresh );
+	detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "minthresh", beatthresh );
     }
-    unlockDetectorEvents( LocalBeatPeakEvents[1] );
+    unlockDetectorEvents( LocalBeatPeakEvents[0] );
     // setup Chirp detector:
     lockDetectorEvents( ChirpEvents );
     if ( events( ChirpEvents ).count(  trace( EODTrace ).currentTime() - 0.1 ) > 0 ) {

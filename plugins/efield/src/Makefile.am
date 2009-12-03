@@ -9,7 +9,8 @@ pluginlib_LTLIBRARIES = \
     libefieldchirpdetector.la \
     libefieldbeatdetector.la \
     libefieldtraces.la \
-    libefieldeodtools.la
+    libefieldeodtools.la \
+    libefieldcalibefield.la
 
 
 
@@ -184,13 +185,47 @@ libefieldeodtools_la_include_HEADERS = $(HEADER_PATH)/eodtools.h
 
 
 
+libefieldcalibefield_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../../base/include \
+    -I$(srcdir)/../include \
+    $(QT3_CPPFLAGS)
+
+libefieldcalibefield_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT3_LDFLAGS)
+
+libefieldcalibefield_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(builddir)/../../base/src/libbaselinearattenuate.la \
+    $(builddir)/libefieldtraces.la \
+    $(builddir)/libefieldeodtools.la \
+    $(QT3_LIBS)
+
+$(libefieldcalibefield_la_OBJECTS) : moc_calibefield.cc
+
+libefieldcalibefield_la_SOURCES = calibefield.cc
+
+libefieldcalibefield_la_includedir = $(pkgincludedir)/efield
+
+libefieldcalibefield_la_include_HEADERS = $(HEADER_PATH)/calibefield.h
+
+
+
 check_PROGRAMS = \
     linktest_libefieldlinearfield_la \
     linktest_libefieldeoddetector_la \
     linktest_libefieldchirpdetector_la \
     linktest_libefieldbeatdetector_la \
     linktest_libefieldtraces_la \
-    linktest_libefieldeodtools_la
+    linktest_libefieldeodtools_la \
+    linktest_libefieldcalibefield_la
 
 linktest_libefieldlinearfield_la_SOURCES = linktest.cc
 linktest_libefieldlinearfield_la_LDADD = libefieldlinearfield.la
@@ -209,5 +244,8 @@ linktest_libefieldtraces_la_LDADD = libefieldtraces.la
 
 linktest_libefieldeodtools_la_SOURCES = linktest.cc
 linktest_libefieldeodtools_la_LDADD = libefieldeodtools.la
+
+linktest_libefieldcalibefield_la_SOURCES = linktest.cc
+linktest_libefieldcalibefield_la_LDADD = libefieldcalibefield.la
 
 TESTS = $(check_PROGRAMS)
