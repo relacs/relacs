@@ -3,6 +3,7 @@ SignalTime: finish this update (RELACSPlugin::signalTime()
 - update all other RePros
 - remove from InData and EventData?
 - update Acquire::readSignal()
+- the same for currenTime() !
 
 Analog Input/Output:
 - WriteDataThread should not be started if the whole stimulus is already transfered.

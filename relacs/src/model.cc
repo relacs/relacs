@@ -123,7 +123,6 @@ void Model::clear( void )
 
 void Model::push( int trace, float val )
 {
-  SignalMutex.unlock();
   if ( trace == 0 ) {
     PushCount++;
     if ( PushCount >= MaxPush ) {
@@ -133,12 +132,13 @@ void Model::push( int trace, float val )
       AveragedLoad = AveragedLoad * (1.0 - AverageRatio ) + l * AverageRatio;
       long st = (long)::rint( 1000.0 * dt );
       if ( st > 0 ) {
+	SignalMutex.unlock();
 	QThread::msleep( st );
+	SignalMutex.lock();
       }
     }
   }
   Data[trace].Buffer.push( val );
-  SignalMutex.lock();
 }
 
 

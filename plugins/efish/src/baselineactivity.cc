@@ -41,44 +41,30 @@ BaselineActivity::BaselineActivity( void )
   // parameter:
   Duration = 0.3;
   Repeats = 0;
-  ISIMax = 0.02;
-  ISIStep = 0.0002;
-  RateDeltaT = 0.00005;   // seconds
-  RateTMax = 0.002;
-  EODDuration = 2.0;
-  SaveEODTrace = false;
-  SaveEODTimes = false;
-  AutoDetect = 1;
   SpikesFastDelay = 1.0;
   SpikesFastDecay = 4.0;
   SpikesSlowDelay = 1.0;
   SpikesSlowDecay = 10.0;
-  BeatStep = 0.005;
+  BeatStep = 0.01;  // should not be smaller than the factor in BeatDetector::adjust()!
   ChirpStep = 2.0;
   ChirpMin = 10.0;
-  Adjust = true;
 
   // add some parameter as options:
   addLabel( "Timing" ).setStyle( OptWidget::Bold );
   addNumber( "duration", "Duration", Duration, 0.01, 100.0, 0.05, "sec", "ms" );
   addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 );
   addLabel( "Analysis" ).setStyle( OptWidget::Bold );
-  addNumber( "isimax", "Maximum interspike-interval", 
-	      ISIMax, 0.001, 1.0, 0.001, "sec", "ms" );
-  addNumber( "isistep", "Interspike-interval resolution",
-	      ISIStep, 0.0001, 0.01, 0.0002, "sec", "ms" );
-  addNumber( "ratedt", "Resolution of firing rate",
-	     RateDeltaT, 0.00001, 0.01, 0.00002, "s", "ms" );
-  addNumber( "ratetmax", "Maximum time for firing rate",
-	     RateTMax, 0.00001, 0.01, 0.00002, "s", "ms" );
+  addNumber( "isimax", "Maximum interspike-interval", 0.02, 0.001, 1.0, 0.001, "sec", "ms" );
+  addNumber( "isistep", "Interspike-interval resolution", 0.0002, 0.0001, 0.01, 0.0002, "sec", "ms" );
+  addNumber( "ratedt", "Resolution of firing rate", 0.00005, 0.00001, 0.01, 0.00002, "s", "ms" );
+  addNumber( "ratetmax", "Maximum time for firing rate", 0.002, 0.00001, 0.01, 0.00002, "s", "ms" );
   addLabel( "Files" ).setStyle( OptWidget::Bold );
-  addNumber( "eodduration", "EOD duration",
-	      EODDuration, 0.1, 10.0, 0.1, "sec", "ms" );
-  addBoolean( "saveeodtrace", "Save EOD trace", SaveEODTrace );
-  addBoolean( "saveeodtimes", "Save EOD times", SaveEODTimes );
+  addNumber( "eodduration", "EOD duration", 2.0, 0.1, 10.0, 0.1, "sec", "ms" );
+  addBoolean( "saveeodtrace", "Save EOD trace", false );
+  addBoolean( "saveeodtimes", "Save EOD times", false );
   addLabel( "Control" ).setStyle( OptWidget::Bold );
   addText( "auto", "Automatically set detector parameter?", "never|once|always", 0, OptWidget::SelectText );
-  addBoolean( "adjust", "Adjust input gain?", Adjust );
+  addBoolean( "adjust", "Adjust input gain?", true );
 
   // header for files:
   Header.addInteger( "index" );
@@ -98,24 +84,10 @@ BaselineActivity::BaselineActivity( void )
   Header.addLabel( "settings:" );
 
   // variables:
-  Spikes.resize( MaxSpikeTraces );
-  for ( int k=0; k<MaxSpikeTraces; k++ ) {
-    ISIH[k] = 0;
-    Trials[k] = 0; 
-    Spikes[k].clear();
-    SpikeRate[k] = 0;
-    EODSpikes[k].clear();
-  }
-  NerveAmplP.clear();
-  NerveAmplT.clear();
-  NerveAmplM.clear();
-  EODCycle = 0;
   EODPeriod = 0.0;
   EODRate = 0.0;
   FirstSignal = 0.0;
   SearchDuration = 0.0;
-  EODTimes.clear();
-  Count = 0; 
 }
 
 
@@ -126,20 +98,18 @@ BaselineActivity::~BaselineActivity( void )
 
 int BaselineActivity::main( void )
 {
-  Count = 0; 
-
   // get options:
   Duration = number( "duration" );
   Repeats = integer( "repeats" );
-  ISIMax = number( "isimax" );
-  ISIStep = number( "isistep" );
-  RateDeltaT = number( "ratedt" );
-  RateTMax = number( "ratetmax" );
-  EODDuration = number( "eodduration" );
-  SaveEODTrace = boolean( "saveeodtrace" );
-  SaveEODTimes = boolean( "saveeodtimes" );
-  AutoDetect = index( "auto" );
-  Adjust = boolean( "adjust" );
+  double isimax = number( "isimax" );
+  double isistep = number( "isistep" );
+  double ratedeltat = number( "ratedt" );
+  double ratetmax = number( "ratetmax" );
+  double eodduration = number( "eodduration" );
+  bool saveeodtrace = boolean( "saveeodtrace" );
+  bool saveeodtimes = boolean( "saveeodtimes" );
+  int autodetect = index( "auto" );
+  bool adjustg = boolean( "adjust" );
 
   // don't print repro message:
   if ( Repeats <= 0 )
@@ -150,7 +120,7 @@ int BaselineActivity::main( void )
     noSaving();
 
   // plot trace:
-  plotToggle( true, true, Duration, 0.0 );
+  plotToggle( true, false, Duration, 0.0 );
 
   // plot:
   P.lock();
@@ -221,41 +191,55 @@ int BaselineActivity::main( void )
   FirstSignal = 0.0;
   SearchDuration = 0.0;
 
+  EventList spikes( MaxSpikeTraces );
+  vector< vector < ArrayD > > eodspikes;
+  eodspikes.resize( MaxSpikeTraces );
+  vector< SampleDataD > isih;
+  vector< SampleDataD > spikerate;
+  vector< int > trials;
   for ( int k=0; k<MaxSpikeTraces; k++ ) {
+    spikes[k].clear();
+    eodspikes[k].clear();
+    trials.push_back( 0 );
     if ( SpikeEvents[k] >= 0 ) {
-      ISIH[k] = new SampleDataD( 0.0, 2.0*ISIMax, ISIStep );
-      Trials[k] = 0;
-      SpikeRate[k] = new SampleDataD( 0.0, RateTMax, RateDeltaT );
-      Spikes[k].clear();
-      EODSpikes[k].clear();
+      isih.push_back( SampleDataD( 0.0, 2.0*isimax, isistep ) );
+      spikerate.push_back( SampleDataD( 0.0, ratetmax, ratedeltat, 0.0 ) );
       if ( Repeats <= 0 ) {
-	Spikes[k].reserve( int( Duration * 1000.0 ) );
-	EODSpikes[k].reserve( int( Duration * 1000.0 ) );
+	spikes[k].reserve( int( Duration * 1000.0 ) );
+	eodspikes[k].reserve( int( Duration * 1000.0 ) );
       }
       else {
-	Spikes[k].reserve( int( Duration * Repeats * 1000.0 ) );
-	EODSpikes[k].reserve( int( Duration * Repeats * 1000.0 ) );
+	spikes[k].reserve( int( Duration * Repeats * 1000.0 ) );
+	eodspikes[k].reserve( int( Duration * Repeats * 1000.0 ) );
       }
     }
+    else {
+      isih.push_back( SampleDataD() );
+      spikerate.push_back( SampleDataD() );
+    }
   }
+  EventData eodtimes;
   if ( Repeats <= 0 )
-    EODTimes.reserve( int( Duration * 1500.0 ) );
+    eodtimes.reserve( int( Duration * 1500.0 ) );
   else {
-    EODTimes.reserve( int( Duration * Repeats * 1500.0 ) );
+    eodtimes.reserve( int( Duration * Repeats * 1500.0 ) );
   }
-  EODCycle = new SampleDataD( 0.0, RateTMax, RateDeltaT );
+  SampleDataD eodcycle( 0.0, ratetmax, ratedeltat );
   EODPeriod = 0.0;
   EODRate = 0.0;
+  MapD nerveamplp;
+  MapD nerveamplt;
+  MapD nerveamplm;
   if ( NerveTrace[0] >= 0 ) {
-    NerveAmplP.clear();
-    NerveAmplT.clear();
-    NerveAmplM.clear();
-    NerveAmplP.reserve( EODTimes.capacity() );
-    NerveAmplT.reserve( EODTimes.capacity() );
-    NerveAmplM.reserve( EODTimes.capacity() );
+    nerveamplp.reserve( eodtimes.capacity() );
+    nerveamplt.reserve( eodtimes.capacity() );
+    nerveamplm.reserve( eodtimes.capacity() );
   }
+  nerveamplp.clear();
+  nerveamplt.clear();
+  nerveamplm.clear();
 
-  if ( AutoDetect > 0 && Repeats <= 0 ) {
+  if ( autodetect > 0 && Repeats <= 0 ) {
     // setup Spike Detector:
     for ( int k=0; k<MaxSpikeTraces; k++ ) {
       if ( SpikeEvents[k] >= 0 ) {
@@ -267,7 +251,7 @@ int BaselineActivity::main( void )
     }
     // setup Beat detector:
     if ( LocalBeatPeakEvents[0] >= 0 && 
-	 ( totalRuns() <= 0 || AutoDetect > 1 ) ) {
+	 ( totalRuns() <= 0 || autodetect > 1 ) ) {
       double beatthresh = BeatStep * trace( LocalEODTrace[0] ).maxValue();
       lockDetectorEvents( LocalBeatPeakEvents[0] );
       detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "minthresh", beatthresh );
@@ -276,7 +260,7 @@ int BaselineActivity::main( void )
     }
     // setup Chirp detector:
     if ( ChirpEvents >= 0 &&
-	 ( totalRuns() <= 0 || AutoDetect > 1 ) ) {
+	 ( totalRuns() <= 0 || autodetect > 1 ) ) {
       lockDetectorEvents( ChirpEvents );
       detectorEventsOpts( ChirpEvents ).setNumber( "minthresh", ChirpMin );
       detectorEventsOpts( ChirpEvents ).setNumber( "threshold", ChirpMin );
@@ -286,14 +270,6 @@ int BaselineActivity::main( void )
 
   // trigger:
   // XXX  setupTrigger( traces(), events() );
-
-  // stimulus:
-  OutData signal( 10, 0.0001 );
-  signal.setDelay( 0.0 );
-  signal.setIdent( "zero" );
-  signal.setTraceName( "EField-global" );
-  signal.setIntensity( 0.0 );
-  signal = 0.0;
 
   for ( int count=0;
 	( Repeats <= 0 || count < Repeats ) && softStop() == 0; 
@@ -305,36 +281,15 @@ int BaselineActivity::main( void )
     else if ( Repeats > 0 )
       message( "Search Loop <b>" + Str( count ) + "</b>" );
 
-    // output stimulus:
-    write( signal );
+    // sleep:
+    if ( Repeats <= 0 || count == 0 )
+      FirstSignal = trace( LocalEODTrace[0] ).currentTime();
     sleep( Duration );
     if ( interrupt() )
       break;
-    testWrite( signal );
-    // signal failed?
-    if ( !signal.success() ) {
-      if ( signal.busy() ) {
-	warning( "Output still busy!<br> Probably missing trigger.<br> Output of this signal software-triggered.", 2.0 );
-	signal.setStartSource( 0 );
-	signal.setPriority();
-	write( signal );
-	sleep( Duration );
-	// trigger:
-	// XXX setupTrigger( traces(), events() );
-      }
-      else {
-	string s = "Output of stimulus failed!<br>Error code is <b>";
-	s += Str( signal.error() ) + ": " + signal.errorStr() + "</b>";
-	warning( s, 2.0 );
-	write( signal );
-	sleep( Duration );
-      }
-      stop();
-      return Failed;
-    }
 
     // adjust gain of daq board:
-    if ( Adjust ) {
+    if ( adjustg ) {
       for ( int k=0; k<MaxSpikeTraces; k++ ) {
 	if ( SpikeTrace[k] >= 0 )
 	  adjust( trace( SpikeTrace[k] ), Duration, 0.8 );
@@ -342,33 +297,31 @@ int BaselineActivity::main( void )
       if ( NerveTrace[0] >= 0 )
 	adjust( trace( NerveTrace[0] ), Duration, 0.8 );
       if ( EODTrace >= 0 ) {
-	double val1 = trace( EODTrace ).maxAbs( trace( EODTrace ).signalTime(),
-						trace( EODTrace ).signalTime()+0.1 );
+	double val1 = trace( EODTrace ).maxAbs( trace( EODTrace ).currentTime()-0.1,
+						trace( EODTrace ).currentTime() );
 	if ( val1 > 0.0 )
 	  adjustGain( trace( EODTrace ), val1 );
       }
-      double val2 = trace( LocalEODTrace[0] ).maxAbs( trace( LocalEODTrace[0] ).signalTime(),
-						      trace( LocalEODTrace[0] ).signalTime()+0.1 );
+      double val2 = trace( LocalEODTrace[0] ).maxAbs( trace( LocalEODTrace[0] ).currentTime()-0.1,
+						      trace( LocalEODTrace[0] ).currentTime() );
       if ( val2 > 0.0 )
 	adjustGain( trace( LocalEODTrace[0] ), 1.25 * val2 );
+      activateGains();
     }
 
     // analyze:
-    analyze();
-    plot();
+    analyze( autodetect, eodcycle, eodtimes, eodspikes,
+	     spikes, isih, spikerate, trials,
+	     nerveamplp, nerveamplt, nerveamplm );
+    plot( eodcycle, eodspikes, isih, spikerate, nerveamplm );
 
   }
 
   setMessage();
-  save();
-  stop();
-  return Completed;
-}
+  save( saveeodtrace, eodduration, saveeodtimes, eodtimes, eodcycle,
+	spikes, isih, spikerate, nerveamplp, nerveamplt, nerveamplm );
 
-
-void BaselineActivity::stop( void )
-{
-  if ( AutoDetect > 0 && Repeats <= 0 ) {
+  if ( autodetect > 0 && Repeats <= 0 ) {
     for ( int k=0; k<MaxSpikeTraces; k++ ) {
       if ( SpikeEvents[k] >= 0 ) {
 	lockDetectorEvents( SpikeEvents[k] );
@@ -378,29 +331,12 @@ void BaselineActivity::stop( void )
       }
     }
   }
-  for ( int k=0; k<MaxSpikeTraces; k++ ) {
-    if ( SpikeEvents[k] >= 0 ) {
-      delete ISIH[k];
-      delete SpikeRate[k];
-    }
-    ISIH[k] = 0;
-    SpikeRate[k] = 0;
-    Spikes[k].clear();
-    Spikes[k].reserve( 0 );
-    EODSpikes[k].clear();
-    EODSpikes[k].reserve( 0 );
-  }
-  NerveAmplP.free();
-  NerveAmplT.free();
-  NerveAmplM.free();
-  delete EODCycle;
-  EODCycle = 0;
-  EODTimes.clear();
-  EODTimes.free( 0 );
+
+  return Completed;
 }
 
 
-void BaselineActivity::saveSpikes( int trace )
+void BaselineActivity::saveSpikes( int trace, const EventList &spikes )
 {
   // create file:
   ofstream df( addPath( "basespikes" + Str(trace+1) + ".dat" ).c_str(),
@@ -417,9 +353,9 @@ void BaselineActivity::saveSpikes( int trace )
   key.saveKey( df, true, false );
 
   // write data into file:
-  if ( Spikes[trace].size() > 0 ) {
-    for ( int j=0; j<Spikes[trace].size(); j++ ) {
-      key.save( df, 1000.0 * Spikes[trace][j], 0 );
+  if ( spikes[trace].size() > 0 ) {
+    for ( int j=0; j<spikes[trace].size(); j++ ) {
+      key.save( df, 1000.0 * spikes[trace][j], 0 );
       df << '\n';
     }
   }
@@ -429,7 +365,7 @@ void BaselineActivity::saveSpikes( int trace )
 }
 
 
-void BaselineActivity::saveISIH( int trace )
+void BaselineActivity::saveISIH( int trace, const vector<SampleDataD> &isih )
 {
   // create file:
   ofstream df( addPath( "baseisih" + Str(trace+1) + ".dat" ).c_str(),
@@ -450,15 +386,15 @@ void BaselineActivity::saveISIH( int trace )
 
   // normalization factor:
   double norm = 0.0;
-  for ( int j=0; j<ISIH[trace]->size(); j++ )
-    norm += (*ISIH[trace])[j];
+  for ( int j=0; j<isih[trace].size(); j++ )
+    norm += isih[trace][j];
 
   // write data into file:
-  for ( int j=0; j<ISIH[trace]->size(); j++ ) {
-    key.save( df, 1000.0 * ISIH[trace]->pos( j ), 0 );
-    key.save( df, ISIH[trace]->pos( j ) * EODRate, 1 );
-    key.save( df, (*ISIH[trace])[j] );
-    key.save( df, (*ISIH[trace])[j]/norm );
+  for ( int j=0; j<isih[trace].size(); j++ ) {
+    key.save( df, 1000.0 * isih[trace].pos( j ), 0 );
+    key.save( df, isih[trace].pos( j ) * EODRate, 1 );
+    key.save( df, isih[trace][j] );
+    key.save( df, isih[trace][j]/norm );
     df << '\n';
   }
 
@@ -466,7 +402,9 @@ void BaselineActivity::saveISIH( int trace )
 }
 
 
-void BaselineActivity::saveRate( int trace )
+void BaselineActivity::saveRate( int trace, 
+				 const vector<SampleDataD> &spikerate,
+				 const SampleDataD &eodcycle )
 {
   // create file:
   ofstream df( addPath( "baserate" + Str(trace+1) + ".dat" ).c_str(),
@@ -485,10 +423,10 @@ void BaselineActivity::saveRate( int trace )
   key.saveKey( df, true, false );
 
   // write data into file:
-  for ( int j=0; j<SpikeRate[trace]->size(); j++ ) {
-    key.save( df, 1000.0 * SpikeRate[trace]->pos( j ), 0 );
-    key.save( df, (*SpikeRate[trace])[j] );
-    key.save( df, (*EODCycle)[j] );
+  for ( int j=0; j<spikerate[trace].size(); j++ ) {
+    key.save( df, 1000.0 * spikerate[trace].pos( j ), 0 );
+    key.save( df, spikerate[trace][j] );
+    key.save( df, eodcycle[j] );
     df << '\n';
   }
 
@@ -496,7 +434,9 @@ void BaselineActivity::saveRate( int trace )
 }
 
 
-void BaselineActivity::saveNerve( void )
+void BaselineActivity::saveNerve( const MapD &nerveamplp,
+				  const MapD &nerveamplt,
+				  const MapD &nerveamplm )
 {
   // create file:
   ofstream df( addPath( "basenerveampl.dat" ).c_str(),
@@ -521,22 +461,22 @@ void BaselineActivity::saveNerve( void )
   key.saveKey( df, true, true );
 
   // write data into file:
-  for ( int k=0; k<NerveAmplP.size() &&
-	  k<NerveAmplT.size() &&
-	  k<NerveAmplM.size(); k++ ) {
-    key.save( df, 1000.0 * NerveAmplP.x(k), 0 );
-    key.save( df, NerveAmplP.y(k) );
-    key.save( df, 1000.0 * NerveAmplT.x(k), 0 );
-    key.save( df, NerveAmplT.y(k) );
-    key.save( df, 1000.0 * NerveAmplM.x(k), 0 );
-    key.save( df, NerveAmplM.y(k) );
+  for ( int k=0; k<nerveamplp.size() &&
+	  k<nerveamplt.size() &&
+	  k<nerveamplm.size(); k++ ) {
+    key.save( df, 1000.0 * nerveamplp.x(k), 0 );
+    key.save( df, nerveamplp.y(k) );
+    key.save( df, 1000.0 * nerveamplt.x(k), 0 );
+    key.save( df, nerveamplt.y(k) );
+    key.save( df, 1000.0 * nerveamplm.x(k), 0 );
+    key.save( df, nerveamplm.y(k) );
     df << '\n';
   }
   df << '\n' << '\n';
 }
 
 
-void BaselineActivity::saveEODTrace( void )
+void BaselineActivity::saveEODTrace( double eodduration )
 {
   // create file:
   ofstream df( addPath( "baseeodtrace.dat" ).c_str(),
@@ -554,7 +494,7 @@ void BaselineActivity::saveEODTrace( void )
   key.saveKey( df, true, false );
 
   // write data into file:
-  long inx = trace( LocalEODTrace[0] ).indices( EODDuration );
+  long inx = trace( LocalEODTrace[0] ).indices( eodduration );
   for ( int k=0; k<inx; k++ ) {
     key.save( df, 1000.0 * trace( LocalEODTrace[0] ).interval( k ), 0 );
     key.save( df, trace( LocalEODTrace[0] )[trace( LocalEODTrace[0] ).size()-inx-k] );
@@ -565,7 +505,7 @@ void BaselineActivity::saveEODTrace( void )
 }
 
 
-void BaselineActivity::saveEODTimes( void )
+void BaselineActivity::saveEODTimes( const EventData &eodtimes )
 {
   // create file:
   ofstream df( addPath( "baseeodtimes.dat" ).c_str(),
@@ -582,8 +522,8 @@ void BaselineActivity::saveEODTimes( void )
   key.saveKey( df, true, false );
 
   // write data into file:
-  for ( int k=0; k<EODTimes.size(); k++ ) {
-    key.save( df, 1000.0 * EODTimes[k], 0 );
+  for ( int k=0; k<eodtimes.size(); k++ ) {
+    key.save( df, 1000.0 * eodtimes[k], 0 );
     df << '\n';
   }
 
@@ -591,7 +531,16 @@ void BaselineActivity::saveEODTimes( void )
 }
 
 
-void BaselineActivity::save( void )
+void BaselineActivity::save( bool saveeodtrace, double eodduration,
+			     bool saveeodtimes,
+			     const EventData &eodtimes,
+			     const SampleDataD &eodcycle,
+			     const EventList &spikes,
+			     const vector<SampleDataD> &isih,
+			     const vector<SampleDataD> &spikerate,
+			     const MapD &nerveamplp,
+			     const MapD &nerveamplt,
+			     const MapD &nerveamplm )
 {
   if ( Repeats <= 0 )
     return;
@@ -614,9 +563,9 @@ void BaselineActivity::save( void )
   for ( int trace=0; trace<MaxSpikeTraces; trace++ ) {
     if ( SpikeEvents[trace] >= 0 ) {
       Header.setInteger( "trace", trace );
-      saveSpikes( trace );
-      saveISIH( trace );
-      saveRate( trace );
+      saveSpikes( trace, spikes );
+      saveISIH( trace, isih );
+      saveRate( trace, spikerate, eodcycle );
       Filter *d = detectorEvents( SpikeEvents[trace] );
       if ( d != 0 )
 	d->save();
@@ -624,17 +573,21 @@ void BaselineActivity::save( void )
   }
   if ( NerveTrace[0] >= 0 ) {
     Header.setInteger( "trace", 0 );
-    saveNerve();
+    saveNerve( nerveamplp, nerveamplt, nerveamplm );
   }
 
-  if ( SaveEODTrace )
-    saveEODTrace();
-  if ( SaveEODTimes )
-    saveEODTimes();  
+  if ( saveeodtrace )
+    saveEODTrace( eodduration );
+  if ( saveeodtimes )
+    saveEODTimes( eodtimes );  
 }
 
 
-void BaselineActivity::plot( void )
+void BaselineActivity::plot( const SampleDataD &eodcycle, 
+			     const vector< vector< ArrayD > > &eodspikes,
+			     const vector<SampleDataD> &isih,
+			     const vector<SampleDataD> &spikerate,
+			     const MapD &nerveamplm )
 {
   P.lock();
 
@@ -643,31 +596,31 @@ void BaselineActivity::plot( void )
     if ( SpikeEvents[k] >= 0 ) {
       P[2*n].clear();
       if ( ! P[2*n].zoomedXRange() )
-	P[2*n].setXRange( 0.0, 1000.0 * ISIMax );
-      for ( double x=EODPeriod; x < ISIMax; x += EODPeriod )
+	P[2*n].setXRange( 0.0, 500.0 * isih[k].rangeBack() );
+      for ( double x=EODPeriod; x < 0.5*isih[k].rangeBack(); x += EODPeriod )
 	P[2*n].plotVLine( 1000.0 * x );
-      P[2*n].plot( *ISIH[k], 1000.0, Plot::Transparent, 0, Plot::Solid, Plot::Box, 0, Plot::Red, Plot::Red );
+      P[2*n].plot( isih[k], 1000.0, Plot::Transparent, 0, Plot::Solid, Plot::Box, 0, Plot::Red, Plot::Red );
 
       P[2*n+1].clear();
-      double tmax = SpikeRate[k]->rangeBack();
+      double tmax = spikerate[k].rangeBack();
       if ( tmax > EODPeriod )
 	tmax = EODPeriod;
       if ( ! P[2*n+1].zoomedXRange() )
 	P[2*n+1].setXRange( 0.0, 1000.0 * tmax );
 
-      double ss = 1.0/EODSpikes[k].size();
+      double ss = 1.0/eodspikes[k].size();
       if ( ss < 0.01 )
 	ss = 0.01;
       int i = 0;
-      for ( unsigned int j = 0; j < EODSpikes[k].size(); j++ ) {
+      for ( unsigned int j = 0; j < eodspikes[k].size(); j++ ) {
 	i++;
-	P[2*n+1].plot( EODSpikes[k][j], 1000.0, 1.0 - i*ss, Plot::Graph, 2, Plot::StrokeUp,
+	P[2*n+1].plot( eodspikes[k][j], 1000.0, 1.0 - i*ss, Plot::Graph, 2, Plot::StrokeUp,
 		       ss, Plot::Graph, Plot::Red, Plot::Red );
       }
       
-      P[2*n+1].plot( *SpikeRate[k], 1000.0, Plot::Yellow, 2, Plot::Solid );
+      P[2*n+1].plot( spikerate[k], 1000.0, Plot::Yellow, 2, Plot::Solid );
 
-      P[2*n+1].plot( *EODCycle, 1000.0, Plot::Green, 2, Plot::Solid );
+      P[2*n+1].plot( eodcycle, 1000.0, Plot::Green, 2, Plot::Solid );
       P[2*n+1].back().setAxis( Plot::X1Y2 );
 
       n++;
@@ -676,10 +629,10 @@ void BaselineActivity::plot( void )
 
   if ( NerveTrace[0] >= 0 ) {
     P[2*n].clear();
-    double l = NerveAmplM.x().back();
+    double l = nerveamplm.x().back();
     if ( ! P[2*n].zoomedXRange() )
       P[2*n].setXRange( 1000.0*(l-Duration), 1000.0*l );
-    P[2*n].plot( NerveAmplM, 1000.0, Plot::Cyan, 1, Plot::Solid );
+    P[2*n].plot( nerveamplm, 1000.0, Plot::Cyan, 1, Plot::Solid );
   }
   P.unlock();
 
@@ -687,34 +640,41 @@ void BaselineActivity::plot( void )
 }
 
 
-void BaselineActivity::analyzeSpikes( const EventData &se, int k )
+void BaselineActivity::analyzeSpikes( const EventData &se,
+				      EventData &eodtimes,
+				      int k,
+				      vector< vector< ArrayD > > &eodspikes,
+				      EventList &spikes,
+				      vector<SampleDataD> &isih,
+				      vector<SampleDataD> &spikerate,
+				      vector<int> &trials )
 {
   // interspike interval histogram:
-  *ISIH[k] = 0.0;
-  se.addIntervalHistogram( FirstSignal, FirstSignal+SearchDuration, *ISIH[k] );
+  isih[k] = 0.0;
+  se.addIntervalHistogram( FirstSignal, FirstSignal+SearchDuration, isih[k] );
   double sd = 0.0;
   double isi = se.interval( FirstSignal, FirstSignal+SearchDuration, &sd );
   CV[k] = isi > 1.0e-6 ? sd / isi : 0.0;
 
   // EOD spike rate:
-  if ( Repeats <= 0 || Count == 0 ) {
-    Trials[k] = 0;
-    *SpikeRate[k] = 0.0;
+  if ( Repeats <= 0 ) {
+    trials[k] = 0;
+    spikerate[k] = 0.0;
   }
-  for ( int j=0; j<EODTimes.size(); j++ ) {
-    se.addRate( *SpikeRate[k], Trials[k], 0.0, EODTimes[j] + FirstSignal );
+  for ( int j=0; j<eodtimes.size(); j++ ) {
+    se.addRate( spikerate[k], trials[k], 0.0, eodtimes[j] + FirstSignal );
   }
 
   // spikes:
-  se.copy( FirstSignal, FirstSignal+SearchDuration, Spikes[k] );
+  se.copy( FirstSignal, FirstSignal+SearchDuration, spikes[k] );
 
   // eod spikes:
-  if ( Repeats <= 0 || Count == 0 )
-    EODSpikes[k].clear();
-  for ( int j=0; j<EODTimes.size(); j++ ) {
-    double lat = se.latency( EODTimes[j] + FirstSignal );
+  if ( Repeats <= 0 )
+    eodspikes[k].clear();
+  for ( int j=0; j<eodtimes.size(); j++ ) {
+    double lat = se.latency( eodtimes[j] + FirstSignal );
     if ( lat >= 0.0 && lat < EODPeriod )
-      EODSpikes[k].push_back( ArrayD( 1, lat ) );
+      eodspikes[k].push_back( ArrayD( 1, lat ) );
   }
 
   // Firing Rate:
@@ -731,7 +691,16 @@ void BaselineActivity::analyzeSpikes( const EventData &se, int k )
 }
 
 
-void BaselineActivity::analyze( void )
+void BaselineActivity::analyze( int autodetect,
+				SampleDataD &eodcycle, 
+				EventData &eodtimes,
+				vector< vector< ArrayD > > &eodspikes,
+				EventList &spikes,
+				vector<SampleDataD> &isih,
+				vector<SampleDataD> &spikerate,
+				vector<int> &trials,
+				MapD &nerveamplp, MapD &nerveamplt,
+				MapD &nerveamplm )
 {
   if ( LocalEODEvents[0] < 0  )
     return;
@@ -739,8 +708,6 @@ void BaselineActivity::analyze( void )
   const EventData &eod2 = events( LocalEODEvents[0] );
   const InData &eodt2 = trace( LocalEODTrace[0] );
 
-  if ( Repeats <= 0 || Count == 0 )
-    FirstSignal = eod2.signalTime();
   SearchDuration = eodt2.currentTime() - FirstSignal;
 
   // EOD period & rate:
@@ -750,24 +717,25 @@ void BaselineActivity::analyze( void )
     metaData( "Cell" ).setNumber( "EOD Frequency", EODRate );
 
   // EOD times
-  eod2.copy( FirstSignal, FirstSignal+SearchDuration, EODTimes );
+  eod2.copy( FirstSignal, FirstSignal+SearchDuration, eodtimes );
 
   // EOD cycle:
   EOD2Unit = eodt2.unit();
-  if ( !EODTimes.empty() ) {
-    eodt2.copy( EODTimes.previousTime( SearchDuration - 2.0*RateTMax, EODTimes[0] ) + FirstSignal,
-		*EODCycle );
+  if ( !eodtimes.empty() ) {
+    eodt2.copy( eodtimes.previousTime( SearchDuration - 2.0*eodcycle.rangeBack(),
+				       eodtimes[0] ) + FirstSignal, eodcycle );
     /*
-    eodt2.copy( EODTimes[0] + FirstSignal,
-		*EODCycle );
-		*/
+    eodt2.copy( eodtimes[0] + FirstSignal,
+		eodcycle );
+    */
   }
   else
-    *EODCycle = 0.0;
+    eodcycle = 0.0;
 
   for ( int k=0; k<MaxSpikeTraces; k++ )
     if ( SpikeEvents[k] >= 0 )
-      analyzeSpikes( events( SpikeEvents[k] ), k );
+      analyzeSpikes( events( SpikeEvents[k] ), eodtimes, k, eodspikes,
+		     spikes, isih, spikerate, trials );
   if ( NerveTrace[0] >= 0 ) {
     const InData &nd = trace( NerveTrace[0] );
     // nerve amplitudes:
@@ -777,13 +745,13 @@ void BaselineActivity::analyze( void )
     InData::const_iterator lastn = nd.end();
     InDataTimeIterator firstntime = nd.timeBegin( FirstSignal );
     EventList peaktroughs( 2, (int)rint(50000.0*Duration), true );
-    if ( Repeats <= 0 || Count == 0 ) {
-      NerveAmplP.clear();
-      NerveAmplT.clear();
-      NerveAmplM.clear();
-      NerveAmplP.reserve( (int)rint(5000.0*SearchDuration) );
-      NerveAmplT.reserve( (int)rint(5000.0*SearchDuration) );
-      NerveAmplM.reserve( (int)rint(5000.0*SearchDuration) );
+    if ( Repeats <= 0 ) {
+      nerveamplp.clear();
+      nerveamplt.clear();
+      nerveamplm.clear();
+      nerveamplp.reserve( (int)rint(5000.0*SearchDuration) );
+      nerveamplt.reserve( (int)rint(5000.0*SearchDuration) );
+      nerveamplm.reserve( (int)rint(5000.0*SearchDuration) );
       double min = nd.min( FirstSignal, FirstSignal+4.0/EODRate );
       double max = nd.max( FirstSignal, FirstSignal+4.0/EODRate );
       threshold = 0.5*(max-min);
@@ -795,24 +763,24 @@ void BaselineActivity::analyze( void )
 		  threshold, threshold, threshold, NerveAcceptEOD );
     // store amplitudes:
     for ( int k=0; k<peaktroughs[0].size(); k++ )
-      NerveAmplP.push( peaktroughs[0][k] - FirstSignal, 
+      nerveamplp.push( peaktroughs[0][k] - FirstSignal, 
 		       peaktroughs[0].eventSize( k ) );
     for ( int k=0; k<peaktroughs[1].size(); k++ )
-      NerveAmplT.push( peaktroughs[1][k] - FirstSignal, 
+      nerveamplt.push( peaktroughs[1][k] - FirstSignal, 
 		       peaktroughs[1].eventSize( k ) );
     // averaged amplitude:
     double st = (peaktroughs[0].back() - peaktroughs[0].front())/double(peaktroughs[0].size()-1);
     int si = nd.indices( st );
-    int inx = nd.indices( FirstSignal + NerveAmplM.size()*st );
+    int inx = nd.indices( FirstSignal + nerveamplm.size()*st );
     double tt=0.0;
-    for ( int k=NerveAmplM.size(); tt+2.0*st<SearchDuration; k++ ) {
+    for ( int k=nerveamplm.size(); tt+2.0*st<SearchDuration; k++ ) {
       tt = nd.interval( inx ) - FirstSignal;
-      NerveAmplM.push( tt, nd.mean( inx, inx+si ) );
+      nerveamplm.push( tt, nd.mean( inx, inx+si ) );
       inx += si;
     }
   }
 
-  if ( AutoDetect > 1 && Repeats <= 0 ) {
+  if ( autodetect > 1 && Repeats <= 0 ) {
     // setup Beat detector:
     lockDetectorEvents( LocalBeatPeakEvents[0] );
     if ( events( LocalBeatPeakEvents[0] ).count( trace( LocalEODTrace[0] ).currentTime() - 0.1 ) > 0 ) {

@@ -89,26 +89,45 @@ public:
   ~BaselineActivity( void );
 
   virtual int main( void );
-  void stop( void );
 
     /*! Save all spikes of the whole run of PUnitSearch. */
-  void saveSpikes( int trace );
+  void saveSpikes( int trace, const EventList &spikes );
     /*! Save the interspike interval histogram. */
-  void saveISIH( int trace );
+  void saveISIH( int trace, const vector<SampleDataD> &isih );
     /*! Save the cyclic spike rate. */
-  void saveRate( int trace );
+  void saveRate( int trace, const vector<SampleDataD> &spikerate,
+		 const SampleDataD &eodcycle );
     /*! Save potential of the nerve recording for the whole run of PUnitSearch. */
-  void saveNerve( void );
+  void saveNerve( const MapD &nerveamplp,
+		  const MapD &nerveamplt,
+		  const MapD &nerveamplm );
     /*! Save the fishes EOD waveform. */
-  void saveEODTrace( void );
+  void saveEODTrace( double eodduration );
     /*! Save the fishes EOD times. */
-  void saveEODTimes( void );
+  void saveEODTimes( const EventData &eodtimes );
     /*! Save results data. */
-  virtual void save( void );
+  void save( bool saveeodtrace, double eodduration, bool saveeodtimes,
+	     const EventData &eodtimes, const SampleDataD &eodcycle,
+	     const EventList &spikes, const vector<SampleDataD> &isih,
+	     const vector<SampleDataD> &spikerate,
+	     const MapD &nerveamplp,
+	     const MapD &nerveamplt,
+	     const MapD &nerveamplm );
 
-  void plot( void );
-  void analyzeSpikes( const EventData &se, int k );
-  void analyze( void );
+  void plot( const SampleDataD &eodcycle,
+	     const vector< vector< ArrayD > > &eodspikes,
+	     const vector<SampleDataD> &isih,
+	     const vector<SampleDataD> &spikerate,
+	     const MapD &nerveamplm );
+  void analyzeSpikes( const EventData &se, EventData &eodtimes, int k,
+		      vector< vector< ArrayD > > &eodspikes,
+		      EventList &spikes, vector<SampleDataD> &isih,
+		      vector<SampleDataD> &spikerate, vector<int> &trials );
+  void analyze( int autodetect, SampleDataD &eodcycle, EventData &eodtimes,
+		vector< vector< ArrayD > > &eodspikes,
+		EventList &spikes, vector<SampleDataD> &isih,
+		vector<SampleDataD> &spikerate,	vector<int> &trials,
+		MapD &nerveamplp, MapD &nerveamplt, MapD &nerveamplm );
 
 
 private:
@@ -119,53 +138,29 @@ private:
   double FirstSignal;
   double SearchDuration;
 
-  SampleDataD *ISIH[MaxSpikeTraces];
-  double ISIMax;
-  double ISIStep;
   double FRate[MaxSpikeTraces];
   double CV[MaxSpikeTraces];
   double PValue[MaxSpikeTraces];
 
-  double RateDeltaT;
-  double RateTMax;
-  SampleDataD *SpikeRate[MaxSpikeTraces];
-  int Trials[MaxSpikeTraces];
-
-  EventList Spikes;
-  vector< ArrayD > EODSpikes[MaxSpikeTraces];
-
-  MapD NerveAmplP;
-  MapD NerveAmplT;
-  MapD NerveAmplM;
   Detector< InData::const_iterator, InDataTimeIterator > D;
   AcceptEOD< InData::const_iterator, InDataTimeIterator > NerveAcceptEOD;
 
-  SampleDataD *EODCycle;
   double EODPeriod;
   double EODRate;
   string EOD2Unit;
-
-  EventData EODTimes;
-  double EODDuration;
-  bool SaveEODTrace;
-  bool SaveEODTimes;
-
-  bool Adjust;
 
   Options Header;
 
   MultiPlot P;
 
-  int AutoDetect;
   double SpikesFastDelay;
   double SpikesFastDecay;
   double SpikesSlowDelay;
   double SpikesSlowDecay;
+
   double BeatStep;
   double ChirpMin;
   double ChirpStep;
-
-  int Count;
 
 };
 
