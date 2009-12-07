@@ -43,7 +43,7 @@ MembraneResistance::MembraneResistance( void )
   addNumber( "amplitude", "Amplitude of output signal", -1.0, -1000.0, 1000.0, 0.1 );
   addNumber( "duration", "Duration of output", 0.1, 0.001, 1000.0, 0.001, "sec", "ms" );
   addNumber( "pause", "Duration of pause bewteen outputs", 0.4, 0.001, 1.0, 0.001, "sec", "ms" );
-  addInteger( "repeats", "Repeats", 100, 0, 10000, 1 );
+  addInteger( "repeats", "Repetitions of stimulus", 10, 0, 10000, 1 );
   addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
   addBoolean( "nossfit", "Fix steady-state potential for fit", true );
   addBoolean( "plotstdev", "Plot standard deviation of membrane potential", true );
@@ -203,7 +203,7 @@ void MembraneResistance::analyzeOn( const InData &trace,
     double v = trace[inx+k];
     MeanTrace[k] += (v - MeanTrace[k])/(count+1);
     SquareTrace[k] += (v*v - SquareTrace[k])/(count+1);
-    StdevTrace = sqrt( SquareTrace[k] - MeanTrace[k]*MeanTrace[k] );
+    StdevTrace[k] = sqrt( SquareTrace[k] - MeanTrace[k]*MeanTrace[k] );
   }
 
   // resting potential:
@@ -270,7 +270,7 @@ void MembraneResistance::analyzeOff( const InData &trace,
     double v = trace[inx+k];
     MeanTrace[k] += (v - MeanTrace[k])/(count+1);
     SquareTrace[k] += (v*v - SquareTrace[k])/(count+1);
-    StdevTrace = sqrt( SquareTrace[k] - MeanTrace[k]*MeanTrace[k] );
+    StdevTrace[k] = sqrt( SquareTrace[k] - MeanTrace[k]*MeanTrace[k] );
   }
 
   // fit exponential to offset:

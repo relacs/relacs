@@ -3153,7 +3153,9 @@ int transfer( const SampleData<TT> &x, const SampleData<SS> &y,
 	      SampleData<RR> &h,
 	      bool overlap, double (*window)( int j, int n ) )
 {
-  h.setStepsize( 1.0/x.stepsize()/h.stepsize() );
+  int n = 1;
+  for ( n = 1; n < h.size(); n <<= 1 );
+  h.setStepsize( 0.5/x.stepsize()/n );
   return transfer( x.array(), y.array(), h.array(), overlap, window );
 }
 

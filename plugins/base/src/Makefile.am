@@ -11,7 +11,8 @@ pluginlib_LTLIBRARIES = \
     libbasespectrumanalyzer.la \
     libbasepause.la \
     libbasesetoutput.la \
-    libbasesimplemodel.la
+    libbasesimplemodel.la \
+    libbasetransferfunction.la
 
 
 
@@ -230,6 +231,35 @@ libbasesimplemodel_la_include_HEADERS = $(HEADER_PATH)/simplemodel.h
 
 
 
+libbasetransferfunction_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT3_CPPFLAGS)
+
+libbasetransferfunction_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT3_LDFLAGS)
+
+libbasetransferfunction_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(QT3_LIBS)
+
+$(libbasetransferfunction_la_OBJECTS) : moc_transferfunction.cc
+
+libbasetransferfunction_la_SOURCES = transferfunction.cc
+
+libbasetransferfunction_la_includedir = $(pkgincludedir)/base
+
+libbasetransferfunction_la_include_HEADERS = $(HEADER_PATH)/transferfunction.h
+
+
+
 check_PROGRAMS = \
     linktest_libbaselinearattenuate_la \
     linktest_libbasedecibelattenuate_la \
@@ -238,7 +268,8 @@ check_PROGRAMS = \
     linktest_libbasespectrumanalyzer_la \
     linktest_libbasepause_la \
     linktest_libbasesetoutput_la \
-    linktest_libbasesimplemodel_la
+    linktest_libbasesimplemodel_la \
+    linktest_libbasetransferfunction_la
 
 linktest_libbaselinearattenuate_la_SOURCES = linktest.cc
 linktest_libbaselinearattenuate_la_LDADD = libbaselinearattenuate.la
@@ -263,5 +294,8 @@ linktest_libbasesetoutput_la_LDADD = libbasesetoutput.la
 
 linktest_libbasesimplemodel_la_SOURCES = linktest.cc
 linktest_libbasesimplemodel_la_LDADD = libbasesimplemodel.la
+
+linktest_libbasetransferfunction_la_SOURCES = linktest.cc
+linktest_libbasetransferfunction_la_LDADD = libbasetransferfunction.la
 
 TESTS = $(check_PROGRAMS)
