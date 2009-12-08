@@ -31,38 +31,89 @@ namespace relacs {
 
   /*! Compute an in-place radix-2 FFT on the range \a first, \a last
       of complex numbers.
-      The size \a N of the range hast to be a power of two,
+      The size \a N = \a last - \a first of the range has to be a power of two,
       otherwise -1 is returned.
-      \a sign determines the sign of the exponential.
+      \param[in] sign determines the sign of the exponential.
       Usually \a sign=-1 is used for forward and \a sign=1 for backward transformation.
       The backward transformation is not normalized;
       you need to multiply the real and imaginary part of each element by \a 1/N.
-      \a RandomAccessIter is a random access iterator that points to a REAL number. 
+      \param RandomAccessIter is a random access iterator that points to a REAL number. 
       Real and imaginary parts of each complex number are placed in alternate neighboring elements,
       i.e. *(first+2*i) and *(first+2*i+1) point to the real and imaginary part
       of the \a i-th complex number of the range.
-      Algorithm adapted from the GNU Scientific Library http://www.gnu.org/software/gsl . */
+      If the input data are spaced by \a Delta,
+      then the first half of the output range contains the positive frequencies
+      at i/(N Delta), i=0..N/2, the negative frequencies are stored
+      backwards from the end with the frequencies -(N-i)/(N Delta) at the indices
+      i=N/2+1..N-1.
+      Algorithm adapted from the GNU Scientific Library http://www.gnu.org/software/gsl .
+      \sa rFFT(), cPower(), cMagnitude(), cPhase() */
 template < typename RandomAccessIter >
 int cFFT( RandomAccessIter first, RandomAccessIter last, int sign );
 template < typename Container >
 int cFFT( Container &c, int sign );
 
+  /*! Return in the range \a firstp, \a lastp the power 
+      of complex fourier transform in the range \a firstc, \a lastc.
+      Half the number \a N of data elements in the range \a firstc, \a lastc
+      can be assigned a power in the range \a firstp, \a lastp,
+      excess elements are set to zero.
+      If the input data to cFFT() were spaced by \a Delta,
+      then the power is computed for the frequencies i/(N Delta), i=0..N/2.
+      \sa cMagnitude(), cPhase(), cFFT() */
+template < typename BidirectIterC, typename ForwardIterP >
+void cPower( BidirectIterC firstc, BidirectIterC lastc,
+	      ForwardIterP firstp, ForwardIterP lastp );
+template < typename ContainerC, typename ContainerP >
+void cPower( ContainerC &c, ContainerP &p );
+  /*! Return in the range \a firstm, \a lastm the magnitude (absolute value)
+      of the complex fourier transform in the range \a firstc, \a lastc.
+      Each of the \a N data elements in the range \a firstc, \a lastc
+      can be assigned a magnitude in the range \a firstm, \a lastm,
+      excess elements are set to zero.
+      If the input data to cFFT() were spaced by \a Delta,
+      then the magnitude is computed for the frequencies i/(N Delta), i=-N/2+1..N/2.
+      \sa cPower(), cPhase(), cFFT() */
+template < typename BidirectIterC, typename ForwardIterM >
+void cMagnitude( BidirectIterC firstc, BidirectIterC lastc,
+		  ForwardIterM firstm, ForwardIterM lastm );
+template < typename ContainerC, typename ContainerM >
+void cMagnitude( ContainerC &c, ContainerM &m );
+  /*! Return in the range \a firstp, \a lastp the phase (argument, from -pi to pi) 
+      of the complex fourier transform in the range \a firstc, \a lastc.
+      Each of the \a N data elements in the range \a firstc, \a lastc
+      can be assigned a phase in the range \a firstm, \a lastm,
+      excess elements are set to zero.
+      If the input data to rFFT() were spaced by \a Delta,
+      then the phase is computed for the frequencies i/(N Delta), i=-N/2+1..N/2.
+      \sa cPower(), cMagnitude(), cFFT() */
+template < typename BidirectIterC, typename ForwardIterP >
+void cPhase( BidirectIterC firstc, BidirectIterC lastc,
+	      ForwardIterP firstp, ForwardIterP lastp );
+template < typename ContainerC, typename ContainerP >
+void cPhase( ContainerC &c, ContainerP &p );
+
   /*! Compute an in-place radix-2 FFT on the range \a first, \a last
       of real numbers.
-      The size \a N of the range hast to be a power of two,
+      The size \a N = \a last - \a first of the range has to be a power of two,
       otherwise -1 is returned.
       The output is a half-complex sequence, which is stored in-place. 
       The arrangement of the half-complex terms uses the following
       scheme: for k < N/2 the real part of the k-th term is stored in
       location k, and the corresponding imaginary part is stored in
-      location N-k. Terms with k > N/2 can be reconstructed using the
-      symmetry z_k = z^*_{N-k}. The terms for k=0 and k=N/2 are both
+      location N-k. Terms with k > N/2 (the negative frequencies)
+      can be reconstructed using the symmetry z_k = z^*_{N-k}.
+      The terms for k=0 and k=N/2 are both
       purely real, and count as a special case. Their real parts are
       stored in locations 0 and N/2 respectively, while their
       imaginary parts which are zero are not stored.
-      \a RandomAccessIter is a random access iterator that points to a
+      If the input data are spaced by \a Delta,
+      then the first half of the output range contains the positive frequencies
+      at i/(N Delta), i=0..N/2.
+      \param RandomAccessIter is a random access iterator that points to a
       real number. 
-      Algorithm adapted from the GNU Scientific Library http://www.gnu.org/software/gsl . */
+      Algorithm adapted from the GNU Scientific Library http://www.gnu.org/software/gsl .
+      \sa hcFFT(), cFFT(), hcPower(), hcMagnitude(), hcPhase() */
 template < typename RandomAccessIter >
 int rFFT( RandomAccessIter first, RandomAccessIter last );
 template < typename Container >
@@ -71,20 +122,27 @@ int rFFT( Container &c );
   /*! Compute the inverse in-place radix-2 FFT on the half-complex
       sequence \a first, \a last stored according the output scheme used by
       rFFT(). 
+      The size \a N = \a last - \a first of the range has to be a power of two,
+      otherwise -1 is returned.
       The result is a real array stored in natural order that is not normalized;
       you need to multiply each element by \a 1/N.
-      The size of the range hast to be a power of two,
-      otherwise -1 is returned.
-      \a RandomAccessIter is a random access iterator that points to a
+      \param RandomAccessIter is a random access iterator that points to a
       real number. 
-      Algorithm adapted from the GNU Scientific Library http://www.gnu.org/software/gsl . */
+      Algorithm adapted from the GNU Scientific Library http://www.gnu.org/software/gsl .
+      \sa rFFT(), cFFT() */
 template < typename RandomAccessIter >
 int hcFFT( RandomAccessIter first, RandomAccessIter last );
 template < typename Container >
 int hcFFT( Container &c );
 
   /*! Return in the range \a firstp, \a lastp the power 
-      of the half-complex sequence in the range \a firsthc, \a lasthc. */
+      of the half-complex sequence in the range \a firsthc, \a lasthc.
+      Half the number \a N of data elements in the range \a firsthc, \a lasthc
+      can be assigned a power in the range \a firstp, \a lastp,
+      excess elements are set to zero.
+      If the input data to rFFT() were spaced by \a Delta,
+      then the power is computed for the frequencies i/(N Delta), i=0..N/2.
+      \sa hcMagnitude(), hcPhase(), rFFT() */
 template < typename BidirectIterHC, typename ForwardIterP >
 void hcPower( BidirectIterHC firsthc, BidirectIterHC lasthc,
 	      ForwardIterP firstp, ForwardIterP lastp );
@@ -92,14 +150,26 @@ template < typename ContainerHC, typename ContainerP >
 void hcPower( ContainerHC &hc, ContainerP &p );
   /*! Return in the range \a firstm, \a lastm the magnitude
       (absolute value, square root of the power)
-      of the half-complex sequence in the range \a firsthc, \a lasthc. */
+      of the half-complex sequence in the range \a firsthc, \a lasthc.
+      Half the number \a N of data elements in the range \a firsthc, \a lasthc
+      can be assigned a magnitude in the range \a firstm, \a lastm,
+      excess elements are set to zero.
+      If the input data to rFFT() were spaced by \a Delta,
+      then the magnitude is computed for the frequencies i/(N Delta), i=0..N/2.
+      \sa hcPower(), hcPhase(), rFFT() */
 template < typename BidirectIterHC, typename ForwardIterM >
 void hcMagnitude( BidirectIterHC firsthc, BidirectIterHC lasthc,
 		  ForwardIterM firstm, ForwardIterM lastm );
 template < typename ContainerHC, typename ContainerM >
 void hcMagnitude( ContainerHC &hc, ContainerM &m );
   /*! Return in the range \a firstp, \a lastp the phase (argument, from -pi to pi) 
-      of the half-complex sequence in the range \a firsthc, \a lasthc. */
+      of the half-complex sequence in the range \a firsthc, \a lasthc.
+      Half the number \a N of data elements in the range \a firsthc, \a lasthc
+      can be assigned a phase in the range \a firstm, \a lastm,
+      excess elements are set to zero.
+      If the input data to rFFT() were spaced by \a Delta,
+      then the phase is computed for the frequencies i/(N Delta), i=0..N/2.
+      \sa hcPower(), hcMagnitude(), rFFT() */
 template < typename BidirectIterHC, typename ForwardIterP >
 void hcPhase( BidirectIterHC firsthc, BidirectIterHC lasthc,
 	      ForwardIterP firstp, ForwardIterP lastp );
@@ -170,9 +240,19 @@ template < typename ContainerX, typename ContainerP >
 int rPSD( const ContainerX &x, ContainerP &p,
 	  bool overlap=true, double (*window)( int j, int n )=bartlett );
 
-  /*! Compute transfer function in range \a firsth, \a lasth
-      as a half-complex sequence
-      between the two ranges \a firstx, \a lastx and \a firsty, \a lasty.
+  /*! Compute transfer function between the two ranges \a firstx, \a lastx
+      and \a firsty, \a lasty as a half-complex sequence
+      in range \a firsth, \a lasth.
+      The input ranges are divided into chunks of TWO times \a N,
+      where \a N is the number of complex data points of the transfer function
+      (N = (lasth - firsth)/2). N must be a power of two.
+      The chunks may overlap by half according to \a overlap. 
+      Each chunk is windowed through a \a window function
+      before passing it to rFFT().
+      If the input data were sampled with \a delta, then 
+      the frequencies are sampled with 1/(2 N delta).
+      The gain and the phase of the transfer function can
+      be computed using hcMagnitude() and hcPhase().
       \a ForwardIterX and \a ForwardIterY
       are forward iterators that point to real numbers. 
       \a BidirectH is a bidirectional iterator pointing to real numbers. */
@@ -386,6 +466,143 @@ template < typename Container >
 int cFFT( Container &c, int sign )
 {
   return cFFT( c.begin(), c.end(), sign );
+}
+
+
+template < typename BidirectIterC, typename ForwardIterP >
+void cPower( BidirectIterC firstc, BidirectIterC lastc,
+	     ForwardIterP firstp, ForwardIterP lastp )
+{
+  typedef typename iterator_traits<ForwardIterP>::value_type ValueTypeP;
+
+  if ( firstc == lastc || firstp == lastp )
+    return;
+  ValueTypeP invn2 = 0.5/(lastc - firstc);
+  invn2 *= invn2;
+  // f=0 real part:
+  *firstp = (*firstc) * (*firstc);
+  ++firstc;
+  // f=0 imaginary part:
+  *firstp += (*firstc) * (*firstc);
+  ++firstc;
+  *firstp *= invn2;
+  ++firstp;
+  --lastc;
+  while ( firstp != lastp && firstc != lastc ) {
+    // f_k real part squared + f_(N-k) imaginary part squared:
+    *firstp = (*firstc) * (*firstc) + (*lastc) * (*lastc);
+    ++firstc;
+    --lastc;
+    // f_k imaginary part squared + f_(N-k) real part squared:
+    if ( firstp != lastp && firstc != lastc ) {
+      *firstp += (*firstc) * (*firstc) + (*lastc) * (*lastc);
+      ++firstc;
+      --lastc;
+    }
+    *firstp *= invn2;
+    ++firstp;
+  }
+  while ( firstp != lastp ) {
+    *firstp = 0.0;
+    ++firstp;
+  }
+}
+
+
+template < typename ContainerC, typename ContainerP >
+void cPower( ContainerC &c, ContainerP &p )
+{
+  cPower( c.begin(), c.end(), p.begin(), p.end() );
+}
+
+
+template < typename BidirectIterC, typename ForwardIterM >
+void cMagnitude( BidirectIterC firstc, BidirectIterC lastc,
+		 ForwardIterM firstm, ForwardIterM lastm )
+{
+  typedef typename iterator_traits<ForwardIterM>::value_type ValueTypeM;
+
+  if ( firstc == lastc || firstm == lastm )
+    return;
+  int n = lastc - firstc;
+  ValueTypeM invn = 0.5/n;
+  ValueTypeM m = 0.0;
+
+  // negative frequencies:
+  BidirectIterC iterc = firstc + n/2 + 2;
+  while ( firstm != lastm && iterc != lastc ) {
+    // real part squared:
+    m = (*iterc) * (*iterc);
+    ++iterc;
+    // imaginary part squared:
+    m += (*iterc) * (*iterc);
+    ++iterc;
+    *firstm = ::sqrt( m ) * invn;
+    ++firstm;
+  }
+
+  // positive frequencies:
+  iterc = firstc + n/2 + 2;
+  while ( firstm != lastm && firstc != iterc ) {
+    // real part squared:
+    m = (*firstc) * (*firstc);
+    ++firstc;
+    // imaginary part squared:
+    m += (*firstc) * (*firstc);
+    ++firstc;
+    *firstm = ::sqrt( m ) * invn;
+    ++firstm;
+  }
+
+  while ( firstm != lastm ) {
+    *firstm = 0.0;
+    ++firstm;
+  }
+}
+
+
+template < typename ContainerC, typename ContainerM >
+void cMagnitude( ContainerC &c, ContainerM &m )
+{
+  cMagnitude( c.begin(), c.end(), m.begin(), m.end() );
+}
+
+
+template < typename BidirectIterC, typename ForwardIterP >
+void cPhase( BidirectIterC firstc, BidirectIterC lastc,
+	      ForwardIterP firstp, ForwardIterP lastp )
+{
+  if ( firstc == lastc || firstp == lastp )
+    return;
+  int n = lastc - firstc;
+
+  // negative frequencies:
+  BidirectIterC iterc = firstc + n/2 + 2;
+  while ( firstp != lastp && iterc != lastc ) {
+    *firstp = ::atan2( *(iterc+1), *iterc );
+    iterc+=2;
+    ++firstp;
+  }
+
+  // positive frequencies:
+  iterc = firstc + n/2 + 2;
+  while ( firstp != lastp && firstc != iterc ) {
+    *firstp = ::atan2( *(firstc+1), *firstc );
+    firstc+=2;
+    ++firstp;
+  }
+
+  while ( firstp != lastp ) {
+    *firstp = 0.0;
+    ++firstp;
+  }
+}
+
+
+template < typename ContainerC, typename ContainerP >
+void cPhase( ContainerC &c, ContainerP &p )
+{
+  cPhase( c.begin(), c.end(), p.begin(), p.end() );
 }
 
 
@@ -624,18 +841,26 @@ template < typename BidirectIterHC, typename ForwardIterP >
 void hcPower( BidirectIterHC firsthc, BidirectIterHC lasthc,
 	      ForwardIterP firstp, ForwardIterP lastp )
 {
-  *firstp = (*firsthc) * (*firsthc);
+  typedef typename iterator_traits<ForwardIterP>::value_type ValueTypeP;
+
+  if ( firsthc == lasthc || firstp == lastp )
+    return;
+  ValueTypeP invn2 = 1.0/(lasthc - firsthc);
+  invn2 *= invn2;
+  *firstp = (*firsthc) * (*firsthc) * invn2;
   ++firsthc;
   --lasthc;
   ++firstp;
   while ( firstp != lastp && firsthc != lasthc ) {
-    *firstp = (*firsthc) * (*firsthc) + (*lasthc) * (*lasthc);
+    *firstp = ( (*firsthc) * (*firsthc) + (*lasthc) * (*lasthc) ) * invn2;
     ++firsthc;
     --lasthc;
     ++firstp;
   }
-  if ( firstp != lastp )
-    *firstp = (*firsthc) * (*firsthc);
+  if ( firstp != lastp ) {
+    *firstp = (*firsthc) * (*firsthc) * invn2;
+    ++firstp;
+  }
   while ( firstp != lastp ) {
     *firstp = 0.0;
     ++firstp;
@@ -654,18 +879,25 @@ template < typename BidirectIterHC, typename ForwardIterM >
 void hcMagnitude( BidirectIterHC firsthc, BidirectIterHC lasthc,
 		  ForwardIterM firstm, ForwardIterM lastm )
 {
-  *firstm = ::sqrt( (*firsthc) * (*firsthc) );
+  typedef typename iterator_traits<ForwardIterM>::value_type ValueTypeM;
+
+  if ( firsthc == lasthc || firstm == lastm )
+    return;
+  ValueTypeM invn = 1.0/(lasthc - firsthc);
+  *firstm = ::sqrt( (*firsthc) * (*firsthc) ) * invn;
   ++firsthc;
   --lasthc;
   ++firstm;
   while ( firstm != lastm && firsthc != lasthc ) {
-    *firstm = ::sqrt( (*firsthc) * (*firsthc) + (*lasthc) * (*lasthc) );
+    *firstm = ::sqrt( (*firsthc) * (*firsthc) + (*lasthc) * (*lasthc) ) * invn;
     ++firsthc;
     --lasthc;
     ++firstm;
   }
-  if ( firstm != lastm )
-    *firstm = (*firsthc) * (*firsthc);
+  if ( firstm != lastm ) {
+    *firstm = (*firsthc) * (*firsthc) * invn;
+    ++firstm;
+  }
   while ( firstm != lastm ) {
     *firstm = 0.0;
     ++firstm;
@@ -684,6 +916,8 @@ template < typename BidirectIterHC, typename ForwardIterP >
 void hcPhase( BidirectIterHC firsthc, BidirectIterHC lasthc,
 	      ForwardIterP firstp, ForwardIterP lastp )
 {
+  if ( firsthc == lasthc || firstp == lastp )
+    return;
   *firstp = 0.0;
   ++firsthc;
   --lasthc;

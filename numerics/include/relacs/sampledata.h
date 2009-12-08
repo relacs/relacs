@@ -1039,16 +1039,28 @@ class SampleData : public Array< T >
   power( double first, double last ) const;
 
     /*! Compute power \a p of the half-complex sequence in \a hc.
-	\a TT and \a SS are real numbers. */
+        Sets the stepsize() of  \a p to the one of \a hc.
+	Half the number hc.size() of data elements in \a hc
+	can be assigned a power in \a p, excess elements are set to zero.
+	\a TT and \a SS are real numbers.
+        \sa hcMagnitude(), hcPhase(), transfer() */
   template < typename TT, typename SS >
   friend void hcPower( const SampleData<TT> &hc, SampleData<SS> &p );
     /*! Compute magnitude \a m of the half-complex sequence in \a hc.
-	\a TT and \a SS are real numbers. */
+        Sets the stepsize() of  \a m to the one of \a hc.
+	Half the number hc.size() of data elements in \a hc
+	can be assigned a magnitude in \a m, excess elements are set to zero.
+	\a TT and \a SS are real numbers.
+        \sa hcPower(), hcPhase(), transfer() */
   template < typename TT, typename SS >
   friend void hcMagnitude( const SampleData<TT> &hc, SampleData<SS> &m );
     /*! Compute phase \a p (argument, from -pi to pi) 
         of the half-complex sequence in \a hc.
-	\a TT and \a SS are real numbers. */
+        Sets the stepsize() of  \a p to the one of \a hc.
+	Half the number hc.size() of data elements in \a hc
+	can be assigned a phase in \a p, excess elements are set to zero.
+	\a TT and \a SS are real numbers.
+        \sa hcPower(), hcMagnitude(), transfer() */
   template < typename TT, typename SS >
   friend void hcPhase( const SampleData<TT> &hc, SampleData<SS> &p );
 
@@ -1061,6 +1073,11 @@ class SampleData : public Array< T >
 		   bool overlap, double (*window)( int j, int n ) );
     /*! Compute transfer function \a h (half-complex sequence) 
         between \a x and \a y.
+	\a x and \a y must have the same stepsize() and size().
+	h.size() must be a power of two.
+	The stepsize() of \a h is set to 1.0/x.stepsize()/h.size().
+	The gain and phase of the transfer function can be obtained
+	using hcMagnitude() and hcPhase().
 	\a TT, \a SS, and \a RR are real numbers. */
   template < typename TT, typename SS, typename RR >
   friend int transfer( const SampleData<TT> &x, const SampleData<SS> &y,
@@ -1268,16 +1285,28 @@ SampleData<> triangle( double l, double r, double stepsize, double period );
 
 
   /*! Compute power \a p of the half-complex sequence in \a hc.
-      \a TT and \a SS are real numbers. */
+      Sets the stepsize() of  \a p to the one of \a hc.
+      Half the number hc.size() of data elements in \a hc
+      can be assigned a power in \a p, excess elements are set to zero.
+      \a TT and \a SS are real numbers.
+      \sa hcMagnitude(), hcPhase(), transfer() */
 template < typename TT, typename SS >
 void hcPower( const SampleData<TT> &hc, SampleData<SS> &p );
   /*! Compute magnitude \a m of the half-complex sequence in \a hc.
-      \a TT and \a SS are real numbers. */
+      Sets the stepsize() of  \a m to the one of \a hc.
+      Half the number hc.size() of data elements in \a hc
+      can be assigned a magnitude in \a m, excess elements are set to zero.
+      \a TT and \a SS are real numbers.
+      \sa hcPower(), hcPhase(), transfer() */
 template < typename TT, typename SS >
 void hcMagnitude( const SampleData<TT> &hc, SampleData<SS> &m );
   /*! Compute phase \a p (argument, from -pi to pi) 
       of the half-complex sequence in \a hc.
-      \a TT and \a SS are real numbers. */
+      Sets the stepsize() of  \a p to the one of \a hc.
+      Half the number hc.size() of data elements in \a hc
+      can be assigned a phase in \a p, excess elements are set to zero.
+      \a TT and \a SS are real numbers.
+      \sa hcPower(), hcMagnitude(), transfer() */
 template < typename TT, typename SS >
 void hcPhase( const SampleData<TT> &hc, SampleData<SS> &p );
 
@@ -1291,6 +1320,11 @@ template < typename TT, typename SS >
 	    double (*window)( int j, int n )=bartlett );
   /*! Compute transfer function \a h (half-complex sequence) 
       between \a x and \a y.
+      \a x and \a y must have the same stepsize() and size().
+      h.size() must be a power of two.
+      The stepsize() of \a h is set to 1.0/x.stepsize()/h.size().
+      The gain and phase of the transfer function can be obtained
+      using hcMagnitude() and hcPhase().
       \a TT, \a SS, and \a RR are real numbers. */
 template < typename TT, typename SS, typename RR >
   int transfer( const SampleData<TT> &x, const SampleData<SS> &y,
@@ -3115,7 +3149,7 @@ typename numerical_traits< T >::variance_type
 template < typename TT, typename SS >
 void hcPower( const SampleData<TT> &hc, SampleData<SS> &p )
 {
-  p.setStepsize( 1.0/hc.stepsize()/hc.size() );
+  p.setStepsize( hc.stepsize() );
   hcPower( hc.array(), p.array() );
 }
 
@@ -3123,7 +3157,7 @@ void hcPower( const SampleData<TT> &hc, SampleData<SS> &p )
 template < typename TT, typename SS >
 void hcMagnitude( const SampleData<TT> &hc, SampleData<SS> &m )
 {
-  m.setStepsize( 1.0/hc.stepsize()/hc.size() );
+  m.setStepsize( hc.stepsize() );
   hcMagnitude( hc.array(), m.array() );
 }
 
@@ -3131,7 +3165,7 @@ void hcMagnitude( const SampleData<TT> &hc, SampleData<SS> &m )
 template < typename TT, typename SS >
 void hcPhase( const SampleData<TT> &hc, SampleData<SS> &p )
 {
-  p.setStepsize( 1.0/hc.stepsize()/hc.size() );
+  p.setStepsize( hc.stepsize() );
   hcPhase( hc.array(), p.array() );
 }
 
@@ -3153,9 +3187,7 @@ int transfer( const SampleData<TT> &x, const SampleData<SS> &y,
 	      SampleData<RR> &h,
 	      bool overlap, double (*window)( int j, int n ) )
 {
-  int n = 1;
-  for ( n = 1; n < h.size(); n <<= 1 );
-  h.setStepsize( 0.5/x.stepsize()/n );
+  h.setStepsize( 1.0/x.stepsize()/h.size() );
   return transfer( x.array(), y.array(), h.array(), overlap, window );
 }
 
