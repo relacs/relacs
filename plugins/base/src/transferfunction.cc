@@ -60,7 +60,8 @@ TransferFunction::TransferFunction( void )
   P[1].setYLabel( "Phase" );
   P[1].setYLabelPos( 2.0, Plot::FirstMargin,
 		     0.5, Plot::Graph, Plot::Center, -90.0 );
-  P[1].setYRange( Plot::AutoScale, Plot::AutoScale );
+  //  P[1].setYRange( Plot::AutoScale, Plot::AutoScale );
+  P[1].setYRange( -3.15, 3.15 );
   P.unlock();
 }
 

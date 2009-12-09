@@ -54,7 +54,7 @@ template < typename Container >
 int cFFT( Container &c, int sign );
 
   /*! Return in the range \a firstp, \a lastp the power 
-      of complex fourier transform in the range \a firstc, \a lastc.
+      of the complex fourier transform in the range \a firstc, \a lastc.
       Half the number \a N of data elements in the range \a firstc, \a lastc
       can be assigned a power in the range \a firstp, \a lastp,
       excess elements are set to zero.
@@ -113,7 +113,7 @@ void cPhase( ContainerC &c, ContainerP &p );
       \param RandomAccessIter is a random access iterator that points to a
       real number. 
       Algorithm adapted from the GNU Scientific Library http://www.gnu.org/software/gsl .
-      \sa hcFFT(), cFFT(), hcPower(), hcMagnitude(), hcPhase() */
+      \sa hcFFT(), cFFT(), hcPower(), hcMagnitude(), hcPhase(), hcReal(), hcImaginary() */
 template < typename RandomAccessIter >
 int rFFT( RandomAccessIter first, RandomAccessIter last );
 template < typename Container >
@@ -140,14 +140,16 @@ int hcFFT( Container &c );
       Half the number \a N of data elements in the range \a firsthc, \a lasthc
       can be assigned a power in the range \a firstp, \a lastp,
       excess elements are set to zero.
+      The spectrum is normalized such that its sum equals the
+      mean squared amplitudes of the signal.
       If the input data to rFFT() were spaced by \a Delta,
       then the power is computed for the frequencies i/(N Delta), i=0..N/2.
-      \sa hcMagnitude(), hcPhase(), rFFT() */
+      \sa hcMagnitude(), hcPhase(), hcReal(), hcImaginary(), rFFT() */
 template < typename BidirectIterHC, typename ForwardIterP >
 void hcPower( BidirectIterHC firsthc, BidirectIterHC lasthc,
 	      ForwardIterP firstp, ForwardIterP lastp );
 template < typename ContainerHC, typename ContainerP >
-void hcPower( ContainerHC &hc, ContainerP &p );
+void hcPower( const ContainerHC &hc, ContainerP &p );
   /*! Return in the range \a firstm, \a lastm the magnitude
       (absolute value, square root of the power)
       of the half-complex sequence in the range \a firsthc, \a lasthc.
@@ -156,12 +158,12 @@ void hcPower( ContainerHC &hc, ContainerP &p );
       excess elements are set to zero.
       If the input data to rFFT() were spaced by \a Delta,
       then the magnitude is computed for the frequencies i/(N Delta), i=0..N/2.
-      \sa hcPower(), hcPhase(), rFFT() */
+      \sa hcPower(), hcPhase(), hcReal(), hcImaginary(), rFFT() */
 template < typename BidirectIterHC, typename ForwardIterM >
 void hcMagnitude( BidirectIterHC firsthc, BidirectIterHC lasthc,
 		  ForwardIterM firstm, ForwardIterM lastm );
 template < typename ContainerHC, typename ContainerM >
-void hcMagnitude( ContainerHC &hc, ContainerM &m );
+void hcMagnitude( const ContainerHC &hc, ContainerM &m );
   /*! Return in the range \a firstp, \a lastp the phase (argument, from -pi to pi) 
       of the half-complex sequence in the range \a firsthc, \a lasthc.
       Half the number \a N of data elements in the range \a firsthc, \a lasthc
@@ -169,12 +171,38 @@ void hcMagnitude( ContainerHC &hc, ContainerM &m );
       excess elements are set to zero.
       If the input data to rFFT() were spaced by \a Delta,
       then the phase is computed for the frequencies i/(N Delta), i=0..N/2.
-      \sa hcPower(), hcMagnitude(), rFFT() */
+      \sa hcPower(), hcMagnitude(), hcReal(), hcImaginary(), rFFT() */
 template < typename BidirectIterHC, typename ForwardIterP >
 void hcPhase( BidirectIterHC firsthc, BidirectIterHC lasthc,
 	      ForwardIterP firstp, ForwardIterP lastp );
 template < typename ContainerHC, typename ContainerP >
-void hcPhase( ContainerHC &hc, ContainerP &p );
+void hcPhase( const ContainerHC &hc, ContainerP &p );
+  /*! Return in the range \a firstr, \a lastr the real parts
+      of the half-complex sequence in the range \a firsthc, \a lasthc.
+      Half the number \a N of data elements in the range \a firsthc, \a lasthc
+      can be assigned a real part in the range \a firstm, \a lastm,
+      excess elements are set to zero.
+      If the input data to rFFT() were spaced by \a Delta,
+      then the real parts are computed for the frequencies i/(N Delta), i=0..N/2.
+      \sa hcPower(), hcPhase(), hcImaginary(), rFFT() */
+template < typename BidirectIterHC, typename ForwardIterR >
+void hcReal( BidirectIterHC firsthc, BidirectIterHC lasthc,
+	     ForwardIterR firstr, ForwardIterR lastr );
+template < typename ContainerHC, typename ContainerR >
+void hcReal( const ContainerHC &hc, ContainerR &r );
+  /*! Return in the range \a firsti, \a lasti the imaginary parts
+      of the half-complex sequence in the range \a firsthc, \a lasthc.
+      Half the number \a N of data elements in the range \a firsthc, \a lasthc
+      can be assigned a imaginary part in the range \a firstm, \a lastm,
+      excess elements are set to zero.
+      If the input data to rFFT() were spaced by \a Delta,
+      then the imaginary parts are computed for the frequencies i/(N Delta), i=0..N/2.
+      \sa hcPower(), hcPhase(), hcReal(), rFFT() */
+template < typename BidirectIterHC, typename ForwardIterI >
+void hcImaginary( BidirectIterHC firsthc, BidirectIterHC lasthc,
+		  ForwardIterI firsti, ForwardIterI lasti );
+template < typename ContainerHC, typename ContainerI >
+void hcImaginary( const ContainerHC &hc, ContainerI &i );
 
   /*! The Bartlett-window 
       \f[ w_j = 1 - \left| \frac{j-N/2}{N/2} \right| \f] 
@@ -223,6 +251,8 @@ double welch( int j, int n );
   /*! Compute the power spectrum of the range \a firstx, \a lastx
       of real numbers.
       The power spectrum is returned in the range \a firstp, \a lastp.
+      The spectrum is normalized such that its sum equals the
+      mean squared amplitudes of the signal.
       The input range is divided into chunks of TWO times \a N,
       where \a N is the minimum power of two not less than 
       the number of data points of the power spectrum.
@@ -243,16 +273,17 @@ int rPSD( const ContainerX &x, ContainerP &p,
   /*! Compute transfer function between the two ranges \a firstx, \a lastx
       and \a firsty, \a lasty as a half-complex sequence
       in range \a firsth, \a lasth.
-      The input ranges are divided into chunks of TWO times \a N,
-      where \a N is the number of complex data points of the transfer function
-      (N = (lasth - firsth)/2). N must be a power of two.
+      The input ranges are divided into chunks of \a N data points,
+      where \a N/2 is the number of complex data points of the transfer function
+      (N = lasth - firsth). N must be a power of two.
       The chunks may overlap by half according to \a overlap. 
       Each chunk is windowed through a \a window function
       before passing it to rFFT().
       If the input data were sampled with \a delta, then 
-      the frequencies are sampled with 1/(2 N delta).
-      The gain and the phase of the transfer function can
-      be computed using hcMagnitude() and hcPhase().
+      the frequencies are sampled with 1/(N delta).
+      The gain, phase, real parts, and imaginary parts of the transfer function can
+      be computed using hcMagnitude(), hcPhase(), hcReal(), and hcImaginary(),
+      respectively.
       \a ForwardIterX and \a ForwardIterY
       are forward iterators that point to real numbers. 
       \a BidirectH is a bidirectional iterator pointing to real numbers. */
@@ -268,6 +299,13 @@ int transfer( const ContainerX &x, const ContainerY &y, ContainerH &h,
   /*! Compute gain (absolute value of the transfer function)
       in range \a firstg, \a lastg
       between the two ranges \a firstx, \a lastx and \a firsty, \a lasty.
+      The input ranges are divided into chunks of TWO times \a N,
+      where \a N is the minimum power of two not less than 
+      the number of data points in the range \a firstg, \a lastg.
+      The chunks may overlap by half according to \a overlap. 
+      Each chunk is windowed through a \a window function.
+      If the input data were sampled with \a delta, then 
+      the frequencies are sampled with 1/(2 N delta).
       \a ForwardIterX, \a ForwardIterY, and \a ForwardG
       are forward iterators that point to real numbers. */
 template < typename ForwardIterX, typename ForwardIterY,
@@ -281,6 +319,13 @@ int gain( const ContainerX &x, const ContainerY &y, ContainerG &g,
 	  bool overlap=true, double (*window)( int j, int n )=bartlett );
   /*! Compute coherence in range \a firstc, \a lastc
       of the two ranges \a firstx, \a lastx and \a firsty, \a lasty.
+      The input ranges are divided into chunks of TWO times \a N,
+      where \a N is the minimum power of two not less than 
+      the number of data points in the range \a firstc, \a lastc.
+      The chunks may overlap by half according to \a overlap. 
+      Each chunk is windowed through a \a window function.
+      If the input data were sampled with \a delta, then 
+      the frequencies are sampled with 1/(2 N delta).
       \a ForwardIterX, \a ForwardIterY, \a ForwardIterC
       are a forward iterators that point to real numbers. */
 template < typename ForwardIterX, typename ForwardIterY, 
@@ -303,6 +348,13 @@ template < typename ContainerC >
 double coherenceInfo( ContainerC &c, double deltaf );
   /*! Compute cross spectrum (in range \a firstc, \a lastc)
       of the two ranges \a firstx, \a lastx and \a firsty, \a lasty.
+      The input ranges are divided into chunks of \a N,
+      where \a N is the minimum power of two not less than 
+      the number of data points in the range \a firstc, \a lastc.
+      The chunks may overlap by half according to \a overlap. 
+      Each chunk is windowed through a \a window function.
+      If the input data were sampled with \a delta, then 
+      the frequencies are sampled with 1/(N delta).
       \a ForwardIterX, \a ForwardIterY, \a ForwardIterC
       are a forward iterators that point to real numbers. */
 template < typename ForwardIterX, typename ForwardIterY, 
@@ -316,7 +368,7 @@ int rCSD( const ContainerX &x, const ContainerY &y, ContainerC &c,
 	  bool overlap=true, double (*window)( int j, int n )=bartlett );
   /*! Compute gain (in range \a firstg, \a lastg),
       coherence (in range \a firstc, \a lastc), 
-      and spectrum of the response (in range \a firstyp, \a lastyp)
+      and power spectrum of the response (in range \a firstyp, \a lastyp)
       between the two ranges \a firstx, \a lastx and \a firsty, \a lasty.
       \a ForwardIterX, \a ForwardIterY, \a ForwardIterG, \a ForwardIterC,
       and \a ForwardIterYP are a forward iterators that point to real numbers. */
@@ -340,7 +392,8 @@ int spectra( const ContainerX &x, const ContainerY &y,
       between the two ranges \a firstx, \a lastx and \a firsty, \a lasty.
       \a ForwardIterX, \a ForwardIterY, \a ForwardIterG, \a ForwardIterC,
       \a ForwardIterCP, \a ForwardIterXP, and \a ForwardIterYP
-      are a forward iterators that point to real numbers. */
+      are a forward iterators that point to real numbers.
+      \bug The cros spectrum must be twice the size as the power spectra! */
 template < typename ForwardIterX, typename ForwardIterY, 
   typename ForwardIterG, typename ForwardIterC, typename ForwardIterCP,
   typename ForwardIterXP, typename ForwardIterYP >
@@ -525,7 +578,6 @@ void cMagnitude( BidirectIterC firstc, BidirectIterC lastc,
   if ( firstc == lastc || firstm == lastm )
     return;
   int n = lastc - firstc;
-  ValueTypeM invn = 0.5/n;
   ValueTypeM m = 0.0;
 
   // negative frequencies:
@@ -537,7 +589,7 @@ void cMagnitude( BidirectIterC firstc, BidirectIterC lastc,
     // imaginary part squared:
     m += (*iterc) * (*iterc);
     ++iterc;
-    *firstm = ::sqrt( m ) * invn;
+    *firstm = ::sqrt( m );
     ++firstm;
   }
 
@@ -550,7 +602,7 @@ void cMagnitude( BidirectIterC firstc, BidirectIterC lastc,
     // imaginary part squared:
     m += (*firstc) * (*firstc);
     ++firstc;
-    *firstm = ::sqrt( m ) * invn;
+    *firstm = ::sqrt( m );
     ++firstm;
   }
 
@@ -852,7 +904,7 @@ void hcPower( BidirectIterHC firsthc, BidirectIterHC lasthc,
   --lasthc;
   ++firstp;
   while ( firstp != lastp && firsthc != lasthc ) {
-    *firstp = ( (*firsthc) * (*firsthc) + (*lasthc) * (*lasthc) ) * invn2;
+    *firstp = 2.0 * ( (*firsthc) * (*firsthc) + (*lasthc) * (*lasthc) ) * invn2;
     ++firsthc;
     --lasthc;
     ++firstp;
@@ -869,7 +921,7 @@ void hcPower( BidirectIterHC firsthc, BidirectIterHC lasthc,
 
 
 template < typename ContainerHC, typename ContainerP >
-void hcPower( ContainerHC &hc, ContainerP &p )
+void hcPower( const ContainerHC &hc, ContainerP &p )
 {
   hcPower( hc.begin(), hc.end(), p.begin(), p.end() );
 }
@@ -883,19 +935,18 @@ void hcMagnitude( BidirectIterHC firsthc, BidirectIterHC lasthc,
 
   if ( firsthc == lasthc || firstm == lastm )
     return;
-  ValueTypeM invn = 1.0/(lasthc - firsthc);
-  *firstm = ::sqrt( (*firsthc) * (*firsthc) ) * invn;
+  *firstm = ::sqrt( (*firsthc) * (*firsthc) );
   ++firsthc;
   --lasthc;
   ++firstm;
   while ( firstm != lastm && firsthc != lasthc ) {
-    *firstm = ::sqrt( (*firsthc) * (*firsthc) + (*lasthc) * (*lasthc) ) * invn;
+    *firstm = ::sqrt( (*firsthc) * (*firsthc) + (*lasthc) * (*lasthc) );
     ++firsthc;
     --lasthc;
     ++firstm;
   }
   if ( firstm != lastm ) {
-    *firstm = (*firsthc) * (*firsthc) * invn;
+    *firstm = (*firsthc) * (*firsthc);
     ++firstm;
   }
   while ( firstm != lastm ) {
@@ -906,7 +957,7 @@ void hcMagnitude( BidirectIterHC firsthc, BidirectIterHC lasthc,
 
 
 template < typename ContainerHC, typename ContainerM >
-void hcMagnitude( ContainerHC &hc, ContainerM &m )
+void hcMagnitude( const ContainerHC &hc, ContainerM &m )
 {
   hcMagnitude( hc.begin(), hc.end(), m.begin(), m.end() );
 }
@@ -936,9 +987,73 @@ void hcPhase( BidirectIterHC firsthc, BidirectIterHC lasthc,
 
 
 template < typename ContainerHC, typename ContainerP >
-void hcPhase( ContainerHC &hc, ContainerP &p )
+void hcPhase( const ContainerHC &hc, ContainerP &p )
 {
   hcPhase( hc.begin(), hc.end(), p.begin(), p.end() );
+}
+
+
+template < typename BidirectIterHC, typename ForwardIterR >
+void hcReal( BidirectIterHC firsthc, BidirectIterHC lasthc,
+	     ForwardIterR firstr, ForwardIterR lastr )
+{
+  if ( firsthc == lasthc || firstr == lastr )
+    return;
+  *firstr = *firsthc;
+  ++firsthc;
+  --lasthc;
+  ++firstr;
+  while ( firstr != lastr && firsthc != lasthc ) {
+    *firstr = *firsthc;
+    ++firsthc;
+    --lasthc;
+    ++firstr;
+  }
+  if ( firstr != lastr ) {
+    *firstr = *firsthc;
+    ++firstr;
+  }
+  while ( firstr != lastr ) {
+    *firstr = 0.0;
+    ++firstr;
+  }
+}
+
+
+template < typename ContainerHC, typename ContainerR >
+void hcReal( const ContainerHC &hc, ContainerR &r )
+{
+  hcReal( hc.begin(), hc.end(), r.begin(), r.end() );
+}
+
+
+template < typename BidirectIterHC, typename ForwardIterI >
+void hcImaginary( BidirectIterHC firsthc, BidirectIterHC lasthc,
+		  ForwardIterI firsti, ForwardIterI lasti )
+{
+  if ( firsthc == lasthc || firsti == lasti )
+    return;
+  *firsti = 0.0;
+  ++firsthc;
+  --lasthc;
+  ++firsti;
+  while ( firsti != lasti && firsthc != lasthc ) {
+    *firsti = *lasthc;
+    ++firsthc;
+    --lasthc;
+    ++firsti;
+  }
+  while ( firsti != lasti ) {
+    *firsti = 0.0;
+    ++firsti;
+  }
+}
+
+
+template < typename ContainerHC, typename ContainerI >
+void hcImaginary( const ContainerHC &hc, ContainerI &i )
+{
+  hcImaginary( hc.begin(), hc.end(), i.begin(), i.end() );
 }
 
 
@@ -1000,18 +1115,25 @@ int rPSD( ForwardIterX firstx, ForwardIterX lastx,
     // remaining elements:
     for ( int k=1; iterp != lastp; ++iterp, ++k ) {
       power = buffer[k] * buffer[k] + buffer[nw-k] * buffer[nw-k];
-      *iterp += ( power - *iterp ) / c;
+      *iterp += ( 2.0*power - *iterp ) / c;
     }
 
   }
 
   // normalize psd:
   ValueTypeP norm = 0.0;
-  for ( int k=0; k<nw; ++k )
-    norm += window( k, nw );
+  for ( int k=0; k<nw; ++k ) {
+    ValueTypeP w = window( k, nw );
+    norm += w*w;
+  }
   norm = 1.0/norm/nw;
-  for ( ForwardIterP iterp=firstp; iterp != lastp; ++iterp )
+
+  ForwardIterP iterp=firstp;
+  for ( int k=0; iterp != lastp && k<nw/2; ++iterp )
     *iterp *= norm;
+  // last element:
+  if ( iterp != lastp )
+    *iterp *= 0.25;
 
   return 0;
 }
@@ -1060,8 +1182,8 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
     return -1;
 
   // working buffers:
-  ValueTypeH re[ np ];
-  ValueTypeH im[ np ];
+  ValueTypeH re[np];
+  ValueTypeH im[np];
   for ( int k=0; k<np; ++k ) {
     re[k] = 0.0;
     im[k] = 0.0;
@@ -1142,7 +1264,7 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
       powerre = xr*yr + xi*yi;
       *iterre += ( powerre - *iterre ) / c;
       ++iterre;
-      powerim = xi*yr - xr*yi;
+      powerim = xr*yi - xi*yr;
       *iterim += ( powerim - *iterim ) / c;
       ++iterim;
     }
@@ -1214,6 +1336,7 @@ int gain( ForwardIterX firstx, ForwardIterX lastx,
   for ( int k=1; k<nw; k <<= 1 )
     logn++;
   nw = (1 << logn);
+  np = nw/2;
 
   // working buffers:
   ValueTypeG re[ np ];
@@ -1298,7 +1421,7 @@ int gain( ForwardIterX firstx, ForwardIterX lastx,
       powerre = xr*yr + xi*yi;
       *iterre += ( powerre - *iterre ) / c;
       ++iterre;
-      powerim = xi*yr - xr*yi;
+      powerim = xr*yi - xi*yr;
       *iterim += ( powerim - *iterim ) / c;
       ++iterim;
     }
@@ -1362,6 +1485,7 @@ int coherence( ForwardIterX firstx, ForwardIterX lastx,
   for ( int k=1; k<nw; k <<= 1 )
     logn++;
   nw = (1 << logn);
+  np = nw/2;
 
   // working buffers:
   ValueTypeC xp[ np ];
@@ -1456,7 +1580,7 @@ int coherence( ForwardIterX firstx, ForwardIterX lastx,
       powerc = xr*yr + xi*yi;
       *iterc += ( powerc - *iterc ) / c;
       ++iterc;
-      powercp = xi*yr - xr*yi;
+      powercp = xr*yi - xi*yr;
       *itercp += ( powercp - *itercp ) / c;
       ++itercp;
     }
@@ -1533,22 +1657,21 @@ int rCSD( ForwardIterX firstx, ForwardIterX lastx,
     return -2;
 
   // number of points for fft window:
-  int np = lastc - firstc;
-  int nw = np*2;  // window size
-  if ( nw <= 2 )
-    return -1;
+  int nw = lastc - firstc;
 
   // make sure that nw is a power of 2:
   int logn = 0;
   for ( int k=1; k<nw; k <<= 1 )
     logn++;
-  nw = (1 << logn);
+  if ( nw != (1 << logn) )
+    return -3;
+  if ( nw <= 3 )
+    return -1;
 
   // working buffer:
-  ValueTypeC cp[ np ];
-  for ( int k=0; k<np; ++k ) {
+  ValueTypeC cp[nw];
+  for ( int k=0; k<nw; ++k )
     cp[k] = 0.0;
-  }
 
   // cycle through the data:
   int c = 0;
@@ -1596,7 +1719,7 @@ int rCSD( ForwardIterX firstx, ForwardIterX lastx,
     // fourier transform y data:
     rFFT( buffery, buffery+nw );
 
-    // compute auto- and cross spectra:
+    // compute spectra:
     c++;
     // first element Re xy:
     ForwardIterC iterc = firstc;
@@ -1617,7 +1740,7 @@ int rCSD( ForwardIterX firstx, ForwardIterX lastx,
       powerc = xr*yr + xi*yi;
       *iterc += ( powerc - *iterc ) / c;
       ++iterc;
-      powercp = xi*yr - xr*yi;
+      powercp = xr*yi - xi*yr;
       *itercp += ( powercp - *itercp ) / c;
       ++itercp;
     }
@@ -1626,10 +1749,11 @@ int rCSD( ForwardIterX firstx, ForwardIterX lastx,
 
   // normalize:
   ValueTypeC norm = 0.0;
-  for ( int k=0; k<nw; ++k )
-    norm += window( k, nw );
-   norm = 1.0/norm/nw;
-   norm *= norm;
+  for ( int k=0; k<nw; ++k ) {
+    ValueTypeC w = window( k, nw );
+    norm += w*w;
+  }
+  norm = 1.0/norm/nw;
 
   // compute cross spectrum:
   ValueTypeC* firstcp = cp;
@@ -1696,12 +1820,12 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
   for ( int k=1; k<nw; k <<= 1 )
     logn++;
   nw = (1 << logn);
+  np = nw/2;
 
   // working buffer:
-  ValueTypeYP xp[ np ];
-  for ( int k=0; k<np; ++k ) {
+  ValueTypeYP xp[np];
+  for ( int k=0; k<np; ++k )
     xp[k] = 0.0;
-  }
 
   // cycle through the data:
   int c = 0;
@@ -1786,7 +1910,7 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
       powerc = xr*yr + xi*yi;
       *iterc += ( powerc - *iterc ) / c;
       ++iterc;
-      powerg = xi*yr - xr*yi;
+      powerg = xr*yi - xi*yr;
       *iterg += ( powerg - *iterg ) / c;
       ++iterg;
     }
@@ -1794,10 +1918,12 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
   }
 
   // normalize:
-  ValueTypeC norm = 0.0;
-  for ( int k=0; k<nw; ++k )
-    norm += window( k, nw );
-   norm = 1.0/norm/nw;
+  ValueTypeYP norm = 0.0;
+  for ( int k=0; k<nw; ++k ) {
+    ValueTypeYP w = window( k, nw );
+    norm += w*w;
+  }
+  norm = 1.0/norm/nw;
 
   // normalize and compute auto spectra and coherence:
   ValueTypeYP* firstxp = xp;
@@ -1882,7 +2008,6 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
   // number of points for fft window:
   int np = lastg - firstg;
   if ( lastc - firstc != np ||
-       lastcp - firstcp != np ||
        lastxp - firstxp != np ||
        lastyp - firstyp != np  )
     return -3;
@@ -1896,6 +2021,10 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
   for ( int k=1; k<nw; k <<= 1 )
     logn++;
   nw = (1 << logn);
+  np = nw/2;
+
+  if ( lastcp - firstcp != nw )
+    return -3;
 
   // cycle through the data:
   int c = 0;
@@ -1980,7 +2109,7 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
       powerc = xr*yr + xi*yi;
       *iterc += ( powerc - *iterc ) / c;
       ++iterc;
-      powercp = xi*yr - xr*yi;
+      powercp = xr*yi - xi*yr;
       *itercp += ( powercp - *itercp ) / c;
       ++itercp;
     }
@@ -1988,10 +2117,12 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
   }
 
   // normalize:
-  ValueTypeC norm = 0.0;
-  for ( int k=0; k<nw; ++k )
-    norm += window( k, nw );
-   norm = 1.0/norm/nw;
+  ValueTypeXP norm = 0.0;
+  for ( int k=0; k<nw; ++k ) {
+    ValueTypeXP w = window( k, nw );
+    norm += w*w;
+  }
+  norm = 1.0/norm/nw;
 
   // normalize and compute auto, cross spectra and coherence:
   while ( firstc != lastc ) {

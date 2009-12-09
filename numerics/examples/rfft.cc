@@ -1,6 +1,6 @@
 /*
-  xspectrum.cc
-  
+  rfft.cc
+  Example for fourier transformation of real numbers.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
@@ -29,35 +29,21 @@ using namespace relacs;
 
 int main( int argc, char **argv )
 {
-  // Create data array with a sine wave at 100 Hz:
-  const int n=4096;
-  SampleDataD data( n*16, 0.0, 0.00005 );
+  // Create data array with the sum of two sine waves at 50 and 100 Hz:
+  SampleDataD data( 4096*16, 0.0, 0.00005 );
   for ( int k=0; k<data.size(); k++ )
-    //    data[k] = 1.0*sin( 2.0*M_PI*100.0*data.pos( k )  );
     data[k] = sin( 2.0*M_PI*50.0*data.pos( k ) ) + 0.5*sin(  2.0*M_PI*100.0*data.pos( k )  );
-  cerr << "Power of data (mean squared amplitudes): " << power( data ) << '\n';
 
-  // power spectrum:
-  SampleDataD powera( n, 0.0, 0.5/data.stepsize()/n );
-  rPSD( data.begin(), data.end(), powera.begin(), powera.end(),
-	false, hanning );
-  cerr << "Power of powera (sum of power spectrum): " << sum( powera ) << '\n';
-  cout << powera << "\n\n";
+  // simple fourier transform:
+  SampleDataD fourier( data );
+  rFFT( fourier );
 
-  // power spectrum of sample data:
-  SampleDataD powersd( n );
-  rPSD( data, powersd, false, hanning );
-  cerr << "Power of powersd (sum of power spectrum): " << sum( powersd ) << '\n';
-  cout << powersd << "\n\n";
-
-  // power spectrum directly from fourier transform:
-  SampleDataD datafft( data );
-  datafft.resize( 2*n );
-  rFFT( datafft );
-  SampleDataD powerfft( n );
-  hcPower( datafft, powerfft );
-  cerr << "Power of powerfft (sum of power spectrum): " << sum( powerfft ) << '\n';
-  cout << powerfft << "\n\n";
+  // backwards transformation:
+  hcFFT( fourier );
+  fourier /= fourier.size();  // normalization!
+  for ( int k=0; k<data.size(); k++ )
+    cout << data.pos( k ) << " " << data[k] << " " << fourier[k] << '\n';
+  cout << "\n\n";
 
   return 0;
 }

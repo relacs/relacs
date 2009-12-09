@@ -132,8 +132,7 @@ struct numerical_container_traits
 
 
   /*! Returns the median of the sorted range \a first, \a last.
-      \a RandomIter is a random access iterator
-      that points to a number. */
+      \a RandomIter is a random access iterator that points to a number. */
 template < typename RandomIter >
 typename iterator_traits<RandomIter>::value_type
   median( RandomIter first, RandomIter last );
@@ -145,8 +144,7 @@ typename Container::value_type
   median( const Container &vec );
   /*! Returns the quantile \a f of the sorted range \a first, \a last.
       \a f is a number ranging from 0 to 1.
-      \a RandomIter is a random access iterator
-      that points to a number. */
+      \a RandomIter is a random access iterator that points to a number. */
 template < typename RandomIter >
 typename iterator_traits<RandomIter>::value_type
   quantile( double f, RandomIter first, RandomIter last );
@@ -171,8 +169,7 @@ template < typename Container >
 double rank( Container &vec );
 
   /*! The minimum value of the range \a first, \a last.
-      \a ForwardIter is a forward iterator
-      that points to a number. */
+      \a ForwardIter is a forward iterator that points to a number. */
 template < typename ForwardIter >
 typename iterator_traits<ForwardIter>::value_type
   min( ForwardIter first, ForwardIter last );
@@ -184,8 +181,7 @@ typename Container::value_type
   min( const Container &vec );
   /*! The minimum value of the range \a first, \a last.
       In \a index the index of the element with the minimum value is returned.
-      \a ForwardIter is a forward iterator
-      that points to a number. */
+      \a ForwardIter is a forward iterator that points to a number. */
 template < typename ForwardIter >
 typename iterator_traits<ForwardIter>::value_type
   min( int &index, ForwardIter first, ForwardIter last );
@@ -197,8 +193,7 @@ template < typename Container >
 typename Container::value_type
   min( int &index, const Container &vec );
   /*! The index of the element with the minimum value of the range \a first, \a last.
-      \a ForwardIter is a forward iterator
-      that points to a number. */
+      \a ForwardIter is a forward iterator that points to a number. */
 template < typename ForwardIter >
 int minIndex( ForwardIter first, ForwardIter last );
   /*! The index of the element with the minimum value of all elements of the container \a vec.
@@ -208,8 +203,7 @@ template < typename Container >
 int minIndex( const Container &vec );
 
   /*! The maximum value of the range \a first, \a last.
-      \a ForwardIter is a forward iterator
-      that points to a number. */
+      \a ForwardIter is a forward iterator that points to a number. */
 template < typename ForwardIter >
 typename iterator_traits<ForwardIter>::value_type
   max( ForwardIter first, ForwardIter last );
@@ -221,8 +215,7 @@ typename Container::value_type
   max( const Container &vec );
   /*! The maximum value of the range \a first, \a last.
       In \a index the index of the element with the maximum value is returned.
-      \a ForwardIter is a forward iterator
-      that points to a number. */
+      \a ForwardIter is a forward iterator that points to a number. */
 template < typename ForwardIter >
 typename iterator_traits<ForwardIter>::value_type
   max( int &index, ForwardIter first, ForwardIter last );
@@ -234,8 +227,7 @@ template < typename Container >
 typename Container::value_type
   max( int &index, const Container &vec );
   /*! The index of the element with the maximum value of the range \a first, \a last.
-      \a ForwardIter is a forward iterator
-      that points to a number. */
+      \a ForwardIter is a forward iterator that points to a number. */
 template < typename ForwardIter >
 int maxIndex( ForwardIter first, ForwardIter last );
   /*! The index of the element with the maximum value of all elements of the container \a vec.
@@ -246,8 +238,7 @@ int maxIndex( const Container &vec );
 
   /*! The minimum value \a min and maximum value \a max 
       of the range \a first, \a last.
-      \a ForwardIter is a forward iterator
-      that points to a number. */
+      \a ForwardIter is a forward iterator that points to a number. */
 template < typename ForwardIter >
 void minMax( typename iterator_traits<ForwardIter>::value_type &min,
 	     typename iterator_traits<ForwardIter>::value_type &max,
@@ -263,8 +254,7 @@ void minMax( typename Container::value_type &min,
       of the range \a first, \a last.
       In \a minindex and \a maxindex the indices of the elements
       with the minimum and maximum value are returned.
-      \a ForwardIter is a forward iterator
-      that points to a number. */
+      \a ForwardIter is a forward iterator that points to a number. */
 template < typename ForwardIter >
 void minMax( typename iterator_traits<ForwardIter>::value_type &min, int &minindex,
 	     typename iterator_traits<ForwardIter>::value_type &max, int &maxindex,
@@ -281,8 +271,7 @@ void minMax( typename Container::value_type &min, int &minindex,
 	     const Container &vec );
   /*! The indices \a minindex and \a maxindex of the elements
       with the minimum and maximum value of the range \a first, \a last.
-      \a ForwardIter is a forward iterator
-      that points to a number. */
+      \a ForwardIter is a forward iterator that points to a number. */
 template < typename ForwardIter >
 void minMaxIndex( int &minindex, int &maxindex, ForwardIter first, ForwardIter last );
   /*! The indices \a minindex and \a maxindex of the elements
@@ -293,8 +282,7 @@ template < typename Container >
 void minMaxIndex( int &minindex, int &maxindex, const Container &vec );
 
   /*! The minimum absolute value of the range \a first, \a last.
-      \a ForwardIter is a forward iterator
-      that points to a number. */
+      \a ForwardIter is a forward iterator that points to a number. */
 template < typename ForwardIter >
 typename iterator_traits<ForwardIter>::value_type
   minAbs( ForwardIter first, ForwardIter last );
@@ -306,8 +294,7 @@ typename Container::value_type
   minAbs( const Container &vec );
 
   /*! The maximum absolute value of the range \a first, \a last.
-      \a ForwardIter is a forward iterator
-      that points to a number. */
+      \a ForwardIter is a forward iterator that points to a number. */
 template < typename ForwardIter >
 typename iterator_traits<ForwardIter>::value_type
   maxAbs( ForwardIter first, ForwardIter last );
@@ -321,8 +308,7 @@ typename Container::value_type
   /*! Clips the elements of the range \a first, \a last
       at \a min and \a max.
       Returns the number of clipped data elements.
-      \a ForwardIter is a forward iterator
-      that points to a number. */
+      \a ForwardIter is a forward iterator that points to a number. */
 template < typename ForwardIter >
 int clip( typename iterator_traits<ForwardIter>::value_type min,
 	  typename iterator_traits<ForwardIter>::value_type max,
@@ -340,8 +326,7 @@ int clip( typename Container::value_type min,
   /*! The arithmetic mean 
       \f[ \bar x = \frac{1}{N} \sum_{i=1}^N x_i \f] 
       over the range of \a x - values \a firstx, \a lastx.
-      \a ForwardIterX is a forward iterator
-      that points to a number. */
+      \a ForwardIterX is a forward iterator that points to a number. */
 template < typename ForwardIterX >
 typename numerical_iterator_traits<ForwardIterX>::mean_type
   mean( ForwardIterX firstx, ForwardIterX lastx );
@@ -397,8 +382,7 @@ typename numerical_container_traits<ContainerX>::mean_type
   /*! The arithmetic mean
       \f[ \bar x = \frac{1}{N} \sum_{i=1}^N x_i \f] 
       over the range \a firstx, \a lastx.
-      \a ForwardIterX is a forward iterator
-      that points to a number. 
+      \a ForwardIterX is a forward iterator that points to a number. 
       In \a stdev the unbiased standard deviation 
       \f[ \sigma = \sqrt{\frac{1}{N-1}\sum_{i=1}^N (x_i - \bar x)^2} \f] is returned. */
 template < typename ForwardIterX >
@@ -476,8 +460,7 @@ typename numerical_container_traits<ContainerX>::mean_type
   /*! The unbiased variance 
       \f[ \sigma^2 = \frac{1}{N-1}\sum_{i=1}^N (x_i - \bar x)^2 \f]
       over the range of \a x - values \a firstx, \a lastx.
-      \a ForwardIterX is a forward iterator
-      that points to a number. */
+      \a ForwardIterX is a forward iterator that points to a number. */
 template < typename ForwardIterX >
 typename numerical_iterator_traits<ForwardIterX>::variance_type
   variance( ForwardIterX firstx, ForwardIterX lastx );
@@ -574,8 +557,7 @@ typename numerical_container_traits<ContainerX>::variance_type
   /*! The unbiased standard deviation
       \f[ \sigma = \sqrt{\frac{1}{N-1}\sum_{i=1}^N (x_i - \bar x)^2} \f]
       over the range of \a x - values \a firstx, \a lastx.
-      \a ForwardIterX is a forward iterator
-      that points to a number. */
+      \a ForwardIterX is a forward iterator that points to a number. */
 template < typename ForwardIterX >
 typename numerical_iterator_traits<ForwardIterX>::variance_type
   stdev( ForwardIterX firstx, ForwardIterX lastx );
@@ -668,8 +650,7 @@ typename numerical_container_traits<ContainerX>::variance_type
   /*! The unbiased standard error mean
       \f[ s.e.m. = \sqrt{\frac{1}{N-1}\sum_{i=1}^N (x_i - \bar x)^2} / \sqrt{N} \f]
       over the range of \a x - values \a firstx, \a lastx.
-      \a ForwardIterX is a forward iterator
-      that points to a number. */
+      \a ForwardIterX is a forward iterator that points to a number. */
 template < typename ForwardIterX >
 typename numerical_iterator_traits<ForwardIterX>::variance_type
   sem( ForwardIterX firstx, ForwardIterX lastx );
@@ -719,8 +700,7 @@ typename numerical_container_traits<ContainerX>::variance_type
   /*! The absolute deviation from the mean 
       \f[ s = \frac{1}{N}\sum_{i=1}^N |x_i - \bar x| \f]
       over the range of \a x - values \a firstx, \a lastx.
-      \a ForwardIterX is a forward iterator
-      that points to a number. */
+      \a ForwardIterX is a forward iterator that points to a number. */
 template < typename ForwardIterX >
 typename numerical_iterator_traits<ForwardIterX>::variance_type
   absdev( ForwardIterX firstx, ForwardIterX lastx );
@@ -795,8 +775,7 @@ typename numerical_container_traits<ContainerX>::variance_type
 
   /*! The root-mean-square
       over the range \a first, \a last.
-      \a ForwardIter is a forward iterator
-      that points to a number. */
+      \a ForwardIter is a forward iterator that points to a number. */
 template < typename ForwardIter >
 typename numerical_iterator_traits<ForwardIter>::variance_type
   rms( ForwardIter first, ForwardIter last );
@@ -809,8 +788,7 @@ typename numerical_container_traits<Container>::variance_type
   rms( const Container &vec );
 
   /*! The skewness over the range \a first, \a last.
-      \a ForwardIter is a forward iterator
-      that points to a number. */
+      \a ForwardIter is a forward iterator that points to a number. */
 template < typename ForwardIter >
 typename numerical_iterator_traits<ForwardIter>::variance_type
   skewness( ForwardIter first, ForwardIter last );
@@ -822,8 +800,7 @@ typename numerical_container_traits<Container>::variance_type
   skewness( const Container &vec );
 
   /*! The kurtosis over the range \a first, \a last.
-      \a ForwardIter is a forward iterator
-      that points to a number. */
+      \a ForwardIter is a forward iterator that points to a number. */
 template < typename ForwardIter >
 typename numerical_iterator_traits<ForwardIter>::variance_type
   kurtosis( ForwardIter first, ForwardIter last );
@@ -835,8 +812,7 @@ typename numerical_container_traits<Container>::variance_type
   kurtosis( const Container &vec );
 
   /*! The sum of all elements over the range \a first, \a last.
-      \a ForwardIter is a forward iterator
-      that points to a number. */
+      \a ForwardIter is a forward iterator that points to a number. */
 template < typename ForwardIter >
 typename iterator_traits<ForwardIter>::value_type
   sum( ForwardIter first, ForwardIter last );
@@ -848,8 +824,7 @@ typename Container::value_type
   sum( const Container &vec );
 
   /*! The sum of the square of all elements over the range \a first, \a last.
-      \a ForwardIter is a forward iterator
-      that points to a number. */
+      \a ForwardIter is a forward iterator that points to a number. */
 template < typename ForwardIter >
 typename numerical_iterator_traits<ForwardIter>::variance_type
   squaredSum( ForwardIter first, ForwardIter last );
@@ -861,8 +836,7 @@ typename numerical_container_traits<Container>::variance_type
   squaredSum( const Container &vec );
 
   /*! The square root of the sum of the square of all elements over the range \a first, \a last.
-      \a ForwardIter is a forward iterator
-      that points to a number. */
+      \a ForwardIter is a forward iterator that points to a number. */
 template < typename ForwardIter >
 typename numerical_iterator_traits<ForwardIter>::variance_type
   magnitude( ForwardIter first, ForwardIter last );
@@ -874,8 +848,7 @@ typename numerical_container_traits<Container>::variance_type
   magnitude( const Container &vec );
 
   /*! The power \<x^2\> of all elements over the range \a first, \a last.
-      \a ForwardIter is a forward iterator
-      that points to a number. */
+      \a ForwardIter is a forward iterator that points to a number. */
 template < typename ForwardIter >
 typename numerical_iterator_traits<ForwardIter>::variance_type
   power( ForwardIter first, ForwardIter last );

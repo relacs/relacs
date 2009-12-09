@@ -1042,6 +1042,8 @@ class SampleData : public Array< T >
         Sets the stepsize() of  \a p to the one of \a hc.
 	Half the number hc.size() of data elements in \a hc
 	can be assigned a power in \a p, excess elements are set to zero.
+	The spectrum is normalized such that its sum equals the
+	mean squared amplitudes of the signal.
 	\a TT and \a SS are real numbers.
         \sa hcMagnitude(), hcPhase(), transfer() */
   template < typename TT, typename SS >
@@ -1063,8 +1065,47 @@ class SampleData : public Array< T >
         \sa hcPower(), hcMagnitude(), transfer() */
   template < typename TT, typename SS >
   friend void hcPhase( const SampleData<TT> &hc, SampleData<SS> &p );
+    /*! Compute real parts of the half-complex sequence in \a hc.
+        Sets the stepsize() of  \a r to the one of \a hc.
+	Half the number hc.size() of data elements in \a hc
+	can be assigned a real part in \a p, excess elements are set to zero.
+	\a TT and \a SS are real numbers.
+        \sa hcPower(), hcMagnitude(), hcPhase(), hcImaginary(), rFFT(), transfer() */
+  template < typename TT, typename SS >
+  friend void hcReal( const SampleData<TT> &hc, SampleData<SS> &r );
+    /*! Compute imaginary parts of the half-complex sequence in \a hc.
+        Sets the stepsize() of  \a i to the one of \a hc.
+	Half the number hc.size() of data elements in \a hc
+	can be assigned a imaginary part in \a p, excess elements are set to zero.
+	\a TT and \a SS are real numbers.
+        \sa hcPower(), hcMagnitude(), hcPhase(), hcReal(), rFFT(), transfer() */
+  template < typename TT, typename SS >
+  friend void hcImaginary( const SampleData<TT> &hc, SampleData<SS> &i );
+
+  /*! Compute an in-place radix-2 FFT on \a x containing real numbers.
+      The size \a N of \a x has to be a power of two, otherwise -1 is returned.
+      The output is a half-complex sequence, which is stored in-place. 
+      The arrangement of the half-complex terms uses the following
+      scheme: for k < N/2 the real part of the k-th term is stored in
+      location k, and the corresponding imaginary part is stored in
+      location N-k. Terms with k > N/2 (the negative frequencies)
+      can be reconstructed using the symmetry z_k = z^*_{N-k}.
+      The terms for k=0 and k=N/2 are both
+      purely real, and count as a special case. Their real parts are
+      stored in locations 0 and N/2 respectively, while their
+      imaginary parts which are zero are not stored.
+      The stepsize() is set to 1/(N stepsize()), such that
+      the first half of the output range contains the positive frequencies
+      at i*stepsize(), i=0..N/2.
+      Use hcPower() and hcPhase() to compute power and phase of the spectrum.
+      Algorithm adapted from the GNU Scientific Library http://www.gnu.org/software/gsl .
+      \sa hcPower(), hcMagnitude(), hcPhase(), rPSD() */
+  template < typename TT >
+  friend int rFFT( SampleData<TT> &x );
 
     /*! Power spectrum \a p of \a x.
+        The spectrum is normalized such that its sum equals the
+        mean squared amplitudes of the signal \a x.
         A fourier window of size \a n ( a power of two no less than 2*p.size() ) is used.
 	p.stepsize() is set to its appropriate value 0.5/x.stepsize()/n.
 	\a TT and \a SS are real numbers. */
@@ -1074,7 +1115,8 @@ class SampleData : public Array< T >
     /*! Compute transfer function \a h (half-complex sequence) 
         between \a x and \a y.
 	\a x and \a y must have the same stepsize() and size().
-	h.size() must be a power of two.
+	\a x and \a y are divided into chunks of \a N data points,
+	where \a N = h.size(). h.size() must be a power of two.
 	The stepsize() of \a h is set to 1.0/x.stepsize()/h.size().
 	The gain and phase of the transfer function can be obtained
 	using hcMagnitude() and hcPhase().
@@ -1085,12 +1127,20 @@ class SampleData : public Array< T >
 		       bool overlap, double (*window)( int j, int n ) );
     /*! Compute gain \a g (magnitude of the transfer function)
         between \a x and \a y.
+	\a x and \a y must have the same stepsize() and size().
+	\a x and \a y are divided into chunks of two times \a N data points,
+	where \a N is the minimum power of two not less than g.size().
+	The stepsize() of \a g is set to 0.5/x.stepsize()/N.
 	\a TT, \a SS, and \a RR are real numbers. */
   template < typename TT, typename SS, typename RR >
   friend int gain( const SampleData<TT> &x, const SampleData<SS> &y,
 		   SampleData<RR> &g,
 		   bool overlap, double (*window)( int j, int n ) );
     /*! Compute coherence \a c of \a x and \a y.
+        \a x and \a y must have the same stepsize() and size().
+	\a x and \a y are divided into chunks of two times \a N data points,
+	where \a N is the minimum power of two not less than c.size().
+	The stepsize() of \a c is set to 0.5/x.stepsize()/N.
 	\a TT, \a SS, and \a RR are real numbers. */
   template < typename TT, typename SS, typename RR >
   friend int coherence( const SampleData<TT> &x, const SampleData<SS> &y,
@@ -1288,6 +1338,8 @@ SampleData<> triangle( double l, double r, double stepsize, double period );
       Sets the stepsize() of  \a p to the one of \a hc.
       Half the number hc.size() of data elements in \a hc
       can be assigned a power in \a p, excess elements are set to zero.
+      The spectrum is normalized such that its sum equals the
+      mean squared amplitudes of the signal.
       \a TT and \a SS are real numbers.
       \sa hcMagnitude(), hcPhase(), transfer() */
 template < typename TT, typename SS >
@@ -1309,8 +1361,45 @@ void hcMagnitude( const SampleData<TT> &hc, SampleData<SS> &m );
       \sa hcPower(), hcMagnitude(), transfer() */
 template < typename TT, typename SS >
 void hcPhase( const SampleData<TT> &hc, SampleData<SS> &p );
+  /*! Compute real parts of the half-complex sequence in \a hc.
+    Sets the stepsize() of  \a r to the one of \a hc.
+    Half the number hc.size() of data elements in \a hc
+    can be assigned a real part in \a p, excess elements are set to zero.
+    \a TT and \a SS are real numbers.
+    \sa hcPower(), hcMagnitude(), hcPhase(), hcImaginary(), rFFT(), transfer() */
+template < typename TT, typename SS >
+void hcReal( const SampleData<TT> &hc, SampleData<SS> &r );
+  /*! Compute imaginary parts of the half-complex sequence in \a hc.
+      Sets the stepsize() of  \a i to the one of \a hc.
+      Half the number hc.size() of data elements in \a hc
+      can be assigned a imaginary part in \a p, excess elements are set to zero.
+      \a TT and \a SS are real numbers.
+      \sa hcPower(), hcMagnitude(), hcPhase(), hcReal(), rFFT(), transfer() */
+template < typename TT, typename SS >
+void hcImaginary( const SampleData<TT> &hc, SampleData<SS> &i );
 
+  /*! Compute an in-place radix-2 FFT on \a x containing real numbers.
+      The size \a N of \a x has to be a power of two, otherwise -1 is returned.
+      The output is a half-complex sequence, which is stored in-place. 
+      The arrangement of the half-complex terms uses the following
+      scheme: for k < N/2 the real part of the k-th term is stored in
+      location k, and the corresponding imaginary part is stored in
+      location N-k. Terms with k > N/2 (the negative frequencies)
+      can be reconstructed using the symmetry z_k = z^*_{N-k}.
+      The terms for k=0 and k=N/2 are both
+      purely real, and count as a special case. Their real parts are
+      stored in locations 0 and N/2 respectively, while their
+      imaginary parts which are zero are not stored.
+      The first half of the output range contains the positive frequencies
+      at i/(N stepsize()), i=0..N/2.
+      Use hcPower() and hcPhase() to compute power and phase of the spectrum.
+      Algorithm adapted from the GNU Scientific Library http://www.gnu.org/software/gsl .
+      \sa hcPower(), hcMagnitude(), hcPhase(), rPSD() */
+template < typename TT >
+int rFFT( SampleData<TT> &x );
   /*! Power spectrum \a p of \a x.
+      The spectrum is normalized such that its sum equals the
+      mean squared amplitudes of the signal \a x.
       A fourier window of size \a n ( a power of two no less than 2*p.size() ) is used.
       p.stepsize() is set to its appropriate value 0.5/x.stepsize()/n.
       \a TT and \a SS are real numbers. */
@@ -1321,7 +1410,8 @@ template < typename TT, typename SS >
   /*! Compute transfer function \a h (half-complex sequence) 
       between \a x and \a y.
       \a x and \a y must have the same stepsize() and size().
-      h.size() must be a power of two.
+      \a x and \a y are divided into chunks of \a N data points,
+      where \a N = h.size(). h.size() must be a power of two.
       The stepsize() of \a h is set to 1.0/x.stepsize()/h.size().
       The gain and phase of the transfer function can be obtained
       using hcMagnitude() and hcPhase().
@@ -1333,13 +1423,20 @@ template < typename TT, typename SS, typename RR >
 		double (*window)( int j, int n )=bartlett );
   /*! Compute gain \a g (magnitude of the transfer function)
       between \a x and \a y.
+      \a x and \a y must have the same stepsize() and size().
+      \a x and \a y are divided into chunks of two times \a N data points,
+      where \a N is the minimum power of two not less than g.size().
+      The stepsize() of \a g is set to 0.5/x.stepsize()/N.
       \a TT, \a SS, and \a RR are real numbers. */
 template < typename TT, typename SS, typename RR >
   int gain( const SampleData<TT> &x, const SampleData<SS> &y,
-	    SampleData<RR> &g,
-	    bool overlap=true, 
+	    SampleData<RR> &g, bool overlap=true, 
 	    double (*window)( int j, int n )=bartlett );
   /*! Compute coherence \a c of \a x and \a y.
+      \a x and \a y must have the same stepsize() and size().
+      \a x and \a y are divided into chunks of two times \a N data points,
+      where \a N is the minimum power of two not less than c.size().
+      The stepsize() of \a c is set to 0.5/x.stepsize()/N.
       \a TT, \a SS, and \a RR are real numbers. */
 template < typename TT, typename SS, typename RR >
   int coherence( const SampleData<TT> &x, const SampleData<SS> &y,
@@ -3149,7 +3246,7 @@ typename numerical_traits< T >::variance_type
 template < typename TT, typename SS >
 void hcPower( const SampleData<TT> &hc, SampleData<SS> &p )
 {
-  p.setStepsize( hc.stepsize() );
+  p.setRange( 0.0, hc.stepsize() );
   hcPower( hc.array(), p.array() );
 }
 
@@ -3157,7 +3254,7 @@ void hcPower( const SampleData<TT> &hc, SampleData<SS> &p )
 template < typename TT, typename SS >
 void hcMagnitude( const SampleData<TT> &hc, SampleData<SS> &m )
 {
-  m.setStepsize( hc.stepsize() );
+  m.setRange( 0.0, hc.stepsize() );
   hcMagnitude( hc.array(), m.array() );
 }
 
@@ -3165,8 +3262,32 @@ void hcMagnitude( const SampleData<TT> &hc, SampleData<SS> &m )
 template < typename TT, typename SS >
 void hcPhase( const SampleData<TT> &hc, SampleData<SS> &p )
 {
-  p.setStepsize( hc.stepsize() );
+  p.setRange( 0.0, hc.stepsize() );
   hcPhase( hc.array(), p.array() );
+}
+
+
+template < typename TT, typename SS >
+void hcReal( const SampleData<TT> &hc, SampleData<SS> &r )
+{
+  r.setRange( 0.0, hc.stepsize() );
+  hcReal( hc.array(), r.array() );
+}
+
+
+template < typename TT, typename SS >
+void hcImaginary( const SampleData<TT> &hc, SampleData<SS> &i )
+{
+  i.setRange( 0.0, hc.stepsize() );
+  hcReal( hc.array(), i.array() );
+}
+
+
+template < typename TT >
+int rFFT( SampleData< TT > &x )
+{
+  x.setRange( 0.0, 1.0/x.stepsize()/x.size() );
+  return rFFT( x.array() );
 }
 
 
@@ -3176,7 +3297,7 @@ int rPSD( const SampleData< TT > &x, SampleData< SS > &p,
 {
   int n = 1;
   for ( n = 1; n < p.size(); n <<= 1 );
-  p.setStepsize( 0.5/x.stepsize()/n );
+  p.setRange( 0.0, 0.5/x.stepsize()/n );
 
   return rPSD( x.array(), p.array(), overlap, window );
 }
@@ -3187,7 +3308,7 @@ int transfer( const SampleData<TT> &x, const SampleData<SS> &y,
 	      SampleData<RR> &h,
 	      bool overlap, double (*window)( int j, int n ) )
 {
-  h.setStepsize( 1.0/x.stepsize()/h.size() );
+  h.setRange( 0.0, 1.0/x.stepsize()/h.size() );
   return transfer( x.array(), y.array(), h.array(), overlap, window );
 }
 
@@ -3199,7 +3320,7 @@ int gain( const SampleData<TT> &x, const SampleData<SS> &y,
 {
   int n = 1;
   for ( n = 1; n < g.size(); n <<= 1 );
-  g.setStepsize( 0.5/x.stepsize()/n );
+  g.setRange( 0.0, 0.5/x.stepsize()/n );
   return gain( x.array(), y.array(), g.array(), overlap, window );
 }
 
@@ -3211,7 +3332,7 @@ int coherence( const SampleData<TT> &x, const SampleData<SS> &y,
 {
   int n = 1;
   for ( n = 1; n < c.size(); n <<= 1 );
-  c.setStepsize( 0.5/x.stepsize()/n );
+  c.setRange( 0.0, 0.5/x.stepsize()/n );
   return coherence( x.array(), y.array(), c.array(), overlap, window );
 }
 
@@ -3238,9 +3359,7 @@ int rCSD( const SampleData<TT> &x, const SampleData<SS> &y,
 	  SampleData<RR> &c,
 	  bool overlap, double (*window)( int j, int n ) )
 {
-  int n = 1;
-  for ( n = 1; n < c.size(); n <<= 1 );
-  c.setStepsize( 0.5/x.stepsize()/n );
+  c.setRange( 0.0, 1.0/x.stepsize()/c.size() );
   return rCSD( x.array(), y.array(), c.array(), overlap, window );
 }
 
@@ -3250,15 +3369,13 @@ int spectra( const SampleData<TT> &x, const SampleData<SS> &y,
 	     SampleData<RR> &g, SampleData<RR> &c, SampleData<RR> &ys,
 	     bool overlap, double (*window)( int j, int n ) )
 {
-  // make sure that g, c, ys have the same size!
   int n = 1;
   for ( n = 1; n < c.size(); n <<= 1 );
-  g.setStepsize( 0.5/x.stepsize()/n );
-  c.setStepsize( 0.5/x.stepsize()/n );
-  ys.setStepsize( 0.5/x.stepsize()/n );
+  g.setRange( 0.0, 0.5/x.stepsize()/n );
+  c.setRange( 0.0, 0.5/x.stepsize()/n );
+  ys.setRange( 0.0, 0.5/x.stepsize()/n );
   return spectra( x.array(), y.array(), g.array(), c.array(), ys.array(),
 		  overlap, window );
-  // normalisation of results by deltat?
 }
 
 
@@ -3268,17 +3385,15 @@ int spectra( const SampleData<TT> &x, const SampleData<SS> &y,
 	     SampleData<RR> &xs, SampleData<RR> &ys,
 	     bool overlap, double (*window)( int j, int n ) )
 {
-  // make sure that g, c, cs, xs, ys have the same size!
   int n = 1;
   for ( n = 1; n < c.size(); n <<= 1 );
-  g.setStepsize( 0.5/x.stepsize()/n );
-  c.setStepsize( 0.5/x.stepsize()/n );
-  cs.setStepsize( 0.5/x.stepsize()/n );
-  xs.setStepsize( 0.5/x.stepsize()/n );
-  ys.setStepsize( 0.5/x.stepsize()/n );
+  g.setRange( 0.0, 0.5/x.stepsize()/n );
+  c.setRange( 0.0, 0.5/x.stepsize()/n );
+  cs.setRange( 0.0, 1.0/x.stepsize()/n );
+  xs.setRange( 0.0, 0.5/x.stepsize()/n );
+  ys.setRange( 0.0, 0.5/x.stepsize()/n );
   return spectra( x.array(), y.array(), g.array(), c.array(), cs.array(),
 		  xs.array(), ys.array(), overlap, window );
-  // normalisation of results by deltat?
 }
 
 
