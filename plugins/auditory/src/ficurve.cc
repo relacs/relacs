@@ -175,8 +175,7 @@ int FICurve::main( void )
   }
 
   // get options:
-  Settings = *this;
-  Settings.setTypeFlags( 16, -Parameter::Blank );
+  settings().setTypeFlags( 16, -Parameter::Blank );
   MinIntensity = number( "intmin" );
   MaxIntensity = number( "intmax" );
   IntensityStep = number( "intstep" );
@@ -421,7 +420,7 @@ void FICurve::saveSpikes( const string &file, const vector< FIData > &results )
 
   // write header and key:
   Header.save( df, "# " );
-  Settings.save( df, "#   ", -1, 16, false, true );
+  settings().save( df, "#   ", -1, 16, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -453,7 +452,7 @@ void FICurve::saveRates( const string &file, const vector< FIData > &results )
 
   // write header and key:
   Header.save( df, "# " );
-  Settings.save( df, "#   ", -1, 16, false, true );
+  settings().save( df, "#   ", -1, 16, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -497,7 +496,7 @@ void FICurve::saveFICurve( const string &file, const vector< FIData > &results )
 
   // write header and key:
   Header.save( df, "# " );
-  Settings.save( df, "#   ", -1, 16, false, true );
+  settings().save( df, "#   ", -1, 16, false, true );
   df << '\n';
   TableKey key;
   key.addLabel( "stimulus" );

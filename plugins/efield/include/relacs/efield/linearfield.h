@@ -74,8 +74,6 @@ protected:
   OptWidget O;
   Plot P;
 
-  Options Settings;
-
   Options GUIOpts;
   bool Measure;
   bool Input;

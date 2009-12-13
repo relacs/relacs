@@ -1582,8 +1582,12 @@ void RELACSWidget::startFirstAcquisition( void )
   CFG.read( RELACSPlugin::Plugins );
   CFG.configure( RELACSPlugin::Plugins );
 
-  for ( unsigned int k=0; k<CN.size(); k++ )
+  for ( unsigned int k=0; k<CN.size(); k++ ) {
+    CN[k]->setSettings();
     CN[k]->initDevices();
+  }
+
+  RP->setSettings();
 
   // start data aquisition:
   setMinTraceTime( 0.0 );
@@ -1696,8 +1700,12 @@ void RELACSWidget::startFirstSimulation( void )
   CFG.read( RELACSPlugin::Plugins );
   CFG.configure( RELACSPlugin::Plugins );
 
-  for ( unsigned int k=0; k<CN.size(); k++ )
+  for ( unsigned int k=0; k<CN.size(); k++ ) {
+    CN[k]->setSettings();
     CN[k]->initDevices();
+  }
+
+  RP->setSettings();
 
   // start data aquisition:
   setMinTraceTime( 0.0 );
@@ -1771,6 +1779,7 @@ void RELACSWidget::startIdle( void )
   CFG.configure( RELACSPlugin::Plugins );
   for ( unsigned int k=0; k<CN.size(); k++ )
     CN[k]->initDevices();
+  RP->setSettings();
   //  IL->clearBuffer();
   //  ED.clear();
   RP->activateRePro( 0 );

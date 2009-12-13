@@ -108,8 +108,6 @@ protected:
   static const int MaxNoSignalTries = 6;
   MultiPlot P;
 
-  Options Settings;
-
 };
 
 

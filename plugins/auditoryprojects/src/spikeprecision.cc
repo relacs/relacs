@@ -232,8 +232,7 @@ int SpikePrecision::main( void )
   }
   if ( Side > 1 )
     Side = metaData( "Cell" ).index( "best side" );
-  Settings = *this;
-  Settings.setTypeFlags( 16, -Parameter::Blank );
+  settings().setTypeFlags( 16, -Parameter::Blank );
 
   // setup frequency range:
   FreqRange.set( freqrangestr );
@@ -558,7 +557,7 @@ void SpikePrecision::saveSpikes( const vector < EnvelopeFrequencyData > &results
   df << "#                      Side: " << Side << " (0 = left speaker, 1 = right speaker)\n";
   df << "#         Carrier Frequency: " << CarrierFrequency << "Hz\n";
   df << "#                     Macro: " << macroName() << "\n";
-  Settings.save( df, "#   ", -1, 16, false, true );
+  settings().save( df, "#   ", -1, 16, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -595,7 +594,7 @@ void SpikePrecision::saveRates( const vector < EnvelopeFrequencyData > &results 
   df << "#                      Side: " << Side << " (0 = left speaker, 1 = right speaker)\n";
   df << "#         Carrier Frequency: " << CarrierFrequency << "Hz\n";
   df << "#                     Macro: " << macroName() << "\n";
-  Settings.save( df, "#   ", -1, 16, false, true );
+  settings().save( df, "#   ", -1, 16, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%5.1f" );

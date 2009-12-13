@@ -107,6 +107,8 @@ public:
     /*! Inform each RePro that some meta data have been changed
         in MetaDataSection \a section. */
   void notifyMetaData( const string &section );
+    /*! Copy each RePro's Options to its RePro::settings(). */
+  void setSettings( void );
     /*! Inform each RePro that a new session is started. */
   void sessionStarted( void );
     /*! Inform each RePro that the session is stopped. */

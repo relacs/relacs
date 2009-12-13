@@ -217,7 +217,6 @@ protected:
   double MaxPlotRate;
   MultiPlot P;
   bool PlotIntensitySelection;
-  Options Settings;
   Options Header;
 
   struct ThreshData {

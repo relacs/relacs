@@ -42,7 +42,11 @@ namespace relacs {
 \class RELACSPlugin
 \brief Adds specific functions for RELACS plugins to ConfigDialog
 \author Jan Benda
-\version 2.0
+\version 2.1
+
+Whenever the RELACSPlugin is started (a RePro whenever it is executed,
+all other plugins when an acquisition is started) the current values
+of the Options are saved and can be later on accesed via settings().
 
 A warning meassage can be displayed in a popup window with warning()
 An info meassage can be displayed in a popup window with info().
@@ -178,6 +182,19 @@ public:
 
     /*! The name of the plugin set the class belongs to. */
   string pluginSet( void ) const;
+
+    /*! \return the plugin's options with the values at the time where
+        the RELACSPlugin was started (a RePro whenever it was executed,
+        all other plugins when an acquisition was started).
+	\sa setSettings() */
+  const Options &settings( void ) const;
+    /*! \return the plugin's options with the values at the time where
+        the RELACSPlugin was started (a RePro whenever it was executed,
+        all other plugins when an acquisition was started).
+	\sa setSettings() */
+  Options &settings( void );
+    /*! Copy the plugin's current Options to its settings(). */
+  void setSettings( void );
 
     /*! Called whenever the mode is changed. */
   virtual void modeChanged( void );
@@ -445,16 +462,18 @@ protected:
         \sa acquisition(), simulation(), analysis(), idle() */
   string modeStr( void ) const;
 
-    /*! Return general RELACS settings. */
-  Options &settings( void );
-    /*! Return general RELACS settings. */
-  const Options &settings( void ) const;
-    /*! Lock the settings mutex. */
-  void lockSettings( void ) const;
-    /*! Unlock the settings mutex. */
-  void unlockSettings( void ) const;
-    /*! The mutex for the settings. */
-  QMutex *settingsMutex( void );
+    /*! Return general settings of RELACS. \sa lockRelacsSettings() */
+  Options &relacsSettings( void );
+    /*! Return general settings of RELACS. \sa lockRelacsSettings() */
+  const Options &relacsSettings( void ) const;
+    /*! Lock the mutex for the general settings of RELACS.
+        \sa unlockRelacsSettings(), relacsSettings() */
+  void lockRelacsSettings( void ) const;
+    /*! Unlock the mutex for the general settings of RELACS.
+        \sa lockRelacsSettings(), relacsSettings() */
+  void unlockRelacsSettings( void ) const;
+    /*! The mutex for the general settings of RELACS. */
+  QMutex *relacsSettingsMutex( void );
 
     /*! The path where all data of the current session are stored. */
   string path( void ) const;
@@ -677,6 +696,8 @@ protected slots:
 private:
 
   string PluginSet;
+
+  Options Settings;
 
     /*! Dummy trace. */
   static const TraceSpec DummyTrace;

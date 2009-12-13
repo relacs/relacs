@@ -131,6 +131,7 @@ void RePro::run( void )
   GrabKeysAllowed = true;
   GrabKeysBaseSize = GrabKeys.size();
   grabKeys();
+  setSettings();
   InterruptLock.lock();
   Interrupt = false;
   InterruptLock.unlock();
@@ -343,9 +344,9 @@ string RePro::reproTimeStr( void ) const
   time.tm_min = (int)min;
   time.tm_hour = (int)hour;
 
-  lockSettings();
-  Str rts = settings().text( "reprotimeformat" );
-  unlockSettings();
+  lockRelacsSettings();
+  Str rts = relacsSettings().text( "reprotimeformat" );
+  unlockRelacsSettings();
   rts.format( &time );
   return rts;
 
@@ -647,9 +648,9 @@ string RePro::macroParam( void )
 string RePro::reproPath( bool v )
 {
   // construct path:
-  lockSettings();
-  Str path = settings().text( "repropath" );
-  unlockSettings();
+  lockRelacsSettings();
+  Str path = relacsSettings().text( "repropath" );
+  unlockRelacsSettings();
   path.provideSlash();
   path += Str( name() ).lower();
   path.provideSlash();

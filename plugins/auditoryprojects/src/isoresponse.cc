@@ -328,8 +328,6 @@ int IsoResponse::findIsoFreq( void )
 
 int IsoResponse::main( void )
 {  
-  Settings = *this;
-
   BestFreq = metaData( "Cell" ).number( "best frequency" );
   // get options:
   UseBestFrequency = index( "use_best_freq" );
@@ -563,7 +561,7 @@ void IsoResponse::saveSpikes( void )
   // write header and key:
 
   Header.save( df, "# " );
-  Settings.save( df, "#   ", -1, 0, false, true );
+  settings().save( df, "#   ", -1, 0, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -597,7 +595,7 @@ void IsoResponse::saveRates( void )
   // write header and key:
 
   Header.save( df, "# " );
-  Settings.save( df, "#   ", -1, 0, false, true );
+  settings().save( df, "#   ", -1, 0, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "I"   , "dB SPL", "%5.1f" );

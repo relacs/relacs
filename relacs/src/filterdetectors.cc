@@ -611,6 +611,7 @@ string FilterDetectors::init( const InList &data, EventList &events )
 
   // init filter and event detectors:
   for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d ) {
+    d->FilterDetector->setSettings();
     d->Init = true;
     string ident = d->FilterDetector->ident();
 

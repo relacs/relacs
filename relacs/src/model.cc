@@ -222,6 +222,7 @@ void Model::restart( void )
 
 void Model::run( void )
 {
+  setSettings();
   main();
 }
 

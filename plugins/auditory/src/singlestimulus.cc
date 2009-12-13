@@ -165,11 +165,8 @@ int SingleStimulus::main( void )
     return Failed;
   }
 
-  // store options:
-  Settings = *this;
-  Settings.setTypeFlags( 16, -Parameter::Blank );
-
   // get options:
+  settings().setTypeFlags( 16, -Parameter::Blank );
   WaveType = (WaveTypes)index( "type" );
   WaveForm = (WaveForms)index( "waveform" );
   Str stimfile = text( "stimfile" );
@@ -643,7 +640,7 @@ void SingleStimulus::saveSpikes( Options &header, const EventList &spikes )
 
   // write header and key:
   header.save( df, "# " );
-  Settings.save( df, "#   ", -1, 16, false, true );
+  settings().save( df, "#   ", -1, 16, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -666,7 +663,7 @@ void SingleStimulus::saveRate( Options &header, const SampleDataD &rate1,
 
   // write header and key:
   header.save( df, "# " );
-  Settings.save( df, "#   ", -1, 16, false, true );
+  settings().save( df, "#   ", -1, 16, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );

@@ -114,8 +114,6 @@ protected:
 
   MultiPlot P;
 
-  Options Settings;
-
 };
 
 

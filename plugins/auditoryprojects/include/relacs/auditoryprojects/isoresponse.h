@@ -239,7 +239,6 @@ protected:
   double AmplRatio;
 
   Options Header; 
-  Options Settings;
 
   int MaxRatePos;
   double MaxRate;

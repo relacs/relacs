@@ -152,8 +152,6 @@ protected:
 
   string StimulusLabel;
 
-  Options Settings;
-
 };
 
 

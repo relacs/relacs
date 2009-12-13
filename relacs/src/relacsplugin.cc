@@ -62,6 +62,24 @@ void RELACSPlugin::setPluginSet( const string &pluginset )
 }
 
 
+const Options &RELACSPlugin::settings( void ) const
+{
+  return Settings;
+}
+
+
+Options &RELACSPlugin::settings( void )
+{
+  return Settings;
+}
+
+
+void RELACSPlugin::setSettings( void )
+{
+  Settings = *this;
+}
+
+
 string RELACSPlugin::helpFileName( void ) const
 {
   return pluginSet() + '-' + name() + ".html";
@@ -453,31 +471,31 @@ void RELACSPlugin::modeChanged( void )
 }
 
 
-Options &RELACSPlugin::settings( void )
+Options &RELACSPlugin::relacsSettings( void )
 {
   return RW->SS;
 }
 
 
-const Options &RELACSPlugin::settings( void ) const
+const Options &RELACSPlugin::relacsSettings( void ) const
 {
   return RW->SS;
 }
 
 
-void RELACSPlugin::lockSettings( void ) const
+void RELACSPlugin::lockRelacsSettings( void ) const
 {
   RW->SS.lock();
 }
 
 
-void RELACSPlugin::unlockSettings( void ) const
+void RELACSPlugin::unlockRelacsSettings( void ) const
 {
   RW->SS.unlock();
 }
 
 
-QMutex *RELACSPlugin::settingsMutex( void )
+QMutex *RELACSPlugin::relacsSettingsMutex( void )
 {
   return RW->SS.mutex();
 }
@@ -869,9 +887,9 @@ string RELACSPlugin::sessionTimeStr( void ) const
   time.tm_min = (int)min;
   time.tm_hour = (int)hour;
 
-  lockSettings();
-  Str sts = settings().text( "sessiontimeformat" );
-  unlockSettings();
+  lockRelacsSettings();
+  Str sts = relacsSettings().text( "sessiontimeformat" );
+  unlockRelacsSettings();
   sts.format( &time );
   return sts;
 }

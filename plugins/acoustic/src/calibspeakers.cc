@@ -77,8 +77,7 @@ void CalibSpeakers::config( void )
 int CalibSpeakers::main( void )
 {
   // get options:
-  Settings = *this;
-  Settings.setTypeFlags( 16, -Parameter::Blank );
+  settings().setTypeFlags( 16, -Parameter::Blank );
   RangeLoop frequencyrange( text( "frequencyrange" ) );
   double minintensity = number( "intmin" );
   double intensityrange = number( "intrange" );
@@ -359,7 +358,7 @@ void CalibSpeakers::saveIntensities( double frequency, const MapD &intensities,
   header.addText( "time", time );
   header.addLabel( "settings:" );
   header.save( df, "# " );
-  Settings.save( df, "#   ", -1, 16, false, true );
+  settings().save( df, "#   ", -1, 16, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "intens", "dB SPL", "%6.2f" );
@@ -400,7 +399,7 @@ void CalibSpeakers::saveOffsets( const MapD &offsets, const ArrayD &gains )
   header.addText( "time", time );
   header.addLabel( "settings:" );
   header.save( df, "# " );
-  Settings.save( df, "#   ", -1, 16, false, true );
+  settings().save( df, "#   ", -1, 16, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "freq", "Hz", "%7.0f" );

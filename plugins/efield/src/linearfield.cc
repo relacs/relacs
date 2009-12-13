@@ -99,7 +99,6 @@ int LinearField::main( void )
 {
   // get options:
   double duration = number( "duration" );
-  Settings = *this;
 
   // init:
   noMessage();
@@ -172,7 +171,7 @@ void LinearField::saveTrace( const SampleDataF &data )
     return;
 
   // write header and key:
-  Settings.save( df, "# " );
+  settings().save( df, "# " );
   GUIOpts.save( df, "# " );
   df << '\n';
   TableKey key;
@@ -202,7 +201,7 @@ void LinearField::saveAmplitude( void )
     return;
 
   // write header and key:
-  Settings.save( df, "# " );
+  settings().save( df, "# " );
   df << '\n';
   TableKey key;
   key.addNumber( "x", "cm", "%6.1f" );

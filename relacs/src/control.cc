@@ -93,6 +93,7 @@ void Control::run( void )
 {
   timeStamp();
   lockAll();
+  setSettings();
   main();
   unlockAll();
 }

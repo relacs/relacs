@@ -125,9 +125,8 @@ int FIField::main( void )
   }
 
   // get options:
-  Settings = *this;
-  Settings.delFlags( 16 );
-  Settings.setTypeFlags( 32, -Parameter::Blank );
+  settings().delFlags( 16 );
+  settings().setTypeFlags( 32, -Parameter::Blank );
   MinFreq = number( "freqmin" );
   MaxFreq = number( "freqmax" );
   FreqStep = number( "freqstep" );
@@ -303,7 +302,7 @@ void FIField::saveHeader( const string &file )
 
   df << '\n';
   FIFieldHeader.save( df, "# ", -1, 1 );
-  Settings.save( df, "#   ", -1, 32, false, true );
+  settings().save( df, "#   ", -1, 32, false, true );
   df << '\n';
 }
 
@@ -318,7 +317,7 @@ void FIField::saveThreshold( const string &file )
 
   // write header and key:
   FIFieldHeader.save( df, "# " );
-  Settings.save( df, "#   ", -1, 32, false, true );
+  settings().save( df, "#   ", -1, 32, false, true );
   df << '\n';
   TableKey key;
   key.addLabel( "threshold" );

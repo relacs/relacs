@@ -153,8 +153,6 @@ protected:
   MultiPlot SP;
   MultiPlot P;
 
-  Options Settings;
-
 };
 
 

@@ -349,7 +349,7 @@ void CalibEField::saveData( void )
   header.addInteger( "channel", LAtt->aoChannel() );
   header.addText( "session time", sessionTimeStr() );
   header.save( df, "# " );
-  Options::save( df, "#   " );
+  settings().save( df, "#   " );
   df << '\n';
   TableKey key;
   key.addNumber( "intens", EOD2Unit, "%8.5g" );

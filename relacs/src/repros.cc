@@ -316,6 +316,13 @@ void RePros::notifyMetaData( const string &section )
 }
 
 
+void RePros::setSettings( void )
+{
+  for ( unsigned int k=0; k<RPs.size(); k++ )
+    RPs[k]->RP->setSettings();
+}
+
+
 void RePros::sessionStarted( void )
 {
   for ( unsigned int k=0; k<RPs.size(); k++ )
