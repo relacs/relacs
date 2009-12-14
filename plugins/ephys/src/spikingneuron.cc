@@ -355,6 +355,12 @@ void MorrisLecar::conductances( double *g ) const
 }
 
 
+string MorrisLecar::conductanceUnit( void ) const
+{
+  return "nS";
+}
+
+
 void MorrisLecar::currents( vector< string > &currentnames ) const
 {
   currentnames.clear();
@@ -373,26 +379,38 @@ void MorrisLecar::currents( double *c ) const
 }
 
 
+string MorrisLecar::currentUnit( void ) const
+{
+  return "pA";
+}
+
+
+string MorrisLecar::inputUnit( void ) const
+{
+  return "pA";
+}
+
+
 void MorrisLecar::add( void )
 {
   addLabel( "General", ModelFlag );
   addSelection( "params", "Parameter set", "Custom|Type I|Type II" ).setFlags( ModelFlag );
 
   addLabel( "Calcium current", ModelFlag );
-  addNumber( "gca", "Ca conductivity", GCa, 0.0, 10000.0, 0.1, "nS" ).setFlags( ModelFlag ).setActivation( "params", "Custom" );
+  addNumber( "gca", "Ca conductivity", GCa, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag ).setActivation( "params", "Custom" );
   addNumber( "eca", "Ca reversal potential", ECa, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag ).setActivation( "params", "Custom" );
   addNumber( "mvca", "Midpoint potential of Ca activation", MVCa, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag ).setActivation( "params", "Custom" );
   addNumber( "mkca", "Width of Ca activation", MKCa, 0.0, 1000.0, 1.0, "mV" ).setFlags( ModelFlag ).setActivation( "params", "Custom" );
 
   addLabel( "Potassium current", ModelFlag );
-  addNumber( "gk", "K conductivity", GK, 0.0, 10000.0, 0.1, "nS" ).setFlags( ModelFlag ).setActivation( "params", "Custom" );
+  addNumber( "gk", "K conductivity", GK, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag ).setActivation( "params", "Custom" );
   addNumber( "ek", "K reversal potential", EK, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag ).setActivation( "params", "Custom" );
   addNumber( "mvk", "Midpoint potential of K activation", MVK, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag ).setActivation( "params", "Custom" );
   addNumber( "mkk", "Width of K activation", MKK, 0.0, 1000.0, 1.0, "mV" ).setFlags( ModelFlag ).setActivation( "params", "Custom" );
   addNumber( "mphik", "Rate of K activation", MPhiK, 0.0, 10.0, 0.001, "kHz" ).setFlags( ModelFlag ).setActivation( "params", "Custom" );
 
   addLabel( "Leak current", ModelFlag );
-  addNumber( "gl", "Leak conductivity", GL, 0.0, 10000.0, 0.1, "nS" ).setFlags( ModelFlag ).setActivation( "params", "Custom" );
+  addNumber( "gl", "Leak conductivity", GL, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag ).setActivation( "params", "Custom" );
   addNumber( "el", "Leak reversal potential", EL, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag ).setActivation( "params", "Custom" );
   addNumber( "c", "Capacitance", C, 0.0, 100.0, 0.1, "pF" ).setFlags( ModelFlag ).setActivation( "params", "Custom" );
 
@@ -610,7 +628,7 @@ void MorrisLecarPrescott::add( void )
   setText( "params", "Custom|I_M|I_AHP" );
 
   insertLabel( "Adaptation current", "Input", ModelFlag );
-  insertNumber( "ga", "Input", "Adaptation conductivity", GA, 0.0, 10000.0, 0.1, "nS" ).setFlags( ModelFlag ).setActivation( "params", "Custom" );
+  insertNumber( "ga", "Input", "Adaptation conductivity", GA, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag ).setActivation( "params", "Custom" );
   insertNumber( "ea", "Input", "Adaptation reversal potential", EA, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag ).setActivation( "params", "Custom" );
   insertNumber( "mva", "Input", "Midpoint potential of adaptation activation", MVA, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag ).setActivation( "params", "Custom" );
   insertNumber( "mka", "Input", "Width of adaptation activation", MKA, 0.0, 1000.0, 1.0, "mV" ).setFlags( ModelFlag ).setActivation( "params", "Custom" );
@@ -823,15 +841,15 @@ void HodgkinHuxley::currents( double *c ) const
 void HodgkinHuxley::add( void )
 {
   addLabel( "Sodium current", ModelFlag );
-  addNumber( "gna", "Na conductivity", GNa, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gna", "Na conductivity", GNa, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
   addNumber( "ena", "Na reversal potential", ENa, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
 
   addLabel( "Potassium current", ModelFlag );
-  addNumber( "gk", "K conductivity", GK, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gk", "K conductivity", GK, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
   addNumber( "ek", "K reversal potential", EK, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
 
   addLabel( "Leak current", ModelFlag );
-  addNumber( "gl", "Leak conductivity", GL, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gl", "Leak conductivity", GL, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
   addNumber( "el", "Leak reversal potential", EL, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
   addNumber( "c", "Capacitance", C, 0.0, 100.0, 0.1, "muF/cm^2" ).setFlags( ModelFlag );
   addNumber( "phi", "Phi", PT, 0.0, 100.0, 1.0 ).setFlags( ModelFlag );
@@ -1004,7 +1022,7 @@ void Connor::add( void )
   HodgkinHuxley::add();
 
   insertLabel( "A current", "Leak current", ModelFlag );
-  insertNumber( "gka", "Leak current", "A conductivity", GKA, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  insertNumber( "gka", "Leak current", "A conductivity", GKA, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
   insertNumber( "eka", "Leak current", "A reversal potential", EKA, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
 
   SpikingNeuron::add();
@@ -1594,11 +1612,11 @@ void TraubMiles::add( void )
   HodgkinHuxley::add();
 
   insertLabel( "Calcium current", "Input", ModelFlag );
-  insertNumber( "gca", "Input", "Ca conductivity", GCa, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  insertNumber( "gca", "Input", "Ca conductivity", GCa, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
   insertNumber( "eca", "Input", "Ca reversal potential", ECa, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
 
   insertLabel( "AHP-type current", "Input", ModelFlag );
-  insertNumber( "gahp", "Input", "AHP conductivity", GAHP, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  insertNumber( "gahp", "Input", "AHP conductivity", GAHP, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
   insertNumber( "eahp", "Input", "AHP reversal potential", EAHP, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
 }
 
@@ -1738,15 +1756,15 @@ void TraubErmentrout::add( void )
   HodgkinHuxley::add();
 
   insertLabel( "Calcium current", "Input", ModelFlag );
-  insertNumber( "gca", "Input", "Ca conductivity", GCa, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  insertNumber( "gca", "Input", "Ca conductivity", GCa, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
   insertNumber( "eca", "Input", "Ca reversal potential", ECa, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
 
   insertLabel( "M-type current", "Input", ModelFlag );
-  insertNumber( "gm", "Input", "M conductivity", GM, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  insertNumber( "gm", "Input", "M conductivity", GM, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
   insertNumber( "em", "Input", "M reversal potential", EM, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
 
   insertLabel( "AHP-type current", "Input", ModelFlag );
-  insertNumber( "gahp", "Input", "AHP conductivity", GAHP, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  insertNumber( "gahp", "Input", "AHP conductivity", GAHP, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
   insertNumber( "eahp", "Input", "AHP reversal potential", EAHP, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
 }
 
@@ -2319,7 +2337,7 @@ void WangBuzsakiAdapt::add( void )
   WangBuzsaki::add();
 
   insertLabel( "Adaptation current", "Input", ModelFlag );
-  insertNumber( "ga", "Input", "A conductivity", GA, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  insertNumber( "ga", "Input", "A conductivity", GA, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
   insertNumber( "ea", "Input", "A reversal potential", EA, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
   insertNumber( "atau", "Input", "A time constant", Atau, 0.0, 1000.0, 1.0, "ms" ).setFlags( ModelFlag );
 }
@@ -2555,29 +2573,29 @@ void Crook::currents( double *c ) const
 void Crook::add( void )
 {
   addLabel( "Soma Sodium current", ModelFlag );
-  addNumber( "gna", "Na conductivity", GNa, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gna", "Na conductivity", GNa, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
   addNumber( "ena", "Na reversal potential", ENa, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
 
   addLabel( "Soma Potassium current", ModelFlag );
-  addNumber( "gk", "K conductivity", GK, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gk", "K conductivity", GK, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
   addNumber( "ek", "K reversal potential", EK, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
 
   addLabel( "Soma Calcium current", ModelFlag );
-  addNumber( "gca", "Ca conductivity", GCa, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gca", "Ca conductivity", GCa, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
   addNumber( "eca", "Ca reversal potential", ECa, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
   addNumber( "caa", "Ca activation", CaA, 0.0, 200.0, 1.0, "1" ).setFlags( ModelFlag );
   addNumber( "catau", "Ca removal time constant", CaTau, 0.0, 10000.0, 1.0, "ms" ).setFlags( ModelFlag );
 
   addLabel( "Soma Leak current", ModelFlag );
-  addNumber( "gl", "Leak conductivity", GL, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gl", "Leak conductivity", GL, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
   addNumber( "el", "Leak reversal potential", EL, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
   addNumber( "c", "Capacitance", C, 0.0, 100.0, 0.1, "muF/cm^2" ).setFlags( ModelFlag );
 
   addLabel( "Other currents", ModelFlag );
-  addNumber( "gahp", "Soma AHP-type K conductivity", GKAHP, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
-  addNumber( "gm", "Soma M-type K conductivity", GKM, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
-  addNumber( "gld", "Dendrite leak conductivity", GLD, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
-  addNumber( "gds", "Soma-dendrite conductivity", GDS, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gahp", "Soma AHP-type K conductivity", GKAHP, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
+  addNumber( "gm", "Soma M-type K conductivity", GKM, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
+  addNumber( "gld", "Dendrite leak conductivity", GLD, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
+  addNumber( "gds", "Soma-dendrite conductivity", GDS, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
   addNumber( "sfrac", "Soma coupling fraction", SFrac, 0.0, 1.0, 0.01 ).setFlags( ModelFlag );
 
   SpikingNeuron::add();
@@ -2841,28 +2859,28 @@ string MilesDai::inputUnit( void ) const
 void MilesDai::add( void )
 {
   addLabel( "Soma Sodium current", ModelFlag );
-  addNumber( "gna", "Na conductivity", GNa, 0.0, 10000.0, 0.1, "muS" ).setFlags( ModelFlag );
+  addNumber( "gna", "Na conductivity", GNa, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
   addNumber( "ena", "Na reversal potential", ENa, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
 
   addLabel( "Soma Delayed Rectifier Potassium current", ModelFlag );
-  addNumber( "gk", "K conductivity", GK, 0.0, 10000.0, 0.1, "muS" ).setFlags( ModelFlag );
+  addNumber( "gk", "K conductivity", GK, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
   addNumber( "ek", "K reversal potential", EK, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
 
   addLabel( "Soma N-Type Calcium current", ModelFlag );
-  addNumber( "gca", "Ca conductivity", GCa, 0.0, 10000.0, 0.1, "muS" ).setFlags( ModelFlag );
+  addNumber( "gca", "Ca conductivity", GCa, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
   addNumber( "eca", "Ca reversal potential", ECa, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
   addNumber( "caa", "Ca activation", CaA, 0.0, 200.0, 1.0, "1" ).setFlags( ModelFlag );
   addNumber( "catau", "Ca removal time constant", CaTau, 0.0, 10000.0, 1.0, "ms" ).setFlags( ModelFlag );
 
   addLabel( "Soma Leak current", ModelFlag );
-  addNumber( "gl", "Leak conductivity", GL, 0.0, 10000.0, 0.1, "muS" ).setFlags( ModelFlag );
+  addNumber( "gl", "Leak conductivity", GL, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
   addNumber( "el", "Leak reversal potential", EL, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
   addNumber( "c", "Capacitance", C, 0.0, 100.0, 0.1, "nF" ).setFlags( ModelFlag );
 
   addLabel( "Other currents", ModelFlag );
-  addNumber( "gahp", "Soma AHP-type potassium conductivity", GKAHP, 0.0, 10000.0, 0.1, "muS" ).setFlags( ModelFlag );
-  addNumber( "gld", "Dendrite leak conductivity", GLD, 0.0, 10000.0, 0.1, "muS" ).setFlags( ModelFlag );
-  addNumber( "gds", "Soma-dendrite coupling conductivity", GDS, 0.0, 10000.0, 0.1, "muS" ).setFlags( ModelFlag );
+  addNumber( "gahp", "Soma AHP-type potassium conductivity", GKAHP, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
+  addNumber( "gld", "Dendrite leak conductivity", GLD, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
+  addNumber( "gds", "Soma-dendrite coupling conductivity", GDS, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
   addNumber( "cd", "Capacitance of dendrite", CD, 0.0, 100.0, 0.1, "nF" ).setFlags( ModelFlag );
 
   SpikingNeuron::add();
@@ -3124,36 +3142,36 @@ void WangIKNa::currents( double *c ) const
 void WangIKNa::add( void )
 {
   addLabel( "Soma Sodium current", ModelFlag );
-  addNumber( "gna", "Na conductivity", GNa, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gna", "Na conductivity", GNa, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
   addNumber( "ena", "Na reversal potential", ENa, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
 
   addLabel( "Soma Potassium current", ModelFlag );
-  addNumber( "gk", "K conductivity", GK, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gk", "K conductivity", GK, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
   addNumber( "ek", "K reversal potential", EK, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
 
   addLabel( "Soma Calcium current", ModelFlag );
-  addNumber( "gcas", "Ca conductivity", GCaS, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gcas", "Ca conductivity", GCaS, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
   addNumber( "eca", "Ca reversal potential", ECa, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
   addNumber( "casa", "Ca activation", CaSA, 0.0, 200.0, 1.0, "1" ).setFlags( ModelFlag );
   addNumber( "castau", "Ca removal time constant", CaSTau, 0.0, 10000.0, 1.0, "ms" ).setFlags( ModelFlag );
 
   addLabel( "Soma Leak current", ModelFlag );
-  addNumber( "gl", "Leak conductivity", GL, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gl", "Leak conductivity", GL, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
   addNumber( "el", "Leak reversal potential", EL, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
   addNumber( "c", "Capacitance", C, 0.0, 100.0, 0.1, "muF/cm^2" ).setFlags( ModelFlag );
   addNumber( "phi", "Phi", PT, 0.0, 100.0, 1.0 ).setFlags( ModelFlag );
 
   addLabel( "Dendrite Calcium current", ModelFlag );
-  addNumber( "gcad", "Ca conductivity", GCaD, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gcad", "Ca conductivity", GCaD, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
   addNumber( "cada", "Ca activation", CaDA, 0.0, 200.0, 1.0, "1" ).setFlags( ModelFlag );
   addNumber( "cadtau", "Ca removal time constant", CaDTau, 0.0, 10000.0, 1.0, "ms" ).setFlags( ModelFlag );
 
   addLabel( "Other currents", ModelFlag );
-  addNumber( "gkcas", "Soma Ca dependent K conductivity", GKCaS, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
-  addNumber( "gkna", "Soma Na dependent K conductivity", GKNa, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
-  addNumber( "gds", "Soma-dendrite conductivity", GDS, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
-  addNumber( "gld", "Dendrite leak conductivity", GLD, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
-  addNumber( "gkcad", "Dendrite Ca dependent K conductivity", GKCaD, 0.0, 10000.0, 0.1, "mS/cm^2" ).setFlags( ModelFlag );
+  addNumber( "gkcas", "Soma Ca dependent K conductivity", GKCaS, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
+  addNumber( "gkna", "Soma Na dependent K conductivity", GKNa, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
+  addNumber( "gds", "Soma-dendrite conductivity", GDS, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
+  addNumber( "gld", "Dendrite leak conductivity", GLD, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
+  addNumber( "gkcad", "Dendrite Ca dependent K conductivity", GKCaD, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
 
   SpikingNeuron::add();
 }
@@ -3477,6 +3495,119 @@ void Edman::notify( void )
   FRT=0.001*Faraday/GasConst/T; // 1/mV
   F2RT=0.001*Faraday*Faraday/GasConst/T;  // makes all currents measured in muA
   ekT=-0.001*eCharge/kBoltz/T;  // -1/mV, without the negative sign all the activation functions and time constants are wrong
+}
+
+
+Chacron2007::Chacron2007( void )
+  : HodgkinHuxley()
+{
+  GNa = 55.0;
+  GK = 40.0;
+  GL = 0.18;
+
+  ENa = +40.0;
+  EK = -88.5;
+  EL = -70.0;
+
+  C = 1.0;
+  PT = 1.0;
+
+  GNaGates = GNa;
+  GKGates = GK;
+
+  INa = 0.0;
+  IK = 0.0;
+  IL = 0.0;
+}
+
+
+string Chacron2007::name( void ) const
+{
+  return "Chacron2007";
+}
+
+
+int Chacron2007::dimension( void ) const
+{
+  return 5;
+}
+
+
+void Chacron2007::variables( vector< string > &varnames ) const
+{
+  HodgkinHuxley::variables( varnames );
+  varnames.push_back( "Vth" );
+}
+
+
+void Chacron2007::units( vector< string > &u ) const
+{
+  HodgkinHuxley::units( u );
+  u.push_back( "mV" );
+}
+
+
+string Chacron2007::conductanceUnit( void ) const
+{
+  return "uS";
+}
+
+
+string Chacron2007::currentUnit( void ) const
+{
+  return "pA";
+}
+
+
+string Chacron2007::inputUnit( void ) const
+{
+  return "pA";
+}
+
+
+void Chacron2007::operator()(  double t, double s, double *x, double *dxdt, int n )
+{
+  double V = x[0];
+  double Vth = x[4];
+
+  double m0 = 1.0/(1.0+exp(-(V-Vth)/3.0));
+  double h0 = 1.0/(1.0+exp((V-Vth)/3.0));
+  double n0 = 1.0/(1.0+exp(-(V+40.0)/3.0));
+
+  double taum = 0.02;
+  double tauh = 0.39;
+  double taun = 0.39;
+
+  GNaGates = GNa*x[1]*x[1]*x[1]*x[2];
+  GKGates = GK*x[3]*x[3];
+
+  INa = GNaGates*(V-ENa);
+  IK = GKGates*(V-EK);
+  IL = GL*(V-EL);
+
+  /* V */ dxdt[0] = ( - INa - IK - IL + s )/C;
+  /* m */ dxdt[1] = (m0-x[1])/taum;
+  /* h */ dxdt[2] = (h0-x[2])/tauh;
+  /* n */ dxdt[3] = (n0-x[3])/taun;
+  /* Vth */ dxdt[4] = (-55.0-x[4])/40.0;
+}
+
+
+void Chacron2007::init( double *x ) const
+{
+  x[0] = -69.98990;
+  x[1] = 0.00672;
+  x[2] = 0.99328;
+  x[3] = 0.0000;
+  x[4] = -55.0;
+}
+
+
+void Chacron2007::add( void )
+{
+  HodgkinHuxley::add();
+  setUnit( "c", "pF" );
+  erase( "phi" );
 }
 
 

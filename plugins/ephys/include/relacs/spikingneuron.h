@@ -324,6 +324,9 @@ class MorrisLecar : public SpikingNeuron
         The number of conductances is defined by the size of 
         \a conductancenames the function conductances() returns. */
   virtual void conductances( double *g ) const;
+    /*! Returns the unit of the conductances returned by conductances(double*) const,
+        i.e. nS. */
+  virtual string conductanceUnit( void ) const;
     /*! Returns in \a currentnames the names of the individual ionic currents
         that currents(double*) const would return. */
   virtual void currents( vector< string > &currentnames ) const;
@@ -331,6 +334,10 @@ class MorrisLecar : public SpikingNeuron
         The number of currents is defined by the size of \a currentnames
         the function currents(vector<string>&) const returns. */
   virtual void currents( double *c ) const;
+    /*! \copydoc SpikingNeuron::currentUnit() */
+  virtual string currentUnit( void ) const;
+    /*! \copydoc SpikingNeuron::inputUnit() */
+  virtual string inputUnit( void ) const;
 
     /*! Add parameters as options. */
   virtual void add( void );
@@ -1273,6 +1280,48 @@ class Edman : public SpikingNeuron
   double INa, IK, ILNa, ILK, ILCl, IP;
   double GNaGates, GKGates, GLNaA, GLKA, GLClA, GPA;
 
+};
+
+
+/*! 
+\class Chacron2007
+\brief [ModelLib] A variant of the Hodgkin-Huxley model with dynamic position of sodium activation and inactivation.
+\author Jan Benda
+
+This is a conductance based model where a dynamic threshold is
+explicitly implemented.
+This model generates divisive effects on the adapted f-I curves.
+(Maurice J. Chacron, Benjamin Lindner and André Longtin (2007):
+Threshold fatigue and information transfer. J. Comput. Neurosci. 23,
+pp. 301-311)
+*/
+
+class Chacron2007 : public HodgkinHuxley
+{
+ public:
+  Chacron2007( void );
+
+    /*! \copydoc SpikingNeuron::name() */
+  virtual string name( void ) const;
+    /*! \copydoc SpikingNeuron::dimension()  */
+  virtual int dimension( void ) const;
+    /*! \copydoc SpikingNeuron::variables() */
+  virtual void variables( vector< string > &varnames ) const;
+    /*! \copydoc SpikingNeuron::units() */
+  virtual void units( vector< string > &u ) const;
+    /*! \copydoc SpikingNeuron::conductanceUnit() */
+  virtual string conductanceUnit( void ) const;
+    /*! \copydoc SpikingNeuron::currentUnit() */
+  virtual string currentUnit( void ) const;
+    /*! \copydoc SpikingNeuron::inputUnit() */
+  virtual string inputUnit( void ) const;
+    /*! Computes the derivative \a dxdt at time \a t
+        with stimulus \a s given the state \a x. */
+  virtual void operator()(  double t, double s, double *x, double *dxdt, int n );
+    /*! Initialize the state \a x with usefull inital conditions. */
+  virtual void init( double *x ) const;
+    /*! Add parameters as options. */
+  virtual void add( void );
 };
 
 
