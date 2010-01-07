@@ -99,9 +99,9 @@ int CalibSpeakers::main( void )
   }
 
   // attenuators:
-  TraceSpec ot( outTrace( outtrace ) );
-  LoudSpeaker *LAtt = dynamic_cast<LoudSpeaker*>( attenuator( ot.device(), ot.channel() ) );
+  LoudSpeaker *LAtt = dynamic_cast<LoudSpeaker*>( attenuator( outtrace ) );
   if ( LAtt == 0 ) {
+    TraceSpec ot( outTrace( outtrace ) );
     warning( "No Attenuator on " + ot.traceName() + 
 	     " (channel " + Str( ot.channel() ) + 
 	     " of device " + Str( ot.device() ) + 

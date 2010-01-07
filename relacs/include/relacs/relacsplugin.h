@@ -528,12 +528,10 @@ protected:
     /*! Return the digital I/O device with identifier \a ident. */
   DigitalIO *digitalIO( const string &ident );
 
-    /*! Return the attenuator for output device
-        \a device at channel \a channel. */
-  Attenuate *attenuator( const string &device, int channel );
-    /*! Return the attenuator for output device
-        number \a index at channel \a channel. */
-  Attenuate *attenuator( int index, int channel );
+    /*! Return the attenuator for output trace \a index. */
+  Attenuate *attenuator( int index );
+    /*! Return the attenuator for output trace \a name. */
+  Attenuate *attenuator( const string &name );
 
     /*! Return the filter with name \a name. */ 
   Filter *filter( const string &name );

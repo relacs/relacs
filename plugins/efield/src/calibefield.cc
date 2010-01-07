@@ -32,45 +32,20 @@ namespace efield {
 
 CalibEField::CalibEField( void )
   : RePro( "CalibEField", "CalibEField", "efield",
-	   "Jan Benda", "1.3", "Dec 03, 2009" ),
+	   "Jan Benda", "1.3", "Jan 07, 2010" ),
     P( 1, 1, true, Plot::Copy, this )    
 {
-  // parameter:
-  Reset = false;
-  AM = false;
-  Duration = 0.4;
-  Frequency = 600.0;
-  BeatFrequency = 20.0;
-  Pause = 0.0;
-  Repeats = 3;
-  MaxContrast = 0.25;
-  MaxIntensities = 10;
-  MinIntensityFrac = 0.5;
-
   // add some parameter as options:
-  addBoolean( "reset", "Reset calibration?", Reset );
-  addBoolean( "am", "Amplitude modulation?", AM );
-  addNumber( "frequency", "Stimulus frequency", Frequency, 10.0, 1000.0, 5.0, "Hz" );
-  addNumber( "beatfreq", "Beat frequency", BeatFrequency, 1.0, 100.0, 1.0, "Hz" );
-  addNumber( "duration", "Duration of stimulus", Duration, 0.0, 10.0, 0.05, "seconds", "ms" );
-  addNumber( "pause", "Pause", Pause, 0.0, 10.0, 0.05, "seconds", "ms" );
-  addNumber( "maxcontrast", "Maximum contrast", MaxContrast, 0.01, 1.0, 0.05, "", "%" );
-  addInteger( "maxint", "Maximum number of intensities", MaxIntensities, 2, 1000, 2 );
-  addNumber( "minintensity", "Minimum relative intensity", MinIntensityFrac, 0.01, 1.0, 0.05, "", "%" );
-  addInteger( "repeats", "Maximum repeats", Repeats, 1, 100, 2 );
-
-  // variables:
-  Fish = false;
-  OrigGain = 0.1;
-  OrigOffset = 0.0;
-  FitGain = 1.0;
-  FitOffset = 0.0;
-  FitFlag = 0;
-  Amplitude = 0.0;
-  IntensityCount = 0;
-  EOD2Unit = "";
-  Intensity = 1.0;
-  Intensities.clear();
+  addBoolean( "reset", "Reset calibration?", false );
+  addBoolean( "am", "Amplitude modulation?", false );
+  addNumber( "frequency", "Stimulus frequency", 600.0, 10.0, 1000.0, 5.0, "Hz" );
+  addNumber( "beatfreq", "Beat frequency", 20.0, 1.0, 100.0, 1.0, "Hz" );
+  addNumber( "duration", "Duration of stimulus", 0.4, 0.0, 10.0, 0.05, "seconds", "ms" );
+  addNumber( "pause", "Pause", 0.0, 0.0, 10.0, 0.05, "seconds", "ms" );
+  addNumber( "maxcontrast", "Maximum contrast", 0.25, 0.01, 1.0, 0.05, "", "%" );
+  addInteger( "maxintensities", "Maximum number of intensities (amplitudes)", 10, 2, 1000, 2 );
+  addNumber( "minintensity", "Minimum relative intensity (amplitude)", 0.5, 0.01, 1.0, 0.05, "", "%" );
+  addInteger( "repeats", "Maximum repeats", 3, 1, 100, 2 );
 }
 
 
@@ -82,102 +57,104 @@ CalibEField::~CalibEField( void )
 int CalibEField::main( void )
 {
   // get options:
-  Reset = boolean( "reset" );
-  AM = boolean( "am" );
-  Frequency = number( "frequency" );
-  BeatFrequency = number( "beatfreq" );
-  Duration = number( "duration" );
-  Pause = number( "pause" );
-  MaxContrast = number( "maxcontrast" );
-  MaxIntensities = integer( "maxint" );
-  MinIntensityFrac = number( "minintensity" );
-  Repeats = integer( "repeats" );
-  IntensitiesOffs = int( MaxIntensities * MinIntensityFrac / ( 1.0 - MinIntensityFrac ) );
+  bool reset = boolean( "reset" );
+  bool am = boolean( "am" );
+  double frequency = number( "frequency" );
+  double beatfrequency = number( "beatfreq" );
+  double duration = number( "duration" );
+  double pause = number( "pause" );
+  double maxcontrast = number( "maxcontrast" );
+  double maxintensities = integer( "maxintensities" );
+  double minintensityfrac = number( "minintensity" );
+  int repeats = integer( "repeats" );
+  int intensitiesoffs = int( maxintensities * minintensityfrac / ( 1.0 - minintensityfrac ) );
+  int outtrace = am ? GlobalAMEField : GlobalEField;
 
   // plot:
   P[0].setXLabel( "Requested Intensity" );
-  P[0].setYLabel( AM ? "Measured AM Intensity" : "Measured EOD Intensity" );
+  P[0].setYLabel( am ? "Measured AM Intensity" : "Measured EOD Intensity" );
 
   // attenuator:
-  LAtt = dynamic_cast<base::LinearAttenuate*>( attenuator( 0, AM ? 1 : 0 ) );
-  if ( LAtt == 0 ) {
+  base::LinearAttenuate *latt = 
+    dynamic_cast<base::LinearAttenuate*>( attenuator( outtrace ) );
+  if ( latt == 0 ) {
     warning( "No Attenuator found!" );
     return Failed;
   }
 
   // data:
   const EventData &ee = events( LocalEODEvents[0] );
-  Fish = ( ee.meanSize() > 0.1 * trace( LocalEODTrace[0] ).maxValue() &&
-	   ee.count( ee.rangeBack() - 1.5 ) > 100 );
-  message( Fish ? "there IS a fish EOD" : "NO fish EOD" );
-  if ( Fish ) {
-    FishRate = ee.frequency( ee.rangeBack() - 0.5 );
-    if ( Duration * BeatFrequency < 6 ) {
-      BeatFrequency = ceil( 10.0 / Duration );
-      Str s = "Not enough beat periods! <br>Set beat frequency to "
-	+ Str( BeatFrequency ) + "Hz.";
+  bool fish = ( ee.meanSize() > 0.1 * trace( LocalEODTrace[0] ).maxValue() &&
+		ee.count( ee.rangeBack() - 1.5 ) > 100 );
+  message( fish ? "there IS a fish EOD" : "NO fish EOD" );
+  double fishrate = 0.0;
+  double fishamplitude = 0.0;
+  if ( fish ) {
+    fishrate = ee.frequency( ee.rangeBack() - 0.5 );
+    if ( duration * beatfrequency < 6 ) {
+      beatfrequency = ceil( 10.0 / duration );
+      Str s = "Not enough beat periods! <br>You should set the beat frequency to "
+	+ Str( beatfrequency ) + "Hz.";
       warning( s, 4.0 );
     }
-    if ( AM ) {
-      Frequency = BeatFrequency;
-    }
-    else {
-      Frequency = FishRate + BeatFrequency;
-    }
+    if ( am )
+      frequency = beatfrequency;
+    else
+      frequency = fishrate + beatfrequency;
     // mean EOD amplitude:
     double fishupmax = ee.meanSize( ee.back() - 0.5 );
     double fishdownmax = fabs( meanTroughs( trace( LocalEODTrace[0] ),
 					    ee.back() - 0.5, 0.5,
 					    0.2 * fishupmax ) );
-    FishAmplitude = fishupmax > fishdownmax ? fishupmax : fishdownmax;
-    Str s = "true fish EOD amplitude = " + Str( FishAmplitude );
+    fishamplitude = fishupmax > fishdownmax ? fishupmax : fishdownmax;
+    Str s = "true fish EOD amplitude = " + Str( fishamplitude );
     s += ", Up = " + Str( fishupmax );
     s += ", Down = " + Str( fishdownmax );
     message( s );
   }
-  else if ( AM ) {
+  else if ( am ) {
     warning( "Need fish EOD for calibrating amplitude modulation!" );
     return Failed;
   }
   Amplitude = 0.0;
-  RepeatCount = 0;
-  EOD2Unit = trace( LocalEODTrace[0] ).unit();
+  int repeatcount = 0;
+  LocalEODUnit = trace( LocalEODTrace[0] ).unit();
   Intensities.reserve( 100 );
-  if ( Reset ) {
-    cerr << "reset gain" << endl;
-    LAtt->setGain( 0.1, 0.0 );
+  if ( reset ) {
+    message( "reset gain" );
+    latt->setGain( 0.1, 0.0 );
   }
-  OrigGain = LAtt->gain();
-  OrigOffset = LAtt->offset();
+  double origgain = latt->gain();
+  double origoffset = latt->offset();
   FitGain = 1.0;
   FitOffset = 0.0;
   FitFlag = 0;
 
-  MaxSignal = 0.0;
+  double maxsignal = 0.0;
+  double intensitystep = 1.0;
 
-  if ( Fish )
-    IntensityStep = MaxContrast * FishAmplitude;
+  if ( fish )
+    intensitystep = maxcontrast * fishamplitude;
   else
-    IntensityStep = trace( LocalEODTrace[0] ).maxValue();
-  IntensityStep /= IntensitiesOffs + MaxIntensities  + 2;
-  Intensity = IntensityStep * IntensitiesOffs;
-  IntensityCount = 0;
+    intensitystep = trace( LocalEODTrace[0] ).maxValue();
+  intensitystep /= intensitiesoffs + maxintensities  + 2;
+  double intensity = intensitystep * intensitiesoffs;
+  int intensitycount = 0;
 
   // plot trace:
-  plotToggle( true, true, Duration, 0.0 );
+  plotToggle( true, true, duration, 0.0 );
 
   // adjust transdermal EOD:
   double val2 = trace( LocalEODTrace[0] ).maxAbs( trace( LocalEODTrace[0] ).currentTime()-0.1,
 						  trace( LocalEODTrace[0] ).currentTime() );
   if ( val2 > 0.0 )
-    adjustGain( trace( LocalEODTrace[0] ), ( 1.0 + MaxContrast ) * val2 );
+    adjustGain( trace( LocalEODTrace[0] ), ( 1.0 + maxcontrast ) * val2 );
 
   // stimulus:
   OutData signal;
-  signal.sineWave( Frequency, Duration, 1.0, 0.001 );
+  signal.sineWave( frequency, duration, 1.0, 0.001 );
   signal.back() = 0;
-  signal.setDelay( 0 );
-  signal.setChannel( AM ? 1 : 0 );
+  signal.setTrace( outtrace );
 
   for ( ; ; ) {
 
@@ -186,30 +163,29 @@ int CalibEField::main( void )
       // failed to get a succesfull testWrite():
       if ( k >= 40 ) {
 	warning( "Could not establish valid intensity!" );
-	LAtt->setGain( OrigGain, OrigOffset );
-	stop();
+	latt->setGain( origgain, origoffset );
+	stop( outtrace );
 	return Failed;
       }
 
-      signal.setIntensity( Intensity );
-      if ( Fish )
-	detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", 0.5*Intensity );
+      signal.setIntensity( intensity );
+      if ( fish )
+	detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", 0.5*intensity );
       testWrite( signal );
 
-      if ( signal.success() ) {
+      if ( signal.success() )
 	break;
-      }
 
       else if ( signal.overflow() ) {
 	cerr << "CalibEField::main() -> attenuator overflow: " << signal.intensity() << endl;
-	IntensityStep *= 0.5;
-	Intensity = IntensityStep * IntensitiesOffs;
+	intensitystep *= 0.5;
+	intensity = intensitystep * intensitiesoffs;
       }
 
       else if ( signal.underflow() ) {
 	cerr << "CalibEField::main() -> attenuator underflow: " << signal.intensity() << endl;
-	IntensityStep *= 2.0;
-	Intensity = IntensityStep * IntensitiesOffs;
+	intensitystep *= 2.0;
+	intensity = intensitystep * intensitiesoffs;
       }
 
       else if ( signal.failed() ) {
@@ -220,123 +196,130 @@ int CalibEField::main( void )
 
     write( signal );
 
-    sleep( Duration + Pause );
+    sleep( duration + pause );
     if ( interrupt() ) {
-      stop();
+      saveData( latt );
+      stop( outtrace );
       return Aborted;
     }
 
 
     // adjust analog input gains:
-    if ( !AM && EFieldSignalTrace[0] >= 0 ) {
-      double max = trace( EFieldSignalTrace[0] ).maxAbs( trace( EFieldSignalTrace[0] ).signalTime(),
-							 trace( EFieldSignalTrace[0] ).signalTime()+Duration );
-      if ( MaxSignal < max )
-	MaxSignal = max;
-      adjustGain( trace( EFieldSignalTrace[0] ), 1.1 * MaxSignal );
+    if ( !am && GlobalEFieldTrace >= 0 ) {
+      double max = trace( GlobalEFieldTrace ).maxAbs( trace( GlobalEFieldTrace ).signalTime(),
+						      trace( GlobalEFieldTrace ).signalTime()+duration );
+      if ( maxsignal < max )
+	maxsignal = max;
+      adjustGain( trace( GlobalEFieldTrace ), 1.1 * maxsignal );
     }
 
     // setup signal eod detector:
-    if ( EFieldSignalTrace[0] >= 0 && EFieldSignalEvents[0] >= 0 ) {
-      double max = trace( EFieldSignalTrace[0] ).maxValue();
-      detectorEventsOpts( EFieldSignalEvents[0] ).setMinMax( "threshold", 0.01 * max, max, 0.01*max );
-      detectorEventsOpts( EFieldSignalEvents[0] ).setNumber( "threshold", 0.1 * max );
+    if ( GlobalEFieldTrace >= 0 && GlobalEFieldEvents >= 0 ) {
+      double max = trace( GlobalEFieldTrace ).maxValue();
+      detectorEventsOpts( GlobalEFieldEvents ).setMinMax( "threshold", 0.01 * max, max, 0.01*max );
+      detectorEventsOpts( GlobalEFieldEvents ).setNumber( "threshold", 0.1 * max );
     }
 
-    analyze();
+    analyze( duration, maxcontrast, intensity, maxintensities, intensitycount,
+	     fish, fishrate );
 
-    Str s = "Loop <b>" + Str( RepeatCount+1 ) + "</b>";
-    s += ":  Tried <b>" + Str( signal.intensity(), 0, 3, 'g' ) + EOD2Unit + "</b>";
-    s += ",  Measured <b>" + Str( Amplitude, 0, 3, 'g' ) + EOD2Unit + "</b>";
+    Str s = "Loop <b>" + Str( repeatcount+1 ) + "</b>";
+    s += ":  Tried <b>" + Str( signal.intensity(), 0, 3, 'g' ) + LocalEODUnit + "</b>";
+    s += ",  Measured <b>" + Str( Amplitude, 0, 3, 'g' ) + LocalEODUnit + "</b>";
     message( s );
 
-    plot();
+    plot( ( intensitiesoffs + maxintensities + 2 ) * intensitystep );
 
     // next stimulus:
-    IntensityCount++;
-    if ( IntensityCount >= MaxIntensities || (FitFlag & 3) ) {
+    intensitycount++;
+    if ( intensitycount >= maxintensities || (FitFlag & 3) ) {
       // overflow?
       if ( FitFlag & 2 ) { 
-	cerr << "CalibEField::read() -> signal overflow: " << signal.intensity() << endl;
-	if ( Fish && IntensityCount > 1 ) {
-	  if ( Intensities.size() > MaxIntensities/2 && 
+	message( "CalibEField::main() -> signal overflow: " + Str( signal.intensity() ) );
+	if ( fish && intensitycount > 1 ) {
+	  if ( Intensities.size() > maxintensities/2 && 
 	       Intensities.size() > 2 )
-	    IntensityStep = Intensities.x(Intensities.size()-2)/(IntensitiesOffs+MaxIntensities+2);
+	    intensitystep = Intensities.x(Intensities.size()-2)/(intensitiesoffs+maxintensities+2);
 	  else
-	    IntensityStep = Intensity/(IntensitiesOffs+MaxIntensities+2);
+	    intensitystep = intensity/(intensitiesoffs+maxintensities+2);
 	}
 	else
-	  IntensityStep *= 0.5;
+	  intensitystep *= 0.5;
       }
       // underflow?
       else if ( (FitFlag & 1) && 
 		( Intensities.size() < 2 || fabs( FitGain ) < 1.0e-6 ) ) {
-	cerr << "CalibEField::read() -> signal underflow: " << signal.intensity() << endl;
-	IntensityStep *= 2.0;
+	message( "CalibEField::main() -> signal underflow: " + Str( signal.intensity() ) );
+	intensitystep *= 2.0;
       }
       // fit totally failed:
       else if ( FitGain <= 0.0 ) {
 	warning( "Negative slope. <br>Exit." );
-	LAtt->setGain( OrigGain, OrigOffset );
-	stop();
+	latt->setGain( origgain, origoffset );
+	saveData( latt );
+	stop( outtrace );
 	return Failed;
       }
       // set new parameter:
       else {
-	double offset = LAtt->offset() - FitOffset * LAtt->gain() / FitGain;
-	double gain = LAtt->gain() / FitGain;
-	LAtt->setGain( gain, offset );
+	double offset = latt->offset() - FitOffset * latt->gain() / FitGain;
+	double gain = latt->gain() / FitGain;
+	latt->setGain( gain, offset );
 	Str s = "new gain = " + Str( gain );
 	s += ",  new offset = " + Str( offset );
 	message( s );
-	RepeatCount++;
-	if ( RepeatCount == Repeats-1 ) {
+	repeatcount++;
+	if ( repeatcount == repeats-1 ) {
 	  // increase resolution:
-	  Duration *= 2.0;
-	  signal.setDelay( 0 );
-	  signal.setChannel( AM ? 1 : 0 );
-	  signal.sineWave( Frequency, Duration, 1.0, 0.001 );
+	  duration *= 2.0;
+	  signal.setTrace( outtrace );
+	  signal.sineWave( frequency, duration, 1.0, 0.001 );
 	  signal.back() = 0;
-	  MaxIntensities *= 2;
-	  IntensitiesOffs *= 2;
-	  plotToggle( true, true, Duration + Pause, 0.0 );
+	  maxintensities *= 2;
+	  intensitiesoffs *= 2;
+	  plotToggle( true, true, duration + pause, 0.0 );
 	}
-	if ( Fish )
-	  IntensityStep = MaxContrast * FishAmplitude;
+	if ( fish )
+	  intensitystep = maxcontrast * fishamplitude;
 	else
-	  IntensityStep = trace( LocalEODTrace[0] ).maxValue();
-	IntensityStep /= IntensitiesOffs + MaxIntensities + 2;
+	  intensitystep = trace( LocalEODTrace[0] ).maxValue();
+	intensitystep /= intensitiesoffs + maxintensities + 2;
 	FitGain = 1.0;
 	FitOffset = 0.0;
       }
       // ready?
-      if ( RepeatCount >= Repeats ) {
-	stop();
+      if ( repeatcount >= repeats ) {
+	saveData( latt );
+	stop( outtrace );
 	return Completed;
       }
       FitFlag = 0;
-      IntensityCount = 0;
-      Intensity = IntensityStep * IntensitiesOffs;
+      intensitycount = 0;
+      intensity = intensitystep * intensitiesoffs;
       Intensities.clear();
     }
     else
-      Intensity += IntensityStep;
+      intensity += intensitystep;
   }
 
-  stop();
+  saveData( latt );
+  stop( outtrace );
   return Completed;
 }
 
 
-void CalibEField::stop( void )
+void CalibEField::stop( int outtrace )
 {
   Intensities.free();
-  writeZero( AM ? 1 : 0 );
+  writeZero( outtrace );
 }
 
 
-void CalibEField::saveData( void )
+void CalibEField::saveData( const base::LinearAttenuate *latt )
 {
+  if ( Intensities.empty() )
+    return;
+
   // create file:
   ofstream df( addPath( "calibrate.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
@@ -345,15 +328,15 @@ void CalibEField::saveData( void )
 
   // write header and key:
   Options header;
-  header.addInteger( "device", LAtt->aoDevice() );
-  header.addInteger( "channel", LAtt->aoChannel() );
+  header.addInteger( "device", latt->aoDevice() );
+  header.addInteger( "channel", latt->aoChannel() );
   header.addText( "session time", sessionTimeStr() );
   header.save( df, "# " );
   settings().save( df, "#   " );
   df << '\n';
   TableKey key;
-  key.addNumber( "intens", EOD2Unit, "%8.5g" );
-  key.addNumber( "measured", EOD2Unit, "%8.5g" );
+  key.addNumber( "intens", LocalEODUnit, "%8.5g" );
+  key.addNumber( "measured", LocalEODUnit, "%8.5g" );
   key.saveKey( df, true, false );
 
   // write data:
@@ -366,43 +349,39 @@ void CalibEField::saveData( void )
 }
 
 
-void CalibEField::save( void )
+void CalibEField::plot( double maxx )
 {
-  saveData();
-}
-
-
-void CalibEField::plot( void )
-{
-  double x = ( IntensitiesOffs + MaxIntensities + 2 ) * IntensityStep;
   P[0].clear();
-  P[0].setXRange( 0.0, x );
-  P[0].setYRange( 0.0, RepeatCount > 0 ? x : x*FitGain+FitOffset );
-  P[0].plotLine( 0.0, 0.0, x, x, Plot::Blue, 4 );
-  P[0].plotLine( 0.0, FitOffset, x, x*FitGain+FitOffset, Plot::Yellow, 2 );
+  P[0].setXRange( 0.0, maxx );
+  P[0].setYRange( 0.0, maxx*FitGain+FitOffset );
+  P[0].plotLine( 0.0, 0.0, maxx, maxx, Plot::Blue, 4 );
+  P[0].plotLine( 0.0, FitOffset, maxx, maxx*FitGain+FitOffset, Plot::Yellow, 2 );
   P[0].plot( Intensities, 1.0, Plot::Transparent, 1, Plot::Solid, Plot::Circle, 6, Plot::Red, Plot::Red );
   P.draw();
 }
 
 
-void CalibEField::analyze( void )
+void CalibEField::analyze( double duration, double maxcontrast,
+			   double intensity,
+			   double maxintensities, int intensitycount,
+			   bool fish, double fishrate )
 {
   double a = 0.0;
-  const EventData &eod2 = events( LocalEODEvents[0] );
+  const EventData &localeod = events( LocalEODEvents[0] );
 
-  if ( Fish ) {
+  if ( fish ) {
     // fish EOD present:
 
     const EventData &bpe = events( LocalBeatPeakEvents[0] );
     const EventData &bte = events( LocalBeatTroughEvents[0] );
 
     // beat:
-    if ( bpe.count( bpe.signalTime(), bpe.signalTime()+Duration ) < 4 ) {
+    if ( bpe.count( bpe.signalTime(), bpe.signalTime()+duration ) < 4 ) {
       // no beat:
-      double offset = 10.0/FishRate;
+      double offset = 10.0/fishrate;
       double min, max;
-      eod2.minMaxSize( eod2.signalTime() + offset,
-		       eod2.signalTime() + Duration - offset,
+      localeod.minMaxSize( localeod.signalTime() + offset,
+		       localeod.signalTime() + duration - offset,
 		       min, max );
       Str s = "NO beat: min=" + Str( min );
       s += " max=" + Str( max );
@@ -423,7 +402,7 @@ void CalibEField::analyze( void )
       }
     }
 
-    double offset = 1.0 * bpe.interval( bpe.signalTime(), bpe.signalTime()+Duration );
+    double offset = 1.0 * bpe.interval( bpe.signalTime(), bpe.signalTime()+duration );
 
     // mean upper and lower beat peaks and troughs:
     double upperpeak;
@@ -431,7 +410,7 @@ void CalibEField::analyze( void )
     double lowerpeak;
     double lowertrough;
     beatPeakTroughs( trace( LocalEODTrace[0] ), bpe, bte,
-		     bpe.signalTime(), Duration, offset,
+		     bpe.signalTime(), duration, offset,
 		     upperpeak, uppertrough, lowerpeak, lowertrough );
     upperpeak = fabs( upperpeak );
     uppertrough = fabs( uppertrough );
@@ -464,8 +443,8 @@ void CalibEField::analyze( void )
     }
 
     // contrast overflow?
-    if ( max-min > MaxContrast * (max+min) &&
-	 IntensityCount < MaxIntensities-2 ) {
+    if ( max-min > maxcontrast * (max+min) &&
+	 intensitycount < maxintensities-2 ) {
       Str s = "Contrast Overflow: " + Str( (max-min)/(min+max) );
       message( s );
       FitFlag |= 2;
@@ -479,9 +458,9 @@ void CalibEField::analyze( void )
     // no fish EOD present:
 
     // mean EOD amplitude:
-    double offset = 0.1 * Duration;
-    a = eod2.meanSize( eod2.signalTime() + offset,
-		       eod2.signalTime() + Duration - offset );
+    double offset = 0.1 * duration;
+    a = localeod.meanSize( localeod.signalTime() + offset,
+			   localeod.signalTime() + duration - offset );
     
     // overflow?
     if ( a > 0.95 * trace( LocalEODTrace[0] ).maxValue() ) {
@@ -502,7 +481,7 @@ void CalibEField::analyze( void )
 
   // store data:
   Amplitude = a;
-  Intensities.push( Intensity, a );
+  Intensities.push( intensity, a );
 
   if ( Intensities.size() < 2 )
     return;

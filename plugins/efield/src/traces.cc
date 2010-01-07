@@ -26,8 +26,11 @@ namespace efield {
 
 
 int Traces::GlobalEField = -1;
+int Traces::GlobalAMEField = -1;
 int Traces::LocalEFields = 0;
 int Traces::LocalEField[MaxEFields] = { -1, -1, -1, -1, -1, -1 };
+int Traces::LocalAMEFields = 0;
+int Traces::LocalAMEField[MaxEFields] = { -1, -1, -1, -1, -1, -1 };
 
 int Traces::EODTrace = -1;
 int Traces::EODEvents = -1;
@@ -40,9 +43,12 @@ int Traces::LocalChirpEvents[MaxEFields] = { -1, -1, -1, -1, -1, -1 };
 int Traces::LocalBeatPeakEvents[MaxEFields] = { -1, -1, -1, -1, -1, -1 };
 int Traces::LocalBeatTroughEvents[MaxEFields] = { -1, -1, -1, -1, -1, -1 };
 
-int Traces::EFieldSignalTraces = 0;
-int Traces::EFieldSignalTrace[MaxEFields] = { -1, -1, -1, -1, -1, -1 };
-int Traces::EFieldSignalEvents[MaxEFields] = { -1, -1, -1, -1, -1, -1 };
+int Traces::GlobalEFieldTrace = -1;
+int Traces::GlobalEFieldEvents = -1;
+
+int Traces::LocalEFieldTraces = 0;
+int Traces::LocalEFieldTrace[MaxEFields] = { -1, -1, -1, -1, -1, -1 };
+int Traces::LocalEFieldEvents[MaxEFields] = { -1, -1, -1, -1, -1, -1 };
 
 
 Traces::Traces( void )
@@ -55,14 +61,19 @@ void Traces::initialize( const RELACSPlugin *rp,
 			 const EventList &events )
 {
   // global stimulation electrode:
-  GlobalEField = rp->outTraceIndex( "EField-global" );
+  GlobalEField = rp->outTraceIndex( "GlobalEField" );
+  GlobalAMEField = rp->outTraceIndex( "GlobalEFieldAM" );
 
   // local stimulation electrodes:
   LocalEFields = 0;
-  for ( int k=0; k<MaxEFields; k++ ) {
-    LocalEField[LocalEFields] = rp->outTraceIndex( "EField-local-" + Str( k ) );
+  LocalAMEFields = 0;
+  for ( int k=1; k<=MaxEFields; k++ ) {
+    LocalEField[LocalEFields] = rp->outTraceIndex( "LocalEField-" + Str( k ) );
     if ( LocalEField[LocalEFields] >= 0 )
       LocalEFields++;
+    LocalAMEField[LocalAMEFields] = rp->outTraceIndex( "LocalEFieldAM-" + Str( k ) );
+    if ( LocalAMEField[LocalAMEFields] >= 0 )
+      LocalAMEFields++;
   }
 				    
   // global EOD:
@@ -72,7 +83,7 @@ void Traces::initialize( const RELACSPlugin *rp,
 
   // local EODs:
   LocalEODTraces = 0;
-  for ( int k=0; k<MaxEFields; k++ ) {
+  for ( int k=1; k<=MaxEFields; k++ ) {
     LocalEODTrace[LocalEODTraces] = data.index( "LocalEOD-" + Str( k ) );
     LocalEODEvents[LocalEODTraces] = events.index( "LocalEOD-" + Str( k ) );
     LocalChirpEvents[LocalEODTraces] = events.index( "LocalChirps-" + Str( k ) );
@@ -82,13 +93,17 @@ void Traces::initialize( const RELACSPlugin *rp,
       LocalEODTraces++;
   }
 
-  // signals:
-  EFieldSignalTraces = 0;
-  for ( int k=0; k<MaxEFields; k++ ) {
-    EFieldSignalTrace[EFieldSignalTraces] = data.index( "EFieldSignal-" + Str( k ) );
-    EFieldSignalEvents[EFieldSignalTraces] = events.index( "EFieldSignal-" + Str( k ) );
-    if ( EFieldSignalTrace[EFieldSignalTraces] >= 0 )
-      EFieldSignalTraces++;
+  // global stimulation fields:
+  GlobalEFieldTrace = data.index( "GlobalEFieldStimulus" );
+  GlobalEFieldEvents = events.index( "GlobalEFieldStimulus" );
+
+  // local stimulation fields:
+  LocalEFieldTraces = 0;
+  for ( int k=1; k<=MaxEFields; k++ ) {
+    LocalEFieldTrace[LocalEFieldTraces] = data.index( "LocalEFieldStimulus-" + Str( k ) );
+    LocalEFieldEvents[LocalEFieldTraces] = events.index( "LocalEFieldStimulus-" + Str( k ) );
+    if ( LocalEFieldTrace[LocalEFieldTraces] >= 0 )
+      LocalEFieldTraces++;
   }
 }
 

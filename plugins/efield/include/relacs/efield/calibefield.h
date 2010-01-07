@@ -36,7 +36,7 @@ namespace efield {
 \class CalibEField
 \brief [RePro] Calibrates an attenuator for electric field stimuli.
 \author Jan Benda
-\version 1.3 (Dec 03, 2009)
+\version 1.3 (Jan 07, 2010)
 \bug if slope == 0 increase Gain by factor 10.
 \bug if fish, then set Duration and BeatFrequency so that we get at least 6 beats!
 
@@ -58,10 +58,12 @@ namespace efield {
 \par Plots
 The plot shows the measured versus the requested stimulus intensity (red circles).
 The yellow line is a fit of a straight line to the data.
-This line should for a successful calibration coincide with the blue 1:1 line.
+In case of a successful calibration this line should coincide
+with the blue line.
 
 \par Requirements
-- Transdermal EOD recording (\c EODTrace2) and events (\c EODEvents2).
+- Local EOD recording (\c LocalEOD), that is to be calibrated, 
+  and corresponding events (\c LocalEOD).
 */
 
 
@@ -75,49 +77,26 @@ public:
   ~CalibEField( void );
 
   virtual int main( void );
-  void stop( void );
-  void saveData( void );
-  void save( void );
+  void stop( int outtrace );
+  void saveData( const base::LinearAttenuate *latt );
 
     /*! Plot data. */
-  void plot( void );
+  void plot( double maxx );
     /*! Analyze data. */
-  void analyze( void );
+  void analyze( double duration, double maxcontrast, double intensity,
+		double maxintensities, int intensitycount,
+		bool fish, double fishrate );
 
 
 private:
-
-  base::LinearAttenuate *LAtt;
-  bool Reset;
-  double OrigGain;
-  double OrigOffset;
-
-  bool AM;
-  double Frequency;
-  double BeatFrequency;
-  double Duration;
-  double Pause;
-  int Repeats;
-  double MaxContrast;
-  int MaxIntensities;
-  double MinIntensityFrac;
-
-  bool Fish;
-  double FishRate;
-  double FishAmplitude;
 
   double FitGain;
   double FitOffset;
   int FitFlag;
   double Amplitude;
-  int RepeatCount;
-  int IntensityCount;
-  int IntensitiesOffs;
-  string EOD2Unit;
-  double MaxSignal;
-  double IntensityStep;
-  double Intensity;
+  string LocalEODUnit;
   MapD Intensities;
+
   MultiPlot P;
 
 };

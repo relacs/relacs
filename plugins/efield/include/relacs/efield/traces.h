@@ -52,14 +52,21 @@ public:
 
 protected:
 
-    /*! Maximum number of supported electric field stimulus channels. */
+    /*! Maximum number of supported electric field input or output channels. */
   static const int MaxEFields = 6;
-    /*! The index of a global electric field stimulus channel. */
+
+    /*! The index of the global electric field stimulus channel (direct stimulation). */
   static int GlobalEField;
-    /*! The number of available local electric field stimulus channels. */
+    /*! The index of the global electric field stimulus channel (amplitude modulation). */
+  static int GlobalAMEField;
+    /*! The number of available local electric field stimulus channels (direct stimulation). */
   static int LocalEFields;
-    /*! The indices of local electric field stimulus channels. */
+    /*! The indices of local electric field stimulus channels (direct stimulation). */
   static int LocalEField[MaxEFields];
+    /*! The number of available local electric field stimulus channels (amplitude modulation). */
+  static int LocalAMEFields;
+    /*! The indices of local electric field stimulus channels (amplitude modulation). */
+  static int LocalAMEField[MaxEFields];
 
     /*! The index of the trace recording the EOD of a fish. */
   static int EODTrace;
@@ -81,12 +88,17 @@ protected:
     /*! The indices of events recording the beat troughs of local EOD measurements of a fish. */
   static int LocalBeatTroughEvents[MaxEFields];
 
+    /*! The index of the trace of the recorded global electric field stimulus. */
+  static int GlobalEFieldTrace;
+    /*! The index of the events of zero crossings of the recorded global electric field stimulus. */
+  static int GlobalEFieldEvents;
+
     /*! The number of available recorded electric field stimuli. */
-  static int EFieldSignalTraces;
+  static int LocalEFieldTraces;
     /*! The indices of traces of recorded electric field stimuli. */
-  static int EFieldSignalTrace[MaxEFields];
+  static int LocalEFieldTrace[MaxEFields];
     /*! The indices of events of zero crossings of recorded electric field stimuli. */
-  static int EFieldSignalEvents[MaxEFields];
+  static int LocalEFieldEvents[MaxEFields];
 
 };
 

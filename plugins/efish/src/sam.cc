@@ -179,8 +179,7 @@ int SAM::createSignal( const InData &data, const EventData &events )
   }
   Signal->repeat( (int)rint( Duration/Signal->duration() ) );
   Signal->setStartSource( 2 );
-  Signal->setDelay( 0 );
-  Signal->setChannel( AM ? 1 : 0 );
+  Signal->setTrace( AM ? GlobalAMEField : GlobalEField );
   Str s = ident + ", C=" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%";
   s += ", Df=" + Str( DeltaF, 0, 1, 'f' ) + "Hz";
   if ( AM )
@@ -213,7 +212,7 @@ int SAM::main( void )
   }
 
   // check for SignalEvents:
-  if ( !AM && EFieldSignalEvents[0] < 0 ) {
+  if ( !AM && GlobalEFieldEvents < 0 ) {
     warning( "Need stimulus recording for non AM-stimuli!" );
     return Failed;
   }
@@ -331,7 +330,7 @@ int SAM::main( void )
     return Failed;
 
   // clear output lines:
-  // XXX  writeZero( AM ? 0 : 1 );
+  // XXX  writeZero( AM ? GlobalEField : GlobalAMEField );
 
   timeStamp();
 
@@ -425,9 +424,9 @@ int SAM::main( void )
 	      trace( NerveTrace[0] ).signalTime()+Duration,
 	      trace( NerveTrace[0] ).signalTime()+Duration+Pause,
 	      0.8 );
-    if ( EFieldSignalTrace[0] >= 0 )
-      adjustGain( trace( EFieldSignalTrace[0] ),
-		  1.05 * trace( EFieldSignalTrace[0] ).maxAbs( trace( EFieldSignalTrace[0] ).signalTime(), trace( EFieldSignalTrace[0] ).signalTime()+Duration ) );
+    if ( GlobalEFieldTrace >= 0 )
+      adjustGain( trace( GlobalEFieldTrace ),
+		  1.05 * trace( GlobalEFieldTrace ).maxAbs( trace( GlobalEFieldTrace ).signalTime(), trace( GlobalEFieldTrace ).signalTime()+Duration ) );
 
     // analyze:
     analyze();
@@ -497,7 +496,7 @@ void SAM::stop( void )
     NerveMeanAmplT.clear();
     NerveMeanAmplM.clear();
   }
-  writeZero( AM ? 1 : 0 );
+  writeZero( AM ? GlobalAMEField : GlobalEField );
 }
 
 
@@ -823,8 +822,8 @@ void SAM::analyze( void )
 
   // Delta F:
   if ( ! AM ) {
-    if ( EFieldSignalEvents[0] >= 0 )
-      TrueDeltaF = events( EFieldSignalEvents[0] ).frequency( ReadCycles ) - FishRate;
+    if ( GlobalEFieldEvents >= 0 )
+      TrueDeltaF = events( GlobalEFieldEvents ).frequency( ReadCycles ) - FishRate;
     else
       TrueDeltaF = 1.0/DeltaF;
   }
@@ -852,12 +851,12 @@ void SAM::analyze( void )
       }
     }
   }
-  else if ( EFieldSignalEvents[0] >= 0 ) {
+  else if ( GlobalEFieldEvents >= 0 ) {
     double p0 = 0.0;
     double p1 = 0.0;
     double p2 = 0.0;
     //    ofstream df( "signal.dat" );
-    const EventData &sige = events( EFieldSignalEvents[0] );
+    const EventData &sige = events( GlobalEFieldEvents );
     for ( EventIterator index = sige.begin( sige.signalTime() );
 	  index < sige.begin( eod2.signalTime() + Duration );
 	  ++index ) {
