@@ -20,7 +20,6 @@
 */
 
 #include <cmath>
-#include <sstream>
 #include <relacs/attsim.h>
 
 using namespace std;
@@ -33,12 +32,15 @@ const double AttSim::AttMax = 100.0;
 const double AttSim::AttMin = -25.0;
 
 
-double AttSim::Decibel[AttSim::MaxDevices] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+double AttSim::Decibel[AttSim::MaxDevices] = { 0, 0 };
 
 
 AttSim::AttSim( void ) 
   : Attenuator( "Attenuator Simulation" )
 {
+  Settings.clear();
+  Settings.addNumber( "level1" );
+  Settings.addNumber( "level2" );
 }
 
 
@@ -49,9 +51,12 @@ AttSim::~AttSim( void )
 
 int AttSim::open( const string &device, long mode )
 {
+  Info.clear();
   setDeviceName( "Attenuator Simulation" );
   setDeviceVendor( "RELACS" );
   setDeviceFile( device );
+  setInfo();
+  Info.addNumber( "resolution", 0.5, "dB" );
   return 0;
 }
 
@@ -64,21 +69,42 @@ bool AttSim::isOpen( void ) const
 
 void AttSim::close( void )
 {
+  Info.clear();
 }
 
 
-string AttSim::settings( void ) const
+const Options &AttSim::settings( void ) const
 {
-  ostringstream ss;
-  ss << "level1: " << Decibel[0]
-     << ";level2: " << Decibel[1];
-  return ss.str();
+  Settings.setNumber( "level1", Decibel[0] );
+  Settings.setNumber( "level2", Decibel[1] );
+  return Settings;
 }
 
 
 int AttSim::lines( void ) const
 {
   return MaxDevices;
+}
+
+
+double AttSim::minLevel( void ) const
+{
+  return AttMin;
+}
+
+
+double AttSim::maxLevel( void ) const
+{
+  return AttMax;
+}
+
+
+void AttSim::levels( vector<double> &l ) const
+{
+  l.clear();
+  l.reserve( (int)::ceil((AttMax-AttMin)/AttStep) );
+  for ( int k=0; AttMin + k*AttStep <= AttMax; k++ )
+    l.push_back( AttMin + k*AttStep );
 }
 
 

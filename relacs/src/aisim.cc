@@ -56,19 +56,24 @@ AISim::~AISim( void )
 
 int AISim::open( const string &device, long mode )
 {
-  clearSettings();
+  Info.clear();
+  Settings.clear();
   setDeviceName( "AI Simulation" );
   setDeviceVendor( "RELACS" );
   setDeviceFile( device );
+  setInfo();
   return 0;
 }
 
 
 int AISim::open( Device &device, long mode )
 {
+  Info.clear();
+  Settings.clear();
   setDeviceName( "AI Simulation" );
   setDeviceVendor( "RELACS" );
   setDeviceFile( device.deviceIdent() );
+  setInfo();
   return 0;
 }
 
@@ -81,6 +86,8 @@ bool AISim::isOpen( void ) const
 
 void AISim::close( void )
 {
+  Info.clear();
+  Settings.clear();
 }
 
 
@@ -191,7 +198,7 @@ int AISim::stop( void )
 
 int AISim::reset( void )
 {
-  clearSettings();
+  Settings.clear();
   return 0;
 }
 

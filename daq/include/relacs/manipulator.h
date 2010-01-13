@@ -34,6 +34,8 @@ namespace relacs {
 \brief Virtual class for controlling a Manipulator. 
 \author Jan Benda
 \version 1.0
+\todo implement info() and settings()
+\todo add something for indicating existing axis
 
 The Manipulator class defines an interface for basic operations
 to control a manipulator. 
@@ -84,11 +86,11 @@ public:
     /*! Move back to the home position. */
   virtual int home( void );
 
-    /*! Return the position of the z-axis.
+    /*! Return the position of the x-axis.
         Depending on the implementation this can be raw steps
 	or a specific distance or angle. */
   virtual double posX( void ) const;
-    /*! Return the position of the z-axis.
+    /*! Return the position of the y-axis.
         Depending on the implementation this can be raw steps
 	or a specific distance or angle. */
   virtual double posY( void ) const;
@@ -97,11 +99,11 @@ public:
 	or a specific distance or angle. */
   virtual double posZ( void ) const;
 
-    /*! Set the amplitude of a step of the z-axis to \a posampl.
+    /*! Set the amplitude of a step of the x-axis to \a posampl.
         If \a negampl >= 0.0 set the negative amplitude to \a negampl,
         otherwise set it equal to \a posampl. */
   virtual int setAmplX( double posampl, double negampl=-1.0 );
-    /*! Set the amplitude of a step of the z-axis to \a posampl.
+    /*! Set the amplitude of a step of the y-axis to \a posampl.
         If \a negampl >= 0.0 set the negative amplitude to \a negampl,
         otherwise set it equal to \a posampl. */
   virtual int setAmplY( double posampl, double negampl=-1.0 );

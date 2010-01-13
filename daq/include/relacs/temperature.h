@@ -47,7 +47,10 @@ public:
         \sa setDeviceClass() */
   Temperature( const string &deviceclass );
 
-    /*! The current temperature in degree celsius. */
+    /*! The current temperature in degree celsius.
+        The reimplementation of this function
+        should call Settings.setNumber( "temperature", x );
+        where \a x is the currently measured temperature. */
   virtual double temperature( void ) = 0;
 
 };

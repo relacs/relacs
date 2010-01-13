@@ -57,11 +57,19 @@ public:
     /*! Close the attenuator device driver. */
   void close( void );
 
-    /*! Returns a string with the current settings of the attenuator. */
-  virtual string settings( void ) const;
+    /*! Returns the current settings of the attenuator. */
+  virtual const Options &settings( void ) const;
 
     /*! Returns the number of attenuator devices the driver handles. */
-  int lines( void ) const;
+  virtual int lines( void ) const;
+    /*! Returns the minimum possible attenuation level in decibel.
+        This number can be negative, indicating amplification. */
+  virtual double minLevel( void ) const;
+    /*! Returns the maximum possible attenuation level in decibel. */
+  virtual double maxLevel( void ) const;
+    /*! Returns in \a l all possible attenuation levels
+        sorted by increasing attenuation levels (highest last). */
+  virtual void levels( vector<double> &l ) const;
 
     /*! Set the attenuation level of the subdevice specified by its index \a di
         to \a decibel decibel. 
@@ -73,7 +81,7 @@ public:
   int testAttenuate( int di, double &decibel );
 
 
-  static const int MaxDevices = 10;
+  static const int MaxDevices = 2;
   static double Decibel[MaxDevices];
 
 

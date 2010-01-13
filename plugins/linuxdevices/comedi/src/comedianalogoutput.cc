@@ -85,7 +85,8 @@ int ComediAnalogOutput::open( const string &device, long mode )
   if ( isOpen() )
     return -5;
 
-  clearSettings();
+  Info.clear();
+  Settings.clear();
   if ( device.empty() )
     return InvalidDevice;
 
@@ -234,6 +235,8 @@ int ComediAnalogOutput::open( const string &device, long mode )
   ComediAOs.clear();
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
+
+  setInfo();
  
   return 0;
 }
@@ -277,6 +280,7 @@ void ComediAnalogOutput::close( void )
     delete [] Cmd.chanlist;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
+  Info.clear();
 }
 
 
@@ -935,7 +939,7 @@ int ComediAnalogOutput::reset( void )
   // by closing and reopening comedi: XXX This closes the whole device, not only the subdevice!
   // the comedi_cancel seems to be sufficient!
 
-  clearSettings();
+  Settings.clear();
   ErrorState = 0;
   if ( Cmd.chanlist != 0 )
     delete [] Cmd.chanlist;

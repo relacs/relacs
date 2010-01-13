@@ -26,7 +26,6 @@
 #include <fcntl.h>   
 #include <linux/ppdev.h>
 #include <time.h>
-#include <sstream>
 #include <cmath>
 #include <relacs/attcs3310/cs3310pp.h>
 using namespace std;
@@ -40,6 +39,9 @@ CS3310PP::CS3310PP( const string &device )
   : Attenuator( "CS3310PP" ),
     Handle( -1 )
 {
+  Settings.clear();
+  Settings.addInteger( "level1" );
+  Settings.addInteger( "level2" );
   open( device );
 }
 
@@ -48,6 +50,9 @@ CS3310PP::CS3310PP( void )
   : Attenuator( "CS3310PP" ),
     Handle( -1 )
 {
+  Settings.clear();
+  Settings.addInteger( "level1" );
+  Settings.addInteger( "level2" );
 }
 
 
@@ -59,6 +64,8 @@ CS3310PP::~CS3310PP( void )
 
 int CS3310PP::open( const string &device, long mode )
 {
+  Info.clear();
+
   // open ppdev:
   Handle = ::open( device.c_str(), O_RDWR );
   // claim port:
@@ -103,6 +110,8 @@ int CS3310PP::open( const string &device, long mode )
     setDeviceFile( device );
     setDeviceVendor( "Crystal Semiconductor Corporation (Austin, TX)" );
     setDeviceName( "CS3310 stereo digital volume control" );
+    setInfo();
+    Info.addNumber( "resolution", 0.5, "dB" );
     return 0;
   }
 
@@ -125,21 +134,43 @@ void CS3310PP::close( void )
   ::ioctl( Handle, PPRELEASE );
   ::close( Handle );
   Handle = -1;
+
+  Info.clear();
 }
 
 
-string CS3310PP::settings( void ) const
+const Options &CS3310PP::settings( void ) const
 {
-  ostringstream ss;
-  ss << "level1: " << (int)Level[0]
-     << ";level2: " << (int)Level[1];
-  return ss.str();
+  Settings.setInteger( "level1", (int)Level[0] );
+  Settings.setInteger( "level2", (int)Level[1] );
+  return Settings;
 }
 
 
 int CS3310PP::lines( void ) const
 {
   return 2;
+}
+
+
+double CS3310PP::minLevel( void ) const
+{
+  return 0.5 * ( ZeroGain - MaxGain );
+}
+
+
+double CS3310PP::maxLevel( void ) const
+{
+  return 0.5 * ( ZeroGain - MinGain );
+}
+
+
+void CS3310PP::levels( vector<double> &l ) const
+{
+  l.clear();
+  l.reserve( MaxGain - MinGain + 1 );
+  for ( int k=MaxGain; k>= MinGain; k-- )
+    l.push_back( 0.5 * ( ZeroGain - MinGain ) );
 }
 
 

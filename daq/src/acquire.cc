@@ -202,6 +202,8 @@ int Acquire::addAttLine( Attenuate *att, const string &device, int channel )
     }
   }
 
+  att->init();
+
   Att.push_back( AttData( att, id ) );
 
   return 0;

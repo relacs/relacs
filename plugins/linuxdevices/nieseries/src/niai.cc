@@ -72,7 +72,8 @@ int NIAI::open( const string &device, long mode )
   if ( isOpen() )
     return -5;
 
-  clearSettings();
+  Info.clear();
+  Settings.clear();
   if ( device.empty() )
     Handle = -1;
   else
@@ -94,6 +95,8 @@ int NIAI::open( const string &device, long mode )
   else
     return InvalidDevice;
 
+  setInfo();
+
   return 0;
 }
 
@@ -107,6 +110,7 @@ bool NIAI::isOpen( void ) const
 void NIAI::close( void )
 {
   reset();
+  Info.clear();
   ::close( Handle );
   Handle = -1;
 }
@@ -538,7 +542,7 @@ int NIAI::reset( void )
   BufferSize = 0;
   BufferN = 0;
 
-  clearSettings();
+  Settings.clear();
   Traces = 0;
   ReadBufferSize = 0;
   TraceIndex = 0;

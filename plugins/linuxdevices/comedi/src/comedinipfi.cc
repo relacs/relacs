@@ -62,7 +62,9 @@ int ComediNIPFI::open( const string &device, long mode )
   if ( isOpen() )
     return -5;
 
-  clearSettings();
+  Info.clear();
+  Settings.clear();
+
   if ( device.empty() )
     return InvalidDevice;
 
@@ -123,6 +125,7 @@ int ComediNIPFI::open( const string &device, long mode )
   setDeviceName( comedi_get_board_name( DeviceP ) );
   setDeviceVendor( comedi_get_driver_name( DeviceP ) );
   setDeviceFile( device );
+  addInfo();
   
   return 0;
 }
@@ -154,6 +157,9 @@ void ComediNIPFI::close( void )
   // clear flags:
   DeviceP = NULL;
   SubDevice = 0;
+
+  Info.clear();
+  Settings.clear();
 }
 
 

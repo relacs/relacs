@@ -52,14 +52,10 @@ public:
   virtual bool isOpen( void ) const;
   virtual void close( void );
   virtual int reset( void );
-  virtual string info( void ) const;
-  virtual string settings( void ) const;
 
   virtual double temperature( void );
 
   void setProbe( int probe );
-
-  friend ostream &operator<<( ostream &str, const TempDTM5080 &k );
 
 
 private:

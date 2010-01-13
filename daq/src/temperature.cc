@@ -27,14 +27,15 @@ namespace relacs {
 Temperature::Temperature( void ) 
   : Device( TemperatureType )
 {
+  Settings.addNumber( "temperature", 0.0, "C" );
 }
 
 
 Temperature::Temperature( const string &deviceclass )
   : Device( deviceclass, TemperatureType )
 {
+  Settings.addNumber( "temperature", 0.0, "C" );
 }
-
 
 }; /* namespace relacs */
 

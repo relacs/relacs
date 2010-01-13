@@ -95,7 +95,8 @@ int ComediAnalogInput::open( const string &device, long mode )
   if ( isOpen() )
     return -5;
 
-  clearSettings();
+  Info.clear();
+  Settings.clear();
   if ( device.empty() )
     return InvalidDevice;
 
@@ -240,6 +241,8 @@ int ComediAnalogInput::open( const string &device, long mode )
   IsRunning = false;
   TotalSamples = 0;
   CurrentSamples = 0;
+
+  setInfo();
   
   return 0;
 }
@@ -287,6 +290,7 @@ void ComediAnalogInput::close( void )
   TraceIndex = 0;
   TotalSamples = 0;
   CurrentSamples = 0;
+  Info.clear();
 }
 
 
@@ -950,7 +954,7 @@ int ComediAnalogInput::reset( void )
   TotalSamples = 0;
   CurrentSamples = 0;
 
-  clearSettings();
+  Settings.clear();
 
   ErrorState = 0;
   if ( Cmd.chanlist != 0 )

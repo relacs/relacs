@@ -19,7 +19,6 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <sstream>
 #include <cmath>
 #include <unistd.h>
 #include <time.h>
@@ -34,6 +33,9 @@ CS3310DIO::CS3310DIO( DigitalIO *dio )
   : Attenuator( "CS3310DIO" ),
     DIO( 0 )
 {
+  Settings.clear();
+  Settings.addInteger( "level1" );
+  Settings.addInteger( "level2" );
   open( *dio );
 }
 
@@ -42,6 +44,9 @@ CS3310DIO::CS3310DIO( void )
   : Attenuator( "CS3310DIO" ),
     DIO( 0 )
 {
+  Settings.clear();
+  Settings.addInteger( "level1" );
+  Settings.addInteger( "level2" );
 }
 
 
@@ -53,6 +58,8 @@ CS3310DIO::~CS3310DIO( void )
 int CS3310DIO::open( DigitalIO &dio, long mode )
 {
   DIO = &dio;
+
+  Info.clear();
   
   if ( isOpen() ) {
     DIOId = DIO->allocateLine( CS );
@@ -106,6 +113,8 @@ int CS3310DIO::open( Device &device, long mode )
 
 int CS3310DIO::open( void )
 {
+  Info.clear();
+
   if ( ! isOpen() )
     return NotOpen;
 
@@ -154,6 +163,8 @@ int CS3310DIO::open( void )
     }
     setDeviceVendor( "Crystal Semiconductor Corporation (Austin, TX)" );
     setDeviceName( "CS3310 stereo digital volume control" );
+    setInfo();
+    Info.addNumber( "resolution", 0.5, "dB" );
     return 0;
   }
 
@@ -176,22 +187,43 @@ void CS3310DIO::close( void )
     DIO->freeLines( DIOId );
   }
 
+  Info.clear();
   DIO = 0;
 }
 
 
-string CS3310DIO::settings( void ) const
+const Options &CS3310DIO::settings( void ) const
 {
-  ostringstream ss;
-  ss << "level1: " << (int)Level[0]
-     << ";level2: " << (int)Level[1];
-  return ss.str();
+  Settings.setInteger( "level1", (int)Level[0] );
+  Settings.setInteger( "level2", (int)Level[1] );
+  return Settings;
 }
 
 
 int CS3310DIO::lines( void ) const
 {
   return 2;
+}
+
+
+double CS3310DIO::minLevel( void ) const
+{
+  return 0.5 * ( ZeroGain - MaxGain );
+}
+
+
+double CS3310DIO::maxLevel( void ) const
+{
+  return 0.5 * ( ZeroGain - MinGain );
+}
+
+
+void CS3310DIO::levels( vector<double> &l ) const
+{
+  l.clear();
+  l.reserve( MaxGain - MinGain + 1 );
+  for ( int k=MaxGain; k>= MinGain; k-- )
+    l.push_back( 0.5 * ( ZeroGain - MinGain ) );
 }
 
 

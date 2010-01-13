@@ -81,12 +81,6 @@ public:
         \sa open(), isOpen(), reset() */
   virtual void close( void ) = 0;
 
-    /*! Returns a string with some information about the 
-        analog input device.
-        This should include the names of possible readable internal variables
-        (see addTraces()). */
-  virtual string info( void ) const;
-
     /*! Number of analog input channels. */
   virtual int channels( void ) const = 0;
     /*! Resolution in bits of analog input. */
@@ -257,7 +251,11 @@ protected:
 	setDeviceFile(), setIdent() */
   void setAnalogInputType( int aitype );
 
-    /*! Set the settings() string for \a traces.
+    /*! Set the device info().
+        Call this function from open().
+        \sa info() */
+  void setInfo( void );
+    /*! Set the settings() for \a traces.
         Call this function from within a successful prepareRead().
 	\param[in] traces the input traces for which the settings string should be constructed.
 	\param[in] readbuffer is the size of the driver's buffer in bytes.

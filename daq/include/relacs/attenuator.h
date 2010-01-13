@@ -23,6 +23,7 @@
 #define _RELACS_ATTENUATOR_H_ 1
 
 
+#include <vector>
 #include <relacs/device.h>
 using namespace std;
 
@@ -37,8 +38,8 @@ namespace relacs {
 
 The Attenuator class defines an interface for accessing attenuator devices
 which are used to attenuate output signals.
-You have to reimplement open(), isOpen(), close(), lines(), attenuate(),
-testAttenuate() for a specific attenuator.
+You have to reimplement open(), isOpen(), close(), lines(), minLevel(),
+maxLevel(), levels(), attenuate(), testAttenuate() for a specific attenuator.
 The open(), isOpen(), and close() functions are defined in the Device class.
 
 Via a constructor or the open()-function a specific attenuator device
@@ -47,8 +48,11 @@ The isOpen()-function checks whether the device driver
 for the attenuator is valid and opened.
 With close() the device driver for the attenuator is closed.
 
-The number of utput lines which can be attenuated by the attenuator
+The number of output lines that can be attenuated by the attenuator
 is returned by lines().
+The minimum and maximum possible attenuation level is returned by minLevel()
+and maxLevel(), respectively.
+levels() returns all possible attenuation levels.
 
 The attenuation level of an output line can be set by the attenuate()-function.
 Attenuators usually can be set to discrete attenuation levels only.
@@ -96,13 +100,22 @@ public:
     /*! Destructor. Closes the attenuator device driver. */
   virtual ~Attenuator( void );
 
-    /*! Returns a string with some information about the attenuator device. */
-  virtual string info( void ) const;
-
     /*! Returns the number of output lines the attenuator device supports.
         Reimplement this  function for a specific attenuator.
-        The default implementation returns 1. */
-  virtual int lines( void ) const;
+        The default implementation returns 1.
+        \sa minLevel(), maxLevel(), levels() */
+  virtual int lines( void ) const =0;
+    /*! Returns the minimum possible attenuation level in decibel.
+        This number can be negative, indicating amplification.
+        \sa maxLevel(), levels(), lines() */
+  virtual double minLevel( void ) const =0;
+    /*! Returns the maximum possible attenuation level in decibel.
+        \sa minLevel(), levels(), lines() */
+  virtual double maxLevel( void ) const =0;
+    /*! Returns in \a l all possible attenuation levels
+        sorted by increasing attenuation levels (highest last).
+        \sa minLevel(), maxLevel(), lines() */
+  virtual void levels( vector<double> &l ) const =0;
 
     /*! Set the attenuation level of the output line specified by its index \a di
         to \a decibel decibel. 
@@ -175,6 +188,14 @@ public:
     /*! Return code indicating a too low requested attenuation level,
         i.e. the requested signal amplitude is too large. */
   static const int Overflow = -6;
+
+
+ protected:
+
+    /*! Set the device info().
+        Call this function from open().
+        \sa info() */
+  void setInfo( void );
 
 };
 

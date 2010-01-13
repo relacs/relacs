@@ -319,7 +319,7 @@ T *DeviceList<T,PluginID>::device( const string &ident )
 
 
 template < class T, int PluginID >
-  T *DeviceList<T,PluginID>::device( int type, int n )
+T *DeviceList<T,PluginID>::device( int type, int n )
 {
   int i = 0;
   for ( unsigned int k=0; k < DVs.size(); k++ ) {
@@ -350,7 +350,7 @@ void DeviceList<T,PluginID>::saveConfig( ofstream &str )
 
 
 template < class T, int PluginID >
-  void DeviceList<T,PluginID>::addMenu( QPopupMenu *menu, int &index )
+void DeviceList<T,PluginID>::addMenu( QPopupMenu *menu, int &index )
 {
   for ( unsigned int k=0; k<DVs.size(); k++, index++ ) {
 
@@ -366,25 +366,19 @@ template < class T, int PluginID >
     if ( Menus[k] == NULL )
       Menus[k] = new QPopupMenu( menu );
     Menus[k]->clear();
-    StrQueue sq1( DVs[k]->info(), ";" );
-    for ( int j=0; j<sq1.size(); j++ ) {
-      if ( ! sq1[j].empty() )
-	Menus[k]->insertItem( sq1[j].c_str() );
-    }
-    StrQueue sq2( DVs[k]->settings(), ";" );
-    if ( ! sq2.empty() && ! sq2[0].empty() )
+    for ( int j=0; j<DVs[k]->info().size(); j++ )
+      Menus[k]->insertItem( DVs[k]->info()[j].save( false, true ) );
+    if ( ! DVs[k]->settings().empty() )
       Menus[k]->insertSeparator();
-    for ( int j=0; j<sq2.size(); j++ ) {
-      if ( ! sq2[j].empty() )
-	Menus[k]->insertItem( sq2[j].c_str() );
-    }
+    for ( int j=0; j<DVs[k]->settings().size(); j++ )
+      Menus[k]->insertItem( DVs[k]->settings()[j].save( false, true ) );
     menu->insertItem( s.c_str(), Menus[k] );
   }
 }
 
 
 template < class T, int PluginID >
-  void DeviceList<T,PluginID>::updateMenu( void )
+void DeviceList<T,PluginID>::updateMenu( void )
 {
   for ( unsigned int k=0; k<DVs.size(); k++ ) {
 
@@ -392,18 +386,12 @@ template < class T, int PluginID >
       continue;
 
     Menus[k]->clear();
-    StrQueue sq1( DVs[k]->info(), ";" );
-    for ( int j=0; j<sq1.size(); j++ ) {
-      if ( ! sq1[j].empty() )
-	Menus[k]->insertItem( sq1[j].c_str() );
-    }
-    StrQueue sq2( DVs[k]->settings(), ";" );
-    if ( ! sq2.empty() && ! sq2[0].empty() )
+    for ( int j=0; j<DVs[k]->info().size(); j++ )
+      Menus[k]->insertItem( DVs[k]->info()[j].save( false, true ) );
+    if ( ! DVs[k]->settings().empty() )
       Menus[k]->insertSeparator();
-    for ( int j=0; j<sq2.size(); j++ ) {
-      if ( ! sq2[j].empty() )
-	Menus[k]->insertItem( sq2[j].c_str() );
-    }
+    for ( int j=0; j<DVs[k]->settings().size(); j++ )
+      Menus[k]->insertItem( DVs[k]->settings()[j].save( false, true ) );
   }
 }
 

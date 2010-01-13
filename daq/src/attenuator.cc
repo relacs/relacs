@@ -43,20 +43,6 @@ Attenuator::~Attenuator( void )
 }
 
 
-string Attenuator::info( void ) const
-{
-  ostringstream ss;
-  ss << ";lines: " << lines();
-  return Device::info() + ss.str();
-}
-
-
-int Attenuator::lines( void ) const
-{
-  return 1;
-}
-
-
 int Attenuator::mute( int di )
 {
   double l = MuteAttenuationLevel;
@@ -68,6 +54,16 @@ int Attenuator::testMute( int di )
 {
   double l = MuteAttenuationLevel;
   return testAttenuate( di, l );
+}
+
+
+void Attenuator::setInfo( void )
+{
+  Info.clear();
+  Device::addInfo();
+  Info.addInteger( "lines", lines() );
+  Info.addNumber( "minimum attenuation level", minLevel(), "dB" );
+  Info.addNumber( "maximum attenuation level", maxLevel(), "dB" );
 }
 
 

@@ -59,7 +59,8 @@ AnalogOutput::~AnalogOutput( void )
 
 int AnalogOutput::open( const string &device, long mode )
 {
-  clearSettings();
+  Info.clear();
+  Settings.clear();
   setDeviceFile( device );
   return InvalidDevice;
 }
@@ -67,7 +68,8 @@ int AnalogOutput::open( const string &device, long mode )
 
 int AnalogOutput::open( Device &device, long mode )
 {
-  clearSettings();
+  Info.clear();
+  Settings.clear();
   setDeviceFile( device.deviceIdent() );
   return InvalidDevice;
 }
@@ -75,6 +77,7 @@ int AnalogOutput::open( Device &device, long mode )
 
 int AnalogOutput::reset( void )
 {
+  Settings.clear();
   return 0;
 }
 
@@ -108,32 +111,31 @@ int AnalogOutput::matchTraces( vector< TraceSpec > &traces ) const
 }
 
 
-string AnalogOutput::info( void ) const
+void AnalogOutput::setInfo( void )
 {
-  ostringstream ss;
-  ss << ";channels: " << channels();
-  ss << ";bits: " << bits();
-  ss << ";max sampling rate: " << 0.001*maxRate() << " kHz";
-  return Device::info() + ss.str();
+  Info.clear();
+  Device::addInfo();
+  if ( isOpen() ) {
+    Info.addInteger( "channels", channels() );
+    Info.addInteger( "bits", bits() );
+    Info.addNumber( "max sampling rate", 0.001*maxRate(), " kHz" );
+  }
 }
 
 
 void AnalogOutput::setSettings( const OutList &sigs, int writebuffer )
 {
-  ostringstream ss;
-  for ( int k=0; k<sigs.size(); k++ ) {
-    ss << "channel: " << sigs[k].channel() << ';';
-  }
-  ss << "continuous: " << ( sigs[0].continuous() ? "yes" : "no" );
-  ss << ";startsource: " << sigs[0].startSource();
-  ss << ";delay: " << 1000.0*sigs[0].delay() << "ms";
-  ss << ";sampling rate: " << 0.001*sigs[0].sampleRate() << "kHz";
-  if ( sigs[0].writeTime() && writebuffer >= 0 )
-    ss << ";write buffer time: " << 1000.0*sigs[0].writeTime() << "ms";
+  Settings.clear();
+  for ( int k=0; k<sigs.size(); k++ )
+    Settings.addInteger( "channel", sigs[k].channel() );
+  Settings.addBoolean( "continuous", sigs[0].continuous() );
+  Settings.addInteger( "startsource", sigs[0].startSource() );
+  Settings.addNumber( "delay", 1000.0*sigs[0].delay(), "ms" );
+  Settings.addNumber( "sampling rate", 0.001*sigs[0].sampleRate(), "kHz" );
+  if ( sigs[0].writeTime() > 0.0 && writebuffer >= 0 )
+    Settings.addNumber( "write buffer time", 1000.0*sigs[0].writeTime(), "ms" );
   if ( writebuffer > 0 )
-    ss << ";write buffer size: " << writebuffer << "Byte";
-
-  Device::setSettings( ss.str() );
+    Settings.addNumber( "write buffer size", writebuffer, "Byte" );
 }
 
 

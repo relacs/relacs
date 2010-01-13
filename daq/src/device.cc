@@ -37,8 +37,7 @@ Device::Device( int type )
     DeviceIdent( "" ),
     DeviceFile( "" ),
     DeviceName( "" ),
-    DeviceVendor( "" ),
-    Settings( "" )
+    DeviceVendor( "" )
 {
 }
 
@@ -49,8 +48,7 @@ Device::Device( const string &deviceclass, int type )
     DeviceIdent( "" ),
     DeviceFile( "" ),
     DeviceName( "" ),
-    DeviceVendor( "" ),
-    Settings( "" )
+    DeviceVendor( "" )
 {
 }
 
@@ -80,42 +78,29 @@ int Device::reset( void )
 }
 
 
-string Device::info( void ) const
+const Options &Device::info( void ) const
 {
-  string s = "";
-  ostringstream ss;
-  ss << "type: " << deviceType();
-  s += ss.str();
-  s += ";class: " + deviceClass();
-  s += ";ident: " + deviceIdent();
-  if ( ! deviceName().empty() )
-    s += ";name: " + deviceName();
-  if ( ! deviceVendor().empty() )
-    s += ";vendor: " + deviceVendor();
-  s += ";file: " + deviceFile();
-  if ( isOpen() )
-    s += ";status: open";
-  else
-    s += ";status: not open";
-  return s;
+  return Info;
 }
 
 
-string Device::settings( void ) const
+void Device::addInfo( void )
+{
+  Info.addInteger( "type", deviceType() );
+  Info.addText( "class", deviceClass() );
+  Info.addText( "ident", deviceIdent() );
+  if ( ! deviceName().empty() )
+    Info.addText( "name", deviceName() );
+  if ( ! deviceVendor().empty() )
+  Info.addText( "vendor", deviceVendor() );
+  Info.addText( "file", deviceFile() );
+  Info.addText( "status", isOpen() ? "open" : "not open" );
+}
+
+
+const Options &Device::settings( void ) const
 {
   return Settings;
-}
-
-
-void Device::setSettings( const string &settings )
-{
-  Settings = settings;
-}
-
-
-void Device::clearSettings( void )
-{
-  Settings = "";
 }
 
 

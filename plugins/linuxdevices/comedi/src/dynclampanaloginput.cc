@@ -106,6 +106,9 @@ DynClampAnalogInput::~DynClampAnalogInput( void )
 
 int DynClampAnalogInput::open( const string &device, long mode )
 { 
+  Info.clear();
+  Settings.clear();
+
   if ( device.empty() )
     return InvalidDevice;
   setDeviceFile( device );
@@ -229,6 +232,8 @@ int DynClampAnalogInput::open( const string &device, long mode )
 
   IsPrepared = false;
 
+  setInfo();
+
   return 0;
 }
 
@@ -263,6 +268,8 @@ void DynClampAnalogInput::close( void )
   delete [] BipConverter;
   UnipConverter = 0;
   BipConverter = 0;
+
+  Info.clear();
 }
 
 
@@ -758,7 +765,7 @@ int DynClampAnalogInput::reset( void )
   BufferSize = 0;
   BufferN = 0;
 
-  clearSettings();
+  Settings.clear();
   ErrorState = 0;
 
   return retval;

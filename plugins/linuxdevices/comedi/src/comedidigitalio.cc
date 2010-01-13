@@ -65,7 +65,8 @@ int ComediDigitalIO::open( const string &device, long mode )
     return -5;
 
   freeLines();
-  clearSettings();
+  Info.clear();
+  Settings.clear();
   if ( device.empty() )
     return InvalidDevice;
 
@@ -106,6 +107,8 @@ int ComediDigitalIO::open( const string &device, long mode )
 
   // get maximum number of output lines:
   MaxLines = comedi_get_n_channels( DeviceP, SubDevice );
+
+  setInfo();
   
   return 0;
 }
@@ -137,6 +140,9 @@ void ComediDigitalIO::close( void )
   // clear flags:
   DeviceP = NULL;
   SubDevice = 0;
+
+  Info.clear();
+  Settings.clear();
 }
 
 

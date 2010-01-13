@@ -19,7 +19,6 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <sstream>
 #include <cmath>
 #include <unistd.h>
 #include <time.h>
@@ -36,6 +35,9 @@ CS3310NIDIO::CS3310NIDIO( const string &device )
     DIO( 0 ),
     Own( false )
 {
+  Settings.clear();
+  Settings.addInteger( "level1" );
+  Settings.addInteger( "level2" );
   open( device );
 }
 
@@ -45,6 +47,9 @@ CS3310NIDIO::CS3310NIDIO( NIDIO *nidio )
     DIO( 0 ),
     Own( false )
 {
+  Settings.clear();
+  Settings.addInteger( "level1" );
+  Settings.addInteger( "level2" );
   open( *nidio );
 }
 
@@ -54,6 +59,9 @@ CS3310NIDIO::CS3310NIDIO( void )
     DIO( 0 ),
     Own( false )
 {
+  Settings.clear();
+  Settings.addInteger( "level1" );
+  Settings.addInteger( "level2" );
 }
 
 
@@ -66,6 +74,8 @@ CS3310NIDIO::~CS3310NIDIO( void )
 
 int CS3310NIDIO::open( const string &device, long mode )
 {
+  Info.clear();
+
   if ( DIO != 0  && !DIO->isOpen() ) {
     if ( Own )
       delete DIO;
@@ -106,6 +116,8 @@ int CS3310NIDIO::open( const string &device, long mode )
 
 int CS3310NIDIO::open( NIDIO &nidio, long mode )
 {
+  Info.clear();
+
   if ( DIO != 0  && !DIO->isOpen() ) {
     if ( Own )
       delete DIO;
@@ -146,6 +158,8 @@ int CS3310NIDIO::open( Device &device, long mode )
 
 int CS3310NIDIO::open( void )
 {
+  Info.clear();
+
   if ( ! isOpen() )
     return NotOpen;
 
@@ -185,6 +199,8 @@ int CS3310NIDIO::open( void )
     }
     setDeviceVendor( "Crystal Semiconductor Corporation (Austin, TX)" );
     setDeviceName( "CS3310 stereo digital volume control" );
+    setInfo();
+    Info.addNumber( "resolution", 0.5, "dB" );
     return 0;
   }
 
@@ -211,21 +227,42 @@ void CS3310NIDIO::close( void )
   }
   DIO = 0;
   Own = false;
+  Info.clear();
 }
 
 
-string CS3310NIDIO::settings( void ) const
+const Options &CS3310NIDIO::settings( void ) const
 {
-  ostringstream ss;
-  ss << "level1: " << (int)Level[0]
-     << ";level2: " << (int)Level[1];
-  return ss.str();
+  Settings.setInteger( "level1", (int)Level[0] );
+  Settings.setInteger( "level2", (int)Level[1] );
+  return Settings;
 }
 
 
 int CS3310NIDIO::lines( void ) const
 {
   return 2;
+}
+
+
+double CS3310NIDIO::minLevel( void ) const
+{
+  return 0.5 * ( ZeroGain - MaxGain );
+}
+
+
+double CS3310NIDIO::maxLevel( void ) const
+{
+  return 0.5 * ( ZeroGain - MinGain );
+}
+
+
+void CS3310NIDIO::levels( vector<double> &l ) const
+{
+  l.clear();
+  l.reserve( MaxGain - MinGain + 1 );
+  for ( int k=MaxGain; k>= MinGain; k-- )
+    l.push_back( 0.5 * ( ZeroGain - MinGain ) );
 }
 
 

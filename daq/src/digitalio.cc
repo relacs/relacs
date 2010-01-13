@@ -19,7 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <sstream>
+#include <relacs/str.h>
 #include <relacs/digitalio.h>
 
 using namespace std;
@@ -42,7 +42,8 @@ DigitalIO::~DigitalIO( void )
 int DigitalIO::open( const string &device, long mode )
 {
   freeLines();
-  clearSettings();
+  Info.clear();
+  Settings.clear();
   setDeviceFile( device );
   return InvalidDevice;
 }
@@ -51,17 +52,21 @@ int DigitalIO::open( const string &device, long mode )
 int DigitalIO::open( Device &device, long mode )
 {
   freeLines();
-  clearSettings();
+  Info.clear();
+  Settings.clear();
   setDeviceFile( device.deviceIdent() );
   return InvalidDevice;
 }
 
 
-string DigitalIO::info( void ) const
+const Options &DigitalIO::settings( void ) const
 {
-  ostringstream ss;
-  ss << ";lines: " << lines();
-  return Device::info() + ss.str();
+  Settings.clear();
+  for ( int k=0; k<lines(); k++ ) {
+    if ( DIOLines[k] > 0 )
+      Settings.addInteger( "line"+Str(k), DIOLines[k] );
+  }
+  return Settings;
 }
 
 
@@ -165,6 +170,14 @@ bool DigitalIO::allocated( int line )
     return false;
 
   return ( DIOLines[line] > 0 );
+}
+
+
+void DigitalIO::setInfo( void )
+{
+  Info.clear();
+  Device::addInfo();
+  Info.addInteger( "lines", lines() );
 }
 
 

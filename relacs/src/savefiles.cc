@@ -901,7 +901,6 @@ void SaveFiles::createXMLFile( const InList &traces,
       if ( dt == Device::AttenuateType )
 	continue;
       string dts = dev.deviceTypeStr();
-      cerr << "DEVICETYPE " << dt << " " << dts << '\n';
       if ( dt == Device::AnalogInputType )
 	dts = "DataAcquisition";
       else if ( dt == Device::AnalogOutputType )
@@ -910,8 +909,7 @@ void SaveFiles::createXMLFile( const InList &traces,
 	dts = "DigitialIO";
       else if ( dt == Device::AttenuateType )
 	dts = "Attenuation";
-      Options opts;
-      opts.load( dev.info() );
+      Options opts( dev.info() );
       opts.erase( "type" );
       *XF << "    <section name=\"" << dts << "\">\n";
       opts.saveXML( *XF, 0, 3, dts+"." ); 

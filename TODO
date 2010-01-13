@@ -48,7 +48,6 @@ Thread safety:
     the application freezes.
 
 Metadata:
-- Devices should get and use Options for their settings
 - OutData should get and use Options for stimulus metadata
 - stimulus section needs a name, a file (if available) and properties
 - A new metadatawriter class instead of saveXML functions
@@ -221,7 +220,6 @@ Macros:
 Devices:
   - mechanism for passing name=value pairs to open()
   - Add and implement probe() and possibly requires() function
-  - implement settings() (AnalogIn/Output, Attenuator, Attenuate already done)
   - implement "dummy (DocDevice)" devices that only get infos from
     the config file and thus serve as documentation of all the used hardware.
 

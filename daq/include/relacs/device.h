@@ -25,6 +25,7 @@
 
 #include <iostream>
 #include <string>
+#include <relacs/options.h>
 using namespace std;
 
 namespace relacs {
@@ -41,12 +42,6 @@ The Device class defines the interface for the basic operations open(),
 close(), and reset() of a device. 
 You have to implement at least the isOpen(), close() and one of the
 two open() functions.
-
-Reimplement the info() function to return some usefull information
-about the capabilities of the specific device.
-The settings() functions returns information about the current
-settings of the specific device. This string can be set by setSettings()
-and cleared by clearSettings().
 
 A subclass of Device can be identified by its \a deviceType().
 For example, the Temperature class provides a uniqe interface for measuring
@@ -71,6 +66,14 @@ deviceName() and deviceVendor().
 Both should be set from within the open() function using 
 setDeviceName() and setDeviceVendor().
 The device file on which the device was opened is returned by deviceFile().
+
+The info() function returns Options that contain some usefull information
+about the capabilities of the specific device.
+The settings() functions returns Options containing
+information about the current
+settings of the specific device.
+You should fill in both info() and settings() in an implementation
+of the Device class.
 
 There are four flags for indicating errors with handling the device:
 NotOpen, InvalidDevice, ReadError, and WriteError.
@@ -118,6 +121,9 @@ public:
 	\a device should be passed to setDeviceFile()
 	and the name and the vendor of the device should be set
 	with setDeviceName() and setDeviceVendor().
+        The info() should be set in the implementation of open()
+	by the info().addNumber(), info().addText(), etc. functions.
+        For adding some default information to info() you may use addInfo().
 	Returns zero on success, or InvalidDevice (or any other negative number
 	indicating the error).
         \sa isOpen(), close(), reset() */
@@ -128,6 +134,9 @@ public:
 	\a device should be passed to setDeviceFile()
 	and the name and the vendor of the device should be set
 	with setDeviceName() and setDeviceVendor().
+        The info() should be set in the implementation of open()
+	by the info().addNumber(), info().addText(), etc. functions.
+        For adding some default information to info() you may use addInfo().
 	Returns zero on success, or InvalidDevice (or any other negative number
 	indicating the error).
         \sa isOpen(), close(), reset() */
@@ -136,6 +145,8 @@ public:
         \sa open(), close(), reset() */
   virtual bool isOpen( void ) const = 0;
     /*! Close the device.
+        info() should be cleared in an implementation of close()
+	by caling Info.clear().
         \sa open(), isOpen(), reset() */
   virtual void close( void ) = 0;
     /*! Reset the device. 
@@ -144,19 +155,18 @@ public:
         \sa close(), open(), isOpen() */
   virtual int reset( void );
 
-    /*! Returns a string with some information about the capabilities of 
+    /*! Returns some information about the capabilities of 
         the device (for example, maximum possible sampling rate).
-        The string is a series of 'name: value' pairs separated by semicolons ';'.
-	This implementation returns the device's type (deviceType()),
-	class (deviceClass()), identifier (deviceIdent()), name (deviceName()),
-	vencdor (deviceVendor()), file (deviceFile()), and status (isOpen()).
+	This function can be reimplemented to set the
+	the infos right before returning them.
         \sa settings() */
-  virtual string info( void ) const;
-    /*! Returns a string with some information about the current settings 
+  virtual const Options &info( void ) const;
+    /*! Returns some information about the current settings 
         of the device (for example, the currently used sampling rate).
-        The string is a series of 'name: value' pairs separated by semicolons ';'.
-        \sa setSettings(), clearSettings(), info() */
-  string settings( void ) const;
+	This function can be reimplemented to set the
+	the settings right before returning them.
+        \sa info() */
+  virtual const Options &settings( void ) const;
 
     /*! The id of the device type.
         \sa deviceTypeStr() setDeviceType(), deviceClass(), deviceFile(), deviceIdent(),
@@ -199,7 +209,7 @@ public:
 	setDeviceName(), setDeviceVendor() */
   virtual void setDeviceIdent( const string &ident );
 
-    /*! Write the info() string to \a str. */
+    /*! Write info() to \a str. */
   friend ostream &operator<<( ostream &str, const Device &d );
 
 
@@ -233,13 +243,15 @@ protected:
 	setDeviceFile(), setDeviceName() */
   void setDeviceVendor( const string &devicevendor );
 
-    /*! Set the string describing the settings of the dvice to \a settings.
-        The string is a series of 'name: value' pairs separated by semicolons ';'.
-        \sa settings(), clearSettings() */
-  void setSettings( const string &settings );
-    /*! Clear the settings() string. 
-        \sa settings(), setSettings() */
-  void clearSettings( void );
+    /*! Adds the device's type (deviceType()),
+	class (deviceClass()), identifier (deviceIdent()), name (deviceName()),
+	vencdor (deviceVendor()), file (deviceFile()), and status (isOpen())
+	to info().
+        \sa info(), settings() */
+  void addInfo( void );
+
+  mutable Options Info;
+  mutable Options Settings;
 
 
 private:
@@ -253,7 +265,6 @@ private:
   string DeviceFile;
   string DeviceName;
   string DeviceVendor;
-  string Settings;
 
 };
 

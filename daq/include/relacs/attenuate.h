@@ -34,6 +34,7 @@ namespace relacs {
 \class Attenuate
 \brief Attenuates a single output channel.
 \author Jan Benda
+\todo check whether we really need the init() function (versus config()!)
 
 This class is an interface for attenuating a single output line.
 It allows to convert a requested intensity into an attenuation level
@@ -153,14 +154,23 @@ public:
         \sa close(), open(), isOpen() */
   void clear ( void );
 
-    /*! Returns a string with some information about the Attenuate device. */
-  virtual string info( void ) const;
+    /*! Returns the minimum possible intensity that can be set
+        by the current attenuator device at the given stimulus frequency.
+        This usually is the intensity at the minimum attenuation level
+	Attenuator::minLevel(). */
+  double minIntensity( double frequency ) const;
+    /*! Returns the maximum possible intensity that can be set
+        by the current attenuator device at the given stimulus frequency.
+        This usually is the intensity at the maximum attenuation level
+	Attenuator::maxLevel(). */
+  double maxIntensity( double frequency ) const;
 
   /*! This function is called after an attenuator is assigned to this class
       and before the attenuator is used.
-      The default implementation does nothing.
-      However, you can reimplement this function to load calibration data,
+      The default implementation sets the info().
+      You can reimplement this function to load calibration data,
       for example.
+      Don't forget to call Attenuate::init() or set info() yourself.
       \sa open() */
   virtual void init( void );
 
@@ -366,7 +376,7 @@ protected:
 	intensityName(), intensityUnit(), intensityFormat(),
 	frequencyName(), frequencyUnit(), frequencyFormat()
     */
-  virtual int decibel( double intensity, double frequency, double &db )=0;
+  virtual int decibel( double intensity, double frequency, double &db ) const =0;
     /*! Transform the attenuation level \a decibel
         for the carrier frequency \a frequency of the signal into
         the intesity \a intens.
@@ -377,7 +387,7 @@ protected:
 	intensityName(), intensityUnit(), intensityFormat(),
 	frequencyName(), frequencyUnit(), frequencyFormat()
     */
-  virtual void intensity( double &intens, double frequency, double decibel )=0;
+  virtual void intensity( double &intens, double frequency, double decibel ) const =0;
 
     /*! Set the name of the intensity the specific implementation of
         Attenuate is using to \a name.

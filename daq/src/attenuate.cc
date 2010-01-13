@@ -19,7 +19,6 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <sstream>
 #include <relacs/attenuate.h>
 using namespace std;
 
@@ -72,7 +71,8 @@ Attenuate::~Attenuate( void )
 
 int Attenuate::open( Device &att, long index )
 {
-  clearSettings();
+  Info.clear();
+  Settings.clear();
   Att = &dynamic_cast<Attenuator&>( att );
   Index = index;
   if ( Att == NULL )
@@ -88,7 +88,8 @@ int Attenuate::open( Device &att, long index )
 
 int Attenuate::open( const string &device, long index )
 {
-  clearSettings();
+  Info.clear();
+  Settings.clear();
   return InvalidDevice;
 }
 
@@ -106,7 +107,8 @@ void Attenuate::close( void )
     Att->close();
   Att = 0;
   Index = -1;
-  clearSettings();
+  Info.clear();
+  Settings.clear();
 }
 
 
@@ -114,23 +116,39 @@ void Attenuate::clear( void )
 {
   Att = 0;
   Index = -1;
-  clearSettings();
+  Info.clear();
+  Settings.clear();
 }
 
 
-string Attenuate::info( void ) const
+double Attenuate::minIntensity( double frequency ) const
 {
-  ostringstream ss;
-  ss << ";analog output device: " << aoDevice();
-  ss << ";analog output channel: " << aoChannel();
-  ss << ";attenuator device: " << ( Att != 0 ? Att->deviceIdent() : "" );
-  ss << ";attenuator line: " << Index;
-  return Device::info() + ss.str();
+  double intens1 = 0.0;
+  intensity( intens1, frequency, Att->minLevel() );
+  double intens2 = 0.0;
+  intensity( intens2, frequency, Att->maxLevel() );
+  return intens1 < intens2 ? intens1 : intens2;
+}
+
+
+double Attenuate::maxIntensity( double frequency ) const
+{
+  double intens1 = 0.0;
+  intensity( intens1, frequency, Att->minLevel() );
+  double intens2 = 0.0;
+  intensity( intens2, frequency, Att->maxLevel() );
+  return intens1 > intens2 ? intens1 : intens2;
 }
 
 
 void Attenuate::init( void )
 {
+  Info.clear();
+  Device::addInfo();
+  Info.addText( "analog output device", aoDevice() );
+  Info.addInteger( "analog output channel", aoChannel() );
+  Info.addText( "attenuator device", Att != 0 ? Att->deviceIdent() : "" );
+  Info.addInteger( "attenuator line", Index );
 }
 
 
@@ -157,10 +175,10 @@ int Attenuate::write( double &intens, double frequency )
   intensity( intens, frequency, db );
 
   // settings:
-  ostringstream ss;
-  ss << "intensity: " << intens
-     << ";frequency: " << frequency;
-  setSettings( ss.str() );
+  Settings.clear();
+  Settings.addNumber( IntensityName, intens, IntensityUnit, IntensityFormat );
+  if ( ! FrequencyName.empty() )
+    Settings.addNumber( FrequencyName, frequency, FrequencyUnit, FrequencyFormat );
 
   return r;
 }
@@ -192,9 +210,8 @@ int Attenuate::mute( void )
     return Attenuator::NotOpen;
 
   // settings:
-  ostringstream ss;
-  ss << "intensity: muted";
-  setSettings( ss.str() );
+  Settings.clear();
+  Settings.addText( IntensityName, "muted" );
 
   return Att->mute( Index );
 }

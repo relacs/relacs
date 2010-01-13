@@ -46,7 +46,7 @@ DecibelAttenuate::~DecibelAttenuate( void )
 }
 
 
-int DecibelAttenuate::decibel( double intensity, double frequency, double &db )
+int DecibelAttenuate::decibel( double intensity, double frequency, double &db ) const
 {
   if ( intensity == 0.0 )
     db = MuteAttenuationLevel;
@@ -58,7 +58,7 @@ int DecibelAttenuate::decibel( double intensity, double frequency, double &db )
 
 
 void DecibelAttenuate::intensity( double &intens, double frequency,
-				  double decibel )
+				  double decibel ) const
 {
   if ( decibel != MuteAttenuationLevel )
     intens = ( decibel - Offset )/ Gain;

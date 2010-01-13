@@ -80,12 +80,6 @@ public:
         \sa open(), isOpen(), reset() */
   virtual void close( void ) = 0;
 
-    /*! Returns a string with some information about the 
-        analog output device.
-        This should include the names of possible writeable parameter
-        (see addTraces()). */
-  virtual string info( void ) const;
-
     /*! Number of analog output channels. */
   virtual int channels( void ) const = 0;
     /*! Resolution in bits of analog output. */
@@ -268,7 +262,11 @@ protected:
         \sa analogOutputType(), setDeviceType(), setDeviceName(), setIdent() */
   void setAnalogOutputType( int aotype );
 
-    /*! Set the settings() string for \a sigs.
+    /*! Set the device info().
+        Call this function from open().
+        \sa info() */
+  void setInfo( void );
+    /*! Set the settings() for \a sigs.
         Call this function from within a successful prepareWrite().
 	\param[in] sigs the output data fro which the settings string should be constructed.
 	\param[in] writebuffer is the size of the driver's buffer in bytes.

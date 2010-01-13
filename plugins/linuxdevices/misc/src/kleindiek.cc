@@ -73,6 +73,9 @@ int Kleindiek::open( const string &device, long mode )
   if ( Handle >= 0 )
     return 0;
 
+  Info.clear();
+  Settings.clear();
+
   // open device:
   Handle = ::open( device.c_str(), O_RDWR | O_NOCTTY );
   if ( Handle < 0 ) {
@@ -106,6 +109,7 @@ int Kleindiek::open( const string &device, long mode )
   setDeviceName( "MM3A" );
   setDeviceVendor( "Kleindiek Nanotechnik GmbH" );
   setDeviceFile( device );
+  Device::addInfo();
 
   return 0;
 }
@@ -117,6 +121,8 @@ void Kleindiek::close( void )
     tcsetattr( Handle, TCSANOW, &OldTIO );
   Handle = -1;
   clear();
+  Info.clear();
+  Settings.clear();
 }
 
 

@@ -6,6 +6,7 @@ if RELACS_TOP_BUILD
 librelacsdaq_la_CPPFLAGS = \
     $(GSL_CPPFLAGS) \
     -I$(srcdir)/../../numerics/include \
+    -I$(srcdir)/../../options/include \
     -I$(srcdir)/../include
 else
 librelacsdaq_la_CPPFLAGS = \
@@ -20,6 +21,7 @@ librelacsdaq_la_LDFLAGS = \
 if RELACS_TOP_BUILD
 librelacsdaq_la_LIBADD = \
     ../../numerics/src/librelacsnumerics.la \
+    ../../options/src/librelacsoptions.la \
     $(GSL_LIBS)
 else
 librelacsdaq_la_LIBADD = \

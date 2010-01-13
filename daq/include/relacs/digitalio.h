@@ -64,13 +64,17 @@ public:
     /*! Open the digital I/O device specified by \a device.
  	\return zero on success, or InvalidDevice (or any other negative number
 	indicating the error).
-	You should call freeLines() somewhere in the reimplmentation of this function.
+	You should call freeLines() somewhere at the beginning 
+	and setInfo() somewhere at the end of 
+	the reimplmentation of this function.
         \sa isOpen(), close() */
   virtual int open( const string &device, long mode=0 );
     /*! Open the digital I/O device specified by \a device.
-	You should call freeLines() somewhere in the reimplmentation of this function.
 	\return zero on success, or InvalidDevice (or any other negative number
 	indicating the error).
+	You should call freeLines() somewhere at the beginning 
+	and setInfo() somewhere at the end of 
+	the reimplmentation of this function.
         \sa isOpen(), close() */
   virtual int open( Device &device, long mode=0 );
     /*! \return \c true if the device is open.
@@ -80,12 +84,11 @@ public:
         \sa open(), isOpen() */
   virtual void close( void ) = 0;
 
-    /*! Returns a string with some information about the 
-        digital I/O device. */
-  virtual string info( void ) const;
-
     /*! \return the number of digital I/O lines the device supports */
   virtual int lines( void ) const = 0;
+
+    /*! Returns the ids for each digital I/O line. */
+  virtual const Options &settings( void ) const;
 
     /*! Allocate the lines \a lines of the digital I/O device.
         \return the id, a positive number, of the allocated lines
@@ -148,6 +151,11 @@ protected:
     /*! Free all allocated digital I/O lines.
         \sa freeLines() */
   void freeLines( void );
+
+    /*! Set the device info().
+        Call this function from open().
+        \sa info() */
+  void setInfo( void );
 
 
 private:

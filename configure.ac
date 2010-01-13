@@ -135,10 +135,10 @@ DOXYGEN_EXTERNAL="${RELACS_DOCLIBS}"
 ## Plugin sets
 #################################################
 
-RELACS_PLUGINSET([nieseries],[linuxdevices/nieseries])
 RELACS_PLUGINSET([comedi],[linuxdevices/comedi],[],[test "$RELACS_COMEDI" != no])
 AC_CONFIG_FILES([plugins/linuxdevices/comedi/examples/Makefile])
 AC_CONFIG_FILES([plugins/linuxdevices/comedi/module/Makefile])
+RELACS_PLUGINSET([nieseries],[linuxdevices/nieseries])
 RELACS_PLUGINSET([attcs3310],[linuxdevices/attcs3310])
 RELACS_PLUGINSET([misc],[linuxdevices/misc])
 AC_CONFIG_FILES([plugins/linuxdevices/misc/examples/Makefile])
@@ -148,9 +148,9 @@ RELACS_PLUGINSET([ephys],[ephys])
 RELACS_PLUGINSET([acoustic],[acoustic])
 RELACS_PLUGINSET([auditory],[auditory],[ephys acoustic misc])
 RELACS_PLUGINSET([auditoryprojects],[auditoryprojects],[ephys acoustic auditory misc])
-RELACS_PLUGINSET([efield],[efield],[base])
 RELACS_PLUGINSET([patchclamp],[patchclamp],[ephys])
 RELACS_PLUGINSET([multielectrode],[multielectrode],[ephys])
+RELACS_PLUGINSET([efield],[efield],[base])
 RELACS_PLUGINSET([efish],[efish],[base])
 
 AC_SUBST([RELACS_PLUGINS_SUBDIRS])
@@ -216,9 +216,9 @@ AC_CONFIG_FILES([plugins/calibration/relacslocal], [chmod a+x plugins/calibratio
 AC_CONFIG_FILES([plugins/acoustic/relacslocal], [chmod a+x plugins/acoustic/relacslocal])
 AC_CONFIG_FILES([plugins/auditory/relacslocal], [chmod a+x plugins/auditory/relacslocal])
 AC_CONFIG_FILES([plugins/auditoryprojects/relacslocal], [chmod a+x plugins/auditoryprojects/relacslocal])
-AC_CONFIG_FILES([plugins/efield/relacslocal], [chmod a+x plugins/efield/relacslocal])
 AC_CONFIG_FILES([plugins/patchclamp/relacslocal], [chmod a+x plugins/patchclamp/relacslocal])
 AC_CONFIG_FILES([plugins/multielectrode/relacslocal], [chmod a+x plugins/multielectrode/relacslocal])
+AC_CONFIG_FILES([plugins/efield/relacslocal], [chmod a+x plugins/efield/relacslocal])
 AC_CONFIG_FILES([plugins/efish/relacslocal], [chmod a+x plugins/efish/relacslocal])
 
 

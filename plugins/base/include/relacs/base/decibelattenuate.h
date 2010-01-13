@@ -69,12 +69,12 @@ protected:
     /*! Transform the requested intensity \a intensity
         for the carrier frequency \a frequency of the signal into
         \a db decibel which are ued to set the attenuation level. */
-  int decibel( double intensity, double frequency, double &db );
+  int decibel( double intensity, double frequency, double &db ) const;
     /*! Transform the attenuation level \a decibel
         for the carrier frequency \a frequency of the signal into
         the intesity \a intens. 
         This is the inverse function of decibel(). */
-  void intensity( double &intens, double frequency, double decibel );
+  void intensity( double &intens, double frequency, double decibel ) const;
 
 
 private:

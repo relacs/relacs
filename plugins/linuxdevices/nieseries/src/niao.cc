@@ -62,7 +62,9 @@ NIAO::~NIAO( void )
 
 int NIAO::open( const string &device, long mode )
 {
-  clearSettings();
+  Info.clear();
+  Settings.clear();
+
   if ( device.empty() )
     Handle = -1;
   else
@@ -74,6 +76,8 @@ int NIAO::open( const string &device, long mode )
     setDeviceVendor( "National Instruments" );
     setDeviceFile( device );
   }
+
+  setInfo();
 
   return 0;
 }
@@ -89,6 +93,7 @@ void NIAO::close( void )
 {
   ::close( Handle );
   Handle = -1;
+  Info.clear();
 }
 
 
@@ -462,7 +467,7 @@ int NIAO::reset( void )
 
   Sigs = 0;
 
-  clearSettings();
+  Settings.clear();
 
   return r;
 }

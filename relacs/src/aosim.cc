@@ -38,20 +38,24 @@ AOSim::~AOSim( void )
 
 int AOSim::open( const string &device, long mode )
 {
-  clearSettings();
+  Info.clear();
+  Settings.clear();
   setDeviceName( "AO Simulation" );
   setDeviceVendor( "RELACS" );
   setDeviceFile( device );
+  setInfo();
   return 0;
 }
 
 
 int AOSim::open( Device &device, long mode )
 {
-  clearSettings();
+  Info.clear();
+  Settings.clear();
   setDeviceName( "AO Simulation" );
   setDeviceVendor( "RELACS" );
   setDeviceFile( device.deviceIdent() );
+  setInfo();
   return 0;
 }
 
@@ -64,12 +68,14 @@ bool AOSim::isOpen( void ) const
 
 void AOSim::close( void )
 {
+  Info.clear();
+  Settings.clear();
 }
 
 
 int AOSim::reset( void )
 {
-  clearSettings();
+  Settings.clear();
   return 0;
 }
 

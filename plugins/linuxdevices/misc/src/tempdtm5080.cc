@@ -40,6 +40,7 @@ TempDTM5080::TempDTM5080( void )
     Handle( -1 ),
     Probe( 0 )
 {
+  Settings.addInteger( "probe" );
 }
 
 
@@ -48,6 +49,7 @@ TempDTM5080::TempDTM5080( const string &device, long probe )
     Handle( -1 ),
     Probe( 0 )
 {
+  Settings.addInteger( "probe" );
   open( device, probe );
 }
 
@@ -100,6 +102,32 @@ int TempDTM5080::open( const string &device, long probe )
   setDeviceVendor( "LKM electronic GmbH (Geraberg, Germany)" );
   setDeviceFile( device );
 
+  // add infos:
+  Info.clear();
+  addInfo();
+
+  char com = 'a';
+  char buf[10];
+  int n;
+
+  com = 't';
+  write( Handle, &com, 1 );
+  n = read( Handle, buf, 10 );
+  buf[n] = '\0';
+  Info.addText( "device type", buf );
+  
+  com = 'l';
+  write( Handle, &com, 1 );
+  n = read( Handle, buf, 10 );
+  buf[n] = '\0';
+  Info.addText( "serial number", buf );
+  
+  com = 'a';
+  write( Handle, &com, 1 );
+  n = read( Handle, buf, 10 );
+  buf[n] = '\0';
+  Info.addText( "resolution", buf );
+
   return 0;
 }
 
@@ -115,6 +143,7 @@ void TempDTM5080::close( void )
   if ( Handle >= 0 )
     tcsetattr( Handle, TCSANOW, &OldTIO );
   Handle = -1;
+  Info.clear();
 }
 
 
@@ -122,24 +151,6 @@ int TempDTM5080::reset( void )
 {
   tcflush( Handle, TCIFLUSH );
   return 0;
-}
-
-
-string TempDTM5080::info( void ) const
-{
-  return Device::info();
-}
-
-
-string TempDTM5080::settings( void ) const
-{
-  string s = Temperature::settings();
-  if ( ! s.empty() )
-    s += ';';
-  ostringstream ss;
-  ss << "probe: " << Probe;
-  s += ss.str();
-  return s;
 }
 
 
@@ -159,6 +170,7 @@ double TempDTM5080::temperature( void )
       double temp = ::strtod( buf, &ep );
       if ( ep != buf ) {
 	temp *= 0.01;
+	Settings.setNumber( "temperature", temp );
 	return temp;
       }
     }
@@ -182,41 +194,8 @@ void TempDTM5080::setProbe( int probe )
     if ( n != 1 && buf[0] != ':' )
       cout << "failed to set probe: " << buf << endl;
     Probe = probe;
+    Settings.setInteger( "probe", Probe );
   }
-}
-
-
-ostream &operator<<( ostream &str, const TempDTM5080 &k )
-{
-  if ( k.Handle < 0 ) {
-    str << "TempDTM5080 not opened!\n";
-  }
-  else {
-
-    char com = 'a';
-    char buf[10];
-    int n;
-
-    com = 't';
-    write( k.Handle, &com, 1 );
-    n = read( k.Handle, buf, 10 );
-    buf[n] = '\0';
-    str << "device type: " << buf << endl;
-
-    com = 'l';
-    write( k.Handle, &com, 1 );
-    n = read( k.Handle, buf, 10 );
-    buf[n] = '\0';
-    str << "serial number: " << buf << endl;
-
-    com = 'a';
-    write( k.Handle, &com, 1 );
-    n = read( k.Handle, buf, 10 );
-    buf[n] = '\0';
-    str << "resolution: " << buf << endl;
-  }
-
-  return str;
 }
 
 

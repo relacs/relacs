@@ -59,6 +59,9 @@ int NIPFI::open( const string &device, long mode )
   if ( Handle >= 0 )
     return 0;
 
+  Info.clear();
+  Settings.clear();
+
   Handle = ::open( device.c_str(), O_RDWR );
 
   if ( Handle < 0 ) {
@@ -79,6 +82,7 @@ int NIPFI::open( const string &device, long mode )
   setDeviceName( board.name );
   setDeviceVendor( "National Instruments" );
   setDeviceFile( device );
+  addInfo();
 
   return 0;
 }
@@ -96,6 +100,8 @@ void NIPFI::close( void )
     ::close( Handle );
     Handle = -1;
   }
+  Info.clear();
+  Settings.clear();
 }
 
 

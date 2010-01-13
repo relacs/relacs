@@ -58,7 +58,7 @@ LoudSpeaker::~LoudSpeaker( void )
 }
 
 
-int LoudSpeaker::decibel( double intensity, double frequency, double &db )
+int LoudSpeaker::decibel( double intensity, double frequency, double &db ) const
 {
   if ( intensity == 0.0 )
     db = MuteAttenuationLevel;
@@ -73,7 +73,7 @@ int LoudSpeaker::decibel( double intensity, double frequency, double &db )
 
 
 void LoudSpeaker::intensity( double &intens, double frequency,
-			     double decibel )
+			     double decibel ) const
 {
   if ( decibel != MuteAttenuationLevel ) {
     double g, o;

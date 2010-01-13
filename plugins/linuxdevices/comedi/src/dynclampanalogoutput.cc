@@ -99,6 +99,9 @@ DynClampAnalogOutput::~DynClampAnalogOutput( void )
 
 int DynClampAnalogOutput::open( const string &device, long mode )
 { 
+  Info.clear();
+  Settings.clear();
+
   if ( device.empty() )
     return InvalidDevice;
   setDeviceFile( device );
@@ -220,8 +223,9 @@ int DynClampAnalogOutput::open( const string &device, long mode )
   }
   BufferSize = deviceIOC.fifoSize;
 
-
   IsPrepared = false;
+
+  setInfo();
 
   return 0;
 }
@@ -246,6 +250,8 @@ void DynClampAnalogOutput::close( void )
     cerr << "Close of module file failed!" << endl;
 
   ModuleFd = -1;
+
+  Info.clear();
 }
 
 
@@ -869,7 +875,7 @@ int DynClampAnalogOutput::reset( void )
 { 
   Sigs = 0;
 
-  clearSettings();
+  Settings.clear();
   ErrorState = 0;
 
   if( !IsPrepared )

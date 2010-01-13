@@ -103,6 +103,9 @@ AmplMode::~AmplMode( void )
 
 int AmplMode::open( const string &device, long mode )
 {
+  Info.clear();
+  Settings.clear();
+
   if ( DIO != 0  && !DIO->isOpen() ) {
     if ( Own )
       delete DIO;
@@ -144,6 +147,9 @@ int AmplMode::open( const string &device, long mode )
 
 int AmplMode::open( NIDIO &nidio, long mode )
 {
+  Info.clear();
+  Settings.clear();
+
   if ( DIO != 0  && !DIO->isOpen() ) {
     if ( Own )
       delete DIO;
@@ -187,6 +193,9 @@ void AmplMode::open( long mode )
 {
   if ( isOpen() ) {
 
+    Info.clear();
+    Settings.clear();
+
     FirstPin = mode;
     
     Buzzer = 0x01 << FirstPin;
@@ -217,6 +226,7 @@ void AmplMode::open( long mode )
     Volume = 0;
     setDeviceVendor( "npi electronic GmbH (Tamm, Germany)" );
     setDeviceName( "SEC-05LX" );
+    addInfo();
   }
 }
 
@@ -259,6 +269,10 @@ void AmplMode::close( void )
   }
   DIO = 0;
   Own = false;
+
+  Info.clear();
+  Settings.clear();
+
 }
 
 

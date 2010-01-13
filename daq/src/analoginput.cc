@@ -57,7 +57,8 @@ AnalogInput::~AnalogInput( void )
 
 int AnalogInput::open( const string &device, long mode )
 {
-  clearSettings();
+  Info.clear();
+  Settings.clear();
   setDeviceFile( device );
   return InvalidDevice;
 }
@@ -65,7 +66,8 @@ int AnalogInput::open( const string &device, long mode )
 
 int AnalogInput::open( Device &device, long mode )
 {
-  clearSettings();
+  Info.clear();
+  Settings.clear();
   setDeviceFile( device.deviceIdent() );
   return InvalidDevice;
 }
@@ -78,41 +80,40 @@ void AnalogInput::take( const vector< AnalogInput* > &ais,
 }
 
 
-string AnalogInput::info( void ) const
+void AnalogInput::setInfo( void )
 {
-  ostringstream ss;
-  ss << ";channels: " << channels();
-  ss << ";bits: " << bits();
-  ss << ";max sampling rate: " << 0.001*maxRate() << " kHz";
-  return Device::info() + ss.str();
+  Info.clear();
+  Device::addInfo();
+  if ( isOpen() ) {
+    Info.addInteger( "channels", channels() );
+    Info.addInteger( "bits", bits() );
+    Info.addNumber( "max sampling rate", 0.001*maxRate(), " kHz" );
+  }
 }
 
 
 void AnalogInput::setSettings( const InList &traces, 
 			       int readbuffer, int updatebuffer )
 {
-  ostringstream ss;
-
+  Settings.clear();
   for ( int k=0; k<traces.size(); k++ ) {
-    ss << "channel: " << traces[k].channel()
-       << ";gain: " << traces[k].gainIndex()
-       << ";polarity: " << ( traces[k].unipolar() ? "unipolar" : "bipolar" )
-       << ";reference: " << traces[k].referenceStr() << ';';
+    Settings.addInteger( "channel", traces[k].channel() );
+    Settings.addInteger( "gain", traces[k].gainIndex() );
+    Settings.addText( "polarity", traces[k].unipolar() ? "unipolar" : "bipolar" );
+    Settings.addText( "reference", traces[k].referenceStr() );
   }
-  ss << "continuous: " << ( traces[0].continuous() ? "yes" : "no" );
-  ss << ";startsource: " << traces[0].startSource();
-  ss << ";delay: " << 1000.0*traces[0].delay() << "ms";
-  ss << ";sampling rate: " << 0.001*traces[0].sampleRate() << "kHz";
+  Settings.addBoolean( "continuous", traces[0].continuous() );
+  Settings.addInteger( "startsource", traces[0].startSource() );
+  Settings.addNumber( "delay", 1000.0*traces[0].delay(), "ms" );
+  Settings.addNumber( "sampling rate", 0.001*traces[0].sampleRate(), "kHz" );
   if ( traces[0].readTime() > 0.0 && readbuffer >= 0 )
-    ss << ";read buffer time: " << 1000.0*traces[0].readTime() << "ms";
+    Settings.addNumber( "read buffer time", 1000.0*traces[0].readTime(), "ms" );
   if ( readbuffer > 0 )
-    ss << ";read buffer size: " << readbuffer << "Byte";
+    Settings.addNumber( "read buffer size", readbuffer, "Byte" );
   if ( traces[0].updateTime() > 0.0 && updatebuffer >= 0 )
-    ss << ";update buffer time: " << 1000.0*traces[0].updateTime() << "ms";
+    Settings.addNumber( "update buffer time", 1000.0*traces[0].updateTime(), "ms" );
   if ( updatebuffer > 0 )
-    ss << ";update buffer size: " << updatebuffer << "Byte";
-
-  Device::setSettings( ss.str() );
+    Settings.addNumber( "update buffer size", updatebuffer, "Byte" );
 }
 
 
