@@ -2721,14 +2721,30 @@ template < typename ForwardIterX, typename ForwardIterY >
 void serialCorr( ForwardIterX firstx, ForwardIterX lastx,
 		 ForwardIterY firsty, ForwardIterY lasty )
 {
-  double stdev = 0.0;
-  double a = meanStdev( stdev, firstx, lastx );
-  double var = stdev * stdev;
+  // mean:
+  typename numerical_iterator_traits<ForwardIterX>::mean_type a = 0;
+  ForwardIterX iterx = firstx;
+  int n=1;
+  for ( ; iterx != lastx; ++iterx, ++n ) {
+    a += ( *iterx - a ) / n;
+  }
+  n--;
+
+  // variance:
+  typename numerical_iterator_traits<ForwardIterX>::variance_type var = 0;
+  if ( n > 1 ) {
+    iterx = firstx;
+    for ( int k=1; iterx != lastx; ++iterx, ++k ) {
+      typename numerical_iterator_traits<ForwardIterX>::mean_type s = *iterx - a;
+      var += ( s*s - var ) / k;
+    }
+  }
 
   ForwardIterX firstx2 = firstx;
   ForwardIterY itery = firsty;
 
-  if ( stdev / a < 1.0e-8 ) {
+  // not enough data points:
+  if ( n < 2 || ( ::fabs(a) > 1e-8 && var/a/a < 1e-8 ) ) {
     *itery = 1.0;
     ++itery;
     while ( itery != lasty ) {
@@ -2738,24 +2754,19 @@ void serialCorr( ForwardIterX firstx, ForwardIterX lastx,
     return;
   }
 
+  // iterate trough lags:
   while ( itery != lasty && firstx2 != lastx ) {
 
     ForwardIterX iterx1 = firstx;
     ForwardIterX iterx2 = firstx2;
     double covar = 0.0;
-    int n = 1;
-    for ( n=1; iterx1 != lastx && iterx2 != lastx; n++ ) {
+    for ( int k=1; iterx1 != lastx && iterx2 != lastx; k++ ) {
       double s1 = *iterx1 - a;
       double s2 = *iterx2 - a;
-      covar += ( s1*s2 - covar )/n;
+      covar += ( s1*s2 - covar )/k;
       ++iterx1;
       ++iterx2;
     }
-    n--;
-    if ( n > 1 )
-      covar *= n/(n-1);
-    else
-      covar = 0.0;
 
     *itery = var > 0.0 ? covar / var : itery == firsty ? 1.0 : 0.0;
     ++itery;

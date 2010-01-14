@@ -81,15 +81,31 @@ if \c make \c install did not create a \c /boot/initrd-2.6.28.9 file already:
 $ cd /boot
 $ update-initramfs -c -k 2.6.28.9
 \endcode
--# Check the grub menu in \c /boot/grub/menu.lst
-whether your new kernel was added.
-There should be an entry like this:
+-# Check the grub menu whether your new kernel was added.. 
+With \c grub \c v1 (default up-to Debian Lenny) 
+there should be an entry like this in \c /boot/grub/menu.lst:
 \code
 title           Debian GNU/Linux, kernel 2.6.28.9
 root            (hd0,0)
 kernel          /boot/vmlinuz-2.6.28.9 root=/dev/sda1 ro quiet
 initrd          /boot/initrd.img-2.6.28.9
 \endcode
+With \c grub \c v2 (default since Debian Lenny) 
+there should be an entry like this in \c /boot/grub/grub.cfg:
+\code
+menuentry "Ubuntu, Linux 2.6.28.9-rtai" {
+        recordfail=1
+        if [ -n ${have_grubenv} ]; then save_env recordfail; fi
+        set quiet=1
+        insmod ext2
+        set root=(hd0,1)
+        search --no-floppy --fs-uuid --set cc028ecc-e801-4f23-a86d-ae2d10a71294
+        linux   /boot/vmlinuz-2.6.28.9-rtai root=UUID=cc028ecc-e801-4f23-a86d-ae2d10a71294 ro   quiet splash
+        initrd  /boot/initrd.img-2.6.28.9-rtai
+}
+\endcode
+You can configure \c grub \c v2 by editing the file \c /etc/default/grub
+and running \c update-grub afterwards.
 -# Reboot the computer into the new kernel.
 \code
 $ reboot
@@ -121,9 +137,9 @@ $ make-kpkg --initrd --revision r1 --config menuconfig kernel-image
    -# Install the kernel
    \code
 $ cd ..
-$ dpkg -i linux-image-2.6.28.9_2.6.28.9-r1_amd64.deb
+$ dpkg -i linux-image-2.6.28.9_r1_amd64.deb
    \endcode
-   -# continue with step 7.
+   -# continue with step 6.
 
 
 \subsection installcomedidriver Comedi
@@ -350,10 +366,14 @@ Check the following settings:
  .
 Then exit and save configuration.
 Watch the output while RTAI is configured for possible warnings and errors.
+In case this fails, you should check and/or edit the file \c .rtai_config
+and run \c .configure manually.
 -# Compile and install (as root)
 \code
 $ make && make install
 \endcode
+In case you get an error like "../../../base/include/asm/rtai_leds.h:24:20: error: asm/io.h: No such file or directory"
+then delete the "#include <asm/io.h>" line in the specified file and call \c make again.
 -# Make the RTAI kernel modules known to modprobe:
 \code
 $ ln -s /usr/realtime/modules /lib/modules/`uname -r`/rtai
@@ -443,24 +463,24 @@ $ chmod a+rw /dev/comedi*
 \section udev Set up udev permissions for comedi device files
 
 -# Login as root.
--# Create a new group "comedi":
+-# Create a new group "iocard":
 \code
-$ addgroup --system comedi
+$ addgroup --system iocard
 \endcode
 -# Add udev rules to the /etc/udev/rules.d directory:
 \code
-$ echo 'KERNEL=="comedi*", MODE="0660", GROUP="comedi"' > /etc/udev/rules.d/comedi.rules
+$ echo 'KERNEL=="comedi*", MODE="0660", GROUP="iocard"' > /etc/udev/rules.d/comedi.rules
 \endcode
 -# Run
 \code
 $ udevadm trigger
 \endcode
 to apply your new udev rules
--# Add users to the "comedi" group:
+-# Add users to the "iocard" group:
 \code
-$ adduser <username> comedi
+$ adduser <username> iocard
 \endcode
-After the next login, \c <username> is a member of the %comedi group
+After the next login, \c <username> is a member of the \c iocard group
 and and has sufficient permissions to access the data acquisition boards through %comedi.
 
 
