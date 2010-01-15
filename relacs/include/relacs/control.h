@@ -151,6 +151,10 @@ public:
     /*! You may reimplement this function to handle key-release events. */
   virtual void keyReleaseEvent( QKeyEvent *e );
 
+  /*! Wait for at maximum \a maxsec seconds or for the thread to terminate.
+      \return \c true if the thread terminated. */
+  bool wait( double maxsec=-1.0 );
+
 
 protected:
 

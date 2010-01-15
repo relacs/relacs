@@ -26,6 +26,17 @@
 #include <cmath>
 #include <string>
 #include <ctime>
+
+#ifdef HAVE_LIBRAND55
+#include <limits.h>
+#include <rand55.h>
+#endif
+
+#ifdef HAVE_LIBGSL
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+#endif
+
 using namespace std;
 
 namespace relacs {
@@ -240,11 +251,6 @@ private:
 
 #ifdef HAVE_LIBRAND55
 
-
-#include <limits.h>
-#include <rand55.h>
-
-
 /*!
 \class Rand55
 \author Jan Benda
@@ -306,11 +312,6 @@ public:
 
 
 #ifdef HAVE_LIBGSL
-
-
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
-
 
 /*!
 \class RandomGSL

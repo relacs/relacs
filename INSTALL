@@ -32,7 +32,14 @@ or Ubuntu execute as root:
 
 > apt-get install autoconf automake libtool 
 
-If you have problems with this and you do not know how to proceed,
+In case of warnings or errors, try running
+
+> autoupdate
+
+first. This updates the configure.ac script to newer versions
+of the GNU autotools.
+
+If you still have problems with this and you do not know how to proceed,
 then I can send you a tar archive with a complete RELACS distribution
 upon request (benda@bio.lmu.de, subject: RELACS).
 

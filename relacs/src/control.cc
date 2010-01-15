@@ -225,6 +225,15 @@ void Control::requestStop( void )
 }
 
 
+bool Control::wait( double maxsec )
+{
+  if ( maxsec < 0.0 )
+    return QThread::wait();
+  else
+    return QThread::wait( (unsigned long)(1000.0*maxsec) );
+}
+
+
 
 }; /* namespace relacs */
 

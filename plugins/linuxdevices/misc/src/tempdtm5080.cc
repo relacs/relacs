@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <cstdlib>
 #include <cstring>
+#include <cstdio>
 #include <cmath>
 #include <iostream>
 #include <sstream>
@@ -108,22 +109,21 @@ int TempDTM5080::open( const string &device, long probe )
 
   char com = 'a';
   char buf[10];
-  int n;
 
   com = 't';
-  write( Handle, &com, 1 );
+  int n = write( Handle, &com, 1 );
   n = read( Handle, buf, 10 );
   buf[n] = '\0';
   Info.addText( "device type", buf );
   
   com = 'l';
-  write( Handle, &com, 1 );
+  n = write( Handle, &com, 1 );
   n = read( Handle, buf, 10 );
   buf[n] = '\0';
   Info.addText( "serial number", buf );
   
   com = 'a';
-  write( Handle, &com, 1 );
+  n = write( Handle, &com, 1 );
   n = read( Handle, buf, 10 );
   buf[n] = '\0';
   Info.addText( "resolution", buf );

@@ -3617,18 +3617,20 @@ istream &SampleData< T >::load( istream &str, const string &stop,
 
   // count lines:
   long n = 0;
+  double x = 0.0;
   double x0 = 0.0;
   double xp = 0.0;
+  double y = 0.0;
 
   // read first line:
   if ( line != 0 && !line->empty() ) {
     // load string:
     const char *fp = line->c_str();
     char *ep;
-    double x = strtod( fp, &ep );
+    x = strtod( fp, &ep );
     if ( ep > fp ) {
       fp = ep;
-      strtod( fp, &ep );
+      y = strtod( fp, &ep );
       if ( ep > fp ) {
 	x0 = x;
 	n++;
@@ -3647,10 +3649,10 @@ istream &SampleData< T >::load( istream &str, const string &stop,
     // load string:
     const char *fp = s.c_str();
     char *ep;
-    double x = strtod( fp, &ep );
+    x = strtod( fp, &ep );
     if ( ep > fp ) {
       fp = ep;
-      strtod( fp, &ep );
+      y = strtod( fp, &ep );
       if ( ep > fp ) {
 	if ( n == 0 )
 	  x0 = x;
@@ -3674,10 +3676,10 @@ istream &SampleData< T >::load( istream &str, const string &stop,
     // load string:
     const char *fp = line->c_str();
     char *ep;
-    strtod( fp, &ep );
+    x = strtod( fp, &ep );
     if ( ep > fp ) {
       fp = ep;
-      double y = strtod( fp, &ep );
+      y = strtod( fp, &ep );
       if ( ep > fp )
 	push( y );
     }
@@ -3694,10 +3696,10 @@ istream &SampleData< T >::load( istream &str, const string &stop,
     // load string:
     const char *fp = s.c_str();
     char *ep;
-    strtod( fp, &ep );
+    x = strtod( fp, &ep );
     if ( ep > fp ) {
       fp = ep;
-      double y = strtod( fp, &ep );
+      y = strtod( fp, &ep );
       if ( ep > fp && size() < capacity() )
 	push( y );
     }
