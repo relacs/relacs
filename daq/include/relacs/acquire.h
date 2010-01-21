@@ -564,6 +564,66 @@ public:
         \sa testWrite(), convert(), write(), writeData(), writeZero() */
   virtual int stopWrite( void );
 
+    /*! Returns the minimum possible attenuation level for the output trace
+        at index \a trace.
+        If \a trace is invalid or \a trace is not connected to an attenuator
+        then OutData::NoLevel is returned.
+        \sa maxLevel() */
+  double minLevel( int trace ) const;
+    /*! Returns the minimum possible attenuation level for output trace
+        with name \a trace. */
+  double minLevel( const string &trace ) const;
+    /*! Returns the maximum possible attenuation level for the output trace
+        at index \a trace.
+        If \a trace is invalid or \a trace is not connected to an attenuator
+        then OutData::NoLevel is returned.
+        \sa minLevel() */
+  double maxLevel( int trace ) const;
+    /*! Returns the maximum possible attenuation level for output trace
+        with name \a trace. */
+  double maxLevel( const string &trace ) const;
+    /*! Returns in \a l all possible attenuation levels
+        sorted by increasing attenuation levels (highest last) 
+	for the output trace at index \a trace.
+        If \a trace is invalid or \a trace is not connected to an attenuator
+        then \a l is returned empty.
+        \sa minLevel(), maxLevel() */
+  void levels( int trace, vector<double> &l ) const;
+    /*! Returns in \a l all possible attenuation levels
+        sorted by increasing attenuation levels (highest last) 
+	for the output trace with name \a trace. */
+  void levels( const string &trace, vector<double> &l ) const;
+
+    /*! Returns the minimum possible intensity at the given stimulus
+        \a frequency for the output trace at index \a trace.
+        If \a trace is invalid or \a trace is not connected to an attenuator
+        then OutData::NoIntensity is returned.
+        \sa maxIntensity(), minLevel(), maxLevel() */
+  double minIntensity( int trace, double frequency=0.0 ) const;
+    /*! Returns the minimum possible intensity for output trace
+        with name \a trace. */
+  double minIntensity( const string &trace, double frequency=0.0 ) const;
+    /*! Returns the maximum possible intensity at the given stimulus
+        \a frequency for the output trace at index \a trace.
+        If \a trace is invalid or \a trace is not connected to an attenuator
+        then OutData::NoIntensity is returned.
+        \sa minIntensity(), minLevel(), maxLevel() */
+  double maxIntensity( int trace, double frequency=0.0 ) const;
+    /*! Returns the maximum possible intensity for output trace
+        with name \a trace. */
+  double maxIntensity( const string &trace, double frequency=0.0 ) const;
+    /*! Returns in \a ints all possible intensities at the given stimulus
+        \a frequency sorted by increasing intensities 
+	for the output trace at index \a trace.
+        If \a trace is invalid or \a trace is not connected to an attenuator
+        then \a intens is returned empty.
+        \sa minIntensity(), maxIntensity() */
+  void intensities( int trace, vector<double> &ints, double frequency=0.0 ) const;
+    /*! Returns in \a ints all possible intensities at the given stimulus
+        \a frequency sorted by increasing intensities 
+	for the output trace with name \a trace. */
+  void intensities( const string &trace, vector<double> &ints, double frequency=0.0 ) const;
+
     /*! Check for a new signal event and add it to \a events.
         \param[out] signaltime is set to the time of the most recent signal.
 	\param[out] data all traces get the current signalTime() set

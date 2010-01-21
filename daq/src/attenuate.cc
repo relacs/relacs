@@ -141,6 +141,35 @@ double Attenuate::maxIntensity( double frequency ) const
 }
 
 
+void Attenuate::intensities( vector<double> &ints, double frequency ) const
+{
+  ints.clear();
+  vector<double> l;
+  l.reserve( 1000 );
+  Att->levels( l );
+  if ( l.empty() )
+    return;
+
+  ints.reserve( l.size() );
+  double intens1 = 0.0;
+  intensity( intens1, frequency, l.front() );
+  double intens2 = 0.0;
+  intensity( intens2, frequency, l.back() );
+  if ( intens1 < intens2 ) {
+    for ( unsigned int k=0; k<l.size(); k++ ) {
+      intensity( intens1, frequency, l[k] );
+      ints.push_back( intens1 );
+    }
+  }
+  else {
+    for ( unsigned int k=l.size()-1; k>=0; k-- ) {
+      intensity( intens1, frequency, l[k] );
+      ints.push_back( intens1 );
+    }
+  }
+}
+
+
 void Attenuate::init( void )
 {
   Info.clear();
@@ -149,6 +178,8 @@ void Attenuate::init( void )
   Info.addInteger( "analog output channel", aoChannel() );
   Info.addText( "attenuator device", Att != 0 ? Att->deviceIdent() : "" );
   Info.addInteger( "attenuator line", Index );
+  Info.addNumber( "minimum intensity", minIntensity( 0.0 ), IntensityUnit );
+  Info.addNumber( "maximum intensity", maxIntensity( 0.0 ), IntensityUnit );
 }
 
 
@@ -157,8 +188,10 @@ void Attenuate::save( const string &path ) const
 }
 
 
-int Attenuate::write( double &intens, double frequency )
+int Attenuate::write( double &intens, double frequency, double &level )
 {
+  level = 0.0;
+
   // get attenuation level:
   double db = 0.0;
   int r = decibel( intens, frequency, db );
@@ -173,6 +206,7 @@ int Attenuate::write( double &intens, double frequency )
 
   // calculate intensity:
   intensity( intens, frequency, db );
+  level = db;
 
   // settings:
   Settings.clear();
@@ -184,8 +218,10 @@ int Attenuate::write( double &intens, double frequency )
 }
 
 
-int Attenuate::testWrite( double &intens, double frequency )
+int Attenuate::testWrite( double &intens, double frequency, double &level )
 {
+  level = 0.0;
+
   // get attenuation level:
   double db = 0.0;
   int r = decibel( intens, frequency, db );
@@ -200,6 +236,8 @@ int Attenuate::testWrite( double &intens, double frequency )
 
   // calculate intensity:
   intensity( intens, frequency, db );
+  level = db;
+
   return r;
 }
 
@@ -223,6 +261,34 @@ int Attenuate::testMute( void )
     return Attenuator::NotOpen;
 
   return Att->testMute( Index );
+}
+
+
+int Attenuate::attenuate( double &level )
+{
+  int r = 0;
+
+  // set attenuation level:
+  if ( Att == 0 || !Att->isOpen() )
+    r = Attenuator::NotOpen;
+  else
+    r = Att->attenuate( Index, level );
+
+  // settings:
+  Settings.clear();
+
+  return r;
+}
+
+
+int Attenuate::testAttenuate( double &level )
+{
+  int r = 0;
+  if ( Att == 0 || !Att->isOpen() )
+    r = Attenuator::NotOpen;
+  else
+    r = Att->testAttenuate( Index, level );
+  return r;
 }
 
 
@@ -319,6 +385,18 @@ string Attenuate::aoDevice( void ) const
 void Attenuate::setAODevice( const string &deviceid )
 {
   AODevice = deviceid;
+}
+
+
+Attenuator *Attenuate::attenuator( void )
+{
+  return Att;
+}
+
+
+const Attenuator *Attenuate::attenuator( void ) const
+{
+  return Att;
 }
 
 

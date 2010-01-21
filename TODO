@@ -1,3 +1,6 @@
+- Switch copyright from 2009 to 2010
+- Switch email from hu to lmu
+
 SignalTime: finish this update (RELACSPlugin::signalTime()
 - test ficurve RePro: does not work!
 - update all other RePros

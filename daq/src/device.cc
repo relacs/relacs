@@ -170,6 +170,7 @@ string Device::deviceIdent( void ) const
 void Device::setDeviceIdent( const string &ident )
 {
   DeviceIdent = ident;
+  Info.setText( "ident", DeviceIdent );
 }
 
 

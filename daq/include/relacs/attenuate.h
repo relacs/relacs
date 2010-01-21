@@ -86,6 +86,9 @@ implement the intensity()-function as the inverse function of decibel().
 To check whether a requested intensity is possible and what intensity would
 be set without setting the attenuation level,
 you can use the testWrite()-function.
+minIntensity() and maxIntensity() return the minimum and maximum
+possible intensities given the capabilities of the attenuator device.
+All possible intensities are returned by intensities().
 
 The mute()-function can be used to mute the output line.
 testMute() checks whether muting of the output line is possible.
@@ -155,15 +158,18 @@ public:
   void clear ( void );
 
     /*! Returns the minimum possible intensity that can be set
-        by the current attenuator device at the given stimulus frequency.
-        This usually is the intensity at the minimum attenuation level
-	Attenuator::minLevel(). */
-  double minIntensity( double frequency ) const;
+        by the current attenuator device at the given stimulus \a frequency.
+        \sa maxIntensity(), intensities() */
+  double minIntensity( double frequency=0.0 ) const;
     /*! Returns the maximum possible intensity that can be set
-        by the current attenuator device at the given stimulus frequency.
-        This usually is the intensity at the maximum attenuation level
-	Attenuator::maxLevel(). */
-  double maxIntensity( double frequency ) const;
+        by the current attenuator device at the given stimulus \a frequency.
+        \sa minIntensity(), intensities() */
+  double maxIntensity( double frequency=0.0 ) const;
+    /*! Returns in \a ints all possible intensities that can be set
+        by the current attenuator device at the given stimulus \a frequency
+        sorted by increasing intensities.
+        \sa minIntensity(), maxIntensity(), lines() */
+  void intensities( vector<double> &ints, double frequency=0.0 ) const;
 
   /*! This function is called after an attenuator is assigned to this class
       and before the attenuator is used.
@@ -193,7 +199,8 @@ public:
 	Since attenuators have a certain resolution, 
 	the actually set intensity may differ from the requested
 	intensity \a intensity.
-	The set intensity is returned in \a intensity.
+	The set intensity is returned in \a intensity
+	and the set attenuation level in \a level.
 	If you want to mute the output line, call mute().
 	\return
 	- 0 on success
@@ -215,11 +222,11 @@ public:
 	  In this case, the maximum possible \a intensity is returned.
 	- \c IntensityError: Another error occured during conversion of
 	  an intensity into an attenuation level by the decibel()-function.
-	\sa testWrite(), mute(),
+	\sa testWrite(), mute(), attenuate(),
 	intensityName(), intensityUnit(), intensityFormat(),
 	frequencyName(), frequencyUnit(), frequencyFormat()
     */
-  int write( double &intensity, double frequency );
+  int write( double &intensity, double frequency, double &level );
     /*! Does the same as write() except setting the attenuator.
         Using this function it can be checked whether the intensities are valid
 	and to what value the intensity will be actually adjusted.
@@ -242,11 +249,11 @@ public:
 	  In this case, the maximum possible \a intensity is returned.
 	- \c IntensityError: Another error occured during conversion of
 	  an intensity into an attenuation level by the decibel()-function.
-	\sa write(), testMute(),
+	\sa write(), testMute(), testAttenuate(),
 	intensityName(), intensityUnit(), intensityFormat(),
 	frequencyName(), frequencyUnit(), frequencyFormat()
     */
-  int testWrite( double &intensity, double frequency ); 
+  int testWrite( double &intensity, double frequency, double &level ); 
 
     /*! Mute the output channel.
 	\return
@@ -268,6 +275,42 @@ public:
         \sa mute(), write(), testWrite()
      */
   int testMute( void );
+
+    /*! Set the attenuation level directly to \a level decibel. 
+        Returns the actually set level in \a level.
+	If the requested attenuation level is too high or too low 
+	(Underflow or Overflow), then the maximum or minimum possible 
+        attenuation level is set and returned in \a level.
+	\return
+	- 0 on success
+	- \c NotOpen: The device driver for the attenuator is not open.
+	- \c InvalidDevice: An invalid device index is requested, i.e.
+	  the requested output line is not supported by the attenuator device.
+	- \c WriteError: Failed in setting the attenuation level.
+	- \c Underflow: The requested attenuation level is too high,
+	  i.e. the requested signal amplitude is too small.
+	- \c Overflow: The requested attenuation level is too low,
+	  i.e. the requested signal amplitude is too large.
+        \sa testAttenuate(), write(), mute()
+    */
+  int attenuate( double &level );
+    /*! Tests setting the attenuation level directly to \a level decibel. 
+        Returns the level that would be set in \a level. 
+	If the requested attenuation level is too high or too low 
+	(Underflow or Overflow), then the maximum or minimum possible 
+        attenuation level is returned in \a level.
+	\return
+	- 0 on success
+	- \c NotOpen: The device driver for the attenuator is not open.
+	- \c InvalidDevice: An invalid device index is requested, i.e.
+	  the requested output line is not supported by the attenuator device.
+	- \c Underflow: The requested attenuation level is too high,
+	  i.e. the requested signal amplitude is too small.
+	- \c Overflow: The requested attenuation level is too low,
+	  i.e. the requested signal amplitude is too large.
+       \sa attenuate(), testWrite(), testMute()
+    */
+  int testAttenuate( double &level );
 
     /*! The name of the intensity the specific implementation of
         Attenuate is using.
@@ -323,6 +366,11 @@ public:
         instance of the Attenuate class to \a channel.
         \sa aoDevice(), setAOChannel(), open() */
   void setAODevice( const string &deviceid );
+
+    /*! Returns the attenuator device that is used by this Attenuate class. */
+  Attenuator *attenuator( void );
+    /*! Returns the attenuator device that is used by this Attenuate class. */
+  const Attenuator *attenuator( void ) const;
 
     /*! Return code indicating that the device driver is not opened. */
   static const int NotOpen = Attenuator::NotOpen;

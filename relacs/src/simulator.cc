@@ -344,13 +344,30 @@ int Simulator::write( OutData &signal )
   for ( unsigned int a=0; a<Att.size(); a++ ) {
     if ( ( Att[a].Id == signal.device() ) && 
 	 ( Att[a].Att->aoChannel() == signal.channel() ) ) {
-      double intens = signal.intensity();
-      int ra = Att[a].Att->write( intens, signal.carrierFreq() );
-      signal.setIntensity( intens );
-      signal.addAttError( ra );
+      if ( signal.noIntensity() && signal.noLevel() )
+	signal.addError( DaqError::NoIntensity );
+      else if ( signal.noLevel() ) {
+	double intens = signal.intensity();
+	int ra = 0;
+	if ( intens == OutData::MuteIntensity )
+	  ra = Att[a].Att->mute();
+	else {
+	  double level = 0.0;
+	  ra = Att[a].Att->write( intens, signal.carrierFreq(), level );
+	  signal.setIntensity( intens );
+	  signal.setLevel( level );
+	}
+	signal.addAttError( ra );
+      }
+      else {
+	double level = signal.level();
+	int ra = Att[a].Att->attenuate( level );
+	signal.setLevel( level );
+	signal.addAttError( ra );
+      }
     }
-    //    else
-    //    Att[a].Att->mute();
+    else
+      Att[a].Att->mute();
   }
 
   // error?
@@ -469,17 +486,25 @@ int Simulator::directWrite( OutData &signal )
   for ( unsigned int a=0; a<Att.size(); a++ ) {
     if ( ( Att[a].Id == di ) && 
 	 ( Att[a].Att->aoChannel() == signal.channel() ) ) {
-      if ( signal.noIntensity() )
+      if ( signal.noIntensity() && signal.noLevel() )
 	signal.addError( DaqError::NoIntensity );
-      else {
+      else if ( signal.noLevel() ) {
 	double intens = signal.intensity();
 	int ra = 0;
 	if ( intens == OutData::MuteIntensity )
 	  ra = Att[a].Att->mute();
 	else {
-	  ra = Att[a].Att->write( intens, signal.carrierFreq() );
+	  double level = 0.0;
+	  ra = Att[a].Att->write( intens, signal.carrierFreq(), level );
 	  signal.setIntensity( intens );
+	  signal.setLevel( level );
 	}
+	signal.addAttError( ra );
+      }
+      else {
+	double level = signal.level();
+	int ra = Att[a].Att->attenuate( level );
+	signal.setLevel( level );
 	signal.addAttError( ra );
       }
     }

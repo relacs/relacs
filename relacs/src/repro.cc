@@ -425,6 +425,78 @@ int RePro::stopWrite( void )
 }
 
 
+double RePro::minLevel( int trace ) const
+{
+  return RW->AQ->minLevel( trace );
+}
+
+
+double RePro::minLevel( const string &trace ) const
+{
+  return RW->AQ->minLevel( trace );
+}
+
+
+double RePro::maxLevel( int trace ) const
+{
+  return RW->AQ->maxLevel( trace );
+}
+
+
+double RePro::maxLevel( const string &trace ) const
+{
+  return RW->AQ->maxLevel( trace );
+}
+
+
+void RePro::levels( int trace, vector<double> &l ) const
+{
+  return RW->AQ->levels( trace, l );
+}
+
+
+void RePro::levels( const string &trace, vector<double> &l ) const
+{
+  return RW->AQ->levels( trace, l );
+}
+
+
+double RePro::minIntensity( int trace, double frequency ) const
+{
+  return RW->AQ->minIntensity( trace, frequency );
+}
+
+
+double RePro::minIntensity( const string &trace, double frequency ) const
+{
+  return RW->AQ->minIntensity( trace, frequency );
+}
+
+
+double RePro::maxIntensity( int trace, double frequency ) const
+{
+  return RW->AQ->maxIntensity( trace, frequency );
+}
+
+
+double RePro::maxIntensity( const string &trace, double frequency ) const
+{
+  return RW->AQ->maxIntensity( trace, frequency );
+}
+
+
+void RePro::intensities( int trace, vector<double> &ints, double frequency ) const
+{
+  return RW->AQ->intensities( trace, ints, frequency );
+}
+
+
+void RePro::intensities( const string &trace, vector<double> &ints, double frequency ) const
+{
+  return RW->AQ->intensities( trace, ints, frequency );
+}
+
+
 void RePro::setMessage( bool message )
 {
   PrintMessage = message;

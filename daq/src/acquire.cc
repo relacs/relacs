@@ -1282,21 +1282,29 @@ int Acquire::testWrite( OutData &signal )
   if ( AO[di].AO->running() && ! signal.priority() )
     signal.addError( DaqError::Busy );
 
-  // set intensity:
+  // set intensity or level:
   for ( unsigned int a=0; a<Att.size(); a++ ) {
     if ( ( Att[a].Id == di ) && 
 	 ( Att[a].Att->aoChannel() == signal.channel() ) ) {
-      if ( signal.noIntensity() )
+      if ( signal.noIntensity() && signal.noLevel() )
 	signal.addError( DaqError::NoIntensity );
-      else {
+      else if ( signal.noLevel() ) {
 	double intens = signal.intensity();
 	int ra = 0;
 	if ( intens == OutData::MuteIntensity ) 
 	  ra = Att[a].Att->testMute();
 	else {
-	  ra = Att[a].Att->testWrite( intens, signal.carrierFreq() );
+	  double level = 0.0;
+	  ra = Att[a].Att->testWrite( intens, signal.carrierFreq(), level );
 	  signal.setIntensity( intens );
+	  signal.setLevel( level );
 	}
+	signal.addAttError( ra );
+      }
+      else {
+	double level = signal.level();
+	int ra = Att[a].Att->testAttenuate( level );
+	signal.setLevel( level );
 	signal.addAttError( ra );
       }
     }
@@ -1424,29 +1432,37 @@ int Acquire::testWrite( OutList &signal )
     }
   }
 
-  // set intensities:
+  // set intensities or levels:
   for ( unsigned int i=0; i<dis.size(); i++ ) {
     for ( int k=0; k<dsignals[i].size(); k++ ) {
       for ( unsigned int a=0; a<Att.size(); a++ ) {
 	if ( Att[a].Id == dis[i] &&
 	     Att[a].Att->aoChannel() == dsignals[i][k].channel() ) {
-	  if ( dsignals[i][k].noIntensity() ) {
+	  if ( dsignals[i][k].noIntensity() && dsignals[i][k].noLevel() ) {
 	    dsignals[i][k].addError( DaqError::NoIntensity );
 	    success = false;
 	  }
-	  else {
+	  else if ( dsignals[i][k].noLevel() ) {
 	    double intens = dsignals[i][k].intensity();
 	    int ra = 0;
 	    if ( intens == OutData::MuteIntensity )
 	      ra = Att[a].Att->testMute();
 	    else {
-	      ra = Att[a].Att->testWrite( intens, dsignals[i][k].carrierFreq() );
+	      double level = 0.0;
+	      ra = Att[a].Att->testWrite( intens, dsignals[i][k].carrierFreq(), level );
 	      dsignals[i][k].setIntensity( intens );
+	      dsignals[i][k].setLevel( level );
 	    }
 	    if ( ra != 0 ) {
 	      dsignals[i][k].addAttError( ra );
 	      success = false;
 	    }
+	  }
+	  else {
+	    double level = dsignals[i][k].level();
+	    int ra = Att[a].Att->testAttenuate( level );
+	    dsignals[i][k].setLevel( level );
+	    dsignals[i][k].addAttError( ra );
 	  }
 	}
       }
@@ -1594,21 +1610,29 @@ int Acquire::write( OutData &signal )
   // add data to device:
   AO[di].Signals.add( &signal );
 
-  // set intensity:
+  // set intensity or level:
   for ( unsigned int a=0; a<Att.size(); a++ ) {
     if ( ( Att[a].Id == di ) && 
 	 ( Att[a].Att->aoChannel() == signal.channel() ) ) {
-      if ( signal.noIntensity() )
+      if ( signal.noIntensity() && signal.noLevel() )
 	signal.addError( DaqError::NoIntensity );
-      else {
+      else if ( signal.noLevel() ) {
 	double intens = signal.intensity();
 	int ra = 0;
 	if ( intens == OutData::MuteIntensity )
 	  ra = Att[a].Att->mute();
 	else {
-	  ra = Att[a].Att->write( intens, signal.carrierFreq() );
+	  double level = 0.0;
+	  ra = Att[a].Att->write( intens, signal.carrierFreq(), level );
 	  signal.setIntensity( intens );
+	  signal.setLevel( level );
 	}
+	signal.addAttError( ra );
+      }
+      else {
+	double level = signal.level();
+	int ra = Att[a].Att->attenuate( level );
+	signal.setLevel( level );
 	signal.addAttError( ra );
       }
     }
@@ -1758,7 +1782,7 @@ int Acquire::write( OutList &signal )
     return -1;
   }
 
-  // set intensities:
+  // set intensities or levels:
   bool usedatt[Att.size()];
   for ( unsigned int a=0; a<Att.size(); a++ )
     usedatt[a] = false;
@@ -1768,23 +1792,31 @@ int Acquire::write( OutList &signal )
 	if ( Att[a].Id == (int)i &&
 	     Att[a].Att->aoChannel() == AO[i].Signals[k].channel() ) {
 	  usedatt[a] = true;
-	  if ( AO[i].Signals[k].noIntensity() ) {
+	  if ( AO[i].Signals[k].noIntensity() && AO[i].Signals[k].noLevel() ) {
 	    AO[i].Signals[k].addError( DaqError::NoIntensity );
 	    success = false;
 	  }
-	  else {
+	  else if ( AO[i].Signals[k].noLevel() ) {
 	    double intens = AO[i].Signals[k].intensity();
 	    int ra = 0;
 	    if ( intens == OutData::MuteIntensity )
 	      ra = Att[a].Att->mute();
 	    else {
-	      ra = Att[a].Att->write( intens, AO[i].Signals[k].carrierFreq() );
+	      double level = 0.0;
+	      ra = Att[a].Att->write( intens, AO[i].Signals[k].carrierFreq(), level );
 	      AO[i].Signals[k].setIntensity( intens );
+	      AO[i].Signals[k].setLevel( level );
 	    }
 	    if ( ra != 0 ) {
 	      AO[i].Signals[k].addAttError( ra );
 	      success = false;
 	    }
+	  }
+	  else {
+	    double level = AO[i].Signals[k].level();
+	    int ra = Att[a].Att->attenuate( level );
+	    AO[i].Signals[k].setLevel( level );
+	    AO[i].Signals[k].addAttError( ra );
 	  }
 	}
       }
@@ -1960,21 +1992,29 @@ int Acquire::directWrite( OutData &signal )
   // add data to device:
   AO[di].Signals.add( &signal );
 
-  // set intensity:
+  // set intensity or level:
   for ( unsigned int a=0; a<Att.size(); a++ ) {
     if ( ( Att[a].Id == di ) && 
 	 ( Att[a].Att->aoChannel() == signal.channel() ) ) {
-      if ( signal.noIntensity() )
+      if ( signal.noIntensity() && signal.noLevel() )
 	signal.addError( DaqError::NoIntensity );
-      else {
+      else if ( signal.noLevel() ) {
 	double intens = signal.intensity();
 	int ra = 0;
 	if ( intens == OutData::MuteIntensity )
 	  ra = Att[a].Att->mute();
 	else {
-	  ra = Att[a].Att->write( intens, signal.carrierFreq() );
+	  double level = 0.0;
+	  ra = Att[a].Att->write( intens, signal.carrierFreq(), level );
 	  signal.setIntensity( intens );
+	  signal.setLevel( level );
 	}
+	signal.addAttError( ra );
+      }
+      else {
+	double level = signal.level();
+	int ra = Att[a].Att->attenuate( level );
+	signal.setLevel( level );
 	signal.addAttError( ra );
       }
     }
@@ -2103,7 +2143,7 @@ int Acquire::directWrite( OutList &signal )
     return -1;
   }
 
-  // set intensities:
+  // set intensities or levels:
   bool usedatt[Att.size()];
   for ( unsigned int a=0; a<Att.size(); a++ )
     usedatt[a] = false;
@@ -2113,23 +2153,31 @@ int Acquire::directWrite( OutList &signal )
 	if ( Att[a].Id == (int)i &&
 	     Att[a].Att->aoChannel() == AO[i].Signals[k].channel() ) {
 	  usedatt[a] = true;
-	  if ( AO[i].Signals[k].noIntensity() ) {
+	  if ( AO[i].Signals[k].noIntensity() && AO[i].Signals[k].noLevel() ) {
 	    AO[i].Signals[k].addError( DaqError::NoIntensity );
 	    success = false;
 	  }
-	  else {
+	  else if ( AO[i].Signals[k].noLevel() ) {
 	    double intens = AO[i].Signals[k].intensity();
 	    int ra = 0;
 	    if ( intens == OutData::MuteIntensity )
 	      ra = Att[a].Att->mute();
 	    else {
-	      ra = Att[a].Att->write( intens, AO[i].Signals[k].carrierFreq() );
+	      double level = 0.0;
+	      ra = Att[a].Att->write( intens, AO[i].Signals[k].carrierFreq(), level );
 	      AO[i].Signals[k].setIntensity( intens );
+	      AO[i].Signals[k].setLevel( level );
 	    }
 	    if ( ra != 0 ) {
 	      AO[i].Signals[k].addAttError( ra );
 	      success = false;
 	    }
+	  }
+	  else {
+	    double level = AO[i].Signals[k].level();
+	    int ra = Att[a].Att->attenuate( level );
+	    AO[i].Signals[k].setLevel( level );
+	    AO[i].Signals[k].addAttError( ra );
 	  }
 	}
       }
@@ -2283,6 +2331,138 @@ int Acquire::stopWrite( void )
   }
 
   return success ? 0 : -1;
+}
+
+
+double Acquire::minLevel( int trace ) const
+{
+  if ( trace < 0 || trace > outTracesSize() )
+    return OutData::NoLevel;
+
+  for ( unsigned int a=0; a<Att.size(); a++ ) {
+    if ( ( Att[a].Id == OutTraces[trace].device() ) && 
+	 ( Att[a].Att->aoChannel() == OutTraces[trace].channel() ) ) {
+      return Att[a].Att->attenuator()->minLevel();
+    }
+  }
+
+  return OutData::NoLevel;
+}
+
+
+double Acquire::minLevel( const string &trace ) const
+{
+  return minLevel( outTraceIndex( trace ) );
+}
+
+
+double Acquire::maxLevel( int trace ) const
+{
+  if ( trace < 0 || trace > outTracesSize() )
+    return OutData::NoLevel;
+
+  for ( unsigned int a=0; a<Att.size(); a++ ) {
+    if ( ( Att[a].Id == OutTraces[trace].device() ) && 
+	 ( Att[a].Att->aoChannel() == OutTraces[trace].channel() ) ) {
+      return Att[a].Att->attenuator()->maxLevel();
+    }
+  }
+
+  return OutData::NoLevel;
+}
+
+
+double Acquire::maxLevel( const string &trace ) const
+{
+  return maxLevel( outTraceIndex( trace ) );
+}
+
+
+void Acquire::levels( int trace, vector<double> &l ) const
+{
+  l.clear();
+  if ( trace < 0 || trace > outTracesSize() )
+    return;
+
+  for ( unsigned int a=0; a<Att.size(); a++ ) {
+    if ( ( Att[a].Id == OutTraces[trace].device() ) && 
+	 ( Att[a].Att->aoChannel() == OutTraces[trace].channel() ) ) {
+      Att[a].Att->attenuator()->levels( l );
+      break;
+    }
+  }
+}
+
+
+void Acquire::levels( const string &trace, vector<double> &l ) const
+{
+  levels( outTraceIndex( trace ), l );
+}
+
+
+double Acquire::minIntensity( int trace, double frequency ) const
+{
+  if ( trace < 0 || trace > outTracesSize() )
+    return OutData::NoIntensity;
+
+  for ( unsigned int a=0; a<Att.size(); a++ ) {
+    if ( ( Att[a].Id == OutTraces[trace].device() ) && 
+	 ( Att[a].Att->aoChannel() == OutTraces[trace].channel() ) ) {
+      return Att[a].Att->minIntensity( frequency );
+    }
+  }
+
+  return OutData::NoIntensity;
+}
+
+
+double Acquire::minIntensity( const string &trace, double frequency ) const
+{
+  return minIntensity( outTraceIndex( trace ), frequency );
+}
+
+
+double Acquire::maxIntensity( int trace, double frequency ) const
+{
+  if ( trace < 0 || trace > outTracesSize() )
+    return OutData::NoIntensity;
+
+  for ( unsigned int a=0; a<Att.size(); a++ ) {
+    if ( ( Att[a].Id == OutTraces[trace].device() ) && 
+	 ( Att[a].Att->aoChannel() == OutTraces[trace].channel() ) ) {
+      return Att[a].Att->maxIntensity( frequency );
+    }
+  }
+
+  return OutData::NoIntensity;
+}
+
+
+double Acquire::maxIntensity( const string &trace, double frequency ) const
+{
+  return maxIntensity( outTraceIndex( trace ), frequency );
+}
+
+
+void Acquire::intensities( int trace, vector<double> &ints, double frequency ) const
+{
+  ints.clear();
+  if ( trace < 0 || trace > outTracesSize() )
+    return;
+
+  for ( unsigned int a=0; a<Att.size(); a++ ) {
+    if ( ( Att[a].Id == OutTraces[trace].device() ) && 
+	 ( Att[a].Att->aoChannel() == OutTraces[trace].channel() ) ) {
+      Att[a].Att->intensities( ints, frequency );
+      break;
+    }
+  }
+}
+
+
+void Acquire::intensities( const string &trace, vector<double> &ints, double frequency ) const
+{
+  intensities( outTraceIndex( trace ), ints, frequency );
 }
 
 

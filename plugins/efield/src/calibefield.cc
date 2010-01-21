@@ -82,6 +82,16 @@ int CalibEField::main( void )
     return Failed;
   }
 
+  // check for analog input traces:
+  if ( LocalEODTrace[0] < 0 ) {
+    warning( "No local EOD recording available!" );
+    return Failed;
+  }
+  if ( LocalEODEvents[0] < 0 ) {
+    warning( "No local EOD events available!" );
+    return Failed;
+  }
+
   // data:
   const EventData &ee = events( LocalEODEvents[0] );
   bool fish = ( ee.meanSize() > 0.1 * trace( LocalEODTrace[0] ).maxValue() &&
@@ -90,6 +100,10 @@ int CalibEField::main( void )
   double fishrate = 0.0;
   double fishamplitude = 0.0;
   if ( fish ) {
+    if ( LocalBeatPeakEvents[0] < 0 || LocalBeatTroughEvents[0] < 0 ) {
+      warning( "No local EOD beat events available!" );
+      return Failed;
+    }
     fishrate = ee.frequency( ee.rangeBack() - 0.5 );
     if ( duration * beatfrequency < 6 ) {
       beatfrequency = ceil( 10.0 / duration );
@@ -141,6 +155,9 @@ int CalibEField::main( void )
   double intensity = intensitystep * intensitiesoffs;
   int intensitycount = 0;
 
+  if ( fish )
+    detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", 0.5*minintensityfrac*fishamplitude );
+
   // plot trace:
   plotToggle( true, true, duration, 0.0 );
 
@@ -158,43 +175,25 @@ int CalibEField::main( void )
 
   for ( ; ; ) {
 
-    for ( int k=0; ; k++ ) {
-
-      // failed to get a succesfull testWrite():
-      if ( k >= 40 ) {
-	warning( "Could not establish valid intensity!" );
-	latt->setGain( origgain, origoffset );
-	stop( outtrace );
-	return Failed;
-      }
-
-      signal.setIntensity( intensity );
-      if ( fish )
-	detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", 0.5*intensity );
-      testWrite( signal );
-
-      if ( signal.success() )
-	break;
-
-      else if ( signal.overflow() ) {
-	cerr << "CalibEField::main() -> attenuator overflow: " << signal.intensity() << endl;
-	intensitystep *= 0.5;
-	intensity = intensitystep * intensitiesoffs;
-      }
-
-      else if ( signal.underflow() ) {
-	cerr << "CalibEField::main() -> attenuator underflow: " << signal.intensity() << endl;
-	intensitystep *= 2.0;
-	intensity = intensitystep * intensitiesoffs;
-      }
-
-      else if ( signal.failed() ) {
-	cerr << "! error: CalibEField::main() -> failed" << endl;
-      }
-
+    // set intensity:
+    if ( intensity > maxIntensity( outtrace ) ) {
+      intensitystep = maxIntensity( outtrace ) / (intensitiesoffs + maxintensities + 2);
+      intensity = intensitystep * intensitiesoffs;
     }
+    else if ( intensity < minIntensity( outtrace ) ) {
+      intensitystep = minIntensity( outtrace ) / intensitiesoffs;
+      intensity = intensitystep * intensitiesoffs;
+    }
+    signal.setIntensity( intensity );
 
+    // write stimulus:
     write( signal );
+    if ( signal.failed() ) {
+      warning( "Failed to write out signal!" );
+      latt->setGain( origgain, origoffset );
+      stop( outtrace );
+      return Failed;
+    }
 
     sleep( duration + pause );
     if ( interrupt() ) {
@@ -203,14 +202,15 @@ int CalibEField::main( void )
       return Aborted;
     }
 
-
-    // adjust analog input gains:
+    // adjust signal analog input gains:
     if ( !am && GlobalEFieldTrace >= 0 ) {
       double max = trace( GlobalEFieldTrace ).maxAbs( trace( GlobalEFieldTrace ).signalTime(),
 						      trace( GlobalEFieldTrace ).signalTime()+duration );
-      if ( maxsignal < max )
+      if ( maxsignal < max ) {
 	maxsignal = max;
-      adjustGain( trace( GlobalEFieldTrace ), 1.1 * maxsignal );
+	adjustGain( trace( GlobalEFieldTrace ), 1.1 * maxsignal );
+	activateGains();
+      }
     }
 
     // setup signal eod detector:
@@ -233,7 +233,7 @@ int CalibEField::main( void )
     // next stimulus:
     intensitycount++;
     if ( intensitycount >= maxintensities || (FitFlag & 3) ) {
-      // overflow?
+      // response too strong?
       if ( FitFlag & 2 ) { 
 	message( "CalibEField::main() -> signal overflow: " + Str( signal.intensity() ) );
 	if ( fish && intensitycount > 1 ) {
@@ -246,7 +246,7 @@ int CalibEField::main( void )
 	else
 	  intensitystep *= 0.5;
       }
-      // underflow?
+      // response too weak?
       else if ( (FitFlag & 1) && 
 		( Intensities.size() < 2 || fabs( FitGain ) < 1.0e-6 ) ) {
 	message( "CalibEField::main() -> signal underflow: " + Str( signal.intensity() ) );

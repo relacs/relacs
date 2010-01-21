@@ -89,6 +89,7 @@ OutData::OutData( const OutData  &od )
   SignalDelay = od.SignalDelay;
   Intensity = od.Intensity;
   CarrierFreq = od.CarrierFreq;
+  Level = od.Level;
   DeviceBuffer = NULL;
   DeviceBufferSize = 0;
   DeviceDataSize = 2;
@@ -132,6 +133,7 @@ void OutData::construct( void )
   SignalDelay = 0.0;
   Intensity = NoIntensity;
   CarrierFreq = 0.0;
+  Level = NoLevel;
   DeviceBuffer = NULL;
   DeviceBufferSize = 0;
   DeviceDataSize = 2;
@@ -215,6 +217,7 @@ const OutData &OutData::assign( const OutData &od )
   SignalDelay = od.SignalDelay;
   Intensity = od.Intensity;
   CarrierFreq = od.CarrierFreq;
+  Level = od.Level;
   if ( DeviceBuffer != NULL )
     delete [] DeviceBuffer;
   DeviceBuffer = NULL;
@@ -254,6 +257,7 @@ const OutData &OutData::copy( OutData &od ) const
   od.SignalDelay = SignalDelay;
   od.Intensity = Intensity;
   od.CarrierFreq = CarrierFreq;
+  od.Level = Level;
   if ( od.DeviceBuffer != NULL )
     delete [] od.DeviceBuffer;
   od.DeviceBuffer = NULL;
@@ -494,6 +498,30 @@ void OutData::setCarrierFreq( double carrierfreq )
 }
 
 
+double OutData::level( void ) const
+{
+  return Level;
+}
+
+
+void OutData::setLevel( double level )
+{
+  Level = level;
+}
+
+
+void OutData::setNoLevel( void )
+{
+  Level = NoLevel;
+}
+
+
+bool OutData::noLevel( void ) const
+{
+  return ( Level == NoLevel );
+}
+
+
 string OutData::ident( void ) const
 {
   return Ident;
@@ -642,7 +670,7 @@ void OutData::setUnit( double scale, const string &unit )
 
 double OutData::minValue( void ) const
 {
-  if ( noIntensity() )
+  if ( noIntensity() && noLevel() )
     return MinVoltage/Scale;
   else
     return -1.0;
@@ -651,7 +679,7 @@ double OutData::minValue( void ) const
 
 double OutData::maxValue( void ) const
 {
-  if ( noIntensity() )
+  if ( noIntensity() && noLevel() )
     return MaxVoltage/Scale;
   else
     return 1.0;
@@ -1024,6 +1052,7 @@ ostream &operator<<( ostream &str, const OutData &od )
   str << "SignalDelay: " << od.SignalDelay << '\n';
   str << "Intensity: " << od.Intensity << '\n';
   str << "CarrierFreq: " << od.CarrierFreq << '\n';
+  str << "Level: " << od.Level << '\n';
   str << "DeviceBuffer: " << od.DeviceBuffer << '\n';
   str << "DeviceBufferSize: " << od.DeviceBufferSize << '\n';
   str << "DeviceDataSize: " << od.DeviceDataSize << '\n';

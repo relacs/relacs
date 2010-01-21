@@ -87,6 +87,7 @@ libefishpunitmodel_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../../ephys/include \
+    -I$(srcdir)/../../efield/include \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 

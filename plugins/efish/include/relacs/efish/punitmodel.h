@@ -23,6 +23,7 @@
 #define _RELACS_EFISH_PUNITMODEL_H_ 1
 
 #include <relacs/ephys/neuronmodels.h>
+#include <relacs/efield/traces.h>
 using namespace relacs;
 
 namespace efish {
@@ -36,7 +37,7 @@ namespace efish {
 */
 
 
-class PUnitModel : public ephys::NeuronModels
+class PUnitModel : public ephys::NeuronModels, public efield::Traces
 {
   Q_OBJECT
 

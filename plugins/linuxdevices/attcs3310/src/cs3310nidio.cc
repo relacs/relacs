@@ -36,8 +36,8 @@ CS3310NIDIO::CS3310NIDIO( const string &device )
     Own( false )
 {
   Settings.clear();
-  Settings.addInteger( "level1" );
-  Settings.addInteger( "level2" );
+  Settings.addNumber( "level1", 0.0, "dB" );
+  Settings.addNumber( "level2", 0.0, "dB" );
   open( device );
 }
 
@@ -48,8 +48,8 @@ CS3310NIDIO::CS3310NIDIO( NIDIO *nidio )
     Own( false )
 {
   Settings.clear();
-  Settings.addInteger( "level1" );
-  Settings.addInteger( "level2" );
+  Settings.addNumber( "level1", 0.0, "dB" );
+  Settings.addNumber( "level2", 0.0, "dB" );
   open( *nidio );
 }
 
@@ -60,8 +60,8 @@ CS3310NIDIO::CS3310NIDIO( void )
     Own( false )
 {
   Settings.clear();
-  Settings.addInteger( "level1" );
-  Settings.addInteger( "level2" );
+  Settings.addNumber( "level1", 0.0, "dB" );
+  Settings.addNumber( "level2", 0.0, "dB" );
 }
 
 
@@ -233,8 +233,8 @@ void CS3310NIDIO::close( void )
 
 const Options &CS3310NIDIO::settings( void ) const
 {
-  Settings.setInteger( "level1", (int)Level[0] );
-  Settings.setInteger( "level2", (int)Level[1] );
+  Settings.setNumber( "level1", 0.5 * ( ZeroGain - Level[0] ) );
+  Settings.setNumber( "level2", 0.5 * ( ZeroGain - Level[1] ) );
   return Settings;
 }
 

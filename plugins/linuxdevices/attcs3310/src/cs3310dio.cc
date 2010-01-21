@@ -34,8 +34,8 @@ CS3310DIO::CS3310DIO( DigitalIO *dio )
     DIO( 0 )
 {
   Settings.clear();
-  Settings.addInteger( "level1" );
-  Settings.addInteger( "level2" );
+  Settings.addNumber( "level1", 0.0, "dB" );
+  Settings.addNumber( "level2", 0.0, "dB" );
   open( *dio );
 }
 
@@ -45,8 +45,8 @@ CS3310DIO::CS3310DIO( void )
     DIO( 0 )
 {
   Settings.clear();
-  Settings.addInteger( "level1" );
-  Settings.addInteger( "level2" );
+  Settings.addNumber( "level1", 0.0, "dB" );
+  Settings.addNumber( "level2", 0.0, "dB" );
 }
 
 
@@ -194,8 +194,8 @@ void CS3310DIO::close( void )
 
 const Options &CS3310DIO::settings( void ) const
 {
-  Settings.setInteger( "level1", (int)Level[0] );
-  Settings.setInteger( "level2", (int)Level[1] );
+  Settings.setNumber( "level1", 0.5 * ( ZeroGain - Level[0] ) );
+  Settings.setNumber( "level2", 0.5 * ( ZeroGain - Level[1] ) );
   return Settings;
 }
 

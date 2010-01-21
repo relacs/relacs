@@ -47,7 +47,7 @@ output line and on the type of external reference. For normal operation
 without a connected attenuator, the data values are given in units \a unit.
 The hardware driver interface class converts the data values
 by multiplying with \a scale() to the voltage that is put out by the daq board. 
-The intensity() is ignored.
+Both intensity() and level() are ignored.
 Which gain is used for converting the voltage to integer values that are transferred to the DAQ board
 can be controlled by request().
 A constant-voltage external reference is used as an additionally 
@@ -63,7 +63,7 @@ the  values from 0 to 1 (unipolar mode) or -1 to 1 (bipolar mode)
 are mapped to the full output range of the daq board.
 scale() might be used internally by AnalogOutput for proper scaling.
 The resulting voltage is then attenuated by additional hardware
-according to the requested intensity().
+according to the requested intensity() or level().
 */
 
 class OutData : public SampleData< float >, public DaqError
@@ -75,6 +75,9 @@ class OutData : public SampleData< float >, public DaqError
   static const double MuteIntensity = -1.0e37;
     /*! Default value for Intensity indicating that no attenuator is used. */
   static const double NoIntensity = -2.0e37;
+
+    /*! Default value fur attenuator level indicating that no attenuator is used. */
+  static const double NoLevel = -2.0e37;
 
     /*! Indicates that the minimum or maximum value of the signal trace
         should be used for setting the appropriate gain on the daq board.
@@ -417,25 +420,26 @@ class OutData : public SampleData< float >, public DaqError
         If MuteIntensity is returned, the attenuator is muted.
 	If NoIntensity is returned, no attenuator is connected
 	to the output channel.
-        \sa setIntensity(), setNoIntensity(), noIntensity() */
+        \sa setIntensity(), setNoIntensity(), noIntensity(), level() */
   double intensity( void ) const;
     /*! Set output peak intensity to \a intensity.
         The intensity is used in conjunction with the carrier frequency
 	to set an attenuator or amplifier.
 	Passing MuteIntensity requests to mute the attenuator
 	connected to the output channel.
+	Setting the intensity overrides a possible set level().
         If no such hardware is used,
         then the intensity as well the carrier frequency settings 
 	have no effect.
-        \sa setCarrierFreq(), intensity(), setNoIntensity(), noIntensity() */
+        \sa setCarrierFreq(), intensity(), setNoIntensity(), noIntensity(), setLevel() */
   void setIntensity( double intensity );
     /*! Set the intensity to its default value, indicating that
         the intensity is not used for computing the output signal.
 	This will cause an error, if the requested output channel
 	is connected to an attenuator.
-        \sa setIntensity() */
+        \sa setIntensity(), setNoLevel() */
   void setNoIntensity( void );
-    /*! Returns \c true if no intensity is set. \sa intensity() */
+    /*! Returns \c true if no intensity is set. \sa intensity(), noLevel() */
   bool noIntensity( void ) const;
     /*! Request to mute the attenuator connected to the output channel. 
         Same as setIntensity( MuteIntensity ). 
@@ -451,6 +455,25 @@ class OutData : public SampleData< float >, public DaqError
 	have no effect.
         \sa setIntensity() */
   void setCarrierFreq( double carrierfreq );
+
+    /*! The level that was set for the attenuator.
+        \sa setLevel(), intensity() */
+  double level( void ) const;
+    /*! Set attenuator level directly to \a level.
+        The specified level is only used if no intensity()
+	was specified.
+        If no atenuator is connected,
+        then setting the level has no effect.
+        \sa level(), setIntensity() */
+  void setLevel( double level );
+    /*! Set the attenuation level to its default value, indicating that
+        the level is not used for computing the output signal.
+	This will cause an error, if the requested output channel
+	is connected to an attenuator and also no intensity() was specified.
+        \sa setLevel(), setNoIntensity() */
+  void setNoLevel( void );
+    /*! Returns \c true if no level is set. \sa level(), noIntensity() */
+  bool noLevel( void ) const;
 
     /*! The duration of the output signal. Equals length(). */
   double duration( void ) const;
@@ -711,6 +734,8 @@ class OutData : public SampleData< float >, public DaqError
   double Intensity;
     /*! Carrier frequency of signal, important for attenuator. */
   double CarrierFreq;
+    /*! Attenuation level. */
+  double Level;
 
     /*! The buffer holding device dependent multiplexed data. */
   char *DeviceBuffer;

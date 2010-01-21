@@ -20,6 +20,7 @@
 */
 
 #include <cmath>
+#include <relacs/attenuator.h>
 #include <relacs/optwidget.h>
 #include <relacs/random.h>
 #include <relacs/odealgorithm.h>
@@ -129,7 +130,15 @@ void PUnitModel::main( void )
 void PUnitModel::process( const OutData &source, OutData &dest )
 {
   dest = source;
-  dest *= source.intensity();
+  double intensfac = 0.0;
+  if ( source.level() != MuteAttenuationLevel ) {
+    intensfac = ( ::pow( 10.0, -source.level()/20.0 ) );
+    if ( source.trace() == GlobalAMEField )
+      intensfac /= 0.3;
+    else
+      intensfac /= 0.4;
+  }
+  dest *= intensfac;
 }
 
 

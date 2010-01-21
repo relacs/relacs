@@ -39,8 +39,8 @@ AttSim::AttSim( void )
   : Attenuator( "Attenuator Simulation" )
 {
   Settings.clear();
-  Settings.addNumber( "level1" );
-  Settings.addNumber( "level2" );
+  Settings.addNumber( "level1", 0.0, "dB" );
+  Settings.addNumber( "level2", 0.0, "dB" );
 }
 
 
