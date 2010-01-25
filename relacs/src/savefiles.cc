@@ -832,7 +832,7 @@ void SaveFiles::createStimulusFile( const InList &traces,
     for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
       if ( TraceFiles[k].Stream != 0 ) {
 	StimulusKey.addLabel( traces[k].ident() );
-	StimulusKey.addNumber( "index", "word", "%10.0f" );
+	StimulusKey.addNumber( "index", "float", "%10.0f" );
       }
     }
     StimulusKey.addLabel( "events" );

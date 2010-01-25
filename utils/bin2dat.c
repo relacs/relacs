@@ -33,7 +33,8 @@
 char binfile[200] = "";
 char datfile[200] = "signal.dat";
 int datasize = 2;
-int datasign = 1;
+int datatype = 'i';  /* i: integer, f: float, d: double */
+int datasign = 0;
 int datachannels = 1;
 long offset = 0;
 long ndata = LONG_MAX;
@@ -49,14 +50,14 @@ void extractData( void )
   long m, n, k, t;
   signed short *swp;
   /*  unsigned short *uwp;*/
+  float *fp;
   int c;
 
   BF = fopen( binfile, "r" );
-  if ( BF == NULL )
-    {
-      fprintf( stderr, "can't open %s!\n", binfile );
-      return;
-    }
+  if ( BF == NULL ) {
+    fprintf( stderr, "can't open %s!\n", binfile );
+    return;
+  }
   fseek( BF, offset, SEEK_SET );
   DF = fopen( datfile, "w" );
   n = 0;
@@ -66,33 +67,47 @@ void extractData( void )
     m = fread( buffer, 1, 2048, BF );
     if ( n+m > ndata )
       m = ndata - n;
-    if ( datasize == 2 && datasign == 1 )
-      {
-	swp = (signed short *)buffer;
-	for ( k=0; k<m; k+=datasize )
-	  {
-	    if ( c>0 )
-	      fprintf( DF, "  " );
-	    else if ( tcol ) 
-	      fprintf( DF, "%.7g  ", deltat*t );
-	    fprintf( DF, "%5d", *swp );
-	    c++;
-	    if ( c >= datachannels ) 
-	      {
-		fprintf( DF, "\n" );
-		c = 0;
-		t++;
-	      }
-	    swp++;
-	  }
+    if ( datatype == 'f' ) {
+      fp = (float *)buffer;
+      for ( k=0; k<m; k+=datasize ) {
+	if ( c>0 )
+	  fprintf( DF, "  " );
+	else if ( tcol ) 
+	  fprintf( DF, "%.7g  ", deltat*t );
+	fprintf( DF, "%8.5g", *fp );
+	c++;
+	if ( c >= datachannels ) {
+	  fprintf( DF, "\n" );
+	  c = 0;
+	  t++;
+	}
+	fp++;
       }
-    else
-      {
-	fprintf( stderr, "sorry! Data format not supported.\n" );
-	fprintf( stderr, "data sign: %s\n", datasign > 0 ? "signed" : "unsigned" );
-	fprintf( stderr, "data size: %d\n", datasize );
-	break;
+    }
+    else if ( datatype == 'i' && datasize == 2 && datasign == 1 ) {
+      swp = (signed short *)buffer;
+      for ( k=0; k<m; k+=datasize ) {
+	if ( c>0 )
+	  fprintf( DF, "  " );
+	else if ( tcol ) 
+	  fprintf( DF, "%.7g  ", deltat*t );
+	fprintf( DF, "%5d", *swp );
+	c++;
+	if ( c >= datachannels ) {
+	  fprintf( DF, "\n" );
+	  c = 0;
+	  t++;
+	}
+	swp++;
       }
+    }
+    else {
+      fprintf( stderr, "sorry! Data format not supported.\n" );
+      fprintf( stderr, "data type: %c\n", datatype );
+      fprintf( stderr, "data sign: %s\n", datasign > 0 ? "signed" : "unsigned" );
+      fprintf( stderr, "data size: %d\n", datasize );
+      break;
+    }
     n += m;
   } while ( m == 2048 && n<ndata);
   if ( c>0 )
@@ -103,26 +118,29 @@ void extractData( void )
 
  
 void WriteUsage()
-
 {
   printf( "\nusage:\n" );
   printf( "\n" );
-  printf( "bin2dat <binfile> <datfile> [-o|O ## -u|U ## -n|N ## -T ## -t ## -s ## -d ## -c ## -v] \n" );
+  printf( "bin2dat [-o|O ## -u|U ## -n|N ## -T ## -t ## -s ## -d ## -f -F -c ## -v] <binfile> <datfile>\n" );
   printf( "\n" );
-  printf( "save binary data from file <binfile> as ascii data in file <datfile>.\n" );
+  printf( "Save binary data from file <binfile> as ascii data into file <datfile>.\n" );
   printf( "-o : save data starting from byte offset ##.\n" );
   printf( "-O : save data starting from byte offset ## times size of data type.\n" );
   printf( "-u : save data upto byte offset ##.\n" );
   printf( "-U : save data upto byte offset ## times size of data type.\n" );
   printf( "-n : save at maximum ## bytes.\n" );
-  printf( "-N : save at maximum ## lines (i.e. ## times size of data type times number of channels bytes).\n" );
+  printf( "-N : save at maximum ## lines (i.e. ## times size of data type times\n" );
+  printf( "     number of channels bytes).\n" );
   printf( "-T : save at maximum ## divided by stepsize (-t) lines of data.\n" );
   printf( "-t : add a time column with stepsize ##.\n" );
+  printf( "\n" );
   printf( "Usually the type of the data contained in the binary file\n" );
   printf( "is determined from its extension. The following options can be\n" );
-  printf( "used to specify the data type directly.\n" );
+  printf( "used to specify the data type directly:\n" );
   printf( "-s : specify sign of the binary data (0=unsigned, 1=signed, default=signed).\n" );
   printf( "-d : specify size of the binary data type in bytes (1, 2, 4, 8, default=2).\n" );
+  printf( "-f : the binary data type is float (4 byte).\n" );
+  printf( "-F : the binary data type is double (8 byte).\n" );
   printf( "-c : specify number of channels multiplexed in the binary data file (default=1).\n" );
   printf( "-v : print settings to stderr.\n" );
   printf( "\n" );
@@ -154,7 +172,7 @@ void ReadArgs( int argc, char *argv[] )
   optind = 0;
   opterr = 0;
   int longindex = 0;
-  while ( (c = getopt_long( argc, argv, "o:O:u:U:n:N:T:t:s:d:c:v",
+  while ( (c = getopt_long( argc, argv, "o:O:u:U:n:N:T:t:s:d:fFc:v",
 			    longoptions, &longindex )) >= 0 ) {
     switch ( c ) {
     case 0: switch ( longindex ) {
@@ -204,11 +222,19 @@ void ReadArgs( int argc, char *argv[] )
 	datasize = 2;
       setsize = 0;
       break;
+    case 'f': datasize = 4;
+      datatype = 'f';
+      setsize = 0;
+      break;
+    case 'F': datasize = 8;
+      datatype = 'd';
+      setsize = 0;
+      break;
     case 'c': if ( optarg == NULL || sscanf( optarg, "%d", &datachannels ) == 0 )
 	datachannels = 1;
       setcol = 0;
       break;
-    case 'v': showvals=1;
+    case 'v': showvals = 1;
       break;
     default : WriteUsage();
     }
@@ -220,31 +246,39 @@ void ReadArgs( int argc, char *argv[] )
   strcpy( datfile, argv[optind+1] );
 
   sp = strrchr( binfile, '.' );
-  if ( sp != NULL )
-    {
-      sp++;
+  if ( sp != NULL ) {
+    sp++;
+    if ( *sp == 'r' ) {
+      if ( setsize ) {
+	datasign = 1;
+	datasize = 4;
+	datatype = 'f';
+      }
+      if ( setcol )
+	datachannels = 1;
+    }
+    else {
       if ( setsign )
 	datasign = ( *sp == 's' );
       sp++;
-      if ( setsize )
-	{
-	  if ( *sp == 'b' )
-	    datasize = 1;
-	  else if ( *sp == 'w' )
-	    datasize = 2;
-	  else if ( *sp == 'd' )
-	    datasize = 4;
-	  else if ( *sp == 'q' )
-	    datasize = 8;
-	}
+      if ( setsize ) {
+	if ( *sp == 'b' )
+	  datasize = 1;
+	else if ( *sp == 'w' )
+	  datasize = 2;
+	else if ( *sp == 'd' )
+	  datasize = 4;
+	else if ( *sp == 'q' )
+	  datasize = 8;
+      }
       sp++;
-      if ( setcol )
-	{
-	  datachannels = atoi( sp );
-	  if ( datachannels <= 0 )
-	    datachannels = 1;
-	}
+      if ( setcol ) {
+	datachannels = atoi( sp );
+	if ( datachannels <= 0 )
+	  datachannels = 1;
+      }
     }
+  }
 
   if ( offsd )
     offset *= datasize;
@@ -259,18 +293,18 @@ void ReadArgs( int argc, char *argv[] )
   if ( upto > 0 )
     ndata = upto - offset;
 
-  if ( showvals )
-    {
-      fprintf( stderr, "binary file: %s\n", binfile );
-      fprintf( stderr, "data file: %s\n", datfile );
-      fprintf( stderr, "offset: %ld bytes\n", offset );
-      fprintf( stderr, "ndata: %ld bytes\n", ndata );
-      fprintf( stderr, "data sign: %s\n", datasign > 0 ? "signed" : "unsigned" );
-      fprintf( stderr, "data size: %d\n", datasize );
-      fprintf( stderr, "data columns: %d\n", datachannels );
-      fprintf( stderr, "time column: %s\n", tcol ? "yes" : "no" );
-      fprintf( stderr, "time step: %g\n", deltat );
-    }
+  if ( showvals ) {
+    fprintf( stderr, "binary file: %s\n", binfile );
+    fprintf( stderr, "data file: %s\n", datfile );
+    fprintf( stderr, "offset: %ld bytes\n", offset );
+    fprintf( stderr, "ndata: %ld bytes\n", ndata );
+    fprintf( stderr, "data sign: %s\n", datasign > 0 ? "signed" : "unsigned" );
+    fprintf( stderr, "data size: %d\n", datasize );
+    fprintf( stderr, "data type: %c\n", datatype );
+    fprintf( stderr, "data columns: %d\n", datachannels );
+    fprintf( stderr, "time column: %s\n", tcol ? "yes" : "no" );
+    fprintf( stderr, "time step: %g\n", deltat );
+  }
 }
 
 
