@@ -335,7 +335,7 @@ public:
 
     /*! Check and initialize the analog input and output devices
         for supported mechanisms of synchronisation. */
-  void init( void );
+  void initSync( void );
     /*! The method that is used for synchronizing analog output with analog input. */
   SyncModes syncMode( void ) const;
     /*! A string describing the method that is used

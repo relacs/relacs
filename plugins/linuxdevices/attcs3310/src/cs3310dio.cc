@@ -33,9 +33,6 @@ CS3310DIO::CS3310DIO( DigitalIO *dio )
   : Attenuator( "CS3310DIO" ),
     DIO( 0 )
 {
-  Settings.clear();
-  Settings.addNumber( "level1", 0.0, "dB" );
-  Settings.addNumber( "level2", 0.0, "dB" );
   open( *dio );
 }
 
@@ -44,9 +41,6 @@ CS3310DIO::CS3310DIO( void )
   : Attenuator( "CS3310DIO" ),
     DIO( 0 )
 {
-  Settings.clear();
-  Settings.addNumber( "level1", 0.0, "dB" );
-  Settings.addNumber( "level2", 0.0, "dB" );
 }
 
 
@@ -154,8 +148,8 @@ int CS3310DIO::open( void )
   }
   else {
     // mute attenuator:
-    Level[0] = 0;
-    Level[1] = 0;
+    Level[0] = MuteGain;
+    Level[1] = MuteGain;
     for ( int n=0; n<Tries; n++ ) {
       ar = write();
       if ( ar == 0 )
@@ -194,8 +188,15 @@ void CS3310DIO::close( void )
 
 const Options &CS3310DIO::settings( void ) const
 {
-  Settings.setNumber( "level1", 0.5 * ( ZeroGain - Level[0] ) );
-  Settings.setNumber( "level2", 0.5 * ( ZeroGain - Level[1] ) );
+  Settings.clear();
+  if ( Level[1] == MuteGain )
+    Settings.addText( "level1", "muted" );
+  else
+    Settings.addNumber( "level1", 0.5 * ( ZeroGain - Level[1] ), "dB" );
+  if ( Level[0] == MuteGain )
+    Settings.addText( "level2", "muted" );
+  else
+    Settings.addNumber( "level2", 0.5 * ( ZeroGain - Level[0] ), "dB" );
   return Settings;
 }
 

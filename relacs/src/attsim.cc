@@ -38,9 +38,6 @@ double AttSim::Decibel[AttSim::MaxDevices] = { 0, 0 };
 AttSim::AttSim( void ) 
   : Attenuator( "Attenuator Simulation" )
 {
-  Settings.clear();
-  Settings.addNumber( "level1", 0.0, "dB" );
-  Settings.addNumber( "level2", 0.0, "dB" );
 }
 
 
@@ -75,8 +72,15 @@ void AttSim::close( void )
 
 const Options &AttSim::settings( void ) const
 {
-  Settings.setNumber( "level1", Decibel[0] );
-  Settings.setNumber( "level2", Decibel[1] );
+  Settings.clear();
+  if ( Decibel[0] == MuteAttenuationLevel )
+    Settings.addText( "level1", "muted" );
+  else
+    Settings.addNumber( "level1", Decibel[0], "dB" );
+  if ( Decibel[1] == MuteAttenuationLevel )
+    Settings.addText( "level2", "muted" );
+  else
+    Settings.addNumber( "level2", Decibel[1], "dB" );
   return Settings;
 }
 

@@ -181,6 +181,18 @@ protected:
       else
 	dv->setAODevice( "" );
       dv->setAOChannel( integer( "channel" + ns, 0, 0 ) );
+      if ( exist( "intensityname" + ns ) )
+	dv->setIntensityName( text( "intensityname" + ns ) );
+      if ( exist( "intensityunit" + ns ) )
+	dv->setIntensityUnit( text( "intensityunit" + ns ) );
+      if ( exist( "intensityformat" + ns ) )
+	dv->setIntensityName( text( "intensityformat" + ns ) );
+      if ( exist( "frequencyname" + ns ) )
+	dv->setFrequencyName( text( "frequencyname" + ns ) );
+      if ( exist( "frequencyunit" + ns ) )
+	dv->setFrequencyUnit( text( "frequencyunit" + ns ) );
+      if ( exist( "frequencyformat" + ns ) )
+	dv->setFrequencyName( text( "frequencyformat" + ns ) );
     };
 
   AODevices *AOD;

@@ -630,7 +630,7 @@ int RELACSWidget::setupHardware( int n )
 
     AQ->setAdjustFlag( 4096 );
 
-    AQ->init();
+    AQ->initSync();
     printlog( "Synchronization method: " + AQ->syncModeStr() );
 
     if ( n == 1 ) {

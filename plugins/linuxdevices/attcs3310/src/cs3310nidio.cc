@@ -35,9 +35,6 @@ CS3310NIDIO::CS3310NIDIO( const string &device )
     DIO( 0 ),
     Own( false )
 {
-  Settings.clear();
-  Settings.addNumber( "level1", 0.0, "dB" );
-  Settings.addNumber( "level2", 0.0, "dB" );
   open( device );
 }
 
@@ -47,9 +44,6 @@ CS3310NIDIO::CS3310NIDIO( NIDIO *nidio )
     DIO( 0 ),
     Own( false )
 {
-  Settings.clear();
-  Settings.addNumber( "level1", 0.0, "dB" );
-  Settings.addNumber( "level2", 0.0, "dB" );
   open( *nidio );
 }
 
@@ -59,9 +53,6 @@ CS3310NIDIO::CS3310NIDIO( void )
     DIO( 0 ),
     Own( false )
 {
-  Settings.clear();
-  Settings.addNumber( "level1", 0.0, "dB" );
-  Settings.addNumber( "level2", 0.0, "dB" );
 }
 
 
@@ -190,8 +181,8 @@ int CS3310NIDIO::open( void )
   }
   else {
     // mute attenuator:
-    Level[0] = 0;
-    Level[1] = 0;
+    Level[0] = MuteGain;
+    Level[1] = MuteGain;
     for ( int n=0; n<Tries; n++ ) {
       ar = write();
       if ( ar == 0 )
@@ -233,8 +224,15 @@ void CS3310NIDIO::close( void )
 
 const Options &CS3310NIDIO::settings( void ) const
 {
-  Settings.setNumber( "level1", 0.5 * ( ZeroGain - Level[0] ) );
-  Settings.setNumber( "level2", 0.5 * ( ZeroGain - Level[1] ) );
+  Settings.clear();
+  if ( Level[1] == MuteGain )
+    Settings.addText( "level1", "muted" );
+  else
+    Settings.addNumber( "level1", 0.5 * ( ZeroGain - Level[1] ), "dB" );
+  if ( Level[0] == MuteGain )
+    Settings.addText( "level2", "muted" );
+  else
+    Settings.addNumber( "level2", 0.5 * ( ZeroGain - Level[0] ), "dB" );
   return Settings;
 }
 

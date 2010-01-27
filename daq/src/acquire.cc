@@ -378,8 +378,9 @@ void Acquire::close( void )
 }
 
 
-void Acquire::init( void )
+void Acquire::initSync( void )
 {
+  // set synchronization mode:
   SyncMode = NoSync;
 
   // create lists of analog input and output devices:
@@ -1288,7 +1289,13 @@ int Acquire::testWrite( OutData &signal )
 	 ( Att[a].Att->aoChannel() == signal.channel() ) ) {
       if ( signal.noIntensity() && signal.noLevel() )
 	signal.addError( DaqError::NoIntensity );
-      else if ( signal.noLevel() ) {
+      else if ( signal.noIntensity() ) {
+	double level = signal.level();
+	int ra = Att[a].Att->testAttenuate( level );
+	signal.setLevel( level );
+	signal.addAttError( ra );
+      }
+      else {
 	double intens = signal.intensity();
 	int ra = 0;
 	if ( intens == OutData::MuteIntensity ) 
@@ -1299,12 +1306,6 @@ int Acquire::testWrite( OutData &signal )
 	  signal.setIntensity( intens );
 	  signal.setLevel( level );
 	}
-	signal.addAttError( ra );
-      }
-      else {
-	double level = signal.level();
-	int ra = Att[a].Att->testAttenuate( level );
-	signal.setLevel( level );
 	signal.addAttError( ra );
       }
     }
@@ -1442,7 +1443,13 @@ int Acquire::testWrite( OutList &signal )
 	    dsignals[i][k].addError( DaqError::NoIntensity );
 	    success = false;
 	  }
-	  else if ( dsignals[i][k].noLevel() ) {
+	  else if ( dsignals[i][k].noIntensity() ) {
+	    double level = dsignals[i][k].level();
+	    int ra = Att[a].Att->testAttenuate( level );
+	    dsignals[i][k].setLevel( level );
+	    dsignals[i][k].addAttError( ra );
+	  }
+	  else {
 	    double intens = dsignals[i][k].intensity();
 	    int ra = 0;
 	    if ( intens == OutData::MuteIntensity )
@@ -1457,12 +1464,6 @@ int Acquire::testWrite( OutList &signal )
 	      dsignals[i][k].addAttError( ra );
 	      success = false;
 	    }
-	  }
-	  else {
-	    double level = dsignals[i][k].level();
-	    int ra = Att[a].Att->testAttenuate( level );
-	    dsignals[i][k].setLevel( level );
-	    dsignals[i][k].addAttError( ra );
 	  }
 	}
       }
@@ -1616,7 +1617,13 @@ int Acquire::write( OutData &signal )
 	 ( Att[a].Att->aoChannel() == signal.channel() ) ) {
       if ( signal.noIntensity() && signal.noLevel() )
 	signal.addError( DaqError::NoIntensity );
-      else if ( signal.noLevel() ) {
+      else if ( signal.noIntensity() ) {
+	double level = signal.level();
+	int ra = Att[a].Att->attenuate( level );
+	signal.setLevel( level );
+	signal.addAttError( ra );
+      }
+      else {
 	double intens = signal.intensity();
 	int ra = 0;
 	if ( intens == OutData::MuteIntensity )
@@ -1627,12 +1634,6 @@ int Acquire::write( OutData &signal )
 	  signal.setIntensity( intens );
 	  signal.setLevel( level );
 	}
-	signal.addAttError( ra );
-      }
-      else {
-	double level = signal.level();
-	int ra = Att[a].Att->attenuate( level );
-	signal.setLevel( level );
 	signal.addAttError( ra );
       }
     }
@@ -1796,7 +1797,13 @@ int Acquire::write( OutList &signal )
 	    AO[i].Signals[k].addError( DaqError::NoIntensity );
 	    success = false;
 	  }
-	  else if ( AO[i].Signals[k].noLevel() ) {
+	  else if ( AO[i].Signals[k].noIntensity() ) {
+	    double level = AO[i].Signals[k].level();
+	    int ra = Att[a].Att->attenuate( level );
+	    AO[i].Signals[k].setLevel( level );
+	    AO[i].Signals[k].addAttError( ra );
+	  }
+	  else {
 	    double intens = AO[i].Signals[k].intensity();
 	    int ra = 0;
 	    if ( intens == OutData::MuteIntensity )
@@ -1811,12 +1818,6 @@ int Acquire::write( OutList &signal )
 	      AO[i].Signals[k].addAttError( ra );
 	      success = false;
 	    }
-	  }
-	  else {
-	    double level = AO[i].Signals[k].level();
-	    int ra = Att[a].Att->attenuate( level );
-	    AO[i].Signals[k].setLevel( level );
-	    AO[i].Signals[k].addAttError( ra );
 	  }
 	}
       }
@@ -1998,7 +1999,13 @@ int Acquire::directWrite( OutData &signal )
 	 ( Att[a].Att->aoChannel() == signal.channel() ) ) {
       if ( signal.noIntensity() && signal.noLevel() )
 	signal.addError( DaqError::NoIntensity );
-      else if ( signal.noLevel() ) {
+      else if ( signal.noIntensity() ) {
+	double level = signal.level();
+	int ra = Att[a].Att->attenuate( level );
+	signal.setLevel( level );
+	signal.addAttError( ra );
+      }
+      else {
 	double intens = signal.intensity();
 	int ra = 0;
 	if ( intens == OutData::MuteIntensity )
@@ -2009,12 +2016,6 @@ int Acquire::directWrite( OutData &signal )
 	  signal.setIntensity( intens );
 	  signal.setLevel( level );
 	}
-	signal.addAttError( ra );
-      }
-      else {
-	double level = signal.level();
-	int ra = Att[a].Att->attenuate( level );
-	signal.setLevel( level );
 	signal.addAttError( ra );
       }
     }
@@ -2157,7 +2158,13 @@ int Acquire::directWrite( OutList &signal )
 	    AO[i].Signals[k].addError( DaqError::NoIntensity );
 	    success = false;
 	  }
-	  else if ( AO[i].Signals[k].noLevel() ) {
+	  else if ( AO[i].Signals[k].noIntensity() ) {
+	    double level = AO[i].Signals[k].level();
+	    int ra = Att[a].Att->attenuate( level );
+	    AO[i].Signals[k].setLevel( level );
+	    AO[i].Signals[k].addAttError( ra );
+	  }
+	  else {
 	    double intens = AO[i].Signals[k].intensity();
 	    int ra = 0;
 	    if ( intens == OutData::MuteIntensity )
@@ -2172,12 +2179,6 @@ int Acquire::directWrite( OutList &signal )
 	      AO[i].Signals[k].addAttError( ra );
 	      success = false;
 	    }
-	  }
-	  else {
-	    double level = AO[i].Signals[k].level();
-	    int ra = Att[a].Att->attenuate( level );
-	    AO[i].Signals[k].setLevel( level );
-	    AO[i].Signals[k].addAttError( ra );
 	  }
 	}
       }

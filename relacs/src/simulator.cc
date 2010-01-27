@@ -346,7 +346,13 @@ int Simulator::write( OutData &signal )
 	 ( Att[a].Att->aoChannel() == signal.channel() ) ) {
       if ( signal.noIntensity() && signal.noLevel() )
 	signal.addError( DaqError::NoIntensity );
-      else if ( signal.noLevel() ) {
+      else if ( signal.noIntensity() ) {
+	double level = signal.level();
+	int ra = Att[a].Att->attenuate( level );
+	signal.setLevel( level );
+	signal.addAttError( ra );
+      }
+      else {
 	double intens = signal.intensity();
 	int ra = 0;
 	if ( intens == OutData::MuteIntensity )
@@ -357,12 +363,6 @@ int Simulator::write( OutData &signal )
 	  signal.setIntensity( intens );
 	  signal.setLevel( level );
 	}
-	signal.addAttError( ra );
-      }
-      else {
-	double level = signal.level();
-	int ra = Att[a].Att->attenuate( level );
-	signal.setLevel( level );
 	signal.addAttError( ra );
       }
     }

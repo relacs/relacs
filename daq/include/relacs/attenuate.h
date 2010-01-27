@@ -317,16 +317,31 @@ public:
         \sa setIntensityName(), intensityUnit(), intensityFormat(),
 	frequencyName(), write(), decibel() */
   string intensityName( void ) const;
+    /*! Set the name of the intensity the specific implementation of
+        Attenuate is using to \a name.
+        \sa intensityName(), setIntensityUnit(), setIntensityFormat(),
+	setFrequencyName(), write(), decibel() */
+  void setIntensityName( const string &name );
     /*! The unit of the intensity the specific implementation of
         Attenuate is using.
         \sa setIntensityUnit(), intensityName(), intensityFormat(),
 	frequencyUnit(), write(), decibel() */
   string intensityUnit( void ) const;
+    /*! Set the unit of the intensity the specific implementation of
+        Attenuate is using to \a unit.
+        \sa intensityUnit(), setIntensityName(), setIntensityFormat(),
+	setFrequencyUnit(), write(), decibel() */
+  void setIntensityUnit( const string &unit );
     /*! A C-style format string to be used for formatting the intensity
         the specific implementation of Attenuate is using.
         \sa setIntensityFormat(), intensityName(), intensityUnit(),
 	frequencyFormat(), write(), decibel() */
   string intensityFormat( void ) const;
+    /*! Set the format of the intensity the specific implementation of
+        Attenuate is using to \a format.
+        \sa intensityFormat(), setIntensityName(), setIntensityUnit(),
+	setFrequencyFormat(), write(), decibel() */
+  void setIntensityFormat( const string &format );
 
     /*! The name of the frequency the specific implementation of
         Attenuate is using for computing the intensity.
@@ -335,17 +350,32 @@ public:
         \sa setFrequencyName(), frequencyUnit(), intensityName(),
 	write(), decibel() */
   string frequencyName( void ) const;
+    /*! Set the name of the frequency the specific implementation of
+        Attenuate is using for computing the intensity to \a name.
+        \sa frequencyName(), setFrequencyUnit(), setIntensityName(),
+	write(), decibel() */
+  void setFrequencyName( const string &name );
     /*! The unit of the frequency the specific implementation of
         Attenuate is using for computing the intensity.
         \sa setFrequencyUnit(), frequencyName(), intensityUnit(),
 	write(), decibel() */
   string frequencyUnit( void ) const;
+    /*! Set the unit of the frequency the specific implementation of
+        Attenuate is using for computing the intensity to \a unit.
+        \sa frequencyUnit(), setFrequencyName(), setIntensityUnit(),
+	write(), decibel() */
+  void setFrequencyUnit( const string &unit );
     /*! A C-style format string to be used for formatting the frequency
         the specific implementation of Attenuate is using for computing
 	the intensity.
         \sa setFrequencyFormat(), frequencyName(), frequencyUnit(),
 	intensityFormat(), write(), decibel() */
   string frequencyFormat( void ) const;
+    /*! Set the format of the frequency the specific implementation of
+        Attenuate is using for computing the intensity to \a format.
+        \sa frequencyFormat(), setFrequencyName(), setFrequencyUnit(),
+	setIntensityFormat(), write(), decibel() */
+  void setFrequencyFormat( const string &format );
 
     /*! Returns the channel number of the analog output device
         which is attenuated by this instance of the Attenuate class.
@@ -436,38 +466,6 @@ protected:
 	frequencyName(), frequencyUnit(), frequencyFormat()
     */
   virtual void intensity( double &intens, double frequency, double decibel ) const =0;
-
-    /*! Set the name of the intensity the specific implementation of
-        Attenuate is using to \a name.
-        \sa intensityName(), setIntensityUnit(), setIntensityFormat(),
-	setFrequencyName(), write(), decibel() */
-  void setIntensityName( const string &name );
-    /*! Set the unit of the intensity the specific implementation of
-        Attenuate is using to \a unit.
-        \sa intensityUnit(), setIntensityName(), setIntensityFormat(),
-	setFrequencyUnit(), write(), decibel() */
-  void setIntensityUnit( const string &unit );
-    /*! Set the format of the intensity the specific implementation of
-        Attenuate is using to \a format.
-        \sa intensityFormat(), setIntensityName(), setIntensityUnit(),
-	setFrequencyFormat(), write(), decibel() */
-  void setIntensityFormat( const string &format );
-
-    /*! Set the name of the frequency the specific implementation of
-        Attenuate is using for computing the intensity to \a name.
-        \sa frequencyName(), setFrequencyUnit(), setIntensityName(),
-	write(), decibel() */
-  void setFrequencyName( const string &name );
-    /*! Set the unit of the frequency the specific implementation of
-        Attenuate is using for computing the intensity to \a unit.
-        \sa frequencyUnit(), setFrequencyName(), setIntensityUnit(),
-	write(), decibel() */
-  void setFrequencyUnit( const string &unit );
-    /*! Set the format of the frequency the specific implementation of
-        Attenuate is using for computing the intensity to \a format.
-        \sa frequencyFormat(), setFrequencyName(), setFrequencyUnit(),
-	setIntensityFormat(), write(), decibel() */
-  void setFrequencyFormat( const string &format );
 
 
 private:
