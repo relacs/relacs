@@ -818,8 +818,9 @@ void RELACSWidget::run( void )
     ThreadSleepWait.wait( di );
     updatetime.restart();
     updateData();
-    DataSleepWait.wakeAll();
+    UpdateDataWait.wakeAll();
     processData();
+    ProcessDataWait.wakeAll();
     RunDataMutex.lock();
     rd = RunData;
     RunDataMutex.unlock();
@@ -837,7 +838,7 @@ void RELACSWidget::setMinTraceTime( double t )
 
 void RELACSWidget::wakeAll( void )
 {
-  DataSleepWait.wakeAll();
+  UpdateDataWait.wakeAll();
   ReProSleepWait.wakeAll();
   ReProAfterWait.wakeAll();
   SessionStartWait.wakeAll();
@@ -881,7 +882,7 @@ int RELACSWidget::write( OutData &signal )
     ThreadSleepWait.wakeAll();
     do {
       // wait for data updates:
-      DataSleepWait.wait();
+      UpdateDataWait.wait();
     } while ( SF->signalPending() );
     CurrentRePro->lockAll();
   }
@@ -924,7 +925,7 @@ int RELACSWidget::write( OutList &signal )
     ThreadSleepWait.wakeAll();
     do {
       // wait for data updates:
-      DataSleepWait.wait();
+      UpdateDataWait.wait();
     } while ( SF->signalPending() );
     CurrentRePro->lockAll();
   }
@@ -967,7 +968,7 @@ int RELACSWidget::directWrite( OutData &signal )
     ThreadSleepWait.wakeAll();
     do {
       // wait for data updates:
-      DataSleepWait.wait();
+      UpdateDataWait.wait();
     } while ( SF->signalPending() );
     CurrentRePro->lockAll();
   }
@@ -1009,7 +1010,7 @@ int RELACSWidget::directWrite( OutList &signal )
     ThreadSleepWait.wakeAll();
     do {
       // wait for data updates:
-      DataSleepWait.wait();
+      UpdateDataWait.wait();
     } while ( SF->signalPending() );
     CurrentRePro->lockAll();
   }
@@ -1035,12 +1036,6 @@ int RELACSWidget::directWrite( OutList &signal )
   if ( IL.failed() )
     printlog( "! error in restarting analog input: " + IL.errorText() );
   return r;
-}
-
-
-void RELACSWidget::noSaving( void )
-{
-  SF->save( false, IL, ED );
 }
 
 
@@ -1146,11 +1141,11 @@ void RELACSWidget::startRePro( RePro *repro, int macroaction, bool saving )
   }
 
   ReProRunning = true;
-
+  
   readLockData();
-  SF->save( saving, IL, ED );
+  SF->holdOn();
+  CurrentRePro->setSaving( saving );
   SF->save( *CurrentRePro );
-  CurrentRePro->setSaving( SF->saving() );
   unlockData();
   CurrentRePro->start( HighPriority );
 }
@@ -1192,13 +1187,12 @@ void RELACSWidget::stopRePro( void )
 
   if ( AQ->readSignal( SignalTime, IL, ED ) ) // we should get the start time of the latest signal here
     SF->save( IL, ED );
+  // force data updates:
+  ThreadSleepWait.wakeAll();
+  ProcessDataWait.wait();
   // last stimulus still not saved?
-  if ( SF->signalPending() ) {
-    // force data updates:
-    ThreadSleepWait.wakeAll();
-    DataSleepWait.wait();
+  if ( SF->signalPending() )
     SF->clearSignal();
-  }
 
   // update Session:
   ReProAfterWait.wakeAll();
@@ -1311,7 +1305,7 @@ void RELACSWidget::startSession( bool startmacro )
   RP->sessionStarted();
 
   if ( startmacro )
-    MC->startSession( true );
+    MC->startSession();
 }
 
 
@@ -1346,7 +1340,7 @@ void RELACSWidget::stopSession( bool saved )
     CN[k]->sessionStopped( saved );
   RP->sessionStopped( saved );
 
-  CurrentRePro->setSaving( SF->saving() );
+  CurrentRePro->setSaving( SF->filesOpen() );
 
 #if QT_VERSION >= 300
   MainWidget->setEraseColor( OrgBackground );
@@ -1371,7 +1365,7 @@ void RELACSWidget::stopSession( bool saved )
   SessionStopWait.wakeAll();
 
   if ( MC->stopSessionIndex() >= 0 && saved )
-    MC->stopSession( false );
+    MC->stopSession();
 
   SF->setPath( SF->defaultPath() );
 }
@@ -1635,7 +1629,7 @@ void RELACSWidget::startFirstAcquisition( void )
     CN[k]->start();
 
   // get first RePro and start it:
-  MC->startUp( false ); 
+  MC->startUp(); 
 
   AcquisitionAction->setEnabled( false );
   SimulationAction->setEnabled( true );
@@ -1761,7 +1755,7 @@ void RELACSWidget::startFirstSimulation( void )
     CN[k]->start();
 
   // get first RePro and start it:
-  MC->startUp( false ); 
+  MC->startUp(); 
 
   AcquisitionAction->setEnabled( true );
   SimulationAction->setEnabled( false );

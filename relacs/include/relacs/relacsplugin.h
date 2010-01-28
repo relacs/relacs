@@ -100,6 +100,9 @@ functions the input data, event data, and the own data are
 already locked.
 
 addPath() prepends the current directory for data storage to a filename.
+addPath() prepends the default directory for data storage.
+saving() returns \c true whenever voltage traces and eventlists
+are saved to disk (via SaveFiles).
 
 Use postCustomEvent() or - if this is not possible -
 lockGUI() and unlockGUI() for thread save drawing 
@@ -475,15 +478,23 @@ protected:
     /*! The mutex for the general settings of RELACS. */
   QMutex *relacsSettingsMutex( void );
 
-    /*! The path where all data of the current session are stored. */
+    /*! The path where all data of the current session are stored.
+        \sa addPath(), defaultPath() */
   string path( void ) const;
-    /*! Returns \a file added to the base path for the current session. */
+    /*! Returns \a file added to the base path for the current session.
+        \sa path(), defaultPath() */
   string addPath( const string &file ) const;
 
-    /*! The default path where data are stored if no session is running. */
+    /*! The default path where data are stored if no session is running.
+        \sa path(), addDefaultPath() */
   string defaultPath( void ) const;
-    /*! Returns \a file added to the default path. */
+    /*! Returns \a file added to the default path.
+        \sa defaultPath(), path() */
   string addDefaultPath( const string &file ) const;
+
+    /*! \return \c true whenever voltage traes and eventlists are saved
+        to disk via SaveFiles. */
+  bool saving( void ) const;
 
     /*! The options that are stored with each stimulus in the trigger file. */
   Options &stimulusData( void );

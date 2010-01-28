@@ -90,14 +90,20 @@ public:
 	     QWidget *parent=0, const char *name=0 );
   ~SaveFiles( void );
 
-    /*! The current status of writing data to files.
-        \return \c true if data are currently written into files.
-        \sa saving(), save(bool) */
-  bool writing( void ) const;
-    /*! The current status of having files ready for saving data.
+    /*! The current status of saving data to files.
+        \return \c true if files are opened and data are currently written
+	into the files.
+        \sa filesOpen(), save(bool), holdOn(), holdOff() */
+  bool saving( void ) const;
+    /*! The current status of having files opened for saving data.
         \return \c true if files are open.
         \sa writing() */
-  bool saving( void ) const;
+  bool filesOpen( void ) const;
+
+    /*! Do not update Saving. */
+  void holdOn( void );
+    /*! Allow updating Saving. */
+  void holdOff( void );
 
     /*! \return the base path where data are currently stored.
         \sa addPath(), setPath(), defaultPath(), pathTemplate() */
@@ -156,7 +162,7 @@ public:
     /*! Switch writing data to file on or off.
         Call this only at the very beginning of your RePro::main() code,
 	i.e. before writing any stimulus. */
-  void save( bool on, const InList &traces, const EventList &events );
+  void save( bool on );
 
     /*! Save data traces and events to files */
   void save( const InList &traces, EventList &events );
@@ -191,9 +197,9 @@ public slots:
 protected:
 
     /*! Save data traces to files */
-  void save( const InList &traces );
+  void saveTraces( void );
     /*! Save events to files */
-  void save( const EventList &events );
+  void saveEvents( void );
 
     /*! Close all open files */
   void closeFiles( void );
@@ -219,8 +225,10 @@ protected:
 
     /*! Are there any files open to save in? */
   bool FilesOpen;
-    /*! Should be written into the files? */
-  bool Writing;
+    /*! Should be saved into the files? */
+  bool Saving;
+    /*! Hold toggling saving. */
+  bool Hold;
 
     /*! The path (directory or common basename)
         where all data of the current session are stored. */
@@ -329,7 +337,7 @@ protected:
 
   bool ToggleOn;
   bool ToggleData;
-  bool saveToggle( const InList &traces, EventList &events );
+  void saveToggle( const InList &traces, EventList &events );
 
     /*! The file \a filename will be removed if the session is not
         saved. */

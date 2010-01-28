@@ -265,25 +265,29 @@ public:
 
     /*! Stops the currently running repro.
         Then executes commands of the current macro until the next repro.
-	Finally starts that repro. */
+	Finally starts that repro.
+        \a saving toggles whether saving to files via SaveFiles
+        is enabled. */
   void startNextRePro( bool saving );
 
     /*! Emits stopRePro(), then 
         starts command number \a command of macro number \a macro
 	and further commands until the next repro.
-        Emits startRePro() and returns a pointer to the running repro. */
+        Emits startRePro() and returns a pointer to the running repro.
+        \a saving toggles whether saving to files via SaveFiles
+        is enabled. */
   void startMacro( int macro, int command=0, bool saving=true, 
 		   vector<MacroPos> *newstack=0 );
     /*! Starts the startup Macro. */
-  void startUp( bool saving=true ) { startMacro( StartUpIndex ); };
+  void startUp( void ) { startMacro( StartUpIndex, 0, false ); };
     /*! Starts the shutdown Macro. */
-  void shutDown( bool saving=true ) { startMacro( ShutDownIndex ); };
+  void shutDown( void ) { startMacro( ShutDownIndex, 0, false ); };
     /*! Starts the fallback Macro. */
-  void fallBack( bool saving=true ) { startMacro( FallBackIndex ); };
+  void fallBack( bool saving=true ) { startMacro( FallBackIndex, 0, saving ); };
     /*! Starts the startsession Macro. */
-  void startSession( bool saving=true ) { startMacro( StartSessionIndex ); };
+  void startSession( void ) { startMacro( StartSessionIndex ); };
     /*! Starts the stopsession Macro. */
-  void stopSession( bool saving=true ) { startMacro( StopSessionIndex ); };
+  void stopSession( void ) { startMacro( StopSessionIndex, 0, false ); };
 
     /*! The index of the startup Macro. */
   int startUpIndex( void ) const { return StartUpIndex; };
@@ -377,7 +381,9 @@ signals:
     /*! Stop the currently running repro. */
   void stopRePro( void );
     /*! Start \a repro. The macro from which the repro is started has
-        \a macroaction - actions set. */
+        \a macroaction - actions set.
+        \a saving toggles whether saving to files via SaveFiles
+        is enabled. */
   void startRePro( RePro *repro, int macroaction, bool saving );
 
 

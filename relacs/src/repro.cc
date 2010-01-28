@@ -49,7 +49,6 @@ RePro::RePro( const string &name, const string &titles,
   TotalRuns = 0;
   AllRuns = 0;
   FailedRuns = 0;
-  Saving = false;
 
   ProjectOpt.addText( "project", "Project", "" );
   ProjectOpt.addText( "experiment", "Experiment", "" );
@@ -136,6 +135,7 @@ void RePro::run( void )
   Interrupt = false;
   InterruptLock.unlock();
   lockAll();
+  RW->SF->holdOff();
 
   // run RePro:
   LastState = main();
@@ -229,7 +229,7 @@ bool RePro::sleep( double t, double tracetime )
   // force data updates:
   RW->setMinTraceTime( ir ? 0.0 : tracetime );
   RW->ThreadSleepWait.wakeAll();
-  RW->DataSleepWait.wait();
+  RW->UpdateDataWait.wait();
 
   lockAll();
 
@@ -846,21 +846,15 @@ string RePro::checkOptions( const string &opttxt )
 }
 
 
-bool RePro::saving( void ) const
-{
-  return Saving;
-}
-
-
 void RePro::setSaving( bool saving )
 {
-  Saving = saving;
+  RW->SF->save( saving );
 }
 
 
 void RePro::noSaving( void )
 {
-  RW->noSaving();
+  setSaving( false );
 }
 
 

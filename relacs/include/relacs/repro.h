@@ -466,11 +466,20 @@ public:
 	\return error message */
   string checkOptions( const string &opttxt );
 
-    /*! \return \c true if data of this run of the RePro are saved to disk. */
-  bool saving( void ) const;
-    /*! Determine whether data of this run of the RePro should be saved to disk. */
+    /*! Determine whether data (voltage traces and event lists)
+        of this run of the RePro should be saved to disk.
+        Only during a running session, data can be saved to disk.
+        By default, data are saved to disk.
+        \note Call this function at the very beginning of your 
+	main() code, i.e. before writing any stimulus,
+	if you want to save nothing during the run of the RePro.
+        \sa SaveFiles::writing(), noSaving() */
   virtual void setSaving( bool saving );
-    /*! Indicate that the data of this RePro don't have to be saved to disk. */
+    /*! Indicate that the data of this RePro don't have to be saved to disk.
+        \note Call this function at the very beginning of your 
+	main() code, i.e. before writing any stimulus,
+	if you want to save nothing during the run of the RePro.
+        Shortcut for setSaving( false ). */
   void noSaving( void );
 
     /*! The eventfilter that is used to grab keys. \sa grabKey() */
@@ -509,8 +518,6 @@ private:
   int TotalRuns;
   int AllRuns;
   int FailedRuns;
-
-  bool Saving;
 
   Options OverwriteOpt;
   Options ProjectOpt;

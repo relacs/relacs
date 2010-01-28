@@ -525,6 +525,12 @@ string RELACSPlugin::addDefaultPath( const string &file ) const
 }
 
 
+bool RELACSPlugin::saving( void ) const
+{
+  return RW->SF->saving();
+}
+
+
 Options &RELACSPlugin::stimulusData( void )
 {
   return *RW->SF;

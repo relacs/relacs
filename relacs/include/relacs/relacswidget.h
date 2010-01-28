@@ -179,8 +179,6 @@ public:
         Passing infos to SaveFiles. */
   int directWrite( OutList &signal );
 
-    /*! Data recorded during runtime of the current RePro don't have to be saved. */
-  void noSaving( void );
     /*! */
   void plotToggle( bool on, bool fixed, double length, double offs );
 
@@ -243,7 +241,9 @@ public:
 
 public slots:
 
-    /*! Starts the research program \a repro.*/
+    /*! Starts the research program \a repro.
+        \a saving toggles whether saving to files via SaveFiles
+        is enabled. */
   void startRePro( RePro *repro, int macroaction, bool saving );
     /*! Stop the current RePro. */
   void stopRePro( void );
@@ -423,7 +423,8 @@ private:
   QWaitCondition ReadDataWait;
 
   // synchronization of Session and Control threads:
-  QWaitCondition DataSleepWait;
+  QWaitCondition UpdateDataWait;
+  QWaitCondition ProcessDataWait;
   QWaitCondition ReProSleepWait;
   QWaitCondition ReProAfterWait;
   QWaitCondition SessionStartWait;

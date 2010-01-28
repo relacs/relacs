@@ -44,7 +44,8 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
   PathTime = ::time( 0 );
 
   FilesOpen = false;
-  Writing = false;
+  Saving = false;
+  Hold = false;
 
   SF = 0;
   XF = 0;
@@ -100,15 +101,27 @@ SaveFiles::~SaveFiles()
 }
 
 
-bool SaveFiles::writing( void ) const
+bool SaveFiles::saving( void ) const
 {
-  return Writing;
+  return FilesOpen && Saving;
 }
 
 
-bool SaveFiles::saving( void ) const
+bool SaveFiles::filesOpen( void ) const
 {
   return FilesOpen;
+}
+
+
+void SaveFiles::holdOn( void )
+{
+  Hold = true;
+}
+
+
+void SaveFiles::holdOff( void )
+{
+  Hold = false;
 }
 
 
@@ -232,19 +245,15 @@ void SaveFiles::polish( void )
 }
 
 
-void SaveFiles::save( bool on, const InList &traces, const EventList &events  )
+void SaveFiles::save( bool on  )
 {
-  //  cerr << "save toggle: " << on << '\n';
-  if ( ! FilesOpen )
-    return;
+  // this function is called from RELACSWidget::setSaving() and
+  // right before starting a RePro in RELACSWidget::startRepRo()
 
-  // switch on writing?
-  if ( on && ! Writing ) {
-    // update offsets:
-    for ( unsigned int k=0; k<TraceFiles.size(); k++ )
-      TraceFiles[k].Index = traces[k].currentIndex();
-    for ( unsigned int k=0; k<EventFiles.size(); k++ )
-      EventFiles[k].Offset = events[k].size();
+  //  cerr << "save toggle: " << on << '\n';
+  if ( ! FilesOpen ) {
+    Saving = false;
+    return;
   }
 
   ToggleData = true;
@@ -252,90 +261,98 @@ void SaveFiles::save( bool on, const InList &traces, const EventList &events  )
 }
 
 
-bool SaveFiles::saveToggle( const InList &traces, EventList &events )
+void SaveFiles::saveToggle( const InList &traces, EventList &events )
 {
+  // only called by save( InList, EventList ).
+
   //  cerr << "saveToggle(): " << ToggleData << ", on=" << ToggleOn << '\n';
 
-  if ( ToggleData ) {
-    if ( RW->CurrentRePro == 0 ||
-	 RW->CurrentRePro->reproTime() > 0.01 ||
-	 StimulusData ) {
-      if ( ToggleOn && ! Writing ) {
-	// add recording event:
-	for ( int k=0; k<events.size(); k++ ) {
-	  if ( ( events[k].mode() & RecordingEventMode ) > 0 ) {
-	    events[k].push( traces[0].pos( TraceFiles[0].Index ) );
-	    break;
-	  }
+  if ( ToggleData && ! Hold ) {
+
+    if ( ToggleOn && ! Saving ) {
+      // update offsets:
+      for ( unsigned int k=0; k<TraceFiles.size(); k++ )
+	TraceFiles[k].Index = traces[k].size();
+      for ( unsigned int k=0; k<EventFiles.size(); k++ )
+	EventFiles[k].Offset = events[k].size();
+      
+      // add recording event:
+      for ( int k=0; k<events.size(); k++ ) {
+	if ( ( events[k].mode() & RecordingEventMode ) > 0 ) {
+	  events[k].push( traces[0].pos( TraceFiles[0].Index ) );
+	  break;
 	}
-	// update SessionTime to deal with the non written data:
-	SessionTime += traces[0].interval( TraceFiles[0].Index - TraceFiles[0].LastIndex );
-	TraceFiles[0].LastIndex = TraceFiles[0].Index;
       }
-      Writing = ToggleOn;
-      SaveLabel->setPause( !writing() );
-      ToggleData = false;
+      // update SessionTime to deal with the non written data:
+      SessionTime += traces[0].interval( TraceFiles[0].Index -
+					 TraceFiles[0].LastIndex );
+      TraceFiles[0].LastIndex = TraceFiles[0].Index;
     }
-    else
-      return true;
+    
+    Saving = ToggleOn;
+    SaveLabel->setPause( ! Saving );
+    ToggleData = false;
+
   }
 
-  return false;
 }
 
 
 void SaveFiles::save( const InList &traces, EventList &events )
 {
+  // this function is called from RELACSWidget::processData()
+  // and from the beggining of the write( OutData ) functions
+  // in case of a pending signal
+  // and from RELACSWidget::stopRePro().
+
   // update save status:
-  if ( saveToggle( traces, events ) )
-    return;
+  saveToggle( traces, events );
 
-  // indicate the new RePro:
-  saveRePro();
-
+  // check for new signal:
   if ( events[0].size() > 0 ) {
     double st = events[0].back();
     if ( st > PrevSignalTime )
       SignalTime = st;
   }
 
-  if ( saving() ) {
-    save( traces );
-    save( events );
-  }
-
+  saveRePro();
+  saveTraces();
+  saveEvents();
   saveStimulus();
 }
 
 
-void SaveFiles::save( const InList &traces )
+void SaveFiles::saveTraces( void )
 {
-  //  cerr << "SaveFiles::save( InList &traces )\n";
+  //  cerr << "SaveFiles::saveTraces()\n";
 
-  // save trace data:
-  if ( (int)TraceFiles.size() != traces.size() )
-    cerr << "! error in SaveFiles::save( InList ) -> TraceFiles.size() != traces.size() !\n";
-  for ( int k=0; k<(int)TraceFiles.size() && k<traces.size(); k++ ) {
-    TraceFiles[k].Trace = &traces[k];
+  if ( ! saving() )
+    return;
+
+  for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
     if ( TraceFiles[k].Stream != 0 ) {
-      if ( writing() ) {
-	TraceFiles[k].Offset += traces[k].saveBinary( *TraceFiles[k].Stream,
-						      TraceFiles[k].Index );
-	TraceFiles[k].LastIndex = traces[k].currentIndex();
-      }
-      TraceFiles[k].Index = traces[k].currentIndex();
-      if ( traces[k].signalIndex() >= 0 )
-	TraceFiles[k].SignalOffset = TraceFiles[k].Offset - TraceFiles[k].Index
-	  + traces[k].signalIndex();
+      int n = TraceFiles[k].Trace->saveBinary( *TraceFiles[k].Stream,
+					       TraceFiles[k].Index );
+      TraceFiles[k].Offset += n;
+      TraceFiles[k].Index += n;
+      TraceFiles[k].LastIndex = TraceFiles[k].Index;
+      // there is a new stimulus:
+      if ( StimulusData && SignalTime >= 0.0 &&
+	   TraceFiles[k].Trace->signalIndex() >= 0 )
+	TraceFiles[k].SignalOffset = TraceFiles[k].Trace->signalIndex() -
+	  TraceFiles[k].Index + TraceFiles[k].Offset;
     }
   }
 
 }
 
 
-void SaveFiles::save( const EventList &events )
+void SaveFiles::saveEvents( void )
 {
   //  cerr << "SaveFiles::save( EventList &events )\n";
+
+  if ( ! saving() )
+    return;
 
   // wait for availability of signal start time:
   if ( StimulusData && SignalTime < 0.0 )
@@ -343,8 +360,7 @@ void SaveFiles::save( const EventList &events )
 
   // save event data:
   double st = EventFiles[0].Events->size() > 0 ? EventFiles[0].Events->back() : EventFiles[0].Events->rangeBack();
-  for ( int k=0; k<(int)EventFiles.size() && k<events.size(); k++ ) {
-    EventFiles[k].Events = &events[k];
+  for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
 
     if ( EventFiles[k].Stream != 0 ) {
       while ( EventFiles[k].Offset < EventFiles[k].Events->size() ) {
@@ -354,22 +370,19 @@ void SaveFiles::save( const EventList &events )
 	else if ( EventFiles[k].Offset == 0 || 
 		  (*EventFiles[k].Events)[EventFiles[k].Offset-1] < st ) {
 	  EventFiles[k].SignalEvent = EventFiles[k].Lines;
-	  if ( writing() )
-	    *EventFiles[k].Stream << '\n';
-	}
-	if ( writing() ) {
-	  EventFiles[k].Key.save( *EventFiles[k].Stream, et - SessionTime, 0 );
-	  if ( EventFiles[k].SaveSize )
-	    EventFiles[k].Key.save( *EventFiles[k].Stream,
-				    EventFiles[k].Events->sizeScale() *
-				    EventFiles[k].Events->eventSize( EventFiles[k].Offset ) );
-	  if ( EventFiles[k].SaveWidth )
-	    EventFiles[k].Key.save( *EventFiles[k].Stream,
-				    EventFiles[k].Events->widthScale() *
-				    EventFiles[k].Events->eventWidth( EventFiles[k].Offset ) );
 	  *EventFiles[k].Stream << '\n';
-	  EventFiles[k].Lines++;
 	}
+	EventFiles[k].Key.save( *EventFiles[k].Stream, et - SessionTime, 0 );
+	if ( EventFiles[k].SaveSize )
+	  EventFiles[k].Key.save( *EventFiles[k].Stream,
+				  EventFiles[k].Events->sizeScale() *
+				  EventFiles[k].Events->eventSize( EventFiles[k].Offset ) );
+	if ( EventFiles[k].SaveWidth )
+	  EventFiles[k].Key.save( *EventFiles[k].Stream,
+				  EventFiles[k].Events->widthScale() *
+				  EventFiles[k].Events->eventWidth( EventFiles[k].Offset ) );
+	*EventFiles[k].Stream << '\n';
+	EventFiles[k].Lines++;
 	EventFiles[k].Offset++;
       }
     }
@@ -381,6 +394,9 @@ void SaveFiles::save( const EventList &events )
 
 void SaveFiles::save( const OutData &signal )
 {
+  // this function is called from RELACSData::write() 
+  // after a successfull call of Acquire::write()
+
   //  cerr << "SaveFiles::save( OutData &signal )\n";
 
   if ( signal.failed() )
@@ -436,7 +452,7 @@ void SaveFiles::saveStimulus( void )
     return;
     
   // stimulus indices file:
-  if ( SF != 0 && saving() && writing() ) {
+  if ( SF != 0 && saving() ) {
     StimulusKey.setSaveColumn( -1 );
     for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
       if ( TraceFiles[k].Stream != 0 )
@@ -497,7 +513,7 @@ void SaveFiles::saveStimulus( void )
   }
     
   // xml metadata file:
-  if ( XF != 0 && saving() && writing() ) {
+  if ( XF != 0 && saving() ) {
     *XF << "    <section name=\"Stimulus\">\n";
     lock();
     if ( !Options::empty() ) {
@@ -573,7 +589,7 @@ void SaveFiles::saveRePro( void )
     ReProSettings.setTypeFlags( 1, -Parameter::Blank );
     
     // stimulus indices file:
-    if ( SF != 0 && saving() && writing() ) {
+    if ( SF != 0 && saving() ) {
       *SF << '\n';
       ReProInfo.save( *SF, "# ", -1, 0, false, true );
       if ( ! ReProSettings.empty() ) {
@@ -586,7 +602,7 @@ void SaveFiles::saveRePro( void )
     }
     
     // xml metadata file:
-    if ( XF != 0 && saving() && writing() ) {
+    if ( XF != 0 && saving() ) {
       if ( DatasetOpen ) {
 	for ( unsigned int k=0; k<ReProFiles.size(); k++ ) {
 	  Parameter p( "file", "file", ReProFiles[k] );
@@ -681,7 +697,8 @@ void SaveFiles::createTraceFiles( const InList &traces )
 
     // init trace variables:
     TraceFiles[k].Trace = &traces[k];
-    TraceFiles[k].Index = traces[k].currentIndex();
+    TraceFiles[k].Index = traces[k].size();
+    TraceFiles[k].LastIndex = -1;
     TraceFiles[k].Offset = 0;
     TraceFiles[k].SignalOffset = -1;
 
@@ -932,8 +949,8 @@ void SaveFiles::openFiles( const InList &traces, EventList &events )
 
   // reset variables:
   ToggleData = false;
-  ToggleOn = true;
-  Writing = true;
+  ToggleOn = false;
+  Saving = false;
 
   ReProData = false;
   ReProSettings.clear();
@@ -1001,6 +1018,7 @@ void SaveFiles::openFiles( const InList &traces, EventList &events )
   createStimulusFile( traces, events );
   createXMLFile( traces, events );
   FilesOpen = true;
+  Hold = false;
 
   // add recording event:
   for ( int k=0; k<events.size(); k++ ) {
@@ -1017,7 +1035,8 @@ void SaveFiles::openFiles( const InList &traces, EventList &events )
   FileLabel->setFont( HighlightFont );
   FileLabel->setPalette( HighlightPalette );
   FileLabel->setText( path().c_str() );
-  SaveLabel->setSpike( true );
+  SaveLabel->setPause( Saving );
+  SaveLabel->setSpike( FilesOpen );
 }
 
 
@@ -1025,6 +1044,7 @@ void SaveFiles::closeFiles( void )
 {
   ToggleData = true;
   ToggleOn = false;
+  Hold = false;
 
   for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
     if ( TraceFiles[k].Stream != 0 ) {

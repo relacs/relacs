@@ -896,19 +896,29 @@ int CyclicArray< T >::saveBinary( ostream &os, int index ) const
 
   assert( index >= minIndex() );
 
-  int buffinx = RCycles * NBuffer;
-  int li = index - buffinx;
-  int ri = R;
+  int li = index % NBuffer;
+  int n = 0;
 
   // write buffer:
-  if ( li >= 0 )
-    os.write( (char *)(Buffer+li), sizeof( T )*( ri - li ) );
+  if ( li < R ) {
+    int m = R-li;
+    os.write( (char *)(Buffer+li), sizeof( T )*m );
+    if ( os.good() )
+      n += m;
+  }
   else {
-    os.write( (char *)(Buffer + (li+NBuffer)), sizeof( T )*( -li ) );
-    os.write( (char *)Buffer, sizeof( T )*ri );
+    int m = NBuffer-li;
+    os.write( (char *)(Buffer+li), sizeof( T )*m );
+    if ( os.good() ) {
+      n += m;
+      m = R;
+      os.write( (char *)Buffer, sizeof( T )*m );
+      if ( os.good() )
+	n += m;
+    }
   }
   os.flush();
-  return ri - li;
+  return n;
 }
 
 

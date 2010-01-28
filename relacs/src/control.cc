@@ -117,7 +117,7 @@ bool Control::waitOnData( double time )
 {
   unlockAll();
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
-  RW->DataSleepWait.wait( t );
+  RW->UpdateDataWait.wait( t );
   lockAll();
   return interrupt();
 }
