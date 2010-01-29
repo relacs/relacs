@@ -1521,6 +1521,10 @@ void EventList::spectrum( double tbegin, double tend, double step,
     for ( int k=0; k<psd.size(); k++ )
       psd[k] += ( p[k] - psd[k] ) / (k+1);
   }
+
+  // frequency axis:
+  psd.setOffset( 0.0 );
+  psd.setStepsize( p.stepsize() );
 }
 
 
@@ -1544,8 +1548,15 @@ void EventList::spectrum( double tbegin, double tend, double step,
   }
 
   // standard deviation:
+  sd.resize( psd.size() );
   for ( int k=0; k<psd.size(); k++ )
     sd[k] = ::sqrt( ::fabs( psq[k] - psd[k]*psd[k] ) );
+
+  // frequency axis:
+  psd.setOffset( 0.0 );
+  psd.setStepsize( p.stepsize() );
+  sd.setOffset( 0.0 );
+  sd.setStepsize( p.stepsize() );
 }
 
 
@@ -1561,6 +1572,9 @@ void EventList::coherence( const SampleDataD &stimulus, SampleDataD &c ) const
     for ( int k=0; k<c.size(); k++ )
       c[k] += ( cohere[k] - c[k] ) / (k+1);
   }
+  // frequency axis:
+  c.setOffset( 0.0 );
+  c.setStepsize( cohere.stepsize() );
 }
 
 
@@ -1584,8 +1598,15 @@ void EventList::coherence( const SampleDataD &stimulus,
   }
 
   // standard deviation:
+  sd.resize( c.size() );
   for ( int k=0; k<c.size(); k++ )
     sd[k] = ::sqrt( ::fabs( csq[k] - c[k]*c[k] ) );
+
+  // frequency axis:
+  c.setOffset( 0.0 );
+  c.setStepsize( cohere.stepsize() );
+  sd.setOffset( 0.0 );
+  sd.setStepsize( cohere.stepsize() );
 }
 
 
@@ -1611,6 +1632,10 @@ void EventList::coherence( double tbegin, double tend, double step,
 	c[k] += ( cohere[k] - c[k] ) / n;
     }
   }
+
+  // frequency axis:
+  c.setOffset( 0.0 );
+  c.setStepsize( cohere.stepsize() );
 }
 
 
@@ -1640,8 +1665,15 @@ void EventList::coherence( double tbegin, double tend, double step,
   }
 
   // standard deviation:
+  sd.resize( c.size() );
   for ( int k=0; k<c.size(); k++ )
     sd[k] = ::sqrt( ::fabs( csq[k] - c[k]*c[k] ) );
+
+  // frequency axis:
+  c.setOffset( 0.0 );
+  c.setStepsize( cohere.stepsize() );
+  sd.setOffset( 0.0 );
+  sd.setStepsize( cohere.stepsize() );
 }
 
 
