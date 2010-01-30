@@ -1,5 +1,6 @@
 - Switch copyright from 2009 to 2010
 - Switch email from hu to lmu
+- CLEANFILES = relacs.log relacs.log.old in all plugins Makefile.am's
 
 SignalTime: finish this update (RELACSPlugin::signalTime()
 - test ficurve RePro: does not work!

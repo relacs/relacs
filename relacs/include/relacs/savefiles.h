@@ -198,8 +198,8 @@ protected:
 
     /*! Save data traces to files */
   void saveTraces( void );
-    /*! Save events to files */
-  void saveEvents( void );
+    /*! Save events with \a offs subtracted to files. */
+  void saveEvents( double offs );
 
     /*! Close all open files */
   void closeFiles( void );
@@ -263,10 +263,8 @@ protected:
     const InData *Trace;
       /*! Current index to trace data from where on to save data. */
     long Index;
-      /*! Index to trace data that were written so far. */
-    long LastIndex;
       /*! Number of so far written trace data. */
-    long Offset;
+    long Written;
       /*! Start of stimulus as an index to the written trace data. */
     long SignalOffset;
   };
@@ -283,9 +281,9 @@ protected:
       /*! The event data that have to be written into the file. */
     const EventData *Events;
       /*! Index to event data. */
-    long Offset;
+    long Index;
       /*! Already written lines. */
-    long Lines;
+    long Written;
       /*! Line index to the signal start in the events files. */
     long SignalEvent;
       /*! Save mean rate in the stimulus file. */

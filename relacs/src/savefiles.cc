@@ -274,7 +274,7 @@ void SaveFiles::saveToggle( const InList &traces, EventList &events )
       for ( unsigned int k=0; k<TraceFiles.size(); k++ )
 	TraceFiles[k].Index = traces[k].size();
       for ( unsigned int k=0; k<EventFiles.size(); k++ )
-	EventFiles[k].Offset = events[k].size();
+	EventFiles[k].Index = events[k].size();
       
       // add recording event:
       for ( int k=0; k<events.size(); k++ ) {
@@ -283,10 +283,6 @@ void SaveFiles::saveToggle( const InList &traces, EventList &events )
 	  break;
 	}
       }
-      // update SessionTime to deal with the non written data:
-      SessionTime += traces[0].interval( TraceFiles[0].Index -
-					 TraceFiles[0].LastIndex );
-      TraceFiles[0].LastIndex = TraceFiles[0].Index;
     }
     
     Saving = ToggleOn;
@@ -311,13 +307,18 @@ void SaveFiles::save( const InList &traces, EventList &events )
   // check for new signal:
   if ( events[0].size() > 0 ) {
     double st = events[0].back();
+    if ( saving() && ::fabs( TraceFiles[0].Trace->signalTime() - st ) > 1.0e-4 )
+      cerr << "SignalTime PROBLEM trace: " << TraceFiles[0].Trace->signalTime() << " stimulus: " << st << "\n";
     if ( st > PrevSignalTime )
       SignalTime = st;
   }
 
   saveRePro();
   saveTraces();
-  saveEvents();
+  double offs = 0.0;
+  if ( saving() )
+    offs = traces[0].interval( TraceFiles[0].Index - TraceFiles[0].Written );
+  saveEvents( offs );
   saveStimulus();
 }
 
@@ -333,21 +334,20 @@ void SaveFiles::saveTraces( void )
     if ( TraceFiles[k].Stream != 0 ) {
       int n = TraceFiles[k].Trace->saveBinary( *TraceFiles[k].Stream,
 					       TraceFiles[k].Index );
-      TraceFiles[k].Offset += n;
+      TraceFiles[k].Written += n;
       TraceFiles[k].Index += n;
-      TraceFiles[k].LastIndex = TraceFiles[k].Index;
       // there is a new stimulus:
       if ( StimulusData && SignalTime >= 0.0 &&
 	   TraceFiles[k].Trace->signalIndex() >= 0 )
 	TraceFiles[k].SignalOffset = TraceFiles[k].Trace->signalIndex() -
-	  TraceFiles[k].Index + TraceFiles[k].Offset;
+	  TraceFiles[k].Index + TraceFiles[k].Written;
     }
   }
 
 }
 
 
-void SaveFiles::saveEvents( void )
+void SaveFiles::saveEvents( double offs )
 {
   //  cerr << "SaveFiles::save( EventList &events )\n";
 
@@ -363,27 +363,27 @@ void SaveFiles::saveEvents( void )
   for ( unsigned int k=0; k<EventFiles.size(); k++ ) {
 
     if ( EventFiles[k].Stream != 0 ) {
-      while ( EventFiles[k].Offset < EventFiles[k].Events->size() ) {
-	double et = (*EventFiles[k].Events)[EventFiles[k].Offset];
+      while ( EventFiles[k].Index < EventFiles[k].Events->size() ) {
+	double et = (*EventFiles[k].Events)[EventFiles[k].Index];
 	if ( et < st )
-	  EventFiles[k].SignalEvent = EventFiles[k].Lines;
-	else if ( EventFiles[k].Offset == 0 || 
-		  (*EventFiles[k].Events)[EventFiles[k].Offset-1] < st ) {
-	  EventFiles[k].SignalEvent = EventFiles[k].Lines;
+	  EventFiles[k].SignalEvent = EventFiles[k].Written;
+	else if ( EventFiles[k].Index == 0 || 
+		  (*EventFiles[k].Events)[EventFiles[k].Index-1] < st ) {
+	  EventFiles[k].SignalEvent = EventFiles[k].Written;
 	  *EventFiles[k].Stream << '\n';
 	}
-	EventFiles[k].Key.save( *EventFiles[k].Stream, et - SessionTime, 0 );
+	EventFiles[k].Key.save( *EventFiles[k].Stream, et - offs, 0 );
 	if ( EventFiles[k].SaveSize )
 	  EventFiles[k].Key.save( *EventFiles[k].Stream,
 				  EventFiles[k].Events->sizeScale() *
-				  EventFiles[k].Events->eventSize( EventFiles[k].Offset ) );
+				  EventFiles[k].Events->eventSize( EventFiles[k].Index ) );
 	if ( EventFiles[k].SaveWidth )
 	  EventFiles[k].Key.save( *EventFiles[k].Stream,
 				  EventFiles[k].Events->widthScale() *
-				  EventFiles[k].Events->eventWidth( EventFiles[k].Offset ) );
+				  EventFiles[k].Events->eventWidth( EventFiles[k].Index ) );
 	*EventFiles[k].Stream << '\n';
-	EventFiles[k].Lines++;
-	EventFiles[k].Offset++;
+	EventFiles[k].Written++;
+	EventFiles[k].Index++;
       }
     }
 
@@ -698,8 +698,7 @@ void SaveFiles::createTraceFiles( const InList &traces )
     // init trace variables:
     TraceFiles[k].Trace = &traces[k];
     TraceFiles[k].Index = traces[k].size();
-    TraceFiles[k].LastIndex = -1;
-    TraceFiles[k].Offset = 0;
+    TraceFiles[k].Written = 0;
     TraceFiles[k].SignalOffset = -1;
 
     // create file:
@@ -763,8 +762,8 @@ void SaveFiles::createEventFiles( const EventList &events )
 
     // init event variables:
     EventFiles[k].Events = &events[k];
-    EventFiles[k].Offset = events[k].size();
-    EventFiles[k].Lines = 0;
+    EventFiles[k].Index = events[k].size();
+    EventFiles[k].Written = 0;
     EventFiles[k].SignalEvent = 0;
 
     // create file:

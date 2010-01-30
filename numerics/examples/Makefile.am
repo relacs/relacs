@@ -14,6 +14,7 @@ noinst_PROGRAMS = \
     transfer \
     xarray \
     xcontainerfuncs \
+    xcyclicarray \
     xkernel \
     xounoise \
     xrand \
@@ -27,6 +28,9 @@ noinst_PROGRAMS = \
 
 AM_CPPFLAGS = \
     -I$(srcdir)/../include
+
+
+CLEANFILES = data.dat test.dat
 
 
 binrate_LDADD = ../src/librelacsnumerics.la
@@ -73,6 +77,9 @@ xarray_SOURCES = xarray.cc
 
 xcontainerfuncs_LDADD = ../src/librelacsnumerics.la
 xcontainerfuncs_SOURCES = xcontainerfuncs.cc
+
+xcyclicarray_LDADD = ../src/librelacsnumerics.la
+xcyclicarray_SOURCES = xcyclicarray.cc
 
 xkernel_LDADD = ../src/librelacsnumerics.la
 xkernel_SOURCES = xkernel.cc
