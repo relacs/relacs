@@ -1385,7 +1385,7 @@ void EventData::sync( const EventData &e, EventData &s, double bin ) const
   EventData::const_iterator k2 = e.begin();
 
   // select synchronous events:
-  double t0 = ::floor( tstart/bin ) * bin;
+  double t0 = ::floor( tstart/bin + 1.0e-6 ) * bin;
   double t1 = t0;
   for ( int i=1; t1<=tend; i++ ) {
     double t2=t0+i*bin;
@@ -2847,7 +2847,7 @@ void EventData::addIntervalHistogram( double tbegin, double tend,
     return;
   
   for ( int k=n+1; k<=p; k++ ) {
-    int inx = int( floor( ( (*this)[k] - (*this)[k-1] - hist.offset() )/hist.stepsize() ) );
+    int inx = int( floor( ( (*this)[k] - (*this)[k-1] - hist.offset() )/hist.stepsize() + 1.0e-6 ) );
     if ( inx >= 0 && inx < hist.size() )
       hist[inx]++;
   }
@@ -2925,7 +2925,7 @@ double EventData::locking( double tbegin, double tend, double period ) const
     return 0.0;
 
   // make duration a multiple of period:
-  double np = ::floor( (tend - tbegin) / period );
+  double np = ::floor( (tend - tbegin) / period + 1.0e-6 );
   tend = tbegin + np*period;
 
   long n = next( tbegin );
@@ -3241,7 +3241,7 @@ void EventData::saveBox( ostream &os, double bin, int offs, double tfac,
   bin *= tfac;
   int nn = 0;
   for ( const_iterator i = begin()+minEvent(); i != end(); ++i, ++nn ) {
-    double t = ::floor( *i * tfac / bin );
+    double t = ::floor( *i * tfac / bin + 1.0e-6 );
     os << setw( ::abs( width ) ) << t << ' ' << offs+lower << '\n';
     os << setw( ::abs( width ) ) << t << ' ' << offs+upper << '\n';
     os << setw( ::abs( width ) ) << t+bin << ' ' << offs+upper << '\n';

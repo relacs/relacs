@@ -260,13 +260,13 @@ double InData::interval( int indices ) const
 
 int InData::index( double pos ) const
 {
-  return int( ::floor( pos/Stepsize ) );
+  return int( ::floor( pos/Stepsize + 1.0e-6 ) );
 }
 
 
 int InData::indices( double iv ) const
 {
-  return int( ::floor( iv/Stepsize ) );
+  return int( ::floor( iv/Stepsize + 1.0e-6 ) );
 }
 
 
@@ -334,13 +334,13 @@ double InData::signalTime( void ) const
 
 void InData::setSignalIndex( int index )
 {
-  SignalIndex = RestartIndex + index;
+  SignalIndex = index;
 }
 
 
 void InData::setSignalTime( double time )
 {
-  SignalIndex = indices( time );
+  SignalIndex = index( time );
 }
 
 

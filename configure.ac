@@ -250,9 +250,10 @@ AC_CONFIG_FILES([
     numerics/src/Makefile
     numerics/examples/Makefile
     
-    daq/src/Makefile
-    daq/Makefile
     daq/configure.ac
+    daq/Makefile
+    daq/src/Makefile
+    daq/examples/Makefile
 
     options/configure.ac
     options/Makefile

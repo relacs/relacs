@@ -182,7 +182,7 @@ class InData : public CyclicArray<float>, public DaqError
         If there wasn't any signal yet, -1.0 is returned.
         \sa signalIndex(), setSignalIndex(), setSignalTime() */
   double signalTime( void ) const;
-    /*! Set index of start of last signal to restart() + \a index.
+    /*! Set index of start of last signal to \a index.
         \sa setSignalTime() */
   void setSignalIndex( int index );
     /*! Set time of start of last signal to \a time.

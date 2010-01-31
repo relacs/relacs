@@ -270,6 +270,7 @@ void SaveFiles::saveToggle( const InList &traces, EventList &events )
   if ( ToggleData && ! Hold ) {
 
     if ( ToggleOn && ! Saving ) {
+      cerr << "UPDATE TOGGLE\n";
       // update offsets:
       for ( unsigned int k=0; k<TraceFiles.size(); k++ )
 	TraceFiles[k].Index = traces[k].size();
@@ -307,7 +308,7 @@ void SaveFiles::save( const InList &traces, EventList &events )
   // check for new signal:
   if ( events[0].size() > 0 ) {
     double st = events[0].back();
-    if ( saving() && ::fabs( TraceFiles[0].Trace->signalTime() - st ) > 1.0e-4 )
+    if ( saving() && ::fabs( TraceFiles[0].Trace->signalTime() - st ) > 1.0e-6 )
       cerr << "SignalTime PROBLEM trace: " << TraceFiles[0].Trace->signalTime() << " stimulus: " << st << "\n";
     if ( st > PrevSignalTime )
       SignalTime = st;

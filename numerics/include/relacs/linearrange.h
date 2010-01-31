@@ -168,9 +168,9 @@ class LinearRange
   double interval( int indices ) const { return indices * Stepsize; };
 
     /*! The index of the range corresponding to \a pos. */
-  long index( double pos ) const { return long( ::floor( (pos - offset())/stepsize() ) ); };
+  long index( double pos ) const { return long( ::floor( (pos - offset())/stepsize() + 1.0e-6 ) ); };
     /*! The number of indices corresponding to an interval \a iv. */
-  long indices( double iv ) const { return long( ::floor( iv/stepsize() ) ); };
+  long indices( double iv ) const { return long( ::floor( iv/stepsize() + 1.0e-6 ) ); };
     /*! True if \a pos is within the range. */
   bool contains( double pos ) const;
 

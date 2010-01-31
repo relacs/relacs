@@ -1792,7 +1792,7 @@ void EventList::sync( EventData &s, double bin, double p, bool keep )
   int min = (int)::rint( p*size() );
   if ( min < 1 )
     min = 1;
-  double t0 = ::floor( tstart/bin ) * bin;
+  double t0 = ::floor( tstart/bin + 1.0e-6 ) * bin;
   double t1 = t0;
   for ( int i=1; t1<=tend; i++ ) {
     double t2=t0+i*bin;

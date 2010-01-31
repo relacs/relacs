@@ -148,9 +148,9 @@ template < class T = double >
   double interval( int indices ) const { return indices * Stepsize; };
 
     /*! The index of the range corresponding to \a pos. */
-  int index( double pos ) const { return int( ::floor( (pos - offset())/stepsize() ) ); };
+  int index( double pos ) const { return int( ::floor( (pos - offset())/stepsize() + 1.0e-6 ) ); };
     /*! The number of indices corresponding to an interval \a iv. */
-  int indices( double iv ) const { return long( ::floor( iv/stepsize() ) ); };
+  int indices( double iv ) const { return long( ::floor( iv/stepsize() + 1.0e-6 ) ); };
     /*! True if \a pos is within the range. */
   bool contains( double pos ) const { return ( p >= offset() && p <= pos( size() ) ); };
 

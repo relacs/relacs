@@ -2484,7 +2484,7 @@ bool Acquire::readSignal( double &signaltime, InList &data, EventList &events )
     if ( d < 0 || AI[d].Traces.empty() )
       return false;
     double prevsigtime = AI[d].Traces[0].signalTime();
-    AI[d].Traces[0].setSignalIndex( inx );
+    AI[d].Traces[0].setSignalIndex( AI[d].Traces[0].restartIndex() + inx );
     sigtime = AI[d].Traces[0].signalTime();
     if ( prevsigtime >= 0.0 &&
 	 sigtime <= prevsigtime ) // got no new signal start yet
