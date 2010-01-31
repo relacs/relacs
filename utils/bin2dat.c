@@ -177,7 +177,7 @@ void ReadArgs( int argc, char *argv[] )
     switch ( c ) {
     case 0: switch ( longindex ) {
       case 0:
-	printf( "bin2dat 1.0\n" );
+	printf( "bin2dat 1.1\n" );
 	exit( 0 );
 	break;
       case 1:
@@ -222,11 +222,11 @@ void ReadArgs( int argc, char *argv[] )
 	datasize = 2;
       setsize = 0;
       break;
-    case 'f': datasize = 4;
+    case 'f': datasize = sizeof( float );
       datatype = 'f';
       setsize = 0;
       break;
-    case 'F': datasize = 8;
+    case 'F': datasize = sizeof( double );
       datatype = 'd';
       setsize = 0;
       break;
@@ -251,7 +251,7 @@ void ReadArgs( int argc, char *argv[] )
     if ( *sp == 'r' ) {
       if ( setsize ) {
 	datasign = 1;
-	datasize = 4;
+	datasize = sizeof( float );
 	datatype = 'f';
       }
       if ( setcol )
