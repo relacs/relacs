@@ -29,7 +29,7 @@ namespace auditory {
 
 Session::Session( void )
   : Control( "Session", "Info", "Auditory",
-	     "Jan Benda", "1.4", "Mar 1, 2009" ),
+	     "Jan Benda", "1.5", "Feb 2, 2010" ),
     P( 2, 1, true, Plot::Pointer, this, "sessionplot" )
 
 {
@@ -230,6 +230,10 @@ void Session::sessionStarted( void )
 {
   SessionButton->setText( "Cell lost" );
 
+  double bf[2];
+  bf[0] = metaData( "Cell" ).number( "left frequency" );
+  bf[1] = metaData( "Cell" ).number( "right frequency" );
+
   // reset values of metaData() options:
   lockMetaData();
   metaData( "Cell" ).setDefaults( MetaDataReset );
@@ -240,22 +244,23 @@ void Session::sessionStarted( void )
 
   lock();
   for ( int k=0; k<2; k++ ) {
+    // copy last threshold curve:
     if ( ThreshCurve[k].empty() )
       OldThreshCurve[k].clear();
     else
       OldThreshCurve[k] = ThreshCurve[k].back();
     ThreshCurve[k].clear();
-    if( FICurve[k].empty() ) {
-      if( OnFICurve[k].empty() )
-	OldFICurve[k].clear();
-      else
-	OldFICurve[k] = OnFICurve[k].back();
-    }
+    // copy last f-I curve:
+    if( FICurve[k].empty() )
+      OldFICurve[k].clear();
     else
-      OldFICurve[k] = FICurve[k].back();
+      OldFICurve[k] = fICurve( k, bf[k] );
     FICurve[k].clear();
+    FICurveCarrier[k].clear();
     OnFICurve[k].clear();
+    OnFICurveCarrier[k].clear();
     SSFICurve[k].clear();
+    SSFICurveCarrier[k].clear();
   }
   unlock();
 
@@ -411,11 +416,13 @@ void Session::notifyMetaData( const string &section )
 
 MapD Session::threshCurve( int side ) const
 {
+  // default values:
   if ( side > 1 ) {
     lockMetaData();
     side = metaData( "Cell" ).index( "best side" );
     unlockMetaData();
   }
+  // get threshold curve:
   MapD tc( 0 );
   lock();
   if ( ! ThreshCurve[side].empty() )
@@ -434,76 +441,184 @@ void Session::addThreshCurve( const MapD &thresh, int side )
 }
 
 
-MapD Session::fICurve( int side ) const
+MapD Session::fICurve( int side, double carrierfreq ) const
 {
+  // default values:
   if ( side > 1 ) {
     lockMetaData();
     side = metaData( "Cell" ).index( "best side" );
     unlockMetaData();
   }
+  if ( ::fabs( carrierfreq ) < 1.0e-8 ) {
+    lockMetaData();
+    const Options &mo = metaData( "Cell" );
+    carrierfreq = mo.number( side > 0 ? "right frequency" : "left frequency" );
+    if ( carrierfreq < 0.0 )
+      carrierfreq = mo.number( "best frequency" );
+    unlockMetaData();
+  }
+  // search f-I curve:
   MapD fi( 0 );
   lock();
-  if ( ! FICurve[side].empty() )
-    fi = FICurve[side].back();
+  for ( int k=FICurve[side].size()-1; k>=0; k-- ) {
+    if ( ::fabs( FICurveCarrier[side][k] - carrierfreq ) < 1.0 ) {
+      fi = FICurve[side][k];
+      break;
+    }
+  }
   unlock();
   return fi;
 }
 
 
-void Session::addFICurve( const MapD &ficurve, int side )
+MapD Session::fICurve( int index, int side, double &carrierfreq ) const
 {
-  lock();
-  FICurve[side].push_back( ficurve );
-  unlock();
-  plot();
-}
-
-
-MapD Session::onFICurve( int side ) const
-{
+  // default values:
   if ( side > 1 ) {
     lockMetaData();
     side = metaData( "Cell" ).index( "best side" );
     unlockMetaData();
   }
+  // get f-I curve:
+  MapD fi( 0 );
+  carrierfreq = 0.0;
+  if ( index < (int)FICurve[side].size() ) {
+    lock();
+    fi = FICurve[side][FICurve[side].size()-1-index];
+    carrierfreq = FICurveCarrier[side][FICurveCarrier[side].size()-1-index];
+    unlock();
+  }
+  return fi;
+}
+
+
+void Session::addFICurve( const MapD &ficurve, int side, double carrierfreq )
+{
+  lock();
+  FICurve[side].push_back( ficurve );
+  FICurveCarrier[side].push_back( carrierfreq );
+  unlock();
+  plot();
+}
+
+
+MapD Session::onFICurve( int side, double carrierfreq ) const
+{
+  // default values:
+  if ( side > 1 ) {
+    lockMetaData();
+    side = metaData( "Cell" ).index( "best side" );
+    unlockMetaData();
+  }
+  if ( ::fabs( carrierfreq ) < 1.0e-8 ) {
+    lockMetaData();
+    const Options &mo = metaData( "Cell" );
+    carrierfreq = mo.number( side > 0 ? "right frequency" : "left frequency" );
+    if ( carrierfreq < 0.0 )
+      carrierfreq = mo.number( "best frequency" );
+    unlockMetaData();
+  }
+  // search f-I curve:
   MapD ofi( 0 );
   lock();
-  if ( ! OnFICurve[side].empty() )
-    ofi = OnFICurve[side].back();
+  for ( int k=OnFICurve[side].size()-1; k>=0; k-- ) {
+    if ( ::fabs( OnFICurveCarrier[side][k] - carrierfreq ) < 1.0 ) {
+      ofi = OnFICurve[side][k];
+      break;
+    }
+  }
   unlock();
   return ofi;
 }
 
 
-void Session::addOnFICurve( const MapD &onficurve, int side )
+MapD Session::onFICurve( int index, int side, double &carrierfreq ) const
 {
-  lock();
-  OnFICurve[side].push_back( onficurve );
-  unlock();
-  plot();
-}
-
-
-MapD Session::ssFICurve( int side ) const
-{
+  // default values:
   if ( side > 1 ) {
     lockMetaData();
     side = metaData( "Cell" ).index( "best side" );
     unlockMetaData();
   }
+  // get f-I curve:
+  MapD onfi( 0 );
+  carrierfreq = 0.0;
+  if ( index < (int)OnFICurve[side].size() ) {
+    lock();
+    onfi = OnFICurve[side][OnFICurve[side].size()-1-index];
+    carrierfreq = OnFICurveCarrier[side][OnFICurveCarrier[side].size()-1-index];
+    unlock();
+  }
+  return onfi;
+}
+
+
+void Session::addOnFICurve( const MapD &onficurve, int side, double carrierfreq )
+{
+  lock();
+  OnFICurve[side].push_back( onficurve );
+  OnFICurveCarrier[side].push_back( carrierfreq );
+  unlock();
+  plot();
+}
+
+
+MapD Session::ssFICurve( int side, double carrierfreq ) const
+{
+  // default values:
+  if ( side > 1 ) {
+    lockMetaData();
+    side = metaData( "Cell" ).index( "best side" );
+    unlockMetaData();
+  }
+  if ( ::fabs( carrierfreq ) < 1.0e-8 ) {
+    lockMetaData();
+    const Options &mo = metaData( "Cell" );
+    carrierfreq = mo.number( side > 0 ? "right frequency" : "left frequency" );
+    if ( carrierfreq < 0.0 )
+      carrierfreq = mo.number( "best frequency" );
+    unlockMetaData();
+  }
+  // search f-I curve:
   MapD sfi( 0 );
   lock();
-  if ( ! SSFICurve[side].empty() )
-    sfi = SSFICurve[side].back();
+  for ( int k=SSFICurve[side].size()-1; k>=0; k-- ) {
+    if ( ::fabs( SSFICurveCarrier[side][k] - carrierfreq ) < 1.0 ) {
+      sfi = FICurve[side][k];
+      break;
+    }
+  }
   unlock();
   return sfi;
 }
 
 
-void Session::addSSFICurve( const MapD &ssficurve, int side )
+MapD Session::ssFICurve( int index, int side, double &carrierfreq ) const
+{
+  // default values:
+  if ( side > 1 ) {
+    lockMetaData();
+    side = metaData( "Cell" ).index( "best side" );
+    unlockMetaData();
+  }
+  // get f-I curve:
+  MapD ssfi( 0 );
+  carrierfreq = 0.0;
+  if ( index < (int)SSFICurve[side].size() ) {
+    lock();
+    ssfi = SSFICurve[side][SSFICurve[side].size()-1-index];
+    carrierfreq = SSFICurveCarrier[side][SSFICurveCarrier[side].size()-1-index];
+    unlock();
+  }
+  return ssfi;
+}
+
+
+void Session::addSSFICurve( const MapD &ssficurve, int side, double carrierfreq )
 {
   lock();
   SSFICurve[side].push_back( ssficurve );
+  SSFICurveCarrier[side].push_back( carrierfreq );
   unlock();
   plot();
 }
@@ -546,12 +661,15 @@ void Session::plot( void )
 
   Options &mo = metaData( "Cell" );
 
+  // threshold curves:
   P[0].clear();
   double bf = mo.number( "best frequency" );
   if ( bf > 0.0 )
     P[0].plotVLine( 0.001*bf, Plot::White, 2 );
-  P[0].plot( OldThreshCurve[0], 0.001, Plot::Gray, 2, Plot::LongDash );
-  P[0].plot( OldThreshCurve[1], 0.001, Plot::Gray, 2, Plot::Solid );
+  if ( ! OldThreshCurve[0].empty() )
+    P[0].plot( OldThreshCurve[0], 0.001, Plot::Gray, 2, Plot::LongDash );
+  if ( ! OldThreshCurve[1].empty() )
+    P[0].plot( OldThreshCurve[1], 0.001, Plot::Gray, 2, Plot::Solid );
   for ( int k=0; k < int(ThreshCurve[0].size()) - 1; k++ )
     P[0].plot( ThreshCurve[0][k], 0.001, Plot::DarkOrange, 2, Plot::LongDash );
   for ( int k=0; k < int(ThreshCurve[1].size()) - 1; k++ )
@@ -561,6 +679,7 @@ void Session::plot( void )
   if ( ! ThreshCurve[1].empty() )
     P[0].plot( ThreshCurve[1].back(), 0.001, Plot::Yellow, 3, Plot::Solid );
 
+  // f-I curves:
   P[1].clear();
   double bt = mo.number( "best threshold" );
   if ( bt > 0.0 )
@@ -568,32 +687,66 @@ void Session::plot( void )
   double bs = mo.number( "best saturation" );
   if ( bs > 0.0 )
     P[1].plotVLine( bs, Plot::White, 2 );
-  P[1].plot( OldFICurve[0], 1.0, Plot::White, 2, Plot::LongDash );
-  P[1].plot( OldFICurve[1], 1.0, Plot::White, 2, Plot::Solid );
-  for ( int k=0; k < int(SSFICurve[0].size()) - 1; k++ )
-    P[1].plot( SSFICurve[0][k], 1.0, Plot::OrangeRed, 2, Plot::LongDash );
-  for ( int k=0; k < int(SSFICurve[1].size()) - 1; k++ )
-    P[1].plot( SSFICurve[1][k], 1.0, Plot::OrangeRed, 2, Plot::Solid );
-  for ( int k=0; k < int(OnFICurve[0].size()) - 1; k++ )
-    P[1].plot( OnFICurve[0][k], 1.0, Plot::DarkGreen, 2, Plot::LongDash );
-  for ( int k=0; k < int(OnFICurve[1].size()) - 1; k++ )
-    P[1].plot( OnFICurve[1][k], 1.0, Plot::DarkGreen, 2, Plot::Solid );
-  for ( int k=0; k < int(FICurve[0].size()) - 1; k++ )
-    P[1].plot( FICurve[0][k], 1.0, Plot::DarkOrange, 2, Plot::LongDash );
-  for ( int k=0; k < int(FICurve[1].size()) - 1; k++ )
-    P[1].plot( FICurve[1][k], 1.0, Plot::DarkOrange, 2, Plot::Solid );
-  if ( ! SSFICurve[0].empty() )
-    P[1].plot( SSFICurve[0].back(), 1.0, Plot::Red, 3, Plot::LongDash );
-  if ( ! SSFICurve[1].empty() )
-    P[1].plot( SSFICurve[1].back(), 1.0, Plot::Red, 3, Plot::Solid );
-  if ( ! OnFICurve[0].empty() )
-    P[1].plot( OnFICurve[0].back(), 1.0, Plot::Green, 3, Plot::LongDash );
-  if ( ! OnFICurve[1].empty() )
-    P[1].plot( OnFICurve[1].back(), 1.0, Plot::Green, 3, Plot::Solid );
-  if ( ! FICurve[0].empty() )
-    P[1].plot( FICurve[0].back(), 1.0, Plot::Orange, 3, Plot::LongDash );
-  if ( ! FICurve[1].empty() )
-    P[1].plot( FICurve[1].back(), 1.0, Plot::Orange, 3, Plot::Solid );
+  if ( ! OldFICurve[0].empty() )
+    P[1].plot( OldFICurve[0], 1.0, Plot::White, 2, Plot::LongDash );
+  if ( ! OldFICurve[1].empty() )
+    P[1].plot( OldFICurve[1], 1.0, Plot::White, 2, Plot::Solid );
+  double lbf = mo.number( "left frequency" );
+  double rbf = mo.number( "right frequency" );
+  int ssl = -1;
+  int ssr = -1;
+  int onl = -1;
+  int onr = -1;
+  int fil = -1;
+  int fir = -1;
+  for ( int k=0; k < int(SSFICurve[0].size()); k++ ) {
+    if ( ::fabs( SSFICurveCarrier[0][k] - lbf ) < 1.0 ) {
+      ssl = k;
+      P[1].plot( SSFICurve[0][k], 1.0, Plot::OrangeRed, 2, Plot::LongDash );
+    }
+  }
+  for ( int k=0; k < int(SSFICurve[1].size()); k++ ) {
+    if ( ::fabs( SSFICurveCarrier[1][k] - rbf ) < 1.0 ) {
+      ssr = k;
+      P[1].plot( SSFICurve[1][k], 1.0, Plot::OrangeRed, 2, Plot::Solid );
+    }
+  }
+  for ( int k=0; k < int(OnFICurve[0].size()); k++ ) {
+    if ( ::fabs( OnFICurveCarrier[0][k] - lbf ) < 1.0 ) {
+      onl = k;
+      P[1].plot( OnFICurve[0][k], 1.0, Plot::DarkGreen, 2, Plot::LongDash );
+    }
+  }
+  for ( int k=0; k < int(OnFICurve[1].size()); k++ ) {
+    if ( ::fabs( OnFICurveCarrier[1][k] - rbf ) < 1.0 ) {
+      onr = k;
+      P[1].plot( OnFICurve[1][k], 1.0, Plot::DarkGreen, 2, Plot::Solid );
+    }
+  }
+  for ( int k=0; k < int(FICurve[0].size()); k++ ) {
+    if ( ::fabs( FICurveCarrier[0][k] - lbf ) < 1.0 ) {
+      fil = k;
+      P[1].plot( FICurve[0][k], 1.0, Plot::DarkOrange, 2, Plot::LongDash );
+    }
+  }
+  for ( int k=0; k < int(FICurve[1].size()); k++ ) {
+    if ( ::fabs( FICurveCarrier[1][k] - rbf ) < 1.0 ) {
+      fir = k;
+      P[1].plot( FICurve[1][k], 1.0, Plot::DarkOrange, 2, Plot::Solid );
+    }
+  }
+  if ( ssl >= 0 )
+    P[1].plot( SSFICurve[0][ssl], 1.0, Plot::Red, 3, Plot::LongDash );
+  if ( ssr >= 0 )
+    P[1].plot( SSFICurve[1][ssr], 1.0, Plot::Red, 3, Plot::Solid );
+  if ( onl >= 0 )
+    P[1].plot( OnFICurve[0][onl], 1.0, Plot::Green, 3, Plot::LongDash );
+  if ( onr >= 0 )
+    P[1].plot( OnFICurve[1][onr], 1.0, Plot::Green, 3, Plot::Solid );
+  if ( fil >= 0 )
+    P[1].plot( FICurve[0][fil], 1.0, Plot::Orange, 3, Plot::LongDash );
+  if ( fir >= 0 )
+    P[1].plot( FICurve[1][fir], 1.0, Plot::Orange, 3, Plot::Solid );
 
   P.unlock(); 
   unlockMetaData();

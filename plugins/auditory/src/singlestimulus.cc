@@ -69,8 +69,8 @@ SingleStimulus::SingleStimulus( void )
   addNumber( "pause", "Duration of pause between stimuli", 1.0, 0.0, 1000.0, 0.01, "seconds", "ms" );
   addSelection( "side", "Speaker", "left|right|best" );
   addLabel( "Carrier" );
-  addNumber( "carrierfreq", "Carrier frequency", CarrierFreq, 2000.0, 40000.0, 500.0, "Hz", "kHz" ).setActivation( "usebestfreq", "false" );
-  addBoolean( "usebestfreq", "Use the cell's best frequency", true );
+  addNumber( "carrierfreq", "Carrier frequency", CarrierFreq, -40000.0, 40000.0, 500.0, "Hz", "kHz" );
+  addBoolean( "usebestfreq", "Relative to the cell's best frequency", true );
   addLabel( "Intensity - search" ).setStyle( OptWidget::TabLabel );
   addBoolean( "userate", "Search intensity for target firing rate", true );
   addNumber( "rate", "Target firing rate", 100.0, 0.0, 1000.0, 10.0, "Hz" ).setActivation( "userate", "true" );
@@ -229,13 +229,13 @@ int SingleStimulus::main( void )
     Intensity += 0.0;
   else
     Intensity = intensity;
-  if ( usebestfreq ) {
-    double cf = metaData( "Cell" ).number( "best frequency" );
-    if ( cf > 0.0 )
-      CarrierFreq = cf;
-  }
   if ( Side > 1 )
     Side = metaData( "Cell" ).index( "best side" );
+  if ( usebestfreq ) {
+    double cf = metaData( "Cell" ).number( Side > 0 ? "right frequency" :  "left frequency" );
+    if ( cf > 0.0 )
+      CarrierFreq += cf;
+  }
 
   string wavetypes[3] = { "Wave", "Envelope", "AM" };
 
@@ -271,9 +271,9 @@ int SingleStimulus::main( void )
     if ( as == 0 )
       warning( "No auditory session!", 4.0 );
     else {
-      MapD fic = as->ssFICurve();
+      MapD fic = as->ssFICurve( Side, CarrierFreq );
       if ( fic.empty() )
-	fic = as->fICurve();
+	fic = as->fICurve( Side, CarrierFreq );
       // find first guess for intensity (default is supplied by the user!):
       for ( int k=fic.size()-1; k >= 0; k-- ) {
 	if ( fic[k] <= targetrate ) {

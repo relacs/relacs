@@ -43,8 +43,8 @@ SysLatency::SysLatency( void )
   addInteger( "pwaves", "Number of cycles of pertubation", 10, 0, 1000, 1 );
   addNumber( "pintensity", "Intensity of pertubations", 10.0, 0.0, 100.0, 1.0, "dB" );
   addNumber( "minpintensity", "Minimum intensity of pertubations", 4.0, 0.0, 100.0, 0.5, "dB" );
-  addNumber( "carrierfreq", "Frequency of carrier", 5000.0, 0.0, 40000.0, 2000.0, "Hz", "kHz" ).setActivation( "usebestfreq", "false" );
-  addBoolean( "usebestfreq", "Use the cell's best frequency", true );
+  addNumber( "carrierfreq", "Frequency of carrier", 0.0, -40000.0, 40000.0, 2000.0, "Hz", "kHz" );
+  addBoolean( "usebestfreq", "Relative to the cell's best frequency", true );
   addNumber( "ramp", "Ramp of stimulus", 0.002, 0.0, 10.0, 0.001, "seconds", "ms" );
   addNumber( "duration", "Duration of stimulus", 0.6, 0.0, 10.0, 0.05, "seconds", "ms" );
   addNumber( "pause", "Pause", 0.6, 0.0, 10.0, 0.05, "seconds", "ms" );
@@ -110,13 +110,13 @@ int SysLatency::main( void )
   double latencystep = number( "latstep" );
   double coincwin = number( "coincwin" );
 
-  if ( usebestfreq ) {
-    double cf = metaData( "Cell" ).number( "best frequency" );
-    if ( cf > 0.0 )
-      carrierfrequency = cf;
-  }
   if ( side > 1 )
     side = metaData( "Cell" ).index( "best side" );
+  if ( usebestfreq ) {
+    double cf = metaData( "Cell" ).number( side > 0 ? "right frequency" :  "left frequency" );
+    if ( cf > 0.0 )
+      carrierfrequency += cf;
+  }
   double intensity = 0.0;
 
   // plot trace:
@@ -129,9 +129,9 @@ int SysLatency::main( void )
     return Failed;
   }
   else {
-    MapD fic = as->ssFICurve();
+    MapD fic = as->ssFICurve( side, carrierfrequency );
     if ( fic.empty() )
-      fic = as->fICurve();
+      fic = as->fICurve( side, carrierfrequency );
     // find appropriate intensity:
     for ( int k = ::relacs::maxIndex( fic.y() ); k >= 0; k-- ) {
       if ( fic[k] <= targetrate ) {

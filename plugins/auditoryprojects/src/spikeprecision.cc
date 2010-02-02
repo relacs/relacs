@@ -39,7 +39,7 @@ SpikePrecision::SpikePrecision( void )
     P( 4, this )
 {
   // default values for the options & other variables:
-  CarrierFrequency	= 5000.0;
+  CarrierFrequency	= 0.0;
   Side 			= 0;		// left ("0") or right ("1") speaker
   Amplitude 		= 4.0;		// amplitude of envelope
   Duration 		= 0.5;
@@ -59,8 +59,8 @@ SpikePrecision::SpikePrecision( void )
   addNumber( "repeats", "Number of stimulus presentations", StimRepetition, 1, 100, 1, "times", "times" );
   addNumber( "duration", "Duration of stimulus", Duration, 0.01, 100.0, 0.01, "seconds", "ms" );
   addNumber( "pause", "Duration of pause between stimuli", 1.0, 0.01, 1000.0, 0.1, "seconds", "ms" );
-  addNumber( "carrierfreq", "Carrier frequency", CarrierFrequency, 2000.0, 40000.0, 500.0, "Hz", "kHz" ).setActivation( "usebestfreq", "false" );
-  addBoolean( "usebestfreq", "Use the cell's best frequency", true );
+  addNumber( "carrierfreq", "Carrier frequency", CarrierFrequency, -40000.0, 40000.0, 500.0, "Hz", "kHz" );
+  addBoolean( "usebestfreq", "Relative to the cell's best frequency", true );
   addSelection( "side", "Speaker", "left|right|best" );
   addLabel( "Waveform" ).setStyle( OptWidget::Bold | OptWidget::TabLabel );
   addSelection( "waveform", "Type of amplitude modulation", "sine|rectangular|triangular|sawup|sawdown|noise gap|noise cutoff" );
@@ -225,13 +225,13 @@ int SpikePrecision::main( void )
     warning( "Amplitude > Intensity" );
     return Failed;
   }
+  if ( Side > 1 )
+    Side = metaData( "Cell" ).index( "best side" );
   if ( usebestfreq ) {
-    double cf = metaData( "Cell" ).number( "best frequency" );
+    double cf = metaData( "Cell" ).number( Side > 0 ? "right frequency" :  "left frequency" );
     if ( cf > 0.0 )
       CarrierFrequency = cf;
   }
-  if ( Side > 1 )
-    Side = metaData( "Cell" ).index( "best side" );
   settings().setTypeFlags( 16, -Parameter::Blank );
 
   // setup frequency range:
@@ -262,9 +262,9 @@ int SpikePrecision::main( void )
     if ( as == 0 )
       warning( "No auditory session!", 4.0 );
     else {
-      MapD fic = as->ssFICurve();
+      MapD fic = as->ssFICurve( Side, CarrierFrequency );
       if ( fic.empty() )
-	fic = as->fICurve();
+	fic = as->fICurve( Side, CarrierFrequency );
       // find first guess for intensity (default is supplied by the user!):
       for ( int k=fic.size()-1; k >= 0; k-- ) {
 	if ( fic[k] <= targetrate ) {

@@ -402,12 +402,12 @@ void FIField::save( void )
     as->addThreshCurve( tm, Side );
 
     // f-I curves:
-    if ( SetCurves == 1 ) {
-      as->addFICurve( BestFICurve, Side );
+    if ( SetCurves == 1 || SetCurves == 3 ) {
+      as->addFICurve( BestFICurve, Side, FieldData[BestIndex].Frequency );
     }
-    else if ( SetCurves == 2 ) {
-      as->addOnFICurve( BestOnFICurve, Side );
-      as->addSSFICurve( BestSSFICurve, Side );
+    else if ( SetCurves == 2 || SetCurves == 3 ) {
+      as->addOnFICurve( BestOnFICurve, Side, FieldData[BestIndex].Frequency );
+      as->addSSFICurve( BestSSFICurve, Side, FieldData[BestIndex].Frequency );
     }
 
   }

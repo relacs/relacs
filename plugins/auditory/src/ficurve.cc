@@ -87,8 +87,8 @@ FICurve::FICurve( void )
   addBoolean( "manualskip", "Show buttons for manual selection of intensities", false );
   addLabel( "Waveform" ).setStyle( OptWidget::TabLabel );
   addSelection( "waveform", "Waveform of stimulus", "sine|noise" );
-  addNumber( "carrierfreq", "Frequency of carrier", CarrierFrequency, 0.0, 40000.0, 2000.0, "Hz", "kHz" ).setActivation( "usebestfreq", "false" );
-  addBoolean( "usebestfreq", "Use the cell's best frequency", UseBestFreq );
+  addNumber( "carrierfreq", "Frequency of carrier", CarrierFrequency, -40000.0, 40000.0, 500.0, "Hz", "kHz" );
+  addBoolean( "usebestfreq", "Relative to the cell's best frequency", UseBestFreq );
   addNumber( "ramp", "Ramp of stimulus", Ramp, 0.0, 10.0, 0.001, "seconds", "ms" );
   addNumber( "duration", "Duration of stimulus", Duration, 0.0, 10.0, 0.05, "seconds", "ms" );
   addNumber( "pause", "Pause", Pause, 0.0, 10.0, 0.05, "seconds", "ms" );
@@ -112,7 +112,7 @@ FICurve::FICurve( void )
   addNumber( "peakwidth", "Window length for peak firing rate", PeakWidth, 0.0, 10.0, 0.01, "seconds", "ms" );
   addNumber( "sswidth", "Window length for steady-state firing rate", SSWidth, 0.0, 10.0, 0.01, "seconds", "ms" );
   addBoolean( "setbest", "Set results to the session variables", SetBest );
-  addSelection( "setcurves", "F-I curves to be passed to session", "none|mean rate|onset + steady-state" );
+  addSelection( "setcurves", "F-I curves to be passed to session", "none|mean rate|onset + steady-state|mean + onset + steady-state" );
   addFlags( 1 );
 
   addTypeStyle( OptWidget::Bold, Parameter::Label );
@@ -222,13 +222,13 @@ int FICurve::main( void )
   MinIntensity += ith;
   MaxIntensity += isat;
 
-  if ( UseBestFreq ) {
-    double cf = metaData( "Cell" ).number( "best frequency" );
-    if ( cf > 0.0 )
-      CarrierFrequency = cf;
-  }
   if ( Side > 1 )
     Side = metaData( "Cell" ).index( "best side" );
+  if ( UseBestFreq ) {
+    double cf = metaData( "Cell" ).number( Side > 0 ? "right frequency" :  "left frequency" );
+    if ( cf > 0.0 )
+      CarrierFrequency += cf;
+  }
   if ( SSWidth > Duration )
     SSWidth = Duration;
 
@@ -740,8 +740,7 @@ void FICurve::updateSession( const vector< FIData > &results )
       mo.setNumber( ns + " maxrate", Threshold.MaxRate, Threshold.MaxRateSD );
     }
     else if ( Waveform == 0 ) {
-      if ( UseBestFreq ||
-	   fabs( CarrierFrequency - mo.number( ss + " frequency" ) ) < 5.0 ) {
+      if ( ::fabs( CarrierFrequency - mo.number( ss + " frequency" ) ) < 1.0 ) {
 	mo.setNumber( ss + " threshold", Threshold.Threshold, Threshold.ThresholdSD );
 	mo.setNumber( ss + " slope", Threshold.Slope, Threshold.SlopeSD );
 	mo.setNumber( ss + " intensity", Threshold.RateIntensity, Threshold.RateIntensitySD );
@@ -750,7 +749,6 @@ void FICurve::updateSession( const vector< FIData > &results )
       }
     }
 
-
     // determine best side:
     as->updateBestSide();
 
@@ -758,8 +756,7 @@ void FICurve::updateSession( const vector< FIData > &results )
     if ( Side == mo.index( "best side" ) &&
 	 ( ( Waveform == 1 ) ||
 	   ( Waveform == 0 &&
-	     ( UseBestFreq ||
-	       fabs( CarrierFrequency - mo.number( "best frequency" ) ) < 5.0 ) ) ) ) {
+	     ::fabs( CarrierFrequency - mo.number( "best frequency" ) ) < 1.0 ) ) ) {
       mo.setNumber( "best threshold", Threshold.Threshold, Threshold.ThresholdSD );
       mo.setNumber( "best slope", Threshold.Slope, Threshold.SlopeSD );
       mo.setNumber( "best intensity", Threshold.RateIntensity, Threshold.RateIntensitySD );
@@ -768,25 +765,20 @@ void FICurve::updateSession( const vector< FIData > &results )
     }
 
     // f-I curves:
-    if ( ( Waveform == 1 ) ||
-	 ( Waveform == 0 && 
-	   ( UseBestFreq ||
-	     fabs( CarrierFrequency - mo.number( ss + " frequency" ) ) < 5.0 ) ) ) {
-      MapD om, sm, fm;
-      for ( unsigned int k=0; 
-	    k<results.size(); 
-	    k=IntensityRange.next( ++k ) ) {
-	om.push( IntensityRange.value( k ), results[k].OnRate );
-	sm.push( IntensityRange.value( k ), results[k].SSRate );
-	fm.push( IntensityRange.value( k ), results[k].MeanRate );
-      }
-      if ( SetCurves == 1 ) {
-	as->addFICurve( fm, Side );
-      }
-      else if ( SetCurves == 2 ) {
-	as->addOnFICurve( om, Side );
-	as->addSSFICurve( sm, Side );
-      }
+    MapD om, sm, fm;
+    for ( unsigned int k=0; 
+	  k<results.size(); 
+	  k=IntensityRange.next( ++k ) ) {
+      om.push( IntensityRange.value( k ), results[k].OnRate );
+      sm.push( IntensityRange.value( k ), results[k].SSRate );
+      fm.push( IntensityRange.value( k ), results[k].MeanRate );
+    }
+    if ( SetCurves == 1 || SetCurves == 3 ) {
+      as->addFICurve( fm, Side, CarrierFrequency );
+    }
+    else if ( SetCurves == 2 || SetCurves == 3 ) {
+      as->addOnFICurve( om, Side, CarrierFrequency );
+      as->addSSFICurve( sm, Side, CarrierFrequency );
     }
   }
 }

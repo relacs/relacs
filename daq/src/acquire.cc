@@ -815,10 +815,14 @@ int Acquire::restartRead( void )
     int m = 0;
     for ( int k=0; k<AI[i].Traces.size(); k++ ) {
       int n = AI[i].Traces[k].indices( t );
-      m += AI[i].Traces[k].size() - n;
-      AI[i].Traces[k].resize( n );
+      int nd = AI[i].Traces[k].size() - n;
+      if ( nd > 0 ) {
+	m += nd;
+	AI[i].Traces[k].resize( n );
+      }
     }
-    cerr << "truncated " << m << '\n';
+    if ( m > 0 )
+      cerr << "truncated " << m << '\n';
     AI[i].Traces.setRestart();
   }
 
@@ -905,10 +909,14 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
     int m = 0;
     for ( int k=0; k<AI[i].Traces.size(); k++ ) {
       int n = AI[i].Traces[k].indices( t );
-      m += AI[i].Traces[k].size() - n;
-      AI[i].Traces[k].resize( n );
+      int nd = AI[i].Traces[k].size() - n;
+      if ( nd > 0 ) {
+	m += nd;
+	AI[i].Traces[k].resize( n );
+      }
     }
-    cerr << "truncated " << m << '\n';
+    if ( m > 0 )
+      cerr << "truncated " << m << '\n';
     AI[i].Traces.setRestart();
   }
 
