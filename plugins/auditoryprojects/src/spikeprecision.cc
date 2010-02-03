@@ -212,26 +212,58 @@ int SpikePrecision::main( void )
   StoreFile = "";
 
   // setup variables:
-  if ( intensitybase == 1 )
-    Intensity = intensity + metaData( "Cell" ).number( "best threshold" );	// get "best thresh" from FICurve (via the session widget)
-  else if ( intensitybase == 2 )
-    Intensity = intensity + metaData( "Cell" ).number( "best intensity" );	// get "best intensity" from FICurve (via the session widget)
-  else if ( intensitybase == 3 )
-    Intensity += 0.0;
-  else
-    Intensity = intensity;
-    
   if ( Amplitude > Intensity ) {
     warning( "Amplitude > Intensity" );
     return Failed;
   }
   if ( Side > 1 )
     Side = metaData( "Cell" ).index( "best side" );
+  string sidestr = Side > 0 ? "right" :  "left";
   if ( usebestfreq ) {
-    double cf = metaData( "Cell" ).number( Side > 0 ? "right frequency" :  "left frequency" );
+    double cf = metaData( "Cell" ).number( sidestr + " frequency" );
     if ( cf > 0.0 )
       CarrierFrequency = cf;
   }
+  if ( intensitybase == 1 || intensitybase == 2 ) {
+    auditory::Session *as = dynamic_cast<auditory::Session*>( control( "Session" ) );
+    if ( as == NULL ) {
+      warning( "Can not get the neuron's threshold intensity. <br>No auditory::Session-plugin found." );
+      return Failed;
+    }
+    MapD thresh = as->threshCurve( Side );
+    if ( thresh.empty() ) {
+      warning( "Can not get the neuron's threshold intensity. <br>No threshold curve was measured so far.");
+      return Failed;
+    }
+    int k=0;
+    for ( k=0;
+	  k < thresh.size() && thresh.x(k) < CarrierFrequency;
+	  k++ );
+    double intthresh = 0.0;
+    if ( k == 0 && ::fabs( thresh.x( k ) - CarrierFrequency ) < 1.0 )
+      intthresh = thresh.y( k );
+    else if ( k >= thresh.size() && ::fabs( thresh.x( thresh.size()-1 ) - CarrierFrequency ) < 1.0 )
+      intthresh = thresh.y( thresh.size()-1 );
+    else if ( k == 0 || k >= thresh.size() ) {
+      warning( "Can not get the neuron's threshold intensity. <br>Requested carrier frequency of " +
+	       Str( 0.001*CarrierFrequency ) +
+	       " kHz is outside the measured range of the threshold curve." );
+      return Failed;
+    }
+    else
+      intthresh = thresh.y(k) + ( CarrierFrequency - thresh.x(k) )*( thresh.y(k) - thresh.y(k-1) )/( thresh.x(k) - thresh.x(k-1) );
+    if ( intensitybase == 1 )  // relative to threshold
+      Intensity = intensity + intthresh;
+    else if ( intensitybase == 2 )  // relative to target rate intensity
+      Intensity = intensity
+	+ intthresh + metaData( "Cell" ).number( sidestr + " intensity" )
+	- metaData( "Cell" ).number( sidestr + " threshold" );
+  }
+  else if ( intensitybase == 3 )  // relative to previous intensity
+    Intensity += 0.0;
+  else  // dB SPL
+    Intensity = intensity;
+
   settings().setTypeFlags( 16, -Parameter::Blank );
 
   // setup frequency range:

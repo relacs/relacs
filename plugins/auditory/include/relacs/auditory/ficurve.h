@@ -47,8 +47,8 @@ Features:
 - \c intmin=30dB SPL: Minimum stimulus intensity (\c number)
 - \c intmax=100dB SPL: Maximum stimulus intensity (\c number)
 - \c intstep=1dB SPL: Sound intensity step (\c number)
-- \c usebestthresh=false: Relative to the cell's best threshold (\c boolean)
-- \c usebestsat=false: Maximum intensity relative to the cell's best saturation (\c boolean)
+- \c usethresh=false: Relative to the cell's best threshold (\c boolean)
+- \c usesat=false: Maximum intensity relative to the cell's best saturation (\c boolean)
 - \c intshuffle=Up: Order of intensities (\c string)
 - \c intincrement=0: Initial increment for intensities (\c integer)
 - \c singlerepeat=6: Number of immediate repetitions of a single stimulus (\c integer)
@@ -58,7 +58,7 @@ Features:
 - Waveform
 - \c waveform=sine: Waveform of stimulus (\c string)
 - \c carrierfreq=5kHz: Frequency of carrier (\c number)
-- \c usebestfreq=false: Use the cell's best frequency (\c boolean)
+- \c usebestfreq=false: Relative to the cell's best frequency (\c boolean)
 - \c ramp=2ms: Ramp of stimulus (\c number)
 - \c duration=400ms: Duration of stimulus (\c number)
 - \c pause=400ms: Pause (\c number)
@@ -171,8 +171,8 @@ protected:
   double MinIntensity;
   double MaxIntensity;
   double IntensityStep;
-  bool UseBestThresh;
-  bool UseBestSaturation;
+  bool UseThresh;
+  bool UseSaturation;
   RangeLoop::Sequence IntShuffle;
   int IntIncrement;
   int SingleRepeat;

@@ -62,8 +62,8 @@ FIField::FIField( void )
   insertInteger( "reducedfreqincrement", "Intensities", "Reduce frequency range at frequency increments below", ReducedFreqIncrement, 0, 1000, 1 );
   insertInteger( "reducedfreqnumber", "Intensities", "Number of frequencies used for the reduced frequency range", ReducedFreqNumber, 0, 1000, 1 );
   insertNumber( "minratefrac", "setbest", "Fraction of maximum rate required for f-I curve analysis", MinRateFrac, 0.0, 1.0, 0.1, "1", "%" );
-  Options::erase( "usebestthresh" );
-  Options::erase( "usebestsat" );
+  Options::erase( "usethresh" );
+  Options::erase( "usesat" );
   Options::erase( "manualskip" );
   Options::erase( "waveform" );
   Options::erase( "carrierfreq" );
@@ -71,7 +71,8 @@ FIField::FIField( void )
 
   addTypeStyle( OptWidget::Bold, Parameter::Label );
 
-  UseBestThresh = false;
+  UseThresh = false;
+  UseSaturation = false;
   Waveform = 0;
   UseBestFreq = false;
 
@@ -139,7 +140,7 @@ int FIField::main( void )
   MinIntensity = number( "intmin" );
   MaxIntensity = number( "intmax" );
   IntensityStep = number( "intstep" );
-  UseBestThresh = boolean( "usebestthresh" );
+  UseThresh = boolean( "usethresh" );
   IntShuffle = RangeLoop::Sequence( index( "intshuffle" ) );
   IntIncrement = integer( "intincrement" );
   SlopeIntIncrement = integer( "slopeintincrement" );

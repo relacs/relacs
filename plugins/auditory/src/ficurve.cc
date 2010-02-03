@@ -42,8 +42,8 @@ FICurve::FICurve( void )
   MinIntensity = 30.0;
   MaxIntensity = 100.0;
   IntensityStep = 1.0;
-  UseBestThresh = false;
-  UseBestSaturation = false;
+  UseThresh = false;
+  UseSaturation = false;
   IntShuffle = RangeLoop::Up;
   IntIncrement = 0;
   SlopeIntIncrement = 2;
@@ -77,8 +77,8 @@ FICurve::FICurve( void )
   addNumber( "intmin", "Minimum stimulus intensity", MinIntensity, -200.0, 200.0, 5.0, "dB SPL" );
   addNumber( "intmax", "Maximum stimulus intensity", MaxIntensity, 0.0, 200.0, 5.0, "dB SPL" );
   addNumber( "intstep", "Sound intensity step", IntensityStep, 0.0, 200.0, 1.0, "dB SPL" );
-  addBoolean( "usebestthresh", "Relative to the cell's best threshold", UseBestThresh );
-  addBoolean( "usebestsat", "Maximum intensity relative to the cell's best saturation", UseBestSaturation );
+  addBoolean( "usethresh", "Relative to the cell's threshold", UseThresh );
+  addBoolean( "usesat", "Maximum intensity relative to the cell's best saturation", UseSaturation );
   addSelection( "intshuffle", "Order of intensities", RangeLoop::sequenceStrings() );
   addInteger( "intincrement", "Initial increment for intensities", IntIncrement, 0, 1000, 1 );
   addInteger( "singlerepeat", "Number of immediate repetitions of a single stimulus", SingleRepeat, 1, 10000, 1 );
@@ -179,8 +179,8 @@ int FICurve::main( void )
   MinIntensity = number( "intmin" );
   MaxIntensity = number( "intmax" );
   IntensityStep = number( "intstep" );
-  UseBestThresh = boolean( "usebestthresh" );
-  UseBestSaturation = boolean( "usebestsat" );
+  UseThresh = boolean( "usethresh" );
+  UseSaturation = boolean( "usesat" );
   IntShuffle = RangeLoop::Sequence( index( "intshuffle" ) );
   IntIncrement = integer( "intincrement" );
   SlopeIntIncrement = integer( "slopeintincrement" );
@@ -213,21 +213,50 @@ int FICurve::main( void )
   if ( PreWidth > Pause )
     Pause = PreWidth;
 
-  double ith = 0.0;
-  if ( UseBestThresh )
-    ith = metaData( "Cell" ).number( "best threshold" );
-  double isat = ith;
-  if ( UseBestSaturation )
-    isat = metaData( "Cell" ).number( "best saturation" );
-  MinIntensity += ith;
-  MaxIntensity += isat;
-
   if ( Side > 1 )
     Side = metaData( "Cell" ).index( "best side" );
+  string sidestr = Side > 0 ? "right" :  "left";
   if ( UseBestFreq ) {
-    double cf = metaData( "Cell" ).number( Side > 0 ? "right frequency" :  "left frequency" );
+    double cf = metaData( "Cell" ).number( sidestr + " frequency" );
     if ( cf > 0.0 )
       CarrierFrequency += cf;
+  }
+  if ( UseThresh || UseSaturation ) {
+    auditory::Session *as = dynamic_cast<auditory::Session*>( control( "Session" ) );
+    if ( as == NULL ) {
+      warning( "Can not get the neuron's threshold intensity. <br>No auditory::Session-plugin found." );
+      return Failed;
+    }
+    MapD thresh = as->threshCurve( Side );
+    if ( thresh.empty() ) {
+      warning( "Can not get the neuron's threshold intensity. <br>No threshold curve was measured so far.");
+      return Failed;
+    }
+    int k=0;
+    for ( k=0;
+	  k < thresh.size() && thresh.x(k) < CarrierFrequency;
+	  k++ );
+    double intthresh = 0.0;
+    if ( k == 0 && ::fabs( thresh.x( k ) - CarrierFrequency ) < 1.0 )
+      intthresh = thresh.y( k );
+    else if ( k >= thresh.size() && ::fabs( thresh.x( thresh.size()-1 ) - CarrierFrequency ) < 1.0 )
+      intthresh = thresh.y( thresh.size()-1 );
+    else if ( k == 0 || k >= thresh.size() ) {
+      warning( "Can not get the neuron's threshold intensity. <br>Requested carrier frequency of " +
+	       Str( 0.001*CarrierFrequency ) +
+	       " kHz is outside the measured range of the threshold curve." );
+      return Failed;
+    }
+    else
+      intthresh = thresh.y(k) + ( CarrierFrequency - thresh.x(k) )*( thresh.y(k) - thresh.y(k-1) )/( thresh.x(k) - thresh.x(k-1) );
+    double ith = 0.0;
+    if ( UseThresh )
+      ith = intthresh;
+    double isat = ith;
+    if ( UseSaturation )
+      isat = intthresh + metaData( "Cell" ).number( sidestr + " saturation" ) - metaData( "Cell" ).number( sidestr + " threshold" );
+    MinIntensity += ith;
+    MaxIntensity += isat;
   }
   if ( SSWidth > Duration )
     SSWidth = Duration;
