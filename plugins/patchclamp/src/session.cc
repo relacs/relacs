@@ -43,7 +43,7 @@ Session::~Session( void )
 void Session::initialize( void )
 {
   // get trace indices:
-  ephys::Traces::initialize( traces(), events() );
+  ephys::Traces::initialize( this, traces(), events() );
 }
 
 

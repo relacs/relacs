@@ -149,9 +149,10 @@ RELACS_PLUGINSET([acoustic],[acoustic])
 RELACS_PLUGINSET([auditory],[auditory],[ephys acoustic misc])
 RELACS_PLUGINSET([auditoryprojects],[auditoryprojects],[ephys acoustic auditory misc])
 RELACS_PLUGINSET([patchclamp],[patchclamp],[ephys])
-RELACS_PLUGINSET([multielectrode],[multielectrode],[ephys])
+RELACS_PLUGINSET([patchclampprojects],[patchclampprojects],[base])
 RELACS_PLUGINSET([efield],[efield],[base])
 RELACS_PLUGINSET([efish],[efish],[base])
+RELACS_PLUGINSET([multielectrode],[multielectrode],[ephys])
 
 AC_SUBST([RELACS_PLUGINS_SUBDIRS])
 AC_SUBST([RELACS_PLUGINS_DIST_SUBDIRS])
@@ -217,9 +218,10 @@ AC_CONFIG_FILES([plugins/acoustic/relacslocal], [chmod a+x plugins/acoustic/rela
 AC_CONFIG_FILES([plugins/auditory/relacslocal], [chmod a+x plugins/auditory/relacslocal])
 AC_CONFIG_FILES([plugins/auditoryprojects/relacslocal], [chmod a+x plugins/auditoryprojects/relacslocal])
 AC_CONFIG_FILES([plugins/patchclamp/relacslocal], [chmod a+x plugins/patchclamp/relacslocal])
-AC_CONFIG_FILES([plugins/multielectrode/relacslocal], [chmod a+x plugins/multielectrode/relacslocal])
+AC_CONFIG_FILES([plugins/patchclampprojects/relacslocal], [chmod a+x plugins/patchclampprojects/relacslocal])
 AC_CONFIG_FILES([plugins/efield/relacslocal], [chmod a+x plugins/efield/relacslocal])
 AC_CONFIG_FILES([plugins/efish/relacslocal], [chmod a+x plugins/efish/relacslocal])
+AC_CONFIG_FILES([plugins/multielectrode/relacslocal], [chmod a+x plugins/multielectrode/relacslocal])
 
 
 #################################################

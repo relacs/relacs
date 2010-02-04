@@ -24,6 +24,7 @@
 
 #include <relacs/inlist.h>
 #include <relacs/eventlist.h>
+#include <relacs/relacsplugin.h>
 using namespace relacs;
 
 namespace ephys {
@@ -42,44 +43,48 @@ public:
 
   Traces( void );
 
-  static void initialize( const InList &data, const EventList &events );
+  static void initialize( const RELACSPlugin *rp,
+			  const InList &data, const EventList &events );
 
   static int StimulusEvents;
 
-  static const int MaxSpikeTraces = 100;
+  static const int MaxSpikeTraces = 10;
   static int SpikeTraces;
   static int SpikeTrace[MaxSpikeTraces];
   static int SpikeEvents[MaxSpikeTraces];
 
-  static const int MaxNerveTraces = 100;
+  static const int MaxNerveTraces = 10;
   static int NerveTraces;
   static int NerveTrace[MaxNerveTraces];
   static int NerveEvents[MaxNerveTraces];
 
+  static const int MaxCurrentOutputs = 10;
+  static int CurrentOutputs;
+  static int CurrentOutput[MaxCurrentOutputs];
 
-  static string spikeTraceName( void );
-  static void setSpikeTraceName( const string &name );
+  static const int MaxPotentialOutputs = 10;
+  static int PotentialOutputs;
+  static int PotentialOutput[MaxPotentialOutputs];
+
+
     /*! Returns the names of all input traces with voltages of neurons,
         separated by '|'. Can be passed to a text Parameter. */
   static string spikeTraceNames( void );
-
-  static string spikeEventsName( void );
-  static void setSpikeEventsName( const string &name );
     /*! Returns the names of all event traces with spikes of neurons,
         separated by '|'. Can be passed to a text Parameter. */
   static string spikeEventNames( void );
-
-  static string nerveTraceName( void );
-  static void setNerveTraceName( const string &name );
     /*! Returns the names of all input traces with voltages of whole nerves,
         separated by '|'. Can be passed to a text Parameter. */
   static string nerveTraceNames( void );
-
-  static string nerveEventsName( void );
-  static void setNerveEventsName( const string &name );
     /*! Returns the names of all event traces with events detected in nerves,
         separated by '|'. Can be passed to a text Parameter. */
   static string nerveEventNames( void );
+    /*! Returns the names of all output traces for current injections,
+        separated by '|'. Can be passed to a text Parameter. */
+  static string currentOutputNames( void );
+    /*! Returns the names of all output traces for voltage-clamp potentials,
+        separated by '|'. Can be passed to a text Parameter. */
+  static string potentialOutputNames( void );
 
 
 private:
@@ -94,9 +99,15 @@ private:
   static string NerveTraceNames;
   static string NerveEventsNames;
 
+  static string CurrentOutputName;
+  static string CurrentOutputNames;
+
+  static string PotentialOutputName;
+  static string PotentialOutputNames;
+
 };
 
 
 }; /* namespace ephys */
 
-#endif /* ! _RELACS_COMMON_EPHYSTRACES_H_ */
+#endif /* ! _RELACS_EPHYS_TRACES_H_ */

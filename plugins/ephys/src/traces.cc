@@ -46,18 +46,30 @@ int Traces::NerveTraces = 0;
 int Traces::NerveTrace[Traces::MaxNerveTraces] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 int Traces::NerveEvents[Traces::MaxNerveTraces] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 
+string Traces::CurrentOutputName = "Current";
+string Traces::CurrentOutputNames = "";
+int Traces::CurrentOutputs = 0;
+int Traces::CurrentOutput[Traces::MaxCurrentOutputs] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+
+string Traces::PotentialOutputName = "Potential";
+string Traces::PotentialOutputNames = "";
+int Traces::PotentialOutputs = 0;
+int Traces::PotentialOutput[Traces::MaxPotentialOutputs] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+
 
 Traces::Traces( void )
 {
 }
 
 
-void Traces::initialize( const InList &data, 
+void Traces::initialize( const RELACSPlugin *rp,
+			 const InList &data, 
 			 const EventList &events )
 {
   // get trace indices:
   StimulusEvents = events.index( "Stimulus" );
 
+  // spikes:
   SpikeTraces = 0;
   SpikeTraceNames = "";
   SpikeEventsNames = "";
@@ -75,6 +87,7 @@ void Traces::initialize( const InList &data,
   SpikeTraceNames.erase( 0, 1 );
   SpikeEventsNames.erase( 0, 1 );
 
+  // nerve potentials:
   NerveTraces = 0;
   NerveTraceNames = "";
   NerveEventsNames = "";
@@ -91,18 +104,33 @@ void Traces::initialize( const InList &data,
   }
   NerveTraceNames.erase( 0, 1 );
   NerveEventsNames.erase( 0, 1 );
-}
 
+  // current output traces:
+  CurrentOutputs = 0;
+  CurrentOutputNames = "";
+  for ( int k=0; k<MaxCurrentOutputs; k++ ) {
+    Str ns( k+1 );
+    CurrentOutput[k] = rp->outTraceIndex( CurrentOutputName + "-" + ns );
+    if ( CurrentOutput[k] >= 0 ) {
+      CurrentOutputs++;
+      CurrentOutputNames += '|' + rp->outTraceName( CurrentOutput[k] );
+    }
+  }
+  CurrentOutputNames.erase( 0, 1 );
 
-string Traces::spikeTraceName( void )
-{
-  return SpikeTraceName;
-}
+  // potential output traces:
+  PotentialOutputs = 0;
+  PotentialOutputNames = "";
+  for ( int k=0; k<MaxPotentialOutputs; k++ ) {
+    Str ns( k+1 );
+    PotentialOutput[k] = rp->outTraceIndex( PotentialOutputName + "-" + ns );
+    if ( PotentialOutput[k] >= 0 ) {
+      PotentialOutputs++;
+      PotentialOutputNames += '|' + rp->outTraceName( PotentialOutput[k] );
+    }
+  }
+  PotentialOutputNames.erase( 0, 1 );
 
-
-void Traces::setSpikeTraceName( const string &name )
-{
-  SpikeTraceName = name;
 }
 
 
@@ -112,33 +140,9 @@ string Traces::spikeTraceNames( void )
 }
 
 
-string Traces::spikeEventsName( void )
-{
-  return SpikeEventsName;
-}
-
-
-void Traces::setSpikeEventsName( const string &name )
-{
-  SpikeEventsName = name;
-}
-
-
 string Traces::spikeEventNames( void )
 {
   return SpikeEventsNames;
-}
-
-
-string Traces::nerveTraceName( void )
-{
-  return NerveTraceName;
-}
-
-
-void Traces::setNerveTraceName( const string &name )
-{
-  NerveTraceName = name;
 }
 
 
@@ -148,21 +152,21 @@ string Traces::nerveTraceNames( void )
 }
 
 
-string Traces::nerveEventsName( void )
-{
-  return NerveEventsName;
-}
-
-
-void Traces::setNerveEventsName( const string &name )
-{
-  NerveEventsName = name;
-}
-
-
 string Traces::nerveEventNames( void )
 {
   return NerveEventsNames;
+}
+
+
+string Traces::currentOutputNames( void )
+{
+  return CurrentOutputNames;
+}
+
+
+string Traces::potentialOutputNames( void )
+{
+  return PotentialOutputNames;
 }
 
 

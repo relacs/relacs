@@ -35,11 +35,18 @@ libephystraces_la_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
-    -I$(srcdir)/../include
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT3_CPPFLAGS)
 
-libephystraces_la_LDFLAGS = -module -avoid-version
+libephystraces_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT3_LDFLAGS)
 
-libephystraces_la_LIBADD = $(top_builddir)/relacs/src/librelacs.la
+libephystraces_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(QT3_LIBS)
 
 libephystraces_la_SOURCES = traces.cc
 

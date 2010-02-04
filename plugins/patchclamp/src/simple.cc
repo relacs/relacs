@@ -34,7 +34,7 @@ Simple::Simple( void )
 {
   // add some options:
   addSelection( "intrace", "Input trace", "V-1" );
-  addSelection( "outtrace", "Output trace", "Speaker-1" );
+  addSelection( "outtrace", "Output trace", "Current-1" );
   addNumber( "amplitude", "Amplitude of output signal", 1.0, -1000.0, 1000.0, 0.1 );
   addNumber( "duration", "Duration of output", 0.1, 0.001, 1000.0, 0.001, "sec", "ms" );
   addSelection( "stimulus", "Stimulus type", "constant|ramp|sine 1p|sine 2p|zero" );
