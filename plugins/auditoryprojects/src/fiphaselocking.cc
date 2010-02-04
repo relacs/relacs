@@ -316,6 +316,10 @@ int FIPhaseLocking::main( void )
       return Failed;
     }
     sleep( duration + pause );
+    if ( interrupt() ) {
+      saveSpikes();
+      return Completed;
+    }
 
     if ( SpikeEvents[0] < 0 )
       return Failed;
