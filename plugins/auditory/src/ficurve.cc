@@ -805,7 +805,7 @@ void FICurve::updateSession( const vector< FIData > &results )
     if ( SetCurves == 1 || SetCurves == 3 ) {
       as->addFICurve( fm, Side, CarrierFrequency );
     }
-    else if ( SetCurves == 2 || SetCurves == 3 ) {
+    if ( SetCurves == 2 || SetCurves == 3 ) {
       as->addOnFICurve( om, Side, CarrierFrequency );
       as->addSSFICurve( sm, Side, CarrierFrequency );
     }

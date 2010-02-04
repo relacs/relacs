@@ -6,7 +6,8 @@ pluginlibdir = $(pkglibdir)/plugins
 pluginlib_LTLIBRARIES = \
     libauditoryprojectsspikeprecision.la \
     libauditoryprojectsisoresponse.la \
-    libauditoryprojectsoneclick.la
+    libauditoryprojectsoneclick.la \
+    libauditoryprojectsfiphaselocking.la
 
 
 
@@ -120,10 +121,46 @@ libauditoryprojectsoneclick_la_includedir = $(pkgincludedir)/auditoryprojects
 libauditoryprojectsoneclick_la_include_HEADERS = $(HEADER_PATH)/oneclick.h
 
 
+libauditoryprojectsfiphaselocking_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/ephys/include \
+    -I$(top_srcdir)/plugins/acoustic/include \
+    -I$(top_srcdir)/plugins/auditory/include \
+    -I$(srcdir)/../include \
+    $(QT3_CPPFLAGS)
+
+libauditoryprojectsfiphaselocking_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT3_LDFLAGS)
+
+libauditoryprojectsfiphaselocking_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(builddir)/../../ephys/src/libephystraces.la \
+    $(builddir)/../../acoustic/src/libacoustictraces.la \
+    $(builddir)/../../auditory/src/libauditorysession.la \
+    $(QT3_LIBS)
+
+$(libauditoryprojectsfiphaselocking_la_OBJECTS) : moc_fiphaselocking.cc
+
+libauditoryprojectsfiphaselocking_la_SOURCES = fiphaselocking.cc
+
+libauditoryprojectsfiphaselocking_la_includedir = $(pkgincludedir)/auditoryprojects
+
+libauditoryprojectsfiphaselocking_la_include_HEADERS = $(HEADER_PATH)/fiphaselocking.h
+
+
+
 check_PROGRAMS = \
     linktest_libauditoryprojectsspikeprecision_la \
     linktest_libauditoryprojectsisoresponse_la \
-    linktest_libauditoryprojectsoneclick_la
+    linktest_libauditoryprojectsoneclick_la \
+    linktest_libauditoryprojectsfiphaselocking_la
 
 linktest_libauditoryprojectsspikeprecision_la_SOURCES = linktest.cc
 linktest_libauditoryprojectsspikeprecision_la_LDADD = libauditoryprojectsspikeprecision.la
@@ -133,5 +170,8 @@ linktest_libauditoryprojectsisoresponse_la_LDADD = libauditoryprojectsisorespons
 
 linktest_libauditoryprojectsoneclick_la_SOURCES = linktest.cc
 linktest_libauditoryprojectsoneclick_la_LDADD = libauditoryprojectsoneclick.la
+
+linktest_libauditoryprojectsfiphaselocking_la_SOURCES = linktest.cc
+linktest_libauditoryprojectsfiphaselocking_la_LDADD = libauditoryprojectsfiphaselocking.la
 
 TESTS = $(check_PROGRAMS)
