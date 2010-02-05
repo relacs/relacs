@@ -380,9 +380,9 @@ int DynClampAnalogOutput::setupChanList( OutList &sigs,
     }
     else {
       index = 0;
-      if ( unipolar && index > (int)CAO->UnipolarRange.size() )
+      if ( unipolar && index >= (int)CAO->UnipolarRange.size() )
 	unipolar = false;
-      if ( ! unipolar && index > (int)CAO->BipolarRange.size() )
+      if ( ! unipolar && index >= (int)CAO->BipolarRange.size() )
 	unipolar = true;
       if ( index >= unipolar ? (int)CAO->UnipolarRange.size() : (int)CAO->BipolarRange.size() )
 	index = -1;

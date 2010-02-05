@@ -641,7 +641,7 @@ void rtDynClamp( long dummy )
 
 	  subdevRunning = 1;
          
-	  // read putput from FIFO:
+	  // read output from FIFO:
 	  for ( iC = 0; iC < subdev[iS].chanN; iC++ ) {
 	    if ( subdev[iS].chanlist[iC].isUsed ) {
 	      // get data from FIFO:

@@ -1963,7 +1963,7 @@ int Acquire::writeData( void )
 
 int Acquire::directWrite( OutData &signal )
 {
-  cerr << "DIRECT\n";
+  cerr << "SINGLE CHANNEL DIRECT WRITE\n";
   // set trace:
   applyOutTrace( signal );
 
@@ -2062,6 +2062,7 @@ int Acquire::directWrite( OutData &signal )
 
 int Acquire::directWrite( OutList &signal )
 {
+  cerr << "MULTI CHANNEL DIRECT WRITE " << signal.size() << "\n";
   if ( signal.size() <= 0 )
     return 0;
 
@@ -2198,7 +2199,7 @@ int Acquire::directWrite( OutList &signal )
   }
 
   // start writing to daq boards:
-  if ( ! success ) {
+  if ( success ) {
     if ( gainChanged() ||
 	 signal[0].restart() ||
 	 SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {

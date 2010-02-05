@@ -156,7 +156,7 @@ int MembraneResistance::main( void )
       return Failed;
     }
 
-    sleep( Duration );
+    sleep( Duration + 0.01 );
     if ( interrupt() ) {
       if ( count > 0 )
 	break;

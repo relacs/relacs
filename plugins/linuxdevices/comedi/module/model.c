@@ -4,7 +4,7 @@ char *moduleName;
 
   /*! The period length of the realtime periodic task in seconds. */
 float loopInterval;
-  /*! One overt the period length of the realtime periodic task in Hertz. */
+  /*! One over the period length of the realtime periodic task in Hertz. */
 float loopRate;
 
   /*! Analog input that is read from the DAQ board. */
@@ -22,7 +22,7 @@ float input[INPUT_N] = { 0.0 };
   /*! Analog output that is written to the DAQ board. */
 #define OUTPUT_N 1
 char *outputNames[OUTPUT_N] = { "Current-1" };
-char *outputUnits[OUTPUT_N] = { "mA" };
+char *outputUnits[OUTPUT_N] = { "nA" };
 int outputChannels[OUTPUT_N];
 int outputDevices[OUTPUT_N];
 float output[OUTPUT_N] = { 0.0 };
