@@ -37,6 +37,16 @@ int Traces::SpikeTraces = 0;
 int Traces::SpikeTrace[Traces::MaxSpikeTraces] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 int Traces::SpikeEvents[Traces::MaxSpikeTraces] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 
+string Traces::CurrentTraceName = "Current";
+string Traces::CurrentTraceNames = "";
+int Traces::CurrentTraces = 0;
+int Traces::CurrentTrace[Traces::MaxCurrentTraces] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+
+string Traces::PotentialTraceName = "Potential";
+string Traces::PotentialTraceNames = "";
+int Traces::PotentialTraces = 0;
+int Traces::PotentialTrace[Traces::MaxPotentialTraces] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
+
 string Traces::NerveTraceName = "Nerve";
 string Traces::NerveEventsName = "Nerve";
 string Traces::NerveTraceNames = "";
@@ -86,6 +96,32 @@ void Traces::initialize( const RELACSPlugin *rp,
   }
   SpikeTraceNames.erase( 0, 1 );
   SpikeEventsNames.erase( 0, 1 );
+
+  // current inputs:
+  CurrentTraces = 0;
+  CurrentTraceNames = "";
+  for ( int k=0; k<MaxCurrentTraces; k++ ) {
+    Str ns( k+1 );
+    CurrentTrace[k] = data.index( CurrentTraceName + "-" + ns );
+    if ( CurrentTrace[k] >= 0 ) {
+      CurrentTraces++;
+      CurrentTraceNames += '|' + data[ CurrentTrace[k] ].ident();
+    }
+  }
+  CurrentTraceNames.erase( 0, 1 );
+
+  // potential inputs:
+  PotentialTraces = 0;
+  PotentialTraceNames = "";
+  for ( int k=0; k<MaxPotentialTraces; k++ ) {
+    Str ns( k+1 );
+    PotentialTrace[k] = data.index( PotentialTraceName + "-" + ns );
+    if ( PotentialTrace[k] >= 0 ) {
+      PotentialTraces++;
+      PotentialTraceNames += '|' + data[ PotentialTrace[k] ].ident();
+    }
+  }
+  PotentialTraceNames.erase( 0, 1 );
 
   // nerve potentials:
   NerveTraces = 0;
@@ -155,6 +191,18 @@ string Traces::nerveTraceNames( void )
 string Traces::nerveEventNames( void )
 {
   return NerveEventsNames;
+}
+
+
+string Traces::currentTraceNames( void )
+{
+  return CurrentTraceNames;
+}
+
+
+string Traces::potentialTraceNames( void )
+{
+  return PotentialTraceNames;
 }
 
 

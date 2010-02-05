@@ -33,7 +33,7 @@ namespace ephys {
 /*! 
 \class Traces
 \author Jan Benda
-\version 1.0
+\version 1.1
 \brief [lib] Variables for standard input traces and events in electrophysiology.
 */
 
@@ -52,6 +52,14 @@ public:
   static int SpikeTraces;
   static int SpikeTrace[MaxSpikeTraces];
   static int SpikeEvents[MaxSpikeTraces];
+
+  static const int MaxCurrentTraces = 10;
+  static int CurrentTraces;
+  static int CurrentTrace[MaxCurrentTraces];
+
+  static const int MaxPotentialTraces = 10;
+  static int PotentialTraces;
+  static int PotentialTrace[MaxPotentialTraces];
 
   static const int MaxNerveTraces = 10;
   static int NerveTraces;
@@ -73,6 +81,12 @@ public:
     /*! Returns the names of all event traces with spikes of neurons,
         separated by '|'. Can be passed to a text Parameter. */
   static string spikeEventNames( void );
+    /*! Returns the names of all input traces with currents for current-clamp,
+        separated by '|'. Can be passed to a text Parameter. */
+  static string currentTraceNames( void );
+    /*! Returns the names of all input traces with command potentials for voltage-clamp,
+        separated by '|'. Can be passed to a text Parameter. */
+  static string potentialTraceNames( void );
     /*! Returns the names of all input traces with voltages of whole nerves,
         separated by '|'. Can be passed to a text Parameter. */
   static string nerveTraceNames( void );
@@ -93,6 +107,12 @@ private:
   static string SpikeEventsName;
   static string SpikeTraceNames;
   static string SpikeEventsNames;
+
+  static string CurrentTraceName;
+  static string CurrentTraceNames;
+
+  static string PotentialTraceName;
+  static string PotentialTraceNames;
 
   static string NerveTraceName;
   static string NerveEventsName;
