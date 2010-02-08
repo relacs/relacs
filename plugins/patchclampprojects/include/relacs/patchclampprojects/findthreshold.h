@@ -1,6 +1,6 @@
 /*
-  patchclampprojects/thresholdlatencies.h
-  Measures spike latencies in response to pulses close to the firing threshold.
+  patchclampprojects/findthreshold.h
+  Finds the current threshold.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _RELACS_PATCHCLAMPPROJECTS_THRESHOLDLATENCIES_H_
-#define _RELACS_PATCHCLAMPPROJECTS_THRESHOLDLATENCIES_H_ 1
+#ifndef _RELACS_PATCHCLAMPPROJECTS_FINDTHRESHOLD_H_
+#define _RELACS_PATCHCLAMPPROJECTS_FINDTHRESHOLD_H_ 1
 
 #include <deque>
 #include <relacs/array.h>
@@ -35,26 +35,25 @@ namespace patchclampprojects {
 
 
 /*!
-\class ThresholdLatencies
-\brief [RePro] Measures spike latencies in response to pulses close to the firing threshold.
+\class FindThreshold
+\brief [RePro] Finds the current threshold.
 \author Jan Benda
-\version 1.0 (Feb 04, 2010)
+\version 1.0 (Feb 08, 2010)
 */
 
 
-  class ThresholdLatencies : public RePro, public ephys::Traces
+  class FindThreshold : public RePro, public ephys::Traces
 {
   Q_OBJECT
 
 public:
 
-  ThresholdLatencies( void );
+  FindThreshold( void );
   virtual int main( void );
   virtual void config( void );
   virtual void notify( void );
   void analyze( int involtage, int incurrent,
-		double amplitude, double dcamplitude,
-		double delay, double duration, double savetime );
+		double amplitude, double duration, double savetime );
   void plot( double duration );
   void openFiles( ofstream &tf, TableKey &tracekey,
 		  ofstream &sf, TableKey &spikekey, int incurrent );
@@ -71,11 +70,10 @@ protected:
   double IInFac;
 
   struct Data {
-    Data( double delay, double savetime,
+    Data( double savetime,
 	  const InData &voltage, const InData &current );
-    Data( double delay, double savetime,
+    Data( double savetime,
 	  const InData &voltage );
-    double DCAmplitude;
     double Amplitude;
     SampleDataF Voltage;
     SampleDataF Current;
@@ -87,7 +85,6 @@ protected:
   int SpikeCount;
   int TrialCount;
   ArrayD Amplitudes;
-  ArrayD DCAmplitudes;
   ArrayD Latencies;
 
 };
@@ -95,4 +92,4 @@ protected:
 
 }; /* namespace patchclampprojects */
 
-#endif /* ! _RELACS_PATCHCLAMPPROJECTS_THRESHOLDLATENCIES_H_ */
+#endif /* ! _RELACS_PATCHCLAMPPROJECTS_FINDTHRESHOLD_H_ */

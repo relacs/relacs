@@ -22,6 +22,8 @@
 #ifndef _RELACS_PATCHCLAMP_SESSION_H_
 #define _RELACS_PATCHCLAMP_SESSION_H_ 1
 
+#include <qpushbutton.h>
+#include <relacs/optwidget.h>
 #include <relacs/ephys/traces.h>
 #include <relacs/control.h>
 using namespace relacs;
@@ -47,6 +49,26 @@ public:
   ~Session( void );
 
   virtual void initialize( void );
+  virtual void config( void );
+  virtual void initDevices( void );
+  virtual void sessionStarted( void );
+  virtual void sessionStopped( bool saved );
+
+    /*! Notify about changes in the meta data. */
+  virtual void notifyMetaData( const string &section );
+
+
+ protected:
+
+  QPushButton *SessionButton;
+
+  OptWidget *PSW;
+
+  static const int MetaDataReadOnly = 1;
+  static const int MetaDataDisplay = 2;
+  static const int MetaDataReset = 4;
+  static const int MetaDataSave = 8;
+
 
 };
 

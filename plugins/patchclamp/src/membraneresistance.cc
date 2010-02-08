@@ -39,16 +39,20 @@ MembraneResistance::MembraneResistance( void )
     IInFac( 1.0 )
 {
   // add some options:
+  addLabel( "Traces" );
   addSelection( "involtage", "Input voltage trace", "V-1" );
   addSelection( "incurrent", "Input current trace", "Current-1" );
   addSelection( "outcurrent", "Output trace", "Current-1" );
+  addLabel( "Stimulus" );
   addNumber( "amplitude", "Amplitude of output signal", -1.0, -1000.0, 1000.0, 0.1 );
   addNumber( "duration", "Duration of output", 0.1, 0.001, 1000.0, 0.001, "sec", "ms" );
   addNumber( "pause", "Duration of pause bewteen outputs", 0.4, 0.001, 1.0, 0.001, "sec", "ms" );
   addInteger( "repeats", "Repetitions of stimulus", 10, 0, 10000, 1 );
+  addLabel( "Analysis" );
   addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
   addBoolean( "nossfit", "Fix steady-state potential for fit", true );
   addBoolean( "plotstdev", "Plot standard deviation of membrane potential", true );
+  addBoolean( "setdata", "Set results to the session variables", true );
 
   // plot:
   P.lock();
@@ -122,6 +126,7 @@ int MembraneResistance::main( void )
   noMessage();
 
   // init:
+  DoneState state = Completed;
   MeanTrace = SampleDataD( -0.5*Duration, 2.0*Duration, 1/samplerate, 0.0 );
   SquareTrace = MeanTrace;
   StdevTrace = MeanTrace;
@@ -154,17 +159,13 @@ int MembraneResistance::main( void )
   P.lock();
   P.setXRange( -500.0*Duration, 2000.0*Duration );
   P.setYLabel( trace( SpikeTrace[involtage] ).ident() + " [" + VUnit + "]" );
-  /*
-  P.setYLabelPos( 2.3, Plot::FirstMargin, 0.5, Plot::Graph,
-		  Plot::Center, -90.0 );
-  */
   P.unlock();
 
   // signal:
   OutData signal( Duration, 1.0/samplerate );
   signal = Amplitude;
   signal.setIdent( "const" );
-  signal.back() = 0.0;
+  signal.back() = metaData( "Cell" ).number( "dc", IUnit );
   signal.setTrace( outcurrent );
   TrueAmplitude = Amplitude;
 
@@ -186,10 +187,9 @@ int MembraneResistance::main( void )
 
     sleep( Duration + 0.01 );
     if ( interrupt() ) {
-      if ( count > 0 )
-	break;
-      else
-	return Aborted;
+      if ( count < 1 )
+	state = Aborted;
+      break;
     }
 
     timeStamp();
@@ -197,27 +197,26 @@ int MembraneResistance::main( void )
 
     sleepOn( Duration + 0.02 );
     if ( interrupt() ) {
-      if ( count > 0 )
-	break;
-      else
-	return Aborted;
+      if ( count < 1 )
+	state = Aborted;
+      break;
     }
 
     analyzeOff( involtage, incurrent, Duration, count, sswidth, nossfit );
     plot();
     sleepOn( pause );
     if ( interrupt() ) {
-      if ( count > 0 )
-	break;
-      else
-	return Aborted;
+      if ( count < 1 )
+	state = Aborted;
+      break;
     }
 
   }
 
-  save();
+  if ( state == Completed )
+    save();
 
-  return Completed;
+  return state;
 }
 
 
@@ -372,6 +371,14 @@ void MembraneResistance::save( void )
   saveData();
   saveTrace();
   saveExpFit();
+
+  if ( settings().boolean( "setdata" ) ) {
+    Options &mo = metaData( "Cell" );
+    mo.setNumber( "vrest", 0.001*VRest, 0.001*VRestsd );
+    mo.setNumber( "membraner", RMOn  );
+    mo.setNumber( "membranec", CMOn );
+    mo.setNumber( "membranetau", 0.001*TauMOn );
+  }
 }
 
 
