@@ -23,6 +23,7 @@
 #define _RELACS_PATCHCLAMPPROJECTS_THRESHOLDLATENCIES_H_ 1
 
 #include <deque>
+#include <relacs/array.h>
 #include <relacs/sampledata.h>
 #include <relacs/tablekey.h>
 #include <relacs/plot.h>
@@ -51,10 +52,14 @@ public:
   virtual int main( void );
   virtual void config( void );
   virtual void notify( void );
-  void analyze( int involtage, int incurrent,
+  void analyze( int involtage, int incurrent, double amplitude,
 		double delay, double duration, double savetime );
   void plot( double duration );
-  void save( ofstream &df, TableKey &datakey, int incurrent );
+  void openFiles( ofstream &tf, TableKey &tracekey,
+		  ofstream &sf, TableKey &spikekey, int incurrent );
+  void saveTrace( ofstream &tf, TableKey &tracekey, int index );
+  void saveSpikes( ofstream &sf, TableKey &spikekey, int index );
+  void saveData( void );
 
 
 protected:
@@ -62,18 +67,25 @@ protected:
   Plot P;
   string VUnit;
   string IUnit;
+  double IInFac;
 
   struct Data {
-    Data( double delay, double savetime, double amplitude,
+    Data( double delay, double savetime,
 	  const InData &voltage, const InData &current );
-    Data( double delay, double savetime, double amplitude,
+    Data( double delay, double savetime,
 	  const InData &voltage );
     double Amplitude;
     SampleDataF Voltage;
     SampleDataF Current;
-    int Spikes;
+    EventData Spikes;
+    int SpikeCount;
   };
   deque< Data > Results;
+
+  int SpikeCount;
+  int TrialCount;
+  ArrayD Amplitudes;
+  ArrayD Latencies;
 
 };
 

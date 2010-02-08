@@ -30,18 +30,32 @@ namespace patchclampprojects {
 ThresholdLatencies::ThresholdLatencies( void )
   : RePro( "ThresholdLatencies", "ThresholdLatencies", "patchclampprojects",
 	   "Jan Benda", "1.0", "Feb 04, 2010" ),
-    P( this )
+    P( this ),
+    VUnit( "mV" ),
+    IUnit( "nA" ),
+    IInFac( 1.0 )
 {
   // add some options:
+  addLabel( "Traces" );
   addSelection( "involtage", "Input voltage trace", "V-1" );
   addSelection( "incurrent", "Input current trace", "Current-1" );
   addSelection( "outcurrent", "Output trace", "Current-1" );
+  addLabel( "Timing" );
   addNumber( "duration", "Duration of output", 0.1, 0.0, 1000.0, 0.001, "sec", "ms" );
   addNumber( "pause", "Duration of pause bewteen outputs", 1.0, 0.0, 1000.0, 0.01, "sec", "ms" );
-  addInteger( "repeats", "Repetitions of stimulus", 10, 0, 10000, 1 );
-  addNumber( "amplitudestep", "Size of amplitude steps used for oscillating around threshold", 0.1, 0.0, 1000.0, 0.01 );
   addNumber( "delay", "Time before stimullus onset", 0.05, 0.0, 1000.0, 0.01, "sec", "ms" );
   addNumber( "savetracetime", "Length of trace to be saved and analyzed", 0.5, 0.0, 1000.0, 0.01, "sec", "ms" );
+  addInteger( "repeats", "Repetitions of stimulus", 10, 0, 10000, 1 );
+  addLabel( "Amplitudes" );
+  addNumber( "startamplitude", "Initial amplitude of current stimulus", 1.0, 0.0, 1000.0, 0.01 );
+  addNumber( "amplitudestep", "Size of amplitude steps used for oscillating around threshold", 0.1, 0.0, 1000.0, 0.01 );
+  addLabel( "Background amplitude" );
+  addSelection( "backamplitudesel", "Background amplitude", "none|relative|absolute" );
+  addNumber( "backamplitudefrac", "Fraction of threshold", 0.9, 0.0, 1.0, 0.01, "1", "%" );
+  addNumber( "backamplitudedecr", "Decrement below threshold", 0.1, 0.0, 1000.0, 0.01 );
+  addInteger( "backrepeats", "Repetitions of stimulus for threshold estimation", 10, 0, 10000, 1 );
+
+  addTypeStyle( OptWidget::Bold, Parameter::Label );
 
   // plot:
   P.lock();
@@ -54,8 +68,8 @@ void ThresholdLatencies::config( void )
 {
   setText( "involtage", spikeTraceNames() );
   setToDefault( "involtage" );
-  //  setText( "incurrent", spikeTraceNames() );
-  //  setToDefault( "incurrent" );
+  setText( "incurrent", currentTraceNames() );
+  setToDefault( "incurrent" );
   setText( "outcurrent", currentOutputNames() );
   setToDefault( "outcurrent" );
 }
@@ -63,14 +77,24 @@ void ThresholdLatencies::config( void )
 
 void ThresholdLatencies::notify( void )
 {
-  int outcurrent = index( "outcurrent" );
-  IUnit = outTrace( outcurrent ).unit();
-  setUnit( "amplitudestep", IUnit );
-  //  IFac = Parameter::changeUnit( 1.0, IUnit, "nA" );
-
   int involtage = index( "involtage" );
-  VUnit = trace( involtage ).unit();
-  //  VFac = Parameter::changeUnit( 1.0, VUnit, "mV" );
+  if ( involtage >= 0 && SpikeTrace[involtage] >= 0 ) {
+    VUnit = trace( SpikeTrace[involtage] ).unit();
+  }
+
+  int outcurrent = index( "outcurrent" );
+  if ( outcurrent >= 0 && CurrentOutput[outcurrent] >= 0 ) {
+    IUnit = outTrace( CurrentOutput[outcurrent] ).unit();
+    setUnit( "startamplitude", IUnit );
+    setUnit( "amplitudestep", IUnit );
+    setUnit( "backamplitudedecr", IUnit );
+  }
+
+  int incurrent = index( "incurrent" );
+  if ( incurrent >= 0 && CurrentTrace[incurrent] >= 0 ) {
+    string iinunit = trace( CurrentTrace[incurrent] ).unit();
+    IInFac = Parameter::changeUnit( 1.0, iinunit, IUnit );
+  }
 }
 
 
@@ -81,10 +105,16 @@ int ThresholdLatencies::main( void )
   int outcurrent = outTraceIndex( text( "outcurrent", 0 ) );
   double duration = number( "duration" );
   double pause = number( "pause" );
-  int repeats = integer( "repeats" );
-  double amplitudestep = number( "amplitudestep" );
   double delay = number( "delay" );
   double savetracetime = number( "savetracetime" );
+  int repeats = integer( "repeats" );
+  double amplitude = number( "startamplitude" );
+  double amplitudestep = number( "amplitudestep" );
+  int backamplitudesel = index( "backamplitudesel" );
+  double backamplitudefrac = number( "backamplitudefrac" );
+  double backamplitudedecr = number( "backamplitudedecr" );
+  int backrepeats = integer( "backrepeats" );
+
   if ( savetracetime < duration ) {
     warning( "savetracetime must be at least as long as the stimulus duration!" );
     return Failed;
@@ -108,24 +138,25 @@ int ThresholdLatencies::main( void )
   noMessage();
 
   // init:
+  /* 0: find threshold
+     1: measure threshold
+     2: find threshold with background
+     3: record */
+  int mode = backamplitudesel == 0 ? 2 : 0;
+  bool record = false;
+  DoneState state = Completed;
+  double backamplitude = 0.0;
   Results.clear();
-
-  // save:
-  TableKey datakey;
-  datakey.addNumber( "t", "ms", "%7.2f" );
-  datakey.addNumber( "V", VUnit, "%6.1f" );
-  if ( incurrent >= 0 )
-    datakey.addNumber( "I", IUnit, "%6.1f" );
-  ofstream df;
-  if ( completeRuns() <= 0 )
-    df.open( addPath( "thresholdlatencies.dat" ).c_str() );
-  else
-    df.open( addPath( "thresholdlatencies.dat" ).c_str(),
-	     ofstream::out | ofstream::app );
-  settings().save( df, "# " );
-  df << '\n';
-  datakey.saveKey( df );
-  df << '\n';
+  Amplitudes.clear();
+  Amplitudes.reserve( 100 );
+  Latencies.clear();
+  Latencies.reserve( 100 );
+  SpikeCount = 0;
+  TrialCount = 0;
+  TableKey tracekey;
+  ofstream tf;
+  TableKey spikekey;
+  ofstream sf;
 
   // plot trace:
   plotToggle( true, true, savetracetime, delay );
@@ -140,105 +171,242 @@ int ThresholdLatencies::main( void )
   OutData signal( duration, 1.0/samplerate );
   signal.setTrace( outcurrent );
   signal.setDelay( delay );
-  double amplitude = 2.0;
 
   // write stimulus:
   sleep( pause );
-  for ( int count=0;
-	( repeats <= 0 || count < repeats ) && softStop() == 0;
-	count++ ) {
+  for ( int count=1; softStop() == 0; count++ ) {
 
     timeStamp();
 
-    Str s = "Amplitude <b>" + Str( amplitude ) + " " + IUnit +"</b>";
-    s += ",  Loop <b>" + Str( count+1 ) + "</b>";
+    Str s;
+    if ( mode == 0 || mode == 2 )
+      s = "<b>Search threshold: </b>";
+    else if ( mode == 1 )
+      s = "<b>Measure threshold: </b>";
+    else if ( mode == 3 )
+      s = "<b>Measure response: </b>";
+    if ( mode >= 2 )
+      s += "Background amplitude <b>" + Str( backamplitude ) + " " + IUnit +"</b>, ";
+    s += "Amplitude <b>" + Str( amplitude ) + " " + IUnit +"</b>";
+    if ( mode==1 || record )
+      s += ",  Loop <b>" + Str( count ) + "</b>";
     message( s );
 
     // signal:
     signal = amplitude;
     signal.setIdent( "const ampl=" + Str( amplitude ) + IUnit );
-    signal.back() = 0.0;
+    signal.back() = backamplitude;
     write( signal );
     if ( signal.failed() ) {
       warning( signal.errorText() );
-      if ( count > 0 )
-	break;
-      else {
-	df << '\n';
-	Results.clear();
-	return Failed;
-      }
+      if ( ! record || count <= 1 )
+	state = Failed;
+      break;
     }
 
+    // sleep:
     sleep( savetracetime + 0.01 );
     if ( interrupt() ) {
-      if ( count > 0 )
-	break;
-      else {
-	df << '\n';
-	Results.clear();
-	return Aborted;
-      }
+      if ( ! record || count <= 1 )
+	state = Aborted;
+      break;
     }
 
-    analyze( involtage, incurrent,
+    // analyze, plot, and save:
+    analyze( involtage, incurrent, amplitude,
 	     delay, duration, savetracetime );
-    save( df, datakey, incurrent );
+    if ( record ) {
+      saveTrace( tf, tracekey, count-1 );
+      saveSpikes( sf, spikekey, count-1 );
+    }
     plot( duration );
 
-    if ( Results.back().Spikes > 0 )
+    if ( Results.back().SpikeCount > 0 )
       amplitude -= amplitudestep;
     else
       amplitude += amplitudestep;
 
+    // switch modes:
+    if ( ! record ) {
+      int prevmode = mode;
+      if ( mode == 1 ) {
+	// threshold measurement:
+	if ( count >= backrepeats ) {
+	  mode++;
+	  backamplitude = Amplitudes.mean();
+	  if ( backamplitudesel == 1 )
+	    backamplitude *= backamplitudefrac;
+	  else
+	    backamplitude -= backamplitudedecr;
+	}
+      }
+      else {
+	// find threshold:
+	if ( Results.size() > 1 &&
+	     ( ( Results[Results.size()-2].SpikeCount <= 0 &&
+		 Results[Results.size()-1].SpikeCount > 0 ) ||
+	       ( Results[Results.size()-2].SpikeCount > 0 &&
+		 Results[Results.size()-1].SpikeCount <= 0 ) ) ) {
+	  mode++;
+	}
+	if ( mode >= 3 ) {
+	  record = true;
+	  openFiles( tf, tracekey, sf, spikekey, incurrent );
+	}
+      }
+      if ( prevmode != mode ) {
+	// new mode, reset:
+	count = 1;
+	Results.clear();
+	SpikeCount = 0;
+	TrialCount = 0;
+	Amplitudes.clear();
+	Amplitudes.reserve( repeats > 0 ? repeats : 1000 );
+	Latencies.clear();
+	Latencies.reserve( repeats > 0 ? repeats : 1000 );
+      }
+    }
+    TrialCount = count;
+
     sleepOn( delay + duration + pause );
+
+    if ( record && repeats > 0 && count >= repeats )
+      break;
 
   }
 
-  df << '\n';
+  tf << '\n';
+  sf << '\n';
+  if ( record && TrialCount > 0 )
+    saveData();
   Results.clear();
-
-  return Completed;
+  Latencies.clear();
+  Amplitudes.clear();
+  writeZero( outcurrent );
+  return state;
 }
 
 
-void ThresholdLatencies::analyze( int involtage, int incurrent,
+void ThresholdLatencies::analyze( int involtage, int incurrent, double amplitude,
 				  double delay, double duration, double savetime )
 {
   if ( Results.size() >= 20 )
     Results.pop_front();
 
-  double amplitude = 0.0; // XXX
-  if ( incurrent >= 0 )
-    Results.push_back( Data( delay, savetime, amplitude,
-			     trace( SpikeTrace[involtage] ), trace( incurrent ) ) );
-  else
-    Results.push_back( Data( delay, savetime, amplitude, trace( SpikeTrace[involtage] ) ) );
-  Results.back().Spikes = events( SpikeEvents[involtage] ).count( events( SpikeEvents[involtage] ).signalTime(),
-								  events( SpikeEvents[involtage] ).signalTime() + savetime );
+  if ( incurrent >= 0 ) {
+    Results.push_back( Data( delay, savetime, trace( SpikeTrace[involtage] ),
+			     trace( incurrent ) ) );
+    Results.back().Current *= IInFac;
+    Results.back().Amplitude = Results.back().Current.mean( 0.5*duration, duration );
+  }
+  else {
+    Results.push_back( Data( delay, savetime, trace( SpikeTrace[involtage] ) ) );
+    Results.back().Amplitude = amplitude;
+  }
+  events( SpikeEvents[involtage] ).copy( events( SpikeEvents[involtage] ).signalTime() - delay,
+					 events( SpikeEvents[involtage] ).signalTime() + savetime - delay,
+					 events( SpikeEvents[involtage] ).signalTime(),
+					 Results.back().Spikes );
+  Results.back().SpikeCount = Results.back().Spikes.count( 0.0, savetime-delay );
+
+  if ( Results.back().SpikeCount > 0 ) {
+    SpikeCount++;
+    Latencies.push( Results.back().Spikes.latency( 0.0 ) );
+  }
+  Amplitudes.push( Results.back().Amplitude );
 }
 
 
-void ThresholdLatencies::save( ofstream &df, TableKey &datakey, int incurrent )
+void ThresholdLatencies::openFiles( ofstream &tf, TableKey &tracekey,
+				    ofstream &sf, TableKey &spikekey,
+				    int incurrent )
 {
-  df << "# amplitude: " << Str( Results.back().Amplitude ) << IUnit << '\n';
-  df << "# spike count: " << Str( Results.back().Spikes ) << '\n';
-  if ( incurrent >= 0 ) {
+  tracekey.addNumber( "t", "ms", "%7.2f" );
+  tracekey.addNumber( "V", VUnit, "%6.1f" );
+  if ( incurrent >= 0 )
+    tracekey.addNumber( "I", IUnit, "%6.1f" );
+  if ( completeRuns() <= 0 )
+    tf.open( addPath( "thresholdlatencies-traces.dat" ).c_str() );
+  else
+    tf.open( addPath( "thresholdlatencies-traces.dat" ).c_str(),
+             ofstream::out | ofstream::app );
+  settings().save( tf, "# " );
+  tf << '\n';
+  tracekey.saveKey( tf, true, false );
+  tf << '\n';
+
+  spikekey.addNumber( "t", "ms", "%7.2f" );
+  if ( completeRuns() <= 0 )
+    sf.open( addPath( "thresholdlatencies-spikes.dat" ).c_str() );
+  else
+    sf.open( addPath( "thresholdlatencies-spikes.dat" ).c_str(),
+             ofstream::out | ofstream::app );
+  settings().save( sf, "# " );
+  sf << '\n';
+  spikekey.saveKey( sf, true, false );
+  sf << '\n';
+}
+
+
+void ThresholdLatencies::saveTrace( ofstream &tf, TableKey &tracekey, int index )
+{
+  tf << "#       index: " << Str( index ) << '\n';
+  tf << "#   amplitude: " << Str( Results.back().Amplitude ) << IUnit << '\n';
+  tf << "# spike count: " << Str( Results.back().SpikeCount ) << '\n';
+  if ( ! Results.back().Current.empty() ) {
     for ( int k=0; k<Results.back().Voltage.size(); k++ ) {
-      datakey.save( df, 1000.0*Results.back().Voltage.pos( k ), 0 );
-      datakey.save( df, Results.back().Voltage[k] );
-      datakey.save( df, Results.back().Current[k] );
-      df << '\n';
+      tracekey.save( tf, 1000.0*Results.back().Voltage.pos( k ), 0 );
+      tracekey.save( tf, Results.back().Voltage[k] );
+      tracekey.save( tf, Results.back().Current[k] );
+      tf << '\n';
     }
   }
   else {
     for ( int k=0; k<Results.back().Voltage.size(); k++ ) {
-      datakey.save( df, 1000.0*Results.back().Voltage.pos( k ), 0 );
-      datakey.save( df, Results.back().Voltage[k] );
-      df << '\n';
+      tracekey.save( tf, 1000.0*Results.back().Voltage.pos( k ), 0 );
+      tracekey.save( tf, Results.back().Voltage[k] );
+      tf << '\n';
     }
   }
-  df << '\n';
+  tf << '\n';
+}
+
+
+void ThresholdLatencies::saveSpikes( ofstream &sf, TableKey &spikekey, int index )
+{
+  sf << "#       index: " << Str( index ) << '\n';
+  sf << "#   amplitude: " << Str( Results.back().Amplitude ) << IUnit << '\n';
+  sf << "# spike count: " << Str( Results.back().SpikeCount ) << '\n';
+  Results.back().Spikes.saveText( sf, 1000.0, 7, 2, 'f', "-0" );
+  sf << '\n';
+}
+
+
+void ThresholdLatencies::saveData( void )
+{
+  TableKey datakey;
+  double asd = 0.0;
+  double am = Amplitudes.mean( asd );
+  datakey.addNumber( "amplitude", IUnit, "%7.2f", am );
+  datakey.addNumber( "s.d.", IUnit, "%7.2f", asd );
+  datakey.addNumber( "trials", "1", "%6.0f", (double)TrialCount );
+  datakey.addNumber( "spikes", "1", "%6.0f", (double)SpikeCount );
+  datakey.addNumber( "prob", "%", "%5.1f", 100.0*(double)SpikeCount/(double)TrialCount );
+  double lsd = 0.0;
+  double lm = Latencies.mean( lsd );
+  datakey.addNumber( "latency", "ms", "%6.2f", 1000.0*lm );
+  datakey.addNumber( "s.d.", "ms", "%6.2f", 1000.0*lsd );
+
+  ofstream df;
+  if ( completeRuns() <= 0 ) {
+    df.open( addPath( "thresholdlatencies-data.dat" ).c_str() );
+    datakey.saveKey( df );
+  }
+  else
+    df.open( addPath( "thresholdlatencies-data.dat" ).c_str(),
+             ofstream::out | ofstream::app );
+
+  datakey.saveData( df );
 }
 
 
@@ -246,6 +414,11 @@ void ThresholdLatencies::plot( double duration )
 {
   P.lock();
   P.clear();
+  double lsd = 0.0;
+  double lm = Latencies.mean( lsd );
+  P.setTitle( "p=" + Str( 100.0*(double)SpikeCount/(double)TrialCount, 0, 0, 'f' ) +
+	      "%,  latency=(" + Str( 1000.0*lm, 0, 0, 'f' ) +
+	      "+/-" + Str( 1000.0*lsd, 0, 0, 'f' ) + ") ms" );
   P.plotVLine( 0, Plot::White, 2 );
   P.plotVLine( 1000.0*duration, Plot::White, 2 );
   for ( unsigned int k=0; k<Results.size()-1; k++ ) {
@@ -261,28 +434,28 @@ void ThresholdLatencies::plot( double duration )
 
 
 ThresholdLatencies::Data::Data( double delay, double savetime,
-				double amplitude,
 				const InData &voltage,
 				const InData &current )
+  : Spikes( 10 )
 {
-  Amplitude = amplitude;
+  Amplitude = 0.0;
   Voltage.resize( -delay, savetime-delay, voltage.stepsize(), 0.0 );
   voltage.copy( voltage.signalTime(), Voltage );
   Current.resize( -delay, savetime-delay, current.stepsize(), 0.0 );
   current.copy( current.signalTime(), Current );
-  Spikes = 0;
+  SpikeCount = 0;
 }
 
 
 ThresholdLatencies::Data::Data( double delay, double savetime,
-				double amplitude,
 				const InData &voltage )
+  : Spikes( 10 )
 {
-  Amplitude = amplitude;
+  Amplitude = 0.0;
   Voltage.resize( -delay, savetime-delay, voltage.stepsize(), 0.0 );
   voltage.copy( voltage.signalTime(), Voltage );
   Current.clear();
-  Spikes = 0;
+  SpikeCount = 0;
 }
 
 

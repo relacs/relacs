@@ -35,11 +35,13 @@ MembraneResistance::MembraneResistance( void )
     VUnit( "mV" ),
     IUnit( "nA" ),
     VFac( 1.0 ),
-    IFac( 1.0 )
+    IFac( 1.0 ),
+    IInFac( 1.0 )
 {
   // add some options:
-  addSelection( "intrace", "Input trace", "V-1" );
-  addSelection( "outtrace", "Output trace", "Current-1" );
+  addSelection( "involtage", "Input voltage trace", "V-1" );
+  addSelection( "incurrent", "Input current trace", "Current-1" );
+  addSelection( "outcurrent", "Output trace", "Current-1" );
   addNumber( "amplitude", "Amplitude of output signal", -1.0, -1000.0, 1000.0, 0.1 );
   addNumber( "duration", "Duration of output", 0.1, 0.001, 1000.0, 0.001, "sec", "ms" );
   addNumber( "pause", "Duration of pause bewteen outputs", 0.4, 0.001, 1.0, 0.001, "sec", "ms" );
@@ -57,31 +59,44 @@ MembraneResistance::MembraneResistance( void )
 
 void MembraneResistance::config( void )
 {
-  setText( "intrace", spikeTraceNames() );
-  setToDefault( "intrace" );
-  setText( "outtrace", currentOutputNames() );
-  setToDefault( "outtrace" );
+  setText( "involtage", spikeTraceNames() );
+  setToDefault( "involtage" );
+  setText( "incurrent", currentTraceNames() );
+  setToDefault( "incurrent" );
+  setText( "outcurrent", currentOutputNames() );
+  setToDefault( "outcurrent" );
 }
 
 
 void MembraneResistance::notify( void )
 {
-  int outtrace = index( "outtrace" );
-  IUnit = outTrace( outtrace ).unit();
-  setUnit( "amplitude", IUnit );
-  IFac = Parameter::changeUnit( 1.0, IUnit, "nA" );
+  int involtage = index( "involtage" );
+  if ( involtage >= 0 && SpikeTrace[involtage] >= 0 ) {
+    VUnit = trace( SpikeTrace[involtage] ).unit();
+    VFac = Parameter::changeUnit( 1.0, VUnit, "mV" );
+  }
 
-  int intrace = index( "intrace" );
-  VUnit = trace( intrace ).unit();
-  VFac = Parameter::changeUnit( 1.0, VUnit, "mV" );
+  int outcurrent = index( "outcurrent" );
+  if ( outcurrent >= 0 && CurrentOutput[outcurrent] >= 0 ) {
+    IUnit = outTrace( CurrentOutput[outcurrent] ).unit();
+    setUnit( "amplitude", IUnit );
+    IFac = Parameter::changeUnit( 1.0, IUnit, "nA" );
+  }
+
+  int incurrent = index( "incurrent" );
+  if ( incurrent >= 0 && CurrentTrace[incurrent] >= 0 ) {
+    string iinunit = trace( CurrentTrace[incurrent] ).unit();
+    IInFac = Parameter::changeUnit( 1.0, iinunit, IUnit );
+  }
 }
 
 
 int MembraneResistance::main( void )
 {
   // get options:
-  int intrace = traceIndex( text( "intrace", 0 ) );
-  int outtrace = index( "outtrace" );
+  int involtage = traceIndex( text( "involtage", 0 ) );
+  int incurrent = traceIndex( text( "incurrent", 0 ) );
+  int outcurrent = outTraceIndex( text( "outcurrent", 0 ) );
   Amplitude = number( "amplitude" );
   Duration = number( "duration" );
   double pause = number( "pause" );
@@ -92,8 +107,16 @@ int MembraneResistance::main( void )
     return Failed;
   }
   bool nossfit = boolean( "nossfit" );
+  if ( involtage < 0 ) {
+    warning( "Invalid input voltage trace!" );
+    return Failed;
+  }
+  if ( outcurrent < 0 ) {
+    warning( "Invalid output current trace!" );
+    return Failed;
+  }
 
-  double samplerate = trace( intrace ).sampleRate();
+  double samplerate = trace( involtage ).sampleRate();
 
   // don't print repro message:
   noMessage();
@@ -102,6 +125,10 @@ int MembraneResistance::main( void )
   MeanTrace = SampleDataD( -0.5*Duration, 2.0*Duration, 1/samplerate, 0.0 );
   SquareTrace = MeanTrace;
   StdevTrace = MeanTrace;
+  if ( incurrent >= 0 )
+    MeanCurrent = MeanTrace;
+  else
+    MeanCurrent.clear();
   VRest = 0.0;
   VRestsd = 0.0;
   VSS = 0.0;
@@ -126,7 +153,7 @@ int MembraneResistance::main( void )
   // plot:
   P.lock();
   P.setXRange( -500.0*Duration, 2000.0*Duration );
-  P.setYLabel( trace( intrace ).ident() + " [" + VUnit + "]" );
+  P.setYLabel( trace( SpikeTrace[involtage] ).ident() + " [" + VUnit + "]" );
   /*
   P.setYLabelPos( 2.3, Plot::FirstMargin, 0.5, Plot::Graph,
 		  Plot::Center, -90.0 );
@@ -138,7 +165,8 @@ int MembraneResistance::main( void )
   signal = Amplitude;
   signal.setIdent( "const" );
   signal.back() = 0.0;
-  signal.setTrace( outtrace );
+  signal.setTrace( outcurrent );
+  TrueAmplitude = Amplitude;
 
   // write stimulus:
   sleep( pause );
@@ -165,9 +193,9 @@ int MembraneResistance::main( void )
     }
 
     timeStamp();
-    analyzeOn( trace( intrace ), Duration, count, sswidth, nossfit );
+    analyzeOn( involtage, incurrent, Duration, count, sswidth, nossfit );
 
-    sleepOn( Duration + 0.01 );
+    sleepOn( Duration + 0.02 );
     if ( interrupt() ) {
       if ( count > 0 )
 	break;
@@ -175,7 +203,7 @@ int MembraneResistance::main( void )
 	return Aborted;
     }
 
-    analyzeOff( trace( intrace ), Duration, count, sswidth, nossfit );
+    analyzeOff( involtage, incurrent, Duration, count, sswidth, nossfit );
     plot();
     sleepOn( pause );
     if ( interrupt() ) {
@@ -193,18 +221,27 @@ int MembraneResistance::main( void )
 }
 
 
-void MembraneResistance::analyzeOn( const InData &trace, 
+void MembraneResistance::analyzeOn( int involtage, int incurrent, 
 				    double duration, int count,
 				    double sswidth, bool nossfit )
 {
   // update averages:
-  int inx = trace.signalIndex() - MeanTrace.index( 0.0 );
-  for ( int k=0; k<MeanTrace.index( duration ); k++ ) {
-    double v = trace[inx+k];
+  const InData &intrace = trace( involtage );
+  int inx = intrace.signalIndex() - MeanTrace.index( 0.0 );
+  for ( int k=0; k<MeanTrace.index( duration ) && inx+k<intrace.size(); k++ ) {
+    double v = intrace[inx+k];
     MeanTrace[k] += (v - MeanTrace[k])/(count+1);
     SquareTrace[k] += (v*v - SquareTrace[k])/(count+1);
     StdevTrace[k] = sqrt( SquareTrace[k] - MeanTrace[k]*MeanTrace[k] );
+    if ( incurrent >= 0 ) {
+      double c = IInFac*trace( incurrent )[inx+k];
+      MeanCurrent[k] += (c - MeanCurrent[k])/(count+1);
+    }
   }
+
+  // stimulus amplitude:
+  if ( incurrent >= 0 )
+    TrueAmplitude = MeanCurrent.mean( duration-sswidth, duration );
 
   // resting potential:
   VRest = MeanTrace.mean( -duration, 0.0 );
@@ -215,7 +252,7 @@ void MembraneResistance::analyzeOn( const InData &trace,
   VSSsd = MeanTrace.stdev( duration-sswidth, duration );
 
   // membrane resitance:
-  RMss = ::fabs( (VSS - VRest)/Amplitude )*VFac/IFac;
+  RMss = ::fabs( (VSS - VRest)/TrueAmplitude )*VFac/IFac;
 
   // peak potential:
   VPeak = VRest;
@@ -253,24 +290,29 @@ void MembraneResistance::analyzeOn( const InData &trace,
 		StdevTrace.begin()+inxon0, StdevTrace.begin()+inxon1,
 		expFuncDerivs, p, pi, u, ch );
   TauMOn = -1000.0*p[1];
-  RMOn = ::fabs( (p[2] - VRest)/Amplitude )*VFac/IFac;
+  RMOn = ::fabs( (p[2] - VRest)/TrueAmplitude )*VFac/IFac;
   CMOn = TauMOn/RMOn*1000.0;
   for ( int k=0; k<ExpOn.size(); k++ )
     ExpOn[k] = expFunc( ExpOn.pos( k ), p );
 }
 
 
-void MembraneResistance::analyzeOff( const InData &trace, 
+void MembraneResistance::analyzeOff( int involtage, int incurrent, 
 				     double duration, int count,
 				     double sswidth, bool nossfit )
 {
   // update averages:
-  int inx = trace.signalIndex() - MeanTrace.index( 0.0 );
-  for ( int k=MeanTrace.index( duration ); k<MeanTrace.size(); k++ ) {
-    double v = trace[inx+k];
+  const InData &intrace = trace( involtage );
+  int inx = intrace.signalIndex() - MeanTrace.index( 0.0 );
+  for ( int k=MeanTrace.index( duration ); k<MeanTrace.size() && inx+k<intrace.size(); k++ ) {
+    double v = intrace[inx+k];
     MeanTrace[k] += (v - MeanTrace[k])/(count+1);
     SquareTrace[k] += (v*v - SquareTrace[k])/(count+1);
     StdevTrace[k] = sqrt( SquareTrace[k] - MeanTrace[k]*MeanTrace[k] );
+    if ( incurrent >= 0 ) {
+      double c = IInFac*trace( incurrent )[inx+k];
+      MeanCurrent[k] += (c - MeanCurrent[k])/(count+1);
+    }
   }
 
   // fit exponential to offset:
@@ -296,7 +338,7 @@ void MembraneResistance::analyzeOff( const InData &trace,
 		StdevTrace.begin()+inxoff0, StdevTrace.begin()+inxoff1,
 		expFuncDerivs, p, pi, u, ch );
   TauMOff = -1000.0*p[1];
-  RMOff = ::fabs( (VSS - p[2])/Amplitude )*VFac/IFac;
+  RMOff = ::fabs( (VSS - p[2])/TrueAmplitude )*VFac/IFac;
   CMOff = TauMOff/RMOff*1000.0;
   for ( int k=0; k<ExpOff.size(); k++ )
     ExpOff[k] = expFunc( ExpOff.pos( k ) - duration, p );
@@ -308,7 +350,7 @@ void MembraneResistance::plot( void )
 {
   P.lock();
   P.clear();
-  P.setTitle( "R=" + Str( RMOn, 0, 1, 'f' ) +
+  P.setTitle( "R=" + Str( RMOn, 0, 2, 'f' ) +
 	      " MOhm,  C=" + Str( CMOn, 0, 1, 'f' ) +
 	      " pF,  tau=" + Str( TauMOn, 0, 1, 'f' ) + " ms" );
   P.plotVLine( 0, Plot::White, 2 );
@@ -338,6 +380,7 @@ void MembraneResistance::saveData( void )
   TableKey datakey;
   datakey.addLabel( "Stimulus" );
   datakey.addNumber( "I", IUnit, "%6.1f", Amplitude );
+  datakey.addNumber( "Im", IUnit, "%6.1f", TrueAmplitude );
   datakey.addNumber( "duration", "ms", "%6.1f", 1000.0*Duration );
   datakey.addLabel( "Rest" );
   datakey.addNumber( "Vrest", VUnit, "%6.1f", VRest );
@@ -361,11 +404,11 @@ void MembraneResistance::saveData( void )
 
   ofstream df;
   if ( completeRuns() <= 0 ) {
-    df.open( addPath( "membraneresistance.dat" ).c_str() );
+    df.open( addPath( "membraneresistance-data.dat" ).c_str() );
     datakey.saveKey( df );
   }
   else
-    df.open( addPath( "membraneresistance.dat" ).c_str(),
+    df.open( addPath( "membraneresistance-data.dat" ).c_str(),
 	     ofstream::out | ofstream::app );
 
   datakey.saveData( df );
@@ -374,7 +417,7 @@ void MembraneResistance::saveData( void )
 
 void MembraneResistance::saveTrace( void )
 {
-  ofstream df( addPath( "membraneresistancetrace.dat" ).c_str(),
+  ofstream df( addPath( "membraneresistance-trace.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
 
   settings().save( df, "# " );
@@ -384,12 +427,16 @@ void MembraneResistance::saveTrace( void )
   datakey.addNumber( "t", "ms", "%6.1f" );
   datakey.addNumber( "V", VUnit, "%6.2f" );
   datakey.addNumber( "s.d.", VUnit, "%6.2f" );
+  if ( ! MeanCurrent.empty() )
+    datakey.addNumber( "I", IUnit, "%6.2f" );
   datakey.saveKey( df );
 
   for ( int k=0; k<MeanTrace.size(); k++ ) {
     datakey.save( df, 1000.0*MeanTrace.pos( k ), 0 );
     datakey.save( df, MeanTrace[k] );
     datakey.save( df, StdevTrace[k] );
+    if ( ! MeanCurrent.empty() )
+      datakey.save( df, MeanCurrent[k] );
     df << '\n';
   }
   
@@ -399,7 +446,7 @@ void MembraneResistance::saveTrace( void )
 
 void MembraneResistance::saveExpFit( void )
 {
-  ofstream df( addPath( "membraneresistanceexpfit.dat" ).c_str(),
+  ofstream df( addPath( "membraneresistance-expfit.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
 
   settings().save( df, "# " );

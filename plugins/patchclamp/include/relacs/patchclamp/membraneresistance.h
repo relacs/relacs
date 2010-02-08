@@ -51,9 +51,9 @@ public:
   virtual void config( void );
   virtual void notify( void );
   virtual int main( void );
-  void analyzeOn( const InData &trace, double duration, int count,
+  void analyzeOn( int involtage, int incurrent, double duration, int count,
 		  double sswidth, bool nossfit );
-  void analyzeOff( const InData &trace, double duration, int count,
+  void analyzeOff( int involtage, int incurrent, double duration, int count,
 		   double sswidth, bool nossfit );
   void plot( void );
   void save( void );
@@ -69,10 +69,13 @@ protected:
   string IUnit;
   double VFac;
   double IFac;
+  double IInFac;
   SampleDataD MeanTrace;
   SampleDataD SquareTrace;
   SampleDataD StdevTrace;
+  SampleDataD MeanCurrent;
   double Amplitude;
+  double TrueAmplitude;
   double Duration;
   double VRest;
   double VRestsd;
