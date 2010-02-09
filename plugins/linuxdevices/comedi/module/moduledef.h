@@ -46,7 +46,7 @@
 
 //* Data buffering:
 
-#define FIFO_SIZE   200000 // bytes
+#define FIFO_SIZE   500000 // bytes
 
 //* DAQ-devices:
 

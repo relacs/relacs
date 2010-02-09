@@ -47,6 +47,7 @@ struct chanT {
   int rangeIndex;
   struct converterT converter;
   float scale;
+  float voltage;
 };
 
 struct subdeviceT {
@@ -385,6 +386,7 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
       subdev[iS].chanlist[iC].isParamChan = (subdev[iS].chanlist[iC].chan >= PARAM_CHAN_OFFSET);
       subdev[iS].chanlist[iC].modelIndex = -1;
       subdev[iS].chanlist[iC].isUsed = 1; 
+      subdev[iS].chanlist[iC].voltage = 0.0; 
       if ( subdev[iS].chanlist[iC].isParamChan ) {
 	subdev[iS].chanlist[iC].chan -= PARAM_CHAN_OFFSET;
 	subdev[iS].chanlist[iC].aref = 0;
@@ -600,8 +602,8 @@ void rtDynClamp( long dummy )
   int iS, iC;
   int subdevRunning = 1;
   unsigned long readCnt = 0;
-  float voltage[MAXCHANLIST];
   unsigned long fifoPutCnt = 0;
+  float voltage;
   lsampl_t lsample;
   struct chanT *pChan;
   unsigned ci;
@@ -645,7 +647,7 @@ void rtDynClamp( long dummy )
 	  for ( iC = 0; iC < subdev[iS].chanN; iC++ ) {
 	    if ( subdev[iS].chanlist[iC].isUsed ) {
 	      // get data from FIFO:
-	      retVal = rtf_get( subdev[iS].fifo, &voltage[iC], sizeof(float) );
+	      retVal = rtf_get( subdev[iS].fifo, &subdev[iS].chanlist[iC].voltage, sizeof(float) );
 	      if ( retVal != sizeof(float) ) {
 		if ( retVal == EINVAL ) {
 		  ERROR_MSG( "rtDynClamp: No open FIFO for subdevice ID %d at loopCnt %lu\n",
@@ -661,34 +663,39 @@ void rtDynClamp( long dummy )
 		continue;
 	      }
 	      if ( dynClampTask.loopCnt % 100 == 0 ) {
-		vi = 1000.0*voltage[iC];
+		vi = 1000.0*subdev[iS].chanlist[iC].voltage;
 		DEBUG_MSG( "FIFO value=%d, isparam=%d\n", vi, subdev[iS].chanlist[iC].isParamChan );
 	      }
 	      if ( subdev[iS].chanlist[iC].isParamChan ) {
-		paramOutput[subdev[iS].chanlist[iC].chan] = voltage[iC];
-		vi = 1000.0*voltage[iC];
+		paramOutput[subdev[iS].chanlist[iC].chan] = subdev[iS].chanlist[iC].voltage;
+		vi = 1000.0*subdev[iS].chanlist[iC].voltage;
 		DEBUG_MSG( "NEW PARAMETER value=%d to channel %d\n", vi, subdev[iS].chanlist[iC].chan );
 	      }
 	    }
+	    /*
 	    else
-	      voltage[iC] = 0.0;
+	      subdev[iS].chanlist[iC].voltage = 0.0;
+	    */
 	  }
-	}
+        }
+	/*
 	else {
 	  for ( iC = 0; iC < subdev[iS].chanN; iC++ )
-	    voltage[iC] = 0.0;
+	    subdev[iS].chanlist[iC].voltage = 0.0;
 	}
-
+	*/
+	
 	// write output to daq board:
 	for ( iC = 0; iC < subdev[iS].chanN; iC++ ) {
 	  // this is an output to the DAQ board:
 	  if ( !subdev[iS].chanlist[iC].isParamChan ) {
+	    voltage = subdev[iS].chanlist[iC].voltage;
 	    // add model output to sample:
 	    if ( subdev[iS].chanlist[iC].modelIndex >= 0 )
-	      voltage[iC] += output[subdev[iS].chanlist[iC].modelIndex];
+	      voltage += output[subdev[iS].chanlist[iC].modelIndex];
 
 	    // write out Sample:
-	    lsample = value_to_sample( &subdev[iS].chanlist[iC], voltage[iC] );
+	    lsample = value_to_sample( &subdev[iS].chanlist[iC], voltage );
 	    retVal = comedi_data_write( device[subdev[iS].devID].devP, 
 					subdev[iS].subdev, 
 					subdev[iS].chanlist[iC].chan,
@@ -709,7 +716,7 @@ void rtDynClamp( long dummy )
 	    }
 	    else {
 	      if ( dynClampTask.loopCnt % 100 == 0 ) {
-		vi = 1000.0*voltage[iC];
+		vi = 1000.0*voltage;
 		oi = 1000.0*output[0];
 		pi = 1000.0*paramOutput[0];
 		DEBUG_MSG( "OUTPUT voltage=%d, ouput=%d, param=%d, data=%d\n", vi, oi, pi, lsample );
@@ -782,23 +789,23 @@ void rtDynClamp( long dummy )
 	      continue;
 	    }
 	    // convert to voltage:
-	    voltage[iC] = 0.0;
+	    subdev[iS].chanlist[iC].voltage = 0.0;
 	    term = 1.0;
 	    for ( ci=0; ci <= pChan->converter.order; ++ci ) {
-	      voltage[iC] += pChan->converter.coefficients[ci] * term;
+	      subdev[iS].chanlist[iC].voltage += pChan->converter.coefficients[ci] * term;
 	      term *= lsample - pChan->converter.expansion_origin;
 	    }
-	    voltage[iC] *= pChan->scale;
+	    subdev[iS].chanlist[iC].voltage *= pChan->scale;
 	    // write to FIFO:
-	    // voltage[iC] = sample_to_value( &subdev[iS].chanlist[iC], lsample );
+	    // subdev[iS].chanlist[iC].voltage = sample_to_value( &subdev[iS].chanlist[iC], lsample );
 	    if ( pChan->modelIndex >= 0 )
-	      input[pChan->modelIndex] = voltage[iC];
+	      input[pChan->modelIndex] = subdev[iS].chanlist[iC].voltage;
 	  }
 	  else {
-	    voltage[iC] = paramInput[pChan->chan];
+	    subdev[iS].chanlist[iC].voltage = paramInput[pChan->chan];
 	  }
 
-	  retVal = rtf_put( subdev[iS].fifo, &voltage[iC], sizeof(float) );
+	  retVal = rtf_put( subdev[iS].fifo, &subdev[iS].chanlist[iC].voltage, sizeof(float) );
 	  fifoPutCnt++;
 	  if ( retVal != sizeof(float) ) {
 	    if ( retVal == EINVAL ) {
