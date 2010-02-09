@@ -125,7 +125,7 @@ int SetOutput::main( void )
 	  double value = OutOpts[k].number();
 	  OutData sig( value );
 	  sig.setTraceName( OutOpts[k].ident() );
-	  sig.setIdent( "value=" + Str( value ) );
+	  sig.setIdent( OutOpts[k].ident() + "=" + Str( value ) + OutOpts[k].unit() );
 	  sigs.push( sig );
 	}
       }
@@ -145,7 +145,7 @@ int SetOutput::main( void )
   else {
     // set the single requested value:
     OutData signal( value );
-    signal.setIdent( "const" );
+    signal.setIdent( "value=" + Str( value ) );
     signal.setTrace( outtrace );
     directWrite( signal );
     if ( signal.failed() ) {

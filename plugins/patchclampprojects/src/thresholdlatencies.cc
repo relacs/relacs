@@ -122,8 +122,14 @@ int ThresholdLatencies::main( void )
   double amplitudestep = number( "amplitudestep" );
   int adjust = index( "adjust" );
   bool usedc = boolean( "usedc" );
-  if ( durationsel == 1 )
-    duration = durationfac*metaData( "Cell" ).number( "membranetau" );
+  double membranetau = metaData( "Cell" ).number( "membranetau" );
+  if ( durationsel == 1 ) {
+    if ( membranetau <= 0.0 ) {
+      warning( "Membrane time constant was not measured yet!" );
+      return Failed;
+    }
+    duration = durationfac*membranetau;
+  }
   if ( amplitudesrc == 1 )
     amplitude = metaData( "Cell" ).number( "dc" );
   else if ( amplitudesrc == 2 )

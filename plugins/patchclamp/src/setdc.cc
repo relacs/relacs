@@ -105,17 +105,13 @@ int SetDC::main( void )
   else
     DCAmplitude -= dcamplitudedecr;
 
-  cerr << "DCAMPLIUDE=" << DCAmplitude << '\n';
-
   if ( interactive ) {
     EW->setValue( DCAmplitude );
-    cerr << "SET VALUE\n";
     OutData dcsignal( DCAmplitude );
     dcsignal.setTrace( OutCurrent );
     dcsignal.setIdent( "DC=" + Str( DCAmplitude ) + IUnit );
     directWrite( dcsignal );
     message( "DC=<b>" + Str( DCAmplitude ) + "</b> " + IUnit );
-    cerr << "WROTE SIGNAL\n";
     sleep( 0.01 );
     postCustomEvent( 1 ); // setFocus();
     // wait for input:

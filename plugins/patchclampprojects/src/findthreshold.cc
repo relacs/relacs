@@ -105,8 +105,6 @@ int FindThreshold::main( void )
   int repeats = integer( "repeats" );
   double amplitude = number( "startamplitude" );
   double amplitudestep = number( "amplitudestep" );
-  if ( durationsel == 1 )
-    duration = durationfac*metaData( "Cell" ).number( "membranetau" );
 
   if ( involtage < 0 || SpikeTrace[ involtage ] < 0 || SpikeEvents[ involtage ] < 0 ) {
     warning( "Invalid input voltage trace or missing input spikes!" );
@@ -115,6 +113,14 @@ int FindThreshold::main( void )
   if ( outcurrent < 0 ) {
     warning( "Invalid output current trace!" );
     return Failed;
+  }
+  double membranetau = metaData( "Cell" ).number( "membranetau" );
+  if ( durationsel == 1 ) {
+    if ( membranetau <= 0.0 ) {
+      warning( "Membrane time constant was not measured yet!" );
+      return Failed;
+    }
+    duration = durationfac*membranetau;
   }
 
   double samplerate = trace( SpikeTrace[involtage] ).sampleRate();
