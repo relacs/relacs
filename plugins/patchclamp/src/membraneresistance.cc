@@ -134,6 +134,7 @@ int MembraneResistance::main( void )
     MeanCurrent = MeanTrace;
   else
     MeanCurrent.clear();
+  DCCurrent = metaData( "Cell" ).number( "dc", IUnit );
   VRest = 0.0;
   VRestsd = 0.0;
   VSS = 0.0;
@@ -163,9 +164,9 @@ int MembraneResistance::main( void )
 
   // signal:
   OutData signal( Duration, 1.0/samplerate );
-  signal = Amplitude;
+  signal = DCCurrent + Amplitude;
   signal.setIdent( "const" );
-  signal.back() = metaData( "Cell" ).number( "dc", IUnit );
+  signal.back() = DCCurrent;
   signal.setTrace( outcurrent );
   TrueAmplitude = Amplitude;
 
@@ -239,8 +240,11 @@ void MembraneResistance::analyzeOn( int involtage, int incurrent,
   }
 
   // stimulus amplitude:
-  if ( incurrent >= 0 )
+  if ( incurrent >= 0 ) {
+    DCCurrent = MeanCurrent.mean( -duration, 0.0 );
     TrueAmplitude = MeanCurrent.mean( duration-sswidth, duration );
+    TrueAmplitude -= DCCurrent;
+  }
 
   // resting potential:
   VRest = MeanTrace.mean( -duration, 0.0 );
@@ -386,8 +390,9 @@ void MembraneResistance::saveData( void )
 {
   TableKey datakey;
   datakey.addLabel( "Stimulus" );
-  datakey.addNumber( "I", IUnit, "%6.1f", Amplitude );
-  datakey.addNumber( "Im", IUnit, "%6.1f", TrueAmplitude );
+  datakey.addNumber( "dI", IUnit, "%6.1f", Amplitude );
+  datakey.addNumber( "dIm", IUnit, "%6.1f", TrueAmplitude );
+  datakey.addNumber( "IDC", IUnit, "%6.1f", DCCurrent );
   datakey.addNumber( "duration", "ms", "%6.1f", 1000.0*Duration );
   datakey.addLabel( "Rest" );
   datakey.addNumber( "Vrest", VUnit, "%6.1f", VRest );

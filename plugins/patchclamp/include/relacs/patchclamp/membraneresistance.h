@@ -74,6 +74,7 @@ protected:
   SampleDataD SquareTrace;
   SampleDataD StdevTrace;
   SampleDataD MeanCurrent;
+  double DCCurrent;
   double Amplitude;
   double TrueAmplitude;
   double Duration;

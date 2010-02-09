@@ -672,18 +672,8 @@ void rtDynClamp( long dummy )
 		DEBUG_MSG( "NEW PARAMETER value=%d to channel %d\n", vi, subdev[iS].chanlist[iC].chan );
 	      }
 	    }
-	    /*
-	    else
-	      subdev[iS].chanlist[iC].voltage = 0.0;
-	    */
 	  }
         }
-	/*
-	else {
-	  for ( iC = 0; iC < subdev[iS].chanN; iC++ )
-	    subdev[iS].chanlist[iC].voltage = 0.0;
-	}
-	*/
 	
 	// write output to daq board:
 	for ( iC = 0; iC < subdev[iS].chanN; iC++ ) {

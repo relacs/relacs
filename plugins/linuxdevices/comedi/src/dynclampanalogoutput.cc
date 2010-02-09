@@ -456,7 +456,7 @@ int DynClampAnalogOutput::setupChanList( OutList &sigs,
       chanlist[k] = CR_PACK( sigs[k].channel(), gi, aref );
     }
 
-    cerr << "DYNCLAMP ChanList channel " << sigs[k].channel() << " packed " << CR_CHAN( chanlist[k] ) << endl;
+    //    cerr << "DYNCLAMP ChanList channel " << sigs[k].channel() << " packed " << CR_CHAN( chanlist[k] ) << endl;
 
   }
 
@@ -550,7 +550,7 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
 
   // fill buffer with data:
   retval = fillWriteBuffer( sigs );
-  cerr << " DynClampAnalogOutput::directWrite -> fillWriteBuffer returned " << retval << endl;
+  //  cerr << " DynClampAnalogOutput::directWrite -> fillWriteBuffer returned " << retval << endl;
   if ( retval < 0 )
     return -1;
 
@@ -606,7 +606,7 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
   if( ol.failed() )
     return -1;
 
-  cerr << " DynClampAnalogOutput::testWrite(): success" << endl;/////TEST/////
+  //  cerr << " DynClampAnalogOutput::testWrite(): success" << endl;/////TEST/////
 
 
   return 0;
@@ -644,7 +644,7 @@ int DynClampAnalogOutput::convertData( OutList &sigs )
 
 int DynClampAnalogOutput::prepareWrite( OutList &sigs )
 {
-  cerr << " DynClampAnalogOutput::prepareWrite(): 1" << endl;/////TEST/////
+  //  cerr << " DynClampAnalogOutput::prepareWrite(): 1" << endl;/////TEST/////
 
   if ( !isOpen() )
     return -1;
@@ -682,7 +682,7 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
   chanlistIOC.userDeviceIndex = ol[0].device();
   chanlistIOC.chanlistN = ol.size();
   int retval = ::ioctl( ModuleFd, IOC_CHANLIST, &chanlistIOC );
-  cerr << "prepareWrite(): IOC_CHANLIST done!" << endl; /// TEST
+  //  cerr << "prepareWrite(): IOC_CHANLIST done!" << endl; /// TEST
   if( retval < 0 ) {
     cerr << " DynClampAnalogOutput::prepareWrite -> ioctl command IOC_CHANLIST on device "
 	 << ModuleDevice << " failed!" << endl;
@@ -697,7 +697,7 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
   syncCmdIOC.duration = ol[0].size();
   syncCmdIOC.continuous = ol[0].continuous();
   retval = ::ioctl( ModuleFd, IOC_SYNC_CMD, &syncCmdIOC );
-  cerr << "prepareWrite(): IOC_SYNC_CMD done!" << endl; /// TEST
+  //  cerr << "prepareWrite(): IOC_SYNC_CMD done!" << endl; /// TEST
   if( retval < 0 ) {
     cerr << " DynClampAnalogOutput::prepareWrite -> ioctl command IOC_SYNC_CMD on device "
 	 << ModuleDevice << " failed!" << endl;
@@ -755,9 +755,9 @@ int DynClampAnalogOutput::fillWriteBuffer( OutList &sigs )
     return -1;
   }
 
-  cerr << "DynClampAnalogOutput::fillWriteBuffer: size of device buffer: " 
-       << sigs[0].deviceBufferSize() << " - size of outdata: " << sigs[0].size() 
-       << " - continuous: " << sigs[0].continuous() << endl;
+  //  cerr << "DynClampAnalogOutput::fillWriteBuffer: size of device buffer: " 
+  //       << sigs[0].deviceBufferSize() << " - size of outdata: " << sigs[0].size() 
+  //       << " - continuous: " << sigs[0].continuous() << endl;
 
   int ern = 0;
   int elemWritten = 0;
@@ -769,9 +769,9 @@ int DynClampAnalogOutput::fillWriteBuffer( OutList &sigs )
 
     int bytesWritten = ::write( FifoFd, sigs[0].deviceBufferPopBuffer(),
 				sigs[0].deviceBufferMaxPop() * BufferElemSize );
-    cerr << " DynClampAnalogOutput::fillWriteBuffer(): " << bytesWritten << " of "
-         << sigs[0].deviceBufferMaxPop() * BufferElemSize << "bytes written:"
-         << endl;/////TEST/////
+    //    cerr << " DynClampAnalogOutput::fillWriteBuffer(): " << bytesWritten << " of "
+    //         << sigs[0].deviceBufferMaxPop() * BufferElemSize << "bytes written:"
+    //         << endl;/////TEST/////
       
     if ( bytesWritten < 0 ) {
       ern = errno;
@@ -820,7 +820,7 @@ int DynClampAnalogOutput::fillWriteBuffer( OutList &sigs )
 
 int DynClampAnalogOutput::startWrite( void )
 {
-  cerr << " DynClampAnalogOutput::startWrite(): 1" << endl;/////TEST/////
+  //  cerr << " DynClampAnalogOutput::startWrite(): 1" << endl;/////TEST/////
 
   if( !prepared() || Sigs == 0 ) {
     cerr << "AO not prepared or no signals!\n";
@@ -829,7 +829,7 @@ int DynClampAnalogOutput::startWrite( void )
 
   // fill buffer with initial data:
   int retval = fillWriteBuffer( *Sigs );
-  cerr << " DynClampAnalogOutput::startWrite -> fillWriteBuffer returned " << retval << endl;
+  //  cerr << " DynClampAnalogOutput::startWrite -> fillWriteBuffer returned " << retval << endl;
 
   if ( retval < 0 )
     return -1;
@@ -854,7 +854,7 @@ int DynClampAnalogOutput::startWrite( void )
 
 int DynClampAnalogOutput::writeData( void )
 {
-  cerr << " DynClampAnalogOutput::writeData(): in" << endl;/////TEST/////
+  //  cerr << " DynClampAnalogOutput::writeData(): in" << endl;/////TEST/////
 
   if ( Sigs == 0 )
     return -1;
@@ -884,8 +884,8 @@ int DynClampAnalogOutput::reset( void )
   int running = SubdeviceID;
   int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
   if( retval < 0 ) {
-    cerr << " DynClampAnalogOutput::running -> ioctl command IOC_CHK_RUNNING on device "
-	 << ModuleDevice << " failed!" << endl;
+    //    cerr << " DynClampAnalogOutput::running -> ioctl command IOC_CHK_RUNNING on device "
+    //	 << ModuleDevice << " failed!" << endl;
     return -1;
   }
 
@@ -918,7 +918,7 @@ bool DynClampAnalogOutput::running( void ) const
 	 << ModuleDevice << " failed!" << endl;
     return false;
   }
-  cerr << "DynClampAnalogOutput::running returned " << running << endl;
+  //  cerr << "DynClampAnalogOutput::running returned " << running << endl;
 
   return running;
 }
@@ -940,7 +940,7 @@ long DynClampAnalogOutput::index( void ) const
 {
   long index = 0;
   int retval = ::ioctl( ModuleFd, IOC_GETAOINDEX, &index );
-    cerr << " DynClampAnalogOutput::index() -> " << index << endl;
+  //    cerr << " DynClampAnalogOutput::index() -> " << index << endl;
   if( retval < 0 ) {
     cerr << " DynClampAnalogOutput::index() -> ioctl command IOC_GETLOOPCNT on device "
 	   << ModuleDevice << " failed!" << endl;

@@ -211,8 +211,8 @@ int DynClampAnalogInput::open( const string &device, long mode )
   deviceIOC.subdevType = SUBDEV_IN;
   deviceIOC.fifoSize = 0;
   retval = ::ioctl( ModuleFd, IOC_OPEN_SUBDEV, &deviceIOC );
-  cerr << " DynClampAnalogInput::open(): IOC_OPEN_SUBDEV request for address done!" /// TEST
-       << &deviceIOC << endl;
+  //  cerr << " DynClampAnalogInput::open(): IOC_OPEN_SUBDEV request for address done!" /// TEST
+  //       << &deviceIOC << endl;
   if( retval < 0 ) {
     cerr << " DynClampAnalogInput::open -> ioctl command IOC_OPEN_SUBDEV on device "
 	 << ModuleDevice << " failed!" << endl;
@@ -408,7 +408,7 @@ int DynClampAnalogInput::testReadDevice( InList &traces )
     return -1;
   }
   
-  cerr << " DynClampAnalogInput::testRead(): 1" << endl;////TEST////
+  //  cerr << " DynClampAnalogInput::testRead(): 1" << endl;////TEST////
 
   // XXX check whether channel >=1000 is valid!
 
@@ -445,7 +445,7 @@ int DynClampAnalogInput::testReadDevice( InList &traces )
   if( traces.failed() )
     return -1;
 
-  cerr << " DynClampAnalogInput::testRead(): success" << endl;/////TEST/////
+  //  cerr << " DynClampAnalogInput::testRead(): success" << endl;/////TEST/////
 
   int retval = 0;
 
@@ -500,7 +500,7 @@ int DynClampAnalogInput::prepareRead( InList &traces )
   chanlistIOC.userDeviceIndex = traces[0].device();
   chanlistIOC.chanlistN = traces.size();
   int retval = ::ioctl( ModuleFd, IOC_CHANLIST, &chanlistIOC );
-  cerr << "prepareRead(): IOC_CHANLIST done!" << endl; /// TEST
+  //  cerr << "prepareRead(): IOC_CHANLIST done!" << endl; /// TEST
   if( retval < 0 ) {
     cerr << " DynClampAnalogInput::prepareRead -> ioctl command IOC_CHANLIST on device "
 	 << ModuleDevice << " failed!" << endl;
@@ -514,7 +514,7 @@ int DynClampAnalogInput::prepareRead( InList &traces )
   syncCmdIOC.duration = traces[0].capacity() + traces[0].indices( traces[0].delay());
   syncCmdIOC.continuous = traces[0].continuous();
   retval = ::ioctl( ModuleFd, IOC_SYNC_CMD, &syncCmdIOC );
-  cerr << "prepareRead(): IOC_SYNC_CMD done!" << endl; /// TEST
+  //  cerr << "prepareRead(): IOC_SYNC_CMD done!" << endl; /// TEST
   if( retval < 0 ) {
     cerr << " DynClampAnalogInput::prepareRead -> ioctl command IOC_SYNC_CMD on device "
 	 << ModuleDevice << " failed!" << endl;
@@ -557,7 +557,7 @@ int DynClampAnalogInput::prepareRead( InList &traces )
 
 int DynClampAnalogInput::startRead( void )
 {
-  cerr << " DynClampAnalogInput::startRead(): 1" << endl;/////TEST/////
+  //  cerr << " DynClampAnalogInput::startRead(): 1" << endl;/////TEST/////
 
   if ( !prepared() || Traces == 0 ) {
     cerr << "AI not prepared or no traces!\n";
@@ -780,8 +780,8 @@ bool DynClampAnalogInput::running( void ) const
   int exchangeVal = SubdeviceID;
   int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &exchangeVal );
 
-  cerr << " DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
-       << ModuleDevice << " " << exchangeVal << endl;
+  //  cerr << " DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
+  //       << ModuleDevice << " " << exchangeVal << endl;
 
   if( retval < 0 ) {
     cerr << " DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
