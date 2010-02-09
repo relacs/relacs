@@ -38,6 +38,7 @@ SetDC::SetDC( void )
   addNumber( "dcamplitudefrac", "Fraction of threshold", 0.9, 0.0, 1.0, 0.01, "1", "%" );
   addNumber( "dcamplitudedecr", "Decrement below threshold", 0.1, 0.0, 1000.0, 0.01 );
   addBoolean( "interactive", "Set dc amplitude interactively", false );
+  addNumber( "dcamplitudestep", "Stepsize for entering dc", 0.001, 0.0, 1000.0, 0.001 );
 
   QVBox *vb = new QVBox( this );
 
@@ -74,14 +75,14 @@ void SetDC::config( void )
 
 void SetDC::notify( void )
 {
-  lock();
   int outcurrent = index( "outcurrent" );
   if ( outcurrent >= 0 && CurrentOutput[outcurrent] >= 0 ) {
     IUnit = outTrace( CurrentOutput[outcurrent] ).unit();
     setUnit( "dcamplitudedecr", IUnit );
+    setUnit( "dcamplitudestep", IUnit );
     UnitLabel->setText( IUnit.c_str() );
   }
-  unlock();
+  postCustomEvent( 3 ); // setStep();
 }
 
 
@@ -96,6 +97,9 @@ int SetDC::main( void )
 
   // don't print repro message:
   noMessage();
+
+  // plot trace:
+  plotToggle( true, false, 1.0, 0.0 );
 
   // init:
   DCAmplitude = metaData( "Cell" ).number( "ithresh" );
@@ -192,6 +196,9 @@ void SetDC::customEvent( QCustomEvent *qce )
     EW->clearFocus();
     disconnect( EW, SIGNAL( valueChanged( double ) ),
 		this, SLOT( setValue( double ) ) );
+  }
+  else if ( qce->type() == QEvent::User+3 ) {
+    EW->setStep( number( "dcamplitudestep" ), 0.001 );
   }
 }
 

@@ -44,7 +44,8 @@ ThresholdLatencies::ThresholdLatencies( void )
   addSelection( "durationsel", "Set duration of stimulus", "in milliseconds|as multiples of membrane time constant" );
   addNumber( "duration", "Duration of stimulus", 0.1, 0.0, 1000.0, 0.001, "sec", "ms" ).setActivation( "durationsel", "in milliseconds" );
   addNumber( "durationfac", "Duration of stimulus", 1.0, 0.0, 1000.0, 0.1, "tau_m" ).setActivation( "durationsel", "as multiples of membrane time constant" );
-  addNumber( "pause", "Duration of pause bewteen outputs", 1.0, 0.0, 1000.0, 0.01, "sec", "ms" );
+  addNumber( "searchpause", "Duration of pause between outputs during search", 0.5, 0.0, 1000.0, 0.01, "sec", "ms" );
+  addNumber( "pause", "Duration of pause between outputs", 1.0, 0.0, 1000.0, 0.01, "sec", "ms" );
   addNumber( "delay", "Time before stimullus onset", 0.05, 0.0, 1000.0, 0.01, "sec", "ms" );
   addNumber( "savetracetime", "Length of trace to be saved and analyzed", 0.5, 0.0, 1000.0, 0.01, "sec", "ms" );
   addInteger( "repeats", "Repetitions of stimulus", 10, 0, 10000, 1 );
@@ -113,7 +114,8 @@ int ThresholdLatencies::main( void )
   int durationsel = index( "durationsel" );
   double duration = number( "duration" );
   double durationfac = number( "durationfac" );
-  double pause = number( "pause" );
+  double searchpause = number( "searchpause" );
+  double measurepause = number( "pause" );
   double delay = number( "delay" );
   double savetracetime = number( "savetracetime" );
   int repeats = integer( "repeats" );
@@ -123,6 +125,7 @@ int ThresholdLatencies::main( void )
   int adjust = index( "adjust" );
   bool usedc = boolean( "usedc" );
   double membranetau = metaData( "Cell" ).number( "membranetau" );
+  double pause = searchpause;
   if ( durationsel == 1 ) {
     if ( membranetau <= 0.0 ) {
       warning( "Membrane time constant was not measured yet!" );
@@ -139,7 +142,11 @@ int ThresholdLatencies::main( void )
     warning( "savetracetime must be at least as long as the stimulus duration!" );
     return Failed;
   }
-  if ( delay + duration + pause < savetracetime ) {
+  if ( delay + duration + searchpause < savetracetime ) {
+    warning( "Stimulus duration plus searchpause plus delay must be at least as long as savetracetime!" );
+    return Failed;
+  }
+  if ( delay + duration + measurepause < savetracetime ) {
     warning( "Stimulus duration plus pause plus delay must be at least as long as savetracetime!" );
     return Failed;
   }
@@ -270,6 +277,7 @@ int ThresholdLatencies::main( void )
 	     ( Results[Results.size()-2].SpikeCount > 0 &&
 	       Results[Results.size()-1].SpikeCount <= 0 ) ) ) {
 	record = true;
+	pause = measurepause;
 	count = 1;
 	Results.clear();
 	SpikeCount = 0;
@@ -457,7 +465,7 @@ void ThresholdLatencies::plot( double duration )
   P.setTitle( "p=" + Str( 100.0*(double)SpikeCount/(double)TrialCount, 0, 0, 'f' ) +
 	      "%,  latency=(" + Str( 1000.0*lm, 0, 0, 'f' ) +
 	      "+/-" + Str( 1000.0*lsd, 0, 0, 'f' ) +
-	      ") ms, amplitude=" + Str( 1000.0*am, 0, 2, 'f' ) + " " + IUnit );
+	      ") ms, amplitude=" + Str( am, 0, 2, 'f' ) + " " + IUnit );
   P.plotVLine( 0, Plot::White, 2 );
   P.plotVLine( 1000.0*duration, Plot::White, 2 );
   for ( unsigned int k=0; k<Results.size()-1; k++ ) {

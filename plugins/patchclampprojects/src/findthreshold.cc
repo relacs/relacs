@@ -44,12 +44,15 @@ FindThreshold::FindThreshold( void )
   addSelection( "durationsel", "Set duration of stimulus", "in milliseconds|as multiples of membrane time constant" );
   addNumber( "duration", "Duration of stimulus", 0.1, 0.0, 1000.0, 0.001, "sec", "ms" ).setActivation( "durationsel", "in milliseconds" );
   addNumber( "durationfac", "Duration of stimulus", 1.0, 0.0, 1000.0, 0.1, "tau_m" ).setActivation( "durationsel", "as multiples of membrane time constant" );
-  addNumber( "pause", "Duration of pause bewteen outputs", 1.0, 0.0, 1000.0, 0.01, "sec", "ms" );
+  addNumber( "searchpause", "Duration of pause between outputs during search", 0.5, 0.0, 1000.0, 0.01, "sec", "ms" );
+  addNumber( "pause", "Duration of pause between outputs", 1.0, 0.0, 1000.0, 0.01, "sec", "ms" );
   addNumber( "savetime", "Length of trace to be saved and analyzed", 0.5, 0.0, 1000.0, 0.01, "sec", "ms" );
+  addNumber( "skiptime", "Initial time skipped from spike-count analysis", 0.0, 0.0, 1000.0, 0.01, "sec", "ms" );
   addInteger( "repeats", "Repetitions of stimulus", 10, 0, 10000, 1 );
   addLabel( "Stimulus amplitudes" );
   addNumber( "startamplitude", "Initial amplitude of current stimulus", 1.0, 0.0, 1000.0, 0.01 );
   addNumber( "amplitudestep", "Size of amplitude steps used for oscillating around threshold", 0.1, 0.0, 1000.0, 0.01 );
+  addNumber( "minspikecount", "Minimum required spike count for each trial", 1.0, 0.0, 10000.0, 1.0 );
   addTypeStyle( OptWidget::Bold, Parameter::Label );
 
   // plot:
@@ -100,11 +103,14 @@ int FindThreshold::main( void )
   int durationsel = index( "durationsel" );
   double duration = number( "duration" );
   double durationfac = number( "durationfac" );
-  double pause = number( "pause" );
+  double searchpause = number( "searchpause" );
+  double measurepause = number( "pause" );
   double savetime = number( "savetime" );
+  double skiptime = number( "skiptime" );
   int repeats = integer( "repeats" );
   double amplitude = number( "startamplitude" );
   double amplitudestep = number( "amplitudestep" );
+  double minspikecount = number( "minspikecount" );
 
   if ( involtage < 0 || SpikeTrace[ involtage ] < 0 || SpikeEvents[ involtage ] < 0 ) {
     warning( "Invalid input voltage trace or missing input spikes!" );
@@ -122,6 +128,11 @@ int FindThreshold::main( void )
     }
     duration = durationfac*membranetau;
   }
+  if ( skiptime > duration || skiptime > savetime ) {
+    warning( "skiptime too long!" );
+    return Failed;
+  }
+  double pause = searchpause;
 
   double samplerate = trace( SpikeTrace[involtage] ).sampleRate();
 
@@ -142,7 +153,7 @@ int FindThreshold::main( void )
   ofstream sf;
 
   // plot trace:
-  plotToggle( true, true, 2.0*duration, 0.5*duration );
+  plotToggle( true, true, 0.5*duration+savetime, 0.5*duration );
 
   // plot:
   P.lock();
@@ -191,7 +202,7 @@ int FindThreshold::main( void )
     }
 
     // analyze, plot, and save:
-    analyze( involtage, incurrent, amplitude, duration, savetime );
+    analyze( involtage, incurrent, amplitude, duration, savetime, skiptime );
     if ( record ) {
       saveTrace( tf, tracekey, count-1 );
       saveSpikes( sf, spikekey, count-1 );
@@ -199,7 +210,7 @@ int FindThreshold::main( void )
     plot( duration );
 
     // change stimulus amplitude:
-    if ( Results.back().SpikeCount > 0 )
+    if ( Results.back().SpikeCount >= minspikecount )
       amplitude -= amplitudestep;
     else
       amplitude += amplitudestep;
@@ -208,11 +219,12 @@ int FindThreshold::main( void )
     if ( ! record ) {
       // find threshold:
       if ( Results.size() > 1 &&
-	   ( ( Results[Results.size()-2].SpikeCount <= 0 &&
-	       Results[Results.size()-1].SpikeCount > 0 ) ||
-	     ( Results[Results.size()-2].SpikeCount > 0 &&
-	       Results[Results.size()-1].SpikeCount <= 0 ) ) ) {
+	   ( ( Results[Results.size()-2].SpikeCount < minspikecount &&
+	       Results[Results.size()-1].SpikeCount >= minspikecount ) ||
+	     ( Results[Results.size()-2].SpikeCount >= minspikecount &&
+	       Results[Results.size()-1].SpikeCount < minspikecount ) ) ) {
 	record = true;
+	pause = measurepause;
 	count = 1;
 	Results.clear();
 	SpikeCount = 0;
@@ -245,7 +257,8 @@ int FindThreshold::main( void )
 
 
 void FindThreshold::analyze( int involtage, int incurrent,
-			     double amplitude, double duration, double savetime )
+			     double amplitude, double duration,
+			     double savetime, double skiptime )
 {
   if ( Results.size() >= 20 )
     Results.pop_front();
@@ -264,7 +277,7 @@ void FindThreshold::analyze( int involtage, int incurrent,
 					 events( SpikeEvents[involtage] ).signalTime() + savetime,
 					 events( SpikeEvents[involtage] ).signalTime(),
 					 Results.back().Spikes );
-  Results.back().SpikeCount = Results.back().Spikes.count( 0.0, savetime );
+  Results.back().SpikeCount = Results.back().Spikes.count( skiptime, savetime );
 
   if ( Results.back().SpikeCount > 0 ) {
     SpikeCount++;
@@ -379,7 +392,7 @@ void FindThreshold::plot( double duration )
   P.setTitle( "p=" + Str( 100.0*(double)SpikeCount/(double)TrialCount, 0, 0, 'f' ) +
 	      "%,  latency=(" + Str( 1000.0*lm, 0, 0, 'f' ) +
 	      "+/-" + Str( 1000.0*lsd, 0, 0, 'f' ) +
-	      ") ms, amplitude=" + Str( 1000.0*am, 0, 2, 'f' ) + " " + IUnit );
+	      ") ms, amplitude=" + Str( am, 0, 2, 'f' ) + " " + IUnit );
   P.plotVLine( 0, Plot::White, 2 );
   P.plotVLine( 1000.0*duration, Plot::White, 2 );
   for ( unsigned int k=0; k<Results.size()-1; k++ ) {

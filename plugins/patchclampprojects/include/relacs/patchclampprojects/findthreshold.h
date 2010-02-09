@@ -53,7 +53,8 @@ public:
   virtual void config( void );
   virtual void notify( void );
   void analyze( int involtage, int incurrent,
-		double amplitude, double duration, double savetime );
+		double amplitude, double duration,
+		double savetime, double skiptime );
   void plot( double duration );
   void openFiles( ofstream &tf, TableKey &tracekey,
 		  ofstream &sf, TableKey &spikekey, int incurrent );
