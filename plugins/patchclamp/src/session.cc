@@ -72,6 +72,7 @@ void Session::config( void )
   mo.addNumber( "membraner", "Membrane resistance", -1.0, -1.0, 1000000.0, 1.0, "MOhm", "MOhm", "%.1f", MetaDataDisplay+MetaDataReset );
   mo.addNumber( "membranetau", "Membrane time constant", -1.0, -1.0, 100.0, 0.001, "s", "ms", "%.0f", MetaDataDisplay+MetaDataReset );
   mo.addNumber( "membranec", "Membrane capacitance", -1.0, -1.0, 1000000.0, 1.0, "pF", "pF", "%.0f", MetaDataDisplay+MetaDataReset );
+  mo.addNumber( "ithresh", "Current threshold", 0.0, -1000.0, 1000.0, 1.0, "nA", "nA", "%.3f", MetaDataDisplay+MetaDataReset );
   mo.addNumber( "dc", "DC current", 0.0, -1000.0, 1000.0, 1.0, "nA", "nA", "%.3f", MetaDataDisplay+MetaDataReset );
 
   mo.addStyle( OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack, MetaDataDisplay );

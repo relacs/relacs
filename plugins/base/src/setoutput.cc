@@ -44,12 +44,12 @@ SetOutput::SetOutput( void )
   bb->setSpacing( 4 );
 
   // Ok button:
-  QPushButton *OKButton = new QPushButton( "&Ok", bb, "OkButton" );
+  OKButton = new QPushButton( "&Ok", bb, "OkButton" );
   connect( OKButton, SIGNAL( clicked() ),
 	   this, SLOT( setValues() ) );
 
   // Cancel button:
-  QPushButton *CancelButton = new QPushButton( "&Cancel", bb, "CancelButton" );
+  CancelButton = new QPushButton( "&Cancel", bb, "CancelButton" );
   connect( CancelButton, SIGNAL( clicked() ),
 	   this, SLOT( keepValues() ) );
 

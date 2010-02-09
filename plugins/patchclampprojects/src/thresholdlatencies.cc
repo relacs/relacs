@@ -49,14 +49,11 @@ ThresholdLatencies::ThresholdLatencies( void )
   addNumber( "savetracetime", "Length of trace to be saved and analyzed", 0.5, 0.0, 1000.0, 0.01, "sec", "ms" );
   addInteger( "repeats", "Repetitions of stimulus", 10, 0, 10000, 1 );
   addLabel( "Stimulus amplitudes" );
-  addNumber( "startamplitude", "Initial amplitude of current stimulus", 1.0, 0.0, 1000.0, 0.01 );
+  addSelection( "amplitudesrc", "Use initial amplitude from", "custom|DC|threshold" );
+  addNumber( "startamplitude", "Initial amplitude of current stimulus", 1.0, 0.0, 1000.0, 0.01 ).setActivation( "amplitudesrc", "custom" );
   addNumber( "amplitudestep", "Size of amplitude steps used for oscillating around threshold", 0.1, 0.0, 1000.0, 0.01 );
   addSelection( "adjust", "Adjust", "DC|none|stimulus|DC" );
-  addLabel( "DC amplitude" );
-  addSelection( "dcamplitudesel", "Set DC amplitude", "none|relative|absolute" );
-  addNumber( "dcamplitudefrac", "Fraction of threshold", 0.9, 0.0, 1.0, 0.01, "1", "%" );
-  addNumber( "dcamplitudedecr", "Decrement below threshold", 0.1, 0.0, 1000.0, 0.01 );
-  addInteger( "dcrepeats", "Repetitions of stimulus for threshold estimation", 10, 0, 10000, 1 );
+  addBoolean( "usedc", "Use DC amplitude", false );
   setFlags( 1 );
   addTypeStyle( OptWidget::Bold, Parameter::Label );
   setConfigSelectMask( 1 );
@@ -98,7 +95,6 @@ void ThresholdLatencies::notify( void )
     IUnit = outTrace( CurrentOutput[outcurrent] ).unit();
     setUnit( "startamplitude", IUnit );
     setUnit( "amplitudestep", IUnit );
-    setUnit( "dcamplitudedecr", IUnit );
   }
 
   int incurrent = index( "incurrent" );
@@ -121,15 +117,17 @@ int ThresholdLatencies::main( void )
   double delay = number( "delay" );
   double savetracetime = number( "savetracetime" );
   int repeats = integer( "repeats" );
+  int amplitudesrc = index( "amplitudesrc" );
   double amplitude = number( "startamplitude" );
   double amplitudestep = number( "amplitudestep" );
   int adjust = index( "adjust" );
-  int dcamplitudesel = index( "dcamplitudesel" );
-  double dcamplitudefrac = number( "dcamplitudefrac" );
-  double dcamplitudedecr = number( "dcamplitudedecr" );
-  int dcrepeats = integer( "dcrepeats" );
+  bool usedc = boolean( "usedc" );
   if ( durationsel == 1 )
     duration = durationfac*metaData( "Cell" ).number( "membranetau" );
+  if ( amplitudesrc == 1 )
+    amplitude = metaData( "Cell" ).number( "dc" );
+  else if ( amplitudesrc == 2 )
+    amplitude = metaData( "Cell" ).number( "ithresh" );
 
   if ( savetracetime < duration ) {
     warning( "savetracetime must be at least as long as the stimulus duration!" );
@@ -154,14 +152,9 @@ int ThresholdLatencies::main( void )
   noMessage();
 
   // init:
-  /* 0: find threshold
-     1: measure threshold and set DC
-     2: find threshold with DC
-     3: record */
-  int mode = dcamplitudesel == 0 ? 2 : 0;
   bool record = false;
   DoneState state = Completed;
-  double dcamplitude = 0.0;
+  double dcamplitude = usedc ? metaData( "Cell" ).number( "dc" ) : 0.0;
   Results.clear();
   Amplitudes.clear();
   Amplitudes.reserve( 100 );
@@ -201,16 +194,13 @@ int ThresholdLatencies::main( void )
     timeStamp();
 
     Str s;
-    if ( mode == 0 || mode == 2 )
+    if ( ! record )
       s = "<b>Search threshold: </b>";
-    else if ( mode == 1 )
-      s = "<b>Measure threshold: </b>";
-    else if ( mode == 3 )
+    else
       s = "<b>Measure response: </b>";
-    if ( mode >= 2 )
-      s += "DC amplitude <b>" + Str( dcamplitude ) + " " + IUnit +"</b>, ";
+    s += "DC amplitude <b>" + Str( dcamplitude ) + " " + IUnit +"</b>, ";
     s += "Amplitude <b>" + Str( amplitude ) + " " + IUnit +"</b>";
-    if ( mode==1 || record )
+    if ( record )
       s += ",  Loop <b>" + Str( count ) + "</b>";
     message( s );
 
@@ -243,7 +233,7 @@ int ThresholdLatencies::main( void )
     }
     plot( duration );
 
-    if ( mode <= 2 || adjust == 1 ) {
+    if ( ! record || adjust == 1 ) {
       // change stimulus amplitude:
       if ( Results.back().SpikeCount > 0 )
 	amplitude -= amplitudestep;
@@ -267,37 +257,13 @@ int ThresholdLatencies::main( void )
 
     // switch modes:
     if ( ! record ) {
-      int prevmode = mode;
-      if ( mode == 1 ) {
-	// threshold measurement:
-	if ( count >= dcrepeats ) {
-	  mode++;
-	  dcamplitude = Amplitudes.mean();
-	  if ( dcamplitudesel == 1 )
-	    dcamplitude *= dcamplitudefrac;
-	  else
-	    dcamplitude -= dcamplitudedecr;
-	  dcsignal = dcamplitude;
-	  dcsignal.setIdent( "DC=" + Str( dcamplitude ) + IUnit );
-	  directWrite( dcsignal );
-	}
-      }
-      else {
-	// find threshold:
-	if ( Results.size() > 1 &&
-	     ( ( Results[Results.size()-2].SpikeCount <= 0 &&
-		 Results[Results.size()-1].SpikeCount > 0 ) ||
-	       ( Results[Results.size()-2].SpikeCount > 0 &&
-		 Results[Results.size()-1].SpikeCount <= 0 ) ) ) {
-	  mode++;
-	}
-	if ( mode >= 3 ) {
-	  record = true;
-	  openFiles( tf, tracekey, sf, spikekey, incurrent );
-	}
-      }
-      if ( prevmode != mode ) {
-	// new mode, reset:
+      // find threshold:
+      if ( Results.size() > 1 &&
+	   ( ( Results[Results.size()-2].SpikeCount <= 0 &&
+	       Results[Results.size()-1].SpikeCount > 0 ) ||
+	     ( Results[Results.size()-2].SpikeCount > 0 &&
+	       Results[Results.size()-1].SpikeCount <= 0 ) ) ) {
+	record = true;
 	count = 1;
 	Results.clear();
 	SpikeCount = 0;
@@ -308,6 +274,7 @@ int ThresholdLatencies::main( void )
 	DCAmplitudes.reserve( repeats > 0 ? repeats : 1000 );
 	Latencies.clear();
 	Latencies.reserve( repeats > 0 ? repeats : 1000 );
+	openFiles( tf, tracekey, sf, spikekey, incurrent );
       }
     }
     TrialCount = count;
@@ -322,7 +289,7 @@ int ThresholdLatencies::main( void )
   tf << '\n';
   sf << '\n';
   if ( record && TrialCount > 0 )
-    saveData( dcamplitudesel > 0 );
+    saveData( usedc );
   Results.clear();
   Latencies.clear();
   Amplitudes.clear();
@@ -467,7 +434,6 @@ void ThresholdLatencies::saveData( bool dc )
   if ( dc ) {
     setNumber( "dcstimulusamplitude", am );
     setNumber( "dcamplitude", bam );
-    metaData( "Cell" ).setNumber( "dc", bam );
   }
   else
     setNumber( "stimulusamplitude", am );

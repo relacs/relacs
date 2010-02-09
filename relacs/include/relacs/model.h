@@ -221,13 +221,14 @@ private:
   vector< InTrace > Data;
 
   struct OutTrace {
-    OutTrace( void ) : Onset( 0.0 ), Offset( 0.0 ) {};
+    OutTrace( void ) : Onset( 0.0 ), Offset( 0.0 ), LastSignal( 0.0 ) {};
     OutTrace( double t, const OutData &signal ) : 
-      Onset( t ), Offset( t + signal.totalDuration() - signal.delay() ), Buffer( signal ) {};
-    OutTrace( const OutTrace &signal ) : Onset( signal.Onset ), Offset( signal.Offset ), Buffer( signal.Buffer ) {};
+      Onset( t ), Offset( t + signal.totalDuration() - signal.delay() ), Buffer( signal ), LastSignal( 0.0 ) {};
+    OutTrace( const OutTrace &signal ) : Onset( signal.Onset ), Offset( signal.Offset ), Buffer( signal.Buffer ), LastSignal( signal.LastSignal ) {};
     double Onset;
     double Offset;
     OutData Buffer;
+    mutable double LastSignal;
   };
   vector< OutTrace > Signals;
   double SignalEnd;

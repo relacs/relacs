@@ -166,10 +166,9 @@ double Model::signal( double t ) const
 {
   if ( ! Signals.empty() && Signals[0].Onset <= t && Signals[0].Offset >= t ) {
     t -= Signals[0].Onset;
-    return Signals[0].Buffer[ t ];
+    Signals[0].LastSignal = Signals[0].Buffer[ t ];
   }
-  else
-    return 0.0;
+  return Signals[0].LastSignal;
 }
 
 
@@ -177,10 +176,9 @@ double Model::signalInterpolated( double t ) const
 {
   if ( ! Signals.empty() && Signals[0].Onset <= t && Signals[0].Offset >= t ) {
     t -= Signals[0].Onset;
-    return Signals[0].Buffer( t );
+    Signals[0].LastSignal = Signals[0].Buffer[ t ];
   }
-  else
-    return 0.0;
+  return Signals[0].LastSignal;
 }
 
 

@@ -45,6 +45,7 @@ FindThreshold::FindThreshold( void )
   addNumber( "duration", "Duration of stimulus", 0.1, 0.0, 1000.0, 0.001, "sec", "ms" ).setActivation( "durationsel", "in milliseconds" );
   addNumber( "durationfac", "Duration of stimulus", 1.0, 0.0, 1000.0, 0.1, "tau_m" ).setActivation( "durationsel", "as multiples of membrane time constant" );
   addNumber( "pause", "Duration of pause bewteen outputs", 1.0, 0.0, 1000.0, 0.01, "sec", "ms" );
+  addNumber( "savetime", "Length of trace to be saved and analyzed", 0.5, 0.0, 1000.0, 0.01, "sec", "ms" );
   addInteger( "repeats", "Repetitions of stimulus", 10, 0, 10000, 1 );
   addLabel( "Stimulus amplitudes" );
   addNumber( "startamplitude", "Initial amplitude of current stimulus", 1.0, 0.0, 1000.0, 0.01 );
@@ -81,7 +82,6 @@ void FindThreshold::notify( void )
     IUnit = outTrace( CurrentOutput[outcurrent] ).unit();
     setUnit( "startamplitude", IUnit );
     setUnit( "amplitudestep", IUnit );
-    setUnit( "dcamplitudedecr", IUnit );
   }
 
   int incurrent = index( "incurrent" );
@@ -101,7 +101,7 @@ int FindThreshold::main( void )
   double duration = number( "duration" );
   double durationfac = number( "durationfac" );
   double pause = number( "pause" );
-  double savetime = 1.0; //XXX
+  double savetime = number( "savetime" );
   int repeats = integer( "repeats" );
   double amplitude = number( "startamplitude" );
   double amplitudestep = number( "amplitudestep" );
@@ -140,7 +140,7 @@ int FindThreshold::main( void )
 
   // plot:
   P.lock();
-  P.setXRange( -500.0*duration, 1500.0*duration );
+  P.setXRange( 0.0, 1000.0*savetime );
   P.setYLabel( trace( SpikeTrace[involtage] ).ident() + " [" + VUnit + "]" );
   P.unlock();
 
@@ -199,39 +199,14 @@ int FindThreshold::main( void )
       amplitude += amplitudestep;
 
     // switch modes:
-    /* XXX
     if ( ! record ) {
-      int prevmode = mode;
-      if ( mode == 1 ) {
-	// threshold measurement:
-	if ( count >= dcrepeats ) {
-	  mode++;
-	  dcamplitude = Amplitudes.mean();
-	  if ( dcamplitudesel == 1 )
-	    dcamplitude *= dcamplitudefrac;
-	  else
-	    dcamplitude -= dcamplitudedecr;
-	  dcsignal = dcamplitude;
-	  dcsignal.setIdent( "DC=" + Str( dcamplitude ) + IUnit );
-	  directWrite( dcsignal );
-	}
-      }
-      else {
-	// find threshold:
-	if ( Results.size() > 1 &&
-	     ( ( Results[Results.size()-2].SpikeCount <= 0 &&
-		 Results[Results.size()-1].SpikeCount > 0 ) ||
-	       ( Results[Results.size()-2].SpikeCount > 0 &&
-		 Results[Results.size()-1].SpikeCount <= 0 ) ) ) {
-	  mode++;
-	}
-	if ( mode >= 3 ) {
-	  record = true;
-	  openFiles( tf, tracekey, sf, spikekey, incurrent );
-	}
-      }
-      if ( prevmode != mode ) {
-	// new mode, reset:
+      // find threshold:
+      if ( Results.size() > 1 &&
+	   ( ( Results[Results.size()-2].SpikeCount <= 0 &&
+	       Results[Results.size()-1].SpikeCount > 0 ) ||
+	     ( Results[Results.size()-2].SpikeCount > 0 &&
+	       Results[Results.size()-1].SpikeCount <= 0 ) ) ) {
+	record = true;
 	count = 1;
 	Results.clear();
 	SpikeCount = 0;
@@ -240,9 +215,9 @@ int FindThreshold::main( void )
 	Amplitudes.reserve( repeats > 0 ? repeats : 1000 );
 	Latencies.clear();
 	Latencies.reserve( repeats > 0 ? repeats : 1000 );
+	openFiles( tf, tracekey, sf, spikekey, incurrent );
       }
     }
-    */
     TrialCount = count;
 
     sleepOn( duration + pause );
@@ -302,9 +277,9 @@ void FindThreshold::openFiles( ofstream &tf, TableKey &tracekey,
   if ( incurrent >= 0 )
     tracekey.addNumber( "I", IUnit, "%6.1f" );
   if ( completeRuns() <= 0 )
-    tf.open( addPath( "thresholdlatencies-traces.dat" ).c_str() );
+    tf.open( addPath( "findthreshold-traces.dat" ).c_str() );
   else
-    tf.open( addPath( "thresholdlatencies-traces.dat" ).c_str(),
+    tf.open( addPath( "findthreshold-traces.dat" ).c_str(),
              ofstream::out | ofstream::app );
   settings().save( tf, "# " );
   tf << '\n';
@@ -313,9 +288,9 @@ void FindThreshold::openFiles( ofstream &tf, TableKey &tracekey,
 
   spikekey.addNumber( "t", "ms", "%7.2f" );
   if ( completeRuns() <= 0 )
-    sf.open( addPath( "thresholdlatencies-spikes.dat" ).c_str() );
+    sf.open( addPath( "findthreshold-spikes.dat" ).c_str() );
   else
-    sf.open( addPath( "thresholdlatencies-spikes.dat" ).c_str(),
+    sf.open( addPath( "findthreshold-spikes.dat" ).c_str(),
              ofstream::out | ofstream::app );
   settings().save( sf, "# " );
   sf << '\n';
@@ -375,14 +350,16 @@ void FindThreshold::saveData( bool dc )
 
   ofstream df;
   if ( completeRuns() <= 0 ) {
-    df.open( addPath( "thresholdlatencies-data.dat" ).c_str() );
+    df.open( addPath( "findthreshold-data.dat" ).c_str() );
     datakey.saveKey( df );
   }
   else
-    df.open( addPath( "thresholdlatencies-data.dat" ).c_str(),
+    df.open( addPath( "findthreshold-data.dat" ).c_str(),
              ofstream::out | ofstream::app );
 
   datakey.saveData( df );
+
+  metaData( "Cell" ).setNumber( "ithresh", am );
 }
 
 
