@@ -133,8 +133,9 @@ int ThresholdLatencies::main( void )
     }
     duration = durationfac*membranetau;
   }
+  double orgdcamplitude = metaData( "Cell" ).number( "dc" );
   if ( amplitudesrc == 1 )
-    amplitude = metaData( "Cell" ).number( "dc" );
+    amplitude = orgdcamplitude;
   else if ( amplitudesrc == 2 )
     amplitude = metaData( "Cell" ).number( "ithresh" );
 
@@ -167,7 +168,7 @@ int ThresholdLatencies::main( void )
   // init:
   bool record = false;
   DoneState state = Completed;
-  double dcamplitude = usedc ? metaData( "Cell" ).number( "dc" ) : 0.0;
+  double dcamplitude = usedc ? orgdcamplitude : 0.0;
   Results.clear();
   Amplitudes.clear();
   Amplitudes.reserve( 100 );
@@ -244,7 +245,7 @@ int ThresholdLatencies::main( void )
       saveTrace( tf, tracekey, count-1 );
       saveSpikes( sf, spikekey, count-1 );
     }
-    plot( duration );
+    plot( record, duration );
 
     if ( ! record || adjust == 1 ) {
       // change stimulus amplitude:
@@ -308,6 +309,13 @@ int ThresholdLatencies::main( void )
   Latencies.clear();
   Amplitudes.clear();
   DCAmplitudes.clear();
+  if ( ! usedc ) {
+    dcsignal = orgdcamplitude;
+    dcsignal.setIdent( "DC=" + Str( orgdcamplitude ) + IUnit );
+    directWrite( dcsignal );
+  }
+  else
+    metaData( "Cell" ).setNumber( "dc", dcamplitude );
   return state;
 }
 
@@ -455,17 +463,20 @@ void ThresholdLatencies::saveData( bool dc )
 }
 
 
-void ThresholdLatencies::plot( double duration )
+void ThresholdLatencies::plot( bool record, double duration )
 {
   P.lock();
   P.clear();
   double am = Amplitudes.mean();
   double lsd = 0.0;
   double lm = Latencies.mean( lsd );
-  P.setTitle( "p=" + Str( 100.0*(double)SpikeCount/(double)TrialCount, 0, 0, 'f' ) +
-	      "%,  latency=(" + Str( 1000.0*lm, 0, 0, 'f' ) +
-	      "+/-" + Str( 1000.0*lsd, 0, 0, 'f' ) +
-	      ") ms, amplitude=" + Str( am, 0, 2, 'f' ) + " " + IUnit );
+  if ( record )
+    P.setTitle( "p=" + Str( 100.0*(double)SpikeCount/(double)TrialCount, 0, 0, 'f' ) +
+		"%,  latency=(" + Str( 1000.0*lm, 0, 0, 'f' ) +
+		"+/-" + Str( 1000.0*lsd, 0, 0, 'f' ) +
+		") ms, amplitude=" + Str( am, 0, 2, 'f' ) + " " + IUnit );
+  else
+    P.setTitle( "" );
   P.plotVLine( 0, Plot::White, 2 );
   P.plotVLine( 1000.0*duration, Plot::White, 2 );
   for ( unsigned int k=0; k<Results.size()-1; k++ ) {

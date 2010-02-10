@@ -34,9 +34,10 @@ SetDC::SetDC( void )
 {
   // add some options:
   addSelection( "outcurrent", "Output trace", "Current-1" );
-  addSelection( "dcamplitudesel", "Set DC amplitude", "relative|absolute" ).setUnit( "to threshold" );
-  addNumber( "dcamplitudefrac", "Fraction of threshold", 0.9, 0.0, 1.0, 0.01, "1", "%" );
-  addNumber( "dcamplitudedecr", "Decrement below threshold", 0.1, 0.0, 1000.0, 0.01 );
+  addSelection( "dcamplitudesel", "Set DC amplitude", "to absolute value|to a fraction of the threshold|relative to threshold" );
+  addNumber( "dcamplitude", "DC amplitude", 0.1, 0.0, 1000.0, 0.01 ).setActivation( "dcamplitudesel", "to absolute value" );
+  addNumber( "dcamplitudefrac", "Fraction of threshold", 0.9, 0.0, 1.0, 0.01, "1", "%" ).setActivation( "dcamplitudesel", "to a fraction of the threshold" );
+  addNumber( "dcamplitudedecr", "Decrement below threshold", 0.1, 0.0, 1000.0, 0.01 ).setActivation( "dcamplitudesel", "relative to threshold" );
   addBoolean( "interactive", "Set dc amplitude interactively", false );
   addNumber( "dcamplitudestep", "Stepsize for entering dc", 0.001, 0.0, 1000.0, 0.001 );
 
@@ -78,6 +79,7 @@ void SetDC::notify( void )
   int outcurrent = index( "outcurrent" );
   if ( outcurrent >= 0 && CurrentOutput[outcurrent] >= 0 ) {
     IUnit = outTrace( CurrentOutput[outcurrent] ).unit();
+    setUnit( "dcamplitude", IUnit );
     setUnit( "dcamplitudedecr", IUnit );
     setUnit( "dcamplitudestep", IUnit );
     UnitLabel->setText( IUnit.c_str() );
@@ -91,6 +93,7 @@ int SetDC::main( void )
   // get options:
   OutCurrent = outTraceIndex( text( "outcurrent", 0 ) );
   int dcamplitudesel = index( "dcamplitudesel" );
+  double dcamplitude = number( "dcamplitude" );
   double dcamplitudefrac = number( "dcamplitudefrac" );
   double dcamplitudedecr = number( "dcamplitudedecr" );
   bool interactive = boolean( "interactive" );
@@ -102,9 +105,11 @@ int SetDC::main( void )
   plotToggle( true, false, 1.0, 0.0 );
 
   // init:
+  double orgampl = metaData( "Cell" ).number( "dc" );
   DCAmplitude = metaData( "Cell" ).number( "ithresh" );
-  double orgampl = DCAmplitude;
   if ( dcamplitudesel == 0 )
+    DCAmplitude = dcamplitude;
+  else if ( dcamplitudesel == 1 )
     DCAmplitude *= dcamplitudefrac;
   else
     DCAmplitude -= dcamplitudedecr;
@@ -157,9 +162,7 @@ int SetDC::main( void )
 
 void SetDC::setValue( double value )
 {
-  lock();
   DCAmplitude = value;
-  unlock();
   wake();
 }
 

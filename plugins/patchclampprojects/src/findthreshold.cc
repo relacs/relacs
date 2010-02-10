@@ -207,7 +207,7 @@ int FindThreshold::main( void )
       saveTrace( tf, tracekey, count-1 );
       saveSpikes( sf, spikekey, count-1 );
     }
-    plot( duration );
+    plot( record, duration );
 
     // change stimulus amplitude:
     if ( Results.back().SpikeCount >= minspikecount )
@@ -382,17 +382,20 @@ void FindThreshold::saveData( bool dc )
 }
 
 
-void FindThreshold::plot( double duration )
+void FindThreshold::plot( bool record, double duration )
 {
   P.lock();
   P.clear();
   double am = Amplitudes.mean();
   double lsd = 0.0;
   double lm = Latencies.mean( lsd );
-  P.setTitle( "p=" + Str( 100.0*(double)SpikeCount/(double)TrialCount, 0, 0, 'f' ) +
-	      "%,  latency=(" + Str( 1000.0*lm, 0, 0, 'f' ) +
-	      "+/-" + Str( 1000.0*lsd, 0, 0, 'f' ) +
-	      ") ms, amplitude=" + Str( am, 0, 2, 'f' ) + " " + IUnit );
+  if ( record )
+    P.setTitle( "p=" + Str( 100.0*(double)SpikeCount/(double)TrialCount, 0, 0, 'f' ) +
+		"%,  latency=(" + Str( 1000.0*lm, 0, 0, 'f' ) +
+		"+/-" + Str( 1000.0*lsd, 0, 0, 'f' ) +
+		") ms, amplitude=" + Str( am, 0, 2, 'f' ) + " " + IUnit );
+  else
+    P.setTitle( "" );
   P.plotVLine( 0, Plot::White, 2 );
   P.plotVLine( 1000.0*duration, Plot::White, 2 );
   for ( unsigned int k=0; k<Results.size()-1; k++ ) {

@@ -55,7 +55,7 @@ public:
   void analyze( int involtage, int incurrent,
 		double amplitude, double duration,
 		double savetime, double skiptime );
-  void plot( double duration );
+  void plot( bool record, double duration );
   void openFiles( ofstream &tf, TableKey &tracekey,
 		  ofstream &sf, TableKey &spikekey, int incurrent );
   void saveTrace( ofstream &tf, TableKey &tracekey, int index );
