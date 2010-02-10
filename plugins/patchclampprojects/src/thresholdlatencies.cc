@@ -52,7 +52,8 @@ ThresholdLatencies::ThresholdLatencies( void )
   addLabel( "Stimulus amplitudes" );
   addSelection( "amplitudesrc", "Use initial amplitude from", "custom|DC|threshold" );
   addNumber( "startamplitude", "Initial amplitude of current stimulus", 1.0, 0.0, 1000.0, 0.01 ).setActivation( "amplitudesrc", "custom" );
-  addNumber( "amplitudestep", "Size of amplitude steps used for oscillating around threshold", 0.1, 0.0, 1000.0, 0.01 );
+  addNumber( "startamplitudestep", "Initial size of amplitude steps used for searching threshold", 0.1, 0.0, 1000.0, 0.001 );
+  addNumber( "amplitudestep", "Final size of amplitude steps used for oscillating around threshold", 0.01, 0.0, 1000.0, 0.001 );
   addSelection( "adjust", "Adjust", "DC|none|stimulus|DC" );
   addBoolean( "usedc", "Use DC amplitude", false );
   setFlags( 1 );
@@ -95,6 +96,7 @@ void ThresholdLatencies::notify( void )
   if ( outcurrent >= 0 && CurrentOutput[outcurrent] >= 0 ) {
     IUnit = outTrace( CurrentOutput[outcurrent] ).unit();
     setUnit( "startamplitude", IUnit );
+    setUnit( "startamplitudestep", IUnit );
     setUnit( "amplitudestep", IUnit );
   }
 
@@ -121,7 +123,8 @@ int ThresholdLatencies::main( void )
   int repeats = integer( "repeats" );
   int amplitudesrc = index( "amplitudesrc" );
   double amplitude = number( "startamplitude" );
-  double amplitudestep = number( "amplitudestep" );
+  double amplitudestep = number( "startamplitudestep" );
+  double finalamplitudestep = number( "amplitudestep" );
   int adjust = index( "adjust" );
   bool usedc = boolean( "usedc" );
   double membranetau = metaData( "Cell" ).number( "membranetau" );
@@ -139,6 +142,10 @@ int ThresholdLatencies::main( void )
   else if ( amplitudesrc == 2 )
     amplitude = metaData( "Cell" ).number( "ithresh" );
 
+  if ( amplitudestep < finalamplitudestep ) {
+    warning( "startamplitudestep must be larger than amplitudestep!" );
+    return Failed;
+  }
   if ( savetracetime < duration ) {
     warning( "savetracetime must be at least as long as the stimulus duration!" );
     return Failed;
@@ -167,6 +174,7 @@ int ThresholdLatencies::main( void )
 
   // init:
   bool record = false;
+  bool search = true;
   DoneState state = Completed;
   double dcamplitude = usedc ? orgdcamplitude : 0.0;
   Results.clear();
@@ -277,19 +285,28 @@ int ThresholdLatencies::main( void )
 	       Results[Results.size()-1].SpikeCount > 0 ) ||
 	     ( Results[Results.size()-2].SpikeCount > 0 &&
 	       Results[Results.size()-1].SpikeCount <= 0 ) ) ) {
-	record = true;
-	pause = measurepause;
-	count = 1;
-	Results.clear();
-	SpikeCount = 0;
-	TrialCount = 0;
-	Amplitudes.clear();
-	Amplitudes.reserve( repeats > 0 ? repeats : 1000 );
-	DCAmplitudes.clear();
-	DCAmplitudes.reserve( repeats > 0 ? repeats : 1000 );
-	Latencies.clear();
-	Latencies.reserve( repeats > 0 ? repeats : 1000 );
-	openFiles( tf, tracekey, sf, spikekey, incurrent );
+	if ( amplitudestep <= finalamplitudestep ) {
+	  amplitudestep = finalamplitudestep;
+	  pause = measurepause;
+	  count = 1;
+	  Results.clear();
+	  SpikeCount = 0;
+	  TrialCount = 0;
+	  Amplitudes.clear();
+	  Amplitudes.reserve( repeats > 0 ? repeats : 1000 );
+	  DCAmplitudes.clear();
+	  DCAmplitudes.reserve( repeats > 0 ? repeats : 1000 );
+	  Latencies.clear();
+	  Latencies.reserve( repeats > 0 ? repeats : 1000 );
+	  if ( search )
+	    search = false;
+	  else {
+	    record = true;
+	    openFiles( tf, tracekey, sf, spikekey, incurrent );
+	  }
+	}
+	else
+	  amplitudestep *= 0.5;
       }
     }
     TrialCount = count;

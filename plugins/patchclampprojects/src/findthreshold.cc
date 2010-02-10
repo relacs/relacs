@@ -50,8 +50,10 @@ FindThreshold::FindThreshold( void )
   addNumber( "skiptime", "Initial time skipped from spike-count analysis", 0.0, 0.0, 1000.0, 0.01, "sec", "ms" );
   addInteger( "repeats", "Repetitions of stimulus", 10, 0, 10000, 1 );
   addLabel( "Stimulus amplitudes" );
-  addNumber( "startamplitude", "Initial amplitude of current stimulus", 1.0, 0.0, 1000.0, 0.01 );
-  addNumber( "amplitudestep", "Size of amplitude steps used for oscillating around threshold", 0.1, 0.0, 1000.0, 0.01 );
+  addSelection( "amplitudesrc", "Use initial amplitude from", "custom|DC|threshold" );
+  addNumber( "startamplitude", "Initial amplitude of current stimulus", 0.0, 0.0, 1000.0, 0.01 ).setActivation( "amplitudesrc", "custom" );
+  addNumber( "startamplitudestep", "Initial size of amplitude steps used for searching threshold", 0.1, 0.0, 1000.0, 0.001 );
+  addNumber( "amplitudestep", "Final size of amplitude steps used for oscillating around threshold", 0.01, 0.0, 1000.0, 0.001 );
   addNumber( "minspikecount", "Minimum required spike count for each trial", 1.0, 0.0, 10000.0, 1.0 );
   addTypeStyle( OptWidget::Bold, Parameter::Label );
 
@@ -84,6 +86,7 @@ void FindThreshold::notify( void )
   if ( outcurrent >= 0 && CurrentOutput[outcurrent] >= 0 ) {
     IUnit = outTrace( CurrentOutput[outcurrent] ).unit();
     setUnit( "startamplitude", IUnit );
+    setUnit( "startamplitudestep", IUnit );
     setUnit( "amplitudestep", IUnit );
   }
 
@@ -108,9 +111,21 @@ int FindThreshold::main( void )
   double savetime = number( "savetime" );
   double skiptime = number( "skiptime" );
   int repeats = integer( "repeats" );
+  int amplitudesrc = index( "amplitudesrc" );
   double amplitude = number( "startamplitude" );
-  double amplitudestep = number( "amplitudestep" );
+  double amplitudestep = number( "startamplitudestep" );
+  double finalamplitudestep = number( "amplitudestep" );
   double minspikecount = number( "minspikecount" );
+  double orgdcamplitude = metaData( "Cell" ).number( "dc" );
+  if ( amplitudesrc == 1 )
+    amplitude = orgdcamplitude;
+  else if ( amplitudesrc == 2 )
+    amplitude = metaData( "Cell" ).number( "ithresh" );
+
+  if ( amplitudestep < finalamplitudestep ) {
+    warning( "startamplitudestep must be larger than amplitudestep!" );
+    return Failed;
+  }
 
   if ( involtage < 0 || SpikeTrace[ involtage ] < 0 || SpikeEvents[ involtage ] < 0 ) {
     warning( "Invalid input voltage trace or missing input spikes!" );
@@ -141,6 +156,7 @@ int FindThreshold::main( void )
 
   // init:
   bool record = false;
+  bool search = true;
   DoneState state = Completed;
   Results.clear();
   Amplitudes.clear();
@@ -223,17 +239,26 @@ int FindThreshold::main( void )
 	       Results[Results.size()-1].SpikeCount >= minspikecount ) ||
 	     ( Results[Results.size()-2].SpikeCount >= minspikecount &&
 	       Results[Results.size()-1].SpikeCount < minspikecount ) ) ) {
-	record = true;
-	pause = measurepause;
-	count = 1;
-	Results.clear();
-	SpikeCount = 0;
-	TrialCount = 0;
-	Amplitudes.clear();
-	Amplitudes.reserve( repeats > 0 ? repeats : 1000 );
-	Latencies.clear();
-	Latencies.reserve( repeats > 0 ? repeats : 1000 );
-	openFiles( tf, tracekey, sf, spikekey, incurrent );
+	if ( amplitudestep <= finalamplitudestep ) {
+	  amplitudestep = finalamplitudestep;
+	  pause = measurepause;
+	  count = 1;
+	  Results.clear();
+	  SpikeCount = 0;
+	  TrialCount = 0;
+	  Amplitudes.clear();
+	  Amplitudes.reserve( repeats > 0 ? repeats : 1000 );
+	  Latencies.clear();
+	  Latencies.reserve( repeats > 0 ? repeats : 1000 );
+	  if ( search )
+	    search = false;
+	  else {
+	    record = true;
+	    openFiles( tf, tracekey, sf, spikekey, incurrent );
+	  }
+	}
+	else
+	  amplitudestep *= 0.5;
       }
     }
     TrialCount = count;
