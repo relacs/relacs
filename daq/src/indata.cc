@@ -178,7 +178,7 @@ void InData::copy( double time, SampleDataF &trace ) const
   int inx = index( time + trace.rangeFront() );
   if ( fabs( sampleInterval() - trace.stepsize() ) < 1.0e-8 ) {
     for ( int k=0; k < trace.size(); k++ ) {
-      if ( inx < size() )
+      if ( inx+k < size() )
 	trace[k] = operator[]( inx+k );
       else {
 	trace.resize( k );
@@ -208,7 +208,7 @@ void InData::copy( double time, SampleDataD &trace ) const
   int inx = index( time + trace.rangeFront() );
   if ( fabs( sampleInterval() - trace.stepsize() ) < 1.0e-8 ) {
     for ( int k=0; k < trace.size(); k++ ) {
-      if ( inx < size() )
+      if ( inx+k < size() )
 	trace[k] = operator[]( inx+k );
       else {
 	trace.resize( k );

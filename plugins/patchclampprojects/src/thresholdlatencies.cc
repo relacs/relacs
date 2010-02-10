@@ -51,7 +51,7 @@ ThresholdLatencies::ThresholdLatencies( void )
   addInteger( "repeats", "Repetitions of stimulus", 10, 0, 10000, 1 );
   addLabel( "Stimulus amplitudes" );
   addSelection( "amplitudesrc", "Use initial amplitude from", "custom|DC|threshold" );
-  addNumber( "startamplitude", "Initial amplitude of current stimulus", 1.0, 0.0, 1000.0, 0.01 ).setActivation( "amplitudesrc", "custom" );
+  addNumber( "startamplitude", "Initial amplitude of current stimulus", 0.1, 0.0, 1000.0, 0.01 ).setActivation( "amplitudesrc", "custom" );
   addNumber( "startamplitudestep", "Initial size of amplitude steps used for searching threshold", 0.1, 0.0, 1000.0, 0.001 );
   addNumber( "amplitudestep", "Final size of amplitude steps used for oscillating around threshold", 0.01, 0.0, 1000.0, 0.001 );
   addSelection( "adjust", "Adjust", "DC|none|stimulus|DC" );
@@ -248,7 +248,7 @@ int ThresholdLatencies::main( void )
 
     // analyze, plot, and save:
     analyze( involtage, incurrent, amplitude, dcamplitude,
-	     delay, duration, savetracetime );
+	     delay, duration, savetracetime, pause );
     if ( record ) {
       saveTrace( tf, tracekey, count-1 );
       saveSpikes( sf, spikekey, count-1 );
@@ -264,7 +264,8 @@ int ThresholdLatencies::main( void )
     }
     else if ( adjust == 2 ) {
       // change DC amplitude:
-      if ( Results.back().SpikeCount > 0 ) {
+      if ( Results.back().SpikeCount > 0 ||
+	   Results.back().BaseSpikeCount > 0 ) {
 	dcamplitude -= amplitudestep;
 	amplitude -= amplitudestep;
       }
@@ -340,7 +341,7 @@ int ThresholdLatencies::main( void )
 void ThresholdLatencies::analyze( int involtage, int incurrent,
 				  double amplitude, double dcamplitude,
 				  double delay, double duration,
-				  double savetime )
+				  double savetime, double pause )
 {
   if ( Results.size() >= 20 )
     Results.pop_front();
@@ -357,11 +358,13 @@ void ThresholdLatencies::analyze( int involtage, int incurrent,
     Results.back().DCAmplitude = dcamplitude;
     Results.back().Amplitude = amplitude;
   }
-  events( SpikeEvents[involtage] ).copy( events( SpikeEvents[involtage] ).signalTime() - delay,
-					 events( SpikeEvents[involtage] ).signalTime() + savetime - delay,
-					 events( SpikeEvents[involtage] ).signalTime(),
+  double sigtime = events( SpikeEvents[involtage] ).signalTime();
+  events( SpikeEvents[involtage] ).copy( sigtime - delay,
+					 sigtime + savetime - delay,
+					 sigtime,
 					 Results.back().Spikes );
   Results.back().SpikeCount = Results.back().Spikes.count( 0.0, savetime-delay );
+  Results.back().BaseSpikeCount = events( SpikeEvents[involtage] ).count( sigtime-pause, sigtime );
 
   if ( Results.back().SpikeCount > 0 ) {
     SpikeCount++;

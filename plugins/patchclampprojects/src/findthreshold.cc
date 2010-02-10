@@ -298,10 +298,9 @@ void FindThreshold::analyze( int involtage, int incurrent,
     Results.push_back( Data( savetime, trace( SpikeTrace[involtage] ) ) );
     Results.back().Amplitude = amplitude;
   }
-  events( SpikeEvents[involtage] ).copy( events( SpikeEvents[involtage] ).signalTime(),
-					 events( SpikeEvents[involtage] ).signalTime() + savetime,
-					 events( SpikeEvents[involtage] ).signalTime(),
-					 Results.back().Spikes );
+  double sigtime = events( SpikeEvents[involtage] ).signalTime();
+  events( SpikeEvents[involtage] ).copy( sigtime, sigtime + savetime,
+					 sigtime, Results.back().Spikes );
   Results.back().SpikeCount = Results.back().Spikes.count( skiptime, savetime );
 
   if ( Results.back().SpikeCount > 0 ) {

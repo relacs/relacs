@@ -42,7 +42,7 @@ namespace patchclampprojects {
 */
 
 
-  class ThresholdLatencies : public RePro, public ephys::Traces
+class ThresholdLatencies : public RePro, public ephys::Traces
 {
   Q_OBJECT
 
@@ -54,7 +54,7 @@ public:
   virtual void notify( void );
   void analyze( int involtage, int incurrent,
 		double amplitude, double dcamplitude,
-		double delay, double duration, double savetime );
+		double delay, double duration, double savetime, double pause );
   void plot( bool record, double duration );
   void openFiles( ofstream &tf, TableKey &tracekey,
 		  ofstream &sf, TableKey &spikekey, int incurrent );
@@ -81,6 +81,7 @@ protected:
     SampleDataF Current;
     EventData Spikes;
     int SpikeCount;
+    int BaseSpikeCount;
   };
   deque< Data > Results;
 
