@@ -97,6 +97,9 @@ libefishpunitmodel_la_LDFLAGS = \
 
 libefishpunitmodel_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/plugins/ephys/src/librelacsspikingneuron.la \
+    $(top_builddir)/plugins/ephys/src/libephysneuronmodels.la \
+    $(top_builddir)/plugins/efield/src/libefieldtraces.la \
     $(QT3_LIBS)
 
 $(libefishpunitmodel_la_OBJECTS) : moc_punitmodel.cc
@@ -130,6 +133,7 @@ libefishsam_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../efield/src/libefieldtraces.la \
+    $(builddir)/../../efield/src/libefieldeodtools.la \
     $(QT3_LIBS)
 
 $(libefishsam_la_OBJECTS) : moc_sam.cc

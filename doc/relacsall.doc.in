@@ -9,8 +9,8 @@
 
 \subsection relacslibrariesapi RELACS Libraries
 - <a href="numerics/index.html">numerics library</a>
-- <a href="daq/index.html">daq library</a>
 - <a href="options/index.html">options library</a>
+- <a href="daq/index.html">daq library</a>
 - <a href="datafile/index.html">datafile library</a>
 - <a href="widgets/index.html">widgets library</a>
 - <a href="plot/index.html">plot library</a>
@@ -24,6 +24,9 @@
 - <a href="auditory/index.html">auditory electrophysiology</a>
 - <a href="auditoryprojects/index.html">special projects for auditory electrophysiology</a>
 - <a href="patchclamp/index.html">patch-clamp</a>
+- <a href="patchclampprojects/index.html">special projects for patch-clamp</a>
+- <a href="efield/index.html">electric field measurements</a>
+- <a href="efish/index.html">recordings from the electrosensory system of weakly electric fish</a>
 - <a href="multielectrode/index.html">multi-electrode</a>
 - <a href="comedi/index.html">comedi device driver</a>
 - <a href="nieseries/index.html">NI E-series device driver</a>
