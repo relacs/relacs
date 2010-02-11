@@ -324,7 +324,10 @@ void FindThreshold::openFiles( ofstream &tf, TableKey &tracekey,
   else
     tf.open( addPath( "findthreshold-traces.dat" ).c_str(),
              ofstream::out | ofstream::app );
-  settings().save( tf, "# " );
+  tf << "# status:\n";
+  stimulusData().save( tf, "#   " );
+  tf << "# settings:\n";
+  settings().save( tf, "#   " );
   tf << '\n';
   tracekey.saveKey( tf, true, false );
   tf << '\n';
@@ -335,7 +338,10 @@ void FindThreshold::openFiles( ofstream &tf, TableKey &tracekey,
   else
     sf.open( addPath( "findthreshold-spikes.dat" ).c_str(),
              ofstream::out | ofstream::app );
-  settings().save( sf, "# " );
+  sf << "# status:\n";
+  stimulusData().save( sf, "#   " );
+  sf << "# settings:\n";
+  settings().save( sf, "#   " );
   sf << '\n';
   spikekey.saveKey( sf, true, false );
   sf << '\n';
@@ -379,6 +385,7 @@ void FindThreshold::saveSpikes( ofstream &sf, TableKey &spikekey, int index )
 void FindThreshold::saveData( bool dc )
 {
   TableKey datakey;
+  datakey.addLabel( "Data" );
   double asd = 0.0;
   double am = Amplitudes.mean( asd );
   datakey.addNumber( "amplitude", IUnit, "%7.2f", am );
@@ -390,6 +397,8 @@ void FindThreshold::saveData( bool dc )
   double lm = Latencies.mean( lsd );
   datakey.addNumber( "latency", "ms", "%6.2f", 1000.0*lm );
   datakey.addNumber( "s.d.", "ms", "%6.2f", 1000.0*lsd );
+  datakey.addLabel( "Traces" );
+  datakey.add( stimulusData() );
 
   ofstream df;
   if ( completeRuns() <= 0 ) {

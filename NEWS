@@ -1,8 +1,12 @@
 Version 0.9.6
 
+February, 2010
+  First successful application of the dynamic-clamp in a
+  real patch-clamp recording. Thank you Clemens!
+
 July, 2009
   Introduced DigitalIO device interface and 
-  got attenuator back into RELACS
+  got attenuator back into RELACS.
 
 March, 2009
   First working version of the dynamic clamp modules.

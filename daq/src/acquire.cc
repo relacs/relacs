@@ -323,6 +323,7 @@ int Acquire::applyOutTrace( OutData &signal ) const
     return -1;
   }
 
+  signal.setTrace( inx );
   return OutTraces[inx].apply( signal );  
 }
 

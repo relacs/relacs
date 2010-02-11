@@ -737,6 +737,13 @@ void RELACSWidget::setupOutTraces( void )
   }
 
   AQ->addOutTraces();
+
+  SF->lock();
+  SF->Options::erase( SF->TraceFlag );
+  for ( int k=0; k<AQ->outTracesSize(); k++ )
+    SF->addNumber( AQ->outTraceName( k ), AQ->outTraceName( k ), 0.0,
+		   -1.0e10, 1.0e10, 0.0001, AQ->outTrace( k ).unit() ).setFlags( SF->TraceFlag );
+  SF->unlock();
 }
 
 
@@ -903,6 +910,7 @@ int RELACSWidget::write( OutData &signal )
     AQ->readRestart( IL, ED );
     // update device menu:
     QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
+    SF->setNumber( AQ->outTraceName( signal.trace() ), signal.back() );
   }
   else
     printlog( "! failed to write signal: " + signal.errorText() );
@@ -946,6 +954,8 @@ int RELACSWidget::write( OutList &signal )
     AQ->readRestart( IL, ED );
     // update device menu:
     QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
+    for ( int k=0; k<signal.size(); k++ )
+      SF->setNumber( AQ->outTraceName( signal[k].trace() ), signal[k].back() );
   }
   else
     printlog( "! failed to write signals: " + signal.errorText() );
@@ -988,6 +998,7 @@ int RELACSWidget::directWrite( OutData &signal )
     AQ->readRestart( IL, ED );
     // update device menu:
     QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
+    SF->setNumber( AQ->outTraceName( signal.trace() ), signal.back() );
   }
   else
     printlog( "! failed to write signal: " + signal.errorText() );
@@ -1030,6 +1041,8 @@ int RELACSWidget::directWrite( OutList &signal )
     AQ->readRestart( IL, ED );
     // update device menu:
     QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
+    for ( int k=0; k<signal.size(); k++ )
+      SF->setNumber( AQ->outTraceName( signal[k].trace() ), signal[k].back() );
   }
   else
     printlog( "! failed to write signals: " + signal.errorText() );

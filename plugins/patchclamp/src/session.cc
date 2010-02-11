@@ -34,9 +34,12 @@ Session::Session( void )
 {
   boxLayout()->setDirection( QBoxLayout::TopToBottom );
 
-  PSW = new OptWidget( (QWidget*)this );
-  PSW->setSpacing( 4 );
-  PSW->setMargin( 4 );
+  CW = new OptWidget( (QWidget*)this );
+  CW->setSpacing( 1 );
+  CW->setMargin( 4 );
+  SW = new OptWidget( (QWidget*)this );
+  SW->setSpacing( 1 );
+  SW->setMargin( 4 );
 
   SessionButton = new QPushButton( "Cell found", this, "SessionButton" );
   SessionButton->setMinimumSize( SessionButton->sizeHint() );
@@ -72,8 +75,8 @@ void Session::config( void )
   mo.addNumber( "membraner", "Membrane resistance", -1.0, -1.0, 1000000.0, 1.0, "MOhm", "MOhm", "%.1f", MetaDataDisplay+MetaDataReset );
   mo.addNumber( "membranetau", "Membrane time constant", -1.0, -1.0, 100.0, 0.001, "s", "ms", "%.0f", MetaDataDisplay+MetaDataReset );
   mo.addNumber( "membranec", "Membrane capacitance", -1.0, -1.0, 1000000.0, 1.0, "pF", "pF", "%.0f", MetaDataDisplay+MetaDataReset );
-  mo.addNumber( "ithresh", "Current threshold", 0.0, -1000.0, 1000.0, 1.0, "nA", "nA", "%.3f", MetaDataDisplay+MetaDataReset );
-  mo.addNumber( "dc", "DC current", 0.0, -1000.0, 1000.0, 1.0, "nA", "nA", "%.3f", MetaDataDisplay+MetaDataReset );
+  mo.addNumber( "ithresh", "Current threshold", 0.0, -1000.0, 1000.0, 1.0, "nA", "nA", "%.3f", MetaDataDisplay+MetaDataReset+MetaDataReadOnly );
+  mo.addNumber( "dc", "DC current", 0.0, -1000.0, 1000.0, 1.0, "nA", "nA", "%.3f", MetaDataDisplay+MetaDataReset+MetaDataReadOnly );
 
   mo.addStyle( OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack, MetaDataDisplay );
   metaData().delSaveFlags( MetaData::dialogFlag() + MetaData::presetDialogFlag() );
@@ -86,9 +89,13 @@ void Session::config( void )
 
 void Session::initDevices( void )
 {
-  PSW->assign( &metaData( "Cell" ), MetaDataDisplay, MetaDataReadOnly, true, 
-	       0, metaDataMutex() );
-  PSW->setSpacing( 2 );
+  CW->assign( &metaData( "Cell" ), MetaDataDisplay, MetaDataReadOnly, true, 
+	      0, metaDataMutex() );
+
+  stimulusData().addText( "drugs", "Applied drugs", "" ).setFlags( 16 );
+  SW->assign( &stimulusData(), 16+stimulusDataTraceFlag(),
+	      stimulusDataTraceFlag(), true, 0, stimulusDataMutex() );
+
   updateGeometry();
 }
 
@@ -117,8 +124,14 @@ void Session::notifyMetaData( const string &section )
 {
   if ( section == "Cell" ) {
     metaData( "Cell" ).addFlags( MetaDataSave, Parameter::changedFlag() );
-    PSW->updateValues( OptWidget::changedFlag() );
+    CW->updateValues( OptWidget::changedFlag() );
   }
+}
+
+
+void Session::notifyStimulusData( void )
+{
+  SW->updateValues( OptWidget::changedFlag() );
 }
 
 

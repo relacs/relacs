@@ -56,13 +56,15 @@ public:
 
     /*! Notify about changes in the meta data. */
   virtual void notifyMetaData( const string &section );
+  virtual void notifyStimulusData( void );
 
 
  protected:
 
   QPushButton *SessionButton;
 
-  OptWidget *PSW;
+  OptWidget *CW;
+  OptWidget *SW;
 
   static const int MetaDataReadOnly = 1;
   static const int MetaDataDisplay = 2;

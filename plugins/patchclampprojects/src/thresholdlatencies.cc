@@ -388,7 +388,10 @@ void ThresholdLatencies::openFiles( ofstream &tf, TableKey &tracekey,
   else
     tf.open( addPath( "thresholdlatencies-traces.dat" ).c_str(),
              ofstream::out | ofstream::app );
-  settings().save( tf, "# " );
+  tf << "# status traces:\n";
+  stimulusData().save( tf, "#   " );
+  tf << "# settings:\n";
+  settings().save( tf, "#   " );
   tf << '\n';
   tracekey.saveKey( tf, true, false );
   tf << '\n';
@@ -399,7 +402,10 @@ void ThresholdLatencies::openFiles( ofstream &tf, TableKey &tracekey,
   else
     sf.open( addPath( "thresholdlatencies-spikes.dat" ).c_str(),
              ofstream::out | ofstream::app );
-  settings().save( sf, "# " );
+  sf << "# status:\n";
+  stimulusData().save( sf, "#   " );
+  sf << "# settings:\n";
+  settings().save( sf, "#   " );
   sf << '\n';
   spikekey.saveKey( sf, true, false );
   sf << '\n';
@@ -445,6 +451,7 @@ void ThresholdLatencies::saveSpikes( ofstream &sf, TableKey &spikekey, int index
 void ThresholdLatencies::saveData( bool dc )
 {
   TableKey datakey;
+  datakey.addLabel( "Data" );
   double basd = 0.0;
   double bam = DCAmplitudes.mean( basd );
   datakey.addNumber( "dcamplitude", IUnit, "%7.2f", bam );
@@ -460,6 +467,8 @@ void ThresholdLatencies::saveData( bool dc )
   double lm = Latencies.mean( lsd );
   datakey.addNumber( "latency", "ms", "%6.2f", 1000.0*lm );
   datakey.addNumber( "s.d.", "ms", "%6.2f", 1000.0*lsd );
+  datakey.addLabel( "Traces" );
+  datakey.add( stimulusData() );
 
   ofstream df;
   if ( completeRuns() <= 0 ) {

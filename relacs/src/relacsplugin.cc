@@ -543,6 +543,12 @@ const Options &RELACSPlugin::stimulusData( void ) const
 }
 
 
+int RELACSPlugin::stimulusDataTraceFlag( void ) const
+{
+  return RW->SF->TraceFlag;
+}
+
+
 void RELACSPlugin::lockStimulusData( void ) const
 {
   RW->SF->lock();

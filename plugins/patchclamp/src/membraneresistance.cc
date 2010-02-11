@@ -53,6 +53,7 @@ MembraneResistance::MembraneResistance( void )
   addBoolean( "nossfit", "Fix steady-state potential for fit", true );
   addBoolean( "plotstdev", "Plot standard deviation of membrane potential", true );
   addBoolean( "setdata", "Set results to the session variables", true );
+  addTypeStyle( OptWidget::Bold, Parameter::Label );
 
   // plot:
   P.lock();
@@ -413,6 +414,8 @@ void MembraneResistance::saveData( void )
   datakey.addNumber( "R", "MOhm", "%6.1f", RMOff );
   datakey.addNumber( "C", "pF", "%6.1f", CMOff );
   datakey.addNumber( "tau", "ms", "%6.1f", TauMOff );
+  datakey.addLabel( "Traces" );
+  datakey.add( stimulusData() );
 
   ofstream df;
   if ( completeRuns() <= 0 ) {
@@ -432,7 +435,10 @@ void MembraneResistance::saveTrace( void )
   ofstream df( addPath( "membraneresistance-trace.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
 
-  settings().save( df, "# " );
+  df << "# status:\n";
+  stimulusData().save( df, "#   " );
+  df << "# settings:\n";
+  settings().save( df, "#   " );
   df << '\n';
 
   TableKey datakey;
@@ -461,7 +467,10 @@ void MembraneResistance::saveExpFit( void )
   ofstream df( addPath( "membraneresistance-expfit.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
 
-  settings().save( df, "# " );
+  df << "# status:\n";
+  stimulusData().save( df, "#   " );
+  df << "# settings:\n";
+  settings().save( df, "#   " );
   df << '\n';
 
   TableKey datakey;

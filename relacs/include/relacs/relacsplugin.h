@@ -496,15 +496,23 @@ protected:
         to disk via SaveFiles. */
   bool saving( void ) const;
 
-    /*! The options that are stored with each stimulus in the trigger file. */
+    /*! The options that are stored with each stimulus in the trigger file.
+        \sa stimulusDataTraceFlag(), lockStimulusData() */
   Options &stimulusData( void );
-    /*! The options that are stored with each stimulus in the trigger file. */
+    /*! The options that are stored with each stimulus in the trigger file.
+        \sa stimulusDataTraceFlag(), lockStimulusData() */
   const Options &stimulusData( void ) const;
-    /*! Lock the stimulus data mutex. */
+    /*! Flag that marks output traces in stimulusData().
+        \sa stimulusData(), lockStimulusData() */
+  int stimulusDataTraceFlag( void ) const;
+    /*! Lock the stimulus data mutex.
+        \sa unlockStimulusData(), stimulusDataMutex(), stimulusData() */
   void lockStimulusData( void ) const;
-    /*! Unlock the stimulus data mutex. */
+    /*! Unlock the stimulus data mutex.
+        \sa lockStimulusData(), stimulusDataMutex(), stimulusData() */
   void unlockStimulusData( void ) const;
-    /*! The mutex for the stimulus data. */
+    /*! The mutex for the stimulus data.
+        \sa lockStimulusData(), stimulusData() */
   QMutex *stimulusDataMutex( void );
 
     /*! Return the MetaData options from section \a section.

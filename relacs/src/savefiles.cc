@@ -485,8 +485,9 @@ void SaveFiles::saveStimulus( void )
     // stimulus:
     StimulusKey.save( *SF, 1000.0*Stimuli[0].Delay );
     for ( int k=0; k<RW->AQ->outTracesSize(); k++ ) {
-      for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
-	const Attenuate *att = RW->AQ->outTraceAttenuate( k );
+      const Attenuate *att = RW->AQ->outTraceAttenuate( k );
+      unsigned int j=0;
+      for ( j=0; j<Stimuli.size(); j++ ) {
 	if ( Stimuli[j].Device == RW->AQ->outTrace( k ).device() &&
 	     Stimuli[j].Channel == RW->AQ->outTrace( k ).channel() ) {
 	  StimulusKey.save( *SF, 0.001*Stimuli[j].SampleRate );
@@ -497,17 +498,18 @@ void SaveFiles::saveStimulus( void )
 	      StimulusKey.save( *SF, Stimuli[j].CarrierFreq );
 	  }
 	  StimulusKey.save( *SF, Stimuli[j].Ident );
+	  break;
 	}
-	else {
+      }
+      if ( j >= Stimuli.size() ) {
+	StimulusKey.save( *SF, "" );
+	StimulusKey.save( *SF, "" );
+	if ( att != 0 ) {
 	  StimulusKey.save( *SF, "" );
-	  StimulusKey.save( *SF, "" );
-	  if ( att != 0 ) {
+	  if ( ! att->frequencyName().empty() )
 	    StimulusKey.save( *SF, "" );
-	    if ( ! att->frequencyName().empty() )
-	      StimulusKey.save( *SF, "" );
-	  }
-	  StimulusKey.save( *SF, "" );
 	}
+	StimulusKey.save( *SF, "" );
       }
     }
     *SF << endl;

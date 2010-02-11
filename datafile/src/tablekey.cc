@@ -171,6 +171,13 @@ Parameter &TableKey::insertLabel( const string &ident, const string &atident,
 }
 
 
+void TableKey::add( const Options &opts, int selectflag )
+{
+  Opt.append( opts, selectflag );
+  init();
+}
+
+
 int TableKey::column( const string &pattern ) const
 {
   // split pattern:

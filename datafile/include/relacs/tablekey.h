@@ -142,6 +142,10 @@ public:
   Parameter &insertLabel( const string &ident, const string &atident="",
 			  int flags=0 );
 
+    /*! Adds all parameter from \a opts to this as specified by \a selectflag.
+       \sa Options::append(const Options&, int) */
+  void add( const Options &opts, int selectflag=0 );
+
     /*! Returns the column whose identifier string matches \a pattern.
         The first column is 0. */
   int column( const string &pattern ) const;

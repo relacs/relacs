@@ -86,6 +86,9 @@ public:
     /*! Flag for the modes of events, indicating that their mean quality should be saved. */
   static const int SaveMeanQuality = 0x0400;
 
+    /*! Flag for the Options to mark the last values of the output traces. */
+  static const int TraceFlag = 32768;
+
   SaveFiles( RELACSWidget *rw, int height,
 	     QWidget *parent=0, const char *name=0 );
   ~SaveFiles( void );
