@@ -45,33 +45,33 @@ public:
   EODTools( void );
 
     /*! Detect eod peaks in \a data. */
-  void eodPeaks( const InData &data, double time, double duration,
+  void eodPeaks( const InData &data, double tbegin, double tend,
 		 double threshold, EventData &peaks );
     /*! Detect eod troughs in \a data. */
-  void eodTroughs( const InData &data, double time, double duration,
+  void eodTroughs( const InData &data, double tbegin, double tend,
 		   double threshold, EventData &troughs );
     /*! Mean size of eod troughs. */
-  double meanTroughs( const InData &data, double time, double duration,
+  double meanTroughs( const InData &data, double tbegin, double tend,
 		      double threshold );
     /*! Mean eod amplitude. */
   double eodAmplitude( const InData &data, const EventData &eode,
-		       double time, double duration );
+		       double tbegin, double tend );
 
     /*! Mean values of the upper and lower peaks and troughs of a beat. */
   void beatPeakTroughs( const InData &eodd, const EventData &bpe,
 			const EventData &bte,
-			double time, double duration, double offset,
+			double tbegin, double tend, double offset,
 			double &upperpeak, double &uppertrough,
 			double &lowerpeak, double &lowertrough );
     /*! Maximum and minimum amplitude of a beat. */
   void beatAmplitudes( const InData &eodd, const EventData &bpe,
 		       const EventData &bte,
-		       double time, double duration, double offset,
+		       double tbegin, double tend, double offset,
 		       double &min, double &max );
     /*! The contrast of the beat. */
   double beatContrast( const InData &eodd, const EventData &bpe,
 		       const EventData &bte,
-		       double time, double duration, double offset );
+		       double tbegin, double tend, double offset );
 
   /* for nerve potential analysis: */
   template < typename DataIter, typename TimeIter >

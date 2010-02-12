@@ -118,7 +118,7 @@ int CalibEField::main( void )
     // mean EOD amplitude:
     double fishupmax = ee.meanSize( ee.back() - 0.5 );
     double fishdownmax = fabs( meanTroughs( trace( LocalEODTrace[0] ),
-					    ee.back() - 0.5, 0.5,
+					    ee.back() - 0.5, ee.back(),
 					    0.2 * fishupmax ) );
     fishamplitude = fishupmax > fishdownmax ? fishupmax : fishdownmax;
     Str s = "true fish EOD amplitude = " + Str( fishamplitude );
@@ -410,7 +410,7 @@ void CalibEField::analyze( double duration, double maxcontrast,
     double lowerpeak;
     double lowertrough;
     beatPeakTroughs( trace( LocalEODTrace[0] ), bpe, bte,
-		     bpe.signalTime(), duration, offset,
+		     bpe.signalTime(), bpe.signalTime()+duration, offset,
 		     upperpeak, uppertrough, lowerpeak, lowertrough );
     upperpeak = fabs( upperpeak );
     uppertrough = fabs( uppertrough );

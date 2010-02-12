@@ -100,15 +100,19 @@ public:
 };
 
 
-void EODTools::eodPeaks( const InData &data, double time, double duration,
+void EODTools::eodPeaks( const InData &data, double tbegin, double tend,
 			 double threshold, EventData &peaks )
 {
-  InDataIterator first = data.begin() + time;
-  InDataIterator last = data.begin() + time + duration;
-  peaks.reserve( long( duration * 10000.0 ) );
+  InDataIterator first = data.begin() + tbegin;
+  if ( first  < data.begin() )
+    first = data.begin();
+  InDataIterator last = data.begin() + tend;
+  if ( last  > data.end() )
+    last = data.end();
+  peaks.reserve( long( (tend-tbegin) * 10000.0 ) );
   AcceptEODPeaks< InDataIterator, InDataTimeIterator > accept;
   Detector< InDataIterator, InDataTimeIterator > D;
-  D.init( first, last, data.timeBegin() + time );
+  D.init( first, last, data.timeBegin() + tbegin );
   D.peak( first, last, peaks, threshold,
 	  threshold, threshold,
 	  accept  );
@@ -154,28 +158,30 @@ public:
 };
 
 
-void EODTools::eodTroughs( const InData &data, double time, double duration,
+void EODTools::eodTroughs( const InData &data, double tbegin, double tend,
 			   double threshold, EventData &troughs )
 {
-  InDataIterator first = data.begin() + time;
-  InDataIterator last = data.begin() + time + duration;
+  InDataIterator first = data.begin() + tbegin;
+  if ( first  < data.begin() )
+    first = data.begin();
+  InDataIterator last = data.begin() + tend;
   if ( last  > data.end() )
     last = data.end();
-  troughs.reserve( long( duration * 10000.0 ) );
+  troughs.reserve( long( (tend-tbegin) * 10000.0 ) );
   troughs.setSource( 1 );
   AcceptEODTroughs accept;
   Detector< InDataIterator, InDataTimeIterator > D;
-  D.init( first, last, data.timeBegin() + time );
+  D.init( first, last, data.timeBegin() + tbegin );
   D.trough( first, last, troughs, threshold,
 	    threshold, threshold, accept );
 }
 
 
-double EODTools::meanTroughs( const InData &data, double time, double duration,
+double EODTools::meanTroughs( const InData &data, double tbegin, double tend,
 			      double threshold )
 {
   EventData troughs( 0, true );
-  eodTroughs( data, time, duration, threshold, troughs );
+  eodTroughs( data, tbegin, tend, threshold, troughs );
   double size = 0.0;
   for ( int k = 0; k<troughs.size(); k++ ) {
     size += ( troughs.eventSize( k ) - size )/(k+1);
@@ -186,36 +192,36 @@ double EODTools::meanTroughs( const InData &data, double time, double duration,
 
 
 double EODTools::eodAmplitude( const InData &eodd, const EventData &eode,
-			       double time, double duration )
+			       double tbegin, double tend )
 {
-  double up = eode.meanSize( time, duration );
-  double down = meanTroughs( eodd, time, duration, 0.2 * up );
+  double up = eode.meanSize( tbegin, tend );
+  double down = meanTroughs( eodd, tbegin, tend, 0.2 * up );
   return up - down;
 }
 
 
 void EODTools::beatPeakTroughs( const InData &eodd, const EventData &bpe,
 				const EventData &bte,
-				double time, double duration, double offset,
+				double tbegin, double tend, double offset,
 				double &upperpeak, double &uppertrough,
 				double &lowerpeak, double &lowertrough )
 {
   // mean upper beat peaks:
-  upperpeak = bpe.meanSize( time + offset, duration - 2.0 * offset );
+  upperpeak = bpe.meanSize( tbegin + offset, tend - offset );
   
   // mean upper beat troughs:
-  uppertrough = bte.meanSize( time + offset, duration - 2.0 * offset );
+  uppertrough = bte.meanSize( tbegin + offset, tend - offset );
   
   // EOD troughs:
   EventData troughs( 0, true );
-  eodTroughs( eodd, time, duration,
+  eodTroughs( eodd, tbegin, tend,
 	      0.2 * 0.5 * ( upperpeak + uppertrough ), troughs );
 
   // EOD lower beat:
   double threshold = 0.3 * fabs( upperpeak - uppertrough );
-  int n = bpe.count( time, duration );
-  if ( n < duration * 100.0 )
-    n = (int)(duration * 100.0);
+  int n = bpe.count( tbegin, tend );
+  if ( n < (tend-tbegin) * 100.0 )
+    n = (int)((tend-tbegin) * 100.0);
   if ( n < 1 )
     n = 1;
   EventData beatpeaks( 10 * n, true );
@@ -234,23 +240,23 @@ void EODTools::beatPeakTroughs( const InData &eodd, const EventData &bpe,
 		accept );
 
   // mean lower beat peaks:
-  lowerpeak = beatpeaks.meanSize( time + offset, duration - 2.0 * offset );
+  lowerpeak = beatpeaks.meanSize( tbegin + offset, tend - offset );
   
   // mean lower beat troughs:
-  lowertrough = beattroughs.meanSize( time + offset, duration - 2.0 * offset );
+  lowertrough = beattroughs.meanSize( tbegin + offset, tend - offset );
 
 }
 
 
 void EODTools::beatAmplitudes( const InData &eodd, const EventData &bpe,
 			       const EventData &bte,
-			       double time, double duration, double offset,
+			       double tbegin, double tend, double offset,
 			       double &min, double &max )
 {
   double up, ut;
   double lp, lt;
 
-  beatPeakTroughs( eodd, bpe, bte, time, duration, offset,
+  beatPeakTroughs( eodd, bpe, bte, tbegin, tend, offset,
 		   up, ut, lp, lt );
   max = up - lp;
   min = ut - lt;
@@ -259,12 +265,12 @@ void EODTools::beatAmplitudes( const InData &eodd, const EventData &bpe,
 
 double EODTools::beatContrast( const InData &eodd, const EventData &bpe,
 			       const EventData &bte,
-			       double time, double duration, double offset )
+			       double tbegin, double tend, double offset )
 {
   double up, ut;
   double lp, lt;
 
-  beatPeakTroughs( eodd, bpe, bte, time, duration, offset,
+  beatPeakTroughs( eodd, bpe, bte, tbegin, tend, offset,
 		   up, ut, lp, lt );
   double max = up - lp;
   double min = ut - lt;

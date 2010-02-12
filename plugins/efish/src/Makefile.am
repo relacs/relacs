@@ -32,7 +32,6 @@ libefishbaselineactivity_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../efield/src/libefieldtraces.la \
-    $(builddir)/../../efield/src/libefieldeodtools.la \
     $(QT3_LIBS)
 
 $(libefishbaselineactivity_la_OBJECTS) : moc_baselineactivity.cc

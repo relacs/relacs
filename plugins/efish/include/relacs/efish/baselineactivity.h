@@ -78,8 +78,7 @@ PUnitSearch writes some information about baseline activity if \c repeats>0.
 class BaselineActivity
   : public RePro,
     public ephys::Traces,
-    public efield::Traces,
-    public efield::EODTools
+    public efield::Traces
 {
   Q_OBJECT
 
@@ -143,7 +142,7 @@ private:
   double PValue[MaxSpikeTraces];
 
   Detector< InData::const_iterator, InDataTimeIterator > D;
-  AcceptEOD< InData::const_iterator, InDataTimeIterator > NerveAcceptEOD;
+  efield::EODTools::AcceptEOD< InData::const_iterator, InDataTimeIterator > NerveAcceptEOD;
 
   double EODPeriod;
   double EODRate;
