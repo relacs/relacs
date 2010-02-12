@@ -68,7 +68,7 @@ fi
 echo ""
 echo "Successfully checked RELACS!"
 echo "Upload the release to sourceforge using"
-echo "  rsync -avP -e ssh relacs-0.9.6.tar.gz janbenda@frs.sourceforge.net:uploads/"
+echo "  rsync -avP -e ssh relacs-0.9.6.tar.gz janbenda,relacs@frs.sourceforge.net:/home/frs/project/r/re/relacs/relacs/"
 echo ""
 
 # configure and check everything for the libraries:
