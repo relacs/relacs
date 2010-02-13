@@ -388,8 +388,8 @@ void FindThreshold::saveData( bool dc )
   datakey.addLabel( "Data" );
   double asd = 0.0;
   double am = Amplitudes.mean( asd );
-  datakey.addNumber( "amplitude", IUnit, "%7.2f", am );
-  datakey.addNumber( "s.d.", IUnit, "%7.2f", asd );
+  datakey.addNumber( "amplitude", IUnit, "%7.3f", am );
+  datakey.addNumber( "s.d.", IUnit, "%7.3f", asd );
   datakey.addNumber( "trials", "1", "%6.0f", (double)TrialCount );
   datakey.addNumber( "spikes", "1", "%6.0f", (double)SpikeCount );
   datakey.addNumber( "prob", "%", "%5.1f", 100.0*(double)SpikeCount/(double)TrialCount );

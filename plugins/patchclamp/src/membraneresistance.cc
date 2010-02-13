@@ -128,7 +128,7 @@ int MembraneResistance::main( void )
 
   // init:
   DoneState state = Completed;
-  MeanTrace = SampleDataD( -0.5*Duration, 2.0*Duration, 1/samplerate, 0.0 );
+  MeanTrace = SampleDataF( -0.5*Duration, 2.0*Duration, 1/samplerate, 0.0 );
   SquareTrace = MeanTrace;
   StdevTrace = MeanTrace;
   if ( incurrent >= 0 )
@@ -151,8 +151,8 @@ int MembraneResistance::main( void )
   RMOff = 0.0;
   CMOff = 0.0;
   TauMOff = 0.0;
-  ExpOn = SampleDataD( 0.0, Duration, 1/samplerate, 0.0 );
-  ExpOff = SampleDataD( Duration, 2.0*Duration, 1/samplerate, 0.0 );
+  ExpOn = SampleDataF( 0.0, Duration, 1/samplerate, 0.0 );
+  ExpOff = SampleDataF( Duration, 2.0*Duration, 1/samplerate, 0.0 );
 
   // plot trace:
   plotToggle( true, true, 2.0*Duration, 0.5*Duration );
@@ -359,11 +359,11 @@ void MembraneResistance::plot( void )
 	      " pF,  tau=" + Str( TauMOn, 0, 1, 'f' ) + " ms" );
   P.plotVLine( 0, Plot::White, 2 );
   P.plotVLine( 1000.0*Duration, Plot::White, 2 );
-  P.plot( MeanTrace, 1000.0, Plot::Red, 3, Plot::Solid );
   if ( boolean( "plotstdev" ) ) {
-      P.plot( MeanTrace+StdevTrace, 1000.0, Plot::Orange, 1, Plot::Solid );
-      P.plot( MeanTrace-StdevTrace, 1000.0, Plot::Orange, 1, Plot::Solid );
-    }
+    P.plot( MeanTrace+StdevTrace, 1000.0, Plot::Orange, 1, Plot::Solid );
+    P.plot( MeanTrace-StdevTrace, 1000.0, Plot::Orange, 1, Plot::Solid );
+  }
+  P.plot( MeanTrace, 1000.0, Plot::Red, 3, Plot::Solid );
   P.plot( ExpOn, 1000.0, Plot::Yellow, 2, Plot::Solid );
   P.plot( ExpOff, 1000.0, Plot::Yellow, 2, Plot::Solid );
   P.unlock();
@@ -391,9 +391,9 @@ void MembraneResistance::saveData( void )
 {
   TableKey datakey;
   datakey.addLabel( "Stimulus" );
-  datakey.addNumber( "dI", IUnit, "%6.1f", Amplitude );
-  datakey.addNumber( "dIm", IUnit, "%6.1f", TrueAmplitude );
-  datakey.addNumber( "IDC", IUnit, "%6.1f", DCCurrent );
+  datakey.addNumber( "dI", IUnit, "%6.3f", Amplitude );
+  datakey.addNumber( "dIm", IUnit, "%6.3f", TrueAmplitude );
+  datakey.addNumber( "IDC", IUnit, "%6.13", DCCurrent );
   datakey.addNumber( "duration", "ms", "%6.1f", 1000.0*Duration );
   datakey.addLabel( "Rest" );
   datakey.addNumber( "Vrest", VUnit, "%6.1f", VRest );
@@ -442,11 +442,11 @@ void MembraneResistance::saveTrace( void )
   df << '\n';
 
   TableKey datakey;
-  datakey.addNumber( "t", "ms", "%6.1f" );
+  datakey.addNumber( "t", "ms", "%6.2f" );
   datakey.addNumber( "V", VUnit, "%6.2f" );
   datakey.addNumber( "s.d.", VUnit, "%6.2f" );
   if ( ! MeanCurrent.empty() )
-    datakey.addNumber( "I", IUnit, "%6.2f" );
+    datakey.addNumber( "I", IUnit, "%6.3f" );
   datakey.saveKey( df );
 
   for ( int k=0; k<MeanTrace.size(); k++ ) {

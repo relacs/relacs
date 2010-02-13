@@ -93,8 +93,8 @@ protected:
   double RMOff;
   double CMOff;
   double TauMOff;
-  SampleDataD ExpOn;
-  SampleDataD ExpOff;
+  SampleDataF ExpOn;
+  SampleDataF ExpOff;
 
 };
 

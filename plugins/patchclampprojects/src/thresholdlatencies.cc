@@ -382,7 +382,7 @@ void ThresholdLatencies::openFiles( ofstream &tf, TableKey &tracekey,
   tracekey.addNumber( "t", "ms", "%7.2f" );
   tracekey.addNumber( "V", VUnit, "%6.1f" );
   if ( incurrent >= 0 )
-    tracekey.addNumber( "I", IUnit, "%6.1f" );
+    tracekey.addNumber( "I", IUnit, "%6.3f" );
   if ( completeRuns() <= 0 )
     tf.open( addPath( "thresholdlatencies-traces.dat" ).c_str() );
   else
@@ -454,12 +454,12 @@ void ThresholdLatencies::saveData( bool dc )
   datakey.addLabel( "Data" );
   double basd = 0.0;
   double bam = DCAmplitudes.mean( basd );
-  datakey.addNumber( "dcamplitude", IUnit, "%7.2f", bam );
-  datakey.addNumber( "s.d.", IUnit, "%7.2f", basd );
+  datakey.addNumber( "dcamplitude", IUnit, "%7.3f", bam );
+  datakey.addNumber( "s.d.", IUnit, "%7.3f", basd );
   double asd = 0.0;
   double am = Amplitudes.mean( asd );
-  datakey.addNumber( "amplitude", IUnit, "%7.2f", am );
-  datakey.addNumber( "s.d.", IUnit, "%7.2f", asd );
+  datakey.addNumber( "amplitude", IUnit, "%7.3f", am );
+  datakey.addNumber( "s.d.", IUnit, "%7.3f", asd );
   datakey.addNumber( "trials", "1", "%6.0f", (double)TrialCount );
   datakey.addNumber( "spikes", "1", "%6.0f", (double)SpikeCount );
   datakey.addNumber( "prob", "%", "%5.1f", 100.0*(double)SpikeCount/(double)TrialCount );

@@ -8,7 +8,8 @@ pluginlib_LTLIBRARIES = \
     libpatchclampsimple.la \
     libpatchclampsinglestimulus.la \
     libpatchclampmembraneresistance.la \
-    libpatchclampsetdc.la
+    libpatchclampsetdc.la \
+    libpatchclampvicurve.la
 
 
 
@@ -169,12 +170,44 @@ libpatchclampsetdc_la_include_HEADERS = $(HEADER_PATH)/setdc.h
 
 
 
+libpatchclampvicurve_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/ephys/include \
+    -I$(srcdir)/../include \
+    $(QT3_CPPFLAGS)
+
+libpatchclampvicurve_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT3_LDFLAGS)
+
+libpatchclampvicurve_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/plugins/ephys/src/libephystraces.la \
+    $(QT3_LIBS)
+
+$(libpatchclampvicurve_la_OBJECTS) : moc_vicurve.cc
+
+libpatchclampvicurve_la_SOURCES = vicurve.cc
+
+libpatchclampvicurve_la_includedir = $(pkgincludedir)/patchclamp
+
+libpatchclampvicurve_la_include_HEADERS = $(HEADER_PATH)/vicurve.h
+
+
+
 check_PROGRAMS = \
     linktest_libpatchclampsession_la \
     linktest_libpatchclampsimple_la \
     linktest_libpatchclampsinglestimulus_la \
     linktest_libpatchclampmembraneresistance_la \
-    linktest_libpatchclampsetdc_la
+    linktest_libpatchclampsetdc_la \
+    linktest_libpatchclampvicurve_la
 
 linktest_libpatchclampsession_la_SOURCES = linktest.cc
 linktest_libpatchclampsession_la_LDADD = libpatchclampsession.la
@@ -190,6 +223,9 @@ linktest_libpatchclampmembraneresistance_la_LDADD = libpatchclampmembraneresista
 
 linktest_libpatchclampsetdc_la_SOURCES = linktest.cc
 linktest_libpatchclampsetdc_la_LDADD = libpatchclampsetdc.la
+
+linktest_libpatchclampvicurve_la_SOURCES = linktest.cc
+linktest_libpatchclampvicurve_la_LDADD = libpatchclampvicurve.la
 
 TESTS = $(check_PROGRAMS)
 
