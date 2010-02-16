@@ -46,7 +46,10 @@ VICurve::VICurve( void )
   addNumber( "imin", "Minimum injected current", -1.0, -1000.0, 1000.0, 0.001 );
   addNumber( "imax", "Maximum injected current", 1.0, -1000.0, 1000.0, 0.001 );
   addNumber( "istep", "Minimum step-size of current", 0.001, 0.001, 1000.0, 0.001 );
-  addSelection( "ishuffle", "Order of currents", RangeLoop::sequenceStrings() );
+  addBoolean( "userm", "Use membrane resistance for estimating istep from vstep", false );
+  addNumber( "vstep", "Minimum step-size of voltage", 0.001, 0.001, 1000.0, 0.001 ).setActivation( "userm", "true" );
+  addSelection( "shuffle", "Sequence of currents", RangeLoop::sequenceStrings() );
+  addSelection( "ishuffle", "Initial sequence of currents for first repetition", RangeLoop::sequenceStrings() );
   addInteger( "iincrement", "Initial increment for currents", 0, 0, 1000, 1 );
   addInteger( "singlerepeat", "Number of immediate repetitions of a single stimulus", 1, 1, 10000, 1 );
   addInteger( "blockrepeat", "Number of repetitions of a fixed intensity increment", 10, 1, 10000, 1 );
@@ -80,6 +83,7 @@ void VICurve::notify( void )
   if ( involtage >= 0 && SpikeTrace[involtage] >= 0 ) {
     VUnit = trace( SpikeTrace[involtage] ).unit();
     VFac = Parameter::changeUnit( 1.0, VUnit, "mV" );
+    setUnit( "vstep", VUnit );
     setUnit( "vmin", VUnit );
   }
 
@@ -109,6 +113,9 @@ int VICurve::main( void )
   double imin = number( "imin" );
   double imax = number( "imax" );
   double istep = number( "istep" );
+  bool userm = boolean( "userm" );
+  double vstep = number( "vstep" );
+  RangeLoop::Sequence shuffle = RangeLoop::Sequence( index( "shuffle" ) );
   RangeLoop::Sequence ishuffle = RangeLoop::Sequence( index( "ishuffle" ) );
   int iincrement = integer( "iincrement" );
   int singlerepeat = integer( "singlerepeat" );
@@ -140,6 +147,18 @@ int VICurve::main( void )
     warning( "Invalid output current trace!" );
     return Failed;
   }
+  if ( userm ) {
+    double rm = metaData( "Cell" ).number( "membraner", "MOhm" );
+    if ( rm <= 0 )
+      warning( "Membrane resistance was not measured yet!" );
+    else {
+      Header.addNumber( "rm", rm, "MOhm" );
+      vstep = Parameter::changeUnit( vstep, VUnit, "mV" ); 
+      double ifac = Parameter::changeUnit( 1.0, "nA", IUnit ); 
+      istep = ifac*vstep/rm;
+    }
+  }
+  Header.addNumber( "istep", istep, IUnit );
 
   // don't print repro message:
   noMessage();
@@ -157,6 +176,7 @@ int VICurve::main( void )
     Range.setIncrement( iincrement );
   Range.setSequence( ishuffle );
   bool needupdate = false;
+  int prevrepeat = 0;
   Results.clear();
   Results.resize( Range.size(), Data( delay, duration, 1.0/samplerate,
 				      incurrent >= 0 ) );
@@ -180,6 +200,14 @@ int VICurve::main( void )
   // write stimulus:
   sleep( pause );
   for ( Range.reset(); ! Range && softStop() == 0; ++Range ) {
+
+    if ( prevrepeat < Range.currentRepetition() ) {
+      if ( Range.currentRepetition() == 1 ) {
+	Range.setSequence( shuffle );
+	needupdate = true;
+      }
+      prevrepeat = Range.currentRepetition();
+    }
 
     if ( needupdate ) {
       Range.update();
@@ -304,6 +332,7 @@ void VICurve::saveData( void )
   ofstream df( addPath( "vicurve-data.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
 
+  Header.save( df, "# " );
   df << "# status:\n";
   stimulusData().save( df, "#   " );
   df << "# settings:\n";
@@ -354,6 +383,7 @@ void VICurve::saveTrace( void )
   ofstream df( addPath( "vicurve-trace.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
 
+  Header.save( df, "# " );
   df << "# status:\n";
   stimulusData().save( df, "#   " );
   df << "# settings:\n";

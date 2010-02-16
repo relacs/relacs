@@ -92,6 +92,7 @@ protected:
   };
   vector< Data > Results;
   RangeLoop Range;
+  Options Header;
 
 };
 
