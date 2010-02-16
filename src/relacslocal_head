@@ -111,7 +111,6 @@ for i; do
           shift
         fi ;;
     -c) COREDUMP="yes"
-        ulimit -c unlimited 
         USELOGFILE="yes"
         shift ;;
     -v) VALGRIND="yes"

@@ -119,6 +119,11 @@ if ! test -f "$RELACSEXEC"; then
     exit 1
 fi
 
+# switch on coredumps:
+if test "x$COREDUMP" = "xyes"; then
+  ulimit -c unlimited 
+fi
+
 # run RELACS:
 if test "x$USELOGFILE" = "xyes" && test "x$LOGFILE" != "x"; then
 

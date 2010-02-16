@@ -107,7 +107,7 @@ void FIPhaseLocking::saveSpikes( void )
     df << "#         index0: " << n++ << '\n';
     df << "#      intensity: " << Results[k].Intensity << "dB SPL\n";
     // df << "# carrier frequency: " << Results[k].CarrierFrequency << "Hz\n";
-    Results[k].Spikes.saveText( df, 1000.0, 7, 1, 'f', 1, "-0" );
+    Results[k].Spikes.saveText( df, 1000.0, 8, 2, 'f', 1, "-0" );
     if( Results[k].Spikes.empty() ) {
       df << "-0\n";
     }

@@ -1019,6 +1019,7 @@ void FICurve::analyze( vector< FIData > &results )
 RePro::DoneState FICurve::next( vector< FIData > &results, bool msg ) 
 {
   if ( softStop() > 1+FICurveStops ) {
+    printlog( "exit f-I curve immediately by softStop()=" + Str( softStop() ) + ", FICurveStops=" + Str( FICurveStops ) );
     return Completed;
   }
 
@@ -1038,6 +1039,7 @@ RePro::DoneState FICurve::next( vector< FIData > &results, bool msg )
     ++IntensityRange;
 
     if ( IntensityRange.finishedBlock() && softStop() > FICurveStops ) {
+      printlog( "exit f-I curve after block by softStop()=" + Str( softStop() ) + ", FICurveStops=" + Str( FICurveStops ) );
       return Completed;
     }
 
@@ -1110,10 +1112,11 @@ RePro::DoneState FICurve::next( vector< FIData > &results, bool msg )
 
       IntensityRange.update();
     }
-    if ( ! IntensityRange ) {
+
+    if ( ! IntensityRange )
       Intensity = *IntensityRange;
-    }
     else {
+      printlog( "exit f-I curve because of no remaining valid intensity." );
       return Completed;
     }
 
