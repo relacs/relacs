@@ -115,12 +115,31 @@ int SetDC::main( void )
     DCAmplitude -= dcamplitudedecr;
 
   if ( interactive ) {
-    EW->setValue( DCAmplitude );
     OutData dcsignal( DCAmplitude );
     dcsignal.setTrace( OutCurrent );
     dcsignal.setIdent( "DC=" + Str( DCAmplitude ) + IUnit );
     directWrite( dcsignal );
+    if ( dcsignal.overflow() ) {
+      printlog( "Requested DC current I=" + Str( DCAmplitude ) + IUnit + "too high!" );
+      DCAmplitude = dcsignal.maxValue();
+    }
+    else if ( dcsignal.underflow() ) {
+      printlog( "Requested DC current I=" + Str( DCAmplitude ) + IUnit + "too small!" );
+      DCAmplitude = dcsignal.minValue();
+    }
+    if ( dcsignal.failed() ) {
+      dcsignal = DCAmplitude;
+      dcsignal.setIdent( "DC=" + Str( DCAmplitude ) + IUnit );
+      directWrite( dcsignal );
+    }
+    if ( dcsignal.failed() ) {
+      warning( "Failed to write out DC current! " + dcsignal.errorText() );
+      return Failed;
+    }
     message( "DC=<b>" + Str( DCAmplitude ) + "</b> " + IUnit );
+    EW->setMinValue( dcsignal.minValue() );
+    EW->setMaxValue( dcsignal.maxValue() );
+    EW->setValue( DCAmplitude );
     sleep( 0.01 );
     postCustomEvent( 1 ); // setFocus();
     // wait for input:
@@ -151,6 +170,12 @@ int SetDC::main( void )
     dcsignal.setTrace( OutCurrent );
     dcsignal.setIdent( "DC=" + Str( DCAmplitude ) + IUnit );
     directWrite( dcsignal );
+    if ( dcsignal.failed() ) {
+      DCAmplitude = orgampl;
+      dcsignal = DCAmplitude;
+      dcsignal.setIdent( "DC=" + Str( DCAmplitude ) + IUnit );
+      directWrite( dcsignal );
+    }
     metaData( "Cell" ).setNumber( "dc", DCAmplitude );
     message( "DC=<b>" + Str( DCAmplitude ) + "</b> " + IUnit );
   }

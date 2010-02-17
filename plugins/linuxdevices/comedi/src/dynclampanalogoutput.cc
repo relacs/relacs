@@ -338,14 +338,16 @@ int DynClampAnalogOutput::setupChanList( OutList &sigs,
     bool unipolar = false;
     if ( min >= 0.0 )
       unipolar = true;
-    double extref = false;
+    bool extref = false;
+    bool minislarger = false;
     if ( max == OutData::ExtRef )
       extref = true;
     else {
       // maximum value:
-      min = ::fabs( min );
-      if ( min > max )
-	max = min;
+      if ( ::fabs( min ) > max ) {
+	max = ::fabs( min );
+	minislarger = true;
+      }
     }
 
     // allocate gain factor:
@@ -377,6 +379,12 @@ int DynClampAnalogOutput::setupChanList( OutList &sigs,
 	if ( index < 0 && p == 0 )
 	  unipolar = ! unipolar;
       }
+      if ( index < 0 ) {
+	if ( minislarger )
+	  sigs[k].addError( DaqError::Underflow );
+	else
+	  sigs[k].addError( DaqError::Overflow );
+      }
     }
     else {
       index = 0;
@@ -386,6 +394,10 @@ int DynClampAnalogOutput::setupChanList( OutList &sigs,
 	unipolar = true;
       if ( index >= unipolar ? (int)CAO->UnipolarRange.size() : (int)CAO->BipolarRange.size() )
 	index = -1;
+      if ( max > 1.0+1.0e-8 )
+	sigs[k].addError( DaqError::Overflow );
+      else if ( min < -1.0-1.0e-8 )
+	sigs[k].addError( DaqError::Underflow );
     }
 
     // none of the available ranges contains the requested range:

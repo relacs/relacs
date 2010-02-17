@@ -79,24 +79,26 @@ class DaqError
   static const long long MultipleReglitch = 1LL<<27;
   static const long long InvalidGain = 1LL<<28;
   static const long long MultipleGains = 1LL<<29;
-  static const long long CalibrationFailed = 1LL<<30;
-  static const long long InvalidChannelType = 1LL<<31;
-  static const long long InvalidChannelSequence = 1LL<<32;
+  static const long long Underflow = 1LL<<30;
+  static const long long Overflow = 1LL<<31;
+  static const long long CalibrationFailed = 1LL<<32;
+  static const long long InvalidChannelType = 1LL<<33;
+  static const long long InvalidChannelSequence = 1LL<<34;
 
-  static const long long Busy = 1LL<<33;
-  static const long long BufferOverflow = 1LL<<34;
-  static const long long OverflowUnderrun = 1LL<<35;
-  static const long long Unknown  = 1LL<<36;
+  static const long long Busy = 1LL<<35;
+  static const long long BufferOverflow = 1LL<<36;
+  static const long long OverflowUnderrun = 1LL<<37;
+  static const long long Unknown  = 1LL<<38;
 
-  static const long long NoIntensity = 1LL<<37;
-  static const long long AttNotOpen = 1LL<<38;
-  static const long long AttInvalidDevice = 1LL<<39;
-  static const long long AttFailed = 1LL<<40;
-  static const long long AttUnderflow = 1LL<<41;
-  static const long long AttOverflow = 1LL<<42;
-  static const long long AttIntensityUnderflow = 1LL<<43;
-  static const long long AttIntensityOverflow = 1LL<<44;
-  static const long long AttIntensityFailed = 1LL<<45;
+  static const long long NoIntensity = 1LL<<39;
+  static const long long AttNotOpen = 1LL<<40;
+  static const long long AttInvalidDevice = 1LL<<41;
+  static const long long AttFailed = 1LL<<42;
+  static const long long AttUnderflow = 1LL<<43;
+  static const long long AttOverflow = 1LL<<44;
+  static const long long AttIntensityUnderflow = 1LL<<45;
+  static const long long AttIntensityOverflow = 1LL<<46;
+  static const long long AttIntensityFailed = 1LL<<47;
 
     /*! \var NoDevice
         %Device for requested operation does not exist. */
@@ -160,6 +162,10 @@ class DaqError
         Invalid gain index. */
     /*! \var MultipleGains
         Multiple gain indices for the channels. */
+    /*! \var Underflow
+        The minimum value of the output signal is larger than the minimum possible output value. */
+    /*! \var Overflow
+        The maximum value of the output signal is larger than the maximum possible output value. */
     /*! \var InvalidChannelType
         Invalid channel type. */
     /*! \var InvalidChannelSequence
@@ -242,13 +248,13 @@ class DaqError
   bool failed( void ) const;
     /*! Another signal is still running. \sa Busy */
   bool busy( void ) const;
-    /*! Requested intensity was too high. 
-        \sa AttOverflow, AttIntensityOverflow */
+    /*! Requested signal amplitude or intensity was too high. 
+        \sa Overflow, AttOverflow, AttIntensityOverflow */
   bool overflow( void ) const;
-    /*! Requested intensity was too low. 
-        \sa AttUnderflow, AttIntensityUnderflow */
+    /*! Requested signal amplitude or intensity was too low. 
+        \sa Underflow, AttUnderflow, AttIntensityUnderflow */
   bool underflow( void ) const;
-    /*! Other failure in attenuator. \sa AttFailed, AttIntensityFailed */
+    /*! Failure in attenuator. \sa AttFailed, AttIntensityFailed */
   bool attenuatorFailed( void ) const;
 
     /*! Write the internal variables to \a str. */
@@ -260,7 +266,7 @@ private:
     /*! State of last output operation. */
   long long State;
     /*! Number of last implemented error-code. */
-  static const int LastState = 46;
+  static const int LastState = 48;
     /*! Plain text error codes. */
   static string ErrorText[LastState];
     /*! Additional error string for messages 

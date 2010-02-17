@@ -853,7 +853,8 @@ const RangeLoop &RangeLoop::operator++( void )
 	Index = 0;
 	BlockRepeatCount++;
 
-	if ( BlockRepeatCount >= BlockRepeat ) {
+	if ( BlockRepeatCount >= BlockRepeat ||
+	     n >= (int)Indices.size() ) { // all elements have the skip flag set:
 	  BlockRepeatCount = 0;
 
 	  do {
@@ -874,12 +875,7 @@ const RangeLoop &RangeLoop::operator++( void )
 	  n = 0;
 	}
       }
-      
-      // all elements have the skip flag set:
-      if ( n >= (int)Indices.size() ) {
-	Index = -1;
-	break;
-      } 
+
       n++;
       
     } while ( Elements[Indices[Index]].Skip ||

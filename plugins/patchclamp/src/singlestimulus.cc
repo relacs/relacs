@@ -546,7 +546,7 @@ int SingleStimulus::main( void )
 	  if ( Offset + offsetincr < minint )
 	    minint = Offset + offsetincr;
 	}
-	else if ( signal.error() ) {
+	else if ( signal.failed() ) {
 	  warning( "Output of stimulus failed!<br>Signal error: <b>" +
 		   signal.errorText() + "</b><br>Exit now!" );
 	  writeZero( outtrace );
@@ -575,9 +575,6 @@ int SingleStimulus::main( void )
     }
     signal += Offset;
   }
-
-  // check signal:
-  testWrite( signal );
 
   // plot trace:
   plotToggle( true, true, Duration, 0.0 );

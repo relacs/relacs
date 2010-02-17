@@ -39,8 +39,8 @@ string DaqError::ErrorText[LastState] =
     "invalid reference", "multiple references",
     "dither not supported", "multiple dither settings",
     "reglitch not supported", "multiple reglitch settings",
-    "invalid gain", "multiple gains", "calibration failed",
-    "invalid channel type", "invalid channel sequence", 
+    "invalid gain", "multiple gains", "signal underflow", "signal overflow",
+    "calibration failed", "invalid channel type", "invalid channel sequence", 
     "busy", "buffer overflow", "overflow/underrun", "unknown",
     "Intensity not set",
     "attenuator not open", "invalid attenuator device",
@@ -109,9 +109,9 @@ void DaqError::addAttError( int ae )
 
   // map error code:
   if ( ae >= Attenuate::ReadError )
-    addError( 1LL<<(37 - ae - 1) );
+    addError( 1LL<<(39 - ae - 1) );
   else if ( ae >= Attenuate::IntensityError )
-    addError( 1LL<<(37 - ae - 2) );
+    addError( 1LL<<(39 - ae - 2) );
   else
     addError( AttIntensityFailed );
 }
@@ -215,13 +215,17 @@ bool DaqError::busy( void ) const
 
 bool DaqError::overflow( void ) const
 {
-  return ( ( State & AttOverflow ) > 0 || ( State & AttIntensityOverflow ) > 0 );
+  return ( ( State & Overflow ) > 0 ||
+	   ( State & AttOverflow ) > 0 ||
+	   ( State & AttIntensityOverflow ) > 0 );
 }
 
 
 bool DaqError::underflow( void ) const
 {
-  return ( ( State & AttUnderflow ) > 0 || ( State & AttIntensityUnderflow ) > 0 );
+  return ( ( State & Underflow ) > 0 ||
+	   ( State & AttUnderflow ) > 0 ||
+	   ( State & AttIntensityUnderflow ) > 0 );
 }
 
 
