@@ -37,9 +37,46 @@ namespace relacs {
   \brief A flexible and sophisticated way to loop trough a range of values.
   \todo set( string ): introduce control characters for controlling the addMode
 
+  RangeLoop is a one-dimensional array of doubles. The array can be filled
+  by the constructors or by the set() and add() functions. All the standard
+  vector functions for accessing and maipulating the data values are provided:
+  operator[], back(), front(), size(), empty(), resize(), clear(),
+  capacity(), reserve().
 
-  \a pos: is the index of an element
-  \a index: is the index of the current sequence
+  Now, RangeLoop provides a couple of features for looping through this
+  array.
+  The basic usage is like this:
+  \code
+  RangeLoop range( 1.0, 4.0, 0.5 );
+  for ( Range.reset(); ! Range && softStop() == 0; ++Range )
+    cout << *range << '\n';
+  \endcode
+  This will print the sequence 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0
+  on the screen.
+
+  You can specify in which order the array is traversed by setSequence()
+  or by calling one of the functions
+  up(), down(), alternateInUp(), alternateInDown(), alternateOutUp(),
+  alternateOutDown(), random(), pseudoRandom().
+
+  How often a single data value is immediately 
+  repeated can be specified by setSingleRepeat(),
+  the number of repetitions of the whole sequence is controlled by
+  setRepeat().
+
+  By specifying an increment by setIncrement(), you can create sub-sequences
+  of reduced resolutions that are traversed first.
+  The number of repetitions of each of the sub-sequences are set by setBlockRepeat().
+  After a sub-sequence is finished, the increment is halfed, and a new
+  sub-sequence is created.
+  This is continued until all data-values have been traversed.
+
+  Data values can be excluded form being further traversed by setSkip(),
+  setSkipAbove(), setSkipBelow(), and setSkipBetween().
+  How often a data value was traversed can be retireieved by count().
+
+  pos() is the index of an data element from the whole data array.
+  index() is the current index into the current (sub-)sequence.
  */
 
 class RangeLoop
@@ -94,17 +131,28 @@ class RangeLoop
     AddRemove
   };
 
+    /*! Construct an empty RangeLoop.
+        Use the set() and add() functions to fil lthe range. */
   RangeLoop( void );
+    /*! Construct a linear range.
+        See set( double, double, double, int, int, int, int ) for details. */
   RangeLoop( double first, double last, double step,
 	     int repeat=1, int blockrepeat=1, int singlerepeat=1,
 	     int increment=1 );
+    /*! Construct a linear range.
+        See set( double, double, int, int, int, int, int ) for details. */
   RangeLoop( double first, double last, int n,
 	     int repeat=1, int blockrepeat=1, int singlerepeat=1,
 	     int increment=1 );
+    /*! Construct a range with a single value \a value.
+        See set( double, int, int, int, int, int ) for details. */
   RangeLoop( double value, int size=1, 
 	     int repeat=1, int blockrepeat=1, int singlerepeat=1,
 	     int increment=1 );
+    /*! Construct a range from \a range.
+        See set( const string& ) for details. */
   RangeLoop( const string &range );
+    /*! Destruct thre RangeLoop. */
   ~RangeLoop( void );
 
     /*! The number of elements. */
@@ -132,7 +180,7 @@ class RangeLoop
 	    int repeat=1, int blockrepeat=1, int singlerepeat=1,
 	    int increment=1 );
     /*! Add the range with first value \a first, last value \a last,
-        and increment value \a step to the range. */
+        and increment value \a step to the range. \sa addMode() */
   void add( double first, double last, double step );
     /*! Initialize the range with first value \a first, last value \a last,
         and increment factor \a fac.
@@ -144,7 +192,7 @@ class RangeLoop
 	       int repeat=1, int blockrepeat=1, int singlerepeat=1,
 	       int increment=1 );
     /*! Add the range with first value \a first, last value \a last,
-        increment factor \a fac to the range. */
+        increment factor \a fac to the range. \sa addMode() */
   void addLog( double first, double last, double fac );
 
     /*! Initialize the range with \a n evenly spaced values starting with
@@ -158,7 +206,7 @@ class RangeLoop
 	    int increment=1 );
     /*! Add a range with \a n evenly spaced values starting with
         the first value \a first and ending with the last value \a last
-	to the range. */
+	to the range. \sa addMode() */
   void add( double first, double last, int n );
     /*! Initialize the range with \a n logarithmically spaced values 
         starting with the first value \a first
@@ -172,7 +220,7 @@ class RangeLoop
 	       int increment=1 );
     /*! Add a range with \a n logarithmically spaced values starting with
         the first value \a first and ending with the last value \a last
-	to the range. */
+	to the range. \sa addMode() */
   void addLog( double first, double last, int n );
 
     /*! Initialize the range with a single value \a value
@@ -187,7 +235,7 @@ class RangeLoop
     /*! Add the single value \a value to the range.
         If the value already exist, then \a value is removed from the range.
         Returns \a true if \a value was added to the range,
-        and \a false if it was not added. */
+        and \a false if it was not added. \sa addMode() */
   bool add( double value );
 
     /*! Initialize the range as defined by \a range. 
@@ -213,10 +261,10 @@ class RangeLoop
   const RangeLoop &operator=( const string &range );
 
     /*! Returns the current method that is used for adding 
-        already existing data vales to the range. */
+        already existing data vales to the range. \sa setAddMode() */
   AddMode addMode( void ) const;
     /*! Set the method that is used for adding 
-        already existing data vales to the range to \a addmode. */
+        already existing data vales to the range to \a addmode. \sa addMode() */
   void setAddMode( AddMode addmode );
 
     /*! The number of repetitions for the whole sequence. */
@@ -250,12 +298,15 @@ class RangeLoop
     /*! Returns true if this is the last single repetition. */
   bool lastSingle( void ) const;
 
-    /*! Set the initial increment to \a increment indices. */
+    /*! Set the initial increment to \a increment indices.
+        E.g. an \a increment of 2 selects every second data value.
+        \sa setLargeIncrement(), currentIncrement() */
   void setIncrement( int increment=1 );
     /*! Set the initial increment to the largest power of two
-        less or equal than half the number of the data elements. */
+        less or equal than half the number of the data elements.
+        \sa setIncrement(), currentIncrement() */
   void setLargeIncrement( void );
-    /*! Return the current increment. */
+    /*! Return the current increment. \sa setIncrement() */
   int currentIncrement( void ) const;
 
     /*! The maximum possible number of repetitions of a single data element. */
@@ -264,22 +315,38 @@ class RangeLoop
         for the current sequence. */
   int maxBlockCount( void ) const; 
 
-    /*! Set the sequence for looping through the data values to \a seq. */
+    /*! Set the sequence for looping through the data values to \a seq.
+        \sa up(), down(), alternateInUp(), alternateInDown(),
+        alternateOutUp(), alternateOutDown(), random(), pseudoRandom() */
   void setSequence( Sequence seq );
+    /*! Loop upwards trough the data values. \sa setSequence() */
   void up( void );
+    /*! Loop downwards trough the data values. \sa setSequence() */
   void down( void );
+    /*! Loop alternating trough the data values starting with the highest
+        value. \sa setSequence() */
   void alternateInUp( void );
+    /*! Loop alternating trough the data values starting with the lowest
+        value. \sa setSequence() */
   void alternateInDown( void );
+    /*! Loop alternating trough the data values starting in the middle
+        upwards. \sa setSequence() */
   void alternateOutUp( void );
+    /*! Loop alternating trough the data values starting in the middle
+        downwards. \sa setSequence() */
   void alternateOutDown( void );
+    /*! Loop randomly trough the data values, i.e. always draw a
+        new sequence of random number. \sa setSequence() */
   void random( void );
+    /*! Loop pseudo-randomly trough the data values, i.e. repeat
+        always the same random sequence. \sa setSequence() */
   void pseudoRandom( void );
 
     /*! Returns a string with the names of possible sequence types
         according to Sequence separated by '|'. */
   static const string &sequenceStrings( void );
 
-    /*! Number of elements in the sequence. */
+    /*! Number of elements in the current sequence. */
   int sequenceSize( void ) const;
 
     /*! Reset the range.
@@ -292,7 +359,8 @@ class RangeLoop
         If \a pos is negative (default) it is set to an appropriate value. */
   void reset( int pos=-1 );
 
-    /*! Reset the sequence. */
+    /*! Reset the sequence and use \a pos as the first data element.
+        \sa reset() */
   const RangeLoop &operator=( int pos );
     /*! Increment the current index of the sequence by one. */
   const RangeLoop &operator++( void );
@@ -304,7 +372,8 @@ class RangeLoop
 	or if you want a different start position for the sequence.
         \a pos = -2: keep using the previously set start position.
         \a pos = -1: use the default start position.
-        \a >= 0: use \a pos as the start position. */
+        \a >= 0: use \a pos as the start position.
+        \note the new sequence might be empty! */
   void update( int pos=-2 );
     /*! Number of increments since last call of reset(). */
   int loop( void ) const;
@@ -353,22 +422,24 @@ class RangeLoop
 
     /*! Return the count of the data element at position \a pos. */
   int count( int pos ) const;
-    /*! Return true if the data element at position \a pos is to be skipped. */
+    /*! Return true if the data element at position \a pos is to be skipped.
+        \sa setSkip() */
   int skip( int pos ) const;
     /*! Set the skipping behavior of the data element a position \a pos
         to \a skip.
         If \a skip is true (default) this data element will be skipped
-        in future sequences. */
+        in future sequences. \sa skip(), setSkipBelow(), setSkipAbove(),
+	setSkipBetween() */
   void setSkip( int pos, bool skip=true );
-    /*! Set the skipping behavior of all data elements below position \a pos inclusively
-        to \a skip.
+    /*! Set the skipping behavior of all data elements below position \a pos
+        inclusively to \a skip.
         If \a skip is true (default) these data elements will be skipped
-        in future sequences. */
+        in future sequences. \sa setSkipAbove(), setSkipBetween(), setSkip() */
   void setSkipBelow( int pos, bool skip=true );
-    /*! Set the skipping behavior of all data elements above position \a pos inclusively
-        to \a skip.
+    /*! Set the skipping behavior of all data elements above position \a pos
+        inclusively to \a skip.
         If \a skip is true (default) these data elements will be skipped
-        in future sequences. */
+        in future sequences. \sa setSkipBelow(), setSkipBetween(), setSkip() */
   void setSkipAbove( int pos, bool skip=true );
     /*! Set the skipping behavior of all data elements above position \a pos1 inclusively
         and below position \a pos2 inclusively
@@ -379,11 +450,11 @@ class RangeLoop
 
     /*! Returns the position of the data element next or equal to position \a pos
         with count larger than zero.
-        If there isn't any such element, size() is returned. */ 
+        If there isn't any such element, size() is returned. \sa previous() */ 
   int next( int pos ) const;
     /*! Returns the position of the data element previous or equal to position \a pos
         with count larger than zero.
-        If there isn't any such element, -1 is returned. */ 
+        If there isn't any such element, -1 is returned. \sa next() */ 
   int previous( int pos ) const;
 
     /*! Return the position of the data element at index \a index. */

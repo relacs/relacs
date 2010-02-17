@@ -855,18 +855,22 @@ const RangeLoop &RangeLoop::operator++( void )
 
 	if ( BlockRepeatCount >= BlockRepeat ) {
 	  BlockRepeatCount = 0;
-	  CurrentIncrement /= 2;
 
-	  if ( CurrentIncrement <= 0 ) {
-	    CurrentIncrement = Increment;
-	    RepeatCount++;
+	  do {
 
-	    if ( RepeatCount >= Repeat ) {
-	      break;
+	    CurrentIncrement /= 2;
+
+	    if ( CurrentIncrement <= 0 ) {
+	      CurrentIncrement = Increment;
+	      RepeatCount++;
+	      
+	      if ( RepeatCount >= Repeat )
+		return *this;
 	    }
-	  }
+	    
+	    initSequence( StartPos );
 
-	  initSequence( StartPos );
+	  } while ( Indices.size() == 0 );
 	  n = 0;
 	}
       }
@@ -1155,6 +1159,21 @@ ostream &operator<< ( ostream &str, const RangeLoop &rl )
     str << k << " -> " 
 	<< rl.Indices[k] << ": " << rl.Elements[rl.Indices[k]].Value << '\n';
   }
+
+  str << "RangeLoop Variables: " << '\n';
+  str << "  Index=" << rl.Index << '\n';
+  str << "  StartPos=" << rl.StartPos << '\n';
+  str << "  Loop=" << rl.Loop << '\n';
+  str << "  Repeat=" << rl.Repeat << '\n';
+  str << "  RepeatCount=" << rl.RepeatCount << '\n';
+  str << "  BlockRepeat=" << rl.BlockRepeat << '\n';
+  str << "  BlockRepeatCount=" << rl.BlockRepeatCount << '\n';
+  str << "  SingleRepeat=" << rl.SingleRepeat << '\n';
+  str << "  SingleRepeatCount=" << rl.SingleRepeatCount << '\n';
+  str << "  Increment=" << rl.Increment << '\n';
+  str << "  CurrentIncrement=" << rl.CurrentIncrement << '\n';
+  str << "  Seq=" << rl.Seq << '\n';
+  str << "  AddMethod=" << rl.AddMethod << '\n';
 
   return str;
 }

@@ -135,7 +135,7 @@ int FindThreshold::main( void )
     warning( "Invalid output current trace!" );
     return Failed;
   }
-  double membranetau = metaData( "Cell" ).number( "membranetau" );
+  double membranetau = metaData( "Cell" ).number( "taum" );
   if ( durationsel == 1 ) {
     if ( membranetau <= 0.0 ) {
       warning( "Membrane time constant was not measured yet!" );

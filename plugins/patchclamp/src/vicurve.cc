@@ -47,7 +47,7 @@ VICurve::VICurve( void )
   addNumber( "imax", "Maximum injected current", 1.0, -1000.0, 1000.0, 0.001 );
   addNumber( "istep", "Minimum step-size of current", 0.001, 0.001, 1000.0, 0.001 );
   addBoolean( "userm", "Use membrane resistance for estimating istep from vstep", false );
-  addNumber( "vstep", "Minimum step-size of voltage", 0.001, 0.001, 1000.0, 0.001 ).setActivation( "userm", "true" );
+  addNumber( "vstep", "Minimum step-size of voltage", 1.0, 0.001, 10000.0, 0.1 ).setActivation( "userm", "true" );
   addSelection( "shuffle", "Sequence of currents", RangeLoop::sequenceStrings() );
   addSelection( "ishuffle", "Initial sequence of currents for first repetition", RangeLoop::sequenceStrings() );
   addInteger( "iincrement", "Initial increment for currents", 0, 0, 1000, 1 );
@@ -139,6 +139,10 @@ int VICurve::main( void )
     warning( "Pause must be at least as long as the delay!" );
     return Failed;
   }
+  if ( sswidth >= duration ) {
+    warning( "sswidth must be smaller than stimulus duration!" );
+    return Failed;
+  }
   if ( involtage < 0 || SpikeTrace[ involtage ] < 0 || SpikeEvents[ involtage ] < 0 ) {
     warning( "Invalid input voltage trace or missing input spikes!" );
     return Failed;
@@ -148,7 +152,9 @@ int VICurve::main( void )
     return Failed;
   }
   if ( userm ) {
-    double rm = metaData( "Cell" ).number( "membraner", "MOhm" );
+    double rm = metaData( "Cell" ).number( "rmss", "MOhm" );
+    if ( rm <= 0 )
+      rm = metaData( "Cell" ).number( "rm", "MOhm" );
     if ( rm <= 0 )
       warning( "Membrane resistance was not measured yet!" );
     else {
@@ -175,7 +181,6 @@ int VICurve::main( void )
   else
     Range.setIncrement( iincrement );
   Range.setSequence( ishuffle );
-  bool needupdate = false;
   int prevrepeat = 0;
   Results.clear();
   Results.resize( Range.size(), Data( delay, duration, 1.0/samplerate,
@@ -204,14 +209,9 @@ int VICurve::main( void )
     if ( prevrepeat < Range.currentRepetition() ) {
       if ( Range.currentRepetition() == 1 ) {
 	Range.setSequence( shuffle );
-	needupdate = true;
+	Range.update();
       }
       prevrepeat = Range.currentRepetition();
-    }
-
-    if ( needupdate ) {
-      Range.update();
-      needupdate = false;
     }
 
     double amplitude = *Range;
@@ -245,16 +245,16 @@ int VICurve::main( void )
 				  events( SpikeEvents[involtage] ), 
 				  incurrent >= 0 ? &trace( incurrent ) : 0,
 				  IInFac, delay, duration, ton, sswidth );
+
     if ( Results[Range.pos()].VSS < vmin ) {
       Range.setSkipBelow( Range.pos() );
       Range.noCount();
-      needupdate = true;
     }
     if ( Results[Range.pos()].SpikeCount > 1 ) {
       Range.setSkipAbove( Range.pos() );
       Range.noCount();
-      needupdate = true;
     }
+
     plot( duration );
     sleepOn( duration + pause );
     if ( interrupt() ) {
@@ -262,7 +262,6 @@ int VICurve::main( void )
 	state = Aborted;
       break;
     }
-
   }
 
   if ( state == Completed )
@@ -369,7 +368,7 @@ void VICurve::saveData( void )
     datakey.save( df, Results[j].VSSsd );
     datakey.save( df, Results[j].VPeak );
     datakey.save( df, Results[j].VPeaksd );
-    datakey.save( df, Results[j].VPeakTime );
+    datakey.save( df, 1000.0*Results[j].VPeakTime );
     datakey.save( df, Results[j].VOn );
     datakey.save( df, Results[j].VOnsd );
     df << '\n';

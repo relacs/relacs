@@ -380,9 +380,10 @@ void MembraneResistance::save( void )
   if ( settings().boolean( "setdata" ) ) {
     Options &mo = metaData( "Cell" );
     mo.setNumber( "vrest", 0.001*VRest, 0.001*VRestsd );
-    mo.setNumber( "membraner", RMOn  );
-    mo.setNumber( "membranec", CMOn );
-    mo.setNumber( "membranetau", 0.001*TauMOn );
+    mo.setNumber( "rm", RMOn  );
+    mo.setNumber( "rmss", RMss  );
+    mo.setNumber( "cm", CMOn );
+    mo.setNumber( "taum", 0.001*TauMOn );
   }
 }
 

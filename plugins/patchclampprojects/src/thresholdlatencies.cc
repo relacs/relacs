@@ -127,7 +127,7 @@ int ThresholdLatencies::main( void )
   double finalamplitudestep = number( "amplitudestep" );
   int adjust = index( "adjust" );
   bool usedc = boolean( "usedc" );
-  double membranetau = metaData( "Cell" ).number( "membranetau" );
+  double membranetau = metaData( "Cell" ).number( "taum" );
   double pause = searchpause;
   if ( durationsel == 1 ) {
     if ( membranetau <= 0.0 ) {
