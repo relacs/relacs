@@ -95,7 +95,7 @@ public:
 	The implementation of a class derived from %ConfigDialog
 	has a \a version and was written by \a author on \a date.
         \sa setConfigIdent(), setConfigGroup(),
-	setName(), setPrefix(), setTitle(), setAuthor(), setDate(), setVersion() */
+	setName(), setTitle(), setAuthor(), setDate(), setVersion() */
   ConfigDialog( const string &configident="", int configgroup=0,
 		const string &name="", 
 		const string &title="",
@@ -114,10 +114,6 @@ public:
   string name( void ) const;
     /*! Set the name of the class to \a name. */
   virtual void setName( const string &name );
-    /*! The prefix identifying the class. Used by saveXML() */
-  string prefix( void ) const;
-    /*! Set the prefix identifying the class to \a prefix. \sa saveXML() */
-  virtual void setPrefix( const string &prefix );
     /*! The title of the class as it appears above the widget. */
   string title( void ) const;
     /*! Set the title of the class to \a title. */
@@ -199,8 +195,6 @@ public:
   QMutex *mutex( void );
 
     /*! Write name() and options in XML format to output stream.
-        The identifiers of the options are prependend by prefix().
-        If prefix() is not empty, it is prepended to the identifier of each option.
         \param[in] str the output stream
         \param[in] selectmask selects options that have \a selectmask set in their flags().
                    See Parameter::flags(int) for details.
@@ -353,7 +347,6 @@ private:
   QBoxLayout *BoxLayout;
 
   string Name;
-  string Prefix;
   string Title;
   string Author;
   string Version;

@@ -2779,18 +2779,17 @@ ostream &operator<<( ostream &str, const Parameter &p )
 }
 
 
-ostream &Parameter::saveXML( ostream &str, int level, const string &prefix,
-			     int indent ) const
+ostream &Parameter::saveXML( ostream &str, int level, int indent ) const
 {
   string indstr1( level*indent, ' ' );
   string indstr2( indstr1 );
   indstr2 += string( indent, ' ' );
 
   if ( isLabel() )
-    str << indstr1 << "<label>" << prefix << label() << "</label>\n";
+    str << indstr1 << "<label>" << label() << "</label>\n";
   else {
     str << indstr1 << "<property>\n";
-    str << indstr2 << "<name>" << prefix << ident() << "</name>\n";
+    str << indstr2 << "<name>" << ident() << "</name>\n";
     if ( isNumber() || isInteger() ) {
       string vtype = "float";
       if ( isInteger() )

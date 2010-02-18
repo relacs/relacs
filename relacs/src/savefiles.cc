@@ -523,29 +523,29 @@ void SaveFiles::saveStimulus( void )
       int col = StimulusKey.column( "data>" + (*this)[0].ident() );
       *XF << "      <section name=\"Data\">\n";
       for( int k=0; k<Options::size(); k++ )
-	StimulusKey[col++].setNumber( (*this)[k].number() ).saveXML( *XF, 5, "Stimulus.Data." );
+	StimulusKey[col++].setNumber( (*this)[k].number() ).saveXML( *XF, 5 );
       *XF << "      </section>\n";
     }
     unlock();
     int col = StimulusKey.column( "stimulus>timing>time" );
-    StimulusKey[col++].setNumber( TraceFiles[0].Trace->signalTime() - SessionTime ).saveXML( *XF, 3, "Stimulus." );
+    StimulusKey[col++].setNumber( TraceFiles[0].Trace->signalTime() - SessionTime ).saveXML( *XF, 3 );
     // Stimulus:
-    StimulusKey[col++].setNumber( 1000.0*Stimuli[0].Delay ).saveXML( *XF, 3, "Stimulus." );
+    StimulusKey[col++].setNumber( 1000.0*Stimuli[0].Delay ).saveXML( *XF, 3 );
     for ( int k=0; k<RW->AQ->outTracesSize(); k++ ) {
       for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
 	const Attenuate *att = RW->AQ->outTraceAttenuate( k );
 	if ( Stimuli[j].Device == RW->AQ->outTrace( k ).device() &&
 	     Stimuli[j].Channel == RW->AQ->outTrace( k ).channel() ) {
 	  Parameter p( "identifier", "identifier", RW->AQ->outTraceName( k ) );
-	  p.saveXML( *XF, 3, "Stimulus." );
-	  StimulusKey[col++].setNumber( 0.001*Stimuli[j].SampleRate ).saveXML( *XF, 3, "Stimulus." );
+	  p.saveXML( *XF, 3 );
+	  StimulusKey[col++].setNumber( 0.001*Stimuli[j].SampleRate ).saveXML( *XF, 3 );
 	  StimulusKey[col++].setNumber( 1000.0*Stimuli[j].Length );
 	  if ( att != 0 ) {
-	    StimulusKey[col++].setNumber( Stimuli[j].Intensity ).saveXML( *XF, 3, "Stimulus." );
+	    StimulusKey[col++].setNumber( Stimuli[j].Intensity ).saveXML( *XF, 3 );
 	    if ( ! att->frequencyName().empty() )
-	      StimulusKey[col++].setNumber( Stimuli[j].CarrierFreq ).saveXML( *XF, 3, "Stimulus." );
+	      StimulusKey[col++].setNumber( Stimuli[j].CarrierFreq ).saveXML( *XF, 3 );
 	  }
-	  StimulusKey[col++].setText( Stimuli[j].Ident ).saveXML( *XF, 3, "Stimulus." );
+	  StimulusKey[col++].setText( Stimuli[j].Ident ).saveXML( *XF, 3 );
 	}
 	else {
 	  col += 3;
@@ -609,7 +609,7 @@ void SaveFiles::saveRePro( void )
       if ( DatasetOpen ) {
 	for ( unsigned int k=0; k<ReProFiles.size(); k++ ) {
 	  Parameter p( "file", "file", ReProFiles[k] );
-	  p.saveXML( *XF, 2, "Dataset." );
+	  p.saveXML( *XF, 2 );
 	}
 	ReProFiles.clear();
 	*XF << "  </section>\n";
@@ -617,11 +617,11 @@ void SaveFiles::saveRePro( void )
       *XF << "  <section name=\"Dataset\">\n";
       Parameter p( "name", "name", ReProInfo.text( "experiment" ) + "-" +
 		   ReProInfo.text( "repro" ) + "-" + Str( path() ).preventedSlash().name() );
-      p.saveXML( *XF, 2, "Dataset." );
-      ReProInfo.saveXML( *XF, 0, 2, "Dataset." );
+      p.saveXML( *XF, 2 );
+      ReProInfo.saveXML( *XF, 0, 2 );
       if ( ! ReProSettings.empty() ) {
 	*XF << "    <section name=\"Settings\">\n";
-	ReProSettings.saveXML( *XF, 1, 3, "" );
+	ReProSettings.saveXML( *XF, 1, 3 );
 	*XF << "    </section>\n";
       }
       DatasetOpen = true;
@@ -931,7 +931,7 @@ void SaveFiles::createXMLFile( const InList &traces,
       Options opts( dev.info() );
       opts.erase( "type" );
       *XF << "    <section name=\"" << dts << "\">\n";
-      opts.saveXML( *XF, 0, 3, dts+"." ); 
+      opts.saveXML( *XF, 0, 3 ); 
       *XF << "    </section>\n";
     }
     *XF << "  </section>\n";
@@ -1071,7 +1071,7 @@ void SaveFiles::closeFiles( void )
     if ( DatasetOpen ) {
       for ( unsigned int k=0; k<ReProFiles.size(); k++ ) {
 	Parameter p( "file", "file", ReProFiles[k] );
-	p.saveXML( *XF, 2, "Dataset." );
+	p.saveXML( *XF, 2 );
 	}
       ReProFiles.clear();
       *XF << "  </section>\n";

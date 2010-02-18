@@ -89,9 +89,8 @@ void MetaDataSection::save( ofstream &str )
 ostream &MetaDataSection::saveXML( ostream &str, int level, int indent ) const
 {
   string indstr1( level*indent, ' ' );
-  string prefix = configIdent() + ".";
   str << indstr1 << "<section name=\"" << configIdent() << "\">\n";
-  Options::saveXML( str, MD->saveFlags(), level+1, prefix, indent );
+  Options::saveXML( str, MD->saveFlags(), level+1, indent );
   str << indstr1 << "</section>\n";
   return str;
 }

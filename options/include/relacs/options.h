@@ -1280,12 +1280,11 @@ public:
         \param[in] selectmask selects options that have \a selectmask set in their flags().
                    See Parameter::flags(int) for details.
         \param[in] level the level of indentation
-        \param[in] prefix a prefix prepended to the options identifiers
         \param[in] indent the indentation depth, 
                    i.e. number of white space characters per level
         \return the output stream \a str */
   ostream &saveXML( ostream &str, int selectmask=0, int level=0,
-		    const string &prefix="", int indent=2 ) const;
+		    int indent=2 ) const;
 
     /*! Read options from string \a opttxt of the form 
         "parameter1=x; parameter2=y; parameter3=z; ...".

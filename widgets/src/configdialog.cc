@@ -48,7 +48,6 @@ ConfigDialog::ConfigDialog( const string &configident, int configgroup,
   BoxLayout->setAutoAdd( true );
   Name = name.empty() ? configident : name;
   QObject::setName( Name.c_str() );
-  Prefix = "";
   Title = title.empty() ? Name : title;
   Author = author;
   Version = version;
@@ -88,18 +87,6 @@ string ConfigDialog::name( void ) const
 void ConfigDialog::setName( const string &name )
 {
   Name = name;
-}
-
-
-string ConfigDialog::prefix( void ) const
-{
-  return Prefix;
-}
-
-
-void ConfigDialog::setPrefix( const string &prefix )
-{
-  Prefix = prefix;
 }
 
 
@@ -549,12 +536,8 @@ QMutex *ConfigDialog::mutex( void )
 ostream &ConfigDialog::saveXML( ostream &str, int selectmask, int level, int indent ) const
 {
   string indstr1( level*indent, ' ' );
-  string prfx = prefix();
-  if ( ! prfx.empty() )
-    prfx += ".";
-
   str << indstr1 << "<section name=\"" << name() << "\">\n";
-  Options::saveXML( str, selectmask, level+1, prfx, indent );
+  Options::saveXML( str, selectmask, level+1, indent );
   str << indstr1 << "</section>\n";
   return str;
 }
