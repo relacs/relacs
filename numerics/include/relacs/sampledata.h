@@ -1863,10 +1863,9 @@ template < typename T > template < typename R >
 {
   sa.clear();
   int k1 = index( x1 );
-  if ( k1 < 0 ) {
+  if ( k1 < 0 )
     k1 = 0;
-    x1 = pos( k1 );
-  }
+  x1 = pos( k1 );
   int k2 = index( x2 );
   if ( k2 >= size() )
     k2 = size()-1;

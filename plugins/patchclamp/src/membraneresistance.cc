@@ -166,7 +166,7 @@ int MembraneResistance::main( void )
   // signal:
   OutData signal( Duration, 1.0/samplerate );
   signal = DCCurrent + Amplitude;
-  signal.setIdent( "const" );
+  signal.setIdent( "I=" + Str( DCCurrent + Amplitude ) + IUnit );
   signal.back() = DCCurrent;
   signal.setTrace( outcurrent );
   TrueAmplitude = Amplitude;
