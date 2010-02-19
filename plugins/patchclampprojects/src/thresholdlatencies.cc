@@ -179,17 +179,19 @@ int ThresholdLatencies::main( void )
   double dcamplitude = usedc ? orgdcamplitude : 0.0;
   Results.clear();
   Amplitudes.clear();
-  Amplitudes.reserve( 100 );
+  Amplitudes.reserve( repeats > 0 ? repeats : 100 );
   DCAmplitudes.clear();
-  DCAmplitudes.reserve( 100 );
+  DCAmplitudes.reserve( repeats > 0 ? repeats : 100 );
   Latencies.clear();
-  Latencies.reserve( 100 );
+  Latencies.reserve( repeats > 0 ? repeats : 100 );
+  SpikeCounts.clear();
+  SpikeCounts.reserve( repeats > 0 ? repeats : 100 );
+  Spikes.clear();
+  Spikes.reserve( repeats > 0 ? repeats : 100 );
   SpikeCount = 0;
   TrialCount = 0;
   TableKey tracekey;
   ofstream tf;
-  TableKey spikekey;
-  ofstream sf;
 
   // plot trace:
   plotToggle( true, true, savetracetime, delay );
@@ -249,10 +251,8 @@ int ThresholdLatencies::main( void )
     // analyze, plot, and save:
     analyze( involtage, incurrent, amplitude, dcamplitude,
 	     delay, duration, savetracetime, pause );
-    if ( record ) {
+    if ( record )
       saveTrace( tf, tracekey, count-1 );
-      saveSpikes( sf, spikekey, count-1 );
-    }
     plot( record, duration );
 
     if ( ! record || adjust == 1 ) {
@@ -289,7 +289,7 @@ int ThresholdLatencies::main( void )
 	if ( amplitudestep <= finalamplitudestep ) {
 	  amplitudestep = finalamplitudestep;
 	  pause = measurepause;
-	  count = 1;
+	  count = 0;
 	  Results.clear();
 	  SpikeCount = 0;
 	  TrialCount = 0;
@@ -299,11 +299,15 @@ int ThresholdLatencies::main( void )
 	  DCAmplitudes.reserve( repeats > 0 ? repeats : 1000 );
 	  Latencies.clear();
 	  Latencies.reserve( repeats > 0 ? repeats : 1000 );
+	  SpikeCounts.clear();
+	  SpikeCounts.reserve( repeats > 0 ? repeats : 100 );
+	  Spikes.clear();
+	  Spikes.reserve( repeats > 0 ? repeats : 1000 );
 	  if ( search )
 	    search = false;
 	  else {
 	    record = true;
-	    openFiles( tf, tracekey, sf, spikekey, incurrent );
+	    openTraceFile( tf, tracekey, incurrent );
 	  }
 	}
 	else
@@ -320,13 +324,14 @@ int ThresholdLatencies::main( void )
   }
 
   tf << '\n';
-  sf << '\n';
   if ( record && TrialCount > 0 )
-    saveData( usedc );
+    save( usedc );
   Results.clear();
   Latencies.clear();
   Amplitudes.clear();
   DCAmplitudes.clear();
+  SpikeCounts.clear();
+  Spikes.clear();
   if ( ! usedc ) {
     dcsignal = orgdcamplitude;
     dcsignal.setIdent( "DC=" + Str( orgdcamplitude ) + IUnit );
@@ -372,12 +377,13 @@ void ThresholdLatencies::analyze( int involtage, int incurrent,
   }
   DCAmplitudes.push( Results.back().DCAmplitude );
   Amplitudes.push( Results.back().Amplitude );
+  SpikeCounts.push( Results.back().SpikeCount );
+  Spikes.push( Results.back().Spikes );
 }
 
 
-void ThresholdLatencies::openFiles( ofstream &tf, TableKey &tracekey,
-				    ofstream &sf, TableKey &spikekey,
-				    int incurrent )
+void ThresholdLatencies::openTraceFile( ofstream &tf, TableKey &tracekey,
+					int incurrent )
 {
   tracekey.addNumber( "t", "ms", "%7.2f" );
   tracekey.addNumber( "V", VUnit, "%6.1f" );
@@ -395,20 +401,6 @@ void ThresholdLatencies::openFiles( ofstream &tf, TableKey &tracekey,
   tf << '\n';
   tracekey.saveKey( tf, true, false );
   tf << '\n';
-
-  spikekey.addNumber( "t", "ms", "%7.2f" );
-  if ( completeRuns() <= 0 )
-    sf.open( addPath( "thresholdlatencies-spikes.dat" ).c_str() );
-  else
-    sf.open( addPath( "thresholdlatencies-spikes.dat" ).c_str(),
-             ofstream::out | ofstream::app );
-  sf << "# status:\n";
-  stimulusData().save( sf, "#   " );
-  sf << "# settings:\n";
-  settings().save( sf, "#   " );
-  sf << '\n';
-  spikekey.saveKey( sf, true, false );
-  sf << '\n';
 }
 
 
@@ -437,13 +429,60 @@ void ThresholdLatencies::saveTrace( ofstream &tf, TableKey &tracekey, int index 
 }
 
 
-void ThresholdLatencies::saveSpikes( ofstream &sf, TableKey &spikekey, int index )
+void ThresholdLatencies::save( bool dc )
 {
-  sf << "#       index: " << Str( index ) << '\n';
-  sf << "# dcamplitude: " << Str( Results.back().DCAmplitude ) << IUnit << '\n';
-  sf << "#   amplitude: " << Str( Results.back().Amplitude ) << IUnit << '\n';
-  sf << "# spike count: " << Str( Results.back().SpikeCount ) << '\n';
-  Results.back().Spikes.saveText( sf, 1000.0, 7, 2, 'f', "-0" );
+  saveSpikes();
+  saveData( dc );
+}
+
+
+void ThresholdLatencies::saveSpikes( void )
+{
+  ofstream sf;
+  if ( completeRuns() <= 0 )
+    sf.open( addPath( "thresholdlatencies-spikes.dat" ).c_str() );
+  else
+    sf.open( addPath( "thresholdlatencies-spikes.dat" ).c_str(),
+             ofstream::out | ofstream::app );
+
+  Options header;
+  double basd = 0.0;
+  double bam = DCAmplitudes.mean( basd );
+  header.addNumber( "dcamplitude", IUnit, "%7.3f", bam );
+  header.addNumber( "dcamplitude s.d.", IUnit, "%7.3f", basd );
+  double asd = 0.0;
+  double am = Amplitudes.mean( asd );
+  header.addNumber( "amplitude", IUnit, "%7.3f", am );
+  header.addNumber( "amplitude s.d.", IUnit, "%7.3f", asd );
+  header.addNumber( "trials", "1", "%6.0f", (double)TrialCount );
+  header.addNumber( "spikes", "1", "%6.0f", (double)SpikeCount );
+  header.addNumber( "prob", "%", "%5.1f", 100.0*(double)SpikeCount/(double)TrialCount );
+  double lsd = 0.0;
+  double lm = Latencies.mean( lsd );
+  header.addNumber( "latency", "ms", "%6.2f", 1000.0*lm );
+  header.addNumber( "latency s.d.", "ms", "%6.2f", 1000.0*lsd );
+
+  header.save( sf, "# " );
+  sf << "# status:\n";
+  stimulusData().save( sf, "#   " );
+  sf << "# settings:\n";
+  settings().save( sf, "#   " );
+  sf << '\n';
+
+  TableKey spikekey;
+  spikekey.addNumber( "t", "ms", "%7.2f" );
+  spikekey.saveKey( sf, true, false );
+  sf << '\n';
+
+  for ( int k=0; k<Spikes.size(); k++ ) {
+    sf << "#       index: " << Str( k ) << '\n';
+    sf << "# dcamplitude: " << Str( DCAmplitudes[k] ) << IUnit << '\n';
+    sf << "#   amplitude: " << Str( Amplitudes[k] ) << IUnit << '\n';
+    sf << "# spike count: " << Str( SpikeCounts[k] ) << '\n';
+    Results.back().Spikes.saveText( sf, 1000.0, 7, 2, 'f', "-0" );
+    sf << '\n';
+  }
+
   sf << '\n';
 }
 

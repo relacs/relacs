@@ -25,6 +25,7 @@
 #include <deque>
 #include <relacs/array.h>
 #include <relacs/sampledata.h>
+#include <relacs/eventlist.h>
 #include <relacs/tablekey.h>
 #include <relacs/plot.h>
 #include <relacs/repro.h>
@@ -56,10 +57,10 @@ public:
 		double amplitude, double dcamplitude,
 		double delay, double duration, double savetime, double pause );
   void plot( bool record, double duration );
-  void openFiles( ofstream &tf, TableKey &tracekey,
-		  ofstream &sf, TableKey &spikekey, int incurrent );
+  void openTraceFile( ofstream &tf, TableKey &tracekey, int incurrent );
   void saveTrace( ofstream &tf, TableKey &tracekey, int index );
-  void saveSpikes( ofstream &sf, TableKey &spikekey, int index );
+  void save( bool dc );
+  void saveSpikes( void );
   void saveData( bool dc );
 
 
@@ -90,6 +91,8 @@ protected:
   ArrayD Amplitudes;
   ArrayD DCAmplitudes;
   ArrayD Latencies;
+  ArrayI SpikeCounts;
+  EventList Spikes;
 
 };
 

@@ -242,7 +242,7 @@ int FindThreshold::main( void )
 	if ( amplitudestep <= finalamplitudestep ) {
 	  amplitudestep = finalamplitudestep;
 	  pause = measurepause;
-	  count = 1;
+	  count = 0;
 	  Results.clear();
 	  SpikeCount = 0;
 	  TrialCount = 0;
@@ -312,8 +312,8 @@ void FindThreshold::analyze( int involtage, int incurrent,
 
 
 void FindThreshold::openFiles( ofstream &tf, TableKey &tracekey,
-				    ofstream &sf, TableKey &spikekey,
-				    int incurrent )
+			       ofstream &sf, TableKey &spikekey,
+			       int incurrent )
 {
   tracekey.addNumber( "t", "ms", "%7.2f" );
   tracekey.addNumber( "V", VUnit, "%6.1f" );

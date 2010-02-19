@@ -373,9 +373,23 @@ void MembraneResistance::plot( void )
 
 void MembraneResistance::save( void )
 {
+  Options header;
+  header.addInteger( "index", completeRuns() );
+  header.addNumber( "Vrest", VUnit, "%6.1f", VRest );
+  header.addNumber( "Vss", VUnit, "%6.1f", VSS );
+  header.addNumber( "Rss", "MOhm", "%6.1f", RMss );
+  header.addNumber( "Vpeak", VUnit, "%6.1f", VPeak );
+  header.addNumber( "Tpeak", "ms", "%6.1f", 1000.0*VPeakTime );
+  header.addNumber( "Rm", "MOhm", "%6.1f", RMOn );
+  header.addNumber( "Cm", "pF", "%6.1f", CMOn );
+  header.addNumber( "Taum", "ms", "%6.1f", TauMOn );
+  header.addNumber( "Roff", "MOhm", "%6.1f", RMOff );
+  header.addNumber( "Coff", "pF", "%6.1f", CMOff );
+  header.addNumber( "Tauoff", "ms", "%6.1f", TauMOff );
+
   saveData();
-  saveTrace();
-  saveExpFit();
+  saveTrace( header );
+  saveExpFit( header );
 
   if ( settings().boolean( "setdata" ) ) {
     Options &mo = metaData( "Cell" );
@@ -394,7 +408,7 @@ void MembraneResistance::saveData( void )
   datakey.addLabel( "Stimulus" );
   datakey.addNumber( "dI", IUnit, "%6.3f", Amplitude );
   datakey.addNumber( "dIm", IUnit, "%6.3f", TrueAmplitude );
-  datakey.addNumber( "IDC", IUnit, "%6.13", DCCurrent );
+  datakey.addNumber( "IDC", IUnit, "%6.3", DCCurrent );
   datakey.addNumber( "duration", "ms", "%6.1f", 1000.0*Duration );
   datakey.addLabel( "Rest" );
   datakey.addNumber( "Vrest", VUnit, "%6.1f", VRest );
@@ -415,7 +429,7 @@ void MembraneResistance::saveData( void )
   datakey.addNumber( "R", "MOhm", "%6.1f", RMOff );
   datakey.addNumber( "C", "pF", "%6.1f", CMOff );
   datakey.addNumber( "tau", "ms", "%6.1f", TauMOff );
-  datakey.addLabel( "Traces" );
+  datakey.addLabel( "Status" );
   datakey.add( stimulusData() );
 
   ofstream df;
@@ -431,11 +445,12 @@ void MembraneResistance::saveData( void )
 }
 
 
-void MembraneResistance::saveTrace( void )
+void MembraneResistance::saveTrace( const Options &header )
 {
   ofstream df( addPath( "membraneresistance-trace.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
 
+  header.save( df, "# " );
   df << "# status:\n";
   stimulusData().save( df, "#   " );
   df << "# settings:\n";
@@ -463,11 +478,12 @@ void MembraneResistance::saveTrace( void )
 }
 
 
-void MembraneResistance::saveExpFit( void )
+void MembraneResistance::saveExpFit( const Options &header )
 {
   ofstream df( addPath( "membraneresistance-expfit.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
 
+  header.save( df, "# " );
   df << "# status:\n";
   stimulusData().save( df, "#   " );
   df << "# settings:\n";

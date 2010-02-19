@@ -58,8 +58,8 @@ public:
   void plot( void );
   void save( void );
   void saveData( void );
-  void saveTrace( void );
-  void saveExpFit( void );
+  void saveTrace( const Options &header );
+  void saveExpFit( const Options &header );
 
 
 protected:
