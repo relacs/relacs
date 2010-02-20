@@ -84,7 +84,7 @@ void SetDC::notify( void )
     setUnit( "dcamplitudestep", IUnit );
     UnitLabel->setText( IUnit.c_str() );
   }
-  postCustomEvent( 3 ); // setStep();
+  postCustomEvent( 13 ); // setStep();
 }
 
 
@@ -141,7 +141,7 @@ int SetDC::main( void )
     EW->setMaxValue( dcsignal.maxValue() );
     EW->setValue( DCAmplitude );
     sleep( 0.01 );
-    postCustomEvent( 1 ); // setFocus();
+    postCustomEvent( 11 ); // setFocus();
     // wait for input:
     SetValue = false;
     Finished = false;
@@ -157,7 +157,7 @@ int SetDC::main( void )
 	sleep( 0.01 );
       }
     } while ( ! Finished && ! interrupt() );
-    postCustomEvent( 2 ); // clearFocus();
+    postCustomEvent( 12 ); // clearFocus();
     if ( interrupt() )
       return Aborted;
   }
@@ -215,19 +215,21 @@ void SetDC::keepValue( void )
 
 void SetDC::customEvent( QCustomEvent *qce )
 {
-  if ( qce->type() == QEvent::User+1 ) {
+  if ( qce->type() == QEvent::User+11 ) {
     EW->setFocus();
     connect( EW, SIGNAL( valueChanged( double ) ),
 	     this, SLOT( setValue( double ) ) );
   }
-  else if ( qce->type() == QEvent::User+2 ) {
+  else if ( qce->type() == QEvent::User+12 ) {
     EW->clearFocus();
     disconnect( EW, SIGNAL( valueChanged( double ) ),
 		this, SLOT( setValue( double ) ) );
   }
-  else if ( qce->type() == QEvent::User+3 ) {
+  else if ( qce->type() == QEvent::User+13 ) {
     EW->setStep( number( "dcamplitudestep" ), 0.001 );
   }
+  else
+    RePro::customEvent( qce );
 }
 
 

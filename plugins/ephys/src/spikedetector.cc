@@ -390,7 +390,7 @@ void SpikeDetector::notify( void )
     AllSpikesHist = SampleDataD( 0.0, 200.0, SizeResolution );
   }
   SDW.updateValues( OptWidget::changedFlag() );
-  postCustomEvent( 1 );
+  postCustomEvent( 11 );
 }
 
 
@@ -596,7 +596,7 @@ int SpikeDetector::detect( const InData &data, EventData &outevents,
     setInteger( "quality", Quality );
     setNotify();
     SDW.updateValues( OptWidget::changedFlag() );
-    postCustomEvent( 1 );
+    postCustomEvent( 11 );
     return 0;
   }
 
@@ -623,7 +623,7 @@ int SpikeDetector::detect( const InData &data, EventData &outevents,
   setInteger( "quality", Quality );
   setNotify();
   SDW.updateValues( OptWidget::changedFlag() );
-  postCustomEvent( 1 );
+  postCustomEvent( 11 );
   return 0;
 }
 
@@ -712,12 +712,14 @@ int SpikeDetector::checkEvent( const InData::const_iterator &first,
 
 void SpikeDetector::customEvent( QCustomEvent *qce )
 {
-  if ( qce->type() == QEvent::User+1 ) {
+  if ( qce->type() == QEvent::User+11 ) {
     lock();
     QualityIndicator->setPixmap( *QualityPixs[Quality] );
     TrendIndicator->setPixmap( *TrendPixs[Trend] );
     unlock();
   }
+  else
+    Filter::customEvent( qce );
 }
 
 

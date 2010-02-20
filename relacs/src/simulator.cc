@@ -325,6 +325,10 @@ int Simulator::write( OutData &signal )
   // set trace:
   applyOutTrace( signal );
 
+  // error?
+  if ( signal.failed() )
+    return -1;
+
   // get ao device:
   int di = signal.device();
   if ( di < 0 ) {
@@ -445,10 +449,14 @@ int Simulator::stopWrite( void )
 
 int Simulator::directWrite( OutData &signal )
 {
+  signal.clearError();
+
   // set trace:
   applyOutTrace( signal );
 
-  signal.clearError();
+  // error?
+  if ( signal.failed() )
+    return -1;
 
   // get ao device:
   int di = signal.device();
@@ -554,6 +562,199 @@ int Simulator::directWrite( OutData &signal )
 
 int Simulator::directWrite( OutList &signal )
 {
+  if ( signal.size() <= 0 )
+    return 0;
+
+  bool success = true;
+  signal.clearError();
+
+  // set trace:
+  applyOutTrace( signal );
+
+  // error?
+  if ( signal.failed() )
+    return -1;
+
+  // get device ids and sort signal per device:
+  for ( int k=0; k<signal.size(); k++ ) {
+    // no device?
+    if ( signal[k].device() < 0 ) {
+      signal[k].addError( DaqError::NoDevice );
+      signal[k].setDevice( 0 );
+      success = false;
+    }
+    else if ( signal[k].device() >= (int)AO.size() ) {
+      signal[k].addError( DaqError::NoDevice );
+      signal[k].setDevice( AO.size()-1 );
+      success = false;
+    }
+  }
+
+  // busy:
+  for ( int i=0; i<(int)AO.size(); i++ ) {
+    // multiple priorities?
+    int k0 = -1;
+    for ( int k=0; k<signal.size(); k++ ) {
+      if ( signal[k].device() == i ) {
+	k0 = k;
+      }
+    }
+    if ( k0 >= 0 ) {
+      for ( int k=k0+1; k<signal.size(); k++ ) {
+	if ( signal[k].device() == i &&
+	     ( signal[k].priority() != signal[k0].priority() ) ) {
+	  signal[k0].addError( DaqError::MultiplePriorities );
+	  signal[k].addError( DaqError::MultiplePriorities );
+	  signal[k].setPriority( signal[k0].priority() );
+	  success = false;
+	}
+      }
+      // device still busy?
+      if ( AO[i].AO->running() ) {
+	if ( signal[k0].priority() )
+	  AO[i].AO->reset();
+	else {
+	  for ( int k=k0; k<signal.size(); k++ ) {
+	    if ( signal[k].device() == i )
+	      signal[k].addError( DaqError::Busy );
+	  }
+	  success = false;
+	}
+      }
+    }
+  }
+
+  // clear device datas:
+  for ( unsigned int i=0; i<AO.size(); i++ )
+    AO[i].Signals.clear();
+
+  // add signals:
+  for ( int k=0; k<signal.size(); k++ )
+    AO[signal[k].device()].Signals.add( &signal[k] );
+
+  // multiple delays:
+  for ( int k=0; k<signal.size(); k++ ) {
+    if ( signal[k].delay() != 
+	 signal[0].delay() ) {
+      signal[0].addError( DaqError::MultipleDelays );
+      signal[k].addError( DaqError::MultipleDelays );
+      signal[k].setDelay( signal[0].delay() );
+      success = false;
+    }
+    if ( signal[k].delay() > 0 ) {
+      signal[k].addError( DaqError::InvalidDelay );
+      signal[k].setDelay( 0.0 );
+      success = false;
+    }
+  }
+
+  // error?
+  if ( ! success ) {
+    for ( unsigned int i=0; i<AO.size(); i++ )
+      AO[i].Signals.clear();
+    return -1;
+  }
+
+  // set intensities or levels:
+  bool usedatt[Att.size()];
+  for ( unsigned int a=0; a<Att.size(); a++ )
+    usedatt[a] = false;
+  for ( unsigned int i=0; i<AO.size(); i++ ) {
+    for ( int k=0; k<AO[i].Signals.size(); k++ ) {
+      for ( unsigned int a=0; a<Att.size(); a++ ) {
+	if ( Att[a].Id == (int)i &&
+	     Att[a].Att->aoChannel() == AO[i].Signals[k].channel() ) {
+	  usedatt[a] = true;
+	  if ( AO[i].Signals[k].noIntensity() && AO[i].Signals[k].noLevel() ) {
+	    AO[i].Signals[k].addError( DaqError::NoIntensity );
+	    success = false;
+	  }
+	  else if ( AO[i].Signals[k].noIntensity() ) {
+	    double level = AO[i].Signals[k].level();
+	    int ra = Att[a].Att->attenuate( level );
+	    AO[i].Signals[k].setLevel( level );
+	    AO[i].Signals[k].addAttError( ra );
+	  }
+	  else {
+	    double intens = AO[i].Signals[k].intensity();
+	    int ra = 0;
+	    if ( intens == OutData::MuteIntensity )
+	      ra = Att[a].Att->mute();
+	    else {
+	      double level = 0.0;
+	      ra = Att[a].Att->write( intens, AO[i].Signals[k].carrierFreq(), level );
+	      AO[i].Signals[k].setIntensity( intens );
+	      AO[i].Signals[k].setLevel( level );
+	    }
+	    if ( ra != 0 ) {
+	      AO[i].Signals[k].addAttError( ra );
+	      success = false;
+	    }
+	  }
+	}
+      }
+    }
+  }
+  for ( unsigned int a=0; a<Att.size(); a++ ) {
+    if ( ! usedatt[a] )
+      Att[a].Att->mute();
+  }
+
+  // start writing to daq boards:
+  if ( success ) {
+    if ( gainChanged() ||
+	 signal[0].restart() ||
+	 SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
+      vector< AOData* > aod;
+      aod.reserve( AO.size() );
+      for ( unsigned int i=0; i<AO.size(); i++ ) {
+	if ( AO[i].Signals.size() > 0 )
+	  aod.push_back( &AO[i] );
+      }
+      if ( restartRead( aod, true, true ) != 0 )
+	success = false;
+    }
+    else {
+      for ( unsigned int i=0; i<AO.size(); i++ ) {
+	if ( AO[i].Signals.size() > 0 ) {
+	  if ( AO[i].AO->directWrite( AO[i].Signals ) != 0 )
+	    success = false;
+	}
+      }
+    }
+  }
+  
+  // error?
+  if ( ! success ) {
+    for ( unsigned int i=0; i<AO.size(); i++ ) {
+      AO[i].AO->reset();
+      AO[i].Signals.clear();
+    }
+    return -1;
+  }
+
+  double st = Sim->add( signal[0] );
+  // device still busy?
+  if ( st < 0.0 ) {
+    if ( signal[0].priority() ) {
+      Sim->stopSignal();
+      st = Sim->add( signal[0] );
+    }
+    else
+      signal.addError( OutData::Busy );
+  }
+  if ( st >= 0.0 ) {
+    LastWrite = st;
+    LastDuration = signal[0].duration();
+    LastDelay = 0.0;  // this is already contained in st!
+  }
+
+  // error?
+  if ( signal.failed() ) {
+    LastWrite = -1.0;
+    return -1;
+  }
+
   return 0;
 }
 

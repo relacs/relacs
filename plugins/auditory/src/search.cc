@@ -199,7 +199,7 @@ int Search::main( void )
   SearchLeft = ( side == 0 );
 
   // update widgets:
-  postCustomEvent( 1 );
+  postCustomEvent( 11 );
 
   // don't print repro message:
   if ( repeats <= 0 )
@@ -274,7 +274,7 @@ int Search::main( void )
 	setIntensity( int( ceil( signal.intensity() - meanintensity )) );
       else
 	setIntensity( int( floor( signal.intensity() - meanintensity )) );
-      postCustomEvent( 2 );
+      postCustomEvent( 12 );
       write( signal );
     }
 
@@ -575,7 +575,7 @@ void Search::dialogAccepted( void )
 void Search::customEvent( QCustomEvent *qce )
 {
   emit intensityChanged( int(Intensity) );
-  if ( qce->type() - QEvent::User == 1  ) {
+  if ( qce->type() - QEvent::User == 11  ) {
     emit durationChanged( int(1000.0*Duration) );
     emit pauseChanged( int(1000.0*Pause) );
     emit frequencyChanged( int(Frequency) );
@@ -585,7 +585,8 @@ void Search::customEvent( QCustomEvent *qce )
       side = metaData( "Cell" ).index( "best side" );
     setSpeaker( ( side == 0 ) );
   }
-
+  else
+    RePro::customEvent( qce );
 }
 
 

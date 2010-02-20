@@ -301,7 +301,7 @@ void Session::main( void )
       EODRate = eode.frequency( ct - 0.5, ct );
       EODRates.push( ct, EODRate );
       stimulusData().setNumber( "EOD Rate", EODRate );
-      postCustomEvent( 1 );
+      postCustomEvent( 11 );
 
       // EOD Amplitude:
       EODAmplitude = eode.meanSize( ct - 0.5, ct );
@@ -317,18 +317,18 @@ void Session::main( void )
 
 void Session::notify( void )
 {
-  postCustomEvent( 2 );
+  postCustomEvent( 12 );
 }
 
 
 void Session::customEvent( QCustomEvent *qce )
 {
-  if ( qce->type() == QEvent::User+1 ) {
+  if ( qce->type() == QEvent::User+11 ) {
     lock();
     EODRateLCD->display( rint( stimulusData().number( "EOD Rate" ) ) );
     unlock();
   }
-  else if ( qce->type() == QEvent::User+2 ) {
+  else if ( qce->type() == QEvent::User+12 ) {
     lock();
     for ( int k=0; k<SpikeTraces; k++ ) {
       // XXX this option is set from a RePro without locking it!
@@ -339,6 +339,8 @@ void Session::customEvent( QCustomEvent *qce )
     }
     unlock();
   }
+  else
+    Control::customEvent( qce );
 }
 
 

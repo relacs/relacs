@@ -54,6 +54,7 @@ SetOutput::SetOutput( void )
 	   this, SLOT( keepValues() ) );
 
   bb->setFixedHeight( OKButton->sizeHint().height() );
+  bb->setSpacing( 4 );
 }
 
 
@@ -112,11 +113,11 @@ int SetOutput::main( void )
 
   if ( interactive ) {
     OutOpts.delFlags( Parameter::changedFlag() );
-    postCustomEvent( 1 ); // STW.setFocus();
+    postCustomEvent( 11 ); // STW.setFocus();
     // wait for input:
     Change = false;
     sleepWait();
-    postCustomEvent( 2 ); // STW.clearFocus();
+    postCustomEvent( 12 ); // STW.clearFocus();
     // set new values:
     if ( Change ) {
       OutList sigs;
@@ -169,13 +170,15 @@ const Options &SetOutput::outTraces( void ) const
 
 void SetOutput::customEvent( QCustomEvent *qce )
 {
-  if ( qce->type() == QEvent::User+1 ) {
+  if ( qce->type() == QEvent::User+11 ) {
     if ( STW.firstWidget() != 0 )
       STW.firstWidget()->setFocus();
   }
-  else if ( qce->type() == QEvent::User+2 ) {
+  else if ( qce->type() == QEvent::User+12 ) {
     clearFocus();
   }
+  else
+    RePro::customEvent( qce );
 }
 
 

@@ -112,7 +112,7 @@ int LinearField::main( void )
   P.setYLabel( "RMS Amplitude [" + trace( 0 ).unit() + "]" );
   P.setYRange( 0.0, Plot::AutoScale );
 
-  postCustomEvent( 1 ); // O.setFocus();
+  postCustomEvent( 11 ); // O.setFocus();
   do {
     // wait for input:
     Measure = false;
@@ -135,7 +135,7 @@ int LinearField::main( void )
     }
   } while ( Measure && ! interrupt() );
   saveAmplitude();
-  postCustomEvent( 2 ); // O.clearFocus();
+  postCustomEvent( 12 ); // O.clearFocus();
   return Completed;
 }
 
@@ -243,13 +243,15 @@ void LinearField::keyPressEvent( QKeyEvent *e )
 
 void LinearField::customEvent( QCustomEvent *qce )
 {
-  if ( qce->type() == QEvent::User+1 ) {
+  if ( qce->type() == QEvent::User+11 ) {
     if ( O.firstWidget() != 0 )
       O.firstWidget()->setFocus();
   }
-  else if ( qce->type() == QEvent::User+2 ) {
+  else if ( qce->type() == QEvent::User+12 ) {
     clearFocus();
   }
+  else
+    RePro::customEvent( qce );
 }
 
 

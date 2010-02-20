@@ -594,23 +594,23 @@ void OptWidget::accept( bool clearchanged )
   if ( OMutex != 0 )
     OMutex->lock();
 
-  // get the values:
-  for ( unsigned int k=0; k<Widgets.size(); k++ )
-    Widgets[k]->get();
-
-  // notify:
-  DisableUpdate = true;
-  if ( Opt->notifying() )
-    Opt->notify();
-  DisableUpdate = false;
+  if ( ! ContinuousUpdate ) {
+    // get the values:
+    for ( unsigned int k=0; k<Widgets.size(); k++ )
+      Widgets[k]->get();
+    // notify:
+    DisableUpdate = true;
+    if ( Opt->notifying() )
+      Opt->notify();
+    DisableUpdate = false;
+  }
 
   // react to accept:
   emit valuesChanged();
 
   // clear changedflag:
-  if ( clearchanged ) {
+  if ( clearchanged )
     Opt->delFlags( changedFlag() );
-  }
 
   if ( OMutex != 0 )
     OMutex->unlock();
@@ -780,9 +780,8 @@ OptWidgetBase::OptWidgetBase( Options::iterator op, QWidget *label,
   if ( OW->readOnlyMask() < 0 ||
        ( OW->readOnlyMask() > 0 && ( (*op).flags() & OW->readOnlyMask() ) ) )
     Editable = false;
-  else {
+  else
     (*OP).delFlags( OW->changedFlag() );
-  }
   ow->addWidget( this );
 }
 
@@ -901,22 +900,26 @@ void OptWidgetText::update( void )
 void OptWidgetText::textChanged( const QString &s )
 {
   if ( ContUpdate && Editable ) {
-    if ( OMutex != 0 && ! InternChanged )
-      OMutex->lock();
-    OW->DisableUpdate = true;
-    bool cn = OO->notifying();
-    OO->unsetNotify();
-    (*OP).setText( s.latin1() );
-    if ( (*OP).text( 0 ) != Value )
-      (*OP).addFlags( OW->changedFlag() );
-    Value = (*OP).text( 0 );
-    if ( cn )
-      OO->notify();
-    (*OP).delFlags( OW->changedFlag() );
-    OO->setNotify( cn );
-    OW->DisableUpdate = false;
-    if ( OMutex != 0 && ! InternChanged )
-      OMutex->unlock();
+    if ( InternChanged )
+      Value = (*OP).text( 0 );
+    else {
+      if ( OMutex != 0 )
+	OMutex->lock();
+      OW->DisableUpdate = true;
+      bool cn = OO->notifying();
+      OO->unsetNotify();
+      (*OP).setText( s.latin1() );
+      if ( (*OP).text( 0 ) != Value )
+	(*OP).addFlags( OW->changedFlag() );
+      Value = (*OP).text( 0 );
+      if ( cn )
+	OO->notify();
+      (*OP).delFlags( OW->changedFlag() );
+      OO->setNotify( cn );
+      OW->DisableUpdate = false;
+      if ( OMutex != 0 )
+	OMutex->unlock();
+    }
   }
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
     Widgets[k]->activateOption( (*Widgets[k]->OP).testActivation( s.latin1() ) );
@@ -1113,24 +1116,28 @@ void OptWidgetMultiText::update( void )
 void OptWidgetMultiText::textChanged( const QString &s )
 {
   if ( ContUpdate && Editable && Update) {
-    if ( OMutex != 0 && ! InternChanged )
-      OMutex->lock();
-    OW->DisableUpdate = true;
-    bool cn = OO->notifying();
-    OO->unsetNotify();
-    (*OP).setText( s.latin1() );
-    for ( int k=0; k<EW->count(); k++ )
-      (*OP).addText( EW->text( k ).latin1() );
-    if ( (*OP).text( 0 ) != Value )
-      (*OP).addFlags( OW->changedFlag() );
-    Value = (*OP).text( 0 );
-    if ( cn )
-      OO->notify();
-    (*OP).delFlags( OW->changedFlag() );
-    OO->setNotify( cn );
-    OW->DisableUpdate = false;
-    if ( OMutex != 0 && ! InternChanged )
-      OMutex->unlock();
+    if ( InternChanged )
+      Value = (*OP).text( 0 );
+    else {
+      if ( OMutex != 0 )
+	OMutex->lock();
+      OW->DisableUpdate = true;
+      bool cn = OO->notifying();
+      OO->unsetNotify();
+      (*OP).setText( s.latin1() );
+      for ( int k=0; k<EW->count(); k++ )
+	(*OP).addText( EW->text( k ).latin1() );
+      if ( (*OP).text( 0 ) != Value )
+	(*OP).addFlags( OW->changedFlag() );
+      Value = (*OP).text( 0 );
+      if ( cn )
+	OO->notify();
+      (*OP).delFlags( OW->changedFlag() );
+      OO->setNotify( cn );
+      OW->DisableUpdate = false;
+      if ( OMutex != 0 )
+	OMutex->unlock();
+    }
   }
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
     Widgets[k]->activateOption( (*Widgets[k]->OP).testActivation( s.latin1() ) );
@@ -1251,9 +1258,8 @@ void OptWidgetNumber::get( void )
     bool cn = OO->notifying();
     OO->unsetNotify();
     (*OP).setNumber( EW->value(), (*OP).outUnit() );
-    if ( fabs( (*OP).number( 0 ) - Value ) > 0.0001*(*OP).step() ) {
+    if ( fabs( (*OP).number( 0 ) - Value ) > 0.0001*(*OP).step() )
       (*OP).addFlags( OW->changedFlag() );
-    }
     Value = (*OP).number();
     OO->setNotify( cn );
   }
@@ -1310,23 +1316,26 @@ void OptWidgetNumber::update( void )
 void OptWidgetNumber::valueChanged( double v )
 {
   if ( ContUpdate && Editable ) {
-    if ( OMutex != 0 && ! InternChanged )
-      OMutex->lock();
-    OW->DisableUpdate = true;
-    bool cn = OO->notifying();
-    OO->unsetNotify();
-    (*OP).setNumber( v, (*OP).outUnit() );
-    if ( fabs( (*OP).number( 0 ) - Value ) > 0.0001*(*OP).step() ) {
-      (*OP).addFlags( OW->changedFlag() );
+    if ( InternChanged )
+      Value = (*OP).number();
+    else {
+      if ( OMutex != 0 )
+	OMutex->lock();
+      OW->DisableUpdate = true;
+      bool cn = OO->notifying();
+      OO->unsetNotify();
+      (*OP).setNumber( v, (*OP).outUnit() );
+      if ( fabs( (*OP).number( 0 ) - Value ) > 0.0001*(*OP).step() )
+	(*OP).addFlags( OW->changedFlag() );
+      Value = (*OP).number();
+      if ( cn )
+	OO->notify();
+      (*OP).delFlags( OW->changedFlag() );
+      OO->setNotify( cn );
+      OW->DisableUpdate = false;
+      if ( OMutex != 0 )
+	OMutex->unlock();
     }
-    Value = (*OP).number();
-    if ( cn )
-      OO->notify();
-    (*OP).delFlags( OW->changedFlag() );
-    OO->setNotify( cn );
-    OW->DisableUpdate = false;
-    if ( OMutex != 0 && ! InternChanged )
-      OMutex->unlock();
   }
 
   double tol = 0.2;
@@ -1426,22 +1435,26 @@ void OptWidgetBoolean::resetDefault( void )
 void OptWidgetBoolean::valueChanged( bool v )
 {
   if ( ContUpdate && Editable ) {
-    if ( OMutex != 0 && ! InternChanged )
-      OMutex->lock();
-    OW->DisableUpdate = true;
-    bool cn = OO->notifying();
-    OO->unsetNotify();
-    (*OP).setBoolean( v );
-    if ( (*OP).boolean( 0 ) != Value )
-      (*OP).addFlags( OW->changedFlag() );
-    Value = (*OP).boolean();
-    if ( cn )
-      OO->notify();
-    (*OP).delFlags( OW->changedFlag() );
-    OO->setNotify( cn );
-    OW->DisableUpdate = false;
-    if ( OMutex != 0 && ! InternChanged )
-      OMutex->unlock();
+    if ( InternChanged )
+      Value = (*OP).boolean();
+    else {
+      if ( OMutex != 0 )
+	OMutex->lock();
+      OW->DisableUpdate = true;
+      bool cn = OO->notifying();
+      OO->unsetNotify();
+      (*OP).setBoolean( v );
+      if ( (*OP).boolean( 0 ) != Value )
+	(*OP).addFlags( OW->changedFlag() );
+      Value = (*OP).boolean();
+      if ( cn )
+	OO->notify();
+      (*OP).delFlags( OW->changedFlag() );
+      OO->setNotify( cn );
+      OW->DisableUpdate = false;
+      if ( OMutex != 0 )
+	OMutex->unlock();
+    }
   }
   string b( v ? "true" : "false" );
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
@@ -1541,26 +1554,33 @@ void OptWidgetDate::resetDefault( void )
 void OptWidgetDate::valueChanged( const QDate &date )
 {
   if ( ContUpdate && Editable ) {
-    if ( OMutex != 0 && ! InternChanged )
-      OMutex->lock();
-    OW->DisableUpdate = true;
-    bool cn = OO->notifying();
-    OO->unsetNotify();
-    (*OP).setDate( date.year(), date.month(), date.day() );
-    if ( (*OP).year( 0 ) != Year ||
-	 (*OP).month( 0 ) != Month ||
-	 (*OP).day( 0 ) != Day )
-      (*OP).addFlags( OW->changedFlag() );
-    Year = (*OP).year( 0 );
-    Month = (*OP).month( 0 );
-    Day = (*OP).day( 0 );
-    if ( cn )
-      OO->notify();
-    (*OP).delFlags( OW->changedFlag() );
-    OO->setNotify( cn );
-    OW->DisableUpdate = false;
-    if ( OMutex != 0 && ! InternChanged )
-      OMutex->unlock();
+    if ( InternChanged ) {
+      Year = (*OP).year( 0 );
+      Month = (*OP).month( 0 );
+      Day = (*OP).day( 0 );
+    }
+    else {
+      if ( OMutex != 0 )
+	OMutex->lock();
+      OW->DisableUpdate = true;
+      bool cn = OO->notifying();
+      OO->unsetNotify();
+      (*OP).setDate( date.year(), date.month(), date.day() );
+      if ( (*OP).year( 0 ) != Year ||
+	   (*OP).month( 0 ) != Month ||
+	   (*OP).day( 0 ) != Day )
+	(*OP).addFlags( OW->changedFlag() );
+      Year = (*OP).year( 0 );
+      Month = (*OP).month( 0 );
+      Day = (*OP).day( 0 );
+      if ( cn )
+	OO->notify();
+      (*OP).delFlags( OW->changedFlag() );
+      OO->setNotify( cn );
+      OW->DisableUpdate = false;
+      if ( OMutex != 0 )
+	OMutex->unlock();
+    }
   }
   string s = "";
   if ( DE != 0 )
@@ -1658,26 +1678,33 @@ void OptWidgetTime::resetDefault( void )
 void OptWidgetTime::valueChanged( const QTime &time )
 {
   if ( ContUpdate && Editable ) {
-    if ( OMutex != 0 && ! InternChanged )
-      OMutex->lock();
-    OW->DisableUpdate = true;
-    bool cn = OO->notifying();
-    OO->unsetNotify();
-    (*OP).setTime( time.hour(), time.minute(), time.second() );
-    if ( (*OP).hour( 0 ) != Hour ||
-	 (*OP).minutes( 0 ) != Minutes ||
-	 (*OP).seconds( 0 ) != Seconds )
-      (*OP).addFlags( OW->changedFlag() );
-    Hour = (*OP).hour( 0 );
-    Minutes = (*OP).minutes( 0 );
-    Seconds = (*OP).seconds( 0 );
-    if ( cn )
-      OO->notify();
-    (*OP).delFlags( OW->changedFlag() );
-    OO->setNotify( cn );
-    OW->DisableUpdate = false;
-    if ( OMutex != 0 && ! InternChanged )
-      OMutex->unlock();
+    if ( InternChanged ) {
+      Hour = (*OP).hour( 0 );
+      Minutes = (*OP).minutes( 0 );
+      Seconds = (*OP).seconds( 0 );
+    }
+    else {
+      if ( OMutex != 0 )
+	OMutex->lock();
+      OW->DisableUpdate = true;
+      bool cn = OO->notifying();
+      OO->unsetNotify();
+      (*OP).setTime( time.hour(), time.minute(), time.second() );
+      if ( (*OP).hour( 0 ) != Hour ||
+	   (*OP).minutes( 0 ) != Minutes ||
+	   (*OP).seconds( 0 ) != Seconds )
+	(*OP).addFlags( OW->changedFlag() );
+      Hour = (*OP).hour( 0 );
+      Minutes = (*OP).minutes( 0 );
+      Seconds = (*OP).seconds( 0 );
+      if ( cn )
+	OO->notify();
+      (*OP).delFlags( OW->changedFlag() );
+      OO->setNotify( cn );
+      OW->DisableUpdate = false;
+      if ( OMutex != 0 )
+	OMutex->unlock();
+    }
   }
   string s = "";
   if ( TE != 0 )

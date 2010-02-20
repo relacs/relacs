@@ -1583,10 +1583,14 @@ int Acquire::write( OutData &signal )
 {
   //  cerr << "Acquire::write( OutData& ) -> " << signal.ident() << '\n';
 
+  signal.clearError();
+
   // set trace:
   applyOutTrace( signal );
 
-  signal.clearError();
+  // error?
+  if ( signal.failed() )
+    return -1;
 
   // get ao device:
   int di = signal.device();
@@ -1711,11 +1715,14 @@ int Acquire::write( OutList &signal )
   //  cerr << "Acquire::write( OutList& )\n";
 
   bool success = true;
+  signal.clearError();
 
   // set trace:
   applyOutTrace( signal );
 
-  signal.clearError();
+  // error?
+  if ( signal.failed() )
+    return -1;
 
   // get device ids and sort signal per device:
   for ( int k=0; k<signal.size(); k++ ) {
@@ -1964,11 +1971,14 @@ int Acquire::writeData( void )
 
 int Acquire::directWrite( OutData &signal )
 {
-  cerr << "SINGLE CHANNEL DIRECT WRITE\n";
+  signal.clearError();
+
   // set trace:
   applyOutTrace( signal );
 
-  signal.clearError();
+  // error?
+  if ( signal.failed() )
+    return -1;
 
   // get ao device:
   int di = signal.device();
@@ -2063,16 +2073,17 @@ int Acquire::directWrite( OutData &signal )
 
 int Acquire::directWrite( OutList &signal )
 {
-  cerr << "MULTI CHANNEL DIRECT WRITE " << signal.size() << "\n";
   if ( signal.size() <= 0 )
     return 0;
 
   bool success = true;
+  signal.clearError();
 
   // set trace:
   applyOutTrace( signal );
 
-  signal.clearError();
+  if ( signal.failed() )
+    return -1;
 
   // get device ids and sort signal per device:
   for ( int k=0; k<signal.size(); k++ ) {
