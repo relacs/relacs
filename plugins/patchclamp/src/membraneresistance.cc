@@ -52,7 +52,7 @@ MembraneResistance::MembraneResistance( void )
   addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
   addBoolean( "nossfit", "Fix steady-state potential for fit", true );
   addBoolean( "plotstdev", "Plot standard deviation of membrane potential", true );
-  addBoolean( "setdata", "Set results to the session variables", true );
+  addSelection( "setdata", "Set results to the session variables", "rest only|always|never" );
   addTypeStyle( OptWidget::Bold, Parameter::Label );
 
   // plot:
@@ -135,7 +135,7 @@ int MembraneResistance::main( void )
     MeanCurrent = MeanTrace;
   else
     MeanCurrent.clear();
-  DCCurrent = metaData( "Cell" ).number( "dc", IUnit );
+  DCCurrent = stimulusData().number( outTraceName( outcurrent ) );
   VRest = 0.0;
   VRestsd = 0.0;
   VSS = 0.0;
@@ -391,7 +391,17 @@ void MembraneResistance::save( void )
   saveTrace( header );
   saveExpFit( header );
 
-  if ( settings().boolean( "setdata" ) ) {
+  bool setdata = ( settings().index( "setdata" ) <= 1 );
+  if ( settings().index( "setdata" ) == 0 ) {
+    // all outputs must be at 0:
+    for ( int k=0; k<outTracesSize(); k++ ) {
+      if ( fabs( stimulusData().number( outTraceName( k ) ) ) > 1.0e-6 ) {
+	setdata = false;
+	break;
+      }
+    }
+  }
+  if ( setdata ) {
     Options &mo = metaData( "Cell" );
     mo.setNumber( "vrest", 0.001*VRest, 0.001*VRestsd );
     mo.setNumber( "rm", RMOn  );

@@ -55,7 +55,6 @@ ThresholdLatencies::ThresholdLatencies( void )
   addNumber( "startamplitudestep", "Initial size of amplitude steps used for searching threshold", 0.1, 0.0, 1000.0, 0.001 );
   addNumber( "amplitudestep", "Final size of amplitude steps used for oscillating around threshold", 0.01, 0.0, 1000.0, 0.001 );
   addSelection( "adjust", "Adjust", "DC|none|stimulus|DC" );
-  addBoolean( "usedc", "Use DC amplitude", false );
   setFlags( 1 );
   addTypeStyle( OptWidget::Bold, Parameter::Label );
   setConfigSelectMask( 1 );
@@ -126,7 +125,6 @@ int ThresholdLatencies::main( void )
   double amplitudestep = number( "startamplitudestep" );
   double finalamplitudestep = number( "amplitudestep" );
   int adjust = index( "adjust" );
-  bool usedc = boolean( "usedc" );
   double membranetau = metaData( "Cell" ).number( "taum" );
   double pause = searchpause;
   if ( durationsel == 1 ) {
@@ -136,7 +134,7 @@ int ThresholdLatencies::main( void )
     }
     duration = durationfac*membranetau;
   }
-  double orgdcamplitude = metaData( "Cell" ).number( "dc" );
+  double orgdcamplitude = stimulusData().number( outTraceName( outcurrent ) );
   if ( amplitudesrc == 1 )
     amplitude = orgdcamplitude;
   else if ( amplitudesrc == 2 )
@@ -176,7 +174,7 @@ int ThresholdLatencies::main( void )
   bool record = false;
   bool search = true;
   DoneState state = Completed;
-  double dcamplitude = usedc ? orgdcamplitude : 0.0;
+  double dcamplitude = orgdcamplitude;
   Results.clear();
   Amplitudes.clear();
   Amplitudes.reserve( repeats > 0 ? repeats : 100 );
@@ -325,20 +323,13 @@ int ThresholdLatencies::main( void )
 
   tf << '\n';
   if ( record && TrialCount > 0 )
-    save( usedc );
+    save( fabs( orgdcamplitude ) > 1.0e-6 );
   Results.clear();
   Latencies.clear();
   Amplitudes.clear();
   DCAmplitudes.clear();
   SpikeCounts.clear();
   Spikes.clear();
-  if ( ! usedc ) {
-    dcsignal = orgdcamplitude;
-    dcsignal.setIdent( "DC=" + Str( orgdcamplitude ) + IUnit );
-    directWrite( dcsignal );
-  }
-  else
-    metaData( "Cell" ).setNumber( "dc", dcamplitude );
   return state;
 }
 

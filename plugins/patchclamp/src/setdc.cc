@@ -105,7 +105,7 @@ int SetDC::main( void )
   plotToggle( true, false, 1.0, 0.0 );
 
   // init:
-  double orgampl = metaData( "Cell" ).number( "dc" );
+  double orgampl = stimulusData().number( outTraceName( OutCurrent ) );
   DCAmplitude = metaData( "Cell" ).number( "ithresh" );
   if ( dcamplitudesel == 0 )
     DCAmplitude = dcamplitude;
@@ -176,7 +176,6 @@ int SetDC::main( void )
       dcsignal.setIdent( "DC=" + Str( DCAmplitude ) + IUnit );
       directWrite( dcsignal );
     }
-    metaData( "Cell" ).setNumber( "dc", DCAmplitude );
     message( "DC=<b>" + Str( DCAmplitude ) + "</b> " + IUnit );
   }
 

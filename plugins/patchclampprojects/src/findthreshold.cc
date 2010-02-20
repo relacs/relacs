@@ -116,7 +116,7 @@ int FindThreshold::main( void )
   double amplitudestep = number( "startamplitudestep" );
   double finalamplitudestep = number( "amplitudestep" );
   double minspikecount = number( "minspikecount" );
-  double orgdcamplitude = metaData( "Cell" ).number( "dc" );
+  double orgdcamplitude = stimulusData().number( outTraceName( outcurrent ) );
   if ( amplitudesrc == 1 )
     amplitude = orgdcamplitude;
   else if ( amplitudesrc == 2 )

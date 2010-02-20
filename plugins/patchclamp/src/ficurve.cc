@@ -200,7 +200,7 @@ int FICurve::main( void )
   OutData signal( duration, 1.0/samplerate );
   signal.setTrace( outcurrent );
   signal.setDelay( delay );
-  double dccurrent = metaData( "Cell" ).number( "dc", IUnit );
+  double dccurrent = stimulusData().number( outTraceName( outcurrent ) );
 
   // write stimulus:
   sleep( pause );
