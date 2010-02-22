@@ -44,6 +44,7 @@ FICurve::FICurve( void )
   addSelection( "outcurrent", "Output trace", "Current-1" );
   addLabel( "Stimulus" );
   addNumber( "imin", "Minimum injected current", 0.0, -1000.0, 1000.0, 0.001 );
+  addBoolean( "iminrelthresh", "Minimum current is relative to threshold", false );
   addNumber( "imax", "Maximum injected current", 1.0, -1000.0, 1000.0, 0.001 );
   addNumber( "istep", "Minimum step-size of current", 0.001, 0.001, 1000.0, 0.001 );
   addBoolean( "userm", "Use membrane resistance for estimating istep from vstep", false );
@@ -103,11 +104,17 @@ void FICurve::notify( void )
 
 int FICurve::main( void )
 {
+  Header.clear();
+  Header.addInteger( "index", completeRuns() );
+  Header.addInteger( "ReProIndex", reproCount() );
+  Header.addNumber( "ReProTime", "s", "%0.3f", reproStartTime() );
+
   // get options:
   int involtage = index( "involtage" );
   int incurrent = traceIndex( text( "incurrent", 0 ) );
   int outcurrent = outTraceIndex( text( "outcurrent", 0 ) );
   double imin = number( "imin" );
+  bool iminrelthresh = boolean( "iminrelthresh" );
   double imax = number( "imax" );
   double istep = number( "istep" );
   bool userm = boolean( "userm" );
@@ -123,6 +130,12 @@ int FICurve::main( void )
   double pause = number( "pause" );
   double fmax = number( "fmax" );
   double sswidth = number( "sswidth" );
+  if ( iminrelthresh ) {
+    double ithresh = metaData( "Cell" ).number( "ithreshon" );
+    if ( ithresh == 0.0 )
+      ithresh = metaData( "Cell" ).number( "ithreshss" );
+    imin += ithresh;
+  }
   if ( imax <= imin ) {
     warning( "imin must be smaller than imax!" );
     return Failed;
@@ -160,6 +173,7 @@ int FICurve::main( void )
       istep = ifac*vstep/rm;
     }
   }
+  Header.addNumber( "imin", imin, IUnit );
   Header.addNumber( "istep", istep, IUnit );
 
   // don't print repro message:

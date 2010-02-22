@@ -78,7 +78,7 @@ Whenever a recording session is started or stopped,
 sessionStarted() or sessionStopped() are called, respectively.
 You can implement these virtual functions according to your needs.
 Other functions related to sessions are sessionData(), sessionTime(),
-sessionTimeStr(), sessionRunning().
+sessionTimeStr(), sessionRunning(), reproCount().
 
 The meta data sections of the current recording can be accessed by metaData(const string&).
 Whenever some of the meta data are set to new values,
@@ -609,6 +609,8 @@ protected:
   string sessionTimeStr( void ) const;
     /*! True if a session is currently running. */
   bool sessionRunning( void ) const;
+    /*! The number of so far executed RePros of the running session. */
+  int reproCount( void ) const;
 
 
 protected slots:

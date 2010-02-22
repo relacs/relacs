@@ -106,7 +106,7 @@ int SetDC::main( void )
 
   // init:
   double orgampl = stimulusData().number( outTraceName( OutCurrent ) );
-  DCAmplitude = metaData( "Cell" ).number( "ithresh" );
+  DCAmplitude = metaData( "Cell" ).number( "ithreshss" );
   if ( dcamplitudesel == 0 )
     DCAmplitude = dcamplitude;
   else if ( dcamplitudesel == 1 )

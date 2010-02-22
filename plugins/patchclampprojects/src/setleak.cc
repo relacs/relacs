@@ -68,16 +68,22 @@ SetLeak::SetLeak( void )
   OKButton = new QPushButton( "&Ok", bb, "OkButton" );
   connect( OKButton, SIGNAL( clicked() ),
 	   this, SLOT( setValues() ) );
+  grabKey( ALT+Key_O );
+  grabKey( Key_Return );
+  grabKey( Key_Enter );
 
   // Cancel button:
   CancelButton = new QPushButton( "&Cancel", bb, "CancelButton" );
   connect( CancelButton, SIGNAL( clicked() ),
 	   this, SLOT( keepValues() ) );
+  grabKey( ALT+Key_C );
+  grabKey( Key_Escape );
 
   // Reset button:
-  ResetButton = new QPushButton( "Re&set", bb, "ResetButton" );
+  ResetButton = new QPushButton( "&Reset", bb, "ResetButton" );
   connect( ResetButton, SIGNAL( clicked() ),
 	   this, SLOT( resetValues() ) );
+  grabKey( ALT+Key_R );
 
   bb->setFixedHeight( OKButton->sizeHint().height() );
   bb->setSpacing( 4 );
@@ -208,6 +214,33 @@ int SetLeak::main( void )
   
   sleep( 0.01 );
   return Completed;
+}
+
+
+void SetLeak::keyPressEvent( QKeyEvent *e )
+{
+  if ( e->key() == Key_O && ( e->state() & AltButton ) ) {
+    OKButton->animateClick();
+    e->accept();
+  }
+  else if ( e->key() == Key_C && ( e->state() & AltButton ) ) {
+    CancelButton->animateClick();
+    e->accept();
+  }
+  else if ( e->key() == Key_R && ( e->state() & AltButton ) ) {
+    ResetButton->animateClick();
+    e->accept();
+  }
+  else if ( ( e->key() == Key_Return || e->key() == Key_Enter ) && ( e->state() & KeyButtonMask ) == 0 ) {
+    OKButton->animateClick();
+    e->accept();
+  }
+  else if ( e->key() == Key_Escape && ( e->state() & KeyButtonMask ) == 0 ) {
+    CancelButton->animateClick();
+    e->accept();
+  }
+  else
+    RePro::keyPressEvent( e );
 }
 
 

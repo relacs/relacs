@@ -93,6 +93,11 @@ public:
     /*! The elapsed time of the total program in seconds. */
   double totalTime( void ) const;
 
+    /*! The number of so far executed RePros of the running session. */
+  int reproCount( void ) const;
+    /*! Increment the RePro counter. */
+  void incrReProCount( void );
+
     /*! Add actions to the menu. */
   virtual void addActions( QPopupMenu *menu );
 
@@ -152,6 +157,9 @@ private:
 
     /*! Counts the sessions. */
   int SessionCounter;
+
+    /*! Counts the repros within a session. */
+  int ReProCounter;
 
     /*! The time the session was started. */
   time_t StartSessionTime;

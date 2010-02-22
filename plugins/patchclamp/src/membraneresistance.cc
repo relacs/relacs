@@ -375,6 +375,8 @@ void MembraneResistance::save( void )
 {
   Options header;
   header.addInteger( "index", completeRuns() );
+  header.addInteger( "ReProIndex", reproCount() );
+  header.addNumber( "ReProTime", "s", "%0.3f", reproStartTime() );
   header.addNumber( "Vrest", VUnit, "%6.1f", VRest );
   header.addNumber( "Vss", VUnit, "%6.1f", VSS );
   header.addNumber( "Rss", "MOhm", "%6.1f", RMss );
@@ -386,6 +388,8 @@ void MembraneResistance::save( void )
   header.addNumber( "Roff", "MOhm", "%6.1f", RMOff );
   header.addNumber( "Coff", "pF", "%6.1f", CMOff );
   header.addNumber( "Tauoff", "ms", "%6.1f", TauMOff );
+  header.addNumber( "Vsag", VUnit, "%6.1f", fabs( VPeak-VSS ) );
+  header.addNumber( "relVsag", "%", "%6.1f", 100.0*fabs( (VPeak-VSS)/(VSS-VRest) ) );
 
   saveData();
   saveTrace( header );
@@ -439,6 +443,11 @@ void MembraneResistance::saveData( void )
   datakey.addNumber( "R", "MOhm", "%6.1f", RMOff );
   datakey.addNumber( "C", "pF", "%6.1f", CMOff );
   datakey.addNumber( "tau", "ms", "%6.1f", TauMOff );
+  datakey.addLabel( "Sag" );
+  datakey.addNumber( "Vsag", VUnit, "%6.1f", fabs( VPeak-VSS ) );
+  datakey.addNumber( "s.d.", VUnit, "%6.1f", sqrt( VPeaksd*VPeaksd + VSSsd*VSSsd ) );
+  datakey.addNumber( "relVsag", "%", "%6.1f", 100.0*fabs( (VPeak-VSS)/(VSS-VRest) ) );
+  datakey.addNumber( "s.d.", "%", "%6.1f", 100.0*sqrt( VPeaksd*VPeaksd + fabs((VRest-VPeak)*VSSsd/(VSS-VRest))*fabs((VRest-VPeak)*VSSsd/(VSS-VRest)) )/fabs(VSS-VRest) );
   datakey.addLabel( "Status" );
   datakey.add( stimulusData() );
 

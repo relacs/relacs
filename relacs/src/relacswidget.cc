@@ -1154,6 +1154,7 @@ void RELACSWidget::startRePro( RePro *repro, int macroaction, bool saving )
   }
 
   ReProRunning = true;
+  SN->incrReProCount();
   
   readLockData();
   SF->holdOn();

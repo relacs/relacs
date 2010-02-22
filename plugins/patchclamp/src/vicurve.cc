@@ -106,6 +106,11 @@ void VICurve::notify( void )
 
 int VICurve::main( void )
 {
+  Header.clear();
+  Header.addInteger( "index", completeRuns() );
+  Header.addInteger( "ReProIndex", reproCount() );
+  Header.addNumber( "ReProTime", "s", "%0.3f", reproStartTime() );
+
   // get options:
   int involtage = index( "involtage" );
   int incurrent = traceIndex( text( "incurrent", 0 ) );
@@ -274,7 +279,7 @@ int VICurve::main( void )
       Range.setSkipBelow( Range.pos() );
       Range.noCount();
     }
-    if ( Results[Range.pos()].SpikeCount > 1 ) {
+    if ( Results[Range.pos()].SpikeCount.back() > 1.0 ) {
       Range.setSkipAbove( Range.pos() );
       Range.noCount();
     }
@@ -345,6 +350,17 @@ void VICurve::plot( double duration )
 
 void VICurve::save( void )
 {
+  for ( unsigned int j=Range.next( 0 );
+	j<Results.size();
+	j=Range.next( ++j ) ) {
+    double spikecount = min( Results[j].SpikeCount );
+    if ( spikecount > 0.0 ) {
+      metaData( "Cell" ).setNumber( "ithreshon", Results[j].I );
+      Header.addNumber( "Ithreshon", Results[j].I, IUnit );
+      break;
+    }
+  }
+
   saveData();
   saveTrace();
 }
@@ -458,11 +474,12 @@ VICurve::Data::Data( double delay, double duration, double stepsize,
     VPeakTime( 0.0 ),
     VSS( 0.0 ),
     VSSsd( 0.0 ),
-    SpikeCount( 0.0 ),
     MeanTrace( -delay, 2.0*duration, stepsize, 0.0 ),
     SquareTrace( -delay, 2.0*duration, stepsize, 0.0 ),
     StdevTrace( -delay, 2.0*duration, stepsize, 0.0 )
 {
+  SpikeCount.clear();
+  SpikeCount.reserve( 100 );
   if ( current )
     MeanCurrent = MeanTrace;
   else
@@ -525,7 +542,7 @@ void VICurve::Data::analyze( int count, const InData &intrace,
 
   // spikes:
   double sigtime = spikes.signalTime();
-  SpikeCount = spikes.count( sigtime, sigtime+duration );
+  SpikeCount.push( (double)spikes.count( sigtime, sigtime+duration ) );
 }
 
 

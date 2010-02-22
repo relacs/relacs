@@ -224,6 +224,8 @@ public:
     /*! A string displaying the elapsed time of the current RePro.
         \sa reproTime() */
   string reproTimeStr( void ) const;
+    /*! The time of the session when the RePro was started in seconds. */
+  double reproStartTime( void ) const;
 
     /*! Test of a single output signal \a signal for validity.
         Returns 0 on success or a negative number if \a signal
@@ -518,6 +520,7 @@ private:
   int TotalRuns;
   int AllRuns;
   int FailedRuns;
+  double ReProStartTime;
 
   Options OverwriteOpt;
   Options ProjectOpt;

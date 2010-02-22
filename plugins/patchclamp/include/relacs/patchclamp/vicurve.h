@@ -84,7 +84,7 @@ protected:
     double VPeakTime;
     double VSS;
     double VSSsd;
-    double SpikeCount;
+    ArrayD SpikeCount;
     SampleDataD MeanTrace;
     SampleDataD SquareTrace;
     SampleDataD StdevTrace;

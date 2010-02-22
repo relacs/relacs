@@ -49,6 +49,7 @@ RePro::RePro( const string &name, const string &titles,
   TotalRuns = 0;
   AllRuns = 0;
   FailedRuns = 0;
+  ReProStartTime = 0.0;
 
   ProjectOpt.addText( "project", "Project", "" );
   ProjectOpt.addText( "experiment", "Experiment", "" );
@@ -126,6 +127,7 @@ void RePro::run( void )
     message( "Running <b>" + title() + "</b> ..." );
 
   // init:
+  ReProStartTime = sessionTime();
   SoftStop = 0;
   GrabKeysAllowed = true;
   GrabKeysBaseSize = GrabKeys.size();
@@ -350,6 +352,12 @@ string RePro::reproTimeStr( void ) const
   rts.format( &time );
   return rts;
 
+}
+
+
+double RePro::reproStartTime( void ) const
+{
+  return ReProStartTime;
 }
 
 

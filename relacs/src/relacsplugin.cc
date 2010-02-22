@@ -919,6 +919,12 @@ bool RELACSPlugin::sessionRunning( void ) const
 }
 
 
+int RELACSPlugin::reproCount( void ) const
+{
+  return RW->SN->reproCount();
+}
+
+
 void RELACSPlugin::startTheSession( void )
 {
   RW->SN->startTheSession();

@@ -70,6 +70,7 @@ public slots:
 
 protected:
 
+  virtual void keyPressEvent( QKeyEvent *e );
   virtual void customEvent( QCustomEvent *qce );
 
   OptWidget STW;

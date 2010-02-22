@@ -45,6 +45,7 @@ Session::Session( RELACSWidget *rw, int height,
   TotalTimer.start();
   MessageTimer = new QTimer( this );
   connect( MessageTimer, SIGNAL( timeout() ), this, SLOT( timeMessage() ) );
+  ReProCounter = 0;
 
   TimeLabel = new QLabel( "-", this );
   TimeLabel->setTextFormat( PlainText );
@@ -115,6 +116,18 @@ double Session::totalTime( void ) const
 }
 
 
+int Session::reproCount( void ) const
+{
+  return ReProCounter;
+}
+
+
+void Session::incrReProCount( void )
+{
+  ReProCounter++;
+}
+
+
 void Session::polish( void )
 {
   QWidget::polish();
@@ -137,6 +150,8 @@ void Session::startTheSession( bool startmacro )
   SessionTimer.start();
   SessionSeconds = 0.0;
   timeMessage();
+
+  ReProCounter = 0;
 
   RW->startSession( startmacro );
 
@@ -194,6 +209,7 @@ void Session::stopTheSession( void )
 
   RW->stopSession( SaveData );
 
+  ReProCounter = 0;
   Running = false;
 }
 

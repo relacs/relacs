@@ -56,11 +56,11 @@ public:
 		double amplitude, double duration,
 		double savetime, double skiptime );
   void plot( bool record, double duration );
-  void openFiles( ofstream &tf, TableKey &tracekey,
-		  ofstream &sf, TableKey &spikekey, int incurrent );
+  void openFiles( ofstream &tf, TableKey &tracekey, int incurrent );
   void saveTrace( ofstream &tf, TableKey &tracekey, int index );
-  void saveSpikes( ofstream &sf, TableKey &spikekey, int index );
-  void saveData( bool dc );
+  void save( void );
+  void saveSpikes( void );
+  void saveData( void );
 
 
 protected:
@@ -87,6 +87,9 @@ protected:
   int TrialCount;
   ArrayD Amplitudes;
   ArrayD Latencies;
+  EventList Spikes;
+
+  Options Header;
 
 };
 

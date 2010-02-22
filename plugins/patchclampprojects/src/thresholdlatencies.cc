@@ -138,7 +138,7 @@ int ThresholdLatencies::main( void )
   if ( amplitudesrc == 1 )
     amplitude = orgdcamplitude;
   else if ( amplitudesrc == 2 )
-    amplitude = metaData( "Cell" ).number( "ithresh" );
+    amplitude = metaData( "Cell" ).number( "ithreshss" );
 
   if ( amplitudestep < finalamplitudestep ) {
     warning( "startamplitudestep must be larger than amplitudestep!" );
@@ -190,6 +190,13 @@ int ThresholdLatencies::main( void )
   TrialCount = 0;
   TableKey tracekey;
   ofstream tf;
+
+  // header:
+  Header.clear();
+  Header.addInteger( "index", completeRuns() );
+  Header.addInteger( "ReProIndex", reproCount() );
+  Header.addNumber( "ReProTime", "s", "%0.3f", reproStartTime() );
+  Header.addNumber( "duration", "ms", "%0.1f", 1000.0*duration );
 
   // plot trace:
   plotToggle( true, true, savetracetime, delay );
@@ -385,7 +392,8 @@ void ThresholdLatencies::openTraceFile( ofstream &tf, TableKey &tracekey,
   else
     tf.open( addPath( "thresholdlatencies-traces.dat" ).c_str(),
              ofstream::out | ofstream::app );
-  tf << "# status traces:\n";
+  Header.save( tf, "# " );
+  tf << "# status:\n";
   stimulusData().save( tf, "#   " );
   tf << "# settings:\n";
   settings().save( tf, "#   " );
@@ -422,6 +430,22 @@ void ThresholdLatencies::saveTrace( ofstream &tf, TableKey &tracekey, int index 
 
 void ThresholdLatencies::save( bool dc )
 {
+  double basd = 0.0;
+  double bam = DCAmplitudes.mean( basd );
+  Header.addNumber( "dcamplitude", IUnit, "%7.3f", bam );
+  Header.addNumber( "dcamplitude s.d.", IUnit, "%7.3f", basd );
+  double asd = 0.0;
+  double am = Amplitudes.mean( asd );
+  Header.addNumber( "amplitude", IUnit, "%7.3f", am );
+  Header.addNumber( "amplitude s.d.", IUnit, "%7.3f", asd );
+  Header.addNumber( "trials", "1", "%6.0f", (double)TrialCount );
+  Header.addNumber( "spikes", "1", "%6.0f", (double)SpikeCount );
+  Header.addNumber( "prob", "%", "%5.1f", 100.0*(double)SpikeCount/(double)TrialCount );
+  double lsd = 0.0;
+  double lm = Latencies.mean( lsd );
+  Header.addNumber( "latency", "ms", "%6.2f", 1000.0*lm );
+  Header.addNumber( "latency s.d.", "ms", "%6.2f", 1000.0*lsd );
+
   saveSpikes();
   saveData( dc );
 }
@@ -435,25 +459,7 @@ void ThresholdLatencies::saveSpikes( void )
   else
     sf.open( addPath( "thresholdlatencies-spikes.dat" ).c_str(),
              ofstream::out | ofstream::app );
-
-  Options header;
-  double basd = 0.0;
-  double bam = DCAmplitudes.mean( basd );
-  header.addNumber( "dcamplitude", IUnit, "%7.3f", bam );
-  header.addNumber( "dcamplitude s.d.", IUnit, "%7.3f", basd );
-  double asd = 0.0;
-  double am = Amplitudes.mean( asd );
-  header.addNumber( "amplitude", IUnit, "%7.3f", am );
-  header.addNumber( "amplitude s.d.", IUnit, "%7.3f", asd );
-  header.addNumber( "trials", "1", "%6.0f", (double)TrialCount );
-  header.addNumber( "spikes", "1", "%6.0f", (double)SpikeCount );
-  header.addNumber( "prob", "%", "%5.1f", 100.0*(double)SpikeCount/(double)TrialCount );
-  double lsd = 0.0;
-  double lm = Latencies.mean( lsd );
-  header.addNumber( "latency", "ms", "%6.2f", 1000.0*lm );
-  header.addNumber( "latency s.d.", "ms", "%6.2f", 1000.0*lsd );
-
-  header.save( sf, "# " );
+  Header.save( sf, "# " );
   sf << "# status:\n";
   stimulusData().save( sf, "#   " );
   sf << "# settings:\n";
@@ -470,7 +476,7 @@ void ThresholdLatencies::saveSpikes( void )
     sf << "# dcamplitude: " << Str( DCAmplitudes[k] ) << IUnit << '\n';
     sf << "#   amplitude: " << Str( Amplitudes[k] ) << IUnit << '\n';
     sf << "# spike count: " << Str( SpikeCounts[k] ) << '\n';
-    Results.back().Spikes.saveText( sf, 1000.0, 7, 2, 'f', "-0" );
+    Spikes[k].saveText( sf, 1000.0, 7, 2, 'f', "-0" );
     sf << '\n';
   }
 
@@ -482,6 +488,7 @@ void ThresholdLatencies::saveData( bool dc )
 {
   TableKey datakey;
   datakey.addLabel( "Data" );
+  datakey.addNumber( "duration", "ms", "%6.1f", Header.number( "duration" ) );
   double basd = 0.0;
   double bam = DCAmplitudes.mean( basd );
   datakey.addNumber( "dcamplitude", IUnit, "%7.3f", bam );

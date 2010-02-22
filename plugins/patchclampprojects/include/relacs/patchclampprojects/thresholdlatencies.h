@@ -94,6 +94,8 @@ protected:
   ArrayI SpikeCounts;
   EventList Spikes;
 
+  Options Header;
+
 };
 
 

@@ -55,6 +55,7 @@ FindThreshold::FindThreshold( void )
   addNumber( "startamplitudestep", "Initial size of amplitude steps used for searching threshold", 0.1, 0.0, 1000.0, 0.001 );
   addNumber( "amplitudestep", "Final size of amplitude steps used for oscillating around threshold", 0.01, 0.0, 1000.0, 0.001 );
   addNumber( "minspikecount", "Minimum required spike count for each trial", 1.0, 0.0, 10000.0, 1.0 );
+  addBoolean( "resetcurrent", "Reset current to zero after each stimulus", false );
   addTypeStyle( OptWidget::Bold, Parameter::Label );
 
   // plot:
@@ -117,10 +118,11 @@ int FindThreshold::main( void )
   double finalamplitudestep = number( "amplitudestep" );
   double minspikecount = number( "minspikecount" );
   double orgdcamplitude = stimulusData().number( outTraceName( outcurrent ) );
+  bool resetcurrent = boolean( "resetcurrent" );
   if ( amplitudesrc == 1 )
     amplitude = orgdcamplitude;
   else if ( amplitudesrc == 2 )
-    amplitude = metaData( "Cell" ).number( "ithresh" );
+    amplitude = metaData( "Cell" ).number( "ithreshss" );
 
   if ( amplitudestep < finalamplitudestep ) {
     warning( "startamplitudestep must be larger than amplitudestep!" );
@@ -161,12 +163,19 @@ int FindThreshold::main( void )
   Results.clear();
   Amplitudes.clear();
   Amplitudes.reserve( 100 );
+  Spikes.clear();
+  Spikes.reserve( repeats > 0 ? repeats : 100 );
   SpikeCount = 0;
   TrialCount = 0;
   TableKey tracekey;
   ofstream tf;
-  TableKey spikekey;
-  ofstream sf;
+
+  // header:
+  Header.clear();
+  Header.addInteger( "index", completeRuns() );
+  Header.addInteger( "ReProIndex", reproCount() );
+  Header.addNumber( "ReProTime", "s", "%0.3f", reproStartTime() );
+  Header.addNumber( "duration", "ms", "%0.1f", 1000.0*duration );
 
   // plot trace:
   plotToggle( true, true, 0.5*duration+savetime, 0.5*duration );
@@ -200,7 +209,8 @@ int FindThreshold::main( void )
     // signal:
     signal = amplitude;
     signal.setIdent( "const ampl=" + Str( amplitude ) + IUnit );
-    signal.back() = 0.0;
+    if ( resetcurrent )
+      signal.back() = 0.0;
     write( signal );
     if ( signal.failed() ) {
       warning( signal.errorText() );
@@ -219,10 +229,8 @@ int FindThreshold::main( void )
 
     // analyze, plot, and save:
     analyze( involtage, incurrent, amplitude, duration, savetime, skiptime );
-    if ( record ) {
+    if ( record )
       saveTrace( tf, tracekey, count-1 );
-      saveSpikes( sf, spikekey, count-1 );
-    }
     plot( record, duration );
 
     // change stimulus amplitude:
@@ -250,11 +258,13 @@ int FindThreshold::main( void )
 	  Amplitudes.reserve( repeats > 0 ? repeats : 1000 );
 	  Latencies.clear();
 	  Latencies.reserve( repeats > 0 ? repeats : 1000 );
+	  Spikes.clear();
+	  Spikes.reserve( repeats > 0 ? repeats : 100 );
 	  if ( search )
 	    search = false;
 	  else {
 	    record = true;
-	    openFiles( tf, tracekey, sf, spikekey, incurrent );
+	    openFiles( tf, tracekey, incurrent );
 	  }
 	}
 	else
@@ -271,12 +281,12 @@ int FindThreshold::main( void )
   }
 
   tf << '\n';
-  sf << '\n';
   if ( record && TrialCount > 0 )
-    saveData( false );
+    save();
   Results.clear();
   Latencies.clear();
   Amplitudes.clear();
+  Spikes.clear();
   return state;
 }
 
@@ -308,11 +318,11 @@ void FindThreshold::analyze( int involtage, int incurrent,
     Latencies.push( Results.back().Spikes.latency( 0.0 ) );
   }
   Amplitudes.push( Results.back().Amplitude );
+  Spikes.push( Results.back().Spikes );
 }
 
 
 void FindThreshold::openFiles( ofstream &tf, TableKey &tracekey,
-			       ofstream &sf, TableKey &spikekey,
 			       int incurrent )
 {
   tracekey.addNumber( "t", "ms", "%7.2f" );
@@ -324,6 +334,7 @@ void FindThreshold::openFiles( ofstream &tf, TableKey &tracekey,
   else
     tf.open( addPath( "findthreshold-traces.dat" ).c_str(),
              ofstream::out | ofstream::app );
+  Header.save( tf, "# " );
   tf << "# status:\n";
   stimulusData().save( tf, "#   " );
   tf << "# settings:\n";
@@ -331,20 +342,6 @@ void FindThreshold::openFiles( ofstream &tf, TableKey &tracekey,
   tf << '\n';
   tracekey.saveKey( tf, true, false );
   tf << '\n';
-
-  spikekey.addNumber( "t", "ms", "%7.2f" );
-  if ( completeRuns() <= 0 )
-    sf.open( addPath( "findthreshold-spikes.dat" ).c_str() );
-  else
-    sf.open( addPath( "findthreshold-spikes.dat" ).c_str(),
-             ofstream::out | ofstream::app );
-  sf << "# status:\n";
-  stimulusData().save( sf, "#   " );
-  sf << "# settings:\n";
-  settings().save( sf, "#   " );
-  sf << '\n';
-  spikekey.saveKey( sf, true, false );
-  sf << '\n';
 }
 
 
@@ -372,20 +369,63 @@ void FindThreshold::saveTrace( ofstream &tf, TableKey &tracekey, int index )
 }
 
 
-void FindThreshold::saveSpikes( ofstream &sf, TableKey &spikekey, int index )
+void FindThreshold::save( void )
 {
-  sf << "#       index: " << Str( index ) << '\n';
-  sf << "#   amplitude: " << Str( Results.back().Amplitude ) << IUnit << '\n';
-  sf << "# spike count: " << Str( Results.back().SpikeCount ) << '\n';
-  Results.back().Spikes.saveText( sf, 1000.0, 7, 2, 'f', "-0" );
+  double asd = 0.0;
+  double am = Amplitudes.mean( asd );
+  Header.addNumber( "amplitude", IUnit, "%7.3f", am );
+  Header.addNumber( "amplitude s.d.", IUnit, "%7.3f", asd );
+  Header.addNumber( "trials", "1", "%6.0f", (double)TrialCount );
+  Header.addNumber( "spikes", "1", "%6.0f", (double)SpikeCount );
+  Header.addNumber( "prob", "%", "%5.1f", 100.0*(double)SpikeCount/(double)TrialCount );
+  double lsd = 0.0;
+  double lm = Latencies.mean( lsd );
+  Header.addNumber( "latency", "ms", "%6.2f", 1000.0*lm );
+  Header.addNumber( "latency s.d.", "ms", "%6.2f", 1000.0*lsd );
+
+  saveSpikes();
+  saveData();
+}
+
+
+void FindThreshold::saveSpikes( void )
+{
+  ofstream sf;
+  if ( completeRuns() <= 0 )
+    sf.open( addPath( "findthreshold-spikes.dat" ).c_str() );
+  else
+    sf.open( addPath( "findthreshold-spikes.dat" ).c_str(),
+             ofstream::out | ofstream::app );
+
+  Header.save( sf, "# " );
+  sf << "# status:\n";
+  stimulusData().save( sf, "#   " );
+  sf << "# settings:\n";
+  settings().save( sf, "#   " );
+  sf << '\n';
+
+  TableKey spikekey;
+  spikekey.addNumber( "t", "ms", "%7.2f" );
+  spikekey.saveKey( sf, true, false );
+  sf << '\n';
+
+  for ( int k=0; k<Spikes.size(); k++ ) {
+    sf << "#       index: " << Str( k ) << '\n';
+    sf << "#   amplitude: " << Str( Results.back().Amplitude ) << IUnit << '\n';
+    sf << "# spike count: " << Str( Results.back().SpikeCount ) << '\n';
+    Spikes[k].saveText( sf, 1000.0, 7, 2, 'f', "-0" );
+    sf << '\n';
+  }
+
   sf << '\n';
 }
 
 
-void FindThreshold::saveData( bool dc )
+void FindThreshold::saveData( void )
 {
   TableKey datakey;
   datakey.addLabel( "Data" );
+  datakey.addNumber( "duration", "ms", "%6.1f", Header.number( "duration" ) );
   double asd = 0.0;
   double am = Amplitudes.mean( asd );
   datakey.addNumber( "amplitude", IUnit, "%7.3f", am );
@@ -411,7 +451,7 @@ void FindThreshold::saveData( bool dc )
 
   datakey.saveData( df );
 
-  metaData( "Cell" ).setNumber( "ithresh", am );
+  metaData( "Cell" ).setNumber( "ithreshss", am );
 }
 
 
