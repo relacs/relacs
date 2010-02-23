@@ -104,17 +104,21 @@ void SetLeak::notify( void )
       setNumber( "taudc", 1.0e-6*rdc*cm );
     }
     else if ( changed( "Rdc" ) ) {
-      double rdc = number( "rdc" );
+      double rdc = number( "Rdc" );
       double cm = metaData( "Cell" ).number( "cm" );
-      setNumber( "gdc", 1000.0/rdc-1000.0/rm );
-      setNumber( "taudc", 1.0e-6*rdc*cm );
+      if ( rdc > 1.0e-6 ) {
+	setNumber( "gdc", 1000.0/rdc-1000.0/rm );
+	setNumber( "taudc", 1.0e-6*rdc*cm );
+      }
     }
     else if ( changed( "taudc" ) ) {
       double taudc = number( "taudc" );
       double cm = metaData( "Cell" ).number( "cm" );
-      double rdc = 1.0e6*taudc/cm;
-      setNumber( "Rdc", rdc );
-      setNumber( "gdc", 1000.0/rdc-1000.0/rm );
+      if ( cm > 1.0e-6 ) {
+	double rdc = 1.0e6*taudc/cm;
+	setNumber( "Rdc", rdc );
+	setNumber( "gdc", 1000.0/rdc-1000.0/rm );
+      }
     }
   }
   delFlags( Parameter::changedFlag() );
