@@ -23,11 +23,11 @@
 #include <relacs/patchclampprojects/setleak.h>
 using namespace relacs;
 
-namespace base {
+namespace patchclampprojects {
 
 
 SetLeak::SetLeak( void )
-  : RePro( "SetLeak", "SetLeak", "Base",
+  : RePro( "SetLeak", "SetLeak", "patchclampprojects",
 	   "Jan Benda", "1.0", "Mar 21, 2009" ),
     STW( (QWidget*)this )
 {
@@ -55,9 +55,6 @@ SetLeak::SetLeak( void )
   // display values:
   STW.assign( this, 2, 4, true, 0, mutex() );
   updateGeometry();
-  if ( STW.lastWidget() != 0 )
-    setTabOrder( STW.lastWidget(), OKButton );
-  setTabOrder( OKButton, CancelButton );
   STW.setSpacing( 2 );
   STW.setMargin( 4 );
 
@@ -87,6 +84,12 @@ SetLeak::SetLeak( void )
 
   bb->setFixedHeight( OKButton->sizeHint().height() );
   bb->setSpacing( 4 );
+
+  // tab order
+  if ( STW.lastWidget() != 0 )
+    setTabOrder( STW.lastWidget(), OKButton );
+  setTabOrder( OKButton, CancelButton );
+  setTabOrder( CancelButton, ResetButton );
 }
 
 
@@ -263,7 +266,7 @@ void SetLeak::customEvent( QCustomEvent *qce )
 
 addRePro( SetLeak );
 
-}; /* namespace base */
+}; /* namespace patchclampprojects */
 
 #include "moc_setleak.cc"
 

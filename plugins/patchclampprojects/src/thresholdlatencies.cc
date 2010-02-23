@@ -137,8 +137,11 @@ int ThresholdLatencies::main( void )
   double orgdcamplitude = stimulusData().number( outTraceName( outcurrent ) );
   if ( amplitudesrc == 1 )
     amplitude = orgdcamplitude;
-  else if ( amplitudesrc == 2 )
+  else if ( amplitudesrc == 2 ) {
     amplitude = metaData( "Cell" ).number( "ithreshss" );
+    if ( amplitude == 0.0 )
+      amplitude = metaData( "Cell" ).number( "ithreshon" );
+  }
 
   if ( amplitudestep < finalamplitudestep ) {
     warning( "startamplitudestep must be larger than amplitudestep!" );
@@ -195,11 +198,11 @@ int ThresholdLatencies::main( void )
   Header.clear();
   Header.addInteger( "index", completeRuns() );
   Header.addInteger( "ReProIndex", reproCount() );
-  Header.addNumber( "ReProTime", "s", "%0.3f", reproStartTime() );
-  Header.addNumber( "duration", "ms", "%0.1f", 1000.0*duration );
+  Header.addNumber( "ReProTime", reproStartTime(), "s", "%0.3f" );
+  Header.addNumber( "duration", 1000.0*duration, "ms", "%0.1f" );
 
   // plot trace:
-  plotToggle( true, true, savetracetime, delay );
+  plotToggle( false, true, 2.0*savetracetime < pause ? 2.0*savetracetime : pause, 0.0 );
 
   // plot:
   P.lock();
@@ -329,8 +332,12 @@ int ThresholdLatencies::main( void )
   }
 
   tf << '\n';
+  bool usedc = fabs( orgdcamplitude ) > 1.0e-6;
   if ( record && TrialCount > 0 )
-    save( fabs( orgdcamplitude ) > 1.0e-6 );
+    save( usedc );
+  dcsignal = orgdcamplitude;
+  dcsignal.setIdent( "DC=" + Str( orgdcamplitude ) + IUnit );
+  directWrite( dcsignal );
   Results.clear();
   Latencies.clear();
   Amplitudes.clear();
@@ -432,19 +439,19 @@ void ThresholdLatencies::save( bool dc )
 {
   double basd = 0.0;
   double bam = DCAmplitudes.mean( basd );
-  Header.addNumber( "dcamplitude", IUnit, "%7.3f", bam );
-  Header.addNumber( "dcamplitude s.d.", IUnit, "%7.3f", basd );
+  Header.addNumber( "dcamplitude", bam, IUnit, "%0.3f" );
+  Header.addNumber( "dcamplitude s.d.", basd, IUnit, "%0.3f" );
   double asd = 0.0;
   double am = Amplitudes.mean( asd );
-  Header.addNumber( "amplitude", IUnit, "%7.3f", am );
-  Header.addNumber( "amplitude s.d.", IUnit, "%7.3f", asd );
-  Header.addNumber( "trials", "1", "%6.0f", (double)TrialCount );
-  Header.addNumber( "spikes", "1", "%6.0f", (double)SpikeCount );
-  Header.addNumber( "prob", "%", "%5.1f", 100.0*(double)SpikeCount/(double)TrialCount );
+  Header.addNumber( "amplitude", am, IUnit, "%0.3f" );
+  Header.addNumber( "amplitude s.d.", asd, IUnit, "%0.3f" );
+  Header.addNumber( "trials", (double)TrialCount, "", "%0.0f" );
+  Header.addNumber( "spikes", (double)SpikeCount, "", "%0.0f" );
+  Header.addNumber( "prob", 100.0*(double)SpikeCount/(double)TrialCount, "%", "%0.1f" );
   double lsd = 0.0;
   double lm = Latencies.mean( lsd );
-  Header.addNumber( "latency", "ms", "%6.2f", 1000.0*lm );
-  Header.addNumber( "latency s.d.", "ms", "%6.2f", 1000.0*lsd );
+  Header.addNumber( "latency", 1000.0*lm, "ms", "%6.2f" );
+  Header.addNumber( "latency s.d.", 1000.0*lsd, "ms", "%6.2f" );
 
   saveSpikes();
   saveData( dc );

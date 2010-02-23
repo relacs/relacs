@@ -868,6 +868,8 @@ ostream &TableKey::saveData( ostream &str )
     if ( c > 0 )
       str << Separator;
     Str s = (*Columns[c][0]).text();
+    if ( s.empty() )
+      s = Missing;
     if ( s.size() >= Width[c] )
       str << s;
     else {
@@ -890,6 +892,8 @@ ostream &TableKey::saveData( ostream &str, int from, int to )
     else 
       str << DataStart;
     Str s = (*Columns[c][0]).text();
+    if ( s.empty() )
+      s = Missing;
     if ( s.size() >= Width[c] )
       str << s;
     else {
@@ -1004,9 +1008,8 @@ ostream &TableKey::save( ostream &str, const string &text, int c ) const
   }
   else {
     Str s;
-    if ( text.empty() ) {
+    if ( text.empty() )
       s = Str( Missing, -formatWidth( c ) );
-    }
     else {
       if ( isText( c ) )
 	s = Str( text, format( c ) );
@@ -1018,6 +1021,33 @@ ostream &TableKey::save( ostream &str, const string &text, int c ) const
     else
       str << Str( s, Width[c] );
   }
+  return str;  
+}
+
+
+ostream &TableKey::save( ostream &str, const Parameter &param, int c ) const
+{
+  if ( c < 0 ) 
+    c = PrevCol + 1;
+
+  if ( c < 0 || c >= (int)Columns.size() )
+    return str;
+
+  PrevCol = c;
+
+  if ( c > 0 )
+    str << Separator;
+  else
+    str << DataStart;
+  Str s = "";
+  if ( param.isText() && param.text().empty() )
+    s = Str( Missing, -formatWidth( c ) );
+  else
+    s = param.text( format( c ) );
+  if ( s.size() >= Width[c] )
+    str << s;
+  else
+    str << Str( s, Width[c] );
   return str;  
 }
 

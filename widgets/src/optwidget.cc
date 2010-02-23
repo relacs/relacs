@@ -827,9 +827,9 @@ OptWidgetText::OptWidgetText( Options::iterator op, QWidget *label,
     BrowseButton( 0 )
 {
   if ( Editable ) {
-    W = EW = new QLineEdit( (*OP).text().c_str(), parent );
+    W = EW = new QLineEdit( (*OP).text( "%s" ).c_str(), parent );
     OptWidget::setValueStyle( W, (*OP).style(), false, true );
-    Value = (*OP).text( 0 );
+    Value = (*OP).text( 0, "%s" );
     connect( EW, SIGNAL( textChanged( const QString& ) ),
 	     this, SLOT( textChanged( const QString& ) ) );
     if ( (*OP).style() & OptWidget::Browse ) {
@@ -840,7 +840,7 @@ OptWidgetText::OptWidgetText( Options::iterator op, QWidget *label,
     }
   }
   else {
-    LW = new QLabel( (*OP).text().c_str(), parent );
+    LW = new QLabel( (*OP).text( "%s" ).c_str(), parent );
     OptWidget::setValueStyle( LW, (*OP).style() );
     //    LW->setBackgroundMode( QWidget::PaletteMid );
     LW->setFrameStyle( QFrame::Panel | QFrame::Sunken );
@@ -856,9 +856,9 @@ void OptWidgetText::get( void )
     bool cn = OO->notifying();
     OO->unsetNotify();
     (*OP).setText( EW->text().latin1() );
-    if ( (*OP).text( 0 ) != Value )
+    if ( (*OP).text( 0, "%s" ) != Value )
       (*OP).addFlags( OW->changedFlag() );
-    Value = (*OP).text( 0 );
+    Value = (*OP).text( 0, "%s" );
     OO->setNotify( cn );
   }
 }
@@ -868,10 +868,10 @@ void OptWidgetText::reset( void )
 {
   InternChanged = true;
   if ( Editable ) {
-    EW->setText( (*OP).text( 0 ).c_str() );
+    EW->setText( (*OP).text( 0, "%s" ).c_str() );
   }
   else if ( ContUpdate ) {
-    LW->setText( (*OP).text( 0 ).c_str() );
+    LW->setText( (*OP).text( 0, "%s" ).c_str() );
   }
   InternChanged = false;
 }
@@ -881,7 +881,7 @@ void OptWidgetText::resetDefault( void )
 {
   if ( Editable ) {
     InternChanged = true;
-    EW->setText( (*OP).defaultText().c_str() );
+    EW->setText( (*OP).defaultText( "%s" ).c_str() );
     InternChanged = false;
   }
 }
@@ -901,7 +901,7 @@ void OptWidgetText::textChanged( const QString &s )
 {
   if ( ContUpdate && Editable ) {
     if ( InternChanged )
-      Value = (*OP).text( 0 );
+      Value = (*OP).text( 0, "%s" );
     else {
       if ( OMutex != 0 )
 	OMutex->lock();
@@ -909,9 +909,9 @@ void OptWidgetText::textChanged( const QString &s )
       bool cn = OO->notifying();
       OO->unsetNotify();
       (*OP).setText( s.latin1() );
-      if ( (*OP).text( 0 ) != Value )
+      if ( (*OP).text( 0, "%s" ) != Value )
 	(*OP).addFlags( OW->changedFlag() );
-      Value = (*OP).text( 0 );
+      Value = (*OP).text( 0, "%s" );
       if ( cn )
 	OO->notify();
       (*OP).delFlags( OW->changedFlag() );
@@ -946,17 +946,17 @@ void OptWidgetText::browse( void )
   if ( (*OP).style() & OptWidget::BrowseExisting ) {
     fd->setMode( QFileDialog::ExistingFile );
     fd->setCaption( "Open File" );
-    fd->setDir( Str( (*OP).text( 0 ) ).dir().c_str() );
+    fd->setDir( Str( (*OP).text( 0, "%s" ) ).dir().c_str() );
   }
   else if ( (*OP).style() & OptWidget::BrowseAny ) {
     fd->setMode( QFileDialog::AnyFile );
     fd->setCaption( "Save File" );
-    fd->setDir( Str( (*OP).text( 0 ) ).dir().c_str() );
+    fd->setDir( Str( (*OP).text( 0, "%s" ) ).dir().c_str() );
   }
   else if ( (*OP).style() & OptWidget::BrowseDirectory ) {
     fd->setMode( QFileDialog::Directory );
     fd->setCaption( "Choose directory" );
-    fd->setDir( Str( (*OP).text( 0 ) ).preventSlash().dir().c_str() );
+    fd->setDir( Str( (*OP).text( 0, "%s" ) ).preventSlash().dir().c_str() );
   }
   fd->setFilter( "All (*)" );
   fd->setViewMode( QFileDialog::List );
@@ -976,8 +976,8 @@ void OptWidgetText::browse( void )
     (*OP).setText( filename );
     if ( (*OP).text( 0 ) != Value )
       (*OP).addFlags( OW->changedFlag() );
-    Value = (*OP).text( 0 );
-    EW->setText( (*OP).text( 0 ).c_str() );
+    Value = (*OP).text( 0, "%s" );
+    EW->setText( (*OP).text( 0, "%s" ).c_str() );
     if ( cn )
       OO->notify();
     (*OP).delFlags( OW->changedFlag() );

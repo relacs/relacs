@@ -379,6 +379,16 @@ public:
         If \a text is empty, the missing-string is written instead ( see setMissing() ). 
         The whole string is written, even if it is longer than the width of the column! */
   ostream &save( ostream &str, const string &text, int c=-1 ) const;
+    /*! Write the Parameter \a param to the output stream \a str 
+        using the format for column \a c.
+        If \a c is negative, the output column is set to the column
+	following the one used in the most recent call
+	of one of the save() functions.
+	If the output column is the first column,
+	\a DataStart, otherwise \a Separator is written right before the string.
+	If the output column does not exist,
+	nothing is written to \a str. */
+  ostream &save( ostream &str, const Parameter &param, int c=-1 ) const;
     /*! Skip one column of automatically formatted output.
         Nothing is written, just the current column is incremented. */
   void saveSkip( void ) const { PrevCol++; };

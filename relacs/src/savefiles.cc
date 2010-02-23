@@ -477,8 +477,9 @@ void SaveFiles::saveStimulus( void )
 
     lock();
     if ( !Options::empty() ) {
-      for( int k=0; k<Options::size(); k++ )
-	StimulusKey.save( *SF, (*this)[k].number() );
+      for( int k=0; k<Options::size(); k++ ) {
+	StimulusKey.save( *SF, (*this)[k] );
+      }
     }
     unlock();
     StimulusKey.save( *SF, TraceFiles[0].Trace->signalTime() - SessionTime );

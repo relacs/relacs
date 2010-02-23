@@ -5,7 +5,10 @@ pkglib_PROGRAMS = \
     relacsgui
 
 dist_pkgdata_DATA = \
-    relacstuxheader.png
+    relacstuxheader.png \
+    relacssplash.png \
+    relacstux.svg \
+    RELACS.desktop
 
 EXTRA_DIST = \
     relacslocal_head \

@@ -19,15 +19,15 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _RELACS_BASE_SETLEAK_H_
-#define _RELACS_BASE_SETLEAK_H_ 1
+#ifndef _RELACS_PATCHCLAMPPROJECTS_SETLEAK_H_
+#define _RELACS_PATCHCLAMPPROJECTS_SETLEAK_H_ 1
 
 #include <qpushbutton.h>
 #include <relacs/optwidget.h>
 #include <relacs/repro.h>
 using namespace relacs;
 
-namespace base {
+namespace patchclampprojects {
 
 
 /*!
@@ -72,7 +72,7 @@ protected:
 };
 
 
-}; /* namespace base */
+}; /* namespace patchclampprojects */
 
-#endif /* ! _RELACS_BASE_SETLEAK_H_ */
+#endif /* ! _RELACS_PATCHCLAMPPROJECTS_SETLEAK_H_ */
 

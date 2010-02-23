@@ -29,7 +29,7 @@ namespace patchclamp {
 
 
 MembraneResistance::MembraneResistance( void )
-  : RePro( "MembraneResistance", "MembraneResistance", "Patch-clamp",
+  : RePro( "MembraneResistance", "MembraneResistance", "patchclamp",
 	   "Jan Benda", "1.0", "Nov 12, 2009" ),
     P( this ),
     VUnit( "mV" ),
@@ -376,20 +376,20 @@ void MembraneResistance::save( void )
   Options header;
   header.addInteger( "index", completeRuns() );
   header.addInteger( "ReProIndex", reproCount() );
-  header.addNumber( "ReProTime", "s", "%0.3f", reproStartTime() );
-  header.addNumber( "Vrest", VUnit, "%6.1f", VRest );
-  header.addNumber( "Vss", VUnit, "%6.1f", VSS );
-  header.addNumber( "Rss", "MOhm", "%6.1f", RMss );
-  header.addNumber( "Vpeak", VUnit, "%6.1f", VPeak );
-  header.addNumber( "Tpeak", "ms", "%6.1f", 1000.0*VPeakTime );
-  header.addNumber( "Rm", "MOhm", "%6.1f", RMOn );
-  header.addNumber( "Cm", "pF", "%6.1f", CMOn );
-  header.addNumber( "Taum", "ms", "%6.1f", TauMOn );
-  header.addNumber( "Roff", "MOhm", "%6.1f", RMOff );
-  header.addNumber( "Coff", "pF", "%6.1f", CMOff );
-  header.addNumber( "Tauoff", "ms", "%6.1f", TauMOff );
-  header.addNumber( "Vsag", VUnit, "%6.1f", fabs( VPeak-VSS ) );
-  header.addNumber( "relVsag", "%", "%6.1f", 100.0*fabs( (VPeak-VSS)/(VSS-VRest) ) );
+  header.addNumber( "ReProTime", reproStartTime(), "s", "%0.3f" );
+  header.addNumber( "Vrest", VRest, VUnit, "%0.1f" );
+  header.addNumber( "Vss", VSS, VUnit, "%0.1f" );
+  header.addNumber( "Rss", RMss, "MOhm", "%0.1f" );
+  header.addNumber( "Vpeak", VPeak, VUnit, "%0.1f" );
+  header.addNumber( "Tpeak", 1000.0*VPeakTime, "ms", "%0.1f" );
+  header.addNumber( "Rm", RMOn, "MOhm", "%0.1f" );
+  header.addNumber( "Cm", CMOn, "pF", "%0.1f" );
+  header.addNumber( "Taum", TauMOn, "ms", "%0.1f" );
+  header.addNumber( "Roff", RMOff, "MOhm", "%0.1f" );
+  header.addNumber( "Coff", CMOff, "pF", "%0.1f" );
+  header.addNumber( "Tauoff", TauMOff, "ms", "%0.1f" );
+  header.addNumber( "Vsag", fabs( VPeak-VSS ), VUnit, "%0.1f" );
+  header.addNumber( "relVsag", 100.0*fabs( (VPeak-VSS)/(VSS-VRest) ), "%", "%0.1f" );
 
   saveData();
   saveTrace( header );
@@ -422,7 +422,7 @@ void MembraneResistance::saveData( void )
   datakey.addLabel( "Stimulus" );
   datakey.addNumber( "dI", IUnit, "%6.3f", Amplitude );
   datakey.addNumber( "dIm", IUnit, "%6.3f", TrueAmplitude );
-  datakey.addNumber( "IDC", IUnit, "%6.3", DCCurrent );
+  datakey.addNumber( "IDC", IUnit, "%6.3f", DCCurrent );
   datakey.addNumber( "duration", "ms", "%6.1f", 1000.0*Duration );
   datakey.addLabel( "Rest" );
   datakey.addNumber( "Vrest", VUnit, "%6.1f", VRest );

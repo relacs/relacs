@@ -35,7 +35,7 @@ namespace patchclamp {
 
 
 SingleStimulus::SingleStimulus( void )
-  : RePro( "SingleStimulus", "Single Stimulus", "Patch-clamp",
+  : RePro( "SingleStimulus", "Single Stimulus", "patchclamp",
 	   "Jan Benda", "1.2", "Oct 13, 2008" ),
     SP( 3, this ),
     P( 2, this )

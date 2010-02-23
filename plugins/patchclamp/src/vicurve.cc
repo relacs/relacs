@@ -109,7 +109,7 @@ int VICurve::main( void )
   Header.clear();
   Header.addInteger( "index", completeRuns() );
   Header.addInteger( "ReProIndex", reproCount() );
-  Header.addNumber( "ReProTime", "s", "%0.3f", reproStartTime() );
+  Header.addNumber( "ReProTime", reproStartTime(), "s", "%0.3f" );
 
   // get options:
   int involtage = index( "involtage" );

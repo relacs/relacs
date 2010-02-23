@@ -28,7 +28,7 @@ namespace patchclamp {
 
 
 Session::Session( void )
-  : Control( "Session", "Info", "Patch-clamp",
+  : Control( "Session", "Info", "patchclamp",
 	     "Jan Benda", "1.0", "Oct 13, 2008" )
 
 {
@@ -95,7 +95,7 @@ void Session::initDevices( void )
 
   for ( int k=0; k<CurrentOutputs; k++ )
     stimulusData().setRequest( outTraceName( CurrentOutput[k] ), "DC current " + Str( k+1 ) );
-  stimulusData().addText( "drugs", "Applied drugs", "" ).setFlags( 16 );
+  stimulusData().addText( "drugs", "Applied drugs", "" ).setFormat( "%-20s" ).setFlags( 16 );
   SW->assign( &stimulusData(), 16+stimulusDataTraceFlag(),
 	      stimulusDataTraceFlag(), true, 0, stimulusDataMutex() );
 

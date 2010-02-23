@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Name=RELACS
+Type=Application
+Terminal=false
+Name[en_US]=RELACS
+Exec=relacs -w /home/benda/data
+Icon=/usr/share/relacs/relacstux.svg
+GenericName[en_US]=RELACS
