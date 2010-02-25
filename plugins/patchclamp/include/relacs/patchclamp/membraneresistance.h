@@ -51,9 +51,9 @@ public:
   virtual void config( void );
   virtual void notify( void );
   virtual int main( void );
-  void analyzeOn( int involtage, int incurrent, double duration, int count,
+  void analyzeOn( int involtage, int incurrent, double duration,
 		  double sswidth, bool nossfit );
-  void analyzeOff( int involtage, int incurrent, double duration, int count,
+  void analyzeOff( int involtage, int incurrent, double duration,
 		   double sswidth, bool nossfit );
   void plot( void );
   void save( void );
@@ -95,6 +95,7 @@ protected:
   double TauMOff;
   SampleDataF ExpOn;
   SampleDataF ExpOff;
+  int Count;
 
 };
 

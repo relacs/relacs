@@ -382,6 +382,7 @@ void VICurve::saveData( void )
   datakey.addLabel( "Stimulus" );
   datakey.addNumber( "I", IUnit, "%6.3f" );
   datakey.addNumber( "IDC", IUnit, "%6.3f" );
+  datakey.addNumber( "trials", "1", "%6.0f" );
   datakey.addLabel( "Rest" );
   datakey.addNumber( "Vrest", VUnit, "%6.1f" );
   datakey.addNumber( "s.d.", VUnit, "%6.1f" );
@@ -402,6 +403,7 @@ void VICurve::saveData( void )
 	j=Range.next( ++j ) ) {
     datakey.save( df, Results[j].I, 0 );
     datakey.save( df, Results[j].DC );
+    datakey.save( df, (double)Range.count( j ) );
     datakey.save( df, Results[j].VRest );
     datakey.save( df, Results[j].VRestsd );
     datakey.save( df, Results[j].VSS );
@@ -436,15 +438,18 @@ void VICurve::saveTrace( void )
   if ( ! Results[0].MeanCurrent.empty() )
     datakey.addNumber( "I", IUnit, "%6.3f" );
 
+  int inx = 0;
   for ( unsigned int j=Range.next( 0 );
 	j<Results.size();
 	j=Range.next( ++j ) ) {
-    df << "#     I: " << Str( Results[j].I ) << IUnit << '\n';
-    df << "#    DC: " << Str( Results[j].DC ) << IUnit << '\n';
-    df << "# VRest: " << Str( Results[j].VRest ) << VUnit << '\n';
-    df << "#   VOn: " << Str( Results[j].VOn ) << VUnit << '\n';
-    df << "# VPeak: " << Str( Results[j].VPeak ) << VUnit << '\n';
-    df << "#   VSS: " << Str( Results[j].VSS ) << VUnit << '\n';
+    df << "#  index: " << Str( inx ) << '\n';
+    df << "# trials: " << Str( Range.count( j ) ) << '\n';
+    df << "#      I: " << Str( Results[j].I ) << IUnit << '\n';
+    df << "#     DC: " << Str( Results[j].DC ) << IUnit << '\n';
+    df << "#  VRest: " << Str( Results[j].VRest ) << VUnit << '\n';
+    df << "#    VOn: " << Str( Results[j].VOn ) << VUnit << '\n';
+    df << "#  VPeak: " << Str( Results[j].VPeak ) << VUnit << '\n';
+    df << "#    VSS: " << Str( Results[j].VSS ) << VUnit << '\n';
     df << '\n';
     datakey.saveKey( df );
     for ( int k=0; k<Results[j].MeanTrace.size(); k++ ) {
@@ -455,7 +460,8 @@ void VICurve::saveTrace( void )
 	datakey.save( df, Results[j].MeanCurrent[k] );
       df << '\n';
     }
-    df << '\n';
+    df << "\n\n";
+    inx++;
   }
   df << '\n';
 }

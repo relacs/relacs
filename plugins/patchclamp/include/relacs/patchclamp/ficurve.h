@@ -57,6 +57,7 @@ public:
   void saveData( void );
   void saveRate( void );
   void saveSpikes( void );
+  void saveTraces( void );
 
 
 protected:
@@ -96,6 +97,8 @@ protected:
     SampleDataD Rate;
     SampleDataD RateSD;
     EventList Spikes;
+    vector< SampleDataF > Voltage;
+    vector< SampleDataF > Current;
   };
   vector< Data > Results;
   RangeLoop Range;

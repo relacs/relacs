@@ -173,12 +173,12 @@ int MembraneResistance::main( void )
 
   // write stimulus:
   sleep( pause );
-  for ( int count=0;
-	( repeats <= 0 || count < repeats ) && softStop() == 0;
-	count++ ) {
+  for ( Count=0;
+	( repeats <= 0 || Count < repeats ) && softStop() == 0;
+	Count++ ) {
 
     Str s = "Amplitude <b>" + Str( Amplitude ) + " " + IUnit +"</b>";
-    s += ",  Loop <b>" + Str( count+1 ) + "</b>";
+    s += ",  Loop <b>" + Str( Count+1 ) + "</b>";
     message( s );
 
     write( signal );
@@ -189,26 +189,26 @@ int MembraneResistance::main( void )
 
     sleep( Duration + 0.01 );
     if ( interrupt() ) {
-      if ( count < 1 )
+      if ( Count < 1 )
 	state = Aborted;
       break;
     }
 
     timeStamp();
-    analyzeOn( involtage, incurrent, Duration, count, sswidth, nossfit );
+    analyzeOn( involtage, incurrent, Duration, sswidth, nossfit );
 
     sleepOn( Duration + 0.02 );
     if ( interrupt() ) {
-      if ( count < 1 )
+      if ( Count < 1 )
 	state = Aborted;
       break;
     }
 
-    analyzeOff( involtage, incurrent, Duration, count, sswidth, nossfit );
+    analyzeOff( involtage, incurrent, Duration, sswidth, nossfit );
     plot();
     sleepOn( pause );
     if ( interrupt() ) {
-      if ( count < 1 )
+      if ( Count < 1 )
 	state = Aborted;
       break;
     }
@@ -223,7 +223,7 @@ int MembraneResistance::main( void )
 
 
 void MembraneResistance::analyzeOn( int involtage, int incurrent, 
-				    double duration, int count,
+				    double duration,
 				    double sswidth, bool nossfit )
 {
   // update averages:
@@ -231,12 +231,12 @@ void MembraneResistance::analyzeOn( int involtage, int incurrent,
   int inx = intrace.signalIndex() - MeanTrace.index( 0.0 );
   for ( int k=0; k<MeanTrace.index( duration ) && inx+k<intrace.size(); k++ ) {
     double v = intrace[inx+k];
-    MeanTrace[k] += (v - MeanTrace[k])/(count+1);
-    SquareTrace[k] += (v*v - SquareTrace[k])/(count+1);
+    MeanTrace[k] += (v - MeanTrace[k])/(Count+1);
+    SquareTrace[k] += (v*v - SquareTrace[k])/(Count+1);
     StdevTrace[k] = sqrt( SquareTrace[k] - MeanTrace[k]*MeanTrace[k] );
     if ( incurrent >= 0 ) {
       double c = IInFac*trace( incurrent )[inx+k];
-      MeanCurrent[k] += (c - MeanCurrent[k])/(count+1);
+      MeanCurrent[k] += (c - MeanCurrent[k])/(Count+1);
     }
   }
 
@@ -302,7 +302,7 @@ void MembraneResistance::analyzeOn( int involtage, int incurrent,
 
 
 void MembraneResistance::analyzeOff( int involtage, int incurrent, 
-				     double duration, int count,
+				     double duration,
 				     double sswidth, bool nossfit )
 {
   // update averages:
@@ -310,12 +310,12 @@ void MembraneResistance::analyzeOff( int involtage, int incurrent,
   int inx = intrace.signalIndex() - MeanTrace.index( 0.0 );
   for ( int k=MeanTrace.index( duration ); k<MeanTrace.size() && inx+k<intrace.size(); k++ ) {
     double v = intrace[inx+k];
-    MeanTrace[k] += (v - MeanTrace[k])/(count+1);
-    SquareTrace[k] += (v*v - SquareTrace[k])/(count+1);
+    MeanTrace[k] += (v - MeanTrace[k])/(Count+1);
+    SquareTrace[k] += (v*v - SquareTrace[k])/(Count+1);
     StdevTrace[k] = sqrt( SquareTrace[k] - MeanTrace[k]*MeanTrace[k] );
     if ( incurrent >= 0 ) {
       double c = IInFac*trace( incurrent )[inx+k];
-      MeanCurrent[k] += (c - MeanCurrent[k])/(count+1);
+      MeanCurrent[k] += (c - MeanCurrent[k])/(Count+1);
     }
   }
 
@@ -377,6 +377,7 @@ void MembraneResistance::save( void )
   header.addInteger( "index", completeRuns() );
   header.addInteger( "ReProIndex", reproCount() );
   header.addNumber( "ReProTime", reproStartTime(), "s", "%0.3f" );
+  header.addInteger( "trials", Count );
   header.addNumber( "Vrest", VRest, VUnit, "%0.1f" );
   header.addNumber( "Vss", VSS, VUnit, "%0.1f" );
   header.addNumber( "Rss", RMss, "MOhm", "%0.1f" );
@@ -423,6 +424,7 @@ void MembraneResistance::saveData( void )
   datakey.addNumber( "dI", IUnit, "%6.3f", Amplitude );
   datakey.addNumber( "dIm", IUnit, "%6.3f", TrueAmplitude );
   datakey.addNumber( "IDC", IUnit, "%6.3f", DCCurrent );
+  datakey.addNumber( "trials", "1", "%6.0f", (double)Count );
   datakey.addNumber( "duration", "ms", "%6.1f", 1000.0*Duration );
   datakey.addLabel( "Rest" );
   datakey.addNumber( "Vrest", VUnit, "%6.1f", VRest );

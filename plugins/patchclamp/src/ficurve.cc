@@ -369,8 +369,9 @@ void FICurve::plot( double duration )
 void FICurve::save( void )
 {
   saveData();
-  saveSpikes();
   saveRate();
+  saveSpikes();
+  saveTraces();
 }
 
 
@@ -390,6 +391,7 @@ void FICurve::saveData( void )
   datakey.addLabel( "Stimulus" );
   datakey.addNumber( "I", IUnit, "%6.3f" );
   datakey.addNumber( "IDC", IUnit, "%6.3f" );
+  datakey.addNumber( "trials", "1", "%6.0f" );
   datakey.addLabel( "Firing rate" );
   datakey.addNumber( "f", "Hz", "%5.1f" );
   datakey.addNumber( "s.d.", "Hz", "%5.1f" );
@@ -416,6 +418,7 @@ void FICurve::saveData( void )
 	j=Range.next( ++j ) ) {
     datakey.save( df, Results[j].I, 0 );
     datakey.save( df, Results[j].DC );
+    datakey.save( df, (double)Range.count( j ) );
     datakey.save( df, Results[j].MeanRate );
     datakey.save( df, Results[j].MeanRateSD );
     datakey.save( df, Results[j].PreRate );
@@ -452,9 +455,12 @@ void FICurve::saveRate( void )
   key.addNumber( "f", "Hz", "%5.1f" );
   key.addNumber( "s.d.", "Hz", "%5.1f" );
 
+  int inx = 0;
   for ( unsigned int j=Range.next( 0 );
 	j<Results.size();
 	j=Range.next( ++j ) ) {
+    df << "#    index: " << Str( inx ) << '\n';
+    df << "#   trials: " << Str( Range.count( j ) ) << '\n';
     df << "#        I: " << Str( Results[j].I ) << IUnit << '\n';
     df << "#       DC: " << Str( Results[j].DC ) << IUnit << '\n';
     df << "#  PreRate: " << Str( Results[j].PreRate ) << "Hz\n";
@@ -470,7 +476,8 @@ void FICurve::saveRate( void )
       key.save( df, Results[j].RateSD[k] );
       df << '\n';
     }
-    df << '\n';
+    df << "\n\n";
+    inx++;
   }
   df << '\n';
 }
@@ -493,9 +500,12 @@ void FICurve::saveSpikes( void )
   key.saveKey( df, true, false );
   df << '\n';
 
+  int inx = 0;
   for ( unsigned int j=Range.next( 0 );
 	j<Results.size();
 	j=Range.next( ++j ) ) {
+    df << "#    index: " << Str( inx ) << '\n';
+    df << "#   trials: " << Str( Range.count( j ) ) << '\n';
     df << "#        I: " << Str( Results[j].I ) << IUnit << '\n';
     df << "#       DC: " << Str( Results[j].DC ) << IUnit << '\n';
     df << "#  PreRate: " << Str( Results[j].PreRate ) << "Hz\n";
@@ -506,6 +516,69 @@ void FICurve::saveSpikes( void )
     df << '\n';
     Results[j].Spikes.saveText( df, 1000.0, 7, 1, 'f', 1, "-0" );
     df << '\n';
+    inx++;
+  }
+  df << '\n';
+}
+
+
+void FICurve::saveTraces( void )
+{
+  ofstream df( addPath( "ficurve-traces.dat" ).c_str(),
+	       ofstream::out | ofstream::app );
+
+  Header.save( df, "# " );
+  df << "# status:\n";
+  stimulusData().save( df, "#   " );
+  df << "# settings:\n";
+  settings().save( df, "#   " );
+  df << '\n';
+
+  TableKey key;
+  key.addNumber( "t", "ms", "%7.2f" );
+  key.addNumber( "V", VUnit, "%6.1f" );
+  if ( ! Results[Range.next( 0 )].Current.empty() )
+    key.addNumber( "I", IUnit, "%6.3f" );
+  key.saveKey( df, true, false );
+  df << '\n';
+
+  int inx = 0;
+  for ( unsigned int j=Range.next( 0 );
+	j<Results.size();
+	j=Range.next( ++j ) ) {
+    df << "#    index: " << Str( inx ) << '\n';
+    df << "#   trials: " << Str( Range.count( j ) ) << '\n';
+    df << "#        I: " << Str( Results[j].I ) << IUnit << '\n';
+    df << "#       DC: " << Str( Results[j].DC ) << IUnit << '\n';
+    df << "#  PreRate: " << Str( Results[j].PreRate ) << "Hz\n";
+    df << "# MeanRate: " << Str( Results[j].MeanRate ) << "Hz\n";
+    df << "#   OnRate: " << Str( Results[j].OnRate ) << "Hz\n";
+    df << "#   SSRate: " << Str( Results[j].SSRate ) << "Hz\n";
+    df << "#  Latency: " << Str( Results[j].Latency*1000.0 ) << "ms\n";
+    df << '\n';
+    if ( ! Results[j].Current.empty() ) {
+      for ( unsigned int i=0; i<Results[j].Current.size() && i<Results[j].Voltage.size(); i++ ) {
+	for ( int k=0; k<Results[j].Voltage[i].size(); k++ ) {
+	  key.save( df, 1000.0*Results[j].Voltage[i].pos( k ), 0 );
+	  key.save( df, Results[j].Voltage[i][k] );
+	  key.save( df, Results[j].Current[i][k] );
+	  df << '\n';
+	}
+	df << '\n';
+      }
+    }
+    else {
+      for ( unsigned int i=0; i<Results[j].Voltage.size(); i++ ) {
+	for ( int k=0; k<Results[j].Voltage[i].size(); k++ ) {
+	  key.save( df, 1000.0*Results[j].Voltage[i].pos( k ), 0 );
+	  key.save( df, Results[j].Voltage[i][k] );
+	  df << '\n';
+	}
+	df << '\n';
+      }
+    }
+    df << '\n';
+    inx++;
   }
   df << '\n';
 }
@@ -537,6 +610,8 @@ FICurve::Data::Data( double delay, double duration, double stepsize,
     MeanCurrent = SampleDataD( -delay, duration, stepsize, 0.0 );
   else
     MeanCurrent.clear();
+  Current.clear();
+  Voltage.clear();
 }
 
 
@@ -545,10 +620,17 @@ void FICurve::Data::analyze( int count, const InData &intrace,
 			     const InData *incurrent, double iinfac,
 			     double delay, double duration, double sswidth )
 {
-  // update averages:
+  // voltage trace:
+  Voltage.push_back( SampleDataF( -delay, duration, intrace.stepsize(), 0.0F ) );
+  intrace.copy( intrace.signalTime(), Voltage.back() );
+
+  // current trace:
   if ( incurrent != 0 ) {
-    int inx = intrace.signalIndex() - MeanCurrent.index( 0.0 );
-    for ( int k=0; k<MeanCurrent.size() && inx+k<intrace.size(); k++ ) {
+    Current.push_back( SampleDataF( -delay, duration, incurrent->stepsize(), 0.0F ) );
+    incurrent->copy( incurrent->signalTime(), Current.back() );
+    Current.back() *= iinfac;
+    int inx = incurrent->signalIndex() - MeanCurrent.index( 0.0 );
+    for ( int k=0; k<MeanCurrent.size() && inx+k<incurrent->size(); k++ ) {
       double c = iinfac*(*incurrent)[inx+k];
       MeanCurrent[k] += (c - MeanCurrent[k])/(count+1);
     }

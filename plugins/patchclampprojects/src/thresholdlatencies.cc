@@ -445,8 +445,8 @@ void ThresholdLatencies::save( bool dc )
   double am = Amplitudes.mean( asd );
   Header.addNumber( "amplitude", am, IUnit, "%0.3f" );
   Header.addNumber( "amplitude s.d.", asd, IUnit, "%0.3f" );
-  Header.addNumber( "trials", (double)TrialCount, "", "%0.0f" );
-  Header.addNumber( "spikes", (double)SpikeCount, "", "%0.0f" );
+  Header.addInteger( "trials", TrialCount );
+  Header.addInteger( "spikes", SpikeCount );
   Header.addNumber( "prob", 100.0*(double)SpikeCount/(double)TrialCount, "%", "%0.1f" );
   double lsd = 0.0;
   double lm = Latencies.mean( lsd );
