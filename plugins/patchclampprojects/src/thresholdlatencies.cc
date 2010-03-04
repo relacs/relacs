@@ -36,10 +36,6 @@ ThresholdLatencies::ThresholdLatencies( void )
     IInFac( 1.0 )
 {
   // add some options:
-  addLabel( "Traces" );
-  addSelection( "involtage", "Input voltage trace", "V-1" );
-  addSelection( "incurrent", "Input current trace", "Current-1" );
-  addSelection( "outcurrent", "Output trace", "Current-1" );
   addLabel( "Timing" );
   addSelection( "durationsel", "Set duration of stimulus", "in milliseconds|as multiples of membrane time constant" );
   addNumber( "duration", "Duration of stimulus", 0.1, 0.0, 1000.0, 0.001, "sec", "ms" ).setActivation( "durationsel", "in milliseconds" );
@@ -49,14 +45,18 @@ ThresholdLatencies::ThresholdLatencies( void )
   addNumber( "delay", "Time before stimullus onset", 0.05, 0.0, 1000.0, 0.01, "sec", "ms" );
   addNumber( "savetracetime", "Length of trace to be saved and analyzed", 0.5, 0.0, 1000.0, 0.01, "sec", "ms" );
   addInteger( "repeats", "Repetitions of stimulus", 10, 0, 10000, 1 );
-  addLabel( "Stimulus amplitudes" );
+  addLabel( "Stimuli" );
+  addSelection( "outcurrent", "Output trace", "Current-1" );
   addSelection( "amplitudesrc", "Use initial amplitude from", "custom|DC|threshold" );
   addNumber( "startamplitude", "Initial amplitude of current stimulus", 0.1, 0.0, 1000.0, 0.01 ).setActivation( "amplitudesrc", "custom" );
   addNumber( "startamplitudestep", "Initial size of amplitude steps used for searching threshold", 0.1, 0.0, 1000.0, 0.001 );
   addNumber( "amplitudestep", "Final size of amplitude steps used for oscillating around threshold", 0.01, 0.0, 1000.0, 0.001 );
   addSelection( "adjust", "Adjust", "DC|none|stimulus|DC" );
+  addLabel( "Analysis" );
+  addSelection( "involtage", "Input voltage trace", "V-1" );
+  addSelection( "incurrent", "Input current trace", "Current-1" );
   setFlags( 1 );
-  addTypeStyle( OptWidget::Bold, Parameter::Label );
+  addTypeStyle( OptWidget::TabLabel, Parameter::Label );
   setConfigSelectMask( 1 );
   setDialogSelectMask( 1 );
 

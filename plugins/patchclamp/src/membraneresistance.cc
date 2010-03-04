@@ -39,16 +39,15 @@ MembraneResistance::MembraneResistance( void )
     IInFac( 1.0 )
 {
   // add some options:
-  addLabel( "Traces" );
-  addSelection( "involtage", "Input voltage trace", "V-1" );
-  addSelection( "incurrent", "Input current trace", "Current-1" );
-  addSelection( "outcurrent", "Output trace", "Current-1" );
   addLabel( "Stimulus" );
+  addSelection( "outcurrent", "Output trace", "Current-1" );
   addNumber( "amplitude", "Amplitude of output signal", -1.0, -1000.0, 1000.0, 0.1 );
   addNumber( "duration", "Duration of output", 0.1, 0.001, 1000.0, 0.001, "sec", "ms" );
   addNumber( "pause", "Duration of pause bewteen outputs", 0.4, 0.001, 1.0, 0.001, "sec", "ms" );
   addInteger( "repeats", "Repetitions of stimulus", 10, 0, 10000, 1 );
   addLabel( "Analysis" );
+  addSelection( "involtage", "Input voltage trace", "V-1" );
+  addSelection( "incurrent", "Input current trace", "Current-1" );
   addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
   addBoolean( "nossfit", "Fix steady-state potential for fit", true );
   addBoolean( "plotstdev", "Plot standard deviation of membrane potential", true );

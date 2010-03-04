@@ -594,14 +594,18 @@ void OptWidget::accept( bool clearchanged )
   if ( OMutex != 0 )
     OMutex->lock();
 
+  // get the values:
+  for ( unsigned int k=0; k<Widgets.size(); k++ )
+    Widgets[k]->get();
+
   if ( ! ContinuousUpdate ) {
-    // get the values:
-    for ( unsigned int k=0; k<Widgets.size(); k++ )
-      Widgets[k]->get();
     // notify:
     DisableUpdate = true;
-    if ( Opt->notifying() )
+    bool cn = Opt->notifying();
+    Opt->unsetNotify();
+    if ( cn )
       Opt->notify();
+    Opt->setNotify( cn );
     DisableUpdate = false;
   }
 
@@ -853,6 +857,7 @@ OptWidgetText::OptWidgetText( Options::iterator op, QWidget *label,
 void OptWidgetText::get( void )
 {
   if ( Editable ) {
+    InternChanged = true;
     bool cn = OO->notifying();
     OO->unsetNotify();
     (*OP).setText( EW->text().latin1() );
@@ -860,6 +865,7 @@ void OptWidgetText::get( void )
       (*OP).addFlags( OW->changedFlag() );
     Value = (*OP).text( 0, "%s" );
     OO->setNotify( cn );
+    InternChanged = false;
   }
 }
 
@@ -1045,6 +1051,7 @@ OptWidgetMultiText::OptWidgetMultiText( Options::iterator op, QWidget *label,
 void OptWidgetMultiText::get( void )
 {
   if ( Editable ) {
+    InternChanged = true;
     bool cn = OO->notifying();
     OO->unsetNotify();
     (*OP).setText( EW->currentText().latin1() );
@@ -1054,6 +1061,7 @@ void OptWidgetMultiText::get( void )
       (*OP).addFlags( OW->changedFlag() );
     Value = (*OP).text( 0 );
     OO->setNotify( cn );
+    InternChanged = false;
   }
 }
 
@@ -1255,6 +1263,7 @@ OptWidgetNumber::OptWidgetNumber( Options::iterator op, QWidget *label,
 void OptWidgetNumber::get( void )
 {
   if ( Editable ) {
+    InternChanged = true;
     bool cn = OO->notifying();
     OO->unsetNotify();
     (*OP).setNumber( EW->value(), (*OP).outUnit() );
@@ -1262,6 +1271,7 @@ void OptWidgetNumber::get( void )
       (*OP).addFlags( OW->changedFlag() );
     Value = (*OP).number();
     OO->setNotify( cn );
+    InternChanged = false;
   }
 }
 
@@ -1403,6 +1413,7 @@ OptWidgetBoolean::OptWidgetBoolean( Options::iterator op, Options *oo,
 void OptWidgetBoolean::get( void )
 {
   if ( Editable ) {
+    InternChanged = true;
     bool cn = OO->notifying();
     OO->unsetNotify();
     (*OP).setBoolean( EW->isChecked() );
@@ -1410,6 +1421,7 @@ void OptWidgetBoolean::get( void )
       (*OP).addFlags( OW->changedFlag() );
     Value = (*OP).boolean();
     OO->setNotify( cn );
+    InternChanged = false;
   }
 }
 
@@ -1516,6 +1528,7 @@ OptWidgetDate::OptWidgetDate( Options::iterator op, Options *oo,
 void OptWidgetDate::get( void )
 {
   if ( Editable ) {
+    InternChanged = true;
     bool cn = OO->notifying();
     OO->unsetNotify();
     (*OP).setDate( DE->date().year(), DE->date().month(), DE->date().day() );
@@ -1527,6 +1540,7 @@ void OptWidgetDate::get( void )
     Month = (*OP).month( 0 );
     Day = (*OP).day( 0 );
     OO->setNotify( cn );
+    InternChanged = false;
   }
 }
 
@@ -1640,6 +1654,7 @@ OptWidgetTime::OptWidgetTime( Options::iterator op, Options *oo,
 void OptWidgetTime::get( void )
 {
   if ( Editable ) {
+    InternChanged = true;
     bool cn = OO->notifying();
     OO->unsetNotify();
     (*OP).setTime( TE->time().hour(), TE->time().minute(), TE->time().second() );
@@ -1651,6 +1666,7 @@ void OptWidgetTime::get( void )
     Minutes = (*OP).minutes( 0 );
     Seconds = (*OP).seconds( 0 );
     OO->setNotify( cn );
+    InternChanged = false;
   }
 }
 

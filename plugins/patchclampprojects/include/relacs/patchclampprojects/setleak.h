@@ -46,6 +46,7 @@ public:
 
   SetLeak( void );
   virtual int main( void );
+  virtual void config( void );
   virtual void notify( void );
 
 
@@ -54,6 +55,7 @@ public slots:
   void setValues( void );
   void keepValues( void );
   void resetValues( void );
+  void measureVRest( void );
 
 
 protected:
@@ -68,6 +70,7 @@ protected:
   QPushButton *OKButton;
   QPushButton *CancelButton;
   QPushButton *ResetButton;
+  QPushButton *VRestButton;
 
 };
 

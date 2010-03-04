@@ -34,7 +34,7 @@ SetDC::SetDC( void )
 {
   // add some options:
   addSelection( "outcurrent", "Output trace", "Current-1" );
-  addSelection( "dcamplitudesel", "Set DC amplitude", "to absolute value|to a fraction of the threshold|relative to threshold" );
+  addSelection( "dcamplitudesel", "Set DC amplitude", "to absolute value|to previous value|to a fraction of the threshold|relative to threshold" );
   addNumber( "dcamplitude", "DC amplitude", 0.1, 0.0, 1000.0, 0.01 ).setActivation( "dcamplitudesel", "to absolute value" );
   addNumber( "dcamplitudefrac", "Fraction of threshold", 0.9, 0.0, 1.0, 0.01, "1", "%" ).setActivation( "dcamplitudesel", "to a fraction of the threshold" );
   addNumber( "dcamplitudedecr", "Decrement below threshold", 0.1, 0.0, 1000.0, 0.01 ).setActivation( "dcamplitudesel", "relative to threshold" );
@@ -110,6 +110,8 @@ int SetDC::main( void )
   if ( dcamplitudesel == 0 )
     DCAmplitude = dcamplitude;
   else if ( dcamplitudesel == 1 )
+    DCAmplitude = orgampl;
+  else if ( dcamplitudesel == 2 )
     DCAmplitude *= dcamplitudefrac;
   else
     DCAmplitude -= dcamplitudedecr;

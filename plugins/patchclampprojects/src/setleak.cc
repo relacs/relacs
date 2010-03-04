@@ -37,6 +37,8 @@ SetLeak::SetLeak( void )
   addNumber( "g", "New value of leak conductance", 0.0, -100000.0, 100000.0, 0.1, "nS" ).setActivation( "preset", "custom" ).setFlags( 1 );
   addNumber( "E", "New value of leak reversal-potential", 0.0, -10000.0, 10000.0, 1.0, "mV" ).setActivation( "preset", "custom" ).setFlags( 1 );
   addBoolean( "reversaltorest", "Set leak reversal-potential to resting potential", true ).setActivation( "preset", "zero", false ).setFlags( 1 );
+  addSelection( "involtage", "Input voltage trace for measuring resting potential", "V-1" ).setFlags( 1 );
+  addNumber( "duration", "Duration of resting potential measurement", 0.1, 0.001, 1000.0, 0.001, "sec", "ms" ).setFlags( 1 );
   setConfigSelectMask( 1 );
   setDialogSelectMask( 1 );
 
@@ -82,6 +84,12 @@ SetLeak::SetLeak( void )
 	   this, SLOT( resetValues() ) );
   grabKey( ALT+Key_R );
 
+  // Reset button:
+  VRestButton = new QPushButton( "&E to VRest", bb, "VRestButton" );
+  connect( VRestButton, SIGNAL( clicked() ),
+	   this, SLOT( measureVRest() ) );
+  grabKey( ALT+Key_E );
+
   bb->setFixedHeight( OKButton->sizeHint().height() );
   bb->setSpacing( 4 );
 
@@ -90,6 +98,14 @@ SetLeak::SetLeak( void )
     setTabOrder( STW.lastWidget(), OKButton );
   setTabOrder( OKButton, CancelButton );
   setTabOrder( CancelButton, ResetButton );
+  setTabOrder( ResetButton, VRestButton );
+}
+
+
+void SetLeak::config( void )
+{
+  setText( "involtage", traceNames() );
+  setToDefault( "involtage" );
 }
 
 
@@ -97,6 +113,7 @@ void SetLeak::notify( void )
 {
   double rm = number("Rm");
   if ( rm > 1.0e-6 ) {
+    bool update = true;
     if ( changed( "gdc" ) ) {
       double rdc = 1.0/(0.001*number( "gdc" )+1.0/rm);
       double cm = metaData( "Cell" ).number( "cm" );
@@ -120,9 +137,15 @@ void SetLeak::notify( void )
 	setNumber( "gdc", 1000.0/rdc-1000.0/rm );
       }
     }
+    else
+      update = false;
+    if ( update ) {
+      delFlags( Parameter::changedFlag() );
+      // STW.updateValues() must be postboned, because it is disabled
+      // whenever notify() is called from OptWidget:
+      postCustomEvent( 13 );
+    }
   }
-  delFlags( Parameter::changedFlag() );
-  postCustomEvent( 13 );   // STW.updateValues();
 }
 
 
@@ -151,6 +174,19 @@ void SetLeak::resetValues( void )
 }
 
 
+void SetLeak::measureVRest( void )
+{
+  int involtage = traceIndex( settings().text( "involtage", 0 ) );
+  if ( involtage < 0 ) 
+    return;
+  double duration = settings().number( "duration" );
+  const InData &data = trace( involtage );
+  double vrest = data.mean( data.currentTime()-duration, data.currentTime() );
+  setNumber( "Edc", vrest );
+  STW.updateValue( "Edc" );  
+}
+
+
 int SetLeak::main( void )
 {
   // get options:
@@ -175,6 +211,7 @@ int SetLeak::main( void )
 
   noMessage();
 
+  unsetNotify();
   setNumber( "Rm", metaData( "Cell" ).number( "rm" ) );
   setNumber( "Taum", metaData( "Cell" ).number( "taum" ) );
   setNumber( "Edc", E );
@@ -182,6 +219,7 @@ int SetLeak::main( void )
   delFlags( Parameter::changedFlag() );
   addFlags( "gdc", Parameter::changedFlag() );
   notify();
+  setNotify();
 
   if ( interactive ) {
     postCustomEvent( 11 ); // STW.setFocus();
@@ -203,6 +241,7 @@ int SetLeak::main( void )
   }
 
   // set the requested values:
+  message( "set g=" + Str( g ) + "nS and E=" + Str( E ) + "mV" );
   OutList signal;
   signal.resize( 2 );
   signal[0] = OutData( g );
@@ -236,6 +275,10 @@ void SetLeak::keyPressEvent( QKeyEvent *e )
   }
   else if ( e->key() == Key_R && ( e->state() & AltButton ) ) {
     ResetButton->animateClick();
+    e->accept();
+  }
+  else if ( e->key() == Key_E && ( e->state() & AltButton ) ) {
+    VRestButton->animateClick();
     e->accept();
   }
   else if ( ( e->key() == Key_Return || e->key() == Key_Enter ) && ( e->state() & KeyButtonMask ) == 0 ) {

@@ -38,30 +38,30 @@ FICurve::FICurve( void )
     IInFac( 1.0 )
 {
   // add some options:
-  addLabel( "Traces" );
-  addSelection( "involtage", "Input voltage trace", "V-1" );
-  addSelection( "incurrent", "Input current trace", "Current-1" );
+  addLabel( "Stimuli" );
   addSelection( "outcurrent", "Output trace", "Current-1" );
-  addLabel( "Stimulus" );
   addNumber( "imin", "Minimum injected current", 0.0, -1000.0, 1000.0, 0.001 );
   addBoolean( "iminrelthresh", "Minimum current is relative to threshold", false );
   addNumber( "imax", "Maximum injected current", 1.0, -1000.0, 1000.0, 0.001 );
   addNumber( "istep", "Minimum step-size of current", 0.001, 0.001, 1000.0, 0.001 );
   addBoolean( "userm", "Use membrane resistance for estimating istep from vstep", false );
   addNumber( "vstep", "Minimum step-size of voltage", 1.0, 0.001, 10000.0, 0.1 ).setActivation( "userm", "true" );
+  addLabel( "Timing" );
+  addNumber( "duration", "Duration of current output", 0.1, 0.001, 1000.0, 0.001, "sec", "ms" );
+  addNumber( "delay", "Delay before current pulses", 0.1, 0.001, 1.0, 0.001, "sec", "ms" );
+  addNumber( "pause", "Duration of pause between current pulses", 0.4, 0.001, 1.0, 0.001, "sec", "ms" );
   addSelection( "shuffle", "Sequence of currents", RangeLoop::sequenceStrings() );
   addSelection( "ishuffle", "Initial sequence of currents for first repetition", RangeLoop::sequenceStrings() );
   addInteger( "iincrement", "Initial increment for currents", 0, 0, 1000, 1 );
   addInteger( "singlerepeat", "Number of immediate repetitions of a single stimulus", 1, 1, 10000, 1 );
   addInteger( "blockrepeat", "Number of repetitions of a fixed intensity increment", 10, 1, 10000, 1 );
   addInteger( "repeat", "Number of repetitions of the whole V-I curve measurement", 1, 1, 10000, 1 );
-  addNumber( "duration", "Duration of current output", 0.1, 0.001, 1000.0, 0.001, "sec", "ms" );
-  addNumber( "delay", "Delay before current pulses", 0.1, 0.001, 1.0, 0.001, "sec", "ms" );
-  addNumber( "pause", "Duration of pause between current pulses", 0.4, 0.001, 1.0, 0.001, "sec", "ms" );
-  addNumber( "fmax", "Maximum firing rate", 100.0, 0.0, 2000.0, 1.0, "Hz" );
   addLabel( "Analysis" );
+  addSelection( "involtage", "Input voltage trace", "V-1" );
+  addSelection( "incurrent", "Input current trace", "Current-1" );
+  addNumber( "fmax", "Maximum firing rate", 100.0, 0.0, 2000.0, 1.0, "Hz" );
   addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
-  addTypeStyle( OptWidget::Bold, Parameter::Label );
+  addTypeStyle( OptWidget::TabLabel, Parameter::Label );
 }
 
 
