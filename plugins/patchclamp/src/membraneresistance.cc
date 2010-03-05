@@ -41,7 +41,9 @@ MembraneResistance::MembraneResistance( void )
   // add some options:
   addLabel( "Stimulus" );
   addSelection( "outcurrent", "Output trace", "Current-1" );
-  addNumber( "amplitude", "Amplitude of output signal", -1.0, -1000.0, 1000.0, 0.1 );
+  addNumber( "amplitude", "Amplitude of output signal", -1.0, -1000.0, 1000.0, 0.1 ).setActivation( "userm", "false" );
+  addBoolean( "userm", "Compute amplitude from vstep and estimated membrane resistance", false );
+  addNumber( "vstep", "Steady-state voltage amplitude induced by output signal", -1.0, -1000.0, 1000.0, 0.1, "mV" ).setActivation( "userm", "true" );
   addNumber( "duration", "Duration of output", 0.1, 0.001, 1000.0, 0.001, "sec", "ms" );
   addNumber( "pause", "Duration of pause bewteen outputs", 0.4, 0.001, 1.0, 0.001, "sec", "ms" );
   addInteger( "repeats", "Repetitions of stimulus", 10, 0, 10000, 1 );
@@ -102,6 +104,8 @@ int MembraneResistance::main( void )
   int incurrent = traceIndex( text( "incurrent", 0 ) );
   int outcurrent = outTraceIndex( text( "outcurrent", 0 ) );
   Amplitude = number( "amplitude" );
+  bool userm = boolean( "userm" );
+  double vstep = number( "vstep" );
   Duration = number( "duration" );
   double pause = number( "pause" );
   int repeats = integer( "repeats" );
@@ -118,6 +122,14 @@ int MembraneResistance::main( void )
   if ( outcurrent < 0 ) {
     warning( "Invalid output current trace!" );
     return Failed;
+  }
+  if ( userm ) {
+    double rm = metaData( "Cell" ).number( "rm", 0.0, "MOhm" );
+    if ( rm > 1.0e-8 ) {
+      double g = stimulusData().number( "g", 0.0, "ns" );
+      double r = 1.0/(0.001*g + 1.0/rm);
+      Amplitude = vstep/r/IFac;
+    }
   }
 
   double samplerate = trace( involtage ).sampleRate();

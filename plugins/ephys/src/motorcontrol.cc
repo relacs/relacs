@@ -212,7 +212,7 @@ void MotorControl::keyPressEvent( QKeyEvent *e )
     break;
 
   default:
-    e->ignore();
+    Control::keyPressEvent( e );
 
   }
 }

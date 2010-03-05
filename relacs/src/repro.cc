@@ -668,7 +668,7 @@ bool RePro::eventFilter( QObject *watched, QEvent *e )
     vector<int>::iterator kp = GrabKeys.begin();
     vector<int>::iterator mp = GrabKeysModifier.begin();
     while ( kp != GrabKeys.end() ) {
-      if ( *kp == k->key() && *mp == k->state() ) {
+      if ( *kp == k->key() && *mp == ( k->state() & KeyButtonMask ) ) {
 	if ( e->type() == QEvent::KeyRelease )
 	  keyReleaseEvent( k );
 	else

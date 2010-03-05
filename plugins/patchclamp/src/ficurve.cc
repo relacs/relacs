@@ -43,7 +43,7 @@ FICurve::FICurve( void )
   addNumber( "imin", "Minimum injected current", 0.0, -1000.0, 1000.0, 0.001 );
   addBoolean( "iminrelthresh", "Minimum current is relative to threshold", false );
   addNumber( "imax", "Maximum injected current", 1.0, -1000.0, 1000.0, 0.001 );
-  addNumber( "istep", "Minimum step-size of current", 0.001, 0.001, 1000.0, 0.001 );
+  addNumber( "istep", "Minimum step-size of current", 0.001, 0.001, 1000.0, 0.001 ).setActivation( "userm", "false" );
   addBoolean( "userm", "Use membrane resistance for estimating istep from vstep", false );
   addNumber( "vstep", "Minimum step-size of voltage", 1.0, 0.001, 10000.0, 0.1 ).setActivation( "userm", "true" );
   addLabel( "Timing" );

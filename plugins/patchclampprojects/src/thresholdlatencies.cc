@@ -231,14 +231,15 @@ int ThresholdLatencies::main( void )
     else
       s = "<b>Measure response: </b>";
     s += "DC amplitude <b>" + Str( dcamplitude ) + " " + IUnit +"</b>, ";
-    s += "Amplitude <b>" + Str( amplitude ) + " " + IUnit +"</b>";
+    s += "Amplitude <b>" + Str( amplitude ) + " " + IUnit +"</b>, ";
+    s += "Step <b>" + Str( amplitudestep ) + " " + IUnit +"</b>";
     if ( record )
       s += ",  Loop <b>" + Str( count ) + "</b>";
     message( s );
 
     // signal:
     signal = amplitude;
-    signal.setIdent( "const ampl=" + Str( amplitude ) + IUnit );
+    signal.setIdent( "I=" + Str( amplitude ) + IUnit );
     signal.back() = dcamplitude;
     write( signal );
     if ( signal.failed() ) {
@@ -269,6 +270,8 @@ int ThresholdLatencies::main( void )
 	amplitude -= amplitudestep;
       else
 	amplitude += amplitudestep;
+      if ( fabs( amplitude ) < 1.0e-8 )
+	amplitude = 0.0;
     }
     else if ( adjust == 2 ) {
       // change DC amplitude:
@@ -281,6 +284,10 @@ int ThresholdLatencies::main( void )
 	dcamplitude += amplitudestep;
 	amplitude += amplitudestep;
       }
+      if ( fabs( amplitude ) < 1.0e-8 )
+	amplitude = 0.0;
+      if ( fabs( dcamplitude ) < 1.0e-8 )
+	dcamplitude = 0.0;
       dcsignal = dcamplitude;
       dcsignal.setIdent( "DC=" + Str( dcamplitude ) + IUnit );
       directWrite( dcsignal );
@@ -318,8 +325,10 @@ int ThresholdLatencies::main( void )
 	    openTraceFile( tf, tracekey, incurrent );
 	  }
 	}
-	else
+	else {
 	  amplitudestep *= 0.5;
+	  amplitudestep = ceil(amplitudestep/finalamplitudestep)*finalamplitudestep;
+	}
       }
     }
     TrialCount = count;

@@ -1806,9 +1806,9 @@ void RELACSWidget::keyPressEvent( QKeyEvent* e)
 {
   if ( CurrentRePro != 0 )
     CurrentRePro->keyPressEvent( e );
-  PT->keyPressEvent( e );
-  MC->keyPressEvent( e );
-  for ( unsigned int k=0; k<CN.size(); k++ )
+  if ( CurrentRePro == 0 || ! e->isAccepted() )
+    PT->keyPressEvent( e );
+  for ( unsigned int k=0; k<CN.size() && ! e->isAccepted(); k++ )
     CN[k]->keyPressEvent( e );
 }
 
@@ -1817,9 +1817,9 @@ void RELACSWidget::keyReleaseEvent( QKeyEvent* e)
 {
   if ( CurrentRePro != 0 )
     CurrentRePro->keyReleaseEvent( e );
-  PT->keyReleaseEvent( e );
-  MC->keyReleaseEvent( e );
-  for ( unsigned int k=0; k<CN.size(); k++ )
+  if ( CurrentRePro == 0 || ! e->isAccepted() )
+    PT->keyReleaseEvent( e );
+  for ( unsigned int k=0; k<CN.size() && ! e->isAccepted(); k++ )
     CN[k]->keyReleaseEvent( e );
 }
 

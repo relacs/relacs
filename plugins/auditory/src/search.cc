@@ -356,8 +356,6 @@ void Search::saveEvents( const EventData &events, int count, const Options &head
 
 void Search::keyPressEvent( QKeyEvent *qke )
 {
-  RePro::keyPressEvent( qke );
-
   switch ( qke->key()) {
   case Key_Up:
     if ( qke->state() & AltButton ) {
@@ -404,7 +402,9 @@ void Search::keyPressEvent( QKeyEvent *qke )
     toggleMute();
     break;
 
-  default: qke->ignore();      // Erase event from list
+  default:
+    RePro::keyPressEvent( qke );
+
   }
 }
 

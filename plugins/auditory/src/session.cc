@@ -354,8 +354,6 @@ void Session::buzz( void )
 
 void Session::keyPressEvent( QKeyEvent *e )
 {
-  Control::keyPressEvent( e );
-
   switch ( e->key() ) {
     /*
   case Key_O:
@@ -376,7 +374,7 @@ void Session::keyPressEvent( QKeyEvent *e )
     break;
     */
   default:
-    e->ignore();
+    Control::keyPressEvent( e );
 
   }
 }
@@ -399,7 +397,7 @@ void Session::keyReleaseEvent( QKeyEvent *e )
     break;
     */
   default:
-    e->ignore();
+    Control::keyReleaseEvent( e );
 
   }
 }

@@ -111,18 +111,17 @@ void SetLeak::config( void )
 
 void SetLeak::notify( void )
 {
-  double rm = number("Rm");
+  double rm = number( "Rm", 0.0, "MOhm" );
   if ( rm > 1.0e-6 ) {
     bool update = true;
+    double cm = metaData( "Cell" ).number( "cm", 0.0, "pF" );
     if ( changed( "gdc" ) ) {
       double rdc = 1.0/(0.001*number( "gdc" )+1.0/rm);
-      double cm = metaData( "Cell" ).number( "cm" );
       setNumber( "Rdc", rdc );
       setNumber( "taudc", 1.0e-6*rdc*cm );
     }
     else if ( changed( "Rdc" ) ) {
       double rdc = number( "Rdc" );
-      double cm = metaData( "Cell" ).number( "cm" );
       if ( rdc > 1.0e-6 ) {
 	setNumber( "gdc", 1000.0/rdc-1000.0/rm );
 	setNumber( "taudc", 1.0e-6*rdc*cm );
@@ -130,7 +129,6 @@ void SetLeak::notify( void )
     }
     else if ( changed( "taudc" ) ) {
       double taudc = number( "taudc" );
-      double cm = metaData( "Cell" ).number( "cm" );
       if ( cm > 1.0e-6 ) {
 	double rdc = 1.0e6*taudc/cm;
 	setNumber( "Rdc", rdc );
@@ -198,8 +196,8 @@ int SetLeak::main( void )
 
   if ( preset == 0 ) {
     // previous values:
-    E = stimulusData().number( "E" );
-    g = stimulusData().number( "g" );
+    E = stimulusData().number( "E", 0.0, "mV" );
+    g = stimulusData().number( "g", 0.0, "nS" );
   }
   else if ( preset == 1 ) {
     // zero:
@@ -207,13 +205,13 @@ int SetLeak::main( void )
     g = 0.0;
   }
   if ( reversaltorest && preset != 1 )
-    E = 1000.0*metaData( "Cell" ).number( "vrest" );
+    E = metaData( "Cell" ).number( "vrest", 0.0, "mV" );
 
   noMessage();
 
   unsetNotify();
-  setNumber( "Rm", metaData( "Cell" ).number( "rm" ) );
-  setNumber( "Taum", metaData( "Cell" ).number( "taum" ) );
+  setNumber( "Rm", metaData( "Cell" ).number( "rm", 0.0, "MOhm" ) );
+  setNumber( "Taum", metaData( "Cell" ).number( "taum", 0.0, "s" ) );
   setNumber( "Edc", E );
   setNumber( "gdc", g );
   delFlags( Parameter::changedFlag() );

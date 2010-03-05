@@ -204,14 +204,15 @@ int FindThreshold::main( void )
       s = "<b>Search threshold: </b>";
     else
       s = "<b>Measure threshold: </b>";
-    s += "Amplitude <b>" + Str( amplitude ) + " " + IUnit +"</b>";
+    s += "Amplitude <b>" + Str( amplitude ) + " " + IUnit +"</b>, ";
+    s += "Step <b>" + Str( amplitudestep ) + " " + IUnit +"</b>";
     if ( record )
       s += ",  Loop <b>" + Str( count ) + "</b>";
     message( s );
 
     // signal:
     signal = amplitude;
-    signal.setIdent( "const ampl=" + Str( amplitude ) + IUnit );
+    signal.setIdent( "I=" + Str( amplitude ) + IUnit );
     if ( resetcurrent )
       signal.back() = 0.0;
     write( signal );
@@ -241,6 +242,8 @@ int FindThreshold::main( void )
       amplitude -= amplitudestep;
     else
       amplitude += amplitudestep;
+    if ( fabs( amplitude ) < 1.0e-8 )
+      amplitude = 0.0;
 
     // switch modes:
     if ( ! record ) {
@@ -270,8 +273,10 @@ int FindThreshold::main( void )
 	    openFiles( tf, tracekey, incurrent );
 	  }
 	}
-	else
+	else {
 	  amplitudestep *= 0.5;
+	  amplitudestep = ceil(amplitudestep/finalamplitudestep)*finalamplitudestep;
+	}
       }
     }
     TrialCount = count;
