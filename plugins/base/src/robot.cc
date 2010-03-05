@@ -52,32 +52,36 @@ void Robot::keyPressEvent( QKeyEvent *e )
 
   case Key_Up:
     if ( Rob != 0 )
-      Rob->stepX( -100.0 );
+      Rob->stepX( -10000.0 );
     break;
 
   case Key_Down:
     if ( Rob != 0 )
-      Rob->stepX( 100.0 );
+      Rob->stepX( 10000.0 );
     break;
 
   case Key_Left:
+    cerr << "LEFT\n";
     if ( Rob != 0 )
-      Rob->stepY( 100.0 );
+      Rob->stepY( 10000.0 );
     break;
 
   case Key_Right:
+    cerr << "RIGHT\n";
     if ( Rob != 0 )
-      Rob->stepY( -100.0 );
+      Rob->stepY( -10000.0 );
     break;
 
-  case Key_PageUp:
+  case Key_U:
+    cerr << "UP\n";
     if ( Rob != 0 )
-      Rob->stepZ( 100.0 );
+      Rob->stepZ( 10000.0 );
     break;
 
-  case Key_PageDown:
+  case Key_D:
+    cerr << "DOWN\n";
     if ( Rob != 0 )
-      Rob->stepZ( -100.0 );
+      Rob->stepZ( -10000.0 );
     break;
 
   default:

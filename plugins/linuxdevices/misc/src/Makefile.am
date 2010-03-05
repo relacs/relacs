@@ -50,14 +50,17 @@ libmiscmirob_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
+    $(TML_CPPFLAGS) \
     $(QT3_CPPFLAGS)
 
 libmiscmirob_la_LDFLAGS = \
     -module -avoid-version \
+    $(TML_LDFLAGS) \
     $(QT3_LDFLAGS)
 
 libmiscmirob_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
+    $(TML_LIBS) \
     $(QT3_LIBS)
 
 libmiscmirob_la_SOURCES = mirob.cc mirobdevice.cc

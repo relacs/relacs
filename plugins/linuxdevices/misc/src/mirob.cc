@@ -41,7 +41,7 @@ Mirob::Mirob( const string &device )
 {
   Opened = false;
   for ( int k=0; k<3; k++ ) {
-    Speed[k] = 30.0;
+    Speed[k] = 100.0;
     Acceleration[k] = 0.6;
   }
   open( device );
@@ -52,7 +52,7 @@ Mirob::Mirob( void )
   : Manipulator( "Mirob" )
 {
   for ( int k=0; k<3; k++ ) {
-    Speed[k] = 30.0;
+    Speed[k] = 100.0;
     Acceleration[k] = 0.6;
   }
   Opened = false;
@@ -67,6 +67,7 @@ Mirob::~Mirob( void )
 
 int Mirob::open( const string &device, long mode )
 {
+  cerr << "MIROB open " << device << '\n';
   if ( Opened )
     return 0;
 
@@ -87,7 +88,7 @@ int Mirob::open( const string &device, long mode )
   }
 
   // setup axis:
-  for ( int k=0; k<3; k++ ) {
+  for ( int k=1; k<=3; k++ ) {
     if ( ! TS_SetupAxis( k, setupindex ) )  {
       cerr << "Failed to setup axis " << k << "! " << TS_GetLastErrorText() << '\n';
       return 1;
@@ -120,6 +121,8 @@ int Mirob::open( const string &device, long mode )
   setDeviceFile( device );
   Device::addInfo();
 
+  Opened = true;
+
   return 0;
 }
 
@@ -127,7 +130,7 @@ int Mirob::open( const string &device, long mode )
 void Mirob::close( void )
 {
   if ( Opened ) {
-    for ( int k=0; k<3; k++ ) {
+    for ( int k=1; k<=3; k++ ) {
       if ( ! TS_SelectAxis( k ) )
 	cerr << "Failed to select axis " << k << "! " << TS_GetLastErrorText() << '\n';
       if ( ! TS_Power( POWER_OFF ) )
@@ -143,7 +146,7 @@ void Mirob::close( void )
 
 int Mirob::reset( void )
 {
-  for ( int k=0; k<3; k++ ) {
+  for ( int k=1; k<=3; k++ ) {
     if ( ! TS_SelectAxis( k ) ) {
       cerr << "Failed to select axis " << k << "! " << TS_GetLastErrorText() << '\n';
       return 1;
@@ -152,10 +155,26 @@ int Mirob::reset( void )
       cerr << "Failed to reset fault axis " << k << "! " << TS_GetLastErrorText() << '\n';
       return 1;
     }
+    if ( ! TS_Power( POWER_ON ) ) {
+      cerr << "Failed to power on drive for axis " << k << "! " << TS_GetLastErrorText() << '\n';
+      return 1;
+    }
+    WORD axison = 0;
+    while ( axison == 0 ) {
+      // Check the status of the power stage:
+      if ( ! TS_ReadStatus( REG_SRL, axison ) ) {
+	cerr << "Failed toread status for axis " << k << "! " << TS_GetLastErrorText() << '\n';
+	return 1;
+      }
+      axison = ((axison & 1<<15) != 0 ? 1 : 0);
+    }
+    /*
     if ( ! TS_Reset() ) {
       cerr << "Failed to reset axis " << k << "! " << TS_GetLastErrorText() << '\n';
       return 1;
     }
+   // Requires much more setup afterwards!
+    */
   }
 
   return 0;
@@ -164,17 +183,20 @@ int Mirob::reset( void )
                              
 int Mirob::step( double x, int axis )
 {
+  cerr << "AXIS " << axis << " step by " << x << '\n';
   // select axis:
   if ( ! TS_SelectAxis( axis ) ) {
     cerr << "Failed to select axis " << axis << "! " << TS_GetLastErrorText() << '\n';
     return 1;
   }
 
+  /*
   // set the actual motor position to 0 [position internal units]:
   if ( ! TS_SetPosition( 0 ) ) {
     cerr << "Failed to set position on axis " << axis << "! " << TS_GetLastErrorText() << '\n';
     return 1;
   }
+  */
 
   // move:
   long step = long( rint( x ) );
@@ -196,19 +218,19 @@ int Mirob::step( double x, int axis )
 
 int Mirob::stepX( double x )
 {
-  return step( x, 0 );
+  return step( x, 1 );
 }
 
 
 int Mirob::stepY( double y )
 {
-  return step( y, 1 );
+  return step( y, 2 );
 }
 
 
 int Mirob::stepZ( double z )
 {
-  return step( z, 2 );
+  return step( z, 3 );
 }
 
 
@@ -233,19 +255,19 @@ double Mirob::pos( int axis ) const
 
 double Mirob::posX( void ) const
 {
-  return pos( 0 );
+  return pos( 1 );
 }
 
 
 double Mirob::posY( void ) const
 {
-  return pos( 1 );
+  return pos( 2 );
 }
 
 
 double Mirob::posZ( void ) const
 {
-  return pos( 2 );
+  return pos( 3 );
 }
 
 

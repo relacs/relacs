@@ -58,7 +58,7 @@ AS_IF([test "x$with_tml" != xno],
       RELACS_TML=no
      ])
    AC_CHECK_LIB([TML_lib], [main],
-     [TML_LIBS="-ltml"
+     [TML_LIBS="-lTML_lib -lz"
       if test "x$with_tml" != xdetect; then
         RELACS_TML=$with_tml
       else
@@ -69,7 +69,7 @@ AS_IF([test "x$with_tml" != xno],
         AC_MSG_ERROR(${TML_MISSING})
       fi
       RELACS_TML=no
-     ])
+     ], [-lz])
   ],
   [ RELACS_TML=no ] )
 
