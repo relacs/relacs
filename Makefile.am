@@ -1,4 +1,8 @@
-ACLOCAL_AMFLAGS = -I m4 -I numerics/m4 -I plugins/linuxdevices/comedi/m4
+ACLOCAL_AMFLAGS = \
+    -I m4 \
+    -I numerics/m4 \
+    -I plugins/linuxdevices/comedi/m4 \
+    -I plugins/linuxdevices/misc/m4
 
 man_MANS = doc/relacs.1
 

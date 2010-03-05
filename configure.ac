@@ -92,6 +92,13 @@ RELACS_LIB_COMEDI()
 
 
 #################################################
+## TML_lib (for Mirob robot)
+#################################################
+RELACS_LIB_TML()
+AM_CONDITIONAL(RELACS_COND_TML,[test "$RELACS_TML" != no])
+
+
+#################################################
 ## RELACSDAQ
 #################################################
 DOXYGEN_PREDEF="$DOXYGEN_PREDEF HAVE_LIBRELACSDAQ"
@@ -308,6 +315,7 @@ cat <<SUMMARY
     Use GSL ...................... ${RELACS_GSL}
     Use Comedi ................... ${RELACS_COMEDI}
     Use RTAI ..................... ${RELACS_RTAI}
+    Use TML_lib .................. ${RELACS_TML}
     Generate user manual ......... ${RELACS_GENERATE_DOCBOOK}
     Generate API documentation ... ${DX_SUMMARY}
     Compile example programs ..... ${RELACS_COMPILE_EXAMPLES}

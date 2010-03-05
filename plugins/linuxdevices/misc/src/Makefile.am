@@ -5,6 +5,10 @@ pluginlibdir = $(pkglibdir)/plugins
 pluginlib_LTLIBRARIES = \
     libmisckleindiek.la \
     libmisctempdtm5080.la
+if RELACS_COND_TML
+pluginlib_LTLIBRARIES += \
+    libmiscmirob.la
+endif
 if RELACS_COND_nieseries
 pluginlib_LTLIBRARIES += \
     libmiscamplmode.la
@@ -36,6 +40,31 @@ libmiscamplmode_la_SOURCES = amplmode.cc amplmodedevice.cc
 libmiscamplmode_la_includedir = $(pkgincludedir)/misc
 
 libmiscamplmode_la_include_HEADERS = $(HEADER_PATH)/amplmode.h
+
+
+
+libmiscmirob_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(srcdir)/../include \
+    $(QT3_CPPFLAGS)
+
+libmiscmirob_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT3_LDFLAGS)
+
+libmiscmirob_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(QT3_LIBS)
+
+libmiscmirob_la_SOURCES = mirob.cc mirobdevice.cc
+
+libmiscmirob_la_includedir = $(pkgincludedir)/misc
+
+libmiscmirob_la_include_HEADERS = $(HEADER_PATH)/mirob.h
 
 
 
@@ -91,11 +120,15 @@ libmisctempdtm5080_la_include_HEADERS = $(HEADER_PATH)/tempdtm5080.h
 
 check_PROGRAMS = \
     linktest_libmiscamplmode_la \
+    linktest_libmiscmirob_la \
     linktest_libmisckleindiek_la \
     linktest_libmisctempdtm5080_la
 
 linktest_libmiscamplmode_la_SOURCES = linktest.cc
 linktest_libmiscamplmode_la_LDADD = libmiscamplmode.la
+
+linktest_libmiscmirob_la_SOURCES = linktest.cc
+linktest_libmiscmirob_la_LDADD = libmiscmirob.la
 
 linktest_libmisckleindiek_la_SOURCES = linktest.cc
 linktest_libmisckleindiek_la_LDADD = libmisckleindiek.la
