@@ -40,7 +40,7 @@ RangeLoop::RangeLoop( void )
     BlockRepeat( 1 ), BlockRepeatCount( 0 ),
     SingleRepeat( 1 ), SingleRepeatCount( 0 ),
     Increment( 1 ), CurrentIncrement( 1 ),
-    Seq( Up ), AddMethod( Add )
+    Seq( Up ), AddMethod( Add ), StepFac( 0.0 )
 {
   Elements.clear();
   Indices.clear();
@@ -97,6 +97,7 @@ bool RangeLoop::empty( void ) const
 void RangeLoop::resize( int newsize, double dflt )
 {
   Elements.resize( newsize, ElementType( dflt ) );
+  StepFac = 0.0;
 }
 
 
@@ -147,6 +148,8 @@ void RangeLoop::set( double first, double last, double step,
 
 void RangeLoop::add( double first, double last, double step )
 {
+  int oldsize = Elements.size();
+
   if ( first == last )
     add( first );
   else if ( first < last && step > 0.0 ) {
@@ -172,6 +175,10 @@ void RangeLoop::add( double first, double last, double step )
     } while ( v >= last );
   }
 
+  if ( oldsize == 0 )
+    StepFac = step;
+  else if ( StepFac <= 0.0 || fabs( StepFac - step ) > 1.0e-8 )
+    StepFac = 0.0;
 }
 
 
@@ -204,6 +211,8 @@ void RangeLoop::setLog( double first, double last, double fac,
 
 void RangeLoop::addLog( double first, double last, double fac )
 {
+  int oldsize = Elements.size();
+
   if ( first == last )
     add( first );
   else if ( first < last && fac > 1.0 ) {
@@ -224,6 +233,11 @@ void RangeLoop::addLog( double first, double last, double fac )
       v *= fac;
     } while ( v >= last );
   }    
+
+  if ( oldsize == 0 )
+    StepFac = -fac;
+  else if ( StepFac >= 0.0 || fabs( -StepFac - fac ) > 1.0e-8 )
+    StepFac = 0.0;
 }
 
 
@@ -256,6 +270,8 @@ void RangeLoop::set( double first, double last, int n,
 
 void RangeLoop::add( double first, double last, int n )
 {
+  int oldsize = Elements.size();
+
   if ( n == 1 )
     add( first );
   else if ( n > 1 ) {
@@ -263,6 +279,10 @@ void RangeLoop::add( double first, double last, int n )
     double step = ( last - first ) / ( n - 1 );
     for ( int k=0; k<n; k++ )
       add( first + k*step );
+    if ( oldsize == 0 )
+      StepFac = step;
+    else if ( StepFac <= 0.0 || fabs( StepFac - step ) > 1.0e-8 )
+      StepFac = 0.0;
   }
 }
 
@@ -296,6 +316,8 @@ void RangeLoop::setLog( double first, double last, int n,
 
 void RangeLoop::addLog( double first, double last, int n )
 {
+  int oldsize = Elements.size();
+
   if ( n == 1 )
     add( first );
   else if ( n > 1 ) {
@@ -306,6 +328,10 @@ void RangeLoop::addLog( double first, double last, int n )
       add( v );
       v *= fac;
     }
+    if ( oldsize == 0 )
+      StepFac = -fac;
+    else if ( StepFac >= 0.0 || fabs( -StepFac - fac ) > 1.0e-8 )
+      StepFac = 0.0;
   }
 }
 
@@ -336,11 +362,13 @@ void RangeLoop::set( double value, int size,
 
   Seq = Up;
   AddMethod = Add;
+  StepFac = 0.0;
 }
 
 
 bool RangeLoop::add( double value )
 {
+  StepFac = 0.0;
   if ( AddMethod != Add ) {
     // check whether the element already exist:
     bool elemexist = false;
@@ -567,6 +595,21 @@ void RangeLoop::setLargeIncrement( void )
 int RangeLoop::currentIncrement( void ) const
 { 
   return CurrentIncrement;
+}
+
+
+double RangeLoop::currentIncrementValue( void ) const
+{ 
+  if ( StepFac > 1.0e-8 )
+    return CurrentIncrement*StepFac;
+  else if ( StepFac < -1.0e-8 ) {
+    double v = 1.0;
+    for ( int k=0; k<CurrentIncrement; k++ )
+      v *= StepFac;
+    return v;
+  }
+  else
+    return 0.0;
 }
 
 
@@ -877,6 +920,17 @@ const RangeLoop &RangeLoop::operator++( void )
 	      RepeatCount++;
 	      
 	      if ( Repeat > 0 && RepeatCount >= Repeat )
+		return *this;
+
+	      // skip all?
+	      bool skipall = true;
+	      for ( unsigned int k=0; k<Elements.size(); k++ ) {
+		if ( ! Elements[k].Skip ) {
+		  skipall = false;
+		  break;
+		}
+	      }
+	      if ( skipall )
 		return *this;
 	    }
 	    

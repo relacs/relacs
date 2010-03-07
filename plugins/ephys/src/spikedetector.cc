@@ -49,6 +49,8 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   MaxThresh = 100.0;
   Delay = 1.0;
   Decay = 10.0;
+  TestPeak = false;
+  AbsPeak = 0.0;
   TestWidth = true;
   MaxWidth = 0.0015;
   TestInterval = true;
@@ -72,6 +74,8 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   addNumber( "delay", "Delay time", Delay, 0.0, 1000.0, 1.0, "sec", "sec", "%.0f", 0+8+32 );
   addNumber( "decay", "Decay time constant", Decay, 0.0, 1000.0, 1.0,  "sec", "sec", "%.0f", 0+8+32 );
   addNumber( "ratio", "Ratio threshold / size", Ratio, 0.0, 1.0, 0.05, "1", "%", "%.0f",  2+8+32 );
+  addBoolean( "testpeak", "Test absolute spike height", TestPeak ).setFlags( 0+8+32 );
+  addNumber( "abspeak", "Absolute required spike height", AbsPeak, -200.0, 200.0, 1.0, "mV", "mV", "%.1f", 0+8+32 ).setActivation( "testpeak", "true" );
   addBoolean( "testwidth", "Test spike width", TestWidth ).setFlags( 0+8+32 );
   addNumber( "maxwidth", "Maximum spike width", MaxWidth, 0.0001, 0.006, 0.0001, "sec", "ms", "%.1f", 0+8+32 ).setActivation( "testwidth", "true" );
   addBoolean( "testisi", "Test interspike interval", TestInterval ).setFlags( 0+8+32 );
@@ -353,6 +357,8 @@ void SpikeDetector::notify( void )
   Delay = number( "delay" );
   Decay = number( "decay" );
   Ratio = number( "ratio" );
+  TestPeak = boolean( "testpeak" );
+  AbsPeak = number( "abspeak" );
   TestWidth = boolean( "testwidth" );
   MaxWidth = number( "maxwidth" );
   TestInterval = boolean( "testinterval" );
@@ -643,6 +649,10 @@ int SpikeDetector::checkEvent( const InData::const_iterator &first,
 {
   // time of spike:
   time = *eventtime;
+
+  // absolute height:
+  if ( TestPeak && *event < AbsPeak )
+    return 0;
 
   // go down to the left:
   InDataIterator left = event;

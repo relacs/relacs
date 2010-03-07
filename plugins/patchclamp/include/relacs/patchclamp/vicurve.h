@@ -51,7 +51,7 @@ public:
   virtual void config( void );
   virtual void notify( void );
   virtual int main( void );
-  void plot( double duration );
+  void plot( double duration, int inx );
   void save( void );
   void saveData( void );
   void saveTrace( void );
@@ -68,7 +68,7 @@ protected:
 
   struct Data
   {
-    Data( double delay, double duration, double stepsize, bool current );
+    Data( void );
     void analyze( int count, const InData &intrace,
 		  const EventData &spikes, const InData *incurrent,
 		  double iinfac, double delay,

@@ -49,8 +49,8 @@ VICurve::VICurve( void )
   addNumber( "duration", "Duration of current output", 0.1, 0.001, 1000.0, 0.001, "sec", "ms" );
   addNumber( "delay", "Delay before current pulses", 0.1, 0.001, 1.0, 0.001, "sec", "ms" );
   addNumber( "pause", "Duration of pause between current pulses", 0.4, 0.001, 1.0, 0.001, "sec", "ms" );
-  addSelection( "shuffle", "Sequence of currents", RangeLoop::sequenceStrings() );
   addSelection( "ishuffle", "Initial sequence of currents for first repetition", RangeLoop::sequenceStrings() );
+  addSelection( "shuffle", "Sequence of currents", RangeLoop::sequenceStrings() );
   addInteger( "iincrement", "Initial increment for currents", -1, -1000, 1000, 1 );
   addInteger( "singlerepeat", "Number of immediate repetitions of a single stimulus", 1, 1, 10000, 1 );
   addInteger( "blockrepeat", "Number of repetitions of a fixed intensity increment", 10, 1, 10000, 1 );
@@ -185,8 +185,7 @@ int VICurve::main( void )
   Range.setSequence( ishuffle );
   int prevrepeat = 0;
   Results.clear();
-  Results.resize( Range.size(), Data( delay, duration, 1.0/samplerate,
-				      incurrent >= 0 ) );
+  Results.resize( Range.size(), Data() );
 
   // plot:
   P.lock();
@@ -206,7 +205,7 @@ int VICurve::main( void )
 
   // write stimulus:
   sleep( pause );
-  for ( Range.reset(); ! Range && softStop() == 0; ++Range ) {
+  for ( Range.reset(); ! Range && softStop() == 0; ) {
 
     if ( prevrepeat < Range.currentRepetition() ) {
       if ( Range.currentRepetition() == 1 ) {
@@ -220,9 +219,9 @@ int VICurve::main( void )
     if ( fabs( amplitude ) < 1.0e-8 )
       amplitude = 0.0;
 
-    Str s = "Current <b>" + Str( amplitude ) + " " + IUnit +"</b>";
-    s += ",  Increment <b>" + Str( Range.currentIncrement() ) + "</b>";
-    s += ",  Loop <b>" + Str( Range.count()+1 ) + "</b>";
+    Str s = "Increment <b>" + Str( Range.currentIncrementValue() ) + " " + IUnit + "</b>";
+    s += ",  Current <b>" + Str( amplitude ) + " " + IUnit +"</b>";
+    s += ",  Count <b>" + Str( Range.count()+1 ) + "</b>";
     message( s );
 
     timeStamp();
@@ -234,7 +233,7 @@ int VICurve::main( void )
       if ( signal.overflow() ) {
 	printlog( "Requested amplitude I=" + Str( amplitude ) + IUnit + "too high!" );
 	for ( int k = Range.size()-1; k >= 0; k-- ) {
-	  if ( Range[k] > signal.maxValue() )
+	  if ( Range[k] > signal.maxValue() || k == Range.pos() )
 	    Range.setSkip( k );
 	  else
 	    break;
@@ -245,7 +244,7 @@ int VICurve::main( void )
       else if ( signal.underflow() ) {
 	printlog( "Requested amplitude I=" + Str( amplitude ) + IUnit + "too small!" );
 	for ( int k = 0; k < Range.size(); k++ ) {
-	  if ( Range[k] < signal.minValue() )
+	  if ( Range[k] < signal.minValue() || k == Range.pos() )
 	    Range.setSkip( k );
 	  else
 	    break;
@@ -282,7 +281,10 @@ int VICurve::main( void )
       Range.noCount();
     }
 
-    plot( duration );
+    int cinx = Range.pos();
+    ++Range;
+
+    plot( duration, cinx );
     sleepOn( duration + pause );
     if ( interrupt() ) {
       if ( Range.count() < 1 )
@@ -298,12 +300,12 @@ int VICurve::main( void )
 }
 
 
-void VICurve::plot( double duration )
+void VICurve::plot( double duration, int inx )
 {
   P.lock();
 
   // membrane voltage:
-  const Data &data = Results[Range.pos()];
+  const Data &data = Results[inx];
   P[0].clear();
   P[0].setTitle( "I=" + Str( data.I, 0, 2, 'f' ) + IUnit );
   P[0].plotVLine( 0, Plot::White, 2 );
@@ -333,12 +335,12 @@ void VICurve::plot( double duration )
   P[1].plot( om, 1.0, Plot::Green, 3, Plot::Solid, Plot::Circle, 6, Plot::Green, Plot::Green );
   P[1].plot( sm, 1.0, Plot::Red, 3, Plot::Solid, Plot::Circle, 6, Plot::Red, Plot::Red );
   P[1].plot( pm, 1.0, Plot::Orange, 3, Plot::Solid, Plot::Circle, 6, Plot::Orange, Plot::Orange );
-  int c = Range.pos();
+
   MapD am;
-  am.push( Results[c].I, Results[c].VRest );
-  am.push( Results[c].I, Results[c].VOn );
-  am.push( Results[c].I, Results[c].VSS );
-  am.push( Results[c].I, Results[c].VPeak );
+  am.push( Results[inx].I, Results[inx].VRest );
+  am.push( Results[inx].I, Results[inx].VOn );
+  am.push( Results[inx].I, Results[inx].VSS );
+  am.push( Results[inx].I, Results[inx].VPeak );
   P[1].plot( am, 1.0, Plot::Transparent, 3, Plot::Solid, Plot::Circle, 8, Plot::Yellow, Plot::Transparent );
 
   P.unlock();
@@ -467,8 +469,7 @@ void VICurve::saveTrace( void )
 }
 
 
-VICurve::Data::Data( double delay, double duration, double stepsize,
-		     bool current )
+VICurve::Data::Data( void )
   : DC( 0.0 ),
     I( 0.0 ),
     VRest( 0.0 ),
@@ -479,17 +480,13 @@ VICurve::Data::Data( double delay, double duration, double stepsize,
     VPeaksd( 0.0 ),
     VPeakTime( 0.0 ),
     VSS( 0.0 ),
-    VSSsd( 0.0 ),
-    MeanTrace( -delay, 2.0*duration, stepsize, 0.0 ),
-    SquareTrace( -delay, 2.0*duration, stepsize, 0.0 ),
-    StdevTrace( -delay, 2.0*duration, stepsize, 0.0 )
+    VSSsd( 0.0 )
 {
   SpikeCount.clear();
-  SpikeCount.reserve( 100 );
-  if ( current )
-    MeanCurrent = MeanTrace;
-  else
-    MeanCurrent.clear();
+  MeanTrace.clear();
+  SquareTrace.clear();
+  StdevTrace.clear();
+  MeanCurrent.clear();
 }
 
 
@@ -499,6 +496,17 @@ void VICurve::Data::analyze( int count, const InData &intrace,
 			     double delay, double duration,
 			     double ton, double sswidth )
 {
+  // initialize:
+  if ( MeanTrace.empty() ) {
+    double stepsize = intrace.stepsize();
+    MeanTrace = SampleDataD( -delay, 2.0*duration, stepsize, 0.0 );
+    SquareTrace = SampleDataD( -delay, 2.0*duration, stepsize, 0.0 );
+    StdevTrace = SampleDataD( -delay, 2.0*duration, stepsize, 0.0 );
+    SpikeCount.reserve( 100 );
+    if ( incurrent != 0 )
+      MeanCurrent = SampleDataD( -delay, 2.0*duration, stepsize, 0.0 );
+  }
+
   // update averages:
   int inx = intrace.signalIndex() - MeanTrace.index( 0.0 );
   for ( int k=0; k<MeanTrace.size() && inx+k<intrace.size(); k++ ) {

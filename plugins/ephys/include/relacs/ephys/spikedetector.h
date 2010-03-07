@@ -131,6 +131,10 @@ protected:
     /*! Decay time constant of the threshold dynamics in seconds. */
   double Decay;
 
+    /*! Test absolute height of spike peak? */
+  bool TestPeak;
+    /*! Absolute height of a spike peak. */
+  double AbsPeak;
     /*! Test spike width? */
   bool TestWidth;
     /*! Maximum width of a spike in seconds. */

@@ -50,8 +50,8 @@ FICurve::FICurve( void )
   addNumber( "duration", "Duration of current output", 0.1, 0.001, 1000.0, 0.001, "sec", "ms" );
   addNumber( "delay", "Delay before current pulses", 0.1, 0.001, 1.0, 0.001, "sec", "ms" );
   addNumber( "pause", "Duration of pause between current pulses", 0.4, 0.001, 1.0, 0.001, "sec", "ms" );
-  addSelection( "shuffle", "Sequence of currents", RangeLoop::sequenceStrings() );
   addSelection( "ishuffle", "Initial sequence of currents for first repetition", RangeLoop::sequenceStrings() );
+  addSelection( "shuffle", "Sequence of currents", RangeLoop::sequenceStrings() );
   addInteger( "iincrement", "Initial increment for currents", -1, -1000, 1000, 1 );
   addInteger( "singlerepeat", "Number of immediate repetitions of a single stimulus", 1, 1, 10000, 1 );
   addInteger( "blockrepeat", "Number of repetitions of a fixed intensity increment", 10, 1, 10000, 1 );
@@ -190,8 +190,7 @@ int FICurve::main( void )
   Range.setSequence( ishuffle );
   int prevrepeat = 0;
   Results.clear();
-  Results.resize( Range.size(), Data( delay, duration, 1.0/samplerate,
-				      incurrent >= 0 ) );
+  Results.resize( Range.size(), Data() );
 
   // plot:
   P.lock();
@@ -215,7 +214,7 @@ int FICurve::main( void )
 
   // write stimulus:
   sleep( pause );
-  for ( Range.reset(); ! Range && softStop() == 0; ++Range ) {
+  for ( Range.reset(); ! Range && softStop() == 0; ) {
 
     if ( prevrepeat < Range.currentRepetition() ) {
       if ( Range.currentRepetition() == 1 ) {
@@ -229,9 +228,9 @@ int FICurve::main( void )
     if ( fabs( amplitude ) < 1.0e-8 )
       amplitude = 0.0;
 
-    Str s = "Current <b>" + Str( amplitude ) + " " + IUnit +"</b>";
-    s += ",  Increment <b>" + Str( Range.currentIncrement() ) + "</b>";
-    s += ",  Loop <b>" + Str( Range.count()+1 ) + "</b>";
+    Str s = "Increment <b>" + Str( Range.currentIncrementValue() ) + " " + IUnit + "</b>";
+    s += ",  Current <b>" + Str( amplitude ) + " " + IUnit +"</b>";
+    s += ",  Count <b>" + Str( Range.count()+1 ) + "</b>";
     message( s );
 
     timeStamp();
@@ -243,7 +242,7 @@ int FICurve::main( void )
       if ( signal.overflow() ) {
 	printlog( "Requested amplitude I=" + Str( amplitude ) + IUnit + "too high!" );
 	for ( int k = Range.size()-1; k >= 0; k-- ) {
-	  if ( Range[k] > signal.maxValue() )
+	  if ( Range[k] > signal.maxValue() || k == Range.pos() )
 	    Range.setSkip( k );
 	  else
 	    break;
@@ -254,7 +253,7 @@ int FICurve::main( void )
       else if ( signal.underflow() ) {
 	printlog( "Requested amplitude I=" + Str( amplitude ) + IUnit + "too small!" );
 	for ( int k = 0; k < Range.size(); k++ ) {
-	  if ( Range[k] < signal.minValue() )
+	  if ( Range[k] < signal.minValue() || k == Range.pos() )
 	    Range.setSkip( k );
 	  else
 	    break;
@@ -291,7 +290,10 @@ int FICurve::main( void )
       Range.noCount();
     }
 
-    plot( duration );
+    int cinx = Range.pos();
+    ++Range;
+
+    plot( duration, cinx );
     sleepOn( duration + pause );
     if ( interrupt() ) {
       if ( Range.count() < 1 )
@@ -307,12 +309,12 @@ int FICurve::main( void )
 }
 
 
-void FICurve::plot( double duration )
+void FICurve::plot( double duration, int inx )
 {
   P.lock();
 
   // rate and spikes:
-  const Data &data = Results[Range.pos()];
+  const Data &data = Results[inx];
   P[0].clear();
   P[0].setTitle( "I=" + Str( data.I, 0, 2, 'f' ) + IUnit );
   P[0].plotVLine( 0, Plot::White, 2 );
@@ -351,12 +353,11 @@ void FICurve::plot( double duration )
   P[1].plot( om, 1.0, Plot::Green, 3, Plot::Solid, Plot::Circle, 6, Plot::Green, Plot::Green );
   P[1].plot( sm, 1.0, Plot::Red, 3, Plot::Solid, Plot::Circle, 6, Plot::Red, Plot::Red );
   P[1].plot( mm, 1.0, Plot::Orange, 3, Plot::Solid, Plot::Circle, 6, Plot::Orange, Plot::Orange );
-  int c = Range.pos();
   MapD am;
-  am.push( Results[c].I, Results[c].PreRate );
-  am.push( Results[c].I, Results[c].OnRate );
-  am.push( Results[c].I, Results[c].SSRate );
-  am.push( Results[c].I, Results[c].MeanRate );
+  am.push( Results[inx].I, Results[inx].PreRate );
+  am.push( Results[inx].I, Results[inx].OnRate );
+  am.push( Results[inx].I, Results[inx].SSRate );
+  am.push( Results[inx].I, Results[inx].MeanRate );
   P[1].plot( am, 1.0, Plot::Transparent, 3, Plot::Solid, Plot::Circle, 8, Plot::Yellow, Plot::Transparent );
 
   P.unlock();
@@ -584,8 +585,7 @@ void FICurve::saveTraces( void )
 }
 
 
-FICurve::Data::Data( double delay, double duration, double stepsize,
-		     bool current )
+FICurve::Data::Data( void )
   : DC( 0.0 ),
     I( 0.0 ),
     VRest( 0.0 ),
@@ -602,14 +602,11 @@ FICurve::Data::Data( double delay, double duration, double stepsize,
     Latency( 0.0 ),
     LatencySD( 0.0 ),
     SpikeCount( 0.0 ),
-    SpikeCountSD( 0.0 ),
-    Rate( -delay, 2.0*duration, 0.001, 0.0 ),
-    RateSD( -delay, 2.0*duration, 0.001, 0.0 )
+    SpikeCountSD( 0.0 )
 {
-  if ( current )
-    MeanCurrent = SampleDataD( -delay, duration, stepsize, 0.0 );
-  else
-    MeanCurrent.clear();
+  Rate.clear();
+  RateSD.clear();
+  MeanCurrent.clear();
   Current.clear();
   Voltage.clear();
 }
@@ -620,6 +617,15 @@ void FICurve::Data::analyze( int count, const InData &intrace,
 			     const InData *incurrent, double iinfac,
 			     double delay, double duration, double sswidth )
 {
+  // initialize:
+  if ( Rate.empty() ) {
+    Rate = SampleDataD( -delay, 2.0*duration, 0.001, 0.0 );
+    RateSD = SampleDataD( -delay, 2.0*duration, 0.001, 0.0 );
+    Spikes.reserve( 100 );
+    if ( incurrent != 0 )
+      MeanCurrent = SampleDataD( -delay, duration, incurrent->stepsize(), 0.0 );
+  }
+
   // voltage trace:
   Voltage.push_back( SampleDataF( -delay, duration, intrace.stepsize(), 0.0F ) );
   intrace.copy( intrace.signalTime(), Voltage.back() );

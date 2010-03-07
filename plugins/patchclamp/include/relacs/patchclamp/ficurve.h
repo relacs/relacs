@@ -22,7 +22,7 @@
 #ifndef _RELACS_PATCHCLAMP_FICURVE_H_
 #define _RELACS_PATCHCLAMP_FICURVE_H_ 1
 
-#include <vector>
+#include <deque>
 #include <relacs/sampledata.h>
 #include <relacs/eventlist.h>
 #include <relacs/multiplot.h>
@@ -52,7 +52,7 @@ public:
   virtual void config( void );
   virtual void notify( void );
   virtual int main( void );
-  void plot( double duration );
+  void plot( double duration, int inx );
   void save( void );
   void saveData( void );
   void saveRate( void );
@@ -71,7 +71,7 @@ protected:
 
   struct Data
   {
-    Data( double delay, double duration, double stepsize, bool current );
+    Data( void );
     void analyze( int count, const InData &intrace,
 		  const EventData &spikes, const InData *incurrent,
 		  double iinfac, double delay,
@@ -97,10 +97,10 @@ protected:
     SampleDataD Rate;
     SampleDataD RateSD;
     EventList Spikes;
-    vector< SampleDataF > Voltage;
-    vector< SampleDataF > Current;
+    deque< SampleDataF > Voltage;
+    deque< SampleDataF > Current;
   };
-  vector< Data > Results;
+  deque< Data > Results;
   RangeLoop Range;
   Options Header;
 

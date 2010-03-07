@@ -333,6 +333,13 @@ class RangeLoop
   void setLargeIncrement( void );
     /*! Return the current increment. \sa setIncrement() */
   int currentIncrement( void ) const;
+    /*! Return the value corresponding to the current increment.
+        This is currentIncrement() times the difference
+	of succesive values in case of a linear range,
+	the factor between succesive increments to the power
+	of currentIncrement() in case of logarithmic ranges,
+	or zero otherwise. \sa currentIncrement() */
+  double currentIncrementValue( void ) const;
 
     /*! The maximum possible number of repetitions of a single data element. */
   int maxCount( void ) const;
@@ -544,6 +551,8 @@ class RangeLoop
   Sequence Seq;
 
   AddMode AddMethod;
+
+  double StepFac;
 
 };
 
