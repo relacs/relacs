@@ -52,10 +52,10 @@ FICurve::FICurve( void )
   addNumber( "pause", "Duration of pause between current pulses", 0.4, 0.001, 1.0, 0.001, "sec", "ms" );
   addSelection( "shuffle", "Sequence of currents", RangeLoop::sequenceStrings() );
   addSelection( "ishuffle", "Initial sequence of currents for first repetition", RangeLoop::sequenceStrings() );
-  addInteger( "iincrement", "Initial increment for currents", 0, 0, 1000, 1 );
+  addInteger( "iincrement", "Initial increment for currents", -1, -1000, 1000, 1 );
   addInteger( "singlerepeat", "Number of immediate repetitions of a single stimulus", 1, 1, 10000, 1 );
   addInteger( "blockrepeat", "Number of repetitions of a fixed intensity increment", 10, 1, 10000, 1 );
-  addInteger( "repeat", "Number of repetitions of the whole V-I curve measurement", 1, 1, 10000, 1 );
+  addInteger( "repeat", "Number of repetitions of the whole V-I curve measurement", 1, 0, 10000, 1 );
   addLabel( "Analysis" );
   addSelection( "involtage", "Input voltage trace", "V-1" );
   addSelection( "incurrent", "Input current trace", "Current-1" );
@@ -186,10 +186,7 @@ int FICurve::main( void )
   DoneState state = Completed;
   double samplerate = trace( SpikeTrace[involtage] ).sampleRate();
   Range.set( imin, imax, istep, repeat, blockrepeat, singlerepeat );
-  if ( iincrement <= 0 )
-    Range.setLargeIncrement();
-  else
-    Range.setIncrement( iincrement );
+  Range.setIncrement( iincrement );
   Range.setSequence( ishuffle );
   int prevrepeat = 0;
   Results.clear();
@@ -233,6 +230,7 @@ int FICurve::main( void )
       amplitude = 0.0;
 
     Str s = "Current <b>" + Str( amplitude ) + " " + IUnit +"</b>";
+    s += ",  Increment <b>" + Str( Range.currentIncrement() ) + "</b>";
     s += ",  Loop <b>" + Str( Range.count()+1 ) + "</b>";
     message( s );
 
@@ -368,10 +366,12 @@ void FICurve::plot( double duration )
 
 void FICurve::save( void )
 {
+  unlockAll();
   saveData();
   saveRate();
   saveSpikes();
   saveTraces();
+  lockAll();
 }
 
 

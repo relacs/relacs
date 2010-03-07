@@ -57,7 +57,7 @@ FIField::FIField( void )
   insertNumber( "freqfac", "Intensities", "Frequency factor", FreqFac, 0.0, 100.0, 0.01 ).setFormat( "%.9f" );
   insertText( "freqrange", "Intensities", "Frequency range", FreqStr ).setUnit( "kHz" );
   insertSelection( "freqshuffle", "Intensities", "Order of frequencies", RangeLoop::sequenceStrings() );
-  insertInteger( "freqincrement", "Intensities", "Initial increment for frequencies", FreqIncrement, 0, 1000, 1 );
+  insertInteger( "freqincrement", "Intensities", "Initial increment for frequencies", FreqIncrement, -1000, 1000, 1 );
   insertLabel( "Optimization", "Intensities" );
   insertInteger( "reducedfreqincrement", "Intensities", "Reduce frequency range at frequency increments below", ReducedFreqIncrement, 0, 1000, 1 );
   insertInteger( "reducedfreqnumber", "Intensities", "Number of frequencies used for the reduced frequency range", ReducedFreqNumber, 0, 1000, 1 );
@@ -184,10 +184,7 @@ int FIField::main( void )
     FrequencyRange.setLog( MinFreq, MaxFreq, FreqFac );
   else
     FrequencyRange.set( MinFreq, MaxFreq, FreqStep );
-  if ( FreqIncrement <= 0 )
-    FrequencyRange.setLargeIncrement();
-  else
-    FrequencyRange.setIncrement( FreqIncrement );
+  FrequencyRange.setIncrement( FreqIncrement );
   FrequencyRange.setSequence( FreqShuffle );
   FrequencyRange.reset();
   CarrierFrequency = *FrequencyRange;

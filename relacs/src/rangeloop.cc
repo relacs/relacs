@@ -137,8 +137,8 @@ void RangeLoop::set( double first, double last, double step,
   SingleRepeat = singlerepeat;
   SingleRepeatCount = 0;
 
-  Increment = increment;
-  CurrentIncrement = increment;
+  setIncrement( increment );
+  CurrentIncrement = Increment;
 
   Seq = Up;
   AddMethod = Add;
@@ -194,8 +194,8 @@ void RangeLoop::setLog( double first, double last, double fac,
   SingleRepeat = singlerepeat;
   SingleRepeatCount = 0;
 
-  Increment = increment;
-  CurrentIncrement = increment;
+  setIncrement( increment );
+  CurrentIncrement = Increment;
 
   Seq = Up;
   AddMethod = Add;
@@ -246,8 +246,8 @@ void RangeLoop::set( double first, double last, int n,
   SingleRepeat = singlerepeat;
   SingleRepeatCount = 0;
 
-  Increment = increment;
-  CurrentIncrement = increment;
+  setIncrement( increment );
+  CurrentIncrement = Increment;
 
   Seq = Up;
   AddMethod = Add;
@@ -286,8 +286,8 @@ void RangeLoop::setLog( double first, double last, int n,
   SingleRepeat = singlerepeat;
   SingleRepeatCount = 0;
 
-  Increment = increment;
-  CurrentIncrement = increment;
+  setIncrement( increment );
+  CurrentIncrement = Increment;
 
   Seq = Up;
   AddMethod = Add;
@@ -331,8 +331,8 @@ void RangeLoop::set( double value, int size,
   SingleRepeat = singlerepeat;
   SingleRepeatCount = 0;
 
-  Increment = increment;
-  CurrentIncrement = increment;
+  setIncrement( increment );
+  CurrentIncrement = Increment;
 
   Seq = Up;
   AddMethod = Add;
@@ -441,7 +441,7 @@ void RangeLoop::set( const string &range, double scale )
     // modifiers:
     else {
       if ( (*sp).size() > 2 && (*sp)[0] == 'i' && (*sp)[1] == ':' ) {
-	Increment = int( (*sp).number( 1.0, 2 ) );
+	setIncrement( int( (*sp).number( 1.0, 2 ) ) );
 	CurrentIncrement = Increment;
       }
       else {
@@ -543,7 +543,18 @@ bool RangeLoop::lastSingle( void ) const
 
 void RangeLoop::setIncrement( int increment )
 { 
-  Increment = increment;
+  if ( increment > 0 )
+    Increment = increment;
+  else {
+    setLargeIncrement();
+    for ( int k=0; k<abs( increment ); k++ ) {
+      Increment /= 2;
+      if ( Increment < 1 ) {
+	Increment = 1;
+	break;
+      }
+    }
+  }
 }
 
 
@@ -865,7 +876,7 @@ const RangeLoop &RangeLoop::operator++( void )
 	      CurrentIncrement = Increment;
 	      RepeatCount++;
 	      
-	      if ( RepeatCount >= Repeat )
+	      if ( Repeat > 0 && RepeatCount >= Repeat )
 		return *this;
 	    }
 	    
@@ -889,7 +900,7 @@ const RangeLoop &RangeLoop::operator++( void )
 bool RangeLoop::operator!( void ) const
 {
   return ( Index >= 0 && Index < (int)Indices.size() &&
-	   RepeatCount >= 0 && RepeatCount < Repeat &&
+	   RepeatCount >= 0 && ( Repeat <= 0 || RepeatCount < Repeat ) &&
 	   BlockRepeatCount >= 0 && BlockRepeatCount < BlockRepeat &&
 	   SingleRepeatCount >= 0 && SingleRepeatCount < SingleRepeat &&
 	   CurrentIncrement > 0 );

@@ -57,12 +57,22 @@ namespace relacs {
   You can specify in which order the array is traversed by setSequence()
   or by calling one of the functions
   up(), down(), alternateInUp(), alternateInDown(), alternateOutUp(),
-  alternateOutDown(), random(), pseudoRandom().
-
+  alternateOutDown(), random(), pseudoRandom(). They will produce the
+  following sequences:
+  - up(): 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0
+  - down(): 4.0, 3.5, 3.0, 2.5, 2.0, 1.5, 1.0
+  - alternateInUp(): 1.0, 4.0, 1.5, 3.5, 2.0, 3.0, 2.5
+  - alternateInDown(): 5.0, 1.0, 3.5, 1.5, 3.0, 2.0, 2.5
+  - alternateOutUp(): 2.5, 3.0, 2.0, 3.5, 1.5, 4.0, 1.0
+  - alternateOutDown(): 2.5, 2.0, 3.0, 1.5, 3.5, 1.0, 4.0
+  - random(): a randomized sequence that will differ for each repetition
+  - pseudoRandom(): a randomized sequence that will always be the same
+  
   How often a single data value is immediately 
   repeated can be specified by setSingleRepeat(),
   the number of repetitions of the whole sequence is controlled by
-  setRepeat().
+  setRepeat(). The latter can be zero, indicating that the whole sequence
+  should be repeated indefinitely.
 
   By specifying an increment by setIncrement(), you can create sub-sequences
   of reduced resolutions that are traversed first.
@@ -173,9 +183,11 @@ class RangeLoop
     /*! Initialize the range with first value \a first, last value \a last,
         and increment value \a step.
         The whole sequence is repeated \a repeat times.
+	If \a repeat is set to zero, the whole sequence is repeated indefinitely.
 	Each subsets of data elements for a given increment is repeated \a blockrepeat times.
         Each data element is repeated \a singlerepeat times.
-        The initial increment is \a increment indices. */
+        The initial increment is set according to \a increment
+	via setIncrement(). */
   void set( double first, double last, double step,
 	    int repeat=1, int blockrepeat=1, int singlerepeat=1,
 	    int increment=1 );
@@ -185,9 +197,11 @@ class RangeLoop
     /*! Initialize the range with first value \a first, last value \a last,
         and increment factor \a fac.
         The whole sequence is repeated \a repeat times.
+	If \a repeat is set to zero, the whole sequence is repeated indefinitely.
 	Each subsets of data elements for a given increment is repeated \a blockrepeat times.
         Each data element is repeated \a singlerepeat times.
-        The initial increment is \a increment indices. */
+        The initial increment is set according to \a increment
+	via setIncrement(). */
   void setLog( double first, double last, double fac,
 	       int repeat=1, int blockrepeat=1, int singlerepeat=1,
 	       int increment=1 );
@@ -198,9 +212,11 @@ class RangeLoop
     /*! Initialize the range with \a n evenly spaced values starting with
         the first value \a first and ending with the last value \a last.
         The sequence is repeated \a repeat times.
+	If \a repeat is set to zero, the whole sequence is repeated indefinitely.
 	Each subsets of data elements for a given increment is repeated \a blockrepeat times.
         Each data element is repeated \a singlerepeat times.
-        The initial increment is \a increment indices. */
+        The initial increment is set according to \a increment
+	via setIncrement(). */
   void set( double first, double last, int n,
 	    int repeat=1, int blockrepeat=1, int singlerepeat=1,
 	    int increment=1 );
@@ -212,9 +228,11 @@ class RangeLoop
         starting with the first value \a first
 	and ending with the last value \a last.
         The sequence is repeated \a repeat times.
+	If \a repeat is set to zero, the whole sequence is repeated indefinitely.
 	Each subsets of data elements for a given increment is repeated \a blockrepeat times.
         Each data element is repeated \a singlerepeat times.
-        The initial increment is \a increment indices. */
+        The initial increment is set according to \a increment
+	via setIncrement(). */
   void setLog( double first, double last, int n,
 	       int repeat=1, int blockrepeat=1, int singlerepeat=1,
 	       int increment=1 );
@@ -226,9 +244,11 @@ class RangeLoop
     /*! Initialize the range with a single value \a value
         and allocate memory for \a size elements.
         The sequence is repeated \a repeat times.
+	If \a repeat is set to zero, the whole sequence is repeated indefinitely.
 	Each subsets of data elements for a given increment is repeated \a blockrepeat times.
         Each data element is repeated \a singlerepeat times.
-        The initial increment is \a increment indices. */
+        The initial increment is set according to \a increment
+	via setIncrement(). */
   void set( double value, int size=1,
 	    int repeat=1, int blockrepeat=1, int singlerepeat=1,
 	    int increment=1 );
@@ -269,7 +289,8 @@ class RangeLoop
 
     /*! The number of repetitions for the whole sequence. */
   inline int repeat( void ) const { return Repeat; };
-    /*! Set the number of repetitions for the whole sequence to \a repeat. */
+    /*! Set the number of repetitions for the whole sequence to \a repeat.
+	If \a repeat is set to zero, the whole sequence is repeated indefinitely. */
   inline void setRepeat( int repeat ) { Repeat = repeat; };
     /*! Return the number of executed repetitions for the whole sequence to \a repeat. */
   inline int currentRepetition( void ) const { return RepeatCount; };
@@ -300,6 +321,10 @@ class RangeLoop
 
     /*! Set the initial increment to \a increment indices.
         E.g. an \a increment of 2 selects every second data value.
+	If \a increment equals 0, the the increment is set to
+	setLargeIncrement().
+	If \a increment is negative, then the increment is set to
+	setLargeIncrement() / 2^|\a increment|.
         \sa setLargeIncrement(), currentIncrement() */
   void setIncrement( int increment=1 );
     /*! Set the initial increment to the largest power of two

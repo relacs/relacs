@@ -80,10 +80,10 @@ FICurve::FICurve( void )
   addBoolean( "usethresh", "Relative to the cell's threshold", UseThresh );
   addBoolean( "usesat", "Maximum intensity relative to the cell's best saturation", UseSaturation );
   addSelection( "intshuffle", "Order of intensities", RangeLoop::sequenceStrings() );
-  addInteger( "intincrement", "Initial increment for intensities", IntIncrement, 0, 1000, 1 );
+  addInteger( "intincrement", "Initial increment for intensities", IntIncrement, -1000, 1000, 1 );
   addInteger( "singlerepeat", "Number of immediate repetitions of a single stimulus", SingleRepeat, 1, 10000, 1 );
   addInteger( "blockrepeat", "Number of repetitions of a fixed intensity increment", IntBlockRepeat, 1, 10000, 1 );
-  addInteger( "repeat", "Number of repetitions of the whole f-I curve measurement", IntRepeat, 1, 10000, 1 );
+  addInteger( "repeat", "Number of repetitions of the whole f-I curve measurement", IntRepeat, 0, 10000, 1 );
   addBoolean( "manualskip", "Show buttons for manual selection of intensities", false );
   addLabel( "Waveform" ).setStyle( OptWidget::TabLabel );
   addSelection( "waveform", "Waveform of stimulus", "sine|noise" );
@@ -286,10 +286,7 @@ int FICurve::main( void )
   // intensity:
   IntensityRange.set( MinIntensity, MaxIntensity, IntensityStep,
 		      IntRepeat, IntBlockRepeat, SingleRepeat );
-  if ( IntIncrement <= 0 )
-    IntensityRange.setLargeIncrement();
-  else
-    IntensityRange.setIncrement( IntIncrement );
+  IntensityRange.setIncrement( IntIncrement );
   IntensityRange.setSequence( IntShuffle );
   IntensityRange.reset();
   Intensity = *IntensityRange;
