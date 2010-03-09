@@ -117,6 +117,7 @@ private:
   int ReadCycles;
   double Duration;
   double Pause;
+  bool FreqAbs;
   double DeltaF;
   double Contrast;
   int Repeats;

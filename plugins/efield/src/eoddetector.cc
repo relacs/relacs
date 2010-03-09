@@ -72,9 +72,9 @@ int EODDetector::init( const InData &data, EventData &outevents,
 
 void EODDetector::notify( void )
 {
-  // no lock is needed, since the Options functions should be locked!
+  // no lock is needed, since the Options functions should already be locked!
   Parameter &p = operator[]( "ratio" );
-  if ( p.flags( OptWidget::changedFlag() ) ) {
+  if ( p.changed() ) {
     ThreshRatio = number( "ratio" );
     double th = ThreshRatio * MaxThresh;
     Threshold = floor( th / MinThresh ) * MinThresh;
@@ -82,7 +82,7 @@ void EODDetector::notify( void )
   }
   else {
     Parameter &p = operator[]( "threshold" );
-    if ( p.flags( OptWidget::changedFlag() ) ) {
+    if ( p.changed() ) {
       Threshold = p.number();
     }
   }
@@ -109,7 +109,7 @@ int EODDetector::adjust( const InData &data )
 
 
 int EODDetector::detect( const InData &data, EventData &outevents,
-			  const EventList &other, const EventData &stimuli )
+			 const EventList &other, const EventData &stimuli )
 {
   D.peak( data.minBegin(), data.end(), outevents,
 	  Threshold, MinThresh, MaxThresh, *this );

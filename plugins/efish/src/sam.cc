@@ -41,6 +41,7 @@ SAM::SAM( void )
   ReadCycles = 100;
   Duration = 1.0;
   Pause = 1.0;
+  FreqAbs = false;
   DeltaF = 5.0;
   Contrast = 0.2;
   Repeats = 6;
@@ -52,23 +53,25 @@ SAM::SAM( void )
   After=0.0;
 
   // add some parameter as options:
-  addLabel( "Stimulus" ).setStyle( OptWidget::Bold );
+  addLabel( "Stimulus" );
   addNumber( "duration", "Duration of signal",
 	      Duration, 0.01, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "pause", "Pause between signals",
 	      Pause, 0.0, 1000.0, 0.01, "seconds", "ms" );
-  addNumber( "deltaf", "Delta f", DeltaF, -1000.0, 1000.0, 5.0, "Hz" );
+  addSelection( "freqsel", "Stimulus frequency is", "relative to EOD|absolute" );
+  addNumber( "deltaf", "Delta f (beat frequency)", DeltaF, -1000.0, 1000.0, 5.0, "Hz" );
   addNumber( "contrast", "Contrast", Contrast, 0.01, 1.0, 0.05, "", "%" );
   addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 );
-  addBoolean( "am", "Amplitude modulation", AM );
+  addBoolean( "am", "Amplitude modulation", AM ).setActivation( "freqsel", "relative to EOD" );
   addBoolean( "sinewave", "Use sine wave", SineWave );
-  addLabel( "Analysis" ).setStyle( OptWidget::Bold );
+  addLabel( "Analysis" );
   addNumber( "skip", "Skip", Skip, 0.0, 100.0, 0.1, "Periods" );
   addInteger( "ratebins", "Number of bins for firing rate", RateN, 2, 1000 );
   addNumber( "before", "Spikes recorded before stimulus",
 	      Before, 0.0, 1000.0, 0.005, "seconds", "ms" );
   addNumber( "after", "Spikes recorded after stimulus",
 	      After, 0.0, 1000.0, 0.005, "seconds", "ms" );
+  addTypeStyle( OptWidget::Bold, Parameter::Label );
   
   // variables:
   Signal = 0;
@@ -148,14 +151,19 @@ int SAM::createSignal( const InData &data, const EventData &events )
       TrueDeltaF = 1.0 / Signal->duration();
     }
     else {
-      warning( "Non-Sinewave as AM not supported!" );
+      warning( "Non-Sinewave as AM not supported yet!" );
       return 1;
     }
   }
   else {
     if ( SineWave ) {
-      double stimulusrate = FishRate + DeltaF;
-      Signal->setSampleRate( 20.0 * stimulusrate );
+      double stimulusrate = DeltaF;
+      if ( ! FreqAbs ) {
+	stimulusrate += FishRate;
+	Signal->setSampleRate( 20.0 * stimulusrate );
+      }
+      else
+	Signal->setSampleRate( 20.0 * FishRate );
       // get the actual set sampling rate.
       // no signal is put out, because there isn't any.
       write( *Signal );
@@ -178,7 +186,7 @@ int SAM::createSignal( const InData &data, const EventData &events )
     }
   }
   Signal->repeat( (int)rint( Duration/Signal->duration() ) );
-  Signal->setStartSource( 2 );
+  //  Signal->setStartSource( 2 );
   Signal->setTrace( AM ? GlobalAMEField : GlobalEField );
   Str s = ident + ", C=" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%";
   s += ", Df=" + Str( DeltaF, 0, 1, 'f' ) + "Hz";
@@ -195,6 +203,7 @@ int SAM::main( void )
   Duration = number( "duration" );
   Pause = number( "pause" );
   Repeats = integer( "repeats" );
+  FreqAbs = ( index( "freqsel" ) == 1 );
   DeltaF = number( "deltaf" );
   Contrast = number( "contrast" );
   SineWave = boolean( "sinewave" );
@@ -203,6 +212,13 @@ int SAM::main( void )
   RateN = integer( "ratebins" );
   Before = number( "before" );
   After = number( "after" );
+
+  if ( FreqAbs && DeltaF <= 0.0 ) {
+    warning( "Delta f cannot be negative for absolute stimulus frequencies!\n" );
+    return Failed;
+  }
+  if ( FreqAbs && AM )
+    AM = false;
 
   // check EODs:
   if ( LocalEODTrace[0] < 0 || LocalEODEvents[0] < 0 ||
@@ -334,7 +350,8 @@ int SAM::main( void )
     return Failed;
 
   // clear output lines:
-  // XXX  writeZero( AM ? GlobalEField : GlobalAMEField );
+  writeZero( AM ? GlobalEField : GlobalAMEField );
+  sleep( 0.01 );
 
   timeStamp();
 
