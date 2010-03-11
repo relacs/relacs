@@ -598,16 +598,14 @@ void OptWidget::accept( bool clearchanged )
   for ( unsigned int k=0; k<Widgets.size(); k++ )
     Widgets[k]->get();
 
-  if ( ! ContinuousUpdate ) {
-    // notify:
-    DisableUpdate = true;
-    bool cn = Opt->notifying();
-    Opt->unsetNotify();
-    if ( cn )
-      Opt->notify();
-    Opt->setNotify( cn );
-    DisableUpdate = false;
-  }
+  // notify:
+  DisableUpdate = true;
+  bool cn = Opt->notifying();
+  Opt->unsetNotify();
+  if ( cn )
+    Opt->notify();
+  Opt->setNotify( cn );
+  DisableUpdate = false;
 
   // react to accept:
   emit valuesChanged();
@@ -779,7 +777,8 @@ OptWidgetBase::OptWidgetBase( Options::iterator op, QWidget *label,
     OMutex( mutex ),
     Editable( true ),
     ContUpdate( ow->continuousUpdate() ),
-    InternChanged( false )
+    InternChanged( false ),
+    InternRead( false )
 {
   if ( OW->readOnlyMask() < 0 ||
        ( OW->readOnlyMask() > 0 && ( (*op).flags() & OW->readOnlyMask() ) ) )
@@ -833,7 +832,7 @@ OptWidgetText::OptWidgetText( Options::iterator op, QWidget *label,
   if ( Editable ) {
     W = EW = new QLineEdit( (*OP).text( "%s" ).c_str(), parent );
     OptWidget::setValueStyle( W, (*OP).style(), false, true );
-    Value = (*OP).text( 0, "%s" );
+    Value = EW->text().latin1();
     connect( EW, SIGNAL( textChanged( const QString& ) ),
 	     this, SLOT( textChanged( const QString& ) ) );
     if ( (*OP).style() & OptWidget::Browse ) {
@@ -857,15 +856,15 @@ OptWidgetText::OptWidgetText( Options::iterator op, QWidget *label,
 void OptWidgetText::get( void )
 {
   if ( Editable ) {
-    InternChanged = true;
+    InternRead = true;
     bool cn = OO->notifying();
     OO->unsetNotify();
     (*OP).setText( EW->text().latin1() );
     if ( (*OP).text( 0, "%s" ) != Value )
       (*OP).addFlags( OW->changedFlag() );
-    Value = (*OP).text( 0, "%s" );
+    Value = EW->text().latin1();
     OO->setNotify( cn );
-    InternChanged = false;
+    InternRead = false;
   }
 }
 
@@ -905,9 +904,18 @@ void OptWidgetText::update( void )
 
 void OptWidgetText::textChanged( const QString &s )
 {
+  if ( InternRead )
+    return;
+
   if ( ContUpdate && Editable ) {
-    if ( InternChanged )
-      Value = (*OP).text( 0, "%s" );
+    if ( InternChanged ) {
+      Value = EW->text().latin1();
+      bool cn = OO->notifying();
+      OO->unsetNotify();
+      (*OP).setText( Value );
+      (*OP).delFlags( OW->changedFlag() );
+      OO->setNotify( cn );
+    }
     else {
       if ( OMutex != 0 )
 	OMutex->lock();
@@ -917,7 +925,7 @@ void OptWidgetText::textChanged( const QString &s )
       (*OP).setText( s.latin1() );
       if ( (*OP).text( 0, "%s" ) != Value )
 	(*OP).addFlags( OW->changedFlag() );
-      Value = (*OP).text( 0, "%s" );
+      Value = EW->text().latin1();
       if ( cn )
 	OO->notify();
       (*OP).delFlags( OW->changedFlag() );
@@ -982,8 +990,8 @@ void OptWidgetText::browse( void )
     (*OP).setText( filename );
     if ( (*OP).text( 0 ) != Value )
       (*OP).addFlags( OW->changedFlag() );
-    Value = (*OP).text( 0, "%s" );
     EW->setText( (*OP).text( 0, "%s" ).c_str() );
+    Value = EW->text().latin1();
     if ( cn )
       OO->notify();
     (*OP).delFlags( OW->changedFlag() );
@@ -1031,7 +1039,7 @@ OptWidgetMultiText::OptWidgetMultiText( Options::iterator op, QWidget *label,
     reset();
     connect( EW, SIGNAL( textChanged( const QString & ) ),
 	     this, SLOT( insertText( const QString & ) ) );
-    Value = (*OP).text( 0 );
+    Value = EW->text( 0 ).latin1();
     connect( EW, SIGNAL( textChanged( const QString& ) ),
 	     this, SLOT( textChanged( const QString& ) ) );
     connect( EW, SIGNAL( activated( const QString& ) ),
@@ -1051,7 +1059,7 @@ OptWidgetMultiText::OptWidgetMultiText( Options::iterator op, QWidget *label,
 void OptWidgetMultiText::get( void )
 {
   if ( Editable ) {
-    InternChanged = true;
+    InternRead = true;
     bool cn = OO->notifying();
     OO->unsetNotify();
     (*OP).setText( EW->currentText().latin1() );
@@ -1059,9 +1067,9 @@ void OptWidgetMultiText::get( void )
       (*OP).addText( EW->text( k ).latin1() );
     if ( (*OP).text( 0 ) != Value )
       (*OP).addFlags( OW->changedFlag() );
-    Value = (*OP).text( 0 );
+    Value = EW->text( 0 ).latin1();
     OO->setNotify( cn );
-    InternChanged = false;
+    InternRead = false;
   }
 }
 
@@ -1123,9 +1131,20 @@ void OptWidgetMultiText::update( void )
 
 void OptWidgetMultiText::textChanged( const QString &s )
 {
+  if ( InternRead )
+    return;
+
   if ( ContUpdate && Editable && Update) {
-    if ( InternChanged )
-      Value = (*OP).text( 0 );
+    if ( InternChanged ) {
+      Value = EW->text( 0 ).latin1();
+      bool cn = OO->notifying();
+      OO->unsetNotify();
+      (*OP).setText( Value );
+      for ( int k=0; k<EW->count(); k++ )
+	(*OP).addText( EW->text( k ).latin1() );
+      (*OP).delFlags( OW->changedFlag() );
+      OO->setNotify( cn );
+    }
     else {
       if ( OMutex != 0 )
 	OMutex->lock();
@@ -1137,7 +1156,7 @@ void OptWidgetMultiText::textChanged( const QString &s )
 	(*OP).addText( EW->text( k ).latin1() );
       if ( (*OP).text( 0 ) != Value )
 	(*OP).addFlags( OW->changedFlag() );
-      Value = (*OP).text( 0 );
+      Value = EW->text( 0 ).latin1();
       if ( cn )
 	OO->notify();
       (*OP).delFlags( OW->changedFlag() );
@@ -1227,7 +1246,7 @@ OptWidgetNumber::OptWidgetNumber( Options::iterator op, QWidget *label,
       prec = pow( 10.0, floor( log10( 0.1*step ) ) );
     W = EW = new DoubleSpinBox( val, min, max, step, prec, (*OP).format(), parent );
     OptWidget::setValueStyle( W, (*OP).style(), false, true );
-    Value = (*OP).number();
+    Value = EW->value();
     connect( EW, SIGNAL( valueChanged( double ) ),
 	     this, SLOT( valueChanged( double ) ) );
   }
@@ -1263,15 +1282,15 @@ OptWidgetNumber::OptWidgetNumber( Options::iterator op, QWidget *label,
 void OptWidgetNumber::get( void )
 {
   if ( Editable ) {
-    InternChanged = true;
+    InternRead = true;
     bool cn = OO->notifying();
     OO->unsetNotify();
     (*OP).setNumber( EW->value(), (*OP).outUnit() );
     if ( fabs( (*OP).number( 0 ) - Value ) > 0.0001*(*OP).step() )
       (*OP).addFlags( OW->changedFlag() );
-    Value = (*OP).number();
+    Value = EW->value();
     OO->setNotify( cn );
-    InternChanged = false;
+    InternRead = false;
   }
 }
 
@@ -1325,9 +1344,18 @@ void OptWidgetNumber::update( void )
 
 void OptWidgetNumber::valueChanged( double v )
 {
+  if ( InternRead )
+    return;
+
   if ( ContUpdate && Editable ) {
-    if ( InternChanged )
-      Value = (*OP).number();
+    if ( InternChanged ) {
+      Value = EW->value();
+      bool cn = OO->notifying();
+      OO->unsetNotify();
+      (*OP).setNumber( Value, (*OP).outUnit() );
+      (*OP).delFlags( OW->changedFlag() );
+      OO->setNotify( cn );
+    }
     else {
       if ( OMutex != 0 )
 	OMutex->lock();
@@ -1335,9 +1363,9 @@ void OptWidgetNumber::valueChanged( double v )
       bool cn = OO->notifying();
       OO->unsetNotify();
       (*OP).setNumber( v, (*OP).outUnit() );
-      if ( fabs( (*OP).number( 0 ) - Value ) > 0.0001*(*OP).step() )
+      if ( fabs( v - Value ) > 0.0001*(*OP).step() )
 	(*OP).addFlags( OW->changedFlag() );
-      Value = (*OP).number();
+      Value = EW->value();
       if ( cn )
 	OO->notify();
       (*OP).delFlags( OW->changedFlag() );
@@ -1399,7 +1427,7 @@ OptWidgetBoolean::OptWidgetBoolean( Options::iterator op, Options *oo,
   reset();
   if ( Editable ) {
     label->setFocusProxy( EW );
-    Value = (*OP).boolean();
+    Value = EW->isChecked();
     connect( EW, SIGNAL( toggled( bool ) ),
 	     this, SLOT( valueChanged( bool ) ) );
   }
@@ -1413,15 +1441,15 @@ OptWidgetBoolean::OptWidgetBoolean( Options::iterator op, Options *oo,
 void OptWidgetBoolean::get( void )
 {
   if ( Editable ) {
-    InternChanged = true;
+    InternRead = true;
     bool cn = OO->notifying();
     OO->unsetNotify();
     (*OP).setBoolean( EW->isChecked() );
     if ( (*OP).boolean( 0 ) != Value )
       (*OP).addFlags( OW->changedFlag() );
-    Value = (*OP).boolean();
+    Value = EW->isChecked();
     OO->setNotify( cn );
-    InternChanged = false;
+    InternRead = false;
   }
 }
 
@@ -1446,9 +1474,18 @@ void OptWidgetBoolean::resetDefault( void )
 
 void OptWidgetBoolean::valueChanged( bool v )
 {
+  if ( InternRead )
+    return;
+
   if ( ContUpdate && Editable ) {
-    if ( InternChanged )
-      Value = (*OP).boolean();
+    if ( InternChanged ) {
+      Value = EW->isChecked();
+      bool cn = OO->notifying();
+      OO->unsetNotify();
+      (*OP).setBoolean( Value );
+      (*OP).delFlags( OW->changedFlag() );
+      OO->setNotify( cn );
+    }
     else {
       if ( OMutex != 0 )
 	OMutex->lock();
@@ -1458,7 +1495,7 @@ void OptWidgetBoolean::valueChanged( bool v )
       (*OP).setBoolean( v );
       if ( (*OP).boolean( 0 ) != Value )
 	(*OP).addFlags( OW->changedFlag() );
-      Value = (*OP).boolean();
+      Value = EW->isChecked();
       if ( cn )
 	OO->notify();
       (*OP).delFlags( OW->changedFlag() );
@@ -1503,14 +1540,14 @@ OptWidgetDate::OptWidgetDate( Options::iterator op, Options *oo,
     Day( 0 )
 {
   if ( Editable ) {
-    Year = (*OP).year( 0 );
-    Month = (*OP).month( 0 );
-    Day = (*OP).day( 0 );
     W = DE = new QDateEdit( QDate( Year, Month, Day ), parent );
     OptWidget::setValueStyle( W, (*OP).style(), false, true );
     DE->setAutoAdvance( true );
     DE->setOrder( QDateEdit::YMD );
     DE->setSeparator( "-" );
+    Year = DE->date().year();
+    Month = DE->date().month();
+    Day = DE->date().day();
     connect( DE, SIGNAL( valueChanged( const QDate& ) ),
 	     this, SLOT( valueChanged( const QDate& ) ) );
   }
@@ -1528,7 +1565,7 @@ OptWidgetDate::OptWidgetDate( Options::iterator op, Options *oo,
 void OptWidgetDate::get( void )
 {
   if ( Editable ) {
-    InternChanged = true;
+    InternRead = true;
     bool cn = OO->notifying();
     OO->unsetNotify();
     (*OP).setDate( DE->date().year(), DE->date().month(), DE->date().day() );
@@ -1536,11 +1573,11 @@ void OptWidgetDate::get( void )
 	 (*OP).month( 0 ) != Month ||
 	 (*OP).day( 0 ) != Day )
       (*OP).addFlags( OW->changedFlag() );
-    Year = (*OP).year( 0 );
-    Month = (*OP).month( 0 );
-    Day = (*OP).day( 0 );
+    Year = DE->date().year();
+    Month = DE->date().month();
+    Day = DE->date().day();
     OO->setNotify( cn );
-    InternChanged = false;
+    InternRead = false;
   }
 }
 
@@ -1567,11 +1604,19 @@ void OptWidgetDate::resetDefault( void )
 
 void OptWidgetDate::valueChanged( const QDate &date )
 {
+  if ( InternRead )
+    return;
+
   if ( ContUpdate && Editable ) {
     if ( InternChanged ) {
-      Year = (*OP).year( 0 );
-      Month = (*OP).month( 0 );
-      Day = (*OP).day( 0 );
+      Year = DE->date().year();
+      Month = DE->date().month();
+      Day = DE->date().day();
+      bool cn = OO->notifying();
+      OO->unsetNotify();
+      (*OP).setDate( Year, Month, Day );
+      (*OP).delFlags( OW->changedFlag() );
+      OO->setNotify( cn );
     }
     else {
       if ( OMutex != 0 )
@@ -1629,14 +1674,14 @@ OptWidgetTime::OptWidgetTime( Options::iterator op, Options *oo,
     Seconds( 0 )
 {
   if ( Editable ) {
-    Hour = (*OP).hour( 0 );
-    Minutes = (*OP).minutes( 0 );
-    Seconds = (*OP).seconds( 0 );
     W = TE = new QTimeEdit( QTime( Hour, Minutes, Seconds ), parent );
     OptWidget::setValueStyle( W, (*OP).style(), false, true );
     TE->setAutoAdvance( true );
     TE->setDisplay( QTimeEdit::Hours | QTimeEdit::Minutes | QTimeEdit::Seconds );
     TE->setSeparator( ":" );
+    Hour = TE->time().hour();
+    Minutes = TE->time().minute();
+    Seconds = TE->time().second();
     connect( TE, SIGNAL( valueChanged( const QTime& ) ),
 	     this, SLOT( valueChanged( const QTime& ) ) );
   }
@@ -1654,7 +1699,7 @@ OptWidgetTime::OptWidgetTime( Options::iterator op, Options *oo,
 void OptWidgetTime::get( void )
 {
   if ( Editable ) {
-    InternChanged = true;
+    InternRead = true;
     bool cn = OO->notifying();
     OO->unsetNotify();
     (*OP).setTime( TE->time().hour(), TE->time().minute(), TE->time().second() );
@@ -1662,11 +1707,11 @@ void OptWidgetTime::get( void )
 	 (*OP).minutes( 0 ) != Minutes ||
 	 (*OP).seconds( 0 ) != Seconds )
       (*OP).addFlags( OW->changedFlag() );
-    Hour = (*OP).hour( 0 );
-    Minutes = (*OP).minutes( 0 );
-    Seconds = (*OP).seconds( 0 );
+    Hour = TE->time().hour();
+    Minutes = TE->time().minute();
+    Seconds = TE->time().second();
     OO->setNotify( cn );
-    InternChanged = false;
+    InternRead = false;
   }
 }
 
@@ -1693,11 +1738,19 @@ void OptWidgetTime::resetDefault( void )
 
 void OptWidgetTime::valueChanged( const QTime &time )
 {
+  if ( InternRead )
+    return;
+
   if ( ContUpdate && Editable ) {
     if ( InternChanged ) {
-      Hour = (*OP).hour( 0 );
-      Minutes = (*OP).minutes( 0 );
-      Seconds = (*OP).seconds( 0 );
+      Hour = TE->time().hour();
+      Minutes = TE->time().minute();
+      Seconds = TE->time().second();
+      bool cn = OO->notifying();
+      OO->unsetNotify();
+      (*OP).setTime( Hour, Minutes, Seconds );
+      (*OP).delFlags( OW->changedFlag() );
+      OO->setNotify( cn );
     }
     else {
       if ( OMutex != 0 )

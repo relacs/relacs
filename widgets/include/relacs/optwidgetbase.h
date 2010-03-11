@@ -67,6 +67,7 @@ public:
   bool Editable;
   bool ContUpdate;
   bool InternChanged;
+  bool InternRead;
   vector< OptWidgetBase* > Widgets;
 };
 

@@ -54,6 +54,7 @@ public:
 
 protected:
 
+  virtual void keyPressEvent( QKeyEvent *e );
   virtual void customEvent( QCustomEvent *qce );
   DoubleSpinBox *EW;
   QLabel *UnitLabel;

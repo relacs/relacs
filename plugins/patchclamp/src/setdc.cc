@@ -57,11 +57,16 @@ SetDC::SetDC( void )
   OKButton = new QPushButton( "&Ok", bb, "OkButton" );
   connect( OKButton, SIGNAL( clicked() ),
 	   this, SLOT( setValue() ) );
+  grabKey( ALT+Key_O );
+  grabKey( Key_Return );
+  grabKey( Key_Enter );
   
   // Cancel button:
   CancelButton = new QPushButton( "&Cancel", bb, "CancelButton" );
   connect( CancelButton, SIGNAL( clicked() ),
 	   this, SLOT( keepValue() ) );
+  grabKey( ALT+Key_C );
+  grabKey( Key_Escape );
 
   bb->setFixedHeight( OKButton->sizeHint().height() );
 }
@@ -211,6 +216,29 @@ void SetDC::keepValue( void )
   Finished = true;
   unlock();
   wake();
+}
+
+
+void SetDC::keyPressEvent( QKeyEvent *e )
+{
+  if ( e->key() == Key_O && ( e->state() & AltButton ) ) {
+    OKButton->animateClick();
+    e->accept();
+  }
+  else if ( e->key() == Key_C && ( e->state() & AltButton ) ) {
+    CancelButton->animateClick();
+    e->accept();
+  }
+  else if ( ( e->key() == Key_Return || e->key() == Key_Enter ) && ( e->state() & KeyButtonMask ) == 0 ) {
+    OKButton->animateClick();
+    e->accept();
+  }
+  else if ( e->key() == Key_Escape && ( e->state() & KeyButtonMask ) == 0 ) {
+    CancelButton->animateClick();
+    e->accept();
+  }
+  else
+    RePro::keyPressEvent( e );
 }
 
 
