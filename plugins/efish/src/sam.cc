@@ -174,15 +174,15 @@ int SAM::createSignal( const InData &data, const EventData &events )
     }
     else {
       // extract an EOD waveform:
-      double t1 = events.back( ReadCycles );
-      double t2 = events.back();
-      data.copy( t1, t2-t1, *Signal );
-      double g = Signal->maximize( 0 );
+      double t1 = events.back( ReadCycles+1 );
+      double t2 = events.back( 1 );
+      data.copy( t1, t2, *Signal );
+      Signal->maximize( 0.5 );
       Signal->setSampleRate( data.sampleRate() * ( FishRate + DeltaF ) / FishRate );
       Signal->setCarrierFreq( FishRate + DeltaF );
       ident = "EOD";
-      double maxamplitude = data.maxValue() - data.minValue();
-      IntensityGain = 0.5 * maxamplitude / FishAmplitude / g;
+      double maxamplitude = Signal->maxValue() - Signal->minValue();
+      IntensityGain = 0.5 * maxamplitude;
     }
   }
   Signal->repeat( (int)rint( Duration/Signal->duration() ) );
@@ -362,7 +362,7 @@ int SAM::main( void )
     // stimulus intensity:
     Intensity = Contrast * FishAmplitude * IntensityGain;
     Signal->setIntensity( Intensity );
-    detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", 0.5*Signal->intensity() );
+    detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", Signal->intensity() );
 
     // output signal:
     write( *Signal );
@@ -445,9 +445,11 @@ int SAM::main( void )
 	      trace( NerveTrace[0] ).signalTime()+Duration,
 	      trace( NerveTrace[0] ).signalTime()+Duration+Pause,
 	      0.8 );
-    if ( GlobalEFieldTrace >= 0 )
-      adjustGain( trace( GlobalEFieldTrace ),
-		  1.05 * trace( GlobalEFieldTrace ).maxAbs( trace( GlobalEFieldTrace ).signalTime(), trace( GlobalEFieldTrace ).signalTime()+Duration ) );
+    if ( GlobalEFieldTrace >= 0 ) {
+      double v = trace( GlobalEFieldTrace ).maxAbs( trace( GlobalEFieldTrace ).signalTime(), trace( GlobalEFieldTrace ).signalTime()+Duration );
+      adjustGain( trace( GlobalEFieldTrace ), 1.05 * v );
+      detectorEventsOpts( GlobalEFieldEvents ).setNumber( "threshold", 0.5*v );
+    }
 
     // analyze:
     analyze();
@@ -842,11 +844,11 @@ void SAM::analyze( void )
     FishRate = events( LocalEODEvents[0] ).frequency( ReadCycles );
 
   // Delta F:
-  if ( ! AM ) {
+  if ( AM || FreqAbs )
+    TrueDeltaF = DeltaF;
+  else {
     if ( GlobalEFieldEvents >= 0 )
       TrueDeltaF = events( GlobalEFieldEvents ).frequency( ReadCycles ) - FishRate;
-    else
-      TrueDeltaF = 1.0/DeltaF;
   }
 
   // EOD amplitude:
@@ -863,8 +865,8 @@ void SAM::analyze( void )
   // beat positions:
   EventData beattimes( EODTransAmpl.capacity() );
 
-  if ( AM ) {
-    for ( double t = 0.25/TrueDeltaF; t < Duration; t += 1.0/TrueDeltaF ) {
+  if ( AM || FreqAbs ) {
+    for ( double t = fabs(0.25/TrueDeltaF); t < Duration; t += fabs(1.0/TrueDeltaF) ) {
       double t0 = eod2.signalTime() + t;
       if ( ! events( ChirpEvents ).within( t0, 0.03 ) &&
 	   t0 >= Skip * Period + eod2.signalTime() && 

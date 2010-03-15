@@ -181,6 +181,7 @@ void JAR::createSignal( const InData &data, const EventData &events )
   Signal->repeat( (int)floor( Duration/Signal->duration() ) );
   //  Signal->setStartSource( 2 );
   Signal->setTrace( GlobalEField );
+  Signal->setDelay( 0.01 );
   Str s = "C=" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%";
   s += ", Df=" + Str( DeltaF, 0, 1, 'f' ) + "Hz";
   //  Signal->setIdent( s );
@@ -272,123 +273,76 @@ int JAR::main( void )
     activateGains();
   }
 
-  // create signal:
-  createSignal( trace( LocalEODTrace[0] ), eod2 );
+  for ( Count = 0;
+	(Repeats <= 0 || Count < Repeats ) && softStop() == 0;
+	Count++ ) {
+    for ( ContrastCount = 0;
+	  ContrastCount < (int)Contrasts.size() && softStop() == 0;
+	  ContrastCount++ ) {
+      for ( DeltaFRange.reset(); !DeltaFRange && softStop() == 0; ++DeltaFRange ) {
 
-  // stimulus intensity:
-  Intensity = Contrast * FishAmplitude2 * IntensityGain;
-  Signal->setIntensity( Intensity );
-  detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", 0.7*Signal->intensity() );
+	Contrast = Contrasts[ContrastCount];
+	DeltaF = *DeltaFRange;
+	
+	// create signal:
+	createSignal( trace( LocalEODTrace[0] ), events( LocalEODEvents[0] ) );
+	
+	// stimulus intensity:
+	Intensity = Contrast * FishAmplitude2 * IntensityGain;
+	Signal->setIntensity( Intensity );
+	detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", 0.7*Signal->intensity() );
 
-  // output signal:
-  write( *Signal );
-  if ( !Signal->success() ) {
-    string s = "Output of stimulus failed!<br>Error code is <b>";
-    s += Signal->errorText() + "</b>";
-    warning( s );
-    stop();
-    return Failed;
-  }
-
-  // meassage: 
-  Str s = "Contrast: <b>" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%</b>";
-  s += "  Delta F:  <b>" + Str( DeltaF, 0, 1, 'f' ) + "Hz</b>";
-  s += "  Loop:  <b>" + Str( Count+1 ) + "</b>";
-  message( s );
-
-  sleep( Duration + Pause );
-
-
-  for ( ; ; ) {
-
-    testWrite( *Signal );
-    // signal failed?
-    if ( !Signal->success() ) {
-      if ( Signal->busy() ) {
-	warning( "Output still busy!<br> Probably missing trigger.<br> Output of this signal software-triggered.", 4.0 );
-	Signal->setStartSource( 0 );
-	Signal->setPriority();
+	// output signal:
 	write( *Signal );
-	sleep( Signal->duration() + Pause );
-	// trigger:
-	// setupTrigger( data, events );
-      }
-      else if ( Signal->error() == Signal->OverflowUnderrun ) {
-	warning( "Analog output overrun error!<br> Try again.", 4.0 );
-	write( *Signal );
-	sleep( Signal->duration() + Pause );
-      }
-      else {
-	string s = "Output of stimulus failed!<br>Error code is <b>";
-	s += Str( Signal->error() ) + ": " + Signal->errorStr() + "</b>";
-	warning( s );
-	stop();
-	return Failed;
-      }
-    }
 
-    // analyze:
-    analyze();
-    plot();
-    saveEODFreq();
-    saveChirps();
-    saveChirpTraces();
-    saveChirpEOD();
-    FileIndex++;
-
-    // keep track:
-    ++DeltaFRange;
-    if ( ! !DeltaFRange ) {
-      DeltaFRange.reset();
-      if ( softStop() ) {
-	save();
-	stop();
-	return Completed;
-      }
-      ContrastCount++;
-      if ( ContrastCount >= (int)Contrasts.size() ) {
-	ContrastCount = 0;
-	Count++;
-	if ( Count >= Repeats ) {
-	  Count = 0;
-	  save();
-	  stop();
-	  return Completed;
+	// signal failed?
+	if ( Signal->failed() ) {
+	  if ( Signal->busy() ) {
+	    warning( "Output still busy!<br> Probably missing trigger.<br> Output of this signal software-triggered.", 4.0 );
+	    Signal->setStartSource( 0 );
+	    Signal->setPriority();
+	    write( *Signal );
+	    // trigger:
+	    // setupTrigger( data, events );
+	  }
+	  else if ( Signal->error() == Signal->OverflowUnderrun ) {
+	    warning( "Analog output overrun error!<br> Try again.", 4.0 );
+	    write( *Signal );
+	  }
+	  else {
+	    string s = "Output of stimulus failed!<br>Error code is <b>";
+	    s += Signal->errorText() + "</b>";
+	    warning( s, 2.0 );
+	    stop();
+	    return Failed;
+	  }
 	}
+	
+	// meassage: 
+	Str s = "Contrast: <b>" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%</b>";
+	s += "  Delta F:  <b>" + Str( DeltaF, 0, 1, 'f' ) + "Hz</b>";
+	s += "  Loop:  <b>" + Str( Count+1 ) + "</b>";
+	message( s );
+	
+	sleep( Duration + 0.1 );
+	
+	// analyze:
+	analyze();
+	plot();
+	saveEODFreq();
+	saveChirps();
+	saveChirpTraces();
+	saveChirpEOD();
+	FileIndex++;
+
+	sleep( Pause - 0.1 );
+	
       }
     }
-    Contrast = Contrasts[ContrastCount];
-    DeltaF = *DeltaFRange;
-
-    // create signal:
-    createSignal( trace( LocalEODTrace[0] ), events( LocalEODEvents[0] ) );
-
-    // stimulus intensity:
-    Intensity = Contrast * FishAmplitude2 * IntensityGain;
-    Signal->setIntensity( Intensity );
-    detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", 0.7*Signal->intensity() );
-
-    // output signal:
-    write( *Signal );
-    if ( !Signal->success() ) {
-      string s = "Output of stimulus failed!<br>Error code is <b>";
-      s += Str( Signal->error() ) + ": " + Signal->errorStr() + "</b>";
-      warning( s, 2.0 );
-      stop();
-      return Failed;
-    }
-
-    // meassage: 
-    Str s = "Contrast: <b>" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%</b>";
-    s += "  Delta F:  <b>" + Str( DeltaF, 0, 1, 'f' ) + "Hz</b>";
-    s += "  Loop:  <b>" + Str( Count+1 ) + "</b>";
-    message( s );
-
-    sleep( Duration + Pause );
-
   }
-
-
+  
+  save();
+  stop();
   return Completed;
 }
 
@@ -879,13 +833,15 @@ void JAR::plot( void )
   MapD m;
   m.reserve( Repeats * DeltaFRange.size() );
   // jars:
-  for ( unsigned int j=0; j<Response[ContrastCount].size(); j++ )
+  for ( unsigned int j=0; j<Response[ContrastCount].size(); j++ ) {
     for ( unsigned int k=0; k<Response[ContrastCount][j].size(); k++ ) {
       m.push( DeltaFRange.value( j ),
 	      Response[ContrastCount][j][k].Jar );
     }
+  }
   P[1].plot( m, 1.0, Plot::Yellow, 0, Plot::Solid, Plot::Circle, 6, Plot::Yellow, Plot::Yellow );
   // current jar:
+  m.clear();
   m.resize( 1, *DeltaFRange, 
 	    Response[ContrastCount][DeltaFRange.pos()][Count].Jar );
   P[1].plot( m, 1.0, Plot::Red, 0, Plot::Solid, Plot::Circle, 6, Plot::Red, Plot::Red );

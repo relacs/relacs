@@ -715,6 +715,7 @@ void BaselineActivity::analyze( int autodetect,
   EODPeriod = 1.0/EODRate;
   if ( Repeats > 0 )
     metaData( "Cell" ).setNumber( "EOD Frequency", EODRate );
+  double eodampl = eod2.meanSize( FirstSignal, FirstSignal+SearchDuration );
 
   // EOD times
   eod2.copy( FirstSignal, FirstSignal+SearchDuration, eodtimes );
@@ -783,24 +784,27 @@ void BaselineActivity::analyze( int autodetect,
   if ( autodetect > 1 && Repeats <= 0 ) {
     // setup Beat detector:
     lockDetectorEvents( LocalBeatPeakEvents[0] );
-    if ( events( LocalBeatPeakEvents[0] ).count( trace( LocalEODTrace[0] ).currentTime() - 0.1 ) > 0 ) {
+    if ( events( LocalBeatPeakEvents[0] ).count( trace( LocalEODTrace[0] ).currentTime() - Duration ) > 0 ) {
+      /*
       double beatthresh = detectorEventsOpts( LocalBeatPeakEvents[0] ).number( "minthresh" );
       beatthresh += BeatStep * eodt2.maxValue();
       detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "minthresh", beatthresh );
-      beatthresh = detectorEventsOpts( LocalBeatPeakEvents[0] ).number( "threshold" );
+      */
+      double beatthresh = detectorEventsOpts( LocalBeatPeakEvents[0] ).number( "threshold" );
       beatthresh += BeatStep * eodt2.maxValue();
       detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", beatthresh );
+      detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "minthresh", beatthresh );
     }
     else {
       double beatthresh = detectorEventsOpts( LocalBeatPeakEvents[0] ).number( "minthresh" );
       beatthresh -= BeatStep * eodt2.maxValue();
-      if ( beatthresh >= BeatStep * eodt2.maxValue() )
+      if ( beatthresh >= 10.0*BeatStep * eodampl )
 	detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "minthresh", beatthresh );
     }
     unlockDetectorEvents( LocalBeatPeakEvents[0] );
     // setup Chirp detector:
     lockDetectorEvents( ChirpEvents );
-    if ( events( ChirpEvents ).count(  trace( EODTrace ).currentTime() - 0.1 ) > 0 ) {
+    if ( events( ChirpEvents ).count(  trace( EODTrace ).currentTime() - Duration ) > 0 ) {
       double chirpmax = detectorEventsOpts( ChirpEvents ).number( "maxthresh" );
       double chirpthresh = detectorEventsOpts( ChirpEvents ).number( "threshold" );
       chirpthresh += ChirpStep;

@@ -164,10 +164,10 @@ void InData::copy( int first, int last, OutData &data ) const
 }
 
 
-void InData::copy( double time, double duration, OutData &data ) const
+void InData::copy( double tbegin, double tend, OutData &data ) const
 {
-  int first = index( time );
-  int last = index( time + duration );
+  int first = index( tbegin );
+  int last = index( tend );
 
   copy( first, last, data );
 }

@@ -43,8 +43,8 @@ BeatDetector::BeatDetector( const string &ident, int mode )
 
   // options:
   int strongstyle = OptWidget::ValueLarge + OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack;
-  addNumber( "threshold", "Threshold", Threshold, 0.0, 1000.0, 0.001, "", "", "", 2+4+32 );
-  addNumber( "minthresh", "Minimum threshold", MinThresh, 0.0, 1000.0, 0.001, "", "", "", 2+8+32 );
+  addNumber( "threshold", "Threshold", Threshold, 0.0, 1000.0, 0.001, "", "", "%.3f", 2+4+32 );
+  addNumber( "minthresh", "Minimum threshold", MinThresh, 0.0, 1000.0, 0.001, "", "", "%.3f", 2+8+32 );
   addNumber( "delay", "Delay time", Delay, 0.0, 1000.0, 1.0, "sec", "sec", "", 8+32 );
   addNumber( "decay", "Decay time constant", Decay, 0.0, 1000.0, 1.0, "sec", "sec", "", 2+8+32 );
   addNumber( "ratio", "Ratio threshold / size", Ratio, 0.0, 1.0, 0.05, "1", "%", "%.0f", 2+8+32 ); 

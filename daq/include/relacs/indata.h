@@ -118,9 +118,9 @@ class InData : public CyclicArray<float>, public DaqError
   const InData &operator=( const InData &data );
     /*! Copy the data from element \a first to element \a last to \a data. */
   void copy( int first, int last, OutData &data ) const;
-    /*! Copy the data from time \a time seconds during \a duration seconds
+    /*! Copy the data from time \a tbegin to time \a tend seconds
         to \a data. */
-  void copy( double time, double duration, OutData &data ) const;
+  void copy( double tbegin, double tend, OutData &data ) const;
     /*! Copy the data values from \a time + \a trace.leftMargin()
         to \a time + \a trace.rightMargin() to \a trace.
         The sample interval given by \a trace is used.

@@ -711,31 +711,12 @@ void FilterDetectors::adjust( const InList &data, const EventList &events )
       // check if this detector really has to be adjusted:
       bool c = false;
       if ( AdjustFlag >= 0 ) {
-	for ( int k=0; k<d->InEvents.size(); k++ )
-	  if ( d->InEvents[k].mode() & AdjustFlag ) {
-	    c = true;
-	    break;
-	  }
-      }
-      else
-	c = true;
-      // adjust detector:
-      if ( c ) {
-	if ( d->FilterDetector->type() & Filter::MultipleTraces )
-	  d->FilterDetector->adjust( d->InEvents );
-	else
-	  d->FilterDetector->adjust( d->InEvents[0] );
-      }
-    }
-    else {
-      // check if this detector really has to be adjusted:
-      bool c = false;
-      if ( AdjustFlag >= 0 ) {
-	for ( int k=0; k<d->InTraces.size(); k++ )
+	for ( int k=0; k<d->InTraces.size(); k++ ) {
 	  if ( d->InTraces[k].mode() & AdjustFlag ) {
 	    c = true;
 	    break;
 	  }
+	}
       }
       else
 	c = true;
@@ -745,6 +726,27 @@ void FilterDetectors::adjust( const InList &data, const EventList &events )
 	  d->FilterDetector->adjust( data );
 	else
 	  d->FilterDetector->adjust( d->InTraces[0] );
+      }
+    }
+    else {
+      // check if this detector really has to be adjusted:
+      bool c = false;
+      if ( AdjustFlag >= 0 ) {
+	for ( int k=0; k<d->InEvents.size(); k++ ) {
+	  if ( d->InEvents[k].mode() & AdjustFlag ) {
+	    c = true;
+	    break;
+	  }
+	}
+      }
+      else
+	c = true;
+      // adjust detector:
+      if ( c ) {
+	if ( d->FilterDetector->type() & Filter::MultipleTraces )
+	  d->FilterDetector->adjust( d->InEvents );
+	else
+	  d->FilterDetector->adjust( d->InEvents[0] );
       }
     }
     d->FilterDetector->unlock();
