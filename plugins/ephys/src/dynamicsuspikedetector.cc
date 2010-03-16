@@ -1,5 +1,5 @@
 /*
-  ephys/spikedetector.cc
+  ephys/dynamicsuspikedetector.cc
   A detector for spikes in single unit recordings.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
@@ -26,18 +26,21 @@
 #include <qpainter.h>
 #include <qpushbutton.h>
 #include <qapplication.h>
+#include <relacs/map.h>
+#include <relacs/basisfunction.h>
+#include <relacs/fitalgorithm.h>
 #include <relacs/str.h>
 #include <relacs/tablekey.h>
-#include <relacs/ephys/spikedetector.h>
+#include <relacs/ephys/dynamicsuspikedetector.h>
 using namespace relacs;
 
 namespace ephys {
 
 
-SpikeDetector::SpikeDetector( const string &ident, int mode )
+DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogDetector, 1,
-	    "SpikeDetector", "SpikeDetector", "EPhys",
-	    "Jan Benda", "1.6", "Jan 24, 2008" ),
+	    "DynamicSUSpikeDetector", "DynamicSUSpikeDetector", "EPhys",
+	    "Jan Benda", "1.8", "Mar 16, 2010" ),
     SDW( (QWidget*)this ),
     GoodSpikesHist( 0.0, 200.0, 0.5 ),
     BadSpikesHist( 0.0, 200.0, 0.5 ),
@@ -49,12 +52,13 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   MaxThresh = 100.0;
   Delay = 1.0;
   Decay = 10.0;
-  TestPeak = false;
-  AbsPeak = 0.0;
   TestWidth = true;
   MaxWidth = 0.0015;
   TestInterval = true;
   MinInterval = 0.001;
+  FitPeak = false;
+  FitWidth = 0.0005;
+  FitIndices = 0;
   Ratio = 0.5;
   NoSpikeInterval = 0.1;
   StimulusRequired = false;
@@ -74,12 +78,12 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
   addNumber( "delay", "Delay time", Delay, 0.0, 1000.0, 1.0, "sec", "sec", "%.0f", 0+8+32 );
   addNumber( "decay", "Decay time constant", Decay, 0.0, 1000.0, 1.0,  "sec", "sec", "%.0f", 0+8+32 );
   addNumber( "ratio", "Ratio threshold / size", Ratio, 0.0, 1.0, 0.05, "1", "%", "%.0f",  2+8+32 );
-  addBoolean( "testpeak", "Test absolute spike height", TestPeak ).setFlags( 0+8+32 );
-  addNumber( "abspeak", "Absolute required spike height", AbsPeak, -200.0, 200.0, 1.0, "mV", "mV", "%.1f", 0+8+32 ).setActivation( "testpeak", "true" );
   addBoolean( "testwidth", "Test spike width", TestWidth ).setFlags( 0+8+32 );
   addNumber( "maxwidth", "Maximum spike width", MaxWidth, 0.0001, 0.006, 0.0001, "sec", "ms", "%.1f", 0+8+32 ).setActivation( "testwidth", "true" );
   addBoolean( "testisi", "Test interspike interval", TestInterval ).setFlags( 0+8+32 );
   addNumber( "minisi", "Minimum interspike interval", MinInterval, 0.0, 0.1, 0.0002, "sec", "ms", "%.1f", 0+8+32 ).setActivation( "testisi", "true" );
+  addBoolean( "fitpeak", "Fit parabula to peak of spike", FitPeak ).setFlags( 0+8+32 );
+  addNumber( "fitwidth", "Width of parabula fit", FitWidth, 0.0, 0.1, 0.00001, "sec", "ms", "%.2f", 0+8+32 );
   addLabel( "Running average", 8 );
   addNumber( "nospike", "Interval for no spike", NoSpikeInterval, 0.0, 1000.0, 0.01, "sec", "ms", "%.0f", 0+8+32 );
   addBoolean( "considerstimulus", "Expect spikes during stimuli only", StimulusRequired, 0+8+32 );
@@ -324,13 +328,13 @@ SpikeDetector::SpikeDetector( const string &ident, int mode )
 }
 
 
-SpikeDetector::~SpikeDetector( void )
+DynamicSUSpikeDetector::~DynamicSUSpikeDetector( void )
 {
 }
 
 
-int SpikeDetector::init( const InData &data, EventData &outevents,
-			 const EventList &other, const EventData &stimuli )
+int DynamicSUSpikeDetector::init( const InData &data, EventData &outevents,
+				  const EventList &other, const EventData &stimuli )
 {
   outevents.setSizeScale( 1.0 );
   outevents.setSizeUnit( data.unit() );
@@ -350,19 +354,19 @@ int SpikeDetector::init( const InData &data, EventData &outevents,
 }
 
 
-void SpikeDetector::notify( void )
+void DynamicSUSpikeDetector::notify( void )
 {
   Threshold = number( "threshold" );
   MinThresh = number( "minthresh" );
   Delay = number( "delay" );
   Decay = number( "decay" );
   Ratio = number( "ratio" );
-  TestPeak = boolean( "testpeak" );
-  AbsPeak = number( "abspeak" );
   TestWidth = boolean( "testwidth" );
   MaxWidth = number( "maxwidth" );
   TestInterval = boolean( "testinterval" );
   MinInterval = number( "minisi" );
+  FitPeak = boolean( "fitpeak" );
+  FitWidth = number( "fitwidth" );
   NoSpikeInterval = number( "nospike" );
   StimulusRequired = boolean( "considerstimulus" );
   LogHistogram = boolean( "log" );
@@ -400,20 +404,20 @@ void SpikeDetector::notify( void )
 }
 
 
-int SpikeDetector::adjust( const InData &data )
+int DynamicSUSpikeDetector::adjust( const InData &data )
 {
   MaxThresh = ceil10( 2.0*data.maxValue(), 0.1 );
   return 0;
 }
 
 
-void SpikeDetector::save( const string &param )
+void DynamicSUSpikeDetector::save( const string &param )
 {
   save();
 }
 
 
-void SpikeDetector::save( void )
+void DynamicSUSpikeDetector::save( void )
 {
   // create file:
   ofstream df( addPath( Str( ident() ).lower() + "-distr.dat" ).c_str(),
@@ -466,9 +470,11 @@ void SpikeDetector::save( void )
 }
 
 
-int SpikeDetector::detect( const InData &data, EventData &outevents,
-			   const EventList &other, const EventData &stimuli )
+int DynamicSUSpikeDetector::detect( const InData &data, EventData &outevents,
+				    const EventList &other, const EventData &stimuli )
 {
+  FitIndices = data.indices( FitWidth );
+
   D.dynamicPeakHist( data.minBegin(), data.end(), outevents,
 		     Threshold, MinThresh, MaxThresh,
 		     Delay, Decay, *this );
@@ -634,25 +640,21 @@ int SpikeDetector::detect( const InData &data, EventData &outevents,
 }
 
 
-int SpikeDetector::checkEvent( const InData::const_iterator &first, 
-			       const InData::const_iterator &last,
-			       InData::const_iterator &event, 
-			       InDataTimeIterator &eventtime, 
-			       InData::const_iterator &index,
-			       InDataTimeIterator &indextime, 
-			       InData::const_iterator &prevevent, 
-			       InDataTimeIterator &prevtime, 
-			       EventData &outevents,
-			       double &threshold,
-			       double &minthresh, double &maxthresh,
-			       double &time, double &size, double &width )
+int DynamicSUSpikeDetector::checkEvent( const InData::const_iterator &first, 
+					const InData::const_iterator &last,
+					InData::const_iterator &event, 
+					InDataTimeIterator &eventtime, 
+					InData::const_iterator &index,
+					InDataTimeIterator &indextime, 
+					InData::const_iterator &prevevent, 
+					InDataTimeIterator &prevtime, 
+					EventData &outevents,
+					double &threshold,
+					double &minthresh, double &maxthresh,
+					double &time, double &size, double &width )
 {
   // time of spike:
   time = *eventtime;
-
-  // absolute height:
-  if ( TestPeak && *event < AbsPeak )
-    return 0;
 
   // go down to the left:
   InDataIterator left = event;
@@ -713,6 +715,33 @@ int SpikeDetector::checkEvent( const InData::const_iterator &first,
        outevents.size() > 0 && time - outevents.back() < MinInterval )
     return 0;
 
+  // adjust spike time by parabula fit:
+  if ( FitPeak ) {
+    MapD peak;
+    peak.reserve( FitIndices );
+    InDataIterator peakp = event - FitIndices/2;
+    InDataTimeIterator peakt = eventtime - FitIndices/2;
+    for ( int k=0; k<FitIndices; k++ ) {
+      peak.push( *peakt - time, *peakp );
+      ++peakt;
+      ++peakp;
+    }
+    ArrayD sd( peak.size(), 1.0 );
+    Polynom poly;
+    ArrayD param( 3, 1.0 );
+    ArrayI paramfit( 3, 1 );
+    ArrayD uncert( 3, 0.0 );
+    double chisq = 0.0;
+    int r = linearFit( peak.x(), peak.y(), sd,
+		       poly, param, paramfit, uncert, chisq );
+    if ( r == 0 ) {
+      time += -0.5*param[1]/param[2];
+      size += param[0] + 0.25*(param[1]*param[1]-2.0)/param[2] - *event;
+    }
+    else
+      printlog( "Parabula fit failed and returned " + Str( r ) );
+  }
+
   // adjust threshold:
   threshold = Ratio * size;
 
@@ -720,7 +749,7 @@ int SpikeDetector::checkEvent( const InData::const_iterator &first,
 }
 
 
-void SpikeDetector::customEvent( QCustomEvent *qce )
+void DynamicSUSpikeDetector::customEvent( QCustomEvent *qce )
 {
   if ( qce->type() == QEvent::User+11 ) {
     lock();
@@ -733,8 +762,8 @@ void SpikeDetector::customEvent( QCustomEvent *qce )
 }
 
 
-addDetector( SpikeDetector );
+addDetector( DynamicSUSpikeDetector );
 
 }; /* namespace ephys */
 
-#include "moc_spikedetector.cc"
+#include "moc_dynamicsuspikedetector.cc"

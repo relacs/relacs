@@ -1,5 +1,5 @@
 /*
-  ephys/spikedetector.h
+  ephys/dynamicsuspikedetector.h
   A detector for spikes in single unit recordings.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _RELACS_EPHYS_SPIKEDETECTOR_H_
-#define _RELACS_EPHYS_SPIKEDETECTOR_H_ 1
+#ifndef _RELACS_EPHYS_DYNAMICSUSPIKEDETECTOR_H_
+#define _RELACS_EPHYS_DYNAMICSUSPIKEDETECTOR_H_ 1
 
 #include <qpixmap.h>
 #include <qlabel.h>
@@ -36,9 +36,10 @@ namespace ephys {
 
 
 /*! 
-\class SpikeDetector
+\class DynamicSUSpikeDetector
 \brief [Detector] A detector for spikes in single unit recordings.
 \author Jan Benda
+\version 1.8 (Mar 16, 2010)
 
 \par Options
 - Detector
@@ -51,6 +52,8 @@ namespace ephys {
 - \c maxwidth=1.5ms: Maximum spike width (\c number)
 - \c testisi=true: Test interspike interval (\c boolean)
 - \c minisi=1ms: Minimum interspike interval (\c number)
+- \c fitpeak=false: Fit parabula to peak of spike (\c boolean)
+- \c fitwidth=0.5ms: Width of parabula fit (\c number)
 - Running average
 - \c nospike=100ms: Interval for no spike (\c number)
 - \c considerstimulus=false: Expect spikes during stimuli only (\c boolean)
@@ -62,25 +65,19 @@ namespace ephys {
 - \c qualitythresh=5%: Quality threshold (\c number)
 - \c trendthresh=1%: Trend threshold (\c number)
 - \c trendtime=1sec: Trend timescale (\c number)
-- \c rate=0Hz: Rate (\c number)
-- \c size=0mV: Spike size (\c number)
-- \c trend=0: Trend (\c integer)
-- \c quality=0: Quality (\c integer)
-
-\version 1.6 (Jan 24, 2008)
 */
 
 
-class SpikeDetector : public Filter
+class DynamicSUSpikeDetector : public Filter
 {
   Q_OBJECT
 
 public:
 
     /*! The constructor. */
-  SpikeDetector( const string &ident="", int mode=0 );
+  DynamicSUSpikeDetector( const string &ident="", int mode=0 );
     /*! The destructor. */
-  ~SpikeDetector( void );
+  ~DynamicSUSpikeDetector( void );
 
   virtual int init( const InData &data, EventData &outevents,
 		    const EventList &other, const EventData &stimuli );
@@ -131,10 +128,6 @@ protected:
     /*! Decay time constant of the threshold dynamics in seconds. */
   double Decay;
 
-    /*! Test absolute height of spike peak? */
-  bool TestPeak;
-    /*! Absolute height of a spike peak. */
-  double AbsPeak;
     /*! Test spike width? */
   bool TestWidth;
     /*! Maximum width of a spike in seconds. */
@@ -143,6 +136,12 @@ protected:
   bool TestInterval;
     /*! Minimum interspike interval. */
   double MinInterval;
+    /*! Fit a parabula to the spike peak? */
+  bool FitPeak;
+    /*! Width of the parabula fit in seconds. */
+  double FitWidth;
+    /*! Width of the parabula fit in indices of the input trace. */
+  int FitIndices;
     /*! Ratio of the spike size to which the new value of the threshold is set. */
   double Ratio;
     /*! If no spikes are detected, update statistic assuming that
@@ -204,4 +203,4 @@ protected:
 
 }; /* namespace ephys */
 
-#endif /* ! _RELACS_EPHYS_SPIKEDETECTOR_H_ */
+#endif /* ! _RELACS_EPHYS_DYNAMICSUSPIKEDETECTOR_H_ */

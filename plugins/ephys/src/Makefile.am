@@ -10,7 +10,8 @@ pluginlibdir = $(pkglibdir)/plugins
 pluginlib_LTLIBRARIES = \
     libephystraces.la \
     libephysneuronmodels.la \
-    libephysspikedetector.la \
+    libephysintraspikedetector.la \
+    libephysdynamicsuspikedetector.la \
     libephysmotorcontrol.la
 
 
@@ -85,7 +86,7 @@ libephysneuronmodels_la_include_HEADERS = $(HEADER_PATH)/neuronmodels.h
 
 
 
-libephysspikedetector_la_CPPFLAGS = \
+libephysintraspikedetector_la_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/datafile/include \
     -I$(top_srcdir)/plot/include \
@@ -96,21 +97,50 @@ libephysspikedetector_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
-libephysspikedetector_la_LDFLAGS = \
+libephysintraspikedetector_la_LDFLAGS = \
     -module -avoid-version \
     $(QT3_LDFLAGS)
 
-libephysspikedetector_la_LIBADD = \
+libephysintraspikedetector_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(QT3_LIBS)
 
-$(libephysspikedetector_la_OBJECTS) : moc_spikedetector.cc
+$(libephysintraspikedetector_la_OBJECTS) : moc_intraspikedetector.cc
 
-libephysspikedetector_la_SOURCES = spikedetector.cc
+libephysintraspikedetector_la_SOURCES = intraspikedetector.cc
 
-libephysspikedetector_la_includedir = $(pkgincludedir)/ephys
+libephysintraspikedetector_la_includedir = $(pkgincludedir)/ephys
 
-libephysspikedetector_la_include_HEADERS = $(HEADER_PATH)/spikedetector.h
+libephysintraspikedetector_la_include_HEADERS = $(HEADER_PATH)/intraspikedetector.h
+
+
+
+libephysdynamicsuspikedetector_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT3_CPPFLAGS)
+
+libephysdynamicsuspikedetector_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT3_LDFLAGS)
+
+libephysdynamicsuspikedetector_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(QT3_LIBS)
+
+$(libephysdynamicsuspikedetector_la_OBJECTS) : moc_dynamicsuspikedetector.cc
+
+libephysdynamicsuspikedetector_la_SOURCES = dynamicsuspikedetector.cc
+
+libephysdynamicsuspikedetector_la_includedir = $(pkgincludedir)/ephys
+
+libephysdynamicsuspikedetector_la_include_HEADERS = $(HEADER_PATH)/dynamicsuspikedetector.h
 
 
 
@@ -145,7 +175,8 @@ check_PROGRAMS = \
     linktest_librelacsspikingneuron_la \
     linktest_libephystraces_la \
     linktest_libephysneuronmodels_la \
-    linktest_libephysspikedetector_la \
+    linktest_libephysintraspikedetector_la \
+    linktest_libephysdynamicsuspikedetector_la \
     linktest_libephysmotorcontrol_la
 
 linktest_librelacsspikingneuron_la_SOURCES = linktest.cc
@@ -157,8 +188,11 @@ linktest_libephystraces_la_LDADD = libephystraces.la
 linktest_libephysneuronmodels_la_SOURCES = linktest.cc
 linktest_libephysneuronmodels_la_LDADD = libephysneuronmodels.la
 
-linktest_libephysspikedetector_la_SOURCES = linktest.cc
-linktest_libephysspikedetector_la_LDADD = libephysspikedetector.la
+linktest_libephysintraspikedetector_la_SOURCES = linktest.cc
+linktest_libephysintraspikedetector_la_LDADD = libephysintraspikedetector.la
+
+linktest_libephysdynamicsuspikedetector_la_SOURCES = linktest.cc
+linktest_libephysdynamicsuspikedetector_la_LDADD = libephysdynamicsuspikedetector.la
 
 linktest_libephysmotorcontrol_la_SOURCES = linktest.cc
 linktest_libephysmotorcontrol_la_LDADD = libephysmotorcontrol.la
