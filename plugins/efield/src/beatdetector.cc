@@ -69,6 +69,12 @@ BeatDetector::~BeatDetector( void )
 int BeatDetector::init( const EventList &inevents, EventList &outevents, 
 			const EventList &other, const EventData &stimuli )
 {
+  for ( int k=0; k<2; k++ ) {
+    outevents[k].setSizeScale( 1.0 );
+    outevents[k].setSizeUnit( inevents[0].sizeUnit() );
+    outevents[k].setSizeFormat( "%6.2f" );
+  }
+
   adjust( inevents );
 
   D.init( EventSizeIterator( inevents[0].begin() ),

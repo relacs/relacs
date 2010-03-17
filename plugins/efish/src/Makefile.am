@@ -7,7 +7,8 @@ pluginlib_LTLIBRARIES = \
     libefishbaselineactivity.la \
     libefishsession.la \
     libefishpunitmodel.la \
-    libefishsam.la
+    libefishsam.la \
+    libefishficurve.la
 
 
 
@@ -145,11 +146,46 @@ libefishsam_la_include_HEADERS = $(HEADER_PATH)/sam.h
 
 
 
+libefishficurve_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../../ephys/include \
+    -I$(srcdir)/../../efield/include \
+    -I$(srcdir)/../include \
+    $(QT3_CPPFLAGS)
+
+libefishficurve_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT3_LDFLAGS)
+
+libefishficurve_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(builddir)/../../ephys/src/libephystraces.la \
+    $(builddir)/../../efield/src/libefieldtraces.la \
+    $(builddir)/../../efield/src/libefieldeodtools.la \
+    $(QT3_LIBS)
+
+$(libefishficurve_la_OBJECTS) : moc_ficurve.cc
+
+libefishficurve_la_SOURCES = ficurve.cc
+
+libefishficurve_la_includedir = $(pkgincludedir)/efish
+
+libefishficurve_la_include_HEADERS = $(HEADER_PATH)/ficurve.h
+
+
+
 check_PROGRAMS = \
     linktest_libefishbaselineactivity_la \
     linktest_libefishsession_la \
     linktest_libefishpunitmodel_la \
-    linktest_libefishsam_la
+    linktest_libefishsam_la \
+    linktest_libefishficurve_la
 
 linktest_libefishbaselineactivity_la_SOURCES = linktest.cc
 linktest_libefishbaselineactivity_la_LDADD = libefishbaselineactivity.la
@@ -162,5 +198,8 @@ linktest_libefishpunitmodel_la_LDADD = libefishpunitmodel.la
 
 linktest_libefishsam_la_SOURCES = linktest.cc
 linktest_libefishsam_la_LDADD = libefishsam.la
+
+linktest_libefishficurve_la_SOURCES = linktest.cc
+linktest_libefishficurve_la_LDADD = libefishficurve.la
 
 TESTS = $(check_PROGRAMS)

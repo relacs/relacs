@@ -382,6 +382,7 @@ int SAM::main( void )
     sleep( Signal->duration() );
     if ( interrupt() ) {
       stop();
+      save();
       return Aborted;
     }
 
@@ -396,6 +397,7 @@ int SAM::main( void )
 	sleep( Signal->duration() );
 	if ( interrupt() ) {
 	  stop();
+	  save();
 	  return Aborted;
 	}
 	// trigger:
@@ -407,6 +409,7 @@ int SAM::main( void )
 	sleep( Signal->duration() );
 	if ( interrupt() ) {
 	  stop();
+	  save();
 	  return Aborted;
 	}
       }
@@ -428,6 +431,7 @@ int SAM::main( void )
     sleepOn( Signal->duration() + Pause );
     if ( interrupt() ) {
       stop();
+      save();
       return Aborted;
     }
     timeStamp();
@@ -746,7 +750,7 @@ void SAM::saveAllNerve( void )
 
 void SAM::save( void )
 {
-  if ( Repeats <= 0 )
+  if ( Repeats <= 0 || Count <= 0 )
     return;
 
   for ( int trace=0; trace<MaxSpikeTraces; trace++ ) {

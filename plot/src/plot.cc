@@ -4395,6 +4395,8 @@ void Plot::EventInDataElement::point( long index, double &x, double &y ) const
   double time = ED->operator[]( index ); 
   x = ( time - Reference ) * TScale;
   int inx = ID->index( time );
+  if ( inx >= ID->size() )
+    inx = ID->size()-1;
   y = (*ID)[inx];
 }
 

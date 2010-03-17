@@ -109,9 +109,9 @@ void DaqError::addAttError( int ae )
 
   // map error code:
   if ( ae >= Attenuate::ReadError )
-    addError( 1LL<<(39 - ae - 1) );
+    addError( 1LL<<(40 - ae - 1) );
   else if ( ae >= Attenuate::IntensityError )
-    addError( 1LL<<(39 - ae - 2) );
+    addError( 1LL<<(40 - ae - 2) );
   else
     addError( AttIntensityFailed );
 }

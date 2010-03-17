@@ -93,7 +93,7 @@ void AISim::close( void )
 
 int AISim::channels( void ) const
 {
-  return 16;
+  return 32;
 }
 
 

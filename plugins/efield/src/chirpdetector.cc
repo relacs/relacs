@@ -70,6 +70,13 @@ ChirpDetector::~ChirpDetector( void )
 int ChirpDetector::init( const EventData &inevents, EventData &outevents,
 			 const EventList &other, const EventData &stimuli )
 {
+  outevents.setSizeScale( 1.0 );
+  outevents.setSizeUnit( "Hz" );
+  outevents.setSizeFormat( "%6.1f" );
+  outevents.setWidthScale( 1000.0 );
+  outevents.setWidthUnit( "ms" );
+  outevents.setWidthFormat( "%6.1f" );
+
   D.init( EventFrequencyIterator( inevents.begin() + 1 ),
 	  EventFrequencyIterator( inevents.end() ),
 	  EventIterator( inevents.begin() + 1 ) );

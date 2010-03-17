@@ -64,6 +64,9 @@ EODDetector::~EODDetector( void )
 int EODDetector::init( const InData &data, EventData &outevents,
 		       const EventList &other, const EventData &stimuli )
 {
+  outevents.setSizeScale( 1.0 );
+  outevents.setSizeUnit( data.unit() );
+  outevents.setSizeFormat( "%6.2f" );
   adjust( data );
   D.init( data.begin(), data.end(), data.timeBegin() );
   return 0;
