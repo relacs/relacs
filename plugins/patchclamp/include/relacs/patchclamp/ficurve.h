@@ -79,7 +79,11 @@ protected:
     double DC;
     double I;
     double VRest;
-    double VRestsd;
+    double VRestSQ;
+    double VRestSD;
+    double VSS;
+    double VSSSQ;
+    double VSSSD;
     double PreRate;
     double PreRateSD;
     double SSRate;

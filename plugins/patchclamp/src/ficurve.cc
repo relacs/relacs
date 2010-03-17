@@ -40,8 +40,8 @@ FICurve::FICurve( void )
   // add some options:
   addLabel( "Stimuli" );
   addSelection( "outcurrent", "Output trace", "Current-1" );
+  addSelection( "ibase", "Currents are relative to", "zero|DC|threshold" );
   addNumber( "imin", "Minimum injected current", 0.0, -1000.0, 1000.0, 0.001 );
-  addBoolean( "iminrelthresh", "Minimum current is relative to threshold", false );
   addNumber( "imax", "Maximum injected current", 1.0, -1000.0, 1000.0, 0.001 );
   addNumber( "istep", "Minimum step-size of current", 0.001, 0.001, 1000.0, 0.001 ).setActivation( "userm", "false" );
   addBoolean( "userm", "Use membrane resistance for estimating istep from vstep", false );
@@ -60,6 +60,7 @@ FICurve::FICurve( void )
   addSelection( "involtage", "Input voltage trace", "V-1" );
   addSelection( "incurrent", "Input current trace", "Current-1" );
   addNumber( "fmax", "Maximum firing rate", 100.0, 0.0, 2000.0, 1.0, "Hz" );
+  addNumber( "vmax", "Maximum steady-state potential", -50.0, -2000.0, 2000.0, 1.0, "mV" );
   addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
   addTypeStyle( OptWidget::TabLabel, Parameter::Label );
 }
@@ -83,6 +84,7 @@ void FICurve::notify( void )
     VUnit = trace( SpikeTrace[involtage] ).unit();
     VFac = Parameter::changeUnit( 1.0, VUnit, "mV" );
     setUnit( "vstep", VUnit );
+    setUnit( "vmax", VUnit );
   }
 
   int outcurrent = index( "outcurrent" );
@@ -113,8 +115,8 @@ int FICurve::main( void )
   int involtage = index( "involtage" );
   int incurrent = traceIndex( text( "incurrent", 0 ) );
   int outcurrent = outTraceIndex( text( "outcurrent", 0 ) );
+  int ibase = index( "ibase" );
   double imin = number( "imin" );
-  bool iminrelthresh = boolean( "iminrelthresh" );
   double imax = number( "imax" );
   double istep = number( "istep" );
   bool userm = boolean( "userm" );
@@ -129,12 +131,19 @@ int FICurve::main( void )
   double delay = number( "delay" );
   double pause = number( "pause" );
   double fmax = number( "fmax" );
+  double vmax = number( "vmax" );
   double sswidth = number( "sswidth" );
-  if ( iminrelthresh ) {
+  double dccurrent = stimulusData().number( outTraceName( outcurrent ) );
+  if ( ibase == 1 ) {
+    imin += dccurrent;
+    imax += dccurrent;
+  }
+  else if ( ibase == 2 ) {
     double ithresh = metaData( "Cell" ).number( "ithreshon" );
     if ( ithresh == 0.0 )
       ithresh = metaData( "Cell" ).number( "ithreshss" );
     imin += ithresh;
+    imax += ithresh;
   }
   if ( imax <= imin ) {
     warning( "imin must be smaller than imax!" );
@@ -210,7 +219,6 @@ int FICurve::main( void )
   OutData signal( duration, 1.0/samplerate );
   signal.setTrace( outcurrent );
   signal.setDelay( delay );
-  double dccurrent = stimulusData().number( outTraceName( outcurrent ) );
 
   // write stimulus:
   sleep( pause );
@@ -281,12 +289,17 @@ int FICurve::main( void )
 				  incurrent >= 0 ? &trace( incurrent ) : 0,
 				  IInFac, delay, duration, sswidth );
 
-    if ( Results[Range.pos()].SpikeCount <= 0.01 ) {
-      Range.setSkipBelow( Range.pos() );
-      Range.noCount();
-    }
     if ( Results[Range.pos()].SSRate > fmax ) {
       Range.setSkipAbove( Range.pos() );
+      Range.noCount();
+    }
+    if ( Results[Range.pos()].SSRate < 1.0/duration &&
+	 Results[Range.pos()].VSS > vmax ) {
+      Range.setSkipAbove( Range.pos() );
+      Range.noCount();
+    }
+    else if ( Results[Range.pos()].SpikeCount <= 0.01 ) {
+      Range.setSkipBelow( Range.pos()-1 );
       Range.noCount();
     }
 
@@ -399,6 +412,8 @@ void FICurve::saveData( void )
   datakey.addLabel( "Baseline" );
   datakey.addNumber( "f_b", "Hz", "%5.1f" );
   datakey.addNumber( "s.d.", "Hz", "%5.1f" );
+  datakey.addNumber( "v_rest", VUnit, "%6.1f" );
+  datakey.addNumber( "s.d.", VUnit, "%6.1f" );
   datakey.addLabel( "Peak rate" );
   datakey.addNumber( "f_on", "Hz", "%5.1f" );
   datakey.addNumber( "s.d.", "Hz", "%5.1f" );
@@ -406,6 +421,8 @@ void FICurve::saveData( void )
   datakey.addLabel( "Steady-state" );
   datakey.addNumber( "f_ss", "Hz", "%5.1f" );
   datakey.addNumber( "s.d.", "Hz", "%5.1f" );
+  datakey.addNumber( "v_rest", VUnit, "%6.1f" );
+  datakey.addNumber( "s.d.", VUnit, "%6.1f" );
   datakey.addLabel( "Spike count" );
   datakey.addNumber( "count", "1", "%7.1f" );
   datakey.addNumber( "s.d.", "1", "%7.1f" );
@@ -424,11 +441,15 @@ void FICurve::saveData( void )
     datakey.save( df, Results[j].MeanRateSD );
     datakey.save( df, Results[j].PreRate );
     datakey.save( df, Results[j].PreRateSD );
+    datakey.save( df, Results[j].VRest );
+    datakey.save( df, Results[j].VRestSD );
     datakey.save( df, Results[j].OnRate );
     datakey.save( df, Results[j].OnRateSD );
     datakey.save( df, Results[j].OnTime*1000.0 );
     datakey.save( df, Results[j].SSRate );
     datakey.save( df, Results[j].SSRateSD );
+    datakey.save( df, Results[j].VSS );
+    datakey.save( df, Results[j].VSSSD );
     datakey.save( df, Results[j].SpikeCount );
     datakey.save( df, Results[j].SpikeCountSD );
     datakey.save( df, Results[j].Latency*1000.0 );
@@ -589,7 +610,11 @@ FICurve::Data::Data( void )
   : DC( 0.0 ),
     I( 0.0 ),
     VRest( 0.0 ),
-    VRestsd( 0.0 ),
+    VRestSQ( 0.0 ),
+    VRestSD( 0.0 ),
+    VSS( 0.0 ),
+    VSSSQ( 0.0 ),
+    VSSSD( 0.0 ),
     PreRate( 0.0 ),
     PreRateSD( 0.0 ),
     SSRate( 0.0 ),
@@ -647,6 +672,18 @@ void FICurve::Data::analyze( int count, const InData &intrace,
     DC = MeanCurrent.mean( -delay, 0.0 );
     I = MeanCurrent.mean( 0.0, duration );
   }
+
+  // resting potential:
+  double vrest = Voltage.back().mean( -delay, 0.0 );
+  VRest += (vrest - VRest)/(count+1);
+  VRestSQ += (vrest*vrest - VRestSQ)/(count+1);
+  VRestSD = sqrt( VRestSQ - VRest*VRest );
+
+  // steady-state potential:
+  double vss = Voltage.back().mean( duration-sswidth, duration );
+  VSS += (vss - VSS)/(count+1);
+  VSSSQ += (vss*vss - VSSSQ)/(count+1);
+  VSSSD = sqrt( VSSSQ - VSS*VSS );
 
   // spikes:
   double sigtime = spikes.signalTime();

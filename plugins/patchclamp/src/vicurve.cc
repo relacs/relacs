@@ -40,6 +40,7 @@ VICurve::VICurve( void )
   // add some options:
   addLabel( "Stimuli" );
   addSelection( "outcurrent", "Output trace", "Current-1" );
+  addSelection( "ibase", "Currents are relative to", "zero|DC|threshold" );
   addNumber( "imin", "Minimum injected current", -1.0, -1000.0, 1000.0, 0.001 );
   addNumber( "imax", "Maximum injected current", 1.0, -1000.0, 1000.0, 0.001 );
   addNumber( "istep", "Minimum step-size of current", 0.001, 0.001, 1000.0, 0.001 ).setActivation( "userm", "false" );
@@ -115,6 +116,7 @@ int VICurve::main( void )
   int involtage = index( "involtage" );
   int incurrent = traceIndex( text( "incurrent", 0 ) );
   int outcurrent = outTraceIndex( text( "outcurrent", 0 ) );
+  int ibase = index( "ibase" );
   double imin = number( "imin" );
   double imax = number( "imax" );
   double istep = number( "istep" );
@@ -132,6 +134,18 @@ int VICurve::main( void )
   double vmin = number( "vmin" );
   double ton = number( "ton" );
   double sswidth = number( "sswidth" );
+  double dccurrent = stimulusData().number( outTraceName( outcurrent ) );
+  if ( ibase == 1 ) {
+    imin += dccurrent;
+    imax += dccurrent;
+  }
+  else if ( ibase == 2 ) {
+    double ithresh = metaData( "Cell" ).number( "ithreshon" );
+    if ( ithresh == 0.0 )
+      ithresh = metaData( "Cell" ).number( "ithreshss" );
+    imin += ithresh;
+    imax += ithresh;
+  }
   if ( imax <= imin ) {
     warning( "imin must be smaller than imax!" );
     return Failed;
@@ -201,7 +215,6 @@ int VICurve::main( void )
   OutData signal( duration, 1.0/samplerate );
   signal.setTrace( outcurrent );
   signal.setDelay( delay );
-  double dccurrent = stimulusData().number( outTraceName( outcurrent ) );
 
   // write stimulus:
   sleep( pause );

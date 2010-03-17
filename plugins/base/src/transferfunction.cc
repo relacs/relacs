@@ -78,11 +78,14 @@ void TransferFunction::config( void )
 void TransferFunction::notify( void )
 {
   int outtrace = index( "outtrace" );
-  OutUnit = outTrace( outtrace ).unit();
-  setUnit( "amplitude", OutUnit );
+  if ( outtrace >= 0 && outtrace < outTracesSize() ) {
+    OutUnit = outTrace( outtrace ).unit();
+    setUnit( "amplitude", OutUnit );
+  }
 
   int intrace = index( "intrace" );
-  InUnit = trace( intrace ).unit();
+  if ( intrace >= 0 && intrace < traces().size() )
+    InUnit = trace( intrace ).unit();
 }
 
 

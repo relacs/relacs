@@ -122,7 +122,7 @@ int SetOutput::main( void )
     // wait for input:
     Change = false;
     sleepWait();
-    postCustomEvent( 12 ); // STW.clearFocus();
+    postCustomEvent( 12 ); // clearFocus();
     // set new values:
     if ( Change ) {
       OutList sigs;
@@ -203,7 +203,7 @@ void SetOutput::customEvent( QCustomEvent *qce )
       STW.firstWidget()->setFocus();
   }
   else if ( qce->type() == QEvent::User+12 ) {
-    clearFocus();
+    topLevelWidget()->setFocus();
   }
   else
     RePro::customEvent( qce );

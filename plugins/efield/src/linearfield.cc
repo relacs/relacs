@@ -135,7 +135,7 @@ int LinearField::main( void )
     }
   } while ( Measure && ! interrupt() );
   saveAmplitude();
-  postCustomEvent( 12 ); // O.clearFocus();
+  postCustomEvent( 12 ); // clearFocus();
   return Completed;
 }
 
@@ -248,7 +248,7 @@ void LinearField::customEvent( QCustomEvent *qce )
       O.firstWidget()->setFocus();
   }
   else if ( qce->type() == QEvent::User+12 ) {
-    clearFocus();
+    topLevelWidget()->setFocus();
   }
   else
     RePro::customEvent( qce );

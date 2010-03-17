@@ -122,7 +122,7 @@ void SpectrumAnalyzer::notify( void )
     P.setYRange( PMin, 0.0 );
   }
   else {
-    if ( traces().size() > 0 )
+    if ( Trace >= 0 && Trace < traces().size() )
       P.setYLabel( trace( Trace ).ident() + " [" + trace( Trace ).unit() + "]" );
     else
       P.setYLabel( "Amplitude" );

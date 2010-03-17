@@ -250,7 +250,7 @@ void SetDC::customEvent( QCustomEvent *qce )
 	     this, SLOT( setValue( double ) ) );
   }
   else if ( qce->type() == QEvent::User+12 ) {
-    EW->clearFocus();
+    topLevelWidget()->setFocus();
     disconnect( EW, SIGNAL( valueChanged( double ) ),
 		this, SLOT( setValue( double ) ) );
   }

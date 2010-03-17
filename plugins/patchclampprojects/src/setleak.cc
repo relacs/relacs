@@ -225,7 +225,7 @@ int SetLeak::main( void )
     Change = false;
     Reset = false;
     sleepWait();
-    postCustomEvent( 12 ); // STW.clearFocus();
+    postCustomEvent( 12 ); // clearFocus();
     // set new values:
     if ( Change ) {
       g = Reset ? 0.0 : number( "gdc" );
@@ -299,7 +299,7 @@ void SetLeak::customEvent( QCustomEvent *qce )
       STW.firstWidget()->setFocus();
   }
   else if ( qce->type() == QEvent::User+12 ) {
-    clearFocus();
+    topLevelWidget()->setFocus();
   }
   else if ( qce->type() == QEvent::User+13 ) {
     STW.updateValues();
