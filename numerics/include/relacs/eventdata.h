@@ -566,12 +566,12 @@ public:
 	then the current value of the running average of the event sizes
 	is returned. */
   double meanSize( double tbegin, double tend ) const;
-    /*! Mean size of events since \a time seconds until the last event.
+    /*! Mean size of events since \a time seconds before the last event.
         If there are no events within this time interval zero is returned.
         If the event sizes of the events are not stored 
 	then the current value of the running average of the event sizes
 	is returned. */
-  double meanSize( double time ) const { return meanSize( time, back() - time ); };
+  double meanSize( double time ) const { return meanSize( back() - time, back() ); };
     /*! Mean size of detected events. */
   double meanSize( void ) const { return MeanSize; }
     /*! Set mean event size to \a meansize. */

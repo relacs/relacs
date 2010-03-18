@@ -295,6 +295,7 @@ int BaselineActivity::main( void )
 						      trace( LocalEODTrace[0] ).currentTime() );
       if ( val2 > 0.0 )
 	adjustGain( trace( LocalEODTrace[0] ), 1.25 * val2 );
+
       activateGains();
     }
 

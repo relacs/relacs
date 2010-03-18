@@ -908,6 +908,7 @@ int RELACSWidget::write( OutData &signal )
     unlockSignals();
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     AQ->readRestart( IL, ED );
+    FD->adjust( IL, ED, AQ->adjustFlag() );
     // update device menu:
     QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
     SF->setNumber( AQ->outTraceName( signal.trace() ), signal.back() );
@@ -917,7 +918,7 @@ int RELACSWidget::write( OutData &signal )
   if ( IL.failed() )
     printlog( "! error in restarting analog input: " + IL.errorText() );
   return r;
-}
+ }
 
 
 int RELACSWidget::write( OutList &signal )
@@ -952,6 +953,7 @@ int RELACSWidget::write( OutList &signal )
     unlockSignals();
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     AQ->readRestart( IL, ED );
+    FD->adjust( IL, ED, AQ->adjustFlag() );
     // update device menu:
     QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
     for ( int k=0; k<signal.size(); k++ )
@@ -996,6 +998,7 @@ int RELACSWidget::directWrite( OutData &signal )
     unlockSignals();
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     AQ->readRestart( IL, ED );
+    FD->adjust( IL, ED, AQ->adjustFlag() );
     // update device menu:
     QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
     SF->setNumber( AQ->outTraceName( signal.trace() ), signal.back() );
@@ -1039,6 +1042,7 @@ int RELACSWidget::directWrite( OutList &signal )
     unlockSignals();
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     AQ->readRestart( IL, ED );
+    FD->adjust( IL, ED, AQ->adjustFlag() );
     // update device menu:
     QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
     for ( int k=0; k<signal.size(); k++ )

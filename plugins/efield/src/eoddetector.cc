@@ -68,6 +68,7 @@ int EODDetector::init( const InData &data, EventData &outevents,
   outevents.setSizeUnit( data.unit() );
   outevents.setSizeFormat( "%6.2f" );
   adjust( data );
+  Threshold = MinThresh;
   D.init( data.begin(), data.end(), data.timeBegin() );
   return 0;
 }
@@ -78,8 +79,9 @@ void EODDetector::notify( void )
   // no lock is needed, since the Options functions should already be locked!
   Parameter &p = operator[]( "ratio" );
   if ( p.changed() ) {
+    double oldratio = ThreshRatio;
     ThreshRatio = number( "ratio" );
-    double th = ThreshRatio * MaxThresh;
+    double th = ThreshRatio * Threshold / oldratio;
     Threshold = floor( th / MinThresh ) * MinThresh;
     setNumber( "threshold", Threshold );
   }
@@ -99,8 +101,6 @@ int EODDetector::adjust( const InData &data )
   unsetNotify();
   MaxThresh = ceil10( data.maxValue(), 0.1 );
   MinThresh = floor10( 0.05 * MaxThresh );
-  double th = ThreshRatio * MaxThresh;
-  Threshold = floor( th / MinThresh ) * MinThresh;
   setUnit( "threshold", data.unit() );
   setMinMax( "threshold", MinThresh, MaxThresh, MinThresh );
   setNumber( "threshold", Threshold );
@@ -145,6 +145,10 @@ int EODDetector::checkEvent( const InData::const_iterator &first,
   if ( event+1 >= last ) {
     // resume:
     return -1;
+  }
+  if ( event-1 < first ) {
+    // discard:
+    return 0;
   }
 
   // threshold for EOD time:
@@ -196,6 +200,9 @@ int EODDetector::checkEvent( const InData::const_iterator &first,
 
   // width:
   width = 0.0;
+
+  // threshold:
+  threshold = ThreshRatio * ( *event - *prevevent );
 
   // accept:
   return 1; 

@@ -1251,6 +1251,10 @@ bool Acquire::gainChanged( void ) const
 
 int Acquire::activateGains( void )
 {
+  // clear adjust-flags:
+  for ( unsigned int i=0; i<AI.size(); i++ )
+    AI[i].Traces.delMode( AdjustFlag );
+
   if ( ! gainChanged() )
     return 0;
 
@@ -1690,8 +1694,12 @@ int Acquire::write( OutData &signal )
     vector< AOData* > aod( 1, &AO[di] );
     restartRead( aod, false, true );
   }
-  else
+  else {
+    // clear adjust-flags:
+    for ( unsigned int i=0; i<AI.size(); i++ )
+      AI[i].Traces.delMode( AdjustFlag );
     AO[di].AO->startWrite();
+  }
 
   // error?
   if ( signal.failed() ) {
@@ -1920,6 +1928,9 @@ int Acquire::write( OutList &signal )
       success = false;
   }
   else {
+    // clear adjust-flags:
+    for ( unsigned int i=0; i<AI.size(); i++ )
+      AI[i].Traces.delMode( AdjustFlag );
     for ( unsigned int i=0; i<AO.size(); i++ ) {
       if ( AO[i].Signals.size() > 0 ) {
 	if ( AO[i].AO->startWrite() != 0 )
@@ -2050,8 +2061,12 @@ int Acquire::directWrite( OutData &signal )
       vector< AOData* > aod( 1, &AO[di] );
       restartRead( aod, true, true );
     }
-    else
+    else {
+      // clear adjust-flags:
+      for ( unsigned int i=0; i<AI.size(); i++ )
+	AI[i].Traces.delMode( AdjustFlag );
       AO[di].AO->directWrite( AO[di].Signals );
+    }
   }
 
   // error?
@@ -2225,6 +2240,9 @@ int Acquire::directWrite( OutList &signal )
 	success = false;
     }
     else {
+      // clear adjust-flags:
+      for ( unsigned int i=0; i<AI.size(); i++ )
+	AI[i].Traces.delMode( AdjustFlag );
       for ( unsigned int i=0; i<AO.size(); i++ ) {
 	if ( AO[i].Signals.size() > 0 ) {
 	  if ( AO[i].AO->directWrite( AO[i].Signals ) != 0 )

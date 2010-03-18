@@ -189,8 +189,8 @@ int BeatDetector::checkTrough( const EventSizeIterator &first,
   size = *event;
 
   // update threshold:
-  double r = 0.01;
-  double diff = 2.0 * (outevents[1].meanSize() - size);
+  double r = 0.2;
+  double diff = fabs(outevents[0].backSize() - size);
   Threshold = (1.0-r)*Threshold + r*Ratio*diff;
 
   // chirps:

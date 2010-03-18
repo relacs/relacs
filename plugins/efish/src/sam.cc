@@ -341,7 +341,8 @@ int SAM::main( void )
   }
 
   // adjust transdermal EOD:
-  double val2 = trace( LocalEODTrace[0] ).maxAbs( trace( LocalEODTrace[0] ).currentTime()-0.1, 0.1 );
+  double val2 = trace( LocalEODTrace[0] ).maxAbs( trace( LocalEODTrace[0] ).currentTime()-0.1,
+						  trace( LocalEODTrace[0] ).currentTime() );
   if ( val2 > 0.0 )
     adjustGain( trace( LocalEODTrace[0] ), ( 1.0 + Contrast ) * val2 );
 
@@ -362,7 +363,7 @@ int SAM::main( void )
     // stimulus intensity:
     Intensity = Contrast * FishAmplitude * IntensityGain;
     Signal->setIntensity( Intensity );
-    detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", Signal->intensity() );
+    detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", 1.5*Signal->intensity() );
 
     // output signal:
     write( *Signal );
@@ -450,7 +451,8 @@ int SAM::main( void )
 	      trace( NerveTrace[0] ).signalTime()+Duration+Pause,
 	      0.8 );
     if ( GlobalEFieldTrace >= 0 ) {
-      double v = trace( GlobalEFieldTrace ).maxAbs( trace( GlobalEFieldTrace ).signalTime(), trace( GlobalEFieldTrace ).signalTime()+Duration );
+      double v = trace( GlobalEFieldTrace ).maxAbs( trace( GlobalEFieldTrace ).signalTime(),
+						    trace( GlobalEFieldTrace ).signalTime()+Duration+Pause );
       adjustGain( trace( GlobalEFieldTrace ), 1.05 * v );
       detectorEventsOpts( GlobalEFieldEvents ).setNumber( "threshold", 0.5*v );
     }

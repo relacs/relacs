@@ -156,7 +156,7 @@ int CalibEField::main( void )
   int intensitycount = 0;
 
   if ( fish )
-    detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", 0.5*minintensityfrac*fishamplitude );
+    detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", 0.25*minintensityfrac*fishamplitude );
 
   // plot trace:
   plotToggle( true, true, duration, 0.0 );
@@ -381,8 +381,8 @@ void CalibEField::analyze( double duration, double maxcontrast,
       double offset = 10.0/fishrate;
       double min, max;
       localeod.minMaxSize( localeod.signalTime() + offset,
-		       localeod.signalTime() + duration - offset,
-		       min, max );
+			   localeod.signalTime() + duration - offset,
+			   min, max );
       Str s = "NO beat: min=" + Str( min );
       s += " max=" + Str( max );
       message( s );
