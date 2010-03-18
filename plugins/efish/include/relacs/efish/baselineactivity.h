@@ -90,28 +90,25 @@ public:
   virtual int main( void );
 
     /*! Save all spikes of the whole run of PUnitSearch. */
-  void saveSpikes( int trace, const EventList &spikes );
+  void saveSpikes( int trace, const Options &header, const EventList &spikes );
     /*! Save the interspike interval histogram. */
-  void saveISIH( int trace, const vector<SampleDataD> &isih );
+  void saveISIH( int trace, const Options &header, const vector<SampleDataD> &isih );
     /*! Save the cyclic spike rate. */
-  void saveRate( int trace, const vector<SampleDataD> &spikerate,
+  void saveRate( int trace, const Options &header, const vector<SampleDataD> &spikerate,
 		 const SampleDataD &eodcycle );
     /*! Save potential of the nerve recording for the whole run of PUnitSearch. */
-  void saveNerve( const MapD &nerveamplp,
-		  const MapD &nerveamplt,
-		  const MapD &nerveamplm );
+  void saveNerve( const Options &header, const MapD &nerveamplp,
+		  const MapD &nerveamplt, const MapD &nerveamplm );
     /*! Save the fishes EOD waveform. */
-  void saveEODTrace( double eodduration );
+  void saveEODTrace( const Options &header, double eodduration );
     /*! Save the fishes EOD times. */
-  void saveEODTimes( const EventData &eodtimes );
+  void saveEODTimes( const Options &header, const EventData &eodtimes );
     /*! Save results data. */
   void save( bool saveeodtrace, double eodduration, bool saveeodtimes,
 	     const EventData &eodtimes, const SampleDataD &eodcycle,
 	     const EventList &spikes, const vector<SampleDataD> &isih,
-	     const vector<SampleDataD> &spikerate,
-	     const MapD &nerveamplp,
-	     const MapD &nerveamplt,
-	     const MapD &nerveamplm );
+	     const vector<SampleDataD> &spikerate, const MapD &nerveamplp,
+	     const MapD &nerveamplt, const MapD &nerveamplm );
 
   void plot( const SampleDataD &eodcycle,
 	     const vector< vector< ArrayD > > &eodspikes,
@@ -135,7 +132,9 @@ private:
   int Repeats;
 
   double FirstSignal;
+  double LastSignal;
   double SearchDuration;
+  int LastEODInx;
 
   double FRate[MaxSpikeTraces];
   double CV[MaxSpikeTraces];
@@ -147,8 +146,6 @@ private:
   double EODPeriod;
   double EODRate;
   string EOD2Unit;
-
-  Options Header;
 
   MultiPlot P;
 

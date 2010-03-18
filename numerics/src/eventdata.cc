@@ -798,6 +798,175 @@ void EventData::assign( const ArrayD &times,
 }
 
 
+void EventData::append( const EventData &events, double tbegin, double tend )
+{
+  long n = events.next( tbegin );
+  long p = events.previous( tend );
+  long ns = p - n + 1;
+  if ( p < n || p < 0 ) 
+    ns = 0;
+
+  long nn = size();
+  if ( ! Cyclic )
+    reserve( nn + ns );
+
+  // nothing was assigend yet:
+  if ( Range.offset() == -HUGE_VAL ) {
+    Index = 0;
+    Cycles = 0;
+    R = 0;
+    Mode = events.Mode;
+    Ident = events.Ident;
+    SizeName = events.SizeName;
+    SizeScale = events.SizeScale;
+    SizeUnit = events.SizeUnit;
+    SizeFormat = events.SizeFormat;
+    WidthName = events.WidthName;
+    WidthScale = events.WidthScale;
+    WidthUnit = events.WidthUnit;
+    WidthFormat = events.WidthFormat;
+  }
+
+  if ( ns > 0 && NBuffer > 0 ) {
+    for ( long k=0; k<ns; k++ ) {
+      if ( R >= NBuffer ) {
+	if ( Cyclic ) {
+	  // set indices for new cycle:
+	  R = 0;
+	  Index += NBuffer;
+	  Cycles++;
+	}
+	else {
+	  ns = k;
+	  break;
+	}
+      }
+      TimeBuffer[R] = events[n+k];
+      if ( UseSizeBuffer )
+	SizeBuffer[R] = events.eventSize( n + k );
+      if ( UseWidthBuffer )
+	WidthBuffer[R] = events.eventWidth( n + k );
+      R++;
+    }
+  }
+
+  MeanRatio = events.MeanRatio;
+  if ( UseSizeBuffer ) {
+    MeanSize = 0.0;
+    for ( long k=0; k<ns; k++ )
+      MeanSize += ( SizeBuffer[nn+k] - MeanSize ) / ( k+1 );
+  }
+  else
+    MeanSize = events.MeanSize;
+  if ( UseWidthBuffer ) {
+    MeanWidth = 0.0;
+    for ( long k=0; k<ns; k++ )
+      MeanWidth += ( WidthBuffer[nn+k] - MeanWidth ) / ( k+1 );
+  }
+  else
+    MeanWidth = events.MeanWidth;
+  if ( ns > 1 )
+    MeanInterval = ( TimeBuffer[nn+ns-1] - TimeBuffer[nn] ) / ( ns - 1 );
+  else
+    MeanInterval = MaxInterval;
+  MeanQuality = events.MeanQuality;
+
+  if ( Range.offset() == -HUGE_VAL ) {
+    Range = events.Range;
+    Range.setOffset( tbegin );
+  }
+  Range.setLength( tend );
+  SignalTime = events.SignalTime > -HUGE_VAL ? events.SignalTime : -HUGE_VAL;
+  ErrorMessage = "";
+  Dummy = 0.0;
+}
+
+
+void EventData::append( const EventData &events, double tbegin, 
+			double tend, double tref )
+{
+  long n = events.next( tbegin );
+  long p = events.previous( tend );
+  long ns = p - n + 1;
+  if ( p < n || p < 0 ) 
+    ns = 0;
+
+  long nn = size();
+  if ( ! Cyclic )
+    reserve( nn + ns );
+
+  // nothing was assigend yet:
+  if ( Range.offset() == -HUGE_VAL ) {
+    Index = 0;
+    Cycles = 0;
+    R = 0;
+    Mode = events.Mode;
+    Ident = events.Ident;
+    SizeName = events.SizeName;
+    SizeScale = events.SizeScale;
+    SizeUnit = events.SizeUnit;
+    SizeFormat = events.SizeFormat;
+    WidthName = events.WidthName;
+    WidthScale = events.WidthScale;
+    WidthUnit = events.WidthUnit;
+    WidthFormat = events.WidthFormat;
+  }
+
+  if ( ns > 0 && NBuffer > 0 ) {
+    for ( long k=0; k<ns; k++ ) {
+      if ( R >= NBuffer ) {
+	if ( Cyclic ) {
+	  // set indices for new cycle:
+	  R = 0;
+	  Index += NBuffer;
+	  Cycles++;
+	}
+	else {
+	  ns = k;
+	  break;
+	}
+      }
+      TimeBuffer[R] = events[n+k] - tref;
+      if ( UseSizeBuffer )
+	SizeBuffer[R] = events.eventSize( n + k );
+      if ( UseWidthBuffer )
+	WidthBuffer[R] = events.eventWidth( n + k );
+      R++;
+    }
+  }
+
+  MeanRatio = events.MeanRatio;
+  if ( UseSizeBuffer ) {
+    MeanSize = 0.0;
+    for ( long k=0; k<ns; k++ )
+      MeanSize += ( SizeBuffer[nn+k] - MeanSize ) / ( k+1 );
+  }
+  else
+    MeanSize = events.MeanSize;
+  if ( UseWidthBuffer ) {
+    MeanWidth = 0.0;
+    for ( long k=0; k<ns; k++ )
+      MeanWidth += ( WidthBuffer[nn+k] - MeanWidth ) / ( k+1 );
+  }
+  else
+    MeanWidth = events.MeanWidth;
+  if ( ns > 1 )
+    MeanInterval = ( TimeBuffer[nn+ns-1] - TimeBuffer[nn] ) / ( ns - 1 );
+  else
+    MeanInterval = MaxInterval;
+  MeanQuality = events.MeanQuality;
+
+  if ( Range.offset() == -HUGE_VAL ) {
+    Range = events.Range;
+    Range.setOffset( tbegin - tref );
+  }
+  Range.setLength( tend - tref );
+  SignalTime = events.SignalTime > -HUGE_VAL ? events.SignalTime - tref : -HUGE_VAL;
+  ErrorMessage = "";
+  Dummy = 0.0;
+}
+
+
 void EventData::copy( double tbegin, double tend,
 		      double *events, long &nevents ) const
 {
@@ -1085,9 +1254,6 @@ void EventData::push( double time, double esize, double ewidth )
       R = 0;
       Index += NBuffer;
       Cycles++;
-#ifndef NDEBUG
-      //      cerr << "EventData('" << Ident << "')::push() -> new cycle: " << Cycles << endl;
-#endif
     }
     else {
       int n = NBuffer > 10 ? 3*NBuffer/2 : 10;
@@ -1155,15 +1321,12 @@ void EventData::push( const ArrayD &time, double esize, double ewidth )
 
   for ( int k=0; k<time.size(); k++ ) {
 
-  // new cycle?
+    // new cycle?
     if ( Cyclic && R >= NBuffer ) {
       // set indices for new cycle:
       R = 0;
       Index += NBuffer;
       Cycles++;
-#ifndef NDEBUG
-      //      cerr << "EventData('" << Ident << "')::push( ArrayD ) -> new cycle: " << Cycles << endl;
-#endif
     }
 
     // add event:

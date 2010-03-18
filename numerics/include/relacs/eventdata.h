@@ -256,6 +256,16 @@ public:
   void assign( const ArrayD &times, double tbegin=-HUGE_VAL,
 	       double tend=HUGE_VAL, double stepsize=0.0001 );
 
+    /*! Append from \a events all events between time \a tbegin
+        and time \a tend seconds to \a *this. */
+  void append( const EventData &events, double tbegin, double tend );
+    /*! Append from \a events all event times between time \a tbegin
+        and time \a tend seconds to \a *this.
+	The appended event times and the signalTime() 
+	are set relative to time \a tref. */
+  void append( const EventData &events, double tbegin, 
+	       double tend, double tref );
+
     /*! Copy event times between time \a tbegin
         and time \a tend seconds to \a events.
         The event times in \a events are set relative to \a tbegin.
