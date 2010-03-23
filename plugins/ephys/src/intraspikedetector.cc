@@ -65,7 +65,7 @@ IntraSpikeDetector::IntraSpikeDetector( const string &ident, int mode )
   addNumber( "threshold", "Detection threshold", Threshold, 0.0, 200.0, 1.0, "mV", "mV", "%.1f", 2+8+32 );
   addNumber( "abspeak", "Absolute threshold", AbsPeak, -200.0, 200.0, 1.0, "mV", "mV", "%.1f", 2+8+32 ).setActivation( "testpeak", "true" );
   addBoolean( "testwidth", "Test spike width", TestWidth ).setFlags( 0+8+32 );
-  addNumber( "maxwidth", "Maximum spike width", MaxWidth, 0.0001, 0.006, 0.0001, "sec", "ms", "%.1f", 0+8+32 ).setActivation( "testwidth", "true" );
+  addNumber( "maxwidth", "Maximum spike width", MaxWidth, 0.0001, 1.000, 0.0001, "sec", "ms", "%.1f", 0+8+32 ).setActivation( "testwidth", "true" );
   addBoolean( "fitpeak", "Fit parabula to peak of spike", FitPeak ).setFlags( 0+8+32 );
   addNumber( "fitwidth", "Width of parabula fit", FitWidth, 0.0, 0.1, 0.00001, "sec", "ms", "%.2f", 0+8+32 );
   addLabel( "Indicators", 8 );

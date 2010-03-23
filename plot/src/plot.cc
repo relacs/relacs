@@ -2028,9 +2028,13 @@ void Plot::drawLine( QPainter &paint, DataElement *d )
       }
       else {
 	f = d->lineIndex();
+	long m = d->first( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+	if ( f < m )
+	  f = m;
 	l = d->last( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
       }
     }
+    d->setLineIndex( l );
     if ( f >= l )
       return;
     long k = f;
@@ -2194,7 +2198,6 @@ void Plot::drawLine( QPainter &paint, DataElement *d )
       }
     }
     paint.flush();
-    d->setLineIndex( l );
   }
 }
 
