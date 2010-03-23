@@ -648,16 +648,16 @@ void FICurve::Data::analyze( int count, const InData &intrace,
     RateSD = SampleDataD( -delay, 2.0*duration, 0.001, 0.0 );
     Spikes.reserve( 100 );
     if ( incurrent != 0 )
-      MeanCurrent = SampleDataD( -delay, duration, incurrent->stepsize(), 0.0 );
+      MeanCurrent = SampleDataD( -delay, 2.0*duration, incurrent->stepsize(), 0.0 );
   }
 
   // voltage trace:
-  Voltage.push_back( SampleDataF( -delay, duration, intrace.stepsize(), 0.0F ) );
+  Voltage.push_back( SampleDataF( -delay, 2.0*duration, intrace.stepsize(), 0.0F ) );
   intrace.copy( intrace.signalTime(), Voltage.back() );
 
   // current trace:
   if ( incurrent != 0 ) {
-    Current.push_back( SampleDataF( -delay, duration, incurrent->stepsize(), 0.0F ) );
+    Current.push_back( SampleDataF( -delay, 2.0*duration, incurrent->stepsize(), 0.0F ) );
     incurrent->copy( incurrent->signalTime(), Current.back() );
     Current.back() *= iinfac;
     int inx = incurrent->signalIndex() - MeanCurrent.index( 0.0 );
