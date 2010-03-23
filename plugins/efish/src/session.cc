@@ -161,15 +161,15 @@ void Session::initialize( void )
 
 void Session::config( void )
 {
+  lockMetaData();
+
   // additional meta data properties:
   if ( ! metaData().exist( "Cell" ) )
     metaData().add( "Cell", "Cell" );
 
-  lockMetaData();
   Options &mo = metaData( "Cell" );
   mo.unsetNotify();
   mo.addLabel( "Cell properties" );
-  mo.addText( "Side", "Side", "Left" );
   // following options are set by the BaselineActivity RePro
   mo.addNumber( "EOD Frequency", "EOD Frequency", 0.0, 0.0, 2000.0, 10.0, "Hz", "Hz", "%0.0f" );
   for ( int k=0; k<SpikeTraces; k++ ) {
@@ -180,6 +180,7 @@ void Session::config( void )
     }
   }
   mo.setNotify();
+
   unlockMetaData();
 }
 

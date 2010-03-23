@@ -375,15 +375,16 @@ int SAM::main( void )
     }
 
     // meassage: 
-    Str s = "Contrast: <b>" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%</b>";
+    Str s = AM ? "SAM" : ( FreqAbs ? "Direct" : "EOD" );
+      s += ":  Contrast: <b>" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%</b>";
     s += "  Delta F: <b>" + Str( DeltaF, 0, 1, 'f' ) + "Hz</b>";
     s += "  Loop: <b>" + Str( Count+1 ) + "</b>";
     message( s );
 
     sleep( Signal->duration() );
     if ( interrupt() ) {
-      stop();
       save();
+      stop();
       return Aborted;
     }
 
@@ -397,8 +398,8 @@ int SAM::main( void )
 	write( *Signal );
 	sleep( Signal->duration() );
 	if ( interrupt() ) {
-	  stop();
 	  save();
+	  stop();
 	  return Aborted;
 	}
 	// trigger:
@@ -409,8 +410,8 @@ int SAM::main( void )
 	write( *Signal );
 	sleep( Signal->duration() );
 	if ( interrupt() ) {
-	  stop();
 	  save();
+	  stop();
 	  return Aborted;
 	}
       }
@@ -431,8 +432,8 @@ int SAM::main( void )
 
     sleepOn( Signal->duration() + Pause );
     if ( interrupt() ) {
-      stop();
       save();
+      stop();
       return Aborted;
     }
     timeStamp();
@@ -493,6 +494,8 @@ int SAM::main( void )
 
   }
 
+  save();
+  stop();
   return Completed;
 }
 

@@ -74,6 +74,7 @@ DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   int strongstyle = OptWidget::ValueLarge + OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack;
   addLabel( "Detector", 8 );
   addNumber( "minthresh", "Minimum threshold", MinThresh, 0.0, 200.0, 0.5, "mV", "mV", "%.1f", 2+8+32 );
+  addNumber( "maxthresh", "Maximum threshold", MaxThresh, 0.0, 200.0, 0.5, "mV", "mV", "%.1f", 8+32 );
   addNumber( "threshold", "Threshold", Threshold, 0.0, 200.0, 1.0, "mV", "mV", "%.1f", 2+4+32 );
   addNumber( "delay", "Delay time", Delay, 0.0, 1000.0, 1.0, "sec", "sec", "%.0f", 0+8+32 );
   addNumber( "decay", "Decay time constant", Decay, 0.0, 1000.0, 1.0,  "sec", "sec", "%.0f", 0+8+32 );
@@ -109,6 +110,7 @@ DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   setDialogReadOnlyMask( 16 );
   setConfigSelectMask( -32 );
 
+  MaxRangeThresh = 100.0;
   LastSize = 0;
   LastTime = 0.0;
   Update.start();
@@ -358,6 +360,7 @@ void DynamicSUSpikeDetector::notify( void )
 {
   Threshold = number( "threshold" );
   MinThresh = number( "minthresh" );
+  MaxThresh = number( "maxthresh" );
   Delay = number( "delay" );
   Decay = number( "decay" );
   Ratio = number( "ratio" );
@@ -392,6 +395,8 @@ void DynamicSUSpikeDetector::notify( void )
     } while ( pre < 8 && fabs( resolution ) > 1.0e-8 );
     setStep( "minthresh", SizeResolution );
     setFormat( "minthresh", 4+pre, pre, 'f' );
+    setStep( "maxthresh", SizeResolution );
+    setFormat( "maxthresh", 4+pre, pre, 'f' );
     setFormat( "threshold", 4+pre, pre, 'f' );
     setFormat( "size", 4+pre, pre, 'f' );
     SDW.updateSettings( "minthresh" );
@@ -406,7 +411,7 @@ void DynamicSUSpikeDetector::notify( void )
 
 int DynamicSUSpikeDetector::adjust( const InData &data )
 {
-  MaxThresh = ceil10( 2.0*data.maxValue(), 0.1 );
+  MaxRangeThresh = ceil10( 2.0*data.maxValue(), 0.1 );
   return 0;
 }
 
@@ -476,7 +481,8 @@ int DynamicSUSpikeDetector::detect( const InData &data, EventData &outevents,
   FitIndices = data.indices( FitWidth );
 
   D.dynamicPeakHist( data.minBegin(), data.end(), outevents,
-		     Threshold, MinThresh, MaxThresh,
+		     Threshold, MinThresh,
+		     MaxThresh < MaxRangeThresh ? MaxThresh : MaxRangeThresh,
 		     Delay, Decay, *this );
 
   // update mean spike size in case of no spikes:

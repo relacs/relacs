@@ -113,7 +113,6 @@ MetaDataRecordingSection::MetaDataRecordingSection( bool tab,
 						    RELACSWidget *rw )
   : MetaDataSection( "Recording", RELACSPlugin::Plugins, tab, md, rw )
 {
-  MD->addSaveFlags( standardFlag() );
   clear();
 }
 

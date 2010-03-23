@@ -123,6 +123,8 @@ protected:
   double MinThresh;
     /*! Maximum value for the threshold detecting spikes. */
   double MaxThresh;
+    /*! Maximum value for the threshold detecting spikes according to the input range. */
+  double MaxRangeThresh;
     /*! Delay of the threshold dynamics in seconds. */
   double Delay;
     /*! Decay time constant of the threshold dynamics in seconds. */
