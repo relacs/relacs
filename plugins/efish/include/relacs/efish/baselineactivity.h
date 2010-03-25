@@ -149,11 +149,6 @@ private:
 
   MultiPlot P;
 
-  double SpikesFastDelay;
-  double SpikesFastDecay;
-  double SpikesSlowDelay;
-  double SpikesSlowDecay;
-
   double BeatStep;
   double ChirpMin;
   double ChirpStep;

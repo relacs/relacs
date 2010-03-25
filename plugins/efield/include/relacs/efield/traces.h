@@ -67,6 +67,10 @@ protected:
   static int LocalAMEFields;
     /*! The indices of local electric field stimulus channels (amplitude modulation). */
   static int LocalAMEField[MaxEFields];
+    /*! The number of all available electric field stimulus channels. */
+  static int EFields;
+    /*! The indices of all electric field stimulus channels. */
+  static int EField[2*MaxEFields];
 
     /*! The index of the trace recording the EOD of a fish. */
   static int EODTrace;

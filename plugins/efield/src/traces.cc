@@ -31,6 +31,8 @@ int Traces::LocalEFields = 0;
 int Traces::LocalEField[MaxEFields] = { -1, -1, -1, -1, -1, -1 };
 int Traces::LocalAMEFields = 0;
 int Traces::LocalAMEField[MaxEFields] = { -1, -1, -1, -1, -1, -1 };
+int Traces::EFields = 0;
+int Traces::EField[2*MaxEFields] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1 };
 
 int Traces::EODTrace = -1;
 int Traces::EODEvents = -1;
@@ -74,6 +76,20 @@ void Traces::initialize( const RELACSPlugin *rp,
     LocalAMEField[LocalAMEFields] = rp->outTraceIndex( "LocalEFieldAM-" + Str( k ) );
     if ( LocalAMEField[LocalAMEFields] >= 0 )
       LocalAMEFields++;
+  }
+
+  // all stimulation electrodes:
+  if ( GlobalEField >= 0 )
+    EField[EFields++] = GlobalEField;
+  if ( GlobalAMEField >= 0 )
+    EField[EFields++] = GlobalAMEField;
+  for ( int k=0; k<LocalEFields; k++ ) {
+    if ( LocalEField[k] >= 0 )
+      EField[EFields++] = LocalEField[k];
+  }
+  for ( int k=0; k<LocalAMEFields; k++ ) {
+    if ( LocalAMEField[k] >= 0 )
+      EField[EFields++] = LocalAMEField[k];
   }
 				    
   // global EOD:

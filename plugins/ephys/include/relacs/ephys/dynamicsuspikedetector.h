@@ -47,6 +47,8 @@ namespace ephys {
 - \c threshold=10mV: Threshold (\c number)
 - \c delay=1sec: Delay time (\c number)
 - \c decay=10sec: Decay time constant (\c number)
+- \c searchdelay=1sec: Delay time for inbetween the recording sessions (\c number)
+- \c searchdecay=10sec: Decay time constant for inbetween the recording sessions (\c number)
 - \c ratio=50%: Ratio threshold / size (\c number)
 - \c testwidth=true: Test spike width (\c boolean)
 - \c maxwidth=1.5ms: Maximum spike width (\c number)
@@ -126,9 +128,13 @@ protected:
     /*! Maximum value for the threshold detecting spikes according to the input range. */
   double MaxRangeThresh;
     /*! Delay of the threshold dynamics in seconds. */
-  double Delay;
+  double RecordingDelay;
     /*! Decay time constant of the threshold dynamics in seconds. */
-  double Decay;
+  double RecordingDecay;
+    /*! Delay of the threshold dynamics in seconds. */
+  double SearchDelay;
+    /*! Decay time constant of the threshold dynamics in seconds. */
+  double SearchDecay;
 
     /*! Test spike width? */
   bool TestWidth;

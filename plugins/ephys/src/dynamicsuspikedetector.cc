@@ -50,8 +50,10 @@ DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   Threshold = 10.0;
   MinThresh = 10.0;
   MaxThresh = 100.0;
-  Delay = 1.0;
-  Decay = 10.0;
+  RecordingDelay = 1.0;
+  RecordingDecay = 10.0;
+  SearchDelay = 1.0;
+  SearchDecay = 10.0;
   TestWidth = true;
   MaxWidth = 0.0015;
   TestInterval = true;
@@ -76,8 +78,10 @@ DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   addNumber( "minthresh", "Minimum threshold", MinThresh, 0.0, 200.0, 0.5, "mV", "mV", "%.1f", 2+8+32 );
   addNumber( "maxthresh", "Maximum threshold", MaxThresh, 0.0, 200.0, 0.5, "mV", "mV", "%.1f", 8+32 );
   addNumber( "threshold", "Threshold", Threshold, 0.0, 200.0, 1.0, "mV", "mV", "%.1f", 2+4+32 );
-  addNumber( "delay", "Delay time", Delay, 0.0, 1000.0, 1.0, "sec", "sec", "%.0f", 0+8+32 );
-  addNumber( "decay", "Decay time constant", Decay, 0.0, 1000.0, 1.0,  "sec", "sec", "%.0f", 0+8+32 );
+  addNumber( "delay", "Delay time", RecordingDelay, 0.0, 1000.0, 1.0, "sec", "sec", "%.0f", 0+8+32 );
+  addNumber( "decay", "Decay time constant", RecordingDecay, 0.0, 1000.0, 1.0,  "sec", "sec", "%.0f", 0+8+32 );
+  addNumber( "searchdelay", "Delay time used inbetween the recordings", SearchDelay, 0.0, 1000.0, 1.0, "sec", "sec", "%.0f", 0+8+32 );
+  addNumber( "searchdecay", "Decay time constant used inbetween the recordings", SearchDecay, 0.0, 1000.0, 1.0,  "sec", "sec", "%.0f", 0+8+32 );
   addNumber( "ratio", "Ratio threshold / size", Ratio, 0.0, 1.0, 0.05, "1", "%", "%.0f",  2+8+32 );
   addBoolean( "testwidth", "Test spike width", TestWidth ).setFlags( 0+8+32 );
   addNumber( "maxwidth", "Maximum spike width", MaxWidth, 0.0001, 0.006, 0.0001, "sec", "ms", "%.1f", 0+8+32 ).setActivation( "testwidth", "true" );
@@ -361,8 +365,10 @@ void DynamicSUSpikeDetector::notify( void )
   Threshold = number( "threshold" );
   MinThresh = number( "minthresh" );
   MaxThresh = number( "maxthresh" );
-  Delay = number( "delay" );
-  Decay = number( "decay" );
+  RecordingDelay = number( "delay" );
+  RecordingDecay = number( "decay" );
+  SearchDelay = number( "searchdelay" );
+  SearchDecay = number( "searchdecay" );
   Ratio = number( "ratio" );
   TestWidth = boolean( "testwidth" );
   MaxWidth = number( "maxwidth" );
@@ -480,10 +486,13 @@ int DynamicSUSpikeDetector::detect( const InData &data, EventData &outevents,
 {
   FitIndices = data.indices( FitWidth );
 
+  double delay = sessionRunning() ? RecordingDelay : SearchDelay;
+  double decay = sessionRunning() ? RecordingDecay : SearchDecay;
+
   D.dynamicPeakHist( data.minBegin(), data.end(), outevents,
 		     Threshold, MinThresh,
 		     MaxThresh < MaxRangeThresh ? MaxThresh : MaxRangeThresh,
-		     Delay, Decay, *this );
+		     delay, decay, *this );
 
   // update mean spike size in case of no spikes:
   if ( StimulusRequired && stimuli.size() > 0 ) {

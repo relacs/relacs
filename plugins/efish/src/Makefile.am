@@ -8,7 +8,8 @@ pluginlib_LTLIBRARIES = \
     libefishsession.la \
     libefishpunitmodel.la \
     libefishsam.la \
-    libefishficurve.la
+    libefishficurve.la \
+    libefishfilestimulus.la
 
 
 
@@ -180,12 +181,47 @@ libefishficurve_la_include_HEADERS = $(HEADER_PATH)/ficurve.h
 
 
 
+libefishfilestimulus_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../../ephys/include \
+    -I$(srcdir)/../../efield/include \
+    -I$(srcdir)/../include \
+    $(QT3_CPPFLAGS)
+
+libefishfilestimulus_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT3_LDFLAGS)
+
+libefishfilestimulus_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(builddir)/../../ephys/src/libephystraces.la \
+    $(builddir)/../../efield/src/libefieldtraces.la \
+    $(builddir)/../../efield/src/libefieldeodtools.la \
+    $(QT3_LIBS)
+
+$(libefishfilestimulus_la_OBJECTS) : moc_filestimulus.cc
+
+libefishfilestimulus_la_SOURCES = filestimulus.cc
+
+libefishfilestimulus_la_includedir = $(pkgincludedir)/efish
+
+libefishfilestimulus_la_include_HEADERS = $(HEADER_PATH)/filestimulus.h
+
+
+
 check_PROGRAMS = \
     linktest_libefishbaselineactivity_la \
     linktest_libefishsession_la \
     linktest_libefishpunitmodel_la \
     linktest_libefishsam_la \
-    linktest_libefishficurve_la
+    linktest_libefishficurve_la \
+    linktest_libefishfilestimulus_la
 
 linktest_libefishbaselineactivity_la_SOURCES = linktest.cc
 linktest_libefishbaselineactivity_la_LDADD = libefishbaselineactivity.la
@@ -201,5 +237,8 @@ linktest_libefishsam_la_LDADD = libefishsam.la
 
 linktest_libefishficurve_la_SOURCES = linktest.cc
 linktest_libefishficurve_la_LDADD = libefishficurve.la
+
+linktest_libefishfilestimulus_la_SOURCES = linktest.cc
+linktest_libefishfilestimulus_la_LDADD = libefishfilestimulus.la
 
 TESTS = $(check_PROGRAMS)

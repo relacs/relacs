@@ -198,7 +198,8 @@ void Session::sessionStarted( void )
 void Session::sessionStopped( bool saved )
 {
   SessionButton->setText( "Cell Found (Enter)" );
-  saveEOD();
+  if ( saved )
+    saveEOD();
 }
 
 

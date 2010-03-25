@@ -1346,17 +1346,17 @@ void RELACSWidget::stopSession( bool saved )
 
   MTDT.save();
 
-  if ( saved )
-    SF->completeFiles();
-  else 
-    SF->deleteFiles();
-
   if ( MD != 0 )
     MD->sessionStopped( saved );
   FD->sessionStopped( saved );
   for ( unsigned int k=0; k<CN.size(); k++ )
     CN[k]->sessionStopped( saved );
   RP->sessionStopped( saved );
+
+  if ( saved )
+    SF->completeFiles();
+  else 
+    SF->deleteFiles();
 
   CurrentRePro->setSaving( SF->filesOpen() );
 

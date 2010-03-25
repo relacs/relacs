@@ -41,10 +41,6 @@ BaselineActivity::BaselineActivity( void )
   // parameter:
   Duration = 0.3;
   Repeats = 0;
-  SpikesFastDelay = 1.0;
-  SpikesFastDecay = 4.0;
-  SpikesSlowDelay = 1.0;
-  SpikesSlowDecay = 10.0;
   BeatStep = 0.01;  // should not be smaller than the factor in BeatDetector::adjust()!
   ChirpStep = 2.0;
   ChirpMin = 10.0;
@@ -227,15 +223,6 @@ int BaselineActivity::main( void )
   nerveamplm.clear();
 
   if ( autodetect > 0 && Repeats <= 0 ) {
-    // setup Spike Detector:
-    for ( int k=0; k<MaxSpikeTraces; k++ ) {
-      if ( SpikeEvents[k] >= 0 ) {
-	lockDetectorEvents( SpikeEvents[k] );
-	detectorEventsOpts( SpikeEvents[k] ).setNumber( "delay", SpikesFastDelay );
-	detectorEventsOpts( SpikeEvents[k] ).setNumber( "decay", SpikesFastDecay );
-	unlockDetectorEvents( SpikeEvents[k] );
-      }
-    }
     // setup Beat detector:
     if ( LocalBeatPeakEvents[0] >= 0 && 
 	 ( totalRuns() <= 0 || autodetect > 1 ) ) {
@@ -255,6 +242,17 @@ int BaselineActivity::main( void )
     }
   }
 
+  // reset all outputs:
+  OutList sigs;
+  for ( int k=0; k<EFields; k++ ) {
+    OutData sig( 0.0 );
+    sig.setTrace( EField[k] );
+    sig.setIdent( "init" );
+    sig.mute();
+    sigs.push( sig );
+  }
+  write( sigs );
+    
   // trigger:
   // XXX  setupTrigger( traces(), events() );
 
@@ -310,17 +308,6 @@ int BaselineActivity::main( void )
   setMessage();
   save( saveeodtrace, eodduration, saveeodtimes, eodtimes, eodcycle,
 	spikes, isih, spikerate, nerveamplp, nerveamplt, nerveamplm );
-
-  if ( autodetect > 0 && Repeats <= 0 ) {
-    for ( int k=0; k<MaxSpikeTraces; k++ ) {
-      if ( SpikeEvents[k] >= 0 ) {
-	lockDetectorEvents( SpikeEvents[k] );
-	detectorEventsOpts( SpikeEvents[k] ).setNumber( "delay", SpikesSlowDelay );
-	detectorEventsOpts( SpikeEvents[k] ).setNumber( "decay", SpikesSlowDecay );
-	unlockDetectorEvents( SpikeEvents[k] );
-      }
-    }
-  }
 
   return Completed;
 }
