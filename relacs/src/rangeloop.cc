@@ -891,24 +891,24 @@ const RangeLoop &RangeLoop::operator++( void )
   // increment singlerepeat:
   SingleRepeatCount++;
   if ( SingleRepeatCount >= SingleRepeat ||
+       Index < 0 ||
+       Index >= (int)Indices.size() ||
        Elements[Indices[Index]].Skip ||
        Elements[Indices[Index]].Count >= maxBlockCount() ) {
 
     SingleRepeatCount = 0;
 
     // increment sequence:
-    int n = 0;
     do {
       // increment:
       Index++;
       
       // next block loop:
-      if ( Index >= (int)Indices.size() ) {
+      if ( Index == 0 || Index >= (int)Indices.size() ) {
 	Index = 0;
 	BlockRepeatCount++;
 
-	if ( BlockRepeatCount >= BlockRepeat ||
-	     n >= (int)Indices.size() ) { // all elements have the skip flag set:
+	if ( BlockRepeatCount >= BlockRepeat ) {
 	  BlockRepeatCount = 0;
 
 	  do {
@@ -937,11 +937,8 @@ const RangeLoop &RangeLoop::operator++( void )
 	    initSequence( StartPos );
 
 	  } while ( Indices.size() == 0 );
-	  n = 0;
 	}
       }
-
-      n++;
       
     } while ( Elements[Indices[Index]].Skip ||
 	      Elements[Indices[Index]].Count >= maxBlockCount() );
@@ -969,8 +966,12 @@ void RangeLoop::update( int pos )
   initSequence( StartPos );
 
   if ( Indices.empty() ) {
-    Index = -1;
+    Loop--;
+    operator++();
   }
+
+  if ( Indices.empty() )
+    Index = -1;
 }
 
 

@@ -228,6 +228,9 @@ int FICurve::main( void )
       if ( Range.currentRepetition() == 1 ) {
 	Range.setSequence( shuffle );
 	Range.update();
+	cerr << "UPDATED RANGE\n";
+	if ( ! !Range )
+	  break;
       }
       prevrepeat = Range.currentRepetition();
     }
@@ -300,7 +303,6 @@ int FICurve::main( void )
     }
     else if ( Results[Range.pos()].SpikeCount <= 0.01 ) {
       Range.setSkipBelow( Range.pos()-1 );
-      Range.noCount();
     }
 
     int cinx = Range.pos();

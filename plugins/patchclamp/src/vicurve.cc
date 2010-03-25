@@ -224,6 +224,8 @@ int VICurve::main( void )
       if ( Range.currentRepetition() == 1 ) {
 	Range.setSequence( shuffle );
 	Range.update();
+	if ( ! !Range )
+	  break;
       }
       prevrepeat = Range.currentRepetition();
     }
