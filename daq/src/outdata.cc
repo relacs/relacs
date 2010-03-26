@@ -1026,7 +1026,10 @@ void OutData::setManualConvert( void )
 
 ostream &operator<<( ostream &str, const OutData &od )
 {
-  str << SampleDataF( od );
+  //  str << SampleDataF( od );
+  str << "Offset: " << od.offset() << '\n';
+  str << "Stepsize: " << od.stepsize() << '\n';
+  str << "Size: " << od.size() << '\n';
   str << DaqError( od );
   str << "Delay: " << od.Delay << '\n';
   str << "StartSource: " << od.StartSource << '\n';
@@ -1043,7 +1046,7 @@ ostream &operator<<( ostream &str, const OutData &od )
   str << "RequestMinValue: " << od.RequestMinValue << '\n';
   str << "RequestMaxValue: " << od.RequestMaxValue << '\n';
   str << "GainIndex: " << od.GainIndex << '\n';
-  str << "GainData: " << od.GainData << '\n';
+  //  str << "GainData: " << od.GainData << '\n';
   str << "Scale: " << od.Scale << '\n';
   str << "Unit: " << od.Unit << '\n';
   str << "WriteTime: " << od.WriteTime << '\n';
@@ -1053,7 +1056,7 @@ ostream &operator<<( ostream &str, const OutData &od )
   str << "Intensity: " << od.Intensity << '\n';
   str << "CarrierFreq: " << od.CarrierFreq << '\n';
   str << "Level: " << od.Level << '\n';
-  str << "DeviceBuffer: " << od.DeviceBuffer << '\n';
+  //  str << "DeviceBuffer: " << od.DeviceBuffer << '\n';
   str << "DeviceBufferSize: " << od.DeviceBufferSize << '\n';
   str << "DeviceDataSize: " << od.DeviceDataSize << '\n';
   str << "DeviceBufferIndex: " << od.DeviceBufferIndex << '\n';

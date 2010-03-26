@@ -3705,6 +3705,8 @@ istream &SampleData< T >::load( istream &str, const string &stop,
 
   }
 
+  Samples.resize( size() ); // push does not set range size.
+
   // store last read line:
   if ( line != 0 )
     *line = s;

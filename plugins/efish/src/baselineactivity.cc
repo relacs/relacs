@@ -251,7 +251,7 @@ int BaselineActivity::main( void )
     sig.mute();
     sigs.push( sig );
   }
-  write( sigs );
+  directWrite( sigs );
     
   // trigger:
   // XXX  setupTrigger( traces(), events() );

@@ -108,6 +108,7 @@ private:
   double SigStdev;
   double Pause;
   double Contrast;
+  bool AM;
   int Repeats;
   double RateDeltaT;
   double Before;

@@ -37,6 +37,7 @@ FileStimulus::FileStimulus( void )
   SigStdev = 1.0;
   Pause = 1.0;
   Contrast = 0.2;
+  AM = true;
   Repeats = 6;
   RateDeltaT = 0.01;
   Before=0.0;
@@ -48,10 +49,10 @@ FileStimulus::FileStimulus( void )
   addNumber( "sigstdev", "Standard deviation of signal", SigStdev, 0.01, 1.0, 0.05 );
   addNumber( "pause", "Pause between signals", Pause, 0.0, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "contrast", "Contrast", Contrast, 0.01, 1.0, 0.05, "", "%" );
+  addBoolean( "am", "Amplitude modulation", AM );
   addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 );
   addLabel( "Analysis" ).setStyle( OptWidget::Bold );
   addNumber( "binwidth", "Bin width", RateDeltaT, 0.0001, 1.0, 0.002, "seconds", "ms" );
-  addLabel( "Files" );
   addNumber( "before", "Spikes recorded before stimulus", Before, 0.0, 1000.0, 0.005, "seconds", "ms" );
   addNumber( "after", "Spikes recorded after stimulus", After, 0.0, 1000.0, 0.005, "seconds", "ms" );
   addTypeStyle( OptWidget::Bold, Parameter::Label );
@@ -114,6 +115,7 @@ int FileStimulus::main( void )
   Pause = number( "pause" );
   Repeats = integer( "repeats" );
   Contrast = number( "contrast" );
+  AM = boolean( "am" );
   RateDeltaT = number( "binwidth" );
   Before = number( "before" );
   After = number( "after" );
@@ -129,7 +131,7 @@ int FileStimulus::main( void )
   }
   //  signal.setStartSource( 2 );
   signal.setDelay( Before );
-  signal.setTrace( GlobalAMEField );
+  signal.setTrace( AM ? GlobalAMEField : GlobalEField );
   Duration = signal.duration();
 
   // data:
@@ -162,7 +164,7 @@ int FileStimulus::main( void )
 
   // plot trace:
   plotToggle( true, true, Before+Duration+After, Before );
-  
+
   // plot:
   P.lock();
   P.resize( 1 + SpikeTraces + NerveTraces, Plot::Pointer );
@@ -245,15 +247,15 @@ int FileStimulus::main( void )
     sig.mute();
     sigs.push( sig );
   }
-  write( sigs );
+  directWrite( sigs );
 
   for ( Count = 0; ( Repeats <= 0 || Count < Repeats ) || softStop() == 0; Count++ ) {
 
     // output signal:
     write( signal );
     if ( !signal.success() ) {
-      string s = "Output of stimulus failed!<br>Error code is <b>";
-      s += Str( signal.error() ) + ": " + signal.errorStr() + "</b>";
+      string s = "Output of stimulus failed!<br>Error is <b>";
+      s += signal.errorText() + "</b>";
       warning( s );
       stop();
       return Failed;
@@ -266,6 +268,11 @@ int FileStimulus::main( void )
     message( s );
     
     sleep( signal.duration() + Pause );
+    if ( interrupt() ) {
+      save();
+      stop();
+      return Aborted;
+    }
 
     testWrite( signal );
     // signal failed?
@@ -276,6 +283,11 @@ int FileStimulus::main( void )
 	signal.setPriority();
 	write( signal );
 	sleep( signal.duration() + Pause );
+	if ( interrupt() ) {
+	  save();
+	  stop();
+	  return Aborted;
+	}
 	// trigger:
 	//	setupTrigger( events );
 	continue;
@@ -284,11 +296,16 @@ int FileStimulus::main( void )
 	warning( "Analog Output Overrun Error! <br> Try again.", 4.0 );
 	write( signal );
 	sleep( signal.duration() + Pause );
+	if ( interrupt() ) {
+	  save();
+	  stop();
+	  return Aborted;
+	}
 	continue;
       }
       else {
-	string s = "Output of stimulus failed!<br>Error code is <b>";
-	s += Str( signal.error() ) + ": " + signal.errorStr() + "</b>";
+	string s = "Output of stimulus failed!<br>Error is <b>";
+	s += signal.errorText() + "</b>";
 	warning( s );
 	stop();
 	return Failed;
@@ -373,7 +390,7 @@ void FileStimulus::saveRate( int trace )
 
   // write header and key:
   Header.save( df, "# " );
-  Options::save( df, "#   " );
+  settings().save( df, "#   " );
   df << '\n';
   TableKey key;
   key.addNumber( "time", "ms", "%9.2f" );
@@ -401,7 +418,7 @@ void FileStimulus::saveNerve( void )
   if ( Count == 0 ) {
     df << '\n' << '\n';
     Header.save( df, "# " );
-    Options::save( df, "#   " );
+    settings().save( df, "#   " );
     df << '\n';
     NerveKey.saveKey( df, true, true );
   }
@@ -433,7 +450,7 @@ void FileStimulus::saveAmpl( void )
   if ( Count == 0 ) {
     df << '\n' << '\n';
     Header.save( df, "# " );
-    Options::save( df, "#   " );
+    settings().save( df, "#   " );
     df << '\n';
     AmplKey.setUnit( 1, LocalEODUnit );
     AmplKey.saveKey( df, true, false, 1 );
@@ -462,7 +479,7 @@ void FileStimulus::saveSpikes( int trace )
   if ( Count == 0 ) {
     df << '\n' << '\n';
     Header.save( df, "# " );
-    Options::save( df, "#   " );
+    settings().save( df, "#   " );
     df << '\n';
     SpikesKey.saveKey( df, true, false );
   }

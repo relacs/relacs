@@ -416,15 +416,15 @@ int SAM::main( void )
 	}
       }
       else {
-	string s = "Output of stimulus failed!<br>Error code is <b>";
-	s += Str( Signal->error() ) + ": " + Signal->errorStr() + "</b>";
+	string s = "Output of stimulus failed!<br>Error is <b>";
+	s += Signal->errorText() + "</b>";
 	warning( s );
 	return Failed;
       }
       testWrite( *Signal );
       if ( !Signal->success() ) {
 	string s = "Output of stimulus failed again!<br>Error code is <b>";
-	s += Str( Signal->error() ) + ": " + Signal->errorStr() + "</b>";
+	s += Signal->errorText() + "</b>";
 	warning( s );
 	return Failed;
       }
