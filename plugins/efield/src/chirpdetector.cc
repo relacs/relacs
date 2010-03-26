@@ -138,11 +138,12 @@ int ChirpDetector::checkEvent( const EventFrequencyIterator &first,
 			       double &time, double &size, double &width )
 {
   // chirp too long:
-  if ( index.time() - event.time() > ChirpMaxWidth )
+  if ( *indextime - *eventtime > ChirpMaxWidth )
     return 0;
 
   // store event:
   EventFrequencyIterator orgevent = event;
+  EventIterator orgtime = eventtime;
 
   // meanrate before chirp:
   double meanrate = 0.0;
@@ -154,9 +155,11 @@ int ChirpDetector::checkEvent( const EventFrequencyIterator &first,
 
   // find end of chirp (ChirpCycles data points within +- 1/2 threshold in a row):
   EventFrequencyIterator findex;
+  EventIterator ftime;
   int n = 0;
   double rate = *index;
-  for ( findex = index+1; !findex; ++findex ) {
+  ftime = indextime+1;
+  for ( findex = index+1; !findex; ++findex, ++ftime ) {
     if ( *event < *findex )
       event = findex;
     if ( fabs( *findex - rate ) < 0.5*threshold ) 
@@ -179,19 +182,23 @@ int ChirpDetector::checkEvent( const EventFrequencyIterator &first,
     return 0;
 
   // chirp:
-  time = event.time();
+  time = *eventtime;
   double minrate = meanrate + 0.1 * size;
   index = findex;
+  indextime = ftime;
 
   // find begin of chirp:
   EventFrequencyIterator lindex;
+  EventIterator ltime;
   if ( *orgevent > minrate ) {
-    for ( lindex = orgevent-1; !lindex; --lindex )
+    ltime = orgtime-1;
+    for ( lindex = orgevent-1; !lindex; --lindex, --ltime )
       if ( *lindex <= minrate )
 	break;
   }
   else {
-    for ( lindex = orgevent+1; !lindex; ++lindex )
+    ltime = orgtime+1;
+    for ( lindex = orgevent+1; !lindex; ++lindex, --ltime )
       if ( *lindex >= minrate )
 	break;
   }
@@ -201,11 +208,11 @@ int ChirpDetector::checkEvent( const EventFrequencyIterator &first,
     return -1;
 
   // find end of chirp:
-  for ( --findex; !findex && findex > event; --findex )
+  for ( --findex, --ftime; !findex && findex > event; --findex, --ftime )
     if ( *findex >= minrate )
       break;
 
-  width = findex.time() - lindex.time();
+  width = *ftime - *ltime;
 
   // chirp too short:
   if ( width < ChirpMinWidth )

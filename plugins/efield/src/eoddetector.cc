@@ -202,7 +202,8 @@ int EODDetector::checkEvent( const InData::const_iterator &first,
   width = 0.0;
 
   // threshold:
-  threshold = ThreshRatio * ( *event - *prevevent );
+  if ( prevevent >= first )
+    threshold = ThreshRatio * ( *event - *prevevent );
 
   // accept:
   return 1; 
