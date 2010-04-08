@@ -37,7 +37,7 @@ namespace relacs {
 \brief Advanced string manipulation.
 
 \bug check all find, find_first_of, etc for usage with empty search strings!!!
-\bug Str( long, width, pad ), format( long ): missing type flag (u,d,x,...)
+\todo Str( long, width, pad ), format( long ): missing type flag (u,d,x,...)
 \todo generalize the double blank concept for spaces and separators to any character.
 \todo Do we need each function with comments? Cant we just use stripComment before?
 */
@@ -46,151 +46,281 @@ namespace relacs {
 class Str : public string
 {
 public:
+
    // diverse constructoren zur formatierung von Zahlen und strings, etc.
 
-  Str( void ) : string() {}
-  Str( const Str &s ) : string( s ) {};
-  Str( const string &s ) : string( s ) {};
-  Str( const char *s ) : string( s ) {};
-  Str( char c ) : string( 1, c ) {};
+    /*! Constructs an empty string. */
+  Str( void );
+    /*! Constructs a copy of \a s. */
+  Str( const Str &s );
+    /*! Constructs a copy of \a s. */
+  Str( const string &s );
+    /*! Constructs a copy of \a s. */
+  Str( const char *s );
+    /*! Constructs a string containing the single character \a c. */
+  Str( char c );
 
-  Str( const string &s, int width, char pad=Pad )
-    { Construct( s, width, pad ); };
-  Str( const char *s, int width, char pad=Pad )
-    { Construct( s, width, pad ); };
+    /*! Constructs a string of size \a width containing a copy of \a s.
+        If \a width is positive, \a s is right justified,
+	otherwise \a s is left justified.
+	\a pad is used as the character that is filled in.
+        If \a s is longer than \a width, it is truncated.
+        If \a width equals zero, the whole string \a s is copied to\a this. */
+  Str( const string &s, int width, char pad=Pad );
+    /*! Constructs a string of size \a width containing a copy of \a s.
+        If \a width is positive, \a s is right justified,
+	otherwise \a s is left justified.
+	\a pad is used as the character that is filled in.
+        If \a s is longer than \a width, it is truncated.
+        If \a width equals zero, the whole string \a s is copied to\a this. */
+  Str( const char *s, int width, char pad=Pad );
+    /*! Constructs a string containing \a len copies of \a c. */
   Str( char c, int len );
+    /*! Convert \a val into a string of size \a width. 
+        If \a width is positive, the number is right justified,
+        otherwise the number is left justified. */
   Str( double val, int width=Width, int precision=Precision, 
-	  char format=DoubleFormat, char pad=Pad )
-    { Construct( val, width, precision, format, pad ); };
-  Str( signed long val, int width=Width, char pad=Pad )
-    { Construct( val, width, pad ); };
-  Str( unsigned long val, int width=Width, char pad=Pad )
-    { Construct( val, width, pad ); };
-  Str( signed int val, int width=Width, char pad=Pad )
-    { Construct( long( val ), width, pad ); };
-  Str( unsigned int val, int width=Width, char pad=Pad )
-    { Construct( long( val ), width, pad ); };
-  Str( signed short val, int width=Width, char pad=Pad )
-    { Construct( long( val ), width, pad ); };
-  Str( unsigned short val, int width=Width, char pad=Pad )
-    { Construct( long( val ), width, pad ); };
-  Str( long long val, int width=Width, char pad=Pad )
-    { Construct( val, width, pad ); };
+       char format=DoubleFormat, char pad=Pad );
+    /*! Convert \a val into a string of size \a width. 
+        If \a width is positive, the number is right justified,
+        otherwise the number is left justified. */
+  Str( signed long val, int width=Width, char pad=Pad );
+    /*! Convert \a val into a string of size \a width. 
+        If \a width is positive, the number is right justified,
+        otherwise the number is left justified. */
+  Str( unsigned long val, int width=Width, char pad=Pad );
+    /*! Convert \a val into a string of size \a width. 
+        If \a width is positive, the number is right justified,
+        otherwise the number is left justified. */
+  Str( signed int val, int width=Width, char pad=Pad );
+    /*! Convert \a val into a string of size \a width. 
+        If \a width is positive, the number is right justified,
+        otherwise the number is left justified. */
+  Str( unsigned int val, int width=Width, char pad=Pad );
+    /*! Convert \a val into a string of size \a width. 
+        If \a width is positive, the number is right justified,
+        otherwise the number is left justified. */
+  Str( signed short val, int width=Width, char pad=Pad );
+    /*! Convert \a val into a string of size \a width. 
+        If \a width is positive, the number is right justified,
+        otherwise the number is left justified. */
+  Str( unsigned short val, int width=Width, char pad=Pad );
+    /*! Convert \a val into a string of size \a width. 
+        If \a width is positive, the number is right justified,
+        otherwise the number is left justified. */
+  Str( long long val, int width=Width, char pad=Pad );
+    /*! Convert \a b into a string of size \a width. 
+        Depending on \a format the resulting string is
+        \c true or \c false (\a format equals \c t or \c f),
+        \c yes or \c no (\a format equals \c y or \c n)
+        \c 1 or \c 0 (otherwise).
+        If \a width is positive, the resulting string is right justified,
+        otherwise the resulting string is left justified. */
   Str( bool b, int width=Width, char format=BoolFormat, 
-	  char pad=Pad )
-    { Construct( b, width, format, pad ); };
+       char pad=Pad );
 
-  Str( const string &s, const char *format )
-    { Construct( s, format ); };
-  Str( const char *s, const char *format )
-    { Construct( s, format ); };
-  Str( char c, const char *format )
-    { Construct( c, format ); };
-  Str( double val, const char *format )
-    { Construct( val, format ); };
-  Str( signed long val, const char *format ) 
-    { Construct( (long)val, format ); };
-  Str( unsigned long val, const char *format ) 
-    { Construct( (long)val, format ); };
-  Str( signed int val, const char *format ) 
-    { Construct( long( val ), format ); };
-  Str( unsigned int val, const char *format ) 
-    { Construct( long( val ), format ); };
-  Str( signed short val, const char *format ) 
-    { Construct( long( val ), format ); };
-  Str( unsigned short val, const char *format ) 
-    { Construct( long( val ), format ); };
-  Str( long long val, const char *format ) 
-    { Construct( val, format ); };
+    /*! Constructs a string containing \a s according to the
+        C-printf-style format string \a format. */
+  Str( const string &s, const char *format );
+    /*! Constructs a string containing \a s according to the
+        C-printf-style format string \a format. */
+  Str( const char *s, const char *format );
+    /*! Constructs a string containing \a c according to the
+        C-printf-style format string \a format. */
+  Str( char c, const char *format );
+    /*! Converts \a val to this string according to the
+        C-printf-style format string \a format. */
+  Str( double val, const char *format );
+    /*! Converts \a val to this string according to the
+        C-printf-style format string \a format. */
+  Str( signed long val, const char *format );
+    /*! Converts \a val to this string according to the
+        C-printf-style format string \a format. */
+  Str( unsigned long val, const char *format );
+    /*! Converts \a val to this string according to the
+        C-printf-style format string \a format. */
+  Str( signed int val, const char *format );
+    /*! Converts \a val to this string according to the
+        C-printf-style format string \a format. */
+  Str( unsigned int val, const char *format );
+    /*! Converts \a val to this string according to the
+        C-printf-style format string \a format. */
+  Str( signed short val, const char *format );
+    /*! Converts \a val to this string according to the
+        C-printf-style format string \a format. */
+  Str( unsigned short val, const char *format );
+    /*! Converts \a val to this string according to the
+        C-printf-style format string \a format. */
+  Str( long long val, const char *format );
 
-  Str( const string &s, const string &format )
-    { Construct( s, format ); };
-  Str( const char *s, const string &format )
-    { Construct( s, format ); };
-  Str( char c, const string &format )
-    { Construct( c, format ); };
-  Str( double val, const string &format )
-    { Construct( val, format ); };
-  Str( signed long val, const string &format )
-    { Construct( (long)val, format ); };
-  Str( unsigned long val, const string &format )
-    { Construct( (long)val, format ); };
-  Str( signed int val, const string &format )
-    { Construct( long( val ), format ); };
-  Str( unsigned int val, const string &format )
-    { Construct( long( val ), format ); };
-  Str( signed short val, const string &format )
-    { Construct( long( val ), format ); };
-  Str( unsigned short val, const string &format )
-    { Construct( long( val ), format ); };
-  Str( long long val, const string &format )
-    { Construct( val, format ); };
-
-  ~Str( void ) {};
+    /*! Constructs a string containing \a s according to the
+        C-printf-style format string \a format. */
+  Str( const string &s, const string &format );
+    /*! Constructs a string containing \a s according to the
+        C-printf-style format string \a format. */
+  Str( const char *s, const string &format );
+    /*! Constructs a string containing \a c according to the
+        C-printf-style format string \a format. */
+  Str( char c, const string &format );
+    /*! Converts \a val to this string according to the
+        C-printf-style format string \a format. */
+  Str( double val, const string &format );
+    /*! Converts \a val to this string according to the
+        C-printf-style format string \a format. */
+  Str( signed long val, const string &format );
+    /*! Converts \a val to this string according to the
+        C-printf-style format string \a format. */
+  Str( unsigned long val, const string &format );
+    /*! Converts \a val to this string according to the
+        C-printf-style format string \a format. */
+  Str( signed int val, const string &format );
+    /*! Converts \a val to this string according to the
+        C-printf-style format string \a format. */
+  Str( unsigned int val, const string &format );
+    /*! Converts \a val to this string according to the
+        C-printf-style format string \a format. */
+  Str( signed short val, const string &format );
+    /*! Converts \a val to this string according to the
+        C-printf-style format string \a format. */
+  Str( unsigned short val, const string &format );
+    /*! Converts \a val to this string according to the
+        C-printf-style format string \a format. */
+  Str( long long val, const string &format );
 
   // assign:
-  inline Str &operator=( const string &s ) { return static_cast<Str &>( string::operator=( s ) ); };
-  inline Str &operator=( const char *s ) { return static_cast<Str &>( string::operator=( s ) ); };
-  inline Str &operator=( char c ) { return static_cast<Str &>( string::operator=( c ) ); };
+    /*! Assign \a s to \a this. */
+  Str &operator=( const string &s );
+    /*! Assign \a s to \a this. */
+  Str &operator=( const char *s );
+    /*! Assign \a c to \a this. */
+  Str &operator=( char c );
 
+    /*! Assigns a string of size \a width containing a copy of \a s.
+        If \a width is positive, \a s is right justified,
+	otherwise \a s is left justified.
+	\a pad is used as the character that is filled in.
+        If \a s is longer than \a width, it is truncated.
+        If \a width equals zero, the whole string \a s is copied to\a this. */
   const Str &assign( const string &s, int width=Width, char pad=Pad );
+    /*! Assigns a string of size \a width containing a copy of \a s.
+        If \a width is positive, \a s is right justified,
+	otherwise \a s is left justified.
+	\a pad is used as the character that is filled in.
+        If \a s is longer than \a width, it is truncated.
+        If \a width equals zero, the whole string \a s is copied to\a this. */
   const Str &assign( const char *s, int width=Width, char pad=Pad );
+    /*! Assigns a string containing \a len copies of \a c. */
   const Str &assign( char c, int len=CharRepeat );
+    /*! Convert \a val into a string of size \a width and assign it to \a this. 
+        If \a width is positive, the number is right justified,
+        otherwise the number is left justified. */
   const Str &assign( double val, int width=Width, int precision=Precision, 
 		     char format=DoubleFormat, char pad=Pad );
+    /*! Convert \a val into a string of size \a width and assign it to \a this. 
+        If \a width is positive, the number is right justified,
+        otherwise the number is left justified. */
   const Str &assign( signed long val, int width=Width, char pad=Pad );
+    /*! Convert \a val into a string of size \a width and assign it to \a this. 
+        If \a width is positive, the number is right justified,
+        otherwise the number is left justified. */
   const Str &assign( unsigned long val, int width=Width, char pad=Pad );
+    /*! Convert \a val into a string of size \a width and assign it to \a this. 
+        If \a width is positive, the number is right justified,
+        otherwise the number is left justified. */
   const Str &assign( signed int val, int width=Width, char pad=Pad );
+    /*! Convert \a val into a string of size \a width and assign it to \a this. 
+        If \a width is positive, the number is right justified,
+        otherwise the number is left justified. */
   const Str &assign( unsigned int val, int width=Width, char pad=Pad );
+    /*! Convert \a val into a string of size \a width and assign it to \a this. 
+        If \a width is positive, the number is right justified,
+        otherwise the number is left justified. */
   const Str &assign( signed short val, int width=Width, char pad=Pad );
+    /*! Convert \a val into a string of size \a width and assign it to \a this. 
+        If \a width is positive, the number is right justified,
+        otherwise the number is left justified. */
   const Str &assign( unsigned short val, int width=Width, char pad=Pad );
+    /*! Convert \a val into a string of size \a width and assign it to \a this. 
+        If \a width is positive, the number is right justified,
+        otherwise the number is left justified. */
   const Str &assign( long long val, int width=Width, char pad=Pad );
+    /*! Convert \a b into a string of size \a width and assign it to \a this. 
+        Depending on \a format the resulting string is
+        \c true or \c false (\a format equals \c t or \c f),
+        \c yes or \c no (\a format equals \c y or \c n)
+        \c 1 or \c 0 (otherwise).
+        If \a width is positive, the resulting string is right justified,
+        otherwise the resulting string is left justified. */
   const Str &assign( bool b, int width=Width, char format=BoolFormat, 
 		     char pad=Pad );
 
+    /*! Assigns a string containing \a s according to the
+        C-printf-style format string \a format to \a this. */
   const Str &assign( const string &s, const char *format );
-  const Str &assign( const char *s, const char *format )
-    { Construct( s, format ); return *this; };
-  const Str &assign( char c, const char *format )
-    { Construct( c, format ); return *this; };
-  const Str &assign( double val, const char *format )
-    { Construct( val, format ); return *this; };
-  const Str &assign( signed long val, const char *format )
-    { Construct( (long)val, format ); return *this; };
-  const Str &assign( unsigned long val, const char *format )
-    { Construct( (long)val, format ); return *this; };
-  const Str &assign( signed int val, const char *format )
-    { Construct( long( val ), format ); return *this; };
-  const Str &assign( unsigned int val, const char *format )
-    { Construct( long( val ), format ); return *this; };
-  const Str &assign( signed short val, const char *format )
-    { Construct( long( val ), format ); return *this; };
-  const Str &assign( unsigned short val, const char *format )
-    { Construct( long( val ), format ); return *this; };
-  const Str &assign( long long val, const char *format )
-    { Construct( val, format ); return *this; };
+    /*! Assigns a string containing \a s according to the
+        C-printf-style format string \a format to \a this. */
+  const Str &assign( const char *s, const char *format );
+    /*! Assigns a string containing \a c according to the
+        C-printf-style format string \a format to \a this. */
+  const Str &assign( char c, const char *format );
+    /*! Converts \a val to a string according to the C-printf-style format
+        string \a format and assign it to \a this. */
+  const Str &assign( double val, const char *format );
+    /*! Converts \a val to a string according to the C-printf-style format
+        string \a format and assign it to \a this. */
+  const Str &assign( signed long val, const char *format );
+    /*! Converts \a val to a string according to the C-printf-style format
+        string \a format and assign it to \a this. */
+  const Str &assign( unsigned long val, const char *format );
+    /*! Converts \a val to a string according to the C-printf-style format
+        string \a format and assign it to \a this. */
+  const Str &assign( signed int val, const char *format );
+    /*! Converts \a val to a string according to the C-printf-style format
+        string \a format and assign it to \a this. */
+  const Str &assign( unsigned int val, const char *format );
+    /*! Converts \a val to a string according to the C-printf-style format
+        string \a format and assign it to \a this. */
+  const Str &assign( signed short val, const char *format );
+    /*! Converts \a val to a string according to the C-printf-style format
+        string \a format and assign it to \a this. */
+  const Str &assign( unsigned short val, const char *format );
+    /*! Converts \a val to a string according to the C-printf-style format
+        string \a format and assign it to \a this. */
+  const Str &assign( long long val, const char *format );
 
+    /*! Assigns a string containing \a s according to the
+        C-printf-style format string \a format to \a this. */
   const Str &assign( const string &s, const string &format );
-  const Str &assign( const char *s, const string &format )
-    { Construct( s, format ); return *this; };
-  const Str &assign( char c, const string &format )
-    { Construct( c, format ); return *this; };
-  const Str &assign( double val, const string &format )
-    { Construct( val, format ); return *this; };
-  const Str &assign( signed long val, const string &format )
-    { Construct( (long)val, format ); return *this; };
-  const Str &assign( unsigned long val, const string &format )
-    { Construct( (long)val, format ); return *this; };
-  const Str &assign( signed int val, const string &format )
-    { Construct( long( val ), format ); return *this; };
-  const Str &assign( unsigned int val, const string &format )
-    { Construct( long( val ), format ); return *this; };
-  const Str &assign( signed short val, const string &format )
-    { Construct( long( val ), format ); return *this; };
-  const Str &assign( unsigned short val, const string &format )
-    { Construct( long( val ), format ); return *this; };
-  const Str &assign( long long val, const string &format )
-    { Construct( val, format ); return *this; };
+    /*! Assigns a string containing \a s according to the
+        C-printf-style format string \a format to \a this. */
+  const Str &assign( const char *s, const string &format );
+    /*! Assigns a string containing \a c according to the
+        C-printf-style format string \a format to \a this. */
+  const Str &assign( char c, const string &format );
+    /*! Converts \a val to a string according to the C-printf-style format
+        string \a format and assign it to \a this. */
+  const Str &assign( double val, const string &format );
+    /*! Converts \a val to a string according to the C-printf-style format
+        string \a format and assign it to \a this. */
+  const Str &assign( signed long val, const string &format );
+    /*! Converts \a val to a string according to the C-printf-style format
+        string \a format and assign it to \a this. */
+  const Str &assign( unsigned long val, const string &format );
+    /*! Converts \a val to a string according to the C-printf-style format
+        string \a format and assign it to \a this. */
+  const Str &assign( signed int val, const string &format );
+    /*! Converts \a val to a string according to the C-printf-style format
+        string \a format and assign it to \a this. */
+  const Str &assign( unsigned int val, const string &format );
+    /*! Converts \a val to a string according to the C-printf-style format
+        string \a format and assign it to \a this. */
+  const Str &assign( signed short val, const string &format );
+    /*! Converts \a val to a string according to the C-printf-style format
+        string \a format and assign it to \a this. */
+  const Str &assign( unsigned short val, const string &format );
+    /*! Converts \a val to a string according to the C-printf-style format
+        string \a format and assign it to \a this. */
+  const Str &assign( long long val, const string &format );
 
   // append:
   inline Str &operator+=( const string &s ) { return static_cast<Str &>( string::operator+=( s ) ); };

@@ -66,6 +66,37 @@ const Str Str::FirstNumber = "0123456789+-";
 const Str Str::Number = "0123456789.+-eE";
 const Str Str::Digit = "0123456789";
 
+
+Str::Str( void )
+  : string()
+{
+}
+
+
+Str::Str( const Str &s )
+  : string( s )
+{
+}
+
+
+Str::Str( const string &s )
+  : string( s )
+{
+}
+
+
+Str::Str( const char *s )
+  : string( s )
+{
+}
+
+
+Str::Str( char c )
+  : string( 1, c )
+{
+}
+
+
 ///// explicit formatted constructors: ///////////////////////////////////////
 
 void Str::Construct( const string &s, int width, char pad, bool append )
@@ -121,9 +152,75 @@ void Str::Construct( const char *s, int width, char pad, bool append )
 }
 
 
-Str::Str( char c, int len ) :
-  string( len >= 0 ? len : 0, c )
+Str::Str( const string &s, int width, char pad )
 {
+  Construct( s, width, pad );
+}
+
+
+Str::Str( const char *s, int width, char pad )
+{
+  Construct( s, width, pad );
+}
+
+
+Str::Str( char c, int len )
+  : string( len >= 0 ? len : 0, c )
+{
+}
+
+
+Str::Str( double val, int width, int precision, char format, char pad )
+{
+  Construct( val, width, precision, format, pad );
+}
+
+
+Str::Str( signed long val, int width, char pad )
+{
+  Construct( val, width, pad );
+}
+
+
+Str::Str( unsigned long val, int width, char pad )
+{
+  Construct( val, width, pad );
+}
+
+
+Str::Str( signed int val, int width, char pad )
+{
+  Construct( long( val ), width, pad );
+}
+
+
+Str::Str( unsigned int val, int width, char pad )
+{
+  Construct( long( val ), width, pad );
+}
+
+
+Str::Str( signed short val, int width, char pad )
+{
+  Construct( long( val ), width, pad );
+}
+
+
+Str::Str( unsigned short val, int width, char pad )
+{
+  Construct( long( val ), width, pad );
+}
+
+
+Str::Str( long long val, int width, char pad )
+{
+  Construct( val, width, pad );
+}
+
+
+Str::Str( bool b, int width, char format, char pad )
+{
+  Construct( b, width, format, pad );
 }
 
 
@@ -438,6 +535,72 @@ void Str::Construct( long long val, const char *format, bool append )
 }
 
 
+Str::Str( const string &s, const char *format )
+{
+  Construct( s, format );
+}
+
+
+Str::Str( const char *s, const char *format )
+{
+  Construct( s, format );
+}
+
+
+Str::Str( char c, const char *format )
+{
+  Construct( c, format );
+}
+
+
+Str::Str( double val, const char *format )
+{
+  Construct( val, format );
+}
+
+
+Str::Str( signed long val, const char *format ) 
+{
+  Construct( (long)val, format );
+}
+
+
+Str::Str( unsigned long val, const char *format ) 
+{
+  Construct( (long)val, format );
+}
+
+
+Str::Str( signed int val, const char *format ) 
+{
+  Construct( long( val ), format );
+}
+
+
+Str::Str( unsigned int val, const char *format ) 
+{
+  Construct( long( val ), format );
+}
+
+
+Str::Str( signed short val, const char *format ) 
+{
+  Construct( long( val ), format );
+}
+
+
+Str::Str( unsigned short val, const char *format ) 
+{
+  Construct( long( val ), format );
+}
+
+
+Str::Str( long long val, const char *format ) 
+{
+  Construct( val, format );
+}
+
+
 ///// string format constructors: ////////////////////////////////////////////
 
 void Str::Construct( const string &s, const string &format, bool append )
@@ -657,7 +820,91 @@ void Str::Construct( long long val, const string &format, bool append )
 }
 
 
+Str::Str( const string &s, const string &format )
+{
+  Construct( s, format );
+}
+
+
+Str::Str( const char *s, const string &format )
+{
+  Construct( s, format );
+}
+
+
+Str::Str( char c, const string &format )
+{
+  Construct( c, format );
+}
+
+
+Str::Str( double val, const string &format )
+{
+  Construct( val, format );
+}
+
+
+Str::Str( signed long val, const string &format )
+{
+  Construct( (long)val, format );
+}
+
+
+Str::Str( unsigned long val, const string &format )
+{
+  Construct( (long)val, format );
+}
+
+
+Str::Str( signed int val, const string &format )
+{
+  Construct( long( val ), format );
+}
+
+
+Str::Str( unsigned int val, const string &format )
+{
+  Construct( long( val ), format );
+}
+
+
+Str::Str( signed short val, const string &format )
+{
+  Construct( long( val ), format );
+}
+
+
+Str::Str( unsigned short val, const string &format )
+{
+  Construct( long( val ), format );
+}
+
+
+Str::Str( long long val, const string &format )
+{
+  Construct( val, format );
+}
+
+
 ///// assignment /////////////////////////////////////////////////////////////
+
+Str &Str::operator=( const string &s )
+{
+  return static_cast<Str &>( string::operator=( s ) );
+}
+
+
+Str &Str::operator=( const char *s )
+{
+  return static_cast<Str &>( string::operator=( s ) );
+}
+
+
+Str &Str::operator=( char c )
+{
+  return static_cast<Str &>( string::operator=( c ) );
+}
+
 
 const Str &Str::assign( const string &s, int width, char pad )
 {
@@ -740,8 +987,7 @@ const Str &Str::assign( long long val, int width, char pad )
 }
 
 
-const Str &Str::assign( bool b, int width, char format, 
-			      char pad )
+const Str &Str::assign( bool b, int width, char format, char pad )
 {
   Construct( b, width, format, pad );
   return *this;
@@ -758,12 +1004,152 @@ const Str &Str::assign( const string &s, const char *format )
 }
 
 
+const Str &Str::assign( const char *s, const char *format )
+{
+  Construct( s, format );
+  return *this;
+}
+
+
+const Str &Str::assign( char c, const char *format )
+{
+  Construct( c, format );
+  return *this;
+}
+
+
+const Str &Str::assign( double val, const char *format )
+{
+  Construct( val, format );
+  return *this;
+}
+
+
+const Str &Str::assign( signed long val, const char *format )
+{
+  Construct( (long)val, format );
+  return *this;
+}
+
+
+const Str &Str::assign( unsigned long val, const char *format )
+{
+  Construct( (long)val, format );
+  return *this;
+}
+
+
+const Str &Str::assign( signed int val, const char *format )
+{
+  Construct( long( val ), format );
+  return *this;
+}
+
+
+const Str &Str::assign( unsigned int val, const char *format )
+{
+  Construct( long( val ), format );
+  return *this;
+}
+
+
+const Str &Str::assign( signed short val, const char *format )
+{
+  Construct( long( val ), format );
+  return *this;
+}
+
+
+const Str &Str::assign( unsigned short val, const char *format )
+{
+  Construct( long( val ), format );
+  return *this;
+}
+
+
+const Str &Str::assign( long long val, const char *format )
+{
+  Construct( val, format );
+  return *this;
+}
+
+
 const Str &Str::assign( const string &s, const string &format )
 {
   if ( &s == this )
     return *this;
 
   Construct( s, format );
+  return *this;
+}
+
+
+const Str &Str::assign( const char *s, const string &format )
+{
+  Construct( s, format );
+  return *this;
+}
+
+
+const Str &Str::assign( char c, const string &format )
+{
+  Construct( c, format );
+  return *this;
+}
+
+
+const Str &Str::assign( double val, const string &format )
+{
+  Construct( val, format );
+  return *this;
+}
+
+
+const Str &Str::assign( signed long val, const string &format )
+{
+  Construct( (long)val, format );
+  return *this;
+}
+
+
+const Str &Str::assign( unsigned long val, const string &format )
+{
+  Construct( (long)val, format );
+  return *this;
+}
+
+
+const Str &Str::assign( signed int val, const string &format )
+{
+  Construct( long( val ), format );
+  return *this;
+}
+
+
+const Str &Str::assign( unsigned int val, const string &format )
+{
+  Construct( long( val ), format );
+  return *this;
+}
+
+
+const Str &Str::assign( signed short val, const string &format )
+{
+  Construct( long( val ), format );
+  return *this;
+}
+
+
+const Str &Str::assign( unsigned short val, const string &format )
+{
+  Construct( long( val ), format );
+  return *this;
+}
+
+
+const Str &Str::assign( long long val, const string &format )
+{
+  Construct( val, format );
   return *this;
 }
 
