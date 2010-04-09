@@ -38,6 +38,11 @@ namespace acoustic {
        depending on carrier frequency.
 \author Jan Benda
 \version 1.1
+
+\par Options
+- \c line: the line on the attenuator
+- \c aodevice: the identifier analog output device
+- \c aochannel: the channel of the analog output device
 */
 
 

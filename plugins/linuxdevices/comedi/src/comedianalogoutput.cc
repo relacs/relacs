@@ -54,7 +54,8 @@ ComediAnalogOutput::ComediAnalogOutput( void )
 }
 
 
-ComediAnalogOutput::ComediAnalogOutput(  const string &device, long mode ) 
+ComediAnalogOutput::ComediAnalogOutput(  const string &device,
+					 const Options &opts ) 
   : AnalogOutput( "Comedi Analog Output", ComediAnalogIOType )
 {
   ErrorState = 0;
@@ -66,7 +67,7 @@ ComediAnalogOutput::ComediAnalogOutput(  const string &device, long mode )
   UnipolarExtRefRangeIndex = -1;
   BipolarExtRefRangeIndex = -1;
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
-  open( device, mode );
+  open( device, opts );
   IsPrepared = false;
   Calibration = 0;
   Sigs = 0;
@@ -80,7 +81,7 @@ ComediAnalogOutput::~ComediAnalogOutput( void )
 }
 
 
-int ComediAnalogOutput::open( const string &device, long mode )
+int ComediAnalogOutput::open( const string &device, const Options &opts )
 { 
   if ( isOpen() )
     return -5;
@@ -207,6 +208,10 @@ int ComediAnalogOutput::open( const string &device, long mode )
       }
     }
   }
+
+  // external reference:
+  double extr = opts.number( "extref", -1.0, "V" );
+  setExternalReference( extr );
 
   // get size of datatype for sample values:
   LongSampleType = ( comedi_get_subdevice_flags( DeviceP, SubDevice ) &

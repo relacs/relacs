@@ -37,6 +37,9 @@ namespace misc {
 \author Jan Benda
 \version 1.0
 \brief [Temperature] The DTM 5080 temperature sensor via serial port
+
+\par Options
+- \c probe: the type of the temperatur sensor (1=PT1000)
  */
 
 class TempDTM5080 : public Temperature
@@ -45,10 +48,10 @@ class TempDTM5080 : public Temperature
 public:
 
   TempDTM5080( void );
-  TempDTM5080( const string &device, long probe );
+  TempDTM5080( const string &device, const Options &opts );
   ~TempDTM5080( void );
 
-  virtual int open( const string &device, long probe=1 );
+  virtual int open( const string &device, const Options &opts );
   virtual bool isOpen( void ) const;
   virtual void close( void );
   virtual int reset( void );

@@ -36,25 +36,31 @@ AOSim::~AOSim( void )
 }
 
 
-int AOSim::open( const string &device, long mode )
+int AOSim::open( const string &device, const Options &opts )
 {
   Info.clear();
   Settings.clear();
   setDeviceName( "AO Simulation" );
   setDeviceVendor( "RELACS" );
   setDeviceFile( device );
+  // external reference:
+  double extr = opts.number( "extref", -1.0, "V" );
+  setExternalReference( extr );
   setInfo();
   return 0;
 }
 
 
-int AOSim::open( Device &device, long mode )
+int AOSim::open( Device &device, const Options &opts )
 {
   Info.clear();
   Settings.clear();
   setDeviceName( "AO Simulation" );
   setDeviceVendor( "RELACS" );
   setDeviceFile( device.deviceIdent() );
+  // external reference:
+  double extr = opts.number( "extref", -1.0, "V" );
+  setExternalReference( extr );
   setInfo();
   return 0;
 }

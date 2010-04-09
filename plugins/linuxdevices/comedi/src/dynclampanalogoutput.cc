@@ -64,7 +64,8 @@ DynClampAnalogOutput::DynClampAnalogOutput( void )
 }
 
 
-DynClampAnalogOutput::DynClampAnalogOutput( const string &device, long mode ) 
+DynClampAnalogOutput::DynClampAnalogOutput( const string &device,
+					    const Options &opts ) 
   : AnalogOutput( "DynClampAnalogOutput", DynClampAnalogIOType )
 {
   CAO = new ComediAnalogOutput;
@@ -86,7 +87,7 @@ DynClampAnalogOutput::DynClampAnalogOutput( const string &device, long mode )
   Sigs = 0;
   BufferSize = 0;
 
-  open( device, mode );
+  open( device, opts );
 }
 
 
@@ -97,7 +98,7 @@ DynClampAnalogOutput::~DynClampAnalogOutput( void )
 }
 
 
-int DynClampAnalogOutput::open( const string &device, long mode )
+int DynClampAnalogOutput::open( const string &device, const Options &opts )
 { 
   Info.clear();
   Settings.clear();
@@ -107,7 +108,7 @@ int DynClampAnalogOutput::open( const string &device, long mode )
   setDeviceFile( device );
 
   // open user space coemdi:
-  int retval = CAO->open( device );
+  int retval = CAO->open( device, opts );
   if ( retval != 0 )
     return retval;
   

@@ -45,12 +45,12 @@ NIAO::NIAO( void )
 }
 
 
-NIAO::NIAO( const string &device, long mode )
+NIAO::NIAO( const string &device, const Options &opts )
   : AnalogOutput( "NI E-Series Analog Output", NIAnalogIOType ),
     Handle( -1 )
 {
   Sigs = 0;
-  open( device, mode );
+  open( device, opts );
 }
 
 
@@ -60,7 +60,7 @@ NIAO::~NIAO( void )
 }
 
 
-int NIAO::open( const string &device, long mode )
+int NIAO::open( const string &device, const Options &opts )
 {
   Info.clear();
   Settings.clear();
@@ -75,6 +75,9 @@ int NIAO::open( const string &device, long mode )
     setDeviceName( Board.name );
     setDeviceVendor( "National Instruments" );
     setDeviceFile( device );
+    // external reference:
+    double extr = opts.number( "extref", -1.0, "V" );
+    setExternalReference( extr );
   }
 
   setInfo();

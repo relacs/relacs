@@ -58,14 +58,14 @@ Device::~Device( void )
 }
 
 
-int Device::open( const string &device, long mode )
+int Device::open( const string &device, const Options &opts )
 {
   setDeviceFile( device );
   return InvalidDevice;
 }
 
 
-int Device::open( Device &device, long mode )
+int Device::open( Device &device, const Options &opts )
 {
   setDeviceFile( device.deviceIdent() );
   return InvalidDevice;

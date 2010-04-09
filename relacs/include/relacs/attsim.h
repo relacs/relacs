@@ -51,7 +51,7 @@ public:
   ~AttSim( void );
 
     /*! Open the attenuator device driver specified by \a device. */
-  int open( const string &device, long mode=0 );
+  int open( const string &device, const Options &opts );
     /*! Returns true if the attenuator device driver was succesfully opened. */
   bool isOpen( void ) const;
     /*! Close the attenuator device driver. */

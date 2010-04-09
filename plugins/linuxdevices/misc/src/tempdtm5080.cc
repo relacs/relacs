@@ -45,13 +45,13 @@ TempDTM5080::TempDTM5080( void )
 }
 
 
-TempDTM5080::TempDTM5080( const string &device, long probe )
+TempDTM5080::TempDTM5080( const string &device, const Options &opts  )
   : Temperature( "TempDTM5080" ),
     Handle( -1 ),
     Probe( 0 )
 {
   Settings.addInteger( "probe" );
-  open( device, probe );
+  open( device, opts );
 }
 
 
@@ -61,7 +61,7 @@ TempDTM5080::~TempDTM5080( void )
 }
 
 
-int TempDTM5080::open( const string &device, long probe )
+int TempDTM5080::open( const string &device, const Options &opts )
 {
   if ( Handle >= 0 )
     return 0;
@@ -97,6 +97,7 @@ int TempDTM5080::open( const string &device, long probe )
   tcflush( Handle, TCIFLUSH );
   tcsetattr( Handle, TCSANOW, &NewTIO );
 
+  int probe = opts.integer( "probe", 0, 1 );
   setProbe( probe );
 
   setDeviceName( "DTM5080" );

@@ -45,12 +45,12 @@ public:
     /*! Create a new NIAI without opening a device. */
   NIAI( void );
     /*! Open the analog input driver specified by its device file \a device. */
-  NIAI( const string &device, long mode=0 ); 
+  NIAI( const string &device, const Options &opts ); 
     /*! Stop analog input and close the driver. */
   ~NIAI( void );           
 
     /*! Open the analog input on device file \a device. */
-  virtual int open( const string &device, long mode=0 );
+  virtual int open( const string &device, const Options &opts );
     /*! Returns true if the device is open. */
   virtual bool isOpen( void ) const;
     /*! Close the device. */

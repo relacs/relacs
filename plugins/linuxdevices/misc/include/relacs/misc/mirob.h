@@ -48,7 +48,7 @@ public:
   Mirob( void );
   ~Mirob( void );
 
-  virtual int open( const string &device, long mode=0 );
+  virtual int open( const string &device, const Options &opts );
   virtual bool isOpen( void ) const { return Opened; };
   virtual void close( void );
   virtual int reset( void );

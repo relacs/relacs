@@ -39,7 +39,7 @@ DigitalIO::~DigitalIO( void )
 }      
 
 
-int DigitalIO::open( const string &device, long mode )
+int DigitalIO::open( const string &device, const Options &opts )
 {
   freeLines();
   Info.clear();
@@ -49,7 +49,7 @@ int DigitalIO::open( const string &device, long mode )
 }
 
 
-int DigitalIO::open( Device &device, long mode )
+int DigitalIO::open( Device &device, const Options &opts )
 {
   freeLines();
   Info.clear();

@@ -67,7 +67,7 @@ DynClampAnalogInput::DynClampAnalogInput( void )
 }
 
 
-DynClampAnalogInput::DynClampAnalogInput( const string &device, long mode ) 
+DynClampAnalogInput::DynClampAnalogInput( const string &device, const Options &opts ) 
   : AnalogInput( "DynClampAnalogInput", DynClampAnalogIOType )
 {
   CAI = new ComediAnalogInput;
@@ -93,7 +93,7 @@ DynClampAnalogInput::DynClampAnalogInput( const string &device, long mode )
   Buffer = NULL;
   TraceIndex = 0;
 
-  open( device, mode );
+  open( device, opts );
 }
 
 
@@ -104,7 +104,7 @@ DynClampAnalogInput::~DynClampAnalogInput( void )
 }
 
 
-int DynClampAnalogInput::open( const string &device, long mode )
+int DynClampAnalogInput::open( const string &device, const Options &opts )
 { 
   Info.clear();
   Settings.clear();
@@ -114,7 +114,7 @@ int DynClampAnalogInput::open( const string &device, long mode )
   setDeviceFile( device );
 
   // open user space coemdi:
-  int retval = CAI->open( device );
+  int retval = CAI->open( device, opts );
   if ( retval != 0 )
     return retval;
   

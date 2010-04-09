@@ -165,7 +165,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
 
   // attenuators:
   ATD = new AttDevices();
-  ATI = new AttInterfaces( AOD );
+  ATI = new AttInterfaces();
 
   // load config:
   SF = 0;

@@ -35,7 +35,7 @@ namespace relacs {
 \class Device
 \brief Basic interface for accessing a device. 
 \author Jan Benda
-\version 1.2
+\version 1.3
 \todo Error codes and strings for errors in the open function
 
 The Device class defines the interface for the basic operations open(),
@@ -115,8 +115,7 @@ public:
     /*! Destroy a Device. In case the associated device is open, close it. */
   virtual ~Device( void );
 
-    /*! Open the device specified by \a device with mode \a mode.
-        You don't have to use \a mode in your implementation.
+    /*! Open the device specified by \a device with options \a opts.
 	On success, in your implementation
 	\a device should be passed to setDeviceFile()
 	and the name and the vendor of the device should be set
@@ -127,9 +126,8 @@ public:
 	Returns zero on success, or InvalidDevice (or any other negative number
 	indicating the error).
         \sa isOpen(), close(), reset() */
-  virtual int open( const string &device, long mode );
-    /*! Open the device specified by \a device with mode \a mode.
-        You don't have to use \a mode in your implementation.
+  virtual int open( const string &device, const Options &opts );
+    /*! Open the device specified by \a device with options \a opts.
 	On success, in your implementation
 	\a device should be passed to setDeviceFile()
 	and the name and the vendor of the device should be set
@@ -140,7 +138,7 @@ public:
 	Returns zero on success, or InvalidDevice (or any other negative number
 	indicating the error).
         \sa isOpen(), close(), reset() */
-  virtual int open( Device &device, long mode );
+  virtual int open( Device &device, const Options &opts );
     /*! Returns true if the device is open.
         \sa open(), close(), reset() */
   virtual bool isOpen( void ) const = 0;

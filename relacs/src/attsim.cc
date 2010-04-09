@@ -46,7 +46,7 @@ AttSim::~AttSim( void )
 }
 
 
-int AttSim::open( const string &device, long mode )
+int AttSim::open( const string &device, const Options &opts )
 {
   Info.clear();
   setDeviceName( "Attenuator Simulation" );

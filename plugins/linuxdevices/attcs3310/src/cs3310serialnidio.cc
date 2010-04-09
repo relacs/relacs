@@ -34,7 +34,8 @@ CS3310SerialNIDIO::CS3310SerialNIDIO( const string &device )
     DIO( 0 ),
     Own( false )
 {
-  open( device );
+  Options opts;
+  open( device, opts );
 }
 
 
@@ -43,7 +44,8 @@ CS3310SerialNIDIO::CS3310SerialNIDIO( NIDIO *nidio )
     DIO( 0 ),
     Own( false )
 {
-  open( *nidio );
+  Options opts;
+  open( *nidio, opts );
 }
 
 
@@ -62,7 +64,7 @@ CS3310SerialNIDIO::~CS3310SerialNIDIO( void )
 }
 
 
-int CS3310SerialNIDIO::open( const string &device, long mode )
+int CS3310SerialNIDIO::open( const string &device, const Options &opts )
 {
   Info.clear();
 
@@ -105,7 +107,7 @@ int CS3310SerialNIDIO::open( const string &device, long mode )
 }
 
 
-int CS3310SerialNIDIO::open( NIDIO &nidio, long mode )
+int CS3310SerialNIDIO::open( NIDIO &nidio, const Options &opts )
 {
   Info.clear();
 
@@ -141,9 +143,9 @@ int CS3310SerialNIDIO::open( NIDIO &nidio, long mode )
 }
 
 
-int CS3310SerialNIDIO::open( Device &device, long mode )
+int CS3310SerialNIDIO::open( Device &device, const Options &opts )
 {
-  return open( dynamic_cast<NIDIO&>( device ) );
+  return open( dynamic_cast<NIDIO&>( device ), opts );
 }
 
 

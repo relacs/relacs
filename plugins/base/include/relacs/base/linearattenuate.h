@@ -35,6 +35,15 @@ namespace base {
 \author Jan Benda
 \version 1.1
 \brief [Attenuate] Linear conversion of intensity to attenuation level independent of carrier frequency.
+
+\par Options
+- \c line: the line on the attenuator
+- \c aodevice: the identifier analog output device
+- \c aochannel: the channel of the analog output device
+- \c intensityname: name of the intensity variable
+- \c intensityunit: unit of the intensity variable
+- \c intensityformat: format string for the intensity variable
+
 */
 
 

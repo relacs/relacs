@@ -23,6 +23,7 @@
 #include <relacs/comedi/comedianaloginput.h>
 #include <relacs/comedi/comedianalogoutput.h>
 #include <relacs/comedi/comedidigitalio.h>
+#include <relacs/comedi/comedirouting.h>
 #include <relacs/comedi/comedinipfi.h>
 
 namespace comedi {
@@ -30,6 +31,7 @@ namespace comedi {
 addAnalogInput( ComediAnalogInput );
 addAnalogOutput( ComediAnalogOutput );
 addDigitalIO( ComediDigitalIO );
+addDevice( ComediRouting );
 addDevice( ComediNIPFI );
 
 };

@@ -35,6 +35,10 @@ namespace comedi {
 \class ComediDigitalIO
 \author Jan Benda
 \brief [DigitalIO] Interface for accessing digital I/O lines of a daq-board via comedi.
+
+\par Options
+- \c subdevice: the subdevice id of the digital I/O (check with comedi_test -t info).
+- \c startsubdevice: start searching for a digital I/O subdevice at the subdevice with the specified id.
 */
 
 
@@ -46,15 +50,19 @@ public:
     /*! Create a new ComediDigitalIO without opening a device. */
   ComediDigitalIO( void );
     /*! Open the digital I/O driver specified by its device file \a device. */
-  ComediDigitalIO( const string &device, long mode=0 );
+  ComediDigitalIO( const string &device, const Options &opts );
     /*! Close the daq driver. */
   virtual ~ComediDigitalIO( void );
 
-    /*! Open the digital I/O device specified by \a device.
+    /*! Open a digital I/O device on the device \a device.
+        The digital I/O subdevice can be specified by the "subdevice" option in \a opts.
+        Alternatively, the first digital I/O subdevice is taken.
+	The search for the digital I/O subdevice starts at the subdevice specified
+	by the "startsubdevice" option in \a opts (defaults to "0").
  	Returns zero on success, or InvalidDevice (or any other negative number
 	indicating the error).
         \sa isOpen(), close() */
-  virtual int open( const string &device, long mode=0 );
+  virtual int open( const string &device, const Options &opts );
     /*! Returns true if the device is open.
         \sa open(), close() */
   virtual bool isOpen( void ) const;

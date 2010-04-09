@@ -48,6 +48,17 @@ The names, units, and formats of the intensity and the frequency can
 be retrieved by intensityName(), intensityUnit(), intensityFormat(),
 frequencyName(), frequencyUnit(), and frequencyFormat().
 
+The open() function recognizes the following options:
+- \c line: the line on the attenuator
+- \c aodevice: the identifier analog output device
+- \c aochannel: the channel of the analog output device
+- \c intensityname: name of the intensity variable
+- \c intensityunit: unit of the intensity variable
+- \c intensityformat: format string for the intensity variable
+- \c frequencyname: name of the frequency variable
+- \c frequencyunit: unit of the frequency variable
+- \c frequencyformat: format string for the frequency variable
+
 The function init() is called before the attenuator is used.
 You can reimplement this function to load calibration data
 from a file, for example.
@@ -137,14 +148,19 @@ public:
     /*! Destructor. */
   virtual ~Attenuate( void );
 
-    /*! Assign the output line \a index of the  attenuator \a att
-	to the attenuator wrapper.
+    /*! Assign output line \a line of the  attenuator \a att
+	to this.
 	Returns zero on success, or InvalidDevice (or any other negative number
 	indicating the error).
         \sa isOpen(), init(), setAODevice(), setAOChannel() */
-  virtual int open( Device &att, long index=0 );
-    /*! Does nothing (needed for compatibility to other devices). */
-  virtual int open( const string &device, long index=0 );
+  int open( Device &att, int line );
+    /*! Evaluates \a opts, calls open(Device&,int,const Options&),
+        and sets name, unit, and format of intensity and frequency.
+        You certainly do not need to reimplement this function. */
+  virtual int open( Device &att, const Options &opts );
+    /*! Does nothing (needed for compatibility to other devices).
+        Do not reimplement this function. */
+  virtual int open( const string &device, const Options &opts );
      /*! True if the hardware driver is open and the device index is supported.
         \sa open() */
   virtual bool isOpen( void ) const;

@@ -39,7 +39,8 @@ CS3310PP::CS3310PP( const string &device )
   : Attenuator( "CS3310PP" ),
     Handle( -1 )
 {
-  open( device );
+  Options opts;
+  open( device, opts );
 }
 
 
@@ -56,7 +57,7 @@ CS3310PP::~CS3310PP( void )
 }
 
 
-int CS3310PP::open( const string &device, long mode )
+int CS3310PP::open( const string &device, const Options &opts )
 {
   Info.clear();
 

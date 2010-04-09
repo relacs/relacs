@@ -33,6 +33,7 @@ libcomedistreaming_la_SOURCES = \
     comedianaloginput.cc \
     comedianalogoutput.cc \
     comedidigitalio.cc \
+    comedirouting.cc \
     comedinipfi.cc \
     comedistreaming.cc
 
@@ -42,6 +43,7 @@ libcomedistreaming_la_include_HEADERS = \
     $(HEADER_PATH)/comedianaloginput.h \
     $(HEADER_PATH)/comedianalogoutput.h \
     $(HEADER_PATH)/comedidigitalio.h \
+    $(HEADER_PATH)/comedirouting.h \
     $(HEADER_PATH)/comedinipfi.h
 
 

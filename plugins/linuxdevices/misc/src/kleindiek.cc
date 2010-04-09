@@ -38,7 +38,8 @@ Kleindiek::Kleindiek( const string &device )
   : Manipulator( "Kleindiek" )
 {
   construct();
-  open( device );
+  Options opts;
+  open( device, opts );
 }
 
 
@@ -68,7 +69,7 @@ void Kleindiek::construct( void )
 }
 
 
-int Kleindiek::open( const string &device, long mode )
+int Kleindiek::open( const string &device, const Options &opts )
 {
   if ( Handle >= 0 )
     return 0;

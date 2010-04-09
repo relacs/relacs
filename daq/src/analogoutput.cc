@@ -57,7 +57,7 @@ AnalogOutput::~AnalogOutput( void )
 }
 
 
-int AnalogOutput::open( const string &device, long mode )
+int AnalogOutput::open( const string &device, const Options &opts )
 {
   Info.clear();
   Settings.clear();
@@ -66,7 +66,7 @@ int AnalogOutput::open( const string &device, long mode )
 }
 
 
-int AnalogOutput::open( Device &device, long mode )
+int AnalogOutput::open( Device &device, const Options &opts )
 {
   Info.clear();
   Settings.clear();

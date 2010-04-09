@@ -47,7 +47,7 @@ NIAI::NIAI( void )
 }
 
 
-NIAI::NIAI( const string &device, long mode )
+NIAI::NIAI( const string &device, const Options &opts )
   : AnalogInput( "NI E-Series Analog Input", NIAnalogIOType ),
     Handle( -1 )
 {
@@ -57,7 +57,7 @@ NIAI::NIAI( const string &device, long mode )
   BufferN = 0;
   Buffer = NULL;
   TraceIndex = 0;
-  open( device, mode );
+  open( device, opts );
 }
 
 
@@ -67,7 +67,7 @@ NIAI::~NIAI( void )
 }
 
 
-int NIAI::open( const string &device, long mode )
+int NIAI::open( const string &device, const Options &opts )
 {
   if ( isOpen() )
     return -5;

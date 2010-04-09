@@ -276,7 +276,7 @@ string Acquire::outTraceName( int index ) const
 }
 
 
-const Attenuate *Acquire::outTraceAttenuate( int index ) const
+Attenuate *Acquire::outTraceAttenuate( int index )
 {
   if ( index >= 0 && index < outTracesSize() ) {
     for ( unsigned int a=0; a<Att.size(); a++ ) {

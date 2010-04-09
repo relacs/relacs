@@ -43,13 +43,13 @@ ComediDigitalIO::ComediDigitalIO( void )
 }
 
 
-ComediDigitalIO::ComediDigitalIO( const string &device, long mode ) 
+ComediDigitalIO::ComediDigitalIO( const string &device, const Options &opts ) 
   : DigitalIO( "ComediDigitalIO" )
 {
   DeviceP = NULL;
   SubDevice = 0;
   MaxLines = 0;
-  open( device, mode );
+  open( device, opts );
 }
 
   
@@ -59,7 +59,7 @@ ComediDigitalIO::~ComediDigitalIO( void )
 }
 
 
-int ComediDigitalIO::open( const string &device, long mode )
+int ComediDigitalIO::open( const string &device, const Options &opts )
 { 
   if ( isOpen() )
     return -5;
@@ -79,14 +79,32 @@ int ComediDigitalIO::open( const string &device, long mode )
   }
 
   // get DIO subdevice:
-  int subdev = comedi_find_subdevice_by_type( DeviceP, COMEDI_SUBD_DIO, mode );
+  int subdev = opts.integer( "subdevice", 0, -1 );
+  if ( subdev >= 0 ) {
+    int diotype = comedi_get_subdevice_type( DeviceP, subdev );
+    if ( diotype != COMEDI_SUBD_DI &&
+	 diotype != COMEDI_SUBD_DO &&
+	 diotype != COMEDI_SUBD_DIO ) {
+      cerr << "! error: ComediDigitalIO::open() -> "
+	   << "Subdevice " << subdev << "is not a digital I/o on device "
+	   << device << '\n';
+      comedi_close( DeviceP );
+      DeviceP = NULL;
+      return InvalidDevice;
+    }
+  }
   if ( subdev < 0 ) {
-    cerr << "! error: ComediDigitalIO::open() -> "
-	 << "No subdevice for DIO found on device "  << device
-	 << " for subdevice >= " << mode << '\n';
-    comedi_close( DeviceP );
-    DeviceP = NULL;
-    return InvalidDevice;
+    int startsubdev = opts.integer( "startsubdevice", 0, 0 );
+    subdev = comedi_find_subdevice_by_type( DeviceP, COMEDI_SUBD_DIO,
+					    startsubdev );
+    if ( subdev < 0 ) {
+      cerr << "! error: ComediDigitalIO::open() -> "
+	   << "No subdevice for DIO found on device "  << device
+	   << " for startsubdevice >= " << startsubdev << '\n';
+      comedi_close( DeviceP );
+      DeviceP = NULL;
+      return InvalidDevice;
+    }
   }
   SubDevice = subdev;
 

@@ -53,12 +53,12 @@ public:
     /*! Create a new DynClampAnalogOutput without opening a device. */
   DynClampAnalogOutput( void );
     /*! Open the analog output driver specified by its device file \a device. */
-  DynClampAnalogOutput( const string &device, long mode=0 );
+  DynClampAnalogOutput( const string &device, const Options &opts );
     /*! Stop analog output and close the daq driver. */
   virtual ~DynClampAnalogOutput( void );
 
     /*! Open the analog output device on device file \a device. */
-  virtual int open( const string &device, long mode=0 );
+  virtual int open( const string &device, const Options &opts );
     /*! Returns true if dynamic clamp module was succesfully opened. */
   virtual bool isOpen( void ) const;
     /*! Stop all activity and close the device. */

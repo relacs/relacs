@@ -32,7 +32,7 @@ using namespace nieseries;
 namespace misc {
 
 
-AmplMode::AmplMode( const string &device, long mode )
+AmplMode::AmplMode( const string &device, const Options &opts )
   : Device( "AmplMode" ),
     DIO( 0 ),
     Own( false )
@@ -52,11 +52,11 @@ AmplMode::AmplMode( const string &device, long mode )
   MixerChannel = SOUND_MIXER_VOLUME;
   Volume = 0;
 
-  open( device, mode );
+  open( device, opts );
 }
 
 
-AmplMode::AmplMode( NIDIO *nidio, long mode )
+AmplMode::AmplMode( NIDIO *nidio, const Options &opts )
   : Device( "AmplMode" ),
     DIO( 0 ),
     Own( false )
@@ -72,7 +72,7 @@ AmplMode::AmplMode( NIDIO *nidio, long mode )
   ModeMask = Bridge + Resistance + VoltageClamp + CurrentClamp;
   Mask = ModeMask + Buzzer;
 
-  open( *nidio, mode );
+  open( *nidio, opts );
 }
 
 
@@ -101,7 +101,7 @@ AmplMode::~AmplMode( void )
 }
 
 
-int AmplMode::open( const string &device, long mode )
+int AmplMode::open( const string &device, const Options &opts )
 {
   Info.clear();
   Settings.clear();
@@ -115,7 +115,8 @@ int AmplMode::open( const string &device, long mode )
   if ( DIO == 0 ) {
     DIO = new NIDIO( device );
     if ( DIO->isOpen() ) {
-      if ( DIO->allocPins( Mask << mode ) > 0 ) {
+      int firstpin = opts.integer( "firstpin", 0 , 0 );
+      if ( DIO->allocPins( Mask << firstpin ) > 0 ) {
 	cerr << "! warning: AmplMode::open( device ) -> cannot allocate pins.\n";
 	DIO->close();
 	delete DIO;
@@ -125,7 +126,7 @@ int AmplMode::open( const string &device, long mode )
       }
       else {
 	Own = true;
-	open( mode );
+	open( opts );
 	setDeviceFile( device );
 	return 0;
       }
@@ -145,7 +146,7 @@ int AmplMode::open( const string &device, long mode )
 }
 
 
-int AmplMode::open( NIDIO &nidio, long mode )
+int AmplMode::open( NIDIO &nidio, const Options &opts )
 {
   Info.clear();
   Settings.clear();
@@ -162,14 +163,15 @@ int AmplMode::open( NIDIO &nidio, long mode )
   }
 
   if ( isOpen() ) {
-    if ( DIO->allocPins( Mask << mode ) > 0 ) {
+    int firstpin = opts.integer( "firstpin", 0 , 0 );
+    if ( DIO->allocPins( Mask << firstpin ) > 0 ) {
       cerr << "! warning: AmplMode::open( device ) -> cannot allocate pins.\n";
       DIO = 0;
       Own = false;
       return InvalidDevice;
     }
     else {
-      open( mode );
+      open( opts );
       setDeviceFile( nidio.deviceIdent() );
       return 0;
     }
@@ -183,20 +185,20 @@ int AmplMode::open( NIDIO &nidio, long mode )
 }
 
 
-int AmplMode::open( Device &device, long mode )
+int AmplMode::open( Device &device, const Options &opts )
 {
-  return open( dynamic_cast<NIDIO&>( device ), mode );
+  return open( dynamic_cast<NIDIO&>( device ), opts );
 }
 
 
-void AmplMode::open( long mode )
+void AmplMode::open( const Options &opts )
 {
   if ( isOpen() ) {
 
     Info.clear();
     Settings.clear();
 
-    FirstPin = mode;
+    FirstPin = opts.integer( "firstpin", 0 , 0 );
     
     Buzzer = 0x01 << FirstPin;
     Resistance = 0x02 << FirstPin;

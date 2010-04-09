@@ -59,7 +59,7 @@ public:
     /*! Create a new ComediAnalogOutput without opening a device. */
   ComediAnalogOutput( void );
     /*! Open the analog output driver specified by its device file \a device. */
-  ComediAnalogOutput( const string &device, long mode=0 );
+  ComediAnalogOutput( const string &device, const Options &opts );
     /*! Stop analog output and close the daq driver. */
   virtual ~ComediAnalogOutput( void );
 
@@ -67,7 +67,7 @@ public:
         \todo  if a ranges is not supported but comedi thinks so: set max = -1.0,
         i.e. NI 6070E PCI: range #3&4 (-1..1V, 0..1V) not supported
         \todo maybe use an internal maximum buffer size (in case comedi max is way too much)? */
-  virtual int open( const string &device, long mode=0 );
+  virtual int open( const string &device, const Options &opts );
     /*! Returns true if driver was succesfully opened. */
   virtual bool isOpen( void ) const;
     /*! Stop all activity and close the device. */

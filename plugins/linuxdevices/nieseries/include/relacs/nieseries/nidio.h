@@ -35,6 +35,9 @@ namespace nieseries {
 \author Jan Benda
 \version 1.0
 \brief [Device] Controls the digital I/O lines of a National Instruments E Series board.
+
+\par Options
+- \c config: Configure the digital I/O pins for input (0) or output (1).
  */
 
 class NIDIO : public Device
@@ -46,7 +49,7 @@ public:
   NIDIO( void );
   ~NIDIO( void );
 
-  virtual int open( const string &device, long mode=0 );
+  virtual int open( const string &device, const Options &opts );
   virtual bool isOpen( void ) const { return Handle >= 0; };
   virtual void close( void );
 

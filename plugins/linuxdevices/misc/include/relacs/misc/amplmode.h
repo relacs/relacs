@@ -35,6 +35,9 @@ namespace misc {
 \author Jan Benda
 \version 1.0
 \brief [Device] Control the mode of an amplifier via NIDIO
+
+\par Options
+- \c firstpin: the first pin of the dio lines used for controlling the amplifier.
  */
 
 
@@ -43,14 +46,14 @@ class AmplMode : public Device
 
 public:
 
-  AmplMode( const string &device, long mode );
-  AmplMode( NIDIO *nidio, long mode );
+  AmplMode( const string &device, const Options &opts );
+  AmplMode( NIDIO *nidio, const Options &opts );
   AmplMode( void );
   virtual ~AmplMode( void );
 
-  virtual int open( const string &device, long mode );
-  virtual int open( NIDIO &nidio, long mode );
-  virtual int open( Device &device, long mode );
+  virtual int open( const string &device, const Options &opts );
+  virtual int open( NIDIO &nidio, const Options &opts );
+  virtual int open( Device &device, const Options &opts );
   virtual bool isOpen( void ) const;
   virtual void close( void );
 
@@ -66,7 +69,7 @@ public:
 private:
 
     /*! Initialize the amplifier. */
-  void open( long mode );
+  void open( const Options &opts );
 
     /*! The NI DIO. */
   NIDIO *DIO;

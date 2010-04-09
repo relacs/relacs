@@ -65,7 +65,7 @@ public:
     /*! Construct and open the PFU subdevice. 
         For each bit (0-9) that is set in \a mode
         the corresponding PFI pin is programmed for output. */
-  NIPFI( const string &device, long mode=0 );
+  NIPFI( const string &device, const Options &opts );
     /*! Constructor. */
   NIPFI( void );
     /*! Destructor. Closes an open PFI subdevice. */
@@ -73,7 +73,7 @@ public:
 
     /*! Open the PFI subdevice. For each bit (0-9) that is set in \a mode
         the corresponding PFI pin is programmed for output. */
-  virtual int open( const string &device, long mode=0 );
+  virtual int open( const string &device, const Options &opts );
     /*! Return \a true if the PFU subdevice is open. */
   virtual bool isOpen( void ) const;
     /*! Close the PFI subdevice. */

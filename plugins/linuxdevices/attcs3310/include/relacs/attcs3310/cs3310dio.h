@@ -63,8 +63,8 @@ public:
   CS3310DIO( void );
   virtual ~CS3310DIO( void );
 
-  virtual int open( DigitalIO &dio, long mode=0 );
-  virtual int open( Device &device, long mode=0 );
+  virtual int open( DigitalIO &dio, const Options &opts );
+  virtual int open( Device &device, const Options &opts );
   virtual bool isOpen( void ) const;
   virtual void close( void );
 

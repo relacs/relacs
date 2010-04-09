@@ -33,7 +33,8 @@ CS3310DIO::CS3310DIO( DigitalIO *dio )
   : Attenuator( "CS3310DIO" ),
     DIO( 0 )
 {
-  open( *dio );
+  Options opts;
+  open( *dio, opts );
 }
 
 
@@ -49,7 +50,7 @@ CS3310DIO::~CS3310DIO( void )
 }
 
 
-int CS3310DIO::open( DigitalIO &dio, long mode )
+int CS3310DIO::open( DigitalIO &dio, const Options &opts )
 {
   DIO = &dio;
 
@@ -99,9 +100,9 @@ int CS3310DIO::open( DigitalIO &dio, long mode )
 }
 
 
-int CS3310DIO::open( Device &device, long mode )
+int CS3310DIO::open( Device &device, const Options &opts )
 {
-  return open( dynamic_cast<DigitalIO&>( device ) );
+  return open( dynamic_cast<DigitalIO&>( device ), opts );
 }
 
 

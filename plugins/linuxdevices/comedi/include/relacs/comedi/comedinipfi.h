@@ -1,6 +1,6 @@
 /*
   comedi/comedinipfi.h
-  Controlling the PFI pins of a NI daq-board via comedi.
+  Controlls the PFI pins of a NI daq-board via comedi.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
@@ -24,7 +24,7 @@
 
 #include <comedilib.h>
 #include <vector>
-#include <relacs/device.h>
+#include <relacs/comedi/comedirouting.h>
 using namespace std;
 using namespace relacs;
 
@@ -34,14 +34,47 @@ namespace comedi {
 /*! 
 \class ComediNIPFI
 \author Jan Benda
-\brief [Device] Controlling the PFI pins of a NI daq-board via comedi.
+\brief [Device] Controlls the PFI pins of a NI daq-board via comedi.
 
-Right now this routes the AO_START signal to PFI6
-\todo make this configurabel
+The signal \a routing is routed to the channel \a channel on the 
+PFI subdevice of a national instruments board.
+Use for \a routing the following values (from comedi.h):
+\code
+enum ni_pfi_routing {
+         NI_PFI_OUTPUT_PFI_DEFAULT = 0,
+         NI_PFI_OUTPUT_AI_START1 = 1,
+         NI_PFI_OUTPUT_AI_START2 = 2,
+         NI_PFI_OUTPUT_AI_CONVERT = 3,
+         NI_PFI_OUTPUT_G_SRC1 = 4,
+         NI_PFI_OUTPUT_G_GATE1 = 5,
+         NI_PFI_OUTPUT_AO_UPDATE_N = 6,
+         NI_PFI_OUTPUT_AO_START1 = 7,
+         NI_PFI_OUTPUT_AI_START_PULSE = 8,
+         NI_PFI_OUTPUT_G_SRC0 = 9,
+         NI_PFI_OUTPUT_G_GATE0 = 10,
+         NI_PFI_OUTPUT_EXT_STROBE = 11,
+         NI_PFI_OUTPUT_AI_EXT_MUX_CLK = 12,
+         NI_PFI_OUTPUT_GOUT0 = 13,
+         NI_PFI_OUTPUT_GOUT1 = 14,
+         NI_PFI_OUTPUT_FREQ_OUT = 15,
+         NI_PFI_OUTPUT_PFI_DO = 16,
+         NI_PFI_OUTPUT_I_ATRIG = 17,
+         NI_PFI_OUTPUT_RTSI0 = 18,
+         NI_PFI_OUTPUT_PXI_STAR_TRIGGER_IN = 26,
+         NI_PFI_OUTPUT_SCXI_TRIG1 = 27,
+         NI_PFI_OUTPUT_DIO_CHANGE_DETECT_RTSI = 28,
+         NI_PFI_OUTPUT_CDI_SAMPLE = 29,
+         NI_PFI_OUTPUT_CDO_UPDATE = 30
+};
+\endcode
+
+\par Options
+- \c channel
+- \c routing
 */
 
 
-class ComediNIPFI : public Device
+class ComediNIPFI : public ComediRouting
 {
 
 public:
@@ -49,7 +82,7 @@ public:
     /*! Create a new ComediNIPFI without opening a device. */
   ComediNIPFI( void );
     /*! Open comedi specified by its device file \a device. */
-  ComediNIPFI( const string &device, long mode=0 );
+  ComediNIPFI( const string &device, const Options &opts );
     /*! Close the comedi driver. */
   virtual ~ComediNIPFI( void );
 
@@ -57,21 +90,7 @@ public:
  	\return zero on success, or InvalidDevice (or any other negative number
 	indicating the error).
         \sa isOpen(), close() */
-  virtual int open( const string &device, long mode=0 );
-    /*! \return \c true if the device is open.
-        \sa open(), close() */
-  virtual bool isOpen( void ) const;
-    /*! Close the device.
-        \sa open(), isOpen() */
-  virtual void close( void );
-
-
-private:
-
-    /*! Pointer to the comedi device. */
-  comedi_t *DeviceP;
-    /*! The comedi subdevice number. */
-  unsigned int SubDevice;
+  virtual int open( const string &device, const Options &opts );
 
 };
 

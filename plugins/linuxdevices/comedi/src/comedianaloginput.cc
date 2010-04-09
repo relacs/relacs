@@ -59,7 +59,7 @@ ComediAnalogInput::ComediAnalogInput( void )
 }
 
 
-ComediAnalogInput::ComediAnalogInput( const string &device, long mode ) 
+ComediAnalogInput::ComediAnalogInput( const string &device, const Options &opts ) 
   : AnalogInput( "ComediAnalogInput", ComediAnalogIOType )
 {
   ErrorState = 0;
@@ -80,7 +80,7 @@ ComediAnalogInput::ComediAnalogInput( const string &device, long mode )
   TraceIndex = 0;
   TotalSamples = 0;
   CurrentSamples = 0;
-  open( device, mode );
+  open( device, opts );
 }
 
   
@@ -90,7 +90,7 @@ ComediAnalogInput::~ComediAnalogInput( void )
 }
 
 
-int ComediAnalogInput::open( const string &device, long mode )
+int ComediAnalogInput::open( const string &device, const Options &opts )
 { 
   if ( isOpen() )
     return -5;

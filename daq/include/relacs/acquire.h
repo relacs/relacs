@@ -280,7 +280,7 @@ public:
         If \a index is invalid or no Atenuate class is connected to the 
 	output trace, then 0 is returned.
         \sa outTraceName() */
-  const Attenuate *outTraceAttenuate( int index ) const;
+  Attenuate *outTraceAttenuate( int index );
     /*! Return the output trace with index \a index.
         \sa addOutTrace(), outTracesSize(), outTraceIndex(),
 	outTraceName(), applyOutTrace(), clearOutTraces() */

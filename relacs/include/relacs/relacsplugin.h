@@ -547,8 +547,6 @@ protected:
     /*! Return the digital I/O device with identifier \a ident. */
   DigitalIO *digitalIO( const string &ident );
 
-    /*! Return the attenuator for output trace \a index. */
-  Attenuate *attenuator( int index );
     /*! Return the attenuator for output trace \a name. */
   Attenuate *attenuator( const string &name );
 

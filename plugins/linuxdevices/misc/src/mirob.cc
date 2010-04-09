@@ -44,7 +44,8 @@ Mirob::Mirob( const string &device )
     Speed[k] = 100.0;
     Acceleration[k] = 0.6;
   }
-  open( device );
+  Options opts;
+  open( device, opts );
 }
 
 
@@ -65,7 +66,7 @@ Mirob::~Mirob( void )
 }
 
 
-int Mirob::open( const string &device, long mode )
+int Mirob::open( const string &device, const Options &opts )
 {
   cerr << "MIROB open " << device << '\n';
   if ( Opened )

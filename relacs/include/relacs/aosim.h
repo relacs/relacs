@@ -48,9 +48,9 @@ public:
   ~AOSim( void );           
 
     /*! Open the analog output device simulation */
-  virtual int open( const string &device, long mode );
+  virtual int open( const string &device, const Options &opts );
     /*! Open the analog output device simulation. */
-  virtual int open( Device &device, long mode );
+  virtual int open( Device &device, const Options &opts );
     /*! Returns true. */
   virtual bool isOpen( void ) const;
     /*! Close the device simulation. */

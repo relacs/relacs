@@ -95,12 +95,6 @@ class AODevices : public DeviceList< AnalogOutput, RELACSPlugin::AnalogOutputId 
 public:
   AODevices( void )
     : DeviceList< AnalogOutput, RELACSPlugin::AnalogOutputId >( "Analog Output Device", "Analog Output Devices" ) {};
-protected:
-  virtual void init( AnalogOutput *dv, int n, const Str &ns, AllDevices &devices )
-    {
-      double extr = number( "extref" + ns, -1.0, "V" );
-      dv->setExternalReference( extr );
-    };
 };
 
 
@@ -127,10 +121,6 @@ class AttDevices : public DeviceList< Attenuator, RELACSPlugin::AttenuatorId >
 public:
   AttDevices( void )
     : DeviceList< Attenuator, RELACSPlugin::AttenuatorId >( "Attenuator", "Attenuator Devices" ) {};
-
-protected:
-  virtual int mode( int n, const Str &ns )
-    { return 0; };
 };
 
 
@@ -142,60 +132,14 @@ protected:
 class AttInterfaces : public DeviceList< Attenuate, RELACSPlugin::AttenuateId >
 {
 public:
-  AttInterfaces( AODevices *aod )
-    : DeviceList< Attenuate, RELACSPlugin::AttenuateId >( "Attenuate", "Attenuator Interfaces" ),
-    AOD( aod ) {};
-  Attenuate *attenuate( const string &device, int channel )
-    {
-      for ( unsigned int k=0; k < DVs.size(); k++ )
-	if ( DVs[k]->aoDevice() == device &&
-	     DVs[k]->aoChannel() == channel )
-	  return DVs[k];
-      return 0;
-    }
-  Attenuate *attenuate( int index, int channel )
-    {
-      if ( index < 0 || index >= AOD->size() )
-	return 0;
-      string device = (*AOD)[index].deviceIdent();
-      return attenuate( device, channel );
-    }
+  AttInterfaces( void )
+    : DeviceList< Attenuate, RELACSPlugin::AttenuateId >( "Attenuate", "Attenuator Interfaces" ) {};
   void save( const string &path )
     {
       for ( unsigned int k=0; k < DVs.size(); k++ ) {
 	DVs[k]->save( path );
       }
     }
-
-protected:
-  virtual int mode( int n, const Str &ns )
-    { return integer( "line" + ns, 0, 0 ); };
-  virtual void init( Attenuate *dv, int n, const Str &ns, AllDevices &devices )
-    {
-      string aos = text( "ao" + ns, 0, "" );
-      Device *d = AOD->device( aos );
-      if ( d == 0 && ! AOD->empty() )
-	d = &(*AOD)[0];
-      if ( d != 0 )
-	dv->setAODevice( d->deviceIdent() );
-      else
-	dv->setAODevice( "" );
-      dv->setAOChannel( integer( "channel" + ns, 0, 0 ) );
-      if ( exist( "intensityname" + ns ) )
-	dv->setIntensityName( text( "intensityname" + ns ) );
-      if ( exist( "intensityunit" + ns ) )
-	dv->setIntensityUnit( text( "intensityunit" + ns ) );
-      if ( exist( "intensityformat" + ns ) )
-	dv->setIntensityName( text( "intensityformat" + ns ) );
-      if ( exist( "frequencyname" + ns ) )
-	dv->setFrequencyName( text( "frequencyname" + ns ) );
-      if ( exist( "frequencyunit" + ns ) )
-	dv->setFrequencyUnit( text( "frequencyunit" + ns ) );
-      if ( exist( "frequencyformat" + ns ) )
-	dv->setFrequencyName( text( "frequencyformat" + ns ) );
-    };
-
-  AODevices *AOD;
     
 };
 

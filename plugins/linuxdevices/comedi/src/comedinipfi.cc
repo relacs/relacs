@@ -1,6 +1,6 @@
 /*
   comedi/comedinipfi.cc
-  Controlling the PFI pins of a NI daq-board via comedi.
+  Controlls the PFI pins of a NI daq-board via comedi.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
@@ -35,48 +35,29 @@ namespace comedi {
 
 
 ComediNIPFI::ComediNIPFI( void ) 
-  : Device( "ComediNIPFI" )
+  : ComediRouting( "ComediNIPFI" )
 {
-  DeviceP = NULL;
-  SubDevice = 0;
 }
 
 
-ComediNIPFI::ComediNIPFI( const string &device, long mode ) 
-  : Device( "ComediNIPFI" )
+ComediNIPFI::ComediNIPFI( const string &device, const Options &opts ) 
+  : ComediRouting( "ComediNIPFI" )
 {
-  DeviceP = NULL;
-  SubDevice = 0;
-  open( device, mode );
+  open( device, opts );
 }
 
   
 ComediNIPFI::~ComediNIPFI( void ) 
 {
-  close();
 }
 
 
-int ComediNIPFI::open( const string &device, long mode )
+int ComediNIPFI::open( const string &device, const Options &opts )
 { 
-  if ( isOpen() )
-    return -5;
-
   Info.clear();
   Settings.clear();
 
-  if ( device.empty() )
-    return InvalidDevice;
-
-  // open comedi device:
-  DeviceP = comedi_open( device.c_str() );
-  if ( DeviceP == NULL ) {
-    cerr << "! error: ComediNIPFI::open() -> "
-	 << "Device-file " << device << " could not be opened!\n";
-    return NotOpen;
-  }
-
-  // check PFI subdevice:  7: 16 (PFI), 10: 8 (RTSI)
+  // check PFI subdevice no. 7
   int subdev = 7;
   int subdevtype = comedi_get_subdevice_type( DeviceP, subdev );
   if ( subdevtype != COMEDI_SUBD_DIO ) {
@@ -87,79 +68,26 @@ int ComediNIPFI::open( const string &device, long mode )
     DeviceP = NULL;
     return InvalidDevice;
   }
-  SubDevice = subdev;
 
-  // lock PFI subdevice:
-  if ( comedi_lock( DeviceP, SubDevice ) != 0 ) {
-    cerr << "! error: ComediNIPFI::open() -> "
-	 << "Locking of AI subdevice failed on device " << device << '\n';
-    comedi_close( DeviceP );
-    DeviceP = NULL;
-    SubDevice = 0;
-    return NotOpen;
-  }  
-
-  // set routing:
-  if ( comedi_set_routing( DeviceP, SubDevice, 6, NI_PFI_OUTPUT_AO_START1 ) != 0 ) {
-    cerr << "! error: ComediNIPFI::open() -> "
-	 << "Routing failed on device " << device << '\n';
-    comedi_unlock( DeviceP,  SubDevice );
-    comedi_close( DeviceP );
-    DeviceP = NULL;
-    SubDevice = 0;
+  // get channel:
+  int channel = opts.integer( "channel", 0, -1 );
+  if ( channel < 0 ) {
+    cerr << "! error: ComediRouting::open() -> "
+	 << "Missing or invalid channel for device "
+	 << deviceIdent() << " !\n";
     return WriteError;
   }
 
-  // configure pins:
-  if ( comedi_dio_config( DeviceP, SubDevice, 6, COMEDI_OUTPUT ) != 0 ) {
-    cerr << "! error: ComediNIPFI::open() -> "
-	 << "DIO_CONFIG failed on device " << device << '\n';
-    comedi_unlock( DeviceP,  SubDevice );
-    comedi_close( DeviceP );
-    DeviceP = NULL;
-    SubDevice = 0;
+  // get routing:
+  int routing = opts.integer( "routing", 0, -1 );
+  if ( routing < 0 ) {
+    cerr << "! error: ComediRouting::open() -> "
+	 << "Missing or invalid routing parameter for device "
+	 << deviceIdent() << " !\n";
     return WriteError;
   }
 
-  // set basic device infos:
-  setDeviceName( comedi_get_board_name( DeviceP ) );
-  setDeviceVendor( comedi_get_driver_name( DeviceP ) );
-  setDeviceFile( device );
-  addInfo();
-  
-  return 0;
-}
-
-
-bool ComediNIPFI::isOpen( void ) const 
-{ 
-  return ( DeviceP != NULL );
-}
-
-
-void ComediNIPFI::close( void ) 
-{
-  if ( ! isOpen() )
-    return;
-
-  // unlock:
-  int error = comedi_unlock( DeviceP,  SubDevice );
-  if ( error < 0 )
-    cerr << "! warning: ComediNIPFI::close() -> "
-	 << "Unlocking of AI subdevice on device " << deviceFile() << "failed\n";
-
-  // close:
-  error = comedi_close( DeviceP );
-  if ( error )
-    cerr << "! warning: ComediNIPFI::close() -> "
-	 << "Closing of AI subdevice on device " << deviceFile() << "failed.\n";
-
-  // clear flags:
-  DeviceP = NULL;
-  SubDevice = 0;
-
-  Info.clear();
-  Settings.clear();
+  return ComediRouting::open( device, subdev, channel, routing );
 }
 
 

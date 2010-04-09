@@ -23,6 +23,7 @@
 #define _RELACS_DEVICELIST_H_ 1
 
 #include <qpopupmenu.h> 
+#include <deque>
 #include <vector>
 #include <relacs/str.h>
 #include <relacs/configclass.h>
@@ -111,11 +112,6 @@ public:
 
 
 protected:
-
-    /*! Return the mode for the \a n -t device. */
-  virtual int mode( int n, const Str &ns );
-    /*! Initialize the device \a dv with some more parameter. */
-  virtual void init( T *dv, int n, const Str &ns, AllDevices &devices ) {};
 
     /*! The list of Devices. */
   vector < T* > DVs;
@@ -213,44 +209,56 @@ void DeviceList<T,PluginID>::add( T *d, DD &devices )
 }
 
 
-template < class T, int PluginID >
-int DeviceList<T,PluginID>::mode( int n, const Str &ns )
-{
-  return integer( "mode" + ns, 0, 0 );
-}
-
-
 template < class T, int PluginID > template < class DD >
-int DeviceList<T,PluginID>::create( DD &devices,
-				    int m, const string &dflt )
+int DeviceList<T,PluginID>::create( DD &devices, int m, const string &dflt )
 {
   Warnings = "";
-  int n = 0;
+
+  // get device entries:
+  deque< Options::const_iterator > devicesecs;
   int failed = 0;
-  for ( int j=1; ; j++ ) {
-    Str ns( j, 0 );
-    if ( ! exist( "plugin" + ns ) ) {
-      failed++;
-      if ( failed > 5 )
-	break;
-      else
-	continue;
+  for ( int j=1; failed<=5; j++ ) {
+    // check for device entry in options:
+    Options::const_iterator dp = find( "Device" + Str( j, 0 ) );
+    if ( dp != Options::end() ) {
+      failed = 0;
+      devicesecs.push_back( dp );
     }
-    failed = 0;
-    string ms = dflt;
-    if ( m >= 0 && m < Options::size( "plugin" + ns ) )
-      ms = text( "plugin" + ns, m );
+    else
+      failed++;
+  }
+  devicesecs.push_back( Options::end() );
+
+  int n = 0;
+  for ( unsigned int j=0; j<devicesecs.size()-1; j++ ) {
+
+    // get section of options:
+    Options deviceopts;
+    for ( Options::const_iterator dp=devicesecs[j];
+	  dp !=devicesecs[j+1];
+	  ++dp ) {
+      deviceopts.add( *dp );
+    }
+
+    // get plugin:
+    string ms = "";
+    if ( m >= 0 && m < deviceopts.size( "plugin" ) )
+      ms = deviceopts.text( "plugin", m );
     if ( ms == "0" )
       continue;
     if ( ms.empty() )
       ms = dflt;
-    int k = Plugins::index( ms, PluginID );
-    if ( !ms.empty() && k >= 0 ) {
+    int k = -1;
+    if ( !ms.empty() )
+      k = Plugins::index( ms, PluginID );
+
+    // create plugin:
+    if ( k >= 0 ) {
       void *mp = Plugins::create( k );
       if ( mp != 0 ) {
 	T *dv = static_cast<T*>( mp );
-	Str ds = text( "device" + ns );
-	int m = mode( j, ns );
+	dv->setDeviceIdent( deviceopts.text( "ident" ) );
+	Str ds = deviceopts.text( "device" );
 	/*
 	for ( int i = 0; i<devices.size(); i++ ) {
 	  if ( devices[i].deviceIdent() == ds ) {
@@ -262,26 +270,33 @@ int DeviceList<T,PluginID>::create( DD &devices,
 	*/
 	Device *d = devices.device( ds );
 	if ( d != 0 ) {
-	  dv->open( *d, m );
+	  dv->open( *d, deviceopts );
 	  ds = "";
 	}
 	if ( ! ds.empty() )
-	  dv->open( ds, m );
+	  dv->open( ds, deviceopts );
 	if ( dv->isOpen() ) {
-	  dv->setDeviceIdent( text( "ident" + ns ) );
-	  init( dv, j, ns, devices );
 	  add( dv, devices );
 	  n++;
 	}
 	else {
-	  Warnings += "Cannot open " + Name + " Plugin <b>" + ms + "</b> !\n";
+	  if ( ms.empty() )
+	    ms = "-empty-";
+	  if ( ds.empty() )
+	    ds = "-empty-";
+	  Warnings += "Cannot open " + Name + " Plugin <b>" + ms
+	    + "</b> with identifier <b>" + ds + "</b> !\n";
 	}
       }
       else {
+	if ( ms.empty() )
+	  ms = "-empty-";
 	Warnings += "Cannot create " + Name + " Plugin <b>" + ms + "</b> !\n";
       }
     }
     else {
+      if ( ms.empty() )
+	ms = "-empty-";
       Warnings += Name + " Plugin <b>" + ms + "</b> not found!\n";
     }
   }
@@ -338,7 +353,8 @@ T *DeviceList<T,PluginID>::device( int type, int n )
 template < class T, int PluginID >
 void DeviceList<T,PluginID>::readConfig( StrQueue &sq )
 {
-  Options::load( sq );
+  Options::clear();
+  Options::load( sq, ":" );
 }
 
 

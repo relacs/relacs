@@ -82,7 +82,7 @@ int CalibSpeakers::main( void )
   double minintensity = number( "intmin" );
   double intensityrange = number( "intrange" );
   double intensitystep = number( "intstep" );
-  int outtrace = outTraceIndex( text( "outtrace", 0 ) );
+  string outtrace = text( "outtrace", 0 );
   int intrace = traceIndex( text( "intrace", 0 ) );
   bool reset = boolean( "reset" );
   bool clear = boolean( "clear" );
@@ -152,7 +152,7 @@ int CalibSpeakers::main( void )
 
   // stimulus:
   OutData signal;
-  signal.setTrace( outtrace );
+  signal.setTraceName( outtrace );
   applyOutTrace( signal );
   signal.sineWave( frequency, duration, 1.0, 0.001 );
   signal.ramp( 0.001 );
@@ -306,7 +306,7 @@ int CalibSpeakers::main( void )
 
 	  // stimulus:
 	  signal.free();
-	  signal.setTrace( outtrace );
+	  signal.setTraceName( outtrace );
 	  applyOutTrace( signal );
 	  signal.sineWave( frequency, duration, 1.0, 0.001 );
 	  signal.ramp( 0.001 );

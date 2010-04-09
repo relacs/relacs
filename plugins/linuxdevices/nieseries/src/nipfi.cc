@@ -33,11 +33,11 @@ using namespace relacs;
 namespace nieseries {
 
 
-NIPFI::NIPFI( const string &device, long mode )
+NIPFI::NIPFI( const string &device, const Options &opts )
   : Device( "NIPFI" ),
     Handle( -1 )
 {
-  open( device, mode );
+  open( device, opts );
 }
 
 
@@ -54,7 +54,7 @@ NIPFI::~NIPFI( void )
 }
 
 
-int NIPFI::open( const string &device, long mode )
+int NIPFI::open( const string &device, const Options &opts )
 {
   if ( Handle >= 0 )
     return 0;
@@ -69,9 +69,10 @@ int NIPFI::open( const string &device, long mode )
     return InvalidDevice;
   }
 
-  // programm PFI pins as given by mode:
+  // programm PFI pins as given by "config":
+  int config = opts.integer( "config", 0, 0 );
   for ( int pin=0; pin<10; pin++ ) {
-    if ( mode & (1<<pin) )
+    if ( config & (1<<pin) )
       pinOut( pin );
     else
       pinIn( pin );

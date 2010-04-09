@@ -643,21 +643,14 @@ DigitalIO *RELACSPlugin::digitalIO( const string &ident )
 }
 
 
-Attenuate *RELACSPlugin::attenuator( int index )
-{
-  int device = RW->AQ->outTrace( index ).device();
-  int channel = RW->AQ->outTrace( index ).channel();
-  return RW->ATI == 0 ? 0 : RW->ATI->attenuate( device, channel );
-}
-
-
 Attenuate *RELACSPlugin::attenuator( const string &name )
 {
   int index = outTraceIndex( name );
   if ( index < 0 )
     return 0;
-  else
-    return attenuator( index );
+  else {
+    return RW->AQ->outTraceAttenuate( index );
+  }
 }
 
 

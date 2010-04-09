@@ -54,7 +54,7 @@ AISim::~AISim( void )
 }
 
 
-int AISim::open( const string &device, long mode )
+int AISim::open( const string &device, const Options &opts )
 {
   Info.clear();
   Settings.clear();
@@ -66,7 +66,7 @@ int AISim::open( const string &device, long mode )
 }
 
 
-int AISim::open( Device &device, long mode )
+int AISim::open( Device &device, const Options &opts )
 {
   Info.clear();
   Settings.clear();

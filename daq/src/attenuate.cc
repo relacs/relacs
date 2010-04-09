@@ -69,12 +69,12 @@ Attenuate::~Attenuate( void )
 }
 
 
-int Attenuate::open( Device &att, long index )
+int Attenuate::open( Device &att, int line )
 {
   Info.clear();
   Settings.clear();
   Att = &dynamic_cast<Attenuator&>( att );
-  Index = index;
+  Index = line;
   if ( Att == NULL )
     return InvalidDevice;
   else if ( ! Att->isOpen() )
@@ -86,7 +86,29 @@ int Attenuate::open( Device &att, long index )
 }
 
 
-int Attenuate::open( const string &device, long index )
+int Attenuate::open( Device &att, const Options &opts )
+{
+  int line = opts.integer( "line", 0, 0 );
+  int r = open( att, line );
+  setAODevice( opts.text( "aodevice", "ao-1" ) );
+  setAOChannel( opts.integer( "aochannel", 0, 0 ) );
+  if ( opts.exist( "intensityname" ) )
+    setIntensityName( opts.text( "intensityname" ) );
+  if ( opts.exist( "intensityunit" ) )
+    setIntensityUnit( opts.text( "intensityunit" ) );
+  if ( opts.exist( "intensityformat" ) )
+    setIntensityName( opts.text( "intensityformat" ) );
+  if ( opts.exist( "frequencyname" ) )
+    setFrequencyName( opts.text( "frequencyname" ) );
+  if ( opts.exist( "frequencyunit" ) )
+    setFrequencyUnit( opts.text( "frequencyunit" ) );
+  if ( opts.exist( "frequencyformat" ) )
+    setFrequencyName( opts.text( "frequencyformat" ) );
+  return r;
+}
+
+
+int Attenuate::open( const string &device, const Options &opts )
 {
   Info.clear();
   Settings.clear();

@@ -68,7 +68,7 @@ public:
 	and setInfo() somewhere at the end of 
 	the reimplmentation of this function.
         \sa isOpen(), close() */
-  virtual int open( const string &device, long mode=0 );
+  virtual int open( const string &device, const Options &opts );
     /*! Open the digital I/O device specified by \a device.
 	\return zero on success, or InvalidDevice (or any other negative number
 	indicating the error).
@@ -76,7 +76,7 @@ public:
 	and setInfo() somewhere at the end of 
 	the reimplmentation of this function.
         \sa isOpen(), close() */
-  virtual int open( Device &device, long mode=0 );
+  virtual int open( Device &device, const Options &opts );
     /*! \return \c true if the device is open.
         \sa open(), close() */
   virtual bool isOpen( void ) const = 0;
