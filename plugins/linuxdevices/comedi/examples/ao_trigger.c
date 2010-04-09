@@ -17,7 +17,6 @@ int main(int argc, char *argv[])
   int n,m;
   comedi_t *dev;
   unsigned int chanlist[16];
-  unsigned int maxbuffersize;
   unsigned int maxdata;
   comedi_range *rng;
   int ret;
@@ -25,7 +24,7 @@ int main(int argc, char *argv[])
   int fn = 3;
   sampl_t *data;
   comedi_insn aotrigger;
-  sampl_t tdata[5];
+  lsampl_t tdata[5];
 
 
   init_parsed_options(&options);
@@ -111,15 +110,30 @@ int main(int argc, char *argv[])
 
   /* Setup analog trigger: */
   memset(&aotrigger,0,sizeof(aotrigger));
-  aotrigger.insn = INSN_CONFIG_ANALOG_TRIG;
+  aotrigger.insn = INSN_CONFIG;
   aotrigger.n = 5;
-  aotrigger.data = &tdata;
+  aotrigger.data = tdata;
   aotrigger.subdev = 0;
   aotrigger.chanspec = 0;
-  tdata[0] = 0;
-  tdata[1] = 1;
-  tdata[2] = CR_PACK(6, 0, AREF_GROUND);
-  tdata[3] = comedi_from_phys(0.0, rng, maxdata);
+  tdata[0] = INSN_CONFIG_ANALOG_TRIG;
+        /*
+         * 00 ignore
+         * 01 set
+         * 10 reset
+         *
+         * modes:
+         *   1 level:                    +b-   +a-
+         *     high mode                00 00 01 10 = 6
+         *     low mode                 00 00 10 01 = 9
+         *   2 level: (a<b)
+         *     hysteresis low mode      10 00 00 01 = 129
+         *     hysteresis high mode     01 00 00 10 = 66
+         *     middle mode              10 01 01 10 = 146
+         */
+
+  tdata[1] = 6 | COMEDI_EV_SCAN_BEGIN;  // EV_SCAN_BEGIN is the only supported trigger? Why???
+  tdata[2] = 0; // only analog input channels!;
+  tdata[3] = 128; // has to be smaller than 255! Why???
   tdata[4] = 0;
   ret = comedi_do_insn( dev, &aotrigger );  
   if(ret < 0){
