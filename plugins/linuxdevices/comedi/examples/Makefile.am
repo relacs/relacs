@@ -1,6 +1,7 @@
 noinst_PROGRAMS = \
     ao_nonblocking \
     ao_underrun \
+    ao_trigger \
     ai_nonblocking \
     ai_maxrate \
     ai_multiboard \
@@ -16,6 +17,10 @@ ao_nonblocking_SOURCES = ao_nonblocking.c common.c
 ao_underrun_LDFLAGS = $(COMEDI_LDFLAGS)
 ao_underrun_LDADD = $(COMEDI_LIBS) $(MATH_LIBS)
 ao_underrun_SOURCES = ao_underrun.c common.c
+
+ao_trigger_LDFLAGS = $(COMEDI_LDFLAGS)
+ao_trigger_LDADD = $(COMEDI_LIBS) $(MATH_LIBS)
+ao_trigger_SOURCES = ao_trigger.c common.c
 
 ai_nonblocking_LDFLAGS = $(COMEDI_LDFLAGS)
 ai_nonblocking_LDADD = $(COMEDI_LIBS) $(MATH_LIBS)
