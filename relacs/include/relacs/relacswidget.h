@@ -365,6 +365,7 @@ private:
   AIDevices *AID;
   AODevices *AOD;
   DIODevices *DIOD;
+  TriggerDevices *TRIGD;
   AttDevices *ATD;
   AttInterfaces *ATI;
 

@@ -643,6 +643,12 @@ DigitalIO *RELACSPlugin::digitalIO( const string &ident )
 }
 
 
+Trigger *RELACSPlugin::trigger( const string &ident )
+{
+  return RW->TRIGD == 0 ? 0 : RW->TRIGD->device( ident );
+}
+
+
 Attenuate *RELACSPlugin::attenuator( const string &name )
 {
   int index = outTraceIndex( name );

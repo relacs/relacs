@@ -91,10 +91,11 @@ public:
     AnalogInputType = 1,
     AnalogOutputType = 2,
     DigitalIOType = 3,
-    AttenuatorType = 4,
-    AttenuateType = 5,
-    ManipulatorType = 6,
-    TemperatureType = 7
+    TriggerType = 4,
+    AttenuatorType = 5,
+    AttenuateType = 6,
+    ManipulatorType = 7,
+    TemperatureType = 8
   } DeviceTypes;
 
     /*! Return code indicating that the device driver is not opened. */

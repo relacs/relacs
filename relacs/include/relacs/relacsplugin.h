@@ -87,7 +87,7 @@ according to your needs.
 With metaData( void ) you get access to a few more functions for managing meta data.
 
 All other RELACS plugins can be accessed:
-devices(), device(), attenuator(), filter(), filterOpts(),
+devices(), device(), attenuator(), trigger(), filter(), filterOpts(),
 detector(), detectorOpts(), control(), controlOpts(),
 repros(), reprosDialogOpts(), repro(), reproOpts(), currentRePro(), currentReProOpts()
 but should be locked with
@@ -110,8 +110,8 @@ and other interactions with the GUI.
 
 Some integers for identifying the type of the RELACS plugin are defined
 and are used by the addDevice, addAttenuate, addAttuator,
-addAnalogInput, addAnalofOutput, addModel, addFilter, addDetector,
-addControl, and addRePro macros.
+addAnalogInput, addAnalogOutput, addDigitalIO, addTrigger,
+addModel, addFilter, addDetector, addControl, and addRePro macros.
 
 Two groups of configuration files are defined as Core and Plugins.
 */
@@ -125,6 +125,7 @@ class Device;
 class AllDevices;
 class Devices;
 class DigitalIO;
+class Trigger;
 class Attenuate;
 class AttInterfaces;
 class RELACSWidget;
@@ -137,25 +138,27 @@ class RELACSPlugin : public ConfigDialog
 public:
 
     /*! The identifier for plugins derived from the Device-class. */
-  static const int DeviceId = 1;
+  static const int DeviceId = 0x0001;
     /*! The identifier for plugins derived from the AnalogInput-class. */
-  static const int AnalogInputId = 2;
+  static const int AnalogInputId = 0x0002;
     /*! The identifier for plugins derived from the AnalogOutput-class. */
-  static const int AnalogOutputId = 4;
+  static const int AnalogOutputId = 0x0004;
     /*! The identifier for plugins derived from the AnalogOutput-class. */
-  static const int DigitalIOId = 8;
+  static const int DigitalIOId = 0x0008;
+    /*! The identifier for plugins derived from the Trigger-class. */
+  static const int TriggerId = 0x0010;
     /*! The identifier for plugins derived from the Attenuator-class. */
-  static const int AttenuatorId = 16;
+  static const int AttenuatorId = 0x0020;
     /*! The identifier for plugins derived from the Attenuate-class. */
-  static const int AttenuateId = 32;
+  static const int AttenuateId = 0x0040;
     /*! The identifier for plugins derived from the Model-class. */
-  static const int ModelId = 64;
+  static const int ModelId = 0x0080;
     /*! The identifier for plugins derived from the Filter-class. */
-  static const int FilterId = 128;
+  static const int FilterId = 0x0100;
     /*! The identifier for plugins derived from the RePro-class. */
-  static const int ReProId = 256;
+  static const int ReProId = 0x0200;
     /*! The identifier for plugins derived from the Control-class. */
-  static const int ControlId = 512;
+  static const int ControlId = 0x0400;
 
     /*! Config-File group for RELACS core classes. */
   static const int Core = 0;
@@ -546,7 +549,8 @@ protected:
 
     /*! Return the digital I/O device with identifier \a ident. */
   DigitalIO *digitalIO( const string &ident );
-
+    /*! Return the trigger device with identifier \a ident. */
+  Trigger *trigger( const string &ident );
     /*! Return the attenuator for output trace \a name. */
   Attenuate *attenuator( const string &name );
 
@@ -744,6 +748,10 @@ addPlugin( aoClass, RELACSPlugin::AnalogOutputId )
       derived from the DigitalIO-class available as a plugin. */
 #define addDigitalIO( dioClass ) \
 addPlugin( dioClass, RELACSPlugin::DigitalIOId )
+  /*! A macro to make the class \a triggerClass
+      derived from the Trigger-class available as a plugin. */
+#define addTrigger( triggerClass ) \
+addPlugin( triggerClass, RELACSPlugin::TriggerId )
   /*! A macro to make the class \a attenuatorClass
       derived from the Attenuator-class available as a plugin. */
 #define addAttenuator( attenuatorClass ) \

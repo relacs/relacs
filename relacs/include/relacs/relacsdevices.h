@@ -27,6 +27,7 @@
 #include <relacs/analoginput.h>
 #include <relacs/analogoutput.h>
 #include <relacs/digitalio.h>
+#include <relacs/trigger.h>
 #include <relacs/attenuator.h>
 #include <relacs/attenuate.h>
 
@@ -108,6 +109,19 @@ class DIODevices : public DeviceList< DigitalIO, RELACSPlugin::DigitalIOId >
 public:
   DIODevices( void )
     : DeviceList< DigitalIO, RELACSPlugin::DigitalIOId >( "Digital I/O Device", "Digital I/O Devices" ) {};
+};
+
+
+/*!
+\class TriggerDevices
+\brief A container for trigger devices
+*/
+
+class TriggerDevices : public DeviceList< Trigger, RELACSPlugin::TriggerId >
+{
+public:
+  TriggerDevices( void )
+    : DeviceList< Trigger, RELACSPlugin::TriggerId >( "Trigger Device", "Trigger Devices" ) {};
 };
 
 

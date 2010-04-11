@@ -162,6 +162,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   AID = new AIDevices();
   AOD = new AODevices();
   DIOD = new DIODevices();
+  TRIGD = new TriggerDevices();
 
   // attenuators:
   ATD = new AttDevices();
@@ -571,6 +572,10 @@ int RELACSWidget::setupHardware( int n )
   // activate digital I/O devices:
   DIOD->create( *ADV, n );
   warnings += DIOD->warnings();
+
+  // activate trigger devices:
+  TRIGD->create( *ADV, n );
+  warnings += TRIGD->warnings();
 
   // activate attenuators:
   if ( n == 0 )
