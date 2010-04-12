@@ -190,8 +190,7 @@ int DynClampAnalogInput::open( const string &device, const Options &opts )
   ModuleDevice = "/dev/dynclamp";
   ModuleFd = ::open( ModuleDevice.c_str(), O_RDONLY );
   if( ModuleFd == -1 ) {
-  cerr << " DynClampAnalogInput::open(): opening dynclamp-module failed" 
-       << endl;/////TEST/////
+  cerr << " DynClampAnalogInput::open(): opening dynclamp-module failed\n";
     return -1;
   }
 
@@ -199,7 +198,7 @@ int DynClampAnalogInput::open( const string &device, const Options &opts )
   retval = ::ioctl( ModuleFd, IOC_GET_SUBDEV_ID, &SubdeviceID );
   if( retval < 0 ) {
     cerr << " DynClampAnalogInput::open -> ioctl command IOC_GET_SUBDEV_ID on device "
-	 << ModuleDevice << " failed!" << endl;
+	 << ModuleDevice << " failed!\n";
     return -1;
   }
 
@@ -212,10 +211,10 @@ int DynClampAnalogInput::open( const string &device, const Options &opts )
   deviceIOC.fifoSize = 0;
   retval = ::ioctl( ModuleFd, IOC_OPEN_SUBDEV, &deviceIOC );
   //  cerr << " DynClampAnalogInput::open(): IOC_OPEN_SUBDEV request for address done!" /// TEST
-  //       << &deviceIOC << endl;
+  //       << &deviceIOC << '\n';
   if( retval < 0 ) {
     cerr << " DynClampAnalogInput::open -> ioctl command IOC_OPEN_SUBDEV on device "
-	 << ModuleDevice << " failed!" << endl;
+	 << ModuleDevice << " failed!\n";
     return -1;
   }
 
@@ -225,7 +224,7 @@ int DynClampAnalogInput::open( const string &device, const Options &opts )
   FifoFd = ::open( fifoName, O_RDONLY | O_NONBLOCK );
   if( FifoFd < 0 ) {
     cerr << " DynClampAnalogInput::open() -> oping RTAI-FIFO " 
-         << fifoName << " failed!" << endl;
+         << fifoName << " failed!\n";
     return -1;
   }
   ReadBufferSize = deviceIOC.fifoSize;
@@ -255,7 +254,7 @@ void DynClampAnalogInput::close( void )
   ::close( FifoFd );
   FifoFd = -1;
   if( ::close( ModuleFd ) < 0 )
-    cerr << "Close of module file failed!" << endl;
+    cerr << "Close of module file failed!\n";
 
   ModuleFd = -1;
 
@@ -408,7 +407,7 @@ int DynClampAnalogInput::testReadDevice( InList &traces )
     return -1;
   }
   
-  //  cerr << " DynClampAnalogInput::testRead(): 1" << endl;////TEST////
+  //  cerr << " DynClampAnalogInput::testRead(): 1\n";////TEST////
 
   // XXX check whether channel >=1000 is valid!
 
@@ -445,7 +444,7 @@ int DynClampAnalogInput::testReadDevice( InList &traces )
   if( traces.failed() )
     return -1;
 
-  //  cerr << " DynClampAnalogInput::testRead(): success" << endl;/////TEST/////
+  //  cerr << " DynClampAnalogInput::testRead(): success\n";/////TEST/////
 
   int retval = 0;
 
@@ -500,10 +499,10 @@ int DynClampAnalogInput::prepareRead( InList &traces )
   chanlistIOC.userDeviceIndex = traces[0].device();
   chanlistIOC.chanlistN = traces.size();
   int retval = ::ioctl( ModuleFd, IOC_CHANLIST, &chanlistIOC );
-  //  cerr << "prepareRead(): IOC_CHANLIST done!" << endl; /// TEST
+  //  cerr << "prepareRead(): IOC_CHANLIST done!\n"; /// TEST
   if( retval < 0 ) {
     cerr << " DynClampAnalogInput::prepareRead -> ioctl command IOC_CHANLIST on device "
-	 << ModuleDevice << " failed!" << endl;
+	 << ModuleDevice << " failed!\n";
     return -1;
   }
 
@@ -514,10 +513,10 @@ int DynClampAnalogInput::prepareRead( InList &traces )
   syncCmdIOC.duration = traces[0].capacity() + traces[0].indices( traces[0].delay());
   syncCmdIOC.continuous = traces[0].continuous();
   retval = ::ioctl( ModuleFd, IOC_SYNC_CMD, &syncCmdIOC );
-  //  cerr << "prepareRead(): IOC_SYNC_CMD done!" << endl; /// TEST
+  //  cerr << "prepareRead(): IOC_SYNC_CMD done!\n"; /// TEST
   if( retval < 0 ) {
     cerr << " DynClampAnalogInput::prepareRead -> ioctl command IOC_SYNC_CMD on device "
-	 << ModuleDevice << " failed!" << endl;
+	 << ModuleDevice << " failed!\n";
     return -1;
   }
 
@@ -557,7 +556,7 @@ int DynClampAnalogInput::prepareRead( InList &traces )
 
 int DynClampAnalogInput::startRead( void )
 {
-  //  cerr << " DynClampAnalogInput::startRead(): 1" << endl;/////TEST/////
+  //  cerr << " DynClampAnalogInput::startRead(): 1\n";/////TEST/////
 
   if ( !prepared() || Traces == 0 ) {
     cerr << "AI not prepared or no traces!\n";
@@ -568,10 +567,10 @@ int DynClampAnalogInput::startRead( void )
   int retval = ::ioctl( ModuleFd, IOC_START_SUBDEV, &SubdeviceID );
   if( retval < 0 ) {
     cerr << " DynClampAnalogInput::startRead -> ioctl command IOC_START_SUBDEV on device "
-	 << ModuleDevice << " failed!" << endl;
+	 << ModuleDevice << " failed!\n";
     int ern = errno;
     if ( ern == ENOMEM )
-      cerr << " !!! No stack for kernel task !!!" << endl;
+      cerr << " !!! No stack for kernel task !!!\n";
     Traces->addErrorStr( ern );
     return -1;
   }
@@ -584,14 +583,14 @@ int DynClampAnalogInput::startRead( void )
  
 int DynClampAnalogInput::readData( void )
 {
-  //  cerr << " DynClampAnalogInput::readData(): in" << endl;/////TEST/////
+  //  cerr << " DynClampAnalogInput::readData(): in\n";/////TEST/////
 
   //device stopped?
     /* // AI does not have to run in order to push data
   if( !running() ) {
     traces.addErrorStr( "DynClampAnalogInput::readData: " +
 		      deviceFile() + " is not running!" );
-    cerr << "DynClampAnalogInput::readData: device is not running!"  << endl;/////TEST/////
+    cerr << "DynClampAnalogInput::readData: device is not running!"  << '\n';/////TEST/////
     return 0;/////TEST/////
   }
     */
@@ -599,7 +598,7 @@ int DynClampAnalogInput::readData( void )
   ErrorState = 0;
   /*  cerr << "DynClampAnalogInput::readData: size of device buffer: " 
        << traces[0].deviceBufferSize() << " - size of indata: " 
-       << " - continuous: " << traces[0].continuous() << endl;*/
+       << " - continuous: " << traces[0].continuous() << '\n';*/
   bool failed = false;
   int readn = BufferN*BufferElemSize;
   int maxn = BufferSize - readn;
@@ -610,7 +609,7 @@ int DynClampAnalogInput::readData( void )
     int retval = ioctl( ModuleFd, IOC_REQ_READ, &SubdeviceID );
     if( retval < 0 ) {
       cerr << " DynClampAnalogInput::readData() -> ioctl command IOC_REQ_READ on device "
-	   << ModuleDevice << " failed!" << endl;
+	   << ModuleDevice << " failed!\n";
       return -2;
     }
 */
@@ -622,7 +621,7 @@ int DynClampAnalogInput::readData( void )
     if ( m < 0 && ern != EAGAIN && ern != EINTR ) {
       Traces->addErrorStr( ern );
       failed = true;
-      cerr << "DynClampAnalogInput::readData(): error" << endl;
+      cerr << "DynClampAnalogInput::readData(): error\n";
     }
     else if ( m > 0 ) {
       maxn -= m;
@@ -640,7 +639,7 @@ int DynClampAnalogInput::readData( void )
     case EPIPE: 
       ErrorState = 1;
       cerr << " DynClampAnalogInput::readData(): buffer-overflow: "
-      	   << strerror( errnoSave ) << endl;/////TEST/////
+      	   << strerror( errnoSave ) << '\n';/////TEST/////
       traces.addErrorStr( deviceFile() + " - buffer-underrun: "
 			+ strerror( errnoSave ) );
       traces.addError( DaqError::OverflowUnderrun );
@@ -649,7 +648,7 @@ int DynClampAnalogInput::readData( void )
     case EBUSY:
       ErrorState = 2;
       cerr << " DynClampAnalogInput::readData(): device busy: "
-	         << strerror( errnoSave ) << endl;/////TEST/////
+	         << strerror( errnoSave ) << '\n';/////TEST/////
       traces.addErrorStr( deviceFile() + " - device busy: "
 			+ strerror( errnoSave ) );
       traces.addError( DaqError::Busy );
@@ -660,7 +659,7 @@ int DynClampAnalogInput::readData( void )
       cerr << " DynClampAnalogInput::readData(): buffer-underrun: "
 	   << "  system: " << strerror( errnoSave )
 	   << " (device file descriptor " << ModuleFd
-	   << endl;/////TEST/////
+	   << '\n';/////TEST/////
 //      traces.addErrorStr( "Error while reading from device-file: " + deviceFile()
 //			+ "  system: " + strerror( errnoSave ) );
       traces.addError( DaqError::Unknown );
@@ -732,7 +731,7 @@ int DynClampAnalogInput::stop( void )
   int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &running );
   if( retval < 0 ) {
     cerr << " DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
-	 << ModuleDevice << " failed!" << endl;
+	 << ModuleDevice << " failed!\n";
     return -1;
   }
 
@@ -740,7 +739,7 @@ int DynClampAnalogInput::stop( void )
     retval = ::ioctl( ModuleFd, IOC_STOP_SUBDEV, &SubdeviceID );
     if( retval < 0 ) {
       cerr << " DynClampAnalogInput::stop -> ioctl command IOC_STOP_SUBDEV on device "
-	   << ModuleDevice << " failed!" << endl;
+	   << ModuleDevice << " failed!\n";
       return -1;
     }
   }
@@ -781,11 +780,11 @@ bool DynClampAnalogInput::running( void ) const
   int retval = ::ioctl( ModuleFd, IOC_CHK_RUNNING, &exchangeVal );
 
   //  cerr << " DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
-  //       << ModuleDevice << " " << exchangeVal << endl;
+  //       << ModuleDevice << " " << exchangeVal << '\n';
 
   if( retval < 0 ) {
     cerr << " DynClampAnalogInput::running -> ioctl command IOC_CHK_RUNNING on device "
-	 << ModuleDevice << " failed!" << endl;
+	 << ModuleDevice << " failed!\n";
     return false;
   }
 
@@ -825,7 +824,7 @@ void DynClampAnalogInput::addTraces( vector< TraceSpec > &traces, int deviceid )
   }
   int ern = errno;
   if ( ern != ERANGE )
-    cerr << "DynClampAnalogInput::addTraces() -> errno " << ern << endl;
+    cerr << "DynClampAnalogInput::addTraces() -> errno " << ern << '\n';
 }
 
 
@@ -842,13 +841,13 @@ int DynClampAnalogInput::matchTraces( InList &traces ) const
     for ( int k=0; k<traces.size(); k++ ) {
       if ( traces[k].ident() == traceInfo.name ) {
 	if ( traces[k].unit() != traceInfo.unit ) {
-	  cerr << "DynClampAnalogInput::matchTraces() -> units do not match for trace " << traceInfo.name << endl;
+	  cerr << "DynClampAnalogInput::matchTraces() -> units do not match for trace " << traceInfo.name << '\n';
 	  return -1;
 	}
 	traceChannel.device = traces[k].device();
 	traceChannel.channel = traces[k].channel();
 	if ( ::ioctl( ModuleFd, IOC_SET_TRACE_CHANNEL, &traceChannel ) != 0 ) {
-	  cerr << "DynClampAnalogInput::matchTraces() set channels -> errno " << errno << endl;
+	  cerr << "DynClampAnalogInput::matchTraces() set channels -> errno " << errno << '\n';
 	  return -1;
 	}
 	notfound = false;
@@ -863,7 +862,7 @@ int DynClampAnalogInput::matchTraces( InList &traces ) const
   }
   int ern = errno;
   if ( ern != ERANGE ) {
-    cerr << "DynClampAnalogInput::matchTraces() get traces -> errno " << ern << endl;
+    cerr << "DynClampAnalogInput::matchTraces() get traces -> errno " << ern << '\n';
     return -1;
   }
   if ( ! unknowntraces.empty() ) {

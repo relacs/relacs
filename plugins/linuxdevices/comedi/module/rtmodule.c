@@ -36,16 +36,6 @@ struct deviceT {
   char name[DEV_NAME_MAXLEN+1];
 };
 
-struct chanT {
-  comedi_t *devP;
-  int subdev;
-  unsigned int chan;
-  int aref;
-  int rangeIndex;
-  struct converterT converter;
-  float scale;
-};
-
 struct subdeviceT {
   int subdev;
   enum subdevTypes type;
@@ -69,6 +59,17 @@ struct subdeviceT {
   int prepared;
   int running;
   int error;               // E_COMEDI, E_NODATA, ...
+};
+
+struct chanT {
+  comedi_t *devP;
+  int subdev;
+  unsigned int chan;
+  int aref;
+  int rangeIndex;
+  struct converterT converter;
+  float scale;
+  unsigned int fifo;
 };
 
 
@@ -352,6 +353,7 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
     subdev[iS].chanlist[iC].rangeIndex = CR_RANGE( chanlistIOC->chanlist[iC] );
     memcpy( &subdev[iS].chanlist[iC].converter, &chanlistIOC->conversionlist[iC], sizeof(struct converterT) );
     subdev[iS].chanlist[iC].scale = chanlistIOC->scalelist[iC];
+    subdev[iS].chanlist[iC].fifo = subdev[iS].fifo;
   }
 
   return 0;
@@ -571,9 +573,11 @@ void rtDynClamp( long dummy )
 
 	    // for every chan...
 	    for ( iC = 0; iC < subdev[iS].chanN; iC++ ) {
+
+	      pChan = &subdev[iS].chanlist[iC];
 	      
 	      // get data from FIFO:
-	      retVal = rtf_get( subdev[iS].fifo, &voltage, sizeof(voltage) );
+	      retVal = rtf_get( pChan->fifo, &voltage, sizeof(voltage) );
 	      if ( retVal != sizeof(voltage) ) {
 		if ( retVal == EINVAL ) {
 		  ERROR_MSG( "rtDynClamp: No open FIFO for subdevice ID %d at loopCnt %lu\n",
@@ -590,13 +594,9 @@ void rtDynClamp( long dummy )
 	      }
 	      
 	      // write out Sample:
-	      lsample = value_to_sample( &subdev[iS].chanlist[iC], voltage );
-	      retVal = comedi_data_write( device[subdev[iS].devID].devP, 
-					  subdev[iS].subdev, 
-					  subdev[iS].chanlist[iC].chan,
-					  subdev[iS].chanlist[iC].rangeIndex,
-					  subdev[iS].chanlist[iC].aref,
-					  lsample );
+	      lsample = value_to_sample( pChan, voltage );
+	      retVal = comedi_data_write( pChan->devP, pChan->subdev, pChan->chan,
+					  pChan->rangeIndex, pChan->aref, lsample );
 	      if ( retVal < 1 ) {
 		subdev[iS].running = 0;
 		if ( retVal < 0 ) {
@@ -661,12 +661,8 @@ void rtDynClamp( long dummy )
 	      pChan = &subdev[iS].chanlist[iC];
 
 	      // acquire sample:
-	      retVal = comedi_data_read( device[subdev[iS].devID].devP, 
-					 subdev[iS].subdev, 
-					 pChan->chan,
-					 pChan->rangeIndex,
-					 pChan->aref,
-					 &lsample );
+	      retVal = comedi_data_read( pChan->devP, pChan->subdev, pChan->chan,
+					 pChan->rangeIndex, pChan->aref, &lsample );
 	      if ( retVal < 0 ) {
 		subdev[iS].running = 0;
 		comedi_perror( "rtmodule: rtDynClamp: comedi_data_write" );
@@ -685,7 +681,7 @@ void rtDynClamp( long dummy )
 	      voltage *= pChan->scale;
 	      // voltage = sample_to_value( &subdev[iS].chanlist[iC], lsample );
 	      // write to FIFO:
-	      retVal = rtf_put( subdev[iS].fifo, &voltage, sizeof(voltage) );
+	      retVal = rtf_put( pChan->fifo, &voltage, sizeof(voltage) );
 	      fifoPutCnt++;
 	      if ( retVal != sizeof(voltage) ) {
 		if ( retVal == EINVAL ) {
