@@ -85,7 +85,8 @@ public:
 
   JAR( void );
   virtual int main( void );
-  void stop( void );
+  virtual void sessionStarted( void );
+  virtual void sessionStopped( bool saved );
 
     /*! Save results data. */
   void save( void );
@@ -95,14 +96,16 @@ public:
   void saveMeanJAR( const Options &header );
     /*! Save EOD stimulus. */
   void saveEOD( const Options &header );
+    /*! Save trace data. */
+  void saveTrace( void );
     /*! Save EOD frequency and amplitude. */
-  void saveEODFreq( void );
+  void saveEODFreq( const Options &header );
     /*! Save chirp parameter. */
-  void saveChirps( void );
+  void saveChirps( const Options &header );
     /*! Save chirp frequency, amplitude and phase traces. */
-  void saveChirpTraces( void );
+  void saveChirpTraces( const Options &header );
     /*! Save the EOD around each chirp. */
-  void saveChirpEOD( void );
+  void saveChirpEOD( const Options &header );
   void reset( bool saved );
 
     /*! Plot data. */
@@ -112,8 +115,6 @@ public:
 
 
 private:
-
-  void createSignal( const InData &data, const EventData &events );
 
   // plot:  
   MultiPlot P;
@@ -128,13 +129,13 @@ private:
   double ContrastStep;
   double ContrastMax;
   int Repeats;
+  double After;
   double JARAverageTime;
   double ChirpAverageTime;
-  int SaveCycles;
+  double EODSaveTime;
   bool SineWave;
 
   // variables:
-  OutData* Signal;
   double FishRate;
   double FishAmplitude1;
   double FishAmplitude2;
@@ -155,24 +156,9 @@ private:
 
   struct ResponseData
   {
-    ResponseData( int i, double f, double l, double j, double c ) 
-      : Index( i ), FirstRate( f ), LastRate( l ), Jar( j ), Contrast( c ),
-	NChirps( 0 ), Size( 0.0 ), SizeSq( 0.0 ),
-	Width( 0.0 ), WidthSq( 0.0 ), Amplitude( 0.0 ), AmplitudeSq( 0.0 ),
-	Phase( 0.0 ), PhaseSq( 0.0 ) {};
-    void addChirp( double size, double width, double ampl, double phase )
-    {
-      NChirps++;
-      Size += ( size - Size ) / NChirps;
-      SizeSq += ( size*size - SizeSq ) / NChirps;
-      Width += ( width - Width ) / NChirps;
-      WidthSq += ( width*width - WidthSq ) / NChirps;
-      Amplitude += ( ampl - Amplitude ) / NChirps;
-      AmplitudeSq += ( ampl*ampl - AmplitudeSq ) / NChirps;
-      Phase += ( phase - Phase ) / NChirps;
-      PhaseSq += ( phase*phase - PhaseSq ) / NChirps;
-    }
-    int Index;\
+    ResponseData( int i, double f, double l, double j, double c ); 
+    void addChirp( double size, double width, double ampl, double phase );
+    int Index;
     double FirstRate;
     double LastRate;
     double Jar;
@@ -191,37 +177,9 @@ private:
 
   struct MeanResponseData
   {
-    MeanResponseData( void ) 
-      : NJar( 0 ), Contrast( 0.0 ), ContrastSq( 0.0 ),
-	Jar( 0.0 ), JarSq( 0.0 ), Chirps( 0.0 ), ChirpsSq( 0.0 ),
-	NChirps( 0 ), Size( 0.0 ), SizeSq( 0.0 ), Width( 0.0 ), WidthSq( 0.0 ), 
-	Amplitude( 0.0 ), AmplitudeSq( 0.0 ), Phase( 0.0 ), PhaseSq( 0.0 ) {};
-    void addJAR( double contrast, double f, double l, double jar, int chirps )
-    {
-      NJar++;
-      Contrast += ( contrast - Contrast ) / NJar;
-      ContrastSq += ( contrast*contrast - ContrastSq ) / NJar;
-      First += ( f - First ) / NJar;
-      FirstSq += ( f*f - FirstSq ) / NJar;
-      Last += ( l - Last ) / NJar;
-      LastSq += ( l*l - LastSq ) / NJar;
-      Jar += ( jar - Jar ) / NJar;
-      JarSq += ( jar*jar - JarSq ) / NJar;
-      Chirps += ( chirps - Chirps ) / NJar;
-      ChirpsSq += ( chirps*chirps - ChirpsSq ) / NJar;
-    }
-    void addChirp( double size, double width, double ampl, double phase )
-    {
-      NChirps++;
-      Size += ( size - Size ) / NChirps;
-      SizeSq += ( size*size - SizeSq ) / NChirps;
-      Width += ( width - Width ) / NChirps;
-      WidthSq += ( width*width - WidthSq ) / NChirps;
-      Amplitude += ( ampl - Amplitude ) / NChirps;
-      AmplitudeSq += ( ampl*ampl - AmplitudeSq ) / NChirps;
-      Phase += ( phase - Phase ) / NChirps;
-      PhaseSq += ( phase*phase - PhaseSq ) / NChirps;
-    }
+    MeanResponseData( void );
+    void addJAR( double contrast, double f, double l, double jar, int chirps );
+    void addChirp( double size, double width, double ampl, double phase );
     int NJar;
     double Contrast;
     double ContrastSq;
@@ -245,8 +203,8 @@ private:
   };
   vector < vector < MeanResponseData > > MeanResponse;
 
-  string EOD1Unit;
-  string EOD2Unit;
+  string GlobalEODUnit;
+  string LocalEODUnit;
   MapD EODFrequency;
   MapD EODAmplitude;
   MapD EODTransAmpl;
@@ -254,19 +212,16 @@ private:
   MapD EODPhases;
   int PlotLabelIndex1;
   int PlotLabelIndex2;
-  const EventData *EOD1Events;
   EventData JARChirpEvents;
 
   struct ChirpData 
   {
-    ChirpData( double t, double s, double w, double ea, double a, double p, 
-	       double bp, double bl, double bf, double bb, double ba )
-      : Time( t ), Size( s ), Width( w ), EODAmpl( ea ), Amplitude( a ), Phase( p ), 
-	BeatPhase( bp ), BeatLoc( bl ), Deltaf ( bf ),
-	BeatBefore( bb ), BeatAfter( ba ) {};
+    ChirpData( double t, double s, double w, double er, double ea, double a,
+	       double p, double bp, double bl, double bf, double bb, double ba );
     double Time;
     double Size;
     double Width;
+    double EODRate;
     double EODAmpl;
     double Amplitude;
     double Phase;
