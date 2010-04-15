@@ -124,14 +124,23 @@ int FileStimulus::main( void )
   string filename = file.name();
   file.expandPath();
   OutData signal;
-  signal.load( file, filename );
-  if ( signal.empty() ) {
-    warning( "Cannot load stimulus file <b>" + file + "</b>!" );
-    return Failed;
-  }
-  //  signal.setStartSource( 2 );
-  signal.setDelay( Before );
   signal.setTrace( AM ? GlobalAMEField : GlobalEField );
+  applyOutTrace( signal );
+  {
+    OutData lsig;
+    lsig.load( file, filename );
+    if ( signal.empty() ) {
+      warning( "Cannot load stimulus file <b>" + file + "</b>!" );
+      return Failed;
+    }
+    if ( signal.fixedSampleRate() && fabs( signal.maxSampleRate() - lsig.sampleRate() ) > 1.0 )
+      signal.SampleDataF::assign( lsig, signal.stepsize() );
+    else
+      signal.SampleDataF::assign( lsig );
+  }
+  signal.setStartSource( 1 );
+  signal.setDelay( Before );
+  signal.setIdent( filename );
   Duration = signal.duration();
 
   // data:

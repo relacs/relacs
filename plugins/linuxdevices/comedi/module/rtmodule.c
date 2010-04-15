@@ -69,6 +69,8 @@ struct chanT {
   unsigned int chan;
   int aref;
   int rangeIndex;
+  comedi_insn insn;
+  lsampl_t lsample;
   struct converterT converter;
   float scale;
   unsigned int fifo;
@@ -373,8 +375,7 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
   }
 
   // create and initialize chanlist for subdevice:
-  subdev[iS].chanlist = vmalloc( chanlistIOC->chanlistN
-				 *sizeof(struct chanT) );
+  subdev[iS].chanlist = vmalloc( chanlistIOC->chanlistN*sizeof(struct chanT) );
   if ( !subdev[iS].chanlist ) {
     ERROR_MSG( "loadChanlist ERROR: Memory allocation for Subdevice %i on device %s. Chanlist not loaded!\n",
 	       iS, device[subdev[iS].devID].name );
@@ -388,6 +389,16 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
     subdev[iS].chanlist[iC].chan = CR_CHAN( chanlistIOC->chanlist[iC] );
     subdev[iS].chanlist[iC].aref = CR_AREF( chanlistIOC->chanlist[iC] );
     subdev[iS].chanlist[iC].rangeIndex = CR_RANGE( chanlistIOC->chanlist[iC] );
+    subdev[iS].chanlist[iC].lsample = 0;
+    memset( &subdev[iS].chanlist[iC].insn, 0, sizeof(comedi_insn) );
+    if ( subdev[iS].type == SUBDEV_IN )
+      subdev[iS].chanlist[iC].insn.insn = INSN_READ;
+    else
+      subdev[iS].chanlist[iC].insn.insn = INSN_WRITE;
+    subdev[iS].chanlist[iC].insn.n = 1;
+    subdev[iS].chanlist[iC].insn.data = &subdev[iS].chanlist[iC].lsample;
+    subdev[iS].chanlist[iC].insn.subdev = subdev[iS].subdev;
+    subdev[iS].chanlist[iC].insn.chanspec = chanlistIOC->chanlist[iC];
     memcpy( &subdev[iS].chanlist[iC].converter, &chanlistIOC->conversionlist[iC], sizeof(struct converterT) );
     subdev[iS].chanlist[iC].scale = chanlistIOC->scalelist[iC];
     subdev[iS].chanlist[iC].fifo = subdev[iS].fifo;
@@ -609,7 +620,6 @@ void rtDynClamp( long dummy )
   int subdevRunning = 1;
   unsigned long readCnt = 0;
   unsigned long fifoPutCnt = 0;
-  lsampl_t lsample;
   struct chanT *pChan;
   unsigned ci;
   double term;
@@ -687,9 +697,8 @@ void rtDynClamp( long dummy )
 	      }
 	      
 	      // write out Sample:
-	      lsample = value_to_sample( pChan, pChan->voltage );
-	      retVal = comedi_data_write( pChan->devP, pChan->subdev, pChan->chan,
-					  pChan->rangeIndex, pChan->aref, lsample );
+	      pChan->lsample = value_to_sample( pChan, pChan->voltage );
+	      retVal = comedi_do_insn( pChan->devP, &pChan->insn );
 	      if ( retVal < 1 ) {
 		subdev[iS].running = 0;
 		if ( retVal < 0 ) {
@@ -717,21 +726,6 @@ void rtDynClamp( long dummy )
 	//* PROBLEM: rt_sleep is timed using jiffies only (granularity = 1msec)
 	    //* int retValSleep = rt_sleep( nano2count( INJECT_RECORD_DELAY ) );
       //      rt_busy_sleep( INJECT_RECORD_DELAY ); // TODO: just default
-
-
-
-      // DEBUG OUTPUT:
-      /*
-	if ( dynClampTask.loopCnt % 10 == 0 ) {
-	DEBUG_MSG( "%d subdevices registered:\n", subdevN );
-	for ( iS = 0; iS < subdevN; iS++ ) {
-        DEBUG_MSG( "LOOP %lu: fifoPutCnt=%lu readCnt=%lu, subdevID=%d, run=%d, type=%d, error=%d, duration=%lu, contin=%d\n", 
-	dynClampTask.loopCnt, fifoPutCnt, readCnt, iS, subdev[iS].running, 
-	subdev[iS].type, subdev[iS].error, subdev[iS].duration, subdev[iS].continuous  );
-	}
-	}
-      */
-
 
 
 	//******** READ FROM ANALOG INPUT: *******************************************/
@@ -768,8 +762,7 @@ void rtDynClamp( long dummy )
 	      pChan->prevvoltage = pChan->voltage;
 
 	      // acquire sample:
-	      retVal = comedi_data_read( pChan->devP, pChan->subdev, pChan->chan,
-					 pChan->rangeIndex, pChan->aref, &lsample );
+	      retVal = comedi_do_insn( pChan->devP, &pChan->insn );
 	      if ( retVal < 0 ) {
 		subdev[iS].running = 0;
 		comedi_perror( "rtmodule: rtDynClamp: comedi_data_read" );
@@ -783,10 +776,10 @@ void rtDynClamp( long dummy )
 	      term = 1.0;
 	      for ( ci=0; ci <= pChan->converter.order; ++ci ) {
 		pChan->voltage += pChan->converter.coefficients[ci] * term;
-		term *= lsample - pChan->converter.expansion_origin;
+		term *= pChan->lsample - pChan->converter.expansion_origin;
 	      }
 	      pChan->voltage *= pChan->scale;
-	      // pChan->voltage = sample_to_value( &subdev[iS].chanlist[iC], lsample );
+	      // pChan->voltage = sample_to_value( &subdev[iS].chanlist[iC], pChan->lsample );
 	      // write to FIFO:
 	      retVal = rtf_put( pChan->fifo, &pChan->voltage, sizeof(float) );
 	      fifoPutCnt++;
@@ -819,8 +812,6 @@ void rtDynClamp( long dummy )
 	    } // end of chan loop
 	    readCnt++; // FOR DEBUG
 	  } // end of device loop
-
-
 
 	  //****************************************************************************/
 	  dynClampTask.loopCnt++;

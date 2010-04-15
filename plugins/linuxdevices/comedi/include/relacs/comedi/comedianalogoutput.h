@@ -137,10 +137,9 @@ public:
 
     /*! Check for every analog output device in \a aos
         whether it can be simultaneously started by startWrite()
-        from this device.
-        Add the indices of those devices to \a aoinx. */
+        from this device. */
   virtual void take( const vector< AnalogOutput* > &aos,
-                     vector< int > &aoinx );
+                     vector< int > &aoinx, vector< bool > &aorate );
 
 
 protected:

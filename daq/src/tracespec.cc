@@ -35,6 +35,7 @@ TraceSpec::TraceSpec( void )
     Unit( "V" ),
     Reglitch( false ),
     MaxRate( 1000.0 ),
+    FixedRate( false ),
     SignalDelay( 0.0 )
 {
 }
@@ -52,6 +53,7 @@ TraceSpec::TraceSpec( int index, const string &name,
     Unit( unit ),
     Reglitch( reglitch ),
     MaxRate( maxrate ),
+    FixedRate( false ),
     SignalDelay( signaldelay )
 {
 }
@@ -66,6 +68,7 @@ TraceSpec::TraceSpec( const TraceSpec &trace )
     Unit( trace.Unit ),
     Reglitch( trace.Reglitch ),
     MaxRate( trace.MaxRate ),
+    FixedRate( trace.FixedRate ),
     SignalDelay( trace.SignalDelay )
 {
 }
@@ -178,6 +181,21 @@ double TraceSpec::maxSampleRate( void )
 void TraceSpec::setMaxSampleRate( double maxrate )
 {
   MaxRate = maxrate;
+  FixedRate = false;
+}
+
+
+bool TraceSpec::fixedSampleRate( void ) const
+{
+  return FixedRate;
+}
+
+
+void TraceSpec::setFixedSampleRate( double rate )
+{
+  MaxRate = rate;
+  FixedRate = true;
+  cerr << "SET FIXED RATE TO " << rate << "Hz for output trace " << TraceName << '\n';
 }
 
 
@@ -202,7 +220,10 @@ int TraceSpec::apply( OutData &signal ) const
     signal.setScale( Scale );
     signal.setUnit( Unit );
     signal.setReglitch( Reglitch );
-    signal.setMaxSampleRate( MaxRate );
+    if ( FixedRate )
+      signal.setFixedSampleRate( MaxRate );
+    else
+      signal.setMaxSampleRate( MaxRate );
     signal.setSignalDelay( SignalDelay );
     return 0;
   }

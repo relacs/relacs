@@ -115,12 +115,17 @@ class TraceSpec
         \sa reglitch() */
   void setReglitch( bool reglitch );
 
-    /*! The maximum sampling rate to be used in Hertz.
-        \sa setMaxSampleRate() */
+    /*! The maximum or fixed sampling rate to be used in Hertz.
+        \sa setMaxSampleRate(), setFixedSampleRate(), fixedSampleRate() */
   double maxSampleRate( void );
     /*! Set the maximum sampling rate to \a maxrate Hertz.
-        \sa maxSampleRate() */
+        \sa maxSampleRate(), setFixedSampleRate() */
   void setMaxSampleRate( double maxrate );
+    /*! \c True if the sampling rate is fixed. */
+  bool fixedSampleRate( void ) const;
+  /*! Set the fixed sampling rate to \a rate Hertz.
+      \sa maxSampleRate(), setMaxSampleRate(), fixedSampleRate() */
+  void setFixedSampleRate( double rate );
 
     /*! The signal delay in seconds,
 	i.e. the time the signal needs from its emission from the daq board to
@@ -160,6 +165,7 @@ class TraceSpec
   string Unit;
   bool Reglitch;
   double MaxRate;
+  bool FixedRate;
   double SignalDelay;
   
 };

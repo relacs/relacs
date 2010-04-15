@@ -143,12 +143,11 @@ public:
     /*! Check for every analog input and analog output device in \a ais
         and \a aos, respectively,
         whether it can be simultaneously started by startRead()
-        from this device.
-        Add the indices of those devices to \a aiinx and \a aoinx,
-        respectively. */
+        from this device. */
   virtual void take( const vector< AnalogInput* > &ais,
 		     const vector< AnalogOutput* > &aos,
-		     vector< int > &aiinx, vector< int > &aoinx );
+		     vector< int > &aiinx, vector< int > &aoinx,
+		     vector< bool > &airate, vector< bool > &aorate );
 
 
 protected:

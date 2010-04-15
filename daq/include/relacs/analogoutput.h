@@ -194,13 +194,20 @@ public:
         and before any IO operation.
         The default implementation simply returns -1. */
   virtual int getAISyncDevice( const vector< AnalogInput* > &ais ) const;
+    /*! Return \c true if the analog output is required to have the
+        same sampling rate as the analog input returned by getAISyncDevice().
+        The default implementation returns \c false. */
+  virtual bool useAIRate( void ) const;
 
     /*! Check for every analog output device in \a aos
         whether it can be simultaneously started by startWrite()
 	from this device.
-	Add the indices of those devices to \a aoinx. */
+	Add the indices of those devices to \a aoinx.
+        The corresponding entries in \a aorate should
+        be set to \c true if these devices should
+        use the same sampling rate as this. */
   virtual void take( const vector< AnalogOutput* > &aos,
-		     vector< int > &aoinx );
+		     vector< int > &aoinx, vector< bool > &aorate );
 
     /*! If the analog output device supports outputs that
         are not physical output lines but rather writeable parameter,

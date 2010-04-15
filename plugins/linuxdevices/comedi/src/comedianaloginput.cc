@@ -987,8 +987,8 @@ int ComediAnalogInput::error( void ) const
 
 void ComediAnalogInput::take( const vector< AnalogInput* > &ais,
 			      const vector< AnalogOutput* > &aos,
-			      vector< int > &aiinx,
-			      vector< int > &aoinx )
+			      vector< int > &aiinx, vector< int > &aoinx,
+			      vector< bool > &airate, vector< bool > &aorate )
 {
   ComediAIs.clear();
   ComediAOs.clear();
@@ -998,6 +998,7 @@ void ComediAnalogInput::take( const vector< AnalogInput* > &ais,
     if ( ais[k]->analogInputType() == ComediAnalogIOType &&
 	 ais[k]->deviceFile() == deviceFile() ) {
       aiinx.push_back( k );
+      airate.push_back( false );
       ComediAIs.push_back( dynamic_cast< ComediAnalogInput* >( ais[k] ) );
     }
   }
@@ -1007,6 +1008,7 @@ void ComediAnalogInput::take( const vector< AnalogInput* > &ais,
     if ( aos[k]->analogOutputType() == ComediAnalogIOType &&
 	 aos[k]->deviceFile() == deviceFile() ) {
       aoinx.push_back( k );
+      aorate.push_back( false );
       ComediAOs.push_back( dynamic_cast< ComediAnalogOutput* >( aos[k] ) );
     }
   }

@@ -143,6 +143,9 @@ public:
     /*! Returns the index of the corresponding analog input device in \a ais
         from which the index of a signal start is taken. */
   virtual int getAISyncDevice( const vector< AnalogInput* > &ais ) const;
+    /*! Returns \c true to indicate that the analog output is required to have the
+        same sampling rate as the analog input returned by getAISyncDevice(). */
+  virtual bool useAIRate( void ) const;
 
     /*! If the analog output device supports outputs that
         are not physical output lines but rather writeable parameter,

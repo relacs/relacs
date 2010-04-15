@@ -178,10 +178,14 @@ public:
         whether it can be simultaneously started by startRead()
 	from this device.
 	Add the indices of those devices to \a aiinx and \a aoinx,
-        respectively. */
+        respectively.
+        The corresponding entries in \a airate and \a aorate should
+        be set to \c true if these devices should
+        use the same sampling rate as this. */
   virtual void take( const vector< AnalogInput* > &ais,
 		     const vector< AnalogOutput* > &aos,
-		     vector< int > &aiinx, vector< int > &aoinx );
+		     vector< int > &aiinx, vector< int > &aoinx,
+		     vector< bool > &airate, vector< bool > &aorate );
 
     /*! If the analog input device supports inputs that
         are not physical input lines but rather readable internal variables,

@@ -248,14 +248,15 @@ int JAR::main( void )
 	
 	// create signal:
 	OutData signal;
+	signal.setTrace( GlobalEField );
+	applyOutTrace( signal );
 	if ( SineWave ) {
 	  StimulusRate = FishRate + DeltaF;
-	  signal.setSampleRate( 20.0 * StimulusRate );
-	  // get the actual set sampling rate.
-	  testWrite( signal );
-	  signal.clearError();
-	  // create sine wave:
-	  signal.sineWave( StimulusRate, ReadCycles * 1.0/StimulusRate );
+	  double p = rint( StimulusRate / fabs( DeltaF ) ) / StimulusRate;
+	  int n = (int)::rint( Duration / p );
+	  if ( n < 1 )
+	    n = 1;
+	  signal.sineWave( StimulusRate, n*p );
 	  signal.setIdent( "sinewave" );
 	  IntensityGain = 0.5;
 	}
@@ -271,11 +272,10 @@ int JAR::main( void )
 	  StimulusRate = ReadCycles/signal.duration();
 	  double maxamplitude = trace( LocalEODTrace[0] ).maxValue() - trace( LocalEODTrace[0] ).minValue();
 	  IntensityGain = 0.5 * maxamplitude / FishAmplitude2 / g;
+	  signal.repeat( (int)floor( Duration/signal.duration() ) );
 	}
-	signal.repeat( (int)floor( Duration/signal.duration() ) );
 	Duration = signal.length();
-	//  signal.setStartSource( 2 );
-	signal.setTrace( GlobalEField );
+	signal.setStartSource( 1 );
 	signal.setDelay( 0.01 );
 	/*
 	Str s = "C=" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%";

@@ -270,7 +270,7 @@ class OutData : public SampleData< float >, public DaqError
 	are then later set according to the trace index.
 	Clears the channel() and device() numbers, as well as the traceName().
         \sa trace(), setChannel(), setDevice(), setTraceName(),
-	setReglitch(), setMaxSampleRate() */
+	setReglitch(), setMaxSampleRate(), setFixedSampleRate() */
   void setTrace( int index );
     /*! The name that is used later to identify and set the device(), channel(),
         etc.
@@ -281,7 +281,7 @@ class OutData : public SampleData< float >, public DaqError
 	are then later set according to the trace name.
 	Clears the channel(), device(), and the trace() index.
         \sa trace(), setChannel(), setDevice(), setTraceName(),
-	setReglitch(), setMaxSampleRate() */
+	setReglitch(), setMaxSampleRate(), setFixedSampleRate() */
   void setTraceName( const string &name );
 
     /*! The signal delay in seconds,
@@ -481,24 +481,35 @@ class OutData : public SampleData< float >, public DaqError
         ( delay() + duration() ). */
   double totalDuration( void ) const;
 
-    /*! The maximum sampling rate to be used in Hertz.
+    /*! The maximum or fixed sampling rate to be used in Hertz.
         If no maximum sampling rate was specified
 	(via setMaxSampleRate(), setMinSampleInterval())
 	defaultMaxSampleRate() is returned.
-        Same as 1/minSampleInterval(). */
+        Same as 1/minSampleInterval().
+        \sa fixedSampleRate() */
   double maxSampleRate( void );
     /*! Set the maximum sampling rate to \a maxrate Hertz.
-        \sa setMinSampleInterval(), setDefaultMaxSampleRate() */
+        \sa setMinSampleInterval(), setFixedSampleRate(), setDefaultMaxSampleRate() */
   void setMaxSampleRate( double maxrate );
-    /*! The minimum sampling interval to be used in seconds.
+    /*! The minimum or fixed sampling interval to be used in seconds.
         If no minimum sampling interval was specified
 	(via setMinSampleInterval(), setMaxSampleRate())
 	defaultMinSampleInterval() is returned.
-        Same as 1/maxSampleRate(). */
+        Same as 1/maxSampleRate().
+        \sa fixedSampleRate() */
   double minSampleInterval( void );
     /*! Set the minimum sampling interval to \a minsample seconds.
-        \sa setMaxSampleRate(), setDefaultMinSampleInterval() */
+        \sa setMaxSampleRate(), setFixedSampleInterval(), setDefaultMinSampleInterval() */
   void setMinSampleInterval( double minsample );
+
+    /*! Set the fixed sampling rate to \a rate Hertz.
+        \sa setFixedSampleInterval(), setMaxSampleRate(), fixedSampleRate() */
+  void setFixedSampleRate( double rate );
+    /*! Set the minimum sampling interval to \a interval seconds.
+        \sa setFixedSampleRate(), setMinSampleInterval(), fixedSampleRate() */
+  void setFixedSampleInterval( double interval );
+    /*! \c True if the sampling rate is fixed. */
+  bool fixedSampleRate( void ) const;
 
     /*! The default maximum sampling rate to be used in Hertz. 
         Same as 1/defaultMinSampleInterval(). 
@@ -523,8 +534,9 @@ class OutData : public SampleData< float >, public DaqError
 	exactly at the zero crossings, minima, and maxima,
 	which is important for a stable output of the amplitude of the sine wave.
         The returned sampling rate is always smaller or equal to maxSampleRate().
-        If \a carrierfreq <= 0, then minSampleRate() is returned.
-        \sa bestSampleInterval(), setBestSample()  */
+	If a fixed sampling rate has to be used, maxSampleRate() is returned.
+        If \a carrierfreq <= 0, then maxSampleRate() is returned.
+        \sa bestSampleInterval(), setBestSample(), fixedRate()  */
   double bestSampleRate( double carrierfreq );
     /*! Returns the optimal sampling interval (in seconds) that should be used 
         for a signal with carrier frequency \a carrierfreq Hz.
@@ -534,6 +546,7 @@ class OutData : public SampleData< float >, public DaqError
 	exactly at the zero crossings, minima, and maxima,
 	which is important for a stable output of the amplitude of the sine wave.
         The returned sampling interval is always larger or equal to minSampleInterval().
+	If a fixed sampling interval has to be used, minSampleInterval() is returned.
         If \a carrierfreq <= 0, then minSampleInterval() is returned.
         \sa bestSampleRate(), setBestSample()  */
   double bestSampleInterval( double carrierfreq );
@@ -697,6 +710,8 @@ class OutData : public SampleData< float >, public DaqError
   bool Restart;
     /*! Maximum alowed sampling rate. */
   double MaxRate;
+    /*! Sampling rate has to equal MaxRate. */
+  bool FixedRate;
     /*! Device identifier. */
   int Device;
     /*! Channel number. */

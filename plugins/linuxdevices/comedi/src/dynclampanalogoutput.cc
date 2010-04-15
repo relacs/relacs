@@ -1013,6 +1013,12 @@ int DynClampAnalogOutput::getAISyncDevice( const vector< AnalogInput* > &ais ) c
 }
 
 
+bool DynClampAnalogOutput::useAIRate( void ) const
+{
+  return true;
+}
+
+
 void DynClampAnalogOutput::addTraces( vector< TraceSpec > &traces, int deviceid ) const
 {
   struct traceInfoIOCT traceInfo;

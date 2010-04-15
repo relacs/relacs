@@ -651,7 +651,7 @@ protected:
       /*! Construct an AIData. */
     AIData( AnalogInput *ai, int type=0 )
       : AI( ai ), DefaultType( type ),
-	AIDevice( -1 ) {};
+	AIDevice( -1 ), AIRate( false ) {};
       /*! Pointer to the interface to the hardware driver. */
     AnalogInput *AI;
       /*! Default analog input type. */
@@ -663,6 +663,8 @@ protected:
       /*! This analog input device will always be started 
 	  by analog input device \a AIDevice (index to \a AI). */
     int AIDevice;
+      /*! ... and has to use the same sampling rate. */
+    bool AIRate;
   };
     /*! All devices for analog input. */
   vector < AIData > AI;
@@ -672,19 +674,26 @@ protected:
 
   struct AOData {
     AOData( AnalogOutput *ao )
-      : AO( ao ), AISyncDevice( -1 ), AIDevice( -1 ), AODevice( -1 ) {};
+      : AO( ao ), AISyncDevice( -1 ), AISyncRate( false ),
+	AIDevice( -1 ), AIRate( false ), AODevice( -1 ), AORate( false ) {};
       /*! Pointer to the interface to the hardware driver. */
     AnalogOutput *AO;
       /*! The signals to be emitted from this device. */
     OutList Signals;
       /*! Output can be synced with running analog input device (index). */
     int AISyncDevice;
+      /*! ... and has to use the same sampling rate. */
+    bool AISyncRate;
       /*! This analog output device will always be started 
 	  by analog input device \a AIDevice (index to \a AI). */
     int AIDevice;
+      /*! ... and has to use the same sampling rate. */
+    bool AIRate;
       /*! This analog output device will always be started 
 	  by analog output device \a AODevice (index to \a AO). */
     int AODevice;
+      /*! ... and has to use the same sampling rate. */
+    bool AORate;
   };
     /*! All devices for analog output. */
   vector < AOData > AO;

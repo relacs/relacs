@@ -41,6 +41,7 @@ namespace efish {
 \class SAM
 \brief [RePro] Measures responses to sinusoidal amplitude modulations.
 \author Jan Benda
+\bug Using EOD waveforms is broken (sampling rate!)
 \version 2.0 (Dec 01, 2009)
 
 \par Options

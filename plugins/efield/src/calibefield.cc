@@ -169,9 +169,10 @@ int CalibEField::main( void )
 
   // stimulus:
   OutData signal;
-  signal.sineWave( frequency, duration, 1.0, 0.001 );
-  signal.back() = 0;
   signal.setTrace( outtrace );
+  applyOutTrace( signal );
+  signal.sineWave( frequency, duration, 1.0 );
+  signal.back() = 0;
 
   for ( ; ; ) {
 
@@ -273,7 +274,8 @@ int CalibEField::main( void )
 	  // increase resolution:
 	  duration *= 2.0;
 	  signal.setTrace( outtrace );
-	  signal.sineWave( frequency, duration, 1.0, 0.001 );
+	  applyOutTrace( signal );
+	  signal.sineWave( frequency, duration, 1.0 );
 	  signal.back() = 0;
 	  maxintensities *= 2;
 	  intensitiesoffs *= 2;

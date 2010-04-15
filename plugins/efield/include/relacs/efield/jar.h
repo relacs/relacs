@@ -37,7 +37,7 @@ namespace efield {
 \brief [RePro] Measure the fishes JAR and chirp characteristics at different delta f's and beat contrasts.
 \author Jan Benda
 \version 2.0 (Mar 09, 2010)
-\bug jareod.dat save stimulus and not the fishes EOD.
+\bug EOD waveform stimulus broken (samplerate!).
 
 
 \par Options

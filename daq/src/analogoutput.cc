@@ -94,8 +94,15 @@ int AnalogOutput::getAISyncDevice( const vector< AnalogInput* > &ais ) const
 }
 
 
+bool AnalogOutput::useAIRate( void ) const
+{
+  return false;
+}
+
+
 void AnalogOutput::take( const vector< AnalogOutput* > &aos,
-			 vector< int > &aoinx )
+			 vector< int > &aoinx,
+			 vector< bool > &aorate )
 {
 }
 

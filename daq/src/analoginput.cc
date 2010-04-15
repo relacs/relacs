@@ -75,7 +75,8 @@ int AnalogInput::open( Device &device, const Options &opts )
 
 void AnalogInput::take( const vector< AnalogInput* > &ais,
 			const vector< AnalogOutput* > &aos,
-			vector< int > &aiinx, vector< int > &aoinx )
+			vector< int > &aiinx, vector< int > &aoinx,
+			vector< bool > &airate, vector< bool > &aorate )
 {
 }
 

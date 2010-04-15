@@ -390,14 +390,18 @@ void Acquire::initSync( void )
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     ais.push_back( AI[i].AI );
     AI[i].AIDevice = -1;
+    AI[i].AIRate = false;
   }
   vector< AnalogOutput* > aos;
   aos.reserve( AO.size() );
   for ( unsigned int i=0; i<AO.size(); i++ ) {
     aos.push_back( AO[i].AO );
     AO[i].AISyncDevice = -1;
+    AO[i].AISyncRate = false;
     AO[i].AIDevice = -1;
+    AO[i].AIRate = false;
     AO[i].AODevice = -1;
+    AO[i].AORate = false;
   }
   
   // can analog output be synchronized with running analog input?
@@ -406,6 +410,8 @@ void Acquire::initSync( void )
     AO[i].AISyncDevice = aos[i]->getAISyncDevice( ais );
     if ( AO[i].AISyncDevice < 0 )
       SyncMode = NoSync;
+    else
+      AO[i].AISyncRate = aos[i]->useAIRate();
   }
 
   // lists of taken device indices:
@@ -413,27 +419,40 @@ void Acquire::initSync( void )
   aiinx.reserve( AI.size() );
   vector< int > aoinx;
   aoinx.reserve( AO.size() );
+  vector< bool > airate;
+  airate.reserve( AI.size() );
+  vector< bool > aorate;
+  aorate.reserve( AO.size() );
   
   // init combined start of other devices:
   for ( unsigned int i=0; i<ais.size(); i++ ) {
     aiinx.clear();
     aoinx.clear();
-    ais[i]->take( ais, aos, aiinx, aoinx );
+    airate.clear();
+    aorate.clear();
+    ais[i]->take( ais, aos, aiinx, aoinx, airate, aorate );
     for ( unsigned int j=0; j<aiinx.size(); j++ ) {
-      if ( AI[aiinx[j]].AIDevice < 0 )
+      if ( AI[aiinx[j]].AIDevice < 0 ) {
 	AI[aiinx[j]].AIDevice = i;
+	AI[aiinx[j]].AIRate = airate[j];
+      }
     }
     for ( unsigned int j=0; j<aoinx.size(); j++ ) {
-      if ( AO[aoinx[j]].AIDevice < 0 )
+      if ( AO[aoinx[j]].AIDevice < 0 ) {
 	AO[aoinx[j]].AIDevice = i;
+	AO[aoinx[j]].AIRate = aorate[j];
+      }
     }
   }
   for ( unsigned int i=0; i<aos.size(); i++ ) {
     aoinx.clear();
-    aos[i]->take( aos, aoinx );
+    aorate.clear();
+    aos[i]->take( aos, aoinx, aorate );
     for ( unsigned int j=0; j<aoinx.size(); j++ ) {
-      if ( AO[aoinx[j]].AODevice < 0 )
+      if ( AO[aoinx[j]].AODevice < 0 ) {
 	AO[aoinx[j]].AODevice = i;
+	AO[aoinx[j]].AORate = aorate[j];
+      }
     }
   }
 
@@ -701,6 +720,20 @@ int Acquire::read( InList &data )
     for ( unsigned int i=0; i<AI.size(); i++ )
       AI[i].AI->reset();
     return -1;
+  }
+
+  // set fixed rates in analog output traces:
+  for ( int k=0; k < outTracesSize(); k++ ) {
+    if ( AO[OutTraces[k].device()].AISyncRate &&
+	 AO[OutTraces[k].device()].AISyncDevice >= 0 &&
+	 AO[OutTraces[k].device()].AISyncDevice < (int)AI.size() && 
+	 AI[AO[OutTraces[k].device()].AISyncDevice].Traces.size() > 0 )
+      OutTraces[k].setFixedSampleRate( AI[AO[OutTraces[k].device()].AISyncDevice].Traces[0].sampleRate() );
+    if ( AO[OutTraces[k].device()].AIRate &&
+	 AO[OutTraces[k].device()].AIDevice >= 0 &&
+	 AO[OutTraces[k].device()].AIDevice < (int)AI.size() && 
+	 AI[AO[OutTraces[k].device()].AIDevice].Traces.size() > 0 )
+      OutTraces[k].setFixedSampleRate( AI[AO[OutTraces[k].device()].AIDevice].Traces[0].sampleRate() );
   }
 
   LastDevice = -1;

@@ -41,6 +41,7 @@ class ComediAnalogInput;
 \author Marco Hackenberg, Jan Benda
 \brief [AnalogInput] Interface for accessing analog input of a daq-board via a dynamic clamp kernel module.
 \todo: testReadDevice(): we don't get integer data!!! sigs[k].setGain( 1.0 );
+\todo: Implement take()
 \bug fix errno usage
 */
 
@@ -138,13 +139,11 @@ public:
 
     /*! Check for every analog input and input device in \a ais and \a aos
         whether it can be simultaneously started by startRead()
-	from this device (\a syncmode = 0)
-	or whether the device driver can read the index of an running
-	analog input at the time of starting an analog input (\a syncmode = 1).
-	Add the indices of those devices to \a aiinx and \a aoinx. */
+	from this device. */
   virtual void take( vector< AnalogInput* > &ais,
 		     vector< AnalogOutput* > &aos,
-		     vector< int > &aiinx, vector< int > &aoinx );
+		     vector< int > &aiinx, vector< int > &aoinx,
+		     vector< bool > &airate, vector< bool > &aorate );
 
     /*! If the analog input device supports inputs that
         are not physical input lines but rather readable internal variables,

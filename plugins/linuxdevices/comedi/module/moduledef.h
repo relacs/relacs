@@ -37,7 +37,8 @@
 
 
 //* default waiting time for neuron to react to injected current
-#define INJECT_RECORD_DELAY 5000 //nsec 
+//* #define INJECT_RECORD_DELAY 5000 //nsec 
+#define INJECT_RECORD_DELAY 1000 //nsec 
 
 
 //* maximum supported dynamic clamp frequency ensuring a stable system

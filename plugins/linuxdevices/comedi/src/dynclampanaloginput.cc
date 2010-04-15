@@ -846,8 +846,8 @@ int DynClampAnalogInput::error( void ) const
 
 void DynClampAnalogInput::take( vector< AnalogInput* > &ais, 
 				vector< AnalogOutput* > &aos,
-				vector< int > &aiinx, 
-                                vector< int > &aoinx )
+				vector< int > &aiinx, vector< int > &aoinx,
+				vector< bool > &airate, vector< bool > &aorate )
 {
   // needs to be implemented, for AO!!!!
 }

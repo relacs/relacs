@@ -71,6 +71,7 @@ OutData::OutData( const OutData  &od )
   Continuous = od.Continuous;
   Restart = od.Restart;
   MaxRate = od.MaxRate;
+  FixedRate = od.FixedRate;
   Device = od.Device;
   Channel = od.Channel;
   Trace = od.Trace;
@@ -115,6 +116,7 @@ void OutData::construct( void )
   Continuous = false;
   Restart = false;
   MaxRate = -1.0;
+  FixedRate = false;
   Device = 0;
   Channel = 0;
   Trace = -1;
@@ -199,6 +201,7 @@ const OutData &OutData::assign( const OutData &od )
   Continuous = od.Continuous;
   Restart = od.Restart;
   MaxRate = od.MaxRate;
+  FixedRate = od.FixedRate;
   Device = od.Device;
   Channel = od.Channel;
   Trace = od.Trace;
@@ -239,6 +242,7 @@ const OutData &OutData::copy( OutData &od ) const
   od.Continuous = Continuous;
   od.Restart = Restart;
   od.MaxRate = MaxRate;
+  od.FixedRate = FixedRate;
   od.Device = Device;
   od.Channel = Channel;
   od.Trace = Trace;
@@ -723,6 +727,7 @@ void OutData::setMaxSampleRate( double maxrate )
 {
   if ( maxrate > 0.0 )
     MaxRate = maxrate;
+  FixedRate = false;
 }
 
 
@@ -739,6 +744,29 @@ void OutData::setMinSampleInterval( double minsample )
 {
   if ( minsample > 0.0 )
     MaxRate = 1.0/minsample;
+  FixedRate = false;
+}
+
+
+void OutData::setFixedSampleRate( double rate )
+{
+  if ( rate > 0.0 )
+    MaxRate = rate;
+  FixedRate = true;
+}
+
+
+void OutData::setFixedSampleInterval( double interval )
+{
+  if ( interval > 0.0 )
+    MaxRate = 1.0/interval;
+  FixedRate = true;
+}
+
+
+bool OutData::fixedSampleRate( void ) const
+{
+  return FixedRate;
 }
 
 
@@ -770,13 +798,16 @@ void OutData::setDefaultMinSampleInterval( double minsample )
 
 double OutData::bestSampleRate( double carrierfreq )
 {
-  double msi = minSampleInterval();
+  double msr = maxSampleRate();
+  if ( fixedSampleRate() )
+    return msr;
+
   if ( carrierfreq <= 1.0e-8 )
-    return 1.0/msi;
+    return msr;
   else {
-    double rate = ::floor( 1.0/msi/4.0/carrierfreq )*4.0*carrierfreq;
+    double rate = ::floor( msr/4.0/carrierfreq )*4.0*carrierfreq;
     if ( rate <= 1.0e-8 )
-      return 1.0/msi;
+      return msr;
     else
       return rate;
   }
@@ -786,6 +817,9 @@ double OutData::bestSampleRate( double carrierfreq )
 double OutData::bestSampleInterval( double carrierfreq )
 {
   double msi = minSampleInterval();
+  if ( fixedSampleRate() )
+    return msi;
+
   if ( carrierfreq <= 1.0e-8 )
     return msi;
   else {
@@ -1037,6 +1071,7 @@ ostream &operator<<( ostream &str, const OutData &od )
   str << "Continuous: " << od.Continuous << '\n';
   str << "Restart: " << od.Restart << '\n';
   str << "MaxRate: " << od.MaxRate << '\n';
+  str << "FixedRate: " << od.FixedRate << '\n';
   str << "Device: " << od.Device << '\n';
   str << "Channel: " << od.Channel << '\n';
   str << "Trace: " << od.Trace << '\n';

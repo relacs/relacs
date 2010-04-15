@@ -986,13 +986,14 @@ int ComediAnalogOutput::error( void ) const
 
 
 void ComediAnalogOutput::take( const vector< AnalogOutput* > &aos,
-			       vector< int > &aoinx )
+			       vector< int > &aoinx, vector< bool > &aorate )
 {
   ComediAOs.clear();
   for ( unsigned int k=0; k<aos.size(); k++ ) {
     if ( aos[k]->analogOutputType() == ComediAnalogIOType &&
 	 aos[k]->deviceFile() == deviceFile() ) {
       aoinx.push_back( k );
+      aorate.push_back( false );
       ComediAOs.push_back( dynamic_cast< ComediAnalogOutput* >( aos[k] ) );
     }
   }

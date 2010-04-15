@@ -69,6 +69,8 @@ struct chanT {
   int isUsed;
   int aref;
   int rangeIndex;
+  comedi_insn insn;
+  lsampl_t lsample;
   struct converterT converter;
   float scale;
   float voltage;
@@ -348,10 +350,6 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
     return -1;
   }
 
-  for ( iC = 0; iC < chanlistIOC->chanlistN; iC++ ) {
-    DEBUG_MSG( "loadChanlist subdevice %d, channel nr %d  at %d\n", iS, iC, CR_CHAN( chanlistIOC->chanlist[iC] ) );
-  }
-
   if ( subdev[iS].chanlist ) {
     // subdev chanlist already exist
     for ( iC = 0; iC < chanlistIOC->chanlistN; iC++ ) {
@@ -362,6 +360,7 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
 	  if ( ! subdev[iS].chanlist[isC].isParamChan ) {
 	    subdev[iS].chanlist[isC].aref = CR_AREF( chanlistIOC->chanlist[iC] );
 	    subdev[iS].chanlist[isC].rangeIndex = CR_RANGE( chanlistIOC->chanlist[iC] );
+	    subdev[iS].chanlist[isC].insn.chanspec = chanlistIOC->chanlist[iC];
 	    memcpy( &subdev[iS].chanlist[iC].converter, &chanlistIOC->conversionlist[iC], sizeof(struct converterT) );
 	    subdev[iS].chanlist[isC].scale = chanlistIOC->scalelist[iC];
 	  }
@@ -387,6 +386,8 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
       subdev[iS].chanlist[iC].devP = device[iD].devP;
       subdev[iS].chanlist[iC].subdev = subdev[iS].subdev;
       subdev[iS].chanlist[iC].chan = CR_CHAN( chanlistIOC->chanlist[iC] );
+      subdev[iS].chanlist[iC].lsample = 0;
+      memset( &subdev[iS].chanlist[iC].insn, 0, sizeof(comedi_insn) );
       subdev[iS].chanlist[iC].isParamChan = (subdev[iS].chanlist[iC].chan >= PARAM_CHAN_OFFSET);
       subdev[iS].chanlist[iC].modelIndex = -1;
       subdev[iS].chanlist[iC].isUsed = 1; 
@@ -401,6 +402,7 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
       }
       else {
 	if ( subdev[iS].type == SUBDEV_IN ) {
+	  subdev[iS].chanlist[iC].insn.insn = INSN_READ;
 	  for ( i = 0; i < INPUT_N; i++ ) {
 	    if ( inputDevices[i] == subdev[iS].userSubdevIndex && 
 		 inputChannels[i] == subdev[iS].chanlist[iC].chan )
@@ -408,6 +410,7 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
 	  }
 	}
 	else {
+	  subdev[iS].chanlist[iC].insn.insn = INSN_WRITE;
 	  for ( i = 0; i < OUTPUT_N; i++ ) {
 	    if ( outputDevices[i] == subdev[iS].userSubdevIndex && 
 		 outputChannels[i] == subdev[iS].chanlist[iC].chan )
@@ -416,6 +419,10 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
 	}
 	subdev[iS].chanlist[iC].aref = CR_AREF( chanlistIOC->chanlist[iC] );
 	subdev[iS].chanlist[iC].rangeIndex = CR_RANGE( chanlistIOC->chanlist[iC] );
+	subdev[iS].chanlist[iC].insn.n = 1;
+	subdev[iS].chanlist[iC].insn.data = &subdev[iS].chanlist[iC].lsample;
+	subdev[iS].chanlist[iC].insn.subdev = subdev[iS].subdev;
+	subdev[iS].chanlist[iC].insn.chanspec = chanlistIOC->chanlist[iC];
 	memcpy( &subdev[iS].chanlist[iC].converter, &chanlistIOC->conversionlist[iC], sizeof(struct converterT) );
 	subdev[iS].chanlist[iC].scale = chanlistIOC->scalelist[iC];
       }
@@ -609,11 +616,10 @@ void rtDynClamp( long dummy )
   unsigned long readCnt = 0;
   unsigned long fifoPutCnt = 0;
   float voltage;
-  lsampl_t lsample;
   struct chanT *pChan;
   unsigned ci;
   double term;
-  int vi, oi, pi; /// DEBUG
+  //  int vi, oi, pi; /// DEBUG
 
   DEBUG_MSG( "rtDynClamp: starting dynamic clamp loop at %u Hz\n", 
 	     1000000000/dynClampTask.periodLengthNs );
@@ -670,14 +676,10 @@ void rtDynClamp( long dummy )
 		subdev[iS].running = 0;
 		continue;
 	      }
-	      if ( dynClampTask.loopCnt % 100 == 0 ) {
-		vi = 1000.0*pChan->voltage;
-		DEBUG_MSG( "FIFO value=%d, isparam=%d\n", vi, pChan->isParamChan );
-	      }
 	      if ( pChan->isParamChan ) {
 		paramOutput[pChan->chan] = pChan->voltage;
-		vi = 1000.0*pChan->voltage;
-		DEBUG_MSG( "NEW PARAMETER value=%d to channel %d\n", vi, pChan->chan );
+		DEBUG_MSG( "NEW PARAMETER value=%d to channel %d\n",
+			   (int)1000.0*pChan->voltage, pChan->chan );
 	      }
 	    }
 	  }
@@ -694,9 +696,8 @@ void rtDynClamp( long dummy )
 	      voltage += output[pChan->modelIndex];
 
 	    // write out Sample:
-	    lsample = value_to_sample( pChan, voltage );
-	    retVal = comedi_data_write( pChan->devP, pChan->subdev, pChan->chan,
-					pChan->rangeIndex, pChan->aref,	lsample );
+	    pChan->lsample = value_to_sample( pChan, voltage );
+	    retVal = comedi_do_insn( pChan->devP, &pChan->insn );
 	    if ( retVal < 1 ) {
 	      subdev[iS].running = 0;
 	      if ( retVal < 0 ) {
@@ -708,14 +709,6 @@ void rtDynClamp( long dummy )
 	      subdev[iS].error = E_NODATA;
 	      DEBUG_MSG( "rtDynClamp: failed to write data to subdevice ID %d channel %d at loopCnt %lu\n",
 			 iS, iC, dynClampTask.loopCnt );
-	    }
-	    else {
-	      if ( dynClampTask.loopCnt % 100 == 0 ) {
-		vi = 1000.0*voltage;
-		oi = 1000.0*output[0];
-		pi = 1000.0*paramOutput[0];
-		DEBUG_MSG( "OUTPUT voltage=%d, ouput=%d, param=%d, data=%d\n", vi, oi, pi, lsample );
-	      }
 	    }
 	  }
 
@@ -730,24 +723,6 @@ void rtDynClamp( long dummy )
 	//* int retValSleep = rt_sleep( nano2count( INJECT_RECORD_DELAY ) );
     rt_busy_sleep( INJECT_RECORD_DELAY ); // TODO: just default
 
-    // DEBUG OUTPUT:
-    /*
-    if ( dynClampTask.loopCnt % 100 == 0 ) {
-      DEBUG_MSG( "%d subdevices registered:\n", subdevN );
-      for ( iS = 0; iS < subdevN; iS++ ) {
-	DEBUG_MSG( "LOOP %lu: fifoPutCnt=%lu readCnt=%lu, subdevID=%d, subdev=%d, run=%d, used=%d, type=%s, error=%d, duration=%lu, contin=%d\n", 
-		   dynClampTask.loopCnt, fifoPutCnt, readCnt, iS, subdev[iS].subdev, 
-		   subdev[iS].running, subdev[iS].used, 
-		   subdev[iS].type == SUBDEV_IN ? "AI" : "AO", subdev[iS].error,
-		   subdev[iS].duration, subdev[iS].continuous  );
-	for ( iC = 0; iC < subdev[iS].chanN; iC++ ) {
-	  DEBUG_MSG( "    channel %d, isParamChan=%d, modelIndex=%d, isUsed=%d\n", 
-		     subdev[iS].chanlist[iC].chan, subdev[iS].chanlist[iC].isParamChan,
-		     subdev[iS].chanlist[iC].modelIndex, subdev[iS].chanlist[iC].isUsed );
-	}
-      }
-    }
-    */
     /******** READ FROM ANALOG INPUT: *******************************************/
     /****************************************************************************/
     for ( iS = 0; iS < subdevN; iS++ ) {
@@ -768,8 +743,7 @@ void rtDynClamp( long dummy )
 	  // acquire sample:
 	  if ( !pChan->isParamChan ) {
 
-	    retVal = comedi_data_read( pChan->devP, pChan->subdev, pChan->chan,
-				       pChan->rangeIndex, pChan->aref, &lsample );
+	    retVal = comedi_do_insn( pChan->devP, &pChan->insn );
                
 	    if ( retVal < 0 ) {
 	      subdev[iS].running = 0;
@@ -784,7 +758,7 @@ void rtDynClamp( long dummy )
 	    term = 1.0;
 	    for ( ci=0; ci <= pChan->converter.order; ++ci ) {
 	      pChan->voltage += pChan->converter.coefficients[ci] * term;
-	      term *= lsample - pChan->converter.expansion_origin;
+	      term *= pChan->lsample - pChan->converter.expansion_origin;
 	    }
 	    pChan->voltage *= pChan->scale;
 	    if ( pChan->modelIndex >= 0 )
@@ -826,7 +800,6 @@ void rtDynClamp( long dummy )
 
     //    start = rt_get_cpu_time_ns();
     rt_task_wait_period();
-
 
   } // END OF DYNCLAMP LOOP
     

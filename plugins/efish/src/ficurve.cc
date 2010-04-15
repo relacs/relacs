@@ -216,10 +216,15 @@ int FICurve::main( void )
     adjustGain( trace( LocalEODTrace[0] ), maxintensityfac * val2 );
 
   // create signal:
-  OutData signal( PreDuration + Duration, 0.001 );
-  signal.setDelay( Delay );
-  //  signal.setStartSource( 2 );
+  OutData signal;
   signal.setTrace( am ? GlobalAMEField : GlobalEField );
+  applyOutTrace( signal );
+  double si = 0.001;
+  if ( signal.fixedSampleRate() )
+    si = signal.minSampleInterval();
+  signal.resize( PreDuration + Duration, si, 0.0 );
+  signal.setDelay( Delay );
+  signal.setStartSource( 1 );
   signal.setIdent( "rectangle" );
   signal.setCarrierFreq( FishRate );
 

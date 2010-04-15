@@ -139,16 +139,10 @@ int SAM::createSignal( const InData &data, const EventData &events )
   if ( AM ) {
     if ( SineWave ) {
       DeltaF = fabs( DeltaF );
-      double sr = 200.0*DeltaF;
-      if ( sr > Signal->maxSampleRate() )
-	sr = Signal->maxSampleRate();
-      Signal->setSampleRate( sr );
-      // get the actual set sampling rate.
-      // no signal is put out, because there isn't any.
-      write( *Signal );
-      // create sine wave:
-      Signal->sin( 0.0, Duration, Signal->stepsize(), DeltaF );
-  // XXX      Signal->sineWave( DeltaF, 1.0 / DeltaF );
+      int n = (int)::rint( Duration * DeltaF );
+      if ( n < 1 )
+	n = 1;
+      Signal->sineWave( DeltaF, n/DeltaF );
       ident = "SAM";
       IntensityGain = 0.5;
       TrueDeltaF = 1.0 / Signal->duration();
@@ -161,17 +155,13 @@ int SAM::createSignal( const InData &data, const EventData &events )
   else {
     if ( SineWave ) {
       double stimulusrate = DeltaF;
-      if ( ! FreqAbs ) {
+      if ( ! FreqAbs )
 	stimulusrate += FishRate;
-	Signal->setSampleRate( 20.0 * stimulusrate );
-      }
-      else
-	Signal->setSampleRate( 20.0 * FishRate );
-      // get the actual set sampling rate.
-      // no signal is put out, because there isn't any.
-      write( *Signal );
-      // create sine wave:
-      Signal->sineWave( stimulusrate, rint( stimulusrate / fabs( DeltaF ) ) / stimulusrate );
+      double p = rint( stimulusrate / fabs( DeltaF ) ) / stimulusrate;
+      int n = (int)::rint( Duration / p );
+      if ( n < 1 )
+	n = 1;
+      Signal->sineWave( stimulusrate, n*p );
       ident = "sinewave";
       IntensityGain = 0.5;
     }
@@ -189,6 +179,7 @@ int SAM::createSignal( const InData &data, const EventData &events )
     }
     Signal->repeat( (int)rint( Duration/Signal->duration() ) );
   }
+  Duration = Signal->duration();
   Signal->setStartSource( 1 );
   Str s = ident + ", C=" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%";
   s += ", Df=" + Str( DeltaF, 0, 1, 'f' ) + "Hz";
