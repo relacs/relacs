@@ -82,6 +82,7 @@ struct dynClampTaskT {
   RT_TASK rtTask;
   unsigned int periodLengthNs;
   unsigned int reqFreq;
+  unsigned int setFreq;
   unsigned long duration;
   int continuous;
   int running;
@@ -121,8 +122,10 @@ char *moduleName = "/dev/dynclamp";
 char *iocNames[RTMODULE_IOC_MAXNR] = {
   "dummy",
   "IOC_GET_SUBDEV_ID", "IOC_OPEN_SUBDEV", "IOC_CHANLIST", "IOC_COMEDI_CMD", "IOC_SYNC_CMD", 
-  "IOC_START_SUBDEV", "IOC_CHK_RUNNING", "IOC_REQ_READ", "IOC_REQ_WRITE", "IOC_REQ_CLOSE", "IOC_STOP_SUBDEV", 
-  "IOC_RELEASE_SUBDEV", "IOC_GET_TRACE_INFO", "IOC_SET_TRACE_CHANNEL", "IOC_GETLOOPCNT", "IOC_GETAOINDEX" 
+  "IOC_START_SUBDEV", "IOC_CHK_RUNNING", "IOC_REQ_READ", "IOC_REQ_WRITE", "IOC_REQ_CLOSE",
+  "IOC_STOP_SUBDEV", "IOC_RELEASE_SUBDEV", "IOC_SET_TRIGGER", "IOC_UNSET_TRIGGER",
+  "IOC_GET_TRACE_INFO", "IOC_SET_TRACE_CHANNEL", "IOC_GETRATE", "IOC_GETLOOPCNT",
+  "IOC_GETAOINDEX" 
 };
 
 
@@ -268,7 +271,7 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
     if ( !device[iDev].devP ) {
       ERROR_MSG( "comediOpenDevice: device %s could not be opened!\n",
 		 deviceIOC->devicename );
-      comedi_perror( "rtmodule: rtmodule_ioctl" );    
+      comedi_perror( "rtmodule: comedi_open" );    
       return -1;
     }
     justOpened = 1;
@@ -442,7 +445,7 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC )
   }
 
   // initialize sampling parameters for subdevice:
-  subdev[iS].frequency = syncCmdIOC->frequency > 0 ? syncCmdIOC->frequency : dynClampTask.reqFreq;
+  subdev[iS].frequency = syncCmdIOC->frequency > 0 ? syncCmdIOC->frequency : dynClampTask.setFreq;
   subdev[iS].delay = syncCmdIOC->delay;
   subdev[iS].duration = syncCmdIOC->duration;
   subdev[iS].continuous = syncCmdIOC->continuous;
@@ -452,9 +455,9 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC )
     dynClampTask.reqFreq = subdev[iS].frequency;
   }
   else {
-    if ( dynClampTask.reqFreq != subdev[iS].frequency ) {
+    if ( dynClampTask.setFreq != subdev[iS].frequency ) {
       ERROR_MSG( "loadSyncCmd ERROR: Requested frequency %u Hz of subdevice %i on device %s is inconsistent to frequency %u Hz of other subdevice. Sync-command not loaded!\n",
-		 subdev[iS].frequency, iS, device[subdev[iS].devID].name, dynClampTask.reqFreq );
+		 subdev[iS].frequency, iS, device[subdev[iS].devID].name, dynClampTask.setFreq );
       return -EINVAL;
     }
   }
@@ -857,7 +860,7 @@ int init_rt_task( void )
   //* test if dynamic clamp frequency is valid:
   if ( dynClampTask.reqFreq <= 0 || dynClampTask.reqFreq > MAX_FREQUENCY )
     ERROR_MSG( "init_rt_task ERROR: %dHz -> invalid dynamic clamp frequency. Valid range is 1 .. %dHz\n", 
-	       dynClampTask.reqFreq, dynClampTask.reqFreq );
+	       dynClampTask.reqFreq, MAX_FREQUENCY );
 
   //* initializing rt-task for dynamic clamp with high priority:
   priority = 1;
@@ -878,11 +881,11 @@ int init_rt_task( void )
     return -3;
   }
   dynClampTask.periodLengthNs = count2nano( periodTicks );
+  dynClampTask.setFreq = 1000000000 / dynClampTask.periodLengthNs;
   loopInterval = 1.0e-9*dynClampTask.periodLengthNs;
   loopRate = 1.0e9/dynClampTask.periodLengthNs;
   INFO_MSG( "init_rt_task: periodic task successfully started... requested freq: %d , accepted freq: ~%u (period=%uns)\n", 
-	    dynClampTask.reqFreq, 1000000000 / dynClampTask.periodLengthNs, 
-	    dynClampTask.periodLengthNs );
+	    dynClampTask.reqFreq, dynClampTask.setFreq, dynClampTask.periodLengthNs );
 
   // For now, the DynClampTask shall always run until any subdev is stopped:
   dynClampTask.continuous = 1;
@@ -933,6 +936,11 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
     
 
     /******** GIVE INFORMATION TO USER SPACE: ***********************************/
+    
+  case IOC_GETRATE:
+    tmp = dynClampTask.setFreq;
+    retVal = put_user( tmp, (int __user *)arg );
+    return retVal == 0 ? 0 : -EFAULT;
 
   case IOC_GETAOINDEX:
     luTmp = dynClampTask.aoIndex;

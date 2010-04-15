@@ -409,6 +409,35 @@ int DynClampAnalogInput::testReadDevice( InList &traces )
   
   //  cerr << " DynClampAnalogInput::testRead(): 1\n";////TEST////
 
+
+  // sampling rate must be the one of the running rt-loop:
+  unsigned int rate = 0;
+  int retval = ::ioctl( ModuleFd, IOC_GETRATE, &rate );
+  if( retval < 0 ) {
+    cerr << " DynClampAnalogOutput::testWriteDevice -> ioctl command IOC_GETRATE on device "
+	 << ModuleDevice << " failed!\n";
+    return -1;
+  }
+  unsigned int reqrate = (unsigned int)traces[0].sampleRate();
+  if ( reqrate == 0 )
+    if ( rate > 0 )
+      traces.setSampleRate( (double)rate );
+    else
+      traces.addError( DaqError::InvalidSampleRate );
+  else {
+    if ( rate > 0 ) {
+      if ( ::abs( reqrate - rate ) > 5 )
+	traces.addError( DaqError::InvalidSampleRate );
+      traces.setSampleRate( (double)rate );
+    }
+  }
+
+  // start source:
+  if ( traces[0].startSource() < 0 || traces[0].startSource() >= 5 ) {
+    traces.setStartSource( 0 );
+    traces.addError( DaqError::InvalidStartSource );
+  }
+
   // XXX check whether channel >=1000 is valid!
 
   // channel configuration:
@@ -446,7 +475,7 @@ int DynClampAnalogInput::testReadDevice( InList &traces )
 
   //  cerr << " DynClampAnalogInput::testRead(): success\n";/////TEST/////
 
-  int retval = 0;
+  retval = 0;
 
   // check read buffer size:
   int readbufsize = traces.size() * traces[0].indices( traces[0].readTime() ) * BufferElemSize;
@@ -512,6 +541,7 @@ int DynClampAnalogInput::prepareRead( InList &traces )
   syncCmdIOC.frequency = (unsigned int)traces[0].sampleRate();
   syncCmdIOC.duration = traces[0].capacity() + traces[0].indices( traces[0].delay());
   syncCmdIOC.continuous = traces[0].continuous();
+  syncCmdIOC.startsource = traces[0].startSource();
   retval = ::ioctl( ModuleFd, IOC_SYNC_CMD, &syncCmdIOC );
   //  cerr << "prepareRead(): IOC_SYNC_CMD done!\n"; /// TEST
   if( retval < 0 ) {
@@ -574,6 +604,16 @@ int DynClampAnalogInput::startRead( void )
     Traces->addErrorStr( ern );
     return -1;
   }
+
+  // get sampling rate:
+  unsigned int rate = 0;
+  retval = ::ioctl( ModuleFd, IOC_GETRATE, &rate );
+  if( retval < 0 ) {
+    cerr << " DynClampAnalogOutput::testWriteDevice -> ioctl command IOC_GETRATE on device "
+	 << ModuleDevice << " failed!\n";
+  }
+  else
+    Traces->setSampleRate( (double)rate );
 
   ErrorState = 0;
   

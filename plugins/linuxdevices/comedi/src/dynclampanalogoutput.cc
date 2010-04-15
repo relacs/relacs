@@ -531,6 +531,7 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
   syncCmdIOC.delay = 0;
   syncCmdIOC.duration = 1;
   syncCmdIOC.continuous = 0;
+  syncCmdIOC.startsource = 0;
   retval = ::ioctl( ModuleFd, IOC_SYNC_CMD, &syncCmdIOC );
   if( retval < 0 ) {
     cerr << " DynClampAnalogOutput::directWrite -> ioctl command IOC_SYNC_CMD on device "
@@ -589,6 +590,35 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
   if( ! isOpen() ) {
     sigs.setError( DaqError::DeviceNotOpen );
     return -1;
+  }
+
+  // sampling rate must be the one of the running rt-loop:
+  unsigned int rate = 0;
+  int retval = ::ioctl( ModuleFd, IOC_GETRATE, &rate );
+  if( retval < 0 ) {
+    cerr << " DynClampAnalogOutput::testWriteDevice -> ioctl command IOC_GETRATE on device "
+	 << ModuleDevice << " failed!\n";
+    return -1;
+  }
+  unsigned int reqrate = (unsigned int)sigs[0].sampleRate();
+  if ( reqrate == 0 ) {
+    if ( rate > 0 )
+      sigs.setSampleRate( (double)rate );
+    else
+      sigs.addError( DaqError::InvalidSampleRate );
+  }
+  else {
+    if ( rate > 0) {
+      if ( ::abs( reqrate - rate ) > 5 )
+	sigs.addError( DaqError::InvalidSampleRate );
+      sigs.setSampleRate( (double)rate );
+    }
+  }
+
+  // start source:
+  if ( sigs[0].startSource() < 0 || sigs[0].startSource() >= 5 ) {
+    sigs.setStartSource( 0 );
+    sigs.addError( DaqError::InvalidStartSource );
   }
 
   // copy and sort signal pointers:
@@ -704,10 +734,11 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
   // set up synchronous command:
   struct syncCmdIOCT syncCmdIOC;
   syncCmdIOC.subdevID = SubdeviceID;
-  syncCmdIOC.frequency = (unsigned int)ol[0].sampleRate();
+  syncCmdIOC.frequency = (unsigned int)::rint( ol[0].sampleRate() );
   syncCmdIOC.delay = ol[0].indices( ol[0].delay() );
   syncCmdIOC.duration = ol[0].size();
   syncCmdIOC.continuous = ol[0].continuous();
+  syncCmdIOC.startsource = ol[0].startSource();
   retval = ::ioctl( ModuleFd, IOC_SYNC_CMD, &syncCmdIOC );
   //  cerr << "prepareWrite(): IOC_SYNC_CMD done!\n"; /// TEST
   if( retval < 0 ) {
@@ -857,6 +888,16 @@ int DynClampAnalogOutput::startWrite( void )
     Sigs->addErrorStr( ern );
     return -1;
   }
+
+  // get sampling rate:
+  unsigned int rate = 0;
+  retval = ::ioctl( ModuleFd, IOC_GETRATE, &rate );
+  if( retval < 0 ) {
+    cerr << " DynClampAnalogOutput::testWriteDevice -> ioctl command IOC_GETRATE on device "
+	 << ModuleDevice << " failed!\n";
+  }
+  else
+    Sigs->setSampleRate( (double)rate );
 
   ErrorState = 0;
   

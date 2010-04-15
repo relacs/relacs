@@ -107,7 +107,15 @@ struct syncCmdIOCT {
   unsigned int frequency;
   unsigned long delay;
   unsigned long duration;
+  int startsource;
   int continuous;
+};
+
+struct triggerIOCT {
+  char devname[DEV_NAME_MAXLEN+1];
+  int subdev;   // -1: assing the first analog input subdevice.
+  unsigned int channel;
+  float alevel;
 };
 
 
@@ -150,15 +158,19 @@ struct traceChannelIOCT {
 #define IOC_STOP_SUBDEV         _IOW(RTMODULE_MAJOR, 11, int)
 #define IOC_RELEASE_SUBDEV      _IOW(RTMODULE_MAJOR, 12, int)
 
+#define IOC_SET_TRIGGER         _IOW(RTMODULE_MAJOR, 13, int)
+#define IOC_UNSET_TRIGGER       _IOW(RTMODULE_MAJOR, 14, int)
+
 // exchange info:
 
-#define IOC_GET_TRACE_INFO      _IOWR(RTMODULE_MAJOR, 13, int)
-#define IOC_SET_TRACE_CHANNEL   _IOW(RTMODULE_MAJOR,  14, int)
-#define IOC_GETLOOPCNT          _IOR(RTMODULE_MAJOR,  15, int)
-#define IOC_GETAOINDEX          _IOR(RTMODULE_MAJOR,  16, int)
+#define IOC_GET_TRACE_INFO      _IOWR(RTMODULE_MAJOR, 15, int)
+#define IOC_SET_TRACE_CHANNEL   _IOW(RTMODULE_MAJOR,  16, int)
+#define IOC_GETRATE             _IOR(RTMODULE_MAJOR,  17, int)
+#define IOC_GETLOOPCNT          _IOR(RTMODULE_MAJOR,  18, int)
+#define IOC_GETAOINDEX          _IOR(RTMODULE_MAJOR,  19, int)
 
 
-#define RTMODULE_IOC_MAXNR 17
+#define RTMODULE_IOC_MAXNR 20
 
 
 #endif

@@ -42,8 +42,8 @@ EODDetector::EODDetector( const string &ident, int mode )
   addNumber( "threshold", "Threshold", Threshold, MinThresh, MaxThresh, 0.01*MaxThresh, "", "", "%g", 2+8+32 );
   addNumber( "ratio", "Ratio", ThreshRatio, 0.05, 1.0, 0.05, "", "%", "%g", 2+8 );
   addNumber( "maxperiod", "Maximum EOD period", MaxEODPeriod, 0.0, 1.0, 0.0001, "s", "ms", "%g", 8 );
-  addNumber( "rate", "Rate", 0.0, 0.0, 2000.0, 0.1, "Hz", "Hz", "%.1f", 2+4 );
-  addNumber( "size", "Size", 0.0, 0.0, 200.0, 0.1, "", "", "%.3f", 2+4 );
+  addNumber( "rate", "Rate", 0.0, 0.0, 100000.0, 0.1, "Hz", "Hz", "%.1f", 2+4 );
+  addNumber( "size", "Size", 0.0, 0.0, 100000.0, 0.1, "", "", "%.3f", 2+4 );
   addStyle( OptWidget::ValueLarge + OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack, 4 );
 
   EDW.assign( ((Options*)this), 2, 4, true, 0, mutex() ),

@@ -22,10 +22,12 @@
 #include <relacs/relacsplugin.h>
 #include <relacs/comedi/dynclampanaloginput.h>
 #include <relacs/comedi/dynclampanalogoutput.h>
+#include <relacs/comedi/dynclamptrigger.h>
 
 namespace comedi {
 
 addAnalogInput( DynClampAnalogInput );
 addAnalogOutput( DynClampAnalogOutput );
+addTrigger( DynClampTrigger );
 
 };

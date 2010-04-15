@@ -154,7 +154,7 @@ void Trigger::setTrough( double threshold, double alevel, double blevel )
 }
 
 
-void Trigger::set( const Options &opts )
+int Trigger::set( const Options &opts )
 {
   clear();
 
@@ -191,6 +191,10 @@ void Trigger::set( const Options &opts )
     setPeak( threshold, alevel, blevel );
   else if ( ttype == "troughwindow" )
     setTrough( threshold, alevel, blevel );
+  else
+    return 0;
+
+  return 1;
 }
 
 

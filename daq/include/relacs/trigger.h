@@ -235,8 +235,15 @@ public:
         \arg \c blevel: the higher level for the trigger events that take
           two levels into account.
         \arg \c threshold: the threshold parameter for detectin peak and
-          troughs. */
-  void set( const Options &opts );
+          troughs.
+        \return 0 if there arn't any parameter specified by \a opts, 
+	\return 1 if some trigger operation was defined by \a opts.
+        This function should be used in open() like
+        \code
+        if ( set( opts ) > 0 )
+          activate();
+        \endcode */
+  int set( const Options &opts );
 
     /*! Add a new hoop to the trigger chain.
         All subsequent call to the set* functions configure the new hoop.

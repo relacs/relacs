@@ -132,6 +132,8 @@ int SAM::createSignal( const InData &data, const EventData &events )
     delete Signal;
 
   Signal = new OutData;
+  Signal->setTrace( AM ? GlobalAMEField : GlobalEField );
+  applyOutTrace( *Signal );
   string ident = "";
 
   if ( AM ) {
@@ -145,7 +147,8 @@ int SAM::createSignal( const InData &data, const EventData &events )
       // no signal is put out, because there isn't any.
       write( *Signal );
       // create sine wave:
-      Signal->sineWave( DeltaF, 1.0 / DeltaF );
+      Signal->sin( 0.0, Duration, Signal->stepsize(), DeltaF );
+  // XXX      Signal->sineWave( DeltaF, 1.0 / DeltaF );
       ident = "SAM";
       IntensityGain = 0.5;
       TrueDeltaF = 1.0 / Signal->duration();
@@ -184,15 +187,15 @@ int SAM::createSignal( const InData &data, const EventData &events )
       double maxamplitude = Signal->maxValue() - Signal->minValue();
       IntensityGain = 0.5 * maxamplitude;
     }
+    Signal->repeat( (int)rint( Duration/Signal->duration() ) );
   }
-  Signal->repeat( (int)rint( Duration/Signal->duration() ) );
-  //  Signal->setStartSource( 2 );
-  Signal->setTrace( AM ? GlobalAMEField : GlobalEField );
+  Signal->setStartSource( 1 );
   Str s = ident + ", C=" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%";
   s += ", Df=" + Str( DeltaF, 0, 1, 'f' ) + "Hz";
   if ( AM )
     s += ", AM";
   Signal->setIdent( s );
+  Signal->clearError();
   return 0;
 }
 
