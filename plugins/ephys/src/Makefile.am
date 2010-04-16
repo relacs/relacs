@@ -12,7 +12,8 @@ pluginlib_LTLIBRARIES = \
     libephysneuronmodels.la \
     libephysintraspikedetector.la \
     libephysdynamicsuspikedetector.la \
-    libephysmotorcontrol.la
+    libephysmotorcontrol.la \
+    libephysamplifiercontrol.la
 
 
 
@@ -171,13 +172,44 @@ libephysmotorcontrol_la_include_HEADERS = $(HEADER_PATH)/motorcontrol.h
 
 
 
+libephysamplifiercontrol_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT3_CPPFLAGS)
+
+libephysamplifiercontrol_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT3_LDFLAGS)
+
+libephysamplifiercontrol_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(builddir)/libephystraces.la \
+    $(QT3_LIBS)
+
+$(libephysamplifiercontrol_la_OBJECTS) : moc_amplifiercontrol.cc
+
+libephysamplifiercontrol_la_SOURCES = amplifiercontrol.cc
+
+libephysamplifiercontrol_la_includedir = $(pkgincludedir)/ephys
+
+libephysamplifiercontrol_la_include_HEADERS = $(HEADER_PATH)/amplifiercontrol.h
+
+
+
 check_PROGRAMS = \
     linktest_librelacsspikingneuron_la \
     linktest_libephystraces_la \
     linktest_libephysneuronmodels_la \
     linktest_libephysintraspikedetector_la \
     linktest_libephysdynamicsuspikedetector_la \
-    linktest_libephysmotorcontrol_la
+    linktest_libephysmotorcontrol_la \
+    linktest_libephysamplifiercontrol_la
 
 linktest_librelacsspikingneuron_la_SOURCES = linktest.cc
 linktest_librelacsspikingneuron_la_LDADD = librelacsspikingneuron.la
@@ -196,5 +228,8 @@ linktest_libephysdynamicsuspikedetector_la_LDADD = libephysdynamicsuspikedetecto
 
 linktest_libephysmotorcontrol_la_SOURCES = linktest.cc
 linktest_libephysmotorcontrol_la_LDADD = libephysmotorcontrol.la
+
+linktest_libephysamplifiercontrol_la_SOURCES = linktest.cc
+linktest_libephysamplifiercontrol_la_LDADD = libephysamplifiercontrol.la
 
 TESTS = $(check_PROGRAMS)

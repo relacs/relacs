@@ -78,7 +78,7 @@ int CalibEField::main( void )
   base::LinearAttenuate *latt = 
     dynamic_cast<base::LinearAttenuate*>( attenuator( outTraceName( outtrace ) ) );
   if ( latt == 0 ) {
-    warning( "No Attenuator found!" );
+    warning( "No Attenuator Plugin found!" );
     return Failed;
   }
 

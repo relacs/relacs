@@ -117,7 +117,7 @@ class TraceSpec
 
     /*! The maximum or fixed sampling rate to be used in Hertz.
         \sa setMaxSampleRate(), setFixedSampleRate(), fixedSampleRate() */
-  double maxSampleRate( void );
+  double maxSampleRate( void ) const;
     /*! Set the maximum sampling rate to \a maxrate Hertz.
         \sa maxSampleRate(), setFixedSampleRate() */
   void setMaxSampleRate( double maxrate );

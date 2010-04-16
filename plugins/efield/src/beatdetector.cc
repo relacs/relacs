@@ -48,8 +48,8 @@ BeatDetector::BeatDetector( const string &ident, int mode )
   addNumber( "delay", "Delay time", Delay, 0.0, 1000.0, 1.0, "sec", "sec", "", 8+32 );
   addNumber( "decay", "Decay time constant", Decay, 0.0, 1000.0, 1.0, "sec", "sec", "", 2+8+32 );
   addNumber( "ratio", "Ratio threshold / size", Ratio, 0.0, 1.0, 0.05, "1", "%", "%.0f", 2+8+32 ); 
-  addNumber( "rate", "Rate", 0.0, 0.0, 2000.0, 0.1, "Hz", "Hz", "%.1f", 2+4, strongstyle );
-  addNumber( "contrast", "Contrast", 0.0, 0.0, 200.0, 0.1, "%", "%", "%.1f", 2+4, strongstyle );
+  addNumber( "rate", "Rate", 0.0, 0.0, 100000.0, 0.1, "Hz", "Hz", "%.1f", 2+4, strongstyle );
+  addNumber( "contrast", "Contrast", 0.0, 0.0, 10000.0, 0.1, "%", "%", "%.1f", 2+4, strongstyle );
 
   BDW.assign( ((Options*)this), 2, 4, true, 0, mutex() );
   BDW.setSpacing( 4 );

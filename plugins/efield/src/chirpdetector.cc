@@ -45,9 +45,9 @@ ChirpDetector::ChirpDetector( const string &ident, int mode )
   addNumber( "minthresh", "Minimum threshold", MinThresh, 0.0, 1000.0, 2.0, "Hz", "Hz", "%.0f", 8+32 );
   addNumber( "minwidth", "Minimum width", ChirpMinWidth, 0.0, 0.5, 0.002, "s", "ms", "%.0f", 2+32 );
   addNumber( "maxwidth", "Maximum width", ChirpMaxWidth, 0.002, 0.5, 0.002, "s", "ms", "%.0f", 2+32 );
-  addNumber( "rate", "Rate", 0.0, 0.0, 2000.0, 1.0, "Hz", "Hz", "%.0f", 2+4 );
-  addNumber( "size", "Size", 0.0, 0.0, 2000.0, 1.0, "Hz", "Hz", "%.0f", 2+4 );
-  addNumber( "width", "Width", 0.0, 0.0, 1000.0, 0.1, "ms", "ms", "%.0f", 2+4 );
+  addNumber( "rate", "Rate", 0.0, 0.0, 10000.0, 1.0, "Hz", "Hz", "%.0f", 2+4 );
+  addNumber( "size", "Size", 0.0, 0.0, 10000.0, 1.0, "Hz", "Hz", "%.0f", 2+4 );
+  addNumber( "width", "Width", 0.0, 0.0, 100000.0, 0.1, "ms", "ms", "%.0f", 2+4 );
   addStyle( OptWidget::ValueLarge + OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack, 4 );
 
   CDW.assign( ((Options*)this), 2, 4, true, 0, mutex() );

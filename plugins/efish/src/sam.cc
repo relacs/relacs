@@ -71,6 +71,7 @@ SAM::SAM( void )
 	      Before, 0.0, 1000.0, 0.005, "seconds", "ms" );
   addNumber( "after", "Spikes recorded after stimulus",
 	      After, 0.0, 1000.0, 0.005, "seconds", "ms" );
+  addBoolean( "adjust", "Adjust input gain?", true );
   addTypeStyle( OptWidget::Bold, Parameter::Label );
   
   // variables:
@@ -206,6 +207,7 @@ int SAM::main( void )
   RateN = integer( "ratebins" );
   Before = number( "before" );
   After = number( "after" );
+  bool adjustg = boolean( "adjust" );
 
   if ( FreqAbs && DeltaF <= 0.0 ) {
     warning( "Delta f cannot be negative for absolute stimulus frequencies!\n" );
@@ -311,6 +313,7 @@ int SAM::main( void )
     }
   }
   P.unlock();
+  P.draw();
 
   // EOD rate:
   FishRate = 0.0;
@@ -433,18 +436,20 @@ int SAM::main( void )
     timeStamp();
 
     // adjust input gains:
-    for ( int k=0; k<MaxSpikeTraces; k++ ) {
-      if ( SpikeTrace[k] >= 0 )
-	adjust( trace( SpikeTrace[k] ),
-		trace( SpikeTrace[k] ).signalTime()+Duration,
-		trace( SpikeTrace[k] ).signalTime()+Duration+Pause,
+    if ( adjustg ) {
+      for ( int k=0; k<MaxSpikeTraces; k++ ) {
+	if ( SpikeTrace[k] >= 0 )
+	  adjust( trace( SpikeTrace[k] ),
+		  trace( SpikeTrace[k] ).signalTime()+Duration,
+		  trace( SpikeTrace[k] ).signalTime()+Duration+Pause,
+		  0.8 );
+      }
+      if ( NerveTrace[0] >= 0 )
+	adjust( trace( NerveTrace[0] ),
+		trace( NerveTrace[0] ).signalTime()+Duration,
+		trace( NerveTrace[0] ).signalTime()+Duration+Pause,
 		0.8 );
     }
-    if ( NerveTrace[0] >= 0 )
-      adjust( trace( NerveTrace[0] ),
-	      trace( NerveTrace[0] ).signalTime()+Duration,
-	      trace( NerveTrace[0] ).signalTime()+Duration+Pause,
-	      0.8 );
     if ( GlobalEFieldTrace >= 0 ) {
       double v = trace( GlobalEFieldTrace ).maxAbs( trace( GlobalEFieldTrace ).signalTime(),
 						    trace( GlobalEFieldTrace ).signalTime()+Duration+Pause );

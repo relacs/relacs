@@ -50,10 +50,10 @@ Session::Session( void )
 
   // this options is needed to update LCDs via notify!
   // set by Search RePro
-  addNumber( "firingrate1", "Baseline Firing Rate 1", 0.0, 0.0, 2000.0, 10.0, "Hz", "", "%.1f", 4 );
-  addNumber( "firingrate2", "Baseline Firing Rate 2", 0.0, 0.0, 2000.0, 10.0, "Hz", "", "%.1f", 4 );
-  addNumber( "pvalue1", "P-Value 1", 0.0, 0.0, 1.0, 0.01, "", "", "%.2f", 4 );
-  addNumber( "pvalue2", "P-Value 2", 0.0, 0.0, 1.0, 0.01, "", "", "%.2f", 4 );
+  addNumber( "firingrate1", "Baseline Firing Rate 1", 0.0, 0.0, 10000.0, 10.0, "Hz", "", "%.1f", 4 );
+  addNumber( "firingrate2", "Baseline Firing Rate 2", 0.0, 0.0, 10000.0, 10.0, "Hz", "", "%.1f", 4 );
+  addNumber( "pvalue1", "P-Value 1", 0.0, 0.0, 10.0, 0.01, "", "", "%.2f", 4 );
+  addNumber( "pvalue2", "P-Value 2", 0.0, 0.0, 10.0, 0.01, "", "", "%.2f", 4 );
   setConfigSelectMask( -32 );
 
   // plots:
@@ -125,9 +125,9 @@ void Session::initialize( void )
 
   // options that are written into the trigger file
   // the values are set in EFishSession::main()
-  stimulusData().addNumber( "EOD Rate", "", EODRate, 0, 5000, 5.0, "Hz", "Hz", "%4.0f" );
+  stimulusData().addNumber( "EOD Rate", "", EODRate, 0, 100000, 5.0, "Hz", "Hz", "%4.0f" );
   stimulusData().addNumber( "EOD Amplitude", "", EODAmplitude,
-			    0, 1000, 0.1, "mV", "mV", "%6.3f" );
+			    0, 100000, 0.1, "mV", "mV", "%6.3f" );
 
   // LCDs:
   unsetNotify();

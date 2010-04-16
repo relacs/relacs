@@ -1,6 +1,6 @@
 /*
   misc/amplmode.h
-  Control the mode of an amplifier via NIDIO
+  Control the mode of an amplifier via DigitalIO
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
@@ -22,10 +22,9 @@
 #ifndef _RELACS_MISC_AMPLMODE_H_
 #define _RELACS_MISC_AMPLMODE_H_ 1
 
-#include <relacs/nieseries/nidio.h>
+#include <relacs/digitalio.h>
 #include <relacs/device.h>
 using namespace relacs;
-using namespace nieseries;
 
 namespace misc {
 
@@ -34,7 +33,7 @@ namespace misc {
 \class AmplMode
 \author Jan Benda
 \version 1.0
-\brief [Device] Control the mode of an amplifier via NIDIO
+\brief [Device] Control the mode of an amplifier via DigitalIO
 
 \par Options
 - \c firstpin: the first pin of the dio lines used for controlling the amplifier.
@@ -46,13 +45,11 @@ class AmplMode : public Device
 
 public:
 
-  AmplMode( const string &device, const Options &opts );
-  AmplMode( NIDIO *nidio, const Options &opts );
+  AmplMode( DigitalIO &dio, const Options &opts );
   AmplMode( void );
   virtual ~AmplMode( void );
 
-  virtual int open( const string &device, const Options &opts );
-  virtual int open( NIDIO &nidio, const Options &opts );
+  virtual int open( DigitalIO &dio, const Options &opts );
   virtual int open( Device &device, const Options &opts );
   virtual bool isOpen( void ) const;
   virtual void close( void );
@@ -71,12 +68,11 @@ private:
     /*! Initialize the amplifier. */
   void open( const Options &opts );
 
-    /*! The NI DIO. */
-  NIDIO *DIO;
-  bool Own;
+    /*! The DigitalIO device for controlling the amplifier. */
+  DigitalIO *DIO;
+  int DIOId;
 
-  int FirstPin;
-
+  /* The DIO lines for controlling the amplifier mode: */
   int Buzzer;
   int Resistance;
   int Bridge;
@@ -86,7 +82,7 @@ private:
   int ModeMask;
   int Mask;
 
-  static const int BuzzPulse = 10;  // milliseconds
+  int BuzzPulse;  // milliseconds
 
   int MixerHandle;
   int MixerChannel;

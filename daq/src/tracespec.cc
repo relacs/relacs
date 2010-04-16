@@ -172,7 +172,7 @@ void TraceSpec::setReglitch( bool reglitch )
 }
 
 
-double TraceSpec::maxSampleRate( void )
+double TraceSpec::maxSampleRate( void ) const
 {
   return MaxRate;
 }
@@ -195,7 +195,6 @@ void TraceSpec::setFixedSampleRate( double rate )
 {
   MaxRate = rate;
   FixedRate = true;
-  cerr << "SET FIXED RATE TO " << rate << "Hz for output trace " << TraceName << '\n';
 }
 
 

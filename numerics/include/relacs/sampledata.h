@@ -208,18 +208,18 @@ class SampleData : public Array< T >
     /*! Assign the array \a sa resampled with stepsize \a stepsize 
         and linearly interpolated. */
   template < typename R >
-  const SampleData< T > &assign( const SampleData< R > &sa, double stepsize )
+  const SampleData< T > &interpolate( const SampleData< R > &sa, double stepsize )
         { return assign( sa, sa.offset(), stepsize ); };
     /*! Assign the array \a sa resampled with \a stepsize 
         and linearly interpolated starting from \a offset. */
   template < typename R >
-  const SampleData< T > &assign( const SampleData< R > &sa, 
-				 double offset, double stepsize );
+  const SampleData< T > &interpolate( const SampleData< R > &sa, 
+				      double offset, double stepsize );
     /*! Assign the array \a sa resampled over the \a range 
         and linearly interpolated. */
   template < typename R >
-  const SampleData< T > &assign( const SampleData< R > &sa, 
-				 const LinearRange &range );
+  const SampleData< T > &interpolate( const SampleData< R > &sa, 
+				      const LinearRange &range );
 
     /*! Resize the array to \a n data elements sampled 
         with stepsize \a step and initialize the data elements
@@ -1701,11 +1701,11 @@ const SampleData< T > &SampleData< T >::assign( const SampleData< T > &sa )
 
 
 template < typename T > template < typename R >
-const SampleData< T > &SampleData< T >::assign( const SampleData< R > &sa, 
-						double offset, 
-						double stepsize )
+const SampleData< T > &SampleData< T >::interpolate( const SampleData< R > &sa, 
+						     double offset, 
+						     double stepsize )
 {
-  int n = int( ( sa.rangeBack() - offset ) / stepsize );
+  int n = (int)::ceil( sa.length() / stepsize );
   resize( n );
   setRange( offset, stepsize );
   for ( int k=0; k<size(); k++ )
@@ -1715,8 +1715,8 @@ const SampleData< T > &SampleData< T >::assign( const SampleData< R > &sa,
 
 
 template < typename T > template < typename R >
-const SampleData< T > &SampleData< T >::assign( const SampleData< R > &sa,
-						const LinearRange &range )
+const SampleData< T > &SampleData< T >::interpolate( const SampleData< R > &sa,
+						     const LinearRange &range )
 {
   resize( range );
   for ( int k=0; k<size(); k++ )

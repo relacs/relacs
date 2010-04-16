@@ -73,8 +73,8 @@ IntraSpikeDetector::IntraSpikeDetector( const string &ident, int mode )
   addBoolean( "log", "Logarithmic histograms", LogHistogram, 0+8+32 );
   addNumber( "update", "Update time interval", UpdateTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8+32 );
   addNumber( "history", "Maximum history time", HistoryTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8+32 );
-  addNumber( "rate", "Rate", 0.0, 0.0, 2000.0, 0.1, "Hz", "Hz", "%.0f", 0+4 );
-  addNumber( "size", "Spike size", 0.0, 0.0, 900.0, 0.1, "mV", "mV", "%.1f", 2+4, strongstyle );
+  addNumber( "rate", "Rate", 0.0, 0.0, 100000.0, 0.1, "Hz", "Hz", "%.0f", 0+4 );
+  addNumber( "size", "Spike size", 0.0, 0.0, 10000.0, 0.1, "mV", "mV", "%.1f", 2+4, strongstyle );
   addTypeStyle( OptWidget::Bold, Parameter::Label );
 
   SDW.assign( ((Options*)this), 2, 4, true, 0, mutex() );

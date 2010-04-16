@@ -100,8 +100,8 @@ DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   addNumber( "qualitythresh", "Quality threshold", QualityThresh, 0.0, 1.0, 0.01, "1", "%", "%.0f", 0+8+32 );
   addNumber( "trendthresh", "Trend threshold", TrendThresh, 0.0, 1.0, 0.01, "1", "%", "%.0f", 0+8+32 );
   addNumber( "trendtime", "Trend timescale", TrendTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8+32 );
-  addNumber( "rate", "Rate", 0.0, 0.0, 2000.0, 0.1, "Hz", "Hz", "%.0f", 0+4 );
-  addNumber( "size", "Spike size", 0.0, 0.0, 900.0, 0.1, "mV", "mV", "%.1f", 2+4, strongstyle );
+  addNumber( "rate", "Rate", 0.0, 0.0, 100000.0, 0.1, "Hz", "Hz", "%.0f", 0+4 );
+  addNumber( "size", "Spike size", 0.0, 0.0, 10000.0, 0.1, "mV", "mV", "%.1f", 2+4, strongstyle );
   addInteger( "trend", "Trend", 0, 0, 4 );
   addInteger( "quality", "Quality", 0, 0, 3 );
   addTypeStyle( OptWidget::Bold, Parameter::Label );

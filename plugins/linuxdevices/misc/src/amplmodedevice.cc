@@ -1,6 +1,6 @@
 /*
   misc/amplmodedevice.cc
-  Makes amplmode a relacs plugin
+  Makes AmplMode a relacs plugin
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>

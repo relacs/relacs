@@ -609,7 +609,8 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
   }
   else {
     if ( rate > 0) {
-      if ( ::abs( reqrate - rate ) > 5 )
+      int dr = ::abs( reqrate - rate );
+      if ( dr > 0 && rate/dr < 200 )  /* less than 5 promille deviation */
 	sigs.addError( DaqError::InvalidSampleRate );
       sigs.setSampleRate( (double)rate );
     }

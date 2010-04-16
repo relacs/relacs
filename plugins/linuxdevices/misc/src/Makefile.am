@@ -4,14 +4,11 @@ pluginlibdir = $(pkglibdir)/plugins
 
 pluginlib_LTLIBRARIES = \
     libmisckleindiek.la \
-    libmisctempdtm5080.la
+    libmisctempdtm5080.la \
+    libmiscamplmode.la
 if RELACS_COND_TML
 pluginlib_LTLIBRARIES += \
     libmiscmirob.la
-endif
-if RELACS_COND_nieseries
-pluginlib_LTLIBRARIES += \
-    libmiscamplmode.la
 endif
 
 
@@ -32,7 +29,6 @@ libmiscamplmode_la_LDFLAGS = \
 
 libmiscamplmode_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/plugins/linuxdevices/nieseries/src/libnieseriesnidio.la \
     $(QT3_LIBS)
 
 libmiscamplmode_la_SOURCES = amplmode.cc amplmodedevice.cc

@@ -55,6 +55,7 @@ FileStimulus::FileStimulus( void )
   addNumber( "binwidth", "Bin width", RateDeltaT, 0.0001, 1.0, 0.002, "seconds", "ms" );
   addNumber( "before", "Spikes recorded before stimulus", Before, 0.0, 1000.0, 0.005, "seconds", "ms" );
   addNumber( "after", "Spikes recorded after stimulus", After, 0.0, 1000.0, 0.005, "seconds", "ms" );
+  addBoolean( "adjust", "Adjust input gain?", true );
   addTypeStyle( OptWidget::Bold, Parameter::Label );
   
   // variables:
@@ -119,6 +120,7 @@ int FileStimulus::main( void )
   RateDeltaT = number( "binwidth" );
   Before = number( "before" );
   After = number( "after" );
+  bool adjustg = boolean( "adjust" );
 
   // create signal:
   string filename = file.name();
@@ -129,15 +131,20 @@ int FileStimulus::main( void )
   {
     OutData lsig;
     lsig.load( file, filename );
-    if ( signal.empty() ) {
+    if ( lsig.empty() ) {
       warning( "Cannot load stimulus file <b>" + file + "</b>!" );
       return Failed;
     }
-    if ( signal.fixedSampleRate() && fabs( signal.maxSampleRate() - lsig.sampleRate() ) > 1.0 )
-      signal.SampleDataF::assign( lsig, signal.stepsize() );
+    if ( signal.fixedSampleRate() &&
+	 fabs( signal.maxSampleRate() - lsig.sampleRate() )/signal.maxSampleRate() > 0.005 ) {
+      signal.SampleDataF::interpolate( lsig, 0.0, signal.bestSampleInterval( -1.0 ) );
+    }
     else
-      signal.SampleDataF::assign( lsig );
+      signal = lsig;
   }
+  int c = ::relacs::clip( -1.0, 1.0, signal );
+  printlog( "clipped " + Str( c ) + " from " + Str( signal.size() ) + " data points.\n" );
+  signal.setTrace( AM ? GlobalAMEField : GlobalEField );
   signal.setStartSource( 1 );
   signal.setDelay( Before );
   signal.setIdent( filename );
@@ -257,8 +264,11 @@ int FileStimulus::main( void )
     sigs.push( sig );
   }
   directWrite( sigs );
+  sleep( 0.01 );
 
-  for ( Count = 0; ( Repeats <= 0 || Count < Repeats ) || softStop() == 0; Count++ ) {
+  for ( Count = 0;
+	( Repeats <= 0 || Count < Repeats ) && softStop() == 0;
+	Count++ ) {
 
     // output signal:
     write( signal );
@@ -322,15 +332,17 @@ int FileStimulus::main( void )
     }
 
     // adjust input gains:
-    for ( int k=0; k<MaxSpikeTraces; k++ )
-      if ( SpikeTrace[k] >= 0 )
-	adjust( trace( SpikeTrace[k] ), trace( SpikeTrace[k] ).signalTime()+Duration,
-		trace( SpikeTrace[k] ).signalTime()+Duration+Pause, 0.8 );
+    if ( adjustg ) {
+      for ( int k=0; k<MaxSpikeTraces; k++ )
+	if ( SpikeTrace[k] >= 0 )
+	  adjust( trace( SpikeTrace[k] ), trace( SpikeTrace[k] ).signalTime()+Duration,
+		  trace( SpikeTrace[k] ).signalTime()+Duration+Pause, 0.8 );
+    }
     if ( GlobalEFieldTrace >= 0 )
       adjustGain( trace( GlobalEFieldTrace ),
 		  1.05 * trace( GlobalEFieldTrace ).maxAbs( trace( GlobalEFieldTrace ).signalTime(),
 							    trace( GlobalEFieldTrace ).signalTime() + Duration ) );
-
+    
     // analyze:
     analyze();
     plot();
