@@ -73,6 +73,13 @@ private:
   int DIOId;
 
   /* The DIO lines for controlling the amplifier mode: */
+  int BuzzerPin;
+  int ResistancePin;
+  int BridgePin;
+  int CurrentClampPin;
+  int VoltageClampPin;
+
+    /* The corresponding bit masks. */
   int Buzzer;
   int Resistance;
   int Bridge;

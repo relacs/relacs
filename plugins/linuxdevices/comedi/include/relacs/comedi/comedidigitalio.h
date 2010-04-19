@@ -79,26 +79,41 @@ public:
   virtual int configureLine( int line, bool output ) const;
     /*! Configure digital I/O lines specified by \a lines for input (0) or output (1)
         according to \a output.
+        \param[in] lines a bit mask of the digital lines to be configured.
+        \param[in] output a bitmask for tha digital I/O lines that should 
+	be configured for output.
         \return 0 on success, otherwise a negative number indicating the error */
-  virtual int configureLines( unsigned long lines, unsigned long output ) const;
+  virtual int configureLines( int lines, int output ) const;
 
     /*! Write \a val to the digital I/O line \a line.
+        \param[in] line the digital line (not its bitmask!)
+        \param[in] val the value that should be written to the digital output line
+	(\c true: high, \c false: low).
         \return 0 on success, otherwise a negative number indicating the error
         \sa read() */
   virtual int write( int line, bool val );
     /*! Read from digital I/O line \a line and return value in \a val.
+        \param[in] line the digital line (not its bitmask!)
+        \param[out] val the value that was read from to the digital input line
+	(\c true: high, \c false: low).
         \return 0 on success, otherwise a negative number indicating the error
         \sa write() */
   virtual int read( int line, bool &val ) const;
 
     /*! Write \a val to the digital I/O lines defined in \a lines.
+        \param[in] lines a bit mask selecting the digital lines to be written.
+        \param[in] val a bit mask indicating what should be written to the digital output lines
+	(\c 1: high, \c 0: low).
         \return 0 on success, otherwise a negative number indicating the error
         \sa read() */
-  virtual int write( unsigned long lines, unsigned long val );
+  virtual int writeLines( int lines, int val );
     /*! Read digital I/O lines and return them in \a val.
+        \param[in] lines a bit mask selecting the digital lines from which to read.
+        \param[out] val a bit field returning the values read from to the digital input lines
+	(\c 1: high, \c 0: low).
         \return 0 on success, otherwise a negative number indicating the error
         \sa write() */
-  virtual int read( unsigned long &val ) const;
+  virtual int readLines( int lines, int &val ) const;
 
 
 private:

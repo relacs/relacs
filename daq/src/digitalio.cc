@@ -70,22 +70,29 @@ const Options &DigitalIO::settings( void ) const
 }
 
 
-int DigitalIO::allocateLines( unsigned long lines )
+int DigitalIO::allocateLines( int lines )
 {
+  int errorlines = 0;
+
   // find unused id:
+  bool foundid = false;
   int id = 0;
   int k=0;
   do {
     id++;
     int bit = 1;
+    foundid = false;
     for ( k=0; k<MaxDIOLines; k++ ) {
       if ( (lines & bit) > 0 && DIOLines[k] > 0 )
-	return WriteError;
+	errorlines |= bit;
       if ( DIOLines[k] == id )
-	break;
+	foundid = true;
       bit *= 2;
     }
-  } while ( k<MaxDIOLines );
+  } while ( errorlines == 0 && foundid );
+
+  if ( errorlines > 0 )
+    return -errorlines;
 
   // allocated lines:
   int bit = 1;
@@ -155,7 +162,33 @@ void DigitalIO::freeLines( void )
 }
 
 
-bool DigitalIO::allocated( int line, int id )
+bool DigitalIO::allocatedLines( int lines, int id )
+{
+  int bit = 1;
+  for ( int k=0; k<MaxDIOLines;  k++ ) {
+    if ( (lines & bit) > 0 &&
+	 ( DIOLines[k] <= 0 || DIOLines[k] != id ) )
+      return false;
+    bit *= 2;
+  }
+  return true;
+}
+
+
+bool DigitalIO::allocatedLines( int lines )
+{
+  int bit = 1;
+  for ( int k=0; k<MaxDIOLines;  k++ ) {
+    if ( (lines & bit) > 0 &&
+	 DIOLines[k] <= 0 )
+      return false;
+    bit *= 2;
+  }
+  return true;
+}
+
+
+bool DigitalIO::allocatedLine( int line, int id )
 {
   if ( line < 0 || line >= MaxDIOLines )
     return false;
@@ -164,7 +197,7 @@ bool DigitalIO::allocated( int line, int id )
 }
 
 
-bool DigitalIO::allocated( int line )
+bool DigitalIO::allocatedLine( int line )
 {
   if ( line < 0 || line >= MaxDIOLines )
     return false;

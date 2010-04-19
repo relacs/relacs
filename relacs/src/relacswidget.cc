@@ -538,14 +538,16 @@ void RELACSWidget::init ( void )
 }
 
 
-int RELACSWidget::setupHardware( int n )
+int RELACSWidget::openHardware( int n, int errorlevel )
 {
-  Str warnings;
-  bool Fatal = false;
+  Str warnings = "";
+  int error = 0;
 
   // activate devices:
   DV->create( *ADV, n );
   warnings += DV->warnings();
+  if ( ! DV->ok() )
+    error |= 1;
 
   // activate analog input devices:
   if ( n == 0 )
@@ -554,7 +556,7 @@ int RELACSWidget::setupHardware( int n )
     AID->create( *ADV, 1, "AISim" );
   warnings += AID->warnings();
   if ( ! AID->ok() ) {
-    Fatal = true;
+    error |= 3;
     warnings += "No analog input device opened!\n";
   }
 
@@ -565,17 +567,21 @@ int RELACSWidget::setupHardware( int n )
     AOD->create( *ADV, 1, "AOSim" );
   warnings += AOD->warnings();
   if ( ! AOD->ok() ) {
-    Fatal = true;
+    error |= 3;
     warnings += "No analog output device opened!\n";
   }
 
   // activate digital I/O devices:
   DIOD->create( *ADV, n );
   warnings += DIOD->warnings();
+  if ( ! DIOD->ok() )
+    error |= 1;
 
   // activate trigger devices:
   TRIGD->create( *ADV, n );
   warnings += TRIGD->warnings();
+  if ( ! TRIGD->ok() )
+    error |= 1;
 
   // activate attenuators:
   if ( n == 0 )
@@ -584,14 +590,14 @@ int RELACSWidget::setupHardware( int n )
     ATD->create( *ADV, 1, "AttSim" );
   warnings += ATD->warnings();
   if ( ! ATD->ok() )
-    Fatal = true;
+    error |= 3;
 
   ATI->create( *ADV, 0 );
   warnings += ATI->warnings();
   if ( ! ATI->ok() )
-    Fatal = true;
+    error |= 3;
 
-  if ( !warnings.empty() ) {
+  if ( errorlevel > 0 && !warnings.empty() ) {
     Str ws = "Errors in activating devices:\n";
     warnings.insert( 0, "<ul><li>" );
     int p = warnings.find( "\n" );
@@ -605,7 +611,7 @@ int RELACSWidget::setupHardware( int n )
       p = n + 4;
     }
     ws += warnings + "</ul>";
-    if ( Fatal ) {
+    if ( errorlevel > 1 ) {
       ws += "Can't switch to <b>" + modeStr() + "</b>-mode!";
       printlog( "! warning: " + ws.erasedMarkup() );
       MessageBox::warning( "RELACS Warning !", ws, true, 0.0, this );
@@ -615,9 +621,17 @@ int RELACSWidget::setupHardware( int n )
       MessageBox::information( "RELACS Info !", ws, false, 0.0, this );
     }
   }
+  return error;
+}
+
+
+int RELACSWidget::setupHardware( int n )
+{
+  openHardware( n, 0 );
+  int r = openHardware( n, 1 );
 
   // setup Acquire:
-  if ( ! Fatal ) {
+  if ( r < 2 ) {
 
     AQ = n == 0 ? AQD : SIM;
 

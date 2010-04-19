@@ -252,12 +252,41 @@ int DeviceList<T,PluginID>::create( DD &devices, int m, const string &dflt )
     if ( !ms.empty() )
       k = Plugins::index( ms, PluginID );
 
+    // check plugin:
+    string ident = deviceopts.text( "ident" );
+    if ( ident.empty() ) {
+      Warnings += "You need to provide an identifier for the <b>" + ms
+	+ "</b> plugin !\n";
+      continue;
+    }
+    int deviceindex = -1;
+    bool alreadyopen = false;
+    for ( unsigned int i=0; i<DVs.size(); i++ ) {
+      if ( DVs[i] != 0 && DVs[i]->deviceIdent() == ident ) {
+	deviceindex = i;
+	if ( DVs[i]->isOpen() )
+	  alreadyopen = true;
+	break;
+      }
+    }
+    if ( alreadyopen )
+      continue;
+
     // create plugin:
     if ( k >= 0 ) {
-      void *mp = Plugins::create( k );
+      void *mp = 0;
+      if ( deviceindex >= 0 )
+	mp = DVs[deviceindex];
+      else
+	mp = Plugins::create( k );
       if ( mp != 0 ) {
+	// add plugin:
 	T *dv = static_cast<T*>( mp );
-	dv->setDeviceIdent( deviceopts.text( "ident" ) );
+	if ( deviceindex < 0 ) {
+	  dv->setDeviceIdent( ident );
+	  add( dv, devices );
+	}
+	// open device:
 	Str ds = deviceopts.text( "device" );
 	/*
 	for ( int i = 0; i<devices.size(); i++ ) {
@@ -271,27 +300,26 @@ int DeviceList<T,PluginID>::create( DD &devices, int m, const string &dflt )
 	Device *d = devices.device( ds );
 	if ( d != 0 ) {
 	  dv->open( *d, deviceopts );
-	  ds = "";
+	  if ( dv->isOpen() )
+	    ds = "";
 	}
 	if ( ! ds.empty() )
 	  dv->open( ds, deviceopts );
-	if ( dv->isOpen() ) {
-	  add( dv, devices );
+	if ( dv->isOpen() )
 	  n++;
-	}
 	else {
 	  if ( ms.empty() )
 	    ms = "-empty-";
 	  if ( ds.empty() )
 	    ds = "-empty-";
-	  Warnings += "Cannot open " + Name + " Plugin <b>" + ms
-	    + "</b> with identifier <b>" + ds + "</b> !\n";
+	  Warnings += "Cannot open " + Name + " plugin <b>" + ms
+	    + "</b> with identifier <b>" + ident + "</b> on device <b>" + ds + " !\n";
 	}
       }
       else {
 	if ( ms.empty() )
 	  ms = "-empty-";
-	Warnings += "Cannot create " + Name + " Plugin <b>" + ms + "</b> !\n";
+	Warnings += "Cannot create " + Name + " plugin <b>" + ms + "</b> !\n";
       }
     }
     else {

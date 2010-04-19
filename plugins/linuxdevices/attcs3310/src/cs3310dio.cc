@@ -367,7 +367,7 @@ int CS3310DIO::write( void )
   // output levels:
   for ( int k=0; k<2; k++ ) {
     for ( int i=7; i>=0; i-- ) {
-      int data = (Level[k] >> i) & 0x01;
+      bool data = (Level[k] >> i) & 0x01;
       DIO->write( DATAOUT, data );  // write one bit
       NSLEEP
       DIO->write( STROBE, true );   // Strobe (D0, Sclk) = 1 high
@@ -382,7 +382,7 @@ int CS3310DIO::write( void )
   for ( int k=0; k<2; k++ ) {
     buffer[k] = 0;
     for ( int i=7; i>=0; i-- ) {
-      int data = (Level[k] >> i) & 0x01;
+      bool data = (Level[k] >> i) & 0x01;
       DIO->write( DATAOUT, data );  // write one bit
       NSLEEP
       DIO->write( STROBE, true );   // Strobe (D0, Sclk) = 1 high

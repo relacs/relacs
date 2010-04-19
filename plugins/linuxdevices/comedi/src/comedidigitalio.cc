@@ -186,7 +186,7 @@ int ComediDigitalIO::configureLine( int line, bool output ) const
 }
 
 
-int ComediDigitalIO::configureLines( unsigned long lines, unsigned long output ) const
+int ComediDigitalIO::configureLines( int lines, int output ) const
 {
   int bit = 1;
   for ( int channel=0; channel<32; channel++ ) {
@@ -211,6 +211,7 @@ int ComediDigitalIO::configureLines( unsigned long lines, unsigned long output )
 int ComediDigitalIO::write( int line, bool val )
 {
   if ( comedi_dio_write( DeviceP, SubDevice, line, val ) != 1 ) {
+    comedi_perror( "ComediDigitalIO::write()" );
     cerr << "! error: ComediDigitalIO::write() -> "
 	 << "Writing on DIO line " << line
 	 << " failed on subdevice " << SubDevice << '\n';
@@ -224,6 +225,7 @@ int ComediDigitalIO::read( int line, bool &val ) const
 {
   unsigned int bit = 0;
   if ( comedi_dio_read( DeviceP, SubDevice, line, &bit ) != 1 ) {
+    comedi_perror( "ComediDigitalIO::read()" );
     cerr << "! error: ComediDigitalIO::read() -> "
 	 << "Reading from DIO line " << line
 	 << " failed on subdevice " << SubDevice << '\n';
@@ -234,10 +236,11 @@ int ComediDigitalIO::read( int line, bool &val ) const
 }
 
 
-int ComediDigitalIO::write( unsigned long lines, unsigned long val )
+int ComediDigitalIO::writeLines( int lines, int val )
 {
   unsigned int ival = val;
-  if ( comedi_dio_bitfield2( DeviceP, SubDevice, lines, &ival, 0 ) != 0 ) {
+  if ( comedi_dio_bitfield2( DeviceP, SubDevice, lines, &ival, 0 ) < 0 ) {
+    comedi_perror( "ComediDigitalIO::write()" );
     cerr << "! error: ComediDigitalIO::write() -> "
 	 << "Writing on DIO subdevice " << SubDevice << " failed\n";
     return WriteError;
@@ -246,16 +249,17 @@ int ComediDigitalIO::write( unsigned long lines, unsigned long val )
 }
 
 
-int ComediDigitalIO::read( unsigned long &val ) const
+int ComediDigitalIO::readLines( int lines, int &val ) const
 {
   unsigned int ival = 0;
-  if ( comedi_dio_bitfield2( DeviceP, SubDevice, 0, &ival, 0 ) != 0 ) {
+  if ( comedi_dio_bitfield2( DeviceP, SubDevice, lines, &ival, 0 ) < 0 ) {
+    comedi_perror( "ComediDigitalIO::read()" );
     cerr << "! error: ComediDigitalIO::read() -> "
 	 << "Reading from DIO subdevice " << SubDevice
 	 << " failed\n";
     return ReadError;
   }
-  val = ival;
+  val = ival & lines;
   return 0;
 }
 

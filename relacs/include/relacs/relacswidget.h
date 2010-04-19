@@ -339,6 +339,7 @@ private:
 
   void checkPlugin( void *plugin, const string &ident );
 
+  int openHardware( int n, int errorlevel );
   int setupHardware( int n );
   void closeHardware( void );
   void clearHardware( void );

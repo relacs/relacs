@@ -91,59 +91,93 @@ public:
   virtual const Options &settings( void ) const;
 
     /*! Allocate the lines \a lines of the digital I/O device.
+        \param[in] lines a bit mask of the digital lines to be allocated.
         \return the id, a positive number, of the allocated lines
         \return WriteError if some of the lines have been already allocated
-        \sa freeLines(), allocated() */
-  int allocateLines( unsigned long lines );
+        \sa freeLines(), allocatedLines() */
+  int allocateLines( int lines );
     /*! Allocate the single digital I/O line \a line of the digital I/O device.
         Further lines can be allocated by calling allocateLine( int, int ).
+        \param[in] line the digital line (not its bitmask!) to be allocated.
         \return the id, a positive number, of the allocated line
         \return WriteError if the line has been already allocated
-        \sa freeLines(), allocated() */
+        \sa freeLines(), allocatedLine() */
   int allocateLine( int line );
     /*! Allocate one more digital I/O line \a line of the digital I/O device for id \a id.
         The \a id should be the returned value of a previous call to
 	allocateLine( int ).
+        \param[in] line the digital line (not its bitmask!) to be allocated.
         \return the id, a positive number, of the allocated line (same as \a id)
         \return WriteError if the line has been already allocated
-        \sa freeLines(), allocated() */
+        \sa freeLines(), allocatedLine() */
   int allocateLine( int line, int id );
     /*! Free the previously allocated digital I/O lines with id \a id.
-        \sa allocatedLines() */
+        \sa allocateLines() */
   void freeLines( int id );
+    /*! \return \c true if all the digitial I/O lines \a lines have been allocated
+        under id \a id.
+        \param[in] lines the bit mask of the digital lines.
+	\param[in] id the id under which this line was previously allocated.
+        \sa allocateLines() */
+  bool allocatedLines( int line, int id );
+    /*! \return \c true if all the digitial I/O lines \a lines have been allocated,
+        independent of the ids.
+        \param[in] lines the bit mask of the digital lines.
+        \sa allocateLines() */
+  bool allocatedLines( int line );
     /*! \return \c true if digitial I/O line \a line was allocated under id \a id.
-        \sa allocateLines() */
-  bool allocated( int line, int id );
+        \param[in] line the digital line (not its bitmask!)
+	\param[in] id the id under which this line was previously allocated.
+        \sa allocateLine() */
+  bool allocatedLine( int line, int id );
     /*! \return \c true if digitial I/O line \a line is allocated, independent of the id.
-        \sa allocateLines() */
-  bool allocated( int line );
+        \param[in] line the digital line (not its bitmask!)
+        \sa allocateLine() */
+  bool allocatedLine( int line );
 
     /*! Configure digital I/O line \a line for input (\a output = \c false) or output 
         (\a output = \c true).
+        \param[in] line the digital line (not its bitmask!)
+        \param[in] output \c true if this line should be configured for output.
         \return 0 on success, otherwise a negative number indicating the error */
   virtual int configureLine( int line, bool output ) const = 0;
     /*! Configure digital I/O lines specified by \a lines for input (0) or output (1)
         according to \a output.
+        \param[in] lines a bit mask of the digital lines to be configured.
+        \param[in] output a bitmask for tha digital I/O lines that should 
+	be configured for output.
         \return 0 on success, otherwise a negative number indicating the error */
-  virtual int configureLines( unsigned long lines, unsigned long output ) const = 0;
+  virtual int configureLines( int lines, int output ) const = 0;
 
     /*! Write \a val to the digital I/O line \a line.
+        \param[in] line the digital line (not its bitmask!)
+        \param[in] val the value that should be written to the digital output line
+	(\c true: high, \c false: low).
         \return 0 on success, otherwise a negative number indicating the error
         \sa read() */
   virtual int write( int line, bool val ) = 0;
     /*! Read from digital I/O line \a line and return value in \a val.
+        \param[in] line the digital line (not its bitmask!)
+        \param[out] val the value that was read from to the digital input line
+	(\c true: high, \c false: low).
         \return 0 on success, otherwise a negative number indicating the error
         \sa write() */
   virtual int read( int line, bool &val ) const = 0;
 
     /*! Write \a val to the digital I/O lines defined in \a lines.
+        \param[in] lines a bit mask selecting the digital lines to be written.
+        \param[in] val a bit mask indicating what should be written to the digital output lines
+	(\c 1: high, \c 0: low).
         \return 0 on success, otherwise a negative number indicating the error
         \sa read() */
-  virtual int write( unsigned long lines, unsigned long val ) = 0;
+  virtual int writeLines( int lines, int val ) = 0;
     /*! Read digital I/O lines and return them in \a val.
+        \param[in] lines a bit mask selecting the digital lines from which to read.
+        \param[out] val a bit field returning the values read from to the digital input lines
+	(\c 1: high, \c 0: low).
         \return 0 on success, otherwise a negative number indicating the error
         \sa write() */
-  virtual int read( unsigned long &val ) const = 0;
+  virtual int readLines( int lines, int &val ) const = 0;
 
 
 protected:

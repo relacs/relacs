@@ -36,11 +36,17 @@ AmplMode::AmplMode( DigitalIO &dio, const Options &opts )
   : Device( "AmplMode" ),
     DIO( 0 )
 {
-  Buzzer = 0x01;
-  Resistance = 0x02;
-  Bridge = 0x04;
-  CurrentClamp = 0x08;
-  VoltageClamp = 0x10;
+  BuzzerPin = 1;
+  ResistancePin = 2;
+  BridgePin = 3;
+  CurrentClampPin = 4;
+  VoltageClampPin = 5;
+
+  Buzzer = 0;
+  Resistance = 0;
+  Bridge = 0;
+  CurrentClamp = 0;
+  VoltageClamp = 0;
 
   ModeMask = Bridge + Resistance + VoltageClamp + CurrentClamp;
   Mask = ModeMask + Buzzer;
@@ -59,11 +65,17 @@ AmplMode::AmplMode( void )
   : Device( "AmplMode" ),
     DIO( 0 )
 {
-  Buzzer = 0x01;
-  Resistance = 0x02;
-  Bridge = 0x04;
-  CurrentClamp = 0x08;
-  VoltageClamp = 0x10;
+  BuzzerPin = 1;
+  ResistancePin = 2;
+  BridgePin = 3;
+  CurrentClampPin = 4;
+  VoltageClampPin = 5;
+
+  Buzzer = 0;
+  Resistance = 0;
+  Bridge = 0;
+  CurrentClamp = 0;
+  VoltageClamp = 0;
 
   ModeMask = Bridge + Resistance + VoltageClamp + CurrentClamp;
   Mask = ModeMask + Buzzer;
@@ -90,16 +102,23 @@ int AmplMode::open( DigitalIO &dio, const Options &opts )
   DIO = &dio;
 
   if ( isOpen() ) {
-    Bridge = 1 << opts.integer( "bridgepin", 0, 3 );
-    Resistance = 1 << opts.integer( "resistancepin", 0, 2 );
-    VoltageClamp = 1 << opts.integer( "vclamppin", 0, 5 );
-    CurrentClamp = 1 << opts.integer( "cclamppin", 0, 4 );
-    Buzzer = 1 << opts.integer( "buzzerpin", 0, 1 );
+    BridgePin = opts.integer( "bridgepin", 0, BridgePin );
+    ResistancePin = opts.integer( "resistancepin", 0, ResistancePin );
+    VoltageClampPin = opts.integer( "vclamppin", 0, VoltageClampPin );
+    CurrentClampPin = opts.integer( "cclamppin", 0, CurrentClampPin );
+    BuzzerPin = opts.integer( "buzzerpin", 0, BuzzerPin );
+
+    Bridge = 1 << BridgePin;
+    Resistance = 1 << ResistancePin;
+    VoltageClamp = 1 << VoltageClampPin;
+    CurrentClamp = 1 << CurrentClampPin;
+    Buzzer = 1 << BuzzerPin;
+
     ModeMask = Bridge + Resistance + VoltageClamp + CurrentClamp;
     Mask = ModeMask + Buzzer;
     DIOId = DIO->allocateLines( Mask );
     if ( DIOId < 0 ) {
-      cerr << "! warning: AmplMode::open( dio ) -> cannot allocate pins.\n";
+      cerr << "! warning: AmplMode::open( dio ) -> cannot allocate pins on lines " << -DIOId << ".\n";
       DIO = 0;
       return InvalidDevice;
     }
@@ -134,10 +153,13 @@ void AmplMode::open( const Options &opts )
     // configure for parallel output: 
     DIO->configureLines( Mask, Mask );
     // manual mode selection, no buzz:
-    DIO->write( Mask, 0x00 );
+    DIO->writeLines( Mask, 0x00 );
 
     MixerHandle = ::open( "/dev/mixer", O_RDWR );
-    if ( MixerHandle != -1 ) {
+    if ( MixerHandle < 0 ) {
+      cerr << "Failed to open mixer device.\n";
+    }
+    else {
       int mask = 0;
       int r = ::ioctl( MixerHandle, SOUND_MIXER_READ_DEVMASK, &mask );
       if ( r == -1 ||
@@ -147,17 +169,17 @@ void AmplMode::open( const Options &opts )
 	MixerHandle = -1;
       }
     }
-    BuzzPulse = (int)::rint( opts.number( "buzzpulse", (double)BuzzPulse, "ms" ) );
+    BuzzPulse = (int)::rint( opts.number( "buzzerpulse", (double)BuzzPulse, "ms" ) );
     Volume = 0;
     setDeviceVendor( "npi electronic GmbH (Tamm, Germany)" );
     setDeviceName( "SEC-05LX" );
     addInfo();
-    Info.addInteger( "pinbridge", Bridge );
-    Info.addInteger( "pinresistance", Resistance );
-    Info.addInteger( "pinvclamp", VoltageClamp );
-    Info.addInteger( "pincclamp", CurrentClamp );
-    Info.addInteger( "pinbuzzer", Buzzer );
-    Info.addNumber( "pinbuzzer", (double)BuzzPulse, "ms" );
+    Info.addInteger( "bridgepin", BridgePin );
+    Info.addInteger( "resistancepin", ResistancePin );
+    Info.addInteger( "vclamppin", VoltageClampPin );
+    Info.addInteger( "cclamppin", CurrentClampPin );
+    Info.addInteger( "buzzerpin", BuzzerPin );
+    Info.addNumber( "buzzerpulse", (double)BuzzPulse, "ms" );
   }
 }
 
@@ -172,7 +194,7 @@ void AmplMode::close( void )
 {
   if ( isOpen() ) {
     // manual mode selection, no buzz:
-    DIO->write( Mask, 0x00 );
+    DIO->writeLines( Mask, 0x00 );
 
     DIO->freeLines( DIOId );
 
@@ -196,7 +218,7 @@ int AmplMode::bridge( void )
   if ( ! isOpen() )
     return NotOpen;
 
-  return DIO->write( ModeMask, Bridge );
+  return DIO->writeLines( ModeMask, Bridge );
 }
 
 
@@ -213,7 +235,7 @@ int AmplMode::resistance( void )
     int vol = 0;
     ::ioctl( MixerHandle, MIXER_WRITE(MixerChannel), &vol );
   }
-  return DIO->write( ModeMask, Resistance );
+  return DIO->writeLines( ModeMask, Resistance );
 }
 
 
@@ -222,7 +244,7 @@ int AmplMode::voltageClamp( void )
   if ( ! isOpen() )
     return NotOpen;
 
-  return DIO->write( ModeMask, VoltageClamp );
+  return DIO->writeLines( ModeMask, VoltageClamp );
 }
 
 
@@ -231,7 +253,7 @@ int AmplMode::currentClamp( void )
   if ( ! isOpen() )
     return NotOpen;
 
-  return DIO->write( ModeMask, CurrentClamp );
+  return DIO->writeLines( ModeMask, CurrentClamp );
 }
 
 
@@ -240,7 +262,7 @@ int AmplMode::manual( void )
   if ( ! isOpen() )
     return NotOpen;
 
-  int r = DIO->write( ModeMask, 0x00 );
+  int r = DIO->writeLines( ModeMask, 0x00 );
 
   if ( MixerHandle != -1 && Volume != 0 ) {
     // reset volume:
@@ -267,9 +289,9 @@ int AmplMode::buzzer( void )
   }
   
   // buzz:
-  DIO->write( Buzzer, Buzzer );
+  DIO->write( BuzzerPin, true );
   usleep( BuzzPulse * 1000 );
-  DIO->write( Buzzer, 0x00 );
+  DIO->write( BuzzerPin, false );
   
   if ( MixerHandle != -1 && Volume != 0 ) {
     // reset volume:
