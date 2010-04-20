@@ -77,8 +77,9 @@ private:
   double MaxResistance;
   double ResistanceScale;
   QHBox *AmplBox;
-  QPushButton *ResistanceButton;
   QPushButton *BuzzerButton;
+  QPushButton *ResistanceButton;
+  QLabel *ResistanceLabel;
 
 };
 

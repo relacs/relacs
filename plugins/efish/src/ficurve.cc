@@ -240,7 +240,7 @@ int FICurve::main( void )
 	++PreIntensityRange ) {
 
     for ( IntensityRange.reset(  IntensityRange.pos( *PreIntensityRange ) );
-	  ! IntensityRange;
+	  ! IntensityRange && softStop() <= 1;
 	  ++IntensityRange ) {
 
       // adaptation stimulus:

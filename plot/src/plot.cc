@@ -2252,8 +2252,11 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
     // index range:
     long f = d->first( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
     long l = d->last( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
-    if ( ! NewData )
-      f = d->pointIndex();
+    if ( ! NewData ) {
+      long m = d->pointIndex();
+      if ( m > f )
+	f = m;
+    }
 
     // draw Box:
     if ( d->Point.type() == Box ) {

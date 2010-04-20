@@ -31,7 +31,7 @@ namespace efish {
 FileStimulus::FileStimulus( void )
   : RePro( "FileStimulus", "FileStimulus", "efish",
 	   "Jan Benda", "1.3", "Mar 25, 2010" ),
-    P( 1 + SpikeTraces + NerveTraces, Plot::Pointer, this )
+    P( 1 + SpikeTraces + NerveTraces, this )
 {
   // parameter:
   SigStdev = 1.0;
@@ -183,7 +183,7 @@ int FileStimulus::main( void )
 
   // plot:
   P.lock();
-  P.resize( 1 + SpikeTraces + NerveTraces, Plot::Pointer );
+  P.resize( 1 + SpikeTraces + NerveTraces );
   double stimheight = SpikeTraces > 1 ? 1.0/(1.0+SpikeTraces+NerveTraces) : 0.4;
   double rateheight = ( 1.0 - stimheight ) / ( SpikeTraces + NerveTraces );
   P[0].setOrigin( 0.0, 0.0 );

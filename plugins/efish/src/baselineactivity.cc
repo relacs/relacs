@@ -776,32 +776,35 @@ void BaselineActivity::analyze( int autodetect,
       */
       double beatthresh = detectorEventsOpts( LocalBeatPeakEvents[0] ).number( "threshold" );
       beatthresh += BeatStep * eodt2.maxValue();
-      detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", beatthresh );
       detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "minthresh", beatthresh );
+      detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", beatthresh );
     }
     else {
       double beatthresh = detectorEventsOpts( LocalBeatPeakEvents[0] ).number( "minthresh" );
       beatthresh -= BeatStep * eodt2.maxValue();
-      if ( beatthresh >= 10.0*BeatStep * eodampl )
+      if ( beatthresh >= 10.0*BeatStep * eodampl && 
+	   beatthresh >= detectorEventsOpts( LocalBeatPeakEvents[0] ).minimum( "minthresh" ) )
 	detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "minthresh", beatthresh );
     }
     unlockDetectorEvents( LocalBeatPeakEvents[0] );
     // setup Chirp detector:
-    lockDetectorEvents( ChirpEvents );
-    if ( events( ChirpEvents ).count(  trace( EODTrace ).currentTime() - Duration ) > 0 ) {
-      double chirpmax = detectorEventsOpts( ChirpEvents ).number( "maxthresh" );
-      double chirpthresh = detectorEventsOpts( ChirpEvents ).number( "threshold" );
-      chirpthresh += ChirpStep;
-      if ( chirpthresh < chirpmax )
-	detectorEventsOpts( ChirpEvents ).setNumber( "threshold", chirpthresh );
+    if ( ChirpEvents >= 0 ) {
+      lockDetectorEvents( ChirpEvents );
+      if ( events( ChirpEvents ).count(  trace( EODTrace ).currentTime() - Duration ) > 0 ) {
+	double chirpmax = detectorEventsOpts( ChirpEvents ).number( "maxthresh" );
+	double chirpthresh = detectorEventsOpts( ChirpEvents ).number( "threshold" );
+	chirpthresh += ChirpStep;
+	if ( chirpthresh < chirpmax )
+	  detectorEventsOpts( ChirpEvents ).setNumber( "threshold", chirpthresh );
+      }
+      else {
+	double chirpthresh = detectorEventsOpts( ChirpEvents ).number( "threshold" );
+	chirpthresh -= ChirpStep;
+	if ( chirpthresh >= ChirpMin )
+	  detectorEventsOpts( ChirpEvents ).setNumber( "threshold", chirpthresh );
+      }
+      unlockDetectorEvents( ChirpEvents );
     }
-    else {
-      double chirpthresh = detectorEventsOpts( ChirpEvents ).number( "threshold" );
-      chirpthresh -= ChirpStep;
-      if ( chirpthresh >= ChirpMin )
-	detectorEventsOpts( ChirpEvents ).setNumber( "threshold", chirpthresh );
-    }
-    unlockDetectorEvents( ChirpEvents );
   }
 
   LastEODInx = eodtimes.size();

@@ -408,9 +408,40 @@ Parameter &Parameter::assign( const string &value )
 	    if ( ! InternUnit.empty() && InternUnit != "L" )
 	      integer = false;
 	    for ( unsigned int k=0; integer && k<Value.size(); k++ )
-	      if ( Value[k] != floor( Value[k] ) )
+	      if ( ::fabs( Value[k] - rint( Value[k] ) ) > 1.0e-8 )
 		integer = false;
 	    setType( integer ? Integer : Number );
+	    if ( integer ) {
+	      setFormat( "%.0f" );
+	      setStep( 1.0 );
+	    }
+	    else {
+	      setFormat( "%g" );
+	      double max = 0.0;
+	      double step = 1.0;
+	      for ( int k=0; k<String.size() && k<(int)Value.size(); k++ ) {
+		double val = fabs( ::fabs( Value[k] ) );
+		if ( val > max )
+		  max = val;
+		int prec = 0;
+		int pp = String[k].find( '.' );
+		if ( pp >= 0 ) {
+		  int np = String[k].findFirstNot( Str::Digit, pp+1 );
+		  if ( np < 0 )
+		    np = String[k].size();
+		  prec = np - pp - 1;
+		}
+		double pstep = 1.0;
+		if ( prec > 0 )
+		  pstep = pow( 10.0, -prec );
+		if ( pstep < step )
+		  step = pstep;
+	      }
+	      if ( max/step < 10.0 )
+		max = 10.0*step;
+	      max = 1000.0 * ceil10( max );
+	      setMinMax( -max, max, step );
+	    }
 	  }
 	  else {
 	    // check for boolean:

@@ -2156,7 +2156,7 @@ long EventData::next( double time ) const
 #endif
     return Index+R;
   }
-  // last event is already next event?
+  // first event is already next event?
   else if ( TimeBuffer[l] >= time ) {
     if ( l >= R )
       l -= NBuffer;

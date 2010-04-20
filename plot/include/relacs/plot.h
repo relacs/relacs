@@ -1681,22 +1681,50 @@ Plot::EventsElement<T>::~EventsElement( void )
 template< typename T >
 long Plot::EventsElement<T>::first( double x1, double y1, double x2, double y2 ) const
 {
-  for ( int k=0; k<int(ED->size()); k++ )
-    if ( (*ED)[k] * TScale > x1 )
-      return k;
+  int l = 0;
+  int r = int(ED->size())-1;
 
-  return ED->size();
+  // there is no next event?
+  if ( r < l || (*ED)[r] * TScale < x1 )
+    return ED->size();
+  // first event is already next event?
+  else if ( (*ED)[l] * TScale >= x1 )
+    return l;
+
+  // bisect:
+  while ( r-l > 1 ) {
+    int h = (l+r)/2;
+    if ( (*ED)[h] * TScale < x1 )
+      l = h;
+    else
+      r = h;
+  }
+  return r;
 }
 
 
 template< typename T >
 long Plot::EventsElement<T>::last( double x1, double y1, double x2, double y2 ) const
 {
-  for ( int k=0; k<int(ED->size()); k++ )
-    if ( (*ED)[k] * TScale > x2 )
-      return k;
+  int l = 0;
+  int r = int(ED->size())-1;
 
-  return ED->size();
+  // there is no next event?
+  if ( r < l || (*ED)[r] * TScale < x2 )
+    return ED->size();
+  // first event is already next event?
+  else if ( (*ED)[l] * TScale >= x2 )
+    return l;
+
+  // bisect:
+  while ( r-l > 1 ) {
+    int h = (l+r)/2;
+    if ( (*ED)[h] * TScale < x2 )
+      l = h;
+    else
+      r = h;
+  }
+  return r;
 }
 
 

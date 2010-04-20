@@ -32,8 +32,9 @@ AmplifierControl::AmplifierControl( void )
 {
 
   AmplBox = new QHBox( this );
-  ResistanceButton = 0;
   BuzzerButton = 0;
+  ResistanceButton = 0;
+  ResistanceLabel = 0;
 
   Ampl = 0;
   RMeasure = false;
@@ -47,26 +48,51 @@ void AmplifierControl::initDevices( void )
 {
   Ampl = dynamic_cast< misc::AmplMode* >( device( "ampl-1" ) );
   if ( Ampl != 0 ) {
-    /*
     lockMetaData();
-    Options &mo = metaData( "Recording" );
+    Options &mo = metaData( "Electrode" );
     mo.unsetNotify();
-    mo.addNumber( "resistance", "Resistance", 0.0, "MOhm", "%.0f", MetaDataReadOnly+MetaDataDisplay );
+    if ( ! mo.exist( "Resistance" ) )
+      mo.addNumber( "Resistance", "Resistance", 0.0, "MOhm", "%.0f" );
     mo.setNotify();
     unlockMetaData();
-    */
     if ( ResistanceButton == 0 && BuzzerButton == 0 ) {
+    
+      new QLabel( AmplBox );
+
+      BuzzerButton = new QPushButton( "Buzz", AmplBox );
+      connect( BuzzerButton, SIGNAL( clicked() ),
+	       this, SLOT( buzz() ) );
+
+      new QLabel( AmplBox );
+
       ResistanceButton = new QPushButton( "R", AmplBox );
       connect( ResistanceButton, SIGNAL( pressed() ),
 	       this, SLOT( startResistance() ) );
       connect( ResistanceButton, SIGNAL( released() ),
 	       this, SLOT( stopResistance() ) );
     
+      QLabel *label = new QLabel( "=", AmplBox );
+      label->setAlignment( AlignHCenter | AlignVCenter );
+
+      ResistanceLabel = new QLabel( "000", AmplBox );
+      ResistanceLabel->setAlignment( AlignRight | AlignVCenter );
+      ResistanceLabel->setFrameStyle( QFrame::Panel | QFrame::Sunken );
+      ResistanceLabel->setLineWidth( 2 );
+      QFont nf( ResistanceLabel->font() );
+      nf.setPointSizeFloat( 1.6 * nf.pointSizeFloat() );
+      nf.setBold( true );
+      ResistanceLabel->setFont( nf );
+      QPalette qp( ResistanceLabel->palette() );
+      qp.setColor( QColorGroup::Background, black );
+      qp.setColor( QColorGroup::Foreground, green );
+      ResistanceLabel->setPalette( qp );
+      ResistanceLabel->setFixedHeight( ResistanceLabel->sizeHint().height() );
+      ResistanceLabel->setFixedWidth( ResistanceLabel->sizeHint().width() );
+      ResistanceLabel->setText( "0" );
+
+      new QLabel( "MOhm", AmplBox );
+    
       new QLabel( AmplBox );
-      
-      BuzzerButton = new QPushButton( "Buzz", AmplBox );
-      connect( BuzzerButton, SIGNAL( clicked() ),
-	       this, SLOT( buzz() ) );
     }
     AmplBox->show();
   }
@@ -82,7 +108,7 @@ void AmplifierControl::startResistance( void )
 {
   if ( Ampl != 0 && SpikeTrace[0] >= 0 && ! RMeasure ) {
     readLockData();
-    //    DGain = trace( SpikeTrace[0] ).gainIndex();
+    DGain = trace( SpikeTrace[0] ).gainIndex();
     adjustGain( trace( SpikeTrace[0] ), MaxResistance / ResistanceScale );
     unlockData();
     activateGains();
@@ -100,12 +126,10 @@ void AmplifierControl::measureResistance( void )
 					     trace( SpikeTrace[0] ).currentTime() );
     unlockData();
     r *= ResistanceScale;
-    info( "Resistance=" + Str( r ) );
-    /*
+    ResistanceLabel->setText( Str( r, "%.0f" ).c_str() );
     lockMetaData();
-    metaData( "Recording" ).setNumber( "resistance", r );
+    metaData( "Electrode" ).setNumber( "Resistance", r );
     unlockMetaData();
-    */
   }
 }
 
@@ -115,7 +139,7 @@ void AmplifierControl::stopResistance( void )
   if ( Ampl != 0 && SpikeTrace[0] >= 0 && RMeasure ) {
     Ampl->manual();
     readLockData();
-    //    setGain( trace( SpikeTrace[0] ), DGain );
+    setGain( trace( SpikeTrace[0] ), DGain );
     unlockData();
     activateGains();
     RMeasure = false;

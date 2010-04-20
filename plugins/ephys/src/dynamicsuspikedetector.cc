@@ -89,10 +89,9 @@ DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   addNumber( "minisi", "Minimum interspike interval", MinInterval, 0.0, 0.1, 0.0002, "sec", "ms", "%.1f", 0+8+32 ).setActivation( "testisi", "true" );
   addBoolean( "fitpeak", "Fit parabula to peak of spike", FitPeak ).setFlags( 0+8+32 );
   addNumber( "fitwidth", "Width of parabula fit", FitWidth, 0.0, 0.1, 0.00001, "sec", "ms", "%.2f", 0+8+32 );
-  addLabel( "Running average", 8 );
+  addLabel( "Indicators", 8 );
   addNumber( "nospike", "Interval for no spike", NoSpikeInterval, 0.0, 1000.0, 0.01, "sec", "ms", "%.0f", 0+8+32 );
   addBoolean( "considerstimulus", "Expect spikes during stimuli only", StimulusRequired, 0+8+32 );
-  addLabel( "Indicators", 8 );
   addNumber( "resolution", "Resolution of spike size", SizeResolution, 0.0, 1000.0, 0.1, "mV", "mV", "%.2f", 0+8+32 );
   addBoolean( "log", "Logarithmic histograms", LogHistogram, 0+8+32 );
   addNumber( "update", "Update time interval", UpdateTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8+32 );
@@ -104,7 +103,7 @@ DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   addNumber( "size", "Spike size", 0.0, 0.0, 10000.0, 0.1, "mV", "mV", "%.1f", 2+4, strongstyle );
   addInteger( "trend", "Trend", 0, 0, 4 );
   addInteger( "quality", "Quality", 0, 0, 3 );
-  addTypeStyle( OptWidget::Bold, Parameter::Label );
+  addTypeStyle( OptWidget::TabLabel, Parameter::Label );
 
   SDW.assign( ((Options*)this), 2, 4, true, 0, mutex() );
   SDW.setSpacing( 4 );
@@ -750,8 +749,11 @@ int DynamicSUSpikeDetector::checkEvent( const InData::const_iterator &first,
     int r = linearFit( peak.x(), peak.y(), sd,
 		       poly, param, paramfit, uncert, chisq );
     if ( r == 0 ) {
-      time += -0.5*param[1]/param[2];
-      size += param[0] + 0.25*(param[1]*param[1]-2.0)/param[2] - *event;
+      double offs = -0.5*param[1]/param[2];
+      if ( offs >= peak.x().front() && offs <= peak.x().back() ) {
+	time += offs;
+	size += param[0] + 0.25*(param[1]*param[1]-2.0)/param[2] - *event;
+      }
     }
     else
       printlog( "Parabula fit failed and returned " + Str( r ) );

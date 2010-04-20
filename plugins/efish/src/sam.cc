@@ -264,7 +264,7 @@ int SAM::main( void )
   
   // plot:
   P.lock();
-  P.resize( (SpikeTraces+NerveTraces)*2, 2, false, Plot::Pointer );
+  P.resize( (SpikeTraces+NerveTraces)*2, 2, false );
   int n=0;
   for ( int k=0; k<MaxSpikeTraces + NerveTraces; k++ ) {
     if ( ( k<MaxSpikeTraces && SpikeEvents[k] >= 0 ) ||
