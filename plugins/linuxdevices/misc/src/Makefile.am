@@ -119,9 +119,12 @@ libmisctempdtm5080_la_include_HEADERS = $(HEADER_PATH)/tempdtm5080.h
 
 check_PROGRAMS = \
     linktest_libmiscamplmode_la \
-    linktest_libmiscmirob_la \
     linktest_libmisckleindiek_la \
     linktest_libmisctempdtm5080_la
+if RELACS_COND_TML
+check_PROGRAMS += \
+    linktest_libmiscmirob_la
+endif
 
 linktest_libmiscamplmode_la_SOURCES = linktest.cc
 linktest_libmiscamplmode_la_LDADD = libmiscamplmode.la

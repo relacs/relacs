@@ -180,6 +180,7 @@ libephysamplifiercontrol_la_CPPFLAGS = \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(srcdir)/../include \
     $(QT3_CPPFLAGS)
 
@@ -189,6 +190,7 @@ libephysamplifiercontrol_la_LDFLAGS = \
 
 libephysamplifiercontrol_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/plugins/linuxdevices/misc/src/libmiscamplmode.la \
     $(builddir)/libephystraces.la \
     $(QT3_LIBS)
 
