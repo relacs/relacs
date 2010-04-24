@@ -9,7 +9,8 @@ pluginlib_LTLIBRARIES = \
     libefishpunitmodel.la \
     libefishsam.la \
     libefishficurve.la \
-    libefishfilestimulus.la
+    libefishfilestimulus.la \
+    libefishchirps.la
 
 
 
@@ -215,13 +216,48 @@ libefishfilestimulus_la_include_HEADERS = $(HEADER_PATH)/filestimulus.h
 
 
 
+libefishchirps_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../../ephys/include \
+    -I$(srcdir)/../../efield/include \
+    -I$(srcdir)/../include \
+    $(QT3_CPPFLAGS)
+
+libefishchirps_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT3_LDFLAGS)
+
+libefishchirps_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(builddir)/../../ephys/src/libephystraces.la \
+    $(builddir)/../../efield/src/libefieldtraces.la \
+    $(builddir)/../../efield/src/libefieldeodtools.la \
+    $(QT3_LIBS)
+
+$(libefishchirps_la_OBJECTS) : moc_chirps.cc
+
+libefishchirps_la_SOURCES = chirps.cc
+
+libefishchirps_la_includedir = $(pkgincludedir)/efish
+
+libefishchirps_la_include_HEADERS = $(HEADER_PATH)/chirps.h
+
+
+
 check_PROGRAMS = \
     linktest_libefishbaselineactivity_la \
     linktest_libefishsession_la \
     linktest_libefishpunitmodel_la \
     linktest_libefishsam_la \
     linktest_libefishficurve_la \
-    linktest_libefishfilestimulus_la
+    linktest_libefishfilestimulus_la \
+    linktest_libefishchirps_la
 
 linktest_libefishbaselineactivity_la_SOURCES = linktest.cc
 linktest_libefishbaselineactivity_la_LDADD = libefishbaselineactivity.la
@@ -240,5 +276,8 @@ linktest_libefishficurve_la_LDADD = libefishficurve.la
 
 linktest_libefishfilestimulus_la_SOURCES = linktest.cc
 linktest_libefishfilestimulus_la_LDADD = libefishfilestimulus.la
+
+linktest_libefishchirps_la_SOURCES = linktest.cc
+linktest_libefishchirps_la_LDADD = libefishchirps.la
 
 TESTS = $(check_PROGRAMS)
