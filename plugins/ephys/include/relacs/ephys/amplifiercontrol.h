@@ -51,6 +51,7 @@ public:
   virtual void keyPressEvent( QKeyEvent *e );
   virtual void keyReleaseEvent( QKeyEvent *e );
   virtual void initDevices( void );
+  virtual void notify( void );
 
 
 public slots:

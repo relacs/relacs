@@ -429,7 +429,7 @@ class SampleData : public Array< T >
      /*! Set the offset and the stepsize of the range to \a offset and \a stepsize, respectively. */
   void setRange( const double &offset, const double &stepsize ) { Samples.setRange( offset, stepsize ); };
      /*! The length of the range, i.e. abs( stepsize() * size() ) */
-  double length( void ) const { return Samples.length(); };
+  double length( void ) const { return Array<T>::size() * ::fabs(Samples.stepsize()); };
      /*! Set the size of the range such that it has the length \a l.
          The array is resized accordingly. \sa resize() */
   void setLength( double l );

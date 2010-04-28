@@ -49,11 +49,11 @@ Chirps::Chirps( void )
   Repeats = 12;
   BeatPos = 10;
   BeatStart = 0.25;
-  RateDeltaT = 0.006;   // seconds
+  RateDeltaT = 0.003;   // seconds
   SaveWindow = 0.4;
   AM = false;
   SineWave = true;
-  Playback = true;
+  Playback = false;
 
   // add some parameter as options:
   addLabel( "Chirp parameter" );
@@ -74,7 +74,8 @@ Chirps::Chirps( void )
   addNumber( "pause", "Pause between signals", Pause, 0.01, 1000.0, 0.05, "sec", "ms" );
   addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 );
   addLabel( "Analysis" );
-  addNumber( "ratedt", "Resolution of firing rate", RateDeltaT, 0.0001, 0.1, 0.0002, "sec", "ms" );
+  addNumber( "ratedt", "Resolution of firing rate", RateDeltaT, 0.001, 0.1, 0.001, "sec", "ms" );
+  addBoolean( "adjust", "Adjust input gain?", true );
   addTypeStyle( OptWidget::Bold, Parameter::Label );
 
   // variables:
@@ -191,7 +192,7 @@ void Chirps::createEOD( OutData &signal )
 
   // create chirp:
   double dt = waveform.sampleInterval();
-  SampleDataF chirp( 4*waveform.size(), dt, 0.0 );
+  SampleDataF chirp( 0.0, 4.0*ChirpWide, dt, 0.0 );
   chirp.clear();
   double sig = 0.5*ChirpWide/sqrt(2.0*log(10.0));
   double T = waveform.length()/ReadCycles;
@@ -227,7 +228,7 @@ void Chirps::createEOD( OutData &signal )
   // setup signal:
   int pointsperbeat = waveform.indices( 1.0 / fabs( DeltaF ) );
   signal = OutData( NChirps*(2*pointsperbeat + chirp.size()) + pointsperbeat,
-		    waveform.sampleRate() );
+		    waveform.sampleInterval() );
   signal.clear();
   signal.setCarrierFreq( StimulusRate );
   signal.setStartSource( 1 );
@@ -271,7 +272,6 @@ void Chirps::createEOD( OutData &signal )
   }
   int cyclesperbeat = (int)rint( signal.sampleRate() / fabs( DeltaF ) / pointspercycle );
 
-  StimulusRateTime = signal.interval( j );
   // insert chirps:
   for ( int k=0; k<NChirps; k++ ) {
     // go to the required beat position:
@@ -327,7 +327,7 @@ void Chirps::createEOD( OutData &signal )
 void Chirps::createPlayback( OutData &signal )
 {
   // setup signal:
-  signal = OutData( Duration, signal.maxSampleRate() );
+  signal = OutData( Duration, signal.minSampleInterval() );
   signal.setCarrierFreq( StimulusRate + DeltaF );
   signal.setStartSource( 1 );
   signal.setTrace( GlobalAMEField );
@@ -378,6 +378,7 @@ int Chirps::createAM( OutData &signal )
   if ( sr > signal.maxSampleRate() )
     sr = signal.maxSampleRate();
   signal.setSampleRate( sr );
+  signal.setIntensity( 0.2 * FishAmplitude * 0.5 );
   // get the actual set sampling rate.
   // no signal is put out, because there isn't any.
   write( signal );
@@ -464,10 +465,10 @@ void Chirps::initMultiPlot( double ampl )
   P.clear();
   P.resize( nsub*BeatPos );
 
-  const int xlabelmarg = 60;
-  const int xmarg = 4;
-  const int ylabelmarg = 50;
-  const int ymarg = 4;
+  const double xlabelmarg = 3.0;
+  const double xmarg = 1.0;
+  const double ylabelmarg = 7.0;
+  const double ymarg = 1.0;
   const double ratemax = 100.0;
   
   double xrange = 100.0;
@@ -476,9 +477,9 @@ void Chirps::initMultiPlot( double ampl )
 
   Rows = BeatPos < 4 ? 1 : 2;
   Cols = BeatPos / Rows;
-  double dx = double( width() - ylabelmarg ) / double( width() ) / double(Cols);
+  double dx = double( width() - 10.0*ylabelmarg ) / double( width() ) / double(Cols);
   double xo = 1.0 - Cols * dx;
-  double dy = double( height() - xlabelmarg ) / double( height() ) / Rows;
+  double dy = double( height() - 10.0*xlabelmarg ) / double( height() ) / Rows;
   double yo = 1.0 - Rows * dy;
   double dys = 1.0/nsub;
 
@@ -501,7 +502,7 @@ void Chirps::initMultiPlot( double ampl )
 	  P[n].setSize( xo+dx, yo+dys*dy );
 	  P[n].setLMarg( ylabelmarg );
 	  P[n].setBMarg( xlabelmarg );
-	  P[n].setTMarg( xmarg/3 );
+	  P[n].setTMarg( xmarg/3.0 );
 	  P[n].setXLabel( "ms" );
 	  P[n].setXLabelPos( 0.0, Plot::Screen, 0.0, Plot::FirstAxis, 
 			     Plot::Left, 0.0 );
@@ -516,7 +517,7 @@ void Chirps::initMultiPlot( double ampl )
 	  P[n].setOrigin( xo+col*dx, 0.0 );
 	  P[n].setSize( dx, yo+dys*dy );
 	  P[n].setBMarg( xlabelmarg );
-	  P[n].setTMarg( xmarg/3 );
+	  P[n].setTMarg( xmarg/3.0 );
 	  P[n].setXTics();
 	  P[n].setYRange( 0.5*ampl, 1.5*ampl );
 	}
@@ -524,7 +525,7 @@ void Chirps::initMultiPlot( double ampl )
 	  P[n].setOrigin( 0.0, yo+row*dy );
 	  P[n].setSize( xo+dx, dys*dy );
 	  P[n].setLMarg( ylabelmarg );
-	  P[n].setTMarg( xmarg/3 );
+	  P[n].setTMarg( xmarg/3.0 );
 	  P[n].setYLabel( "Beat" );
 	  P[n].setYLabelPos( -0.55, Plot::FirstAxis, 0.5, Plot::Graph, 
 			     Plot::Center, -90.0 );
@@ -535,7 +536,7 @@ void Chirps::initMultiPlot( double ampl )
 	  P[n].setOrigin( 0.0, yo+row*dy+dys*(nsub-sub)*dy );
 	  P[n].setSize( xo+dx, dys*dy );
 	  P[n].setLMarg( ylabelmarg );
-	  P[n].setBMarg( xmarg/3 );
+	  P[n].setBMarg( xmarg/3.0 );
 	  if ( NerveTraces > 0 && sub == SpikeTraces + NerveTraces )
 	    P[n].setYLabel( "Voltage / uV" );
 	  else
@@ -548,13 +549,13 @@ void Chirps::initMultiPlot( double ampl )
 	else if ( sub == 0 ) {
 	  P[n].setOrigin( xo+col*dx, yo+row*dy );
 	  P[n].setSize( dx, dys*dy );
-	  P[n].setTMarg( xmarg/3 );
+	  P[n].setTMarg( xmarg/3.0 );
 	  P[n].setYRange( 0.5*ampl, 1.5*ampl );
 	}
 	else {
 	  P[n].setOrigin( xo+col*dx, yo+row*dy+dys*(nsub-sub)*dy );
 	  P[n].setSize( dx, dys*dy );
-	  P[n].setBMarg( xmarg/3 );
+	  P[n].setBMarg( xmarg/3.0 );
 	  P[n].setYRange( 0.0, ratemax );
 	}
 	n++;
@@ -585,13 +586,13 @@ int Chirps::main( void )
   AM = boolean( "am" );
   SineWave = boolean( "sinewave" );
   Playback = boolean( "playback" );
+  bool adjustg = boolean( "adjust" );
 
   // data:
   OutWarning = true;
   Mode = 0;
   Intensity = 0.0;
   Count = 0;
-  StimulusRateTime = Duration;
 
   // check for GlobalEFieldEvents:
   if ( !AM && GlobalEFieldEvents < 0 ) {
@@ -680,6 +681,8 @@ int Chirps::main( void )
 	( Repeats <= 0 || Count < Repeats ) && softStop() == 0; 
 	Count++ ) {
 
+    cerr << "LOOP " << Count << "\n";
+
     // stimulus intensity:
     Intensity = Contrast * FishAmplitude * IntensityGain;
     signal.setIntensity( Intensity );
@@ -688,8 +691,7 @@ int Chirps::main( void )
     // output signal:
     write( signal );
     if ( !signal.success() ) {
-      string s = "Output of stimulus failed!<br>Error code is <b>";
-      s += Str( signal.error() ) + ": " + signal.errorStr() + "</b>";
+      string s = "Output of stimulus failed!<br>Error code is <b>" + signal.errorText() + "</b>";
       warning( s, 4.0 );
       stop();
       return Failed;
@@ -776,11 +778,13 @@ int Chirps::main( void )
     }
 
     // adjust input gains:
-    for ( int k=0; k<MaxSpikeTraces; k++ )
-      if ( SpikeTrace[k] >= 0 )
-	adjust( trace(SpikeTrace[k]), Duration, 0.8 );
-    if ( NerveTrace[0] >= 0 )
-      adjust( trace(NerveTrace[0]), Duration, 0.8 );
+    if ( adjustg ) {
+      for ( int k=0; k<MaxSpikeTraces; k++ )
+	if ( SpikeTrace[k] >= 0 )
+	  adjust( trace(SpikeTrace[k]), Duration, 0.8 );
+      if ( NerveTrace[0] >= 0 )
+	adjust( trace(NerveTrace[0]), Duration, 0.8 );
+    }
     if ( GlobalEFieldTrace >= 0 )
       adjustGain( trace(GlobalEFieldTrace), 1.05 * trace(GlobalEFieldTrace).maxAbs( trace(GlobalEFieldTrace).signalTime(), Duration ) );
 
@@ -1255,7 +1259,7 @@ void Chirps::analyze( void )
 
   // signal frequency:
   double sigfreq = AM ? 0.0 : events(GlobalEFieldEvents).frequency( eod2.signalTime(),
-								    eod2.signalTime()+StimulusRateTime );
+								    eod2.signalTime()+Duration );
 
   // Delta F:
   TrueDeltaF = AM ? DeltaF : sigfreq - FishRate;
@@ -1370,7 +1374,7 @@ void Chirps::analyze( void )
       beattrough = eod2.eventSize( btee );
 
       // beat frequency before chirp:
-      beatfreq = events(LocalBeatPeakEvents[0])[bpe] - events(LocalBeatPeakEvents[0])[bpe-1];
+      beatfreq = 1.0/(events(LocalBeatPeakEvents[0])[bpe] - events(LocalBeatPeakEvents[0])[bpe-1]);
 
       // location of chirp relative to beat:
       if ( AM ) {
@@ -1418,14 +1422,14 @@ void Chirps::analyze( void )
 
     }
     else {
-     beatfreq = Response[lastr+k].BeatFreq;
-     beatphase = Response[lastr+k].BeatPhase;
-     beatloc = Response[lastr+k].BeatLoc;
-     beatbin = Response[lastr+k].BeatBin;
-     beatbefore = Response[lastr+k].BeatBefore;
-     beatafter = Response[lastr+k].BeatAfter;
-     beatpeak = Response[lastr+k].BeatPeak;
-     beattrough = Response[lastr+k].BeatTrough;
+      beatfreq = Response[lastr+k].BeatFreq;
+      beatphase = Response[lastr+k].BeatPhase;
+      beatloc = Response[lastr+k].BeatLoc;
+      beatbin = Response[lastr+k].BeatBin;
+      beatbefore = Response[lastr+k].BeatBefore;
+      beatafter = Response[lastr+k].BeatAfter;
+      beatpeak = Response[lastr+k].BeatPeak;
+      beattrough = Response[lastr+k].BeatTrough;
     }
 
     // store results:

@@ -221,6 +221,8 @@ int FileStimulus::main( void )
       P[n].setYTics( );
       P[n].clear();
       P[n].setXRange( -Before, Duration+After );
+      if ( n > 1 )
+	P.setCommonYRange( n-1, n );
     }
   }
   if ( NerveTrace[0] >= 0 ) {
@@ -241,6 +243,7 @@ int FileStimulus::main( void )
     P[n].clear();
     P[n].setXRange( -Before, Duration+After );
   }
+  P.setCommonXRange();
   P.unlock();
 
   // adjust transdermal EOD:
@@ -538,6 +541,7 @@ void FileStimulus::save( void )
 
 void FileStimulus::plot( void )
 {
+  P.lock();
   // amplitude:
   P[0].clear();
   for ( unsigned int i=0; i<EODTransAmpl.size()-1; i++ )
@@ -553,7 +557,8 @@ void FileStimulus::plot( void )
     if ( SpikeEvents[k] >= 0 ) {
       n++;
       P[n].clear();
-      P[n].setYRange( 0.0, MaxRate[k] );
+      if ( ! P[n].zoomedYRange() )
+	P[n].setYRange( 0.0, MaxRate[k] );
       int j = 0;
       double delta = Repeats > 0 && Repeats < maxspikes ? 1.0/Repeats : 1.0/maxspikes;
       int offs = (int)Spikes[k].size() > maxspikes ? Spikes[k].size() - maxspikes : 0;
@@ -571,11 +576,13 @@ void FileStimulus::plot( void )
   if ( NerveTrace[0] >= 0 ) {
     n++;
     P[n].clear();
-    P[n].setAutoScaleY();
+    if ( ! P[n].zoomedYRange() )
+      P[n].setAutoScaleY();
     for ( unsigned int i=0; i<NerveAmplM.size(); i++ )
       P[n].plot( NerveAmplM[i], 1000.0, Plot::Cyan, 1, Plot::Solid );
     P[n].plot( NerveMeanAmplM, 1000.0, Plot::Magenta, 2, Plot::Solid );
   }
+  P.unlock();
 
   P.draw();
 }

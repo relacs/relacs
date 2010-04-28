@@ -201,6 +201,13 @@ int FICurve::main( void )
       P[2*n+1].setYRange( 0.0, 100.0 );
       P[2*n+1].setYTics( );
 
+      if ( n > 0 ) {
+	P.setCommonXRange( 2*(n-1), 2*n );
+	P.setCommonYRange( 2*(n-1), 2*n );
+	P.setCommonXRange( 2*(n-1)+1, 2*n+1 );
+	P.setCommonYRange( 2*(n-1)+1, 2*n+1 );
+      }
+
       n++;
     }
   }
@@ -556,7 +563,8 @@ void FICurve::plot( void )
 
       // f-I-curves:
       P[2*n].clear();
-      P[2*n].setYRange( 0.0, MaxRate[k] );
+      if  (! P[2*n].zoomedYRange() )
+	P[2*n].setYRange( 0.0, MaxRate[k] );
       P[2*n].plotVLine( FishAmplitude, Plot::White, 2, Plot::LongDash );
       if ( PreDuration > 0.0 )
 	P[2*n].plotVLine( PreIntensity, Plot::White, 2 );
@@ -603,7 +611,8 @@ void FICurve::plot( void )
       
       // rate and spikes:
       P[2*n+1].clear();
-      P[2*n+1].setYRange( 0.0, MaxRate[k] );
+      if  (! P[2*n+1].zoomedYRange() )
+	P[2*n+1].setYRange( 0.0, MaxRate[k] );
       P[2*n+1].plotVLine( 0.0, Plot::White, 2 );
       if ( PreDuration > 0.0 )
 	P[2*n+1].plotVLine( -1000.0*PreDuration, Plot::White, 2 );

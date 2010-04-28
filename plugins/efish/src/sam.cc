@@ -283,6 +283,8 @@ int SAM::main( void )
 			     Plot::Center, -90.0 );
 	P[2*n].setYRange( 0.0, 100.0 );
 	P[2*n].setYTics( );
+	if ( n > 0 )
+	  P.setCommonYRange( 2*(n-1), 2*n );
       }
       else {
 	P[2*n].setYLabel( "Potential [mV]" );
@@ -312,6 +314,7 @@ int SAM::main( void )
       n++;
     }
   }
+  P.setCommonXRange();
   P.unlock();
   P.draw();
 
@@ -777,7 +780,8 @@ void SAM::plot( void )
       if ( k<MaxSpikeTraces ) {
 	// rate and spikes:
 	P[2*n].clear();
-	P[2*n].setYRange( 0.0, MaxRate[k] );
+	if ( ! P[2*n].zoomedYRange() )
+	  P[2*n].setYRange( 0.0, MaxRate[k] );
 	int j = 0;
 	double delta = Spikes[k].size() < 20 ? 1.0/Spikes[k].size() : 0.05;
 	int offs = Spikes[k].size() > 20 ? Spikes[k].size() - 20 : 0;

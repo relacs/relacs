@@ -147,7 +147,6 @@ private:
   double TrueDeltaF;
   double TrueContrast;
   double Duration;
-  double StimulusRateTime;
   double StimulusRate;
   double IntensityGain;
   double FishRate;

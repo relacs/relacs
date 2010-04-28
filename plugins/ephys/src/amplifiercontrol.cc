@@ -41,6 +41,16 @@ AmplifierControl::AmplifierControl( void )
 
   MaxResistance = 100.0;
   ResistanceScale = 1.0;
+
+  addNumber( "resistancescale", "Scaling factor for computing R from stdev of voltage trace", ResistanceScale, 0.0, 100000.0, 0.01 );
+  addNumber( "maxresistance", "Maximum resistance to be expected for scaling voltage trace", MaxResistance, 0.0, 1000000.0, 10.0, "MOhm" );
+}
+
+
+void AmplifierControl::notify( void )
+{
+  ResistanceScale = number( "resistancescale" );
+  MaxResistance = number( "maxresistance" );
 }
 
 

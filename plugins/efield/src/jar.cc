@@ -321,6 +321,11 @@ int JAR::main( void )
 	message( s );
 	
 	sleep( Duration + After );
+	if ( interrupt() ) {
+	  writeZero( GlobalEField );
+	  save();
+	  return Aborted;
+	}
 	
 	// analyze:
 	analyze();
@@ -329,6 +334,11 @@ int JAR::main( void )
 	FileIndex++;
 
 	sleep( Pause - After );
+	if ( interrupt() ) {
+	  writeZero( GlobalEField );
+	  save();
+	  return Aborted;
+	}
 	
       }
     }
