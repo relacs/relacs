@@ -1,6 +1,6 @@
 /*
   misc/amplmode.cc
-  Control the mode of an amplifier via NIDIO
+  Control the mode of an amplifier via DigitalIO
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
@@ -129,7 +129,8 @@ int AmplMode::open( DigitalIO &dio, const Options &opts )
     }
   }
   else {
-    if ( DIO != NULL && ! DIO->isOpen() )
+    DIO = 0;
+    if ( DIO != 0 && ! DIO->isOpen() )
       return NotOpen;
     else
       return InvalidDevice;

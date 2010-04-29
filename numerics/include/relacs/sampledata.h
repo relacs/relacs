@@ -427,16 +427,16 @@ class SampleData : public Array< T >
          This does not change offset(), length(), and rangeBack(). */
   void scaleStepsize( double scale ) { Samples.scaleStepsize( scale ); };
      /*! Set the offset and the stepsize of the range to \a offset and \a stepsize, respectively. */
-  void setRange( const double &offset, const double &stepsize ) { Samples.setRange( offset, stepsize ); };
+  void setRange( double offset, double stepsize ) { Samples.setRange( offset, stepsize ); };
      /*! The length of the range, i.e. abs( stepsize() * size() ) */
-  double length( void ) const { return Array<T>::size() * ::fabs(Samples.stepsize()); };
+  double length( void ) const { Samples.resize( Array<T>::size() ); return Samples.length(); };
      /*! Set the size of the range such that it has the length \a l.
          The array is resized accordingly. \sa resize() */
   void setLength( double l );
     /*! Returns the first range element, i.e. the offset. \sa offset() */
   double rangeFront( void ) const { return Samples.front(); };
     /*! Returns the last range element. */
-  double rangeBack( void ) const { return Samples.back(); };
+  double rangeBack( void ) const { Samples.resize( Array<T>::size() ); return Samples.back(); };
     /*! Resize the range such that it last value equals \a val. */
   void setRangeBack( double val ) { resize( index( val ) ); };
 
@@ -457,7 +457,7 @@ class SampleData : public Array< T >
     /*! The number of indices corresponding to an interval \a iv. */
   int indices( double iv ) const { return Samples.indices( iv ); };
     /*! True if \a pos is within the range. */
-  bool contains( double pos ) const { return Samples.contains( pos ); };
+  bool contains( double pos ) const { Samples.resize( Array<T>::size() ); return Samples.contains( pos ); };
 
     /*! Returns a reference to the data element at index \a i.
         No range checking is performed. */
@@ -551,6 +551,11 @@ class SampleData : public Array< T >
     /*! Returns an const_iterator pointing behind the last element of the array. */
   const_iterator end( void ) const { return Array<T>::end(); };
 
+    /*! Returns an const_iterator pointing to the first element of the array. */
+  const_range_iterator rangeBegin( void ) const { Samples.resize( Array<T>::size() ); return Samples.begin(); };
+    /*! Returns an const_iterator pointing behind the last element of the array. */
+  const_range_iterator rangeEnd( void ) const { Samples.resize( Array<T>::size() ); return Samples.end(); };
+
     /*! Insert the data element \a yval at position \a i. */
   SampleData< T > &insert( int i, const T &yval );
     /*! Insert the data element \a yval at position \a i. */
@@ -570,16 +575,16 @@ class SampleData : public Array< T >
   /* Generates declarations for unary operators of class SampleData
      that take scalars as argument.
      \a COP is the operator name (like operator+= ). */
-#define SAMPLEDARRAYOPS1SCALARDEC( COP )		\
-  const SampleData< T > &COP( float x );				\
-  const SampleData< T > &COP( double x );				\
-  const SampleData< T > &COP( long double x );			\
-  const SampleData< T > &COP( signed char x );			\
-  const SampleData< T > &COP( unsigned char x );			\
-  const SampleData< T > &COP( signed int x );			\
-  const SampleData< T > &COP( unsigned int x );			\
-  const SampleData< T > &COP( signed long x );			\
-  const SampleData< T > &COP( unsigned long x );                      \
+#define SAMPLEDARRAYOPS1SCALARDEC( COP )	\
+  const SampleData< T > &COP( float x );	\
+  const SampleData< T > &COP( double x );	\
+  const SampleData< T > &COP( long double x );	\
+  const SampleData< T > &COP( signed char x );	\
+  const SampleData< T > &COP( unsigned char x );\
+  const SampleData< T > &COP( signed int x );	\
+  const SampleData< T > &COP( unsigned int x );	\
+  const SampleData< T > &COP( signed long x );	\
+  const SampleData< T > &COP( unsigned long x );
 
     /*! Set the value of each data element to \a val. */
   SAMPLEDARRAYOPS1SCALARDEC( operator= );
@@ -587,6 +592,12 @@ class SampleData : public Array< T >
         to the corresponding data element. */
   template < class R >
   const SampleData< T > &operator+=( const R &x );
+    /*! Add each value of the container \a x
+        to the corresponding data element.
+        Also copies the range (offset(), size(), and stepsize())
+	of \a x to \a this. */
+  template < class R >
+  const SampleData< T > &operator+=( const SampleData<R> &x );
     /*! Add \a x to each of the data elements. 
         \a x is a scalar type like \c float, \c double, \c int, etc. */
   SAMPLEDARRAYOPS1SCALARDEC( operator+= );
@@ -594,6 +605,12 @@ class SampleData : public Array< T >
         from the corresponding data element. */
   template < class R >
   const SampleData< T > &operator-=( const R &x );
+    /*! Subtract each value of the container \a x
+        from the corresponding data element.
+        Also copies the range (offset(), size(), and stepsize())
+	of \a x to \a this. */
+  template < class R >
+  const SampleData< T > &operator-=( const SampleData<R> &x );
     /*! Subtract \a x from each of the data elements. 
         \a x is a scalar type like \c float, \c double, \c int, etc. */
   SAMPLEDARRAYOPS1SCALARDEC( operator-= );
@@ -601,6 +618,12 @@ class SampleData : public Array< T >
         with the corresponding data element. */
   template < class R >
   const SampleData< T > &operator*=( const R &x );
+    /*! Multiply each value of the container \a x
+        with the corresponding data element.
+        Also copies the range (offset(), size(), and stepsize())
+	of \a x to \a this. */
+  template < class R >
+  const SampleData< T > &operator*=( const SampleData<R> &x );
     /*! Multiply \a x with each of the data elements. 
         \a x is a scalar type like \c float, \c double, \c int, etc. */
   SAMPLEDARRAYOPS1SCALARDEC( operator*= );
@@ -608,6 +631,12 @@ class SampleData : public Array< T >
         corresponding element of the container \a x. */
   template < class R >
   const SampleData< T > &operator/=( const R &x );
+    /*! Divide each data element by the 
+        corresponding element of the container \a x.
+        Also copies the range (offset(), size(), and stepsize())
+	of \a x to \a this. */
+  template < class R >
+  const SampleData< T > &operator/=( const SampleData<R> &x );
     /*! Divide each data element by \a x. 
         \a x is a scalar type like \c float, \c double, \c int, etc. */
   SAMPLEDARRAYOPS1SCALARDEC( operator/= );
@@ -615,6 +644,12 @@ class SampleData : public Array< T >
         corresponding element of the container \a x. */
   template < class R >
   const SampleData< T > &operator%=( const R &x );
+    /*! Return the remainder of the division of each data element by the 
+        corresponding element of the container \a x.
+        Also copies the range (offset(), size(), and stepsize())
+	of \a x to \a this. */
+  template < class R >
+  const SampleData< T > &operator%=( const SampleData<R> &x );
     /*! Return the remainder of each data element divided by \a x. 
         \a x is a scalar type like \c float, \c double, \c int, etc. */
   SAMPLEDARRAYOPS1SCALARDEC( operator%= );
@@ -1255,7 +1290,7 @@ class SampleData : public Array< T >
 
 private:
   
-  LinearRange Samples;
+  mutable LinearRange Samples;
   
 };
 
@@ -2160,6 +2195,8 @@ typename SampleData< T >::iterator SampleData< T >::erase( iterator i )
 template < typename TT > 
 bool operator==( const SampleData<TT> &a, const SampleData<TT> &b )
 {
+  a.range().resize( a.array().size() );
+  b.range().resize( b.array().size() );
   return ( a.range() == b.range() && a.array() == b.array() );
 }
 
@@ -2167,6 +2204,8 @@ bool operator==( const SampleData<TT> &a, const SampleData<TT> &b )
 template < typename  TT> 
 bool operator<( const SampleData<TT> &a, const SampleData<TT> &b )
 {
+  a.range().resize( a.array().size() );
+  b.range().resize( b.array().size() );
   return ( a.range() < b.range() && a.array() < b.array() );
 }
 
@@ -2210,9 +2249,9 @@ bool operator<( const SampleData<TT> &a, const SampleData<TT> &b )
 /* Generates definitions for unary operators of class SampleData. 
    \a COPNAME is the operator name (like operator+= ), and
    \a COP is the operator name (like += ). */
-#define SAMPLEDARRAYOPS1DEF( COPNAME, COP ) \
-  template < typename T > template < class COT >					\
-  const SampleData< T > &SampleData< T >::COPNAME ( const COT &x )		\
+#define SAMPLEDARRAYOPS1DEF( COPNAME, COP )                             \
+  template < typename T > template < class COT >			\
+  const SampleData< T > &SampleData< T >::COPNAME ( const COT &x )	\
   {									\
     iterator iter1 = begin();						\
     iterator end1 = end();						\
@@ -2225,7 +2264,21 @@ bool operator<( const SampleData<TT> &a, const SampleData<TT> &b )
     };									\
     return *this;							\
   }									\
-									\
+  template < typename T > template < class COT >			\
+  const SampleData< T > &SampleData< T >::COPNAME ( const SampleData<COT> &x )	\
+  {									\
+    resize( x.range(), 0 );						\
+    iterator iter1 = begin();						\
+    iterator end1 = end();						\
+    typename SampleData<COT>::const_iterator iter2 = x.begin();			\
+    typename SampleData<COT>::const_iterator end2 = x.end();			\
+    while ( iter1 != end1 && iter2 != end2 ) {				\
+      (*iter1) COP static_cast< value_type >(*iter2);			\
+      ++iter1;								\
+      ++iter2;								\
+    };									\
+    return *this;							\
+  }									\
   SAMPLEDARRAYOPS1SCALARDEF( COPNAME, COP ) \
 
 

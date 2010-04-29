@@ -97,13 +97,13 @@ int Attenuate::open( Device &att, const Options &opts )
   if ( opts.exist( "intensityunit" ) )
     setIntensityUnit( opts.text( "intensityunit" ) );
   if ( opts.exist( "intensityformat" ) )
-    setIntensityName( opts.text( "intensityformat" ) );
+    setIntensityFormat( opts.text( "intensityformat" ) );
   if ( opts.exist( "frequencyname" ) )
     setFrequencyName( opts.text( "frequencyname" ) );
   if ( opts.exist( "frequencyunit" ) )
     setFrequencyUnit( opts.text( "frequencyunit" ) );
   if ( opts.exist( "frequencyformat" ) )
-    setFrequencyName( opts.text( "frequencyformat" ) );
+    setFrequencyFormat( opts.text( "frequencyformat" ) );
   return r;
 }
 

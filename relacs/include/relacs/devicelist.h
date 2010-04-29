@@ -81,7 +81,7 @@ public:
 
     /*! Create \a devices from plugins. */
   template < class DD >
-    int create( DD &devices, int n, const string &dflt="" );
+    int create( DD &devices, int n, const string &dflt="0" );
     /*! Returns the warning messages of the last call of create(). */
   Str warnings( void ) const;
     /*! True if the last call of create() was succesfull, i.e. no warnings. */
@@ -244,10 +244,10 @@ int DeviceList<T,PluginID>::create( DD &devices, int m, const string &dflt )
     string ms = "";
     if ( m >= 0 && m < deviceopts.size( "plugin" ) )
       ms = deviceopts.text( "plugin", m );
-    if ( ms == "0" )
-      continue;
     if ( ms.empty() )
       ms = dflt;
+    if ( ms == "0" )
+      continue;
     int k = -1;
     if ( !ms.empty() )
       k = Plugins::index( ms, PluginID );

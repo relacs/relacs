@@ -661,6 +661,8 @@ int RELACSWidget::setupHardware( int n )
     DV->addMenu( DeviceMenu, menuindex );
     AID->addMenu( DeviceMenu, menuindex );
     AOD->addMenu( DeviceMenu, menuindex );
+    DIOD->addMenu( DeviceMenu, menuindex );
+    TRIGD->addMenu( DeviceMenu, menuindex );
     ATD->addMenu( DeviceMenu, menuindex );
     ATI->addMenu( DeviceMenu, menuindex );
 
@@ -673,6 +675,8 @@ int RELACSWidget::setupHardware( int n )
     DV->clear();
     ATD->clear();
     ATI->clear();
+    TRIGD->clear();
+    DIOD->clear();
     AID->clear();
     AOD->clear();
     AQ = 0;
@@ -690,6 +694,8 @@ void RELACSWidget::clearHardware( void )
   DV->clear();
   ATD->clear();
   ATI->clear();
+  TRIGD->clear();
+  DIOD->clear();
   AID->clear();
   AOD->clear();
 }
@@ -1257,6 +1263,7 @@ void RELACSWidget::customEvent( QCustomEvent *qce )
     AOD->updateMenu();
     ATD->updateMenu();
     ATI->updateMenu();
+    TRIGD->updateMenu();
   }
   else if ( qce->type() == QEvent::User+3 ) {
     MessageBox::error( "RELACS Error !", "Transfering stimulus data to hardware driver failed.", this );
