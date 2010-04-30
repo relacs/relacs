@@ -212,7 +212,7 @@ int JAR::main( void )
 		  DeltaFRange.maxValue() + 0.5 * DeltaFStep );
 
   // EOD rate:
-  FishRate = events( LocalEODEvents[0] ).frequency( ReadCycles );
+  FishRate = EODEvents >= 0 ? events( EODEvents ).frequency( ReadCycles ) : events( LocalEODEvents[0] ).frequency( ReadCycles );
   if ( FishRate <= 0.0 ) {
     warning( "Not enough EOD cycles recorded!", 5.0 );
     return Failed;
@@ -222,17 +222,23 @@ int JAR::main( void )
   //  setupTrigger( data, events );
 
   // EOD amplitude:
-  FishAmplitude1 = eodAmplitude( trace( EODTrace ), events( EODEvents ),
-				 events( EODEvents ).back() - 0.5, events( EODEvents ).back() );
-  FishAmplitude2 = eodAmplitude( trace( LocalEODTrace[0] ), events( LocalEODEvents[0] ),
-				 events( LocalEODEvents[0] ).back() - 0.5, events( LocalEODEvents[0] ).back() );
+  if ( EODTrace >= 0 )
+    FishAmplitude1 = eodAmplitude( trace( EODTrace ), events( EODEvents ),
+				   events( EODEvents ).back() - 0.5, events( EODEvents ).back() );
+  else
+    FishAmplitude1 = 0.0;
+  FishAmplitude2 = 0.0;
 
   // adjust transdermal EOD:
-  double val2 = trace( LocalEODTrace[0] ).maxAbs( trace( LocalEODTrace[0] ).currentTime()-0.1,
-						  trace( LocalEODTrace[0] ).currentTime() );
-  if ( val2 > 0.0 ) {
-    adjustGain( trace( LocalEODTrace[0] ), ( 1.0 + ContrastMax + 0.1 ) * val2 );
-    activateGains();
+  if ( LocalEODTrace[0] >= 0 ) {
+    FishAmplitude2 = eodAmplitude( trace( LocalEODTrace[0] ), events( LocalEODEvents[0] ),
+				   events( LocalEODEvents[0] ).back() - 0.5, events( LocalEODEvents[0] ).back() );
+    double val2 = trace( LocalEODTrace[0] ).maxAbs( trace( LocalEODTrace[0] ).currentTime()-0.1,
+						    trace( LocalEODTrace[0] ).currentTime() );
+    if ( val2 > 0.0 ) {
+      adjustGain( trace( LocalEODTrace[0] ), ( 1.0 + ContrastMax + 0.1 ) * val2 );
+      activateGains();
+    }
   }
 
   for ( Count = 0;
@@ -260,7 +266,7 @@ int JAR::main( void )
 	  signal.setIdent( "sinewave" );
 	  IntensityGain = 0.5;
 	}
-	else {
+	else if ( LocalEODEvents[0] >= 0 ) {
 	  // extract an EOD waveform:
 	  double t1 = events( LocalEODEvents[0] ).back( ReadCycles );
 	  double t2 = events( LocalEODEvents[0] ).back();
@@ -783,6 +789,9 @@ void JAR::saveChirpTraces( const Options &header )
 
 void JAR::saveChirpEOD( const Options &header )
 {
+  if ( EODTrace < 0 || EODEvents < 0 )
+    return;
+
   ofstream df( addPath( SineWave ? "jarchirpeods.dat" : "jarchirpeod.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
   if ( ! df.good() )

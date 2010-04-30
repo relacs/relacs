@@ -70,6 +70,11 @@ int CalibEField::main( void )
   int intensitiesoffs = int( maxintensities * minintensityfrac / ( 1.0 - minintensityfrac ) );
   int outtrace = am ? GlobalAMEField : GlobalEField;
 
+  if ( duration*beatfrequency < 4 ) {
+    warning( "stimulus too short or beat frequency too low." );
+    return Failed;
+  }
+
   // plot:
   P[0].setXLabel( "Requested Intensity" );
   P[0].setYLabel( am ? "Measured AM Intensity" : "Measured EOD Intensity" );
@@ -115,6 +120,7 @@ int CalibEField::main( void )
       frequency = beatfrequency;
     else
       frequency = fishrate + beatfrequency;
+
     // mean EOD amplitude:
     double fishupmax = ee.meanSize( ee.back() - 0.5 );
     double fishdownmax = fabs( meanTroughs( trace( LocalEODTrace[0] ),
@@ -174,7 +180,7 @@ int CalibEField::main( void )
   signal.sineWave( frequency, duration, 1.0 );
   signal.back() = 0;
 
-  for ( ; ; ) {
+  while ( softStop() == 0 ) {
 
     // set intensity:
     if ( intensity > maxIntensity( outtrace ) ) {

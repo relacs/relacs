@@ -83,6 +83,9 @@ int BeatDetector::init( const EventList &inevents, EventList &outevents,
 
   ChirpEvents = &other[0];
 
+  outevents[0].setMeanRatio( 0.3 );
+  outevents[1].setMeanRatio( 0.3 );
+
   return 0;
 }
 
@@ -126,10 +129,9 @@ int BeatDetector::detect( const EventList &inevents, EventList &outevents,
 		       Delay, Decay, *this );
 
   if ( outevents[0].size() - lastsize0 <= 0 )
-    outevents[0].updateMean( 2 );
+    outevents[0].updateMean( 1, inevents[0].meanSize() );
   if ( outevents[1].size() - lastsize1 <= 0 )
-    outevents[1].updateMean( 2 );
-
+    outevents[1].updateMean( 1, inevents[0].meanSize() );
 
   double sum = outevents[0].meanSize() + outevents[1].meanSize();
   double diff = outevents[0].meanSize() - outevents[1].meanSize();
