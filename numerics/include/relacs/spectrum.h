@@ -2023,8 +2023,8 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
   nw = (1 << logn);
   np = nw/2;
 
-  if ( lastcp - firstcp != nw )
-    return -3;
+  if ( lastcp - firstcp < np )
+    return -4;
 
   // cycle through the data:
   int c = 0;

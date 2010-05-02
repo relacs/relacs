@@ -1907,7 +1907,7 @@ template < typename T > template < typename R >
   int n = k2 - k1 + 1;
   if ( n <= 0 )
     return *this;
-  n = sa.reserve( n );
+  sa.reserve( n );
   sa.setRange( x1, stepsize() );
   for ( int k=0; k<n; k++ )
     sa.push( static_cast< R >( operator[]( k1+k ) ) );
@@ -1929,7 +1929,7 @@ template < typename T > template < typename R >
   int n = k2 - k1 + 1;
   if ( n <= 0 )
     return *this;
-  n = m.reserve( n );
+  m.reserve( n );
   for ( int k=0; k<n; k++ )
     m.push( pos( k1+k ), static_cast< R >( operator[]( k1+k ) ) );
   return *this;
@@ -1950,7 +1950,7 @@ template < typename T > template < typename R >
   int n = k2 - k1 + 1;
   if ( n <= 0 )
     return *this;
-  n = a.reserve( n );
+  a.reserve( n );
   for ( int k=0; k<n; k++ )
     a.push( static_cast< R >( operator[]( k1+k ) ) );
   return *this;
@@ -1971,7 +1971,7 @@ template < typename T > template < typename R >
   int n = k2 - k1 + 1;
   if ( n <= 0 )
     return *this;
-  n = v.reserve( n );
+  v.reserve( n );
   for ( int k=0; k<n; k++ )
     v.push( static_cast< R >( operator[]( k1+k ) ) );
   return *this;
