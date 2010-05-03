@@ -126,8 +126,11 @@ private:
   double DeltaFStep;
   double DeltaFMin;
   double DeltaFMax;
+  bool UseContrast;
   double ContrastStep;
   double ContrastMax;
+  double AmplStep;
+  double AmplMax;
   int Repeats;
   double After;
   double JARAverageTime;

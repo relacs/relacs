@@ -37,8 +37,11 @@ JAR::JAR( void )
   DeltaFStep = 2.0;
   DeltaFMax = 12.0;
   DeltaFMin = -12.0;
+  UseContrast = true;
   ContrastStep = 0.1;
   ContrastMax = 0.2;
+  AmplStep = 1.0;
+  AmplMax = 2.0;
   Repeats = 200;
   After = 5.0;
   JARAverageTime = 0.5;
@@ -50,11 +53,15 @@ JAR::JAR( void )
   addLabel( "Stimulation" );
   addNumber( "duration", "Signal duration", Duration, 1.0, 10000.0, 1.0, "seconds" );
   addNumber( "pause", "Pause between signals", Pause, 1.0, 10000.0, 1.0, "seconds" );
+  addNumber( "ramp", "Duration of linear ramp", 0.5, 0, 10000.0, 0.1, "seconds" );
   addNumber( "deltafstep", "Delta f steps", DeltaFStep, 1.0, 10000.0, 1.0, "Hz" );
   addNumber( "deltafmax", "Maximum delta f", DeltaFMax, -10000.0, 10000.0, 2.0, "Hz" );
   addNumber( "deltafmin", "Minimum delta f", DeltaFMin, -10000.0, 10000.0, 2.0, "Hz" );
-  addNumber( "contraststep", "Contrast steps", ContrastStep, 0.01, 1.0, 0.05, "1", "%", "%.0f" );
-  addNumber( "contrastmax", "Maximum contrast", ContrastMax, 0.01, 1.0, 0.05, "1", "%", "%.0f" );
+  addSelection( "amplsel", "Stimulus amplitude", "contrast|absolute" );
+  addNumber( "contraststep", "Contrast steps", ContrastStep, 0.01, 1.0, 0.05, "1", "%", "%.0f" ).setActivation( "amplsel", "contrast" );
+  addNumber( "contrastmax", "Maximum contrast", ContrastMax, 0.01, 1.0, 0.05, "1", "%", "%.0f" ).setActivation( "amplsel", "contrast" );
+  addNumber( "amplstep", "Amplitude steps", AmplStep, 0.1, 1000.0, 0.1, "mV/cm" ).setActivation( "amplsel", "absolute" );
+  addNumber( "amplmax", "Maximum amplitude", AmplMax, 0.1, 1000.0, 0.1, "mV/cm" ).setActivation( "amplsel", "absolute" );
   addInteger( "repeats", "Repeats", Repeats, 0, 1000, 2 );
   addBoolean( "sinewave", "Use sine wave", SineWave );
   addLabel( "Analysis" );
@@ -153,12 +160,16 @@ int JAR::main( void )
   // get options:
   Duration = number( "duration" );
   Pause = number( "pause" );
+  double ramp = number( "ramp" );
   Repeats = integer( "repeats" );
   DeltaFStep = number( "deltafstep" );
   DeltaFMax = number( "deltafmax" );
   DeltaFMin = number( "deltafmin" );
+  UseContrast = ( index( "amplsel" ) == 0 );
   ContrastStep = number( "contraststep" );
   ContrastMax = number( "contrastmax" );
+  AmplStep = number( "amplstep" );
+  AmplMax = number( "amplmax" );
   After = number( "after" );
   JARAverageTime = number( "jaraverage" );
   ChirpAverageTime = number( "chirpaverage" );
@@ -167,14 +178,46 @@ int JAR::main( void )
   if ( After > Pause )
     After = Pause;
 
+  if ( EODTrace < 0 ) {
+    warning( "need a recording of the EOD Trace." );
+    return Failed;
+  }
+  if ( EODEvents < 0 ) {
+    warning( "need EOD events of the EOD Trace." );
+    return Failed;
+  }
+  if ( ChirpEvents < 0 ) {
+    warning( "need chirp events of the EOD Trace." );
+    return Failed;
+  }
+  if ( LocalEODTrace[0] >= 0 && LocalEODEvents[0] < 0 ) {
+    warning( "need EOD events of local EOD Trace." );
+    return Failed;
+  }
+  if ( LocalEODTrace[0] >= 0 && LocalBeatPeakEvents[0] < 0 ) {
+    warning( "need beat events of local EOD Trace." );
+    return Failed;
+  }
+  if ( UseContrast && LocalEODTrace[0] < 0 ) {
+    warning( "need local EOD for contrasts." );
+    return Failed;
+  }
+
   // plot trace:
   plotToggle( true, false, 1.0, 0.0 );
 
   // ranges:
   ContrastCount = 0;
-  Contrasts.resize( int( ContrastMax/ContrastStep ) );
-  for ( unsigned int i=0; i<Contrasts.size(); i++ )
-    Contrasts[i] = (i+1)*ContrastStep;
+  if ( UseContrast ) {
+    Contrasts.resize( int( ContrastMax/ContrastStep ) );
+    for ( unsigned int i=0; i<Contrasts.size(); i++ )
+      Contrasts[i] = (i+1)*ContrastStep;
+  }
+  else {
+    Contrasts.resize( int( AmplMax/AmplStep ) );
+    for ( unsigned int i=0; i<Contrasts.size(); i++ )
+      Contrasts[i] = (i+1)*AmplStep;
+  }
   DeltaFRange.clear();
   DeltaFRange.set( DeltaFMin, DeltaFMax, DeltaFStep );
   DeltaFRange.random();
@@ -212,7 +255,7 @@ int JAR::main( void )
 		  DeltaFRange.maxValue() + 0.5 * DeltaFStep );
 
   // EOD rate:
-  FishRate = EODEvents >= 0 ? events( EODEvents ).frequency( ReadCycles ) : events( LocalEODEvents[0] ).frequency( ReadCycles );
+  FishRate = events( EODEvents ).frequency( ReadCycles );
   if ( FishRate <= 0.0 ) {
     warning( "Not enough EOD cycles recorded!", 5.0 );
     return Failed;
@@ -236,7 +279,10 @@ int JAR::main( void )
     double val2 = trace( LocalEODTrace[0] ).maxAbs( trace( LocalEODTrace[0] ).currentTime()-0.1,
 						    trace( LocalEODTrace[0] ).currentTime() );
     if ( val2 > 0.0 ) {
-      adjustGain( trace( LocalEODTrace[0] ), ( 1.0 + ContrastMax + 0.1 ) * val2 );
+      if ( UseContrast )
+	adjustGain( trace( LocalEODTrace[0] ), ( 1.0 + ContrastMax + 0.1 ) * val2 );
+      else
+	adjustGain( trace( LocalEODTrace[0] ), val2 + ContrastMax );
       activateGains();
     }
   }
@@ -258,11 +304,15 @@ int JAR::main( void )
 	applyOutTrace( signal );
 	if ( SineWave ) {
 	  StimulusRate = FishRate + DeltaF;
-	  double p = rint( StimulusRate / fabs( DeltaF ) ) / StimulusRate;
+	  double p = 1.0;
+	  if ( fabs( DeltaF ) > 0.01 )
+	    p = rint( StimulusRate / fabs( DeltaF ) ) / StimulusRate;
+	  else
+	    p = 1.0/StimulusRate;
 	  int n = (int)::rint( Duration / p );
 	  if ( n < 1 )
 	    n = 1;
-	  signal.sineWave( StimulusRate, n*p );
+	  signal.sineWave( StimulusRate, n*p, 1.0, ramp );
 	  signal.setIdent( "sinewave" );
 	  IntensityGain = 0.5;
 	}
@@ -279,6 +329,7 @@ int JAR::main( void )
 	  double maxamplitude = trace( LocalEODTrace[0] ).maxValue() - trace( LocalEODTrace[0] ).minValue();
 	  IntensityGain = 0.5 * maxamplitude / FishAmplitude2 / g;
 	  signal.repeat( (int)floor( Duration/signal.duration() ) );
+	  signal.ramp( ramp );
 	}
 	Duration = signal.length();
 	signal.setStartSource( 1 );
@@ -290,9 +341,13 @@ int JAR::main( void )
 	*/
 	
 	// stimulus intensity:
-	Intensity = Contrast * FishAmplitude2 * IntensityGain;
+	if ( UseContrast )
+	  Intensity = Contrast * FishAmplitude2 * IntensityGain;
+	else
+	  Intensity = Contrast * 2.0 * IntensityGain;
 	signal.setIntensity( Intensity );
-	detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", 0.7*signal.intensity() );
+	if ( LocalBeatPeakEvents[0] >= 0 )
+	  detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", 0.7*signal.intensity() );
 
 	// output signal:
 	write( signal );
@@ -321,7 +376,11 @@ int JAR::main( void )
 	}
 	
 	// meassage: 
-	Str s = "Contrast: <b>" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%</b>";
+	Str s = "";
+	if ( UseContrast )
+	  s = "Contrast: <b>" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%</b>";
+	else
+	  s = "Amplitude: <b>" + Str( Contrast, "%g" ) + "mV/cm</b>";
 	s += "  Delta F:  <b>" + Str( DeltaF, 0, 1, 'f' ) + "Hz</b>";
 	s += "  Loop:  <b>" + Str( Count+1 ) + "</b>";
 	message( s );
@@ -376,7 +435,8 @@ void JAR::save( void )
   header.addText( "Waveform", SineWave ? "Sine-Wave" : "Fish-EOD" );
   header.addNumber( "EOD Rate", FishRate, "Hz", "%.1f" );
   header.addNumber( "EOD Amplitude", FishAmplitude1, GlobalEODUnit, "%.2f" );
-  header.addNumber( "Trans. Amplitude", FishAmplitude2, LocalEODUnit, "%.2f" );
+  if ( FishAmplitude2 > 0.0 )
+    header.addNumber( "Trans. Amplitude", FishAmplitude2, LocalEODUnit, "%.2f" );
   header.addText( "RePro Time", reproTimeStr() );
   header.addText( "Session Time", sessionTimeStr() );
   header.addLabel( "settings:" );
@@ -404,11 +464,15 @@ void JAR::saveJAR( const Options &header )
   // write key:
   TableKey key;
   key.addLabel( "stimulus" );
-  key.addNumber( "contrast", "%", "%8.1f" );
+  if ( UseContrast )
+    key.addNumber( "contrast", "%", "%8.1f" );
+  else
+    key.addNumber( "amplitude", "mV/cm", "%6.3f" );
   key.addNumber( "deltaf", "Hz", "%5.1f" );
   key.addNumber( "index", "1", "%5.0f" );
   key.addLabel( "jar" );
-  key.addNumber( "contrast", "%", "%6.1f" );
+  if ( UseContrast )
+    key.addNumber( "contrast", "%", "%6.1f" );
   key.addNumber( "first", "Hz", "%5.1f" );
   key.addNumber( "last", "Hz", "%5.1f" );
   key.addNumber( "jar", "Hz", "%5.1f" );
@@ -429,10 +493,11 @@ void JAR::saveJAR( const Options &header )
     df << '\n';
     for ( unsigned int j=0; j<Response[i].size(); j++ ) {
       for ( unsigned int k=0; k<Response[i][j].size(); k++ ) {
-	key.save( df, 100.0 * Contrasts[i], 0 );
+	key.save( df, UseContrast ? 100.0 * Contrasts[i] : Contrasts[i], 0 );
 	key.save( df, DeltaFRange.value( j ) );
 	key.save( df, Response[i][j][k].Index );
-	key.save( df, 100.0 * Response[i][j][k].Contrast );
+	if ( UseContrast )
+	  key.save( df, 100.0 * Response[i][j][k].Contrast );
 	key.save( df, Response[i][j][k].FirstRate );
 	key.save( df, Response[i][j][k].LastRate );
 	key.save( df, Response[i][j][k].Jar );
@@ -481,11 +546,15 @@ void JAR::saveMeanJAR( const Options &header )
   // write key:
   TableKey key;
   key.addLabel( "stimulus" );
-  key.addNumber( "contrast", "%", "%8.1f" );
+  if ( UseContrast )
+    key.addNumber( "contrast", "%", "%8.1f" );
+  else
+    key.addNumber( "amplitude", "mV/cm", "%6.3f" );
   key.addNumber( "deltaf", "Hz", "%6.1f" );
   key.addNumber( "n", "1", "%3.0f" );
   key.addLabel( "jar" );
-  key.addNumber( "contrast", "%", "%8.1f" );
+  if ( UseContrast )
+    key.addNumber( "contrast", "%", "%8.1f" );
   key.addNumber( "s.d.", "%", "%5.1f" );
   key.addNumber( "first", "Hz", "%5.1f" );
   key.addNumber( "s.d.", "Hz", "%5.1f" );
@@ -513,14 +582,16 @@ void JAR::saveMeanJAR( const Options &header )
     for ( unsigned int j=0; j<MeanResponse[i].size(); j++ ) {
       if ( MeanResponse[i][j].NJar > 0 ) {
 	double var, v;
-	key.save( df, 100.0 * Contrasts[i], 0 );
+	key.save( df, UseContrast ? 100.0 * Contrasts[i] : Contrasts[i], 0 );
 	key.save( df, DeltaFRange.value( j ) );
 	key.save( df, MeanResponse[i][j].NJar );
 	// measured contrast:
-	v = MeanResponse[i][j].Contrast;
-	var = MeanResponse[i][j].ContrastSq - v * v;
-	key.save( df, 100.0 * v );
-	key.save( df, var > 0.0 ? 100.0 * sqrt( var ) : 0.0 );
+	if ( UseContrast ) {
+	  v = MeanResponse[i][j].Contrast;
+	  var = MeanResponse[i][j].ContrastSq - v * v;
+	  key.save( df, 100.0 * v );
+	  key.save( df, var > 0.0 ? 100.0 * sqrt( var ) : 0.0 );
+	}
 	// first rate:
 	v = MeanResponse[i][j].First;
 	var = MeanResponse[i][j].FirstSq - v * v;
@@ -585,7 +656,7 @@ void JAR::saveEOD( const Options &header )
   // write key:
   TableKey key;
   key.addNumber( "time", "s", "%9.5f" );
-  key.addNumber( "EOD", LocalEODUnit, "%.5g" );
+  key.addNumber( "EOD", GlobalEODUnit, "%.5g" );
   key.saveKey( df );
 
   // write data into file:
@@ -605,17 +676,22 @@ void JAR::saveTrace( void )
   Options header;
   header.addInteger( "Index", FileIndex );
   header.addNumber( "Delta f", DeltaF, "Hz", "%.1f" );
-  header.addNumber( "Contrast", 100.0*Contrast, "Hz", "%.1f" );
+  if ( UseContrast )
+    header.addNumber( "Contrast", 100.0*Contrast, "%", "%.1f" );
+  else
+    header.addNumber( "Amplitude", Contrast, "mV/cm", "%.3f" );
   header.addNumber( "Duration", Duration, "sec", "%.3f" );
   header.addNumber( "Pause", Pause, "sec", "%.3f" );
   header.addText( "Waveform", SineWave ? "Sine-Wave" : "Fish-EOD" );
   header.addNumber( "True Delta f", TrueDeltaF, "Hz", "%.1f" );
-  header.addNumber( "True Contrast", 100.0*TrueContrast, "Hz", "%.1f" );
+  if ( TrueContrast > 0.0 )
+    header.addNumber( "True Contrast", 100.0*TrueContrast, "Hz", "%.1f" );
   header.addNumber( "EOD Rate before", FirstRate, "Hz", "%.1f" );
   header.addNumber( "EOD Rate at end", LastRate, "Hz", "%.1f" );
   header.addNumber( "JAR", LastRate-FirstRate, "Hz", "%.1f" );
   header.addNumber( "EOD Amplitude", FishAmplitude1, GlobalEODUnit, "%.2f" );
-  header.addNumber( "Trans. Amplitude", FishAmplitude2, LocalEODUnit, "%.2f" );
+  if ( FishAmplitude2 > 0.0 )
+    header.addNumber( "Trans. Amplitude", FishAmplitude2, LocalEODUnit, "%.2f" );
   header.addText( "RePro Time", reproTimeStr() );
   header.addText( "Session Time", sessionTimeStr() );
 
@@ -641,17 +717,19 @@ void JAR::saveEODFreq( const Options &header )
   TableKey key;
   key.addNumber( "time", "s", "%9.5f" );
   key.addNumber( "freq", "Hz", "%5.1f" );
-  key.addNumber( "ampl", LocalEODUnit, "%6.4f" );
+  if ( ! LocalEODUnit.empty() )
+    key.addNumber( "ampl", LocalEODUnit, "%6.4f" );
   key.addNumber( "beat", "1", "%5.3f" );
   key.saveKey( df );
 
   // write data into file:
   for ( int k=0;
-	k<EODFrequency.size() && k<EODTransAmpl.size() && k<EODBeatPhase.size();
+	k<EODFrequency.size() && k<EODBeatPhase.size();
 	k++ ) {
     key.save( df, EODFrequency.x(k), 0 );
     key.save( df, EODFrequency.y(k) );
-    key.save( df, EODTransAmpl.y(k) );
+    if ( ! LocalEODUnit.empty() )
+      key.save( df, EODTransAmpl.y(k) );
     key.save( df, EODBeatPhase.y(k) );
     df << '\n';
   }
@@ -676,18 +754,20 @@ void JAR::saveChirps( const Options &header )
   key.addNumber( "time", "s", "%10.5f" );
   key.addNumber( "size", "Hz", "%5.1f" );
   key.addNumber( "width", "ms", "%5.1f" );
-  key.addNumber( "ampl", LocalEODUnit, "%6.4f" );
-  key.addNumber( "adiff", LocalEODUnit, "%6.4f" );
+  key.addNumber( "ampl", GlobalEODUnit, "%6.4f" );
+  key.addNumber( "adiff", GlobalEODUnit, "%6.4f" );
   key.addNumber( "dip", "%", "%5.1f" );
   key.addNumber( "phase", "1", "%5.3f" );
   key.addLabel( "beat" );
   key.addNumber( "phase", "1", "%5.3f" );
   key.addNumber( "loc", "1", "%5.3f" );
   key.addNumber( "df", "Hz", "%5.1f" );
-  key.addNumber( "ampl-", LocalEODUnit, "%6.4f" );
-  key.addNumber( "ampl+", LocalEODUnit, "%6.4f" );
-  key.addNumber( "jump", LocalEODUnit, "%7.4f" );
-  key.addNumber( "rjump", "%", "%5.1f" );
+  if ( ! LocalEODUnit.empty() ) {
+    key.addNumber( "ampl-", LocalEODUnit, "%6.4f" );
+    key.addNumber( "ampl+", LocalEODUnit, "%6.4f" );
+    key.addNumber( "jump", LocalEODUnit, "%7.4f" );
+    key.addNumber( "rjump", "%", "%5.1f" );
+  }
   key.saveKey( df );
 
   // write data into file:
@@ -702,10 +782,12 @@ void JAR::saveChirps( const Options &header )
       key.save( df, "" );
       key.save( df, "" );
       key.save( df, "" );
-      key.save( df, "" );
-      key.save( df, "" );
-      key.save( df, "" );
-      key.save( df, "" );
+      if ( ! LocalEODUnit.empty() ) {
+	key.save( df, "" );
+	key.save( df, "" );
+	key.save( df, "" );
+	key.save( df, "" );
+      }
       df << '\n';
   }
   else {
@@ -720,10 +802,12 @@ void JAR::saveChirps( const Options &header )
       key.save( df, Chirps[k].BeatPhase );
       key.save( df, Chirps[k].BeatLoc );
       key.save( df, Chirps[k].Deltaf );
-      key.save( df, Chirps[k].BeatBefore );
-      key.save( df, Chirps[k].BeatAfter );
-      key.save( df, Chirps[k].BeatAfter - Chirps[k].BeatBefore );
-      key.save( df, 100.0 * ( Chirps[k].BeatAfter - Chirps[k].BeatBefore ) / ( Chirps[k].BeatAfter + Chirps[k].BeatBefore ) );
+      if ( ! LocalEODUnit.empty() ) {
+	key.save( df, Chirps[k].BeatBefore );
+	key.save( df, Chirps[k].BeatAfter );
+	key.save( df, Chirps[k].BeatAfter - Chirps[k].BeatBefore );
+	key.save( df, 100.0 * ( Chirps[k].BeatAfter - Chirps[k].BeatBefore ) / ( Chirps[k].BeatAfter + Chirps[k].BeatBefore ) );
+      }
       df << '\n';
     }
   }
@@ -748,8 +832,10 @@ void JAR::saveChirpTraces( const Options &header )
   key.addNumber( "size", "Hz", "%5.1f" );
   key.addNumber( "ampl", GlobalEODUnit, "%6.4f" );
   key.addNumber( "phase", "1", "%5.3f" );
-  key.addNumber( "ampl2", LocalEODUnit, "%6.4f" );
-  key.addNumber( "beat", "1", "%5.3f" );
+  if ( ! LocalEODUnit.empty() ) {
+    key.addNumber( "ampl2", LocalEODUnit, "%6.4f" );
+    key.addNumber( "beat", "1", "%5.3f" );
+  }
   key.saveKey( df );
 
   // write data into file:
@@ -775,8 +861,10 @@ void JAR::saveChirpTraces( const Options &header )
 	  key.save( df, EODFrequency.y(j+i) );
 	  key.save( df, EODAmplitude.y(j+i) );
 	  key.save( df, EODPhases.y(j+i) );
-	  key.save( df, EODTransAmpl.y(j+i) );
-	  key.save( df, EODBeatPhase.y(j+i) );
+	  if ( ! LocalEODUnit.empty() ) {
+	    key.save( df, EODTransAmpl.y(j+i) );
+	    key.save( df, EODBeatPhase.y(j+i) );
+	  }
 	  df << '\n';
 	}
       }
@@ -840,7 +928,10 @@ void JAR::plot( void )
   P[0].clear();
   Str s;
   s = "Delta f = " + Str( DeltaF, 0, 0, 'f' ) + "Hz";
-  s += ", Contrast = " + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%, ";
+  if ( UseContrast )
+    s += ", Contrast = " + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%, ";
+  else
+    s += ", Amplitude = " + Str( Contrast ) + "mV/cm, ";
   s += SineWave ? "Sine Wave" : "Fish EOD";
   P[0].setTitle( s );
   P[0].plotVLine( Duration );
@@ -925,7 +1016,7 @@ void JAR::plot( void )
 void JAR::analyze( void )
 {
   const EventData &eodglobal = events( EODEvents );
-  const EventData &eodlocal = events( LocalEODEvents[0] );
+  const EventData &eodlocal = LocalEODEvents[0] >= 0 ? events( LocalEODEvents[0] ) : events( EODEvents );
   const EventData &sige = events( GlobalEFieldEvents );
   double sigtime = eodglobal.signalTime();
 
@@ -939,17 +1030,21 @@ void JAR::analyze( void )
   FishAmplitude1 = eodAmplitude( trace( EODTrace ), eodglobal,
 				 eodglobal.back() - JARAverageTime,
 				 eodglobal.back() );
-  FishAmplitude2 = eodAmplitude( trace( LocalEODTrace[0] ), eodlocal,
-				 eodlocal.back() - JARAverageTime,
-				 eodlocal.back() );
+  if ( LocalEODTrace[0] >= 0 )
+    FishAmplitude2 = eodAmplitude( trace( LocalEODTrace[0] ), eodlocal,
+				   eodlocal.back() - JARAverageTime,
+				   eodlocal.back() );
 
   // contrast:
-  TrueContrast = beatContrast( trace( LocalEODTrace[0] ),
-			       events( LocalBeatPeakEvents[0] ),
-			       events( LocalBeatTroughEvents[0] ),
-			       sigtime,
-			       sigtime+Duration,
-			       0.1*Duration );
+  if ( LocalEODTrace[0] >= 0 )
+    TrueContrast = beatContrast( trace( LocalEODTrace[0] ),
+				 events( LocalBeatPeakEvents[0] ),
+				 events( LocalBeatTroughEvents[0] ),
+				 sigtime,
+				 sigtime+Duration,
+				 0.1*Duration );
+  else
+    TrueContrast = 0.0;
 
   // mean rate before stimulus:
   FirstRate = eodglobal.frequency( sigtime - JARAverageTime,
@@ -964,7 +1059,10 @@ void JAR::analyze( void )
 
   // EOD trace:
   GlobalEODUnit = trace( EODTrace ).unit();
-  LocalEODUnit = trace( LocalEODTrace[0] ).unit();
+  if ( LocalEODTrace[0] >= 0 )
+    LocalEODUnit = trace( LocalEODTrace[0] ).unit();
+  else
+    LocalEODUnit = "";
 
   EventIterator first1 = eodglobal.begin( sigtime );
   EventIterator last1 = eodglobal.begin( sigtime + Duration + After );
@@ -991,12 +1089,14 @@ void JAR::analyze( void )
   }
 
   // EOD transdermal amplitude:
-  EventIterator first2 = eodlocal.begin( sigtime );
-  EventIterator last2 = eodlocal.begin( sigtime + Duration + After );
   EODTransAmpl.clear();
-  EODTransAmpl.reserve( last2 - first2 + 2 );
-  for ( sindex = first2; sindex < last2; ++sindex ) {
-    EODTransAmpl.push( sindex.time() - sigtime, *sindex );
+  if ( LocalEODEvents[0] >= 0 ) {
+    EventIterator first2 = eodlocal.begin( sigtime );
+    EventIterator last2 = eodlocal.begin( sigtime + Duration + After );
+    EODTransAmpl.reserve( last2 - first2 + 2 );
+    for ( sindex = first2; sindex < last2; ++sindex ) {
+      EODTransAmpl.push( sindex.time() - sigtime, *sindex );
+    }
   }
 
   // Beat phase:
@@ -1007,9 +1107,9 @@ void JAR::analyze( void )
     if ( ti >= sige.size() )
       break;
     double t1 = sige[ ti ];
-    int pi = eodlocal.previous( t1 );
-    double t0 = eodlocal[ pi ];
-    double phase = ( t1 - t0 ) / ( eodlocal[ pi + 1 ] - t0 );
+    int pi = eodglobal.previous( t1 );
+    double t0 = eodglobal[ pi ];
+    double phase = ( t1 - t0 ) / ( eodglobal[ pi + 1 ] - t0 );
     EODBeatPhase.push( index.time() - sigtime, phase );
   }
 
@@ -1108,12 +1208,16 @@ void JAR::analyze( void )
     // beat location:
     double beatloc = cdeltaf <= 0.0 ? beatphase : 1.0 - beatphase;
 
-    // beat amplitude right before chirp:
-    double beatbefore = eodlocal.meanSize( JARChirpEvents[k] + sigtime - 0.6 * width - 4.0 * meaninterv,
-					   JARChirpEvents[k] + sigtime - 0.6 * width );
-    // beat amplitude right after chirp:
-    double beatafter = eodlocal.meanSize( JARChirpEvents[k] + sigtime + 0.6 * width,
-					  JARChirpEvents[k] + sigtime + 0.6 * width + 4.0 * meaninterv );
+    double beatbefore = 0.0;
+    double beatafter = 0.0;
+    if ( LocalEODEvents[0] >= 0 ) {
+      // beat amplitude right before chirp:
+      beatbefore = eodlocal.meanSize( JARChirpEvents[k] + sigtime - 0.6 * width - 4.0 * meaninterv,
+				      JARChirpEvents[k] + sigtime - 0.6 * width );
+      // beat amplitude right after chirp:
+      beatafter = eodlocal.meanSize( JARChirpEvents[k] + sigtime + 0.6 * width,
+				     JARChirpEvents[k] + sigtime + 0.6 * width + 4.0 * meaninterv );
+    }
 
     // stor results:
     ChirpData d( time, size, width, meanrate, meanampl, ampl, meanphase, 
