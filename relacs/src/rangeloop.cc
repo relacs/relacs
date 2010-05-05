@@ -873,6 +873,19 @@ void RangeLoop::reset( int pos )
 }
 
 
+void RangeLoop::purge( void )
+{
+  vector < ElementType >::iterator ep=Elements.begin();
+  while ( ep != Elements.end() ) {
+    if ( ep->Skip )
+      ep = Elements.erase( ep );
+    else
+      ++ep;
+  }
+  initSequence( StartPos );
+}
+
+
 const RangeLoop &RangeLoop::operator=( int pos )
 {
   reset( pos );

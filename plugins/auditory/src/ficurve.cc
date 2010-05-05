@@ -79,6 +79,7 @@ FICurve::FICurve( void )
   addNumber( "intstep", "Sound intensity step", IntensityStep, 0.0, 200.0, 1.0, "dB SPL" );
   addBoolean( "usethresh", "Relative to the cell's threshold", UseThresh );
   addBoolean( "usesat", "Maximum intensity relative to the cell's best saturation", UseSaturation );
+  addBoolean( "useprevints", "Re-use the intensity settings from the previous run", false );
   addSelection( "intshuffle", "Order of intensities", RangeLoop::sequenceStrings() );
   addInteger( "intincrement", "Initial increment for intensities", IntIncrement, -1000, 1000, 1 );
   addInteger( "singlerepeat", "Number of immediate repetitions of a single stimulus", SingleRepeat, 1, 10000, 1 );
@@ -181,6 +182,7 @@ int FICurve::main( void )
   IntensityStep = number( "intstep" );
   UseThresh = boolean( "usethresh" );
   UseSaturation = boolean( "usesat" );
+  bool useprevints = boolean( "useprevints" );
   IntShuffle = RangeLoop::Sequence( index( "intshuffle" ) );
   IntIncrement = integer( "intincrement" );
   SlopeIntIncrement = integer( "slopeintincrement" );
@@ -284,8 +286,13 @@ int FICurve::main( void )
   P.unlock();
 
   // intensity:
-  IntensityRange.set( MinIntensity, MaxIntensity, IntensityStep,
-		      IntRepeat, IntBlockRepeat, SingleRepeat );
+  if ( useprevints )
+    IntensityRange.purge();
+  else
+    IntensityRange.set( MinIntensity, MaxIntensity, IntensityStep );
+  IntensityRange.setRepeat( IntRepeat );
+  IntensityRange.setBlockRepeat( IntBlockRepeat );
+  IntensityRange.setSingleRepeat( SingleRepeat );
   IntensityRange.setIncrement( IntIncrement );
   IntensityRange.setSequence( IntShuffle );
   IntensityRange.reset();

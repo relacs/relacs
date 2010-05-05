@@ -39,7 +39,7 @@ namespace relacs {
 
   RangeLoop is a one-dimensional array of doubles. The array can be filled
   by the constructors or by the set() and add() functions. All the standard
-  vector functions for accessing and maipulating the data values are provided:
+  vector functions for accessing and manipulating the data values are provided:
   operator[], back(), front(), size(), empty(), resize(), clear(),
   capacity(), reserve().
 
@@ -48,7 +48,7 @@ namespace relacs {
   The basic usage is like this:
   \code
   RangeLoop range( 1.0, 4.0, 0.5 );
-  for ( Range.reset(); ! Range && softStop() == 0; ++Range )
+  for ( Range.reset(); ! Range; ++Range )
     cout << *range << '\n';
   \endcode
   This will print the sequence 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0
@@ -84,6 +84,7 @@ namespace relacs {
   Data values can be excluded form being further traversed by setSkip(),
   setSkipAbove(), setSkipBelow(), and setSkipBetween().
   How often a data value was traversed can be retireieved by count().
+  You can remove data elements that have their skip flag set by calling purge().
 
   pos() is the index of an data element from the whole data array.
   index() is the current index into the current (sub-)sequence.
@@ -388,8 +389,13 @@ class RangeLoop
         and clear the skip flags.
         A new sequence of indices is generated
 	starting with the one nearest to \a pos.
-        If \a pos is negative (default) it is set to an appropriate value. */
+        If \a pos is negative (default) it is set to an appropriate value.
+	\sa purge() */
   void reset( int pos=-1 );
+    /*! Remove all data elements, that have their skip flag set
+        and generates a new sequence.
+        \sa reset() */
+  void purge( void );
 
     /*! Reset the sequence and use \a pos as the first data element.
         \sa reset() */
