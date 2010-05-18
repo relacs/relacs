@@ -24,6 +24,7 @@
 #include <iomanip>
 #include <relacs/str.h>
 #include <relacs/detector.h>
+#include <relacs/kernel.h>
 #include <relacs/efish/chirps.h>
 using namespace relacs;
 
@@ -42,14 +43,14 @@ Chirps::Chirps( void )
   MinSpace = 0.2;
   Pause = 1.0;
   ChirpSize = 100.0;  // Hertz
-  ChirpWide = 0.014;  // seconds
+  ChirpWidth = 0.014;  // seconds
   ChirpDip = 0.02;
   DeltaF = 10.0;
   Contrast = 0.2;
   Repeats = 12;
   BeatPos = 10;
   BeatStart = 0.25;
-  RateDeltaT = 0.003;   // seconds
+  Sigma = 0.003;
   SaveWindow = 0.4;
   AM = false;
   SineWave = true;
@@ -63,7 +64,7 @@ Chirps::Chirps( void )
   addNumber( "minspace", "Minimum time between chirps", MinSpace, 0.01, 1000.0, 0.05, "sec", "ms" );
   addNumber( "firstspace", "Time preceeding first chirp", FirstSpace, 0.01, 1000.0, 0.05, "sec", "ms" );
   addNumber( "chirpsize", "Size of chirp", ChirpSize, 0.0, 1000.0, 10.0, "Hz" );
-  addNumber( "chirpwidth", "Width of chirp", ChirpWide, 0.002, 1.0, 0.001, "sec", "ms" );
+  addNumber( "chirpwidth", "Width of chirp", ChirpWidth, 0.002, 1.0, 0.001, "sec", "ms" );
   addNumber( "chirpampl", "Amplitude of chirp", ChirpDip, 0.0, 1.0, 0.01, "1", "%", "%.0f" );
   addLabel( "Beat parameter" );
   addNumber( "deltaf", "Delta f", DeltaF, -500.0, 500.0, 5, "Hz" );
@@ -74,7 +75,7 @@ Chirps::Chirps( void )
   addNumber( "pause", "Pause between signals", Pause, 0.01, 1000.0, 0.05, "sec", "ms" );
   addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 );
   addLabel( "Analysis" );
-  addNumber( "ratedt", "Resolution of firing rate", RateDeltaT, 0.001, 0.1, 0.001, "sec", "ms" );
+  addNumber( "sigma", "Standard deviation of rate smoothing kernel", Sigma, 0.0, 1.0, 0.0001, "seconds", "ms" );
   addBoolean( "adjust", "Adjust input gain?", true );
   addTypeStyle( OptWidget::Bold, Parameter::Label );
 
@@ -192,15 +193,15 @@ void Chirps::createEOD( OutData &signal )
 
   // create chirp:
   double dt = waveform.sampleInterval();
-  SampleDataF chirp( 0.0, 4.0*ChirpWide, dt, 0.0 );
+  SampleDataF chirp( 0.0, 4.0*ChirpWidth, dt, 0.0 );
   chirp.clear();
-  double sig = 0.5*ChirpWide/sqrt(2.0*log(10.0));
+  double sig = 0.5*ChirpWidth/sqrt(2.0*log(10.0));
   double T = waveform.length()/ReadCycles;
-  double chirptime = 2.0*ChirpWide;
+  double chirptime = 2.0*ChirpWidth;
   int j = 0;
   double p = 0.0;
   double dp = 0.0;
-  for ( double t=0.0; t<4.0*ChirpWide; ) {
+  for ( double t=0.0; t<4.0*ChirpWidth; ) {
     t = chirp.length();
     double x = t - chirptime;
     double g = exp( -0.5*(x/sig)*(x/sig) );
@@ -240,7 +241,7 @@ void Chirps::createEOD( OutData &signal )
   s += ", Df=" + Str( DeltaF, 0, 1, 'f' ) + "Hz";
   s += ", chirps=" + Str( NChirps );
   s += ", size=" + Str( ChirpSize, 0, 0, 'f' ) + "Hz";
-  s += ", width=" + Str( 1000.0*ChirpWide, 0, 0, 'f' ) + "ms";
+  s += ", width=" + Str( 1000.0*ChirpWidth, 0, 0, 'f' ) + "ms";
   s += ", ampl=" + Str( 100.0*ChirpDip, 0, 0, 'f' ) + "%";
   s += ", phase: " + Str( ChirpPhase, 0, 2, 'f' );
   //  signal.setComment( s );
@@ -389,13 +390,13 @@ int Chirps::createAM( OutData &signal )
   int mincycle = int( ceil( MinSpace / period ) );
   if ( mincycle < 1 )
     mincycle = 1;
-  double chirpslot = 4.0*ChirpWide + period;
+  double chirpslot = 4.0*ChirpWidth + period;
   double deltat = signal.sampleInterval();
   int pointsperbeat = int( rint( period / deltat ) );
   int pointsperchirp = int( rint( chirpslot / deltat ) );
   signal.reserve( firstcycle*pointsperbeat + NChirps*(mincycle*pointsperbeat+pointsperchirp) );
   double phasestep = 1.0/BeatPos;
-  double sig = 0.5*ChirpWide/sqrt(2.0*log(10.0));
+  double sig = 0.5*ChirpWidth/sqrt(2.0*log(10.0));
 
   // first beat:
   double p = -0.25;
@@ -412,7 +413,7 @@ int Chirps::createAM( OutData &signal )
   double chirpphase = BeatStart;
   for ( int n=0; n<NChirps; n++ ) {
     // chirp:
-    double p0 = fabs( p + DeltaF*2.0*ChirpWide );
+    double p0 = fabs( p + DeltaF*2.0*ChirpWidth );
     double cp = floor( p0 );
     cp += chirpphase;
     if ( cp < p0 )
@@ -466,20 +467,23 @@ void Chirps::initMultiPlot( double ampl )
   P.resize( nsub*BeatPos );
 
   const double xlabelmarg = 3.0;
-  const double xmarg = 1.0;
+  const double xmarg = 0.3;
   const double ylabelmarg = 7.0;
   const double ymarg = 1.0;
   const double ratemax = 100.0;
   
-  double xrange = 100.0;
+  double xr = 100.0;
   if ( fabs( DeltaF ) > 50.0 )
-    xrange = 50.0;
+    xr = 50.0;
+  double xrange = xr;
+  while ( xrange <= 2.0*ChirpWidth )
+    xrange += xr;
 
   Rows = BeatPos < 4 ? 1 : 2;
   Cols = BeatPos / Rows;
-  double dx = double( width() - 10.0*ylabelmarg ) / double( width() ) / double(Cols);
+  double dx = double( width() - P[0].fontPixel( ylabelmarg ) ) / double( width() ) / double(Cols);
   double xo = 1.0 - Cols * dx;
-  double dy = double( height() - 10.0*xlabelmarg ) / double( height() ) / Rows;
+  double dy = double( height() - P[0].fontPixel( xlabelmarg ) ) / double( height() ) / Rows;
   double yo = 1.0 - Rows * dy;
   double dys = 1.0/nsub;
 
@@ -488,7 +492,7 @@ void Chirps::initMultiPlot( double ampl )
     for ( int col=0; col < Cols; col++ ) {
       for ( int sub=0; sub < nsub; sub++ ) {
 	P[n].clear();
-	P[n].setLMarg( ymarg );
+	P[n].setLMarg( 0.0 );
 	P[n].setRMarg( ymarg );
 	P[n].setBMarg( xmarg );
 	P[n].setTMarg( xmarg );
@@ -502,8 +506,7 @@ void Chirps::initMultiPlot( double ampl )
 	  P[n].setSize( xo+dx, yo+dys*dy );
 	  P[n].setLMarg( ylabelmarg );
 	  P[n].setBMarg( xlabelmarg );
-	  P[n].setTMarg( xmarg/3.0 );
-	  P[n].setXLabel( "ms" );
+	  P[n].setXLabel( "[ms]" );
 	  P[n].setXLabelPos( 0.0, Plot::Screen, 0.0, Plot::FirstAxis, 
 			     Plot::Left, 0.0 );
 	  P[n].setXTics();
@@ -517,7 +520,6 @@ void Chirps::initMultiPlot( double ampl )
 	  P[n].setOrigin( xo+col*dx, 0.0 );
 	  P[n].setSize( dx, yo+dys*dy );
 	  P[n].setBMarg( xlabelmarg );
-	  P[n].setTMarg( xmarg/3.0 );
 	  P[n].setXTics();
 	  P[n].setYRange( 0.5*ampl, 1.5*ampl );
 	}
@@ -525,7 +527,7 @@ void Chirps::initMultiPlot( double ampl )
 	  P[n].setOrigin( 0.0, yo+row*dy );
 	  P[n].setSize( xo+dx, dys*dy );
 	  P[n].setLMarg( ylabelmarg );
-	  P[n].setTMarg( xmarg/3.0 );
+	  P[n].setBMarg( 3.0*xmarg );
 	  P[n].setYLabel( "Beat" );
 	  P[n].setYLabelPos( -0.55, Plot::FirstAxis, 0.5, Plot::Graph, 
 			     Plot::Center, -90.0 );
@@ -536,11 +538,12 @@ void Chirps::initMultiPlot( double ampl )
 	  P[n].setOrigin( 0.0, yo+row*dy+dys*(nsub-sub)*dy );
 	  P[n].setSize( xo+dx, dys*dy );
 	  P[n].setLMarg( ylabelmarg );
-	  P[n].setBMarg( xmarg/3.0 );
+	  if ( sub == nsub-1 )
+	    P[n].setTMarg( 3.0*xmarg );
 	  if ( NerveTraces > 0 && sub == SpikeTraces + NerveTraces )
-	    P[n].setYLabel( "Voltage / uV" );
+	    P[n].setYLabel( "Voltage [uV]" );
 	  else
-	    P[n].setYLabel( "Rate " + Str( sub ) + " / Hz" );
+	    P[n].setYLabel( "Rate " + Str( sub ) + " [Hz]" );
 	  P[n].setYLabelPos( -0.55, Plot::FirstAxis, 0.5, Plot::Graph, 
 			     Plot::Center, -90.0 );
 	  P[n].setYRange( 0.0, ratemax );
@@ -549,21 +552,25 @@ void Chirps::initMultiPlot( double ampl )
 	else if ( sub == 0 ) {
 	  P[n].setOrigin( xo+col*dx, yo+row*dy );
 	  P[n].setSize( dx, dys*dy );
-	  P[n].setTMarg( xmarg/3.0 );
+	  P[n].setBMarg( 3.0*xmarg );
 	  P[n].setYRange( 0.5*ampl, 1.5*ampl );
 	}
 	else {
 	  P[n].setOrigin( xo+col*dx, yo+row*dy+dys*(nsub-sub)*dy );
 	  P[n].setSize( dx, dys*dy );
-	  P[n].setBMarg( xmarg/3.0 );
+	  if ( sub == nsub-1 )
+	    P[n].setTMarg( 3.0*xmarg );
 	  P[n].setYRange( 0.0, ratemax );
 	}
+	if ( n > nsub )
+	  P.setCommonYRange( n%nsub, n );
 	n++;
       }
     }
   }
+  P.setCommonXRange();
   P.unlock();
-  //  P.draw();
+  P.draw();
 }
 
 
@@ -578,11 +585,11 @@ int Chirps::main( void )
   DeltaF = number( "deltaf" );
   Contrast = number( "contrast" );
   ChirpSize = number( "chirpsize" );
-  ChirpWide = number( "chirpwidth" );
+  ChirpWidth = number( "chirpwidth" );
   ChirpDip = number( "chirpampl" );
   BeatPos = integer( "beatpos" );
   BeatStart = number( "beatstart" );
-  RateDeltaT = number( "ratedt" );
+  Sigma = number( "sigma" );
   AM = boolean( "am" );
   SineWave = boolean( "sinewave" );
   Playback = boolean( "playback" );
@@ -642,11 +649,8 @@ int Chirps::main( void )
     if ( SpikeEvents[k] >= 0 ) {
       Spikes[k].clear();
       SpikeRate[k].resize( BeatPos );
-      for ( unsigned int i=0; i<SpikeRate[k].size(); i++ ) {
-	SpikeRate[k][i].resize( 2 );
-	SpikeRate[k][i][0].Rate = new SampleDataD( -SaveWindow, SaveWindow, RateDeltaT );
-	SpikeRate[k][i][1].Rate = new SampleDataD( -SaveWindow, SaveWindow, RateDeltaT );
-      }
+      for ( unsigned int i=0; i<SpikeRate[k].size(); i++ )
+	SpikeRate[k][i].resize( 2, RateData( SaveWindow, 0.25*Sigma ) );
       MaxRate[k] = 20.0;
     }
   }
@@ -680,8 +684,6 @@ int Chirps::main( void )
   for ( Count=0;
 	( Repeats <= 0 || Count < Repeats ) && softStop() == 0; 
 	Count++ ) {
-
-    cerr << "LOOP " << Count << "\n";
 
     // stimulus intensity:
     Intensity = Contrast * FishAmplitude * IntensityGain;
@@ -990,7 +992,7 @@ void Chirps::saveChirpSpikes( int trace )
     df << "#    beat bin: " << Response[j].BeatBin << '\n';
     if ( Response[j].Spikes[trace].size() > 0 ) {
       for ( int i=0; i<Response[j].Spikes[trace].size(); i++ ) {
-	SpikesKey.save( df, Response[j].Spikes[trace][i], 0 );
+	SpikesKey.save( df, 1000.0*Response[j].Spikes[trace][i], 0 );
 	df << '\n';
       }
     }
@@ -1117,9 +1119,9 @@ void Chirps::saveChirpRate( int trace )
       // write key:
       key.saveKey( df, true, false );
       // write data:
-      for ( int j=0; j<SpikeRate[trace][n][m].Rate->size(); j++ ) {
-	key.save( df, 1000.0*SpikeRate[trace][n][m].Rate->pos( j ), 0 );
-	key.save( df, (*SpikeRate[trace][n][m].Rate)[j] );
+      for ( int j=0; j<SpikeRate[trace][n][m].Rate.size(); j++ ) {
+	key.save( df, 1000.0*SpikeRate[trace][n][m].Rate.pos( j ), 0 );
+	key.save( df, SpikeRate[trace][n][m].Rate[j] );
 	df << '\n';
       }
       df << '\n';
@@ -1201,25 +1203,34 @@ void Chirps::plot( void )
       for ( int k=0; k<MaxSpikeTraces; k++ ) {
 	if ( SpikeEvents[k] >= 0 ) {
 	  P[n].clear();
-	  P[n].setYRange( 0.0, MaxRate[k] );
+	  if ( ! P[n].zoomedYRange() )
+	    P[n].setYRange( 0.0, MaxRate[k] );
 	  P[n].plotVLine( 0.0, Plot::White, 1 );
 	  double delta = Repeats > 0 && Repeats < maxspikes ? 1.0/Repeats : 1.0/maxspikes;
-	  int offs = (int)Response.size() > maxspikes ? Response.size() - maxspikes : 0;
+	  int nsp=0;
+	  for ( unsigned int j = 0; j < Response.size(); j++ ) {
+	    if ( Response[j].BeatBin == beatbin )
+	      nsp++;
+	  }
+	  int offs = nsp > maxspikes ? nsp - maxspikes : 0;
 	  int ns = 0;
-	  for ( unsigned int j = offs; j < Response.size(); j++ )
+	  for ( unsigned int j = 0; j < Response.size(); j++ ) {
 	    if ( Response[j].BeatBin == beatbin ) {
 	      ns++;
-	      int color = Plot::Red;
-	      if ( Response[j].Mode == 1 )
-		color = Plot::Magenta;
-	      P[n].plot( Response[j].Spikes[k], 1.0,
-			 1.0 - delta*(ns-0.1), Plot::Graph, 2, Plot::StrokeUp,
-			 delta*0.8, Plot::Graph, color, color );
+	      if ( ns > offs ) {
+		int color = Plot::Red;
+		if ( Response[j].Mode == 1 )
+		  color = Plot::Magenta;
+		P[n].plot( Response[j].Spikes[k], 1000.0,
+			   1.0 - delta*(ns-offs-0.1), Plot::Graph, 2, Plot::StrokeUp,
+			   delta*0.8, Plot::Graph, color, color );
+	      }
 	    }
+	  }
 	  if ( Playback )
-	    P[n].plot( *SpikeRate[k][beatbin][1].Rate,
+	    P[n].plot( SpikeRate[k][beatbin][1].Rate,
 		       1000.0, Plot::Orange, 2, Plot::Solid );
-	  P[n].plot( *SpikeRate[k][beatbin][0].Rate,
+	  P[n].plot( SpikeRate[k][beatbin][0].Rate,
 		     1000.0, Plot::Yellow, 2, Plot::Solid );
 	  n++;
 	}
@@ -1250,6 +1261,9 @@ void Chirps::analyze( void )
 {
   const EventData &eod1 = EODEvents >= 0 ? events(EODEvents) : events(LocalEODEvents[0]);
   const EventData &eod2 = events(LocalEODEvents[0]);
+
+  GaussKernel kernel;
+  kernel.setStdev( Sigma );
 
   // EOD trace:
   EOD2Unit = trace(LocalEODTrace[0]).unit();
@@ -1344,8 +1358,8 @@ void Chirps::analyze( void )
   for ( int k=0; k<ChirpTimes.size(); k++ ) {
 
     // mean rate at chirp:
-    double eodrate = eod1.frequency( eod1.signalTime() + ChirpTimes[k] - 3.0*ChirpWide,
-				     eod1.signalTime() + ChirpTimes[k] + 3.0*ChirpWide );
+    double eodrate = eod1.frequency( eod1.signalTime() + ChirpTimes[k] - 3.0*ChirpWidth,
+				     eod1.signalTime() + ChirpTimes[k] + 3.0*ChirpWidth );
 
     double beatpeak;
     double beattrough;
@@ -1365,7 +1379,7 @@ void Chirps::analyze( void )
       double cdeltaf = AM ? DeltaF : sigfreq - eodrate;
 
       // beat amplitudes before chirp:
-      double t = eod2.signalTime() + ChirpTimes[k] - 1.0 * ChirpWide;
+      double t = eod2.signalTime() + ChirpTimes[k] - 1.0 * ChirpWidth;
       int bpe = events(LocalBeatPeakEvents[0]).previous( t );
       int bpee = eod2.next( events(LocalBeatPeakEvents[0])[bpe] );
       beatpeak = eod2.eventSize( bpee );
@@ -1383,7 +1397,7 @@ void Chirps::analyze( void )
       else {
 	const EventData &sige = events(GlobalEFieldEvents);
 	double siginterv = 1.0 / sigfreq;
-	int sigi = sige.next( sige.signalTime() + ChirpTimes[k] - 2.0*ChirpWide );
+	int sigi = sige.next( sige.signalTime() + ChirpTimes[k] - 2.0*ChirpWidth );
 	double sigtime = 0.0;
 	int maxn = 8;
 	for ( int n=0; n < maxn && sigi-n < sige.size(); n++ )
@@ -1414,11 +1428,11 @@ void Chirps::analyze( void )
 	beatbin = BeatPos-1;
 
       // beat amplitude right before chirp:
-      beatbefore = eod2.meanSize( eod2.signalTime() + ChirpTimes[k] - ChirpWide,
-				  eod2.signalTime() + ChirpTimes[k] - ChirpWide + 4.0 * meaninterv );
+      beatbefore = eod2.meanSize( eod2.signalTime() + ChirpTimes[k] - ChirpWidth,
+				  eod2.signalTime() + ChirpTimes[k] - ChirpWidth + 4.0 * meaninterv );
       // beat amplitude right after chirp:
-      beatafter = eod2.meanSize( eod2.signalTime() + ChirpTimes[k] + ChirpWide - 4.0 * meaninterv,
-				 eod2.signalTime() + ChirpTimes[k] + ChirpWide );
+      beatafter = eod2.meanSize( eod2.signalTime() + ChirpTimes[k] + ChirpWidth - 4.0 * meaninterv,
+				 eod2.signalTime() + ChirpTimes[k] + ChirpWidth );
 
     }
     else {
@@ -1434,7 +1448,7 @@ void Chirps::analyze( void )
 
     // store results:
     ChirpData d( StimulusIndex, Mode, 2, ChirpTimes[k], ChirpSize,
-		 1000.0*ChirpWide, 100.0*ChirpDip, ChirpPhase,
+		 1000.0*ChirpWidth, 100.0*ChirpDip, ChirpPhase,
 		 eodrate, beatfreq, beatphase, beatloc, beatbin,
 		 beatbefore, beatafter, beatpeak, beattrough );
     Response.push_back( d );
@@ -1467,14 +1481,14 @@ void Chirps::analyze( void )
 				     chirptime, spikes );
 	rd.Spikes[j].reserve( spikes.size() );
 	for ( int i=0; i<spikes.size(); i++ )
-	  rd.Spikes[j].push( 1000.0*spikes[i] );
+	  rd.Spikes[j].push( spikes[i] );
 	
 	// spike rate:
-	events(SpikeEvents[j]).addRate( *SpikeRate[j][beatbin][Mode].Rate,
+	events(SpikeEvents[j]).addRate( SpikeRate[j][beatbin][Mode].Rate,
 					SpikeRate[j][beatbin][Mode].Trials,
-					chirptime );
+					kernel, chirptime );
 	
-	double maxr = max( *SpikeRate[j][beatbin][Mode].Rate );
+	double maxr = max( SpikeRate[j][beatbin][Mode].Rate );
 	if ( maxr+100.0 > MaxRate[j] ) {
 	  MaxRate[j] = ::ceil((maxr+100.0)/20.0)*20.0;
 	}

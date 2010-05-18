@@ -57,7 +57,7 @@ void SimpleModel::main( void )
   }
   else if ( model == 2 ) {
     while ( ! interrupt() ) {
-      push( 0, gain*signalInterpolated( time( 0 ) ) );
+      push( 0, gain*signal( time( 0 ) ) );
     }
   }
   else {

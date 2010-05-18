@@ -22,7 +22,7 @@
 #ifndef _RELACS_MODEL_H_
 #define _RELACS_MODEL_H_ 1
 
-#include <vector>
+#include <deque>
 #include <string>
 #include <qpopupmenu.h>
 #include <qmutex.h>
@@ -88,12 +88,10 @@ public:
         assuming that main() first reads out the Options. */
   virtual void notify( void );
 
-    /*! Returns the signal at time \a t. 
+    /*! Returns the signal of output trace \a trace at time \a t. 
         Specifically, this function returns the data value 
 	of the current signal at or right before time \a t. */
-  double signal( double t ) const;
-    /*! Returns the linearly interpolated signal at time \a t. */
-  double signalInterpolated( double t ) const;
+  double signal( double t, int trace=-1 ) const;
 
     /*! Returns \c true if the simulation thread should be stopped.
         Use this from within main()
@@ -218,7 +216,7 @@ private:
     float Scale;
     CyclicArrayF Buffer;
   };
-  vector< InTrace > Data;
+  deque< InTrace > Data;
 
   struct OutTrace {
     OutTrace( void ) : Onset( 0.0 ), Offset( 0.0 ), LastSignal( 0.0 ) {};
@@ -230,8 +228,7 @@ private:
     OutData Buffer;
     mutable double LastSignal;
   };
-  vector< OutTrace > Signals;
-  double SignalEnd;
+  deque< OutTrace > Signals;
   QMutex SignalMutex;
 
   bool InterruptModel;

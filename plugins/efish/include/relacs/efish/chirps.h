@@ -129,11 +129,11 @@ private:
   double FirstSpace;
   double Pause;
   double ChirpSize;
-  double ChirpWide;
+  double ChirpWidth;
   double ChirpDip;
   int BeatPos;
   double BeatStart;
-  double RateDeltaT;
+  double Sigma;
   double DeltaF;
   double Contrast;
   int Repeats;
@@ -207,9 +207,9 @@ private:
   struct RateData
   {
     RateData( void ) : Trials( 0 ), Rate( 0 ) {};
-    ~RateData( void ) { if ( Rate != 0 ) delete Rate; };
+    RateData( double width, double dt ) : Trials( 0 ), Rate( -width, width, dt ) {};
     int Trials;
-    SampleDataD *Rate;
+    SampleDataD Rate;
   };
 
   EventData Spikes[MaxSpikeTraces];

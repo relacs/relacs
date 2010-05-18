@@ -162,23 +162,35 @@ void Model::notify( void )
 }
 
 
-double Model::signal( double t ) const 
+double Model::signal( double t, int trace ) const 
 {
-  if ( ! Signals.empty() && Signals[0].Onset <= t && Signals[0].Offset >= t ) {
-    t -= Signals[0].Onset;
-    Signals[0].LastSignal = Signals[0].Buffer[ t ];
-  }
-  return Signals[0].LastSignal;
-}
+  if ( Signals.empty() )
+    return 0.0;
 
-
-double Model::signalInterpolated( double t ) const 
-{
-  if ( ! Signals.empty() && Signals[0].Onset <= t && Signals[0].Offset >= t ) {
-    t -= Signals[0].Onset;
-    Signals[0].LastSignal = Signals[0].Buffer[ t ];
+  int inx = -1;
+  for ( unsigned int k=0; k<Signals.size(); k++ ) {
+    if ( Signals[k].Buffer.trace() == trace ) {
+      inx = k;
+      break;
+    }
   }
-  return Signals[0].LastSignal;
+  if ( inx < 0 ) {
+    if ( trace < 0 )
+      inx = 0;
+    else
+      return 0.0;
+  }
+
+  if ( Signals[inx].Onset <= t && Signals[inx].Offset >= t ) {
+    t -= Signals[inx].Onset;
+    int tinx = Signals[inx].Buffer.index( t );
+    if ( tinx < 0 )
+      tinx = 0;
+    else if ( tinx >= Signals[inx].Buffer.size() )
+      tinx = Signals[inx].Buffer.size()-1;
+    Signals[inx].LastSignal = Signals[inx].Buffer[tinx];
+  }
+  return Signals[inx].LastSignal;
 }
 
 
@@ -200,9 +212,7 @@ void Model::start( void )
   MaxPush = deltat( 0 ) > 0.0 ? (int)::ceil( 0.01 / deltat( 0 ) ) : 100;
   MaxPushTime = MaxPush * deltat( 0 );
   PushCount = 0;
-  Signals.reserve( 10 );
   Signals.clear();
-  SignalEnd = -1.0;
   SignalMutex.lock();
   SimTime.start();
   QThread::start( QThread::HighestPriority );
@@ -250,16 +260,21 @@ double Model::add( OutData &signal )
 
   SignalMutex.lock();
 
-  // device still busy?
-  if ( SignalEnd > ct && ! signal.priority() ) {
-    signal.setError( signal.Busy );
-    SignalMutex.unlock();
-    return -1.0;
+  // find signal on same trace:
+  for ( unsigned int k=0; k<Signals.size(); k++ ) {
+    if ( Signals[k].Buffer.trace() == signal.trace() ) {
+      // trace still busy?
+      if ( Signals[k].Offset > ct && ! signal.priority() ) {
+	signal.setError( signal.Busy );
+	SignalMutex.unlock();
+	return -1.0;
+      }
+      Signals.erase( Signals.begin()+k );
+      break;
+    }
   }
 
   // add signal:
-  SignalEnd = -1.0;
-  Signals.clear();
   Signals.push_back( OutTrace() );
   process( signal, Signals.back().Buffer );
 
@@ -270,7 +285,6 @@ double Model::add( OutData &signal )
     ct = bt;
   Signals.back().Onset = ct + Signals.back().Buffer.delay();
   Signals.back().Offset = ct + Signals.back().Buffer.totalDuration();
-  SignalEnd = ct + Signals.back().Buffer.totalDuration();
   SignalMutex.unlock();
   return Signals.back().Onset;
 }
@@ -286,10 +300,15 @@ void Model::stopSignal( void )
     SignalMutex.unlock();
     return;
   }
-  if ( Signals.back().Onset >= ct )
-    Signals.clear();
-  else if ( Signals.back().Offset > ct )
-    Signals.back().Offset = ct;
+  for ( deque< OutTrace >::iterator sp = Signals.begin(); sp != Signals.end(); ) {
+    if ( sp->Onset >= ct ) {
+      sp = Signals.erase( sp );
+      continue;
+    }
+    else if ( sp->Offset > ct )
+      sp->Offset = ct;
+    ++sp;
+  }
   SignalMutex.unlock();
 }
 
@@ -297,7 +316,6 @@ void Model::stopSignal( void )
 void Model::clearSignals( void )
 {
   SignalMutex.lock();
-  SignalEnd = -1.0;
   Signals.clear();
   SignalMutex.unlock();
 }

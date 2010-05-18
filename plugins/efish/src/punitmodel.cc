@@ -39,6 +39,7 @@ PUnitModel::PUnitModel( void )
   EODAmpl1 = 1.0;
   EODAmpl2 = 1.0;
   EODFreqTau = 1000.0;
+  SignalFac = 1.0;
   // Spikes:
   VoltageScale = 1.0;
 
@@ -50,6 +51,7 @@ PUnitModel::PUnitModel( void )
   addNumber( "eodfreqtau", "Timescale of frequency", EODFreqTau, 0.5, 100000.0, 0.5, "s" );
   addNumber( "eodampl1", "Amplitude 1", EODAmpl1, 0.0, 100.0, 0.1, "mV/cm" );
   addNumber( "eodampl2", "Amplitude 2", EODAmpl2, 0.0, 100.0, 0.1, "mV/cm" );
+  addNumber( "sigfac", "Factor for signal", SignalFac, 0.0, 100000.0, 0.1 );
   addLabel( "Spikes" );
   addNumber( "voltagescale", "Scale factor for membrane potential", VoltageScale, 0.0, 100.0, 0.1 );
 
@@ -74,6 +76,7 @@ void PUnitModel::main( void )
   EODFreqTau = 1000.0*number( "eodfreqtau" );
   EODAmpl1 = number( "eodampl1" );
   EODAmpl2 = number( "eodampl2" ) / EODAmpl1;
+  SignalFac = number( "sigfac" );
   VoltageScale = number( "voltagescale" );
 
   int sigdimension = 2;
@@ -131,7 +134,7 @@ void PUnitModel::process( const OutData &source, OutData &dest )
 {
   dest = source;
   double intensfac = 0.0;
-  if ( source.level() != MuteAttenuationLevel ) {
+  if ( source.level() != OutData::NoLevel ) {
     intensfac = ( ::pow( 10.0, -source.level()/20.0 ) );
     if ( source.trace() == GlobalAMEField )
       intensfac /= 0.3;
@@ -150,11 +153,14 @@ void PUnitModel::operator()( double t, double *x, double *dxdt, int n )
   dxdt[0] = ( -x[0] + EODFreqFac*rand.gaussian() ) / EODFreqTau;
   // phase of EOD frequency:
   dxdt[1] = EODFreq + EODFreqSD * x[0];
-  Signal = signal( 0.001 * t );
   EOD1 = EODAmpl1 * ::sin( x[1] );
   EOD2 = EODAmpl2 * EOD1;
-  EOD2 += EOD2*Signal;
-  double s = EOD2*neuron()->gain() + neuron()->offset() + noiseSD() * rand.gaussian();
+  double sglobal = signal( 0.001 * t, GlobalEField );
+  double sglobalam = signal( 0.001 * t, GlobalAMEField ) * EOD2;
+  Signal = sglobal + sglobalam;
+  EOD2 += Signal;
+  Signal *= SignalFac;
+  double s = EOD2 * neuron()->gain() + neuron()->offset() + noiseSD() * rand.gaussian();
   (*neuron())( t, s, x+2, dxdt+2, n-2 );
 }
 

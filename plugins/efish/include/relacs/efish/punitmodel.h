@@ -59,6 +59,7 @@ public:
   double EODFreqFac;
   double EODAmpl1;
   double EODAmpl2;
+  double SignalFac;
   double VoltageScale;
 
   double Signal;
