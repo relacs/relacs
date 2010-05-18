@@ -16,6 +16,7 @@ noinst_PROGRAMS = \
     xcontainerfuncs \
     xcyclicarray \
     xkernel \
+    xinterpolation \
     xounoise \
     xrand \
     xsampledata \
@@ -83,6 +84,9 @@ xcyclicarray_SOURCES = xcyclicarray.cc
 
 xkernel_LDADD = ../src/librelacsnumerics.la
 xkernel_SOURCES = xkernel.cc
+
+xinterpolation_LDADD = ../src/librelacsnumerics.la
+xinterpolation_SOURCES = xinterpolation.cc
 
 xounoise_LDADD = ../src/librelacsnumerics.la
 xounoise_SOURCES = xounoise.cc

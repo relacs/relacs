@@ -205,6 +205,9 @@ class SampleData : public Array< T >
     /*! Set the size(), capacity(), range(), and content of the array to \a sa. */
   const SampleData< T > &assign( const SampleData< T > &sa );
 
+    /*! Assign the content of the array \a sa resampled over the range of this. */
+  template < typename R >
+  const SampleData< T > &interpolate( const SampleData< R > &sa );
     /*! Assign the array \a sa resampled with stepsize \a stepsize 
         and linearly interpolated. */
   template < typename R >
@@ -219,6 +222,14 @@ class SampleData : public Array< T >
         and linearly interpolated. */
   template < typename R >
   const SampleData< T > &interpolate( const SampleData< R > &sa, 
+				      const LinearRange &range );
+    /*! Assign the content of the map \a ma resampled over the range of this. */
+  template < typename R >
+  const SampleData< T > &interpolate( const Map< R > &ma );
+    /*! Assign the map \a ma resampled over the \a range 
+        and linearly interpolated. */
+  template < typename R >
+  const SampleData< T > &interpolate( const Map< R > &ma, 
 				      const LinearRange &range );
 
     /*! Resize the array to \a n data elements sampled 
@@ -1736,6 +1747,15 @@ const SampleData< T > &SampleData< T >::assign( const SampleData< T > &sa )
 
 
 template < typename T > template < typename R >
+const SampleData< T > &SampleData< T >::interpolate( const SampleData< R > &sa )
+{
+  for ( int k=0; k<size(); k++ )
+    operator[]( k ) = static_cast< T >( sa.interpolate( pos( k ) ) );
+  return *this;
+}
+
+
+template < typename T > template < typename R >
 const SampleData< T > &SampleData< T >::interpolate( const SampleData< R > &sa, 
 						     double offset, 
 						     double stepsize )
@@ -1756,6 +1776,62 @@ const SampleData< T > &SampleData< T >::interpolate( const SampleData< R > &sa,
   resize( range );
   for ( int k=0; k<size(); k++ )
     operator[]( k ) = static_cast< T >( sa.interpolate( pos( k ) ) );
+  return *this;
+}
+
+
+template < typename T > template < typename R >
+const SampleData< T > &SampleData< T >::interpolate( const Map< R > &ma )
+{
+
+  if ( ma.empty() ) {
+    *this = 0;
+    return *this;
+  }
+
+  int j = 0;
+  for ( int k=0; k<size(); k++ ) {
+    double x = pos( k );
+    while ( j<ma.size() && ma.x( j ) < x )
+      j++;
+    if ( j == 0 )
+      operator[]( k ) = static_cast< T >( ma.y().front() );
+    else if ( j >= ma.size() )
+      operator[]( k ) = static_cast< T >( ma.y().back() );
+    else {
+      R slope = ( ma.y( j ) - ma.y( j-1 ) ) / ( ma.x( j ) - ma.x( j-1 ) );
+      operator[]( k ) = static_cast< T >( ma.y( j ) + slope * ( x - ma.x( j ) ) );
+    }
+  }
+  return *this;
+}
+
+
+template < typename T > template < typename R >
+const SampleData< T > &SampleData< T >::interpolate( const Map< R > &ma,
+						     const LinearRange &range )
+{
+  resize( range );
+
+  if ( ma.empty() ) {
+    *this = 0;
+    return *this;
+  }
+
+  int j = 0;
+  for ( int k=0; k<size(); k++ ) {
+    double x = pos( k );
+    while ( j<ma.size() && ma.x( j ) < x )
+      j++;
+    if ( j == 0 )
+      operator[]( k ) = static_cast< T >( ma.y().front() );
+    else if ( j >= ma.size() )
+      operator[]( k ) = static_cast< T >( ma.y().back() );
+    else {
+      R slope = ( ma.y( j ) - ma.y( j-1 ) ) / ( ma.x( j ) - ma.x( j-1 ) );
+      operator[]( k ) = static_cast< T >( ma.y( j ) + slope * ( x - ma.x( j ) ) );
+    }
+  }
   return *this;
 }
 

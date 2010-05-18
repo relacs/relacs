@@ -72,6 +72,8 @@ class Map : public Array < T >
     /*! Creates a map with the same size and content
         as the Array \a x and \a y. */
   Map( const Array< T > &x, const Array< T > &y );
+    /*! Creates a map with the same size and content as \a sa. */
+  Map( const SampleData< T > &sa );
     /*! Copy constructor. */
   Map( const Map< T > &a );
     /*! The destructor. */
@@ -88,6 +90,8 @@ class Map : public Array < T >
         and set the content of the y-data array to \a y.
         \note Some values of the x-data array might be undefined! */
   const Map<T> &operator=( const Array<T> &y );
+    /*! Assign \a sa to \a this. */
+  const Map<T> &operator=( const SampleData<T> &sa );
     /*! Set the size(), capacity(), and content 
         of the map to \a a. */
   const Map<T> &operator=( const Map<T> &a );
@@ -114,6 +118,8 @@ class Map : public Array < T >
   const Map<T> &assign( const Array<T> &y, const T &xval=0 );
     /*! Set the size(), capacity(), and content of the map to \a x and \a y. */
   const Map<T> &assign( const Array<T> &x, const Array<T> &y );
+    /*! Set the size(), capacity(), and content of the map to \a sa. */
+  const Map<T> &assign( const SampleData<T> &sa );
     /*! Set the size(), capacity(), and content of the map to \a a. */
   const Map<T> &assign( const Map<T> &a );
 
@@ -335,6 +341,12 @@ class Map : public Array < T >
     /*! Set the value of each y-data element to the value of the corresponding
         x-data element. */
   Map<T> &identity( void );
+
+    /*! Return a linearly interpolated value for position \a x.
+        If \a x is outside the range the value of the first 
+        or last data element is returned.
+	Assumes the x() array to be sorted ascendingly. */
+  T interpolate( double x ) const;
 
     /*! The minimum value of the elements of the x-data array between indices
         \a first (inclusively) and \a last (exclusively). 
@@ -610,6 +622,16 @@ Map<T>::Map( const Array< T > &x, const Array< T > &y )
 
 
 template < typename T > 
+Map<T>::Map( const SampleData< T > &sa )
+: Array< T >( sa.array() ),
+  XData( sa.range() )
+{
+  A[0] = &XData;
+  A[1] = this;
+}
+
+
+template < typename T > 
 Map<T>::Map( const Map< T > &a )
   : Array< T >( a.y() ),
     XData( a.x() )
@@ -636,6 +658,13 @@ template < typename T >
 const Map<T> &Map<T>::operator=( const Array<T> &y )
 {
   return assign( y );
+}
+
+
+template < typename T > 
+const Map<T> &Map<T>::operator=( const SampleData<T> &sa )
+{
+  return assign( sa );
 }
 
 
@@ -701,6 +730,16 @@ const Map<T> &Map<T>::assign( const Array<T> &x, const Array<T> &y )
 {
   XData.assign( x );
   Array< T >::assign( y );
+
+  return *this;
+}
+
+
+template < typename T > 
+const Map<T> &Map<T>::assign( const SampleData<T> &sa )
+{
+  XData.assign( sa.range() );
+  Array< T >::assign( sa.array() );
 
   return *this;
 }
@@ -997,6 +1036,33 @@ Map<T> &Map<T>::identity( void )
   for ( int k=0; k<size(); k++ )
     y(k) = x(k);
   return *this;
+}
+
+
+template < typename T > 
+T Map< T >::interpolate( double xv ) const
+{
+  if ( empty() )
+    return 0;
+
+  int l = 0;
+  int r = size()-1;
+  if ( xv <= x( l ) )
+    return y( l );
+  else if ( xv >= x( r ) )
+    return y( r );
+  else {
+    // bisect:
+    while ( r-l > 1 ) {
+      int h = (l+r)/2;
+      if ( x( h ) < xv )
+	l = h;
+      else
+	r = h;
+    }
+    T slope = ( y( l+1 ) - y( l ) ) / ( x( l+1 ) - x( l ) );
+    return y( l ) + slope * ( xv - x( l ) );
+  }
 }
 
 

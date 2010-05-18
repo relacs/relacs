@@ -37,6 +37,7 @@
 #endif
 #include <relacs/containerops.h>
 #include <relacs/stats.h>
+#include <relacs/linearrange.h>
 #include <relacs/random.h>
 
 using namespace std;
@@ -115,12 +116,16 @@ class Array
         Creates an array with the same size and content
         as the array \a a. */
   Array( const Array< T > &a );
+    /*! Creates an array from \a range. */
+  Array( const LinearRange &range );
     /*! The destructor. */
   virtual ~Array( void );
 
     /*! Set the size(), capacity(), and content of the array to \a a. */
   template < typename S >
   const Array<T> &operator=( const S &a );
+    /*! Assign \a range to \a this. */
+  const Array<T> &operator=( const LinearRange &range );
     /*! Set the size(), capacity(), and content of the array to \a a. */
   const Array<T> &operator=( const Array<T> &a );
 
@@ -136,6 +141,8 @@ class Array
   const Array<T> &assign( const S &a );
     /*! Set the size(), capacity(), and content of the array to \a a. */
   const Array<T> &assign( const Array<T> &a );
+    /*! Assign \a range to \a this. */
+  const Array<T> &assign( const LinearRange &range );
 
     /*! Initialize the array with \a n zeros.
         \sa resize() */
@@ -874,6 +881,18 @@ Array<T>::Array( const Array< T > &a )
 
 
 template < typename T > 
+Array<T>::Array( const LinearRange &range )
+  : Buffer( 0 ),
+    NBuffer( 0 ),
+    NSize( 0 ),
+    MaxBuffer( INT_MAX/sizeof( T ) ),
+    Dummy( 0 )
+{
+  assign( range );
+}
+
+
+template < typename T > 
 Array<T>::~Array<T>( void )
 {
   if ( Buffer != 0 )
@@ -892,6 +911,13 @@ template < typename T >
 const Array<T> &Array<T>::operator=( const Array<T> &a )
 {
   return assign( a );
+}
+
+
+template < typename T >
+const Array<T> &Array<T>::operator=( const LinearRange &range )
+{
+  return assign( range );
 }
 
 
@@ -1001,6 +1027,32 @@ const Array<T> &Array<T>::assign( const Array<T> &a )
     NSize = n;
     if( NSize > 0 )
       memcpy( Buffer, a.data(), NSize * sizeof( T ) );
+  }
+
+  return *this;
+}
+
+
+template < typename T >
+const Array<T> &Array<T>::assign( const LinearRange &range )
+{
+  if ( Buffer != 0 )
+    delete [] Buffer;
+  Buffer = 0;
+  NBuffer = 0;
+  NSize = 0;
+
+  if ( range.size() > 0 ) {
+    int n = range.size();
+    if ( n > MaxBuffer )
+      n = MaxBuffer;
+    Buffer = new T[ n ];
+    if ( Buffer == 0 )
+      n = 0;
+    NBuffer = n;
+    NSize = n;
+    for ( int k=0; k<n; k++ )
+      Buffer[k] = static_cast< T >( range[k] );
   }
 
   return *this;
