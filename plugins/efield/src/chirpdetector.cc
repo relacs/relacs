@@ -145,13 +145,32 @@ int ChirpDetector::checkEvent( const EventFrequencyIterator &first,
   EventFrequencyIterator orgevent = event;
   EventIterator orgtime = eventtime;
 
+  // meanrate after chirp:
+  double ameanrate = 0.0;
+  EventFrequencyIterator cindex = event + ChirpCycles;
+  for ( int j=0; j<AverageCycles; j++ ) {
+    if ( cindex >= last )
+      return -1;
+    ameanrate += ( *cindex - ameanrate )/(j+1);
+    ++cindex;
+  }
+
   // meanrate before chirp:
   double meanrate = 0.0;
-  EventFrequencyIterator cindex = event - ChirpCycles;
+  cindex = event - ChirpCycles;
   for ( int j=0; j<AverageCycles && !cindex; j++ ) {
     meanrate += ( *cindex - meanrate )/(j+1);
     --cindex;
   }
+
+  // eod detector was down:
+  if ( ameanrate < 0.3*meanrate || meanrate < 0.3*ameanrate )
+    return 0;
+  for ( cindex = event - ChirpCycles; cindex != event + ChirpCycles && !cindex; ++cindex ) {
+    if ( *cindex < 0.3*meanrate )
+      return 0;
+  }
+
 
   // find end of chirp (ChirpCycles data points within +- 1/2 threshold in a row):
   EventFrequencyIterator findex;
@@ -173,7 +192,7 @@ int ChirpDetector::checkEvent( const EventFrequencyIterator &first,
   }
 
   // end of chirp not contained in data:
-  if ( !(!findex) || *findex > rate + 0.5*threshold )
+  if ( findex >= last || *findex > rate + 0.5*threshold )
     return -1;
 
   // size of chirp:

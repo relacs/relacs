@@ -311,7 +311,7 @@ public:
 	The width of the bins is given by \a width seconds.
         If \a width is less or equal to zero it is set to
 	the stepsize of \a rate. */
-  void rate( SampleDataD &rate, SampleDataD &rate,
+  void rate( SampleDataD &rate, SampleDataD &ratesd,
 	     double width=0.0, double time=0.0 ) const;
     /*! The time course of the mean event rate
         between rate.rangeFront() and rate.rangeBack() seconds
