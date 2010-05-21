@@ -534,6 +534,32 @@ void EventList::rate( SampleDataD &rate, double width, double time ) const
 }
 
 
+void EventList::rate( SampleDataD &rate, SampleDataD &ratesd,
+		      double width, double time ) const
+{
+  rate = 0.0;
+  ratesd = 0.0;
+
+  vector< ArrayD > rates( rate.size(), ArrayD() );
+  for ( unsigned int k=0; k<rates.size(); k++ )
+    rates[k].reserve( size() );
+
+  for ( const_iterator i = begin(); i != end(); ++i ) {
+    SampleDataD s( rate.range() );
+    (*i)->rate( s, width, time );
+    for ( int k=0; k<s.size(); k++ )
+      rates[k].push( s[k] );
+  }
+
+  for ( int k=0; k<rate.size(); k++ ) {
+    double sd = 0.0;
+    rate[k] = meanStdev( sd, rates[k] );
+    ratesd[k] = sd;
+  }
+
+}
+
+
 void EventList::addRate( SampleDataD &rate, int &trials, double width,
 			 double time ) const
 {
@@ -1708,7 +1734,7 @@ double EventList::latency( double time, double *sd ) const
 }
 
 
-void EventList::sum( EventData &all )
+void EventList::sum( EventData &all ) const
 {
   all.clear();
   if ( empty() )
@@ -1743,7 +1769,7 @@ void EventList::sum( EventData &all )
 }
 
 
-void EventList::sync( EventData &s, double bin, double p, bool keep )
+void EventList::sync( EventData &s, double bin, double p, bool keep ) const
 {
   s.clear();
   if ( empty() )

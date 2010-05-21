@@ -38,7 +38,9 @@ namespace efield {
 Detects each cycle of a periodic input waveform, like the EOD of a wave-type
 weakly electric fish.
 
-The detection threshold is automatically set to \a ratio times the maximum input range.
+The threshold defines the minimum distance between peaks and troughs that are detected.
+If \a adapt is set to \c true, then the threshold is set automatically to
+\a ratio times the two-fold size of the EOD amplitude.
 If the a previous peak of similar size is more than \a maxperiod away,
 then this peak is not regarded as an EOD cycle.
 
@@ -49,7 +51,9 @@ A single voltage trace of the periodic input waveform
 The times of the EOD peaks and their amplitude.
 
 \par Options
-- \c ratio=40%: Ratio (\c number)
+- \c threshold=0.1mV: Threshold (\c number)
+- \c adapt=false: Adapt threshold (\c boolean)
+- \c ratio=50%: Ratio (\c number)
 - \c maxperiod=10ms: Maximum EOD period (\c number)
 
 \version 1.3 (Jun 16, 2009)
@@ -95,6 +99,7 @@ protected:
   double MinThresh;
   double MaxThresh;
   double ThreshRatio;
+  bool AdaptThresh;
 
     /*! Maximum period of the EOD to detect in seconds. */
   double MaxEODPeriod;

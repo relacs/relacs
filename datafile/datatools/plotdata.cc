@@ -290,7 +290,7 @@ void writeUsage()
 {
   cerr << "\nusage:\n";
   cerr << '\n';
-  cerr << "plotpage [-a|-m] [-d ##] [-f ##] [-i ##] [-s] [-p ## [-p ## ...]] [-v] [-x]\n";
+  cerr << "plotdata [-a|-m] [-d ##] [-f ##] [-i ##] [-s] [-p ## [-p ## ...]] [-v] [-x]\n";
   cerr << "         [-t xxx] [-g axb] [-h header] datafile cmdfile plotfile\n";
   cerr << '\n';
   cerr << "Plot the data contained in <datafile>\n";

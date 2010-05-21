@@ -35,12 +35,14 @@ EODDetector::EODDetector( const string &ident, int mode )
   Threshold = 0.0001;
   MinThresh = 0.0;
   MaxThresh = 1000.0;
-  ThreshRatio = 0.4;
   MaxEODPeriod = 0.01;  // 100 Hz
+  ThreshRatio = 0.5;
+  AdaptThresh = false;
 
   // options:
   addNumber( "threshold", "Threshold", Threshold, MinThresh, MaxThresh, 0.01*MaxThresh, "", "", "%g", 2+8+32 );
-  addNumber( "ratio", "Ratio", ThreshRatio, 0.05, 1.0, 0.05, "", "%", "%g", 2+8 );
+  addBoolean( "adapt", "Adapt threshold", AdaptThresh, 2+8 );
+  addNumber( "ratio", "Ratio", ThreshRatio, 0.05, 1.0, 0.05, "", "%", "%g", 2+8 ).setActivation( "adapt", "true" );
   addNumber( "maxperiod", "Maximum EOD period", MaxEODPeriod, 0.0, 1.0, 0.0001, "s", "ms", "%g", 8 );
   addNumber( "rate", "Rate", 0.0, 0.0, 100000.0, 0.1, "Hz", "Hz", "%.1f", 2+4 );
   addNumber( "size", "Size", 0.0, 0.0, 100000.0, 0.1, "", "", "%.3f", 2+4 );
@@ -77,20 +79,9 @@ int EODDetector::init( const InData &data, EventData &outevents,
 void EODDetector::notify( void )
 {
   // no lock is needed, since the Options functions should already be locked!
-  Parameter &p = operator[]( "ratio" );
-  if ( p.changed() ) {
-    double oldratio = ThreshRatio;
-    ThreshRatio = number( "ratio" );
-    double th = ThreshRatio * Threshold / oldratio;
-    Threshold = floor( th / MinThresh ) * MinThresh;
-    setNumber( "threshold", Threshold );
-  }
-  else {
-    Parameter &p = operator[]( "threshold" );
-    if ( p.changed() ) {
-      Threshold = p.number();
-    }
-  }
+  Threshold = number( "threshold" );
+  AdaptThresh = boolean( "adapt" );
+  ThreshRatio = number( "ratio" );
   MaxEODPeriod = number( "maxperiod" );
   EDW.updateValues( OptWidget::changedFlag() );
 }
@@ -100,7 +91,7 @@ int EODDetector::adjust( const InData &data )
 {
   unsetNotify();
   MaxThresh = ceil10( data.maxValue(), 0.1 );
-  MinThresh = floor10( 0.05 * MaxThresh );
+  MinThresh = floor10( 0.01 * MaxThresh );
   setUnit( "threshold", data.unit() );
   setMinMax( "threshold", MinThresh, MaxThresh, MinThresh );
   setNumber( "threshold", Threshold );
@@ -121,6 +112,8 @@ int EODDetector::detect( const InData &data, EventData &outevents,
     outevents.updateMean( 1 );
 
   unsetNotify();
+  if ( AdaptThresh )
+    setNumber( "threshold", Threshold );
   setNumber( "rate", outevents.meanRate() );
   setNumber( "size", outevents.meanSize() );
   setNotify();
@@ -202,8 +195,8 @@ int EODDetector::checkEvent( const InData::const_iterator &first,
   width = 0.0;
 
   // threshold:
-  if ( prevevent >= first )
-    threshold = ThreshRatio * ( *event - *prevevent );
+  if ( AdaptThresh )
+    threshold = ThreshRatio * 2.0 * size;
 
   // accept:
   return 1; 

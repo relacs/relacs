@@ -34,7 +34,7 @@ namespace efish {
 Chirps::Chirps( void )
   : RePro( "Chirps", "Chirps", "efish",
 	   "Jan Benda", "1.8", "Apr 23, 2010" ),
-    P( this )
+    P( 1, this )
 {
   // parameter:
   ReadCycles = 100;
@@ -463,7 +463,6 @@ void Chirps::initMultiPlot( double ampl )
   int nsub = 1 + SpikeTraces + NerveTraces;
 
   P.lock();
-  P.clear();
   P.resize( nsub*BeatPos );
 
   const double xlabelmarg = 3.0;
@@ -628,8 +627,10 @@ int Chirps::main( void )
 				events(LocalEODEvents[0]).back() );
 
   // plot:
+  cerr << "INIT MULTIPLOT BEGIN\n";
   initMultiPlot( events(LocalEODEvents[0]).meanSize( events(LocalEODEvents[0]).back() - 0.5,
 						     events(LocalEODEvents[0]).back() ) );
+  cerr << "INIT MULTIPLOT END\n";
 
   // first stimulus:
   OutData signal;
@@ -684,6 +685,8 @@ int Chirps::main( void )
   for ( Count=0;
 	( Repeats <= 0 || Count < Repeats ) && softStop() == 0; 
 	Count++ ) {
+
+    cerr << "LOOP " << Count << '\n';
 
     // stimulus intensity:
     Intensity = Contrast * FishAmplitude * IntensityGain;

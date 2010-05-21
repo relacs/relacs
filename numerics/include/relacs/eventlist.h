@@ -304,6 +304,15 @@ public:
         If \a width is less or equal to zero it is set to
 	the stepsize of \a rate. */
   void rate( SampleDataD &rate, double width=0.0, double time=0.0 ) const;
+    /*! The time course of the mean event rate and its standard deviation
+        between rate.rangeFront() and rate.rangeBack() seconds
+	relative to time \a time seconds is returned in \a rate.
+	The rate is the average number of events per bin.
+	The width of the bins is given by \a width seconds.
+        If \a width is less or equal to zero it is set to
+	the stepsize of \a rate. */
+  void rate( SampleDataD &rate, SampleDataD &rate,
+	     double width=0.0, double time=0.0 ) const;
     /*! The time course of the mean event rate
         between rate.rangeFront() and rate.rangeBack() seconds
 	relative to time \a time seconds is added to \a rate.
@@ -720,7 +729,7 @@ public:
     /*! Merge (sum up) all event data into a single EventData \a all.
         \note Only event times are considered.
         Additional sizes and widths are ignored. */
-  void sum( EventData &all );
+  void sum( EventData &all ) const;
     /*! For each time bin of width \a bin 
         count the number of trials that contain at least one event.
         If the event count divided by the number of trials (size())
@@ -728,7 +737,7 @@ public:
         is added to \a s.
         If \a keep is set true, then the event times of the first trial
         are added to \a s instead of the time bins. */
-  void sync( EventData &s, double bin, double p=1.0, bool keep=false );
+  void sync( EventData &s, double bin, double p=1.0, bool keep=false ) const;
 
     /*! Generate \a trials of independent
         poisson spike trains each with rate \a rate Hertz
