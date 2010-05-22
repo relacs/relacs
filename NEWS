@@ -1,8 +1,12 @@
 Version 0.9.6
 
+May, 2010
+  Last release of the Qt3 based version.
+  Many new plugins for investigating electrosensory systems.
+
 February, 2010
   First successful application of the dynamic-clamp in a
-  real patch-clamp recording. Thank you Clemens!
+  real patch-clamp recording. Thank you, Clemens!
 
 July, 2009
   Introduced DigitalIO device interface and 

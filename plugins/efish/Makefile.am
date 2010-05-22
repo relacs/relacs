@@ -1,6 +1,12 @@
 SUBDIRS = src
 
-EXTRA_DIST = doc/efish.doc
+EXTRA_DIST = \
+    doc/efish.doc \
+    relacs.cfg \
+    relacsplugins.cfg \
+    macros.cfg \
+    macrosam.cfg \
+    macrosdc.cfg
 
 pkglibdir = $(libdir)/relacs
 pkgincludedir = $(includedir)/relacs

@@ -1,6 +1,10 @@
 SUBDIRS = src
 
-EXTRA_DIST = doc/efield.doc
+EXTRA_DIST = \
+    doc/efield.doc \
+    relacs.cfg \
+    relacsplugins.cfg \
+    macros.cfg
 
 pkglibdir = $(libdir)/relacs
 pkgincludedir = $(includedir)/relacs

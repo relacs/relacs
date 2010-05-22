@@ -1,6 +1,10 @@
 SUBDIRS = src
 
-EXTRA_DIST = doc/base.doc
+EXTRA_DIST = \
+    doc/base.doc \
+    relacs.cfg \
+    relacsplugins.cfg \
+    macros.cfg
 
 pkglibdir = $(libdir)/relacs
 pkgincludedir = $(includedir)/relacs

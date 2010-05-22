@@ -23,15 +23,44 @@
 #
 ###############################################################################
 
-FILE="$1"
 
-! [ -f "$FILE" ] && exit 1
+function rewritegpl
+{
+    FILE="$1"
+    if test -f "$FILE" && fgrep -q 'Copyright (C) 2002' "$FILE"; then
+	sed -e 's/2002-20[0-9][0-9] Jan Benda/2002-2010 Jan Benda/' "$FILE" > tmp.txt
+	mv tmp.txt "$FILE"
+    fi
+}
 
-#sed -e "1,20s/2002-2008 Jan Benda/2002-2009 Jan Benda/" "$FILE" > tmp.txt
-sed -e "1,20{s/2002-2008 Jan Benda/2002-2009 Jan Benda/; s/RealTime ELectrophysiological/Relaxed ELectrophysiological/}" "$FILE" > tmp.txt
+# help:
+if test "$1" = "--help"; then
+  echo "updategpl"
+  echo
+  echo "Run this script from the relacs base directory!"
+  echo "Note: enable the examples beforehand:"
+  echo "./configure --enable-examples"
+  echo "and adapt the sed line to the right year."
+  exit 0
+fi
 
-mv tmp.txt "$FILE"
+# .h
+for i in $(find -name '*.h'); do
+  rewritegpl $i
+done
 
-# for i in $(find -name '*.h'); do utils/updategpl $i; done
-# for i in $(find -name '*.cc'); do utils/updategpl $i; done
-# and scripts  in utils
+# .cc
+for i in $(find -name '*.cc'); do
+  rewritegpl $i
+done
+
+make distclean
+
+# scripts:
+# XXX need o keep permissions!!!
+for i in $(find -name '*' -type f | grep -v '^\..*\.' | egrep -v 'Makefile|Doxyfile|configure|compile|missing|depcomp|updategpl'); do
+  rewritegpl $i
+done
+
+# restoresome of the permissions:
+./config.status

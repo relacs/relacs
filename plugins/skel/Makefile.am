@@ -1,6 +1,7 @@
 SUBDIRS = src
 
-EXTRA_DIST = doc/PLUGINNAME.doc
+EXTRA_DIST = \
+    doc/PLUGINNAME.doc
 
 pkglibdir = $(libdir)/relacs
 pkgincludedir = $(includedir)/relacs
