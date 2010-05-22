@@ -34,7 +34,7 @@ namespace efield {
 
 /*!
 \class JAR
-\brief [RePro] Measure the fishes JAR and chirp characteristics at different delta f's and beat contrasts.
+\brief [RePro] Measure the fishes jamming avoidance response and chirp characteristics at different delta f's and beat contrasts.
 \author Jan Benda
 \version 2.0 (Mar 09, 2010)
 \bug EOD waveform stimulus broken (samplerate!).

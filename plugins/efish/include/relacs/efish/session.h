@@ -36,7 +36,7 @@ namespace efish {
 
 /*!
 \class Session
-\brief [Control] Session for in vivo recordings in weakly electric fish.
+\brief [Control] %Session for in vivo recordings in weakly electric fish.
 \author Jan Benda
 \version 1.0 (Nov 27, 2009)
 */
