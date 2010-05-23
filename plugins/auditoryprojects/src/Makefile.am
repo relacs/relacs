@@ -1,5 +1,5 @@
 HEADER_PATH = ../include/relacs/auditoryprojects
-include ${top_srcdir}/moc3.mk
+include ${top_srcdir}/moc4.mk
 
 pluginlibdir = $(pkglibdir)/plugins
 
@@ -25,18 +25,18 @@ libauditoryprojectsspikeprecision_la_CPPFLAGS = \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/auditory/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libauditoryprojectsspikeprecision_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libauditoryprojectsspikeprecision_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../acoustic/src/libacoustictraces.la \
     $(builddir)/../../auditory/src/libauditorysession.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libauditoryprojectsspikeprecision_la_OBJECTS) : moc_spikeprecision.cc
 
@@ -62,18 +62,18 @@ libauditoryprojectsisoresponse_la_CPPFLAGS = \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/auditory/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libauditoryprojectsisoresponse_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libauditoryprojectsisoresponse_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../acoustic/src/libacoustictraces.la \
     $(builddir)/../../auditory/src/libauditorysession.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libauditoryprojectsisoresponse_la_OBJECTS) : moc_isoresponse.cc
 
@@ -99,18 +99,18 @@ libauditoryprojectsoneclick_la_CPPFLAGS = \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/auditory/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libauditoryprojectsoneclick_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libauditoryprojectsoneclick_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../acoustic/src/libacoustictraces.la \
     $(builddir)/../../acoustic/src/libacousticloudspeaker.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libauditoryprojectsoneclick_la_OBJECTS) : moc_oneclick.cc
 
@@ -133,18 +133,18 @@ libauditoryprojectsfiphaselocking_la_CPPFLAGS = \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/auditory/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libauditoryprojectsfiphaselocking_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libauditoryprojectsfiphaselocking_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../acoustic/src/libacoustictraces.la \
     $(builddir)/../../auditory/src/libauditorysession.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libauditoryprojectsfiphaselocking_la_OBJECTS) : moc_fiphaselocking.cc
 

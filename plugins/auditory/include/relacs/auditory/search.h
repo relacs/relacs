@@ -23,11 +23,11 @@
 #define _RELACS_AUDITORY_SEARCH_H_ 1
 
 
+#include <relacs/lcdrange.h>
 #include <relacs/repro.h>
 #include <relacs/acoustic/traces.h>
-#include <qpushbutton.h>
-#include <qradiobutton.h>
-#include <qbuttongroup.h>
+#include <QPushButton>
+#include <QRadioButton>
 using namespace relacs;
 
 namespace auditory {
@@ -38,6 +38,7 @@ namespace auditory {
 \brief [RePro] Periodically emits a search stimulus.
 \author Jan Benda
 \author Christian Machens
+\todo check postCustomEvent usage!!!! user types+10 and event handling
 \todo Use mutex to protect stimulus creation.
 \bug sampling rate is only 10 kHz?!
 \todo reanable manual convert of signal
@@ -119,25 +120,12 @@ public slots:
     /*! Updates all input widgets to the values of the options. */
   virtual void dialogAccepted( void );
 
-signals:
-
-    /*! Intensity of stimulus changed to \a dB dB. */
-  void intensityChanged( int dB );
-    /*! Duration of stimulus changed to \a noise ms. */
-  void durationChanged( int noise );
-    /*! Duration of pause changed to \a pause ms. */
-  void pauseChanged( int pause );
-    /*! Frequency of stimulus changed to \a freq Hz. */
-  void frequencyChanged( int freq );
-    /*! Waveform of stimulus changed to \a noise. */
-  void waveformChanged( int noise );
-
 
 protected:
 
     /*! Handle keyboard events. */
   void keyPressEvent( QKeyEvent *qke );
-  virtual void customEvent( QCustomEvent *qce );
+  virtual void customEvent( QEvent *qce );
 
   bool NewSignal;
   int SetBestSide;
@@ -152,18 +140,21 @@ protected:
   bool Mute;
   QPushButton *MuteButton;
 
+  LCDRange *ILCD;
   double Intensity;                       // (in dB)
   static const double ShortIntensityStep;
   static const double LongIntensityStep;
   static const double MaxIntensity;
   static const double MinIntensity;  
 
+  LCDRange *DLCD;
   double Duration;                         // in seconds
   static const double ShortDurationStep;
   static const double LongDurationStep;
   static const double MaxDuration;
   static const double MinDuration;
 
+  LCDRange *PLCD;
   double Pause;                         // in seconds
   double PrePause;
   static const double ShortPauseStep;
@@ -171,13 +162,16 @@ protected:
   static const double MaxPause;
   static const double MinPause;
 
+  LCDRange *FLCD;
   double Frequency;    // in Hz
   static const double ShortFrequencyStep;
   static const double LongFrequencyStep;
   static const double MaxFrequency;
   static const double MinFrequency;
+
   int Waveform;
-  QButtonGroup *WaveformButtons;
+  QRadioButton *SineButton;
+  QRadioButton *NoiseButton;
 
 };
 

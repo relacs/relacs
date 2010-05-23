@@ -26,9 +26,7 @@ namespace efish {
 
 
 FICurve::FICurve( void )
-  : RePro( "FICurve", "FICurve", "efish",
-	   "Jan Benda", "1.4", "Mar 17, 2010" ),
-    P( this )    
+  : RePro( "FICurve", "efish", "Jan Benda", "1.4", "Mar 17, 2010" )
 {
   // parameter:
   Duration = 0.4;
@@ -81,6 +79,9 @@ FICurve::FICurve( void )
   Header.addText( "repro time" );
   Header.addText( "session time" );
   Header.addLabel( "settings:" );
+
+  // plot:
+  setWidget( &P );
 }
 
 

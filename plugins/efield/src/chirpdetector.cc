@@ -27,9 +27,8 @@ namespace efield {
 
 ChirpDetector::ChirpDetector( const string &ident, int mode )
   : Filter( ident, mode, SingleEventDetector, 1,
-	    "ChirpDetector", "Chirp Detector", "EField", 
-	    "Jan Benda", "1.2", "Jun 17, 2009" ),
-    CDW( (QWidget*)this )
+	    "ChirpDetector", "EField", 
+	    "Jan Benda", "1.2", "Jun 17, 2009" )
 {
   // parameter:
   Threshold = 8.0;
@@ -51,10 +50,11 @@ ChirpDetector::ChirpDetector( const string &ident, int mode )
   addStyle( OptWidget::ValueLarge + OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack, 4 );
 
   CDW.assign( ((Options*)this), 2, 4, true, 0, mutex() );
-  CDW.setSpacing( 4 );
-  CDW.setMargin( 4 );
-  connect( this, SIGNAL( dialogAccepted( void ) ),
-	   &CDW, SLOT( updateValues( void ) ) );
+  CDW.setVerticalSpacing( 4 );
+  CDW.setMargins( 4 );
+  setWidget( &CDW );
+  QObject::connect( (QWidget*)this, SIGNAL( dialogAccepted( void ) ),
+		    &CDW, SLOT( updateValues( void ) ) );
 
   setDialogSelectMask( 8 );
   setDialogReadOnlyMask( 16 );

@@ -39,7 +39,6 @@ namespace efish {
 
 class PUnitModel : public ephys::NeuronModels, public efield::Traces
 {
-  Q_OBJECT
 
 public:
 

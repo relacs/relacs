@@ -22,6 +22,7 @@
 #include <fstream>
 #include <iomanip>
 #include <ctype.h>
+#include <QVBoxLayout>
 #include <relacs/optwidget.h>
 #include <relacs/tablekey.h>
 #include <relacs/translate.h>
@@ -36,10 +37,7 @@ namespace auditory {
 
 
 SingleStimulus::SingleStimulus( void )
-  : RePro( "SingleStimulus", "Single Stimulus", "Auditory",
-	   "Jan Benda", "1.2", "Jan 10, 2008" ),
-    SP( 3, this ),
-    P( 2, this )
+  : RePro( "SingleStimulus", "Auditory", "Jan Benda", "1.2", "Jan 10, 2008" )
 {
   Intensity = 50.0;
   Amplitude = 1.0;
@@ -98,8 +96,12 @@ SingleStimulus::SingleStimulus( void )
   addTypeStyle( OptWidget::Bold, Parameter::Label );
 
   // setup plots:
+  QVBoxLayout *vb = new QVBoxLayout;
+  setLayout( vb );
+
   SP.hide();
   SP.lock();
+  SP.resize( 3 );
   SP.setCommonXRange( 0, 1 );
   SP[0].setOrigin( 0.0, 0.5 );
   SP[0].setSize( 0.7, 0.5 );
@@ -128,9 +130,11 @@ SingleStimulus::SingleStimulus( void )
   SP[2].setYLabelPos( 2.3, Plot::FirstMargin, 0.5, Plot::Graph,
 		      Plot::Center, -90.0 );
   SP.unlock();
+  vb->addWidget( &SP );
 
   P.show();
   P.lock();
+  P.resize( 2 );
   P.setCommonXRange( 0, 1 );
   P[0].setOrigin( 0.0, 0.5 );
   P[0].setSize( 1.0, 0.5 );
@@ -149,6 +153,7 @@ SingleStimulus::SingleStimulus( void )
   P[1].setYLabelPos( 2.3, Plot::FirstMargin, 0.5, Plot::Graph,
 		     Plot::Center, -90.0 );
   P.unlock();
+  vb->addWidget( &P );
 
 }
 
@@ -286,10 +291,11 @@ int SingleStimulus::main( void )
     // plot trace:
     plotToggle( true, true, searchduration, 0.0 );
     
-    QApplication::postEvent( this, new QCustomEvent( QEvent::User+12 ) );
+    postCustomEvent( 12 );
     SP.lock();
     SP.clearPlots();
     SP[0].setTitle( "Search target firing rate " + Str( targetrate ) + " Hz" );
+    SP.setDrawBackground();
     SP.unlock();
     SP.draw();
 
@@ -582,10 +588,11 @@ int SingleStimulus::main( void )
   plotToggle( true, true, Duration, 0.0 );
 
   // setup plots:
-  QApplication::postEvent( this, new QCustomEvent( QEvent::User+11 ) );
+  postCustomEvent( 11 );
   P.lock();
   P.clearPlots();
   P[0].setTitle( "Mean firing rate =    Hz" );
+  P.setDrawBackground();
   P.unlock();
   P.draw();
 
@@ -1014,7 +1021,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
 }
 
 
-void SingleStimulus::customEvent( QCustomEvent *qce )
+void SingleStimulus::customEvent( QEvent *qce )
 {
   if ( qce->type() == QEvent::User+11 ) {
     SP.hide();
@@ -1025,7 +1032,7 @@ void SingleStimulus::customEvent( QCustomEvent *qce )
     SP.show();
   }
   else
-    RePro::customEvent( qce );
+    RELACSPlugin::customEvent( qce );
 }
 
 

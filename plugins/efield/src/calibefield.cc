@@ -31,9 +31,8 @@ namespace efield {
 
 
 CalibEField::CalibEField( void )
-  : RePro( "CalibEField", "CalibEField", "efield",
-	   "Jan Benda", "1.3", "Jan 07, 2010" ),
-    P( 1, 1, true, Plot::Copy, this )    
+  : RePro( "CalibEField", "efield",
+	   "Jan Benda", "1.3", "Jan 07, 2010" )
 {
   // add some parameter as options:
   addBoolean( "reset", "Reset calibration?", false );
@@ -46,6 +45,9 @@ CalibEField::CalibEField( void )
   addInteger( "maxintensities", "Maximum number of intensities (amplitudes)", 10, 2, 1000, 2 );
   addNumber( "minintensity", "Minimum relative intensity (amplitude)", 0.5, 0.01, 1.0, 0.05, "", "%" );
   addInteger( "repeats", "Maximum repeats", 3, 1, 100, 2 );
+
+  // plot:
+  setWidget( &P );    
 }
 
 
@@ -76,8 +78,8 @@ int CalibEField::main( void )
   }
 
   // plot:
-  P[0].setXLabel( "Requested Intensity" );
-  P[0].setYLabel( am ? "Measured AM Intensity" : "Measured EOD Intensity" );
+  P.setXLabel( "Requested Intensity" );
+  P.setYLabel( am ? "Measured AM Intensity" : "Measured EOD Intensity" );
 
   // attenuator:
   base::LinearAttenuate *latt = 
@@ -359,12 +361,12 @@ void CalibEField::saveData( const base::LinearAttenuate *latt )
 
 void CalibEField::plot( double maxx )
 {
-  P[0].clear();
-  P[0].setXRange( 0.0, maxx );
-  P[0].setYRange( 0.0, maxx*FitGain+FitOffset );
-  P[0].plotLine( 0.0, 0.0, maxx, maxx, Plot::Blue, 4 );
-  P[0].plotLine( 0.0, FitOffset, maxx, maxx*FitGain+FitOffset, Plot::Yellow, 2 );
-  P[0].plot( Intensities, 1.0, Plot::Transparent, 1, Plot::Solid, Plot::Circle, 6, Plot::Red, Plot::Red );
+  P.clear();
+  P.setXRange( 0.0, maxx );
+  P.setYRange( 0.0, maxx*FitGain+FitOffset );
+  P.plotLine( 0.0, 0.0, maxx, maxx, Plot::Blue, 4 );
+  P.plotLine( 0.0, FitOffset, maxx, maxx*FitGain+FitOffset, Plot::Yellow, 2 );
+  P.plot( Intensities, 1.0, Plot::Transparent, 1, Plot::Solid, Plot::Circle, 6, Plot::Red, Plot::Red );
   P.draw();
 }
 

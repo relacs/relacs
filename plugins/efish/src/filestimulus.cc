@@ -29,9 +29,7 @@ namespace efish {
 
 
 FileStimulus::FileStimulus( void )
-  : RePro( "FileStimulus", "FileStimulus", "efish",
-	   "Jan Benda", "1.3", "Mar 25, 2010" ),
-    P( 1 + SpikeTraces + NerveTraces, this )
+  : RePro( "FileStimulus", "efish", "Jan Benda", "1.3", "Mar 25, 2010" )
 {
   // parameter:
   SigStdev = 1.0;
@@ -105,6 +103,8 @@ FileStimulus::FileStimulus( void )
   NerveKey.addNumber( "time", "ms", "%9.2f" );
   NerveKey.addNumber( "ampl", "uV", "%6.1f" );
 
+  // plot:
+  setWidget( &P );
 }
 
 

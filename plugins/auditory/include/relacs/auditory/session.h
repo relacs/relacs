@@ -22,8 +22,8 @@
 #ifndef _RELACS_AUDITORY_SESSION_H_
 #define _RELACS_AUDITORY_SESSION_H_ 1
 
-#include <qpushbutton.h>
-#include <qhbox.h>
+#include <QPushButton>
+#include <QWidget>
 #include <relacs/optwidget.h>
 #include <relacs/multiplot.h>
 #include <relacs/map.h>
@@ -188,7 +188,7 @@ private:
   int DGain;
   double MaxResistance;
   double ResistanceScale;
-  QHBox *AmplBox;
+  QWidget *AmplBox;
   QPushButton *ResistanceButton;
   QPushButton *BuzzerButton;
 

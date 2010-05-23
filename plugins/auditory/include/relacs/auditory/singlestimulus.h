@@ -118,7 +118,7 @@ protected:
   int createStimulus( OutData &signal, const Str &file,
 		      double &duration, bool stoream );
 
-  void customEvent( QCustomEvent *qce );
+  void customEvent( QEvent *qce );
 
   double CarrierFreq;
   double Amplitude;

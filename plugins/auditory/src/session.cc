@@ -19,8 +19,9 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <qvbox.h>
-#include <qlabel.h>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QLabel>
 #include <relacs/auditory/session.h>
 using namespace relacs;
 
@@ -28,33 +29,40 @@ namespace auditory {
 
 
 Session::Session( void )
-  : Control( "Session", "Info", "Auditory",
-	     "Jan Benda", "1.5", "Feb 2, 2010" ),
-    P( 2, 1, true, Plot::Pointer, this, "sessionplot" )
-
+  : Control( "Session", "Auditory", "Jan Benda", "1.5", "Feb 2, 2010" )
 {
-  //  setColumnLayout( 2, Horizontal );
-  boxLayout()->setDirection( QBoxLayout::LeftToRight );
+  QHBoxLayout *hb = new QHBoxLayout;
+  setLayout( hb );
 
-  QVBox *bb = new QVBox( this );
-  bb->setSpacing( 0 );
+  hb->addWidget( &P );
 
-  ASW = new OptWidget( bb );
-  ASW->setSpacing( 4 );
-  ASW->setMargin( 4 );
+  QVBoxLayout *vb = new QVBoxLayout;
+  hb->addLayout( vb );
+  vb->setSpacing( 0 );
 
-  AmplBox = new QHBox( bb );
+  ASW = new OptWidget;
+  ASW->setVerticalSpacing( 4 );
+  ASW->setMargins( 4 );
+  vb->addWidget( ASW );
+
+  /*
+  AmplBox = new QWidget;
+  AmplBox->setLayout( AmplBoxLayout );
+  vb->addWidget( AmplBox );
+  */
   ResistanceButton = 0;
   BuzzerButton = 0;
 
-  SessionButton = new QPushButton( "Cell found", bb, "SessionButton" );
+  SessionButton = new QPushButton;
+  SessionButton->setText( "Cell Found" );
   SessionButton->setMinimumSize( SessionButton->sizeHint() );
-  connect( SessionButton, SIGNAL( clicked() ),
-	   this, SLOT( toggleSession() ) );
+  vb->addWidget( SessionButton );
+  QWidget::connect( SessionButton, SIGNAL( clicked() ),
+		    (QWidget*)this, SLOT( toggleSession() ) );
 
   P.lock();
+  P.resize( 2, 1, true, Plot::Pointer );
   P.setDataMutex( mutex() );
-
   P[0].setXRange( 0.0, 40.0 );
   P[0].setXLabel( "Frequency [kHz]" );
   P[0].setYRange( 20.0, 100.0 );
@@ -76,7 +84,6 @@ Session::Session( void )
   P[1].setRMarg( 2.0 );
   P[1].setTMarg( 1.0 );
   P[1].setBMarg( 5.0 );
-
   P.unlock();
 
   Temp = 0;
@@ -201,28 +208,27 @@ void Session::initDevices( void )
     AmplBox->show();
     if ( ResistanceButton == 0 && BuzzerButton == 0 ) {
       ResistanceButton = new QPushButton( "R", AmplBox );
-      connect( ResistanceButton, SIGNAL( pressed() ),
-	       this, SLOT( startResistance() ) );
-      connect( ResistanceButton, SIGNAL( released() ),
-	       this, SLOT( stopResistance() ) );
+      QWidget::connect( ResistanceButton, SIGNAL( pressed() ),
+	       (QWidget*)this, SLOT( startResistance() ) );
+      QWidget::connect( ResistanceButton, SIGNAL( released() ),
+	       (QWidget*)this, SLOT( stopResistance() ) );
     
       new QLabel( AmplBox );
       
       BuzzerButton = new QPushButton( "Buzz", AmplBox );
-      connect( BuzzerButton, SIGNAL( clicked() ),
-	       this, SLOT( buzz() ) );
+      QWidget::connect( BuzzerButton, SIGNAL( clicked() ),
+	       (QWidget*)this, SLOT( buzz() ) );
     }
   }
   else {
-  */
     AmplBox->hide();
-    //  }
+    }
+  */
 
   ASW->assign( &metaData( "Cell" ), MetaDataDisplay, MetaDataReadOnly, true, 
 	       OptWidget::BreakLinesStyle + OptWidget::ExtraSpaceStyle,
 	       metaDataMutex() );
-  ASW->setSpacing( 2 );
-  updateGeometry();
+  ASW->setVerticalSpacing( 2 );
 }
 
 

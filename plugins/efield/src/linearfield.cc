@@ -19,7 +19,9 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <qlabel.h>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QLabel>
 #include <relacs/tablekey.h>
 #include <relacs/efield/linearfield.h>
 using namespace relacs;
@@ -28,45 +30,50 @@ namespace efield {
 
 
 LinearField::LinearField( void )
-  : RePro( "LinearField", "LinearField", "EField",
-	   "Jan Benda", "1.0", "Apr 23, 2009" ),
-    B( (QWidget*)this ),
-    O( &B ),
-    P( (QWidget*)this )
+  : RePro( "LinearField", "EField", "Jan Benda", "1.0", "Apr 23, 2009" )
 {
   // add some options:
   addNumber( "duration", "Duration of measurement", 1.0, 0.01, 1000000.0, 1.0, "s" );
 
   // layout:
-  boxLayout()->setDirection( QBoxLayout::LeftToRight );
+  QHBoxLayout *hb = new QHBoxLayout;
+  setLayout( hb );
+  QVBoxLayout *vb = new QVBoxLayout;
+  hb->addLayout( vb );
 
   // user interaction:
   GUIOpts.addText( "comment", "Comment", "" );
   GUIOpts.addNumber( "distance", "Distance", 0.0, -100000.0, 100000.0, 1.0, "cm" );
   O.assign( &GUIOpts, 0, 0, false, OptWidget::BreakLinesStyle + OptWidget::ExtraSpaceStyle );
-  O.setSpacing( 2 );
+  O.setVerticalSpacing( 2 );
+  vb->addWidget( &O );
 
   // measure button:
-  MeasureButton = new QPushButton( "&Measure", &B, "MeasureButton" );
-  connect( MeasureButton, SIGNAL( clicked() ),
-	   this, SLOT( measure() ) );
-  grabKey( ALT+Key_M );
-  grabKey( Key_Return );
-  grabKey( Key_Enter );
+  MeasureButton = new QPushButton( "&Measure" );
+  QObject::connect( MeasureButton, SIGNAL( clicked() ),
+		    (QWidget*)this, SLOT( measure() ) );
+  grabKey( Qt::ALT+Qt::Key_M );
+  grabKey( Qt::Key_Return );
+  grabKey( Qt::Key_Enter );
+  vb->addWidget( MeasureButton );
 
   // finish button:
-  FinishButton = new QPushButton( "&Finish", &B, "FinishButton" );
-  connect( FinishButton, SIGNAL( clicked() ),
-	   this, SLOT( finish() ) );
-  grabKey( ALT+Key_F );
-  grabKey( Key_Escape );
-
-  updateGeometry();
+  FinishButton = new QPushButton( "&Finish" );
+  QObject::connect( FinishButton, SIGNAL( clicked() ),
+		    (QWidget*)this, SLOT( finish() ) );
+  grabKey( Qt::ALT+Qt::Key_F );
+  grabKey( Qt::Key_Escape );
+  vb->addWidget( FinishButton );
 
   // setting the right tab order (seems not really to be needed!)
+  /*
   if ( O.lastWidget() != 0 )
     setTabOrder( O.lastWidget(), MeasureButton );
   setTabOrder( MeasureButton, FinishButton );
+  */
+
+  // plot:
+  hb->addWidget( &P );
 
   Input = false;
 }
@@ -220,19 +227,19 @@ void LinearField::saveAmplitude( void )
 
 void LinearField::keyPressEvent( QKeyEvent *e )
 {
-  if ( e->key() == Key_M && ( e->state() & AltButton ) ) {
+  if ( e->key() == Qt::Key_M && ( e->modifiers() & Qt::AltModifier ) ) {
     MeasureButton->animateClick();
     e->accept();
   }
-  else if ( e->key() == Key_F && ( e->state() & AltButton ) ) {
+  else if ( e->key() == Qt::Key_F && ( e->modifiers() & Qt::AltModifier ) ) {
     FinishButton->animateClick();
     e->accept();
   }
-  else if ( ( e->key() == Key_Return || e->key() == Key_Enter ) && ( e->state() & KeyButtonMask ) == 0 ) {
+  else if ( ( e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter ) && ( e->modifiers() == Qt::NoModifier ) ) {
     MeasureButton->animateClick();
     e->accept();
   }
-  else if ( e->key() == Key_Escape && ( e->state() & KeyButtonMask ) == 0 ) {
+  else if ( e->key() == Qt::Key_Escape && ( e->modifiers() == Qt::NoModifier ) ) {
     FinishButton->animateClick();
     e->accept();
   }
@@ -241,17 +248,17 @@ void LinearField::keyPressEvent( QKeyEvent *e )
 }
 
 
-void LinearField::customEvent( QCustomEvent *qce )
+void LinearField::customEvent( QEvent *qce )
 {
   if ( qce->type() == QEvent::User+11 ) {
     if ( O.firstWidget() != 0 )
       O.firstWidget()->setFocus();
   }
   else if ( qce->type() == QEvent::User+12 ) {
-    topLevelWidget()->setFocus();
+    widget()->window()->setFocus();
   }
   else
-    RePro::customEvent( qce );
+    RELACSPlugin::customEvent( qce );
 }
 
 

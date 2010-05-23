@@ -31,10 +31,8 @@ namespace acoustic {
 
 
 CalibMicrophone::CalibMicrophone( void )
-  : RePro( "CalibMicrophone", "CalibMicrophone", "Acoustic",
-	   "Jan Benda", "1.0", "Aug 11 2008" ),
-    Traces(),
-    MW( (QWidget*)this )
+  : RePro( "CalibMicrophone", "Acoustic", "Jan Benda", "1.0", "Aug 11 2008" ),
+    Traces()
 {
   // add some parameter as options:
   addNumber( "intensity", "Intensity of the sound source", 114.0, 0.0, 200.0, 1.0, "dB SPL" );
@@ -49,8 +47,9 @@ CalibMicrophone::CalibMicrophone( void )
   addNumber( "scale", "Scale factor", 0.0, 0.0, 10000.0, 0.05, "V/Pa" ).setFlags( 2 );
 
   MW.assign( ((Options*)this), 0, 1+2, true, 0, mutex() );
-  MW.setSpacing( 4 );
-  MW.setMargin( 4 );
+  MW.setVerticalSpacing( 4 );
+  MW.setMargins( 4 );
+  setWidget( &MW );
 
   setDialogSelectMask( 1 );
 }

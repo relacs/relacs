@@ -22,7 +22,7 @@
 #ifndef _RELACS_EFIELD_CALIBEFIELD_H_
 #define _RELACS_EFIELD_CALIBEFIELD_H_ 1
 
-#include <relacs/multiplot.h>
+#include <relacs/plot.h>
 #include <relacs/base/linearattenuate.h>
 #include <relacs/efield/traces.h>
 #include <relacs/efield/eodtools.h>
@@ -97,7 +97,7 @@ private:
   string LocalEODUnit;
   MapD Intensities;
 
-  MultiPlot P;
+  Plot P;
 
 };
 

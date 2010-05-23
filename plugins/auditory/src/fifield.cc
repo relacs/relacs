@@ -32,7 +32,6 @@ namespace auditory {
 FIField::FIField( void )
 {
   setName( "FIField" );
-  setTitle( "F-I Field" );
   setVersion( "1.4" );
   setDate( "Oct 1, 2008" );
 

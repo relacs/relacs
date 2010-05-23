@@ -28,9 +28,7 @@ namespace patchclampprojects {
 
 
 FindThreshold::FindThreshold( void )
-  : RePro( "FindThreshold", "FindThreshold", "patchclampprojects",
-	   "Jan Benda", "1.0", "Feb 08, 2010" ),
-    P( this ),
+  : RePro( "FindThreshold", "patchclampprojects", "Jan Benda", "1.0", "Feb 08, 2010" ),
     VUnit( "mV" ),
     IUnit( "nA" ),
     IInFac( 1.0 )
@@ -62,6 +60,7 @@ FindThreshold::FindThreshold( void )
   P.lock();
   P.setXLabel( "Time [ms]" );
   P.unlock();
+  setWidget( &P );
 }
 
 

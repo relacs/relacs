@@ -33,9 +33,7 @@ namespace auditory {
 
 
 SysLatency::SysLatency( void )
-  : RePro( "SysLatency", "System - Latency", "Auditory",
-	   "Jan Benda", "1.5", "Jan 10, 2008" ),
-    P( 2, 2, true, this )    
+  : RePro( "SysLatency", "Auditory", "Jan Benda", "1.5", "Jan 10, 2008" )
 {
   // options:
   addLabel( "Stimulus" );
@@ -61,6 +59,7 @@ SysLatency::SysLatency( void )
 
   // plot:
   P.lock();
+  P.resize( 2, 2, true );
   P[0].setLMarg( 7.0 );
   P[0].setTMarg( 3.0 );
   P[0].setXLabel( "Latency" );
@@ -76,6 +75,7 @@ SysLatency::SysLatency( void )
 		     Plot::Center, -90.0 );
   P[1].setYRange( -0.5, 1.0 );
   P.unlock();
+  setWidget( &P );
 }
 
 

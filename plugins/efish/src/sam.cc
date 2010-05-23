@@ -33,9 +33,7 @@ namespace efish {
 
 
 SAM::SAM( void )
-  : RePro( "SAM", "SAM", "efish",
-	   "Jan Benda", "2.0", "Dec 01, 2009" ),
-    P( this )
+  : RePro( "SAM", "efish", "Jan Benda", "2.0", "Dec 01, 2009" )
 {
   // parameter:
   ReadCycles = 100;
@@ -124,6 +122,9 @@ SAM::SAM( void )
   NerveKey.addLabel( "average" );
   NerveKey.addNumber( "time", "ms", "%9.2f" );
   NerveKey.addNumber( "ampl", "uV", "%6.1f" );
+
+  // plot:
+  setWidget( &P );
 }
 
 

@@ -1,5 +1,5 @@
 HEADER_PATH = ../include/relacs/efish
-include ${top_srcdir}/moc3.mk
+include ${top_srcdir}/moc4.mk
 
 pluginlibdir = $(pkglibdir)/plugins
 
@@ -25,17 +25,17 @@ libefishbaselineactivity_la_CPPFLAGS = \
     -I$(srcdir)/../../ephys/include \
     -I$(srcdir)/../../efield/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libefishbaselineactivity_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libefishbaselineactivity_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../efield/src/libefieldtraces.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libefishbaselineactivity_la_OBJECTS) : moc_baselineactivity.cc
 
@@ -58,17 +58,17 @@ libefishsession_la_CPPFLAGS = \
     -I$(srcdir)/../../ephys/include \
     -I$(srcdir)/../../efield/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libefishsession_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libefishsession_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../efield/src/libefieldtraces.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libefishsession_la_OBJECTS) : moc_session.cc
 
@@ -91,20 +91,18 @@ libefishpunitmodel_la_CPPFLAGS = \
     -I$(srcdir)/../../ephys/include \
     -I$(srcdir)/../../efield/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libefishpunitmodel_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libefishpunitmodel_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/plugins/ephys/src/librelacsspikingneuron.la \
     $(top_builddir)/plugins/ephys/src/libephysneuronmodels.la \
     $(top_builddir)/plugins/efield/src/libefieldtraces.la \
-    $(QT3_LIBS)
-
-$(libefishpunitmodel_la_OBJECTS) : moc_punitmodel.cc
+    $(QT4_LIBS)
 
 libefishpunitmodel_la_SOURCES = punitmodel.cc
 
@@ -125,18 +123,18 @@ libefishsam_la_CPPFLAGS = \
     -I$(srcdir)/../../ephys/include \
     -I$(srcdir)/../../efield/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libefishsam_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libefishsam_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../efield/src/libefieldtraces.la \
     $(builddir)/../../efield/src/libefieldeodtools.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libefishsam_la_OBJECTS) : moc_sam.cc
 
@@ -159,18 +157,18 @@ libefishficurve_la_CPPFLAGS = \
     -I$(srcdir)/../../ephys/include \
     -I$(srcdir)/../../efield/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libefishficurve_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libefishficurve_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../efield/src/libefieldtraces.la \
     $(builddir)/../../efield/src/libefieldeodtools.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libefishficurve_la_OBJECTS) : moc_ficurve.cc
 
@@ -193,18 +191,18 @@ libefishfilestimulus_la_CPPFLAGS = \
     -I$(srcdir)/../../ephys/include \
     -I$(srcdir)/../../efield/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libefishfilestimulus_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libefishfilestimulus_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../efield/src/libefieldtraces.la \
     $(builddir)/../../efield/src/libefieldeodtools.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libefishfilestimulus_la_OBJECTS) : moc_filestimulus.cc
 
@@ -227,18 +225,18 @@ libefishchirps_la_CPPFLAGS = \
     -I$(srcdir)/../../ephys/include \
     -I$(srcdir)/../../efield/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libefishchirps_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libefishchirps_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../efield/src/libefieldtraces.la \
     $(builddir)/../../efield/src/libefieldeodtools.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libefishchirps_la_OBJECTS) : moc_chirps.cc
 

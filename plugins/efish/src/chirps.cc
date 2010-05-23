@@ -32,9 +32,7 @@ namespace efish {
 
 
 Chirps::Chirps( void )
-  : RePro( "Chirps", "Chirps", "efish",
-	   "Jan Benda", "1.8", "Apr 23, 2010" ),
-    P( 1, this )
+  : RePro( "Chirps", "efish", "Jan Benda", "1.8", "Apr 23, 2010" )
 {
   // parameter:
   ReadCycles = 100;
@@ -159,6 +157,9 @@ Chirps::Chirps( void )
 
   AmplKey.addNumber( "time", "ms", "%8.2f" );
   AmplKey.addNumber( "ampl", "", "%5.3f" );
+
+  // plot:
+  setWidget( &P );
 }
 
 
@@ -480,9 +481,9 @@ void Chirps::initMultiPlot( double ampl )
 
   Rows = BeatPos < 4 ? 1 : 2;
   Cols = BeatPos / Rows;
-  double dx = double( width() - P[0].fontPixel( ylabelmarg ) ) / double( width() ) / double(Cols);
+  double dx = double( widget()->width() - P[0].fontPixel( ylabelmarg ) ) / double( widget()->width() ) / double(Cols);
   double xo = 1.0 - Cols * dx;
-  double dy = double( height() - P[0].fontPixel( xlabelmarg ) ) / double( height() ) / Rows;
+  double dy = double( widget()->height() - P[0].fontPixel( xlabelmarg ) ) / double( widget()->height() ) / Rows;
   double yo = 1.0 - Rows * dy;
   double dys = 1.0/nsub;
 

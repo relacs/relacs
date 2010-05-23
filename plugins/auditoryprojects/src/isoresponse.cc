@@ -34,9 +34,8 @@ namespace auditoryprojects {
 
 
 IsoResponse::IsoResponse( void )
-  : RePro( "IsoResponse", "Iso-Response", "Auditoryprojects",
-	   "Alexander Wolf", "1.0", "Jan 10, 2008" ),
-    P( 3, 3, true, this)
+  : RePro( "IsoResponse", "Auditoryprojects",
+	   "Alexander Wolf", "1.0", "Jan 10, 2008" )
 {
 
   pi=4.0*atan(1.0);
@@ -139,6 +138,12 @@ IsoResponse::IsoResponse( void )
 
   Results.clear();
   IsoResults.clear();
+
+  // plot:
+  P.lock();
+  P.resize( 3, 3, true );
+  P.unlock();
+  setWidget( &P );
 
   // header:
   Header.addInteger( "run" );

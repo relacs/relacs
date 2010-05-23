@@ -27,9 +27,8 @@ namespace efield {
 
 EODDetector::EODDetector( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogDetector, 1, 
-	    "EODDetector", "EOD Detector", "EField",
-	    "Jan Benda", "1.3", "June 16, 2009" ),
-    EDW( (QWidget *)this )
+	    "EODDetector", "EField",
+	    "Jan Benda", "1.3", "June 16, 2009" )
 {
   // parameter:
   Threshold = 0.0001;
@@ -49,8 +48,9 @@ EODDetector::EODDetector( const string &ident, int mode )
   addStyle( OptWidget::ValueLarge + OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack, 4 );
 
   EDW.assign( ((Options*)this), 2, 4, true, 0, mutex() ),
-  EDW.setSpacing( 4 );
-  EDW.setMargin( 4 );
+  EDW.setVerticalSpacing( 4 );
+  EDW.setMargins( 4 );
+  setWidget( &EDW );
 
   setDialogSelectMask( 8 );
   setDialogReadOnlyMask( 16 );

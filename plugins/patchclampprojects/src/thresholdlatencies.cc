@@ -28,9 +28,7 @@ namespace patchclampprojects {
 
 
 ThresholdLatencies::ThresholdLatencies( void )
-  : RePro( "ThresholdLatencies", "ThresholdLatencies", "patchclampprojects",
-	   "Jan Benda", "1.0", "Feb 04, 2010" ),
-    P( this ),
+  : RePro( "ThresholdLatencies", "patchclampprojects", "Jan Benda", "1.0", "Feb 04, 2010" ),
     VUnit( "mV" ),
     IUnit( "nA" ),
     IInFac( 1.0 )
@@ -70,6 +68,7 @@ ThresholdLatencies::ThresholdLatencies( void )
   P.lock();
   P.setXLabel( "Time [ms]" );
   P.unlock();
+  setWidget( &P );
 }
 
 

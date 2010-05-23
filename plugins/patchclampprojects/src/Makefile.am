@@ -1,5 +1,5 @@
 HEADER_PATH = ../include/relacs/patchclampprojects
-include ${top_srcdir}/moc3.mk
+include ${top_srcdir}/moc4.mk
 
 pluginlibdir = $(pkglibdir)/plugins
 
@@ -20,16 +20,16 @@ libpatchclampprojectsthresholdlatencies_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libpatchclampprojectsthresholdlatencies_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libpatchclampprojectsthresholdlatencies_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libpatchclampprojectsthresholdlatencies_la_OBJECTS) : moc_thresholdlatencies.cc
 
@@ -51,16 +51,16 @@ libpatchclampprojectsfindthreshold_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libpatchclampprojectsfindthreshold_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libpatchclampprojectsfindthreshold_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libpatchclampprojectsfindthreshold_la_OBJECTS) : moc_findthreshold.cc
 
@@ -81,15 +81,15 @@ libpatchclampprojectssetleak_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libpatchclampprojectssetleak_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libpatchclampprojectssetleak_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libpatchclampprojectssetleak_la_OBJECTS) : moc_setleak.cc
 

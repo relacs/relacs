@@ -30,8 +30,7 @@ namespace auditory {
 
 
 ReceptorModel::ReceptorModel( void )
-  : NeuronModels( "ReceptorModel", "Auditory Receptor", "Auditory",
-		  "Alexander Wolf, Jan Benda",
+  : NeuronModels( "ReceptorModel", "Auditory", "Alexander Wolf, Jan Benda",
 		  "1.1", "Jan 15, 2006" )
 {
   // tympanum:
@@ -211,7 +210,7 @@ void ReceptorModel::process( const OutData &source, OutData &dest )
   // rescale stimulus to mPa:
   const double p0 = 2.0e-5;
   double i = source.intensity();
-  if ( source.channel() == 1 )
+  if ( source.trace() == RightSpeaker[0] )
     i -= 10.0;
   double g = p0 * ::pow( 10.0, i / 20.0 );
 
@@ -261,15 +260,17 @@ void ReceptorModel::operator()( double t, double *x, double *dxdt, int n ) const
 {
   static Random rand;
 
+  double s = signal( 0.001 * t, LeftSpeaker[0] );
+  s += signal( 0.001 * t, RightSpeaker[0] );
   if ( TympanumModel == 2 ) {
     dxdt[0] = x[1];
-    dxdt[1] = -Beta*x[0] - Alpha*x[1] + signal( 0.001 * t );
+    dxdt[1] = -Beta*x[0] - Alpha*x[1] + s;
     double s = ( (this->*Nonlinearity)( x[0] ) + neuron()->offset() ) * neuron()->gain();
     s += noiseSD() * rand.gaussian();
     (*neuron())( t, s, x+2, dxdt+2, n-2 );
   }
   else {
-    double s = signal( 0.001 * t ) + noiseSD() * rand.gaussian();;
+    s += noiseSD() * rand.gaussian();;
     (*neuron())( t, s, x, dxdt, n );
   }
 }
@@ -336,13 +337,11 @@ void ReceptorModel::dialogOptions( OptDialog *od )
   od->addTabOptions( "Nonlinearity", *this, dialogSelectMask() | 2,
 		     dialogReadOnlyMask(), dialogStyle(), mutex() );
   dialogModelOptions( od );
-  od->setSpacing( 1 );
-  od->setMargin( 10 );
+  od->setVerticalSpacing( 1 );
+  od->setMargins( 10 );
 }
 
 
 addModel( ReceptorModel );
 
 }; /* namespace auditory */
-
-#include "moc_receptormodel.cc"

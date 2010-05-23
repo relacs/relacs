@@ -27,8 +27,7 @@ namespace efield {
 
 
 JAR::JAR( void )
-  : RePro( "JAR", "JAR", "efield", "Jan Benda", "2.0", "Mar 09, 2010" ),
-    P( 4, 2, true, Plot::Copy, this )
+  : RePro( "JAR", "efield", "Jan Benda", "2.0", "Mar 09, 2010" )
 {
   // parameter:
   ReadCycles = 100;
@@ -97,6 +96,8 @@ JAR::JAR( void )
   Chirps.clear();
 
   // plot:
+  P.lock();
+  P.resize( 4, 2, true );
   //  P[0].setTitlePos( 0.0, Plot::Graph, 0.0, Plot::X2Axis, Plot::Left );
   P[0].setXLabel( "sec" );
   //  P[0].setXLabelPos( 0.0, Plot::Screen, 0.0, Plot::Y1Axis, 
@@ -152,6 +153,8 @@ JAR::JAR( void )
   P[3].setTMarg( 3 );
   P[3].setOrigin( 0.67, 0.0 );
   P[3].setSize( 0.33, 0.55 );
+  P.unlock();
+  setWidget( &P );
 }
 
 

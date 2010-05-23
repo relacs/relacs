@@ -31,8 +31,7 @@ namespace efish {
 
 
 PUnitModel::PUnitModel( void )
-  : NeuronModels( "PUnitModel", "PUnitModel", "efish",
-		  "Jan Benda", "1.0", "Nov 27, 2009" )
+  : NeuronModels( "PUnitModel", "efish", "Jan Benda", "1.0", "Nov 27, 2009" )
 {
   // EOD:
   EODFreq = 800.0;
@@ -168,5 +167,3 @@ void PUnitModel::operator()( double t, double *x, double *dxdt, int n )
 addModel( PUnitModel );
 
 }; /* namespace efish */
-
-#include "moc_punitmodel.cc"

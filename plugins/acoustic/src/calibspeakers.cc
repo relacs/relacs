@@ -31,10 +31,8 @@ namespace acoustic {
 
 
 CalibSpeakers::CalibSpeakers( void )
-  : RePro( "CalibSpeakers", "CalibSpeakers", "Acoustic",
-	   "Jan Benda", "1.1", "Aug 12, 2008" ),
-    Traces(),
-    P( 2, 2, true, this )    
+  : RePro( "CalibSpeakers", "Acoustic", "Jan Benda", "1.1", "Aug 12, 2008" ),
+    Traces()
 {
   // add some parameter as options:
   addText( "frequencyrange", "Frequency range (Hz)", "2000..40000..1000" );
@@ -52,11 +50,13 @@ CalibSpeakers::CalibSpeakers( void )
 
   // plot:
   P.lock();
+  P.resize( 2, 2, true );    
   P[0].setXLabel( "Requested intensity [dB SPL]" );
   P[0].setYLabel( "Measured intensity [dB SPL]" );
   P[1].setXLabel( "Frequency [kHz]" );
   P[1].setYLabel( "Offset [dB SPL]" );
   P.unlock();
+  setWidget( &P );
 }
 
 

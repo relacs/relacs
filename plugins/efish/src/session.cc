@@ -20,9 +20,8 @@
 */
 
 #include <cmath>
-#include <qapplication.h>
-#include <qlayout.h>
-#include <qlabel.h>
+#include <QVBoxLayout>
+#include <QLabel>
 #include <relacs/tablekey.h>
 #include <relacs/efish/session.h>
 using namespace relacs;
@@ -31,9 +30,7 @@ namespace efish {
 
 
 Session::Session( void )
-  : Control( "Session", "Session", "efish",
-	     "Jan Benda", "1.0", "Nov 27, 2009" ),
-    EODPlot( 2, 1, true, Plot::Copy, this )
+  : Control( "Session", "efish", "Jan Benda", "1.0", "Nov 27, 2009" )
 {
   // parameter:
   PlotWindow = 3600.0;
@@ -56,8 +53,13 @@ Session::Session( void )
   addNumber( "pvalue2", "P-Value 2", 0.0, 0.0, 10.0, 0.01, "", "", "%.2f", 4 );
   setConfigSelectMask( -32 );
 
+  // layout:
+  QVBoxLayout *vb = new QVBoxLayout;
+  setLayout( vb );
+
   // plots:
   EODPlot.lock();
+  EODPlot.resize( 2, 1, true );
   EODPlot.setCommonXRange( 0, 1 );
 
   EODPlot[0].setXLabel( "sec" );
@@ -92,20 +94,30 @@ Session::Session( void )
   EODPlot[1].setSize( 1.0, 0.45 );
 
   EODPlot.unlock();
+  vb->addWidget( &EODPlot );
 
-  Numbers = new QGrid( 6, Qt::Horizontal, this );
-  Numbers->setSpacing( 2 );
+  Numbers = new QGridLayout;
+  Numbers->setHorizontalSpacing( 2 );
+  Numbers->setVerticalSpacing( 2 );
+  vb->addLayout( Numbers );
   QLabel *label;
-  label = new QLabel( "EOD", Numbers );
+  label = new QLabel( "EOD" );
   label->setAlignment( Qt::AlignCenter );
-  EODRateLCD = new QLCDNumber( 4, Numbers );
+  Numbers->addWidget( label, 0, 0 );
+  EODRateLCD = new QLCDNumber( 4 );
   EODRateLCD->display( EODRate );
-  EODRateLCD->setPalette( QPalette( green, black ) );
+  QColor fg( Qt::green );
+  QColor bg( Qt::black );
+  QPalette qp( fg, fg, fg.lighter( 140 ), fg.darker( 170 ), fg.darker( 130 ), fg, fg, fg, bg );
+  EODRateLCD->setPalette( qp );
+  EODRateLCD->setAutoFillBackground( true );
+  Numbers->addWidget( EODRateLCD, 0, 1 );
 
-  SessionButton = new QPushButton( "Cell Found (Enter)", this );
+  SessionButton = new QPushButton( "Cell Found (Enter)" );
   SessionButton->setMinimumSize( SessionButton->sizeHint() );
-  connect( SessionButton, SIGNAL( clicked() ),
-	   this, SLOT( toggleSession() ) );
+  vb->addWidget( SessionButton );
+  QObject::connect( SessionButton, SIGNAL( clicked() ),
+		    (QWidget*)this, SLOT( toggleSession() ) );
 }
 
 
@@ -131,29 +143,30 @@ void Session::initialize( void )
 
   // LCDs:
   unsetNotify();
-  hide();
+  widget()->hide();
   int n=0;
   for ( int k=0; k<SpikeTraces; k++ ) {
     if ( SpikeEvents[k] >= 0 ) {
-      QLabel *label;
-      if ( n > 0 ) {
-	label = new QLabel( "", Numbers );
-	label = new QLabel( "", Numbers );
-      }
-      label = new QLabel( "Rate", Numbers );
+      QLabel *label = new QLabel( "Rate" );
       label->setAlignment( Qt::AlignCenter );
-      FiringRateLCD[k] = new QLCDNumber( 3, Numbers );
+      Numbers->addWidget( label, k, 2 );
+      FiringRateLCD[k] = new QLCDNumber( 3 );
       FiringRateLCD[k]->display( 0.0 );
-      FiringRateLCD[k]->setPalette( QPalette( green, black ) );
-      label = new QLabel( "P-Val", Numbers );
+      FiringRateLCD[k]->setPalette( EODRateLCD->palette() );
+      FiringRateLCD[k]->setAutoFillBackground( true );
+      Numbers->addWidget( FiringRateLCD[k], k, 3 );
+      label = new QLabel( "P-Val" );
       label->setAlignment( Qt::AlignCenter );
-      PValueLCD[k] = new QLCDNumber( 4, Numbers );
+      Numbers->addWidget( label, k, 4 );
+      PValueLCD[k] = new QLCDNumber( 4 );
       PValueLCD[k]->display( 0.0 );
-      PValueLCD[k]->setPalette( QPalette( green, black ) );
+      PValueLCD[k]->setPalette( EODRateLCD->palette() );
+      PValueLCD[k]->setAutoFillBackground( true );
+      Numbers->addWidget( PValueLCD[k], k, 5 );
       n++;
     }
   }
-  show();
+  widget()->show();
 
   setNotify();
 }
@@ -323,7 +336,7 @@ void Session::notify( void )
 }
 
 
-void Session::customEvent( QCustomEvent *qce )
+void Session::customEvent( QEvent *qce )
 {
   if ( qce->type() == QEvent::User+11 ) {
     lock();
@@ -342,7 +355,7 @@ void Session::customEvent( QCustomEvent *qce )
     unlock();
   }
   else
-    Control::customEvent( qce );
+    RELACSPlugin::customEvent( qce );
 }
 
 

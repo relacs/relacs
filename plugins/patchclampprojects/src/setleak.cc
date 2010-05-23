@@ -19,7 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <qhbox.h>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
 #include <relacs/patchclampprojects/setleak.h>
 using namespace relacs;
 
@@ -27,9 +28,7 @@ namespace patchclampprojects {
 
 
 SetLeak::SetLeak( void )
-  : RePro( "SetLeak", "SetLeak", "patchclampprojects",
-	   "Jan Benda", "1.0", "Mar 21, 2009" ),
-    STW( (QWidget*)this )
+  : RePro( "SetLeak", "patchclampprojects", "Jan Benda", "1.0", "Mar 21, 2009" )
 {
   // add some options:
   addBoolean( "interactive", "Set values interactively", true ).setFlags( 1 );
@@ -54,51 +53,65 @@ SetLeak::SetLeak( void )
   addNumber( "taudc", "New membrane time constant", 0.0, 0.0, 1.0e6, 0.001, "s", "ms" ).setFlags( 2 );
   addTypeStyle( OptWidget::Bold, Parameter::Label );
 
-  // display values:
-  STW.assign( this, 2, 4, true, 0, mutex() );
-  updateGeometry();
-  STW.setSpacing( 2 );
-  STW.setMargin( 4 );
+  // layout:
+  QVBoxLayout *vb = new QVBoxLayout;
+  setLayout( vb );
 
-  QHBox *bb = new QHBox( this );
+  // display values:
+  STW.assign( (Options*)this, 2, 4, true, 0, mutex() );
+  STW.setVerticalSpacing( 2 );
+  STW.setMargins( 4 );
+  vb->addWidget( &STW );
+
+  QHBoxLayout *bb = new QHBoxLayout;
   bb->setSpacing( 4 );
+  vb->addLayout( bb );
 
   // Ok button:
-  OKButton = new QPushButton( "&Ok", bb, "OkButton" );
-  connect( OKButton, SIGNAL( clicked() ),
-	   this, SLOT( setValues() ) );
-  grabKey( ALT+Key_O );
-  grabKey( Key_Return );
-  grabKey( Key_Enter );
+  OKButton = new QPushButton( "&Ok" );
+  bb->addWidget( OKButton );
+  QObject::connect( OKButton, SIGNAL( clicked() ),
+		    (QWidget*)this, SLOT( setValues() ) );
+  grabKey( Qt::ALT+Qt::Key_O );
+  grabKey( Qt::Key_Return );
+  grabKey( Qt::Key_Enter );
 
   // Cancel button:
-  CancelButton = new QPushButton( "&Cancel", bb, "CancelButton" );
-  connect( CancelButton, SIGNAL( clicked() ),
-	   this, SLOT( keepValues() ) );
-  grabKey( ALT+Key_C );
-  grabKey( Key_Escape );
+  CancelButton = new QPushButton( "&Cancel" );
+  bb->addWidget( CancelButton );
+  QObject::connect( CancelButton, SIGNAL( clicked() ),
+		    (QWidget*)this, SLOT( keepValues() ) );
+  grabKey( Qt::ALT+Qt::Key_C );
+  grabKey( Qt::Key_Escape );
 
   // Reset button:
-  ResetButton = new QPushButton( "&Reset", bb, "ResetButton" );
-  connect( ResetButton, SIGNAL( clicked() ),
-	   this, SLOT( resetValues() ) );
-  grabKey( ALT+Key_R );
+  ResetButton = new QPushButton( "&Reset" );
+  bb->addWidget( ResetButton );
+  QObject::connect( ResetButton, SIGNAL( clicked() ),
+		    (QWidget*)this, SLOT( resetValues() ) );
+  grabKey( Qt::ALT+Qt::Key_R );
 
-  // Reset button:
-  VRestButton = new QPushButton( "&E to VRest", bb, "VRestButton" );
-  connect( VRestButton, SIGNAL( clicked() ),
-	   this, SLOT( measureVRest() ) );
-  grabKey( ALT+Key_E );
+  // E to VRest button:
+  VRestButton = new QPushButton( "&E to VRest" );
+  bb->addWidget( VRestButton );
+  QObject::connect( VRestButton, SIGNAL( clicked() ),
+		    (QWidget*)this, SLOT( measureVRest() ) );
+  grabKey( Qt::ALT+Qt::Key_E );
 
-  bb->setFixedHeight( OKButton->sizeHint().height() );
+  OKButton->setFixedHeight( OKButton->sizeHint().height() );
+  CancelButton->setFixedHeight( OKButton->sizeHint().height() );
+  ResetButton->setFixedHeight( OKButton->sizeHint().height() );
+  VRestButton->setFixedHeight( OKButton->sizeHint().height() );
   bb->setSpacing( 4 );
 
   // tab order
+  /*
   if ( STW.lastWidget() != 0 )
-    setTabOrder( STW.lastWidget(), OKButton );
-  setTabOrder( OKButton, CancelButton );
-  setTabOrder( CancelButton, ResetButton );
-  setTabOrder( ResetButton, VRestButton );
+    widget()->setTabOrder( STW.lastWidget(), OKButton );
+  widget()->setTabOrder( OKButton, CancelButton );
+  widget()->setTabOrder( CancelButton, ResetButton );
+  widget()->setTabOrder( ResetButton, VRestButton );
+  */
 }
 
 
@@ -263,27 +276,27 @@ int SetLeak::main( void )
 
 void SetLeak::keyPressEvent( QKeyEvent *e )
 {
-  if ( e->key() == Key_O && ( e->state() & AltButton ) ) {
+  if ( e->key() == Qt::Key_O && ( e->modifiers() & Qt::AltModifier ) ) {
     OKButton->animateClick();
     e->accept();
   }
-  else if ( e->key() == Key_C && ( e->state() & AltButton ) ) {
+  else if ( e->key() == Qt::Key_C && ( e->modifiers() & Qt::AltModifier ) ) {
     CancelButton->animateClick();
     e->accept();
   }
-  else if ( e->key() == Key_R && ( e->state() & AltButton ) ) {
+  else if ( e->key() == Qt::Key_R && ( e->modifiers() & Qt::AltModifier ) ) {
     ResetButton->animateClick();
     e->accept();
   }
-  else if ( e->key() == Key_E && ( e->state() & AltButton ) ) {
+  else if ( e->key() == Qt::Key_E && ( e->modifiers() & Qt::AltModifier ) ) {
     VRestButton->animateClick();
     e->accept();
   }
-  else if ( ( e->key() == Key_Return || e->key() == Key_Enter ) && ( e->state() & KeyButtonMask ) == 0 ) {
+  else if ( ( e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter ) && ( e->modifiers() == Qt::NoModifier ) ) {
     OKButton->animateClick();
     e->accept();
   }
-  else if ( e->key() == Key_Escape && ( e->state() & KeyButtonMask ) == 0 ) {
+  else if ( e->key() == Qt::Key_Escape && ( e->modifiers() == Qt::NoModifier ) ) {
     CancelButton->animateClick();
     e->accept();
   }
@@ -292,20 +305,20 @@ void SetLeak::keyPressEvent( QKeyEvent *e )
 }
 
 
-void SetLeak::customEvent( QCustomEvent *qce )
+void SetLeak::customEvent( QEvent *qce )
 {
   if ( qce->type() == QEvent::User+11 ) {
     if ( STW.firstWidget() != 0 )
       STW.firstWidget()->setFocus();
   }
   else if ( qce->type() == QEvent::User+12 ) {
-    topLevelWidget()->setFocus();
+    widget()->window()->setFocus();
   }
   else if ( qce->type() == QEvent::User+13 ) {
     STW.updateValues();
   }
   else
-    RePro::customEvent( qce );
+    RELACSPlugin::customEvent( qce );
 }
 
 

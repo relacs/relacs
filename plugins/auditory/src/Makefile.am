@@ -1,5 +1,5 @@
 HEADER_PATH = ../include/relacs/auditory
-include ${top_srcdir}/moc3.mk
+include ${top_srcdir}/moc4.mk
 
 pluginlibdir = $(pkglibdir)/plugins
 
@@ -13,7 +13,6 @@ pluginlib_LTLIBRARIES = \
     libauditorysyslatency.la
 
 
-
 libauditoryreceptormodel_la_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
@@ -21,19 +20,19 @@ libauditoryreceptormodel_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/plugins/ephys/include \
+    -I$(top_srcdir)/plugins/acoustic/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libauditoryreceptormodel_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libauditoryreceptormodel_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(builddir)/../../ephys/src/libephysneuronmodels.la \
-    $(QT3_LIBS)
-
-$(libauditoryreceptormodel_la_OBJECTS) : moc_receptormodel.cc
+    $(builddir)/../../acoustic/src/libacoustictraces.la \
+    $(QT4_LIBS)
 
 libauditoryreceptormodel_la_SOURCES = receptormodel.cc
 
@@ -52,16 +51,16 @@ libauditorysearch_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libauditorysearch_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libauditorysearch_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(builddir)/../../acoustic/src/libacoustictraces.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libauditorysearch_la_OBJECTS) : moc_search.cc
 
@@ -85,18 +84,18 @@ libauditorysession_la_CPPFLAGS = \
     -I$(top_srcdir)/plugins/linuxdevices/nieseries/include \
     -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libauditorysession_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libauditorysession_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
     $(top_builddir)/plugins/acoustic/src/libacoustictraces.la \
     $(top_builddir)/plugins/linuxdevices/nieseries/src/libnieseriesnidio.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 #    $(top_builddir)/plugins/linuxdevices/misc/src/libmiscamplmode.la
 
 $(libauditorysession_la_OBJECTS) : moc_session.cc
@@ -123,18 +122,18 @@ libauditoryficurve_la_CPPFLAGS = \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libauditoryficurve_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libauditoryficurve_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../acoustic/src/libacoustictraces.la \
     libauditorysession.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libauditoryficurve_la_OBJECTS) : moc_ficurve.cc
 
@@ -159,18 +158,18 @@ libauditoryfifield_la_CPPFLAGS = \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libauditoryfifield_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libauditoryfifield_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../acoustic/src/libacoustictraces.la \
     libauditoryficurve.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libauditoryfifield_la_OBJECTS) : moc_fifield.cc
 
@@ -195,18 +194,18 @@ libauditorysinglestimulus_la_CPPFLAGS = \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libauditorysinglestimulus_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libauditorysinglestimulus_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../acoustic/src/libacoustictraces.la \
     libauditorysession.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libauditorysinglestimulus_la_OBJECTS) : moc_singlestimulus.cc
 
@@ -232,18 +231,18 @@ libauditorysyslatency_la_CPPFLAGS = \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libauditorysyslatency_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libauditorysyslatency_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../acoustic/src/libacoustictraces.la \
     libauditorysession.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libauditorysyslatency_la_OBJECTS) : moc_syslatency.cc
 

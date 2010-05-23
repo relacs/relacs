@@ -19,12 +19,12 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <qhbox.h>
-#include <qvbox.h>
-#include <qlabel.h>
-#include <qkeycode.h>
+#include <QWidget>
+#include <QWidget>
+#include <QLabel>
+#include <QGroupBox>
+#include <QButtonGroup>
 #include <relacs/tablekey.h>
-#include <relacs/lcdrange.h>
 #include <relacs/auditory/search.h>
 using namespace relacs;
 
@@ -53,8 +53,7 @@ const double Search::MinFrequency = 2000.0;
 
 
 Search::Search( void )
-  : RePro( "Search", "Search", "Auditory",
-	   "Jan Benda and Christian Machens", "2.2", "Jan 10, 2008" )
+  : RePro( "Search", "Auditory", "Jan Benda and Christian Machens", "2.2", "Jan 10, 2008" )
 {
   // parameter:
   Intensity = 80.0;
@@ -67,17 +66,12 @@ Search::Search( void )
   SetBestSide = 1;
 
   // options:
-  addNumber( "intensity", "Intensity",  Intensity, MinIntensity, MaxIntensity,
-	     ShortIntensityStep, "dB", "dB", "%.1f" ).setActivation( "mute", "false" );
+  addNumber( "intensity", "Intensity",  Intensity, MinIntensity, MaxIntensity, ShortIntensityStep, "dB", "dB", "%.1f" ).setActivation( "mute", "false" );
   addBoolean( "mute", "No stimulus", false );
-  addNumber( "duration", "Duration of stimulus", Duration, MinDuration, 
-	     MaxDuration, ShortDurationStep, "sec", "ms" );
-  addNumber( "pause", "Duration of pause", Pause, MinPause, MaxPause, 
-	     ShortPauseStep, "sec", "ms" );
-  addNumber( "prepause", "Part of pause before stimulus", PrePause, 0.0, MaxPause, 
-	     ShortPauseStep, "sec", "ms" );
-  addNumber( "frequency", "Frequency of stimulus", Frequency, MinFrequency, 
-	     MaxFrequency, ShortFrequencyStep, "Hz", "kHz" );
+  addNumber( "duration", "Duration of stimulus", Duration, MinDuration, MaxDuration, ShortDurationStep, "sec", "ms" );
+  addNumber( "pause", "Duration of pause", Pause, MinPause, MaxPause, ShortPauseStep, "sec", "ms" );
+  addNumber( "prepause", "Part of pause before stimulus", PrePause, 0.0, MaxPause, ShortPauseStep, "sec", "ms" );
+  addNumber( "frequency", "Frequency of stimulus", Frequency, MinFrequency, MaxFrequency, ShortFrequencyStep, "Hz", "kHz" );
   addSelection( "waveform", "Waveform of stimulus", "sine|noise" );
   addNumber( "ramp", "Ramp", 0.002, 0.0, 10.0, 0.001, "sec", "ms" );
   addSelection( "side", "Speaker", "left|right|best" );
@@ -92,81 +86,85 @@ Search::Search( void )
   Mute = false;
 
   // layout:
-  delete boxLayout();
-  QGridLayout *grid = new QGridLayout( this, 2, 2 );
-  grid->setAutoAdd( true );
+  QGridLayout *grid = new QGridLayout;
+  setLayout( grid );
 
   // Intensity Settings:
-  LCDRange *lcd;
-  lcd = new LCDRange( "Intensity (dB)", this, "LCD", 3 );
-  lcd->setRange( int(MinIntensity), int(MaxIntensity) );
-  lcd->setValue( int(Intensity) );
-  lcd->setSteps( int(ShortIntensityStep), int(LongIntensityStep) );
-  connect( lcd, SIGNAL( valueChanged( int ) ), 
-	   this, SLOT( setIntensity( int ) ) );
-  connect( this, SIGNAL( intensityChanged( int ) ), 
-	   lcd, SLOT( setValue( int ) ) );
+  ILCD = new LCDRange( "Intensity (dB)", 3 );
+  ILCD->setRange( int(MinIntensity), int(MaxIntensity) );
+  ILCD->setValue( int(Intensity) );
+  ILCD->setSteps( int(ShortIntensityStep), int(LongIntensityStep) );
+  grid->addWidget( ILCD, 0, 0 );
+  QObject::connect( ILCD, SIGNAL( valueChanged( int ) ), 
+		    (QWidget*)this, SLOT( setIntensity( int ) ) );
 
-  QVBox *vbox = new QVBox( this );
+  QGridLayout *sgrid = new QGridLayout;
+  grid->addLayout( sgrid, 0, 1 );
 
-  QHBox *hbox = new QHBox( vbox );
   // Duration Settings:
-  lcd = new LCDRange( "Stimulus (msec)", hbox, "Noise", 4 );
-  lcd->setRange( int(1000.0*MinDuration), int(1000.0*MaxDuration) );
-  lcd->setValue( int(1000.0*Duration) );
-  lcd->setSteps( int(1000.0*ShortDurationStep), int(1000.0*LongDurationStep) );
-  connect( lcd, SIGNAL( valueChanged( int ) ), 
-	   this, SLOT( setDuration( int ) ) );
-  connect( this, SIGNAL( durationChanged( int ) ), 
-	   lcd, SLOT( setValue( int ) ) );
+  DLCD = new LCDRange( "Stimulus (msec)", 4 );
+  DLCD->setRange( int(1000.0*MinDuration), int(1000.0*MaxDuration) );
+  DLCD->setValue( int(1000.0*Duration) );
+  DLCD->setSteps( int(1000.0*ShortDurationStep), int(1000.0*LongDurationStep) );
+  sgrid->addWidget( DLCD, 0, 0 );
+  QObject::connect( DLCD, SIGNAL( valueChanged( int ) ), 
+		    (QWidget*)this, SLOT( setDuration( int ) ) );
 
   // Pause Settings:
-  lcd = new LCDRange( "Pause (msec)", hbox, "Pause", 4 );
-  lcd->setRange( int(1000.0*MinPause), int(1000.0*MaxPause) );
-  lcd->setValue( int(1000.0*Pause) );
-  lcd->setSteps( int(1000.0*ShortPauseStep), int(1000.0*LongPauseStep) );
-  connect( lcd, SIGNAL( valueChanged( int ) ), 
-	   this, SLOT( setPause( int ) ) );
-  connect( this,  SIGNAL( pauseChanged( int ) ), 
-	   lcd, SLOT( setValue( int ) ) );
+  PLCD = new LCDRange( "Pause (msec)", 4 );
+  PLCD->setRange( int(1000.0*MinPause), int(1000.0*MaxPause) );
+  PLCD->setValue( int(1000.0*Pause) );
+  PLCD->setSteps( int(1000.0*ShortPauseStep), int(1000.0*LongPauseStep) );
+  sgrid->addWidget( PLCD, 0, 1 );
+  QObject::connect( PLCD, SIGNAL( valueChanged( int ) ), 
+		    (QWidget*)this, SLOT( setPause( int ) ) );
 
-  hbox = new QHBox( vbox );
   // Waveform:
-  WaveformButtons = new QButtonGroup( 1, Qt::Horizontal, "Waveform", hbox );
-  new QRadioButton( "Sine", WaveformButtons );
-  new QRadioButton( "Noise", WaveformButtons );
-  WaveformButtons->setButton( 0 );
-  connect( WaveformButtons, SIGNAL( clicked( int ) ), 
-	   this, SLOT( setWaveform( int ) ) );
-  connect( this, SIGNAL( waveformChanged( int ) ), 
-	   this, SLOT( setWaveformButton( int ) ) );
+  QGroupBox *gb = new QGroupBox( "Waveform" );
+  sgrid->addWidget( gb, 1, 0 );
+  SineButton = new QRadioButton( "Sine" );
+  NoiseButton = new QRadioButton( "Noise" );
+  SineButton->setChecked( true );
+  QVBoxLayout *gbl = new QVBoxLayout;
+  gbl->addWidget( SineButton );
+  gbl->addWidget( NoiseButton );
+  gb->setLayout( gbl );
+  QButtonGroup *WaveformButtons = new QButtonGroup;
+  WaveformButtons->addButton( SineButton, 0 );
+  WaveformButtons->addButton( NoiseButton, 1 );
+  QObject::connect( WaveformButtons, SIGNAL( buttonClicked( int ) ), 
+		    (QWidget*)this, SLOT( setWaveform( int ) ) );
 
   // Frequency Settings:
-  lcd = new LCDRange( "Frequency (Hz)", hbox, "Frequency", 5 );
-  lcd->setRange( int(MinFrequency), int(MaxFrequency) );
-  lcd->setValue( int(Frequency) );
-  lcd->setSteps( int(ShortFrequencyStep), int(LongFrequencyStep) );
-  connect( lcd, SIGNAL( valueChanged( int ) ), 
-	   this, SLOT( setFrequency( int ) ) );
-  connect( this,  SIGNAL( frequencyChanged( int ) ), 
-	   lcd, SLOT( setValue( int ) ) );
+  FLCD = new LCDRange( "Frequency (Hz)", 5 );
+  FLCD->setRange( int(MinFrequency), int(MaxFrequency) );
+  FLCD->setValue( int(Frequency) );
+  FLCD->setSteps( int(ShortFrequencyStep), int(LongFrequencyStep) );
+  sgrid->addWidget( FLCD, 1, 1 );
+  QObject::connect( FLCD, SIGNAL( valueChanged( int ) ), 
+		    (QWidget*)this, SLOT( setFrequency( int ) ) );
 
   // mute button:
-  MuteButton = new QPushButton( this );
-  MuteButton->setToggleButton( true );
+  MuteButton = new QPushButton;
+  MuteButton->setCheckable( true );
   MuteButton->setText( "Mute" );
-  connect( MuteButton, SIGNAL( clicked() ), 
-	   this, SLOT( toggleMute() ) ); 
+  grid->addWidget( MuteButton, 1, 0 );
+  QObject::connect( MuteButton, SIGNAL( clicked() ), 
+		    (QWidget*)this, SLOT( toggleMute() ) ); 
 
   // SearchSide Settings:
-  hbox = new QHBox( this );
-  new QLabel( "Speaker:", hbox );
-  LeftButton = new QRadioButton( "left", hbox );
-  RightButton = new QRadioButton( "right", hbox );
-  connect( LeftButton, SIGNAL( clicked() ), 
-	   this, SLOT( setSpeakerLeft() ) ); 
-  connect( RightButton, SIGNAL( clicked() ), 
-	   this, SLOT( setSpeakerRight() ) ); 
+  QHBoxLayout *hbox = new QHBoxLayout;
+  grid->addLayout( hbox, 1, 1 );
+  QLabel *label = new QLabel( "Speaker:" );
+  hbox->addWidget( label );
+  LeftButton = new QRadioButton( "left" );
+  hbox->addWidget( LeftButton );
+  RightButton = new QRadioButton( "right" );
+  hbox->addWidget( RightButton );
+  QObject::connect( LeftButton, SIGNAL( clicked() ), 
+		    (QWidget*)this, SLOT( setSpeakerLeft() ) ); 
+  QObject::connect( RightButton, SIGNAL( clicked() ), 
+		    (QWidget*)this, SLOT( setSpeakerRight() ) ); 
 }
 
 
@@ -357,48 +355,48 @@ void Search::saveEvents( const EventData &events, int count, const Options &head
 void Search::keyPressEvent( QKeyEvent *qke )
 {
   switch ( qke->key()) {
-  case Key_Up:
-    if ( qke->state() & AltButton ) {
-      if ( qke->state() & ShiftButton )
+  case Qt::Key_Up:
+    if ( qke->modifiers() & Qt::AltModifier ) {
+      if ( qke->modifiers() & Qt::ShiftModifier )
 	setFrequency( int(Frequency + LongFrequencyStep) );
       else
 	setFrequency( int(Frequency + ShortFrequencyStep) );
-      emit frequencyChanged( int(Frequency) );
+      FLCD->setValue( int(Frequency) );
     }
     else {
-      if ( qke->state() & ShiftButton )
+      if ( qke->modifiers() & Qt::ShiftModifier )
 	setIntensity( int(Intensity + LongIntensityStep) );
       else
 	setIntensity( int(Intensity + ShortIntensityStep) );
-      emit intensityChanged( int(Intensity) );
+      ILCD->setValue( int(Intensity) );
     }
     break;
-  case Key_Down:                // arrow down
-    if ( qke->state() & AltButton ) {
-      if ( qke->state() & ShiftButton )
+  case Qt::Key_Down:                // arrow down
+    if ( qke->modifiers() & Qt::AltModifier ) {
+      if ( qke->modifiers() & Qt::ShiftModifier )
 	setFrequency( int(Frequency - LongFrequencyStep) );
       else
 	setFrequency( int(Frequency - ShortFrequencyStep) );
-      emit frequencyChanged( int(Frequency) );
+      FLCD->setValue( int(Frequency) );
     }
     else {
-      if ( qke->state() & ShiftButton )
+      if ( qke->modifiers() & Qt::ShiftModifier )
 	setIntensity( int(Intensity - LongIntensityStep) );
       else
 	setIntensity( int(Intensity - ShortIntensityStep) );
-      emit intensityChanged( int(Intensity) );
+      ILCD->setValue( int(Intensity) );
     }
     break;
 
-  case Key_Left:
+  case Qt::Key_Left:
     setSpeakerLeft();
     break;
-  case Key_Right:
+  case Qt::Key_Right:
     setSpeakerRight();
     break;
 
-  case Key_Pause:
-  case Key_M:
+  case Qt::Key_Pause:
+  case Qt::Key_M:
     toggleMute();
     break;
 
@@ -498,7 +496,10 @@ void Search::setWaveform( int wave )
 
 void Search::setWaveformButton( int wave )
 {
-  WaveformButtons->setButton( wave );
+  if ( wave == 1 )
+    NoiseButton->setChecked( true );
+  else
+    SineButton->setChecked( true );
 }
 
 
@@ -546,12 +547,12 @@ void Search::setMute( bool mute )
   if ( mute != Mute ) {
     if ( ! mute ) {
       Mute = false;
-      MuteButton->setOn( false );
+      MuteButton->setDown( false );
       NewSignal = true;
     }
     else {
       Mute = true;
-      MuteButton->setOn( true );
+      MuteButton->setDown( true );
       NewSignal = true;
     }
   }
@@ -560,11 +561,11 @@ void Search::setMute( bool mute )
 
 void Search::dialogAccepted( void )
 {
-  emit intensityChanged( int( number( "intensity" ) ) );
-  emit durationChanged( int( number( "duration", "ms" ) ) );
-  emit pauseChanged( int( number( "pause", "ms" ) ) );
-  emit frequencyChanged( int( number( "frequency", "Hz" ) ) );
-  emit waveformChanged( index( "waveform" ) );
+  ILCD->setValue( int( number( "intensity" ) ) );
+  DLCD->setValue( int( number( "duration", "ms" ) ) );
+  PLCD->setValue( int( number( "pause", "ms" ) ) );
+  FLCD->setValue( int( number( "frequency", "Hz" ) ) );
+  setWaveformButton( index( "waveform" ) );
   int side = index( "side" );
   if ( side > 1 )
     side = metaData( "Cell" ).index( "best side" );
@@ -572,21 +573,21 @@ void Search::dialogAccepted( void )
 }
 
 
-void Search::customEvent( QCustomEvent *qce )
+void Search::customEvent( QEvent *qce )
 {
-  emit intensityChanged( int(Intensity) );
+  ILCD->setValue( int(Intensity) );
   if ( qce->type() - QEvent::User == 11  ) {
-    emit durationChanged( int(1000.0*Duration) );
-    emit pauseChanged( int(1000.0*Pause) );
-    emit frequencyChanged( int(Frequency) );
-    emit waveformChanged( Waveform );
+    DLCD->setValue( int(1000.0*Duration) );
+    PLCD->setValue( int(1000.0*Pause) );
+    FLCD->setValue( int(Frequency) );
+    setWaveformButton( Waveform );
     int side = index( "side" );
     if ( side > 1 )
       side = metaData( "Cell" ).index( "best side" );
     setSpeaker( ( side == 0 ) );
   }
   else
-    RePro::customEvent( qce );
+    RELACSPlugin::customEvent( qce );
 }
 
 

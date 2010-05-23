@@ -22,9 +22,9 @@
 #ifndef _RELACS_EFISH_SESSION_H_
 #define _RELACS_EFISH_SESSION_H_ 1
 
-#include <qgrid.h>
-#include <qpushbutton.h>
-#include <qlcdnumber.h>
+#include <QGridLayout>
+#include <QPushButton>
+#include <QLCDNumber>
 #include <relacs/multiplot.h>
 #include <relacs/ephys/traces.h>
 #include <relacs/efield/traces.h>
@@ -67,7 +67,7 @@ public:
 
 public slots:
 
-  void customEvent( QCustomEvent *qce );
+  void customEvent( QEvent *qce );
 
 
 protected:
@@ -89,7 +89,7 @@ private:
   long EODOffset;
 
   MultiPlot EODPlot;
-  QGrid *Numbers;
+  QGridLayout *Numbers;
   QLCDNumber *EODRateLCD;
   QLCDNumber *FiringRateLCD[MaxSpikeTraces];
   QLCDNumber *PValueLCD[MaxSpikeTraces];

@@ -34,9 +34,7 @@ namespace auditory {
 
 
 FICurve::FICurve( void )
-  : RePro( "FICurve", "F-I Curve", "Auditory",
-	   "Jan Benda", "1.4", "Oct 1, 2008" ),
-    P( 2, 2, true, this, "ficurveplot" )    
+  : RePro( "FICurve", "Auditory", "Jan Benda", "1.4", "Oct 1, 2008" )
 {
   // parameter:
   MinIntensity = 30.0;
@@ -134,6 +132,7 @@ FICurve::FICurve( void )
   // plot:
   P.setDataMutex( mutex() );
   P.lock();
+  P.resize( 2, 2, true );
   P[0].setLMarg( 5.0 );
   P[0].setRMarg( 1.0 );
   P[0].setXLabel( "Time [ms]" );
@@ -143,6 +142,7 @@ FICurve::FICurve( void )
   P[1].setXLabel( "Intensity [dB SPL]" );
   P[1].setYLabel( "Firing rate [Hz]" );
   P.unlock();
+  setWidget( &P );
 
   // header and keys:
   Header.addInteger( "index1" );
@@ -279,8 +279,8 @@ int FICurve::main( void )
   P[1].setYRange( 0.0, Plot::AutoScale );
   if ( manualskip ) {
     P[1].setMouseTracking( true );
-    connect( &P[1], SIGNAL( userMouseEvent( Plot::MouseEvent& ) ),
-	     this, SLOT( plotMouseEvent( Plot::MouseEvent& ) ) );
+    QWidget::connect( &P[1], SIGNAL( userMouseEvent( Plot::MouseEvent& ) ),
+		      (QWidget*)this, SLOT( plotMouseEvent( Plot::MouseEvent& ) ) );
   }
   PlotIntensitySelection = false;
   P.unlock();
@@ -331,8 +331,8 @@ int FICurve::main( void )
       if ( manualskip ) {
 	P.lock();
 	P[1].setMouseTracking( false );
-	disconnect( &P[1], SIGNAL( userMouseEvent( Plot::MouseEvent& ) ),
-		    this, SLOT( plotMouseEvent( Plot::MouseEvent& ) ) );
+	QWidget::disconnect( &P[1], SIGNAL( userMouseEvent( Plot::MouseEvent& ) ),
+			     (QWidget*)this, SLOT( plotMouseEvent( Plot::MouseEvent& ) ) );
 	P.unlock();
       }
       return Failed;
@@ -371,8 +371,8 @@ int FICurve::main( void )
   if ( manualskip ) {
     P.lock();
     P[1].setMouseTracking( false );
-    disconnect( &P[1], SIGNAL( userMouseEvent( Plot::MouseEvent& ) ),
-		this, SLOT( plotMouseEvent( Plot::MouseEvent& ) ) );
+    QWidget::disconnect( &P[1], SIGNAL( userMouseEvent( Plot::MouseEvent& ) ),
+			 (QWidget*)this, SLOT( plotMouseEvent( Plot::MouseEvent& ) ) );
     P.unlock();
   }
   return ds;

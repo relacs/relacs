@@ -34,9 +34,7 @@ namespace efish {
 
 
 BaselineActivity::BaselineActivity( void )
-  : RePro( "BaselineActivity", "BaselineActivity", "efish",
-	   "Jan Benda", "2.1", "Nov 26, 2009" ),
-    P( 1, this )
+  : RePro( "BaselineActivity", "efish", "Jan Benda", "2.1", "Nov 26, 2009" )
 {
   // parameter:
   Duration = 0.3;
@@ -69,6 +67,8 @@ BaselineActivity::BaselineActivity( void )
   LastSignal = 0.0;
   SearchDuration = 0.0;
   LastEODInx = 0;
+
+  setWidget( &P );
 }
 
 

@@ -23,6 +23,7 @@
 #define _RELACS_AUDITORY_RECEPTORMODEL_H_ 1
 
 #include <relacs/ephys/neuronmodels.h>
+#include <relacs/acoustic/traces.h>
 using namespace relacs;
 
 namespace auditory {
@@ -113,9 +114,8 @@ option with default values and data type):
 */
 
 
-class ReceptorModel : public ephys::NeuronModels
+class ReceptorModel : public ephys::NeuronModels, public acoustic::Traces
 {
-  Q_OBJECT
 
 public:
 

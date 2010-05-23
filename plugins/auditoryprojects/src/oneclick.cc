@@ -32,9 +32,7 @@ namespace auditoryprojects {
 
 
 OneClick::OneClick( void )
-  : RePro( "OneClick", "OneClick", "Auditoryprojects",
-	   "Alexander Wolf", "0.2", "Jan 10, 2008" ),
-    P( 1, 1, true, this)    
+  : RePro( "OneClick", "Auditoryprojects", "Alexander Wolf", "0.2", "Jan 10, 2008" )
 {
   // parameter:
   MinIntensity = 30.0;
@@ -66,9 +64,11 @@ OneClick::OneClick( void )
 
   // plot:
   P.lock();
+  P.resize( 1, 1, true );    
   P[0].setXLabel( "Amplitude [dB SPL]" );
   P[0].setYLabel( "Spike Probability [%]" );
   P.unlock();
+  setWidget( &P );
 }
 
 

@@ -27,9 +27,8 @@ namespace efield {
 
 BeatDetector::BeatDetector( const string &ident, int mode )
   : Filter( ident, mode, MultipleEventDetector, 2,
-	    "BeatDetector", "Beat Detector", "EField", 
-	    "Jan Benda", "1.2", "Jun 17, 2009" ),
-    BDW( (QWidget*)this )
+	    "BeatDetector", "EField", 
+	    "Jan Benda", "1.2", "Jun 17, 2009" )
 {
   // parameter:
   Threshold = 6.0;
@@ -52,8 +51,9 @@ BeatDetector::BeatDetector( const string &ident, int mode )
   addNumber( "contrast", "Contrast", 0.0, 0.0, 10000.0, 0.1, "%", "%", "%.1f", 2+4, strongstyle );
 
   BDW.assign( ((Options*)this), 2, 4, true, 0, mutex() );
-  BDW.setSpacing( 4 );
-  BDW.setMargin( 4 );
+  BDW.setVerticalSpacing( 4 );
+  BDW.setMargins( 4 );
+  setWidget( &BDW );
 
   setDialogSelectMask( 8 );
   setDialogReadOnlyMask( 16 );

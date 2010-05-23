@@ -21,6 +21,7 @@
 
 #include <fstream>
 #include <iomanip>
+#include <QVBoxLayout>
 #include <relacs/kernel.h>
 #include <relacs/spectrum.h>
 #include <relacs/tablekey.h>
@@ -33,10 +34,8 @@ namespace auditoryprojects {
 
 
 SpikePrecision::SpikePrecision( void )
-  : RePro( "SpikePrecision", "SpikePrecision", "Auditoryprojects",
-	   "Samuel Glauser, Jan Benda", "1.5", "Jan 10, 2008" ),
-    SP( 3, this ),
-    P( 4, this )
+  : RePro( "SpikePrecision", "Auditoryprojects",
+	   "Samuel Glauser, Jan Benda", "1.5", "Jan 10, 2008" )
 {
   // default values for the options & other variables:
   CarrierFrequency	= 0.0;
@@ -87,8 +86,12 @@ SpikePrecision::SpikePrecision( void )
   addText( "storepath", "Save stimuli in custom directory", "" ).setStyle( OptWidget::BrowseDirectory ).setActivation( "storemode", "custom" );
 
   // setup plots:
+  QVBoxLayout *vb = new QVBoxLayout;
+  setLayout( vb );
+
   SP.hide();
   SP.lock();
+  SP.resize( 3 );
   SP.setCommonXRange( 0, 1 );
   SP[0].setOrigin( 0.0, 0.5 );
   SP[0].setSize( 0.7, 0.5 );
@@ -117,9 +120,11 @@ SpikePrecision::SpikePrecision( void )
   SP[2].setYLabelPos( 2.3, Plot::FirstMargin, 0.5, Plot::Graph,
 		      Plot::Center, -90.0 );
   SP.unlock();
+  vb->addWidget( &SP );
 
   P.show();
   P.lock();
+  P.resize( 4 );
   P.setCommonXRange( 0, 1 );
   P[0].setOrigin( 0.0, 0.5 );
   P[0].setSize( 0.7, 0.5 );
@@ -157,6 +162,7 @@ SpikePrecision::SpikePrecision( void )
   P[3].setYLabelPos( 2.3, Plot::FirstMargin, 0.5, Plot::Graph,
 		     Plot::Center, -90.0 );
   P.unlock();
+  vb->addWidget( &P );
 }
 
 
@@ -279,10 +285,11 @@ int SpikePrecision::main( void )
   // search for intensity that evokes the target firing rate:
   if ( userate ) {
     // setup plot:
-    QApplication::postEvent( this, new QCustomEvent( QEvent::User+12 ) );
+    postCustomEvent( 12 );
     SP.lock();
     SP.clearPlots();
     SP[0].setTitle( "Search target firing rate " + Str( targetrate ) + " Hz" );
+    SP.setDrawBackground();
     SP.unlock();
     SP.draw();
 
@@ -487,10 +494,11 @@ int SpikePrecision::main( void )
   results.resize( FreqRange.size(), EnvelopeFrequencyData( Duration, 0.0005 ) );
 
   // setup plots:
-  QApplication::postEvent( this, new QCustomEvent( QEvent::User+11 ) );
+  postCustomEvent( 11 );
   P.lock();
   P.clearPlots();
   P[0].setTitle( "Mean firing rate =    Hz" );
+  P.setDrawBackground();
   P.unlock();
   P.draw();
 
@@ -955,7 +963,7 @@ int SpikePrecision::createStimulus( OutData &signal, SampleDataD &amdb,
 }
 
 
-void SpikePrecision::customEvent( QCustomEvent *qce )
+void SpikePrecision::customEvent( QEvent *qce )
 {
   if ( qce->type() == QEvent::User+11 ) {
     SP.hide();
@@ -966,7 +974,7 @@ void SpikePrecision::customEvent( QCustomEvent *qce )
     SP.show();
   }
   else
-    RePro::customEvent( qce );
+    RELACSPlugin::customEvent( qce );
 }
 
 

@@ -451,6 +451,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
 
   // miscellaneous:
   setFocusPolicy( Qt::StrongFocus );
+  topLevelWidget()->setFocus();
   KeyTime = new KeyTimeOut( topLevelWidget() );
 
 }

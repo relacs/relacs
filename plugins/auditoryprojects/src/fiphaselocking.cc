@@ -32,9 +32,7 @@ namespace auditoryprojects {
 
 
 FIPhaseLocking::FIPhaseLocking( void )
-  : RePro( "FIPhaseLocking", "FIPhaseLocking", "auditoryprojects",
-	   "Karin Fisch", "1.0", "Feb 01, 2010" ),
-    P( 2, 2, true, this )
+  : RePro( "FIPhaseLocking", "auditoryprojects", "Karin Fisch", "1.0", "Feb 01, 2010" )
 {
   //parameters
   // double  CarrierFrequency = 5000.0;
@@ -65,6 +63,7 @@ FIPhaseLocking::FIPhaseLocking( void )
   //plot
   P.setDataMutex( mutex() );
   P.lock();
+  P.resize( 2, 2, true );
   P[0].setLMarg( 5.0 );
   P[0].setRMarg( 1.0 );
   P[0].setXLabel( "Time [ms]" );
@@ -74,6 +73,7 @@ FIPhaseLocking::FIPhaseLocking( void )
   P[1].setXLabel( "Interspike interval [ms]" );
   P[1].setYLabel( "Count" );
   P.unlock();
+  setWidget( &P );
 }
 
 
