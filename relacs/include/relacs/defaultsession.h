@@ -22,7 +22,7 @@
 #ifndef _RELACS_DEFAULTSESSION_H_
 #define _RELACS_DEFAULTSESSION_H_ 1
 
-#include <qpushbutton.h>
+#include <QPushButton>
 #include <relacs/control.h>
 
 namespace relacs {
@@ -45,8 +45,8 @@ public:
   DefaultSession( void );
   ~DefaultSession( void );
 
-  void sessionStarted( void );
-  void sessionStopped( bool saved );
+  virtual void sessionStarted( void );
+  virtual void sessionStopped( bool saved );
 
 
 private:

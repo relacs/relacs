@@ -27,8 +27,7 @@ namespace base {
 
 
 SimpleModel::SimpleModel( void )
-  : Model( "SimpleModel", "Simple Model", "Base",
-	   "Jan Benda", "1.1", "Jan 31, 2008" )
+  : Model( "SimpleModel", "Base", "Jan Benda", "1.1", "Jan 31, 2008" )
 {
   // define options:
   addSelection( "model", "The model", "Noise|Sine|Stimulus" );
@@ -71,5 +70,3 @@ void SimpleModel::main( void )
 addModel( SimpleModel );
 
 }; /* namespace base */
-
-#include "moc_simplemodel.cc"

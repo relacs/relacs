@@ -20,40 +20,63 @@
 */
 
 #include <iostream>
-#include <qapplication.h>
-#include <qpushbutton.h>
-#include <qlabel.h>
+#include <QApplication>
+#include <QVBoxLayout>
+#include <QPushButton>
+#include <QLabel>
 #include <relacs/optdialog.h>
 #include "mainwidget.h"
 using namespace relacs;
 
 
-MainWidget::MainWidget( QWidget *parent, const char *name )
-  : QVBox( parent, name )
+MainWidget::MainWidget( void )
+  : QWidget()
 {
-  Opt1.addLabel( "Timing", 0, OptWidget::Bold );
+  //int testflag = OptWidget::BackBlack | OptWidget::Blue;
+  int testflag = 0;
+  Opt1.addLabel( "Timing", 0, OptWidget::Bold + OptWidget::TabLabel | testflag );
   Opt1.addNumber( "duration", "Duration of Signal",
-		  0.3, 0.01, 1.0, 0.000001, "seconds", "ms" ).setStyle( OptWidget::Huge + OptWidget::Italic + OptWidget::Green );
+		  0.3, 0.01, 1.0, 0.000001, "seconds", "ms" ).setStyle( OptWidget::Huge | OptWidget::Italic | OptWidget::Green | testflag );
   Opt1.addNumber( "pause", "Pause between Signals",
-		 0.2, 0.0, 1.0, 0.01, "seconds", "ms", "%g", 3 ).setStyle( OptWidget::LabelNormal + OptWidget::ValueItalic + OptWidget::LabelBold +  OptWidget::ValueGreen + OptWidget::ValueBackBlack + OptWidget::ValueLCD );
-  Opt1.setNumber( "pause", 0.180 );
-  Opt1.addInteger( "repeats", "Repeats", 8, 0, 100 );
-  Opt1.addLabel( "Settings", 0,  OptWidget::Large + OptWidget::Bold +  OptWidget::Red );
-  Opt1.addText( "color", "Color", "red|green|blue");
-  Opt1.addText( "comment", "Comments", "no comment" );
+		  0.2, 0.0, 1.0, 0.01, "seconds", "ms", "%g", 3 ).setStyle( OptWidget::ValueGreen | OptWidget::ValueBackBlack | OptWidget::ValueLCD | OptWidget::ValueHuge | testflag );
+  Opt1.addInteger( "repeats", "Repeats", 8, 0, 100 ).setStyle( testflag );
+  Opt1.addLabel( "Settings", 0,  OptWidget::Bold | testflag );
+  Opt1.addInteger( "repeats", "Repeats", 8, 0, 100 ).setStyle( testflag );
+
+  Opt1.addLabel( "Settings", 0,  OptWidget::Large | OptWidget::Bold |  OptWidget::Red | testflag );
+  Opt1.addText( "fgcolor", "Foreground color", "red|green|blue" ).setStyle( OptWidget::SelectText | testflag );
+  Opt1.addText( "bgcolor", "Background color", "red|green|blue" ).setStyle( testflag );
+  Opt1.addText( "comment", "Comments", "no comment" ).setStyle( testflag );
+  Opt1.addBoolean( "adjust", "Adjust input gain", true ).setStyle( testflag );
+
+  Opt1.addLabel( "Analysis" ).setStyle( OptWidget::TabLabel );
+  Opt1.addNumber( "skipwin", "Initial portion of stimulus not used for analysis", 1.0, 0.0, 100.0, 0.01, "seconds", "ms" );
+  Opt1.addNumber( "sigma1", "Standard deviation of rate smoothing kernel 1", 0.001, 0.0, 1.0, 0.0001, "seconds", "ms" );
+  Opt1.addNumber( "sigma2", "Standard deviation of rate smoothing kernel 2", 0.005, 0.0, 1.0, 0.001, "seconds", "ms" );
+  Opt1.addNumber( "sigma3", "Standard deviation of rate smoothing kernel 3", 0.005, 0.0, 1.0, 0.001, "seconds", "ms" );
+  Opt1.addBoolean( "adjust", "Adjust input gain", true );
+  Opt1.addLabel( "Save stimuli" ).setStyle( OptWidget::Bold );
+  Opt1.addSelection( "storemode", "Save stimuli in", "session|repro|custom" ).setUnit( "path" );
+  Opt1.addText( "storepath", "Save stimuli in custom directory", "" ).setStyle( OptWidget::BrowseDirectory ).setActivation( "storemode", "custom" );
+  Opt1.addSelection( "storelevel", "Save", "all|generated|noise|none" ).setUnit( "stimuli" );
 
   Opt2.addSeparator();
   Opt2.addBoolean( "sinewave", "Use Sine Wave", false );
-  Opt2.addBoolean( "loop", "Loop", true, 1 ).setStyle( OptWidget::LabelSmall +  OptWidget::ValueRed );
+  Opt2.addBoolean( "loop", "Loop", true, 1 ).setStyle( OptWidget::LabelSmall |  OptWidget::ValueRed );
   Opt2.addDate( "date", "Date", 2009, 6, 20 );
   Opt2.addTime( "time", "Time", 16, 42, 13 );
 
-  QPushButton *dialogButton = new QPushButton( "&Dialog", this );
-  QPushButton *quitButton = new QPushButton( "&Quit", this );
+  QPushButton *dialogButton = new QPushButton( "&Dialog" );
+  QPushButton *quitButton = new QPushButton( "&Quit" );
   connect( dialogButton, SIGNAL( clicked() ),
            this, SLOT( dialog() ) );
   connect( quitButton, SIGNAL( clicked() ),
            qApp, SLOT( quit() ) );
+
+  QVBoxLayout *l = new QVBoxLayout;
+  l->addWidget( dialogButton );
+  l->addWidget( quitButton );
+  setLayout( l );
 }
 
 
@@ -65,10 +88,10 @@ void MainWidget::dialog( void )
   OptDialog d( this );
   d.setCaption( "Example Dialog" );
   d.addWidget( l );
-  d.addOptions( Opt1, 0, 1, 1 );
+  d.addOptions( Opt1, 0, 1, OptWidget::BreakLinesStyle );
   d.addOptions( Opt2 );
-  d.setSpacing( 4 );
-  d.setMargin( 10 );
+  d.setVerticalSpacing( 4 );
+  d.setMargins( 10 );
   d.addButton( "&Ok", OptDialog::Accept, 1 );
   d.addButton( "&Apply", OptDialog::Accept, 2, false );
   d.addButton( "&Reset", OptDialog::Reset );
@@ -77,10 +100,8 @@ void MainWidget::dialog( void )
   connect( &d, SIGNAL( buttonClicked( int ) ), this, SLOT( action( int ) ) );
   connect( &d, SIGNAL( valuesChanged( void ) ), this, SLOT( accepted( void ) ) );
   int r = d.exec();
-  cerr << "dialog: " << r << endl << Opt1 << Opt2 << endl;
-  Options co;
-  co.assign( Opt1, 8 );
-  cerr << "changed: " << endl << co << endl;
+  cerr << "dialog: " << r << endl;
+  cerr << Opt1 << Opt2 << endl;
 }
 
 
@@ -99,6 +120,11 @@ void MainWidget::action( int r )
 void MainWidget::accepted( void )
 {
   cerr << "dialog accepted" << endl;
+  Options co1;
+  co1.assign( Opt1, Parameter::changedFlag() );
+  Options co2;
+  co2.assign( Opt2, Parameter::changedFlag() );
+  cerr << "changed: " << endl << co1 << endl << co2 << endl;
 }
 
 
@@ -106,7 +132,6 @@ int main( int argc, char **argv )
 {
   QApplication a( argc, argv );
   MainWidget w;
-  a.setMainWidget( &w );
   w.show();
   return a.exec();
 }

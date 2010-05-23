@@ -28,9 +28,7 @@ namespace patchclamp {
 
 
 VICurve::VICurve( void )
-  : RePro( "VICurve", "VICurve", "patchclamp",
-	   "Jan Benda", "1.0", "Feb 12, 2010" ),
-    P( 2, 2, true, this ),
+  : RePro( "VICurve", "patchclamp", "Jan Benda", "1.0", "Feb 12, 2010" ),
     VUnit( "mV" ),
     IUnit( "nA" ),
     VFac( 1.0 ),
@@ -64,6 +62,9 @@ VICurve::VICurve( void )
   addNumber( "ton", "Timepoint of onset-voltage measurement", 0.01, 0.0, 100.0, 0.001, "sec", "ms" );
   addBoolean( "plotstdev", "Plot standard deviation of membrane potential", true );
   addTypeStyle( OptWidget::TabLabel, Parameter::Label );
+
+  P.resize( 2, 2, true );
+  setWidget( &P );
 }
 
 

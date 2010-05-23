@@ -22,11 +22,11 @@
 #ifndef _RELACS_REPRO_H_
 #define _RELACS_REPRO_H_ 1
 
-#include <qglobal.h>
-#include <qmutex.h>
-#include <qwaitcondition.h>
-#include <qthread.h>
-#include <qdatetime.h>
+//#include <QGlobal>
+#include <QMutex>
+#include <QWaitCondition>
+#include <QThread>
+#include <QDateTime>
 #include <relacs/outlist.h>
 #include <relacs/relacsplugin.h>
 
@@ -68,14 +68,13 @@ public:
   };
 
     /*! Constructs a RePro with name \a name (has to be identical
-        to the class name), widget title \a title,
-	that belongs to the set of plugins named \a pluginset.
+        to the class name) that belongs to the set of plugins 
+	named \a pluginset.
 	The implementation of a class derived from RePro
 	has the version \a version and was written
 	by \a author on \a date.
         The date defaults to the date of compilation. */
   RePro( const string &name,
-	 const string &title="", 
 	 const string &pluginset="",
 	 const string &author="unknown",
 	 const string &version="unknown",
@@ -392,11 +391,6 @@ public:
 	from these widgets after some timeout. */
   void keepFocus( void );
 
-    /*! Reimplement this function to handle key events. */
-  virtual void keyPressEvent( QKeyEvent *e );
-    /*! Reimplement this function to handle key events. */
-  virtual void keyReleaseEvent( QKeyEvent *e );
-
     /*! Add \a key to the list of keys that are forced to be passed
         to keyPressEvent().
         You need to handle this key event in a reimplementation 
@@ -488,16 +482,13 @@ public:
   virtual bool eventFilter( QObject *watched, QEvent *e );
 
 
-signals:
+protected:
 
-  /*
-  // *! Request stop of data acquisition.
-        Do not use this function! It will in future be removed from the RePro methods! * //
-  void stopRW( );
-    // *! Request restart of data acquisition.
-        Do not use this function! It will in future be removed from the RePro methods! * //
-  void restartRW( );
-  */
+    /*! Reimplement this function to handle key-press events.
+        This implementation handles softStop()*/
+  virtual void keyPressEvent( QKeyEvent *event );
+    /*! Reimplement this function to handle key-release events. */
+  virtual void keyReleaseEvent( QKeyEvent *event );
 
 
 private:

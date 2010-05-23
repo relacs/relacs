@@ -26,9 +26,7 @@ namespace base {
 
 
 TransferFunction::TransferFunction( void )
-  : RePro( "TransferFunction", "TransferFunction", "base",
-	   "Jan Benda", "1.0", "Dec 07, 2009" ),
-    P( 2, this )
+  : RePro( "TransferFunction", "base", "Jan Benda", "1.0", "Dec 07, 2009" )
 {
   // options:
   addLabel( "Stimulus" ).setStyle( OptWidget::Bold );
@@ -45,6 +43,7 @@ TransferFunction::TransferFunction( void )
   addSelection( "window", "FFT window function", "Hanning|Bartlett|Blackman|Blackman-Harris|Hamming|Hanning|Parzen|Square|Welch" );
 
   // plot:
+  P.resize( 2 );
   P.lock();
   P.setCommonXRange( 0, 1 );
   P[0].setLMarg( 8 );
@@ -63,6 +62,7 @@ TransferFunction::TransferFunction( void )
   //  P[1].setYRange( Plot::AutoScale, Plot::AutoScale );
   P[1].setYRange( -3.15, 3.15 );
   P.unlock();
+  setWidget( &P );
 }
 
 

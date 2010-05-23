@@ -20,9 +20,9 @@
 */
 
 #include <cstdio>
-#include <qdatetime.h>
-#include <qpainter.h>
-#include <qtooltip.h>
+#include <QDateTime>
+#include <QPainter>
+#include <QToolTip>
 #include <relacs/relacswidget.h>
 #include <relacs/savefiles.h>
 
@@ -30,11 +30,11 @@ namespace relacs {
 
 
 SaveFiles::SaveFiles( RELACSWidget *rw, int height,
-		      QWidget *parent, const char *name )
-  : QHBox( parent, name ),
+		      QWidget *parent )
+  : QWidget( parent ),
     Options(),
     RW( rw ),
-    StimulusDataLock( true )
+    StimulusDataLock( QMutex::Recursive )
 {
   Path = "";
   PathTemplate = "%04Y-%02m-%02d-%a2a";
@@ -77,15 +77,37 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
 
   setFixedHeight( height );
 
-  FileLabel = new QLabel( "no files open", this );
-  FileLabel->setTextFormat( PlainText );
-  FileLabel->setIndent( 2 );
-  FileLabel->setAlignment( AlignLeft | AlignVCenter );
-  QToolTip::add( FileLabel, "The directory where files are currently stored" );
+  StatusInfoLayout = new QHBoxLayout;
+  StatusInfoLayout->setContentsMargins( 0, 0, 0, 0 );
+  StatusInfoLayout->setSpacing( 4 );
+  setLayout( StatusInfoLayout );
 
-  SaveLabel = new SpikeTrace( 0.8, 8, 3, this );
+  FileLabel = new QLabel( "no files open" );
+  // XXX  ensurePolished(); produces SIGSEGV
+  NormalFont = FileLabel->font();
+  HighlightFont = QFont( fontInfo().family(), fontInfo().pointSize()*4/3, QFont::Bold );
+  FileLabel->setTextFormat( Qt::PlainText );
+  FileLabel->setIndent( 2 );
+  FileLabel->setAlignment( Qt::AlignLeft | Qt::AlignVCenter );
+  FileLabel->setToolTip( "The directory where files are currently stored" );
+  Str fn = PathTemplate;
+  fn.format( localtime( &PathTime ) );
+  fn.format( 99, 'n', 'd' );
+  fn.format( "aa", 'a' );
+  fn.format( "AA", 'A' );
+  FileLabel->setFixedWidth( QFontMetrics( HighlightFont ).boundingRect( fn.c_str() ).width() + 8 );
+  StatusInfoLayout->addWidget( FileLabel );
+
+  SaveLabel = new SpikeTrace( 0.8, 8, 3 );
   SaveLabel->setFixedWidth( SaveLabel->minimumSizeHint().width() );
-  QToolTip::add( SaveLabel, "An animation indicating that raw data are stored on disk" );
+  SaveLabel->setToolTip( "An animation indicating that raw data are stored on disk" );
+  StatusInfoLayout->addWidget( SaveLabel );
+
+  setMinimumWidth( FileLabel->width() + 4 + SaveLabel->width() );
+
+  NormalPalette = FileLabel->palette();
+  HighlightPalette = FileLabel->palette();
+  HighlightPalette.setColor( QPalette::WindowText, Qt::red );
 }
 
 
@@ -221,27 +243,6 @@ void SaveFiles::unlock( void ) const
 QMutex *SaveFiles::mutex( void )
 {
   return &StimulusDataLock;
-}
-
-
-void SaveFiles::polish( void )
-{
-  QWidget::polish();
-
-  NormalFont = FileLabel->font();
-  HighlightFont = QFont( fontInfo().family(), fontInfo().pointSize()*4/3, QFont::Bold );
-
-  Str fn = PathTemplate;
-  fn.format( localtime( &PathTime ) );
-  fn.format( 99, 'n', 'd' );
-  fn.format( "aa", 'a' );
-  fn.format( "AA", 'A' );
-  FileLabel->setFixedWidth( QFontMetrics( HighlightFont ).boundingRect( fn.c_str() ).width() + 8 );
-
-  NormalPalette = FileLabel->palette();
-  HighlightPalette = FileLabel->palette();
-  HighlightPalette.setColor( QPalette::Normal, QColorGroup::Foreground, red );
-  HighlightPalette.setColor( QPalette::Inactive, QColorGroup::Foreground, red );
 }
 
 

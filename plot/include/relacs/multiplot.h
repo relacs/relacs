@@ -23,11 +23,10 @@
 #define _RELACS_MULTIPLOT_H_ 1
 
 
-#include <relacs/plot.h>
 #include <vector>
-#include <qwidget.h>
-#include <qpixmap.h>
-#include <qmutex.h>
+#include <QWidget>
+#include <QMutex>
+#include <relacs/plot.h>
 
 namespace relacs {
 
@@ -52,18 +51,17 @@ public:
 	you need to provide a mutex for locking the data
 	via setDataMutex(). */
   MultiPlot( int plots, int columns, bool horizontal=true, Plot::KeepMode keep=Plot::Copy,
-	     QWidget *parent=0, const char *name=0 );
+	     QWidget *parent=0 );
     /*! Constructs \a plots plots. */
-  MultiPlot( int plots, int columns, bool horizontal=true,
-	     QWidget *parent=0, const char *name=0 );
+  MultiPlot( int plots, int columns, bool horizontal=true, QWidget *parent=0 );
     /*! Constructs \a plots plots with KeepMode \a keep.
         If you set \a keep to Plot::Pointer and
 	you are using multible threads, then
 	you need to provide a mutex for locking the data
 	via setDataMutex(). */
-  MultiPlot( int plots, Plot::KeepMode keep, QWidget *parent=0, const char *name=0 );
-  MultiPlot( int plots, QWidget *parent=0, const char *name=0 );
-  MultiPlot( QWidget *parent=0, const char *name=0 );
+  MultiPlot( int plots, Plot::KeepMode keep, QWidget *parent=0 );
+  MultiPlot( int plots, QWidget *parent=0 );
+  MultiPlot( QWidget *parent=0 );
   ~MultiPlot( void );
 
     /*! Lock the plot mutex. */
@@ -117,10 +115,8 @@ public:
   void setCommonRange( int plot1, int plot2 );
   void setCommonRange( void );
 
-    /*! Give a hint for the prefered size of this widget. */
-  QSize sizeHint( void ) const;
     /*! Give a hint for the minimum size of this widget. */
-  QSize minimumSizeHint( void ) const;
+  virtual QSize minimumSizeHint( void ) const;
 
     /*! Draw the Plots. */
   void draw( void );
@@ -142,6 +138,9 @@ signals:
     /*! Ranges of some plots where changes
         due to a change in plot \a id. */
   void changedRanges( int id );
+    /*! This signal is emitted whenever the MultiPlot widget receives
+        a resizeEvent() before processing it. */
+  void resizePlots( QResizeEvent *qre );
 
 
 protected:
@@ -186,7 +185,6 @@ private:
   int Columns;
   bool Horizontal;
 
-  QPixmap *PixMap;
   bool DrawBackground;
 
 };

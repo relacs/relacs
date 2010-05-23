@@ -22,7 +22,7 @@
 #ifndef _RELACS_DEVICELIST_H_
 #define _RELACS_DEVICELIST_H_ 1
 
-#include <qpopupmenu.h> 
+#include <QMenu> 
 #include <deque>
 #include <vector>
 #include <relacs/str.h>
@@ -103,7 +103,7 @@ public:
   virtual void saveConfig( ofstream &str );
 
     /*! Add devices to the popup window. */
-  virtual void addMenu( QPopupMenu *menu, int &index );
+  virtual void addMenu( QMenu *menu, int &index );
     /*! Update device infos in the menu. */
   virtual void updateMenu( void );
 
@@ -116,7 +116,7 @@ protected:
     /*! The list of Devices. */
   vector < T* > DVs;
     /*! The list of corresponding menus. */
-  vector < QPopupMenu* > Menus;
+  vector < QMenu* > Menus;
     /*! Name of the device list used for error messages. */
   string Name;
     /*! Warning messages. */
@@ -394,7 +394,7 @@ void DeviceList<T,PluginID>::saveConfig( ofstream &str )
 
 
 template < class T, int PluginID >
-void DeviceList<T,PluginID>::addMenu( QPopupMenu *menu, int &index )
+void DeviceList<T,PluginID>::addMenu( QMenu *menu, int &index )
 {
   for ( unsigned int k=0; k<DVs.size(); k++, index++ ) {
 
@@ -408,15 +408,14 @@ void DeviceList<T,PluginID>::addMenu( QPopupMenu *menu, int &index )
     s += " ";
     s += DVs[k]->deviceIdent();
     if ( Menus[k] == NULL )
-      Menus[k] = new QPopupMenu( menu );
+      Menus[k] = menu->addMenu( s.c_str() );
     Menus[k]->clear();
     for ( int j=0; j<DVs[k]->info().size(); j++ )
-      Menus[k]->insertItem( DVs[k]->info()[j].save( false, true ) );
+      Menus[k]->addAction( DVs[k]->info()[j].save().c_str() );
     if ( ! DVs[k]->settings().empty() )
-      Menus[k]->insertSeparator();
+      Menus[k]->addSeparator();
     for ( int j=0; j<DVs[k]->settings().size(); j++ )
-      Menus[k]->insertItem( DVs[k]->settings()[j].save( false, true ) );
-    menu->insertItem( s.c_str(), Menus[k] );
+      Menus[k]->addAction( DVs[k]->settings()[j].save().c_str() );
   }
 }
 
@@ -431,11 +430,11 @@ void DeviceList<T,PluginID>::updateMenu( void )
 
     Menus[k]->clear();
     for ( int j=0; j<DVs[k]->info().size(); j++ )
-      Menus[k]->insertItem( DVs[k]->info()[j].save( false, true ) );
+      Menus[k]->addAction( DVs[k]->info()[j].save().c_str() );
     if ( ! DVs[k]->settings().empty() )
-      Menus[k]->insertSeparator();
+      Menus[k]->addSeparator();
     for ( int j=0; j<DVs[k]->settings().size(); j++ )
-      Menus[k]->insertItem( DVs[k]->settings()[j].save( false, true ) );
+      Menus[k]->addAction( DVs[k]->settings()[j].save().c_str() );
   }
 }
 

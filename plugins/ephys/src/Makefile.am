@@ -1,5 +1,5 @@
 HEADER_PATH = ../include/relacs/ephys
-include ${top_srcdir}/moc3.mk
+include ${top_srcdir}/moc4.mk
 
 lib_LTLIBRARIES = \
     librelacsspikingneuron.la
@@ -40,15 +40,15 @@ libephystraces_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libephystraces_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libephystraces_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 libephystraces_la_SOURCES = traces.cc
 
@@ -66,18 +66,16 @@ libephysneuronmodels_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libephysneuronmodels_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libephysneuronmodels_la_LIBADD = \
     librelacsspikingneuron.la \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT3_LIBS)
-
-$(libephysneuronmodels_la_OBJECTS) : moc_neuronmodels.cc
+    $(QT4_LIBS)
 
 libephysneuronmodels_la_SOURCES = neuronmodels.cc
 
@@ -96,15 +94,15 @@ libephysintraspikedetector_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libephysintraspikedetector_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libephysintraspikedetector_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libephysintraspikedetector_la_OBJECTS) : moc_intraspikedetector.cc
 
@@ -125,15 +123,15 @@ libephysdynamicsuspikedetector_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libephysdynamicsuspikedetector_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libephysdynamicsuspikedetector_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libephysdynamicsuspikedetector_la_OBJECTS) : moc_dynamicsuspikedetector.cc
 
@@ -152,15 +150,15 @@ libephysmotorcontrol_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libephysmotorcontrol_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libephysmotorcontrol_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libephysmotorcontrol_la_OBJECTS) : moc_motorcontrol.cc
 
@@ -182,17 +180,17 @@ libephysamplifiercontrol_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libephysamplifiercontrol_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libephysamplifiercontrol_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/plugins/linuxdevices/misc/src/libmiscamplmode.la \
     $(builddir)/libephystraces.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 $(libephysamplifiercontrol_la_OBJECTS) : moc_amplifiercontrol.cc
 

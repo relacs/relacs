@@ -1225,6 +1225,8 @@ public:
   Options &addStyle( int style, int selectflag=0 );
     /*! Clear the bits specified by \a style of the style of all options. */
   Options &delStyle( int style, int selectflag=0 );
+    /*! Total number of options that have the style \a style set in their style(). */
+  int styleSize( int style ) const;
 
     /*! Set style of all options whose type matches \a typemask 
         (see Parameter::types() ) to \a style. */

@@ -27,8 +27,7 @@ namespace base {
 
 LowPass::LowPass( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogFilter, 1,
-	    "LowPass", "LowPass", "Base",
-	    "Jan Benda", "0.1", "May 3 2007" ),
+	    "LowPass", "Base", "Jan Benda", "0.1", "May 3 2007" ),
     LFW( (QWidget*)this )
 {
   // parameter:
@@ -38,8 +37,7 @@ LowPass::LowPass( const string &ident, int mode )
   addNumber( "tau", "Filter time constant", Tau, 0.0, 10000.0, 0.001, "s", "ms", "%.1f" );
 
   LFW.assign( ((Options*)this), 0, 0, true, 0, mutex() );
-  LFW.setSpacing( 4 );
-  LFW.setMargin( 4 );
+  setWidget( &LFW );
 }
 
 

@@ -22,7 +22,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <ctime>
-#include <qdatetime.h>
+#include <QDateTime>
 #include <relacs/str.h>
 #include <relacs/optdialog.h>
 #include <relacs/relacsplugin.h>
@@ -170,7 +170,7 @@ MetaData::MetaData( RELACSWidget *rw )
     SaveFlags( 0 ),
     Dialog( false ),
     PresetDialog( false ),
-    MetaDataLock( true ),
+    MetaDataLock( QMutex::Recursive ),
     RW( rw )
 {
 }
@@ -403,8 +403,6 @@ int MetaData::dialog( void )
   Dialog = true;
   OptDialog *od = new OptDialog( this );
   od->addOptions( DialogOpts );
-  od->setSpacing( 10 );
-  od->setMargin( 10 );
   od->setCaption( "Stop Session Dialog" );
   od->setRejectCode( -1 );
   od->addButton( "&Save", OptDialog::Accept, 1 );
@@ -489,8 +487,6 @@ void MetaData::presetDialog( void )
 
   OptDialog *od = new OptDialog( this );
   od->addOptions( PresetDialogOpts );
-  od->setSpacing( 10 );
-  od->setMargin( 10 );
   od->setCaption( "Stop Session Dialog" );
   od->setRejectCode( -1 );
   od->addButton( "&Ok", OptDialog::Accept, 1 );
@@ -541,14 +537,10 @@ void MetaData::presetDialogChanged( void )
 }
 
 
-void MetaData::addActions( QPopupMenu *menu )
+void MetaData::addActions( QMenu *menu )
 {
-  QAction *action = new QAction( RW, "MetaDataAction" );
-  action->setMenuText( "Session &Info..." );
-  action->setAccel( ALT+Key_I );
-  connect( action, SIGNAL( activated() ),
-	   this, SLOT( presetDialog() ) );
-  action->addTo( menu );
+  menu->addAction( "Session &Info...",
+		   this, SLOT( presetDialog() ), Qt::ALT + Qt::Key_I );
 }
 
 

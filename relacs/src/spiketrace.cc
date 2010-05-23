@@ -22,17 +22,24 @@
 #include <cstdlib>
 #include <iostream>
 #include <cmath>
-#include <qapplication.h>
-#include <qpainter.h>
-#include <qapplication.h>
+#include <QApplication>
+#include <QPainter>
+#include <QPainterPath>
+#include <QPaintEvent>
+#include <QResizeEvent>
 #include <relacs/spiketrace.h>
+
+using namespace std;
+
 
 namespace relacs {
 
 
 SpikeTrace::SpikeTrace( double spikewidth, int radius, int tracewidth, 
-			QWidget *parent, const char *name )
-  : QWidget( parent, name ), QThread()
+			QWidget *parent )
+  : QWidget( parent ),
+    QThread(),
+    SMutex()
 {
   SpikeWidth = spikewidth;
   Radius = radius;
@@ -43,13 +50,13 @@ SpikeTrace::SpikeTrace( double spikewidth, int radius, int tracewidth,
   Show = false;
   Pause = false;
   Pos = Radius/2;
-  pPos = Pos;
-  dPos = 4;
+  dPos = 2;
 }
 
 
-SpikeTrace::SpikeTrace( QWidget *parent, const char *name )
-  : QWidget( parent, name )
+SpikeTrace::SpikeTrace( QWidget *parent )
+  : QWidget( parent ),
+    QThread()
 {
   SpikeWidth = 1.0;
   Radius = 6;
@@ -93,9 +100,11 @@ QSizePolicy SpikeTrace::sizePolicy( void ) const
 
 void SpikeTrace::resizeEvent( QResizeEvent *qre )
 {
+  SMutex.lock();
   SpikeSize = double( height() - Radius );
   SpikePos *= double( width() ) / double( qre->oldSize().width() );
   SpikePos = rint( SpikePos );
+  SMutex.unlock();
 }
 
 
@@ -110,29 +119,24 @@ int SpikeTrace::trace( int x )
 
 void SpikeTrace::paintEvent( QPaintEvent *qpe )
 {
-  QPainter paint( this );
+  SMutex.lock();
 
   if ( Show ) {
 
     animate();
 
     int b = height() - Radius/2;
-    int x;
-    
-    // clear widget:
-    if ( !qpe->erased() && Pos == Radius/2 )
-      erase();
-    else
-      // clear ball:
-      paint.eraseRect( pPos - Radius/2, b - trace( pPos ) - Radius/2, 
-		       Radius, Radius );
     
     // draw line:
-    paint.setPen( QPen( darkGreen, TraceWidth ) );
-    x = qpe->erased() ? 0 : pPos-Radius/2-1;
-    paint.moveTo( x, b - trace( x ) );
+    QPainterPath path;
+    int x = 0;
+    path.moveTo( x, b - trace( x ) );
     for ( x++; x<Pos; x++ )
-      paint.lineTo( x, b - trace( x ) ); 
+      path.lineTo( x, b - trace( x ) ); 
+
+    QPainter paint( this );
+    paint.setPen( QPen( Qt::darkGreen, TraceWidth ) );
+    paint.drawPath( path );
     
     // draw ball:
     paint.setPen( Qt::green );
@@ -140,28 +144,30 @@ void SpikeTrace::paintEvent( QPaintEvent *qpe )
     paint.drawEllipse( Pos - Radius/2, b - trace( Pos ) - Radius/2, 
 		       Radius, Radius );
   }
-  else
-    paint.eraseRect( rect() );
+
+  SMutex.unlock();
 }
 
 
 void SpikeTrace::setSpike( bool on )
 {
+  SMutex.lock();
   Show = on;
   Pos = Radius/2;
   pPos = Pos;
-  if ( Show ) {
+  SMutex.unlock();
+  if ( on )
     start();
-  }
-  else {
+  else
     wait();
-  }
 }
 
 
 void SpikeTrace::setPause( bool pause )
 {
+  SMutex.lock();
   Pause = pause;
+  SMutex.unlock();
 }
 
 
@@ -169,25 +175,30 @@ void SpikeTrace::animate( void )
 {
   pPos = Pos;
   Pos += dPos;
-  if ( Pos >= width()-Radius/2 )
-    {
-      Pos = Radius/2;
-      double r = rand();
-      r /= RAND_MAX;
-      SpikePos = rint( 2*SpikeWidth + ( width() - 4*SpikeWidth ) * r );
-    }
+  if ( Pos >= width()-Radius/2 ) {
+    Pos = Radius/2;
+    double r = rand();
+    r /= RAND_MAX;
+    SpikePos = rint( 2*SpikeWidth + ( width() - 4*SpikeWidth ) * r );
+  }
 }
 
 
 void SpikeTrace::run( void )
 {
+  bool showw = true;
   do {
-    QApplication::postEvent( this, new QPaintEvent( rect(), false ) );
+    update();
+    bool pausew = true;
     do {
-      msleep( 100 );
-    } while ( Show && Pause );
-  } while ( Show );
-  QApplication::postEvent( this, new QPaintEvent( rect(), false ) );
+      msleep( 50 );
+      SMutex.lock();
+      showw = Show;
+      pausew = Pause;
+      SMutex.unlock();
+    } while ( showw && pausew );
+  } while ( showw );
+  update();
 }
 
 

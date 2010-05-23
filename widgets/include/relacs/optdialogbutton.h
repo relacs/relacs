@@ -23,7 +23,7 @@
 #define _RELACS_OPTDIALOGBUTTON_H_ 1
 
 #include <vector>
-#include <qpushbutton.h>
+#include <QPushButton>
 #include <relacs/optdialog.h>
 using namespace std;
 
@@ -43,7 +43,7 @@ public:
   ~OptDialogButton( void );
 
   void create( vector<OptWidget*> ows, int rejectc,
-	       QWidget *parent=0, char *name=0 );
+	       QHBoxLayout *layout );
 
   bool defaultButton( void ) const;
   void setDefaultButton( bool d=true );

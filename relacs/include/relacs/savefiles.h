@@ -25,9 +25,9 @@
 #include <vector>
 #include <fstream>
 #include <ctime>
-#include <qhbox.h>
-#include <qlabel.h>
-#include <qmutex.h>
+#include <QWidget>
+#include <QLabel>
+#include <QMutex>
 #include <relacs/str.h>
 #include <relacs/options.h>
 #include <relacs/tablekey.h>
@@ -65,7 +65,7 @@ SaveFile sets the following environment variables:
   allows for float and double
 */
 
-class SaveFiles : public QHBox, public Options
+class SaveFiles : public QWidget, public Options
 {
   Q_OBJECT
 
@@ -90,7 +90,7 @@ public:
   static const int TraceFlag = 32768;
 
   SaveFiles( RELACSWidget *rw, int height,
-	     QWidget *parent=0, const char *name=0 );
+	     QWidget *parent=0 );
   ~SaveFiles( void );
 
     /*! The current status of saving data to files.
@@ -189,12 +189,6 @@ public:
   void deleteFiles( void );
     /*! Close files and keep them. */
   void completeFiles( void );
-
-
-public slots:
-
-    /*! Doing some late initialization, i.e. setting fonts and palette. */
-  void polish( void );
 
 
 protected:
@@ -361,6 +355,7 @@ protected:
   QPalette NormalPalette;
   QPalette HighlightPalette;
   SpikeTrace *SaveLabel;
+  QHBoxLayout *StatusInfoLayout;
 
   mutable QMutex StimulusDataLock;
 

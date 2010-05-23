@@ -22,17 +22,17 @@
 #ifndef _MAINWIDGET_H_
 #define _MAINWIDGET_H_
 
-#include <qvbox.h>
+#include <QWidget>
 #include <relacs/options.h>
 using namespace relacs;
 
 
-class MainWidget : public QVBox
+class MainWidget : public QWidget
 {
   Q_OBJECT
 
 public:
-  MainWidget( QWidget *parent=0, const char *name=0 );
+  MainWidget( void );
   ~MainWidget( void ) {};
 
 private slots:

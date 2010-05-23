@@ -22,8 +22,9 @@
 #ifndef _RELACS_SPIKETRACE_H_
 #define _RELACS_SPIKETRACE_H_ 1
 
-#include <qwidget.h>
-#include <qthread.h>
+#include <QWidget>
+#include <QThread>
+#include <QMutex>
 
 namespace relacs {
 
@@ -59,9 +60,9 @@ public:
 	the radius of the ball set to \a radius pixels,
 	and the width of the trace set to \a linewidth pixels. */
   SpikeTrace( double spikewidth=1.0, int radius=6, int tracewidth=1,
-		QWidget *parent=0, const char *name=0 );
+		QWidget *parent=0 );
     /*! Constructs the SpikeTrace-widget with default parameters. */
-  SpikeTrace( QWidget *parent=0, const char *name=0 );
+  SpikeTrace( QWidget *parent=0 );
     /*! Destructs the SpikeTrace-widget. */
   ~SpikeTrace( void );
 
@@ -89,6 +90,12 @@ public slots:
 
 protected:
 
+  virtual void run( void );
+
+    /*! Animates the spike trace by increasing the position of the ball
+        and replace the spike on a new run. */
+  void animate( void );
+
     /*! A function providing the shape of the trace. 
         For a given position \a x in pixels it returns the 
         corresponding y-value (in pixels). */
@@ -115,14 +122,8 @@ protected:
     /*! The width of the spike. */
   double SpikeWidth;
 
-
-protected:
-
-  virtual void run( void );
-
-    /*! Animates the spike trace by increasing the position of the ball
-        and replace the spike on a new run. */
-  void animate( void );
+    /*! Locks the widget's variables. */
+  QMutex SMutex;
 
 };
 

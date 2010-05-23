@@ -48,7 +48,6 @@ or the stimulus (\c model=Stimulus), multiplied by \c gain.
 
 class SimpleModel : public Model
 {
-  Q_OBJECT
 
 public:
 

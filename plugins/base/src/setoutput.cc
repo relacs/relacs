@@ -19,7 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <qhbox.h>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
 #include <relacs/base/setoutput.h>
 using namespace relacs;
 
@@ -27,39 +28,40 @@ namespace base {
 
 
 SetOutput::SetOutput( void )
-  : RePro( "SetOutput", "SetOutput", "Base",
-	   "Jan Benda", "1.0", "Mar 21, 2009" ),
-    STW( (QWidget*)this )
+  : RePro( "SetOutput", "Base", "Jan Benda", "1.0", "Mar 21, 2009" )
 {
   // add some options:
   addSelection( "outtrace", "Output trace", "V-1" );
   addNumber( "value", "Value to be writen to output trace", 0.0, -100000.0, 100000.0, 0.1 );
   addBoolean( "interactive", "Set values interactively", false );
 
-  // display output variables:
-  STW.setSpacing( 2 );
-  STW.setMargin( 4 );
-
-  QHBox *bb = new QHBox( this );
-  bb->setSpacing( 4 );
-
   // Ok button:
-  OKButton = new QPushButton( "&Ok", bb, "OkButton" );
-  connect( OKButton, SIGNAL( clicked() ),
-	   this, SLOT( setValues() ) );
-  grabKey( ALT+Key_O );
-  grabKey( Key_Return );
-  grabKey( Key_Enter );
+  QPushButton *OKButton = new QPushButton( "&Ok" );
+  OKButton->setFixedHeight( OKButton->sizeHint().height() );
+  QWidget::connect( OKButton, SIGNAL( clicked() ),
+		    (QWidget*)this, SLOT( setValues() ) );
+  grabKey( Qt::ALT+Qt::Key_O );
+  grabKey( Qt::Key_Return );
+  grabKey( Qt::Key_Enter );
 
   // Cancel button:
-  CancelButton = new QPushButton( "&Cancel", bb, "CancelButton" );
-  connect( CancelButton, SIGNAL( clicked() ),
-	   this, SLOT( keepValues() ) );
-  grabKey( ALT+Key_C );
-  grabKey( Key_Escape );
+  QPushButton *CancelButton = new QPushButton( "&Cancel" );
+  CancelButton->setFixedHeight( OKButton->sizeHint().height() );
+  QWidget::connect( CancelButton, SIGNAL( clicked() ),
+		    (QWidget*)this, SLOT( keepValues() ) );
+  grabKey( Qt::ALT+Qt::Key_C );
+  grabKey( Qt::Key_Escape );
 
-  bb->setFixedHeight( OKButton->sizeHint().height() );
-  bb->setSpacing( 4 );
+  // layout:
+  QHBoxLayout *hb = new QHBoxLayout;
+  hb->setSpacing( 4 );
+  hb->addWidget( OKButton );
+  hb->addWidget( CancelButton );
+
+  QVBoxLayout *l = new QVBoxLayout;
+  setLayout( l );
+  l->addWidget( &STW );
+  l->addLayout( hb );
 }
 
 
@@ -78,10 +80,10 @@ void SetOutput::config( void )
 
   // display values:
   STW.assign( &OutOpts, ParameterFlag, 0, false, 0, mutex() );
-  updateGeometry();
+  widget()->updateGeometry();
   if ( STW.lastWidget() != 0 )
-    setTabOrder( STW.lastWidget(), OKButton );
-  setTabOrder( OKButton, CancelButton );
+    widget()->setTabOrder( STW.lastWidget(), OKButton );
+  //  setTabOrder( OKButton, CancelButton );
 }
 
 
@@ -175,19 +177,19 @@ const Options &SetOutput::outTraces( void ) const
 
 void SetOutput::keyPressEvent( QKeyEvent *e )
 {
-  if ( e->key() == Key_O && ( e->state() & AltButton ) ) {
+  if ( e->key() == Qt::Key_O && ( e->modifiers() & Qt::AltModifier ) ) {
     OKButton->animateClick();
     e->accept();
   }
-  else if ( e->key() == Key_C && ( e->state() & AltButton ) ) {
+  else if ( e->key() == Qt::Key_C && ( e->modifiers() & Qt::AltModifier ) ) {
     CancelButton->animateClick();
     e->accept();
   }
-  else if ( ( e->key() == Key_Return || e->key() == Key_Enter ) && ( e->state() & KeyButtonMask ) == 0 ) {
+  else if ( ( e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter ) && e->modifiers() == Qt::NoModifier ) {
     OKButton->animateClick();
     e->accept();
   }
-  else if ( e->key() == Key_Escape && ( e->state() & KeyButtonMask ) == 0 ) {
+  else if ( e->key() == Qt::Key_Escape && e->modifiers() == Qt::NoModifier ) {
     CancelButton->animateClick();
     e->accept();
   }
@@ -196,17 +198,17 @@ void SetOutput::keyPressEvent( QKeyEvent *e )
 }
 
 
-void SetOutput::customEvent( QCustomEvent *qce )
+void SetOutput::customEvent( QEvent *qce )
 {
   if ( qce->type() == QEvent::User+11 ) {
     if ( STW.firstWidget() != 0 )
       STW.firstWidget()->setFocus();
   }
   else if ( qce->type() == QEvent::User+12 ) {
-    topLevelWidget()->setFocus();
+    widget()->window()->setFocus();
   }
   else
-    RePro::customEvent( qce );
+    RELACSPlugin::customEvent( qce );
 }
 
 

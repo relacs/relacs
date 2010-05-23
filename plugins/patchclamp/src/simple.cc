@@ -28,9 +28,7 @@ namespace patchclamp {
 
 
 Simple::Simple( void )
-  : RePro( "Simple", "Simple", "patchclamp",
-	   "Jan Benda", "0.0", "Feb 14, 2008" ),
-    P( this, "simpleplot" )
+  : RePro( "Simple", "patchclamp", "Jan Benda", "0.0", "Feb 14, 2008" )
 {
   // add some options:
   addSelection( "intrace", "Input trace", "V-1" );
@@ -49,6 +47,7 @@ Simple::Simple( void )
   P.setXLabel( "Time [ms]" );
   P.setYLabel( "" );
   P.unlock();
+  setWidget( &P );
 }
 
 

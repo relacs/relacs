@@ -22,10 +22,10 @@
 #ifndef _RELACS_REPROS_H_
 #define _RELACS_REPROS_H_ 1
 
-#include <qobject.h>
-#include <qtabwidget.h>
-#include <qpopupmenu.h> 
-#include <qlabel.h>
+#include <QObject>
+#include <QTabWidget>
+#include <QMenu> 
+#include <QLabel>
 #include <vector>
 #include <relacs/options.h>
 #include <relacs/relacsplugin.h>
@@ -42,7 +42,6 @@ class RELACSWidget;
 \author Jan Benda
 \version 1.0
 \brief Container handling RePros
-\bug ~RePros: is that all?
 */
 
 
@@ -52,19 +51,17 @@ class RePros : public QTabWidget
 
 public:
 
-  RePros( RELACSWidget *rw=0, QWidget *parent=0, const char *name=0 );
+    /*! Initializes RePros and create all available repros. */ 
+  RePros( RELACSWidget *rw=0, QWidget *parent=0 );
   ~RePros( void );
-
-    /*! Initializes RePros and create all available repros from \a plugins. 
-        Returns the number of repros. */ 
-  int create( RELACSWidget *rw=0 );
 
     /*! Displays the message \a msg of a RePro. */
   void message( const string &msg );
     /*! The display for RePro messages. */
-  QLabel *display( QWidget *parent=0, const char *name=0 );
-    /*! The popup menu from which each RePro can be started and configured. */
-  QPopupMenu *menu( void );
+  QLabel *display( QWidget *parent=0 );
+    /*! Add the menu from which each RePro can be started and
+        configured to \a menu. */
+  void addMenu( QMenu *menu );
 
     /*! The index of the RePro with class name \a name. */
   int index( const string &name ) const;
@@ -74,20 +71,22 @@ public:
   void raise( int index );
     /*! Makes the repro \a repro visible. */
   void raise( RePro *repro );
-    /*! Reloads the research program \a repro. */
-  void reload( RePro *repro ) { reload( index( repro ) ); };
-    /*! Display help text for research program \a repro. */
-  void help( RePro *repro ) { help( index( repro ) ); };
+    /*! Reloads the plugin of the repro \a repro. */
+  void reload( RePro *repro );
+    /*! Display the help text of the repro \a repro. */
+  void help( RePro *repro );
     /*! The number of repros. */
   int size( void ) const { return RPs.size(); };
     /*! The RePro with index \a index. */
   RePro *repro( int index ) const;
     /*! The RePro with class name \a name. */
-  RePro *repro( const string &name ) const { return repro( index( name ) ); };
+  RePro *repro( const string &name ) const;
     /*! The index of the RePro with name \a name. */
   int nameIndex( const string &name ) const;
     /*! The RePro with name \a name. */
-  RePro *nameRepro( const string &name ) const { return repro( nameIndex( name ) ); };
+  RePro *nameRepro( const string &name ) const;
+    /*! \return The index of the currently active RePro. */
+  int currentRePro( void ) const;
 
     /*! Makes \a repro the current RePro and raises its widget. */
   void activateRePro( RePro *repro, int macroaction=0 );
@@ -115,7 +114,7 @@ public:
   void sessionStopped( bool saved );
 
     /*! The additional options needed for RePro Dialogs. */
-  Options &dialogOptions( void ) { return DialogOpt; };
+  Options &dialogOptions( void );
 
   friend ostream &operator<< ( ostream &str, const RePros &repros );
 
@@ -125,7 +124,7 @@ public slots:
     /*! Launches the options dialog of the current RePro. */
   void dialog( void );
     /*! Raise the widget of the previous RePro. */
-  void raise( void ) { raise( PreviousView ); };
+  void raise( void );
     /*! Displays help for the current RePro. */
   void help( void );
 
@@ -142,6 +141,11 @@ signals:
   void reloadRePro( const string &name );
 
 
+private slots:
+
+  void customEvent( QEvent *qce );
+
+
 private:
   
   typedef vector<ReProData*> ReProsList;
@@ -156,27 +160,12 @@ private:
   RePro *CurrentView;
   RePro *PreviousView;
 
-  QPopupMenu *Menu;
   QLabel *Message;
   string MessageStr;
 
   Options DialogOpt;
 
   RELACSWidget *RW;
-
-    /*! Reloads the research program \a index. */
-  void reload( int index );
-    /*! Display help text for research program \a index. */
-  void help( int index );
-
-
-private slots:
-
-    /*! Starts or launches the option dialog of the research program
-        as specified by \a id. 
-        This function is called from the RePros menu. */
-  void select( int id );
-  void customEvent( QCustomEvent *qce );
 
 };
 
@@ -194,21 +183,27 @@ class ReProData : public QObject
 
 public:
 
-  ReProData( const string &name, RePro *repro, Options &dopt );
-  void start( void );
-  void dialog( void );
+  ReProData( const string &name, RePro *repro, Options &dopt,
+	     RePros *rps, RELACSWidget *rw );
 
-  string Name;
-  int ID;
-  RePro *RP;
-  Options CO;
-  Options *DO;
+    /*! Adds the submenu for this RePro with inex \a inx to \a menu. */
+  void addMenu( QMenu *menu, int inx );
+
+    /*! \return the name of the RePro. */
+  string name( void ) const;
+    /*! \return a pointer to the RePro. */
+  RePro *repro( void );
 
 public slots:
 
+  void start( void );
+  void dialog( void );
   void acceptDialog( void );
   void dialogAction( int r );
   void dialogClosed( int r );
+  void raise( void );
+  void reload( void );
+  void help( void );
 
 signals:
 
@@ -219,6 +214,18 @@ signals:
     /*! This is emitted right before startRePro() in order to indicate
         that the repro was not started from a macro. */
   void noMacro( RePro *repro );
+    /*! The repro \a name was reloaded. */
+  void reloadRePro( const string &name );
+
+ private:
+
+  string Name;
+  RePro *RP;
+  Options CO;
+  Options *DO;
+
+  RePros *RPs;
+  RELACSWidget *RW;
 
 };
 

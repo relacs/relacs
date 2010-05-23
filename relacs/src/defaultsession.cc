@@ -19,6 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <QVBoxLayout>
 #include <relacs/defaultsession.h>
 
 namespace relacs {
@@ -28,10 +29,13 @@ DefaultSession::DefaultSession( void )
   : Control( "DefaultSession", "Info", "Jan Benda", "1.0" )
 
 {
-  SessionButton = new QPushButton( "Start", this );
+  QVBoxLayout *l = new QVBoxLayout;
+  setLayout( l );
+  SessionButton = new QPushButton( "Start" );
   SessionButton->setMinimumSize( SessionButton->sizeHint() );
-  connect( SessionButton, SIGNAL( clicked() ),
-	   this, SLOT( toggleSession() ) );
+  QWidget::connect( SessionButton, SIGNAL( clicked() ),
+		    (RELACSPlugin*)this, SLOT( toggleSession() ) );
+  l->addWidget( SessionButton );
 }
 
 

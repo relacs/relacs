@@ -24,8 +24,8 @@
 
 #include <string>
 #include <vector>
-#include <qtabwidget.h>
-#include <qpopupmenu.h> 
+#include <QTabWidget>
+#include <QMenu> 
 #include <relacs/configclass.h>
 #include <relacs/inlist.h>
 #include <relacs/eventlist.h>
@@ -55,7 +55,7 @@ class FilterDetectors : public QTabWidget, public ConfigClass
 
 public:
 
-  FilterDetectors( RELACSWidget *rw, QWidget *parent=0, const char *name=0 );
+  FilterDetectors( RELACSWidget *rw, QWidget *parent=0 );
   ~FilterDetectors( void );
 
   void clear( void );
@@ -140,8 +140,8 @@ public:
         events of the EventData with identifier \a ident were detected. */
   int eventInputEvent( const string &ident ) const;
 
-    /*! The popup menu for configuring %FilterDetectors. */
-  QPopupMenu* menu( void );
+    /*! Add the menu for configuring %FilterDetectors to \a menu. */
+  void addMenu( QMenu *menu );
 
     /*! Calles modeChanged() of each Filter
         whenever the mode is changed. */
@@ -161,7 +161,8 @@ public:
 
 protected:
 
-  void keyPressEvent( QKeyEvent *e );
+  void keyPressEvent( QKeyEvent *event );
+  void keyReleaseEvent( QKeyEvent *event );
 
 
 private:
@@ -169,7 +170,8 @@ private:
   class FilterData
   {
   public:
-    FilterData( Filter *filter, const vector<string> &in, 
+    FilterData( Filter *filter, const string &pluginname,
+		const vector<string> &in, 
 		const vector<string> &other,
 		long n, bool size, bool width );
     FilterData( const FilterData &fd );
@@ -178,6 +180,7 @@ private:
     void print( ostream &str ) const;
 
     Filter *FilterDetector;
+    string PluginName;
     int Out;
     int NOut;
     vector<string> In;
@@ -208,20 +211,12 @@ private:
 
   EventData *StimulusEvents;
 
-  QPopupMenu *Menu;
+  QMenu *Menu;
 
   bool NeedAdjust;
   int AdjustFlag;
 
   RELACSWidget *RW;
-
-
-private slots:
-
-    /*! Launches the option dialog of the event detector
-        as specified by \a id. 
-        This function is called from the Filterdetectors menu. */
-  void select( int id );
 
 };
 

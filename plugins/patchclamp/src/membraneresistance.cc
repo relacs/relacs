@@ -29,9 +29,7 @@ namespace patchclamp {
 
 
 MembraneResistance::MembraneResistance( void )
-  : RePro( "MembraneResistance", "MembraneResistance", "patchclamp",
-	   "Jan Benda", "1.0", "Nov 12, 2009" ),
-    P( this ),
+  : RePro( "MembraneResistance", "patchclamp", "Jan Benda", "1.0", "Nov 12, 2009" ),
     VUnit( "mV" ),
     IUnit( "nA" ),
     VFac( 1.0 ),
@@ -60,6 +58,7 @@ MembraneResistance::MembraneResistance( void )
   P.lock();
   P.setXLabel( "Time [ms]" );
   P.unlock();
+  setWidget( &P );
 }
 
 

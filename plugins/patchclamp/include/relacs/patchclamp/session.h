@@ -22,7 +22,7 @@
 #ifndef _RELACS_PATCHCLAMP_SESSION_H_
 #define _RELACS_PATCHCLAMP_SESSION_H_ 1
 
-#include <qpushbutton.h>
+#include <QPushButton>
 #include <relacs/optwidget.h>
 #include <relacs/ephys/traces.h>
 #include <relacs/control.h>

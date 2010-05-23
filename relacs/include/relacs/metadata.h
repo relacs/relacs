@@ -25,8 +25,8 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <qpopupmenu.h>
-#include <qmutex.h>
+#include <QMenu>
+#include <QMutex>
 #include <relacs/configclass.h>
 
 using namespace std;
@@ -241,7 +241,7 @@ public:
   QMutex *mutex( void );
 
     /*! Add actions to the RELACS menu. */
-  void addActions( QPopupMenu *menu );
+  void addActions( QMenu *menu );
 
     /*! The flag that is used to mark meta data options for the dialog. */
   static int dialogFlag( void );

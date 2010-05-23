@@ -28,9 +28,7 @@ namespace calibration {
 
 
 StimulusDelay::StimulusDelay( void )
-  : RePro( "StimulusDelay", "StimulusDelay", "Calibration",
-	   "Jan Benda", "1.2", "Feb 8, 2008" ),
-    P( this, "stimulusdelayplot" )
+  : RePro( "StimulusDelay", "Calibration", "Jan Benda", "1.2", "Feb 8, 2008" )
 {
   // add some options:
   addSelection( "intrace", "Input trace", "V-1" );
@@ -45,6 +43,7 @@ StimulusDelay::StimulusDelay( void )
   P.setXLabel( "Time [ms]" );
   P.setYLabel( "" );
   P.unlock();
+  setWidget( &P );
 }
 
 

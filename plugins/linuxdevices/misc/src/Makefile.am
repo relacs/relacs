@@ -21,15 +21,15 @@ libmiscamplmode_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../../nieseries/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libmiscamplmode_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libmiscamplmode_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 libmiscamplmode_la_SOURCES = amplmode.cc amplmodedevice.cc
 
@@ -47,17 +47,17 @@ libmiscmirob_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
     $(TML_CPPFLAGS) \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libmiscmirob_la_LDFLAGS = \
     -module -avoid-version \
     $(TML_LDFLAGS) \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libmiscmirob_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(TML_LIBS) \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 libmiscmirob_la_SOURCES = mirob.cc mirobdevice.cc
 
@@ -74,15 +74,15 @@ libmisckleindiek_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libmisckleindiek_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libmisckleindiek_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 libmisckleindiek_la_SOURCES = kleindiek.cc kleindiekdevice.cc
 
@@ -99,15 +99,15 @@ libmisctempdtm5080_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libmisctempdtm5080_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libmisctempdtm5080_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 libmisctempdtm5080_la_SOURCES = tempdtm5080.cc tempdtm5080device.cc
 

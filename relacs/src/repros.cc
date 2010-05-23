@@ -19,10 +19,10 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <qdatetime.h>
-#include <qlabel.h>
-#include <qtooltip.h>
-#include <qapplication.h>
+#include <QDateTime>
+#include <QLabel>
+#include <QToolTip>
+#include <QApplication>
 #include <relacs/messagebox.h>
 #include <relacs/optdialog.h>
 #include <relacs/relacswidget.h>
@@ -34,26 +34,10 @@
 namespace relacs {
 
 
-RePros::RePros( RELACSWidget *rw, QWidget *parent, const char *name )
-  : QTabWidget( parent, name ), Menu( 0 )
+RePros::RePros( RELACSWidget *rw, QWidget *parent )
+  : QTabWidget( parent ),
+    RW( rw )
 {
-  create( rw );
-}
-
-
-RePros::~RePros( void )
-{
-  // XXX das ist noch nicht alles ???
-  for ( unsigned int k=0; k<RPs.size(); k++ )
-    delete RPs[k];
-  RPs.clear();
-}
-
-
-int RePros::create( RELACSWidget *rw )
-{
-  RW = rw;
-
   CurrentRePro = -1;
   ActionRePro = -1;
 
@@ -63,9 +47,8 @@ int RePros::create( RELACSWidget *rw )
   CurrentView = 0;
   PreviousView = 0;
 
-  DialogOpt.addSeparator();
-  DialogOpt.addBoolean( "default", "Set values as default", true );
-  DialogOpt.addBoolean( "overwrite", "Changes overwrite macro options", false );
+  DialogOpt.addBoolean( "default", "Set values as default", true, 1 );
+  DialogOpt.addBoolean( "overwrite", "Changes overwrite macro options", false, 1 );
 
   int n = 0;
   for ( int k=0; k<Plugins::plugins(); k++ )
@@ -73,8 +56,11 @@ int RePros::create( RELACSWidget *rw )
       void *mp = Plugins::create( k );
       RePro *rp = (RePro*)mp;
       rp->setRELACSWidget( RW );
-      addTab( rp, rp->title().c_str() );
-      ReProData *rd = new ReProData( Plugins::ident( k ), rp, DialogOpt );
+      if ( rp->widget() == 0 )
+	rp->setWidget( new QWidget );
+      addTab( rp->widget(), rp->name().c_str() );
+      ReProData *rd = new ReProData( Plugins::ident( k ), rp, DialogOpt,
+				     this, RW );
       RPs.push_back( rd );
       connect( rd, SIGNAL( stopRePro( void ) ),
 	       this, SIGNAL( stopRePro( void ) ) );
@@ -89,8 +75,8 @@ int RePros::create( RELACSWidget *rw )
     MessageBox::warning( "RELACS Warning !", "No RePros found!<br>Activating Default RePro.", 4.0, this );
     RePro *rp = new DefaultRePro();
     rp->setRELACSWidget( RW );
-    addTab( rp, rp->title().c_str() );
-    ReProData *rd = new ReProData( rp->name(), rp, DialogOpt );
+    addTab( rp->widget(), rp->name().c_str() );
+    ReProData *rd = new ReProData( rp->name(), rp, DialogOpt, this, RW );
     RPs.push_back( rd );
     connect( rd, SIGNAL( stopRePro( void ) ),
 	     this, SIGNAL( stopRePro( void ) ) );
@@ -101,7 +87,30 @@ int RePros::create( RELACSWidget *rw )
     n++;
   }
 
-  return n;
+  setTabPosition( North );         // tab bar on top
+  setElideMode( Qt::ElideRight );  // ellipses at the right
+  //  setUseScrollButtons( false );
+  setElideMode( Qt::ElideNone );   // no ellipses
+  setUsesScrollButtons( true );
+}
+
+
+RePros::~RePros( void )
+{
+  for ( unsigned int k=0; k<RPs.size(); k++ ) {
+    if ( RPs[k]->repro() != 0 ) {
+      Plugins::destroy( RPs[k]->name(), RELACSPlugin::ReProId );
+      delete RPs[k]->repro();
+    }
+    delete RPs[k];
+  }
+  RPs.clear();
+}
+
+
+int RePros::currentRePro( void ) const
+{
+  return CurrentRePro;
 }
 
 
@@ -139,15 +148,15 @@ string RePros::macroParam( void ) const
 }
 
 
-QLabel *RePros::display( QWidget *parent, const char *name )
+QLabel *RePros::display( QWidget *parent )
 {
   MessageStr = "No Cell";
-  Message = new QLabel( "Xg", parent, name );
+  Message = new QLabel( "Xg", parent );
   Message->setFixedHeight( 2*Message->sizeHint().height() );
-  Message->setTextFormat( AutoText );
+  Message->setTextFormat( Qt::AutoText );
   Message->setIndent( 14 );
   Message->setText( MessageStr.c_str() );
-  QToolTip::add( Message, "Infos from the current research program" );
+  Message->setToolTip( "Infos from the current research program" );
   return Message;
 }
 
@@ -156,133 +165,34 @@ void RePros::message( const string &msg )
 {
   Str s = msg;
   s.eraseMarkup();
-  RW->printlog( ( CurrentRePro >= 0 ? RPs[CurrentRePro]->RP->name() + ": " : "" ) + s );
+  RW->printlog( ( CurrentRePro >= 0 ? RPs[CurrentRePro]->repro()->name() + ": " : "" ) + s );
 
   MessageStr = msg;
-  QApplication::postEvent( this, new QCustomEvent( QEvent::User+3 ) );
+  QApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+3 ) ) );
 }
 
 
-void RePros::customEvent( QCustomEvent *qce )
+void RePros::customEvent( QEvent *qce )
 {
   Message->setText( MessageStr.c_str() );
 }
 
 
-QPopupMenu *RePros::menu( void )
+void RePros::addMenu( QMenu *menu )
 {
-  if ( Menu == 0 ) {
-    Menu = new QPopupMenu( this );
-    Menu->insertItem( "&Options...", this, SLOT( dialog( void ) ), CTRL + Key_O );
-    Menu->insertItem( "&View", this, SLOT( raise( void ) ), CTRL + Key_V );
-    Menu->insertItem( "&Help...", this, SLOT( help( void ) ), CTRL + Key_H );
-    Menu->insertSeparator();
-    for ( unsigned int k=0; k<RPs.size(); k++ ) {
-      QPopupMenu *pop = new QPopupMenu( this );
-      pop->insertItem( "&Run", k << 3 );
-      pop->insertItem( "&Options...", ( k << 3 ) | 1 );
-      pop->insertItem( "&View", ( k << 3 ) | 2 );
-      pop->insertItem( "&Load", ( k << 3 ) | 3 );
-      pop->insertItem( "&Help...", ( k << 3 ) | 4 );
-      connect( pop, SIGNAL( activated( int ) ),
-	       this, SLOT( select( int ) ) );
-      string mt = "&";
-      if ( k == 0 )
-	mt += '0';
-      else if ( k < 10 )
-	mt += ( '1' + k - 1 );
-      else
-	mt += ( 'a' + k - 10 );
-      mt += " ";
-      mt += RPs[k]->RP->name();
-      Menu->insertItem( mt.c_str(), pop );
-    }
-  }
-
-  return Menu;
-}
-
-
-void RePros::select( int id )
-{
-  int index = id >> 3;
-  if ( index < 0 || index >= (int)RPs.size() )
-    return;
-
-  int action = id & 7;
-
-  if ( action == 1 )
-    RPs[index]->dialog();
-  else if ( action == 2 )
-    raise( index );
-  else if ( action == 3 )
-    reload( index );
-  else if ( action == 4 )
-    help( index );
-  else
-    RPs[index]->start();
+  menu->addAction( "&Options...", this, SLOT( dialog() ), Qt::CTRL + Qt::Key_O );
+  menu->addAction( "&View", this, SLOT( raise() ), Qt::CTRL + Qt::Key_V );
+  menu->addAction( "&Help...", this, SLOT( help() ), Qt::CTRL + Qt::Key_H );
+  menu->addSeparator();
+  for ( unsigned int k=0; k<RPs.size(); k++ )
+    RPs[k]->addMenu( menu, k );
 }
 
 
 void RePros::modeChanged( void )
 {
   for ( unsigned int k=0; k<RPs.size(); k++ )
-    RPs[k]->RP->modeChanged();
-}
-
-
-void RePros::reload( int index )
-{
-  if ( index < 0 ) {
-    RW->printlog( "! warning: RePros::reload() -> invalid index!" );
-    return;
-  }
-
-  if ( index == CurrentRePro ) {
-    MessageBox::warning( "RELACS RePros", "Cannot reload a running RePro!", this );
-    return;
-  }
-
-  // just copying a new library into plugins/ makes 
-  // starting every other RePro crash!
-  // however, moving libraries is save!
-  // the save way is to stop the RePro, move the new library into plugins/
-  // and then reload it.
-
-  // remove repro from repros list:
-  removePage( RPs[index]->RP );
-  delete RPs[index]->RP;
-
-  if ( Plugins::destroy( RPs[index]->Name, RELACSPlugin::ReProId ) <= 0 ) {
-    Plugins::reopen( Plugins::fileID( RPs[index]->Name ) );
-  }
-  else {
-    RW->printlog( "! warning: RePros::reload() -> unable to reopen plugin!" );
-  }
-
-  void *mp = Plugins::create( RPs[index]->Name, RELACSPlugin::ReProId );
-  if ( mp != 0 ) {
-    RePro *rp = (RePro*)mp;
-    rp->setRELACSWidget( RW );
-    insertTab( rp, rp->title().c_str(), index );
-    RPs[index]->RP = rp;
-    emit reloadRePro( RPs[index]->Name );
-    RW->printlog( "RePros::reload() -> loaded repro " + rp->name() );
-  }
-  else
-    RW->printlog( "! error: RePros::reload() -> cannot recreate RePro " +
-		  RPs[index]->Name );
-}
-
-
-void RePros::help( int index )
-{
-  if ( index < 0 ) {
-    RW->printlog( "! warning: RePros::help() -> invalid index!" );
-    return;
-  }
-
-  RPs[index]->RP->help();
+    RPs[k]->repro()->modeChanged();
 }
 
 
@@ -290,7 +200,7 @@ void RePros::help( void )
 {
   if ( ActionRePro < 0 || ActionRePro >= (int)RPs.size() )
     return;
-  RPs[ActionRePro]->RP->help();
+  RPs[ActionRePro]->help();
 }
 
 
@@ -305,35 +215,35 @@ void RePros::dialog( void )
 void RePros::notifyStimulusData( void )
 {
   for ( unsigned int k=0; k<RPs.size(); k++ )
-    RPs[k]->RP->notifyStimulusData();
+    RPs[k]->repro()->notifyStimulusData();
 }
 
 
 void RePros::notifyMetaData( const string &section )
 {
   for ( unsigned int k=0; k<RPs.size(); k++ )
-    RPs[k]->RP->notifyMetaData( section );
+    RPs[k]->repro()->notifyMetaData( section );
 }
 
 
 void RePros::setSettings( void )
 {
   for ( unsigned int k=0; k<RPs.size(); k++ )
-    RPs[k]->RP->setSettings();
+    RPs[k]->repro()->setSettings();
 }
 
 
 void RePros::sessionStarted( void )
 {
   for ( unsigned int k=0; k<RPs.size(); k++ )
-    RPs[k]->RP->sessionStarted();
+    RPs[k]->repro()->sessionStarted();
 }
 
 
 void RePros::sessionStopped( bool saved )
 {
   for ( unsigned int k=0; k<RPs.size(); k++ )
-    RPs[k]->RP->sessionStopped( saved );
+    RPs[k]->repro()->sessionStopped( saved );
 }
 
 
@@ -346,7 +256,7 @@ int RePros::index( const string &name ) const
   id.lower();
 
   for ( unsigned int k=0; k<RPs.size(); k++ ) {
-    Str idr = RPs[k]->Name;
+    Str idr = RPs[k]->name();
     idr.lower();
     if ( idr == id )
       return k;
@@ -359,7 +269,7 @@ int RePros::index( const string &name ) const
 int RePros::index( const RePro *repro ) const
 {
   for ( unsigned int k=0; k<RPs.size(); k++ )
-    if ( RPs[k]->RP == repro )
+    if ( RPs[k]->repro() == repro )
       return k;
 
   return -1;
@@ -369,8 +279,14 @@ int RePros::index( const RePro *repro ) const
 RePro *RePros::repro( int index ) const
 {
   if ( index >= 0 && index < (int)RPs.size() )
-    return RPs[index]->RP;
+    return RPs[index]->repro();
   return 0;
+}
+
+
+RePro *RePros::repro( const string &name ) const
+{
+  return repro( index( name ) );
 }
 
 
@@ -383,7 +299,7 @@ int RePros::nameIndex( const string &name ) const
   id.lower();
 
   for ( unsigned int k=0; k<RPs.size(); k++ ) {
-    Str idr = RPs[k]->RP->name();
+    Str idr = RPs[k]->repro()->name();
     idr.lower();
     if ( idr == id )
       return k;
@@ -393,10 +309,16 @@ int RePros::nameIndex( const string &name ) const
 }
 
 
+RePro *RePros::nameRepro( const string &name ) const
+{
+  return repro( nameIndex( name ) );
+}
+
+
 void RePros::raise( int index )
 {
   if ( index >= 0 )
-    raise( RPs[index]->RP );
+    raise( RPs[index]->repro() );
 }
 
 
@@ -405,25 +327,90 @@ void RePros::raise( RePro *repro )
   if ( repro != CurrentView )
     PreviousView = CurrentView;
   CurrentView = repro;
-  showPage( repro );
+  removeTab( indexOf( repro->widget() ) );
+  insertTab( 0, repro->widget(), repro->name().c_str() );
+  setCurrentWidget( repro->widget() );
+}
+
+
+void RePros::raise( void )
+{
+  raise( PreviousView );
+}
+
+
+void RePros::reload( RePro *repro )
+{
+  RPs[ index( repro ) ]->reload();
+}
+
+
+void RePros::help( RePro *repro )
+{
+  RPs[ index( repro ) ]->help();
+}
+
+
+Options &RePros::dialogOptions( void )
+{
+  return DialogOpt;
 }
 
 
 ostream &operator<<( ostream &str, const RePros &repros )
 {
   for ( unsigned int k=0; k < repros.RPs.size(); k++ ) {
-    str << "RePro " << k << ": " << repros.RPs[k]->Name << '\n';
+    str << "RePro " << k << ": " << repros.RPs[k]->name() << '\n';
   }
   return str;
 }
 
 
-ReProData::ReProData( const string &name, RePro *repro, Options &dopt )
+ReProData::ReProData( const string &name, RePro *repro, Options &dopt,
+		      RePros *rps, RELACSWidget *rw )
 {
   Name = name;
   RP = repro;
   CO.clear();
   DO = &dopt;
+  RPs = rps;
+  RW = rw;
+  connect( this, SIGNAL( reloadRePro( const string& ) ),
+	   RPs, SIGNAL( reloadRePro( const string& ) ) );
+}
+
+
+void ReProData::addMenu( QMenu *menu, int inx )
+{
+  string mt = "&";
+  if ( inx == 0 )
+    mt += '0';
+  else if ( inx < 10 )
+    mt += ( '1' + inx - 1 );
+  else
+    mt += ( 'a' + inx - 10 );
+  mt += " ";
+  mt += RP->name();
+
+  QMenu *pop = menu->addMenu( mt.c_str() );
+
+  pop->addAction( "&Run", this, SLOT( start() ) );
+  pop->addAction( "&Options...", this, SLOT( dialog() ) );
+  pop->addAction( "&View", this, SLOT( raise() ) );
+  pop->addAction( "&Load", this, SLOT( reload() ) );
+  pop->addAction( "&Help...", this, SLOT( help() ) );
+}
+
+
+string ReProData::name( void ) const
+{
+  return Name;
+}
+
+
+RePro *ReProData::repro( void )
+{
+  return RP;
 }
 
 
@@ -451,11 +438,11 @@ void ReProData::dialog( void )
 
   RP->dialog();
 
-  connect( RP, SIGNAL( dialogAccepted( void ) ),
+  connect( (QWidget*)RP, SIGNAL( dialogAccepted( void ) ),
 	   this, SLOT( acceptDialog( void ) ) );
-  connect( RP, SIGNAL( dialogAction( int ) ),
+  connect( (QWidget*)RP, SIGNAL( dialogAction( int ) ),
 	   this, SLOT( dialogAction( int ) ) );
-  connect( RP, SIGNAL( dialogClosed( int ) ),
+  connect( (QWidget*)RP, SIGNAL( dialogClosed( int ) ),
 	   this, SLOT( dialogClosed( int ) ) );
 }
 
@@ -463,19 +450,19 @@ void ReProData::dialog( void )
 void ReProData::acceptDialog( void )
 {
   Options newopt( *((Options*)RP), OptDialog::changedFlag() );
-  if ( DO->boolean( "overwrite" ) ) {
+
+  if ( DO->boolean( "overwrite" ) )
     RP->overwriteOptions().readAppend( newopt );
-  }
-  else {
+  else
     RP->overwriteOptions().clear();
-  }
+
   if ( DO->boolean( "default" ) ) {
     RP->Options::setToDefaults();
     CO.clear();
   }
-  else {
+  else
     CO.readAppend( newopt );
-  }
+
   RP->setProjectOptions();
 }
 
@@ -489,14 +476,64 @@ void ReProData::dialogAction( int r )
 
 void ReProData::dialogClosed( int r )
 {
-  disconnect( RP, SIGNAL( dialogAccepted( void ) ),
+  disconnect( (QWidget*)RP, SIGNAL( dialogAccepted( void ) ),
 	      this, SLOT( acceptDialog( void ) ) );
-  disconnect( RP, SIGNAL( dialogAction( int ) ),
+  disconnect( (QWidget*)RP, SIGNAL( dialogAction( int ) ),
 	      this, SLOT( dialogAction( int ) ) );
-  disconnect( RP, SIGNAL( dialogClosed( int ) ),
+  disconnect( (QWidget*)RP, SIGNAL( dialogClosed( int ) ),
 	      this, SLOT( dialogClosed( int ) ) );
 }
 
+
+void ReProData::raise( void )
+{
+  RPs->raise( RP );
+}
+
+
+void ReProData::reload( void )
+{
+  if ( RPs->index( RP ) == RPs->currentRePro() ) {
+    MessageBox::warning( "RELACS RePros", "Cannot reload a running RePro!", RPs );
+    return;
+  }
+
+  // just copying a new library into plugins/ makes 
+  // starting every other RePro crash!
+  // however, moving libraries is save!
+  // the save way is to stop the RePro, move the new library into plugins/
+  // and then reload it.
+
+  // remove repro from repros list:
+  int index = RPs->indexOf( RP->widget() );
+  RPs->removeTab( index );
+  delete RP;
+
+  if ( Plugins::destroy( Name, RELACSPlugin::ReProId ) <= 0 )
+    Plugins::reopen( Plugins::fileID( Name ) );
+  else
+    RW->printlog( "! warning: ReProData::reload() -> unable to reopen plugin!" );
+
+  void *mp = Plugins::create( Name, RELACSPlugin::ReProId );
+  if ( mp != 0 ) {
+    RP = (RePro*)mp;
+    RP->setRELACSWidget( RW );
+    if ( RP->widget() == 0 )
+      RP->setWidget( new QWidget );
+    RPs->insertTab( index, RP->widget(), RP->name().c_str() );
+    emit reloadRePro( Name );
+    RW->printlog( "ReProData::reload() -> loaded repro " + RP->name() );
+  }
+  else
+    RW->printlog( "! error: ReProData::reload() -> cannot recreate RePro " +
+		  Name );
+}
+
+
+void ReProData::help( void )
+{
+  RP->help();
+}
 
 
 }; /* namespace relacs */

@@ -22,12 +22,11 @@
 #ifndef _RELACS_PLOTTRACE_H_
 #define _RELACS_PLOTTRACE_H_ 1
 
-#include <qhbox.h>
-#include <qpushbutton.h>
-#include <qpopupmenu.h> 
+#include <QWidget>
+#include <QPushButton>
+#include <QMenu> 
 #include <vector>
-#include <relacs/inlist.h>
-#include <relacs/eventlist.h>
+#include <relacs/relacsplugin.h>
 #include <relacs/multiplot.h>
 
 namespace relacs {
@@ -47,7 +46,7 @@ class RELACSWidget;
   /*! Flag for the modes of traces or events, indicating that they should be plotted. */
 static const int PlotTraceMode = 0x0008;
 
-class PlotTrace : public MultiPlot
+class PlotTrace : public RELACSPlugin
 {
   Q_OBJECT
 
@@ -90,32 +89,31 @@ public:
   };
 
     /*! Construct a PlotTrace. */
-  PlotTrace( RELACSWidget *ow, QWidget* parent=0, const char* name=0 );
+  PlotTrace( RELACSWidget *rw, QWidget* parent=0 );
     /*! Destruct a PlotTrace. */
   ~PlotTrace( );
 
-  void keyPressEvent( QKeyEvent* e);
-
-
-public slots:
-
     /*! Plot voltage traces and spike trains. */
-  void plot( const InList &data, const EventList &events );
+  void plot( void );
     /*! Specify some properties of PlotTrace. 
         Set total time window to \a length seconds
 	and part preceeding stimulus to \a offs seconds. */
   void setState( bool on, bool fixed, double length, double offs );
 
-    /*! Toggle plot of trace \a i. */
-  void toggle( int i );
-    /*! Set the number of plots necessary for \a data and \a events. */
-  void resize( InList &data, const EventList &events );
+    /*! Set the number of plots necessary for the input traces and events. */
+  void resize( void );
     /*! Initialize the plots with the data \a data and \a events. */
-  void init( const InList &data, const EventList &events );
+  void init( void );
     /*! Add menu entries controlling the time window to \a menu. */
-  void addMenu( QPopupMenu *menu );
+  void addMenu( QMenu *menu );
     /*! Update menu entries toggeling the traces. */
   void updateMenu( void );
+
+
+public slots:
+
+    /*! Toggle plot of trace \a trace. */
+  void toggle( QAction *trace );
 
   void zoomOut( void );
   void zoomIn( void );
@@ -123,46 +121,60 @@ public slots:
   void moveRight( void );
   void moveStart( void );
   void moveEnd( void );
-  void moveSignal( void );
-  void fixedSignal( void );
-  void moveOffsLeft( void );
-  void moveOffsRight( void );
-  void continuousEnd( void );
+  void moveToSignal( void );
+  void viewSignal( void );
+  void moveSignalOffsLeft( void );
+  void moveSignalOffsRight( void );
+  void viewEnd( void );
   void manualRange( void );
   void autoRange( void );
 
   void plotOnOff( void );
-  void offsetToggle( void );
+  void viewToggle( void );
   void toggleManual( void );
-  void setOffset( int mode );
 
 
 protected:
 
   virtual void resizeLayout( void );
   virtual void resizeEvent( QResizeEvent *qre );
-  virtual void customEvent( QCustomEvent *qce );
+  virtual void keyPressEvent( QKeyEvent *event );
+  virtual void customEvent( QEvent *qce );
 
-  QHBox *ButtonBox;
+  QWidget *ButtonBox;
+  QHBoxLayout *ButtonBoxLayout;
   QPushButton *OnOffButton;
-  QPushButton *OffsetButton;
+  QPushButton *ViewButton;
   QPushButton *ManualButton;
 
-  QPixmap FixedOffsetIcon;
-  QPixmap ContinuousOffsetIcon;
+  QPixmap SignalViewIcon;
+  QPixmap EndViewIcon;
 
 
 protected slots:
 
   void updateRanges( int id );
+  void resizePlots( QResizeEvent *qre );
 
 
 private:
 
+    /*! Different view modes. */
+  enum Views { 
+      /*! Keep the display fixed. */
+    FixedView,
+      /*! Show the traces relative to the current signal time. */
+    SignalView,
+      /*! Show the traces relative to the current data. */
+    EndView,
+  };
+
+  void setView( Views mode );
+
   double TimeWindow;
   double TimeOffs;
 
-  int OffsetMode;
+  Views ViewMode;
   bool PlotChanged;
   double LeftTime;
   double Offset;
@@ -175,14 +187,13 @@ private:
   double AutoTime;
   double AutoOffs;
 
-  InList *IL;
-  const EventList *EL;
-
   vector< int > PlotElements;
 
-  RELACSWidget *RW;
+  vector< QAction* > PlotActions;
 
-  QPopupMenu *Menu;
+  QMenu *Menu;
+
+  MultiPlot P;
 
 };
 

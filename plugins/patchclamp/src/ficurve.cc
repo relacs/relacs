@@ -28,9 +28,7 @@ namespace patchclamp {
 
 
 FICurve::FICurve( void )
-  : RePro( "FICurve", "FICurve", "patchclamp",
-	   "Jan Benda", "1.0", "Feb 17, 2010" ),
-    P( 2, 2, true, this ),
+  : RePro( "FICurve", "patchclamp", "Jan Benda", "1.0", "Feb 17, 2010" ),
     VUnit( "mV" ),
     IUnit( "nA" ),
     VFac( 1.0 ),
@@ -63,6 +61,9 @@ FICurve::FICurve( void )
   addNumber( "vmax", "Maximum steady-state potential", -50.0, -2000.0, 2000.0, 1.0, "mV" );
   addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
   addTypeStyle( OptWidget::TabLabel, Parameter::Label );
+
+  P.resize( 2, 2, true );
+  setWidget( &P );
 }
 
 

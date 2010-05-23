@@ -22,8 +22,9 @@
 #ifndef _RELACS_EPHYS_AMPLIFIERCONTROL_H_
 #define _RELACS_EPHYS_AMPLIFIERCONTROL_H_ 1
 
-#include <qpushbutton.h>
-#include <qhbox.h>
+#include <QLabel>
+#include <QPushButton>
+#include <QHBoxLayout>
 #include <relacs/misc/amplmode.h>
 #include <relacs/ephys/traces.h>
 #include <relacs/control.h>
@@ -77,7 +78,7 @@ private:
   int DGain;
   double MaxResistance;
   double ResistanceScale;
-  QHBox *AmplBox;
+  QHBoxLayout *AmplBox;
   QPushButton *BuzzerButton;
   QPushButton *ResistanceButton;
   QLabel *ResistanceLabel;

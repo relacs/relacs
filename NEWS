@@ -1,6 +1,9 @@
-Version 0.9.6
+Version 0.9.7
 
 May, 2010
+  Port to Qt4 for improved performance.
+
+May, 2010: Version 0.9.6
   Last release of the Qt3 based version.
   Many new plugins for investigating electrosensory systems.
 

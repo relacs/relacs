@@ -29,9 +29,7 @@ namespace calibration {
 
 
 RestartDelay::RestartDelay( void )
-  : RePro( "RestartDelay", "RestartDelay", "Calibration",
-	   "Jan Benda", "1.3", "Feb 8, 2008" ),
-    P( this, "restartdelayplot" )
+  : RePro( "RestartDelay", "Calibration", "Jan Benda", "1.3", "Feb 8, 2008" )
 {
   // add some options:
   addNumber( "duration", "Duration of analysis window", 0.1, 0.01, 1000.0, 0.02, "sec", "ms" );
@@ -44,6 +42,7 @@ RestartDelay::RestartDelay( void )
   P.setXLabel( "Time [ms]" );
   P.setYLabel( "" );
   P.unlock();
+  setWidget( &P );
 }
 
 

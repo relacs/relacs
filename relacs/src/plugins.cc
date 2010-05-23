@@ -23,8 +23,8 @@
 #include <dlfcn.h>
 #include <fstream>
 #include <iostream>
-#include <qdir.h>
-#include <qfileinfo.h>
+#include <QDir>
+#include <QFileInfo>
 #include <relacs/str.h>
 #include <relacs/plugins.h>
 using namespace std;
@@ -178,9 +178,9 @@ int Plugins::openPath( const string &path, const string &relativepath,
     if ( filename.substr( 0, 3 ) != "lib" )
       filename = "lib" + filename;
     // look for files in directory:
-    QDir files( file.dir(), filename );
+    QDir files( file.dir().c_str(), filename.c_str() );
     for ( unsigned int k=0; k < files.count(); k++ ) {
-      Str libfile = files.absFilePath( files[k], false ).latin1();
+      Str libfile = files.absoluteFilePath( files[k] ).toLatin1().data();
       QFileInfo qfi( libfile.c_str() );
       if ( qfi.exists() ) {
 	int r = open( libfile );
@@ -233,9 +233,10 @@ int Plugins::close( int id )
     return -InvalidFile;
 
   // check for still used plugins:
-  for ( unsigned int k=0; k<Plugs.size(); k++ )
+  for ( unsigned int k=0; k<Plugs.size(); k++ ) {
     if ( Plugs[k].FileID == id && Plugs[k].UseCount > 0 )
       return -LibraryInUse;
+  }
 
   // remove plugins:
   for ( PluginsType::iterator p = Plugs.begin(); p != Plugs.end(); )

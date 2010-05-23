@@ -22,11 +22,11 @@
 #ifndef _RELACS_OPTDIALOG_H_
 #define _RELACS_OPTDIALOG_H_ 1
 
-#include <qdialog.h>
-#include <qmutex.h>
-#include <qtabwidget.h>
-#include <qhbox.h>
-#include <qvbox.h>
+#include <QDialog>
+#include <QMutex>
+#include <QTabWidget>
+#include <QHBoxLayout>
+#include <QVBoxLayout>
 #include <relacs/options.h>
 #include <relacs/optwidget.h>
 
@@ -47,8 +47,9 @@ Here is an example:
 \image html optdialog.png
 This example was created with the following code:
 \code
-#include <options.h>
-#include <optdialog.h>
+#include <relacs/options.h>
+#include <relacs/optdialog.h>
+using namespace relacs;
 
 ...
 
@@ -73,8 +74,8 @@ OptDialog d( this );
 d.setCaption( "Example Dialog" );
 d.addOptions( opt1, 0, 1 );
 d.addOptions( opt2 );
-d.setSpacing( 4 );
-d.setMargin( 10 );
+d.setVerticalSpacing( 4 );
+d.setMargins( 10 );
 d.addButton( "&Ok", OptDialog::Accept, 1 );
 d.addButton( "&Reset", OptDialog::Reset );
 d.addButton( "&Close" );
@@ -130,9 +131,9 @@ dialogClosed() tells you that the dialog is closed.
 The last two signals are especially important for modeless dialogs.
 
 The caption of the dialog can be set by setCaption().
-The spacing between two input lines can be adjusted with setSpacing().
+The spacing between two input lines can be adjusted with setVerticalSpacing().
 The spacing between the widget margins and its content are set with
-setMargin().
+setMargins().
 */
 
 
@@ -173,25 +174,25 @@ public:
     /*! Construct an empty modal dialog.
         This dialog will block input to the program.
         \note You still have to call exec() in order to launch the dialog. */
-  OptDialog( QWidget *parent=0, char *name=0 );
+  OptDialog( QWidget *parent=0 );
     /*! Construct an empty dialog with modality \a modal.
         If \a modal is \c true,
 	this dialog will block input to the program.
         \note You still have to call exec() in order to launch the dialog. */
-  OptDialog( bool modal, QWidget *parent=0, char *name=0 );
+  OptDialog( bool modal, QWidget *parent=0 );
     /*! Construct a modal dialog for editing the Options \a o.
         The caption of the dialog window is set to \a title.
         This dialog will block input to the program.
         \note You still have to call exec() in order to launch the dialog. */
   OptDialog( Options &opt, const string &title,
-	     QMutex *mutex=0, QWidget *parent=0, char *name=0 );
+	     QMutex *mutex=0, QWidget *parent=0 );
     /*! Construct a dialog for editing the Options \a o with modality \a modal.
         The caption of the dialog window is set to \a title.
 	If \a modal is \c true,
 	this dialog will block input to the program.
         \note You still have to call exec() in order to launch the dialog. */
   OptDialog( Options &opt, const string &title, bool modal,
-	     QMutex *mutex=0, QWidget *parent=0, char *name=0 );
+	     QMutex *mutex=0, QWidget *parent=0 );
     /*! Destructs the OptDialog. */
   ~OptDialog( void );
 
@@ -210,7 +211,7 @@ public:
         The standard layout \a style = 0 puts each option into a separate line.
         If \a style = 1 then the option's identifier is in one line
         and the options value and unit is in the following line.
-	\sa addTabOptions(), addWidget(), addTabWidget(), addButton() */
+	\sa addTabOptions(), addWidget(), addTabWidget(), addSeparator(), addButton() */
   OptWidget *addOptions( Options &opt, int selectmask=0,
 			 int romask=0, int style=0, QMutex *mutex=0 );
     /*! Assigns Options \a o as a page of a TabWidget with label \a label
@@ -224,7 +225,7 @@ public:
         The standard layout \a style = 0 puts each option into a separate line.
         If \a style = 1 then the option's identifier is in one line
         and the options value and unit is in the following line.
-	\sa addOptions(), addWidget(), addTabWidget(), addButton() */
+	\sa addOptions(), addWidget(), addTabWidget(), addSeparator(), addButton() */
   OptWidget *addTabOptions( const string &label, Options &opt,
 			    int selectmask=0, int romask=0, int style=0,
 			    QMutex *mutex=0 );
@@ -236,20 +237,35 @@ public:
     /*! Add some widget as a page of a TabWidget with label \a label
         to the dialog. 
         The widget is deleted when the dialog is closed.
-        \sa addOptions(), addTabOptions(), addWidget(), addButton() */
+        \sa addOptions(), addTabOptions(), addWidget(), addSeparator(), addButton() */
   void addTabWidget( const string &label, QWidget *widget );
+
+    /*! Add a separator line to the dialog. 
+        \sa addOptions(), addTabOptions(), addWidget(), addTabWidget(), addButton() */
+  void addSeparator( void );
 
     /*! Set the spacing between the lines to \a pixel pixel.
         Call this function after you added all Options to the dialog
         with addOptions().
-        \sa setMargin() */
-  void setSpacing( int pixel );
+        \sa setHorizontalSpacing(), setMargins() */
+  void setVerticalSpacing( int pixel );
+    /*! Set the horizontal spacing to \a pixel pixel.
+        Call this function after you added all Options to the dialog
+        with addOptions().
+        \sa setVerticalSpacing(), setMargins() */
+  void setHorizontalSpacing( int pixel );
     /*! Set the spacing between the widget margins and its content
         to \a pixel pixel.
         Call this function after you added all Options to the dialog
         with addOptions().
-        \sa setSpacing() */
-  void setMargin( int pixel );
+        \sa setVerticalSpacing(), setHorizontalSpacing() */
+  void setMargins( int pixel );
+    /*! Set the spacing between the widget margins and its content
+        to all sides individually.
+        Call this function after you added all Options to the dialog
+        with addOptions().
+        \sa setVerticalSpacing(), setHorizontalSpacing() */
+  void setMargins( int left, int top, int right, int bottom );
 
     /*! The code exec() returns if the dialog is closed by entering "ESC"
         or by closing the window.
@@ -345,8 +361,8 @@ private:
   void construct( void );
   void createButtons( void );
 
-  QVBox *DialogBox;
-  QHBox *ButtonBox;
+  QVBoxLayout *DialogBox;
+  QHBoxLayout *ButtonBox;
 
   vector< OptWidget* > OWs;
 

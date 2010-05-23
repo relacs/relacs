@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <qvbox.h>
-#include <qhbox.h>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
 #include <relacs/patchclamp/setdc.h>
 using namespace relacs;
 
@@ -28,8 +28,7 @@ namespace patchclamp {
 
 
 SetDC::SetDC( void )
-  : RePro( "SetDC", "SetDC", "patchclamp",
-	   "Jan Benda", "1.0", "Feb 09, 2010" ),
+  : RePro( "SetDC", "patchclamp", "Jan Benda", "1.0", "Feb 09, 2010" ),
     IUnit( "nA" )
 {
   // add some options:
@@ -41,34 +40,46 @@ SetDC::SetDC( void )
   addBoolean( "interactive", "Set dc amplitude interactively", false );
   addNumber( "dcamplitudestep", "Stepsize for entering dc", 0.001, 0.0, 1000.0, 0.001 );
 
-  QVBox *vb = new QVBox( this );
+  QVBoxLayout *vb = new QVBoxLayout;
+  setLayout( vb );
 
   // edit:
-  QHBox *eb = new QHBox( vb );
-  new QLabel( "DC current", eb );
-  EW = new DoubleSpinBox( 0.0, -1000.0, 1000.0, 0.1, 0.001, "%0.3f", eb );
-  UnitLabel = new QLabel( "nA", eb );
+  QHBoxLayout *eb = new QHBoxLayout;
+  vb->addLayout( eb );
+  eb->addWidget( new QLabel( "DC current" ) );
+  EW = new QDoubleSpinBox;
+  EW->setRange( -1000.0, 1000.0 );
+  EW->setValue( 0.0 );
+  EW->setDecimals( 3 );
+  EW->setSingleStep( 0.001 );
+  eb->addWidget( EW );
+  UnitLabel = new QLabel( "nA" );
+  eb->addWidget( UnitLabel );
 
   // buttons:
-  QHBox *bb = new QHBox( vb );
+  QHBoxLayout *bb = new QHBoxLayout;
+  vb->addLayout( bb );
   bb->setSpacing( 4 );
 
   // Ok button:
-  OKButton = new QPushButton( "&Ok", bb, "OkButton" );
-  connect( OKButton, SIGNAL( clicked() ),
-	   this, SLOT( setValue() ) );
-  grabKey( ALT+Key_O );
-  grabKey( Key_Return );
-  grabKey( Key_Enter );
+  OKButton = new QPushButton( "&Ok" );
+  OKButton->setFixedHeight( OKButton->sizeHint().height() );
+  bb->addWidget( OKButton );
+  QWidget::connect( OKButton, SIGNAL( clicked() ),
+		    (QWidget*)this, SLOT( setValue() ) );
+  grabKey( Qt::ALT+Qt::Key_O );
+  grabKey( Qt::Key_Return );
+  grabKey( Qt::Key_Enter );
   
   // Cancel button:
-  CancelButton = new QPushButton( "&Cancel", bb, "CancelButton" );
-  connect( CancelButton, SIGNAL( clicked() ),
-	   this, SLOT( keepValue() ) );
-  grabKey( ALT+Key_C );
-  grabKey( Key_Escape );
+  CancelButton = new QPushButton( "&Cancel" );
+  CancelButton->setFixedHeight( OKButton->sizeHint().height() );
+  bb->addWidget( CancelButton );
+  QWidget::connect( CancelButton, SIGNAL( clicked() ),
+		    (QWidget*)this, SLOT( keepValue() ) );
+  grabKey( Qt::ALT+Qt::Key_C );
+  grabKey( Qt::Key_Escape );
 
-  bb->setFixedHeight( OKButton->sizeHint().height() );
 }
 
 
@@ -144,8 +155,8 @@ int SetDC::main( void )
       return Failed;
     }
     message( "DC=<b>" + Str( DCAmplitude ) + "</b> " + IUnit );
-    EW->setMinValue( dcsignal.minValue() );
-    EW->setMaxValue( dcsignal.maxValue() );
+    EW->setMinimum( dcsignal.minValue() );
+    EW->setMaximum( dcsignal.maxValue() );
     EW->setValue( DCAmplitude );
     sleep( 0.01 );
     postCustomEvent( 11 ); // setFocus();
@@ -221,19 +232,19 @@ void SetDC::keepValue( void )
 
 void SetDC::keyPressEvent( QKeyEvent *e )
 {
-  if ( e->key() == Key_O && ( e->state() & AltButton ) ) {
+  if ( e->key() == Qt::Key_O && ( e->modifiers() & Qt::AltModifier ) ) {
     OKButton->animateClick();
     e->accept();
   }
-  else if ( e->key() == Key_C && ( e->state() & AltButton ) ) {
+  else if ( e->key() == Qt::Key_C && ( e->modifiers() & Qt::AltModifier ) ) {
     CancelButton->animateClick();
     e->accept();
   }
-  else if ( ( e->key() == Key_Return || e->key() == Key_Enter ) && ( e->state() & KeyButtonMask ) == 0 ) {
+  else if ( ( e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter ) && ( e->modifiers() == Qt::NoModifier ) ) {
     OKButton->animateClick();
     e->accept();
   }
-  else if ( e->key() == Key_Escape && ( e->state() & KeyButtonMask ) == 0 ) {
+  else if ( e->key() == Qt::Key_Escape && ( e->modifiers() == Qt::NoModifier ) ) {
     CancelButton->animateClick();
     e->accept();
   }
@@ -242,23 +253,23 @@ void SetDC::keyPressEvent( QKeyEvent *e )
 }
 
 
-void SetDC::customEvent( QCustomEvent *qce )
+void SetDC::customEvent( QEvent *qce )
 {
   if ( qce->type() == QEvent::User+11 ) {
     EW->setFocus();
-    connect( EW, SIGNAL( valueChanged( double ) ),
-	     this, SLOT( setValue( double ) ) );
+    QWidget::connect( EW, SIGNAL( valueChanged( double ) ),
+		      (QWidget*)this, SLOT( setValue( double ) ) );
   }
   else if ( qce->type() == QEvent::User+12 ) {
-    topLevelWidget()->setFocus();
-    disconnect( EW, SIGNAL( valueChanged( double ) ),
-		this, SLOT( setValue( double ) ) );
+    widget()->window()->setFocus();
+    QWidget::disconnect( EW, SIGNAL( valueChanged( double ) ),
+			 (QWidget*)this, SLOT( setValue( double ) ) );
   }
   else if ( qce->type() == QEvent::User+13 ) {
-    EW->setStep( number( "dcamplitudestep" ), 0.001 );
+    EW->setSingleStep( number( "dcamplitudestep" ) );
   }
   else
-    RePro::customEvent( qce );
+    RELACSPlugin::customEvent( qce );
 }
 
 

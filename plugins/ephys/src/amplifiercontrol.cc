@@ -19,7 +19,6 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <qlabel.h>
 #include <relacs/ephys/amplifiercontrol.h>
 using namespace relacs;
 
@@ -27,11 +26,12 @@ namespace ephys {
 
 
 AmplifierControl::AmplifierControl( void )
-  : Control( "AmplifierControl", "AmplifierControl", "ephys",
-	     "Jan Benda", "1.0", "Apr 16, 2010" )
+  : Control( "AmplifierControl", "ephys", "Jan Benda", "1.0", "Apr 16, 2010" )
 {
 
-  AmplBox = new QHBox( this );
+  AmplBox = new QHBoxLayout;
+  setLayout( AmplBox );
+
   BuzzerButton = 0;
   ResistanceButton = 0;
   ResistanceLabel = 0;
@@ -67,50 +67,52 @@ void AmplifierControl::initDevices( void )
     unlockMetaData();
     if ( ResistanceButton == 0 && BuzzerButton == 0 ) {
     
-      new QLabel( AmplBox );
+      AmplBox->addWidget( new QLabel );
 
-      BuzzerButton = new QPushButton( "Buzz", AmplBox );
-      connect( BuzzerButton, SIGNAL( clicked() ),
-	       this, SLOT( buzz() ) );
+      BuzzerButton = new QPushButton( "Buzz" );
+      AmplBox->addWidget( BuzzerButton );
+      QWidget::connect( BuzzerButton, SIGNAL( clicked() ),
+			(QWidget*)this, SLOT( buzz() ) );
 
-      new QLabel( AmplBox );
+      AmplBox->addWidget( new QLabel );
 
-      ResistanceButton = new QPushButton( "R", AmplBox );
-      connect( ResistanceButton, SIGNAL( pressed() ),
-	       this, SLOT( startResistance() ) );
-      connect( ResistanceButton, SIGNAL( released() ),
-	       this, SLOT( stopResistance() ) );
+      ResistanceButton = new QPushButton( "R" );
+      AmplBox->addWidget( ResistanceButton );
+      QWidget::connect( ResistanceButton, SIGNAL( pressed() ),
+			(QWidget*)this, SLOT( startResistance() ) );
+      QWidget::connect( ResistanceButton, SIGNAL( released() ),
+			(QWidget*)this, SLOT( stopResistance() ) );
     
-      QLabel *label = new QLabel( "=", AmplBox );
-      label->setAlignment( AlignHCenter | AlignVCenter );
+      QLabel *label = new QLabel( "=" );
+      label->setAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
+      AmplBox->addWidget( label );
 
-      ResistanceLabel = new QLabel( "000", AmplBox );
-      ResistanceLabel->setAlignment( AlignRight | AlignVCenter );
+      ResistanceLabel = new QLabel( "000" );
+      ResistanceLabel->setAlignment( Qt::AlignRight | Qt::AlignVCenter );
       ResistanceLabel->setFrameStyle( QFrame::Panel | QFrame::Sunken );
       ResistanceLabel->setLineWidth( 2 );
       QFont nf( ResistanceLabel->font() );
-      nf.setPointSizeFloat( 1.6 * nf.pointSizeFloat() );
+      nf.setPointSizeF( 1.6 * nf.pointSizeF() );
       nf.setBold( true );
       ResistanceLabel->setFont( nf );
       QPalette qp( ResistanceLabel->palette() );
-      qp.setColor( QColorGroup::Background, black );
-      qp.setColor( QColorGroup::Foreground, green );
+      qp.setColor( QPalette::Window, Qt::black );
+      qp.setColor( QPalette::WindowText, Qt::green );
       ResistanceLabel->setPalette( qp );
       ResistanceLabel->setFixedHeight( ResistanceLabel->sizeHint().height() );
       ResistanceLabel->setFixedWidth( ResistanceLabel->sizeHint().width() );
       ResistanceLabel->setText( "0" );
+      AmplBox->addWidget( ResistanceLabel );
 
-      new QLabel( "MOhm", AmplBox );
+      AmplBox->addWidget( new QLabel( "MOhm" ) );
     
-      new QLabel( AmplBox );
+      AmplBox->addWidget( new QLabel );
     }
-    AmplBox->show();
+    widget()->show();
   }
   else {
-    AmplBox->hide();
+    widget()->hide();
   }
-
-  updateGeometry();
 }
 
 
@@ -169,7 +171,7 @@ void AmplifierControl::keyPressEvent( QKeyEvent *e )
 {
   switch ( e->key() ) {
 
-  case Key_O:
+  case Qt::Key_O:
     if ( Ampl != 0 && ResistanceButton != 0 ) {
       ResistanceButton->setDown( true );
       startResistance();
@@ -178,7 +180,7 @@ void AmplifierControl::keyPressEvent( QKeyEvent *e )
       e->ignore();
     break;
 
-  case Key_Z:
+  case Qt::Key_Z:
     if ( Ampl != 0 && BuzzerButton != 0 ) {
       BuzzerButton->animateClick();
     }
@@ -197,7 +199,7 @@ void AmplifierControl::keyReleaseEvent( QKeyEvent *e )
 {
   switch ( e->key() ) {
 
-  case Key_O: 
+  case Qt::Key_O: 
     if ( Ampl != 0 && ResistanceButton != 0 ) {
       measureResistance();
       if ( ! e->isAutoRepeat() ) {

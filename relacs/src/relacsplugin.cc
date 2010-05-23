@@ -19,7 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <qdatetime.h>
+#include <QDateTime>
 #include <relacs/messagebox.h>
 #include <relacs/metadata.h>
 #include <relacs/model.h>
@@ -34,19 +34,45 @@ const TraceSpec RELACSPlugin::DummyTrace;
 
 
 RELACSPlugin::RELACSPlugin( const string &configident, int configgroup,
-			    const string &name, const string &title,
-			    const string &pluginset, const string &author, 
+			    const string &name, const string &pluginset,
+			    const string &author, 
 			    const string &version, const string &date )
   : ConfigDialog( configident, configgroup,
-		  name, title, author, version, date )
+		  name, author, version, date )
 {
   setPluginSet( pluginset );
+  Widget = 0;
   RW = 0;
+  GlobalKeyEvents = false;
 }
 
 
 RELACSPlugin::~RELACSPlugin( void )
 {
+  if ( Widget != 0 )
+    delete Widget;
+}
+
+
+QWidget *RELACSPlugin::widget( void )
+{
+  return Widget;
+}
+
+
+void RELACSPlugin::setWidget( QWidget *widget )
+{
+  Widget = widget;
+  connect( Widget, SIGNAL( destroyed( QObject* ) ),
+	   this, SLOT( widgetDestroyed( QObject* ) ) );
+  Widget->installEventFilter( this );
+}
+
+
+void RELACSPlugin::setLayout( QLayout *layout )
+{
+  setWidget( new QWidget );
+  Widget->setLayout( layout );
 }
 
 
@@ -89,7 +115,7 @@ string RELACSPlugin::helpFileName( void ) const
 void RELACSPlugin::printlog( const string &s ) const
 {
   if ( RW == 0 )
-    cerr << QTime::currentTime().toString() << " "
+    cerr << QTime::currentTime().toString().toLatin1().data() << " "
 	 << name() << ": " << s << endl;
   else
     RW->printlog( name() + ": " + s );
@@ -122,23 +148,23 @@ void RELACSPlugin::info( const string &s, double timeout )
 
 void RELACSPlugin::postCustomEvent( int type )
 {
-  QApplication::postEvent( this, new QCustomEvent( QEvent::User+type ) );
+  QApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+type ) ) );
 }
 
 
-void RELACSPlugin::customEvent( QCustomEvent *qce )
+void RELACSPlugin::customEvent( QEvent *qce )
 {
   switch ( qce->type() ) {
   case QEvent::User+3: {
     string ss = "RELACS: ";
     ss += name();
-    MessageBox::warning( ss, WarningStr, WarningTimeout, this );
+    MessageBox::warning( ss, WarningStr, WarningTimeout, RW );
     break;
   }
   case QEvent::User+4: {
     string ss = "RELACS: ";
     ss += name();
-    MessageBox::information( ss, InfoStr, InfoTimeout, this );
+    MessageBox::information( ss, InfoStr, InfoTimeout, RW );
     break;
   }
   case QEvent::User+5: {
@@ -152,18 +178,9 @@ void RELACSPlugin::customEvent( QCustomEvent *qce )
 }
 
 
-
-void RELACSPlugin::lockGUI( void )
+void RELACSPlugin::widgetDestroyed( QObject *obj )
 {
-  if ( RW != 0 )
-    RW->lockGUI();
-}
-
-
-void RELACSPlugin::unlockGUI( void )
-{
-  if ( RW != 0 )
-    RW->unlockGUI(); 
+  Widget = 0;
 }
 
 
@@ -858,6 +875,9 @@ void RELACSPlugin::setRELACSWidget( RELACSWidget *rw )
 {
   RW = rw;
 
+  // main widget for the ConfigDialog:
+  setMainWidget( RW );
+
   // pathes to help files of plugins:
   clearHelpPathes();
   for ( int k=0; k<RW->HelpPathes.size(); k++ )
@@ -1148,6 +1168,44 @@ void RELACSPlugin::unlockCurrentRePro( void )
     rp->unlock();
 }
 
+
+void RELACSPlugin::keyPressEvent( QKeyEvent *event )
+{
+  event->ignore();
+}
+
+
+void RELACSPlugin::keyReleaseEvent( QKeyEvent *event )
+{
+  event->ignore();
+}
+
+
+bool RELACSPlugin::eventFilter( QObject *obj, QEvent *event )
+{
+  if ( event->type() == QEvent::KeyPress ) {
+    keyPressEvent( static_cast<QKeyEvent *>( event ) );
+    return ( event->isAccepted() );
+  }
+  else if ( event->type() == QEvent::KeyRelease ) {
+    keyReleaseEvent( static_cast<QKeyEvent *>( event ) );
+    return ( event->isAccepted() );
+  }
+  else
+    return QObject::eventFilter( obj, event );
+}
+
+
+bool RELACSPlugin::globalKeyEvents( void )
+{
+  return GlobalKeyEvents;
+}
+
+
+void RELACSPlugin::setGlobalKeyEvents( bool global )
+{
+  GlobalKeyEvents = global;
+}
 
 
 }; /* namespace relacs */

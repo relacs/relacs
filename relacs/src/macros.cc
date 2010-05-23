@@ -20,13 +20,12 @@
 */
 
 #include <cstdio>
-#include <qdatetime.h>
-#include <qapplication.h>
-#include <qkeycode.h>
-#include <qpainter.h>
-#include <qbitmap.h>
-#include <qtextbrowser.h>
-#include <qfiledialog.h>
+#include <QDateTime>
+#include <QApplication>
+#include <QPainter>
+#include <QBitmap>
+#include <QTextBrowser>
+#include <QFileDialog>
 #include <relacs/str.h>
 #include <relacs/strqueue.h>
 #include <relacs/optdialog.h>
@@ -54,20 +53,37 @@ const string Macro::KeepIdent = "keep";
 const string Macro::OverwriteIdent = "overwrite";
 
 
-Macros::Macros( RELACSWidget *rw, QWidget *parent, const char *name )
-  : QWidget( parent, name ),
+Macros::Macros( RELACSWidget *rw, QWidget *parent )
+  : QWidget( parent ),
     ConfigClass( "Macros", RELACSPlugin::Core ),
-    RW( rw ), RP( 0 ), MCs(),
-    CurrentMacro( -1 ), CurrentCommand( 0 ),
-    Stack(), ResumePos(), ResumeMacroOnly( false ),
-    ThisCommandOnly( false ), ThisMacroOnly( false ), Enable( false ),
+    RW( rw ), 
+    RPs( 0 ), 
+    MCs(),
+    CurrentMacro( -1 ), 
+    CurrentCommand( 0 ),
+    Stack(), 
+    ResumePos(), 
+    ResumeMacroOnly( false ),
+    ThisCommandOnly( false ), 
+    ThisMacroOnly( false ), 
+    Enable( false ),
     Warnings( "" ), 
-    StartUpIndex( 0 ), ShutDownIndex( -1 ), FallBackIndex( 0 ), 
-    StartSessionIndex( 1 ), StopSessionIndex( -1 ),
+    StartUpIndex( 0 ), 
+    ShutDownIndex( -1 ), 
+    FallBackIndex( 0 ), 
+    StartSessionIndex( 1 ), 
+    StopSessionIndex( -1 ),
     MacroFile( "" ),
-    Menu( 0 ), SwitchMenu( 0 ), ButtonLayout( 0 ), ButtonMenuKeys( 0 ),
+    Menu( 0 ), 
+    SwitchMenu( 0 ), 
+    ButtonLayout( 0 ),
     Fatal( false )
 {
+  ButtonLayout = new QGridLayout( this );
+  ButtonLayout->setContentsMargins( 0, 0, 0, 0 );
+  ButtonLayout->setSpacing( 0 );
+  setLayout( ButtonLayout );
+
   addText( "file", "Configuration file", "macros.cfg" );
   addText( "mainfile", "Main configuration file", "" );
   addBoolean( "fallbackonreload", "Start fallback macro when loading macros", true );
@@ -84,24 +100,16 @@ Macros::~Macros( void )
 
 void Macros::createIcons( void )
 {
-  /*
-  cerr << font().pointSize() << endl;
-  cerr << font().pixelSize() << endl;
-  cerr << fontInfo().pointSize() << endl;
-  cerr << fontInfo().pixelSize() << endl;
-  cerr << fontMetrics().height() << endl;
-  */
-
   int my = fontInfo().pixelSize() - 2;
   int mx = my;
 
-  SessionIcon.resize( mx+2, my+2 );
+  SessionIcon = QPixmap( mx+2, my+2 );
   QPainter p;
-  p.begin( &SessionIcon, this );
+  p.begin( &SessionIcon );
   p.eraseRect( SessionIcon.rect() );
-  p.setPen( QPen( black, 1 ) );
-  p.setBrush( black );
-  QPointArray pa( 3 );
+  p.setPen( QPen( Qt::black, 1 ) );
+  p.setBrush( Qt::black );
+  QPolygon pa( 3 );
   pa.setPoint( 0, mx/3, 0 );
   pa.setPoint( 1, mx/3, my );
   pa.setPoint( 2, mx, my/2 );
@@ -109,53 +117,53 @@ void Macros::createIcons( void )
   p.end();
   SessionIcon.setMask( SessionIcon.createHeuristicMask() );
 
-  BaseIcon.resize( mx+2, my+2 );
-  p.begin( &BaseIcon, this );
+  BaseIcon = QPixmap( mx+2, my+2 );
+  p.begin( &BaseIcon );
   p.eraseRect( BaseIcon.rect() );
-  p.setPen( QPen( black, 1 ) );
-  p.setBrush( red );
+  p.setPen( QPen( Qt::black, 1 ) );
+  p.setBrush( Qt::red );
   p.drawEllipse( mx/4, (my-mx*3/4)/2, mx*3/4, mx*3/4 );
   p.end();
   BaseIcon.setMask( BaseIcon.createHeuristicMask() );
 
-  StackIcon.resize( mx+2, my+2 );
-  p.begin( &StackIcon, this );
+  StackIcon = QPixmap( mx+2, my+2 );
+  p.begin( &StackIcon );
   p.eraseRect( StackIcon.rect() );
-  p.setPen( QPen( black, 1 ) );
-  p.setBrush( yellow );
+  p.setPen( QPen( Qt::black, 1 ) );
+  p.setBrush( Qt::yellow );
   p.drawEllipse( mx/4, (my-mx*3/4)/2, mx*3/4, mx*3/4 );
   p.end();
   StackIcon.setMask( StackIcon.createHeuristicMask() );
 
-  RunningIcon.resize( mx+2, my+2 );
-  p.begin( &RunningIcon, this );
+  RunningIcon = QPixmap( mx+2, my+2 );
+  p.begin( &RunningIcon );
   p.eraseRect( RunningIcon.rect() );
-  p.setPen( QPen( black, 1 ) );
-  p.setBrush( green );
+  p.setPen( QPen( Qt::black, 1 ) );
+  p.setBrush( Qt::green );
   p.drawEllipse( mx/4, (my-mx*3/4)/2, mx*3/4, mx*3/4 );
   p.end();
   RunningIcon.setMask( RunningIcon.createHeuristicMask() );
 
-  IdleIcon.resize( mx+2, my+2 );
-  p.begin( &IdleIcon, this );
+  IdleIcon = QPixmap( mx+2, my+2 );
+  p.begin( &IdleIcon );
   p.eraseRect( IdleIcon.rect() );
   p.end();
   IdleIcon.setMask( IdleIcon.createHeuristicMask() );
 
-  EnabledIcon.resize( mx, mx );
-  p.begin( &EnabledIcon, this );
+  EnabledIcon = QPixmap( mx, mx );
+  p.begin( &EnabledIcon );
   p.eraseRect( EnabledIcon.rect() );
-  p.setPen( QPen( black, 1 ) );
-  p.setBrush( green );
+  p.setPen( QPen( Qt::black, 1 ) );
+  p.setBrush( Qt::green );
   p.drawEllipse( 0, 0, mx-1, mx-1 );
   p.end();
   EnabledIcon.setMask( EnabledIcon.createHeuristicMask() );
 
-  DisabledIcon.resize( mx, mx );
-  p.begin( &DisabledIcon, this );
+  DisabledIcon = QPixmap( mx, mx );
+  p.begin( &DisabledIcon );
   p.eraseRect( DisabledIcon.rect() );
-  p.setPen( QPen( black, 1 ) );
-  p.setBrush( red );
+  p.setPen( QPen( Qt::black, 1 ) );
+  p.setBrush( Qt::red );
   p.drawEllipse( 0, 0, mx-1, mx-1 );
   p.end();
   DisabledIcon.setMask( DisabledIcon.createHeuristicMask() );
@@ -166,28 +174,22 @@ void Macros::clear( bool keep )
 {
   // clear buttons:
   for ( unsigned int k=0; k<MCs.size(); k++ ) {
-    if ( MCs[k]->PushButton != 0 ) {
-      if ( MCs[k]->Key ) {
-	ButtonMenuKeys->setItemEnabled( MCs[k]->AccelId, false );
-	ButtonMenuKeys->disconnectItem( MCs[k]->AccelId,
-				    MCs[k]->PushButton,
-				    SLOT( wasRightClicked( void ) ) );
-	ButtonMenuKeys->removeItem( MCs[k]->AccelId );
-	MCs[k]->AccelId = -1;
-      }
-      ButtonLayout->remove( MCs[k]->PushButton );
-      MCs[k]->PushButton->hide();
-      delete MCs[k]->PushButton;
-      MCs[k]->PushButton = 0;
+    if ( MCs[k]->button() != 0 ) {
+      MCs[k]->button()->hide();
+      ButtonLayout->removeWidget( MCs[k]->button() );
     }
   }
-  delete ButtonLayout;
-  delete ButtonMenuKeys;
+
+  // clear menu:
+  if ( Menu != 0 )
+    Menu->clear();
+  SwitchMenu = 0;
+  SwitchActions.clear();
 
   // clear macros:
   MacrosType::iterator mp = MCs.begin();
   while ( mp != MCs.end() ) {
-    if ( ! ( (*mp)->Keep && keep ) ) {
+    if ( ! ( (*mp)->keep() && keep ) ) {
       delete (*mp);
       mp = MCs.erase( mp );
     }
@@ -431,7 +433,7 @@ bool Macros::check( void )
 	
 	else {
 	  // find RePro:
-	  RePro *repro = RP->nameRepro( (*cp)->Name );
+	  RePro *repro = RPs->nameRepro( (*cp)->Name );
 	  if ( repro == 0 ) {
 	    Warnings += "Removed unknown RePro \"<b>";
 	    Warnings += (*cp)->Name;
@@ -567,8 +569,8 @@ bool Macros::check( void )
 	(*cp)->Macro = index( (*cp)->Name );
   
   // set RePros back to default values:
-  for ( int k=0; k<RP->size(); k++ )
-    RP->repro( k )->setDefaults();
+  for ( int k=0; k<RPs->size(); k++ )
+    RPs->repro( k )->setDefaults();
 
   // no macros?
   if ( MCs.empty() ) {
@@ -577,9 +579,9 @@ bool Macros::check( void )
       Warnings += "\n";
     Warnings += "No Macros specified! Trying to create Macros from RePros...\n";
 
-    for ( int k=0; k<RP->size(); k++ ) {
-      MCs.push_back( new Macro( RP->repro( k )->name(), this ) );
-      MCs.back()->Commands.push_back( new MacroCommand( RP->repro( k ),
+    for ( int k=0; k<RPs->size(); k++ ) {
+      MCs.push_back( new Macro( RPs->repro( k )->name(), this ) );
+      MCs.back()->Commands.push_back( new MacroCommand( RPs->repro( k ),
 							"", this ) );
     }
 
@@ -668,6 +670,15 @@ bool Macros::check( void )
     Fatal = true;
   }
 
+  // set macro and command indices:
+  for ( unsigned int m=0; m<MCs.size(); m++ ) {
+    MCs[m]->MacroNum = m;
+    for ( unsigned int c=0; c<MCs[m]->Commands.size(); c++ ) {
+      MCs[m]->Commands[c]->MacroNum = m;
+      MCs[m]->Commands[c]->CommandNum = c;
+    }
+  }
+
   return Fatal;
 }
 
@@ -696,14 +707,37 @@ void Macros::warning( void )
 }
 
 
-void Macros::buttons( void )
+void Macros::create( void )
 {
+  // base menu:
+  Menu->addAction( "&Reload", this, SLOT( reload( void ) ) );
+  Menu->addAction( "&Load...", this, SLOT( selectMacros( void ) ) );
+  if ( Options::size( "file" ) > 1 ) {
+    SwitchMenu = Menu->addMenu( "&Switch" );
+    for ( int k=0; k<Options::size( "file" ); k++ )
+      SwitchActions.push_back( SwitchMenu->addAction( text( "file", k ).c_str() ) );
+    connect( SwitchMenu, SIGNAL( triggered( QAction* ) ), 
+	     this, SLOT( switchMacro( QAction* ) ) );
+  }
+  Menu->addAction( "&Skip RePro", this, SLOT( startNextRePro( void ) ),
+		   QKeySequence( Qt::Key_S ) );
+  Menu->addAction( "&Break", this, SLOT( softBreak( void ) ),
+		   QKeySequence( Qt::Key_B ) );
+  ResumeAction = Menu->addAction( "Resume", this, SLOT( resume( void ) ),
+				  QKeySequence( Qt::Key_R ) );
+  ResumeNextAction = Menu->addAction( "Resume Next", this,
+				      SLOT( resumeNext( void ) ),
+				      QKeySequence( Qt::Key_N ) );
+  ResumeAction->setEnabled( false );
+  ResumeNextAction->setEnabled( false );
+  Menu->addSeparator();
+
   // count macro buttons:
   int nb = 0;
   for ( unsigned int k=0; k<MCs.size(); k++ )
     if ( MCs[k]->Button )
       nb++;
-
+  
   // number of buttons in a row:
   int cols = nb;
   const int maxcols = 6;
@@ -711,25 +745,38 @@ void Macros::buttons( void )
     int r = (nb-1)/maxcols + 1;
     cols = (nb-1)/r + 1;
   }
-  int rows = ( nb - 1 ) / cols + 1;
-
-  ButtonLayout = new QGridLayout( this, rows, cols );
-  ButtonMenuKeys = new QAccel( this );
-
-  // create buttons:
+  
+  // create buttons and menus:
   int fkc = 0;
+  int mk = 0;
   int row=0;
   int col=0;
   for ( unsigned int k=0; k<MCs.size(); k++ ) {
+    
+    string mt = "";
+    if ( MCs[k]->Menu ) {
+      mt += "&";
+      if ( mk == 0 )
+	mt += '0';
+      else if ( mk < 10 )
+	mt += ( '1' + mk - 1 );
+      else
+	mt += ( 'a' + mk - 10 );
+      mt += " ";
+      mk++;
+    }
+    mt += MCs[k]->Name;
+    MCs[k]->MAction = new QAction( mt.c_str(), this );
 
+    // key code:
     Str keys = "";
     if ( MCs[k]->Key ) {
       if ( MCs[k]->fallBack() ) {
-	MCs[k]->KeyCode = Key_Escape;
+	MCs[k]->KeyCode = Qt::Key_Escape;
 	keys = " (ESC)";
       }
       else if ( fkc < 12 ) {
-	MCs[k]->KeyCode = Key_F1 + fkc;
+	MCs[k]->KeyCode = Qt::Key_F1 + fkc;
 	fkc++;
 	keys = Str( fkc, " (F%d)" );
       }
@@ -739,33 +786,19 @@ void Macros::buttons( void )
     else
       MCs[k]->KeyCode = 0;
 
+    // menu:
+    MCs[k]->addMenu( Menu );
+      
+    // button:
+    MCs[k]->addButton( keys );
     if ( MCs[k]->Button ) {
-      MacroButton *button = new MacroButton( k, MCs[k]->Name + keys, this );
-      ButtonLayout->addWidget( button, row, col );
-      button->show();
-      if ( MCs[k]->startSession() )
-	button->setIconSet( SessionIcon );
-      else
-	button->setIconSet( IdleIcon );
-      button->setMinimumSize( button->sizeHint() );
-      connect( button, SIGNAL( leftClicked( int ) ),
-	       this, SLOT( launch( int ) ) );
-      connect( button, SIGNAL( rightClicked( int ) ),
-	       this, SLOT( popup( int ) ) );
-      if ( MCs[k]->Key ) {
-	MCs[k]->AccelId = ButtonMenuKeys->insertItem( MCs[k]->KeyCode + SHIFT );
- 	ButtonMenuKeys->connectItem( MCs[k]->AccelId,
-				     button, SLOT( wasRightClicked( void ) ) );
-      }
-      MCs[k]->PushButton = button;
+      ButtonLayout->addWidget( MCs[k]->PushButton, row, col );
       col++;
       if ( col >= cols ) {
 	col=0;
 	row++;
       }
     }
-    else
-      MCs[k]->PushButton = 0;
 
   }
 
@@ -774,230 +807,9 @@ void Macros::buttons( void )
 }
 
 
-QPopupMenu* Macros::menu( void )
+void Macros::setMenu( QMenu *menu )
 {
-  string s;
-
-  if ( Menu == 0 )
-    Menu = new QPopupMenu( this );
-  else {
-    Menu->clear();
-    SwitchMenu = 0;
-  }
-
-  Menu->insertItem( "&Reload", this, SLOT( reload( void ) ) );
-  Menu->insertItem( "&Load...", this, SLOT( selectMacros( void ) ) );
-  if ( Options::size( "file" ) > 1 ) {
-    SwitchMenu = new QPopupMenu( Menu );
-    for ( int k=0; k<Options::size( "file" ); k++ )
-      SwitchMenu->insertItem( text( "file", k ).c_str(), k );
-    connect( SwitchMenu, SIGNAL( activated( int ) ), 
-	     this, SLOT( switchMacro( int ) ) );
-    Menu->insertItem( "&Switch", SwitchMenu );
-  }
-  Menu->insertItem( "&Skip RePro", this, SLOT( startNextRePro( void ) ), Key_S );
-  Menu->insertItem( "&Break", this, SLOT( softBreak( void ) ), Key_B );
-  Menu->insertItem( "Resume", this, SLOT( resume( void ) ), Key_R, 3 );
-  Menu->insertItem( "Resume Next", this, SLOT( resumeNext( void ) ), Key_N, 4 );
-  Menu->setItemEnabled( 3, false );
-  Menu->setItemEnabled( 4, false );
-  Menu->insertSeparator();
-  for ( unsigned int k=0; k<MCs.size(); k++ ) {
-    if ( MCs[k]->Menu ) {
-      QPopupMenu *firstpop = new QPopupMenu( Menu );
-      QPopupMenu *pop = firstpop;
-      s = MCs[k]->menuStr();
-      firstpop->insertItem( s.c_str(), k << 10 );
-      if ( MCs[k]->Key )
-	firstpop->setAccel( MCs[k]->KeyCode, k << 10 );
-      int n=2;
-      firstpop->insertItem( "&Options", k << 10 | 1 );	
-      n++;
-      MCs[k]->PMenu = firstpop;
-      MCs[k]->PMenuId = ( k << 10 );
-      MCs[k]->MacroNum = k;
-      firstpop->insertSeparator();
-      for ( unsigned int j=0; j<MCs[k]->Commands.size(); j++, n++ ) {
-	if ( j < 36 ) {
-	  s = "&";
-	  if ( j == 0 )
-	    s += '0';
-	  else if ( j < 10 )
-	    s += ( '1' + j - 1 );
-	  else
-	    s += ( 'a' + j - 10 );
-	  s += " ";
-	}
-	else
-	  s = "  ";
-	MCs[k]->Commands[j]->MenuShortcut = s;
-	if ( MCs[k]->Commands[j]->Macro >= 0 ) {
-	  s += "Macro " + MCs[k]->Commands[j]->Name;
-	  if ( !MCs[k]->Commands[j]->Params.empty() ) {
-	    s += ": ";
-	    int index = 0;
-	    int nc = 10 + MCs[k]->Commands[j]->Name.size();
-	    for ( int i=0; nc+index < MenuWidth && index >= 0; i++ ) {
-	      index = MCs[k]->Commands[j]->Params.find( ';', index+1 );
-	    }
-	    if ( index < 0 )
-	      s += ": " + MCs[k]->Commands[j]->Params;
-	    else
-	      s += ": " + MCs[k]->Commands[j]->Params.substr( 0, index ) + " ...";
-	  }
-	}
-	else if ( MCs[k]->Commands[j]->Shell )
-	  s += "Shell " + MCs[k]->Commands[j]->Name;
-	else if ( MCs[k]->Commands[j]->Filter )
-	  s += "Filter " + MCs[k]->Commands[j]->Name;
-	else if ( MCs[k]->Commands[j]->Detector )
-	  s += "Detector " + MCs[k]->Commands[j]->Name;
-	else if ( MCs[k]->Commands[j]->Switch )
-	  s += "Switch to " + MCs[k]->Commands[j]->Name;
-	else if ( MCs[k]->Commands[j]->StartSession )
-	  s += "Start Session";
-	else if ( MCs[k]->Commands[j]->Message ) {
-	  s += "Message " + MCs[k]->Commands[j]->Name;
-	  if ( !MCs[k]->Commands[j]->Params.empty() ) {
-	    Str ps = MCs[k]->Commands[j]->Params;
-	    ps.eraseMarkup();
-	    if ( ps.size() > 40 ) {
-	      ps.erase( 36 );
-	      ps += " ...";
-	    }
-	    s += ": " + ps;
-	  }
-	}
-	else if ( MCs[k]->Commands[j]->Browse ) {
-	  s += "Browse " + MCs[k]->Commands[j]->Params;
-	}
-	else {
-	  s += "RePro " + MCs[k]->Commands[j]->Name;
-	  if ( !MCs[k]->Commands[j]->Params.empty() ) {
-	    s += ": ";
-	    int index = 0;
-	    int nc = 10 + MCs[k]->Commands[j]->Name.size();
-	    for ( int i=0; nc+index < MenuWidth && index >= 0; i++ ) {
-	      index = MCs[k]->Commands[j]->Params.find( ';', index+1 );
-	    }
-	    if ( index < 0 )
-	      s += ": " + MCs[k]->Commands[j]->Params;
-	    else
-	      s += ": " + MCs[k]->Commands[j]->Params.substr( 0, index ) + " ...";
-	  }
-	}
-
-	QPopupMenu *subpop = new QPopupMenu( pop );
-	if ( j+1 < MCs[k]->Commands.size() ) {
-	  subpop->insertItem( "&Start macro here", ( k << 10 ) | (j+1) << 3 );
-	  subpop->insertItem( "&Run only this", ( k << 10 ) | ( (j+1) << 3 ) | 1 );
-	}
-	else {
-	  subpop->insertItem( "&Run", ( k << 10 ) | ( (j+1) << 3 ) | 1 );
-	}
-	if ( MCs[k]->Commands[j]->RP != 0 ) {
-	  subpop->insertItem( "&Options...", ( k << 10 ) | ( (j+1) << 3 ) | 2 );
-	  subpop->insertItem( "&View", ( k << 10 ) | ( (j+1) << 3 ) | 3 );
-	  subpop->insertItem( "&Load", ( k << 10 ) | ( (j+1) << 3 ) | 4 );
-	  subpop->insertItem( "&Help...", ( k << 10 ) | ( (j+1) << 3 ) | 5 );
-	}
-	else if ( MCs[k]->Commands[j]->Macro >= 0 &&
-		  ! MCs[k]->Commands[j]->Params.empty() ) {
-	  subpop->insertItem( "&Options...", ( k << 10 ) | ( (j+1) << 3 ) | 2 );
-	}
-	subpop->insertItem( MCs[k]->Commands[j]->Enabled ? "&Disable" : "&Enable", ( k << 10 ) | ( (j+1) << 3 ) | 6 );
-	connect( subpop, SIGNAL( activated( int ) ),
-		 this, SLOT( select( int ) ) );
-	
-	pop->insertItem( MCs[k]->Commands[j]->Enabled ? EnabledIcon : DisabledIcon,
-			 s.c_str(), subpop, ( k << 10 ) | ( (j+1) << 3 ) );
-	MCs[k]->Commands[j]->MenuText = s;
-	MCs[k]->Commands[j]->Menu = pop;
-	MCs[k]->Commands[j]->MenuId = ( k << 10 ) | ( (j+1) << 3 );
-	MCs[k]->Commands[j]->SubMenu = subpop;
-
-	if ( n > 20 ) {
-	  QPopupMenu *nextpop = new QPopupMenu( pop );
-	  pop->insertSeparator();
-	  pop->insertItem( "More...", nextpop );
-	  connect( pop, SIGNAL( activated( int ) ),
-		   this, SLOT( select( int ) ) );
-	  pop = nextpop;
-	  nextpop = 0;
-	  n = 0;
-	}
-      }
-      connect( pop, SIGNAL( activated( int ) ),
-	       this, SLOT( select( int ) ) );
-      string mt = "&";
-      if ( k == 0 )
-	mt += '0';
-      else if ( k < 10 )
-	mt += ( '1' + k - 1 );
-      else
-	mt += ( 'a' + k - 10 );
-      mt += " ";
-      mt += MCs[k]->Name;
-      Menu->insertItem( mt.c_str(), firstpop );
-    }
-  }
-
-  return Menu;
-}
-
-
-void Macros::select( int id )
-{
-  int action = id & 7;
-  int command = ( id & 1023 ) >> 3;
-  int macro = id >> 10;
-
-  if ( command == 0 ) {
-    if ( action == 1 ) {
-      MCs[macro]->dialog( this );
-    }
-    else {
-      if ( MCs[macro]->KeyCode == Key_Escape &&
-	   qApp->focusWidget() != topLevelWidget() ) {
-	topLevelWidget()->setFocus();
-      }
-      else
-	launch( macro );
-    }
-  }
-  else {
-    command--;
-    MacroCommand *mc = MCs[macro]->Commands[command];
-    if ( action == 6 ) {
-      mc->Enabled = !mc->Enabled;
-      mc->SubMenu->changeItem( id, mc->Enabled ? "&Disable" : "&Enable" );
-      mc->Menu->changeItem( mc->MenuId, mc->Enabled ? EnabledIcon : DisabledIcon, mc->MenuText.c_str() );
-    }
-    else if ( action == 5 ) {
-      RP->help( mc->RP );
-    }
-    else if ( action == 4 ) {
-      RP->reload( mc->RP );
-    }
-    else if ( action == 3 ) {
-      RP->raise( mc->RP );
-    }
-    else if ( action == 2 ) {
-      mc->dialog( macro, command, RP->dialogOptions() );
-    }
-    else if ( action <= 1 ) {
-      if ( macro >= 0 && macro < (int)MCs.size() )
-	MCs[macro]->Variables.setDefaults();
-      Enable = true;
-      startMacro( macro, command );
-      if ( action == 1 ) {
-	if ( mc->Macro >= 0 )
-	  ThisMacroOnly = true;
-	else
-	  ThisCommandOnly = true;
-      }
-    }
-  }
+  Menu = menu;
 }
 
 
@@ -1199,9 +1011,11 @@ void Macros::startNextRePro( bool saving )
 	  OptDialog *od = new OptDialog( false, this );
 	  od->setCaption( MCs[CurrentMacro]->Commands[CurrentCommand]->Name );
 	  QTextBrowser *hb = new QTextBrowser( this );
-	  hb->mimeSourceFactory()->setFilePath( file.dir().c_str() );
-	  hb->setSource( file.notdir().c_str() );
-	  if ( hb->mimeSourceFactory()->data( file.notdir().c_str() ) == 0 ) {
+	  QStringList fpl;
+	  fpl.push_back( file.dir().c_str() );
+	  hb->setSearchPaths( fpl );
+	  hb->setSource( QUrl::fromLocalFile( file.notdir().c_str() ) );
+	  if ( hb->toHtml().isEmpty() ) {
 	    hb->setText( string( "Sorry, can't find file <b>" + file + "</b>." ).c_str() );
 	  }
 	  hb->setMinimumSize( 600, 400 );
@@ -1266,9 +1080,9 @@ void Macros::clearButton( void )
   if ( CurrentMacro >= 0 && CurrentMacro < (int)MCs.size() &&
        MCs[CurrentMacro]->PushButton != 0 ) {
     if ( MCs[CurrentMacro]->startSession() )
-      MCs[CurrentMacro]->PushButton->setIconSet( SessionIcon );
+      MCs[CurrentMacro]->PushButton->setIcon( SessionIcon );
     else
-      MCs[CurrentMacro]->PushButton->setIconSet( IdleIcon );
+      MCs[CurrentMacro]->PushButton->setIcon( IdleIcon );
   }
 }
 
@@ -1277,7 +1091,7 @@ void Macros::runButton( void )
 {
   if ( CurrentMacro >= 0 && CurrentMacro < (int)MCs.size() &&
        MCs[CurrentMacro]->PushButton != 0 )
-    MCs[CurrentMacro]->PushButton->setIconSet( RunningIcon );
+    MCs[CurrentMacro]->PushButton->setIcon( RunningIcon );
 }
 
 
@@ -1286,9 +1100,9 @@ void Macros::stackButton( void )
   if ( CurrentMacro >= 0 && CurrentMacro < (int)MCs.size() &&
        MCs[CurrentMacro]->PushButton != 0 ) {
     if ( Stack.empty() )
-      MCs[CurrentMacro]->PushButton->setIconSet( BaseIcon );
+      MCs[CurrentMacro]->PushButton->setIcon( BaseIcon );
     else
-      MCs[CurrentMacro]->PushButton->setIconSet( StackIcon );
+      MCs[CurrentMacro]->PushButton->setIcon( StackIcon );
   }
 }
 
@@ -1300,9 +1114,9 @@ void Macros::stackButtons( void )
     if ( macro >= 0 && macro < (int)MCs.size() &&
 	 MCs[macro]->PushButton != 0 ) {
       if ( k==0 )
-	MCs[macro]->PushButton->setIconSet( BaseIcon );
+	MCs[macro]->PushButton->setIcon( BaseIcon );
       else
-	MCs[macro]->PushButton->setIconSet( StackIcon );
+	MCs[macro]->PushButton->setIcon( StackIcon );
     }
   }
 }
@@ -1315,9 +1129,9 @@ void Macros::clearStackButtons( void )
     if ( macro >= 0 && macro < (int)MCs.size() &&
 	 MCs[macro]->PushButton != 0 ) {
       if ( MCs[macro]->startSession() )
-	MCs[macro]->PushButton->setIconSet( SessionIcon );
+	MCs[macro]->PushButton->setIcon( SessionIcon );
       else
-	MCs[macro]->PushButton->setIconSet( IdleIcon );
+	MCs[macro]->PushButton->setIcon( IdleIcon );
     }
   }
   Stack.clear();
@@ -1330,8 +1144,7 @@ void Macros::loadMacros( const string &file )
   load( file );
   check();
   warning();
-  buttons();
-  menu();
+  create();
 
   if ( boolean( "fallbackonreload" ) ) {
     ResumePos.clear();
@@ -1343,28 +1156,34 @@ void Macros::loadMacros( const string &file )
 
 void Macros::selectMacros( void )
 {
-  QFileDialog* fd = new QFileDialog( 0, "file dialog", TRUE );
-  fd->setCaption( "Open Macro File" );
-  fd->setMode( QFileDialog::ExistingFile );
-  //  fd->setDir( Str( (*OP).text( 0 ) ).dir().c_str() );
+  QFileDialog* fd = new QFileDialog( 0 );
+  fd->setFileMode( QFileDialog::ExistingFile );
+  fd->setWindowTitle( "Open Macro File" );
+  //  fd->setDirectory( Str( (*OP).text( 0 ) ).dir().c_str() );
   QString types( "Macro files (m*.cfg);;"
 		 "Config files (*.cfg);;"
 		 "Any files (*)" );
-  fd->setFilters( types );
+  fd->setFilter( types );
   fd->setViewMode( QFileDialog::List );
   if ( fd->exec() == QDialog::Accepted ) {
-    QString filename = fd->selectedFile();
-    loadMacros( filename.latin1() );
+    Str filename = "";
+    QStringList qsl = fd->selectedFiles();
+    if ( qsl.size() > 0 )
+      loadMacros( qsl[0].toLatin1().data() );
   }
 }
 
 
-void Macros::switchMacro( int id )
+void Macros::switchMacro( QAction *action )
 {
-  if ( id < 0 || id >= Options::size( "file" ) )
-    return;
-
-  loadMacros( text( "file", id ) );
+  for ( unsigned int k=0;
+	k<SwitchActions.size() && (int)k < Options::size( "file" );
+	k++ ) {
+    if ( action == SwitchActions[k] ) {
+      loadMacros( text( "file", k ) );
+      break;
+    }
+  }
 }
 
 
@@ -1377,7 +1196,7 @@ void Macros::reload( void )
 void Macros::reloadRePro( const string &name )
 {
   // find RePro:
-  RePro *repro = RP->nameRepro( name );
+  RePro *repro = RPs->nameRepro( name );
   if ( repro == 0 ) {
     RW->printlog( "! warning: Macros::reloadRePro() -> RePro " +
 		  name + " not found!" );
@@ -1404,8 +1223,8 @@ void Macros::store( void )
 		   MCs[CurrentMacro]->Variables, MCs[CurrentMacro]->Project );
     ResumeStack = Stack;
     ResumeMacroOnly = ThisMacroOnly;
-    Menu->setItemEnabled( 3, true );
-    Menu->setItemEnabled( 4, true );
+    ResumeAction->setEnabled( true );
+    ResumeNextAction->setEnabled( true );
   }
 }
 
@@ -1450,8 +1269,8 @@ void Macros::resume( void )
 
     // clear resume:
     ResumePos.clear();
-    Menu->setItemEnabled( 3, false );
-    Menu->setItemEnabled( 4, false );
+    ResumeAction->setEnabled( false );
+    ResumeNextAction->setEnabled( false );
   }
 }
 
@@ -1472,27 +1291,9 @@ void Macros::resumeNext( void )
 
     // clear resume:
     ResumePos.clear();
-    Menu->setItemEnabled( 3, false );
-    Menu->setItemEnabled( 4, false );
+    ResumeAction->setEnabled( false );
+    ResumeNextAction->setEnabled( false );
   }
-}
-
-
-void Macros::launch( int number )
-{
-  if ( number == FallBackIndex ) {
-    store();
-  }
-  if ( number >= 0 && number < (int)MCs.size() )
-    MCs[number]->Variables.setDefaults();
-  startMacro( number );
-}
-
-
-void Macros::popup( int number )
-{
-  QPoint p = MCs[number]->PushButton->mapToGlobal( QPoint( 0, -30 ) );
-  MCs[number]->PMenu->popup( p, MCs[number]->PMenu->count()-1 );
 }
 
 
@@ -1579,8 +1380,9 @@ void Macros::saveConfig( ofstream &str )
   setToDefault( "file" );
   if ( SwitchMenu != 0 ) {
     SwitchMenu->clear();
+    SwitchActions.clear();
     for ( int k=0; k<Options::size( "file" ); k++ )
-      SwitchMenu->insertItem( text( "file", k ).c_str(), k );
+      SwitchActions.push_back( SwitchMenu->addAction( text( "file", k ).c_str() ) );
   }
   ConfigClass::saveConfig( str );
 }
@@ -1588,45 +1390,8 @@ void Macros::saveConfig( ofstream &str )
 
 ostream &operator<< ( ostream &str, const Macros &macros )
 {
-  for ( unsigned int k=0; k<macros.MCs.size(); k++ ) {
-    str << "Macro " << k+1 << ": " << macros.MCs[k]->Name 
-	<< ( macros.MCs[k]->startUp() ? " startup" : "" )
-	<< ( macros.MCs[k]->shutDown() ? " shutdown" : "" )
-	<< ( macros.MCs[k]->fallBack() ? " fallback" : "" ) 
-	<< ( macros.MCs[k]->startSession() ? " startsession" : "" )
-	<< ( macros.MCs[k]->stopSession() ? " stopsession" : "" )
-	<< ( macros.MCs[k]->Button ? "" : " nobutton" )
-	<< ( macros.MCs[k]->Menu ? "" : " nomenu" );
-    if ( macros.MCs[k]->AccelId >= 0 )
-      str << " accel: " << macros.MCs[k]->AccelId;
-    str << " -> " << macros.MCs[k]->Variables.save() << '\n';
-    for ( unsigned int j=0; j<macros.MCs[k]->Commands.size(); j++ ) {
-      str << "  " << j+1 << " ";
-      if ( macros.MCs[k]->Commands[j]->Macro >= 0 )
-	str << "Macro";
-      else if ( macros.MCs[k]->Commands[j]->Shell )
-	str << "Shell";
-      else if ( macros.MCs[k]->Commands[j]->Filter )
-	str << "Filter";
-      else if ( macros.MCs[k]->Commands[j]->Detector )
-	str << "Detector";
-      else if ( macros.MCs[k]->Commands[j]->Switch )
-	str << "Switch";
-      else if ( macros.MCs[k]->Commands[j]->StartSession )
-	str << "StartSession";
-      else if ( macros.MCs[k]->Commands[j]->Message ) {
-	str << "Message";
-	if ( macros.MCs[k]->Commands[j]->TimeOut > 0.0 )
-	  str << " (timeout " << macros.MCs[k]->Commands[j]->TimeOut << ")";
-      }
-      else if ( macros.MCs[k]->Commands[j]->Browse )
-	str << "Browse";
-      else
-	str << "RePro";
-      str << ": " << macros.MCs[k]->Commands[j]->Name 
-	  << " -> " << macros.MCs[k]->Commands[j]->Params << '\n';
-    }
-  }
+  for ( unsigned int k=0; k<macros.MCs.size(); k++ )
+    str << *macros.MCs[k];
   return str;
 }
 
@@ -1684,11 +1449,21 @@ bool Macros::MacroPos::defined( void )
 }
 
 
+Macro::Macro( void )
+  : Name( "" ), Action( 0 ), 
+  Button( true ), Menu( true ), Key( true ),
+  Keep( false ), Overwrite( false ),
+  PushButton( 0 ), MAction( NULL ), PMenu( 0 ), RunAction( 0 ), BottomAction( 0 ),
+  MacroNum( -1 ), MC( 0 ), Commands(), DialogOpen( false )
+{
+}
+
+
 Macro::Macro( Str name, Macros *mc ) 
   : Action( 0 ), Button( true ), Menu( true ), Key( true ), 
-    Keep( false ), Overwrite( false ),
-    PushButton( 0 ), AccelId( -1 ), PMenu( 0 ), PMenuId( -1 ), MacroNum( -1 ),
-    MC( mc ), Commands(), DialogOpen( false )
+  Keep( false ), Overwrite( false ),
+  PushButton( 0 ), MAction( NULL ), PMenu( 0 ), RunAction( 0 ), BottomAction( 0 ),
+  MacroNum( -1 ), MC( mc ), Commands(), DialogOpen( false )
 {
   Project.clear();
   Project.addText( "project", "Project", "" );
@@ -1729,6 +1504,33 @@ Macro::Macro( Str name, Macros *mc )
   if ( name.erase( OverwriteIdent, 0, false, 3, Str::WordSpace ) > 0 )
     Overwrite = true;
   Name = name.stripped( Str::WordSpace );
+}
+
+
+Macro::Macro( const Macro &macro ) 
+  : Name( macro.Name ), 
+  Variables( macro.Variables ),
+  Project( macro.Project ),
+  Action( macro.Action ), 
+  Button( macro.Button ), Menu( macro.Menu ), Key( macro.Key ),
+  Keep( false ), Overwrite( false ),
+  PushButton( macro.PushButton ), MAction( macro.MAction ), 
+  PMenu( macro.PMenu ), RunAction( macro.RunAction ), BottomAction( macro.BottomAction ),
+  MacroNum( macro.MacroNum ), MC( macro.MC ), Commands( macro.Commands ),
+  DialogOpen( macro.DialogOpen )
+{
+}
+
+
+string Macro::name( void ) const
+{
+  return Name;
+}
+
+
+bool Macro::keep( void ) const
+{
+  return Keep;
 }
 
 
@@ -1808,6 +1610,42 @@ string Macro::expandParams( const Str &params, Options &prjopt ) const
 }
 
 
+void Macro::addMenu( QMenu *menu )
+{
+  if ( Menu ) {
+    QMenu *firstpop = menu->addMenu( MAction->text() );
+    RunAction = firstpop->addAction( menuStr().c_str(), this, SLOT( run() ) );
+    if ( Key )
+      RunAction->setShortcut( KeyCode );
+    int n=2;
+    firstpop->addAction( "&Options", this, SLOT( dialog() ) );	
+    n++;
+    PMenu = firstpop;
+    firstpop->addSeparator();
+    BottomAction = 0;
+
+    QMenu *pop = firstpop;
+
+    for ( unsigned int j=0; j<Commands.size(); j++, n++ ) {
+
+      Commands[j]->addMenu( pop );
+
+      if ( n > 20 ) {
+	pop->addSeparator();
+	QMenu *nextpop = pop->addMenu( "More..." );
+	pop = nextpop;
+	if ( BottomAction == 0 )
+	  BottomAction = nextpop->menuAction();
+	n = 0;
+      }
+    }
+    if ( BottomAction == 0 && Commands.size() > 0 )
+      BottomAction = Commands.back()->SubMenu->menuAction();
+
+  }
+}
+
+
 string Macro::menuStr( void ) const
 {
   string s = "&Run Macro " + Name;
@@ -1852,20 +1690,79 @@ string Macro::menuStr( void ) const
 }
 
 
-void Macro::dialog( Macros *macros )
+void Macro::addButton( const string &keys )
+{
+  if ( Button ) {
+    MacroButton *button = new MacroButton( Name + keys, MC );
+    button->show();
+    if ( startSession() )
+      button->setIcon( MC->SessionIcon );
+    else
+      button->setIcon( MC->IdleIcon );
+    button->setMinimumSize( button->sizeHint() );
+    connect( button, SIGNAL( clicked() ), this, SLOT( launch() ) );
+    connect( button, SIGNAL( rightClicked() ), this, SLOT( popup() ) );
+    if ( Key ) {
+      MAction->setShortcut( KeyCode + Qt::SHIFT );
+      connect( MAction, SIGNAL( triggered() ), this, SLOT( popup() ) );
+    }
+    PushButton = button;
+  }
+  else
+    PushButton = 0;
+}
+
+
+ostream &operator<< ( ostream &str, const Macro &macro )
+{
+  str << "Macro " << macro.MacroNum+1 << ": " << macro.Name 
+      << ( macro.startUp() ? " startup" : "" )
+      << ( macro.shutDown() ? " shutdown" : "" )
+      << ( macro.fallBack() ? " fallback" : "" ) 
+      << ( macro.startSession() ? " startsession" : "" )
+      << ( macro.stopSession() ? " stopsession" : "" )
+      << ( macro.Button ? "" : " nobutton" )
+      << ( macro.Menu ? "" : " nomenu" );
+  if ( macro.MAction != NULL )
+    str << "Action: " << macro.MAction->shortcut().toString().toLatin1().data();
+  str << " -> " << macro.Variables.save() << '\n';
+  for ( unsigned int j=0; j<macro.Commands.size(); j++ )
+    str << *macro.Commands[j];
+  return str;
+}
+
+
+MacroButton *Macro::button( void )
+{
+  return PushButton;
+}
+
+
+void Macro::clear( void )
+{
+  delete MAction;
+  MAction = 0;
+  Key = 0;
+  if ( PushButton != 0 ) {
+    delete PushButton;
+    PushButton = 0;
+  }
+}
+
+
+void Macro::dialog( void )
 {
   if ( DialogOpen )
     return;
 
   DialogOpen = true;
   // create and exec dialog:
-  OptDialog *od = new OptDialog( false, macros );
+  OptDialog *od = new OptDialog( false, MC );
   od->setCaption( "Macro " + Name + " Variables" );
   if ( ! Variables.empty() )
     od->addOptions( Variables );
   od->addOptions( Project );
-  od->setSpacing( int(9.0*exp(-double(Variables.size())/14.0))+1 );
-  od->setMargin( 10 );
+  od->setVerticalSpacing( int(9.0*exp(-double(Variables.size())/14.0))+1 );
   od->setRejectCode( 0 );
   od->addButton( "&Ok", OptDialog::Accept, 1 );
   od->addButton( "&Apply", OptDialog::Accept, 1, false );
@@ -1887,8 +1784,7 @@ void Macro::acceptDialog( void )
   Variables.setToDefaults();
   Project.setToDefaults();
   // update menu:
-  string s = menuStr();
-  PMenu->changeItem( PMenuId, s.c_str() );
+  RunAction->setText( menuStr().c_str() );
 }
 
 
@@ -1903,6 +1799,35 @@ void Macro::dialogAction( int r )
 void Macro::dialogClosed( int r )
 {
   DialogOpen = false;
+}
+
+
+void Macro::run( void )
+{
+  if ( KeyCode == Qt::Key_Escape &&
+       qApp->focusWidget() != MC->window() ) {
+    MC->window()->setFocus();
+  }
+  else
+    launch();
+}
+
+
+void Macro::launch( void )
+{
+  if ( fallBack() )
+    MC->store();
+  Variables.setDefaults();
+  MC->startMacro( MacroNum );
+}
+
+
+void Macro::popup( void )
+{
+  if ( BottomAction != 0 ) {
+    QPoint p = PushButton->mapToGlobal( QPoint( 0, -30 ) );
+    PMenu->popup( p, BottomAction );
+  }
 }
 
 
@@ -1923,16 +1848,14 @@ MacroCommand::MacroCommand( void )
     TimeOut( 0.0 ),
     Browse( false ),
     Enabled( true ),
+    EnabledAction( 0 ),
     MacroNum( 0 ),
     CommandNum( 0 ),
-    MC( 0 ),
+    MCs( 0 ),
     DialogOpen( false ),
     MacroVars(),
     MacroProject(),
     MenuShortcut( "" ),
-    MenuText( "" ),
-    Menu( 0 ),
-    MenuId( -1 ),
     SubMenu( 0 )
 {
 }
@@ -1959,16 +1882,14 @@ MacroCommand::MacroCommand( const string &name, const string &params,
     TimeOut( to ),
     Browse( browse ),
     Enabled( enabled ),
+    EnabledAction( 0 ),
     MacroNum( 0 ),
     CommandNum( 0 ),
-    MC( mc ),
+    MCs( mc ),
     DialogOpen( false ),
     MacroVars(),
     MacroProject(),
     MenuShortcut( "" ),
-    MenuText( "" ),
-    Menu( 0 ),
-    MenuId( -1 ),
     SubMenu( 0 )
 {
 }
@@ -1991,16 +1912,14 @@ MacroCommand::MacroCommand( RePro *repro, const string &params, Macros *mc )
     TimeOut( 0.0 ),
     Browse( false ),
     Enabled( true ),
+    EnabledAction( 0 ),
     MacroNum( 0 ),
     CommandNum( 0 ),
-    MC( mc ),
+    MCs( mc ),
     DialogOpen( false ),
     MacroVars(),
     MacroProject(),
     MenuShortcut( "" ),
-    MenuText( "" ),
-    Menu( 0 ),
-    MenuId( -1 ),
     SubMenu( 0 )
 {
 }
@@ -2023,47 +1942,158 @@ MacroCommand::MacroCommand( const MacroCommand &com )
     TimeOut( com.TimeOut ),
     Browse( com.Browse ),
     Enabled( com.Enabled ),
+    EnabledAction( com.EnabledAction ),
     MacroNum( com.MacroNum ),
     CommandNum( com.CommandNum ),
-    MC( com.MC ),
+    MCs( com.MCs ),
     DialogOpen( com.DialogOpen ),
     MacroVars( com. MacroVars ),
     MacroProject( com.MacroProject ),
     MenuShortcut( com.MenuShortcut ),
-    MenuText( com.MenuText ),
-    Menu( com.Menu ),
-    MenuId( com.MenuId ),
     SubMenu( com.SubMenu )
 {
 }
 
 
-void MacroCommand::dialog( int macro, int command,
-			   Options &dopt )
+void MacroCommand::addMenu( QMenu *menu )
+{
+  string s = "";
+  if ( CommandNum < 36 ) {
+    s = "&";
+    if ( CommandNum == 0 )
+      s += '0';
+    else if ( CommandNum < 10 )
+      s += ( '1' + CommandNum - 1 );
+    else
+      s += ( 'a' + CommandNum - 10 );
+    s += " ";
+  }
+  else
+    s = "  ";
+  MenuShortcut = s;
+  if ( Macro >= 0 ) {
+    s += "Macro " + Name;
+    if ( !Params.empty() ) {
+      s += ": ";
+      int index = 0;
+      int nc = 10 + Name.size();
+      for ( int i=0; nc+index < Macros::MenuWidth && index >= 0; i++ ) {
+	index = Params.find( ';', index+1 );
+      }
+      if ( index < 0 )
+	s += ": " + Params;
+      else
+	s += ": " + Params.substr( 0, index ) + " ...";
+    }
+  }
+  else if ( Shell )
+    s += "Shell " + Name;
+  else if ( Filter )
+    s += "Filter " + Name;
+  else if ( Detector )
+    s += "Detector " + Name;
+  else if ( Switch )
+    s += "Switch to " + Name;
+  else if ( StartSession )
+    s += "Start Session";
+  else if ( Message ) {
+    s += "Message " + Name;
+    if ( !Params.empty() ) {
+      Str ps = Params;
+      ps.eraseMarkup();
+      if ( ps.size() > 40 ) {
+	ps.erase( 36 );
+	ps += " ...";
+      }
+      s += ": " + ps;
+    }
+  }
+  else if ( Browse ) {
+    s += "Browse " + Params;
+  }
+  else {
+    s += "RePro " + Name;
+    if ( !Params.empty() ) {
+      s += ": ";
+      int index = 0;
+      int nc = 10 + Name.size();
+      for ( int i=0; nc+index < Macros::MenuWidth && index >= 0; i++ ) {
+	index = Params.find( ';', index+1 );
+      }
+      if ( index < 0 )
+	s += ": " + Params;
+      else
+	s += ": " + Params.substr( 0, index ) + " ...";
+    }
+  }
+
+  SubMenu = menu->addMenu( s.c_str() );
+  SubMenu->menuAction()->setIcon( Enabled ? MCs->EnabledIcon : MCs->DisabledIcon );
+
+  if ( CommandNum+1 < (int)MCs->MCs[MacroNum]->Commands.size() ) {
+    SubMenu->addAction( "&Start macro here", this, SLOT( start() ) );
+    SubMenu->addAction( "&Run only this", this, SLOT( run() ) );
+  }
+  else {
+    SubMenu->addAction( "&Run", this, SLOT( run() ) );
+  }
+  if ( RP != 0 ) {
+    SubMenu->addAction( "&Options...", this, SLOT( dialog() ) );
+    SubMenu->addAction( "&View", this, SLOT( view() ) );
+    SubMenu->addAction( "&Load", this, SLOT( reload() ) );
+    SubMenu->addAction( "&Help...", this, SLOT( help() ) );
+  }
+  else if ( Macro >= 0 &&
+	    ! Params.empty() ) {
+    SubMenu->addAction( "&Options...", this, SLOT( dialog() ) );
+  }
+  EnabledAction = SubMenu->addAction( Enabled ? "&Disable" : "&Enable",
+				      this, SLOT( enable() ) );
+}
+
+
+void MacroCommand::start( void )
+{
+  MCs->MCs[MacroNum]->Variables.setDefaults();
+  MCs->Enable = true;
+  MCs->startMacro( MacroNum, CommandNum );
+}
+
+
+void MacroCommand::run( void )
+{
+  MCs->MCs[MacroNum]->Variables.setDefaults();
+  MCs->Enable = true;
+  MCs->startMacro( MacroNum, CommandNum );
+  if ( Macro >= 0 )
+    MCs->ThisMacroOnly = true;
+  else
+    MCs->ThisCommandOnly = true;
+}
+
+
+void MacroCommand::dialog( void )
 {
   if ( DialogOpen || ( RP != 0 && RP->dialogOpen() ) )
     return;
 
   DialogOpen = true;
-  MacroNum = macro;
-  CommandNum = command;
-  DO = &dopt;
+  DO = &MCs->RPs->dialogOptions();
 
   if ( Macro >= 0 ) {
     // Macro dialog:
     Options prjopt;
-    MacroVars = MC->variables( Macro );
+    MacroVars = MCs->variables( Macro );
     MacroVars.setDefaults();
-    MacroVars.read( MC->expandParams( MacroNum, Params, prjopt ) );
-    MacroProject = MC->project( Macro );
+    MacroVars.read( MCs->expandParams( MacroNum, Params, prjopt ) );
+    MacroProject = MCs->project( Macro );
     MacroProject.read( prjopt );
     // create and exec dialog:
-    OptDialog *od = new OptDialog( false, MC );
+    OptDialog *od = new OptDialog( false, MCs );
     od->setCaption( "Macro " + Name + " Variables" );
     od->addOptions( MacroVars );
     od->addOptions( MacroProject );
-    od->setSpacing( int(9.0*exp(-double(MacroVars.size())/14.0))+1 );
-    od->setMargin( 10 );
+    od->setVerticalSpacing( int(9.0*exp(-double(MacroVars.size())/14.0))+1 );
     od->setRejectCode( 0 );
     od->addButton( "&Ok", OptDialog::Accept, 1 );
     od->addButton( "&Apply", OptDialog::Accept, 1, false );
@@ -2082,7 +2112,7 @@ void MacroCommand::dialog( int macro, int command,
     // RePro dialog:
     Options prjopt;
     RP->Options::setDefaults();
-    RP->Options::read( MC->expandParams( MacroNum, Params, prjopt ), RePro::MacroFlag );
+    RP->Options::read( MCs->expandParams( MacroNum, Params, prjopt ), RePro::MacroFlag );
     RP->Options::read( RP->overwriteOptions(), 0, RePro::OverwriteFlag );
     RP->Options::read( CO, 0, RePro::CurrentFlag );
     RP->projectOptions().read( prjopt );
@@ -2090,11 +2120,11 @@ void MacroCommand::dialog( int macro, int command,
     
     RP->dialog();
     
-    connect( RP, SIGNAL( dialogAccepted( void ) ),
+    connect( (ConfigDialog*)RP, SIGNAL( dialogAccepted( void ) ),
 	     this, SLOT( acceptDialog( void ) ) );
-    connect( RP, SIGNAL( dialogAction( int ) ),
+    connect( (ConfigDialog*)RP, SIGNAL( dialogAction( int ) ),
 	     this, SLOT( dialogAction( int ) ) );
-    connect( RP, SIGNAL( dialogClosed( int ) ),
+    connect( (ConfigDialog*)RP, SIGNAL( dialogClosed( int ) ),
 	     this, SLOT( dialogClosed( int ) ) );
   }
 }
@@ -2104,7 +2134,7 @@ void MacroCommand::acceptDialog( void )
 {
   if ( Macro >= 0 ) {
     Options prjopt;
-    Options po( MC->expandParams( MacroNum, Params, prjopt ) );
+    Options po( MCs->expandParams( MacroNum, Params, prjopt ) );
     po.readAppend( MacroVars, OptDialog::changedFlag() );
     po.readAppend( MacroProject, OptDialog::changedFlag() );
     Params = po.save( "; " );
@@ -2123,8 +2153,7 @@ void MacroCommand::acceptDialog( void )
       else
 	s += ": " + Params.substr( 0, index ) + " ...";
     }
-    MenuText = s;
-    Menu->changeItem( MenuId, s.c_str() );
+    SubMenu->menuAction()->setText( s.c_str() );
   }
   else {
     Options newopt( *((Options*)RP), OptDialog::changedFlag() );
@@ -2134,7 +2163,7 @@ void MacroCommand::acceptDialog( void )
     if ( DO->boolean( "default" ) ) {
       Options prjopt;
       RP->Options::setToDefaults();
-      RP->Options::read( MC->expandParams( MacroNum, Params, prjopt ) );
+      RP->Options::read( MCs->expandParams( MacroNum, Params, prjopt ) );
       RP->Options::read( RP->overwriteOptions() );
       CO.assign( *((Options*)RP), Options::NonDefault );
       RP->Options::setDefaults();
@@ -2152,7 +2181,7 @@ void MacroCommand::dialogAction( int r )
 {
   // run:
   if ( r == 2 ) {
-    MC->startMacro( MacroNum, CommandNum );
+    MCs->startMacro( MacroNum, CommandNum );
   }
   // defaults:
   if ( r == 3 ) {
@@ -2164,41 +2193,83 @@ void MacroCommand::dialogAction( int r )
 void MacroCommand::dialogClosed( int r )
 {
   DialogOpen = false;
-  disconnect( RP, SIGNAL( dialogAccepted( void ) ),
+  disconnect( (ConfigDialog*)RP, SIGNAL( dialogAccepted( void ) ),
 	      this, SLOT( acceptDialog( void ) ) );
-  disconnect( RP, SIGNAL( dialogAction( int ) ),
+  disconnect( (ConfigDialog*)RP, SIGNAL( dialogAction( int ) ),
 	      this, SLOT( dialogAction( int ) ) );
-  disconnect( RP, SIGNAL( dialogClosed( int ) ),
+  disconnect( (ConfigDialog*)RP, SIGNAL( dialogClosed( int ) ),
 	      this, SLOT( dialogClosed( int ) ) );
 }
 
 
-MacroButton::MacroButton( int number, const string &title,
-			  QWidget *parent, const char *name )
-  : QPushButton( title.c_str(), parent, name ), Number( number )
+void MacroCommand::view( void )
 {
-  connect( this, SIGNAL( clicked() ), this, SLOT( wasLeftClicked() ) );
+  MCs->RPs->raise( RP );
+}
+
+
+void MacroCommand::reload( void )
+{
+  MCs->RPs->reload( RP );
+}
+
+
+void MacroCommand::help( void )
+{
+  MCs->RPs->help( RP );
+}
+
+
+void MacroCommand::enable( void )
+{
+  Enabled = ! Enabled;
+  EnabledAction->setText( Enabled ? "&Disable" : "&Enable" );
+  SubMenu->menuAction()->setIcon( Enabled ? MCs->EnabledIcon : MCs->DisabledIcon );
+}
+
+
+ostream &operator<< ( ostream &str, const MacroCommand &command )
+{
+  str << "  " << command.CommandNum+1 << " ";
+  if ( command.Macro >= 0 )
+    str << "Macro";
+  else if ( command.Shell )
+    str << "Shell";
+  else if ( command.Filter )
+    str << "Filter";
+  else if ( command.Detector )
+    str << "Detector";
+  else if ( command.Switch )
+    str << "Switch";
+  else if ( command.StartSession )
+    str << "StartSession";
+  else if ( command.Message ) {
+    str << "Message";
+    if ( command.TimeOut > 0.0 )
+      str << " (timeout " << command.TimeOut << ")";
+  }
+  else if ( command.Browse )
+    str << "Browse";
+  else
+    str << "RePro";
+  str << ": " << command.Name 
+      << " -> " << command.Params << '\n';
+  return str;
+}
+
+
+MacroButton::MacroButton( const string &title, QWidget *parent )
+  : QPushButton( title.c_str(), parent )
+{
 }
 
 
 void MacroButton::mouseReleaseEvent( QMouseEvent *qme )
 {
   QPushButton::mouseReleaseEvent( qme );
-  if ( qme->button() == RightButton ) {
-    emit rightClicked( Number );
+  if ( qme->button() == Qt::RightButton ) {
+    emit rightClicked();
   }
-}
-
-
-void MacroButton::wasLeftClicked( void )
-{
-  emit leftClicked( Number );
-}
-
-
-void MacroButton::wasRightClicked( void )
-{
-  emit rightClicked( Number );
 }
 
 

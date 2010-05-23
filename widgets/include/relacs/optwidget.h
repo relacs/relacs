@@ -23,11 +23,12 @@
 #define _RELACS_OPTWIDGET_H_ 1
 
 #include <vector>
-#include <qwidget.h>
-#include <qevent.h>
-#include <qmutex.h>
-#include <qlabel.h>
-#include <qlayout.h>
+#include <QWidget>
+#include <QEvent>
+#include <QMutex>
+#include <QLabel>
+#include <QLayout>
+#include <QEvent>
 #include <relacs/options.h>
 using namespace std;
 
@@ -54,8 +55,9 @@ Here is an example:
 \image html optwidget.png
 It was created with the following code:
 \code
-#include <options.h>
-#include <optwidget.h>
+#include <relacs/options.h>
+#include <relacs/optwidget.h>
+using namespace relacs;
 
 ...
 
@@ -75,8 +77,8 @@ opt.addText( "comment", "Comments", "no comment" );
 
 OptWidget ow( this );
 ow.assign( opt, 0, 1 );
-ow.setSpacing( 4 );
-ow.setMargin( 10 );
+ow.setVerticalSpacing( 4 );
+ow.setMargins( 10 );
 
 ...
 \endcode
@@ -112,9 +114,9 @@ to update the input form of the OptWidget.
 Options whose values were changed via the OptWidget get the changedFlag()
 in their flags() set.
 
-The spacing between two input lines can be adjusted with setSpacing().
+The spacing between two input lines can be adjusted with setVerticalSpacing().
 The spacing between the widget margins and its content are set with
-setMargin().
+setMargins().
 
 
 */
@@ -253,12 +255,12 @@ public:
 
     /*! Constructs an empty OptWidget.
         To add Options to the widget use assign(). */
-  OptWidget( QWidget *parent=0, const char *name=0, WFlags f=0 );
+  OptWidget( QWidget *parent=0, Qt::WindowFlags f=0 );
     /*! Constructs an OptWidget for the Options \a o. 
         All Options are displayed and are editable.
         \sa assign() */
   OptWidget( Options *o, QMutex *mutex=0, 
-	     QWidget *parent=0, const char *name=0, WFlags f=0 );
+	     QWidget *parent=0, Qt::WindowFlags f=0 );
     /*! Constructs an OptWidget for the Options \a o. 
         Only Options with their flags() & \a selectmask > 0 are displayed.
 	If \a selectmask ist less or equal to zero,
@@ -271,7 +273,7 @@ public:
         Otherwise, accept() has to be called in order
 	to apply the changes to the Options \a o. */
   OptWidget( Options *o, int selectmask, int romask, bool contupdate, int style,
-	     QMutex *mutex=0, QWidget *parent=0, const char *name=0, WFlags f=0 );
+	     QMutex *mutex=0, QWidget *parent=0, Qt::WindowFlags f=0 );
     /*! Destructs the OptWidget. */
   ~OptWidget( void );
 
@@ -300,12 +302,21 @@ public:
 		     QMutex *mutex=0 );
 
     /*! The maximum number of lines in a single tab. */
-  int lines( void ) const { return MaxLines; };
-    /*! Set the spacing between the lines to \a pixel pixel. */
-  void setSpacing( int pixel );
+  int lines( void ) const;
+    /*! Set the spacing between the lines to \a pixel pixel.
+        \sa setHorizontalSpacing(), setMargins() */
+  void setVerticalSpacing( int pixel );
+    /*! Set the horizontal spacing to \a pixel pixel.
+        \sa setVerticalSpacing(), setMargins() */
+  void setHorizontalSpacing( int pixel );
     /*! Set the spacing between the widget margins and its content
-        to \a pixel pixel. */
-  void setMargin( int pixel );
+        to \a pixel pixel.
+        \sa setVerticalSpacing(), setHorizontalSpacing() */
+  void setMargins( int pixel );
+    /*! Set the spacing between the widget margins and its content
+        to all sides individually.
+        \sa setVerticalSpacing(), setHorizontalSpacing() */
+  void setMargins( int left, int top, int right, int bottom );
 
     /*! A pointer to the first editable widget in OptWidget.
         Is null, if there isn't any editable widget.
@@ -318,23 +329,23 @@ public:
 
     /*! The mask that was used to select single options.
 	\sa assign(), readOnlyMask() */
-  int selectMask( void ) const { return SelectMask; };
+  int selectMask( void ) const;
     /*! The mask that was used to decide whether
         an option should be editable or not.
 	\sa assign(), selectMask(). */
-  int readOnlyMask( void ) const { return ReadOnlyMask; };
+  int readOnlyMask( void ) const;
     /*! \c True if changes by the user are immediately applied to the
         Options values.
         \sa assign(). */
-  bool continuousUpdate( void ) const { return ContinuousUpdate; };
+  bool continuousUpdate( void ) const;
     /*! The flag that is used to mark options whose value were changed
         by or-ing their flags with this flag.
         It is preset to a constant value (16384) and
 	cannot be changed by the user. */
-  static int changedFlag( void ) { return ChangedFlag; };
+  static int changedFlag( void );
 
     /*! Returns a pointer to the Options on which this widgets works on. */
-  Options *options( void ) const { return Opt; };
+  Options *options( void ) const;
 
     /*! Provide a mutex that is used by OptWidget to lock
         access to the options while they are accessed. 
@@ -425,7 +436,7 @@ signals:
 
 protected:
 
-  virtual void customEvent( QCustomEvent *e );
+  virtual void customEvent( QEvent *e );
 
 
 private:
@@ -440,15 +451,14 @@ private:
   friend class OptWidgetLabel;
   friend class OptWidgetSeparator;
 
-    /*! For internal use only. */
   void addWidget( OptWidgetBase *owb );
+  void disableUpdate( void );
+  void enableUpdate( void );
+  static void setLabelStyle( QWidget *w, long style, bool palette=false, bool base=false, bool button=false );
+  static void setValueStyle( QWidget *w, long style, bool palette=false, bool base=false, bool button=false );
   static void setLabelFontStyle( QWidget *w, long style );
   static void setLabelColorStyle( QWidget *w, long style, bool palette=false, bool base=false, bool button=false );
-  static void setLabelStyle( QWidget *w, long style, bool palette=false, bool base=false, bool button=false );
-  static void setValueFontStyle( QWidget *w, long style );
-  static void setValueColorStyle( QWidget *w, long style, bool palette=false, bool base=false, bool button=false );
-  static void setValueStyle( QWidget *w, long style, bool palette=false, bool base=false, bool button=false );
-  static QLabel* unitLabel( const Parameter &p, QWidget *parent );
+  static QLabel* unitLabel( const Parameter &p, QWidget *parent=0 );
 
   Options *Opt;
 
@@ -471,18 +481,18 @@ private:
   static const int ChangedFlag = Parameter::ChangedFlag;
   static const int UpdateFlag = Parameter::ChangedFlag >> 1;
 
-  class UpdateEvent : public QCustomEvent
+  class UpdateEvent : public QEvent
   {
   public:
     UpdateEvent( int type )
-      : QCustomEvent( QEvent::User+type ) {};
+      : QEvent( QEvent::Type( QEvent::User+type ) ) {};
   };
 
-  class UpdateIdentEvent : public QCustomEvent
+  class UpdateIdentEvent : public QEvent
   {
   public:
     UpdateIdentEvent( int type, const string &ident )
-      : QCustomEvent( QEvent::User+type ), Ident( ident ) {};
+      : QEvent( QEvent::Type( QEvent::User+type ) ), Ident( ident ) {};
     string ident( void ) const { return Ident; };
   private:
     string Ident;

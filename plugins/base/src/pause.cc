@@ -26,8 +26,7 @@ namespace base {
 
 
 Pause::Pause( void )
-  : RePro( "Pause", "Pause", "Base",
-	   "Jan Benda", "1.2", "Oct 1, 2004" )
+  : RePro( "Pause", "Base", "Jan Benda", "1.2", "Oct 1, 2004" )
 {
   // add some options:
   addNumber( "duration", "Duration", 1.0, 0.01, 1000.0, 0.02, "sec", "ms" );

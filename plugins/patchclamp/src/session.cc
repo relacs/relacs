@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <qvbox.h>
-#include <qlabel.h>
+#include <QVBoxLayout>
+#include <QLabel>
 #include <relacs/patchclamp/session.h>
 using namespace relacs;
 
@@ -28,23 +28,26 @@ namespace patchclamp {
 
 
 Session::Session( void )
-  : Control( "Session", "Info", "patchclamp",
-	     "Jan Benda", "1.0", "Oct 13, 2008" )
+  : Control( "Session", "patchclamp", "Jan Benda", "1.0", "Oct 13, 2008" )
 
 {
-  boxLayout()->setDirection( QBoxLayout::TopToBottom );
+  QVBoxLayout *l = new QVBoxLayout;
+  setLayout( l );
 
-  CW = new OptWidget( (QWidget*)this );
-  CW->setSpacing( 1 );
-  CW->setMargin( 4 );
-  SW = new OptWidget( (QWidget*)this );
-  SW->setSpacing( 1 );
-  SW->setMargin( 4 );
+  CW = new OptWidget;
+  CW->setVerticalSpacing( 1 );
+  CW->setMargins( 4 );
+  l->addWidget( CW );
+  SW = new OptWidget;
+  SW->setVerticalSpacing( 1 );
+  SW->setMargins( 4 );
+  l->addWidget( SW );
 
-  SessionButton = new QPushButton( "Cell found", this, "SessionButton" );
+  SessionButton = new QPushButton( "Cell found" );
   SessionButton->setMinimumSize( SessionButton->sizeHint() );
-  connect( SessionButton, SIGNAL( clicked() ),
-	   this, SLOT( toggleSession() ) );
+  QWidget::connect( SessionButton, SIGNAL( clicked() ),
+		    (QWidget*)this, SLOT( toggleSession() ) );
+  l->addWidget( SessionButton );
 }
 
 
@@ -98,8 +101,6 @@ void Session::initDevices( void )
   stimulusData().addText( "drugs", "Applied drugs", "" ).setFormat( "%-20s" ).setFlags( 16 );
   SW->assign( &stimulusData(), 16+stimulusDataTraceFlag(),
 	      stimulusDataTraceFlag(), true, 0, stimulusDataMutex() );
-
-  updateGeometry();
 }
 
 

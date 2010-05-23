@@ -19,7 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <qaction.h>
+#include <QAction>
 #include <relacs/str.h>
 #include <relacs/relacswidget.h>
 #include <relacs/control.h>
@@ -27,11 +27,11 @@
 namespace relacs {
 
 
-Control::Control( const string &name, const string &title,
-		  const string &pluginset, const string &author, 
-		  const string &version, const string &date )
+Control::Control( const string &name, const string &pluginset,
+		  const string &author, const string &version, 
+		  const string &date )
   : RELACSPlugin( "Control: " + name, RELACSPlugin::Plugins,
-		  name, title, pluginset, author, version, date )
+		  name, pluginset, author, version, date )
 {
   Interrupt = false;
 }
@@ -59,33 +59,19 @@ void Control::initDevices( void )
 }
 
 
-void Control::addActions( QPopupMenu *menu )
+void Control::addActions( QMenu *menu )
 {
-  QAction *action;
+  QAction* action = new QAction( (QWidget*)this );
+  action->setText( string( name() + " Dialog..." ).c_str() );
+  QWidget::connect( action, SIGNAL( triggered() ),
+		    (QWidget*)this, SLOT( dialog() ) );
+  menu->addAction( action );
 
-  action = new QAction( this );
-  action->setMenuText( string( title() + " Dialog..." ).c_str() );
-  connect( action, SIGNAL( activated() ),
-	   this, SLOT( dialog() ) );
-  action->addTo( menu );
-
-  action = new QAction( this );
-  action->setMenuText( string( title() + " Help..." ).c_str() );
-  connect( action, SIGNAL( activated() ),
-	   this, SLOT( help() ) );
-  action->addTo( menu );
-}
-
-
-void Control::keyPressEvent( QKeyEvent *e )
-{
-  QWidget::keyPressEvent( e );
-}
-
-
-void Control::keyReleaseEvent( QKeyEvent *e )
-{
-  QWidget::keyReleaseEvent( e );
+  action = new QAction( (QWidget*)this );
+  action->setText( string( name() + " Help..." ).c_str() );
+  QWidget::connect( action, SIGNAL( triggered() ),
+		    (QWidget*)this, SLOT( help() ) );
+  menu->addAction( action );
 }
 
 
@@ -115,60 +101,84 @@ bool Control::interrupt( void ) const
 
 bool Control::waitOnData( double time )
 {
-  unlockAll();
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
-  RW->UpdateDataWait.wait( t );
-  lockAll();
+  unlockStimulusData();
+  unlockMetaData();
+  unlockData();
+  RW->UpdateDataWait.wait( mutex(), t );
+  readLockData();
+  lockMetaData();
+  lockStimulusData();
   return interrupt();
 }
 
 
 bool Control::waitOnReProSleep( double time )
 {
-  unlockAll();
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
-  RW->ReProSleepWait.wait( t );
-  lockAll();
+  unlockStimulusData();
+  unlockMetaData();
+  unlockData();
+  RW->ReProSleepWait.wait( mutex(), t );
+  readLockData();
+  lockMetaData();
+  lockStimulusData();
   return interrupt();
 }
 
 
 bool Control::waitOnReProFinished( double time )
 {
-  unlockAll();
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
-  RW->ReProAfterWait.wait( t );
-  lockAll();
+  unlockStimulusData();
+  unlockMetaData();
+  unlockData();
+  RW->ReProAfterWait.wait( mutex(), t );
+  readLockData();
+  lockMetaData();
+  lockStimulusData();
   return interrupt();
 }
 
 
 bool Control::waitOnSessionStart( double time )
 {
-  unlockAll();
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
-  RW->SessionStartWait.wait( t );
-  lockAll();
+  unlockStimulusData();
+  unlockMetaData();
+  unlockData();
+  RW->SessionStartWait.wait( mutex(), t );
+  readLockData();
+  lockMetaData();
+  lockStimulusData();
   return interrupt();
 }
 
 
 bool Control::waitOnSessionPrestop( double time )
 {
-  unlockAll();
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
-  RW->SessionPrestopWait.wait( t );
-  lockAll();
+  unlockStimulusData();
+  unlockMetaData();
+  unlockData();
+  RW->SessionPrestopWait.wait( mutex(), t );
+  readLockData();
+  lockMetaData();
+  lockStimulusData();
   return interrupt();
 }
 
 
 bool Control::waitOnSessionStop( double time )
 {
-  unlockAll();
   unsigned long t = time == MAXDOUBLE ? ULONG_MAX : (unsigned long)::rint(1.0e3*time);
-  RW->SessionStopWait.wait( t );
-  lockAll();
+  unlockStimulusData();
+  unlockMetaData();
+  unlockData();
+  RW->SessionStopWait.wait( mutex(), t );
+  readLockData();
+  lockMetaData();
+  lockStimulusData();
   return interrupt();
 }
 
@@ -176,16 +186,22 @@ bool Control::waitOnSessionStop( double time )
 bool Control::sleep( double t )
 {
   // sleep:
-  unlockAll();
+  unlockStimulusData();
+  unlockMetaData();
+  unlockData();
   if ( t > 0.0 ) {
     unsigned long ms = (unsigned long)(1.0e3*t);
-    if ( t < 0.001 || ms < 1 )
+    if ( t < 0.001 || ms < 1 ) {
+      lock();
       QThread::usleep( (unsigned long)(1.0e6*t) );
+      unlock();
+    }
     else
-      SleepWait.wait( ms );
+      SleepWait.wait( mutex(), ms );
   }
-
-  lockAll();
+  readLockData();
+  lockMetaData();
+  lockStimulusData();
 
   // interrupt Control:
   return interrupt();
@@ -214,7 +230,7 @@ void Control::start( void )
 void Control::requestStop( void )
 {
   // terminate thread:
-  if ( running() ) {
+  if ( isRunning() ) {
     InterruptLock.lock();
     Interrupt = true;
     InterruptLock.unlock();
@@ -223,16 +239,6 @@ void Control::requestStop( void )
     SleepWait.wakeAll();
   }
 }
-
-
-bool Control::wait( double maxsec )
-{
-  if ( maxsec < 0.0 )
-    return QThread::wait();
-  else
-    return QThread::wait( (unsigned long)(1000.0*maxsec) );
-}
-
 
 
 }; /* namespace relacs */

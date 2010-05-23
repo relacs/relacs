@@ -1,5 +1,5 @@
 #! /usr/bin/env bash
-VERSION=0.9.6
+VERSION=0.9.7
 
 TIMESTAMP_START=`date +%s`
 PKGDIR=relacs-${VERSION}

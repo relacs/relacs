@@ -23,7 +23,8 @@
 #define _RELACS_RELACSPLUGIN_H_ 1
 
 
-#include <qapplication.h>
+#include <QKeyEvent>
+#include <QApplication>
 #include <relacs/tracespec.h>
 #include <relacs/indata.h>
 #include <relacs/inlist.h>
@@ -104,9 +105,14 @@ addPath() prepends the default directory for data storage.
 saving() returns \c true whenever voltage traces and eventlists
 are saved to disk (via SaveFiles).
 
-Use postCustomEvent() or - if this is not possible -
-lockGUI() and unlockGUI() for thread save drawing 
+Use update() or postCustomEvent() for thread save drawing 
 and other interactions with the GUI.
+
+You can handle key press and release events of a RELACSPlugin that has a widget
+by reimplementing keyPressEvent() and keyReleaseEvent().
+Usually, the events are only delivered, if the corresponding widget() is
+visible. If you want he key event handlers to be called irrespective
+of the widgets visibility, then call setGlobalKeyEvents().
 
 Some integers for identifying the type of the RELACS plugin are defined
 and are used by the addDevice, addAttenuate, addAttuator,
@@ -170,21 +176,32 @@ public:
         The identifier \a configident is used for identifying this class
 	in the configuration file of group \a configgroup.
         \a name has to be exactly the name of the class.
-	The class has a widget \a title and
-	belongs to the set of plugins named \a pluginset.
+	The class belongs to the set of plugins named \a pluginset.
 	The implementation of a class derived from %RELACSPlugin
 	has a \a version and was written by \a author on \a date.
         \sa setConfigIdent(), setConfigGroup(),
 	setName(), setTitle(), setAuthor(), setDate(), setVersion() */
   RELACSPlugin( const string &configident="", int configgroup=0,
 		const string &name="", 
-		const string &title="",
 		const string &pluginset="",
 		const string &author="unknown",
 		const string &version="unknown",
 		const string &date=__DATE__ );
     /*! Destruct the RELACSPlugin. */
   virtual ~RELACSPlugin( void );
+
+    /*! \return the widget of this plugin., or NULL if it does not have one.
+        \sa setWidget(), setLayout() */
+  QWidget *widget( void );
+    /*! Declare \a widget as the main widget of this class.
+        \note call this function only once in the constructor.
+        \sa widget(), setLayout() */
+  void setWidget( QWidget *widget );
+    /*! Declare \a layout as the main layout of this class.
+        A container widget for the layout is created automatically.
+        \note call this function only once in the constructor.
+        \sa widget(), setWidget() */
+  void setLayout( QLayout *layout );
 
     /*! The name of the plugin set the class belongs to. */
   string pluginSet( void ) const;
@@ -240,38 +257,41 @@ protected:
 	is also written to standard error as a warning.
         If \a timeout is greater than zero, the message window is
         closed automatically after \a timeout seconds.
-        You do NOT need to wrap this function with lockGUI() and unlockGUI(). */
+	Can be called directly from a non GUI thread. */
   void warning( const string &s, double timeout=0.0 );
     /*! Opens an info window with the message \a s.
         The message together with the current time and the name of the plugin
 	is also written to standard error.
         If \a timeout is greater than zero, the message window is
         closed automatically after \a timeout seconds.
-        You do NOT need to wrap this function with lockGUI() and unlockGUI(). */
+	Can be called directly from a non GUI thread. */
   void info( const string &s, double timeout=0.0 );
 
     /*! Post a custom event for thread save manipulations of the GUI.
         This is just a shortcut for
 	\code
-	QApplication::postEvent( this, new QCustomEvent( QEvent::User+type ) );
+	QApplication::postEvent( this, new QCustomEvent( QEvent::Type( QEvent::User+type ) ) );
 	\endcode
 	For your own events use values greater than 10 for \a type.
-        \sa lockGUI(), unlockGUI() */
-  void postCustomEvent( int type=0 );
-    /*! Locks the GUI thread. 
-        Use it whenever you call a function from a thread
-	that directly or indirectly draws on the screen.
-	Don't forget to unlock the GUI thread afterwards!
-	\code
-	lockGUI();
-	updateWidgetContent(); // whatever this is
-	unlockGUI();
+	To handle posted events, reimplement customEvent( QEvent* ).
+	Don't forget to call RELACSPlugin::customEvent() from your reimplemented customEvent().
+	If, for example, you want to hide a widget, you call
+        \code
+	postCustomEvent( 10 );
 	\endcode
-        \sa unlockGUI(), postCustomEvent() */
-  void lockGUI( void );
-    /*! Unlocks the GUI thread.. 
-        \sa lockGUI(), postCustomEvent() */
-  void unlockGUI( void );
+	Then yuo reimplement customEvent() like this:
+	\code
+	void MyPlugin::customEvent( QEvent *qce )
+	{
+  	  if ( qce->type() == QEvent::User+10 ) {
+	     // hide the widget here
+ 	  }
+	  else
+	    RELACSPlugin::customEvent( qce );
+	}
+	\endcode
+        \sa customEvent() */
+  void postCustomEvent( int type=0 );
 
     /*! Lock the input data and events for reading. */
   void readLockData( void );
@@ -704,14 +724,47 @@ protected:
     /*! Pointer to the main RELACSWidget. */
   RELACSWidget *RW;
 
+    /*! Reimplement this function in case you need 
+        to handle key-press events.
+        \note this RELACSPlugin needs to have a widget,
+	set by setWidget() or setLayout(), in order 
+        to have keyPressEvent() called. */
+  virtual void keyPressEvent( QKeyEvent *event );
+    /*! Reimplement this function in case you need 
+        to handle key-release events.
+        \note this RELACSPlugin needs to have a widget,
+	set by setWidget() or setLayout(), in order 
+        to have keyPressEvent() called. */
+  virtual void keyReleaseEvent( QKeyEvent *event );
+    /*! This function calls keyPressEvent() and keyReleaseEvent()
+        by listening to the events the widget() is receiving. */
+  virtual bool eventFilter( QObject *obj, QEvent *event );
+
+
+public:
+
+    /*! \return \c true if the key event handlers should be called
+        irrespective of the visibility of the corresponding widget.
+	\sa setGlobalKeyEvents(), keyPressEvent(), keyReleaseEvent(), setWidget() */
+  bool globalKeyEvents( void );
+    /*! Set \a global to \c true in order to make the key event handlers to
+        be called irrespective of the visibility of the corresponding widget().
+	\sa globalKeyEvents(), keyPressEvent(), keyReleaseEvent(), setWidget() */
+  void setGlobalKeyEvents( bool global=true );
+
 
 protected slots:
 
     /*! Called from warning(), info(), updateDeviceMenu().
         If you reimplement this event handler,
         don't forget to call this implementation
-        via RELACSPlugin::customEvent(). */
-  virtual void customEvent( QCustomEvent *qce );
+        via RELACSPlugin::customEvent().
+        \sa postCustomEvent() */
+  virtual void customEvent( QEvent *qce );
+
+    /*! Informs the plugin that the associated widget is going
+        to be destroyed. */
+  void widgetDestroyed( QObject *obj );
 
 
 private:
@@ -719,6 +772,9 @@ private:
   string PluginSet;
 
   Options Settings;
+
+  bool GlobalKeyEvents;
+  QWidget *Widget;
 
     /*! Dummy trace. */
   static const TraceSpec DummyTrace;

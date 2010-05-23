@@ -24,13 +24,13 @@
 
 #include <ctime>
 #include <string>
-#include <qhbox.h>
-#include <qlabel.h>
-#include <qdatetime.h>
-#include <qtimer.h>
-#include <qlabel.h>
-#include <qpopupmenu.h>
-#include <qaction.h>
+#include <QWidget>
+#include <QLabel>
+#include <QDateTime>
+#include <QTimer>
+#include <QLabel>
+#include <QMenu>
+#include <QAction>
 #include <relacs/options.h>
 
 namespace relacs {
@@ -66,15 +66,14 @@ that can be used from within a shell command:
 
 class RELACSWidget;
 
-class Session : public QHBox, public Options
+class Session : public QWidget, public Options
 {
   Q_OBJECT
 
 public:
 
     /*! Construct a session. */
-  Session( RELACSWidget *rw, int height,
-	   QWidget *parent, const char *name );
+  Session( RELACSWidget *rw, int height, QWidget *parent );
     /*! Deconstruct the Session. */
   ~Session( void );
 
@@ -99,7 +98,7 @@ public:
   void incrReProCount( void );
 
     /*! Add actions to the menu. */
-  virtual void addActions( QPopupMenu *menu );
+  virtual void addActions( QMenu *menu );
 
     /*! Returns \c true if the data currently recorded should
         be saved on disc, returns false otherwise. */
@@ -138,9 +137,6 @@ public slots:
 	\note This function must not be called from a non GUI thread! */
   void toggleSession( void );
 
-    /*! Doing some late initialization, i.e. setting fonts and palette. */
-  void polish( void );
-
 
 private:
 
@@ -174,6 +170,7 @@ private:
   QTimer *MessageTimer;
 
   QLabel *TimeLabel;
+  QHBoxLayout *TimeLabelLayout;
 
   QAction *StartSessionAction;
 

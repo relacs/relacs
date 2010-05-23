@@ -1,5 +1,5 @@
 HEADER_PATH = ../include/relacs
-include ${top_srcdir}/moc3.mk
+include ${top_srcdir}/moc4.mk
 
 lib_LTLIBRARIES = \
     librelacsplot.la
@@ -11,30 +11,30 @@ librelacsplot_la_CPPFLAGS = \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 else
 librelacsplot_la_CPPFLAGS = \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 endif
 
 librelacsplot_la_LDFLAGS = \
     -version-info 0:0:0 \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 if RELACS_TOP_BUILD
 librelacsplot_la_LIBADD = \
     ../../daq/src/librelacsdaq.la \
     ../../numerics/src/librelacsnumerics.la \
     ../../options/src/librelacsoptions.la \
-    $(QT3_LIBS) \
+    $(QT4_LIBS) \
     $(MATH_LIBS)
 else
 librelacsplot_la_LIBADD = \
     -lrelacsdaq \
     -lrelacsnumerics \
     -lrelacsoptions \
-    $(QT3_LIBS) \
+    $(QT4_LIBS) \
     $(MATH_LIBS)
 endif
 

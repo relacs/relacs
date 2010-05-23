@@ -20,12 +20,12 @@
 */
 
 #include <cmath>
-#include <qhbox.h>
-#include <qvbox.h>
-#include <qgrid.h>
-#include <qpainter.h>
-#include <qpushbutton.h>
-#include <qapplication.h>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QPainter>
+#include <QPolygon>
+#include <QPushButton>
+#include <QApplication>
 #include <relacs/map.h>
 #include <relacs/basisfunction.h>
 #include <relacs/fitalgorithm.h>
@@ -39,9 +39,7 @@ namespace ephys {
 
 DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogDetector, 1,
-	    "DynamicSUSpikeDetector", "DynamicSUSpikeDetector", "EPhys",
-	    "Jan Benda", "1.8", "Mar 16, 2010" ),
-    SDW( (QWidget*)this ),
+	    "DynamicSUSpikeDetector", "EPhys", "Jan Benda", "1.8", "Mar 16, 2010" ),
     GoodSpikesHist( 0.0, 200.0, 0.5 ),
     BadSpikesHist( 0.0, 200.0, 0.5 ),
     AllSpikesHist( 0.0, 200.0, 0.5 )
@@ -105,9 +103,17 @@ DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   addInteger( "quality", "Quality", 0, 0, 3 );
   addTypeStyle( OptWidget::TabLabel, Parameter::Label );
 
+  // main layout:
+  QVBoxLayout *vb = new QVBoxLayout;
+  vb->setContentsMargins( 0, 0, 0, 0 );
+  vb->setSpacing( 0 );
+  setLayout( vb );
+
+  // parameter widgets:
   SDW.assign( ((Options*)this), 2, 4, true, 0, mutex() );
-  SDW.setSpacing( 4 );
-  SDW.setMargin( 4 );
+  SDW.setMargins( 4, 2, 4, 0 );
+  SDW.setVerticalSpacing( 1 );
+  vb->addWidget( &SDW, 0, Qt::AlignHCenter );
 
   setDialogSelectMask( 8 );
   setDialogReadOnlyMask( 16 );
@@ -118,10 +124,12 @@ DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   LastTime = 0.0;
   Update.start();
 
-  QHBox *hb = new QHBox( this );
+  QHBoxLayout *hb = new QHBoxLayout;
+  vb->addLayout( hb );
+  hb->setContentsMargins( 4, 4, 4, 4 );
   hb->setSpacing( 4 );
 
-  P = new Plot( Plot::Copy, hb );
+  P = new Plot( Plot::Copy );
   P->lock();
   P->noGrid();
   P->setTMarg( 1 );
@@ -133,115 +141,108 @@ DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   P->setYLabel( "" );
   P->setLMarg( 5 );
   P->unlock();
+  hb->addWidget( P );
 
   // key to histogram plot:  XXX provide a function in Plot!
-  QVBox *vb = new QVBox( hb );
+  QGridLayout *gl = new QGridLayout;
+  gl->setContentsMargins( 0, 0, 0, 0 );
+  gl->setVerticalSpacing( 0 );
+  gl->setHorizontalSpacing( 4 );
+  hb->addLayout( gl );
 
-  QGrid *gl = new QGrid( 4, vb );
-  gl->setSpacing( 0 );
-
-  QPixmap pm( 20, 10 );
-  QPainter p;
-  p.begin( &pm );
-  p.setBackgroundMode( OpaqueMode );
-  p.fillRect( pm.rect(), this->backgroundColor() );
-  p.setPen( QPen( green, 4 ) );
-  p.drawLine( 0, 5, pm.width(), 5 );
-  p.end();
-  QLabel *key = new QLabel( gl );
-  key = new QLabel( gl );
+  int is = widget()->fontInfo().pixelSize();
+  QPixmap pm( is*2, is/3 );
+  pm.fill( Qt::green );
+  QLabel *key = new QLabel;
   key->setPixmap( pm );
-  key = new QLabel( "  ", gl );
-  key = new QLabel( "detected", gl );
+  gl->addWidget( key, 0, 0, Qt::AlignRight | Qt::AlignVCenter );
+  key = new QLabel( "detected" );
+  key->setFixedHeight( is );
+  gl->addWidget( key, 0, 1, Qt::AlignLeft );
 
-  p.begin( &pm );
-  p.setPen( QPen( red, 4 ) );
-  p.drawLine( 0, 5, pm.width(), 5 );
-  p.end();
-  key = new QLabel( gl );
-  key = new QLabel( gl );
+  pm.fill( Qt::red );
+  key = new QLabel;
   key->setPixmap( pm );
-  key = new QLabel( "  ", gl );
-  key = new QLabel( "not detected", gl );
+  gl->addWidget( key, 1, 0, Qt::AlignRight | Qt::AlignVCenter );
+  key = new QLabel( "not detected" );
+  key->setFixedHeight( is );
+  gl->addWidget( key, 1, 1, Qt::AlignLeft );
 
-  p.begin( &pm );
-  p.setPen( QPen( white, 4 ) );
-  p.drawLine( 0, 5, pm.width(), 5 );
-  p.end();
-  key = new QLabel( gl );
-  key = new QLabel( gl );
+  pm.fill( Qt::white );
+  key = new QLabel;
   key->setPixmap( pm );
-  key = new QLabel( "  ", gl );
-  key = new QLabel( "threshold", gl );
+  gl->addWidget( key, 2, 0, Qt::AlignRight | Qt::AlignVCenter );
+  key = new QLabel( "threshold" );
+  key->setFixedHeight( is );
+  gl->addWidget( key, 2, 1, Qt::AlignLeft );
 
-  p.begin( &pm );
-  p.setPen( QPen( yellow, 4 ) );
-  p.drawLine( 0, 5, pm.width(), 5 );
-  p.end();
-  key = new QLabel( gl );
-  key = new QLabel( gl );
+  pm.fill( Qt::yellow );
+  key = new QLabel;
   key->setPixmap( pm );
-  key = new QLabel( "  ", gl );
-  key = new QLabel( "min thresh", gl );
+  gl->addWidget( key, 3, 0, Qt::AlignRight | Qt::AlignVCenter );
+  key = new QLabel( "min thresh" );
+  key->setFixedHeight( is );
+  gl->addWidget( key, 3, 1, Qt::AlignLeft );
 
   // indicators:
-  int is = fontInfo().pixelSize() * 2;
   QColor orange( 255, 165, 0 );
-  GoodQuality.resize( is, is );
+  is *= 2;
+  GoodQuality = QPixmap( is, is );
+  QPainter p;
   p.begin( &GoodQuality );
-  p.setBackgroundMode( OpaqueMode );
-  p.fillRect( GoodQuality.rect(), black );
+  p.setBackgroundMode( Qt::OpaqueMode );
+  p.fillRect( GoodQuality.rect(), Qt::black );
   p.setPen( Qt::NoPen );
-  p.setBrush( green );
+  p.setBrush( Qt::green );
   p.drawEllipse( 1, 1, is-2, is-2 );
-  p.setPen( QPen( green.light( 160 ), is/8 > 0 ? is/8 : 1 ) );
+  p.setPen( QPen( QColor( Qt::green ).lighter( 160 ), is/8 > 0 ? is/8 : 1 ) );
   p.drawEllipse( is/5, is/5, 3*is/5+1, 3*is/5+1 );
   p.drawLine( 6*is/10, 6*is/10, 4*is/5, 4*is/5 );
   p.end();
 
-  OkQuality.resize( is, is );
+  OkQuality = QPixmap( is, is );
   p.begin( &OkQuality );
-  p.setBackgroundMode( OpaqueMode );
-  p.fillRect( OkQuality.rect(), black );
+  p.setBackgroundMode( Qt::OpaqueMode );
+  p.fillRect( OkQuality.rect(), Qt::black );
   p.setPen( Qt::NoPen );
-  p.setBrush( yellow );
+  p.setBrush( Qt::yellow );
   p.drawEllipse( 1, 1, is-2, is-2 );
-  p.setPen( QPen( yellow.light( 160 ), is/8 > 0 ? is/8 : 1 ) );
+  p.setPen( QPen( QColor( Qt::yellow ).lighter( 160 ), is/8 > 0 ? is/8 : 1 ) );
   p.drawEllipse( is/5, is/5, 3*is/5, 3*is/5 );
   p.drawLine( is/2, is/2, 4*is/5, 4*is/5 );
   p.end();
 
-  PotentialQuality.resize( is, is );
+  PotentialQuality = QPixmap( is, is );
   p.begin( &PotentialQuality );
-  p.setBackgroundMode( OpaqueMode );
-  p.fillRect( PotentialQuality.rect(), black );
+  p.setBackgroundMode( Qt::OpaqueMode );
+  p.fillRect( PotentialQuality.rect(), Qt::black );
   p.setPen( Qt::NoPen );
   p.setBrush( orange );
   p.drawEllipse( 1, 1, is-2, is-2 );
-  p.setPen( QPen( orange.light( 160 ), is/8 > 0 ? is/8 : 1 ) );
+  p.setPen( QPen( QColor( orange ).lighter( 160 ), is/8 > 0 ? is/8 : 1 ) );
   p.drawEllipse( is/5, is/5, 3*is/5, 3*is/5 );
   p.drawLine( is/2, is/2, 4*is/5, 4*is/5 );
   p.end();
 
-  BadQuality.resize( is, is );
+  BadQuality = QPixmap( is, is );
   p.begin( &BadQuality );
-  p.setBackgroundMode( OpaqueMode );
-  p.fillRect( BadQuality.rect(), black );
+  p.setBackgroundMode( Qt::OpaqueMode );
+  p.fillRect( BadQuality.rect(), Qt::black );
   p.setPen( Qt::NoPen );
-  p.setBrush( red );
+  p.setBrush( Qt::red );
   p.drawEllipse( 1, 1, is-2, is-2 );
-  p.setPen( QPen( red.light( 160 ), is/8 > 0 ? is/8 : 1 ) );
+  p.setPen( QPen( QColor( Qt::red ).lighter( 160 ), is/8 > 0 ? is/8 : 1 ) );
   p.drawEllipse( is/5, is/5, 3*is/5, 3*is/5 );
   p.drawLine( is/2, is/2, 4*is/5, 4*is/5 );
   p.end();
 
-  QPointArray pa( 7 );
-  BadArrow.resize( is, is );
+  QPolygon pa( 7 );
+  BadArrow = QPixmap( is, is );
   p.begin( &BadArrow );
-  p.setBackgroundMode( OpaqueMode );
-  p.fillRect( BadArrow.rect(), black );
-  p.setPen( QPen( black, 1 ) );
-  p.setBrush( red );
+  p.setBackgroundMode( Qt::OpaqueMode );
+  p.fillRect( BadArrow.rect(), Qt::black );
+  p.setPen( QPen( Qt::black, 1 ) );
+  p.setBrush( Qt::red );
   pa.setPoint( 0, is/4, 0 );
   pa.setPoint( 1, 3*is/4, 0 );
   pa.setPoint( 2, 3*is/4, 2*is/3 );
@@ -252,48 +253,48 @@ DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   p.drawPolygon( pa );
   p.end();
 
-  BadTrend.resize( is, is );
+  BadTrend = QPixmap( is, is );
   p.begin( &BadTrend );
-  p.setBackgroundMode( OpaqueMode );
-  p.fillRect( BadTrend.rect(), black );
+  p.setBackgroundMode( Qt::OpaqueMode );
+  p.fillRect( BadTrend.rect(), Qt::black );
   p.setPen( Qt::NoPen );
-  p.setBrush( red );
+  p.setBrush( Qt::red );
   p.drawEllipse( 1, 1, is-2, is-2 );
-  p.setPen( QPen( red.light( 160 ), is/8 > 0 ? is/8 : 1 ) );
+  p.setPen( QPen( QColor( Qt::red ).lighter( 160 ), is/8 > 0 ? is/8 : 1 ) );
   p.drawLine( is/2, is/4, is/2, 3*is/4 );
   p.drawLine( is/4, is/4, 3*is/4, is/4 );
   p.end();
 
-  OkTrend.resize( is, is );
+  OkTrend = QPixmap( is, is );
   p.begin( &OkTrend );
-  p.setBackgroundMode( OpaqueMode );
-  p.fillRect( OkTrend.rect(), black );
+  p.setBackgroundMode( Qt::OpaqueMode );
+  p.fillRect( OkTrend.rect(), Qt::black );
   p.setPen( Qt::NoPen );
-  p.setBrush( yellow );
+  p.setBrush( Qt::yellow );
   p.drawEllipse( 1, 1, is-2, is-2 );
-  p.setPen( QPen( yellow.light( 160 ), is/8 > 0 ? is/8 : 1 ) );
+  p.setPen( QPen( QColor( Qt::yellow ).lighter( 160 ), is/8 > 0 ? is/8 : 1 ) );
   p.drawLine( is/2, is/4, is/2, 3*is/4 );
   p.drawLine( is/4, is/4, 3*is/4, is/4 );
   p.end();
 
-  GoodTrend.resize( is, is );
+  GoodTrend = QPixmap( is, is );
   p.begin( &GoodTrend );
-  p.setBackgroundMode( OpaqueMode );
-  p.fillRect( GoodTrend.rect(), black );
+  p.setBackgroundMode( Qt::OpaqueMode );
+  p.fillRect( GoodTrend.rect(), Qt::black );
   p.setPen( Qt::NoPen );
-  p.setBrush( green );
+  p.setBrush( Qt::green );
   p.drawEllipse( 1, 1, is-2, is-2 );
-  p.setPen( QPen( green.light( 160 ), is/8 > 0 ? is/8 : 1 ) );
+  p.setPen( QPen( QColor( Qt::green ).lighter( 160 ), is/8 > 0 ? is/8 : 1 ) );
   p.drawLine( is/2, is/4, is/2, 3*is/4 );
   p.drawLine( is/4, is/4, 3*is/4, is/4 );
   p.end();
 
-  GoodArrow.resize( is, is );
+  GoodArrow = QPixmap( is, is );
   p.begin( &GoodArrow );
-  p.setBackgroundMode( OpaqueMode );
-  p.fillRect( GoodArrow.rect(), black );
-  p.setPen( QPen( black, 1 ) );
-  p.setBrush( green );
+  p.setBackgroundMode( Qt::OpaqueMode );
+  p.fillRect( GoodArrow.rect(), Qt::black );
+  p.setPen( QPen( Qt::black, 1 ) );
+  p.setBrush( Qt::green );
   pa.setPoint( 0, is/4, is-1 );
   pa.setPoint( 1, 3*is/4, is-1 );
   pa.setPoint( 2, 3*is/4, is/3 );
@@ -304,19 +305,15 @@ DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   p.drawPolygon( pa );
   p.end();
 
-  gl = new QGrid( 2, vb );
-
   // quality indicator:
   Quality = 0;
   QualityPixs[0] = &BadQuality;
   QualityPixs[1] = &PotentialQuality;
   QualityPixs[2] = &OkQuality;
   QualityPixs[3] = &GoodQuality;
-  QualityIndicator = new QLabel( gl );
-
-  // the complete dialog:
-  QPushButton *pb = new QPushButton( "Dialog", gl );
-  connect( pb, SIGNAL( clicked( void ) ), this, SLOT( dialog( void ) ) );
+  QualityIndicator = new QLabel;
+  QualityIndicator->setPixmap( *QualityPixs[Quality] );
+  gl->addWidget( QualityIndicator, 4, 0, Qt::AlignLeft );
 
   // trend indicator:
   Trend = 2;
@@ -325,10 +322,18 @@ DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   TrendPixs[2] = &OkTrend;
   TrendPixs[3] = &GoodTrend;
   TrendPixs[4] = &GoodArrow;
-  TrendIndicator = new QLabel( gl );
+  TrendIndicator = new QLabel;
+  TrendIndicator->setPixmap( *TrendPixs[Trend] );
+  gl->addWidget( TrendIndicator, 5, 0, Qt::AlignLeft );
+
+  // dialog:
+  QPushButton *pb = new QPushButton( "Dialog" );
+  gl->addWidget( pb, 4, 1, Qt::AlignRight );
+  connect( pb, SIGNAL( clicked( void ) ), this, SLOT( dialog( void ) ) );
 
   // help:
-  pb = new QPushButton( "Help", gl );
+  pb = new QPushButton( "Help" );
+  gl->addWidget( pb, 5, 1, Qt::AlignRight );
   connect( pb, SIGNAL( clicked( void ) ), this, SLOT( help( void ) ) );
 }
 
@@ -766,7 +771,7 @@ int DynamicSUSpikeDetector::checkEvent( const InData::const_iterator &first,
 }
 
 
-void DynamicSUSpikeDetector::customEvent( QCustomEvent *qce )
+void DynamicSUSpikeDetector::customEvent( QEvent *qce )
 {
   if ( qce->type() == QEvent::User+11 ) {
     lock();

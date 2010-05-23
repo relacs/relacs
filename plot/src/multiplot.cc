@@ -21,7 +21,9 @@
 
 #include <cmath>
 #include <iostream>
-#include <qapplication.h>
+#include <QApplication>
+#include <QPainter>
+#include <QMouseEvent>
 #include <relacs/str.h>
 #include <relacs/multiplot.h>
 
@@ -29,42 +31,42 @@ namespace relacs {
 
 
 MultiPlot::MultiPlot( int plots, int columns, bool horizontal, Plot::KeepMode keep,
-	      QWidget *parent, const char *name )
-  : QWidget( parent, name, WNoAutoErase ),
-    PMutex( true )
+		      QWidget *parent )
+  : QWidget( parent ),
+    PMutex( QMutex::Recursive )
 {
   construct( plots, columns, horizontal, keep );
 }
 
 
 MultiPlot::MultiPlot( int plots, int columns, bool horizontal,
-	      QWidget *parent, const char *name )
-  : QWidget( parent, name, WNoAutoErase ),
-    PMutex( true )
+		      QWidget *parent )
+  : QWidget( parent ),
+    PMutex( QMutex::Recursive )
 {
   construct( plots, columns, horizontal, Plot::Copy );
 }
 
 
-MultiPlot::MultiPlot( int plots, Plot::KeepMode keep, QWidget *parent, const char *name )
-  : QWidget( parent, name, WNoAutoErase ),
-    PMutex( true )
+MultiPlot::MultiPlot( int plots, Plot::KeepMode keep, QWidget *parent )
+  : QWidget( parent ),
+    PMutex( QMutex::Recursive )
 {
   construct( plots, 1, true, keep );
 }
 
 
-MultiPlot::MultiPlot( int plots, QWidget *parent, const char *name )
-  : QWidget( parent, name, WNoAutoErase ),
-    PMutex( true )
+MultiPlot::MultiPlot( int plots, QWidget *parent )
+  : QWidget( parent ),
+    PMutex( QMutex::Recursive )
 {
   construct( plots, 1, true, Plot::Copy );
 }
 
 
-MultiPlot::MultiPlot( QWidget *parent, const char *name )
-  : QWidget( parent, name, WNoAutoErase ),
-    PMutex( true )
+MultiPlot::MultiPlot( QWidget *parent )
+  : QWidget( parent ),
+    PMutex( QMutex::Recursive )
 {
   construct( 0, 1, true, Plot::Copy );
 }
@@ -75,13 +77,14 @@ MultiPlot::~MultiPlot( void )
   clear();
 
   PMutex.lock();
-  delete PixMap;
   PMutex.unlock();
 }
 
 
 void MultiPlot::construct( int plots, int columns, bool horizontal, Plot::KeepMode keep )
 {
+  setAttribute( Qt::WA_OpaquePaintEvent );
+
   Columns = columns;
   Horizontal = horizontal;
 
@@ -90,16 +93,14 @@ void MultiPlot::construct( int plots, int columns, bool horizontal, Plot::KeepMo
   PMutex.lock();
   
   for ( int k=0; k<plots; k++ ) {
-    string n = name() + Str( k );
-    PlotList.push_back( new Plot( keep, true, k, this, n.c_str() ) );
+    PlotList.push_back( new Plot( keep, true, k, this ) );
     //    PlotList.back()->setBackgroundColor( Plot::Transparent );
     connect( PlotList.back(), SIGNAL( changedRange( int ) ),
 	     this, SLOT( setRanges( int ) ) );
     CommonXRange.push_back( vector< int >( 0 ) );
     CommonYRange.push_back( vector< int >( 0 ) );
   }
-  
-  PixMap = new QPixmap;
+  DrawBackground = true;
   DrawBackground = true;
 
   layout();
@@ -109,7 +110,7 @@ void MultiPlot::construct( int plots, int columns, bool horizontal, Plot::KeepMo
   
   PMutex.unlock();
 
-  // draw() ??
+  // XXX draw() ??
 }
 
 
@@ -173,8 +174,7 @@ void MultiPlot::resize( int plots, Plot::KeepMode keep )
     clear();
   else if ( plots > size() ) {
     for ( int k=size(); k<plots; k++ ) {
-      string n = name() + Str( k );
-      PlotList.push_back( new Plot( keep, true, k, this, n.c_str() ) );
+      PlotList.push_back( new Plot( keep, true, k, this ) );
       //      PlotList.back()->setBackgroundColor( Plot::Transparent );
       connect( PlotList.back(), SIGNAL( changedRange( int ) ),
 	       this, SLOT( setRanges( int ) ) );
@@ -344,13 +344,6 @@ void MultiPlot::setCommonRange( void )
 }
 
 
-QSize MultiPlot::sizeHint( void ) const
-{
-  QSize QS( 400, 400 );
-  return QS;
-}
-
-
 QSize MultiPlot::minimumSizeHint( void ) const
 {
   QSize QS( 200, 200 );
@@ -360,7 +353,7 @@ QSize MultiPlot::minimumSizeHint( void ) const
 
 void MultiPlot::draw( void )
 {
-  QApplication::postEvent( this, new QPaintEvent( rect(), false ) );
+  update();
 }
 
 
@@ -371,17 +364,19 @@ void MultiPlot::paintEvent( QPaintEvent *qpe )
   lockData();
   PMutex.lock();
 
-  if ( DrawBackground )
-    PixMap->fill( paletteBackgroundColor() );
+  if ( DrawBackground ) {
+    QPainter p( this );
+    p.eraseRect( rect() );
+  }
 
   for ( PlotListType::iterator p = PlotList.begin(); 
 	p != PlotList.end(); 
 	++p ) {
     (**p).scale( width(), height() );
-    (**p).draw( PixMap ); // this will not lock the data again!
+    (**p).draw( this ); // this will not lock the data again!
   }
 
-  bitBlt( this, 0, 0, PixMap, 0, 0, PixMap->width(), PixMap->height() );
+  DrawBackground = false;
 
   DrawBackground = false;
 
@@ -392,8 +387,14 @@ void MultiPlot::paintEvent( QPaintEvent *qpe )
 
 void MultiPlot::resizeEvent( QResizeEvent *qre )
 {
+  emit resizePlots( qre );
   PMutex.lock();
-  PixMap->resize( width(), height() );
+  for ( PlotListType::iterator p = PlotList.begin(); 
+	p != PlotList.end(); 
+	++p ) {
+    (**p).resizeEvent( qre );
+  }
+  DrawBackground = true;
   for ( PlotListType::iterator p = PlotList.begin(); 
 	p != PlotList.end(); 
 	++p ) {
@@ -401,6 +402,7 @@ void MultiPlot::resizeEvent( QResizeEvent *qre )
   }
   DrawBackground = true;
   PMutex.unlock();
+  QWidget::resizeEvent( qre );
 }
 
 

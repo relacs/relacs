@@ -1,4 +1,8 @@
 -----------------------------------------------------------------------------
+Version 0.9.7
+2010-05-22  Jan Benda
+	Start to merge the qt4 branch into the trunk.
+-----------------------------------------------------------------------------
 Version 0.9.6
 2008-02-27  Jan Benda, Sebastian Pipping
 	First commit to the subversion repository.

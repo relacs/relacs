@@ -24,11 +24,11 @@
 
 #include <deque>
 #include <string>
-#include <qpopupmenu.h>
-#include <qmutex.h>
-#include <qwaitcondition.h>
-#include <qthread.h>
-#include <qdatetime.h>
+#include <QMenu>
+#include <QMutex>
+#include <QWaitCondition>
+#include <QThread>
+#include <QDateTime>
 #include <relacs/cyclicarray.h>
 #include <relacs/outdata.h>
 #include <relacs/relacsplugin.h>
@@ -55,13 +55,12 @@ class Model : public RELACSPlugin, public QThread
 public:
 
     /*! Construct a Model with name \a name (has to be identical
-        to the class name), widget title \a title,
-	that belongs to the set of plugins named \a pluginset.
+        to the class name) that belongs to the set of plugins
+	named \a pluginset.
 	The implementation of a class derived from Model
 	has the version \a version and was written
 	by \a author on \a date. */
   Model( const string &name,
-	 const string &title="", 
 	 const string &pluginset="",
 	 const string &author="unknown",
 	 const string &version="unknown",
@@ -135,7 +134,7 @@ public:
   double load( void ) const;
 
     /*! Add specific actions to the menu. */
-  virtual void addActions( QPopupMenu *menu );
+  virtual void addActions( QMenu *menu );
 
 
 private:

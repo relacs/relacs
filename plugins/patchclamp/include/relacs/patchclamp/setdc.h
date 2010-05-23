@@ -22,9 +22,9 @@
 #ifndef _RELACS_PATCHCLAMP_SETDC_H_
 #define _RELACS_PATCHCLAMP_SETDC_H_ 1
 
-#include <qlabel.h>
-#include <qpushbutton.h>
-#include <relacs/doublespinbox.h>
+#include <QLabel>
+#include <QPushButton>
+#include <QDoubleSpinBox>
 #include <relacs/ephys/traces.h>
 #include <relacs/repro.h>
 using namespace relacs;
@@ -55,8 +55,8 @@ public:
 protected:
 
   virtual void keyPressEvent( QKeyEvent *e );
-  virtual void customEvent( QCustomEvent *qce );
-  DoubleSpinBox *EW;
+  virtual void customEvent( QEvent *qce );
+  QDoubleSpinBox *EW;
   QLabel *UnitLabel;
   QPushButton *OKButton;
   QPushButton *CancelButton;

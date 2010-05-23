@@ -76,11 +76,6 @@ This means that you either
 
 After installation of new packages you need to run ./configure again.
 
-In particular, you may need to specify the location of the Qt3
-libraries: For example, on SuSE you need to call: 
-> ./configure --with-qt3=/usr/lib/qt3
-On Debian and Ubuntu ./configure should work without any argument.
-
 See ./configure --help and the instructions below for details.
 
 In case you really cannot get ./configure to run successfully or it

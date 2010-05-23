@@ -26,8 +26,7 @@ namespace base {
 
 
 Robot::Robot( void )
-  : Control( "Robot", "Robot", "base",
-	     "Jan Benda", "1.0", "Mar 05, 2010" )
+  : Control( "Robot", "base", "Jan Benda", "1.0", "Mar 05, 2010" )
 {
   Rob = 0;
 }
@@ -50,35 +49,35 @@ void Robot::keyPressEvent( QKeyEvent *e )
 
   switch ( e->key() ) {
 
-  case Key_Up:
+  case Qt::Key_Up:
     if ( Rob != 0 )
       Rob->stepX( -10000.0 );
     break;
 
-  case Key_Down:
+  case Qt::Key_Down:
     if ( Rob != 0 )
       Rob->stepX( 10000.0 );
     break;
 
-  case Key_Left:
+  case Qt::Key_Left:
     cerr << "LEFT\n";
     if ( Rob != 0 )
       Rob->stepY( 10000.0 );
     break;
 
-  case Key_Right:
+  case Qt::Key_Right:
     cerr << "RIGHT\n";
     if ( Rob != 0 )
       Rob->stepY( -10000.0 );
     break;
 
-  case Key_U:
+  case Qt::Key_U:
     cerr << "UP\n";
     if ( Rob != 0 )
       Rob->stepZ( 10000.0 );
     break;
 
-  case Key_D:
+  case Qt::Key_D:
     cerr << "DOWN\n";
     if ( Rob != 0 )
       Rob->stepZ( -10000.0 );

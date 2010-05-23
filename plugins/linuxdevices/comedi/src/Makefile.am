@@ -17,17 +17,17 @@ libcomedistreaming_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libcomedistreaming_la_LDFLAGS = \
     -module -avoid-version \
     $(COMEDI_LDFLAGS) \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libcomedistreaming_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(COMEDI_LIBS) \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 libcomedistreaming_la_SOURCES = \
     comedianaloginput.cc \
@@ -57,18 +57,18 @@ libcomedidynclamp_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     -I/usr/src/linux/include \
     $(RTAI_CPPFLAGS) \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 libcomedidynclamp_la_LDFLAGS = \
     -module -avoid-version \
     $(COMEDI_LDFLAGS) \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 libcomedidynclamp_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     libcomedistreaming.la \
     $(COMEDI_LIBS) \
-    $(QT3_LIBS)
+    $(QT4_LIBS)
 
 libcomedidynclamp_la_SOURCES = \
     dynclampanaloginput.cc \

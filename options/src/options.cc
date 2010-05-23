@@ -2736,6 +2736,19 @@ Options &Options::delStyle( int style, int selectflag )
 }
 
 
+int Options::styleSize( int style ) const
+{
+  Warning = "";
+  int n=0;
+  for ( const_iterator pp = begin(); pp != end(); ++pp ) {
+    if ( ( (*pp).style() & style ) == style ) {
+      n++;
+    }
+  }
+  return n;
+}
+
+
 Options &Options::setTypeStyle( int style, int typemask )
 {
   for ( iterator pp = begin(); pp != end(); ++pp ) {

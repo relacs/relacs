@@ -21,8 +21,8 @@
 
 #include <string>
 #include <getopt.h>
-#include <qapplication.h>
-#include <qsplashscreen.h>
+#include <QApplication>
+#include <QSplashScreen>
 #include <relacs/relacswidget.h>
 
 using namespace std;
@@ -127,7 +127,7 @@ int main( int argc, char **argv )
     splash = new QSplashScreen( pixmap );
     splash->setFont( QFont( "Helvetica", 18, QFont::Bold ) );
     splash->show();
-    splash->message( "Loading ...", Qt::AlignLeft | Qt::AlignBottom );
+    splash->showMessage( "Loading ...", Qt::AlignLeft | Qt::AlignBottom );
   }
 
   relacs::RELACSWidget relacs( pluginrelative, pluginhomes, pluginhelp,
@@ -135,12 +135,11 @@ int main( int argc, char **argv )
 			       docpath, iconpath, splash, mode );
 
   if ( splashscreen )
-    splash->message( "Finished ...", Qt::AlignLeft | Qt::AlignBottom );
+    splash->showMessage( "Finished ...", Qt::AlignLeft | Qt::AlignBottom );
 
   if ( fullscreen )
     relacs.fullScreen();
 
-  app.setMainWidget( &relacs );
   relacs.show();
   relacs.init();
 

@@ -8,17 +8,17 @@ AM_CPPFLAGS = \
     -I$(srcdir)/../../numerics/include \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../include \
-    $(QT3_CPPFLAGS)
+    $(QT4_CPPFLAGS)
 
 AM_LDFLAGS = \
-    $(QT3_LDFLAGS)
+    $(QT4_LDFLAGS)
 
 xplot_LDADD = \
     ../../daq/src/librelacsdaq.la \
     ../../numerics/src/librelacsnumerics.la \
     ../../options/src/librelacsoptions.la \
     ../src/librelacsplot.la \
-    $(QT3_LIBS) \
+    $(QT4_LIBS) \
     $(MATH_LIBS)
 xplot_SOURCES = xplot.cc
 
@@ -27,6 +27,6 @@ xplots_LDADD = \
     ../../numerics/src/librelacsnumerics.la \
     ../../options/src/librelacsoptions.la \
     ../src/librelacsplot.la \
-    $(QT3_LIBS) \
+    $(QT4_LIBS) \
     $(MATH_LIBS)
 xplots_SOURCES = xplots.cc

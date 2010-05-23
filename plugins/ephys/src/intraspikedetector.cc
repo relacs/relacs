@@ -20,12 +20,11 @@
 */
 
 #include <cmath>
-#include <qhbox.h>
-#include <qvbox.h>
-#include <qgrid.h>
-#include <qpainter.h>
-#include <qpushbutton.h>
-#include <qapplication.h>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QPainter>
+#include <QPushButton>
+#include <QApplication>
 #include <relacs/map.h>
 #include <relacs/basisfunction.h>
 #include <relacs/fitalgorithm.h>
@@ -39,9 +38,7 @@ namespace ephys {
 
 IntraSpikeDetector::IntraSpikeDetector( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogDetector, 1,
-	    "IntraSpikeDetector", "IntraSpikeDetector", "EPhys",
-	    "Jan Benda", "1.0", "Mar 16, 2010" ),
-    SDW( (QWidget*)this ),
+	    "IntraSpikeDetector", "EPhys", "Jan Benda", "1.0", "Mar 16, 2010" ),
     GoodSpikesHist( 0.0, 200.0, 0.5 ),
     BadSpikesHist( 0.0, 200.0, 0.5 ),
     AllSpikesHist( 0.0, 200.0, 0.5 )
@@ -77,9 +74,17 @@ IntraSpikeDetector::IntraSpikeDetector( const string &ident, int mode )
   addNumber( "size", "Spike size", 0.0, 0.0, 10000.0, 0.1, "mV", "mV", "%.1f", 2+4, strongstyle );
   addTypeStyle( OptWidget::Bold, Parameter::Label );
 
+  // main layout:
+  QVBoxLayout *vb = new QVBoxLayout;
+  vb->setContentsMargins( 0, 0, 0, 0 );
+  vb->setSpacing( 0 );
+  setLayout( vb );
+
+  // parameter widgets:
   SDW.assign( ((Options*)this), 2, 4, true, 0, mutex() );
-  SDW.setSpacing( 4 );
-  SDW.setMargin( 4 );
+  SDW.setMargins( 4, 2, 4, 0 );
+  SDW.setVerticalSpacing( 1 );
+  vb->addWidget( &SDW, 0, Qt::AlignHCenter );
 
   setDialogSelectMask( 8 );
   setDialogReadOnlyMask( 16 );
@@ -87,10 +92,12 @@ IntraSpikeDetector::IntraSpikeDetector( const string &ident, int mode )
 
   Update.start();
 
-  QHBox *hb = new QHBox( this );
+  QHBoxLayout *hb = new QHBoxLayout;
+  vb->addLayout( hb );
+  hb->setContentsMargins( 4, 4, 4, 4 );
   hb->setSpacing( 4 );
 
-  P = new Plot( Plot::Copy, hb );
+  P = new Plot( Plot::Copy );
   P->lock();
   P->noGrid();
   P->setTMarg( 1 );
@@ -102,59 +109,57 @@ IntraSpikeDetector::IntraSpikeDetector( const string &ident, int mode )
   P->setYLabel( "" );
   P->setLMarg( 5 );
   P->unlock();
+  hb->addWidget( P );
 
   // key to histogram plot:  XXX provide a function in Plot!
-  QVBox *vb = new QVBox( hb );
+  QGridLayout *gl = new QGridLayout;
+  gl->setContentsMargins( 0, 0, 0, 0 );
+  gl->setVerticalSpacing( 0 );
+  gl->setHorizontalSpacing( 4 );
+  hb->addLayout( gl );
 
-  QGrid *gl = new QGrid( 4, vb );
-  gl->setSpacing( 0 );
-
-  QPixmap pm( 20, 10 );
-  QPainter p;
-  p.begin( &pm );
-  p.setBackgroundMode( OpaqueMode );
-  p.fillRect( pm.rect(), this->backgroundColor() );
-  p.setPen( QPen( green, 4 ) );
-  p.drawLine( 0, 5, pm.width(), 5 );
-  p.end();
-  QLabel *key = new QLabel( gl );
-  key = new QLabel( gl );
+  int is = widget()->fontInfo().pixelSize();
+  QPixmap pm( is*2, is/3 );
+  pm.fill( Qt::green );
+  QLabel *key = new QLabel;
   key->setPixmap( pm );
-  key = new QLabel( "  ", gl );
-  key = new QLabel( "detected", gl );
+  gl->addWidget( key, 0, 0, Qt::AlignRight | Qt::AlignVCenter );
+  key = new QLabel( "detected" );
+  key->setFixedHeight( is );
+  gl->addWidget( key, 0, 1, Qt::AlignLeft );
 
-  p.begin( &pm );
-  p.setPen( QPen( red, 4 ) );
-  p.drawLine( 0, 5, pm.width(), 5 );
-  p.end();
-  key = new QLabel( gl );
-  key = new QLabel( gl );
+  pm.fill( Qt::red );
+  key = new QLabel;
   key->setPixmap( pm );
-  key = new QLabel( "  ", gl );
-  key = new QLabel( "not detected", gl );
+  gl->addWidget( key, 1, 0, Qt::AlignRight | Qt::AlignVCenter );
+  key = new QLabel( "not detected" );
+  key->setFixedHeight( is );
+  gl->addWidget( key, 1, 1, Qt::AlignLeft );
 
-  p.begin( &pm );
-  p.setPen( QPen( white, 4 ) );
-  p.drawLine( 0, 5, pm.width(), 5 );
-  p.end();
-  key = new QLabel( gl );
-  key = new QLabel( gl );
+  pm.fill( Qt::white );
+  key = new QLabel;
   key->setPixmap( pm );
-  key = new QLabel( "  ", gl );
-  key = new QLabel( "threshold", gl );
+  gl->addWidget( key, 2, 0, Qt::AlignRight | Qt::AlignVCenter );
+  key = new QLabel( "threshold" );
+  key->setFixedHeight( is );
+  gl->addWidget( key, 2, 1, Qt::AlignLeft );
 
-  // the complete dialog:
-  key = new QLabel( gl );
-  key = new QLabel( gl );
-  key = new QLabel( gl );
-  QPushButton *pb = new QPushButton( "Dialog", gl );
+  pm.fill( Qt::yellow );
+  key = new QLabel;
+  key->setPixmap( pm );
+  gl->addWidget( key, 3, 0, Qt::AlignRight | Qt::AlignVCenter );
+  key = new QLabel( "min thresh" );
+  key->setFixedHeight( is );
+  gl->addWidget( key, 3, 1, Qt::AlignLeft );
+
+  // dialog:
+  QPushButton *pb = new QPushButton( "Dialog" );
+  gl->addWidget( pb, 4, 1, Qt::AlignRight );
   connect( pb, SIGNAL( clicked( void ) ), this, SLOT( dialog( void ) ) );
 
   // help:
-  key = new QLabel( gl );
-  key = new QLabel( gl );
-  key = new QLabel( gl );
-  pb = new QPushButton( "Help", gl );
+  pb = new QPushButton( "Help" );
+  gl->addWidget( pb, 5, 1, Qt::AlignRight );
   connect( pb, SIGNAL( clicked( void ) ), this, SLOT( help( void ) ) );
 }
 

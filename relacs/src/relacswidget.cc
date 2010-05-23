@@ -24,14 +24,12 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-#include <qlabel.h>
-#include <qtabwidget.h>
-#include <qkeycode.h>
-#include <qmenubar.h>
-#include <qstatusbar.h>
-#include <qtooltip.h>
-#include <qlayout.h>
-#include <qtextbrowser.h>
+#include <QLabel>
+#include <QMenuBar>
+#include <QStatusBar>
+#include <QToolTip>
+#include <QLayout>
+#include <QTextBrowser>
 #include <relacs/relacswidget.h>
 #include <relacs/plugins.h>
 #include <relacs/defaultsession.h>
@@ -76,8 +74,8 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
 			    const string &docpath,
 			    const string &iconpath,
 			    QSplashScreen *splash,
-			    ModeTypes mode, QWidget *parent, const char *name )
-  : QMainWindow( parent, name ),
+			    ModeTypes mode, QWidget *parent )
+  : QMainWindow( parent ),
     ConfigClass( "RELACS", RELACSPlugin::Core ),
     Mode( mode ),
     SS( this ),
@@ -90,16 +88,16 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     InfoFileMacro( "" ),
     IsFullScreen( false ),
     IsMaximized( false ),
-    GUILock( 0 ),
-    DataMutex( true ),  // recursive, because of activateGains()!
+    DataMutex( QMutex::Recursive ),  // recursive, because of activateGains()!
     DataMutexCount( 0 ),
-    AIMutex( true ),  // recursive, because of activateGains()???
-    SignalMutex( false ),
+    AIMutex( QMutex::Recursive ),  // recursive, because of activateGains()???
+    SignalMutex(),
     RunData( false ),
-    RunDataMutex( false ),
+    RunDataMutex(),
     MinTraceTime( 0.0 ),
     DeviceMenu( 0 ),
-    Help( false )
+    Help( false ),
+    HandlingEvent( false )
 {
   printlog( "this is RELACS, version " + string( RELACSVERSION ) );
 
@@ -138,16 +136,21 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   addNumber( "outputtracedelay", "Signal delay", 0.0, 0.0, 10.0, 0.00001, "s", "ms" );
 
   // main widget:
-  setCaption( "RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation: Version " + QString( RELACSVERSION ) );
-  MainWidget = new QWidget( this );
-  QGridLayout *mainlayout = new QGridLayout( MainWidget, 2, 2, 5, 5, "RELACSWidget::MainLayout" );
+  setWindowTitle( "RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation: Version " + QString( RELACSVERSION ) );
+  MainWidget = new QWidget;
+  QGridLayout *mainlayout = new QGridLayout;
+  mainlayout->setContentsMargins( 4, 4, 4, 4 );
+  mainlayout->setSpacing( 4 );
+  MainWidget->setLayout( mainlayout );
+  MainWidget->setBackgroundRole( QPalette::Window );
+  MainWidget->setAutoFillBackground( true );
   setCentralWidget( MainWidget );
 
   // filter and detectors:
-  FD = new FilterDetectors( this, MainWidget, "RELACSWidget::FilterDetectors" );
+  FD = new FilterDetectors( this );
 
   // macros:
-  MC = new Macros( this, MainWidget, "RELACSWidget::Macros" );
+  MC = new Macros( this );
 
   // data acquisition:
   AQ = 0;
@@ -249,13 +252,9 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     HelpPathes[k].preventSlash();
 
   // session, control tabwidget:
-  QTabWidget *cw = new QTabWidget( MainWidget );
+  CW = new QTabWidget;
 
-#if QT_VERSION >= 300
-  OrgBackground = paletteBackgroundColor();
-#else
-  OrgBackground = backgroundColor();
-#endif
+  OrgBackground = palette().color( QPalette::Window );
 
   // Control plugins:
   CN.clear();
@@ -272,8 +271,8 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
 			     this );
       }
       else {
-	cn->reparent( this, QPoint( 0, 0 ) );
-	cw->addTab( cn, cn->title().c_str() );
+	if ( cn->widget() != 0 )
+	  CW->addTab( cn->widget(), cn->name().c_str() );
 	cn->setRELACSWidget( this );
 	CN.push_back( cn );
       }
@@ -311,179 +310,147 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
 
   // setup RePros:
   ReProRunning = false;
-  RP = new RePros( this, MainWidget, "RELACSWidget::RePros" );
+  RP = new RePros( this );
   if ( RP->size() <= 0 ) {
     printlog( "! error: No RePros found! Exit now!" );
     MessageBox::error( "RELACS Error !", "No RePros found!<br>Exit now!", this );
     ::exit( 1 );
   }
-  connect( RP, SIGNAL( stopRePro( void ) ), 
-	   this, SLOT( stopRePro( void ) ) );
-  connect( RP, SIGNAL( startRePro( RePro*, int, bool ) ), 
-	   this, SLOT( startRePro( RePro*, int, bool ) ) );
+  QWidget::connect( RP, SIGNAL( stopRePro( void ) ), 
+		    (QWidget*)this, SLOT( stopRePro( void ) ) );
+  QWidget::connect( RP, SIGNAL( startRePro( RePro*, int, bool ) ), 
+		    (QWidget*)this, SLOT( startRePro( RePro*, int, bool ) ) );
   CurrentRePro = 0;
 
-  // setup Macros:
-  MC->setRePros( RP );
-  MC->load( "", true );
-  MC->load();
-  MC->check();
-  MC->buttons();
-  connect( MC, SIGNAL( stopRePro( void ) ), 
-	   this, SLOT( stopRePro( void ) ) );
-  connect( MC, SIGNAL( startRePro( RePro*, int, bool ) ), 
-	   this, SLOT( startRePro( RePro*, int, bool ) ) );
-  connect( RP, SIGNAL( noMacro( RePro* ) ), 
-	   MC, SLOT( noMacro( RePro* ) ) );
-  connect( RP, SIGNAL( reloadRePro( const string& ) ),
-	   MC, SLOT( reloadRePro( const string& ) ) );
-
   // setup PlotTrace:
-  PT = new PlotTrace( this, MainWidget, "RELACSWidget::PT" );
-  PT->setDataMutex( &DataMutex );
+  PT = new PlotTrace( this );
 
   // status bar:
   // RePro message:
-  QLabel *rl = RP->display( statusBar() );
-  statusBar()->addWidget( rl, 200, true );
+  QLabel *rl = RP->display();
+  statusBar()->addPermanentWidget( rl, 200 );
   int statusbarheight = rl->height();
   // Session message:
-  SN = new Session( this, statusbarheight, statusBar(), "RELACSWidget::SN" );
-  //  SN = new Session( this, statusbarheight, this, "RELACSWidget::SN" );
-  statusBar()->addWidget( SN, 0, false );
+  SN = new Session( this, statusbarheight, statusBar() );
+  statusBar()->addWidget( SN, 0 );
   // SaveFiles:
-  SF = new SaveFiles( this, statusbarheight, statusBar(), "RELACSWidget::SF" );
+  SF = new SaveFiles( this, statusbarheight, statusBar() );
   SS.notify(); // initialize SF from the Settings
-  statusBar()->addWidget( SF, 0, false );
+  statusBar()->addWidget( SF, 0 );
   // Simulation:
   SimLabel = new QLabel( this );
-  SimLabel->setTextFormat( PlainText );
-  SimLabel->setAlignment( AlignRight | AlignVCenter );
+  SimLabel->setTextFormat( Qt::PlainText );
+  SimLabel->setAlignment( Qt::AlignRight | Qt::AlignVCenter );
   SimLabel->setIndent( 2 );
   SimLabel->setFixedHeight( statusbarheight );
-  QToolTip::add( SimLabel, "The load of the simulation" );
-  statusBar()->addWidget( SimLabel, 0, false );
+  SimLabel->setToolTip( "The load of the simulation" );
+  statusBar()->addWidget( SimLabel, 0 );
   
   // menubar:
-  QPopupMenu* popup;
+
   // file:
-  QPopupMenu *filemenu = new QPopupMenu;
-
-  AcquisitionAction = new QAction( this );
-  AcquisitionAction->setMenuText( "&Online (acquire)" );
-  AcquisitionAction->setAccel( CTRL+SHIFT+Key_O );
-  connect( AcquisitionAction, SIGNAL( activated() ), 
-	   this, SLOT( startAcquisition() ) );
-  AcquisitionAction->addTo( filemenu );
-
-  SimulationAction = new QAction( this );
-  SimulationAction->setMenuText( "&Simulate" );
-  SimulationAction->setAccel( CTRL+SHIFT+Key_S );
-  connect( SimulationAction, SIGNAL( activated() ), 
-	   this, SLOT( startSimulation() ) );
-  SimulationAction->addTo( filemenu );
-
-  IdleAction = new QAction( this );
-  IdleAction->setMenuText( "&Idle (stop)" );
-  IdleAction->setAccel( CTRL+SHIFT+Key_I );
-  connect( IdleAction, SIGNAL( activated() ),
-	   this, SLOT( stopActivity() ) );
-  IdleAction->addTo( filemenu );
-
-  filemenu->insertSeparator();
-
+  QMenu *filemenu = menuBar()->addMenu( "&File" );
+  AcquisitionAction = filemenu->addAction( "&Online (acquire)",
+					   (QWidget*)this, SLOT( startAcquisition() ),
+					   Qt::CTRL + Qt::SHIFT + Qt::Key_O );
+  SimulationAction = filemenu->addAction( "&Simulate",
+					  (QWidget*)this, SLOT( startSimulation() ),
+					  Qt::CTRL + Qt::SHIFT + Qt::Key_S );
+  IdleAction = filemenu->addAction( "&Idle (stop)",
+				    (QWidget*)this, SLOT( stopActivity() ),
+				    Qt::CTRL + Qt::SHIFT + Qt::Key_I );
+  filemenu->addSeparator();
   SN->addActions( filemenu );
   MTDT.addActions( filemenu );
-  filemenu->insertSeparator();
-  filemenu->insertItem( "Settings...", &SS, SLOT( dialog() ) );
-  filemenu->insertItem( "Save Settings", this, SLOT( saveConfig() ) );
-  filemenu->insertItem( "&Quit", this, SLOT( quit() ), ALT+Key_Q );
-  menuBar()->insertItem( "&File", filemenu );
+  filemenu->addSeparator();
+  filemenu->addAction( "Settings...", &SS, SLOT( dialog() ) );
+  filemenu->addAction( "Save Settings", (QWidget*)this, SLOT( saveConfig() ) );
+  filemenu->addAction( "&Quit", (QWidget*)this, SLOT( quit() ), Qt::ALT + Qt::Key_Q );
 
   // plugins:
-  QPopupMenu *pluginmenu = new QPopupMenu( this );
+  QMenu *pluginmenu = menuBar()->addMenu( "&Plugins" );
   if ( MD != 0 ) {
     MD->addActions( pluginmenu );
-    pluginmenu->insertSeparator();
+    pluginmenu->addSeparator();
   }
   if ( ! CN.empty() ) {
     for ( unsigned int k=0; k<CN.size(); k++ )
       CN[k]->addActions( pluginmenu );
   }
-  menuBar()->insertItem( "&Plugins", pluginmenu );
 
   // devices:
-  DeviceMenu = new QPopupMenu( this );
-  menuBar()->insertItem( "De&vices", DeviceMenu );
+  DeviceMenu = menuBar()->addMenu( "De&vices" );
 
   // filters:
-  menuBar()->insertItem( "&Detectors/Filters", FD->menu() );
+  QMenu *filtermenu = menuBar()->addMenu( "&Detectors/Filters" );
+  FD->addMenu( filtermenu );
 
   // repros:
-  menuBar()->insertItem( "&RePros", RP->menu() );
+  QMenu *repromenu = menuBar()->addMenu( "&RePros" );
+  RP->addMenu( repromenu );
 
   // macros:
-  menuBar()->insertItem( "&Macros", MC->menu() );
+  QMenu *macromenu = menuBar()->addMenu( "&Macros" );
+  MC->setMenu( macromenu );
+  MC->setRePros( RP );
+  MC->load( "", true );
+  MC->load();
+  MC->check();
+  MC->create();
+  QWidget::connect( MC, SIGNAL( stopRePro( void ) ), 
+		    (QWidget*)this, SLOT( stopRePro( void ) ) );
+  QWidget::connect( MC, SIGNAL( startRePro( RePro*, int, bool ) ), 
+		    (QWidget*)this, SLOT( startRePro( RePro*, int, bool ) ) );
+  QWidget::connect( RP, SIGNAL( noMacro( RePro* ) ), 
+		    MC, SLOT( noMacro( RePro* ) ) );
+  QWidget::connect( RP, SIGNAL( reloadRePro( const string& ) ),
+		    MC, SLOT( reloadRePro( const string& ) ) );
 
   // view:
-  QPopupMenu *viewmenu = new QPopupMenu;
-
-  MaximizedAction = new QAction( this );
-  MaximizedAction->setMenuText( "&Maximize window" );
-  MaximizedAction->setAccel( CTRL+SHIFT+Key_M );
-  connect( MaximizedAction, SIGNAL( activated() ), this, SLOT( maximizeScreen() ) );
-  MaximizedAction->addTo( viewmenu );
-
-  FullscreenAction = new QAction( this );
-  FullscreenAction->setMenuText( "&Full-Screen Mode" );
-  FullscreenAction->setAccel( CTRL+SHIFT+Key_F );
-  connect( FullscreenAction, SIGNAL( activated() ), this, SLOT( fullScreen() ) );
-  FullscreenAction->addTo( viewmenu );
-
-  viewmenu->insertSeparator();
+  QMenu *viewmenu = menuBar()->addMenu( "&View" );
+  MaximizedAction = viewmenu->addAction( "&Maximize window",
+					 (QWidget*)this, SLOT( maximizeScreen() ),
+					 Qt::CTRL + Qt::SHIFT + Qt::Key_M );
+  FullscreenAction = viewmenu->addAction( "&Full-Screen Mode",
+					  (QWidget*)this, SLOT( fullScreen() ),
+					  Qt::CTRL + Qt::SHIFT + Qt::Key_F );
+  viewmenu->addSeparator();
   PT->addMenu( viewmenu );
 
-  menuBar()->insertItem( "&View", viewmenu );
-
   // help:
-  popup = new QPopupMenu;
-  popup->insertItem( "&Help...", this, SLOT( help() ) );
-  popup->insertItem( "&About...", this, SLOT( about() ) );
-  menuBar()->insertItem( "&Help", popup );
+  QMenu *helpmenu = menuBar()->addMenu( "&Help" );
+  helpmenu->addAction( "&Help...", (QWidget*)this, SLOT( help() ) );
+  helpmenu->addAction( "&About...", (QWidget*)this, SLOT( about() ) );
 
   // layout:
   /*
   int wd = FD->minimumSizeHint().width();
-  int wc = cw->minimumSizeHint().width();
+  int wc = CW->minimumSizeHint().width();
   */
   int wd = FD->sizeHint().width();
-  int wc = cw->sizeHint().width();
+  int wc = CW->sizeHint().width();
   int w = wc > wd ? wc : wd;
   FD->setMaximumWidth( w );
-  cw->setMaximumWidth( w );
+  CW->setMaximumWidth( w );
   mainlayout->addWidget( FD, 0, 0 );
-  mainlayout->addWidget( PT, 0, 1 );
-  mainlayout->addWidget( cw, 1, 0 );
+  mainlayout->addWidget( PT->widget(), 0, 1 );
+  mainlayout->addWidget( CW, 1, 0 );
   mainlayout->addWidget( RP, 1, 1 );
-  mainlayout->addMultiCellWidget( MC, 2, 2, 0, 1 );
-  mainlayout->setColStretch( 0, 1 );
-  mainlayout->setColStretch( 1, 100 );
+  mainlayout->addWidget( MC, 2, 0, 1, 2 );
+  mainlayout->setColumnStretch( 0, 1 );
+  mainlayout->setColumnStretch( 1, 100 );
   mainlayout->setRowStretch( 0, 2 );
   mainlayout->setRowStretch( 1, 3 );
-  wd = FD->width();
-  wc = cw->width();
-  w = wc > wd ? wc : wd;
-  w = 3*w/2;
-  if ( PT->minimumWidth() < w || RP->minimumWidth() < w ) {
-    PT->setMinimumWidth( w );
+  w *= 3/2;
+  if ( PT->widget()->minimumWidth() < w || RP->minimumWidth() < w ) {
+    PT->widget()->setMinimumWidth( w );
     RP->setMinimumWidth( w );
   }
-
   if ( splash != 0 )
     msleep( 2000 );
 
   // miscellaneous:
-  setFocusPolicy( QWidget::StrongFocus );
+  setFocusPolicy( Qt::StrongFocus );
   KeyTime = new KeyTimeOut( topLevelWidget() );
 
 }
@@ -492,29 +459,28 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
 RELACSWidget::~RELACSWidget( void )
 {
   stopThreads();
-  saveConfig();
+  clearActivity();
+  if ( MD != 0 ) {
+    Plugins::destroy( MD->name(), RELACSPlugin::ModelId );
+    delete MD;
+  }
+  delete FD;
+  for ( unsigned int k=0; k<CN.size(); k++ ) {
+    Plugins::destroy( CN[k]->name(), RELACSPlugin::ControlId );
+    delete CN[k];
+  }
+  delete RP;
+  delete PT;
   Plugins::close();
-}
-
-
-void RELACSWidget::lockGUI( void )
-{
-  qApp->lock(); 
-}
-
-
-void RELACSWidget::unlockGUI( void )
-{
-  qApp->unlock(); 
 }
 
 
 void RELACSWidget::printlog( const string &message ) const
 {
-  cerr << QTime::currentTime().toString() << " "
+  cerr << QTime::currentTime().toString().toLatin1().data() << " "
        << message << endl;
   if ( LogFile != 0 )
-    *LogFile << QTime::currentTime().toString() << " "
+    *LogFile << QTime::currentTime().toString().toLatin1().data() << " "
 	     << message << endl;
 }
 
@@ -653,8 +619,9 @@ int RELACSWidget::setupHardware( int n )
     printlog( "Synchronization method: " + AQ->syncModeStr() );
 
     if ( n == 1 ) {
-      connect( &SimLoad, SIGNAL( timeout() ), this, SLOT( simLoadMessage() ) );
-      SimLoad.start( 1000, false );
+      QWidget::connect( &SimLoad, SIGNAL( timeout() ),
+			(QWidget*)this, SLOT( simLoadMessage() ) );
+      SimLoad.start( 1000 );
     }
 
     int menuindex = 0;
@@ -780,7 +747,7 @@ void RELACSWidget::updateData( void )
   // check data:
   if ( IL.failed() ) {
     AIErrorMsg = "Error in acquisition: " + IL.errorText();
-    //    QApplication::postEvent( this, new QCustomEvent( QEvent::User+4 ) ); // this causes a lot of trouble!
+    //    QApplication::postEvent( this, new QEvent( QEvent::User+4 ) ); // this causes a lot of trouble!
     IL.clearError();    
   }
   // read data:
@@ -799,11 +766,15 @@ void RELACSWidget::updateData( void )
     RunDataMutex.unlock();
     if ( ! rd )
       break;
+    // XXX wait needs a locked mutex!
+    QMutex mutex;
+    mutex.lock();
     if ( acquisition() ) {
-      ReadDataWait.wait();
+      ReadDataWait.wait( &mutex );
     }
     else
-      ReadDataWait.wait( 1 );
+      ReadDataWait.wait( &mutex, 1 );
+    mutex.unlock(); // XXX
     writeLockData();
     lockAI();
     AQ->convertData();
@@ -829,7 +800,7 @@ void RELACSWidget::processData( void )
   readLockData();
   SF->save( IL, ED );
   unlockData();
-  PT->plot( IL, ED );
+  PT->plot();
 }
 
 
@@ -847,7 +818,11 @@ void RELACSWidget::run( void )
     int di = ui - ei;
     if ( di < 2 )
       di = 2;
-    ThreadSleepWait.wait( di );
+    // XXX wait needs a locked mutex!
+    QMutex mutex;
+    mutex.lock();
+    ThreadSleepWait.wait( &mutex, di );
+    mutex.unlock(); // XXX
     updatetime.restart();
     updateData();
     UpdateDataWait.wakeAll();
@@ -935,7 +910,8 @@ int RELACSWidget::write( OutData &signal )
     AQ->readRestart( IL, ED );
     FD->adjust( IL, ED, AQ->adjustFlag() );
     // update device menu:
-    QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
+    QApplication::postEvent( (QWidget*)this,
+			     new QEvent( QEvent::Type( QEvent::User+2 ) ) );
     SF->setNumber( AQ->outTraceName( signal.trace() ), signal.back() );
   }
   else
@@ -980,7 +956,8 @@ int RELACSWidget::write( OutList &signal )
     AQ->readRestart( IL, ED );
     FD->adjust( IL, ED, AQ->adjustFlag() );
     // update device menu:
-    QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
+    QApplication::postEvent( (QWidget*)this,
+			     new QEvent( QEvent::Type( QEvent::User+2 ) ) );
     for ( int k=0; k<signal.size(); k++ )
       SF->setNumber( AQ->outTraceName( signal[k].trace() ), signal[k].back() );
   }
@@ -1025,7 +1002,8 @@ int RELACSWidget::directWrite( OutData &signal )
     AQ->readRestart( IL, ED );
     FD->adjust( IL, ED, AQ->adjustFlag() );
     // update device menu:
-    QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
+    QApplication::postEvent( (QWidget*)this,
+			     new QEvent( QEvent::Type( QEvent::User+2 ) ) );
     SF->setNumber( AQ->outTraceName( signal.trace() ), signal.back() );
   }
   else
@@ -1069,7 +1047,8 @@ int RELACSWidget::directWrite( OutList &signal )
     AQ->readRestart( IL, ED );
     FD->adjust( IL, ED, AQ->adjustFlag() );
     // update device menu:
-    QApplication::postEvent( this, new QCustomEvent( QEvent::User+2 ) );
+    QApplication::postEvent( (QWidget*)this,
+			     new QEvent( QEvent::Type( QEvent::User+2 ) ) );
     for ( int k=0; k<signal.size(); k++ )
       SF->setNumber( AQ->outTraceName( signal[k].trace() ), signal[k].back() );
   }
@@ -1178,7 +1157,7 @@ void RELACSWidget::startRePro( RePro *repro, int macroaction, bool saving )
     InfoFileMacro = "";
   }
   if ( InfoFile != 0 ) {
-    *InfoFile << QTime::currentTime().toString();
+    *InfoFile << QTime::currentTime().toString().toLatin1().data();
     *InfoFile << "   " << CurrentRePro->name() << ": " << MC->options();
   }
 
@@ -1200,7 +1179,7 @@ void RELACSWidget::stopRePro( void )
     return;
 
   // wait on RePro to stop:
-  if ( CurrentRePro->running() ) {
+  if ( CurrentRePro->isRunning() ) {
     /*
     // wait for the RePro to leave sensible code:
     CurrentRePro->lock();
@@ -1213,7 +1192,7 @@ void RELACSWidget::stopRePro( void )
     // as long as the RePro is normally running, so that it has
     // still all internal variables available:
     QApplication::sendPostedEvents();
-    qApp->processEvents( 100 );
+    qApp->processEvents( QEventLoop::AllEvents, 100 );
 
     // request and wait for the RePro to properly terminate:
     CurrentRePro->requestStop();
@@ -1230,12 +1209,17 @@ void RELACSWidget::stopRePro( void )
 
   if ( AQ->readSignal( SignalTime, IL, ED ) ) // we should get the start time of the latest signal here
     SF->save( IL, ED );
-  // force data updates:
-  ThreadSleepWait.wakeAll();
-  ProcessDataWait.wait();
   // last stimulus still not saved?
-  if ( SF->signalPending() )
+  if ( SF->signalPending() ) {
+    // force data updates:
+    ThreadSleepWait.wakeAll();
+    // XXX wait needs a locked mutex!
+    QMutex mutex;
+    mutex.lock();
+    ProcessDataWait.wait( &mutex );
+    mutex.unlock(); // XXX
     SF->clearSignal();
+  }
 
   // update Session:
   ReProAfterWait.wakeAll();
@@ -1254,7 +1238,7 @@ void RELACSWidget::stopRePro( void )
 }
 
 
-void RELACSWidget::customEvent( QCustomEvent *qce )
+void RELACSWidget::customEvent( QEvent *qce )
 {
   if ( qce->type() == QEvent::User+1 ) {
     MC->startNextRePro( true );
@@ -1299,11 +1283,15 @@ void RELACSWidget::startSession( bool startmacro )
   // open files:
   SF->openFiles( IL, ED );
 
-#if QT_VERSION >= 300
-  MainWidget->setEraseColor( QColor( 255, 96, 96 ) );
-#else
-  MainWidget->setBackgroundColor( QColor( 255, 96, 96 ) );
-#endif
+  QPalette p( palette() );
+  p.setColor( QPalette::Window, QColor( 255, 96, 96 ) );
+  MainWidget->setPalette( p );
+  p.setColor( QPalette::Window, OrgBackground );
+  FD->setPalette( p );
+  PT->widget()->setPalette( p );
+  CW->setPalette( p );
+  RP->setPalette( p );
+  MC->setPalette( p );
 
   SS.lock();
   if ( SS.boolean( "saverelacscore" ) )
@@ -1334,8 +1322,8 @@ void RELACSWidget::startSession( bool startmacro )
   else {
     *InfoFile << "This is RELACS, Version " << RELACSVERSION << "\n\n";
     *InfoFile << "The session was started at time "
-	     << QTime::currentTime().toString() << " on "
-	     << QDate::currentDate().toString() << "\n\n"
+	     << QTime::currentTime().toString().toLatin1().data() << " on "
+	     << QDate::currentDate().toString().toLatin1().data() << "\n\n"
 	     << "Time:      Research Program:\n";
   }
 
@@ -1386,11 +1374,9 @@ void RELACSWidget::stopSession( bool saved )
 
   CurrentRePro->setSaving( SF->filesOpen() );
 
-#if QT_VERSION >= 300
-  MainWidget->setEraseColor( OrgBackground );
-#else
-  MainWidget->setBackgroundColor( OrgBackground );
-#endif
+  QPalette p( palette() );
+  p.setColor( QPalette::Window, OrgBackground );
+  MainWidget->setPalette( p );
 
   if ( LogFile != 0 ) {
     delete LogFile;
@@ -1400,8 +1386,8 @@ void RELACSWidget::stopSession( bool saved )
   if ( InfoFile != 0 ) {
     *InfoFile << "\n\n"
 	     << "The session was stopped at time " 
-	     << QTime::currentTime().toString() << " on "
-	     << QDate::currentDate().toString() << '\n';
+	     << QTime::currentTime().toString().toLatin1().data() << " on "
+	     << QDate::currentDate().toString().toLatin1().data() << '\n';
     delete InfoFile;
     InfoFile = 0;
   }
@@ -1434,7 +1420,7 @@ void RELACSWidget::stopThreads( void )
     CN[k]->requestStop();
   wakeAll();
   for ( unsigned int k=0; k<CN.size(); k++ )
-    CN[k]->wait( 0.2 );
+    CN[k]->QThread::wait( 200 );
 
   // stop data threads:
   ReadLoop.stop();
@@ -1609,7 +1595,7 @@ void RELACSWidget::startFirstAcquisition( void )
   SF->setPath( SF->defaultPath() );
 
   // plot:
-  PT->resize( IL, ED );
+  PT->resize();
   PT->updateMenu();
 
   for ( unsigned int k=0; k<CN.size(); k++ )
@@ -1724,7 +1710,7 @@ void RELACSWidget::startFirstSimulation( void )
   SF->setPath( SF->defaultPath() );
 
   // plots:
-  PT->resize( IL, ED );
+  PT->resize();
   PT->updateMenu();
 
   SimLabel->setText( "" );
@@ -1832,25 +1818,49 @@ void RELACSWidget::startIdle( void )
 
 //-------------------------Keyboard Interaction----------------------------//
 
-void RELACSWidget::keyPressEvent( QKeyEvent* e)
+void RELACSWidget::keyPressEvent( QKeyEvent *event )
 {
-  if ( CurrentRePro != 0 )
-    CurrentRePro->keyPressEvent( e );
-  if ( CurrentRePro == 0 || ! e->isAccepted() )
-    PT->keyPressEvent( e );
-  for ( unsigned int k=0; k<CN.size() && ! e->isAccepted(); k++ )
-    CN[k]->keyPressEvent( e );
+  // unused events are propagated back to parent widgets,
+  // therefore we have to prevent this additional call:
+  if ( HandlingEvent )
+    return;
+  HandlingEvent = true;
+  QApplication::sendEvent( PT->widget(), event );
+  if ( CurrentRePro != 0 && CurrentRePro->widget() != 0  )
+    QApplication::sendEvent( CurrentRePro->widget(), event );
+  if ( ! event->isAccepted() )
+    QApplication::sendEvent( CW, event );
+  for ( unsigned int k=0; k<CN.size() && ! event->isAccepted(); k++ ) {
+    if ( CN[k]->globalKeyEvents() && CN[k]->widget() != 0 )
+    QApplication::sendEvent( CN[k]->widget(), event );
+  }
+  if ( ! event->isAccepted() )
+    QApplication::sendEvent( FD, event );
+  HandlingEvent = false;
 }
 
 
-void RELACSWidget::keyReleaseEvent( QKeyEvent* e)
+void RELACSWidget::keyReleaseEvent( QKeyEvent *event )
 {
-  if ( CurrentRePro != 0 )
-    CurrentRePro->keyReleaseEvent( e );
-  if ( CurrentRePro == 0 || ! e->isAccepted() )
-    PT->keyReleaseEvent( e );
-  for ( unsigned int k=0; k<CN.size() && ! e->isAccepted(); k++ )
-    CN[k]->keyReleaseEvent( e );
+  // unused events are propagated back to parent widgets,
+  // therefore we have to prevent this additional call:
+  if ( HandlingEvent )
+    return;
+  HandlingEvent = true;
+  QApplication::sendEvent( PT->widget(), event );
+  if ( ! event->isAccepted() &&
+       CurrentRePro != 0 &&
+       CurrentRePro->widget() != 0  )
+    QApplication::sendEvent( CurrentRePro->widget(), event );
+  if ( ! event->isAccepted() )
+    QApplication::sendEvent( CW, event );
+  for ( unsigned int k=0; k<CN.size() && ! event->isAccepted(); k++ ) {
+    if ( CN[k]->globalKeyEvents() && CN[k]->widget() != 0 )
+      QApplication::sendEvent( CN[k]->widget(), event );
+  }
+  if ( ! event->isAccepted() )
+    QApplication::sendEvent( FD, event );
+  HandlingEvent = false;
 }
 
 
@@ -1862,12 +1872,12 @@ void RELACSWidget::fullScreen( void )
   if ( IsFullScreen ) {
     showNormal();
     IsFullScreen = false;
-    FullscreenAction->setMenuText( "&Full-Screen Mode" );
+    FullscreenAction->setText( "&Full-Screen Mode" );
   }
   else {
     showFullScreen();
     IsFullScreen = true;
-    FullscreenAction->setMenuText( "Exit &Full-Screen Mode" );
+    FullscreenAction->setText( "Exit &Full-Screen Mode" );
   }
 }
 
@@ -1877,12 +1887,12 @@ void RELACSWidget::maximizeScreen( void )
   if ( IsMaximized ) {
     showNormal();
     IsMaximized = false;
-    MaximizedAction->setMenuText( "&Maximize window" );
+    MaximizedAction->setText( "&Maximize window" );
   }
   else {
     showMaximized();
     IsMaximized = true;
-    MaximizedAction->setMenuText( "Exit &Maximize window" );
+    MaximizedAction->setText( "Exit &Maximize window" );
   }
 }
 
@@ -1913,16 +1923,17 @@ void RELACSWidget::help( void )
   OptDialog *od = new OptDialog( false, this );
   od->setCaption( "RELACS Help" );
   QTextBrowser *hb = new QTextBrowser( this );
-  hb->mimeSourceFactory()->setFilePath( DocPath.c_str() );
-  hb->setSource( "index.html" );
-  if ( hb->mimeSourceFactory()->data( "index.html" ) == 0 ) {
+  QStringList fpl;
+  fpl.push_back( DocPath.c_str() );
+  hb->setSearchPaths( fpl );
+  hb->setSource( QUrl::fromLocalFile( "index.html" ) );
+  if ( hb->toHtml().isEmpty() )
     hb->setText( "Sorry, there is no help for <br><h2>RELACS</h2> available.<br><br> Try <c>make doc</c>." );
-  }
   hb->setMinimumSize( 600, 400 );
   od->addWidget( hb );
   od->addButton( "&Ok" );
-  connect( od, SIGNAL( dialogClosed( int ) ),
-	   this, SLOT( helpClosed( int ) ) );
+  QWidget::connect( od, SIGNAL( dialogClosed( int ) ),
+		    (QWidget*)this, SLOT( helpClosed( int ) ) );
   od->exec();
 }
 
@@ -1934,7 +1945,8 @@ void RELACSWidget::helpClosed( int r )
 
 
 KeyTimeOut::KeyTimeOut( QWidget *tlw )
-  : TopLevelWidget( tlw ),
+  : TimerId( 0 ),
+    TopLevelWidget( tlw ),
     NoFocusWidget( 0 )
 {
   qApp->installEventFilter( this );
@@ -1966,8 +1978,9 @@ bool KeyTimeOut::eventFilter( QObject *o, QEvent *e )
        ( e->type() == QEvent::KeyPress ||
 	 e->type() == QEvent::MouseButtonPress ||
 	 e->type() == QEvent::FocusIn ) ) {
-    killTimers();
-    startTimer( 15000 );
+    if ( TimerId != 0 )
+      killTimer( TimerId );
+    TimerId = startTimer( 15000 );
   }
   return false;
 }
@@ -1979,7 +1992,9 @@ void KeyTimeOut::timerEvent( QTimerEvent *e )
        noFocusWidget() ) {
     TopLevelWidget->setFocus();
   }
-  killTimers();
+  if ( TimerId != 0 )
+    killTimer( TimerId );
+  TimerId = 0;
 }
 
 
@@ -1987,9 +2002,8 @@ bool KeyTimeOut::noFocusWidget( void ) const
 {
   if ( NoFocusWidget != 0 ) {
     QWidget *fw = qApp->focusWidget();
-    while ( fw != 0 && fw != NoFocusWidget ) {
-      fw = fw->parentWidget( true );
-    }
+    while ( fw != 0 && fw != NoFocusWidget )
+      fw = fw->parentWidget();
     if ( fw != 0 && fw == NoFocusWidget )
       return false;
   }

@@ -22,10 +22,14 @@
 #include <cmath>
 #include <iostream>
 #include <algorithm>
-#include <qbitmap.h>
-#include <qpainter.h>
-#include <qcursor.h>
-#include <qapplication.h>
+#include <QBitmap>
+#include <QPainter>
+#include <QPainterPath>
+#include <QPolygon>
+#include <QCursor>
+#include <QMouseEvent>
+#include <QApplication>
+#include <QActionGroup>
 #include <relacs/str.h>
 #include <relacs/multiplot.h>
 #include <relacs/plot.h>
@@ -53,26 +57,26 @@ Plot::RGBColor Plot::RGBColor::lighten( double f ) const
 }
 
 
-Plot::Plot( KeepMode keep, QWidget *parent, const char *name )
-  : QWidget( parent, name, WNoAutoErase ),
-    PMutex( true )
+Plot::Plot( KeepMode keep, QWidget *parent )
+  : QWidget( parent ),
+    PMutex( QMutex::Recursive )
 {
   construct( keep );
 }
 
 
-Plot::Plot( QWidget *parent, const char *name )
-  : QWidget( parent, name, WNoAutoErase ),
-    PMutex( true )
+Plot::Plot( QWidget *parent )
+  : QWidget( parent ),
+    PMutex( QMutex::Recursive )
 {
   construct( Copy );
 }
 
 
 Plot::Plot( KeepMode keep, bool subwidget, int id,
-	    MultiPlot *mp, const char *name )
-  : QWidget( 0, name ),
-    PMutex( true )
+	    MultiPlot *mp )
+  : QWidget( 0 ),
+    PMutex( QMutex::Recursive )
 {
   construct( keep, subwidget, id, mp );
 }
@@ -80,14 +84,32 @@ Plot::Plot( KeepMode keep, bool subwidget, int id,
 
 void Plot::construct( KeepMode keep, bool subwidget, int id, MultiPlot *mp )
 {
+  setAttribute( Qt::WA_OpaquePaintEvent );
   Keep = keep;
   SubWidget = subwidget;
   Id = id;
   MP = mp;
   setMouseTracking( false );
-  MouseMenu = 0;
+  MouseZoom = new QAction( "&Zoom", this );
+  MouseZoom->setCheckable( true );
+  MouseMove = new QAction( "&Move", this );
+  MouseMove->setCheckable( true );
+  MouseAnalyse = new QAction( "&Analyse", this );
+  MouseAnalyse->setCheckable( true );
+  MouseDisable = new QAction( "&Disable", this );
+  MouseDisable->setCheckable( true );
+  QActionGroup *mousegroup = new QActionGroup( this );
+  mousegroup->addAction( MouseZoom );
+  mousegroup->addAction( MouseMove );
+  mousegroup->addAction( MouseAnalyse );
+  mousegroup->addAction( MouseDisable );
+  MouseZoom->setChecked( true );
+  MouseAction = MouseZoom;
+  MouseMenu = new QMenu( this );
+  MouseMenu->addActions( mousegroup->actions() );
+  connect( MouseMenu, SIGNAL( triggered( QAction* ) ),
+	   this, SLOT( mouseSelect( QAction* ) ) );
   MouseMenuClick = false;
-  MouseAction = 2;
   MouseDrawRect = false;
   MouseX1 = 0xffff;
   MouseY1 = 0xffff;
@@ -240,7 +262,7 @@ void Plot::construct( KeepMode keep, bool subwidget, int id, MultiPlot *mp )
   PlotColor = Black;
   BackgroundColor = WidgetBackground;
 
-  QColor pbc = paletteBackgroundColor();
+  QColor pbc = palette().color( QPalette::Window );
   addColor( RGBColor( pbc.red(), pbc.green(), pbc.blue() ) );  // WidgetBackground
   addColor( RGBColor( 0, 0, 0 ) );  // Black
   addColor( RGBColor( 127, 127, 127 ) );  // Gray
@@ -278,11 +300,6 @@ void Plot::construct( KeepMode keep, bool subwidget, int id, MultiPlot *mp )
   ShiftData = false;
   ShiftXPix = 0;
 
-  if ( SubWidget )
-    PixMap = 0;
-  else
-    PixMap = new QPixmap; 
-
   DMutex = 0;
 }
 
@@ -290,11 +307,10 @@ void Plot::construct( KeepMode keep, bool subwidget, int id, MultiPlot *mp )
 Plot::~Plot( void )
 {
   clear();
-
-  PMutex.lock();
-  if ( PixMap != 0 )
-    delete PixMap;
-  PMutex.unlock();
+  delete MouseZoom;
+  delete MouseMove;
+  delete MouseAnalyse;
+  delete MouseDisable;
 }
 
 
@@ -987,6 +1003,21 @@ int Plot::fontPixel( double w ) const
 }
 
 
+void Plot::setFontSize( double pixel )
+{
+  QFont fnt( font() );
+  int newfontsize = (int)::rint( pixel );
+  if ( newfontsize < 8 )
+    newfontsize = 8;
+  fnt.setPixelSize( newfontsize );
+  setFont( fnt );
+
+  FontSize = fontMetrics().height();
+  FontWidth = fontMetrics().width( "00" ) - fontMetrics().width( "0" );
+  FontHeight = fontMetrics().ascent();
+}
+
+
 Plot::Label::Label( void )
 {
   Just = Plot::Left;
@@ -1167,7 +1198,7 @@ int Plot::setLabel( const string &label, double x, double y,
 
 
 int Plot::setLabel( const string &label, double x, Coordinates xcoor,
-	      double y, Coordinates ycoor, Justification just, double angle )
+		    double y, Coordinates ycoor, Justification just, double angle )
 {
   Label l = DefaultLabel;
 
@@ -1217,16 +1248,29 @@ int Plot::setLabel( int index, const string &label )
 }
 
 
+void Plot::clearLabels( void )
+{
+  Labels.clear();
+}
+
+
+void Plot::clearLabel( int index )
+{
+  if ( index >= 0 && index < (int)Labels.size() )
+    Labels.erase( Labels.begin() + index );
+}
+
+
 QSize Plot::sizeHint( void ) const
 {
-  QSize qs( LMarg+RMarg+180, TMarg+BMarg+150 );
+  QSize qs( LMarg+RMarg+200, TMarg+BMarg+150 );
   return qs;
 }
 
 
 QSize Plot::minimumSizeHint( void ) const
 {
-  QSize qs( LMarg+RMarg+120, TMarg+BMarg+100 );
+  QSize qs( LMarg+RMarg+120, TMarg+BMarg+90 );
   return qs;
 }
 
@@ -1240,6 +1284,8 @@ void Plot::resizeEvent( QResizeEvent *qre )
   if ( SubWidget )
     return;
 
+  emit resizePlot( qre );
+
   PMutex.lock();
 
   ScreenX1 = 0;
@@ -1247,9 +1293,9 @@ void Plot::resizeEvent( QResizeEvent *qre )
   ScreenX2 = width() - 1;
   ScreenY2 = 0;
 
-  PixMap->resize( ScreenX2 - ScreenX1, ScreenY1 - ScreenY2 );
-
   PMutex.unlock();
+
+  QWidget::resizeEvent( qre );
 }
 
 
@@ -1711,10 +1757,10 @@ void Plot::drawBorder( QPainter &paint )
   if ( BackgroundColor != Transparent ) {
     RGBColor c = color( BackgroundColor );
     QColor qcolor( c.red(), c.green(), c.blue() );
-    paint.fillRect( ScreenX1, ScreenY2, PlotX1, ScreenY1 - ScreenY2 + 1, qcolor );
-    paint.fillRect( PlotX2 + 1, ScreenY2, ScreenX2 - PlotX2, ScreenY1 - ScreenY2 + 1, qcolor );
-    paint.fillRect( PlotX1, ScreenY1, PlotX2 - PlotX1 + 1, PlotY1 - ScreenY1, qcolor );
-    paint.fillRect( PlotX1, ScreenY2, PlotX2 - PlotX1 + 1, PlotY2 - ScreenY2, qcolor );
+    paint.fillRect( ScreenX1, ScreenY2, PlotX1 - ScreenX1, ScreenY1 - ScreenY2 + 1, qcolor ); // left
+    paint.fillRect( PlotX2 + 1, ScreenY2, ScreenX2 - PlotX2, ScreenY1 - ScreenY2 + 1, qcolor ); // right
+    paint.fillRect( PlotX1, PlotY1+1, PlotX2 - PlotX1 + 1, ScreenY1 - PlotY1, qcolor );  // bottom
+    paint.fillRect( PlotX1, ScreenY2, PlotX2 - PlotX1 + 1, PlotY2 - ScreenY2, qcolor );  // top
   }
 
   if ( ! NewData && ShiftData ) {
@@ -1724,9 +1770,55 @@ void Plot::drawBorder( QPainter &paint )
       RGBColor c = color( PlotColor );
       QColor qcolor( c.red(), c.green(), c.blue() );
       if ( ShiftXPix > 0 )
-	paint.fillRect( PlotX2-ShiftXPix, PlotY2, ShiftXPix, PlotY1-PlotY2+1, qcolor );
+	paint.fillRect( PlotX2-ShiftXPix+1, PlotY2, ShiftXPix, PlotY1-PlotY2+1, qcolor );
       else
 	paint.fillRect( PlotX1, PlotY2, -ShiftXPix, PlotY1-PlotY2+1, qcolor );
+    }
+
+    // grid:
+    for ( int k=0; k<MaxAxis; k++ ) {
+      
+      // draw horizontal grid lines:
+      if ( YGrid[k] && YGridStyle[k].width() > 0 && 
+	   YGridStyle[k].color() != Transparent ) {
+	RGBColor c = color( YGridStyle[k].color() );
+	QColor qcolor( c.red(), c.green(), c.blue() );
+	Qt::PenStyle dash = QtDash.find( YGridStyle[k].dash() )->second;
+	paint.setPen( QPen( qcolor, YGridStyle[k].width(), dash ) );
+	for ( double y=YTicsStart[k]; y<=YMax[k]; y+=YTicsIncr[k] ) {
+	  if ( ::fabs( y ) < 0.001*YTicsIncr[k] )
+	    y = 0.0;
+	  int yp = PlotY1 + (int)::rint( double(PlotY2-PlotY1)/(YMax[k]-YMin[k])*(y-YMin[k]) );
+	  if ( ::abs( PlotY1 - yp ) > YGridStyle[k].width() &&
+	       ::abs( PlotY2 - yp ) > YGridStyle[k].width() ) {
+	    if ( ShiftXPix > 0 )
+	      paint.drawLine( PlotX2-ShiftXPix, yp, PlotX2, yp );
+	    else
+	      paint.drawLine( PlotX1, yp, PlotX1-ShiftXPix, yp );
+	  }
+	}
+      }
+      
+      // draw vertical grid lines:
+      if ( XGrid[k] && XGridStyle[k].width() > 0 && 
+	   XGridStyle[k].color() != Transparent ) {
+	RGBColor c = color( XGridStyle[k].color() );
+	QColor qcolor( c.red(), c.green(), c.blue() );
+	Qt::PenStyle dash = QtDash.find( XGridStyle[k].dash() )->second;
+	paint.setPen( QPen( qcolor, XGridStyle[k].width(), dash ) );
+	for ( double x=XTicsStart[k]; x<=XMax[k]; x+=XTicsIncr[k] ) {
+	  if ( ( ShiftX[k] > 0.0 && x >= XMax[k] - ShiftX[k] - 1.e-3*(XMax[k]-XMin[k]) ) ||
+	       ( ShiftX[k] < 0.0 && x <= XMin[k] - ShiftX[k] + 1.e-3*(XMax[k]-XMin[k]) ) ) {
+	    if ( ::fabs( x ) < 0.001*XTicsIncr[k] )
+	      x = 0.0;
+	    int xp = PlotX1 + (int)::rint( double(PlotX2-PlotX1)/(XMax[k]-XMin[k])*(x-XMin[k]) );
+	    if ( ::abs( PlotX1 - xp ) > XGridStyle[k].width() &&
+	       ::abs( PlotX2 - xp ) > XGridStyle[k].width() )
+	      paint.drawLine( xp, PlotY1, xp, PlotY2 );
+	  }
+	}
+      }
+
     }
 
   }
@@ -1777,8 +1869,9 @@ void Plot::drawBorder( QPainter &paint )
       }
       
     }
+
   }
-  
+
   // draw border:
   if ( Border > 0 && BorderStyle.width() > 0 && 
        BorderStyle.color() != Transparent ) {
@@ -1797,7 +1890,6 @@ void Plot::drawBorder( QPainter &paint )
     if ( Border & 8 )
       paint.drawLine( PlotX2+bwh1, PlotY2-BorderStyle.width()+1, PlotX2+bwh1, PlotY1+BorderStyle.width()+1 );  
   }
-  paint.flush();
 }
 
 
@@ -1922,7 +2014,6 @@ void Plot::drawAxis( QPainter &paint )
     drawTicMarks( paint, k );
     drawTicLabels( paint, k );
   }
-  paint.flush();
 }
 
 
@@ -1931,10 +2022,16 @@ void Plot::drawLabel( QPainter &paint, const Label &label )
   if ( label.Text.length() > 0 && label.LColor != Transparent ) {
     int xp = xPixel( label );
     int yp = yPixel( label );
-    int w = fontMetrics().width( label.Text.c_str() );
     paint.save();
     paint.translate( xp, yp );
     paint.rotate( label.Angle );
+    QFont fnt( font() );
+    int newfontsize = (int)::ceil( fontInfo().pixelSize()*label.LSize );
+    if ( newfontsize < 5 )
+      newfontsize = 5;
+    fnt.setPixelSize( newfontsize );
+    paint.setFont( fnt );
+    int w = paint.fontMetrics().width( label.Text.c_str() );
 
     if ( label.FColor != Transparent && label.FWidth > 0 ) {
       int fw = label.FWidth;
@@ -1978,7 +2075,6 @@ void Plot::drawLabel( QPainter &paint, const Label &label )
       paint.drawText( 0, 0, label.Text.c_str() );
     paint.restore();
   }
-  paint.flush();
 }
 
 
@@ -2002,6 +2098,8 @@ void Plot::drawLine( QPainter &paint, DataElement *d )
     QColor qcolor( c.red(), c.green(), c.blue() );
     Qt::PenStyle dash = QtDash.find( d->Line.dash() )->second;
     paint.setPen( QPen( qcolor, d->Line.width(), dash ) );
+    // no brush:
+    paint.setBrush( QBrush( Qt::black, Qt::NoBrush ) );
 
     // axis:
     int xaxis = d->XAxis;
@@ -2043,7 +2141,8 @@ void Plot::drawLine( QPainter &paint, DataElement *d )
     double nx, ny;
     bool previn = true;
     double slope;
-    int xp, yp;
+    qreal xp, yp;
+    QPainterPath path;
     
     // find first point inside plot:
     d->point( k, x, y );
@@ -2088,19 +2187,19 @@ void Plot::drawLine( QPainter &paint, DataElement *d )
 	  oy = YMax[yaxis];
       }
       // move to margin point:
-      xp = PlotX1 + (int)::rint( double(PlotX2-PlotX1)/(XMax[xaxis]-XMin[xaxis])*(ox-XMin[xaxis]) );
-      yp = PlotY1 + (int)::rint( double(PlotY2-PlotY1)/(YMax[yaxis]-YMin[yaxis])*(oy-YMin[yaxis]) );
-      paint.moveTo( xp, yp );
+      xp = PlotX1 + double(PlotX2-PlotX1)/(XMax[xaxis]-XMin[xaxis])*(ox-XMin[xaxis]);
+      yp = PlotY1 + double(PlotY2-PlotY1)/(YMax[yaxis]-YMin[yaxis])*(oy-YMin[yaxis]);
+      path.moveTo( xp, yp );
       // draw line to first point:
-      xp = PlotX1 + (int)::rint( double(PlotX2-PlotX1)/(XMax[xaxis]-XMin[xaxis])*(x-XMin[xaxis]) );
-      yp = PlotY1 + (int)::rint( double(PlotY2-PlotY1)/(YMax[yaxis]-YMin[yaxis])*(y-YMin[yaxis]) );
-      paint.lineTo( xp, yp );
+      xp = PlotX1 + double(PlotX2-PlotX1)/(XMax[xaxis]-XMin[xaxis])*(x-XMin[xaxis]);
+      yp = PlotY1 + double(PlotY2-PlotY1)/(YMax[yaxis]-YMin[yaxis])*(y-YMin[yaxis]);
+      path.lineTo( xp, yp );
     }
     else {
       // this is the first point to draw
-      xp = PlotX1 + (int)::rint( double(PlotX2-PlotX1)/(XMax[xaxis]-XMin[xaxis])*(x-XMin[xaxis]) );
-      yp = PlotY1 + (int)::rint( double(PlotY2-PlotY1)/(YMax[yaxis]-YMin[yaxis])*(y-YMin[yaxis]) );
-      paint.moveTo( xp, yp );
+      xp = PlotX1 + double(PlotX2-PlotX1)/(XMax[xaxis]-XMin[xaxis])*(x-XMin[xaxis]);
+      yp = PlotY1 + double(PlotY2-PlotY1)/(YMax[yaxis]-YMin[yaxis])*(y-YMin[yaxis]);
+      path.moveTo( xp, yp );
     }
 
     // draw remaining line:
@@ -2145,9 +2244,9 @@ void Plot::drawLine( QPainter &paint, DataElement *d )
 	      ny = YMax[yaxis];
 	  }
 	  // line to margin point:
-	  xp = PlotX1 + (int)::rint( double(PlotX2-PlotX1)/(XMax[xaxis]-XMin[xaxis])*(nx-XMin[xaxis]) );
-	  yp = PlotY1 + (int)::rint( double(PlotY2-PlotY1)/(YMax[yaxis]-YMin[yaxis])*(ny-YMin[yaxis]) );
-	  paint.lineTo( xp, yp );
+	  xp = PlotX1 + double(PlotX2-PlotX1)/(XMax[xaxis]-XMin[xaxis])*(nx-XMin[xaxis]);
+	  yp = PlotY1 + double(PlotY2-PlotY1)/(YMax[yaxis]-YMin[yaxis])*(ny-YMin[yaxis]);
+	  path.lineTo( xp, yp );
 	}
 	else {
 	  // the previous point was outside the plot, too
@@ -2186,18 +2285,18 @@ void Plot::drawLine( QPainter &paint, DataElement *d )
 	      oy = YMax[yaxis];
 	  }
 	  // move to margin point:
-	  xp = PlotX1 + (int)::rint( double(PlotX2-PlotX1)/(XMax[xaxis]-XMin[xaxis])*(ox-XMin[xaxis]) );
-	  yp = PlotY1 + (int)::rint( double(PlotY2-PlotY1)/(YMax[yaxis]-YMin[yaxis])*(oy-YMin[yaxis]) );
-	  paint.moveTo( xp, yp );
+	  xp = PlotX1 + double(PlotX2-PlotX1)/(XMax[xaxis]-XMin[xaxis])*(ox-XMin[xaxis]);
+	  yp = PlotY1 + double(PlotY2-PlotY1)/(YMax[yaxis]-YMin[yaxis])*(oy-YMin[yaxis]);
+	  path.moveTo( xp, yp );
 	}
 	// line to the point:
-	xp = PlotX1 + (int)::rint( double(PlotX2-PlotX1)/(XMax[xaxis]-XMin[xaxis])*(x-XMin[xaxis]) );
-	yp = PlotY1 + (int)::rint( double(PlotY2-PlotY1)/(YMax[yaxis]-YMin[yaxis])*(y-YMin[yaxis]) );
-	paint.lineTo( xp, yp );
+	xp = PlotX1 + double(PlotX2-PlotX1)/(XMax[xaxis]-XMin[xaxis])*(x-XMin[xaxis]);
+	yp = PlotY1 + double(PlotY2-PlotY1)/(YMax[yaxis]-YMin[yaxis])*(y-YMin[yaxis]);
+	path.lineTo( xp, yp );
 	previn = true;
       }
     }
-    paint.flush();
+    paint.drawPath( path );
   }
 }
 
@@ -2207,6 +2306,38 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
   if ( ( d->Point.color() != Transparent || 
 	 d->Point.fillColor() != Transparent ) && 
        ( d->Point.size() > 0 || d->Point.type() == Box ) ) {
+
+    // axis:
+    int xaxis = d->XAxis;
+    int yaxis = d->YAxis;
+
+    // index range:
+    long f = 0;
+    long l = 0;
+    if ( NewData ) {
+      f = d->first( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+      l = d->last( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+    }
+    else {
+      if ( ShiftData ) {
+	double px = d->Point.size()*(XMax[xaxis]-XMin[xaxis])/double(PlotX2-PlotX1+1);
+	if ( ShiftX[xaxis] > 0.0 ) {
+	  f = d->first( XMax[xaxis]-ShiftX[xaxis]-px, YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+	  l = d->last( XMax[xaxis]-ShiftX[xaxis]-px, YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+	}
+	else {
+	  f = d->first( XMin[xaxis], YMin[yaxis], XMin[xaxis]-ShiftX[xaxis]+px, YMax[yaxis] );
+	  l = d->last( XMin[xaxis], YMin[yaxis], XMin[xaxis]-ShiftX[xaxis]+px, YMax[yaxis] );
+	}
+      }
+      else {
+	f = d->pointIndex();
+	l = d->last( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+      }
+    }
+    if ( f >= l )
+      return;
+
     // single point pixmap:
     int offs = d->Point.size();
     if ( offs <= 0 )
@@ -2245,13 +2376,7 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
       mpaint.setBrush( QBrush( Qt::color0 ) );
     }
 
-    // axis:
-    int xaxis = d->XAxis;
-    int yaxis = d->YAxis;
-
     // index range:
-    long f = d->first( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
-    long l = d->last( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
     if ( ! NewData ) {
       long m = d->pointIndex();
       if ( m > f )
@@ -2277,7 +2402,7 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
 	if ( y < YMin[yaxis] )
 	  y = YMin[yaxis];
 	int Y0 = PlotY1 + (int)::rint( double(PlotY2-PlotY1)/(YMax[yaxis]-YMin[yaxis])*(y-YMin[yaxis]) );
-	QPointArray pa( 4 );
+	QPolygon pa( 4 );
 	for ( long k=f; k<l; k++ ) {
 	  d->point( k, x, y );
 	  if ( XMin[xaxis] <= x && XMax[xaxis] >= x && YMin[yaxis] <= y ) {
@@ -2315,7 +2440,7 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
 	break;
 
       case Diamond: {
-	QPointArray pa( 4 );
+	QPolygon pa( 4 );
 	int c = (int)::rint( d->Point.size() / sqrt( 2.0 ) );
 	pa.setPoint( 0, offs - c, offs );
 	pa.setPoint( 1, offs, offs + c );
@@ -2327,7 +2452,7 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
 	break;
 
       case DiamondDot: {
-	QPointArray pa( 4 );
+	QPolygon pa( 4 );
 	int c = (int)::rint( d->Point.size() / sqrt( 2.0 ) );
 	pa.setPoint( 0, offs - c, offs );
 	pa.setPoint( 1, offs, offs + c );
@@ -2361,7 +2486,7 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
 	break;
 
       case TriangleUp: {
-	QPointArray pa( 3 );
+	QPolygon pa( 3 );
 	int a = (int)::rint( d->Point.size() / sqrt( sqrt( 3.0 ) ) );
 	int c = (int)::rint( d->Point.size() * sqrt( sqrt( 3.0 ) ) / 3 );
 	pa.setPoint( 0, offs - a, offs + c );
@@ -2373,7 +2498,7 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
 	break;
 
       case TriangleUpDot: {
-	QPointArray pa( 3 );
+	QPolygon pa( 3 );
 	int a = (int)::rint( d->Point.size() / sqrt( sqrt( 3.0 ) ) );
 	int c = (int)::rint( d->Point.size() * sqrt( sqrt( 3.0 ) ) / 3.0 );
 	pa.setPoint( 0, offs - a, offs + c );
@@ -2387,7 +2512,7 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
 	break;
 
       case TriangleDown: {
-	QPointArray pa( 3 );
+	QPolygon pa( 3 );
 	int a = (int)::rint( d->Point.size() / sqrt( sqrt( 3.0 ) ) );
 	int c = (int)::rint( d->Point.size() * sqrt( sqrt( 3.0 ) ) / 3 );
 	pa.setPoint( 0, offs - a, offs - c );
@@ -2399,7 +2524,7 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
 	break;
 
       case TriangleDownDot: {
-	QPointArray pa( 3 );
+	QPolygon pa( 3 );
 	int a = (int)::rint( d->Point.size() / sqrt( sqrt( 3.0 ) ) );
 	int c = (int)::rint( d->Point.size() * sqrt( sqrt( 3.0 ) ) / 3 );
 	pa.setPoint( 0, offs - a, offs - c );
@@ -2413,7 +2538,7 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
 	break;
 
       case TriangleLeft: {
-	QPointArray pa( 3 );
+	QPolygon pa( 3 );
 	int a = (int)::rint( d->Point.size() / sqrt( sqrt( 3.0 ) ) );
 	int c = (int)::rint( d->Point.size() * sqrt( sqrt( 3.0 ) ) / 3 );
 	pa.setPoint( 0, offs + c, offs - a );
@@ -2425,7 +2550,7 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
 	break;
 
       case TriangleLeftDot: {
-	QPointArray pa( 3 );
+	QPolygon pa( 3 );
 	int a = (int)::rint( d->Point.size() / sqrt( sqrt( 3.0 ) ) );
 	int c = (int)::rint( d->Point.size() * sqrt( sqrt( 3.0 ) ) / 3 );
 	pa.setPoint( 0, offs + c, offs - a );
@@ -2439,7 +2564,7 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
 	break;
 
       case TriangleRight: {
-	QPointArray pa( 3 );
+	QPolygon pa( 3 );
 	int a = (int)::rint( d->Point.size() / sqrt( sqrt( 3.0 ) ) );
 	int c = (int)::rint( d->Point.size() * sqrt( sqrt( 3.0 ) ) / 3 );
 	pa.setPoint( 0, offs - c, offs - a );
@@ -2451,7 +2576,7 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
 	break;
 
       case TriangleRightDot: {
-	QPointArray pa( 3 );
+	QPolygon pa( 3 );
 	int a = (int)::rint( d->Point.size() / sqrt( sqrt( 3.0 ) ) );
 	int c = (int)::rint( d->Point.size() * sqrt( sqrt( 3.0 ) ) / 3 );
 	pa.setPoint( 0, offs - c, offs - a );
@@ -2465,7 +2590,7 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
 	break;
 
       case TriangleNorth: {
-	QPointArray pa( 3 );
+	QPolygon pa( 3 );
 	int a = (int)::rint( offs / sqrt( 3.0 ) );
 	pa.setPoint( 0, offs - a, offs );
 	pa.setPoint( 1, offs, offs + offs );
@@ -2476,7 +2601,7 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
 	break;
 
       case TriangleSouth: {
-	QPointArray pa( 3 );
+	QPolygon pa( 3 );
 	int a = (int)::rint( offs / sqrt( 3.0 ) );
 	pa.setPoint( 0, offs - a, offs );
 	pa.setPoint( 1, offs, offs - offs );
@@ -2487,7 +2612,7 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
 	break;
 
       case TriangleWest: {
-	QPointArray pa( 3 );
+	QPolygon pa( 3 );
 	int a = (int)::rint( offs / sqrt( 3.0 ) );
 	pa.setPoint( 0, offs, offs - a );
 	pa.setPoint( 1, offs + offs, offs );
@@ -2498,7 +2623,7 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
 	break;
 
       case TriangleEast: {
-	QPointArray pa( 3 );
+	QPolygon pa( 3 );
 	int a = (int)::rint( offs / sqrt( 3.0 ) );
 	pa.setPoint( 0, offs, offs - a );
 	pa.setPoint( 1, offs - offs, offs );
@@ -2591,6 +2716,8 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
       default:
 	cerr << "point type not supported!\n";
       }
+      ppaint.end();
+      mpaint.end();
       point.setMask( mask );
 
       // draw points:
@@ -2605,7 +2732,6 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
       }
 
     }
-    paint.flush();
     d->setPointIndex( l );
   }
 }
@@ -2651,7 +2777,6 @@ void Plot::drawMouse( QPainter &paint )
       }
       paint.drawRect( x, y, w, h );
     }
-    paint.flush();
   }
   else if ( ! MouseXPos.empty() ) {
     vector< double > xpos( MouseXPos.size() );
@@ -2707,11 +2832,11 @@ void Plot::drawMouse( QPainter &paint )
       int offs = 2;
       int lx = PlotX1 + offs;
       int ly = PlotY1 + offs;
-      int flags = Qt::AlignTop | Qt::AlignLeft | Qt::DontClip;
+      int flags = Qt::AlignTop | Qt::AlignLeft | Qt::TextSingleLine;
       QRect lr = paint.boundingRect( lx, ly, 300, FontSize, 
 				     flags, label.c_str() );
       QRect fr = lr;
-      fr.addCoords( -offs, -offs, offs, offs );
+      fr.adjust( -offs, -offs, offs, offs );
       paint.fillRect( fr, qpcolor );
       paint.drawText( lr, flags, label.c_str() );
     }
@@ -2728,16 +2853,14 @@ void Plot::drawMouse( QPainter &paint )
       int offs = 2;
       int lx = PlotX2 - offs;
       int ly = PlotY1 + offs;
-      int flags = Qt::AlignTop | Qt::AlignRight | Qt::DontClip;
+      int flags = Qt::AlignTop | Qt::AlignRight | Qt::TextSingleLine;
       QRect lr = paint.boundingRect( lx, ly, 0, FontSize, 
 				     flags, label.c_str() );
       QRect fr = lr;
-      fr.addCoords( -offs, -offs, offs, offs );
+      fr.adjust( -offs, -offs, offs, offs );
       paint.fillRect( fr, qpcolor );
       paint.drawText( lr, flags, label.c_str() );
     }
-
-    paint.flush();
   }
 }
 
@@ -2750,7 +2873,7 @@ void Plot::draw( QPaintDevice *qpm )
     lockData();
   PMutex.lock();
 
-  QColor pbc = paletteBackgroundColor();
+  QColor pbc = palette().color( QPalette::Window );
   Colors[WidgetBackground] = RGBColor( pbc.red(), pbc.green(), pbc.blue() );
 
   init();
@@ -2762,80 +2885,79 @@ void Plot::draw( QPaintDevice *qpm )
   // check for changes:
   ShiftData = false;
   ShiftXPix = 0;
-  for ( int k=0; k<MaxAxis; k++ ) {
-    ShiftX[k] = 0.0;
-    // check whether axis is in use:
-    bool havexaxis = false;
-    bool haveyaxis = false;
-    for ( PDataType::iterator d = PData.begin(); d != PData.end(); ++d ) {
-      if ( (*d)->XAxis == k ) {
-	havexaxis = true;
-	if ( haveyaxis )
-	  break;
-      }
-      if ( (*d)->YAxis == k ) {
-	haveyaxis = true;
-	if ( havexaxis )
-	  break;
-      }
-    }
-
-    if ( havexaxis ) {
-      if ( ::fabs( ::fabs( XMax[k] - XMin[k] ) - ::fabs( XMaxPrev[k] - XMinPrev[k] ) ) > 1.0e-8 )
-	NewData = true;
-      else {
-	if ( XMin[k] != XMinPrev[k] ) {
-	  ShiftData = true;
-	  int dx = (int)::rint( double(PlotX2-PlotX1)/(XMax[k]-XMin[k])*(XMin[k]-XMinPrev[k]) );
-	  if ( ShiftXPix == 0 )
-	    ShiftXPix = dx;
-	  else if ( dx != ShiftXPix )
-	    NewData = true;
-	  ShiftX[k] = XMin[k]-XMinPrev[k];
+  if ( ! NewData ) {
+    for ( int k=0; k<MaxAxis; k++ ) {
+      ShiftX[k] = 0.0;
+      // check whether axis is in use:
+      bool havexaxis = false;
+      bool haveyaxis = false;
+      for ( PDataType::iterator d = PData.begin(); d != PData.end(); ++d ) {
+	if ( (*d)->XAxis == k ) {
+	  havexaxis = true;
+	  if ( haveyaxis )
+	    break;
 	}
+	if ( (*d)->YAxis == k ) {
+	  haveyaxis = true;
+	  if ( havexaxis )
+	    break;
+	}
+      }
+      
+      if ( havexaxis ) {
+	if ( ::fabs( ::fabs( XMax[k] - XMin[k] ) - ::fabs( XMaxPrev[k] - XMinPrev[k] ) ) > 1.0e-8 )
+	  NewData = true;
 	else {
-	  if ( ShiftData )
-	    NewData = true;
+	  if ( ::fabs( XMin[k] - XMinPrev[k] ) > 1.0e-8 ) {
+	    ShiftData = true;
+	    int dx = (int)::rint( double(PlotX2-PlotX1+1)/(XMax[k]-XMin[k])*(XMin[k]-XMinPrev[k]) );
+	    if ( ShiftXPix == 0 )
+	      ShiftXPix = dx;
+	    else if ( dx != ShiftXPix )
+	      NewData = true;
+	    ShiftX[k] = XMin[k]-XMinPrev[k];
+	  }
+	  else {
+	    if ( ShiftData )
+	      NewData = true;
+	  }
 	}
       }
-    }
-
-    if ( haveyaxis ) {
-      if ( YMin[k] != YMinPrev[k] )
-	NewData = true;
-      if ( YMax[k] != YMaxPrev[k] )
-	NewData = true;
+      
+      if ( haveyaxis ) {
+	if ( YMin[k] != YMinPrev[k] )
+	  NewData = true;
+	if ( YMax[k] != YMaxPrev[k] )
+	  NewData = true;
+      }
     }
   }
 
   // XXX remove, once thes optimiziation for shifted data is working:
+  /*
   if ( ShiftData ) {
     ShiftData = false;
     NewData = true;
   }
-
+  */
   if ( ! NewData && ShiftData ) {
     if ( ShiftXPix >= PlotX2 - PlotX1 )
       NewData = true;
     else {
-      if ( ShiftX > 0 ) {
-	QPixmap pxm( PlotX2-PlotX1+1-ShiftXPix, PlotY2-PlotY1 );
-	bitBlt( &pxm, 0, 0,
-		qpm, PlotX1+ShiftXPix, PlotY1, PlotX2-PlotX1+1-ShiftXPix, PlotY2-PlotY1,
-		CopyROP, true );
-	bitBlt( qpm, PlotX1, PlotY1,
-		&pxm, 0, 0, PlotX2-PlotX1+1-ShiftXPix, PlotY2-PlotY1,
-		CopyROP, true );
+      // align coordinates with pixel shift:
+      for ( int k=0; k<MaxAxis; k++ ) {
+	ShiftX[k] = ShiftXPix*(XMaxPrev[k]-XMinPrev[k])/double(PlotX2-PlotX1+1);
+	XMin[k] = XMinPrev[k] + ShiftX[k];
+	XMax[k] = XMaxPrev[k] + ShiftX[k];
       }
-      else {
-	QPixmap pxm( PlotX2-PlotX1+1+ShiftXPix, PlotY2-PlotY1 );
-	bitBlt( &pxm, 0, 0,
-		qpm, PlotX1, PlotY1, PlotX2-PlotX1+1+ShiftXPix, PlotY2-PlotY1,
-		CopyROP, true );
-	bitBlt( qpm, PlotX1-ShiftXPix, PlotY1,
-		&pxm, 0, 0, PlotX2-PlotX1+1+ShiftXPix, PlotY2-PlotY1,
-		CopyROP, true );
-      }
+      // get widget:
+      QWidget *w = this;
+      if ( SubWidget && MP != 0 )
+	w = MP;
+      // scroll widget:
+      if ( ShiftXPix != 0 )
+	w->scroll( -ShiftXPix, 0,
+		   QRect( PlotX1, PlotY2, PlotX2-PlotX1+1, PlotY1-PlotY2+1 ) );
     }
   }
 
@@ -2873,19 +2995,15 @@ void Plot::draw( void )
       MP->draw();
   }
   else {
-    QApplication::postEvent( this, new QPaintEvent( rect(), false ) );
+    update();
   }
 }
 
 
 void Plot::paintEvent( QPaintEvent *qpe )
 {
-  if ( !SubWidget ) {
-    draw( PixMap );
-    PMutex.lock();
-    bitBlt( this, 0, 0, PixMap, 0, 0, PixMap->width(), PixMap->height() );
-    PMutex.unlock();
-  }
+  if ( !SubWidget )
+    draw( this );
 }
 
 
@@ -2964,6 +3082,22 @@ Plot::MouseEvent::MouseEvent( void )
 }
 
 
+Plot::MouseEvent::MouseEvent( int mode )
+  : XPixel( 0xffff ),
+    YPixel( 0xffff ),
+    XCoor( Plot::First ),
+    YCoor( Plot::First ), 
+    Mode( mode ),
+    Init( false ),
+    Used( false )
+{
+  for ( int k=0; k<MaxAxis; k++ ) {
+    XPos[k] = Plot::AutoScale;
+    YPos[k] = Plot::AutoScale;
+  }
+}
+
+
 void Plot::MouseEvent::clear( void )
 {
   XPixel = 0xffff;
@@ -2998,25 +3132,26 @@ void Plot::setMouseCoordinates( MouseEvent &me )
 }
 
 
-void Plot::readMouse( QMouseEvent *qme, MouseEvent &me, bool move )
+void Plot::readMouse( QMouseEvent *qme, MouseEvent &me )
 {
   me.XPixel = qme->x();
   me.YPixel = qme->y();
   setMouseCoordinates( me );
 
-  me.Mode = 0;
-  ButtonState button = move ? qme->state() : qme->button();
-  if ( button & LeftButton )
+  int button = qme->buttons();
+  if ( me.Mode & 128 )
+    button = qme->button();
+  if ( button & Qt::LeftButton )
     me.Mode |= 1;
-  if ( button & RightButton )
+  if ( button & Qt::RightButton )
     me.Mode |= 2;
-  if ( button & MidButton )
+  if ( button & Qt::MidButton )
     me.Mode |= 4;
-  if ( qme->state() & ShiftButton )
+  if ( qme->modifiers() & Qt::ShiftModifier )
     me.Mode |= 8;
-  if ( qme->state() & ControlButton )
+  if ( qme->modifiers() & Qt::ControlModifier )
     me.Mode |= 16;
-  if ( qme->state() & AltButton )
+  if ( qme->modifiers() & Qt::AltModifier )
     me.Mode |= 32;
 }
 
@@ -3026,9 +3161,8 @@ void Plot::mousePressEvent( QMouseEvent *qme )
   if ( ! SubWidget )
     lockData();
   PMutex.lock();
-  MouseEvent me;
-  readMouse( qme, me, false );
-  me.Mode |= 64;
+  MouseEvent me( 64 );
+  readMouse( qme, me );
   mouseEvent( me );
   PMutex.unlock();
   if ( ! SubWidget )
@@ -3041,9 +3175,8 @@ void Plot::mouseReleaseEvent( QMouseEvent *qme )
   if ( ! SubWidget )
     lockData();
   PMutex.lock();
-  MouseEvent me;
-  readMouse( qme, me, false );
-  me.Mode |= 128;
+  MouseEvent me( 128 );
+  readMouse( qme, me );
   mouseEvent( me );
   PMutex.unlock();
   if ( ! SubWidget )
@@ -3056,9 +3189,8 @@ void Plot::mouseMoveEvent( QMouseEvent *qme )
   if ( ! SubWidget )
     lockData();
   PMutex.lock();
-  MouseEvent me;
-  readMouse( qme, me, true );
-  me.Mode |= 256;
+  MouseEvent me( 256 );
+  readMouse( qme, me );
   mouseEvent( me );
   PMutex.unlock();
   if ( ! SubWidget )
@@ -3071,9 +3203,8 @@ void Plot::mouseDoubleClickEvent( QMouseEvent *qme )
   if ( ! SubWidget )
     lockData();
   PMutex.lock();
-  MouseEvent me;
-  readMouse( qme, me, false );
-  me.Mode |= 512;
+  MouseEvent me( 512 );
+  readMouse( qme, me );
   mouseEvent( me );
   PMutex.unlock();
   if ( ! SubWidget )
@@ -3702,17 +3833,6 @@ void Plot::mouseAnalyse( MouseEvent &me )
 void Plot::mouseMenu( MouseEvent &me )
 {
   if ( me.pressed() && me.mid() ) {
-    if ( MouseMenu == 0 ) {
-      MouseMenu = new QPopupMenu( this );
-      MouseMenu->setCheckable( true );
-      MouseMenu->insertItem( "&Zoom", 2 );
-      MouseMenu->insertItem( "&Move", 4 );
-      MouseMenu->insertItem( "&Analyse", 8 );
-      MouseMenu->insertItem( "&Disable", 1 );
-      MouseMenu->setItemChecked( 2, true );
-      connect( MouseMenu, SIGNAL( activated( int ) ),
-	       this, SLOT( mouseSelect( int ) ) );
-    }
     MouseMenu->popup( QCursor::pos() );
     MouseMenuClick = true;
     me.setUsed();
@@ -3725,20 +3845,19 @@ void Plot::mouseMenu( MouseEvent &me )
 }
 
 
-void Plot::mouseSelect( int id )
+void Plot::mouseSelect( QAction *action )
 {
-  if ( id < 0 ) {
+  if ( action == 0 ) {
     PMutex.lock();
     MouseMenuClick = true;
     PMutex.unlock();
   }
   else {
     MouseMenuClick = false;
-    LastMouseEvent.clear();
-    if ( id != MouseAction ) {
-      MouseMenu->setItemChecked( MouseAction, false );
-      MouseMenu->setItemChecked( id, true );
-      if ( MouseAction == 8 ) {
+    if ( action != MouseAction ) {
+      action->setChecked( true );
+      LastMouseEvent.clear();
+      if ( MouseAction == MouseAnalyse ) {
 	PMutex.lock();
 	MouseXPos.clear();
 	MouseYPos.clear();
@@ -3753,8 +3872,8 @@ void Plot::mouseSelect( int id )
 	PMutex.unlock();
 	draw();
       }
-      MouseAction = id;
-      if ( MouseAction == 8 ) {
+      MouseAction = action;
+      if ( MouseAction == MouseAnalyse ) {
 	if ( ! MouseTracking ) {
 	  if ( SubWidget && MP != 0 )
 	    MP->setMouseTracking( true );
@@ -3763,12 +3882,12 @@ void Plot::mouseSelect( int id )
 	}
 	QPoint p = mapFromGlobal( QCursor::pos() );
 	QMouseEvent qme( QEvent::MouseButtonRelease, p, 
-			 Qt::LeftButton, Qt::NoButton );
-	MouseEvent nme;
+			 Qt::LeftButton, Qt::LeftButton, Qt::NoModifier );
+	MouseEvent nme( 64 );
 	if ( ! SubWidget )
 	  lockData();
 	PMutex.lock();
-	readMouse( &qme, nme, false );
+	readMouse( &qme, nme );
 	nme.setInit();
 	mouseAnalyse( nme );
 	if ( ! SubWidget )
@@ -3790,11 +3909,11 @@ void Plot::mouseEvent( MouseEvent &me )
   if ( me.used() )
     return;
 
-  if ( MouseAction == 2 )
+  if ( MouseAction == MouseZoom )
     mouseZoomMovePlot( me, false );
-  else if ( MouseAction == 4 )
+  else if ( MouseAction == MouseMove )
     mouseZoomMovePlot( me, true );
-  else if ( MouseAction == 8 )
+  else if ( MouseAction == MouseAnalyse )
     mouseAnalyse( me );
 
   if ( ! me.used() ) {
@@ -3816,13 +3935,13 @@ void Plot::setMouseTracking( bool enable )
 
 void Plot::enableMouse( void )
 {
-  MouseAction &= ~1;
+  MouseAction = MouseZoom;
 }
 
 
 void Plot::disableMouse( void )
 {
-  MouseAction |= 1;
+  MouseAction = MouseDisable;
 }
 
 
@@ -4438,7 +4557,7 @@ int Plot::plot( const EventData &events, const InData &data, int origin, double 
 #endif
 
 
-void Plot::clear( void )
+void Plot::clearData( void )
 {
   for ( PDataType::iterator d = PData.begin(); d != PData.end(); ++d )
     delete (*d);
@@ -4447,7 +4566,7 @@ void Plot::clear( void )
 }
 
 
-void Plot::clear( int index )
+void Plot::clearData( int index )
 {
   int k;
   PDataType::iterator d;
@@ -4457,6 +4576,13 @@ void Plot::clear( int index )
     PData.erase( d );
   }
   NewData = true;
+}
+
+
+void Plot::clear( void )
+{
+  clearData();
+  clearLabels();
 }
 
 

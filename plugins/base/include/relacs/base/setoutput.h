@@ -22,7 +22,7 @@
 #ifndef _RELACS_BASE_SETOUTPUT_H_
 #define _RELACS_BASE_SETOUTPUT_H_ 1
 
-#include <qpushbutton.h>
+#include <QPushButton>
 #include <relacs/optwidget.h>
 #include <relacs/repro.h>
 using namespace relacs;
@@ -71,7 +71,7 @@ public slots:
 protected:
 
   virtual void keyPressEvent( QKeyEvent *e );
-  virtual void customEvent( QCustomEvent *qce );
+  virtual void customEvent( QEvent *qce );
 
   OptWidget STW;
   Options OutOpts;

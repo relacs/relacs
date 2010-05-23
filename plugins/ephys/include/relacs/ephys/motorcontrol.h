@@ -23,11 +23,11 @@
 #define _RELACS_EPHYS_MOTORCONTROL_H_ 1
 
 #include <vector>
-#include <qpixmap.h>
-#include <qlabel.h>
-#include <qpushbutton.h>
-#include <qdatetime.h>
-#include <qtimer.h>
+#include <QPixmap>
+#include <QLabel>
+#include <QPushButton>
+#include <QDateTime>
+#include <QTimer>
 #include <relacs/optwidget.h>
 #include <relacs/configclass.h>
 #include <relacs/control.h>
@@ -115,6 +115,7 @@ public:
   virtual void keyPressEvent( QKeyEvent *e );
 
   int spikes( int trace );
+  QVBoxLayout *mainLayout( void );
 
   friend class MiMaPu;
 
@@ -128,13 +129,19 @@ private:
   double MinRate;
   double MinSize;
 
-  QPixmap GoodCircle;
-  QPixmap OkCircle;
-  QPixmap PotentialCircle;
-  QPixmap BadCircle;
+  QVBoxLayout *MainLayout;
+
+  QPixmap BadQuality;
+  QPixmap PotentialQuality;
+  QPixmap OkQuality;
+  QPixmap GoodQuality;
   QPixmap *QualityPixs[4];
-  QPixmap GoodArrow;
+
   QPixmap BadArrow;
+  QPixmap BadTrend;
+  QPixmap OkTrend;
+  QPixmap GoodTrend;
+  QPixmap GoodArrow;
   QPixmap *TrendPixs[5];
 
 };

@@ -22,6 +22,7 @@
 #include <fstream>
 #include <iomanip>
 #include <ctype.h>
+#include <QVBoxLayout>
 #include <relacs/optwidget.h>
 #include <relacs/tablekey.h>
 #include <relacs/translate.h>
@@ -35,10 +36,7 @@ namespace patchclamp {
 
 
 SingleStimulus::SingleStimulus( void )
-  : RePro( "SingleStimulus", "Single Stimulus", "patchclamp",
-	   "Jan Benda", "1.2", "Oct 13, 2008" ),
-    SP( 3, this ),
-    P( 2, this )
+  : RePro( "Single Stimulus", "patchclamp", "Jan Benda", "1.2", "Oct 13, 2008" )
 {
   AmplitudeUnit = "nA";
   Offset = 0.0;
@@ -95,6 +93,10 @@ SingleStimulus::SingleStimulus( void )
   addTypeStyle( OptWidget::Bold, Parameter::Label );
 
   // setup plots:
+  QVBoxLayout *l = new QVBoxLayout;
+  setLayout( l );
+
+  SP.resize( 3 );
   SP.hide();
   SP.lock();
   SP.setCommonXRange( 0, 1 );
@@ -123,7 +125,9 @@ SingleStimulus::SingleStimulus( void )
   SP[2].setYLabelPos( 2.3, Plot::FirstMargin, 0.5, Plot::Graph,
 		      Plot::Center, -90.0 );
   SP.unlock();
+  l->addWidget( &SP );
 
+  P.resize( 2 );
   P.show();
   P.lock();
   P.setCommonXRange( 0, 1 );
@@ -143,6 +147,7 @@ SingleStimulus::SingleStimulus( void )
   P[1].setYLabelPos( 2.3, Plot::FirstMargin, 0.5, Plot::Graph,
 		     Plot::Center, -90.0 );
   P.unlock();
+  l->addWidget( &P );
 
 }
 
@@ -279,7 +284,7 @@ int SingleStimulus::main( void )
     // plot trace:
     plotToggle( true, true, searchduration, 0.0 );
     
-    QApplication::postEvent( this, new QCustomEvent( QEvent::User+12 ) );
+    postCustomEvent( 12 );
     SP.lock();
     SP.clearPlots();
     SP[0].setTitle( "Search target firing rate " + Str( targetrate ) + " Hz" );
@@ -580,7 +585,7 @@ int SingleStimulus::main( void )
   plotToggle( true, true, Duration, 0.0 );
 
   // setup plots:
-  QApplication::postEvent( this, new QCustomEvent( QEvent::User+11 ) );
+  postCustomEvent( 11 );
   P.lock();
   P.clearPlots();
   P[0].setTitle( "Mean firing rate =    Hz" );
@@ -958,7 +963,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
 }
 
 
-void SingleStimulus::customEvent( QCustomEvent *qce )
+void SingleStimulus::customEvent( QEvent *qce )
 {
   if ( qce->type() == QEvent::User+11 ) {
     SP.hide();
@@ -969,7 +974,7 @@ void SingleStimulus::customEvent( QCustomEvent *qce )
     SP.show();
   }
   else
-    RePro::customEvent( qce );
+    RELACSPlugin::customEvent( qce );
 }
 
 
