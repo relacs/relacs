@@ -98,6 +98,7 @@ void Plot::construct( KeepMode keep, bool subwidget, int id, MultiPlot *mp )
   MouseAnalyse->setCheckable( true );
   MouseDisable = new QAction( "&Disable", this );
   MouseDisable->setCheckable( true );
+  MouseZoomReset = new QAction( "&Reset", this );
   QActionGroup *mousegroup = new QActionGroup( this );
   mousegroup->addAction( MouseZoom );
   mousegroup->addAction( MouseMove );
@@ -107,6 +108,7 @@ void Plot::construct( KeepMode keep, bool subwidget, int id, MultiPlot *mp )
   MouseAction = MouseZoom;
   MouseMenu = new QMenu( this );
   MouseMenu->addActions( mousegroup->actions() );
+  MouseMenu->addAction( MouseZoomReset );
   connect( MouseMenu, SIGNAL( triggered( QAction* ) ),
 	   this, SLOT( mouseSelect( QAction* ) ) );
   MouseMenuClick = false;
@@ -311,6 +313,7 @@ Plot::~Plot( void )
   delete MouseMove;
   delete MouseAnalyse;
   delete MouseDisable;
+  delete MouseZoomReset;
 }
 
 
@@ -2106,7 +2109,6 @@ void Plot::drawLine( QPainter &paint, DataElement *d )
     int yaxis = d->YAxis;
     
     // init data:
-    // XXX needs to be replicated in drawPoints()!
     long f = 0;
     long l = 0;
     if ( NewData ) {
@@ -2332,9 +2334,13 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
       }
       else {
 	f = d->pointIndex();
+	long m = d->first( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+	if ( f < m )
+	  f = m;
 	l = d->last( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
       }
     }
+    d->setPointIndex( l );
     if ( f >= l )
       return;
 
@@ -2374,13 +2380,6 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
       paint.setBrush( QBrush( Qt::black, Qt::NoBrush ) );
       ppaint.setBrush( QBrush( Qt::black, Qt::NoBrush ) );
       mpaint.setBrush( QBrush( Qt::color0 ) );
-    }
-
-    // index range:
-    if ( ! NewData ) {
-      long m = d->pointIndex();
-      if ( m > f )
-	f = m;
     }
 
     // draw Box:
@@ -2732,7 +2731,6 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
       }
 
     }
-    d->setPointIndex( l );
   }
 }
 
@@ -2933,13 +2931,6 @@ void Plot::draw( QPaintDevice *qpm )
     }
   }
 
-  // XXX remove, once thes optimiziation for shifted data is working:
-  /*
-  if ( ShiftData ) {
-    ShiftData = false;
-    NewData = true;
-  }
-  */
   if ( ! NewData && ShiftData ) {
     if ( ShiftXPix >= PlotX2 - PlotX1 )
       NewData = true;
@@ -3062,6 +3053,21 @@ void Plot::popRanges( void )
       YMaxRange[k] = YMax[k] = MouseRangeStack.back().YMax[k];
     }
     MouseRangeStack.pop_back();
+  }
+}
+
+
+void Plot::resetRanges( void )
+{
+  if ( ! MouseRangeStack.empty() ) {
+    for ( int k=0; k<MaxAxis; k++ ) {
+      XMinRange[k] = XMin[k] = MouseRangeStack.front().XMin[k];
+      XMaxRange[k] = XMax[k] = MouseRangeStack.front().XMax[k];
+      YMinRange[k] = YMin[k] = MouseRangeStack.front().YMin[k];
+      YMaxRange[k] = YMax[k] = MouseRangeStack.front().YMax[k];
+    }
+    MouseRangeStack.clear();
+    MouseZoomOut = false;
   }
 }
 
@@ -3253,7 +3259,7 @@ void Plot::mouseZoomMoveFirstX( MouseEvent &me )
     }
     // zoom x1 min:
     else if ( MouseZoomXMin ) {
-      if ( me.xPixel() < PlotX2 && 
+      if ( me.xPixel() < PlotX2 - ::abs( PlotX2 - PlotX1 )/8 && 
 	   me.xPixel() != LastMouseEvent.xPixel() ) {
 	double d[MaxAxis];
 	for ( int k=0; k<MaxAxis; k++ ) {
@@ -3271,7 +3277,7 @@ void Plot::mouseZoomMoveFirstX( MouseEvent &me )
     }
     // zoom x1 max:
     else if ( MouseZoomXMax ) {
-      if ( me.xPixel() > PlotX1 && 
+      if ( me.xPixel() > PlotX1 + ::abs( PlotX2 - PlotX1 )/8 && 
 	   me.xPixel() != LastMouseEvent.xPixel() ) {
 	double d[MaxAxis];
 	for ( int k=0; k<MaxAxis; k++ ) {
@@ -3398,7 +3404,7 @@ void Plot::mouseZoomMoveFirstY( MouseEvent &me )
     }
     // zoom y1 min:
     else if ( MouseZoomYMin ) {
-      if ( me.yPixel() > PlotY2 && 
+      if ( me.yPixel() > PlotY2 + ::abs( PlotY2 - PlotY1 )/8 && 
 	   me.yPixel() != LastMouseEvent.yPixel() ) {
 	double d[MaxAxis];
 	for ( int k=0; k<MaxAxis; k++ ) {
@@ -3416,7 +3422,7 @@ void Plot::mouseZoomMoveFirstY( MouseEvent &me )
     }
     // zoom y1 max:
     else if ( MouseZoomYMax ) {
-      if ( me.yPixel() < PlotY1 && 
+      if ( me.yPixel() < PlotY1 - ::abs( PlotY2 - PlotY1 )/8 && 
 	   me.yPixel() != LastMouseEvent.yPixel() ) {
 	double d[MaxAxis];
 	for ( int k=0; k<MaxAxis; k++ ) {
@@ -3851,6 +3857,13 @@ void Plot::mouseSelect( QAction *action )
     PMutex.lock();
     MouseMenuClick = true;
     PMutex.unlock();
+  }
+  else if ( action == MouseZoomReset ) {
+    MouseMenuClick = false;
+    resetRanges();
+    emit changedRange();
+    emit changedRange( Id );
+    draw();
   }
   else {
     MouseMenuClick = false;

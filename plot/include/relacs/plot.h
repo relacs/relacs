@@ -971,6 +971,7 @@ protected:
   QMenu *MouseMenu;
   QAction *MouseZoom;
   QAction *MouseMove;
+  QAction *MouseZoomReset;
   QAction *MouseAnalyse;
   QAction *MouseDisable;
   QAction *MouseAction;  // the current mouse action mode
@@ -1009,6 +1010,7 @@ protected:
   bool ranges( void ) const;  
   void popRanges( void );
   void pushRanges( void );
+  void resetRanges( void );
 
 
 protected slots:

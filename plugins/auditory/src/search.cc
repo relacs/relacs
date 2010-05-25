@@ -246,6 +246,7 @@ int Search::main( void )
       else {
 	if ( Waveform == 1 ) {
 	  signal.bandNoiseWave( MinFrequency, Frequency, Duration, 0.3, ramp );
+	  ::relacs::clip( -1.0, 1.0, signal );
 	  meanintensity = 6.0206; // stdev=0.5
 	  meanintensity = 10.458; // stdev = 0.3
 	}
