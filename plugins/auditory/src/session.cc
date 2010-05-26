@@ -32,26 +32,19 @@ Session::Session( void )
   : Control( "Session", "Auditory", "Jan Benda", "1.5", "Feb 2, 2010" )
 {
   QHBoxLayout *hb = new QHBoxLayout;
+  hb->setSpacing( 0 );
   setLayout( hb );
 
   hb->addWidget( &P );
 
   QVBoxLayout *vb = new QVBoxLayout;
+  vb->setContentsMargins( 0, 0, 0, 0 );
   hb->addLayout( vb );
-  vb->setSpacing( 0 );
 
   ASW = new OptWidget;
   ASW->setVerticalSpacing( 4 );
-  ASW->setMargins( 4 );
+  ASW->setMargins( 0 );
   vb->addWidget( ASW );
-
-  /*
-  AmplBox = new QWidget;
-  AmplBox->setLayout( AmplBoxLayout );
-  vb->addWidget( AmplBox );
-  */
-  ResistanceButton = 0;
-  BuzzerButton = 0;
 
   SessionButton = new QPushButton;
   SessionButton->setText( "Cell Found" );
@@ -87,12 +80,6 @@ Session::Session( void )
   P.unlock();
 
   Temp = 0;
-  //  Ampl = 0;
-  RMeasure = false;
-
-  MaxResistance = 100.0;
-  ResistanceScale = 1.0;
-
 }
 
 
@@ -196,35 +183,6 @@ void Session::initDevices( void )
     unlockStimulusData();
   }
 
-  /*
-  Ampl = dynamic_cast< misc::AmplMode* >( device( "ampl-1" ) );
-  if ( Ampl != 0 ) {
-    lockMetaData();
-    Options &mo = metaData( "Recording" );
-    mo.unsetNotify();
-    mo.addNumber( "resistance", "Resistance", 0.0, "MOhm", "%.0f", MetaDataReadOnly+MetaDataDisplay );
-    mo.setNotify();
-    unlockMetaData();
-    AmplBox->show();
-    if ( ResistanceButton == 0 && BuzzerButton == 0 ) {
-      ResistanceButton = new QPushButton( "R", AmplBox );
-      QWidget::connect( ResistanceButton, SIGNAL( pressed() ),
-	       (QWidget*)this, SLOT( startResistance() ) );
-      QWidget::connect( ResistanceButton, SIGNAL( released() ),
-	       (QWidget*)this, SLOT( stopResistance() ) );
-    
-      new QLabel( AmplBox );
-      
-      BuzzerButton = new QPushButton( "Buzz", AmplBox );
-      QWidget::connect( BuzzerButton, SIGNAL( clicked() ),
-	       (QWidget*)this, SLOT( buzz() ) );
-    }
-  }
-  else {
-    AmplBox->hide();
-    }
-  */
-
   ASW->assign( &metaData( "Cell" ), MetaDataDisplay, MetaDataReadOnly, true, 
 	       OptWidget::BreakLinesStyle + OptWidget::ExtraSpaceStyle,
 	       metaDataMutex() );
@@ -296,115 +254,6 @@ void Session::main( void )
     stimulusData().setNumber( "temp-1", temp );
     unlockStimulusData();
     sleep( 1.0 );
-  }
-}
-
-
-void Session::startResistance( void )
-{
-  /*
-  if ( Ampl != 0 && SpikeTrace[0] >= 0 && ! RMeasure ) {
-    readLockData();
-    DGain = trace( SpikeTrace[0] ).gainIndex();
-    adjustGain( trace( SpikeTrace[0] ), MaxResistance / ResistanceScale );
-    unlockData();
-    activateGains();
-    Ampl->resistance();
-    RMeasure = true;
-  }
-  */
-}
-
-
-void Session::measureResistance( void )
-{
-  /*
-  if ( Ampl != 0 && SpikeTrace[0] >= 0 && RMeasure ) {
-    readLockData();
-    double r = trace( SpikeTrace[0] ).stdev( trace( SpikeTrace[0] ).currentTime() - 0.05,
-					     trace( SpikeTrace[0] ).currentTime() );
-    unlockData();
-    r *= ResistanceScale;
-    lockMetaData();
-    metaData( "Recording" ).setNumber( "resistance", r );
-    unlockMetaData();
-  }
-  */
-}
-
-
-void Session::stopResistance( void )
-{
-  /*
-  if ( Ampl != 0 && SpikeTrace[0] >= 0 && RMeasure ) {
-    Ampl->manual();
-    readLockData();
-    setGain( trace( SpikeTrace[0] ), DGain );
-    unlockData();
-    activateGains();
-    RMeasure = false;
-  }
-  */
-}
-
-
-void Session::buzz( void )
-{
-  /*
-  if ( Ampl != 0 ) {
-    Ampl->buzzer( );
-  }
-  */
-}
-
-
-void Session::keyPressEvent( QKeyEvent *e )
-{
-  switch ( e->key() ) {
-    /*
-  case Key_O:
-    if ( Ampl != 0 && ResistanceButton != 0 ) {
-      ResistanceButton->setDown( true );
-      startResistance();
-    }
-    else
-      e->ignore();
-    break;
-
-  case Key_Z:
-    if ( Ampl != 0 && BuzzerButton != 0 ) {
-      BuzzerButton->animateClick();
-    }
-    else
-      e->ignore();
-    break;
-    */
-  default:
-    Control::keyPressEvent( e );
-
-  }
-}
-
-
-void Session::keyReleaseEvent( QKeyEvent *e )
-{
-  switch ( e->key() ) {
-    /*
-  case Key_O: 
-    if ( Ampl != 0 && ResistanceButton != 0 ) {
-      measureResistance();
-      if ( ! e->isAutoRepeat() ) {
-	ResistanceButton->setDown( false );
-	stopResistance();
-      }
-    }
-    else
-      e->ignore();
-    break;
-    */
-  default:
-    Control::keyReleaseEvent( e );
-
   }
 }
 

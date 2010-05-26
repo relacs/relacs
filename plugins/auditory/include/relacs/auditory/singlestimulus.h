@@ -22,10 +22,11 @@
 #ifndef _RELACS_AUDITORY_SINGLESTIMULUS_H_
 #define _RELACS_AUDITORY_SINGLESTIMULUS_H_ 1
 
-#include <relacs/repro.h>
+#include <QStackedLayout>
 #include <relacs/eventlist.h>
 #include <relacs/sampledata.h>
 #include <relacs/multiplot.h>
+#include <relacs/repro.h>
 #include <relacs/ephys/traces.h>
 #include <relacs/acoustic/traces.h>
 using namespace relacs;
@@ -155,6 +156,7 @@ protected:
 
   MultiPlot SP;
   MultiPlot P;
+  QStackedLayout *Stack;
 
 };
 

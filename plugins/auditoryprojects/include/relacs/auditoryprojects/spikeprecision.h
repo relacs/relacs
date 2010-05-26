@@ -22,6 +22,7 @@
 #ifndef _RELACS_AUDITORYPROJECTS_SPIKEPRECISION_H_
 #define _RELACS_AUDITORYPROJECTS_SPIKEPRECISION_H_ 1
 
+#include <QStackedLayout>
 #include <relacs/sampledata.h>
 #include <relacs/multiplot.h>
 #include <relacs/rangeloop.h>
@@ -149,6 +150,7 @@ protected:
 
   MultiPlot SP;
   MultiPlot P;
+  QStackedLayout *Stack;
 
   string StimulusLabel;
 

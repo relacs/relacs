@@ -68,7 +68,7 @@ JAR::JAR( void )
   addNumber( "jaraverage", "Time for measuring EOD rate", JARAverageTime, 0.01, 10000.0, 0.02, "seconds", "ms" );
   addNumber( "chirpaverage", "Time for measuring chirp data", ChirpAverageTime, 0.01, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "eodsavetime", "Duration of EOD to be saved", EODSaveTime, 0.0, 10000.0, 0.01, "seconds", "ms" );
-  addTypeStyle( OptWidget::Bold, Parameter::Label );
+  addTypeStyle( OptWidget::TabLabel, Parameter::Label );
   
   // variables:
   FishAmplitude1 = 0.0;
@@ -97,62 +97,45 @@ JAR::JAR( void )
 
   // plot:
   P.lock();
-  P.resize( 4, 2, true );
-  //  P[0].setTitlePos( 0.0, Plot::Graph, 0.0, Plot::X2Axis, Plot::Left );
-  P[0].setXLabel( "sec" );
-  //  P[0].setXLabelPos( 0.0, Plot::Screen, 0.0, Plot::Y1Axis, 
-  //		     Plot::Left, 0.0 );
+  P.resize( 4 );
+  P[0].setXLabel( "[sec]" );
   P[0].setYRange( Plot::AutoScale, Plot::AutoScale );
-  P[0].setYLabel( "Hz" );
-  //  P[0].setYLabelPos( -0.55, Plot::Y1Axis, 0.5, Plot::Graph, 
-  //		     Plot::Center, -90.0 );
-  P[0].setLMarg( 5 );
+  P[0].setYLabel( "EOD [Hz]" );
+  P[0].setLMarg( 6 );
   P[0].setRMarg( 1 );
   P[0].setTMarg( 3 );
   P[0].setBMarg( 4 );
-  P[0].setOrigin( 0.0, 0.55 );
-  P[0].setSize( 1.0, 0.45 );
+  P[0].setOrigin( 0.0, 0.5 );
+  P[0].setSize( 1.0, 0.5 );
 
-  P[1].setXLabel( "Df/Hz" );
-  //  P[1].setXLabelPos( 0.0, Plot::Screen, 0.0, Plot::Y1Axis, 
-  //		     Plot::Left, 0.0 );
+  P[1].setXLabel( "Beat Df [Hz]" );
   P[1].setYFallBackRange( -10.0, 10.0 );
   P[1].setYRange( -10.0, 10.0 );
-  P[1].setYLabel( "JAR" );
-  //  P[1].setYLabelPos( -0.55, Plot::Y1Axis, 0.5, Plot::Graph, 
-  //		     Plot::Center, -90.0 );
-  P[1].setTMarg( 3 );
-  P[1].setLMarg( 5 );
-  P[1].setRMarg( 1 );
+  P[1].setYLabel( "JAR [Hz]" );
+  P[1].setLMarg( 6 );
+  P[1].setRMarg( 0 );
+  P[1].setTMarg( 1 );
   P[1].setOrigin( 0.0, 0.0 );
-  P[1].setSize( 0.33, 0.55 );
+  P[1].setSize( 0.33, 0.5 );
 
-  P[2].setXLabel( "Df/Hz" );
-  //  P[2].setXLabelPos( 0.0, Plot::Screen, 0.0, Plot::Y1Axis, 
-  //		     Plot::Left, 0.0 );
+  P[2].setXLabel( "Beat Df [Hz]" );
   P[2].setYRange( 0.0, 10.0 );
-  P[2].setYLabel( "Chirps" );
-  //  P[2].setYLabelPos( -0.55, Plot::Y1Axis, 0.5, Plot::Graph, 
-  //		     Plot::Center, -90.0 );
+  P[2].setYLabel( "Chirps #" );
   P[2].setLMarg( 5 );
   P[2].setRMarg( 1 );
-  P[2].setTMarg( 3 );
+  P[2].setTMarg( 1 );
   P[2].setOrigin( 0.33, 0.0 );
-  P[2].setSize( 0.33, 0.55 );
+  P[2].setSize( 0.33, 0.5 );
 
-  P[3].setXLabel( "ms" );
-  //  P[3].setXLabelPos( 0.0, Plot::Screen, 0.0, Plot::Y1Axis, 
-  //		     Plot::Left, 0.0 );
+  P[3].setXLabel( "Time [ms]" );
   P[3].setXRange( -40.0, 40.0 );
   P[3].setYRange( Plot::AutoScale, Plot::AutoScale );
-  P[3].setYLabel( "Hz" );
-  //  P[3].setYLabelPos( -0.55, Plot::Y1Axis, 0.5, Plot::Graph, 
-  //		     Plot::Center, -90.0 );
+  P[3].setYLabel( "Chirps [Hz]" );
   P[3].setLMarg( 5 );
   P[3].setRMarg( 1 );
-  P[3].setTMarg( 3 );
+  P[3].setTMarg( 1 );
   P[3].setOrigin( 0.67, 0.0 );
-  P[3].setSize( 0.33, 0.55 );
+  P[3].setSize( 0.33, 0.5 );
   P.unlock();
   setWidget( &P );
 }

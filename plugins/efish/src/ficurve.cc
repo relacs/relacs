@@ -61,7 +61,7 @@ FICurve::FICurve( void )
   addInteger( "medres", "Medium resolution", MediumResolution, 1, 100, 1 );
   addInteger( "nskip", "N skip", NSkip, 1, 10, 1 );
   addNumber( "minrateslope", "Minimum slope of f-I curve", MinRateSlope, 0.0, 1000.0, 10.0, "Hz/mV/cm" );
-  addTypeStyle( OptWidget::Bold, Parameter::Label );
+  addTypeStyle( OptWidget::TabLabel, Parameter::Label );
   
   // variables:
   IntensityRange.clear();
@@ -111,6 +111,9 @@ int FICurve::main( void )
     warning( "Local EOD recording with EOD events required!" );
     return Failed;
   }
+
+  // EOD trace unit:
+  EOD2Unit = trace( LocalEODTrace[0] ).unit();
 
   // EOD rate:
   FishRate = events( LocalEODEvents[0] ).frequency( events( LocalEODEvents[0] ).back() - 0.5,
@@ -178,9 +181,9 @@ int FICurve::main( void )
       P[2*n].clear();
       P[2*n].setLMarg( 7 );
       P[2*n].setRMarg( 2 );
-      P[2*n].setBMarg( 3 );
+      P[2*n].setBMarg( 2.5 );
       P[2*n].setTMarg( 1 );
-      P[2*n].setXLabel( "mV/cm" );
+      P[2*n].setXLabel( "[" + EOD2Unit + "]" );
       P[2*n].setXLabelPos( 0.0, Plot::Screen, 0.0, Plot::FirstAxis, Plot::Left, 0.0 );
       P[2*n].setXRange( IntensityRange.minValue(), IntensityRange.maxValue() );
       P[2*n].setXTics();
@@ -194,7 +197,7 @@ int FICurve::main( void )
       P[2*n+1].setRMarg( 2 );
       P[2*n+1].setBMarg( 3 );
       P[2*n+1].setTMarg( 1 );
-      P[2*n+1].setXLabel( "ms" );
+      P[2*n+1].setXLabel( "[ms]" );
       P[2*n+1].setXLabelPos( 0.0, Plot::Screen, 0.0, Plot::FirstAxis, Plot::Left, 0.0 );
       P[2*n+1].setXRange( -1000.0 * ( Delay + PreDuration ), 1000.0*Duration );
       P[2*n+1].setYLabel( "Frequency [Hz]" );
@@ -694,9 +697,6 @@ void FICurve::analyzeSpikes( const EventData &se, int trace,
 void FICurve::analyze( void )
 {
   const EventData &eod2 = events( LocalEODEvents[0] );
-
-  // EOD trace unit:
-  EOD2Unit = trace( LocalEODTrace[0] ).unit();
 
   // amplitude:
   double truepreintensity = eod2.meanSize( eod2.signalTime(), eod2.signalTime()+PreDuration );

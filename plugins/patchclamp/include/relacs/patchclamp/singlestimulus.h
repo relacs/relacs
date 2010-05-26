@@ -22,6 +22,7 @@
 #ifndef _RELACS_PATCHCLAMP_SINGLESTIMULUS_H_
 #define _RELACS_PATCHCLAMP_SINGLESTIMULUS_H_ 1
 
+#include <QStackedLayout>
 #include <relacs/repro.h>
 #include <relacs/eventlist.h>
 #include <relacs/sampledata.h>
@@ -152,6 +153,7 @@ protected:
 
   MultiPlot SP;
   MultiPlot P;
+  QStackedLayout *Stack;
 
 };
 

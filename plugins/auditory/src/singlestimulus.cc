@@ -22,7 +22,6 @@
 #include <fstream>
 #include <iomanip>
 #include <ctype.h>
-#include <QVBoxLayout>
 #include <relacs/optwidget.h>
 #include <relacs/tablekey.h>
 #include <relacs/translate.h>
@@ -96,10 +95,9 @@ SingleStimulus::SingleStimulus( void )
   addTypeStyle( OptWidget::Bold, Parameter::Label );
 
   // setup plots:
-  QVBoxLayout *vb = new QVBoxLayout;
-  setLayout( vb );
+  Stack = new QStackedLayout;
+  setLayout( Stack );
 
-  SP.hide();
   SP.lock();
   SP.resize( 3 );
   SP.setCommonXRange( 0, 1 );
@@ -107,15 +105,19 @@ SingleStimulus::SingleStimulus( void )
   SP[0].setSize( 0.7, 0.5 );
   SP[0].setLMarg( 7.0 );
   SP[0].setRMarg( 1.5 );
-  SP[0].setTMarg( 3.0 );
+  SP[0].setTMarg( 3.5 );
+  SP[0].setBMarg( 1.0 );
   SP[0].noXTics();
+  SP[0].setYRange( 0.0, Plot::AutoScale );
   SP[0].setYLabel( "Firing rate [Hz]" );
   SP[0].setYLabelPos( 2.3, Plot::FirstMargin, 0.5, Plot::Graph,
 		      Plot::Center, -90.0 );
   SP[1].setOrigin( 0.0, 0.0 );
-  SP[1].setSize( 0.7, 0.48 );
+  SP[1].setSize( 0.7, 0.5 );
   SP[1].setLMarg( 7.0 );
   SP[1].setRMarg( 1.5 );
+  SP[1].setTMarg( 0.5 );
+  SP[1].setBMarg( 5.0 );
   SP[1].setXLabel( "Time [ms]" );
   SP[1].setYLabel( "Stimulus [dB]" );
   SP[1].setYLabelPos( 2.3, Plot::FirstMargin, 0.5, Plot::Graph,
@@ -124,36 +126,42 @@ SingleStimulus::SingleStimulus( void )
   SP[2].setSize( 0.3, 0.8 );
   SP[2].setLMarg( 7.0 );
   SP[2].setRMarg( 1.5 );
-  SP[2].setTMarg( 3.0 );
+  SP[2].setTMarg( 2.0 );
+  SP[2].setBMarg( 5.0 );
   SP[2].setXLabel( "Intensity [dB SPL]" );
   SP[2].setYLabel( "Firing rate [Hz]" );
   SP[2].setYLabelPos( 2.3, Plot::FirstMargin, 0.5, Plot::Graph,
 		      Plot::Center, -90.0 );
   SP.unlock();
-  vb->addWidget( &SP );
+  Stack->addWidget( &SP );
 
-  P.show();
   P.lock();
   P.resize( 2 );
   P.setCommonXRange( 0, 1 );
   P[0].setOrigin( 0.0, 0.5 );
   P[0].setSize( 1.0, 0.5 );
-  P[0].setLMarg( 8.0 );
-  P[0].setRMarg( 2.0 );
+  P[0].setLMarg( 7.0 );
+  P[0].setRMarg( 1.5 );
+  P[0].setTMarg( 3.5 );
+  P[0].setBMarg( 1.0 );
   P[0].noXTics();
+  P[0].setYRange( 0.0, Plot::AutoScale );
   P[0].setYLabel( "Firing rate [Hz]" );
   P[0].setYLabelPos( 2.3, Plot::FirstMargin, 0.5, Plot::Graph,
 		     Plot::Center, -90.0 );
   P[1].setOrigin( 0.0, 0.0 );
-  P[1].setSize( 1.0, 0.48 );
-  P[1].setLMarg( 8.0 );
-  P[1].setRMarg( 2.0 );
+  P[1].setSize( 1.0, 0.5 );
+  P[1].setLMarg( 7.0 );
+  P[1].setRMarg( 1.5 );
+  P[1].setTMarg( 0.5 );
+  P[1].setBMarg( 5.0 );
   P[1].setXLabel( "Time [ms]" );
   P[1].setYLabel( "Stimulus [dB]" );
   P[1].setYLabelPos( 2.3, Plot::FirstMargin, 0.5, Plot::Graph,
 		     Plot::Center, -90.0 );
   P.unlock();
-  vb->addWidget( &P );
+  Stack->addWidget( &P );
+  Stack->setCurrentWidget( &P );
 
 }
 
@@ -1024,12 +1032,16 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
 void SingleStimulus::customEvent( QEvent *qce )
 {
   if ( qce->type() == QEvent::User+11 ) {
-    SP.hide();
-    P.show();
+    P.lock();
+    P.setDrawBackground();
+    P.unlock();
+    Stack->setCurrentWidget( &P );
   }
   else if ( qce->type() == QEvent::User+12 ) {
-    P.hide();
-    SP.show();
+    P.lock();
+    P.setDrawBackground();
+    P.unlock();
+    Stack->setCurrentWidget( &SP );
   }
   else
     RELACSPlugin::customEvent( qce );

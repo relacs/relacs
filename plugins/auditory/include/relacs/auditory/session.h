@@ -28,7 +28,6 @@
 #include <relacs/multiplot.h>
 #include <relacs/map.h>
 #include <relacs/temperature.h>
-//#include <relacs/misc/amplmode.h>
 #include <relacs/ephys/traces.h>
 #include <relacs/acoustic/traces.h>
 #include <relacs/control.h>
@@ -41,7 +40,7 @@ namespace auditory {
 \class Session
 \brief [Control] Control recordings from auditory neurons
 \author Jan Benda
-\todo Temperature and Resistance need also to be displayed in the widget.
+\todo Temperature needs also to be displayed in the widget.
 \version 1.5 (Feb 2, 2010)
 */
 
@@ -60,8 +59,6 @@ public:
   virtual void initDevices( void );
   virtual void sessionStarted( void );
   virtual void sessionStopped( bool saved );
-  virtual void keyPressEvent( QKeyEvent *e );
-  virtual void keyReleaseEvent( QKeyEvent *e );
 
     /*! Notify about changes in the meta data. */
   virtual void notifyMetaData( const string &section );
@@ -133,16 +130,6 @@ public:
   void updateBestSide( void );
 
 
-public slots:
-
-    /*! Start measuring electrode resistance. */
-  void startResistance( void );
-    /*! Stop measuring electrode resistance. */
-  void stopResistance( void );
-    /*! Buzz the electrode. */
-  void buzz( void );
-
-
 protected:
 
   void main( void );
@@ -152,9 +139,6 @@ private:
 
     /*! Update the plots. */
   void plot( void );
-
-    /*! Measure electrode resistance. */
-  void measureResistance( void );
 
     /*! The last threshold curve of the previous session for each side. */
   MapD OldThreshCurve[2];
@@ -183,14 +167,6 @@ private:
   static const int MetaDataSave = 8;
 
   Temperature *Temp;
-  //  misc::AmplMode *Ampl;
-  bool RMeasure;
-  int DGain;
-  double MaxResistance;
-  double ResistanceScale;
-  QWidget *AmplBox;
-  QPushButton *ResistanceButton;
-  QPushButton *BuzzerButton;
 
   QPushButton *SessionButton;
 

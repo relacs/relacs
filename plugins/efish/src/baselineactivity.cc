@@ -142,7 +142,7 @@ int BaselineActivity::main( void )
       else
 	P[2*n+1].setOrigin( pdx, NerveTraces*pdy );
       P[2*n+1].setSize( pdx, pdy );
-      P[2*n+1].setTitle( "EOD Firing Rate" + ns );
+      P[2*n+1].setTitle( "EOD Firing Rate [Hz]" + ns );
       P[2*n+1].setTitlePos( 0.0, Plot::Graph, 0.0, Plot::SecondAxis, Plot::Left );
       P[2*n+1].setXLabel( "Time [ms]" );
       P[2*n+1].setYRange( 0.0, Plot::AutoMinScale );

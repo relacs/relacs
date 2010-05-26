@@ -52,10 +52,8 @@ SAM::SAM( void )
 
   // add some parameter as options:
   addLabel( "Stimulus" );
-  addNumber( "duration", "Duration of signal",
-	      Duration, 0.01, 1000.0, 0.01, "seconds", "ms" );
-  addNumber( "pause", "Pause between signals",
-	      Pause, 0.0, 1000.0, 0.01, "seconds", "ms" );
+  addNumber( "duration", "Duration of signal", Duration, 0.01, 1000.0, 0.01, "seconds", "ms" );
+  addNumber( "pause", "Pause between signals", Pause, 0.0, 1000.0, 0.01, "seconds", "ms" );
   addSelection( "freqsel", "Stimulus frequency is", "relative to EOD|absolute" );
   addNumber( "deltaf", "Delta f (beat frequency)", DeltaF, -1000.0, 1000.0, 5.0, "Hz" );
   addNumber( "contrast", "Contrast", Contrast, 0.01, 1.0, 0.05, "", "%" );
@@ -65,12 +63,10 @@ SAM::SAM( void )
   addLabel( "Analysis" );
   addNumber( "skip", "Skip", Skip, 0.0, 100.0, 0.1, "Periods" );
   addInteger( "ratebins", "Number of bins for firing rate", RateN, 2, 1000 );
-  addNumber( "before", "Spikes recorded before stimulus",
-	      Before, 0.0, 1000.0, 0.005, "seconds", "ms" );
-  addNumber( "after", "Spikes recorded after stimulus",
-	      After, 0.0, 1000.0, 0.005, "seconds", "ms" );
+  addNumber( "before", "Spikes recorded before stimulus", Before, 0.0, 1000.0, 0.005, "seconds", "ms" );
+  addNumber( "after", "Spikes recorded after stimulus", After, 0.0, 1000.0, 0.005, "seconds", "ms" );
   addBoolean( "adjust", "Adjust input gain?", true );
-  addTypeStyle( OptWidget::Bold, Parameter::Label );
+  addTypeStyle( OptWidget::TabLabel, Parameter::Label );
   
   // variables:
   Signal = 0;
@@ -231,6 +227,7 @@ int SAM::main( void )
   }
 
   // data:
+  EOD2Unit = trace( LocalEODTrace[0] ).unit();
   Intensity = 0.0;
   Period = fabs( 1.0/DeltaF );
   int beats = int( 2.0 * Duration * fabs( DeltaF ) );
@@ -302,11 +299,11 @@ int SAM::main( void )
       P[2*n+1].setTMarg( 0.2 );
 
       P[2*n+1].setXRange( -500.0*Period, 500.0*Period );
-      P[2*n+1].setXLabel( "ms" );
+      P[2*n+1].setXLabel( "[ms]" );
       P[2*n+1].setXLabelPos( 0.0, Plot::Screen, 0.0, Plot::FirstAxis, 
 			 Plot::Left, 0.0 );
       P[2*n+1].setXTics();
-      P[2*n+1].setYLabel( "SAM" );
+      P[2*n+1].setYLabel( "SAM [" + EOD2Unit + "]" );
       P[2*n+1].setYLabelPos( 2.0, Plot::FirstMargin, 0.5, Plot::Graph, 
 			 Plot::Center, -90.0 );
       P[2*n+1].setAutoScaleY();
@@ -846,9 +843,6 @@ void SAM::analyzeSpikes( const EventData &se, int k,
 void SAM::analyze( void )
 {
   const EventData &eod2 = events( LocalEODEvents[0] );
-
-  // EOD trace unit:
-  EOD2Unit = trace( LocalEODTrace[0] ).unit();
 
   // EOD rate:
   if ( EODEvents >= 0 )
