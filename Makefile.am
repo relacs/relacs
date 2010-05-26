@@ -80,3 +80,9 @@ install-data-local: doxygen-install
 uninstall-local: doxygen-uninstall
 
 endif DX_COND_doc
+
+.PHONY: libclean
+
+# whenever you change the prefix, it is sufficient jsut to delete the *.la files:
+libclean:
+	find -name '*.la' | xargs rm

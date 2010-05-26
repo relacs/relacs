@@ -22,7 +22,9 @@
 #include <cmath>
 #include <iostream>
 #include <QApplication>
+#include <QThread>
 #include <QPainter>
+#include <QEvent>
 #include <QMouseEvent>
 #include <relacs/str.h>
 #include <relacs/multiplot.h>
@@ -30,10 +32,41 @@
 namespace relacs {
 
 
+class MultiPlotEvent : public QEvent
+{
+
+public:
+
+  MultiPlotEvent( int plots, Plot::KeepMode keep )  // resize
+    : QEvent( Type( User+11 ) ),
+      Plots( plots ),
+      Keep( keep )
+  {
+  }
+
+
+  MultiPlotEvent( void )   // clear
+    : QEvent( Type( User+12 ) )
+  {
+  }
+
+
+  MultiPlotEvent( int index )  // clear( int )
+    : QEvent( Type( User+13 ) ),
+      Index( index )
+  {
+  }
+
+  int Plots;
+  Plot::KeepMode Keep;
+  int Index;
+};
+
+
 MultiPlot::MultiPlot( int plots, int columns, bool horizontal, Plot::KeepMode keep,
 		      QWidget *parent )
   : QWidget( parent ),
-    PMutex( QMutex::Recursive )
+    PMutex( QMutex::NonRecursive )
 {
   construct( plots, columns, horizontal, keep );
 }
@@ -42,7 +75,7 @@ MultiPlot::MultiPlot( int plots, int columns, bool horizontal, Plot::KeepMode ke
 MultiPlot::MultiPlot( int plots, int columns, bool horizontal,
 		      QWidget *parent )
   : QWidget( parent ),
-    PMutex( QMutex::Recursive )
+    PMutex( QMutex::NonRecursive )
 {
   construct( plots, columns, horizontal, Plot::Copy );
 }
@@ -50,7 +83,7 @@ MultiPlot::MultiPlot( int plots, int columns, bool horizontal,
 
 MultiPlot::MultiPlot( int plots, Plot::KeepMode keep, QWidget *parent )
   : QWidget( parent ),
-    PMutex( QMutex::Recursive )
+    PMutex( QMutex::NonRecursive )
 {
   construct( plots, 1, true, keep );
 }
@@ -58,7 +91,7 @@ MultiPlot::MultiPlot( int plots, Plot::KeepMode keep, QWidget *parent )
 
 MultiPlot::MultiPlot( int plots, QWidget *parent )
   : QWidget( parent ),
-    PMutex( QMutex::Recursive )
+    PMutex( QMutex::NonRecursive )
 {
   construct( plots, 1, true, Plot::Copy );
 }
@@ -66,7 +99,7 @@ MultiPlot::MultiPlot( int plots, QWidget *parent )
 
 MultiPlot::MultiPlot( QWidget *parent )
   : QWidget( parent ),
-    PMutex( QMutex::Recursive )
+    PMutex( QMutex::NonRecursive )
 {
   construct( 0, 1, true, Plot::Copy );
 }
@@ -83,12 +116,15 @@ MultiPlot::~MultiPlot( void )
 
 void MultiPlot::construct( int plots, int columns, bool horizontal, Plot::KeepMode keep )
 {
+  GUIThread = QThread::currentThread();
+
   setAttribute( Qt::WA_OpaquePaintEvent );
 
   Columns = columns;
   Horizontal = horizontal;
 
   DMutex = 0;
+  DRWMutex = 0;
 
   PMutex.lock();
   
@@ -128,15 +164,26 @@ void MultiPlot::unlock( void )
 
 void MultiPlot::setDataMutex( QMutex *mutex )
 {
+  DRWMutex = 0;
   DMutex = mutex;
   for ( unsigned int k=0; k<PlotList.size(); k++ )
     PlotList[k]->setDataMutex( DMutex );
 }
 
 
+void MultiPlot::setDataMutex( QReadWriteLock *mutex )
+{
+  DMutex = 0;
+  DRWMutex = mutex;
+  for ( unsigned int k=0; k<PlotList.size(); k++ )
+    PlotList[k]->setDataMutex( DRWMutex );
+}
+
+
 void MultiPlot::clearDataMutex( void )
 {
   DMutex = 0;
+  DRWMutex = 0;
   for ( unsigned int k=0; k<PlotList.size(); k++ )
     PlotList[k]->clearDataMutex();
 }
@@ -146,6 +193,8 @@ void MultiPlot::lockData( void )
 {
   if ( DMutex != 0 )
     DMutex->lock();
+  else if ( DRWMutex != 0 )
+    DRWMutex->lockForRead();
 }
 
 
@@ -153,6 +202,8 @@ void MultiPlot::unlockData( void )
 {
   if ( DMutex != 0 )
     DMutex->unlock();
+  else if ( DRWMutex != 0 )
+    DRWMutex->unlock();
 }
 
 
@@ -170,8 +221,20 @@ bool MultiPlot::empty( void ) const
 
 void MultiPlot::resize( int plots, Plot::KeepMode keep )
 {
+  if ( QThread::currentThread() != GUIThread ) {
+    qApp->removePostedEvents( this );
+    QApplication::postEvent( this, new MultiPlotEvent( plots, keep ) );
+    WaitGUI.wait( &PMutex );
+  }
+  else
+    doResize( plots, keep );
+}
+
+
+void MultiPlot::doResize( int plots, Plot::KeepMode keep )
+{
   if ( plots <= 0 )
-    clear();
+    doClear();
   else if ( plots > size() ) {
     for ( int k=size(); k<plots; k++ ) {
       PlotList.push_back( new Plot( keep, true, k, this ) );
@@ -180,7 +243,10 @@ void MultiPlot::resize( int plots, Plot::KeepMode keep )
 	       this, SLOT( setRanges( int ) ) );
       CommonXRange.push_back( vector< int >( 0 ) );
       CommonYRange.push_back( vector< int >( 0 ) );
-      PlotList.back()->setDataMutex( DMutex );
+      if ( DMutex != 0 )
+	PlotList.back()->setDataMutex( DMutex );
+      else if ( DRWMutex != 0 )
+	PlotList.back()->setDataMutex( DRWMutex );
     }
   }
   else if ( plots < size() ) {
@@ -208,7 +274,18 @@ void MultiPlot::resize( int plots, int columns, bool horizontal, Plot::KeepMode 
 
 void MultiPlot::clear( void )
 {
-  qApp->removePostedEvents( this );
+  if ( QThread::currentThread() != GUIThread ) {
+    qApp->removePostedEvents( this );
+    QApplication::postEvent( this, new MultiPlotEvent );
+    WaitGUI.wait( &PMutex );
+  }
+  else
+    doClear();
+}
+
+
+void MultiPlot::doClear( void )
+{
   for ( PlotListType::iterator p = PlotList.begin(); 
 	p != PlotList.end(); 
 	++p )
@@ -221,6 +298,18 @@ void MultiPlot::clear( void )
 
 
 void MultiPlot::clear( int index )
+{
+  if ( QThread::currentThread() != GUIThread ) {
+    qApp->removePostedEvents( this );
+    QApplication::postEvent( this, new MultiPlotEvent( index ) );
+    WaitGUI.wait( &PMutex );
+  }
+  else
+    doClear( index );
+}
+
+
+void MultiPlot::doClear( int index )
 {
   int k;
   PlotListType::iterator p;
@@ -553,6 +642,32 @@ void MultiPlot::mouseMoveEvent( QMouseEvent *qme )
       unlockData();
       return;
     }
+  }
+}
+
+
+void MultiPlot::customEvent( QEvent *qce )
+{
+  switch ( qce->type() ) {
+  case QEvent::User+11: {
+    MultiPlotEvent *mpe = dynamic_cast<MultiPlotEvent*>( qce );
+    doResize( mpe->Plots, mpe->Keep );
+    WaitGUI.wakeAll();
+    break;
+  }
+  case QEvent::User+12: {
+    doClear();
+    WaitGUI.wakeAll();
+    break;
+  }
+  case QEvent::User+13: {
+    MultiPlotEvent *mpe = dynamic_cast<MultiPlotEvent*>( qce );
+    doClear( mpe->Index );
+    WaitGUI.wakeAll();
+    break;
+  }
+  default:
+    QWidget::customEvent( qce );
   }
 }
 

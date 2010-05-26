@@ -299,9 +299,6 @@ protected:
   void writeLockData( void );
     /*! Unlock the input data and events. */
   void unlockData( void );
-    /*! Returns how often the input data are locked. 
-        For debugging only. */
-  int dataMutexCount( void );
 
 
  public:

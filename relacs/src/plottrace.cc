@@ -814,13 +814,11 @@ void PlotTrace::viewToggle( void )
 
 void PlotTrace::setView( Views mode )
 {
-  P.lock();
   if ( ViewMode != mode ) {
     ViewMode = mode;
     PlotChanged = true;
     QApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
   }
-  P.unlock();
 }
 
 

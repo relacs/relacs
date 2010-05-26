@@ -225,12 +225,6 @@ void RELACSPlugin::unlockData( void )
 }
 
 
-int RELACSPlugin::dataMutexCount( void )
-{
-  return RW != 0 ? RW->dataMutexCount() : -1;
-}
-
-
 const InList &RELACSPlugin::traces( void ) const
 {
   return RW->IL;

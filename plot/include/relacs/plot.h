@@ -29,6 +29,7 @@
 #include <map>
 #include <QWidget>
 #include <QMutex>
+#include <QReadWriteLock>
 #include <QAction>
 #include <QMenu>
 #include <relacs/array.h>
@@ -404,6 +405,17 @@ public:
 	while drawing,
 	the individual data locks are not used in this situation. */
   void setDataMutex( QMutex *mutex );
+    /*! Provide a mutex that is used by Plot to lock
+        reading access to data while they are plotted. 
+        Passing a '0' disables the data mutex.
+        If you want to change the mutex, you have first to
+        disable the mutex by passing '0' or calling clearDataMutex().
+	\note If this Plot is part of a MultiPlot, then you should set a
+	common data lock using MutiPlot::setDataLock().
+	This data lock is used by MultiPlot to lock the data for all Subplots
+	while drawing,
+	the individual data locks are not used in this situation. */
+  void setDataMutex( QReadWriteLock *mutex );
     /*! Disables the data mutex. \sa setDataMutex() */
   void clearDataMutex( void );
 
@@ -1432,6 +1444,7 @@ private:
   double ShiftX[MaxAxis];
   QMutex PMutex;
   QMutex *DMutex;
+  QReadWriteLock *DRWMutex;
 
   int addData( DataElement *d );
   void drawLine( QPainter &paint, DataElement *d );

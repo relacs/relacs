@@ -26,6 +26,8 @@
 #include <vector>
 #include <QWidget>
 #include <QMutex>
+#include <QReadWriteLock>
+#include <QWaitCondition>
 #include <relacs/plot.h>
 
 namespace relacs {
@@ -71,9 +73,14 @@ public:
 
     /*! Provide a mutex that is used to lock
         access to all data while they are plotted. 
-        Passing a '0' disabled the data mutex.
+        Passing a '0' disables the data mutex.
         \sa clearDataMutex(), lockData(), unlockData() */
   void setDataMutex( QMutex *mutex );
+    /*! Provide a mutex that is used to lock
+        reading access to all data while they are plotted. 
+        Passing a '0' disables the data mutex.
+        \sa clearDataMutex(), lockData(), unlockData() */
+  void setDataMutex( QReadWriteLock *mutex );
     /*! Disables the data mutex and the data mutexes of the subplots.
         \sa setDataMutex() */
   void clearDataMutex( void );
@@ -87,15 +94,19 @@ public:
     /*! True if there isn't any Plot in the MultiPlot widget. */
   bool empty( void ) const;
 
-    /*! Change the number of plots to \a plots. */
+    /*! Change the number of plots to \a plots.
+        \note the plot mutex must be locked ( lock() ), when calling this function! */
   void resize( int plots, Plot::KeepMode keep=Plot::Copy );
     /*! Change the number of plots to \a plots
-        and update the layout. */
+        and update the layout.
+        \note the plot mutex must be locked ( lock() ), when calling this function! */
   void resize( int plots, int columns, bool horizontal, Plot::KeepMode keep=Plot::Copy );
 
-    /*! Remove all Plots from the MultiPlot widget. */
+    /*! Remove all Plots from the MultiPlot widget.
+        \note the plot mutex must be locked ( lock() ), when calling this function! */
   void clear( void );
-    /*! Remove Plot number \a index from the MultiPlot widget. */
+    /*! Remove Plot number \a index from the MultiPlot widget.
+        \note the plot mutex must be locked ( lock() ), when calling this function! */
   void clear( int index );
 
     /*! The Plot-widget \a i. */
@@ -148,6 +159,11 @@ protected:
     /*! Paints the entire plot. */
   void paintEvent( QPaintEvent *qpe );
   void resizeEvent( QResizeEvent *qre );
+  void customEvent( QEvent *qce );
+
+  void doResize( int plots, Plot::KeepMode keep );
+  void doClear( void );
+  void doClear( int index );
 
     /*! The Qt mouse event handler for a mouse press event.
         Dispatches the event to the appropriate Plot. */
@@ -181,6 +197,9 @@ private:
 
   QMutex PMutex;
   QMutex *DMutex;
+  QReadWriteLock *DRWMutex;
+  QWaitCondition WaitGUI;
+  QThread *GUIThread;
 
   int Columns;
   bool Horizontal;

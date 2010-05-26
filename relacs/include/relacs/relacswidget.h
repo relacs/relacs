@@ -31,6 +31,7 @@
 #include <QTimer>
 #include <QThread>
 #include <QMutex>
+#include <QReadWriteLock>
 #include <QWaitCondition>
 #include <QSplashScreen>
 #include <QApplication>
@@ -134,13 +135,11 @@ public:
   void processData( void );
 
     /*! Locks the mutex of the data thread for reading. */
-  void readLockData( void ) { DataMutexCount++; DataMutex.lock(); };
+  void readLockData( void ) { DataMutex.lockForRead(); };
     /*! Locks the data mutex of the data thread for writing. */
-  void writeLockData( void ) { DataMutexCount++; DataMutex.lock(); };
+  void writeLockData( void ) { DataMutex.lockForWrite(); };
     /*! Unlocks the mutex of the data thread. */
-  void unlockData( void ) { DataMutexCount--; DataMutex.unlock(); };
-    /*! Returns how often the data mutex is locked. */
-  int dataMutexCount( void ) { return DataMutexCount; };
+  void unlockData( void ) { DataMutex.unlock(); };
 
     /*! Locks the mutex for analog input. */
   void lockAI( void ) { AIMutex.lock(); };
@@ -396,8 +395,7 @@ private:
   QLabel *SimLabel;
 
     /*! Controls the data reading thread. */
-  QMutex DataMutex;
-  int DataMutexCount;
+  QReadWriteLock DataMutex;
   QMutex AIMutex;
   QMutex SignalMutex;
   bool RunData;

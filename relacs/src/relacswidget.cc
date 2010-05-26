@@ -88,8 +88,6 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     InfoFileMacro( "" ),
     IsFullScreen( false ),
     IsMaximized( false ),
-    DataMutex( QMutex::Recursive ),  // recursive, because of activateGains()!
-    DataMutexCount( 0 ),
     AIMutex( QMutex::Recursive ),  // recursive, because of activateGains()???
     SignalMutex(),
     RunData( false ),
@@ -867,6 +865,7 @@ void RELACSWidget::simLoadMessage( void )
 
 void RELACSWidget::activateGains( void )
 {
+  unlockData();
   writeLockData();
   lockAI();
   AQ->activateGains();
@@ -874,6 +873,7 @@ void RELACSWidget::activateGains( void )
   AQ->readRestart( IL, ED );
   FD->adjust( IL, ED, AQ->adjustFlag() );
   unlockData();
+  readLockData();
 }
 
 

@@ -303,6 +303,7 @@ void Plot::construct( KeepMode keep, bool subwidget, int id, MultiPlot *mp )
   ShiftXPix = 0;
 
   DMutex = 0;
+  DRWMutex = 0;
 }
 
 
@@ -331,14 +332,26 @@ void Plot::unlock( void )
 
 void Plot::setDataMutex( QMutex *mutex )
 {
-  if ( DMutex == 0 )
+  if ( DMutex == 0 && DRWMutex == 0 ) {
     DMutex = mutex;
+    DRWMutex = 0;
+  }
+}
+
+
+void Plot::setDataMutex( QReadWriteLock *mutex )
+{
+  if ( DMutex == 0 && DRWMutex == 0 ) {
+    DRWMutex = mutex;
+    DMutex = 0;
+  }
 }
 
 
 void Plot::clearDataMutex( void )
 {
   DMutex = 0;
+  DRWMutex = 0;
 }
 
 
@@ -346,6 +359,8 @@ void Plot::lockData( void )
 {
   if ( DMutex != 0 )
     DMutex->lock();
+  else if ( DRWMutex != 0 )
+    DRWMutex->lockForRead();
 }
 
 
@@ -353,6 +368,8 @@ void Plot::unlockData( void )
 {
   if ( DMutex != 0 )
     DMutex->unlock();
+  else if ( DRWMutex != 0 )
+    DRWMutex->unlock();
 }
 
 
