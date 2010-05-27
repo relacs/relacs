@@ -190,6 +190,8 @@ int EODDetector::checkEvent( const InData::const_iterator &first,
   */
   // peak size:
   size = y1 - 0.25*a*a/b;
+  if ( size <= 0.0 )
+    return 0;
 
   // width:
   width = 0.0;

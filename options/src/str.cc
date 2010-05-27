@@ -228,7 +228,7 @@ void Str::Construct( double val, int width, int precision, char format,
 		     char pad, bool append )
 {
   ostringstream oss( *this, ostringstream::out |
-		     ( append ? ostringstream::ate : ostringstream::openmode( 0 ) ) );
+		     ( append ? ostringstream::app : ostringstream::trunc ) );
 
   if ( format == 'f' || format == 'F' )
     oss.setf( ios::fixed, ios::floatfield );
@@ -257,7 +257,7 @@ void Str::Construct( double val, int width, int precision, char format,
 void Str::Construct( signed long val, int width, char pad, bool append )
 {
   ostringstream oss( *this, ostringstream::out | 
-		     ( append ? ostringstream::ate : ostringstream::openmode( 0 ) ) );
+		     ( append ? ostringstream::app : ostringstream::trunc ) );
 
   if ( width < 0 )
     oss.setf( ios::left, ios::adjustfield );
@@ -272,7 +272,7 @@ void Str::Construct( signed long val, int width, char pad, bool append )
 void Str::Construct( unsigned long val, int width, char pad, bool append )
 {
   ostringstream oss( *this, ostringstream::out | 
-		     ( append ? ostringstream::ate : ostringstream::openmode( 0 ) ) );
+		     ( append ? ostringstream::app : ostringstream::trunc ) );
 
   if ( width < 0 )
     oss.setf( ios::left, ios::adjustfield );
@@ -287,7 +287,7 @@ void Str::Construct( unsigned long val, int width, char pad, bool append )
 void Str::Construct( long long val, int width, char pad, bool append )
 {
   ostringstream oss( *this, ostringstream::out | 
-		     ( append ? ostringstream::ate : ostringstream::openmode( 0 ) ) );
+		     ( append ? ostringstream::app : ostringstream::trunc ) );
 
   if ( width < 0 )
     oss.setf( ios::left, ios::adjustfield );

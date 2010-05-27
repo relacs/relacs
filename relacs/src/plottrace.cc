@@ -470,12 +470,11 @@ void PlotTrace::plot( void )
 
 void PlotTrace::updateRanges( int id )
 {
-  P.lock();
+  // P is already locked!
   double tfac = 0.001;
   TimeWindow = tfac * ( P[id].xmaxRange() - P[id].xminRange() );
   TimeOffs = -tfac * P[id].xminRange();
   LeftTime = Offset - TimeOffs;
-  P.unlock();
 }
 
 

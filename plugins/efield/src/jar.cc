@@ -42,6 +42,7 @@ JAR::JAR( void )
   AmplStep = 1.0;
   AmplMax = 2.0;
   Repeats = 200;
+  Before = 1.0;
   After = 5.0;
   JARAverageTime = 0.5;
   ChirpAverageTime = 0.02;
@@ -50,12 +51,13 @@ JAR::JAR( void )
 
   // add some parameter as options:
   addLabel( "Stimulation" );
-  addNumber( "duration", "Signal duration", Duration, 1.0, 10000.0, 1.0, "seconds" );
-  addNumber( "pause", "Pause between signals", Pause, 1.0, 10000.0, 1.0, "seconds" );
+  addNumber( "duration", "Signal duration", Duration, 1.0, 1000000.0, 1.0, "seconds" );
+  addNumber( "pause", "Pause between signals", Pause, 1.0, 1000000.0, 1.0, "seconds" );
   addNumber( "ramp", "Duration of linear ramp", 0.5, 0, 10000.0, 0.1, "seconds" );
   addNumber( "deltafstep", "Delta f steps", DeltaFStep, 1.0, 10000.0, 1.0, "Hz" );
   addNumber( "deltafmax", "Maximum delta f", DeltaFMax, -10000.0, 10000.0, 2.0, "Hz" );
   addNumber( "deltafmin", "Minimum delta f", DeltaFMin, -10000.0, 10000.0, 2.0, "Hz" );
+  addText( "deltafrange", "Range of delta f's", "" );
   addSelection( "amplsel", "Stimulus amplitude", "contrast|absolute" );
   addNumber( "contraststep", "Contrast steps", ContrastStep, 0.01, 1.0, 0.05, "1", "%", "%.0f" ).setActivation( "amplsel", "contrast" );
   addNumber( "contrastmax", "Maximum contrast", ContrastMax, 0.01, 1.0, 0.05, "1", "%", "%.0f" ).setActivation( "amplsel", "contrast" );
@@ -64,7 +66,9 @@ JAR::JAR( void )
   addInteger( "repeats", "Repeats", Repeats, 0, 1000, 2 );
   addBoolean( "sinewave", "Use sine wave", SineWave );
   addLabel( "Analysis" );
-  addNumber( "after", "Time after stimulation to be analyzed", After, 0.0, 10000.0, 1.0, "seconds", "ms" );
+  addNumber( "before", "Time before stimulation to be analyzed", Before, 0.0, 100000.0, 1.0, "seconds" );
+  addNumber( "after", "Time after stimulation to be analyzed", After, 0.0, 100000.0, 1.0, "seconds" );
+  addBoolean( "savetraces", "Save traces during pause", true );
   addNumber( "jaraverage", "Time for measuring EOD rate", JARAverageTime, 0.01, 10000.0, 0.02, "seconds", "ms" );
   addNumber( "chirpaverage", "Time for measuring chirp data", ChirpAverageTime, 0.01, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "eodsavetime", "Duration of EOD to be saved", EODSaveTime, 0.0, 10000.0, 0.01, "seconds", "ms" );
@@ -114,7 +118,7 @@ JAR::JAR( void )
   P[1].setYLabel( "JAR [Hz]" );
   P[1].setLMarg( 6 );
   P[1].setRMarg( 0 );
-  P[1].setTMarg( 1 );
+  P[1].setTMarg( 2.0 );
   P[1].setOrigin( 0.0, 0.0 );
   P[1].setSize( 0.33, 0.5 );
 
@@ -123,7 +127,7 @@ JAR::JAR( void )
   P[2].setYLabel( "Chirps #" );
   P[2].setLMarg( 5 );
   P[2].setRMarg( 1 );
-  P[2].setTMarg( 1 );
+  P[2].setTMarg( 2.0 );
   P[2].setOrigin( 0.33, 0.0 );
   P[2].setSize( 0.33, 0.5 );
 
@@ -133,7 +137,7 @@ JAR::JAR( void )
   P[3].setYLabel( "Chirps [Hz]" );
   P[3].setLMarg( 5 );
   P[3].setRMarg( 1 );
-  P[3].setTMarg( 1 );
+  P[3].setTMarg( 2.0 );
   P[3].setOrigin( 0.67, 0.0 );
   P[3].setSize( 0.33, 0.5 );
   P.unlock();
@@ -151,18 +155,21 @@ int JAR::main( void )
   DeltaFStep = number( "deltafstep" );
   DeltaFMax = number( "deltafmax" );
   DeltaFMin = number( "deltafmin" );
+  string deltafrange = text( "deltafrange" );
   UseContrast = ( index( "amplsel" ) == 0 );
   ContrastStep = number( "contraststep" );
   ContrastMax = number( "contrastmax" );
   AmplStep = number( "amplstep" );
   AmplMax = number( "amplmax" );
+  Before = number( "before" );
   After = number( "after" );
+  bool savetraces = boolean( "savetraces" );
   JARAverageTime = number( "jaraverage" );
   ChirpAverageTime = number( "chirpaverage" );
   EODSaveTime = number( "eodsavetime" );
   SineWave = boolean( "sinewave" );
-  if ( After > Pause )
-    After = Pause;
+  if ( After + Before > Pause )
+    Pause = Before + After;
 
   if ( EODTrace < 0 ) {
     warning( "need a recording of the EOD Trace." );
@@ -205,7 +212,10 @@ int JAR::main( void )
       Contrasts[i] = (i+1)*AmplStep;
   }
   DeltaFRange.clear();
-  DeltaFRange.set( DeltaFMin, DeltaFMax, DeltaFStep );
+  if ( deltafrange.empty() )
+    DeltaFRange.set( DeltaFMin, DeltaFMax, DeltaFStep );
+  else
+    DeltaFRange.set( deltafrange );
   DeltaFRange.random();
 
   // data:
@@ -241,6 +251,10 @@ int JAR::main( void )
 		  DeltaFRange.maxValue() + 0.5 * DeltaFStep );
 
   // EOD rate:
+  if ( events( EODEvents ).frequency( JARAverageTime ) < 10.0 ) {
+    warning( "Missing EOD!<br>Either no fish or threshold of EOD Detector too high.", 5.0 );
+    return Failed;
+  }
   FishRate = events( EODEvents ).frequency( ReadCycles );
   if ( FishRate <= 0.0 ) {
     warning( "Not enough EOD cycles recorded!", 5.0 );
@@ -280,6 +294,14 @@ int JAR::main( void )
 	  ContrastCount < (int)Contrasts.size() && softStop() <= 1;
 	  ContrastCount++ ) {
       for ( DeltaFRange.reset(); !DeltaFRange && softStop() <= 2; ++DeltaFRange ) {
+
+	setSaving( true );
+	sleep( Before );
+	if ( interrupt() ) {
+	  writeZero( GlobalEField );
+	  save();
+	  return Aborted;
+	}
 
 	Contrast = Contrasts[ContrastCount];
 	DeltaF = *DeltaFRange;
@@ -384,7 +406,9 @@ int JAR::main( void )
 	saveTrace();
 	FileIndex++;
 
-	sleep( Pause - After );
+	setSaving( savetraces );
+
+	sleep( Pause - Before - After );
 	if ( interrupt() ) {
 	  writeZero( GlobalEField );
 	  save();
@@ -837,7 +861,7 @@ void JAR::saveChirpTraces( const Options &header )
   else {
     int j = 0;
     for ( unsigned int k=0; k<Chirps.size(); k++ ) {
-      int wi = (int)::rint( 0.7 * Chirps[k].Width * Chirps[k].EODRate );
+      int wi = (int)::rint( Chirps[k].Width * Chirps[k].EODRate );
       for ( ; j<EODFrequency.size(); j++ )
 	if ( EODFrequency.x(j) >= Chirps[k].Time )
 	  break;
@@ -890,7 +914,7 @@ void JAR::saveChirpEOD( const Options &header )
   else {
     const EventData &eodev = events( EODEvents );
     for ( unsigned int k=0; k<Chirps.size(); k++ ) {
-      double wt = 0.7 * Chirps[k].Width;
+      double wt = Chirps[k].Width;
       double ect = eodev.nextTime( Chirps[k].Time + eodev.signalTime() );
       InDataIterator ft = trace( EODTrace ).begin( ect-wt );
       InDataIterator lt = trace( EODTrace ).begin( ect+wt );
@@ -971,7 +995,7 @@ void JAR::plot( void )
     for ( ; j<EODFrequency.size(); j++ )
       if ( EODFrequency.x(j) >= Chirps[k].Time )
 	break;
-    int wi = (int)::rint( 0.7 * Chirps[k].Width * Chirps[k].EODRate );
+    int wi = (int)::rint( Chirps[k].Width * Chirps[k].EODRate );
     // chirp frequency:
     cm.clear();
     cm.reserve( 2*wi+10 );
@@ -1140,15 +1164,15 @@ void JAR::analyze( void )
 
     // phase shift:
     // time of an eod zero crossing before the chirp:
-    double eodtime = eodglobal.previousTime( event.time() - 0.7 * width );
+    double eodtime = eodglobal.previousTime( event.time() - width );
     // mean EOD interval before the chirp:
     double meaninterv = 1.0 / meanrate;
 
     // time course of chirp phase shift:
-    EventIterator gefi = event - 0.7*width - 10;
+    EventIterator gefi = event - width - 10;
     double ophase = -0.3;
     for ( int j = gefi.index() - eodglobal.next( sigtime );
-	  !gefi && gefi < event + 0.7*width + 10 && 
+	  !gefi && gefi < event + width + 10 && 
 	    j < EODPhases.size();
 	  ++gefi, ++j ) {
       double t = *gefi;

@@ -132,6 +132,7 @@ private:
   double AmplStep;
   double AmplMax;
   int Repeats;
+  double Before;
   double After;
   double JARAverageTime;
   double ChirpAverageTime;
