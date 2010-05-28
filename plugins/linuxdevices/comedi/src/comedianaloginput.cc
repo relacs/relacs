@@ -162,7 +162,7 @@ int ComediAnalogInput::open( const string &device, const Options &opts )
       Calibration = comedi_parse_calibration_file( calibpath );
     else
       Calibration = 0;
-    delete [] calibpath;
+    free( calibpath );
   }
 
   // initialize ranges:

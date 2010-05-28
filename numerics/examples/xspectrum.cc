@@ -53,6 +53,8 @@ int main( int argc, char **argv )
   // power spectrum directly from fourier transform:
   SampleDataD datafft( data );
   datafft.resize( 2*n );
+  cerr << "Size of subset of data: " << datafft.size() << '\n';
+  cerr << "Power of subset of data (mean squared amplitudes): " << power( datafft ) << '\n';
   rFFT( datafft );
   SampleDataD powerfft( n );
   hcPower( datafft, powerfft );

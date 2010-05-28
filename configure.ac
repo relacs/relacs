@@ -19,7 +19,7 @@ AC_LANG(C++)
 #################################################
 RELACS_CHECK_CXX()
 
-CXXFLAGS="-Wall $CXXFLAGS"
+CXXFLAGS="-Wall -g -O0"
 CFLAGS="-Wall $CFLAGS"
 
 AM_PROG_CC_C_O

@@ -35,7 +35,7 @@ namespace patchclamp {
 
 
 SingleStimulus::SingleStimulus( void )
-  : RePro( "Single Stimulus", "patchclamp", "Jan Benda", "1.2", "Oct 13, 2008" )
+  : RePro( "SingleStimulus", "patchclamp", "Jan Benda", "1.2", "Oct 13, 2008" )
 {
   AmplitudeUnit = "nA";
   Offset = 0.0;

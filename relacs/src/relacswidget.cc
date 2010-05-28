@@ -471,6 +471,17 @@ RELACSWidget::~RELACSWidget( void )
   delete RP;
   delete PT;
   Plugins::close();
+  delete AQD;
+  delete SIM;
+  delete ADV;
+  delete DV;
+  delete ATD;
+  delete ATI;
+  delete TRIGD;
+  delete DIOD;
+  delete AID;
+  delete AOD;
+  delete KeyTime;
 }
 
 

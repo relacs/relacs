@@ -1706,9 +1706,7 @@ int Acquire::write( OutData &signal )
   }
 
   // convert data and prepare writing to daq board:
-  if ( signal.autoConvert() || signal.deviceBuffer() == NULL ) {
-    AO[di].AO->convertData( Signal );
-  }
+  AO[di].AO->convertData( Signal );
   AO[di].Signals[0].deviceBufferReset();
 
   AO[di].AO->prepareWrite( Signal );
@@ -1906,31 +1904,12 @@ int Acquire::write( OutList &signal )
   }
 
   // convert data:
-  bool ac = signal[0].autoConvert();
-  // for manual convert there must be at least one non empty buffer per device:
-  for ( unsigned int i=0; !ac && i<AO.size(); i++ ) {
-    if ( AO[i].Signals.size() > 0 ) {
-      bool e = true;
-      for ( int k=0; k<AO[i].Signals.size(); k++ ) { 
-	if ( AO[i].Signals[k].deviceBuffer() != NULL ) {
-	  e = false;
-	  break;
-	}
-      }
-      if ( e )
-	ac = true;
-    }
-  }
-  if ( ac ) {
-    for ( unsigned int i=0; i<AO.size(); i++ ) {
-      if ( AO[i].Signals.size() > 0 &&
-	   AO[i].AO->convertData( AO[i].Signals ) != 0 )
-	success = false;
-    }
-  }
   for ( unsigned int i=0; i<AO.size(); i++ ) {
-    if ( AO[i].Signals.size() > 0 )
+    if ( AO[i].Signals.size() > 0 ) {
+      if ( AO[i].AO->convertData( AO[i].Signals ) != 0 )
+	success = false;
       AO[i].Signals.deviceBufferReset();
+    }
   }
 
   // prepare writing to daq boards:
@@ -2002,9 +1981,7 @@ int Acquire::writeData( void )
 	  error = true;
       }
       else {
-	if ( AO[i].Signals[0].autoConvert() ) {
-	  AO[i].Signals.freeDeviceBuffer();
-	}
+	AO[i].Signals.freeDeviceBuffer();
 	AO[i].Signals.clear();
       }
     }

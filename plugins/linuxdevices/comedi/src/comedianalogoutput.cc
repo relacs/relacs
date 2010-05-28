@@ -150,7 +150,7 @@ int ComediAnalogOutput::open( const string &device, const Options &opts )
       Calibration = comedi_parse_calibration_file( calibpath );
     else
       Calibration = 0;
-    delete [] calibpath;
+    free( calibpath );
   }
 
   // make write calls non blocking:

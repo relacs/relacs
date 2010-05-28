@@ -27,6 +27,10 @@ using namespace relacs;
 namespace base {
 
 
+const int SetOutput::ChannelFlag = 1;
+const int SetOutput::ParameterFlag = 2;
+
+
 SetOutput::SetOutput( void )
   : RePro( "SetOutput", "Base", "Jan Benda", "1.0", "Mar 21, 2009" )
 {

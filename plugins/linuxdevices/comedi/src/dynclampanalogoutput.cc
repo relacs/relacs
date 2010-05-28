@@ -135,7 +135,7 @@ int DynClampAnalogOutput::open( const string &device, const Options &opts )
       calibration = comedi_parse_calibration_file( calibpath );
     else
       calibration = 0;
-    delete [] calibpath;
+    free( calibpath );
   }
 
   // get conversion polynomials:

@@ -76,8 +76,8 @@ protected:
   OptWidget STW;
   Options OutOpts;
   bool Change;
-  static const int ChannelFlag = 1;
-  static const int ParameterFlag = 2;
+  static const int ChannelFlag;
+  static const int ParameterFlag;
 
   QPushButton *OKButton;
   QPushButton *CancelButton;

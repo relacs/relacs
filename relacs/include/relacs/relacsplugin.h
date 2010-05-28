@@ -166,11 +166,11 @@ public:
     /*! The identifier for plugins derived from the Control-class. */
   static const int ControlId = 0x0400;
 
-    /*! Config-File group for RELACS core classes. */
-  static const int Core = 0;
+    /*! Config-File group for RELACS core classes (=0). */
+  static const int Core;
     /*! Config-File group for alr RELACS plugins, i.e.
-        RePro, Filter, Control, Model, ... classes. */
-  static const int Plugins = 1;
+        RePro, Filter, Control, Model, ... classes (=1). */
+  static const int Plugins;
 
     /*! Construct an RELACSPlugin.
         The identifier \a configident is used for identifying this class

@@ -680,7 +680,7 @@ class OutData : public SampleData< float >, public DaqError
         \sa deviceBufferPopBuffer(), deviceBufferMaxPop(), deviceBufferPop() */
   inline void deviceBufferReset( void ) { DeviceBufferIndex = 0; };
     /*! The size of the internal device dependent buffer in bytes. */
-  inline int deviceBufferSize( void ) { return DeviceBufferSize*DeviceDataSize; };
+  inline int deviceBufferByteSize( void ) const { return DeviceBufferSize*DeviceDataSize; };
     /*! Return \c true if data are to be converted automatically. */
   inline bool autoConvert( void ) const { return AutoConvert; };
     /*! Indicate that the data are to be converted automatically. */

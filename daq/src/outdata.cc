@@ -81,7 +81,7 @@ OutData::OutData( const OutData  &od )
   RequestMinValue = od.RequestMinValue;
   RequestMaxValue = od.RequestMaxValue;
   GainIndex = od.GainIndex;
-  GainData = NULL;
+  GainData = 0;
   Scale = od.Scale;
   Unit = od.Unit;
   WriteTime = od.WriteTime;
@@ -91,7 +91,7 @@ OutData::OutData( const OutData  &od )
   Intensity = od.Intensity;
   CarrierFreq = od.CarrierFreq;
   Level = od.Level;
-  DeviceBuffer = NULL;
+  DeviceBuffer = 0;
   DeviceBufferSize = 0;
   DeviceDataSize = 2;
   DeviceBufferIndex = 0;
@@ -103,7 +103,7 @@ OutData::OutData( const OutData  &od )
 OutData::~OutData( void )
 {
   freeDeviceBuffer();
-  if ( GainData != NULL )
+  if ( GainData != 0 )
     delete [] GainData;
 }
 
@@ -126,7 +126,7 @@ void OutData::construct( void )
   RequestMinValue = AutoRange;
   RequestMaxValue = AutoRange;
   GainIndex = 0;
-  GainData = NULL;
+  GainData = 0;
   Scale = 1.0;
   Unit = "V";
   WriteTime = 0.0;
@@ -136,7 +136,7 @@ void OutData::construct( void )
   Intensity = NoIntensity;
   CarrierFreq = 0.0;
   Level = NoLevel;
-  DeviceBuffer = NULL;
+  DeviceBuffer = 0;
   DeviceBufferSize = 0;
   DeviceDataSize = 2;
   DeviceBufferIndex = 0;
@@ -211,7 +211,7 @@ const OutData &OutData::assign( const OutData &od )
   RequestMinValue = od.RequestMinValue;
   RequestMaxValue = od.RequestMaxValue;
   GainIndex = od.GainIndex;
-  GainData = NULL;
+  GainData = 0;
   Scale = od.Scale;
   Unit = od.Unit;
   WriteTime = od.WriteTime;
@@ -221,9 +221,9 @@ const OutData &OutData::assign( const OutData &od )
   Intensity = od.Intensity;
   CarrierFreq = od.CarrierFreq;
   Level = od.Level;
-  if ( DeviceBuffer != NULL )
+  if ( DeviceBuffer != 0 )
     delete [] DeviceBuffer;
-  DeviceBuffer = NULL;
+  DeviceBuffer = 0;
   DeviceBufferSize = 0;
   DeviceDataSize = 2;
   DeviceBufferIndex = 0;
@@ -252,7 +252,7 @@ const OutData &OutData::copy( OutData &od ) const
   od.RequestMinValue = RequestMinValue;
   od.RequestMaxValue = RequestMaxValue;
   od.GainIndex = GainIndex;
-  od.GainData = NULL;
+  od.GainData = 0;
   od.Scale = Scale;
   od.Unit = Unit;
   od.WriteTime = WriteTime;
@@ -262,9 +262,9 @@ const OutData &OutData::copy( OutData &od ) const
   od.Intensity = Intensity;
   od.CarrierFreq = CarrierFreq;
   od.Level = Level;
-  if ( od.DeviceBuffer != NULL )
+  if ( od.DeviceBuffer != 0 )
     delete [] od.DeviceBuffer;
-  od.DeviceBuffer = NULL;
+  od.DeviceBuffer = 0;
   od.DeviceBufferSize = 0;
   od.DeviceDataSize = 2;
   od.DeviceBufferIndex = 0;
@@ -934,6 +934,7 @@ void OutData::fill( const SampleDataD &am, double carrierfreq,
       j=0;
     operator[]( i ) = sinbuf[j] * ( am[k] + slope * ( t - am.pos(k) ) );
   }
+  back() = 0.0;
 
   setCarrierFreq( carrierfreq );
   setIdent( ident );
@@ -966,6 +967,7 @@ void OutData::sineWave( double freq, double duration, double ampl, double r,
     array() *= ampl;
   if ( r > 0.0 )
     ramp( r );
+  back() = 0.0;
 
   setCarrierFreq( freq );
   setIdent( ident );
@@ -1039,7 +1041,7 @@ void OutData::freeDeviceBuffer( void )
 {
   if ( DeviceBuffer != 0 )
     delete [] DeviceBuffer;
-  DeviceBuffer = NULL;
+  DeviceBuffer = 0;
   DeviceBufferSize = 0;
   DeviceDataSize = 2;
   DeviceBufferIndex = 0;

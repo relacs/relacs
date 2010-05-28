@@ -178,6 +178,13 @@ MetaData::MetaData( RELACSWidget *rw )
 
 MetaData::~MetaData( void )
 {
+  for ( unsigned int k=0; k<MetaDataSections.size(); k++ ) {
+    if ( MetaDataSections[k] != 0 ) {
+      delete MetaDataSections[k];
+      MetaDataSections[k] = 0;
+    }
+  }
+  MetaDataSections.clear();
 }
 
 

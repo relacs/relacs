@@ -47,6 +47,10 @@ RELACSPlugin::RELACSPlugin( const string &configident, int configgroup,
 }
 
 
+const int RELACSPlugin::Core = 0;
+const int RELACSPlugin::Plugins = 1;
+
+
 RELACSPlugin::~RELACSPlugin( void )
 {
   if ( Widget != 0 )

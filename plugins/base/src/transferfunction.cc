@@ -43,8 +43,8 @@ TransferFunction::TransferFunction( void )
   addSelection( "window", "FFT window function", "Hanning|Bartlett|Blackman|Blackman-Harris|Hamming|Hanning|Parzen|Square|Welch" );
 
   // plot:
-  P.resize( 2 );
   P.lock();
+  P.resize( 2, 1, true );
   P.setCommonXRange( 0, 1 );
   P[0].setLMarg( 8 );
   P[0].noXTics();
