@@ -88,6 +88,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     InfoFileMacro( "" ),
     IsFullScreen( false ),
     IsMaximized( false ),
+    DataMutex( QMutex::Recursive ),
     AIMutex( QMutex::Recursive ),  // recursive, because of activateGains()???
     SignalMutex(),
     RunData( false ),
