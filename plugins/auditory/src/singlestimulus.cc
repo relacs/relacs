@@ -304,8 +304,8 @@ int SingleStimulus::main( void )
     SP.clearPlots();
     SP[0].setTitle( "Search target firing rate " + Str( targetrate ) + " Hz" );
     SP.setDrawBackground();
-    SP.unlock();
     SP.draw();
+    SP.unlock();
 
     MapD rates;
     rates.reserve( 20 );
@@ -439,8 +439,8 @@ int SingleStimulus::main( void )
 	  MapD cr;
 	  cr.push( Intensity, rate );
 	  SP[2].plot( cr, 1.0, Plot::Transparent, 0, Plot::Solid, Plot::Circle, 10, Plot::Yellow, Plot::Yellow );
-	  SP.unlock();
 	  SP.draw();
+	  SP.unlock();
 	}
 
 	if ( rate >= silentrate ) {
@@ -601,8 +601,8 @@ int SingleStimulus::main( void )
   P.clearPlots();
   P[0].setTitle( "Mean firing rate =    Hz" );
   P.setDrawBackground();
-  P.unlock();
   P.draw();
+  P.unlock();
 
   // variables:
   EventList spikes;
@@ -796,9 +796,10 @@ void SingleStimulus::plot( const EventList &spikes, const SampleDataD &rate1,
   if ( threshold > 0.0 )
     P[1].plotHLine( threshold, Plot::Yellow, 2 );
   P[1].plot( AMDB, 1000.0, Plot::Green, 2 );
-  P.unlock();
 
   P.draw();
+
+  P.unlock();
 }
 
 

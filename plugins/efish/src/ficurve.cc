@@ -629,8 +629,10 @@ void FICurve::plot( void )
       n++;
     }
   }
-  P.unlock();  
+
   P.draw();
+
+  P.unlock();  
 }
 
 

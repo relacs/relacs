@@ -666,9 +666,9 @@ void IsoResponse::plot( void )
   am.push( Results[c].Intensity, Results[c].CurOnRate   );
   P[0].plot( am, 1.0, Plot::Transparent, 3, Plot::Solid, Plot::Circle, 8, Plot::Yellow, Plot::Transparent );
 
-  P.unlock();
-
   P.draw();
+
+  P.unlock();
 }
 
 
@@ -737,10 +737,10 @@ void IsoResponse::plotIsoSets(  )
 	int color = 3+l;
 	P[2].plot( p, 1.0, Plot::Transparent, 0, Plot::Solid, Plot::Circle, 6, color, color );
       }
-
-      P.unlock();
       
       P.draw();
+
+      P.unlock();
     }
   /********************************************************************************************************/
   /*Plot Onset Iso Sets************************************************************************************/
@@ -803,9 +803,9 @@ void IsoResponse::plotIsoSets(  )
     P[1].plot( p, 1.0, Plot::Transparent, 0, Plot::Solid, Plot::Circle, 6, color, color );
   }
 
-  P.unlock();
-
   P.draw();
+
+  P.unlock();
 }
 
 

@@ -61,8 +61,8 @@ FIPhaseLocking::FIPhaseLocking( void )
 
 
   //plot
-  P.setDataMutex( mutex() );
   P.lock();
+  P.setDataMutex( mutex() );
   P.resize( 2, 2, true );
   P[0].setLMarg( 5.0 );
   P[0].setRMarg( 1.0 );
@@ -166,8 +166,10 @@ void FIPhaseLocking::plot( int index )
   P[1].setXRange(1000.0*x1,1000.0*x2);
   P[1].clear();
   P[1].plot(hist, 1000.0, Plot::Transparent, 0, Plot::Solid, Plot::Box, 0, Plot::DarkOrange, Plot::Orange);
-  P.unlock();
+
   P.draw();
+
+  P.unlock();
 }
 
 

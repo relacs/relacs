@@ -25,7 +25,6 @@
 #include <QPainter>
 #include <QPolygon>
 #include <QPushButton>
-#include <QApplication>
 #include <relacs/map.h>
 #include <relacs/basisfunction.h>
 #include <relacs/fitalgorithm.h>

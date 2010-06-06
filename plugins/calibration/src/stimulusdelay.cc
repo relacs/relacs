@@ -147,8 +147,8 @@ int StimulusDelay::analyze( const InData &data, double duration,
 	      + Str( count+1 ) );
   P.plotVLine( 0.0, Plot::White, 2 );
   P.plot( d, 1000.0, Plot::Green, 4, Plot::Solid );
-  P.unlock();
   P.draw();
+  P.unlock();
 
   return 0;
 }

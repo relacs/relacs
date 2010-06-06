@@ -424,8 +424,25 @@ public:
     /*! Unlock the data mutex if it was set by setDataMutex() before. */
   void unlockData( void );
 
+    /*! If this Plot is part of a MultiPlot, then this function specifies
+        the position of the Plot within the MultiPlot.
+        \param[in] x the x-coordinate of the lower-left corner
+	\param[in] y the x-coordinate of the lower-left corner
+        the coordinates range from 0 to 1 for the entire plot area of the MultiPlot.
+	\sa setSize() */
   void setOrigin( double x, double y );
+    /*! Return the origin of this Plot. \sa setOrigin() */
+  void origin( double &x, double &y );
+    /*! If this Plot is part of a MultiPlot, then this function specifies
+        the size of the Plot within the MultiPlot.
+        \param[in] x the width of the plot
+	\param[in] y the height of the plot
+        \a x and \a y range from 0 to 1 for the entire plot area of the MultiPlot.
+	\sa setOrigin() */
   void setSize( double w, double h );
+    /*! Return the size of this Plot. \sa setSize() */
+  void size( double &x, double &y );
+    /*! Used by MultiPlot to provide the size used by the MultiPlot. */
   void scale( int width, int height );
     /*! True if \a xpixel, \a ypixel is inside the plot screen
         handled by this widget. */
@@ -938,6 +955,7 @@ protected:
   void resizeEvent( QResizeEvent *qre );
     /*! Paints the entire plot. */
   void paintEvent( QPaintEvent *qpe );
+  void customEvent( QEvent *qce );
 
     /*! Handles all kinds of mouse events.
         The current implementation supports
@@ -1442,7 +1460,7 @@ private:
   bool ShiftData;
   int ShiftXPix;
   double ShiftX[MaxAxis];
-  QMutex PMutex;
+  mutable QMutex PMutex;
   QMutex *DMutex;
   QReadWriteLock *DRWMutex;
 

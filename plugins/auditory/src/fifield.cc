@@ -472,9 +472,9 @@ void FIField::plot( const vector< FIData > &results )
   am.push( results[c].Intensity, results[c].MeanRate );
   P[1].plot( am, 1.0, Plot::Transparent, 3, Plot::Solid, Plot::Circle, 8, Plot::Yellow, Plot::Transparent );
 
-  P.unlock();
-
   P.draw();
+
+  P.unlock();
 }
 
 

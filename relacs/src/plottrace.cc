@@ -395,7 +395,10 @@ void PlotTrace::init( void )
 
 void PlotTrace::plot( void )
 {
-  if ( !Plotting ) 
+  P.lock();
+  bool plotting = Plotting;
+  P.unlock();
+  if ( !plotting ) 
     return;
 
   if ( PlotChanged ) {
@@ -459,12 +462,11 @@ void PlotTrace::plot( void )
       
     }
 
-  P.unlock();
-  P.unlockData();
-
   // plot:
   P.draw();
 
+  P.unlock();
+  P.unlockData();
 }
 
 
@@ -553,7 +555,7 @@ void PlotTrace::setState( bool on, bool fixed, double length, double offs )
 
   // toggle plot:
   Plotting = on;
-  QApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+1 ) ) );
+  postCustomEvent( 11 );
 
   // toggle fixed offset:
   setView( fixed ? SignalView : EndView );
@@ -816,7 +818,7 @@ void PlotTrace::setView( Views mode )
   if ( ViewMode != mode ) {
     ViewMode = mode;
     PlotChanged = true;
-    QApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
+    postCustomEvent( 12 );
   }
 }
 
@@ -921,7 +923,7 @@ void PlotTrace::customEvent( QEvent *qce )
 {
   switch ( qce->type() - QEvent::User ) {
 
-  case 1 :
+  case 11 :
     if ( OnOffButton != 0 ) {
       P.lock();
       bool plotting = Plotting;
@@ -933,7 +935,7 @@ void PlotTrace::customEvent( QEvent *qce )
     }
     break;
 
-  case 2:
+  case 12:
     if ( ViewButton != 0 ) {
       if ( ViewMode == SignalView )
 	ViewButton->setIcon( SignalViewIcon );

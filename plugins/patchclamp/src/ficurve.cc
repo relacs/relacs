@@ -62,7 +62,9 @@ FICurve::FICurve( void )
   addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
   addTypeStyle( OptWidget::TabLabel, Parameter::Label );
 
+  P.lock();
   P.resize( 2, 2, true );
+  P.unlock();
   setWidget( &P );
 }
 
@@ -376,8 +378,9 @@ void FICurve::plot( double duration, int inx )
   am.push( Results[inx].I, Results[inx].MeanRate );
   P[1].plot( am, 1.0, Plot::Transparent, 3, Plot::Solid, Plot::Circle, 8, Plot::Yellow, Plot::Transparent );
 
-  P.unlock();
   P.draw();
+
+  P.unlock();
 }
 
 

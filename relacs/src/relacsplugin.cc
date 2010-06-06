@@ -152,7 +152,7 @@ void RELACSPlugin::info( const string &s, double timeout )
 
 void RELACSPlugin::postCustomEvent( int type )
 {
-  QApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+type ) ) );
+  QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+type ) ) );
 }
 
 

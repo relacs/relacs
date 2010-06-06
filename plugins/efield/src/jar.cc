@@ -1018,8 +1018,8 @@ void JAR::plot( void )
     P[3].plot( cm, 1.0, Plot::Red, 2, Plot::Solid );
   }
 
-  P.unlock();
   P.draw();
+  P.unlock();
 }
 
 

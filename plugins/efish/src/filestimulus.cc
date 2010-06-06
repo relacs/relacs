@@ -386,7 +386,9 @@ int FileStimulus::main( void )
 
 void FileStimulus::stop( void )
 {
+  P.lock();
   P.clearPlots();
+  P.unlock();
   EODTransAmpl.clear();
   for ( int k=0; k<MaxSpikeTraces; k++ ) {
     if ( SpikeEvents[k] >= 0 ) {
@@ -582,9 +584,10 @@ void FileStimulus::plot( void )
       P[n].plot( NerveAmplM[i], 1000.0, Plot::Cyan, 1, Plot::Solid );
     P[n].plot( NerveMeanAmplM, 1000.0, Plot::Magenta, 2, Plot::Solid );
   }
-  P.unlock();
 
   P.draw();
+
+  P.unlock();
 }
 
 

@@ -616,9 +616,10 @@ void BaselineActivity::plot( const SampleDataD &eodcycle,
       P[2*n].setXRange( 1000.0*(l-Duration), 1000.0*l );
     P[2*n].plot( nerveamplm, 1000.0, Plot::Cyan, 1, Plot::Solid );
   }
-  P.unlock();
 
   P.draw();
+
+  P.unlock();
 }
 
 

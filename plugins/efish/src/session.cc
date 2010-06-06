@@ -288,9 +288,9 @@ void Session::plot( void )
     EODPlot[1].setXRange( xmin, xmax );
   EODPlot[1].plot( EODAmplitudes, xfac, Plot::Red, 2 );
 
-  EODPlot.unlock();
-
   EODPlot.draw();
+
+  EODPlot.unlock();
 }
 
 

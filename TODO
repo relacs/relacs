@@ -1,3 +1,6 @@
+- Plot, MultiPlot: is update() in draw() really thread safe?
+  Try postEvent()!
+
 - CLEANFILES = relacs.log relacs.log.old in all plugins Makefile.am's
 
 SignalTime: finish this update (RELACSPlugin::signalTime()

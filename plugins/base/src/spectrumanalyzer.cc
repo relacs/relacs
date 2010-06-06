@@ -160,8 +160,8 @@ void SpectrumAnalyzer::main( void )
       P.clear();
       P.noXYGrid();
       P.setLabel( 0, "Not enough data points (n=" + Str( n ) + ")!" );
-      P.unlock();
       P.draw();
+      P.unlock();
       if ( Origin > 0 )
 	waitOnReProSleep();
       else {
@@ -194,8 +194,8 @@ void SpectrumAnalyzer::main( void )
     P.setXYGrid();
     P.setLabel( 0, "" );
     P.plot( spec, 1.0, Plot::Yellow, 2, Plot::Solid );
-    P.unlock();
     P.draw();
+    P.unlock();
 
     if ( Origin > 0 )
       waitOnReProSleep();

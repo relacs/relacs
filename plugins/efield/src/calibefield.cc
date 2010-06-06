@@ -78,8 +78,10 @@ int CalibEField::main( void )
   }
 
   // plot:
+  P.lock();
   P.setXLabel( "Requested Intensity" );
   P.setYLabel( am ? "Measured AM Intensity" : "Measured EOD Intensity" );
+  P.unlock();
 
   // attenuator:
   base::LinearAttenuate *latt = 
@@ -361,6 +363,7 @@ void CalibEField::saveData( const base::LinearAttenuate *latt )
 
 void CalibEField::plot( double maxx )
 {
+  P.lock();
   P.clear();
   P.setXRange( 0.0, maxx );
   P.setYRange( 0.0, maxx*FitGain+FitOffset );
@@ -368,6 +371,7 @@ void CalibEField::plot( double maxx )
   P.plotLine( 0.0, FitOffset, maxx, maxx*FitGain+FitOffset, Plot::Yellow, 2 );
   P.plot( Intensities, 1.0, Plot::Transparent, 1, Plot::Solid, Plot::Circle, 6, Plot::Red, Plot::Red );
   P.draw();
+  P.unlock();
 }
 
 

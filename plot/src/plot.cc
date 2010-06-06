@@ -28,7 +28,7 @@
 #include <QPolygon>
 #include <QCursor>
 #include <QMouseEvent>
-#include <QApplication>
+#include <QCoreApplication>
 #include <QActionGroup>
 #include <relacs/str.h>
 #include <relacs/multiplot.h>
@@ -59,7 +59,7 @@ Plot::RGBColor Plot::RGBColor::lighten( double f ) const
 
 Plot::Plot( KeepMode keep, QWidget *parent )
   : QWidget( parent ),
-    PMutex( QMutex::Recursive )
+    PMutex( QMutex::NonRecursive )
 {
   construct( keep );
 }
@@ -67,7 +67,7 @@ Plot::Plot( KeepMode keep, QWidget *parent )
 
 Plot::Plot( QWidget *parent )
   : QWidget( parent ),
-    PMutex( QMutex::Recursive )
+    PMutex( QMutex::NonRecursive )
 {
   construct( Copy );
 }
@@ -76,7 +76,7 @@ Plot::Plot( QWidget *parent )
 Plot::Plot( KeepMode keep, bool subwidget, int id,
 	    MultiPlot *mp )
   : QWidget( 0 ),
-    PMutex( QMutex::Recursive )
+    PMutex( QMutex::NonRecursive )
 {
   construct( keep, subwidget, id, mp );
 }
@@ -297,6 +297,7 @@ void Plot::construct( KeepMode keep, bool subwidget, int id, MultiPlot *mp )
 
   setSizePolicy( QSizePolicy( QSizePolicy::Expanding, 
 			      QSizePolicy::Expanding ) );
+  setFocusPolicy( Qt::NoFocus );
 
   NewData = true;
   ShiftData = false;
@@ -383,6 +384,13 @@ void Plot::setOrigin( double x, double y )
 }
 
 
+void Plot::origin( double &x, double &y )
+{
+  x = XOrigin;
+  y = YOrigin;
+}
+
+
 void Plot::setSize( double w, double h )
 {
   XSize = w;
@@ -390,6 +398,13 @@ void Plot::setSize( double w, double h )
   NewData = true;
   if ( SubWidget && MP != 0 )
     MP->setDrawBackground();
+}
+
+
+void Plot::size( double &x, double &y )
+{
+  x = XSize;
+  y = YSize;
 }
 
 
@@ -1283,14 +1298,18 @@ void Plot::clearLabel( int index )
 
 QSize Plot::sizeHint( void ) const
 {
+  PMutex.lock();
   QSize qs( LMarg+RMarg+200, TMarg+BMarg+150 );
+  PMutex.unlock();
   return qs;
 }
 
 
 QSize Plot::minimumSizeHint( void ) const
 {
+  PMutex.lock();
   QSize qs( LMarg+RMarg+120, TMarg+BMarg+90 );
+  PMutex.unlock();
   return qs;
 }
 
@@ -2928,8 +2947,11 @@ void Plot::draw( QPaintDevice *qpm )
 	    int dx = (int)::rint( double(PlotX2-PlotX1+1)/(XMax[k]-XMin[k])*(XMin[k]-XMinPrev[k]) );
 	    if ( ShiftXPix == 0 )
 	      ShiftXPix = dx;
-	    else if ( dx != ShiftXPix )
+	    else if ( dx != ShiftXPix ) {
 	      NewData = true;
+	      ShiftData = false;
+	      break;
+	    }
 	    ShiftX[k] = XMin[k]-XMinPrev[k];
 	  }
 	  else {
@@ -2949,8 +2971,10 @@ void Plot::draw( QPaintDevice *qpm )
   }
 
   if ( ! NewData && ShiftData ) {
-    if ( ShiftXPix >= PlotX2 - PlotX1 )
+    if ( ::abs( ShiftXPix ) >= ::abs( PlotX2 - PlotX1 ) ) {
       NewData = true;
+      ShiftData = false;
+    }
     else {
       // align coordinates with pixel shift:
       for ( int k=0; k<MaxAxis; k++ ) {
@@ -3003,7 +3027,8 @@ void Plot::draw( void )
       MP->draw();
   }
   else {
-    update();
+    QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+100 ) ) ); // update
+    //    update();  // not thread safe???
   }
 }
 
@@ -3012,6 +3037,15 @@ void Plot::paintEvent( QPaintEvent *qpe )
 {
   if ( !SubWidget )
     draw( this );
+}
+
+
+void Plot::customEvent( QEvent *qce )
+{
+  if ( qce->type() - QEvent::User == 100 )
+    update();
+  else
+    QWidget::customEvent( qce );
 }
 
 
@@ -3920,9 +3954,9 @@ void Plot::mouseSelect( QAction *action )
 	readMouse( &qme, nme );
 	nme.setInit();
 	mouseAnalyse( nme );
+	PMutex.unlock();
 	if ( ! SubWidget )
 	  unlockData();
-	PMutex.unlock();
       }
     }
   }

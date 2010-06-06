@@ -280,8 +280,8 @@ int CalibSpeakers::main( void )
 	  P[1].clear();
 	  P[1].plot( oldoffsets, 0.001, Plot::Orange, 2, Plot::Solid );
 	  P[1].plot( offsets, 0.001, Plot::Red, 4, Plot::Solid, Plot::Circle, 6, Plot::Red, Plot::Red );
-	  P.unlock();
 	  P.draw();
+	  P.unlock();
 	}
 
 	// next frequency:
@@ -436,9 +436,9 @@ void CalibSpeakers::plot( double minintensity, double intensityrange,
   P[1].plot( oldoffsets, 0.001, Plot::Orange, 2, Plot::Solid );
   P[1].plot( offsets, 0.001, Plot::Red, 4, Plot::Solid, Plot::Circle, 6, Plot::Red, Plot::Red );
 
-  P.unlock();
-
   P.draw();
+
+  P.unlock();
 }
 
 

@@ -63,7 +63,9 @@ VICurve::VICurve( void )
   addBoolean( "plotstdev", "Plot standard deviation of membrane potential", true );
   addTypeStyle( OptWidget::TabLabel, Parameter::Label );
 
+  P.lock();
   P.resize( 2, 2, true );
+  P.unlock();
   setWidget( &P );
 }
 
@@ -359,8 +361,9 @@ void VICurve::plot( double duration, int inx )
   am.push( Results[inx].I, Results[inx].VPeak );
   P[1].plot( am, 1.0, Plot::Transparent, 3, Plot::Solid, Plot::Circle, 8, Plot::Yellow, Plot::Transparent );
 
-  P.unlock();
   P.draw();
+
+  P.unlock();
 }
 
 

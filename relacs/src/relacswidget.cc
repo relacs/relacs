@@ -88,7 +88,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     InfoFileMacro( "" ),
     IsFullScreen( false ),
     IsMaximized( false ),
-    DataMutex( QMutex::Recursive ),
+    //    DataMutex( QMutex::Recursive ),
     AIMutex( QMutex::Recursive ),  // recursive, because of activateGains()???
     SignalMutex(),
     RunData( false ),
@@ -758,7 +758,7 @@ void RELACSWidget::updateData( void )
   // check data:
   if ( IL.failed() ) {
     AIErrorMsg = "Error in acquisition: " + IL.errorText();
-    //    QApplication::postEvent( this, new QEvent( QEvent::User+4 ) ); // this causes a lot of trouble!
+    //    QCoreApplication::postEvent( this, new QEvent( QEvent::User+4 ) ); // this causes a lot of trouble!
     IL.clearError();    
   }
   // read data:
@@ -923,8 +923,8 @@ int RELACSWidget::write( OutData &signal )
     AQ->readRestart( IL, ED );
     FD->adjust( IL, ED, AQ->adjustFlag() );
     // update device menu:
-    QApplication::postEvent( (QWidget*)this,
-			     new QEvent( QEvent::Type( QEvent::User+2 ) ) );
+    QCoreApplication::postEvent( (QWidget*)this,
+				 new QEvent( QEvent::Type( QEvent::User+2 ) ) );
     SF->setNumber( AQ->outTraceName( signal.trace() ), signal.back() );
   }
   else
@@ -969,8 +969,8 @@ int RELACSWidget::write( OutList &signal )
     AQ->readRestart( IL, ED );
     FD->adjust( IL, ED, AQ->adjustFlag() );
     // update device menu:
-    QApplication::postEvent( (QWidget*)this,
-			     new QEvent( QEvent::Type( QEvent::User+2 ) ) );
+    QCoreApplication::postEvent( (QWidget*)this,
+				 new QEvent( QEvent::Type( QEvent::User+2 ) ) );
     for ( int k=0; k<signal.size(); k++ )
       SF->setNumber( AQ->outTraceName( signal[k].trace() ), signal[k].back() );
   }
@@ -1015,8 +1015,8 @@ int RELACSWidget::directWrite( OutData &signal )
     AQ->readRestart( IL, ED );
     FD->adjust( IL, ED, AQ->adjustFlag() );
     // update device menu:
-    QApplication::postEvent( (QWidget*)this,
-			     new QEvent( QEvent::Type( QEvent::User+2 ) ) );
+    QCoreApplication::postEvent( (QWidget*)this,
+				 new QEvent( QEvent::Type( QEvent::User+2 ) ) );
     SF->setNumber( AQ->outTraceName( signal.trace() ), signal.back() );
   }
   else
@@ -1060,8 +1060,8 @@ int RELACSWidget::directWrite( OutList &signal )
     AQ->readRestart( IL, ED );
     FD->adjust( IL, ED, AQ->adjustFlag() );
     // update device menu:
-    QApplication::postEvent( (QWidget*)this,
-			     new QEvent( QEvent::Type( QEvent::User+2 ) ) );
+    QCoreApplication::postEvent( (QWidget*)this,
+				 new QEvent( QEvent::Type( QEvent::User+2 ) ) );
     for ( int k=0; k<signal.size(); k++ )
       SF->setNumber( AQ->outTraceName( signal[k].trace() ), signal[k].back() );
   }
@@ -1182,6 +1182,11 @@ void RELACSWidget::startRePro( RePro *repro, int macroaction, bool saving )
   CurrentRePro->setSaving( saving );
   SF->save( *CurrentRePro );
   unlockData();
+  /* XXX
+  // make sure all paintEvents are finished:???
+  if ( CurrentRePro->widget() != 0 )
+    QCoreApplication::sendPostedEvents( CurrentRePro->widget(), 0 );
+  */
   CurrentRePro->start( HighPriority );
 }
 
@@ -1204,7 +1209,7 @@ void RELACSWidget::stopRePro( void )
     // dispatch all posted events (that usually paint the RePro...)
     // as long as the RePro is normally running, so that it has
     // still all internal variables available:
-    QApplication::sendPostedEvents();
+    QCoreApplication::sendPostedEvents();
     qApp->processEvents( QEventLoop::AllEvents, 100 );
 
     // request and wait for the RePro to properly terminate:
@@ -1838,17 +1843,17 @@ void RELACSWidget::keyPressEvent( QKeyEvent *event )
   if ( HandlingEvent )
     return;
   HandlingEvent = true;
-  QApplication::sendEvent( PT->widget(), event );
+  QCoreApplication::sendEvent( PT->widget(), event );
   if ( CurrentRePro != 0 && CurrentRePro->widget() != 0  )
-    QApplication::sendEvent( CurrentRePro->widget(), event );
+    QCoreApplication::sendEvent( CurrentRePro->widget(), event );
   if ( ! event->isAccepted() )
-    QApplication::sendEvent( CW, event );
+    QCoreApplication::sendEvent( CW, event );
   for ( unsigned int k=0; k<CN.size() && ! event->isAccepted(); k++ ) {
     if ( CN[k]->globalKeyEvents() && CN[k]->widget() != 0 )
-    QApplication::sendEvent( CN[k]->widget(), event );
+    QCoreApplication::sendEvent( CN[k]->widget(), event );
   }
   if ( ! event->isAccepted() )
-    QApplication::sendEvent( FD, event );
+    QCoreApplication::sendEvent( FD, event );
   HandlingEvent = false;
 }
 
@@ -1860,19 +1865,19 @@ void RELACSWidget::keyReleaseEvent( QKeyEvent *event )
   if ( HandlingEvent )
     return;
   HandlingEvent = true;
-  QApplication::sendEvent( PT->widget(), event );
+  QCoreApplication::sendEvent( PT->widget(), event );
   if ( ! event->isAccepted() &&
        CurrentRePro != 0 &&
        CurrentRePro->widget() != 0  )
-    QApplication::sendEvent( CurrentRePro->widget(), event );
+    QCoreApplication::sendEvent( CurrentRePro->widget(), event );
   if ( ! event->isAccepted() )
-    QApplication::sendEvent( CW, event );
+    QCoreApplication::sendEvent( CW, event );
   for ( unsigned int k=0; k<CN.size() && ! event->isAccepted(); k++ ) {
     if ( CN[k]->globalKeyEvents() && CN[k]->widget() != 0 )
-      QApplication::sendEvent( CN[k]->widget(), event );
+      QCoreApplication::sendEvent( CN[k]->widget(), event );
   }
   if ( ! event->isAccepted() )
-    QApplication::sendEvent( FD, event );
+    QCoreApplication::sendEvent( FD, event );
   HandlingEvent = false;
 }
 

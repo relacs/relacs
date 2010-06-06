@@ -298,8 +298,8 @@ int SpikePrecision::main( void )
     SP.clearPlots();
     SP[0].setTitle( "Search target firing rate " + Str( targetrate ) + " Hz" );
     SP.setDrawBackground();
-    SP.unlock();
     SP.draw();
+    SP.unlock();
 
     MapD rates;
     rates.reserve( 20 );
@@ -438,8 +438,8 @@ int SpikePrecision::main( void )
 	  MapD cr;
 	  cr.push( Intensity, meanrate );
 	  SP[2].plot( cr, 1.0, Plot::Transparent, 0, Plot::Solid, Plot::Circle, 10, Plot::Yellow, Plot::Yellow );
-	  SP.unlock();
 	  SP.draw();
+	  SP.unlock();
 	}
       
 	if ( softStop() > 0 ) {
@@ -507,8 +507,8 @@ int SpikePrecision::main( void )
   P.clearPlots();
   P[0].setTitle( "Mean firing rate =    Hz" );
   P.setDrawBackground();
-  P.unlock();
   P.draw();
+  P.unlock();
 
   // loop through frequencies:
   for ( FreqRange.reset(); ! FreqRange; ++FreqRange ) {
@@ -765,9 +765,9 @@ void SpikePrecision::plot( const SampleDataD &amdb,
   if ( results[FreqRange.pos()].Spikes.size() > 1 )
     P[3].plot( crd, 1.0, Plot::Transparent, 2, Plot::Solid, Plot::Circle, 6, Plot::Yellow, Plot::Transparent );
 
-  P.unlock();
-
   P.draw();
+
+  P.unlock();
 }
 
 

@@ -458,9 +458,9 @@ void SysLatency::plot( const MapD &coincidentspikes, const MapD &prc,
   P[1].plotLine( 0.0, offset, 1.0, offset+slope, Plot::Yellow, 2 );
   P[1].plot( prc, 1.0, Plot::Transparent, 0, Plot::Solid, Plot::Circle, 5, Plot::Red, Plot::Red );
 
-  P.unlock();
-
   P.draw();
+
+  P.unlock();
 }
 
 

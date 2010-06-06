@@ -19,7 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <QApplication>
+#include <QCoreApplication>
 #include <QVBoxLayout>
 #include <QTabWidget>
 #include <QFileDialog>
@@ -729,7 +729,7 @@ void OptWidget::updateValue( const string &ident )
   if ( DisableUpdate )
     return;
   UpdateIdentEvent *ue = new UpdateIdentEvent( 1, ident );
-  QApplication::postEvent( this, ue );
+  QCoreApplication::postEvent( this, ue );
 }
 
 
@@ -738,7 +738,7 @@ void OptWidget::updateValues( void )
   if ( DisableUpdate )
     return;
   UpdateEvent *ue = new UpdateEvent( 2 );
-  QApplication::postEvent( this, ue );
+  QCoreApplication::postEvent( this, ue );
 }
 
 
@@ -749,7 +749,7 @@ void OptWidget::updateValues( int flag )
   // save ChangedFlag:
   Opt->addFlags( UpdateFlag, flag );
   UpdateEvent *ue = new UpdateEvent( 3 );
-  QApplication::postEvent( this, ue );
+  QCoreApplication::postEvent( this, ue );
 }
 
 
@@ -758,7 +758,7 @@ void OptWidget::updateSettings( const string &ident )
   if ( DisableUpdate )
     return;
   UpdateIdentEvent *ue = new UpdateIdentEvent( 4, ident );
-  QApplication::postEvent( this, ue );
+  QCoreApplication::postEvent( this, ue );
 }
 
 
@@ -767,7 +767,7 @@ void OptWidget::updateSettings( void )
   if ( DisableUpdate )
     return;
   UpdateEvent *ue = new UpdateEvent( 5 );
-  QApplication::postEvent( this, ue );
+  QCoreApplication::postEvent( this, ue );
 }
 
 
@@ -777,7 +777,7 @@ void OptWidget::updateSettings( int flag )
     return;
   Opt->addFlags( UpdateFlag, flag );
   UpdateEvent *ue = new UpdateEvent( 6 );
-  QApplication::postEvent( this, ue );
+  QCoreApplication::postEvent( this, ue );
 }
 
 

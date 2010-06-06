@@ -37,29 +37,15 @@ class MultiPlotEvent : public QEvent
 
 public:
 
-  MultiPlotEvent( int plots, Plot::KeepMode keep )  // resize
-    : QEvent( Type( User+11 ) ),
+  MultiPlotEvent( int type, int plots=0, Plot::KeepMode keep=Plot::Copy )
+    : QEvent( Type( User+type ) ),
       Plots( plots ),
       Keep( keep )
   {
   }
 
-
-  MultiPlotEvent( void )   // clear
-    : QEvent( Type( User+12 ) )
-  {
-  }
-
-
-  MultiPlotEvent( int index )  // clear( int )
-    : QEvent( Type( User+13 ) ),
-      Index( index )
-  {
-  }
-
   int Plots;
   Plot::KeepMode Keep;
-  int Index;
 };
 
 
@@ -108,9 +94,6 @@ MultiPlot::MultiPlot( QWidget *parent )
 MultiPlot::~MultiPlot( void )
 {
   clear();
-
-  PMutex.lock();
-  PMutex.unlock();
 }
 
 
@@ -137,12 +120,12 @@ void MultiPlot::construct( int plots, int columns, bool horizontal, Plot::KeepMo
     CommonYRange.push_back( vector< int >( 0 ) );
   }
   DrawBackground = true;
-  DrawBackground = true;
 
   layout();
 
   setSizePolicy( QSizePolicy( QSizePolicy::Expanding, 
 			      QSizePolicy::Expanding ) );
+  setFocusPolicy( Qt::NoFocus );
   
   PMutex.unlock();
 
@@ -223,7 +206,7 @@ void MultiPlot::resize( int plots, Plot::KeepMode keep )
 {
   if ( QThread::currentThread() != GUIThread ) {
     qApp->removePostedEvents( this );
-    QApplication::postEvent( this, new MultiPlotEvent( plots, keep ) );
+    QCoreApplication::postEvent( this, new MultiPlotEvent( 101, plots, keep ) );
     WaitGUI.wait( &PMutex );
   }
   else
@@ -276,7 +259,7 @@ void MultiPlot::clear( void )
 {
   if ( QThread::currentThread() != GUIThread ) {
     qApp->removePostedEvents( this );
-    QApplication::postEvent( this, new MultiPlotEvent );
+    QCoreApplication::postEvent( this, new MultiPlotEvent( 102 ) );
     WaitGUI.wait( &PMutex );
   }
   else
@@ -301,7 +284,7 @@ void MultiPlot::clear( int index )
 {
   if ( QThread::currentThread() != GUIThread ) {
     qApp->removePostedEvents( this );
-    QApplication::postEvent( this, new MultiPlotEvent( index ) );
+    QCoreApplication::postEvent( this, new MultiPlotEvent( 103, index ) );
     WaitGUI.wait( &PMutex );
   }
   else
@@ -433,16 +416,64 @@ void MultiPlot::setCommonRange( void )
 }
 
 
+QSize MultiPlot::sizeHint( void ) const
+{
+  PMutex.lock();
+  double meanw = 0.0;
+  double meanh = 0.0;
+  int n = 0;
+  for ( PlotListType::const_iterator p = PlotList.begin(); 
+	p != PlotList.end(); 
+	++p ) {
+    n++;
+    (**p).lock();
+    double w=0.0,h=0.0;
+    (**p).size( w, h );
+    (**p).unlock();
+    meanw += ( w - meanw ) / n;
+    meanh += ( h - meanh ) / n;
+  }
+  PMutex.unlock();
+  if ( meanw < 0.02 )
+    meanw = 0.5;
+  if ( meanh < 0.02 )
+    meanh = 0.5;
+  QSize qs( (int)::ceil( 200.0/meanw ), (int)::ceil( 150.0/meanh ) );
+  return qs;
+}
+
+
 QSize MultiPlot::minimumSizeHint( void ) const
 {
-  QSize QS( 200, 200 );
-  return QS;
+  PMutex.lock();
+  double meanw = 0.0;
+  double meanh = 0.0;
+  int n = 0;
+  for ( PlotListType::const_iterator p = PlotList.begin(); 
+	p != PlotList.end(); 
+	++p ) {
+    n++;
+    (**p).lock();
+    double w=0.0,h=0.0;
+    (**p).size( w, h );
+    (**p).unlock();
+    meanw += ( w - meanw ) / n;
+    meanh += ( h - meanh ) / n;
+  }
+  PMutex.unlock();
+  if ( meanw < 0.02 )
+    meanw = 0.5;
+  if ( meanh < 0.02 )
+    meanh = 0.5;
+  QSize qs( (int)::ceil( 120.0/meanw ), (int)::ceil( 90.0/meanh ) );
+  return qs;
 }
 
 
 void MultiPlot::draw( void )
 {
-  update();
+  QCoreApplication::postEvent( this, new MultiPlotEvent( 100 ) ); // update
+  //  update(); not thread safe???
 }
 
 
@@ -467,8 +498,6 @@ void MultiPlot::paintEvent( QPaintEvent *qpe )
 
   DrawBackground = false;
 
-  DrawBackground = false;
-
   PMutex.unlock();
   unlockData();
 }
@@ -478,12 +507,6 @@ void MultiPlot::resizeEvent( QResizeEvent *qre )
 {
   emit resizePlots( qre );
   PMutex.lock();
-  for ( PlotListType::iterator p = PlotList.begin(); 
-	p != PlotList.end(); 
-	++p ) {
-    (**p).resizeEvent( qre );
-  }
-  DrawBackground = true;
   for ( PlotListType::iterator p = PlotList.begin(); 
 	p != PlotList.end(); 
 	++p ) {
@@ -648,21 +671,31 @@ void MultiPlot::mouseMoveEvent( QMouseEvent *qme )
 
 void MultiPlot::customEvent( QEvent *qce )
 {
-  switch ( qce->type() ) {
-  case QEvent::User+11: {
+  switch ( qce->type() - QEvent::User ) {
+  case 100: {
+    update();
+    break;
+  }
+  case 101: {
     MultiPlotEvent *mpe = dynamic_cast<MultiPlotEvent*>( qce );
+    PMutex.lock();
     doResize( mpe->Plots, mpe->Keep );
+    PMutex.unlock();
     WaitGUI.wakeAll();
     break;
   }
-  case QEvent::User+12: {
+  case 102: {
+    PMutex.lock();
     doClear();
+    PMutex.unlock();
     WaitGUI.wakeAll();
     break;
   }
-  case QEvent::User+13: {
+  case 103: {
     MultiPlotEvent *mpe = dynamic_cast<MultiPlotEvent*>( qce );
-    doClear( mpe->Index );
+    PMutex.lock();
+    doClear( mpe->Plots );
+    PMutex.unlock();
     WaitGUI.wakeAll();
     break;
   }

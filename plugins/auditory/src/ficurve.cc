@@ -130,8 +130,8 @@ FICurve::FICurve( void )
   PlotIntensitySelection = false;
 
   // plot:
-  P.setDataMutex( mutex() );
   P.lock();
+  P.setDataMutex( mutex() );
   P.resize( 2, 2, true );
   P[0].setLMarg( 5.0 );
   P[0].setRMarg( 1.0 );
@@ -902,9 +902,9 @@ void FICurve::plot( const vector< FIData > &results )
   if ( PlotIntensitySelection )
     plotIntensitySelection();
 
-  P.unlock();
-
   P.draw();
+
+  P.unlock();
 }
 
 
@@ -1178,8 +1178,8 @@ void FICurve::plotMouseEvent( Plot::MouseEvent &me )
     if ( ! PlotIntensitySelection || changed ) {
       P.lock();
       plotIntensitySelection();
-      P.unlock();
       P.draw();
+      P.unlock();
     }
     PlotIntensitySelection = true;
     me.setUsed();

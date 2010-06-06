@@ -126,6 +126,8 @@ public:
   void setCommonRange( int plot1, int plot2 );
   void setCommonRange( void );
 
+    /*! Give a hint for the prefered size of this widget. */
+  virtual QSize sizeHint( void ) const;
     /*! Give a hint for the minimum size of this widget. */
   virtual QSize minimumSizeHint( void ) const;
 
@@ -195,7 +197,7 @@ private:
   CommonRangeType CommonXRange;
   CommonRangeType CommonYRange;
 
-  QMutex PMutex;
+  mutable QMutex PMutex;
   QMutex *DMutex;
   QReadWriteLock *DRWMutex;
   QWaitCondition WaitGUI;

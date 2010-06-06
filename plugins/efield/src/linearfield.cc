@@ -115,9 +115,11 @@ int LinearField::main( void )
   Amplitude.reserve( 1000 );
 
   // plot:
+  P.lock();
   P.setXLabel( "Distance [cm]" );
   P.setYLabel( "RMS Amplitude [" + trace( 0 ).unit() + "]" );
   P.setYRange( 0.0, Plot::AutoScale );
+  P.unlock();
 
   postCustomEvent( 11 ); // O.setFocus();
   do {

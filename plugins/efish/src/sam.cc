@@ -313,8 +313,8 @@ int SAM::main( void )
     }
   }
   P.setCommonXRange();
-  P.unlock();
   P.draw();
+  P.unlock();
 
   // EOD rate:
   FishRate = 0.0;
@@ -811,9 +811,10 @@ void SAM::plot( void )
       n++;
     }
   }
-  P.unlock();
 
   P.draw();
+
+  P.unlock();
 }
 
 

@@ -376,8 +376,8 @@ void MembraneResistance::plot( void )
   P.plot( MeanTrace, 1000.0, Plot::Red, 3, Plot::Solid );
   P.plot( ExpOn, 1000.0, Plot::Yellow, 2, Plot::Solid );
   P.plot( ExpOff, 1000.0, Plot::Yellow, 2, Plot::Solid );
-  P.unlock();
   P.draw();
+  P.unlock();
 }
 
 

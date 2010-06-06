@@ -485,8 +485,8 @@ void FindThreshold::plot( bool record, double duration )
   }
   if ( ! Results.empty() )
     P.plot( Results.back().Voltage, 1000.0, Plot::Yellow, 4, Plot::Solid );
-  P.unlock();
   P.draw();
+  P.unlock();
 }
 
 

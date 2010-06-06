@@ -569,8 +569,8 @@ void Chirps::initMultiPlot( double ampl )
     }
   }
   P.setCommonXRange();
-  P.unlock();
   P.draw();
+  P.unlock();
 }
 
 
@@ -1255,9 +1255,10 @@ void Chirps::plot( void )
       beatbin++;
     }
   }
-  P.unlock();
 
   P.draw();
+
+  P.unlock();
 }
 
 

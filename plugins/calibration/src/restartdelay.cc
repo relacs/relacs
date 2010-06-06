@@ -197,8 +197,8 @@ int RestartDelay::analyze( const InData &data, double duration,
   P.plot( d, 1000.0, Plot::Green, 4, Plot::Solid );
   P.plot( s1, 1000.0, Plot::Red, 2, Plot::Solid );
   P.plot( s2, 1000.0, Plot::Red, 2, Plot::Solid );
-  P.unlock();
   P.draw();
+  P.unlock();
 
   lockAll();
 
