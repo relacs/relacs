@@ -235,7 +235,7 @@ int Search::main( void )
 
     // create stimulus:
     if ( NewSignal ) {
-      signal.free();
+      signal.clear();
       signal.setTrace( SearchLeft ? LeftSpeaker[0] : RightSpeaker[0]  );
       applyOutTrace( signal );  // needed for maximum sampling rate!
       if ( Mute ) {

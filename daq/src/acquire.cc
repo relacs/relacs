@@ -1640,6 +1640,10 @@ int Acquire::write( OutData &signal )
     signal.setDevice( AO.size()-1 );
   }
 
+  // error?
+  if ( signal.failed() )
+    return -1;
+
   // device still busy?
   if ( AO[di].AO->running() ) {
     if ( signal.priority() )
@@ -1777,6 +1781,10 @@ int Acquire::write( OutList &signal )
       success = false;
     }
   }
+
+  // error?
+  if ( signal.failed() )
+    return -1;
 
   // busy:
   for ( int i=0; i<(int)AO.size(); i++ ) {
@@ -2012,6 +2020,10 @@ int Acquire::directWrite( OutData &signal )
     signal.setDevice( AO.size()-1 );
   }
 
+  // error?
+  if ( signal.failed() )
+    return -1;
+
   // device still busy?
   if ( AO[di].AO->running() ) {
     if ( signal.priority() )
@@ -2124,6 +2136,10 @@ int Acquire::directWrite( OutList &signal )
       success = false;
     }
   }
+
+  // error?
+  if ( signal.failed() )
+    return -1;
 
   // busy:
   for ( int i=0; i<(int)AO.size(); i++ ) {
