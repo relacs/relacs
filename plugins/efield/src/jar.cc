@@ -244,11 +244,15 @@ int JAR::main( void )
   Chirps.reserve( int( 100.0*(Duration+Pause) ) );
 
   // plot:
+  P.lock();
+  P.clearPlots();
   P[0].setXRange( 0.0, Duration+After );
   P[1].setXRange( DeltaFRange.minValue() - 0.5 * DeltaFStep, 
 		  DeltaFRange.maxValue() + 0.5 * DeltaFStep );
   P[2].setXRange( DeltaFRange.minValue() - 0.5 * DeltaFStep, 
 		  DeltaFRange.maxValue() + 0.5 * DeltaFStep );
+  P.draw();
+  P.unlock();
 
   // EOD rate:
   if ( events( EODEvents ).frequency( JARAverageTime ) < 10.0 ) {

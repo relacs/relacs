@@ -136,10 +136,8 @@ public:
 
     /*! Locks the mutex of the data thread for reading. */
   void readLockData( void ) { DataMutex.lockForRead(); };
-  //  void readLockData( void ) { DataMutex.lock(); };
     /*! Locks the data mutex of the data thread for writing. */
   void writeLockData( void ) { DataMutex.lockForWrite(); };
-  //  void writeLockData( void ) { DataMutex.lock(); };
     /*! Unlocks the mutex of the data thread. */
   void unlockData( void ) { DataMutex.unlock(); };
 
@@ -398,7 +396,6 @@ private:
 
     /*! Controls the data reading thread. */
   QReadWriteLock DataMutex;
-  //  QMutex DataMutex;
   QMutex AIMutex;
   QMutex SignalMutex;
   bool RunData;

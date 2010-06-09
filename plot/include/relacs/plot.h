@@ -950,7 +950,7 @@ signals:
 protected:
 
     /*! Redraws the plot widget. */
-  void draw( QPaintDevice *qpm );
+  void draw( QPaintDevice *qpm, bool drawdata );
     /*! Handles the resize event. */
   void resizeEvent( QResizeEvent *qre );
     /*! Paints the entire plot. */
@@ -1456,6 +1456,7 @@ private:
 
   typedef vector<DataElement*> PDataType;
   PDataType PData;
+  bool DrawData;
   bool NewData;
   bool ShiftData;
   int ShiftXPix;
@@ -1463,6 +1464,7 @@ private:
   mutable QMutex PMutex;
   QMutex *DMutex;
   QReadWriteLock *DRWMutex;
+  QThread *GUIThread;
 
   int addData( DataElement *d );
   void drawLine( QPainter &paint, DataElement *d );

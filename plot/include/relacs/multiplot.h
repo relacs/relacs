@@ -148,11 +148,12 @@ public:
 
 signals:
 
-    /*! Ranges of some plots where changes
+    /*! Ranges of some plots have been changed
         due to a change in plot \a id. */
   void changedRanges( int id );
     /*! This signal is emitted whenever the MultiPlot widget receives
-        a resizeEvent() before processing it. */
+        a resizeEvent() before processing it.
+	Can be used to change e.g. the origin and size of the plots. */
   void resizePlots( QResizeEvent *qre );
 
 
@@ -207,6 +208,7 @@ private:
   bool Horizontal;
 
   bool DrawBackground;
+  bool DrawData;
 
 };
 

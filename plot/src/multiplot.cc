@@ -119,6 +119,7 @@ void MultiPlot::construct( int plots, int columns, bool horizontal, Plot::KeepMo
     CommonXRange.push_back( vector< int >( 0 ) );
     CommonYRange.push_back( vector< int >( 0 ) );
   }
+  DrawData = false;
   DrawBackground = true;
 
   layout();
@@ -438,7 +439,7 @@ QSize MultiPlot::sizeHint( void ) const
     meanw = 0.5;
   if ( meanh < 0.02 )
     meanh = 0.5;
-  QSize qs( (int)::ceil( 200.0/meanw ), (int)::ceil( 150.0/meanh ) );
+  QSize qs( (int)::ceil( 180.0/meanw ), (int)::ceil( 120.0/meanh ) );
   return qs;
 }
 
@@ -465,15 +466,18 @@ QSize MultiPlot::minimumSizeHint( void ) const
     meanw = 0.5;
   if ( meanh < 0.02 )
     meanh = 0.5;
-  QSize qs( (int)::ceil( 120.0/meanw ), (int)::ceil( 90.0/meanh ) );
+  QSize qs( (int)::ceil( 120.0/meanw ), (int)::ceil( 80.0/meanh ) );
   return qs;
 }
 
 
 void MultiPlot::draw( void )
 {
-  QCoreApplication::postEvent( this, new MultiPlotEvent( 100 ) ); // update
-  //  update(); not thread safe???
+  DrawData = true;
+  if ( QThread::currentThread() != GUIThread )
+    QCoreApplication::postEvent( this, new MultiPlotEvent( 100 ) ); // update
+  else
+    update();
 }
 
 
@@ -493,10 +497,11 @@ void MultiPlot::paintEvent( QPaintEvent *qpe )
 	p != PlotList.end(); 
 	++p ) {
     (**p).scale( width(), height() );
-    (**p).draw( this ); // this will not lock the data again!
+    (**p).draw( this, DrawData ); // this will not lock the data again!
   }
 
   DrawBackground = false;
+  DrawData = false;
 
   PMutex.unlock();
   unlockData();

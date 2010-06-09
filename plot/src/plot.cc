@@ -28,7 +28,8 @@
 #include <QPolygon>
 #include <QCursor>
 #include <QMouseEvent>
-#include <QCoreApplication>
+#include <QApplication>
+#include <QThread>
 #include <QActionGroup>
 #include <relacs/str.h>
 #include <relacs/multiplot.h>
@@ -84,6 +85,7 @@ Plot::Plot( KeepMode keep, bool subwidget, int id,
 
 void Plot::construct( KeepMode keep, bool subwidget, int id, MultiPlot *mp )
 {
+  GUIThread = QThread::currentThread();
   setAttribute( Qt::WA_OpaquePaintEvent );
   Keep = keep;
   SubWidget = subwidget;
@@ -299,6 +301,7 @@ void Plot::construct( KeepMode keep, bool subwidget, int id, MultiPlot *mp )
 			      QSizePolicy::Expanding ) );
   setFocusPolicy( Qt::NoFocus );
 
+  DrawData = false;
   NewData = true;
   ShiftData = false;
   ShiftXPix = 0;
@@ -2899,7 +2902,7 @@ void Plot::drawMouse( QPainter &paint )
 }
 
 
-void Plot::draw( QPaintDevice *qpm )
+void Plot::draw( QPaintDevice *qpm, bool drawdata )
 {
   // the order of locking is important here!
   // if the data are not available there is no need to lock the plot.
@@ -2915,6 +2918,10 @@ void Plot::draw( QPaintDevice *qpm )
   initTics();
   initBorder();
   initLines();
+
+  if ( ! drawdata )
+    NewData = true;
+  DrawData = false;
 
   // check for changes:
   ShiftData = false;
@@ -3027,8 +3034,11 @@ void Plot::draw( void )
       MP->draw();
   }
   else {
-    QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+100 ) ) ); // update
-    //    update();  // not thread safe???
+    DrawData = true;
+    if ( QThread::currentThread() != GUIThread )
+      QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+100 ) ) ); // update
+    else
+      update();
   }
 }
 
@@ -3036,7 +3046,7 @@ void Plot::draw( void )
 void Plot::paintEvent( QPaintEvent *qpe )
 {
   if ( !SubWidget )
-    draw( this );
+    draw( this, DrawData );
 }
 
 
@@ -3934,6 +3944,7 @@ void Plot::mouseSelect( QAction *action )
 	    QWidget::setMouseTracking( false );
 	}
 	PMutex.unlock();
+	NewData = true;
 	draw();
       }
       MouseAction = action;
