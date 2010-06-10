@@ -550,12 +550,11 @@ void PlotTrace::setState( bool on, bool fixed, double length, double offs )
   if ( man )
     return;
 
-  P.lockData();
   P.lock();
 
   // toggle plot:
   Plotting = on;
-  postCustomEvent( 11 );
+  postCustomEvent( 11 );  // animate on/off button
 
   // toggle fixed offset:
   setView( fixed ? SignalView : EndView );
@@ -582,7 +581,6 @@ void PlotTrace::setState( bool on, bool fixed, double length, double offs )
     }
   }
   P.unlock();
-  P.unlockData();
 }
 
 
