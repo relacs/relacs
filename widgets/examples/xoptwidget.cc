@@ -40,9 +40,7 @@ MainWidget::MainWidget( void )
   Opt1.addNumber( "pause", "Pause between Signals",
 		  0.2, 0.0, 1.0, 0.01, "seconds", "ms", "%g", 3 ).setStyle( OptWidget::ValueGreen | OptWidget::ValueBackBlack | OptWidget::ValueLCD | OptWidget::ValueHuge | testflag );
   Opt1.addInteger( "repeats", "Repeats", 8, 0, 100 ).setStyle( testflag );
-  Opt1.addLabel( "Settings", 0,  OptWidget::Bold | testflag );
-  Opt1.addInteger( "repeats", "Repeats", 8, 0, 100 ).setStyle( testflag );
-
+  
   Opt1.addLabel( "Settings", 0,  OptWidget::Large | OptWidget::Bold |  OptWidget::Red | testflag );
   Opt1.addText( "fgcolor", "Foreground color", "red|green|blue" ).setStyle( OptWidget::SelectText | testflag );
   Opt1.addText( "bgcolor", "Background color", "red|green|blue" ).setStyle( testflag );
@@ -100,31 +98,33 @@ void MainWidget::dialog( void )
   connect( &d, SIGNAL( buttonClicked( int ) ), this, SLOT( action( int ) ) );
   connect( &d, SIGNAL( valuesChanged( void ) ), this, SLOT( accepted( void ) ) );
   int r = d.exec();
-  cerr << "dialog: " << r << endl;
-  cerr << Opt1 << Opt2 << endl;
+  cerr << "dialog exec() returned " << r << '\n';
+  cerr << "the values of the options are:\n";
+  cerr << Opt1 << Opt2 << '\n';
 }
 
 
 void MainWidget::done( int r )
 {
-  cerr << "dialog returned " << r << endl;
+  cerr << "dialog called done() and is about to return " << r << '\n';
 }
 
 
 void MainWidget::action( int r )
 {
-  cerr << "dialog button pressed " << r << endl;
+  cerr << "dialog button pressed that activated button with " << r << '\n';
 }
 
 
 void MainWidget::accepted( void )
 {
-  cerr << "dialog accepted" << endl;
+  cerr << "dialog called accepted()" << '\n';
   Options co1;
   co1.assign( Opt1, Parameter::changedFlag() );
   Options co2;
   co2.assign( Opt2, Parameter::changedFlag() );
-  cerr << "changed: " << endl << co1 << endl << co2 << endl;
+  cerr << "the following options have been changed: " << '\n'
+       << co1 << '\n' << co2 << '\n';
 }
 
 

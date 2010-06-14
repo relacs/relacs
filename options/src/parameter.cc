@@ -2551,7 +2551,8 @@ Parameter &Parameter::setActivation( const string &name, const string &value,
       inx=2;
     }
     Str vs( value );
-    ActivationNumber = vs.number( 0.0, inx );
+    string unit = vs.unit( InternUnit, inx );
+    ActivationNumber = changeUnit( vs.number( 0.0, inx ), unit, OutUnit );
   }
   return *this;
 }

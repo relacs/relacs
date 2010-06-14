@@ -36,6 +36,7 @@ $(librelacswidgets_la_OBJECTS) : \
     moc_optdialogbutton.cc \
     moc_optwidget.cc \
     moc_optwidgetbase.cc \
+    moc_doublespinbox.cc \
     moc_lcdrange.cc \
     moc_messagebox.cc
 
@@ -45,6 +46,7 @@ pkginclude_HEADERS = \
     ../include/relacs/configdialog.h \
     ../include/relacs/optdialog.h \
     ../include/relacs/optwidget.h \
+    ../include/relacs/doublespinbox.h \
     ../include/relacs/lcdrange.h \
     ../include/relacs/messagebox.h
 
@@ -56,6 +58,7 @@ librelacswidgets_la_SOURCES = \
     optwidgetbase.cc \
     ../include/relacs/optdialogbutton.h \
     optdialogbutton.cc \
+    doublespinbox.cc \
     lcdrange.cc \
     messagebox.cc
 

@@ -33,8 +33,8 @@
 #include <QCheckBox>
 #include <QDateTimeEdit>
 #include <QPushButton>
-#include <QDoubleSpinBox>
 #include <relacs/options.h>
+#include <relacs/doublespinbox.h>
 #include <relacs/optwidget.h>
 using namespace std;
 
@@ -141,7 +141,7 @@ public:
 public slots:
   void valueChanged( double v );
 private:
-  QDoubleSpinBox *EW;
+  DoubleSpinBox *EW;
   double Value;
   QLabel *LW;
   QLCDNumber *LCDW;

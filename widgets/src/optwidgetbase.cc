@@ -567,24 +567,13 @@ OptWidgetNumber::OptWidgetNumber( Options::iterator param, QWidget *label,
     double min = (*Param).minimum( (*Param).outUnit() );
     double max = (*Param).maximum( (*Param).outUnit() );
     double step = (*Param).step( (*Param).outUnit() );
-    int prec = 0;
-    if ( (*Param).isNumber() ) {
-      int width=0;
-      int precision=0;
-      char type='g';
-      char pad='0';
-      Str frmt = (*Param).format();
-      frmt.readFormat( 0, width, precision, type, pad );
-      int stepprec = (int)-floor( log10( 0.1*step ) );
-      if ( precision > stepprec || ( precision >= 0 && type == 'f' ) )
-	prec = precision;
-      else
-	prec = stepprec;
-    }
-    W = EW = new QDoubleSpinBox( parent );
+    W = EW = new DoubleSpinBox( parent );
     EW->setRange( min, max );
     EW->setSingleStep( step );
-    EW->setDecimals( prec );
+    if ( (*Param).isNumber() )
+      EW->setFormat( (*Param).format() );
+    else
+      EW->setFormat( "%.0f" );
     EW->setValue( val );
     OptWidget::setValueStyle( W, (*Param).style(), false, true );
     Value = EW->value();
@@ -628,7 +617,7 @@ void OptWidgetNumber::get( void )
     bool cn = OO->notifying();
     OO->unsetNotify();
     (*Param).setNumber( EW->value(), (*Param).outUnit() );
-    if ( fabs( (*Param).number( 0 ) - Value ) > 0.0001*(*Param).step() )
+    if ( fabs( (*Param).number( (*Param).outUnit() ) - Value ) > 0.0001*(*Param).step() )
       (*Param).addFlags( OW->changedFlag() );
     Value = EW->value();
     OO->setNotify( cn );
@@ -673,23 +662,12 @@ void OptWidgetNumber::update( void )
     double min = (*Param).minimum( (*Param).outUnit() );
     double max = (*Param).maximum( (*Param).outUnit() );
     double step = (*Param).step( (*Param).outUnit() );
-    int prec = 0;
-    if ( (*Param).isNumber() ) {
-      int width=0;
-      int precision=0;
-      char type='g';
-      char pad='0';
-      Str frmt = (*Param).format();
-      frmt.readFormat( 0, width, precision, type, pad );
-      int stepprec = (int)-floor( log10( 0.1*step ) );
-      if ( precision > stepprec || ( precision >= 0 && type == 'f' ) )
-	prec = precision;
-      else
-	prec = stepprec;
-    }
     EW->setRange( min, max );
     EW->setSingleStep( step );
-    EW->setDecimals( prec );
+    if ( (*Param).isNumber() )
+      EW->setFormat( (*Param).format() );
+    else
+      EW->setFormat( "%.0f" );
     EW->setValue( val );
   }
   InternChanged = false;
@@ -743,7 +721,7 @@ void OptWidgetNumber::initActivation( void )
 {
   double v = 0.0;
   if ( EW == 0 && LCDW == 0 )
-    v = (*Param).number();
+    v = (*Param).number( (*Param).outUnit() );
   else {
     if ( EW != 0 )
       v = EW->value();

@@ -796,6 +796,8 @@ public:
 	Several values can be supplied by seperating them by '|'.
 	A numerical value can be preceeded by '=', '>', '>=', '<', '<=', '<>'
         to determine the way of a numerical comparison.
+	Numerical values can be supplied with a unit.
+	If no unit is given, then the internally used unit is assumed.
         \sa clearActivation(), activationName(), activationValue(),
 	activationValues(), activationNumber(), activationComparison(), activation() */
   Parameter &setActivation( const string &name, const string &value, bool activate=true );

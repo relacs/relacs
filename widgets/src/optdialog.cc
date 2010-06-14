@@ -280,6 +280,9 @@ int OptDialog::exec( void )
 {
   createButtons();
 
+  if ( OWs.size() > 0 && OWs[0]->firstWidget() != 0 )
+    OWs[0]->firstWidget()->setFocus();
+
   if ( isModal() ) {
     return QDialog::exec();
   }

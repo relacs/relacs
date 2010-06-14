@@ -1,7 +1,5 @@
-- Plot, MultiPlot: is update() in draw() really thread safe?
-  Try postEvent()!
-
 - CLEANFILES = relacs.log relacs.log.old in all plugins Makefile.am's
+- configure.ac: check dependencies of plugins
 
 SignalTime: finish this update (RELACSPlugin::signalTime()
 - test ficurve RePro: does not work!
