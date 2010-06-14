@@ -137,6 +137,7 @@ void Plot::construct( KeepMode keep, bool subwidget, int id, MultiPlot *mp )
   YOrigin = 0.0;
   XSize = 1.0;
   YSize = 1.0;
+  Skip = false;
 
   ScreenX1 = 0;
   ScreenY1 = height() - 1;
@@ -387,7 +388,7 @@ void Plot::setOrigin( double x, double y )
 }
 
 
-void Plot::origin( double &x, double &y )
+void Plot::origin( double &x, double &y ) const
 {
   x = XOrigin;
   y = YOrigin;
@@ -404,10 +405,22 @@ void Plot::setSize( double w, double h )
 }
 
 
-void Plot::size( double &x, double &y )
+void Plot::size( double &x, double &y ) const
 {
   x = XSize;
   y = YSize;
+}
+
+
+void Plot::setSkip( bool skip )
+{
+  Skip = skip;
+}
+
+
+bool Plot::skip( void ) const
+{
+  return Skip;
 }
 
 
@@ -1848,9 +1861,10 @@ void Plot::drawBorder( QPainter &paint )
 	QColor qcolor( c.red(), c.green(), c.blue() );
 	Qt::PenStyle dash = QtDash.find( XGridStyle[k].dash() )->second;
 	paint.setPen( QPen( qcolor, XGridStyle[k].width(), dash ) );
+	double px = XGridStyle[k].width() * ::fabs( ( XMax[k] - XMin[k ] ) / ( PlotX2 - PlotX1 ) );
 	for ( double x=XTicsStart[k]; x<=XMax[k]; x+=XTicsIncr[k] ) {
-	  if ( ( ShiftX[k] > 0.0 && x >= XMax[k] - ShiftX[k] - 1.e-3*(XMax[k]-XMin[k]) ) ||
-	       ( ShiftX[k] < 0.0 && x <= XMin[k] - ShiftX[k] + 1.e-3*(XMax[k]-XMin[k]) ) ) {
+	  if ( ( ShiftX[k] > 0.0 && x >= XMax[k] - ShiftX[k] - px ) ||
+	       ( ShiftX[k] < 0.0 && x <= XMin[k] - ShiftX[k] + px ) ) {
 	    if ( ::fabs( x ) < 0.001*XTicsIncr[k] )
 	      x = 0.0;
 	    int xp = PlotX1 + (int)::rint( double(PlotX2-PlotX1)/(XMax[k]-XMin[k])*(x-XMin[k]) );
@@ -2132,7 +2146,7 @@ void Plot::drawLabels( QPainter &paint )
 }
 
 
-void Plot::drawLine( QPainter &paint, DataElement *d )
+void Plot::drawLine( QPainter &paint, DataElement *d, int addpx )
 {
   if ( d->Line.color() != Transparent && d->Line.width() > 0 ) {
     // set pen:
@@ -2155,14 +2169,15 @@ void Plot::drawLine( QPainter &paint, DataElement *d )
       l = d->last( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
     }
     else {
+      double ax = (addpx+1) * ::fabs( ( XMax[xaxis] - XMin[xaxis] ) / ( PlotX2 - PlotX1 ) );
       if ( ShiftData ) {
 	if ( ShiftX[xaxis] > 0.0 ) {
-	  f = d->first( XMax[xaxis]-ShiftX[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
-	  l = d->last( XMax[xaxis]-ShiftX[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+	  f = d->first( XMax[xaxis]-ShiftX[xaxis]-ax, YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+	  l = d->last( XMax[xaxis]-ShiftX[xaxis]-ax, YMin[yaxis], XMax[xaxis], YMax[yaxis] );
 	}
 	else {
-	  f = d->first( XMin[xaxis], YMin[yaxis], XMin[xaxis]-ShiftX[xaxis], YMax[yaxis] );
-	  l = d->last( XMin[xaxis], YMin[yaxis], XMin[xaxis]-ShiftX[xaxis], YMax[yaxis] );
+	  f = d->first( XMin[xaxis], YMin[yaxis], XMin[xaxis]-ShiftX[xaxis]+ax, YMax[yaxis] );
+	  l = d->last( XMin[xaxis], YMin[yaxis], XMin[xaxis]-ShiftX[xaxis]+ax, YMax[yaxis] );
 	}
       }
       else {
@@ -2171,6 +2186,13 @@ void Plot::drawLine( QPainter &paint, DataElement *d )
 	if ( f < m )
 	  f = m;
 	l = d->last( XMin[xaxis], YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+	if ( f < l && ax > 0.0 ) {
+	  double x, y;
+	  d->point( f, x, y );
+	  f = d->first( x-ax, YMin[yaxis], XMax[xaxis], YMax[yaxis] );
+	  if ( f < m )
+	    f = m;
+	}
       }
     }
     d->setLineIndex( l );
@@ -2342,7 +2364,7 @@ void Plot::drawLine( QPainter &paint, DataElement *d )
 }
 
 
-void Plot::drawPoints( QPainter &paint, DataElement *d )
+int Plot::drawPoints( QPainter &paint, DataElement *d )
 {
   if ( ( d->Point.color() != Transparent || 
 	 d->Point.fillColor() != Transparent ) && 
@@ -2381,7 +2403,7 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
     }
     d->setPointIndex( l );
     if ( f >= l )
-      return;
+      return 0;
 
     // single point pixmap:
     int offs = d->Point.size();
@@ -2426,16 +2448,16 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
       // XXX improve single point plot!
       if ( l-f >= 2 ) {
 	double x, y;
-	int WP = d->Point.size();
-	if ( WP <= 0 ) {
+	int wp = d->Point.size();
+	if ( wp <= 0 ) {
 	  double x1, x2;
 	  d->point( f, x1, y );
 	  d->point( l-1, x2, y );
 	  double w = (x2-x1)/(l-f-1);
-	  WP = (int)::rint( double(PlotX2-PlotX1)/(XMax[xaxis]-XMin[xaxis])*w );
+	  wp = (int)::rint( double(PlotX2-PlotX1)/(XMax[xaxis]-XMin[xaxis])*w );
 	}
-	int WPL = WP/2;
-	int WPR = WP - WPL;
+	int wpl = wp/2;
+	int wpr = wp - wpl;
 	y = 0.0;
 	if ( y < YMin[yaxis] )
 	  y = YMin[yaxis];
@@ -2448,13 +2470,14 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
 	      y = YMax[yaxis];
 	    int xp = PlotX1 + (int)::rint( double(PlotX2-PlotX1)/(XMax[xaxis]-XMin[xaxis])*(x-XMin[xaxis]) );
 	    int yp = PlotY1 + (int)::rint( double(PlotY2-PlotY1)/(YMax[yaxis]-YMin[yaxis])*(y-YMin[yaxis]) );
-	    pa.setPoint( 0, xp - WPL, yp );
-	    pa.setPoint( 1, xp + WPR, yp );
-	    pa.setPoint( 2, xp + WPR, Y0 );
-	    pa.setPoint( 3, xp - WPL, Y0 );
+	    pa.setPoint( 0, xp - wpl, yp );
+	    pa.setPoint( 1, xp + wpr, yp );
+	    pa.setPoint( 2, xp + wpr, Y0 );
+	    pa.setPoint( 3, xp - wpl, Y0 );
 	    paint.drawPolygon( pa );
 	  }
 	}
+	return wpl > wpr ? wpl : wpr;
       }
     }
     else {
@@ -2769,16 +2792,21 @@ void Plot::drawPoints( QPainter &paint, DataElement *d )
 	}
       }
 
+      return offs;
     }
   }
+  return 0;
 }
 
 
 void Plot::drawData( QPainter &paint )
 {
+  int addpx = 0;
   for ( PDataType::iterator d = PData.begin(); d != PData.end(); ++d ) {
-    drawLine( paint, *d );
-    drawPoints( paint, *d );
+    drawLine( paint, *d, addpx );
+    int apx = drawPoints( paint, *d );
+    if ( apx > addpx )
+      addpx = apx;
   }
 }
 

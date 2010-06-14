@@ -45,7 +45,7 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
   setRELACSWidget( rw );
 
   ViewMode = SignalView;
-  setView( EndView );
+  setView( WrapView );
   Manual = false;
   Plotting = true;
 
@@ -69,6 +69,8 @@ PlotTrace::PlotTrace( RELACSWidget *rw, QWidget* parent )
   OnOffButton = 0;
 
   setWidget( &P );
+
+  VP.clear();
 
   ButtonBox = 0;
   /*
@@ -175,65 +177,78 @@ PlotTrace::~PlotTrace( void )
 
 void PlotTrace::resize( void )
 {
-  // count plots:
+  // count active plots:
   P.lockData();
-  int plots = 0;
-  for ( int c=0; c<traces().size(); c++ )
+  VP.clear();
+  VP.reserve( traces().size() );
+  for ( int c=0; c<traces().size(); c++ ) {
     if ( trace(c).mode() & PlotTraceMode )
-      plots++;
+      VP.push_back( c );
+  }
   P.unlockData();
 
   P.lock();
 
   // setup plots:
-  P.resize( plots, Plot::Pointer );
+  if ( traces().size() != P.size() )
+    P.resize( traces().size(), Plot::Pointer );
   P.setDataMutex( &RW->DataMutex );
   P.setCommonXRange();
-  PlotElements.resize( plots, -1 );
+  PlotElements.clear();
+  PlotElements.resize( VP.size(), -1 );
 
-  if ( plots > 0 ) {
+  if ( traces().size() > 0 ) {
 
-    double lmarg = 11.0;
-    if ( plots == 1 )
-      lmarg = 8.0;
-    int o = 0;
-    if ( plots > 1 && plots % 2 == 1 )
-      o = 1;
-    
-    for ( int c=0; c<plots; c++ ) {
+    for ( int c=0; c<traces().size(); c++ ) {
       P[c].clear();
-      P[c].setLMarg( lmarg );
-      P[c].setRMarg( 2.0 );
-      P[c].setTMarg( 0.2 );
-      P[c].setBMarg( 0.2 );
-      P[c].noXTics();
-      P[c].setXLabel( "" );
-      P[c].setYTics();
-      P[c].setYLabelPos( 2.0 + ((c+o)%2)*3.0, Plot::FirstMargin,
-			 0.5, Plot::Graph, Plot::Center, -90.0 );
+      if ( trace(c).mode() & PlotTraceMode )
+	P[c].setSkip( false );
+      else
+	P[c].setSkip( true );
     }
     
-    P[0].setTMarg( 1.0 );
-    P[plots-1].setXTics();
-    P[plots-1].setXLabel( "msec" );
-    P[plots-1].setXLabelPos( 1.0, Plot::FirstMargin, 0.0, Plot::FirstAxis, 
-			     Plot::Left, 0.0 );
-    P[plots-1].setBMarg( 2.5 );
-
-    if ( plots > 6 ) {
-      P[(plots+1)/2].setTMarg( 1.0 );
-      P[(plots-1)/2].setXTics();
-      P[(plots-1)/2].setXLabel( "msec" );
-      P[(plots-1)/2].setXLabelPos( 1.0, Plot::FirstMargin,
-				   0.0, Plot::FirstAxis, Plot::Left, 0.0 );
-      P[(plots-1)/2].setBMarg( 2.5 );
+    double lmarg = 11.0;
+    if ( VP.size() == 1 )
+      lmarg = 8.0;
+    int o = 0;
+    if ( VP.size() > 1 && VP.size() % 2 == 1 )
+      o = 1;
+    
+    for ( unsigned int c=0; c<VP.size(); c++ ) {
+      P[VP[c]].setLMarg( lmarg );
+      P[VP[c]].setRMarg( 2.0 );
+      P[VP[c]].setTMarg( 0.2 );
+      P[VP[c]].setBMarg( 0.2 );
+      P[VP[c]].noXTics();
+      P[VP[c]].setXLabel( "" );
+      P[VP[c]].setYTics();
+      P[VP[c]].setYLabelPos( 2.0 + ((c+o)%2)*3.0, Plot::FirstMargin,
+			     0.5, Plot::Graph, Plot::Center, -90.0 );
+    }
+    
+    if ( VP.size() >= 0 ) {
+      P[VP.front()].setTMarg( 1.0 );
+      P[VP.back()].setXTics();
+      P[VP.back()].setXLabel( "msec" );
+      P[VP.back()].setXLabelPos( 1.0, Plot::FirstMargin, 0.0, Plot::FirstAxis, 
+				 Plot::Left, 0.0 );
+      P[VP.back()].setBMarg( 2.5 );
+    }
+    
+    if ( VP.size() > 6 ) {
+      P[VP[(VP.size()+1)/2]].setTMarg( 1.0 );
+      P[VP[(VP.size()-1)/2]].setXTics();
+      P[VP[(VP.size()-1)/2]].setXLabel( "msec" );
+      P[VP[(VP.size()-1)/2]].setXLabelPos( 1.0, Plot::FirstMargin,
+					   0.0, Plot::FirstAxis, Plot::Left, 0.0 );
+      P[VP[(VP.size()-1)/2]].setBMarg( 2.5 );
     }
     
     resizeLayout();
   }
-
+  
   P.unlock();
-
+  
   PlotChanged = true;
 }
 
@@ -283,109 +298,107 @@ void PlotTrace::init( void )
   double tfac = 1000.0;
   string tunit = "ms";
 
-  int plots = 0;
-  for ( int c=0; c<traces().size(); c++ )
-    if ( trace(c).mode() & PlotTraceMode ) {
+  for ( unsigned int c=0; c<VP.size(); c++ ) {
 
-      // clear plot:
-      P[plots].clear();
+    int vp = VP[c];
 
-      // y-label:
-      string s = trace(c).ident() + " [" + trace(c).unit() + "]";
-      P[plots].setYLabel( s );
+    // clear plot:
+    P[vp].clear();
+
+    // y-label:
+    string s = trace(vp).ident() + " [" + trace(vp).unit() + "]";
+    P[vp].setYLabel( s );
 	
-      // plot stimulus events:
-      for ( int s=0; s<events().size(); s++ ) {
-	if ( (events(s).mode() & PlotTraceMode) &&
-	     (events(s).mode() & StimulusEventMode) ) {
-	  P[plots].plot( events(s), origin, Offset, tfac,
-			 0.0, Plot::Graph, 2,
-			 Plot::StrokeUp, 1.0, Plot::GraphY,
-			 Plot::White );
-	  break;
-	}
+    // plot stimulus events:
+    for ( int s=0; s<events().size(); s++ ) {
+      if ( (events(s).mode() & PlotTraceMode) &&
+	   (events(s).mode() & StimulusEventMode) ) {
+	P[vp].plot( events(s), origin, Offset, tfac,
+		    0.0, Plot::Graph, 2,
+		    Plot::StrokeUp, 1.0, Plot::GraphY,
+		    Plot::White );
+	break;
       }
-      // plot restart events:
-      for ( int s=0; s<events().size(); s++ ) {
-	if ( (events(s).mode() & PlotTraceMode) &&
-	     (events(s).mode() & RestartEventMode) ) {
-	  P[plots].plot( events(s), origin, Offset, tfac,
-			 1.0, Plot::Graph, 1,
-			 Plot::TriangleNorth, 0.07, Plot::GraphY,
-			 Plot::Orange, Plot::Orange );
-	  break;
-	}
+    }
+    // plot restart events:
+    for ( int s=0; s<events().size(); s++ ) {
+      if ( (events(s).mode() & PlotTraceMode) &&
+	   (events(s).mode() & RestartEventMode) ) {
+	P[vp].plot( events(s), origin, Offset, tfac,
+		    1.0, Plot::Graph, 1,
+		    Plot::TriangleNorth, 0.07, Plot::GraphY,
+		    Plot::Orange, Plot::Orange );
+	break;
       }
-      // plot recording events:
-      for ( int s=0; s<events().size(); s++ ) {
-	if ( (events(s).mode() & PlotTraceMode) &&
-	     (events(s).mode() & RecordingEventMode) ) {
-	  P[plots].plot( events(s), origin, Offset, tfac,
-			 0.0, Plot::Graph, 4,
-			 Plot::StrokeUp, 1.0, Plot::GraphY,
-			 Plot::Red );
-	  break;
-	}
+    }
+    // plot recording events:
+    for ( int s=0; s<events().size(); s++ ) {
+      if ( (events(s).mode() & PlotTraceMode) &&
+	   (events(s).mode() & RecordingEventMode) ) {
+	P[vp].plot( events(s), origin, Offset, tfac,
+		    0.0, Plot::Graph, 4,
+		    Plot::StrokeUp, 1.0, Plot::GraphY,
+		    Plot::Red );
+	break;
       }
-      // plot events:
-      int sn = 0;
-      for ( int s=0; s<events().size(); s++ ) 
-	if ( (events(s).mode() & PlotTraceMode) &&
-	     !(events(s).mode() & StimulusEventMode) &&
-	     !(events(s).mode() & RestartEventMode) &&
-	     !(events(s).mode() & RecordingEventMode) ) {
-	  
-	  if ( RW->FD->eventInputTrace( s ) == int( c ) ) {
+    }
+    // plot events:
+    int sn = 0;
+    for ( int s=0; s<events().size(); s++ ) 
+      if ( (events(s).mode() & PlotTraceMode) &&
+	   !(events(s).mode() & StimulusEventMode) &&
+	   !(events(s).mode() & RestartEventMode) &&
+	   !(events(s).mode() & RecordingEventMode) ) {
+	
+	if ( RW->FD->eventInputTrace( s ) == int( vp ) ) {
 
-	    if ( sn == 0 ) {
-	      /*
-		P[plots].plot( events(s), origin, Offset, tfac,
-		0.05, Plot::Graph, 1,
-		Plot::StrokeUp, 20, Plot::Pixel,
-		Plot::Red );
-	      */
-	      P[plots].plot( events(s), trace(c),
-			     origin, Offset, tfac,
-			     1, Plot::Circle, 6, Plot::Pixel,
-			     Plot::Gold, Plot::Gold );
-	    }
-	    else if ( sn == 1 )
+	  if ( sn == 0 ) {
+	    /*
 	      P[plots].plot( events(s), origin, Offset, tfac,
-			     0.1, Plot::Graph, 1,
-			     Plot::Circle, 6, Plot::Pixel,
-			     Plot::Yellow, Plot::Yellow );
-	    else if ( sn == 2 )
-	      P[plots].plot( events(s), origin, Offset, tfac, 0.2,
-			     Plot::Graph, 1,
-			     Plot::Diamond, 6, Plot::Pixel,
-			     Plot::Blue, Plot::Blue );
-	    
-	    else
-	      P[plots].plot( events(s), origin, Offset, tfac,
-			     0.3, Plot::Graph, 1,
-			     Plot::TriangleUp, 6, Plot::Pixel,
-			     Plot::Red, Plot::Red );
-	    
-	    sn++;
+	      0.05, Plot::Graph, 1,
+	      Plot::StrokeUp, 20, Plot::Pixel,
+	      Plot::Red );
+	    */
+	    P[vp].plot( events(s), trace(vp),
+			origin, Offset, tfac,
+			1, Plot::Circle, 6, Plot::Pixel,
+			Plot::Gold, Plot::Gold );
 	  }
+	  else if ( sn == 1 )
+	    P[vp].plot( events(s), origin, Offset, tfac,
+			0.1, Plot::Graph, 1,
+			Plot::Circle, 6, Plot::Pixel,
+			Plot::Yellow, Plot::Yellow );
+	  else if ( sn == 2 )
+	    P[vp].plot( events(s), origin, Offset, tfac, 0.2,
+			Plot::Graph, 1,
+			Plot::Diamond, 6, Plot::Pixel,
+			Plot::Blue, Plot::Blue );
+	  
+	  else
+	    P[vp].plot( events(s), origin, Offset, tfac,
+			0.3, Plot::Graph, 1,
+			Plot::TriangleUp, 6, Plot::Pixel,
+			Plot::Red, Plot::Red );
+	  
+	  sn++;
 	}
+      }
       // plot voltage trace:
       int inx = -1;
-      if ( trace(c).indices( TimeWindow ) > 80 )
-	inx = P[plots].plot( trace(c), origin, Offset, tfac,
-			     Plot::Green, 2, Plot::Solid,
-			     Plot::Circle, 0, Plot::Green, Plot::Green );
+      if ( trace(vp).indices( TimeWindow ) > 80 )
+	inx = P[vp].plot( trace(vp), origin, Offset, tfac,
+			  Plot::Green, 2, Plot::Solid,
+			  Plot::Circle, 0, Plot::Green, Plot::Green );
       else
-	inx = P[plots].plot( trace(c), origin, Offset, tfac,
-			     Plot::Green, 2, Plot::Solid,
-			     Plot::Circle, 4, Plot::Green, Plot::Green );
-      PlotElements[plots] = inx;
-
-      plots++;
+	inx = P[vp].plot( trace(vp), origin, Offset, tfac,
+			  Plot::Green, 2, Plot::Solid,
+			  Plot::Circle, 4, Plot::Green, Plot::Green );
+      PlotElements[c] = inx;
     }
 
   // set xlabel:
-  P.back().setXLabel( tunit );
+  P[VP.back()].setXLabel( tunit );
 
   P.unlock();
   P.unlockData();
@@ -420,14 +433,21 @@ void PlotTrace::plot( void )
     // offset fixed at signalTime():
     leftwin = -tfac * TimeOffs;
     rightwin = leftwin + tfac * TimeWindow;
-    LeftTime = 0.001 * leftwin + sigtime;
+    LeftTime = leftwin/tfac + sigtime;
     Offset = sigtime;
   }
   else if ( ViewMode == EndView ) {
     // offset continuous at currentTime():
     rightwin = tfac * ( trace(0).currentTime() - sigtime );
     leftwin = rightwin - tfac * TimeWindow;
-    LeftTime = 0.001 * leftwin + sigtime;
+    LeftTime = leftwin/tfac + sigtime;
+    Offset = sigtime;
+  }
+  else if ( ViewMode == WrapView ) {
+    // offset wrapped at signalTime():
+    LeftTime = ::floor( ( trace(0).currentTime() - sigtime ) / TimeWindow ) * TimeWindow;
+    leftwin = tfac * LeftTime;
+    rightwin += leftwin;
     Offset = sigtime;
   }
   else {
@@ -437,30 +457,23 @@ void PlotTrace::plot( void )
   }
       
   // set xrange:
-  int plots = 0;
-  for ( int c=0; c<traces().size(); c++ )
-    if ( ( trace(c).mode() & PlotTraceMode ) > 0 ) {
+  for ( unsigned int c=0; c<VP.size(); c++ ) {
 
-      // setting axis:
-      P[plots].setXRange( leftwin, rightwin );
-      if ( ! P[plots].zoomedYRange() )
-	P[plots].setYRange( trace(c).minValue(), trace(c).maxValue() );
-
-      // pointstyle:
-      if ( PlotElements[plots] >= 0 ) {
-	if ( trace(c).indices( TimeWindow ) > 80 )
-	  P[plots][PlotElements[plots]].setPoint( Plot::Circle, 0,
-							Plot::Green, Plot::Green );
-	else
-	  P[plots][PlotElements[plots]].setPoint( Plot::Circle, 4,
-							Plot::Green, Plot::Green );
-      }
-      
-      plots++;
-      if ( plots >= P.size() )
-	break;
-      
+    // setting axis:
+    P[VP[c]].setXRange( leftwin, rightwin );
+    if ( ! P[VP[c]].zoomedYRange() )
+      P[VP[c]].setYRange( trace(VP[c]).minValue(), trace(VP[c]).maxValue() );
+    
+    // pointstyle:
+    if ( PlotElements[c] >= 0 ) {
+      if ( trace(VP[c]).indices( TimeWindow ) > 80 )
+	P[VP[c]][PlotElements[c]].setPoint( Plot::Circle, 0,
+					    Plot::Green, Plot::Green );
+      else
+	P[VP[c]][PlotElements[c]].setPoint( Plot::Circle, 4,
+					    Plot::Green, Plot::Green );
     }
+  }
 
   // plot:
   P.draw();
@@ -495,6 +508,7 @@ void PlotTrace::addMenu( QMenu *menu )
   Menu->addAction( "Move offset left", this, SLOT( moveSignalOffsLeft() ), Qt::SHIFT + Qt::Key_PageUp );
   Menu->addAction( "Move offset right", this, SLOT( moveSignalOffsRight() ), Qt::SHIFT + Qt::Key_PageDown );
   Menu->addAction( "&End view", this, SLOT( viewEnd() ), Qt::Key_End );
+  Menu->addAction( "&Wrapped view", this, SLOT( viewWrapped() ), Qt::Key_Insert );
   Menu->addAction( "&Manual", this, SLOT( manualRange() ), Qt::CTRL + Qt::Key_M );
   Menu->addAction( "&Auto", this, SLOT( autoRange() ), Qt::CTRL + Qt::Key_A );
   Menu->addAction( "&Toggle Plot", this, SLOT( plotOnOff() ) );
@@ -531,7 +545,7 @@ void PlotTrace::updateMenu( void )
       s += trace(k).ident();
       PlotActions.push_back( Menu->addAction( s.c_str() ) );
       PlotActions.back()->setCheckable( true );
-      PlotActions.back()->setChecked( true );
+      PlotActions.back()->setChecked( (trace(k).mode() & PlotTraceMode) > 0 );
     }
   }
 }
@@ -557,7 +571,7 @@ void PlotTrace::setState( bool on, bool fixed, double length, double offs )
   postCustomEvent( 11 );  // animate on/off button
 
   // toggle fixed offset:
-  setView( fixed ? SignalView : EndView );
+  setView( fixed ? SignalView : WrapView );
 
   // length of total time window:
   TimeWindow = length;
@@ -566,18 +580,14 @@ void PlotTrace::setState( bool on, bool fixed, double length, double offs )
   TimeOffs = offs;
 
   // pointstyle:
-  int plots=0;
-  for ( int c=0; c<traces().size(); c++ ) {
-    if ( PlotElements[plots] >= 0 ) {
-      if ( trace(c).indices( TimeWindow ) > 80 )
-	P[plots][PlotElements[plots]].setPoint( Plot::Circle, 0,
-						      Plot::Green, Plot::Green );
+  for ( unsigned int c=0; c<VP.size(); c++ ) {
+    if ( PlotElements[c] >= 0 ) {
+      if ( trace(VP[c]).indices( TimeWindow ) > 80 )
+	P[VP[c]][PlotElements[c]].setPoint( Plot::Circle, 0,
+					    Plot::Green, Plot::Green );
       else
-	P[plots][PlotElements[plots]].setPoint( Plot::Circle, 4,
-						      Plot::Green, Plot::Green );
-      plots++;
-      if ( plots >= P.size() )
-	break;
+	P[VP[c]][PlotElements[c]].setPoint( Plot::Circle, 4,
+					    Plot::Green, Plot::Green );
     }
   }
   P.unlock();
@@ -595,15 +605,11 @@ void PlotTrace::zoomOut( void )
   else {
     P.lockData();
     P.lock();
-    int plots=0;
-    for ( int c=0; c<traces().size(); c++ ) {
-      if ( PlotElements[plots] >= 0 ) {
-	if ( trace(c).indices( TimeWindow ) > 80 )
-	  P[plots][PlotElements[plots]].setPoint( Plot::Circle, 0,
-							Plot::Green, Plot::Green );
-	plots++;
-	if ( plots >= P.size() )
-	  break;
+    for ( unsigned int c=0; c<VP.size(); c++ ) {
+      if ( PlotElements[c] >= 0 ) {
+	if ( trace(VP[c]).indices( TimeWindow ) > 80 )
+	  P[VP[c]][PlotElements[c]].setPoint( Plot::Circle, 0,
+					      Plot::Green, Plot::Green );
       }
     }
     P.unlock();
@@ -623,15 +629,11 @@ void PlotTrace::zoomIn( void )
   else {
     P.lockData();
     P.lock();
-    int plots=0;
-    for ( int c=0; c<traces().size(); c++ ) {
-      if ( PlotElements[plots] >= 0 ) {
-	if ( trace(c).indices( TimeWindow ) <= 80 )
-	  P[plots][PlotElements[plots]].setPoint( Plot::Circle, 4,
-							Plot::Green, Plot::Green );
-	plots++;
-	if ( plots >= P.size() )
-	  break;
+    for ( unsigned int c=0; c<VP.size(); c++ ) {
+      if ( PlotElements[c] >= 0 ) {
+	if ( trace(VP[c]).indices( TimeWindow ) <= 80 )
+	  P[VP[c]][PlotElements[c]].setPoint( Plot::Circle, 4,
+					      Plot::Green, Plot::Green );
       }
     }
     P.unlock();
@@ -759,6 +761,16 @@ void PlotTrace::viewEnd( void )
 }
 
 
+void PlotTrace::viewWrapped( void )
+{
+  P.lock();
+  setView( WrapView );
+  P.unlock();
+  if ( RW->idle() )
+    plot();
+}
+
+
 void PlotTrace::plotOnOff( )
 {
   P.lock();
@@ -806,7 +818,12 @@ void PlotTrace::autoRange( void )
 void PlotTrace::viewToggle( void )
 {
   P.lock();
-  setView( ViewMode == EndView ? SignalView : EndView );
+  if ( ViewMode == EndView )
+    setView( SignalView );
+  else if ( ViewMode == SignalView )
+    setView( WrapView );
+  else if ( ViewMode == WrapView )
+    setView( EndView );
   P.unlock();
 }
 
@@ -847,43 +864,44 @@ void PlotTrace::keyPressEvent( QKeyEvent *event )
 
 void PlotTrace::resizeLayout( void )
 {
-  int plots = P.size();
+  if ( VP.empty() )
+    return;
 
-  if ( plots == 1 ) {
-    P[0].setOrigin( 0.0, 0.0 );
-    P[0].setSize( 1.0, 1.0 );
+  if ( VP.size() == 1 ) {
+    P[VP.front()].setOrigin( 0.0, 0.0 );
+    P[VP.front()].setSize( 1.0, 1.0 );
     return;
   }
 
   int columns = 1;
-  if ( plots > 6 )
+  if ( VP.size() > 6 )
     columns = 2;
-  int rows = plots/columns;
-  if ( plots%columns > 0 )
+  int rows = VP.size()/columns;
+  if ( VP.size()%columns > 0 )
     rows++;
   double xsize = 1.0/columns;
-  double yboffs = double( P[0].fontPixel( 2.3 ) ) / double( P.height() );
-  double ytoffs = double( P[0].fontPixel( 0.8 ) ) / double( P.height() );
+  double yboffs = double( P[VP.front()].fontPixel( 2.3 ) ) / double( P.height() );
+  double ytoffs = double( P[VP.front()].fontPixel( 0.8 ) ) / double( P.height() );
   double yheight = (1.0-yboffs-ytoffs)/rows;
     
   int c = 0;
   int r = 0;
-  for ( int k=0; k<plots; k++ ) {
-    P[k].setOrigin( c*xsize, yboffs+(rows-r-1)*yheight );
-    P[k].setSize( xsize, yheight );
+  for ( unsigned int k=0; k<VP.size(); k++ ) {
+    P[VP[k]].setOrigin( c*xsize, yboffs+(rows-r-1)*yheight );
+    P[VP[k]].setSize( xsize, yheight );
     r++;
     if ( r >= rows ) {
       c++;
       r = 0;
     }
   }
-  P[0].setSize( xsize, yheight+ytoffs );
-  P[plots-1].setOrigin( (columns-1)*xsize, 0.0 );
-  P[plots-1].setSize( xsize, yheight+yboffs );
+  P[VP.front()].setSize( xsize, yheight+ytoffs );
+  P[VP.back()].setOrigin( (columns-1)*xsize, 0.0 );
+  P[VP.back()].setSize( xsize, yheight+yboffs );
   if ( columns > 1 ) {
-    P[(plots+1)/2].setSize( xsize, yheight+ytoffs );
-    P[(plots-1)/2].setOrigin( 0.0, 0.0 );
-    P[(plots-1)/2].setSize( xsize, yheight+yboffs );
+    P[VP[(VP.size()+1)/2]].setSize( xsize, yheight+ytoffs );
+    P[VP[(VP.size()-1)/2]].setOrigin( 0.0, 0.0 );
+    P[VP[(VP.size()-1)/2]].setSize( xsize, yheight+yboffs );
   }
 }
 
@@ -937,6 +955,8 @@ void PlotTrace::customEvent( QEvent *qce )
     if ( ViewButton != 0 ) {
       if ( ViewMode == SignalView )
 	ViewButton->setIcon( SignalViewIcon );
+      else if ( ViewMode == WrapView )
+	printlog( "warnig: PlotTrace WrapIcon not implemented yet!" );
       else
 	ViewButton->setIcon( EndViewIcon );
     }

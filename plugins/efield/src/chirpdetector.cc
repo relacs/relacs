@@ -137,6 +137,14 @@ int ChirpDetector::checkEvent( const EventFrequencyIterator &first,
 			       double &minthresh, double &maxthresh,
 			       double &time, double &size, double &width )
 {
+  // accept everything as a chirp:
+  time = *eventtime;
+  size = *event;
+  width = *indextime - *eventtime;
+  return 1;
+
+  // XXX The following algorithm is quite broken: XXX
+
   // chirp too long:
   if ( *indextime - *eventtime > ChirpMaxWidth )
     return 0;

@@ -62,7 +62,7 @@ Session::Session( void )
   EODPlot.resize( 2, 1, true );
   EODPlot.setCommonXRange( 0, 1 );
 
-  EODPlot[0].setXLabel( "sec" );
+  EODPlot[0].setXLabel( "[sec]" );
   EODPlot[0].setXLabelPos( 1.0, Plot::FirstMargin, 0.0, Plot::FirstAxis, 
 			   Plot::Left, 0.0 );
   EODPlot[0].setYFallBackRange( 800.0, 820.0 );
@@ -106,6 +106,7 @@ Session::Session( void )
   Numbers->addWidget( label, 0, 0 );
   EODRateLCD = new QLCDNumber( 4 );
   EODRateLCD->display( EODRate );
+  EODRateLCD->setSegmentStyle( QLCDNumber::Filled );
   QColor fg( Qt::green );
   QColor bg( Qt::black );
   QPalette qp( fg, fg, fg.lighter( 140 ), fg.darker( 170 ), fg.darker( 130 ), fg, fg, fg, bg );
@@ -152,6 +153,7 @@ void Session::initialize( void )
       Numbers->addWidget( label, k, 2 );
       FiringRateLCD[k] = new QLCDNumber( 3 );
       FiringRateLCD[k]->display( 0.0 );
+      FiringRateLCD[k]->setSegmentStyle( QLCDNumber::Filled );
       FiringRateLCD[k]->setPalette( EODRateLCD->palette() );
       FiringRateLCD[k]->setAutoFillBackground( true );
       Numbers->addWidget( FiringRateLCD[k], k, 3 );
@@ -160,6 +162,7 @@ void Session::initialize( void )
       Numbers->addWidget( label, k, 4 );
       PValueLCD[k] = new QLCDNumber( 4 );
       PValueLCD[k]->display( 0.0 );
+      PValueLCD[k]->setSegmentStyle( QLCDNumber::Filled );
       PValueLCD[k]->setPalette( EODRateLCD->palette() );
       PValueLCD[k]->setAutoFillBackground( true );
       Numbers->addWidget( PValueLCD[k], k, 5 );
@@ -257,19 +260,19 @@ void Session::plot( void )
   string xunit = "";
   double xfac = 1.0;
   if ( xmax < 60.0 ) {
-    xunit = "sec";
+    xunit = "[sec]";
     xfac = 1.0;
   }
   else if ( xmax < 60.0*60.0 ) {
     xmax /= 60.0;
     xmin /=  60.0;
-    xunit = "min";
+    xunit = "[min]";
     xfac = 1.0/60.0;
   }
   else {
     xmax /= 3600.0;
     xmin /= 3600.0;
-    xunit = "hours";
+    xunit = "[hours]";
     xfac = 1.0/3600.0;
   }
 

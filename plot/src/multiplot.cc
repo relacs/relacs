@@ -232,6 +232,11 @@ void MultiPlot::doResize( int plots, Plot::KeepMode keep )
       else if ( DRWMutex != 0 )
 	PlotList.back()->setDataMutex( DRWMutex );
     }
+    for ( unsigned int k=0; k<PlotList.size(); k++ ) {
+      PlotList[k]->resetRanges();
+      CommonXRange[k].clear();
+      CommonYRange[k].clear();
+    }
   }
   else if ( plots < size() ) {
     for ( int k=size()-1; k>=plots; k-- ) {
@@ -239,6 +244,11 @@ void MultiPlot::doResize( int plots, Plot::KeepMode keep )
       PlotList.pop_back();
       CommonXRange.pop_back();
       CommonYRange.pop_back();
+    }
+    for ( unsigned int k=0; k<PlotList.size(); k++ ) {
+      PlotList[k]->resetRanges();
+      CommonXRange[k].clear();
+      CommonYRange[k].clear();
     }
   }
   DrawBackground = true;
@@ -281,7 +291,7 @@ void MultiPlot::doClear( void )
 }
 
 
-void MultiPlot::clear( int index )
+void MultiPlot::erase( int index )
 {
   if ( QThread::currentThread() != GUIThread ) {
     qApp->removePostedEvents( this );
@@ -289,11 +299,11 @@ void MultiPlot::clear( int index )
     WaitGUI.wait( &PMutex );
   }
   else
-    doClear( index );
+    doErase( index );
 }
 
 
-void MultiPlot::doClear( int index )
+void MultiPlot::doErase( int index )
 {
   int k;
   PlotListType::iterator p;
@@ -488,7 +498,7 @@ void MultiPlot::paintEvent( QPaintEvent *qpe )
   lockData();
   PMutex.lock();
 
-  if ( DrawBackground ) {
+  if ( DrawBackground || ! DrawData ) {
     QPainter p( this );
     p.eraseRect( rect() );
   }
@@ -496,8 +506,10 @@ void MultiPlot::paintEvent( QPaintEvent *qpe )
   for ( PlotListType::iterator p = PlotList.begin(); 
 	p != PlotList.end(); 
 	++p ) {
-    (**p).scale( width(), height() );
-    (**p).draw( this, DrawData ); // this will not lock the data again!
+    if ( ! (**p).skip() ) {
+      (**p).scale( width(), height() );
+      (**p).draw( this, DrawData ); // this will not lock the data again!
+    }
   }
 
   DrawBackground = false;
@@ -515,7 +527,8 @@ void MultiPlot::resizeEvent( QResizeEvent *qre )
   for ( PlotListType::iterator p = PlotList.begin(); 
 	p != PlotList.end(); 
 	++p ) {
-    (**p).resizeEvent( qre );
+    if ( ! (**p).skip() )
+      (**p).resizeEvent( qre );
   }
   DrawBackground = true;
   PMutex.unlock();
@@ -577,7 +590,7 @@ void MultiPlot::disableMouse( void )
 void MultiPlot::mousePressEvent( QMouseEvent *qme )
 {
   for ( unsigned int k=0; k<PlotList.size(); k++ ) {
-    if ( PlotList[k]->mouseGrabbed() ) {
+    if ( !PlotList[k]->skip() && PlotList[k]->mouseGrabbed() ) {
       lockData();
       PMutex.lock();
       PlotList[k]->mousePressEvent( qme );
@@ -587,7 +600,7 @@ void MultiPlot::mousePressEvent( QMouseEvent *qme )
     }
   }
   for ( unsigned int k=0; k<PlotList.size(); k++ ) {
-    if ( PlotList[k]->inside( qme->x(), qme->y() ) ) {
+    if ( !PlotList[k]->skip() && PlotList[k]->inside( qme->x(), qme->y() ) ) {
       lockData();
       PMutex.lock();
       PlotList[k]->mousePressEvent( qme );
@@ -602,7 +615,7 @@ void MultiPlot::mousePressEvent( QMouseEvent *qme )
 void MultiPlot::mouseReleaseEvent( QMouseEvent *qme )
 {
   for ( unsigned int k=0; k<PlotList.size(); k++ ) {
-    if ( PlotList[k]->mouseGrabbed() ) {
+    if ( !PlotList[k]->skip() && PlotList[k]->mouseGrabbed() ) {
       lockData();
       PMutex.lock();
       PlotList[k]->mouseReleaseEvent( qme );
@@ -612,7 +625,7 @@ void MultiPlot::mouseReleaseEvent( QMouseEvent *qme )
     }
   }
   for ( unsigned int k=0; k<PlotList.size(); k++ ) {
-    if ( PlotList[k]->inside( qme->x(), qme->y() ) ) {
+    if ( !PlotList[k]->skip() && PlotList[k]->inside( qme->x(), qme->y() ) ) {
       lockData();
       PMutex.lock();
       PlotList[k]->mouseReleaseEvent( qme );
@@ -627,7 +640,7 @@ void MultiPlot::mouseReleaseEvent( QMouseEvent *qme )
 void MultiPlot::mouseDoubleClickEvent( QMouseEvent *qme )
 {
   for ( unsigned int k=0; k<PlotList.size(); k++ ) {
-    if ( PlotList[k]->mouseGrabbed() ) {
+    if ( !PlotList[k]->skip() && PlotList[k]->mouseGrabbed() ) {
       lockData();
       PMutex.lock();
       PlotList[k]->mouseDoubleClickEvent( qme );
@@ -637,7 +650,7 @@ void MultiPlot::mouseDoubleClickEvent( QMouseEvent *qme )
     }
   }
   for ( unsigned int k=0; k<PlotList.size(); k++ ) {
-    if ( PlotList[k]->inside( qme->x(), qme->y() ) ) {
+    if ( !PlotList[k]->skip() && PlotList[k]->inside( qme->x(), qme->y() ) ) {
       lockData();
       PMutex.lock();
       PlotList[k]->mouseDoubleClickEvent( qme );
@@ -652,7 +665,7 @@ void MultiPlot::mouseDoubleClickEvent( QMouseEvent *qme )
 void MultiPlot::mouseMoveEvent( QMouseEvent *qme )
 {
   for ( unsigned int k=0; k<PlotList.size(); k++ ) {
-    if ( PlotList[k]->mouseGrabbed() ) {
+    if ( !PlotList[k]->skip() && PlotList[k]->mouseGrabbed() ) {
       lockData();
       PMutex.lock();
       PlotList[k]->mouseMoveEvent( qme );
@@ -662,7 +675,7 @@ void MultiPlot::mouseMoveEvent( QMouseEvent *qme )
     }
   }
   for ( unsigned int k=0; k<PlotList.size(); k++ ) {
-    if ( PlotList[k]->inside( qme->x(), qme->y() ) ) {
+    if ( !PlotList[k]->skip() && PlotList[k]->inside( qme->x(), qme->y() ) ) {
       lockData();
       PMutex.lock();
       PlotList[k]->mouseMoveEvent( qme );
@@ -699,7 +712,7 @@ void MultiPlot::customEvent( QEvent *qce )
   case 103: {
     MultiPlotEvent *mpe = dynamic_cast<MultiPlotEvent*>( qce );
     PMutex.lock();
-    doClear( mpe->Plots );
+    doErase( mpe->Plots );
     PMutex.unlock();
     WaitGUI.wakeAll();
     break;

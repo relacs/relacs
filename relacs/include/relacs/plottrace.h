@@ -126,6 +126,7 @@ public slots:
   void moveSignalOffsLeft( void );
   void moveSignalOffsRight( void );
   void viewEnd( void );
+  void viewWrapped( void );
   void manualRange( void );
   void autoRange( void );
 
@@ -167,6 +168,8 @@ private:
     SignalView,
       /*! Show the traces relative to the current data. */
     EndView,
+      /*! Show the traces wrapped relative to the current data. */
+    WrapView,
   };
 
   void setView( Views mode );
@@ -194,6 +197,7 @@ private:
   QMenu *Menu;
 
   MultiPlot P;
+  vector< int > VP;  // the indices of the visible plots
 
 };
 

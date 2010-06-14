@@ -95,10 +95,14 @@ public:
   bool empty( void ) const;
 
     /*! Change the number of plots to \a plots.
+        The zoom-stacks of all plots are reset (Plot::resetRanges() )
+	and the common X and Y ranges are cleared.
         \note the plot mutex must be locked ( lock() ), when calling this function! */
   void resize( int plots, Plot::KeepMode keep=Plot::Copy );
     /*! Change the number of plots to \a plots
         and update the layout.
+        The zoom-stacks of all plots are reset (Plot::resetRanges() )
+	and the common X and Y ranges are cleared.
         \note the plot mutex must be locked ( lock() ), when calling this function! */
   void resize( int plots, int columns, bool horizontal, Plot::KeepMode keep=Plot::Copy );
 
@@ -107,7 +111,7 @@ public:
   void clear( void );
     /*! Remove Plot number \a index from the MultiPlot widget.
         \note the plot mutex must be locked ( lock() ), when calling this function! */
-  void clear( int index );
+  void erase( int index );
 
     /*! The Plot-widget \a i. */
   Plot &operator[]( int i ) { return *PlotList[i]; };
@@ -166,7 +170,7 @@ protected:
 
   void doResize( int plots, Plot::KeepMode keep );
   void doClear( void );
-  void doClear( int index );
+  void doErase( int index );
 
     /*! The Qt mouse event handler for a mouse press event.
         Dispatches the event to the appropriate Plot. */

@@ -54,6 +54,7 @@ Session::Session( void )
 		    (QWidget*)this, SLOT( toggleSession() ) );
 
   P.lock();
+  P.setMinimumWidth( 210 );
   P.resize( 2, 1, true, Plot::Pointer );
   P.setDataMutex( mutex() );
   P[0].setXRange( 0.0, 40.0 );

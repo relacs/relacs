@@ -300,12 +300,6 @@ int JAR::main( void )
       for ( DeltaFRange.reset(); !DeltaFRange && softStop() <= 2; ++DeltaFRange ) {
 
 	setSaving( true );
-	sleep( Before );
-	if ( interrupt() ) {
-	  writeZero( GlobalEField );
-	  save();
-	  return Aborted;
-	}
 
 	Contrast = Contrasts[ContrastCount];
 	DeltaF = *DeltaFRange;
@@ -345,7 +339,7 @@ int JAR::main( void )
 	}
 	Duration = signal.length();
 	signal.setStartSource( 1 );
-	signal.setDelay( 0.01 );
+	signal.setDelay( Before );
 	/*
 	Str s = "C=" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%";
 	s += ", Df=" + Str( DeltaF, 0, 1, 'f' ) + "Hz";
@@ -397,7 +391,7 @@ int JAR::main( void )
 	s += "  Loop:  <b>" + Str( Count+1 ) + "</b>";
 	message( s );
 	
-	sleep( Duration + After );
+	sleep( Before + Duration + After );
 	if ( interrupt() ) {
 	  writeZero( GlobalEField );
 	  save();
@@ -1078,7 +1072,7 @@ void JAR::analyze( void )
   else
     LocalEODUnit = "";
 
-  EventIterator first1 = eodglobal.begin( sigtime );
+  EventIterator first1 = eodglobal.begin( sigtime - Before );
   EventIterator last1 = eodglobal.begin( sigtime + Duration + After );
   if ( last1 >= eodglobal.end() - 2 )
     last1 = eodglobal.end() - 2;
