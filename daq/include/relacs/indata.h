@@ -237,18 +237,20 @@ class InData : public CyclicArray<float>, public DaqError
   const_iterator minBegin( void ) const;
     /*! Returns an iterator pointing behind the last element. */
   const_iterator end( void ) const;
+    /*! Const iterator used to iterate through InData. */
+  typedef InDataTimeIterator const_range_iterator;
     /*! Returns an iterator for the time associated with the data elements 
         pointing to the first data element. */
-  InDataTimeIterator timeBegin( void ) const;
+  const_range_iterator timeBegin( void ) const;
     /*! Returns an iterator for the time associated with the data elements 
         pointing to the element at time \a time seconds. */
-  InDataTimeIterator timeBegin( double time ) const;
+  const_range_iterator timeBegin( double time ) const;
     /*! Returns an iterator for the time associated with the data elements
         pointing to the first accessible element \sa minIndex(). */
-  InDataTimeIterator minTimeBegin( void ) const;
+  const_range_iterator minTimeBegin( void ) const;
     /*! Returns an iterator for the time associated with the data elements 
         pointing behind the last element. */
-  InDataTimeIterator timeEnd( void ) const;
+  const_range_iterator timeEnd( void ) const;
 
     /*! The sampling rate of the input trace in Hertz */
   double sampleRate( void ) const;

@@ -163,6 +163,30 @@ EventData::EventData( const ArrayD &times, double tbegin,
 }
 
 
+EventData::EventData( const ArrayD &times, const ArrayD &sizes, double tbegin,
+		      double tend, double stepsize )
+{
+  TimeBuffer = 0;
+  SizeBuffer = 0;
+  WidthBuffer = 0;
+  NBuffer = 0;
+  Cyclic = false;
+  assign( times, sizes, tbegin, tend, stepsize );
+}
+
+
+EventData::EventData( const ArrayD &times, const ArrayD &sizes, const ArrayD &widths,
+		      double tbegin, double tend, double stepsize )
+{
+  TimeBuffer = 0;
+  SizeBuffer = 0;
+  WidthBuffer = 0;
+  NBuffer = 0;
+  Cyclic = false;
+  assign( times, sizes, widths, tbegin, tend, stepsize );
+}
+
+
 EventData::~EventData( void )
 {
   if ( TimeBuffer != 0 )
@@ -785,6 +809,83 @@ void EventData::assign( const ArrayD &times,
   Ident = "";
   MeanSize = 0.0;
   MeanWidth = 0.0;
+  MeanInterval = times.size() > 1 ? ( times.back() - times.front() ) / double( ns - 1 ) : MaxInterval;
+  MeanQuality = 0.0;
+  if ( tbegin == -HUGE_VAL && size() > 0 )
+    tbegin = front();
+  if ( tend == HUGE_VAL && size() > 0 )
+    tend = back();
+  Range = LinearRange( tbegin, tend, stepsize );
+  Source = 0;
+  SignalTime = -HUGE_VAL;
+  ErrorMessage = "";
+}
+
+
+void EventData::assign( const ArrayD &times, const ArrayD &sizes, 
+			double tbegin, double tend, double stepsize )
+{
+  UseSizeBuffer = true;
+  UseWidthBuffer = false;
+  clear();
+
+  long ns = times.size();
+  reserve( ns );
+  if ( NBuffer < ns )
+    ns = NBuffer;
+
+  for ( int k=0; k<ns; k++ ) {
+    TimeBuffer[k] = times[k];
+    SizeBuffer[k] = sizes[k];
+  }
+
+  Cyclic = false;
+  R = ns;
+  Index = 0;
+  Cycles = 0;
+  Mode = 0;
+  Ident = "";
+  MeanSize = mean( SizeBuffer, SizeBuffer+ns );
+  MeanWidth = 0.0;
+  MeanInterval = times.size() > 1 ? ( times.back() - times.front() ) / double( ns - 1 ) : MaxInterval;
+  MeanQuality = 0.0;
+  if ( tbegin == -HUGE_VAL && size() > 0 )
+    tbegin = front();
+  if ( tend == HUGE_VAL && size() > 0 )
+    tend = back();
+  Range = LinearRange( tbegin, tend, stepsize );
+  Source = 0;
+  SignalTime = -HUGE_VAL;
+  ErrorMessage = "";
+}
+
+
+void EventData::assign( const ArrayD &times, const ArrayD &sizes, const ArrayD &widths, 
+			double tbegin, double tend, double stepsize )
+{
+  UseSizeBuffer = true;
+  UseWidthBuffer = true;
+  clear();
+
+  long ns = times.size();
+  reserve( ns );
+  if ( NBuffer < ns )
+    ns = NBuffer;
+
+  for ( int k=0; k<ns; k++ ) {
+    TimeBuffer[k] = times[k];
+    SizeBuffer[k] = sizes[k];
+    WidthBuffer[k] = widths[k];
+  }
+
+  Cyclic = false;
+  R = ns;
+  Index = 0;
+  Cycles = 0;
+  Mode = 0;
+  Ident = "";
+  MeanSize = mean( SizeBuffer, SizeBuffer+ns );
+  MeanWidth = mean( WidthBuffer, WidthBuffer+ns );
   MeanInterval = times.size() > 1 ? ( times.back() - times.front() ) / double( ns - 1 ) : MaxInterval;
   MeanQuality = 0.0;
   if ( tbegin == -HUGE_VAL && size() > 0 )

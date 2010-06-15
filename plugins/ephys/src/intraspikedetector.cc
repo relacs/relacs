@@ -341,14 +341,14 @@ int IntraSpikeDetector::detect( const InData &data, EventData &outevents,
 }
 
 
-int IntraSpikeDetector::checkEvent( const InData::const_iterator &first, 
-				    const InData::const_iterator &last,
-				    InData::const_iterator &event, 
-				    InDataTimeIterator &eventtime, 
-				    InData::const_iterator &index,
-				    InDataTimeIterator &indextime, 
-				    InData::const_iterator &prevevent, 
-				    InDataTimeIterator &prevtime, 
+int IntraSpikeDetector::checkEvent( InData::const_iterator first, 
+				    InData::const_iterator last,
+				    InData::const_iterator event, 
+				    InData::const_range_iterator eventtime, 
+				    InData::const_iterator index,
+				    InData::const_range_iterator indextime, 
+				    InData::const_iterator prevevent, 
+				    InData::const_range_iterator prevtime, 
 				    EventData &outevents,
 				    double &threshold,
 				    double &minthresh, double &maxthresh,
@@ -362,8 +362,8 @@ int IntraSpikeDetector::checkEvent( const InData::const_iterator &first,
     return 0;
 
   // go down to the left:
-  InDataIterator left = event;
-  InDataTimeIterator lefttime = eventtime;
+  InData::const_iterator left = event;
+  InData::const_range_iterator lefttime = eventtime;
   if ( left <= first )
     return 0;
   for ( --left, --lefttime; ; --left, --lefttime ) {
@@ -377,8 +377,8 @@ int IntraSpikeDetector::checkEvent( const InData::const_iterator &first,
   }
   double base1 = *left;
   // go down to the right:
-  InDataIterator right = event;
-  InDataTimeIterator righttime = eventtime;
+  InData::const_iterator right = event;
+  InData::const_range_iterator righttime = eventtime;
   for ( ++right, ++righttime; ; ++right, ++righttime ) {
     if ( right+1 >= last )
       return -1;
@@ -396,16 +396,16 @@ int IntraSpikeDetector::checkEvent( const InData::const_iterator &first,
 
   // width of spike:
   double minval = *event - 0.5 * size;
-  InDataIterator linx = event;
-  InDataTimeIterator linxtime = eventtime;
+  InData::const_iterator linx = event;
+  InData::const_range_iterator linxtime = eventtime;
   for ( --linx, --linxtime; linx >= left; --linx, --linxtime ) {
     if ( left <= first )
       return 0;
     if ( *linx <= minval )
       break;
   }
-  InDataIterator rinx = event;
-  InDataTimeIterator rinxtime = eventtime;
+  InData::const_iterator rinx = event;
+  InData::const_range_iterator rinxtime = eventtime;
   for ( ++rinx, ++rinxtime; rinx < right; ++rinx, ++rinxtime ) {
     if ( right >= last )
       return -1;
@@ -420,8 +420,8 @@ int IntraSpikeDetector::checkEvent( const InData::const_iterator &first,
   if ( FitPeak ) {
     MapD peak;
     peak.reserve( FitIndices );
-    InDataIterator peakp = event - FitIndices/2;
-    InDataTimeIterator peakt = eventtime - FitIndices/2;
+    InData::const_iterator peakp = event - FitIndices/2;
+    InData::const_range_iterator peakt = eventtime - FitIndices/2;
     for ( int k=0; k<FitIndices; k++ ) {
       peak.push( *peakt - time, *peakp );
       ++peakt;

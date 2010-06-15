@@ -81,14 +81,14 @@ public:
         Update the threshold \a threshold.
         After each call of checkEvent() the threshold is bounded
         to \a minthresh and \a maxthresh. */
-  int checkEvent( const InData::const_iterator &first, 
-		  const InData::const_iterator &last,
-		  InData::const_iterator &event, 
-		  InDataTimeIterator &eventtime, 
-		  InData::const_iterator &index,
-		  InDataTimeIterator &indextime, 
-		  InData::const_iterator &prevevent, 
-		  InDataTimeIterator &prevtime, 
+  int checkEvent( InData::const_iterator first, 
+		  InData::const_iterator last,
+		  InData::const_iterator event, 
+		  InData::const_range_iterator eventtime, 
+		  InData::const_iterator index,
+		  InData::const_range_iterator indextime, 
+		  InData::const_iterator prevevent, 
+		  InData::const_range_iterator prevtime, 
 		  EventData &outevents,
 		  double &threshold,
 		  double &minthresh, double &maxthresh,
@@ -97,7 +97,7 @@ public:
 
 protected:
 
-  Detector< InData::const_iterator, InDataTimeIterator > D;
+  Detector< InData::const_iterator, InData::const_range_iterator > D;
 
     /*! The threshold for detecting spikes. */
   double Threshold;

@@ -114,6 +114,19 @@ public:
 	of \a times. */
   EventData( const ArrayD &times, double tbegin=-HUGE_VAL,
 	     double tend=HUGE_VAL, double stepsize=0.0001 );
+    /*! Copy the event times \a times and their correspondiong sizes \a sizes to \a *this
+        and initializes the range with \a tbegin, \a tend, and \a stepsize.
+        By default \a tbegin and \a tend are set to the first and last event
+	of \a times. */
+  EventData( const ArrayD &times, const ArrayD &sizes, double tbegin=-HUGE_VAL,
+	     double tend=HUGE_VAL, double stepsize=0.0001 );
+    /*! Copy the event times \a times and their correspondiong sizes \a sizes
+        and widths \a widths to \a *this
+        and initializes the range with \a tbegin, \a tend, and \a stepsize.
+        By default \a tbegin and \a tend are set to the first and last event
+	of \a times. */
+  EventData( const ArrayD &times, const ArrayD &sizes, const ArrayD &width,
+	     double tbegin=-HUGE_VAL, double tend=HUGE_VAL, double stepsize=0.0001 );
     /*! Destructs an EventData. */
   ~EventData( void );
 
@@ -255,6 +268,19 @@ public:
 	of \a times. */
   void assign( const ArrayD &times, double tbegin=-HUGE_VAL,
 	       double tend=HUGE_VAL, double stepsize=0.0001 );
+    /*! Copy the event times \a times and the corresponding sizes \a sizes to \a *this
+        and initializes the range with \a tbegin, \a tend, and \a stepsize.
+        On default \a tbegin and \a tend are set to the first and last event
+	of \a times. */
+  void assign( const ArrayD &times, const ArrayD &sizes, double tbegin=-HUGE_VAL,
+	       double tend=HUGE_VAL, double stepsize=0.0001 );
+    /*! Copy the event times \a times and the corresponding sizes \a sizes
+        and widths \a widths to \a *this
+        and initializes the range with \a tbegin, \a tend, and \a stepsize.
+        On default \a tbegin and \a tend are set to the first and last event
+	of \a times. */
+  void assign( const ArrayD &times, const ArrayD &sizes, const ArrayD &width,
+	       double tbegin=-HUGE_VAL, double tend=HUGE_VAL, double stepsize=0.0001 );
 
     /*! Append from \a events all events between time \a tbegin
         and time \a tend seconds to \a *this. */

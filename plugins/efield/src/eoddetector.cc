@@ -122,14 +122,14 @@ int EODDetector::detect( const InData &data, EventData &outevents,
 }
 
 
-int EODDetector::checkEvent( const InData::const_iterator &first, 
-			     const InData::const_iterator &last,
-			     InData::const_iterator &event,
-			     InDataTimeIterator &eventtime,
-			     InData::const_iterator &index,
-			     InDataTimeIterator &indextime,
-			     InData::const_iterator &prevevent,
-			     InDataTimeIterator &prevtime,
+int EODDetector::checkEvent( InData::const_iterator first, 
+			     InData::const_iterator last,
+			     InData::const_iterator event,
+			     InData::const_range_iterator eventtime,
+			     InData::const_iterator index,
+			     InData::const_range_iterator indextime,
+			     InData::const_iterator prevevent,
+			     InData::const_range_iterator prevtime,
 			     EventData &outevents,
 			     double &threshold,
 			     double &minthresh, double &maxthresh,
@@ -155,7 +155,7 @@ int EODDetector::checkEvent( const InData::const_iterator &first,
 
   // previous maxsize crossing time:
   InData::const_iterator id = event;
-  InDataTimeIterator it = eventtime;
+  InData::const_range_iterator it = eventtime;
   double ival = *id;
   double pval = ival;
   for ( --id, --it; id != first; --id, --it ) {

@@ -34,10 +34,10 @@ template < typename DataIter, typename TimeIter >
 class AcceptEODPeaks
 {
 public:
-  int checkEvent( const DataIter &first, const DataIter &last,
-		  DataIter &event, TimeIter &eventtime,
-		  DataIter &index, TimeIter &indextime,
-		  DataIter &prevevent, TimeIter &prevtime,
+  int checkEvent( DataIter first, DataIter last,
+		  DataIter event, TimeIter eventtime,
+		  DataIter index, TimeIter indextime,
+		  DataIter prevevent, TimeIter prevtime,
 		  EventData &outevents,
 		  double &threshold,
 		  double &minthresh, double &maxthresh,
@@ -122,14 +122,14 @@ void EODTools::eodPeaks( const InData &data, double tbegin, double tend,
 class AcceptEODTroughs
 {
 public:
-  int checkEvent( const InDataIterator &first, 
-		  const InDataIterator &last,
-		  InDataIterator &event, 
-		  InDataTimeIterator &eventtime, 
-		  InDataIterator &index,
-		  InDataTimeIterator &indextime,
-		  InDataIterator &prevevent,
-		  InDataTimeIterator &prevtime,
+  int checkEvent( InDataIterator first, 
+		  InDataIterator last,
+		  InDataIterator event, 
+		  InDataTimeIterator eventtime, 
+		  InDataIterator index,
+		  InDataTimeIterator indextime,
+		  InDataIterator prevevent,
+		  InDataTimeIterator prevtime,
 		  EventData &outevents, 
 		  double &threshold,
 		  double &minthresh, double &maxthresh,

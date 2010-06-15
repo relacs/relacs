@@ -81,10 +81,10 @@ public:
 
       AcceptEOD( void ) {};
   
-      int checkPeak( const DataIter &first, const DataIter &last,
-		     DataIter &event, TimeIter &eventtime,
-		     DataIter &index, TimeIter &indextime,
-		     DataIter &prevevent, TimeIter &prevtime,
+      int checkPeak( DataIter first, DataIter last,
+		     DataIter event, TimeIter eventtime,
+		     DataIter index, TimeIter indextime,
+		     DataIter prevevent, TimeIter prevtime,
 		     EventList &outevents,
 		     double &threshold,
 		     double &minthresh, double &maxthresh,
@@ -109,10 +109,10 @@ public:
 	return 1; 
       }
 
-      int checkTrough( const DataIter &first, const DataIter &last,
-		       DataIter &event, TimeIter &eventtime,
-		       DataIter &index, TimeIter &indextime,
-		       DataIter &prevevent, TimeIter &prevtime,
+      int checkTrough( DataIter first, DataIter last,
+		       DataIter event, TimeIter eventtime,
+		       DataIter index, TimeIter indextime,
+		       DataIter prevevent, TimeIter prevtime,
 		       EventList &outevents,
 		       double &threshold,
 		       double &minthresh, double &maxthresh,
