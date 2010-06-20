@@ -33,7 +33,6 @@ namespace relacs {
 \brief Basic virtual class for filtering or detecting events (e.g. spikes) 
        in an InData or EventData
 \author Jan Benda
-\version 1.2
 */
 
 class Filter : public RELACSPlugin
@@ -69,19 +68,29 @@ public:
   };
 
     /*! The constructor.
-        A Filter is a widget, i.e. you can display parameters 
-        or plot something on the screen. 
-	\a mode is passed to the resulting InData or EventData.
-	\a type determines the type of the filter or detector.
-        \a outtraces is the number of produced output traces.
+        When implementing a %Filter,
+	the constructor must have the following signature
+\code
+class MyFilter : public Filter
+{
+public
+  MyFilter::MyFilter( const string &ident, int mode );
+};
+\endcode
+	\a ident and \a mode are determined from the config file
+	and should simply be passed to this constructor.
+        \param[in] ident a unique identifier for each instance of the Filter plugin.
+        \param[in] mode is passed to the resulting InData or EventData.
+	\param[in] type determines the type of the filter or detector.
+        \param[in] outtraces is the number of produced output traces.
         If \a outtraces == 0, then the number of output traces
         equals the number of input traces.
-        The %Filter is named \a name (has to be identical
-        to the class name) and belongs to the set of plugins
-	named \a pluginset.
-	The implementation of a class derived from Filter
-	has the version \a version and was written
-	by \a author on \a date. */
+	\param[in] name the name of the Filter plugin (has to be identical to the class name)
+	\param[in] pluginset the name of the plugin-set the Filter plugin belongs to
+	\param[in] author name(s) of the person(s) who progammed the plugin
+	\param[in] version a version string
+	\param[in] date date of the last change
+    */
   Filter( const string &ident, int mode,
 	  FilterType type, int outtraces=0, 
 	  const string &name="",
@@ -138,7 +147,7 @@ public:
 	The detector and the data are already locked during this function 
 	by lock() and writeLockData(), respectively.
 	Initialize the \a outevents with appropriate names, scale factors,
-	units and formats
+	units and formats if required
         (EventData::setSizeName(), EventData::setSizeScale(),
 	EventData::setSizeUnit(), EventData::setSizeFormat(), 
 	EventData::setWidthName(), EventData::setWidthScale(),
@@ -153,7 +162,7 @@ public:
 	The detector and the data are already locked during this function 
 	by lock() and writeLockData(), respectively.
 	Initialize the \a outevents with appropriate names, scale factors,
-	units and formats
+	units and formats if required
         (EventData::setSizeName(), EventData::setSizeScale(),
 	EventData::setSizeUnit(), EventData::setSizeFormat(), 
 	EventData::setWidthName(), EventData::setWidthScale(),
@@ -167,7 +176,7 @@ public:
 	The detector and the data are already locked during this function 
 	by lock() and writeLockData(), respectively.
 	Initialize the \a outevents with appropriate names, scale factors,
-	units and formats
+	units and formats if required
         (EventData::setSizeName(), EventData::setSizeScale(),
 	EventData::setSizeUnit(), EventData::setSizeFormat(), 
 	EventData::setWidthName(), EventData::setWidthScale(),
@@ -181,7 +190,7 @@ public:
 	The detector and the data are already locked during this function 
 	by lock() and writeLockData(), respectively.
 	Initialize the \a outevents with appropriate names, scale factors,
-	units and formats
+	units and formats if required
         (EventData::setSizeName(), EventData::setSizeScale(),
 	EventData::setSizeUnit(), EventData::setSizeFormat(), 
 	EventData::setWidthName(), EventData::setWidthScale(),
@@ -195,53 +204,104 @@ public:
 	that detect events in a single trace of the analog data 
 	given in \a indata.
 	The filter and the data are already locked during this function 
-	by lock() and writeLockData(), respectively. */
+	by lock() and writeLockData(), respectively.
+	Your reimplementation should return 0. */
   virtual int adjust( const InData &indata ) { return INT_MIN; };
     /*! Reimplement this function to react to changes in the input gain.
         This function is for filters and detectors 
         that detect events in multiple traces of the analog data 
 	given in \a indata.
 	The filter and the data are already locked during this function 
-	by lock() and writeLockData(), respectively. */
+	by lock() and writeLockData(), respectively.
+	Your reimplementation should return 0. */
   virtual int adjust( const InList &indata ) { return INT_MIN; };
     /*! Reimplement this function to react to changes in the input gain.
         This function is for filters and detectors 
 	that detect events in the events \a inevents.
 	The filter and the data are already locked during this function 
-	by lock() and writeLockData(), respectively. */
+	by lock() and writeLockData(), respectively.
+	Your reimplementation should return 0. */
   virtual int adjust( const EventData &inevents ) { return INT_MIN; };
     /*! Reimplement this function to react to changes in the input gain.
         This function is for filters and detectors 
 	that detect events in the multiple events \a inevents.
 	The filter and the data are already locked during this function 
-	by lock() and writeLockData(), respectively. */
+	by lock() and writeLockData(), respectively.
+	Your reimplementation should return 0. */
   virtual int adjust( const EventList &inevents ) { return INT_MIN; };
+
+    /*! Reimplement this function to react to automatically set parameters
+        of the filter/detector, based on the input data
+	between the times \a tbegin and \a tend.
+        This function is for filters and detectors 
+	that detect events in a single trace of the analog data 
+	given in \a indata.
+	The filter and the data are already locked during this function 
+	by lock() and readLockData(), respectively.
+	Your reimplementation should return 0 on success. */
+  virtual int autoConfigure( const InData &indata, double tbegin, double tend ) { return INT_MIN; };
+    /*! Reimplement this function to react to automatically set parameters
+        of the filter/detector, based on the input data
+	between the times \a tbegin and \a tend.
+        This function is for filters and detectors 
+        that detect events in multiple traces of the analog data 
+	given in \a indata.
+	The filter and the data are already locked during this function 
+	by lock() and readLockData(), respectively.
+	Your reimplementation should return 0 on success. */
+  virtual int autoConfigure( const InList &indata, double tbegin, double tend ) { return INT_MIN; };
+    /*! Reimplement this function to react to automatically set parameters
+        of the filter/detector, based on the input data
+	between the times \a tbegin and \a tend.
+        This function is for filters and detectors 
+	that detect events in the events \a inevents.
+	The filter and the data are already locked during this function 
+	by lock() and readLockData(), respectively.
+	Your reimplementation should return 0 on success. */
+  virtual int autoConfigure( const EventData &inevents, double tbegin, double tend ) { return INT_MIN; };
+    /*! Reimplement this function to react to automatically set parameters
+        of the filter/detector, based on the input data
+	between the times \a tbegin and \a tend.
+        This function is for filters and detectors 
+	that detect events in the multiple events \a inevents.
+	The filter and the data are already locked during this function 
+	by lock() and readLockData(), respectively.
+	Your reimplementation should return 0 on success. */
+  virtual int autoConfigure( const EventList &inevents, double tbegin, double tend ) { return INT_MIN; };
 
     /*! Reimplement this function with an appropriate filter.
         This function filters a single trace of
 	the analog data given in \a indata.
 	The filtered trace is stored in \a outdata.
 	The filter and the data are already locked during this function 
-	by lock() and writeLockData(), respectively. */
+	by lock() and writeLockData(), respectively.
+        This function is called periodically
+	whenever a new chunk of data is available. */
   virtual int filter( const InData &indata, InData &outdata ) { return INT_MIN; };
     /*! Reimplement this function with an appropriate filter.
         This function filters multiple traces of
 	the analog data given in \a indata.
 	The filtered traces are stored in \a outdata.
 	The filter and the data are already locked during this function 
-	by lock() and writeLockData(), respectively. */
+	by lock() and writeLockData(), respectively.
+        This function is called periodically
+	whenever a new chunk of data is available. */
   virtual int filter( const InList &indata, InList &outdata ) { return INT_MIN; };
     /*! Reimplement this function with an appropriate filter.
         This function filters the events \a inevents.
 	The filtered trace is stored in \a outdata.
 	The filter and the data are already locked during this function 
-	by lock() and writeLockData(), respectively. */
+	by lock() and writeLockData(), respectively.
+        This function is called periodically
+	whenever a new chunk of data is available. */
   virtual int filter( const EventData &inevents, InData &outdata ) { return INT_MIN; };
     /*! Reimplement this function with an appropriate filter.
         This function filters multiple events \a inevents.
 	The filtered traces are stored in \a outdata.
 	The filter and the data are already locked during this function 
-	by lock() and writeLockData(), respectively. */
+	by lock() and writeLockData(), respectively.
+        This function is called periodically
+	whenever a new chunk of data is available. */
   virtual int filter( const EventList &inevents, InList &outdata ) { return INT_MIN; };
     /*! Reimplement this function with an appropriate event detector.
         This function detects events in a single trace of
@@ -249,7 +309,9 @@ public:
 	The trace number is specified by \a events->trace().
 	The events are stored in \a outevents.
 	The detector and the data are already locked during this function 
-	by lock() and writeLockData(), respectively. */
+	by lock() and writeLockData(), respectively.
+        This function is called periodically
+	whenever a new chunk of data is available. */
   virtual int detect( const InData &data, EventData &outevents, 
 		      const EventList &other, const EventData &stimuli ) { return INT_MIN; };
     /*! Reimplement this function with an appropriate event detector.
@@ -258,21 +320,27 @@ public:
 	The trace numbers are specified by \a events->trace() and \a event->traceNum().
 	The events are stored in \a outevents.
 	The detector and the data are already locked during this function 
-	by lock() and writeLockData(), respectively. */
+	by lock() and writeLockData(), respectively.
+        This function is called periodically
+	whenever a new chunk of data is available. */
   virtual int detect( const InList &data, EventList &outevents, 
 		      const EventList &other, const EventData &stimuli ) { return INT_MIN; };
     /*! Reimplement this function with an appropriate event detector.
         This function detects events in the events \a inevents.
 	The detected events are stored in \a outevents.
 	The detector and the data are already locked during this function 
-	by lock() and writeLockData(), respectively. */
+	by lock() and writeLockData(), respectively.
+        This function is called periodically
+	whenever a new chunk of data is available. */
   virtual int detect( const EventData &inevents, EventData &outevents, 
 		      const EventList &other, const EventData &stimuli ) { return INT_MIN; };
     /*! Reimplement this function with an appropriate event detector.
         This function detects events in multiple events \a inevents.
 	The events are stored in \a outevents.
 	The detector and the data are already locked during this function 
-	by lock() and writeLockData(), respectively. */
+	by lock() and writeLockData(), respectively.
+        This function is called periodically
+	whenever a new chunk of data is available. */
   virtual int detect( const EventList &inevents, 
 		      EventList &outevents, 
 		      const EventList &other, const EventData &stimuli ) { return INT_MIN; };

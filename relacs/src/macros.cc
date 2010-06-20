@@ -296,7 +296,8 @@ void Macros::load( const string &file, bool main )
 	  MCs.back()->Commands.back()->Params += name;
 	}
       }
-      else if ( !startsession && !shell && !message && !browse &&
+      else if ( !startsession && !shell && !filter && !detector &&
+		!message && !browse &&
 		name.empty() ) {
 	Warnings += "Missing name of action in line <b>"
 	  + Str( linenum ) + "</b>: \"<b>" + line + "</b>\".\n";
@@ -361,8 +362,9 @@ bool Macros::check( void )
 	    ++cp;
 	}
 
-	else if ( (*cp)->Filter ) {
-	  if ( ! RW->FD->exist( (*cp)->Name ) ) {
+	else if ( (*cp)->Filter > 0 ) {
+	  if ( ! (*cp)->Name.empty() &&
+	       ! RW->FD->exist( (*cp)->Name ) ) {
 	    Warnings += "Removed unknown Filter \"<b>";
 	    Warnings += (*cp)->Name;
 	    Warnings += "</b>\" in Macro \"<b>";
@@ -374,8 +376,9 @@ bool Macros::check( void )
 	    ++cp;
 	}
 
-	else if ( (*cp)->Detector ) {
-	  if ( ! RW->FD->exist( (*cp)->Name ) ) {
+	else if ( (*cp)->Detector > 0 ) {
+	  if ( ! (*cp)->Name.empty() &&
+	       ! RW->FD->exist( (*cp)->Name ) ) {
 	    Warnings += "Removed unknown Detector \"<b>";
 	    Warnings += (*cp)->Name;
 	    Warnings += "</b>\" in Macro \"<b>";
@@ -926,21 +929,51 @@ void Macros::startNextRePro( bool saving )
 	system( com.c_str() );
       }
       // filter:
-      else if ( MCs[CurrentMacro]->Commands[CurrentCommand]->Filter ) {
-	Filter *filter = RW->FD->filter( MCs[CurrentMacro]->Commands[CurrentCommand]->Name );
-	if ( filter != 0 ) {
-	  RW->printlog( "filter \"" + filter->ident() + ": " + 
-			MCs[CurrentMacro]->Commands[CurrentCommand]->Params + "\"" );
-	  filter->save( MCs[CurrentMacro]->Commands[CurrentCommand]->Params );
+      else if ( MCs[CurrentMacro]->Commands[CurrentCommand]->Filter > 0 ) {
+	if ( MCs[CurrentMacro]->Commands[CurrentCommand]->Filter == 2 &&
+	     MCs[CurrentMacro]->Commands[CurrentCommand]->Name.empty() ) {
+	  RW->printlog( "filter \"ALL\": auto-configure " + 
+			Str( MCs[CurrentMacro]->Commands[CurrentCommand]->AutoConfigureTime ) + "s" );
+	  RW->FD->autoConfigure( MCs[CurrentMacro]->Commands[CurrentCommand]->AutoConfigureTime );
+	}
+	else {
+	  Filter *filter = RW->FD->filter( MCs[CurrentMacro]->Commands[CurrentCommand]->Name );
+	  if ( filter != 0 ) {
+	    if ( MCs[CurrentMacro]->Commands[CurrentCommand]->Filter == 1 ) {
+	      RW->printlog( "filter \"" + filter->ident() + "\": save \"" + 
+			    MCs[CurrentMacro]->Commands[CurrentCommand]->Params + "\"" );
+	      filter->save( MCs[CurrentMacro]->Commands[CurrentCommand]->Params );
+	    }
+	    else {
+	      RW->printlog( "filter \"" + filter->ident() + "\": auto-configure " + 
+			    Str( MCs[CurrentMacro]->Commands[CurrentCommand]->AutoConfigureTime ) + "s" );
+	      RW->FD->autoConfigure( filter, MCs[CurrentMacro]->Commands[CurrentCommand]->AutoConfigureTime );
+	    }
+	  }
 	}
       }
       // detector:
-      else if ( MCs[CurrentMacro]->Commands[CurrentCommand]->Detector ) {
-	Filter *filter = RW->FD->detector( MCs[CurrentMacro]->Commands[CurrentCommand]->Name );
-	if ( filter != 0 ) {
-	  RW->printlog( "detector \"" + filter->ident() + ": " + 
-			MCs[CurrentMacro]->Commands[CurrentCommand]->Params + "\"" );
-	  filter->save( MCs[CurrentMacro]->Commands[CurrentCommand]->Params );
+      else if ( MCs[CurrentMacro]->Commands[CurrentCommand]->Detector > 0 ) {
+	if ( MCs[CurrentMacro]->Commands[CurrentCommand]->Detector == 2 &&
+	     MCs[CurrentMacro]->Commands[CurrentCommand]->Name.empty() ) {
+	  RW->printlog( "detector \"ALL\": auto-configure " + 
+			Str( MCs[CurrentMacro]->Commands[CurrentCommand]->AutoConfigureTime ) + "s" );
+	  RW->FD->autoConfigure( MCs[CurrentMacro]->Commands[CurrentCommand]->AutoConfigureTime );
+	}
+	else {
+	  Filter *filter = RW->FD->detector( MCs[CurrentMacro]->Commands[CurrentCommand]->Name );
+	  if ( filter != 0 ) {
+	    if ( MCs[CurrentMacro]->Commands[CurrentCommand]->Detector == 1 ) {
+	      RW->printlog( "detector \"" + filter->ident() + "\" save: \"" + 
+			    MCs[CurrentMacro]->Commands[CurrentCommand]->Params + "\"" );
+	      filter->save( MCs[CurrentMacro]->Commands[CurrentCommand]->Params );
+	    }
+	    else {
+	      RW->printlog( "detector \"" + filter->ident() + "\": auto-configure " + 
+			    Str( MCs[CurrentMacro]->Commands[CurrentCommand]->AutoConfigureTime ) + "s" );
+	      RW->FD->autoConfigure( filter, MCs[CurrentMacro]->Commands[CurrentCommand]->AutoConfigureTime );
+	    }
+	  }
 	}
       }
       // switch macros:
@@ -1207,7 +1240,7 @@ void Macros::reloadRePro( const string &name )
     for ( vector<MacroCommand*>::iterator cp = (*mp)->Commands.begin(); 
 	  cp != (*mp)->Commands.end();
 	  ++cp )
-      if ( (*cp)->Macro < 0 && !(*cp)->Filter && !(*cp)->Detector &&
+      if ( (*cp)->Macro < 0 && (*cp)->Filter==0 && (*cp)->Detector==0 &&
 	   !(*cp)->Switch && !(*cp)->Shell && !(*cp)->Message &&
 	   (*cp)->Name == name )
 	(*cp)->RP = repro;
@@ -1839,8 +1872,9 @@ MacroCommand::MacroCommand( void )
     PO(),
     DO( 0 ),
     Macro( -1 ),
-    Filter( false ),
-    Detector( false ),
+    Filter( 0 ),
+    Detector( 0 ),
+    AutoConfigureTime( 0.0 ),
     Switch( false ),
     StartSession( false ),
     Shell( false ),
@@ -1873,8 +1907,9 @@ MacroCommand::MacroCommand( const string &name, const string &params,
     PO(), 
     DO( 0 ),
     Macro( macro ),
-    Filter( filter ),
-    Detector( detector ),
+    Filter( filter ? 1 : 0 ),
+    Detector( detector ? 1 : 0 ),
+    AutoConfigureTime( 0.0 ),
     Switch( switchm ),
     StartSession( startsession ),
     Shell( shell ),
@@ -1892,6 +1927,24 @@ MacroCommand::MacroCommand( const string &name, const string &params,
     MenuShortcut( "" ),
     SubMenu( 0 )
 {
+  if ( Filter > 0 ) {
+    if ( Params.eraseFirst( "save", 0, false, 3, Str::WhiteSpace ) )
+      Filter = 1;
+    else if ( Params.eraseFirst( "autoconf", 0, false, 3, Str::WhiteSpace ) ) {
+      Filter = 2;
+      AutoConfigureTime = Params.number( 1.0 );
+      Params.clear();
+    }
+  }
+  if ( Detector > 0 ) {
+    if ( Params.eraseFirst( "save", 0, false, 3, Str::WhiteSpace ) )
+      Detector = 1;
+    else if ( Params.eraseFirst( "autoconf", 0, false, 3, Str::WhiteSpace ) ) {
+      Detector = 2;
+      AutoConfigureTime = Params.number( 1.0 );
+      Params.clear();
+    }
+  }
 }
 
 
@@ -1903,8 +1956,9 @@ MacroCommand::MacroCommand( RePro *repro, const string &params, Macros *mc )
     PO(), 
     DO( 0 ),
     Macro( -1 ),
-    Filter( false ),
-    Detector( false ),
+    Filter( 0 ),
+    Detector( 0 ),
+    AutoConfigureTime( 0.0 ),
     Switch( false ),
     StartSession( false ),
     Shell( false ),
@@ -1935,6 +1989,7 @@ MacroCommand::MacroCommand( const MacroCommand &com )
     Macro( com.Macro ),
     Filter( com.Filter ), 
     Detector( com.Detector ), 
+    AutoConfigureTime( com.AutoConfigureTime ),
     Switch( com.Switch ), 
     StartSession( com.StartSession ), 
     Shell( com.Shell ), 
@@ -1988,10 +2043,20 @@ void MacroCommand::addMenu( QMenu *menu )
   }
   else if ( Shell )
     s += "Shell " + Name;
-  else if ( Filter )
-    s += "Filter " + Name;
-  else if ( Detector )
-    s += "Detector " + Name;
+  else if ( Filter ) {
+    s += "Filter " + Name + ": ";
+    if ( Filter == 1 )
+      s += "save";
+    else
+      s += "auto-configure " + Str( AutoConfigureTime ) + "s";
+  }
+  else if ( Detector ) {
+    s += "Detector " + Name + ": ";
+    if ( Detector == 1 )
+      s += "save";
+    else
+      s += "auto-configure " + Str( AutoConfigureTime ) + "s";
+  }
   else if ( Switch )
     s += "Switch to " + Name;
   else if ( StartSession )
@@ -2236,9 +2301,9 @@ ostream &operator<< ( ostream &str, const MacroCommand &command )
   else if ( command.Shell )
     str << "Shell";
   else if ( command.Filter )
-    str << "Filter";
+    str << "Filter " << ( command.Filter == 1 ? "save" : "auto-configure" );
   else if ( command.Detector )
-    str << "Detector";
+    str << "Detector " << ( command.Detector == 1 ? "save" : "auto-configure" );
   else if ( command.Switch )
     str << "Switch";
   else if ( command.StartSession )

@@ -772,6 +772,34 @@ void RELACSPlugin::unlockFilterTrace( const string &name )
 }
 
 
+void RELACSPlugin::autoConfigureFilter( Filter *filter, double tbegin, double tend )
+{
+  if ( filter == 0 )
+    return;
+  RW->FD->autoConfigure( filter, tbegin, tend );
+}
+
+
+void RELACSPlugin::autoConfigureFilter( Filter *filter, double duration )
+{
+  if ( filter == 0 )
+    return;
+  RW->FD->autoConfigure( filter, duration );
+}
+
+
+void RELACSPlugin::autoConfigureFilter( double tbegin, double tend )
+{
+  RW->FD->autoConfigure( tbegin, tend );
+}
+
+
+void RELACSPlugin::autoConfigureFilter( double duration )
+{
+  RW->FD->autoConfigure( duration );
+}
+
+
 Filter *RELACSPlugin::detector( const string &name )
 {
   return RW->FD == 0 ? 0 : RW->FD->detector( name );
@@ -866,6 +894,34 @@ void RELACSPlugin::unlockDetectorEvents( const string &name )
   Filter *fl = detectorEvents( name );
   if ( fl != 0 )
     fl->unlock();
+}
+
+
+void RELACSPlugin::autoConfigureDetector( Filter *detector, double tbegin, double tend )
+{
+  if ( detector == 0 )
+    return;
+  RW->FD->autoConfigure( detector, tbegin, tend );
+}
+
+
+void RELACSPlugin::autoConfigureDetector( Filter *detector, double duration )
+{
+  if ( detector == 0 )
+    return;
+  RW->FD->autoConfigure( detector, duration );
+}
+
+
+void RELACSPlugin::autoConfigureDetectors( double tbegin, double tend )
+{
+  RW->FD->autoConfigure( tbegin, tend );
+}
+
+
+void RELACSPlugin::autoConfigureDetectors( double duration )
+{
+  RW->FD->autoConfigure( duration );
 }
 
 

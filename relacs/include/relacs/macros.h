@@ -552,10 +552,14 @@ public slots:
     /*! If the command refers to a macro (\a Macro >= 0)
         this is the index of the macro. */
   int Macro;
-    /*! True if the command refers to a filter. */
-  bool Filter;
-    /*! True if the command refers to an event detector. */
-  bool Detector;
+    /*! > 0 if the command refers to a filter.
+       1: save, 2: autoConfigure */
+  int Filter;
+    /*! > 0 if the command refers to an event detector.
+       1: save, 2: autoConfigure */
+  int Detector;
+    /*! Time for auto-configuring a filter or detector. */
+  double AutoConfigureTime;
     /*! True if the command requests to switch the macros file. */
   bool Switch;
     /*! True if the command starts a session. */

@@ -91,6 +91,7 @@ public:
         \return in case of errors (init() not implemented) 
 	an appropriate message. */
   string init( const InList &data, EventList &events );
+
     /*! Notice input signal gain changes so that adjust() is called
         on the next invokation of filter(). */
   void adjust( const InList &data, const EventList &events, int flag );
@@ -98,6 +99,20 @@ public:
         Calls the adjust() function of each filter/detector if the gain of its
         input data was adjusted. */
   void adjust( const InList &data, const EventList &events );
+
+    /*! Call the Filter::autoConfigure() function for all filter
+        on the last \a duration seconds of data. */
+  void autoConfigure( double duration );
+    /*! Call the Filter::autoConfigure() function for all filter
+        on the time range from \a tbegin to \a tend . */
+  void autoConfigure( double tbegin, double tend );
+    /*! Call the Filter::autoConfigure() function for the filter \a f
+        on the last \a duration seconds of data. */
+  void autoConfigure( Filter *f, double duration );
+    /*! Call the Filter::autoConfigure() function for the filter \a f
+        on the time range from \a tbegin to \a tend. */
+  void autoConfigure( Filter *f, double tbegin, double tend );
+
     /*! Filter or detect events. The Filter is initialized at its first call.
         \return in case of errors (filter() not implemented) 
 	an appropriate message. */

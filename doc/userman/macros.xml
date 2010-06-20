@@ -76,7 +76,7 @@ pause=260ms
 			
 			<para><itemizedlist>
 				<listitem><para>call a RePro (<xref linkend='macrofileactionrepro' endterm='macrofileactionreprotitle'/>)</para></listitem>
-				<listitem><para>save data of a filter or event detector (<xref linkend='macrofileactionfilter' endterm='macrofileactionfiltertitle'/>)</para></listitem>
+				<listitem><para>auto-configure or save data of a filter or event detector (<xref linkend='macrofileactionfilter' endterm='macrofileactionfiltertitle'/>)</para></listitem>
 				<listitem><para>display a message (<xref linkend='macrofileactionmessage' endterm='macrofileactionmessagetitle'/>)</para></listitem>
 				<listitem><para>open a text-browser (<xref linkend='macrofileactionbrowse' endterm='macrofileactionbrowsetitle'/>)</para></listitem>
 				<listitem><para>execute a shell command (<xref linkend='macrofileactionshell' endterm='macrofileactionshelltitle'/>)</para></listitem>
@@ -151,16 +151,33 @@ ResearchProgram1: parameter1=(4..10..2,down,r:2)ms;
 
 		<section xml:id='macrofileactionfilter'>
                         <title xml:id='macrofileactionfiltertitle'>Filter/Detector</title>
-			<para>Specifying a filter like this
+                        <para>Two functions of a filter or detector can be accessed
+                        from a macro: auto-configure the parameter of a filter or detector,
+                        or save some data.</para>
+			<para>A filter can be auto-configured by writing
 			<programlisting>
-filter LcoalField-1: some parameter
+filter LocalField-1: autoconf 0.5
 			</programlisting>
-			or a detector like this
+			and similarly for a detector
 			<programlisting>
-detector Spikes-1: some parameter
+detector Spikes-1: autoconf 0.5
 			</programlisting>
-			executes the save() function of the filter/event detector for the trace/events
-			with name "LocalField-1"/"Spikes-1" and passes the string "some parameter" to this function.
+			This executes the autoConfigure() function of the filter/event detector for the trace/events
+			with name "LocalField-1"/"Spikes-1" for the last 0.5 seconds of available data.
+                        If the time is omitted, 1 second is assumed.
+                        If the name of a specific filter/event detector is omitted,
+                        then autoConfigure() is called for all filter and event detectors.
+			See the documentation of the Filter for more details.</para>
+			<para>Data of a filter can be saved by writing
+			<programlisting>
+filter LocalField-1: save some-parameter
+			</programlisting>
+			and similarly for a detector
+			<programlisting>
+detector Spikes-1: save some-parameter
+			</programlisting>
+			This executes the save() function of the filter/event detector for the trace/events
+			with name "LocalField-1"/"Spikes-1" and passes the string "some-parameter" to this function.
 			This is ment to write some usefull information of the performance of the
 			filter or event detection into a file.
 			The parameter string may span multiple lines as long as each line contains a '='.

@@ -88,8 +88,9 @@ according to your needs.
 With metaData( void ) you get access to a few more functions for managing meta data.
 
 All other RELACS plugins can be accessed:
-devices(), device(), attenuator(), trigger(), filter(), filterOpts(),
-detector(), detectorOpts(), control(), controlOpts(),
+devices(), device(), attenuator(), digitalIO(), trigger(), filter(), filterOpts(),
+autoConfigureFilter(), detector(), detectorOpts(), autoConfigureDetector(),
+control(), controlOpts(),
 repros(), reprosDialogOpts(), repro(), reproOpts(), currentRePro(), currentReProOpts()
 but should be locked with
 lockFilter(), unlockFilter(),
@@ -568,6 +569,7 @@ protected:
   DigitalIO *digitalIO( const string &ident );
     /*! Return the trigger device with identifier \a ident. */
   Trigger *trigger( const string &ident );
+
     /*! Return the attenuator for output trace \a name. */
   Attenuate *attenuator( const string &name );
 
@@ -595,6 +597,20 @@ protected:
   void unlockFilterTrace( int index );
     /*! Unlock the filter for trace \a name. */ 
   void unlockFilterTrace( const string &name );
+    /*! Auto-configure the parameter of the filter \a filter
+        on the time range from \a tbegin to \a tend. */
+  void autoConfigureFilter( Filter *filter, double tbegin, double tend );
+    /*! Auto-configure the parameter of the filter \a filter
+        on the last \a duration seconds of data. */
+  void autoConfigureFilter( Filter *filter, double duration );
+    /*! Auto-configure the parameter of all filter and detectors
+        on the time range from \a tbegin to \a tend.
+        Same function as autoConfigureDetectors( double, double ) */
+  void autoConfigureFilter( double tbegin, double tend );
+    /*! Auto-configure the parameter of the all filter and detectors
+        on the last \a duration seconds of data.
+        Same function as autoConfigureDetectors( double ) */
+  void autoConfigureFilter( double duration );
 
     /*! Return the detector with name \a name. */ 
   Filter *detector( const string &name );
@@ -620,6 +636,20 @@ protected:
   void unlockDetectorEvents( int index );
     /*! Unlock the event detector for event data \a name. */ 
   void unlockDetectorEvents( const string &name );
+    /*! Auto-configure the parameter of the detector \a detector
+        on the time range from \a tbegin to \a tend. */
+  void autoConfigureDetector( Filter *detector, double tbegin, double tend );
+    /*! Auto-configure the parameter of the detector \a detector
+        on the last \a duration seconds of data. */
+  void autoConfigureDetector( Filter *detector, double duration );
+    /*! Auto-configure the parameter of all filter and detectors
+        on the time range from \a tbegin to \a tend.
+        Same function as autoConfigureFilter( double, double ) */
+  void autoConfigureDetectors( double tbegin, double tend );
+    /*! Auto-configure the parameter of the all filter and detectors
+        on the last \a duration seconds of data.
+        Same function as autoConfigureFilter( double ) */
+  void autoConfigureDetectors( double duration );
 
     /*! The elapsed time of the current session in seconds. */
   double sessionTime( void ) const;
