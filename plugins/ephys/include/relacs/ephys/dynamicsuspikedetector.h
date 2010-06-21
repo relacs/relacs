@@ -39,7 +39,7 @@ namespace ephys {
 \class DynamicSUSpikeDetector
 \brief [Detector] A detector for spikes in single unit recordings.
 \author Jan Benda
-\version 1.8 (Mar 16, 2010)
+\version 1.9 (Jun 21, 2010)
 
 \par Options
 - Detector
@@ -85,6 +85,7 @@ public:
 		    const EventList &other, const EventData &stimuli );
   virtual void notify( void );
   virtual int adjust( const InData &data );
+  virtual int autoConfigure( const InData &data, double tbegin, double tend );
   virtual void save( const string &param );
   void save( void );
     /*! Detect spikes in a single trace of the analog data \a ID. */
@@ -113,6 +114,7 @@ public:
 public slots:
 
   void customEvent( QEvent *qce );
+  void autoConfigure( void );
 
 
 protected:
@@ -183,6 +185,7 @@ protected:
   double IntervalStart;
   double IntervalEnd;
   double IntervalWidth;
+  double MinThreshGuess;
   QTime Update;
   Plot *P;
   SampleDataD GoodSpikesHist;

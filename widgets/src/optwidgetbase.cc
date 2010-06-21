@@ -195,7 +195,7 @@ void OptWidgetText::reset( void )
   if ( Editable ) {
     EW->setText( (*Param).text( 0, "%s" ).c_str() );
   }
-  else if ( ContUpdate ) {
+  else {
     LW->setText( (*Param).text( 0, "%s" ).c_str() );
   }
   InternChanged = false;
@@ -239,7 +239,7 @@ void OptWidgetText::textChanged( const QString &s )
     else {
       if ( OMutex != 0 )
 	OMutex->lock();
-      OW->enableUpdate();
+      OW->disableUpdate();
       bool cn = OO->notifying();
       OO->unsetNotify();
       (*Param).setText( s.toLatin1().data() );
@@ -250,7 +250,7 @@ void OptWidgetText::textChanged( const QString &s )
 	OO->notify();
       (*Param).delFlags( OW->changedFlag() );
       OO->setNotify( cn );
-      OW->disableUpdate();
+      OW->enableUpdate();
       if ( OMutex != 0 )
 	OMutex->unlock();
     }
@@ -427,7 +427,7 @@ void OptWidgetMultiText::reset( void )
     Inserted = false;
     Update = true;
   }
-  else if ( ContUpdate ) {
+  else {
     LW->setText( (*Param).text( 0 ).c_str() );
   }
   InternChanged = false;
@@ -475,7 +475,7 @@ void OptWidgetMultiText::textChanged( const QString &s )
     else {
       if ( OMutex != 0 )
 	OMutex->lock();
-      OW->enableUpdate();
+      OW->disableUpdate();
       bool cn = OO->notifying();
       OO->unsetNotify();
       (*Param).setText( s.toLatin1().data() );
@@ -488,7 +488,7 @@ void OptWidgetMultiText::textChanged( const QString &s )
 	OO->notify();
       (*Param).delFlags( OW->changedFlag() );
       OO->setNotify( cn );
-      OW->disableUpdate();
+      OW->enableUpdate();
       if ( OMutex != 0 )
 	OMutex->unlock();
     }
@@ -632,7 +632,7 @@ void OptWidgetNumber::reset( void )
   if ( Editable ) {
     EW->setValue( (*Param).number( (*Param).outUnit() ) );
   }
-  else if ( ContUpdate ) {
+  else {
     if ( (*Param).style() & OptWidget::ValueLCD )
       LCDW->display( (*Param).text( "", (*Param).outUnit() ).c_str() );
     else
@@ -691,7 +691,7 @@ void OptWidgetNumber::valueChanged( double v )
     else {
       if ( OMutex != 0 )
 	OMutex->lock();
-      OW->enableUpdate();
+      OW->disableUpdate();
       bool cn = OO->notifying();
       OO->unsetNotify();
       (*Param).setNumber( v, (*Param).outUnit() );
@@ -702,7 +702,7 @@ void OptWidgetNumber::valueChanged( double v )
 	OO->notify();
       (*Param).delFlags( OW->changedFlag() );
       OO->setNotify( cn );
-      OW->disableUpdate();
+      OW->enableUpdate();
       if ( OMutex != 0 )
 	OMutex->unlock();
     }
@@ -825,7 +825,7 @@ void OptWidgetBoolean::valueChanged( bool v )
     else {
       if ( OMutex != 0 )
 	OMutex->lock();
-      OW->enableUpdate();
+      OW->disableUpdate();
       bool cn = OO->notifying();
       OO->unsetNotify();
       (*Param).setBoolean( v );
@@ -836,7 +836,7 @@ void OptWidgetBoolean::valueChanged( bool v )
 	OO->notify();
       (*Param).delFlags( OW->changedFlag() );
       OO->setNotify( cn );
-      OW->disableUpdate();
+      OW->enableUpdate();
       if ( OMutex != 0 )
 	OMutex->unlock();
     }
@@ -947,7 +947,7 @@ void OptWidgetDate::valueChanged( const QDate &date )
     else {
       if ( OMutex != 0 )
 	OMutex->lock();
-      OW->enableUpdate();
+      OW->disableUpdate();
       bool cn = OO->notifying();
       OO->unsetNotify();
       (*Param).setDate( date.year(), date.month(), date.day() );
@@ -962,7 +962,7 @@ void OptWidgetDate::valueChanged( const QDate &date )
 	OO->notify();
       (*Param).delFlags( OW->changedFlag() );
       OO->setNotify( cn );
-      OW->disableUpdate();
+      OW->enableUpdate();
       if ( OMutex != 0 )
 	OMutex->unlock();
     }
@@ -1081,7 +1081,7 @@ void OptWidgetTime::valueChanged( const QTime &time )
     else {
       if ( OMutex != 0 )
 	OMutex->lock();
-      OW->enableUpdate();
+      OW->disableUpdate();
       bool cn = OO->notifying();
       OO->unsetNotify();
       (*Param).setTime( time.hour(), time.minute(), time.second() );
@@ -1096,7 +1096,7 @@ void OptWidgetTime::valueChanged( const QTime &time )
 	OO->notify();
       (*Param).delFlags( OW->changedFlag() );
       OO->setNotify( cn );
-      OW->disableUpdate();
+      OW->enableUpdate();
       if ( OMutex != 0 )
 	OMutex->unlock();
     }

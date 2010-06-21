@@ -481,24 +481,6 @@ private:
   static const int ChangedFlag = Parameter::ChangedFlag;
   static const int UpdateFlag = Parameter::ChangedFlag >> 1;
 
-  class UpdateEvent : public QEvent
-  {
-  public:
-    UpdateEvent( int type )
-      : QEvent( QEvent::Type( QEvent::User+type ) ) {};
-  };
-
-  class UpdateIdentEvent : public QEvent
-  {
-  public:
-    UpdateIdentEvent( int type, const string &ident )
-      : QEvent( QEvent::Type( QEvent::User+type ) ), Ident( ident ) {};
-    string ident( void ) const { return Ident; };
-  private:
-    string Ident;
-  };
-
-
 };
 
 }; /* namespace relacs */

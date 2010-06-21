@@ -219,6 +219,7 @@ void IntraSpikeDetector::notify( void )
     AllSpikesHist = SampleDataD( 0.0, 200.0, SizeResolution );
   }
   SDW.updateValues( OptWidget::changedFlag() );
+  delFlags( OptWidget::changedFlag() );
 }
 
 
@@ -290,16 +291,18 @@ int IntraSpikeDetector::detect( const InData &data, EventData &outevents,
 	      Threshold, Threshold, Threshold, *this );
 
   unsetNotify();
-  setNumber( "threshold", Threshold ).addFlags( OptWidget::changedFlag() );
-  setNumber( "rate", outevents.meanRate() ).addFlags( OptWidget::changedFlag() );
-  setNumber( "size", outevents.meanSize() ).addFlags( OptWidget::changedFlag() );
+  setNumber( "threshold", Threshold );
+  setNumber( "rate", outevents.meanRate() );
+  setNumber( "size", outevents.meanSize() );
   setNotify();
-  notify();
 
   // update indicator widgets:
   if ( Update.elapsed()*0.001 < UpdateTime )
     return 0;
   Update.start();
+
+  SDW.updateValues( OptWidget::changedFlag() );
+  delFlags( OptWidget::changedFlag() );
 
   // histogramms:
   D.goodEvents().sizeHist( data.currentTime() - HistoryTime, data.currentTime(), GoodSpikesHist );

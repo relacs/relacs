@@ -646,16 +646,20 @@ string FilterDetectors::init( const InList &data, EventList &events )
 	  if ( d->FilterDetector->init( d->InEvents[0], d->OutEvents[0], 
 					d->OtherEvents, *StimulusEvents ) == INT_MIN )
 	    warning += "<b>" + ident + "</b>: init( EventData, EventData, EventList, EventData ) function must be implemented!<br>\n";
-	  else
+	  else {
 	    d->Init = false;
+	    d->FilterDetector->adjust( d->InEvents[0] );
+	  }
 	}
 	// multiple event traces -> multiple event traces
 	else {
 	  if ( d->FilterDetector->init( d->InEvents, d->OutEvents, 
 					d->OtherEvents, *StimulusEvents ) == INT_MIN )
 	    warning += "<b>" + ident + "</b>: init( EventList, EventList, EventList, EventData ) function must be implemented!<br>\n";
-	  else
+	  else {
 	    d->Init = false;
+	    d->FilterDetector->adjust( d->InEvents );
+	  }
 	}
       }
       else {
@@ -664,16 +668,20 @@ string FilterDetectors::init( const InList &data, EventList &events )
 	  if ( d->FilterDetector->init( d->InTraces[0], d->OutEvents[0],
 					d->OtherEvents, *StimulusEvents ) == INT_MIN )
 	    warning += "<b>" + ident + "</b>: init( InData, EventData, EventList, EventData ) function must be implemented!<br>\n";
-	  else
+	  else {
 	    d->Init = false;
+	    d->FilterDetector->adjust( d->InTraces[0] );
+	  }
 	}
 	// multiple analog -> multiple event traces
 	else {
 	  if ( d->FilterDetector->init( d->InTraces, d->OutEvents, 
 					d->OtherEvents, *StimulusEvents ) == INT_MIN )
 	    warning += "<b>" + ident + "</b>: init( InList, EventList, EventList, EventData ) function must be implemented!<br>\n";
-	  else
+	  else {
 	    d->Init = false;
+	    d->FilterDetector->adjust( d->InTraces );
+	  }
 	}
       }
     }
@@ -683,15 +691,19 @@ string FilterDetectors::init( const InList &data, EventList &events )
 	if ( d->FilterDetector->type() == Filter::SingleEventFilter ) {
 	  if ( d->FilterDetector->init( d->InEvents[0], d->OutTraces[0] ) == INT_MIN )
 	    warning += "<b>" + ident + "</b>: init( EventData, InData ) function must be implemented!<br>\n";
-	  else
+	  else {
 	    d->Init = false;
+	    d->FilterDetector->adjust( d->InEvents[0] );
+	  }
 	}
 	// multiple event traces -> multiple traces
 	else {
 	  if ( d->FilterDetector->init( d->InEvents, d->OutTraces ) == INT_MIN )
 	    warning += "<b>" + ident + "</b>: init( EventList, InList ) function must be implemented!<br>\n";
-	  else
+	  else {
 	    d->Init = false;
+	    d->FilterDetector->adjust( d->InEvents );
+	  }
 	}
       }
       else {
@@ -699,15 +711,19 @@ string FilterDetectors::init( const InList &data, EventList &events )
 	if ( d->FilterDetector->type() == Filter::SingleAnalogFilter ) {
 	  if ( d->FilterDetector->init( d->InTraces[0], d->OutTraces[0] ) == INT_MIN )
 	    warning += "<b>" + ident + "</b>: init( InData, EventData ) function must be implemented!<br>\n";
-	  else
+	  else {
 	    d->Init = false;
+	    d->FilterDetector->adjust( d->InTraces[0] );
+	  }
 	}
 	// multiple analog traces -> multiple traces
 	else {
 	  if ( d->FilterDetector->init( d->InTraces, d->OutTraces ) == INT_MIN )
 	    warning += "<b>" + ident + "</b>: init( InList, EventList ) function must be implemented!<br>\n";
-	  else
+	  else {
 	    d->Init = false;
+	    d->FilterDetector->adjust( d->InTraces );
+	  }
 	}
       }
     }
@@ -731,29 +747,8 @@ void FilterDetectors::adjust( const InList &data, const EventList &events )
   for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d ) {
 
     d->FilterDetector->lock();
-    if ( d->FilterDetector->type() & Filter::EventDetector ) {
-      // check if this detector really has to be adjusted:
-      bool c = false;
-      if ( AdjustFlag >= 0 ) {
-	for ( int k=0; k<d->InTraces.size(); k++ ) {
-	  if ( d->InTraces[k].mode() & AdjustFlag ) {
-	    c = true;
-	    break;
-	  }
-	}
-      }
-      else
-	c = true;
-      // adjust detector:
-      if ( c ) {
-	if ( d->FilterDetector->type() & Filter::MultipleTraces )
-	  d->FilterDetector->adjust( d->InTraces );
-	else
-	  d->FilterDetector->adjust( d->InTraces[0] );
-      }
-    }
-    else {
-      // check if this detector really has to be adjusted:
+    if ( d->FilterDetector->type() & Filter::EventInput ) {
+      // check if this filter really has to be adjusted:
       bool c = false;
       if ( AdjustFlag >= 0 ) {
 	for ( int k=0; k<d->InEvents.size(); k++ ) {
@@ -765,12 +760,33 @@ void FilterDetectors::adjust( const InList &data, const EventList &events )
       }
       else
 	c = true;
-      // adjust detector:
+      // adjust:
       if ( c ) {
 	if ( d->FilterDetector->type() & Filter::MultipleTraces )
 	  d->FilterDetector->adjust( d->InEvents );
 	else
 	  d->FilterDetector->adjust( d->InEvents[0] );
+      }
+    }
+    else {
+      // check if this filter really has to be adjusted:
+      bool c = false;
+      if ( AdjustFlag >= 0 ) {
+	for ( int k=0; k<d->InTraces.size(); k++ ) {
+	  if ( d->InTraces[k].mode() & AdjustFlag ) {
+	    c = true;
+	    break;
+	  }
+	}
+      }
+      else
+	c = true;
+      // adjust:
+      if ( c ) {
+	if ( d->FilterDetector->type() & Filter::MultipleTraces )
+	  d->FilterDetector->adjust( d->InTraces );
+	else
+	  d->FilterDetector->adjust( d->InTraces[0] );
       }
     }
     d->FilterDetector->unlock();
@@ -784,7 +800,15 @@ void FilterDetectors::autoConfigure( double duration )
 {
   for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d ) {
     d->FilterDetector->lock();
-    if ( d->FilterDetector->type() & Filter::EventDetector ) {
+    if ( d->FilterDetector->type() & Filter::EventInput ) {
+      double tend = d->InEvents[0].rangeBack();
+      double tbegin = tend - duration;
+      if ( d->FilterDetector->type() & Filter::MultipleTraces )
+	d->FilterDetector->autoConfigure( d->InEvents, tbegin, tend );
+      else
+	d->FilterDetector->autoConfigure( d->InEvents[0], tbegin, tend );
+    }
+    else {
       double tend = d->InTraces[0].currentTime();
       double tbegin = tend - duration;
       if ( tbegin < d->InTraces[0].minTime() )
@@ -793,14 +817,6 @@ void FilterDetectors::autoConfigure( double duration )
 	d->FilterDetector->autoConfigure( d->InTraces, tbegin, tend );
       else
 	d->FilterDetector->autoConfigure( d->InTraces[0], tbegin, tend );
-    }
-    else {
-      double tend = d->InEvents[0].rangeBack();
-      double tbegin = tend - duration;
-      if ( d->FilterDetector->type() & Filter::MultipleTraces )
-	d->FilterDetector->autoConfigure( d->InEvents, tbegin, tend );
-      else
-	d->FilterDetector->autoConfigure( d->InEvents[0], tbegin, tend );
     }
     d->FilterDetector->unlock();
   }
@@ -811,17 +827,17 @@ void FilterDetectors::autoConfigure( double tbegin, double tend )
 {
   for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d ) {
     d->FilterDetector->lock();
-    if ( d->FilterDetector->type() & Filter::EventDetector ) {
-      if ( d->FilterDetector->type() & Filter::MultipleTraces )
-	d->FilterDetector->autoConfigure( d->InTraces, tbegin, tend );
-      else
-	d->FilterDetector->autoConfigure( d->InTraces[0], tbegin, tend );
-    }
-    else {
+    if ( d->FilterDetector->type() & Filter::EventInput ) {
       if ( d->FilterDetector->type() & Filter::MultipleTraces )
 	d->FilterDetector->autoConfigure( d->InEvents, tbegin, tend );
       else
 	d->FilterDetector->autoConfigure( d->InEvents[0], tbegin, tend );
+    }
+    else {
+      if ( d->FilterDetector->type() & Filter::MultipleTraces )
+	d->FilterDetector->autoConfigure( d->InTraces, tbegin, tend );
+      else
+	d->FilterDetector->autoConfigure( d->InTraces[0], tbegin, tend );
     }
     d->FilterDetector->unlock();
   }
@@ -833,7 +849,15 @@ void FilterDetectors::autoConfigure( Filter *f, double duration )
   for ( FilterList::iterator fp = FL.begin(); fp != FL.end(); ++fp ) {
     if ( fp->FilterDetector == f ) {
       fp->FilterDetector->lock();
-      if ( fp->FilterDetector->type() & Filter::EventDetector ) {
+      if ( fp->FilterDetector->type() & Filter::EventInput ) {
+	double tend = fp->InEvents[0].rangeBack();
+	double tbegin = tend - duration;
+	if ( fp->FilterDetector->type() & Filter::MultipleTraces )
+	  fp->FilterDetector->autoConfigure( fp->InEvents, tbegin, tend );
+	else
+	  fp->FilterDetector->autoConfigure( fp->InEvents[0], tbegin, tend );
+      }
+      else {
 	double tend = fp->InTraces[0].currentTime();
 	double tbegin = tend - duration;
 	if ( tbegin < fp->InTraces[0].minTime() )
@@ -842,14 +866,6 @@ void FilterDetectors::autoConfigure( Filter *f, double duration )
 	  fp->FilterDetector->autoConfigure( fp->InTraces, tbegin, tend );
 	else
 	  fp->FilterDetector->autoConfigure( fp->InTraces[0], tbegin, tend );
-      }
-      else {
-	double tend = fp->InEvents[0].rangeBack();
-	double tbegin = tend - duration;
-	if ( fp->FilterDetector->type() & Filter::MultipleTraces )
-	  fp->FilterDetector->autoConfigure( fp->InEvents, tbegin, tend );
-	else
-	  fp->FilterDetector->autoConfigure( fp->InEvents[0], tbegin, tend );
       }
       fp->FilterDetector->unlock();
       break;
@@ -863,17 +879,17 @@ void FilterDetectors::autoConfigure( Filter *f, double tbegin, double tend )
   for ( FilterList::iterator fp = FL.begin(); fp != FL.end(); ++fp ) {
     if ( fp->FilterDetector == f ) {
       fp->FilterDetector->lock();
-      if ( fp->FilterDetector->type() & Filter::EventDetector ) {
-	if ( fp->FilterDetector->type() & Filter::MultipleTraces )
-	  fp->FilterDetector->autoConfigure( fp->InTraces, tbegin, tend );
-	else
-	  fp->FilterDetector->autoConfigure( fp->InTraces[0], tbegin, tend );
-      }
-      else {
+      if ( fp->FilterDetector->type() & Filter::EventInput ) {
 	if ( fp->FilterDetector->type() & Filter::MultipleTraces )
 	  fp->FilterDetector->autoConfigure( fp->InEvents, tbegin, tend );
 	else
 	  fp->FilterDetector->autoConfigure( fp->InEvents[0], tbegin, tend );
+      }
+      else {
+	if ( fp->FilterDetector->type() & Filter::MultipleTraces )
+	  fp->FilterDetector->autoConfigure( fp->InTraces, tbegin, tend );
+	else
+	  fp->FilterDetector->autoConfigure( fp->InTraces[0], tbegin, tend );
       }
       fp->FilterDetector->unlock();
       break;

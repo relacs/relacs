@@ -29,6 +29,23 @@
 namespace relacs {
 
 
+class UpdateEvent : public QEvent
+{
+public:
+  UpdateEvent( int type )
+    : QEvent( QEvent::Type( QEvent::User+type ) ), Ident( "" ), Flags( 0 ) {};
+  UpdateEvent( int type, const string &ident )
+    : QEvent( QEvent::Type( QEvent::User+type ) ), Ident( ident ), Flags( 0 ) {};
+  UpdateEvent( int type, int flags )
+    : QEvent( QEvent::Type( QEvent::User+type ) ), Ident( "" ), Flags( flags ) {};
+  string ident( void ) const { return Ident; };
+  int flags( void ) const { return Flags; };
+private:
+  string Ident;
+  int Flags;
+};
+
+
 OptWidget::OptWidget( QWidget *parent, Qt::WindowFlags f )
   : QWidget( parent, f ),
     Opt( 0 ),
@@ -728,8 +745,7 @@ void OptWidget::updateValue( const string &ident )
 {
   if ( DisableUpdate )
     return;
-  UpdateIdentEvent *ue = new UpdateIdentEvent( 1, ident );
-  QCoreApplication::postEvent( this, ue );
+  QCoreApplication::postEvent( this, new UpdateEvent( 1, ident ) );
 }
 
 
@@ -737,8 +753,7 @@ void OptWidget::updateValues( void )
 {
   if ( DisableUpdate )
     return;
-  UpdateEvent *ue = new UpdateEvent( 2 );
-  QCoreApplication::postEvent( this, ue );
+  QCoreApplication::postEvent( this, new UpdateEvent( 2 ) );
 }
 
 
@@ -748,8 +763,7 @@ void OptWidget::updateValues( int flag )
     return;
   // save ChangedFlag:
   Opt->addFlags( UpdateFlag, flag );
-  UpdateEvent *ue = new UpdateEvent( 3 );
-  QCoreApplication::postEvent( this, ue );
+  QCoreApplication::postEvent( this, new UpdateEvent( 3, UpdateFlag ) );
 }
 
 
@@ -757,8 +771,7 @@ void OptWidget::updateSettings( const string &ident )
 {
   if ( DisableUpdate )
     return;
-  UpdateIdentEvent *ue = new UpdateIdentEvent( 4, ident );
-  QCoreApplication::postEvent( this, ue );
+  QCoreApplication::postEvent( this, new UpdateEvent( 4, ident ) );
 }
 
 
@@ -766,8 +779,7 @@ void OptWidget::updateSettings( void )
 {
   if ( DisableUpdate )
     return;
-  UpdateEvent *ue = new UpdateEvent( 5 );
-  QCoreApplication::postEvent( this, ue );
+  QCoreApplication::postEvent( this, new UpdateEvent( 5 ) );
 }
 
 
@@ -776,8 +788,7 @@ void OptWidget::updateSettings( int flag )
   if ( DisableUpdate || Opt == 0 )
     return;
   Opt->addFlags( UpdateFlag, flag );
-  UpdateEvent *ue = new UpdateEvent( 6 );
-  QCoreApplication::postEvent( this, ue );
+  QCoreApplication::postEvent( this, new UpdateEvent( 6, UpdateFlag ) );
 }
 
 
@@ -786,9 +797,9 @@ void OptWidget::customEvent( QEvent *e )
   if ( e->type() >= QEvent::User+1 && e->type() <= QEvent::User+6 ) {
     if ( OMutex != 0 )
       OMutex->lock();
+    UpdateEvent *ue = dynamic_cast<UpdateEvent*>( e );
     if ( e->type() == QEvent::User+1 ) {
       // updateValues( ident )
-      UpdateIdentEvent *ue = (UpdateIdentEvent*)e;
       for ( unsigned int k=0; k<Widgets.size(); k++ ) {
 	if ( Widgets[k]->param().ident() == ue->ident() ) {
 	  Widgets[k]->reset();
@@ -805,15 +816,14 @@ void OptWidget::customEvent( QEvent *e )
     else if ( e->type() == QEvent::User+3 ) {
       // updateValues( flags )
       for ( unsigned int k=0; k<Widgets.size(); k++ ) {
-	if ( Widgets[k]->param().flags( UpdateFlag ) ) {
+	if ( Widgets[k]->param().flags( ue->flags() ) ) {
 	  Widgets[k]->reset();
-	  Widgets[k]->param().delFlags( UpdateFlag );
+	  Widgets[k]->param().delFlags( ue->flags() );
 	}
       }
     }
     else if ( e->type() == QEvent::User+4 ) {
       // updaeSettings( ident )
-      UpdateIdentEvent *ue = (UpdateIdentEvent*)e;
       for ( unsigned int k=0; k<Widgets.size(); k++ ) {
 	if ( Widgets[k]->param().ident() == ue->ident() ) {
 	  Widgets[k]->update();
@@ -830,9 +840,9 @@ void OptWidget::customEvent( QEvent *e )
     else if ( e->type() == QEvent::User+6 ) {
       // updateSettings( flags )
       for ( unsigned int k=0; k<Widgets.size(); k++ ) {
-	if ( Widgets[k]->param().flags( UpdateFlag ) ) {
+	if ( Widgets[k]->param().flags( ue->flags() ) ) {
 	  Widgets[k]->update();
-	  Widgets[k]->param().delFlags( UpdateFlag );
+	  Widgets[k]->param().delFlags( ue->flags() );
 	}
       }
     }

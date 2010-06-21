@@ -56,7 +56,7 @@ The times of the EOD peaks and their amplitude.
 - \c ratio=50%: Ratio (\c number)
 - \c maxperiod=10ms: Maximum EOD period (\c number)
 
-\version 1.3 (Jun 16, 2009)
+\version 1.4 (Jun 21, 2010)
 */
 
 
@@ -73,6 +73,7 @@ public:
 		     const EventList &other, const EventData &stimuli );
   virtual void notify( void );
   virtual int adjust( const InData &data );
+  virtual int autoConfigure( const InData &data, double tbegin, double tend );
     /*! Detect EODs in a single trace of the analog data \a data. */
   virtual int detect( const InData &data, EventData &outevents,
 		      const EventList &other, const EventData &stimuli );
@@ -91,6 +92,11 @@ public:
 		  double &time, double &size, double &width );
 
 
+public slots:
+
+  void autoConfigure( void );
+
+
 protected:
 
   Detector< InData::const_iterator, InData::const_range_iterator > D;
@@ -105,6 +111,8 @@ protected:
   double MaxEODPeriod;
 
   OptWidget EDW;
+
+  const InData *Data;
 
 };
 

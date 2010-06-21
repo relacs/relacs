@@ -19,6 +19,9 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QPushButton>
 #include <relacs/efield/eoddetector.h>
 using namespace relacs;
 
@@ -28,7 +31,7 @@ namespace efield {
 EODDetector::EODDetector( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogDetector, 1, 
 	    "EODDetector", "EField",
-	    "Jan Benda", "1.3", "June 16, 2009" )
+	    "Jan Benda", "1.4", "June 21, 2010" )
 {
   // parameter:
   Threshold = 0.0001;
@@ -47,14 +50,35 @@ EODDetector::EODDetector( const string &ident, int mode )
   addNumber( "size", "Size", 0.0, 0.0, 100000.0, 0.1, "", "", "%.3f", 2+4 );
   addStyle( OptWidget::ValueLarge + OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack, 4 );
 
+  // main layout:
+  QVBoxLayout *vb = new QVBoxLayout;
+  setLayout( vb );
+
+  // parameter:
   EDW.assign( ((Options*)this), 2, 4, true, 0, mutex() ),
   EDW.setVerticalSpacing( 4 );
   EDW.setMargins( 4 );
-  setWidget( &EDW );
+  vb->addWidget( &EDW, 0, Qt::AlignHCenter );
+
+  // buttons:
+  QHBoxLayout *hb = new QHBoxLayout;
+  vb->addLayout( hb );
+
+  // dialog:
+  QPushButton *pb = new QPushButton( "Dialog" );
+  hb->addWidget( pb );
+  connect( pb, SIGNAL( clicked( void ) ), this, SLOT( dialog( void ) ) );
+
+  // auto configure:
+  pb = new QPushButton( "Auto" );
+  hb->addWidget( pb );
+  connect( pb, SIGNAL( clicked( void ) ), this, SLOT( autoConfigure( void ) ) );
 
   setDialogSelectMask( 8 );
   setDialogReadOnlyMask( 16 );
   setConfigSelectMask( -32 );
+
+  Data = 0;
 }
 
 
@@ -66,6 +90,7 @@ EODDetector::~EODDetector( void )
 int EODDetector::init( const InData &data, EventData &outevents,
 		       const EventList &other, const EventData &stimuli )
 {
+  Data = &data;
   outevents.setSizeScale( 1.0 );
   outevents.setSizeUnit( data.unit() );
   outevents.setSizeFormat( "%6.2f" );
@@ -84,20 +109,53 @@ void EODDetector::notify( void )
   ThreshRatio = number( "ratio" );
   MaxEODPeriod = number( "maxperiod" );
   EDW.updateValues( OptWidget::changedFlag() );
+  delFlags( OptWidget::changedFlag() );
 }
 
 
 int EODDetector::adjust( const InData &data )
 {
   unsetNotify();
-  MaxThresh = ceil10( data.maxValue(), 0.1 );
-  MinThresh = floor10( 0.01 * MaxThresh );
   setUnit( "threshold", data.unit() );
-  setMinMax( "threshold", MinThresh, MaxThresh, MinThresh );
-  setNumber( "threshold", Threshold );
   setUnit( "size", data.unit() );
   setNotify();
   EDW.updateSettings();
+  return 0;
+}
+
+
+void EODDetector::autoConfigure( void )
+{
+  autoConfigure( *Data, Data->currentTime() - 0.2, Data->currentTime() );
+}
+
+
+int EODDetector::autoConfigure( const InData &data,
+				double tbegin, double tend )
+{
+  // get rough estimate for a threshold:
+  SampleDataF d( 0.0, tend-tbegin, data.stepsize() );
+  data.copy( tbegin, d );
+  double thresh = 0.75*max( d );
+  // detect eods using this threshold:
+  EventData eods( (int)::floor( 2000.0*d.length() ), true );
+  AcceptEvent<SampleDataF::const_iterator,SampleDataF::const_range_iterator> A;
+  peaks( d, eods, thresh, A );
+  double ampl = eods.meanSize( 0.0, d.length() );
+  // set range:
+  double min = ceil10( 0.1*ampl );
+  double max = ceil10( ::floor( 10.0*ampl/min )*min );
+  // refine threshold:
+  Threshold = floor10( ampl, 0.1 );
+  if ( Threshold < MinThresh )
+    Threshold = MinThresh;
+  // update values:
+  unsetNotify();
+  setMinMax( "threshold", min, max, min );
+  setNumber( "threshold", Threshold );
+  setNotify();
+  EDW.updateSettings( "threshold" );
+  EDW.updateValue( "threshold" );
   return 0;
 }
 
@@ -118,6 +176,7 @@ int EODDetector::detect( const InData &data, EventData &outevents,
   setNumber( "size", outevents.meanSize() );
   setNotify();
   EDW.updateValues( OptWidget::changedFlag() );
+  delFlags( OptWidget::changedFlag() );
   return 0;
 }
 
@@ -164,7 +223,6 @@ int EODDetector::checkEvent( InData::const_iterator first,
       double m = sampleinterval / ( pval - ival );
       time = *it + m * ( maxsize - ival );
       if ( outevents.size() > 0 && time <= outevents.back() ) {
-	cerr << "! warning in " << ident() << " time " << time << " <= back " << outevents.back() << endl;
 	// discard:
 	return 0;
       }

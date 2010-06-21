@@ -38,7 +38,7 @@ namespace ephys {
 
 DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogDetector, 1,
-	    "DynamicSUSpikeDetector", "EPhys", "Jan Benda", "1.8", "Mar 16, 2010" ),
+	    "DynamicSUSpikeDetector", "EPhys", "Jan Benda", "1.9", "Jun 21, 2010" ),
     GoodSpikesHist( 0.0, 200.0, 0.5 ),
     BadSpikesHist( 0.0, 200.0, 0.5 ),
     AllSpikesHist( 0.0, 200.0, 0.5 )
@@ -68,6 +68,7 @@ DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   TrendThresh = 0.01;
   TrendTime = 1.0;
   SizeResolution = 0.5;
+  MinThreshGuess = -1.0;
 
   // options:
   int strongstyle = OptWidget::ValueLarge + OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack;
@@ -330,10 +331,17 @@ DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   gl->addWidget( pb, 4, 1, Qt::AlignRight );
   connect( pb, SIGNAL( clicked( void ) ), this, SLOT( dialog( void ) ) );
 
+  // auto configure:
+  pb = new QPushButton( "Auto" );
+  gl->addWidget( pb, 5, 1, Qt::AlignRight );
+  connect( pb, SIGNAL( clicked( void ) ), this, SLOT( autoConfigure( void ) ) );
+
+  /*
   // help:
   pb = new QPushButton( "Help" );
   gl->addWidget( pb, 5, 1, Qt::AlignRight );
   connect( pb, SIGNAL( clicked( void ) ), this, SLOT( help( void ) ) );
+  */
 }
 
 
@@ -393,7 +401,12 @@ void DynamicSUSpikeDetector::notify( void )
   TrendTime = number( "trendtime" );
   double resolution = number( "resolution" );
 
-  if ( resolution != SizeResolution && resolution > 0.0 ) {
+  if ( Threshold < MinThresh ) {
+    Threshold = MinThresh;
+    setNumber( "threshold", Threshold );
+  }
+
+  if ( ::fabs( resolution - SizeResolution ) > 1.0e-5 && resolution > 0.0 ) {
     SizeResolution = resolution;
     // necessary precision:
     int pre = -1;
@@ -401,7 +414,7 @@ void DynamicSUSpikeDetector::notify( void )
       pre++;
       double f = pow( 10.0, -pre );
       resolution -= floor( 1.001*resolution/f ) * f;
-    } while ( pre < 8 && fabs( resolution ) > 1.0e-8 );
+    } while ( pre < 3 && fabs( resolution ) > 1.0e-3 );
     setStep( "minthresh", SizeResolution );
     setFormat( "minthresh", 4+pre, pre, 'f' );
     setStep( "maxthresh", SizeResolution );
@@ -414,13 +427,38 @@ void DynamicSUSpikeDetector::notify( void )
     AllSpikesHist = SampleDataD( 0.0, 200.0, SizeResolution );
   }
   SDW.updateValues( OptWidget::changedFlag() );
-  postCustomEvent( 11 );
+  delFlags( OptWidget::changedFlag() );
 }
 
 
 int DynamicSUSpikeDetector::adjust( const InData &data )
 {
   MaxRangeThresh = ceil10( 2.0*data.maxValue(), 0.1 );
+  return 0;
+}
+
+
+void DynamicSUSpikeDetector::autoConfigure( void )
+{
+  if ( MinThreshGuess > 0.0 ) {
+    unsetNotify();
+    MinThresh = MinThreshGuess;
+    setNumber( "minthresh", MinThresh );
+    if ( Threshold < MinThresh ) {
+      Threshold = MinThresh;
+      setNumber( "threshold", Threshold );
+    }
+    setNotify();
+    SDW.updateValues( OptWidget::changedFlag() );
+    delFlags( OptWidget::changedFlag() );
+  }
+}
+
+
+int DynamicSUSpikeDetector::autoConfigure( const InData &data,
+					   double tbegin, double tend )
+{
+  autoConfigure();
   return 0;
 }
 
@@ -530,9 +568,9 @@ int DynamicSUSpikeDetector::detect( const InData &data, EventData &outevents,
   }
 
   unsetNotify();
-  setNumber( "threshold", Threshold ).addFlags( OptWidget::changedFlag() );
-  setNumber( "rate", outevents.meanRate() ).addFlags( OptWidget::changedFlag() );
-  setNumber( "size", outevents.meanSize() ).addFlags( OptWidget::changedFlag() );
+  setNumber( "threshold", Threshold );
+  setNumber( "rate", outevents.meanRate() );
+  setNumber( "size", outevents.meanSize() );
   setNotify();
 
   // update indicator widgets:
@@ -625,7 +663,7 @@ int DynamicSUSpikeDetector::detect( const InData &data, EventData &outevents,
     unsetNotify();
     setInteger( "quality", Quality );
     setNotify();
-    SDW.updateValues( OptWidget::changedFlag() );
+    SDW.updateValues( 2+4 );
     postCustomEvent( 11 );
     return 0;
   }
@@ -652,8 +690,15 @@ int DynamicSUSpikeDetector::detect( const InData &data, EventData &outevents,
   unsetNotify();
   setInteger( "quality", Quality );
   setNotify();
-  SDW.updateValues( OptWidget::changedFlag() );
+  SDW.updateValues( 2+4 );
   postCustomEvent( 11 );
+
+  // guess for optimal minimum threhsold:
+  if ( gap )
+    MinThreshGuess = AllSpikesHist.pos( lp ) + SizeResolution;
+  else
+    MinThreshGuess = -1.0;
+
   return 0;
 }
 
