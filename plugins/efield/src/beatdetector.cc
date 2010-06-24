@@ -105,7 +105,7 @@ int BeatDetector::adjust( const EventList &events )
 {
   const InData &dd = trace( eventInputTrace( events[0].ident() ) );
   MaxThresh = ceil10( dd.maxValue(), 0.1 );
-  double min = floor10( 0.01 * MaxThresh );
+  double min = floor10( 0.005 * MaxThresh );
   unsetNotify();
   setUnit( "threshold", dd.unit() );
   setMinMax( "threshold", min, MaxThresh, min );

@@ -185,7 +185,6 @@ protected:
   double IntervalStart;
   double IntervalEnd;
   double IntervalWidth;
-  double MinThreshGuess;
   QTime Update;
   Plot *P;
   SampleDataD GoodSpikesHist;

@@ -172,6 +172,7 @@ int FICurve::main( void )
 
   // plot:
   P.lock();
+  P.setGUIMutex( &dataMutex() );
   P.resize( 2*SpikeTraces, 2, false, Plot::Copy );
 
   // plot:

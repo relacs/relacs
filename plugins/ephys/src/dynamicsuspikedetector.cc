@@ -68,7 +68,6 @@ DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   TrendThresh = 0.01;
   TrendTime = 1.0;
   SizeResolution = 0.5;
-  MinThreshGuess = -1.0;
 
   // options:
   int strongstyle = OptWidget::ValueLarge + OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack;
@@ -440,18 +439,44 @@ int DynamicSUSpikeDetector::adjust( const InData &data )
 
 void DynamicSUSpikeDetector::autoConfigure( void )
 {
-  if ( MinThreshGuess > 0.0 ) {
-    unsetNotify();
-    MinThresh = MinThreshGuess;
-    setNumber( "minthresh", MinThresh );
-    if ( Threshold < MinThresh ) {
-      Threshold = MinThresh;
-      setNumber( "threshold", Threshold );
+  // skip initial zeros:
+  int lp = 0;
+  for ( lp=0; lp<AllSpikesHist.size() && AllSpikesHist[lp] <= 0.0; lp++ );
+  // skip final zeros:
+  int rp = 0;
+  for ( rp=AllSpikesHist.size()-1; rp>=0 && AllSpikesHist[rp] <= 0.0; rp-- );
+  // no data in histogram:
+  if ( lp >= rp )
+    return;
+  // find longest stretch of zeros:
+  int zp = -1;
+  int zn = 0;
+  for ( int k=lp; k<=rp; k++ ) {
+    if ( AllSpikesHist[k] <= 0.0 ) {
+      int p = k;
+      int n = 0;
+      for ( n++, k++; k<=rp && AllSpikesHist[k] <= 0.0; n++, k++ );
+      if ( n >= zn ) {
+	zp = p;
+	zn = n;
+      }
     }
-    setNotify();
-    SDW.updateValues( OptWidget::changedFlag() );
-    delFlags( OptWidget::changedFlag() );
   }
+  // no zero stretch:
+  if ( zp < 0 )
+    MinThresh = AllSpikesHist.pos( rp+2 );
+  else
+    MinThresh = AllSpikesHist.pos( zp+1 );
+  // set thresholds:
+  unsetNotify();
+  setNumber( "minthresh", MinThresh );
+  if ( Threshold < MinThresh ) {
+    Threshold = MinThresh;
+    setNumber( "threshold", Threshold );
+  }
+  setNotify();
+  SDW.updateValues( OptWidget::changedFlag() );
+  delFlags( OptWidget::changedFlag() );
 }
 
 
@@ -692,12 +717,6 @@ int DynamicSUSpikeDetector::detect( const InData &data, EventData &outevents,
   setNotify();
   SDW.updateValues( 2+4 );
   postCustomEvent( 11 );
-
-  // guess for optimal minimum threhsold:
-  if ( gap )
-    MinThreshGuess = AllSpikesHist.pos( lp ) + SizeResolution;
-  else
-    MinThreshGuess = -1.0;
 
   return 0;
 }

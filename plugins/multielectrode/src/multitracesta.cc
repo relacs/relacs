@@ -65,6 +65,7 @@ int MultiTraceSTA::main( void )
   // init plots:
   P.lock();
   P.clear();
+  P.setGUIMutex( &dataMutex() );
   P.resize( STAs.size(), 4, true );  // set the number of plots and arrange them in 4 columns
   for ( int k=0; k<P.size(); k++ ) {
     if ( SpikeTrace[inspikes] == k )

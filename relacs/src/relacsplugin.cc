@@ -77,6 +77,7 @@ void RELACSPlugin::setLayout( QLayout *layout )
 {
   setWidget( new QWidget );
   Widget->setLayout( layout );
+  Widget->setAutoFillBackground( true );
 }
 
 
@@ -215,17 +216,16 @@ void RELACSPlugin::readLockData( void )
 }
 
 
-void RELACSPlugin::writeLockData( void )
-{
-  if ( RW != 0 )
-    RW->writeLockData();
-}
-
-
 void RELACSPlugin::unlockData( void )
 {
   if ( RW != 0 )
     RW->unlockData(); 
+}
+
+
+QReadWriteLock &RELACSPlugin::dataMutex( void )
+{
+  return RW->dataMutex(); 
 }
 
 

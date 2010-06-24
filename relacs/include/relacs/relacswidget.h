@@ -140,6 +140,8 @@ public:
   void writeLockData( void ) { DataMutex.lockForWrite(); };
     /*! Unlocks the mutex of the data thread. */
   void unlockData( void ) { DataMutex.unlock(); };
+    /*! Returns the mutex used for locking the data. */
+  QReadWriteLock &dataMutex( void ) { return DataMutex; };
 
     /*! Locks the mutex for analog input. */
   void lockAI( void ) { AIMutex.lock(); };

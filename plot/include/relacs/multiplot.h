@@ -84,10 +84,29 @@ public:
     /*! Disables the data mutex and the data mutexes of the subplots.
         \sa setDataMutex() */
   void clearDataMutex( void );
-    /*! Lock the data mutex. \sa setDataMutex(), clearDataMutex() */
+    /*! Lock the data mutex for reading. \sa setDataMutex(), clearDataMutex() */
   void lockData( void );
     /*! Unlock the data mutex. \sa setDataMutex(), clearDataMutex() */
   void unlockData( void );
+
+    /*! Provide a mutex that should be unlocked while waiting
+        for the main event loop to process an event.
+	This is only needed when using the resize(), clear(), or 
+	erase() function from within a non-GUI thread.
+        \sa clearGUIMutex(), lockGUI(), unlockGUI() */
+  void setGUIMutex( QMutex *mutex );
+    /*! Provide a mutex that should be unlocked while waiting
+        for the main event loop to process an event.
+	This is only needed when using the resize(), clear(), or 
+	erase() function from within a non-GUI thread.
+        \sa clearGUIMutex(), lockGUI(), unlockGUI() */
+  void setGUIMutex( QReadWriteLock *mutex );
+    /*! Disables the GUI mutex. \sa setGUIMutex() */
+  void clearGUIMutex( void );
+    /*! Lock the GUI mutex for reading. \sa setGUIMutex(), clearGUIMutex() */
+  void lockGUI( void );
+    /*! Unlock the GUI mutex. \sa setGUIMutex(), clearGUIMutex() */
+  void unlockGUI( void );
 
     /*! The number of Plots in the MultiPlot widget. */
   int size( void ) const;
@@ -97,20 +116,36 @@ public:
     /*! Change the number of plots to \a plots.
         The zoom-stacks of all plots are reset (Plot::resetRanges() )
 	and the common X and Y ranges are cleared.
-        \note the plot mutex must be locked ( lock() ), when calling this function! */
+        \note the plot mutex must be locked ( lock() ), when calling this function!
+	\note When using this function from within a non-GUI thread
+	you might need to provide a mutex that is unlocked
+        when waiting for the GUI thread to process the resize request
+        via setGUIMutex(). */
   void resize( int plots, Plot::KeepMode keep=Plot::Copy );
     /*! Change the number of plots to \a plots
         and update the layout.
         The zoom-stacks of all plots are reset (Plot::resetRanges() )
 	and the common X and Y ranges are cleared.
-        \note the plot mutex must be locked ( lock() ), when calling this function! */
+        \note the plot mutex must be locked ( lock() ), when calling this function!
+	\note When using this function from within a non-GUI thread
+	you might need to provide a mutex that is unlocked
+        when waiting for the GUI thread to process the resize request
+        via setGUIMutex(). */
   void resize( int plots, int columns, bool horizontal, Plot::KeepMode keep=Plot::Copy );
 
     /*! Remove all Plots from the MultiPlot widget.
-        \note the plot mutex must be locked ( lock() ), when calling this function! */
+        \note the plot mutex must be locked ( lock() ), when calling this function!
+	\note When using this function from within a non-GUI thread
+	you might need to provide a mutex that is unlocked
+        when waiting for the GUI thread to process the resize request
+        via setGUIMutex(). */
   void clear( void );
     /*! Remove Plot number \a index from the MultiPlot widget.
-        \note the plot mutex must be locked ( lock() ), when calling this function! */
+        \note the plot mutex must be locked ( lock() ), when calling this function!
+	\note When using this function from within a non-GUI thread
+	you might need to provide a mutex that is unlocked
+        when waiting for the GUI thread to process the resize request
+        via setGUIMutex(). */
   void erase( int index );
 
     /*! The Plot-widget \a i. */
@@ -207,6 +242,8 @@ private:
   QReadWriteLock *DRWMutex;
   QWaitCondition WaitGUI;
   QThread *GUIThread;
+  QMutex *GUIMutex;
+  QReadWriteLock *GUIRWMutex;
 
   int Columns;
   bool Horizontal;

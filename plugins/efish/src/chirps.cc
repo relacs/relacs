@@ -464,6 +464,7 @@ void Chirps::initMultiPlot( double ampl )
   int nsub = 1 + SpikeTraces + NerveTraces;
 
   P.lock();
+  P.setGUIMutex( &dataMutex() );
   P.resize( nsub*BeatPos );
 
   const double xlabelmarg = 3.0;
@@ -628,10 +629,8 @@ int Chirps::main( void )
 				events(LocalEODEvents[0]).back() );
 
   // plot:
-  cerr << "INIT MULTIPLOT BEGIN\n";
   initMultiPlot( events(LocalEODEvents[0]).meanSize( events(LocalEODEvents[0]).back() - 0.5,
 						     events(LocalEODEvents[0]).back() ) );
-  cerr << "INIT MULTIPLOT END\n";
 
   // first stimulus:
   OutData signal;
