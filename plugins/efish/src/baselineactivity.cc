@@ -105,7 +105,6 @@ int BaselineActivity::main( void )
 
   // plot:
   P.lock();
-  P.setGUIMutex( &dataMutex() );
   P.resize( SpikeTraces*2+NerveTraces, 2, ( SpikeTraces < 2 ) );
   double pdx = 0.5;
   double pdy = 1.0;

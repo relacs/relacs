@@ -73,6 +73,20 @@ public:
 		       const EventData &bte,
 		       double tbegin, double tend, double offset );
 
+
+    /*! The amplitude of the beat determined from the standard deviation of EOD amplitudes. */
+  double beatAmplitude( const InData &eodd, const EventData &eode,
+			double tbegin, double tend, double offset );
+    /*! The contrast of the beat determined from the standard deviation of EOD amplitudes. */
+  double beatContrast( const InData &eodd, const EventData &eode,
+		       double tbegin, double tend, double offset );
+    /*! The mean EOD amplitude an beat amplitudes of the beat determined
+        from the standard deviation of the upper and lower EOD amplitudes. */
+  void beatAmplitudes( const InData &eodd, const EventData &eode,
+		       double tbegin, double tend, double offset,
+		       double &uppermean, double &upperampl,
+		       double &lowermean, double &lowerampl );
+
   /* for nerve potential analysis: */
   template < typename DataIter, typename TimeIter >
     class AcceptEOD

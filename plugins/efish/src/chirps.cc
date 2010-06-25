@@ -464,7 +464,6 @@ void Chirps::initMultiPlot( double ampl )
   int nsub = 1 + SpikeTraces + NerveTraces;
 
   P.lock();
-  P.setGUIMutex( &dataMutex() );
   P.resize( nsub*BeatPos );
 
   const double xlabelmarg = 3.0;

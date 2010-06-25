@@ -183,7 +183,6 @@ int FileStimulus::main( void )
 
   // plot:
   P.lock();
-  P.setGUIMutex( &dataMutex() );
   P.resize( 1 + SpikeTraces + NerveTraces );
   double stimheight = SpikeTraces > 1 ? 1.0/(1.0+SpikeTraces+NerveTraces) : 0.4;
   double rateheight = ( 1.0 - stimheight ) / ( SpikeTraces + NerveTraces );

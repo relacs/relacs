@@ -281,4 +281,60 @@ double EODTools::beatContrast( const InData &eodd, const EventData &bpe,
 }
 
 
+void EODTools::beatAmplitudes( const InData &eodd, const EventData &eode,
+			       double tbegin, double tend, double offset,
+			       double &uppermean, double &upperampl,
+			       double &lowermean, double &lowerampl )
+{
+  // EOD peaks:
+  upperampl = 0.0;
+  uppermean = eode.meanSize( tbegin+offset, tend-offset, upperampl );
+  upperampl *= ::sqrt( 2.0 );
+
+  // EOD troughs:
+  double threshold = fabs( uppermean ) - upperampl;
+  EventData lowereod( eode.count( tbegin, tend ), true );
+  eodTroughs( eodd, tbegin, tend, threshold, lowereod );
+  lowerampl = 0.0;
+  lowermean = lowereod.meanSize( tbegin+offset, tend-offset, lowerampl );
+  lowerampl *= ::sqrt( 2.0 );
+}
+
+
+double EODTools::beatAmplitude( const InData &eodd, const EventData &eode,
+				double tbegin, double tend, double offset )
+{
+  // EOD peaks:
+  double uppersd = 0.0;
+  double uppera = eode.meanSize( tbegin+offset, tend-offset, uppersd );
+
+  // EOD troughs:
+  double threshold = fabs( uppera ) - sqrt( 2.0 )*uppersd;
+  EventData lowereod( eode.count( tbegin, tend ), true );
+  eodTroughs( eodd, tbegin, tend, threshold, lowereod );
+  double lowersd = 0.0;
+  lowereod.meanSize( tbegin+offset, tend-offset, lowersd );
+
+  return ::sqrt( 2.0 )*0.5*(uppersd + lowersd);
+}
+
+
+double EODTools::beatContrast( const InData &eodd, const EventData &eode,
+			       double tbegin, double tend, double offset )
+{
+  // EOD peaks:
+  double uppersd = 0.0;
+  double uppera = eode.meanSize( tbegin+offset, tend-offset, uppersd );
+
+  // EOD troughs:
+  double threshold = fabs( uppera ) - sqrt( 2.0 )*uppersd;
+  EventData lowereod( eode.count( tbegin, tend ), true );
+  eodTroughs( eodd, tbegin, tend, threshold, lowereod );
+  double lowersd = 0.0;
+  double lowera = lowereod.meanSize( tbegin+offset, tend-offset, lowersd );
+
+  return ::sqrt( 2.0 )*(uppersd + lowersd)/(fabs(uppera) + fabs(lowera));
+}
+
+
 }; /* namespace efield */

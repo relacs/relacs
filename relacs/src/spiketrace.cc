@@ -188,7 +188,7 @@ void SpikeTrace::run( void )
 {
   bool showw = true;
   do {
-    update();
+    QCoreApplication::postEvent( (QWidget*)this, new QEvent( QEvent::Type( QEvent::User+1 ) ) );
     bool pausew = true;
     do {
       msleep( 50 );
@@ -198,9 +198,17 @@ void SpikeTrace::run( void )
       SMutex.unlock();
     } while ( showw && pausew );
   } while ( showw );
-  update();
+  QCoreApplication::postEvent( (QWidget*)this, new QEvent( QEvent::Type( QEvent::User+1 ) ) );
 }
 
+
+void SpikeTrace::customEvent( QEvent *qce )
+{
+  if ( qce->type() - QEvent::User == 1 )
+    update();
+  else
+    QWidget::customEvent( qce );
+}
 
 
 }; /* namespace relacs */

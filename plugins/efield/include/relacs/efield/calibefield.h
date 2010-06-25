@@ -83,8 +83,9 @@ public:
     /*! Plot data. */
   void plot( double maxx );
     /*! Analyze data. */
-  void analyze( double duration, double maxcontrast, double intensity,
-		double maxintensities, int intensitycount,
+  void analyze( double duration, double beatfrequency,
+		double mincontrast, double maxcontrast, double intensity,
+		int numintensities, int intensitycount,
 		bool fish, double fishrate );
 
 

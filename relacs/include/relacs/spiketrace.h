@@ -73,12 +73,6 @@ public:
     /*! Make this widget stretchable in both directions. */
   QSizePolicy sizePolicy( void ) const;
 
-    /*! Handles the resize event. 
-        It scales the position of the spike and its size appropriately. */
-  void resizeEvent( QResizeEvent *qre );
-    /*! Paints the spike trace. */
-  void paintEvent( QPaintEvent *qpe );
-
 
 public slots:
 
@@ -100,6 +94,14 @@ protected:
         For a given position \a x in pixels it returns the 
         corresponding y-value (in pixels). */
   int trace( int x );
+
+    /*! Handles the resize event. 
+        It scales the position of the spike and its size appropriately. */
+  void resizeEvent( QResizeEvent *qre );
+    /*! Paints the spike trace. */
+  void paintEvent( QPaintEvent *qpe );
+    /*! Post update() to the GUI thread. */
+  void customEvent( QEvent *qce );
 
     /*! If true, the trace is painted. */
   bool Show;

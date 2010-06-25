@@ -109,9 +109,6 @@ void MultiPlot::construct( int plots, int columns, bool horizontal, Plot::KeepMo
   DMutex = 0;
   DRWMutex = 0;
 
-  GUIMutex = 0;
-  GUIRWMutex = 0;
-
   PMutex.lock();
   
   for ( int k=0; k<plots; k++ ) {
@@ -185,51 +182,23 @@ void MultiPlot::lockData( void )
 }
 
 
+bool MultiPlot::tryLockData( int timeout )
+{
+  if ( DMutex != 0 )
+    return DMutex->tryLock( timeout );
+  else if ( DRWMutex != 0 )
+    return DRWMutex->tryLockForRead( timeout );
+  else
+    return true;
+}
+
+
 void MultiPlot::unlockData( void )
 {
   if ( DMutex != 0 )
     DMutex->unlock();
   else if ( DRWMutex != 0 )
     DRWMutex->unlock();
-}
-
-
-void MultiPlot::setGUIMutex( QMutex *mutex )
-{
-  GUIRWMutex = 0;
-  GUIMutex = mutex;
-}
-
-
-void MultiPlot::setGUIMutex( QReadWriteLock *mutex )
-{
-  GUIMutex = 0;
-  GUIRWMutex = mutex;
-}
-
-
-void MultiPlot::clearGUIMutex( void )
-{
-  GUIMutex = 0;
-  GUIRWMutex = 0;
-}
-
-
-void MultiPlot::lockGUI( void )
-{
-  if ( GUIMutex != 0 )
-    GUIMutex->lock();
-  else if ( GUIRWMutex != 0 )
-    GUIRWMutex->lockForRead();
-}
-
-
-void MultiPlot::unlockGUI( void )
-{
-  if ( GUIMutex != 0 )
-    GUIMutex->unlock();
-  else if ( GUIRWMutex != 0 )
-    GUIRWMutex->unlock();
 }
 
 
@@ -250,9 +219,7 @@ void MultiPlot::resize( int plots, Plot::KeepMode keep )
   if ( QThread::currentThread() != GUIThread ) {
     qApp->removePostedEvents( this );
     QCoreApplication::postEvent( this, new MultiPlotEvent( 101, plots, keep ) );
-    unlockGUI();
     WaitGUI.wait( &PMutex );
-    lockGUI();
   }
   else
     doResize( plots, keep );
@@ -315,9 +282,7 @@ void MultiPlot::clear( void )
   if ( QThread::currentThread() != GUIThread ) {
     qApp->removePostedEvents( this );
     QCoreApplication::postEvent( this, new MultiPlotEvent( 102 ) );
-    unlockGUI();
     WaitGUI.wait( &PMutex );
-    lockGUI();
   }
   else
     doClear();
@@ -342,9 +307,7 @@ void MultiPlot::erase( int index )
   if ( QThread::currentThread() != GUIThread ) {
     qApp->removePostedEvents( this );
     QCoreApplication::postEvent( this, new MultiPlotEvent( 103, index ) );
-    unlockGUI();
     WaitGUI.wait( &PMutex );
-    lockGUI();
   }
   else
     doErase( index );
@@ -543,7 +506,13 @@ void MultiPlot::paintEvent( QPaintEvent *qpe )
 {
   // the order of locking is important here!
   // if the data are not available there is no need to lock the plot.
-  lockData();
+  if ( ! tryLockData( 5 ) ) {
+    // we do not get the lock for the data now,
+    // so we repost the paintEven() to a later time.
+    update();
+    return;
+  }
+
   PMutex.lock();
 
   if ( DrawBackground || ! DrawData ) {
