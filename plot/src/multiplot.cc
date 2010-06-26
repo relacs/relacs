@@ -508,7 +508,7 @@ void MultiPlot::paintEvent( QPaintEvent *qpe )
   // if the data are not available there is no need to lock the plot.
   if ( ! tryLockData( 5 ) ) {
     // we do not get the lock for the data now,
-    // so we repost the paintEven() to a later time.
+    // so we repost the paintEvent() to a later time.
     update();
     return;
   }

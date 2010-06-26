@@ -403,7 +403,8 @@ public:
 	common data lock using MutiPlot::setDataLock().
 	This data lock is used by MultiPlot to lock the data for all Subplots
 	while drawing,
-	the individual data locks are not used in this situation. */
+	the individual data locks are not used in this situation.
+        \sa lockData() */
   void setDataMutex( QMutex *mutex );
     /*! Provide a mutex that is used by Plot to lock
         reading access to data while they are plotted. 
@@ -414,14 +415,21 @@ public:
 	common data lock using MutiPlot::setDataLock().
 	This data lock is used by MultiPlot to lock the data for all Subplots
 	while drawing,
-	the individual data locks are not used in this situation. */
+	the individual data locks are not used in this situation.
+        \sa lockData() */
   void setDataMutex( QReadWriteLock *mutex );
     /*! Disables the data mutex. \sa setDataMutex() */
   void clearDataMutex( void );
 
-    /*! Lock the data mutex if it was set by setDataMutex() before. */
+    /*! Lock the data mutex if it was set by setDataMutex() before.
+        \sa tryLockData(), unlockData() */
   void lockData( void );
-    /*! Unlock the data mutex if it was set by setDataMutex() before. */
+    /*! Try to lock the data mutex for reading.
+        Returns \c true if the lock was obtained within \a timeout milliseconds.
+	\sa lockData(), setDataMutex(), clearDataMutex() */
+  bool tryLockData( int timeout=1 );
+    /*! Unlock the data mutex if it was set by setDataMutex() before.
+        \sa lockData(), tryLockData() */
   void unlockData( void );
 
     /*! If this Plot is part of a MultiPlot, then this function specifies

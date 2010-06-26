@@ -53,6 +53,9 @@ public:
   virtual void resetDefault( void );
   virtual void update( void );
   void setMutex( QMutex *mutex );
+  void lockMutex( void );
+  bool tryLockMutex( int timeout=1 );
+  void unlockMutex( void );
   void addActivation( OptWidgetBase *w );
   void activateOption( bool eq );
   QWidget *valueWidget( void );
@@ -93,6 +96,10 @@ public:
 public slots:
   void textChanged( const QString &s );
   void browse( void );
+protected:
+  void doTextChanged( const QString &s );
+  void doBrowse( Str filename );
+  virtual void customEvent( QEvent *e );
 private:
   QLineEdit *EW;
   string Value;
@@ -116,6 +123,10 @@ public:
 public slots:
   void textChanged( const QString &s );
   void insertText( const QString &text );
+protected:
+  void doTextChanged( const QString &s );
+  void doInsertText( const QString &text );
+  virtual void customEvent( QEvent *e );
 private:
   QComboBox *EW;
   int CI;
@@ -140,6 +151,9 @@ public:
   void setUnitLabel( QLabel *l );
 public slots:
   void valueChanged( double v );
+protected:
+  void doValueChanged( double v );
+  virtual void customEvent( QEvent *e );
 private:
   DoubleSpinBox *EW;
   double Value;
@@ -160,6 +174,9 @@ public:
   virtual void initActivation( void );
 public slots:
   void valueChanged( bool t );
+protected:
+  void doValueChanged( bool t );
+  virtual void customEvent( QEvent *e );
 private:
   QCheckBox *EW;
   bool Value;
@@ -178,6 +195,9 @@ public:
   virtual void initActivation( void );
 public slots:
   void valueChanged( const QDate &date );
+protected:
+  void doValueChanged( const QDate &date );
+  virtual void customEvent( QEvent *e );
 private:
   QDateEdit *DE;
   QLabel *LW;
@@ -199,6 +219,9 @@ public:
   virtual void initActivation( void );
 public slots:
   void valueChanged( const QTime &time );
+protected:
+  void doValueChanged( const QTime &time );
+  virtual void customEvent( QEvent *e );
 private:
   QTimeEdit *TE;
   QLabel *LW;

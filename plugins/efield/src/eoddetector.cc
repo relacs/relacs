@@ -239,8 +239,16 @@ int EODDetector::checkEvent( InData::const_iterator first,
   double y2 = *event;
   double y3 = *(event+1);
   double y1 = *(event-1);
+
+  if ( y2 <= 0.0 )
+    return 0;
+
   double a = y3 - 4.0*y2 + 3.0*y1;
   double b = 2.0*y3 - 4.0*y2 + 2.0*y1;
+
+  if ( fabs( b ) < 1.0e-5 )
+    return 0;
+
   /*
   // peak time:
   --event;

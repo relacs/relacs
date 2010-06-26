@@ -29,6 +29,7 @@
 #include <QLabel>
 #include <QLayout>
 #include <QEvent>
+#include <QThread>
 #include <relacs/options.h>
 using namespace std;
 
@@ -352,6 +353,15 @@ public:
         Passing a '0' disables the mutex. */
   void setMutex( QMutex *mutex );
 
+    /*! Lock the mutex for reading. \sa tryLockMutex(), setMutex() */
+  void lockMutex( void );
+    /*! Try to lock the data mutex for reading.
+        Returns \c true if the lock was obtained within \a timeout milliseconds.
+	\sa lockMutex(), setMutex() */
+  bool tryLockMutex( int timeout=1 );
+    /*! Unlock the data mutex. \sa tryLockMutex(), setMutex() */
+  void unlockMutex( void );
+
 
 public slots:
 
@@ -467,6 +477,7 @@ private:
   QWidget *LastWidget;
 
   QMutex *OMutex;
+  QThread *GUIThread;
 
   vector< QGridLayout* > Layout;
   int MaxLines;

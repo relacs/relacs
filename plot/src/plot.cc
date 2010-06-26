@@ -369,6 +369,17 @@ void Plot::lockData( void )
 }
 
 
+bool Plot::tryLockData( int timeout )
+{
+  if ( DMutex != 0 )
+    return DMutex->tryLock( timeout );
+  else if ( DRWMutex != 0 )
+    return DRWMutex->tryLockForRead( timeout );
+  else
+    return true;
+}
+
+
 void Plot::unlockData( void )
 {
   if ( DMutex != 0 )
@@ -2934,8 +2945,14 @@ void Plot::draw( QPaintDevice *qpm, bool drawdata )
 {
   // the order of locking is important here!
   // if the data are not available there is no need to lock the plot.
-  if ( ! SubWidget )
-    lockData();
+  if ( ! SubWidget ) {
+    if ( ! tryLockData( 5 ) ) {
+      // we do not get the lock for the data now,
+      // so we repost the paintEvent() to a later time.
+      update();
+      return;
+    }
+  }
   PMutex.lock();
 
   QColor pbc = palette().color( QPalette::Window );

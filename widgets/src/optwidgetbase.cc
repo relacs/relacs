@@ -23,6 +23,7 @@
  *****************************************************************************/
 
 #include <cmath>
+#include <QCoreApplication>
 #include <QHBoxLayout>
 #include <QFileDialog>
 #include <relacs/optwidgetbase.h>
@@ -83,6 +84,29 @@ void OptWidgetBase::update( void )
 void OptWidgetBase::setMutex( QMutex *mutex )
 {
   OMutex = mutex;
+}
+
+
+void OptWidgetBase::lockMutex( void )
+{
+  if ( OMutex != 0 )
+    OMutex->lock();
+}
+
+
+bool OptWidgetBase::tryLockMutex( int timeout )
+{
+  if ( OMutex != 0 )
+    return OMutex->tryLock( timeout );
+  else
+    return true;
+}
+
+
+void OptWidgetBase::unlockMutex( void )
+{
+  if ( OMutex != 0 )
+    OMutex->unlock();
 }
 
 
@@ -236,27 +260,68 @@ void OptWidgetText::textChanged( const QString &s )
       (*Param).delFlags( OW->changedFlag() );
       OO->setNotify( cn );
     }
-    else {
-      if ( OMutex != 0 )
-	OMutex->lock();
-      OW->disableUpdate();
-      bool cn = OO->notifying();
-      OO->unsetNotify();
-      (*Param).setText( s.toLatin1().data() );
-      if ( (*Param).text( 0, "%s" ) != Value )
-	(*Param).addFlags( OW->changedFlag() );
-      Value = EW->text().toLatin1().data();
-      if ( cn )
-	OO->notify();
-      (*Param).delFlags( OW->changedFlag() );
-      OO->setNotify( cn );
-      OW->enableUpdate();
-      if ( OMutex != 0 )
-	OMutex->unlock();
-    }
+    else
+      doTextChanged( s );
   }
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
     Widgets[k]->activateOption( Widgets[k]->param().testActivation( s.toLatin1().data() ) );
+  }
+}
+
+
+class OptWidgetTextEvent : public QEvent
+{
+public:
+  OptWidgetTextEvent( int type )
+    : QEvent( QEvent::Type( QEvent::User+type ) ), Text( "" ), FileName( "" ) {};
+  OptWidgetTextEvent( int type, const QString &s )
+    : QEvent( QEvent::Type( QEvent::User+type ) ), Text( s ), FileName( "" ) {};
+  OptWidgetTextEvent( int type, const Str &filename )
+    : QEvent( QEvent::Type( QEvent::User+type ) ), Text( "" ), FileName( filename ) {};
+  QString text( void ) const { return Text; };
+  Str fileName( void ) const { return FileName; };
+private:
+  QString Text;
+  Str FileName;
+};
+
+
+void OptWidgetText::doTextChanged( const QString &s )
+{
+  if ( ! tryLockMutex( 5 ) ) {
+    // we do not get the lock for the data now,
+    // so we repost the event to a later time.
+    QCoreApplication::postEvent( this, new OptWidgetTextEvent( 1, s ) );
+    return;
+  }
+  OW->disableUpdate();
+  bool cn = OO->notifying();
+  OO->unsetNotify();
+  (*Param).setText( s.toLatin1().data() );
+  if ( (*Param).text( 0, "%s" ) != Value )
+    (*Param).addFlags( OW->changedFlag() );
+  Value = EW->text().toLatin1().data();
+  if ( cn )
+    OO->notify();
+  (*Param).delFlags( OW->changedFlag() );
+  OO->setNotify( cn );
+  OW->enableUpdate();
+  unlockMutex();
+}
+
+
+void OptWidgetText::customEvent( QEvent *e )
+{
+  if ( e->type() == QEvent::User+1 ) {
+    OptWidgetTextEvent *te = dynamic_cast<OptWidgetTextEvent*>( e );
+    doTextChanged( te->text() );
+  }
+  else if ( e->type() == QEvent::User+2 ) {
+    browse();
+  }
+  else if ( e->type() == QEvent::User+3 ) {
+    OptWidgetTextEvent *te = dynamic_cast<OptWidgetTextEvent*>( e );
+    doBrowse( te->fileName() );
   }
 }
 
@@ -274,55 +339,69 @@ void OptWidgetText::initActivation( void )
 
 void OptWidgetText::browse( void )
 {
-  if ( OMutex != 0 )
-    OMutex->lock();
+  if ( ! tryLockMutex( 5 ) ) {
+    // we do not get the lock for the data now,
+    // so we repost the event to a later time.
+    QCoreApplication::postEvent( this, new OptWidgetTextEvent( 2 ) );
+    return;
+  }
+  Str file = (*Param).text( 0 );
+  int style = (*Param).style();
+  unlockMutex();
   QFileDialog* fd = new QFileDialog( 0 );
-  if ( (*Param).style() & OptWidget::BrowseExisting ) {
+  if ( style & OptWidget::BrowseExisting ) {
     fd->setFileMode( QFileDialog::ExistingFile );
     fd->setWindowTitle( "Open File" );
-    fd->setDirectory( Str( (*Param).text( 0 ) ).dir().c_str() );
+    fd->setDirectory( file.dir().c_str() );
   }
-  else if ( (*Param).style() & OptWidget::BrowseAny ) {
+  else if ( style & OptWidget::BrowseAny ) {
     fd->setFileMode( QFileDialog::AnyFile );
     fd->setWindowTitle( "Save File" );
-    fd->setDirectory( Str( (*Param).text( 0 ) ).dir().c_str() );
+    fd->setDirectory( file.dir().c_str() );
   }
-  else if ( (*Param).style() & OptWidget::BrowseDirectory ) {
+  else if ( style & OptWidget::BrowseDirectory ) {
     fd->setFileMode( QFileDialog::Directory );
     fd->setWindowTitle( "Choose directory" );
-    fd->setDirectory( Str( (*Param).text( 0 ) ).preventSlash().dir().c_str() );
+    fd->setDirectory( file.preventSlash().dir().c_str() );
   }
   fd->setFilter( "All (*)" );
   fd->setViewMode( QFileDialog::List );
-  if ( OMutex != 0 )
-    OMutex->unlock();
   if ( fd->exec() == QDialog::Accepted ) {
-    if ( OMutex != 0 )
-      OMutex->lock();
-    Str filename = "";
     QStringList qsl = fd->selectedFiles();
+    Str filename = "";
     if ( qsl.size() > 0 )
-      Str filename = qsl[0].toLatin1().data();
-    if ( ( (*Param).style() & OptWidget::BrowseAbsolute ) == 0 )
-      filename.stripWorkingPath( 3 );
-    if ( ( (*Param).style() & OptWidget::BrowseDirectory ) )
-      filename.provideSlash();
-    OW->disableUpdate();
-    bool cn = OO->notifying();
-    OO->unsetNotify();
-    (*Param).setText( filename );
-    if ( (*Param).text( 0 ) != Value )
-      (*Param).addFlags( OW->changedFlag() );
-    EW->setText( (*Param).text( 0, "%s" ).c_str() );
-    Value = EW->text().toLatin1().data();
-    if ( cn )
-      OO->notify();
-    (*Param).delFlags( OW->changedFlag() );
-    OO->setNotify( cn );
-    OW->enableUpdate();
-    if ( OMutex != 0 )
-      OMutex->unlock();
+      filename = qsl[0].toLatin1().data();
+    doBrowse( filename );
   }
+}
+
+
+void OptWidgetText::doBrowse( Str filename )
+{
+  if ( ! tryLockMutex( 5 ) ) {
+    // we do not get the lock for the data now,
+    // so we repost the event to a later time.
+    QCoreApplication::postEvent( this, new OptWidgetTextEvent( 3, filename ) );
+    return;
+  }
+  if ( ( (*Param).style() & OptWidget::BrowseAbsolute ) == 0 )
+    filename.stripWorkingPath( 3 );
+  if ( ( (*Param).style() & OptWidget::BrowseDirectory ) )
+    filename.provideSlash();
+  OW->disableUpdate();
+  bool cn = OO->notifying();
+  OO->unsetNotify();
+  (*Param).setText( filename );
+  if ( (*Param).text( 0 ) != Value )
+    (*Param).addFlags( OW->changedFlag() );
+  EW->setText( (*Param).text( 0, "%s" ).c_str() );
+  Value = EW->text().toLatin1().data();
+  if ( cn )
+    OO->notify();
+  (*Param).delFlags( OW->changedFlag() );
+  OO->setNotify( cn );
+  OW->enableUpdate();
+  unlockMutex();
 }
 
 
@@ -472,29 +551,61 @@ void OptWidgetMultiText::textChanged( const QString &s )
       (*Param).delFlags( OW->changedFlag() );
       OO->setNotify( cn );
     }
-    else {
-      if ( OMutex != 0 )
-	OMutex->lock();
-      OW->disableUpdate();
-      bool cn = OO->notifying();
-      OO->unsetNotify();
-      (*Param).setText( s.toLatin1().data() );
-      for ( int k=0; k<EW->count(); k++ )
-	(*Param).addText( EW->itemText( k ).toLatin1().data() );
-      if ( (*Param).text( 0 ) != Value )
-	(*Param).addFlags( OW->changedFlag() );
-      Value = EW->itemText( 0 ).toLatin1().data();
-      if ( cn )
-	OO->notify();
-      (*Param).delFlags( OW->changedFlag() );
-      OO->setNotify( cn );
-      OW->enableUpdate();
-      if ( OMutex != 0 )
-	OMutex->unlock();
-    }
+    else
+      doTextChanged( s );
   }
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
     Widgets[k]->activateOption( Widgets[k]->param().testActivation( s.toLatin1().data() ) );
+  }
+}
+
+
+class OptWidgetMultiTextEvent : public QEvent
+{
+public:
+  OptWidgetMultiTextEvent( int type, const QString &s )
+    : QEvent( QEvent::Type( QEvent::User+type ) ), Text( s ) {};
+  QString text( void ) const { return Text; };
+private:
+  QString Text;
+};
+
+
+void OptWidgetMultiText::doTextChanged( const QString &s )
+{
+  if ( ! tryLockMutex( 5 ) ) {
+    // we do not get the lock for the data now,
+    // so we repost the event to a later time.
+    QCoreApplication::postEvent( this, new OptWidgetMultiTextEvent( 1, s ) );
+    return;
+  }
+  OW->disableUpdate();
+  bool cn = OO->notifying();
+  OO->unsetNotify();
+  (*Param).setText( s.toLatin1().data() );
+  for ( int k=0; k<EW->count(); k++ )
+    (*Param).addText( EW->itemText( k ).toLatin1().data() );
+  if ( (*Param).text( 0 ) != Value )
+    (*Param).addFlags( OW->changedFlag() );
+  Value = EW->itemText( 0 ).toLatin1().data();
+  if ( cn )
+    OO->notify();
+  (*Param).delFlags( OW->changedFlag() );
+  OO->setNotify( cn );
+  OW->enableUpdate();
+  unlockMutex();
+}
+
+
+void OptWidgetMultiText::customEvent( QEvent *e )
+{
+  if ( e->type() == QEvent::User+1 ) {
+    OptWidgetMultiTextEvent *te = dynamic_cast<OptWidgetMultiTextEvent*>( e );
+    doTextChanged( te->text() );
+  }
+  else if ( e->type() == QEvent::User+2 ) {
+    OptWidgetMultiTextEvent *te = dynamic_cast<OptWidgetMultiTextEvent*>( e );
+    doInsertText( te->text() );
   }
 }
 
@@ -515,8 +626,18 @@ void OptWidgetMultiText::insertText( const QString &text )
   if ( ! Update )
     return;
 
-  if ( OMutex != 0 )
-    OMutex->lock();
+  doInsertText( text );
+}
+
+
+void OptWidgetMultiText::doInsertText( const QString &text )
+{
+  if ( ! tryLockMutex( 5 ) ) {
+    // we do not get the lock for the data now,
+    // so we repost the event to a later time.
+    QCoreApplication::postEvent( this, new OptWidgetMultiTextEvent( 2, text ) );
+    return;
+  }
   if ( CI == EW->currentIndex() &&
        ( CI > 0 || EW->currentText() != EW->itemText( 0 ) ) ) {
     if ( ! Inserted ) {
@@ -539,8 +660,7 @@ void OptWidgetMultiText::insertText( const QString &text )
       Inserted = false;
     }
   }
-  if ( OMutex != 0 )
-    OMutex->unlock();
+  unlockMutex();
 }
 
 
@@ -688,24 +808,8 @@ void OptWidgetNumber::valueChanged( double v )
       (*Param).delFlags( OW->changedFlag() );
       OO->setNotify( cn );
     }
-    else {
-      if ( OMutex != 0 )
-	OMutex->lock();
-      OW->disableUpdate();
-      bool cn = OO->notifying();
-      OO->unsetNotify();
-      (*Param).setNumber( v, (*Param).outUnit() );
-      if ( fabs( v - Value ) > 0.0001*(*Param).step() )
-	(*Param).addFlags( OW->changedFlag() );
-      Value = EW->value();
-      if ( cn )
-	OO->notify();
-      (*Param).delFlags( OW->changedFlag() );
-      OO->setNotify( cn );
-      OW->enableUpdate();
-      if ( OMutex != 0 )
-	OMutex->unlock();
-    }
+    else
+      doValueChanged( v );
   }
 
   double tol = 0.2;
@@ -713,6 +817,50 @@ void OptWidgetNumber::valueChanged( double v )
     tol = 0.01*(*Param).step();
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
     Widgets[k]->activateOption( Widgets[k]->param().testActivation( v, tol ) );
+  }
+}
+
+
+class OptWidgetNumberEvent : public QEvent
+{
+public:
+  OptWidgetNumberEvent( double value )
+    : QEvent( QEvent::Type( QEvent::User+1 ) ), Value( value ) {};
+  double value( void ) const { return Value; };
+private:
+  double Value;
+};
+
+
+void OptWidgetNumber::doValueChanged( double v )
+{
+  if ( ! tryLockMutex( 5 ) ) {
+    // we do not get the lock for the data now,
+    // so we repost the event to a later time.
+    QCoreApplication::postEvent( this, new OptWidgetNumberEvent( v ) );
+    return;
+  }
+  OW->disableUpdate();
+  bool cn = OO->notifying();
+  OO->unsetNotify();
+  (*Param).setNumber( v, (*Param).outUnit() );
+  if ( fabs( v - Value ) > 0.0001*(*Param).step() )
+    (*Param).addFlags( OW->changedFlag() );
+  Value = EW->value();
+  if ( cn )
+    OO->notify();
+  (*Param).delFlags( OW->changedFlag() );
+  OO->setNotify( cn );
+  OW->enableUpdate();
+  unlockMutex();
+}
+
+
+void OptWidgetNumber::customEvent( QEvent *e )
+{
+  if ( e->type() == QEvent::User+1 ) {
+    OptWidgetNumberEvent *ne = dynamic_cast<OptWidgetNumberEvent*>( e );
+    doValueChanged( ne->value() );
   }
 }
 
@@ -822,28 +970,56 @@ void OptWidgetBoolean::valueChanged( bool v )
       (*Param).delFlags( OW->changedFlag() );
       OO->setNotify( cn );
     }
-    else {
-      if ( OMutex != 0 )
-	OMutex->lock();
-      OW->disableUpdate();
-      bool cn = OO->notifying();
-      OO->unsetNotify();
-      (*Param).setBoolean( v );
-      if ( (*Param).boolean( 0 ) != Value )
-	(*Param).addFlags( OW->changedFlag() );
-      Value = EW->isChecked();
-      if ( cn )
-	OO->notify();
-      (*Param).delFlags( OW->changedFlag() );
-      OO->setNotify( cn );
-      OW->enableUpdate();
-      if ( OMutex != 0 )
-	OMutex->unlock();
-    }
+    else
+      doValueChanged( v );
   }
   string b( v ? "true" : "false" );
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
     Widgets[k]->activateOption( Widgets[k]->param().testActivation( b ) );
+  }
+}
+
+
+class OptWidgetBooleanEvent : public QEvent
+{
+public:
+  OptWidgetBooleanEvent( bool value )
+    : QEvent( QEvent::Type( QEvent::User+1 ) ), Value( value ) {};
+  bool value( void ) const { return Value; };
+private:
+  bool Value;
+};
+
+
+void OptWidgetBoolean::doValueChanged( bool v )
+{
+  if ( ! tryLockMutex( 5 ) ) {
+    // we do not get the lock for the data now,
+    // so we repost the event to a later time.
+    QCoreApplication::postEvent( this, new OptWidgetBooleanEvent( v ) );
+    return;
+  }
+  OW->disableUpdate();
+  bool cn = OO->notifying();
+  OO->unsetNotify();
+  (*Param).setBoolean( v );
+  if ( (*Param).boolean( 0 ) != Value )
+    (*Param).addFlags( OW->changedFlag() );
+  Value = EW->isChecked();
+  if ( cn )
+    OO->notify();
+  (*Param).delFlags( OW->changedFlag() );
+  OO->setNotify( cn );
+  OW->enableUpdate();
+  unlockMutex();
+}
+
+
+void OptWidgetBoolean::customEvent( QEvent *e )
+{
+  if ( e->type() == QEvent::User+1 ) {
+    OptWidgetBooleanEvent *be = dynamic_cast<OptWidgetBooleanEvent*>( e );
+    doValueChanged( be->value() );
   }
 }
 
@@ -944,28 +1120,8 @@ void OptWidgetDate::valueChanged( const QDate &date )
       (*Param).delFlags( OW->changedFlag() );
       OO->setNotify( cn );
     }
-    else {
-      if ( OMutex != 0 )
-	OMutex->lock();
-      OW->disableUpdate();
-      bool cn = OO->notifying();
-      OO->unsetNotify();
-      (*Param).setDate( date.year(), date.month(), date.day() );
-      if ( (*Param).year( 0 ) != Year ||
-	   (*Param).month( 0 ) != Month ||
-	   (*Param).day( 0 ) != Day )
-	(*Param).addFlags( OW->changedFlag() );
-      Year = (*Param).year( 0 );
-      Month = (*Param).month( 0 );
-      Day = (*Param).day( 0 );
-      if ( cn )
-	OO->notify();
-      (*Param).delFlags( OW->changedFlag() );
-      OO->setNotify( cn );
-      OW->enableUpdate();
-      if ( OMutex != 0 )
-	OMutex->unlock();
-    }
+    else
+      doValueChanged( date );
   }
   string s = "";
   if ( DE != 0 )
@@ -974,6 +1130,54 @@ void OptWidgetDate::valueChanged( const QDate &date )
     s = LW->text().toLatin1().data();
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
     Widgets[k]->activateOption( Widgets[k]->param().testActivation( s ) );
+  }
+}
+
+
+class OptWidgetDateEvent : public QEvent
+{
+public:
+  OptWidgetDateEvent( const QDate &date )
+    : QEvent( QEvent::Type( QEvent::User+1 ) ), Date( date ) {};
+  QDate date( void ) const { return Date; };
+private:
+  QDate Date;
+};
+
+
+void OptWidgetDate::doValueChanged( const QDate &date )
+{
+  if ( ! tryLockMutex( 5 ) ) {
+    // we do not get the lock for the data now,
+    // so we repost the event to a later time.
+    QCoreApplication::postEvent( this, new OptWidgetDateEvent( date ) );
+    return;
+  }
+  OW->disableUpdate();
+  bool cn = OO->notifying();
+  OO->unsetNotify();
+  (*Param).setDate( date.year(), date.month(), date.day() );
+  if ( (*Param).year( 0 ) != Year ||
+       (*Param).month( 0 ) != Month ||
+       (*Param).day( 0 ) != Day )
+    (*Param).addFlags( OW->changedFlag() );
+  Year = (*Param).year( 0 );
+  Month = (*Param).month( 0 );
+  Day = (*Param).day( 0 );
+  if ( cn )
+    OO->notify();
+  (*Param).delFlags( OW->changedFlag() );
+  OO->setNotify( cn );
+  OW->enableUpdate();
+  unlockMutex();
+}
+
+
+void OptWidgetDate::customEvent( QEvent *e )
+{
+  if ( e->type() == QEvent::User+1 ) {
+    OptWidgetDateEvent *de = dynamic_cast<OptWidgetDateEvent*>( e );
+    doValueChanged( de->date() );
   }
 }
 
@@ -1078,28 +1282,8 @@ void OptWidgetTime::valueChanged( const QTime &time )
       (*Param).delFlags( OW->changedFlag() );
       OO->setNotify( cn );
     }
-    else {
-      if ( OMutex != 0 )
-	OMutex->lock();
-      OW->disableUpdate();
-      bool cn = OO->notifying();
-      OO->unsetNotify();
-      (*Param).setTime( time.hour(), time.minute(), time.second() );
-      if ( (*Param).hour( 0 ) != Hour ||
-	   (*Param).minutes( 0 ) != Minutes ||
-	   (*Param).seconds( 0 ) != Seconds )
-	(*Param).addFlags( OW->changedFlag() );
-      Hour = (*Param).hour( 0 );
-      Minutes = (*Param).minutes( 0 );
-      Seconds = (*Param).seconds( 0 );
-      if ( cn )
-	OO->notify();
-      (*Param).delFlags( OW->changedFlag() );
-      OO->setNotify( cn );
-      OW->enableUpdate();
-      if ( OMutex != 0 )
-	OMutex->unlock();
-    }
+    else
+      doValueChanged( time );
   }
   string s = "";
   if ( TE != 0 )
@@ -1108,6 +1292,54 @@ void OptWidgetTime::valueChanged( const QTime &time )
     s = LW->text().toLatin1().data();
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
     Widgets[k]->activateOption( Widgets[k]->param().testActivation( s ) );
+  }
+}
+
+
+class OptWidgetTimeEvent : public QEvent
+{
+public:
+  OptWidgetTimeEvent( const QTime &time )
+    : QEvent( QEvent::Type( QEvent::User+1 ) ), Time( time ) {};
+  QTime time( void ) const { return Time; };
+private:
+  QTime Time;
+};
+
+
+void OptWidgetTime::doValueChanged( const QTime &time )
+{
+  if ( ! tryLockMutex( 5 ) ) {
+    // we do not get the lock for the data now,
+    // so we repost the event to a later time.
+    QCoreApplication::postEvent( this, new OptWidgetTimeEvent( time ) );
+    return;
+  }
+  OW->disableUpdate();
+  bool cn = OO->notifying();
+  OO->unsetNotify();
+  (*Param).setTime( time.hour(), time.minute(), time.second() );
+  if ( (*Param).hour( 0 ) != Hour ||
+       (*Param).minutes( 0 ) != Minutes ||
+       (*Param).seconds( 0 ) != Seconds )
+    (*Param).addFlags( OW->changedFlag() );
+  Hour = (*Param).hour( 0 );
+  Minutes = (*Param).minutes( 0 );
+  Seconds = (*Param).seconds( 0 );
+  if ( cn )
+    OO->notify();
+  (*Param).delFlags( OW->changedFlag() );
+  OO->setNotify( cn );
+  OW->enableUpdate();
+  unlockMutex();
+}
+
+
+void OptWidgetTime::customEvent( QEvent *e )
+{
+  if ( e->type() == QEvent::User+1 ) {
+    OptWidgetTimeEvent *te = dynamic_cast<OptWidgetTimeEvent*>( e );
+    doValueChanged( te->time() );
   }
 }
 

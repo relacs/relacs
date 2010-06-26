@@ -84,6 +84,7 @@ public:
     /*! Disables the data mutex and the data mutexes of the subplots.
         \sa setDataMutex() */
   void clearDataMutex( void );
+
     /*! Lock the data mutex for reading. \sa tryLockData(), setDataMutex(), clearDataMutex() */
   void lockData( void );
     /*! Try to lock the data mutex for reading.

@@ -35,6 +35,7 @@ PUnitModel::PUnitModel( void )
 {
   // EOD:
   EODFreq = 800.0;
+  EODFreqSD = 10.0;
   EODAmpl1 = 1.0;
   EODAmpl2 = 1.0;
   EODFreqTau = 1000.0;

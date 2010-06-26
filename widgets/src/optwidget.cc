@@ -38,6 +38,8 @@ public:
     : QEvent( QEvent::Type( QEvent::User+type ) ), Ident( ident ), Flags( 0 ) {};
   UpdateEvent( int type, int flags )
     : QEvent( QEvent::Type( QEvent::User+type ) ), Ident( "" ), Flags( flags ) {};
+  UpdateEvent( const UpdateEvent &ue )
+    : QEvent( QEvent::Type( ue.type() ) ), Ident( ue.Ident ), Flags( ue.Flags ) {};
   string ident( void ) const { return Ident; };
   int flags( void ) const { return Flags; };
 private:
@@ -60,6 +62,7 @@ OptWidget::OptWidget( QWidget *parent, Qt::WindowFlags f )
     ReadOnlyMask( 0 ),
     ContinuousUpdate( false )
 {
+  GUIThread = QThread::currentThread();
 }
 
 
@@ -78,6 +81,7 @@ OptWidget::OptWidget( Options *o, QMutex *mutex,
     ReadOnlyMask( 0 ),
     ContinuousUpdate( false )
 {
+  GUIThread = QThread::currentThread();
   assign( o );
 }
 
@@ -98,6 +102,7 @@ OptWidget::OptWidget( Options *o, int selectmask, int romask,
     ReadOnlyMask( 0 ),
     ContinuousUpdate( false )
 {
+  GUIThread = QThread::currentThread();
   assign( o, selectmask, romask, contupdate, style, mutex );
 }
 
@@ -138,12 +143,10 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
   Layout.clear();
   MaxLines = 0;
 
-  if ( OMutex != 0 )
-    OMutex->lock();
+  lockMutex();
 
   if ( Opt->empty() ) {
-    if ( OMutex != 0 )
-      OMutex->unlock();
+    unlockMutex();
     return *this;
   }
 
@@ -461,8 +464,7 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
     }
   }
 
-  if ( OMutex != 0 )
-    OMutex->unlock();
+  unlockMutex();
 
   MainWidget->show();
 
@@ -551,6 +553,29 @@ void OptWidget::setMutex( QMutex *mutex )
   OMutex = mutex;
   for ( unsigned int k=0; k<Widgets.size(); k++ )
     Widgets[k]->setMutex( mutex );
+}
+
+
+void OptWidget::lockMutex( void )
+{
+  if ( OMutex != 0 )
+    OMutex->lock();
+}
+
+
+bool OptWidget::tryLockMutex( int timeout )
+{
+  if ( OMutex != 0 )
+    return OMutex->tryLock( timeout );
+  else
+    return true;
+}
+
+
+void OptWidget::unlockMutex( void )
+{
+  if ( OMutex != 0 )
+    OMutex->unlock();
 }
 
 
@@ -685,8 +710,7 @@ QLabel* OptWidget::unitLabel( const Parameter &p, QWidget *parent )
 
 void OptWidget::accept( bool clearchanged )
 {
-  if ( OMutex != 0 )
-    OMutex->lock();
+  lockMutex();
 
   // get the values:
   for ( unsigned int k=0; k<Widgets.size(); k++ )
@@ -708,8 +732,7 @@ void OptWidget::accept( bool clearchanged )
   if ( clearchanged )
     Opt->delFlags( changedFlag() );
 
-  if ( OMutex != 0 )
-    OMutex->unlock();
+  unlockMutex();
 }
 
 
@@ -721,23 +744,19 @@ void OptWidget::accept( void )
 
 void OptWidget::reset( void )
 {
-  if ( OMutex != 0 )
-    OMutex->lock();
+  lockMutex();
   for ( unsigned int k=0; k<Widgets.size(); k++ )
     Widgets[k]->reset();
-  if ( OMutex != 0 )
-    OMutex->unlock();
+  unlockMutex();
 }
 
 
 void OptWidget::resetDefault( void )
 {
-  if ( OMutex != 0 )
-    OMutex->lock();
+  lockMutex();
   for ( unsigned int k=0; k<Widgets.size(); k++ )
     Widgets[k]->resetDefault();
-  if ( OMutex != 0 )
-    OMutex->unlock();
+  unlockMutex();
 }
 
 
@@ -745,7 +764,13 @@ void OptWidget::updateValue( const string &ident )
 {
   if ( DisableUpdate )
     return;
-  QCoreApplication::postEvent( this, new UpdateEvent( 1, ident ) );
+  if ( QThread::currentThread() != GUIThread )
+    QCoreApplication::postEvent( this, new UpdateEvent( 1, ident ) );
+  else {
+    UpdateEvent *ue = new UpdateEvent( 1, ident );
+    customEvent( ue );
+    delete ue;
+  }
 }
 
 
@@ -753,7 +778,13 @@ void OptWidget::updateValues( void )
 {
   if ( DisableUpdate )
     return;
-  QCoreApplication::postEvent( this, new UpdateEvent( 2 ) );
+  if ( QThread::currentThread() != GUIThread )
+    QCoreApplication::postEvent( this, new UpdateEvent( 2 ) );
+  else {
+    UpdateEvent *ue = new UpdateEvent( 2 );
+    customEvent( ue );
+    delete ue;
+  }
 }
 
 
@@ -763,7 +794,13 @@ void OptWidget::updateValues( int flag )
     return;
   // save ChangedFlag:
   Opt->addFlags( UpdateFlag, flag );
-  QCoreApplication::postEvent( this, new UpdateEvent( 3, UpdateFlag ) );
+  if ( QThread::currentThread() != GUIThread )
+    QCoreApplication::postEvent( this, new UpdateEvent( 3, UpdateFlag ) );
+  else {
+    UpdateEvent *ue = new UpdateEvent( 3, UpdateFlag );
+    customEvent( ue );
+    delete ue;
+  }
 }
 
 
@@ -771,7 +808,13 @@ void OptWidget::updateSettings( const string &ident )
 {
   if ( DisableUpdate )
     return;
-  QCoreApplication::postEvent( this, new UpdateEvent( 4, ident ) );
+  if ( QThread::currentThread() != GUIThread )
+    QCoreApplication::postEvent( this, new UpdateEvent( 4, ident ) );
+  else {
+    UpdateEvent *ue = new UpdateEvent( 4, ident );
+    customEvent( ue );
+    delete ue;
+  }
 }
 
 
@@ -779,7 +822,13 @@ void OptWidget::updateSettings( void )
 {
   if ( DisableUpdate )
     return;
-  QCoreApplication::postEvent( this, new UpdateEvent( 5 ) );
+  if ( QThread::currentThread() != GUIThread )
+    QCoreApplication::postEvent( this, new UpdateEvent( 5 ) );
+  else {
+    UpdateEvent *ue = new UpdateEvent( 5 );
+    customEvent( ue );
+    delete ue;
+  }
 }
 
 
@@ -788,17 +837,28 @@ void OptWidget::updateSettings( int flag )
   if ( DisableUpdate || Opt == 0 )
     return;
   Opt->addFlags( UpdateFlag, flag );
-  QCoreApplication::postEvent( this, new UpdateEvent( 6, UpdateFlag ) );
+  if ( QThread::currentThread() != GUIThread )
+    QCoreApplication::postEvent( this, new UpdateEvent( 6, UpdateFlag ) );
+  else {
+    UpdateEvent *ue = new UpdateEvent( 6, UpdateFlag );
+    customEvent( ue );
+    delete ue;
+  }
 }
 
 
 void OptWidget::customEvent( QEvent *e )
 {
   if ( e->type() >= QEvent::User+1 && e->type() <= QEvent::User+6 ) {
-    if ( OMutex != 0 )
-      OMutex->lock();
     UpdateEvent *ue = dynamic_cast<UpdateEvent*>( e );
-    if ( e->type() == QEvent::User+1 ) {
+    if ( ! tryLockMutex( 5 ) ) {
+      // we do not get the lock for the data now,
+      // so we repost the event to a later time.
+      QCoreApplication::postEvent( this, new UpdateEvent( *ue ) );
+      return;
+    }
+    switch ( e->type() - QEvent::User ) {
+    case 1: {
       // updateValues( ident )
       for ( unsigned int k=0; k<Widgets.size(); k++ ) {
 	if ( Widgets[k]->param().ident() == ue->ident() ) {
@@ -806,14 +866,16 @@ void OptWidget::customEvent( QEvent *e )
 	  break;
 	}
       }
+      break;
     }
-    else if ( e->type() == QEvent::User+2 ) {
+    case 2: {
       // updateValues()
       for ( unsigned int k=0; k<Widgets.size(); k++ ) {
 	Widgets[k]->reset();
       }
+      break;
     }
-    else if ( e->type() == QEvent::User+3 ) {
+    case 3: {
       // updateValues( flags )
       for ( unsigned int k=0; k<Widgets.size(); k++ ) {
 	if ( Widgets[k]->param().flags( ue->flags() ) ) {
@@ -821,8 +883,9 @@ void OptWidget::customEvent( QEvent *e )
 	  Widgets[k]->param().delFlags( ue->flags() );
 	}
       }
+      break;
     }
-    else if ( e->type() == QEvent::User+4 ) {
+    case 4: {
       // updaeSettings( ident )
       for ( unsigned int k=0; k<Widgets.size(); k++ ) {
 	if ( Widgets[k]->param().ident() == ue->ident() ) {
@@ -830,14 +893,16 @@ void OptWidget::customEvent( QEvent *e )
 	  break;
 	}
       }
+      break;
     }
-    else if ( e->type() == QEvent::User+5 ) {
+    case 5: {
       // updateSetings()
       for ( unsigned int k=0; k<Widgets.size(); k++ ) {
 	Widgets[k]->update();
       }
+      break;
     }
-    else if ( e->type() == QEvent::User+6 ) {
+    case 6: {
       // updateSettings( flags )
       for ( unsigned int k=0; k<Widgets.size(); k++ ) {
 	if ( Widgets[k]->param().flags( ue->flags() ) ) {
@@ -845,10 +910,13 @@ void OptWidget::customEvent( QEvent *e )
 	  Widgets[k]->param().delFlags( ue->flags() );
 	}
       }
+      break;
     }
-    if ( OMutex != 0 )
-      OMutex->unlock();
+    }
+    unlockMutex();
   }
+  else
+    QWidget::customEvent( e );
 }
 
    

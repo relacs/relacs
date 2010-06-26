@@ -1,12 +1,21 @@
 - CLEANFILES = relacs.log relacs.log.old in all plugins Makefile.am's
 - configure.ac: check dependencies of plugins
 
+Dead locks:
+- do we need to take care about blocking lockMutex() in accept(), reset(), etc.?
+- Plot, MultiPlot: take care about blocking lockData() in mouse event handlers!
+- check relacs classes and all plugins for possibly blocking customEvents!
+
+Macros:
+- Buttons should immediately loose focus after being clicked!
+- delete all MacroCommands after usage!
+
 SignalTime: finish this update (RELACSPlugin::signalTime()
 - test ficurve RePro: does not work!
 - update all other RePros
 - remove from InData and EventData?
 - update Acquire::readSignal()
-- the same for currenTime() !
+- the same for currentTime() !
 
 Analog Input/Output:
 - WriteDataThread should not be started if the whole stimulus is already transfered.
@@ -37,18 +46,6 @@ Thread safety:
   done from the GUI thread only!
 - disentangle start and stopSession calls?
 - OptWidget::assign is not thread safe
-- shouldn't the draw() function in Plot and MultiPlot not just be QWidget::update()?
-  update() calls postEvent() !
-- (Multi)Plot::draw() can be called from within the locks!
-- what is qApp->syncX and flushX all about?
-  It is removed from Qt4!
-  From Qt interest archive:
-  - bitblt + flushX
-  - In X, obviously the flush makes sure all request go out 
-    to the server, and sync waits until the server finishes processing them.
-  - Why not try calling QApplication::flushX() before going into the
-    blocking read.  This should force the screen update to complete before
-    the application freezes.
 
 Metadata:
 - OutData should get and use Options for stimulus metadata
