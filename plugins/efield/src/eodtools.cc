@@ -282,10 +282,15 @@ double EODTools::beatContrast( const InData &eodd, const EventData &bpe,
 
 
 void EODTools::beatAmplitudes( const InData &eodd, const EventData &eode,
-			       double tbegin, double tend, double offset,
+			       double tbegin, double tend, double period,
 			       double &uppermean, double &upperampl,
 			       double &lowermean, double &lowerampl )
 {
+  // duration as integer multiples of beat period:
+  double duration = tend - tend;
+  double window = floor( duration/period )*period;
+  double offset = 0.5*(duration - window);
+
   // EOD peaks:
   upperampl = 0.0;
   uppermean = eode.meanSize( tbegin+offset, tend-offset, upperampl );
@@ -302,8 +307,13 @@ void EODTools::beatAmplitudes( const InData &eodd, const EventData &eode,
 
 
 double EODTools::beatAmplitude( const InData &eodd, const EventData &eode,
-				double tbegin, double tend, double offset )
+				double tbegin, double tend, double period )
 {
+  // duration as integer multiples of beat period:
+  double duration = tend - tend;
+  double window = floor( duration/period )*period;
+  double offset = 0.5*(duration - window);
+
   // EOD peaks:
   double uppersd = 0.0;
   double uppera = eode.meanSize( tbegin+offset, tend-offset, uppersd );
@@ -320,8 +330,13 @@ double EODTools::beatAmplitude( const InData &eodd, const EventData &eode,
 
 
 double EODTools::beatContrast( const InData &eodd, const EventData &eode,
-			       double tbegin, double tend, double offset )
+			       double tbegin, double tend, double period )
 {
+  // duration as integer multiples of beat period:
+  double duration = tend - tend;
+  double window = floor( duration/period )*period;
+  double offset = 0.5*(duration - window);
+
   // EOD peaks:
   double uppersd = 0.0;
   double uppera = eode.meanSize( tbegin+offset, tend-offset, uppersd );

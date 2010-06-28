@@ -134,7 +134,8 @@ private:
   unsigned char Level[2];
 
   const static int ZeroGain = 192;
-  static const int MaxGain = 255;
+  //  static const int MaxGain = 255; amplification saturates the output!
+  static const int MaxGain = ZeroGain;
   static const int MinGain = 1;
   static const int MuteGain = 0;
   const static int Tries = 5;

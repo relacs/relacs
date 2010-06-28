@@ -122,7 +122,8 @@ private:
   static const int Delay = 10;
 
   static const int ZeroGain = 192;
-  static const int MaxGain = 255;
+  //  static const int MaxGain = 255; amplification saturates the output!
+  static const int MaxGain = ZeroGain;
   static const int MinGain = 1;
   static const int MuteGain = 0;
 

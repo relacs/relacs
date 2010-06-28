@@ -161,7 +161,6 @@ private:
   RePro *PreviousView;
 
   QLabel *Message;
-  string MessageStr;
 
   Options DialogOpt;
 

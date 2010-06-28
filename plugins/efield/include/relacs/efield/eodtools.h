@@ -74,16 +74,19 @@ public:
 		       double tbegin, double tend, double offset );
 
 
-    /*! The amplitude of the beat determined from the standard deviation of EOD amplitudes. */
+    /*! The amplitude of the beat of period \a period determined
+        from the standard deviation of EOD amplitudes. */
   double beatAmplitude( const InData &eodd, const EventData &eode,
-			double tbegin, double tend, double offset );
-    /*! The contrast of the beat determined from the standard deviation of EOD amplitudes. */
+			double tbegin, double tend, double period );
+    /*! The contrast of the beat of period \a period determined
+        from the standard deviation of EOD amplitudes. */
   double beatContrast( const InData &eodd, const EventData &eode,
-		       double tbegin, double tend, double offset );
-    /*! The mean EOD amplitude an beat amplitudes of the beat determined
+		       double tbegin, double tend, double period );
+    /*! The mean EOD amplitude and beat amplitudes of the beat
+        of period \a period determined
         from the standard deviation of the upper and lower EOD amplitudes. */
   void beatAmplitudes( const InData &eodd, const EventData &eode,
-		       double tbegin, double tend, double offset,
+		       double tbegin, double tend, double period,
 		       double &uppermean, double &upperampl,
 		       double &lowermean, double &lowerampl );
 

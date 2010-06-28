@@ -4,7 +4,9 @@
 Dead locks:
 - do we need to take care about blocking lockMutex() in accept(), reset(), etc.?
 - Plot, MultiPlot: take care about blocking lockData() in mouse event handlers!
-- check relacs classes and all plugins for possibly blocking customEvents!
+
+Auditory ReceptorModel does not woork anymore:
+- problem with setIntensity and setTrace
 
 Macros:
 - Buttons should immediately loose focus after being clicked!

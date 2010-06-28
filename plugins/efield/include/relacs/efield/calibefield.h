@@ -83,17 +83,15 @@ public:
     /*! Plot data. */
   void plot( double maxx );
     /*! Analyze data. */
-  void analyze( double duration, double beatfrequency,
-		double mincontrast, double maxcontrast, double intensity,
-		int numintensities, int intensitycount,
-		bool fish, double fishrate );
+  int analyze( double duration, double beatfrequency,
+	       double mincontrast, double maxcontrast, double intensity,
+	       bool fish );
 
 
 private:
 
   double FitGain;
   double FitOffset;
-  int FitFlag;
   double Amplitude;
   string LocalEODUnit;
   MapD Intensities;

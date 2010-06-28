@@ -34,6 +34,22 @@
 namespace relacs {
 
 
+class ReProsEvent : public QEvent
+{
+
+public:
+
+  ReProsEvent( const string &message )
+    : QEvent( Type( User+1 ) ),
+      Message( message )
+  {
+  }
+
+  string Message;
+
+};
+
+
 RePros::RePros( RELACSWidget *rw, QWidget *parent )
   : QTabWidget( parent ),
     RW( rw )
@@ -150,12 +166,11 @@ string RePros::macroParam( void ) const
 
 QLabel *RePros::display( QWidget *parent )
 {
-  MessageStr = "No Cell";
   Message = new QLabel( "Xg", parent );
   Message->setFixedHeight( 2*Message->sizeHint().height() );
   Message->setTextFormat( Qt::AutoText );
   Message->setIndent( 14 );
-  Message->setText( MessageStr.c_str() );
+  Message->setText( "No Cell" );
   Message->setToolTip( "Infos from the current research program" );
   return Message;
 }
@@ -166,15 +181,21 @@ void RePros::message( const string &msg )
   Str s = msg;
   s.eraseMarkup();
   RW->printlog( ( CurrentRePro >= 0 ? RPs[CurrentRePro]->repro()->name() + ": " : "" ) + s );
-
-  MessageStr = msg;
-  QApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+3 ) ) );
+  QApplication::postEvent( this, new ReProsEvent( msg ) );
 }
 
 
 void RePros::customEvent( QEvent *qce )
 {
-  Message->setText( MessageStr.c_str() );
+  switch ( qce->type() - QEvent::User ) {
+  case 1: {
+    ReProsEvent *re = dynamic_cast<ReProsEvent*>( qce );
+    Message->setText( re->Message.c_str() );
+    break;
+  }
+  default:
+    QWidget::customEvent( qce );
+  }
 }
 
 
