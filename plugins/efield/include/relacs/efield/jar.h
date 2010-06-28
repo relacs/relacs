@@ -22,6 +22,7 @@
 #ifndef _RELACS_EFIELD_JAR_H_
 #define _RELACS_EFIELD_JAR_H_ 1
 
+#include <relacs/array.h>
 #include <relacs/multiplot.h>
 #include <relacs/rangeloop.h>
 #include <relacs/repro.h>
@@ -127,10 +128,12 @@ private:
   double DeltaFMin;
   double DeltaFMax;
   bool UseContrast;
-  double ContrastStep;
+  double ContrastMin;
   double ContrastMax;
-  double AmplStep;
+  double ContrastStep;
+  double AmplMin;
   double AmplMax;
+  double AmplStep;
   int Repeats;
   double Before;
   double After;
@@ -149,7 +152,7 @@ private:
   double LastRate;
   double Contrast;
   int ContrastCount;
-  vector<double> Contrasts;
+  ArrayD Contrasts;
   double Intensity;
   RangeLoop DeltaFRange;
   double DeltaF;

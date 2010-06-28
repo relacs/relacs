@@ -288,36 +288,51 @@ class RangeLoop
         already existing data vales to the range to \a addmode. \sa addMode() */
   void setAddMode( AddMode addmode );
 
-    /*! The number of repetitions for the whole sequence. */
-  inline int repeat( void ) const { return Repeat; };
+    /*! The number of repetitions for the whole sequence.
+        \sa setRepeat(), currentRepetition(), blockRepeat(), singleRepeat() */
+  int repeat( void ) const;
     /*! Set the number of repetitions for the whole sequence to \a repeat.
-	If \a repeat is set to zero, the whole sequence is repeated indefinitely. */
-  inline void setRepeat( int repeat ) { Repeat = repeat; };
-    /*! Return the number of executed repetitions for the whole sequence to \a repeat. */
-  inline int currentRepetition( void ) const { return RepeatCount; };
+	If \a repeat is set to zero, the whole sequence is repeated indefinitely.
+        \sa repeat(), setBlockRepeat(), setSingleRepeat() */
+  void setRepeat( int repeat );
+    /*! Return the number of executed repetitions for the whole sequence to \a repeat.
+        \sa repeat(), currentBlockRepetition(), currentSingleRepetition() */
+  int currentRepetition( void ) const;
 
     /*! The number of repetitons for a block of data elements
-        of a single increment. */
+        of a single increment.
+	\sa setBlockRepeat(), currentBlockRepetition(), finishedBlock(),
+        repeat(), singleRepeat() */
   int blockRepeat( void ) const;
     /*! Set the number of repetitons for a block of data elements
-        of a single increment to \a repeat. */
+        of a single increment to \a repeat. 
+	\sa blockRepeat(), setRepeat(), setSingleRepeat() */
   void setBlockRepeat( int repeat );
     /*! Return the number of executed repetitions for a block of data elements
-        of a single increment. */
+        of a single increment. \sa blockRepeat(), finishedBlock(),
+	currentRepetition(), currentSingleRepetition() */
   int currentBlockRepetition( void ) const;
-    /*! Returns true if the current block repetitions are completed. */
+    /*! Returns true if the current block repetitions are completed.
+        \sa blockRepeat(), currentBlockRepetition(), finishedSingle() */
   bool finishedBlock( void ) const;
 
-    /*! The number of repetitons for a single data element. */
+    /*! The number of repetitons for a single data element.
+        \sa setSingleRepeat(), currentSingleRepetition(), finishedSingle(), lastSingle(),
+	repeat(), blockRepeat() */
   int singleRepeat( void ) const;
-    /*! Set the number of repetitons for a single data element to \a repeat. */
+    /*! Set the number of repetitons for a single data element to \a repeat.
+        \sa singleRepeat(), setRepeat(), setBlockRepeat() */
   void setSingleRepeat( int repeat );
-    /*! Return the number of executed repetitions for a single data element. */
+    /*! Return the number of executed repetitions for a single data element.
+        \sa signleRpeat(), finishedSingle(), lastSingle(),
+	currentRepetition(), currentBlockRepetition() */
   int currentSingleRepetition( void ) const;
     /*! Returns true if the current single repetitions are completed,
-        i.e. the next data element is to be started. */
+        i.e. the next data element is to be started.
+        \sa signleRpeat(), currentSignelRepetition(), lastSingle(), finishedBlock() */
   bool finishedSingle( void ) const;
-    /*! Returns true if this is the last single repetition. */
+    /*! Returns true if this is the last single repetition.
+        \sa signleRpeat(), currentSignelRepetition(), finishedSingle() */
   bool lastSingle( void ) const;
 
     /*! Set the initial increment to \a increment indices.
@@ -342,11 +357,22 @@ class RangeLoop
 	or zero otherwise. \sa currentIncrement() */
   double currentIncrementValue( void ) const;
 
-    /*! The maximum possible number of repetitions of a single data element. */
+    /*! The maximum possible number of repetitions of a single data element
+        (repeat() * blockRepeat() * singleRepeat() ).
+         \sa maxBlockCount(), remainingCount() */
   int maxCount( void ) const;
     /*! The maximum possible number of repetitions of a single data element
-        for the current sequence. */
-  int maxBlockCount( void ) const; 
+        for the current block sequence. \sa maxCount(), remainingCount() */
+  int maxBlockCount( void ) const;
+    /*! Returns the overall number of remaining counts summed over all data elements
+        that do not have their skip flag set.
+        If repeat() is set to zero, returns the remaining count for a single repeat.
+        \sa remainingBlockCount(), maxCount() */
+  int remainingCount( void ) const;
+    /*! Returns the overall number of remaining counts summed over all data elements
+        that do not have their skip flag set
+	for the current block of data. */
+  int remainingBlockCount( void ) const;
 
     /*! Set the sequence for looping through the data values to \a seq.
         \sa up(), down(), alternateInUp(), alternateInDown(),
@@ -393,7 +419,7 @@ class RangeLoop
 	\sa purge() */
   void reset( int pos=-1 );
     /*! Remove all data elements, that have their skip flag set
-        and generates a new sequence.
+        and generate a new sequence.
         \sa reset() */
   void purge( void );
 

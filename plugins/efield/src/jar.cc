@@ -37,10 +37,12 @@ JAR::JAR( void )
   DeltaFMax = 12.0;
   DeltaFMin = -12.0;
   UseContrast = true;
-  ContrastStep = 0.1;
+  ContrastMin = 0.1;
   ContrastMax = 0.2;
-  AmplStep = 1.0;
+  ContrastStep = 0.1;
+  AmplMin = 1.0;
   AmplMax = 2.0;
+  AmplStep = 1.0;
   Repeats = 200;
   Before = 1.0;
   After = 5.0;
@@ -59,10 +61,12 @@ JAR::JAR( void )
   addNumber( "deltafmin", "Minimum delta f", DeltaFMin, -10000.0, 10000.0, 2.0, "Hz" );
   addText( "deltafrange", "Range of delta f's", "" );
   addSelection( "amplsel", "Stimulus amplitude", "contrast|absolute" );
-  addNumber( "contraststep", "Contrast steps", ContrastStep, 0.01, 1.0, 0.05, "1", "%", "%.0f" ).setActivation( "amplsel", "contrast" );
   addNumber( "contrastmax", "Maximum contrast", ContrastMax, 0.01, 1.0, 0.05, "1", "%", "%.0f" ).setActivation( "amplsel", "contrast" );
-  addNumber( "amplstep", "Amplitude steps", AmplStep, 0.1, 1000.0, 0.1, "mV/cm" ).setActivation( "amplsel", "absolute" );
+  addNumber( "contrastmin", "Minimum contrast", ContrastMin, 0.01, 1.0, 0.05, "1", "%", "%.0f" ).setActivation( "amplsel", "contrast" );
+  addNumber( "contraststep", "Contrast steps", ContrastStep, 0.01, 1.0, 0.05, "1", "%", "%.0f" ).setActivation( "amplsel", "contrast" );
+  addNumber( "amplmin", "Minimum amplitude", AmplMin, 0.1, 1000.0, 0.1, "mV/cm" ).setActivation( "amplsel", "absolute" );
   addNumber( "amplmax", "Maximum amplitude", AmplMax, 0.1, 1000.0, 0.1, "mV/cm" ).setActivation( "amplsel", "absolute" );
+  addNumber( "amplstep", "Amplitude steps", AmplStep, 0.1, 1000.0, 0.1, "mV/cm" ).setActivation( "amplsel", "absolute" );
   addInteger( "repeats", "Repeats", Repeats, 0, 1000, 2 );
   addBoolean( "sinewave", "Use sine wave", SineWave );
   addLabel( "Analysis" );
@@ -157,10 +161,12 @@ int JAR::main( void )
   DeltaFMin = number( "deltafmin" );
   string deltafrange = text( "deltafrange" );
   UseContrast = ( index( "amplsel" ) == 0 );
-  ContrastStep = number( "contraststep" );
+  ContrastMin = number( "contrastmin" );
   ContrastMax = number( "contrastmax" );
-  AmplStep = number( "amplstep" );
+  ContrastStep = number( "contraststep" );
+  AmplMin = number( "amplmin" );
   AmplMax = number( "amplmax" );
+  AmplStep = number( "amplstep" );
   Before = number( "before" );
   After = number( "after" );
   bool savetraces = boolean( "savetraces" );
@@ -201,16 +207,10 @@ int JAR::main( void )
 
   // ranges:
   ContrastCount = 0;
-  if ( UseContrast ) {
-    Contrasts.resize( int( ContrastMax/ContrastStep ) );
-    for ( unsigned int i=0; i<Contrasts.size(); i++ )
-      Contrasts[i] = (i+1)*ContrastStep;
-  }
-  else {
-    Contrasts.resize( int( AmplMax/AmplStep ) );
-    for ( unsigned int i=0; i<Contrasts.size(); i++ )
-      Contrasts[i] = (i+1)*AmplStep;
-  }
+  if ( UseContrast )
+    Contrasts.assign( LinearRange( ContrastMin, ContrastMax, ContrastStep ) );
+  else
+    Contrasts.assign( LinearRange( AmplMin, AmplMax, AmplStep ) );
   DeltaFRange.clear();
   if ( deltafrange.empty() )
     DeltaFRange.set( DeltaFMin, DeltaFMax, DeltaFStep );
@@ -286,7 +286,7 @@ int JAR::main( void )
       if ( UseContrast )
 	adjustGain( trace( LocalEODTrace[0] ), ( 1.0 + ContrastMax + 0.1 ) * val2 );
       else
-	adjustGain( trace( LocalEODTrace[0] ), val2 + ContrastMax );
+	adjustGain( trace( LocalEODTrace[0] ), val2 + AmplMax );
       activateGains();
     }
   }
@@ -389,6 +389,19 @@ int JAR::main( void )
 	  s = "Amplitude: <b>" + Str( Contrast, "%g" ) + "mV/cm</b>";
 	s += "  Delta F:  <b>" + Str( DeltaF, 0, 1, 'f' ) + "Hz</b>";
 	s += "  Loop:  <b>" + Str( Count+1 ) + "</b>";
+	int rc = DeltaFRange.remainingBlockCount() + 
+	  (Contrasts.size()-ContrastCount-1)*DeltaFRange.size()*DeltaFRange.blockRepeat()*DeltaFRange.singleRepeat();
+	int rs = (Duration + Pause)*rc;
+	double rm = floor( rs/60.0 );
+	rs -= rm*60.0;
+	double rh = floor( rm/60.0 );
+	rm -= rh*60.0;
+	string rt = "";
+	if ( rh > 0.0 )
+	  rt += Str( rh, 0, 0, 'f' ) + "h";
+	rt += Str( rm, 2, 0, 'f', '0' ) + "min";
+	rt += Str( rs, 2, 0, 'f', '0' ) + "sec";
+	s += "  Remaining:  <b>" + rt + "</b>";
 	message( s );
 	
 	sleep( Before + Duration + After );

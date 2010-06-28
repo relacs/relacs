@@ -73,6 +73,9 @@ public:
     /*! Set the \a Gain and \a Offset variable if the config is changed. */
   virtual void notify( void );
 
+    /*! Adds offset and gain to the info(). */
+  virtual void init( void );
+
 
 protected:
 

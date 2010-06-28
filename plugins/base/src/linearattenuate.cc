@@ -77,6 +77,7 @@ void LinearAttenuate::setGain( double gain )
 {
   Gain = gain;
   setNumber( "gain", Gain );
+  Info.setNumber( "gain", Gain );
 }
 
 
@@ -84,6 +85,7 @@ void LinearAttenuate::setOffset( double offset )
 {
   Offset = offset;
   setNumber( "offset", Offset );
+  Info.setNumber( "offset", Offset );
 }
 
 
@@ -105,6 +107,16 @@ void LinearAttenuate::notify( void )
 {
   Gain = number( "gain" );
   Offset = number( "offset" );
+  Info.setNumber( "gain", Gain );
+  Info.setNumber( "offset", Offset );
+}
+
+
+void LinearAttenuate::init( void )
+{
+  Attenuate::init();
+  Info.addNumber( "offset", Offset, "" );
+  Info.addNumber( "gain", Gain, "" );
 }
 
 

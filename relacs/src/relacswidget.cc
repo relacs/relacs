@@ -634,15 +634,6 @@ int RELACSWidget::setupHardware( int n )
       SimLoad.start( 1000 );
     }
 
-    int menuindex = 0;
-    DV->addMenu( DeviceMenu, menuindex );
-    AID->addMenu( DeviceMenu, menuindex );
-    AOD->addMenu( DeviceMenu, menuindex );
-    DIOD->addMenu( DeviceMenu, menuindex );
-    TRIGD->addMenu( DeviceMenu, menuindex );
-    ATD->addMenu( DeviceMenu, menuindex );
-    ATI->addMenu( DeviceMenu, menuindex );
-
     return 0;
   }
   else {
@@ -1195,6 +1186,12 @@ void RELACSWidget::stopRePro( void )
   if ( ! ReProRunning )
     return;
 
+  // stop analog output:
+  WriteLoop.stop();
+  lockSignals();
+  AQ->stopWrite();                
+  unlockSignals();
+
   // wait on RePro to stop:
   if ( CurrentRePro->isRunning() ) {
     /*
@@ -1217,12 +1214,6 @@ void RELACSWidget::stopRePro( void )
   }
 
   ReProRunning = false;
-
-  // stop analog output:
-  WriteLoop.stop();
-  lockSignals();
-  AQ->stopWrite();                
-  unlockSignals();
 
   if ( AQ->readSignal( SignalTime, IL, ED ) ) // we should get the start time of the latest signal here
     SF->save( IL, ED );
@@ -1623,6 +1614,17 @@ void RELACSWidget::startFirstAcquisition( void )
   CFG.read( RELACSPlugin::Plugins );
   CFG.configure( RELACSPlugin::Plugins );
 
+  // device menu:
+  int menuindex = 0;
+  DV->addMenu( DeviceMenu, menuindex );
+  AID->addMenu( DeviceMenu, menuindex );
+  AOD->addMenu( DeviceMenu, menuindex );
+  DIOD->addMenu( DeviceMenu, menuindex );
+  TRIGD->addMenu( DeviceMenu, menuindex );
+  ATD->addMenu( DeviceMenu, menuindex );
+  ATI->addMenu( DeviceMenu, menuindex );
+
+  // controls:
   for ( unsigned int k=0; k<CN.size(); k++ ) {
     CN[k]->setSettings();
     CN[k]->initDevices();
@@ -1741,6 +1743,17 @@ void RELACSWidget::startFirstSimulation( void )
   CFG.read( RELACSPlugin::Plugins );
   CFG.configure( RELACSPlugin::Plugins );
 
+  // device menu:
+  int menuindex = 0;
+  DV->addMenu( DeviceMenu, menuindex );
+  AID->addMenu( DeviceMenu, menuindex );
+  AOD->addMenu( DeviceMenu, menuindex );
+  DIOD->addMenu( DeviceMenu, menuindex );
+  TRIGD->addMenu( DeviceMenu, menuindex );
+  ATD->addMenu( DeviceMenu, menuindex );
+  ATI->addMenu( DeviceMenu, menuindex );
+
+  // controls:
   for ( unsigned int k=0; k<CN.size(); k++ ) {
     CN[k]->setSettings();
     CN[k]->initDevices();

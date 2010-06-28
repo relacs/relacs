@@ -95,7 +95,6 @@ int EODDetector::init( const InData &data, EventData &outevents,
   outevents.setSizeUnit( data.unit() );
   outevents.setSizeFormat( "%6.2f" );
   adjust( data );
-  Threshold = MinThresh;
   D.init( data.begin(), data.end(), data.timeBegin() );
   return 0;
 }

@@ -137,6 +137,9 @@ int ChirpDetector::checkEvent( EventFrequencyIterator first,
 			       double &minthresh, double &maxthresh,
 			       double &time, double &size, double &width )
 {
+  // accept nothing as a chirp:
+  return 0;
+
   // accept everything as a chirp:
   time = *eventtime;
   size = *event;

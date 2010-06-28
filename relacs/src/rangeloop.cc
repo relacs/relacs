@@ -515,6 +515,24 @@ void RangeLoop::setAddMode( AddMode addmode )
 }
 
 
+int RangeLoop::repeat( void ) const
+{
+  return Repeat;
+}
+
+
+void RangeLoop::setRepeat( int repeat )
+{
+  Repeat = repeat;
+}
+
+
+int RangeLoop::currentRepetition( void ) const
+{
+  return RepeatCount;
+}
+
+
 int RangeLoop::blockRepeat( void ) const
 { 
   return BlockRepeat;
@@ -622,6 +640,38 @@ int RangeLoop::maxCount( void ) const
 int RangeLoop::maxBlockCount( void ) const
 { 
   return RepeatCount*BlockRepeat*SingleRepeat + BlockRepeat*SingleRepeat;
+}
+
+
+int RangeLoop::remainingCount( void ) const
+{
+  int mc = Repeat*BlockRepeat*SingleRepeat;
+  if ( Repeat == 0 )
+    mc = BlockRepeat*SingleRepeat;
+  int c = 0;
+  for ( unsigned int k = 0; k < Elements.size(); k++ ) {
+    if ( ! Elements[k].Skip ) {
+      int r = mc - Elements[k].Count;
+      if ( r > 0 )
+	c += r;
+    }
+  }
+  return c;
+}
+
+
+int RangeLoop::remainingBlockCount( void ) const
+{
+  int mc = BlockRepeat*SingleRepeat;
+  int c = 0;
+  for ( unsigned int k = 0; k < Elements.size(); k++ ) {
+    if ( ! Elements[k].Skip ) {
+      int r = mc - Elements[k].Count;
+      if ( r > 0 )
+	c += r;
+    }
+  }
+  return c;
 }
 
 

@@ -71,6 +71,7 @@ void DecibelAttenuate::setGain( double gain )
 {
   Gain = gain;
   setNumber( "gain", Gain );
+  Info.setNumber( "gain", Gain );
 }
 
 
@@ -78,6 +79,7 @@ void DecibelAttenuate::setOffset( double offset )
 {
   Offset = offset;
   setNumber( "offset", Offset );
+  Info.setNumber( "offset", Offset );
 }
 
 
@@ -99,6 +101,16 @@ void DecibelAttenuate::notify( void )
 {
   Gain = number( "gain" );
   Offset = number( "offset" );
+  Info.setNumber( "gain", Gain );
+  Info.setNumber( "offset", Offset );
+}
+
+
+void DecibelAttenuate::init( void )
+{
+  Attenuate::init();
+  Info.addNumber( "offset", Offset, "dB" );
+  Info.addNumber( "gain", Gain, "" );
 }
 
 

@@ -400,7 +400,9 @@ int ComediAnalogOutput::convert( OutList &sigs )
 
   // allocate buffer:
   int nbuffer = ol.size() * ( ol[0].size() + delayinx );
-  T *buffer = new T [nbuffer];
+  char *cbuffer = new char [nbuffer*sizeof(T)];
+  //  T *buffer = new T [nbuffer];  // it gets freed as an char * array...?
+  T *buffer = (T*)cbuffer;
   T *bp = buffer;
 
   // simulate delay:
@@ -425,7 +427,7 @@ int ComediAnalogOutput::convert( OutList &sigs )
     }
   }
 
-  sigs[0].setDeviceBuffer( (char *)buffer, nbuffer, sizeof( T ) );
+  sigs[0].setDeviceBuffer( cbuffer, nbuffer, sizeof( T ) );
 
   return 0;
 }
