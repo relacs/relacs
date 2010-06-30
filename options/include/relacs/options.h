@@ -317,6 +317,12 @@ public:
     /*! Set the value of an existing text option 
         with identifier \a ident to \a strg. */
   Parameter &setText( const string &ident, const string &strg );
+    /*! Set value of an existing text option 
+        with identifier \a ident to the one of \a p,
+        if both are of type() Text.
+	If the value of the parameter is changing 
+	then the changedFlag() is set. */
+  Parameter &setText( const string &ident, const Parameter &p );
     /*! Add \a strg to the value of an existing text option 
         with identifier \a ident. */
   Parameter &pushText( const string &ident, const string &strg );
@@ -545,6 +551,12 @@ public:
   inline Parameter &pushNumber( const string &ident, double number,
 				const string &unit )
     { return pushNumber( ident, number, -1.0, unit ); };
+    /*! Set value of an existing number option 
+        with identifier \a ident to the one of \a p,
+        if both are of type() Number.
+	If the value of the parameter is changing 
+	then the changedFlag() is set. */
+  Parameter &setNumber( const string &ident, const Parameter &p );
     /*! Return the default number of the option 
         with identifier equal to \a ident. 
         If there is no option with identifier \a ident, or the option is
@@ -710,6 +722,12 @@ public:
         with identifier \a ident. */
   inline Parameter &pushInteger( const string &ident, long number, const string &unit="" )
     { return pushInteger( ident, number, -1, unit ); };
+    /*! Set value of an existing integer option 
+        with identifier \a ident to the one of \a p,
+        if both are of type() Integer.
+	If the value of the parameter is changing 
+	then the changedFlag() is set. */
+  Parameter &setInteger( const string &ident, const Parameter &p );
     /*! Return the default number of the integer option 
         with identifier equal to \a ident. 
         If there is no option with identifier \a ident, or the option is
@@ -780,6 +798,12 @@ public:
     /*! Set the value of an existing boolean option 
         with identifier \a ident to \a string. */
   Parameter &setBoolean( const string &ident, bool b );
+    /*! Set value of an existing boolean option 
+        with identifier \a ident to the one of \a p,
+        if both are of type() Boolean.
+	If the value of the parameter is changing 
+	then the changedFlag() is set. */
+  Parameter &setBoolean( const string &ident, const Parameter &p );
     /*! Return the default boolean of the option 
         with identifier equal to \a ident. 
         If there is no option with identifier \a ident, or the option is
@@ -921,6 +945,12 @@ public:
 	\return a reference to the option.
         \sa setDate(), setDefaultDate(), addDate(), insertDate(), date() */
   Parameter &setCurrentDate( const string &ident );
+    /*! Set value of an existing date option 
+        with identifier \a ident to the one of \a p,
+        if both are of type() Date.
+	If the value of the parameter is changing 
+	then the changedFlag() is set. */
+  Parameter &setDate( const string &ident, const Parameter &p );
     /*! Get the default date from a date option.
 	\param[in] ident the identifier string of the option
 	\param[in] index the index of the default date
@@ -1073,6 +1103,12 @@ public:
 	\return a reference to the option.
         \sa setTime(), setDefaultTime(), addTime(), insertTime(), time() */
   Parameter &setCurrentTime( const string &ident );
+    /*! Set value of an existing time option 
+        with identifier \a ident to the one of \a p,
+        if both are of type() Time.
+	If the value of the parameter is changing 
+	then the changedFlag() is set. */
+  Parameter &setTime( const string &ident, const Parameter &p );
     /*! Get the default time from a time option.
 	\param[in] ident the identifier string of the option
 	\param[in] index the index of the default time

@@ -287,7 +287,6 @@ int JAR::main( void )
 	adjustGain( trace( LocalEODTrace[0] ), ( 1.0 + ContrastMax + 0.1 ) * val2 );
       else
 	adjustGain( trace( LocalEODTrace[0] ), val2 + AmplMax );
-      activateGains();
     }
   }
 

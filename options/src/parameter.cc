@@ -850,6 +850,25 @@ Parameter &Parameter::setText( const string &strg )
 }
 
 
+Parameter &Parameter::setText( const Parameter &p )
+{
+  Warning = "";
+  if ( ! isText() || ! p.isText() ) {
+    Warning = "Parameter::setText() -> '" + Ident + "' or '" + p.ident()
+      + "' is not of type text!";
+    return *this;
+  }
+
+  if ( String.size() != p.String.size() ||
+       ( String.size() > 0 && p.String.size() > 0 && String[0] != p.String[0] ) )
+    Flags |= ChangedFlag;
+
+  String = p.String;
+  
+  return *this;
+}
+
+
 Parameter &Parameter::addText( const string &strg, bool clear )
 {
   Warning = "";
@@ -1358,6 +1377,28 @@ Parameter &Parameter::setNumbers( const vector<double> &numbers,
 }
 
 
+Parameter &Parameter::setNumber( const Parameter &p )
+{
+  Warning = "";
+  if ( ! isNumber() || ! p.isNumber() ) {
+    Warning = "Parameter::setNumber() -> '" + Ident + "' or '" + p.ident()
+      + "' is not of type number!";
+    return *this;
+  }
+
+  if ( Value.size() != p.Value.size() ||
+       ( Value.size() > 0 && p.Value.size() > 0 && Value[0] != p.Value[0] ) )
+    Flags |= ChangedFlag;
+
+  Value = p.Value;
+  Error = p.Error;
+  InternUnit = p.InternUnit;
+  String = p.String;
+  
+  return *this;
+}
+
+
 Parameter &Parameter::addNumber( double number, double error,
 				 const string &unit, bool clear )
 {
@@ -1463,7 +1504,29 @@ Parameter &Parameter::setInteger( long number, long error,
 		    static_cast<double>( error ), unit );
 }
 
+
+Parameter &Parameter::setInteger( const Parameter &p )
+{
+  Warning = "";
+  if ( ! isInteger() || ! p.isInteger() ) {
+    Warning = "Parameter::setInteger() -> '" + Ident + "' or '" + p.ident()
+      + "' is not of type integer!";
+    return *this;
+  }
+
+  if ( Value.size() != p.Value.size() ||
+       ( Value.size() > 0 && p.Value.size() > 0 && Value[0] != p.Value[0] ) )
+    Flags |= ChangedFlag;
+
+  Value = p.Value;
+  Error = p.Error;
+  InternUnit = p.InternUnit;
+  String = p.String;
   
+  return *this;
+}
+
+
 Parameter &Parameter::addInteger( long number, long error, const string &unit )
 {
   if ( ! isAnyNumber() && ! isText() ) {
@@ -1830,6 +1893,26 @@ Parameter &Parameter::setBoolean( bool b )
 }
 
 
+Parameter &Parameter::setBoolean( const Parameter &p )
+{
+  Warning = "";
+  if ( ! isBoolean() || ! p.isBoolean() ) {
+    Warning = "Parameter::setBoolean() -> '" + Ident + "' or '" + p.ident()
+      + "' is not of type boolean!";
+    return *this;
+  }
+
+  if ( Value.size() != p.Value.size() ||
+       ( Value.size() > 0 && p.Value.size() > 0 && Value[0] != p.Value[0] ) )
+    Flags |= ChangedFlag;
+
+  Value = p.Value;
+  String = p.String;
+  
+  return *this;
+}
+
+
 bool Parameter::defaultBoolean( int index ) const
 { 
   Warning = "";
@@ -2026,6 +2109,29 @@ Parameter &Parameter::setCurrentDate( void )
 {
   setDate( ::time( 0 ) );
 
+  return *this;
+}
+
+
+Parameter &Parameter::setDate( const Parameter &p )
+{
+  Warning = "";
+  if ( ! isDate() || ! p.isDate() ) {
+    Warning = "Parameter::setDate() -> '" + Ident + "' or '" + p.ident()
+      + "' is not of type date!";
+    return *this;
+  }
+
+  if ( Year.size() != p.Year.size() ||
+       ( Year.size() > 0 && p.Year.size() > 0 && 
+	 ( Year[0] != p.Year[0] || Month[0] != p.Month[0] || Day[0] != p.Day[0] ) ) )
+    Flags |= ChangedFlag;
+
+  Year = p.Year;
+  Month = p.Month;
+  Day = p.Day;
+  String = p.String;
+  
   return *this;
 }
 
@@ -2322,6 +2428,29 @@ Parameter &Parameter::setCurrentTime( void )
 {
   setTime( ::time( 0 ) );
 
+  return *this;
+}
+
+
+Parameter &Parameter::setTime( const Parameter &p )
+{
+  Warning = "";
+  if ( ! isTime() || ! p.isTime() ) {
+    Warning = "Parameter::setTime() -> '" + Ident + "' or '" + p.ident()
+      + "' is not of type time!";
+    return *this;
+  }
+
+  if ( Hour.size() != p.Hour.size() ||
+       ( Hour.size() > 0 && p.Hour.size() > 0 && 
+	 ( Hour[0] != p.Hour[0] || Minutes[0] != p.Minutes[0] || Seconds[0] != p.Seconds[0] ) ) )
+    Flags |= ChangedFlag;
+
+  Hour = p.Hour;
+  Minutes = p.Minutes;
+  Seconds = p.Seconds;
+  String = p.String;
+  
   return *this;
 }
 

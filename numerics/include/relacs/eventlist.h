@@ -646,18 +646,35 @@ public:
   void coincidenceRate( SampleDataD &rate,  SampleDataD &ratesd, 
 			const Kernel &kernel );
 
-    /*! Compute the event-triggered average \a ave of the trace \a trace
+    /*! Compute the event-triggered average (spike-triggerd average STA)
+        \a ave of the trace \a trace
         for all \a n events \a t_i between time \a tbegin and time \a tend seconds:
-	\f[ ave(t) = \frac{1}{n} \sum_{i=1}^n trace( t_i + t ) \f]. */
-  void average( double tbegin, double tend, const SampleDataD &trace,
-		SampleDataD &ave ) const;
-    /*! Compute the event-triggered average \a ave and its
+	\f[ ave(t) = \frac{1}{n} \sum_{i=1}^n trace( t_i + t ) \f].
+	The range of \a ave determines the time axis of the event-triggered average.
+        \return the number of events used for computing the event-triggered average. */
+  int average( double tbegin, double tend, const SampleDataD &trace,
+	       SampleDataD &ave ) const;
+    /*! Compute the event-triggered average \a ave (spike-triggerd average STA) and its
         standard deviation \a sd of the trace \a trace
         for all \a n events \a t_i between time \a tbegin and time \a tend seconds:
 	\f[ ave(t) = \frac{1}{n} \sum_{i=1}^n trace( t_i + t ) \f]
-	\f[ sd(t) = \sqrt{ \frac{1}{n} \sum_{i=1}^n \left( trace( t_i + t ) - ave(t)\right)^2} \f]. */
-  void average( double tbegin, double tend, const SampleDataD &trace,
-		SampleDataD &ave, SampleDataD &sd ) const;
+	\f[ sd(t) = \sqrt{ \frac{1}{n} \sum_{i=1}^n \left( trace( t_i + t ) - ave(t)\right)^2} \f].
+	The range of \a ave determines the time axis of the event-triggered average.
+        \return the number of events used for computing the event-triggered average. */
+  int average( double tbegin, double tend, const SampleDataD &trace,
+	       SampleDataD &ave, SampleDataD &sd ) const;
+    /*! Compute the event-triggered average \a ave (spike-triggerd average STA) and its
+        standard deviation \a sd of the trace \a trace
+        for all \a n events \a t_i between time \a tbegin and time \a tend seconds:
+	\f[ ave(t) = \frac{1}{n} \sum_{i=1}^n trace( t_i + t ) \f]
+	\f[ sd(t) = \sqrt{ \frac{1}{n} \sum_{i=1}^n \left( trace( t_i + t ) - ave(t)\right)^2} \f].
+	The range of \a ave determines the time axis of the event-triggered average.
+	In \a snippets all individual sections from \a trace that were used for computing
+	the event-triggered average are returned. \a snippets does not need to be initialized
+	in any way.
+        \return the number of events used for computing the event-triggered average. */
+  int average( double tbegin, double tend, const SampleDataD &trace,
+	       SampleDataD &ave, SampleDataD &sd, vector< SampleDataD > &snippets ) const;
 
     /*! Returns in \a psd the trial averaged powerspectrum density
         of the events between \a tbegin and \a tend.

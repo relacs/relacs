@@ -363,6 +363,11 @@ public:
         If the value of the parameter is changing 
 	then the changedFlag() is set. */
   Parameter &setText( const string &strg );
+    /*! Set value of text parameter to the one of \a p,
+        if \a this and \a p are both of type() Text.
+	If the value of the parameter is changing 
+	then the changedFlag() is set. */
+  Parameter &setText( const Parameter &p );
     /*! Add \a strg to values of text parameter.
         \a strg is also converted into a number.
         If \a clear is true then the current value of the parameter is
@@ -467,6 +472,11 @@ public:
   inline Parameter &setNumbers( const vector<double> &numbers,
 				const string &unit="" )
     { return setNumbers( numbers, -1.0, unit ); };
+    /*! Set number value, error, and unit to the ones of \a p,
+        if \a this and \a p are both of type() Number.
+        If the value of the parameter is changing 
+	then the changedFlag() is set. */
+  Parameter &setNumber( const Parameter &p );
     /*! Add \a number to the number values and their
         standard deviation to \a error (only if it is non negative).
         A text value is added according to the specified format.
@@ -514,6 +524,11 @@ public:
 	then the changedFlag() is set. */
   inline Parameter &setInteger( long number, const string &unit="" )
     { return setInteger( number, -1, unit ); };
+    /*! Set integer value, error, and unit to the ones of \a p,
+        if \a this and \a p are both of type() Integer.
+        If the value of the parameter is changing 
+	then the changedFlag() is set. */
+  Parameter &setInteger( const Parameter &p );
     /*! Add \a number and \a error to the integer values.
         The warning message is set if \a number is invalid.
         The ChangedFlag is not set, since the value is not changing. */
@@ -629,6 +644,11 @@ public:
         If the value of the parameter is changing 
 	then the changedFlag() is set. */
   Parameter &setBoolean( bool b );
+    /*! Set boolean value to the one of \a p,
+        if \a this and \a p are both of type() Boolean.
+        If the value of the parameter is changing 
+	then the changedFlag() is set. */
+  Parameter &setBoolean( const Parameter &p );
     /*! Returns the \a index-th default boolean value. */
   bool defaultBoolean( int index=0 ) const;
     /*! Set default boolean value to \a dflt. */
@@ -676,6 +696,11 @@ public:
         If the value of the parameter is changing 
 	then the changedFlag() is set. */
   Parameter &setCurrentDate( void );
+    /*! Set date value to the one of \a p,
+        if \a this and \a p are both of type() Date.
+        If the value of the parameter is changing 
+	then the changedFlag() is set. */
+  Parameter &setDate( const Parameter &p );
     /*! \return the \a index-th default year. 
         \sa defaultMonth(), defaultDay(), defaultText() */ 
   int defaultYear( int index=0 ) const;
@@ -742,6 +767,11 @@ public:
         If the value of the parameter is changing 
 	then the changedFlag() is set. */
   Parameter &setCurrentTime( void );
+    /*! Set time value to the one of \a p,
+        if \a this and \a p are both of type() Time.
+        If the value of the parameter is changing 
+	then the changedFlag() is set. */
+  Parameter &setTime( const Parameter &p );
     /*! \return the \a index-th default hour. 
         \sa defaultMinutes(), defaultSeconds(), defaultText() */ 
   int defaultHour( int index=0 ) const;

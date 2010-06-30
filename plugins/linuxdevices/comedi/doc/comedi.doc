@@ -412,6 +412,7 @@ section of the kernel configuration. Either recompile your kernel with the
 $ cp /lib/modules/`uname -r`/rtai/Module.symvers /usr/local/src/comedi/comedi
 $ make clean
 $ make && make install
+$ depmod -a
 $ cp /usr/local/src/comedi/comedi/Module.symvers /lib/modules/`uname -r`/comedi
 \endcode
 -# Then follow the instructions above for installing (if not already done, this is independent of the kernel used)

@@ -3243,8 +3243,8 @@ double EventData::vectorPhase( double tbegin, double tend, double period ) const
 }
 
 
-void EventData::average( double tbegin, double tend, const SampleDataD &trace,
-			 SampleDataD &ave ) const
+int EventData::average( double tbegin, double tend, const SampleDataD &trace,
+			SampleDataD &ave ) const
 {
   ave = 0.0;
 
@@ -3264,19 +3264,20 @@ void EventData::average( double tbegin, double tend, const SampleDataD &trace,
   long p = previous( tend );
 
   if ( p <= n || p < 0 || tend <= tbegin )
-    return;
+    return 0;
 
   int c = 0;
   for ( int k=n; k<=p; k++ ) {
     c++;
     for ( int j=0; j<ave.size(); j++ )
       ave[j] += ( trace[(*this)[k] + ave.pos(j)] - ave[j] ) / c;
-  }  
+  }
+  return c;
 }
 
 
-void EventData::average( double tbegin, double tend, const SampleDataD &trace,
-			 SampleDataD &ave, SampleDataD &sd ) const
+int EventData::average( double tbegin, double tend, const SampleDataD &trace,
+			SampleDataD &ave, SampleDataD &sd ) const
 {
   ave = 0.0;
   sd = ave;
@@ -3297,7 +3298,7 @@ void EventData::average( double tbegin, double tend, const SampleDataD &trace,
   long p = previous( tend );
 
   if ( p <= n || p < 0 || tend <= tbegin )
-    return;
+    return 0;
 
   int c = 0;
   for ( int k=n; k<=p; k++ ) {
@@ -3316,6 +3317,59 @@ void EventData::average( double tbegin, double tend, const SampleDataD &trace,
   }  
   for ( int j=0; j<sd.size(); j++ )
     sd[j] = ::sqrt( sd[j] );
+  return c;
+}
+
+
+int EventData::average( double tbegin, double tend, const SampleDataD &trace,
+			SampleDataD &ave, SampleDataD &sd,
+			vector< SampleDataD > &snippets ) const
+{
+  ave = 0.0;
+  sd = ave;
+  snippets.clear();
+
+  // adjust range to trace:
+  if ( trace.rangeFront() > tbegin )
+    tbegin = trace.rangeFront();
+  if ( trace.rangeBack() < tend )
+    tend = trace.rangeBack();
+
+  // adjust range to ave:
+  if ( ave.rangeFront() < 0.0 )
+    tbegin -= ave.rangeFront();
+  if ( ave.rangeBack() > 0.0 )
+    tend -= ave.rangeBack();
+
+  long n = next( tbegin );
+  long p = previous( tend );
+
+  if ( p <= n || p < 0 || tend <= tbegin )
+    return 0;
+
+  snippets.reserve( p-n+1 );
+  int c = 0;
+  for ( int k=n; k<=p; k++ ) {
+    c++;
+    snippets.push_back( SampleDataD( ave.range() ) );
+    for ( int j=0; j<ave.size(); j++ ) {
+      double v = trace[(*this)[k] + ave.pos(j)];
+      snippets.back()[j] = v;
+      ave[j] += ( v - ave[j] ) / c;
+    }
+  }  
+
+  c = 0;
+  for ( int k=n; k<=p; k++ ) {
+    c++;
+    for ( int j=0; j<sd.size(); j++ ) {
+      double s = trace[(*this)[k] + ave.pos(j)] - ave[j];
+      sd[j] += ( s*s - sd[j] ) / c;
+    }
+  }  
+  for ( int j=0; j<sd.size(); j++ )
+    sd[j] = ::sqrt( sd[j] );
+  return c;
 }
 
 

@@ -107,7 +107,9 @@ private:
   // parameter:
   double SigStdev;
   double Pause;
+  bool UseContrast;
   double Contrast;
+  double Amplitude;
   bool AM;
   int Repeats;
   double RateDeltaT;
@@ -125,6 +127,7 @@ private:
   Str File;
   string LocalEODUnit;
   vector< MapD > EODTransAmpl;
+  vector< SampleDataF > EFieldAmpl;
   EventList Spikes[MaxSpikeTraces];
   SampleDataD SpikeRate[MaxSpikeTraces];
   int Trials[MaxSpikeTraces];
@@ -141,6 +144,7 @@ private:
   TableKey SpikesKey;
   TableKey NerveKey;
   TableKey AmplKey;
+  TableKey EFieldKey;
   
   MultiPlot P;
 

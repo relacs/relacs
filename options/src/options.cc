@@ -190,7 +190,7 @@ Parameter *Options::assign( const string &ident, const string &value )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::assign( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::assign( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -214,7 +214,7 @@ const Parameter &Options::operator[]( int i ) const
 
   Warning = "index " + Str( i ) + " does not exist!";
 #ifndef NDEBUG
-  cerr << "!warning in Options::operator[" << i << "] const -> " << Warning << endl;
+  cerr << "!warning in Options::operator[" << i << "] const -> " << Warning << '\n';
 #endif
   Dummy = Parameter();
   return Dummy;
@@ -230,7 +230,7 @@ Parameter &Options::operator[]( int i )
 
   Warning = "index " + Str( i ) + " does not exist!";
 #ifndef NDEBUG
-  cerr << "!warning in Options::operator[" << i << "] -> " << Warning << endl;
+  cerr << "!warning in Options::operator[" << i << "] -> " << Warning << '\n';
 #endif
   Dummy = Parameter();
   return Dummy;
@@ -581,7 +581,7 @@ Str Options::request( const string &ident ) const
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::request( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::request( " << ident << " ) -> " << Warning << '\n';
 #endif
     return s;
   }
@@ -601,7 +601,7 @@ Parameter &Options::setRequest( const string &ident, const string &request )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setRequest( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setRequest( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
@@ -616,7 +616,7 @@ Parameter::Type Options::type( const string &ident ) const
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::type( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::type( " << ident << " ) -> " << Warning << '\n';
 #endif
     return t;
   }
@@ -636,7 +636,7 @@ Parameter &Options::setType( const string &ident, Parameter::Type type )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setType( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setType( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
@@ -651,7 +651,7 @@ int Options::flags( const string &ident ) const
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::flags( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::flags( " << ident << " ) -> " << Warning << '\n';
 #endif
     return m;
   }
@@ -671,7 +671,7 @@ Parameter &Options::setFlags( const string &ident, int flags )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setFlags( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setFlags( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
@@ -689,7 +689,7 @@ Parameter &Options::addFlags( const string &ident, int flags )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::addFlags( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::addFlags( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
@@ -707,7 +707,7 @@ Parameter &Options::delFlags( const string &ident, int flags )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::delFlags( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::delFlags( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
@@ -725,7 +725,7 @@ Parameter &Options::clearFlags( const string &ident )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::clearFlags( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::clearFlags( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
@@ -742,7 +742,7 @@ bool Options::changed( const string &ident )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::changed( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::changed( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
   return false;
@@ -757,7 +757,7 @@ int Options::style( const string &ident ) const
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::style( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::style( " << ident << " ) -> " << Warning << '\n';
 #endif
     return m;
   }
@@ -777,7 +777,7 @@ Parameter &Options::setStyle( const string &ident, int style )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setStyle( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setStyle( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
@@ -795,7 +795,7 @@ Parameter &Options::addStyle( const string &ident, int style )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::addStyle( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::addStyle( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
@@ -813,7 +813,7 @@ Parameter &Options::delStyle( const string &ident, int style )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::delStyle( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::delStyle( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
@@ -828,7 +828,7 @@ int Options::size( const string &ident ) const
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::size( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::size( " << ident << " ) -> " << Warning << '\n';
 #endif
     return s;
   }
@@ -845,7 +845,7 @@ Str Options::format( const string &ident ) const
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::format( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::format( " << ident << " ) -> " << Warning << '\n';
 #endif
     return s;
   }
@@ -865,7 +865,7 @@ Parameter &Options::setFormat( const string &ident, int width, int prec, char fm
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setFormat( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setFormat( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
@@ -883,7 +883,7 @@ Parameter &Options::setFormat( const string &ident, const string &format )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setFormat( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setFormat( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
@@ -898,7 +898,7 @@ int Options::formatWidth( const string &ident ) const
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::formatWidth( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::formatWidth( " << ident << " ) -> " << Warning << '\n';
 #endif
     return w;
   }
@@ -952,7 +952,7 @@ Parameter &Options::addText( const string &ident, const string &request,
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::addText( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::addText( " << ident << " ) -> " << Warning << '\n';
 #endif
   return pp;
 }
@@ -970,7 +970,7 @@ Parameter &Options::insertText( const string &ident, const string &atident,
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::insertText( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::insertText( " << ident << " ) -> " << Warning << '\n';
 #endif
   return pp;
 }
@@ -985,7 +985,7 @@ Str Options::text( const string &ident, int index, const string &dflt,
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::text( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::text( " << ident << " ) -> " << Warning << '\n';
 #endif
     return s;
   }
@@ -1005,7 +1005,7 @@ Parameter &Options::setText( const string &ident, const string &strg )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setText( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setText( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -1031,7 +1031,33 @@ Parameter &Options::pushText( const string &ident, const string &strg )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::pushText( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::pushText( " << ident << " ) -> " << Warning << '\n';
+  }
+#endif
+
+  // notify the change:
+  if ( CallNotify && ! Notified ) {
+    Notified = true;
+    notify();
+    Notified = false;
+  }
+
+  return *pp;
+}
+
+
+Parameter &Options::setText( const string &ident, const Parameter &p )
+{
+  iterator pp = find( ident );
+  // set value:
+  if ( pp != end() ) {
+    (*pp).setText( p );
+    Warning += (*pp).warning();
+  }
+#ifndef NDEBUG
+  if ( ! Warning.empty() ) {
+    // error?
+    cerr << "!warning in Options::setText( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -1055,7 +1081,7 @@ Str Options::defaultText( const string &ident,
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::defaultText( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::defaultText( " << ident << " ) -> " << Warning << '\n';
 #endif
     return s;
   }
@@ -1075,7 +1101,7 @@ Parameter &Options::setDefaultText( const string &ident, const string &dflt )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setDefaultText( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setDefaultText( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
@@ -1112,7 +1138,7 @@ Parameter &Options::selectText( const string &ident, const string &strg,
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::selectText( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::selectText( " << ident << " ) -> " << Warning << '\n';
 #endif
 
     // notify the change:
@@ -1139,7 +1165,7 @@ int Options::index( const string &ident ) const
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::index( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::index( " << ident << " ) -> " << Warning << '\n';
 #endif
     return inx;
   }
@@ -1156,7 +1182,7 @@ int Options::index( const string &ident, const string &strg ) const
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::index( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::index( " << ident << " ) -> " << Warning << '\n';
 #endif
     return inx;
   }
@@ -1180,7 +1206,7 @@ Parameter &Options::addNumber( const string &ident, const string &request,
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::addNumber( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::addNumber( " << ident << " ) -> " << Warning << '\n';
 #endif
   return pp;
 }
@@ -1201,7 +1227,7 @@ Parameter &Options::insertNumber( const string &ident, const string &atident,
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::insertNumber( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::insertNumber( " << ident << " ) -> " << Warning << '\n';
 #endif
   return pp;
 }
@@ -1216,7 +1242,7 @@ double Options::number( const string &ident, double dflt,
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::number( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::number( " << ident << " ) -> " << Warning << '\n';
 #endif
     return v;
   }
@@ -1233,7 +1259,7 @@ double Options::error( const string &ident, const string &unit, int index ) cons
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::error( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::error( " << ident << " ) -> " << Warning << '\n';
 #endif
     return v;
   }
@@ -1254,7 +1280,7 @@ Parameter &Options::setNumber( const string &ident, double number,
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setNumber( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setNumber( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -1281,7 +1307,33 @@ Parameter &Options::pushNumber( const string &ident, double number,
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::pushNumber( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::pushNumber( " << ident << " ) -> " << Warning << '\n';
+  }
+#endif
+
+  // notify the change:
+  if ( CallNotify && ! Notified ) {
+    Notified = true;
+    notify();
+    Notified = false;
+  }
+
+  return *pp;
+}
+
+
+Parameter &Options::setNumber( const string &ident, const Parameter &p )
+{
+  iterator pp = find( ident );
+  // set value:
+  if ( pp != end() ) {
+    (*pp).setNumber( p );
+    Warning += (*pp).warning();
+  }
+#ifndef NDEBUG
+  if ( ! Warning.empty() ) {
+    // error?
+    cerr << "!warning in Options::setNumber( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -1304,7 +1356,7 @@ double Options::defaultNumber( const string &ident, const string &unit ) const
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::defaultNumber( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::defaultNumber( " << ident << " ) -> " << Warning << '\n';
 #endif
     return v;
   }
@@ -1325,7 +1377,7 @@ Parameter &Options::setDefaultNumber( const string &ident, double dflt,
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setDefaultNumber( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setDefaultNumber( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
@@ -1340,7 +1392,7 @@ double Options::minimum( const string &ident, const string &unit ) const
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::minimum( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::minimum( " << ident << " ) -> " << Warning << '\n';
 #endif
     return v;
   }
@@ -1357,7 +1409,7 @@ double Options::maximum( const string &ident, const string &unit ) const
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::maximum( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::maximum( " << ident << " ) -> " << Warning << '\n';
 #endif
     return v;
   }
@@ -1374,7 +1426,7 @@ double Options::step( const string &ident, const string &unit ) const
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::step( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::step( " << ident << " ) -> " << Warning << '\n';
 #endif
     return v;
   }
@@ -1394,7 +1446,7 @@ Parameter &Options::setStep( const string &ident, double step )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setStep( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setStep( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
@@ -1413,7 +1465,7 @@ Parameter &Options::setMinMax( const string &ident, double minimum,
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setMinMax( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setMinMax( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
@@ -1428,7 +1480,7 @@ Str Options::unit( const string &ident ) const
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::unit( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::unit( " << ident << " ) -> " << Warning << '\n';
 #endif
     return s;
   }
@@ -1445,7 +1497,7 @@ Str Options::outUnit( const string &ident ) const
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::outUnit( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::outUnit( " << ident << " ) -> " << Warning << '\n';
 #endif
     return s;
   }
@@ -1466,7 +1518,7 @@ Parameter &Options::setUnit( const string &ident, const string &internunit,
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setUnit( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setUnit( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
@@ -1487,7 +1539,7 @@ Parameter &Options::addInteger( const string &ident, const string &request,
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::addInteger( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::addInteger( " << ident << " ) -> " << Warning << '\n';
 #endif
   return pp;
 }
@@ -1508,7 +1560,7 @@ Parameter &Options::insertInteger( const string &ident, const string &atident,
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::insertInteger( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::insertInteger( " << ident << " ) -> " << Warning << '\n';
 #endif
   return pp;
 }
@@ -1523,7 +1575,7 @@ long Options::integer( const string &ident,
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::integer( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::integer( " << ident << " ) -> " << Warning << '\n';
 #endif
     return i;
   }
@@ -1544,7 +1596,7 @@ Parameter &Options::setInteger( const string &ident, long number, long error,
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setInteger( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setInteger( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -1571,7 +1623,33 @@ Parameter &Options::pushInteger( const string &ident, long number, long error,
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::pushInteger( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::pushInteger( " << ident << " ) -> " << Warning << '\n';
+  }
+#endif
+
+  // notify the change:
+  if ( CallNotify && ! Notified ) {
+    Notified = true;
+    notify();
+    Notified = false;
+  }
+
+  return *pp;
+}
+
+
+Parameter &Options::setInteger( const string &ident, const Parameter &p )
+{
+  iterator pp = find( ident );
+  // set value:
+  if ( pp != end() ) {
+    (*pp).setInteger( p );
+    Warning += (*pp).warning();
+  }
+#ifndef NDEBUG
+  if ( ! Warning.empty() ) {
+    // error?
+    cerr << "!warning in Options::setInteger( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -1594,7 +1672,7 @@ long Options::defaultInteger( const string &ident, const string &unit ) const
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::defaultInteger( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::defaultInteger( " << ident << " ) -> " << Warning << '\n';
 #endif
     return i;
   }
@@ -1615,7 +1693,7 @@ Parameter &Options::setDefaultInteger( const string &ident, long dflt,
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setDefaultInteger( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setDefaultInteger( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
@@ -1634,7 +1712,7 @@ Parameter &Options::setMinMax( const string &ident, long minimum,
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setMinMax( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setMinMax( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
@@ -1652,7 +1730,7 @@ Parameter &Options::addBoolean( const string &ident, const string &request,
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::addBoolean( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::addBoolean( " << ident << " ) -> " << Warning << '\n';
 #endif
   return pp;
 }
@@ -1669,7 +1747,7 @@ Parameter &Options::insertBoolean( const string &ident, const string &atident,
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::insertBoolean( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::insertBoolean( " << ident << " ) -> " << Warning << '\n';
 #endif
   return pp;
 }
@@ -1683,7 +1761,7 @@ bool Options::boolean( const string &ident, bool dflt, int index ) const
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::boolean( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::boolean( " << ident << " ) -> " << Warning << '\n';
 #endif
     return b;
   }
@@ -1703,7 +1781,33 @@ Parameter &Options::setBoolean( const string &ident, bool b )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setBoolean( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setBoolean( " << ident << " ) -> " << Warning << '\n';
+  }
+#endif
+
+  // notify the change:
+  if ( CallNotify && ! Notified ) {
+    Notified = true;
+    notify();
+    Notified = false;
+  }
+
+  return *pp;
+}
+
+
+Parameter &Options::setBoolean( const string &ident, const Parameter &p )
+{
+  iterator pp = find( ident );
+  // set value:
+  if ( pp != end() ) {
+    (*pp).setBoolean( p );
+    Warning += (*pp).warning();
+  }
+#ifndef NDEBUG
+  if ( ! Warning.empty() ) {
+    // error?
+    cerr << "!warning in Options::setBoolean( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -1726,7 +1830,7 @@ bool Options::defaultBoolean( const string &ident ) const
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::defaultBoolean( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::defaultBoolean( " << ident << " ) -> " << Warning << '\n';
 #endif
     return b;
   }
@@ -1746,7 +1850,7 @@ Parameter &Options::setDefaultBoolean( const string &ident, bool dflt )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setDefaultBoolean( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setDefaultBoolean( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
@@ -1766,7 +1870,7 @@ Parameter &Options::addDate( const string &ident, const string &request,
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::addDate( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::addDate( " << ident << " ) -> " << Warning << '\n';
 #endif
   return pp;
 }
@@ -1786,7 +1890,7 @@ Parameter &Options::insertDate( const string &ident, const string &atident,
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::insertDate( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::insertDate( " << ident << " ) -> " << Warning << '\n';
 #endif
   return pp;
 }
@@ -1804,7 +1908,7 @@ const Parameter &Options::date( const string &ident, int index,
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::date( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::date( " << ident << " ) -> " << Warning << '\n';
 #endif
     return *pp;
   }
@@ -1827,7 +1931,7 @@ Parameter &Options::setDate( const string &ident,
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setDate( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setDate( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -1853,7 +1957,7 @@ Parameter &Options::setDate( const string &ident, const string &date )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setDate( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setDate( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -1879,7 +1983,7 @@ Parameter &Options::setDate( const string &ident, const struct tm &date )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setDate( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setDate( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -1905,7 +2009,7 @@ Parameter &Options::setDate( const string &ident, const time_t &time )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setDate( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setDate( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -1931,7 +2035,33 @@ Parameter &Options::setCurrentDate( const string &ident )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setCurrentDate( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setCurrentDate( " << ident << " ) -> " << Warning << '\n';
+  }
+#endif
+
+  // notify the change:
+  if ( CallNotify && ! Notified ) {
+    Notified = true;
+    notify();
+    Notified = false;
+  }
+
+  return *pp;
+}
+
+
+Parameter &Options::setDate( const string &ident, const Parameter &p )
+{
+  iterator pp = find( ident );
+  // set value:
+  if ( pp != end() ) {
+    (*pp).setDate( p );
+    Warning += (*pp).warning();
+  }
+#ifndef NDEBUG
+  if ( ! Warning.empty() ) {
+    // error?
+    cerr << "!warning in Options::setDate( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -1955,7 +2085,7 @@ const Parameter &Options::defaultDate( const string &ident, int index,
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::defaultDate( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::defaultDate( " << ident << " ) -> " << Warning << '\n';
 #endif
     return *pp;
   }
@@ -1978,7 +2108,7 @@ Parameter &Options::setDefaultDate( const string &ident,
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setDefaultDate( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setDefaultDate( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
@@ -1998,7 +2128,7 @@ Parameter &Options::addTime( const string &ident, const string &request,
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::addTime( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::addTime( " << ident << " ) -> " << Warning << '\n';
 #endif
   return pp;
 }
@@ -2018,7 +2148,7 @@ Parameter &Options::insertTime( const string &ident, const string &atident,
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::insertTime( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::insertTime( " << ident << " ) -> " << Warning << '\n';
 #endif
   return pp;
 }
@@ -2036,7 +2166,7 @@ const Parameter &Options::time( const string &ident, int index,
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::time( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::time( " << ident << " ) -> " << Warning << '\n';
 #endif
     return *pp;
   }
@@ -2059,7 +2189,7 @@ Parameter &Options::setTime( const string &ident,
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setTime( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setTime( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -2085,7 +2215,7 @@ Parameter &Options::setTime( const string &ident, const string &time )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setTime( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setTime( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -2111,7 +2241,7 @@ Parameter &Options::setTime( const string &ident, const struct tm &time )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setTime( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setTime( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -2137,7 +2267,7 @@ Parameter &Options::setTime( const string &ident, const time_t &time )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setTime( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setTime( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -2163,7 +2293,33 @@ Parameter &Options::setCurrentTime( const string &ident )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setCurrentTime( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setCurrentTime( " << ident << " ) -> " << Warning << '\n';
+  }
+#endif
+
+  // notify the change:
+  if ( CallNotify && ! Notified ) {
+    Notified = true;
+    notify();
+    Notified = false;
+  }
+
+  return *pp;
+}
+
+
+Parameter &Options::setTime( const string &ident, const Parameter &p )
+{
+  iterator pp = find( ident );
+  // set value:
+  if ( pp != end() ) {
+    (*pp).setTime( p );
+    Warning += (*pp).warning();
+  }
+#ifndef NDEBUG
+  if ( ! Warning.empty() ) {
+    // error?
+    cerr << "!warning in Options::setTime( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -2187,7 +2343,7 @@ const Parameter &Options::defaultTime( const string &ident, int index,
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::defaultTime( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::defaultTime( " << ident << " ) -> " << Warning << '\n';
 #endif
     return *pp;
   }
@@ -2210,7 +2366,7 @@ Parameter &Options::setDefaultTime( const string &ident,
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setDefaultTime( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setDefaultTime( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
@@ -2227,7 +2383,7 @@ Parameter &Options::addLabel( const string &ident, int flags, int style )
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::addLabel( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::addLabel( " << ident << " ) -> " << Warning << '\n';
 #endif
   return pp;
 }
@@ -2244,7 +2400,7 @@ Parameter &Options::insertLabel( const string &ident, const string &atident,
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::insertLabel( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::insertLabel( " << ident << " ) -> " << Warning << '\n';
 #endif
   return pp;
 }
@@ -2258,7 +2414,7 @@ Str Options::label( const string &ident ) const
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::label( " << ident << " ) -> " << Warning << endl;
+      cerr << "!warning in Options::label( " << ident << " ) -> " << Warning << '\n';
 #endif
     return s;
   }
@@ -2278,7 +2434,7 @@ Parameter &Options::setLabel( const string &ident, const string &label )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setLabel( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setLabel( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -2303,7 +2459,7 @@ Parameter &Options::addSeparator( int flags, int style )
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::addSeparator() -> " << Warning << endl;
+    cerr << "!warning in Options::addSeparator() -> " << Warning << '\n';
 #endif
   return pp;
 }
@@ -2319,7 +2475,7 @@ Parameter &Options::insertSeparator( const string &atident, int flags, int style
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::insertSeparator() -> " << Warning << endl;
+    cerr << "!warning in Options::insertSeparator() -> " << Warning << '\n';
 #endif
   return pp;
 }
@@ -2336,7 +2492,7 @@ Parameter &Options::setDefault( const string &ident )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setDefault( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setDefault( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
@@ -2367,7 +2523,7 @@ Parameter &Options::setToDefault( const string &ident )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setToDefault( " << ident << " ) -> " << Warning << endl;
+    cerr << "!warning in Options::setToDefault( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
@@ -2928,7 +3084,7 @@ Options &Options::read( const string &opttxt, int flag,
 
 #ifndef NDEBUG
   if ( ! Warning.empty() )
-    cerr << "!warning in Options::read() -> " << Warning << endl;
+    cerr << "!warning in Options::read() -> " << Warning << '\n';
 #endif
 
   // notify the change:
@@ -3164,7 +3320,7 @@ Options &Options::readAppend( const StrQueue &sq, bool appendseparator,
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::readAppend( StrQueue ) -> " << Warning << endl;
+    cerr << "!warning in Options::readAppend( StrQueue ) -> " << Warning << '\n';
   }
 #endif
 
@@ -3195,7 +3351,7 @@ Options &Options::load( const Str &opttxt, const string &assignment,
 
 #ifndef NDEBUG
   if ( ! Warning.empty() )
-    cerr << "!warning in Options::load() -> " << Warning << endl;
+    cerr << "!warning in Options::load() -> " << Warning << '\n';
 #endif
 
   return *this;
@@ -3259,7 +3415,7 @@ Options &Options::load( const StrQueue &sq, const string &assignment )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::load( StrQueue ) -> " << Warning << endl;
+    cerr << "!warning in Options::load( StrQueue ) -> " << Warning << '\n';
   }
 #endif
   return *this;

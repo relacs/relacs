@@ -1442,8 +1442,8 @@ void EventList::coincidenceRate( SampleDataD &rate,  SampleDataD &ratesd,
 }
 
 
-void EventList::average( double tbegin, double tend, const SampleDataD &trace,
-			 SampleDataD &ave ) const
+int EventList::average( double tbegin, double tend, const SampleDataD &trace,
+			SampleDataD &ave ) const
 {
   ave = 0.0;
 
@@ -1460,7 +1460,7 @@ void EventList::average( double tbegin, double tend, const SampleDataD &trace,
     tend -= ave.rangeBack();
 
   if ( tend <= tbegin )
-    return;
+    return 0;
 
   int c = 0;
   for ( const_iterator i = begin(); i != end(); ++i ) {
@@ -1475,11 +1475,12 @@ void EventList::average( double tbegin, double tend, const SampleDataD &trace,
 	ave[j] += ( trace[(*(*i))[k] + ave.pos(j)] - ave[j] ) / c;
     }  
   }
+  return c;
 }
 
 
-void EventList::average( double tbegin, double tend, const SampleDataD &trace,
-			 SampleDataD &ave, SampleDataD &sd ) const
+int EventList::average( double tbegin, double tend, const SampleDataD &trace,
+			SampleDataD &ave, SampleDataD &sd ) const
 {
   ave = 0.0;
   sd = ave;
@@ -1497,7 +1498,7 @@ void EventList::average( double tbegin, double tend, const SampleDataD &trace,
     tend -= ave.rangeBack();
 
   if ( tend <= tbegin )
-    return;
+    return 0;
 
   int c = 0;
   for ( const_iterator i = begin(); i != end(); ++i ) {
@@ -1531,6 +1532,72 @@ void EventList::average( double tbegin, double tend, const SampleDataD &trace,
 
   for ( int j=0; j<sd.size(); j++ )
     sd[j] = ::sqrt( sd[j] );
+
+  return c;
+}
+
+
+int EventList::average( double tbegin, double tend, const SampleDataD &trace,
+			SampleDataD &ave, SampleDataD &sd,
+			vector< SampleDataD > &snippets ) const
+{
+  ave = 0.0;
+  sd = ave;
+  snippets.clear();
+
+  // adjust range to trace:
+  if ( trace.rangeFront() > tbegin )
+    tbegin = trace.rangeFront();
+  if ( trace.rangeBack() < tend )
+    tend = trace.rangeBack();
+
+  // adjust range to ave:
+  if ( ave.rangeFront() < 0.0 )
+    tbegin -= ave.rangeFront();
+  if ( ave.rangeBack() > 0.0 )
+    tend -= ave.rangeBack();
+
+  if ( tend <= tbegin )
+    return 0;
+
+  int c = 0;
+  for ( const_iterator i = begin(); i != end(); ++i ) {
+    long n = (*i)->next( tbegin );
+    long p = (*i)->previous( tend );
+    if ( p <= n || p < 0 )
+      continue;
+    
+    for ( int k=n; k<=p; k++ ) {
+      c++;
+      for ( int j=0; j<ave.size(); j++ )
+	ave[j] += ( trace[(*(*i))[k] + ave.pos(j)] - ave[j] ) / c;
+    }
+  }
+
+  snippets.reserve( c );
+  c = 0;
+  for ( const_iterator i = begin(); i != end(); ++i ) {
+    long n = (*i)->next( tbegin );
+    long p = (*i)->previous( tend );
+    if ( p <= n || p < 0 )
+      continue;
+    
+    for ( int k=n; k<=p; k++ ) {
+      c++;
+      snippets.push_back( SampleDataD( ave.range() ) );
+      for ( int j=0; j<sd.size(); j++ ) {
+	double v = trace[(*(*i))[k] + ave.pos(j)];
+	snippets.back()[j] = v;
+	double s = v - ave[j];
+	sd[j] += ( s*s - sd[j] ) / c;
+      }
+    }
+  }
+
+  for ( int j=0; j<sd.size(); j++ )
+    sd[j] = ::sqrt( sd[j] );
+
+  return c;
 }
 
 

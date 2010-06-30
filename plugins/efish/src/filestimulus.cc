@@ -34,7 +34,9 @@ FileStimulus::FileStimulus( void )
   // parameter:
   SigStdev = 1.0;
   Pause = 1.0;
+  UseContrast = true;
   Contrast = 0.2;
+  Amplitude = 1.0;
   AM = true;
   Repeats = 6;
   RateDeltaT = 0.01;
@@ -46,7 +48,9 @@ FileStimulus::FileStimulus( void )
   addText( "file", "Stimulus file", "" ).setStyle( OptWidget::BrowseExisting );
   addNumber( "sigstdev", "Standard deviation of signal", SigStdev, 0.01, 1.0, 0.05 );
   addNumber( "pause", "Pause between signals", Pause, 0.0, 1000.0, 0.01, "seconds", "ms" );
-  addNumber( "contrast", "Contrast", Contrast, 0.01, 1.0, 0.05, "", "%" );
+  addSelection( "amplsel", "Stimulus amplitude", "contrast|absolute" );
+  addNumber( "contrast", "Contrast", Contrast, 0.01, 1.0, 0.05, "", "%" ).setActivation( "amplsel", "contrast" );
+  addNumber( "amplitude", "Amplitude", Amplitude, 0.1, 1000.0, 0.1, "mV/cm" ).setActivation( "amplsel", "absolute" );
   addBoolean( "am", "Amplitude modulation", AM );
   addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 );
   addLabel( "Analysis" ).setStyle( OptWidget::Bold );
@@ -61,6 +65,7 @@ FileStimulus::FileStimulus( void )
   Intensity = 0.0;
   Count = 0;
   EODTransAmpl.clear();
+  EFieldAmpl.clear();
   for ( int k=0; k<MaxSpikeTraces; k++ ) {
     Spikes[k].clear();
     Trials[k] = 0; 
@@ -87,9 +92,9 @@ FileStimulus::FileStimulus( void )
   // tablekeys:
   AmplKey.addNumber( "time", "ms", "%9.2f", 3 );
   AmplKey.addNumber( "ampl", LocalEODUnit, "%5.3f", 3 );
-  for ( int k=0; k<MaxSpikeTraces; k++ )
-    if ( SpikeEvents[k] >= 0 )
-      AmplKey.addNumber( "spikes"+Str( k+1 ), "ms", "%9.2f", 2 );
+
+  EFieldKey.addNumber( "time", "ms", "%9.2f", 3 );
+  EFieldKey.addNumber( "efield", "mV", "%7.1f", 3 );
 
   SpikesKey.addNumber( "time", "ms", "%9.2f" );
 
@@ -115,7 +120,9 @@ int FileStimulus::main( void )
   SigStdev = number( "sigstdev" );
   Pause = number( "pause" );
   Repeats = integer( "repeats" );
+  UseContrast = ( index( "amplsel" ) == 0 );
   Contrast = number( "contrast" );
+  Amplitude = number( "amplitude" );
   AM = boolean( "am" );
   RateDeltaT = number( "binwidth" );
   Before = number( "before" );
@@ -152,7 +159,10 @@ int FileStimulus::main( void )
 
   // data:
   Intensity = 0.0;
-  EODTransAmpl.reserve( Repeats>0 ? Repeats : 100 );
+  if ( UseContrast )
+    EODTransAmpl.reserve( Repeats>0 ? Repeats : 100 );
+  else
+    EFieldAmpl.reserve( Repeats>0 ? Repeats : 100 );
   for ( int k=0; k<MaxSpikeTraces; k++ ) {
     if ( SpikeEvents[k] >= 0 ) {
       Spikes[k].clear();
@@ -249,11 +259,18 @@ int FileStimulus::main( void )
   // adjust transdermal EOD:
   double val2 = trace( LocalEODTrace[0] ).maxAbs( trace( LocalEODTrace[0] ).currentTime()-0.1,
 						  trace( LocalEODTrace[0] ).currentTime() );
-  if ( val2 > 0.0 )
-    adjustGain( trace( LocalEODTrace[0] ), 1.05 * ( 1.0 + Contrast / SigStdev ) * val2 );
+  if ( val2 > 0.0 ) {
+    if ( UseContrast )
+      adjustGain( trace( LocalEODTrace[0] ), ( 1.0 + Contrast / SigStdev ) * val2 );
+    else
+      adjustGain( trace( LocalEODTrace[0] ), val2 + Amplitude / SigStdev );
+  }
 
   // stimulus intensity:
-  Intensity = Contrast * FishAmplitude * 0.5 / SigStdev;
+  if ( UseContrast )
+    Intensity = Contrast * FishAmplitude * 0.5 / SigStdev;
+  else
+    Intensity = Amplitude / SigStdev;
   signal.setIntensity( Intensity );
   detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", 0.5*signal.intensity() );
 
@@ -285,7 +302,10 @@ int FileStimulus::main( void )
     
     // message: 
     Str s = "Stimulus: <b>" + filename + "</b>";
-    s += "  Contrast: <b>" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%</b>";
+    if ( UseContrast )
+      s += "  Contrast: <b>" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%</b>";
+    else
+      s += "  Amplitude: <b>" + Str( Amplitude, 0, 3, 'g' ) + "mV/cm</b>";
     s += "  Loop: <b>" + Str( Count+1 ) + "</b>";
     message( s );
     
@@ -390,6 +410,7 @@ void FileStimulus::stop( void )
   P.clearPlots();
   P.unlock();
   EODTransAmpl.clear();
+  EFieldAmpl.clear();
   for ( int k=0; k<MaxSpikeTraces; k++ ) {
     if ( SpikeEvents[k] >= 0 ) {
       Spikes[k].clear();
@@ -478,17 +499,34 @@ void FileStimulus::saveAmpl( void )
     Header.save( df, "# " );
     settings().save( df, "#   " );
     df << '\n';
-    AmplKey.setUnit( 1, LocalEODUnit );
-    AmplKey.saveKey( df, true, false, 1 );
+    if ( UseContrast ) {
+      AmplKey.setUnit( 1, LocalEODUnit );
+      AmplKey.saveKey( df, true, false, 1 );
+    }
+    else {
+      EFieldKey.setUnit( 1, trace( GlobalEFieldTrace ).unit() );
+      EFieldKey.saveKey( df, true, false, 1 );
+    }
   }
 
   // write data:
-  df << '\n';
-  df << "# trial: " << EODTransAmpl.size()-1 << '\n';
-  for ( int j=0; j<EODTransAmpl.back().size(); j++ ) {
-    AmplKey.save( df, 1000.0*EODTransAmpl.back().x(j), 0 );
-    AmplKey.save( df, EODTransAmpl.back().y(j), 1 );
+  if ( UseContrast ) {
     df << '\n';
+    df << "# trial: " << EODTransAmpl.size()-1 << '\n';
+    for ( int j=0; j<EODTransAmpl.back().size(); j++ ) {
+      AmplKey.save( df, 1000.0*EODTransAmpl.back().x(j), 0 );
+      AmplKey.save( df, EODTransAmpl.back().y(j), 1 );
+      df << '\n';
+    }
+  }
+  else {
+    df << '\n';
+    df << "# trial: " << EFieldAmpl.size()-1 << '\n';
+    for ( int j=0; j<EFieldAmpl.back().size(); j++ ) {
+      EFieldKey.save( df, 1000.0*EFieldAmpl.back().pos(j), 0 );
+      EFieldKey.save( df, EFieldAmpl.back()[j], 1 );
+      df << '\n';
+    }
   }
 }
 
@@ -546,9 +584,16 @@ void FileStimulus::plot( void )
   P.lock();
   // amplitude:
   P[0].clear();
-  for ( unsigned int i=0; i<EODTransAmpl.size()-1; i++ )
-    P[0].plot( EODTransAmpl[i], 1.0, Plot::DarkGreen, 2, Plot::Solid );
-  P[0].plot( EODTransAmpl.back(), 1.0, Plot::Green, 2, Plot::Solid );
+  if ( UseContrast ) {
+    for ( unsigned int i=0; i<EODTransAmpl.size()-1; i++ )
+      P[0].plot( EODTransAmpl[i], 1.0, Plot::DarkGreen, 2, Plot::Solid );
+    P[0].plot( EODTransAmpl.back(), 1.0, Plot::Green, 2, Plot::Solid );
+  }
+  else {
+    for ( unsigned int i=0; i<EFieldAmpl.size()-1; i++ )
+      P[0].plot( EFieldAmpl[i], 1.0, Plot::DarkGreen, 2, Plot::Solid );
+    P[0].plot( EFieldAmpl.back(), 1.0, Plot::Green, 2, Plot::Solid );
+  }
 
   // rate and spikes:
   int maxspikes = (int)rint( 20.0 / SpikeTraces );
@@ -637,12 +682,19 @@ void FileStimulus::analyze( void )
 			       0.1*Duration );
 
   // EOD transdermal amplitude:
-  EventSizeIterator pindex = localeod.begin( localeod.signalTime() );
-  EventSizeIterator plast = localeod.begin( localeod.signalTime() + Duration );
-  EODTransAmpl.push_back( MapD() );
-  EODTransAmpl.back().reserve( plast - pindex + 1 );
-  for ( ; pindex < plast; ++pindex )
-    EODTransAmpl.back().push( pindex.time() - localeod.signalTime(), *pindex ); 
+  if ( UseContrast ) {
+    EventSizeIterator pindex = localeod.begin( localeod.signalTime() );
+    EventSizeIterator plast = localeod.begin( localeod.signalTime() + Duration );
+    EODTransAmpl.push_back( MapD() );
+    EODTransAmpl.back().reserve( plast - pindex + 1 );
+    for ( ; pindex < plast; ++pindex )
+      EODTransAmpl.back().push( pindex.time() - localeod.signalTime(), *pindex ); 
+  }
+  else {
+    const InData &globalefield = trace( GlobalEFieldTrace );
+    EFieldAmpl.push_back( SampleDataF( 0.0, Duration, globalefield.stepsize() ) );
+    globalefield.copy( globalefield.signalTime(), EFieldAmpl.back() );
+  }
 
   // spikes:
   for ( int k=0; k<MaxSpikeTraces; k++ )
