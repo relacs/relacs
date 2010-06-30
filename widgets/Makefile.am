@@ -5,9 +5,9 @@ SUBDIRS = src $(EXAMPLES)
 
 EXTRA_DIST = \
     m4/ax_prog_doxygen.m4 \
-    m4/relacs_qt3.m4 \
+    m4/relacs_qt4.m4 \
     \
-    moc3.mk \
+    moc4.mk \
     doxygen.mk \
     \
     doc/Doxyfile \
