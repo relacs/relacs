@@ -20,7 +20,6 @@
 */
 
 #include <relacs/tablekey.h>
-#include <relacs/base/setoutput.h>
 #include <relacs/patchclamp/simple.h>
 using namespace relacs;
 
@@ -136,14 +135,6 @@ int Simple::main( void )
       // write header and key:
       Options header;
       header.addInteger( "index", totalRuns()-1 );
-      RePro *r = repro( "SetOutput" );
-      if ( r != 0 ) {
-	base::SetOutput *so = dynamic_cast<base::SetOutput*>( r );
-	if ( so != 0 && so->outTraces().size( 2 ) > 0 ) {
-	  header.addLabel( "model parameter:" );
-	  header.readAppend( so->outTraces(), 2 );
-	}
-      }
       header.addText( "session time", sessionTimeStr() ); 
       header.addLabel( "settings:" );
       header.save( df, "# " );

@@ -86,7 +86,7 @@ int EchoTest::main( void )
     }
 
     SampleDataF data( 0.0, responseDuration, trace( 0 ).stepsize() );
-    trace(0).copy( trace(0).signalTime(), data );
+    trace(0).copy( signalTime(), data );
     traceVector.push_back(data);
 
     if ( (int)traceVector.size()>lastTraces) {

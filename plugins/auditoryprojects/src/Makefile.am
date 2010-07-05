@@ -19,8 +19,6 @@ libauditoryprojectsspikeprecision_la_CPPFLAGS = \
     -I$(top_srcdir)/options/include \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
-    -I$(top_srcdir)/plugins/linuxdevices/nieseries/include \
-    -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/auditory/include \
@@ -56,8 +54,6 @@ libauditoryprojectsisoresponse_la_CPPFLAGS = \
     -I$(top_srcdir)/options/include \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
-    -I$(top_srcdir)/plugins/linuxdevices/nieseries/include \
-    -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/auditory/include \
@@ -93,8 +89,6 @@ libauditoryprojectsoneclick_la_CPPFLAGS = \
     -I$(top_srcdir)/options/include \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
-    -I$(top_srcdir)/plugins/linuxdevices/nieseries/include \
-    -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/auditory/include \

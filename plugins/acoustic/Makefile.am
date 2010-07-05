@@ -2,6 +2,8 @@ SUBDIRS = src
 
 EXTRA_DIST = doc/acoustic.doc
 
+DISTCLEANFILES = relacs.log relacs.log.old
+
 pkglibdir = $(libdir)/relacs
 pkgincludedir = $(includedir)/relacs
 pkgdatadir=$(datadir)/relacs

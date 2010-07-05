@@ -1,23 +1,22 @@
-- CLEANFILES = relacs.log relacs.log.old in all plugins Makefile.am's
-- configure.ac: check dependencies of plugins
-
 Dead locks:
 - do we need to take care about blocking lockMutex() in accept(), reset(), etc.?
 - Plot, MultiPlot: take care about blocking lockData() in mouse event handlers!
 
-Auditory ReceptorModel does not woork anymore:
-- problem with setIntensity and setTrace
-
 Macros:
-- Buttons should immediately loose focus after being clicked!
+- How are plugins (control, repros) found/identified? Possibility of name clashes!
+  Use plugin-set name as well.
 - delete all MacroCommands after usage!
 
 SignalTime: finish this update (RELACSPlugin::signalTime()
-- test ficurve RePro: does not work!
-- update all other RePros
-- remove from InData and EventData?
+- test ficurve RePro: does not work!?
+- update all other RePros: Pluginsets already updated: acoustic, auditory, efield, efish
+- remove from InData and EventData? 
+  No, because we might need a signal time in other classes 
+  (see for example patchclamp::FICurve)
+  No, because it is needed by Acquire::readSignal()
+- what about signalIndex() ? Needs to be tied to the traces!
 - update Acquire::readSignal()
-- the same for currentTime() !
+- the same for currentTime() !?
 
 Analog Input/Output:
 - WriteDataThread should not be started if the whole stimulus is already transfered.
@@ -59,19 +58,18 @@ Acquisition interface:
 - check whether test, prepare, and start can be used simulataneously with read/write
 - add single data read and write
 - add function for blocked write() and corresponding error checking (buffer underrun)
-- need a ComediNIRTSI device class.
 - manual convert of signals does not work, because some gain settings are needed in advance!
 
 Plugins:
 - Put relacs configuration files in root directory of the plugin sets
 
 Relacs:
-- How are plugins (control, repros) found/identified? Possibility of name clashes!
-  Use plugin-set name as well.
+- Check and clean up RELACSPlugin public/protected/private functions.
 - Parameter/Options/OptWidget: generalize selectText() and index() to all types
 - Fix command line arg names from path to dir in relacsmain and RELACSWidget.
 - The right name for dlopen can be found in the dlname field of the *.la file!
   Use this approach for loading the plugins?
+  No, use QLibrary instead
 - Reading config from PWD and LD_LIBRARY_PATH containing PWD
   -> On/off by user?
 - Log files written to relacs exec dir, not /var/log?
@@ -149,59 +147,10 @@ Bug in xarray.cc: Problems with the pow function (in containerfuncs.h)
 
 new RePro name: ExPro, Protocol, ...
 
--------------------------------------------------------------------------
-
-Update 1.8.18 oel.cfg:
-  - "extref" for AnalogOutput devices
-  - new config section FilterDetectors in oel.cfg!
-  - remove eventdetector.h eventdetector.cc, detectors.h detectors.cc,
-    *dock*, make dependall
-  - add to outputdata:
-       outputtraceid: Left-Speaker|Right-Speaker
-  outputtracechannel: 0|1
-   outputtracedevice: ao-1|ao-1
-  outputtracemaxrate: 240|240kHz
-    outputtracedelay: 0|0ms
-  - add devices:
-
-*Analog Input Devices
-  plugin1: DAQNIE|AISim
-  device1: /dev/comedi0
-   ident1: ai-1
-
-*Analog Output Devices
-  plugin1: DAQNIE|AOSim
-  device1: /dev/comedi1
-   ident1: ao-1
-
-- in Attenuator Interfaces change "daq1: daq-1" to "ao1: ao-1"
-
-Update 1.8.14:
-  - make cleanall
-  - daq/src: remove eventdata.* eventlist.* detector.h
-  - numerics/src: remove basefuncs.h
-  - oel.cfg: replace "daq1: 0" by "daq1: daq-1" in AttInterfaces
-             remove "mode1" line in AttDevices
-  - oelplugins.cfg: Auditory Neuron Model
-
----------------------------------
-
-Announce new releases to <A
-HREF="news:comp.os.linux.announce"
-TARGET="_top"
->comp.os.linux.announce</A
->.  Besides being widely read itself,
-this group is a major feeder for web-based what's-new sites like
-<A
-HREF="http://www.freshmeat.net"
-TARGET="_top"
->Freshmeat</A
->.
-
 ---------------------------------
 
 RePros:
-  - use convert( OutData& )!
+  - use convert( OutData& )! Not any more!
   - check save() function of all RePros.
   - test all RePros! Especially the files they are saving.
 
@@ -220,7 +169,6 @@ Macros:
     (similar to break, but without softStopRequest).
 
 Devices:
-  - mechanism for passing name=value pairs to open()
   - Add and implement probe() and possibly requires() function
   - implement "dummy (DocDevice)" devices that only get infos from
     the config file and thus serve as documentation of all the used hardware.
@@ -229,11 +177,8 @@ Attenuate:
   - interaction with gain settings of daq board? Are there boards with
     many gains for analog output?
 
-ConfigDialog:
-  - check recursive mutex
-
-Model:
-  - check recursive mutexes
+MetaData, RELACSWidget::AIMutex, SaveFiles::StimulusDataLock
+  - really need recursive mutexes?
 
 Filter/Detectors/PlotTrace:
   Make PlotTrace better configurable!
@@ -270,6 +215,19 @@ A new Tab-Widget Container:
  - check KDE for such a widget (KJanusWidget)
  - use for detectors and sessions and repros
 
+-------------------------------------------------------------------------
+
+Announce new releases to <A
+HREF="news:comp.os.linux.announce"
+TARGET="_top"
+>comp.os.linux.announce</A
+>.  Besides being widely read itself,
+this group is a major feeder for web-based what's-new sites like
+<A
+HREF="http://www.freshmeat.net"
+TARGET="_top"
+>Freshmeat</A
+>.
 
 ---------------------------------
 

@@ -75,9 +75,16 @@ void RELACSPlugin::setWidget( QWidget *widget )
 
 void RELACSPlugin::setLayout( QLayout *layout )
 {
-  setWidget( new QWidget );
-  Widget->setLayout( layout );
-  Widget->setAutoFillBackground( true );
+  if ( Widget == 0 ) {
+    setWidget( new QWidget );
+    Widget->setLayout( layout );
+    Widget->setAutoFillBackground( true );
+  }
+  else {
+    if ( Widget->layout() != 0 )
+      delete Widget->layout();
+    Widget->setLayout( layout );
+  }
 }
 
 
@@ -159,20 +166,20 @@ void RELACSPlugin::postCustomEvent( int type )
 
 void RELACSPlugin::customEvent( QEvent *qce )
 {
-  switch ( qce->type() ) {
-  case QEvent::User+3: {
+  switch ( qce->type() - QEvent::User ) {
+  case 3: {
     string ss = "RELACS: ";
     ss += name();
     MessageBox::warning( ss, WarningStr, WarningTimeout, RW );
     break;
   }
-  case QEvent::User+4: {
+  case 4: {
     string ss = "RELACS: ";
     ss += name();
     MessageBox::information( ss, InfoStr, InfoTimeout, RW );
     break;
   }
-  case QEvent::User+5: {
+  case 5: {
     if ( RW->DV != 0 )
       RW->DV->updateMenu();
     break;
@@ -1016,6 +1023,12 @@ void RELACSPlugin::toggleSession( void )
 }
 
 
+void RELACSPlugin::removeFocus( void )
+{
+  RW->window()->setFocus();
+}
+
+
 Control *RELACSPlugin::control( int index )
 {
   if ( index >= 0 && index < (int)RW->CN.size() )
@@ -1238,15 +1251,22 @@ void RELACSPlugin::keyReleaseEvent( QKeyEvent *event )
 bool RELACSPlugin::eventFilter( QObject *obj, QEvent *event )
 {
   if ( event->type() == QEvent::KeyPress ) {
-    keyPressEvent( static_cast<QKeyEvent *>( event ) );
-    return ( event->isAccepted() );
+    QKeyEvent *ke = dynamic_cast<QKeyEvent *>( event );
+    if ( ke != 0 ) {
+      keyPressEvent( ke );
+      if ( event->isAccepted() )
+	return true;
+    }
   }
   else if ( event->type() == QEvent::KeyRelease ) {
-    keyReleaseEvent( static_cast<QKeyEvent *>( event ) );
-    return ( event->isAccepted() );
+    QKeyEvent *ke = dynamic_cast<QKeyEvent *>( event );
+    if ( ke != 0 ) {
+      keyReleaseEvent( ke );
+      if ( event->isAccepted() )
+	return true;
+    }
   }
-  else
-    return QObject::eventFilter( obj, event );
+  return QObject::eventFilter( obj, event );
 }
 
 

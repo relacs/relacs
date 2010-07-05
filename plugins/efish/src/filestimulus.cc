@@ -358,13 +358,13 @@ int FileStimulus::main( void )
     if ( adjustg ) {
       for ( int k=0; k<MaxSpikeTraces; k++ )
 	if ( SpikeTrace[k] >= 0 )
-	  adjust( trace( SpikeTrace[k] ), trace( SpikeTrace[k] ).signalTime()+Duration,
-		  trace( SpikeTrace[k] ).signalTime()+Duration+Pause, 0.8 );
+	  adjust( trace( SpikeTrace[k] ), signalTime()+Duration,
+		  signalTime()+Duration+Pause, 0.8 );
     }
     if ( GlobalEFieldTrace >= 0 )
       adjustGain( trace( GlobalEFieldTrace ),
-		  1.05 * trace( GlobalEFieldTrace ).maxAbs( trace( GlobalEFieldTrace ).signalTime(),
-							    trace( GlobalEFieldTrace ).signalTime() + Duration ) );
+		  1.05 * trace( GlobalEFieldTrace ).maxAbs( signalTime(),
+							    signalTime() + Duration ) );
     
     // analyze:
     analyze();
@@ -639,11 +639,11 @@ void FileStimulus::plot( void )
 void FileStimulus::analyzeSpikes( const EventData &se, int k )
 {
   // spikes:
-  Spikes[k].push( se, se.signalTime()-Before, se.signalTime()+Duration+After,
-		  se.signalTime() );
+  Spikes[k].push( se, signalTime()-Before, signalTime()+Duration+After,
+		  signalTime() );
   
   // spike rate:
-  se.addRate( SpikeRate[k], Trials[k], 0.0, se.signalTime() );
+  se.addRate( SpikeRate[k], Trials[k], 0.0, signalTime() );
   
   double maxr = max( SpikeRate[k] );
   if ( maxr+100.0 > MaxRate[k] ) {
@@ -656,7 +656,7 @@ void FileStimulus::analyze( void )
 {
   const EventData &localeod = events( LocalEODEvents[0] );
 
-  double dt = localeod.back() - localeod.signalTime() - Duration;
+  double dt = localeod.back() - signalTime() - Duration;
   if ( dt < Pause )
     dt = Pause;
   if ( dt < 0.015 )
@@ -678,22 +678,22 @@ void FileStimulus::analyze( void )
   // contrast:
   TrueContrast = beatContrast( trace( LocalEODTrace[0] ), events( LocalBeatPeakEvents[0] ),
 			       events( LocalBeatTroughEvents[0] ),
-			       localeod.signalTime(), localeod.signalTime()+Duration,
+			       signalTime(), signalTime()+Duration,
 			       0.1*Duration );
 
   // EOD transdermal amplitude:
   if ( UseContrast ) {
-    EventSizeIterator pindex = localeod.begin( localeod.signalTime() );
-    EventSizeIterator plast = localeod.begin( localeod.signalTime() + Duration );
+    EventSizeIterator pindex = localeod.begin( signalTime() );
+    EventSizeIterator plast = localeod.begin( signalTime() + Duration );
     EODTransAmpl.push_back( MapD() );
     EODTransAmpl.back().reserve( plast - pindex + 1 );
     for ( ; pindex < plast; ++pindex )
-      EODTransAmpl.back().push( pindex.time() - localeod.signalTime(), *pindex ); 
+      EODTransAmpl.back().push( pindex.time() - signalTime(), *pindex ); 
   }
   else {
     const InData &globalefield = trace( GlobalEFieldTrace );
     EFieldAmpl.push_back( SampleDataF( 0.0, Duration, globalefield.stepsize() ) );
-    globalefield.copy( globalefield.signalTime(), EFieldAmpl.back() );
+    globalefield.copy( signalTime(), EFieldAmpl.back() );
   }
 
   // spikes:
@@ -706,7 +706,7 @@ void FileStimulus::analyze( void )
     const InData &nd = trace( NerveTrace[0] );
     // nerve amplitudes:
     // peak and trough amplitudes:
-    double l = nd.signalTime();
+    double l = signalTime();
     double min = nd.min( l, l+4.0/FishRate );
     double max = nd.max( l, l+4.0/FishRate );
     double threshold = 0.5*(max-min);

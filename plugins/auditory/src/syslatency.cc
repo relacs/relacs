@@ -271,9 +271,8 @@ int SysLatency::main( void )
     }
     
     // adjust gain of daq board:
-    adjust( trace( SpikeTrace[0] ), trace( SpikeTrace[0] ).signalTime(), 
-	    trace( SpikeTrace[0] ).signalTime() + duration, 0.8 );
-    //    activateGains();
+    adjust( trace( SpikeTrace[0] ), signalTime(), 
+	    signalTime() + duration, 0.8 );
     
     analyze( duration, skipwin, analysewin, pwaves/carrierfrequency,
 	     coincwin, maxlatency, latencystep,
@@ -553,14 +552,11 @@ void SysLatency::analyze( double duration, double skipwin, double analysewin,
   if ( SpikeEvents[0] < 0 )
     return;
 
-  const EventData &spikeevents = events( SpikeEvents[0] );
-
   // spikes:
-  spikes.push( spikeevents, spikeevents.signalTime(),
-	       spikeevents.signalTime() + duration );
+  spikes.push( events( SpikeEvents[0] ), signalTime(), signalTime() + duration );
 
   // spike width:
-  spikewidth += ( spikeevents.meanWidth() - spikewidth ) / spikes.size();
+  spikewidth += ( events( SpikeEvents[0] ).meanWidth() - spikewidth ) / spikes.size();
 
   // latency to first spike:
   latency = spikes.latency( 0.0, &latencysd );

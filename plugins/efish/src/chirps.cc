@@ -343,8 +343,7 @@ void Chirps::createPlayback( OutData &signal )
 
   //  IntensityGain *= 1.3;
 
-  double first = events(LocalEODEvents[0]).meanSize( events(LocalEODEvents[0]).signalTime() - 0.5,
-						     events(LocalEODEvents[0]).signalTime() );
+  double first = events(LocalEODEvents[0]).meanSize( signalTime() - 0.5, signalTime() );
   double max = EODAmplitude.max() - first;
   double min = EODAmplitude.min() - first;
   double norm = max > -min ? 1.0/max : -1.0/min; 
@@ -790,7 +789,7 @@ int Chirps::main( void )
 	adjust( trace(NerveTrace[0]), Duration, 0.8 );
     }
     if ( GlobalEFieldTrace >= 0 )
-      adjustGain( trace(GlobalEFieldTrace), 1.05 * trace(GlobalEFieldTrace).maxAbs( trace(GlobalEFieldTrace).signalTime(), Duration ) );
+      adjustGain( trace(GlobalEFieldTrace), 1.05 * trace(GlobalEFieldTrace).maxAbs( signalTime(), Duration ) );
 
     // analyze:
     analyze();
@@ -1275,8 +1274,8 @@ void Chirps::analyze( void )
   FishRate = eod1.frequency( ReadCycles );
 
   // signal frequency:
-  double sigfreq = AM ? 0.0 : events(GlobalEFieldEvents).frequency( eod2.signalTime(),
-								    eod2.signalTime()+Duration );
+  double sigfreq = AM ? 0.0 : events(GlobalEFieldEvents).frequency( signalTime(),
+								    signalTime()+Duration );
 
   // Delta F:
   TrueDeltaF = AM ? DeltaF : sigfreq - FishRate;
@@ -1288,7 +1287,7 @@ void Chirps::analyze( void )
   // contrast:
   TrueContrast = beatContrast( trace(LocalEODTrace[0]), events(LocalBeatPeakEvents[0]),
 			       events(LocalBeatTroughEvents[0]),
-			       eod2.signalTime(), eod2.signalTime()+Duration,
+			       signalTime(), signalTime()+Duration,
 			       0.1*Duration );
 
   // Fish Amplitudes:
@@ -1298,19 +1297,18 @@ void Chirps::analyze( void )
 			  0.05*trace(LocalEODTrace[0]).maxValue() );
 
   // EOD transdermal amplitude:
-  EventIterator first2 = eod2.begin( eod2.signalTime() );
-  EventIterator last2 = eod2.begin( eod2.signalTime() + Duration ); 
+  EventIterator first2 = eod2.begin( signalTime() );
+  EventIterator last2 = eod2.begin( signalTime() + Duration ); 
   EODAmplitude.clear();
   EODAmplitude.reserve( last2 - first2 + 2 );
   for ( EventSizeIterator sindex = first2; sindex < last2; ++sindex ) {
-    EODAmplitude.push( sindex.time() - eod2.signalTime(), *sindex );
+    EODAmplitude.push( sindex.time() - signalTime(), *sindex );
   }
 
   // all spikes:
   for ( int k=0; k<MaxSpikeTraces; k++ )
     if ( SpikeEvents[k] >= 0 )
-      events(SpikeEvents[k]).copy( events(SpikeEvents[k]).signalTime(),
-				   events(SpikeEvents[k]).signalTime()+Duration,
+      events(SpikeEvents[k]).copy( signalTime(), signalTime()+Duration,
 				   Spikes[k] );
 
   // Nerve potential:
@@ -1318,7 +1316,7 @@ void Chirps::analyze( void )
     const InData &nd = trace(NerveTrace[0]);
     // nerve amplitudes:
     // peak and trough amplitudes:
-    double l = nd.signalTime();
+    double l = signalTime();
     double min = nd.min( l, l+4.0/FishRate );
     double max = nd.max( l, l+4.0/FishRate );
     double threshold = 0.5*(max-min);
@@ -1349,7 +1347,7 @@ void Chirps::analyze( void )
     // averaged amplitude:
     double st = (peaktroughs[0].back() - peaktroughs[0].front())/double(peaktroughs[0].size()-1);
     for ( int k=0; k<NerveAmplP.size(); k++ ) {
-      NerveAmplM.push( l-nd.signalTime(), nd.mean( l, l+st ) );
+      NerveAmplM.push( l-signalTime(), nd.mean( l, l+st ) );
       l += st;
     }
   }
@@ -1361,8 +1359,8 @@ void Chirps::analyze( void )
   for ( int k=0; k<ChirpTimes.size(); k++ ) {
 
     // mean rate at chirp:
-    double eodrate = eod1.frequency( eod1.signalTime() + ChirpTimes[k] - 3.0*ChirpWidth,
-				     eod1.signalTime() + ChirpTimes[k] + 3.0*ChirpWidth );
+    double eodrate = eod1.frequency( signalTime() + ChirpTimes[k] - 3.0*ChirpWidth,
+				     signalTime() + ChirpTimes[k] + 3.0*ChirpWidth );
 
     double beatpeak;
     double beattrough;
@@ -1382,7 +1380,7 @@ void Chirps::analyze( void )
       double cdeltaf = AM ? DeltaF : sigfreq - eodrate;
 
       // beat amplitudes before chirp:
-      double t = eod2.signalTime() + ChirpTimes[k] - 1.0 * ChirpWidth;
+      double t = signalTime() + ChirpTimes[k] - 1.0 * ChirpWidth;
       int bpe = events(LocalBeatPeakEvents[0]).previous( t );
       int bpee = eod2.next( events(LocalBeatPeakEvents[0])[bpe] );
       beatpeak = eod2.eventSize( bpee );
@@ -1400,12 +1398,12 @@ void Chirps::analyze( void )
       else {
 	const EventData &sige = events(GlobalEFieldEvents);
 	double siginterv = 1.0 / sigfreq;
-	int sigi = sige.next( sige.signalTime() + ChirpTimes[k] - 2.0*ChirpWidth );
+	int sigi = sige.next( signalTime() + ChirpTimes[k] - 2.0*ChirpWidth );
 	double sigtime = 0.0;
 	int maxn = 8;
 	for ( int n=0; n < maxn && sigi-n < sige.size(); n++ )
 	  sigtime += ( sige[ sigi - n ] + siginterv * double(n) ) / double( maxn );
-	sigi = (int)floor( ( sige.signalTime() + ChirpTimes[k] - sigtime ) / siginterv );
+	sigi = (int)floor( ( signalTime() + ChirpTimes[k] - sigtime ) / siginterv );
 	maxn = 1;
 	beatphase = 0.0;
 	for ( int n=0; n < maxn; n++ ) {
@@ -1431,11 +1429,11 @@ void Chirps::analyze( void )
 	beatbin = BeatPos-1;
 
       // beat amplitude right before chirp:
-      beatbefore = eod2.meanSize( eod2.signalTime() + ChirpTimes[k] - ChirpWidth,
-				  eod2.signalTime() + ChirpTimes[k] - ChirpWidth + 4.0 * meaninterv );
+      beatbefore = eod2.meanSize( signalTime() + ChirpTimes[k] - ChirpWidth,
+				  signalTime() + ChirpTimes[k] - ChirpWidth + 4.0 * meaninterv );
       // beat amplitude right after chirp:
-      beatafter = eod2.meanSize( eod2.signalTime() + ChirpTimes[k] + ChirpWidth - 4.0 * meaninterv,
-				 eod2.signalTime() + ChirpTimes[k] + ChirpWidth );
+      beatafter = eod2.meanSize( signalTime() + ChirpTimes[k] + ChirpWidth - 4.0 * meaninterv,
+				 signalTime() + ChirpTimes[k] + ChirpWidth );
 
     }
     else {
@@ -1458,7 +1456,7 @@ void Chirps::analyze( void )
     ChirpData &rd = Response.back();
 
     // frequency and amplitude:
-    double chirptime =  eod2.signalTime() + ChirpTimes[k];
+    double chirptime =  signalTime() + ChirpTimes[k];
     EventFrequencyIterator findex = eod2.begin() + eod2.next( chirptime - SaveWindow );
     EventFrequencyIterator lindex = eod2.begin() + eod2.previous( chirptime + SaveWindow );
     EventSizeIterator sindex = findex;
@@ -1467,7 +1465,7 @@ void Chirps::analyze( void )
     rd.EODFreq.reserve( ns );
     rd.EODAmpl.reserve( ns );
     while ( findex <= lindex && ! findex ) {
-      double t = findex.time() - eod2.signalTime() - ChirpTimes[k];
+      double t = findex.time() - signalTime() - ChirpTimes[k];
       rd.EODTime.push( 1000.0*t );
       rd.EODFreq.push( *findex );
       rd.EODAmpl.push( *sindex );

@@ -60,10 +60,7 @@ RePro::RePro( const string &name, const string &pluginset,
 
   GrabKeys.clear();
   GrabKeys.reserve( 20 );
-  GrabKeysModifier.clear();
-  GrabKeysModifier.reserve( 20 );
   GrabKeysBaseSize = 0;
-  GrabKeysAlt = false;
   GrabKeysInstalled = false;
   GrabKeysAllowed = false;
 
@@ -154,6 +151,7 @@ void RePro::run( void )
   unlockAll();
 
   RW->KeyTime->unsetNoFocusWidget();
+  removeFocus();
   GrabKeysAllowed = false;
   releaseKeys();
 
@@ -569,18 +567,8 @@ void RePro::keyReleaseEvent( QKeyEvent *event )
 
 void RePro::grabKey( int key )
 {
-  int mask = Qt::META | Qt::SHIFT | Qt::CTRL | Qt::ALT;
-  int modifier = 0;
-  switch ( key & mask ) {
-  case Qt::META : modifier = Qt::META; break;
-  case Qt::SHIFT : modifier = Qt::SHIFT; break;
-  case Qt::CTRL : modifier = Qt::CTRL; break;
-  case Qt::ALT : modifier = Qt::ALT; GrabKeysAlt = true; break;
-  default: modifier = 0; break;
-  }
   GrabKeyLock.lock();
-  GrabKeys.push_back( key & ~mask );
-  GrabKeysModifier.push_back( modifier );
+  GrabKeys.push_back( key );
   GrabKeyLock.unlock();
   grabKeys();
 }
@@ -595,7 +583,7 @@ void RePro::grabKeys( void )
     return;
 
   GrabKeyLock.lock();
-  qApp->installEventFilter( (QWidget*)this );
+  qApp->installEventFilter( (RELACSPlugin*)this );
   GrabKeysInstalled = true;
   GrabKeyLock.unlock();
 }
@@ -603,39 +591,18 @@ void RePro::grabKeys( void )
 
 void RePro::releaseKey( int key )
 {
-  int mask = Qt::META | Qt::SHIFT | Qt::CTRL | Qt::ALT;
-  int modifier = 0;
-  switch ( key & mask ) {
-  case Qt::META : modifier = Qt::META; break;
-  case Qt::SHIFT : modifier = Qt::SHIFT; break;
-  case Qt::CTRL : modifier = Qt::CTRL; break;
-  case Qt::ALT : modifier = Qt::ALT; GrabKeysAlt = true; break;
-  default: modifier = 0; break;
-  }
-  int keycode = key & ~mask;
-
   GrabKeyLock.lock();
   int inx = 0;
   vector<int>::iterator kp = GrabKeys.begin();
-  vector<int>::iterator mp = GrabKeysModifier.begin();
   while ( kp != GrabKeys.end() ) {
-    if ( *kp == keycode && *mp == modifier ) {
+    if ( *kp == key ) {
       kp = GrabKeys.erase( kp );
-      mp = GrabKeysModifier.erase( mp );
       if ( inx < GrabKeysBaseSize )
 	GrabKeysBaseSize--;
     }
     else {
       ++kp;
-      ++mp;
       ++inx;
-    }
-  }
-  GrabKeysAlt = false;
-  for ( mp = GrabKeysModifier.begin(); mp != GrabKeysModifier.end(); ++mp ) {
-    if ( *mp == Qt::ALT ) {
-      GrabKeysAlt = true;
-      break;
     }
   }
   int empty = GrabKeys.empty();
@@ -649,18 +616,8 @@ void RePro::releaseKeys( void )
 {
   GrabKeyLock.lock();
   GrabKeys.resize( GrabKeysBaseSize );
-  GrabKeysModifier.resize( GrabKeysBaseSize );
-  GrabKeysAlt = false;
-  for ( vector<int>::iterator mp = GrabKeysModifier.begin();
-	mp != GrabKeysModifier.end();
-	++mp ) {
-    if ( *mp == Qt::ALT ) {
-      GrabKeysAlt = true;
-      break;
-    }
-  }
   if ( GrabKeysInstalled ) {
-    qApp->removeEventFilter( (QWidget*)this );
+    qApp->removeEventFilter( (RELACSPlugin*)this );
     GrabKeysInstalled = false;
   }
   GrabKeyLock.unlock();
@@ -669,32 +626,25 @@ void RePro::releaseKeys( void )
 
 bool RePro::eventFilter( QObject *watched, QEvent *e )
 {
-  if ( e->type() == QEvent::KeyPress ||
-       e->type() == QEvent::KeyRelease ||
-       e->type() == QEvent::Shortcut ||
-       e->type() == QEvent::ShortcutOverride ) {
-    QKeyEvent *k = (QKeyEvent*)e;
-    // no Alt-release event:
-    if ( e->type() == QEvent::KeyRelease &&
-	 GrabKeysAlt &&
-	 k->key() == Qt::Key_Alt )
-      return true;
+  if ( watched == widget() )
+    return RELACSPlugin::eventFilter( watched, e );   // this passes the keyevents to the RePros...
+
+  if ( e->type() == QEvent::Shortcut ) {
     // check for grabbed keys:
+    QShortcutEvent *se = dynamic_cast<QShortcutEvent *>(e);
     vector<int>::iterator kp = GrabKeys.begin();
-    vector<int>::iterator mp = GrabKeysModifier.begin();
     while ( kp != GrabKeys.end() ) {
-      if ( *kp == k->key() && *mp == k->QInputEvent::modifiers() ) {
-	if ( e->type() == QEvent::KeyRelease )
-	  keyReleaseEvent( k );
-	else
-	  keyPressEvent( k );
+      if ( se->key() == QKeySequence( *kp ) ) {
+	int mask = Qt::META | Qt::SHIFT | Qt::CTRL | Qt::ALT;
+	QKeyEvent ke( QEvent::KeyPress, se->key()[0] & ~mask,
+		      Qt::KeyboardModifiers( se->key()[0] & mask ) );
+	keyPressEvent( &ke );
 	return true;
       }
       ++kp;
-      ++mp;
     }
   }
-  return RELACSPlugin::eventFilter( watched, e );
+  return false;
 }
 
 

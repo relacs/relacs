@@ -1852,6 +1852,7 @@ void Macro::launch( void )
     MC->store();
   Variables.setDefaults();
   MC->startMacro( MacroNum );
+  MC->window()->setFocus();
 }
 
 

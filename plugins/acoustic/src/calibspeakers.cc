@@ -194,8 +194,7 @@ int CalibSpeakers::main( void )
   while ( ! interrupt() ) {
 
     // adjust analog input gains:
-    double max = trace( intrace ).maxAbs( trace( intrace ).signalTime(),
-					  trace( intrace ).signalTime()+duration );
+    double max = trace( intrace ).maxAbs( signalTime(), signalTime()+duration );
     for ( int gaintries = 0; gaintries < MaxGainTries; gaintries++ ) {
       // check signal amplitude:
       if ( max < 0.95 * trace( intrace ).maxValue() &&
@@ -212,8 +211,7 @@ int CalibSpeakers::main( void )
 	writeZero( outtrace );
 	return Aborted;
       }
-      max = trace( intrace ).maxAbs( trace( intrace ).signalTime(), 
-				     trace( intrace ).signalTime()+duration );
+      max = trace( intrace ).maxAbs( signalTime(), signalTime()+duration );
     }
 
     // signal amplitude has proper range?

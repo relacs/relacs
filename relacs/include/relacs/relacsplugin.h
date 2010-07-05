@@ -679,6 +679,11 @@ protected slots:
 	\note This function must not be called from a non GUI thread! */
   void toggleSession( void );
 
+    /*! Move the focus back to the top level window.
+        Call this function, for example, for a button that wa clicked,
+	by connecting removeFocus() to the button's clicked() signal. */
+  void removeFocus( void );
+
 
 public:
 

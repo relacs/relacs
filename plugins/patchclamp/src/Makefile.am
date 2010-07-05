@@ -53,14 +53,12 @@ libpatchclampsimple_la_CPPFLAGS = \
     -I$(top_srcdir)/options/include \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
-    -I$(top_srcdir)/plugins/base/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
     $(QT4_CPPFLAGS)
 
 libpatchclampsimple_la_LDFLAGS = \
     -module -avoid-version \
-    $(top_builddir)/plugins/base/src/libbasesetoutput.la \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
     $(QT4_LDFLAGS)
 

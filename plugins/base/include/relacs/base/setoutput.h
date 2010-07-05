@@ -75,6 +75,7 @@ protected:
 
   OptWidget STW;
   Options OutOpts;
+  bool Interactive;
   bool Change;
   static const int ChannelFlag;
   static const int ParameterFlag;

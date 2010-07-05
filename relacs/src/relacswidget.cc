@@ -449,8 +449,8 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
 
   // miscellaneous:
   setFocusPolicy( Qt::StrongFocus );
-  topLevelWidget()->setFocus();
-  KeyTime = new KeyTimeOut( topLevelWidget() );
+  window()->setFocus();
+  KeyTime = new KeyTimeOut( window() );
 
 }
 
@@ -1852,20 +1852,34 @@ void RELACSWidget::keyPressEvent( QKeyEvent *event )
 {
   // unused events are propagated back to parent widgets,
   // therefore we have to prevent this additional call:
-  if ( HandlingEvent )
+  if ( HandlingEvent ) {
+    event->ignore();
     return;
+  }
   HandlingEvent = true;
+  // note: because keyPressEvent() is protected, we need to call
+  // this function via sendEvent().
+  // This has the advantage, that all the eventFilters, etc. are called as well.
   QCoreApplication::sendEvent( PT->widget(), event );
-  if ( CurrentRePro != 0 && CurrentRePro->widget() != 0  )
+  if ( ! event->isAccepted() &&
+       CurrentRePro != 0 &&
+       CurrentRePro->widget() != 0  ) {
+    // even RePros without a widget get one automatically assigned by RePros.
+    // So, via the RELACSPlugin::eventFilter() they also get their
+    // keyPressEvent() called!
     QCoreApplication::sendEvent( CurrentRePro->widget(), event );
-  if ( ! event->isAccepted() )
-    QCoreApplication::sendEvent( CW, event );
-  for ( unsigned int k=0; k<CN.size() && ! event->isAccepted(); k++ ) {
-    if ( CN[k]->globalKeyEvents() && CN[k]->widget() != 0 )
-    QCoreApplication::sendEvent( CN[k]->widget(), event );
   }
   if ( ! event->isAccepted() )
+    QCoreApplication::sendEvent( CW->currentWidget(), event );
+  for ( unsigned int k=0; k<CN.size() && ! event->isAccepted(); k++ ) {
+    if ( CN[k]->globalKeyEvents() &&
+	 CN[k]->widget() != 0 &&
+	 CN[k]->widget() != CW->currentWidget() )
+      QCoreApplication::sendEvent( CN[k]->widget(), event );
+  }
+  if ( ! event->isAccepted() ) {
     QCoreApplication::sendEvent( FD, event );
+  }
   HandlingEvent = false;
 }
 
@@ -1874,8 +1888,10 @@ void RELACSWidget::keyReleaseEvent( QKeyEvent *event )
 {
   // unused events are propagated back to parent widgets,
   // therefore we have to prevent this additional call:
-  if ( HandlingEvent )
+  if ( HandlingEvent ) {
+    event->ignore();
     return;
+  }
   HandlingEvent = true;
   QCoreApplication::sendEvent( PT->widget(), event );
   if ( ! event->isAccepted() &&
@@ -1883,9 +1899,11 @@ void RELACSWidget::keyReleaseEvent( QKeyEvent *event )
        CurrentRePro->widget() != 0  )
     QCoreApplication::sendEvent( CurrentRePro->widget(), event );
   if ( ! event->isAccepted() )
-    QCoreApplication::sendEvent( CW, event );
+    QCoreApplication::sendEvent( CW->currentWidget(), event );
   for ( unsigned int k=0; k<CN.size() && ! event->isAccepted(); k++ ) {
-    if ( CN[k]->globalKeyEvents() && CN[k]->widget() != 0 )
+    if ( CN[k]->globalKeyEvents() &&
+	 CN[k]->widget() != 0 &&
+	 CN[k]->widget() != CW->currentWidget() )
       QCoreApplication::sendEvent( CN[k]->widget(), event );
   }
   if ( ! event->isAccepted() )

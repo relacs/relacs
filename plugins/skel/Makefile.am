@@ -3,6 +3,8 @@ SUBDIRS = src
 EXTRA_DIST = \
     doc/PLUGINNAME.doc
 
+DISTCLEANFILES = relacs.log relacs.log.old
+
 pkglibdir = $(libdir)/relacs
 pkgincludedir = $(includedir)/relacs
 pkgdatadir=$(datadir)/relacs

@@ -133,6 +133,7 @@ int SetDC::main( void )
     DCAmplitude -= dcamplitudedecr;
 
   if ( interactive ) {
+    keepFocus();
     OutData dcsignal( DCAmplitude );
     dcsignal.setTrace( OutCurrent );
     dcsignal.setIdent( "DC=" + Str( DCAmplitude ) + IUnit );
@@ -255,21 +256,26 @@ void SetDC::keyPressEvent( QKeyEvent *e )
 
 void SetDC::customEvent( QEvent *qce )
 {
-  if ( qce->type() == QEvent::User+11 ) {
+  switch ( qce->type() - QEvent::User ) {
+  case 11: {
     EW->setFocus();
     QWidget::connect( EW, SIGNAL( valueChanged( double ) ),
 		      (QWidget*)this, SLOT( setValue( double ) ) );
+    break;
   }
-  else if ( qce->type() == QEvent::User+12 ) {
-    widget()->window()->setFocus();
+  case 12: {
+    removeFocus();
     QWidget::disconnect( EW, SIGNAL( valueChanged( double ) ),
 			 (QWidget*)this, SLOT( setValue( double ) ) );
+    break;
   }
-  else if ( qce->type() == QEvent::User+13 ) {
+  case 13: {
     EW->setSingleStep( number( "dcamplitudestep" ) );
+    break;
   }
-  else
+  default:
     RELACSPlugin::customEvent( qce );
+  }
 }
 
 

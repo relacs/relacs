@@ -440,20 +440,16 @@ int SAM::main( void )
     if ( adjustg ) {
       for ( int k=0; k<MaxSpikeTraces; k++ ) {
 	if ( SpikeTrace[k] >= 0 )
-	  adjust( trace( SpikeTrace[k] ),
-		  trace( SpikeTrace[k] ).signalTime()+Duration,
-		  trace( SpikeTrace[k] ).signalTime()+Duration+Pause,
-		  0.8 );
+	  adjust( trace( SpikeTrace[k] ), signalTime()+Duration,
+		  signalTime()+Duration+Pause, 0.8 );
       }
       if ( NerveTrace[0] >= 0 )
-	adjust( trace( NerveTrace[0] ),
-		trace( NerveTrace[0] ).signalTime()+Duration,
-		trace( NerveTrace[0] ).signalTime()+Duration+Pause,
-		0.8 );
+	adjust( trace( NerveTrace[0] ), signalTime()+Duration,
+		signalTime()+Duration+Pause, 0.8 );
     }
     if ( GlobalEFieldTrace >= 0 ) {
-      double v = trace( GlobalEFieldTrace ).maxAbs( trace( GlobalEFieldTrace ).signalTime(),
-						    trace( GlobalEFieldTrace ).signalTime()+Duration+Pause );
+      double v = trace( GlobalEFieldTrace ).maxAbs( signalTime(),
+						    signalTime()+Duration+Pause );
       adjustGain( trace( GlobalEFieldTrace ), 1.05 * v );
       detectorEventsOpts( GlobalEFieldEvents ).setNumber( "threshold", 0.5*v );
     }
@@ -827,8 +823,8 @@ void SAM::analyzeSpikes( const EventData &se, int k,
     se.copy( beattimes[i]-0.5 * Period, beattimes[i]+0.5 * Period,
 	     beattimes[i], Spikes[k][i] );
   }
-  se.copy( se.signalTime()-Before, se.signalTime()+Duration+After,
-	   se.signalTime(), AllSpikes[k] );
+  se.copy( signalTime()-Before, signalTime()+Duration+After,
+	   signalTime(), AllSpikes[k] );
   
   // beat spike rate:
   for ( int j=0; j<beattimes.size(); j++ )
@@ -867,7 +863,7 @@ void SAM::analyze( void )
   TrueContrast = beatContrast( trace( LocalEODTrace[0] ),
 			       events( LocalBeatPeakEvents[0] ),
 			       events( LocalBeatTroughEvents[0] ),
-			       eod2.signalTime(), eod2.signalTime()+Duration,
+			       signalTime(), signalTime()+Duration,
 			       0.1*Duration );
 
   // beat positions:
@@ -875,10 +871,10 @@ void SAM::analyze( void )
 
   if ( AM || FreqAbs ) {
     for ( double t = fabs(0.25/TrueDeltaF); t < Duration; t += fabs(1.0/TrueDeltaF) ) {
-      double t0 = eod2.signalTime() + t;
+      double t0 = signalTime() + t;
       if ( ! events( ChirpEvents ).within( t0, 0.03 ) &&
-	   t0 >= Skip * Period + eod2.signalTime() && 
-	   t0 <= Signal->duration() - 2.0*Skip*Period + eod2.signalTime() ) {
+	   t0 >= Skip * Period + signalTime() && 
+	   t0 <= Signal->duration() - 2.0*Skip*Period + signalTime() ) {
 	beattimes.push( t0 );
       }
     }
@@ -889,8 +885,8 @@ void SAM::analyze( void )
     double p2 = 0.0;
     //    ofstream df( "signal.dat" );
     const EventData &sige = events( GlobalEFieldEvents );
-    for ( EventIterator index = sige.begin( sige.signalTime() );
-	  index < sige.begin( eod2.signalTime() + Duration );
+    for ( EventIterator index = sige.begin( signalTime() );
+	  index < sige.begin( signalTime() + Duration );
 	  ++index ) {
       double t1 = *index;
       int pi = eod2.previous( t1 );
@@ -912,13 +908,13 @@ XXX
 	   p2 - floor( p2 ) > 0.95 &&
       */
 	   ! events( ChirpEvents ).within( t0, 0.03 ) &&
-	   t0 >= Skip * Period + eod2.signalTime() && 
-	   t0 <= Signal->duration() - 2.0*Skip*Period + eod2.signalTime() ) {
+	   t0 >= Skip * Period + signalTime() && 
+	   t0 <= Signal->duration() - 2.0*Skip*Period + signalTime() ) {
 	beattimes.push( eod2[ pi - 1 ] );
 	// skip a quarter period:
 	for ( int j=0; 
 	      j < int( 0.25*(FishRate + DeltaF)/fabs(DeltaF) ) &&
-		index < sige.begin( eod2.signalTime() + Duration ); 
+		index < sige.begin( signalTime() + Duration ); 
 	      j++ )
 	  ++index;
       }
@@ -941,10 +937,10 @@ XXX
       EODTransAmpl[k].push( pindex.time() - beattimes[k] - dt, *pindex );
   }
   AllEODTransAmpl.clear();
-  EventSizeIterator pindex = eod2.begin( eod2.signalTime() );
-  EventSizeIterator plast = eod2.begin( eod2.signalTime() + Duration );
+  EventSizeIterator pindex = eod2.begin( signalTime() );
+  EventSizeIterator plast = eod2.begin( signalTime() + Duration );
   for ( ; pindex < plast; ++pindex )
-    AllEODTransAmpl.push( pindex.time() - eod2.signalTime(), *pindex );
+    AllEODTransAmpl.push( pindex.time() - signalTime(), *pindex );
 
   for ( int k=0; k<MaxSpikeTraces; k++ ) {
     if ( SpikeEvents[k] >= 0 )
@@ -1006,7 +1002,7 @@ XXX
 
     // nerve amplitudes:
     // peak and trough amplitudes:
-    double l = nd.signalTime();
+    double l = signalTime();
     double min = nd.min( l, l+4.0/FishRate );
     double max = nd.max( l, l+4.0/FishRate );
     double threshold = 0.5*(max-min);

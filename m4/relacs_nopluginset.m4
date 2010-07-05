@@ -1,25 +1,14 @@
-# RELACS_PLUGINSET( pluginsetname, pluginsetdir, dependencies, externaldependency ) 
-# Takes care of the plugin set with name $pluginsetname in 
-# directory $pluginsetdir relative to plugins/.
-# The plugin set depends on the plugin sets whose names are listed in $dependencies.
-# The plugin set might depend on further external dependencies as 
-# determined by the shell test $externaldependencies.
-# If $pluginsetname is anabled and all dependencies are fullfilled, then
-# $pluginset is added to SUBDIRS in plugins/Makefile.am
-# and plugins/$pluginset is added to DOXYGEN_EXTERNAL.
-# In any case $pluginset is added to DIST_SUBDIRS in plugins/Makefile.am,
-# plugins/$pluginsetdir/Makefile and plugins/$pluginsetdir/src/Makefile
-# are passed to AC_CONFIG_FILES,
-# and an am conditional RELACS_COND_$pluginsetname is defined.
+# RELACS_NOPLUGINSET( pluginsetname, pluginsetdir, dependencies, externaldependency ) 
+# Same as RELACS_PLUGINSET, but disable the pluginset by default.
 
-AC_DEFUN([RELACS_PLUGINSET], [
+AC_DEFUN([RELACS_NOPLUGINSET], [
 
 # check whether the plugin set should be compiled at all:
-RELACS_COMPILE="yes"
+RELACS_COMPILE="no"
 AC_ARG_ENABLE(plugins-$1,
-   [AS_HELP_STRING([--disable-plugins-$1],[don't compile $1 plugins])],
+   [AS_HELP_STRING([--enable-plugins-$1],[do compile $1 plugins])],
    [AS_IF([test "x$enableval" = xyes],[RELACS_COMPILE="yes"],[RELACS_COMPILE="no"])],
-   [RELACS_COMPILE="yes"])
+   [RELACS_COMPILE="no"])
 
 # is the external dependency fullfilled?
 RELACS_EXTERNAL_DEPENDENCY="$4"

@@ -256,7 +256,7 @@ void ReceptorModel::process( const OutData &source, OutData &dest )
 }
 
 
-void ReceptorModel::operator()( double t, double *x, double *dxdt, int n ) const
+void ReceptorModel::operator()( double t, double *x, double *dxdt, int n )
 {
   static Random rand;
 

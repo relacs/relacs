@@ -103,15 +103,6 @@ SetLeak::SetLeak( void )
   ResetButton->setFixedHeight( OKButton->sizeHint().height() );
   VRestButton->setFixedHeight( OKButton->sizeHint().height() );
   bb->setSpacing( 4 );
-
-  // tab order
-  /*
-  if ( STW.lastWidget() != 0 )
-    widget()->setTabOrder( STW.lastWidget(), OKButton );
-  widget()->setTabOrder( OKButton, CancelButton );
-  widget()->setTabOrder( CancelButton, ResetButton );
-  widget()->setTabOrder( ResetButton, VRestButton );
-  */
 }
 
 
@@ -233,6 +224,7 @@ int SetLeak::main( void )
   setNotify();
 
   if ( interactive ) {
+    keepFocus();
     postCustomEvent( 11 ); // STW.setFocus();
     // wait for input:
     Change = false;
@@ -268,6 +260,8 @@ int SetLeak::main( void )
   }
   setNumber( "gdc", g );
   setNumber( "Edc", E );
+  setToDefaults();
+  STW.updateValues();
   
   sleep( 0.01 );
   return Completed;
@@ -307,18 +301,23 @@ void SetLeak::keyPressEvent( QKeyEvent *e )
 
 void SetLeak::customEvent( QEvent *qce )
 {
-  if ( qce->type() == QEvent::User+11 ) {
+  switch ( qce->type() - QEvent::User ) {
+  case 11: {
     if ( STW.firstWidget() != 0 )
       STW.firstWidget()->setFocus();
+    break;
   }
-  else if ( qce->type() == QEvent::User+12 ) {
-    widget()->window()->setFocus();
+  case 12: {
+    removeFocus();
+    break;
   }
-  else if ( qce->type() == QEvent::User+13 ) {
+  case 13: {
     STW.updateValues();
+    break;
   }
-  else
+  default:
     RELACSPlugin::customEvent( qce );
+  }
 }
 
 

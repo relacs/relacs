@@ -81,8 +81,6 @@ libauditorysession_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(top_srcdir)/plugins/acoustic/include \
-    -I$(top_srcdir)/plugins/linuxdevices/nieseries/include \
-    -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(srcdir)/../include \
     $(QT4_CPPFLAGS)
 
@@ -94,9 +92,7 @@ libauditorysession_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
     $(top_builddir)/plugins/acoustic/src/libacoustictraces.la \
-    $(top_builddir)/plugins/linuxdevices/nieseries/src/libnieseriesnidio.la \
     $(QT4_LIBS)
-#    $(top_builddir)/plugins/linuxdevices/misc/src/libmiscamplmode.la
 
 $(libauditorysession_la_OBJECTS) : moc_session.cc
 
@@ -117,8 +113,6 @@ libauditoryficurve_la_CPPFLAGS = \
     -I$(top_srcdir)/options/include \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
-    -I$(top_srcdir)/plugins/linuxdevices/nieseries/include \
-    -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
@@ -153,8 +147,6 @@ libauditoryfifield_la_CPPFLAGS = \
     -I$(top_srcdir)/options/include \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
-    -I$(top_srcdir)/plugins/linuxdevices/nieseries/include \
-    -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
@@ -189,8 +181,6 @@ libauditorysinglestimulus_la_CPPFLAGS = \
     -I$(top_srcdir)/options/include \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
-    -I$(top_srcdir)/plugins/linuxdevices/nieseries/include \
-    -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
@@ -226,8 +216,6 @@ libauditorysyslatency_la_CPPFLAGS = \
     -I$(top_srcdir)/options/include \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
-    -I$(top_srcdir)/plugins/linuxdevices/nieseries/include \
-    -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \

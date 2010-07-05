@@ -214,8 +214,7 @@ int CalibEField::main( void )
 
     // adjust signal analog input gains:
     if ( !am && GlobalEFieldTrace >= 0 ) {
-      double max = trace( GlobalEFieldTrace ).maxAbs( trace( GlobalEFieldTrace ).signalTime(),
-						      trace( GlobalEFieldTrace ).signalTime()+duration );
+      double max = trace( GlobalEFieldTrace ).maxAbs( signalTime(), signalTime()+duration );
       if ( maxsignal < max ) {
 	maxsignal = max;
 	adjustGain( trace( GlobalEFieldTrace ), 1.1 * maxsignal );
@@ -388,7 +387,7 @@ int CalibEField::analyze( double duration, double beatfrequency,
     double lowermean = 0.0;
     double lowerampl = 0.0;
     beatAmplitudes( localeodtrace, localeod,
-		    localeod.signalTime(), localeod.signalTime() + duration, 1.0/beatfrequency,
+		    signalTime(), signalTime() + duration, 1.0/beatfrequency,
 		    uppermean, upperampl, lowermean, lowerampl );
     
     Amplitude = sqrt( 2.0 ) * 0.5 * (upperampl + lowerampl);
@@ -435,8 +434,8 @@ int CalibEField::analyze( double duration, double beatfrequency,
 
     // mean EOD amplitude:
     double offset = 0.1 * duration;
-    Amplitude = localeod.meanSize( localeod.signalTime() + offset,
-				   localeod.signalTime() + duration - offset );
+    Amplitude = localeod.meanSize( signalTime() + offset,
+				   signalTime() + duration - offset );
     
     // overflow?
     if ( Amplitude > 0.95 * localeodtrace.maxValue() ) {

@@ -362,8 +362,8 @@ int FICurve::main( void )
       // adjust input gains:
       for ( int k=0; k<MaxSpikeTraces; k++ )
 	if ( SpikeTrace[k] >= 0 )
-	  adjust( trace( SpikeTrace[k] ), trace( SpikeTrace[k] ).signalTime()+Duration,
-		  trace( SpikeTrace[k] ).signalTime()+Duration+Pause, 0.8 );
+	  adjust( trace( SpikeTrace[k] ), signalTime()+Duration,
+		  signalTime()+Duration+Pause, 0.8 );
 
       // analyze:
       analyze();
@@ -647,11 +647,10 @@ void FICurve::analyzeSpikes( const EventData &se, int trace,
   response.Intensity = trueintensity;
 
   // spikes:
-  double sigtime = se.signalTime();
-  response.Spikes.push( se, sigtime-Delay-PreDuration, sigtime+Duration+Pause, sigtime+PreDuration );
+  response.Spikes.push( se, signalTime()-Delay-PreDuration, signalTime()+Duration+Pause, signalTime()+PreDuration );
 
   // firing frequency:
-  se.addFrequency( response.Rate, response.Trial, sigtime+PreDuration );
+  se.addFrequency( response.Rate, response.Trial, signalTime()+PreDuration );
 
   int offs0 = response.Rate.index( -PreDuration );
   int offs1 = response.Rate.index( 0.0 );
@@ -701,12 +700,12 @@ void FICurve::analyze( void )
   const EventData &eod2 = events( LocalEODEvents[0] );
 
   // amplitude:
-  double truepreintensity = eod2.meanSize( eod2.signalTime(), eod2.signalTime()+PreDuration );
+  double truepreintensity = eod2.meanSize( signalTime(), signalTime()+PreDuration );
   //  double trueprecontrast = ( truepreintensity - FishAmplitude ) / FishAmplitude;
-  double trueintensity = eod2.meanSize( eod2.signalTime() + PreDuration, eod2.signalTime()+Duration );
+  double trueintensity = eod2.meanSize( signalTime() + PreDuration, signalTime()+Duration );
   //  double truecontrast = ( trueintensity - FishAmplitude ) / FishAmplitude;
 
-  double bd = eod2.back() - eod2.signalTime() - PreDuration - Duration;
+  double bd = eod2.back() - signalTime() - PreDuration - Duration;
   if ( bd > 0.5 )
     bd = 0.5;
 

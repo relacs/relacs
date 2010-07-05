@@ -289,9 +289,7 @@ int Search::main( void )
     // adjust gain of daq board:
     if ( adjustgain ) {
       for ( int k=0; k<traces().size(); k++ )
-	adjust( trace( k ), trace( k ).signalTime(),
-		trace( k ).signalTime() + Duration, 0.8 );
-      //      activateGains();
+	adjust( trace( k ), signalTime(), signalTime() + Duration, 0.8 );
     }
 
     // save:
@@ -336,16 +334,15 @@ void Search::saveEvents( const EventData &events, int count, const Options &head
   }
 
   // write data:
-  double t0 = events.signalTime();
   df << '\n';
   df << "# trial: " << count << '\n';
-  if ( events.count( t0-PrePause, t0-PrePause+Duration+Pause ) <= 0 ) {
+  if ( events.count( signalTime()-PrePause, signalTime()-PrePause+Duration+Pause ) <= 0 ) {
     df << "  -0" << '\n';
   }
   else {
-    long jmax = events.previous( t0 + Duration + Pause - PrePause );
-    for ( long j=events.next( t0-PrePause ); j<=jmax; j++ ) {
-      spikeskey.save( df, 1000.0 * ( events[j] - t0 ), 0 );
+    long jmax = events.previous( signalTime() + Duration + Pause - PrePause );
+    for ( long j=events.next( signalTime()-PrePause ); j<=jmax; j++ ) {
+      spikeskey.save( df, 1000.0 * ( events[j] - signalTime() ), 0 );
       df << '\n';
     }
   }

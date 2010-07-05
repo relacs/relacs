@@ -155,11 +155,13 @@ IntraSpikeDetector::IntraSpikeDetector( const string &ident, int mode )
   QPushButton *pb = new QPushButton( "Dialog" );
   gl->addWidget( pb, 4, 1, Qt::AlignRight );
   connect( pb, SIGNAL( clicked( void ) ), this, SLOT( dialog( void ) ) );
+  connect( pb, SIGNAL( clicked( void ) ), this, SLOT( removeFocus( void ) ) );
 
   // help:
   pb = new QPushButton( "Help" );
   gl->addWidget( pb, 5, 1, Qt::AlignRight );
   connect( pb, SIGNAL( clicked( void ) ), this, SLOT( help( void ) ) );
+  connect( pb, SIGNAL( clicked( void ) ), this, SLOT( removeFocus( void ) ) );
 }
 
 

@@ -855,8 +855,9 @@ void PlotTrace::keyPressEvent( QKeyEvent *event )
     zoomIn();
     break;
 
-  default:
-    event->ignore();
+  default: {
+    RELACSPlugin::keyPressEvent( event );
+  }
 
   }
 }

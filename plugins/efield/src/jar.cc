@@ -922,15 +922,14 @@ void JAR::saveChirpEOD( const Options &header )
     df << '\n';
   }
   else {
-    const EventData &eodev = events( EODEvents );
     for ( unsigned int k=0; k<Chirps.size(); k++ ) {
       double wt = Chirps[k].Width;
-      double ect = eodev.nextTime( Chirps[k].Time + eodev.signalTime() );
+      double ect = events( EODEvents ).nextTime( Chirps[k].Time + signalTime() );
       InDataIterator ft = trace( EODTrace ).begin( ect-wt );
       InDataIterator lt = trace( EODTrace ).begin( ect+wt );
       InDataTimeIterator ti = trace( EODTrace ).timeBegin( ect-wt );
       for ( InDataIterator i = ft; i < lt && !i; ++i, ++ti ) {
-	key.save( df, 1000.0 * ( *ti - Chirps[k].Time - eodev.signalTime() ), 0 );
+	key.save( df, 1000.0 * ( *ti - Chirps[k].Time - signalTime() ), 0 );
 	key.save( df, *i );
 	df << '\n';
       }
@@ -1038,13 +1037,12 @@ void JAR::analyze( void )
   const EventData &eodglobal = events( EODEvents );
   const EventData &eodlocal = LocalEODEvents[0] >= 0 ? events( LocalEODEvents[0] ) : events( EODEvents );
   const EventData &sige = events( GlobalEFieldEvents );
-  double sigtime = eodglobal.signalTime();
 
   // EOD rate:
-  FishRate = eodglobal.frequency( sigtime - JARAverageTime, sigtime );
+  FishRate = eodglobal.frequency( signalTime() - JARAverageTime, signalTime() );
 
   // Delta F:
-  TrueDeltaF = sige.frequency( sigtime, sigtime +  JARAverageTime ) - FishRate;
+  TrueDeltaF = sige.frequency( signalTime(), signalTime() +  JARAverageTime ) - FishRate;
 
   // EOD amplitude:
   FishAmplitude1 = eodAmplitude( trace( EODTrace ), eodglobal,
@@ -1060,19 +1058,19 @@ void JAR::analyze( void )
     TrueContrast = beatContrast( trace( LocalEODTrace[0] ),
 				 events( LocalBeatPeakEvents[0] ),
 				 events( LocalBeatTroughEvents[0] ),
-				 sigtime,
-				 sigtime+Duration,
+				 signalTime(),
+				 signalTime()+Duration,
 				 0.1*Duration );
   else
     TrueContrast = 0.0;
 
   // mean rate before stimulus:
-  FirstRate = eodglobal.frequency( sigtime - JARAverageTime,
-				   sigtime );
+  FirstRate = eodglobal.frequency( signalTime() - JARAverageTime,
+				   signalTime() );
 
   // mean rate at end of stimulus:
-  LastRate = eodglobal.frequency( sigtime + Duration - JARAverageTime,
-				  sigtime + Duration );
+  LastRate = eodglobal.frequency( signalTime() + Duration - JARAverageTime,
+				  signalTime() + Duration );
 
   // JAR:
   double jar = LastRate - FirstRate;
@@ -1084,8 +1082,8 @@ void JAR::analyze( void )
   else
     LocalEODUnit = "";
 
-  EventIterator first1 = eodglobal.begin( sigtime - Before );
-  EventIterator last1 = eodglobal.begin( sigtime + Duration + After );
+  EventIterator first1 = eodglobal.begin( signalTime() - Before );
+  EventIterator last1 = eodglobal.begin( signalTime() + Duration + After );
   if ( last1 >= eodglobal.end() - 2 )
     last1 = eodglobal.end() - 2;
 
@@ -1096,8 +1094,8 @@ void JAR::analyze( void )
   EODPhases.clear();
   EODPhases.reserve( last1 - first1 + 2 );
   for ( findex=first1; findex < last1; ++findex ) {
-    EODFrequency.push( findex.time() - sigtime, *findex );
-    EODPhases.push( findex.time() - sigtime, 0.0 );
+    EODFrequency.push( findex.time() - signalTime(), *findex );
+    EODPhases.push( findex.time() - signalTime(), 0.0 );
   }
 
   // EOD amplitude:
@@ -1105,17 +1103,17 @@ void JAR::analyze( void )
   EODAmplitude.clear();
   EODAmplitude.reserve( last1 - first1 + 2 );
   for ( sindex=first1; sindex < last1; ++sindex ) {
-    EODAmplitude.push( sindex.time() - sigtime, *sindex );
+    EODAmplitude.push( sindex.time() - signalTime(), *sindex );
   }
 
   // EOD transdermal amplitude:
   EODTransAmpl.clear();
   if ( LocalEODEvents[0] >= 0 ) {
-    EventIterator first2 = eodlocal.begin( sigtime );
-    EventIterator last2 = eodlocal.begin( sigtime + Duration + After );
+    EventIterator first2 = eodlocal.begin( signalTime() );
+    EventIterator last2 = eodlocal.begin( signalTime() + Duration + After );
     EODTransAmpl.reserve( last2 - first2 + 2 );
     for ( sindex = first2; sindex < last2; ++sindex ) {
-      EODTransAmpl.push( sindex.time() - sigtime, *sindex );
+      EODTransAmpl.push( sindex.time() - signalTime(), *sindex );
     }
   }
 
@@ -1130,7 +1128,7 @@ void JAR::analyze( void )
     int pi = eodglobal.previous( t1 );
     double t0 = eodglobal[ pi ];
     double phase = ( t1 - t0 ) / ( eodglobal[ pi + 1 ] - t0 );
-    EODBeatPhase.push( index.time() - sigtime, phase );
+    EODBeatPhase.push( index.time() - signalTime(), phase );
   }
 
   // store results:
@@ -1139,13 +1137,13 @@ void JAR::analyze( void )
 
   // Chirps:
   JARChirpEvents.assign( events( ChirpEvents ),
-			 sigtime, sigtime + Duration + After );
+			 signalTime(), signalTime() + Duration + After );
   Chirps.clear();
   for ( int k=0; k < JARChirpEvents.size(); k++ ) {
 
     // time:
     double time = JARChirpEvents[k] - JARChirpEvents.signalTime();
-    EventFrequencyIterator event = eodglobal.begin( JARChirpEvents[k] + sigtime );
+    EventFrequencyIterator event = eodglobal.begin( JARChirpEvents[k] + signalTime() );
     last1 = eodglobal.end() - 1;
 
     // size:
@@ -1155,15 +1153,15 @@ void JAR::analyze( void )
     double width = JARChirpEvents.eventWidth( k );
 
     // mean rate before chirp:
-    double meanrate = eodglobal.frequency( JARChirpEvents[k] + sigtime - 0.7 * width - ChirpAverageTime,
-					   JARChirpEvents[k] + sigtime - 0.7 * width );
+    double meanrate = eodglobal.frequency( JARChirpEvents[k] + signalTime() - 0.7 * width - ChirpAverageTime,
+					   JARChirpEvents[k] + signalTime() - 0.7 * width );
 
     // current deltaf:
     double cdeltaf = StimulusRate - meanrate;
 
     // mean amplitude before chirp:
-    double meanampl = eodglobal.meanSize( JARChirpEvents[k] + sigtime - 0.7 * width - ChirpAverageTime,
-					  JARChirpEvents[k] + sigtime - 0.7 * width );
+    double meanampl = eodglobal.meanSize( JARChirpEvents[k] + signalTime() - 0.7 * width - ChirpAverageTime,
+					  JARChirpEvents[k] + signalTime() - 0.7 * width );
 
     // find maximum amplitude difference:
     EventSizeIterator sindex;
@@ -1181,12 +1179,12 @@ void JAR::analyze( void )
     // time course of chirp phase shift:
     EventIterator gefi = event - width - 10;
     double ophase = -0.3;
-    for ( int j = gefi.index() - eodglobal.next( sigtime );
+    for ( int j = gefi.index() - eodglobal.next( signalTime() );
 	  !gefi && gefi < event + width + 10 && 
 	    j < EODPhases.size();
 	  ++gefi, ++j ) {
       double t = *gefi;
-      EODPhases.x(j) = t - sigtime;
+      EODPhases.x(j) = t - signalTime();
       double t0 = floor( ( t - eodtime ) / meaninterv ) * meaninterv + eodtime;
       double phase = ( t - t0 ) / meaninterv;
       phase -= rint( phase - ophase );
@@ -1196,7 +1194,7 @@ void JAR::analyze( void )
 
     // mean phase before:
     gefi = event - 0.7*width;
-    int inx = gefi.index() - eodglobal.next( sigtime );
+    int inx = gefi.index() - eodglobal.next( signalTime() );
     double meanphasel = 0.0;
     for ( int j=0; j < 6 && inx-j >= 0 && inx-j < EODPhases.size(); j++ ) {
       meanphasel += ( EODPhases.y(inx-j) - meanphasel ) / (j+1);
@@ -1205,7 +1203,7 @@ void JAR::analyze( void )
 
     // mean phase after:
     gefi = event + 0.7*width;
-    inx = gefi.index() - eodglobal.next( sigtime );
+    inx = gefi.index() - eodglobal.next( signalTime() );
     double meanphaser = 0.0;
     for ( int j=0; j < 6 && inx+j >= 0 && inx+j < EODPhases.size(); j++ ) {
       meanphaser += ( EODPhases.y(inx+j) - meanphaser ) / (j+1);
@@ -1232,11 +1230,11 @@ void JAR::analyze( void )
     double beatafter = 0.0;
     if ( LocalEODEvents[0] >= 0 ) {
       // beat amplitude right before chirp:
-      beatbefore = eodlocal.meanSize( JARChirpEvents[k] + sigtime - 0.6 * width - 4.0 * meaninterv,
-				      JARChirpEvents[k] + sigtime - 0.6 * width );
+      beatbefore = eodlocal.meanSize( JARChirpEvents[k] + signalTime() - 0.6 * width - 4.0 * meaninterv,
+				      JARChirpEvents[k] + signalTime() - 0.6 * width );
       // beat amplitude right after chirp:
-      beatafter = eodlocal.meanSize( JARChirpEvents[k] + sigtime + 0.6 * width,
-				     JARChirpEvents[k] + sigtime + 0.6 * width + 4.0 * meaninterv );
+      beatafter = eodlocal.meanSize( JARChirpEvents[k] + signalTime() + 0.6 * width,
+				     JARChirpEvents[k] + signalTime() + 0.6 * width + 4.0 * meaninterv );
     }
 
     // stor results:

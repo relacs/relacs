@@ -125,7 +125,7 @@ public:
   virtual void main( void );
   virtual void process( const OutData &source, OutData &dest );
 
-  virtual void operator()( double t, double *x, double *dxdt, int n ) const;
+  virtual void operator()( double t, double *x, double *dxdt, int n );
 
 
  protected:

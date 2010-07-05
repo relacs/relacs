@@ -1279,15 +1279,13 @@ ostream &operator<<( ostream &str, const FilterDetectors &fd )
 
 void FilterDetectors::keyPressEvent( QKeyEvent *event )
 {
-  if ( event->key() != Qt::Key_Return )
-    event->ignore();
   for ( FilterList::iterator d = FL.begin();
 	d != FL.end() && ! event->isAccepted();
 	++d ) {
     if ( d->FilterDetector != 0 &&
 	 d->FilterDetector->globalKeyEvents() &&
 	 d->FilterDetector->widget() != 0 )
-      d->FilterDetector->widget()->QObject::event( event );
+      QCoreApplication::sendEvent( d->FilterDetector->widget(), event );
   }
 }
 
@@ -1300,7 +1298,7 @@ void FilterDetectors::keyReleaseEvent( QKeyEvent *event )
     if ( d->FilterDetector != 0 &&
 	 d->FilterDetector->globalKeyEvents() &&
 	 d->FilterDetector->widget() != 0 )
-      d->FilterDetector->widget()->QObject::event( event );
+      QCoreApplication::sendEvent( d->FilterDetector->widget(), event );
   }
 }
 

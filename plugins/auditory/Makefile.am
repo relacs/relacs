@@ -8,6 +8,8 @@ EXTRA_DIST = \
     calib0-0.cfg \
     calib0-1.cfg
 
+DISTCLEANFILES = relacs.log relacs.log.old
+
 pkglibdir = $(libdir)/relacs
 pkgincludedir = $(includedir)/relacs
 pkgdatadir=$(datadir)/relacs

@@ -46,7 +46,7 @@
       inputtracescale: 100
        inputtraceunit: mV
      inputtracedevice: 0
-    inputtracechannel: 0
+    inputtracechannel: 3
   inputtracereference: ground
        inputtracegain: 2
   ----- output data ----------------------------------------------------
@@ -62,7 +62,7 @@
 *FilterDetectors
   Filter1
              name: Spikes-1
-           filter: SpikeDetector
+           filter: IntraSpikeDetector
        inputtrace: V-1
              save: true
          savesize: true
@@ -83,14 +83,16 @@
   fallbackonreload: true
 
 *Analog Input Devices
-  plugin1: ComediAnalogInput
-  device1: /dev/comedi0
-   ident1: ai-1
+Device1
+  plugin: ComediAnalogInput
+  device: /dev/comedi0
+   ident: ai-1
 
 *Analog Output Devices
-  plugin1: ComediAnalogOutput
-  device1: /dev/comedi0
-   ident1: ao-1
+Device1
+  plugin: ComediAnalogOutput
+  device: /dev/comedi0
+   ident: ao-1
 
 *Setup
         Name: Setup1

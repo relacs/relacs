@@ -8,6 +8,8 @@ EXTRA_DIST = \
     macrosam.cfg \
     macrosdc.cfg
 
+DISTCLEANFILES = relacs.log relacs.log.old
+
 pkglibdir = $(libdir)/relacs
 pkgincludedir = $(includedir)/relacs
 pkgdatadir=$(datadir)/relacs

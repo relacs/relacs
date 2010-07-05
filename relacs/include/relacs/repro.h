@@ -518,7 +518,6 @@ private:
   Options MyProjectOpt;
 
   vector< int > GrabKeys;
-  vector< int > GrabKeysModifier;
   int GrabKeysBaseSize;
   bool GrabKeysAlt;
   bool GrabKeysInstalled;

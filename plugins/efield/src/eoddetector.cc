@@ -68,11 +68,13 @@ EODDetector::EODDetector( const string &ident, int mode )
   QPushButton *pb = new QPushButton( "Dialog" );
   hb->addWidget( pb );
   connect( pb, SIGNAL( clicked( void ) ), this, SLOT( dialog( void ) ) );
+  connect( pb, SIGNAL( clicked( void ) ), this, SLOT( removeFocus( void ) ) );
 
   // auto configure:
   pb = new QPushButton( "Auto" );
   hb->addWidget( pb );
   connect( pb, SIGNAL( clicked( void ) ), this, SLOT( autoConfigure( void ) ) );
+  connect( pb, SIGNAL( clicked( void ) ), this, SLOT( removeFocus( void ) ) );
 
   setDialogSelectMask( 8 );
   setDialogReadOnlyMask( 16 );

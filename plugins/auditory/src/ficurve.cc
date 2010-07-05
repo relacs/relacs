@@ -405,18 +405,16 @@ int FICurve::loop( vector< FIData > &results )
       ds = Aborted;
     else {
       silentActivity();
-      
-      double sigtime = events( SpikeEvents[0] ).signalTime();
 
       // pause if there were spikes:
       if ( ! SkipPause ||
-	   events( SpikeEvents[0] ).rate( sigtime, sigtime + Duration ) > MaxSilentRate ) {
+	   events( SpikeEvents[0] ).rate( signalTime(), signalTime() + Duration ) > MaxSilentRate ) {
 	sleepWait( Pause );
       }
       
       // if there were some spikes, adjust analog input gain:
-      if ( events( SpikeEvents[0] ).count( sigtime, sigtime + Duration ) > 0 ) {
-	adjust( trace( SpikeTrace[0] ), sigtime, sigtime + Duration, 0.8 );
+      if ( events( SpikeEvents[0] ).count( signalTime(), signalTime() + Duration ) > 0 ) {
+	adjust( trace( SpikeTrace[0] ), signalTime(), signalTime() + Duration, 0.8 );
 	//      activateGains();
       }
 
@@ -927,8 +925,7 @@ void FICurve::silentActivity( void )
   const EventData &spikes = events( SpikeEvents[0] );
 
   // rate:
-  double rate = spikes.rate( spikes.signalTime()-PreWidth,
-			     spikes.signalTime() );
+  double rate = spikes.rate( signalTime()-PreWidth, signalTime() );
 
   // update statistics:
   if ( NSilent < MaxSilent ) {
@@ -960,10 +957,8 @@ void FICurve::analyze( vector< FIData > &results )
   FIData &fid = results[IntensityRange.pos()];
 
   // spikes:
-  fid.Spikes.push( spikes,
-		   spikes.signalTime()-PreWidth,
-		   spikes.signalTime()+Duration + Pause,
-		   spikes.signalTime() );
+  fid.Spikes.push( spikes, signalTime()-PreWidth,
+		   signalTime()+Duration + Pause, signalTime() );
 
   // firing frequency:
   fid.Spikes.frequency( fid.Rate, fid.RateSD );

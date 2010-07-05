@@ -252,15 +252,19 @@ void LinearField::keyPressEvent( QKeyEvent *e )
 
 void LinearField::customEvent( QEvent *qce )
 {
-  if ( qce->type() == QEvent::User+11 ) {
+  switch ( qce->type() - QEvent::User ) {
+  case 11: {
     if ( O.firstWidget() != 0 )
       O.firstWidget()->setFocus();
+    break;
   }
-  else if ( qce->type() == QEvent::User+12 ) {
-    widget()->window()->setFocus();
+  case 12: {
+    removeFocus();
+    break;
   }
-  else
+  default:
     RELACSPlugin::customEvent( qce );
+  }
 }
 
 
