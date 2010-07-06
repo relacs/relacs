@@ -1214,6 +1214,7 @@ void RELACSWidget::stopRePro( void )
   }
 
   ReProRunning = false;
+  window()->setFocus();
 
   if ( AQ->readSignal( SignalTime, IL, ED ) ) // we should get the start time of the latest signal here
     SF->save( IL, ED );

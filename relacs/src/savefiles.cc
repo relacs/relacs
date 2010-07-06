@@ -299,7 +299,7 @@ void SaveFiles::saveToggle( const InList &traces, EventList &events )
 void SaveFiles::save( const InList &traces, EventList &events )
 {
   // this function is called from RELACSWidget::processData()
-  // and from the beggining of the write( OutData ) functions
+  // and from the beginning of the write( OutData ) functions
   // in case of a pending signal
   // and from RELACSWidget::stopRePro().
 
@@ -309,8 +309,8 @@ void SaveFiles::save( const InList &traces, EventList &events )
   // check for new signal:
   if ( events[0].size() > 0 ) {
     double st = events[0].back();
-    if ( saving() && ::fabs( TraceFiles[0].Trace->signalTime() - st ) > 1.0e-6 )
-      cerr << "SignalTime PROBLEM trace: " << TraceFiles[0].Trace->signalTime() << " stimulus: " << st << "\n";
+    if ( saving() && ::fabs( TraceFiles[0].Trace->signalTime() - st ) >= TraceFiles[0].Trace->stepsize() )
+      cerr << "SignalTime PROBLEM trace: " << Str( TraceFiles[0].Trace->signalTime(), 0, 5, 'f' ) << " stimulus: " << Str( st, 0, 5, 'f' ) << "\n";
     if ( st > PrevSignalTime )
       SignalTime = st;
   }

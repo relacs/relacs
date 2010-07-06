@@ -88,8 +88,9 @@ LinearRange::LinearRange( double r, double stepsize )
   if ( Stepsize == 0 )
     Stepsize = r;
 
-  if ( r == 0 ) {
-    if ( Stepsize == 0 )
+  if ( r < 1.0e-8 ) {
+    NSize = 1;
+    if ( Stepsize < 1.0e-8 )
       Stepsize = 1;
   }
   else {
@@ -106,9 +107,10 @@ LinearRange::LinearRange( double l, double r, double stepsize )
   if ( Stepsize == 0 )
     Stepsize = r - l;
 
-  if ( r == l ) {
-    if ( Stepsize == 0 )
-      Stepsize = 1;
+  if ( fabs ( r - l ) < 1.0e-8 ) {
+    NSize = 1;
+    if ( Stepsize < 1.0e-8 )
+      Stepsize = 1.0;
   }
   else {
     NSize = index( r ) + 1;
@@ -195,7 +197,14 @@ const LinearRange &LinearRange::assign( double r, double stepsize )
 {
   Offset = 0;
   Stepsize = stepsize == 0 ? r : stepsize;
-  NSize = index( r ) + 1;
+  if ( fabs ( r ) < 1.0e-8 ) {
+    NSize = 1;
+    if ( Stepsize < 1.0e-8 )
+      Stepsize = 1.0;
+  }
+  else {
+    NSize = index( r ) + 1;
+  }
   return *this;
 }
 
@@ -204,7 +213,14 @@ const LinearRange &LinearRange::assign( double l, double r, double stepsize )
 {
   Offset = l;
   Stepsize = stepsize == 0 ? r - l : stepsize;
-  NSize = index( r ) + 1;
+  if ( fabs ( r - l ) < 1.0e-8 ) {
+    NSize = 1;
+    if ( Stepsize < 1.0e-8 )
+      Stepsize = 1.0;
+  }
+  else {
+    NSize = index( r ) + 1;
+  }
   return *this;
 }
 

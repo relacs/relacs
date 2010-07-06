@@ -151,7 +151,6 @@ void RePro::run( void )
   unlockAll();
 
   RW->KeyTime->unsetNoFocusWidget();
-  removeFocus();
   GrabKeysAllowed = false;
   releaseKeys();
 

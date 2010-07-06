@@ -343,7 +343,9 @@ void Session::customEvent( QEvent *qce )
 {
   if ( qce->type() == QEvent::User+11 ) {
     lock();
+    lockStimulusData();
     EODRateLCD->display( rint( stimulusData().number( "EOD Rate" ) ) );
+    unlockStimulusData();
     unlock();
   }
   else if ( qce->type() == QEvent::User+12 ) {
