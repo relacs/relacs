@@ -75,8 +75,10 @@ public:
 	If \a side equals 2, then the f-I curve of the cell's best side
 	is returned.
         If \a carrierfreq equals 0.0, then the f-I curve at the
-	best frequency is returned. */
-  MapD fICurve( int side=2, double carrierfreq=0.0 ) const;
+	best frequency is returned.
+        Setting \a lockit to \c false does not lock the Session's mutex
+	while accessing the f-I curve data (for internal usage). */
+  MapD fICurve( int side=2, double carrierfreq=0.0, bool lockit=true ) const;
     /*! Return the \a index-th most recently measured f-I curve and its 
         carrier frequency \a carrierfreq of side \a side.
 	If \a side equals 2, then an f-I curve of the cell's best side

@@ -2321,9 +2321,9 @@ void Parameter::time( int &hour, int &minutes, int &seconds, int index ) const
   hour = 0;
   minutes = 0;
   seconds = 0;
-  if ( ! isDate() ) {
+  if ( ! isTime() ) {
     Warning = "Parameter::time -> parameter '" + 
-      Ident + "' is not of type date!";
+      Ident + "' is not of type time!";
     return;
   }
   if ( index < 0 || index >= (int)Hour.size() ) {

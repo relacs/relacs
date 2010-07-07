@@ -13,7 +13,8 @@ pluginlib_LTLIBRARIES = \
     libbasesetoutput.la \
     libbasesimplemodel.la \
     libbasetransferfunction.la \
-    libbaserobot.la
+    libbaserobot.la \
+    libbasewait.la
 
 
 
@@ -288,6 +289,35 @@ libbaserobot_la_include_HEADERS = $(HEADER_PATH)/robot.h
 
 
 
+libbasewait_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS)
+
+libbasewait_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS)
+
+libbasewait_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(QT4_LIBS)
+
+$(libbasewait_la_OBJECTS) : moc_wait.cc
+
+libbasewait_la_SOURCES = wait.cc
+
+libbasewait_la_includedir = $(pkgincludedir)/base
+
+libbasewait_la_include_HEADERS = $(HEADER_PATH)/wait.h
+
+
+
 check_PROGRAMS = \
     linktest_libbaselinearattenuate_la \
     linktest_libbasedecibelattenuate_la \
@@ -298,7 +328,8 @@ check_PROGRAMS = \
     linktest_libbasesetoutput_la \
     linktest_libbasesimplemodel_la \
     linktest_libbasetransferfunction_la \
-    linktest_libbaserobot_la
+    linktest_libbaserobot_la \
+    linktest_libbasewait_la
 
 linktest_libbaselinearattenuate_la_SOURCES = linktest.cc
 linktest_libbaselinearattenuate_la_LDADD = libbaselinearattenuate.la
@@ -329,5 +360,8 @@ linktest_libbasetransferfunction_la_LDADD = libbasetransferfunction.la
 
 linktest_libbaserobot_la_SOURCES = linktest.cc
 linktest_libbaserobot_la_LDADD = libbaserobot.la
+
+linktest_libbasewait_la_SOURCES = linktest.cc
+linktest_libbasewait_la_LDADD = libbasewait.la
 
 TESTS = $(check_PROGRAMS)

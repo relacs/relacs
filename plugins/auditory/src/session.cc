@@ -219,7 +219,7 @@ void Session::sessionStarted( void )
     if( FICurve[k].empty() )
       OldFICurve[k].clear();
     else
-      OldFICurve[k] = fICurve( k, bf[k] );
+      OldFICurve[k] = fICurve( k, bf[k], false );
     FICurve[k].clear();
     FICurveCarrier[k].clear();
     OnFICurve[k].clear();
@@ -295,7 +295,7 @@ void Session::addThreshCurve( const MapD &thresh, int side )
 }
 
 
-MapD Session::fICurve( int side, double carrierfreq ) const
+  MapD Session::fICurve( int side, double carrierfreq, bool lockit ) const
 {
   // default values:
   if ( side > 1 ) {
@@ -313,14 +313,16 @@ MapD Session::fICurve( int side, double carrierfreq ) const
   }
   // search f-I curve:
   MapD fi( 0 );
-  lock();
+  if ( lockit )
+    lock();
   for ( int k=FICurve[side].size()-1; k>=0; k-- ) {
     if ( ::fabs( FICurveCarrier[side][k] - carrierfreq ) < 1.0 ) {
       fi = FICurve[side][k];
       break;
     }
   }
-  unlock();
+  if ( lockit )
+    unlock();
   return fi;
 }
 
