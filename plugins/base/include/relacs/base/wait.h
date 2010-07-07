@@ -22,6 +22,8 @@
 #ifndef _RELACS_BASE_WAIT_H_
 #define _RELACS_BASE_WAIT_H_ 1
 
+#include <QLabel>
+#include <QProgressBar>
 #include <relacs/repro.h>
 using namespace relacs;
 
@@ -63,6 +65,15 @@ public:
 
   Wait( void );
   virtual int main( void );
+
+
+protected:
+
+  virtual void customEvent( QEvent *qce );
+
+  QProgressBar QPB;
+  QLabel EndTimeLabel;
+  QLabel RemainingTimeLabel;
 
 };
 

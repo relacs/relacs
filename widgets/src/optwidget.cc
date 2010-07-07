@@ -365,7 +365,7 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
 	else
 	  Layout.back()->addWidget( l, row, 1,
 				    Qt::AlignLeft | Qt::AlignVCenter );
-	OptWidgetDate *d = new OptWidgetDate( pp, Opt, this, OMutex );
+	OptWidgetDate *d = new OptWidgetDate( pp, l, Opt, this, OMutex );
 	if ( d->editable() ) {
 	  if ( FirstWidget == 0 )
 	    FirstWidget = d->valueWidget();
@@ -388,7 +388,7 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
 	else
 	  Layout.back()->addWidget( l, row, 1,
 				    Qt::AlignLeft | Qt::AlignVCenter );
-	OptWidgetTime *t = new OptWidgetTime( pp, Opt, this, OMutex );
+	OptWidgetTime *t = new OptWidgetTime( pp, l, Opt, this, OMutex );
 	if ( t->editable() ) {
 	  if ( FirstWidget == 0 )
 	    FirstWidget = t->valueWidget();

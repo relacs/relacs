@@ -909,6 +909,7 @@ OptWidgetBoolean::OptWidgetBoolean( Options::iterator param, Options *oo,
   QLabel *label = new QLabel( request.c_str() );
   OptWidget::setLabelStyle( label, (*Param).style() );
   hb->addWidget( label );
+  LabelW = label;
   reset();
   if ( Editable ) {
     EW->setEnabled( true );
@@ -1031,9 +1032,10 @@ void OptWidgetBoolean::initActivation( void )
 }
 
 
-OptWidgetDate::OptWidgetDate( Options::iterator param, Options *oo,
-			      OptWidget *ow, QMutex *mutex, QWidget *parent )
-  : OptWidgetBase( param, 0, oo, ow, mutex ),
+OptWidgetDate::OptWidgetDate( Options::iterator param, QWidget *label,
+			      Options *oo, OptWidget *ow,
+			      QMutex *mutex, QWidget *parent )
+  : OptWidgetBase( param, label, oo, ow, mutex ),
     DE( 0 ),
     LW( 0 ),
     Year( 0 ),
@@ -1193,9 +1195,10 @@ void OptWidgetDate::initActivation( void )
 }
 
 
-OptWidgetTime::OptWidgetTime( Options::iterator param, Options *oo,
-			      OptWidget *ow, QMutex *mutex, QWidget *parent )
-  : OptWidgetBase( param, 0, oo, ow, mutex ),
+OptWidgetTime::OptWidgetTime( Options::iterator param, QWidget *label,
+			      Options *oo, OptWidget *ow,
+			      QMutex *mutex, QWidget *parent )
+  : OptWidgetBase( param, label, oo, ow, mutex ),
     TE( 0 ),
     LW( 0 ),
     Hour( 0 ),

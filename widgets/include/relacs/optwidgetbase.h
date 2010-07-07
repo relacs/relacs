@@ -187,7 +187,8 @@ class OptWidgetDate : public OptWidgetBase
 {
   Q_OBJECT
 public:
-  OptWidgetDate( Options::iterator param, Options *oo, OptWidget *ow,
+  OptWidgetDate( Options::iterator param, QWidget *label,
+		 Options *oo, OptWidget *ow,
 		 QMutex *mutex=0, QWidget *parent=0 );
   virtual void get( void );
   virtual void reset( void );
@@ -211,7 +212,8 @@ class OptWidgetTime : public OptWidgetBase
 {
   Q_OBJECT
 public:
-  OptWidgetTime( Options::iterator param, Options *oo, OptWidget *ow,
+  OptWidgetTime( Options::iterator param, QWidget *label,
+		 Options *oo, OptWidget *ow,
 		 QMutex *mutex=0, QWidget *parent=0 );
   virtual void get( void );
   virtual void reset( void );
