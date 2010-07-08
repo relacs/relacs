@@ -102,18 +102,19 @@ int Wait::main( void )
 {
   // get options:
   bool absdate = boolean( "absdate" );
-  int year, month, day;
-  Options::date( "date", 0, year, month, day );
-  int days = Options::integer( "days" );
   int hour, minutes, seconds;
   Options::time( "time", 0, hour, minutes, seconds );
-
   QDateTime endtime = QDateTime::currentDateTime();
   endtime.setTime( QTime( hour, minutes, seconds ) );
-  if ( absdate )
+  if ( absdate ) {
+    int year, month, day;
+    Options::date( "date", 0, year, month, day );
     endtime.setDate( QDate( year, month, day ) );
-  else
+  }
+  else {
+    int days = Options::integer( "days" );
     endtime = endtime.addDays( days );
+  }
 
   // don't print repro message:
   noMessage();

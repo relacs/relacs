@@ -336,8 +336,10 @@ void SaveFiles::saveTraces( void )
     if ( TraceFiles[k].Stream != 0 ) {
       int n = TraceFiles[k].Trace->saveBinary( *TraceFiles[k].Stream,
 					       TraceFiles[k].Index );
-      TraceFiles[k].Written += n;
-      TraceFiles[k].Index += n;
+      if ( n > 0 ) {
+	TraceFiles[k].Written += n;
+	TraceFiles[k].Index += n;
+      }
       // there is a new stimulus:
       if ( StimulusData && SignalTime >= 0.0 &&
 	   TraceFiles[k].Trace->signalIndex() >= 0 )
