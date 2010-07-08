@@ -926,13 +926,13 @@ void OutData::fill( const SampleDataD &am, double carrierfreq,
   double slope = (am[1]-am[0])/am.stepsize();
   for ( int i=0, j=0, k=1; i<size(); i++, j++ ) {
     double t = pos( i );
-    while ( am.pos( k+1 ) < t && k+1 < am.size() ) {
+    while ( am.pos( k ) < t && k+1 < am.size() ) {
       k++;
       slope = (am[k]-am[k-1])/am.stepsize();
     }
     if ( j >= sinbuf.size() ) 
       j=0;
-    operator[]( i ) = sinbuf[j] * ( am[k] + slope * ( t - am.pos(k) ) );
+    operator[]( i ) = sinbuf[j] * ( am[k-1] + slope * ( t - am.pos(k-1) ) );
   }
   back() = 0.0;
 
