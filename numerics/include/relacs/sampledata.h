@@ -212,7 +212,7 @@ class SampleData : public Array< T >
         and linearly interpolated. */
   template < typename R >
   const SampleData< T > &interpolate( const SampleData< R > &sa, double stepsize )
-        { return assign( sa, sa.offset(), stepsize ); };
+        { return interpolate( sa, sa.offset(), stepsize ); };
     /*! Assign the array \a sa resampled with \a stepsize 
         and linearly interpolated starting from \a offset. */
   template < typename R >
@@ -231,6 +231,20 @@ class SampleData : public Array< T >
   template < typename R >
   const SampleData< T > &interpolate( const Map< R > &ma, 
 				      const LinearRange &range );
+
+    /*! Assign the content and the range of the array \a sa to \a this
+        smoothed by a running average over \a n data points
+	(symmetrically) . */
+  template < typename R >
+  const SampleData< T > &smooth( const SampleData< R > &sa, int n );
+    /*! Assign the content and the range of the array \a sa to \a this
+        smoothed by summing over \a weights.size() data elements
+	weighted by \a weight starting \a nl points left of the current
+	data element (exclusively).
+        You can construct the weights, for example, by means of the
+        savitzkyGolay() function defined in fitalgorithm.h . */
+  template < typename R >
+  const SampleData< T > &smooth( const SampleData< R > &sa, const ArrayD &weights, int nl );
 
     /*! Resize the array to \a n data elements sampled 
         with stepsize \a step and initialize the data elements
@@ -906,10 +920,6 @@ class SampleData : public Array< T >
         or last data element is returned. */
   T interpolate( double x ) const;
 
-    /*! Returns the integral of the SampleData, 
-        i.e. the sum of the data elements times stepsize(). */
-  T integral( void ) const;
-
     /*! Multiply the first \a indices( x ) y-data elements with a ramp
         linearly increasing from zero to one. */
   SampleData< T > &rampUp( double x );
@@ -1072,9 +1082,19 @@ class SampleData : public Array< T >
         position \a first (inclusively) and \a last (exclusively). */
   typename numerical_traits< T >::variance_type
   kurtosis( double first, double last ) const;
-    /*! The sum of all elements of the data elements between
+    /*! The sum of the data elements between
         position \a first (inclusively) and \a last (exclusively). */
-  T sum( double first, double last ) const;
+  typename numerical_traits< T >::mean_type
+  sum( double first, double last ) const;
+    /*! Returns the integral ovar all data elements,
+        i.e. the sum of the data elements times stepsize(). */
+  typename numerical_traits< T >::mean_type
+  integral( void ) const;
+    /*! Returns the integral of the data elements between
+        position \a first (inclusively) and \a last (exclusively),
+        i.e. the sum of the data elements times stepsize(). */
+  typename numerical_traits< T >::mean_type
+  integral( double first, double last ) const;
     /*! The sum of the square of all elements of the data elements between
         position \a first (inclusively) and \a last (exclusively). */
   typename numerical_traits< T >::variance_type
@@ -1837,6 +1857,93 @@ const SampleData< T > &SampleData< T >::interpolate( const Map< R > &ma,
 
 
 template < typename T > template < typename R >
+const SampleData< T > &SampleData< T >::smooth( const SampleData< R > &sa, int n )
+{
+  resize( sa.range() );
+
+  if ( sa.empty() ) {
+    *this = 0;
+    return *this;
+  }
+
+  if ( n <= 1 ) {
+    assign( sa );
+    return *this;
+  }
+
+  int n2 = n/2;
+  int kn = n - n2;
+  iterator first = begin();
+  iterator last = end();
+  typename SampleData< R >::const_iterator firsta = sa.begin();
+  typename SampleData< R >::const_iterator lasta = sa.end();
+  while ( first != last ) {
+    R a = *firsta;
+    typename SampleData< R >::const_iterator itera = firsta;
+    ++itera;
+    for ( int k=2; k<=kn && itera != lasta; k++ ) {
+      a += ( *itera - a ) / k;
+      ++itera;
+    }
+    if ( kn < n )
+      ++kn;
+    else
+      ++firsta;
+    *first = static_cast< T >( a );
+    ++first;
+  }
+
+  return *this;
+}
+
+
+template < typename T > template < typename R >
+const SampleData< T > &SampleData< T >::smooth( const SampleData< R > &sa,
+						const ArrayD &weights, int nl )
+{
+  resize( sa.range() );
+
+  if ( sa.empty() ) {
+    *this = 0;
+    return *this;
+  }
+
+  if ( weights.empty() ) {
+    assign( sa );
+    return *this;
+  }
+
+  int nk = nl;
+  iterator first = begin();
+  iterator last = end();
+  typename SampleData< R >::const_iterator firsta = sa.begin();
+  typename SampleData< R >::const_iterator lasta = sa.end();
+  typename ArrayD::const_iterator firstw = weights.begin();
+  typename ArrayD::const_iterator lastw = weights.end();
+  while ( first != last ) {
+    R a = 0;
+    R w = 0;
+    typename SampleData< R >::const_iterator itera = firsta;
+    typename ArrayD::const_iterator iterw = firstw + nk;
+    while ( iterw != lastw && itera != lasta ) {
+      a += (*itera) * (*iterw);
+      w += (*iterw);
+      ++itera;
+      ++iterw;
+    }
+    if ( nk > 0 )
+      nk--;
+    else
+      ++firsta;
+    *first = static_cast< T >( a / w );
+    ++first;
+  }
+
+  return *this;
+}
+
+
+template < typename T > template < typename R >
 SampleData< T > &SampleData< T >::whiteNoise( int n, double step,
 					      double cflow, double cfup, 
 					      R &r )
@@ -2455,23 +2562,6 @@ bool operator<( const SampleData<TT> &a, const SampleData<TT> &b )
 #undef SAMPLEDARRAYOPS2SINGLESCALARDEF
 #undef SAMPLEDARRAYOPS2SCALARDEF
 #undef SAMPLEDARRAYOPS2DEF
-
-
-template < typename T > 
-T SampleData< T >::integral( void ) const
-{
-  if ( empty() )
-    return 0.0;
-
-  const_iterator first = begin();
-  const_iterator last = end();
-  double sum = *first;
-  while ( ++first != last ) {
-    sum += *first;
-  }
-
-  return sum*stepsize();
-}
 
 
 template < typename T >
@@ -3322,7 +3412,8 @@ typename numerical_traits< T >::variance_type
 
 
 template < typename T >
-T SampleData< T >::sum( double first, double last ) const
+typename numerical_traits< T >::mean_type
+SampleData< T >::sum( double first, double last ) const
 {
   int fi = index( first );
   if ( fi < 0 )
@@ -3334,6 +3425,41 @@ T SampleData< T >::sum( double first, double last ) const
     return 0;
   else
     return ::relacs::sum( begin()+fi, begin()+li );
+}
+
+
+template < typename T > 
+typename numerical_traits< T >::mean_type
+SampleData< T >::integral( void ) const
+{
+  if ( empty() )
+    return 0.0;
+
+  const_iterator first = begin();
+  const_iterator last = end();
+  double sum = *first;
+  while ( ++first != last ) {
+    sum += *first;
+  }
+
+  return sum*stepsize();
+}
+
+
+template < typename T >
+typename numerical_traits< T >::mean_type
+SampleData< T >::integral( double first, double last ) const
+{
+  int fi = index( first );
+  if ( fi < 0 )
+    fi = 0;
+  int li = index( last );
+  if ( li > size() )
+    li = size();
+  if ( li <= fi )
+    return 0;
+  else
+    return ::relacs::sum( begin()+fi, begin()+li ) * stepsize();
 }
 
 

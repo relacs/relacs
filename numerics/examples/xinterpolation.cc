@@ -33,17 +33,50 @@ int main( int argc, char **argv )
 {
   // some noise:
   SampleDataD noise;
-  noise.whiteNoise( 100.0, 0.005, 0.0, 20.0, rnd );
+  noise.whiteNoise( 10.0, 0.005, 0.0, 20.0, rnd );
+  cout << "# original data:\n";
   cout << noise << "\n\n";
+
+  // interpolate from SampleData to SampleData:
+  SampleDataD isnoise( 1.0, 11.0, 0.001 );
+  isnoise.interpolate( noise );
+  cout << "# interpolated from sampledata:\n";
+  cout << isnoise << "\n\n";
+
+  // interpolate from SampleData with new stepsize:
+  SampleDataD ssnoise;
+  ssnoise.interpolate( noise, 0.002 );
+  cout << "# interpolated from sampledata with new stepsize:\n";
+  cout << ssnoise << "\n\n";
+
+  // interpolate from SampleData with new stepsize and offset:
+  SampleDataD sosnoise;
+  sosnoise.interpolate( noise, 3.0, 0.002 );
+  cout << "# interpolated from sampledata with new offset and stepsize:\n";
+  cout << sosnoise << "\n\n";
+
+  // interpolate from SampleData with new range:
+  SampleDataD rsnoise;
+  rsnoise.interpolate( noise, LinearRange( 1.0, 4.0, 0.01 ) );
+  cout << "# interpolated from sampledata with new range:\n";
+  cout << rsnoise << "\n\n";
 
   // convert to map:
   MapD mnoise( noise );
+  cout << "# as map:\n";
   cout << mnoise << "\n\n";
 
-  // interpolate to SampleData:
-  SampleDataD inoise( 10.0, 110.0, 0.001 );
-  inoise.interpolate( mnoise );
-  cout << inoise << "\n\n";
+  // interpolate from Map to SampleData:
+  SampleDataD imnoise( 1.0, 11.0, 0.001 );
+  imnoise.interpolate( mnoise );
+  cout << "# interpolated from map:\n";
+  cout << imnoise << "\n\n";
+
+  // interpolate from Map to SampleData with new range:
+  SampleDataD rmnoise( 1.0, 11.0, 0.001 );
+  rmnoise.interpolate( mnoise, LinearRange( 2.0, 6.0, 0.01 ) );
+  cout << "# interpolated from map with new range:\n";
+  cout << rmnoise << "\n\n";
 
   return 0;
 }

@@ -21,6 +21,7 @@ noinst_PROGRAMS = \
     xounoise \
     xrand \
     xsampledata \
+    xsmooth \
     xspectrum \
     xstats \
     xmoments \
@@ -91,6 +92,9 @@ xkernel_SOURCES = xkernel.cc
 
 xinterpolation_LDADD = ../src/librelacsnumerics.la
 xinterpolation_SOURCES = xinterpolation.cc
+
+xsmooth_LDADD = ../src/librelacsnumerics.la
+xsmooth_SOURCES = xsmooth.cc
 
 xounoise_LDADD = ../src/librelacsnumerics.la
 xounoise_SOURCES = xounoise.cc

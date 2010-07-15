@@ -227,10 +227,18 @@ void expGuess( ArrayD &p, double y0, double x1, double y1,
 double sineFunc( double x, const ArrayD &p );
 double sineFuncDerivs( double x, const ArrayD &p, ArrayD &dfdp );
 
+  /*! Computes the Savitzky-Golay filter coefficients.
+      These can be used for the SampleData::smooth() function.
+      \param[in] np size of the filter, i.e. number of data points.
+      \param[in] nl number of data points left of the current data element. 
+      \param[in] m order of smoothing polynomial
+      \param[in] ld order of derivative.
+      \param[out] weights the \a np coefficients of the computed filter. */
+ void savitzkyGolay( ArrayD &weights, int np, int nl, int m=1, int ld=0 );
 
   /*! 0: everything o.k.
-      1: Singular Matrix-1 
-      2: Singular Matrix-2 */
+      1: singular matrix 1 
+      2: singular matrix 2 */
 int gaussJordan( vector< ArrayD > &a, int n, ArrayD &b );
 
 void covarSort( vector< ArrayD > &covar, const ArrayI &paramfit, int mfit );

@@ -160,5 +160,125 @@ double sineFuncDerivs( double x, const ArrayD &p, ArrayD &dfdp )
 }
 
 
+int ludcmp( vector< ArrayD > &a, int n, ArrayI &indx, double *d )
+{
+  const double TINY = 1.0e-20;
+  ArrayD vv( n );
+  *d=1.0;
+  for ( int i=0; i<n; i++ ) {
+    double big=0.0;
+    double temp=0.0;
+    for ( int j=0; j<n; j++ ) {
+      if ((temp=fabs(a[i][j])) > big) 
+	big=temp;
+    }
+    if ( big == 0.0 )
+      return 1;    // singular matrix!
+    vv[i]=1.0/big;
+  }
+  int imax = 0;
+  for ( int j=0; j<n; j++ ) {
+    for ( int i=0; i<j; i++ ) {
+      double sum=a[i][j];
+      for ( int k=0; k<i; k++ ) 
+	sum -= a[i][k]*a[k][j];
+      a[i][j] = sum;
+    }
+    double big=0.0;
+    double dum=0.0;
+    for ( int i=j; i<n; i++ ) {
+      double sum=a[i][j];
+      for ( int k=0; k<j; k++ )
+	sum -= a[i][k]*a[k][j];
+      a[i][j] = sum;
+      if ( (dum=vv[i]*fabs(sum)) >= big) {
+	big=dum;
+	imax=i;
+      }
+    }
+    if ( j != imax ) {
+      for ( int k=0; k<n; k++ ) {
+	dum=a[imax][k];
+	a[imax][k]=a[j][k];
+	a[j][k]=dum;
+      }
+      *d = -(*d);
+      vv[imax]=vv[j];
+    }
+    indx[j]=imax;
+    if (a[j][j] == 0.0) 
+      a[j][j]=TINY;
+    if (j != n-1) {
+      dum=1.0/(a[j][j]);
+      for ( int i=j+1; i<n; i++ ) 
+	a[i][j] *= dum;
+    }
+  }
+  return 0;
+}
+
+
+void lubksb( vector< ArrayD > &a, int n, ArrayI &indx, ArrayD &b )
+{
+  int ii=0;
+  for ( int i=0; i<n; i++ ) {
+    int ip=indx[i];
+    double sum=b[ip];
+    b[ip]=b[i];
+    if (ii) {
+      for ( int j=ii-1; j<i; j++ ) 
+	sum -= a[i][j]*b[j];
+    }
+    else if ( sum ) 
+      ii=i+1;
+    b[i]=sum;
+  }
+  for ( int i=n-1; i>=0; i-- ) {
+    double sum=b[i];
+    for ( int j=i+1; j<n; j++ ) 
+      sum -= a[i][j]*b[j];
+    b[i]=sum/a[i][i];
+  }
+}
+
+
+void savitzkyGolay( ArrayD &weights, int np, int nl, int m, int ld )
+{
+  weights.clear();
+  if ( np <= 0 || nl < 0 || np < nl+1 || ld > m || np <= m )
+    return;
+
+  weights.resize( np, 0.0 );
+  int nr = np - nl - 1;
+  int mm = 0;
+  vector< ArrayD > a( m+1, ArrayD( m+1 ) );
+  ArrayD b( m+1 );
+  for ( int ipj=0; ipj <= (m << 1); ipj++ ) {
+    double sum = ( ipj ? 0.0 : 1.0 );
+    for ( int k=1; k<=nr; k++ )
+      sum += pow( (double)k, (double)ipj );
+    for ( int k=1; k<=nl; k++ )
+      sum += pow( (double)-k, (double)ipj );
+    mm = ipj < 2*m-ipj ? ipj : 2*m-ipj;
+    for ( int imj = -mm; imj<=mm; imj+=2 )
+      a[(ipj+imj)/2][(ipj-imj)/2] = sum;
+  }
+  ArrayI indx( m+1 );
+  double d;
+  ludcmp( a, m+1, indx, &d );
+  for ( int j=0; j<=m; j++ )
+    b[j]=0.0;
+  b[ld]=1.0;
+  lubksb( a, m+1, indx, b );
+  for ( int k = -nl; k<=nr; k++ ) {
+    double sum = b[0];
+    double fac = 1.0;
+    for ( mm=1; mm<=m; mm++ )
+      sum += b[mm]*(fac *= k);
+    weights[k+nl] = sum;
+  }
+}
+
+
 }; /* namespace relacs */
 
