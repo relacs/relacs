@@ -78,6 +78,8 @@ public:
     /*! Add Device \a d to the list and to the device list \a devices. */
   template < class DD >
   void add( T *d, DD &devices );
+    /*! Move device \a d and its menu entry to the back of the list. */
+  void swapBack( T *d );
 
     /*! Create \a devices from plugins. */
   template < class DD >
@@ -172,7 +174,7 @@ void DeviceList<T,PluginID>::clear( void )
 template < class T, int PluginID >
 void DeviceList<T,PluginID>::close( void )
 {
-  for ( unsigned int k=0; k<DVs.size(); k++ )
+  for ( int k=(int)DVs.size()-1; k >= 0; k-- )
     DVs[k]->close();
 }
 
@@ -206,6 +208,22 @@ void DeviceList<T,PluginID>::add( T *d, DD &devices )
   if ( (void *)&devices != (void *)this )
     devices.add( d, devices );
   Menus.push_back( NULL );
+}
+
+
+template < class T, int PluginID >
+void DeviceList<T,PluginID>::swapBack( T *d )
+{
+  for ( unsigned int k=0; k<DVs.size(); k++ ) {
+    if ( DVs[k] == d ) {
+      DVs.erase( DVs.begin() + k );
+      DVs.push_back( d );
+      QMenu *m = Menus[k];
+      Menus.erase( Menus.begin() + k );
+      Menus.push_back( m );
+      break;
+    }
+  }
 }
 
 
@@ -285,6 +303,12 @@ int DeviceList<T,PluginID>::create( DD &devices, int m, const string &dflt )
 	if ( deviceindex < 0 ) {
 	  dv->setDeviceIdent( ident );
 	  add( dv, devices );
+	}
+	else {
+	  // swap device to the end of the lists:
+	  swapBack( dv );
+	  if ( (void *)&devices != (void *)this )
+	    devices.swapBack( dv );
 	}
 	// open device:
 	Str ds = deviceopts.text( "device" );

@@ -434,8 +434,13 @@ protected:
   void adjust( const InData &data, double duration, double threshold );
     /*! Activates the new gain settings for analog input traces
         set by adjustGain().
+        activateGains() assumes the data to be locked (default situation
+	when called from a RePro::main() or Control::main() function).
+        If you call activateGains() from a context where the data
+        are not locked, e.g. from a keyPressEvent(),
+        then call it with \a datalocked set to \c false.
         \sa adjustGain( InData, double ), adjustGain( InData, double, double ), adjust() */
-  void activateGains( void );
+  void activateGains( bool datalocked=true );
 
 
  public:

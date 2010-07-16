@@ -118,7 +118,7 @@ unsigned long RandomStd::integer( void )
 
 double RandomStd::uniform( void )
 {
-  return double(rand())/double(RAND_MAX);
+  return double(rand())/(double(RAND_MAX) + 1.0);
 }
 
 

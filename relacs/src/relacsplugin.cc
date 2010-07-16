@@ -382,9 +382,9 @@ void RELACSPlugin::adjust( const InData &data, double duration,
 }
 
 
-void RELACSPlugin::activateGains( void )
+void RELACSPlugin::activateGains( bool datalocked )
 {
-  RW->activateGains();
+  RW->activateGains( datalocked );
 }
 
 

@@ -343,7 +343,13 @@ void Session::customEvent( QEvent *qce )
 {
   if ( qce->type() == QEvent::User+11 ) {
     lock();
-    lockStimulusData();
+    if ( ! stimulusDataMutex()->tryLock( 5 ) ) {
+      // we do not get the lock for the stimulus data now,
+      // so we repost the event to a later time.
+      unlock();
+      postCustomEvent( 11 );
+      return;
+    }
     EODRateLCD->display( rint( stimulusData().number( "EOD Rate" ) ) );
     unlockStimulusData();
     unlock();

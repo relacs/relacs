@@ -44,6 +44,8 @@ AmplifierControl::AmplifierControl( void )
 
   addNumber( "resistancescale", "Scaling factor for computing R from stdev of voltage trace", ResistanceScale, 0.0, 100000.0, 0.01 );
   addNumber( "maxresistance", "Maximum resistance to be expected for scaling voltage trace", MaxResistance, 0.0, 1000000.0, 10.0, "MOhm" );
+
+  setGlobalKeyEvents();
 }
 
 
@@ -116,6 +118,21 @@ void AmplifierControl::initDevices( void )
 }
 
 
+class AmplifierEvent : public QEvent
+{
+
+public:
+
+  AmplifierEvent( const string &ls )
+    : QEvent( Type( User+11 ) ),
+      LabelStr( ls )
+  {
+  }
+
+  string LabelStr;
+};
+
+
 void AmplifierControl::startResistance( void )
 {
   if ( Ampl != 0 && SpikeTrace[0] >= 0 && ! RMeasure ) {
@@ -123,7 +140,7 @@ void AmplifierControl::startResistance( void )
     DGain = trace( SpikeTrace[0] ).gainIndex();
     adjustGain( trace( SpikeTrace[0] ), MaxResistance / ResistanceScale );
     unlockData();
-    activateGains();
+    activateGains( false );
     Ampl->resistance();
     RMeasure = true;
   }
@@ -138,7 +155,8 @@ void AmplifierControl::measureResistance( void )
 					     trace( SpikeTrace[0] ).currentTime() );
     unlockData();
     r *= ResistanceScale;
-    ResistanceLabel->setText( Str( r, "%.0f" ).c_str() );
+    QCoreApplication::postEvent( (RELACSPlugin*)this,
+				 new AmplifierEvent( Str( r, "%.0f" ) ) );
     lockMetaData();
     metaData( "Electrode" ).setNumber( "Resistance", r );
     unlockMetaData();
@@ -153,7 +171,7 @@ void AmplifierControl::stopResistance( void )
     readLockData();
     setGain( trace( SpikeTrace[0] ), DGain );
     unlockData();
-    activateGains();
+    activateGains( false );
     RMeasure = false;
   }
 }
@@ -217,6 +235,19 @@ void AmplifierControl::keyReleaseEvent( QKeyEvent *e )
   }
 }
 
+
+void AmplifierControl::customEvent( QEvent *qce )
+{
+  switch ( qce->type() - QEvent::User ) {
+  case 11: {
+    AmplifierEvent *ae = dynamic_cast<AmplifierEvent*>( qce );
+    ResistanceLabel->setText( ae->LabelStr.c_str() );
+    break;
+  }
+  default:
+    RELACSPlugin::customEvent( qce );
+  }
+}
 
 
 addControl( AmplifierControl );

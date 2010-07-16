@@ -1823,9 +1823,9 @@ void Macro::acceptDialog( void )
 
 void Macro::dialogAction( int r )
 {
-  if ( r == 2 ) {
+  if ( r == 2 )
     MC->startMacro( MacroNum );
-  }
+  // Note: in case of a switch command, *this does not exist anymore!
 }
 
 
@@ -1848,11 +1848,12 @@ void Macro::run( void )
 
 void Macro::launch( void )
 {
+  MC->window()->setFocus();
   if ( fallBack() )
     MC->store();
   Variables.setDefaults();
   MC->startMacro( MacroNum );
-  MC->window()->setFocus();
+  // Note: in case of a switch command, *this does not exist anymore!
 }
 
 
@@ -2123,6 +2124,7 @@ void MacroCommand::start( void )
   MCs->MCs[MacroNum]->Variables.setDefaults();
   MCs->Enable = true;
   MCs->startMacro( MacroNum, CommandNum );
+  // Note: in case of a switch command, *this does not exist anymore?
 }
 
 
@@ -2131,6 +2133,7 @@ void MacroCommand::run( void )
   MCs->MCs[MacroNum]->Variables.setDefaults();
   MCs->Enable = true;
   MCs->startMacro( MacroNum, CommandNum );
+  // XXX Note: in case of a switch command, *this does not exist anymore? XXX
   if ( Macro >= 0 )
     MCs->ThisMacroOnly = true;
   else
@@ -2246,13 +2249,13 @@ void MacroCommand::acceptDialog( void )
 void MacroCommand::dialogAction( int r )
 {
   // run:
-  if ( r == 2 ) {
+  if ( r == 2 )
     MCs->startMacro( MacroNum, CommandNum );
-  }
+  // Note: in case of a switch command, *this does not exist anymore?
+
   // defaults:
-  if ( r == 3 ) {
+  if ( r == 3 )
     CO.clear();
-  }
 }
 
 

@@ -70,6 +70,8 @@ protected:
     /*! Measure electrode resistance. */
   void measureResistance( void );
 
+  virtual void customEvent( QEvent *qce );
+
 
 private:
 

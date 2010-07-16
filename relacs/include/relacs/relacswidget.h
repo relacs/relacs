@@ -228,8 +228,12 @@ public:
   void setMode( ModeTypes mode );
 
     /*! Activates the new gain settings for analog input
-        set by the adjustGain() functions. */
-  void activateGains( void );
+        set by the adjustGain() functions.
+        activateGains() assumes the data to be locked (default).
+        If you call activateGains() from a context where the data
+        are not locked, e.g. from a keyPressEvent(),
+        then call it with \a datalocked set to \c false. */
+  void activateGains( bool datalocked=true );
 
 
 public slots:

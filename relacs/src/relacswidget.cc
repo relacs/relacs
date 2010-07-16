@@ -865,9 +865,10 @@ void RELACSWidget::simLoadMessage( void )
 
 ////// RePros ///////////////////////////////////////////////////////////
 
-void RELACSWidget::activateGains( void )
+void RELACSWidget::activateGains( bool datalocked )
 {
-  unlockData();
+  if ( datalocked )
+    unlockData();
   writeLockData();
   lockAI();
   AQ->activateGains();
@@ -875,7 +876,8 @@ void RELACSWidget::activateGains( void )
   AQ->readRestart( IL, ED );
   FD->adjust( IL, ED, AQ->adjustFlag() );
   unlockData();
-  readLockData();
+  if ( datalocked )
+    readLockData();
 }
 
 

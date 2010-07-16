@@ -19,6 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <cstdlib>
+#include <ctime>
 #include <cmath>
 #include <unistd.h>
 #include <time.h>
@@ -132,9 +134,12 @@ int CS3310DIO::open( void )
   
   // check if attenuator is working:
   int ar = 0;
+  // get some random attenuation level:
+  srand ( time( NULL ) );
+  int rl = rand() % 20 - 10;
   // set attenuation:
-  Level[0] = ZeroGain/2;
-  Level[1] = ZeroGain/2;
+  Level[0] = ZeroGain/2 + rl;
+  Level[1] = ZeroGain/2 + rl;
   for ( int n=0; n<Tries; n++ ) {
     ar = write();
     if ( ar == 0 )
