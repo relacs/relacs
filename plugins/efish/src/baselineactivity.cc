@@ -159,7 +159,7 @@ int BaselineActivity::main( void )
     P[2*n].setSize( 1.0, pdy );
     P[2*n].setTitle( "Nerve Potential" );
     P[2*n].setTitlePos( 0.0, Plot::Graph, 0.0, Plot::SecondAxis, Plot::Left );
-    P[2*n].setXLabel( "Time / ms" );
+    P[2*n].setXLabel( "Time [ms]" );
     P[2*n].setAutoScaleY();
     P[2*n].setYLabel( "" );
     P[2*n].setLMarg( 5.0 );
@@ -730,21 +730,19 @@ void BaselineActivity::analyze( int autodetect,
     InData::const_iterator firstn = nd.begin( FirstSignal );
     InData::const_iterator lastn = nd.end();
     InDataTimeIterator firstntime = nd.timeBegin( FirstSignal );
-    EventList peaktroughs( 2, (int)rint(50000.0*Duration), true );
-    if ( Repeats <= 0 ) {
-      nerveamplp.clear();
-      nerveamplt.clear();
-      nerveamplm.clear();
-      nerveamplp.reserve( (int)rint(5000.0*SearchDuration) );
-      nerveamplt.reserve( (int)rint(5000.0*SearchDuration) );
-      nerveamplm.reserve( (int)rint(5000.0*SearchDuration) );
-      double min = nd.min( FirstSignal, FirstSignal+4.0/EODRate );
-      double max = nd.max( FirstSignal, FirstSignal+4.0/EODRate );
-      threshold = 0.5*(max-min);
-      if ( threshold < 1.0e-8 )
-	threshold = 0.001;
-      D.init( firstn, lastn, firstntime );
-    }
+    EventList peaktroughs( 2, (int)rint(5000.0*Duration), true );
+    nerveamplp.clear();
+    nerveamplt.clear();
+    nerveamplm.clear();
+    nerveamplp.reserve( (int)rint(5000.0*SearchDuration) );
+    nerveamplt.reserve( (int)rint(5000.0*SearchDuration) );
+    nerveamplm.reserve( (int)rint(5000.0*SearchDuration) );
+    double min = nd.min( FirstSignal, FirstSignal+4.0/EODRate );
+    double max = nd.max( FirstSignal, FirstSignal+4.0/EODRate );
+    threshold = 0.5*(max-min);
+    if ( threshold < 1.0e-8 )
+      threshold = 0.001;
+    D.init( firstn, lastn, firstntime );
     D.peakTrough( firstn, lastn, peaktroughs,
 		  threshold, threshold, threshold, NerveAcceptEOD );
     // store amplitudes:
@@ -755,14 +753,11 @@ void BaselineActivity::analyze( int autodetect,
       nerveamplt.push( peaktroughs[1][k] - FirstSignal, 
 		       peaktroughs[1].eventSize( k ) );
     // averaged amplitude:
+    double left = FirstSignal;
     double st = (peaktroughs[0].back() - peaktroughs[0].front())/double(peaktroughs[0].size()-1);
-    int si = nd.indices( st );
-    int inx = nd.indices( FirstSignal + nerveamplm.size()*st );
-    double tt=0.0;
-    for ( int k=nerveamplm.size(); tt+2.0*st<SearchDuration; k++ ) {
-      tt = nd.interval( inx ) - FirstSignal;
-      nerveamplm.push( tt, nd.mean( inx, inx+si ) );
-      inx += si;
+    for ( int k=0; k<nerveamplp.size(); k++ ) {
+      nerveamplm.push( left-FirstSignal, nd.mean( left, left+st ) );
+      left += st;
     }
   }
 

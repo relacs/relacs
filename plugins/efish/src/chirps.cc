@@ -1313,22 +1313,21 @@ void Chirps::analyze( void )
 
   // Nerve potential:
   if ( NerveTrace[0] >= 0 ) {
-    const InData &nd = trace(NerveTrace[0]);
+    const InData &nd = trace( NerveTrace[0] );
     // nerve amplitudes:
     // peak and trough amplitudes:
-    double l = signalTime();
-    double min = nd.min( l, l+4.0/FishRate );
-    double max = nd.max( l, l+4.0/FishRate );
+    double min = nd.min( signalTime(), signalTime()+4.0/FishRate );
+    double max = nd.max( signalTime(), signalTime()+4.0/FishRate );
     double threshold = 0.5*(max-min);
     if ( threshold < 1.0e-8 )
       threshold = 0.001;
     EventList peaktroughs( 2, (int)rint(1500.0*Duration), true );
-    InData::const_iterator firstn = nd.begin( l );
-    InData::const_iterator lastn = nd.begin( l+Duration );
+    InData::const_iterator firstn = nd.begin( signalTime() );
+    InData::const_iterator lastn = nd.begin( signalTime()+Duration );
     if ( lastn > nd.end() )
       lastn = nd.end();
     Detector< InData::const_iterator, InDataTimeIterator > D;
-    D.init( firstn, lastn, nd.timeBegin( l ) );
+    D.init( firstn, lastn, nd.timeBegin( signalTime() ) );
     D.peakTrough( firstn, lastn, peaktroughs, threshold,
 		  threshold, threshold, NerveAcceptEOD );
     // store amplitudes:
@@ -1339,16 +1338,17 @@ void Chirps::analyze( void )
     NerveAmplT.reserve( peaktroughs[0].size() + 100 );
     NerveAmplM.reserve( peaktroughs[0].size() + 100 );
     for ( int k=0; k<peaktroughs[0].size() && k<peaktroughs[1].size(); k++ ) {
-      NerveAmplP.push( peaktroughs[0][k] - l, 
+      NerveAmplP.push( peaktroughs[0][k] - signalTime(), 
 		       peaktroughs[0].eventSize( k ) );
-      NerveAmplT.push( peaktroughs[1][k] - l, 
+      NerveAmplT.push( peaktroughs[1][k] - signalTime(), 
 		       peaktroughs[1].eventSize( k ) );
     }
     // averaged amplitude:
+    double left = signalTime();
     double st = (peaktroughs[0].back() - peaktroughs[0].front())/double(peaktroughs[0].size()-1);
     for ( int k=0; k<NerveAmplP.size(); k++ ) {
-      NerveAmplM.push( l-signalTime(), nd.mean( l, l+st ) );
-      l += st;
+      NerveAmplM.push( left-signalTime(), nd.mean( left, left+st ) );
+      left += st;
     }
   }
 
@@ -1498,22 +1498,22 @@ void Chirps::analyze( void )
 
     // nerve:
     if ( NerveTrace[0] >= 0 ) {
-      const InData &nd = trace(NerveTrace[0]);
+      const InData &nd = trace( NerveTrace[0] );
       // nerve amplitudes:
       // peak and trough amplitudes:
-      double l = chirptime - SaveWindow;
-      double min = nd.min( l, l+4.0/FishRate );
-      double max = nd.max( l, l+4.0/FishRate );
+      double left = chirptime - SaveWindow;
+      double min = nd.min( left, left+4.0/FishRate );
+      double max = nd.max( left, left+4.0/FishRate );
       double threshold = 0.5*(max-min);
       if ( threshold < 1.0e-8 )
 	threshold = 0.001;
       EventList peaktroughs( 2, (int)rint(1500.0*(Duration>2.0*SaveWindow?Duration:2.0*SaveWindow)), true );
-      InData::const_iterator firstn = nd.begin( l );
-      InData::const_iterator lastn = nd.begin( l+2.0*SaveWindow );
+      InData::const_iterator firstn = nd.begin( left );
+      InData::const_iterator lastn = nd.begin( left+2.0*SaveWindow );
       if ( lastn > nd.end() )
 	lastn = nd.end();
       Detector< InData::const_iterator, InDataTimeIterator > D;
-      D.init( firstn, lastn, nd.timeBegin( l ) );
+      D.init( firstn, lastn, nd.timeBegin( left ) );
       D.peakTrough( firstn, lastn, peaktroughs, threshold,
 		    threshold, threshold, NerveAcceptEOD );
       // store amplitudes:
@@ -1532,8 +1532,8 @@ void Chirps::analyze( void )
       // averaged amplitude:
       double st = (peaktroughs[0].back() - peaktroughs[0].front())/double(peaktroughs[0].size()-1);
       for ( int k=0; k<rd.NerveAmplP.size(); k++ ) {
-	rd.NerveAmplM.push( l-chirptime, nd.mean( l, l+st ) );
-	l += st;
+	rd.NerveAmplM.push( left-chirptime, nd.mean( left, left+st ) );
+	left += st;
       }
     }
   }

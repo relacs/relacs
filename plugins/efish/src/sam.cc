@@ -951,21 +951,21 @@ XXX
     const InData &nd = trace( NerveTrace[0] );
     Offset = NerveAmplP.size();
 
-    for ( int i = 0; i<beattimes.size(); i++ ) {
+    for ( int i=0; i<beattimes.size(); i++ ) {
       // nerve amplitudes:
       // peak and trough amplitudes:
-      double l = beattimes[i];
-      double min = nd.min( l, l+4.0/FishRate );
-      double max = nd.max( l, l+4.0/FishRate );
+      double ref = beattimes[i];
+      double min = nd.min( ref, ref+4.0/FishRate );
+      double max = nd.max( ref, ref+4.0/FishRate );
       double threshold = 0.5*(max-min);
       if ( threshold < 1.0e-8 )
 	threshold = 0.001;
       EventList peaktroughs( 2, (int)rint(2000.0*Period), true );
-      InData::const_iterator firstn = nd.begin( l-0.5*Period-1.0/FishRate );
-      InData::const_iterator lastn = nd.begin( l+0.5*Period+10.0/FishRate );
+      InData::const_iterator firstn = nd.begin( ref-0.5*Period-1.0/FishRate );
+      InData::const_iterator lastn = nd.begin( ref+0.5*Period+1.0/FishRate );
       if ( lastn > nd.end() )
 	lastn = nd.end();
-      InDataTimeIterator firstt = nd.timeBegin( l-0.5*Period-1.0/FishRate );
+      InDataTimeIterator firstt = nd.timeBegin( ref-0.5*Period-1.0/FishRate );
       Detector< InData::const_iterator, InDataTimeIterator > D;
       D.init( firstn, lastn, firstt );
       D.peakTrough( firstn, lastn, peaktroughs,
@@ -975,23 +975,19 @@ XXX
       NerveAmplP.push_back( MapD() );
       NerveAmplT.push_back( MapD() );
       NerveAmplM.push_back( MapD() );
-      NerveAmplP.back().reserve( peaktroughs[0].size() + 100 );
-      NerveAmplT.back().reserve( peaktroughs[0].size() + 100 );
-      NerveAmplM.back().reserve( peaktroughs[0].size() + 100 );
+      NerveAmplP.back().reserve( peaktroughs[0].size() );
+      NerveAmplT.back().reserve( peaktroughs[0].size() );
+      NerveAmplM.back().reserve( peaktroughs[0].size() );
       for ( int k=0; k<peaktroughs[0].size() && k<peaktroughs[1].size(); k++ ) {
-	NerveAmplP.back().push( peaktroughs[0][k] - l, 
-				peaktroughs[0].eventSize( k ) );
-	NerveAmplT.back().push( peaktroughs[1][k] - l, 
-				peaktroughs[1].eventSize( k ) );
+	NerveAmplP.back().push( peaktroughs[0][k] - ref, peaktroughs[0].eventSize( k ) );
+	NerveAmplT.back().push( peaktroughs[1][k] - ref, peaktroughs[1].eventSize( k ) );
       }
       // averaged amplitude:
       double st = (peaktroughs[0].back() - peaktroughs[0].front())/double(peaktroughs[0].size()-1);
-      int si = nd.indices( st );
-      int inx = nd.indices( l-0.5*Period-1.0/FishRate );
+      double left = ref-0.5*Period-1.0/FishRate;
       for ( int k=0; k<NerveAmplP.back().size(); k++ ) {
-	NerveAmplM.back().push( nd.interval( inx )-l, 
-				nd.mean( inx, inx+si ) );
-	inx += si;
+	NerveAmplM.back().push( left-ref, nd.mean( left, left+st ) );
+	left += st;
       }
     }
 
@@ -1002,40 +998,36 @@ XXX
 
     // nerve amplitudes:
     // peak and trough amplitudes:
-    double l = signalTime();
-    double min = nd.min( l, l+4.0/FishRate );
-    double max = nd.max( l, l+4.0/FishRate );
+    double left = signalTime();
+    double min = nd.min( left, left+4.0/FishRate );
+    double max = nd.max( left, left+4.0/FishRate );
     double threshold = 0.5*(max-min);
     if ( threshold < 1.0e-8 )
       threshold = 0.001;
     EventList peaktroughs( 2, (int)rint(1500.0*Duration), true );
-    InData::const_iterator firstn = nd.begin( l );
-    InData::const_iterator lastn = nd.begin( l+Duration );
+    InData::const_iterator firstn = nd.begin( left );
+    InData::const_iterator lastn = nd.begin( left+Duration );
     if ( lastn > nd.end() )
       lastn = nd.end();
-    InDataTimeIterator firstt = nd.timeBegin( l );
+    InDataTimeIterator firstt = nd.timeBegin( left );
     Detector< InData::const_iterator, InDataTimeIterator > D;
     D.init( firstn, lastn, firstt );
     D.peakTrough( firstn, lastn, peaktroughs,
 		  threshold, threshold, threshold, 
 		  NerveAcceptEOD );
     // store amplitudes:
-    AllNerveAmplP.reserve( peaktroughs[0].size() + 100 );
-    AllNerveAmplT.reserve( peaktroughs[0].size() + 100 );
-    AllNerveAmplM.reserve( peaktroughs[0].size() + 100 );
+    AllNerveAmplP.reserve( peaktroughs[0].size() );
+    AllNerveAmplT.reserve( peaktroughs[0].size() );
+    AllNerveAmplM.reserve( peaktroughs[0].size() );
     for ( int k=0; k<peaktroughs[0].size() && k<peaktroughs[1].size(); k++ ) {
-      AllNerveAmplP.push( peaktroughs[0][k] - l, 
-			  peaktroughs[0].eventSize( k ) );
-      AllNerveAmplT.push( peaktroughs[1][k] - l, 
-			  peaktroughs[1].eventSize( k ) );
+      AllNerveAmplP.push( peaktroughs[0][k] - left, peaktroughs[0].eventSize( k ) );
+      AllNerveAmplT.push( peaktroughs[1][k] - left, peaktroughs[1].eventSize( k ) );
     }
     // averaged amplitude:
     double st = (peaktroughs[0].back() - peaktroughs[0].front())/double(peaktroughs[0].size()-1);
-    int si = nd.indices( st );
-    int inx = nd.indices( l );
     for ( int k=0; k<AllNerveAmplP.size(); k++ ) {
-      AllNerveAmplM.push( nd.interval( inx )-l, nd.mean( inx, inx+si ) );
-      inx += si;
+      AllNerveAmplM.push( left-signalTime(), nd.mean( left, left+st ) );
+      left += st;
     }
   }
 }
