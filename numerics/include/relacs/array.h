@@ -814,7 +814,7 @@ Array<T>::Array( const vector< S > &a, int first, int last )
 {
   if ( first < 0 )
     first = 0;
-  if ( last < 0 || last > a.size() )
+  if ( last < 0 || last > (int)a.size() )
     last = a.size();
   int n = last - first;
   if ( n > 0 ) {
@@ -825,7 +825,7 @@ Array<T>::Array( const vector< S > &a, int first, int last )
       n = 0;
     NBuffer = n;
     NSize = n;
-    for ( unsigned k=0; k < n; k++ )
+    for ( int k=0; k < n; k++ )
       Buffer[k] = a[first+k];
   }
 }

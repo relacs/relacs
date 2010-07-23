@@ -255,10 +255,7 @@ int linearFit( ForwardIterX firstx, ForwardIterX lastx,
   uncert = -1.0;
   chisq = -1.0;
 
-  ArrayD beta( params.size(), 0.0 );
-  ArrayD afunc( params.size() );
-  vector< ArrayD > covar( params.size(), ArrayD( params.size(), 0.0 ) );
-
+  // number of fit parameter:
   int mfit = 0;
   for ( int j=0; j<paramfit.size(); j++ ) {
     if ( paramfit[j] )
@@ -266,6 +263,11 @@ int linearFit( ForwardIterX firstx, ForwardIterX lastx,
   }
   if ( mfit == 0 )
     return 1;
+
+  ArrayD beta( params.size(), 0.0 );
+  ArrayD afunc( params.size() );
+  vector< ArrayD > covar( params.size(), ArrayD( params.size(), 0.0 ) );
+
   int nn = 0;
   ForwardIterX iterx = firstx;
   ForwardIterY itery = firsty;
@@ -381,48 +383,74 @@ int fitUncertainties( ForwardIterX firstx, ForwardIterX lastx,
 		      FitFunc &f, const ArrayD &params, const ArrayI &paramfit,
 		      ArrayD &uncert )
 {
-  const double dp = 0.001;
-
   // numbers of parameters to be fitted:
   int mfit=0; 
   for ( int j=0; j<paramfit.size(); j++ ) {
     if ( paramfit[j] )
       mfit++;
-    if ( uncert[j] <= 0.0 )
-      uncert[j] = dp;
   }
   if ( mfit == 0 )
     return 0;
 
-  // initialize:
-  vector< ArrayD > alpha( params.size(), ArrayD( params.size(), 0 ) );
-  ArrayD dyda( params.size() );
-  ArrayD pp( params );
+  // set stepsize for calculating the derivatives:
+  const double dp = 0.001;
+  for ( int j=0; j<paramfit.size(); j++ ) {
+    if ( uncert[j] <= 0.0 )
+      uncert[j] = dp;
+  }
 
-  while ( (firstx != lastx) && (firsty != lasty) && (firsts != lasts) ) {
-    FitFlag = true;   // new parameters
-    double y = f( (*firstx), pp );
+  // function values:
+  FitFlag = true;   // new parameters
+  ArrayD pp( params );
+  ArrayD y( lastx - firstx, 0 );
+  ArrayD::iterator itery = y.begin();
+  ForwardIterX iterx = firstx;
+  while ( iterx != lastx ) {
+    *itery = f( (*iterx), pp );
+    ++iterx;
+    ++itery;
+  }
+
+  // derivatives:
+  vector< ArrayD > yd( mfit, ArrayD( lastx - firstx, 0 ) );
+  for ( int j=0, l=0; l<pp.size(); l++ ) {
+    if ( paramfit[l] ) {
+      FitFlag = true;   // new parameters
+      pp[l] += uncert[l];
+      ArrayD::iterator iteryd = yd[j].begin();
+      itery = y.begin();
+      iterx = firstx;
+      while ( iterx != lastx ) {
+	*iteryd = ( f( (*iterx), pp ) - *itery ) / uncert[l];
+	++iterx;
+	++itery;
+	++iteryd;
+      }
+      pp[l] = params[l];
+      j++;
+    }
+  }
+
+  // jacobian:
+  vector< ArrayD > alpha( params.size(), ArrayD( params.size(), 0 ) );
+  vector< ArrayD::iterator > iteryd( mfit );
+  for ( int k=0; k<mfit; k++ )
+    iteryd[k] = yd[k].begin();
+  while ( firsts != lasts ) {
     for ( int j=0, l=0; l<pp.size(); l++ ) {
       if ( paramfit[l] ) {
-	FitFlag = true;   // new parameters
-	pp[l] += uncert[l];
-	double dydl = ( f( (*firstx), pp ) - y ) / uncert[l];
-	pp[l] -= uncert[l];
 	for ( int k=0, m=0; m<=l; m++ ) {
 	  if ( paramfit[m] ) {
-	    FitFlag = true;   // new parameters
-	    pp[m] += uncert[m];
-	    double dydm = ( f( (*firstx), pp ) - y ) / uncert[m];
-	    pp[m] -= uncert[m];
-	    alpha[j][k++] += (dydl/(*firsts))*(dydm/(*firsts));
+	    alpha[j][k] += ((*iteryd[j])/(*firsts))*((*iteryd[k])/(*firsts));
+	    k++;
 	  }
 	}
 	j++;
       }
     }
-    ++firstx;
-    ++firsty;
     ++firsts;
+    for ( int k=0; k<mfit; k++ )
+      ++iteryd[k];
   }
 
   // fill up alpha:

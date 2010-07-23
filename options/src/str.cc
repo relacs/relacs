@@ -1408,16 +1408,21 @@ int Str::totalWidth( void ) const
 	   ( *p == '-' || *p == '+' || 
 	     ( *p != '.' && 
 	       ( *p < '1' || *p > '9' ) ) ) ) {
-	p++;
+	++p;
       }
       
       // read width of format:
       int fwidth = 0;
       bool nowidth = true;
-      for ( ; p != end() && isdigit( *p ); p++ ) {
+      for ( ; p != end() && isdigit( *p ); ++p ) {
 	int num = *p - '0';
 	fwidth = 10*fwidth+num;
 	nowidth = false;
+      }
+
+      // skip precision:
+      if ( p != end() && *p == '.' ) {
+	for ( ++p; p != end() && isdigit( *p ); ++p );
       }
       
       // skip format character:
@@ -1436,7 +1441,7 @@ int Str::totalWidth( void ) const
     }
     else {
       ++p;
-      width++;
+      ++width;
     }
   }
 
