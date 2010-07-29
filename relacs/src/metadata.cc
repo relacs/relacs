@@ -370,9 +370,10 @@ int MetaData::dialog( void )
     return 0;
 
   // setup options:
+  if ( ! MetaDataLock.tryLock( 5 ) )
+    return -1000;
   DialogOpts.clear();
   bool dflttab = false;
-  lock();
   Str usedtabs = "sdrc";
   for ( unsigned int k=0; k<MetaDataSections.size(); k++ ) {
     if ( ! MetaDataSections[k]->ownTab() && ! MetaDataSections[k]->empty() ) {
@@ -466,10 +467,15 @@ void MetaData::presetDialog( void )
   if ( PresetDialog )
     return;
 
+  // we do not want to block the event queue:
+  if ( ! MetaDataLock.tryLock( 5 ) ) {
+    QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+11 ) ) );
+    return;
+  }
+
   // setup options:
   PresetDialogOpts.clear();
   bool dflttab = false;
-  lock();
   for ( unsigned int k=0; k<MetaDataSections.size(); k++ ) {
     if ( ! MetaDataSections[k]->ownTab() && ! MetaDataSections[k]->empty() ) {
       if ( ! dflttab ) {
@@ -491,7 +497,6 @@ void MetaData::presetDialog( void )
 
   // create and exec dialog:
   PresetDialog = true;
-
   OptDialog *od = new OptDialog( this );
   od->addOptions( PresetDialogOpts );
   od->setCaption( "Stop Session Dialog" );
@@ -541,6 +546,16 @@ void MetaData::presetDialogChanged( void )
   if ( secinx >= 0 && changed )
     notifyMetaData( MetaDataSections[secinx]->configIdent() );
   unlock();
+}
+
+
+void MetaData::customEvent( QEvent *qe )
+{
+  if ( qe->type() == QEvent::User+11 ) {
+    presetDialog();
+  }
+  else
+    QObject::customEvent( qe );
 }
 
 

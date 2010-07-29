@@ -23,6 +23,7 @@
 #include <QDateTime>
 #include <QPainter>
 #include <QToolTip>
+#include <QMutexLocker>
 #include <relacs/relacswidget.h>
 #include <relacs/savefiles.h>
 
@@ -33,8 +34,7 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
 		      QWidget *parent )
   : QWidget( parent ),
     Options(),
-    RW( rw ),
-    StimulusDataLock( QMutex::Recursive )
+    RW( rw )
 {
   Path = "";
   PathTemplate = "%04Y-%02m-%02d-%a2a";
@@ -252,6 +252,7 @@ void SaveFiles::save( bool on  )
   // right before starting a RePro in RELACSWidget::startRepRo()
 
   //  cerr << "save toggle: " << on << '\n';
+  QMutexLocker locker( &SaveMutex );
   if ( ! FilesOpen ) {
     Saving = false;
     return;
@@ -298,6 +299,8 @@ void SaveFiles::saveToggle( const InList &traces, EventList &events )
 
 void SaveFiles::save( const InList &traces, EventList &events )
 {
+  QMutexLocker locker( &SaveMutex );
+
   // this function is called from RELACSWidget::processData()
   // and from the beginning of the write( OutData ) functions
   // in case of a pending signal
@@ -398,7 +401,7 @@ void SaveFiles::saveEvents( double offs )
 
 void SaveFiles::save( const OutData &signal )
 {
-  // this function is called from RELACSData::write() 
+  // this function is called from RELACSWidget::write() 
   // after a successfull call of Acquire::write()
 
   //  cerr << "SaveFiles::save( OutData &signal )\n";
@@ -406,10 +409,15 @@ void SaveFiles::save( const OutData &signal )
   if ( signal.failed() )
     return;
 
+  QMutexLocker locker( &SaveMutex );
+
   if ( StimulusData ) {
     RW->printlog( "! warning: SaveFiles::save( OutData & ) -> already stimulus data there" );
     Stimuli.clear();
   }
+
+  // StimulusDataLock is already locked from within the RePro!
+  StimulusOptions = *this;
 
   // store stimulus:
   StimulusData = true;
@@ -428,10 +436,15 @@ void SaveFiles::save( const OutList &signal )
   if ( signal.empty() || signal.failed() )
     return;
 
+  QMutexLocker locker( &SaveMutex );
+
   if ( StimulusData ) {
     RW->printlog( "! warning: SaveFiles::save( OutList& ) -> already stimulus data there" );
     Stimuli.clear();
   }
+
+  // StimulusDataLock is already locked from within the RePro!
+  StimulusOptions = *this;
 
   // store stimulus:
   StimulusData = true;
@@ -478,13 +491,11 @@ void SaveFiles::saveStimulus( void )
       }
     }
 
-    lock();
-    if ( !Options::empty() ) {
-      for( int k=0; k<Options::size(); k++ ) {
-	StimulusKey.save( *SF, (*this)[k] );
+    if ( !StimulusOptions.empty() ) {
+      for( int k=0; k<StimulusOptions.size(); k++ ) {
+	StimulusKey.save( *SF, StimulusOptions[k] );
       }
     }
-    unlock();
     StimulusKey.save( *SF, TraceFiles[0].Trace->signalTime() - SessionTime );
     // stimulus:
     StimulusKey.save( *SF, 1000.0*Stimuli[0].Delay );
@@ -522,15 +533,13 @@ void SaveFiles::saveStimulus( void )
   // xml metadata file:
   if ( XF != 0 && saving() ) {
     *XF << "    <section name=\"Stimulus\">\n";
-    lock();
-    if ( !Options::empty() ) {
-      int col = StimulusKey.column( "data>" + (*this)[0].ident() );
+    if ( !StimulusOptions.empty() ) {
+      int col = StimulusKey.column( "data>" + StimulusOptions[0].ident() );
       *XF << "      <section name=\"Data\">\n";
-      for( int k=0; k<Options::size(); k++ )
-	StimulusKey[col++].setNumber( (*this)[k].number() ).saveXML( *XF, 5 );
+      for( int k=0; k<StimulusOptions.size(); k++ )
+	StimulusKey[col++].setNumber( StimulusOptions[k].number() ).saveXML( *XF, 5 );
       *XF << "      </section>\n";
     }
-    unlock();
     int col = StimulusKey.column( "stimulus>timing>time" );
     StimulusKey[col++].setNumber( TraceFiles[0].Trace->signalTime() - SessionTime ).saveXML( *XF, 3 );
     // Stimulus:
@@ -572,6 +581,8 @@ void SaveFiles::saveStimulus( void )
 void SaveFiles::save( const RePro &rp )
 {
   //  cerr << "SaveFiles::save( const RePro &rp ) \n";
+
+  QMutexLocker locker( &SaveMutex );
 
   if ( ReProData )
     RW->printlog( "! warning: SaveFiles::save( RePro & ) -> already RePro data there." );

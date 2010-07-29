@@ -272,7 +272,10 @@ public slots:
     /*! Launches a dialog at stopTheSession(). 
         It should return 1 to stop and safe the data, 
 	0 to stop and discard the data, and
-        -1 to continue the session. */
+        -1 to continue the session.
+        If -1000 is returned,
+        then the dialog() functions should be called again at a later time,
+	because the MetaData are currently locked. */
   int dialog( void );
     /*! Launches a dialog from the menu.
         It is used to preset values of the dialog(). */
@@ -289,6 +292,11 @@ protected slots:
   void presetDialogClosed( int r );
     /*! Apply changes made in the preset dialog to the MetaDataSections. */
   void presetDialogChanged( void );
+
+
+protected:
+
+  virtual void customEvent( QEvent *qe );
 
 
 private:

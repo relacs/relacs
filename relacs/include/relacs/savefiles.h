@@ -321,6 +321,7 @@ protected:
   vector< Stimulus > Stimuli;
   bool StimulusData;
   TableKey StimulusKey;
+  Options StimulusOptions;
   void saveStimulus( void );
 
   Options ReProInfo;
@@ -357,6 +358,7 @@ protected:
   SpikeTrace *SaveLabel;
   QHBoxLayout *StatusInfoLayout;
 
+  QMutex SaveMutex;
   mutable QMutex StimulusDataLock;
 
 };

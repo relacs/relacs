@@ -179,9 +179,19 @@ void Session::stopTheSession( void )
   RW->preStopSession();
   Running = false;
 
+  doStopTheSession();
+}
+
+
+void Session::doStopTheSession( void )
+{
   // launch dialog:
   if ( SaveDialog ) {
     int r = RW->MTDT.dialog();
+    if ( r == -1000 ) {
+      QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+11 ) ) );
+      return;
+    }
     if ( r < 0 ) {
       // cancel, the session is to be continued:
       Running = true;
@@ -193,6 +203,8 @@ void Session::stopTheSession( void )
   else {
     SaveData = false;
   }
+
+  // finish session:
   setenv( "RELACSSESSIONSAVED", SaveData ? "1" : "0", 1 );
 
   MessageTimer->stop();
@@ -209,6 +221,16 @@ void Session::stopTheSession( void )
 
   ReProCounter = 0;
   Running = false;
+}
+
+
+void Session::customEvent( QEvent *qe )
+{
+  if ( qe->type() == QEvent::User+11 ) {
+    doStopTheSession();
+  }
+  else
+    QWidget::customEvent( qe );
 }
 
 

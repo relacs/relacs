@@ -138,7 +138,14 @@ public slots:
   void toggleSession( void );
 
 
+protected:
+  
+  virtual void customEvent( QEvent *qe );
+
+
 private:
+
+  void doStopTheSession( void );
 
     /*! True if data of this session should be saved. */
   bool SaveData;
