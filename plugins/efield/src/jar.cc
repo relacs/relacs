@@ -20,6 +20,7 @@
 */
 
 #include <relacs/tablekey.h>
+#include <relacs/base/linearattenuate.h>
 #include <relacs/efield/jar.h>
 using namespace relacs;
 
@@ -196,6 +197,14 @@ int JAR::main( void )
   }
   if ( UseContrast && LocalEODTrace[0] < 0 ) {
     warning( "need local EOD for contrasts." );
+    return Failed;
+  }
+
+  // check gain of attenuator:
+  base::LinearAttenuate *latt = 
+    dynamic_cast<base::LinearAttenuate*>( attenuator( outTraceName( GlobalEField ) ) );
+  if ( latt != 0 && fabs( latt->gain() - 1.0 ) < 1.0e-8 ) {
+    warning( "Attenuator gain is not set!" );
     return Failed;
   }
 

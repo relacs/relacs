@@ -67,6 +67,7 @@ FICurve::FICurve( void )
   RateDt = 0.001;
   PeakWidth = 0.1;
   SSWidth = 0.05;
+  AdjustGain = true;
   SetBest = true;
   SetCurves = 1;
 
@@ -110,6 +111,7 @@ FICurve::FICurve( void )
   addNumber( "prewidth", "Window length for baseline firing rate", PreWidth, 0.0, 10.0, 0.05, "seconds", "ms" );
   addNumber( "peakwidth", "Window length for peak firing rate", PeakWidth, 0.0, 10.0, 0.01, "seconds", "ms" );
   addNumber( "sswidth", "Window length for steady-state firing rate", SSWidth, 0.0, 10.0, 0.01, "seconds", "ms" );
+  addBoolean( "adjust", "Adjust input gain", AdjustGain );
   addBoolean( "setbest", "Set results to the session variables", SetBest );
   addSelection( "setcurves", "F-I curves to be passed to session", "none|mean rate|onset + steady-state|mean + onset + steady-state" );
   addFlags( 1 );
@@ -209,6 +211,7 @@ int FICurve::main( void )
   RateDt = number( "ratedt" );
   PeakWidth = number( "peakwidth" );
   SSWidth = number( "sswidth" );
+  AdjustGain = boolean( "adjust" );
   SetBest = boolean( "setbest" );
   SetCurves = index( "setcurves" );
 
@@ -413,10 +416,9 @@ int FICurve::loop( vector< FIData > &results )
       }
       
       // if there were some spikes, adjust analog input gain:
-      if ( events( SpikeEvents[0] ).count( signalTime(), signalTime() + Duration ) > 0 ) {
+      if ( AdjustGain &&
+	   events( SpikeEvents[0] ).count( signalTime(), signalTime() + Duration ) > 0 )
 	adjust( trace( SpikeTrace[0] ), signalTime(), signalTime() + Duration, 0.8 );
-	//      activateGains();
-      }
 
       // analyze:
       analyze( results );

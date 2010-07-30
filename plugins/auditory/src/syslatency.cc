@@ -54,6 +54,7 @@ SysLatency::SysLatency( void )
   addNumber( "maxlat", "Maximum latency", 0.01, 0.0, 1.0, 0.001, "seconds", "ms" );
   addNumber( "latstep", "Resolution of latency", 0.0001, 0.0, 1.0, 0.0001, "seconds", "ms" );
   addNumber( "coincwin", "Window width for coincident spikes", 0.0005, 0.0, 1.0, 0.0005, "seconds", "ms" );
+  addBoolean( "adjust", "Adjust input gain", true );
 
   addTypeStyle( OptWidget::Bold, Parameter::Label );
 
@@ -109,6 +110,7 @@ int SysLatency::main( void )
   double maxlatency = number( "maxlat" );
   double latencystep = number( "latstep" );
   double coincwin = number( "coincwin" );
+  bool adjustgain = boolean( "adjust" );
 
   if ( side > 1 )
     side = metaData( "Cell" ).index( "best side" );
@@ -271,8 +273,9 @@ int SysLatency::main( void )
     }
     
     // adjust gain of daq board:
-    adjust( trace( SpikeTrace[0] ), signalTime(), 
-	    signalTime() + duration, 0.8 );
+    if ( adjustgain )
+      adjust( trace( SpikeTrace[0] ), signalTime(), 
+	      signalTime() + duration, 0.8 );
     
     analyze( duration, skipwin, analysewin, pwaves/carrierfrequency,
 	     coincwin, maxlatency, latencystep,

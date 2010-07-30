@@ -198,6 +198,7 @@ protected:
   double PreWidth;
   double PeakWidth;
   double SSWidth;
+  bool AdjustGain;
   bool SetBest;
   int SetCurves;
 

@@ -227,6 +227,7 @@ libefieldjar_la_CPPFLAGS = \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../../base/include \
     -I$(srcdir)/../include \
     $(QT4_CPPFLAGS)
 
@@ -236,6 +237,7 @@ libefieldjar_la_LDFLAGS = \
 
 libefieldjar_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
+    $(builddir)/../../base/src/libbaselinearattenuate.la \
     $(builddir)/libefieldtraces.la \
     $(builddir)/libefieldeodtools.la \
     $(QT4_LIBS)
