@@ -1434,7 +1434,7 @@ void RELACSWidget::stopThreads( void )
     CN[k]->requestStop();
   wakeAll();
   for ( unsigned int k=0; k<CN.size(); k++ )
-    CN[k]->QThread::wait( 200 );
+    CN[k]->wait( 0.2 );
 
   // stop data threads:
   ReadLoop.stop();

@@ -41,7 +41,7 @@ namespace efish {
 \class FICurve
 \brief [RePro] Measures f-I curves of electrosensory neurons.
 \author Jan Benda
-\version 1.4 (Mar 17, 2010)
+\version 1.5 (Aug 16, 2010)
 
 \par Options
 - \b duration (\c number, \e ms): Duration of stimulus.
@@ -117,8 +117,10 @@ private:
   double RateDeltaT;
   double SSTime;
   double OnsetTime;
-  int MediumResolution;
-  int NSkip;
+  double MinRate;
+  int IntIncrement;
+  int RangeIntIncrement;
+  double MinRateFrac;
   double MinRateSlope;
 
   // variables:

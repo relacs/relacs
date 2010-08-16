@@ -1047,7 +1047,11 @@ void JAR::analyze( void )
   const EventData &sige = events( GlobalEFieldEvents );
 
   // EOD rate:
-  FishRate = eodglobal.frequency( signalTime() - JARAverageTime, signalTime() );
+  double teod = signalTime();
+  do {
+    FishRate = eodglobal.frequency( teod - JARAverageTime, teod );
+    teod -= JARAverageTime;
+  } while ( FishRate < 1.0 );
 
   // Delta F:
   TrueDeltaF = sige.frequency( signalTime(), signalTime() +  JARAverageTime ) - FishRate;
@@ -1135,6 +1139,8 @@ void JAR::analyze( void )
     double t1 = sige[ ti ];
     int pi = eodglobal.previous( t1 );
     double t0 = eodglobal[ pi ];
+    if ( pi+1 >= eodglobal.size() )
+      break;
     double phase = ( t1 - t0 ) / ( eodglobal[ pi + 1 ] - t0 );
     EODBeatPhase.push( index.time() - signalTime(), phase );
   }

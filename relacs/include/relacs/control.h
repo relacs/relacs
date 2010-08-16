@@ -137,6 +137,9 @@ public:
     /*! Kindly ask the Control thread to stop by setting interrupt()
         to \c true and interrupt a possible sleep(). */
   virtual void requestStop( void );
+    /*! Wait for the thread to finish execution (\a time < 0, returns \c true) 
+        or for \a time seconds to be elapsed (returns \c false). */
+  bool wait( double time=-1.0 );
 
     /*! Add specific actions to the RELACS File-menu.
         This implementation adds a "Dialog" and a "Help" menu entry. */

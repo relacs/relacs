@@ -241,6 +241,15 @@ void Control::requestStop( void )
 }
 
 
+bool Control::wait( double time )
+{
+  if ( time < 0.0 )
+    return QThread::wait();
+  else
+    return QThread::wait( (unsigned long)::floor( 1000.0*time ) );
+}
+
+
 }; /* namespace relacs */
 
 #include "moc_control.cc"

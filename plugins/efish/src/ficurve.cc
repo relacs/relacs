@@ -26,7 +26,7 @@ namespace efish {
 
 
 FICurve::FICurve( void )
-  : RePro( "FICurve", "efish", "Jan Benda", "1.4", "Mar 17, 2010" )
+  : RePro( "FICurve", "efish", "Jan Benda", "1.5", "Aug 16, 2010" )
 {
   // parameter:
   Duration = 0.4;
@@ -36,31 +36,38 @@ FICurve::FICurve( void )
   RateDeltaT = 0.001;
   OnsetTime = 0.05;
   SSTime = 0.05;
-  NSkip = 2;
-  MediumResolution = 2;
+  IntIncrement = 2;
+  RangeIntIncrement = 1;
+  MinRate = 0.0;
+  MinRateFrac = 0.0;
   MinRateSlope = 100.0;
 
   // add some parameter as options:
-  addLabel( "Timing" );
+  addLabel( "Intensities" );
   addNumber( "duration", "Duration of test stimulus", Duration, 0.01, 1000.0, 0.05, "seconds", "ms" );
+  addNumber( "maxintfac", "Maximum intensity of test stimulus", 1.6, 0.0, 2.0, 0.1, "1", "%" );
+  addNumber( "minintfac", "Minimum intensity of test stimulus", 0.2, 0.0, 2.0, 0.1, "1", "%" );
+  addInteger( "nints", "Number of intensities for test stimulus", 16, 2, 500, 1 );
+  addInteger( "repeats", "Total number of repetitions of an f-I curve measurement", 10, 0, 100000, 2 );
+  addInteger( "blockrepeats", "Number of repetitions of a sequence of intensities", 1, 1, 100000, 2 );
+  addInteger( "singlerepeats", "Number of immediate repetitions of an intensity", 1, 1, 100000, 2 );
+  addSelection( "intshuffle", "Order of intensities", RangeLoop::sequenceStrings() );
+  addInteger( "intincrement", "Initial increment", IntIncrement, -1000, 1000, 1 );
+  addLabel( "PreIntensities" );
   addNumber( "preduration", "Duration of adapting stimulus", PreDuration, 0.0, 1000.0, 0.05, "seconds", "ms" );
+  addNumber( "maxpreintfac", "Maximum intensity of adapting stimulus", 1.4, 0.0, 2.0, 0.1, "1", "%" ).setActivation( "preduration", ">0" );
+  addNumber( "minpreintfac", "Minimum intensity of adapting stimulus", 0.6, 0.0, 2.0, 0.1, "1", "%" ).setActivation( "preduration", ">0" );
+  addInteger( "npreints", "Number of intensities for adapting stimuli", 5, 2, 500, 1 ).setActivation( "preduration", ">0" );
+  addSelection( "preintshuffle", "Order of  adapting intensities", RangeLoop::sequenceStrings() );
+  addLabel( "Control" );
+  addBoolean( "am", "Amplitude modulation", true );
   addNumber( "pause", "Pause between stimuli", Pause, 0.0, 1000.0, 0.05, "seconds", "ms" );
   addNumber( "delay", "Part of pause before stimulus", Delay, 0.0, 1000.0, 0.01, "seconds", "ms" );
-  addLabel( "Intensities" );
-  addNumber( "maxintfac", "Maximum intensity", 1.6, 0.0, 2.0, 0.1, "1", "%" );
-  addNumber( "minintfac", "Minimum intensity", 0.2, 0.0, 2.0, 0.1, "1", "%" );
-  addInteger( "nints", "Number of intensities", 16, 2, 500, 1 );
-  addNumber( "maxpreintfac", "Maximum preintensity", 1.4, 0.0, 2.0, 0.1, "1", "%" );
-  addNumber( "minpreintfac", "Minimum preintensity", 0.6, 0.0, 2.0, 0.1, "1", "%" );
-  addInteger( "npreints", "Number of preintensities", 5, 2, 500, 1 );
-  addBoolean( "am", "Amplitude modulation", true );
-  addLabel( "Control" );
-  addInteger( "repeats", "Repeats", 10, 0, 100000, 2 );
-  addInteger( "blockrepeats", "Block repeats", 1, 1, 100000, 2 );
-  addInteger( "singlerepeats", "Single repeats", 1, 1, 100000, 2 );
-  addInteger( "medres", "Medium resolution", MediumResolution, 1, 100, 1 );
-  addInteger( "nskip", "N skip", NSkip, 1, 10, 1 );
-  addNumber( "minrateslope", "Minimum slope of f-I curve", MinRateSlope, 0.0, 1000.0, 10.0, "Hz/mV/cm" );
+  addNumber( "onsettime", "Onset rate occurs within", OnsetTime, 0.0, 1000.0, 0.002, "seconds", "ms" );
+  addInteger( "rangeintincrement", "Optimize intensity range at increments below", RangeIntIncrement, 0, 1000, 1 );
+  addNumber( "minrate", "Minimum required onset rate", MinRate, 0.0, 2000.0, 10.0, "Hz" );
+  addNumber( "minratefrac", "Minimum required rate differences", MinRateFrac, 0.0, 1.0, 0.05, "1", "%" );
+  //  addNumber( "minrateslope", "Minimum slope of f-I curve", MinRateSlope, 0.0, 1000.0, 10.0, "Hz/mV/cm" );
   addTypeStyle( OptWidget::TabLabel, Parameter::Label );
   
   // variables:
@@ -89,22 +96,27 @@ int FICurve::main( void )
 {
   // get options:
   Duration = number( "duration" );
-  PreDuration = number( "preduration" );
-  Pause = number( "pause" );
-  Delay = number( "delay" );
-  int repeats = integer( "repeats" );
-  int blockrepeats = integer( "blockrepeats" );
-  int singlerepeats = integer( "singlerepeats" );
   double maxintensityfac = number( "maxintfac" );
   double minintensityfac = number( "minintfac" );
   int nintensities = integer( "nints" );
+  int repeats = integer( "repeats" );
+  int blockrepeats = integer( "blockrepeats" );
+  int singlerepeats = integer( "singlerepeats" );
+  RangeLoop::Sequence intshuffle = RangeLoop::Sequence( index( "intshuffle" ) );
+  IntIncrement = integer( "intincrement" );
+  PreDuration = number( "preduration" );
   double maxpreintensityfac = number( "maxpreintfac" );
   double minpreintensityfac = number( "minpreintfac" );
   int npreintensities = integer( "npreints" );
+  RangeLoop::Sequence preintshuffle = RangeLoop::Sequence( index( "preintshuffle" ) );
   bool am = boolean( "am" );
-  MediumResolution = integer( "medres" );
-  NSkip = integer( "nskip" );
-  MinRateSlope = number( "minrateslope" );
+  Pause = number( "pause" );
+  Delay = number( "delay" );
+  OnsetTime = number( "onsettime" );
+  RangeIntIncrement = integer( "rangeintincrement" );
+  MinRate = number( "minrate" );
+  MinRateFrac = number( "minratefrac" );
+  //  MinRateSlope = number( "minrateslope" );
 
   // check EODs:
   if ( LocalEODTrace[0] < 0 || LocalEODEvents[0] < 0 ) {
@@ -136,11 +148,11 @@ int FICurve::main( void )
   if ( maxint > trace( LocalEODTrace[0] ).maxValue() )
     maxint = trace( LocalEODTrace[0] ).maxValue();
   IntensityRange.set( minintensityfac * FishAmplitude, maxint, nintensities );
-  IntensityRange.setIncrement( MediumResolution*2 );
+  IntensityRange.setIncrement( IntIncrement );
   IntensityRange.setSingleRepeat( singlerepeats );
   IntensityRange.setBlockRepeat( blockrepeats );
   IntensityRange.setRepeat( repeats );
-  IntensityRange.alternateOutUp();
+  IntensityRange.setSequence( intshuffle );
 
   // pre-intensities:
   if ( PreDuration > 0.0 ) {
@@ -148,7 +160,7 @@ int FICurve::main( void )
     if ( maxpreint > trace( LocalEODTrace[0] ).maxValue() )
       maxpreint = trace( LocalEODTrace[0] ).maxValue();
     PreIntensityRange.set( minpreintensityfac * FishAmplitude, maxpreint, npreintensities );
-    PreIntensityRange.alternateOutDown();
+    PreIntensityRange.setSequence( preintshuffle );
   }
   else
     PreIntensityRange.set( FishAmplitude );
@@ -370,8 +382,6 @@ int FICurve::main( void )
       plot();
 
       // select intensities:
-      if ( IntensityRange.lastSingle() )
-	selectRange();
       if ( IntensityRange.finishedBlock() ) {
 	if ( softStop() > 1 ) {
 	  saveData();
@@ -379,7 +389,8 @@ int FICurve::main( void )
 	  stop();
 	  return Completed;
 	}
-	//    selectSlopes();
+	selectRange();
+	// selectSlopes();  // does not work yet, all code in this function is disabled.
       }
 
     }
@@ -724,10 +735,11 @@ void FICurve::analyze( void )
 
 void FICurve::selectSlopes( void )
 {
-  if ( IntensityRange.currentIncrement() != MediumResolution )
+  /*
+  if ( IntensityRange.currentIncrement() != IntIncrement )
     return;
 
-  cerr << "FICurve::selectSlopes()" << endl;
+  printlog( "FICurve::selectSlopes()" );
 
   int pinx = PreIntensityRange.pos();
   bool first = true;
@@ -756,11 +768,11 @@ void FICurve::selectSlopes( void )
     double slope = ( Response[0][pinx][j].OnsetRate - Response[0][pinx][k].OnsetRate ) /
       ( IntensityRange.value( j ) - IntensityRange.value( k ) );
 
-    cerr << "slope " << k << " " << j << " @" << IntensityRange.value( k ) << " " << IntensityRange.value( j ) << ": " << slope << endl;
+    printlog( "slope " + Str( k ) + " " + Str( j ) + " @" + Str( IntensityRange.value( k ) ) + " " + Str( IntensityRange.value( j ) ) + ": " +Str( slope ) );
 
     if ( fabs( slope ) < MinRateSlope ) {
 
-    cerr << "  skipped" << endl;
+      printlog( "  skipped" );
 
       // this measurement is not necessary, skip it:
       for ( int i=k+1; i<j; i++ )
@@ -776,46 +788,45 @@ void FICurve::selectSlopes( void )
     k = j-1;
     first = false;
   }
-  
+  */  
 }
 
 
 void FICurve::selectRange( void )
 {
-  if ( IntensityRange.currentIncrement() <= MediumResolution )
+  if ( IntensityRange.currentIncrement() > RangeIntIncrement )
     return;
 
   int pinx = PreIntensityRange.pos();
   int iinx = IntensityRange.pos();
 
-  cerr << "FICurve::selectRange() -> " << iinx << endl;
-
+  // index of current background intensity:
   int sinx = IntensityRange.pos( *PreIntensityRange );
 
   // no response:
-  if ( Response[0][pinx][iinx].OnsetRate < 2.0/OnsetTime ) {
+  if ( Response[0][pinx][iinx].OnsetRate < MinRate ) {
 
     // at left end:
     if ( iinx < sinx ) {
-      cerr << "  skip zeros " << 0 << " - " << iinx
-	   << " rate: " << Response[0][pinx][iinx].OnsetRate
-	   << " minrate: " << 2.0/OnsetTime << endl;
-      for ( int k=0; k <= iinx; k++ )
-	IntensityRange.setSkip( k );
+      printlog( "  skip zeros 0 - " + Str( iinx )
+		+ " rate: " + Str( Response[0][pinx][iinx].OnsetRate )
+		+ " minrate: " + Str( MinRate ) );
+      IntensityRange.setSkipBelow( iinx );
     }
+    /* this makes only sense, if the f-I curve has anegative slope!
     // at right end:
-    else {
-      cerr << "  skip zeros " << iinx << " - " << IntensityRange.size()-1
-	   << " rate: " << Response[0][pinx][iinx].OnsetRate
-	   << " minrate: " << 2.0/OnsetTime << endl;
-      for ( int k=iinx; k < IntensityRange.size(); k++ )
-	IntensityRange.setSkip( k );
+    else if ( iinx > sinx ) {
+      printlog( "  skip zeros " + Str( iinx ) + " - " + Str( IntensityRange.size()-1 )
+		+ " rate: " + Str( Response[0][pinx][iinx].OnsetRate )
+		+ " minrate: " + Str( MinRate ) );
+      IntensityRange.setSkipAbove( iinx );
     }
+    */
 
   }
 
-  // maximum and minimum response:
-  int k=IntensityRange.next( 0 );
+  // maximum and minimum onset response:
+  int k = IntensityRange.next( 0 );
   double min = Response[0][pinx][k].OnsetRate;
   double max = min;
   for ( k=IntensityRange.next( k+1 );
@@ -830,42 +841,34 @@ void FICurve::selectRange( void )
   // no change in response:
   // at left end:
   if ( iinx < sinx ) {
-    k = iinx;
-    for ( int n=1; n<NSkip; n++ ) {
-      int j = k;
-      k = IntensityRange.next( k+1 );
-      if ( k >= sinx )
-	break;
+    for ( k = IntensityRange.previous( iinx-1 );
+	  k >= 0;
+	  k = IntensityRange.previous( k-1 ) ) {
       if ( fabs( Response[0][pinx][k].OnsetRate - Response[0][pinx][iinx].OnsetRate ) >
-	   0.15*(max-min) )
+	   MinRateFrac*(max-min) )
 	break;
-      if ( n >= NSkip-1 ) {
-	cerr << "  skip left " << 0 << " - " << j
-	     << " rate: " << Response[0][pinx][j].OnsetRate
-	     << " delta rate: " << max-min << endl;
-	for ( int i=0; i <= j; i++ )
-	  IntensityRange.setSkip( i );
-      }
+    }
+    if ( k < 0 ) {
+      printlog( "  skip left 0 - " + Str( iinx )
+		+ " rate: " + Str( Response[0][pinx][iinx].OnsetRate )
+		+ " delta rate: " + Str( max-min ) );
+      IntensityRange.setSkipBelow( iinx );
     }
   }
   // at right end:
-  else {
-    k = iinx;
-    for ( int n=1; n<NSkip; n++ ) {
-      int j = k;
-      k = IntensityRange.previous( k-1 );
-      if ( k <= sinx )
-	break;
+  else if ( iinx > sinx ) {
+    for ( k = IntensityRange.next( iinx+1 );
+	  k < IntensityRange.size();
+	  k = IntensityRange.next( k+1 ) ) {
       if ( fabs( Response[0][pinx][k].OnsetRate - Response[0][pinx][iinx].OnsetRate ) >
-	   0.15*(max-min) )
+	   MinRateFrac*(max-min) )
 	break;
-      if ( n >= NSkip-1 ) {
-	cerr << "  skip right " << j << " - " << IntensityRange.size()-1
-	     << " rate: " << Response[0][pinx][j].OnsetRate
-	     << " delta rate: " << max-min << endl;
-	for ( int i=j; i<IntensityRange.size(); i++ )
-	  IntensityRange.setSkip( i );
-      }
+    }
+    if ( k >= IntensityRange.size() ) {
+      printlog( "  skip right " + Str( iinx ) + " - " + Str( IntensityRange.size()-1 )
+		+ " rate: " + Str( Response[0][pinx][iinx].OnsetRate )
+		+ " delta rate: " + Str( max-min ) );
+      IntensityRange.setSkipAbove( iinx );
     }
   }
 
