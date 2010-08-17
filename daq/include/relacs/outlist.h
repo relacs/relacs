@@ -33,7 +33,6 @@ namespace relacs {
 /*!
 \class OutList
 \author Jan Benda
-\version 1.0
 \brief A container for OutData
 */
 
@@ -164,16 +163,11 @@ public:
         to \a time seconds. */
   void setWriteTime( double time );
 
-    /*! Reset the number of bytes that have been transferred to the hardware driver
-        to zero. */
-  void deviceBufferReset( void );
-    /*! Free the internal buffers holding the data in a 
-        device dependend multiplexed format. */
-  void freeDeviceBuffer( void );
-    /*! Indicate that the data are to be converted automatically. */
-  void setAutoConvert( void );
-    /*! Indicate that the data are converted manually. */
-  void setManualConvert( void );
+    /*! Reset the device indices. */
+  void deviceReset( void );
+    /*! Returns the required size of the device buffer
+        (total number of data elements include delays). */
+  int deviceBufferSize( void );
 
     /*! Return string with an error message. */
   string errorText( void ) const;

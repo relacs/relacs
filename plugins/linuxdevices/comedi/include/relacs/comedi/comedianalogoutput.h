@@ -39,7 +39,6 @@ class ComediAnalogInput;
 \author Jan Benda
 \version 0.2
 \brief [AnalogOutput] Interface for accessing analog output of a daq-board via comedi.
-\todo manual convert of signals does not work, because it needs the comedi_polynomial
 
 \code
 # calibrate all ranges, references and channels:
@@ -93,13 +92,6 @@ public:
         to the data acquisition board. */
   virtual int directWrite( OutList &sigs );
 
-    /*! Convert data of the output signals \a sigs.
-	If an error ocurred in any channel, the corresponding errorflags in the
-	OutData structure are filled and a negative value is returned.
-	The output signals are sorted by channel number first
-        and are then multiplexed into a buffer of signed short's (2 byte).
-        The buffer is attached to the first signal in \a sigs. */
-  virtual int convertData( OutList &sigs );
     /*! Prepare analog output of the output signals \a sigs on the device.
 	If an error ocurred in any signal, the corresponding errorflags in
 	OutData are set and a negative value is returned.
@@ -167,7 +159,7 @@ protected:
 	If an error ocurred in any channel, the corresponding errorflags in the
 	OutList structure are filled and a negative value is returned.  
 	For internal usage! */
-  int fillWriteBuffer( OutList &sigs );
+  int fillWriteBuffer( int maxntry );
 
     /*! Execute the command that was prepared by prepareWrite(). */
   int executeCommand( void );
@@ -189,7 +181,7 @@ private:
   
     /*! Converts the signal traces to raw integer values for the DAQ board. */
   template < typename T >
-    int convert( OutList &sigs );
+    int convert( char *cbuffer, int nbuffer );
 
     /*! Unique analog I/O device type id for all 
         Comedi DAQ devices. */
@@ -233,10 +225,14 @@ private:
     /*! Calibration info. */
   comedi_calibration_t *Calibration;
 
-    /*! The output signals that were prepared by prepareWrite(). */
-  OutList *Sigs;
-    /*! Size of the internal buffer used for getting the data from the driver. */
+    /*! The sorted output signals that were prepared by prepareWrite(). */
+  OutList Sigs;
+    /*! Size of the buffer for transfering data to the driver. */
   int BufferSize;
+    /*! Buffer used for transfering data to the driver. */
+  char *Buffer;
+    /*! Current number of elements in the buffer. */
+  int NBuffer;
 
 };
 

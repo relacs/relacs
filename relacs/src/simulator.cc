@@ -307,15 +307,7 @@ int Simulator::restartRead( vector< AOData* > &aos, bool directao,
 }
 
 
-int Simulator::convert( OutData &signal )
-{
-  signal.clearError();
-  signal.setManualConvert();
-  return 0;
-}
-
-
-int Simulator::write( OutData &signal )
+int Simulator::setupWrite( OutData &signal )
 {
   signal.clearError();
 
@@ -393,6 +385,14 @@ int Simulator::write( OutData &signal )
   if ( signal.failed() )
     return -1;
 
+  return 0;
+}
+
+
+int Simulator::startWrite( OutData &signal )
+{
+  int di = signal.device();
+
   // start writing to daq board:
   if ( gainChanged() ||
        signal.restart() ||
@@ -430,6 +430,20 @@ int Simulator::write( OutData &signal )
   }
 
   return 0;
+}
+
+
+int Simulator::setupWrite( OutList &signal )
+{
+  cerr << "ERROR: Simulator::setupWrite( OutList& ) not yet impemented!\n";
+  return -1;
+}
+
+
+int Simulator::startWrite( OutList &signal )
+{
+  cerr << "ERROR: Simulator::startWrite( OutList& ) not yet impemented!\n";
+  return -1;
 }
 
 

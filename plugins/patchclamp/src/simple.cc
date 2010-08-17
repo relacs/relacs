@@ -121,7 +121,6 @@ int Simple::main( void )
   }
   signal.back() = 0.0;
   signal.setTrace( outtrace );
-  convert( signal );
 
   // save:
   ofstream df;

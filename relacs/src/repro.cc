@@ -382,7 +382,7 @@ int RePro::testWrite( OutList &signal )
   return RW->AQ->testWrite( signal );
 }
 
-
+/*
 int RePro::convert( OutData &signal )
 {
   return RW->AQ->convert( signal );
@@ -393,7 +393,7 @@ int RePro::convert( OutList &signal )
 {
   return RW->AQ->convert( signal );
 }
-
+*/
 
 int RePro::write( OutData &signal )
 {

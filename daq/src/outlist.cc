@@ -314,31 +314,19 @@ void OutList::setWriteTime( double time )
 }
 
 
-void OutList::deviceBufferReset( void )
+void OutList::deviceReset( void )
 {
   for ( int k=0; k<size(); k++ )
-    operator[]( k ).deviceBufferReset();
+    operator[]( k ).deviceReset();
 }
 
 
-void OutList::freeDeviceBuffer( void )
+int OutList::deviceBufferSize( void )
 {
+  int n = 0;
   for ( int k=0; k<size(); k++ )
-    operator[]( k ).freeDeviceBuffer();
-}
-
-
-void OutList::setAutoConvert( void )
-{
-  for ( int k=0; k<size(); k++ )
-    operator[]( k ).setAutoConvert();
-}
-
-
-void OutList::setManualConvert( void )
-{
-  for ( int k=0; k<size(); k++ )
-    operator[]( k ).setManualConvert();
+    n += operator[]( k ).deviceDelay() + operator[]( k ).size();
+  return n;
 }
 
 

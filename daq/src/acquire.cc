@@ -915,6 +915,7 @@ int Acquire::restartRead( vector< AOData* > &aod, bool directao,
 
   bool success = true;
 
+  // empty analog input buffer:
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     int n = AI[i].AI->readData();
     if ( n < 0 && AI[i].Traces.failed() )
@@ -1533,93 +1534,8 @@ int Acquire::testWrite( OutList &signal )
 }
 
 
-int Acquire::convert( OutData &signal )
+int Acquire::setupWrite( OutData &signal )
 {
-  //  cerr << "Acquire::convert( OutData& ) -> " << signal.ident() << '\n';
-
-  signal.clearError();
-
-  // get ao device:
-  int di = signal.device();
-  if ( di < 0 ) {
-    signal.addError( DaqError::NoDevice );
-    return -1;
-  }
-  else if ( di >= (int)AO.size() ) {
-    signal.addError( DaqError::NoDevice );
-    return -1;
-  }
-
-  // do conversion:
-  signal.setManualConvert();
-  OutList ol( &signal );
-  return AO[di].AO->convertData( ol );
-}
-
-
-int Acquire::convert( OutList &signal )
-{
-  //  cerr << "Acquire::convert( OutList& )\n";
-
-  bool success = true;
-
-  signal.clearError();
-
-  // get device ids and sort signal per device:
-  vector< int > dis;
-  dis.reserve( signal.size() );
-  vector< OutList > dsignals;
-  dsignals.reserve( signal.size() );
-  for ( int k=0; k<signal.size(); k++ ) {
-    int di = -1;
-    for ( unsigned int i=0; i<dis.size(); i++ ) {
-      if ( signal[k].device() == dis[i] ) {
-	di = i;
-	break;
-      }
-    }
-    if ( di >= 0 )
-      dsignals[di].add( &signal[k] );
-    else {
-      di = dis.size();
-      dis.push_back( signal[k].device() );
-      dsignals.push_back( OutList() );
-      dsignals[di].reserve( signal.size() - k );
-      dsignals[di].add( &signal[k] );
-    }
-  }
-
-  // no device?
-  for ( unsigned int i=0; i<dis.size(); i++ ) {
-    if ( dis[i] < 0 ) {
-      dsignals[i].addError( DaqError::NoDevice );
-      success = false;
-    }
-    else if ( dis[i] >= (int)AO.size() ) {
-      dsignals[i].addError( DaqError::NoDevice );
-      success = false;
-    }
-  }
-
-  if ( ! success )
-    return -1;
-
-  // do conversion:
-  for ( unsigned int i=0; i<dis.size(); i++ ) {
-    int r = AO[dis[i]].AO->convertData( dsignals[i] );    
-    if ( r < 0 )
-      success = false;
-    dsignals[i].setManualConvert();
-  }
-
-  return success ? 0 : -1;
-}
-
-
-int Acquire::write( OutData &signal )
-{
-  //  cerr << "Acquire::write( OutData& ) -> " << signal.ident() << '\n';
-
   signal.clearError();
 
   // set trace:
@@ -1709,10 +1625,6 @@ int Acquire::write( OutData &signal )
     return -1;
   }
 
-  // convert data and prepare writing to daq board:
-  AO[di].AO->convertData( Signal );
-  AO[di].Signals[0].deviceBufferReset();
-
   AO[di].AO->prepareWrite( Signal );
 
   // error?
@@ -1721,6 +1633,14 @@ int Acquire::write( OutData &signal )
     AO[di].Signals.clear();
     return -1;
   }
+
+  return 0;
+}
+
+
+int Acquire::startWrite( OutData &signal )
+{
+  int di = signal.device();
 
   // start writing to daq board:
   if ( gainChanged() ||
@@ -1747,16 +1667,22 @@ int Acquire::write( OutData &signal )
   LastDuration = signal.duration();
   LastDelay = signal.delay();
 
-  //  cerr << "Acquire::write( OutData& ) end\n";
-
   return 0;
 }
 
 
-int Acquire::write( OutList &signal )
+int Acquire::write( OutData &signal )
 {
-  //  cerr << "Acquire::write( OutList& )\n";
+  int r = setupWrite( signal );
+  if ( r < 0 )
+    return -1;
+  r = startWrite( signal );
+  return r;
+}
 
+
+int Acquire::setupWrite( OutList &signal )
+{
   bool success = true;
   signal.clearError();
 
@@ -1911,22 +1837,10 @@ int Acquire::write( OutList &signal )
     return -1;
   }
 
-  // convert data:
-  for ( unsigned int i=0; i<AO.size(); i++ ) {
-    if ( AO[i].Signals.size() > 0 ) {
-      if ( AO[i].AO->convertData( AO[i].Signals ) != 0 )
-	success = false;
-      AO[i].Signals.deviceBufferReset();
-    }
-  }
-
   // prepare writing to daq boards:
-  vector< AOData* > aod;
-  aod.reserve( AO.size() );
   for ( unsigned int i=0; i<AO.size(); i++ ) {
     if ( AO[i].Signals.size() > 0 ) {
-      aod.push_back( &AO[i] );
-      if ( aod.back()->AO->prepareWrite( AO[i].Signals ) != 0 )
+      if ( AO[i].AO->prepareWrite( AO[i].Signals ) != 0 )
 	success = false;
     }
   }
@@ -1940,10 +1854,24 @@ int Acquire::write( OutList &signal )
     return -1;
   }
 
+  return 0;
+}
+
+
+int Acquire::startWrite( OutList &signal )
+{
+  bool success = true;
+
   // start writing to daq boards:
   if ( gainChanged() ||
        signal[0].restart() ||
        SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
+    vector< AOData* > aod;
+    aod.reserve( AO.size() );
+    for ( unsigned int i=0; i<AO.size(); i++ ) {
+      if ( AO[i].Signals.size() > 0 )
+	aod.push_back( &AO[i] );
+    }
     if ( restartRead( aod, false, true ) != 0 )
       success = false;
   }
@@ -1976,20 +1904,30 @@ int Acquire::write( OutList &signal )
 }
 
 
+int Acquire::write( OutList &signal )
+{
+  int r = setupWrite( signal );
+  if ( r < 0 )
+    return -1;
+  r = startWrite( signal );
+  return r;
+}
+
+
 int Acquire::writeData( void )
 {
   bool finished = true;
   bool error = false;
   for ( unsigned int i=0; i<AO.size(); i++ ) {
     if ( ! AO[i].Signals.empty() ) {
-      if ( AO[i].Signals[0].deviceBufferMaxPop() > 0 && AO[i].AO->running() ) {
+      if ( AO[i].Signals[0].deviceWriting() && AO[i].AO->running() ) {
 	finished = false;
 	int r = AO[i].AO->writeData();
 	if ( r < 0 )
 	  error = true;
       }
       else {
-	AO[i].Signals.freeDeviceBuffer();
+	AO[i].Signals.deviceReset();
 	AO[i].Signals.clear();
       }
     }

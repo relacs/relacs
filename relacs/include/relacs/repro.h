@@ -245,7 +245,7 @@ public:
 	you have to call convert() again before you are able to write out 
         the changed signal with write().
 	You may also clear the internal buffer by calling signal.clearBuffer(). */
-  int convert( OutData &signal );
+  //  int convert( OutData &signal );
     /*! Convert the data of \a signal into a device dependent format.
         Subsequent calls of write( signal ) will not
 	convert the data again.
@@ -254,7 +254,7 @@ public:
 	you have to call convert() again before you are able to write out 
         the changed signals with write().
 	You may also clear the internal buffers by calling signal.clearBuffer(). */
-  int convert( OutList &signal );
+  //  int convert( OutList &signal );
 
     /*! Output of a signal \a signal.
         See OutData about how to specify output channel, sampling rate, 

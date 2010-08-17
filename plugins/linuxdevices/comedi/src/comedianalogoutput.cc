@@ -19,13 +19,14 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <iostream>
-#include <sstream>
 #include <cstdio>
+#include <cstring>
 #include <cmath>
 #include <ctime>
 #include <unistd.h>
 #include <fcntl.h>
+#include <iostream>
+#include <sstream>
 #include <relacs/str.h>
 #include <relacs/comedi/comedianaloginput.h>
 #include <relacs/comedi/comedianalogoutput.h>
@@ -49,8 +50,9 @@ ComediAnalogOutput::ComediAnalogOutput( void )
   memset( &Cmd, 0, sizeof( comedi_cmd ) );
   IsPrepared = false;
   Calibration = 0;
-  Sigs = 0;
   BufferSize = 0;
+  Buffer = 0;
+  NBuffer = 0;
 }
 
 
@@ -70,8 +72,9 @@ ComediAnalogOutput::ComediAnalogOutput(  const string &device,
   open( device, opts );
   IsPrepared = false;
   Calibration = 0;
-  Sigs = 0;
   BufferSize = 0;
+  Buffer = 0;
+  NBuffer = 0;
 }
 
 
@@ -138,9 +141,8 @@ int ComediAnalogOutput::open( const string &device, const Options &opts )
   setDeviceFile( device );
 
   // set size of comedi-internal buffer to maximum:
-  BufferSize = comedi_get_max_buffer_size( DeviceP, SubDevice );
-  comedi_set_buffer_size( DeviceP, SubDevice, BufferSize );
-  BufferSize = comedi_get_buffer_size( DeviceP, SubDevice );
+  int buffersize = comedi_get_max_buffer_size( DeviceP, SubDevice );
+  comedi_set_buffer_size( DeviceP, SubDevice, buffersize );
 
   // get calibration:
   {
@@ -378,70 +380,53 @@ int ComediAnalogOutput::directWrite( OutList &sigs )
 
 
 template < typename T >
-int ComediAnalogOutput::convert( OutList &sigs )
+int ComediAnalogOutput::convert( char *cbuffer, int nbuffer )
 {
-  // copy and sort signal pointers:
-  OutList ol;
-  ol.add( sigs );
-  ol.sortByChannel();
-
   // conversion polynomials and scale factors:
-  int delayinx = ol[0].indices( sigs[0].delay() );
-  double minval[ ol.size() ];
-  double maxval[ ol.size() ];
-  double scale[ ol.size() ];
-  const comedi_polynomial_t* polynomial[ol.size()];
-  for ( int k=0; k<ol.size(); k++ ) {
-    minval[k] = ol[k].minValue();
-    maxval[k] = ol[k].maxValue();
-    scale[k] = ol[k].scale();
-    polynomial[k] = (const comedi_polynomial_t *)ol[k].gainData();
+  double minval[ Sigs.size() ];
+  double maxval[ Sigs.size() ];
+  double scale[ Sigs.size() ];
+  const comedi_polynomial_t* polynomial[Sigs.size()];
+  T zeros[ Sigs.size() ];
+  for ( int k=0; k<Sigs.size(); k++ ) {
+    minval[k] = Sigs[k].minValue();
+    maxval[k] = Sigs[k].maxValue();
+    scale[k] = Sigs[k].scale();
+    polynomial[k] = (const comedi_polynomial_t *)Sigs[k].gainData();
+    zeros[k] = comedi_from_physical( 0.0, polynomial[k] );
   }
 
-  // allocate buffer:
-  int nbuffer = ol.size() * ( ol[0].size() + delayinx );
-  char *cbuffer = new char [nbuffer*sizeof(T)];
-  //  T *buffer = new T [nbuffer];  // it gets freed as an char * array...?
-  T *buffer = (T*)cbuffer;
-  T *bp = buffer;
-
-  // simulate delay:
-  for ( int i=0; i<delayinx; i++ ) {
-    for ( int k=0; k<ol.size(); k++ ) {
-      *bp = comedi_from_physical( 0.0, polynomial[k] );
-      ++bp;
-    }
-  }
+  // buffer pointer:
+  T *bp = (T*)cbuffer;
+  int maxn = nbuffer/sizeof( T )/Sigs.size();
+  int n = 0;
 
   // convert data and multiplex into buffer:
-  for ( int i=0; i<ol[0].size(); i++ ) {
-    for ( int k=0; k<ol.size(); k++ ) {
-      float v = ol[k][i];
-      if ( v > maxval[k] )
-	v = maxval[k];
-      else if ( v < minval[k] ) 
-	v = minval[k];
-      v *= scale[k];
-      *bp = comedi_from_physical( v, polynomial[k] );
+  for ( int i=0; i<maxn && Sigs[0].deviceWriting(); i++ ) {
+    for ( int k=0; k<Sigs.size(); k++ ) {
+      if ( Sigs[k].deviceCount() < 0 ) {
+	*bp = zeros[k];
+	Sigs[k].incrDeviceIndex();
+	if ( Sigs[k].deviceIndex() >= Sigs[k].deviceDelay() )
+	  Sigs[k].incrDeviceCount();
+      }
+      else {
+	float v = Sigs[k].deviceValue();
+	if ( v > maxval[k] )
+	  v = maxval[k];
+	else if ( v < minval[k] ) 
+	  v = minval[k];
+	v *= scale[k];
+	*bp = comedi_from_physical( v, polynomial[k] );
+	if ( Sigs[k].deviceIndex() >= Sigs[k].size() )
+	  Sigs[k].incrDeviceCount();
+      }
       ++bp;
+      ++n;
     }
   }
 
-  sigs[0].setDeviceBuffer( cbuffer, nbuffer, sizeof( T ) );
-
-  return 0;
-}
-
-
-int ComediAnalogOutput::convertData( OutList &sigs )
-{
-  if ( sigs.size() <= 0 )
-    return -1;
-
-  if ( LongSampleType )
-    return convert<lsampl_t>( sigs );
-  else  
-    return convert<sampl_t>( sigs );
+  return n * sizeof( T );
 }
 
 
@@ -787,11 +772,9 @@ int ComediAnalogOutput::testWriteDevice( OutList &sigs )
   if ( cmd.chanlist != 0 )
     delete [] cmd.chanlist;
 
-  int bufsize = sigs.size()*BufferElemSize*sigs[0].indices( sigs[0].writeTime() );
-  int maxbufsize = comedi_get_max_buffer_size( DeviceP, SubDevice );
-  if ( bufsize > maxbufsize ) {
+  double buffertime = sigs[0].interval( bufferSize()/sigs.size() );
+  if ( buffertime < sigs[0].writeTime() ) {
     sigs.addError( DaqError::InvalidBufferTime );
-    sigs.setWriteTime( maxbufsize/sigs.size()/BufferElemSize/sigs[0].sampleRate() );
     retVal = -1;
   }
 
@@ -814,11 +797,6 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   if ( setupCommand( ol, Cmd ) < 0 )
     return -1;
 
-  // check buffer size:
-  int minbufsize = sigs.size()*BufferElemSize*sigs[0].indices( sigs[0].writeTime() ) * BufferElemSize;
-  if ( minbufsize > BufferSize )
-    sigs.addError( DaqError::InvalidBufferTime );
-
   // apply calibration:
   if ( Calibration != 0 ) {
     for( int k=0; k < ol.size(); k++ ) {
@@ -833,14 +811,30 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
 
   IsPrepared = ol.success();
 
-  if ( ol.success() ) {
-    setSettings( ol, BufferSize );
-    Sigs = &sigs;
-  }
+  if ( ! ol.success() )
+    return -1;
 
-  //  cerr << " ComediAnalogOutput::prepareWrite(): success" << endl;//////TEST/////
+  setSettings( ol, BufferSize );
 
-  return sigs.success() ? 0 : -1;
+  int delayinx = ol[0].indices( ol[0].delay() );
+  for ( int k=0; k<ol.size(); k++ )
+    ol[k].deviceReset( delayinx );
+
+  // set buffer size:
+  BufferSize = 5*sigs.size()*sigs[0].indices( sigs[0].writeTime() )*BufferElemSize;
+  int nbuffer = sigs.deviceBufferSize()*BufferElemSize;
+  if ( nbuffer < BufferSize )
+    BufferSize = nbuffer;
+  if ( BufferSize > bufferSize() )
+    sigs.addError( DaqError::InvalidBufferTime );
+
+  if ( ! ol.success() )
+    return -1;
+
+  Sigs = ol;
+  Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
+
+  return 0;
 }
 
 
@@ -855,7 +849,7 @@ int ComediAnalogOutput::executeCommand( void )
     */
     return -1;
   }
-  fillWriteBuffer( *Sigs );
+  fillWriteBuffer( 5 );
   return 0;
 }
 
@@ -876,7 +870,7 @@ int ComediAnalogOutput::startWrite( void )
 {
   //  cerr << " ComediAnalogOutput::startWrite(): begin" << endl;/////TEST/////
 
-  if ( !prepared() || Sigs == 0 ) {
+  if ( !prepared() || Sigs.empty() ) {
     cerr << "AO not prepared or no signals!\n";
     return -1;
   }
@@ -921,24 +915,24 @@ int ComediAnalogOutput::startWrite( void )
 
 int ComediAnalogOutput::writeData( void )
 {
-  if ( Sigs == 0 )
+  if ( Sigs.empty() )
     return -1;
 
   //device stopped?
   if ( !running() ) {
     if ( comedi_get_subdevice_flags( DeviceP, SubDevice ) & SDF_BUSY ) {
       ErrorState = 1;
-      Sigs->addError( DaqError::OverflowUnderrun );
+      Sigs.addError( DaqError::OverflowUnderrun );
     }
     else {
-      Sigs->addErrorStr( "ComediAnalogOutput::writeData: " +
+      Sigs.addErrorStr( "ComediAnalogOutput::writeData: " +
 			deviceFile() + " is not running and not busy!" );
       cerr << "ComediAnalogOutput::writeData: device is not running and not busy! comedi_strerror: " << comedi_strerror( comedi_errno() ) << '\n';
     }
     return -1;
   }
 
-  return fillWriteBuffer( *Sigs );
+  return fillWriteBuffer( 2 );
 }
 
 
@@ -946,7 +940,12 @@ int ComediAnalogOutput::reset( void )
 { 
   //  cerr << " ComediAnalogOutput::reset()" << endl;/////TEST/////
 
-  Sigs = 0;
+  Sigs.clear();
+  if ( Buffer != 0 )
+    delete [] Buffer;
+  Buffer = 0;
+  BufferSize = 0;
+  NBuffer = 0;
 
   if ( !isOpen() )
     return NotOpen;
@@ -1002,17 +1001,17 @@ void ComediAnalogOutput::take( const vector< AnalogOutput* > &aos,
 }
 
 
-int ComediAnalogOutput::fillWriteBuffer( OutList &sigs )
+int ComediAnalogOutput::fillWriteBuffer( int maxntry )
 {
   if ( !isOpen() ) {
-    sigs.setError( DaqError::DeviceNotOpen );
+    Sigs.setError( DaqError::DeviceNotOpen );
     return -1;
   }
 
   ErrorState = 0;
 
-  if ( sigs[0].deviceBufferMaxPop() <= 0 ) {
-    sigs.addError( DaqError::NoData );
+  if ( ! Sigs[0].deviceWriting() ) {
+    Sigs.addError( DaqError::NoData );
     return -1;
   }
 
@@ -1021,13 +1020,20 @@ int ComediAnalogOutput::fillWriteBuffer( OutList &sigs )
 
   // try to write twice
   for ( int tryit = 0;
-	tryit < 2 && sigs[0].deviceBufferMaxPop() > 0; 
+	tryit < maxntry && Sigs[0].deviceWriting(); 
 	tryit++ ){
 
-    int bytesWritten = write( comedi_fileno(DeviceP),
-			      sigs[0].deviceBufferPopBuffer(),
-			      sigs[0].deviceBufferMaxPop() * BufferElemSize );
-      
+    // convert data into buffer:
+    int bytesConverted = 0;
+    if ( LongSampleType )
+      bytesConverted = convert<lsampl_t>( Buffer+NBuffer, BufferSize-NBuffer );
+    else  
+      bytesConverted = convert<sampl_t>( Buffer+NBuffer, BufferSize-NBuffer );
+    NBuffer += bytesConverted;
+
+    // transfer buffer to comedi:
+    int bytesWritten = write( comedi_fileno( DeviceP ), Buffer, NBuffer );
+
     if ( bytesWritten < 0 ) {
       ern = errno;
       if ( ern == EAGAIN || ern == EINTR ) {
@@ -1036,15 +1042,22 @@ int ComediAnalogOutput::fillWriteBuffer( OutList &sigs )
       }
     }
     else if ( bytesWritten > 0 ) {
-      sigs[0].deviceBufferPop( bytesWritten / BufferElemSize );
+      memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
+      NBuffer -= bytesWritten;
       elemWritten += bytesWritten / BufferElemSize;
     }
   }
 
   if ( ern == 0 ) {
     // no more data:
-    if ( sigs[0].deviceBufferMaxPop() == 0 )
+    if ( ! Sigs[0].deviceWriting() ) {
+      if ( Buffer != 0 )
+	delete [] Buffer;
+      Buffer = 0;
+      BufferSize = 0;
+      NBuffer = 0;
       return 0;
+    }
   }
   else {
     // error:
@@ -1052,18 +1065,18 @@ int ComediAnalogOutput::fillWriteBuffer( OutList &sigs )
 
     case EPIPE: 
       ErrorState = 1;
-      sigs.addError( DaqError::OverflowUnderrun );
+      Sigs.addError( DaqError::OverflowUnderrun );
       return -1;
 
     case EBUSY:
       ErrorState = 2;
-      sigs.addError( DaqError::Busy );
+      Sigs.addError( DaqError::Busy );
       return -1;
 
     default:
       ErrorState = 2;
-      sigs.addErrorStr( ern );
-      sigs.addError( DaqError::Unknown );
+      Sigs.addErrorStr( ern );
+      Sigs.addError( DaqError::Unknown );
       return -1;
     }
   }

@@ -37,7 +37,6 @@ namespace relacs {
 \class OutData
 \brief An output signal for a data acquisition board.
 \author Marco Hackenberg, Jan Benda
-\version 1.0
 
 \bug noiseWave(), bandNoiseWave(): should set negative carrier frequency -> but: calibrate repro still does not calibrate white noise stimuli!
 
@@ -641,52 +640,32 @@ class OutData : public SampleData< float >, public DaqError
 		    double ramp=0.0, 
 		    const string &ident="ou noise wave" );
 
-    /*! Pointer to the internal buffer that holds the data in a 
-        device dependent multiplexed format.
-        \sa deviceBufferSize() */
-  inline char *deviceBuffer( void ) const { return DeviceBuffer; };
-    /*! The size of the buffer (number of elements). \sa deviceBuffer() */
-  inline int deviceBufferSize( void ) const { return DeviceBufferSize; };
-    /*! The size of a single data element of the device dependent buffer 
-        in Bytes.
-        \sa deviceBufferSize() */
-  inline int deviceDataSize( void ) const { return DeviceDataSize; };
-    /*! Set the pointer to the internal buffer holding the data in a 
-        device dependent multiplexed format to \a buffer
-	and its size to \a nbuffer data elements, each of \a dsize Bytes.
-        If there is already a buffer it is freed before. 
-        \sa freeDeviceBuffer(), deviceBuffer(), deviceBufferSize() */
-  void setDeviceBuffer( char *buffer, int nbuffer, int dsize );
-    /*! Free the internal buffer that holds the data in a device dependent
-        multiplexed format. 
-        \sa setDeviceBuffer() */
-  void freeDeviceBuffer( void );
-    /*! Pointer into the internal device dependent buffer
-        from where on the data still need to be transferred to the
-	hardware driver.
-        \sa deviceBufferMaxPop(), deviceBufferPop() */
-  inline char *deviceBufferPopBuffer( void ) const
-    { return DeviceBuffer + DeviceBufferIndex*DeviceDataSize; };
-    /*! The number of data elements that still need to be transferred 
-        to the hardware driver.
-        \sa deviceBufferPopBuffer(), deviceBufferPop(), deviceBuffer() */
-  inline int deviceBufferMaxPop( void ) const
-    { return DeviceBufferSize - DeviceBufferIndex; };
-    /*! Increment the number of transferred data elements by \a n. 
-        \sa deviceBufferPopBuffer(), deviceBufferMaxPop() */
-  inline void deviceBufferPop( int n ) { DeviceBufferIndex += n; };
-    /*! Reset the number of bytes that have been transferred to the hardware driver
-        to zero. 
-        \sa deviceBufferPopBuffer(), deviceBufferMaxPop(), deviceBufferPop() */
-  inline void deviceBufferReset( void ) { DeviceBufferIndex = 0; };
-    /*! The size of the internal device dependent buffer in bytes. */
-  inline int deviceBufferByteSize( void ) const { return DeviceBufferSize*DeviceDataSize; };
-    /*! Return \c true if data are to be converted automatically. */
-  inline bool autoConvert( void ) const { return AutoConvert; };
-    /*! Indicate that the data are to be converted automatically. */
-  void setAutoConvert( void );
-    /*! Indicate that the data are converted manually. */
-  void setManualConvert( void );
+    /*! The index of the next element to be written to the data buffer.
+        \sa incrDeviceIndex(), devieValue(), incrDeviceCount(), deviceReset() */
+  int deviceIndex( void ) const { return DeviceIndex; };
+    /*! Increment deviceIndex(). \sa deviceIndex(), deviceValue() */
+  void incrDeviceIndex( void ) { DeviceIndex++; };
+    /*! Return the value of the next element to be written to the data buffer
+        and increment deviceIndex(). \sa deviceIndex() */
+  float deviceValue( void ) { return (*this)[ DeviceIndex++ ]; };
+    /*! The number of delay elements. \sa setDeviceDelay() */
+  int deviceDelay( void ) const { return DeviceDelay; };
+    /*! Set the number of delay elements to \a delay. \sa deviceDelay() */
+  void setDeviceDelay( int delay ) { DeviceDelay = delay; };
+    /*! The device buffer counter.
+        \sa setDeviceCount(), incrDeviceCount(), deviceReset() */
+  int deviceCount( void ) const { return DeviceCount; };
+    /*! Set the device counter to \a count. \sa deviceCount() */
+  void setDeviceCount( int count ) { DeviceCount = count; };
+    /*! Increment the device counter and reset deviceIndex(). \sa deviceCount() */
+  void incrDeviceCount( void ) { DeviceCount++; DeviceIndex = 0; };
+    /*! Returns \c true as long data need to be transferred to the device. */
+  bool deviceWriting( void ) const { return ( DeviceCount <= 0 ); };
+    /*! Reset the device index and counter. */
+  void deviceReset( void ) { DeviceIndex = 0; DeviceCount = 0; };
+    /*! Reset the device index, counter, and delay. */
+  void deviceReset( int delay )
+    { DeviceIndex = 0; DeviceDelay = delay; DeviceCount = delay > 0 ? -1 : 0; };
 
   friend ostream &operator<<( ostream &str, const OutData &od );
 
@@ -752,16 +731,12 @@ class OutData : public SampleData< float >, public DaqError
     /*! Attenuation level. */
   double Level;
 
-    /*! The buffer holding device dependent multiplexed data. */
-  char *DeviceBuffer;
-    /*! The size of the buffer. */
-  int DeviceBufferSize;
-    /*! Size in Bytes of a single data element of the device dependent buffer. */
-  int DeviceDataSize;
-    /*! Index to the device dependent buffer. */
-  int DeviceBufferIndex;
-    /*! Indicates whether data are to be converted automatically. */
-  bool AutoConvert;
+    /*! Index to the element that should be written to the device next. */
+  int DeviceIndex;
+    /*! Number of zeros that should be written to emulate the delay. */
+  int DeviceDelay;
+    /*! Counts repetitions of outputs. -1: delay emulation, 0: first time. */
+  int DeviceCount;
 
     /*! Default minimum possible sampling interval in seconds. */
   static double DefaultMinSampleInterval;

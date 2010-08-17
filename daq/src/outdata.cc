@@ -91,18 +91,15 @@ OutData::OutData( const OutData  &od )
   Intensity = od.Intensity;
   CarrierFreq = od.CarrierFreq;
   Level = od.Level;
-  DeviceBuffer = 0;
-  DeviceBufferSize = 0;
-  DeviceDataSize = 2;
-  DeviceBufferIndex = 0;
-  AutoConvert = true;
+  DeviceIndex = od.DeviceIndex;
+  DeviceDelay = od.DeviceDelay;
+  DeviceCount = od.DeviceCount;
   setError( od.error() );
 }
 
 
 OutData::~OutData( void )
 {
-  freeDeviceBuffer();
   if ( GainData != 0 )
     delete [] GainData;
 }
@@ -136,11 +133,9 @@ void OutData::construct( void )
   Intensity = NoIntensity;
   CarrierFreq = 0.0;
   Level = NoLevel;
-  DeviceBuffer = 0;
-  DeviceBufferSize = 0;
-  DeviceDataSize = 2;
-  DeviceBufferIndex = 0;
-  AutoConvert = true;
+  DeviceIndex = 0;
+  DeviceDelay = 0;
+  DeviceCount = 0;
   clearError();
 }
 
@@ -221,13 +216,9 @@ const OutData &OutData::assign( const OutData &od )
   Intensity = od.Intensity;
   CarrierFreq = od.CarrierFreq;
   Level = od.Level;
-  if ( DeviceBuffer != 0 )
-    delete [] DeviceBuffer;
-  DeviceBuffer = 0;
-  DeviceBufferSize = 0;
-  DeviceDataSize = 2;
-  DeviceBufferIndex = 0;
-  AutoConvert = true;
+  DeviceIndex = od.DeviceIndex;
+  DeviceDelay = od.DeviceDelay;
+  DeviceCount = od.DeviceCount;
   setError( od.error() );
   return *this;
 }
@@ -262,13 +253,9 @@ const OutData &OutData::copy( OutData &od ) const
   od.Intensity = Intensity;
   od.CarrierFreq = CarrierFreq;
   od.Level = Level;
-  if ( od.DeviceBuffer != 0 )
-    delete [] od.DeviceBuffer;
-  od.DeviceBuffer = 0;
-  od.DeviceBufferSize = 0;
-  od.DeviceDataSize = 2;
-  od.DeviceBufferIndex = 0;
-  od.AutoConvert = true;
+  od.DeviceIndex = DeviceIndex;
+  od.DeviceDelay = DeviceDelay;
+  od.DeviceCount = DeviceCount;
   od.setError( error() );
   return *this;
 }
@@ -1026,40 +1013,6 @@ void OutData::ouNoiseWave( double tau, double duration, double stdev,
 }
 
 
-void OutData::setDeviceBuffer( char *buffer, int nbuffer, int dsize )
-{
-  if ( DeviceBuffer != 0 )
-    delete [] DeviceBuffer;
-  DeviceBuffer = buffer;
-  DeviceBufferSize = nbuffer;
-  DeviceDataSize = dsize;
-  DeviceBufferIndex = 0;
-}
-
-
-void OutData::freeDeviceBuffer( void )
-{
-  if ( DeviceBuffer != 0 )
-    delete [] DeviceBuffer;
-  DeviceBuffer = 0;
-  DeviceBufferSize = 0;
-  DeviceDataSize = 2;
-  DeviceBufferIndex = 0;
-}
-
-
-void OutData::setAutoConvert( void )
-{
-  AutoConvert = true;
-}
-
-
-void OutData::setManualConvert( void )
-{
-  AutoConvert = false;
-}
-
-
 ostream &operator<<( ostream &str, const OutData &od )
 {
   //  str << SampleDataF( od );
@@ -1093,11 +1046,9 @@ ostream &operator<<( ostream &str, const OutData &od )
   str << "Intensity: " << od.Intensity << '\n';
   str << "CarrierFreq: " << od.CarrierFreq << '\n';
   str << "Level: " << od.Level << '\n';
-  //  str << "DeviceBuffer: " << od.DeviceBuffer << '\n';
-  str << "DeviceBufferSize: " << od.DeviceBufferSize << '\n';
-  str << "DeviceDataSize: " << od.DeviceDataSize << '\n';
-  str << "DeviceBufferIndex: " << od.DeviceBufferIndex << '\n';
-  str << "AutoConvert: " << od.AutoConvert << '\n';
+  str << "DeviceIndex: " << od.DeviceIndex << '\n';
+  str << "DeviceDelay: " << od.DeviceDelay << '\n';
+  str << "DeviceCount: " << od.DeviceCount << '\n';
   return str;
 }
 

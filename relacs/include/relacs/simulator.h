@@ -80,10 +80,11 @@ public:
     /*! Stop simulation. */
   virtual int stopRead( void );
 
-    /*! Convert data of \a signal. */
-  virtual int convert( OutData &signal );
     /*! Output of a signal \a signal. */
-  virtual int write( OutData &signal );
+  virtual int setupWrite( OutData &signal );
+  virtual int startWrite( OutData &signal );
+  virtual int setupWrite( OutList &signal );
+  virtual int startWrite( OutList &signal );
     /*! Transfer data to hardware driver. */
   virtual int writeData( void );
     /*! Stop current stimulus. */

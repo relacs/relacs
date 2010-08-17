@@ -902,9 +902,12 @@ int RELACSWidget::write( OutData &signal )
   if ( SF->signalPending() )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
   lockSignals();
-  lockAI();
-  int r = AQ->write( signal );
-  unlockAI();
+  int r = AQ->setupWrite( signal );
+  if ( r >= 0 ) {
+    lockAI();
+    r = AQ->startWrite( signal );
+    unlockAI();
+  }
   unlockSignals();
   if ( r == 0 ) {
     WriteLoop.start( signal.writeTime() );
@@ -924,7 +927,7 @@ int RELACSWidget::write( OutData &signal )
   if ( IL.failed() )
     printlog( "! error in restarting analog input: " + IL.errorText() );
   return r;
- }
+}
 
 
 int RELACSWidget::write( OutList &signal )
@@ -948,9 +951,12 @@ int RELACSWidget::write( OutList &signal )
   if ( SF->signalPending() )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
   lockSignals();
-  lockAI();
-  int r = AQ->write( signal );
-  unlockAI();
+  int r = AQ->setupWrite( signal );
+  if ( r >= 0 ) {
+    lockAI();
+    r = AQ->startWrite( signal );
+    unlockAI();
+  }
   unlockSignals();
   if ( r == 0 ) {
     WriteLoop.start( signal[0].writeTime() );

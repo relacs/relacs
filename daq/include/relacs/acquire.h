@@ -459,7 +459,7 @@ public:
         Returns 0 on success or a negative number if \a signal
         is not valid.
 	The error state of \a signal is set appropriately.
-        \sa convert(), write(), writeData(), writeZero(), stopWrite() */
+        \sa write(), writeData(), writeZero(), stopWrite() */
   virtual int testWrite( OutData &signal );
     /*! Test of a multiple output signals \a signal for validity.
         If the signals \a signal are the same as from the last call of write()
@@ -468,30 +468,11 @@ public:
         Returns 0 on success or a negative number if \a signal
         is not valid.
         The error state of \a signal is set appropriately.
-        \sa convert(), write(), writeData(), writeZero(), stopWrite() */
+        \sa write(), writeData(), writeZero(), stopWrite() */
   virtual int testWrite( OutList &signal );
 
-    /*! Convert the data of \a signal into a device dependent format.
-        Subsequent calls of write( signal ) will not
-	convert the data again.
-        Once convert() is called, you have to maintain the internal
-        data buffer of \a signal, i.e. if you change the data
-	you have to call convert() again before you are able to write out 
-        the changed signal with write().
-	You may also clear the internal buffer by calling signal.clearBuffer().
-        \sa testWrite(), write(), writeData(), writeZero(), stopWrite() */
-  virtual int convert( OutData &signal );
-    /*! Convert the data of \a signal into a device dependent format.
-        Subsequent calls of write( signal ) will not
-	convert the data again.
-        Once convert() is called, you have to maintain the internal
-        data buffers of \a signal, i.e. if you change the data
-	you have to call convert() again before you are able to write out 
-        the changed signals with write().
-	You may also clear the internal buffers by calling signal.clearBuffer().
-        \sa testWrite(), write(), writeData(), writeZero(), stopWrite() */
-  virtual int convert( OutList &signal );
-
+  virtual int setupWrite( OutData &signal );
+  virtual int startWrite( OutData &signal );
     /*! Output of a signal \a signal.
         See OutData about how to specify output channel, sampling rate, 
 	intensity, delay, etc. 
@@ -501,8 +482,10 @@ public:
 	Returns 0 on success.
         If the output of the signal failed, a negative number is returned and
         the reason is specified in the error state of \a signal.
-        \sa testWrite(), convert(), writeData(), writeZero(), stopWrite() */
-  virtual int write( OutData &signal );
+        \sa testWrite(), writeData(), writeZero(), stopWrite() */
+  int write( OutData &signal );
+  virtual int setupWrite( OutList &signal );
+  virtual int startWrite( OutList &signal );
     /*! Output of multiple signals \a signal.
         See OutData about how to specify output channel, sampling rate, 
 	intensity, delay, etc. 
@@ -512,7 +495,7 @@ public:
 	Returns 0 on success.
         If the output of the signals failed, a negative number is returned and
         the reason is specified in the error state of \a signal.
-        \sa testWrite(), convert(), writeData(), writeZero(), stopWrite() */
+        \sa testWrite(), writeData(), writeZero(), stopWrite() */
   virtual int write( OutList &signal );
 
     /*! After having started an analog output with write()
@@ -521,7 +504,7 @@ public:
 	Returns -1 on error, 0 if no more data need to be
 	transferred to the hardware driver, and 1 if some data were
 	successfully transfered to the hardware driver.
-        \sa testWrite(), convert(), write(), writeZero(), stopWrite() */
+        \sa testWrite(), write(), writeZero(), stopWrite() */
   virtual int writeData( void );
     /*! Direct output of a single data value as specified by \a signal
         to the DAQ boards.
@@ -549,19 +532,19 @@ public:
 
     /*! Set the output of channel \a channel on device \a device to zero.
         Returns 0 on success or a negative number on error. 
-        \sa testWrite(), convert(), write(), writeData(), stopWrite() */
+        \sa testWrite(), write(), writeData(), stopWrite() */
   virtual int writeZero( int channel, int device );
     /*! Set the output of the trace with index \a index to zero.
         Returns 0 on success or a negative number on error.
-        \sa testWrite(), convert(), write(), writeData(), stopWrite() */
+        \sa testWrite(), write(), writeData(), stopWrite() */
   virtual int writeZero( int index );
     /*! Set the output of the trace with name \a trace to zero.
         Returns 0 on success or a negative number on error.
-        \sa testWrite(), convert(), write(), writeData(), stopWrite() */
+        \sa testWrite(), write(), writeData(), stopWrite() */
   virtual int writeZero( const string &trace );
 
     /*! Stop analog output of all analog output devices.
-        \sa testWrite(), convert(), write(), writeData(), writeZero() */
+        \sa testWrite(), write(), writeData(), writeZero() */
   virtual int stopWrite( void );
 
     /*! Returns the minimum possible attenuation level for the output trace

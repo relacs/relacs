@@ -124,8 +124,8 @@ void WriteThread::run( void )
   bool rd = true;
 
   signed long wi = (unsigned long)::rint( 1000.0*WriteInterval );
+  QThread::msleep( wi/4 );
   do {
-    QThread::msleep( wi );
     RW->lockSignals();
     int r = RW->AQ->writeData();
     RW->unlockSignals();
@@ -143,6 +143,7 @@ void WriteThread::run( void )
       RunMutex.unlock();
       break;
     }
+    QThread::msleep( wi );
     RunMutex.lock();
     rd = Run;
     RunMutex.unlock();

@@ -38,7 +38,6 @@ class AnalogInput;
 \class AnalogOutput
 \author Marco Hackenberg
 \author Jan Benda
-\version 0.5
 \brief Interface for accessing analog output of a data-aquisition board.
 \todo add wait function for blocked writes. Returns an error code in the signals.
 \todo add probe function that returns a string of possible supported devices.
@@ -118,16 +117,6 @@ public:
         independently of prepareWrite() and startWrite() with
         different \a sigs. */
   virtual int testWrite( OutList &sigs );
-    /*! Convert data of the output signals \a sigs.
-	If an error ocurred in any channel, the corresponding errorflags in the
-	OutData structure are filled and a negative value is returned.
-        The default implementation calls convert<signed short>( sigs ),
-	i.e. the output signals are sorted by channel number first
-        and are then multiplexed into a buffer of signed short's (2 byte).
-        This should be good for most 12 or 16 bit daq boards.
-        The buffer is attached to the first signal in \a sigs.
-        This function is called before prepareWrite(). */
-  virtual int convertData( OutList &sigs ) = 0;
     /*! Prepare analog output of the output signals \a sigs on the device.
 	If an error ocurred in any signal, the corresponding errorflags in
 	OutData are set and a negative value is returned.
@@ -136,8 +125,7 @@ public:
 	and the minimum and maximum possible output voltages for each
 	of the traces in \a sigs should be set (see OutData::setGain(),
 	OutData::setGainIndex(), OutData::setMaxData(), OutData::setMinData() ).
-	This function assumes that \a sigs successfully passed testWrite()
-	and that convertData() was already called.
+	This function assumes that \a sigs successfully passed testWrite().
         The channels in \a sigs are not sorted. */
   virtual int prepareWrite( OutList &sigs ) = 0;
     /*! Start analog output of the output signals that were passed to the previous call
@@ -153,7 +141,7 @@ public:
         Returns the number of transferred data elements.
 	Returns zero if all data are transferred.
 	If an error ocurred in any channel, the corresponding errorflags in the
-	InData structure are filled and a negative value is returned.
+	OutData structure are filled and a negative value is returned.
         This function is called periodically after writing has been successfully
         started by startWrite(). */
   virtual int writeData( void ) = 0;
@@ -234,7 +222,7 @@ protected:
 
     /*! Test each output signal in \a sigs for valid settings.
 	If an error ocurred in any signal, the corresponding errorflags in the
-	InData are set and a negative value is returned.
+	OutData are set and a negative value is returned.
 	The following error conditions are checked:
         DeviceNotOpen, NoData (OutData::size() <= 0), 
 	MultipleDevices, MultipleStartSources,
