@@ -58,6 +58,21 @@ Plot::RGBColor Plot::RGBColor::lighten( double f ) const
 }
 
 
+class PlotMouseTrackingEvent : public QEvent
+{
+
+public:
+
+  PlotMouseTrackingEvent( bool enable )
+    : QEvent( Type( User+101 ) ),
+      Enable( enable )
+  {
+  }
+
+  bool Enable;
+};
+
+
 Plot::Plot( KeepMode keep, QWidget *parent )
   : QWidget( parent ),
     PMutex( QMutex::NonRecursive )
@@ -3097,10 +3112,22 @@ void Plot::paintEvent( QPaintEvent *qpe )
 
 void Plot::customEvent( QEvent *qce )
 {
-  if ( qce->type() - QEvent::User == 100 )
+  switch ( qce->type() - QEvent::User ) {
+  case 100: {
     update();
-  else
+    break;
+  }
+  case 101: {
+    PlotMouseTrackingEvent *pmte = dynamic_cast<PlotMouseTrackingEvent*>( qce );
+    if ( SubWidget && MP != 0 )
+      MP->setMouseTracking( pmte->Enable );
+    else
+      QWidget::setMouseTracking( pmte->Enable );
+    break;
+  }
+  default:
     QWidget::customEvent( qce );
+  }
 }
 
 
@@ -4046,10 +4073,14 @@ void Plot::mouseEvent( MouseEvent &me )
 void Plot::setMouseTracking( bool enable )
 {
   MouseTracking = enable;
-  if ( SubWidget && MP != 0 )
-    MP->setMouseTracking( MouseTracking );
-  else
-    QWidget::setMouseTracking( MouseTracking );
+  if ( QThread::currentThread() != GUIThread )
+    QCoreApplication::postEvent( this, new PlotMouseTrackingEvent( MouseTracking ) );
+  else {
+    if ( SubWidget && MP != 0 )
+      MP->setMouseTracking( MouseTracking );
+    else
+      QWidget::setMouseTracking( MouseTracking );
+  }
 }
 
 

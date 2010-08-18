@@ -1173,10 +1173,8 @@ void FICurve::plotMouseEvent( Plot::MouseEvent &me )
       changed = true;
     }
     if ( ! PlotIntensitySelection || changed ) {
-      P.lock();
       plotIntensitySelection();
       P.draw();
-      P.unlock();
     }
     PlotIntensitySelection = true;
     me.setUsed();

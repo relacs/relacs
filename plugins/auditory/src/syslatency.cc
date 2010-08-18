@@ -284,7 +284,7 @@ int SysLatency::main( void )
 	     offset, slope, meanrate );
     plot( coincidentspikes, prc, coinclatency, offset, slope, meanrate );
     
-    if ( softStop() > 1 ) {
+    if ( softStop() > 0 ) {
       save( carrierfrequency, side, pwaves/carrierfrequency, intensity,
 	    spikes, trigger, coincidentspikes, prc,
 	    spikewidth, latency, latencysd, maxcoincidence, coinclatency,
