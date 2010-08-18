@@ -849,7 +849,7 @@ int ComediAnalogOutput::executeCommand( void )
     */
     return -1;
   }
-  fillWriteBuffer( 5 );
+  fillWriteBuffer( true );
   return 0;
 }
 
@@ -932,7 +932,7 @@ int ComediAnalogOutput::writeData( void )
     return -1;
   }
 
-  return fillWriteBuffer( 2 );
+  return fillWriteBuffer( false );
 }
 
 
@@ -1001,7 +1001,7 @@ void ComediAnalogOutput::take( const vector< AnalogOutput* > &aos,
 }
 
 
-int ComediAnalogOutput::fillWriteBuffer( int maxntry )
+int ComediAnalogOutput::fillWriteBuffer( bool first )
 {
   if ( !isOpen() ) {
     Sigs.setError( DaqError::DeviceNotOpen );
@@ -1014,6 +1014,10 @@ int ComediAnalogOutput::fillWriteBuffer( int maxntry )
     Sigs.addError( DaqError::NoData );
     return -1;
   }
+
+  int maxntry = 2;
+  if ( first )
+    maxntry = 50000/BufferSize;
 
   int ern = 0;
   int elemWritten = 0;

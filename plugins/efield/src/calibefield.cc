@@ -218,7 +218,6 @@ int CalibEField::main( void )
       if ( maxsignal < max ) {
 	maxsignal = max;
 	adjustGain( trace( GlobalEFieldTrace ), 1.1 * maxsignal );
-	activateGains();
       }
     }
 
