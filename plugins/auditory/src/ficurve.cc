@@ -90,8 +90,8 @@ FICurve::FICurve( void )
   addNumber( "carrierfreq", "Frequency of carrier", CarrierFrequency, -40000.0, 40000.0, 500.0, "Hz", "kHz" );
   addBoolean( "usebestfreq", "Relative to the cell's best frequency", UseBestFreq );
   addNumber( "ramp", "Ramp of stimulus", Ramp, 0.0, 10.0, 0.001, "seconds", "ms" );
-  addNumber( "duration", "Duration of stimulus", Duration, 0.0, 10.0, 0.05, "seconds", "ms" );
-  addNumber( "pause", "Pause", Pause, 0.0, 10.0, 0.05, "seconds", "ms" );
+  addNumber( "duration", "Duration of stimulus", Duration, 0.0, 1000.0, 0.05, "seconds", "ms" );
+  addNumber( "pause", "Pause", Pause, 0.0, 1000.0, 0.05, "seconds", "ms" );
   addSelection( "side", "Speaker", "left|right|best" );
   addLabel( "Optimization" ).setStyle( OptWidget::TabLabel );
   addLabel( "Baseline activity" );

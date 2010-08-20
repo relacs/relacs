@@ -106,7 +106,7 @@ FileStimulus::FileStimulus( void )
   NerveKey.addNumber( "ampl", "uV", "%6.1f" );
   NerveKey.addLabel( "average" );
   NerveKey.addNumber( "time", "ms", "%9.2f" );
-  NerveKey.addNumber( "ampl", "uV", "%6.1f" );
+  NerveKey.addNumber( "ampl", "uV", "%7.2f" );
 
   // plot:
   setWidget( &P );
@@ -706,9 +706,7 @@ void FileStimulus::analyze( void )
     const InData &nd = trace( NerveTrace[0] );
     // nerve amplitudes:
     // peak and trough amplitudes:
-    double min = nd.min( signalTime(), signalTime()+4.0/FishRate );
-    double max = nd.max( signalTime(), signalTime()+4.0/FishRate );
-    double threshold = 0.5*(max-min);
+    double threshold = nd.stdev( signalTime(), signalTime()+4.0/FishRate );
     if ( threshold < 1.0e-8 )
       threshold = 0.001;
     EventList peaktroughs( 2, (int)rint(1500.0*(Before+Duration+After)), true );

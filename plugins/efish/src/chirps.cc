@@ -153,7 +153,7 @@ Chirps::Chirps( void )
   NerveKey.addNumber( "ampl", "uV", "%6.1f" );
   NerveKey.addLabel( "average" );
   NerveKey.addNumber( "time", "ms", "%7.2f" );
-  NerveKey.addNumber( "ampl", "uV", "%6.1f" );
+  NerveKey.addNumber( "ampl", "uV", "%7.2f" );
 
   AmplKey.addNumber( "time", "ms", "%8.2f" );
   AmplKey.addNumber( "ampl", "", "%5.3f" );
@@ -1026,14 +1026,25 @@ void Chirps::saveChirpNerve( void )
     df << "#  beat phase: " << Str( Response[j].BeatPhase, "%.3f" ) << '\n';
     df << "#    beat pos: " << Str( Response[j].BeatLoc, "%.3f" ) << '\n';
     df << "#    beat bin: " << Response[j].BeatBin << '\n';
-    for ( int i=0; i<Response[j].NerveAmplP.size(); i++ ) {
-      NerveKey.save( df, 1000.0 * Response[j].NerveAmplP.x( i ), 0 );
-      NerveKey.save( df, Response[j].NerveAmplP.y(i) );
-      NerveKey.save( df, 1000.0 * Response[j].NerveAmplT.x( i ) );
-      NerveKey.save( df, Response[j].NerveAmplT.y(i) );
-      NerveKey.save( df, 1000.0 * Response[j].NerveAmplM.x( i ) );
-      NerveKey.save( df, Response[j].NerveAmplM.y(i) );
+    if ( Response[j].NerveAmplP.empty() ) {
+      NerveKey.save( df, 0.0, 0 );
+      NerveKey.save( df, 0.0 );
+      NerveKey.save( df, 0.0 );
+      NerveKey.save( df, 0.0 );
+      NerveKey.save( df, 0.0 );
+      NerveKey.save( df, 0.0 );
       df << '\n';
+    }
+    else {
+      for ( int i=0; i<Response[j].NerveAmplP.size(); i++ ) {
+	NerveKey.save( df, 1000.0 * Response[j].NerveAmplP.x( i ), 0 );
+	NerveKey.save( df, Response[j].NerveAmplP.y(i) );
+	NerveKey.save( df, 1000.0 * Response[j].NerveAmplT.x( i ) );
+	NerveKey.save( df, Response[j].NerveAmplT.y(i) );
+	NerveKey.save( df, 1000.0 * Response[j].NerveAmplM.x( i ) );
+	NerveKey.save( df, Response[j].NerveAmplM.y(i) );
+	df << '\n';
+      }
     }
   }
   df << "\n\n";
@@ -1148,14 +1159,25 @@ void Chirps::saveNerve( void )
   NerveKey.saveKey( df, true, true );
 
   // write data into file:
-  for ( int j=0; j<NerveAmplP.size(); j++ ) {
-    NerveKey.save( df, 1000.0 * NerveAmplP.x( j ), 0 );
-    NerveKey.save( df, NerveAmplP.y( j ) );
-    NerveKey.save( df, 1000.0 * NerveAmplT.x( j ) );
-    NerveKey.save( df, NerveAmplT.y( j ) );
-    NerveKey.save( df, 1000.0 * NerveAmplM.x( j ) );
-    NerveKey.save( df, NerveAmplM.y( j ) );
+  if ( NerveAmplP.empty() ) {
+    NerveKey.save( df, 0.0, 0 );
+    NerveKey.save( df, 0.0 );
+    NerveKey.save( df, 0.0 );
+    NerveKey.save( df, 0.0 );
+    NerveKey.save( df, 0.0 );
+    NerveKey.save( df, 0.0 );
     df << '\n';
+  }
+  else {
+    for ( int j=0; j<NerveAmplP.size(); j++ ) {
+      NerveKey.save( df, 1000.0 * NerveAmplP.x( j ), 0 );
+      NerveKey.save( df, NerveAmplP.y( j ) );
+      NerveKey.save( df, 1000.0 * NerveAmplT.x( j ) );
+      NerveKey.save( df, NerveAmplT.y( j ) );
+      NerveKey.save( df, 1000.0 * NerveAmplM.x( j ) );
+      NerveKey.save( df, NerveAmplM.y( j ) );
+      df << '\n';
+    }
   }
   df << "\n\n";
 }
@@ -1316,9 +1338,7 @@ void Chirps::analyze( void )
     const InData &nd = trace( NerveTrace[0] );
     // nerve amplitudes:
     // peak and trough amplitudes:
-    double min = nd.min( signalTime(), signalTime()+4.0/FishRate );
-    double max = nd.max( signalTime(), signalTime()+4.0/FishRate );
-    double threshold = 0.5*(max-min);
+    double threshold = nd.stdev( signalTime(), signalTime()+4.0/FishRate );
     if ( threshold < 1.0e-8 )
       threshold = 0.001;
     EventList peaktroughs( 2, (int)rint(1500.0*Duration), true );
@@ -1344,11 +1364,13 @@ void Chirps::analyze( void )
 		       peaktroughs[1].eventSize( k ) );
     }
     // averaged amplitude:
-    double left = signalTime();
-    double st = (peaktroughs[0].back() - peaktroughs[0].front())/double(peaktroughs[0].size()-1);
-    for ( int k=0; k<NerveAmplP.size(); k++ ) {
-      NerveAmplM.push( left-signalTime(), nd.mean( left, left+st ) );
-      left += st;
+    if ( peaktroughs[0].size() > 1 ) {
+      double left = signalTime();
+      double st = (peaktroughs[0].back() - peaktroughs[0].front())/double(peaktroughs[0].size()-1);
+      for ( int k=0; k<NerveAmplP.size(); k++ ) {
+	NerveAmplM.push( left-signalTime(), nd.mean( left, left+st ) );
+	left += st;
+      }
     }
   }
 
@@ -1502,9 +1524,7 @@ void Chirps::analyze( void )
       // nerve amplitudes:
       // peak and trough amplitudes:
       double left = chirptime - SaveWindow;
-      double min = nd.min( left, left+4.0/FishRate );
-      double max = nd.max( left, left+4.0/FishRate );
-      double threshold = 0.5*(max-min);
+      double threshold = nd.stdev( left, left+4.0/FishRate );
       if ( threshold < 1.0e-8 )
 	threshold = 0.001;
       EventList peaktroughs( 2, (int)rint(1500.0*(Duration>2.0*SaveWindow?Duration:2.0*SaveWindow)), true );
@@ -1530,10 +1550,12 @@ void Chirps::analyze( void )
 			    peaktroughs[1].eventSize( k ) );
       }
       // averaged amplitude:
-      double st = (peaktroughs[0].back() - peaktroughs[0].front())/double(peaktroughs[0].size()-1);
-      for ( int k=0; k<rd.NerveAmplP.size(); k++ ) {
-	rd.NerveAmplM.push( left-chirptime, nd.mean( left, left+st ) );
-	left += st;
+      if ( peaktroughs[0].size() > 1 ) {
+	double st = (peaktroughs[0].back() - peaktroughs[0].front())/double(peaktroughs[0].size()-1);
+	for ( int k=0; k<rd.NerveAmplP.size(); k++ ) {
+	  rd.NerveAmplM.push( left-chirptime, nd.mean( left, left+st ) );
+	  left += st;
+	}
       }
     }
   }

@@ -438,16 +438,27 @@ void BaselineActivity::saveNerve( const Options &header, const MapD &nerveamplp,
   key.saveKey( df, true, true );
 
   // write data into file:
-  for ( int k=0; k<nerveamplp.size() &&
-	  k<nerveamplt.size() &&
-	  k<nerveamplm.size(); k++ ) {
-    key.save( df, 1000.0 * nerveamplp.x(k), 0 );
-    key.save( df, nerveamplp.y(k) );
-    key.save( df, 1000.0 * nerveamplt.x(k), 0 );
-    key.save( df, nerveamplt.y(k) );
-    key.save( df, 1000.0 * nerveamplm.x(k), 0 );
-    key.save( df, nerveamplm.y(k) );
+  if ( nerveamplm.empty() ) {
+    key.save( df, 0.0, 0 );
+    key.save( df, 0.0 );
+    key.save( df, 0.0 );
+    key.save( df, 0.0 );
+    key.save( df, 0.0 );
+    key.save( df, 0.0 );
     df << '\n';
+  }
+  else {
+    for ( int k=0; k<nerveamplp.size() &&
+	    k<nerveamplt.size() &&
+	    k<nerveamplm.size(); k++ ) {
+      key.save( df, 1000.0 * nerveamplp.x(k), 0 );
+      key.save( df, nerveamplp.y(k) );
+      key.save( df, 1000.0 * nerveamplt.x(k), 0 );
+      key.save( df, nerveamplt.y(k) );
+      key.save( df, 1000.0 * nerveamplm.x(k), 0 );
+      key.save( df, nerveamplm.y(k) );
+      df << '\n';
+    }
   }
   df << '\n' << '\n';
 }
@@ -737,9 +748,7 @@ void BaselineActivity::analyze( int autodetect,
     nerveamplp.reserve( (int)rint(5000.0*SearchDuration) );
     nerveamplt.reserve( (int)rint(5000.0*SearchDuration) );
     nerveamplm.reserve( (int)rint(5000.0*SearchDuration) );
-    double min = nd.min( FirstSignal, FirstSignal+4.0/EODRate );
-    double max = nd.max( FirstSignal, FirstSignal+4.0/EODRate );
-    threshold = 0.5*(max-min);
+    threshold = nd.stdev( FirstSignal, FirstSignal+4.0/EODRate );
     if ( threshold < 1.0e-8 )
       threshold = 0.001;
     D.init( firstn, lastn, firstntime );
@@ -753,11 +762,13 @@ void BaselineActivity::analyze( int autodetect,
       nerveamplt.push( peaktroughs[1][k] - FirstSignal, 
 		       peaktroughs[1].eventSize( k ) );
     // averaged amplitude:
-    double left = FirstSignal;
-    double st = (peaktroughs[0].back() - peaktroughs[0].front())/double(peaktroughs[0].size()-1);
-    for ( int k=0; k<nerveamplp.size(); k++ ) {
-      nerveamplm.push( left-FirstSignal, nd.mean( left, left+st ) );
-      left += st;
+    if ( peaktroughs[0].size() > 1 ) {
+      double left = FirstSignal;
+      double st = (peaktroughs[0].back() - peaktroughs[0].front())/double(peaktroughs[0].size()-1);
+      for ( int k=0; k<nerveamplp.size(); k++ ) {
+	nerveamplm.push( left-FirstSignal, nd.mean( left, left+st ) );
+	left += st;
+      }
     }
   }
 

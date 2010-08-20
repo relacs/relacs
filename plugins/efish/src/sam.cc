@@ -117,7 +117,7 @@ SAM::SAM( void )
   NerveKey.addNumber( "ampl", "uV", "%6.1f" );
   NerveKey.addLabel( "average" );
   NerveKey.addNumber( "time", "ms", "%9.2f" );
-  NerveKey.addNumber( "ampl", "uV", "%6.1f" );
+  NerveKey.addNumber( "ampl", "uV", "%7.2f" );
 
   // plot:
   setWidget( &P );
@@ -890,6 +890,8 @@ void SAM::analyze( void )
 	  ++index ) {
       double t1 = *index;
       int pi = eod2.previous( t1 );
+      if ( pi + 1 >= eod2.size() )
+	break;
       double t0 = eod2[ pi ];
       double p = ( t1 - t0 ) / ( eod2[ pi + 1 ] - t0 );
       //      while ( p - p2 < -0.2 )
@@ -955,9 +957,7 @@ XXX
       // nerve amplitudes:
       // peak and trough amplitudes:
       double ref = beattimes[i];
-      double min = nd.min( ref, ref+4.0/FishRate );
-      double max = nd.max( ref, ref+4.0/FishRate );
-      double threshold = 0.5*(max-min);
+      double threshold = nd.stdev( ref, ref+4.0/FishRate );
       if ( threshold < 1.0e-8 )
 	threshold = 0.001;
       EventList peaktroughs( 2, (int)rint(2000.0*Period), true );
