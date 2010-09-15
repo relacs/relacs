@@ -1689,7 +1689,7 @@ void Plot::SampleDataElement<T>::yminmax( double xmin, double xmax,
   if ( x2i >= SD->size() )
     x2i = SD->size()-1;
 
-  if ( x2i > x1i ) {
+  if ( x2i >= x1i ) {
     ymin = ymax = (*SD)[ x1i ];
     for ( int k=x1i+1; k<=x2i; k++ )
       if ( (*SD)[k] > ymax )

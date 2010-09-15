@@ -656,24 +656,20 @@ void FileStimulus::analyze( void )
 {
   const EventData &localeod = events( LocalEODEvents[0] );
 
-  double dt = localeod.back() - signalTime() - Duration;
-  if ( dt < Pause )
-    dt = Pause;
-  if ( dt < 0.015 )
-    dt = 0.015;  // about 10 EOD cycles
-
   // EOD trace unit:
   LocalEODUnit = trace( LocalEODTrace[0] ).unit();
 
   // EOD rate:
   if ( EODEvents >= 0 )
-    FishRate = events( EODEvents ).frequency( localeod.back() - dt, localeod.back() );
+    FishRate = events( EODEvents ).frequency( signalTime() + Duration,
+					      signalTime() + Duration + Pause );
   else
-    FishRate = localeod.frequency( localeod.back() - dt, localeod.back() );
+    FishRate = localeod.frequency( signalTime() + Duration,
+				   signalTime() + Duration + Pause );
 
   // EOD amplitude:
   FishAmplitude = eodAmplitude( trace( LocalEODTrace[0] ), localeod,
-				localeod.back() - dt, localeod.back() );
+				signalTime() + Duration, signalTime() + Duration + Pause );
 
   // contrast:
   TrueContrast = beatContrast( trace( LocalEODTrace[0] ), events( LocalBeatPeakEvents[0] ),

@@ -4504,24 +4504,26 @@ Plot::InDataElement::~InDataElement( void )
 long Plot::InDataElement::first( double x1, double y1, double x2, double y2 ) const
 {
   double t = x1/TScale + Reference; 
-  long x1i = long( ::floor( t/ID->sampleInterval() ) );
-  if ( x1i > ID->currentIndex() )
-    return ID->currentIndex();
-  if ( x1i < ID->minIndex() )
+  long x1i = ID->index( t );
+  if ( x1i > ID->size() )
+    return ID->size();
+  else if ( x1i < ID->minIndex() )
     return ID->minIndex();
-  return x1i;
+  else
+    return x1i;
 }
 
 
 long Plot::InDataElement::last( double x1, double y1, double x2, double y2 ) const
 {
   double t = x2/TScale + Reference; 
-  long x2i = long( ::ceil( t/ID->sampleInterval() ) ) + 1;
-  if ( x2i > ID->currentIndex() )
-    return ID->currentIndex();
-  if ( x2i < ID->minIndex() )
+  long x2i = ID->index( t ) + 1;
+  if ( x2i > ID->size() )
+    return ID->size();
+  else if ( x2i < ID->minIndex() )
     return ID->minIndex();
-  return x2i;
+  else
+    return x2i;
 }
 
 
@@ -4574,11 +4576,11 @@ void Plot::InDataElement::yminmax( double xmin, double xmax,
   long x1i = ID->indices( tmin );
   long x2i = ID->indices( tmax );
 
-  if ( x1i < 0 )
-    x1i = 0;
-  if ( x2i > ID->currentIndex() )
-    x2i = ID->currentIndex();
-  if ( x2i > x1i ) {
+  if ( x1i < ID->minIndex() )
+    x1i = ID->minIndex();
+  if ( x2i >= ID->size() )
+    x2i = ID->size() - 1;
+  if ( x2i >= x1i ) {
     ymin = ymax = (*ID)[x1i];
     for ( long k=x1i+1; k<=x2i; k++ )
       if ( (*ID)[k] > ymax )

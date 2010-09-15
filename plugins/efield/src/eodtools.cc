@@ -103,16 +103,20 @@ public:
 void EODTools::eodPeaks( const InData &data, double tbegin, double tend,
 			 double threshold, EventData &peaks )
 {
+  peaks.clear();
+  if ( tend < tbegin )
+    return;
   InDataIterator first = data.begin() + tbegin;
-  if ( first  < data.begin() )
-    first = data.begin();
+  if ( first  < data.minBegin() )
+    first = data.minBegin();
+  InDataTimeIterator firsttime( first );
   InDataIterator last = data.begin() + tend;
   if ( last  > data.end() )
     last = data.end();
   peaks.reserve( long( (tend-tbegin) * 10000.0 ) );
   AcceptEODPeaks< InDataIterator, InDataTimeIterator > accept;
   Detector< InDataIterator, InDataTimeIterator > D;
-  D.init( first, last, data.timeBegin() + tbegin );
+  D.init( first, last, firsttime );
   D.peak( first, last, peaks, threshold,
 	  threshold, threshold,
 	  accept  );
@@ -161,17 +165,21 @@ public:
 void EODTools::eodTroughs( const InData &data, double tbegin, double tend,
 			   double threshold, EventData &troughs )
 {
+  troughs.clear();
+  if ( tend < tbegin )
+    return;
   InDataIterator first = data.begin() + tbegin;
-  if ( first  < data.begin() )
-    first = data.begin();
+  if ( first < data.minBegin() )
+    first = data.minBegin();
+  InDataTimeIterator firsttime( first );
   InDataIterator last = data.begin() + tend;
-  if ( last  > data.end() )
+  if ( last > data.end() )
     last = data.end();
   troughs.reserve( long( (tend-tbegin) * 10000.0 ) );
   troughs.setSource( 1 );
   AcceptEODTroughs accept;
   Detector< InDataIterator, InDataTimeIterator > D;
-  D.init( first, last, data.timeBegin() + tbegin );
+  D.init( first, last, firsttime );
   D.trough( first, last, troughs, threshold,
 	    threshold, threshold, accept );
 }
