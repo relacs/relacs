@@ -26,6 +26,7 @@ librelacsdaq_la_LIBADD = \
 else
 librelacsdaq_la_LIBADD = \
     -lrelacsnumerics \
+    -lrelacsoptions \
     $(GSL_LIBS)
 endif
 

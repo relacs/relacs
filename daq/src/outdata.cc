@@ -77,6 +77,7 @@ OutData::OutData( const OutData  &od )
   Trace = od.Trace;
   TraceName = od.TraceName;
   Ident = od.Ident;
+  Descriptions = od.Descriptions;
   Reglitch = od.Reglitch;
   RequestMinValue = od.RequestMinValue;
   RequestMaxValue = od.RequestMaxValue;
@@ -95,6 +96,7 @@ OutData::OutData( const OutData  &od )
   DeviceDelay = od.DeviceDelay;
   DeviceCount = od.DeviceCount;
   setError( od.error() );
+  Dummy.clear();
 }
 
 
@@ -119,6 +121,7 @@ void OutData::construct( void )
   Trace = -1;
   TraceName = "";
   Ident = "";
+  Descriptions.clear();
   Reglitch = false;
   RequestMinValue = AutoRange;
   RequestMaxValue = AutoRange;
@@ -137,6 +140,7 @@ void OutData::construct( void )
   DeviceDelay = 0;
   DeviceCount = 0;
   clearError();
+  Dummy.clear();
 }
 
 
@@ -202,6 +206,7 @@ const OutData &OutData::assign( const OutData &od )
   Trace = od.Trace;
   TraceName = od.TraceName;
   Ident = od.Ident;
+  Descriptions = od.Descriptions;
   Reglitch = od.Reglitch;
   RequestMinValue = od.RequestMinValue;
   RequestMaxValue = od.RequestMaxValue;
@@ -220,6 +225,7 @@ const OutData &OutData::assign( const OutData &od )
   DeviceDelay = od.DeviceDelay;
   DeviceCount = od.DeviceCount;
   setError( od.error() );
+  Dummy.clear();
   return *this;
 }
 
@@ -239,6 +245,7 @@ const OutData &OutData::copy( OutData &od ) const
   od.Trace = Trace;
   od.TraceName = TraceName;
   od.Ident = Ident;
+  od.Descriptions = Descriptions;
   od.Reglitch = Reglitch;
   od.RequestMinValue = RequestMinValue;
   od.RequestMaxValue = RequestMaxValue;
@@ -257,6 +264,7 @@ const OutData &OutData::copy( OutData &od ) const
   od.DeviceDelay = DeviceDelay;
   od.DeviceCount = DeviceCount;
   od.setError( error() );
+  Dummy.clear();
   return *this;
 }
 
@@ -522,6 +530,70 @@ string OutData::ident( void ) const
 void OutData::setIdent( const string &ident )
 {
   Ident = ident;
+}
+
+
+int OutData::descriptions( void ) const
+{
+  return Descriptions.size();
+}
+
+
+const Options &OutData::description( int i ) const
+{
+  if ( i < 0 || i >= (int)Descriptions.size() ) {
+    Dummy.clear();
+    return Dummy;
+  }
+  else
+    return Descriptions[ i ];
+}
+
+
+Options &OutData::description( int i )
+{
+  if ( i < 0 || i >= (int)Descriptions.size() ) {
+    Dummy.clear();
+    return Dummy;
+  }
+  else
+    return Descriptions[ i ];
+}
+
+
+const Options &OutData::description( void ) const
+{
+  if ( Descriptions.empty() ) {
+    Dummy.clear();
+    return Dummy;
+  }
+  else
+    return Descriptions.back();
+}
+
+
+Options &OutData::description( void )
+{
+  if ( Descriptions.empty() ) {
+    Dummy.clear();
+    return Dummy;
+  }
+  else
+    return Descriptions.back();
+}
+
+
+Options &OutData::addDescription( const string &type )
+{
+  Descriptions.push_back( Options() );
+  Descriptions.back().addText( "type", type );
+  return Descriptions.back();
+}
+
+
+void OutData::clearDescriptions( void )
+{
+  Descriptions.clear();
 }
 
 
@@ -1049,6 +1121,19 @@ ostream &operator<<( ostream &str, const OutData &od )
   str << "DeviceIndex: " << od.DeviceIndex << '\n';
   str << "DeviceDelay: " << od.DeviceDelay << '\n';
   str << "DeviceCount: " << od.DeviceCount << '\n';
+  if ( od.Descriptions.empty() )
+    str << "Descriptions: <empty>\n";
+  else {
+    str << "Descriptions: \n";
+    for ( int k=0; k<(int)od.Descriptions.size(); k++ ) {
+      if ( od.Descriptions[k].empty() )
+	str << "  Description empty\n";
+      else {
+	str << "  Description:\n";
+	od.Descriptions[k].save( str, "  " );
+      }
+    }
+  }
   return str;
 }
 

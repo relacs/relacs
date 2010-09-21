@@ -2955,23 +2955,24 @@ ostream &Parameter::saveXML( ostream &str, int level, int indent ) const
       string vtype = "float";
       if ( isInteger() )
 	vtype = "integer";
-      str << indstr2 << "<value type=\"" << vtype << "\">" << Str( number( 0 ), format() ).strip() << "</value>\n";
+      str << indstr2 << "<value>" << Str( number( 0 ), format() ).strip() << "<type>" << vtype << "</type>";
       if ( error( 0 ) >= 0.0 )
-	str << indstr2 << "<errorvalue type=\"" << vtype << "\">" << Str( error( 0 ), format() ).strip() << "</errorvalue>\n";
+	str << "<error>" << Str( error( 0 ), format() ).strip() << "</error>";
       if ( ! outUnit().empty() && outUnit() != "1" )
-	str << indstr2 << "<unit>" << unit() << "</unit>\n";
+	str << "<unit>" << unit() << "</unit>";
+      str << "</value>\n";
     }
     else if ( isBoolean() ) {
-      str << indstr2 << "<value type=\"boolean\">" << ( boolean( 0 ) ? "true" : "false" ) << "</value>\n";
+      str << indstr2 << "<value>" << ( boolean( 0 ) ? "true" : "false" ) << "<type>boolean</boolean></value>\n";
     }
     else if ( isDate() ) {
-      str << indstr2 << "<value type=\"date\">" << text( 0, "%04Y-%02m-%02d" ) << "</value>\n";
+      str << indstr2 << "<value>" << text( 0, "%04Y-%02m-%02d" ) << "<type>date</type></value>\n";
     }
     else if ( isTime() ) {
-      str << indstr2 << "<value type=\"time\">" << text( 0, "%02H:%02M:%02S" ) << "</value>\n";
+      str << indstr2 << "<value>" << text( 0, "%02H:%02M:%02S" ) << "<type>time</type></value>\n";
     }
     else if ( isText() ) {
-      str << indstr2 << "<value type=\"string\">" << text().strip() << "</value>\n";
+      str << indstr2 << "<value>" << text().strip() << "<type>string</type></value>\n";
     }
     str << indstr1 << "</property>\n";
   }

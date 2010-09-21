@@ -48,7 +48,9 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
   Hold = false;
 
   SF = 0;
+  SDF = 0;
   XF = 0;
+  XSF = 0;
   TraceFiles.clear();
   EventFiles.clear();
 
@@ -467,9 +469,24 @@ void SaveFiles::saveStimulus( void )
   // no stimulus yet:
   if ( SignalTime < 0.0 )
     return;
+
+  string stimuliname = "StimulusNameXXX";
     
   // stimulus indices file:
   if ( SF != 0 && saving() ) {
+
+    // stimulus description:
+    if ( SDF != 0 ) {
+      *SDF << "Stimulus: " << stimuliname << '\n';
+      for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
+	for ( int k=0; k<Stimuli[j].Descriptions.size(); k++ ) {
+	  *SDF << "Type: " << Stimuli[j].Types[k] << '\n';
+	  Stimuli[j].Descriptions[k].save( *SDF, "  " );
+	}
+      }
+      *SDF << '\n';
+    }
+
     StimulusKey.setSaveColumn( -1 );
     for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
       if ( TraceFiles[k].Stream != 0 )
@@ -532,10 +549,31 @@ void SaveFiles::saveStimulus( void )
     
   // xml metadata file:
   if ( XF != 0 && saving() ) {
-    *XF << "    <section name=\"Stimulus\">\n";
+
+    // stimulus description:
+    if ( XSF != 0 ) {
+      *XSF << "  <section>\n";
+      *XSF << "    <type>stimulus</type>\n";
+      *XSF << "    <name>" << stimuliname << "</name>\n";
+      for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
+	for ( int k=0; k<Stimuli[j].Descriptions.size(); k++ ) {
+	  *XSF << "    <section>\n";
+	  *XSF << "      <type>" << Stimuli[j].Types[k] << "</type>\n";
+	  Stimuli[j].Descriptions[k].saveXML( *XSF, 0, 3 );
+	  *XSF << "    </section>\n";
+	}
+      }
+      *XSF << "  </section>\n";
+    }
+
+    *XF << "    <section>\n";
+    *XF << "      <type>stimulus</type>\n";
+    *XF << "      <name>" << stimuliname << "</name>\n";
+    *XF << "      <link>" << stimuliname << "</link>\n"; // XXX
     if ( !StimulusOptions.empty() ) {
       int col = StimulusKey.column( "data>" + StimulusOptions[0].ident() );
-      *XF << "      <section name=\"Data\">\n";
+      *XF << "      <section>\n";
+      *XF << "        <type>data</type>\n";
       for( int k=0; k<StimulusOptions.size(); k++ )
 	StimulusKey[col++].setNumber( StimulusOptions[k].number() ).saveXML( *XF, 5 );
       *XF << "      </section>\n";
@@ -558,7 +596,6 @@ void SaveFiles::saveStimulus( void )
 	    if ( ! att->frequencyName().empty() )
 	      StimulusKey[col++].setNumber( Stimuli[j].CarrierFreq ).saveXML( *XF, 3 );
 	  }
-	  StimulusKey[col++].setText( Stimuli[j].Ident ).saveXML( *XF, 3 );
 	}
 	else {
 	  col += 3;
@@ -629,13 +666,15 @@ void SaveFiles::saveRePro( void )
 	ReProFiles.clear();
 	*XF << "  </section>\n";
       }
-      *XF << "  <section name=\"Dataset\">\n";
+      *XF << "  <section>\n";
+      *XF << "    <type>dataset</type>\n";
       Parameter p( "name", "name", ReProInfo.text( "experiment" ) + "-" +
 		   ReProInfo.text( "repro" ) + "-" + Str( path() ).preventedSlash().name() );
       p.saveXML( *XF, 2 );
       ReProInfo.saveXML( *XF, 0, 2 );
       if ( ! ReProSettings.empty() ) {
-	*XF << "    <section name=\"Settings\">\n";
+	*XF << "    <section>\n";
+	*XF << "      <type>settings</type>\n";
 	ReProSettings.saveXML( *XF, 1, 3 );
 	*XF << "    </section>\n";
       }
@@ -858,6 +897,7 @@ void SaveFiles::createStimulusFile( const InList &traces,
       *SF << "# signal delay" + Str( k+1 ) + ": " << 1000.0*trace.signalDelay() << "ms\n";
       *SF << "# maximum rate" + Str( k+1 ) + ": " << 0.001*trace.maxSampleRate() << "kHz\n";
     }
+    *SF << " stimulus descriptions: stimlus-descriptions.dat\n";
     *SF << '\n';
 
     // create key:
@@ -915,6 +955,10 @@ void SaveFiles::createStimulusFile( const InList &traces,
       StimulusKey.addText( "signal", -30 );
     }
   }
+
+
+  // create file for stimuli:
+  SDF = openFile( "stimulus-descriptions.dat", ios::out );
 }
 
 
@@ -927,8 +971,10 @@ void SaveFiles::createXMLFile( const InList &traces,
   if ( (*XF) ) {
     *XF << "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n";
     *XF << "<odML>\n";
+    *XF << "  <include>stimulus-metadata.xml</include>\n";
 
-    *XF << "  <section name=\"HardwareSettings\">\n";
+    *XF << "  <section>\n";
+    *XF << "    <type>hardware</type>\n";
     for ( int k=0; k<RW->ADV->size(); k++ ) {
       const Device &dev = (*RW->ADV)[k];
       int dt = dev.deviceType();
@@ -945,11 +991,19 @@ void SaveFiles::createXMLFile( const InList &traces,
 	dts = "Attenuation";
       Options opts( dev.info() );
       opts.erase( "type" );
-      *XF << "    <section name=\"" << dts << "\">\n";
+      *XF << "    <section>\n";
+      *XF << "      <type>" << dts << "</type>\n";
       opts.saveXML( *XF, 0, 3 ); 
       *XF << "    </section>\n";
     }
     *XF << "  </section>\n";
+  }
+
+  // create xml file for all data:
+  XSF = openFile( "stimulus-metadata.xml", ios::out );
+  if ( (*XSF) ) {
+    *XSF << "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n";
+    *XSF << "<odML>\n";
   }
 }
 
@@ -1082,6 +1136,9 @@ void SaveFiles::closeFiles( void )
   if ( SF != 0 )
     delete SF;
   SF = 0;
+  if ( SDF != 0 )
+    delete SDF;
+  SDF = 0;
   if ( XF != 0 ) {
     if ( DatasetOpen ) {
       for ( unsigned int k=0; k<ReProFiles.size(); k++ ) {
@@ -1097,6 +1154,11 @@ void SaveFiles::closeFiles( void )
     delete XF;
   }
   XF = 0;
+  if ( XSF != 0 ) {
+    *XSF << "</odML>\n";
+    delete XSF;
+  }
+  XSF = 0;
 
   if ( FilesOpen ) {
     RW->MTDT.section( "Recording" ).erase( "File" );
@@ -1160,6 +1222,7 @@ SaveFiles::Stimulus::Stimulus( void )
     CarrierFreq( 0.0 ),
     Ident( "" )
 {
+  Descriptions.clear();
 }
 
 
@@ -1172,7 +1235,9 @@ SaveFiles::Stimulus::Stimulus( const Stimulus &signal )
     Length( signal.Length ),
     Intensity( signal.Intensity ),
     CarrierFreq( signal.CarrierFreq ),
-    Ident( signal.Ident )
+    Ident( signal.Ident ),
+    Descriptions( signal.Descriptions ),
+    Types( signal.Types )
 {
 }
 
@@ -1187,6 +1252,14 @@ SaveFiles::Stimulus::Stimulus( const OutData &signal )
   Intensity = signal.intensity();
   CarrierFreq = signal.carrierFreq();
   Ident = signal.ident();
+  Descriptions = Descriptions;
+  Types.clear();
+  for ( unsigned int k=0; k<Descriptions.size(); k++ ) {
+    Types.push_back( Descriptions[k].text( "type", "stimulus/unknown" ) );
+    Descriptions[k].erase( "type" );
+    if ( ! signal.ident().empty() )
+      Descriptions[k].addText( "Description", signal.ident() );
+  }
 }
 
 

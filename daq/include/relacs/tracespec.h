@@ -49,7 +49,7 @@ class TraceSpec
 	     int device, int channel,
 	     double scale=1.0, const string &unit="",
 	     bool reglitch=false, double maxrate=-1.0,
-	     double signaldelay=0.0 );
+	     double signaldelay=0.0, const string &modality="" );
     /*! Copy constructor. */
   TraceSpec( const TraceSpec &trace );
   
@@ -138,6 +138,13 @@ class TraceSpec
         \sa signalDelay() */
   void setSignalDelay( double sigdelay );
 
+    /*! The modality of the signal, i.e. electric, visual, acoustic, etc.
+        \sa setModality() */
+  string modality( void ) const;
+    /*! Set the modality of the signal to \a modality.
+        \sa modality() */
+  void setModality( const string &modality );
+
     /*! Apply the values of TraceSpec to \a signal
         if signal.traceName() matches traceName()
 	or signal.trace() matches trace().
@@ -167,6 +174,7 @@ class TraceSpec
   double MaxRate;
   bool FixedRate;
   double SignalDelay;
+  string Modality;
   
 };
 

@@ -62,6 +62,7 @@
       outputtraceunit: mA
    outputtracemaxrate: 20kHz
      outputtracedelay: 0ms
+  outputtracemodality: current
 
 *FilterDetectors
   Filter1

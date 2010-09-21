@@ -234,11 +234,12 @@ void Acquire::closeAttLines( void )
 void Acquire::addOutTrace( const string &name,
 			   int device, int channel, 
 			   double scale, const string &unit,
-			   bool reglitch, double maxrate, double signaldelay )
+			   bool reglitch, double maxrate,
+			   double signaldelay, const string &modality )
 {
   OutTraces.push_back( TraceSpec( OutTraces.size(), name, device, channel,
-				  scale, unit,
-				  reglitch, maxrate, signaldelay ) );
+				  scale, unit, reglitch, maxrate,
+				  signaldelay, modality ) );
 }
 
 

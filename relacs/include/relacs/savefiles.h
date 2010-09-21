@@ -247,9 +247,13 @@ protected:
 
     /*! File with stimuli and indices to traces and events. */
   ofstream *SF;
+    /*! File with stimulus descriptions. */
+  ofstream *SDF;
 
     /*! XML file containing all data. */
   ofstream *XF;
+    /*! XML file containing stimulus descriptions. */
+  ofstream *XSF;
 
   struct TraceFile {
       /*! The name of the file for the trace. */
@@ -317,6 +321,8 @@ protected:
     double Intensity;
     double CarrierFreq;
     string Ident;
+    vector< Options > Descriptions;
+    vector< string > Types;
   };
   vector< Stimulus > Stimuli;
   bool StimulusData;

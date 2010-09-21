@@ -725,7 +725,8 @@ void RELACSWidget::setupOutTraces( void )
 		     text( "outputtraceunit", k, "V" ),
 		     false,
 		     number( "outputtracemaxrate", k, 0.0 ),
-		     number( "outputtracedelay", k, 0.0 ) );
+		     number( "outputtracedelay", k, 0.0 ),
+		     text( "outputtracemodality", k, "unknown" ) );
     chan++;
   }
 
