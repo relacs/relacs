@@ -23,6 +23,7 @@
 #define _RELACS_SAVEFILES_H_ 1
 
 #include <vector>
+#include <map>
 #include <fstream>
 #include <ctime>
 #include <QWidget>
@@ -325,6 +326,8 @@ protected:
     vector< string > Types;
   };
   vector< Stimulus > Stimuli;
+  string StimuliRePro;
+  map< string, int > StimuliReProCount;
   bool StimulusData;
   TableKey StimulusKey;
   Options StimulusOptions;

@@ -319,8 +319,8 @@ LinearRange::const_iterator LinearRange::end( void ) const
 bool operator==( const LinearRange &a, const LinearRange &b )
 {
   return ( a.size() == b.size() &&
-	   a.offset() == b.offset() &&
-	   a.stepsize() == b.stepsize() );
+	   ::fabs( a.offset() - b.offset() ) < 1e-8 &&
+	   ::fabs( a.stepsize() - b.stepsize() ) < 1e-8 );
 }
 
 

@@ -62,6 +62,7 @@ public:
 
     /*! Notify about changes in the meta data. */
   virtual void notifyMetaData( const string &section );
+  virtual void notifyStimulusData( void );
 
     /*! Return the most recently measured threshold curve
         of side \a side.
@@ -167,6 +168,7 @@ private:
   static const int MetaDataDisplay = 2;
   static const int MetaDataReset = 4;
   static const int MetaDataSave = 8;
+  OptWidget *SW;
 
   Temperature *Temp;
 

@@ -544,9 +544,9 @@ class SampleData : public Array< T >
   Array<T> &array( void ) { return *this; };
 
     /*! Returns a reference to the range. */
-  const LinearRange &range( void ) const { return Samples; };
+  const LinearRange &range( void ) const { Samples.resize( Array<T>::size() ); return Samples; };
     /*! Returns a reference to the range. */
-  LinearRange &range( void ) { return Samples; };
+  LinearRange &range( void ) { Samples.resize( Array<T>::size() ); return Samples; };
 
     /*! The type of object, T, stored in the arry. */
   typedef T value_type;

@@ -28,8 +28,45 @@ This requires to compile a kernel first.
 
 
 \subsection installkernel Linux kernel
--# You almost certainly need to compile a new kernel.
-Either get a vanilla kernel from http://www.kernel.org,
+
+In order to be able to install the comedi drivers you need to have a kernel source tree
+that matches your running kernel image. Either compile your own kernel from scratch 
+(section \ref installvanillakernel , takes some time),
+or make sure that you get a matching source tree for your kernel image
+(section \ref installkernelsources).
+
+
+\subsubsection installkernelsources Install sources for an existing kernel
+
+-# Get the soure that matches your kernel. 
+On Ubuntu/Debian you get the kernel source matching your running kernel image by executing
+\code
+$ cd /usr/src
+$ apt-get source linux-image-`uname -r`
+\endcode
+as root and cd into the kernel source directory
+\code
+$ cd `uname -r`
+\endcode
+-# Copy the kernel configuration file of your kernel image to the source:
+\code
+$ cp /boot/config-`uname -r` .config
+\endcode
+-# Make sure the file \c Module.symvers is also in your source. 
+On Ubuntu/Debian you find it in the corresponding \c linux-headers directory:
+\code
+cp ../linux-headers-`uname -r`/Module.symvers .
+\endcode
+-# Run
+\code
+$ make oldconfig
+$ make prepare
+$ make scripts
+\endcode
+
+\subsubsection installvanillakernel Compile your own kernel
+
+-# Either get a vanilla kernel from http://www.kernel.org,
 e.g. http://www.kernel.org/pub/linux/kernel/v2.6/linux-2.6.28.9.tar.bz2,
 place the tar file in /usr/src and unpack it with
 \code
@@ -37,13 +74,7 @@ $ cd /usr/src
 $ tar xjvf linux-2.6.28.9.tar.bz2
 \endcode
 (replace \c linux-2.6.28.9 by the directory name of your new kernel source).
-Or get the soure that matches your kernel. 
-On Debian you get the kernel source matching your kernel image by executing
-\code
-$ apt-get source kernel-image-package
-\endcode
-in the \c /usr/src directory.
-In any case, create a softlink to your kernel source 
+Create a softlink to your kernel source 
 \code
 $ cd /usr/src
 $ ln -s linux-2.6.28.9 linux
@@ -176,7 +207,12 @@ $ cd /usr/local/src/comedi
 $ ./autogen.sh
 \endcode
 You may ignore warnings and reminders.
--# Configure
+-# Configure simply by calling
+\code
+./configure
+\endcode
+in case you want to install comedi into your currently running kernel.
+If -c /usr/src/linux is not your running kernel, then call
 \code
 $ ./configure --with-linuxdir=/usr/src/linux
 \endcode
@@ -215,7 +251,8 @@ i.e. some \c comedi* character device files, your board probably was detected. R
 \code
 $ comedi_test -t info -f /dev/comedi0
 \endcode
-to see more details about your data acquisition board.
+to see more details about your data acquisition board (note: \c comedi_test
+is part of comedilib, see below).
 In case no \c /dev/comedi* device file shows up
 or \c comedi_test reported an error (E: comedi_open("/dev/comedi0"): No such device),
 your data acquisition board needs to be configured manually, using something like

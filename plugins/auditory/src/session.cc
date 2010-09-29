@@ -42,9 +42,14 @@ Session::Session( void )
   hb->addLayout( vb );
 
   ASW = new OptWidget;
-  ASW->setVerticalSpacing( 4 );
+  ASW->setVerticalSpacing( 2 );
   ASW->setMargins( 0 );
   vb->addWidget( ASW );
+
+  SW = new OptWidget;
+  SW->setVerticalSpacing( 2 );
+  SW->setMargins( 0 );
+  vb->addWidget( SW );
 
   SessionButton = new QPushButton;
   SessionButton->setText( "Cell Found" );
@@ -188,6 +193,11 @@ void Session::initDevices( void )
 	       OptWidget::BreakLinesStyle + OptWidget::ExtraSpaceStyle,
 	       metaDataMutex() );
   ASW->setVerticalSpacing( 2 );
+
+  stimulusData().addText( "drugs", "Applied drugs", "" ).setFormat( "%-20s" ).setFlags( 16 );
+  SW->assign( &stimulusData(), 16, 0, true, 
+	      OptWidget::BreakLinesStyle + OptWidget::ExtraSpaceStyle,
+	      stimulusDataMutex() );
 }
 
 
@@ -265,6 +275,12 @@ void Session::notifyMetaData( const string &section )
     metaData( "Cell" ).addFlags( MetaDataSave, Parameter::changedFlag() );
     ASW->updateValues( OptWidget::changedFlag() );
   }
+}
+
+
+void Session::notifyStimulusData( void )
+{
+  SW->updateValues( OptWidget::changedFlag() );
 }
 
 
