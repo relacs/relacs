@@ -202,6 +202,7 @@ libephysamplifiercontrol_la_include_HEADERS = $(HEADER_PATH)/amplifiercontrol.h
 
 
 
+
 check_PROGRAMS = \
     linktest_librelacsspikingneuron_la \
     linktest_libephystraces_la \

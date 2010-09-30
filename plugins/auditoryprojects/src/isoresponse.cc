@@ -535,6 +535,7 @@ int IsoResponse::main( void )
     Header.setNumber( "best", BestFreq );
     Header.setNumber( "freq1", Frequency1 );
     Header.setNumber( "freq2", Frequency2 );
+    Header.addLabel( "status:" );
     saveSpikes();
     saveRates();
 
@@ -566,6 +567,8 @@ void IsoResponse::saveSpikes( void )
   // write header and key:
 
   Header.save( df, "# " );
+  stimulusData().save( df, "#   " );
+  df << "# settings:\n";
   settings().save( df, "#   ", -1, 0, false, true );
   df << '\n';
   TableKey key;
@@ -600,6 +603,8 @@ void IsoResponse::saveRates( void )
   // write header and key:
 
   Header.save( df, "# " );
+  stimulusData().save( df, "#   " );
+  df << "# settings:\n";
   settings().save( df, "#   ", -1, 0, false, true );
   df << '\n';
   TableKey key;

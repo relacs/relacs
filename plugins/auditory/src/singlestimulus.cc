@@ -682,6 +682,8 @@ void SingleStimulus::saveSpikes( Options &header, const EventList &spikes )
 
   // write header and key:
   header.save( df, "# " );
+  stimulusData().save( df, "#   " );
+  df << "# settings:\n";
   settings().save( df, "#   ", -1, 16, false, true );
   df << '\n';
   TableKey key;
@@ -705,6 +707,8 @@ void SingleStimulus::saveRate( Options &header, const SampleDataD &rate1,
 
   // write header and key:
   header.save( df, "# " );
+  stimulusData().save( df, "#   " );
+  df << "# settings:\n";
   settings().save( df, "#   ", -1, 16, false, true );
   df << '\n';
   TableKey key;
@@ -737,7 +741,7 @@ void SingleStimulus::save( const EventList &spikes, const SampleDataD &rate1,
   header.addNumber( "duration", 1000.0*Duration, "ms", "%.1f" );
   header.addText( "envelope", StoreFile );
   header.addText( "session time", sessionTimeStr() ); 
-  header.addLabel( "settings:" );
+  header.addLabel( "status:" );
 
   saveSpikes( header, spikes );
   saveRate( header, rate1, rate2 );

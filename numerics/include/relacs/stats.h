@@ -1644,12 +1644,16 @@ typename numerical_iterator_traits<ForwardIterX>::mean_type
   n--;
 
   typename numerical_iterator_traits<ForwardIterX>::variance_type v = 0;
+  typename numerical_iterator_traits<ForwardIterX>::variance_type ep = 0;
   if ( n > 1 ) {
     for ( int k=1; firstx != lastx; ++firstx, ++k ) {
       typename numerical_iterator_traits<ForwardIterX>::mean_type s = *firstx - a;
-      v += ( s*s - v ) / k;
+      v += s*s;
+      ep += s;
+      //      v += ( s*s - v ) / k;
     }
-    v *= n/(n-1);
+    v = (v - ep*ep/n)/(n-1);
+    //    v *= n/(n-1);
   }
   stdev = ::sqrt( v );
 

@@ -107,8 +107,8 @@ FIField::FIField( void )
   FIFieldHeader.addNumber( "best maximum rate", "Hz", "%.1f" );
   FIFieldHeader.addInteger( "best nfit" );
   FIFieldHeader.addText( "session time" ).setFlags( 1 );
-  FIFieldHeader.addLabel( "settings:" ).setFlags( 1 );
-  Header.erase( "settings:" );
+  FIFieldHeader.addLabel( "status:" ).setFlags( 1 );
+  Header.erase( "status:" );
 }
 
 
@@ -299,6 +299,8 @@ void FIField::saveHeader( const string &file )
 
   df << '\n';
   FIFieldHeader.save( df, "# ", -1, 1 );
+  stimulusData().save( df, "#   " );
+  df << "# settings:\n";
   settings().save( df, "#   ", -1, 32, false, true );
   df << '\n';
 }
@@ -314,6 +316,8 @@ void FIField::saveThreshold( const string &file )
 
   // write header and key:
   FIFieldHeader.save( df, "# " );
+  stimulusData().save( df, "#   " );
+  df << "# settings:\n";
   settings().save( df, "#   ", -1, 32, false, true );
   df << '\n';
   TableKey key;

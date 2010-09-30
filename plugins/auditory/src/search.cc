@@ -210,7 +210,7 @@ int Search::main( void )
   Options header;
   header.addInteger( "index" );
   header.addText( "session time" );
-  header.addLabel( "settings:" );
+  header.addLabel( "status:" );
 
   // stimulus:
   OutData signal;
@@ -328,6 +328,8 @@ void Search::saveEvents( const EventData &events, int count, const Options &head
   if ( count == 0 ) {
     df << '\n' << '\n';
     header.save( df, "# " );
+    stimulusData().save( df, "#   " );
+    df << "# settings:\n";
     Options::save( df, "#   ", -1, 0, false, true );
     df << '\n';
     spikeskey.saveKey( df, true, false );

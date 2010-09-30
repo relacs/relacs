@@ -161,7 +161,7 @@ FICurve::FICurve( void )
   Header.addInteger( "nfit" );
   Header.addNumber( "silent rate", "Hz", "%.1f" );
   Header.addText( "session time" );
-  Header.addLabel( "settings:" );
+  Header.addLabel( "status:" );
 }
 
 
@@ -453,6 +453,8 @@ void FICurve::saveSpikes( const string &file, const vector< FIData > &results )
 
   // write header and key:
   Header.save( df, "# " );
+  stimulusData().save( df, "#   " );
+  df << "# settings:\n";
   settings().save( df, "#   ", -1, 16, false, true );
   df << '\n';
   TableKey key;
@@ -485,6 +487,8 @@ void FICurve::saveRates( const string &file, const vector< FIData > &results )
 
   // write header and key:
   Header.save( df, "# " );
+  stimulusData().save( df, "#   " );
+  df << "# settings:\n";
   settings().save( df, "#   ", -1, 16, false, true );
   df << '\n';
   TableKey key;
@@ -529,6 +533,8 @@ void FICurve::saveFICurve( const string &file, const vector< FIData > &results )
 
   // write header and key:
   Header.save( df, "# " );
+  stimulusData().save( df, "#   " );
+  df << "# settings:\n";
   settings().save( df, "#   ", -1, 16, false, true );
   df << '\n';
   TableKey key;

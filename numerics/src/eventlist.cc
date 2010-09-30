@@ -537,6 +537,7 @@ void EventList::rate( SampleDataD &rate, double width, double time ) const
 void EventList::rate( SampleDataD &rate, SampleDataD &ratesd,
 		      double width, double time ) const
 {
+  cerr << "BIN RATE\n";
   rate = 0.0;
   ratesd = 0.0;
 

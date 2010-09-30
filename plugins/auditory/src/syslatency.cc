@@ -314,6 +314,8 @@ void SysLatency::saveSpikes( Options &header, const EventList &spikes )
 
   // write header and key:
   header.save( df, "# " );
+  stimulusData().save( df, "#   " );
+  df << "# settings:\n";
   settings().save( df, "#   ", -1, 16, false, true );
   df << '\n';
   TableKey key;
@@ -336,6 +338,8 @@ void SysLatency::saveTrigger( Options &header, const ArrayD &trigger )
 
   // write header and key:
   header.save( df, "# " );
+  stimulusData().save( df, "#   " );
+  df << "# settings:\n";
   settings().save( df, "#   ", -1, 16, false, true );
   df << '\n';
   TableKey key;
@@ -362,6 +366,8 @@ void SysLatency::saveCoincidentSpikes( Options &header,
 
   // write header and key:
   header.save( df, "# " );
+  stimulusData().save( df, "#   " );
+  df << "# settings:\n";
   settings().save( df, "#   ", -1, 16, false, true );
   df << '\n';
   TableKey key;
@@ -389,6 +395,8 @@ void SysLatency::savePRC( Options &header, const MapD &prc )
 
   // write header and key:
   header.save( df, "# " );
+  stimulusData().save( df, "#   " );
+  df << "# settings:\n";
   settings().save( df, "#   ", -1, 16, false, true );
   df << '\n';
   TableKey key;
@@ -434,7 +442,7 @@ void SysLatency::save( double carrierfrequency, int side, double pduration,
   header.addNumber( "prc slope", slope, "", "%.3f" );
   header.addNumber( "prc offset", offset, "", "%.3f" );
   header.addText( "session time", sessionTimeStr() );
-  header.addLabel( "settings:" );
+  header.addLabel( "status:" );
 
   saveSpikes( header, spikes );
   saveTrigger( header, trigger );
