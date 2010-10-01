@@ -103,6 +103,26 @@ Parameter::Parameter( const string &ident, const string &request,
 }
 
 
+Parameter::Parameter( const string &ident, const string &request,  
+		      double number, const string &unit, 
+		      const string &format, int flags, int style )
+{
+  clear( ident, request, Number );
+  string e;
+  setUnit( unit, unit );
+  e += Warning;
+  setNumber( number );
+  e += Warning;
+  setDefaultNumber( number );
+  e += Warning;
+  setFormat( format );
+  e += Warning;
+  setFlags( flags );
+  setStyle( style );
+  Warning = e;
+}
+
+
 Parameter::Parameter( const string &ident, const string &request, 
 		      const vector<double> &numbers,
 		      const vector<double> &errors, 
@@ -2963,7 +2983,7 @@ ostream &Parameter::saveXML( ostream &str, int level, int indent ) const
       str << "</value>\n";
     }
     else if ( isBoolean() ) {
-      str << indstr2 << "<value>" << ( boolean( 0 ) ? "true" : "false" ) << "<type>boolean</boolean></value>\n";
+      str << indstr2 << "<value>" << ( boolean( 0 ) ? "true" : "false" ) << "<type>boolean</type></value>\n";
     }
     else if ( isDate() ) {
       str << indstr2 << "<value>" << text( 0, "%04Y-%02m-%02d" ) << "<type>date</type></value>\n";

@@ -132,6 +132,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   addText( "outputtraceunit", "Output trace unit", "V" );
   addNumber( "outputtracemaxrate", "Maximum output sampling rate", 0.0, 0.0, 10000000.0, 1000.0, "Hz", "kHz" );
   addNumber( "outputtracedelay", "Signal delay", 0.0, 0.0, 10.0, 0.00001, "s", "ms" );
+  addText( "outputtracemodality", "Output trace modality", "voltage" );
 
   // main widget:
   setWindowTitle( "RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation: Version " + QString( RELACSVERSION ) );

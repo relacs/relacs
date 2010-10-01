@@ -240,10 +240,6 @@ int TraceSpec::apply( OutData &signal ) const
     else
       signal.setMaxSampleRate( MaxRate );
     signal.setSignalDelay( SignalDelay );
-    for ( int k=0; k<signal.descriptions(); k++ ) {
-      if ( ! signal.description( k ).exist( "Modality" ) )
-	signal.description( k ).addText( "Modality", Modality );
-    }
     return 0;
   }
   else {

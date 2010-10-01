@@ -1,6 +1,6 @@
 /*
   ephys/windowmuspikedetector.cc
-  bla bnla
+  Extracellular spike discrimination based on threshold windows.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2010 Jan Benda <benda@bio.lmu.de>
@@ -20,20 +20,15 @@
 */
 
 #include <relacs/ephys/windowmuspikedetector.h>
-#include <relacs/eventdata.h>
-#include <relacs/eventlist.h>
-#include <relacs/indata.h>
-#include <relacs/optwidget.h>
-#include <relacs/filter.h>
 using namespace relacs;
 
 namespace ephys {
 
 
 WindowMUSpikeDetector::WindowMUSpikeDetector( const string &ident, int mode )
-  : Filter( ident, mode, SingleAnalogDetector, 1,
+  : Filter( ident, mode, MultipleAnalogDetector, 1,
 	    "WindowMUSpikeDetector", "ephys",
-	    "Karin Fisch", "1.0", "Mai 26, 2010" )
+	    "Jan Benda", "1.0", "Sep 30, 2010" )
 {
   // add some options:
 //  addNumber( "duration", "Stimulus duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
@@ -42,7 +37,7 @@ WindowMUSpikeDetector::WindowMUSpikeDetector( const string &ident, int mode )
   Threshold = 0.0001;
   MinThresh = 0.0;
   MaxThresh = 1000.0;
-  MaxEODPeriod = 0.01;  // 100 Hz
+  /*
   ThreshRatio = 0.5;
   AdaptThresh = false;
 
@@ -50,7 +45,6 @@ WindowMUSpikeDetector::WindowMUSpikeDetector( const string &ident, int mode )
   addNumber( "threshold", "Threshold", Threshold, MinThresh, MaxThresh, 0.01*MaxThresh, "", "", "%g", 2+8+32 );
   addBoolean( "adapt", "Adapt threshold", AdaptThresh, 2+8 );
   addNumber( "ratio", "Ratio", ThreshRatio, 0.05, 1.0, 0.05, "", "%", "%g", 2+8 ).setActivation( "adapt", "true" );
-  addNumber( "maxperiod", "Maximum EOD period", MaxEODPeriod, 0.0, 1.0, 0.0001, "s", "ms", "%g", 8 );
   addNumber( "rate", "Rate", 0.0, 0.0, 100000.0, 0.1, "Hz", "Hz", "%.1f", 2+4 );
   addNumber( "size", "Size", 0.0, 0.0, 100000.0, 0.1, "", "", "%.3f", 2+4 );
   addStyle( OptWidget::ValueLarge + OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack, 4 );
@@ -63,51 +57,47 @@ WindowMUSpikeDetector::WindowMUSpikeDetector( const string &ident, int mode )
   setDialogSelectMask( 8 );
   setDialogReadOnlyMask( 16 );
   setConfigSelectMask( -32 );
-  
+  */
 }
 
-int EODDetector::init( const InData &data, EventData &outevents,
-		       const EventList &other, const EventData &stimuli )
+
+int WindowMUSpikeDetector::init( const InList &data, EventList &outevents,
+				 const EventList &other, const EventData &stimuli )
 {
+  /*
   outevents.setSizeScale( 1.0 );
-  outevents.setSizeUnit( data.unit() );
+  outevents.setSizeUnit( data[0].unit() );
   outevents.setSizeFormat( "%6.2f" );
-  adjust( data );
+  */
   Threshold = MinThresh;
-  D.init( data.begin(), data.end(), data.timeBegin() );
+  D.init( data[0].begin(), data[0].end(), data[0].timeBegin() );
   return 0;
 }
 
 
-int EODDetector::detect( const InData &data, EventData &outevents,
-			 const EventList &other, const EventData &stimuli )
+int WindowMUSpikeDetector::detect( const InList &data, EventList &outevents,
+				   const EventList &other, const EventData &stimuli )
 {
-  D.peak( data.minBegin(), data.end(), outevents,
+  EventData peaks( 1000, true );
+  D.peak( data[0].minBegin(), data[0].end(), peaks,
 	  Threshold, MinThresh, MaxThresh, *this );
-
+  // sort peaks according to threshold windows:
+  return 0;
 }
 
 
-int WindowMUSpikeDetector::main( void )
-{
-  // get options:
-//  double duration = number( "duration" );
-  return Completed;
-}
-
-
-int EODDetector::checkEvent( const InData::const_iterator &first, 
-			     const InData::const_iterator &last,
-			     InData::const_iterator &event,
-			     InDataTimeIterator &eventtime,
-			     InData::const_iterator &index,
-			     InDataTimeIterator &indextime,
-			     InData::const_iterator &prevevent,
-			     InDataTimeIterator &prevtime,
-			     EventData &outevents,
-			     double &threshold,
-			     double &minthresh, double &maxthresh,
-			     double &time, double &size, double &width )
+int WindowMUSpikeDetector::checkEvent( const InData::const_iterator &first, 
+				       const InData::const_iterator &last,
+				       InData::const_iterator &event,
+				       InDataTimeIterator &eventtime,
+				       InData::const_iterator &index,
+				       InDataTimeIterator &indextime,
+				       InData::const_iterator &prevevent,
+				       InDataTimeIterator &prevtime,
+				       EventData &outevents,
+				       double &threshold,
+				       double &minthresh, double &maxthresh,
+				       double &time, double &size, double &width )
 { 
   if ( event+1 >= last ) {
     // resume:
@@ -118,66 +108,12 @@ int EODDetector::checkEvent( const InData::const_iterator &first,
     return 0;
   }
 
-  // threshold for EOD time:
-  double maxsize = 0.0;
-  if ( prevevent > first && *event <= 0.0 )
-    maxsize = *event - 0.25 * ( *event - *prevevent );
-  else
-    maxsize = 0.5 * *event;
-
-  double sampleinterval = *eventtime - *(eventtime - 1);
-
-  // previous maxsize crossing time:
-  InData::const_iterator id = event;
-  InDataTimeIterator it = eventtime;
-  double ival = *id;
-  double pval = ival;
-  for ( --id, --it; id != first; --id, --it ) {
-    ival = *id;
-    if ( ival < maxsize ) {
-      double m = sampleinterval / ( pval - ival );
-      time = *it + m * ( maxsize - ival );
-      if ( outevents.size() > 0 && time <= outevents.back() ) {
-	cerr << "! warning in " << ident() << " time " << time << " <= back " << outevents.back() << endl;
-	// discard:
-	return 0;
-      }
-      break;
-    }
-    if ( *eventtime - *it > MaxEODPeriod ) {
-      // discard:
-      return 0;
-    }
-    pval = ival;
-  }
-
-  // peak:
-  double y2 = *event;
-  double y3 = *(event+1);
-  double y1 = *(event-1);
-  double a = y3 - 4.0*y2 + 3.0*y1;
-  double b = 2.0*y3 - 4.0*y2 + 2.0*y1;
-  /*
-  // peak time:
-  --event;
-  time = event.time() + event.sampleInterval()*a/b;  // very noisy!
-  */
-  // peak size:
-  size = y1 - 0.25*a*a/b;
-
-  // width:
-  width = 0.0;
-
-  // threshold:
-  if ( AdaptThresh )
-    threshold = ThreshRatio * 2.0 * size;
-
   // accept:
   return 1; 
 }
 
 
-addFilter( WindowMUSpikeDetector );
+ addDetector( WindowMUSpikeDetector );
 
 }; /* namespace ephys */
 

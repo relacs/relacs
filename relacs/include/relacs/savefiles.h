@@ -316,6 +316,7 @@ protected:
     Stimulus( const OutData &signal );
     int Device;
     int Channel;
+    int Trace;
     double Delay;
     double SampleRate;
     double Length;
@@ -324,6 +325,7 @@ protected:
     string Ident;
     vector< Options > Descriptions;
     vector< string > Types;
+    vector< string > TypeNames;
   };
   vector< Stimulus > Stimuli;
   string StimuliRePro;

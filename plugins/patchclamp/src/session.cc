@@ -98,7 +98,7 @@ void Session::initDevices( void )
 
   for ( int k=0; k<CurrentOutputs; k++ )
     stimulusData().setRequest( outTraceName( CurrentOutput[k] ), "DC current " + Str( k+1 ) );
-  stimulusData().addText( "drugs", "Applied drugs", "" ).setFormat( "%-20s" ).setFlags( 16 );
+  stimulusData().addText( "Drugs", "Applied drugs", "" ).setFormat( "%-20s" ).setFlags( 16 );
   SW->assign( &stimulusData(), 16+stimulusDataTraceFlag(),
 	      stimulusDataTraceFlag(), true, 0, stimulusDataMutex() );
 }

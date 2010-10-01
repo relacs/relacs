@@ -131,6 +131,13 @@ public:
 	     const string &internunit="", const string &outputunit="", 
 	     const string &format="", int flags=0, int style=0 );
     /*! Construct and initialize a single Parameter of type Number. 
+        Its value and its default value are set to \a number,
+	its standard deviation to \a 0.0.
+        The unit of the number is \a unit. */
+  Parameter( const string &ident, const string &request,  
+	     double number, const string &unit="", 
+	     const string &format="", int flags=0, int style=0 );
+    /*! Construct and initialize a single Parameter of type Number. 
         Its values are set to \a numbers,
         its default value is set to \a numbers[0],
 	its standard deviation to \a error.

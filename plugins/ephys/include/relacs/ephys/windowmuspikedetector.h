@@ -1,6 +1,6 @@
 /*
   ephys/windowmuspikedetector.h
-  bla bnla
+  
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2010 Jan Benda <benda@bio.lmu.de>
@@ -22,11 +22,9 @@
 #ifndef _RELACS_EPHYS_WINDOWMUSPIKEDETECTOR_H_
 #define _RELACS_EPHYS_WINDOWMUSPIKEDETECTOR_H_ 1
 
-#include <relacs/filter.h>
-#include <relacs/eventdata.h>
-#include <relacs/eventlist.h>
-#include <relacs/indata.h>
+#include <relacs/detector.h>
 #include <relacs/optwidget.h>
+#include <relacs/filter.h>
 using namespace relacs;
 
 namespace ephys {
@@ -34,9 +32,9 @@ namespace ephys {
 
 /*!
 \class WindowMUSpikeDetector
-\brief [Filter] bla bnla
-\author Karin Fisch
-\version 1.0 (Mai 26, 2010)
+\brief [Filter] Extracellular spike discrimination based on threshold windows.
+\author Jan Benda
+\version 1.0 (Sep 30, 2010)
 */
 
 
@@ -46,11 +44,10 @@ class WindowMUSpikeDetector : public Filter
 
 public:
 
-  WindowMUSpikeDetector( void );
-  virtual int main( void );
-  virtual int init( const InData &data, EventData &outevents,
+  WindowMUSpikeDetector( const string &ident="", int mode=0 );
+  virtual int init( const InList &data, EventList &outevents,
 		     const EventList &other, const EventData &stimuli );
-  virtual int detect( const InData &data, EventData &outevents,
+  virtual int detect( const InList &data, EventList &outevents,
 		      const EventList &other, const EventData &stimuli );
 
   int checkEvent( const InData::const_iterator &first, 
@@ -74,13 +71,8 @@ public:
   double Threshold;
   double MinThresh;
   double MaxThresh;
-  double ThreshRatio;
-  bool AdaptThresh;
 
-    /*! Maximum period of the EOD to detect in seconds. */
-  double MaxEODPeriod;
-
-  OptWidget EDW;
+  OptWidget WDW;
 
 };
 

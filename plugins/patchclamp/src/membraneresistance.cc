@@ -179,6 +179,10 @@ int MembraneResistance::main( void )
   signal.setIdent( "I=" + Str( DCCurrent + Amplitude ) + IUnit );
   signal.back() = DCCurrent;
   signal.setTrace( outcurrent );
+  signal.addDescription( "stimulus/pulse" );
+  signal.description().addNumber( "Intensity", DCCurrent + Amplitude, IUnit );
+  signal.description().addNumber( "IntensityOffset", DCCurrent, IUnit );
+  signal.description().addNumber( "Duration", 1000.0*Duration, "ms" );
   TrueAmplitude = Amplitude;
 
   // write stimulus:

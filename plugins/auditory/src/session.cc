@@ -194,7 +194,7 @@ void Session::initDevices( void )
 	       metaDataMutex() );
   ASW->setVerticalSpacing( 2 );
 
-  stimulusData().addText( "drugs", "Applied drugs", "" ).setFormat( "%-20s" ).setFlags( 16 );
+  stimulusData().addText( "Drugs", "Applied drugs", "" ).setFormat( "%-20s" ).setFlags( 16 );
   SW->assign( &stimulusData(), 16, 0, true, 
 	      OptWidget::BreakLinesStyle + OptWidget::ExtraSpaceStyle,
 	      stimulusDataMutex() );

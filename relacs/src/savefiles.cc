@@ -476,6 +476,7 @@ void SaveFiles::saveStimulus( void )
   // track stimulus name:
   int rc = StimuliReProCount[ StimuliRePro ] + 1;
   string stimulirepro = StimuliRePro + "-" + Str( rc );
+  StimuliReProCount[ StimuliRePro ] = rc;
     
   // stimulus indices file:
   if ( SF != 0 && saving() ) {
@@ -527,6 +528,7 @@ void SaveFiles::saveStimulus( void )
       for ( j=0; j<Stimuli.size(); j++ ) {
 	if ( Stimuli[j].Device == RW->AQ->outTrace( k ).device() &&
 	     Stimuli[j].Channel == RW->AQ->outTrace( k ).channel() ) {
+	  Stimuli[j].Trace = k; // needed for XML
 	  StimulusKey.save( *SF, 0.001*Stimuli[j].SampleRate );
 	  StimulusKey.save( *SF, 1000.0*Stimuli[j].Length );
 	  if ( att != 0 ) {
@@ -563,10 +565,15 @@ void SaveFiles::saveStimulus( void )
       for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
 	*XSF << "    <section>\n";
 	*XSF << "      <type>stimulus</type>\n";
-	*XSF << "      <name>" << stimulirepro << "-" << j << "</name>\n";
+	*XSF << "      <name>" << RW->AQ->outTraceName( Stimuli[j].Trace ) << "</name>\n";
+	Parameter pm( "Modality", "", RW->AQ->outTrace( Stimuli[j].Trace ).modality() );
+	pm.saveXML( *XSF, 3 );
+	Parameter pr( "SamplingRate", "", 1000.0*Stimuli[j].SampleRate, "kHz" );
+	pr.saveXML( *XSF, 3 );
 	for ( unsigned int k=0; k<Stimuli[j].Descriptions.size(); k++ ) {
 	  *XSF << "      <section>\n";
 	  *XSF << "        <type>" << Stimuli[j].Types[k] << "</type>\n";
+	  *XSF << "        <name>" << Stimuli[j].TypeNames[k] << "</name>\n";
 	  Stimuli[j].Descriptions[k].saveXML( *XSF, 0, 4 );
 	  *XSF << "      </section>\n";
 	}
@@ -579,44 +586,35 @@ void SaveFiles::saveStimulus( void )
     *XF << "    <section>\n";
     *XF << "      <type>stimulus</type>\n";
     *XF << "      <name>" << stimulirepro << "</name>\n";
-    *XF << "      <include>stimulus-metadata.xml#" << stimulirepro << "</include>\n"; // XXX
-    if ( !StimulusOptions.empty() ) {  // this probably does not belong here XXX
-      int col = StimulusKey.column( "data>" + StimulusOptions[0].ident() );
-      *XF << "      <section>\n";
-      *XF << "        <type>data</type>\n";
-      *XF << "        <name>" << stimulirepro << "-data" << "</name>\n";
-      for( int k=0; k<StimulusOptions.size(); k++ )
-	StimulusKey[col++].setNumber( StimulusOptions[k].number() ).saveXML( *XF, 5 );
-      *XF << "      </section>\n";
-    }
-    int col = StimulusKey.column( "stimulus>timing>time" );
-    StimulusKey[col++].setNumber( TraceFiles[0].Trace->signalTime() - SessionTime ).saveXML( *XF, 3 );
+    *XF << "      <include>stimulus-metadata.xml#" << stimulirepro << "</include>\n";
+    for( int k=0; k<StimulusOptions.size(); k++ )
+      StimulusOptions[k].saveXML( *XF, 3 );
+    //    int col = StimulusKey.column( "stimulus>timing>time" );
+    //    StimulusKey[col++].setNumber( TraceFiles[0].Trace->signalTime() - SessionTime ).saveXML( *XF, 3 );
     // Stimulus:
-    StimulusKey[col++].setNumber( 1000.0*Stimuli[0].Delay ).saveXML( *XF, 3 );
+    //    StimulusKey[col++].setNumber( 1000.0*Stimuli[0].Delay ).saveXML( *XF, 3 );
     for ( int k=0; k<RW->AQ->outTracesSize(); k++ ) {
       for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
 	const Attenuate *att = RW->AQ->outTraceAttenuate( k );
 	if ( Stimuli[j].Device == RW->AQ->outTrace( k ).device() &&
 	     Stimuli[j].Channel == RW->AQ->outTrace( k ).channel() ) {
-	  Parameter p( "identifier", "", RW->AQ->outTraceName( k ) );
-	  p.saveXML( *XF, 3 );
-	  StimulusKey[col++].setNumber( 0.001*Stimuli[j].SampleRate ).saveXML( *XF, 3 );
-	  StimulusKey[col++].setNumber( 1000.0*Stimuli[j].Length );
+	  *XF << "      <section>\n";
+	  *XF << "        <type>stimulus</type>\n";
+	  *XF << "        <name>" << RW->AQ->outTraceName( Stimuli[j].Trace ) << "</name>\n";
+	  Parameter pc( "OutputChannel", "", RW->AQ->outTraceName( Stimuli[j].Trace ) );
+	  pc.saveXML( *XF, 4 );
 	  if ( att != 0 ) {
-	    StimulusKey[col++].setNumber( Stimuli[j].Intensity ).saveXML( *XF, 3 );
-	    if ( ! att->frequencyName().empty() )
-	      StimulusKey[col++].setNumber( Stimuli[j].CarrierFreq ).saveXML( *XF, 3 );
+	    Parameter pa( att->intensityName(), "", Stimuli[j].Intensity,
+			  att->intensityUnit(), att->intensityFormat() );
+	    pa.saveXML( *XF, 4 );
+	    if ( ! att->frequencyName().empty() ) {
+	      Parameter pf( att->frequencyName(), "", Stimuli[j].CarrierFreq,
+			    att->frequencyUnit(), att->frequencyFormat() );
+	      pf.saveXML( *XF, 4 );
+	    }
 	  }
-	  col++;
+	  *XF << "      </section>\n";
 	  break;
-	}
-	else {
-	  col += 3;
-	  if ( att != 0 ) {
-	    col++;
-	    if ( ! att->frequencyName().empty() )
-	      col++;
-	  }
 	}
       }
     }
@@ -985,9 +983,9 @@ void SaveFiles::createXMLFile( const InList &traces,
 
   if ( (*XF) ) {
     *XF << "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n";
-    *XF << "<odML>\n";
-    *XF << "  <include>stimulus-metadata.xml</include>\n";
-
+    *XF << "<?xml-stylesheet type=\"text/xsl\" href=\"odml.xsl\"  xmlns:odml=\"http://www.g-node.org/odml\"?>\n";
+    *XF << "<odML version=\"1\">\n";
+    *XF << "  <repository>http://portal.g-node.org/odml/terminologies/v1.0/terminologies.xml</repository>\n";
     *XF << "  <section>\n";
     *XF << "    <type>hardware</type>\n";
     for ( int k=0; k<RW->ADV->size(); k++ ) {
@@ -1018,7 +1016,9 @@ void SaveFiles::createXMLFile( const InList &traces,
   XSF = openFile( "stimulus-metadata.xml", ios::out );
   if ( (*XSF) ) {
     *XSF << "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n";
-    *XSF << "<odML>\n";
+    *XSF << "<?xml-stylesheet type=\"text/xsl\" href=\"odml.xsl\"  xmlns:odml=\"http://www.g-node.org/odml\"?>\n";
+    *XSF << "<odML version=\"1\">\n";
+    *XSF << "  <repository>http://portal.g-node.org/odml/terminologies/v1.0/terminologies.xml</repository>\n";
   }
 }
 
@@ -1230,6 +1230,7 @@ void SaveFiles::completeFiles( void )
 SaveFiles::Stimulus::Stimulus( void )
   : Device( 0 ),
     Channel( 0 ),
+    Trace( 0 ),
     Delay( 0.0 ),
     SampleRate( 0.0 ),
     Length( 0.0 ),
@@ -1238,6 +1239,8 @@ SaveFiles::Stimulus::Stimulus( void )
     Ident( "" )
 {
   Descriptions.clear();
+  Types.clear();
+  TypeNames.clear();
 }
 
 
@@ -1245,6 +1248,7 @@ SaveFiles::Stimulus::Stimulus( void )
 SaveFiles::Stimulus::Stimulus( const Stimulus &signal )
   : Device( signal.Device ),
     Channel( signal.Channel ),
+    Trace( signal.Trace ),
     Delay( signal.Delay ),
     SampleRate( signal.SampleRate ),
     Length( signal.Length ),
@@ -1252,7 +1256,8 @@ SaveFiles::Stimulus::Stimulus( const Stimulus &signal )
     CarrierFreq( signal.CarrierFreq ),
     Ident( signal.Ident ),
     Descriptions( signal.Descriptions ),
-    Types( signal.Types )
+    Types( signal.Types ),
+    TypeNames( signal.TypeNames )
 {
 }
 
@@ -1261,17 +1266,22 @@ SaveFiles::Stimulus::Stimulus( const OutData &signal )
 {
   Device = signal.device();
   Channel = signal.channel();
+  Trace = 0;
   Delay = signal.delay();
   SampleRate = signal.sampleRate();
   Length = signal.length();
   Intensity = signal.intensity();
   CarrierFreq = signal.carrierFreq();
   Ident = signal.ident();
-  Descriptions = Descriptions;
   Types.clear();
-  for ( unsigned int k=0; k<Descriptions.size(); k++ ) {
-    Types.push_back( Descriptions[k].text( "type", "stimulus/unknown" ) );
+  TypeNames.clear();
+  for ( int k=0; k<signal.descriptions(); k++ ) {
+    Descriptions.push_back( signal.description( k ) );
+    Str ts = Descriptions[k].text( "type", "stimulus/unknown" );
+    Types.push_back( ts );
     Descriptions[k].erase( "type" );
+    ts.preventFirst( "stimulus/" ).strip();
+    TypeNames.push_back( ts );
     if ( ! signal.ident().empty() )
       Descriptions[k].addText( "Description", signal.ident() );
   }
