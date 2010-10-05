@@ -53,10 +53,12 @@ struct subdeviceT {
   long delay;
   long duration;           // => relative to index of dynclamp-Task
   int continuous;
+  int startsource;
 
   int used;
   int prepared;
   int running;
+  int pending;
   int error;               // E_COMEDI, E_NODATA, ...
 };
 
@@ -73,8 +75,20 @@ struct chanT {
   lsampl_t lsample;
   struct converterT converter;
   float scale;
-  float voltage;
   unsigned int fifo;
+  float voltage;
+  float prevvoltage;
+  int trigger;
+  float alevel;
+};
+
+
+struct triggerT {
+  int enabled;
+  char devname[DEV_NAME_MAXLEN+1];
+  int subdev;
+  unsigned int chan;
+  float alevel;
 };
 
 
@@ -108,6 +122,8 @@ int subdevN = 0;
 
 int reqTraceSubdevID = -1;
 int reqCloseSubdevID = -1;
+
+struct triggerT trigger;
 
 int traceIndex = 0;
 int chanIndex = 0;
@@ -312,6 +328,7 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
   subdev[iS].type = deviceIOC->subdevType;
   subdev[iS].delay = -1; 
   subdev[iS].duration = -1;
+  subdev[iS].startsource = 0;
 
   // create FIFO for subdevice:
   subdev[iS].fifo = iS;
@@ -338,6 +355,7 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
   int iS = chanlistIOC->subdevID;
   int iD = subdev[iS].devID;
   int iC, i, isC;
+  int trig = 0;
 
   if ( subdev[iS].subdev < 0 || !subdev[iS].used ) {
     ERROR_MSG( "loadChanlist ERROR: First open an appropriate device and subdevice. Chanlist not loaded!\n" );
@@ -350,6 +368,20 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
     return -1;
   }
 
+  // check for trigger:
+  if ( trigger.enabled &&
+       strcmp( device[subdev[iS].devID].name, trigger.devname ) == 0 ) {
+    if ( trigger.subdev >= 0 ) {
+      if ( subdev[iS].subdev == trigger.subdev )
+	trig = 1;
+    }
+    else {
+      if ( subdev[iS].type == SUBDEV_IN )
+	trig = 1;
+    }
+    DEBUG_MSG( "dynclampmodule: checked for trigger on subdevice %d: %d\n", subdev[iS].subdev, trig );
+  }
+
   if ( subdev[iS].chanlist ) {
     // subdev chanlist already exist
     for ( iC = 0; iC < chanlistIOC->chanlistN; iC++ ) {
@@ -357,6 +389,15 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
         if ( CR_CHAN(chanlistIOC->chanlist[iC]) == 
             subdev[iS].chanlist[isC].chan + PARAM_CHAN_OFFSET*subdev[iS].chanlist[isC].isParamChan ) {
 	  subdev[iS].chanlist[isC].isUsed = 1;
+	  if ( trig && subdev[iS].chanlist[iC].chan == trigger.chan ) {
+	    DEBUG_MSG( "dynclampmodule: set trigger for channel %d id %d on subdevice %d with level %d\n", subdev[iS].chanlist[iC].chan, iC, subdev[iS].subdev, (int)(100.0*trigger.alevel) );
+	    subdev[iS].chanlist[iC].trigger = 1;
+	    subdev[iS].chanlist[iC].alevel = trigger.alevel;
+	  }
+	  else {
+	    subdev[iS].chanlist[iC].trigger = 0;
+	    subdev[iS].chanlist[iC].alevel = 0.0;
+	  }
 	  if ( ! subdev[iS].chanlist[isC].isParamChan ) {
 	    subdev[iS].chanlist[isC].aref = CR_AREF( chanlistIOC->chanlist[iC] );
 	    subdev[iS].chanlist[isC].rangeIndex = CR_RANGE( chanlistIOC->chanlist[iC] );
@@ -392,7 +433,17 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
       subdev[iS].chanlist[iC].modelIndex = -1;
       subdev[iS].chanlist[iC].isUsed = 1; 
       subdev[iS].chanlist[iC].voltage = 0.0; 
+      subdev[iS].chanlist[iC].prevvoltage = 0.0;
       subdev[iS].chanlist[iC].fifo = subdev[iS].fifo;
+      if ( trig && subdev[iS].chanlist[iC].chan == trigger.chan ) {
+	DEBUG_MSG( "dynclampmodule: added trigger to channel %d id %d on subdevice %d with level %d\n", subdev[iS].chanlist[iC].chan, iC, subdev[iS].subdev, (int)(100.0*trigger.alevel) );
+	subdev[iS].chanlist[iC].trigger = 1;
+	subdev[iS].chanlist[iC].alevel = trigger.alevel;
+      }
+      else {
+	subdev[iS].chanlist[iC].trigger = 0;
+	subdev[iS].chanlist[iC].alevel = 0.0;
+      }
       if ( subdev[iS].chanlist[iC].isParamChan ) {
 	subdev[iS].chanlist[iC].chan -= PARAM_CHAN_OFFSET;
 	subdev[iS].chanlist[iC].aref = 0;
@@ -456,6 +507,9 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC )
   subdev[iS].delay = syncCmdIOC->delay;
   subdev[iS].duration = syncCmdIOC->duration;
   subdev[iS].continuous = syncCmdIOC->continuous;
+  subdev[iS].startsource = syncCmdIOC->startsource;
+
+  DEBUG_MSG( "loadSyncCmd: loaded %d samples with startsource %d for subdevice %d\n", subdev[iS].duration, subdev[iS].startsource, iS );
 
   // test requested sampling-rate and set frequency for dynamic clamp task:
   if ( !dynClampTask.reqFreq ) {
@@ -477,7 +531,6 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC )
 int startSubdevice( int iS )
 { 
   int retVal = 0;
-  unsigned long firstLoopCnt, tmpDelay, tmpDuration;
 
   if ( !subdev[iS].prepared || subdev[iS].running ) {
     ERROR_MSG( "startSubdevice ERROR:  Subdevice ID %i on device %s either not prepared or already running.\n",
@@ -485,24 +538,8 @@ int startSubdevice( int iS )
     return -EBUSY;
   }
 
-  subdev[iS].running = 1;
-
-  if ( dynClampTask.running ) {
-    // get current index of dynclamp loop in a thread-save way:
-    do { 
-      firstLoopCnt = dynClampTask.loopCnt;
-      tmpDelay = subdev[iS].delay + dynClampTask.loopCnt + 10;
-      tmpDuration = tmpDelay + subdev[iS].duration;
-      dynClampTask.aoIndex = tmpDelay; 
-    } 
-    while( firstLoopCnt != dynClampTask.loopCnt );
-    // set subdevice duration relative to index of dynclamp-Task
-    subdev[iS].delay = tmpDelay; 
-    subdev[iS].duration = tmpDuration;
-  }
-  else {
-    subdev[iS].delay = subdev[iS].delay; 
-    subdev[iS].duration = subdev[iS].delay + subdev[iS].duration;
+  subdev[iS].pending = 1;
+  if ( !dynClampTask.running ) {
     dynClampTask.aoIndex = 0;
     dynClampTask.reqFreq = subdev[iS].frequency;
 
@@ -513,6 +550,8 @@ int startSubdevice( int iS )
       return -ENOMEM;
     }
   }
+
+  subdev[iS].running = 1;
 
   DEBUG_MSG( "startSubdevice: successfully started subdevice %d type %s!\n",
 	     iS, subdev[iS].type == SUBDEV_IN ? "AI" : "AO" );
@@ -602,6 +641,50 @@ void releaseSubdevice( int iS )
 
 
 
+int setAnalogTrigger( struct triggerIOCT *triggerIOC )
+{
+#ifdef ENABLE_TRIGGER
+  // disable trigger:
+  trigger.enabled = 0;
+
+  // setup trigger parameter:
+  strcpy( trigger.devname, triggerIOC->devname );
+  trigger.subdev = triggerIOC->subdev;
+  trigger.chan = triggerIOC->channel;
+  trigger.alevel = triggerIOC->alevel;
+
+  DEBUG_MSG( "rtDynClamp: setup trigger for channel %d on device %s\n",
+	     trigger.chan, trigger.devname );
+
+  // enable trigger:
+  trigger.enabled = 1;
+  return 0;
+#else
+  return -EINVAL;
+#endif
+}
+
+
+int unsetAnalogTrigger( struct triggerIOCT *triggerIOC )
+{
+#ifdef ENABLE_TRIGGER
+  int iS, iC;
+
+  // disable trigger:
+  trigger.enabled = 0;
+  for ( iS = 0; iS < subdevN; iS++ ) {
+    for ( iC = 0; iC < subdev[iS].chanN; iC++ ) {
+      subdev[iS].chanlist[iC].trigger = 0;
+    }
+  }
+
+  return 0;
+#else
+  return -EINVAL;
+#endif
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 // *** REAL-TIME TASKS *** 
 ///////////////////////////////////////////////////////////////////////////////
@@ -615,10 +698,12 @@ void rtDynClamp( long dummy )
   int subdevRunning = 1;
   unsigned long readCnt = 0;
   unsigned long fifoPutCnt = 0;
-  float voltage;
   struct chanT *pChan;
+  float voltage;
   unsigned ci;
   double term;
+  int triggerevs[5] = { 1, 0, 0, 0, 0 };
+  int prevtriggerevs[5] = { 0, 0, 0, 0, 0 };
   //  int vi, oi, pi; /// DEBUG
 
   DEBUG_MSG( "rtDynClamp: starting dynamic clamp loop at %u Hz\n", 
@@ -639,21 +724,38 @@ void rtDynClamp( long dummy )
     /****************************************************************************/
     // AO Subdevice loop:
     for ( iS = 0; iS < subdevN; iS++ ) {
-      if ( subdev[iS].type == SUBDEV_OUT ) {
+      if ( subdev[iS].running && subdev[iS].type == SUBDEV_OUT ) {
 
-	// AO running?
-	if ( subdev[iS].running && dynClampTask.loopCnt >= subdev[iS].delay ) {
-
-	  // check duration:
-	  if ( !subdev[iS].continuous &&
-	       subdev[iS].duration <= dynClampTask.loopCnt ) {
-	    rtf_reset( subdev[iS].fifo );
-	    stopSubdevice(iS, /*kill=*/0 );
-	    continue;
+	if ( subdev[iS].pending ) {
+	  DEBUG_MSG( "REALTIMELOOP PENDING AO subdev=%d, startsrc=%d, prevtriger1=%d, triger1=%d, pv=%d, v=%d\n",
+		     iS, subdev[iS].startsource, prevtriggerevs[1], triggerevs[1],
+		     (int)(100.0*subdev[0].chanlist[2].prevvoltage), (int)(100.0*subdev[0].chanlist[2].voltage) );
+	  if ( triggerevs[subdev[iS].startsource] &&
+	       ! prevtriggerevs[subdev[iS].startsource] ) {
+	    DEBUG_MSG( "REALTIMELOOP PENDING AO SETUP duration=%lu, loopCnt=%lu\n", subdev[iS].duration, dynClampTask.loopCnt );
+	    subdev[iS].delay = dynClampTask.loopCnt + subdev[iS].delay; 
+	    subdev[iS].duration = subdev[iS].delay + subdev[iS].duration;
+	    dynClampTask.aoIndex = subdev[iS].delay;
+	    subdev[iS].pending = 0;
+	    DEBUG_MSG( "REALTIMELOOP PENDING AO STARTED duration=%lu delay=%lu, loopCnt=%lu\n", subdev[iS].duration, subdev[iS].delay, dynClampTask.loopCnt );
 	  }
+	  else
+	    continue;
+	}
 
-	  subdevRunning = 1;
-         
+	// check duration:
+	if ( !subdev[iS].continuous &&
+	     subdev[iS].duration <= dynClampTask.loopCnt ) {
+	  DEBUG_MSG( "rtDynClamp: finished subdevice %d at loop %lu\n", iS, dynClampTask.loopCnt );
+	  rtf_reset( subdev[iS].fifo );
+	  stopSubdevice(iS, /*kill=*/0 );
+	  continue;
+	}
+	
+	subdevRunning = 1;
+
+	if ( dynClampTask.loopCnt >= subdev[iS].delay ) {
+ 
 	  // read output from FIFO:
 	  for ( iC = 0; iC < subdev[iS].chanN; iC++ ) {
 
@@ -722,11 +824,22 @@ void rtDynClamp( long dummy )
     //* PROBLEM: rt_sleep is timed using jiffies only (granularity = 1msec)
 	//* int retValSleep = rt_sleep( nano2count( INJECT_RECORD_DELAY ) );
     rt_busy_sleep( INJECT_RECORD_DELAY ); // TODO: just default
-
-    /******** READ FROM ANALOG INPUT: *******************************************/
+    
+    /******** FROM ANALOG INPUT: **********************************************/
     /****************************************************************************/
     for ( iS = 0; iS < subdevN; iS++ ) {
       if ( subdev[iS].type == SUBDEV_IN && subdev[iS].running ) {
+	
+	if ( subdev[iS].pending ) {
+	  if ( triggerevs[subdev[iS].startsource] &&
+	       ! prevtriggerevs[subdev[iS].startsource] ) {
+	    subdev[iS].delay = dynClampTask.loopCnt + subdev[iS].delay; 
+	    subdev[iS].duration = subdev[iS].delay + subdev[iS].duration;
+	    subdev[iS].pending = 0;
+	  }
+	  else
+	    continue;
+	}
           
 	// check duration:
 	if ( !subdev[iS].continuous &&
@@ -740,11 +853,12 @@ void rtDynClamp( long dummy )
 
 	  pChan = &subdev[iS].chanlist[iC];
 
+	  // previous sample:
+	  pChan->prevvoltage = pChan->voltage;
+
 	  // acquire sample:
 	  if ( !pChan->isParamChan ) {
-
-	    retVal = comedi_do_insn( pChan->devP, &pChan->insn );
-               
+	    retVal = comedi_do_insn( pChan->devP, &pChan->insn );     
 	    if ( retVal < 0 ) {
 	      subdev[iS].running = 0;
 	      comedi_perror( "rtmodule: rtDynClamp: comedi_data_write" );
@@ -767,7 +881,8 @@ void rtDynClamp( long dummy )
 	  else {
 	    pChan->voltage = paramInput[pChan->chan];
 	  }
-
+	  
+	  // write to FIFO:
 	  retVal = rtf_put( pChan->fifo, &pChan->voltage, sizeof(float) );
 	  fifoPutCnt++;
 	  if ( retVal != sizeof(float) ) {
@@ -785,6 +900,19 @@ void rtDynClamp( long dummy )
 	    continue;
 	  }
 
+#ifdef ENABLE_TRIGGER
+	  // trigger:
+	  if ( pChan->trigger ) {
+	    prevtriggerevs[1] = triggerevs[1];
+	    if ( pChan->voltage > pChan->alevel && pChan->prevvoltage <= pChan->alevel ) {
+	      triggerevs[1] = 1;
+	    }
+	    else if ( pChan->voltage < pChan->alevel && pChan->prevvoltage >= pChan->alevel ) {
+	      triggerevs[1] = 0;
+	    }
+	  }
+#endif
+	  
 	} // end of chan loop
 	readCnt++; // FOR DEBUG
       }
@@ -892,6 +1020,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
   static struct syncCmdIOCT syncCmdIOC;
   static struct traceInfoIOCT traceInfo;
   static struct traceChannelIOCT traceChannel;
+  static struct triggerIOCT triggerIOC;
 
   int tmp, subdevID;
   int retVal;
@@ -1159,6 +1288,24 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
     releaseSubdevice( subdevID );
     return 0;
 
+
+    // ******* Trigger: ***********************************************
+
+  case IOC_SET_TRIGGER:
+    retVal = copy_from_user( &triggerIOC, (void __user *)arg, sizeof(struct triggerIOCT) );
+    if ( retVal ) {
+      ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to triggerIOCT-struct!\n" );
+      return -EFAULT;
+    }
+    return setAnalogTrigger( &triggerIOC );
+
+  case IOC_UNSET_TRIGGER:
+    retVal = copy_from_user( &triggerIOC, (void __user *)arg, sizeof(struct triggerIOCT) );
+    if ( retVal ) {
+      ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to triggerIOCT-struct!\n" );
+      return -EFAULT;
+    }
+    return unsetAnalogTrigger( &triggerIOC );
 
   }
 

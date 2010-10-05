@@ -25,6 +25,7 @@ Analog Input/Output:
   ComediAnalogOutput should use instruction lists for this.
 
 Dynamic clamp:
+- CHECK IT! Both kernel modules, optional trigger, and DynClmapAnalogOutput
 - relacs_rtai.m4: provide good default location
 - include of asm-offsets.h in src/Makefile.am could be made part of a
    linux kernel source detection macro.

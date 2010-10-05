@@ -59,8 +59,9 @@ DynClampAnalogOutput::DynClampAnalogOutput( void )
   ErrorState = 0;
   UnipConverter = 0;
   BipConverter = 0;
-  Sigs = 0;
   BufferSize = 0;
+  Buffer = 0;
+  NBuffer = 0;
 }
 
 
@@ -84,8 +85,9 @@ DynClampAnalogOutput::DynClampAnalogOutput( const string &device,
   ErrorState = 0;
   UnipConverter = 0;
   BipConverter = 0;
-  Sigs = 0;
   BufferSize = 0;
+  Buffer = 0;
+  NBuffer = 0;
 
   open( device, opts );
 }
@@ -221,7 +223,7 @@ int DynClampAnalogOutput::open( const string &device, const Options &opts )
          << fifoName << " failed!\n";
     return -1;
   }
-  BufferSize = deviceIOC.fifoSize;
+  FIFOSize = deviceIOC.fifoSize;
 
   IsPrepared = false;
 
@@ -488,8 +490,6 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
 
   reset();
 
-  convertData( sigs );
-
   // copy and sort signal pointers:
   OutList ol;
   ol.add( sigs );
@@ -562,7 +562,8 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
     return -1;
 
   // fill buffer with data:
-  retval = fillWriteBuffer( sigs );
+  Sigs = ol;
+  retval = fillWriteBuffer();
   //  cerr << " DynClampAnalogOutput::directWrite -> fillWriteBuffer returned " << retval << '\n';
   if ( retval < 0 )
     return -1;
@@ -646,40 +647,12 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
   unsigned int chanlist[MAXCHANLIST];
   setupChanList( ol, chanlist, MAXCHANLIST );
 
+  double buffertime = sigs[0].interval( FIFOSize/BufferElemSize/sigs.size() );
+  if ( buffertime < sigs[0].writeTime() )
+    ol.addError( DaqError::InvalidBufferTime );
+
   if( ol.failed() )
     return -1;
-
-  //  cerr << " DynClampAnalogOutput::testWrite(): success\n";/////TEST/////
-
-
-  return 0;
-}
-
-
-int DynClampAnalogOutput::convertData( OutList &sigs )
-{
-  if ( sigs.size() <= 0 )
-    return -1;
-
-  // copy and sort signal pointers:
-  OutList ol;
-  ol.add( sigs );
-  ol.sortByChannel();
-
-  // allocate buffer:
-  int nbuffer = ol.size()*ol[0].size();
-  float *buffer = new float [nbuffer];
-
-  // multiplex data into buffer:
-  float *bp = buffer;
-  for ( int i=0; i<ol[0].size(); i++ ) {
-    for ( int k=0; k<ol.size(); k++ ) {
-      *bp = ol[k][i];
-      ++bp;
-    }
-  }
-
-  sigs[0].setDeviceBuffer( (char *)buffer, nbuffer, sizeof( float ) );
 
   return 0;
 }
@@ -752,11 +725,6 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
     return -1;
   }
 
-  // check buffer size:
-  int minbufsize = ol.size()*BufferElemSize*ol[0].indices( ol[0].writeTime() ) * BufferElemSize;
-  if ( minbufsize > BufferSize )
-    ol.addError( DaqError::InvalidBufferTime );
-
   // apply calibration:
   /*
   XXX this requires user space comedi!
@@ -774,48 +742,73 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
 
   IsPrepared = ol.success();
 
-  if ( ol.success() ) {
-    setSettings( ol, BufferSize );
-    Sigs = &sigs;
-  }
+  if ( ! ol.success() )
+    return -1;
 
-  //  cerr << " ComediAnalogOutput::prepareWrite(): success\n";//////TEST/////
+  setSettings( ol, BufferSize );
 
-  return sigs.success() ? 0 : -1;
+  for ( int k=0; k<ol.size(); k++ )
+    ol[k].deviceReset( 0 );
+
+  // set buffer size:
+  BufferSize = 5*sigs.size()*sigs[0].indices( sigs[0].writeTime() )*BufferElemSize;
+  int nbuffer = sigs.deviceBufferSize()*BufferElemSize;
+  if ( nbuffer < BufferSize )
+    BufferSize = nbuffer;
+  if ( BufferSize > FIFOSize/(int)BufferElemSize )
+    sigs.addError( DaqError::InvalidBufferTime );
+
+  if ( ! ol.success() )
+    return -1;
+
+  Sigs = ol;
+  Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
+
+  return 0;
 }
 
 
-int DynClampAnalogOutput::fillWriteBuffer( OutList &sigs )
+int DynClampAnalogOutput::fillWriteBuffer( void )
 {
   if ( !isOpen() ) {
-    sigs.setError( DaqError::DeviceNotOpen );
+    Sigs.setError( DaqError::DeviceNotOpen );
     return -1;
   }
 
   ErrorState = 0;
 
-  if( sigs[0].deviceBufferMaxPop() <= 0 ) {
-    sigs.addError( DaqError::NoData );
+  if ( ! Sigs[0].deviceWriting() ) {
+    Sigs.addError( DaqError::NoData );
     return -1;
   }
 
-  //  cerr << "DynClampAnalogOutput::fillWriteBuffer: size of device buffer: " 
-  //       << sigs[0].deviceBufferSize() << " - size of outdata: " << sigs[0].size() 
-  //       << " - continuous: " << sigs[0].continuous() << '\n';
-
+  int maxntry = 2;
   int ern = 0;
   int elemWritten = 0;
 
   // try to write twice
   for ( int tryit = 0;
-	tryit < 2 && sigs[0].deviceBufferMaxPop() > 0; 
+	tryit < maxntry && Sigs[0].deviceWriting(); 
 	tryit++ ){
 
-    int bytesWritten = ::write( FifoFd, sigs[0].deviceBufferPopBuffer(),
-				sigs[0].deviceBufferMaxPop() * BufferElemSize );
-    //    cerr << " DynClampAnalogOutput::fillWriteBuffer(): " << bytesWritten << " of "
-    //         << sigs[0].deviceBufferMaxPop() * BufferElemSize << "bytes written:"
-    //         << '\n';/////TEST/////
+    // multiplex data into buffer:
+    float *bp = (float*)(Buffer+NBuffer);
+    int maxn = (BufferSize-NBuffer)/sizeof( float )/Sigs.size();
+    int bytesConverted = 0;
+    for ( int i=0; i<maxn && Sigs[0].deviceWriting(); i++ ) {
+      for ( int k=0; k<Sigs.size(); k++ ) {
+	*bp = Sigs[k].deviceValue();
+	if ( Sigs[k].deviceIndex() >= Sigs[k].size() )
+	  Sigs[k].incrDeviceCount();
+	++bp;
+	++bytesConverted;
+      }
+    }
+    bytesConverted *= sizeof( float );
+    NBuffer += bytesConverted;
+
+    // transfer buffer to kernel modul:
+    int bytesWritten = ::write( FifoFd, Buffer, NBuffer );
       
     if ( bytesWritten < 0 ) {
       ern = errno;
@@ -825,15 +818,22 @@ int DynClampAnalogOutput::fillWriteBuffer( OutList &sigs )
       }
     }
     else if ( bytesWritten > 0 ) {
-      sigs[0].deviceBufferPop( bytesWritten / BufferElemSize );
+      memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
+      NBuffer -= bytesWritten;
       elemWritten += bytesWritten / BufferElemSize;
     }
   }
 
   if ( ern == 0 ) {
     // no more data:
-    if ( sigs[0].deviceBufferMaxPop() == 0 )
+    if ( Sigs[0].deviceWriting() == 0 ) {
+      if ( Buffer != 0 )
+	delete [] Buffer;
+      Buffer = 0;
+      BufferSize = 0;
+      NBuffer = 0;
       return 0;
+    }
   }
   else {
     // error:
@@ -841,21 +841,20 @@ int DynClampAnalogOutput::fillWriteBuffer( OutList &sigs )
 
     case EPIPE: 
       ErrorState = 1;
-      sigs.addError( DaqError::OverflowUnderrun );
-      break;
+      Sigs.addError( DaqError::OverflowUnderrun );
+      return -1;
 
     case EBUSY:
       ErrorState = 2;
-      sigs.addError( DaqError::Busy );
-      break;
+      Sigs.addError( DaqError::Busy );
+      return -1;
 
     default:
       ErrorState = 2;
-      sigs.addErrorStr( ern );
-      sigs.addError( DaqError::Unknown );
-      break;
+      Sigs.addErrorStr( ern );
+      Sigs.addError( DaqError::Unknown );
+      return -1;
     }
-    return -1;
   }
   
   return elemWritten;
@@ -866,13 +865,13 @@ int DynClampAnalogOutput::startWrite( void )
 {
   //  cerr << " DynClampAnalogOutput::startWrite(): 1\n";/////TEST/////
 
-  if( !prepared() || Sigs == 0 ) {
+  if( !prepared() || Sigs.empty() ) {
     cerr << "AO not prepared or no signals!\n";
     return -1;
   }
 
   // fill buffer with initial data:
-  int retval = fillWriteBuffer( *Sigs );
+  int retval = fillWriteBuffer();
   //  cerr << " DynClampAnalogOutput::startWrite -> fillWriteBuffer returned " << retval << '\n';
 
   if ( retval < 0 )
@@ -886,7 +885,7 @@ int DynClampAnalogOutput::startWrite( void )
     int ern = errno;
     if ( ern == ENOMEM )
       cerr << " !!! No stack for kernel task !!!\n";
-    Sigs->addErrorStr( ern );
+    Sigs.addErrorStr( ern );
     return -1;
   }
 
@@ -898,7 +897,7 @@ int DynClampAnalogOutput::startWrite( void )
 	 << ModuleDevice << " failed!\n";
   }
   else
-    Sigs->setSampleRate( (double)rate );
+    Sigs.setSampleRate( (double)rate );
 
   ErrorState = 0;
   
@@ -910,24 +909,29 @@ int DynClampAnalogOutput::writeData( void )
 {
   //  cerr << " DynClampAnalogOutput::writeData(): in\n";/////TEST/////
 
-  if ( Sigs == 0 )
+  if ( Sigs.empty() )
     return -1;
 
   //device stopped?
   if( !running() ) {
-    Sigs->addErrorStr( "DynClampAnalogOutput::writeData: " +
+    Sigs.addErrorStr( "DynClampAnalogOutput::writeData: " +
 		      deviceFile() + " is not running!" );
     cerr << "DynClampAnalogOutput::writeData: device is not running!"  << '\n';/////TEST/////
     return -1;
   }
 
-  return fillWriteBuffer( *Sigs );
+  return fillWriteBuffer();
 }
 
 
 int DynClampAnalogOutput::reset( void )
 { 
-  Sigs = 0;
+  Sigs.clear();
+  if ( Buffer != 0 )
+    delete [] Buffer;
+  Buffer = 0;
+  BufferSize = 0;
+  NBuffer = 0;
 
   Settings.clear();
   ErrorState = 0;

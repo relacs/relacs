@@ -94,13 +94,6 @@ public:
         to the data acquisition board. */
   virtual int directWrite( OutList &sigs );
 
-    /*! Convert data of the output signals \a sigs.
-	If an error ocurred in any channel, the corresponding errorflags in the
-	OutData structure are filled and a negative value is returned.
-	The output signals are sorted by channel number first
-        and are then multiplexed into a buffer of signed short's (2 byte).
-        The buffer is attached to the first signal in \a sigs. */
-  virtual int convertData( OutList &sigs );
     /*! Prepare analog output of the output signals \a sigs on the device.
 	If an error ocurred in any signal, the corresponding errorflags in
 	OutData are set and a negative value is returned.
@@ -183,7 +176,7 @@ protected:
 	If an error ocurred in any channel, the corresponding errorflags in the
 	OutList structure are filled and a negative value is returned.  
 	For internal usage! */
-  int fillWriteBuffer( OutList &sigs );
+  int fillWriteBuffer( void );
 
     /*! True if analog output was prepared using testWriteDevice() and prepareWrite() */
   bool prepared( void ) const;
@@ -230,9 +223,15 @@ private:
   mutable int ErrorState;
 
     /*! The output signals that were prepared by prepareWrite(). */
-  OutList *Sigs;
-    /*! Size of the internal buffer used for getting the data from the driver. */
+  OutList Sigs;
+    /*! Size of the FIFO for transfering data to the driver. */
+  int FIFOSize;
+    /*! Size of the buffer for transfering data to the driver. */
   int BufferSize;
+    /*! Buffer used for transfering data to the driver. */
+  char *Buffer;
+    /*! Current number of elements in the buffer. */
+  int NBuffer;
 
 };
 
