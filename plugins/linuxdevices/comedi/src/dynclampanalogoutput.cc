@@ -561,10 +561,21 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
   if ( ol.failed() )
     return -1;
 
+  BufferSize = ol.size() * BufferElemSize;
+  Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
+
   // fill buffer with data:
+  for ( int k=0; k<ol.size(); k++ )
+    ol[k].deviceReset( 0 );
   Sigs = ol;
   retval = fillWriteBuffer();
   //  cerr << " DynClampAnalogOutput::directWrite -> fillWriteBuffer returned " << retval << '\n';
+
+  delete [] Buffer;
+  Buffer = 0;
+  BufferSize = 0;
+  NBuffer = 0;
+
   if ( retval < 0 )
     return -1;
 
@@ -745,8 +756,6 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
   if ( ! ol.success() )
     return -1;
 
-  setSettings( ol, BufferSize );
-
   for ( int k=0; k<ol.size(); k++ )
     ol[k].deviceReset( 0 );
 
@@ -757,6 +766,8 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
     BufferSize = nbuffer;
   if ( BufferSize > FIFOSize/(int)BufferElemSize )
     sigs.addError( DaqError::InvalidBufferTime );
+
+  setSettings( ol, BufferSize );
 
   if ( ! ol.success() )
     return -1;

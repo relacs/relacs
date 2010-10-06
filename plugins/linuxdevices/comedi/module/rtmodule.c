@@ -446,6 +446,7 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC )
   subdev[iS].duration = syncCmdIOC->duration;
   subdev[iS].continuous = syncCmdIOC->continuous;
   subdev[iS].startsource = syncCmdIOC->startsource;
+  subdev[iS].pending = 0;
 
   DEBUG_MSG( "loadSyncCmd: loaded %d samples with startsource %d for subdevice %d\n", subdev[iS].duration, subdev[iS].startsource, iS );
 
@@ -653,7 +654,7 @@ void rtDynClamp( long dummy )
 	if ( subdev[iS].pending ) {
 	  DEBUG_MSG( "REALTIMELOOP PENDING AO subdev=%d, startsrc=%d, prevtriger1=%d, triger1=%d, pv=%d, v=%d\n",
 		     iS, subdev[iS].startsource, prevtriggerevs[1], triggerevs[1],
-		     (int)(100.0*subdev[0].chanlist[2].prevvoltage), (int)(100.0*subdev[0].chanlist[2].voltage) );
+		     (int)(100.0*subdev[0].chanlist[0].prevvoltage), (int)(100.0*subdev[0].chanlist[0].voltage) );
 	  if ( triggerevs[subdev[iS].startsource] &&
 	       ! prevtriggerevs[subdev[iS].startsource] ) {
 	    DEBUG_MSG( "REALTIMELOOP PENDING AO SETUP duration=%lu, loopCnt=%lu\n", subdev[iS].duration, dynClampTask.loopCnt );

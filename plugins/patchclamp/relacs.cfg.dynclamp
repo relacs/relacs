@@ -84,13 +84,13 @@
   fallbackonreload: true
 
 *Analog Input Devices
-Device1
+  Device1
   plugin: DynClampAnalogInput
   device: /dev/comedi0
    ident: ai-1
 
 *Analog Output Devices
-Device1
+  Device1
   plugin: DynClampAnalogOutput
   device: /dev/comedi0
    ident: ao-1
