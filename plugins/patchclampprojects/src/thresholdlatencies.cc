@@ -368,14 +368,11 @@ void ThresholdLatencies::analyze( int involtage, int incurrent,
     Results.push_back( Data( delay, savetime, trace( SpikeTrace[involtage] ),
 			     trace( incurrent ) ) );
     Results.back().Current *= IInFac;
-    Results.back().DCAmplitude = Results.back().Current.mean( -delay, 0.0 );
-    Results.back().Amplitude = Results.back().Current.mean( 0.5*duration, duration );
   }
-  else {
+  else
     Results.push_back( Data( delay, savetime, trace( SpikeTrace[involtage] ) ) );
-    Results.back().DCAmplitude = dcamplitude;
-    Results.back().Amplitude = amplitude;
-  }
+  Results.back().DCAmplitude = dcamplitude;
+  Results.back().Amplitude = amplitude;
   double sigtime = events( SpikeEvents[involtage] ).signalTime();
   events( SpikeEvents[involtage] ).copy( sigtime - delay,
 					 sigtime + savetime - delay,

@@ -309,12 +309,10 @@ void FindThreshold::analyze( int involtage, int incurrent,
     Results.push_back( Data( savetime, trace( SpikeTrace[involtage] ),
 			     trace( incurrent ) ) );
     Results.back().Current *= IInFac;
-    Results.back().Amplitude = Results.back().Current.mean( 0.5*duration, duration );
   }
-  else {
+  else
     Results.push_back( Data( savetime, trace( SpikeTrace[involtage] ) ) );
-    Results.back().Amplitude = amplitude;
-  }
+  Results.back().Amplitude = amplitude;
   double sigtime = events( SpikeEvents[involtage] ).signalTime();
   events( SpikeEvents[involtage] ).copy( sigtime, sigtime + savetime,
 					 sigtime, Results.back().Spikes );

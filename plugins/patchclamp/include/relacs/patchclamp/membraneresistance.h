@@ -76,7 +76,6 @@ protected:
   SampleDataD MeanCurrent;
   double DCCurrent;
   double Amplitude;
-  double TrueAmplitude;
   double Duration;
   double VRest;
   double VRestsd;

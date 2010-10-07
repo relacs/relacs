@@ -725,9 +725,10 @@ void rtDynClamp( long dummy )
     /****************************************************************************/
     // AO Subdevice loop:
     for ( iS = 0; iS < subdevN; iS++ ) {
-      if ( subdev[iS].running && subdev[iS].type == SUBDEV_OUT ) {
+      if ( subdev[iS].type == SUBDEV_OUT ) {
 
-	if ( subdev[iS].pending ) {
+	// check for pending start trigger:
+	if ( subdev[iS].running && subdev[iS].pending ) {
 	  DEBUG_MSG( "REALTIMELOOP PENDING AO subdev=%d, startsrc=%d, prevtriger1=%d, triger1=%d, pv=%d, v=%d\n",
 		     iS, subdev[iS].startsource, prevtriggerevs[1], triggerevs[1],
 		     (int)(100.0*subdev[0].chanlist[0].prevvoltage), (int)(100.0*subdev[0].chanlist[0].voltage) );
@@ -740,53 +741,50 @@ void rtDynClamp( long dummy )
 	    subdev[iS].pending = 0;
 	    DEBUG_MSG( "REALTIMELOOP PENDING AO STARTED duration=%lu delay=%lu, loopCnt=%lu\n", subdev[iS].duration, subdev[iS].delay, dynClampTask.loopCnt );
 	  }
-	  else
-	    continue;
 	}
 
-	// check duration:
-	if ( !subdev[iS].continuous &&
-	     subdev[iS].duration <= dynClampTask.loopCnt ) {
-	  DEBUG_MSG( "rtDynClamp: finished subdevice %d at loop %lu\n", iS, dynClampTask.loopCnt );
-	  rtf_reset( subdev[iS].fifo );
-	  stopSubdevice(iS, /*kill=*/0 );
-	  continue;
-	}
-	
-	subdevRunning = 1;
-
-	if ( dynClampTask.loopCnt >= subdev[iS].delay ) {
- 
-	  // read output from FIFO:
-	  for ( iC = 0; iC < subdev[iS].chanN; iC++ ) {
-
-	    pChan = &subdev[iS].chanlist[iC];
+	if ( subdev[iS].running && ! subdev[iS].pending ) {
 	  
-	    if ( pChan->isUsed ) {
-	      // get data from FIFO:
-	      retVal = rtf_get( pChan->fifo, &pChan->voltage, sizeof(float) );
-	      if ( retVal != sizeof(float) ) {
-		if ( retVal == EINVAL ) {
-		  ERROR_MSG( "rtDynClamp: No open FIFO for subdevice ID %d at loopCnt %lu\n",
+	  // check end of stimulus:
+	  if ( !subdev[iS].continuous &&
+	       subdev[iS].duration <= dynClampTask.loopCnt ) {
+	    DEBUG_MSG( "rtDynClamp: finished subdevice %d at loop %lu\n", iS, dynClampTask.loopCnt );
+	    rtf_reset( subdev[iS].fifo );
+	    stopSubdevice( iS, /*kill=*/0 );
+	  }
+	  else if ( dynClampTask.loopCnt >= subdev[iS].delay ) {
+ 	    // read output from FIFO:
+	    for ( iC = 0; iC < subdev[iS].chanN; iC++ ) {
+	      pChan = &subdev[iS].chanlist[iC];
+	      if ( pChan->isUsed ) {
+		// get data from FIFO:
+		retVal = rtf_get( pChan->fifo, &pChan->voltage, sizeof(float) );
+		if ( retVal != sizeof(float) ) {
+		  if ( retVal == EINVAL ) {
+		    ERROR_MSG( "rtDynClamp: No open FIFO for subdevice ID %d at loopCnt %lu\n",
+			       iS, dynClampTask.loopCnt );
+		    dynClampTask.running = 0;
+		    dynClampTask.duration = 0;
+		    return;
+		  }
+		  subdev[iS].error = E_UNDERRUN;
+		  DEBUG_MSG( "rtDynClamp: Data buffer underrun for AO subdevice ID %d at loopCnt %lu\n",
 			     iS, dynClampTask.loopCnt );
-		  dynClampTask.running = 0;
-		  dynClampTask.duration = 0;
-		  return;
+		  subdev[iS].running = 0;
+		  continue;
 		}
-		subdev[iS].error = E_UNDERRUN;
-		DEBUG_MSG( "rtDynClamp: Data buffer underrun for AO subdevice ID %d at loopCnt %lu\n",
-			   iS, dynClampTask.loopCnt );
-		subdev[iS].running = 0;
-		continue;
-	      }
-	      if ( pChan->isParamChan ) {
-		paramOutput[pChan->chan] = pChan->voltage;
-		DEBUG_MSG( "NEW PARAMETER value=%d to channel %d\n",
-			   (int)1000.0*pChan->voltage, pChan->chan );
+		if ( pChan->isParamChan ) {
+		  paramOutput[pChan->chan] = pChan->voltage;
+		  DEBUG_MSG( "NEW PARAMETER value=%d to channel %d\n",
+			     (int)1000.0*pChan->voltage, pChan->chan );
+		}
 	      }
 	    }
 	  }
-        }
+
+	}  // subdev[iS].running && ! subdev[iS].pending
+	
+	subdevRunning = 1;
 	
 	// write output to daq board:
 	for ( iC = 0; iC < subdev[iS].chanN; iC++ ) {
@@ -814,7 +812,6 @@ void rtDynClamp( long dummy )
 			 iS, iC, dynClampTask.loopCnt );
 	    }
 	  }
-
 	} // end of chan loop
 
       }

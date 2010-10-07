@@ -539,12 +539,6 @@ void VICurve::Data::analyze( int count, const InData &intrace,
     }
   }
 
-  // stimulus amplitude:
-  if ( ! MeanCurrent.empty() ) {
-    DC = MeanCurrent.mean( -delay, 0.0 );
-    I = MeanCurrent.mean( 0.0, duration );
-  }
-
   // resting potential:
   VRest = MeanTrace.mean( -delay, 0.0 );
   VRestsd = MeanTrace.stdev( -delay, 0.0 );

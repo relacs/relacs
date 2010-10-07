@@ -183,7 +183,6 @@ int MembraneResistance::main( void )
   signal.description().addNumber( "Intensity", DCCurrent + Amplitude, IUnit );
   signal.description().addNumber( "IntensityOffset", DCCurrent, IUnit );
   signal.description().addNumber( "Duration", 1000.0*Duration, "ms" );
-  TrueAmplitude = Amplitude;
 
   // write stimulus:
   sleep( pause );
@@ -254,13 +253,6 @@ void MembraneResistance::analyzeOn( int involtage, int incurrent,
     }
   }
 
-  // stimulus amplitude:
-  if ( incurrent >= 0 ) {
-    DCCurrent = MeanCurrent.mean( -duration, 0.0 );
-    TrueAmplitude = MeanCurrent.mean( duration-sswidth, duration );
-    TrueAmplitude -= DCCurrent;
-  }
-
   // resting potential:
   VRest = MeanTrace.mean( -duration, 0.0 );
   VRestsd = MeanTrace.stdev( -duration, 0.0 );
@@ -270,7 +262,7 @@ void MembraneResistance::analyzeOn( int involtage, int incurrent,
   VSSsd = MeanTrace.stdev( duration-sswidth, duration );
 
   // membrane resitance:
-  RMss = ::fabs( (VSS - VRest)/TrueAmplitude )*VFac/IFac;
+  RMss = ::fabs( (VSS - VRest)/Amplitude )*VFac/IFac;
 
   // peak potential:
   VPeak = VRest;
@@ -308,7 +300,7 @@ void MembraneResistance::analyzeOn( int involtage, int incurrent,
 		StdevTrace.begin()+inxon0, StdevTrace.begin()+inxon1,
 		expFuncDerivs, p, pi, u, ch );
   TauMOn = -1000.0*p[1];
-  RMOn = ::fabs( (p[2] - VRest)/TrueAmplitude )*VFac/IFac;
+  RMOn = ::fabs( (p[2] - VRest)/Amplitude )*VFac/IFac;
   CMOn = TauMOn/RMOn*1000.0;
   for ( int k=0; k<ExpOn.size(); k++ )
     ExpOn[k] = expFunc( ExpOn.pos( k ), p );
@@ -356,7 +348,7 @@ void MembraneResistance::analyzeOff( int involtage, int incurrent,
 		StdevTrace.begin()+inxoff0, StdevTrace.begin()+inxoff1,
 		expFuncDerivs, p, pi, u, ch );
   TauMOff = -1000.0*p[1];
-  RMOff = ::fabs( (VSS - p[2])/TrueAmplitude )*VFac/IFac;
+  RMOff = ::fabs( (VSS - p[2])/Amplitude )*VFac/IFac;
   CMOff = TauMOff/RMOff*1000.0;
   for ( int k=0; k<ExpOff.size(); k++ )
     ExpOff[k] = expFunc( ExpOff.pos( k ) - duration, p );
@@ -436,7 +428,6 @@ void MembraneResistance::saveData( void )
   TableKey datakey;
   datakey.addLabel( "Stimulus" );
   datakey.addNumber( "dI", IUnit, "%6.3f", Amplitude );
-  datakey.addNumber( "dIm", IUnit, "%6.3f", TrueAmplitude );
   datakey.addNumber( "IDC", IUnit, "%6.3f", DCCurrent );
   datakey.addNumber( "trials", "1", "%6.0f", (double)Count );
   datakey.addNumber( "duration", "ms", "%6.1f", 1000.0*Duration );

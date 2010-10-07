@@ -62,7 +62,7 @@ void SetOutput::config( void )
   for ( int k=0; k<outTracesSize(); k++ ) {
     int flag = outTrace( k ).channel() < 1000 ? ChannelFlag : ParameterFlag;
     OutOpts.addNumber( outTraceName( k ), outTraceName( k ), 0.0,
-		       -1.0e10, 1.0e10, 0.0001, outTrace( k ).unit() ).setFlags( flag );
+		       -1.0e6, 1.0e6, 0.001, outTrace( k ).unit() ).setFlags( flag );
   }
 
   // display values:

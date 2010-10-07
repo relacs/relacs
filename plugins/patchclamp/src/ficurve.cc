@@ -673,12 +673,6 @@ void FICurve::Data::analyze( int count, const InData &intrace,
     }
   }
 
-  // stimulus amplitude:
-  if ( ! MeanCurrent.empty() ) {
-    DC = MeanCurrent.mean( -delay, 0.0 );
-    I = MeanCurrent.mean( 0.0, duration );
-  }
-
   // resting potential:
   double vrest = Voltage.back().mean( -delay, 0.0 );
   VRest += (vrest - VRest)/(count+1);
