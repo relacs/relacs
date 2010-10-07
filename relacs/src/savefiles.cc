@@ -57,6 +57,7 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
   Stimuli.clear();
   StimuliRePro = "";
   StimuliReProCount.clear();
+  ReProStimuli.clear();
   StimulusData = false;
   StimulusKey.clear();
   SignalTime = -1.0;
@@ -125,6 +126,7 @@ SaveFiles::~SaveFiles()
 
   Stimuli.clear();
   StimuliReProCount.clear();
+  ReProStimuli.clear();
 }
 
 
@@ -473,24 +475,69 @@ void SaveFiles::saveStimulus( void )
   if ( SignalTime < 0.0 )
     return;
 
+  // extract intensity from stimulus description:
+  vector< vector < Options > > stimuliref( Stimuli.size() );
+  for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
+    for ( unsigned int k=0; k<Stimuli[j].Descriptions.size(); k++ ) {
+      stimuliref[j].push_back( Options() );
+      Options::iterator pi = Stimuli[j].Descriptions[k].find( "Intensity" );
+      if ( pi != Stimuli[j].Descriptions[k].end() ) {
+	stimuliref[j].back().add( *pi );
+	Stimuli[j].Descriptions[k].erase( pi );
+      }
+      Options::iterator pd = Stimuli[j].Descriptions[k].find( "Description" );
+      if ( pd != Stimuli[j].Descriptions[k].end() ) {
+	stimuliref[j].back().add( *pd );
+	Stimuli[j].Descriptions[k].erase( pd );
+      }
+    }
+  }
+
+  // generate names for stimuli:
+  vector< string > stimulinames( Stimuli.size() );
+  for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
+    string sn = StimuliRePro;
+    for ( unsigned int k=0; k<Stimuli[j].TypeNames.size(); k++ )
+      sn += '-' + Stimuli[j].TypeNames[k];
+    stimulinames[j] = sn;
+  }
+
+  // track stimuli:
+  vector< bool > newstimuli( Stimuli.size(), false );
+  for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
+    map < vector< Options >, string > &rsd = ReProStimuli[ stimulinames[j] ];
+    string &rsds = rsd[ Stimuli[j].Descriptions ];
+    if ( rsds.empty() ) {
+      newstimuli[j] = true;
+      stimulinames[j] += '-' + Str( rsd.size() );
+      rsds = stimulinames[j];
+    }
+    else
+      stimulinames[j] = rsds;
+  }
+
   // track stimulus name:
-  int rc = StimuliReProCount[ StimuliRePro ] + 1;
+  int &rc = StimuliReProCount[ StimuliRePro ];
+  rc++;
   string stimulirepro = StimuliRePro + "-" + Str( rc );
-  StimuliReProCount[ StimuliRePro ] = rc;
     
   // stimulus indices file:
   if ( SF != 0 && saving() ) {
 
     // stimulus description:
     if ( SDF != 0 ) {
-      *SDF << "Stimulus: " << stimulirepro << '\n';
       for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
-	for ( unsigned int k=0; k<Stimuli[j].Descriptions.size(); k++ ) {
-	  *SDF << "Type: " << Stimuli[j].Types[k] << '\n';
-	  Stimuli[j].Descriptions[k].save( *SDF, "  " );
+	if ( newstimuli[j] ) {
+	  *SDF << "Stimulus: " << stimulinames[j] << '\n';
+	  *SDF << "Modality: " << RW->AQ->outTrace( Stimuli[j].Trace ).modality() << '\n';
+	  *SDF << "SamplingRate: " << 0.001*Stimuli[j].SampleRate << "kHz\n";
+	  for ( unsigned int k=0; k<Stimuli[j].Descriptions.size(); k++ ) {
+	    *SDF << "Type: " << Stimuli[j].Types[k] << '\n';
+	    Stimuli[j].Descriptions[k].save( *SDF, "  " );
+	  }
+	  *SDF << '\n';
 	}
       }
-      *SDF << '\n';
     }
 
     StimulusKey.setSaveColumn( -1 );
@@ -559,34 +606,31 @@ void SaveFiles::saveStimulus( void )
 
     // stimulus description:
     if ( XSF != 0 ) {
-      *XSF << "  <section>\n";
-      *XSF << "    <type>stimulus</type>\n";
-      *XSF << "    <name>" << stimulirepro << "</name>\n";
       for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
-	*XSF << "    <section>\n";
-	*XSF << "      <type>stimulus</type>\n";
-	*XSF << "      <name>" << RW->AQ->outTraceName( Stimuli[j].Trace ) << "</name>\n";
-	Parameter pm( "Modality", "", RW->AQ->outTrace( Stimuli[j].Trace ).modality() );
-	pm.saveXML( *XSF, 3 );
-	Parameter pr( "SamplingRate", "", 1000.0*Stimuli[j].SampleRate, "kHz" );
-	pr.saveXML( *XSF, 3 );
-	for ( unsigned int k=0; k<Stimuli[j].Descriptions.size(); k++ ) {
-	  *XSF << "      <section>\n";
-	  *XSF << "        <type>" << Stimuli[j].Types[k] << "</type>\n";
-	  *XSF << "        <name>" << Stimuli[j].TypeNames[k] << "</name>\n";
-	  Stimuli[j].Descriptions[k].saveXML( *XSF, 0, 4 );
-	  *XSF << "      </section>\n";
+	if ( newstimuli[j] ) {
+	  *XSF << "<section>\n";
+	  *XSF << "  <type>stimulus</type>\n";
+	  *XSF << "  <name>" << stimulinames[j] << "</name>\n";
+	  Parameter pm( "Modality", "", RW->AQ->outTrace( Stimuli[j].Trace ).modality() );
+	  pm.saveXML( *XSF, 1 );
+	  Parameter pr( "SamplingRate", "", 0.001*Stimuli[j].SampleRate, "kHz" );
+	  pr.saveXML( *XSF, 1 );
+	  for ( unsigned int k=0; k<Stimuli[j].Descriptions.size(); k++ ) {
+	    *XSF << "  <section>\n";
+	    *XSF << "    <type>" << Stimuli[j].Types[k] << "</type>\n";
+	    *XSF << "    <name>" << Stimuli[j].TypeNames[k] << "</name>\n";
+	    Stimuli[j].Descriptions[k].saveXML( *XSF, 0, 2 );
+	    *XSF << "  </section>\n";
+	  }
+	  *XSF << "</section>\n";
 	}
-	*XSF << "    </section>\n";
       }
-      *XSF << "  </section>\n";
     }
 
     // stimulus reference:
     *XF << "    <section>\n";
     *XF << "      <type>stimulus</type>\n";
     *XF << "      <name>" << stimulirepro << "</name>\n";
-    *XF << "      <include>stimulus-metadata.xml#" << stimulirepro << "</include>\n";
     for( int k=0; k<StimulusOptions.size(); k++ )
       StimulusOptions[k].saveXML( *XF, 3 );
     //    int col = StimulusKey.column( "stimulus>timing>time" );
@@ -600,7 +644,8 @@ void SaveFiles::saveStimulus( void )
 	     Stimuli[j].Channel == RW->AQ->outTrace( k ).channel() ) {
 	  *XF << "      <section>\n";
 	  *XF << "        <type>stimulus</type>\n";
-	  *XF << "        <name>" << RW->AQ->outTraceName( Stimuli[j].Trace ) << "</name>\n";
+	  *XF << "        <name>" << stimulinames[j] << "</name>\n";
+	  *XF << "        <include>stimulus-metadata.xml#" << stimulinames[j] << "</include>\n";
 	  Parameter pc( "OutputChannel", "", RW->AQ->outTraceName( Stimuli[j].Trace ) );
 	  pc.saveXML( *XF, 4 );
 	  if ( att != 0 ) {
@@ -612,6 +657,13 @@ void SaveFiles::saveStimulus( void )
 			    att->frequencyUnit(), att->frequencyFormat() );
 	      pf.saveXML( *XF, 4 );
 	    }
+	  }
+	  for ( unsigned int i=0; i<stimuliref[j].size(); i++ ) {
+	    *XF << "        <section>\n";
+	    *XF << "          <type>" << Stimuli[j].Types[i] << "</type>\n";
+	    *XF << "          <name>" << Stimuli[j].TypeNames[i] << "</name>\n";
+	    stimuliref[j][i].saveXML( *XF, 0, 5 );
+	    *XF << "        </section>\n";
 	  }
 	  *XF << "      </section>\n";
 	  break;
@@ -690,6 +742,7 @@ void SaveFiles::saveRePro( void )
 	ReProSettings.saveXML( *XF, 1, 3 );
 	*XF << "    </section>\n";
       }
+      StimuliReProCount[ StimuliRePro ] = 0;
       DatasetOpen = true;
     }
 
@@ -879,6 +932,7 @@ void SaveFiles::createStimulusFile( const InList &traces,
   StimulusData = false;
   Stimuli.clear();
   StimuliReProCount.clear();
+  ReProStimuli.clear();
   SignalTime = -1.0;
   PrevSignalTime = -1.0;
 

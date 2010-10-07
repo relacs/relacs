@@ -140,6 +140,18 @@ public:
         Used by read(). */
   Parameter *assign( const string &ident, const string &value );
 
+    /*! Returns true if the two Options \a o1 and \a o2 are equal,
+        i.e. they have the same number of Parameter with identical identifier
+	and value (as returned by Parameter::text()). */
+  friend bool operator==( const Options &o1, const Options &o2 );
+    /*! Returns true if the Option \a o1 is smaller than \a o2,
+        i.e. \a o2 has less elements than \a o1,
+	an identifier of \a o2 is smaller than the corresponding one in \a o1,
+	or a value of \a o2 is smaller than the corresponding one in \a o1.
+        This function is provided just to define some ordering of Options,
+	as is needed for example for an stl::map. */
+  friend bool operator<( const Options &o1, const Options &o2 );
+
     /*! Returns the warning messages of the last called 
         Option member-function. */
   Str warning( void ) const { return Warning; };

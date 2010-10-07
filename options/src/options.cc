@@ -205,6 +205,44 @@ Parameter *Options::assign( const string &ident, const string &value )
 }
 
 
+bool operator==( const Options &o1, const Options &o2 )
+{
+  if ( o1.size() != o2.size() )
+    return false;
+  for ( Options::const_iterator p1 = o1.begin(), p2 = o2.begin();
+	p1 != o1.end() && p2 != o2.end();
+	++p1, ++p2 ) {
+    if ( (*p1).ident() != (*p2).ident() )
+      return false;
+    if ( (*p1).text() != (*p2).text() )
+      return false;
+  }
+  return true; // all parameter are equal
+}
+
+
+bool operator<( const Options &o1, const Options &o2 )
+{
+  if ( o1.size() < o2.size() )
+    return true;
+  if ( o1.size() > o2.size() )
+    return false;
+  for ( Options::const_iterator p1 = o1.begin(), p2 = o2.begin();
+	p1 != o1.end() && p2 != o2.end();
+	++p1, ++p2 ) {
+    if ( (*p1).ident() < (*p2).ident() )
+      return true;
+    else if ( (*p1).ident() > (*p2).ident() )
+      return false;
+    if ( (*p1).text() < (*p2).text() )
+      return true;
+    else if ( (*p1).text() > (*p2).text() )
+      return false;
+  }
+  return false; // all parameter are equal
+}
+
+
 const Parameter &Options::operator[]( int i ) const
 {
   Warning = "";

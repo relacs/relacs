@@ -330,6 +330,7 @@ protected:
   vector< Stimulus > Stimuli;
   string StimuliRePro;
   map< string, int > StimuliReProCount;
+  map< string, map < vector< Options >, string > > ReProStimuli;
   bool StimulusData;
   TableKey StimulusKey;
   Options StimulusOptions;
