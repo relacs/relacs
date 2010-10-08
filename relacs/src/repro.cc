@@ -762,7 +762,7 @@ void RePro::dialog( void )
     od->addButton( "&Ok", OptDialog::Accept, 1 );
     od->addButton( "&Apply", OptDialog::Accept, 1, false );
     od->addButton( "&Run", OptDialog::Accept, 2, false );
-    od->addButton( "&Defaults", OptDialog::Defaults, 3, false );
+    od->addButton( "&Reset", OptDialog::Defaults, 3, false );
     od->addButton( "&Close" );
     QWidget::connect( od, SIGNAL( dialogClosed( int ) ),
 		      (QWidget*)this, SLOT( dClosed( int ) ) );

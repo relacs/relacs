@@ -1014,7 +1014,21 @@ Str Parameter::defaultText( int index, const string &format,
   if ( u.empty() )
     u = OutUnit;
 
-  if ( isDate() ) {
+  if ( isAnyNumber() ) {
+    double uv = changeUnit( 1.0, InternUnit, u );
+
+    double v = DefaultValue[index];
+    double e = 0.0;
+    v *= uv;
+    e *= uv;
+
+    f.format( v, "fge" );
+    f.format( e, "FGE" );
+
+    string b( v != 0 ? "true" : "false" );
+    f.format( b, 'b' );
+  }
+  else if ( isDate() ) {
     struct tm time;
     memset( &time, 0, sizeof( time ) );
     time.tm_year = DefaultYear[index];
@@ -1029,20 +1043,6 @@ Str Parameter::defaultText( int index, const string &format,
     time.tm_min = DefaultMinutes[index];
     time.tm_sec = DefaultSeconds[index];
     f.format( &time );
-  }
-  else {
-    double uv = changeUnit( 1.0, InternUnit, u );
-
-    double v = DefaultValue[index];
-    double e = 0.0;
-    v *= uv;
-    e *= uv;
-
-    f.format( v, "fge" );
-    f.format( e, "FGE" );
-
-    string b( v != 0 ? "true" : "false" );
-    f.format( b, 'b' );
   }
 
   if ( u == "1" )

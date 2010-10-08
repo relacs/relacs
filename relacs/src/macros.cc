@@ -1800,7 +1800,7 @@ void Macro::dialog( void )
   od->addButton( "&Ok", OptDialog::Accept, 1 );
   od->addButton( "&Apply", OptDialog::Accept, 1, false );
   od->addButton( "&Run", OptDialog::Accept, 2, false );
-  od->addButton( "&Defaults", OptDialog::Defaults );
+  od->addButton( "&Reset", OptDialog::Defaults );
   od->addButton( "&Close" );
   connect( od, SIGNAL( dialogClosed( int ) ),
 	   this, SLOT( dialogClosed( int ) ) );
