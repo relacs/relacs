@@ -250,6 +250,20 @@ void InList::clearBuffer( void )
 }
 
 
+double InList::currentTime( void ) const
+{
+  if ( empty() )
+    return 0.0;
+  double ct = operator[]( 0 ).currentTime();
+  for ( int k=1; k<size(); k++ ) {
+    double ctk = operator[]( k ).currentTime();
+    if ( ct > ctk )
+      ct = ctk;
+  }
+  return ct;
+}
+
+
 void InList::setDevice( int device )
 {
   for ( int k=0; k<size(); k++ )

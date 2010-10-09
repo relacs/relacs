@@ -170,10 +170,9 @@ int Simple::main( void )
 
     if ( save ) {
       const InData &data = trace( intrace );
-      int si = data.signalIndex();
-      int di = data.indices( duration );
-      for ( int k=si-di/2; k<si+2*di; k++ ) {
-	key.save( df, 1000.0*(data.pos( k ) - data.signalTime()), 0 );
+      for ( int k=data.index( signalTime()-0.5*duration );
+	    k<data.index( signalTime()+2.0*duration ); k++ ) {
+	key.save( df, 1000.0*(data.pos( k ) - signalTime()), 0 );
 	key.save( df, data[k] );
 	df << '\n';
       }

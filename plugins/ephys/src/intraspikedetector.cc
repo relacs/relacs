@@ -307,8 +307,8 @@ int IntraSpikeDetector::detect( const InData &data, EventData &outevents,
   delFlags( OptWidget::changedFlag() );
 
   // histogramms:
-  D.goodEvents().sizeHist( data.currentTime() - HistoryTime, data.currentTime(), GoodSpikesHist );
-  D.badEvents().sizeHist( data.currentTime() - HistoryTime, data.currentTime(), BadSpikesHist );
+  D.goodEvents().sizeHist( currentTime() - HistoryTime, currentTime(), GoodSpikesHist );
+  D.badEvents().sizeHist( currentTime() - HistoryTime, currentTime(), BadSpikesHist );
   AllSpikesHist = GoodSpikesHist + BadSpikesHist;
 
   // plot:

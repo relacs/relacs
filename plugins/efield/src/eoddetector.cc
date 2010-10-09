@@ -127,7 +127,7 @@ int EODDetector::adjust( const InData &data )
 
 void EODDetector::autoConfigure( void )
 {
-  autoConfigure( *Data, Data->currentTime() - 0.2, Data->currentTime() );
+  autoConfigure( *Data, currentTime() - 0.2, currentTime() );
 }
 
 
@@ -167,7 +167,7 @@ int EODDetector::detect( const InData &data, EventData &outevents,
   D.peak( data.minBegin(), data.end(), outevents,
 	  Threshold, MinThresh, MaxThresh, *this );
 
-  if ( outevents.count( data.currentTime() - 0.1 ) <= 0 )
+  if ( outevents.count( currentTime() - 0.1 ) <= 0 )
     outevents.updateMean( 1 );
 
   unsetNotify();

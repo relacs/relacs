@@ -426,7 +426,7 @@ void PlotTrace::plot( void )
   double tfac = 1000.0;
   double leftwin = 0.0;
   double rightwin = tfac * TimeWindow;
-  double sigtime = trace(0).signalTime();
+  double sigtime = signalTime();
   if ( sigtime < 0.0 )
     sigtime = 0.0;
   if ( ViewMode == SignalView ) {
@@ -438,14 +438,14 @@ void PlotTrace::plot( void )
   }
   else if ( ViewMode == EndView ) {
     // offset continuous at currentTime():
-    rightwin = tfac * ( trace(0).currentTime() - sigtime );
+    rightwin = tfac * ( currentTime() - sigtime );
     leftwin = rightwin - tfac * TimeWindow;
     LeftTime = leftwin/tfac + sigtime;
     Offset = sigtime;
   }
   else if ( ViewMode == WrapView ) {
     // offset wrapped at signalTime():
-    LeftTime = ::floor( ( trace(0).currentTime() - sigtime ) / TimeWindow ) * TimeWindow;
+    LeftTime = ::floor( ( currentTime() - sigtime ) / TimeWindow ) * TimeWindow;
     leftwin = tfac * LeftTime;
     rightwin += leftwin;
     Offset = sigtime;
@@ -686,7 +686,7 @@ void PlotTrace::moveEnd( void )
   P.lock();
   if ( ViewMode != FixedView )
     setView( FixedView );
-  LeftTime = trace(0).currentTime() - TimeWindow;
+  LeftTime = currentTime() - TimeWindow;
   P.unlock();
   P.unlockData();
   if ( RW->idle() )
@@ -703,7 +703,7 @@ void PlotTrace::moveToSignal( void )
   else {
     if ( ViewMode != FixedView )
       setView( FixedView );
-    double sigtime = trace(0).signalTime();
+    double sigtime = signalTime();
     if ( sigtime < 0.0 )
       sigtime = 0.0;
     LeftTime = sigtime;

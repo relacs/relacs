@@ -138,6 +138,9 @@ public:
         by increasing channel number. */
   void sortByDeviceChannel( void );
 
+    /*! Returns the smallest buffer time of all the InData. */
+  double currentTime( void ) const;
+
     /*! Set the device id of all traces to \a device. */
   void setDevice( int device );
     /*! Set the reference of all input lines to \a ref.

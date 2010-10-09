@@ -565,9 +565,8 @@ int DynamicSUSpikeDetector::detect( const InData &data, EventData &outevents,
 
   // update mean spike size in case of no spikes:
   if ( StimulusRequired && stimuli.size() > 0 ) {
-    double ct = data.currentTime();
     double stimulusstart = stimuli.back();
-    if ( stimulusstart >= LastTime && stimulusstart < ct ) {
+    if ( stimulusstart >= LastTime && stimulusstart < currentTime() ) {
       IntervalWidth = stimuli.backWidth();
       StimulusEnd = stimulusstart + IntervalWidth;
       if ( IntervalWidth > NoSpikeInterval )
@@ -575,10 +574,10 @@ int DynamicSUSpikeDetector::detect( const InData &data, EventData &outevents,
       IntervalStart = stimulusstart;
       IntervalEnd = IntervalStart + IntervalWidth;
     }
-    LastTime = ct;
+    LastTime = currentTime();
     while ( IntervalWidth > 0.0 &&
 	    IntervalEnd <= StimulusEnd &&
-	    IntervalEnd <= ct ) {
+	    IntervalEnd <= currentTime() ) {
       if ( outevents.count( IntervalStart, IntervalEnd ) == 0 )
 	outevents.updateMean( (int)::rint(IntervalWidth/NoSpikeInterval + 0.5) );
       IntervalStart = IntervalEnd;
@@ -586,11 +585,10 @@ int DynamicSUSpikeDetector::detect( const InData &data, EventData &outevents,
     }
   }
   else {
-    double ct = data.currentTime();
-    if ( ct > LastTime + NoSpikeInterval ) {
+    if ( currentTime() > LastTime + NoSpikeInterval ) {
       if ( outevents.size() - LastSize <= 0 )
-	outevents.updateMean( (int)::rint((ct - LastTime)/NoSpikeInterval) );
-      LastTime = ct;
+	outevents.updateMean( (int)::rint((currentTime() - LastTime)/NoSpikeInterval) );
+      LastTime = currentTime();
       LastSize = outevents.size();
     }
   }
@@ -607,8 +605,8 @@ int DynamicSUSpikeDetector::detect( const InData &data, EventData &outevents,
   Update.start();
 
   // histogramms:
-  D.goodEvents().sizeHist( data.currentTime() - HistoryTime, data.currentTime(), GoodSpikesHist );
-  D.badEvents().sizeHist( data.currentTime() - HistoryTime, data.currentTime(), BadSpikesHist );
+  D.goodEvents().sizeHist( currentTime() - HistoryTime, currentTime(), GoodSpikesHist );
+  D.badEvents().sizeHist( currentTime() - HistoryTime, currentTime(), BadSpikesHist );
   AllSpikesHist = GoodSpikesHist + BadSpikesHist;
 
   // plot:
@@ -646,7 +644,7 @@ int DynamicSUSpikeDetector::detect( const InData &data, EventData &outevents,
   // indicators:
 
   // spikes detected:
-  bool spikes = ( outevents.count( data.currentTime() - TrendTime ) > 1 );
+  bool spikes = ( outevents.count( currentTime() - TrendTime ) > 1 );
 
   // set update speed for spike size:
   double nratio = outevents.meanRate();

@@ -140,8 +140,8 @@ int FICurve::main( void )
 
   // adjust EOD2 gain:
   adjustGain( trace( LocalEODTrace[0] ), 1.05*maxintensityfac *
-	      trace( LocalEODTrace[0] ).maxAbs( trace( LocalEODTrace[0] ).currentTime()-0.2,
-						trace( LocalEODTrace[0] ).currentTime() ) );
+	      trace( LocalEODTrace[0] ).maxAbs( currentTime()-0.2,
+						currentTime() ) );
 
   // intensities:
   double maxint = maxintensityfac * FishAmplitude;
@@ -233,8 +233,8 @@ int FICurve::main( void )
   plotToggle( true, true, Delay + PreDuration + Duration, Delay );
 
   // adjust transdermal EOD:
-  double val2 = trace( LocalEODTrace[0] ).maxAbs( trace( LocalEODTrace[0] ).currentTime()-0.1,
-						  trace( LocalEODTrace[0] ).currentTime() );
+  double val2 = trace( LocalEODTrace[0] ).maxAbs( currentTime()-0.1,
+						  currentTime() );
   if ( val2 > 0.0 )
     adjustGain( trace( LocalEODTrace[0] ), maxintensityfac * val2 );
 

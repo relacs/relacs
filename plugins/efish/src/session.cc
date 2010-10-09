@@ -312,18 +312,15 @@ void Session::main( void )
     if ( eodcount >= EODUpdate ) {
       eodcount = 0;
 
-      // time:
-      double ct = trace( 0 ).currentTime();
-
       // EOD Rate:
-      EODRate = eode.frequency( ct - 0.5, ct );
-      EODRates.push( ct, EODRate );
+      EODRate = eode.frequency( currentTime() - 0.5, currentTime() );
+      EODRates.push( currentTime(), EODRate );
       stimulusData().setNumber( "EOD Rate", EODRate );
       postCustomEvent( 11 );
 
       // EOD Amplitude:
-      EODAmplitude = eode.meanSize( ct - 0.5, ct );
-      EODAmplitudes.push( ct, EODAmplitude );
+      EODAmplitude = eode.meanSize( currentTime() - 0.5, currentTime() );
+      EODAmplitudes.push( currentTime(), EODAmplitude );
       stimulusData().setNumber( "EOD Amplitude", EODAmplitude );
       stimulusData().setUnit( "EOD Amplitude", trace( EODTrace ).unit() );
 

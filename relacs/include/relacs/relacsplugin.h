@@ -392,6 +392,8 @@ protected:
 
     /*! \return the time of the last signal. */
   double signalTime( void ) const;
+    /*! \return the current recording time of the input buffers. */
+  double currentTime( void ) const;
 
 
  protected:

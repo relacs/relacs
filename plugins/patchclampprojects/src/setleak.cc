@@ -183,7 +183,7 @@ void SetLeak::measureVRest( void )
     return;
   double duration = settings().number( "duration" );
   const InData &data = trace( involtage );
-  double vrest = data.mean( data.currentTime()-duration, data.currentTime() );
+  double vrest = data.mean( currentTime()-duration, currentTime() );
   setNumber( "Edc", vrest );
   STW.updateValue( "Edc" );  
 }

@@ -198,7 +198,7 @@ void RePro::requestStop( void )
 bool RePro::sleep( double t, double tracetime )
 {
   if ( tracetime < 0.0 )
-    tracetime = trace( 0 ).currentTime() + t;
+    tracetime = currentTime() + t;
 
   RW->updateRePro();
 
@@ -253,7 +253,7 @@ bool RePro::sleep( double t, double tracetime )
 void RePro::timeStamp( void )
 {
   SleepTime.start();
-  TraceTime = trace( 0 ).currentTime();
+  TraceTime = currentTime();
 }
 
 

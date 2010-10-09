@@ -382,6 +382,7 @@ private:
   vector<PlotTrace::EventStyle> EventStyles;
 
   double SignalTime;
+  double CurrentTime;
 
   ReadThread ReadLoop;
   WriteThread WriteLoop;

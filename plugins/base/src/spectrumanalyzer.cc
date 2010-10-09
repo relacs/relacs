@@ -144,11 +144,11 @@ void SpectrumAnalyzer::main( void )
     int n = trace( Trace ).indices( Duration );
     int offsinx = 0;
     if ( Origin == 1 )
-      offsinx = trace( Trace ).signalIndex() - trace( Trace ).indices( Offset ) - n;
+      offsinx = trace( Trace ).index( signalTime() - Offset - Duration );
     else if ( Origin == 2 )
-      offsinx = trace( Trace ).signalIndex() + trace( Trace ).indices( Offset );
+      offsinx = trace( Trace ).index( signalTime() + Offset );
     else
-      offsinx = trace( Trace ).currentIndex() - trace( Trace ).indices( Offset ) - n;
+      offsinx = trace( Trace ).index( currentTime() - Offset - Duration );
     if ( offsinx < trace( Trace ).minIndex() )
       offsinx = trace( Trace ).minIndex();
     if ( offsinx + n > trace( Trace ).currentIndex() )

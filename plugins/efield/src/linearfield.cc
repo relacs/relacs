@@ -134,7 +134,7 @@ int LinearField::main( void )
       // get data:
       sleep( duration+0.1 );
       SampleDataF data( 0.0, duration, trace( 0 ).sampleInterval() );
-      trace( 0 ).copy( trace( 0 ).currentTime()-duration-0.1, data );
+      trace( 0 ).copy( currentTime()-duration-0.1, data );
       // analyse:
       analyze( distance, data );
       // plot:

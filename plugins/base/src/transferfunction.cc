@@ -205,7 +205,7 @@ void TransferFunction::analyze( const OutData &signal, const InData &data,
   
   // de-mean:
   SampleDataD y( 0.0, duration, data.stepsize() );
-  data.copy( data.signalTime(), y );
+  data.copy( signalTime(), y );
   y -= mean( y );
 
   // transfer fucntion:

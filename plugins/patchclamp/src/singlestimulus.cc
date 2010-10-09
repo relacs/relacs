@@ -362,8 +362,8 @@ int SingleStimulus::main( void )
 	}
 
 	// analyze:
-	const EventData &spk = events( SpikeEvents[0] );
-	spikes.push( spk, spk.signalTime(), spk.signalTime()+searchduration );
+	spikes.push( events( SpikeEvents[0] ), signalTime(),
+		     signalTime()+searchduration );
 	double rate = spikes.back().rate( SkipWin, searchduration );
 	double meanrate = spikes.rate( SkipWin, searchduration );
 	SampleDataD rate2( 0.0, searchduration, 0.0005 );
@@ -446,9 +446,8 @@ int SingleStimulus::main( void )
 	  }
 	  // adjust gain of daq board:
 	  if ( adjustgain ) {
-	    adjust( trace( SpikeTrace[0] ), trace( SpikeTrace[0] ).signalTime(), 
-		    trace( SpikeTrace[0] ).signalTime() + searchduration, 0.8 );
-	    //	    activateGains();
+	    adjust( trace( SpikeTrace[0] ), signalTime(), 
+		    signalTime() + searchduration, 0.8 );
 	  }
 	}
 	else {
@@ -648,9 +647,8 @@ int SingleStimulus::main( void )
     
     // adjust gain of daq board:
     if ( adjustgain ) {
-      adjust( trace( SpikeTrace[0] ), trace( SpikeTrace[0] ).signalTime(),
-	      trace( SpikeTrace[0] ).signalTime() + Duration, 0.8 );
-      //      activateGains();
+      adjust( trace( SpikeTrace[0] ), signalTime(),
+	      signalTime() + Duration, 0.8 );
     }
 
     sleepOn( Duration + pause );
@@ -801,11 +799,9 @@ void SingleStimulus::analyze( EventList &spikes, SampleDataD &rate1,
   if ( SpikeEvents[0] < 0 )
     return;
 
-  const EventData &spikeevents = events( SpikeEvents[0] );
-
   // spikes:
-  spikes.push( spikeevents, spikeevents.signalTime(),
-	       spikeevents.signalTime() + Duration );
+  spikes.push( events( SpikeEvents[0] ), signalTime(),
+	       signalTime() + Duration );
   int trial1 = spikes.size()-1;
   int trial2 = spikes.size()-1;
 

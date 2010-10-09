@@ -368,10 +368,9 @@ int SpikePrecision::main( void )
 	  return Aborted;
 	}
 
-	const EventData &spk = events( SpikeEvents[0] );
-
 	// analyze:
-	spikes.push( spk, spk.signalTime(), spk.signalTime() + Duration );
+	spikes.push( events( SpikeEvents[0] ), signalTime(),
+		     signalTime() + Duration );
 	double meanrate = spikes.back().rate( SkipWindow, Duration );
 	SampleDataD rate2( 0.0, Duration, 0.0005 );
 	spikes.rate( rate2, GaussKernel( Sigma2 ) );
@@ -454,8 +453,8 @@ int SpikePrecision::main( void )
 	    return Aborted;
 	  }
 	  // adjust gain of daq board:
-	  adjust( trace( SpikeTrace[0] ), trace( SpikeTrace[0] ).signalTime(),
-		  trace( SpikeTrace[0] ).signalTime() + Duration, 0.8 );
+	  adjust( trace( SpikeTrace[0] ), signalTime(),
+		  signalTime() + Duration, 0.8 );
 	  //	  activateGains();
 	}
 	else
@@ -562,8 +561,8 @@ int SpikePrecision::main( void )
       }
 
       // adjust gain of daq board:
-      adjust( trace( SpikeTrace[0] ), trace( SpikeTrace[0] ).signalTime(), 
-	      trace( SpikeTrace[0] ).signalTime() + Duration, 0.8 );
+      adjust( trace( SpikeTrace[0] ), signalTime(), 
+	      signalTime() + Duration, 0.8 );
       //      activateGains();
 
       analyze( results );
@@ -782,7 +781,8 @@ void SpikePrecision::analyze( vector < EnvelopeFrequencyData > &results )
   const EventData &spikes = events( SpikeEvents[0] );
 
   // spikes:
-  results[FreqRange.pos()].Spikes.push( spikes, spikes.signalTime(), spikes.signalTime() + Duration + 0.1 );
+  results[FreqRange.pos()].Spikes.push( spikes, signalTime(),
+					signalTime() + Duration + 0.1 );
   int trial1 = results[FreqRange.pos()].Spikes.size() - 1;
   int trial2 = trial1;
   results[FreqRange.pos()].Frequency = Frequency;

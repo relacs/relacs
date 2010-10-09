@@ -446,12 +446,12 @@ void CalibSpeakers::analyze( int intrace, double duration, double skip,
 			     double &fitgain, double &fitoffset )
 {
   // signal amplitude:
-  int si = trace( intrace ).signalIndex() + trace( intrace ).indices( skip );
+  int si = trace( intrace ).index( signalTime() + skip );
   double periods = floor( frequency * 0.001 );
   if ( periods < 1.0 )
     periods = 1.0;
   int wi = trace( intrace ).indices( periods/frequency );
-  int fi = trace( intrace ).signalIndex() + trace( intrace ).indices( duration - 0.004 ) - wi;
+  int fi = trace( intrace ).index( signalTime() + duration - 0.004 ) - wi;
   double p = 0.0;
   for ( int n=1; si < fi; n++ ) {
     double sd = trace( intrace ).stdev( si, si+wi );

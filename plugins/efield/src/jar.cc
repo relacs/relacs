@@ -286,8 +286,8 @@ int JAR::main( void )
   if ( LocalEODTrace[0] >= 0 ) {
     FishAmplitude2 = eodAmplitude( trace( LocalEODTrace[0] ), events( LocalEODEvents[0] ),
 				   events( LocalEODEvents[0] ).back() - 0.5, events( LocalEODEvents[0] ).back() );
-    double val2 = trace( LocalEODTrace[0] ).maxAbs( trace( LocalEODTrace[0] ).currentTime()-0.1,
-						    trace( LocalEODTrace[0] ).currentTime() );
+    double val2 = trace( LocalEODTrace[0] ).maxAbs( currentTime()-0.1,
+						    currentTime() );
     if ( val2 > 0.0 ) {
       if ( UseContrast )
 	adjustGain( trace( LocalEODTrace[0] ), ( 1.0 + ContrastMax + 0.1 ) * val2 );
@@ -1159,7 +1159,7 @@ void JAR::analyze( void )
 
       // time:
       double time = JARChirpEvents[k] - JARChirpEvents.signalTime();
-      EventFrequencyIterator event = eodglobal.begin( JARChirpEvents[k] + signalTime() );
+      EventFrequencyIterator eventfp = eodglobal.begin( JARChirpEvents[k] + signalTime() );
       last1 = eodglobal.end() - 1;
 
       // size:
@@ -1182,21 +1182,21 @@ void JAR::analyze( void )
       // find maximum amplitude difference:
       EventSizeIterator sindex;
       double ampl = 0;
-      for ( sindex = event - 0.7*width; sindex < event + 0.7*width; ++sindex )
+      for ( sindex = eventfp - 0.7*width; sindex < eventfp + 0.7*width; ++sindex )
 	if ( ampl < fabs( *sindex - meanampl ) )
 	  ampl = fabs( *sindex - meanampl );
 
       // phase shift:
       // time of an eod zero crossing before the chirp:
-      double eodtime = eodglobal.previousTime( event.time() - width );
+      double eodtime = eodglobal.previousTime( eventfp.time() - width );
       // mean EOD interval before the chirp:
       double meaninterv = 1.0 / meanrate;
 
       // time course of chirp phase shift:
-      EventIterator gefi = event - width - 10;
+      EventIterator gefi = eventfp - width - 10;
       double ophase = -0.3;
       for ( int j = gefi.index() - eodglobal.next( signalTime() );
-	    !gefi && gefi < event + width + 10 && 
+	    !gefi && gefi < eventfp + width + 10 && 
 	      j < EODPhases.size();
 	    ++gefi, ++j ) {
 	double t = *gefi;
@@ -1209,7 +1209,7 @@ void JAR::analyze( void )
       } 
 
       // mean phase before:
-      gefi = event - 0.7*width;
+      gefi = eventfp - 0.7*width;
       int inx = gefi.index() - eodglobal.next( signalTime() );
       double meanphasel = 0.0;
       for ( int j=0; j < 6 && inx-j >= 0 && inx-j < EODPhases.size(); j++ ) {
@@ -1218,7 +1218,7 @@ void JAR::analyze( void )
       }
 
       // mean phase after:
-      gefi = event + 0.7*width;
+      gefi = eventfp + 0.7*width;
       inx = gefi.index() - eodglobal.next( signalTime() );
       double meanphaser = 0.0;
       for ( int j=0; j < 6 && inx+j >= 0 && inx+j < EODPhases.size(); j++ ) {
@@ -1231,7 +1231,7 @@ void JAR::analyze( void )
 
       // beat phase:
       double beatphase = 0.0;
-      gefi = sige.begin( event.time() ) - 2;
+      gefi = sige.begin( eventfp.time() ) - 2;
       for ( int n=0; n < 4 && gefi < sige.end(); n++, ++gefi ) {
 	double t1 = *gefi;
 	double t0 = floor( ( t1 - eodtime ) / meaninterv ) * meaninterv + eodtime;
@@ -1253,7 +1253,7 @@ void JAR::analyze( void )
 				       JARChirpEvents[k] + signalTime() + 0.6 * width + 4.0 * meaninterv );
       }
 
-      // stor results:
+      // store results:
       ChirpData d( time, size, width, meanrate, meanampl, ampl, meanphase, 
 		   beatphase, beatloc, cdeltaf, beatbefore, beatafter );
       Chirps.push_back( d );

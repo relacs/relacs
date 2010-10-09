@@ -332,12 +332,10 @@ int FIPhaseLocking::main( void )
     const EventData &spikes = events( SpikeEvents[0] );
 
     // spikes:
-    //cerr << spikes.size() << " " << spikes.signalTime() << " " << duration << " " << trace( 0 ).currentTime() << '\n';
-    Results[Intval].Spikes.push( spikes, spikes.signalTime(),
-				 spikes.signalTime() + duration );
+    Results[Intval].Spikes.push( spikes, signalTime(),
+				 signalTime() + duration );
 
-
-    plot(Intval);
+    plot( Intval );
 
     if ( softStop() > 1 ) {
       saveSpikes();

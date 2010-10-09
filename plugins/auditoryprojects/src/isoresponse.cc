@@ -506,9 +506,10 @@ int IsoResponse::main( void )
       }
 
       // adjust gain of daq board:
-      double sigtime = trace( SpikeTrace[0] ).signalTime();
-      if ( events( SpikeEvents[0] ).count( sigtime, sigtime + Duration ) > 2 ) {
-	adjust( trace( SpikeTrace[0] ), sigtime, sigtime + Duration, 0.8 );
+      if ( events( SpikeEvents[0] ).count( signalTime(),
+					   signalTime() + Duration ) > 2 ) {
+	adjust( trace( SpikeTrace[0] ), signalTime(),
+		signalTime() + Duration, 0.8 );
 	//	activateGains();
       }
       
@@ -822,8 +823,8 @@ void IsoResponse::analyze( const OutData &signal )
   FIData &fid = Results[IntensityRange.pos()];
 
   // spikes:
-  fid.Spikes.push( spikes, spikes.signalTime(),
-		   spikes.signalTime() + Duration + Pause );
+  fid.Spikes.push( spikes, signalTime(),
+		   signalTime() + Duration + Pause );
 
   // frequencies
   fid.OnRate = fid.Spikes.frequency( 0.0, OnWidth, fid.OnRateSD );

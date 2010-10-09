@@ -122,8 +122,8 @@ void MultiTraceSTA::analyze( const EventData &spiketrain, double interval )
     STAs[k].Snippets.clear();
     // for each spike find corresponding snippet in the input trace:
     const InData &intrace = trace( SpikeTrace[k] );  // numerics/include/relacs/eventdata.h
-    int n = spiketrain.next( intrace.currentTime() - skip - interval ); // index to first spike in interval
-    int p = spiketrain.previous( intrace.currentTime() - skip ); // index to last spike in interval
+    int n = spiketrain.next( currentTime() - skip - interval ); // index to first spike in interval
+    int p = spiketrain.previous( currentTime() - skip ); // index to last spike in interval
     for ( int i=n; i<=p; i++ ) {
       STAs[k].Snippets.push_back( SampleDataF( STAs[k].Average.range(), 0.0 ) );
       SampleDataF &snippet = STAs[k].Snippets.back();

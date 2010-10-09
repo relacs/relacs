@@ -3,20 +3,19 @@ Dead locks:
 - Plot, MultiPlot: take care about blocking lockData() in mouse event handlers!
 
 Macros:
+- Improve code by distributing more code to the commands
 - How are plugins (control, repros) found/identified? Possibility of name clashes!
   Use plugin-set name as well.
 - delete all MacroCommands after usage!
+- add new macro command to set all sorts of internal Options (e.g. stimulusData!)
 
-SignalTime: finish this update (RELACSPlugin::signalTime()
-- test ficurve RePro: does not work!?
-- update all other RePros: Pluginsets already updated: acoustic, auditory, efield, efish
-- remove from InData and EventData? 
-  No, because we might need a signal time in other classes 
-  (see for example patchclamp::FICurve)
-  No, because it is needed by Acquire::readSignal()
-- what about signalIndex() ? Needs to be tied to the traces!
-- update Acquire::readSignal()
-- the same for currentTime() !?
+Metadata:
+- Implement in all RePros OutData::descriptions() !
+- Stimulus section needs a file (if available)!
+- SaveFiles: check section names - do we really need them?
+- SaveFiles: finish reorganization of saveStimuli().
+- Parameter::label should get a level that is used to make sections in the XML file ?
+- Check out JSON libraries and compatibility with Options
 
 Analog Input/Output:
 - WriteDataThread should not be started if the whole stimulus is already transfered.
@@ -49,20 +48,13 @@ Thread safety:
 - disentangle start and stopSession calls?
 - OptWidget::assign is not thread safe
 
-Metadata:
-- OutData should get and use Options for stimulus metadata
-- stimulus section needs a name, a file (if available) and properties
-- A new metadatawriter class instead of saveXML functions
-- Parameter::label should get a level that is used to make sections in the XML file ?
-
 Acquisition interface:
 - check whether test, prepare, and start can be used simulataneously with read/write
 - add single data read and write
 - add function for blocked write() and corresponding error checking (buffer underrun)
-- manual convert of signals does not work, because some gain settings are needed in advance!
 
 Plugins:
-- Put relacs configuration files in root directory of the plugin sets
+- Put relacs configuration files in root directory of ALL the plugin sets
 
 Relacs:
 - Check and clean up RELACSPlugin public/protected/private functions.
@@ -151,7 +143,6 @@ new RePro name: ExPro, Protocol, ...
 ---------------------------------
 
 RePros:
-  - use convert( OutData& )! Not any more!
   - check save() function of all RePros.
   - test all RePros! Especially the files they are saving.
 
@@ -178,24 +169,18 @@ Attenuate:
   - interaction with gain settings of daq board? Are there boards with
     many gains for analog output?
 
-MetaData, RELACSWidget::AIMutex, SaveFiles::StimulusDataLock
+MetaData, RELACSWidget::AIMutex
   - really need recursive mutexes?
 
 Filter/Detectors/PlotTrace:
   Make PlotTrace better configurable!
 
-Plugins:
- - use Qt shared libraries interface!? 
-   QWidgetPlugin would replace addPlugin and/or the Plugin class (?)
-   and can contain whatever classes as plugins.
-   What about Qt 4? Provides a new and much better interface!
-
 OutData, Acquire:
  - handle unset SampleInterval
 
 A virtual I/O Data handler controlling the data flow in RELACS.
- - online data aquisition
- - simulation
+ - * online data aquisition
+ - * simulation
  - data browser
  - data analysis
 
@@ -213,8 +198,8 @@ A new Tab-Widget Container:
  - switch between tabs with shift-arrow left/right
  - minimizable
  - button menu on right click
- - check KDE for such a widget (KJanusWidget)
  - use for detectors and sessions and repros
+ - -> QDockWidgets !
 
 -------------------------------------------------------------------------
 

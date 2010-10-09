@@ -257,8 +257,8 @@ int FileStimulus::main( void )
   P.unlock();
 
   // adjust transdermal EOD:
-  double val2 = trace( LocalEODTrace[0] ).maxAbs( trace( LocalEODTrace[0] ).currentTime()-0.1,
-						  trace( LocalEODTrace[0] ).currentTime() );
+  double val2 = trace( LocalEODTrace[0] ).maxAbs( currentTime()-0.1,
+						  currentTime() );
   if ( val2 > 0.0 ) {
     if ( UseContrast )
       adjustGain( trace( LocalEODTrace[0] ), ( 1.0 + Contrast / SigStdev ) * val2 );

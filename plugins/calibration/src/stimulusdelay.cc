@@ -114,30 +114,25 @@ int StimulusDelay::main( void )
 int StimulusDelay::analyze( const InData &data, double duration,
 			    double pause, int count, double &deltat )
 {
-  // get data:
-  SampleDataF d( -0.5*pause, duration+0.5*pause, data.sampleInterval() );
-  int d2 = d.index( 0.0 );
-  for ( int k=0, j=data.signalIndex()-d2;
-	k<d.size() && j<data.size();
-	k++, j++ ) {
-    d[k] = data[j];
-  }
-
   // find transition:
-  double max0 = data.max( data.signalTime()-duration, data.signalTime() );
-  double max1 = data.max( data.signalTime(), data.signalTime()+duration );
+  double max0 = data.max( signalTime()-duration, signalTime() );
+  double max1 = data.max( signalTime(), signalTime()+duration );
   double thresh = 0.5*(max0+max1);
   double dt = 0.0;
-  for ( int k=data.index( data.signalTime()-duration ); 
-	k<data.index( data.signalTime()+duration );
+  for ( int k=data.index( signalTime()-duration ); 
+	k<data.index( signalTime()+duration );
 	k++ ) {
     if ( data[k] > thresh ) {
-      dt = data.pos( k ) - data.signalTime();
+      dt = data.pos( k ) - signalTime();
       break;
     }
   }
 
   deltat += ( dt - deltat ) / ( count+1 );
+
+  // get data:
+  SampleDataF d( -0.5*pause, duration+0.5*pause, data.sampleInterval() );
+  data.copy( signalTime(), d );
 
   // plot:
   P.lock();

@@ -81,6 +81,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     SS( this ),
     MTDT( this ),
     SignalTime( -1.0 ),
+    CurrentTime( 0.0 ),
     ReadLoop( this ),
     WriteLoop( this ),
     LogFile( 0 ),
@@ -757,13 +758,13 @@ void RELACSWidget::updateData( void )
   lockAI();
   AQ->convertData();
   unlockAI();
-  double currenttime = IL[0].currentTime();
+  CurrentTime = IL.currentTime();
   unlockData();
   // do we need to wait for more data?
   MinTraceMutex.lock();
   double mintime = MinTraceTime;
   MinTraceMutex.unlock();
-  while ( IL.success() && currenttime < mintime ) {
+  while ( IL.success() && CurrentTime < mintime ) {
     RunDataMutex.lock();
     bool rd = RunData;
     RunDataMutex.unlock();
@@ -782,7 +783,7 @@ void RELACSWidget::updateData( void )
     lockAI();
     AQ->convertData();
     unlockAI();
-    currenttime = IL[0].currentTime();
+    CurrentTime = IL.currentTime();
     unlockData();
   }
   setMinTraceTime( 0.0 );
@@ -790,7 +791,7 @@ void RELACSWidget::updateData( void )
   writeLockData();
   AQ->readSignal( SignalTime, IL, ED ); // we probably get the latest signal start here
   AQ->readRestart( IL, ED );
-  ED.setRangeBack( IL[0].currentTime() );
+  ED.setRangeBack( CurrentTime );
   Str fdw = FD->filter( IL, ED );
   if ( !fdw.empty() )
     printlog( "! error: " + fdw.erasedMarkup() );
@@ -1597,6 +1598,7 @@ void RELACSWidget::startFirstAcquisition( void )
 
   // analog input and output traces:
   SignalTime = -1.0;
+  CurrentTime = 0.0;
   setupInTraces();
   setupOutTraces();
 
@@ -1723,6 +1725,7 @@ void RELACSWidget::startFirstSimulation( void )
 
   // analog input and output traces:
   SignalTime = -1.0;
+  CurrentTime = 0.0;
   setupInTraces();
   setupOutTraces();
 

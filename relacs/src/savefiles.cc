@@ -805,7 +805,7 @@ ofstream *SaveFiles::openFile( const string &filename, int type )
 
 void SaveFiles::createTraceFiles( const InList &traces )
 {
-  SessionTime = traces[0].currentTime();
+  SessionTime = traces.currentTime();
 
   string format = "%d";
   if ( traces.size() > 9 )
@@ -1163,7 +1163,7 @@ void SaveFiles::openFiles( const InList &traces, EventList &events )
   // add recording event:
   for ( int k=0; k<events.size(); k++ ) {
     if ( (events[k].mode() & RecordingEventMode) > 0 ) {
-      events[k].push( traces[0].currentTime() );
+      events[k].push( traces.currentTime() );
       break;
     }
   }

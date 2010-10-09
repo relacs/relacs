@@ -269,8 +269,8 @@ int BaselineActivity::main( void )
 
     // sleep:
     if ( Repeats <= 0 || count == 0 )
-      FirstSignal = trace( LocalEODTrace[0] ).currentTime();
-    LastSignal = trace( LocalEODTrace[0] ).currentTime();
+      FirstSignal = currentTime();
+    LastSignal = currentTime();
     sleep( Duration );
     if ( interrupt() )
       break;
@@ -284,13 +284,13 @@ int BaselineActivity::main( void )
       if ( NerveTrace[0] >= 0 )
 	adjust( trace( NerveTrace[0] ), Duration, 0.8 );
       if ( EODTrace >= 0 ) {
-	double val1 = trace( EODTrace ).maxAbs( trace( EODTrace ).currentTime()-0.1,
-						trace( EODTrace ).currentTime() );
+	double val1 = trace( EODTrace ).maxAbs( currentTime()-0.1,
+						currentTime() );
 	if ( val1 > 0.0 )
 	  adjustGain( trace( EODTrace ), val1 );
       }
-      double val2 = trace( LocalEODTrace[0] ).maxAbs( trace( LocalEODTrace[0] ).currentTime()-0.1,
-						      trace( LocalEODTrace[0] ).currentTime() );
+      double val2 = trace( LocalEODTrace[0] ).maxAbs( currentTime()-0.1,
+						      currentTime() );
       if ( val2 > 0.0 )
 	adjustGain( trace( LocalEODTrace[0] ), 1.25 * val2 );
 
@@ -705,7 +705,7 @@ void BaselineActivity::analyze( int autodetect,
   const EventData &eod2 = events( LocalEODEvents[0] );
   const InData &eodt2 = trace( LocalEODTrace[0] );
 
-  SearchDuration = eodt2.currentTime() - FirstSignal;
+  SearchDuration = currentTime() - FirstSignal;
 
   // EOD period & rate:
   EODRate = eod2.frequency( FirstSignal, FirstSignal+SearchDuration );
@@ -775,7 +775,7 @@ void BaselineActivity::analyze( int autodetect,
   if ( autodetect > 1 && Repeats <= 0 ) {
     // setup Beat detector:
     lockDetectorEvents( LocalBeatPeakEvents[0] );
-    if ( events( LocalBeatPeakEvents[0] ).count( trace( LocalEODTrace[0] ).currentTime() - Duration ) > 0 ) {
+    if ( events( LocalBeatPeakEvents[0] ).count( currentTime() - Duration ) > 0 ) {
       /*
       double beatthresh = detectorEventsOpts( LocalBeatPeakEvents[0] ).number( "minthresh" );
       beatthresh += BeatStep * eodt2.maxValue();
@@ -797,7 +797,7 @@ void BaselineActivity::analyze( int autodetect,
     // setup Chirp detector:
     if ( ChirpEvents >= 0 ) {
       lockDetectorEvents( ChirpEvents );
-      if ( events( ChirpEvents ).count(  trace( EODTrace ).currentTime() - Duration ) > 0 ) {
+      if ( events( ChirpEvents ).count(  currentTime() - Duration ) > 0 ) {
 	double chirpmax = detectorEventsOpts( ChirpEvents ).number( "maxthresh" );
 	double chirpthresh = detectorEventsOpts( ChirpEvents ).number( "threshold" );
 	chirpthresh += ChirpStep;

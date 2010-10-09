@@ -344,6 +344,12 @@ double RELACSPlugin::signalTime( void ) const
 }
 
 
+double RELACSPlugin::currentTime( void ) const
+{
+  return RW->CurrentTime;
+}
+
+
 void RELACSPlugin::setGain( const InData &data, int gainindex )
 {
   if ( RW->AQ != 0 )
@@ -377,7 +383,7 @@ void RELACSPlugin::adjust( const InData &data, double tbegin, double tend,
 void RELACSPlugin::adjust( const InData &data, double duration,
 			   double threshold )
 { 
-  adjust( data, data.currentTime() - duration, data.currentTime(),
+  adjust( data, currentTime() - duration, currentTime(),
 	  threshold ); 
 }
 

@@ -99,13 +99,13 @@ int CalibMicrophone::main( void )
   bool failed = true;
   for ( int k=0; k<20; k++ ) {
     sleep( duration );
-    double maxampl = indata.maxAbs( indata.currentTime()-duration, indata.currentTime() );
+    double maxampl = indata.maxAbs( currentTime()-duration, currentTime() );
     if ( maxampl < indata.maxValue() ) {
       adjustGain( indata, maxampl );
       failed = false;
       break;
     }
-    adjust( indata, indata.currentTime()-duration, duration, 0.9 );
+    adjust( indata, currentTime()-duration, duration, 0.9 );
     activateGains();
   }
   if ( failed ) {
@@ -156,7 +156,7 @@ void CalibMicrophone::analyze( const InData &intrace,
   if ( nperiods < 1 )
     nperiods = 1;
   double period = 1.0/frequency;
-  double upto = intrace.currentTime() - period;
+  double upto = currentTime() - period;
   double from = upto - nperiods*period;
   double p = intrace.stdev( from, upto );
   amplitudes.push( p );

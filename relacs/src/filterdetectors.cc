@@ -809,7 +809,7 @@ void FilterDetectors::autoConfigure( double duration )
 	d->FilterDetector->autoConfigure( d->InEvents[0], tbegin, tend );
     }
     else {
-      double tend = d->InTraces[0].currentTime();
+      double tend = d->InTraces.currentTime();
       double tbegin = tend - duration;
       if ( tbegin < d->InTraces[0].minTime() )
 	tbegin = d->InTraces[0].minTime();
@@ -858,7 +858,7 @@ void FilterDetectors::autoConfigure( Filter *f, double duration )
 	  fp->FilterDetector->autoConfigure( fp->InEvents[0], tbegin, tend );
       }
       else {
-	double tend = fp->InTraces[0].currentTime();
+	double tend = fp->InTraces.currentTime();
 	double tbegin = tend - duration;
 	if ( tbegin < fp->InTraces[0].minTime() )
 	  tbegin = fp->InTraces[0].minTime();

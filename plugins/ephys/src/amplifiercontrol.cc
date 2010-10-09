@@ -151,8 +151,8 @@ void AmplifierControl::measureResistance( void )
 {
   if ( Ampl != 0 && SpikeTrace[0] >= 0 && RMeasure ) {
     readLockData();
-    double r = trace( SpikeTrace[0] ).stdev( trace( SpikeTrace[0] ).currentTime() - 0.05,
-					     trace( SpikeTrace[0] ).currentTime() );
+    double r = trace( SpikeTrace[0] ).stdev( currentTime() - 0.05,
+					     currentTime() );
     unlockData();
     r *= ResistanceScale;
     QCoreApplication::postEvent( (RELACSPlugin*)this,
