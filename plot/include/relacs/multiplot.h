@@ -71,28 +71,21 @@ public:
     /*! Unlock the plot mutex. */
   void unlock( void );
 
-    /*! Provide a mutex that is used to lock
+    /*! Provide a mutex for all subplots that is used to lock
         access to all data while they are plotted. 
-        Passing a '0' disables the data mutex.
-        \sa clearDataMutex(), lockData(), unlockData() */
+        If you want to change the mutex, you first have to
+        disable the mutex by calling clearDataMutex().
+        \sa setDataMutex(QReadWriteLock*) */
   void setDataMutex( QMutex *mutex );
-    /*! Provide a mutex that is used to lock
+    /*! Provide a mutex for all subplots that is used to lock
         reading access to all data while they are plotted. 
-        Passing a '0' disables the data mutex.
-        \sa clearDataMutex(), lockData(), unlockData() */
+        If you want to change the mutex, you first have to
+        disable the mutex by calling clearDataMutex().
+        \sa setDataMutex(QMutex*) */
   void setDataMutex( QReadWriteLock *mutex );
     /*! Disables the data mutex and the data mutexes of the subplots.
         \sa setDataMutex() */
   void clearDataMutex( void );
-
-    /*! Lock the data mutex for reading. \sa tryLockData(), setDataMutex(), clearDataMutex() */
-  void lockData( void );
-    /*! Try to lock the data mutex for reading.
-        Returns \c true if the lock was obtained within \a timeout milliseconds.
-	\sa lockData(), setDataMutex(), clearDataMutex() */
-  bool tryLockData( int timeout=1 );
-    /*! Unlock the data mutex. \sa tryLockData(), setDataMutex(), clearDataMutex() */
-  void unlockData( void );
 
     /*! The number of Plots in the MultiPlot widget. */
   int size( void ) const;
@@ -158,7 +151,10 @@ public:
 signals:
 
     /*! Ranges of some plots have been changed
-        due to a change in plot \a id. */
+        due to a change in plot \a id.
+        The plot range was changed by the user.
+        Both the MultiPlot mutex and the mutex of the Plot that initiated
+	the changed ranges are locked. */
   void changedRanges( int id );
     /*! This signal is emitted whenever the MultiPlot widget receives
         a resizeEvent() before processing it.
@@ -202,6 +198,7 @@ private:
 
   typedef vector < Plot* > PlotListType;
   PlotListType PlotList;
+  PlotListType UpdatePlotList;
 
   typedef vector< vector< int > > CommonRangeType;
   CommonRangeType CommonXRange;
@@ -212,6 +209,7 @@ private:
   QReadWriteLock *DRWMutex;
   QWaitCondition WaitGUI;
   QThread *GUIThread;
+  bool Painting;
 
   int Columns;
   bool Horizontal;

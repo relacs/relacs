@@ -396,27 +396,15 @@ public:
 
     /*! Provide a mutex that is used by Plot to lock
         access to data while they are plotted. 
-        Passing a '0' disables the data mutex.
-        If you want to change the mutex, you have first to
-        disable the mutex by passing '0' or calling clearDataMutex().
-	\note If this Plot is part of a MultiPlot, then you should set a
-	common data lock using MutiPlot::setDataLock().
-	This data lock is used by MultiPlot to lock the data for all Subplots
-	while drawing,
-	the individual data locks are not used in this situation.
-        \sa lockData() */
+        If you want to change the mutex, you first have to
+        disable the mutex by calling clearDataMutex().
+        \sa setDataMutex(QReadWriteLock*), lockData() */
   void setDataMutex( QMutex *mutex );
     /*! Provide a mutex that is used by Plot to lock
         reading access to data while they are plotted. 
-        Passing a '0' disables the data mutex.
-        If you want to change the mutex, you have first to
-        disable the mutex by passing '0' or calling clearDataMutex().
-	\note If this Plot is part of a MultiPlot, then you should set a
-	common data lock using MutiPlot::setDataLock().
-	This data lock is used by MultiPlot to lock the data for all Subplots
-	while drawing,
-	the individual data locks are not used in this situation.
-        \sa lockData() */
+        If you want to change the mutex, you first have to
+        disable the mutex by calling clearDataMutex().
+        \sa setDataMutex(QMutex*), lockData() */
   void setDataMutex( QReadWriteLock *mutex );
     /*! Disables the data mutex. \sa setDataMutex() */
   void clearDataMutex( void );
@@ -431,6 +419,12 @@ public:
     /*! Unlock the data mutex if it was set by setDataMutex() before.
         \sa lockData(), tryLockData() */
   void unlockData( void );
+    /*! Returns \c true if \a this has the same data mutex as \a p.
+        \sa setDataMutex() */
+  bool equalDataMutex( const Plot &p ) const;
+    /*! Returns \c true if no data mutex is set.
+        \sa setDataMutex() */
+  bool noDataMutex( void ) const;
 
     /*! If this Plot is part of a MultiPlot, then this function specifies
         the position of the Plot within the MultiPlot.
@@ -840,7 +834,6 @@ public:
   /*!
     \class MouseEvent
     \author Jan Benda
-    \version 0.1
     \brief Handling a mouse event for the Plot class.
    */
   class MouseEvent
@@ -853,6 +846,7 @@ public:
 
     MouseEvent( void );
     MouseEvent( int mode );
+    MouseEvent( const MouseEvent &me );
 
     int xPixel( void ) const { return XPixel; };
     int yPixel( void ) const { return YPixel; };
@@ -950,7 +944,11 @@ public slots:
 
 signals:
   
+    /*! The plot range was changed by the user.
+        Both the Plot mutex and the MultiPlot mutex (if applicable) are locked. */
   void changedRange( void );
+    /*! The plot range was changed by the user.
+        Both the Plot mutex and the MultiPlot mutex (if applicable) are locked. */
   void changedRange( int );
     /*! This signal is emitted whenever the Plot widget receives
         a resizeEvent() before processing it. */
@@ -958,6 +956,7 @@ signals:
     /*! This signal is emitted whenever a mouse event in the Plot occured.
         A slot making use of the mouse event should call me.setUsed()
         to prevent further processing by the default mouse event handling functions.
+	Neither the Plot nor the data are locked during the call of userMouseEvent().
         \param[in] me the coordinates and status of the mouse event */
   void userMouseEvent( Plot::MouseEvent &me );
 

@@ -1,6 +1,5 @@
 Dead locks:
 - do we need to take care about blocking lockMutex() in accept(), reset(), etc.?
-- Plot, MultiPlot: take care about blocking lockData() in mouse event handlers!
 
 Macros:
 - Improve code by distributing more code to the commands
@@ -16,6 +15,11 @@ Metadata:
 - SaveFiles: finish reorganization of saveStimuli().
 - Parameter::label should get a level that is used to make sections in the XML file ?
 - Check out JSON libraries and compatibility with Options
+
+Plot:
+- possibly infinite loop in line 1527 (autoscaling) from line 1534 (initTics)
+- change zoom behavior on axis (centered)
+- remove the zoom stack -  remember only the default range
 
 Analog Input/Output:
 - WriteDataThread should not be started if the whole stimulus is already transfered.

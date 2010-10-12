@@ -122,6 +122,8 @@ protected slots:
 
 protected:
 
+  virtual void customEvent( QEvent *qce );
+
   struct FIData {
     FIData( double p, double d, double dt ) : Rate( p, d, dt ),
 	 RateSD( p, d, dt ), MaxPlotRate( 50.0 ) {};

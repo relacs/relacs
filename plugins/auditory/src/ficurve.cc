@@ -1159,8 +1159,28 @@ RePro::DoneState FICurve::next( vector< FIData > &results, bool msg )
 }
 
 
+class PlotMouseEvent : public QEvent
+{
+
+public:
+
+  PlotMouseEvent( const Plot::MouseEvent &me )
+    : QEvent( Type( User+11 ) ),
+      ME( me )
+  {
+  }
+
+  Plot::MouseEvent ME;
+};
+
+
 void FICurve::plotMouseEvent( Plot::MouseEvent &me )
 {
+  if ( ! tryLock( 5 ) ) {
+    QCoreApplication::postEvent( (RELACSPlugin*)this, new PlotMouseEvent( me ) );
+    return;
+  }
+  P[1].lock();
   if ( me.xCoor() == Plot::First && me.yCoor() == Plot::First &&
        me.yPos() > P[1].yminRange() + 0.9*(P[1].ymaxRange() - P[1].yminRange()) ) {
     bool changed = false;
@@ -1187,6 +1207,22 @@ void FICurve::plotMouseEvent( Plot::MouseEvent &me )
   }
   else
     PlotIntensitySelection = false;
+  P[1].unlock();
+  unlock();
+}
+
+
+void FICurve::customEvent( QEvent *qce )
+{
+  switch ( qce->type() - QEvent::User ) {
+  case 11: {
+    PlotMouseEvent *pme = dynamic_cast<PlotMouseEvent*>( qce );
+    plotMouseEvent( pme->ME );
+    break;
+  }
+  default:
+    RELACSPlugin::customEvent( qce );
+  }
 }
 
 

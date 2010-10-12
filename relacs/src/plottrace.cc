@@ -178,14 +178,14 @@ PlotTrace::~PlotTrace( void )
 void PlotTrace::resize( void )
 {
   // count active plots:
-  P.lockData();
+  RW->readLockData();
   VP.clear();
   VP.reserve( traces().size() );
   for ( int c=0; c<traces().size(); c++ ) {
     if ( trace(c).mode() & PlotTraceMode )
       VP.push_back( c );
   }
-  P.unlockData();
+  RW->unlockData();
 
   P.lock();
 
@@ -267,7 +267,7 @@ void PlotTrace::toggle( QAction *mtrace )
   if ( nodata )
     return;
 
-  P.lockData();
+  RW->readLockData();
   int m = trace(i).mode();
   if ( m & PlotTraceMode ) {
     for ( unsigned int k=0; (int)k<traces().size(); k++ ) {
@@ -283,7 +283,7 @@ void PlotTrace::toggle( QAction *mtrace )
     PlotActions[i]->setChecked( true );
   }
   const_cast<InData&>(trace(i)).setMode( m );
-  P.unlockData();
+  RW->unlockData();
   resize();
   plot();
 }
@@ -291,7 +291,7 @@ void PlotTrace::toggle( QAction *mtrace )
 
 void PlotTrace::init( void )
 {
-  P.lockData();
+  RW->readLockData();
   P.lock();
 
   int origin = ViewMode == FixedView ? 3 : 2;
@@ -401,7 +401,7 @@ void PlotTrace::init( void )
   P[VP.back()].setXLabel( tunit );
 
   P.unlock();
-  P.unlockData();
+  RW->unlockData();
 	
 }
 
@@ -419,7 +419,7 @@ void PlotTrace::plot( void )
     PlotChanged = false;
   }
 
-  P.lockData();
+  RW->readLockData();
   P.lock();
 
   // set left- and rightmargin:
@@ -479,7 +479,7 @@ void PlotTrace::plot( void )
   P.draw();
 
   P.unlock();
-  P.unlockData();
+  RW->unlockData();
 }
 
 
@@ -603,7 +603,7 @@ void PlotTrace::zoomOut( void )
   if ( RW->idle() )
     plot();
   else {
-    P.lockData();
+    RW->readLockData();
     P.lock();
     for ( unsigned int c=0; c<VP.size(); c++ ) {
       if ( PlotElements[c] >= 0 ) {
@@ -613,7 +613,7 @@ void PlotTrace::zoomOut( void )
       }
     }
     P.unlock();
-    P.unlockData();
+    RW->unlockData();
   }
 }
 
@@ -627,7 +627,7 @@ void PlotTrace::zoomIn( void )
   if ( RW->idle() )
     plot();
   else {
-    P.lockData();
+    RW->readLockData();
     P.lock();
     for ( unsigned int c=0; c<VP.size(); c++ ) {
       if ( PlotElements[c] >= 0 ) {
@@ -637,7 +637,7 @@ void PlotTrace::zoomIn( void )
       }
     }
     P.unlock();
-    P.unlockData();
+    RW->unlockData();
   }
 }
 
@@ -682,13 +682,13 @@ void PlotTrace::moveStart( void )
 
 void PlotTrace::moveEnd( void )
 {
-  P.lockData();
+  RW->readLockData();
   P.lock();
   if ( ViewMode != FixedView )
     setView( FixedView );
   LeftTime = currentTime() - TimeWindow;
   P.unlock();
-  P.unlockData();
+  RW->unlockData();
   if ( RW->idle() )
     plot();
 }
@@ -696,7 +696,7 @@ void PlotTrace::moveEnd( void )
 
 void PlotTrace::moveToSignal( void )
 {
-  P.lockData();
+  RW->readLockData();
   P.lock();
   if ( ViewMode == SignalView )
     TimeOffs = 0.0;
@@ -709,7 +709,7 @@ void PlotTrace::moveToSignal( void )
     LeftTime = sigtime;
   }
   P.unlock();
-  P.unlockData();
+  RW->unlockData();
   if ( RW->idle() )
     plot();
 }

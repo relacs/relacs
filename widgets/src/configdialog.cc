@@ -525,6 +525,12 @@ void ConfigDialog::unlock() const
 }
 
 
+bool ConfigDialog::tryLock( int timeout )
+{
+  return CDMutex.tryLock( timeout );
+}
+
+
 QMutex *ConfigDialog::mutex( void )
 {
   return &CDMutex;

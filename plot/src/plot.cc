@@ -73,6 +73,21 @@ public:
 };
 
 
+class PlotMouseAnalyseEvent : public QEvent
+{
+
+public:
+
+  PlotMouseAnalyseEvent( const Plot::MouseEvent &me )
+    : QEvent( Type( User+102 ) ),
+      ME( me )
+  {
+  }
+
+  Plot::MouseEvent ME;
+};
+
+
 Plot::Plot( KeepMode keep, QWidget *parent )
   : QWidget( parent ),
     PMutex( QMutex::NonRecursive )
@@ -401,6 +416,18 @@ void Plot::unlockData( void )
     DMutex->unlock();
   else if ( DRWMutex != 0 )
     DRWMutex->unlock();
+}
+
+
+bool Plot::equalDataMutex( const Plot &p ) const
+{
+  return ( DMutex == p.DMutex && DRWMutex == p.DRWMutex );
+}
+
+
+bool Plot::noDataMutex( void ) const
+{
+  return ( DMutex == 0 && DRWMutex == 0 );
 }
 
 
@@ -3125,6 +3152,11 @@ void Plot::customEvent( QEvent *qce )
       QWidget::setMouseTracking( pmte->Enable );
     break;
   }
+  case 102: {
+    PlotMouseAnalyseEvent *pme = dynamic_cast<PlotMouseAnalyseEvent*>( qce );
+    mouseAnalyse( pme->ME );
+    break;
+  }
   default:
     QWidget::customEvent( qce );
   }
@@ -3237,6 +3269,22 @@ Plot::MouseEvent::MouseEvent( int mode )
 }
 
 
+Plot::MouseEvent::MouseEvent( const MouseEvent &me )
+  : XPixel( me.XPixel ),
+    YPixel( me.YPixel ),
+    XCoor( me.XCoor ),
+    YCoor( me.YCoor ), 
+    Mode( me.Mode ),
+    Init( me.Init ),
+    Used( me.Used )
+{
+  for ( int k=0; k<MaxAxis; k++ ) {
+    XPos[k] = me.XPos[k];
+    YPos[k] = me.YPos[k];
+  }
+}
+
+
 void Plot::MouseEvent::clear( void )
 {
   XPixel = 0xffff;
@@ -3251,6 +3299,7 @@ void Plot::MouseEvent::clear( void )
 
 void Plot::setMouseCoordinates( MouseEvent &me )
 {
+  PMutex.lock();
   for ( int k=0; k<MaxAxis; k++ )
     me.XPos[k] = double( me.XPixel - PlotX1 ) / double( PlotX2 - PlotX1 ) * ( XMax[k] - XMin[k] ) + XMin[k];
   if ( me.XPixel < PlotX1 )
@@ -3268,6 +3317,7 @@ void Plot::setMouseCoordinates( MouseEvent &me )
     me.YCoor = SecondMargin;    
   else
     me.YCoor = First;
+  PMutex.unlock();
 }
 
 
@@ -3297,62 +3347,41 @@ void Plot::readMouse( QMouseEvent *qme, MouseEvent &me )
 
 void Plot::mousePressEvent( QMouseEvent *qme )
 {
-  if ( ! SubWidget )
-    lockData();
-  PMutex.lock();
   MouseEvent me( 64 );
   readMouse( qme, me );
   mouseEvent( me );
-  PMutex.unlock();
-  if ( ! SubWidget )
-    unlockData();
 }
 
 
 void Plot::mouseReleaseEvent( QMouseEvent *qme )
 {
-  if ( ! SubWidget )
-    lockData();
-  PMutex.lock();
   MouseEvent me( 128 );
   readMouse( qme, me );
   mouseEvent( me );
-  PMutex.unlock();
-  if ( ! SubWidget )
-    unlockData();
 }
 
 
 void Plot::mouseMoveEvent( QMouseEvent *qme )
 {
-  if ( ! SubWidget )
-    lockData();
-  PMutex.lock();
   MouseEvent me( 256 );
   readMouse( qme, me );
   mouseEvent( me );
-  PMutex.unlock();
-  if ( ! SubWidget )
-    unlockData();
 }
 
 
 void Plot::mouseDoubleClickEvent( QMouseEvent *qme )
 {
-  if ( ! SubWidget )
-    lockData();
-  PMutex.lock();
   MouseEvent me( 512 );
   readMouse( qme, me );
   mouseEvent( me );
-  PMutex.unlock();
-  if ( ! SubWidget )
-    unlockData();
 }
 
 
 void Plot::mouseZoomMoveFirstX( MouseEvent &me )
 {
+  if ( SubWidget && MP != 0 )
+    MP->lock();
+  PMutex.lock();
   // move and zoom x1 axis:
   if ( me.pressed() && me.left() &&
        me.xCoor() == First && me.yCoor() == FirstMargin ) {
@@ -3493,11 +3522,17 @@ void Plot::mouseZoomMoveFirstX( MouseEvent &me )
     draw();
     me.setUsed();
   }
+  PMutex.unlock();
+  if ( SubWidget && MP != 0 )
+    MP->unlock();
 }
 
 
 void Plot::mouseZoomMoveFirstY( MouseEvent &me )
 {
+  if ( SubWidget && MP != 0 )
+    MP->lock();
+  PMutex.lock();
   // move y1 axis:
   if ( me.pressed() && me.left() &&
        me.yCoor() == First && me.xCoor() == FirstMargin ) {
@@ -3638,11 +3673,17 @@ void Plot::mouseZoomMoveFirstY( MouseEvent &me )
     draw();
     me.setUsed();
   }
+  PMutex.unlock();
+  if ( SubWidget && MP != 0 )
+    MP->unlock();
 }
 
 
 void Plot::mouseZoomMovePlot( MouseEvent &me, bool move )
 {
+  if ( SubWidget && MP != 0 )
+    MP->lock();
+  PMutex.lock();
   // start move or zoom plot:
   if ( me.pressed() && me.left() &&
        me.xCoor() == First && me.yCoor() == First ) {
@@ -3849,11 +3890,23 @@ void Plot::mouseZoomMovePlot( MouseEvent &me, bool move )
     draw();
   }
   */
+  PMutex.unlock();
+  if ( SubWidget && MP != 0 )
+    MP->unlock();
 }
 
 
 void Plot::mouseAnalyse( MouseEvent &me )
 {
+  if ( ! tryLockData( 5 ) ) {
+    QCoreApplication::postEvent( this, new PlotMouseAnalyseEvent( me ) );
+    return;
+  }
+
+  if ( SubWidget && MP != 0 )
+    MP->lock();
+  PMutex.lock();
+
   if ( me.xCoor() == First && me.yCoor() == First ) {
 
     LastMouseEvent = me;
@@ -3966,11 +4019,17 @@ void Plot::mouseAnalyse( MouseEvent &me )
     MousePInx.push_back( -1 );
     me.setUsed();
   }
+
+  PMutex.unlock();
+  if ( SubWidget && MP != 0 )
+    MP->unlock();
+  unlockData();
 }
 
 
 void Plot::mouseMenu( MouseEvent &me )
 {
+  PMutex.lock();
   if ( me.pressed() && me.mid() ) {
     MouseMenu->popup( QCursor::pos() );
     MouseMenuClick = true;
@@ -3981,15 +4040,18 @@ void Plot::mouseMenu( MouseEvent &me )
       MouseMenuClick = false;
     me.setUsed();
   }
+  PMutex.unlock();
 }
 
 
 void Plot::mouseSelect( QAction *action )
 {
+  if ( SubWidget && MP != 0 )
+    MP->lock();
+  PMutex.lock();
+
   if ( action == 0 ) {
-    PMutex.lock();
     MouseMenuClick = true;
-    PMutex.unlock();
   }
   else if ( action == MouseZoomReset ) {
     MouseMenuClick = false;
@@ -4004,7 +4066,6 @@ void Plot::mouseSelect( QAction *action )
       action->setChecked( true );
       LastMouseEvent.clear();
       if ( MouseAction == MouseAnalyse ) {
-	PMutex.lock();
 	MouseXPos.clear();
 	MouseYPos.clear();
 	MouseDInx.clear();
@@ -4015,7 +4076,6 @@ void Plot::mouseSelect( QAction *action )
 	  else
 	    QWidget::setMouseTracking( false );
 	}
-	PMutex.unlock();
 	NewData = true;
 	draw();
       }
@@ -4027,22 +4087,24 @@ void Plot::mouseSelect( QAction *action )
 	  else
 	    QWidget::setMouseTracking( true );
 	}
+	PMutex.unlock();
+	if ( SubWidget && MP != 0 )
+	  MP->unlock();
 	QPoint p = mapFromGlobal( QCursor::pos() );
 	QMouseEvent qme( QEvent::MouseButtonRelease, p, 
 			 Qt::LeftButton, Qt::LeftButton, Qt::NoModifier );
 	MouseEvent nme( 64 );
-	if ( ! SubWidget )
-	  lockData();
-	PMutex.lock();
 	readMouse( &qme, nme );
 	nme.setInit();
 	mouseAnalyse( nme );
-	PMutex.unlock();
-	if ( ! SubWidget )
-	  unlockData();
+	return;
       }
     }
   }
+
+  PMutex.unlock();
+  if ( SubWidget && MP != 0 )
+    MP->unlock();
 }
 
 

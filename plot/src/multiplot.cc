@@ -99,6 +99,8 @@ MultiPlot::~MultiPlot( void )
 
 void MultiPlot::construct( int plots, int columns, bool horizontal, Plot::KeepMode keep )
 {
+  PMutex.lock();
+
   GUIThread = QThread::currentThread();
 
   setAttribute( Qt::WA_OpaquePaintEvent );
@@ -108,8 +110,7 @@ void MultiPlot::construct( int plots, int columns, bool horizontal, Plot::KeepMo
 
   DMutex = 0;
   DRWMutex = 0;
-
-  PMutex.lock();
+  Painting = false;
   
   for ( int k=0; k<plots; k++ ) {
     PlotList.push_back( new Plot( keep, true, k, this ) );
@@ -121,6 +122,7 @@ void MultiPlot::construct( int plots, int columns, bool horizontal, Plot::KeepMo
   }
   DrawData = false;
   DrawBackground = true;
+  UpdatePlotList.clear();
 
   layout();
 
@@ -148,19 +150,23 @@ void MultiPlot::unlock( void )
 
 void MultiPlot::setDataMutex( QMutex *mutex )
 {
-  DRWMutex = 0;
-  DMutex = mutex;
-  for ( unsigned int k=0; k<PlotList.size(); k++ )
-    PlotList[k]->setDataMutex( DMutex );
+  if ( DMutex == 0 && DRWMutex == 0 ) {
+    DRWMutex = 0;
+    DMutex = mutex;
+    for ( unsigned int k=0; k<PlotList.size(); k++ )
+      PlotList[k]->setDataMutex( DMutex );
+  }
 }
 
 
 void MultiPlot::setDataMutex( QReadWriteLock *mutex )
 {
-  DMutex = 0;
-  DRWMutex = mutex;
-  for ( unsigned int k=0; k<PlotList.size(); k++ )
-    PlotList[k]->setDataMutex( DRWMutex );
+  if ( DMutex == 0 && DRWMutex == 0 ) {
+    DMutex = 0;
+    DRWMutex = mutex;
+    for ( unsigned int k=0; k<PlotList.size(); k++ )
+      PlotList[k]->setDataMutex( DRWMutex );
+  }
 }
 
 
@@ -170,35 +176,6 @@ void MultiPlot::clearDataMutex( void )
   DRWMutex = 0;
   for ( unsigned int k=0; k<PlotList.size(); k++ )
     PlotList[k]->clearDataMutex();
-}
-
-
-void MultiPlot::lockData( void )
-{
-  if ( DMutex != 0 )
-    DMutex->lock();
-  else if ( DRWMutex != 0 )
-    DRWMutex->lockForRead();
-}
-
-
-bool MultiPlot::tryLockData( int timeout )
-{
-  if ( DMutex != 0 )
-    return DMutex->tryLock( timeout );
-  else if ( DRWMutex != 0 )
-    return DRWMutex->tryLockForRead( timeout );
-  else
-    return true;
-}
-
-
-void MultiPlot::unlockData( void )
-{
-  if ( DMutex != 0 )
-    DMutex->unlock();
-  else if ( DRWMutex != 0 )
-    DRWMutex->unlock();
 }
 
 
@@ -230,39 +207,43 @@ void MultiPlot::doResize( int plots, Plot::KeepMode keep )
 {
   if ( plots <= 0 )
     doClear();
-  else if ( plots > size() ) {
-    for ( int k=size(); k<plots; k++ ) {
-      PlotList.push_back( new Plot( keep, true, k, this ) );
-      //      PlotList.back()->setBackgroundColor( Plot::Transparent );
-      connect( PlotList.back(), SIGNAL( changedRange( int ) ),
-	       this, SLOT( setRanges( int ) ) );
-      CommonXRange.push_back( vector< int >( 0 ) );
-      CommonYRange.push_back( vector< int >( 0 ) );
-      if ( DMutex != 0 )
-	PlotList.back()->setDataMutex( DMutex );
-      else if ( DRWMutex != 0 )
-	PlotList.back()->setDataMutex( DRWMutex );
+  else {
+    Painting = false;
+    if ( plots > size() ) {
+      for ( int k=size(); k<plots; k++ ) {
+	PlotList.push_back( new Plot( keep, true, k, this ) );
+	//      PlotList.back()->setBackgroundColor( Plot::Transparent );
+	connect( PlotList.back(), SIGNAL( changedRange( int ) ),
+		 this, SLOT( setRanges( int ) ) );
+	CommonXRange.push_back( vector< int >( 0 ) );
+	CommonYRange.push_back( vector< int >( 0 ) );
+	if ( DMutex != 0 )
+	  PlotList.back()->setDataMutex( DMutex );
+	else if ( DRWMutex != 0 )
+	  PlotList.back()->setDataMutex( DRWMutex );
+      }
+      for ( unsigned int k=0; k<PlotList.size(); k++ ) {
+	PlotList[k]->resetRanges();
+	CommonXRange[k].clear();
+	CommonYRange[k].clear();
+      }
     }
-    for ( unsigned int k=0; k<PlotList.size(); k++ ) {
-      PlotList[k]->resetRanges();
-      CommonXRange[k].clear();
-      CommonYRange[k].clear();
+    else if ( plots < size() ) {
+      for ( int k=size()-1; k>=plots; k-- ) {
+	delete PlotList.back();
+	PlotList.pop_back();
+	CommonXRange.pop_back();
+	CommonYRange.pop_back();
+      }
+      for ( unsigned int k=0; k<PlotList.size(); k++ ) {
+	PlotList[k]->resetRanges();
+	CommonXRange[k].clear();
+	CommonYRange[k].clear();
+      }
     }
+    UpdatePlotList.clear();
+    DrawBackground = true;
   }
-  else if ( plots < size() ) {
-    for ( int k=size()-1; k>=plots; k-- ) {
-      delete PlotList.back();
-      PlotList.pop_back();
-      CommonXRange.pop_back();
-      CommonYRange.pop_back();
-    }
-    for ( unsigned int k=0; k<PlotList.size(); k++ ) {
-      PlotList[k]->resetRanges();
-      CommonXRange[k].clear();
-      CommonYRange[k].clear();
-    }
-  }
-  DrawBackground = true;
 }
 
 
@@ -291,11 +272,13 @@ void MultiPlot::clear( void )
 
 void MultiPlot::doClear( void )
 {
+  Painting = false;
   for ( PlotListType::iterator p = PlotList.begin(); 
 	p != PlotList.end(); 
 	++p )
     delete (*p);
   PlotList.clear();
+  UpdatePlotList.clear();
   CommonXRange.clear();
   CommonYRange.clear();
   DrawBackground = true;
@@ -316,6 +299,7 @@ void MultiPlot::erase( int index )
 
 void MultiPlot::doErase( int index )
 {
+  Painting = false;
   int k;
   PlotListType::iterator p;
   CommonRangeType::iterator cx;
@@ -328,6 +312,7 @@ void MultiPlot::doErase( int index )
     CommonXRange.erase( cx );
     CommonYRange.erase( cy );
   }
+  UpdatePlotList.clear();
   DrawBackground = true;
 }
 
@@ -343,6 +328,8 @@ void MultiPlot::layout( int columns, bool horizontal )
 
 void MultiPlot::layout( void )
 {
+  Painting = false;
+
   unsigned int n = PlotList.size();
 
   if ( n == 0 )
@@ -382,6 +369,7 @@ void MultiPlot::layout( void )
       }
     }
   }
+  UpdatePlotList.clear();
   DrawBackground = true;
 }
 
@@ -494,6 +482,8 @@ QSize MultiPlot::minimumSizeHint( void ) const
 
 void MultiPlot::draw( void )
 {
+  Painting = false;
+  UpdatePlotList.clear();
   DrawData = true;
   if ( QThread::currentThread() != GUIThread )
     QCoreApplication::postEvent( this, new MultiPlotEvent( 100 ) ); // update
@@ -504,36 +494,100 @@ void MultiPlot::draw( void )
 
 void MultiPlot::paintEvent( QPaintEvent *qpe )
 {
-  // the order of locking is important here!
-  // if the data are not available there is no need to lock the plot.
-  if ( ! tryLockData( 5 ) ) {
-    // we do not get the lock for the data now,
-    // so we repost the paintEvent() to a later time.
+  PMutex.lock();
+  Painting = true;
+  bool newlist = false;
+  // initialize list of plots that need to be updated:
+  if ( UpdatePlotList.empty() ) {
+    UpdatePlotList = PlotList;
+    for ( PlotListType::iterator p = UpdatePlotList.begin(); 
+	  p != UpdatePlotList.end(); 
+	  ) {
+      if ( (**p).skip() )
+	p = UpdatePlotList.erase( p );
+      else
+	++p;
+    }
+    newlist = true;
+  }
+
+  // loop through the subplots:
+  PlotListType::iterator p = UpdatePlotList.begin(); 
+  while ( p != UpdatePlotList.end() ) {
+
+    PMutex.unlock();
+
+    Plot *cp = *p;
+
+    // if the data are not available there is no need to lock the plot.
+    if ( ! cp->tryLockData( 5 ) ) {
+      // we do not get the lock for the data now,
+      // so we check the other plots first:
+      PMutex.lock();
+      if ( ! Painting )  // the subplots have been changed in the meantime!
+	break;
+      for ( ++p; p != UpdatePlotList.end() && (**p).equalDataMutex( *cp ); ++p );
+      continue;
+    }
+
+    PMutex.lock();
+    if ( ! Painting ) {  // the subplots have been changed in the meantime!
+      cp->unlockData();
+      break;
+    }
+
+    if ( newlist ) {
+      // redraw background:
+      if ( DrawBackground || ! DrawData ) {
+	QPainter qp( this );
+	qp.eraseRect( rect() );
+      }
+    }
+
+    // draw subplot:
+    cp->scale( width(), height() );
+    cp->draw( this, DrawData );
+
+    // draw subplots with the same or no data lock:
+    PlotListType::iterator sp = UpdatePlotList.erase( p ); 
+    bool setp = false;
+    while ( sp != UpdatePlotList.end() ) {
+      if ( (**sp).equalDataMutex( *cp ) || (**sp).noDataMutex() ) {
+	(**sp).scale( width(), height() );
+	(**sp).draw( this, DrawData );
+	sp = UpdatePlotList.erase( sp );
+      }
+      else {
+	if ( ! setp )
+	  p = sp;
+	setp = true;
+	++sp;
+      }
+    }
+    if ( ! setp )
+      p = UpdatePlotList.end();
+
+    PMutex.unlock();
+    cp->unlockData();
+
+    PMutex.lock();
+    if ( ! Painting )  // the subplots have been changed in the meantime!
+      break;
+  }
+
+  if ( Painting && ! UpdatePlotList.empty() ) {
+    Painting = false;
+    PMutex.unlock();
+    // we did not get the lock for the data of some plots now,
+    // so we repost the paintEvent() for the remaining subplots to a later time.
     update();
     return;
   }
 
-  PMutex.lock();
-
-  if ( DrawBackground || ! DrawData ) {
-    QPainter p( this );
-    p.eraseRect( rect() );
-  }
-
-  for ( PlotListType::iterator p = PlotList.begin(); 
-	p != PlotList.end(); 
-	++p ) {
-    if ( ! (**p).skip() ) {
-      (**p).scale( width(), height() );
-      (**p).draw( this, DrawData ); // this will not lock the data again!
-    }
-  }
-
   DrawBackground = false;
   DrawData = false;
-
+  Painting = false;
   PMutex.unlock();
-  unlockData();
 }
 
 
@@ -541,12 +595,14 @@ void MultiPlot::resizeEvent( QResizeEvent *qre )
 {
   emit resizePlots( qre );
   PMutex.lock();
+  Painting = false;
   for ( PlotListType::iterator p = PlotList.begin(); 
 	p != PlotList.end(); 
 	++p ) {
     if ( ! (**p).skip() )
       (**p).resizeEvent( qre );
   }
+  UpdatePlotList.clear();
   DrawBackground = true;
   PMutex.unlock();
   QWidget::resizeEvent( qre );
@@ -608,21 +664,13 @@ void MultiPlot::mousePressEvent( QMouseEvent *qme )
 {
   for ( unsigned int k=0; k<PlotList.size(); k++ ) {
     if ( !PlotList[k]->skip() && PlotList[k]->mouseGrabbed() ) {
-      lockData();
-      PMutex.lock();
       PlotList[k]->mousePressEvent( qme );
-      PMutex.unlock();
-      unlockData();
       return;
     }
   }
   for ( unsigned int k=0; k<PlotList.size(); k++ ) {
     if ( !PlotList[k]->skip() && PlotList[k]->inside( qme->x(), qme->y() ) ) {
-      lockData();
-      PMutex.lock();
       PlotList[k]->mousePressEvent( qme );
-      PMutex.unlock();
-      unlockData();
       return;
     }
   }
@@ -633,21 +681,13 @@ void MultiPlot::mouseReleaseEvent( QMouseEvent *qme )
 {
   for ( unsigned int k=0; k<PlotList.size(); k++ ) {
     if ( !PlotList[k]->skip() && PlotList[k]->mouseGrabbed() ) {
-      lockData();
-      PMutex.lock();
       PlotList[k]->mouseReleaseEvent( qme );
-      PMutex.unlock();
-      unlockData();
       return;
     }
   }
   for ( unsigned int k=0; k<PlotList.size(); k++ ) {
     if ( !PlotList[k]->skip() && PlotList[k]->inside( qme->x(), qme->y() ) ) {
-      lockData();
-      PMutex.lock();
       PlotList[k]->mouseReleaseEvent( qme );
-      PMutex.unlock();
-      unlockData();
       return;
     }
   }
@@ -658,21 +698,13 @@ void MultiPlot::mouseDoubleClickEvent( QMouseEvent *qme )
 {
   for ( unsigned int k=0; k<PlotList.size(); k++ ) {
     if ( !PlotList[k]->skip() && PlotList[k]->mouseGrabbed() ) {
-      lockData();
-      PMutex.lock();
       PlotList[k]->mouseDoubleClickEvent( qme );
-      PMutex.unlock();
-      unlockData();
       return;
     }
   }
   for ( unsigned int k=0; k<PlotList.size(); k++ ) {
     if ( !PlotList[k]->skip() && PlotList[k]->inside( qme->x(), qme->y() ) ) {
-      lockData();
-      PMutex.lock();
       PlotList[k]->mouseDoubleClickEvent( qme );
-      PMutex.unlock();
-      unlockData();
       return;
     }
   }
@@ -683,21 +715,13 @@ void MultiPlot::mouseMoveEvent( QMouseEvent *qme )
 {
   for ( unsigned int k=0; k<PlotList.size(); k++ ) {
     if ( !PlotList[k]->skip() && PlotList[k]->mouseGrabbed() ) {
-      lockData();
-      PMutex.lock();
       PlotList[k]->mouseMoveEvent( qme );
-      PMutex.unlock();
-      unlockData();
       return;
     }
   }
   for ( unsigned int k=0; k<PlotList.size(); k++ ) {
     if ( !PlotList[k]->skip() && PlotList[k]->inside( qme->x(), qme->y() ) ) {
-      lockData();
-      PMutex.lock();
       PlotList[k]->mouseMoveEvent( qme );
-      PMutex.unlock();
-      unlockData();
       return;
     }
   }

@@ -183,11 +183,15 @@ public:
   virtual void setMainWidget( QWidget *widget );
 
     /*! Lock the mutex of the ConfigDialog.
-        \sa unlock(), mutex() */
+        \sa unlock(), tryLock(), mutex() */
   void lock() const;
     /*! Unlock the mutex of the ConfigDialog.
         \sa lock(), mutex() */
   void unlock() const;
+    /*! Try to lock the mutex of the ConfigDialog.
+        Returns \c true if the lock was obtained within \a timeout milliseconds.
+	\sa lock(), mutex() */
+  bool tryLock( int timeout=1 );
     /*! Returns a pointer to the mutex of the ConfigDialog.
         \sa lock(), unlock() */
   QMutex *mutex( void );
