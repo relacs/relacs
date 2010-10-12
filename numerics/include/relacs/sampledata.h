@@ -921,15 +921,32 @@ class SampleData : public Array< T >
   T interpolate( double x ) const;
 
     /*! Multiply the first \a indices( x ) y-data elements with a ramp
-        linearly increasing from zero to one. */
-  SampleData< T > &rampUp( double x );
+        monotonically increasing from zero to one.
+        \a type == 0: linear ramp,
+        \a type == 1: square ramp,
+        \a type == 2: square root ramp,
+        \a type == 3: cosine ramp.
+        \sa rampDown(), ramp(), RampStrings */
+  SampleData< T > &rampUp( double x, int type=0 );
     /*! Multiply the last \a indices( x ) y-data elements with a ramp
-        linearly decreasing from one to zero. */
-  SampleData< T > &rampDown( double x );
+        monotonically decreasing from one to zero.
+        \a type == 0: linear ramp,
+        \a type == 1: square ramp,
+        \a type == 2: square root ramp,
+        \a type == 3: cosine ramp.
+        \sa rampUp(), ramp(), RampStrings */
+  SampleData< T > &rampDown( double x, int type=0 );
     /*! Multiply the first and the last \a indices( x ) y-data elements 
         with a ramp.
-        \sa rampUp(), rampDown() */
-  SampleData< T > &ramp( double x );
+        \a type == 0: linear ramp,
+        \a type == 1: square ramp,
+        \a type == 2: square root ramp,
+        \a type == 3: cosine ramp.
+        \sa rampUp(), rampDown(), RampStrings */
+  SampleData< T > &ramp( double x, int type=0 );
+
+    /*! A '|' separated list of supported ramp types. */
+  static const string RampStrings;
 
     /*! Add the values of the range \a first, \a last
         to the histogram. */
@@ -2565,32 +2582,72 @@ bool operator<( const SampleData<TT> &a, const SampleData<TT> &b )
 
 
 template < typename T >
-SampleData< T > &SampleData< T >::rampUp( double x )
+  SampleData< T > &SampleData< T >::rampUp( double x, int type )
 {
   int maxi = indices( x );
-  for ( int k=0; k<maxi; k++ ) {
-    Array<T>::operator[]( k ) *= static_cast<T>( double(k)/double(maxi) );
+  if ( maxi >= size() )
+    maxi = size();
+  if ( type == 3 ) {
+    // cosine ramp:
+    for ( int k=0; k<maxi; k++ )
+      Array<T>::operator[]( k ) *= static_cast<T>( 0.5 - 0.5 * ::cos( 3.14159265358979323846*double(k)/double(maxi) ) );
+  }
+  else if ( type == 2 ) {
+    // square root ramp:
+    for ( int k=0; k<maxi; k++ )
+      Array<T>::operator[]( k ) *= static_cast<T>( ::sqrt( double(k)/double(maxi) ) );
+  }
+  else if ( type == 1 ) {
+    // square ramp:
+    for ( int k=0; k<maxi; k++ ) {
+      double x = double(k)/double(maxi);
+      Array<T>::operator[]( k ) *= static_cast<T>( x*x );
+    }
+  }
+  else {
+    // linear ramp:
+    for ( int k=0; k<maxi; k++ )
+      Array<T>::operator[]( k ) *= static_cast<T>( double(k)/double(maxi) );
   }
   return *this;
 }
 
 
 template < typename T >
-SampleData< T > &SampleData< T >::rampDown( double x )
+SampleData< T > &SampleData< T >::rampDown( double x, int type )
 {
   int maxi = indices( x );
-  for ( int k=size()-1, i=0; k>size()-1-maxi; k--, i++ ) {
-    Array<T>::operator[]( k ) *= static_cast<T>( double(i)/double(maxi) );
+  if ( type == 3 ) {
+    // cosine ramp:
+    for ( int k=size()-1, i=0; k>size()-1-maxi && k >= 0; k--, i++ )
+      Array<T>::operator[]( k ) *= static_cast<T>( 0.5 - 0.5 * ::cos( 3.14159265358979323846*double(i)/double(maxi) ) );
+  }
+  else if ( type == 2 ) {
+    // square root ramp:
+    for ( int k=size()-1, i=0; k>size()-1-maxi && k >= 0; k--, i++ )
+      Array<T>::operator[]( k ) *= static_cast<T>( ::sqrt( double(i)/double(maxi) ) );
+  }
+  else if ( type == 1 ) {
+    // square ramp:
+    for ( int k=size()-1, i=0; k>size()-1-maxi && k >= 0; k--, i++ ) {
+      double x = double(i)/double(maxi);
+      Array<T>::operator[]( k ) *= static_cast<T>( x*x );
+    }
+  }
+  else {
+    // linear ramp:
+    for ( int k=size()-1, i=0; k>size()-1-maxi && k >= 0; k--, i++ )
+      Array<T>::operator[]( k ) *= static_cast<T>( double(i)/double(maxi) );
   }
   return *this;
 }
 
 
 template < typename T >
-SampleData< T > &SampleData< T >::ramp( double x )
+SampleData< T > &SampleData< T >::ramp( double x, int type )
 {
-  rampUp( x );
-  rampDown( x );
+  rampUp( x, type );
+  rampDown( x, type );
   return *this;
 }
 

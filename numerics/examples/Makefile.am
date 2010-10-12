@@ -7,6 +7,7 @@ noinst_PROGRAMS = \
     marquardtfit \
     maxreturnval \
     meanreturnval \
+    ramps \
     randtiming \
     rfft \
     simplexfit \
@@ -51,14 +52,17 @@ generatepairs_SOURCES = generatepairs.cc
 linearfit_LDADD = ../src/librelacsnumerics.la
 linearfit_SOURCES = linearfit.cc
 
+marquardtfit_LDADD = ../src/librelacsnumerics.la
+marquardtfit_SOURCES = marquardtfit.cc
+
 maxreturnval_LDADD = ../src/librelacsnumerics.la
 maxreturnval_SOURCES = maxreturnval.cc
 
 meanreturnval_LDADD = ../src/librelacsnumerics.la
 meanreturnval_SOURCES = meanreturnval.cc
 
-marquardtfit_LDADD = ../src/librelacsnumerics.la
-marquardtfit_SOURCES = marquardtfit.cc
+ramps_LDADD = ../src/librelacsnumerics.la
+ramps_SOURCES = ramps.cc
 
 randtiming_LDADD = ../src/librelacsnumerics.la
 randtiming_SOURCES = randtiming.cc

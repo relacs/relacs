@@ -24,6 +24,10 @@
 namespace relacs {
 
 
+template < typename T > 
+const string SampleData<T>::RampStrings = "linear|square|sqrt|cosine";
+
+
 SampleData<> sin( const LinearRange &r, double f )
 {
   SampleData<> y( r );

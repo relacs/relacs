@@ -26,7 +26,7 @@ TYPEINCLUDE=$(echo "$TYPECLASS" | tr [:upper:] [:lower:])
 
 # get input name of plugin:
 until test -n "$PLUGINNAME"; do
-    read -e -p "Name of the new plugin: " PLUGINNAME
+    read -e -p "Name of the new plugin (CamelCase): " PLUGINNAME
     test -z "$PLUGINNAME" && echo "! Error! You need to privide a name for the plugin!"
 done
 PLUGINFILE=$(echo "$PLUGINNAME" | tr [:upper:] [:lower:])
@@ -53,13 +53,15 @@ PLUGINLIB="$PLUGINSET$PLUGINFILE"
 
 
 # get name of plugin set:
-read -e -p "Name of the plugin set [${PLUGINSETDEFAULTNAME}]: " PLUGINSETNAME
-test -z "$PLUGINSETNAME" && PLUGINSETNAME="$PLUGINSETDEFAULTNAME"
+#read -e -p "Name of the plugin set [${PLUGINSETDEFAULTNAME}]: " PLUGINSETNAME
+#test -z "$PLUGINSETNAME" && PLUGINSETNAME="$PLUGINSETDEFAULTNAME"
+PLUGINSETNAME="$PLUGINSETDEFAULTNAME"
 
 
 # get name of the author:
 until test -n "$AUTHOR"; do
     read -e -p "Author of the plugin: " AUTHOR
+
 done
 
 # get brief description:
@@ -154,8 +156,6 @@ EOF
 } < "$PLUGINSETPATH/src/Makefile.am" > tmp$$.am
 
 mv tmp$$.am "$PLUGINSETPATH/src/Makefile.am"
-#cat tmp$$.am
-#rm tmp$$.am
 
 
 
