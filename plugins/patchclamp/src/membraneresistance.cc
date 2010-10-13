@@ -38,7 +38,6 @@ MembraneResistance::MembraneResistance( void )
 {
   // add some options:
   addLabel( "Stimulus" );
-  addSelection( "outcurrent", "Output trace", "Current-1" );
   addNumber( "amplitude", "Amplitude of output signal", -1.0, -1000.0, 1000.0, 0.1 ).setActivation( "userm", "false" );
   addBoolean( "userm", "Compute amplitude from vstep and estimated membrane resistance", false );
   addNumber( "vstep", "Steady-state voltage amplitude induced by output signal", -1.0, -1000.0, 1000.0, 0.1, "mV" ).setActivation( "userm", "true" );
@@ -46,8 +45,6 @@ MembraneResistance::MembraneResistance( void )
   addNumber( "pause", "Duration of pause bewteen outputs", 0.4, 0.001, 1.0, 0.001, "sec", "ms" );
   addInteger( "repeats", "Repetitions of stimulus", 10, 0, 10000, 1 );
   addLabel( "Analysis" );
-  addSelection( "involtage", "Input voltage trace", "V-1" );
-  addSelection( "incurrent", "Input current trace", "Current-1" );
   addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
   addBoolean( "nossfit", "Fix steady-state potential for fit", true );
   addBoolean( "plotstdev", "Plot standard deviation of membrane potential", true );
@@ -64,33 +61,19 @@ MembraneResistance::MembraneResistance( void )
 
 void MembraneResistance::config( void )
 {
-  setText( "involtage", spikeTraceNames() );
-  setToDefault( "involtage" );
-  setText( "incurrent", currentTraceNames() );
-  setToDefault( "incurrent" );
-  setText( "outcurrent", currentOutputNames() );
-  setToDefault( "outcurrent" );
-}
-
-
-void MembraneResistance::notify( void )
-{
-  int involtage = index( "involtage" );
-  if ( involtage >= 0 && SpikeTrace[involtage] >= 0 ) {
-    VUnit = trace( SpikeTrace[involtage] ).unit();
+  if ( SpikeTrace[0] >= 0 ) {
+    VUnit = trace( SpikeTrace[0] ).unit();
     VFac = Parameter::changeUnit( 1.0, VUnit, "mV" );
   }
 
-  int outcurrent = index( "outcurrent" );
-  if ( outcurrent >= 0 && CurrentOutput[outcurrent] >= 0 ) {
-    IUnit = outTrace( CurrentOutput[outcurrent] ).unit();
+  if ( CurrentOutput[0] >= 0 ) {
+    IUnit = outTrace( CurrentOutput[0] ).unit();
     setUnit( "amplitude", IUnit );
     IFac = Parameter::changeUnit( 1.0, IUnit, "nA" );
   }
 
-  int incurrent = index( "incurrent" );
-  if ( incurrent >= 0 && CurrentTrace[incurrent] >= 0 ) {
-    string iinunit = trace( CurrentTrace[incurrent] ).unit();
+  if ( CurrentTrace[0] >= 0 ) {
+    string iinunit = trace( CurrentTrace[0] ).unit();
     IInFac = Parameter::changeUnit( 1.0, iinunit, IUnit );
   }
 }
@@ -99,9 +82,6 @@ void MembraneResistance::notify( void )
 int MembraneResistance::main( void )
 {
   // get options:
-  int involtage = traceIndex( text( "involtage", 0 ) );
-  int incurrent = traceIndex( text( "incurrent", 0 ) );
-  int outcurrent = outTraceIndex( text( "outcurrent", 0 ) );
   Amplitude = number( "amplitude" );
   bool userm = boolean( "userm" );
   double vstep = number( "vstep" );
@@ -114,12 +94,8 @@ int MembraneResistance::main( void )
     return Failed;
   }
   bool nossfit = boolean( "nossfit" );
-  if ( involtage < 0 ) {
+  if ( SpikeTrace[0] < 0 ) {
     warning( "Invalid input voltage trace!" );
-    return Failed;
-  }
-  if ( outcurrent < 0 ) {
-    warning( "Invalid output current trace!" );
     return Failed;
   }
   if ( userm ) {
@@ -131,7 +107,7 @@ int MembraneResistance::main( void )
     }
   }
 
-  double samplerate = trace( involtage ).sampleRate();
+  double samplerate = trace( SpikeTrace[0] ).sampleRate();
 
   // don't print repro message:
   noMessage();
@@ -141,11 +117,11 @@ int MembraneResistance::main( void )
   MeanTrace = SampleDataF( -0.5*Duration, 2.0*Duration, 1/samplerate, 0.0 );
   SquareTrace = MeanTrace;
   StdevTrace = MeanTrace;
-  if ( incurrent >= 0 )
+  if ( CurrentTrace[0] >= 0 )
     MeanCurrent = MeanTrace;
   else
     MeanCurrent.clear();
-  DCCurrent = stimulusData().number( outTraceName( outcurrent ) );
+  DCCurrent = stimulusData().number( outTraceName( CurrentOutput[0] ) );
   VRest = 0.0;
   VRestsd = 0.0;
   VSS = 0.0;
@@ -170,7 +146,7 @@ int MembraneResistance::main( void )
   // plot:
   P.lock();
   P.setXRange( -500.0*Duration, 2000.0*Duration );
-  P.setYLabel( trace( SpikeTrace[involtage] ).ident() + " [" + VUnit + "]" );
+  P.setYLabel( trace( SpikeTrace[0] ).ident() + " [" + VUnit + "]" );
   P.unlock();
 
   // signal:
@@ -178,7 +154,7 @@ int MembraneResistance::main( void )
   signal = DCCurrent + Amplitude;
   signal.setIdent( "I=" + Str( DCCurrent + Amplitude ) + IUnit );
   signal.back() = DCCurrent;
-  signal.setTrace( outcurrent );
+  signal.setTrace( CurrentOutput[0] );
   signal.addDescription( "stimulus/pulse" );
   signal.description().addNumber( "Intensity", DCCurrent + Amplitude, IUnit );
   signal.description().addNumber( "IntensityOffset", DCCurrent, IUnit );
@@ -208,7 +184,7 @@ int MembraneResistance::main( void )
     }
 
     timeStamp();
-    analyzeOn( involtage, incurrent, Duration, sswidth, nossfit );
+    analyzeOn( Duration, sswidth, nossfit );
 
     sleepOn( Duration + 0.02 );
     if ( interrupt() ) {
@@ -217,7 +193,7 @@ int MembraneResistance::main( void )
       break;
     }
 
-    analyzeOff( involtage, incurrent, Duration, sswidth, nossfit );
+    analyzeOff( Duration, sswidth, nossfit );
     plot();
     sleepOn( pause );
     if ( interrupt() ) {
@@ -235,20 +211,19 @@ int MembraneResistance::main( void )
 }
 
 
-void MembraneResistance::analyzeOn( int involtage, int incurrent, 
-				    double duration,
+void MembraneResistance::analyzeOn( double duration,
 				    double sswidth, bool nossfit )
 {
   // update averages:
-  const InData &intrace = trace( involtage );
+  const InData &intrace = trace( SpikeTrace[0] );
   int inx = intrace.signalIndex() - MeanTrace.index( 0.0 );
   for ( int k=0; k<MeanTrace.index( duration ) && inx+k<intrace.size(); k++ ) {
     double v = intrace[inx+k];
     MeanTrace[k] += (v - MeanTrace[k])/(Count+1);
     SquareTrace[k] += (v*v - SquareTrace[k])/(Count+1);
     StdevTrace[k] = sqrt( SquareTrace[k] - MeanTrace[k]*MeanTrace[k] );
-    if ( incurrent >= 0 ) {
-      double c = IInFac*trace( incurrent )[inx+k];
+    if ( CurrentTrace[0] >= 0 ) {
+      double c = IInFac*trace( CurrentTrace[0] )[inx+k];
       MeanCurrent[k] += (c - MeanCurrent[k])/(Count+1);
     }
   }
@@ -307,20 +282,19 @@ void MembraneResistance::analyzeOn( int involtage, int incurrent,
 }
 
 
-void MembraneResistance::analyzeOff( int involtage, int incurrent, 
-				     double duration,
+void MembraneResistance::analyzeOff( double duration,
 				     double sswidth, bool nossfit )
 {
   // update averages:
-  const InData &intrace = trace( involtage );
+  const InData &intrace = trace( SpikeTrace[0] );
   int inx = intrace.signalIndex() - MeanTrace.index( 0.0 );
   for ( int k=MeanTrace.index( duration ); k<MeanTrace.size() && inx+k<intrace.size(); k++ ) {
     double v = intrace[inx+k];
     MeanTrace[k] += (v - MeanTrace[k])/(Count+1);
     SquareTrace[k] += (v*v - SquareTrace[k])/(Count+1);
     StdevTrace[k] = sqrt( SquareTrace[k] - MeanTrace[k]*MeanTrace[k] );
-    if ( incurrent >= 0 ) {
-      double c = IInFac*trace( incurrent )[inx+k];
+    if ( CurrentTrace[0] >= 0 ) {
+      double c = IInFac*trace( CurrentTrace[0] )[inx+k];
       MeanCurrent[k] += (c - MeanCurrent[k])/(Count+1);
     }
   }

@@ -112,10 +112,8 @@ public:
 
     /*! The number of traces that need to be simulated. */
   int traces( void ) const;
-    /*! The device of trace \a trace of the simulated data. */
-  int device( int trace ) const;
-    /*! The channel number of trace \a trace of the simulated data. */
-  int channel( int trace ) const;
+    /*! The name of trace \a trace of the simulated data. */
+  string traceName( int trace ) const;
     /*! The time step for trace \a trace of the simulated data.
         The time step is set to the sampling interval of the data acquisition
 	by default. Adjust it to your needs with setDeltat(). */
@@ -158,12 +156,11 @@ private:
     /*! Retrieve a single data value of the buffer of trace \a trace. */
   inline float pop( int trace ) { return Data[trace].Buffer.read(); };
 
-    /*! Add trace of device \a device, channel no. \a channel
-        with sampling interval \a deltat seconds,
+    /*! Add trace \a name with sampling interval \a deltat seconds,
 	voltage to secondary unit factor \a scale,
 	a buffer with \a nbuffer elements.
 	\sa clear() */
-  void add( int device, int channel, double deltat, 
+  void add( const string &name, double deltat, 
 	    double scale, int nbuffer );
     /*! Clear trace buffers. 
         \sa add() */
@@ -196,21 +193,20 @@ private:
   double AverageRatio;
 
   struct InTrace {
-    InTrace( void ) : Device( 0 ), Channel( 0 ), DeltaT( 0.0 ), 
+    InTrace( void ) : Name( "" ), DeltaT( 0.0 ), 
 		      Scale( 1.0 ),
 		      Buffer() {};
-    InTrace( int device, int channel, double deltat, 
+    InTrace( const string &name, double deltat, 
 	     float scale, int nbuffer )
-      : Device( device ), Channel( channel ), DeltaT( deltat ), 
+      : Name( name ), DeltaT( deltat ), 
 	Scale( scale ),	Buffer( nbuffer )
       {};
     InTrace( const InTrace &td )
-      : Device( td.Device ), Channel( td.Channel ), DeltaT( td.DeltaT ), 
+      : Name( td.Name ), DeltaT( td.DeltaT ), 
 	Scale( td.Scale ), Buffer( td.Buffer )
       {};
     void clear( void ) { Buffer.clear(); };
-    int Device;
-    int Channel;
+    string Name;
     double DeltaT;
     float Scale;
     CyclicArrayF Buffer;

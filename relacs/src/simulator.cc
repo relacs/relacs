@@ -201,8 +201,7 @@ int Simulator::read( InList &data )
 	bs = data[k].capacity();
       else
 	bs *= 100;
-      Sim->add( data[k].device(), data[k].channel(), 
-		data[k].sampleInterval(), data[k].scale(), bs );
+      Sim->add( data[k].ident(), data[k].sampleInterval(), data[k].scale(), bs );
     }
   }
 

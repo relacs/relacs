@@ -22,6 +22,7 @@ Plot:
 - remove the zoom stack -  remember only the default range
 
 Analog Input/Output:
+- Replace Ident by Name in InData, OutData, TraceSpec
 - WriteDataThread should not be started if the whole stimulus is already transfered.
 - check and improve writeReset and writeZero interfaces and implementations.
 - directWrite implementation should take care about synchronization as well!

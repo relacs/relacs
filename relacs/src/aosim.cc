@@ -88,13 +88,13 @@ int AOSim::reset( void )
 
 int AOSim::channels( void ) const
 {
-  return 2;
+  return 4;
 }
 
 
 int AOSim::bits( void ) const
 {
-  return 12;
+  return 16;
 }
 
 

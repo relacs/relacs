@@ -101,6 +101,7 @@ public:
   SpikingNeuron *NM;
   double NoiseSD;
   double SimDT;
+  double CurrentInput;
 
 };
 

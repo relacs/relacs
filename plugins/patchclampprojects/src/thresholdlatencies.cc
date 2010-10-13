@@ -44,15 +44,11 @@ ThresholdLatencies::ThresholdLatencies( void )
   addNumber( "savetracetime", "Length of trace to be saved and analyzed", 0.5, 0.0, 1000.0, 0.01, "sec", "ms" );
   addInteger( "repeats", "Repetitions of stimulus", 10, 0, 10000, 1 );
   addLabel( "Stimuli" );
-  addSelection( "outcurrent", "Output trace", "Current-1" );
   addSelection( "amplitudesrc", "Use initial amplitude from", "custom|DC|threshold" );
   addNumber( "startamplitude", "Initial amplitude of current stimulus", 0.1, 0.0, 1000.0, 0.01 ).setActivation( "amplitudesrc", "custom" );
   addNumber( "startamplitudestep", "Initial size of amplitude steps used for searching threshold", 0.1, 0.0, 1000.0, 0.001 );
   addNumber( "amplitudestep", "Final size of amplitude steps used for oscillating around threshold", 0.01, 0.0, 1000.0, 0.001 );
   addSelection( "adjust", "Adjust", "DC|none|stimulus|DC" );
-  addLabel( "Analysis" );
-  addSelection( "involtage", "Input voltage trace", "V-1" );
-  addSelection( "incurrent", "Input current trace", "Current-1" );
   setFlags( 1 );
   addTypeStyle( OptWidget::TabLabel, Parameter::Label );
   setConfigSelectMask( 1 );
@@ -74,33 +70,16 @@ ThresholdLatencies::ThresholdLatencies( void )
 
 void ThresholdLatencies::config( void )
 {
-  setText( "involtage", spikeTraceNames() );
-  setToDefault( "involtage" );
-  setText( "incurrent", currentTraceNames() );
-  setToDefault( "incurrent" );
-  setText( "outcurrent", currentOutputNames() );
-  setToDefault( "outcurrent" );
-}
-
-
-void ThresholdLatencies::notify( void )
-{
-  int involtage = index( "involtage" );
-  if ( involtage >= 0 && SpikeTrace[involtage] >= 0 ) {
-    VUnit = trace( SpikeTrace[involtage] ).unit();
-  }
-
-  int outcurrent = index( "outcurrent" );
-  if ( outcurrent >= 0 && CurrentOutput[outcurrent] >= 0 ) {
-    IUnit = outTrace( CurrentOutput[outcurrent] ).unit();
+  if ( SpikeTrace[0] >= 0 )
+    VUnit = trace( SpikeTrace[0] ).unit();
+  if ( CurrentOutput[0] >= 0 ) {
+    IUnit = outTrace( CurrentOutput[0] ).unit();
     setUnit( "startamplitude", IUnit );
     setUnit( "startamplitudestep", IUnit );
     setUnit( "amplitudestep", IUnit );
   }
-
-  int incurrent = index( "incurrent" );
-  if ( incurrent >= 0 && CurrentTrace[incurrent] >= 0 ) {
-    string iinunit = trace( CurrentTrace[incurrent] ).unit();
+  if ( CurrentTrace[0] >= 0 ) {
+    string iinunit = trace( CurrentTrace[0] ).unit();
     IInFac = Parameter::changeUnit( 1.0, iinunit, IUnit );
   }
 }
@@ -108,9 +87,6 @@ void ThresholdLatencies::notify( void )
 
 int ThresholdLatencies::main( void )
 {
-  int involtage = index( "involtage" );
-  int incurrent = traceIndex( text( "incurrent", 0 ) );
-  int outcurrent = outTraceIndex( text( "outcurrent", 0 ) );
   int durationsel = index( "durationsel" );
   double duration = number( "duration" );
   double durationfac = number( "durationfac" );
@@ -133,7 +109,7 @@ int ThresholdLatencies::main( void )
     }
     duration = durationfac*membranetau;
   }
-  double orgdcamplitude = stimulusData().number( outTraceName( outcurrent ) );
+  double orgdcamplitude = stimulusData().number( outTraceName( 0 ) );
   if ( amplitudesrc == 1 )
     amplitude = orgdcamplitude;
   else if ( amplitudesrc == 2 ) {
@@ -158,16 +134,12 @@ int ThresholdLatencies::main( void )
     warning( "Stimulus duration plus pause plus delay must be at least as long as savetracetime!" );
     return Failed;
   }
-  if ( involtage < 0 || SpikeTrace[ involtage ] < 0 || SpikeEvents[ involtage ] < 0 ) {
+  if ( SpikeTrace[ 0 ] < 0 || SpikeEvents[ 0 ] < 0 ) {
     warning( "Invalid input voltage trace or missing input spikes!" );
     return Failed;
   }
-  if ( outcurrent < 0 ) {
-    warning( "Invalid output current trace!" );
-    return Failed;
-  }
 
-  double samplerate = trace( SpikeTrace[involtage] ).sampleRate();
+  double samplerate = trace( SpikeTrace[0] ).sampleRate();
 
   // don't print repro message:
   noMessage();
@@ -206,17 +178,17 @@ int ThresholdLatencies::main( void )
   // plot:
   P.lock();
   P.setXRange( -1000.0*delay, 1000.0*(savetracetime-delay) );
-  P.setYLabel( trace( SpikeTrace[involtage] ).ident() + " [" + VUnit + "]" );
+  P.setYLabel( trace( SpikeTrace[0] ).ident() + " [" + VUnit + "]" );
   P.unlock();
 
   // signal:
   OutData signal( duration, 1.0/samplerate );
-  signal.setTrace( outcurrent );
+  signal.setTrace( CurrentOutput[0] );
   signal.setDelay( delay );
 
   // DC signal:
   OutData dcsignal( dcamplitude );
-  dcsignal.setTrace( outcurrent );
+  dcsignal.setTrace( CurrentOutput[0] );
 
   // write stimulus:
   sleep( pause );
@@ -257,8 +229,7 @@ int ThresholdLatencies::main( void )
     }
 
     // analyze, plot, and save:
-    analyze( involtage, incurrent, amplitude, dcamplitude,
-	     delay, duration, savetracetime, pause );
+    analyze( amplitude, dcamplitude, delay, duration, savetracetime, pause );
     if ( record )
       saveTrace( tf, tracekey, count-1 );
     plot( record, duration );
@@ -321,7 +292,7 @@ int ThresholdLatencies::main( void )
 	    search = false;
 	  else {
 	    record = true;
-	    openTraceFile( tf, tracekey, incurrent );
+	    openTraceFile( tf, tracekey );
 	  }
 	}
 	else {
@@ -356,29 +327,28 @@ int ThresholdLatencies::main( void )
 }
 
 
-void ThresholdLatencies::analyze( int involtage, int incurrent,
-				  double amplitude, double dcamplitude,
+void ThresholdLatencies::analyze( double amplitude, double dcamplitude,
 				  double delay, double duration,
 				  double savetime, double pause )
 {
   if ( Results.size() >= 20 )
     Results.pop_front();
 
-  if ( incurrent >= 0 ) {
-    Results.push_back( Data( delay, savetime, trace( SpikeTrace[involtage] ),
-			     trace( incurrent ) ) );
+  if ( CurrentTrace[0] >= 0 ) {
+    Results.push_back( Data( delay, savetime, trace( SpikeTrace[0] ),
+			     trace( CurrentTrace[0] ) ) );
     Results.back().Current *= IInFac;
   }
   else
-    Results.push_back( Data( delay, savetime, trace( SpikeTrace[involtage] ) ) );
+    Results.push_back( Data( delay, savetime, trace( SpikeTrace[0] ) ) );
   Results.back().DCAmplitude = dcamplitude;
   Results.back().Amplitude = amplitude;
-  events( SpikeEvents[involtage] ).copy( signalTime() - delay,
-					 signalTime() + savetime - delay,
-					 signalTime(),
-					 Results.back().Spikes );
+  events( SpikeEvents[0] ).copy( signalTime() - delay,
+				 signalTime() + savetime - delay,
+				 signalTime(),
+				 Results.back().Spikes );
   Results.back().SpikeCount = Results.back().Spikes.count( 0.0, savetime-delay );
-  Results.back().BaseSpikeCount = events( SpikeEvents[involtage] ).count( signalTime()-pause, signalTime() );
+  Results.back().BaseSpikeCount = events( SpikeEvents[0] ).count( signalTime()-pause, signalTime() );
 
   if ( Results.back().SpikeCount > 0 ) {
     SpikeCount++;
@@ -391,12 +361,11 @@ void ThresholdLatencies::analyze( int involtage, int incurrent,
 }
 
 
-void ThresholdLatencies::openTraceFile( ofstream &tf, TableKey &tracekey,
-					int incurrent )
+void ThresholdLatencies::openTraceFile( ofstream &tf, TableKey &tracekey )
 {
   tracekey.addNumber( "t", "ms", "%7.2f" );
   tracekey.addNumber( "V", VUnit, "%6.1f" );
-  if ( incurrent >= 0 )
+  if ( CurrentTrace[0] >= 0 )
     tracekey.addNumber( "I", IUnit, "%6.3f" );
   if ( completeRuns() <= 0 )
     tf.open( addPath( "thresholdlatencies-traces.dat" ).c_str() );

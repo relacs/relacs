@@ -50,7 +50,6 @@ public:
 
   FICurve( void );
   virtual void config( void );
-  virtual void notify( void );
   virtual int main( void );
   void plot( double duration, int inx );
   void save( void );

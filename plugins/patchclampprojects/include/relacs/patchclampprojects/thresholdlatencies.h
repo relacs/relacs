@@ -52,12 +52,10 @@ public:
   ThresholdLatencies( void );
   virtual int main( void );
   virtual void config( void );
-  virtual void notify( void );
-  void analyze( int involtage, int incurrent,
-		double amplitude, double dcamplitude,
+  void analyze( double amplitude, double dcamplitude,
 		double delay, double duration, double savetime, double pause );
   void plot( bool record, double duration );
-  void openTraceFile( ofstream &tf, TableKey &tracekey, int incurrent );
+  void openTraceFile( ofstream &tf, TableKey &tracekey );
   void saveTrace( ofstream &tf, TableKey &tracekey, int index );
   void save( bool dc );
   void saveSpikes( void );

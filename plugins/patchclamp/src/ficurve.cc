@@ -37,7 +37,6 @@ FICurve::FICurve( void )
 {
   // add some options:
   addLabel( "Stimuli" );
-  addSelection( "outcurrent", "Output trace", "Current-1" );
   addSelection( "ibase", "Currents are relative to", "zero|DC|threshold" );
   addNumber( "imin", "Minimum injected current", 0.0, -1000.0, 1000.0, 0.001 );
   addNumber( "imax", "Maximum injected current", 1.0, -1000.0, 1000.0, 0.001 );
@@ -55,8 +54,6 @@ FICurve::FICurve( void )
   addInteger( "blockrepeat", "Number of repetitions of a fixed intensity increment", 10, 1, 10000, 1 );
   addInteger( "repeat", "Number of repetitions of the whole V-I curve measurement", 1, 0, 10000, 1 );
   addLabel( "Analysis" );
-  addSelection( "involtage", "Input voltage trace", "V-1" );
-  addSelection( "incurrent", "Input current trace", "Current-1" );
   addNumber( "fmax", "Maximum firing rate", 100.0, 0.0, 2000.0, 1.0, "Hz" );
   addNumber( "vmax", "Maximum steady-state potential", -50.0, -2000.0, 2000.0, 1.0, "mV" );
   addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
@@ -71,37 +68,23 @@ FICurve::FICurve( void )
 
 void FICurve::config( void )
 {
-  setText( "involtage", spikeTraceNames() );
-  setToDefault( "involtage" );
-  setText( "incurrent", currentTraceNames() );
-  setToDefault( "incurrent" );
-  setText( "outcurrent", currentOutputNames() );
-  setToDefault( "outcurrent" );
-}
-
-
-void FICurve::notify( void )
-{
-  int involtage = index( "involtage" );
-  if ( involtage >= 0 && SpikeTrace[involtage] >= 0 ) {
-    VUnit = trace( SpikeTrace[involtage] ).unit();
+  if ( SpikeTrace[0] >= 0 ) {
+    VUnit = trace( SpikeTrace[0] ).unit();
     VFac = Parameter::changeUnit( 1.0, VUnit, "mV" );
     setUnit( "vstep", VUnit );
-    setUnit( "vmax", VUnit );
+    setUnit( "vmin", VUnit );
   }
 
-  int outcurrent = index( "outcurrent" );
-  if ( outcurrent >= 0 && CurrentOutput[outcurrent] >= 0 ) {
-    IUnit = outTrace( CurrentOutput[outcurrent] ).unit();
+  if ( CurrentOutput[0] >= 0 ) {
+    IUnit = outTrace( CurrentOutput[0] ).unit();
     setUnit( "imin", IUnit );
     setUnit( "imax", IUnit );
     setUnit( "istep", IUnit );
     IFac = Parameter::changeUnit( 1.0, IUnit, "nA" );
   }
 
-  int incurrent = index( "incurrent" );
-  if ( incurrent >= 0 && CurrentTrace[incurrent] >= 0 ) {
-    string iinunit = trace( CurrentTrace[incurrent] ).unit();
+  if ( CurrentTrace[0] >= 0 ) {
+    string iinunit = trace( CurrentTrace[0] ).unit();
     IInFac = Parameter::changeUnit( 1.0, iinunit, IUnit );
   }
 }
@@ -115,9 +98,6 @@ int FICurve::main( void )
   Header.addNumber( "ReProTime", reproStartTime(), "s", "%0.3f" );
 
   // get options:
-  int involtage = index( "involtage" );
-  int incurrent = traceIndex( text( "incurrent", 0 ) );
-  int outcurrent = outTraceIndex( text( "outcurrent", 0 ) );
   int ibase = index( "ibase" );
   double imin = number( "imin" );
   double imax = number( "imax" );
@@ -136,7 +116,7 @@ int FICurve::main( void )
   double fmax = number( "fmax" );
   double vmax = number( "vmax" );
   double sswidth = number( "sswidth" );
-  double dccurrent = stimulusData().number( outTraceName( outcurrent ) );
+  double dccurrent = stimulusData().number( outTraceName( CurrentOutput[0] ) );
   if ( ibase == 1 ) {
     imin += dccurrent;
     imax += dccurrent;
@@ -164,11 +144,11 @@ int FICurve::main( void )
     warning( "sswidth must be smaller than stimulus duration!" );
     return Failed;
   }
-  if ( involtage < 0 || SpikeTrace[ involtage ] < 0 || SpikeEvents[ involtage ] < 0 ) {
+  if ( SpikeTrace[0] < 0 || SpikeEvents[0 ] < 0 ) {
     warning( "Invalid input voltage trace or missing input spikes!" );
     return Failed;
   }
-  if ( outcurrent < 0 ) {
+  if ( CurrentOutput[0] < 0 ) {
     warning( "Invalid output current trace!" );
     return Failed;
   }
@@ -196,7 +176,7 @@ int FICurve::main( void )
 
   // init:
   DoneState state = Completed;
-  double samplerate = trace( SpikeTrace[involtage] ).sampleRate();
+  double samplerate = trace( SpikeTrace[0] ).sampleRate();
   Range.set( imin, imax, istep, repeat, blockrepeat, singlerepeat );
   Range.setIncrement( iincrement );
   Range.setSequence( ishuffle );
@@ -220,7 +200,7 @@ int FICurve::main( void )
 
   // signal:
   OutData signal( duration, 1.0/samplerate );
-  signal.setTrace( outcurrent );
+  signal.setTrace( CurrentOutput[0] );
   signal.setDelay( delay );
 
   // write stimulus:
@@ -290,9 +270,9 @@ int FICurve::main( void )
 
     Results[Range.pos()].I = amplitude;
     Results[Range.pos()].DC = dccurrent;
-    Results[Range.pos()].analyze( Range.count(), trace( involtage ),
-				  events( SpikeEvents[involtage] ), 
-				  incurrent >= 0 ? &trace( incurrent ) : 0,
+    Results[Range.pos()].analyze( Range.count(), trace( 0 ),
+				  events( SpikeEvents[0] ), 
+				  CurrentTrace[0] >= 0 ? &trace( CurrentTrace[0] ) : 0,
 				  IInFac, delay, duration, sswidth );
 
     if ( Results[Range.pos()].SSRate > fmax ) {

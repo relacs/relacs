@@ -51,12 +51,10 @@ public:
   FindThreshold( void );
   virtual int main( void );
   virtual void config( void );
-  virtual void notify( void );
-  void analyze( int involtage, int incurrent,
-		double amplitude, double duration,
+  void analyze( double amplitude, double duration,
 		double savetime, double skiptime );
   void plot( bool record, double duration );
-  void openFiles( ofstream &tf, TableKey &tracekey, int incurrent );
+  void openFiles( ofstream &tf, TableKey &tracekey );
   void saveTrace( ofstream &tf, TableKey &tracekey, int index );
   void save( void );
   void saveSpikes( void );

@@ -53,15 +53,9 @@ int Model::traces( void ) const
 }
 
 
-int Model::device( int trace ) const
+string Model::traceName( int trace ) const
 {
-  return trace >=0 && trace < (int)Data.size() ? Data[trace].Device : -1;
-}
-
-
-int Model::channel( int trace ) const
-{
-  return trace >=0 && trace < (int)Data.size() ? Data[trace].Channel : -1;
+  return trace >=0 && trace < (int)Data.size() ? Data[trace].Name : "";
 }
 
 
@@ -100,10 +94,10 @@ void Model::setDeltat( int trace, double deltat )
 }
 
 
-void Model::add( int device, int channel, double deltat, 
+void Model::add( const string &name, double deltat, 
 		 double scale, int nbuffer )
 {
-  Data.push_back( InTrace( device, channel, deltat, scale, nbuffer ) );
+  Data.push_back( InTrace( name, deltat, scale, nbuffer ) );
 }
 
 

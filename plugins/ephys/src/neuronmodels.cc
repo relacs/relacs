@@ -61,6 +61,17 @@ void NeuronModels::main( void )
 {
   readOptions();
 
+  // traces:
+  int traceinx[2] = { -1, -1 };
+  for ( int k=0; k<traces(); k++ ) {
+    if ( traceName( k ) == "V-1" )
+      traceinx[0] = k;
+    else if ( traceName( k ) == "Current-1" )
+      traceinx[1] = k;
+    else
+      warning( "Input trace <b>" + traceName( k ) + "</b> not known to NeuronModels!" );
+  }
+
   // deltat( 0 ) must be integer multiple of delta t for integration:
   int maxs = int( ::floor( 1000.0*deltat( 0 )/timeStep() ) );
   if ( maxs <= 0 )
@@ -90,7 +101,9 @@ void NeuronModels::main( void )
 
     cs++;
     if ( cs == maxs ) {
-      push( 0, simx[0] );
+      push( traceinx[0], simx[0] );
+      if ( traceinx[1] >= 0 )
+	push( traceinx[1], CurrentInput );
       cs = 0;
     }
 
@@ -102,7 +115,8 @@ void NeuronModels::main( void )
 
 void NeuronModels::operator()( double t, double *x, double *dxdt, int n )
 {
-  double s = signal( 0.001 * t ) + NoiseSD * rnd.gaussian();;
+  CurrentInput = signal( 0.001 * t );
+  double s = ( CurrentInput + NM->offset() ) * NM->gain() + NoiseSD * rnd.gaussian();;
   (*NM)( t, s, x, dxdt, n );
 }
 
@@ -110,8 +124,6 @@ void NeuronModels::operator()( double t, double *x, double *dxdt, int n )
 void NeuronModels::process( const OutData &source, OutData &dest )
 {
   dest = source;
-  dest += NM->offset();
-  dest *= NM->gain();
 }
 
 

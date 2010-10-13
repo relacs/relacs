@@ -49,12 +49,9 @@ public:
 
   MembraneResistance( void );
   virtual void config( void );
-  virtual void notify( void );
   virtual int main( void );
-  void analyzeOn( int involtage, int incurrent, double duration,
-		  double sswidth, bool nossfit );
-  void analyzeOff( int involtage, int incurrent, double duration,
-		   double sswidth, bool nossfit );
+  void analyzeOn( double duration, double sswidth, bool nossfit );
+  void analyzeOff( double duration, double sswidth, bool nossfit );
   void plot( void );
   void save( void );
   void saveData( void );
