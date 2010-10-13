@@ -411,13 +411,14 @@ class RangeLoop
     /*! Reset the range.
         Set index and repeat counters to zero,
         reset current increment,
-        set the counts of the data elements to zero,
-        and clear the skip flags.
+        set the counts of the data elements to zero.
+        If \a clearskip is set to \c true (default)
+	then the skip flags are also cleared.
         A new sequence of indices is generated
 	starting with the one nearest to \a pos.
         If \a pos is negative (default) it is set to an appropriate value.
 	\sa purge() */
-  void reset( int pos=-1 );
+  void reset( int pos=-1, bool clearskip=true );
     /*! Remove all data elements, that have their skip flag set
         and generate a new sequence.
         \sa reset() */

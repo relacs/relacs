@@ -908,12 +908,13 @@ void RangeLoop::initSequence( int pos )
 }
 
 
-void RangeLoop::reset( int pos )
+  void RangeLoop::reset( int pos, bool clearskip )
 {
   Loop = 0;
   for ( unsigned int k=0; k<Elements.size(); k++ ) {
     Elements[k].Count = 0;
-    Elements[k].Skip = false;
+    if ( clearskip )
+      Elements[k].Skip = false;
   }
   RepeatCount = 0;
   BlockRepeatCount = 0;

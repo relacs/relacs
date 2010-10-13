@@ -73,12 +73,12 @@ FICurve::FICurve( void )
 
   // add some parameter as options:
   addLabel( "Intensities" ).setStyle( OptWidget::TabLabel );
-  addNumber( "intmin", "Minimum stimulus intensity", MinIntensity, -200.0, 200.0, 5.0, "dB SPL" );
-  addNumber( "intmax", "Maximum stimulus intensity", MaxIntensity, 0.0, 200.0, 5.0, "dB SPL" );
-  addNumber( "intstep", "Sound intensity step", IntensityStep, 0.0, 200.0, 1.0, "dB SPL" );
-  addBoolean( "usethresh", "Relative to the cell's threshold", UseThresh );
-  addBoolean( "usesat", "Maximum intensity relative to the cell's best saturation", UseSaturation );
-  addBoolean( "useprevints", "Re-use the intensity settings from the previous run", false );
+  addNumber( "intmin", "Minimum stimulus intensity", MinIntensity, -200.0, 200.0, 5.0, "dB SPL" ).setActivation( "useprevints", "no" );
+  addNumber( "intmax", "Maximum stimulus intensity", MaxIntensity, 0.0, 200.0, 5.0, "dB SPL" ).setActivation( "useprevints", "no" );
+  addNumber( "intstep", "Sound intensity step", IntensityStep, 0.0, 200.0, 1.0, "dB SPL" ).setActivation( "useprevints", "no" );
+  addBoolean( "usethresh", "Relative to the cell's threshold", UseThresh ).setActivation( "useprevints", "no" );
+  addBoolean( "usesat", "Maximum intensity relative to the cell's best saturation", UseSaturation ).setActivation( "useprevints", "no" );
+  addSelection( "useprevints", "Re-use intensities from the previous run", "no|all|selected" );
   addSelection( "intshuffle", "Order of intensities", RangeLoop::sequenceStrings() );
   addInteger( "intincrement", "Initial increment for intensities", IntIncrement, -1000, 1000, 1 );
   addInteger( "singlerepeat", "Number of immediate repetitions of a single stimulus", SingleRepeat, 1, 10000, 1 );
@@ -125,7 +125,6 @@ FICurve::FICurve( void )
   SilentRateSq = 0.0;
   SilentRateSD = 0.0;
   MaxSilentRate = 0.0;
-  IntensityRange.clear();
   Intensity = 0.0;
   MinCarrierFrequency = 2000.0;
   FICurveStops = 0;
@@ -184,7 +183,7 @@ int FICurve::main( void )
   IntensityStep = number( "intstep" );
   UseThresh = boolean( "usethresh" );
   UseSaturation = boolean( "usesat" );
-  bool useprevints = boolean( "useprevints" );
+  int useprevints = index( "useprevints" );
   IntShuffle = RangeLoop::Sequence( index( "intshuffle" ) );
   IntIncrement = integer( "intincrement" );
   SlopeIntIncrement = integer( "slopeintincrement" );
@@ -269,6 +268,29 @@ int FICurve::main( void )
   // plot trace:
   plotToggle( true, true, 2.0*PreWidth+Duration, PreWidth );
 
+  // intensity:
+  if ( useprevints > 0 ) {
+    if ( useprevints > 1 )
+      IntensityRange.purge();
+    MinIntensity = IntensityRange.minValue();
+    MaxIntensity = IntensityRange.maxValue();
+    IntensityStep = IntensityRange.step();
+  }
+  else {
+    IntensityRange.clear();
+    IntensityRange.set( MinIntensity, MaxIntensity, IntensityStep );
+  }
+  IntensityRange.setRepeat( IntRepeat );
+  IntensityRange.setBlockRepeat( IntBlockRepeat );
+  IntensityRange.setSingleRepeat( SingleRepeat );
+  IntensityRange.setIncrement( IntIncrement );
+  IntensityRange.setSequence( IntShuffle );
+  IntensityRange.reset( -1, ( useprevints != 1 ) );
+  Intensity = *IntensityRange;
+
+  if ( ResetSilent == 2 )
+    resetSilentActivity();
+
   // plot:
   P.lock();
   P[0].clear();
@@ -287,22 +309,6 @@ int FICurve::main( void )
   }
   PlotIntensitySelection = false;
   P.unlock();
-
-  // intensity:
-  if ( useprevints )
-    IntensityRange.purge();
-  else
-    IntensityRange.set( MinIntensity, MaxIntensity, IntensityStep );
-  IntensityRange.setRepeat( IntRepeat );
-  IntensityRange.setBlockRepeat( IntBlockRepeat );
-  IntensityRange.setSingleRepeat( SingleRepeat );
-  IntensityRange.setIncrement( IntIncrement );
-  IntensityRange.setSequence( IntShuffle );
-  IntensityRange.reset();
-  Intensity = *IntensityRange;
-
-  if ( ResetSilent == 2 )
-    resetSilentActivity();
 
   // results:
   vector< FIData > results( IntensityRange.size(), FIData( -PreWidth, Duration+Pause-PreWidth, RateDt ) );
