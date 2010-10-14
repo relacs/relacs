@@ -257,7 +257,7 @@ double InList::currentTime( void ) const
   double ct = operator[]( 0 ).currentTime();
   for ( int k=1; k<size(); k++ ) {
     double ctk = operator[]( k ).currentTime();
-    if ( ct > ctk )
+    if ( ct > ctk && ctk > 0.0 )  // skip empty traces in case a model does not simulate some traces
       ct = ctk;
   }
   return ct;

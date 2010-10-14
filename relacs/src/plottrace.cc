@@ -810,8 +810,12 @@ void PlotTrace::autoRange( void )
   Manual = false;
   if ( ManualButton != 0 )
     ManualButton->setDown( Manual );
-  setState( AutoOn, AutoFixed, AutoTime, AutoOffs );
+  bool autoon = AutoOn;
+  bool autofixed = AutoFixed;
+  double autotime = AutoTime;
+  double autooffs = AutoOffs;
   P.unlock();
+  setState( autoon, autofixed, autotime, autooffs );
 }
 
 

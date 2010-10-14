@@ -20,6 +20,7 @@ Plot:
 - possibly infinite loop in line 1527 (autoscaling) from line 1534 (initTics)
 - change zoom behavior on axis (centered)
 - remove the zoom stack -  remember only the default range
+- PlotTrace/RePro: replace plotToggel() by some nicer functions!
 
 Analog Input/Output:
 - Replace Ident by Name in InData, OutData, TraceSpec

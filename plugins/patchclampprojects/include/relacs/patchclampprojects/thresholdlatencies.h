@@ -52,9 +52,10 @@ public:
   ThresholdLatencies( void );
   virtual int main( void );
   virtual void config( void );
-  void analyze( double amplitude, double dcamplitude,
-		double delay, double duration, double savetime, double pause );
-  void plot( bool record, double duration );
+  void analyze( double dcamplitude, double preamplitude, double amplitude, double postamplitude,
+		double delay, double preduration, double duration, double postduration,
+		double savetime, double pause );
+  void plot( bool record, double preduration, double duration, double postduration );
   void openTraceFile( ofstream &tf, TableKey &tracekey );
   void saveTrace( ofstream &tf, TableKey &tracekey, int index );
   void save( bool dc );
@@ -70,12 +71,14 @@ protected:
   double IInFac;
 
   struct Data {
-    Data( double delay, double savetime,
+    Data( double delay, double preduration, double savetime,
 	  const InData &voltage, const InData &current );
-    Data( double delay, double savetime,
+    Data( double delay, double preduration, double savetime,
 	  const InData &voltage );
     double DCAmplitude;
     double Amplitude;
+    double PreAmplitude;
+    double PostAmplitude;
     SampleDataF Voltage;
     SampleDataF Current;
     EventData Spikes;
@@ -88,6 +91,8 @@ protected:
   int TrialCount;
   ArrayD Amplitudes;
   ArrayD DCAmplitudes;
+  ArrayD PreAmplitudes;
+  ArrayD PostAmplitudes;
   ArrayD Latencies;
   ArrayI SpikeCounts;
   EventList Spikes;
