@@ -158,33 +158,19 @@ void Model::notify( void )
 
 double Model::signal( double t, int trace ) const 
 {
-  if ( Signals.empty() )
+  if ( Signals.empty() || trace < 0 || trace >= (int)Signals.size() )
     return 0.0;
 
-  int inx = -1;
-  for ( unsigned int k=0; k<Signals.size(); k++ ) {
-    if ( Signals[k].Buffer.trace() == trace ) {
-      inx = k;
-      break;
-    }
-  }
-  if ( inx < 0 ) {
-    if ( trace < 0 )
+  if ( Signals[trace].Onset <= t && Signals[trace].Offset >= t ) {
+    t -= Signals[trace].Onset;
+    int inx = Signals[trace].Buffer.index( t );
+    if ( inx < 0 )
       inx = 0;
-    else
-      return 0.0;
+    else if ( inx >= Signals[trace].Buffer.size() )
+      inx = Signals[trace].Buffer.size()-1;
+    Signals[trace].LastSignal = Signals[trace].Buffer[inx];
   }
-
-  if ( Signals[inx].Onset <= t && Signals[inx].Offset >= t ) {
-    t -= Signals[inx].Onset;
-    int tinx = Signals[inx].Buffer.index( t );
-    if ( tinx < 0 )
-      tinx = 0;
-    else if ( tinx >= Signals[inx].Buffer.size() )
-      tinx = Signals[inx].Buffer.size()-1;
-    Signals[inx].LastSignal = Signals[inx].Buffer[tinx];
-  }
-  return Signals[inx].LastSignal;
+  return Signals[trace].LastSignal;
 }
 
 
@@ -253,33 +239,30 @@ double Model::add( OutData &signal )
 
   SignalMutex.lock();
 
-  // find signal on same trace:
-  for ( unsigned int k=0; k<Signals.size(); k++ ) {
-    if ( Signals[k].Buffer.trace() == signal.trace() ) {
-      // trace still busy?
-      if ( Signals[k].Offset > ct && ! signal.priority() ) {
-	signal.setError( signal.Busy );
-	SignalMutex.unlock();
-	return -1.0;
-      }
-      Signals.erase( Signals.begin()+k );
-      break;
-    }
+  if ( signal.trace() >= (int)Signals.size() ) {
+    // add new signals:
+    Signals.resize( signal.trace()+1 );
   }
 
-  // add signal:
-  Signals.push_back( OutTrace() );
-  process( signal, Signals.back().Buffer );
+  // trace still busy?
+  if ( Signals[signal.trace()].Offset > ct && ! signal.priority() ) {
+    signal.setError( signal.Busy );
+    SignalMutex.unlock();
+    return -1.0;
+  }
+
+  Signals[signal.trace()].Buffer.clear();
+  process( signal, Signals[signal.trace()].Buffer );
 
   // current time:
   ct = elapsed();
   double bt = time( 0 );
   if ( ct < bt )
     ct = bt;
-  Signals.back().Onset = ct + Signals.back().Buffer.delay();
-  Signals.back().Offset = ct + Signals.back().Buffer.totalDuration();
+  Signals[signal.trace()].Onset = ct + Signals[signal.trace()].Buffer.delay();
+  Signals[signal.trace()].Offset = ct + Signals[signal.trace()].Buffer.totalDuration();
   SignalMutex.unlock();
-  return Signals.back().Onset;
+  return Signals[signal.trace()].Onset;
 }
 
 
@@ -287,20 +270,15 @@ void Model::stopSignal( void )
 {
   // current time:
   double ct = elapsed();
-
   SignalMutex.lock();
-  if ( Signals.empty() ) {
-    SignalMutex.unlock();
-    return;
-  }
-  for ( deque< OutTrace >::iterator sp = Signals.begin(); sp != Signals.end(); ) {
+  for ( deque< OutTrace >::iterator sp = Signals.begin(); sp != Signals.end(); ++sp ) {
     if ( sp->Onset >= ct ) {
-      sp = Signals.erase( sp );
-      continue;
+      sp->Onset = 0.0;
+      sp->Offset = 0.0;
+      sp->Buffer.clear();
     }
     else if ( sp->Offset > ct )
       sp->Offset = ct;
-    ++sp;
   }
   SignalMutex.unlock();
 }
@@ -309,7 +287,11 @@ void Model::stopSignal( void )
 void Model::clearSignals( void )
 {
   SignalMutex.lock();
-  Signals.clear();
+  for ( deque< OutTrace >::iterator sp = Signals.begin(); sp != Signals.end(); ++sp ) {
+    sp->Onset = 0.0;
+    sp->Offset = 0.0;
+    sp->Buffer.clear();
+  }
   SignalMutex.unlock();
 }
 

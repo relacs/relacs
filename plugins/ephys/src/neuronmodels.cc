@@ -115,7 +115,7 @@ void NeuronModels::main( void )
 
 void NeuronModels::operator()( double t, double *x, double *dxdt, int n )
 {
-  CurrentInput = signal( 0.001 * t );
+  CurrentInput = signal( 0.001 * t, 0 );
   double s = ( CurrentInput + NM->offset() ) * NM->gain() + NoiseSD * rnd.gaussian();;
   (*NM)( t, s, x, dxdt, n );
 }

@@ -28,7 +28,7 @@ namespace patchclampprojects {
 
 
 ThresholdLatencies::ThresholdLatencies( void )
-  : RePro( "ThresholdLatencies", "patchclampprojects", "Jan Benda", "1.0", "Feb 04, 2010" ),
+  : RePro( "ThresholdLatencies", "patchclampprojects", "Jan Benda", "1.1", "Oct 15, 2010" ),
     VUnit( "mV" ),
     IUnit( "nA" ),
     IInFac( 1.0 )
@@ -47,6 +47,8 @@ ThresholdLatencies::ThresholdLatencies( void )
   addNumber( "preduration", "Duration of pre-pulse stimulus", 0.0, 0.0, 1000.0, 0.001, "sec", "ms" );
   addSelection( "preamplitudesrc", "Set pre-pulse amplitude to", "custom|previous DC|threshold" ).setActivation( "preduration", ">0" );
   addNumber( "preamplitude", "Amplitude of pre-pulse stimulus", 0.1, 0.0, 1000.0, 0.01 ).setActivation( "preamplitudesrc", "custom" );
+  addSelection( "prepulseramp", "Start the pre-pulse with a ramp", "none|linear|cosine" ).setActivation( "preduration", ">0" );
+  addNumber( "prepulserampwidth", "Width of the ramp", 0.0, 0.0, 1000.0, 0.001, "sec", "ms" ).setActivation( "prepulseramp", "none", false );
   addNumber( "postduration", "Duration of post-pulse stimulus", 0.0, 0.0, 1000.0, 0.001, "sec", "ms" );
   addSelection( "postamplitudesrc", "Set post-pulse amplitude to", "custom|previous DC|threshold" ).setActivation( "postduration", ">0" );
   addNumber( "postamplitude", "Amplitude of post-pulse stimulus", 0.1, 0.0, 1000.0, 0.01 ).setActivation( "postamplitudesrc", "custom" );
@@ -110,6 +112,8 @@ int ThresholdLatencies::main( void )
   double preduration = number( "preduration" );
   int preamplitudesrc = index( "preamplitudesrc" );
   double preamplitude = number( "preamplitude" );
+  int prepulseramp = index( "prepulseramp" );
+  double prepulserampwidth = number( "prepulserampwidth" );
   double postduration = number( "postduration" );
   int postamplitudesrc = index( "postamplitudesrc" );
   double postamplitude = number( "postamplitude" );
@@ -150,15 +154,23 @@ int ThresholdLatencies::main( void )
     return Failed;
   }
   if ( savetracetime < duration+preduration+postduration ) {
-    warning( "savetracetime must be at least as long as the stimulus duration!" );
+    warning( "savetracetime must be at least as long as the stimulus duration (pre-, test-, and post-pulse)!" );
     return Failed;
   }
   if ( delay + preduration + duration + postduration + searchpause < savetracetime ) {
-    warning( "Stimulus duration plus searchpause plus delay must be at least as long as savetracetime!" );
+    warning( "Test-pulse plus pre-pulse plus post-pulse duration plus searchpause plus delay must be at least as long as savetracetime!" );
     return Failed;
   }
   if ( delay + preduration + duration + postduration + measurepause < savetracetime ) {
-    warning( "Stimulus duration plus pause plus delay must be at least as long as savetracetime!" );
+    warning( "Test-pulse plus pre-pulse plus post-pulse duration plus pause plus delay must be at least as long as savetracetime!" );
+    return Failed;
+  }
+  if ( prepulseramp > 0 && preduration > 0.0 && preduration < prepulserampwidth ) {
+    warning( "Width of pre-pulse ramp is longer than pre-pulse duration!" );
+    return Failed;
+  }
+  if ( prepulseramp > 0 && prepulserampwidth <= 0.0 ) {
+    warning( "Width of pre-pulse ramp should be greater than zero!" );
     return Failed;
   }
   if ( SpikeTrace[ 0 ] < 0 || SpikeEvents[ 0 ] < 0 ) {
@@ -240,8 +252,25 @@ int ThresholdLatencies::main( void )
     message( s );
 
     // signal:
-    for ( int k=0; k<signal.index( preduration ); k++ )
-      signal[k] = preamplitude;
+    if ( preduration > 0.0 && prepulseramp > 0 ) {
+      int w = signal.indices( prepulserampwidth );
+      if ( prepulseramp == 2 ) {
+	// cosine ramp:
+	for ( int k=0; k<w; k++ )
+	  signal[k] = dcamplitude + (preamplitude-dcamplitude)*( 0.5 - 0.5 * ::cos( 3.14159265358979323846*double(k)/double(w) ) );
+      }
+      else {
+	// linear ramp:
+	for ( int k=0; k<w; k++ )
+	  signal[k] = dcamplitude + (preamplitude-dcamplitude)*double(k)/double(w);
+      }
+      for ( int k=w; k<signal.index( preduration ); k++ )
+	signal[k] = preamplitude;
+    }
+    else {
+      for ( int k=0; k<signal.index( preduration ); k++ )
+	signal[k] = preamplitude;
+    }
     for ( int k=signal.index( preduration ); k<signal.index( preduration + duration ); k++ )
       signal[k] = amplitude;
     for ( int k=signal.index( preduration + duration ); k<signal.size(); k++ )

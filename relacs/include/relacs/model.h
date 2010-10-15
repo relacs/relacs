@@ -90,7 +90,7 @@ public:
     /*! Returns the signal of output trace \a trace at time \a t. 
         Specifically, this function returns the data value 
 	of the current signal at or right before time \a t. */
-  double signal( double t, int trace=-1 ) const;
+  double signal( double t, int trace=0 ) const;
 
     /*! Returns \c true if the simulation thread should be stopped.
         Use this from within main()

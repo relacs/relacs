@@ -83,7 +83,7 @@ for DOXYFILE in $SRCDIR/class*.html; do
     echo "create help file for ${PLUGINSET}${CLASSNAME}..."
     { echo "<html><body>"
 	echo "<h2>$CLASSNAME [$(sed -n  -e '/^\[.*\]/{s/^\[\(.*\)\].*/\1/; p;}' $DOXYFILE)]</h2>"
-	sed -n -e '/^\[.*\]/s/^\[.*\]\s*//; /<hr><a name="_details"/,/<hr>/p' $DOXYFILE | sed "1d; \$d; s/\\(<img.*\\)src=\"\\(.*\\)\"/\\1src=\"${PLUGINSET}\2\"/"
+	sed -n -e '/^\[.*\]/s/^\[.*\]\s*//; /<hr><a name="_details"/,/<hr>/p' $DOXYFILE | sed "1d; \$s/<hr>.*//; s/\\(<img.*\\)src=\"\\(.*\\)\"/\\1src=\"${PLUGINSET}\2\"/"
 	echo "</body></html>"; 
     } > ${HELPDIR}/${PLUGINSET}${CLASSNAME}.html
     LASTFILE="$CLASSNAME"
@@ -92,7 +92,10 @@ done
 
 # copy image files:
 for IMAGE in $SRCDIR/*.jpg $SRCDIR/*.png; do
-  if test -f $IMAGE && test "x${IMAGE##*/}" != "xdoxygen.png"; then
+  if test -f $IMAGE && test "x${IMAGE##*/}" != "xdoxygen.png" && \
+     test $(expr match "x${IMAGE##*/}" '.*__graph.*\.png') == "0" && \
+     test $(expr match "x${IMAGE##*/}" '.*dep.png') == "0" && \
+     test $(expr match "x${IMAGE##*/}" '.*legend.png') == "0"; then
     echo "copy image file ${PLUGINSET}${IMAGE##*/} ..."
     cp $IMAGE  $HELPDIR/${PLUGINSET}${IMAGE##*/}
   fi

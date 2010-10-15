@@ -39,7 +39,15 @@ namespace patchclampprojects {
 \class ThresholdLatencies
 \brief [RePro] Measures spike latencies in response to pulses close to the firing threshold.
 \author Jan Benda
-\version 1.0 (Feb 04, 2010)
+\version 1.1 (Oct 15, 2010)
+
+Possible stimulus configurations are shown in the figure:
+\image html thresholdlatenciesstimuli.png
+The left column shows the stimuli without a DC input
+whereas in the right column stimuli starting out from a preset DC input
+(for example by the RePro SetDC) are shown.
+Stimuli A and B are the standard test protocol, whereas for testing out the dynamics
+stimuli F and G might be most usefull.
 */
 
 
