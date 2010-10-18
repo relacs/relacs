@@ -143,7 +143,7 @@ public:
 
     /*! Add specific actions to the RELACS File-menu.
         This implementation adds a "Dialog" and a "Help" menu entry. */
-  virtual void addActions( QMenu *menu );
+  virtual void addActions( QMenu *menu, bool doxydoc );
 
 
 protected:

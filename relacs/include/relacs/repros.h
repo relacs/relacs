@@ -60,8 +60,8 @@ public:
     /*! The display for RePro messages. */
   QLabel *display( QWidget *parent=0 );
     /*! Add the menu from which each RePro can be started and
-        configured to \a menu. */
-  void addMenu( QMenu *menu );
+        configured to \a menu. See ReProData::addMenu() */
+  void addMenu( QMenu *menu, bool doxydoc );
 
     /*! The index of the RePro with class name \a name. */
   int index( const string &name ) const;
@@ -185,8 +185,11 @@ public:
   ReProData( const string &name, RePro *repro, Options &dopt,
 	     RePros *rps, RELACSWidget *rw );
 
-    /*! Adds the submenu for this RePro with inex \a inx to \a menu. */
-  void addMenu( QMenu *menu, int inx );
+    /*! Adds the submenu for this RePro with index \a inx to \a menu.
+        Add an action "doxygen" to the menu, if \a doxydoc is \c true.
+        This writes the RePro's options to standard output in a format
+	that can be used for the doxygen documentation of the RePro. */
+  void addMenu( QMenu *menu, int inx, bool doxydoc );
 
     /*! \return the name of the RePro. */
   string name( void ) const;

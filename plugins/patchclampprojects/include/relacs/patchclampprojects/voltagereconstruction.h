@@ -1,6 +1,6 @@
 /*
-  patchclamp/simple.h
-  Simple RePro for testing dynamic clamp
+  patchclampprojects/voltagereconstruction.h
+  Reconstructs the membrane voltage inbetween the spikes from latency measurements.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2010 Jan Benda <benda@bio.lmu.de>
@@ -19,55 +19,54 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _RELACS_PATCHCLAMP_SIMPLE_H_
-#define _RELACS_PATCHCLAMP_SIMPLE_H_ 1
+#ifndef _RELACS_PATCHCLAMPPROJECTS_VOLTAGERECONSTRUCTION_H_
+#define _RELACS_PATCHCLAMPPROJECTS_VOLTAGERECONSTRUCTION_H_ 1
 
+#include <QStackedLayout>
 #include <relacs/plot.h>
 #include <relacs/repro.h>
 #include <relacs/ephys/traces.h>
 using namespace relacs;
 
-namespace patchclamp {
+namespace patchclampprojects {
 
 
 /*!
-\class Simple
-\brief [RePro] Test dynamic clamp
-\author Jan Benda
-\version 0.0 (Feb 14, 2008)
-\par Options
-- \c intrace=V-1: Input trace (\c string)
-- \c outtrace=Current-1: Output trace (\c string)
-- \c amplitude=1nA: Amplitude of output signal (\c number)
-- \c duration=100ms: Duration of output (\c number)
-- \c stimulus=constant: Stimulus type (\c string)
-- \c samerate=true: Use sampling rate of input (\c boolean)
-- \c samplerate=1kHz: Sampling rate of output (\c number)
-- \c pause=400ms: Duration of pause bewteen outputs (\c number)
-- \c repeats=0: Repeats (\c integer)
-- \c save=false: Save recorded traces (\c boolean)
+\class VoltageReconstruction
+\brief [RePro] Reconstructs the membrane voltage inbetween the spikes from latency measurements.
+\author JanBenda, Ales Skorjanc
+\version 1.0 (Oct 18, 2010)
 */
 
 
-class Simple : public RePro, public ephys::Traces
+class VoltageReconstruction : public RePro, public ephys::Traces
 {
   Q_OBJECT
 
 public:
 
-  Simple( void );
+  VoltageReconstruction( void );
   virtual void config( void );
-  virtual void notify( void );
   virtual int main( void );
+
 
 protected:
 
+  void customEvent( QEvent *qce );
+
+  Plot SP;
   Plot P;
+  QStackedLayout *Stack;
+
+  string VUnit;
+  string IUnit;
+  double IInFac;
+
+  double PrevDCAmplitude;
 
 };
 
 
-}; /* namespace patchclamp */
+}; /* namespace patchclampprojects */
 
-#endif /* ! _RELACS_PATCHCLAMP_SIMPLE_H_ */
-
+#endif /* ! _RELACS_PATCHCLAMPPROJECTS_VOLTAGERECONSTRUCTION_H_ */

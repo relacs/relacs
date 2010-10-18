@@ -178,8 +178,6 @@ int ThresholdLatencies::main( void )
     return Failed;
   }
 
-  double samplerate = trace( SpikeTrace[0] ).sampleRate();
-
   // don't print repro message:
   noMessage();
 
@@ -225,7 +223,7 @@ int ThresholdLatencies::main( void )
   P.unlock();
 
   // signal:
-  OutData signal( preduration + duration + postduration, 1.0/samplerate );
+  OutData signal( preduration + duration + postduration, trace( SpikeTrace[0] ).stepsize() );
   signal.setTrace( CurrentOutput[0] );
   signal.setDelay( delay );
 

@@ -37,7 +37,7 @@ namespace patchclamp {
 \class SingleStimulus
 \brief [RePro] Output of a single stimulus stored in a file.
 \author Jan Benda
-
+\version 1.2 (Oct 13, 2008)
 \par Options
 - Waveform
 - \c waveform=From file: Stimulus waveform (\c string)
@@ -56,7 +56,7 @@ namespace patchclamp {
 - \c samplerate=1kHz: Sampling rate of output (\c number)
 - \c repeats=10times: Number of stimulus presentations (\c number)
 - \c pause=1000ms: Duration of pause between stimuli (\c number)
-- \c outtrace=V-1: Output trace (\c string)
+- \c outtrace=Current-1: Output trace (\c string)
 - Offset - search
 - \c userate=false: Search offset for target firing rate (\c boolean)
 - \c rate=100Hz: Target firing rate (\c number)
@@ -80,8 +80,6 @@ namespace patchclamp {
 - \c storemode=session: Save stimuli in (\c string)
 - \c storepath=: Save stimuli in custom directory (\c string)
 - \c storelevel=all: Save (\c string)
-
-\version 1.2 (Oct 13, 2008)
 */
 
 

@@ -37,6 +37,14 @@ namespace patchclamp {
 \brief [RePro] Interactively set the DC current.
 \author Jan Benda
 \version 1.0 (Feb 09, 2010)
+\par Options
+- \c outcurrent=Current-1: Output trace (\c string)
+- \c dcamplitudesel=to a fraction of the threshold: Set DC amplitude (\c string)
+- \c dcamplitude=0.1nA: DC amplitude (\c number)
+- \c dcamplitudefrac=90%: Fraction of threshold (\c number)
+- \c dcamplitudedecr=0.01nA: Decrement below threshold (\c number)
+- \c interactive=true: Set dc amplitude interactively (\c boolean)
+- \c dcamplitudestep=0.01nA: Stepsize for entering dc (\c number)
 */
 
 

@@ -82,7 +82,6 @@ void Filter::setName( const string &name )
 }
 
 
-
 }; /* namespace relacs */
 
 #include "moc_filter.cc"

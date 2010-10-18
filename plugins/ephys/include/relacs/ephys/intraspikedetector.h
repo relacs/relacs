@@ -39,7 +39,7 @@ namespace ephys {
 \class IntraSpikeDetector
 \brief [Detector] A detector for spikes in intracellular recordings.
 \author Jan Benda
-
+\version 1.0 (Mar 16, 2010)
 \par Options
 - Detector
 - \c threshold=10mV: Detection threshold (\c number)
@@ -53,6 +53,8 @@ namespace ephys {
 - \c log=false: Logarithmic histograms (\c boolean)
 - \c update=1sec: Update time interval (\c number)
 - \c history=10sec: Maximum history time (\c number)
+- \c rate=1e-12Hz: Rate (\c number)
+- \c size=0mV: Spike size (\c number)
 */
 
 

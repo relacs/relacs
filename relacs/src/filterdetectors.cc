@@ -1148,7 +1148,7 @@ int FilterDetectors::eventInputEvent( const string &ident ) const
 }
 
 
-void FilterDetectors::addMenu( QMenu *menu )
+void FilterDetectors::addMenu( QMenu *menu, bool doxydoc )
 {
   if ( Menu == 0 )
     Menu = menu;
@@ -1167,6 +1167,8 @@ void FilterDetectors::addMenu( QMenu *menu )
     QMenu *pop = Menu->addMenu( s.c_str() );
     pop->addAction( "&Options...", FL[k].FilterDetector, SLOT( dialog() ) );
     pop->addAction( "&Help...", FL[k].FilterDetector, SLOT( help() ) );
+    if ( doxydoc )
+      pop->addAction( "&Doxygen", FL[k].FilterDetector, SLOT( saveDoxygenOptions() ) );
   }
 }
 

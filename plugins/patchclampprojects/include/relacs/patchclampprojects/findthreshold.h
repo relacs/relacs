@@ -39,6 +39,23 @@ namespace patchclampprojects {
 \brief [RePro] Finds the current threshold.
 \author Jan Benda
 \version 1.0 (Feb 08, 2010)
+\par Options
+- Stimuli
+- \c amplitudesrc=custom: Use initial amplitude from (\c string)
+- \c startamplitude=0nA: Initial amplitude of current stimulus (\c number)
+- \c startamplitudestep=0.5nA: Initial size of amplitude steps used for searching threshold (\c number)
+- \c amplitudestep=0.01nA: Final size of amplitude steps used for oscillating around threshold (\c number)
+- \c minspikecount=1: Minimum required spike count for each trial (\c number)
+- \c resetcurrent=false: Reset current to zero after each stimulus (\c boolean)
+- Timing
+- \c durationsel=in milliseconds: Set duration of stimulus (\c string)
+- \c duration=1000ms: Duration of stimulus (\c number)
+- \c durationfac=1tau_m: Duration of stimulus (\c number)
+- \c searchpause=10ms: Duration of pause between outputs during search (\c number)
+- \c pause=10ms: Duration of pause between outputs (\c number)
+- \c savetime=1000ms: Length of trace to be saved and analyzed (\c number)
+- \c skiptime=100ms: Initial time skipped from spike-count analysis (\c number)
+- \c repeats=100: Repetitions of stimulus (\c integer)
 */
 
 

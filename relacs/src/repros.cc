@@ -199,14 +199,14 @@ void RePros::customEvent( QEvent *qce )
 }
 
 
-void RePros::addMenu( QMenu *menu )
+void RePros::addMenu( QMenu *menu, bool doxydoc )
 {
   menu->addAction( "&Options...", this, SLOT( dialog() ), Qt::CTRL + Qt::Key_O );
   menu->addAction( "&View", this, SLOT( raise() ), Qt::CTRL + Qt::Key_V );
   menu->addAction( "&Help...", this, SLOT( help() ), Qt::CTRL + Qt::Key_H );
   menu->addSeparator();
   for ( unsigned int k=0; k<RPs.size(); k++ )
-    RPs[k]->addMenu( menu, k );
+    RPs[k]->addMenu( menu, k, doxydoc );
 }
 
 
@@ -401,7 +401,7 @@ ReProData::ReProData( const string &name, RePro *repro, Options &dopt,
 }
 
 
-void ReProData::addMenu( QMenu *menu, int inx )
+void ReProData::addMenu( QMenu *menu, int inx, bool doxydoc )
 {
   string mt = "&";
   if ( inx == 0 )
@@ -420,6 +420,8 @@ void ReProData::addMenu( QMenu *menu, int inx )
   pop->addAction( "&View", this, SLOT( raise() ) );
   pop->addAction( "&Load", this, SLOT( reload() ) );
   pop->addAction( "&Help...", this, SLOT( help() ) );
+  if ( doxydoc )
+    pop->addAction( "&Doxygen", (RELACSPlugin*)(this->RP), SLOT( saveDoxygenOptions() ) );
 }
 
 

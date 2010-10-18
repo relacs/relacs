@@ -40,6 +40,7 @@ int main( int argc, char **argv )
   string pluginconfigfiles = "relacsplugins.cfg";
   string docpath = "";
   string iconpath = "";
+  bool doxydoc = false;
 
   static struct option longoptions[] = {
     { "version", 0, 0, 0 },
@@ -51,6 +52,7 @@ int main( int argc, char **argv )
     { "plugins-config-files", 1, 0, 0 },
     { "doc-path", 1, 0, 0 },
     { "icon-path", 1, 0, 0 },
+    { "with-doxygen", 0, 0, 0 },
     { 0, 0, 0, 0 }
   };
   optind = 0;
@@ -98,6 +100,9 @@ int main( int argc, char **argv )
 	if ( optarg && *optarg != '\0' )
 	  iconpath = optarg;
 	break;
+      case 9:
+	doxydoc = true;
+	break;
       }
       break;
 
@@ -132,7 +137,7 @@ int main( int argc, char **argv )
 
   relacs::RELACSWidget relacs( pluginrelative, pluginhomes, pluginhelp,
 			       coreconfigfiles, pluginconfigfiles, 
-			       docpath, iconpath, splash, mode );
+			       docpath, iconpath, doxydoc, splash, mode );
 
   if ( splashscreen )
     splash->showMessage( "Finished ...", Qt::AlignLeft | Qt::AlignBottom );

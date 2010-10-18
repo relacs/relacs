@@ -43,6 +43,7 @@ DEBUGRUN="no"
 DEBUGATTACH="no"
 DEBUGGER="libtool --mode=execute gdb"
 COREFILE=""
+WITHDOXYGEN="--with-doxygen"
 
 # Valgrind:
 VALGRIND="no"

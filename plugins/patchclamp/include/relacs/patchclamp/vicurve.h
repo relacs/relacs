@@ -38,6 +38,29 @@ namespace patchclamp {
 \brief [RePro] V-I curve measured in current-clamp
 \author Jan Benda
 \version 1.0 (Feb 12, 2010)
+\par Options
+- Stimuli
+- \c ibase=zero: Currents are relative to (\c string)
+- \c imin=-2nA: Minimum injected current (\c number)
+- \c imax=1.5nA: Maximum injected current (\c number)
+- \c istep=0.1nA: Minimum step-size of current (\c number)
+- \c userm=true: Use membrane resistance for estimating istep from vstep (\c boolean)
+- \c vstep=2mV: Minimum step-size of voltage (\c number)
+- Timing
+- \c duration=500ms: Duration of current output (\c number)
+- \c delay=100ms: Delay before current pulses (\c number)
+- \c pause=1000ms: Duration of pause between current pulses (\c number)
+- \c ishuffle=AlternateOutUp: Initial sequence of currents for first repetition (\c string)
+- \c shuffle=Random: Sequence of currents (\c string)
+- \c iincrement=-3: Initial increment for currents (\c integer)
+- \c singlerepeat=1: Number of immediate repetitions of a single stimulus (\c integer)
+- \c blockrepeat=5: Number of repetitions of a fixed intensity increment (\c integer)
+- \c repeat=100: Number of repetitions of the whole V-I curve measurement (\c integer)
+- Analysis
+- \c vmin=-120mV: Minimum value for membrane voltage (\c number)
+- \c sswidth=100ms: Window length for steady-state analysis (\c number)
+- \c ton=20ms: Timepoint of onset-voltage measurement (\c number)
+- \c plotstdev=true: Plot standard deviation of membrane potential (\c boolean)
 */
 
 

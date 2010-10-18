@@ -32,11 +32,11 @@ namespace base {
 \class SpectrumAnalyzer
 \brief [Control] Displays the spectrum of a voltage trace.
 \author Jan Benda
-
+\version 1.1 (Jul 24, 2009)
 \par Options
-- \c trace=0: Input trace number (\c number)
-- \c origin=before end of data: Analysis window (\c text)
-- \c offset=-1000ms: Offset of analysis window (\c number)
+- \c trace=V-1: Input trace (\c string)
+- \c origin=before end of data: Analysis window (\c string)
+- \c offset=0ms: Offset of analysis window (\c number)
 - \c duration=1000ms: Width of analysis window (\c number)
 - \c size=1024: Number of data points for FFT (\c string)
 - \c overlap=true: Overlap FFT windows (\c boolean)
@@ -44,8 +44,6 @@ namespace base {
 - \c fmax=500Hz: Maximum frequency (\c number)
 - \c decibel=true: Plot decibel relative to maximum (\c boolean)
 - \c pmin=-50dB: Minimum power (\c number)
-
-\version 1.1 (Jul 24, 2009)
 */
 
 

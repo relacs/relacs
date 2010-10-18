@@ -794,6 +794,13 @@ public:
   void setGlobalKeyEvents( bool global=true );
 
 
+public slots:
+
+    /*! Write the plugin's options to standard output in a format that can
+        directly be used for the doxygen documentation of the plugin. */
+  virtual void saveDoxygenOptions( void );
+
+
 protected slots:
 
     /*! Called from warning(), info(), updateDeviceMenu().

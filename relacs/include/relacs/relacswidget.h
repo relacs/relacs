@@ -118,6 +118,7 @@ public:
 		const string &pluginconfigfiles,
 		const string &docpath,
 		const string &iconpath,
+		bool doxydoc,
 		QSplashScreen *splash,
 		ModeTypes mode,
 		QWidget *parent=0 );
@@ -179,10 +180,6 @@ public:
   void notifyStimulusData( void );
     /*! Inform all plugins about changes in the meta data section \a section. */
   void notifyMetaData( const string &section );
-
-    /*! Writes out all options of all RELACSPlugins in a format 
-        suitable for the doxygen documentation. */
-  void saveDoxygenOptions( void );
 
     /*! Tells RELACSWidget that a new Session is started. Opens the files of
         SaveFiles and starts the initial macro if \a startmacro is true. */

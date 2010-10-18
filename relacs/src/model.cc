@@ -310,12 +310,15 @@ bool Model::restarted( void )
 }
 
 
-void Model::addActions( QMenu *menu )
+void Model::addActions( QMenu *menu, bool doxydoc )
 {
   menu->addAction( string( name() + " Dialog..." ).c_str(),
 		   (RELACSPlugin*)this, SLOT( dialog() ) );
   menu->addAction( string( name() + " Help..." ).c_str(),
 		   (RELACSPlugin*)this, SLOT( help() ) );
+  if ( doxydoc )
+    menu->addAction( string( name() + " Doxygen" ).c_str(),
+		     (RELACSPlugin*)this, SLOT( saveDoxygenOptions() ) );
 }
 
 

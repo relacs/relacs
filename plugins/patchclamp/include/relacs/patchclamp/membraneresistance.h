@@ -38,6 +38,19 @@ namespace patchclamp {
 \brief [RePro] Measures membrane resistance, capacitance, and time constant with current pulses
 \author Jan Benda
 \version 1.0 (Nov 12, 2009)
+\par Options
+- Stimulus
+- \c amplitude=-0.1nA: Amplitude of output signal (\c number)
+- \c userm=false: Compute amplitude from vstep and estimated membrane resistance (\c boolean)
+- \c vstep=-1mV: Steady-state voltage amplitude induced by output signal (\c number)
+- \c duration=500ms: Duration of output (\c number)
+- \c pause=1000ms: Duration of pause bewteen outputs (\c number)
+- \c repeats=100: Repetitions of stimulus (\c integer)
+- Analysis
+- \c sswidth=100ms: Window length for steady-state analysis (\c number)
+- \c nossfit=false: Fix steady-state potential for fit (\c boolean)
+- \c plotstdev=true: Plot standard deviation of membrane potential (\c boolean)
+- \c setdata=rest only: Set results to the session variables (\c string)
 */
 
 

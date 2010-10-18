@@ -73,6 +73,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
 			    const string &pluginconfigfiles,
 			    const string &docpath,
 			    const string &iconpath,
+			    bool doxydoc,
 			    QSplashScreen *splash,
 			    ModeTypes mode, QWidget *parent )
   : QMainWindow( parent ),
@@ -188,11 +189,6 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
       Plugins::openPath( pluginlib, pluginrelative, pluginhomes );
     }
   }
-
-  /*
-  saveDoxygenOptions();
-  ::exit( 0 );
-  */
 
   if ( Plugins::empty() ) {
     printlog(  "! error: No valid plugins found. Exit now." );
@@ -370,12 +366,12 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   // plugins:
   QMenu *pluginmenu = menuBar()->addMenu( "&Plugins" );
   if ( MD != 0 ) {
-    MD->addActions( pluginmenu );
+    MD->addActions( pluginmenu, doxydoc );
     pluginmenu->addSeparator();
   }
   if ( ! CN.empty() ) {
     for ( unsigned int k=0; k<CN.size(); k++ )
-      CN[k]->addActions( pluginmenu );
+      CN[k]->addActions( pluginmenu, doxydoc );
   }
 
   // devices:
@@ -383,11 +379,11 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
 
   // filters:
   QMenu *filtermenu = menuBar()->addMenu( "&Detectors/Filters" );
-  FD->addMenu( filtermenu );
+  FD->addMenu( filtermenu, doxydoc );
 
   // repros:
   QMenu *repromenu = menuBar()->addMenu( "&RePros" );
-  RP->addMenu( repromenu );
+  RP->addMenu( repromenu, doxydoc );
 
   // macros:
   QMenu *macromenu = menuBar()->addMenu( "&Macros" );
@@ -1099,43 +1095,6 @@ void RELACSWidget::notifyMetaData( const string &section )
   for ( unsigned int k=0; k<CN.size(); k++ )
     CN[k]->notifyMetaData( section );
   RP->notifyMetaData( section );
-}
-
-
-void RELACSWidget::saveDoxygenOptions( void )
-{
-  for ( int k=0; k < Plugins::plugins(); k++ ) {
-    if ( Plugins::type( k ) == RELACSPlugin::ModelId ||
-	 Plugins::type( k ) == RELACSPlugin::FilterId ||
-	 Plugins::type( k ) == RELACSPlugin::ControlId ||
-	 Plugins::type( k ) == RELACSPlugin::ReProId ) {
-      cout << "\n";
-      RELACSPlugin *rxp = (RELACSPlugin *)Plugins::create( k );
-      if ( Plugins::type( k ) == RELACSPlugin::ModelId )
-	cout << "Model ";
-      else if ( Plugins::type( k ) == RELACSPlugin::FilterId )
-	cout << "Filter ";
-      else if ( Plugins::type( k ) == RELACSPlugin::ReProId )
-	cout << "RePro ";
-      else if ( Plugins::type( k ) == RELACSPlugin::ControlId )
-	cout << "Control ";
-      else
-	cout << "! Invalid Plugin Type ";
-      cout << rxp->name() << " [" << rxp->pluginSet() << "]\n";
-      cout << "\\author " << rxp->author() << '\n';
-      cout << "\\version " << rxp->version() << " (" << rxp->date() << ")\n";
-      cout << "\\par Options\n";
-      rxp->save( cout, "- \\c %i=%s: %r (\\c %T)\n",
-		 "- \\c %i=%g%u: %r (\\c %T)\n",
-		 "- \\c %i=%b: %r (\\c %T)\n",
-		 "- \\c %i=%04Y-%02m-%02d: %r (\\c %T)\n",
-		 "- \\c %i=%02H:%02M:%02S: %r (\\c %T)\n",
-		 "- %i\n" );
-      delete rxp;
-      Plugins::destroy( k );
-    }
-  }
-  ::exit( 0 );
 }
 
 

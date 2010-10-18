@@ -156,7 +156,7 @@ public:
   int eventInputEvent( const string &ident ) const;
 
     /*! Add the menu for configuring %FilterDetectors to \a menu. */
-  void addMenu( QMenu *menu );
+  void addMenu( QMenu *menu, bool doxydoc );
 
     /*! Calles modeChanged() of each Filter
         whenever the mode is changed. */

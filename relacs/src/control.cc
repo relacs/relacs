@@ -59,19 +59,15 @@ void Control::initDevices( void )
 }
 
 
-void Control::addActions( QMenu *menu )
+void Control::addActions( QMenu *menu, bool doxydoc )
 {
-  QAction* action = new QAction( (QWidget*)this );
-  action->setText( string( name() + " Dialog..." ).c_str() );
-  QWidget::connect( action, SIGNAL( triggered() ),
-		    (QWidget*)this, SLOT( dialog() ) );
-  menu->addAction( action );
-
-  action = new QAction( (QWidget*)this );
-  action->setText( string( name() + " Help..." ).c_str() );
-  QWidget::connect( action, SIGNAL( triggered() ),
-		    (QWidget*)this, SLOT( help() ) );
-  menu->addAction( action );
+  menu->addAction( string( name() + " Dialog..." ).c_str(),
+		   (RELACSPlugin*)this, SLOT( dialog() ) );
+  menu->addAction( string( name() + " Help..." ).c_str(),
+		   (RELACSPlugin*)this, SLOT( help() ) );
+  if ( doxydoc )
+    menu->addAction( string( name() + " Doxygen" ).c_str(),
+		     (RELACSPlugin*)this, SLOT( saveDoxygenOptions() ) );
 }
 
 

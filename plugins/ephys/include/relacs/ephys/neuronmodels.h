@@ -34,15 +34,13 @@ namespace ephys {
 \brief [Model] Various models of spiking (point-) neurons.
 \author Jan Benda
 \author Alexander Wolf
-
+\version 1.0 (Jan 10, 2006)
 \par Options
 - Spike generator
 - \c spikemodel=Stimulus: Spike model (\c string)
 - \c noise=0: Standard deviation of current noise (\c number)
 - \c deltat=0.005ms: Delta t (\c number)
 - \c integrator=Euler: Method of integration (\c string)
-
-\version 1.1 (Jan 10, 2006)
 */
 
 

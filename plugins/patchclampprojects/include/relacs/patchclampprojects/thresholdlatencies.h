@@ -40,6 +40,35 @@ namespace patchclampprojects {
 \brief [RePro] Measures spike latencies in response to pulses close to the firing threshold.
 \author Jan Benda
 \version 1.1 (Oct 15, 2010)
+\par Options
+- Test-Pulse
+- \c durationsel=as multiples of membrane time constant: Set duration of stimulus (\c string)
+- \c duration=15ms: Duration of stimulus (\c number)
+- \c durationfac=1tau_m: Duration of stimulus (\c number)
+- \c startamplitudesrc=custom: Set initial amplitude to (\c string)
+- \c startamplitude=0.1nA: Initial amplitude of current stimulus (\c number)
+- \c startamplitudestep=0.5nA: Initial size of amplitude steps used for searching threshold (\c number)
+- \c amplitudestep=0.003nA: Final size of amplitude steps used for oscillating around threshold (\c number)
+- \c adjust=DC: Adjust (\c string)
+- Pre- and Post-Pulse
+- \c preduration=50ms: Duration of pre-pulse stimulus (\c number)
+- \c preamplitudesrc=custom: Set pre-pulse amplitude to (\c string)
+- \c preamplitude=0.2: Amplitude of pre-pulse stimulus (\c number)
+- \c prepulseramp=cosine: Start the pre-pulse with a ramp (\c string)
+- \c prepulserampwidth=10ms: Width of the ramp (\c number)
+- \c postduration=100ms: Duration of post-pulse stimulus (\c number)
+- \c postamplitudesrc=custom: Set post-pulse amplitude to (\c string)
+- \c postamplitude=0.1: Amplitude of post-pulse stimulus (\c number)
+- Control
+- \c searchpause=3000ms: Duration of pause between outputs during search (\c number)
+- \c pause=5000ms: Duration of pause between outputs (\c number)
+- \c delay=50ms: Time before stimullus onset (\c number)
+- \c savetracetime=1050ms: Length of trace to be saved and analyzed (\c number)
+- \c repeats=300: Repetitions of stimulus (\c integer)
+- Used amplitudes
+- \c stimulusamplitude=0: stimulusamplitude (\c number)
+- \c dcstimulusamplitude=0: dcstimulusamplitude (\c number)
+- \c dcamplitude=0: dcamplitude (\c number)
 
 Possible stimulus configurations are shown in the figure:
 \image html thresholdlatenciesstimuli.png
