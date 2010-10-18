@@ -1573,10 +1573,11 @@ double Plot::autoTics( double val, double min )
 {
   if ( val <= 0.0 )
     return 1.0;
+  min = ::fabs( min );
 
   double valEE = ::pow( 10.0, ::floor( ::log10( val ) ) );
   val /= valEE;
-  for ( ; ; ) {
+  for ( int k=0; k<20; k++ ) {
     if ( val <= 1.0 && 1.0 * valEE >= min )
       return  1.0 * valEE;
     else if ( val <= 2.0 && 2.0 * valEE >= min )
@@ -1586,6 +1587,14 @@ double Plot::autoTics( double val, double min )
     else {
       val *= 0.1;
       valEE *= 10.0;
+    }
+    if ( k == 19 ) {
+      cerr << "ERROR in Plot::autoTics() min=" << min << " val=" << val << " valEE=" << valEE << '\n';
+      for ( int k=0; k<MaxAxis; k++ )
+	cerr << "XMin[" << k << "]=" << XMin[k] << '\n'
+	     << "XMax[" << k << "]=" << XMax[k] << '\n'
+	     << "YMin[" << k << "]=" << YMin[k] << '\n'
+	     << "YMax[" << k << "]=" << YMax[k] << '\n';
     }
   }
 }
@@ -4613,7 +4622,7 @@ bool Plot::InDataElement::init( void )
 
 
 void Plot::InDataElement::xminmax( double &xmin, double &xmax, 
-				      double ymin, double ymax ) const
+				   double ymin, double ymax ) const
 {
   double tmin = ID->minTime();
   double tmax = ID->currentTime();
@@ -4629,14 +4638,18 @@ void Plot::InDataElement::xminmax( double &xmin, double &xmax,
 void Plot::InDataElement::yminmax( double xmin, double xmax, 
 				   double &ymin, double &ymax ) const
 {
-  double tmin = xmin/TScale;
-  double tmax = xmax/TScale;
+  long x1i = ID->minIndex();
+  long x2i = ID->size()-1;
 
-  tmin += Reference;
-  tmax += Reference; 
+  if ( xmin != -MAXDOUBLE ) {
+    double tmin = xmin/TScale + Reference;
+    x1i = ID->indices( tmin );
+  }
 
-  long x1i = ID->indices( tmin );
-  long x2i = ID->indices( tmax );
+  if ( xmax != MAXDOUBLE ) {
+    double tmax = xmax/TScale + Reference; 
+    x2i = ID->indices( tmax );
+  }
 
   if ( x1i < ID->minIndex() )
     x1i = ID->minIndex();
@@ -4742,7 +4755,7 @@ void Plot::EventInDataElement::point( long index, double &x, double &y ) const
 
 
 void Plot::EventInDataElement::xminmax( double &xmin, double &xmax, 
-					   double ymin, double ymax ) const
+					double ymin, double ymax ) const
 {
   double tmin = ED->rangeFront();
   if ( ED->size() > 0 && ED->minTime() > tmin )

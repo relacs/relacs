@@ -194,17 +194,32 @@ int VICurve::main( void )
   OutData signal( duration, 1.0/samplerate );
   signal.setTrace( CurrentOutput[0] );
   signal.setDelay( delay );
+  signal.addDescription( "stimulus/pulse" );
+  signal.description().addNumber( "Intensity", dccurrent, IUnit );
+  signal.description().addNumber( "IntensityOffset", dccurrent, IUnit );
+  signal.description().addNumber( "Duration", 1000.0*duration, "ms" );
+
+  // dc signal:
+  OutData dcsignal( dccurrent );
+  dcsignal.setTrace( CurrentOutput[0] );
+  dcsignal.setIdent( "DC=" + Str( dccurrent ) + IUnit );
+  dcsignal.addDescription( "stimulus/value" );
+  dcsignal.description().addNumber( "Intensity", dccurrent, IUnit );
 
   // write stimulus:
   sleep( pause );
+  if ( interrupt() )
+    return Aborted;
   for ( Range.reset(); ! Range && softStop() == 0; ) {
 
     if ( prevrepeat < Range.currentRepetition() ) {
       if ( Range.currentRepetition() == 1 ) {
 	Range.setSequence( shuffle );
 	Range.update();
-	if ( ! !Range )
+	if ( ! !Range ) {
+	  directWrite( dcsignal );
 	  break;
+	}
       }
       prevrepeat = Range.currentRepetition();
     }
@@ -222,6 +237,7 @@ int VICurve::main( void )
     signal.setIdent( "I=" + Str( amplitude ) + IUnit );
     signal = amplitude;
     signal.back() = dccurrent;
+    signal.description().setNumber( "Intensity", amplitude, IUnit );
     write( signal );
     if ( signal.failed() ) {
       if ( signal.overflow() ) {
@@ -229,8 +245,10 @@ int VICurve::main( void )
 	for ( int k = Range.size()-1; k >= 0; k-- ) {
 	  if ( Range[k] > signal.maxValue() || k == Range.pos() )
 	    Range.setSkip( k );
-	  else
+	  else {
+	    directWrite( dcsignal );
 	    break;
+	  }
 	}
 	Range.noCount();
 	continue;
@@ -240,14 +258,17 @@ int VICurve::main( void )
 	for ( int k = 0; k < Range.size(); k++ ) {
 	  if ( Range[k] < signal.minValue() || k == Range.pos() )
 	    Range.setSkip( k );
-	  else
+	  else {
+	    directWrite( dcsignal );
 	    break;
+	  }
 	}
 	Range.noCount();
 	continue;
       }
       else {
 	warning( signal.errorText() );
+	directWrite( dcsignal );
 	return Failed;
       }
     }
@@ -256,6 +277,7 @@ int VICurve::main( void )
     if ( interrupt() ) {
       if ( Range.count() < 1 )
 	state = Aborted;
+      directWrite( dcsignal );
       break;
     }
 
@@ -283,6 +305,7 @@ int VICurve::main( void )
     if ( interrupt() ) {
       if ( Range.count() < 1 )
 	state = Aborted;
+      directWrite( dcsignal );
       break;
     }
   }

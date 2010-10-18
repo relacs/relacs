@@ -19,6 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <list>
 #include <relacs/optwidget.h>
 #include <relacs/tablekey.h>
 #include <relacs/map.h>
@@ -75,6 +76,7 @@ VoltageReconstruction::VoltageReconstruction( void )
   P.setXLabel( "Time [ms]" );
   P.setYLabel( "Latency [ms]" );
   P.setY2Label( "Membrane voltage [" + VUnit + "]" );
+  P.setY2Tics();
   P.setYLabelPos( 2.3, Plot::FirstMargin, 0.5, Plot::Graph,
 		  Plot::Center, -90.0 );
   P.unlock();
@@ -149,6 +151,8 @@ int VoltageReconstruction::main( void )
   OutData orgdcsignal( orgdcamplitude );
   orgdcsignal.setTrace( CurrentOutput[0] );
   orgdcsignal.setIdent( "DC=" + Str( orgdcamplitude ) + IUnit );
+  orgdcsignal.addDescription( "stimulus/value" );
+  orgdcsignal.description().addNumber( "Intensity", orgdcamplitude, IUnit );
 
   // search for offset that evokes the target firing rate:
   if ( userate ) {
@@ -169,6 +173,9 @@ int VoltageReconstruction::main( void )
     // stimulus:
     OutData signal( dcamplitude );
     signal.setTrace( CurrentOutput[0] );
+    signal.setIdent( "DC=" + Str( dcamplitude ) + IUnit );
+    signal.addDescription( "stimulus/value" );
+    signal.description().addNumber( "Intensity", dcamplitude, IUnit );
     
     double minampl = dcamplitude;
     double maxampl = dcamplitude;
@@ -178,6 +185,8 @@ int VoltageReconstruction::main( void )
     while ( true ) {
 
       signal = dcamplitude;
+      signal.setIdent( "DC=" + Str( dcamplitude ) + IUnit );
+      signal.description().setNumber( "Intensity", dcamplitude, IUnit );
 	
       // message:
       Str s = "<b>Search</b> rate <b>" + Str( targetrate ) + " Hz</b>";
@@ -330,10 +339,38 @@ int VoltageReconstruction::main( void )
   signal = dcamplitude + amplitude;
   signal.back() = dcamplitude;
   signal.setTrace( CurrentOutput[0] );
+  signal.setIdent( "I=" + Str( dcamplitude + amplitude ) + IUnit );
+  signal.addDescription( "stimulus/pulse" );
+  signal.description().addNumber( "Intensity", dcamplitude + amplitude, IUnit );
+  signal.description().addNumber( "IntensityOffset", dcamplitude, IUnit );
+  signal.description().addNumber( "Duration", 1000.0*duration, "ms" );
 
+  // data:
+  const InData &data = trace( SpikeTrace[0] );
   MapD latencies;
   latencies.reserve( 10000 );
-  SampleDataD meanvoltage( 0.0, period, trace( SpikeTrace[0] ).stepsize() );
+  list< SampleDataF > voltages;
+  SampleDataF meanvoltage( -1.5*period, 4.5*period, data.stepsize(), 0.0 );
+  SampleDataF voltagesq( meanvoltage );
+  SampleDataF voltagesd( meanvoltage );
+  SampleDataF current;
+  if ( CurrentTrace[0] >= 0 ) {
+    current.resize( -1.5*period, 4.5*period,
+		    trace( CurrentTrace[0] ).stepsize() );
+  }
+
+  // header:
+  Options header;
+  header.addInteger( "index", completeRuns() );
+  header.addInteger( "ReProIndex", reproCount() );
+  header.addNumber( "ReProTime", reproStartTime(), "s", "%0.3f" );
+  header.addNumber( "firing rate", meanrate, "Hz", "%0.1f" );
+  header.addNumber( "period", 1000.0*period, "ms", "%0.2f" );
+
+  // files:
+  ofstream tf;
+  TableKey tracekey;
+  openTraceFile( tf, tracekey, header );
 
   for ( int n=0; (repeats == 0 || n<repeats ) && softStop() <= 0; n++ ) {
 
@@ -357,24 +394,49 @@ int VoltageReconstruction::main( void )
     double y = spikes[psi+1] - signalTime();
     latencies.push( 1000.0*x, -1000.0*y );
 
-    // mean voltage trace:
-    const InData &data = trace( SpikeTrace[0] );
-    int spi = data.index( spikes[psi-1] );
-    for ( int k=0; k<meanvoltage.size(); k++, spi++ )
-      meanvoltage[k] += (data[spi] - meanvoltage[k])/(n+1);
+    // voltage trace:
+    voltages.push_back( SampleDataF( meanvoltage.range() ) );
+    data.copy( spikes[psi-1], voltages.back() );
+    meanvoltage.averageAdd( voltages.back(), n+1, voltagesq, voltagesd );
+    if ( voltages.size() > 5 )
+      voltages.pop_front();
+
+    // current trace:
+    if ( CurrentTrace[0] >= 0 )
+      trace( CurrentTrace[0] ).copy( spikes[psi-1], current );
 
     // plot:
     P.lock();
     P.clear();
-    //    SampleDataD mv( meanvoltage, LinearRange( 0.001, meanvoltage.rangeBack(), meanvoltage.stepsize() ) );
-    SampleDataD mv;
-    meanvoltage.copy( 0.001, meanvoltage.rangeBack(), mv );
-    P.plot( mv, 1000.0, Plot::Yellow, 4 );
+    P.setY2Range( Plot::AutoScale, meanvoltage.max( 0.5*period, period ) );
+    for ( list< SampleDataF >::const_iterator p = voltages.begin();
+	  p != voltages.end();
+	  ++p ) {
+      P.plot( *p, 1000.0, Plot::Yellow, 2 );
+      P.back().setAxis( Plot::X1Y2 );
+    }
+    if ( n > 4 ) {
+      P.plot( meanvoltage+voltagesd, 1000.0, Plot::Orange, 2 );
+      P.back().setAxis( Plot::X1Y2 );
+      P.plot( meanvoltage-voltagesd, 1000.0, Plot::Orange, 2 );
+      P.back().setAxis( Plot::X1Y2 );
+    }
+    P.plot( meanvoltage, 1000.0, Plot::Red, 4 );
     P.back().setAxis( Plot::X1Y2 );
-    P.plot( latencies, 1.0, Plot::Transparent, 0, Plot::Solid, Plot::Circle, 10, Plot::Red, Plot::Red );
+    P.plot( latencies, 1.0, Plot::Transparent, 0, Plot::Solid, Plot::Circle, 10, Plot::Blue, Plot::Blue );
+    MapD cl;
+    cl.push( 1000.0*x, -1000.0*y );
+    P.plot( cl, 1.0, Plot::Transparent, 0, Plot::Solid, Plot::Circle, 16, Plot::Cyan, Plot::Cyan );
     P.draw();
     P.unlock();
+
+    // save:
+    saveTrace( tf, tracekey, n, voltages.back(), current, x, y );
   }
+
+  tf << '\n';
+  saveMeanTrace( header, meanvoltage, voltagesd );
+  saveData( header, latencies );
 
   // back to initial dc-current:
   directWrite( orgdcsignal );
@@ -383,16 +445,130 @@ int VoltageReconstruction::main( void )
 }
 
 
+void VoltageReconstruction::openTraceFile( ofstream &tf, TableKey &tracekey,
+					   const Options &header )
+{
+  tracekey.addNumber( "t", "ms", "%7.2f" );
+  tracekey.addNumber( "V", VUnit, "%6.1f" );
+  if ( CurrentTrace[0] >= 0 )
+    tracekey.addNumber( "I", IUnit, "%6.3f" );
+  if ( completeRuns() <= 0 )
+    tf.open( addPath( "voltagereconstruction-traces.dat" ).c_str() );
+  else
+    tf.open( addPath( "voltagereconstruction-traces.dat" ).c_str(),
+             ofstream::out | ofstream::app );
+  header.save( tf, "# " );
+  tf << "# status:\n";
+  stimulusData().save( tf, "#   " );
+  tf << "# settings:\n";
+  settings().save( tf, "#   " );
+  tf << '\n';
+  tracekey.saveKey( tf, true, false );
+  tf << '\n';
+}
+
+
+void VoltageReconstruction::saveTrace( ofstream &tf, TableKey &tracekey,
+				       int index,
+				       const SampleDataF &voltage,
+				       const SampleDataF &current,
+				       double x, double y )
+{
+  tf << "# index: " << index << '\n';
+  tf << "# x: " << Str( 1000.0*x, 0, 2, 'f' ) << "ms\n";
+  tf << "# y: " << Str( 1000.0*y, 0, 2, 'f' ) << "ms\n";
+  if ( ! current.empty() ) {
+    for ( int k=0; k<voltage.size(); k++ ) {
+      tracekey.save( tf, 1000.0*voltage.pos( k ), 0 );
+      tracekey.save( tf, voltage[k] );
+      tracekey.save( tf, current[k] );
+      tf << '\n';
+    }
+  }
+  else {
+    for ( int k=0; k<voltage.size(); k++ ) {
+      tracekey.save( tf, 1000.0*voltage.pos( k ), 0 );
+      tracekey.save( tf, voltage[k] );
+      tf << '\n';
+    }
+  }
+  tf << '\n';
+}
+
+
+void VoltageReconstruction::saveMeanTrace( const Options &header,
+					   const SampleDataF &voltage,
+					   const SampleDataF &voltagesd )
+{
+  ofstream df( addPath( "voltagereconstruction-meantrace.dat" ).c_str(),
+	       ofstream::out | ofstream::app );
+
+  header.save( df, "# " );
+  df << "# status:\n";
+  stimulusData().save( df, "#   " );
+  df << "# settings:\n";
+  settings().save( df, "#   " );
+  df << '\n';
+
+  TableKey datakey;
+  datakey.addNumber( "t", "ms", "%6.2f" );
+  datakey.addNumber( "V", VUnit, "%6.2f" );
+  datakey.addNumber( "s.d.", VUnit, "%6.2f" );
+  datakey.saveKey( df );
+
+  for ( int k=0; k<voltage.size(); k++ ) {
+    datakey.save( df, 1000.0*voltage.pos( k ), 0 );
+    datakey.save( df, voltage[k] );
+    datakey.save( df, voltagesd[k] );
+    df << '\n';
+  }
+  
+  df << "\n\n";
+}
+
+
+void VoltageReconstruction::saveData( const Options &header,
+				      const MapD &latencies )
+{
+  ofstream df( addPath( "voltagereconstruction-data.dat" ).c_str(),
+	       ofstream::out | ofstream::app );
+
+  header.save( df, "# " );
+  df << "# status:\n";
+  stimulusData().save( df, "#   " );
+  df << "# settings:\n";
+  settings().save( df, "#   " );
+  df << '\n';
+
+  TableKey datakey;
+  datakey.addNumber( "x", "ms", "%7.2f" );
+  datakey.addNumber( "y", "ms", "%7.2f" );
+  datakey.saveKey( df );
+
+  for ( int k=0; k<latencies.size(); k++ ) {
+    datakey.save( df, latencies.x( k ), 0 );
+    datakey.save( df, latencies.y( k ) );
+    df << '\n';
+  }
+  
+  df << "\n\n";
+}
+
+
 void VoltageReconstruction::customEvent( QEvent *qce )
 {
-  if ( qce->type() == QEvent::User+11 ) {
+  switch ( qce->type() - QEvent::User ) {
+  case 11: {
     Stack->setCurrentWidget( &P );
+    break;
   }
-  else if ( qce->type() == QEvent::User+12 ) {
+  case 12: {
     Stack->setCurrentWidget( &SP );
+    break;
   }
-  else
+  default:
     RELACSPlugin::customEvent( qce );
+  }
 }
 
 

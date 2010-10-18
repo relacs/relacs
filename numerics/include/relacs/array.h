@@ -48,7 +48,6 @@ namespace relacs {
 /*! 
 \class Array
 \author Jan Benda
-\version 0.3
 \brief A template defining an one-dimensional array of data.
 \todo type independent reading of data elements in load()
 \todo math functions with two arguments: one scalar/container as first argument for member function, z.B. pow/exp
@@ -469,6 +468,16 @@ class Array
         relative to \a level back to a linear scala
 	according to pow( 10.0, 0.1 * x ) * level. */
   Array<T> &linear( double level );
+
+    /*! Add \a as the \a n -th element of an average to \a this. */
+  Array<T> &averageAdd( const Array<T> &a, int n );
+    /*! Add \a as the \a n -th element of an average to \a this.
+        Simultaneously add the squared elements of \a a to the average in \a sq. */
+  Array<T> &averageAdd( const Array<T> &a, int n, Array<T> &sq );
+    /*! Add \a as the \a n -th element of an average to \a this.
+        Simultaneously add the squared elements of \a a to the average in \a sq
+	and return in \a sd the corresponding standard deviation. */
+  Array<T> &averageAdd( const Array<T> &a, int n, Array<T> &sq, Array<T> &sd );
 
     /*! The minimum value of the data elements between indices
         \a first (inclusively) and \a last (exclusively). 
@@ -1793,6 +1802,51 @@ Array<T> &Array<T>::linear( double level )
   for ( int k=0; k<NSize; k++ )
     Buffer[k] = ::pow( 10.0, 0.1 * Buffer[k] ) * level;
 
+  return *this;
+}
+
+
+template < typename T >
+Array<T> &Array<T>::averageAdd( const Array<T> &a, int n )
+{
+  double nn = n;
+  int minsize = NSize;
+  if ( minsize > a.size() ) 
+    minsize = a.size();
+  for ( int k=0; k<minsize; k++ )
+    Buffer[k] = (a[k] - Buffer[k])/nn;
+  return *this;
+}
+
+
+template < typename T >
+Array<T> &Array<T>::averageAdd( const Array<T> &a, int n, Array<T> &sq )
+{
+  double nn = n;
+  int minsize = NSize;
+  if ( minsize > a.size() ) 
+    minsize = a.size();
+  for ( int k=0; k<minsize; k++ ) {
+    Buffer[k] += (a[k] - Buffer[k])/nn;
+    sq[k] += (a[k]*a[k] - sq[k])/nn;
+  }
+  return *this;
+}
+
+
+template < typename T >
+Array<T> &Array<T>::averageAdd( const Array<T> &a, int n,
+				Array<T> &sq, Array<T> &sd )
+{
+  double nn = n;
+  int minsize = NSize;
+  if ( minsize > a.size() ) 
+    minsize = a.size();
+  for ( int k=0; k<minsize; k++ ) {
+    Buffer[k] += (a[k] - Buffer[k])/nn;
+    sq[k] += (a[k]*a[k] - sq[k])/nn;
+    sd[k] = ::sqrt( sq[k] - Buffer[k]*Buffer[k] );
+  }
   return *this;
 }
 

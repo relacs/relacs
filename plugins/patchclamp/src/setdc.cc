@@ -137,6 +137,8 @@ int SetDC::main( void )
     OutData dcsignal( DCAmplitude );
     dcsignal.setTrace( OutCurrent );
     dcsignal.setIdent( "DC=" + Str( DCAmplitude ) + IUnit );
+    dcsignal.addDescription( "stimulus/value" );
+    dcsignal.description().addNumber( "Intensity", DCAmplitude, IUnit );
     directWrite( dcsignal );
     if ( dcsignal.overflow() ) {
       printlog( "Requested DC current I=" + Str( DCAmplitude ) + IUnit + "too high!" );
@@ -171,6 +173,7 @@ int SetDC::main( void )
 	  DCAmplitude = orgampl;
 	dcsignal = DCAmplitude;
 	dcsignal.setIdent( "DC=" + Str( DCAmplitude ) + IUnit );
+	dcsignal.description().setNumber( "Intensity", DCAmplitude, IUnit );
 	directWrite( dcsignal );
 	message( "DC=<b>" + Str( DCAmplitude ) + "</b> " + IUnit );
 	sleep( 0.01 );
@@ -188,11 +191,14 @@ int SetDC::main( void )
     OutData dcsignal( DCAmplitude );
     dcsignal.setTrace( OutCurrent );
     dcsignal.setIdent( "DC=" + Str( DCAmplitude ) + IUnit );
+    dcsignal.addDescription( "stimulus/value" );
+    dcsignal.description().addNumber( "Intensity", DCAmplitude, IUnit );
     directWrite( dcsignal );
     if ( dcsignal.failed() ) {
       DCAmplitude = orgampl;
       dcsignal = DCAmplitude;
       dcsignal.setIdent( "DC=" + Str( DCAmplitude ) + IUnit );
+      dcsignal.description().setNumber( "Intensity", DCAmplitude, IUnit );
       directWrite( dcsignal );
     }
     message( "DC=<b>" + Str( DCAmplitude ) + "</b> " + IUnit );

@@ -167,9 +167,23 @@ int FindThreshold::main( void )
   // signal:
   OutData signal( duration, 1.0/samplerate );
   signal.setTrace( CurrentOutput[0] );
+  signal.addDescription( "stimulus/pulse" );
+  signal.description().addNumber( "Intensity", 0.0, IUnit );
+  if ( resetcurrent )
+    signal.description().addNumber( "IntensityOffs", 0.0, IUnit );
+  signal.description().addNumber( "Duration", 1000.0*duration, "ms" );
+
+  // dc signal:
+  OutData dcsignal( orgdcamplitude );
+  dcsignal.setTrace( CurrentOutput[0] );
+  dcsignal.setIdent( "DC=" + Str( orgdcamplitude ) + IUnit );
+  dcsignal.addDescription( "stimulus/value" );
+  dcsignal.description().addNumber( "Intensity", orgdcamplitude, IUnit );
 
   // write stimulus:
   sleep( pause );
+  if ( interrupt() )
+    return Aborted;
   for ( int count=1; softStop() == 0; count++ ) {
 
     timeStamp();
@@ -188,6 +202,7 @@ int FindThreshold::main( void )
     // signal:
     signal = amplitude;
     signal.setIdent( "I=" + Str( amplitude ) + IUnit );
+    signal.description().setNumber( "Intensity", amplitude, IUnit );
     if ( resetcurrent )
       signal.back() = 0.0;
     write( signal );
@@ -195,6 +210,7 @@ int FindThreshold::main( void )
       warning( signal.errorText() );
       if ( ! record || count <= 1 )
 	state = Failed;
+      directWrite( dcsignal );
       break;
     }
 
@@ -203,6 +219,7 @@ int FindThreshold::main( void )
     if ( interrupt() ) {
       if ( ! record || count <= 1 )
 	state = Aborted;
+      directWrite( dcsignal );
       break;
     }
 

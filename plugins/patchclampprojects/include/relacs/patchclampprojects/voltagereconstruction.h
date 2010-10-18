@@ -54,6 +54,14 @@ protected:
 
   void customEvent( QEvent *qce );
 
+  void openTraceFile( ofstream &tf, TableKey &tracekey, const Options &header );
+  void saveTrace( ofstream &tf, TableKey &tracekey, int index,
+		  const SampleDataF &voltage, const SampleDataF &current,
+		  double x, double y );
+  void saveMeanTrace( const Options &header, const SampleDataF &voltage,
+		      const SampleDataF &voltagesd );
+  void saveData( const Options &header, const MapD &latencies );
+
   Plot SP;
   Plot P;
   QStackedLayout *Stack;

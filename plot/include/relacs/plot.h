@@ -1520,17 +1520,20 @@ template< typename T, typename R >
 void Plot::VectorElement<T,R>::xminmax( double &xmin, double &xmax, 
 					double ymin, double ymax ) const
 {
+  bool autoymin = ( ymin == -MAXDOUBLE );
+  bool autoymax = ( ymax == MAXDOUBLE );
+
   int k;
   for ( k=0; k<(int)YData->size(); k++ )
-    if ( YData->operator[]( k ) >= ymin && 
-	 YData->operator[]( k ) <= ymax )
+    if ( ( autoymin || YData->operator[]( k ) >= ymin ) && 
+	 ( autoymax || YData->operator[]( k ) <= ymax ) )
       break;
   if ( k<(int)XData->size() ) {
     xmin = XData->operator[]( k );
     xmax = xmin;
     for ( k++; k<(int)XData->size() && k<(int)YData->size(); k++ )
-      if ( YData->operator[]( k ) >= ymin && 
-	   YData->operator[]( k ) <= ymax ) {
+      if ( ( autoymin || YData->operator[]( k ) >= ymin ) && 
+	   ( autoymax || YData->operator[]( k ) <= ymax ) ) {
 	if ( XData->operator[]( k ) < xmin )
 	  xmin = XData->operator[]( k );
 	else if ( XData->operator[]( k ) > xmax )
@@ -1550,20 +1553,23 @@ template< typename T, typename R >
 void Plot::VectorElement<T,R>::yminmax( double xmin, double xmax, 
 					double &ymin, double &ymax ) const
 {
+  bool autoxmin = ( xmin == -MAXDOUBLE );
+  bool autoxmax = ( xmax == MAXDOUBLE );
+
   xmin /= XScale;
   xmax /= XScale;
 
   int k;
   for ( k=0; k<(int)XData->size(); k++ )
-    if ( XData->operator[]( k ) >= xmin && 
-	 XData->operator[]( k ) <= xmax )
+    if ( ( autoxmin || XData->operator[]( k ) >= xmin ) && 
+	 ( autoxmax || XData->operator[]( k ) <= xmax ) )
       break;
   if ( k<(int)YData->size() ) {
     ymin = YData->operator[]( k );
     ymax = ymin;
     for ( k++; k<(int)XData->size() && k<(int)YData->size(); k++ )
-      if ( XData->operator[]( k ) >= xmin && 
-	   XData->operator[]( k ) <= xmax ) {
+      if ( ( autoxmin || XData->operator[]( k ) >= xmin ) && 
+	   ( autoxmax || XData->operator[]( k ) <= xmax ) ) {
 	if ( YData->operator[]( k ) < ymin )
 	  ymin = YData->operator[]( k );
 	else if ( YData->operator[]( k ) > ymax )
@@ -1680,8 +1686,8 @@ template< typename T >
 void Plot::SampleDataElement<T>::yminmax( double xmin, double xmax, 
 					  double &ymin, double &ymax ) const
 {
-  int x1i = SD->index( xmin/XScale );
-  int x2i = SD->index( xmax/XScale );
+  int x1i = xmin == -MAXDOUBLE ? 0 : SD->index( xmin/XScale );
+  int x2i = xmax == MAXDOUBLE ? SD->size()-1 : SD->index( xmax/XScale );
 
   if ( x1i < 0 )
     x1i = 0;
@@ -1805,7 +1811,7 @@ void Plot::EventsElement<T>::point( long index, double &x, double &y ) const
 
 template< typename T >
 void Plot::EventsElement<T>::xminmax( double &xmin, double &xmax, 
-					double ymin, double ymax ) const
+				      double ymin, double ymax ) const
 {
   if ( ED->empty() ) {
     xmin = AutoScale;

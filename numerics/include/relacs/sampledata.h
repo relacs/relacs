@@ -41,7 +41,6 @@ namespace relacs {
 /*! 
 \class SampleData
 \author Jan Benda
-\version 0.5
 \brief A template defining an one-dimensional Array of data with an associated Range.
 \todo colored noise
 \todo interface to class Kernel
@@ -1686,7 +1685,7 @@ template < typename T > template < typename R >
 SampleData< T >::SampleData( const SampleData< R > &sa,
 			     const LinearRange &range )
 {
-  assign( sa, range );
+  interpolate( sa, range );
 }
 
 

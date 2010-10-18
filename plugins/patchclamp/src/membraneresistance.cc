@@ -160,6 +160,13 @@ int MembraneResistance::main( void )
   signal.description().addNumber( "IntensityOffset", DCCurrent, IUnit );
   signal.description().addNumber( "Duration", 1000.0*Duration, "ms" );
 
+  // dc signal:
+  OutData dcsignal( DCCurrent );
+  dcsignal.setTrace( CurrentOutput[0] );
+  dcsignal.setIdent( "DC=" + Str( DCCurrent ) + IUnit );
+  dcsignal.addDescription( "stimulus/value" );
+  dcsignal.description().addNumber( "Intensity", DCCurrent, IUnit );
+
   // write stimulus:
   sleep( pause );
   for ( Count=0;
@@ -173,6 +180,7 @@ int MembraneResistance::main( void )
     write( signal );
     if ( signal.failed() ) {
       warning( signal.errorText() );
+      directWrite( dcsignal );
       return Failed;
     }
 
@@ -180,6 +188,7 @@ int MembraneResistance::main( void )
     if ( interrupt() ) {
       if ( Count < 1 )
 	state = Aborted;
+      directWrite( dcsignal );
       break;
     }
 
@@ -190,6 +199,7 @@ int MembraneResistance::main( void )
     if ( interrupt() ) {
       if ( Count < 1 )
 	state = Aborted;
+      directWrite( dcsignal );
       break;
     }
 
@@ -199,6 +209,7 @@ int MembraneResistance::main( void )
     if ( interrupt() ) {
       if ( Count < 1 )
 	state = Aborted;
+      directWrite( dcsignal );
       break;
     }
 

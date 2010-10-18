@@ -226,13 +226,37 @@ int ThresholdLatencies::main( void )
   OutData signal( preduration + duration + postduration, trace( SpikeTrace[0] ).stepsize() );
   signal.setTrace( CurrentOutput[0] );
   signal.setDelay( delay );
+  if ( preduration > 0.0 ) {
+    signal.addDescription( "stimulus/pulse" );
+    signal.description().addNumber( "TOffs", 0.0, "ms" );
+    signal.description().addNumber( "Intensity", preamplitude, IUnit );
+    signal.description().addNumber( "IntensityOffset", dcamplitude, IUnit );
+    signal.description().addNumber( "Duration", 1000.0*preduration, "ms" );
+  }
+  signal.addDescription( "stimulus/pulse" );
+  signal.description().addNumber( "TOffs", 1000.0*preduration, "ms" );
+  signal.description().addNumber( "Intensity", preamplitude, IUnit );
+  signal.description().addNumber( "IntensityOffset", dcamplitude, IUnit );
+  signal.description().addNumber( "Duration", 1000.0*preduration, "ms" );
+  if ( postduration > 0.0 ) {
+    signal.addDescription( "stimulus/pulse" );
+    signal.description().addNumber( "TOffs", 1000.0*(preduration+duration), "ms" );
+    signal.description().addNumber( "Intensity", postamplitude, IUnit );
+    signal.description().addNumber( "IntensityOffset", dcamplitude, IUnit );
+    signal.description().addNumber( "Duration", 1000.0*postduration, "ms" );
+  }
 
   // DC signal:
   OutData dcsignal( dcamplitude );
   dcsignal.setTrace( CurrentOutput[0] );
+  dcsignal.setIdent( "DC=" + Str( dcamplitude ) + IUnit );
+  dcsignal.addDescription( "stimulus/value" );
+  dcsignal.description().addNumber( "Intensity", dcamplitude, IUnit );
 
   // write stimulus:
   sleep( pause );
+  if ( interrupt() )
+    return Aborted;
   for ( int count=1; softStop() == 0; count++ ) {
 
     timeStamp();
@@ -250,6 +274,7 @@ int ThresholdLatencies::main( void )
     message( s );
 
     // signal:
+    int sdi = 0;
     if ( preduration > 0.0 && prepulseramp > 0 ) {
       int w = signal.indices( prepulserampwidth );
       if ( prepulseramp == 2 ) {
@@ -264,18 +289,31 @@ int ThresholdLatencies::main( void )
       }
       for ( int k=w; k<signal.index( preduration ); k++ )
 	signal[k] = preamplitude;
+      signal.description( sdi ).setNumber( "Intensity", preamplitude, IUnit );
+      signal.description( sdi ).setNumber( "IntensityOffset", dcamplitude, IUnit );
+      sdi++;
     }
     else {
       for ( int k=0; k<signal.index( preduration ); k++ )
 	signal[k] = preamplitude;
+      signal.description( sdi ).setNumber( "Intensity", preamplitude, IUnit );
+      signal.description( sdi ).setNumber( "IntensityOffset", dcamplitude, IUnit );
+      sdi++;
     }
     for ( int k=signal.index( preduration ); k<signal.index( preduration + duration ); k++ )
       signal[k] = amplitude;
+    signal.description( sdi ).setNumber( "Intensity", amplitude, IUnit );
+    signal.description( sdi ).setNumber( "IntensityOffset", dcamplitude, IUnit );
+    sdi++;
     for ( int k=signal.index( preduration + duration ); k<signal.size(); k++ )
       signal[k] = postamplitude;
+    if ( postduration > 0.0 ) {
+      signal.description( sdi ).setNumber( "Intensity", postamplitude, IUnit );
+      signal.description( sdi ).setNumber( "IntensityOffset", dcamplitude, IUnit );
+    }
     signal.back() = dcamplitude;
-    if ( postduration > 0.0 )
-      signal.setIdent( "I=" + Str( amplitude ) + IUnit + "IP=" + Str( postamplitude ) + IUnit);
+    if ( preduration > 0.0 )
+      signal.setIdent( "I=" + Str( amplitude ) + IUnit + "IP=" + Str( preamplitude ) + IUnit);
     else
       signal.setIdent( "I=" + Str( amplitude ) + IUnit );
     write( signal );
@@ -335,6 +373,7 @@ int ThresholdLatencies::main( void )
 	postamplitude = 0.0;
       dcsignal = dcamplitude;
       dcsignal.setIdent( "DC=" + Str( dcamplitude ) + IUnit );
+      dcsignal.description().setNumber( "Intensity", dcamplitude, IUnit );
       directWrite( dcsignal );
     }
 
@@ -395,6 +434,7 @@ int ThresholdLatencies::main( void )
     save( usedc );
   dcsignal = orgdcamplitude;
   dcsignal.setIdent( "DC=" + Str( orgdcamplitude ) + IUnit );
+  dcsignal.description().addNumber( "Intensity", orgdcamplitude, IUnit );
   directWrite( dcsignal );
   Results.clear();
   Latencies.clear();
