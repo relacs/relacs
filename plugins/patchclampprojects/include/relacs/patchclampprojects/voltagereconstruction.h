@@ -36,6 +36,19 @@ namespace patchclampprojects {
 \brief [RePro] Reconstructs the membrane voltage inbetween the spikes from latency measurements.
 \author JanBenda, Ales Skorjanc
 \version 1.0 (Oct 18, 2010)
+\par Options
+- \c startamplitudesrc=custom: Set initial dc-current to (\c string)
+- \c startamplitude=0.1nA: Initial amplitude of dc-current (\c number)
+- \c amplitude=12nA: Test-pulse amplitude (\c number)
+- \c duration=10ms: Duration of test-pulse (\c number)
+- \c repeats=100: Number of test-pulses (\c integer)
+- Rate - search
+- \c userate=true: Search dc-current for target firing rate (\c boolean)
+- \c rate=20Hz: Target firing rate (\c number)
+- \c ratetol=1Hz: Tolerance for target firing rate (\c number)
+- \c amplitudestep=4nA: Initial size of dc-current steps used for searching target rate (\c number)
+- \c searchduration=500ms: Duration of dc-current stimulus (\c number)
+- \c skipwin=100ms: Initial portion of stimulus not used for analysis (\c number)
 */
 
 

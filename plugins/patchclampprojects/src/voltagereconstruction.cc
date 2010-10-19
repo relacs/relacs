@@ -38,10 +38,11 @@ VoltageReconstruction::VoltageReconstruction( void )
     IInFac( 1.0 )
 {
   // add some options:
+  addLabel( "Pulse-stimulus" ).setStyle( OptWidget::TabLabel );
   addSelection( "startamplitudesrc", "Set initial dc-current to", "custom|DC|threshold|previous" );
   addNumber( "startamplitude", "Initial amplitude of dc-current", 0.1, 0.0, 1000.0, 0.01 ).setActivation( "startamplitudesrc", "custom" );
   addNumber( "amplitude", "Test-pulse amplitude", 0.1, 0.0, 1000.0, 0.01 );
-  addNumber( "duration", "Duration of test-pulse", 0.0, 0.0, 1000.0, 0.001, "seconds", "ms" ).setActivation( "userate", "true" );
+  addNumber( "duration", "Duration of test-pulse", 0.0, 0.0, 1000.0, 0.001, "seconds", "ms" );
   addInteger( "repeats", "Number of test-pulses", 100, 0, 1000000 );
   addLabel( "Rate - search" ).setStyle( OptWidget::TabLabel );
   addBoolean( "userate", "Search dc-current for target firing rate", false );
@@ -240,7 +241,7 @@ int VoltageReconstruction::main( void )
 	rinx = rates.insert( dcamplitude, meanrate );
 
       if ( softStop() > 0 )
-	break;
+	return Aborted;
 
       // new offset:
       if ( signal.success() && 
@@ -261,12 +262,20 @@ int VoltageReconstruction::main( void )
 	  }
 	}
 	if ( ( signal.success() && meanrate < targetrate ) || signal.underflow() ) {
-	  // rate below target rate:
-	  if ( dcamplitude < maxampl )
-	    amplitudestep *= 0.5;
-	  dcamplitude += amplitudestep;
-	  if ( dcamplitude > maxampl )
-	    maxampl = dcamplitude;
+	  if ( rates.y().maxIndex() < rinx ) {
+	    // depolarization block reached:
+	    dcamplitude -= amplitudestep;
+	    if ( dcamplitude < minampl )
+	      minampl = dcamplitude;
+	  }
+	  else {
+	    // rate below target rate:
+	    if ( dcamplitude < maxampl )
+	      amplitudestep *= 0.5;
+	    dcamplitude += amplitudestep;
+	    if ( dcamplitude > maxampl )
+	      maxampl = dcamplitude;
+	  }
 	}
 	else if ( ( signal.success() && meanrate > targetrate ) || signal.overflow() ) {
 	  // overflow:

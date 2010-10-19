@@ -38,7 +38,7 @@ ThresholdLatencies::ThresholdLatencies( void )
   addSelection( "durationsel", "Set duration of stimulus", "in milliseconds|as multiples of membrane time constant" );
   addNumber( "duration", "Duration of stimulus", 0.1, 0.0, 1000.0, 0.001, "sec", "ms" ).setActivation( "durationsel", "in milliseconds" );
   addNumber( "durationfac", "Duration of stimulus", 1.0, 0.0, 1000.0, 0.1, "tau_m" ).setActivation( "durationsel", "as multiples of membrane time constant" );
-  addSelection( "startamplitudesrc", "Set initial amplitude to", "custom|DC|threshold" );
+  addSelection( "startamplitudesrc", "Set initial amplitude to", "custom|DC|threshold|previous" );
   addNumber( "startamplitude", "Initial amplitude of current stimulus", 0.1, 0.0, 1000.0, 0.01 ).setActivation( "startamplitudesrc", "custom" );
   addNumber( "startamplitudestep", "Initial size of amplitude steps used for searching threshold", 0.1, 0.0, 1000.0, 0.001 );
   addNumber( "amplitudestep", "Final size of amplitude steps used for oscillating around threshold", 0.01, 0.0, 1000.0, 0.001 );
@@ -62,6 +62,8 @@ ThresholdLatencies::ThresholdLatencies( void )
   addTypeStyle( OptWidget::TabLabel, Parameter::Label );
   setConfigSelectMask( 1 );
   setDialogSelectMask( 1 );
+
+  PrevAmplitude = 0.0;
 
   // data exchange options:
   addLabel( "Used amplitudes" );
@@ -127,13 +129,15 @@ int ThresholdLatencies::main( void )
     duration = durationfac*membranetau;
   }
   double orgdcamplitude = stimulusData().number( outTraceName( 0 ) );
-  if ( startamplitudesrc == 1 )
+  if ( startamplitudesrc == 1 ) // previous dc
     amplitude = orgdcamplitude;
-  else if ( startamplitudesrc == 2 ) {
+  else if ( startamplitudesrc == 2 ) {  // thresh
     amplitude = metaData( "Cell" ).number( "ithreshss" );
     if ( amplitude == 0.0 )
       amplitude = metaData( "Cell" ).number( "ithreshon" );
   }
+  else if ( startamplitudesrc == 3 )  // prev
+    amplitude = PrevAmplitude;
   if ( preamplitudesrc == 1 )
     preamplitude = number( "dcstimulusamplitude" );
   else if ( preamplitudesrc == 2 ) {
@@ -338,6 +342,10 @@ int ThresholdLatencies::main( void )
     if ( record )
       saveTrace( tf, tracekey, count-1 );
     plot( record, preduration, duration, postduration );
+
+    // remember baseline current:
+    if ( record )
+      PrevAmplitude = amplitude;
 
     if ( ! record || adjust == 1 ) {
       // change stimulus amplitude:

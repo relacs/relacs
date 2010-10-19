@@ -3,6 +3,7 @@ noinst_PROGRAMS = \
     coherence \
     euler \
     generatepairs \
+    isnan \
     linearfit \
     marquardtfit \
     maxreturnval \
@@ -48,6 +49,9 @@ euler_SOURCES = euler.cc
 
 generatepairs_LDADD = ../src/librelacsnumerics.la
 generatepairs_SOURCES = generatepairs.cc
+
+isnan_LDADD = ../src/librelacsnumerics.la
+isnan_SOURCES = isnan.cc
 
 linearfit_LDADD = ../src/librelacsnumerics.la
 linearfit_SOURCES = linearfit.cc

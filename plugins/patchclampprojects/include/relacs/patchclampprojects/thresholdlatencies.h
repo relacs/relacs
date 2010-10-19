@@ -107,6 +107,8 @@ protected:
   string IUnit;
   double IInFac;
 
+  double PrevAmplitude;
+
   struct Data {
     Data( double delay, double preduration, double savetime,
 	  const InData &voltage, const InData &current );

@@ -4656,12 +4656,17 @@ void Plot::InDataElement::yminmax( double xmin, double xmax,
   if ( x2i >= ID->size() )
     x2i = ID->size() - 1;
   if ( x2i >= x1i ) {
+    while ( x1i <= x2i && ! finite( (*ID)[ x1i ] ) )
+      x1i++;
     ymin = ymax = (*ID)[x1i];
-    for ( long k=x1i+1; k<=x2i; k++ )
-      if ( (*ID)[k] > ymax )
-	ymax = (*ID)[k];
-      else if ( (*ID)[k] < ymin )
-	ymin = (*ID)[k];
+    for ( long k=x1i+1; k<=x2i; k++ ) {
+      if ( finite( (*ID)[k] ) ) {
+	if ( (*ID)[k] > ymax )
+	  ymax = (*ID)[k];
+	else if ( (*ID)[k] < ymin )
+	  ymin = (*ID)[k];
+      }
+    }
   }
   else {
     ymin = 0.0;

@@ -1524,21 +1524,28 @@ void Plot::VectorElement<T,R>::xminmax( double &xmin, double &xmax,
   bool autoymax = ( ymax == MAXDOUBLE );
 
   int k;
-  for ( k=0; k<(int)YData->size(); k++ )
-    if ( ( autoymin || YData->operator[]( k ) >= ymin ) && 
-	 ( autoymax || YData->operator[]( k ) <= ymax ) )
+  for ( k=0; k<(int)XData->size() && k<(int)YData->size(); k++ ) {
+    double y = YData->operator[]( k );
+    if ( finite( XData->operator[]( k ) ) && finite( y ) &&
+	 ( autoymin || y >= ymin ) && 
+	 ( autoymax || y <= ymax ) )
       break;
+  }
   if ( k<(int)XData->size() ) {
     xmin = XData->operator[]( k );
     xmax = xmin;
-    for ( k++; k<(int)XData->size() && k<(int)YData->size(); k++ )
-      if ( ( autoymin || YData->operator[]( k ) >= ymin ) && 
-	   ( autoymax || YData->operator[]( k ) <= ymax ) ) {
-	if ( XData->operator[]( k ) < xmin )
-	  xmin = XData->operator[]( k );
-	else if ( XData->operator[]( k ) > xmax )
-	  xmax = XData->operator[]( k );
-      }
+    for ( k++; k<(int)XData->size() && k<(int)YData->size(); k++ ) {
+      double x = XData->operator[]( k );
+      double y = YData->operator[]( k );
+      if ( finite( x ) && finite( y ) &&
+	   ( autoymin || y >= ymin ) && 
+	   ( autoymax || y <= ymax ) ) {
+	if ( x < xmin )
+	  xmin = x;
+	else if ( x > xmax )
+	  xmax = x;
+      }      
+    }
     xmin *= XScale;
     xmax *= XScale;
   }
@@ -1560,21 +1567,28 @@ void Plot::VectorElement<T,R>::yminmax( double xmin, double xmax,
   xmax /= XScale;
 
   int k;
-  for ( k=0; k<(int)XData->size(); k++ )
-    if ( ( autoxmin || XData->operator[]( k ) >= xmin ) && 
-	 ( autoxmax || XData->operator[]( k ) <= xmax ) )
+  for ( k=0; k<(int)XData->size() &&  k<(int)YData->size(); k++ ) {
+    double x = XData->operator[]( k );
+    if ( finite( x ) && finite( YData->operator[]( k ) ) &&
+	 ( autoxmin || x >= xmin ) &&
+	 ( autoxmax || x <= xmax ) )
       break;
+  }
   if ( k<(int)YData->size() ) {
     ymin = YData->operator[]( k );
     ymax = ymin;
-    for ( k++; k<(int)XData->size() && k<(int)YData->size(); k++ )
-      if ( ( autoxmin || XData->operator[]( k ) >= xmin ) && 
-	   ( autoxmax || XData->operator[]( k ) <= xmax ) ) {
-	if ( YData->operator[]( k ) < ymin )
-	  ymin = YData->operator[]( k );
-	else if ( YData->operator[]( k ) > ymax )
-	  ymax = YData->operator[]( k );
+    for ( k++; k<(int)XData->size() && k<(int)YData->size(); k++ ) {
+      double x = XData->operator[]( k );
+      double y = YData->operator[]( k );
+      if ( finite( x ) && finite( y ) &&
+	   ( autoxmin || x >= xmin ) && 
+	   ( autoxmax || x <= xmax ) ) {
+	if ( y < ymin )
+	  ymin = y;
+	else if ( y > ymax )
+	  ymax = y;
       }
+    }
   }
   else {
     ymin = 0.0;
@@ -1695,12 +1709,17 @@ void Plot::SampleDataElement<T>::yminmax( double xmin, double xmax,
     x2i = SD->size()-1;
 
   if ( x2i >= x1i ) {
+    while ( x1i <= x2i && ! finite( (*SD)[ x1i ] ) )
+      x1i++;
     ymin = ymax = (*SD)[ x1i ];
-    for ( int k=x1i+1; k<=x2i; k++ )
-      if ( (*SD)[k] > ymax )
-	ymax = (*SD)[k];
-      else if ( (*SD)[k] < ymin )
-	ymin = (*SD)[k];
+    for ( int k=x1i+1; k<=x2i; k++ ) {
+      if ( finite( (*SD)[k] ) ) {
+	if ( (*SD)[k] > ymax )
+	  ymax = (*SD)[k];
+	else if ( (*SD)[k] < ymin )
+	  ymin = (*SD)[k];
+      }
+    }
   }
   else {
     ymin = 0.0;

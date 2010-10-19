@@ -72,7 +72,6 @@ void FICurve::config( void )
     VUnit = trace( SpikeTrace[0] ).unit();
     VFac = Parameter::changeUnit( 1.0, VUnit, "mV" );
     setUnit( "vstep", VUnit );
-    setUnit( "vmin", VUnit );
   }
 
   if ( CurrentOutput[0] >= 0 ) {
