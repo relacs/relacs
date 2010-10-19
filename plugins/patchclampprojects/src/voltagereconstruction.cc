@@ -262,7 +262,8 @@ int VoltageReconstruction::main( void )
 	  }
 	}
 	if ( ( signal.success() && meanrate < targetrate ) || signal.underflow() ) {
-	  if ( rates.y().maxIndex() < rinx ) {
+	  double maxr = 0.0;
+	  if ( rates.y().maxIndex( maxr ) < rinx && maxr > 2.0*silentrate ) {
 	    // depolarization block reached:
 	    dcamplitude -= amplitudestep;
 	    if ( dcamplitude < minampl )

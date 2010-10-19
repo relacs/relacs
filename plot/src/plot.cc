@@ -1597,6 +1597,7 @@ double Plot::autoTics( double val, double min )
 	     << "YMax[" << k << "]=" << YMax[k] << '\n';
     }
   }
+  return 1.0;
 }
 
 
