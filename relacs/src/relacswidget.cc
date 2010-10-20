@@ -37,9 +37,19 @@
 #include <relacs/aosim.h>
 #include <relacs/attsim.h>
 #include <relacs/attenuate.h>
+#include <relacs/acquire.h>
+#include <relacs/control.h>
+#include <relacs/databrowser.h>
 #include <relacs/filter.h>
+#include <relacs/filterdetectors.h>
+#include <relacs/macros.h>
 #include <relacs/model.h>
 #include <relacs/messagebox.h>
+#include <relacs/relacsdevices.h>
+#include <relacs/repros.h>
+#include <relacs/savefiles.h>
+#include <relacs/session.h>
+#include <relacs/simulator.h>
 #include <relacs/optdialog.h>
 
 namespace relacs {
@@ -274,6 +284,10 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
       }
     }
   }
+
+  // data browser:
+  DB = new DataBrowser( this );
+  CW->addTab( DB, "Data-Browser" );
 
   // model plugin:
   MD = 0;
@@ -1133,6 +1147,7 @@ void RELACSWidget::startRePro( RePro *repro, int macroaction, bool saving )
     *InfoFile << QTime::currentTime().toString().toLatin1().data();
     *InfoFile << "   " << CurrentRePro->name() << ": " << MC->options();
   }
+  DB->addRepro( CurrentRePro );
 
   ReProRunning = true;
   SN->incrReProCount();
@@ -1308,6 +1323,8 @@ void RELACSWidget::startSession( bool startmacro )
 	     << QDate::currentDate().toString().toLatin1().data() << "\n\n"
 	     << "Time:      Research Program:\n";
   }
+
+  DB->addSession( SF->path() );
 
   SessionStartWait.wakeAll();
 

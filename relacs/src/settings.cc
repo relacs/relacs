@@ -23,8 +23,10 @@
  *****************************************************************************/
 
 #include <cstdlib>
+#include <relacs/acquire.h>
 #include <relacs/optwidget.h>
 #include <relacs/relacswidget.h>
+#include <relacs/savefiles.h>
 #include <relacs/settings.h>
 
 using namespace std;

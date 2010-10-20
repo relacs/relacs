@@ -20,6 +20,7 @@
 */
 
 #include <relacs/relacswidget.h>
+#include <relacs/acquire.h>
 #include <relacs/datathreads.h>
 
 namespace relacs {

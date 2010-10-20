@@ -25,6 +25,7 @@
 #include <relacs/repros.h>
 #include <relacs/filter.h>
 #include <relacs/session.h>
+#include <relacs/savefiles.h>
 #include <relacs/relacsdevices.h>
 #include <relacs/relacswidget.h>
 #include <relacs/filterdetectors.h>

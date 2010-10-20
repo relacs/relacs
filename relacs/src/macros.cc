@@ -34,6 +34,7 @@
 #include <relacs/relacswidget.h>
 #include <relacs/repro.h>
 #include <relacs/repros.h>
+#include <relacs/session.h>
 #include <relacs/filter.h>
 #include <relacs/filterdetectors.h>
 #include <relacs/macros.h>

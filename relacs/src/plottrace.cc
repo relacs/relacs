@@ -29,6 +29,7 @@
 #include <QToolTip>
 #include <QApplication>
 #include <relacs/str.h>
+#include <relacs/filterdetectors.h>
 #include <relacs/relacswidget.h>
 #include <relacs/plottrace.h>
 

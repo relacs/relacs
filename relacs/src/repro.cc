@@ -29,7 +29,10 @@
 #include <QApplication>
 #include <relacs/str.h>
 #include <relacs/optdialog.h>
+#include <relacs/acquire.h>
+#include <relacs/savefiles.h>
 #include <relacs/relacswidget.h>
+#include <relacs/repros.h>
 #include <relacs/repro.h>
 
 namespace relacs {

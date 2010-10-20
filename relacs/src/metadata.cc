@@ -27,6 +27,8 @@
 #include <relacs/optdialog.h>
 #include <relacs/relacsplugin.h>
 #include <relacs/relacswidget.h>
+#include <relacs/savefiles.h>
+#include <relacs/session.h>
 #include <relacs/metadata.h>
 
 namespace relacs {

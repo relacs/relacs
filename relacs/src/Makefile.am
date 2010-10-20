@@ -31,6 +31,7 @@ librelacs_la_LIBADD = \
 
 $(librelacs_la_OBJECTS) : \
     moc_control.cc \
+    moc_databrowser.cc \
     moc_defaultrepro.cc \
     moc_defaultsession.cc \
     moc_filter.cc \
@@ -54,6 +55,7 @@ pkginclude_HEADERS = \
     ../include/relacs/aosim.h \
     ../include/relacs/attsim.h \
     ../include/relacs/control.h \
+    ../include/relacs/databrowser.h \
     ../include/relacs/datathreads.h \
     ../include/relacs/defaultrepro.h \
     ../include/relacs/defaultsession.h \
@@ -83,6 +85,7 @@ librelacs_la_SOURCES = \
     aosim.cc \
     attsim.cc \
     control.cc \
+    databrowser.cc \
     datathreads.cc \
     defaultrepro.cc \
     defaultsession.cc \

@@ -23,7 +23,14 @@
 #include <relacs/messagebox.h>
 #include <relacs/metadata.h>
 #include <relacs/model.h>
+#include <relacs/acquire.h>
+#include <relacs/control.h>
 #include <relacs/filter.h>
+#include <relacs/filterdetectors.h>
+#include <relacs/relacsdevices.h>
+#include <relacs/repros.h>
+#include <relacs/savefiles.h>
+#include <relacs/session.h>
 #include <relacs/relacswidget.h>
 #include <relacs/relacsplugin.h>
 

@@ -40,23 +40,34 @@
 #include <relacs/configclass.h>
 #include <relacs/configureclasses.h>
 #include <relacs/settings.h>
-#include <relacs/relacsdevices.h>
 #include <relacs/metadata.h>
-#include <relacs/plottrace.h>
-#include <relacs/acquire.h>
 #include <relacs/datathreads.h>
-#include <relacs/simulator.h>
-#include <relacs/savefiles.h>
-#include <relacs/filterdetectors.h>
-#include <relacs/session.h>
-#include <relacs/control.h>
+#include <relacs/plottrace.h>
 #include <relacs/relacsplugin.h>
-#include <relacs/repros.h>
-#include <relacs/macros.h>
 
 using namespace std;
 
 namespace relacs {
+
+class AllDevices;
+class Devices;
+class AIDevices;
+class AODevices;
+class DIODevices;
+class TriggerDevices;
+class AttDevices;
+class AttInterfaces;
+class Acquire;
+class Simulator;
+class Model;
+class PlotTrace;
+class SaveFiles;
+class RePros;
+class Macros;
+class FilterDetectors;
+class Session;
+class Control;
+class DataBrowser;
 
 
 /*! 
@@ -324,6 +335,7 @@ private:
   friend class PlotTrace;
   friend class Macros;
   friend class Control;
+  friend class DataBrowser;
   friend class FilterDetectors;
   friend class SaveFiles;
 
@@ -372,6 +384,7 @@ private:
   FilterDetectors *FD;
   Session *SN;
   vector<Control*> CN;
+  DataBrowser *DB;
 
   InList IL;
   EventList ED;

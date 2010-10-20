@@ -24,7 +24,11 @@
 #include <QPainter>
 #include <QToolTip>
 #include <QMutexLocker>
+#include <relacs/acquire.h>
+#include <relacs/attenuate.h>
+#include <relacs/relacsdevices.h>
 #include <relacs/relacswidget.h>
+#include <relacs/session.h>
 #include <relacs/savefiles.h>
 
 namespace relacs {
