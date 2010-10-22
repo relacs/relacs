@@ -173,7 +173,7 @@ int ThresholdLatencies::main( void )
     warning( "Width of pre-pulse ramp is longer than pre-pulse duration!" );
     return Failed;
   }
-  if ( prepulseramp > 0 && prepulserampwidth <= 0.0 ) {
+  if ( preduration > 0.0 && prepulseramp > 0 && prepulserampwidth <= 0.0 ) {
     warning( "Width of pre-pulse ramp should be greater than zero!" );
     return Failed;
   }

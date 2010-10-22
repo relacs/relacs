@@ -34,6 +34,9 @@ using namespace std;
 namespace relacs {
 
 
+class ControlThread;
+
+
 /*! 
 \class Control
 \brief Base class for widgets that control hardware or analyze data.
@@ -96,7 +99,7 @@ dialogOpen() returns \c true if the dialog is already displayed.
 */
 
 
-class Control : public RELACSPlugin, protected QThread
+class Control : public RELACSPlugin
 {
   Q_OBJECT
 
@@ -248,13 +251,33 @@ protected:
 
 private:
 
-    /*! This is the thread. It calls main(). */
-  virtual void run( void );
+  friend class ControlThread;
 
+  void run( void );
+
+  ControlThread *Thread;
   bool Interrupt;
   mutable QMutex InterruptLock;
   QWaitCondition SleepWait;
   QTime SleepTime;
+
+};
+
+
+class ControlThread : public QThread
+{
+  Q_OBJECT
+
+
+public:
+  
+  ControlThread( Control *c );
+  virtual void run( void );
+
+
+private:
+
+  Control *C;
 
 };
 

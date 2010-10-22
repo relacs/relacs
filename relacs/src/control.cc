@@ -33,6 +33,7 @@ Control::Control( const string &name, const string &pluginset,
   : RELACSPlugin( "Control: " + name, RELACSPlugin::Plugins,
 		  name, pluginset, author, version, date )
 {
+  Thread = new ControlThread( this );
   Interrupt = false;
 }
 
@@ -219,14 +220,14 @@ bool Control::sleepOn( double t )
 
 void Control::start( void )
 {
-  QThread::start();
+  Thread->start();
 }
 
 
 void Control::requestStop( void )
 {
   // terminate thread:
-  if ( isRunning() ) {
+  if ( Thread->isRunning() ) {
     InterruptLock.lock();
     Interrupt = true;
     InterruptLock.unlock();
@@ -240,9 +241,21 @@ void Control::requestStop( void )
 bool Control::wait( double time )
 {
   if ( time < 0.0 )
-    return QThread::wait();
+    return Thread->wait();
   else
-    return QThread::wait( (unsigned long)::floor( 1000.0*time ) );
+    return Thread->wait( (unsigned long)::floor( 1000.0*time ) );
+}
+
+  
+ControlThread::ControlThread( Control *c )
+  : C( c )
+{
+}
+
+
+void ControlThread::run( void )
+{
+  C->run();
 }
 
 
