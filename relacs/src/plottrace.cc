@@ -446,9 +446,9 @@ void PlotTrace::plot( void )
   }
   else if ( ViewMode == WrapView ) {
     // offset wrapped at signalTime():
-    LeftTime = ::floor( ( currentTime() - sigtime ) / TimeWindow ) * TimeWindow;
-    leftwin = tfac * LeftTime;
+    leftwin = tfac * ::floor( ( currentTime() - sigtime ) / TimeWindow ) * TimeWindow;
     rightwin += leftwin;
+    LeftTime = leftwin/tfac + sigtime;
     Offset = sigtime;
   }
   else {

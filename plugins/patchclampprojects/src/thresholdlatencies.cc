@@ -58,18 +58,11 @@ ThresholdLatencies::ThresholdLatencies( void )
   addNumber( "delay", "Time before stimullus onset", 0.05, 0.0, 1000.0, 0.01, "sec", "ms" );
   addNumber( "savetracetime", "Length of trace to be saved and analyzed", 0.5, 0.0, 1000.0, 0.01, "sec", "ms" );
   addInteger( "repeats", "Repetitions of stimulus", 10, 0, 10000, 1 );
-  setFlags( 1 );
   addTypeStyle( OptWidget::TabLabel, Parameter::Label );
-  setConfigSelectMask( 1 );
-  setDialogSelectMask( 1 );
 
-  PrevAmplitude = 0.0;
-
-  // data exchange options:
-  addLabel( "Used amplitudes" );
-  addNumber( "stimulusamplitude", 0.0 );
-  addNumber( "dcstimulusamplitude", 0.0 );
-  addNumber( "dcamplitude", 0.0 );
+  PrevMeanTestAmplitude = 0.0;
+  PrevMeanDCTestAmplitude = 0.0;
+  PrevMeanDCAmplitude = 0.0;
 
   // plot:
   P.lock();
@@ -129,7 +122,7 @@ int ThresholdLatencies::main( void )
     duration = durationfac*membranetau;
   }
   double orgdcamplitude = stimulusData().number( outTraceName( 0 ) );
-  if ( startamplitudesrc == 1 ) // previous dc
+  if ( startamplitudesrc == 1 ) // current dc
     amplitude = orgdcamplitude;
   else if ( startamplitudesrc == 2 ) {  // thresh
     amplitude = metaData( "Cell" ).number( "ithreshss" );
@@ -137,17 +130,18 @@ int ThresholdLatencies::main( void )
       amplitude = metaData( "Cell" ).number( "ithreshon" );
   }
   else if ( startamplitudesrc == 3 )  // prev
-    amplitude = PrevAmplitude;
-  if ( preamplitudesrc == 1 )
-    preamplitude = number( "dcstimulusamplitude" );
-  else if ( preamplitudesrc == 2 ) {
+    amplitude = PrevMeanTestAmplitude;
+    cerr << "PREVIOUS DC: " << PrevMeanDCAmplitude << '\n';
+  if ( preamplitudesrc == 1 ) // previous dc
+    preamplitude = PrevMeanDCAmplitude;
+  else if ( preamplitudesrc == 2 ) { // thresh
     preamplitude = metaData( "Cell" ).number( "ithreshss" );
     if ( preamplitude == 0.0 )
       preamplitude = metaData( "Cell" ).number( "ithreshon" );
   }
-  if ( postamplitudesrc == 1 )
-    postamplitude = number( "dcstimulusamplitude" );
-  else if ( postamplitudesrc == 2 ) {
+  if ( postamplitudesrc == 1 ) // previous dc
+    postamplitude = PrevMeanDCAmplitude;
+  else if ( postamplitudesrc == 2 ) { // thresh
     postamplitude = metaData( "Cell" ).number( "ithreshss" );
     if ( postamplitude == 0.0 )
       postamplitude = metaData( "Cell" ).number( "ithreshon" );
@@ -170,8 +164,8 @@ int ThresholdLatencies::main( void )
     return Failed;
   }
   if ( prepulseramp > 0 && preduration > 0.0 && preduration < prepulserampwidth ) {
-    warning( "Width of pre-pulse ramp is longer than pre-pulse duration!" );
-    return Failed;
+    warning( "Width of pre-pulse ramp is longer than pre-pulse duration!<br>Continue with ramp set to pre-pulse width." );
+    prepulserampwidth = preduration;
   }
   if ( preduration > 0.0 && prepulseramp > 0 && prepulserampwidth <= 0.0 ) {
     warning( "Width of pre-pulse ramp should be greater than zero!" );
@@ -218,7 +212,7 @@ int ThresholdLatencies::main( void )
   Header.addNumber( "duration", 1000.0*duration, "ms", "%0.1f" );
 
   // plot trace:
-  plotToggle( true, false, 2.0*savetracetime < pause ? 2.0*savetracetime : pause, 0.0 );
+  plotToggle( true, true, 1.5*savetracetime, 0.5*savetracetime );
 
   // plot:
   P.lock();
@@ -270,11 +264,16 @@ int ThresholdLatencies::main( void )
       s = "<b>Search threshold: </b>";
     else
       s = "<b>Measure response: </b>";
+    if ( preduration > 0.0 )
+      s += "Pre-pulse <b>" + Str( 1000.0*preduration, 0, 0, 'f' ) + " ms</b>, ";
     s += "DC amplitude <b>" + Str( dcamplitude ) + " " + IUnit +"</b>, ";
     s += "Amplitude <b>" + Str( amplitude ) + " " + IUnit +"</b>, ";
     s += "Step <b>" + Str( amplitudestep ) + " " + IUnit +"</b>";
-    if ( record )
+    if ( record ) {
       s += ",  Loop <b>" + Str( count ) + "</b>";
+      if ( repeats > 0 )
+	s += " of <b>" + Str( repeats ) + "</b>";
+    }
     message( s );
 
     // signal:
@@ -342,10 +341,6 @@ int ThresholdLatencies::main( void )
     if ( record )
       saveTrace( tf, tracekey, count-1 );
     plot( record, preduration, duration, postduration );
-
-    // remember baseline current:
-    if ( record )
-      PrevAmplitude = amplitude;
 
     if ( ! record || adjust == 1 ) {
       // change stimulus amplitude:
@@ -671,11 +666,11 @@ void ThresholdLatencies::saveData( bool dc )
 
   // make amplitudes public:
   if ( dc ) {
-    setNumber( "dcstimulusamplitude", am );
-    setNumber( "dcamplitude", bam );
+    PrevMeanDCTestAmplitude = am;
+    PrevMeanDCAmplitude = bam;
   }
   else
-    setNumber( "stimulusamplitude", am );
+    PrevMeanTestAmplitude = am;
 
 }
 

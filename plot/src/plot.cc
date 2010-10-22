@@ -593,12 +593,16 @@ void Plot::setYRange( double ymin, double ymax )
 void Plot::setXFallBackRange( double xmin, double xmax )
 {
   if ( xmin <= xmax ) {
-    XMinFB[0] = xmin;
-    XMaxFB[0] = xmax;
+    if ( xmin < 0.001*AnyScale )
+      XMinFB[0] = xmin;
+    if ( xmax < 0.001*AnyScale )
+      XMaxFB[0] = xmax;
   }
   else {
-    XMinFB[0] = xmax;
-    XMaxFB[0] = xmin;
+    if ( xmax < 0.001*AnyScale )
+      XMinFB[0] = xmax;
+    if ( xmin < 0.001*AnyScale )
+      XMaxFB[0] = xmin;
   }
 }
 
@@ -606,12 +610,16 @@ void Plot::setXFallBackRange( double xmin, double xmax )
 void Plot::setYFallBackRange( double ymin, double ymax )
 {
   if ( ymin <= ymax ) {
-    YMinFB[0] = ymin;
-    YMaxFB[0] = ymax;
+    if ( ymin < 0.001*AnyScale )
+      YMinFB[0] = ymin;
+    if ( ymax < 0.001*AnyScale )
+      YMaxFB[0] = ymax;
   }
   else {
-    YMinFB[0] = ymax;
-    YMaxFB[0] = ymin;
+    if ( ymax < 0.001*AnyScale )
+      YMinFB[0] = ymax;
+    if ( ymin < 0.001*AnyScale )
+      YMaxFB[0] = ymin;
   }
 }
 
@@ -691,12 +699,16 @@ void Plot::setY2Range( double ymin, double ymax )
 void Plot::setX2FallBackRange( double xmin, double xmax )
 {
   if ( xmin <= xmax ) {
-    XMinFB[1] = xmin;
-    XMaxFB[1] = xmax;
+    if ( xmin < 0.001*AnyScale )
+      XMinFB[1] = xmin;
+    if ( xmax < 0.001*AnyScale )
+      XMaxFB[1] = xmax;
   }
   else {
-    XMinFB[1] = xmax;
-    XMaxFB[1] = xmin;
+    if ( xmax < 0.001*AnyScale )
+      XMinFB[1] = xmax;
+    if ( xmin < 0.001*AnyScale )
+      XMaxFB[1] = xmin;
   }
 }
 
@@ -704,12 +716,16 @@ void Plot::setX2FallBackRange( double xmin, double xmax )
 void Plot::setY2FallBackRange( double ymin, double ymax )
 {
   if ( ymin <= ymax ) {
-    YMinFB[1] = ymin;
-    YMaxFB[1] = ymax;
+    if ( ymin < 0.001*AnyScale )
+      YMinFB[1] = ymin;
+    if ( ymax < 0.001*AnyScale )
+      YMaxFB[1] = ymax;
   }
   else {
-    YMinFB[1] = ymax;
-    YMaxFB[1] = ymin;
+    if ( ymax < 0.001*AnyScale )
+      YMinFB[1] = ymax;
+    if ( ymin < 0.001*AnyScale )
+      YMaxFB[1] = ymin;
   }
 }
 
@@ -1421,27 +1437,28 @@ void Plot::initXRange( int axis )
   XMin[axis] = XMinRange[axis];
   XMax[axis] = XMaxRange[axis];
   if ( XMinRange[axis] >= AnyScale || XMaxRange[axis] >= AnyScale ) {
+    // search in data for the appropriate ranges:
     double xmin = XMinFB[axis];
     double xmax = XMaxFB[axis];
     double ymin[MaxAxis], ymax[MaxAxis];
     for ( int k=0; k<MaxAxis; k++ ) {
-      ymin[k] = YMin[k] >= AnyScale ? -MAXDOUBLE : YMin[k];
-      ymax[k] = YMax[k] >= AnyScale ? MAXDOUBLE : YMax[k];
+      ymin[k] = YMinRange[k] >= AnyScale ? -MAXDOUBLE : YMinRange[k];
+      ymax[k] = YMaxRange[k] >= AnyScale ? MAXDOUBLE : YMaxRange[k];
     }
     PDataType::iterator d;
     for ( d = PData.begin(); d != PData.end(); ++d ) {
       if ( (*d)->XAxis == axis ) {
 	double nxmin, nxmax;
 	(*d)->xminmax( nxmin, nxmax, ymin[(*d)->YAxis], ymax[(*d)->YAxis] );
-	if ( nxmin != AutoScale && nxmax != AutoScale ) {
+	if ( nxmin < AnyScale && nxmax < AnyScale ) {
 	  xmin = nxmin;
 	  xmax = nxmax;
 	  for ( ++d; d != PData.end(); ++d ) {
 	    if ( (*d)->XAxis == axis ) {
 	      (*d)->xminmax( nxmin, nxmax, ymin[(*d)->YAxis], ymax[(*d)->YAxis] );
-	      if ( nxmin != AutoScale && nxmin < xmin )
+	      if ( nxmin < AnyScale && nxmin < xmin )
 		xmin = nxmin;
-	      if ( nxmax != AutoScale && nxmax > xmax )
+	      if ( nxmax < AnyScale && nxmax > xmax )
 		xmax = nxmax;
 	    }
 	  }
@@ -1450,21 +1467,34 @@ void Plot::initXRange( int axis )
       }
     }
     if ( XMinRange[axis] >= AnyScale ) {
-      if ( XMinRange[axis] == AutoScale || XMinRange[axis] == ExactScale ||
-	   xmin < XMinFB[axis] )
+      // set xmin if appropriate:
+      if ( xmin < AnyScale &&
+	   ( XMinRange[axis] == AutoScale || XMinRange[axis] == ExactScale ||
+	     xmin < XMinFB[axis] ) )
 	XMin[axis] = xmin;
       else
 	XMin[axis] = XMinFB[axis];
     }
     if ( XMaxRange[axis] >= AnyScale ) {
-      if ( XMaxRange[axis] == AutoScale || XMaxRange[axis] == ExactScale ||
-	   ( xmax > XMaxFB[axis] && xmax < AnyScale ) )
+      // set xmax if appropriate:
+      if (  xmax < AnyScale &&
+	    ( XMaxRange[axis] == AutoScale || XMaxRange[axis] == ExactScale ||
+	      xmax > XMaxFB[axis] ) )
 	XMax[axis] = xmax;
       else
 	XMax[axis] = XMaxFB[axis];
     }
   }
 
+  if ( XMin[axis] > 0.001*AnyScale )
+    XMin[axis] = 0.001*AnyScale;
+  if ( XMin[axis] < -0.001*AnyScale )
+    XMin[axis] = -0.001*AnyScale;
+  if ( XMax[axis] > 0.01*AnyScale )
+    XMax[axis] = 0.001*AnyScale;
+  if ( XMax[axis] < -0.001*AnyScale )
+    XMax[axis] = -0.001*AnyScale;
+      
   if ( ::fabs( XMax[axis] - XMin[axis] ) < 1.0e-8 &&
        ( XMaxRange[axis] >= AnyScale || XMinRange[axis] >= AnyScale ) ) {
     if ( XMaxRange[axis] >= AnyScale && XMinRange[axis] < AnyScale )
@@ -1493,27 +1523,24 @@ void Plot::initYRange( int axis )
   YMin[axis] = YMinRange[axis];
   YMax[axis] = YMaxRange[axis];
   if ( YMinRange[axis] >= AnyScale || YMaxRange[axis] >= AnyScale ) {
-    double xmin[MaxAxis], xmax[MaxAxis];
-    for ( int k=0; k<MaxAxis; k++ ) {
-      xmin[k] = XMin[k] >= AnyScale ? -MAXDOUBLE : XMin[k];
-      xmax[k] = XMax[k] >= AnyScale ? MAXDOUBLE : XMax[k];
-    }
+    // search in data for the appropriate ranges:
+    // xmin and xmax has been already set by initXRange()!
     double ymin = YMinFB[axis];
     double ymax = YMaxFB[axis];
     PDataType::iterator d;
     for ( d = PData.begin(); d != PData.end(); ++d ) {
       if ( (*d)->YAxis == axis ) {
 	double nymin, nymax;
-	(*d)->yminmax( xmin[(*d)->XAxis], xmax[(*d)->XAxis], nymin, nymax );
-	if ( nymin != AutoScale && nymax != AutoScale ) {
+	(*d)->yminmax( XMin[(*d)->XAxis], XMax[(*d)->XAxis], nymin, nymax );
+	if ( nymin < AnyScale && nymax < AnyScale ) {
 	  ymin = nymin;
 	  ymax = nymax;
 	  for ( ++d; d != PData.end(); ++d ) {
 	    if ( (*d)->YAxis == axis ) {
-	      (*d)->yminmax( xmin[(*d)->XAxis], xmax[(*d)->XAxis], nymin, nymax );
-	      if ( nymin != AutoScale && nymin < ymin )
+	      (*d)->yminmax( XMin[(*d)->XAxis], XMax[(*d)->XAxis], nymin, nymax );
+	      if ( nymin < AnyScale && nymin < ymin )
 		ymin = nymin;
-	      if ( nymax != AutoScale && nymax > ymax )
+	      if ( nymax < AnyScale && nymax > ymax )
 		ymax = nymax;
 	    }
 	  }
@@ -1522,20 +1549,33 @@ void Plot::initYRange( int axis )
       }
     }
     if ( YMinRange[axis] >= AnyScale ) {
-      if ( YMinRange[axis] == AutoScale || YMinRange[axis] == ExactScale ||
-	   ymin < YMinFB[axis] )
+      // set ymin if appropriate:
+      if ( ymin < AnyScale &&
+	   ( YMinRange[axis] == AutoScale || YMinRange[axis] == ExactScale ||
+	     ymin < YMinFB[axis] ) )
 	YMin[axis] = ymin;
       else
 	YMin[axis] = YMinFB[axis];
     }
     if ( YMaxRange[axis] >= AnyScale ) {
-      if ( YMaxRange[axis] == AutoScale || YMaxRange[axis] == ExactScale ||
-	   ymax > YMaxFB[axis] )
+      // set ymax if appropriate:
+      if ( ymax < AnyScale &&
+	   ( YMaxRange[axis] == AutoScale || YMaxRange[axis] == ExactScale ||
+	     ymax > YMaxFB[axis] ) )
 	YMax[axis] = ymax;
       else
 	YMax[axis] = YMaxFB[axis];
     }
   }
+
+  if ( YMin[axis] > 0.001*AnyScale )
+    YMin[axis] = 0.001*AnyScale;
+  if ( YMin[axis] < -0.001*AnyScale )
+    YMin[axis] = -0.001*AnyScale;
+  if ( YMax[axis] > 0.01*AnyScale )
+    YMax[axis] = 0.001*AnyScale;
+  if ( YMax[axis] < -0.001*AnyScale )
+    YMax[axis] = -0.001*AnyScale;
 
   if ( ::fabs( YMax[axis] - YMin[axis] ) < 1.0e-8 && 
        ( YMaxRange[axis] >= AnyScale || YMinRange[axis] >= AnyScale ) ) {
@@ -1590,11 +1630,11 @@ double Plot::autoTics( double val, double min )
     }
     if ( k == 19 ) {
       cerr << "ERROR in Plot::autoTics() min=" << min << " val=" << val << " valEE=" << valEE << '\n';
-      for ( int k=0; k<MaxAxis; k++ )
-	cerr << "XMin[" << k << "]=" << XMin[k] << '\n'
-	     << "XMax[" << k << "]=" << XMax[k] << '\n'
-	     << "YMin[" << k << "]=" << YMin[k] << '\n'
-	     << "YMax[" << k << "]=" << YMax[k] << '\n';
+      for ( int j=0; j<MaxAxis; j++ )
+	cerr << "XMin[" << j << "]=" << XMin[j] << '\n'
+	     << "XMax[" << j << "]=" << XMax[j] << '\n'
+	     << "YMin[" << j << "]=" << YMin[j] << '\n'
+	     << "YMax[" << j << "]=" << YMax[j] << '\n';
     }
   }
   return 1.0;
@@ -1696,8 +1736,8 @@ void Plot::initTics( void )
 
     // x tic marks:
     if ( XTicsIncrAutoScale[k] ) {
-      double minx1ticsincr;
-      double dw;
+      double minx1ticsincr = 0.0;
+      double dw = 0.0;
       int pw = screenWidth();
       pw -= LMargAutoScale ? Y1TicsMarg : LMarg;
       pw -= RMargAutoScale ? Y2TicsMarg : RMarg;
@@ -3180,6 +3220,10 @@ Plot::RangeCopy::RangeCopy( void )
     XMax[k] = 10.0;
     YMin[k] = -10.0;
     YMax[k] = 10.0;
+    XMinRange[k] = -10.0;
+    XMaxRange[k] = 10.0;
+    YMinRange[k] = -10.0;
+    YMaxRange[k] = 10.0;
   }
 }
 
@@ -3191,6 +3235,10 @@ Plot::RangeCopy::RangeCopy( const RangeCopy &rc )
     XMax[k] = rc.XMax[k];
     YMin[k] = rc.YMin[k];
     YMax[k] = rc.YMax[k];
+    XMinRange[k] = rc.XMinRange[k];
+    XMaxRange[k] = rc.XMaxRange[k];
+    YMinRange[k] = rc.YMinRange[k];
+    YMaxRange[k] = rc.YMaxRange[k];
   }
 }
 
@@ -3198,10 +3246,14 @@ Plot::RangeCopy::RangeCopy( const RangeCopy &rc )
 Plot::RangeCopy::RangeCopy( const Plot *p ) 
 {
   for ( int k=0; k<MaxAxis; k++ ) {
-    XMin[k] = p->XMinRange[k];
-    XMax[k] = p->XMaxRange[k];
-    YMin[k] = p->YMinRange[k];
-    YMax[k] = p->YMaxRange[k];
+    XMin[k] = p->XMin[k];
+    XMax[k] = p->XMax[k];
+    YMin[k] = p->YMin[k];
+    YMax[k] = p->YMax[k];
+    XMinRange[k] = p->XMinRange[k];
+    XMaxRange[k] = p->XMaxRange[k];
+    YMinRange[k] = p->YMinRange[k];
+    YMaxRange[k] = p->YMaxRange[k];
   }
 }
 
@@ -3222,10 +3274,14 @@ void Plot::popRanges( void )
 {
   if ( ! MouseRangeStack.empty() ) {
     for ( int k=0; k<MaxAxis; k++ ) {
-      XMinRange[k] = XMin[k] = MouseRangeStack.back().XMin[k];
-      XMaxRange[k] = XMax[k] = MouseRangeStack.back().XMax[k];
-      YMinRange[k] = YMin[k] = MouseRangeStack.back().YMin[k];
-      YMaxRange[k] = YMax[k] = MouseRangeStack.back().YMax[k];
+      XMin[k] = MouseRangeStack.back().XMin[k];
+      XMax[k] = MouseRangeStack.back().XMax[k];
+      YMin[k] = MouseRangeStack.back().YMin[k];
+      YMax[k] = MouseRangeStack.back().YMax[k];
+      XMinRange[k] = MouseRangeStack.back().XMinRange[k];
+      XMaxRange[k] = MouseRangeStack.back().XMaxRange[k];
+      YMinRange[k] = MouseRangeStack.back().YMinRange[k];
+      YMaxRange[k] = MouseRangeStack.back().YMaxRange[k];
     }
     MouseRangeStack.pop_back();
   }
@@ -3236,10 +3292,14 @@ void Plot::resetRanges( void )
 {
   if ( ! MouseRangeStack.empty() ) {
     for ( int k=0; k<MaxAxis; k++ ) {
-      XMinRange[k] = XMin[k] = MouseRangeStack.front().XMin[k];
-      XMaxRange[k] = XMax[k] = MouseRangeStack.front().XMax[k];
-      YMinRange[k] = YMin[k] = MouseRangeStack.front().YMin[k];
-      YMaxRange[k] = YMax[k] = MouseRangeStack.front().YMax[k];
+      XMin[k] = MouseRangeStack.front().XMin[k];
+      XMax[k] = MouseRangeStack.front().XMax[k];
+      YMin[k] = MouseRangeStack.front().YMin[k];
+      YMax[k] = MouseRangeStack.front().YMax[k];
+      XMinRange[k] = MouseRangeStack.front().XMinRange[k];
+      XMaxRange[k] = MouseRangeStack.front().XMaxRange[k];
+      YMinRange[k] = MouseRangeStack.front().YMinRange[k];
+      YMaxRange[k] = MouseRangeStack.front().YMaxRange[k];
     }
     MouseRangeStack.clear();
     MouseZoomOut = false;
@@ -4670,8 +4730,8 @@ void Plot::InDataElement::yminmax( double xmin, double xmax,
     }
   }
   else {
-    ymin = 0.0;
-    ymax = 0.0;
+    ymin = AnyScale;
+    ymax = AnyScale;
   }
 }
 

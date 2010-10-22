@@ -334,7 +334,7 @@ int VoltageReconstruction::main( void )
   double period = 1.0/meanrate;
   
   // plot trace:
-  plotToggle( true, false, searchduration, 0.0 );
+  plotToggle( true, false, searchduration, 0.5*searchduration );
 
   // setup plots:
   postCustomEvent( 11 );

@@ -107,7 +107,9 @@ protected:
   string IUnit;
   double IInFac;
 
-  double PrevAmplitude;
+  double PrevMeanTestAmplitude;
+  double PrevMeanDCTestAmplitude;
+  double PrevMeanDCAmplitude;
 
   struct Data {
     Data( double delay, double preduration, double savetime,

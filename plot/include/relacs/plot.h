@@ -1046,6 +1046,10 @@ protected:
     double XMax[MaxAxis];
     double YMin[MaxAxis];
     double YMax[MaxAxis];
+    double XMinRange[MaxAxis];
+    double XMaxRange[MaxAxis];
+    double YMinRange[MaxAxis];
+    double YMaxRange[MaxAxis];
 
   };
 
@@ -1591,8 +1595,8 @@ void Plot::VectorElement<T,R>::yminmax( double xmin, double xmax,
     }
   }
   else {
-    ymin = 0.0;
-    ymax = 0.0;
+    ymin = AutoScale;
+    ymax = AutoScale;
   }
 }
 
@@ -1722,8 +1726,8 @@ void Plot::SampleDataElement<T>::yminmax( double xmin, double xmax,
     }
   }
   else {
-    ymin = 0.0;
-    ymax = 0.0;
+    ymin = AnyScale;
+    ymax = AnyScale;
   }
 }
 
