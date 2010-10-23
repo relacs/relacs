@@ -7,6 +7,8 @@ Macros:
   Use plugin-set name as well.
 - delete all MacroCommands after usage!
 - add new macro command to set all sorts of internal Options (e.g. stimulusData!)
+- Shift+Functionkey is not working any more
+- Macro Options and Macro stack (B R N keys) do not work together
 
 Metadata:
 - Implement in all RePros OutData::descriptions() !
@@ -20,7 +22,7 @@ Plot:
 - possibly infinite loop in line 1527 (autoscaling) from line 1534 (initTics)
   because of YMin or YMax isnan: probably fixed...
 - change zoom behavior on axis (centered)
-- remove the zoom stack -  remember only the default range
+- make the zoom stack optional - remember only the default range
 - check alignment of grid with plotted lines at various plot widget sizes!
 - PlotTrace/RePro: replace plotToggle() by some nicer functions!
 

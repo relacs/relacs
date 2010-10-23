@@ -56,7 +56,7 @@ ThresholdLatencies::ThresholdLatencies( void )
   addNumber( "searchpause", "Duration of pause between outputs during search", 0.5, 0.0, 1000.0, 0.01, "sec", "ms" );
   addNumber( "pause", "Duration of pause between outputs", 1.0, 0.0, 1000.0, 0.01, "sec", "ms" );
   addNumber( "delay", "Time before stimullus onset", 0.05, 0.0, 1000.0, 0.01, "sec", "ms" );
-  addNumber( "savetracetime", "Length of trace to be saved and analyzed", 0.5, 0.0, 1000.0, 0.01, "sec", "ms" );
+  addNumber( "savetracetime", "Length of trace to be saved and analyzed (from test-pulse on)", 0.5, 0.0, 1000.0, 0.01, "sec", "ms" );
   addInteger( "repeats", "Repetitions of stimulus", 10, 0, 10000, 1 );
   addTypeStyle( OptWidget::TabLabel, Parameter::Label );
 
@@ -131,7 +131,6 @@ int ThresholdLatencies::main( void )
   }
   else if ( startamplitudesrc == 3 )  // prev
     amplitude = PrevMeanTestAmplitude;
-    cerr << "PREVIOUS DC: " << PrevMeanDCAmplitude << '\n';
   if ( preamplitudesrc == 1 ) // previous dc
     preamplitude = PrevMeanDCAmplitude;
   else if ( preamplitudesrc == 2 ) { // thresh
@@ -151,8 +150,8 @@ int ThresholdLatencies::main( void )
     warning( "startamplitudestep must be larger than amplitudestep!" );
     return Failed;
   }
-  if ( savetracetime < duration+preduration+postduration ) {
-    warning( "savetracetime must be at least as long as the stimulus duration (pre-, test-, and post-pulse)!" );
+  if ( savetracetime < duration+postduration ) {
+    warning( "savetracetime must be at least as long as the test- and post-pulse duration!" );
     return Failed;
   }
   if ( delay + preduration + duration + postduration + searchpause < savetracetime ) {
@@ -216,7 +215,7 @@ int ThresholdLatencies::main( void )
 
   // plot:
   P.lock();
-  P.setXRange( -1000.0*(delay+preduration), 1000.0*(savetracetime-delay-preduration) );
+  P.setXRange( -1000.0*(delay+preduration), 1000.0*(savetracetime-delay) );
   P.setYLabel( trace( SpikeTrace[0] ).ident() + " [" + VUnit + "]" );
   P.unlock();
 
@@ -328,7 +327,7 @@ int ThresholdLatencies::main( void )
     }
 
     // sleep:
-    sleep( savetracetime + 0.01 );
+    sleep( delay+preduration+savetracetime + 0.01 );
     if ( interrupt() ) {
       if ( ! record || count <= 1 )
 	state = Aborted;
@@ -424,7 +423,7 @@ int ThresholdLatencies::main( void )
     }
     TrialCount = count;
 
-    sleepOn( delay + duration + pause );
+    sleepOn( preduration + duration + postduration + pause );
 
     if ( record && repeats > 0 && count >= repeats )
       break;
@@ -471,11 +470,11 @@ void ThresholdLatencies::analyze( double dcamplitude, double preamplitude,
   Results.back().Amplitude = amplitude;
   Results.back().PreAmplitude = preduration > 0.0 ? preamplitude : -1.0e38;
   Results.back().PostAmplitude = postduration > 0.0 ? postamplitude : -1.0e38;
-  events( SpikeEvents[0] ).copy( signalTime() - delay - preduration,
-				 signalTime() + savetime - delay - preduration,
+  events( SpikeEvents[0] ).copy( signalTime() - delay,
+				 signalTime() + preduration + savetime - delay,
 				 signalTime() + preduration,
 				 Results.back().Spikes );
-  Results.back().SpikeCount = Results.back().Spikes.count( 0.0, savetime-delay-preduration );
+  Results.back().SpikeCount = Results.back().Spikes.count( 0.0, savetime-delay );
   Results.back().BaseSpikeCount = events( SpikeEvents[0] ).count( signalTime()-pause, signalTime() );
 
   if ( Results.back().SpikeCount > 0 ) {
@@ -716,9 +715,9 @@ ThresholdLatencies::Data::Data( double delay, double preduration, double savetim
   Amplitude = 0.0;
   PreAmplitude = 0.0;
   PostAmplitude = 0.0;
-  Voltage.resize( -delay-preduration, savetime-delay-preduration, voltage.stepsize(), 0.0 );
+  Voltage.resize( -delay-preduration, savetime-delay, voltage.stepsize(), 0.0 );
   voltage.copy( voltage.signalTime() + preduration, Voltage );
-  Current.resize( -delay-preduration, savetime-delay-preduration, current.stepsize(), 0.0 );
+  Current.resize( -delay-preduration, savetime-delay, current.stepsize(), 0.0 );
   current.copy( current.signalTime() + preduration, Current );
   SpikeCount = 0;
 }
@@ -732,7 +731,7 @@ ThresholdLatencies::Data::Data( double delay, double preduration, double savetim
   Amplitude = 0.0;
   PreAmplitude = 0.0;
   PostAmplitude = 0.0;
-  Voltage.resize( -delay-preduration, savetime-delay-preduration, voltage.stepsize(), 0.0 );
+  Voltage.resize( -delay-preduration, savetime-delay, voltage.stepsize(), 0.0 );
   voltage.copy( voltage.signalTime() + preduration, Voltage );
   Current.clear();
   SpikeCount = 0;
