@@ -129,20 +129,18 @@ int Wait::main( void )
     message( "Time out is already in the past" );
     return Failed;
   }
-  QCoreApplication::postEvent( (RELACSPlugin*)this,
-			       new WaitEvent( 0, maxsecs ) );
+  QCoreApplication::postEvent( this, new WaitEvent( 0, maxsecs ) );
   string ws;
   if ( endtime.date() == currenttime.date() )
     ws = endtime.time().toString( Qt::ISODate ).toStdString();
   else
     ws = endtime.toString( Qt::ISODate ).toStdString();
-  QCoreApplication::postEvent( (RELACSPlugin*)this, new WaitEvent( ws ) );
+  QCoreApplication::postEvent( this, new WaitEvent( ws ) );
   while ( softStop() == 0 ) {
     currenttime = QDateTime::currentDateTime();
     if ( currenttime >= endtime )
       break;
-    QCoreApplication::postEvent( (RELACSPlugin*)this,
-				 new WaitEvent( currenttime.secsTo( endtime ) ) );
+    QCoreApplication::postEvent( this, new WaitEvent( currenttime.secsTo( endtime ) ) );
     sleep( 0.1 );
     if ( interrupt() )
       return Aborted;

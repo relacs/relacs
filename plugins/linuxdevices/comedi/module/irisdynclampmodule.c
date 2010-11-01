@@ -14,7 +14,7 @@
 
 #include <math.h>
 
-#include "rtmodule.h"
+#include "moduledef.h"
 
 MODULE_LICENSE( "GPL" );
 

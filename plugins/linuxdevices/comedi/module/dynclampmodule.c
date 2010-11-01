@@ -13,7 +13,7 @@
 #include <rtai_shm.h>
 #include <rtai_math.h>
 
-#include "rtmodule.h"
+#include "moduledef.h"
 
 MODULE_LICENSE( "GPL" );
 

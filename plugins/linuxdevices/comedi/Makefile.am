@@ -11,7 +11,6 @@ EXTRA_DIST = \
     module/Makefile \
     module/model.h \
     module/model.c \
-    module/rtmodule.h \
     module/rtmodule.c \
     module/dynclampmodule.c \
     module/irisdynclampmodule.c \

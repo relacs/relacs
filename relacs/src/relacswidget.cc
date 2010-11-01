@@ -159,11 +159,11 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   MainWidget->setAutoFillBackground( true );
   setCentralWidget( MainWidget );
 
-  // filter and detectors:
-  FD = new FilterDetectors( this );
-
   // macros:
   MC = new Macros( this );
+
+  // filter and detectors:
+  FD = new FilterDetectors( this );
 
   // data acquisition:
   AQ = 0;
@@ -467,8 +467,6 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
 
 RELACSWidget::~RELACSWidget( void )
 {
-  stopThreads();
-  clearActivity();
   if ( MD != 0 ) {
     Plugins::destroy( MD->name(), RELACSPlugin::ModelId );
     delete MD;
@@ -772,7 +770,8 @@ void RELACSWidget::updateData( void )
   MinTraceMutex.lock();
   double mintime = MinTraceTime;
   MinTraceMutex.unlock();
-  while ( IL.success() && CurrentTime < mintime ) {
+  while ( IL.success() && CurrentTime < mintime &&
+	  ( simulation() || ReadLoop.isRunning() ) ) {
     RunDataMutex.lock();
     bool rd = RunData;
     RunDataMutex.unlock();
@@ -781,9 +780,8 @@ void RELACSWidget::updateData( void )
     // XXX wait needs a locked mutex!
     QMutex mutex;
     mutex.lock();
-    if ( acquisition() ) {
+    if ( acquisition() )
       ReadDataWait.wait( &mutex );
-    }
     else
       ReadDataWait.wait( &mutex, 1 );
     mutex.unlock(); // XXX
@@ -843,7 +841,39 @@ void RELACSWidget::run( void )
     RunDataMutex.lock();
     rd = RunData;
     RunDataMutex.unlock();
-  } while( rd );
+  } while( rd && ( simulation() || ReadLoop.isRunning() ) );
+
+  if ( ! rd )
+    return;
+
+  // stop all activity:
+  UpdateDataWait.wakeAll();
+  stopRePro();
+  for ( unsigned int k=0; k<CN.size(); k++ )
+    CN[k]->requestStop();
+  wakeAll();
+  for ( unsigned int k=0; k<CN.size(); k++ )
+    CN[k]->wait( 0.2 );
+  ReadLoop.stop();
+  WriteLoop.stop();
+  ThreadSleepWait.wakeAll();
+  ReadDataWait.wakeAll();
+  SimLoad.stop();
+  if ( AQ != 0 ) {
+    lockAI();
+    lockSignals();
+    AQ->stop();
+    unlockSignals();
+    unlockAI();
+  }
+  qApp->processEvents();
+  closeHardware();
+  RP->activateRePro( 0 );
+  AcquisitionAction->setEnabled( true );
+  SimulationAction->setEnabled( true );
+  IdleAction->setEnabled( false );
+  setMode( IdleMode );
+  RP->message( "<b>Idle-mode</b>" );
 }
 
 
@@ -1204,11 +1234,13 @@ void RELACSWidget::stopRePro( void )
   if ( SF->signalPending() ) {
     // force data updates:
     ThreadSleepWait.wakeAll();
-    // XXX wait needs a locked mutex!
-    QMutex mutex;
-    mutex.lock();
-    ProcessDataWait.wait( &mutex );
-    mutex.unlock(); // XXX
+    if ( ReadLoop.isRunning() ) {
+      // XXX wait needs a locked mutex!
+      QMutex mutex;
+      mutex.lock();
+      ProcessDataWait.wait( &mutex );
+      mutex.unlock(); // XXX
+    }
     SF->clearSignal();
   }
 
@@ -1422,14 +1454,15 @@ void RELACSWidget::stopThreads( void )
     CN[k]->wait( 0.2 );
 
   // stop data threads:
-  ReadLoop.stop();
-  WriteLoop.stop();
   RunDataMutex.lock();
   RunData = false;
   RunDataMutex.unlock();
+  ReadLoop.stop();
+  WriteLoop.stop();
   ThreadSleepWait.wakeAll();
   ReadDataWait.wakeAll();
-  Thread->wait();
+  if ( Thread->isRunning() )
+    Thread->wait();
 
   // stop simulation and data acquisition:
   SimLoad.stop();
@@ -1472,7 +1505,9 @@ void RELACSWidget::stopActivity( void )
 
 void RELACSWidget::quit( void )
 {
-  stopActivity();
+  if ( ! idle() )
+    stopActivity();
+  clearActivity();
   printlog( "quitting RELACS" );
   qApp->quit();
 }

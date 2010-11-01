@@ -215,6 +215,7 @@ int ThresholdLatencies::main( void )
 
   // plot:
   P.lock();
+  P.clear();
   P.setXRange( -1000.0*(delay+preduration), 1000.0*(savetracetime-delay) );
   P.setYLabel( trace( SpikeTrace[0] ).ident() + " [" + VUnit + "]" );
   P.unlock();
@@ -682,7 +683,7 @@ void ThresholdLatencies::plot( bool record, double preduration, double duration,
   double lsd = 0.0;
   double lm = Latencies.mean( lsd );
   if ( record )
-    P.setTitle( "p=" + Str( 100.0*(double)SpikeCount/(double)TrialCount, 0, 0, 'f' ) +
+    P.setTitle( "p=" + Str( 100.0*(double)SpikeCount/(double)(TrialCount+1), 0, 0, 'f' ) +
 		"%,  latency=(" + Str( 1000.0*lm, 0, 0, 'f' ) +
 		"+/-" + Str( 1000.0*lsd, 0, 0, 'f' ) +
 		") ms, amplitude=" + Str( am, 0, 2, 'f' ) + " " + IUnit );

@@ -709,8 +709,11 @@ int DynClampAnalogInput::readData( void )
   }
 
   // no more data to be read:
-  if ( BufferN <= 0 && !running() )
+  if ( BufferN <= 0 && !running() ) {
+    if ( Traces->front().continuous() )
+      Traces->addError( DaqError::Unknown );
     return -1;
+  }
 
   //  cerr << "Comedi::readData() end " << BufferN << "\n";
 

@@ -36,7 +36,7 @@ namespace patchclamp {
 \class SetDC
 \brief [RePro] Interactively set the DC current.
 \author Jan Benda
-\version 1.0 (Feb 09, 2010)
+\version 1.2 (Nov 01, 2010)
 \par Options
 - \c outcurrent=Current-1: Output trace (\c string)
 - \c dcamplitudesel=to a fraction of the threshold: Set DC amplitude (\c string)
@@ -68,11 +68,14 @@ protected:
   QLabel *UnitLabel;
   QPushButton *OKButton;
   QPushButton *CancelButton;
+  QPushButton *ResetButton;
+  QPushButton *ZeroButton;
   bool SetValue;
   bool Finished;
   int OutCurrent;
   string IUnit;
   double DCAmplitude;
+  double OrgDCAmplitude;
 
 
 protected slots:
@@ -80,6 +83,8 @@ protected slots:
   void setValue( double value );
   void setValue( void );
   void keepValue( void );
+  void resetDC( void );
+  void zeroDC( void );
 
 };
 

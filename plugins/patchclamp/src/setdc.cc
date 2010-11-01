@@ -28,7 +28,7 @@ namespace patchclamp {
 
 
 SetDC::SetDC( void )
-  : RePro( "SetDC", "patchclamp", "Jan Benda", "1.0", "Feb 09, 2010" ),
+  : RePro( "SetDC", "patchclamp", "Jan Benda", "1.2", "Nov 01, 2010" ),
     IUnit( "nA" )
 {
   // add some options:
@@ -79,6 +79,22 @@ SetDC::SetDC( void )
 	   this, SLOT( keepValue() ) );
   grabKey( Qt::ALT+Qt::Key_C );
   grabKey( Qt::Key_Escape );
+  
+  // Reset button:
+  ResetButton = new QPushButton( "&Reset" );
+  ResetButton->setFixedHeight( OKButton->sizeHint().height() );
+  bb->addWidget( ResetButton );
+  connect( ResetButton, SIGNAL( clicked() ),
+	   this, SLOT( resetDC() ) );
+  grabKey( Qt::ALT+Qt::Key_R );
+  
+  // Zero button:
+  ZeroButton = new QPushButton( "&Zero" );
+  ZeroButton->setFixedHeight( OKButton->sizeHint().height() );
+  bb->addWidget( ZeroButton );
+  connect( ZeroButton, SIGNAL( clicked() ),
+	   this, SLOT( zeroDC() ) );
+  grabKey( Qt::ALT+Qt::Key_Z );
 
 }
 
@@ -104,6 +120,25 @@ void SetDC::notify( void )
 }
 
 
+class SetDCEvent : public QEvent
+{
+
+public:
+
+  SetDCEvent( double val, double min, double max )
+    : QEvent( Type( User+14 ) ),
+      Value( val ),
+      Min( min ),
+      Max( max )
+  {
+  }
+
+  double Value;
+  double Min;
+  double Max;
+};
+
+
 int SetDC::main( void )
 {
   // get options:
@@ -121,12 +156,12 @@ int SetDC::main( void )
   plotToggle( true, false, 1.0, 0.0 );
 
   // init:
-  double orgampl = stimulusData().number( outTraceName( OutCurrent ) );
+  OrgDCAmplitude = stimulusData().number( outTraceName( OutCurrent ) );
   DCAmplitude = metaData( "Cell" ).number( "ithreshss" );
   if ( dcamplitudesel == 0 )
     DCAmplitude = dcamplitude;
   else if ( dcamplitudesel == 1 )
-    DCAmplitude = orgampl;
+    DCAmplitude = OrgDCAmplitude;
   else if ( dcamplitudesel == 2 )
     DCAmplitude *= dcamplitudefrac;
   else
@@ -158,9 +193,9 @@ int SetDC::main( void )
       return Failed;
     }
     message( "DC=<b>" + Str( DCAmplitude ) + "</b> " + IUnit );
-    EW->setMinimum( dcsignal.minValue() );
-    EW->setMaximum( dcsignal.maxValue() );
-    EW->setValue( DCAmplitude );
+    QCoreApplication::postEvent( this, new SetDCEvent( DCAmplitude,
+						       dcsignal.minValue(),
+						       dcsignal.maxValue() ) );
     sleep( 0.01 );
     postCustomEvent( 11 ); // setFocus();
     // wait for input:
@@ -170,7 +205,7 @@ int SetDC::main( void )
       sleepWait();
       if ( ! Finished || ! SetValue ) {
 	if ( Finished )
-	  DCAmplitude = orgampl;
+	  DCAmplitude = OrgDCAmplitude;
 	dcsignal = DCAmplitude;
 	dcsignal.setIdent( "DC=" + Str( DCAmplitude ) + IUnit );
 	dcsignal.description().setNumber( "Intensity", DCAmplitude, IUnit );
@@ -195,7 +230,7 @@ int SetDC::main( void )
     dcsignal.description().addNumber( "Intensity", DCAmplitude, IUnit );
     directWrite( dcsignal );
     if ( dcsignal.failed() ) {
-      DCAmplitude = orgampl;
+      DCAmplitude = OrgDCAmplitude;
       dcsignal = DCAmplitude;
       dcsignal.setIdent( "DC=" + Str( DCAmplitude ) + IUnit );
       dcsignal.description().setNumber( "Intensity", DCAmplitude, IUnit );
@@ -211,7 +246,9 @@ int SetDC::main( void )
 
 void SetDC::setValue( double value )
 {
+  lock();
   DCAmplitude = value;
+  unlock();
   wake();
 }
 
@@ -237,6 +274,23 @@ void SetDC::keepValue( void )
 }
 
 
+void SetDC::resetDC( void )
+{
+  lock();
+  double ampl = OrgDCAmplitude;
+  unlock();
+  EW->setValue( ampl );
+  wake();
+}
+
+
+void SetDC::zeroDC( void )
+{
+  EW->setValue( 0.0 );
+  wake();
+}
+
+
 void SetDC::keyPressEvent( QKeyEvent *e )
 {
   if ( e->key() == Qt::Key_O && ( e->modifiers() & Qt::AltModifier ) ) {
@@ -245,6 +299,14 @@ void SetDC::keyPressEvent( QKeyEvent *e )
   }
   else if ( e->key() == Qt::Key_C && ( e->modifiers() & Qt::AltModifier ) ) {
     CancelButton->animateClick();
+    e->accept();
+  }
+  else if ( e->key() == Qt::Key_R && ( e->modifiers() & Qt::AltModifier ) ) {
+    ResetButton->animateClick();
+    e->accept();
+  }
+  else if ( e->key() == Qt::Key_Z && ( e->modifiers() & Qt::AltModifier ) ) {
+    ZeroButton->animateClick();
     e->accept();
   }
   else if ( ( e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter ) && ( e->modifiers() == Qt::NoModifier ) ) {
@@ -277,6 +339,13 @@ void SetDC::customEvent( QEvent *qce )
   }
   case 13: {
     EW->setSingleStep( number( "dcamplitudestep" ) );
+    break;
+  }
+  case 14: {
+    SetDCEvent *sde = dynamic_cast<SetDCEvent*>( qce );
+    EW->setMinimum( sde->Min );
+    EW->setMaximum( sde->Max );
+    EW->setValue( sde->Value );
     break;
   }
   default:

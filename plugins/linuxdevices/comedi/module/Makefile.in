@@ -2,8 +2,6 @@ ifneq ($(KERNELRELEASE),)
 
 EXTRA_CFLAGS += @RTAI_CPPFLAGS@ -I/usr/include/ -ffast-math -mhard-float
 
-EXTRA_CFLAGS += -DENABLE_TRIGGER
-
 EXTRA_CFLAGS += -Wall
 
 obj-m := rtmodule.o dynclampmodule.o
