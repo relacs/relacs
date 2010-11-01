@@ -818,6 +818,13 @@ int Simulator::writeZero( int channel, int device )
 
   OutData signal( 1, 0.0001 );
   signal.setChannel( channel, device );
+  for ( int k=0; k<(int)OutTraces.size(); k++ ) {
+    if ( device == OutTraces[k].device() &&
+	 channel == OutTraces[k].channel() ) {
+      signal.setTrace( k );
+      break;
+    }
+  }
   signal[0] = 0.0;
   OutList sigs( signal );
 

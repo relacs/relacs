@@ -32,28 +32,17 @@ namespace base {
 
 /*!
 \class Wait
-\brief [RePro] Wait until a specified (date and) time.
+\brief [RePro] %Wait until a specified (date and) time.
 \author Jan Benda
 \version 1.0 (Jul 07, 2010)
-
-The Pause-RePro does not write any stimulus
-and terminates after \c repeats times \c duration ms.
-With the \c savedata option you can switch off saving of the raw data
-recorded during Pause.
+\par Screenshot
+\image html wait.png
 
 \par Options
-- \c date
-- \c time
-- \c savedata=false: Save Data (\c boolean)
-
-\par Files
-No output files.
-
-\par Plots
-No plot.
-
-\par Requirements
-No requirements.
+- \c absdate=false: Specify absolute date (\c boolean)
+- \c date=0000-00-00: Date (\c date)
+- \c days=0days: Days from start of RePro on (\c integer)
+- \c time=00:00:00: Time (\c time)
 */
 
 

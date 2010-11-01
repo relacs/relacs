@@ -38,6 +38,9 @@ namespace patchclamp {
 \brief [RePro] Measures membrane resistance, capacitance, and time constant with current pulses
 \author Jan Benda
 \version 1.0 (Nov 12, 2009)
+\par Screenshot
+\image html membraneresistance.png
+
 \par Options
 - Stimulus
 - \c amplitude=-0.1nA: Amplitude of output signal (\c number)

@@ -1,9 +1,14 @@
 Version 0.9.7
 
-May, 2010
-  Port to Qt4 for improved performance.
+November, 2010
+  First release of the Qt4 port.
 
-May, 2010: Version 0.9.6
+May, 2010
+  Started porting RELACS to Qt4 for improved performance.
+
+Version 0.9.6
+
+May, 2010
   Last release of the Qt3 based version.
   Many new plugins for investigating electrosensory systems.
 
@@ -16,7 +21,8 @@ July, 2009
   got attenuator back into RELACS.
 
 March, 2009
-  First working version of the dynamic clamp modules.
+  First working version of the dynamic clamp modules
+  thanks to Marco.
 
 December, 2008
   Working interface to the comedi library supporting many
@@ -30,7 +36,9 @@ June 14, 2008
 Mar 1, 2008
   The new web site goes online.
 
-Aug 22, 2007: Version 0.9.0 - prerelease 
+Version 0.9.0 - prerelease 
+
+Aug 22, 2007
   Note that names of libraries and classes as well as class interfaces
   may still change. Also, no hardware support is shipped with this
   release. Use this release as a demo only and don't put any work into

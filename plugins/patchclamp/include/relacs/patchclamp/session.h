@@ -36,6 +36,8 @@ namespace patchclamp {
 \brief [Control] %Session for current-clamp recordings
 \author Jan Benda
 \version 1.0 (Oct 13, 2008)
+\par Screenshot
+\image html session.png
 */
 
 

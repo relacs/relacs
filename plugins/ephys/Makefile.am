@@ -9,7 +9,7 @@ pkgincludedir = $(includedir)/relacs
 pkgdatadir=$(datadir)/relacs
 docdir = $(datarootdir)/doc/relacs
 
-PLUGINSET = EPhys
+PLUGINSET = ephys
 DX_PROJECT = ephys
 DX_CONFIG = ../../doc/Doxyfile
 DX_INSTALL_SUBDIR = /api/$(DX_PROJECT)

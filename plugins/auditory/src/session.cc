@@ -55,8 +55,8 @@ Session::Session( void )
   SessionButton->setText( "Cell Found" );
   SessionButton->setMinimumSize( SessionButton->sizeHint() );
   vb->addWidget( SessionButton );
-  QWidget::connect( SessionButton, SIGNAL( clicked() ),
-		    (QWidget*)this, SLOT( toggleSession() ) );
+  connect( SessionButton, SIGNAL( clicked() ),
+	   this, SLOT( toggleSession() ) );
 
   P.lock();
   P.setMinimumWidth( 210 );

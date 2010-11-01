@@ -13,7 +13,7 @@ pkgincludedir = $(includedir)/relacs
 pkgdatadir=$(datadir)/relacs
 docdir = $(datarootdir)/doc/relacs
 
-PLUGINSET = Patch-clamp
+PLUGINSET = patchclamp
 DX_PROJECT = patchclamp
 DX_CONFIG = ../../doc/Doxyfile
 DX_INSTALL_SUBDIR = /api/$(DX_PROJECT)

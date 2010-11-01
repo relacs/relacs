@@ -266,13 +266,12 @@ private:
 
 class ControlThread : public QThread
 {
-  Q_OBJECT
-
 
 public:
   
   ControlThread( Control *c );
   virtual void run( void );
+  void usleep( unsigned long usecs );
 
 
 private:

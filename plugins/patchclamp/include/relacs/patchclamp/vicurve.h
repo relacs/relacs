@@ -38,6 +38,9 @@ namespace patchclamp {
 \brief [RePro] V-I curve measured in current-clamp
 \author Jan Benda
 \version 1.0 (Feb 12, 2010)
+\par Screenshot
+\image html vicurve.png
+
 \par Options
 - Stimuli
 - \c ibase=zero: Currents are relative to (\c string)

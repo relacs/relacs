@@ -39,6 +39,9 @@ namespace patchclamp {
 \brief [RePro] F-I curve measured in current-clamp
 \author Jan Benda
 \version 1.0 (Feb 17, 2010)
+\par Screenshot
+\image html ficurve.png
+
 \par Options
 - Stimuli
 - \c ibase=zero: Currents are relative to (\c string)

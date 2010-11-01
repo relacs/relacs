@@ -9,7 +9,7 @@ pkgincludedir = $(includedir)/relacs
 pkgdatadir=$(datadir)/relacs
 docdir = $(datarootdir)/doc/relacs
 
-PLUGINSET = Acoustic
+PLUGINSET = acoustic
 DX_PROJECT = acoustic
 DX_CONFIG = ../../doc/Doxyfile
 DX_INSTALL_SUBDIR = /api/$(DX_PROJECT)

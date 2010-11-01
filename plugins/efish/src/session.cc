@@ -117,8 +117,8 @@ Session::Session( void )
   SessionButton = new QPushButton( "Cell Found (Enter)" );
   SessionButton->setMinimumSize( SessionButton->sizeHint() );
   vb->addWidget( SessionButton );
-  QObject::connect( SessionButton, SIGNAL( clicked() ),
-		    (QWidget*)this, SLOT( toggleSession() ) );
+  connect( SessionButton, SIGNAL( clicked() ),
+	   this, SLOT( toggleSession() ) );
 }
 
 

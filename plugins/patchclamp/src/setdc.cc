@@ -65,8 +65,8 @@ SetDC::SetDC( void )
   OKButton = new QPushButton( "&Ok" );
   OKButton->setFixedHeight( OKButton->sizeHint().height() );
   bb->addWidget( OKButton );
-  QWidget::connect( OKButton, SIGNAL( clicked() ),
-		    (QWidget*)this, SLOT( setValue() ) );
+  connect( OKButton, SIGNAL( clicked() ),
+	   this, SLOT( setValue() ) );
   grabKey( Qt::ALT+Qt::Key_O );
   grabKey( Qt::Key_Return );
   grabKey( Qt::Key_Enter );
@@ -75,8 +75,8 @@ SetDC::SetDC( void )
   CancelButton = new QPushButton( "&Cancel" );
   CancelButton->setFixedHeight( OKButton->sizeHint().height() );
   bb->addWidget( CancelButton );
-  QWidget::connect( CancelButton, SIGNAL( clicked() ),
-		    (QWidget*)this, SLOT( keepValue() ) );
+  connect( CancelButton, SIGNAL( clicked() ),
+	   this, SLOT( keepValue() ) );
   grabKey( Qt::ALT+Qt::Key_C );
   grabKey( Qt::Key_Escape );
 
@@ -265,14 +265,14 @@ void SetDC::customEvent( QEvent *qce )
   switch ( qce->type() - QEvent::User ) {
   case 11: {
     EW->setFocus();
-    QWidget::connect( EW, SIGNAL( valueChanged( double ) ),
-		      (QWidget*)this, SLOT( setValue( double ) ) );
+    connect( EW, SIGNAL( valueChanged( double ) ),
+	     this, SLOT( setValue( double ) ) );
     break;
   }
   case 12: {
     removeFocus();
-    QWidget::disconnect( EW, SIGNAL( valueChanged( double ) ),
-			 (QWidget*)this, SLOT( setValue( double ) ) );
+    disconnect( EW, SIGNAL( valueChanged( double ) ),
+		this, SLOT( setValue( double ) ) );
     break;
   }
   case 13: {

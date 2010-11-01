@@ -53,8 +53,8 @@ ChirpDetector::ChirpDetector( const string &ident, int mode )
   CDW.setVerticalSpacing( 4 );
   CDW.setMargins( 4 );
   setWidget( &CDW );
-  QObject::connect( (QWidget*)this, SIGNAL( dialogAccepted( void ) ),
-		    &CDW, SLOT( updateValues( void ) ) );
+  connect( this, SIGNAL( dialogAccepted( void ) ),
+	   &CDW, SLOT( updateValues( void ) ) );
 
   setDialogSelectMask( 8 );
   setDialogReadOnlyMask( 16 );

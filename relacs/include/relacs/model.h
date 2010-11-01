@@ -37,6 +37,9 @@ using namespace std;
 namespace relacs {
 
 
+class ModelThread;
+
+
 /*! 
 \class Model
 \author Jan Benda
@@ -44,10 +47,9 @@ namespace relacs {
 \brief Base class of all models used by Simulate.
 \bug Check locking of signals AND traces!
 \bug restart() synchronization of real time, data buffers and signal times does not work
-\todo Handling of multiple signals.
 */
 
-class Model : public RELACSPlugin, public QThread 
+class Model : public RELACSPlugin 
 {
 
   friend class Simulator;
@@ -105,6 +107,8 @@ public:
         \endcode
         */
   bool interrupt( void ) const;
+    /*! Returns \c true if the %Model thread is running. */
+  bool isRunning( void ) const;
 
     /*! Push the value \a val of trace \a trace to the data buffer.
         \sa main() */
@@ -137,6 +141,8 @@ public:
 
 private:
 
+  friend class ModelThread;
+
      /*! Set the time step of trace \a trace to \a deltat. */
   void setDeltat( int trace, double deltat );
 
@@ -147,7 +153,7 @@ private:
         \sa stop(), notify(), start() */
   void restart( void );
     /*! The simulation thread. Simply calls main(). */
-  virtual void run( void );
+  void run( void );
     /*! Stop the simulation. */
   void stop( void );
 
@@ -183,6 +189,8 @@ private:
 
     /*! True if the simulation was restarted since the last call of restart(). */
   bool restarted( void );
+
+  ModelThread *Thread;
 
   int MaxPush;
   double MaxPushTime;
@@ -229,6 +237,23 @@ private:
   bool InterruptModel;
   mutable QMutex InterruptLock;
   QWaitCondition SleepWait;
+
+};
+
+
+class ModelThread : public QThread
+{
+
+public:
+  
+  ModelThread( Model *m );
+  virtual void run( void );
+  void msleep( unsigned long msecs );
+
+
+private:
+
+  Model *M;
 
 };
 

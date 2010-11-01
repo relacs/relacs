@@ -18,13 +18,13 @@ RELACS is controlled by three configuration files
   </varlistentry>
   <varlistentry><term><filename>relacsplugin.cfg</filename></term>
     <listitem><para>
-      Here, all default parameter for experimental protocols,
+      Here, all default parameter for research protocols,
       filter, detectors, and controls are stored.
     </para></listitem>
   </varlistentry>
   <varlistentry><term><filename>macros.cfg</filename></term>
     <listitem><para>
-      Specifies macros, i.e. lists of experimental protocols.
+      Specifies macros, i.e. lists of research protocols.
       The format of this file is described in detail in the following chapter
       (<xref linkend='macros' endterm='macrostitle'/>).
     </para></listitem>

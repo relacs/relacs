@@ -83,4 +83,8 @@ endif DX_COND_doc
 
 # whenever you change the prefix, it is sufficient jsut to delete the *.la files:
 libclean:
-	find -name '*.la' | xargs rm
+	find -name '*.la' | xargs rm -v
+
+# number of header and source files, lines of code:
+stats:
+	utils/relacsstats

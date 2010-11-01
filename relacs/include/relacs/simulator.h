@@ -108,7 +108,8 @@ public:
         \param[in] params resets parameter channels. */
   virtual int writeReset( bool channels=true, bool params=true );
     /*! Set the output of channel \a channel on device \a device to zero.
-        Returns 0 on success or a negative number on error. */
+        Returns 0 on success or a negative number on error. 
+        \sa testWrite(), write(), writeData(), stopWrite() */
   virtual int writeZero( int channel, int device );
 
     /*! Stop all activity. */

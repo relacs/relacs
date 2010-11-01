@@ -9,6 +9,9 @@ exempt of errors.
 
 * Jan Benda <benda@bio.lmu.de>
 
+* Maxime Ambard and Armin Brandt (University of Freiburg) for
+their initial help on porting RELACS to Qt4.
+
 * Samuel Glauser <s.glauser@freemails.ch> for being a patient user
 during the multi-thread test phase.
 

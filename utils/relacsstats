@@ -1,0 +1,72 @@
+#!/bin/bash
+
+###############################################################################
+#
+# relacsstats
+# 
+#
+# RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
+# Copyright (C) 2002-2010 Jan Benda <benda@bio.lmu.de>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 3 of the License, or
+# (at your option) any later version.
+# 
+# RELACS is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+###############################################################################
+
+# --help and --version:
+if test "x$1" = "x--help"; then
+  echo ""
+  echo "Usage:"
+  echo "  relacsstats"
+  echo ""
+  echo "Prints some statistics of the RELACS project"
+  echo "(number of files and lines of code) to standard output."
+  echo ""
+  exit 0
+elif test "x$1" = "x--version"; then
+  echo "relacsstats 1.0"
+  echo "Copyright (C) 2010 Jan Benda"
+  exit 0
+fi
+
+echo ""
+echo "RELACS core:"
+echo "  .h files: $(find -name '*.h' | fgrep -v '/example' | fgrep -v '/datatools' | fgrep -v 'moc_' | fgrep -v './plugins/' | wc -l)"
+echo "  .cc files: $(find -name '*.cc' | fgrep -v '/example' | fgrep -v '/datatools' | fgrep -v 'moc_' | fgrep -v 'linktest.cc' | fgrep -v './plugins/' | wc -l)"
+FN=$(find -name '*.h' -or -name '*.cc' | fgrep -v '/example' | fgrep -v '/datatools' | fgrep -v 'moc_' | fgrep -v 'linktest.cc' | fgrep -v './plugins/' | wc -l)
+LN=$(find -name '*.h' -or -name '*.cc' | fgrep -v '/example' | fgrep -v '/datatools' | fgrep -v 'moc_' | fgrep -v 'linktest.cc' | fgrep -v './plugins/' | xargs cat | wc -l)
+echo "  all files: $FN"
+echo "  number of lines: $LN"
+echo "  number of lines without GPL: $(echo "$LN-$FN*21" | bc )"
+
+echo ""
+echo "RELACS plugins:"
+echo "  .h files: $(find plugins -name '*.h' | fgrep -v '/example' | fgrep -v '/datatools' | fgrep -v 'moc_' | wc -l)"
+echo "  .cc files: $(find plugins -name '*.cc' | fgrep -v '/example' | fgrep -v '/datatools' | fgrep -v 'moc_' | fgrep -v 'linktest.cc' | wc -l)"
+FN=$(find plugins -name '*.h' -or -name '*.cc' | fgrep -v '/example' | fgrep -v '/datatools' | fgrep -v 'moc_' | fgrep -v 'linktest.cc' | wc -l)
+LN=$(find plugins -name '*.h' -or -name '*.cc' | fgrep -v '/example' | fgrep -v '/datatools' | fgrep -v 'moc_' | fgrep -v 'linktest.cc' | xargs cat | wc -l)
+echo "  all files: $FN"
+echo "  number of lines: $LN"
+echo "  number of lines without GPL: $(echo "$LN-$FN*21" | bc )"
+
+echo ""
+echo "total:"
+echo "  .h files: $(find -name '*.h' | fgrep -v '/example' | fgrep -v '/datatools' | fgrep -v 'moc_' | wc -l)"
+echo "  .cc files: $(find -name '*.cc' | fgrep -v '/example' | fgrep -v '/datatools' | fgrep -v 'moc_' | fgrep -v 'linktest.cc' | wc -l)"
+FN=$(find -name '*.h' -or -name '*.cc' | fgrep -v '/example' | fgrep -v '/datatools' | fgrep -v 'moc_' | fgrep -v 'linktest.cc' | wc -l)
+LN=$(find -name '*.h' -or -name '*.cc' | fgrep -v '/example' | fgrep -v '/datatools' | fgrep -v 'moc_' | fgrep -v 'linktest.cc' | xargs cat | wc -l)
+echo "  all files: $FN"
+echo "  number of lines: $LN"
+echo "  number of lines without GPL: $(echo "$LN-$FN*21" | bc )"
+
+echo ""

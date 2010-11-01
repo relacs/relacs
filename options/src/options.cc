@@ -3378,8 +3378,12 @@ Options &Options::load( const Str &opttxt, const string &assignment,
 {
   Warning = "";
 
+  string s = opttxt.stripped().preventLast( separator );
+  if ( s.empty() )
+    return *this;
+
   // split up opttxt:
-  StrQueue sq( opttxt.stripped().preventLast( separator ), separator );
+  StrQueue sq( s, separator );
 
   for ( StrQueue::const_iterator sp=sq.begin(); sp != sq.end(); ++sp ) {
     Parameter np( *sp, assignment );

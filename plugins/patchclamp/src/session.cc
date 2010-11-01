@@ -45,8 +45,8 @@ Session::Session( void )
 
   SessionButton = new QPushButton( "Cell found" );
   SessionButton->setMinimumSize( SessionButton->sizeHint() );
-  QWidget::connect( SessionButton, SIGNAL( clicked() ),
-		    (QWidget*)this, SLOT( toggleSession() ) );
+  connect( SessionButton, SIGNAL( clicked() ),
+	   this, SLOT( toggleSession() ) );
   l->addWidget( SessionButton );
 }
 

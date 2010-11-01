@@ -63,12 +63,15 @@ void Control::initDevices( void )
 void Control::addActions( QMenu *menu, bool doxydoc )
 {
   menu->addAction( string( name() + " Dialog..." ).c_str(),
-		   (RELACSPlugin*)this, SLOT( dialog() ) );
+		   this, SLOT( dialog() ) );
   menu->addAction( string( name() + " Help..." ).c_str(),
-		   (RELACSPlugin*)this, SLOT( help() ) );
-  if ( doxydoc )
+		   this, SLOT( help() ) );
+  if ( doxydoc ) {
     menu->addAction( string( name() + " Doxygen" ).c_str(),
-		     (RELACSPlugin*)this, SLOT( saveDoxygenOptions() ) );
+		     this, SLOT( saveDoxygenOptions() ) );
+    menu->addAction( string( name() + " Screenshot" ).c_str(),
+		     this, SLOT( saveWidget() ) );
+  }
 }
 
 
@@ -190,7 +193,7 @@ bool Control::sleep( double t )
     unsigned long ms = (unsigned long)(1.0e3*t);
     if ( t < 0.001 || ms < 1 ) {
       lock();
-      QThread::usleep( (unsigned long)(1.0e6*t) );
+      Thread->usleep( (unsigned long)(1.0e6*t) );
       unlock();
     }
     else
@@ -214,7 +217,7 @@ void Control::timeStamp( void )
 bool Control::sleepOn( double t )
 {
   double st = 0.001 * SleepTime.elapsed();
-  return Control::sleep( t - st );
+  return sleep( t - st );
 }
 
 
@@ -246,9 +249,10 @@ bool Control::wait( double time )
     return Thread->wait( (unsigned long)::floor( 1000.0*time ) );
 }
 
-  
+
 ControlThread::ControlThread( Control *c )
-  : C( c )
+  : QThread( this ),
+    C( c )
 {
 }
 
@@ -256,6 +260,12 @@ ControlThread::ControlThread( Control *c )
 void ControlThread::run( void )
 {
   C->run();
+}
+
+
+void ControlThread::usleep( unsigned long usecs )
+{
+  QThread::usleep( usecs );
 }
 
 

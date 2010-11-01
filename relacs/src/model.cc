@@ -36,6 +36,8 @@ Model::Model( const string &name, const string &pluginset,
     SignalMutex(),
     InterruptLock()
 {
+  Thread = new ModelThread( this );
+  InterruptModel = false;
   Restarted = false;
   AveragedLoad = 0;
   AverageRatio = 0.01;
@@ -127,7 +129,7 @@ void Model::push( int trace, float val )
       long st = (long)::rint( 1000.0 * dt );
       if ( st > 0 ) {
 	SignalMutex.unlock();
-	QThread::msleep( st );
+	Thread->msleep( st );
 	SignalMutex.lock();
       }
     }
@@ -149,7 +151,7 @@ void Model::process( const OutData &source, OutData &dest )
 
 void Model::notify( void )
 {
-  if ( isRunning() ) {
+  if ( Thread->isRunning() ) {
     stop();
     restart();
   }
@@ -183,6 +185,12 @@ bool Model::interrupt( void ) const
 }
 
 
+bool Model::isRunning( void ) const
+{
+  return Thread->isRunning();
+}
+
+
 void Model::start( void )
 {
   clearData();
@@ -194,7 +202,7 @@ void Model::start( void )
   PushCount = 0;
   Signals.clear();
   SimTime.start();
-  QThread::start( QThread::HighestPriority );
+  Thread->start( QThread::HighestPriority );
 }
 
 
@@ -203,7 +211,7 @@ void Model::restart( void )
   InterruptModel = false;
   Restarted = true;
   SignalMutex.lock();
-  QThread::start();
+  Thread->start( QThread::HighestPriority );
 }
 
 
@@ -218,7 +226,7 @@ void Model::run( void )
 
 void Model::stop( void )
 {
-  if ( isRunning() ) {
+  if ( Thread->isRunning() ) {
     // tell the Model to interrupt:
     InterruptLock.lock();
     InterruptModel = true;
@@ -227,7 +235,7 @@ void Model::stop( void )
     // wake up the Model from sleeping:
     SleepWait.wakeAll();
 
-    wait();
+    Thread->wait();
   }
 }
 
@@ -238,6 +246,12 @@ double Model::add( OutData &signal )
   double ct = elapsed();
 
   SignalMutex.lock();
+
+  if ( signal.trace() < 0 ) {
+    signal.setError( signal.InvalidTrace );
+    SignalMutex.unlock();
+    return -1.0;
+  }
 
   if ( signal.trace() >= (int)Signals.size() ) {
     // add new signals:
@@ -261,8 +275,9 @@ double Model::add( OutData &signal )
     ct = bt;
   Signals[signal.trace()].Onset = ct + Signals[signal.trace()].Buffer.delay();
   Signals[signal.trace()].Offset = ct + Signals[signal.trace()].Buffer.totalDuration();
+  double onset = Signals[signal.trace()].Onset;
   SignalMutex.unlock();
-  return Signals[signal.trace()].Onset;
+  return onset;
 }
 
 
@@ -313,12 +328,34 @@ bool Model::restarted( void )
 void Model::addActions( QMenu *menu, bool doxydoc )
 {
   menu->addAction( string( name() + " Dialog..." ).c_str(),
-		   (RELACSPlugin*)this, SLOT( dialog() ) );
+		   this, SLOT( dialog() ) );
   menu->addAction( string( name() + " Help..." ).c_str(),
-		   (RELACSPlugin*)this, SLOT( help() ) );
-  if ( doxydoc )
+		   this, SLOT( help() ) );
+  if ( doxydoc ) {
     menu->addAction( string( name() + " Doxygen" ).c_str(),
-		     (RELACSPlugin*)this, SLOT( saveDoxygenOptions() ) );
+		     this, SLOT( saveDoxygenOptions() ) );
+    menu->addAction( string( name() + " Screenshot" ).c_str(),
+		     this, SLOT( saveWidget() ) );
+  }
+}
+
+
+ModelThread::ModelThread( Model *m )
+  : QThread( this ),
+    M( m )
+{
+}
+
+
+void ModelThread::run( void )
+{
+  M->run();
+}
+
+
+void ModelThread::msleep( unsigned long msecs )
+{
+  QThread::msleep( msecs );
 }
 
 

@@ -70,8 +70,8 @@ SetLeak::SetLeak( void )
   // Ok button:
   OKButton = new QPushButton( "&Ok" );
   bb->addWidget( OKButton );
-  QObject::connect( OKButton, SIGNAL( clicked() ),
-		    (QWidget*)this, SLOT( setValues() ) );
+  connect( OKButton, SIGNAL( clicked() ),
+	   this, SLOT( setValues() ) );
   grabKey( Qt::ALT+Qt::Key_O );
   grabKey( Qt::Key_Return );
   grabKey( Qt::Key_Enter );
@@ -79,23 +79,23 @@ SetLeak::SetLeak( void )
   // Cancel button:
   CancelButton = new QPushButton( "&Cancel" );
   bb->addWidget( CancelButton );
-  QObject::connect( CancelButton, SIGNAL( clicked() ),
-		    (QWidget*)this, SLOT( keepValues() ) );
+  connect( CancelButton, SIGNAL( clicked() ),
+	   this, SLOT( keepValues() ) );
   grabKey( Qt::ALT+Qt::Key_C );
   grabKey( Qt::Key_Escape );
 
   // Reset button:
   ResetButton = new QPushButton( "&Reset" );
   bb->addWidget( ResetButton );
-  QObject::connect( ResetButton, SIGNAL( clicked() ),
-		    (QWidget*)this, SLOT( resetValues() ) );
+  connect( ResetButton, SIGNAL( clicked() ),
+	   this, SLOT( resetValues() ) );
   grabKey( Qt::ALT+Qt::Key_R );
 
   // E to VRest button:
   VRestButton = new QPushButton( "&E to VRest" );
   bb->addWidget( VRestButton );
-  QObject::connect( VRestButton, SIGNAL( clicked() ),
-		    (QWidget*)this, SLOT( measureVRest() ) );
+  connect( VRestButton, SIGNAL( clicked() ),
+	   this, SLOT( measureVRest() ) );
   grabKey( Qt::ALT+Qt::Key_E );
 
   OKButton->setFixedHeight( OKButton->sizeHint().height() );

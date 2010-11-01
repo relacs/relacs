@@ -799,6 +799,10 @@ public slots:
     /*! Write the plugin's options to standard output in a format that can
         directly be used for the doxygen documentation of the plugin. */
   virtual void saveDoxygenOptions( void );
+    /*! Save the plugin's widget as an png file to the 
+        current working directory.
+        The name of the png file is the plugin's name() in lowercase. */
+  virtual void saveWidget( void );
 
 
 protected slots:

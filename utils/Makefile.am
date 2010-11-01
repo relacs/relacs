@@ -3,6 +3,7 @@ dist_bin_SCRIPTS = \
 
 
 EXTRA_DIST = \
+    relacsstats \
     bin2dat.doc \
     bin2wav \
     remotebackup \

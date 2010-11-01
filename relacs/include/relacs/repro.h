@@ -33,6 +33,9 @@
 namespace relacs {
 
 
+class ReProThread;
+
+
 /*! 
 \class RePro
 \author Jan Benda
@@ -43,7 +46,7 @@ namespace relacs {
 \todo addPath: something with a format string giving the RePro's name, totalRuns, etc.
 */
 
-class RePro : public RELACSPlugin, public QThread
+class RePro : public RELACSPlugin
 {
   Q_OBJECT
 
@@ -131,10 +134,18 @@ public:
         */
   bool interrupt( void ) const;
 
+    /*! Start execution of the %RePro thread. 
+        Reimplement main() to make the thread do something. */
+  void start( QThread::Priority priority = QThread::InheritPriority );
     /*! Kindly ask the RePro to stop. 
         Sets interrupt() to \c true and terminates all sleeps.
         You still need to wait on the RePro thread to finish. */
   virtual void requestStop( void );
+    /*! Returns \c true if the %RePro therad is running. */
+  bool isRunning( void ) const;
+    /*! Wait on the %RePro's thread to terminate or at most \a time seconds,
+        if \a time is greater than zero. */
+  bool wait( double time=-1.0 );
 
     /*! Sleep for some time.
         Right before returning, the data and event buffers are updated.
@@ -493,13 +504,16 @@ protected:
 
 private:
 
-    /*! The thread that runs the RePro.
-        It calls main(). */
-  virtual void run( void );
-
     /*! Install the event filter for grabbing keys. */
   void grabKeys( void );
 
+  friend class ReProThread;
+
+    /*! The thread that runs the RePro.
+        It calls main(). */
+  void run( void );
+
+  ReProThread *Thread;
   bool Interrupt;
   mutable QMutex InterruptLock;
   QWaitCondition SleepWait;
@@ -536,6 +550,23 @@ private slots:
 
   virtual void dClosed( int r );
 
+
+};
+
+
+class ReProThread : public QThread
+{
+
+public:
+  
+  ReProThread( RePro *r );
+  virtual void run( void );
+  void usleep( unsigned long usecs );
+
+
+private:
+
+  RePro *R;
 
 };
 

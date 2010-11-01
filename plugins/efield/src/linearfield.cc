@@ -50,8 +50,8 @@ LinearField::LinearField( void )
 
   // measure button:
   MeasureButton = new QPushButton( "&Measure" );
-  QObject::connect( MeasureButton, SIGNAL( clicked() ),
-		    (QWidget*)this, SLOT( measure() ) );
+  connect( MeasureButton, SIGNAL( clicked() ),
+	   this, SLOT( measure() ) );
   grabKey( Qt::ALT+Qt::Key_M );
   grabKey( Qt::Key_Return );
   grabKey( Qt::Key_Enter );
@@ -59,8 +59,8 @@ LinearField::LinearField( void )
 
   // finish button:
   FinishButton = new QPushButton( "&Finish" );
-  QObject::connect( FinishButton, SIGNAL( clicked() ),
-		    (QWidget*)this, SLOT( finish() ) );
+  connect( FinishButton, SIGNAL( clicked() ),
+	   this, SLOT( finish() ) );
   grabKey( Qt::ALT+Qt::Key_F );
   grabKey( Qt::Key_Escape );
   vb->addWidget( FinishButton );

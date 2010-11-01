@@ -95,8 +95,8 @@ Search::Search( void )
   ILCD->setValue( int(Intensity) );
   ILCD->setSteps( int(ShortIntensityStep), int(LongIntensityStep) );
   grid->addWidget( ILCD, 0, 0 );
-  QObject::connect( ILCD, SIGNAL( valueChanged( int ) ), 
-		    (QWidget*)this, SLOT( setIntensity( int ) ) );
+  connect( ILCD, SIGNAL( valueChanged( int ) ), 
+	   this, SLOT( setIntensity( int ) ) );
 
   QGridLayout *sgrid = new QGridLayout;
   grid->addLayout( sgrid, 0, 1 );
@@ -107,8 +107,8 @@ Search::Search( void )
   DLCD->setValue( int(1000.0*Duration) );
   DLCD->setSteps( int(1000.0*ShortDurationStep), int(1000.0*LongDurationStep) );
   sgrid->addWidget( DLCD, 0, 0 );
-  QObject::connect( DLCD, SIGNAL( valueChanged( int ) ), 
-		    (QWidget*)this, SLOT( setDuration( int ) ) );
+  connect( DLCD, SIGNAL( valueChanged( int ) ), 
+	   this, SLOT( setDuration( int ) ) );
 
   // Pause Settings:
   PLCD = new LCDRange( "Pause (msec)", 4 );
@@ -116,8 +116,8 @@ Search::Search( void )
   PLCD->setValue( int(1000.0*Pause) );
   PLCD->setSteps( int(1000.0*ShortPauseStep), int(1000.0*LongPauseStep) );
   sgrid->addWidget( PLCD, 0, 1 );
-  QObject::connect( PLCD, SIGNAL( valueChanged( int ) ), 
-		    (QWidget*)this, SLOT( setPause( int ) ) );
+  connect( PLCD, SIGNAL( valueChanged( int ) ), 
+	   this, SLOT( setPause( int ) ) );
 
   // Waveform:
   QGroupBox *gb = new QGroupBox( "Waveform" );
@@ -132,8 +132,8 @@ Search::Search( void )
   QButtonGroup *WaveformButtons = new QButtonGroup;
   WaveformButtons->addButton( SineButton, 0 );
   WaveformButtons->addButton( NoiseButton, 1 );
-  QObject::connect( WaveformButtons, SIGNAL( buttonClicked( int ) ), 
-		    (QWidget*)this, SLOT( setWaveform( int ) ) );
+  connect( WaveformButtons, SIGNAL( buttonClicked( int ) ), 
+	   this, SLOT( setWaveform( int ) ) );
 
   // Frequency Settings:
   FLCD = new LCDRange( "Frequency (Hz)", 5 );
@@ -141,16 +141,16 @@ Search::Search( void )
   FLCD->setValue( int(Frequency) );
   FLCD->setSteps( int(ShortFrequencyStep), int(LongFrequencyStep) );
   sgrid->addWidget( FLCD, 1, 1 );
-  QObject::connect( FLCD, SIGNAL( valueChanged( int ) ), 
-		    (QWidget*)this, SLOT( setFrequency( int ) ) );
+  connect( FLCD, SIGNAL( valueChanged( int ) ), 
+	   this, SLOT( setFrequency( int ) ) );
 
   // mute button:
   MuteButton = new QPushButton;
   MuteButton->setCheckable( true );
   MuteButton->setText( "Mute" );
   grid->addWidget( MuteButton, 1, 0 );
-  QObject::connect( MuteButton, SIGNAL( clicked() ), 
-		    (QWidget*)this, SLOT( toggleMute() ) ); 
+  connect( MuteButton, SIGNAL( clicked() ), 
+	   this, SLOT( toggleMute() ) ); 
 
   // SearchSide Settings:
   QHBoxLayout *hbox = new QHBoxLayout;
@@ -161,10 +161,10 @@ Search::Search( void )
   hbox->addWidget( LeftButton );
   RightButton = new QRadioButton( "right" );
   hbox->addWidget( RightButton );
-  QObject::connect( LeftButton, SIGNAL( clicked() ), 
-		    (QWidget*)this, SLOT( setSpeakerLeft() ) ); 
-  QObject::connect( RightButton, SIGNAL( clicked() ), 
-		    (QWidget*)this, SLOT( setSpeakerRight() ) ); 
+  connect( LeftButton, SIGNAL( clicked() ), 
+	   this, SLOT( setSpeakerLeft() ) ); 
+  connect( RightButton, SIGNAL( clicked() ), 
+	   this, SLOT( setSpeakerRight() ) ); 
 }
 
 

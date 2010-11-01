@@ -49,6 +49,8 @@ using namespace std;
 
 namespace relacs {
 
+
+class UpdateThread;
 class AllDevices;
 class Devices;
 class AIDevices;
@@ -102,7 +104,7 @@ If the session is really to be stopped, stopSession() is called.
 */
 
 
-class RELACSWidget : public QMainWindow, public QThread, public ConfigClass
+class RELACSWidget : public QMainWindow, public ConfigClass
 {
   Q_OBJECT
 
@@ -202,9 +204,14 @@ public:
   void resumeSession( void );
     /*! Tells RELACSWidget that the current session is stopped. */
   void stopSession( bool saved );
+    /*! Returns pointer to the session. */
+  Session *session( void );
 
     /*! The name of a started macro. */
   void startedMacro( const string &ident, const string &param );
+
+    /*! Returns pointer to the filters and detectors. */
+  FilterDetectors *filterDetectors( void );
 
     /*! The current working mode.
         Can be AcquisitionMode, SimulationMode, BrowseMode, AnalysisMode, or IdleMode. 
@@ -255,10 +262,6 @@ public slots:
     /*! Updates indices for input data and events
         and call the readRePro functions of the Session and Control plugins.  */
   void updateRePro( void );
-
-    /*! Contains the UpateDataThread loop, continuously updates and 
-        processes data. */    
-  void run( void );
 
     /*! Save settings to configuration files. */
   void saveConfig( void );
@@ -321,6 +324,7 @@ protected slots:
 
 private:
 
+  friend class UpdateThread;
   friend class Settings;
   friend class MetaData;
   friend class MetaDataSection;
@@ -348,6 +352,12 @@ private:
 
   void setupInTraces( void );
   void setupOutTraces( void );
+
+    /*! Contains the UpateDataThread loop, continuously updates and 
+        processes data. */    
+  void run( void );
+
+  UpdateThread *Thread;
 
   ModeTypes Mode;
   static const string ModeStr[5];
@@ -450,6 +460,23 @@ private:
 
   bool HandlingEvent;
   class KeyTimeOut *KeyTime;
+
+};
+
+
+class UpdateThread : public QThread
+{
+
+public:
+  
+  UpdateThread( RELACSWidget *rw );
+  virtual void run( void );
+  void msleep( unsigned long msecs );
+
+
+private:
+
+  RELACSWidget *RW;
 
 };
 

@@ -67,6 +67,9 @@ RePro::RePro( const string &name, const string &pluginset,
   GrabKeysInstalled = false;
   GrabKeysAllowed = false;
 
+  Thread = new ReProThread( this );
+  Interrupt = false;
+
   // start timer:
   ReProTime.start();
   
@@ -169,7 +172,7 @@ void RePro::run( void )
 
   // start next RePro:
   if ( ! interrupt() ) {
-    QApplication::postEvent( (QWidget*)RW, new QEvent( QEvent::Type( QEvent::User+1 ) ) );
+    QApplication::postEvent( RW, new QEvent( QEvent::Type( QEvent::User+1 ) ) );
   }
 }
 
@@ -183,18 +186,41 @@ bool RePro::interrupt( void ) const
 }
 
 
+void RePro::start( QThread::Priority priority )
+{
+  Thread->start( priority );
+}
+
+
 void RePro::requestStop( void )
 {
-  // tell the RePro to interrupt:
-  InterruptLock.lock();
-  Interrupt = true;
-  InterruptLock.unlock();
+  if ( Thread->isRunning() ) {
+    // tell the RePro to interrupt:
+    InterruptLock.lock();
+    Interrupt = true;
+    InterruptLock.unlock();
+    
+    // wake up the RePro from sleeping:
+    SleepWait.wakeAll();
+    
+    // don't wait for the requested data:
+    RW->setMinTraceTime( 0.0 );
+  }
+}
 
-  // wake up the RePro from sleeping:
-  SleepWait.wakeAll();
 
-  // don't wait for the requested data:
-  RW->setMinTraceTime( 0.0 );
+bool RePro::isRunning( void ) const
+{
+  return Thread->isRunning();
+}
+
+
+bool RePro::wait( double time )
+{
+  if ( time > 0.0 )
+    return Thread->wait( (unsigned long)::floor( 1000.0*time ) );
+  else
+    return Thread->wait();
 }
 
 
@@ -218,7 +244,7 @@ bool RePro::sleep( double t, double tracetime )
   if ( t > 0.0 ) {
     unsigned long ms = (unsigned long)::rint(1.0e3*t);
     if ( t < 0.001 || ms < 1 )
-      QThread::usleep( (unsigned long)::rint(1.0e6*t) );
+      Thread->usleep( (unsigned long)::rint(1.0e6*t) );
     else {
       // XXX wait requires a mutex!
       QMutex mutex;
@@ -767,12 +793,12 @@ void RePro::dialog( void )
     od->addButton( "&Run", OptDialog::Accept, 2, false );
     od->addButton( "&Reset", OptDialog::Defaults, 3, false );
     od->addButton( "&Close" );
-    QWidget::connect( od, SIGNAL( dialogClosed( int ) ),
-		      (QWidget*)this, SLOT( dClosed( int ) ) );
-    QWidget::connect( od, SIGNAL( buttonClicked( int ) ),
-		      (QWidget*)this, SIGNAL( dialogAction( int ) ) );
-    QWidget::connect( od, SIGNAL( valuesChanged( void ) ),
-		      (QWidget*)this, SIGNAL( dialogAccepted( void ) ) );
+    connect( od, SIGNAL( dialogClosed( int ) ),
+	     this, SLOT( dClosed( int ) ) );
+    connect( od, SIGNAL( buttonClicked( int ) ),
+	     this, SIGNAL( dialogAction( int ) ) );
+    connect( od, SIGNAL( valuesChanged( void ) ),
+	     this, SIGNAL( dialogAccepted( void ) ) );
   }
   od->exec();
 }
@@ -839,6 +865,24 @@ void RePro::noSaving( void )
   setSaving( false );
 }
 
+
+ReProThread::ReProThread( RePro *r )
+  : QThread( this ),
+    R( r )
+{
+}
+
+
+void ReProThread::run( void )
+{
+  R->run();
+}
+
+
+void ReProThread::usleep( unsigned long usecs )
+{
+  QThread::usleep( usecs );
+}
 
 
 }; /* namespace relacs */

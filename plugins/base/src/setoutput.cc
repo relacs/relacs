@@ -90,15 +90,15 @@ void SetOutput::config( void )
   QPushButton *OKButton = new QPushButton( "&Ok" );
   bb->addWidget( OKButton );
   OKButton->setFixedHeight( OKButton->sizeHint().height() );
-  QObject::connect( OKButton, SIGNAL( clicked() ),
-		    (RELACSPlugin*)this, SLOT( setValues() ) );
+  connect( OKButton, SIGNAL( clicked() ),
+	   this, SLOT( setValues() ) );
 
   // Cancel button:
   QPushButton *CancelButton = new QPushButton( "&Cancel" );
   bb->addWidget( CancelButton );
   CancelButton->setFixedHeight( OKButton->sizeHint().height() );
-  QObject::connect( CancelButton, SIGNAL( clicked() ),
-		    (RELACSPlugin*)this, SLOT( keepValues() ) );
+  connect( CancelButton, SIGNAL( clicked() ),
+	   this, SLOT( keepValues() ) );
 
   widget()->show();
 }

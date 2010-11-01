@@ -20,6 +20,7 @@
 */
 
 #include <QDateTime>
+#include <relacs/str.h>
 #include <relacs/messagebox.h>
 #include <relacs/metadata.h>
 #include <relacs/model.h>
@@ -1308,6 +1309,18 @@ void RELACSPlugin::saveDoxygenOptions( void )
 		 "- \\c %i=%04Y-%02m-%02d: %r (\\c %T)\n",
 		 "- \\c %i=%02H:%02M:%02S: %r (\\c %T)\n",
 		 "- %i\n" );
+}
+
+
+void RELACSPlugin::saveWidget( void )
+{
+  if ( Widget != 0 ) {
+    string filename = Str( name() + ".png" ).lower();
+    QPixmap::grabWidget( Widget ).save( filename.c_str() ); 
+    cout << "\n";
+    cout << "Saved widget as " << filename << "\n";
+    cout << "\n";
+  }
 }
 
 

@@ -95,7 +95,7 @@ That takes a while!
 
 In case compilation fails, then please write me an email
 (benda@bio.lmu.de, subject: RELACS) containing the full output of
-./make (run "./make &> make.log" and send the file "make.log").
+"make" (run "make &> make.log" and send the file "make.log").
 
 
 5. Optionally run
@@ -106,7 +106,7 @@ for executing some self tests.
 
 In case checking fails, then please write
 me an email (benda@bio.lmu.de, subject: RELACS) containing the full
-output of ./make check.
+output of "make check".
 
 
 6. Run a demo

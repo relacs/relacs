@@ -73,17 +73,17 @@ void AmplifierControl::initDevices( void )
 
       BuzzerButton = new QPushButton( "Buzz" );
       AmplBox->addWidget( BuzzerButton );
-      QWidget::connect( BuzzerButton, SIGNAL( clicked() ),
-			(QWidget*)this, SLOT( buzz() ) );
+      connect( BuzzerButton, SIGNAL( clicked() ),
+	       this, SLOT( buzz() ) );
 
       AmplBox->addWidget( new QLabel );
 
       ResistanceButton = new QPushButton( "R" );
       AmplBox->addWidget( ResistanceButton );
-      QWidget::connect( ResistanceButton, SIGNAL( pressed() ),
-			(QWidget*)this, SLOT( startResistance() ) );
-      QWidget::connect( ResistanceButton, SIGNAL( released() ),
-			(QWidget*)this, SLOT( stopResistance() ) );
+      connect( ResistanceButton, SIGNAL( pressed() ),
+	       this, SLOT( startResistance() ) );
+      connect( ResistanceButton, SIGNAL( released() ),
+	       this, SLOT( stopResistance() ) );
     
       QLabel *label = new QLabel( "=" );
       label->setAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
@@ -155,8 +155,7 @@ void AmplifierControl::measureResistance( void )
 					     currentTime() );
     unlockData();
     r *= ResistanceScale;
-    QCoreApplication::postEvent( (RELACSPlugin*)this,
-				 new AmplifierEvent( Str( r, "%.0f" ) ) );
+    QCoreApplication::postEvent( this, new AmplifierEvent( Str( r, "%.0f" ) ) );
     lockMetaData();
     metaData( "Electrode" ).setNumber( "Resistance", r );
     unlockMetaData();

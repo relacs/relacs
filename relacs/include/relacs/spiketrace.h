@@ -29,6 +29,9 @@
 namespace relacs {
 
 
+class SpikeTraceThread;
+
+
 /*!
   \class SpikeTrace
   \author Jan Benda
@@ -45,11 +48,10 @@ namespace relacs {
   With setPause() the animation can be stopped and restarted.
   
   Reimplementate trace() to get a better trace.
-  
 */
 
 
-class SpikeTrace : public QWidget, public QThread
+class SpikeTrace : public QWidget
 { 
   Q_OBJECT
 
@@ -84,7 +86,9 @@ public slots:
 
 protected:
 
-  virtual void run( void );
+  friend class SpikeTraceThread;
+
+  void run( void );
 
     /*! Animates the spike trace by increasing the position of the ball
         and replace the spike on a new run. */
@@ -126,6 +130,25 @@ protected:
 
     /*! Locks the widget's variables. */
   QMutex SMutex;
+
+  SpikeTraceThread *Thread;
+
+};
+
+
+class SpikeTraceThread : public QThread
+{
+
+public:
+  
+  SpikeTraceThread( SpikeTrace *s );
+  virtual void run( void );
+  void msleep( unsigned long msecs );
+
+
+private:
+
+  SpikeTrace *S;
 
 };
 

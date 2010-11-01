@@ -420,8 +420,10 @@ void ReProData::addMenu( QMenu *menu, int inx, bool doxydoc )
   pop->addAction( "&View", this, SLOT( raise() ) );
   pop->addAction( "&Load", this, SLOT( reload() ) );
   pop->addAction( "&Help...", this, SLOT( help() ) );
-  if ( doxydoc )
-    pop->addAction( "&Doxygen", (RELACSPlugin*)(this->RP), SLOT( saveDoxygenOptions() ) );
+  if ( doxydoc ) {
+    pop->addAction( "&Doxygen", RP, SLOT( saveDoxygenOptions() ) );
+    pop->addAction( "&Screenshot", RP, SLOT( saveWidget() ) );
+  }
 }
 
 

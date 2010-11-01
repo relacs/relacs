@@ -122,6 +122,10 @@ public:
     /*! Delete the stop-session flag. */
   void noStopSession( void ) { Action &= ~StopSession; };
 
+    /*! Returns the macro variables. */
+  Options &variables( void );
+    /*! Returns the macro variables as a string. */
+  string variablesStr( void ) const;
     /*! True if this Macro is not to be cleared. */
   bool keep( void ) const;
 
@@ -132,8 +136,9 @@ public:
         the string and loaded into \a prjopt. */
   string expandParams( const Str &params, Options &prjopt ) const;
 
-    /*! Add menu for the macro and its commands to \a menu. */
-  void addMenu( QMenu *menu );
+    /*! Add menu for the macro and its commands to \a menu
+        using \a text as a label. */
+  void addMenu( QMenu *menu, const string &text );
     /*! Forms a string for the menu consisting of the macro name
         and its variables. */
   string menuStr( void ) const;
@@ -143,6 +148,14 @@ public:
   MacroButton *button( void );
     /*! Clear menu and button. */
   void clear( void );
+    /*! Update the macro for the reloaded repro \a repro. */
+  void reloadRePro( RePro *repro );
+
+  static void createIcons( int size );
+  static void destroyIcons( void );
+  void clearButton( void );
+  void runButton( void );
+  void stackButton( bool base );
 
   friend ostream &operator<< ( ostream &str, const Macro &macro );
 
@@ -194,11 +207,13 @@ private:
   bool Overwrite;
     /*! A pointer to the macro's button. */
   MacroButton *PushButton;
-    /*! A pointer to the macro's action that might have a key shortcut. */
-  QAction *MAction;
-    /*! The popup menu of the Macro . */
-  QMenu *PMenu;
+    /*! A pointer to the macro's menu action that might have a key shortcut
+        for popping up the menu. */
+  QAction *MenuAction;
+    /*! A pointer to the action that executes the macro. */
   QAction *RunAction;
+    /*! A pointer to the last action of the firt macro menu for
+        positioning the popup menu. */
   QAction *BottomAction;
   int MacroNum;
     /*! Pointer to Macros. */
@@ -206,6 +221,12 @@ private:
 
     /*! The list of commands associated with the Macro. */
   vector< MacroCommand* > Commands;
+
+  static QPixmap *BaseIcon;
+  static QPixmap *StackIcon;
+  static QPixmap *RunningIcon;
+  static QPixmap *IdleIcon;
+  static QPixmap *SessionIcon;
 
   const static string StartUpIdent;
   const static string ShutDownIdent;
@@ -283,8 +304,9 @@ public:
         Then executes commands of the current macro until the next repro.
 	Finally starts that repro.
         \a saving toggles whether saving to files via SaveFiles
-        is enabled. */
-  void startNextRePro( bool saving );
+        is enabled.
+        \a enable overrides disbaled macro commands. */
+  void startNextRePro( bool saving, bool enable=false );
 
     /*! Emits stopRePro(), then 
         starts command number \a command of macro number \a macro
@@ -293,7 +315,9 @@ public:
         \a saving toggles whether saving to files via SaveFiles
         is enabled. */
   void startMacro( int macro, int command=0, bool saving=true, 
-		   vector<MacroPos> *newstack=0 );
+		   bool enable=false, vector<MacroPos> *newstack=0 );
+    /*! Execute next macro command. */
+  void executeMacro( int newmacro, const Str &params );
     /*! Starts the startup Macro. */
   void startUp( void ) { startMacro( StartUpIndex, 0, false ); };
     /*! Starts the shutdown Macro. */
@@ -333,16 +357,8 @@ public:
   string macro( void ) const { return MCs[CurrentMacro]->name(); };
     /*! Returns the options of the current RePro. */
   string options( void ) const;
-    /*! Returns the macro variables of macro \a macro. */
-  Options &variables( int macro );
-    /*! Returns the macro variables of macro \a macro as a string. */
-  string variablesStr( int macro );
     /*! Returns the project variables of macro \a macro. */
   Options &project( int macro );
-    /*! Replaces variables of macro \a macro in \a params by their value.
-        The project options, "project" and "experiment" are deleted from
-        the string and loaded into \a prjopt. */
-  string expandParams( int macro, const Str &params, Options &prjopt ) const;
 
   virtual void saveConfig( ofstream &str );
 
@@ -387,21 +403,9 @@ public slots:
     /*! Inform macros that a repro is started that is not part of a macro. */
   void noMacro( RePro *repro );
 
-  
-signals:
-
-    /*! Stop the currently running repro. */
-  void stopRePro( void );
-    /*! Start \a repro. The macro from which the repro is started has
-        \a macroaction - actions set.
-        \a saving toggles whether saving to files via SaveFiles
-        is enabled. */
-  void startRePro( RePro *repro, int macroaction, bool saving );
-
 
 private:
 
-  void createIcons( void );
   void clearButton( void );
   void runButton( void );
   void stackButton( void );
@@ -449,8 +453,6 @@ private:
   bool ThisCommandOnly;
     /*! True if only a single Macro should be executed. */
   bool ThisMacroOnly;
-    /*! Overide disabled commands. */
-  bool Enable;
 
   Str Warnings;
 
@@ -459,14 +461,6 @@ private:
   int FallBackIndex;
   int StartSessionIndex;
   int StopSessionIndex;
-
-  QPixmap BaseIcon;
-  QPixmap StackIcon;
-  QPixmap RunningIcon;
-  QPixmap IdleIcon;
-  QPixmap SessionIcon;
-  QPixmap EnabledIcon;
-  QPixmap DisabledIcon;
 
   string MacroFile;
 
@@ -503,12 +497,19 @@ public:
   MacroCommand( const string &name, const string &params, 
 		bool enabled, int macro, bool filter, bool detector, bool switchm,
 		bool startsession, bool shell, bool mes, double to,
-		bool browse, Macros *mc );
-  MacroCommand( RePro *repro, const string &params, Macros *mc );
+		bool browse, Macros *mcs, Macro *mc );
+  MacroCommand( RePro *repro, const string &params, Macros *mc, Macro *mc );
   MacroCommand( const MacroCommand &com );
 
     /*! Adds the submenu for this command to \a menu. */
   void addMenu( QMenu *menu );
+    /*! Execute the command. Returns \c true if a RePro was executed. */
+  bool execute( bool saving );
+    /*! Update the macro command for the reloaded repro \a repro. */
+  void reloadRePro( RePro *repro );
+
+  static void createIcons( int size );
+  static void destroyIcons( void );
 
   friend ostream &operator<< ( ostream &str, const MacroCommand &command );
 
@@ -549,15 +550,15 @@ public slots:
   Options PO;
     /*! The additional dialog options from RePros. */
   Options *DO;
-    /*! If the command refers to a macro (\a Macro >= 0)
+    /*! If the command refers to a macro (\a MacroIndex >= 0)
         this is the index of the macro. */
-  int Macro;
+  int MacroIndex;
     /*! > 0 if the command refers to a filter.
        1: save, 2: autoConfigure */
-  int Filter;
+  int FilterCom;
     /*! > 0 if the command refers to an event detector.
        1: save, 2: autoConfigure */
-  int Detector;
+  int DetectorCom;
     /*! Time for auto-configuring a filter or detector. */
   double AutoConfigureTime;
     /*! True if the command requests to switch the macros file. */
@@ -580,6 +581,8 @@ public slots:
   int MacroNum;
     /*! The index of this command withing its Macro. */
   int CommandNum;
+    /*! Pointer to the parent Macro. */
+  Macro *MC;
     /*! Pointer to Macros. */
   Macros *MCs;
     /*! True if dialog for this command is open. */
@@ -592,6 +595,9 @@ public slots:
   string MenuShortcut;
     /*! The menu offering various actions for the command. */
   QMenu *SubMenu;
+
+  static QPixmap *EnabledIcon;
+  static QPixmap *DisabledIcon;
 
 };
 

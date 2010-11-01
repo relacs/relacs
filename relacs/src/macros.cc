@@ -53,6 +53,15 @@ const string Macro::NoMenuIdent = "nomenu";
 const string Macro::KeepIdent = "keep";
 const string Macro::OverwriteIdent = "overwrite";
 
+QPixmap *Macro::BaseIcon = 0;
+QPixmap *Macro::StackIcon = 0;
+QPixmap *Macro::RunningIcon = 0;
+QPixmap *Macro::IdleIcon = 0;
+QPixmap *Macro::SessionIcon = 0;
+
+QPixmap *MacroCommand::EnabledIcon = 0;
+QPixmap *MacroCommand::DisabledIcon = 0;
+
 
 Macros::Macros( RELACSWidget *rw, QWidget *parent )
   : QWidget( parent ),
@@ -67,7 +76,6 @@ Macros::Macros( RELACSWidget *rw, QWidget *parent )
     ResumeMacroOnly( false ),
     ThisCommandOnly( false ), 
     ThisMacroOnly( false ), 
-    Enable( false ),
     Warnings( "" ), 
     StartUpIndex( 0 ), 
     ShutDownIndex( -1 ), 
@@ -89,85 +97,16 @@ Macros::Macros( RELACSWidget *rw, QWidget *parent )
   addText( "mainfile", "Main configuration file", "" );
   addBoolean( "fallbackonreload", "Start fallback macro when loading macros", true );
 
-  createIcons();
+  Macro::createIcons( fontInfo().pixelSize() );
+  MacroCommand::createIcons( fontInfo().pixelSize() );
 }
 
 
 Macros::~Macros( void )
 {
   clear( false );
-}
-
-
-void Macros::createIcons( void )
-{
-  int my = fontInfo().pixelSize() - 2;
-  int mx = my;
-
-  SessionIcon = QPixmap( mx+2, my+2 );
-  QPainter p;
-  p.begin( &SessionIcon );
-  p.eraseRect( SessionIcon.rect() );
-  p.setPen( QPen( Qt::black, 1 ) );
-  p.setBrush( Qt::black );
-  QPolygon pa( 3 );
-  pa.setPoint( 0, mx/3, 0 );
-  pa.setPoint( 1, mx/3, my );
-  pa.setPoint( 2, mx, my/2 );
-  p.drawPolygon( pa );
-  p.end();
-  SessionIcon.setMask( SessionIcon.createHeuristicMask() );
-
-  BaseIcon = QPixmap( mx+2, my+2 );
-  p.begin( &BaseIcon );
-  p.eraseRect( BaseIcon.rect() );
-  p.setPen( QPen( Qt::black, 1 ) );
-  p.setBrush( Qt::red );
-  p.drawEllipse( mx/4, (my-mx*3/4)/2, mx*3/4, mx*3/4 );
-  p.end();
-  BaseIcon.setMask( BaseIcon.createHeuristicMask() );
-
-  StackIcon = QPixmap( mx+2, my+2 );
-  p.begin( &StackIcon );
-  p.eraseRect( StackIcon.rect() );
-  p.setPen( QPen( Qt::black, 1 ) );
-  p.setBrush( Qt::yellow );
-  p.drawEllipse( mx/4, (my-mx*3/4)/2, mx*3/4, mx*3/4 );
-  p.end();
-  StackIcon.setMask( StackIcon.createHeuristicMask() );
-
-  RunningIcon = QPixmap( mx+2, my+2 );
-  p.begin( &RunningIcon );
-  p.eraseRect( RunningIcon.rect() );
-  p.setPen( QPen( Qt::black, 1 ) );
-  p.setBrush( Qt::green );
-  p.drawEllipse( mx/4, (my-mx*3/4)/2, mx*3/4, mx*3/4 );
-  p.end();
-  RunningIcon.setMask( RunningIcon.createHeuristicMask() );
-
-  IdleIcon = QPixmap( mx+2, my+2 );
-  p.begin( &IdleIcon );
-  p.eraseRect( IdleIcon.rect() );
-  p.end();
-  IdleIcon.setMask( IdleIcon.createHeuristicMask() );
-
-  EnabledIcon = QPixmap( mx, mx );
-  p.begin( &EnabledIcon );
-  p.eraseRect( EnabledIcon.rect() );
-  p.setPen( QPen( Qt::black, 1 ) );
-  p.setBrush( Qt::green );
-  p.drawEllipse( 0, 0, mx-1, mx-1 );
-  p.end();
-  EnabledIcon.setMask( EnabledIcon.createHeuristicMask() );
-
-  DisabledIcon = QPixmap( mx, mx );
-  p.begin( &DisabledIcon );
-  p.eraseRect( DisabledIcon.rect() );
-  p.setPen( QPen( Qt::black, 1 ) );
-  p.setBrush( Qt::red );
-  p.drawEllipse( 0, 0, mx-1, mx-1 );
-  p.end();
-  DisabledIcon.setMask( DisabledIcon.createHeuristicMask() );
+  Macro::destroyIcons();
+  MacroCommand::destroyIcons();
 }
 
 
@@ -253,7 +192,7 @@ void Macros::load( const string &file, bool main )
 	  + "</b>: \"<b>" + line + "</b>\".\n";
       }
     }
-    // repro, macro, filter, detector, shell, message, browse command:
+    // command:
     else {
       bool enabled = true;
       if ( ls[mpos] == '!' )
@@ -291,7 +230,7 @@ void Macros::load( const string &file, bool main )
 	if ( appendmacro )
 	  MCs.back()->addParams( name );
 	else {
-	  if ( appendparam )
+	  if ( appendparam && ! MCs.back()->Commands.back()->Params.empty() )
 	    MCs.back()->Commands.back()->Params.provideLast( ';' );
 	  MCs.back()->Commands.back()->Params.provideLast( ' ' );
 	  MCs.back()->Commands.back()->Params += name;
@@ -309,7 +248,7 @@ void Macros::load( const string &file, bool main )
 					     enabled, macro ? 0 : -1, 
 					     filter, detector, switchm, startsession,
 					     shell, message, timeout, 
-					     browse, this );
+					     browse, this, MCs.back() );
 	MCs.back()->Commands.push_back( mc );
 	if ( startsession || browse || switchm )
 	  appendable = false;
@@ -350,7 +289,7 @@ bool Macros::check( void )
       for ( vector<MacroCommand*>::iterator cp = (*mp)->Commands.begin(); 
 	    cp != (*mp)->Commands.end(); ) {
 	
-	if ( (*cp)->Macro >= 0 ) {
+	if ( (*cp)->MacroIndex >= 0 ) {
 	  if ( index( (*cp)->Name ) < 0 ) {
 	    Warnings += "Removed unknown Macro \"<b>";
 	    Warnings += (*cp)->Name;
@@ -363,9 +302,9 @@ bool Macros::check( void )
 	    ++cp;
 	}
 
-	else if ( (*cp)->Filter > 0 ) {
+	else if ( (*cp)->FilterCom > 0 ) {
 	  if ( ! (*cp)->Name.empty() &&
-	       ! RW->FD->exist( (*cp)->Name ) ) {
+	       ! RW->filterDetectors()->exist( (*cp)->Name ) ) {
 	    Warnings += "Removed unknown Filter \"<b>";
 	    Warnings += (*cp)->Name;
 	    Warnings += "</b>\" in Macro \"<b>";
@@ -377,9 +316,9 @@ bool Macros::check( void )
 	    ++cp;
 	}
 
-	else if ( (*cp)->Detector > 0 ) {
+	else if ( (*cp)->DetectorCom > 0 ) {
 	  if ( ! (*cp)->Name.empty() &&
-	       ! RW->FD->exist( (*cp)->Name ) ) {
+	       ! RW->filterDetectors()->exist( (*cp)->Name ) ) {
 	    Warnings += "Removed unknown Detector \"<b>";
 	    Warnings += (*cp)->Name;
 	    Warnings += "</b>\" in Macro \"<b>";
@@ -569,8 +508,8 @@ bool Macros::check( void )
 	mp != MCs.end(); ++mp )
     for ( vector<MacroCommand*>::iterator cp = (*mp)->Commands.begin(); 
 	  cp != (*mp)->Commands.end(); ++cp )
-      if ( (*cp)->Macro >= 0 )
-	(*cp)->Macro = index( (*cp)->Name );
+      if ( (*cp)->MacroIndex >= 0 )
+	(*cp)->MacroIndex = index( (*cp)->Name );
   
   // set RePros back to default values:
   for ( int k=0; k<RPs->size(); k++ )
@@ -585,8 +524,8 @@ bool Macros::check( void )
 
     for ( int k=0; k<RPs->size(); k++ ) {
       MCs.push_back( new Macro( RPs->repro( k )->name(), this ) );
-      MCs.back()->Commands.push_back( new MacroCommand( RPs->repro( k ),
-							"", this ) );
+      MCs.back()->Commands.push_back( new MacroCommand( RPs->repro( k ), "",
+							this, MCs.back() ) );
     }
 
   }
@@ -769,8 +708,7 @@ void Macros::create( void )
       mt += " ";
       mk++;
     }
-    mt += MCs[k]->Name;
-    MCs[k]->MAction = new QAction( mt.c_str(), this );
+    mt += MCs[k]->name();
 
     // key code:
     Str keys = "";
@@ -791,7 +729,7 @@ void Macros::create( void )
       MCs[k]->KeyCode = 0;
 
     // menu:
-    MCs[k]->addMenu( Menu );
+    MCs[k]->addMenu( Menu, mt );
       
     // button:
     MCs[k]->addButton( keys );
@@ -818,7 +756,7 @@ void Macros::setMenu( QMenu *menu )
 
 
 void Macros::startMacro( int macro, int command, bool saving, 
-			 vector<MacroPos> *newstack )
+			 bool enable, vector<MacroPos> *newstack )
 {
   clearStackButtons();
   clearButton();
@@ -840,18 +778,37 @@ void Macros::startMacro( int macro, int command, bool saving,
 
   runButton();
 
-  RW->startedMacro( MCs[CurrentMacro]->Name, variablesStr( CurrentMacro ) );
+  RW->startedMacro( MCs[CurrentMacro]->name(), MCs[CurrentMacro]->variablesStr() );
 
-  startNextRePro( saving );
+  startNextRePro( saving, enable );
 }
 
 
-void Macros::startNextRePro( bool saving )
+void Macros::executeMacro( int newmacro, const Str &params )
+{
+  // put next command on the stack:
+  if ( MCs[newmacro]->Button )
+    stackButton();
+  Stack.push_back( MacroPos( CurrentMacro, CurrentCommand + 1, 
+			     MCs[CurrentMacro]->Variables,
+			     MCs[CurrentMacro]->Project ) );
+  // execute the requested macro:
+  Options prjopts;
+  MCs[newmacro]->Variables.setDefaults();
+  MCs[newmacro]->Variables.read( MCs[CurrentMacro]->expandParams( params, prjopts ) );
+  MCs[newmacro]->Project.read( prjopts );
+  CurrentMacro = newmacro;
+  CurrentCommand = -1;
+  runButton();
+}
+
+
+void Macros::startNextRePro( bool saving, bool enable )
 {
   if ( RW->idle() )
     return;
 
-  emit stopRePro();
+  RW->stopRePro();
 
   do {
     CurrentCommand++;
@@ -863,7 +820,8 @@ void Macros::startNextRePro( bool saving )
 	CurrentCommand = 0;
 	ThisCommandOnly = false;
 	runButton();
-	RW->startedMacro( MCs[CurrentMacro]->Name, variablesStr( CurrentMacro ) );
+	RW->startedMacro( MCs[CurrentMacro]->name(), MCs[CurrentMacro]->variablesStr() );
+	enable = false;
       }
       else if ( CurrentCommand >= (int)MCs[CurrentMacro]->Commands.size() ) {
 	if ( ThisMacroOnly && Stack.size() == 1 ) {
@@ -874,7 +832,7 @@ void Macros::startNextRePro( bool saving )
 	  CurrentMacro = FallBackIndex;
 	  CurrentCommand = 0;
 	  runButton();
-	  RW->startedMacro( MCs[CurrentMacro]->Name, variablesStr( CurrentMacro ) );
+	  RW->startedMacro( MCs[CurrentMacro]->name(), MCs[CurrentMacro]->variablesStr() );
 	}
 	else if ( Stack.size() > 0 ) {
 	  clearButton();
@@ -893,251 +851,48 @@ void Macros::startNextRePro( bool saving )
 	  CurrentMacro = FallBackIndex;
 	  CurrentCommand = 0;
 	  runButton();
-	  RW->startedMacro( MCs[CurrentMacro]->Name, variablesStr( CurrentMacro ) );
+	  RW->startedMacro( MCs[CurrentMacro]->name(), MCs[CurrentMacro]->variablesStr() );
 	}
+	enable = false;
       }
     } while ( CurrentCommand < 0 || 
 	      CurrentCommand >= (int)MCs[CurrentMacro]->Commands.size() );
     
-    if ( MCs[CurrentMacro]->Commands[CurrentCommand]->Enabled || Enable ) {
-      if ( Enable && MCs[CurrentMacro]->Commands[CurrentCommand]->RP == 0 )
-	Enable = false;
-      // execute macro:
-      if ( MCs[CurrentMacro]->Commands[CurrentCommand]->Macro >= 0 ) {
-	int newmacro = MCs[CurrentMacro]->Commands[CurrentCommand]->Macro;
-	// put next command on the stack:
-	if ( MCs[newmacro]->Button )
-	  stackButton();
-	Stack.push_back( MacroPos( CurrentMacro, CurrentCommand + 1, 
-				   MCs[CurrentMacro]->Variables,
-				   MCs[CurrentMacro]->Project ) );
-	// execute the requested macro:
-	Options prjopts;
-	MCs[newmacro]->Variables.setDefaults();
-	MCs[newmacro]->Variables.read( MCs[CurrentMacro]->expandParams( MCs[CurrentMacro]->Commands[CurrentCommand]->Params, prjopts ) );
-	MCs[newmacro]->Project.read( prjopts );
-	CurrentMacro = newmacro;
-	CurrentCommand = -1;
-	runButton();
-      }
-      // execute shell command:
-      else if ( MCs[CurrentMacro]->Commands[CurrentCommand]->Shell ) {
-	string com = "nice ";
-	com += MCs[CurrentMacro]->Commands[CurrentCommand]->Name;
-	com += " ";
-	com += MCs[CurrentMacro]->Commands[CurrentCommand]->Params;
-	RW->printlog( "execute \"" + com + "\"" );
-	system( com.c_str() );
-      }
-      // filter:
-      else if ( MCs[CurrentMacro]->Commands[CurrentCommand]->Filter > 0 ) {
-	if ( MCs[CurrentMacro]->Commands[CurrentCommand]->Filter == 2 &&
-	     MCs[CurrentMacro]->Commands[CurrentCommand]->Name.empty() ) {
-	  RW->printlog( "filter \"ALL\": auto-configure " + 
-			Str( MCs[CurrentMacro]->Commands[CurrentCommand]->AutoConfigureTime ) + "s" );
-	  RW->FD->autoConfigure( MCs[CurrentMacro]->Commands[CurrentCommand]->AutoConfigureTime );
-	}
-	else {
-	  Filter *filter = RW->FD->filter( MCs[CurrentMacro]->Commands[CurrentCommand]->Name );
-	  if ( filter != 0 ) {
-	    if ( MCs[CurrentMacro]->Commands[CurrentCommand]->Filter == 1 ) {
-	      RW->printlog( "filter \"" + filter->ident() + "\": save \"" + 
-			    MCs[CurrentMacro]->Commands[CurrentCommand]->Params + "\"" );
-	      filter->save( MCs[CurrentMacro]->Commands[CurrentCommand]->Params );
-	    }
-	    else {
-	      RW->printlog( "filter \"" + filter->ident() + "\": auto-configure " + 
-			    Str( MCs[CurrentMacro]->Commands[CurrentCommand]->AutoConfigureTime ) + "s" );
-	      RW->FD->autoConfigure( filter, MCs[CurrentMacro]->Commands[CurrentCommand]->AutoConfigureTime );
-	    }
-	  }
-	}
-      }
-      // detector:
-      else if ( MCs[CurrentMacro]->Commands[CurrentCommand]->Detector > 0 ) {
-	if ( MCs[CurrentMacro]->Commands[CurrentCommand]->Detector == 2 &&
-	     MCs[CurrentMacro]->Commands[CurrentCommand]->Name.empty() ) {
-	  RW->printlog( "detector \"ALL\": auto-configure " + 
-			Str( MCs[CurrentMacro]->Commands[CurrentCommand]->AutoConfigureTime ) + "s" );
-	  RW->FD->autoConfigure( MCs[CurrentMacro]->Commands[CurrentCommand]->AutoConfigureTime );
-	}
-	else {
-	  Filter *filter = RW->FD->detector( MCs[CurrentMacro]->Commands[CurrentCommand]->Name );
-	  if ( filter != 0 ) {
-	    if ( MCs[CurrentMacro]->Commands[CurrentCommand]->Detector == 1 ) {
-	      RW->printlog( "detector \"" + filter->ident() + "\" save: \"" + 
-			    MCs[CurrentMacro]->Commands[CurrentCommand]->Params + "\"" );
-	      filter->save( MCs[CurrentMacro]->Commands[CurrentCommand]->Params );
-	    }
-	    else {
-	      RW->printlog( "detector \"" + filter->ident() + "\": auto-configure " + 
-			    Str( MCs[CurrentMacro]->Commands[CurrentCommand]->AutoConfigureTime ) + "s" );
-	      RW->FD->autoConfigure( filter, MCs[CurrentMacro]->Commands[CurrentCommand]->AutoConfigureTime );
-	    }
-	  }
-	}
-      }
-      // switch macros:
-      else if ( MCs[CurrentMacro]->Commands[CurrentCommand]->Switch ) {
-	RW->printlog( "switch to macro file \"" + 
-		      MCs[CurrentMacro]->Commands[CurrentCommand]->Name + "\"" );
-	loadMacros( MCs[CurrentMacro]->Commands[CurrentCommand]->Name );
-	if ( boolean( "fallbackonreload" ) )
-	  return;
-      }
-      // start session:
-      else if ( MCs[CurrentMacro]->Commands[CurrentCommand]->StartSession ) {
-	RW->SN->startTheSession( false );
-      }
-      // message:
-      else if ( MCs[CurrentMacro]->Commands[CurrentCommand]->Message ) {
-	Str msg = MCs[CurrentMacro]->Commands[CurrentCommand]->Params;
-	int i = msg.find( "$(" );
-	while ( i >= 0 ) {
-	  int c = msg.findBracket( i+1, "(", "" );
-	  if ( c < 1 )
-	    c = msg.size();
-	  string cs( msg.substr( i+2, c-i-2 ) );
-	  FILE *p = popen( cs.c_str(), "r" );
-	  Str ns = "";
-	  char ls[1024];
-	  while ( fgets( ls, 1024, p ) != NULL )
-	    ns += ls;
-	  pclose( p );
-	  ns.strip();
-	  msg.replace( i, c-i+1, ns );
-	  i = msg.find( "$(", i+3 );
-	}
-	if ( !msg.empty() ) {
-	  MessageBox::information( MCs[CurrentMacro]->Commands[CurrentCommand]->Name, msg, 
-				   MCs[CurrentMacro]->Commands[CurrentCommand]->TimeOut,
-				   this );
-	  msg.eraseMarkup();
-	  RW->printlog( "message " +
-			MCs[CurrentMacro]->Commands[CurrentCommand]->Name +
-			": " + msg );
-	}
-      }
-      else if ( MCs[CurrentMacro]->Commands[CurrentCommand]->Browse ) {
-	Str file = MCs[CurrentMacro]->Commands[CurrentCommand]->Params;
-	int i = file.find( "$(" );
-	while ( i >= 0 ) {
-	  int c = file.findBracket( i+1, "(", "" );
-	  if ( c < 1 )
-	    c = file.size();
-	  string cs( file.substr( i+2, c-i-2 ) );
-	  FILE *p = popen( cs.c_str(), "r" );
-	  Str ns = "";
-	  char ls[1024];
-	  while ( fgets( ls, 1024, p ) != NULL )
-	    ns += ls;
-	  pclose( p );
-	  ns.strip();
-	  file.replace( i, c-i+1, ns );
-	  i = file.find( "$(", i+3 );
-	}
-	file.expandPath();
-	if ( !file.empty() ) {
-	  RW->printlog( "browse " +
-			MCs[CurrentMacro]->Commands[CurrentCommand]->Name +
-			": " + file );
-	  // create and exec dialog:
-	  OptDialog *od = new OptDialog( false, this );
-	  od->setCaption( MCs[CurrentMacro]->Commands[CurrentCommand]->Name );
-	  QTextBrowser *hb = new QTextBrowser( this );
-	  QStringList fpl;
-	  fpl.push_back( file.dir().c_str() );
-	  hb->setSearchPaths( fpl );
-	  hb->setSource( QUrl::fromLocalFile( file.notdir().c_str() ) );
-	  if ( hb->toHtml().isEmpty() ) {
-	    hb->setText( string( "Sorry, can't find file <b>" + file + "</b>." ).c_str() );
-	  }
-	  hb->setMinimumSize( 600, 400 );
-	  od->addWidget( hb );
-	  od->addButton( "&Ok" );
-	  od->exec();
-	}
-      }
+    if ( MCs[CurrentMacro]->Commands[CurrentCommand]->Enabled || enable ) {
+      if ( MCs[CurrentMacro]->Commands[CurrentCommand]->execute( saving ) )
+	break;
+      enable = false;
     }
 
   } while ( CurrentCommand < 0 ||
-	    MCs[CurrentMacro]->Commands[CurrentCommand]->RP == 0 ||
-	    ! ( Enable || MCs[CurrentMacro]->Commands[CurrentCommand]->Enabled ) );
-
-  if ( Enable )
-    Enable = false;
-
-  // start RePro:
-  RePro *repro = MCs[CurrentMacro]->Commands[CurrentCommand]->RP;
-  Options prjopt;
-  repro->Options::setDefaults();
-  repro->Options::read( MCs[CurrentMacro]->expandParams( MCs[CurrentMacro]->Commands[CurrentCommand]->Params, prjopt ) );
-  repro->Options::read( repro->overwriteOptions() );
-  repro->Options::read( MCs[CurrentMacro]->Commands[CurrentCommand]->CO );
-  repro->projectOptions().read( prjopt );
-  repro->projectOptions().read( MCs[CurrentMacro]->Commands[CurrentCommand]->CO );
-  if ( repro->projectOptions().text( "project" ).empty() ) {
-    string ps = MCs[CurrentMacro]->Project.text( "project" );
-    if ( ps.empty() ) {
-      for ( int k=(int)Stack.size()-1; k>=0; k-- ) {
-	ps = Stack[k].MacroProject.text( "project" );
-	if ( ! ps.empty() )
-	  break;
-      }
-    }
-    repro->projectOptions().setText( "project", ps );
-    string es = MCs[CurrentMacro]->Project.text( "experiment" );
-    if ( es.empty() ) {
-      for ( int k=(int)Stack.size()-1; k>=0; k-- ) {
-	es = Stack[k].MacroProject.text( "experiment" );
-	if ( ! es.empty() )
-	  break;
-      }
-    }
-    if ( es.empty() )
-      es = repro->name();
-    repro->projectOptions().setText( "experiment", es );
-  }
-
-  emit startRePro( repro, MCs[CurrentMacro]->Action, saving );
+	    MCs[CurrentMacro]->Commands[CurrentCommand]->RP == 0 );
 }
 
 
 void Macros::startNextRePro( void )
 {
-  startNextRePro( true );
+  startNextRePro( true, false );
 }
 
 
 void Macros::clearButton( void )
 {
-  if ( CurrentMacro >= 0 && CurrentMacro < (int)MCs.size() &&
-       MCs[CurrentMacro]->PushButton != 0 ) {
-    if ( MCs[CurrentMacro]->startSession() )
-      MCs[CurrentMacro]->PushButton->setIcon( SessionIcon );
-    else
-      MCs[CurrentMacro]->PushButton->setIcon( IdleIcon );
-  }
+  if ( CurrentMacro >= 0 && CurrentMacro < (int)MCs.size() )
+    MCs[CurrentMacro]->clearButton();
 }
 
 
 void Macros::runButton( void )
 {
-  if ( CurrentMacro >= 0 && CurrentMacro < (int)MCs.size() &&
-       MCs[CurrentMacro]->PushButton != 0 )
-    MCs[CurrentMacro]->PushButton->setIcon( RunningIcon );
+  if ( CurrentMacro >= 0 && CurrentMacro < (int)MCs.size() )
+    MCs[CurrentMacro]->runButton();
 }
 
 
 void Macros::stackButton( void )
 {
-  if ( CurrentMacro >= 0 && CurrentMacro < (int)MCs.size() &&
-       MCs[CurrentMacro]->PushButton != 0 ) {
-    if ( Stack.empty() )
-      MCs[CurrentMacro]->PushButton->setIcon( BaseIcon );
-    else
-      MCs[CurrentMacro]->PushButton->setIcon( StackIcon );
-  }
+  if ( CurrentMacro >= 0 && CurrentMacro < (int)MCs.size()  )
+    MCs[CurrentMacro]->stackButton( Stack.empty() );
 }
 
 
@@ -1145,13 +900,8 @@ void Macros::stackButtons( void )
 {
   for ( int k = 0; k < (int)Stack.size(); k++ ) {
     int macro = Stack[k].MacroID;
-    if ( macro >= 0 && macro < (int)MCs.size() &&
-	 MCs[macro]->PushButton != 0 ) {
-      if ( k==0 )
-	MCs[macro]->PushButton->setIcon( BaseIcon );
-      else
-	MCs[macro]->PushButton->setIcon( StackIcon );
-    }
+    if ( macro >= 0 && macro < (int)MCs.size() )
+      MCs[macro]->stackButton( (k==0) );
   }
 }
 
@@ -1160,13 +910,8 @@ void Macros::clearStackButtons( void )
 {
   for ( int k = (int)Stack.size()-1; k >= 0; k-- ) {
     int macro = Stack[k].MacroID;
-    if ( macro >= 0 && macro < (int)MCs.size() &&
-	 MCs[macro]->PushButton != 0 ) {
-      if ( MCs[macro]->startSession() )
-	MCs[macro]->PushButton->setIcon( SessionIcon );
-      else
-	MCs[macro]->PushButton->setIcon( IdleIcon );
-    }
+    if ( macro >= 0 && macro < (int)MCs.size() )
+      MCs[macro]->clearButton();
   }
   Stack.clear();
   clearButton();
@@ -1238,14 +983,7 @@ void Macros::reloadRePro( const string &name )
 
   for ( MacrosType::iterator mp = MCs.begin();
 	mp != MCs.end(); ++mp )
-    for ( vector<MacroCommand*>::iterator cp = (*mp)->Commands.begin(); 
-	  cp != (*mp)->Commands.end();
-	  ++cp )
-      if ( (*cp)->Macro < 0 && (*cp)->Filter==0 && (*cp)->Detector==0 &&
-	   !(*cp)->Switch && !(*cp)->Shell && !(*cp)->Message &&
-	   (*cp)->Name == name )
-	(*cp)->RP = repro;
-
+    (*mp)->reloadRePro( repro );
 }
 
 
@@ -1298,7 +1036,7 @@ void Macros::resume( void )
     MCs[ResumePos.MacroID]->Project = ResumePos.MacroProject;
 
     startMacro( ResumePos.MacroID, ResumePos.CommandID, 
-		true, &ResumeStack );
+		true, false, &ResumeStack );
     ThisMacroOnly = ResumeMacroOnly;
 
     // clear resume:
@@ -1320,7 +1058,7 @@ void Macros::resumeNext( void )
     MCs[ResumePos.MacroID]->Project = ResumePos.MacroProject;
 
     startMacro( ResumePos.MacroID, ResumePos.CommandID + 1, 
-		true, &ResumeStack );
+		true, false, &ResumeStack );
     ThisMacroOnly = ResumeMacroOnly;
 
     // clear resume:
@@ -1351,7 +1089,7 @@ int Macros::index( const string &macro ) const
   id.lower();
 
   for ( unsigned int k=0; k<MCs.size(); k++ ) {
-    Str idr = MCs[k]->Name;
+    Str idr = MCs[k]->name();
     idr.lower();
     if ( idr == id )
       return k;
@@ -1373,34 +1111,9 @@ string Macros::options( void ) const
 }
 
 
-Options &Macros::variables( int macro )
-{
-  return MCs[macro]->Variables;
-}
-
-
-string Macros::variablesStr( int macro )
-{
-  string s = "";
-  for ( int k=0; k<MCs[macro]->Variables.size(); k++ ) {
-    if ( k > 0 )
-      s += "; ";
-    s += MCs[macro]->Variables[k].save();
-  }
-  return s;
-}
-
-
 Options &Macros::project( int macro )
 {
   return MCs[macro]->Project;
-}
-
-
-string Macros::expandParams( int macro, const Str &params,
-			     Options &prjopt ) const
-{
-  return MCs[macro]->expandParams( params, prjopt );
 }
 
 
@@ -1487,7 +1200,7 @@ Macro::Macro( void )
   : Name( "" ), Action( 0 ), 
   Button( true ), Menu( true ), Key( true ),
   Keep( false ), Overwrite( false ),
-  PushButton( 0 ), MAction( NULL ), PMenu( 0 ), RunAction( 0 ), BottomAction( 0 ),
+  PushButton( 0 ), MenuAction( 0 ), RunAction( 0 ), BottomAction( 0 ),
   MacroNum( -1 ), MC( 0 ), Commands(), DialogOpen( false )
 {
 }
@@ -1496,16 +1209,16 @@ Macro::Macro( void )
 Macro::Macro( Str name, Macros *mc ) 
   : Action( 0 ), Button( true ), Menu( true ), Key( true ), 
   Keep( false ), Overwrite( false ),
-  PushButton( 0 ), MAction( NULL ), PMenu( 0 ), RunAction( 0 ), BottomAction( 0 ),
+  PushButton( 0 ), MenuAction( 0 ), RunAction( 0 ), BottomAction( 0 ),
   MacroNum( -1 ), MC( mc ), Commands(), DialogOpen( false )
 {
   Project.clear();
   Project.addText( "project", "Project", "" );
   Project.addText( "experiment", "Experiment", "" );
 
+  Variables.clear();
   int cp = name.find( ':' );
   if ( cp > 0 ) {
-    Variables.clear();
     addParams( name.substr( cp+1 ) );
     name.erase( cp );
   }
@@ -1548,8 +1261,8 @@ Macro::Macro( const Macro &macro )
   Action( macro.Action ), 
   Button( macro.Button ), Menu( macro.Menu ), Key( macro.Key ),
   Keep( false ), Overwrite( false ),
-  PushButton( macro.PushButton ), MAction( macro.MAction ), 
-  PMenu( macro.PMenu ), RunAction( macro.RunAction ), BottomAction( macro.BottomAction ),
+  PushButton( macro.PushButton ), MenuAction( macro.MenuAction ), 
+  RunAction( macro.RunAction ), BottomAction( macro.BottomAction ),
   MacroNum( macro.MacroNum ), MC( macro.MC ), Commands( macro.Commands ),
   DialogOpen( macro.DialogOpen )
 {
@@ -1559,6 +1272,24 @@ Macro::Macro( const Macro &macro )
 string Macro::name( void ) const
 {
   return Name;
+}
+
+
+Options &Macro::variables( void )
+{
+  return Variables;
+}
+
+
+string Macro::variablesStr( void ) const
+{
+  string s = "";
+  for ( int k=0; k<Variables.size(); k++ ) {
+    if ( k > 0 )
+      s += "; ";
+    s += Variables[k].save();
+  }
+  return s;
 }
 
 
@@ -1644,17 +1375,17 @@ string Macro::expandParams( const Str &params, Options &prjopt ) const
 }
 
 
-void Macro::addMenu( QMenu *menu )
+void Macro::addMenu( QMenu *menu, const string &text )
 {
   if ( Menu ) {
-    QMenu *firstpop = menu->addMenu( MAction->text() );
+    QMenu *firstpop = menu->addMenu( text.c_str() );
+    MenuAction = firstpop->menuAction();
     RunAction = firstpop->addAction( menuStr().c_str(), this, SLOT( run() ) );
     if ( Key )
       RunAction->setShortcut( KeyCode );
     int n=2;
     firstpop->addAction( "&Options", this, SLOT( dialog() ) );	
     n++;
-    PMenu = firstpop;
     firstpop->addSeparator();
     BottomAction = 0;
 
@@ -1673,6 +1404,7 @@ void Macro::addMenu( QMenu *menu )
 	n = 0;
       }
     }
+
     if ( BottomAction == 0 && Commands.size() > 0 )
       BottomAction = Commands.back()->SubMenu->menuAction();
 
@@ -1695,7 +1427,7 @@ string Macro::menuStr( void ) const
       s += ": ";
       nc += 2;
     }
-    string vs = Variables[i].save();
+    string vs = Variables[i].save( false, true );
     s += vs;
     nc += vs.size();
   }
@@ -1713,7 +1445,7 @@ string Macro::menuStr( void ) const
 	s += ": ";
 	nc += 2;
       }
-      string vs = Project[i].save();
+      string vs = Project[i].save( false, true );
       s += vs;
       nc += vs.size();
     }
@@ -1729,21 +1461,120 @@ void Macro::addButton( const string &keys )
   if ( Button ) {
     MacroButton *button = new MacroButton( Name + keys, MC );
     button->show();
-    if ( startSession() )
-      button->setIcon( MC->SessionIcon );
-    else
-      button->setIcon( MC->IdleIcon );
+    clearButton();
     button->setMinimumSize( button->sizeHint() );
     connect( button, SIGNAL( clicked() ), this, SLOT( launch() ) );
     connect( button, SIGNAL( rightClicked() ), this, SLOT( popup() ) );
     if ( Key ) {
-      MAction->setShortcut( KeyCode + Qt::SHIFT );
-      connect( MAction, SIGNAL( triggered() ), this, SLOT( popup() ) );
+      MenuAction->setShortcut( Qt::SHIFT + KeyCode );
+      connect( MenuAction, SIGNAL( triggered() ), this, SLOT( popup() ) );
     }
     PushButton = button;
   }
   else
     PushButton = 0;
+}
+
+
+void Macro::reloadRePro( RePro *repro )
+{
+  for ( vector<MacroCommand*>::iterator cp = Commands.begin(); 
+	cp != Commands.end();
+	++cp )
+    (*cp)->reloadRePro( repro );
+}
+
+
+void Macro::createIcons( int size )
+{
+  int my = size - 2;
+  int mx = my;
+
+  SessionIcon = new QPixmap( mx+2, my+2 );
+  QPainter p;
+  p.begin( SessionIcon );
+  p.eraseRect( SessionIcon->rect() );
+  p.setPen( QPen( Qt::black, 1 ) );
+  p.setBrush( Qt::black );
+  QPolygon pa( 3 );
+  pa.setPoint( 0, mx/3, 0 );
+  pa.setPoint( 1, mx/3, my );
+  pa.setPoint( 2, mx, my/2 );
+  p.drawPolygon( pa );
+  p.end();
+  SessionIcon->setMask( SessionIcon->createHeuristicMask() );
+
+  BaseIcon = new QPixmap( mx+2, my+2 );
+  p.begin( BaseIcon );
+  p.eraseRect( BaseIcon->rect() );
+  p.setPen( QPen( Qt::black, 1 ) );
+  p.setBrush( Qt::red );
+  p.drawEllipse( mx/4, (my-mx*3/4)/2, mx*3/4, mx*3/4 );
+  p.end();
+  BaseIcon->setMask( BaseIcon->createHeuristicMask() );
+
+  StackIcon = new QPixmap( mx+2, my+2 );
+  p.begin( StackIcon );
+  p.eraseRect( StackIcon->rect() );
+  p.setPen( QPen( Qt::black, 1 ) );
+  p.setBrush( Qt::yellow );
+  p.drawEllipse( mx/4, (my-mx*3/4)/2, mx*3/4, mx*3/4 );
+  p.end();
+  StackIcon->setMask( StackIcon->createHeuristicMask() );
+
+  RunningIcon = new QPixmap( mx+2, my+2 );
+  p.begin( RunningIcon );
+  p.eraseRect( RunningIcon->rect() );
+  p.setPen( QPen( Qt::black, 1 ) );
+  p.setBrush( Qt::green );
+  p.drawEllipse( mx/4, (my-mx*3/4)/2, mx*3/4, mx*3/4 );
+  p.end();
+  RunningIcon->setMask( RunningIcon->createHeuristicMask() );
+
+  IdleIcon = new QPixmap( mx+2, my+2 );
+  p.begin( IdleIcon );
+  p.eraseRect( IdleIcon->rect() );
+  p.end();
+  IdleIcon->setMask( IdleIcon->createHeuristicMask() );
+}
+
+
+void Macro::destroyIcons( void )
+{
+  delete SessionIcon;
+  delete BaseIcon;
+  delete StackIcon;
+  delete RunningIcon;
+  delete IdleIcon;
+}
+
+
+void Macro::clearButton( void )
+{
+  if ( PushButton != 0 ) {
+    if ( startSession() )
+      PushButton->setIcon( *SessionIcon );
+    else
+      PushButton->setIcon( *IdleIcon );
+  }
+}
+
+
+void Macro::runButton( void )
+{
+  if ( PushButton != 0 )
+    PushButton->setIcon( *RunningIcon );
+}
+
+
+void Macro::stackButton( bool base )
+{
+  if ( PushButton != 0 ) {
+    if ( base )
+      PushButton->setIcon( *BaseIcon );
+    else
+      PushButton->setIcon( *StackIcon );
+  }
 }
 
 
@@ -1757,8 +1588,8 @@ ostream &operator<< ( ostream &str, const Macro &macro )
       << ( macro.stopSession() ? " stopsession" : "" )
       << ( macro.Button ? "" : " nobutton" )
       << ( macro.Menu ? "" : " nomenu" );
-  if ( macro.MAction != NULL )
-    str << "Action: " << macro.MAction->shortcut().toString().toLatin1().data();
+  if ( macro.MenuAction != 0 )
+    str << "Action: " << macro.MenuAction->shortcut().toString().toLatin1().data();
   str << " -> " << macro.Variables.save() << '\n';
   for ( unsigned int j=0; j<macro.Commands.size(); j++ )
     str << *macro.Commands[j];
@@ -1774,13 +1605,11 @@ MacroButton *Macro::button( void )
 
 void Macro::clear( void )
 {
-  delete MAction;
-  MAction = 0;
+  MenuAction = 0;
   Key = 0;
-  if ( PushButton != 0 ) {
+  if ( PushButton != 0 )
     delete PushButton;
-    PushButton = 0;
-  }
+  PushButton = 0;
 }
 
 
@@ -1862,7 +1691,7 @@ void Macro::popup( void )
 {
   if ( BottomAction != 0 ) {
     QPoint p = PushButton->mapToGlobal( QPoint( 0, -30 ) );
-    PMenu->popup( p, BottomAction );
+    MenuAction->menu()->popup( p, BottomAction );
   }
 }
 
@@ -1874,9 +1703,9 @@ MacroCommand::MacroCommand( void )
     CO(),
     PO(),
     DO( 0 ),
-    Macro( -1 ),
-    Filter( 0 ),
-    Detector( 0 ),
+    MacroIndex( -1 ),
+    FilterCom( 0 ),
+    DetectorCom( 0 ),
     AutoConfigureTime( 0.0 ),
     Switch( false ),
     StartSession( false ),
@@ -1888,6 +1717,7 @@ MacroCommand::MacroCommand( void )
     EnabledAction( 0 ),
     MacroNum( 0 ),
     CommandNum( 0 ),
+    MC( 0 ),
     MCs( 0 ),
     DialogOpen( false ),
     MacroVars(),
@@ -1902,16 +1732,16 @@ MacroCommand::MacroCommand( const string &name, const string &params,
 			    bool enabled, int macro, bool filter,
 			    bool detector, bool switchm, bool startsession,
 			    bool shell, bool mes, double to, bool browse,
-			    Macros *mc ) 
+			    Macros *mcs, Macro *mc ) 
   : Name( name ),
     Params( params ),
     RP( 0 ),
     CO(), 
     PO(), 
     DO( 0 ),
-    Macro( macro ),
-    Filter( filter ? 1 : 0 ),
-    Detector( detector ? 1 : 0 ),
+    MacroIndex( macro ),
+    FilterCom( filter ? 1 : 0 ),
+    DetectorCom( detector ? 1 : 0 ),
     AutoConfigureTime( 0.0 ),
     Switch( switchm ),
     StartSession( startsession ),
@@ -1923,27 +1753,28 @@ MacroCommand::MacroCommand( const string &name, const string &params,
     EnabledAction( 0 ),
     MacroNum( 0 ),
     CommandNum( 0 ),
-    MCs( mc ),
+    MC( mc ),
+    MCs( mcs ),
     DialogOpen( false ),
     MacroVars(),
     MacroProject(),
     MenuShortcut( "" ),
     SubMenu( 0 )
 {
-  if ( Filter > 0 ) {
+  if ( FilterCom > 0 ) {
     if ( Params.eraseFirst( "save", 0, false, 3, Str::WhiteSpace ) )
-      Filter = 1;
+      FilterCom = 1;
     else if ( Params.eraseFirst( "autoconf", 0, false, 3, Str::WhiteSpace ) ) {
-      Filter = 2;
+      FilterCom = 2;
       AutoConfigureTime = Params.number( 1.0 );
       Params.clear();
     }
   }
-  if ( Detector > 0 ) {
+  if ( DetectorCom > 0 ) {
     if ( Params.eraseFirst( "save", 0, false, 3, Str::WhiteSpace ) )
-      Detector = 1;
+      DetectorCom = 1;
     else if ( Params.eraseFirst( "autoconf", 0, false, 3, Str::WhiteSpace ) ) {
-      Detector = 2;
+      DetectorCom = 2;
       AutoConfigureTime = Params.number( 1.0 );
       Params.clear();
     }
@@ -1951,16 +1782,17 @@ MacroCommand::MacroCommand( const string &name, const string &params,
 }
 
 
-MacroCommand::MacroCommand( RePro *repro, const string &params, Macros *mc )
+MacroCommand::MacroCommand( RePro *repro, const string &params,
+			    Macros *mcs, Macro *mc )
   : Name( repro->name() ),
     Params( params ),
     RP( repro ),
     CO(), 
     PO(), 
     DO( 0 ),
-    Macro( -1 ),
-    Filter( 0 ),
-    Detector( 0 ),
+    MacroIndex( -1 ),
+    FilterCom( 0 ),
+    DetectorCom( 0 ),
     AutoConfigureTime( 0.0 ),
     Switch( false ),
     StartSession( false ),
@@ -1972,7 +1804,8 @@ MacroCommand::MacroCommand( RePro *repro, const string &params, Macros *mc )
     EnabledAction( 0 ),
     MacroNum( 0 ),
     CommandNum( 0 ),
-    MCs( mc ),
+    MC( mc ),
+    MCs( mcs ),
     DialogOpen( false ),
     MacroVars(),
     MacroProject(),
@@ -1989,9 +1822,9 @@ MacroCommand::MacroCommand( const MacroCommand &com )
     CO( com.CO ),
     PO( com.PO ),
     DO( com.DO ),
-    Macro( com.Macro ),
-    Filter( com.Filter ), 
-    Detector( com.Detector ), 
+    MacroIndex( com.MacroIndex ),
+    FilterCom( com.FilterCom ), 
+    DetectorCom( com.DetectorCom ), 
     AutoConfigureTime( com.AutoConfigureTime ),
     Switch( com.Switch ), 
     StartSession( com.StartSession ), 
@@ -2003,6 +1836,7 @@ MacroCommand::MacroCommand( const MacroCommand &com )
     EnabledAction( com.EnabledAction ),
     MacroNum( com.MacroNum ),
     CommandNum( com.CommandNum ),
+    MC( com.MC ),
     MCs( com.MCs ),
     DialogOpen( com.DialogOpen ),
     MacroVars( com. MacroVars ),
@@ -2029,7 +1863,7 @@ void MacroCommand::addMenu( QMenu *menu )
   else
     s = "  ";
   MenuShortcut = s;
-  if ( Macro >= 0 ) {
+  if ( MacroIndex >= 0 ) {
     s += "Macro " + Name;
     if ( !Params.empty() ) {
       s += ": ";
@@ -2039,23 +1873,23 @@ void MacroCommand::addMenu( QMenu *menu )
 	index = Params.find( ';', index+1 );
       }
       if ( index < 0 )
-	s += ": " + Params;
+	s += Params;
       else
-	s += ": " + Params.substr( 0, index ) + " ...";
+	s += Params.substr( 0, index ) + " ...";
     }
   }
   else if ( Shell )
     s += "Shell " + Name;
-  else if ( Filter ) {
+  else if ( FilterCom ) {
     s += "Filter " + Name + ": ";
-    if ( Filter == 1 )
+    if ( FilterCom == 1 )
       s += "save";
     else
       s += "auto-configure " + Str( AutoConfigureTime ) + "s";
   }
-  else if ( Detector ) {
+  else if ( DetectorCom ) {
     s += "Detector " + Name + ": ";
-    if ( Detector == 1 )
+    if ( DetectorCom == 1 )
       s += "save";
     else
       s += "auto-configure " + Str( AutoConfigureTime ) + "s";
@@ -2089,16 +1923,16 @@ void MacroCommand::addMenu( QMenu *menu )
 	index = Params.find( ';', index+1 );
       }
       if ( index < 0 )
-	s += ": " + Params;
+	s += Params;
       else
-	s += ": " + Params.substr( 0, index ) + " ...";
+	s += Params.substr( 0, index ) + " ...";
     }
   }
 
   SubMenu = menu->addMenu( s.c_str() );
-  SubMenu->menuAction()->setIcon( Enabled ? MCs->EnabledIcon : MCs->DisabledIcon );
+  SubMenu->menuAction()->setIcon( Enabled ? *EnabledIcon : *DisabledIcon );
 
-  if ( CommandNum+1 < (int)MCs->MCs[MacroNum]->Commands.size() ) {
+  if ( CommandNum+1 < (int)MC->Commands.size() ) {
     SubMenu->addAction( "&Start macro here", this, SLOT( start() ) );
     SubMenu->addAction( "&Run only this", this, SLOT( run() ) );
   }
@@ -2111,7 +1945,7 @@ void MacroCommand::addMenu( QMenu *menu )
     SubMenu->addAction( "&Load", this, SLOT( reload() ) );
     SubMenu->addAction( "&Help...", this, SLOT( help() ) );
   }
-  else if ( Macro >= 0 &&
+  else if ( MacroIndex >= 0 &&
 	    ! Params.empty() ) {
     SubMenu->addAction( "&Options...", this, SLOT( dialog() ) );
   }
@@ -2120,22 +1954,191 @@ void MacroCommand::addMenu( QMenu *menu )
 }
 
 
+bool MacroCommand::execute( bool saving )
+{
+  // execute macro:
+  if ( MacroIndex >= 0 ) {
+    MCs->executeMacro( MacroIndex, Params );
+  }
+  // execute shell command:
+  else if ( Shell ) {
+    string com = "nice " + Name + " " + Params;
+    MCs->RW->printlog( "execute \"" + com + "\"" );
+    system( com.c_str() );
+  }
+  // filter:
+  else if ( FilterCom > 0 ) {
+    if ( FilterCom == 2 && Name.empty() ) {
+      MCs->RW->printlog( "filter \"ALL\": auto-configure " + 
+			 Str( AutoConfigureTime ) + "s" );
+      MCs->RW->filterDetectors()->autoConfigure( AutoConfigureTime );
+    }
+    else {
+      Filter *filter = MCs->RW->filterDetectors()->filter( Name );
+      if ( filter != 0 ) {
+	if ( FilterCom == 1 ) {
+	  MCs->RW->printlog( "filter \"" + filter->ident() + "\": save \"" + 
+			     Params + "\"" );
+	  filter->save( Params );
+	}
+	else {
+	  MCs->RW->printlog( "filter \"" + filter->ident() + "\": auto-configure " + 
+			     Str( AutoConfigureTime ) + "s" );
+	  MCs->RW->filterDetectors()->autoConfigure( filter, AutoConfigureTime );
+	}
+      }
+    }
+  }
+  // detector:
+  else if ( DetectorCom > 0 ) {
+    if ( DetectorCom == 2 && Name.empty() ) {
+      MCs->RW->printlog( "detector \"ALL\": auto-configure " + 
+			 Str( AutoConfigureTime ) + "s" );
+      MCs->RW->filterDetectors()->autoConfigure( AutoConfigureTime );
+    }
+    else {
+      Filter *filter = MCs->RW->filterDetectors()->detector( Name );
+      if ( filter != 0 ) {
+	if ( DetectorCom == 1 ) {
+	  MCs->RW->printlog( "detector \"" + filter->ident() + "\" save: \"" + 
+			     Params + "\"" );
+	  filter->save( Params );
+	}
+	else {
+	  MCs->RW->printlog( "detector \"" + filter->ident() + "\": auto-configure " + 
+			     Str( AutoConfigureTime ) + "s" );
+	  MCs->RW->filterDetectors()->autoConfigure( filter, AutoConfigureTime );
+	}
+      }
+    }
+  }
+  // switch macros:
+  else if ( Switch ) {
+    MCs->RW->printlog( "switch to macro file \"" + Name + "\"" );
+    MCs->loadMacros( Name );
+    if ( MCs->boolean( "fallbackonreload" ) )
+      return false;
+  }
+  // start session:
+  else if ( StartSession ) {
+    MCs->RW->session()->startTheSession( false );
+  }
+  // message:
+  else if ( Message ) {
+    Str msg = Params;
+    int i = msg.find( "$(" );
+    while ( i >= 0 ) {
+      int c = msg.findBracket( i+1, "(", "" );
+      if ( c < 1 )
+	c = msg.size();
+      string cs( msg.substr( i+2, c-i-2 ) );
+      FILE *p = popen( cs.c_str(), "r" );
+      Str ns = "";
+      char ls[1024];
+      while ( fgets( ls, 1024, p ) != 0 )
+	ns += ls;
+      pclose( p );
+      ns.strip();
+      msg.replace( i, c-i+1, ns );
+      i = msg.find( "$(", i+3 );
+    }
+    if ( !msg.empty() ) {
+      MessageBox::information( Name, msg, TimeOut, MCs );
+      msg.eraseMarkup();
+      MCs->RW->printlog( "message " + Name + ": " + msg );
+    }
+  }
+  else if ( Browse ) {
+    Str file = Params;
+    int i = file.find( "$(" );
+    while ( i >= 0 ) {
+      int c = file.findBracket( i+1, "(", "" );
+      if ( c < 1 )
+	c = file.size();
+      string cs( file.substr( i+2, c-i-2 ) );
+      FILE *p = popen( cs.c_str(), "r" );
+      Str ns = "";
+      char ls[1024];
+      while ( fgets( ls, 1024, p ) != 0 )
+	ns += ls;
+      pclose( p );
+      ns.strip();
+      file.replace( i, c-i+1, ns );
+      i = file.find( "$(", i+3 );
+    }
+    file.expandPath();
+    if ( !file.empty() ) {
+      MCs->RW->printlog( "browse " + Name + ": " + file );
+      // create and exec dialog:
+      OptDialog *od = new OptDialog( false, MCs );
+      od->setCaption( Name );
+      QTextBrowser *hb = new QTextBrowser( MCs );
+      QStringList fpl;
+      fpl.push_back( file.dir().c_str() );
+      hb->setSearchPaths( fpl );
+      hb->setSource( QUrl::fromLocalFile( file.notdir().c_str() ) );
+      if ( hb->toHtml().isEmpty() ) {
+	hb->setText( string( "Sorry, can't find file <b>" + file + "</b>." ).c_str() );
+      }
+      hb->setMinimumSize( 600, 400 );
+      od->addWidget( hb );
+      od->addButton( "&Ok" );
+      od->exec();
+    }
+  }
+  else if ( RP != 0 ) {
+    // start RePro:
+    Options prjopt;
+    RP->Options::setDefaults();
+    RP->Options::read( MC->expandParams( Params, prjopt ) );
+    RP->Options::read( RP->overwriteOptions() );
+    RP->Options::read( CO );
+    RP->projectOptions().read( prjopt );
+    RP->projectOptions().read( CO );
+    if ( RP->projectOptions().text( "project" ).empty() ) {
+      string ps = MC->Project.text( "project" );
+      if ( ps.empty() ) {
+	for ( int k=(int)MCs->Stack.size()-1; k>=0; k-- ) {
+	  ps = MCs->Stack[k].MacroProject.text( "project" );
+	  if ( ! ps.empty() )
+	    break;
+	}
+      }
+      RP->projectOptions().setText( "project", ps );
+      string es = MC->Project.text( "experiment" );
+      if ( es.empty() ) {
+	for ( int k=(int)MCs->Stack.size()-1; k>=0; k-- ) {
+	  es = MCs->Stack[k].MacroProject.text( "experiment" );
+	  if ( ! es.empty() )
+	    break;
+	}
+      }
+      if ( es.empty() )
+	es = RP->name();
+      RP->projectOptions().setText( "experiment", es );
+    }
+
+    MCs->RW->startRePro( RP, MC->Action, saving );
+    return true;
+  }
+  return false;
+}
+
+
 void MacroCommand::start( void )
 {
-  MCs->MCs[MacroNum]->Variables.setDefaults();
-  MCs->Enable = true;
-  MCs->startMacro( MacroNum, CommandNum );
+  MC->Variables.setDefaults();
+  MCs->startMacro( MacroNum, CommandNum, true, true );
   // Note: in case of a switch command, *this does not exist anymore?
 }
 
 
 void MacroCommand::run( void )
 {
-  MCs->MCs[MacroNum]->Variables.setDefaults();
-  MCs->Enable = true;
-  MCs->startMacro( MacroNum, CommandNum );
+  MC->Variables.setDefaults();
+  MCs->startMacro( MacroNum, CommandNum, true, true );
   // XXX Note: in case of a switch command, *this does not exist anymore? XXX
-  if ( Macro >= 0 )
+  if ( MacroIndex >= 0 )
     MCs->ThisMacroOnly = true;
   else
     MCs->ThisCommandOnly = true;
@@ -2150,13 +2153,13 @@ void MacroCommand::dialog( void )
   DialogOpen = true;
   DO = &MCs->RPs->dialogOptions();
 
-  if ( Macro >= 0 ) {
+  if ( MacroIndex >= 0 ) {
     // Macro dialog:
     Options prjopt;
-    MacroVars = MCs->variables( Macro );
+    MacroVars = MC->variables();
     MacroVars.setDefaults();
-    MacroVars.read( MCs->expandParams( MacroNum, Params, prjopt ) );
-    MacroProject = MCs->project( Macro );
+    MacroVars.read( MC->expandParams( Params, prjopt ) );
+    MacroProject = MCs->project( MacroIndex );
     MacroProject.read( prjopt );
     // create and exec dialog:
     OptDialog *od = new OptDialog( false, MCs );
@@ -2182,7 +2185,7 @@ void MacroCommand::dialog( void )
     // RePro dialog:
     Options prjopt;
     RP->Options::setDefaults();
-    RP->Options::read( MCs->expandParams( MacroNum, Params, prjopt ), RePro::MacroFlag );
+    RP->Options::read( MC->expandParams( Params, prjopt ), RePro::MacroFlag );
     RP->Options::read( RP->overwriteOptions(), 0, RePro::OverwriteFlag );
     RP->Options::read( CO, 0, RePro::CurrentFlag );
     RP->projectOptions().read( prjopt );
@@ -2202,9 +2205,9 @@ void MacroCommand::dialog( void )
 
 void MacroCommand::acceptDialog( void )
 {
-  if ( Macro >= 0 ) {
+  if ( MacroIndex >= 0 ) {
     Options prjopt;
-    Options po( MCs->expandParams( MacroNum, Params, prjopt ) );
+    Options po( MC->expandParams( Params, prjopt ) );
     po.readAppend( MacroVars, OptDialog::changedFlag() );
     po.readAppend( MacroProject, OptDialog::changedFlag() );
     Params = po.save( "; " );
@@ -2233,7 +2236,7 @@ void MacroCommand::acceptDialog( void )
     if ( DO->boolean( "default" ) ) {
       Options prjopt;
       RP->Options::setToDefaults();
-      RP->Options::read( MCs->expandParams( MacroNum, Params, prjopt ) );
+      RP->Options::read( MC->expandParams( Params, prjopt ) );
       RP->Options::read( RP->overwriteOptions() );
       CO.assign( *((Options*)RP), Options::NonDefault );
       RP->Options::setDefaults();
@@ -2294,21 +2297,63 @@ void MacroCommand::enable( void )
 {
   Enabled = ! Enabled;
   EnabledAction->setText( Enabled ? "&Disable" : "&Enable" );
-  SubMenu->menuAction()->setIcon( Enabled ? MCs->EnabledIcon : MCs->DisabledIcon );
+  SubMenu->menuAction()->setIcon( Enabled ? *EnabledIcon : *DisabledIcon );
+}
+
+
+void MacroCommand::reloadRePro( RePro *repro )
+{
+  if ( MacroIndex < 0 && FilterCom==0 && DetectorCom==0 &&
+       !Switch && !Shell && !Message &&
+       Name == repro->name() )
+    RP = repro;
+}
+
+
+void MacroCommand::createIcons( int size )
+{
+  int my = size - 2;
+  int mx = my;
+
+  EnabledIcon = new QPixmap( mx, mx );
+  QPainter p;
+  p.begin( EnabledIcon );
+  p.eraseRect( EnabledIcon->rect() );
+  p.setPen( QPen( Qt::black, 1 ) );
+  p.setBrush( Qt::green );
+  p.drawEllipse( 0, 0, mx-1, mx-1 );
+  p.end();
+  EnabledIcon->setMask( EnabledIcon->createHeuristicMask() );
+
+  DisabledIcon = new QPixmap( mx, mx );
+  p.begin( DisabledIcon );
+  p.eraseRect( DisabledIcon->rect() );
+  p.setPen( QPen( Qt::black, 1 ) );
+  p.setBrush( Qt::red );
+  p.drawEllipse( 0, 0, mx-1, mx-1 );
+  p.end();
+  DisabledIcon->setMask( DisabledIcon->createHeuristicMask() );
+}
+
+
+void MacroCommand::destroyIcons( void )
+{
+  delete EnabledIcon;
+  delete DisabledIcon;
 }
 
 
 ostream &operator<< ( ostream &str, const MacroCommand &command )
 {
   str << "  " << command.CommandNum+1 << " ";
-  if ( command.Macro >= 0 )
+  if ( command.MacroIndex >= 0 )
     str << "Macro";
   else if ( command.Shell )
     str << "Shell";
-  else if ( command.Filter )
-    str << "Filter " << ( command.Filter == 1 ? "save" : "auto-configure" );
-  else if ( command.Detector )
-    str << "Detector " << ( command.Detector == 1 ? "save" : "auto-configure" );
+  else if ( command.FilterCom )
+    str << "Filter " << ( command.FilterCom == 1 ? "save" : "auto-configure" );
+  else if ( command.DetectorCom )
+    str << "Detector " << ( command.DetectorCom == 1 ? "save" : "auto-configure" );
   else if ( command.Switch )
     str << "Switch";
   else if ( command.StartSession )

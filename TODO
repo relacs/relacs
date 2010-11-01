@@ -3,11 +3,15 @@ Dead locks:
 
 Macros:
 - Improve code by distributing more code to the commands
+- Less friend relationships in Macros, Macro, MacroCommand
+- Check whether all variables are really needed in Macros, Macro, MacroCommand
+- Use a type-enum in MacroCommand
 - How are plugins (control, repros) found/identified? Possibility of name clashes!
   Use plugin-set name as well.
 - delete all MacroCommands after usage!
 - add new macro command to set all sorts of internal Options (e.g. stimulusData!)
-- Shift+Functionkey is not working any more
+- add stopSession macro command
+- add dialog macro command for launching macro and repro dialogs, meta data dialog, etc.
 - Macro Options and Macro stack (B R N keys) do not work together
 
 Metadata:

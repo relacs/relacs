@@ -219,10 +219,10 @@ void MotorControl::initDevices( void )
   MainLayout->addLayout( h );
   QPushButton *db = new QPushButton( "Dialog" );
   h->addWidget( db );
-  QWidget::connect( db, SIGNAL( clicked() ), (QWidget*)this, SLOT( dialog() ) );
+  connect( db, SIGNAL( clicked() ), this, SLOT( dialog() ) );
   QPushButton *hb = new QPushButton( "Help" );
   h->addWidget( hb );
-  QWidget::connect( hb, SIGNAL( clicked() ), (QWidget*)this, SLOT( help() ) );
+  connect( hb, SIGNAL( clicked() ), this, SLOT( help() ) );
 }
 
 

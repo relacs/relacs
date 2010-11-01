@@ -38,7 +38,6 @@ namespace relacs {
 SpikeTrace::SpikeTrace( double spikewidth, int radius, int tracewidth, 
 			QWidget *parent )
   : QWidget( parent ),
-    QThread(),
     SMutex()
 {
   SpikeWidth = spikewidth;
@@ -51,12 +50,13 @@ SpikeTrace::SpikeTrace( double spikewidth, int radius, int tracewidth,
   Pause = false;
   Pos = Radius/2;
   dPos = 2;
+
+  Thread = new SpikeTraceThread( this );
 }
 
 
 SpikeTrace::SpikeTrace( QWidget *parent )
-  : QWidget( parent ),
-    QThread()
+  : QWidget( parent )
 {
   SpikeWidth = 1.0;
   Radius = 6;
@@ -69,6 +69,8 @@ SpikeTrace::SpikeTrace( QWidget *parent )
   Pos = Radius/2;
   pPos = Pos;
   dPos = 4;
+
+  Thread = new SpikeTraceThread( this );
 }
 
 
@@ -157,9 +159,9 @@ void SpikeTrace::setSpike( bool on )
   pPos = Pos;
   SMutex.unlock();
   if ( on )
-    start();
+    Thread->start();
   else
-    wait();
+    Thread->wait();
 }
 
 
@@ -188,17 +190,17 @@ void SpikeTrace::run( void )
 {
   bool showw = true;
   do {
-    QCoreApplication::postEvent( (QWidget*)this, new QEvent( QEvent::Type( QEvent::User+1 ) ) );
+    QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+1 ) ) );
     bool pausew = true;
     do {
-      msleep( 50 );
+      Thread->msleep( 50 );
       SMutex.lock();
       showw = Show;
       pausew = Pause;
       SMutex.unlock();
     } while ( showw && pausew );
   } while ( showw );
-  QCoreApplication::postEvent( (QWidget*)this, new QEvent( QEvent::Type( QEvent::User+1 ) ) );
+  QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+1 ) ) );
 }
 
 
@@ -208,6 +210,25 @@ void SpikeTrace::customEvent( QEvent *qce )
     update();
   else
     QWidget::customEvent( qce );
+}
+
+
+SpikeTraceThread::SpikeTraceThread( SpikeTrace *s )
+  : QThread( this ),
+    S( s )
+{
+}
+
+
+void SpikeTraceThread::run( void )
+{
+  S->run();
+}
+
+
+void SpikeTraceThread::msleep( unsigned long msecs )
+{
+  QThread::msleep( msecs );
 }
 
 

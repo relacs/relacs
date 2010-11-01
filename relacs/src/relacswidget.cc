@@ -111,6 +111,8 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
 {
   printlog( "this is RELACS, version " + string( RELACSVERSION ) );
 
+  Thread = new UpdateThread( this );
+
   // setup configuration files:
   CFG.clearGroups();
   CFG.addGroup( coreconfigfiles );
@@ -326,10 +328,10 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     MessageBox::error( "RELACS Error !", "No RePros found!<br>Exit now!", this );
     ::exit( 1 );
   }
-  QWidget::connect( RP, SIGNAL( stopRePro( void ) ), 
-		    (QWidget*)this, SLOT( stopRePro( void ) ) );
-  QWidget::connect( RP, SIGNAL( startRePro( RePro*, int, bool ) ), 
-		    (QWidget*)this, SLOT( startRePro( RePro*, int, bool ) ) );
+  connect( RP, SIGNAL( stopRePro( void ) ), 
+	   this, SLOT( stopRePro( void ) ) );
+  connect( RP, SIGNAL( startRePro( RePro*, int, bool ) ), 
+	   this, SLOT( startRePro( RePro*, int, bool ) ) );
   CurrentRePro = 0;
 
   // setup PlotTrace:
@@ -407,14 +409,10 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   MC->load();
   MC->check();
   MC->create();
-  QWidget::connect( MC, SIGNAL( stopRePro( void ) ), 
-		    (QWidget*)this, SLOT( stopRePro( void ) ) );
-  QWidget::connect( MC, SIGNAL( startRePro( RePro*, int, bool ) ), 
-		    (QWidget*)this, SLOT( startRePro( RePro*, int, bool ) ) );
-  QWidget::connect( RP, SIGNAL( noMacro( RePro* ) ), 
-		    MC, SLOT( noMacro( RePro* ) ) );
-  QWidget::connect( RP, SIGNAL( reloadRePro( const string& ) ),
-		    MC, SLOT( reloadRePro( const string& ) ) );
+  connect( RP, SIGNAL( noMacro( RePro* ) ), 
+	   MC, SLOT( noMacro( RePro* ) ) );
+  connect( RP, SIGNAL( reloadRePro( const string& ) ),
+	   MC, SLOT( reloadRePro( const string& ) ) );
 
   // view:
   QMenu *viewmenu = menuBar()->addMenu( "&View" );
@@ -457,7 +455,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     RP->setMinimumWidth( w );
   }
   if ( splash != 0 )
-    msleep( 2000 );
+    Thread->msleep( 2000 );
 
   // miscellaneous:
   setFocusPolicy( Qt::StrongFocus );
@@ -641,8 +639,8 @@ int RELACSWidget::setupHardware( int n )
     printlog( "Synchronization method: " + AQ->syncModeStr() );
 
     if ( n == 1 ) {
-      QWidget::connect( &SimLoad, SIGNAL( timeout() ),
-			(QWidget*)this, SLOT( simLoadMessage() ) );
+      connect( &SimLoad, SIGNAL( timeout() ),
+	       this, SLOT( simLoadMessage() ) );
       SimLoad.start( 1000 );
     }
 
@@ -825,7 +823,7 @@ void RELACSWidget::run( void )
   signed long ui = (unsigned long)::rint( 1000.0*updateinterval );
   QTime updatetime;
   updatetime.start();
-  QThread::msleep( 1 );
+  Thread->msleep( 1 );
 
   do {
     int ei = updatetime.elapsed();
@@ -931,8 +929,7 @@ int RELACSWidget::write( OutData &signal )
     AQ->readRestart( IL, ED );
     FD->adjust( IL, ED, AQ->adjustFlag() );
     // update device menu:
-    QCoreApplication::postEvent( (QWidget*)this,
-				 new QEvent( QEvent::Type( QEvent::User+2 ) ) );
+    QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
     SF->setNumber( AQ->outTraceName( signal.trace() ), signal.back() );
   }
   else
@@ -980,8 +977,7 @@ int RELACSWidget::write( OutList &signal )
     AQ->readRestart( IL, ED );
     FD->adjust( IL, ED, AQ->adjustFlag() );
     // update device menu:
-    QCoreApplication::postEvent( (QWidget*)this,
-				 new QEvent( QEvent::Type( QEvent::User+2 ) ) );
+    QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
     for ( int k=0; k<signal.size(); k++ )
       SF->setNumber( AQ->outTraceName( signal[k].trace() ), signal[k].back() );
   }
@@ -1026,8 +1022,7 @@ int RELACSWidget::directWrite( OutData &signal )
     AQ->readRestart( IL, ED );
     FD->adjust( IL, ED, AQ->adjustFlag() );
     // update device menu:
-    QCoreApplication::postEvent( (QWidget*)this,
-				 new QEvent( QEvent::Type( QEvent::User+2 ) ) );
+    QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
     SF->setNumber( AQ->outTraceName( signal.trace() ), signal.back() );
   }
   else
@@ -1071,8 +1066,7 @@ int RELACSWidget::directWrite( OutList &signal )
     AQ->readRestart( IL, ED );
     FD->adjust( IL, ED, AQ->adjustFlag() );
     // update device menu:
-    QCoreApplication::postEvent( (QWidget*)this,
-				 new QEvent( QEvent::Type( QEvent::User+2 ) ) );
+    QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
     for ( int k=0; k<signal.size(); k++ )
       SF->setNumber( AQ->outTraceName( signal[k].trace() ), signal[k].back() );
   }
@@ -1162,7 +1156,7 @@ void RELACSWidget::startRePro( RePro *repro, int macroaction, bool saving )
   if ( CurrentRePro->widget() != 0 )
     QCoreApplication::sendPostedEvents( CurrentRePro->widget(), 0 );
   */
-  CurrentRePro->start( HighPriority );
+  CurrentRePro->start( QThread::HighPriority );
 }
 
 
@@ -1400,6 +1394,12 @@ void RELACSWidget::stopSession( bool saved )
 }
 
 
+Session *RELACSWidget::session( void )
+{
+  return SN;
+}
+
+
 //------------------------------Quit and Exit------------------------------//
 
 
@@ -1429,7 +1429,7 @@ void RELACSWidget::stopThreads( void )
   RunDataMutex.unlock();
   ThreadSleepWait.wakeAll();
   ReadDataWait.wakeAll();
-  QThread::wait();
+  Thread->wait();
 
   // stop simulation and data acquisition:
   SimLoad.stop();
@@ -1482,6 +1482,12 @@ void RELACSWidget::closeEvent( QCloseEvent *ce )
 {
   quit();
   ce->accept();
+}
+
+
+FilterDetectors *RELACSWidget::filterDetectors( void )
+{
+  return FD;
 }
 
 
@@ -1664,7 +1670,7 @@ void RELACSWidget::startFirstAcquisition( void )
   RunDataMutex.lock();
   RunData = true;
   RunDataMutex.unlock();
-  QThread::start( HighPriority );
+  Thread->start( QThread::HighPriority );
 
   for ( unsigned int k=0; k<CN.size(); k++ )
     CN[k]->start();
@@ -1802,7 +1808,7 @@ void RELACSWidget::startFirstSimulation( void )
   RunDataMutex.lock();
   RunData = true;
   RunDataMutex.unlock();
-  QThread::start( HighPriority );
+  Thread->start( QThread::HighPriority );
 
   for ( unsigned int k=0; k<CN.size(); k++ )
     CN[k]->start();
@@ -1973,8 +1979,8 @@ void RELACSWidget::help( void )
   hb->setMinimumSize( 600, 400 );
   od->addWidget( hb );
   od->addButton( "&Ok" );
-  QWidget::connect( od, SIGNAL( dialogClosed( int ) ),
-		    (QWidget*)this, SLOT( helpClosed( int ) ) );
+  connect( od, SIGNAL( dialogClosed( int ) ),
+	   this, SLOT( helpClosed( int ) ) );
   od->exec();
 }
 
@@ -1982,6 +1988,25 @@ void RELACSWidget::help( void )
 void RELACSWidget::helpClosed( int r )
 {
   Help = false;
+}
+
+
+UpdateThread::UpdateThread( RELACSWidget *rw )
+  : QThread( this ),
+    RW( rw )
+{
+}
+
+
+void UpdateThread::run( void )
+{
+  RW->run();
+}
+
+
+void UpdateThread::msleep( unsigned long msecs )
+{
+  QThread::msleep( msecs );
 }
 
 

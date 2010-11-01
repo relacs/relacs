@@ -7,7 +7,7 @@ pkgincludedir = $(includedir)/relacs
 pkgdatadir=$(datadir)/relacs
 docdir = $(datarootdir)/doc/relacs
 
-PLUGINSET = NIESeries
+PLUGINSET = nieseries
 DX_PROJECT = nieseries
 DX_CONFIG = ../../../doc/Doxyfile
 DX_INSTALL_SUBDIR = /api/$(DX_PROJECT)

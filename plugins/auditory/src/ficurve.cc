@@ -304,8 +304,8 @@ int FICurve::main( void )
   P[1].setYRange( 0.0, Plot::AutoScale );
   if ( manualskip ) {
     P[1].setMouseTracking( true );
-    QWidget::connect( &P[1], SIGNAL( userMouseEvent( Plot::MouseEvent& ) ),
-		      (QWidget*)this, SLOT( plotMouseEvent( Plot::MouseEvent& ) ) );
+    connect( &P[1], SIGNAL( userMouseEvent( Plot::MouseEvent& ) ),
+	     this, SLOT( plotMouseEvent( Plot::MouseEvent& ) ) );
   }
   PlotIntensitySelection = false;
   P.unlock();
@@ -340,8 +340,8 @@ int FICurve::main( void )
       if ( manualskip ) {
 	P.lock();
 	P[1].setMouseTracking( false );
-	QWidget::disconnect( &P[1], SIGNAL( userMouseEvent( Plot::MouseEvent& ) ),
-			     (QWidget*)this, SLOT( plotMouseEvent( Plot::MouseEvent& ) ) );
+	disconnect( &P[1], SIGNAL( userMouseEvent( Plot::MouseEvent& ) ),
+		    this, SLOT( plotMouseEvent( Plot::MouseEvent& ) ) );
 	P.unlock();
       }
       return Failed;
@@ -380,8 +380,8 @@ int FICurve::main( void )
   if ( manualskip ) {
     P.lock();
     P[1].setMouseTracking( false );
-    QWidget::disconnect( &P[1], SIGNAL( userMouseEvent( Plot::MouseEvent& ) ),
-			 (QWidget*)this, SLOT( plotMouseEvent( Plot::MouseEvent& ) ) );
+    disconnect( &P[1], SIGNAL( userMouseEvent( Plot::MouseEvent& ) ),
+		this, SLOT( plotMouseEvent( Plot::MouseEvent& ) ) );
     P.unlock();
   }
   return ds;
@@ -1183,7 +1183,7 @@ public:
 void FICurve::plotMouseEvent( Plot::MouseEvent &me )
 {
   if ( ! tryLock( 5 ) ) {
-    QCoreApplication::postEvent( (RELACSPlugin*)this, new PlotMouseEvent( me ) );
+    QCoreApplication::postEvent( this, new PlotMouseEvent( me ) );
     return;
   }
   P[1].lock();

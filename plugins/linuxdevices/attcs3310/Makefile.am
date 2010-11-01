@@ -7,7 +7,7 @@ pkgincludedir = $(includedir)/relacs
 pkgdatadir=$(datadir)/relacs
 docdir = $(datarootdir)/doc/relacs
 
-PLUGINSET = AttCS3310
+PLUGINSET = attcs3310
 DX_PROJECT = attcs3310
 DX_CONFIG = ../../../doc/Doxyfile
 DX_INSTALL_SUBDIR = /api/$(DX_PROJECT)
