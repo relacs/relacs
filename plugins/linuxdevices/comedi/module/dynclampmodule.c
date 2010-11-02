@@ -570,6 +570,7 @@ int stopSubdevice( int iS, int kill )
   subdev[iS].running = 0;
   for ( i = 0; i < subdev[iS].chanN; i++ )
     subdev[iS].chanlist[i].isUsed = 0;
+  DEBUG_MSG( "stopSubdevice %d with kill=%d\n", iS, kill );
 
   if ( !kill )
     return 0;
@@ -578,6 +579,7 @@ int stopSubdevice( int iS, int kill )
   for ( i = 0; i < subdevN; i++ )
     if ( subdev[i].running )
       return 0;
+  DEBUG_MSG( "stopSubdevice halts dynclamp task\n" );
   cleanup_rt_task();
   return 0;
 }
@@ -626,7 +628,7 @@ void releaseSubdevice( int iS )
   }
 
   // close comedi device:
-  DEBUG_MSG( "YYYYYYY releaseSubdevice: released device for last subdev-ID %d\n", iS );
+  DEBUG_MSG( "releaseSubdevice: released device for last subdev-ID %d\n", iS );
   if ( device[iD].devP && comedi_close( device[iD].devP ) < 0 )
     WARN_MSG( "releaseSubdevice WARNING: closing of device %s failed!\n",
 	      device[iD].name );
@@ -761,22 +763,20 @@ void rtDynClamp( long dummy )
 		retVal = rtf_get( pChan->fifo, &pChan->voltage, sizeof(float) );
 		if ( retVal != sizeof(float) ) {
 		  if ( retVal == EINVAL ) {
-		    ERROR_MSG( "rtDynClamp: No open FIFO for subdevice ID %d at loopCnt %lu\n",
+		    ERROR_MSG( "rtDynClamp: ERROR! No open FIFO for AO subdevice ID %d at loopCnt %lu\n",
 			       iS, dynClampTask.loopCnt );
 		    dynClampTask.running = 0;
 		    dynClampTask.duration = 0;
 		    return;
 		  }
 		  subdev[iS].error = E_UNDERRUN;
-		  DEBUG_MSG( "rtDynClamp: Data buffer underrun for AO subdevice ID %d at loopCnt %lu\n",
+		  ERROR_MSG( "rtDynClamp: ERROR! Data buffer underrun for AO subdevice ID %d at loopCnt %lu\n",
 			     iS, dynClampTask.loopCnt );
 		  subdev[iS].running = 0;
 		  continue;
 		}
 		if ( pChan->isParamChan ) {
 		  paramOutput[pChan->chan] = pChan->voltage;
-		  DEBUG_MSG( "NEW PARAMETER value=%d to channel %d\n",
-			     (int)(1000.0*pChan->voltage), pChan->chan );
 		}
 	      }
 	    }
@@ -805,10 +805,12 @@ void rtDynClamp( long dummy )
 		comedi_perror( "rtmodule: rtDynClamp: comedi_data_write" );
 		subdev[iS].error = E_COMEDI;
 		subdev[iS].running = 0;
+		ERROR_MSG( "rtDynClamp: ERROR! failed to write to AO subdevice ID %d channel %d at loopCnt %lu\n",
+			   iS, iC, dynClampTask.loopCnt );
 		continue;
 	      }
 	      subdev[iS].error = E_NODATA;
-	      DEBUG_MSG( "rtDynClamp: failed to write data to subdevice ID %d channel %d at loopCnt %lu\n",
+	      ERROR_MSG( "rtDynClamp: ERROR! failed to write data to AO subdevice ID %d channel %d at loopCnt %lu\n",
 			 iS, iC, dynClampTask.loopCnt );
 	    }
 	  }
@@ -861,7 +863,7 @@ void rtDynClamp( long dummy )
 	      subdev[iS].running = 0;
 	      comedi_perror( "rtmodule: rtDynClamp: comedi_data_write" );
 	      subdev[iS].error = E_COMEDI;
-	      DEBUG_MSG( "rtDynClamp: failed to read from subdevice ID %d channel %d at loopCnt %lu\n",
+	      ERROR_MSG( "rtDynClamp: ERROR! failed to read from AI subdevice ID %d channel %d at loopCnt %lu\n",
 			 iS, iC, dynClampTask.loopCnt );
 	      continue;
 	    }
@@ -885,14 +887,14 @@ void rtDynClamp( long dummy )
 	  fifoPutCnt++;
 	  if ( retVal != sizeof(float) ) {
 	    if ( retVal == EINVAL ) {
-	      ERROR_MSG( "rtDynClamp: No open FIFO for subdevice ID %d at loopCnt %lu\n",
+	      ERROR_MSG( "rtDynClamp: ERROR! No open FIFO for AI subdevice ID %d at loopCnt %lu\n",
 			 iS, dynClampTask.loopCnt );
 	      dynClampTask.running = 0;
 	      dynClampTask.duration = 0;
 	      return;
 	    }
 	    subdev[iS].error = E_OVERFLOW;
-	    ERROR_MSG( "rtDynClamp: Data buffer overflow for AI subdevice ID %d at loopCnt %lu\n",
+	    ERROR_MSG( "rtDynClamp: ERROR! Data buffer overflow for AI subdevice ID %d at loopCnt %lu\n",
 		       iS, dynClampTask.loopCnt );
 	    subdev[iS].running = 0;
 	    continue;

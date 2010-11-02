@@ -143,14 +143,9 @@ int ThresholdLatencies::main( void )
     if ( preamplitude == 0.0 )
       preamplitude = metaData( "Cell" ).number( "ithreshon" );
   }
-  else if ( preamplitudesrc == 3 ) {  // VC
+  else if ( preamplitudesrc >= 3 ) {  // VC + VC rest
     prevc = ( preduration > 0.0 );
     preamplitude = 0.0;
-  }
-  else if ( preamplitudesrc == 4 ) {  // VC rest
-    prevc = ( preduration > 0.0 );
-    preamplitude = 0.0;
-    prevcamplitude += metaData( "Cell" ).number( "vrest" );
   }
   if ( postamplitudesrc == 1 ) // previous dc
     postamplitude = PrevMeanDCAmplitude;
@@ -277,6 +272,14 @@ int ThresholdLatencies::main( void )
   vcgainsignal.description().addNumber( "IntensityOffset", 0.0, "mS" );
   vcgainsignal.description().addNumber( "Duration", 1000.0*preduration, "ms" );
 
+  // all signals:
+  OutList sigs;
+  sigs.add( &signal );
+  if ( prevc ) {
+    sigs.add( &vcsignal );
+    sigs.add( &vcgainsignal );
+  }
+
   // DC signal:
   OutData dcsignal( dcamplitude );
   dcsignal.setTrace( CurrentOutput[0] );
@@ -284,12 +287,30 @@ int ThresholdLatencies::main( void )
   dcsignal.addDescription( "stimulus/value" );
   dcsignal.description().addNumber( "Intensity", dcamplitude, IUnit );
 
-  // all signals:
-  OutList sigs;
-  sigs.add( &signal );
-  if ( prevc ) {
-    sigs.add( &vcsignal );
-    sigs.add( &vcgainsignal );
+  // measure resting potential:
+  double restvoltage = metaData( "Cell" ).number( "vrest" );
+  if ( prevc && preamplitudesrc == 4 ) {  // VC rest
+    // zero DC current:
+    dcsignal = 0.0;
+    dcsignal.setIdent( "DC=" + Str( dcamplitude ) + IUnit );
+    dcsignal.description().setNumber( "Intensity", dcamplitude, IUnit );
+    directWrite( dcsignal );
+    sleep( 0.5 );
+    if ( interrupt() )
+      return Aborted;
+
+    // measure resting potential:
+    restvoltage = trace( SpikeTrace[0] ).mean( currentTime()-0.2,
+					       currentTime() );
+    prevcamplitude += restvoltage;
+    message( "Voltage clamp to " + Str( prevcamplitude ) + " mV, resting potential is at "
+	     + Str( restvoltage ) + " mV" );
+
+    // back to DC:
+    dcsignal = dcamplitude;
+    dcsignal.setIdent( "DC=" + Str( dcamplitude ) + IUnit );
+    dcsignal.description().setNumber( "Intensity", dcamplitude, IUnit );
+    directWrite( dcsignal );
   }
 
   // wait:

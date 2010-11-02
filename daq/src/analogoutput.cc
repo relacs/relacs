@@ -19,6 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <cmath>
 #include <sstream>
 #include <relacs/outdata.h>
 #include <relacs/analogoutput.h>
@@ -206,11 +207,11 @@ int AnalogOutput::testWriteData( OutList &sigs )
       sigs[k].addError( DaqError::MultipleStartSources ); 
       sigs[k].setStartSource( sigs[0].startSource() );
     }
-    if ( sigs[k].delay() != sigs[0].delay() ) {
+    if ( fabs( sigs[k].delay() - sigs[0].delay() ) > 1e-7 ) {
       sigs[k].addError( DaqError::MultipleDelays ); 
       sigs[k].setDelay( sigs[0].delay() );
     }
-    if ( sigs[k].sampleRate() != sigs[0].sampleRate() ) {
+    if ( fabs( sigs[k].sampleRate() - sigs[0].sampleRate() ) > 0.1 ) {
       sigs[k].addError( DaqError::MultipleSampleRates ); 
       sigs[k].setSampleRate( sigs[0].sampleRate() );
     }
@@ -225,7 +226,7 @@ int AnalogOutput::testWriteData( OutList &sigs )
     if ( sigs[k].size() != sigs[0].size() ) {
       sigs[k].addError( DaqError::MultipleBuffersizes );
     }
-    if ( sigs[k].writeTime() != sigs[0].writeTime() ) {
+    if ( fabs( sigs[k].writeTime() - sigs[0].writeTime() ) > 1e-7 ) {
       sigs[k].addError( DaqError::MultipleBufferTimes ); 
       sigs[k].setWriteTime( sigs[0].writeTime() );
     }

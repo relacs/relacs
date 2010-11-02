@@ -191,7 +191,7 @@ int VoltageReconstruction::main( void )
 	
       // message:
       Str s = "<b>Search</b> rate <b>" + Str( targetrate ) + " Hz</b>";
-      s += ":  DC = <b>" + Str( dcamplitude, 0, 0, 'f' ) + " " + IUnit + "</b>";
+      s += ":  DC = <b>" + Str( dcamplitude, 0, 3, 'f' ) + " " + IUnit + "</b>";
       message( s );
 
       // output:
@@ -207,6 +207,11 @@ int VoltageReconstruction::main( void )
       // analyze:
       double meanrate = events( SpikeEvents[0] ).rate( signalTime() + skipwin,
 						       signalTime() + searchduration );
+
+      // message:
+      s = "<b>Measured</b> rate <b>" + Str( meanrate ) + " Hz</b>";
+      s += ":  DC = <b>" + Str( dcamplitude, 0, 3, 'f' ) + " " + IUnit + "</b>";
+      message( s );
 	
       // plot:
       {
