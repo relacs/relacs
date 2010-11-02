@@ -28,35 +28,26 @@ int outputDevices[OUTPUT_N];
 float output[OUTPUT_N] = { 0.0 };
 
   /*! Parameter that are provided by the model and can be read out. */
-#define PARAMINPUT_N 2
-char *paramInputNames[PARAMINPUT_N] = { "Leak-Current", "VC-Current" };
-char *paramInputUnits[PARAMINPUT_N] = { "nA", "nA" };
-float paramInput[PARAMINPUT_N] = { 0.0, 0.0 };
+#define PARAMINPUT_N 1
+char *paramInputNames[PARAMINPUT_N] = { "LeakCurrent" };
+char *paramInputUnits[PARAMINPUT_N] = { "nA" };
+float paramInput[PARAMINPUT_N] = { 0.0 };
 
   /*! Parameter that are read by the model and are written to the model. */
-#define PARAMOUTPUT_N 4
-char *paramOutputNames[PARAMOUTPUT_N] = { "g", "E", "VCgain", "VC" };
-char *paramOutputUnits[PARAMOUTPUT_N] = { "nS", "mV", "mS", "mV" };
-float paramOutput[PARAMOUTPUT_N] = { 0.0, 0.0, 0.0, 0.0 };
+#define PARAMOUTPUT_N 2
+char *paramOutputNames[PARAMOUTPUT_N] = { "g", "E" };
+char *paramOutputUnits[PARAMOUTPUT_N] = { "nS", "mV" };
+float paramOutput[PARAMOUTPUT_N] = { 0.0, 0.0 };
 
   /*! Variables used by the model. */
-float meaninput = 0.0;
 
 void initModel( void )
 {
    moduleName = "/dev/dynclamp";
-   meaninput = 0.0;
 }
 
 void computeModel( void )
 {
-  // running average:
-  meaninput += (input[0] - meaninput)/5.0;  // steps
-
-  // leak:
-  paramInput[0] = -0.001*paramOutput[0]*(input[0]-paramOutput[1]);
-  // voltage clamp:
-  paramInput[1] = -paramOutput[2]*(meaninput-paramOutput[3]);
-  // total injected current:
-  output[0] = paramInput[0] + paramInput[1];
+   output[0] = -0.001*paramOutput[0]*(input[0]-paramOutput[1]);
+   paramInput[0] = output[0];
 }

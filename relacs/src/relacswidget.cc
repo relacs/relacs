@@ -288,8 +288,8 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   }
 
   // data browser:
-  DB = new DataBrowser( this );
-  CW->addTab( DB, "Data-Browser" );
+  //  DB = new DataBrowser( this );
+  //  CW->addTab( DB, "Data-Browser" );
 
   // model plugin:
   MD = 0;
@@ -1171,7 +1171,7 @@ void RELACSWidget::startRePro( RePro *repro, int macroaction, bool saving )
     *InfoFile << QTime::currentTime().toString().toLatin1().data();
     *InfoFile << "   " << CurrentRePro->name() << ": " << MC->options();
   }
-  DB->addRepro( CurrentRePro );
+  //  DB->addRepro( CurrentRePro );
 
   ReProRunning = true;
   SN->incrReProCount();
@@ -1350,7 +1350,7 @@ void RELACSWidget::startSession( bool startmacro )
 	     << "Time:      Research Program:\n";
   }
 
-  DB->addSession( SF->path() );
+  //  DB->addSession( SF->path() );
 
   SessionStartWait.wakeAll();
 

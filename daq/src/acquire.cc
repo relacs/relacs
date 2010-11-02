@@ -624,10 +624,15 @@ int Acquire::read( InList &data )
 
   // check model traces:
   if ( AI.size() > 0 && AI[0].AI->matchTraces( data ) < 0 ) {
-    data.addErrorStr( "unable to match model input traces" );
+    if ( ! data.failed() )
+      data.addErrorStr( "unable to match model input traces" );
     success = false;
   }
   if ( AO.size() > 0 && AO[0].AO->matchTraces( OutTraces ) < 0 ) {
+    /*
+    if ( ! OutTraces.failed() )
+      OutTraces.addErrorStr( "unable to match model output traces" );
+    */
     data.addErrorStr( "unable to match model output traces" );
     success = false;
   }

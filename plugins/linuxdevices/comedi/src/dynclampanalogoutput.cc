@@ -1052,6 +1052,7 @@ void DynClampAnalogOutput::addTraces( vector< TraceSpec > &traces, int deviceid 
 
 int DynClampAnalogOutput::matchTraces( vector< TraceSpec > &traces ) const
 {
+  int failed = false;
   struct traceInfoIOCT traceInfo;
   traceInfo.traceType = TRACE_OUT;
   struct traceChannelIOCT traceChannel;
@@ -1062,11 +1063,17 @@ int DynClampAnalogOutput::matchTraces( vector< TraceSpec > &traces ) const
     bool notfound = true;
     for ( unsigned int k=0; k<traces.size(); k++ ) {
       if ( traces[k].traceName() == traceInfo.name ) {
+	if ( traces[k].unit() != traceInfo.unit ) {
+	  failed = true;
+	  cerr << "! DynClampAnalogOutput::matchTraces -> model input trace " << traces[k].traceName() << " requires as unit '" << traceInfo.unit << "', not '" << traces[k].unit() << "'\n";
+	  //	  traces[k].addErrorStr( "model input trace " + traces[k].traceName() + " requires as unit '" + traceInfo.unit + "', not '" + traces[k].unit() + "'" );
+	}
 	traceChannel.device = traces[k].device();
 	traceChannel.channel = traces[k].channel();
 	if ( ::ioctl( ModuleFd, IOC_SET_TRACE_CHANNEL, &traceChannel ) != 0 ) {
-	  cerr << "DynClampAnalogOutput::matchTraces() set channels -> errno " << errno << '\n';
-	  return -1;
+	  failed = true;
+	  cerr << "! DynClampAnalogOutput::matchTraces -> failed to pass device and channel information to model output trace -> errno=" << errno << '\n';
+	  //	  traces[k].addErrorStr( "failed to pass device and channel information to model output trace -> errno=" + Str( errno ) );
 	}
 	notfound = false;
 	foundtraces++;
@@ -1080,14 +1087,17 @@ int DynClampAnalogOutput::matchTraces( vector< TraceSpec > &traces ) const
   }
   int ern = errno;
   if ( ern != ERANGE ) {
-    cerr << "DynClampAnalogOutput::matchTraces() get traces -> errno " << ern << '\n';
-    return -1;
+    failed = true;
+    cerr << "! DynClampAnalogOutput::matchTraces -> failure in getting model output traces -> errno=" << ern << '\n';
+    //    traces.addErrorStr( "failure in getting model output traces -> errno=" + Str( ern ) );
   }
   if ( ! unknowntraces.empty() ) {
-    //    traces.addErrorStr( "unable to match model input traces" + unknowntraces );
-    return -1;
+    failed = true;
+    cerr << "! DynClampAnalogOutput::matchTraces -> unable to match model output traces" << unknowntraces << '\n';
+    //    traces.addErrorStr( "unable to match model output traces" + unknowntraces );
   }
-  return foundtraces;
+
+  return failed ? -1 : foundtraces;
 }
 
 

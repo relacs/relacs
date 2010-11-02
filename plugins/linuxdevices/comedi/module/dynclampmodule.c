@@ -510,7 +510,7 @@ int loadSyncCmd( struct syncCmdIOCT *syncCmdIOC )
   subdev[iS].startsource = syncCmdIOC->startsource;
   subdev[iS].pending = 0;
 
-  DEBUG_MSG( "loadSyncCmd: loaded %d samples with startsource %d for subdevice %d\n", subdev[iS].duration, subdev[iS].startsource, iS );
+  DEBUG_MSG( "loadSyncCmd: loaded %ld samples with startsource %d for subdevice %d\n", subdev[iS].duration, subdev[iS].startsource, iS );
 
   // test requested sampling-rate and set frequency for dynamic clamp task:
   if ( !dynClampTask.reqFreq ) {
@@ -776,7 +776,7 @@ void rtDynClamp( long dummy )
 		if ( pChan->isParamChan ) {
 		  paramOutput[pChan->chan] = pChan->voltage;
 		  DEBUG_MSG( "NEW PARAMETER value=%d to channel %d\n",
-			     (int)1000.0*pChan->voltage, pChan->chan );
+			     (int)(1000.0*pChan->voltage), pChan->chan );
 		}
 	      }
 	    }
@@ -1174,21 +1174,16 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
     case TRACE_IN:
       inputDevices[chanIndex] = traceChannel.device;
       inputChannels[chanIndex] = traceChannel.channel;
-      if ( chanIndex >= INPUT_N -1 )
-	chanIndex = 0;
-      else
-	chanIndex++;
       break;
     case TRACE_OUT:
       outputDevices[chanIndex] = traceChannel.device;
       outputChannels[chanIndex] = traceChannel.channel;
-      if ( chanIndex >= OUTPUT_N -1 )
-	chanIndex = 0;
-      else
-	chanIndex++;
       break;
     default: ;
     }
+    chanIndex++;
+    if ( chanIndex >= INPUT_N )
+      chanIndex = 0;
     return 0;
 
 

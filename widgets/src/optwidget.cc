@@ -56,6 +56,12 @@ OptWidget::OptWidget( QWidget *parent, Qt::WindowFlags f )
     LastWidget( 0 ),
     OMutex( 0 ),
     MaxLines( 0 ),
+    LeftMargin( -1 ),
+    RightMargin( -1 ),
+    TopMargin( -1 ),
+    BottomMargin( -1 ),
+    VerticalSpacing( -1 ),
+    HorizontalSpacing( -1 ),
     Widgets(),
     DisableUpdate( false ),
     SelectMask( 0 ),
@@ -75,6 +81,12 @@ OptWidget::OptWidget( Options *o, QMutex *mutex,
     LastWidget( 0 ),
     OMutex( mutex ),
     MaxLines( 0 ),
+    LeftMargin( -1 ),
+    RightMargin( -1 ),
+    TopMargin( -1 ),
+    BottomMargin( -1 ),
+    VerticalSpacing( -1 ),
+    HorizontalSpacing( -1 ),
     Widgets(),
     DisableUpdate( false ),
     SelectMask( 0 ),
@@ -96,6 +108,12 @@ OptWidget::OptWidget( Options *o, int selectmask, int romask,
     LastWidget( 0 ),
     OMutex( mutex ),
     MaxLines( 0 ),
+    LeftMargin( -1 ),
+    RightMargin( -1 ),
+    TopMargin( -1 ),
+    BottomMargin( -1 ),
+    VerticalSpacing( -1 ),
+    HorizontalSpacing( -1 ),
     Widgets(),
     DisableUpdate( false ),
     SelectMask( 0 ),
@@ -209,6 +227,13 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
     }
 
     Layout.push_back( new QGridLayout );
+    if ( VerticalSpacing >= 0 )
+      Layout.back()->setVerticalSpacing( VerticalSpacing );
+    if ( HorizontalSpacing >= 0 )
+      Layout.back()->setHorizontalSpacing( HorizontalSpacing );
+    if ( TopMargin >= 0 )
+      Layout.back()->setContentsMargins( LeftMargin, TopMargin,
+					 RightMargin, BottomMargin );
     parent->setLayout( Layout.back() );
     QLabel *l;
 
@@ -482,6 +507,7 @@ void OptWidget::setVerticalSpacing( int pixel )
 {
   for ( unsigned int k=0; k<Layout.size(); k++ )
     Layout[k]->setVerticalSpacing( pixel );
+  VerticalSpacing = pixel;
 }
 
 
@@ -489,6 +515,7 @@ void OptWidget::setHorizontalSpacing( int pixel )
 {
   for ( unsigned int k=0; k<Layout.size(); k++ )
     Layout[k]->setHorizontalSpacing( pixel );
+  HorizontalSpacing = pixel;
 }
 
 
@@ -496,6 +523,10 @@ void OptWidget::setMargins( int pixel )
 {
   for ( unsigned int k=0; k<Layout.size(); k++ )
     Layout[k]->setContentsMargins( pixel, pixel, pixel, pixel );
+  LeftMargin = pixel;
+  RightMargin = pixel;
+  TopMargin = pixel;
+  BottomMargin = pixel;
 }
 
 
@@ -503,6 +534,10 @@ void OptWidget::setMargins( int left, int top, int right, int bottom )
 {
   for ( unsigned int k=0; k<Layout.size(); k++ )
     Layout[k]->setContentsMargins( left, top, right, bottom );
+  LeftMargin = left;
+  RightMargin = right;
+  TopMargin = top;
+  BottomMargin = bottom;
 }
 
 

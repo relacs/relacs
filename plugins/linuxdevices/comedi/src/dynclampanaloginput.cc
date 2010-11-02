@@ -399,7 +399,6 @@ int DynClampAnalogInput::setupChanList( InList &traces,
 
 int DynClampAnalogInput::testReadDevice( InList &traces )
 {
-
   ErrorState = 0;
  
   if( ! isOpen() ) {
@@ -438,21 +437,17 @@ int DynClampAnalogInput::testReadDevice( InList &traces )
     traces.addError( DaqError::InvalidStartSource );
   }
 
-  // XXX check whether channel >=1000 is valid!
-
   // channel configuration:
-  if ( traces[0].error() == DaqError::InvalidChannel ) {
-    for ( int k=0; k<traces.size(); k++ ) {
-      traces[k].delError( DaqError::InvalidChannel );
-      // check channel number:
-      if( traces[k].channel() < 0 ) {
-	traces[k].addError( DaqError::InvalidChannel );
-	traces[k].setChannel( 0 );
-      }
-      else if( traces[k].channel() >= channels() && traces[k].channel() < PARAM_CHAN_OFFSET ) {
-	traces[k].addError( DaqError::InvalidChannel );
-	traces[k].setChannel( channels()-1 );
-      }
+  for ( int k=0; k<traces.size(); k++ ) {
+    traces[k].delError( DaqError::InvalidChannel );
+    // check channel number:
+    if( traces[k].channel() < 0 ) {
+      traces[k].addError( DaqError::InvalidChannel );
+      traces[k].setChannel( 0 );
+    }
+    else if( traces[k].channel() >= channels() && traces[k].channel() < PARAM_CHAN_OFFSET ) {
+      traces[k].addError( DaqError::InvalidChannel );
+      traces[k].setChannel( channels()-1 );
     }
   }
 
@@ -873,26 +868,28 @@ void DynClampAnalogInput::addTraces( vector< TraceSpec > &traces, int deviceid )
 
 int DynClampAnalogInput::matchTraces( InList &traces ) const
 {
+  int foundtraces = 0;
+  int tracefound[ traces.size() ];
+  for ( int k=0; k<traces.size(); k++ )
+    tracefound[k] = 0;
+
+  // analog input traces:
   struct traceInfoIOCT traceInfo;
   traceInfo.traceType = TRACE_IN;
   struct traceChannelIOCT traceChannel;
   traceChannel.traceType = TRACE_IN;
   string unknowntraces = "";
-  int foundtraces = 0;
   while ( ::ioctl( ModuleFd, IOC_GET_TRACE_INFO, &traceInfo ) == 0 ) {
     bool notfound = true;
     for ( int k=0; k<traces.size(); k++ ) {
       if ( traces[k].ident() == traceInfo.name ) {
-	if ( traces[k].unit() != traceInfo.unit ) {
-	  cerr << "DynClampAnalogInput::matchTraces() -> units do not match for trace " << traceInfo.name << '\n';
-	  return -1;
-	}
+	tracefound[k] = 1;
+	if ( traces[k].unit() != traceInfo.unit )
+	  traces[k].addErrorStr( "model input trace " + traces[k].ident() + " requires as unit '" + traceInfo.unit + "', not '" + traces[k].unit() + "'" );
 	traceChannel.device = traces[k].device();
 	traceChannel.channel = traces[k].channel();
-	if ( ::ioctl( ModuleFd, IOC_SET_TRACE_CHANNEL, &traceChannel ) != 0 ) {
-	  cerr << "DynClampAnalogInput::matchTraces() set channels -> errno " << errno << '\n';
-	  return -1;
-	}
+	if ( ::ioctl( ModuleFd, IOC_SET_TRACE_CHANNEL, &traceChannel ) != 0 )
+	  traces[k].addErrorStr( "failed to pass device and channel information to model input traces -> errno=" + Str( errno ) );
 	notfound = false;
 	foundtraces++;
 	break;
@@ -904,15 +901,36 @@ int DynClampAnalogInput::matchTraces( InList &traces ) const
     }
   }
   int ern = errno;
-  if ( ern != ERANGE ) {
-    cerr << "DynClampAnalogInput::matchTraces() get traces -> errno " << ern << '\n';
-    return -1;
-  }
-  if ( ! unknowntraces.empty() ) {
+  if ( ern != ERANGE )
+    traces.addErrorStr( "failure in getting model input traces -> errno=" + Str( ern ) );
+  if ( ! unknowntraces.empty() )
     traces.addErrorStr( "unable to match model input traces" + unknowntraces );
-    return -1;
+
+  // parameter traces:
+  traceInfo.traceType = PARAM_IN;
+  int pchan = 0;
+  while ( ::ioctl( ModuleFd, IOC_GET_TRACE_INFO, &traceInfo ) == 0 ) {
+    for ( int k=0; k<traces.size(); k++ ) {
+      if ( traces[k].ident() == traceInfo.name ) {
+	tracefound[k] = 1;
+	if ( traces[k].unit() != traceInfo.unit )
+	  traces[k].addErrorStr( "model input parameter trace " + traces[k].ident() + " requires as unit '" + traceInfo.unit + "', not '" + traces[k].unit() + "'" );
+	traces[k].setChannel( PARAM_CHAN_OFFSET + pchan );
+	pchan++;
+	foundtraces++;
+	break;
+      }
+    }
   }
-  return foundtraces;
+  ern = errno;
+  if ( ern != ERANGE )
+    traces.addErrorStr( "failure in getting model input parameter traces -> errno=" + Str( ern ) );
+  for ( int k=0; k<traces.size(); k++ ) {
+    if ( tracefound[k] == 0 )
+      traces[k].addErrorStr( "no matching trace found for trace " + traces[k].ident() );
+  }
+
+  return traces.failed() ? -1 : foundtraces;
 }
 
 

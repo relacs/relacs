@@ -20,6 +20,7 @@
 */
 
 #include <QVBoxLayout>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <relacs/patchclamp/session.h>
 using namespace relacs;
@@ -38,10 +39,26 @@ Session::Session( void )
   CW->setVerticalSpacing( 1 );
   CW->setMargins( 4 );
   l->addWidget( CW );
-  SW = new OptWidget;
-  SW->setVerticalSpacing( 1 );
-  SW->setMargins( 4 );
-  l->addWidget( SW );
+
+  QHBoxLayout *h = new QHBoxLayout;
+  h->setContentsMargins( 2, 0, 2, 0 );
+  h->setSpacing( 8 );
+  l->addLayout( h );
+
+  SW1 = new OptWidget;
+  SW1->setVerticalSpacing( 1 );
+  SW1->setMargins( 0 );
+  h->addWidget( SW1 );
+
+  SW2 = new OptWidget;
+  SW2->setVerticalSpacing( 1 );
+  SW2->setMargins( 0 );
+  h->addWidget( SW2 );
+
+  DW = new OptWidget;
+  DW->setVerticalSpacing( 1 );
+  DW->setMargins( 4 );
+  l->addWidget( DW );
 
   SessionButton = new QPushButton( "Cell found" );
   SessionButton->setMinimumSize( SessionButton->sizeHint() );
@@ -80,7 +97,7 @@ void Session::config( void )
   mo.addNumber( "taum", "Time-constant tau_m", -1.0, -1.0, 100.0, 0.001, "s", "ms", "%.0f", MetaDataDisplay+MetaDataReset );
   mo.addNumber( "cm", "Capacitance C_m", -1.0, -1.0, 1000000.0, 1.0, "pF", "pF", "%.0f", MetaDataDisplay+MetaDataReset );
   mo.addNumber( "ithreshon", "Threshold for onset spikes", 0.0, -1000.0, 1000.0, 1.0, "nA", "nA", "%.3f", MetaDataReset );
-  mo.addNumber( "ithreshss", "Threshold for periodic firing", 0.0, -1000.0, 1000.0, 1.0, "nA", "nA", "%.3f", MetaDataDisplay+MetaDataReset );
+  mo.addNumber( "ithreshss", "Threshold for periodic firing", 0.0, -1000.0, 1000.0, 1.0, "nA", "nA", "%.3f", MetaDataReset );
 
   mo.addStyle( OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack, MetaDataDisplay );
   metaData().delSaveFlags( MetaData::dialogFlag() + MetaData::presetDialogFlag() );
@@ -98,9 +115,28 @@ void Session::initDevices( void )
 
   for ( int k=0; k<CurrentOutputs; k++ )
     stimulusData().setRequest( outTraceName( CurrentOutput[k] ), "DC current " + Str( k+1 ) );
+  if ( stimulusData().size( stimulusDataTraceFlag() ) >= 4 ) {
+    int n = 0;
+    for ( int k=0; k<stimulusData().size(); k++ ) {
+      if ( ( stimulusData()[k].flags() & stimulusDataTraceFlag() ) > 0 ) {
+	if ( n <= stimulusData().size( stimulusDataTraceFlag() )/2 )
+	  stimulusData()[k].addFlags( 32 );
+	else
+	  stimulusData()[k].addFlags( 64 );
+	n++;
+      }
+    }
+    SW1->assign( &stimulusData(), 32, stimulusDataTraceFlag(), true, 0, stimulusDataMutex() );
+    SW2->assign( &stimulusData(), 64, stimulusDataTraceFlag(), true, 0, stimulusDataMutex() );
+  }
+  else {
+    SW1->assign( &stimulusData(), stimulusDataTraceFlag(),
+		 stimulusDataTraceFlag(), true, 0, stimulusDataMutex() );
+    SW2->hide();
+  }
+
   stimulusData().addText( "Drugs", "Applied drugs", "" ).setFormat( "%-20s" ).setFlags( 16 );
-  SW->assign( &stimulusData(), 16+stimulusDataTraceFlag(),
-	      stimulusDataTraceFlag(), true, 0, stimulusDataMutex() );
+  DW->assign( &stimulusData(), 16, 0, true, 0, stimulusDataMutex() );
 }
 
 
@@ -135,7 +171,9 @@ void Session::notifyMetaData( const string &section )
 
 void Session::notifyStimulusData( void )
 {
-  SW->updateValues( OptWidget::changedFlag() );
+  SW1->updateValues( OptWidget::changedFlag() );
+  SW2->updateValues( OptWidget::changedFlag() );
+  DW->updateValues( OptWidget::changedFlag() );
 }
 
 

@@ -481,6 +481,12 @@ private:
 
   vector< QGridLayout* > Layout;
   int MaxLines;
+  int LeftMargin;
+  int RightMargin;
+  int TopMargin;
+  int BottomMargin;
+  int VerticalSpacing;
+  int HorizontalSpacing;
 
   vector< OptWidgetBase* > Widgets;
 

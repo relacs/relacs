@@ -66,7 +66,9 @@ public:
   QPushButton *SessionButton;
 
   OptWidget *CW;
-  OptWidget *SW;
+  OptWidget *SW1;
+  OptWidget *SW2;
+  OptWidget *DW;
 
   static const int MetaDataReadOnly = 1;
   static const int MetaDataDisplay = 2;

@@ -498,7 +498,7 @@ public:
 		bool enabled, int macro, bool filter, bool detector, bool switchm,
 		bool startsession, bool shell, bool mes, double to,
 		bool browse, Macros *mcs, Macro *mc );
-  MacroCommand( RePro *repro, const string &params, Macros *mc, Macro *mc );
+  MacroCommand( RePro *repro, const string &params, Macros *mcs, Macro *mc );
   MacroCommand( const MacroCommand &com );
 
     /*! Adds the submenu for this command to \a menu. */

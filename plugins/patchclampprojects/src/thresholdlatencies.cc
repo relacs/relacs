@@ -45,8 +45,10 @@ ThresholdLatencies::ThresholdLatencies( void )
   addSelection( "adjust", "Adjust", "DC|none|stimulus|DC" );
   addLabel( "Pre- and Post-Pulse" );
   addNumber( "preduration", "Duration of pre-pulse stimulus", 0.0, 0.0, 1000.0, 0.001, "sec", "ms" );
-  addSelection( "preamplitudesrc", "Set pre-pulse amplitude to", "custom|previous DC|threshold" ).setActivation( "preduration", ">0" );
+  addSelection( "preamplitudesrc", "Set pre-pulse amplitude to", "custom|previous DC|threshold|VC|VC rest" ).setActivation( "preduration", ">0" );
   addNumber( "preamplitude", "Amplitude of pre-pulse stimulus", 0.1, 0.0, 1000.0, 0.01 ).setActivation( "preamplitudesrc", "custom" );
+  addNumber( "prevcamplitude", "Pre-pulse voltage clamp value", 0.0, -1000.0, 1000.0, 0.1, "mV" ).setActivation( "preamplitudesrc", "VC|VC rest" );
+  addNumber( "prevcgain", "Gain for pre-pulse voltage clamp", 0.0, -1000.0, 1000.0, 0.1, "mS" ).setActivation( "preamplitudesrc", "VC|VC rest" );
   addSelection( "prepulseramp", "Start the pre-pulse with a ramp", "none|linear|cosine" ).setActivation( "preduration", ">0" );
   addNumber( "prepulserampwidth", "Width of the ramp", 0.0, 0.0, 1000.0, 0.001, "sec", "ms" ).setActivation( "prepulseramp", "none", false );
   addNumber( "postduration", "Duration of post-pulse stimulus", 0.0, 0.0, 1000.0, 0.001, "sec", "ms" );
@@ -107,6 +109,8 @@ int ThresholdLatencies::main( void )
   double preduration = number( "preduration" );
   int preamplitudesrc = index( "preamplitudesrc" );
   double preamplitude = number( "preamplitude" );
+  double prevcamplitude = number( "prevcamplitude" );
+  double prevcgain = number( "prevcgain" );
   int prepulseramp = index( "prepulseramp" );
   double prepulserampwidth = number( "prepulserampwidth" );
   double postduration = number( "postduration" );
@@ -131,12 +135,22 @@ int ThresholdLatencies::main( void )
   }
   else if ( startamplitudesrc == 3 )  // prev
     amplitude = PrevMeanTestAmplitude;
+  double prevc = false;
   if ( preamplitudesrc == 1 ) // previous dc
     preamplitude = PrevMeanDCAmplitude;
   else if ( preamplitudesrc == 2 ) { // thresh
     preamplitude = metaData( "Cell" ).number( "ithreshss" );
     if ( preamplitude == 0.0 )
       preamplitude = metaData( "Cell" ).number( "ithreshon" );
+  }
+  else if ( preamplitudesrc == 3 ) {  // VC
+    prevc = ( preduration > 0.0 );
+    preamplitude = 0.0;
+  }
+  else if ( preamplitudesrc == 4 ) {  // VC rest
+    prevc = ( preduration > 0.0 );
+    preamplitude = 0.0;
+    prevcamplitude += metaData( "Cell" ).number( "vrest" );
   }
   if ( postamplitudesrc == 1 ) // previous dc
     postamplitude = PrevMeanDCAmplitude;
@@ -244,6 +258,25 @@ int ThresholdLatencies::main( void )
     signal.description().addNumber( "Duration", 1000.0*postduration, "ms" );
   }
 
+  // VC signals:
+  OutData vcsignal( preduration + duration + postduration, trace( SpikeTrace[0] ).stepsize() );
+  vcsignal.setTraceName( "VC" );
+  vcsignal.setDelay( delay );
+  vcsignal.addDescription( "stimulus/pulse" );
+  vcsignal.description().addNumber( "TOffs", 0.0, "ms" );
+  vcsignal.description().addNumber( "Intensity", prevcamplitude, "mV" );
+  vcsignal.description().addNumber( "IntensityOffset", 0.0, "mV" );
+  vcsignal.description().addNumber( "Duration", 1000.0*preduration, "ms" );
+
+  OutData vcgainsignal( preduration + duration + postduration, trace( SpikeTrace[0] ).stepsize() );
+  vcgainsignal.setTraceName( "VCgain" );
+  vcgainsignal.setDelay( delay );
+  vcgainsignal.addDescription( "stimulus/pulse" );
+  vcgainsignal.description().addNumber( "TOffs", 0.0, "ms" );
+  vcgainsignal.description().addNumber( "Intensity", prevcgain, "mS" );
+  vcgainsignal.description().addNumber( "IntensityOffset", 0.0, "mS" );
+  vcgainsignal.description().addNumber( "Duration", 1000.0*preduration, "ms" );
+
   // DC signal:
   OutData dcsignal( dcamplitude );
   dcsignal.setTrace( CurrentOutput[0] );
@@ -251,10 +284,20 @@ int ThresholdLatencies::main( void )
   dcsignal.addDescription( "stimulus/value" );
   dcsignal.description().addNumber( "Intensity", dcamplitude, IUnit );
 
-  // write stimulus:
+  // all signals:
+  OutList sigs;
+  sigs.add( &signal );
+  if ( prevc ) {
+    sigs.add( &vcsignal );
+    sigs.add( &vcgainsignal );
+  }
+
+  // wait:
   sleep( pause );
   if ( interrupt() )
     return Aborted;
+
+  // run:
   for ( int count=1; softStop() == 0; count++ ) {
 
     timeStamp();
@@ -276,9 +319,13 @@ int ThresholdLatencies::main( void )
     }
     message( s );
 
+    // current membrane voltage:
+    double dcvoltage = trace( SpikeTrace[0] ).mean( currentTime()-0.5*pause,
+						    currentTime() );
+
     // signal:
     int sdi = 0;
-    if ( preduration > 0.0 && prepulseramp > 0 ) {
+    if ( preduration > 0.0 && prepulseramp > 0 && ! prevc ) {
       int w = signal.indices( prepulserampwidth );
       if ( prepulseramp == 2 ) {
 	// cosine ramp:
@@ -296,7 +343,7 @@ int ThresholdLatencies::main( void )
       signal.description( sdi ).setNumber( "IntensityOffset", dcamplitude, IUnit );
       sdi++;
     }
-    else {
+    else if ( preduration > 0.0 ) {
       for ( int k=0; k<signal.index( preduration ); k++ )
 	signal[k] = preamplitude;
       signal.description( sdi ).setNumber( "Intensity", preamplitude, IUnit );
@@ -319,9 +366,39 @@ int ThresholdLatencies::main( void )
       signal.setIdent( "I=" + Str( amplitude ) + IUnit + "IP=" + Str( preamplitude ) + IUnit);
     else
       signal.setIdent( "I=" + Str( amplitude ) + IUnit );
-    write( signal );
-    if ( signal.failed() ) {
-      warning( signal.errorText() );
+    // vc signals:
+    if ( prevc ) {
+      vcsignal = 0.0;
+      if ( prepulseramp > 0 ) {
+	int w = vcsignal.indices( prepulserampwidth );
+	if ( prepulseramp == 2 ) {
+	  // cosine ramp:
+	  for ( int k=0; k<w; k++ )
+	    vcsignal[k] = dcvoltage + (prevcamplitude-dcvoltage)*( 0.5 - 0.5 * ::cos( 3.14159265358979323846*double(k)/double(w) ) );
+	}
+	else {
+	  // linear ramp:
+	  for ( int k=0; k<w; k++ )
+	    vcsignal[k] = dcvoltage + (prevcamplitude-dcvoltage)*double(k)/double(w);
+	}
+	for ( int k=w; k<vcsignal.index( preduration ); k++ )
+	  vcsignal[k] = prevcamplitude;
+      }
+      else {
+	for ( int k=0; k<vcsignal.index( preduration ); k++ )
+	  vcsignal[k] = prevcamplitude;
+      }
+      vcsignal.description().setNumber( "Intensity", prevcamplitude );
+      vcgainsignal = 0.0;
+      for ( int k=0; k<vcgainsignal.index( preduration ); k++ )
+	vcgainsignal[k] = prevcgain;
+      vcgainsignal.description().setNumber( "Intensity", prevcgain );
+    }
+
+    // write out signals:
+    write( sigs );
+    if ( sigs.failed() ) {
+      warning( sigs.errorText() );
       if ( ! record || count <= 1 )
 	state = Failed;
       break;
@@ -425,6 +502,11 @@ int ThresholdLatencies::main( void )
     TrialCount = count;
 
     sleepOn( preduration + duration + postduration + pause );
+    if ( interrupt() ) {
+      if ( ! record || count <= 1 )
+	state = Aborted;
+      break;
+    }
 
     if ( record && repeats > 0 && count >= repeats )
       break;
@@ -439,6 +521,10 @@ int ThresholdLatencies::main( void )
   dcsignal.setIdent( "DC=" + Str( orgdcamplitude ) + IUnit );
   dcsignal.description().addNumber( "Intensity", orgdcamplitude, IUnit );
   directWrite( dcsignal );
+  if ( prevc ) {
+    writeZero( "VCgain" );
+    writeZero( "VC" );
+  }
   Results.clear();
   Latencies.clear();
   Amplitudes.clear();

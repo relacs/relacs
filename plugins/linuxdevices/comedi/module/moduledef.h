@@ -12,7 +12,7 @@
 
 // *** KERNEL LOGGING MODE ***
 
-// #define RTMODULE_DEBUG
+#define RTMODULE_DEBUG
 // #define RTMODULE_INFO
 
 
