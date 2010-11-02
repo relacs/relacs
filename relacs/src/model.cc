@@ -341,7 +341,7 @@ void Model::addActions( QMenu *menu, bool doxydoc )
 
 
 ModelThread::ModelThread( Model *m )
-  : QThread( this ),
+  : QThread( m ),
     M( m )
 {
 }

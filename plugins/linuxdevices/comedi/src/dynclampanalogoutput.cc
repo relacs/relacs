@@ -640,18 +640,16 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
   ol.sortByChannel();
 
   // channel configuration:
-  if ( ol[0].error() == DaqError::InvalidChannel ) {
-    for ( int k=0; k<ol.size(); k++ ) {
-      ol[k].delError( DaqError::InvalidChannel );
-      // check channel number:
-      if( ol[k].channel() < 0 ) {
-	ol[k].addError( DaqError::InvalidChannel );
-	ol[k].setChannel( 0 );
-      }
-      else if( ol[k].channel() >= channels() && ol[k].channel() < PARAM_CHAN_OFFSET ) {
-	ol[k].addError( DaqError::InvalidChannel );
-	ol[k].setChannel( channels()-1 );
-      }
+  for ( int k=0; k<ol.size(); k++ ) {
+    ol[k].delError( DaqError::InvalidChannel );
+    // check channel number:
+    if( ol[k].channel() < 0 ) {
+      ol[k].addError( DaqError::InvalidChannel );
+      ol[k].setChannel( 0 );
+    }
+    else if( ol[k].channel() >= channels() && ol[k].channel() < PARAM_CHAN_OFFSET ) {
+      ol[k].addError( DaqError::InvalidChannel );
+      ol[k].setChannel( channels()-1 );
     }
   }
 

@@ -2027,7 +2027,7 @@ void RELACSWidget::helpClosed( int r )
 
 
 UpdateThread::UpdateThread( RELACSWidget *rw )
-  : QThread( this ),
+  : QThread( rw ),
     RW( rw )
 {
 }

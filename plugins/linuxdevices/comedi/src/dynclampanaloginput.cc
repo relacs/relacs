@@ -925,11 +925,12 @@ int DynClampAnalogInput::matchTraces( InList &traces ) const
   ern = errno;
   if ( ern != ERANGE )
     traces.addErrorStr( "failure in getting model input parameter traces -> errno=" + Str( ern ) );
+  /*
   for ( int k=0; k<traces.size(); k++ ) {
     if ( tracefound[k] == 0 )
       traces[k].addErrorStr( "no matching trace found for trace " + traces[k].ident() );
   }
-
+  */
   return traces.failed() ? -1 : foundtraces;
 }
 

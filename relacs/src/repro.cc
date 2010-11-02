@@ -867,7 +867,7 @@ void RePro::noSaving( void )
 
 
 ReProThread::ReProThread( RePro *r )
-  : QThread( this ),
+  : QThread( r ),
     R( r )
 {
 }

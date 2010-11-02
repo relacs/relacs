@@ -251,7 +251,7 @@ bool Control::wait( double time )
 
 
 ControlThread::ControlThread( Control *c )
-  : QThread( this ),
+  : QThread( c ),
     C( c )
 {
 }

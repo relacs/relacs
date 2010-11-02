@@ -214,7 +214,7 @@ void SpikeTrace::customEvent( QEvent *qce )
 
 
 SpikeTraceThread::SpikeTraceThread( SpikeTrace *s )
-  : QThread( this ),
+  : QThread( s ),
     S( s )
 {
 }
