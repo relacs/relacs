@@ -85,7 +85,7 @@ int CalibMicrophone::main( void )
   const InData &indata = trace( intrace );
 
   // plot trace:
-  plotToggle( true, false, duration, 0.0 );
+  tracePlotContinuous( duration );
 
   double refpressure = 2.0e-5 * ::pow( 10.0, intensity/20.0 );
 

@@ -186,9 +186,6 @@ public:
         Passing infos to SaveFiles. */
   int directWrite( OutList &signal );
 
-    /*! */
-  void plotToggle( bool on, bool fixed, double length, double offs );
-
     /*! Inform all plugins about changes in the stimulus data. */
   void notifyStimulusData( void );
     /*! Inform all plugins about changes in the meta data section \a section. */

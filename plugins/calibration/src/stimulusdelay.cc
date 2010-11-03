@@ -72,7 +72,7 @@ int StimulusDelay::main( void )
   noMessage();
 
   // plot trace:
-  plotToggle( true, true, 2.0*duration, 0.6*duration );
+  tracePlotSignal( 2.0*duration, 0.6*duration );
 
   // plot:
   P.lock();

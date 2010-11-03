@@ -1108,12 +1108,6 @@ int RELACSWidget::directWrite( OutList &signal )
 }
 
 
-void RELACSWidget::plotToggle( bool on, bool fixed, double length, double offs )
-{
-  PT->setState( on, fixed, length, offs );
-}
-
-
 void RELACSWidget::notifyStimulusData( void )
 {
   if ( MD != 0 )

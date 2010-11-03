@@ -200,7 +200,7 @@ int FIPhaseLocking::main( void )
     side = metaData( "Cell" ).index( "best side" );
 
   // plot trace:
-  plotToggle( true, true, duration, 0.0 );
+  tracePlotSignal( duration );
   
 
   //int arraylength = (2*(int)(addcf/(cfstep/1000.0))+1)*(2*(int)(addintensities/intensitystep)+1);

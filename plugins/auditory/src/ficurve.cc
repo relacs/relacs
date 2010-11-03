@@ -266,7 +266,7 @@ int FICurve::main( void )
     SSWidth = Duration;
 
   // plot trace:
-  plotToggle( true, true, 2.0*PreWidth+Duration, PreWidth );
+  tracePlotSignal( 2.0*PreWidth+Duration, PreWidth );
 
   // intensity:
   if ( useprevints > 0 ) {

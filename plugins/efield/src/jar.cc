@@ -209,7 +209,7 @@ int JAR::main( void )
   }
 
   // plot trace:
-  plotToggle( true, false, 1.0, 0.0 );
+  tracePlotContinuous( 1.0 );
 
   // ranges:
   ContrastCount = 0;

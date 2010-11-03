@@ -122,7 +122,7 @@ int SysLatency::main( void )
   double intensity = 0.0;
 
   // plot trace:
-  plotToggle( true, true, duration, 0.0 );
+  tracePlotSignal( duration );
 
   // get intensity:
   auditory::Session *as = dynamic_cast<auditory::Session*>( control( "Session" ) );

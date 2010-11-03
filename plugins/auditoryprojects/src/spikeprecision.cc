@@ -284,7 +284,7 @@ int SpikePrecision::main( void )
   FreqRange.set( freqrangestr );
 
   // plot trace:
-  plotToggle( true, true, Duration+0.01, 0.0 );
+  tracePlotSignal( Duration+0.01 );
 
   OutData signal;
   SampleDataD amdb;

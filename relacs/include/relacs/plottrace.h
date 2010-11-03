@@ -95,10 +95,20 @@ public:
 
     /*! Plot voltage traces and spike trains. */
   void plot( void );
-    /*! Specify some properties of PlotTrace. 
-        Set total time window to \a length seconds
-	and part preceeding stimulus to \a offs seconds. */
-  void setState( bool on, bool fixed, double length, double offs );
+
+    /*! Switch plotting of raw traces on or off. */
+  void setPlotOn( bool on=true );
+    /*! Switch plotting of raw traces off. */
+  void setPlotOff( void );
+    /*! Plot raw traces relative to signal in a window of width \a length seconds
+        and the start of the signal \a offs seconds from the left margin. */
+  void setPlotSignal( double length, double offs=0.0 );
+    /*! Plot raw traces relative to signal while leaving the window size unchanged. */
+  void setPlotSignal( void );
+    /*! Plot raw traces continuously in a window of width \a length seconds. */
+  void setPlotContinuous( double length );
+    /*! Plot raw traces continuously while leaving the window size unchanged. */
+  void setPlotContinuous( void );
 
     /*! Set the number of plots necessary for the input traces and events. */
   void resize( void );

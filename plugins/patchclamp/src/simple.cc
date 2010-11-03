@@ -87,7 +87,7 @@ int Simple::main( void )
   noMessage();
 
   // plot trace:
-  plotToggle( true, true, 2.5*duration, 0.5*duration );
+  tracePlotSignal( 2.5*duration, 0.5*duration );
 
   // plot:
   P.lock();

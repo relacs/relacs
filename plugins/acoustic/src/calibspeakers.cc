@@ -113,7 +113,7 @@ int CalibSpeakers::main( void )
     LAtt->clear();
 
   // plot trace:
-  plotToggle( true, true, duration, 0.0 );
+  tracePlotSignal( duration );
 
   // plot:
   P.lock();

@@ -37,7 +37,7 @@ namespace patchclamp {
 \class VICurve
 \brief [RePro] V-I curve measured in current-clamp
 \author Jan Benda
-\version 1.0 (Feb 12, 2010)
+\version 1.1 (Nov 03, 2010)
 \par Screenshot
 \image html vicurve.png
 

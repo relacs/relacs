@@ -700,9 +700,40 @@ void RePro::setSoftStopKey( int keycode )
 }
 
 
-void RePro::plotToggle( bool on, bool fixed, double length, double offs )
+void RePro::tracePlotOn( bool on )
 {
-  RW->plotToggle( on, fixed, length, offs );
+  RW->PT->setPlotOn( on );
+}
+
+
+void RePro::tracePlotOff( void )
+{
+  RW->PT->setPlotOff();
+}
+
+
+void RePro::tracePlotSignal( double length, double offs )
+{
+  RW->PT->setPlotSignal( length, offs );
+}
+
+
+
+void RePro::tracePlotSignal( void )
+{
+  RW->PT->setPlotSignal();
+}
+
+
+void RePro::tracePlotContinuous( double length )
+{
+  RW->PT->setPlotContinuous( length );
+}
+
+
+void RePro::tracePlotContinuous( void )
+{
+  RW->PT->setPlotContinuous();
 }
 
 

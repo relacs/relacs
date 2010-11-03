@@ -230,7 +230,7 @@ int FICurve::main( void )
   P.unlock();
 
   // plot trace:
-  plotToggle( true, true, Delay + PreDuration + Duration, Delay );
+  tracePlotSignal( Delay + PreDuration + Duration, Delay );
 
   // adjust transdermal EOD:
   double val2 = trace( LocalEODTrace[0] ).maxAbs( currentTime()-0.1,

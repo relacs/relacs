@@ -158,7 +158,7 @@ int CalibEField::main( void )
   int intensitycount = 0;
 
   // plot trace:
-  plotToggle( true, true, duration, 0.0 );
+  tracePlotSignal( duration );
 
   // plot:
   P.lock();
@@ -280,7 +280,7 @@ int CalibEField::main( void )
 	  signal.back() = 0;
 	  numintensities *= 2;
 	  intensitystep *= 0.5;
-	  plotToggle( true, true, duration + pause, 0.0 );
+	  tracePlotSignal( duration + pause );
 	}
 	else {
 	  // reset intensity range:

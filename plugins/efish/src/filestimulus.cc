@@ -189,7 +189,7 @@ int FileStimulus::main( void )
 				events( LocalEODEvents[0] ).back() - Pause, events( LocalEODEvents[0] ).back() );
 
   // plot trace:
-  plotToggle( true, true, Before+Duration+After, Before );
+  tracePlotSignal( Before+Duration+After, Before );
 
   // plot:
   P.lock();

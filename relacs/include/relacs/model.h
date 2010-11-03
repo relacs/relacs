@@ -179,8 +179,12 @@ private:
         Returns the starting time of the signal on success,
 	otherwise -1.0. */
   double add( OutData &signal );
-    /*! Stop current signal. */
-  void stopSignal( void );
+    /*! Add output signals to the simulation. 
+        Returns the starting time of the signals on success,
+	otherwise -1.0. */
+  double add( OutList &sigs );
+    /*! Stop current signals. */
+  void stopSignals( void );
     /*! Remove all signals. */
   void clearSignals( void );
 

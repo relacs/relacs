@@ -49,7 +49,7 @@ int DefaultRePro::main( void )
   noMessage();
 
   // plot trace:
-  plotToggle( true, false, Duration, 0.0 );
+  tracePlotContinuous( Duration );
 
   while ( true )
     sleep( Duration );

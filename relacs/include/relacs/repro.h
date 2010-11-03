@@ -428,8 +428,31 @@ public:
         \sa softStop(), setSoftStop(), clearSoftStop() */
   void setSoftStopKey( int keycode );
 
-    /*! */
-  void plotToggle( bool on, bool fixed, double length, double offs );
+    /*! Switch plotting of raw traces on (\a on = \c true, default)
+        or off (\a off = \c false). 
+	\sa tracePlotOff(), tracePlotSignal(), tracPlotContinuous() */
+  void tracePlotOn( bool on=true );
+    /*! Switch plotting of raw traces off.
+        \sa tracePlotOn(), tracePlotSignal(), tracPlotContinuous() */
+  void tracePlotOff( void );
+    /*! Raw traces are plotted relative to the beginning of the last
+        output signal in a window of \a length seconds width.
+        The start time of the signal is \a offs seconds 
+        from the left margin of that window.
+        \sa tracePlotOn(), tracPlotContinuous() */
+  void tracePlotSignal( double length, double offs=0.0 );
+    /*! Raw traces are plotted relative to the beginning of the last
+        output signal. The width of the plot window is not changed.
+        \sa tracePlotOn(), tracPlotContinuous() */
+  void tracePlotSignal( void );
+    /*! Raw traces are plotted continuously in a window of
+        \a length seconds width.
+        \sa tracePlotOn(), tracPlotSignal() */
+  void tracePlotContinuous( double length );
+    /*! Raw traces are plotted continuously. The width of the
+        plot window is not changed.
+        \sa tracePlotOn(), tracPlotSignal() */
+  void tracePlotContinuous( void );
 
     /*! Return the name of the currently running macro.
         If the %RePro was called from the %RePro menu

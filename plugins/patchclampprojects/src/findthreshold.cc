@@ -156,7 +156,7 @@ int FindThreshold::main( void )
   Header.addNumber( "duration", 1000.0*duration, "ms", "%0.1f" );
 
   // plot trace:
-  plotToggle( true, true, 0.5*duration+savetime, 0.5*duration );
+  tracePlotSignal( 0.5*duration+savetime, 0.5*duration );
 
   // plot:
   P.lock();

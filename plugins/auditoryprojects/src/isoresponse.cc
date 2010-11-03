@@ -406,7 +406,7 @@ int IsoResponse::main( void )
   }
    
   // plot trace:
-  plotToggle( true, true, Duration, 0.0 );
+  tracePlotSignal( Duration );
 
   // plot:
   P.lock();

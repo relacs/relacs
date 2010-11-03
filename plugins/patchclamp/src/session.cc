@@ -135,7 +135,8 @@ void Session::initDevices( void )
     SW2->hide();
   }
 
-  stimulusData().addText( "Drugs", "Applied drugs", "" ).setFormat( "%-20s" ).setFlags( 16 );
+  if ( ! stimulusData().exist( "Drugs" ) )
+    stimulusData().addText( "Drugs", "Applied drugs", "" ).setFormat( "%-20s" ).setFlags( 16 );
   DW->assign( &stimulusData(), 16, 0, true, 0, stimulusDataMutex() );
 }
 

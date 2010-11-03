@@ -141,7 +141,7 @@ int MembraneResistance::main( void )
   ExpOff = SampleDataF( Duration, 2.0*Duration, 1/samplerate, 0.0 );
 
   // plot trace:
-  plotToggle( true, true, 2.0*Duration, 0.5*Duration );
+  tracePlotSignal( 2.0*Duration, 0.5*Duration );
 
   // plot:
   P.lock();

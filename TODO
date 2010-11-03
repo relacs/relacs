@@ -28,7 +28,6 @@ Plot:
 - change zoom behavior on axis (centered)
 - make the zoom stack optional - remember only the default range
 - check alignment of grid with plotted lines at various plot widget sizes!
-- PlotTrace/RePro: replace plotToggle() by some nicer functions!
 
 Analog Input/Output:
 - Replace Ident by Name in InData, OutData, TraceSpec

@@ -98,7 +98,7 @@ int OneClick::main( void )
   Side = index( "side" );
 
   // plot trace:
-  plotToggle( true, true, Duration+Pause, 0 );
+  tracePlotSignal( Duration+Pause );
 
   // plot:
   P.lock();

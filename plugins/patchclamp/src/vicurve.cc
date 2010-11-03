@@ -28,7 +28,7 @@ namespace patchclamp {
 
 
 VICurve::VICurve( void )
-  : RePro( "VICurve", "patchclamp", "Jan Benda", "1.0", "Feb 12, 2010" ),
+  : RePro( "VICurve", "patchclamp", "Jan Benda", "1.1", "Nov 03, 2010" ),
     VUnit( "mV" ),
     IUnit( "nA" ),
     VFac( 1.0 ),
@@ -168,7 +168,7 @@ int VICurve::main( void )
   noMessage();
 
   // plot trace:
-  plotToggle( true, true, 2.0*duration+delay, delay );
+  tracePlotSignal( 2.0*duration+delay, delay );
 
   // init:
   DoneState state = Completed;
@@ -182,9 +182,11 @@ int VICurve::main( void )
 
   // plot:
   P.lock();
+  P[0].clear();
   P[0].setXLabel( "Time [ms]" );
   P[0].setXRange( -1000.0*delay, 2000.0*duration );
   P[0].setYLabel( "Membrane potential [" + VUnit + "]" );
+  P[1].clear();
   P[1].setXLabel( "Current [" + IUnit + "]" );
   P[1].setXRange( imin, imax );
   P[1].setYLabel( "Membrane potential [" + VUnit + "]" );
@@ -368,6 +370,8 @@ void VICurve::plot( double duration, int inx )
 
 void VICurve::save( void )
 {
+  message( "<b>Saving ...</b/>" );
+  tracePlotContinuous();
   unlockAll();
   for ( unsigned int j=Range.next( 0 );
 	j<Results.size();

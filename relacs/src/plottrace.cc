@@ -552,13 +552,10 @@ void PlotTrace::updateMenu( void )
 }
 
 
-void PlotTrace::setState( bool on, bool fixed, double length, double offs )
+void PlotTrace::setPlotOn( bool on )
 {
   P.lock();
   AutoOn = on;
-  AutoFixed = fixed;
-  AutoTime = length;
-  AutoOffs = offs;
   bool man = Manual;
   P.unlock();
 
@@ -570,9 +567,37 @@ void PlotTrace::setState( bool on, bool fixed, double length, double offs )
   // toggle plot:
   Plotting = on;
   postCustomEvent( 11 );  // animate on/off button
+  P.unlock();
+}
+
+
+void PlotTrace::setPlotOff( void )
+{
+  setPlotOn( false );
+}
+
+
+void PlotTrace::setPlotSignal( double length, double offs )
+{
+  P.lock();
+  AutoOn = true;
+  AutoFixed = true;
+  AutoTime = length;
+  AutoOffs = offs;
+  bool man = Manual;
+  P.unlock();
+
+  if ( man )
+    return;
+
+  P.lock();
+
+  // toggle plot:
+  Plotting = true;
+  postCustomEvent( 11 );  // animate on/off button
 
   // toggle fixed offset:
-  setView( fixed ? SignalView : WrapView );
+  setView( SignalView );
 
   // length of total time window:
   TimeWindow = length;
@@ -591,6 +616,93 @@ void PlotTrace::setState( bool on, bool fixed, double length, double offs )
 					    Plot::Green, Plot::Green );
     }
   }
+  P.unlock();
+}
+
+
+void PlotTrace::setPlotSignal( void )
+{
+  P.lock();
+  AutoOn = true;
+  AutoFixed = true;
+  bool man = Manual;
+  P.unlock();
+
+  if ( man )
+    return;
+
+  P.lock();
+
+  // toggle plot:
+  Plotting = true;
+  postCustomEvent( 11 );  // animate on/off button
+
+  // toggle fixed offset:
+  setView( SignalView );
+
+  P.unlock();
+}
+
+
+void PlotTrace::setPlotContinuous( double length )
+{
+  P.lock();
+  AutoOn = true;
+  AutoFixed = false;
+  AutoTime = length;
+  bool man = Manual;
+  P.unlock();
+
+  if ( man )
+    return;
+
+  P.lock();
+
+  // toggle plot:
+  Plotting = true;
+  postCustomEvent( 11 );  // animate on/off button
+
+  // toggle fixed offset:
+  setView( WrapView );
+
+  // length of total time window:
+  TimeWindow = length;
+
+  // pointstyle:
+  for ( unsigned int c=0; c<VP.size(); c++ ) {
+    if ( PlotElements[c] >= 0 ) {
+      if ( trace(VP[c]).indices( TimeWindow ) > 80 )
+	P[VP[c]][PlotElements[c]].setPoint( Plot::Circle, 0,
+					    Plot::Green, Plot::Green );
+      else
+	P[VP[c]][PlotElements[c]].setPoint( Plot::Circle, 4,
+					    Plot::Green, Plot::Green );
+    }
+  }
+  P.unlock();
+}
+
+
+void PlotTrace::setPlotContinuous( void )
+{
+  P.lock();
+  AutoOn = true;
+  AutoFixed = false;
+  bool man = Manual;
+  P.unlock();
+
+  if ( man )
+    return;
+
+  P.lock();
+
+  // toggle plot:
+  Plotting = true;
+  postCustomEvent( 11 );  // animate on/off button
+
+  // toggle fixed offset:
+  setView( WrapView );
+
   P.unlock();
 }
 
@@ -811,12 +923,35 @@ void PlotTrace::autoRange( void )
   Manual = false;
   if ( ManualButton != 0 )
     ManualButton->setDown( Manual );
-  bool autoon = AutoOn;
-  bool autofixed = AutoFixed;
-  double autotime = AutoTime;
-  double autooffs = AutoOffs;
+
+  // toggle plot:
+  Plotting = AutoOn;
+  if ( Plotting )
+    OnOffButton->setDown( false );
+  else
+    OnOffButton->setDown( true );
+
+  // toggle fixed offset:
+  setView( AutoFixed ? SignalView : WrapView );
+
+  // length of total time window:
+  TimeWindow = AutoTime;
+
+  // left offset to signal:
+  TimeOffs = AutoOffs;
+
+  // pointstyle:
+  for ( unsigned int c=0; c<VP.size(); c++ ) {
+    if ( PlotElements[c] >= 0 ) {
+      if ( trace(VP[c]).indices( TimeWindow ) > 80 )
+	P[VP[c]][PlotElements[c]].setPoint( Plot::Circle, 0,
+					    Plot::Green, Plot::Green );
+      else
+	P[VP[c]][PlotElements[c]].setPoint( Plot::Circle, 4,
+					    Plot::Green, Plot::Green );
+    }
+  }
   P.unlock();
-  setState( autoon, autofixed, autotime, autooffs );
 }
 
 

@@ -28,7 +28,7 @@ namespace patchclamp {
 
 
 FICurve::FICurve( void )
-  : RePro( "FICurve", "patchclamp", "Jan Benda", "1.0", "Feb 17, 2010" ),
+  : RePro( "FICurve", "patchclamp", "Jan Benda", "1.1", "Nov 03, 2010" ),
     VUnit( "mV" ),
     IUnit( "nA" ),
     VFac( 1.0 ),
@@ -57,6 +57,9 @@ FICurve::FICurve( void )
   addNumber( "fmax", "Maximum firing rate", 100.0, 0.0, 2000.0, 1.0, "Hz" );
   addNumber( "vmax", "Maximum steady-state potential", -50.0, -2000.0, 2000.0, 1.0, "mV" );
   addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
+  addInteger( "ratioincrement", "Optimize range at current increments below", 0, 0, 10000 );
+  addNumber( "minrate", "Minimum required firing rate for optimization", 10.0, 0.0, 2000.0, 1.0, "Hz" ).setActivation( "ratioincrement", ">0" );
+  addNumber( "maxrateratio", "Maximum ratio between onset and steady-state firing rate for optimization", 2.0, 0.0, 1000.0, 0.1 ).setActivation( "ratioincrement", ">0" );
   addTypeStyle( OptWidget::TabLabel, Parameter::Label );
 
   P.lock();
@@ -115,6 +118,10 @@ int FICurve::main( void )
   double fmax = number( "fmax" );
   double vmax = number( "vmax" );
   double sswidth = number( "sswidth" );
+  int ratioincrement = number( "ratioincrement" );
+  double minrate = number( "minrate" );
+  double maxrateratio = number( "maxrateratio" );
+
   double dccurrent = stimulusData().number( outTraceName( CurrentOutput[0] ) );
   if ( ibase == 1 ) {
     imin += dccurrent;
@@ -171,7 +178,7 @@ int FICurve::main( void )
   noMessage();
 
   // plot trace:
-  plotToggle( true, true, 2.0*duration+delay, delay );
+  tracePlotSignal( 2.0*duration+delay, delay );
 
   // init:
   DoneState state = Completed;
@@ -185,11 +192,13 @@ int FICurve::main( void )
 
   // plot:
   P.lock();
+  P[0].clear();
   P[0].setXLabel( "Time [ms]" );
   P[0].setXRange( -1000.0*delay, 1000.0*(duration+delay) );
   P[0].setYLabel( "Firing rate [Hz]" );
   P[0].setYFallBackRange( 0.0, 20.0 );
   P[0].setYRange( 0.0, Plot::AutoScale );
+  P[1].clear();
   P[1].setXLabel( "Current [" + IUnit + "]" );
   P[1].setXRange( imin, imax );
   P[1].setYLabel( "Firing rate [Hz]" );
@@ -219,6 +228,9 @@ int FICurve::main( void )
     return Aborted;
   for ( Range.reset(); ! Range && softStop() == 0; ) {
 
+    timeStamp();
+
+    // reset sequence after first repetition:
     if ( prevrepeat < Range.currentRepetition() ) {
       if ( Range.currentRepetition() == 1 ) {
 	Range.setSequence( shuffle );
@@ -231,6 +243,7 @@ int FICurve::main( void )
       prevrepeat = Range.currentRepetition();
     }
 
+    // new stimulus:
     double amplitude = *Range;
     if ( fabs( amplitude ) < 1.0e-8 )
       amplitude = 0.0;
@@ -240,7 +253,6 @@ int FICurve::main( void )
     s += ",  Count <b>" + Str( Range.count()+1 ) + "</b>";
     message( s );
 
-    timeStamp();
     signal.setIdent( "I=" + Str( amplitude ) + IUnit );
     signal = amplitude;
     signal.back() = dccurrent;
@@ -280,6 +292,7 @@ int FICurve::main( void )
       }
     }
 
+    // sleep:
     sleep( delay + 2.0*duration + 0.01 );
     if ( interrupt() ) {
       if ( Range.count() < 1 )
@@ -288,6 +301,7 @@ int FICurve::main( void )
       break;
     }
 
+    // analyse:
     Results[Range.pos()].I = amplitude;
     Results[Range.pos()].DC = dccurrent;
     Results[Range.pos()].analyze( Range.count(), trace( 0 ),
@@ -295,23 +309,47 @@ int FICurve::main( void )
 				  CurrentTrace[0] >= 0 ? &trace( CurrentTrace[0] ) : 0,
 				  IInFac, delay, duration, sswidth );
 
+    // skip currents that evoke firing rates greater than fmax:
     if ( Results[Range.pos()].SSRate > fmax ) {
       Range.setSkipAbove( Range.pos() );
       Range.noCount();
     }
+    // skip currents causing depolarization block:
     if ( Results[Range.pos()].SSRate < 1.0/duration &&
 	 Results[Range.pos()].VSS > vmax ) {
       Range.setSkipAbove( Range.pos() );
       Range.noCount();
     }
+    // skip currents too low to make the neuron fire:
     else if ( Results[Range.pos()].SpikeCount <= 0.01 ) {
       Range.setSkipBelow( Range.pos()-1 );
+    }
+    // skip currents above large enough fon/fss ratios:
+    if ( Range.finishedBlock() &&
+	 Range.currentIncrement() == ratioincrement ) {
+      int n = 0;
+      for ( unsigned int k=Range.next( 0 );
+	    k<Results.size();
+	    k=Range.next( ++k ) ) {
+	if ( Results[k].SSRate > minrate &&
+	     Results[k].OnRate/Results[k].SSRate > maxrateratio ) {
+	  n++;
+	  if ( n > 1 ) {
+	    printlog( "Skip currents above " + Str( Range[k] ) );
+	    Range.setSkipAbove( k );
+	    break;
+	  }
+	}
+	else
+	  n = 0;
+      }
     }
 
     int cinx = Range.pos();
     ++Range;
 
     plot( duration, cinx );
+
     sleepOn( duration + pause );
     if ( interrupt() ) {
       if ( Range.count() < 1 )
@@ -321,6 +359,7 @@ int FICurve::main( void )
     }
   }
 
+  // save data:
   if ( state == Completed )
     save();
 
@@ -387,6 +426,8 @@ void FICurve::plot( double duration, int inx )
 
 void FICurve::save( void )
 {
+  message( "<b>Saving ...</b/>" );
+  tracePlotContinuous();
   unlockAll();
   saveData();
   saveRate();

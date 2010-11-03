@@ -39,36 +39,39 @@ namespace patchclampprojects {
 \class ThresholdLatencies
 \brief [RePro] Measures spike latencies in response to pulses close to the firing threshold.
 \author Jan Benda
-\version 1.1 (Oct 15, 2010)
+\version 1.2 (Nov 03, 2010)
 \par Options
 - Test-Pulse
-- \c durationsel=as multiples of membrane time constant: Set duration of stimulus (\c string)
-- \c duration=15ms: Duration of stimulus (\c number)
+- \c durationsel=in milliseconds: Set duration of stimulus (\c string)
+- \c duration=100ms: Duration of stimulus (\c number)
 - \c durationfac=1tau_m: Duration of stimulus (\c number)
 - \c startamplitudesrc=custom: Set initial amplitude to (\c string)
 - \c startamplitude=0.1nA: Initial amplitude of current stimulus (\c number)
-- \c startamplitudestep=0.5nA: Initial size of amplitude steps used for searching threshold (\c number)
-- \c amplitudestep=0.003nA: Final size of amplitude steps used for oscillating around threshold (\c number)
+- \c startamplitudestep=0.1nA: Initial size of amplitude steps used for searching threshold (\c number)
+- \c amplitudestep=0.01nA: Final size of amplitude steps used for oscillating around threshold (\c number)
 - \c adjust=DC: Adjust (\c string)
-- Pre- and Post-Pulse
-- \c preduration=50ms: Duration of pre-pulse stimulus (\c number)
-- \c preamplitudesrc=custom: Set pre-pulse amplitude to (\c string)
-- \c preamplitude=0.2: Amplitude of pre-pulse stimulus (\c number)
-- \c prepulseramp=cosine: Start the pre-pulse with a ramp (\c string)
-- \c prepulserampwidth=10ms: Width of the ramp (\c number)
-- \c postduration=100ms: Duration of post-pulse stimulus (\c number)
+- First Pre-Pulse
+- \c preduration=0ms: Duration of first pre-pulse stimulus (\c number)
+- \c preamplitudesrc=custom: Set amplitude of first pre-pulse to (\c string)
+- \c preamplitude=0.1nA: Amplitude of first pre-pulse stimulus (\c number)
+- \c prevcamplitude=0mV: Voltage clamp value of first pre-pulse (\c number)
+- \c prevcgain=0mS: Gain for voltage clamp of first pre-pulse (\c number)
+- \c prepulseramp=none: Start first pre-pulse with a ramp (\c string)
+- \c prepulserampwidth=0ms: Width of the ramp (\c number)
+- Second Pre-Pulse
+- \c pre2duration=0ms: Duration of second pre-pulse stimulus (\c number)
+- \c pre2amplitudesrc=custom: Set amplitude of second pre-pulse to (\c string)
+- \c pre2amplitude=0.1nA: Amplitude of second pre-pulse stimulus (\c number)
+- Post-Pulse
+- \c postduration=0ms: Duration of post-pulse stimulus (\c number)
 - \c postamplitudesrc=custom: Set post-pulse amplitude to (\c string)
-- \c postamplitude=0.1: Amplitude of post-pulse stimulus (\c number)
-- Control
-- \c searchpause=3000ms: Duration of pause between outputs during search (\c number)
-- \c pause=5000ms: Duration of pause between outputs (\c number)
+- \c postamplitude=0.1nA: Amplitude of post-pulse stimulus (\c number)
+- Timing
+- \c searchpause=500ms: Duration of pause between outputs during search (\c number)
+- \c pause=1000ms: Duration of pause between outputs (\c number)
 - \c delay=50ms: Time before stimullus onset (\c number)
-- \c savetracetime=1050ms: Length of trace to be saved and analyzed (\c number)
-- \c repeats=300: Repetitions of stimulus (\c integer)
-- Used amplitudes
-- \c stimulusamplitude=0: stimulusamplitude (\c number)
-- \c dcstimulusamplitude=0: dcstimulusamplitude (\c number)
-- \c dcamplitude=0: dcamplitude (\c number)
+- \c savetracetime=500ms: Length of trace to be saved and analyzed (from test-pulse on) (\c number)
+- \c repeats=10: Repetitions of stimulus (\c integer)
 
 Possible stimulus configurations are shown in the figure:
 \image html thresholdlatenciesstimuli.png
@@ -89,10 +92,13 @@ public:
   ThresholdLatencies( void );
   virtual int main( void );
   virtual void config( void );
-  void analyze( double dcamplitude, double preamplitude, double amplitude, double postamplitude,
-		double delay, double preduration, double duration, double postduration,
+  void analyze( double dcamplitude, double preamplitude, double prevcamplitude,
+		double pre2amplitude, double amplitude,
+		double postamplitude, double delay, double preduration,
+		double pre2duration, double duration, double postduration,
 		double savetime, double pause );
-  void plot( bool record, double preduration, double duration, double postduration );
+  void plot( bool record, double preduration, double pre2duration,
+	     double duration, double postduration );
   void openTraceFile( ofstream &tf, TableKey &tracekey );
   void saveTrace( ofstream &tf, TableKey &tracekey, int index );
   void save( bool dc );
@@ -112,13 +118,15 @@ protected:
   double PrevMeanDCAmplitude;
 
   struct Data {
-    Data( double delay, double preduration, double savetime,
+    Data( double delay, double predurations, double savetime,
 	  const InData &voltage, const InData &current );
-    Data( double delay, double preduration, double savetime,
+    Data( double delay, double predurations, double savetime,
 	  const InData &voltage );
     double DCAmplitude;
     double Amplitude;
     double PreAmplitude;
+    double PreVCAmplitude;
+    double Pre2Amplitude;
     double PostAmplitude;
     SampleDataF Voltage;
     SampleDataF Current;
@@ -133,6 +141,7 @@ protected:
   ArrayD Amplitudes;
   ArrayD DCAmplitudes;
   ArrayD PreAmplitudes;
+  ArrayD Pre2Amplitudes;
   ArrayD PostAmplitudes;
   ArrayD Latencies;
   ArrayI SpikeCounts;

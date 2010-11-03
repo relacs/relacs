@@ -258,7 +258,7 @@ int SAM::main( void )
   }
 
   // plot trace:
-  plotToggle( true, true, Before+Duration+After, Before );
+  tracePlotSignal( Before+Duration+After, Before );
   
   // plot:
   P.lock();

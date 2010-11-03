@@ -159,7 +159,7 @@ int VoltageReconstruction::main( void )
   if ( userate ) {
     
     // plot trace:
-    plotToggle( true, true, searchduration, 0.0 );
+    tracePlotSignal( searchduration );
     
     postCustomEvent( 12 );
     SP.lock();
@@ -339,7 +339,7 @@ int VoltageReconstruction::main( void )
   double period = 1.0/meanrate;
   
   // plot trace:
-  plotToggle( true, false, searchduration, 0.5*searchduration );
+  tracePlotContinuous( searchduration );
 
   // setup plots:
   postCustomEvent( 11 );

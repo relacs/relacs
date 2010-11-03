@@ -297,7 +297,7 @@ int SingleStimulus::main( void )
     storedstimulus = sameduration;
     
     // plot trace:
-    plotToggle( true, true, searchduration, 0.0 );
+    tracePlotSignal( searchduration );
     
     postCustomEvent( 12 );
     SP.lock();
@@ -591,7 +591,7 @@ int SingleStimulus::main( void )
   Intensity = signal.intensity() - PeakAmplitude;
 
   // plot trace:
-  plotToggle( true, true, Duration, 0.0 );
+  tracePlotSignal( Duration );
 
   // setup plots:
   postCustomEvent( 11 );

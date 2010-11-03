@@ -153,7 +153,7 @@ int SetDC::main( void )
   noMessage();
 
   // plot trace:
-  plotToggle( true, false, 1.0, 0.0 );
+  tracePlotContinuous( 1.0 );
 
   // init:
   OrgDCAmplitude = stimulusData().number( outTraceName( OutCurrent ) );

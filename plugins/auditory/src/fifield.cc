@@ -174,7 +174,7 @@ int FIField::main( void )
     SSWidth = Duration;
 
   // plot trace:
-  plotToggle( true, true, 2.0*PreWidth+Duration, PreWidth );
+  tracePlotSignal( 2.0*PreWidth+Duration, PreWidth );
 
   // frequency:
   if ( ! FreqStr.empty() )

@@ -670,9 +670,9 @@ int Chirps::main( void )
 
   // plot trace:
   if ( Duration <= 0.5 )
-    plotToggle( true, true, Duration, 0.0 );
+    tracePlotSignal( Duration );
   else
-    plotToggle( true, false, 1.0, 0.0 );
+    tracePlotContinuous( 1.0 );
 
   // adjust transdermal EOD:
   double val2 = trace(LocalEODTrace[0]).maxAbs( currentTime()-0.1,

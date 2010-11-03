@@ -55,7 +55,7 @@ int Pause::main( void )
     noSaving();
 
   // plot trace:
-  plotToggle( true, false, duration, 0.0 );
+  tracePlotContinuous( duration );
 
   for ( int count=0; 
 	( repeats <= 0 || count < repeats ) && softStop() == 0; 

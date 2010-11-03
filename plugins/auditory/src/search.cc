@@ -219,7 +219,7 @@ int Search::main( void )
   NewSignal = true;
 
   // plot trace:
-  plotToggle( true, true, 1.25*Duration, 0.125*Duration );
+  tracePlotSignal( 1.25*Duration, 0.125*Duration );
 
   timeStamp();
 
@@ -436,7 +436,7 @@ void Search::setDuration( int duration )
   setNumber( "duration", Duration );
 
   // plot trace:
-  plotToggle( true, true, 1.25*Duration, 0.125*Duration );
+  tracePlotSignal( 1.25*Duration, 0.125*Duration );
 
   // new stimulus:
   NewSignal = true;

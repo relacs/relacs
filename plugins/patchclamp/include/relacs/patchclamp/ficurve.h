@@ -38,7 +38,7 @@ namespace patchclamp {
 \class FICurve
 \brief [RePro] F-I curve measured in current-clamp
 \author Jan Benda
-\version 1.0 (Feb 17, 2010)
+\version 1.1 (Nov 03, 2010)
 \par Screenshot
 \image html ficurve.png
 

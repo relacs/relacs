@@ -67,7 +67,7 @@ int RestartDelay::main( void )
   noMessage();
 
   // plot trace:
-  plotToggle( true, true, 2.0*duration, 1.0*duration );
+  tracePlotSignal( 2.0*duration, 1.0*duration );
 
   // plot:
   P.lock();

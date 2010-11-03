@@ -245,13 +245,12 @@ double Model::add( OutData &signal )
   // current time:
   double ct = elapsed();
 
-  SignalMutex.lock();
-
   if ( signal.trace() < 0 ) {
     signal.setError( signal.InvalidTrace );
-    SignalMutex.unlock();
     return -1.0;
   }
+
+  SignalMutex.lock();
 
   if ( signal.trace() >= (int)Signals.size() ) {
     // add new signals:
@@ -281,7 +280,62 @@ double Model::add( OutData &signal )
 }
 
 
-void Model::stopSignal( void )
+double Model::add( OutList &sigs )
+{
+  // current time:
+  double ct = elapsed();
+
+  for ( int k=0; k<sigs.size(); k++ ) {
+    if ( sigs[k].trace() < 0 )
+      sigs[k].setError( OutData::InvalidTrace );
+  }
+
+  if ( sigs.failed() )
+    return -1.0;
+
+  SignalMutex.lock();
+
+  for ( int k=0; k<sigs.size(); k++ ) {
+    if ( sigs[k].trace() >= (int)Signals.size() ) {
+      // add new signals:
+      Signals.resize( sigs[k].trace()+1 );
+    }
+  }
+
+  // trace still busy?
+  for ( int k=0; k<sigs.size(); k++ ) {
+    if ( Signals[sigs[k].trace()].Offset > ct && ! sigs[k].priority() )
+      sigs[k].setError( OutData::Busy );
+  }
+
+  if ( sigs.failed() ) {
+    SignalMutex.unlock();
+    return -1.0;
+  }
+
+  // transer signals to buffer:
+  for ( int k=0; k<sigs.size(); k++ ) {
+    Signals[sigs[k].trace()].Buffer.clear();
+    process( sigs[k], Signals[sigs[k].trace()].Buffer );
+  }
+
+  // current time:
+  ct = elapsed();
+  double bt = time( 0 );
+  if ( ct < bt )
+    ct = bt;
+  for ( int k=0; k<sigs.size(); k++ ) {
+    Signals[sigs[k].trace()].Onset = ct + Signals[sigs[k].trace()].Buffer.delay();
+    Signals[sigs[k].trace()].Offset = ct + Signals[sigs[k].trace()].Buffer.totalDuration();
+  }
+  double onset = Signals[sigs[0].trace()].Onset;
+  SignalMutex.unlock();
+
+  return onset;
+}
+
+
+void Model::stopSignals( void )
 {
   // current time:
   double ct = elapsed();

@@ -126,7 +126,7 @@ int TransferFunction::main( void )
   noMessage();
 
   // plot trace:
-  plotToggle( true, true, duration, 0.0 );
+  tracePlotSignal( duration );
 
   // plot:
   P.lock();
