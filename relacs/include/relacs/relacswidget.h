@@ -339,7 +339,6 @@ private:
   friend class DataBrowser;
   friend class FilterDetectors;
   friend class SaveFiles;
-  friend class DataBrowser;
 
   void checkPlugin( void *plugin, const string &ident );
 
