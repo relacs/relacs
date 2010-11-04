@@ -50,13 +50,32 @@ public:
   DataBrowser( QWidget *parent=0 );
   ~DataBrowser( void );
 
-  void addSession( const string &path );
+  string folder;
+  bool session;
+
+  void addStimulus(const OutData &signal);
+  void addStimulus(const OutList &signal);
   void addRepro( const RePro *repro );
+  void addSession( const string &path );
+  void endSession( void );
+  void load( const string &dir );
+  void read(string file, QTreeWidgetItem *parent);
+
+public slots:
+
+  void list(QTreeWidgetItem * item, int col);
 
 
 private:
 
   QTreeWidget *TreeWidget;
+  struct Stimulus;
+  struct Rep;
+  struct Cell;
+  map<string, map<long,DataBrowser::Stimulus>* > * cell; 
+  map<long, DataBrowser::Stimulus> * nstimuli;
+  map< string, map<int,DataBrowser::Rep>* > * protocol;
+  map< string, DataBrowser::Cell* > * header;
 
 };
 

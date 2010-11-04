@@ -42,6 +42,8 @@
 #include <relacs/databrowser.h>
 #include <relacs/filter.h>
 #include <relacs/filterdetectors.h>
+#include <relacs/inputconfig.h>
+#include <relacs/outputconfig.h>
 #include <relacs/macros.h>
 #include <relacs/model.h>
 #include <relacs/messagebox.h>
@@ -288,8 +290,8 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   }
 
   // data browser:
-  //  DB = new DataBrowser( this );
-  //  CW->addTab( DB, "Data-Browser" );
+  DB = new DataBrowser( this );
+  CW->addTab( DB, "Data-Browser" );
 
   // model plugin:
   MD = 0;
@@ -378,6 +380,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   filemenu->addAction( "Settings...", &SS, SLOT( dialog() ) );
   filemenu->addAction( "Save Settings", (QWidget*)this, SLOT( saveConfig() ) );
   filemenu->addAction( "&Quit", (QWidget*)this, SLOT( quit() ), Qt::ALT + Qt::Key_Q );
+  filemenu->addAction( "&Channels", this, SLOT( channels() ) );
 
   // plugins:
   QMenu *pluginmenu = menuBar()->addMenu( "&Plugins" );
@@ -1165,7 +1168,7 @@ void RELACSWidget::startRePro( RePro *repro, int macroaction, bool saving )
     *InfoFile << QTime::currentTime().toString().toLatin1().data();
     *InfoFile << "   " << CurrentRePro->name() << ": " << MC->options();
   }
-  //  DB->addRepro( CurrentRePro );
+  DB->addRepro( CurrentRePro );
 
   ReProRunning = true;
   SN->incrReProCount();
@@ -1344,7 +1347,7 @@ void RELACSWidget::startSession( bool startmacro )
 	     << "Time:      Research Program:\n";
   }
 
-  //  DB->addSession( SF->path() );
+  DB->addSession( SF->path() );
 
   SessionStartWait.wakeAll();
 
@@ -1410,6 +1413,8 @@ void RELACSWidget::stopSession( bool saved )
     delete InfoFile;
     InfoFile = 0;
   }
+
+  DB->endSession();
 
   SessionStopWait.wakeAll();
 
@@ -1511,6 +1516,20 @@ void RELACSWidget::closeEvent( QCloseEvent *ce )
 {
   quit();
   ce->accept();
+}
+
+
+void RELACSWidget::channels( void )
+{
+  InputConfig *ic = new InputConfig( this );
+  OptDialog *od = new OptDialog( false, this );
+  od->addWidget( ic );
+  od->exec();
+
+  OutputConfig *oc = new OutputConfig( this );
+  OptDialog *od2 = new OptDialog( false, this );
+  od2->addWidget( oc );
+  od2->exec();
 }
 
 

@@ -44,6 +44,7 @@
 #include <relacs/datathreads.h>
 #include <relacs/plottrace.h>
 #include <relacs/relacsplugin.h>
+#include <relacs/databrowser.h>
 
 using namespace std;
 
@@ -296,8 +297,6 @@ public slots:
   void help( void );
 
 
-  //signals:
-
     /*! After a signal is written to the daq-board for output
         the function write( OData &OD ) emits this signal.
         It can be used to check the success of the output operation.
@@ -317,6 +316,7 @@ protected slots:
 
   void helpClosed( int r );
   void simLoadMessage( void );
+  void channels( void );
 
 
 private:
@@ -339,6 +339,7 @@ private:
   friend class DataBrowser;
   friend class FilterDetectors;
   friend class SaveFiles;
+  friend class DataBrowser;
 
   void checkPlugin( void *plugin, const string &ident );
 

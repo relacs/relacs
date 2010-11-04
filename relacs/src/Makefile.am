@@ -36,8 +36,10 @@ $(librelacs_la_OBJECTS) : \
     moc_defaultsession.cc \
     moc_filter.cc \
     moc_filterdetectors.cc \
+    moc_inputconfig.cc \
     moc_macros.cc \
     moc_metadata.cc \
+    moc_outputconfig.cc \
     moc_plottrace.cc \
     moc_relacsplugin.cc \
     moc_relacswidget.cc \
@@ -61,9 +63,11 @@ pkginclude_HEADERS = \
     ../include/relacs/defaultsession.h \
     ../include/relacs/filterdetectors.h \
     ../include/relacs/filter.h \
+    ../include/relacs/inputconfig.h \
     ../include/relacs/macros.h \
     ../include/relacs/metadata.h \
     ../include/relacs/model.h \
+    ../include/relacs/outputconfig.h \
     ../include/relacs/plottrace.h \
     ../include/relacs/plugins.h \
     ../include/relacs/rangeloop.h \
@@ -91,9 +95,11 @@ librelacs_la_SOURCES = \
     defaultsession.cc \
     filter.cc \
     filterdetectors.cc \
+    inputconfig.cc \
     macros.cc \
     metadata.cc \
     model.cc \
+    outputconfig.cc \
     plottrace.cc \
     plugins.cc \
     rangeloop.cc \
