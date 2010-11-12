@@ -7,7 +7,8 @@ pluginlib_LTLIBRARIES = \
     libpatchclampprojectsthresholdlatencies.la \
     libpatchclampprojectsfindthreshold.la \
     libpatchclampprojectssetleak.la \
-    libpatchclampprojectsvoltagereconstruction.la
+    libpatchclampprojectsvoltagereconstruction.la \
+    libpatchclampprojectsfeedforwardnetwork.la
 
 
 
@@ -133,11 +134,41 @@ libpatchclampprojectsvoltagereconstruction_la_include_HEADERS = $(HEADER_PATH)/v
 
 
 
+libpatchclampprojectsfeedforwardnetwork_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS)
+
+libpatchclampprojectsfeedforwardnetwork_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS)
+
+libpatchclampprojectsfeedforwardnetwork_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(QT4_LIBS)
+
+$(libpatchclampprojectsfeedforwardnetwork_la_OBJECTS) : moc_feedforwardnetwork.cc
+
+libpatchclampprojectsfeedforwardnetwork_la_SOURCES = feedforwardnetwork.cc
+
+libpatchclampprojectsfeedforwardnetwork_la_includedir = $(pkgincludedir)/patchclampprojects
+
+libpatchclampprojectsfeedforwardnetwork_la_include_HEADERS = $(HEADER_PATH)/feedforwardnetwork.h
+
+
+
 check_PROGRAMS = \
     linktest_libpatchclampprojectsthresholdlatencies_la \
     linktest_libpatchclampprojectsfindthreshold_la \
     linktest_libpatchclampprojectssetleak_la \
-    linktest_libpatchclampprojectsvoltagereconstruction_la
+    linktest_libpatchclampprojectsvoltagereconstruction_la \
+    linktest_libpatchclampprojectsfeedforwardnetwork_la
 
 linktest_libpatchclampprojectsthresholdlatencies_la_SOURCES = linktest.cc
 linktest_libpatchclampprojectsthresholdlatencies_la_LDADD = libpatchclampprojectsthresholdlatencies.la
@@ -150,5 +181,8 @@ linktest_libpatchclampprojectssetleak_la_LDADD = libpatchclampprojectssetleak.la
 
 linktest_libpatchclampprojectsvoltagereconstruction_la_SOURCES = linktest.cc
 linktest_libpatchclampprojectsvoltagereconstruction_la_LDADD = libpatchclampprojectsvoltagereconstruction.la
+
+linktest_libpatchclampprojectsfeedforwardnetwork_la_SOURCES = linktest.cc
+linktest_libpatchclampprojectsfeedforwardnetwork_la_LDADD = libpatchclampprojectsfeedforwardnetwork.la
 
 TESTS = $(check_PROGRAMS)
