@@ -59,7 +59,7 @@ FICurve::FICurve( void )
   addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
   addInteger( "ratioincrement", "Optimize range at current increments below", 0, 0, 10000 );
   addNumber( "minrate", "Minimum required firing rate for optimization", 10.0, 0.0, 2000.0, 1.0, "Hz" ).setActivation( "ratioincrement", ">0" );
-  addNumber( "maxrateratio", "Maximum ratio between onset and steady-state firing rate for optimization", 2.0, 0.0, 1000.0, 0.1 ).setActivation( "ratioincrement", ">0" );
+  addNumber( "maxratediff", "Maximum difference between onset and steady-state firing rate for optimization", 10.0, 0.0, 1000.0, 1.0, "Hz" ).setActivation( "ratioincrement", ">0" );
   addTypeStyle( OptWidget::TabLabel, Parameter::Label );
 
   P.lock();
@@ -120,7 +120,7 @@ int FICurve::main( void )
   double sswidth = number( "sswidth" );
   int ratioincrement = number( "ratioincrement" );
   double minrate = number( "minrate" );
-  double maxrateratio = number( "maxrateratio" );
+  double maxratediff = number( "maxratediff" );
 
   double dccurrent = stimulusData().number( outTraceName( CurrentOutput[0] ) );
   if ( ibase == 1 ) {
@@ -332,7 +332,7 @@ int FICurve::main( void )
 	    k<Results.size();
 	    k=Range.next( ++k ) ) {
 	if ( Results[k].SSRate > minrate &&
-	     Results[k].OnRate/Results[k].SSRate > maxrateratio ) {
+	     Results[k].OnRate - Results[k].SSRate > maxratediff ) {
 	  n++;
 	  if ( n > 1 ) {
 	    printlog( "Skip currents above " + Str( Range[k] ) );

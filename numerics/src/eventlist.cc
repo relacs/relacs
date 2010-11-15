@@ -1608,12 +1608,15 @@ void EventList::spectrum( double tbegin, double tend, double step,
   psd = 0.0;
   SampleDataD p( psd.size(), 0.0 );
   SampleDataD rr( tbegin, tend, step );
+
+  int n = 0;
   for ( int i=0; i<size(); i++ ) {
     (*this)[i].rate( rr );
     rr -= mean( rr );
     rPSD( rr, p );
+    n++;
     for ( int k=0; k<psd.size(); k++ )
-      psd[k] += ( p[k] - psd[k] ) / (k+1);
+      psd[k] += ( p[k] - psd[k] ) / n;
   }
 
   // frequency axis:
@@ -1659,12 +1662,15 @@ void EventList::coherence( const SampleDataD &stimulus, SampleDataD &c ) const
   c = 0.0;
   SampleDataD cohere( c.size(), 0.0 );
   SampleDataD rr( stimulus.range() );
+
+  int n=0;
   for ( int i=0; i<size(); i++ ) {
     (*this)[i].rate( rr );
     rr -= mean( rr );
     ::relacs::coherence( stimulus, rr, cohere );
+    n++;
     for ( int k=0; k<c.size(); k++ )
-      c[k] += ( cohere[k] - c[k] ) / (k+1);
+      c[k] += ( cohere[k] - c[k] ) / n;
   }
   // frequency axis:
   c.setOffset( 0.0 );
