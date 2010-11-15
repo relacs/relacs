@@ -142,6 +142,7 @@ libpatchclampprojectsfeedforwardnetwork_la_CPPFLAGS = \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
     $(QT4_CPPFLAGS)
 
@@ -151,6 +152,7 @@ libpatchclampprojectsfeedforwardnetwork_la_LDFLAGS = \
 
 libpatchclampprojectsfeedforwardnetwork_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/plugins/ephys/src/libephystraces.la \
     $(QT4_LIBS)
 
 $(libpatchclampprojectsfeedforwardnetwork_la_OBJECTS) : moc_feedforwardnetwork.cc
