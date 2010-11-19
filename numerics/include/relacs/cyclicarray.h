@@ -188,6 +188,9 @@ class CyclicArray
     /*! Return the maximum value of the array between index \a from inclusively
         and index \a upto exclusively. */
   T max( int from, int upto ) const;
+    /*! Return the minimum and maximum value, \a min and \a max,
+        of the array between index \a from inclusively and index \a upto exclusively. */
+  void minMax( double &min, double &max, int from, int upto ) const;
     /*! Return the minimum absolute value of the array between index \a from inclusively
         and index \a upto exclusively. */
   T minAbs( int from, int upto ) const;
@@ -706,6 +709,28 @@ T CyclicArray< T >::max( int from, int upto ) const
       m = operator[]( k );
 
   return m;
+}
+
+
+template < class T >
+void CyclicArray< T >::minMax( double &min, double &max, int from, int upto ) const
+{
+  if ( from < minIndex() )
+    from = minIndex();
+  if ( upto > size() )
+    upto = size();
+
+  if ( from >= upto )
+    return;
+
+  min = operator[]( from );
+  max = min;
+  for ( int k=from+1; k<upto; k++ ) {
+    if ( operator[]( k ) > max )
+      max = operator[]( k );
+    else if ( operator[]( k ) < min )
+      min = operator[]( k );
+  }
 }
 
 

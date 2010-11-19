@@ -185,8 +185,9 @@ int FileStimulus::main( void )
   //  setupTrigger( events );
 
   // EOD amplitude:
-  FishAmplitude = eodAmplitude( trace( LocalEODTrace[0] ), events( LocalEODEvents[0] ),
-				events( LocalEODEvents[0] ).back() - Pause, events( LocalEODEvents[0] ).back() );
+  FishAmplitude = eodAmplitude( trace( LocalEODTrace[0] ),
+				events( LocalEODEvents[0] ).back() - Pause,
+				events( LocalEODEvents[0] ).back() );
 
   // plot trace:
   tracePlotSignal( Before+Duration+After, Before );
@@ -668,7 +669,7 @@ void FileStimulus::analyze( void )
 				   signalTime() + Duration + Pause );
 
   // EOD amplitude:
-  FishAmplitude = eodAmplitude( trace( LocalEODTrace[0] ), localeod,
+  FishAmplitude = eodAmplitude( trace( LocalEODTrace[0] ),
 				signalTime() + Duration, signalTime() + Duration + Pause );
 
   // contrast:

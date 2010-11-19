@@ -276,16 +276,17 @@ int JAR::main( void )
 
   // EOD amplitude:
   if ( EODTrace >= 0 )
-    FishAmplitude1 = eodAmplitude( trace( EODTrace ), events( EODEvents ),
-				   events( EODEvents ).back() - 0.5, events( EODEvents ).back() );
+    FishAmplitude1 = eodAmplitude( trace( EODTrace ), events( EODEvents ).back() - 0.5,
+				   events( EODEvents ).back() );
   else
     FishAmplitude1 = 0.0;
   FishAmplitude2 = 0.0;
 
   // adjust transdermal EOD:
   if ( LocalEODTrace[0] >= 0 ) {
-    FishAmplitude2 = eodAmplitude( trace( LocalEODTrace[0] ), events( LocalEODEvents[0] ),
-				   events( LocalEODEvents[0] ).back() - 0.5, events( LocalEODEvents[0] ).back() );
+    FishAmplitude2 = eodAmplitude( trace( LocalEODTrace[0] ),
+				   events( LocalEODEvents[0] ).back() - 0.5,
+				   events( LocalEODEvents[0] ).back() );
     double val2 = trace( LocalEODTrace[0] ).maxAbs( currentTime()-0.1,
 						    currentTime() );
     if ( val2 > 0.0 ) {
@@ -1057,11 +1058,11 @@ void JAR::analyze( void )
   TrueDeltaF = sige.frequency( signalTime(), signalTime() +  JARAverageTime ) - FishRate;
 
   // EOD amplitude:
-  FishAmplitude1 = eodAmplitude( trace( EODTrace ), eodglobal,
+  FishAmplitude1 = eodAmplitude( trace( EODTrace ),
 				 eodglobal.back() - JARAverageTime,
 				 eodglobal.back() );
   if ( LocalEODTrace[0] >= 0 )
-    FishAmplitude2 = eodAmplitude( trace( LocalEODTrace[0] ), eodlocal,
+    FishAmplitude2 = eodAmplitude( trace( LocalEODTrace[0] ),
 				   eodlocal.back() - JARAverageTime,
 				   eodlocal.back() );
 

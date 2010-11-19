@@ -472,6 +472,19 @@ class InData : public CyclicArray<float>, public DaqError
     /*! Return the maximum value of the trace since time \a from seconds. */
   double max( double from ) const
     { return max( indices( from ), size() ); };
+    /*! Return the minimum and maximum value, \a min and \a max,
+        of the trace between index \a from inclusively
+        and index \a upto exclusively. */
+  void minMax( double &min, double &max, int from, int upto ) const 
+    { CyclicArrayF::minMax( min, max, from, upto ); };
+    /*! Return the minimum and maximum value, \a min and \a max,
+        of the trace between times \a from and \a upto. */
+  void minMax( double &min, double &max, double from, double upto ) const
+    { minMax( min, max, indices( from ), indices( upto ) ); };
+    /*! Return the minimum and maximum value, \a min and \a max,
+        of the trace since time \a from seconds. */
+  void minMax( double &min, double &max, double from ) const
+    { minMax( min, max, indices( from ), size() ); };
     /*! Return the minimum absolute value of the trace between index \a from inclusively
         and index \a upto exclusively. */
   double minAbs( int from, int upto ) const 

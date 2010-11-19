@@ -44,18 +44,32 @@ public:
 
   EODTools( void );
 
-    /*! Detect eod peaks in \a data. */
+    /*! Detect eod \a peaks in \a data.
+        The times of the EOD peaks are the times of the maximum data values.
+        The sizes are the maximum of a square function fitted to the three
+        topmost data points. */
   void eodPeaks( const InData &data, double tbegin, double tend,
 		 double threshold, EventData &peaks );
-    /*! Detect eod troughs in \a data. */
+    /*! Detect eod \a troughs in \a data.
+        The times of the EOD troughs are the times of the minimum data values.
+        The sizes are the minimum of a square function fitted to the three
+        lowest data points. */
   void eodTroughs( const InData &data, double tbegin, double tend,
 		   double threshold, EventData &troughs );
-    /*! Mean size of eod troughs. */
+    /*! Detect eod \a peaks and \a troughs in \a data.
+        The times of the EOD peaks/troughs are the times of the maximum/minimum data values.
+        The sizes are the maximum/minimum of a square function fitted to the three
+        highest/lowest data points. */
+  void eodPeaksTroughs( const InData &data, double tbegin, double tend,
+			double threshold, EventData &peaks, EventData &troughs );
+    /*! Mean absolute size of eod peaks. */
+  double meanPeaks( const InData &data, double tbegin, double tend,
+		    double threshold );
+    /*! Mean absolute size of eod troughs. */
   double meanTroughs( const InData &data, double tbegin, double tend,
 		      double threshold );
     /*! Mean eod amplitude. */
-  double eodAmplitude( const InData &data, const EventData &eode,
-		       double tbegin, double tend );
+  double eodAmplitude( const InData &data, double tbegin, double tend );
 
     /*! Mean values of the upper and lower peaks and troughs of a beat. */
   void beatPeakTroughs( const InData &eodd, const EventData &bpe,
@@ -76,17 +90,14 @@ public:
 
     /*! The amplitude of the beat of period \a period determined
         from the standard deviation of EOD amplitudes. */
-  double beatAmplitude( const InData &eodd, const EventData &eode,
-			double tbegin, double tend, double period );
+  double beatAmplitude( const InData &eodd, double tbegin, double tend, double period );
     /*! The contrast of the beat of period \a period determined
         from the standard deviation of EOD amplitudes. */
-  double beatContrast( const InData &eodd, const EventData &eode,
-		       double tbegin, double tend, double period );
+  double beatContrast( const InData &eodd, double tbegin, double tend, double period );
     /*! The mean EOD amplitude and beat amplitudes of the beat
         of period \a period determined
         from the standard deviation of the upper and lower EOD amplitudes. */
-  void beatAmplitudes( const InData &eodd, const EventData &eode,
-		       double tbegin, double tend, double period,
+  void beatAmplitudes( const InData &eodd, double tbegin, double tend, double period,
 		       double &uppermean, double &upperampl,
 		       double &lowermean, double &lowerampl );
 

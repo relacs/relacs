@@ -31,7 +31,7 @@ namespace efield {
 EODDetector::EODDetector( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogDetector, 1, 
 	    "EODDetector", "EField",
-	    "Jan Benda", "1.4", "June 21, 2010" )
+	    "Jan Benda", "1.5", "Nov 19, 2010" )
 {
   // parameter:
   Threshold = 0.0001;
@@ -40,14 +40,17 @@ EODDetector::EODDetector( const string &ident, int mode )
   MaxEODPeriod = 0.01;  // 100 Hz
   ThreshRatio = 0.5;
   AdaptThresh = false;
+  AverageCycles = 100;
 
   // options:
   addNumber( "threshold", "Threshold", Threshold, MinThresh, MaxThresh, 0.01*MaxThresh, "", "", "%g", 2+8+32 );
   addBoolean( "adapt", "Adapt threshold", AdaptThresh, 2+8 );
   addNumber( "ratio", "Ratio", ThreshRatio, 0.05, 1.0, 0.05, "", "%", "%g", 2+8 ).setActivation( "adapt", "true" );
   addNumber( "maxperiod", "Maximum EOD period", MaxEODPeriod, 0.0, 1.0, 0.0001, "s", "ms", "%g", 8 );
+  addInteger( "averagecycles", "Average over", AverageCycles, 1, 1000000, 1, "EOD cycles", "", 8 );
   addNumber( "rate", "Rate", 0.0, 0.0, 100000.0, 0.1, "Hz", "Hz", "%.1f", 2+4 );
   addNumber( "size", "Size", 0.0, 0.0, 100000.0, 0.1, "", "", "%.3f", 2+4 );
+  addNumber( "meanvolts", "Average", 0.0, -10000.0, 10000.0, 0.1, "", "", "%.1f", 2+4 );
   addStyle( OptWidget::ValueLarge + OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack, 4 );
 
   // main layout:
@@ -109,6 +112,7 @@ void EODDetector::notify( void )
   AdaptThresh = boolean( "adapt" );
   ThreshRatio = number( "ratio" );
   MaxEODPeriod = number( "maxperiod" );
+  AverageCycles = integer( "averagecycles" );
   EDW.updateValues( OptWidget::changedFlag() );
   delFlags( OptWidget::changedFlag() );
 }
@@ -119,6 +123,7 @@ int EODDetector::adjust( const InData &data )
   unsetNotify();
   setUnit( "threshold", data.unit() );
   setUnit( "size", data.unit() );
+  setUnit( "meanvolts", data.unit() );
   setNotify();
   EDW.updateSettings();
   return 0;
@@ -137,12 +142,14 @@ int EODDetector::autoConfigure( const InData &data,
   // get rough estimate for a threshold:
   SampleDataF d( 0.0, tend-tbegin, data.stepsize() );
   data.copy( tbegin, d );
-  double thresh = 0.75*max( d );
-  // detect eods using this threshold:
-  EventData eods( (int)::floor( 2000.0*d.length() ), true );
+  double thresh = 0.5*( max( d ) - min( d ) );
+  // detect eod peaks and troughs using this threshold:
+  EventData eodpeaks( (int)::floor( 2000.0*d.length() ), true );
+  EventData eodtroughs( (int)::floor( 2000.0*d.length() ), true );
   AcceptEvent<SampleDataF::const_iterator,SampleDataF::const_range_iterator> A;
-  peaks( d, eods, thresh, A );
-  double ampl = eods.meanSize( 0.0, d.length() );
+  peaksTroughs( d, eodpeaks, eodtroughs, thresh, A );
+  double ampl = 0.5*(eodpeaks.meanSize( 0.0, d.length() ) -
+		     eodtroughs.meanSize( 0.0, d.length() ) );
   // set range:
   double min = ceil10( 0.1*ampl );
   double max = ceil10( ::floor( 10.0*ampl/min )*min );
@@ -167,14 +174,17 @@ int EODDetector::detect( const InData &data, EventData &outevents,
   D.peak( data.minBegin(), data.end(), outevents,
 	  Threshold, MinThresh, MaxThresh, *this );
 
+  double meanvolts = 0.0;
   if ( outevents.count( currentTime() - 0.1 ) <= 0 )
     outevents.updateMean( 1 );
-
+  else if ( currentTime() > AverageCycles/outevents.meanRate() )
+    meanvolts = data.mean( currentTime()-AverageCycles/outevents.meanRate(), currentTime() );
   unsetNotify();
   if ( AdaptThresh )
     setNumber( "threshold", Threshold );
   setNumber( "rate", outevents.meanRate() );
   setNumber( "size", outevents.meanSize() );
+  setNumber( "meanvolts", meanvolts );
   setNotify();
   EDW.updateValues( OptWidget::changedFlag() );
   delFlags( OptWidget::changedFlag() );
@@ -206,7 +216,7 @@ int EODDetector::checkEvent( InData::const_iterator first,
 
   // threshold for EOD time:
   double maxsize = 0.0;
-  if ( prevevent > first && *event <= 0.0 )
+  if ( prevevent > first )
     maxsize = *event - 0.25 * ( *event - *prevevent );
   else
     maxsize = 0.5 * *event;
@@ -240,23 +250,31 @@ int EODDetector::checkEvent( InData::const_iterator first,
   double y2 = *event;
   double y3 = *(event+1);
   double y1 = *(event-1);
-
-  if ( y2 <= 0.0 )
-    return 0;
-
   double a = y3 - 4.0*y2 + 3.0*y1;
   double b = 2.0*y3 - 4.0*y2 + 2.0*y1;
-
   if ( fabs( b ) < 1.0e-5 )
     return 0;
-
+  double peakampl = y1 - 0.25*a*a/b;
   /*
   // peak time:
   --event;
   time = event.time() + event.sampleInterval()*a/b;  // very noisy!
   */
-  // peak size:
-  size = y1 - 0.25*a*a/b;
+
+  // previous trough:
+  double troughampl = 0.0;
+  if ( prevevent-1 > first ) {
+    y2 = *prevevent;
+    y3 = *(prevevent+1);
+    y1 = *(prevevent-1);
+    a = y3 - 4.0*y2 + 3.0*y1;
+    b = 2.0*y3 - 4.0*y2 + 2.0*y1;
+    if ( fabs( b ) >= 1.0e-5 )
+      troughampl = y1 - 0.25*a*a/b;
+  }
+
+  // amplitude:
+  size = 0.5*(peakampl - troughampl);
   if ( size <= 0.0 )
     return 0;
 

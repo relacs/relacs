@@ -375,10 +375,8 @@ int Chirps::createAM( OutData &signal )
   signal.clear();
   signal.setTrace( GlobalAMEField );
   applyOutTrace( signal );
-  double sr = 30.0 * ( fabs(DeltaF) + ChirpSize );
-  if ( sr > signal.maxSampleRate() )
-    sr = signal.maxSampleRate();
-  signal.setSampleRate( sr );
+  double sr = fabs( DeltaF ) + ChirpSize;
+  signal.setSampleRate( floor( signal.maxSampleRate()/sr ) * sr );
   signal.setIntensity( 0.2 * FishAmplitude * 0.5 );
   // get the actual set sampling rate.
   // no signal is put out, because there isn't any.
@@ -622,7 +620,7 @@ int Chirps::main( void )
   //  setupTrigger( data, events );
 
   // EOD amplitude:
-  FishAmplitude = eodAmplitude( trace(LocalEODTrace[0]), events(LocalEODEvents[0]),
+  FishAmplitude = eodAmplitude( trace(LocalEODTrace[0]),
 				events(LocalEODEvents[0]).back() - 0.5,
 				events(LocalEODEvents[0]).back() );
 
@@ -1303,7 +1301,7 @@ void Chirps::analyze( void )
   TrueDeltaF = AM ? DeltaF : sigfreq - FishRate;
 
   // EOD amplitude:
-  FishAmplitude = eodAmplitude( trace(LocalEODTrace[0]), eod2,
+  FishAmplitude = eodAmplitude( trace(LocalEODTrace[0]),
 				eod2.back() - 0.5, eod2.back() );
 
   // contrast:

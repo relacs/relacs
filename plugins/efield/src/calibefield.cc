@@ -180,21 +180,46 @@ int CalibEField::main( void )
   applyOutTrace( signal );
   signal.sineWave( frequency, duration, 1.0 );
   signal.back() = 0;
+  double previntensity = -1.0;
 
   while ( softStop() == 0 ) {
 
     // set intensity:
     if ( intensity > maxIntensity( outtrace ) ) {
+      printlog( "intensity " + Str( intensity ) + " larger than maximum possible intensity " + Str( maxIntensity( outtrace ) ) );
       maxintensity = maxIntensity( outtrace );
-      intensitystep = (maxintensity - minintensity)/(numintensities-1);
-      intensity = minintensity + intensitycount*intensitystep;
+      if ( minintensity >= 0.5*maxintensity || intensitycount < 4 ) {
+	printlog( "reduced minintensity. minintensity=" + Str( minintensity ) + ", maxintensity=" + Str( maxintensity ) + ", intensitystep=" + Str( intensitystep ) );
+	minintensity = maxintensity*mincontrast/maxcontrast;
+	intensitystep = (maxintensity - minintensity)/(numintensities-1);
+	Intensities.clear();
+	/*
+	if ( previntensity > 0.0 ) {
+	  intensitycount = -1;
+	  do {
+	    intensitycount++;	  
+	    intensity = minintensity + intensitycount*intensitystep;
+	    if ( intensity >= previntensity )
+	      break;
+	  } while ( intensity < maxintensity );
+	}
+	else
+	*/
+	  intensitycount = 0;
+      }
+      else {
+	intensity = minintensity + intensitycount*intensitystep;
+      }
+      printlog( "new intensity range. minintensity=" + Str( minintensity ) + ", maxintensity=" + Str( maxintensity ) + ", intensitystep=" + Str( intensitystep ) );
     }
     else if ( intensity < minIntensity( outtrace ) ) {
+      printlog( "intensity " + Str( intensity ) + " smalle than minimum possible intensity " + Str( minIntensity( outtrace ) ) );
       minintensity = minIntensity( outtrace );
       intensitystep = (maxintensity - minintensity)/(numintensities-1);
       intensity = minintensity + intensitycount*intensitystep;
     }
     signal.setIntensity( intensity );
+    previntensity = intensity;
 
     // write stimulus:
     write( signal );
@@ -246,6 +271,7 @@ int CalibEField::main( void )
 	intensitystep *= 0.5;
 	minintensity *= 0.5;
 	maxintensity *= 0.5;
+	printlog( "divided intensity range by two. minintensity=" + Str( minintensity ) + ", maxintensity=" + Str( maxintensity ) );
       }
       // response too weak?
       else if ( r == 1 || 
@@ -253,6 +279,12 @@ int CalibEField::main( void )
 	intensitystep *= 2.0;
 	minintensity *= 2.0;
 	maxintensity *= 2.0;
+	printlog( "multiplied intensity range by two. minintensity=" + Str( minintensity ) + ", maxintensity=" + Str( maxintensity ) );
+	if ( maxintensity > maxIntensity( outtrace ) ) {
+	  minintensity = intensity + intensitystep;
+	  maxintensity = maxIntensity( outtrace );
+	  printlog( "prevented overflow: new intensity range minintensity=" + Str( minintensity ) + ", maxintensity=" + Str( maxintensity ) );
+	}
       }
       // fit totally failed:
       else if ( FitGain <= 0.0 ) {
@@ -306,6 +338,7 @@ int CalibEField::main( void )
       intensitycount = 0;
       intensity = minintensity;
       Intensities.clear();
+      printlog( "new intensity range. minintensity=" + Str( minintensity ) + ", maxintensity=" + Str( maxintensity ) + ", intensitystep=" + Str( intensitystep ) );
     }
     else
       intensity += intensitystep;
@@ -364,6 +397,7 @@ void CalibEField::plot( double maxx )
   P.clear();
   P.setXRange( 0.0, maxx );
   P.setYRange( 0.0, maxx*FitGain+FitOffset );
+  P.setYRange( 0.0, Plot::AutoScale );
   P.plotLine( 0.0, 0.0, maxx, maxx, Plot::Blue, 4 );
   P.plotLine( 0.0, FitOffset, maxx, maxx*FitGain+FitOffset, Plot::Yellow, 2 );
   P.plot( Intensities, 1.0, Plot::Transparent, 1, Plot::Solid, Plot::Circle, 6, Plot::Red, Plot::Red );
@@ -376,7 +410,6 @@ int CalibEField::analyze( double duration, double beatfrequency,
 			  double mincontrast, double maxcontrast,
 			  double intensity, bool fish )
 {
-  const EventData &localeod = events( LocalEODEvents[0] );
   const InData &localeodtrace = trace( LocalEODTrace[0] );
 
   if ( fish ) {
@@ -385,11 +418,10 @@ int CalibEField::analyze( double duration, double beatfrequency,
     double upperampl = 0.0;
     double lowermean = 0.0;
     double lowerampl = 0.0;
-    beatAmplitudes( localeodtrace, localeod,
-		    signalTime(), signalTime() + duration, 1.0/beatfrequency,
+    beatAmplitudes( localeodtrace, signalTime(), signalTime() + duration, 1.0/beatfrequency,
 		    uppermean, upperampl, lowermean, lowerampl );
-    
-    Amplitude = sqrt( 2.0 ) * 0.5 * (upperampl + lowerampl);
+
+    Amplitude = 0.5 * (upperampl + lowerampl);
 
     // range overflow?
     if ( uppermean+upperampl > 0.95 * localeodtrace.maxValue() ||
@@ -410,31 +442,34 @@ int CalibEField::analyze( double duration, double beatfrequency,
       return 1;
     }
 
-    double contrast = (upperampl + lowerampl)/(fabs(uppermean) + fabs(lowermean)); 
+    double contrast = (upperampl + lowerampl)/fabs(uppermean - lowermean);
 
     // contrast overflow?
     if ( contrast > 1.1*maxcontrast ) {
-      Str s = "Contrast overflow: "
-	+ Str( (upperampl + lowerampl)/(fabs(uppermean) + fabs(lowermean)) );
+      Str s = "Contrast overflow: " + Str( 100.0*contrast ) + "%";
       message( s );
       return 2;
     }
 
     // contrast underflow?
     if ( contrast < 0.9*mincontrast ) {
-      Str s = "Contrast underflow: "
-	+ Str( (upperampl + lowerampl)/(fabs(uppermean) + fabs(lowermean)) );
+      Str s = "Contrast underflow: " + Str( 100.0*contrast ) + "%";
       message( s );
       return 1;
     }
+    printlog( "Contrast: " + Str( 100.0*contrast ) + "%" );
   }
   else {
     // no fish EOD present:
 
     // mean EOD amplitude:
     double offset = 0.1 * duration;
-    Amplitude = localeod.meanSize( signalTime() + offset,
-				   signalTime() + duration - offset );
+    double min=0.0, max=0.0;
+    localeodtrace.minMax( min, max,
+			  signalTime() + offset, signalTime() + duration - offset );
+    double threshold = 0.5*(max-min);
+    Amplitude = meanPeaks( localeodtrace, signalTime() + offset,
+			   signalTime() + duration - offset, threshold );
     
     // overflow?
     if ( Amplitude > 0.95 * localeodtrace.maxValue() ) {

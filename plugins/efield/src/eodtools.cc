@@ -43,40 +43,8 @@ public:
 		  double &minthresh, double &maxthresh,
 		  double &time, double &size, double &width )
   { 
-    double maxsize = 0.5 * *event;
-    double sampleinterval = *eventtime - *(eventtime - 1);
-
-    // previous maxsize crossing time:
-    DataIter id = event;
-    TimeIter it = eventtime;
-    double ival = *id;
-    double pval = ival;
-    for ( --id, --it; id != first; --id, --it ) {
-      ival = *id;
-      if ( ival < maxsize ) {
-	double m = sampleinterval / ( pval - ival );
-	time = *it + m * ( maxsize - ival );
-	break;
-      }
-      pval = ival;
-    }
-
-    /*
-    // next maxsize crossing time:
-    id = event;
-    ival = *id;
-    pval = ival;
-    for ( ++id, ++it; id != last; ++id, ++it ) {
-      ival = *id;
-      if ( ival < maxsize ) {
-	double m = sampleinterval / ( ival - pval );
-	double t = *it + m * ( maxsize - ival );
-	time = 0.5 * ( time + t );
-	break;
-      }
-      pval = ival;
-    }
-    */
+    // time:
+    time = *eventtime;
 
     // peak:
     double y2 = *event;
@@ -185,26 +153,139 @@ void EODTools::eodTroughs( const InData &data, double tbegin, double tend,
 }
 
 
+class AcceptEODPeaksTroughs
+{
+public:
+  int checkPeak( InDataIterator first, InDataIterator last,
+		 InDataIterator event, InDataTimeIterator eventtime,
+		 InDataIterator index, InDataTimeIterator indextime,
+		 InDataIterator prevevent, InDataTimeIterator prevtime,
+		 EventList &outevents,
+		 double &threshold,
+		 double &minthresh, double &maxthresh,
+		 double &time, double &size, double &width )
+  { 
+    // time:
+    time = *eventtime;
+
+    // peak:
+    double y2 = *event;
+    double y3 = *(event+1);
+    --event;
+    double y1 = *event;
+    double a = y3 - 4.0*y2 + 3.0*y1;
+    double b = 2.0*y3 - 4.0*y2 + 2.0*y1;
+    // peak time:
+    // time = *eventtime + event.sampleInterval()*a/b;  // very noisy!
+    // peak size:
+    size = y1 - 0.25*a*a/b;
+    
+    // width:
+    width = 0.0;
+    
+    // accept:
+    return 1; 
+  }
+
+  int checkTrough( InDataIterator first, InDataIterator last,
+		   InDataIterator event, InDataTimeIterator eventtime, 
+		   InDataIterator index, InDataTimeIterator indextime,
+		   InDataIterator prevevent, InDataTimeIterator prevtime,
+		   EventList &outevents, double &threshold,
+		   double &minthresh, double &maxthresh,
+		   double &time, double &size, double &width )
+  {
+    // time:
+    time = *eventtime;
+
+    // peak:
+    double y2 = *event;
+    double y3 = *(event+1);
+    --event;
+    double y1 = *event;
+    double a = y3 - 4.0*y2 + 3.0*y1;
+    double b = 2.0*y3 - 4.0*y2 + 2.0*y1;
+    // peak size:
+    size = y1 - 0.25*a*a/b;
+    
+    // width:
+    width = 0.0;
+    
+    // accept:
+    return 1; 
+  }
+
+};
+
+
+void EODTools::eodPeaksTroughs( const InData &data, double tbegin, double tend,
+				double threshold, EventData &troughs, EventData &peaks )
+{
+  peaks.clear();
+  troughs.clear();
+  if ( tend < tbegin )
+    return;
+  InDataIterator first = data.begin() + tbegin;
+  if ( first < data.minBegin() )
+    first = data.minBegin();
+  InDataTimeIterator firsttime( first );
+  InDataIterator last = data.begin() + tend;
+  if ( last > data.end() )
+    last = data.end();
+  peaks.reserve( long( (tend-tbegin) * 10000.0 ) );
+  peaks.setSource( 1 );
+  troughs.reserve( long( (tend-tbegin) * 10000.0 ) );
+  troughs.setSource( 1 );
+  EventList peaktroughs( &peaks );
+  peaktroughs.add( &troughs );
+  AcceptEODPeaksTroughs accept;
+  Detector< InDataIterator, InDataTimeIterator > D;
+  D.init( first, last, firsttime );
+  D.peakTrough( first, last, peaktroughs, threshold,
+		threshold, threshold, accept );
+}
+
+
+double EODTools::meanPeaks( const InData &data, double tbegin, double tend,
+			    double threshold )
+{
+  EventData peaks( 0, true );
+  eodPeaks( data, tbegin, tend, threshold, peaks );
+  double size = 0.0;
+  for ( int k = 0; k<peaks.size(); k++ )
+    size += ( peaks.eventSize( k ) - size )/(k+1);
+  return size;
+}
+
+
 double EODTools::meanTroughs( const InData &data, double tbegin, double tend,
 			      double threshold )
 {
   EventData troughs( 0, true );
   eodTroughs( data, tbegin, tend, threshold, troughs );
   double size = 0.0;
-  for ( int k = 0; k<troughs.size(); k++ ) {
+  for ( int k = 0; k<troughs.size(); k++ )
     size += ( troughs.eventSize( k ) - size )/(k+1);
-  }
-
   return size;
 }
 
 
-double EODTools::eodAmplitude( const InData &eodd, const EventData &eode,
-			       double tbegin, double tend )
+double EODTools::eodAmplitude( const InData &eodd, double tbegin, double tend )
 {
-  double up = eode.meanSize( tbegin, tend );
-  double down = meanTroughs( eodd, tbegin, tend, 0.2 * up );
-  return up - down;
+  double min=0.0, max=0.0;
+  eodd.minMax( min, max, tbegin, tend );
+  double threshold = 0.5*(max-min);
+
+  EventData peaks( 0, true );
+  EventData troughs( 0, true );
+  eodPeaksTroughs( eodd, tbegin, tend, threshold, peaks, troughs );
+  double peaksize = 0.0;
+  for ( int k = 0; k<peaks.size(); k++ )
+    peaksize += ( peaks.eventSize( k ) - peaksize )/(k+1);
+  double troughsize = 0.0;
+  for ( int k = 0; k<peaks.size(); k++ )
+    troughsize += ( peaks.eventSize( k ) - troughsize )/(k+1);
+  return 0.5*(peaksize - troughsize);
 }
 
 
@@ -289,7 +370,7 @@ double EODTools::beatContrast( const InData &eodd, const EventData &bpe,
 }
 
 
-void EODTools::beatAmplitudes( const InData &eodd, const EventData &eode,
+void EODTools::beatAmplitudes( const InData &eodd,
 			       double tbegin, double tend, double period,
 			       double &uppermean, double &upperampl,
 			       double &lowermean, double &lowerampl )
@@ -299,22 +380,27 @@ void EODTools::beatAmplitudes( const InData &eodd, const EventData &eode,
   double window = floor( duration/period )*period;
   double offset = 0.5*(duration - window);
 
-  // EOD peaks:
+  // threshold:
+  double min=0.0, max=0.0;
+  eodd.minMax( min, max, tbegin, tend );
+  double threshold = 0.5*(max-min);
+
+  // EOD peaks and troughs:
+  EventData uppereod( (int)::floor( 2000.0*(tend-tbegin) ), true );
+  EventData lowereod( (int)::floor( 2000.0*(tend-tbegin) ), true );
+  eodPeaksTroughs( eodd, tbegin, tend, threshold, uppereod, lowereod );
+
   upperampl = 0.0;
-  uppermean = eode.meanSize( tbegin+offset, tend-offset, upperampl );
+  uppermean = uppereod.meanSize( tbegin+offset, tend-offset, upperampl );
   upperampl *= ::sqrt( 2.0 );
 
-  // EOD troughs:
-  double threshold = fabs( uppermean ) - upperampl;
-  EventData lowereod( eode.count( tbegin, tend ), true );
-  eodTroughs( eodd, tbegin, tend, threshold, lowereod );
   lowerampl = 0.0;
   lowermean = lowereod.meanSize( tbegin+offset, tend-offset, lowerampl );
   lowerampl *= ::sqrt( 2.0 );
 }
 
 
-double EODTools::beatAmplitude( const InData &eodd, const EventData &eode,
+double EODTools::beatAmplitude( const InData &eodd,
 				double tbegin, double tend, double period )
 {
   // duration as integer multiples of beat period:
@@ -322,14 +408,19 @@ double EODTools::beatAmplitude( const InData &eodd, const EventData &eode,
   double window = floor( duration/period )*period;
   double offset = 0.5*(duration - window);
 
-  // EOD peaks:
-  double uppersd = 0.0;
-  double uppera = eode.meanSize( tbegin+offset, tend-offset, uppersd );
+  // threshold:
+  double min=0.0, max=0.0;
+  eodd.minMax( min, max, tbegin, tend );
+  double threshold = 0.5*(max-min);
 
-  // EOD troughs:
-  double threshold = fabs( uppera ) - sqrt( 2.0 )*uppersd;
-  EventData lowereod( eode.count( tbegin, tend ), true );
-  eodTroughs( eodd, tbegin, tend, threshold, lowereod );
+  // EOD peaks and troughs:
+  EventData uppereod( (int)::floor( 2000.0*(tend-tbegin) ), true );
+  EventData lowereod( (int)::floor( 2000.0*(tend-tbegin) ), true );
+  eodPeaksTroughs( eodd, tbegin, tend, threshold, uppereod, lowereod );
+
+  double uppersd = 0.0;
+  uppereod.meanSize( tbegin+offset, tend-offset, uppersd );
+
   double lowersd = 0.0;
   lowereod.meanSize( tbegin+offset, tend-offset, lowersd );
 
@@ -337,7 +428,7 @@ double EODTools::beatAmplitude( const InData &eodd, const EventData &eode,
 }
 
 
-double EODTools::beatContrast( const InData &eodd, const EventData &eode,
+double EODTools::beatContrast( const InData &eodd,
 			       double tbegin, double tend, double period )
 {
   // duration as integer multiples of beat period:
@@ -345,18 +436,23 @@ double EODTools::beatContrast( const InData &eodd, const EventData &eode,
   double window = floor( duration/period )*period;
   double offset = 0.5*(duration - window);
 
-  // EOD peaks:
-  double uppersd = 0.0;
-  double uppera = eode.meanSize( tbegin+offset, tend-offset, uppersd );
+  // threshold:
+  double min=0.0, max=0.0;
+  eodd.minMax( min, max, tbegin, tend );
+  double threshold = 0.5*(max-min);
 
-  // EOD troughs:
-  double threshold = fabs( uppera ) - sqrt( 2.0 )*uppersd;
-  EventData lowereod( eode.count( tbegin, tend ), true );
-  eodTroughs( eodd, tbegin, tend, threshold, lowereod );
+  // EOD peaks and troughs:
+  EventData uppereod( (int)::floor( 2000.0*(tend-tbegin) ), true );
+  EventData lowereod( (int)::floor( 2000.0*(tend-tbegin) ), true );
+  eodPeaksTroughs( eodd, tbegin, tend, threshold, uppereod, lowereod );
+
+  double uppersd = 0.0;
+  double uppera = uppereod.meanSize( tbegin+offset, tend-offset, uppersd );
+
   double lowersd = 0.0;
   double lowera = lowereod.meanSize( tbegin+offset, tend-offset, lowersd );
 
-  return ::sqrt( 2.0 )*(uppersd + lowersd)/(fabs(uppera) + fabs(lowera));
+  return ::sqrt( 2.0 )*(uppersd + lowersd)/fabs(uppera - lowera);
 }
 
 

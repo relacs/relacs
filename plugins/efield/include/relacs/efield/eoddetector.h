@@ -55,8 +55,9 @@ The times of the EOD peaks and their amplitude.
 - \c adapt=false: Adapt threshold (\c boolean)
 - \c ratio=50%: Ratio (\c number)
 - \c maxperiod=10ms: Maximum EOD period (\c number)
+- \c averagecycles=100: Number of EOD cycles to be averaged over for computing mean voltage (\c integer)
 
-\version 1.4 (Jun 21, 2010)
+\version 1.5 (Nov 19, 2010)
 */
 
 
@@ -105,6 +106,7 @@ protected:
   double MinThresh;
   double MaxThresh;
   double ThreshRatio;
+  int AverageCycles;
   bool AdaptThresh;
 
     /*! Maximum period of the EOD to detect in seconds. */

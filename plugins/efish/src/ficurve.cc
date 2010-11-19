@@ -26,7 +26,7 @@ namespace efish {
 
 
 FICurve::FICurve( void )
-  : RePro( "FICurve", "efish", "Jan Benda", "1.5", "Aug 16, 2010" )
+  : RePro( "FICurve", "efish", "Jan Benda", "1.6", "Nov 19, 2010" )
 {
   // parameter:
   Duration = 0.4;
@@ -68,6 +68,7 @@ FICurve::FICurve( void )
   addNumber( "minrate", "Minimum required onset rate", MinRate, 0.0, 2000.0, 10.0, "Hz" );
   addNumber( "minratefrac", "Minimum required rate differences", MinRateFrac, 0.0, 1.0, 0.05, "1", "%" );
   //  addNumber( "minrateslope", "Minimum slope of f-I curve", MinRateSlope, 0.0, 1000.0, 10.0, "Hz/mV/cm" );
+  addBoolean( "adjust", "Adjust input gain?", true );
   addTypeStyle( OptWidget::TabLabel, Parameter::Label );
   
   // variables:
@@ -117,6 +118,7 @@ int FICurve::main( void )
   MinRate = number( "minrate" );
   MinRateFrac = number( "minratefrac" );
   //  MinRateSlope = number( "minrateslope" );
+  bool adjustg = boolean( "adjust" );
 
   // check EODs:
   if ( LocalEODTrace[0] < 0 || LocalEODEvents[0] < 0 ) {
@@ -137,11 +139,6 @@ int FICurve::main( void )
 
   // trigger:
   //  setupTrigger( data, events );
-
-  // adjust EOD2 gain:
-  adjustGain( trace( LocalEODTrace[0] ), 1.05*maxintensityfac *
-	      trace( LocalEODTrace[0] ).maxAbs( currentTime()-0.2,
-						currentTime() ) );
 
   // intensities:
   double maxint = maxintensityfac * FishAmplitude;
@@ -384,10 +381,12 @@ int FICurve::main( void )
       }
 
       // adjust input gains:
-      for ( int k=0; k<MaxSpikeTraces; k++ )
-	if ( SpikeTrace[k] >= 0 )
-	  adjust( trace( SpikeTrace[k] ), signalTime()+Duration,
-		  signalTime()+Duration+Pause, 0.8 );
+      if ( adjustg ) {
+	for ( int k=0; k<MaxSpikeTraces; k++ )
+	  if ( SpikeTrace[k] >= 0 )
+	    adjust( trace( SpikeTrace[k] ), signalTime()+Duration,
+		    signalTime()+Duration+Pause, 0.8 );
+      }
 
       // analyze:
       analyze();
@@ -798,77 +797,98 @@ void FICurve::selectRange( void )
     return;
 
   int pinx = PreIntensityRange.pos();
-  int iinx = IntensityRange.pos();
-
-  // index of current background intensity:
-  int sinx = IntensityRange.pos( *PreIntensityRange );
-
-  // no response:
-  if ( Response[0][pinx][iinx].OnsetRate < MinRate ) {
-
-    // at left end:
-    if ( iinx < sinx ) {
-      printlog( "  skip zeros 0 - " + Str( iinx )
-		+ " rate: " + Str( Response[0][pinx][iinx].OnsetRate )
-		+ " minrate: " + Str( MinRate ) );
-      IntensityRange.setSkipBelow( iinx );
-    }
-    /* this makes only sense, if the f-I curve has anegative slope!
-    // at right end:
-    else if ( iinx > sinx ) {
-      printlog( "  skip zeros " + Str( iinx ) + " - " + Str( IntensityRange.size()-1 )
-		+ " rate: " + Str( Response[0][pinx][iinx].OnsetRate )
-		+ " minrate: " + Str( MinRate ) );
-      IntensityRange.setSkipAbove( iinx );
-    }
-    */
-
-  }
 
   // maximum and minimum onset response:
   int k = IntensityRange.next( 0 );
   double min = Response[0][pinx][k].OnsetRate;
+  int  mininx = k;
   double max = min;
+  int  maxinx = k;
   for ( k=IntensityRange.next( k+1 );
 	k<IntensityRange.size();
 	k=IntensityRange.next( k+1 ) ) {
-    if ( Response[0][pinx][k].OnsetRate > max )
+    if ( Response[0][pinx][k].OnsetRate > max ) {
       max = Response[0][pinx][k].OnsetRate;
-    else if ( Response[0][pinx][k].OnsetRate < min )
+      maxinx = k;
+    }
+    else if ( Response[0][pinx][k].OnsetRate < min ) {
       min = Response[0][pinx][k].OnsetRate;
+      mininx = k;
+    }
   }
 
-  // no change in response:
-  // at left end:
-  if ( iinx < sinx ) {
-    for ( k = IntensityRange.previous( iinx-1 );
-	  k >= 0;
-	  k = IntensityRange.previous( k-1 ) ) {
-      if ( fabs( Response[0][pinx][k].OnsetRate - Response[0][pinx][iinx].OnsetRate ) >
-	   MinRateFrac*(max-min) )
+  // no response:
+  if ( mininx < maxinx ) {
+    // monotonically increasing f-I curve:
+    int skipinx = -1;
+    for ( k=IntensityRange.next( 0 );
+	  k<IntensityRange.size();
+	  k=IntensityRange.next( k+1 ) ) {
+      if ( Response[0][pinx][k].OnsetRate < MinRate )
+	skipinx = k;
+      else
 	break;
     }
-    if ( k < 0 ) {
-      printlog( "  skip left 0 - " + Str( iinx )
-		+ " rate: " + Str( Response[0][pinx][iinx].OnsetRate )
-		+ " delta rate: " + Str( max-min ) );
-      IntensityRange.setSkipBelow( iinx );
+    if ( skipinx >= 0 ) {
+      printlog( "  skip zeros 0 - " + Str( skipinx )
+		+ " rate: " + Str( Response[0][pinx][skipinx].OnsetRate )
+		+ " minrate: " + Str( MinRate ) );
+      IntensityRange.setSkipBelow( skipinx );
     }
   }
-  // at right end:
-  else if ( iinx > sinx ) {
-    for ( k = IntensityRange.next( iinx+1 );
-	  k < IntensityRange.size();
-	  k = IntensityRange.next( k+1 ) ) {
-      if ( fabs( Response[0][pinx][k].OnsetRate - Response[0][pinx][iinx].OnsetRate ) >
-	   MinRateFrac*(max-min) )
+  else {
+    // monotonically decreasing f-I curve:
+    int skipinx = -1;
+    for ( k = IntensityRange.previous( IntensityRange.size()-1 );
+	  k >= 0;
+	  k = IntensityRange.previous( k-1 ) ) {
+      if ( Response[0][pinx][k].OnsetRate < MinRate )
+	skipinx = k;
+      else
 	break;
     }
-    if ( k >= IntensityRange.size() ) {
-      printlog( "  skip right " + Str( iinx ) + " - " + Str( IntensityRange.size()-1 )
-		+ " rate: " + Str( Response[0][pinx][iinx].OnsetRate )
+    if ( skipinx >= 0 ) {
+      printlog( "  skip zeros " + Str( skipinx ) + " - " + Str( IntensityRange.size()-1 )
+		+ " rate: " + Str( Response[0][pinx][skipinx].OnsetRate )
+		+ " minrate: " + Str( MinRate ) );
+      IntensityRange.setSkipAbove( skipinx );
+    }
+  }
+
+  // no change in response at right end for monotonically increasing f-I curve:
+  if ( mininx < maxinx ) {
+    int skipinx = -1;
+    for ( k = IntensityRange.previous( IntensityRange.size()-1 );
+	  k >= 0;
+	  k = IntensityRange.previous( k-1 ) ) {
+      if ( fabs( Response[0][pinx][k].OnsetRate - max ) < MinRateFrac*(max-min) )
+	skipinx = k;
+      else
+	break;
+    }
+    if ( skipinx >= 0 ) {
+      printlog( "  skip right " + Str( skipinx ) + " - " + Str( IntensityRange.size()-1 )
+		+ " rate: " + Str( Response[0][pinx][skipinx].OnsetRate )
 		+ " delta rate: " + Str( max-min ) );
-      IntensityRange.setSkipAbove( iinx );
+      IntensityRange.setSkipAbove( skipinx );
+    }
+  }
+  else {
+    // no change in response at left end for monotonically decreasing f-I curve:
+    int skipinx = -1;
+    for ( k = IntensityRange.next( 0 );
+	  k < IntensityRange.size();
+	  k = IntensityRange.next( k+1 ) ) {
+      if ( fabs( Response[0][pinx][k].OnsetRate - max ) < MinRateFrac*(max-min) )
+	skipinx = k;
+      else
+	break;
+    }
+    if ( skipinx >= 0 ) {
+      printlog( "  skip left 0 - " + Str( skipinx )
+		+ " rate: " + Str( Response[0][pinx][skipinx].OnsetRate )
+		+ " delta rate: " + Str( max-min ) );
+      IntensityRange.setSkipBelow( skipinx );
     }
   }
 

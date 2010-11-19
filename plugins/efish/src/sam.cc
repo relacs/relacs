@@ -331,8 +331,9 @@ int SAM::main( void )
   // XXX  setupTrigger( traces(), events() );
 
   // EOD amplitude:
-  FishAmplitude = eodAmplitude( trace( LocalEODTrace[0] ), events( LocalEODEvents[0] ),
-				events( LocalEODEvents[0] ).back() - 0.5, events( LocalEODEvents[0] ).back() );
+  FishAmplitude = eodAmplitude( trace( LocalEODTrace[0] ),
+				events( LocalEODEvents[0] ).back() - 0.5,
+				events( LocalEODEvents[0] ).back() );
   if ( FishAmplitude <= 1.0e-8 ) {
     warning( "No EOD amplitude on local EOD electrode!" );
     return Failed;
@@ -856,7 +857,7 @@ void SAM::analyze( void )
   }
 
   // EOD amplitude:
-  FishAmplitude = eodAmplitude( trace( LocalEODTrace[0] ), eod2,
+  FishAmplitude = eodAmplitude( trace( LocalEODTrace[0] ),
 				eod2.back() - 0.5, eod2.back() );
 
   // contrast:
