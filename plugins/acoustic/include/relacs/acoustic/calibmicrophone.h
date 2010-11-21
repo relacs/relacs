@@ -33,7 +33,7 @@ namespace acoustic {
 
 /*!
 \class CalibMicrophone
-\brief Determine calibration factor for a microphone using a calibration sound source.
+\brief [RePro] Determine calibration factor for a microphone using a calibration sound source.
 \author Jan Benda
 
 \par Options

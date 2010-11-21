@@ -36,9 +36,7 @@ namespace efield {
 \class CalibEField
 \brief [RePro] Calibrates an attenuator for electric field stimuli.
 \author Jan Benda
-\version 1.3 (Jan 07, 2010)
-\bug if slope == 0 increase Gain by factor 10.
-\bug if fish, then set Duration and BeatFrequency so that we get at least 6 beats!
+\version 2.0 (Nov 21, 2010)
 
 \par Options
 - \b reset (\c boolean): Reset calibration, i.e. do not use old calibration results.
@@ -47,10 +45,10 @@ namespace efield {
 - \b beatfreq (\c number, \e Hz): If there is a fish EOD, then use calibration stimulus that results in this beat frequency.
 - \b duration (\c number, \e ms): Duration of calibration stimulus.
 - \b pause (\c number, \e ms): %Pause between successive stimuli.
+- \b targetcontrast (\c number, \e %): Target contrast to be tested first.
 - \b maxcontrast (\c number, \e %): Maximum contrast (beat amplitude / EOD amplitude) to be used.
 - \b maxint (\c integer): Maximum number of test intensities.
 - \b minintensity (\c number, \e %): Minimum stimulus intensity relative to EOD amplitude.
-- \b repeats (\c integer): Maximum repetitions of the calibration protocol.
 
 \par Files
 - \b calibrate.dat : the calibration data (measured versus requested stimulus intensity).
@@ -77,25 +75,22 @@ public:
   ~CalibEField( void );
 
   virtual int main( void );
-  void stop( int outtrace );
-  void saveData( const base::LinearAttenuate *latt );
+  void saveData( const MapD &intensities, const base::LinearAttenuate *latt );
 
     /*! Plot data. */
-  void plot( double maxx );
+  void plotGain( const MapD &gainamplitudes, double targetintensity );
+  void plotIntensities( const MapD &intensities, double maxx );
     /*! Analyze data. */
-  int analyze( double duration, double beatfrequency,
-	       double mincontrast, double maxcontrast, double intensity,
-	       bool fish );
+  int analyze( const InData &localeodtrace, double duration,
+	       double beatfrequency, double mincontrast, double maxcontrast,
+	       double intensity, bool fish, double &amplitude );
 
 
 private:
 
   double FitGain;
   double FitOffset;
-  double Amplitude;
   string LocalEODUnit;
-  MapD Intensities;
-
   Plot P;
 
 };

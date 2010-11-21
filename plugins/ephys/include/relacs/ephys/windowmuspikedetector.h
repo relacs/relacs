@@ -32,7 +32,7 @@ namespace ephys {
 
 /*!
 \class WindowMUSpikeDetector
-\brief [Filter] Extracellular spike discrimination based on threshold windows.
+\brief [Detector] Extracellular spike discrimination based on threshold windows.
 \author Jan Benda
 \version 1.0 (Sep 30, 2010)
 */

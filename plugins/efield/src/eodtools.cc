@@ -219,7 +219,7 @@ public:
 
 
 void EODTools::eodPeaksTroughs( const InData &data, double tbegin, double tend,
-				double threshold, EventData &troughs, EventData &peaks )
+				double threshold, EventData &peaks, EventData &troughs )
 {
   peaks.clear();
   troughs.clear();
@@ -283,8 +283,8 @@ double EODTools::eodAmplitude( const InData &eodd, double tbegin, double tend )
   for ( int k = 0; k<peaks.size(); k++ )
     peaksize += ( peaks.eventSize( k ) - peaksize )/(k+1);
   double troughsize = 0.0;
-  for ( int k = 0; k<peaks.size(); k++ )
-    troughsize += ( peaks.eventSize( k ) - troughsize )/(k+1);
+  for ( int k = 0; k<troughs.size(); k++ )
+    troughsize += ( troughs.eventSize( k ) - troughsize )/(k+1);
   return 0.5*(peaksize - troughsize);
 }
 
