@@ -142,7 +142,7 @@ int SAM::createSignal( const InData &data, const EventData &events )
 	n = 1;
       Signal->sineWave( DeltaF, n/DeltaF );
       ident = "SAM";
-      IntensityGain = 0.5;
+      IntensityGain = 1.0;
       TrueDeltaF = 1.0 / Signal->duration();
     }
     else {
@@ -161,7 +161,7 @@ int SAM::createSignal( const InData &data, const EventData &events )
 	n = 1;
       Signal->sineWave( stimulusrate, n*p );
       ident = "sinewave";
-      IntensityGain = 0.5;
+      IntensityGain = 1.0;
     }
     else {
       // extract an EOD waveform:
@@ -173,7 +173,7 @@ int SAM::createSignal( const InData &data, const EventData &events )
       Signal->setCarrierFreq( FishRate + DeltaF );
       ident = "EOD";
       double maxamplitude = Signal->maxValue() - Signal->minValue();
-      IntensityGain = 0.5 * maxamplitude;
+      IntensityGain = maxamplitude;
     }
     Signal->repeat( (int)rint( Duration/Signal->duration() ) );
   }
@@ -861,11 +861,8 @@ void SAM::analyze( void )
 				eod2.back() - 0.5, eod2.back() );
 
   // contrast:
-  TrueContrast = beatContrast( trace( LocalEODTrace[0] ),
-			       events( LocalBeatPeakEvents[0] ),
-			       events( LocalBeatTroughEvents[0] ),
-			       signalTime(), signalTime()+Duration,
-			       0.1*Duration );
+  TrueContrast = beatContrast( trace( LocalEODTrace[0] ), signalTime(),
+			       signalTime()+Duration, 0.1*Duration );
 
   // beat positions:
   EventData beattimes( EODTransAmpl.capacity() );

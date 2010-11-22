@@ -326,7 +326,7 @@ int JAR::main( void )
 	    n = 1;
 	  signal.sineWave( StimulusRate, n*p, 1.0, ramp );
 	  signal.setIdent( "sinewave" );
-	  IntensityGain = 0.5;
+	  IntensityGain = 1.0;
 	}
 	else if ( LocalEODEvents[0] >= 0 ) {
 	  // extract an EOD waveform:
@@ -339,7 +339,7 @@ int JAR::main( void )
 	  signal.setIdent( "EOD" );
 	  StimulusRate = ReadCycles/signal.duration();
 	  double maxamplitude = trace( LocalEODTrace[0] ).maxValue() - trace( LocalEODTrace[0] ).minValue();
-	  IntensityGain = 0.5 * maxamplitude / FishAmplitude2 / g;
+	  IntensityGain = maxamplitude / FishAmplitude2 / g;
 	  signal.repeat( (int)floor( Duration/signal.duration() ) );
 	  signal.ramp( ramp );
 	}
@@ -356,7 +356,7 @@ int JAR::main( void )
 	if ( UseContrast )
 	  Intensity = Contrast * FishAmplitude2 * IntensityGain;
 	else
-	  Intensity = Contrast * 2.0 * IntensityGain;
+	  Intensity = Contrast * IntensityGain;
 	signal.setIntensity( Intensity );
 	if ( LocalBeatPeakEvents[0] >= 0 )
 	  detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", 0.7*signal.intensity() );
@@ -1068,12 +1068,8 @@ void JAR::analyze( void )
 
   // contrast:
   if ( LocalEODTrace[0] >= 0 )
-    TrueContrast = beatContrast( trace( LocalEODTrace[0] ),
-				 events( LocalBeatPeakEvents[0] ),
-				 events( LocalBeatTroughEvents[0] ),
-				 signalTime(),
-				 signalTime()+Duration,
-				 0.1*Duration );
+    TrueContrast = beatContrast( trace( LocalEODTrace[0] ), signalTime(),
+				 signalTime()+Duration, 0.1*Duration );
   else
     TrueContrast = 0.0;
 

@@ -71,23 +71,6 @@ public:
     /*! Mean eod amplitude. */
   double eodAmplitude( const InData &data, double tbegin, double tend );
 
-    /*! Mean values of the upper and lower peaks and troughs of a beat. */
-  void beatPeakTroughs( const InData &eodd, const EventData &bpe,
-			const EventData &bte,
-			double tbegin, double tend, double offset,
-			double &upperpeak, double &uppertrough,
-			double &lowerpeak, double &lowertrough );
-    /*! Maximum and minimum amplitude of a beat. */
-  void beatAmplitudes( const InData &eodd, const EventData &bpe,
-		       const EventData &bte,
-		       double tbegin, double tend, double offset,
-		       double &min, double &max );
-    /*! The contrast of the beat. */
-  double beatContrast( const InData &eodd, const EventData &bpe,
-		       const EventData &bte,
-		       double tbegin, double tend, double offset );
-
-
     /*! The amplitude of the beat of period \a period determined
         from the standard deviation of EOD amplitudes. */
   double beatAmplitude( const InData &eodd, double tbegin, double tend, double period );

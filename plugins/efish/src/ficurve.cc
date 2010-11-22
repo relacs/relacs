@@ -134,8 +134,9 @@ int FICurve::main( void )
 						    events( LocalEODEvents[0] ).back() );
 
   // EOD amplitude:
-  FishAmplitude = events( LocalEODEvents[0] ).meanSize( events( LocalEODEvents[0] ).back() - 0.5,
-							events( LocalEODEvents[0] ).back() );
+  FishAmplitude = eodAmplitude( trace( LocalEODTrace[0] ),
+				events( LocalEODEvents[0] ).back() - 0.5,
+				events( LocalEODEvents[0] ).back() );
 
   // trigger:
   //  setupTrigger( data, events );
@@ -723,7 +724,7 @@ void FICurve::analyze( void )
   FishRate = eod2.frequency( eod2.back() - bd, eod2.back() );
 
   // EOD amplitude:
-  FishAmplitude = eod2.meanSize( eod2.back() - bd, eod2.back() );
+  FishAmplitude = eodAmplitude( trace( LocalEODTrace[0] ), eod2.back() - bd, eod2.back() );
 
   // spikes:
   for ( int k=0; k<MaxSpikeTraces; k++ )

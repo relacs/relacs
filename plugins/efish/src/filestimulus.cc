@@ -269,7 +269,7 @@ int FileStimulus::main( void )
 
   // stimulus intensity:
   if ( UseContrast )
-    Intensity = Contrast * FishAmplitude * 0.5 / SigStdev;
+    Intensity = Contrast * FishAmplitude / SigStdev;
   else
     Intensity = Amplitude / SigStdev;
   signal.setIntensity( Intensity );
@@ -673,10 +673,8 @@ void FileStimulus::analyze( void )
 				signalTime() + Duration, signalTime() + Duration + Pause );
 
   // contrast:
-  TrueContrast = beatContrast( trace( LocalEODTrace[0] ), events( LocalBeatPeakEvents[0] ),
-			       events( LocalBeatTroughEvents[0] ),
-			       signalTime(), signalTime()+Duration,
-			       0.1*Duration );
+  TrueContrast = beatContrast( trace( LocalEODTrace[0] ), signalTime(),
+			       signalTime()+Duration, 0.1*Duration );
 
   // EOD transdermal amplitude:
   if ( UseContrast ) {

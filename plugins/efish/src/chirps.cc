@@ -176,7 +176,7 @@ void Chirps::createEOD( OutData &signal )
     StimulusRate = FishRate + DeltaF;
     waveform.sineWave( StimulusRate, ReadCycles / StimulusRate );
     pointspercycle = waveform.size() / ReadCycles;
-    IntensityGain = 0.5;
+    IntensityGain = 1.0;
   }
   else {
     // extract an EOD waveform:
@@ -189,7 +189,7 @@ void Chirps::createEOD( OutData &signal )
     StimulusRate = ReadCycles/signal.duration();
     pointspercycle = waveform.size() / ReadCycles;
     double maxamplitude = trace(LocalEODTrace[0]).maxValue() - trace(LocalEODTrace[0]).minValue();
-    IntensityGain = 0.5 * maxamplitude / FishAmplitude / g;
+    IntensityGain = maxamplitude / FishAmplitude / g;
   }
 
   // create chirp:
@@ -341,8 +341,6 @@ void Chirps::createPlayback( OutData &signal )
   s += ", amplitude modulation";
   //  signal.setComment( s );
 
-  //  IntensityGain *= 1.3;
-
   double first = events(LocalEODEvents[0]).meanSize( signalTime() - 0.5, signalTime() );
   double max = EODAmplitude.max() - first;
   double min = EODAmplitude.min() - first;
@@ -377,7 +375,7 @@ int Chirps::createAM( OutData &signal )
   applyOutTrace( signal );
   double sr = fabs( DeltaF ) + ChirpSize;
   signal.setSampleRate( floor( signal.maxSampleRate()/sr ) * sr );
-  signal.setIntensity( 0.2 * FishAmplitude * 0.5 );
+  signal.setIntensity( 0.2 * FishAmplitude );
   // get the actual set sampling rate.
   // no signal is put out, because there isn't any.
   write( signal );
@@ -443,7 +441,7 @@ int Chirps::createAM( OutData &signal )
   }
   signal.push( 0.0 );
 
-  IntensityGain = 0.5;
+  IntensityGain = 1.0;
   Duration = signal.duration();
   signal.setStartSource( 1 );
   signal.setTrace( GlobalAMEField );
@@ -1305,10 +1303,8 @@ void Chirps::analyze( void )
 				eod2.back() - 0.5, eod2.back() );
 
   // contrast:
-  TrueContrast = beatContrast( trace(LocalEODTrace[0]), events(LocalBeatPeakEvents[0]),
-			       events(LocalBeatTroughEvents[0]),
-			       signalTime(), signalTime()+Duration,
-			       0.1*Duration );
+  TrueContrast = beatContrast( trace(LocalEODTrace[0]), signalTime(),
+			       signalTime()+Duration, 0.1*Duration );
 
   // Fish Amplitudes:
   FishUp = eod2.meanSize( eod2.back() - 0.5, eod2.back() );

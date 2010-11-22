@@ -149,6 +149,7 @@ int CalibEField::main( void )
 
   // plot:
   P.lock();
+  P.clear();
   P.setXLabel( "Gain" );
   string ylabel = am ? "Measured AM Intensity" : "Measured EOD Intensity";
   ylabel += " [" + LocalEODUnit + "]";
@@ -166,23 +167,23 @@ int CalibEField::main( void )
   double gain = latt->gain();
   double maxgain = ( ::pow( 10.0, -minLevel( outtrace )/20.0 ) )/targetintensity;
   double mingain = ( ::pow( 10.0, -maxLevel( outtrace )/20.0 ) )/targetintensity;
-  cerr << "gain=" << gain << " mingain=" << mingain << " maxgain=" << maxgain << '\n';
   if ( targetintensity > maxIntensity( outtrace ) ) {
-    gain = maxgain;
+    gain = 0.5*maxgain;
     latt->setGain( gain, 0.0 );
     printlog( "Set gain to " + Str( gain ) + " to make targetintensity " +
-	      Str( targetintensity ) + " equal to maximum possible intensity of " +
+	      Str( targetintensity ) + " smaller than maximum possible intensity of " +
 	      Str( maxIntensity( outtrace ) ) );
   }
   else if ( targetintensity < minIntensity( outtrace ) ) {
-    gain = mingain;
+    gain = 2.0*mingain;
     latt->setGain( gain, 0.0 );
     printlog( "Set gain to " + Str( gain ) + " to make targetintensity " +
-	      Str( targetintensity ) + " equal to minimum possible intensity of " +
+	      Str( targetintensity ) + " greater than minimum possible intensity of " +
 	      Str( minIntensity( outtrace ) ) );
   }
-  double gainfac = 10.0;
+  double gainfac = sqrt(10.0);
   int gaindir = 0;
+  bool bisect = false;
   MapD gainamplitudes;
   gainamplitudes.reserve( 100 );
 
@@ -242,20 +243,24 @@ int CalibEField::main( void )
     else {
       if ( amplitude > targetintensity || r == 2 ) {
 	// reduces gain:
+	if ( gaindir == 1 )
+	  bisect = true;
+	if ( bisect )
+	  gainfac = sqrt( gainfac );
 	gain /= gainfac;
 	latt->setGain( gain, 0.0 );
 	printlog( "Set new gain to " + Str( gain ) );
-	if ( gaindir == 1 )
-	  gainfac = sqrt( gainfac );
 	gaindir = -1;
       }
       else {
 	// increase gain:
+	if ( gaindir == -1 )
+	  bisect = true;
+	if ( bisect )
+	  gainfac = sqrt( gainfac );
 	gain *= gainfac;
 	latt->setGain( gain, 0.0 );
 	printlog( "Set new gain to " + Str( gain ) );
-	if ( gaindir == -1 )
-	  gainfac = sqrt( gainfac );
 	gaindir = 1;
       }
     }
@@ -292,6 +297,7 @@ int CalibEField::main( void )
 
   // plot:
   P.lock();
+  P.clear();
   P.setXLabel( "Requested Intensity [" + LocalEODUnit + "]" );
   P.unlock();
 
@@ -437,7 +443,7 @@ int CalibEField::main( void )
 	  signal.back() = 0;
 	  numintensities *= 2;
 	  intensitystep *= 0.5;
-	  tracePlotSignal( duration + pause );
+	  tracePlotSignal( duration );
 	  FitGain = 1.0;
 	  FitOffset = 0.0;
 	}
@@ -544,6 +550,10 @@ int CalibEField::analyze( const InData &localeodtrace,
     beatAmplitudes( localeodtrace, signalTime(), signalTime() + duration,
 		    1.0/beatfrequency,
 		    uppermean, upperampl, lowermean, lowerampl );
+    /*
+    printlog( "UM=" + Str( uppermean, "%.3f" ) + " LM=" + Str( lowermean, "%.3f" ) +
+	      " UA=" + Str( upperampl, "%.3f" ) + " LA=" + Str( lowerampl, "%.3f" ) );
+    */
     amplitude = 0.5 * (upperampl + lowerampl);
 
     // range overflow?
