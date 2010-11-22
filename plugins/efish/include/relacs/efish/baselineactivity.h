@@ -41,6 +41,7 @@ namespace efish {
 \brief [RePro] ISI statistics and EOD locking of baseline activity.
 \author Jan Benda
 \version 1.0 (Nov 26, 2009)
+\todo Put beat detector auto settings into beat detector.
 
 \par Options
 - \b duration (\c number, \e ms): Duration of single sweep.

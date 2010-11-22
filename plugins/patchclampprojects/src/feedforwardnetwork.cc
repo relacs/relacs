@@ -113,7 +113,10 @@ int FeedForwardNetwork::main( void )
   /*
     This RePro scans a feedforward network. It can run a calibration method before starting the FFN.
   */
+  noMessage();
+  P.lock();
   P.clear();
+  P.unlock();
   // init:
   DoneState state = Completed;
   double samplerate = trace( SpikeTrace[0] ).sampleRate();
@@ -153,23 +156,18 @@ int FeedForwardNetwork::main( void )
     message("JeFFN before calibration: "+Str(JeFFN));
     message("JeBKG before calibration: "+Str(JeBKG));
     message("gBKG before calibration: "+Str(gBKG));
-    noMessage();
     calibrateFFN(JeFFN,JeBKG,gBKG);
     setNumber("JeFFN",JeFFN);
     setNumber("JeBKG",JeBKG);
     setNumber("gBKG",gBKG);
-    
-    noMessage();
     message("JeFFN after calibration: "+Str(JeFFN));
     message("JeBKG after calibration: "+Str(JeBKG));
     message("gBKG after calibration: "+Str(gBKG));
   }
   else {
-    P.clear();
     P.lock();
     P.resize( 2, 1, true );
     P.unlock();
-    setWidget( &P ); 
     message("JeFFN: "+Str(JeFFN));
     message("JeBKG: "+Str(JeBKG));
     message("gBKG: "+Str(gBKG));
@@ -261,6 +259,7 @@ int FeedForwardNetwork::main( void )
       
       // plot trace:
       // plotToggle( true, true, duration, 0.0);// has been removed, changed to ??
+      tracePlotSignal( duration );
       
       // plot rasters and vm and conductance
       rasterplot(SpikeTimesVector,group,neuron);
@@ -279,9 +278,9 @@ int FeedForwardNetwork::main( void )
   
 void FeedForwardNetwork::rasterplot(const vector<vector<EventData> > &SpikeTimes,int group, int neuron){
   
+  P.lock();
   // we do not clear the plot because we only add the latest spike train
   P[0].setYLabel("ID");
-  P.lock();
   
   // Raster Plot
   double x = 0.;
@@ -306,11 +305,13 @@ void FeedForwardNetwork::rasterplot(const vector<vector<EventData> > &SpikeTimes
   for (int sp=0;sp<ed.size();sp++){
     x = ed[sp];
     y = neuron+(group*number("nExc"));
-    P[0].plotPoint(x,xcoor,y,ycoor,lwidth,ptype,size,sizecoor,pcolor=pcolor);
+    P[0].plotPoint(x,xcoor,y,ycoor,lwidth,ptype,size,sizecoor,pcolor);
   }
   
-  P[0].setXRange( 0.0,number("duration"));
-  P[0].setYRange( ymin, ymax);
+  if ( ! P[0].zoomedXRange() )
+    P[0].setXRange( 0.0,number("duration"));
+  if ( ! P[0].zoomedYRange() )
+    P[0].setYRange( ymin, ymax);
   
   P.draw();
   P.unlock();
@@ -322,13 +323,11 @@ void FeedForwardNetwork::rasterplot(const vector<vector<EventData> > &SpikeTimes
     P[pindex].setXLabel("Time (sec)");
     P[pindex].setYLabel("G (nS)");
     P[pindex].clear();
-    P[pindex].lock();
     // cond
     P[pindex].plot(ge,1.,Plot::Red);
     P[pindex].plot(gi,1.,Plot::Blue);
-    P[pindex].setXRange( 0.0, duration);
-    P[pindex].unlock();
-    
+    if ( ! P[pindex].zoomedXRange() )
+      P[pindex].setXRange( 0.0, duration);
     P.draw();
     P.unlock();
   }
@@ -490,51 +489,62 @@ void FeedForwardNetwork::saveEvents(const vector<vector<EventData> > &SpikeTimes
   }
   
 void FeedForwardNetwork::stimulate(const SampleDataD &ge, SampleDataD &gi, EventData &SpikeTimes, double &signaltime, double duration){
-  // input as currents
-  SampleDataD istim(ge-gi);
-  //istim -= gi;
-  
-  // OutData
-  OutData signal;
-  /*
-  // calculate conductance output, will be used in the live experiment, or once the simulation mode has dynamic clamp
-  // g1(V-E1)+g2(V-E2)+...
-  // (g1+g2)*(V-((g1*E1+g2*E2)/(g1+g2)))
-  // g = g1+g2
-  // E = (g1*E1+g2*E2)/(g1+g2)
-  SampleDataD g(ge+gi);
-  
-  double e1 = number("E_ex");
-  double e2 = number("E_in");
-  SampleDataD E(((ge*e1)+(gi*e2))/(ge+gi));
-  
-  OutList signalL;                                                                                                                                                
-  signalL.resize( 2 );
-  signalL[0] = OutData(g);
-  signalL[0].setTraceName( "g" );
-  signalL[1] = OutData(E);
-  signalL[1].setTraceName( "E" );
-  */
-  signal = OutData(istim);
-  signal.setTraceName("Current-1");//setTrace(CurrentOutput[0]); //setTraceName("Current-1");
-  signal.back() = 0;
-  
-  write( signal );
-  if ( signal.failed() ) {
-    warning( signal.errorText() );
-    //directWrite( dcsignal );
-    //return Failed;
+  if ( outTraceIndex( "g" ) >= 0 && outTraceIndex( "E" ) >= 0 ) {
+    // yes, we have dynamic clamp with "g" and "E"!
+    // calculate conductance output, will be used in the live experiment, or once the simulation mode has dynamic clamp
+    // g1(V-E1)+g2(V-E2)+...
+    // (g1+g2)*(V-((g1*E1+g2*E2)/(g1+g2)))
+    // g = g1+g2
+    // E = (g1*E1+g2*E2)/(g1+g2)
+    SampleDataD g(ge+gi);
+    
+    double e1 = number("E_ex");
+    double e2 = number("E_in");
+    SampleDataD E(((ge*e1)+(gi*e2))/(ge+gi));
+    
+    OutList signalL;                                                                                                                                                
+    signalL.resize( 2 );
+    signalL[0] = OutData(g);
+    signalL[0].setTraceName( "g" );
+    signalL[0].back() = 0;
+    signalL[1] = OutData(E);
+    signalL[1].setTraceName( "E" );
+    signalL[1].back() = 0;
+
+    write( signalL );
+    if ( signalL.failed() ) {
+      warning( signalL.errorText() );
+      //directWrite( dcsignal );
+      //return Failed;
+    }
+  }
+  else {
+    // Let's simply put out some stimulus as a current:
+    // input as currents
+    SampleDataD istim(ge-gi);
+    //istim -= gi;
+    
+    // OutData
+    OutData signal(istim);
+    signal.setTraceName("Current-1");//setTrace(CurrentOutput[0]); //setTraceName("Current-1");
+    signal.back() = 0;
+    
+    write( signal );
+    if ( signal.failed() ) {
+      warning( signal.errorText() );
+      //directWrite( dcsignal );
+      //return Failed;
+    }
   }
   
   sleep( duration + number("pause"));
-  if ( interrupt() ) {
-    //break;
+  signaltime = signalTime();
+  if ( ! interrupt() ) {
+    // Calculate spiking response
+    EventData spikes = events(SpikeEvents[0]);
+    // This should copy the spikes between signaltime and signaltime+duration, with a reference of signaltime 
+    spikes.copy(signaltime,signaltime+duration,signaltime,SpikeTimes);
   }
-  // Calculate spiking response
-  EventData spikes = events(SpikeEvents[0]);
-  signaltime = spikes.signalTime();
-  // This should copy the spikes between signaltime and signaltime+duration, with a reference of signaltime 
-  spikes.copy(signaltime,signaltime+duration,signaltime,SpikeTimes);
   
 }
   
@@ -548,7 +558,6 @@ void FeedForwardNetwork::stimulate(const SampleDataD &ge, SampleDataD &gi, Event
     P.lock();
     P.resize( 1, 1, true );
     P.unlock();
-    setWidget( &P ); 
     
     // init:
     // we use the calibration duration because we may need longer vm traces to calucate good mean and std
@@ -566,7 +575,7 @@ void FeedForwardNetwork::stimulate(const SampleDataD &ge, SampleDataD &gi, Event
     
     // First we tune the background input
     // so far we use a fixed number of trials to find the good JeBKG and gBKG
-    // it would be bette to do that dynamically
+    // it would be better to do that dynamically
     for (int trial=0;trial<integer("calibrationtrials");trial++){
       // Background input
       EventData ExcBkg;
@@ -594,9 +603,12 @@ void FeedForwardNetwork::stimulate(const SampleDataD &ge, SampleDataD &gi, Event
       stimulate(ge,gi,SpikeTimesResponse,sigt,duration);
       if ( interrupt() ) {
 	break;
+	// XXX Break is not enough here!
+	// XXX You need to make sure to quit the RePro as quick as possible!
       }
       // plot trace:
       //plotToggle( true, true, duration, 0.0);
+      tracePlotSignal( duration );
       traceplot(ge,gi,0,duration);
       
       
@@ -680,6 +692,7 @@ void FeedForwardNetwork::stimulate(const SampleDataD &ge, SampleDataD &gi, Event
       
       // plot trace:
       //plotToggle( true, true, duration, 0.0);
+      tracePlotSignal( duration );
       traceplot(ge,gi,0,duration);
       
       // update Je
@@ -698,7 +711,6 @@ void FeedForwardNetwork::stimulate(const SampleDataD &ge, SampleDataD &gi, Event
     P.lock();
     P.resize( 2, 1, true );
     P.unlock();
-    setWidget( &P ); 
 
   }
   

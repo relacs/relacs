@@ -144,8 +144,8 @@ private:
 
   // variables:
   double FishRate;
-  double FishAmplitude1;
-  double FishAmplitude2;
+  double GlobalFishAmplitude;
+  double LocalFishAmplitude;
   double IntensityGain;
   double StimulusRate;
   double FirstRate;

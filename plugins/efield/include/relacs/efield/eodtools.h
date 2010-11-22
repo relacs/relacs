@@ -44,6 +44,12 @@ public:
 
   EODTools( void );
 
+    /*! Returns a threshold suitable for detecting EOD peaks and troughs
+        in \a data in the time interval from \a tbegin to \a tend.
+        \a contrast is the maximum expected contrast of an
+	amplitude modulation or beat within this time interval. */
+  double eodThreshold( const InData &data, double tbegin, double tend,
+		       double contrast=0.2 );
     /*! Detect eod \a peaks in \a data.
         The times of the EOD peaks are the times of the maximum data values.
         The sizes are the maximum of a square function fitted to the three
@@ -68,21 +74,24 @@ public:
     /*! Mean absolute size of eod troughs. */
   double meanTroughs( const InData &data, double tbegin, double tend,
 		      double threshold );
-    /*! Mean eod amplitude. */
+    /*! Mean eod amplitude from an EOD without beat. */
   double eodAmplitude( const InData &data, double tbegin, double tend );
 
-    /*! The amplitude of the beat of period \a period determined
-        from the standard deviation of EOD amplitudes. */
-  double beatAmplitude( const InData &eodd, double tbegin, double tend, double period );
-    /*! The contrast of the beat of period \a period determined
-        from the standard deviation of EOD amplitudes. */
-  double beatContrast( const InData &eodd, double tbegin, double tend, double period );
     /*! The mean EOD amplitude and beat amplitudes of the beat
-        of period \a period determined
+        of period \a period and expected contrast \a contrast determined
         from the standard deviation of the upper and lower EOD amplitudes. */
-  void beatAmplitudes( const InData &eodd, double tbegin, double tend, double period,
+  void beatAmplitudes( const InData &eodd, double tbegin, double tend,
+		       double period, double contrast,
 		       double &uppermean, double &upperampl,
 		       double &lowermean, double &lowerampl );
+    /*! The amplitude of the beat of period \a period determined
+        from the standard deviation of EOD amplitudes. */
+  double beatAmplitude( const InData &eodd, double tbegin, double tend,
+			double period, double contrast=0.2 );
+    /*! The contrast of the beat of period \a period determined
+        from the standard deviation of EOD amplitudes. */
+  double beatContrast( const InData &eodd, double tbegin, double tend,
+		       double period, double contrast=0.2 );
 
   /* for nerve potential analysis: */
   template < typename DataIter, typename TimeIter >

@@ -43,6 +43,7 @@ namespace efish {
 \brief [RePro] Measures responses to chirps.
 \author Jan Benda
 \version 1.8 (Apr 23, 2010)
+\todo Make independent of beat detector
 
 \par Options
 - \b nchirps (\c integer): Number of chirps per stimulus.

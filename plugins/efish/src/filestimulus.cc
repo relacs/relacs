@@ -673,8 +673,10 @@ void FileStimulus::analyze( void )
 				signalTime() + Duration, signalTime() + Duration + Pause );
 
   // contrast:
-  TrueContrast = beatContrast( trace( LocalEODTrace[0] ), signalTime(),
-			       signalTime()+Duration, 0.1*Duration );
+  TrueContrast = beatContrast( trace(LocalEODTrace[0]),
+			       signalTime()+0.1*Duration,
+			       signalTime()+0.9*Duration,
+			       Intensity/FishAmplitude );
 
   // EOD transdermal amplitude:
   if ( UseContrast ) {

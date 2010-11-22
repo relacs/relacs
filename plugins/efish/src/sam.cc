@@ -214,9 +214,8 @@ int SAM::main( void )
     AM = false;
 
   // check EODs:
-  if ( LocalEODTrace[0] < 0 || LocalEODEvents[0] < 0 ||
-       LocalBeatPeakEvents[0] < 0 || LocalBeatTroughEvents[0] < 0) {
-    warning( "Local EOD recording with EOD and beat events required!" );
+  if ( LocalEODTrace[0] < 0 || LocalEODEvents[0] < 0 ) {
+    warning( "Local EOD recording with EOD events required!" );
     return Failed;
   }
 
@@ -840,7 +839,7 @@ void SAM::analyzeSpikes( const EventData &se, int k,
 
 void SAM::analyze( void )
 {
-  const EventData &eod2 = events( LocalEODEvents[0] );
+  const EventData &localeod = events( LocalEODEvents[0] );
 
   // EOD rate:
   if ( EODEvents >= 0 )
@@ -858,11 +857,13 @@ void SAM::analyze( void )
 
   // EOD amplitude:
   FishAmplitude = eodAmplitude( trace( LocalEODTrace[0] ),
-				eod2.back() - 0.5, eod2.back() );
+				localeod.back() - 0.5, localeod.back() );
 
   // contrast:
-  TrueContrast = beatContrast( trace( LocalEODTrace[0] ), signalTime(),
-			       signalTime()+Duration, 0.1*Duration );
+  TrueContrast = beatContrast( trace(LocalEODTrace[0]),
+			       signalTime()+0.1*Duration,
+			       signalTime()+0.9*Duration,
+			       fabs( DeltaF ) );
 
   // beat positions:
   EventData beattimes( EODTransAmpl.capacity() );
@@ -887,11 +888,11 @@ void SAM::analyze( void )
 	  index < sige.begin( signalTime() + Duration );
 	  ++index ) {
       double t1 = *index;
-      int pi = eod2.previous( t1 );
-      if ( pi + 1 >= eod2.size() )
+      int pi = localeod.previous( t1 );
+      if ( pi + 1 >= localeod.size() )
 	break;
-      double t0 = eod2[ pi ];
-      double p = ( t1 - t0 ) / ( eod2[ pi + 1 ] - t0 );
+      double t0 = localeod[ pi ];
+      double p = ( t1 - t0 ) / ( localeod[ pi + 1 ] - t0 );
       //      while ( p - p2 < -0.2 )
       //	p += 1.0;
       //df << t1 << "  " << p << endl;
@@ -910,7 +911,7 @@ XXX
 	   ! events( ChirpEvents ).within( t0, 0.03 ) &&
 	   t0 >= Skip * Period + signalTime() && 
 	   t0 <= Signal->duration() - 2.0*Skip*Period + signalTime() ) {
-	beattimes.push( eod2[ pi - 1 ] );
+	beattimes.push( localeod[ pi - 1 ] );
 	// skip a quarter period:
 	for ( int j=0; 
 	      j < int( 0.25*(FishRate + DeltaF)/fabs(DeltaF) ) &&
@@ -925,20 +926,20 @@ XXX
   }
 
   // EOD transdermal amplitude:
-  double dt = 0.25 * eod2.interval( ReadCycles );
+  double dt = 0.25 * localeod.interval( ReadCycles );
   EODTransAmpl.resize( beattimes.size() );
   for ( int k = 0; k<beattimes.size(); k++ ) {
-    int cycles = eod2.count( beattimes[k] - 0.5 * Period, Period );
+    int cycles = localeod.count( beattimes[k] - 0.5 * Period, Period );
     EODTransAmpl[k].clear();
     EODTransAmpl[k].reserve( cycles+10 );
-    EventSizeIterator pindex = eod2.begin( beattimes[k] - 0.5 * Period );
-    EventSizeIterator plast = eod2.begin( beattimes[k] + 0.5 * Period );
+    EventSizeIterator pindex = localeod.begin( beattimes[k] - 0.5 * Period );
+    EventSizeIterator plast = localeod.begin( beattimes[k] + 0.5 * Period );
     for ( ; pindex < plast; ++pindex )
       EODTransAmpl[k].push( pindex.time() - beattimes[k] - dt, *pindex );
   }
   AllEODTransAmpl.clear();
-  EventSizeIterator pindex = eod2.begin( signalTime() );
-  EventSizeIterator plast = eod2.begin( signalTime() + Duration );
+  EventSizeIterator pindex = localeod.begin( signalTime() );
+  EventSizeIterator plast = localeod.begin( signalTime() + Duration );
   for ( ; pindex < plast; ++pindex )
     AllEODTransAmpl.push( pindex.time() - signalTime(), *pindex );
 

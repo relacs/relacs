@@ -557,8 +557,9 @@ void Chirps::initMultiPlot( double ampl )
 	    P[n].setTMarg( 3.0*xmarg );
 	  P[n].setYRange( 0.0, ratemax );
 	}
-	if ( n > nsub )
-	  P.setCommonYRange( n%nsub, n );
+	for ( int kr=0; kr<Rows; kr++ )
+	  for ( int kc=0; kc<Cols; kc++ )
+	    P.setCommonYRange( kr*Cols*nsub+kc*nsub+sub, n );
 	n++;
       }
     }
@@ -1303,8 +1304,10 @@ void Chirps::analyze( void )
 				eod2.back() - 0.5, eod2.back() );
 
   // contrast:
-  TrueContrast = beatContrast( trace(LocalEODTrace[0]), signalTime(),
-			       signalTime()+Duration, 0.1*Duration );
+  TrueContrast = beatContrast( trace(LocalEODTrace[0]),
+			       signalTime()+0.1*Duration,
+			       signalTime()+0.9*Duration,
+			       fabs( DeltaF ) );
 
   // Fish Amplitudes:
   FishUp = eod2.meanSize( eod2.back() - 0.5, eod2.back() );

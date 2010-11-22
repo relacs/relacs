@@ -297,7 +297,7 @@ int CalibEField::main( void )
 
   // plot:
   P.lock();
-  P.clear();
+  P.setXRange( 0.0, maxintensity );
   P.setXLabel( "Requested Intensity [" + LocalEODUnit + "]" );
   P.unlock();
 
@@ -509,13 +509,15 @@ void CalibEField::plotGain( const MapD &gainamplitudes, double targetintensity )
 {
   P.lock();
   P.clear();
-  P.setXRange( Plot::AutoScale, Plot::AutoScale );
+  if ( ! P.zoomedXRange() )
+    P.setXRange( Plot::AutoScale, Plot::AutoScale );
   double ymax = max( gainamplitudes.y() );
   if ( ymax < targetintensity )
     ymax = targetintensity;
-  P.setYRange( 0.0, ymax );
+  if ( ! P.zoomedYRange() )
+    P.setYRange( 0.0, ymax );
   P.plotHLine( targetintensity, Plot::Yellow, 4 );
-  P.plot( gainamplitudes, 1.0, Plot::Transparent, 1, Plot::Solid, Plot::Circle, 6, Plot::Red, Plot::Red );
+  P.plot( gainamplitudes, 1.0, Plot::Transparent, 1, Plot::Solid, Plot::Circle, 10, Plot::Red, Plot::Red );
   P.draw();
   P.unlock();
 }
@@ -525,12 +527,14 @@ void CalibEField::plotIntensities( const MapD &intensities, double maxx )
 {
   P.lock();
   P.clear();
-  P.setXRange( 0.0, maxx );
-  P.setYRange( 0.0, maxx*FitGain+FitOffset );
-  P.setYRange( 0.0, Plot::AutoScale );
+  if ( ! P.zoomedXRange() )
+    P.setXRange( 0.0, maxx );
+  if ( ! P.zoomedYRange() )
+    P.setYRange( 0.0, maxx*FitGain+FitOffset );
+  //  P.setYRange( 0.0, Plot::AutoScale );
   P.plotLine( 0.0, 0.0, maxx, maxx, Plot::Blue, 4 );
   P.plotLine( 0.0, FitOffset, maxx, maxx*FitGain+FitOffset, Plot::Yellow, 2 );
-  P.plot( intensities, 1.0, Plot::Transparent, 1, Plot::Solid, Plot::Circle, 6, Plot::Red, Plot::Red );
+  P.plot( intensities, 1.0, Plot::Transparent, 1, Plot::Solid, Plot::Circle, 10, Plot::Red, Plot::Red );
   P.draw();
   P.unlock();
 }
@@ -548,7 +552,7 @@ int CalibEField::analyze( const InData &localeodtrace,
     double lowermean = 0.0;
     double lowerampl = 0.0;
     beatAmplitudes( localeodtrace, signalTime(), signalTime() + duration,
-		    1.0/beatfrequency,
+		    1.0/beatfrequency, maxcontrast,
 		    uppermean, upperampl, lowermean, lowerampl );
     /*
     printlog( "UM=" + Str( uppermean, "%.3f" ) + " LM=" + Str( lowermean, "%.3f" ) +

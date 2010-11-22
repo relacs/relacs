@@ -80,8 +80,8 @@ JAR::JAR( void )
   addTypeStyle( OptWidget::TabLabel, Parameter::Label );
   
   // variables:
-  FishAmplitude1 = 0.0;
-  FishAmplitude2 = 0.0;
+  GlobalFishAmplitude = 0.0;
+  LocalFishAmplitude = 0.0;
   FirstRate = 0.0;
   LastRate = 0.0;
   Intensity = 0.0;
@@ -191,12 +191,12 @@ int JAR::main( void )
     warning( "need EOD events of local EOD Trace." );
     return Failed;
   }
-  if ( LocalEODTrace[0] >= 0 && LocalBeatPeakEvents[0] < 0 ) {
-    warning( "need beat events of local EOD Trace." );
-    return Failed;
-  }
   if ( UseContrast && LocalEODTrace[0] < 0 ) {
     warning( "need local EOD for contrasts." );
+    return Failed;
+  }
+  if ( !SineWave && LocalEODEvents[0] < 0 ) {
+    warning( "need local EOD events for EOD waveform stimulus." );
     return Failed;
   }
 
@@ -276,24 +276,23 @@ int JAR::main( void )
 
   // EOD amplitude:
   if ( EODTrace >= 0 )
-    FishAmplitude1 = eodAmplitude( trace( EODTrace ), events( EODEvents ).back() - 0.5,
-				   events( EODEvents ).back() );
+    GlobalFishAmplitude = eodAmplitude( trace( EODTrace ), events( EODEvents ).back() - 0.5,
+					events( EODEvents ).back() );
   else
-    FishAmplitude1 = 0.0;
-  FishAmplitude2 = 0.0;
+    GlobalFishAmplitude = 0.0;
+  LocalFishAmplitude = 0.0;
 
   // adjust transdermal EOD:
   if ( LocalEODTrace[0] >= 0 ) {
-    FishAmplitude2 = eodAmplitude( trace( LocalEODTrace[0] ),
-				   events( LocalEODEvents[0] ).back() - 0.5,
-				   events( LocalEODEvents[0] ).back() );
-    double val2 = trace( LocalEODTrace[0] ).maxAbs( currentTime()-0.1,
-						    currentTime() );
-    if ( val2 > 0.0 ) {
+    LocalFishAmplitude = eodAmplitude( trace( LocalEODTrace[0] ),
+				       currentTime() - 0.5, currentTime() );
+    double absampl = trace( LocalEODTrace[0] ).maxAbs( currentTime()-0.1,
+						       currentTime() );
+    if ( absampl > 0.0 ) {
       if ( UseContrast )
-	adjustGain( trace( LocalEODTrace[0] ), ( 1.0 + ContrastMax + 0.1 ) * val2 );
+	adjustGain( trace( LocalEODTrace[0] ), absampl + ( ContrastMax + 0.1 ) * LocalFishAmplitude );
       else
-	adjustGain( trace( LocalEODTrace[0] ), val2 + AmplMax );
+	adjustGain( trace( LocalEODTrace[0] ), absampl + AmplMax );
     }
   }
 
@@ -339,7 +338,7 @@ int JAR::main( void )
 	  signal.setIdent( "EOD" );
 	  StimulusRate = ReadCycles/signal.duration();
 	  double maxamplitude = trace( LocalEODTrace[0] ).maxValue() - trace( LocalEODTrace[0] ).minValue();
-	  IntensityGain = maxamplitude / FishAmplitude2 / g;
+	  IntensityGain = maxamplitude / LocalFishAmplitude / g;
 	  signal.repeat( (int)floor( Duration/signal.duration() ) );
 	  signal.ramp( ramp );
 	}
@@ -354,7 +353,7 @@ int JAR::main( void )
 	
 	// stimulus intensity:
 	if ( UseContrast )
-	  Intensity = Contrast * FishAmplitude2 * IntensityGain;
+	  Intensity = Contrast * LocalFishAmplitude * IntensityGain;
 	else
 	  Intensity = Contrast * IntensityGain;
 	signal.setIntensity( Intensity );
@@ -463,9 +462,9 @@ void JAR::save( void )
   header.addInteger( "Index", totalRuns()-1 );
   header.addText( "Waveform", SineWave ? "Sine-Wave" : "Fish-EOD" );
   header.addNumber( "EOD Rate", FishRate, "Hz", "%.1f" );
-  header.addNumber( "EOD Amplitude", FishAmplitude1, GlobalEODUnit, "%.2f" );
-  if ( FishAmplitude2 > 0.0 )
-    header.addNumber( "Trans. Amplitude", FishAmplitude2, LocalEODUnit, "%.2f" );
+  header.addNumber( "EOD Amplitude", GlobalFishAmplitude, GlobalEODUnit, "%.2f" );
+  if ( LocalFishAmplitude > 0.0 )
+    header.addNumber( "Trans. Amplitude", LocalFishAmplitude, LocalEODUnit, "%.2f" );
   header.addText( "RePro Time", reproTimeStr() );
   header.addText( "Session Time", sessionTimeStr() );
   header.addLabel( "settings:" );
@@ -718,9 +717,9 @@ void JAR::saveTrace( void )
   header.addNumber( "EOD Rate before", FirstRate, "Hz", "%.1f" );
   header.addNumber( "EOD Rate at end", LastRate, "Hz", "%.1f" );
   header.addNumber( "JAR", LastRate-FirstRate, "Hz", "%.1f" );
-  header.addNumber( "EOD Amplitude", FishAmplitude1, GlobalEODUnit, "%.2f" );
-  if ( FishAmplitude2 > 0.0 )
-    header.addNumber( "Trans. Amplitude", FishAmplitude2, LocalEODUnit, "%.2f" );
+  header.addNumber( "EOD Amplitude", GlobalFishAmplitude, GlobalEODUnit, "%.2f" );
+  if ( LocalFishAmplitude > 0.0 )
+    header.addNumber( "Trans. Amplitude", LocalFishAmplitude, LocalEODUnit, "%.2f" );
   header.addText( "RePro Time", reproTimeStr() );
   header.addText( "Session Time", sessionTimeStr() );
 
@@ -1058,18 +1057,20 @@ void JAR::analyze( void )
   TrueDeltaF = sige.frequency( signalTime(), signalTime() +  JARAverageTime ) - FishRate;
 
   // EOD amplitude:
-  FishAmplitude1 = eodAmplitude( trace( EODTrace ),
-				 eodglobal.back() - JARAverageTime,
-				 eodglobal.back() );
+  GlobalFishAmplitude = eodAmplitude( trace( EODTrace ),
+				      eodglobal.back() - JARAverageTime,
+				      eodglobal.back() );
   if ( LocalEODTrace[0] >= 0 )
-    FishAmplitude2 = eodAmplitude( trace( LocalEODTrace[0] ),
-				   eodlocal.back() - JARAverageTime,
-				   eodlocal.back() );
+    LocalFishAmplitude = eodAmplitude( trace( LocalEODTrace[0] ),
+				       eodlocal.back() - JARAverageTime,
+				       eodlocal.back() );
 
   // contrast:
   if ( LocalEODTrace[0] >= 0 )
-    TrueContrast = beatContrast( trace( LocalEODTrace[0] ), signalTime(),
-				 signalTime()+Duration, 0.1*Duration );
+    TrueContrast = beatContrast( trace(LocalEODTrace[0]),
+				 signalTime()+0.1*Duration,
+				 signalTime()+0.9*Duration,
+				 fabs( DeltaF ) );
   else
     TrueContrast = 0.0;
 

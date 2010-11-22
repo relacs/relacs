@@ -376,8 +376,10 @@ void MultiPlot::layout( void )
 
 void MultiPlot::setCommonXRange( int plot1, int plot2 )
 {
-  CommonXRange[ plot1 ].push_back( plot2 );
-  CommonXRange[ plot2 ].push_back( plot1 );
+  if ( plot1 != plot2 ) {
+    CommonXRange[ plot1 ].push_back( plot2 );
+    CommonXRange[ plot2 ].push_back( plot1 );
+  }
 }
 
 
@@ -395,8 +397,10 @@ void MultiPlot::setCommonXRange( void )
 
 void MultiPlot::setCommonYRange( int plot1, int plot2 )
 {
-  CommonYRange[ plot1 ].push_back( plot2 );
-  CommonYRange[ plot2 ].push_back( plot1 );
+  if ( plot1 != plot2 ) {
+    CommonYRange[ plot1 ].push_back( plot2 );
+    CommonYRange[ plot2 ].push_back( plot1 );
+  }
 }
 
 

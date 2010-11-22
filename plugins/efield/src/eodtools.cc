@@ -30,6 +30,18 @@ EODTools::EODTools( void )
 }
 
 
+double EODTools::eodThreshold( const InData &data, double tbegin, double tend,
+			       double contrast )
+{
+  contrast = fabs( contrast );
+  if ( contrast > 0.99 )
+    contrast = 0.99;
+  double min=0.0, max=0.0;
+  data.minMax( min, max, tbegin, tend );
+  return 0.75*(max-min)*(1.0-contrast)/(1.0+contrast);
+}
+
+
 template < typename DataIter, typename TimeIter >
 class AcceptEODPeaks
 {
@@ -272,10 +284,7 @@ double EODTools::meanTroughs( const InData &data, double tbegin, double tend,
 
 double EODTools::eodAmplitude( const InData &eodd, double tbegin, double tend )
 {
-  double min=0.0, max=0.0;
-  eodd.minMax( min, max, tbegin, tend );
-  double threshold = 0.5*(max-min);
-
+  double threshold = eodThreshold( eodd, tbegin, tend, 0.0 );
   EventData peaks( 0, true );
   EventData troughs( 0, true );
   eodPeaksTroughs( eodd, tbegin, tend, threshold, peaks, troughs );
@@ -289,8 +298,8 @@ double EODTools::eodAmplitude( const InData &eodd, double tbegin, double tend )
 }
 
 
-void EODTools::beatAmplitudes( const InData &eodd,
-			       double tbegin, double tend, double period,
+void EODTools::beatAmplitudes( const InData &eodd, double tbegin, double tend,
+			       double period, double contrast,
 			       double &uppermean, double &upperampl,
 			       double &lowermean, double &lowerampl )
 {
@@ -300,9 +309,7 @@ void EODTools::beatAmplitudes( const InData &eodd,
   double offset = 0.5*(duration - window);
 
   // threshold:
-  double min=0.0, max=0.0;
-  eodd.minMax( min, max, tbegin, tend );
-  double threshold = 0.5*(max-min);
+  double threshold = eodThreshold( eodd, tbegin, tend, contrast );
 
   // EOD peaks and troughs:
   EventData uppereod( (int)::floor( 2000.0*(tend-tbegin) ), true );
@@ -319,8 +326,8 @@ void EODTools::beatAmplitudes( const InData &eodd,
 }
 
 
-double EODTools::beatAmplitude( const InData &eodd,
-				double tbegin, double tend, double period )
+double EODTools::beatAmplitude( const InData &eodd, double tbegin, double tend,
+				double period, double contrast )
 {
   // duration as integer multiples of beat period:
   double duration = tend - tend;
@@ -328,9 +335,7 @@ double EODTools::beatAmplitude( const InData &eodd,
   double offset = 0.5*(duration - window);
 
   // threshold:
-  double min=0.0, max=0.0;
-  eodd.minMax( min, max, tbegin, tend );
-  double threshold = 0.5*(max-min);
+  double threshold = eodThreshold( eodd, tbegin, tend, contrast );
 
   // EOD peaks and troughs:
   EventData uppereod( (int)::floor( 2000.0*(tend-tbegin) ), true );
@@ -347,8 +352,8 @@ double EODTools::beatAmplitude( const InData &eodd,
 }
 
 
-double EODTools::beatContrast( const InData &eodd,
-			       double tbegin, double tend, double period )
+double EODTools::beatContrast( const InData &eodd, double tbegin, double tend,
+			       double period, double contrast )
 {
   // duration as integer multiples of beat period:
   double duration = tend - tend;
@@ -356,9 +361,7 @@ double EODTools::beatContrast( const InData &eodd,
   double offset = 0.5*(duration - window);
 
   // threshold:
-  double min=0.0, max=0.0;
-  eodd.minMax( min, max, tbegin, tend );
-  double threshold = 0.5*(max-min);
+  double threshold = eodThreshold( eodd, tbegin, tend, contrast );
 
   // EOD peaks and troughs:
   EventData uppereod( (int)::floor( 2000.0*(tend-tbegin) ), true );
