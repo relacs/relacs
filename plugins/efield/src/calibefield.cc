@@ -297,8 +297,7 @@ int CalibEField::main( void )
 
   // plot:
   P.lock();
-  P.setXRange( 0.0, maxintensity );
-  P.setXLabel( "Requested Intensity [" + LocalEODUnit + "]" );
+  P.resetRanges();
   P.unlock();
 
   while ( softStop() == 0 ) {
@@ -527,6 +526,7 @@ void CalibEField::plotIntensities( const MapD &intensities, double maxx )
 {
   P.lock();
   P.clear();
+  P.setXLabel( "Requested Intensity [" + LocalEODUnit + "]" );
   if ( ! P.zoomedXRange() )
     P.setXRange( 0.0, maxx );
   if ( ! P.zoomedYRange() )

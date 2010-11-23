@@ -186,8 +186,7 @@ int FileStimulus::main( void )
 
   // EOD amplitude:
   FishAmplitude = eodAmplitude( trace( LocalEODTrace[0] ),
-				events( LocalEODEvents[0] ).back() - Pause,
-				events( LocalEODEvents[0] ).back() );
+				currentTime() - Pause, currentTime() );
 
   // plot trace:
   tracePlotSignal( Before+Duration+After, Before );
@@ -673,7 +672,7 @@ void FileStimulus::analyze( void )
 				signalTime() + Duration, signalTime() + Duration + Pause );
 
   // contrast:
-  TrueContrast = beatContrast( trace(LocalEODTrace[0]),
+  TrueContrast = beatContrast( trace( LocalEODTrace[0] ),
 			       signalTime()+0.1*Duration,
 			       signalTime()+0.9*Duration,
 			       Intensity/FishAmplitude );

@@ -4431,6 +4431,8 @@ void Plot::PointElement::setRange( double xmin[MaxAxis], double xmax[MaxAxis],
       Point.setSize( (int)::rint( Size ) );
     else
       Point.setSize( (int)::rint( Size*::fabs( (ypmax-ypmin)/double(ymax[YAxis]-ymin[YAxis]) ) ) );
+    if ( Point.size() <= 0 )
+      Point.setSize( 1 );
   }
 }
 

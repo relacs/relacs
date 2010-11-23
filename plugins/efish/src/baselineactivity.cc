@@ -702,30 +702,30 @@ void BaselineActivity::analyze( int autodetect,
   if ( LocalEODEvents[0] < 0  )
     return;
 
-  const EventData &eod2 = events( LocalEODEvents[0] );
-  const InData &eodt2 = trace( LocalEODTrace[0] );
+  const EventData &localeod = events( LocalEODEvents[0] );
+  const InData &localeodtrace = trace( LocalEODTrace[0] );
 
   SearchDuration = currentTime() - FirstSignal;
 
   // EOD period & rate:
-  EODRate = eod2.frequency( FirstSignal, FirstSignal+SearchDuration );
+  EODRate = localeod.frequency( FirstSignal, FirstSignal+SearchDuration );
   EODPeriod = 1.0/EODRate;
   if ( Repeats > 0 )
     metaData( "Cell" ).setNumber( "EOD Frequency", EODRate );
-  double eodampl = eod2.meanSize( LastSignal, FirstSignal+SearchDuration );
-
+  double eodampl = eodAmplitude( localeodtrace, LastSignal, FirstSignal+SearchDuration );
+  
   // EOD times
   if ( Repeats <= 0 ) {
     eodtimes.clear();
     LastEODInx = 0;
   }
-  eodtimes.append( eod2, LastSignal, FirstSignal+SearchDuration, FirstSignal );
-
+  eodtimes.append( localeod, LastSignal, FirstSignal+SearchDuration, FirstSignal );
+  
   // EOD cycle:
-  EOD2Unit = eodt2.unit();
+  EOD2Unit = localeodtrace.unit();
   if ( !eodtimes.empty() )
-    eodt2.copy( eodtimes.previousTime( SearchDuration - 2.0*eodcycle.rangeBack(),
-				       eodtimes[0] ) + FirstSignal, eodcycle );
+    localeodtrace.copy( eodtimes.previousTime( SearchDuration - 2.0*eodcycle.rangeBack(),
+					       eodtimes[0] ) + FirstSignal, eodcycle );
   else
     eodcycle = 0.0;
 
@@ -778,17 +778,17 @@ void BaselineActivity::analyze( int autodetect,
     if ( events( LocalBeatPeakEvents[0] ).count( currentTime() - Duration ) > 0 ) {
       /*
       double beatthresh = detectorEventsOpts( LocalBeatPeakEvents[0] ).number( "minthresh" );
-      beatthresh += BeatStep * eodt2.maxValue();
+      beatthresh += BeatStep * localeodtrace.maxValue();
       detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "minthresh", beatthresh );
       */
       double beatthresh = detectorEventsOpts( LocalBeatPeakEvents[0] ).number( "threshold" );
-      beatthresh += BeatStep * eodt2.maxValue();
+      beatthresh += BeatStep * localeodtrace.maxValue();
       detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "minthresh", beatthresh );
       detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", beatthresh );
     }
     else {
       double beatthresh = detectorEventsOpts( LocalBeatPeakEvents[0] ).number( "minthresh" );
-      beatthresh -= BeatStep * eodt2.maxValue();
+      beatthresh -= BeatStep * localeodtrace.maxValue();
       if ( beatthresh >= 10.0*BeatStep * eodampl && 
 	   beatthresh >= detectorEventsOpts( LocalBeatPeakEvents[0] ).minimum( "minthresh" ) )
 	detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "minthresh", beatthresh );

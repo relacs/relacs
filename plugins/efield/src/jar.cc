@@ -276,8 +276,8 @@ int JAR::main( void )
 
   // EOD amplitude:
   if ( EODTrace >= 0 )
-    GlobalFishAmplitude = eodAmplitude( trace( EODTrace ), events( EODEvents ).back() - 0.5,
-					events( EODEvents ).back() );
+    GlobalFishAmplitude = eodAmplitude( trace( EODTrace ), currentTime() - 0.5,
+					currentTime() );
   else
     GlobalFishAmplitude = 0.0;
   LocalFishAmplitude = 0.0;

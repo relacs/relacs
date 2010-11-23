@@ -28,6 +28,7 @@
 #include <relacs/multiplot.h>
 #include <relacs/ephys/traces.h>
 #include <relacs/efield/traces.h>
+#include <relacs/efield/eodtools.h>
 #include <relacs/control.h>
 using namespace relacs;
 
@@ -45,7 +46,8 @@ namespace efish {
 class Session
   : public Control,
     public ephys::Traces,
-    public efield::Traces
+    public efield::Traces,
+    public efield::EODTools
 {
   Q_OBJECT
 

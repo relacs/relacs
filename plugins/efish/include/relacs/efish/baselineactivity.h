@@ -79,7 +79,8 @@ PUnitSearch writes some information about baseline activity if \c repeats>0.
 class BaselineActivity
   : public RePro,
     public ephys::Traces,
-    public efield::Traces
+    public efield::Traces,
+    public efield::EODTools
 {
   Q_OBJECT
 

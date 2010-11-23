@@ -319,7 +319,7 @@ void Session::main( void )
       postCustomEvent( 11 );
 
       // EOD Amplitude:
-      EODAmplitude = eode.meanSize( currentTime() - 0.5, currentTime() );
+      EODAmplitude = eodAmplitude( trace( EODTrace ), currentTime() - 0.5, currentTime() );
       EODAmplitudes.push( currentTime(), EODAmplitude );
       stimulusData().setNumber( "EOD Amplitude", EODAmplitude );
       stimulusData().setUnit( "EOD Amplitude", trace( EODTrace ).unit() );

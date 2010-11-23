@@ -152,8 +152,6 @@ private:
   double IntensityGain;
   double FishRate;
   double FishAmplitude;
-  double FishUp;
-  double FishDown;
   double ChirpPhase;
   ArrayD ChirpTimes;
   ArrayD BeatPhases;

@@ -57,7 +57,7 @@ The times of the EOD peaks and their amplitude.
 - \c maxperiod=10ms: Maximum EOD period (\c number)
 - \c averagecycles=100: Number of EOD cycles to be averaged over for computing mean voltage (\c integer)
 
-\version 1.5 (Nov 19, 2010)
+\version 1.6 (Nov 23, 2010)
 */
 
 
@@ -106,15 +106,14 @@ protected:
   double MinThresh;
   double MaxThresh;
   double ThreshRatio;
-  int AverageCycles;
+  double FilterTau;
   bool AdaptThresh;
-
-    /*! Maximum period of the EOD to detect in seconds. */
   double MaxEODPeriod;
 
   OptWidget EDW;
-
   const InData *Data;
+  InData::const_iterator FilterIterator;
+  double MeanEOD;
 
 };
 

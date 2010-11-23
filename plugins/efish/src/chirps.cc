@@ -620,12 +620,10 @@ int Chirps::main( void )
 
   // EOD amplitude:
   FishAmplitude = eodAmplitude( trace(LocalEODTrace[0]),
-				events(LocalEODEvents[0]).back() - 0.5,
-				events(LocalEODEvents[0]).back() );
+				currentTime() - 0.5, currentTime() );
 
   // plot:
-  initMultiPlot( events(LocalEODEvents[0]).meanSize( events(LocalEODEvents[0]).back() - 0.5,
-						     events(LocalEODEvents[0]).back() ) );
+  initMultiPlot( FishAmplitude );
 
   // first stimulus:
   OutData signal;
@@ -804,10 +802,6 @@ int Chirps::main( void )
 	Header.setNumber( "EOD rate", FishRate );
 	Header.setUnit( "trans. amplitude", EOD2Unit );
 	Header.setNumber( "trans. amplitude", FishAmplitude );
-	Header.setUnit( "upper trans. amplitude", EOD2Unit );
-	Header.setNumber( "upper trans. amplitude", FishUp );
-	Header.setUnit( "lower trans. amplitude", EOD2Unit );
-	Header.setNumber( "lower trans. amplitude", FishDown );
 	Header.setText( "repro time", reproTimeStr() );
 	Header.setText( "session time", sessionTimeStr() );
 	ChirpKey.setUnit( "ampl-", EOD2Unit );
@@ -1301,19 +1295,13 @@ void Chirps::analyze( void )
 
   // EOD amplitude:
   FishAmplitude = eodAmplitude( trace(LocalEODTrace[0]),
-				eod2.back() - 0.5, eod2.back() );
+				currentTime() - 0.5, currentTime() );
 
   // contrast:
   TrueContrast = beatContrast( trace(LocalEODTrace[0]),
 			       signalTime()+0.1*Duration,
 			       signalTime()+0.9*Duration,
 			       fabs( DeltaF ) );
-
-  // Fish Amplitudes:
-  FishUp = eod2.meanSize( eod2.back() - 0.5, eod2.back() );
-  FishDown = meanTroughs( trace(LocalEODTrace[0]),
-			  eod2.back() - 0.5, eod2.back(), 
-			  0.05*trace(LocalEODTrace[0]).maxValue() );
 
   // EOD transdermal amplitude:
   EventIterator first2 = eod2.begin( signalTime() );
@@ -1448,11 +1436,13 @@ void Chirps::analyze( void )
 	beatbin = BeatPos-1;
 
       // beat amplitude right before chirp:
-      beatbefore = eod2.meanSize( signalTime() + ChirpTimes[k] - ChirpWidth,
-				  signalTime() + ChirpTimes[k] - ChirpWidth + 4.0 * meaninterv );
+      beatbefore = eodAmplitude( trace(LocalEODTrace[0]),
+				 signalTime() + ChirpTimes[k] - ChirpWidth,
+				 signalTime() + ChirpTimes[k] - ChirpWidth + 4.0 * meaninterv );
       // beat amplitude right after chirp:
-      beatafter = eod2.meanSize( signalTime() + ChirpTimes[k] + ChirpWidth - 4.0 * meaninterv,
-				 signalTime() + ChirpTimes[k] + ChirpWidth );
+      beatafter = eodAmplitude( trace(LocalEODTrace[0]),
+				signalTime() + ChirpTimes[k] + ChirpWidth - 4.0 * meaninterv,
+				signalTime() + ChirpTimes[k] + ChirpWidth );
 
     }
     else {

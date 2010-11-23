@@ -31,7 +31,7 @@ namespace efield {
 EODDetector::EODDetector( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogDetector, 1, 
 	    "EODDetector", "EField",
-	    "Jan Benda", "1.5", "Nov 19, 2010" )
+	    "Jan Benda", "1.6", "Nov 23, 2010" )
 {
   // parameter:
   Threshold = 0.0001;
@@ -40,14 +40,14 @@ EODDetector::EODDetector( const string &ident, int mode )
   MaxEODPeriod = 0.01;  // 100 Hz
   ThreshRatio = 0.5;
   AdaptThresh = false;
-  AverageCycles = 100;
+  FilterTau = 0.1;
 
   // options:
   addNumber( "threshold", "Threshold", Threshold, MinThresh, MaxThresh, 0.01*MaxThresh, "", "", "%g", 2+8+32 );
   addBoolean( "adapt", "Adapt threshold", AdaptThresh, 2+8 );
   addNumber( "ratio", "Ratio", ThreshRatio, 0.05, 1.0, 0.05, "", "%", "%g", 2+8 ).setActivation( "adapt", "true" );
   addNumber( "maxperiod", "Maximum EOD period", MaxEODPeriod, 0.0, 1.0, 0.0001, "s", "ms", "%g", 8 );
-  addInteger( "averagecycles", "Average over", AverageCycles, 1, 1000000, 1, "EOD cycles", "", 8 );
+  addNumber( "filtertau", "Filter time constant", FilterTau, 0.0, 10000.0, 0.001, "s", "ms", "%g", 8 );
   addNumber( "rate", "Rate", 0.0, 0.0, 100000.0, 0.1, "Hz", "Hz", "%.1f", 2+4 );
   addNumber( "size", "Size", 0.0, 0.0, 100000.0, 0.1, "", "", "%.3f", 2+4 );
   addNumber( "meanvolts", "Average", 0.0, -10000.0, 10000.0, 0.1, "", "", "%.1f", 2+4 );
@@ -84,6 +84,7 @@ EODDetector::EODDetector( const string &ident, int mode )
   setConfigSelectMask( -32 );
 
   Data = 0;
+  MeanEOD = 0.0;
 }
 
 
@@ -101,6 +102,9 @@ int EODDetector::init( const InData &data, EventData &outevents,
   outevents.setSizeFormat( "%6.2f" );
   adjust( data );
   D.init( data.begin(), data.end(), data.timeBegin() );
+  FilterIterator = data.begin();
+  if ( FilterIterator < data.end() )
+    MeanEOD = *FilterIterator;
   return 0;
 }
 
@@ -112,7 +116,7 @@ void EODDetector::notify( void )
   AdaptThresh = boolean( "adapt" );
   ThreshRatio = number( "ratio" );
   MaxEODPeriod = number( "maxperiod" );
-  AverageCycles = integer( "averagecycles" );
+  FilterTau = number( "filtertau" );
   EDW.updateValues( OptWidget::changedFlag() );
   delFlags( OptWidget::changedFlag() );
 }
@@ -174,17 +178,14 @@ int EODDetector::detect( const InData &data, EventData &outevents,
   D.peak( data.minBegin(), data.end(), outevents,
 	  Threshold, MinThresh, MaxThresh, *this );
 
-  double meanvolts = 0.0;
   if ( outevents.count( currentTime() - 0.1 ) <= 0 )
     outevents.updateMean( 1 );
-  else if ( currentTime() > AverageCycles/outevents.meanRate() )
-    meanvolts = data.mean( currentTime()-AverageCycles/outevents.meanRate(), currentTime() );
   unsetNotify();
   if ( AdaptThresh )
     setNumber( "threshold", Threshold );
   setNumber( "rate", outevents.meanRate() );
   setNumber( "size", outevents.meanSize() );
-  setNumber( "meanvolts", meanvolts );
+  setNumber( "meanvolts", MeanEOD );
   setNotify();
   EDW.updateValues( OptWidget::changedFlag() );
   delFlags( OptWidget::changedFlag() );
@@ -214,14 +215,24 @@ int EODDetector::checkEvent( InData::const_iterator first,
     return 0;
   }
 
+  double sampleinterval = *eventtime - *(eventtime - 1);
+
+  // update mean:
+  if ( FilterTau > 0.0 ) {
+    while ( FilterIterator < last ) {
+      MeanEOD += ( *FilterIterator - MeanEOD )*sampleinterval/FilterTau;
+      ++FilterIterator;
+    }
+  }
+  else
+    MeanEOD = 0.0;
+
   // threshold for EOD time:
   double maxsize = 0.0;
   if ( prevevent > first )
     maxsize = *event - 0.25 * ( *event - *prevevent );
   else
     maxsize = 0.5 * *event;
-
-  double sampleinterval = *eventtime - *(eventtime - 1);
 
   // previous maxsize crossing time:
   InData::const_iterator id = event;
@@ -261,6 +272,7 @@ int EODDetector::checkEvent( InData::const_iterator first,
   time = event.time() + event.sampleInterval()*a/b;  // very noisy!
   */
 
+  /*
   // previous trough:
   double troughampl = 0.0;
   if ( prevevent-1 > first ) {
@@ -272,9 +284,11 @@ int EODDetector::checkEvent( InData::const_iterator first,
     if ( fabs( b ) >= 1.0e-5 )
       troughampl = y1 - 0.25*a*a/b;
   }
+  */
 
   // amplitude:
-  size = 0.5*(peakampl - troughampl);
+  //  size = 0.5*(peakampl - troughampl);
+  size = peakampl - MeanEOD;
   if ( size <= 0.0 )
     return 0;
 

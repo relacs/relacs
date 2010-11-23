@@ -130,13 +130,11 @@ int FICurve::main( void )
   EOD2Unit = trace( LocalEODTrace[0] ).unit();
 
   // EOD rate:
-  FishRate = events( LocalEODEvents[0] ).frequency( events( LocalEODEvents[0] ).back() - 0.5,
-						    events( LocalEODEvents[0] ).back() );
+  FishRate = events( LocalEODEvents[0] ).frequency( currentTime() - 0.5, currentTime() );
 
   // EOD amplitude:
   FishAmplitude = eodAmplitude( trace( LocalEODTrace[0] ),
-				events( LocalEODEvents[0] ).back() - 0.5,
-				events( LocalEODEvents[0] ).back() );
+				currentTime() - 0.5, currentTime() );
 
   // trigger:
   //  setupTrigger( data, events );
@@ -708,23 +706,22 @@ void FICurve::analyzeSpikes( const EventData &se, int trace,
 
 void FICurve::analyze( void )
 {
-  const EventData &eod2 = events( LocalEODEvents[0] );
-
-  // amplitude:
-  double truepreintensity = eod2.meanSize( signalTime(), signalTime()+PreDuration );
-  //  double trueprecontrast = ( truepreintensity - FishAmplitude ) / FishAmplitude;
-  double trueintensity = eod2.meanSize( signalTime() + PreDuration, signalTime()+Duration );
-  //  double truecontrast = ( trueintensity - FishAmplitude ) / FishAmplitude;
-
-  double bd = eod2.back() - signalTime() - PreDuration - Duration;
+  double bd = currentTime() - signalTime() - PreDuration - Duration;
   if ( bd > 0.5 )
     bd = 0.5;
 
   // EOD rate:
-  FishRate = eod2.frequency( eod2.back() - bd, eod2.back() );
+  FishRate = events( LocalEODEvents[0] ).frequency( currentTime() - bd, currentTime() );
 
   // EOD amplitude:
-  FishAmplitude = eodAmplitude( trace( LocalEODTrace[0] ), eod2.back() - bd, eod2.back() );
+  FishAmplitude = eodAmplitude( trace( LocalEODTrace[0] ),
+				currentTime() - bd, currentTime()  );
+
+  // amplitude:
+  double truepreintensity = eodAmplitude( trace( LocalEODTrace[0] ),
+					  signalTime(), signalTime()+PreDuration );
+  double trueintensity = eodAmplitude( trace( LocalEODTrace[0] ),
+				       signalTime() + PreDuration, signalTime()+Duration );
 
   // spikes:
   for ( int k=0; k<MaxSpikeTraces; k++ )

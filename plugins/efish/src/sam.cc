@@ -331,16 +331,14 @@ int SAM::main( void )
 
   // EOD amplitude:
   FishAmplitude = eodAmplitude( trace( LocalEODTrace[0] ),
-				events( LocalEODEvents[0] ).back() - 0.5,
-				events( LocalEODEvents[0] ).back() );
+				currentTime() - 0.5, currentTime() );
   if ( FishAmplitude <= 1.0e-8 ) {
     warning( "No EOD amplitude on local EOD electrode!" );
     return Failed;
   }
 
   // adjust transdermal EOD:
-  double val2 = trace( LocalEODTrace[0] ).maxAbs( currentTime()-0.1,
-						  currentTime() );
+  double val2 = trace( LocalEODTrace[0] ).maxAbs( currentTime()-0.1, currentTime() );
   if ( val2 > 0.0 )
     adjustGain( trace( LocalEODTrace[0] ), ( 1.0 + Contrast ) * val2 );
 
@@ -857,7 +855,7 @@ void SAM::analyze( void )
 
   // EOD amplitude:
   FishAmplitude = eodAmplitude( trace( LocalEODTrace[0] ),
-				localeod.back() - 0.5, localeod.back() );
+				currentTime() - 0.5, currentTime() );
 
   // contrast:
   TrueContrast = beatContrast( trace(LocalEODTrace[0]),
