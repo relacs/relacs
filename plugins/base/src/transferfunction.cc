@@ -19,6 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <relacs/tablekey.h>
 #include <relacs/base/transferfunction.h>
 using namespace relacs;
 
@@ -26,7 +27,7 @@ namespace base {
 
 
 TransferFunction::TransferFunction( void )
-  : RePro( "TransferFunction", "base", "Jan Benda", "1.0", "Dec 07, 2009" )
+  : RePro( "TransferFunction", "base", "Jan Benda", "1.1", "Nov 25, 2010" )
 {
   // options:
   addLabel( "Stimulus" ).setStyle( OptWidget::Bold );
@@ -59,7 +60,6 @@ TransferFunction::TransferFunction( void )
   P[1].setYLabel( "Phase" );
   P[1].setYLabelPos( 2.0, Plot::FirstMargin,
 		     0.5, Plot::Graph, Plot::Center, -90.0 );
-  //  P[1].setYRange( Plot::AutoScale, Plot::AutoScale );
   P[1].setYRange( -3.15, 3.15 );
   P.unlock();
   setWidget( &P );
@@ -79,12 +79,14 @@ void TransferFunction::notify( void )
 {
   int outtrace = index( "outtrace" );
   if ( outtrace >= 0 && outtrace < outTracesSize() ) {
+    OutName = outTrace( outtrace ).traceName();
     OutUnit = outTrace( outtrace ).unit();
     setUnit( "amplitude", OutUnit );
   }
 
   int intrace = index( "intrace" );
   if ( intrace >= 0 && intrace < traces().size() )
+    InName = trace( intrace ).ident();
     InUnit = trace( intrace ).unit();
 }
 
@@ -113,8 +115,6 @@ int TransferFunction::main( void )
   default: Window = hanning;
   }
 
-  double samplerate = trace( intrace ).sampleRate();
-
   MeanGain.clear();
   SquareGain.clear();
   StdevGain.clear();
@@ -133,8 +133,17 @@ int TransferFunction::main( void )
   P[0].setYLabel( "Gain [" + OutUnit + "/" + InUnit + "]" );
   P.unlock();
 
+  // files:
+  ofstream tf;
+  TableKey tracekey;
+  Options header;
+  header.addInteger( "index", completeRuns() );
+  header.addInteger( "ReProIndex", reproCount() );
+  header.addNumber( "ReProTime", reproStartTime(), "s", "%0.3f" );
+  openTraceFile( tf, tracekey, header );
+
   // signal:
-  OutData signal( duration, 1.0/samplerate );
+  OutData signal;
   signal.noiseWave( fmax, duration, amplitude );
   signal.setIdent( "WhiteNoise, fmax=" + Str( fmax ) + "Hz" );
   signal.back() = 0.0;
@@ -150,6 +159,8 @@ int TransferFunction::main( void )
     Str s = "Amplitude <b>" + Str( amplitude ) + " " + outTrace( outtrace ).unit() +"</b>";
     s += ",  Frequency <b>" + Str( fmax, "%.0f" ) + " Hz</b>";
     s += ",  Loop <b>" + Str( count+1 ) + "</b>";
+    if ( repeats > 0 )
+      s += " of <b>" + Str( repeats ) + "</b>";
     message( s );
 
     write( signal );
@@ -166,7 +177,8 @@ int TransferFunction::main( void )
 	return Aborted;
     }
 
-    analyze( signal, trace( intrace ), duration, count );
+    SampleDataF input, output;
+    analyze( signal, trace( intrace ), duration, count, input, output );
 
     // plot gain:
     P.lock();
@@ -183,6 +195,9 @@ int TransferFunction::main( void )
     P.unlock();
     P.draw();
 
+    // save:
+    saveTrace( tf, tracekey, count, input, output );
+
     sleepOn( duration+pause );
     if ( interrupt() ) {
       if ( count > 0 )
@@ -193,19 +208,26 @@ int TransferFunction::main( void )
 
   }
 
+  saveData( header );
+
   return Completed;
 }
 
 
 
 void TransferFunction::analyze( const OutData &signal, const InData &data,
-				double duration, int count )
+				double duration, int count,
+				SampleDataF &input, SampleDataF &output )
 {
-  SampleDataD x( signal );
-  
   // de-mean:
-  SampleDataD y( 0.0, duration, data.stepsize() );
-  data.copy( signalTime(), y );
+  input.resize( 0.0, duration, data.stepsize() );
+  input.interpolate( signal );
+  SampleDataD x( input );
+  x -= mean( x );
+
+  output.resize( 0.0, duration, data.stepsize() );
+  data.copy( signalTime(), output );
+  SampleDataD y( output );
   y -= mean( y );
 
   // transfer fucntion:
@@ -241,6 +263,73 @@ void TransferFunction::analyze( const OutData &signal, const InData &data,
       StdevPhase[k] = sqrt( SquarePhase[k] - MeanPhase[k]*MeanPhase[k] );
     }
   }
+}
+
+
+void TransferFunction::openTraceFile( ofstream &tf, TableKey &tracekey,
+				      const Options &header )
+{
+  tracekey.addNumber( "t", "ms", "%7.2f" );
+  tracekey.addNumber( OutName, OutUnit, "%8.3f" );
+  tracekey.addNumber( InName, InUnit, "%8.3f" );
+  tf.open( addPath( "transferfunction-traces.dat" ).c_str(),
+	   ofstream::out | ofstream::app );
+  header.save( tf, "# " );
+  tf << "# status:\n";
+  stimulusData().save( tf, "#   " );
+  tf << "# settings:\n";
+  settings().save( tf, "#   " );
+  tf << '\n';
+  tracekey.saveKey( tf, true, false );
+  tf << '\n';
+}
+
+
+void TransferFunction::saveTrace( ofstream &tf, TableKey &tracekey,
+				  int index,
+				  const SampleDataF &input,
+				  const SampleDataF &output )
+{
+  tf << "# index: " << index << '\n';
+  for ( int k=0; k<input.size(); k++ ) {
+    tracekey.save( tf, 1000.0*input.pos( k ), 0 );
+    tracekey.save( tf, input[k] );
+    tracekey.save( tf, output[k] );
+    tf << '\n';
+  }
+  tf << '\n';
+}
+
+
+void TransferFunction::saveData( const Options &header )
+{
+  ofstream df( addPath( "transferfunction-data.dat" ).c_str() );
+
+  header.save( df, "# " );
+  df << "# status:\n";
+  stimulusData().save( df, "#   " );
+  df << "# settings:\n";
+  settings().save( df, "#   " );
+  df << '\n';
+
+  TableKey datakey;
+  datakey.addNumber( "f", "Hz", "%7.2f" );
+  datakey.addNumber( "gain", OutUnit + "/" + InUnit, "%7.2f" );
+  datakey.addNumber( "s.d.", OutUnit + "/" + InUnit, "%7.2f" );
+  datakey.addNumber( "phase", "1", "%6.3f" );
+  datakey.addNumber( "s.d.", "1", "%6.3f" );
+  datakey.saveKey( df );
+
+  for ( int k=0; k<MeanGain.size(); k++ ) {
+    datakey.save( df, MeanGain.pos( k ), 0 );
+    datakey.save( df, MeanGain[k] );
+    datakey.save( df, StdevGain[k] );
+    datakey.save( df, MeanPhase[k] );
+    datakey.save( df, StdevPhase[k] );
+    df << '\n';
+  }
+  
+  df << "\n\n";
 }
 
 

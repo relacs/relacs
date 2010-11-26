@@ -28,7 +28,7 @@ namespace patchclamp {
 
 
 FICurve::FICurve( void )
-  : RePro( "FICurve", "patchclamp", "Jan Benda", "1.1", "Nov 03, 2010" ),
+  : RePro( "FICurve", "patchclamp", "Jan Benda", "1.2", "Nov 25, 2010" ),
     VUnit( "mV" ),
     IUnit( "nA" ),
     VFac( 1.0 ),
@@ -58,7 +58,6 @@ FICurve::FICurve( void )
   addNumber( "vmax", "Maximum steady-state potential", -50.0, -2000.0, 2000.0, 1.0, "mV" );
   addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
   addInteger( "ratioincrement", "Optimize range at current increments below", 0, 0, 10000 );
-  addNumber( "minrate", "Minimum required firing rate for optimization", 10.0, 0.0, 2000.0, 1.0, "Hz" ).setActivation( "ratioincrement", ">0" );
   addNumber( "maxratediff", "Maximum difference between onset and steady-state firing rate for optimization", 10.0, 0.0, 1000.0, 1.0, "Hz" ).setActivation( "ratioincrement", ">0" );
   addTypeStyle( OptWidget::TabLabel, Parameter::Label );
 
@@ -119,7 +118,6 @@ int FICurve::main( void )
   double vmax = number( "vmax" );
   double sswidth = number( "sswidth" );
   int ratioincrement = number( "ratioincrement" );
-  double minrate = number( "minrate" );
   double maxratediff = number( "maxratediff" );
 
   double dccurrent = stimulusData().number( outTraceName( CurrentOutput[0] ) );
@@ -331,12 +329,11 @@ int FICurve::main( void )
       for ( unsigned int k=Range.next( 0 );
 	    k<Results.size();
 	    k=Range.next( ++k ) ) {
-	if ( Results[k].SSRate > minrate &&
-	     Results[k].OnRate - Results[k].SSRate > maxratediff ) {
+	if ( Results[k].OnRate - Results[k].SSRate > maxratediff ) {
 	  n++;
 	  if ( n > 1 ) {
 	    printlog( "Skip currents above " + Str( Range[k] ) );
-	    Range.setSkipAbove( k );
+	    Range.setSkipAbove( Range.next( ++k ) );
 	    break;
 	  }
 	}

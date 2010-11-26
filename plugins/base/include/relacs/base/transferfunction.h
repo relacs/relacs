@@ -33,16 +33,20 @@ namespace base {
 \class TransferFunction
 \brief [RePro] Measures the transfer function with white-noise stimuli.
 \author Jan Benda
-\version 1.0 (Dec 07, 2009)
-
+\version 1.1 (Nov 25, 2010)
+\par Screenshot
+\image html transferfunction.png
 
 \par Options
-- \c outtrace=0: Output trace number (\c number)
-- \c duration=1000ms: Stimulus duration (\c number)
+- Stimulus
+- \c outtrace=Current-1: Output trace (\c string)
+- \c amplitude=1nA: Amplitude (\c number)
+- \c fmax=1000Hz: Maximum frequency (\c number)
+- \c duration=1000ms: Width of analysis window (\c number)
 - \c pause=1000ms: Length of pause inbetween successive stimuli (\c number)
-- \c fmax=1000Hz: Maximum frequency of stimulus (\c number)
-- \c repeats=10: Repetitions of stimulus (\c integer)
-- \c intrace=0: Input trace number (\c number)
+- \c repeats=100: Repeats (\c integer)
+- Analysis
+- \c intrace=V-1: Input trace (\c string)
 - \c size=1024: Number of data points for FFT (\c string)
 - \c overlap=true: Overlap FFT windows (\c boolean)
 - \c window=Hanning: FFT window function (\c string)
@@ -64,13 +68,20 @@ public:
 protected:
 
   void analyze( const OutData &signal, const InData &data,
-		double duration, int count );
+		double duration, int count,
+		SampleDataF &input, SampleDataF &output );
+  void openTraceFile( ofstream &tf, TableKey &tracekey, const Options &header );
+  void saveTrace( ofstream &tf, TableKey &tracekey, int index,
+		  const SampleDataF &input, const SampleDataF &output );
+  void saveData( const Options &header );
 
   int SpecSize;
   bool Overlap;
   double (*Window)( int j, int n );
 
+  string InName;
   string InUnit;
+  string OutName;
   string OutUnit;
 
   SampleDataD MeanGain;

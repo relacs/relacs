@@ -10,7 +10,9 @@ pluginlib_LTLIBRARIES = \
     libpatchclampmembraneresistance.la \
     libpatchclampvicurve.la \
     libpatchclampficurve.la \
-    libpatchclampsetdc.la
+    libpatchclampsetdc.la \
+    libpatchclampfindrate.la \
+    libpatchclampphaseresettingcurve.la
 
 
 
@@ -231,6 +233,68 @@ libpatchclampsetdc_la_include_HEADERS = $(HEADER_PATH)/setdc.h
 
 
 
+libpatchclampfindrate_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/ephys/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS)
+
+libpatchclampfindrate_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS)
+
+libpatchclampfindrate_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/plugins/ephys/src/libephystraces.la \
+    $(QT4_LIBS)
+
+$(libpatchclampfindrate_la_OBJECTS) : moc_findrate.cc
+
+libpatchclampfindrate_la_SOURCES = findrate.cc
+
+libpatchclampfindrate_la_includedir = $(pkgincludedir)/patchclamp
+
+libpatchclampfindrate_la_include_HEADERS = $(HEADER_PATH)/findrate.h
+
+
+
+libpatchclampphaseresettingcurve_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/ephys/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS)
+
+libpatchclampphaseresettingcurve_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS)
+
+libpatchclampphaseresettingcurve_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/plugins/ephys/src/libephystraces.la \
+    $(QT4_LIBS)
+
+$(libpatchclampphaseresettingcurve_la_OBJECTS) : moc_phaseresettingcurve.cc
+
+libpatchclampphaseresettingcurve_la_SOURCES = phaseresettingcurve.cc
+
+libpatchclampphaseresettingcurve_la_includedir = $(pkgincludedir)/patchclamp
+
+libpatchclampphaseresettingcurve_la_include_HEADERS = $(HEADER_PATH)/phaseresettingcurve.h
+
+
+
 check_PROGRAMS = \
     linktest_libpatchclampsession_la \
     linktest_libpatchclampsimple_la \
@@ -238,7 +302,9 @@ check_PROGRAMS = \
     linktest_libpatchclampmembraneresistance_la \
     linktest_libpatchclampvicurve_la \
     linktest_libpatchclampficurve_la \
-    linktest_libpatchclampsetdc_la
+    linktest_libpatchclampsetdc_la \
+    linktest_libpatchclampfindrate_la \
+    linktest_libpatchclampphaseresettingcurve_la
 
 linktest_libpatchclampsession_la_SOURCES = linktest.cc
 linktest_libpatchclampsession_la_LDADD = libpatchclampsession.la
@@ -260,6 +326,12 @@ linktest_libpatchclampficurve_la_LDADD = libpatchclampficurve.la
 
 linktest_libpatchclampsetdc_la_SOURCES = linktest.cc
 linktest_libpatchclampsetdc_la_LDADD = libpatchclampsetdc.la
+
+linktest_libpatchclampfindrate_la_SOURCES = linktest.cc
+linktest_libpatchclampfindrate_la_LDADD = libpatchclampfindrate.la
+
+linktest_libpatchclampphaseresettingcurve_la_SOURCES = linktest.cc
+linktest_libpatchclampphaseresettingcurve_la_LDADD = libpatchclampphaseresettingcurve.la
 
 TESTS = $(check_PROGRAMS)
 

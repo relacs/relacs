@@ -38,7 +38,7 @@ namespace patchclamp {
 \class FICurve
 \brief [RePro] F-I curve measured in current-clamp
 \author Jan Benda
-\version 1.1 (Nov 03, 2010)
+\version 1.2 (Nov 25, 2010)
 \par Screenshot
 \image html ficurve.png
 
@@ -46,24 +46,26 @@ namespace patchclamp {
 - Stimuli
 - \c ibase=zero: Currents are relative to (\c string)
 - \c imin=0nA: Minimum injected current (\c number)
-- \c imax=3nA: Maximum injected current (\c number)
-- \c istep=0.05nA: Minimum step-size of current (\c number)
+- \c imax=1nA: Maximum injected current (\c number)
+- \c istep=0.001nA: Minimum step-size of current (\c number)
 - \c userm=false: Use membrane resistance for estimating istep from vstep (\c boolean)
-- \c vstep=2mV: Minimum step-size of voltage (\c number)
+- \c vstep=1mV: Minimum step-size of voltage (\c number)
 - Timing
-- \c duration=500ms: Duration of current output (\c number)
+- \c duration=100ms: Duration of current output (\c number)
 - \c delay=100ms: Delay before current pulses (\c number)
-- \c pause=1000ms: Duration of pause between current pulses (\c number)
-- \c ishuffle=AlternateOutUp: Initial sequence of currents for first repetition (\c string)
-- \c shuffle=Random: Sequence of currents (\c string)
-- \c iincrement=0: Initial increment for currents (\c integer)
+- \c pause=400ms: Duration of pause between current pulses (\c number)
+- \c ishuffle=Up: Initial sequence of currents for first repetition (\c string)
+- \c shuffle=Up: Sequence of currents (\c string)
+- \c iincrement=-1: Initial increment for currents (\c integer)
 - \c singlerepeat=1: Number of immediate repetitions of a single stimulus (\c integer)
-- \c blockrepeat=1: Number of repetitions of a fixed intensity increment (\c integer)
-- \c repeat=100: Number of repetitions of the whole V-I curve measurement (\c integer)
+- \c blockrepeat=10: Number of repetitions of a fixed intensity increment (\c integer)
+- \c repeat=1: Number of repetitions of the whole V-I curve measurement (\c integer)
 - Analysis
-- \c fmax=80Hz: Maximum firing rate (\c number)
+- \c fmax=100Hz: Maximum firing rate (\c number)
 - \c vmax=-50mV: Maximum steady-state potential (\c number)
-- \c sswidth=300ms: Window length for steady-state analysis (\c number)
+- \c sswidth=50ms: Window length for steady-state analysis (\c number)
+- \c ratioincrement=0: Optimize range at current increments below (\c integer)
+- \c maxratediff=10Hz: Maximum difference between onset and steady-state firing rate for optimization (\c number)
 */
 
 

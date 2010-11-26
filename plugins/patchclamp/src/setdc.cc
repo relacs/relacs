@@ -21,6 +21,7 @@
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
+#include <QGridLayout>
 #include <relacs/patchclamp/setdc.h>
 using namespace relacs;
 
@@ -28,7 +29,7 @@ namespace patchclamp {
 
 
 SetDC::SetDC( void )
-  : RePro( "SetDC", "patchclamp", "Jan Benda", "1.2", "Nov 01, 2010" ),
+  : RePro( "SetDC", "patchclamp", "Jan Benda", "1.3", "Nov 25, 2010" ),
     IUnit( "nA" )
 {
   // add some options:
@@ -39,22 +40,67 @@ SetDC::SetDC( void )
   addNumber( "dcamplitudedecr", "Decrement below threshold", 0.1, 0.0, 1000.0, 0.01 ).setActivation( "dcamplitudesel", "relative to threshold" );
   addBoolean( "interactive", "Set dc amplitude interactively", false );
   addNumber( "dcamplitudestep", "Stepsize for entering dc", 0.001, 0.0, 1000.0, 0.001 );
+  addNumber( "duration", "Duration for analysis", 0.5, 0.0, 1000.0, 0.01, "seconds", "ms" );
 
   QVBoxLayout *vb = new QVBoxLayout;
   setLayout( vb );
 
+  QGridLayout *gl = new QGridLayout;
+  vb->addLayout( gl );
+
   // edit:
-  QHBoxLayout *eb = new QHBoxLayout;
-  vb->addLayout( eb );
-  eb->addWidget( new QLabel( "DC current" ) );
+  QLabel *label = new QLabel( "DC current" );
+  label->setSizePolicy( QSizePolicy( QSizePolicy::Minimum,
+				     QSizePolicy::MinimumExpanding ) );
+  gl->addWidget( label, 0, 1 );
   EW = new QDoubleSpinBox;
   EW->setRange( -1000.0, 1000.0 );
   EW->setValue( 0.0 );
   EW->setDecimals( 3 );
   EW->setSingleStep( 0.001 );
-  eb->addWidget( EW );
+  gl->addWidget( EW, 0, 2 );
   UnitLabel = new QLabel( "nA" );
-  eb->addWidget( UnitLabel );
+  gl->addWidget( UnitLabel, 0, 3 );
+
+  // mean voltage:
+  label = new QLabel( "Membrane potential" );
+  label->setSizePolicy( QSizePolicy( QSizePolicy::Minimum,
+				     QSizePolicy::MinimumExpanding ) );
+  gl->addWidget( label, 1, 1 );
+  VoltageLabel = new QLabel( "0.0" );
+  VoltageLabel->setAlignment( Qt::AlignRight | Qt::AlignVCenter );
+  VoltageLabel->setFrameStyle( QFrame::Panel | QFrame::Sunken );
+  VoltageLabel->setLineWidth( 2 );
+  VoltageLabel->setFixedHeight( VoltageLabel->sizeHint().height() );
+  QFont nf( widget()->font() );
+  nf.setPointSizeF( 1.3 * widget()->fontInfo().pointSizeF() );
+  nf.setBold( true );
+  VoltageLabel->setFont( nf );
+  VoltageLabel->setAutoFillBackground( true );
+  QPalette qp( widget()->palette() );
+  qp.setColor( QPalette::Window, Qt::black );
+  qp.setColor( QPalette::WindowText, Qt::green );
+  VoltageLabel->setPalette( qp );
+  gl->addWidget( VoltageLabel, 1, 2 );
+  QLabel *ul = new QLabel( "mV" );
+  gl->addWidget( ul, 1, 3 );
+
+  // mean rate:
+  label = new QLabel( "Firing rate" );
+  label->setSizePolicy( QSizePolicy( QSizePolicy::Minimum,
+				     QSizePolicy::MinimumExpanding ) );
+  gl->addWidget( label, 2, 1 );
+  RateLabel = new QLabel( "0.0" );
+  RateLabel->setAlignment( Qt::AlignRight | Qt::AlignVCenter );
+  RateLabel->setFrameStyle( QFrame::Panel | QFrame::Sunken );
+  RateLabel->setLineWidth( 2 );
+  RateLabel->setFixedHeight( RateLabel->sizeHint().height() );
+  RateLabel->setFont( nf );
+  RateLabel->setAutoFillBackground( true );
+  RateLabel->setPalette( qp );
+  gl->addWidget( RateLabel, 2, 2 );
+  ul = new QLabel( "Hz" );
+  gl->addWidget( ul, 2, 3 );
 
   // buttons:
   QHBoxLayout *bb = new QHBoxLayout;
@@ -132,6 +178,11 @@ public:
       Max( max )
   {
   }
+  SetDCEvent( double val, int type )
+    : QEvent( Type( User+type ) ),
+      Value( val )
+  {
+  }
 
   double Value;
   double Min;
@@ -148,6 +199,7 @@ int SetDC::main( void )
   double dcamplitudefrac = number( "dcamplitudefrac" );
   double dcamplitudedecr = number( "dcamplitudedecr" );
   bool interactive = boolean( "interactive" );
+  double duration = number( "duration" );
 
   // don't print repro message:
   noMessage();
@@ -169,6 +221,16 @@ int SetDC::main( void )
 
   if ( interactive ) {
     keepFocus();
+    if ( SpikeTrace[0] >= 0 ) {
+      double meanvoltage = trace( SpikeTrace[0] ).mean( currentTime()-duration,
+							currentTime() );
+      QCoreApplication::postEvent( this, new SetDCEvent( meanvoltage, 15 ) );
+    }
+    if ( SpikeEvents[0] >= 0 ) {
+      double meanrate = events( SpikeEvents[0] ).rate( currentTime()-duration,
+						       currentTime() );
+      QCoreApplication::postEvent( this, new SetDCEvent( meanrate, 16 ) );
+    }
     OutData dcsignal( DCAmplitude );
     dcsignal.setTrace( OutCurrent );
     dcsignal.setIdent( "DC=" + Str( DCAmplitude ) + IUnit );
@@ -202,7 +264,20 @@ int SetDC::main( void )
     SetValue = false;
     Finished = false;
     do {
-      sleepWait();
+      bool w = false;
+      do {
+	w = sleepWait( duration );
+	if ( SpikeTrace[0] >= 0 ) {
+	  double meanvoltage = trace( SpikeTrace[0] ).mean( currentTime()-duration,
+							    currentTime() );
+	  QCoreApplication::postEvent( this, new SetDCEvent( meanvoltage, 15 ) );
+	}
+	if ( SpikeEvents[0] >= 0 ) {
+	  double meanrate = events( SpikeEvents[0] ).rate( currentTime()-duration,
+							   currentTime() );
+	  QCoreApplication::postEvent( this, new SetDCEvent( meanrate, 16 ) );
+	}
+      } while ( ! w );
       if ( ! Finished || ! SetValue ) {
 	if ( Finished )
 	  DCAmplitude = OrgDCAmplitude;
@@ -346,6 +421,16 @@ void SetDC::customEvent( QEvent *qce )
     EW->setMinimum( sde->Min );
     EW->setMaximum( sde->Max );
     EW->setValue( sde->Value );
+    break;
+  }
+  case 15: {
+    SetDCEvent *sde = dynamic_cast<SetDCEvent*>( qce );
+    VoltageLabel->setText( Str( sde->Value, 0, 1, 'f' ).c_str() );
+    break;
+  }
+  case 16: {
+    SetDCEvent *sde = dynamic_cast<SetDCEvent*>( qce );
+    RateLabel->setText( Str( sde->Value, 0, 1, 'f' ).c_str() );
     break;
   }
   default:

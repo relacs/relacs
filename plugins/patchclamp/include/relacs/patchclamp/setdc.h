@@ -36,15 +36,19 @@ namespace patchclamp {
 \class SetDC
 \brief [RePro] Interactively set the DC current.
 \author Jan Benda
-\version 1.2 (Nov 01, 2010)
+\version 1.3 (Nov 25, 2010)
+\par Screenshot
+\image html setdc.png
+
 \par Options
 - \c outcurrent=Current-1: Output trace (\c string)
-- \c dcamplitudesel=to a fraction of the threshold: Set DC amplitude (\c string)
-- \c dcamplitude=0.1nA: DC amplitude (\c number)
+- \c dcamplitudesel=to absolute value: Set DC amplitude (\c string)
+- \c dcamplitude=0nA: DC amplitude (\c number)
 - \c dcamplitudefrac=90%: Fraction of threshold (\c number)
-- \c dcamplitudedecr=0.01nA: Decrement below threshold (\c number)
-- \c interactive=true: Set dc amplitude interactively (\c boolean)
-- \c dcamplitudestep=0.01nA: Stepsize for entering dc (\c number)
+- \c dcamplitudedecr=0.1nA: Decrement below threshold (\c number)
+- \c interactive=false: Set dc amplitude interactively (\c boolean)
+- \c dcamplitudestep=0.001nA: Stepsize for entering dc (\c number)
+- \c duration=500ms: Duration for analysis (\c number)
 */
 
 
@@ -66,6 +70,8 @@ protected:
   virtual void customEvent( QEvent *qce );
   QDoubleSpinBox *EW;
   QLabel *UnitLabel;
+  QLabel *VoltageLabel;
+  QLabel *RateLabel;
   QPushButton *OKButton;
   QPushButton *CancelButton;
   QPushButton *ResetButton;

@@ -2059,7 +2059,7 @@ void Plot::drawTicMarks( QPainter &paint, int axis )
     RGBColor c = color( TicsColor );
     QColor qcolor( c.red(), c.green(), c.blue() );
     paint.setPen( QPen( qcolor, TicsWidth ) );
-    for ( double x=XTicsStart[axis]; x<=XMax[axis]; x+=XTicsIncr[axis] )	{
+    for ( double x=XTicsStart[axis]; x<=XMax[axis]+1e-8; x+=XTicsIncr[axis] )	{
       if ( ::fabs( x ) < 0.001*XTicsIncr[axis] )
 	x = 0.0;
       int xp = PlotX1 + (int)::rint( double(PlotX2-PlotX1)/(XMax[axis]-XMin[axis])*(x-XMin[axis]) );
@@ -2093,7 +2093,7 @@ void Plot::drawTicMarks( QPainter &paint, int axis )
     RGBColor c = color( TicsColor );
     QColor qcolor( c.red(), c.green(), c.blue() );
     paint.setPen( QPen( qcolor, TicsWidth ) );
-    for ( double y=YTicsStart[axis]; y<=YMax[axis]; y+=YTicsIncr[axis] )	{
+    for ( double y=YTicsStart[axis]; y<=YMax[axis]+1e-8; y+=YTicsIncr[axis] )	{
       if ( ::fabs( y ) < 0.001*YTicsIncr[axis] )
 	y = 0.0;
       int yp = PlotY1 + (int)::rint( double(PlotY2-PlotY1)/(YMax[axis]-YMin[axis])*(y-YMin[axis]) );
@@ -2131,7 +2131,7 @@ void Plot::drawTicLabels( QPainter &paint, int axis )
     RGBColor c = color( TicsLabelColor );
     QColor qcolor( c.red(), c.green(), c.blue() );
     paint.setPen( QPen( qcolor ) );
-    for ( double x=XTicsStart[axis]; x<=XMax[axis]; x+=XTicsIncr[axis] ) {
+    for ( double x=XTicsStart[axis]; x<=XMax[axis]+1e-8; x+=XTicsIncr[axis] ) {
       if ( ::fabs( x ) < 0.001*XTicsIncr[axis] )
 	x = 0.0;
       int xp = PlotX1 + (int)::rint( double(PlotX2-PlotX1)/(XMax[axis]-XMin[axis])*(x-XMin[axis]) );
@@ -2150,7 +2150,7 @@ void Plot::drawTicLabels( QPainter &paint, int axis )
     RGBColor c = color( TicsLabelColor );
     QColor qcolor( c.red(), c.green(), c.blue() );
     paint.setPen( qcolor );
-    for ( double y=YTicsStart[axis]; y<=YMax[axis]; y+=YTicsIncr[axis] ) {
+    for ( double y=YTicsStart[axis]; y<=YMax[axis]+1e-8; y+=YTicsIncr[axis] ) {
       if ( ::fabs( y ) < 0.001*YTicsIncr[axis] )
 	y = 0.0;
       int yp = PlotY1 + (int)::rint( double(PlotY2-PlotY1)/(YMax[axis]-YMin[axis])*(y-YMin[axis]) );

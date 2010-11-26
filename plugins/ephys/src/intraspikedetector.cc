@@ -143,14 +143,6 @@ IntraSpikeDetector::IntraSpikeDetector( const string &ident, int mode )
   key->setFixedHeight( is );
   gl->addWidget( key, 2, 1, Qt::AlignLeft );
 
-  pm.fill( Qt::yellow );
-  key = new QLabel;
-  key->setPixmap( pm );
-  gl->addWidget( key, 3, 0, Qt::AlignRight | Qt::AlignVCenter );
-  key = new QLabel( "min thresh" );
-  key->setFixedHeight( is );
-  gl->addWidget( key, 3, 1, Qt::AlignLeft );
-
   // dialog:
   QPushButton *pb = new QPushButton( "Dialog" );
   gl->addWidget( pb, 4, 1, Qt::AlignRight );

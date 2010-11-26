@@ -20,7 +20,6 @@
 */
 
 #include <list>
-#include <relacs/optwidget.h>
 #include <relacs/tablekey.h>
 #include <relacs/map.h>
 #include <relacs/sampledata.h>
@@ -32,47 +31,25 @@ namespace patchclampprojects {
 
 
 VoltageReconstruction::VoltageReconstruction( void )
-  : RePro( "VoltageReconstruction", "patchclampprojects", "JanBenda, Ales Skorjanc", "1.0", "Oct 18, 2010" ),
+  : RePro( "VoltageReconstruction", "patchclampprojects",
+	   "Jan Benda, Ales Skorjanc", "1.1", "Nov 25, 2010" ),
     VUnit( "mV" ),
     IUnit( "nA" ),
     IInFac( 1.0 )
 {
   // add some options:
-  addLabel( "Pulse-stimulus" ).setStyle( OptWidget::TabLabel );
-  addSelection( "startamplitudesrc", "Set initial dc-current to", "custom|DC|threshold|previous" );
-  addNumber( "startamplitude", "Initial amplitude of dc-current", 0.1, 0.0, 1000.0, 0.01 ).setActivation( "startamplitudesrc", "custom" );
+  addSelection( "dcamplitudesrc", "Set initial dc-current to", "DC|custom|DC" );
+  addNumber( "dcamplitude", "Initial amplitude of dc-current", 0.0, 0.0, 1000.0, 0.01 ).setActivation( "dcamplitudesrc", "custom" );
   addNumber( "amplitude", "Test-pulse amplitude", 0.1, 0.0, 1000.0, 0.01 );
-  addNumber( "duration", "Duration of test-pulse", 0.0, 0.0, 1000.0, 0.001, "seconds", "ms" );
+  addNumber( "duration", "Duration of test-pulse", 0.005, 0.0, 1000.0, 0.001, "seconds", "ms" );
   addInteger( "repeats", "Number of test-pulses", 100, 0, 1000000 );
-  addLabel( "Rate - search" ).setStyle( OptWidget::TabLabel );
-  addBoolean( "userate", "Search dc-current for target firing rate", false );
-  addNumber( "rate", "Target firing rate", 100.0, 0.0, 1000.0, 10.0, "Hz" ).setActivation( "userate", "true" );
-  addNumber( "ratetol", "Tolerance for target firing rate", 5.0, 0.0, 1000.0, 1.0, "Hz" ).setActivation( "userate", "true" );
-  addNumber( "amplitudestep", "Initial size of dc-current steps used for searching target rate", 8.0, 0.0, 100.0, 1.0, IUnit ).setActivation( "userate", "true" );
-  addNumber( "searchduration", "Duration of dc-current stimulus", 0.0, 0.0, 1000.0, 0.01, "seconds", "ms" ).setActivation( "userate", "true" );
-  addNumber( "skipwin", "Initial portion of stimulus not used for analysis", 0.1, 0.0, 100.0, 0.01, "seconds", "ms" ).setActivation( "userate", "true" );
+  addNumber( "rateduration", "Time for initial estimate of firing rate", 1.0, 0.0, 100000.0, 0.01, "seconds", "ms" );
 
-  PrevDCAmplitude = 0.0;
-
-  // setup plots:
-  Stack = new QStackedLayout;
-  setLayout( Stack );
-
-  SP.lock();
-  SP.setLMarg( 7.0 );
-  SP.setRMarg( 1.5 );
-  SP.setTMarg( 3.0 );
-  SP.setBMarg( 5.0 );
-  SP.setYLabel( "Firing rate [Hz]" );
-  SP.setYLabelPos( 2.3, Plot::FirstMargin, 0.5, Plot::Graph,
-		   Plot::Center, -90.0 );
-  SP.unlock();
-  Stack->addWidget( &SP );
-
+  // setup plot:
   P.lock();
   P.setLMarg( 7.0 );
   P.setRMarg( 7.0 );
-  P.setTMarg( 3.0 );
+  P.setTMarg( 1.0 );
   P.setBMarg( 5.0 );
   P.setXLabel( "Time [ms]" );
   P.setYLabel( "Latency [ms]" );
@@ -81,8 +58,7 @@ VoltageReconstruction::VoltageReconstruction( void )
   P.setYLabelPos( 2.3, Plot::FirstMargin, 0.5, Plot::Graph,
 		  Plot::Center, -90.0 );
   P.unlock();
-  Stack->addWidget( &P );
-  Stack->setCurrentWidget( &P );
+  setWidget( &P );
 }
 
 
@@ -92,9 +68,8 @@ void VoltageReconstruction::config( void )
     VUnit = trace( SpikeTrace[0] ).unit();
   if ( CurrentOutput[0] >= 0 ) {
     IUnit = outTrace( CurrentOutput[0] ).unit();
-    setUnit( "startamplitude", IUnit );
+    setUnit( "dcamplitude", IUnit );
     setUnit( "amplitude", IUnit );
-    setUnit( "amplitudestep", IUnit );
   }
   if ( CurrentTrace[0] >= 0 ) {
     string iinunit = trace( CurrentTrace[0] ).unit();
@@ -106,48 +81,21 @@ void VoltageReconstruction::config( void )
 int VoltageReconstruction::main( void )
 {
   // get options:
-  int startamplitudesrc = index( "startamplitudesrc" );
-  double startamplitude = number( "startamplitude" );
+  int dcamplitudesrc = index( "dcamplitudesrc" );
+  double dcamplitude = number( "dcamplitude" );
   double amplitude = number( "amplitude" );
   double duration = number( "duration" );
   int repeats = number( "repeats" );
-  bool userate = boolean( "userate" );
-  double targetrate = number( "rate" );
-  double ratetolerance = number( "ratetol" );
-  double amplitudestep = number( "amplitudestep" );
-  double searchduration = number( "searchduration" );
-  double skipwin = number( "skipwin" );
+  double rateduration = number( "rateduration" );
 
   double orgdcamplitude = stimulusData().number( outTraceName( 0 ) );
-  double dcamplitude = startamplitude;
-  if ( startamplitudesrc == 1 ) // dc
+  if ( dcamplitudesrc == 1 ) // dc
     dcamplitude = orgdcamplitude;
-  else if ( startamplitudesrc == 2 ) {  // thresh
-    dcamplitude = metaData( "Cell" ).number( "ithreshss" );
-    if ( dcamplitude == 0.0 )
-      dcamplitude = metaData( "Cell" ).number( "ithreshon" );
-  }
-  else if ( startamplitudesrc == 3 )  // prev
-    dcamplitude = PrevDCAmplitude;
 
   if ( SpikeTrace[ 0 ] < 0 || SpikeEvents[ 0 ] < 0 ) {
     warning( "Invalid input voltage trace or missing input spikes!" );
     return Failed;
   }
-  if ( userate && searchduration < 5.0/targetrate ) {
-    warning( "Searchduration too small for requested targetrate!" );
-    return Failed;
-  }
-  if ( userate && skipwin > 0.5*searchduration ) {
-    warning( "Skipwin too large compared to searchduration!" );
-    return Failed;
-  }
-  if ( userate && ratetolerance > 0.3*targetrate ) {
-    warning( "Ratetolerance certainly too high!" );
-    return Failed;
-  }
-  double silentrate = 1.0/(searchduration-skipwin);
-  double minamplitudestep = 0.001;
 
   OutData orgdcsignal( orgdcamplitude );
   orgdcsignal.setTrace( CurrentOutput[0] );
@@ -155,181 +103,18 @@ int VoltageReconstruction::main( void )
   orgdcsignal.addDescription( "stimulus/value" );
   orgdcsignal.description().addNumber( "Intensity", orgdcamplitude, IUnit );
 
-  // search for offset that evokes the target firing rate:
-  if ( userate ) {
-    
-    // plot trace:
-    tracePlotSignal( searchduration );
-    
-    postCustomEvent( 12 );
-    SP.lock();
-    SP.setTitle( "Search target firing rate " + Str( targetrate ) + " Hz" );
-    SP.setXLabel( "DC Current [" + IUnit + "]" );
-    SP.draw();
-    SP.unlock();
-
-    MapD rates;
-    rates.reserve( 20 );
-
-    // stimulus:
-    OutData signal( dcamplitude );
-    signal.setTrace( CurrentOutput[0] );
-    signal.setIdent( "DC=" + Str( dcamplitude ) + IUnit );
-    signal.addDescription( "stimulus/value" );
-    signal.description().addNumber( "Intensity", dcamplitude, IUnit );
-    
-    double minampl = dcamplitude;
-    double maxampl = dcamplitude;
-    double maxf = 50.0;
-
-    // search dc-curent amplitude:
-    while ( true ) {
-
-      signal = dcamplitude;
-      signal.setIdent( "DC=" + Str( dcamplitude ) + IUnit );
-      signal.description().setNumber( "Intensity", dcamplitude, IUnit );
-	
-      // message:
-      Str s = "<b>Search</b> rate <b>" + Str( targetrate ) + " Hz</b>";
-      s += ":  DC = <b>" + Str( dcamplitude, 0, 3, 'f' ) + " " + IUnit + "</b>";
-      message( s );
-
-      // output:
-      directWrite( signal );
-      if ( ! signal.success() )
-	break;
-      sleep( searchduration );
-      if ( interrupt() ) {
-	directWrite( orgdcsignal );
-	return Aborted;
-      }
-
-      // analyze:
-      double meanrate = events( SpikeEvents[0] ).rate( signalTime() + skipwin,
-						       signalTime() + searchduration );
-
-      // message:
-      s = "<b>Measured</b> rate <b>" + Str( meanrate ) + " Hz</b>";
-      s += ":  DC = <b>" + Str( dcamplitude, 0, 3, 'f' ) + " " + IUnit + "</b>";
-      message( s );
-	
-      // plot:
-      {
-	SP.lock();
-	// firing rate versus stimulus offset:
-	SP.clear();
-	double mina = minampl;
-	double maxa = maxampl;
-	if ( maxa - mina < amplitudestep ) {
-	  mina -= 0.5*amplitudestep;
-	  maxa += 0.5*amplitudestep;
-	}
-	if ( ! SP.zoomedXRange() )
-	  SP.setXRange( mina, maxa );
-	if ( meanrate+10.0 > maxf )
-	  maxf = ::ceil((meanrate+10.0)/10.0)*10.0;
-	if ( maxf < targetrate ) 
-	  maxf = targetrate;
-	if ( ! SP.zoomedYRange() )
-	  SP.setYRange( 0.0, maxf );
-	SP.plotHLine( targetrate, Plot::White, 2 );
-	SP.plot( rates, 1.0, Plot::Transparent, 0, Plot::Solid, Plot::Circle, 10, Plot::Red, Plot::Red );
-	MapD cr;
-	cr.push( dcamplitude, meanrate );
-	SP.plot( cr, 1.0, Plot::Transparent, 0, Plot::Solid, Plot::Circle, 10, Plot::Yellow, Plot::Yellow );
-	SP.draw();
-	SP.unlock();
-      }
-
-      int rinx = 0;
-      if ( signal.success() )
-	rinx = rates.insert( dcamplitude, meanrate );
-
-      if ( softStop() > 0 )
-	return Aborted;
-
-      // new offset:
-      if ( signal.success() && 
-	   fabs( meanrate - targetrate ) < ratetolerance ) {
-	// ready:
-	break;
-      }
-      else {
-	// cell lost?
-	if ( signal.success() && meanrate < silentrate &&
-	     rinx > 0 && rates.y( rinx-1 ) > 2.0*silentrate ) {
-	  if ( ( rinx < rates.size()-1 && 
-		 rates.y( rinx+1 ) > 2.0*silentrate ) ||
-	       rates.y( rinx-1 ) > silentrate + 0.3*(targetrate - silentrate ) ) {
-	    info( "Cell probably lost!" );
-	    directWrite( orgdcsignal );
-	    return Failed;
-	  }
-	}
-	if ( ( signal.success() && meanrate < targetrate ) || signal.underflow() ) {
-	  double maxr = 0.0;
-	  if ( rates.y().maxIndex( maxr ) < rinx && maxr > 2.0*silentrate ) {
-	    // depolarization block reached:
-	    dcamplitude -= amplitudestep;
-	    if ( dcamplitude < minampl )
-	      minampl = dcamplitude;
-	  }
-	  else {
-	    // rate below target rate:
-	    if ( dcamplitude < maxampl )
-	      amplitudestep *= 0.5;
-	    dcamplitude += amplitudestep;
-	    if ( dcamplitude > maxampl )
-	      maxampl = dcamplitude;
-	  }
-	}
-	else if ( ( signal.success() && meanrate > targetrate ) || signal.overflow() ) {
-	  // overflow:
-	  if ( rates.size() > 0 && dcamplitude > rates.x().back() &&
-	       amplitudestep < minamplitudestep ) {
-	    info( "dcamplitude needed for targetrate is too high!" );
-	    directWrite( orgdcsignal );
-	    return Failed;
-	  }
-	  // rate above target rate:
-	  if ( dcamplitude > minampl )
-	    amplitudestep *= 0.5;
-	  dcamplitude -= amplitudestep;
-	  if ( dcamplitude < minampl )
-	    minampl = dcamplitude;
-	}
-	else if ( signal.failed() ) {
-	  warning( "Output of stimulus failed!<br>Signal error: <b>" +
-		   signal.errorText() + "</b><br>Exit now!" );
-	  directWrite( orgdcsignal );
-	  return Failed;
-	}
-	else {
-	  warning( "Could not establish firing rate!" );
-	  directWrite( orgdcsignal );
-	  return Failed;
-	}
-      }
-
-    }
-
-  }
-
-  // remember baseline current:
-  PrevDCAmplitude = dcamplitude;
-
   // measure firing rate:
   for ( int n=0; ; n++ ) {
     message( "<b>Measure</b> mean firing rate " + Str( '.', n ) );
-    sleep( 1.0 );
-    if ( n*1.0 >= 3.0*searchduration )
+    sleep( rateduration-n*1.0 > 1.0 ? 1.0 : rateduration-n*1.0 );
+    if ( rateduration - n*1.0 <= 1.0  )
       break;
   }
   if ( interrupt() ) {
     directWrite( orgdcsignal );
     return Aborted;
   }
-  double meanrate = events( SpikeEvents[0] ).rate( currentTime() - 3.0*searchduration,
+  double meanrate = events( SpikeEvents[0] ).rate( currentTime() - rateduration,
 						   currentTime() );
   if ( meanrate < 0.01 ) {
     warning( "Not enough spikes evoked by dc current!" );
@@ -339,10 +124,9 @@ int VoltageReconstruction::main( void )
   double period = 1.0/meanrate;
   
   // plot trace:
-  tracePlotContinuous( searchduration );
+  tracePlotSignal( rateduration, 0.5*rateduration );
 
   // setup plots:
-  postCustomEvent( 11 );
   P.lock();
   P.clear();
   P.setXRange( 0.0, 1000.0*period );    
@@ -363,7 +147,7 @@ int VoltageReconstruction::main( void )
   // data:
   const InData &data = trace( SpikeTrace[0] );
   MapD latencies;
-  latencies.reserve( 10000 );
+  latencies.reserve( repeats>0?repeats:10000 );
   list< SampleDataF > voltages;
   SampleDataF meanvoltage( -1.5*period, 4.5*period, data.stepsize(), 0.0 );
   SampleDataF voltagesq( meanvoltage );
@@ -467,11 +251,8 @@ void VoltageReconstruction::openTraceFile( ofstream &tf, TableKey &tracekey,
   tracekey.addNumber( "V", VUnit, "%6.1f" );
   if ( CurrentTrace[0] >= 0 )
     tracekey.addNumber( "I", IUnit, "%6.3f" );
-  if ( completeRuns() <= 0 )
-    tf.open( addPath( "voltagereconstruction-traces.dat" ).c_str() );
-  else
-    tf.open( addPath( "voltagereconstruction-traces.dat" ).c_str(),
-             ofstream::out | ofstream::app );
+  tf.open( addPath( "voltagereconstruction-traces.dat" ).c_str(),
+	   ofstream::out | ofstream::app );
   header.save( tf, "# " );
   tf << "# status:\n";
   stimulusData().save( tf, "#   " );
@@ -483,7 +264,7 @@ void VoltageReconstruction::openTraceFile( ofstream &tf, TableKey &tracekey,
 }
 
 
-void VoltageReconstruction::saveTrace( ofstream &tf, TableKey &tracekey,
+void VoltageReconstruction::saveTrace( ofstream &tf, const TableKey &tracekey,
 				       int index,
 				       const SampleDataF &voltage,
 				       const SampleDataF &current,
@@ -567,23 +348,6 @@ void VoltageReconstruction::saveData( const Options &header,
   }
   
   df << "\n\n";
-}
-
-
-void VoltageReconstruction::customEvent( QEvent *qce )
-{
-  switch ( qce->type() - QEvent::User ) {
-  case 11: {
-    Stack->setCurrentWidget( &P );
-    break;
-  }
-  case 12: {
-    Stack->setCurrentWidget( &SP );
-    break;
-  }
-  default:
-    RELACSPlugin::customEvent( qce );
-  }
 }
 
 
