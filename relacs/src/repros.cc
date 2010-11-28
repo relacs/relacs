@@ -204,6 +204,7 @@ void RePros::addMenu( QMenu *menu, bool doxydoc )
   menu->addAction( "&Options...", this, SLOT( dialog() ), Qt::CTRL + Qt::Key_O );
   menu->addAction( "&View", this, SLOT( raise() ), Qt::CTRL + Qt::Key_V );
   menu->addAction( "&Help...", this, SLOT( help() ), Qt::CTRL + Qt::Key_H );
+  menu->addAction( "&Screenshot", this, SLOT( screenshot() ), Qt::CTRL + Qt::Key_S );
   menu->addSeparator();
   for ( unsigned int k=0; k<RPs.size(); k++ )
     RPs[k]->addMenu( menu, k, doxydoc );
@@ -222,6 +223,14 @@ void RePros::help( void )
   if ( ActionRePro < 0 || ActionRePro >= (int)RPs.size() )
     return;
   RPs[ActionRePro]->help();
+}
+
+
+void RePros::screenshot( void )
+{
+  if ( ActionRePro < 0 || ActionRePro >= (int)RPs.size() )
+    return;
+  RPs[ActionRePro]->repro()->saveWidget();
 }
 
 
@@ -420,10 +429,9 @@ void ReProData::addMenu( QMenu *menu, int inx, bool doxydoc )
   pop->addAction( "&View", this, SLOT( raise() ) );
   pop->addAction( "&Load", this, SLOT( reload() ) );
   pop->addAction( "&Help...", this, SLOT( help() ) );
-  if ( doxydoc ) {
+  pop->addAction( "&Screenshot", RP, SLOT( saveWidget() ) );
+  if ( doxydoc )
     pop->addAction( "&Doxygen", RP, SLOT( saveDoxygenOptions() ) );
-    pop->addAction( "&Screenshot", RP, SLOT( saveWidget() ) );
-  }
 }
 
 

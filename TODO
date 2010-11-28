@@ -23,7 +23,6 @@ Plugin documentation:
   - show in the plugin summaries for each RePro the number of publications
   - add a section to each RePro linking to its publications
 - Need to document the comedi and dynclamp plugins!
-- Shortcut (ctrl-alt s) for RePro widget screenshots
 - Option for automatic screenshot at the end of stimulus (in menu)
 - Put (small) screenshots to plugins overview
 

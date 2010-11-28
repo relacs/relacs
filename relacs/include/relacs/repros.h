@@ -127,6 +127,8 @@ public slots:
   void raise( void );
     /*! Displays help for the current RePro. */
   void help( void );
+    /*! Save the widget of the current RePro to a file. */
+  void screenshot( void );
 
 signals:
 

@@ -1168,10 +1168,9 @@ void FilterDetectors::addMenu( QMenu *menu, bool doxydoc )
     QMenu *pop = Menu->addMenu( s.c_str() );
     pop->addAction( "&Options...", FL[k].FilterDetector, SLOT( dialog() ) );
     pop->addAction( "&Help...", FL[k].FilterDetector, SLOT( help() ) );
-    if ( doxydoc ) {
+    pop->addAction( "&Screenshot", FL[k].FilterDetector, SLOT( saveWidget() ) );
+    if ( doxydoc )
       pop->addAction( "&Doxygen", FL[k].FilterDetector, SLOT( saveDoxygenOptions() ) );
-      pop->addAction( "&Screenshot", FL[k].FilterDetector, SLOT( saveWidget() ) );
-    }
   }
 }
 

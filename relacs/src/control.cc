@@ -66,12 +66,11 @@ void Control::addActions( QMenu *menu, bool doxydoc )
 		   this, SLOT( dialog() ) );
   menu->addAction( string( name() + " Help..." ).c_str(),
 		   this, SLOT( help() ) );
-  if ( doxydoc ) {
+  menu->addAction( string( name() + " Screenshot" ).c_str(),
+		   this, SLOT( saveWidget() ) );
+  if ( doxydoc )
     menu->addAction( string( name() + " Doxygen" ).c_str(),
 		     this, SLOT( saveDoxygenOptions() ) );
-    menu->addAction( string( name() + " Screenshot" ).c_str(),
-		     this, SLOT( saveWidget() ) );
-  }
 }
 
 

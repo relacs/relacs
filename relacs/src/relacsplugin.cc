@@ -1316,10 +1316,15 @@ void RELACSPlugin::saveWidget( void )
 {
   if ( Widget != 0 ) {
     string filename = Str( name() + ".png" ).lower();
+    for ( int n=0; n<100; n++ ) {
+      if ( n > 0 )
+	filename = Str( name() + "-" + Str( n, 2, '0' ) + ".png" ).lower();
+      ifstream f( filename.c_str() );
+      if ( ! f.good() )
+	break;
+    }
     QPixmap::grabWidget( Widget ).save( filename.c_str() ); 
-    cout << "\n";
-    cout << "Saved widget as " << filename << "\n";
-    cout << "\n";
+    info( "Saved widget of plugin <b>" + name() + "</b><br> to file <b>" + filename + "</b>" );
   }
 }
 
