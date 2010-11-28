@@ -264,7 +264,7 @@ void Plot::construct( KeepMode keep, bool subwidget, int id, MultiPlot *mp )
   XLabel[1].Angle = 0.0;
   XLabel[1].LColor = Black;
 
-  YLabel[1].setXPos( 1.0, SecondAxis );
+  YLabel[1].setXPos( 2.0, SecondAxis );
   YLabel[1].setYPos( 0.5, Graph );
   YLabel[1].Just = Center;
   YLabel[1].Angle = -90.0;
@@ -1247,7 +1247,7 @@ void Plot::setX2LabelPos( double xpos, Coordinates xcoor,
 void Plot::setY2Label( const string &label, int color, double size, 
 		       Fonts font, int bcolor, int fwidth, int fcolor )
 {
-  YLabel[1].setXPos( 1.0, SecondAxis );
+  YLabel[1].setXPos( 2.0, SecondAxis );
   YLabel[1].setYPos( 0.5, Graph );
   YLabel[1].Just = Center;
   YLabel[1].Angle = -90.0;

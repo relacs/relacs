@@ -33,7 +33,7 @@ namespace base {
 \class TransferFunction
 \brief [RePro] Measures the transfer function with white-noise stimuli.
 \author Jan Benda
-\version 1.1 (Nov 25, 2010)
+\version 1.2 (Nov 28, 2010)
 \par Screenshot
 \image html transferfunction.png
 
@@ -42,7 +42,7 @@ namespace base {
 - \c outtrace=Current-1: Output trace (\c string)
 - \c amplitude=1nA: Amplitude (\c number)
 - \c fmax=1000Hz: Maximum frequency (\c number)
-- \c duration=1000ms: Width of analysis window (\c number)
+- \c duration=1000ms: Duration of noise stimulus (\c number)
 - \c pause=1000ms: Length of pause inbetween successive stimuli (\c number)
 - \c repeats=100: Repeats (\c integer)
 - Analysis
@@ -91,6 +91,10 @@ protected:
   SampleDataD MeanPhase;
   SampleDataD SquarePhase;
   SampleDataD StdevPhase;
+
+  SampleDataD MeanCoherence;
+  SampleDataD SquareCoherence;
+  SampleDataD StdevCoherence;
 
   MultiPlot P;
 

@@ -296,6 +296,37 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
 template < typename ContainerX, typename ContainerY, typename ContainerH >
 int transfer( const ContainerX &x, const ContainerY &y, ContainerH &h,
 	      bool overlap=true, double (*window)( int j, int n )=bartlett );
+  /*! Compute transfer function between the two ranges \a firstx, \a lastx
+      and \a firsty, \a lasty as a half-complex sequence
+      in range \a firsth, \a lasth and the coherence in the range
+      \a firstc, \a lastc.
+      The input ranges are divided into chunks of \a N data points,
+      where \a N/2 is the number of complex data points of the transfer function
+      (N = lasth - firsth = 2*(lastc-firstc)). N must be a power of two.
+      The chunks may overlap by half according to \a overlap. 
+      Each chunk is windowed through a \a window function
+      before passing it to rFFT().
+      If the input data were sampled with \a delta, then 
+      the frequencies are sampled with 1/(N delta).
+      The gain, phase, real parts, and imaginary parts of the transfer function can
+      be computed using hcMagnitude(), hcPhase(), hcReal(), and hcImaginary(),
+      respectively.
+      \a ForwardIterX and \a ForwardIterY
+      are forward iterators that point to real numbers. 
+      \a BidirectH and \a BidirectC are a bidirectional iterators
+      pointing to real numbers. */
+template < typename ForwardIterX, typename ForwardIterY,
+  typename BidirectIterH, typename BidirectIterC >
+int transfer( ForwardIterX firstx, ForwardIterX lastx,
+	      ForwardIterY firsty, ForwardIterY lasty,
+	      BidirectIterH firsth, BidirectIterH lasth,
+	      BidirectIterC firstc, BidirectIterC lastc,
+	      bool overlap=true, double (*window)( int j, int n )=bartlett );
+template < typename ContainerX, typename ContainerY,
+  typename ContainerH, typename ContainerC >
+int transfer( const ContainerX &x, const ContainerY &y,
+	      ContainerH &h, ContainerC &c,
+	      bool overlap=true, double (*window)( int j, int n )=bartlett );
   /*! Compute gain (absolute value of the transfer function)
       in range \a firstg, \a lastg
       between the two ranges \a firstx, \a lastx and \a firsty, \a lasty.
@@ -1302,6 +1333,199 @@ int transfer( const ContainerX &x, const ContainerY &y, ContainerH &h,
   return transfer( x.begin(), x.end(),
 		   y.begin(), y.end(),
 		   h.begin(), h.end(),
+		   overlap, window );
+}
+
+
+template < typename ForwardIterX, typename ForwardIterY,
+  typename BidirectIterH, typename BidirectIterC >
+int transfer( ForwardIterX firstx, ForwardIterX lastx,
+	      ForwardIterY firsty, ForwardIterY lasty,
+	      BidirectIterH firsth, BidirectIterH lasth,
+	      BidirectIterC firstc, BidirectIterC lastc,
+	      bool overlap, double (*window)( int j, int n ) )
+{
+  typedef typename iterator_traits<ForwardIterX>::value_type ValueTypeX;
+  typedef typename iterator_traits<ForwardIterY>::value_type ValueTypeY;
+  typedef typename iterator_traits<BidirectIterH>::value_type ValueTypeH;
+  typedef typename iterator_traits<BidirectIterC>::value_type ValueTypeC;
+
+  // clear transfer:
+  for ( BidirectIterH iterh=firsth; iterh != lasth; ++iterh )
+    *iterh = 0.0;
+
+  // clear coherence:
+  for ( BidirectIterC iterc=firstc; iterc != lastc; ++iterc )
+    *iterc = 0.0;
+
+  // check input ranges:
+  if ( lastx - firstx != lasty - firsty )
+    return -2;
+
+  // number of points for fft window:
+  int nw = lasth - firsth;
+
+  // make sure that nw is a power of 2:
+  int logn = 0;
+  for ( int k=1; k<nw; k <<= 1 )
+    logn++;
+  if ( nw != (1 << logn) )
+    return -3;
+
+  int np = nw/2;
+  if ( np <= 1 )
+    return -1;
+
+  // check coherence size:
+  if ( lastc - firstc != np )
+    return -3;
+
+  // working buffers:
+  ValueTypeH re[np];
+  ValueTypeH im[np];
+  for ( int k=0; k<np; ++k ) {
+    re[k] = 0.0;
+    im[k] = 0.0;
+  }
+
+  // cycle through the data:
+  int c = 0;
+  ForwardIterX iterx = firstx;
+  ForwardIterY itery = firsty;
+  while ( iterx != lastx ) {
+
+    // copy chunk of x data into buffer and apply window:
+    ValueTypeX bufferx[nw];
+    int k=0;
+    if ( overlap ) {
+      for ( ; k<nw/2 && iterx != lastx; ++k, ++iterx )
+	bufferx[k] = *iterx * window( k, nw );
+      ForwardIterX iterx2 = iterx;
+      for ( ; k<nw && iterx2 != lastx; ++k, ++iterx2 )
+	bufferx[k] = *iterx2 * window( k, nw );
+    }
+    else {
+      for ( ; k<nw && iterx != lastx; ++k, ++iterx )
+	bufferx[k] = *iterx * window( k, nw );
+    }
+    for ( ; k<nw; k++ )
+      bufferx[k] = 0.0;
+
+    // fourier transform x data:
+    rFFT( bufferx, bufferx+nw );
+
+    // copy chunk of y data into buffer and apply window:
+    ValueTypeY buffery[nw];
+    k=0;
+    if ( overlap ) {
+      for ( ; k<nw/2 && itery != lasty; ++k, ++itery )
+	buffery[k] = *itery * window( k, nw );
+      ForwardIterY itery2 = itery;
+      for ( ; k<nw && itery2 != lasty; ++k, ++itery2 )
+	buffery[k] = *itery2 * window( k, nw );
+    }
+    else {
+      for ( ; k<nw && itery != lasty; ++k, ++itery )
+	buffery[k] = *itery * window( k, nw );
+    }
+    for ( ; k<nw; k++ )
+      buffery[k] = 0.0;
+
+    // fourier transform y data:
+    rFFT( buffery, buffery+nw );
+
+    // compute spectra:
+    c++;
+    // first element xx:
+    BidirectIterH iterxp = firsth;
+    ValueTypeH powerxp = bufferx[0] * bufferx[0];
+    *iterxp += ( powerxp - *iterxp ) / c;
+    ++iterxp;
+    // first element yy:
+    BidirectIterC iteryp = firstc;
+    ValueTypeC poweryp = buffery[0] * buffery[0];
+    *iteryp += ( poweryp - *iteryp ) / c;
+    ++iteryp;
+    // first element Re xy:
+    ValueTypeH* iterre = re;
+    ValueTypeH powerre = bufferx[0] * buffery[0];
+    *iterre += ( powerre - *iterre ) / c;
+    ++iterre;
+    // first element Im xy:
+    ValueTypeH* iterim = im;
+    ValueTypeH powerim = 0.0;
+    *iterim += ( powerim - *iterim ) / c;
+    ++iterim;
+    // remaining elements:
+    for ( int k=1; k<np; ++k ) {
+      ValueTypeX xr = bufferx[k];
+      ValueTypeX xi = bufferx[nw-k];
+      ValueTypeY yr = buffery[k];
+      ValueTypeY yi = buffery[nw-k];
+      powerxp = xr*xr + xi*xi;
+      *iterxp += ( powerxp - *iterxp ) / c;
+      ++iterxp;
+      poweryp = yr*yr + yi*yi;
+      *iteryp += ( poweryp - *iteryp ) / c;
+      ++iteryp;
+      powerre = xr*yr + xi*yi;
+      *iterre += ( powerre - *iterre ) / c;
+      ++iterre;
+      powerim = xr*yi - xi*yr;
+      *iterim += ( powerim - *iterim ) / c;
+      ++iterim;
+    }
+
+  }
+
+  // compute transfer function and coherence:
+  BidirectIterH iterhre = firsth;   // powerx
+  BidirectIterH iterhim = lasth;    // nothing
+  ValueTypeH* iterre = re;          // re crossspectrum xy
+  ValueTypeH* iterim = im;          // im crossspectrum xy
+  // first element coherence:
+  if ( *iterhre == 0.0 || *firstc == 0.0 ) 
+    *firstc = 0.0;
+  else 
+    *firstc = ( (*iterre) * (*iterre) + (*iterim) * (*iterim) ) / ( (*iterhre) * (*firstc) );
+  ++firstc;
+  // first element transfer function:
+  *iterhre = (*iterre) / (*iterhre);
+  ++iterhre;
+  --iterhim;
+  ++iterim;
+  ++iterre;
+  for ( int k=1; k<np; ++k ) {
+    // coherence:
+    if ( *iterhre == 0.0 || *firstc == 0.0 ) 
+      *firstc = 0.0;
+    else 
+      *firstc = ( (*iterre) * (*iterre) + (*iterim) * (*iterim) ) / ( (*iterhre) * (*firstc) );
+    ++firstc;
+    // transfer function:
+    *iterhim = (*iterim) / (*iterhre);
+    *iterhre = (*iterre) / (*iterhre);
+    ++iterhre;
+    --iterhim;
+    ++iterim;
+    ++iterre;
+  }
+  *iterhre = (*iterre) / (*iterhre);
+
+  return 0;
+}
+
+
+template < typename ContainerX, typename ContainerY,
+  typename ContainerH, typename ContainerC >
+int transfer( const ContainerX &x, const ContainerY &y,
+	      ContainerH &h, ContainerC &c,
+	      bool overlap, double (*window)( int j, int n ) )
+{
+  return transfer( x.begin(), x.end(),
+		   y.begin(), y.end(),
+		   h.begin(), h.end(),
+		   c.begin(), c.end(),
 		   overlap, window );
 }
 

@@ -1184,6 +1184,19 @@ class SampleData : public Array< T >
   friend int transfer( const SampleData<TT> &x, const SampleData<SS> &y,
 		       SampleData<RR> &h,
 		       bool overlap, double (*window)( int j, int n ) );
+    /*! Compute transfer function \a h (half-complex sequence)
+        and coherence \a c between \a x and \a y.
+	\a x and \a y must have the same stepsize() and size().
+	\a x and \a y are divided into chunks of \a N data points,
+	where \a N = h.size(). h.size() must be a power of two.
+	The stepsize() of \a h is set to 1.0/x.stepsize()/h.size().
+	The gain and phase of the transfer function can be obtained
+	using hcMagnitude() and hcPhase().
+	\a TT, \a SS, and \a RR are real numbers. */
+  template < typename TT, typename SS, typename RR >
+  friend int transfer( const SampleData<TT> &x, const SampleData<SS> &y,
+		       SampleData<RR> &h, SampleData<RR> &c,
+		       bool overlap, double (*window)( int j, int n ) );
     /*! Compute gain \a g (magnitude of the transfer function)
         between \a x and \a y.
 	\a x and \a y must have the same stepsize() and size().
@@ -1480,6 +1493,19 @@ template < typename TT, typename SS, typename RR >
 		SampleData<RR> &h,
 		bool overlap=true, 
 		double (*window)( int j, int n )=bartlett );
+    /*! Compute transfer function \a h (half-complex sequence)
+        and coherence \a c between \a x and \a y.
+	\a x and \a y must have the same stepsize() and size().
+	\a x and \a y are divided into chunks of \a N data points,
+	where \a N = h.size(). h.size() must be a power of two.
+	The stepsize() of \a h is set to 1.0/x.stepsize()/h.size().
+	The gain and phase of the transfer function can be obtained
+	using hcMagnitude() and hcPhase().
+	\a TT, \a SS, and \a RR are real numbers. */
+template < typename TT, typename SS, typename RR >
+  int transfer( const SampleData<TT> &x, const SampleData<SS> &y,
+		SampleData<RR> &h, SampleData<RR> &c,
+		bool overlap=true, double (*window)( int j, int n )=bartlett );
   /*! Compute gain \a g (magnitude of the transfer function)
       between \a x and \a y.
       \a x and \a y must have the same stepsize() and size().
@@ -3577,6 +3603,18 @@ int transfer( const SampleData<TT> &x, const SampleData<SS> &y,
 {
   h.setRange( 0.0, 1.0/x.stepsize()/h.size() );
   return transfer( x.array(), y.array(), h.array(), overlap, window );
+}
+
+
+template < typename TT, typename SS, typename RR >
+int transfer( const SampleData<TT> &x, const SampleData<SS> &y,
+	      SampleData<RR> &h, SampleData<RR> &c,
+	      bool overlap, double (*window)( int j, int n ) )
+{
+  h.setRange( 0.0, 1.0/x.stepsize()/h.size() );
+  c.setRange( 0.0, 1.0/x.stepsize()/h.size() );
+  return transfer( x.array(), y.array(),
+		   h.array(), c.array(), overlap, window );
 }
 
 

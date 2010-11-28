@@ -27,14 +27,14 @@ namespace base {
 
 
 TransferFunction::TransferFunction( void )
-  : RePro( "TransferFunction", "base", "Jan Benda", "1.1", "Nov 25, 2010" )
+  : RePro( "TransferFunction", "base", "Jan Benda", "1.2", "Nov 28, 2010" )
 {
   // options:
   addLabel( "Stimulus" ).setStyle( OptWidget::Bold );
   addSelection( "outtrace", "Output trace", "V-1" );
   addNumber( "amplitude", "Amplitude", 1.0, 0.0, 100000.0, 1.0, "", "" );
-  addNumber( "fmax", "Maximum frequency", 1000.0, 0.0, 100000.0, 100.0, "Hz", "Hz" );
-  addNumber( "duration", "Width of analysis window", 1.0, 0.0, 100.0, 0.1, "s", "ms" );
+  addNumber( "fmax", "Maximum frequency", 1000.0, 0.0, 10000000.0, 100.0, "Hz", "Hz" );
+  addNumber( "duration", "Duration of noise stimulus", 1.0, 0.0, 100.0, 0.1, "s", "ms" );
   addNumber( "pause", "Length of pause inbetween successive stimuli", 1.0, 0.0, 100.0, 0.1, "s", "ms" );
   addInteger( "repeats", "Repeats", 100, 0, 10000, 1 );
   addLabel( "Analysis" ).setStyle( OptWidget::Bold );
@@ -48,13 +48,18 @@ TransferFunction::TransferFunction( void )
   P.resize( 2, 1, true );
   P.setCommonXRange( 0, 1 );
   P[0].setLMarg( 8 );
+  P[0].setRMarg( 6 );
   P[0].noXTics();
   P[0].setXRange( 0.0, 1000.0 );
   P[0].setYLabel( "Gain" );
   P[0].setYLabelPos( 2.0, Plot::FirstMargin,
 		     0.5, Plot::Graph, Plot::Center, -90.0 );
   P[0].setYRange( 0.0, Plot::AutoScale );
+  P[0].setY2Label( "Coherence" );
+  P[0].setY2Tics();
+  P[0].setY2Range( 0.0, 1.0 );
   P[1].setLMarg( 8 );
+  P[1].setRMarg( 6 );
   P[1].setXLabel( "Frequency [Hz]" );
   P[1].setXRange( 0.0, 1000.0 );
   P[1].setYLabel( "Phase" );
@@ -115,12 +120,34 @@ int TransferFunction::main( void )
   default: Window = hanning;
   }
 
+  // check parameter:
+  if ( amplitude <= 0.0 ) {
+    warning( "Amplitude of noise stimulus must be greater than zero!" );
+    return Failed;
+  }
+  if ( fmax > 0.5*trace( intrace ).sampleRate()+1.0e-8 ) {
+    warning( "Maximum frequency " + Str( fmax, 0, 10, 'g' ) +
+	     "Hz must be less than or equal to half the sampling rate " +
+	     Str( trace( intrace ).sampleRate(), 0, 10, 'g' ) + "Hz!" );
+    return Failed;
+  }
+  if ( trace( intrace ).interval( SpecSize ) > 0.25*duration ) {
+    warning( "Number of data points for FFT too large! Must be less than a quarter of the stimulus duration, i.e. less than " +
+	     Str( trace( intrace ).indices( duration )/4 ) +
+	     "! Alternatively, you can increase the stimulus duration to at least " +
+	     Str( 40.*trace( intrace ).interval( SpecSize ) ) + "s." );
+    return Failed;
+  }
+
   MeanGain.clear();
   SquareGain.clear();
   StdevGain.clear();
   MeanPhase.clear();
   SquarePhase.clear();
   StdevPhase.clear();
+  MeanCoherence.clear();
+  SquareCoherence.clear();
+  StdevCoherence.clear();
 
   // don't print repro message:
   noMessage();
@@ -130,7 +157,9 @@ int TransferFunction::main( void )
 
   // plot:
   P.lock();
-  P[0].setYLabel( "Gain [" + OutUnit + "/" + InUnit + "]" );
+  P[0].resetRanges();
+  P[0].setYLabel( "Gain [" + InUnit + "/" + OutUnit + "]" );
+  P[1].resetRanges();
   P.unlock();
 
   // files:
@@ -144,7 +173,6 @@ int TransferFunction::main( void )
 
   // signal:
   OutData signal;
-  signal.noiseWave( fmax, duration, amplitude );
   signal.setIdent( "WhiteNoise, fmax=" + Str( fmax ) + "Hz" );
   signal.back() = 0.0;
   signal.setTrace( outtrace );
@@ -163,6 +191,11 @@ int TransferFunction::main( void )
       s += " of <b>" + Str( repeats ) + "</b>";
     message( s );
 
+    signal.noiseWave( fmax, duration, amplitude );
+    // debug:
+    if ( signal.length() < duration )
+      printlog( "WARNING: noiseWave() too short! duration=" + Str( duration ) +
+		" length=" + Str( signal.length() ) );
     write( signal );
     if ( signal.failed() ) {
       warning( signal.errorText() );
@@ -184,13 +217,22 @@ int TransferFunction::main( void )
     P.lock();
     P[0].clear();
     if ( ! P[0].zoomedXRange() && ! P[1].zoomedXRange() )
-      P[0].setXRange( 0.0, fmax < MeanGain.rangeBack() ? fmax : MeanGain.rangeBack() );
-    P[0].plotVLine( fmax, Plot::White, 2 );
+      P[0].setXRange( 0.0, fmax );
+    P[0].plot( MeanCoherence+StdevCoherence, 1.0, Plot::Yellow, 1, Plot::Solid );
+    P[0].back().setAxis( Plot::X1Y2 );
+    P[0].plot( MeanCoherence-StdevCoherence, 1.0, Plot::Yellow, 1, Plot::Solid );
+    P[0].back().setAxis( Plot::X1Y2 );
+    P[0].plot( MeanCoherence, 1.0, Plot::Yellow, 3, Plot::Solid );
+    P[0].back().setAxis( Plot::X1Y2 );
+    P[0].plot( MeanGain+StdevGain, 1.0, Plot::Red, 1, Plot::Solid );
+    P[0].plot( MeanGain-StdevGain, 1.0, Plot::Red, 1, Plot::Solid );
     P[0].plot( MeanGain, 1.0, Plot::Red, 3, Plot::Solid );
     P[1].clear();
     if ( ! P[0].zoomedXRange() && ! P[1].zoomedXRange() )
-      P[1].setXRange( 0.0, fmax < MeanGain.rangeBack() ? fmax : MeanGain.rangeBack() );
-    P[1].plotVLine( fmax, Plot::White, 2 );
+      P[1].setXRange( 0.0, fmax );
+    P[1].plotHLine( 0.0, Plot::White, 2 );
+    P[1].plot( MeanPhase+StdevPhase, 1.0, Plot::Blue, 1, Plot::Solid );
+    P[1].plot( MeanPhase-StdevPhase, 1.0, Plot::Blue, 1, Plot::Solid );
     P[1].plot( MeanPhase, 1.0, Plot::Blue, 3, Plot::Solid );
     P.unlock();
     P.draw();
@@ -232,7 +274,8 @@ void TransferFunction::analyze( const OutData &signal, const InData &data,
 
   // transfer fucntion:
   SampleDataD trans( SpecSize );
-  transfer( x, y, trans, Overlap, Window );
+  SampleDataD cohere( SpecSize/2 );
+  transfer( x, y, trans, cohere, Overlap, Window );
 
   // gain and phase:
   SampleDataD gain( trans.size()/2 );
@@ -244,23 +287,32 @@ void TransferFunction::analyze( const OutData &signal, const InData &data,
   if ( count <= 0 ) {
     MeanGain = gain;
     SquareGain = gain*gain;
-    StdevGain = gain;
+    StdevGain = gain;  // setting the right range
     StdevGain = 0.0;
     MeanPhase = phase;
     SquarePhase = phase*phase;
-    StdevPhase = phase;
+    StdevPhase = phase;  // setting the right range
     StdevPhase = 0.0;
+    MeanCoherence = cohere;
+    SquareCoherence = cohere*cohere;
+    StdevCoherence = cohere;  // setting the right range
+    StdevCoherence = 0.0;
   }
   else {
     for ( int k=0; k<gain.size(); k++ ) {
       double g = gain[k];
       MeanGain[k] += (g - MeanGain[k])/(count+1);
       SquareGain[k] += (g*g - SquareGain[k])/(count+1);
-      StdevGain[k] = sqrt( SquareGain[k] - MeanGain[k]*MeanGain[k] );
+      StdevGain[k] = sqrt( fabs( SquareGain[k] - MeanGain[k]*MeanGain[k] ) );
       double p = phase[k];
       MeanPhase[k] += (p - MeanPhase[k])/(count+1);
       SquarePhase[k] += (p*p - SquarePhase[k])/(count+1);
-      StdevPhase[k] = sqrt( SquarePhase[k] - MeanPhase[k]*MeanPhase[k] );
+      StdevPhase[k] = sqrt( fabs( SquarePhase[k] - MeanPhase[k]*MeanPhase[k] ) );
+
+      double c = cohere[k];
+      MeanCoherence[k] += (c - MeanCoherence[k])/(count+1);
+      SquareCoherence[k] += (c*c - SquareCoherence[k])/(count+1);
+      StdevCoherence[k] = sqrt( fabs( SquareCoherence[k] - MeanCoherence[k]*MeanCoherence[k] ) );
     }
   }
 }
@@ -314,10 +366,12 @@ void TransferFunction::saveData( const Options &header )
 
   TableKey datakey;
   datakey.addNumber( "f", "Hz", "%7.2f" );
-  datakey.addNumber( "gain", OutUnit + "/" + InUnit, "%7.2f" );
-  datakey.addNumber( "s.d.", OutUnit + "/" + InUnit, "%7.2f" );
+  datakey.addNumber( "gain", InUnit + "/" + OutUnit, "%9.4f" );
+  datakey.addNumber( "s.d.", InUnit + "/" + OutUnit, "%9.4f" );
   datakey.addNumber( "phase", "1", "%6.3f" );
   datakey.addNumber( "s.d.", "1", "%6.3f" );
+  datakey.addNumber( "coherence", "1", "%6.4f" );
+  datakey.addNumber( "s.d.", "1", "%6.4f" );
   datakey.saveKey( df );
 
   for ( int k=0; k<MeanGain.size(); k++ ) {
@@ -326,6 +380,8 @@ void TransferFunction::saveData( const Options &header )
     datakey.save( df, StdevGain[k] );
     datakey.save( df, MeanPhase[k] );
     datakey.save( df, StdevPhase[k] );
+    datakey.save( df, MeanCoherence[k] );
+    datakey.save( df, StdevCoherence[k] );
     df << '\n';
   }
   
