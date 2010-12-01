@@ -765,6 +765,7 @@ void rtDynClamp( long dummy )
 		  if ( retVal == EINVAL ) {
 		    ERROR_MSG( "rtDynClamp: ERROR! No open FIFO for AO subdevice ID %d at loopCnt %lu\n",
 			       iS, dynClampTask.loopCnt );
+		    ERROR_MSG( "Stop dynClampTask." );
 		    dynClampTask.running = 0;
 		    dynClampTask.duration = 0;
 		    return;
@@ -801,17 +802,16 @@ void rtDynClamp( long dummy )
 	    retVal = comedi_do_insn( pChan->devP, &pChan->insn );
 	    if ( retVal < 1 ) {
 	      subdev[iS].running = 0;
+	      subdev[iS].error = E_NODATA;
+	      ERROR_MSG( "rtDynClamp: ERROR! failed to write data to AO subdevice ID %d channel %d at loopCnt %lu\n",
+			 iS, iC, dynClampTask.loopCnt );
 	      if ( retVal < 0 ) {
 		comedi_perror( "rtmodule: rtDynClamp: comedi_data_write" );
 		subdev[iS].error = E_COMEDI;
 		subdev[iS].running = 0;
 		ERROR_MSG( "rtDynClamp: ERROR! failed to write to AO subdevice ID %d channel %d at loopCnt %lu\n",
 			   iS, iC, dynClampTask.loopCnt );
-		continue;
 	      }
-	      subdev[iS].error = E_NODATA;
-	      ERROR_MSG( "rtDynClamp: ERROR! failed to write data to AO subdevice ID %d channel %d at loopCnt %lu\n",
-			 iS, iC, dynClampTask.loopCnt );
 	    }
 	  }
 	} // end of chan loop
@@ -859,13 +859,19 @@ void rtDynClamp( long dummy )
 	  // acquire sample:
 	  if ( !pChan->isParamChan ) {
 	    retVal = comedi_do_insn( pChan->devP, &pChan->insn );     
-	    if ( retVal < 0 ) {
+	    if ( retVal < 1 ) {
 	      subdev[iS].running = 0;
-	      comedi_perror( "rtmodule: rtDynClamp: comedi_data_write" );
-	      subdev[iS].error = E_COMEDI;
-	      ERROR_MSG( "rtDynClamp: ERROR! failed to read from AI subdevice ID %d channel %d at loopCnt %lu\n",
+	      subdev[iS].error = E_NODATA;
+	      ERROR_MSG( "rtDynClamp: ERROR! failed to read data from AI subdevice ID %d channel %d at loopCnt %lu\n",
 			 iS, iC, dynClampTask.loopCnt );
-	      continue;
+	      if ( retVal < 0 ) {
+		comedi_perror( "rtmodule: rtDynClamp: comedi_data_read" );
+		subdev[iS].running = 0;
+		subdev[iS].error = E_COMEDI;
+		ERROR_MSG( "rtDynClamp: ERROR! failed to read from AI subdevice ID %d channel %d at loopCnt %lu\n",
+			   iS, iC, dynClampTask.loopCnt );
+		continue;
+	      }
 	    }
 	    // convert to voltage:
 	    pChan->voltage = 0.0;
@@ -889,6 +895,7 @@ void rtDynClamp( long dummy )
 	    if ( retVal == EINVAL ) {
 	      ERROR_MSG( "rtDynClamp: ERROR! No open FIFO for AI subdevice ID %d at loopCnt %lu\n",
 			 iS, dynClampTask.loopCnt );
+	      ERROR_MSG( "Stop dynClampTask." );
 	      dynClampTask.running = 0;
 	      dynClampTask.duration = 0;
 	      return;

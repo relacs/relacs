@@ -27,11 +27,13 @@ namespace base {
 
 
 TransferFunction::TransferFunction( void )
-  : RePro( "TransferFunction", "base", "Jan Benda", "1.2", "Nov 28, 2010" )
+  : RePro( "TransferFunction", "base", "Jan Benda", "1.3", "Dec 01, 2010" )
 {
   // options:
   addLabel( "Stimulus" ).setStyle( OptWidget::Bold );
   addSelection( "outtrace", "Output trace", "V-1" );
+  addSelection( "offsetbase", "Set offset relative to", "custom|current" ).setUnit( "value" );
+  addNumber( "offset", "Offset", 0.0, -100000.0, 100000.0, 0.001, "", "" );
   addNumber( "amplitude", "Amplitude", 1.0, 0.0, 100000.0, 1.0, "", "" );
   addNumber( "fmax", "Maximum frequency", 1000.0, 0.0, 10000000.0, 100.0, "Hz", "Hz" );
   addNumber( "duration", "Duration of noise stimulus", 1.0, 0.0, 100.0, 0.1, "s", "ms" );
@@ -42,6 +44,8 @@ TransferFunction::TransferFunction( void )
   addSelection( "size", "Number of data points for FFT", "1024|64|128|256|512|1024|2048|4096|8192|16384|32768|65536|131072|262144|524288|1048576" );
   addBoolean( "overlap", "Overlap FFT windows", true );
   addSelection( "window", "FFT window function", "Hanning|Bartlett|Blackman|Blackman-Harris|Hamming|Hanning|Parzen|Square|Welch" );
+  addBoolean( "plotstdevs", "Plot standard deviations", true );
+  addBoolean( "plotcoherence", "Plot coherence", true );
 
   // plot:
   P.lock();
@@ -87,6 +91,7 @@ void TransferFunction::notify( void )
     OutName = outTrace( outtrace ).traceName();
     OutUnit = outTrace( outtrace ).unit();
     setUnit( "amplitude", OutUnit );
+    setUnit( "offset", OutUnit );
   }
 
   int intrace = index( "intrace" );
@@ -99,6 +104,8 @@ void TransferFunction::notify( void )
 int TransferFunction::main( void )
 {
   int outtrace = index( "outtrace" );
+  int offsetbase = index( "offsetbase" );
+  double offset = number( "offset" );
   double amplitude = number( "amplitude" );
   double fmax = number( "fmax" );
   double duration = number( "duration" );
@@ -119,6 +126,10 @@ int TransferFunction::main( void )
   case 7: Window = welch; break;
   default: Window = hanning;
   }
+
+  double orgoffset = stimulusData().number( outTraceName( outtrace ) );
+  if ( offsetbase == 1 ) // current
+    offset += orgoffset;
 
   // check parameter:
   if ( amplitude <= 0.0 ) {
@@ -174,8 +185,14 @@ int TransferFunction::main( void )
   // signal:
   OutData signal;
   signal.setIdent( "WhiteNoise, fmax=" + Str( fmax ) + "Hz" );
-  signal.back() = 0.0;
   signal.setTrace( outtrace );
+
+  // original offset:
+  OutData orgdcsignal( orgoffset );
+  orgdcsignal.setTrace( outtrace );
+  orgdcsignal.setIdent( "DC=" + Str( orgoffset ) + OutUnit );
+  orgdcsignal.addDescription( "stimulus/value" );
+  orgdcsignal.description().addNumber( "Intensity", orgoffset, OutUnit );
 
   // write stimulus:
   sleep( pause );
@@ -192,6 +209,8 @@ int TransferFunction::main( void )
     message( s );
 
     signal.noiseWave( fmax, duration, amplitude );
+    signal.back() = 0.0;
+    signal += offset;
     // debug:
     if ( signal.length() < duration )
       printlog( "WARNING: noiseWave() too short! duration=" + Str( duration ) +
@@ -199,6 +218,7 @@ int TransferFunction::main( void )
     write( signal );
     if ( signal.failed() ) {
       warning( signal.errorText() );
+      directWrite( orgdcsignal );
       return Failed;
     }
 
@@ -206,33 +226,52 @@ int TransferFunction::main( void )
     if ( interrupt() ) {
       if ( count > 0 )
 	break;
-      else
+      else {
+	directWrite( orgdcsignal );
 	return Aborted;
+      }
     }
 
-    SampleDataF input, output;
-    analyze( signal, trace( intrace ), duration, count, input, output );
+    // get data:
+    SampleDataF input( 0.0, duration, trace( intrace ).stepsize() );
+    input.interpolate( signal );
+    SampleDataF output( 0.0, duration, trace( intrace ).stepsize() );
+    trace( intrace ).copy( signalTime(), output );
+
+    unlockAll();
+
+    analyze( input, output, duration, count );
 
     // plot gain:
+    bool plotstdevs = boolean( "plotstdevs" );
+    bool plotcoherence = boolean( "plotcoherence" );
     P.lock();
     P[0].clear();
     if ( ! P[0].zoomedXRange() && ! P[1].zoomedXRange() )
       P[0].setXRange( 0.0, fmax );
-    P[0].plot( MeanCoherence+StdevCoherence, 1.0, Plot::Yellow, 1, Plot::Solid );
-    P[0].back().setAxis( Plot::X1Y2 );
-    P[0].plot( MeanCoherence-StdevCoherence, 1.0, Plot::Yellow, 1, Plot::Solid );
-    P[0].back().setAxis( Plot::X1Y2 );
-    P[0].plot( MeanCoherence, 1.0, Plot::Yellow, 3, Plot::Solid );
-    P[0].back().setAxis( Plot::X1Y2 );
-    P[0].plot( MeanGain+StdevGain, 1.0, Plot::Red, 1, Plot::Solid );
-    P[0].plot( MeanGain-StdevGain, 1.0, Plot::Red, 1, Plot::Solid );
+    if ( plotcoherence ) {
+      if ( plotstdevs ) {
+	P[0].plot( MeanCoherence+StdevCoherence, 1.0, Plot::Yellow, 1, Plot::Solid );
+	P[0].back().setAxis( Plot::X1Y2 );
+	P[0].plot( MeanCoherence-StdevCoherence, 1.0, Plot::Yellow, 1, Plot::Solid );
+	P[0].back().setAxis( Plot::X1Y2 );
+      }
+      P[0].plot( MeanCoherence, 1.0, Plot::Yellow, 3, Plot::Solid );
+      P[0].back().setAxis( Plot::X1Y2 );
+    }
+    if ( plotstdevs ) {
+      P[0].plot( MeanGain+StdevGain, 1.0, Plot::Red, 1, Plot::Solid );
+      P[0].plot( MeanGain-StdevGain, 1.0, Plot::Red, 1, Plot::Solid );
+    }
     P[0].plot( MeanGain, 1.0, Plot::Red, 3, Plot::Solid );
     P[1].clear();
     if ( ! P[0].zoomedXRange() && ! P[1].zoomedXRange() )
       P[1].setXRange( 0.0, fmax );
     P[1].plotHLine( 0.0, Plot::White, 2 );
-    P[1].plot( MeanPhase+StdevPhase, 1.0, Plot::Blue, 1, Plot::Solid );
-    P[1].plot( MeanPhase-StdevPhase, 1.0, Plot::Blue, 1, Plot::Solid );
+    if ( plotstdevs ) {
+      P[1].plot( MeanPhase+StdevPhase, 1.0, Plot::Blue, 1, Plot::Solid );
+      P[1].plot( MeanPhase-StdevPhase, 1.0, Plot::Blue, 1, Plot::Solid );
+    }
     P[1].plot( MeanPhase, 1.0, Plot::Blue, 3, Plot::Solid );
     P.unlock();
     P.draw();
@@ -240,35 +279,35 @@ int TransferFunction::main( void )
     // save:
     saveTrace( tf, tracekey, count, input, output );
 
+    lockAll();
+
     sleepOn( duration+pause );
     if ( interrupt() ) {
       if ( count > 0 )
 	break;
-      else
+      else {
+	directWrite( orgdcsignal );
 	return Aborted;
+      }
     }
 
   }
 
   saveData( header );
 
+  directWrite( orgdcsignal );
+
   return Completed;
 }
 
 
-
-void TransferFunction::analyze( const OutData &signal, const InData &data,
-				double duration, int count,
-				SampleDataF &input, SampleDataF &output )
+void TransferFunction::analyze( const SampleDataF &input, const SampleDataF &output,
+				double duration, int count )
 {
   // de-mean:
-  input.resize( 0.0, duration, data.stepsize() );
-  input.interpolate( signal );
   SampleDataD x( input );
   x -= mean( x );
 
-  output.resize( 0.0, duration, data.stepsize() );
-  data.copy( signalTime(), output );
   SampleDataD y( output );
   y -= mean( y );
 

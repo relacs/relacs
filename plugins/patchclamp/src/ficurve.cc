@@ -52,13 +52,13 @@ FICurve::FICurve( void )
   addInteger( "iincrement", "Initial increment for currents", -1, -1000, 1000, 1 );
   addInteger( "singlerepeat", "Number of immediate repetitions of a single stimulus", 1, 1, 10000, 1 );
   addInteger( "blockrepeat", "Number of repetitions of a fixed intensity increment", 10, 1, 10000, 1 );
-  addInteger( "repeat", "Number of repetitions of the whole V-I curve measurement", 1, 0, 10000, 1 );
+  addInteger( "repeat", "Number of repetitions of the whole f-I curve measurement", 1, 0, 10000, 1 );
   addLabel( "Analysis" );
   addNumber( "fmax", "Maximum firing rate", 100.0, 0.0, 2000.0, 1.0, "Hz" );
   addNumber( "vmax", "Maximum steady-state potential", -50.0, -2000.0, 2000.0, 1.0, "mV" );
   addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
-  addInteger( "ratioincrement", "Optimize range at current increments below", 0, 0, 10000 );
-  addNumber( "maxratediff", "Maximum difference between onset and steady-state firing rate for optimization", 10.0, 0.0, 1000.0, 1.0, "Hz" ).setActivation( "ratioincrement", ">0" );
+  addInteger( "diffincrement", "Optimize range at current increments below", 0, 0, 10000 );
+  addNumber( "maxratediff", "Maximum difference between onset and steady-state firing rate for optimization", 10.0, 0.0, 1000.0, 1.0, "Hz" ).setActivation( "diffincrement", ">0" );
   addTypeStyle( OptWidget::TabLabel, Parameter::Label );
 
   P.lock();
@@ -117,7 +117,7 @@ int FICurve::main( void )
   double fmax = number( "fmax" );
   double vmax = number( "vmax" );
   double sswidth = number( "sswidth" );
-  int ratioincrement = number( "ratioincrement" );
+  int diffincrement = number( "diffincrement" );
   double maxratediff = number( "maxratediff" );
 
   double dccurrent = stimulusData().number( outTraceName( CurrentOutput[0] ) );
@@ -322,9 +322,9 @@ int FICurve::main( void )
     else if ( Results[Range.pos()].SpikeCount <= 0.01 ) {
       Range.setSkipBelow( Range.pos()-1 );
     }
-    // skip currents above large enough fon/fss ratios:
+    // skip currents above large enough fon - fss differences:
     if ( Range.finishedBlock() &&
-	 Range.currentIncrement() == ratioincrement ) {
+	 Range.currentIncrement() == diffincrement ) {
       int n = 0;
       for ( unsigned int k=Range.next( 0 );
 	    k<Results.size();
@@ -403,7 +403,8 @@ void FICurve::plot( double duration, int inx )
     sm.push( Results[k].I, Results[k].SSRate );
     mm.push( Results[k].I, Results[k].MeanRate );
   }
-  P[1].setXRange( imin, imax );
+  if ( ! P[1].zoomedXRange() && imax > imin+1.0e-8 )
+    P[1].setXRange( imin, imax );
   P[1].plot( rm, 1.0, Plot::Cyan, 3, Plot::Solid, Plot::Circle, 6, Plot::Cyan, Plot::Cyan );
   P[1].plot( om, 1.0, Plot::Green, 3, Plot::Solid, Plot::Circle, 6, Plot::Green, Plot::Green );
   P[1].plot( sm, 1.0, Plot::Red, 3, Plot::Solid, Plot::Circle, 6, Plot::Red, Plot::Red );
@@ -423,7 +424,7 @@ void FICurve::plot( double duration, int inx )
 
 void FICurve::save( void )
 {
-  message( "<b>Saving ...</b/>" );
+  message( "<b>Saving ...</b>" );
   tracePlotContinuous();
   unlockAll();
   saveData();
@@ -716,13 +717,13 @@ void FICurve::Data::analyze( int count, const InData &intrace,
   double vrest = Voltage.back().mean( -delay, 0.0 );
   VRest += (vrest - VRest)/(count+1);
   VRestSQ += (vrest*vrest - VRestSQ)/(count+1);
-  VRestSD = sqrt( VRestSQ - VRest*VRest );
+  VRestSD = sqrt( fabs(VRestSQ - VRest*VRest) );
 
   // steady-state potential:
   double vss = Voltage.back().mean( duration-sswidth, duration );
   VSS += (vss - VSS)/(count+1);
   VSSSQ += (vss*vss - VSSSQ)/(count+1);
-  VSSSD = sqrt( VSSSQ - VSS*VSS );
+  VSSSD = sqrt( fabs(VSSSQ - VSS*VSS) );
 
   // spikes:
   double sigtime = spikes.signalTime();

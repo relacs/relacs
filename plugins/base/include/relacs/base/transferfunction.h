@@ -33,14 +33,16 @@ namespace base {
 \class TransferFunction
 \brief [RePro] Measures the transfer function with white-noise stimuli.
 \author Jan Benda
-\version 1.2 (Nov 28, 2010)
+\version 1.3 (Dec 01, 2010)
 \par Screenshot
 \image html transferfunction.png
 
 \par Options
 - Stimulus
 - \c outtrace=Current-1: Output trace (\c string)
-- \c amplitude=1nA: Amplitude (\c number)
+- \c offsetbase=custom: Set offset relative to (\c string)
+- \c offset=0V: Offset (\c number)
+- \c amplitude=1V: Amplitude (\c number)
 - \c fmax=1000Hz: Maximum frequency (\c number)
 - \c duration=1000ms: Duration of noise stimulus (\c number)
 - \c pause=1000ms: Length of pause inbetween successive stimuli (\c number)
@@ -50,6 +52,8 @@ namespace base {
 - \c size=1024: Number of data points for FFT (\c string)
 - \c overlap=true: Overlap FFT windows (\c boolean)
 - \c window=Hanning: FFT window function (\c string)
+- \c plotstdevs=true: Plot standard deviations (\c boolean)
+- \c plotcoherence=true: Plot coherence (\c boolean)
 */
 
 
@@ -67,9 +71,8 @@ public:
 
 protected:
 
-  void analyze( const OutData &signal, const InData &data,
-		double duration, int count,
-		SampleDataF &input, SampleDataF &output );
+  void analyze( const SampleDataF &input, const SampleDataF &output,
+		double duration, int count );
   void openTraceFile( ofstream &tf, TableKey &tracekey, const Options &header );
   void saveTrace( ofstream &tf, TableKey &tracekey, int index,
 		  const SampleDataF &input, const SampleDataF &output );

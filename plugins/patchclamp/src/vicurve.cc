@@ -349,7 +349,8 @@ void VICurve::plot( double duration, int inx )
     sm.push( Results[k].I, Results[k].VSS );
     pm.push( Results[k].I, Results[k].VPeak );
   }
-  P[1].setXRange( imin, imax );
+  if ( ! P[1].zoomedXRange() && imax > imin+1.0e-8 )
+    P[1].setXRange( imin, imax );
   P[1].plot( rm, 1.0, Plot::Cyan, 3, Plot::Solid, Plot::Circle, 6, Plot::Cyan, Plot::Cyan );
   P[1].plot( om, 1.0, Plot::Green, 3, Plot::Solid, Plot::Circle, 6, Plot::Green, Plot::Green );
   P[1].plot( sm, 1.0, Plot::Red, 3, Plot::Solid, Plot::Circle, 6, Plot::Red, Plot::Red );
@@ -370,7 +371,7 @@ void VICurve::plot( double duration, int inx )
 
 void VICurve::save( void )
 {
-  message( "<b>Saving ...</b/>" );
+  message( "<b>Saving ...</b>" );
   tracePlotContinuous();
   unlockAll();
   for ( unsigned int j=Range.next( 0 );

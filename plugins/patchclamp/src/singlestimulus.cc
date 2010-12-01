@@ -35,9 +35,9 @@ namespace patchclamp {
 
 
 SingleStimulus::SingleStimulus( void )
-  : RePro( "SingleStimulus", "patchclamp", "Jan Benda", "1.2", "Oct 13, 2008" )
+  : RePro( "SingleStimulus", "patchclamp", "Jan Benda", "1.3", "Dec 01, 2010" )
 {
-  AmplitudeUnit = "nA";
+  IUnit = "nA";
   Offset = 0.0;
   Amplitude = 1.0;
   Duration = 0.0;
@@ -51,15 +51,17 @@ SingleStimulus::SingleStimulus( void )
   addSelection( "waveform", "Stimulus waveform", "From file|Const|Sine|Rectangular|Triangular|Sawup|Sawdown|Whitenoise|OUnoise" );
   addText( "stimfile", "Stimulus file", "" ).setStyle( OptWidget::BrowseExisting ).setActivation( "waveform", "From file" );
   addNumber( "stimampl", "Amplitude factor (standard deviation) of stimulus file", 0.0, 0.0, 1.0, 0.01 ).setActivation( "waveform", "From file" );
-  addNumber( "amplitude", "Amplitude of stimulus", Amplitude, 0.0, 130.0, 1.0, AmplitudeUnit ).setActivation( "waveform", "Const", false );;
-  addNumber( "freq", "Frequency of waveform", 10.0, 0.0, 1000000.0, 1.0, "Hz" ).setActivation( "waveform", "From file|Const", false );
+  addNumber( "amplitude", "Amplitude of stimulus", Amplitude, 0.0, 130.0, 1.0, IUnit ).setActivation( "waveform", "Const", false );;
+  addSelection( "freqsel", "Specify", "frequency|periods" ).setActivation( "waveform", "From file|Const", false );
+  addNumber( "freq", "Frequency of waveform", 10.0, 0.0, 1000000.0, 1.0, "Hz" ).setActivation( "freqsel", "frequency" );
+  addNumber( "periods", "Number of periods", 1.0, 0.0, 1000000.0, 1.0 ).setActivation( "freqsel", "periods" );
   addNumber( "dutycycle", "Duty-cycle of rectangular waveform", 0.5, 0.0, 1.0, 0.05, "1", "%" ).setActivation( "waveform", "Rectangular" );
   addInteger( "seed", "Seed for random number generation", 0 ).setActivation( "waveform", "Whitenoise|OUnoise" );;
   addNumber( "duration", "Maximum duration of stimulus", Duration, 0.0, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "ramp", "Ramp of stimulus", 0.002, 0.0, 10.0, 0.001, "seconds", "ms" );
   addLabel( "Stimulus" ).setStyle( OptWidget::TabLabel );
-  addNumber( "offset", "Stimulus mean", Offset, -2000.0, 2000.0, 5.0, AmplitudeUnit );
-  addSelection( "offsetbase", "Stimulus mean relative to", "absolute|threshold|previous" );
+  addNumber( "offset", "Stimulus mean", Offset, -2000.0, 2000.0, 5.0, IUnit );
+  addSelection( "offsetbase", "Stimulus mean relative to", "absolute|amplitude|current|threshold|previous" );
   addBoolean( "samerate", "Use sampling rate of input", true ).setActivation( "waveform", "From file", false );
   addNumber( "samplerate", "Sampling rate of output", 1000.0, 0.0, 10000000.0, 1000.0, "Hz", "kHz" ).setActivation( "samerate", "true", false );
   addNumber( "repeats", "Number of stimulus presentations", Repeats, 0, 10000, 1, "times" );
@@ -69,21 +71,20 @@ SingleStimulus::SingleStimulus( void )
   addBoolean( "userate", "Search offset for target firing rate", false );
   addNumber( "rate", "Target firing rate", 100.0, 0.0, 1000.0, 10.0, "Hz" ).setActivation( "userate", "true" );
   addNumber( "ratetol", "Tolerance for target firing rate", 5.0, 0.0, 1000.0, 1.0, "Hz" ).setActivation( "userate", "true" );
-  addNumber( "offsetstep", "Initial offset step", 8.0, 0.0, 100.0, 1.0, AmplitudeUnit ).setActivation( "userate", "true" );
+  addNumber( "offsetstep", "Initial offset step", 8.0, 0.0, 100.0, 1.0, IUnit ).setActivation( "userate", "true" );
   addNumber( "searchrepeats", "Number of search stimulus presentations", 2, 1, 100, 1, "times" ).setActivation( "userate", "true" );
   addNumber( "silentrate", "Ignore response below", 0.0, 0.0, 1000.0, 5.0, "Hz" ).setActivation( "userate", "true" );
   addInteger( "maxsilent", "Number of stimulus presentations if response is below silentrate", 1, 1, 1000, 1 ).setActivation( "userate", "true" );
   addBoolean( "skippause", "Skip pause if response is below silentrate", true ).setActivation( "userate", "true" );
   addInteger( "maxsearch", "Stop search if response does not change for more than", 1, 1, 1000, 1 ).setUnit( "intensities" ).setActivation( "userate", "true" );
   addSelection( "method", "Method", "Bisect|Interpolate" ).setActivation( "userate", "true" );
-  addNumber( "minslope", "Minimum slope required for interpolation", 4.0, 0.0, 100.0, 0.5, "Hz/"+AmplitudeUnit ).setActivation( "userate", "true" );
+  addNumber( "minslope", "Minimum slope required for interpolation", 4.0, 0.0, 100.0, 0.5, "Hz/"+IUnit ).setActivation( "userate", "true" );
   addNumber( "searchduration", "Maximum duration of stimulus", 0.0, 0.0, 1000.0, 0.01, "seconds", "ms" ).setActivation( "userate", "true" );
   addNumber( "searchpause", "Duration of pause between stimuli", 0.0, 0.0, 1000.0, 0.01, "seconds", "ms" ).setActivation( "userate", "true" );
   addLabel( "Analysis" ).setStyle( OptWidget::TabLabel );
   addNumber( "skipwin", "Initial portion of stimulus not used for analysis", SkipWin, 0.0, 100.0, 0.01, "seconds", "ms" );
   addNumber( "sigma1", "Standard deviation of rate smoothing kernel 1", Sigma1, 0.0, 1.0, 0.0001, "seconds", "ms" );
   addNumber( "sigma2", "Standard deviation of rate smoothing kernel 2", Sigma2, 0.0, 1.0, 0.001, "seconds", "ms" );
-  addBoolean( "adjust", "Adjust input gain", true );
   addLabel( "Save stimuli" );
   addSelection( "storemode", "Save stimuli in", "session|repro|custom" ).setUnit( "path" );
   addText( "storepath", "Save stimuli in custom directory", "" ).setStyle( OptWidget::BrowseDirectory ).setActivation( "storemode", "custom" );
@@ -164,8 +165,20 @@ SingleStimulus::~SingleStimulus( void )
 
 void SingleStimulus::config( void )
 {
-  setText( "outtrace", outTraceNames() );
-  setToDefault( "outtrace" );
+  if ( SpikeTrace[0] >= 0 )
+    VUnit = trace( SpikeTrace[0] ).unit();
+  int outtrace = index( "outtrace" );
+  if ( outtrace >= 0 ) {
+    IUnit = outTrace( outtrace ).unit();
+    setUnit( "amplitude", IUnit );
+    setUnit( "offset", IUnit );
+    setUnit( "offsetstep", IUnit );
+    setUnit( "minslope", "Hz/"+IUnit );
+  }
+  if ( CurrentTrace[0] >= 0 ) {
+    string iinunit = trace( CurrentTrace[0] ).unit();
+    IInFac = Parameter::changeUnit( 1.0, iinunit, IUnit );
+  }
 }
 
 
@@ -182,11 +195,11 @@ void SingleStimulus::readConfig( StrQueue &sq )
 void SingleStimulus::notify( void )
 {
   int outtrace = index( "outtrace" );
-  AmplitudeUnit = outTrace( outtrace ).unit();
-  setUnit( "amplitude", AmplitudeUnit );
-  setUnit( "offset", AmplitudeUnit );
-  setUnit( "offsetstep", AmplitudeUnit );
-  setUnit( "minslope", "Hz/"+AmplitudeUnit );
+  IUnit = outTrace( outtrace ).unit();
+  setUnit( "amplitude", IUnit );
+  setUnit( "offset", IUnit );
+  setUnit( "offsetstep", IUnit );
+  setUnit( "minslope", "Hz/"+IUnit );
 }
 
 
@@ -204,7 +217,9 @@ int SingleStimulus::main( void )
   WaveForm = (WaveForms)index( "waveform" );
   Str stimfile = text( "stimfile" );
   PeakAmplitudeFac = number( "stimampl" );
+  int freqsel = index( "freqsel" );
   Frequency = number( "freq" );
+  double periods = number( "periods" );
   DutyCycle = number( "dutycycle" );
   Seed = integer( "seed" );
   Amplitude = number( "amplitude" );
@@ -238,7 +253,6 @@ int SingleStimulus::main( void )
   SkipWin = number( "skipwin" );
   Sigma1 = number( "sigma1" );
   Sigma2 = number( "sigma2" );
-  bool adjustgain = boolean( "adjust" );
   StoreModes storemode = (StoreModes)index( "storemode" );
   if ( storemode == SessionPath )
     StorePath = addPath( "" );
@@ -254,14 +268,22 @@ int SingleStimulus::main( void )
   StoreLevel = (StoreLevels)index( "storelevel" );
   StoreFile = "";
 
-  if ( offsetbase == 1 )
-    Offset = offset + metaData( "Cell" ).number( "best threshold" );	// get "best thresh" from FICurve (via the session widget)
-  else if ( offsetbase == 2 )
-    Offset = offset + metaData( "Cell" ).number( "best offset" );	// get "best offset" from FICurve (via the session widget)
-  else if ( offsetbase == 3 )
+  if ( offsetbase == 1 ) // amplitude
+    Offset = offset + Amplitude;
+  else if ( offsetbase == 2 ) // current
+    Offset = offset + stimulusData().number( outTraceName( outtrace ) );
+  else if ( offsetbase == 3 ) { // threshold
+    Offset = offset + metaData( "Cell" ).number( "ithreshss" );
+    if ( fabs( Offset - offset ) < 1.0e-8 )
+      Offset = offset + metaData( "Cell" ).number( "ithreshon" );
+  }
+  else if ( offsetbase == 4 )  // previous
     Offset += 0.0;
-  else
+  else   // absolute
     Offset = offset;
+
+  if ( freqsel == 1 ) // periods
+    Frequency = periods/Duration;
 
   bool sameduration = ( Duration == searchduration );
   bool storedstimulus = false;
@@ -293,8 +315,8 @@ int SingleStimulus::main( void )
     SP.lock();
     SP.clearPlots();
     SP[0].setTitle( "Search target firing rate " + Str( targetrate ) + " Hz" );
-    SP[1].setYLabel( "Stimulus [" + AmplitudeUnit + "]" );
-    SP[2].setXLabel( "Offset [" + AmplitudeUnit + "]" );
+    SP[1].setYLabel( "Stimulus [" + IUnit + "]" );
+    SP[2].setXLabel( "Offset [" + IUnit + "]" );
     SP.draw();
     SP.unlock();
 
@@ -347,7 +369,7 @@ int SingleStimulus::main( void )
 	// message:
 	Str s = "Search rate <b>" + Str( targetrate ) + " Hz</b>";
 	s += ",  <b>" + StimulusLabel + "</b>";
-	s += ":  Offset: <b>" + Str( Offset, 0, 0, 'f' ) + " " + AmplitudeUnit + "</b>";
+	s += ":  Offset: <b>" + Str( Offset, 0, 0, 'f' ) + " " + IUnit + "</b>";
 	s += ",  Loop <b>" + Str( counter+1 ) + "</b> of <b>" + Str( searchrepeats ) + "</b>";
 	message( s );
 
@@ -443,11 +465,6 @@ int SingleStimulus::main( void )
 	  if ( interrupt() ) {
 	    writeZero( outtrace );
 	    return Aborted;
-	  }
-	  // adjust gain of daq board:
-	  if ( adjustgain ) {
-	    adjust( trace( SpikeTrace[0] ), signalTime(), 
-		    signalTime() + searchduration, 0.8 );
 	  }
 	}
 	else {
@@ -593,7 +610,7 @@ int SingleStimulus::main( void )
   P.lock();
   P.clearPlots();
   P[0].setTitle( "Mean firing rate =    Hz" );
-  P[1].setYLabel( "Stimulus [" + AmplitudeUnit + "]" );
+  P[1].setYLabel( "Stimulus [" + IUnit + "]" );
   P.draw();
   P.unlock();
 
@@ -610,8 +627,8 @@ int SingleStimulus::main( void )
     
     // message:
     Str s =  "<b>" + StimulusLabel + "</b>";
-    s += ",  Offset: <b>" + Str( Offset, 0, 1, 'f' ) + " " + AmplitudeUnit + "</b>";
-    s += ",  Amplitude: <b>" + Str( Amplitude, 0, 1, 'f' ) + " " + AmplitudeUnit + "</b>";
+    s += ",  Offset: <b>" + Str( Offset, 0, 1, 'f' ) + " " + IUnit + "</b>";
+    s += ",  Amplitude: <b>" + Str( Amplitude, 0, 1, 'f' ) + " " + IUnit + "</b>";
     s += ",  Loop <b>" + Str( counter+1 ) + "</b>";
     if ( Repeats > 0 )
       s += " of <b>" + Str( Repeats ) + "</b>";
@@ -645,12 +662,6 @@ int SingleStimulus::main( void )
     analyze( spikes, rate1, rate2 );
     plot( spikes, rate1, rate2, signal );
     
-    // adjust gain of daq board:
-    if ( adjustgain ) {
-      adjust( trace( SpikeTrace[0] ), signalTime(),
-	      signalTime() + Duration, 0.8 );
-    }
-
     sleepOn( Duration + pause );
     timeStamp();
     
@@ -671,7 +682,7 @@ int SingleStimulus::main( void )
 void SingleStimulus::saveSpikes( Options &header, const EventList &spikes )
 {
   // create file:
-  ofstream df( addPath( "stimulusspikes.dat" ).c_str(),
+  ofstream df( addPath( "stimulus-spikes.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
   if ( ! df.good() )
     return;
@@ -694,7 +705,7 @@ void SingleStimulus::saveRate( Options &header, const SampleDataD &rate1,
 			       const SampleDataD &rate2 )
 {
   // create file:
-  ofstream df( addPath( "stimulusrate.dat" ).c_str(),
+  ofstream df( addPath( "stimulus-rate.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
   if ( ! df.good() )
     return;
@@ -725,9 +736,8 @@ void SingleStimulus::save( const EventList &spikes, const SampleDataD &rate1,
 {
   Options header;
   header.addInteger( "index1", totalRuns()-1 );
-  header.addText( "outtrace" );
-  header.addNumber( "offset", Offset, AmplitudeUnit, "%.1f" );
-  header.addNumber( "amplitude", Amplitude, AmplitudeUnit, "%.1f" );
+  header.addNumber( "offset", Offset, IUnit, "%.1f" );
+  header.addNumber( "amplitude", Amplitude, IUnit, "%.1f" );
   header.addNumber( "amplfac", PeakAmplitudeFac, "", "%.3f" );
   header.addNumber( "duration", 1000.0*Duration, "ms", "%.1f" );
   header.addText( "envelope", StoreFile );
@@ -941,8 +951,8 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
   signal.ramp( Ramp );
   PeakAmplitude = Amplitude / PeakAmplitudeFac;
 
-  signal.setIdent( "signal=" + wavename + ", amplitude=" + Str( Amplitude ) + AmplitudeUnit );
-  header.addText( "amplitude", Str( Amplitude ) + AmplitudeUnit );
+  signal.setIdent( "signal=" + wavename + ", amplitude=" + Str( Amplitude ) + IUnit );
+  header.addText( "amplitude", Str( Amplitude ) + IUnit );
   header.addText( "amplitudefactor", Str( PeakAmplitude, 0, 3, 'g' ) );
   if ( storesignal && store ) {
     Str filepattern = "$(waveform)$(filename)$(frequency)$(random seed)$(dutycycle)r$(ramp)$(duration)$(amplitude)$(amplitudefactor).dat";

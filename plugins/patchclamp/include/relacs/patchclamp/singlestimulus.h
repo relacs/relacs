@@ -37,7 +37,7 @@ namespace patchclamp {
 \class SingleStimulus
 \brief [RePro] Output of a single stimulus stored in a file.
 \author Jan Benda
-\version 1.2 (Oct 13, 2008)
+\version 1.2 (Dec 01, 2010)
 \par Options
 - Waveform
 - \c waveform=From file: Stimulus waveform (\c string)
@@ -95,9 +95,8 @@ public:
   ~SingleStimulus( void );
 
   virtual void config( void );
+  virtual void readConfig( StrQueue &sq );
   virtual void notify( void );
-  void readConfig( StrQueue &sq );
-
   virtual int main( void );
 
   void saveSpikes( Options &header, const EventList &spikes );
@@ -120,7 +119,9 @@ protected:
 
   void customEvent( QEvent *qce );
 
-  string AmplitudeUnit;
+  string VUnit;
+  string IUnit;
+  double IInFac;
   double Amplitude;
   double PeakAmplitude;
   double PeakAmplitudeFac;

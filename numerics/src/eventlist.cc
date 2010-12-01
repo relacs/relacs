@@ -1729,7 +1729,7 @@ void EventList::coherence( double tbegin, double tend, double step,
       ::relacs::coherence( rr[i], rr[j], cohere );
       n++;
       for ( int k=0; k<c.size(); k++ )
-	c[k] += ( cohere[k] - c[k] ) / n;
+	c[k] += ( ::sqrt(cohere[k]) - c[k] ) / n;
     }
   }
 
@@ -1758,8 +1758,8 @@ void EventList::coherence( double tbegin, double tend, double step,
       ::relacs::coherence( rr[i], rr[j], cohere );
       n++;
       for ( int k=0; k<c.size(); k++ ) {
-	c[k] += ( cohere[k] - c[k] ) / n;
-	csq[k] += ( cohere[k]*cohere[k] - csq[k] ) / n;
+	c[k] += ( ::sqrt(cohere[k]) - c[k] ) / n;
+	csq[k] += ( ::sqrt(cohere[k]*cohere[k]) - csq[k] ) / n;
       }
     }
   }
