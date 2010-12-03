@@ -35,7 +35,7 @@ namespace patchclamp {
 
 
 SingleStimulus::SingleStimulus( void )
-  : RePro( "SingleStimulus", "patchclamp", "Jan Benda", "1.3", "Dec 01, 2010" )
+  : RePro( "SingleStimulus", "patchclamp", "Jan Benda", "1.3", "Dec 03, 2010" )
 {
   IUnit = "nA";
   Offset = 0.0;
@@ -43,12 +43,11 @@ SingleStimulus::SingleStimulus( void )
   Duration = 0.0;
   Repeats = 10;
   SkipWin = 0.1;
-  Sigma1 = 0.002;
-  Sigma2 = 0.02;
+  Sigma = 0.01;
 
   // options:
   addLabel( "Waveform" ).setStyle( OptWidget::TabLabel );
-  addSelection( "waveform", "Stimulus waveform", "From file|Const|Sine|Rectangular|Triangular|Sawup|Sawdown|Whitenoise|OUnoise" );
+  addSelection( "waveform", "Stimulus waveform", "From file|Const|Sine|Rectangular|Triangular|Sawup|Sawdown|Whitenoise|OUnoise|Sweep" );
   addText( "stimfile", "Stimulus file", "" ).setStyle( OptWidget::BrowseExisting ).setActivation( "waveform", "From file" );
   addNumber( "stimampl", "Amplitude factor (standard deviation) of stimulus file", 0.0, 0.0, 1.0, 0.01 ).setActivation( "waveform", "From file" );
   addNumber( "amplitude", "Amplitude of stimulus", Amplitude, 0.0, 130.0, 1.0, IUnit ).setActivation( "waveform", "Const", false );;
@@ -57,6 +56,8 @@ SingleStimulus::SingleStimulus( void )
   addNumber( "periods", "Number of periods", 1.0, 0.0, 1000000.0, 1.0 ).setActivation( "freqsel", "periods" );
   addNumber( "dutycycle", "Duty-cycle of rectangular waveform", 0.5, 0.0, 1.0, 0.05, "1", "%" ).setActivation( "waveform", "Rectangular" );
   addInteger( "seed", "Seed for random number generation", 0 ).setActivation( "waveform", "Whitenoise|OUnoise" );;
+  addNumber( "startfreq", "Start sweep with frequency", 1.0, 0.0, 1000000.0, 1.0 ).setActivation( "waveform", "Sweep" );
+  addNumber( "endfreq", "End sweep with frequency", 100.0, 0.0, 1000000.0, 1.0 ).setActivation( "waveform", "Sweep" );
   addNumber( "duration", "Maximum duration of stimulus", Duration, 0.0, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "ramp", "Ramp of stimulus", 0.002, 0.0, 10.0, 0.001, "seconds", "ms" );
   addLabel( "Stimulus" ).setStyle( OptWidget::TabLabel );
@@ -83,8 +84,9 @@ SingleStimulus::SingleStimulus( void )
   addNumber( "searchpause", "Duration of pause between stimuli", 0.0, 0.0, 1000.0, 0.01, "seconds", "ms" ).setActivation( "userate", "true" );
   addLabel( "Analysis" ).setStyle( OptWidget::TabLabel );
   addNumber( "skipwin", "Initial portion of stimulus not used for analysis", SkipWin, 0.0, 100.0, 0.01, "seconds", "ms" );
-  addNumber( "sigma1", "Standard deviation of rate smoothing kernel 1", Sigma1, 0.0, 1.0, 0.0001, "seconds", "ms" );
-  addNumber( "sigma2", "Standard deviation of rate smoothing kernel 2", Sigma2, 0.0, 1.0, 0.001, "seconds", "ms" );
+  addNumber( "sigma", "Standard deviation of rate smoothing kernel", Sigma, 0.0, 1.0, 0.0001, "seconds", "ms" );
+  addBoolean( "storevoltage", "Save voltage trace", true );
+  addSelection( "plot", "Plot shows", "Voltage trace|Firing rate" );
   addLabel( "Save stimuli" );
   addSelection( "storemode", "Save stimuli in", "session|repro|custom" ).setUnit( "path" );
   addText( "storepath", "Save stimuli in custom directory", "" ).setStyle( OptWidget::BrowseDirectory ).setActivation( "storemode", "custom" );
@@ -139,7 +141,6 @@ SingleStimulus::SingleStimulus( void )
   P[0].setTMarg( 3.5 );
   P[0].setBMarg( 1.0 );
   P[0].noXTics();
-  P[0].setYLabel( "Firing rate [Hz]" );
   P[0].setYLabelPos( 2.3, Plot::FirstMargin, 0.5, Plot::Graph,
 		     Plot::Center, -90.0 );
   P[1].setOrigin( 0.0, 0.0 );
@@ -222,6 +223,8 @@ int SingleStimulus::main( void )
   double periods = number( "periods" );
   DutyCycle = number( "dutycycle" );
   Seed = integer( "seed" );
+  StartFreq = number( "startfreq" );
+  EndFreq = number( "endfreq" );
   Amplitude = number( "amplitude" );
   double offset = number( "offset" );
   int offsetbase = index( "offsetbase" );
@@ -251,8 +254,9 @@ int SingleStimulus::main( void )
   if ( searchpause <= 0.0 )
     searchpause = pause;
   SkipWin = number( "skipwin" );
-  Sigma1 = number( "sigma1" );
-  Sigma2 = number( "sigma2" );
+  Sigma = number( "sigma" );
+  bool storevoltage = boolean( "storevoltage" );
+  int plotmode = index( "plot" );
   StoreModes storemode = (StoreModes)index( "storemode" );
   if ( storemode == SessionPath )
     StorePath = addPath( "" );
@@ -388,8 +392,8 @@ int SingleStimulus::main( void )
 		     signalTime()+searchduration );
 	double rate = spikes.back().rate( SkipWin, searchduration );
 	double meanrate = spikes.rate( SkipWin, searchduration );
-	SampleDataD rate2( 0.0, searchduration, 0.0005 );
-	spikes.rate( rate2, GaussKernel( Sigma2 ) );
+	SampleDataD ratepsth( 0.0, searchduration, 0.0005 );
+	spikes.rate( ratepsth, GaussKernel( Sigma ) );
 	
 	// plot:
 	{
@@ -409,7 +413,7 @@ int SingleStimulus::main( void )
 	    j++;
 	    SP[0].plot( spikes[i], 0, 0.0, 1000.0, 1.0 - delta*(j-0.1), Plot::Graph, 2, Plot::StrokeUp, delta*0.8, Plot::Graph, Plot::Red, Plot::Red );
 	  }
-	  SP[0].plot( rate2, 1000.0, Plot::Orange, 2, Plot::Solid );
+	  SP[0].plot( ratepsth, 1000.0, Plot::Orange, 2, Plot::Solid );
 
 	  // stimulus:
 	  double threshold = metaData( "Cell" ).number( "best threshold" );
@@ -609,16 +613,45 @@ int SingleStimulus::main( void )
   postCustomEvent( 11 );
   P.lock();
   P.clearPlots();
-  P[0].setTitle( "Mean firing rate =    Hz" );
+  P[0].setXRange( 1000.0*SkipWin, 1000.0*Duration );
+  if ( plotmode == 0 ) {
+    P[0].setYLabel( "Voltage [" + VUnit + "]" );
+    P[0].setYRange( Plot::AutoScale, Plot::AutoScale );
+  }
+  else {
+    P[0].setTitle( "Mean firing rate =    Hz" );
+    P[0].setYLabel( "Firing rate [Hz]" );
+    P[0].setYRange( 0.0, Plot::AutoScale );
+  }
+  P[1].setXRange( 1000.0*SkipWin, 1000.0*Duration );
   P[1].setYLabel( "Stimulus [" + IUnit + "]" );
   P.draw();
   P.unlock();
 
+  // files:
+  ofstream tf;
+  TableKey tracekey;
+  Options header;
+  header.addInteger( "index", completeRuns() );
+  header.addInteger( "ReProIndex", reproCount() );
+  header.addNumber( "ReProTime", reproStartTime(), "s", "%0.3f" );
+  header.addNumber( "offset", Offset, IUnit, "%.1f" );
+  header.addNumber( "amplitude", Amplitude, IUnit, "%.1f" );
+  header.addNumber( "amplfac", PeakAmplitudeFac, "", "%.3f" );
+  header.addNumber( "duration", 1000.0*Duration, "ms", "%.1f" );
+  header.addText( "envelope", StoreFile );
+  if ( storevoltage )
+    openTraceFile( tf, tracekey, header );
+
   // variables:
   EventList spikes;
   MeanRate = 0.0;
-  SampleDataD rate1( 0.0, Duration, 0.001, 0.0 );
-  SampleDataD rate2( 0.0, Duration, 0.001, 0.0 );
+  SampleDataD rate( -0.1, Duration+0.1, 0.001, 0.0 );
+  SampleDataF voltage( -0.1, Duration+0.1, trace( SpikeTrace[0] ).stepsize(), 0.0 );
+  SampleDataF current;
+  if ( CurrentTrace[0] >= 0 )
+    current.resize( 0.0, Duration, trace( CurrentTrace[0] ).stepsize(), 0.0 );
+  int state = Completed;
 
   timeStamp();
 
@@ -654,42 +687,103 @@ int SingleStimulus::main( void )
     sleep( Duration + ( pause > 0.01 ? 0.01 : pause ) );
 
     if ( interrupt() ) {
-      save( spikes, rate1, rate2 );
-      writeZero( outtrace );
-      return Aborted;
+      state = Aborted;
+      break;
     }
+
+    // voltage trace:
+    trace( SpikeTrace[0] ).copy( signalTime(), voltage );
+
+    // current trace:
+    if ( CurrentTrace[0] >= 0 )
+      trace( CurrentTrace[0] ).copy( signalTime(), current );
     
-    analyze( spikes, rate1, rate2 );
-    plot( spikes, rate1, rate2, signal );
+    analyze( spikes, rate );
+    plot( spikes, rate, signal, voltage, plotmode );
+    if ( storevoltage )
+      saveTrace( tf, tracekey, counter, voltage, current );
     
     sleepOn( Duration + pause );
     timeStamp();
     
-    if ( softStop() > 0 ) {
-      save( spikes, rate1, rate2 );
-      writeZero( outtrace );
-      return Completed;
-    }
+    if ( softStop() > 0 )
+      break;
     
   }
   
-  save( spikes, rate1, rate2 );
+  tf << '\n';
+  saveRate( header, rate );
+  saveSpikes( header, spikes );
   writeZero( outtrace );
   return Completed;
+}
+
+
+void SingleStimulus::openTraceFile( ofstream &tf, TableKey &tracekey,
+				    const Options &header )
+{
+  tracekey.addNumber( "t", "ms", "%7.2f" );
+  tracekey.addNumber( "V", VUnit, "%6.1f" );
+  if ( CurrentTrace[0] >= 0 )
+    tracekey.addNumber( "I", IUnit, "%6.3f" );
+  Str waveform = text( "waveform" );
+  if ( waveform == "From file" )
+    waveform = "file";
+  waveform.lower();
+  tf.open( addPath( "stimulus-" + waveform + "-traces.dat" ).c_str(),
+	   ofstream::out | ofstream::app );
+  header.save( tf, "# " );
+  tf << "# status:\n";
+  stimulusData().save( tf, "#   " );
+  tf << "# settings:\n";
+  settings().save( tf, "#   " );
+  tf << '\n';
+  tracekey.saveKey( tf, true, false );
+  tf << '\n';
+}
+
+
+void SingleStimulus::saveTrace( ofstream &tf, TableKey &tracekey, int index,
+				const SampleDataF &voltage, const SampleDataF &current )
+{
+  tf << "# index: " << index << '\n';
+  if ( ! current.empty() ) {
+    for ( int k=0; k<voltage.size(); k++ ) {
+      tracekey.save( tf, 1000.0*voltage.pos( k ), 0 );
+      tracekey.save( tf, voltage[k] );
+      tracekey.save( tf, current[k] );
+      tf << '\n';
+    }
+  }
+  else {
+    for ( int k=0; k<voltage.size(); k++ ) {
+      tracekey.save( tf, 1000.0*voltage.pos( k ), 0 );
+      tracekey.save( tf, voltage[k] );
+      tf << '\n';
+    }
+  }
+  tf << '\n';
 }
 
 
 void SingleStimulus::saveSpikes( Options &header, const EventList &spikes )
 {
   // create file:
-  ofstream df( addPath( "stimulus-spikes.dat" ).c_str(),
+  Str waveform = text( "waveform" );
+  if ( waveform == "From file" )
+    waveform = "file";
+  waveform.lower();
+  ofstream df( addPath( "stimulus-" + waveform + "-spikes.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
   if ( ! df.good() )
     return;
 
   // write header and key:
   header.save( df, "# " );
-  settings().save( df, "#   ", -1, 16, false, true );
+  df << "# status:\n";
+  stimulusData().save( df, "#   " );
+  df << "# settings:\n";
+  settings().save( df, "#   " );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -701,76 +795,64 @@ void SingleStimulus::saveSpikes( Options &header, const EventList &spikes )
 }
 
 
-void SingleStimulus::saveRate( Options &header, const SampleDataD &rate1,
-			       const SampleDataD &rate2 )
+void SingleStimulus::saveRate( Options &header, const SampleDataD &rate )
 {
   // create file:
-  ofstream df( addPath( "stimulus-rate.dat" ).c_str(),
+  Str waveform = text( "waveform" );
+  if ( waveform == "From file" )
+    waveform = "file";
+  waveform.lower();
+  ofstream df( addPath( "stimulus-" + waveform + "-rate.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
   if ( ! df.good() )
     return;
 
   // write header and key:
   header.save( df, "# " );
-  settings().save( df, "#   ", -1, 16, false, true );
+  df << "# status:\n";
+  stimulusData().save( df, "#   " );
+  df << "# settings:\n";
+  settings().save( df, "#   " );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
-  key.addNumber( "r" + Str( 1000.0*Sigma1 ) + "ms", "Hz", "%5.1f" );
-  key.addNumber( "r" + Str( 1000.0*Sigma2 ) + "ms", "Hz", "%5.1f" );
+  key.addNumber( "r" + Str( 1000.0*Sigma ) + "ms", "Hz", "%5.1f" );
   key.saveKey( df, true, false );
 
   // write data:
-  for ( int k=0; k<rate1.size(); k++ ) {
-    key.save( df, rate1.pos( k ) * 1000.0, 0 );
-    key.save( df, rate1[k] );
-    key.save( df, rate2[k] );
+  for ( int k=0; k<rate.size(); k++ ) {
+    key.save( df, rate.pos( k ) * 1000.0, 0 );
+    key.save( df, rate[k] );
     df << '\n';
   }
   df << "\n\n";
 }
 
 
-void SingleStimulus::save( const EventList &spikes, const SampleDataD &rate1,
-			   const SampleDataD &rate2 )
-{
-  Options header;
-  header.addInteger( "index1", totalRuns()-1 );
-  header.addNumber( "offset", Offset, IUnit, "%.1f" );
-  header.addNumber( "amplitude", Amplitude, IUnit, "%.1f" );
-  header.addNumber( "amplfac", PeakAmplitudeFac, "", "%.3f" );
-  header.addNumber( "duration", 1000.0*Duration, "ms", "%.1f" );
-  header.addText( "envelope", StoreFile );
-  header.addText( "session time", sessionTimeStr() ); 
-  header.addLabel( "settings:" );
-
-  saveSpikes( header, spikes );
-  saveRate( header, rate1, rate2 );
-}
-
-
-void SingleStimulus::plot( const EventList &spikes, const SampleDataD &rate1,
-			   const SampleDataD &rate2, const OutData &signal )
+void SingleStimulus::plot( const EventList &spikes, const SampleDataD &rate,
+			   const OutData &signal, const SampleDataF &voltage,
+			   int plotmode )
 {
   P.lock();
-  // spikes and firing rate:
-  P[0].clear();
-  P[0].setTitle( "Mean firing rate = " + Str( MeanRate, 0, 0, 'f' ) + "Hz" );
-  if ( ! P[0].zoomedXRange() && ! P[1].zoomedXRange() )
-    P[0].setXRange( 1000.0*SkipWin, 1000.0*Duration );
-  if ( ! P[0].zoomedYRange() )
-    P[0].setYRange( 0.0, Plot::AutoScale );
-  int maxspikes	= (int)rint( 20.0 / SpikeTraces );
-  if ( maxspikes < 4 )
-    maxspikes = 4;
-  int offs = (int)spikes.size() > maxspikes ? spikes.size() - maxspikes : 0;
-  double delta = Repeats > 0 && Repeats < maxspikes ? 1.0/Repeats : 1.0/maxspikes;
-  for ( int i=offs, j=0; i<spikes.size(); i++ ) {
-    j++;
-    P[0].plot( spikes[i], 0, 0.0, 1000.0, 1.0 - delta*(j-0.1), Plot::Graph, 2, Plot::StrokeUp, delta*0.8, Plot::Graph, Plot::Red, Plot::Red );
+  if ( plotmode == 0 ) {
+    P[0].clear();
+    P[0].plot( voltage, 1000.0, Plot::Yellow, 2, Plot::Solid );
   }
-  P[0].plot( rate1, 1000.0, Plot::Yellow, 2, Plot::Solid );
-  P[0].plot( rate2, 1000.0, Plot::Orange, 2, Plot::Solid );
+  else {
+    // spikes and firing rate:
+    P[0].clear();
+    P[0].setTitle( "Mean firing rate = " + Str( MeanRate, 0, 0, 'f' ) + "Hz" );
+    int maxspikes	= (int)rint( 20.0 / SpikeTraces );
+    if ( maxspikes < 4 )
+      maxspikes = 4;
+    int offs = (int)spikes.size() > maxspikes ? spikes.size() - maxspikes : 0;
+    double delta = Repeats > 0 && Repeats < maxspikes ? 1.0/Repeats : 1.0/maxspikes;
+    for ( int i=offs, j=0; i<spikes.size(); i++ ) {
+      j++;
+      P[0].plot( spikes[i], 0, 0.0, 1000.0, 1.0 - delta*(j-0.1), Plot::Graph, 2, Plot::StrokeUp, delta*0.8, Plot::Graph, Plot::Red, Plot::Red );
+    }
+    P[0].plot( rate, 1000.0, Plot::Yellow, 2, Plot::Solid );
+  }
 
   // stimulus:
   double threshold = metaData( "Cell" ).number( "best threshold" );
@@ -783,13 +865,6 @@ void SingleStimulus::plot( const EventList &spikes, const SampleDataD &rate1,
       ymax = threshold;
   }
   P[1].clear();
-  if ( ! P[0].zoomedXRange() && ! P[1].zoomedXRange() )
-    P[1].setXRange( 1000.0*SkipWin, 1000.0*Duration );
-  /*
-  P[1].setYFallBackRange( ymin - 1.0, ymax + 1.0 );
-  if ( ! P[1].zoomedYRange() )
-    P[1].setYRange( Plot::AutoMinScale, Plot::AutoMinScale );
-  */
   if ( ! P[1].zoomedYRange() )
     P[1].setYRange( ymin - 1.0, ymax + 1.0 );
   P[1].plotHLine( Offset, Plot::White, 2 );
@@ -803,8 +878,7 @@ void SingleStimulus::plot( const EventList &spikes, const SampleDataD &rate1,
 }
 
 
-void SingleStimulus::analyze( EventList &spikes, SampleDataD &rate1,
-			      SampleDataD &rate2 )
+void SingleStimulus::analyze( EventList &spikes, SampleDataD &rate )
 {
   if ( SpikeEvents[0] < 0 )
     return;
@@ -812,12 +886,10 @@ void SingleStimulus::analyze( EventList &spikes, SampleDataD &rate1,
   // spikes:
   spikes.push( events( SpikeEvents[0] ), signalTime(),
 	       signalTime() + Duration );
-  int trial1 = spikes.size()-1;
-  int trial2 = spikes.size()-1;
+  int trial = spikes.size()-1;
 
   MeanRate = spikes.rate( SkipWin, Duration );
-  spikes.back().addRate( rate1, trial1, GaussKernel( Sigma1 ) );
-  spikes.back().addRate( rate2, trial2, GaussKernel( Sigma2 ) );
+  spikes.back().addRate( rate, trial, GaussKernel( Sigma ) );
 }
 
 
@@ -912,6 +984,16 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     if ( StoreLevel == Noise && 
 	 ( WaveForm == Whitenoise || WaveForm == OUnoise ) ) 
       store = true;
+    if ( StoreLevel == Generated ) 
+      store = true;
+  }
+  else if ( WaveForm == Sweep ) {
+    // frequency sweep:
+    header.addText( "waveform", "Sweep" );
+    header.addText( "startfrequency", Str( StartFreq ) + "Hz" );
+    header.addText( "endfrequency", Str( EndFreq ) + "Hz" );
+    PeakAmplitudeFac = 1.0;
+    wave.sweep( LinearRange( 0.0, duration, deltat ), StartFreq, EndFreq );
     if ( StoreLevel == Generated ) 
       store = true;
   }

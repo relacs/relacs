@@ -86,6 +86,38 @@ SampleData<> cos( double l, double r, double stepsize, double f )
 }
 
 
+SampleData<> sweep( const LinearRange &r, double startfreq, double endfreq )
+{
+  SampleData<> y( r );
+  double df2 = 0.5*(endfreq-startfreq);
+  typedef SampleData<>::iterator ForwardIter1;
+  typedef LinearRange::const_iterator ForwardIter2;
+  ForwardIter1 iter1 = y.begin();
+  ForwardIter1 end1 = y.end();
+  ForwardIter2 iter2 = r.begin();
+  while ( iter1 != end1 ) {
+    *iter1 = ::sin( 6.28318530717959*(startfreq+df2*(*iter2))*(*iter2) );
+    ++iter1;
+    ++iter2;
+  }
+  return y;
+}
+
+
+SampleData<> sweep( int n, double offset, double stepsize,
+		    double startfreq, double endfreq )
+{
+  return sweep( LinearRange( n, offset, stepsize ), startfreq, endfreq );
+}
+
+
+SampleData<> sweep( double l, double r, double stepsize,
+		    double startfreq, double endfreq )
+{
+  return sweep( LinearRange( l, r, stepsize ), startfreq, endfreq );
+}
+
+
 SampleData<> gauss( const LinearRange &r )
 {
   SampleData<> y( r );

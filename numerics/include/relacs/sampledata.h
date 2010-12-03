@@ -758,6 +758,22 @@ class SampleData : public Array< T >
   SampleData< T > &cos( double l,  double r, double stepsize, double f )
     { return cos( LinearRange( l, r, stepsize ), f ); };
 
+    /*! Returns a frequency sweep from \a startfreq f_1 to \a endfreq f_2,
+        i.e. sin(2*pi*(f_1+(f_2-f_1)*x/2)*x),
+	computed for each element \a x of the range \a r. */
+  friend SampleData<> sweep( const LinearRange &r, double startfreq, double endfreq );
+  friend SampleData<> sweep( int n, double offset, double stepsize, double startfreq, double endfreq );
+  friend SampleData<> sweep( double l, double r, double stepsize, double startfreq, double endfreq );
+    /*! Initializes the range  with \a r 
+        and the array with a frequency sweep from \a startfreq f_1 to \a endfreq f_2,
+        i.e. sin(2*pi*(f_1+(f_2-f_1)*x/2)*x),
+        computed for each element \a x of the range \a r. */
+  SampleData< T > &sweep( const LinearRange &r, double startfreq, double endfreq );
+  SampleData< T > &sweep( int n, double offset, double stepsize, double startfreq, double endfreq )
+    { return sweep( LinearRange( n, offset, stepsize ), startfreq, endfreq ); };
+  SampleData< T > &sweep( double l,  double r, double stepsize, double startfreq, double endfreq )
+  { return sweep( LinearRange( l, r, stepsize ), startfreq, endfreq ); };
+
     /*! Returns the standard normal distribution exp( -0.5*x^2 )/sqrt(2*pi) 
         for each element \a x of the range \a r. */
   friend SampleData<> gauss( const LinearRange &r );
@@ -1346,6 +1362,13 @@ SampleData<> sin( double l, double r, double stepsize, double f );
 SampleData<> cos( const LinearRange &r, double f );
 SampleData<> cos( int n, double offset, double stepsize, double f );
 SampleData<> cos( double l, double r, double stepsize, double f );
+
+  /*! Returns a frequency sweep from \a startfreq f_1 to \a endfreq f_2,
+      i.e. sin(2*pi*(f_1+(f_2-f_1)*x/2)*x),
+      computed for each element \a x of the range \a r. */
+SampleData<> sweep( const LinearRange &r, double startfreq, double endfreq );
+SampleData<> sweep( int n, double offset, double stepsize, double startfreq, double endfreq );
+SampleData<> sweep( double l, double r, double stepsize, double startfreq, double endfreq );
 
   /*! Returns the standard normal distribution exp( -0.5*x^2 )/sqrt(2*pi) 
       for each element \a x of the range \a r. */
@@ -2686,6 +2709,26 @@ SampleData< T > &SampleData< T >::cos( const LinearRange &r, double f )
   ForwardIter2 iter2 = r.begin();
   while ( iter1 != end1 ) {
     *iter1 = ::cos( 6.28318530717959*f*(*iter2) );
+    ++iter1;
+    ++iter2;
+  }
+  return *this;
+}
+
+
+template < typename T >
+SampleData< T > &SampleData< T >::sweep( const LinearRange &r, double startfreq,
+					 double endfreq )
+{
+  Samples = r;
+  resize( r.size() );
+  double df2 = 0.5*(endfreq-startfreq);
+  typedef typename LinearRange::const_iterator ForwardIter2;
+  iterator iter1 = begin();
+  iterator end1 = end();
+  ForwardIter2 iter2 = r.begin();
+  while ( iter1 != end1 ) {
+    *iter1 = ::sin( 6.28318530717959*(startfreq+df2*(*iter2))*(*iter2) );
     ++iter1;
     ++iter2;
   }

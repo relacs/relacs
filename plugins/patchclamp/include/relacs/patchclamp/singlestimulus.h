@@ -37,16 +37,20 @@ namespace patchclamp {
 \class SingleStimulus
 \brief [RePro] Output of a single stimulus stored in a file.
 \author Jan Benda
-\version 1.2 (Dec 01, 2010)
+\version 1.3 (Dec 03, 2010)
 \par Options
 - Waveform
 - \c waveform=From file: Stimulus waveform (\c string)
 - \c stimfile=: Stimulus file (\c string)
 - \c stimampl=0: Amplitude factor (standard deviation) of stimulus file (\c number)
 - \c amplitude=1nA: Amplitude of stimulus (\c number)
+- \c freqsel=frequency: Specify (\c string)
 - \c freq=10Hz: Frequency of waveform (\c number)
+- \c periods=1: Number of periods (\c number)
 - \c dutycycle=50%: Duty-cycle of rectangular waveform (\c number)
 - \c seed=0: Seed for random number generation (\c integer)
+- \c startfreq=1: Start sweep with frequency (\c number)
+- \c endfreq=100: End sweep with frequency (\c number)
 - \c duration=0ms: Maximum duration of stimulus (\c number)
 - \c ramp=2ms: Ramp of stimulus (\c number)
 - Stimulus
@@ -56,7 +60,7 @@ namespace patchclamp {
 - \c samplerate=1kHz: Sampling rate of output (\c number)
 - \c repeats=10times: Number of stimulus presentations (\c number)
 - \c pause=1000ms: Duration of pause between stimuli (\c number)
-- \c outtrace=Current-1: Output trace (\c string)
+- \c outtrace=V-1: Output trace (\c string)
 - Offset - search
 - \c userate=false: Search offset for target firing rate (\c boolean)
 - \c rate=100Hz: Target firing rate (\c number)
@@ -73,9 +77,9 @@ namespace patchclamp {
 - \c searchpause=0ms: Duration of pause between stimuli (\c number)
 - Analysis
 - \c skipwin=100ms: Initial portion of stimulus not used for analysis (\c number)
-- \c sigma1=2ms: Standard deviation of rate smoothing kernel 1 (\c number)
-- \c sigma2=20ms: Standard deviation of rate smoothing kernel 2 (\c number)
-- \c adjust=true: Adjust input gain (\c boolean)
+- \c sigma=10ms: Standard deviation of rate smoothing kernel (\c number)
+- \c storevoltage=true: Save voltage trace (\c boolean)
+- \c plot=Voltage trace: Plot shows (\c string)
 - Save stimuli
 - \c storemode=session: Save stimuli in (\c string)
 - \c storepath=: Save stimuli in custom directory (\c string)
@@ -99,20 +103,17 @@ public:
   virtual void notify( void );
   virtual int main( void );
 
-  void saveSpikes( Options &header, const EventList &spikes );
-  void saveRate( Options &header, const SampleDataD &rate1,
-		 const SampleDataD &rate2 );
-  void save( const EventList &spikes, const SampleDataD &rate1,
-	     const SampleDataD &rate2 );
-
-    /*! Plot data. */
-  void plot( const EventList &spikes, const SampleDataD &rate1,
-	     const SampleDataD &rate2, const OutData &signal );
-    /*! Analyze data. */
-  void analyze( EventList &spikes, SampleDataD &rate1, SampleDataD &rate2 );
-
 
 protected:
+
+  void openTraceFile( ofstream &tf, TableKey &tracekey, const Options &header );
+  void saveTrace( ofstream &tf, TableKey &tracekey, int index,
+		  const SampleDataF &voltage, const SampleDataF &current );
+  void saveSpikes( Options &header, const EventList &spikes );
+  void saveRate( Options &header, const SampleDataD &rate );
+  void plot( const EventList &spikes, const SampleDataD &rate,
+	     const OutData &signal, const SampleDataF &voltage, int plotmode );
+  void analyze( EventList &spikes, SampleDataD &rate );
 
   int createStimulus( OutData &signal, const Str &file,
 		      double &duration, double deltat, bool storesignal );
@@ -126,19 +127,20 @@ protected:
   double PeakAmplitude;
   double PeakAmplitudeFac;
   enum WaveForms { File=0, Const, Sine, Rectangular, Triangular,
-		   Sawup, Sawdown, Whitenoise, OUnoise };
+		   Sawup, Sawdown, Whitenoise, OUnoise, Sweep };
   WaveForms WaveForm;
   double Frequency;
   double DutyCycle;
   int Seed;
+  double StartFreq;
+  double EndFreq;
   double Ramp;
   double Offset;
   double Duration;
   int Side;
   int Repeats;
   double SkipWin;
-  double Sigma1;
-  double Sigma2;
+  double Sigma;
 
   string StimulusLabel;
   enum StoreModes { SessionPath, ReProPath, CustomPath };
@@ -147,8 +149,6 @@ protected:
   Str StorePath;
   Str StoreFile;
   double MeanRate;
-  SampleDataD Rate1;
-  SampleDataD Rate2;
 
   MultiPlot SP;
   MultiPlot P;
