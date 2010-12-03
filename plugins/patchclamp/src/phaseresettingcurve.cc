@@ -261,8 +261,15 @@ int PhaseResettingCurve::main( void )
     // plot:
     P.lock();
     P.clear();
+    if ( ! P.zoomedYRange() ) {
+      double min=0.0, max=0.0;
+      minMax( min, max, prcphases.y() );
+      P.setYRange( min, max );
+    }
     P.plotHLine( 0.0, Plot::White, 2 );
-    P.plotLine( 0.0, 0.0, 1.0, 1.0, Plot::Yellow, 2 );
+    SampleDataD line;
+    line.line( 0.0, 1.0, 0.01, 1.0, -1.0 );
+    P.plot( line, 1.0, Plot::Yellow, 2 );
     P.plot( prcphases, 1.0, Plot::Transparent, 0, Plot::Solid, Plot::Circle, 10, Plot::Blue, Plot::Blue );
     MapD cp;
     cp.push( p, dp );

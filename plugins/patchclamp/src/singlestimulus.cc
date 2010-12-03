@@ -51,7 +51,7 @@ SingleStimulus::SingleStimulus( void )
   addText( "stimfile", "Stimulus file", "" ).setStyle( OptWidget::BrowseExisting ).setActivation( "waveform", "From file" );
   addNumber( "stimampl", "Amplitude factor (standard deviation) of stimulus file", 0.0, 0.0, 1.0, 0.01 ).setActivation( "waveform", "From file" );
   addNumber( "amplitude", "Amplitude of stimulus", Amplitude, 0.0, 130.0, 1.0, IUnit ).setActivation( "waveform", "Const", false );;
-  addSelection( "freqsel", "Specify", "frequency|periods" ).setActivation( "waveform", "From file|Const", false );
+  addSelection( "freqsel", "Specify", "frequency|periods" ).setActivation( "waveform", "From file|Const|Sweep", false );
   addNumber( "freq", "Frequency of waveform", 10.0, 0.0, 1000000.0, 1.0, "Hz" ).setActivation( "freqsel", "frequency" );
   addNumber( "periods", "Number of periods", 1.0, 0.0, 1000000.0, 1.0 ).setActivation( "freqsel", "periods" );
   addNumber( "dutycycle", "Duty-cycle of rectangular waveform", 0.5, 0.0, 1.0, 0.05, "1", "%" ).setActivation( "waveform", "Rectangular" );
