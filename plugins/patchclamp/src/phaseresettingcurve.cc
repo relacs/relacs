@@ -354,7 +354,8 @@ void PhaseResettingCurve::saveData( const Options &header,
 				    const MapD &prctimes,
 				    const MapD &prcphases )
 {
-  ofstream df( addPath( "phaseresettingcurve-data.dat" ).c_str() );
+  ofstream df( addPath( "phaseresettingcurve-data.dat" ).c_str(),
+	       ofstream::out | ofstream::app );
 
   header.save( df, "# " );
   df << "# status:\n";
@@ -391,7 +392,8 @@ void PhaseResettingCurve::saveData( const Options &header,
 void PhaseResettingCurve::savePRC( const Options &header,
 				   const SampleDataD &medianprc )
 {
-  ofstream df( addPath( "phaseresettingcurve-prc.dat" ).c_str() );
+  ofstream df( addPath( "phaseresettingcurve-prc.dat" ).c_str(),
+	       ofstream::out | ofstream::app );
 
   header.save( df, "# " );
   df << "# status:\n";

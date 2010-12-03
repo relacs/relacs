@@ -394,7 +394,8 @@ void TransferFunction::saveTrace( ofstream &tf, TableKey &tracekey,
 
 void TransferFunction::saveData( const Options &header )
 {
-  ofstream df( addPath( "transferfunction-data.dat" ).c_str() );
+  ofstream df( addPath( "transferfunction-data.dat" ).c_str(),
+	       ofstream::out | ofstream::app );
 
   header.save( df, "# " );
   df << "# status:\n";

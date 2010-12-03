@@ -278,7 +278,8 @@ int FindRate::main( void )
 
 void FindRate::saveData( const MapD &rates )
 {
-  ofstream df( addPath( "findrate-data.dat" ).c_str() );
+  ofstream df( addPath( "findrate-data.dat" ).c_str(),
+	       ofstream::out | ofstream::app );
 
   Options header;
   header.addInteger( "index", completeRuns() );

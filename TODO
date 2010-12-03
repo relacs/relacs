@@ -15,16 +15,12 @@ Macros:
 - Macro Options and Macro stack (B R N keys) do not work together
 
 Plugin documentation:
-- EFields::AcceptEOD should not be part of the plugin docu
-- Each plugin summary page should have a link to the next or previous plugin set/type
-- Within a plugin summary page the plugins should be sorted by type/set with headers.
 - Each publication should get a file indicating the RePros it used:
   - list for each publication the ussed RePros
   - show in the plugin summaries for each RePro the number of publications
   - add a section to each RePro linking to its publications
 - Need to document the comedi and dynclamp plugins!
 - Option for automatic screenshot at the end of stimulus (in menu)
-- Put (small) screenshots to plugins overview
 
 Metadata:
 - Implement in all RePros OutData::descriptions() !
