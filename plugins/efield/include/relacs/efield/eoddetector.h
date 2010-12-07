@@ -25,6 +25,7 @@
 #include <relacs/optwidget.h>
 #include <relacs/detector.h>
 #include <relacs/filter.h>
+#include <relacs/efield/eodtools.h>
 using namespace relacs;
 
 namespace efield {
@@ -34,6 +35,8 @@ namespace efield {
 \class EODDetector
 \brief [Detector] A detector for EOD cycles of weakly electric fish
 \author Jan Benda
+\version 1.6 (Dec 07, 2010)
+
 
 Detects each cycle of a periodic input waveform, like the EOD of a wave-type
 weakly electric fish.
@@ -56,12 +59,10 @@ The times of the EOD peaks and their amplitude.
 - \c ratio=50%: Ratio (\c number)
 - \c maxperiod=10ms: Maximum EOD period (\c number)
 - \c averagecycles=100: Number of EOD cycles to be averaged over for computing mean voltage (\c integer)
-
-\version 1.6 (Nov 23, 2010)
 */
 
 
-class EODDetector : public Filter
+  class EODDetector : public Filter, public EODTools
 {
   Q_OBJECT
 

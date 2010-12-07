@@ -554,7 +554,7 @@ int startSubdevice( int iS )
 
   subdev[iS].running = 1;
 
-  DEBUG_MSG( "startSubdevice: successfully started subdevice %d type %s!\n",
+  SDEBUG_MSG( "startSubdevice: successfully started subdevice %d type %s!\n",
 	     iS, subdev[iS].type == SUBDEV_IN ? "AI" : "AO" );
 
   return 0;
@@ -570,7 +570,7 @@ int stopSubdevice( int iS, int kill )
   subdev[iS].running = 0;
   for ( i = 0; i < subdev[iS].chanN; i++ )
     subdev[iS].chanlist[i].isUsed = 0;
-  DEBUG_MSG( "stopSubdevice %d with kill=%d\n", iS, kill );
+  SDEBUG_MSG( "stopSubdevice %d with kill=%d\n", iS, kill );
 
   if ( !kill )
     return 0;
@@ -579,7 +579,7 @@ int stopSubdevice( int iS, int kill )
   for ( i = 0; i < subdevN; i++ )
     if ( subdev[i].running )
       return 0;
-  DEBUG_MSG( "stopSubdevice halts dynclamp task\n" );
+  SDEBUG_MSG( "stopSubdevice halts dynclamp task\n" );
   cleanup_rt_task();
   return 0;
 }
@@ -591,14 +591,15 @@ void releaseSubdevice( int iS )
   int i;
 
   if ( !subdev[iS].used || subdev[iS].subdev < 0 ) {
-    ERROR_MSG( "releaseSubdevice ERROR: Subdevice with ID %d not in use!\n", 
-	       iS );
+    ERROR_MSG( "releaseSubdevice ERROR: Subdevice with ID %d not in use!\n", iS );
     return;
   }
 
   // stop subdevice:
-  if ( subdev[iS].running )
+  if ( subdev[iS].running ) {
+    SDEBUG_MSG( "releaseSubdevice stops and potentially kills subdevice %d\n", iS );
     stopSubdevice( iS, /*kill=*/1 );
+  }
   
   // unlock subdevice:
   if ( device[iD].devP && comedi_unlock( device[iD].devP, subdev[iS].subdev ) < 0 )
@@ -709,7 +710,7 @@ void rtDynClamp( long dummy )
   int prevtriggerevs[5] = { 0, 0, 0, 0, 0 };
   //  int vi, oi, pi; /// DEBUG
 
-  DEBUG_MSG( "rtDynClamp: starting dynamic clamp loop at %u Hz\n", 
+  SDEBUG_MSG( "rtDynClamp: starting dynamic clamp loop at %u Hz\n", 
 	     1000000000/dynClampTask.periodLengthNs );
 
   dynClampTask.loopCnt = 0;
@@ -750,7 +751,7 @@ void rtDynClamp( long dummy )
 	  // check end of stimulus:
 	  if ( !subdev[iS].continuous &&
 	       subdev[iS].duration <= dynClampTask.loopCnt ) {
-	    DEBUG_MSG( "rtDynClamp: finished subdevice %d at loop %lu\n", iS, dynClampTask.loopCnt );
+	    SDEBUG_MSG( "rtDynClamp: finished subdevice %d at loop %lu\n", iS, dynClampTask.loopCnt );
 	    rtf_reset( subdev[iS].fifo );
 	    stopSubdevice( iS, /*kill=*/0 );
 	  }
@@ -941,7 +942,7 @@ void rtDynClamp( long dummy )
   dynClampTask.running = 0;
   dynClampTask.duration = 0;
 
-  DEBUG_MSG( "rtDynClamp: left dynamic clamp loop after %lu cycles\n",
+  SDEBUG_MSG( "rtDynClamp: left dynamic clamp loop after %lu cycles\n",
 	     dynClampTask.loopCnt );
 
 }
@@ -1272,6 +1273,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID for stop-query!\n" );
       return -EFAULT;
     }
+    SDEBUG_MSG( "ioctl: user requests to stop and potentially kill subdevice %d\n", subdevID );
     retVal = stopSubdevice( subdevID, /*kill=*/1 );
     DEBUG_MSG( "rtmodule_ioctl: stopSubdevice returned %u\n", retVal );
     return retVal == 0 ? 0 : -EFAULT;
@@ -1287,6 +1289,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID for release-query!\n" );
       return -EFAULT;
     }
+    SDEBUG_MSG( "ioctl: user requests to release subdevice %d\n", subdevID );
     releaseSubdevice( subdevID );
     return 0;
 

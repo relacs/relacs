@@ -216,6 +216,16 @@ int PhaseResettingCurve::main( void )
     double p = t/meanperiod;
     double dp = dt/meanperiod;
     prcphases.push( p, dp );
+
+    // voltage trace:
+    data.copy( spikes[psi-1], voltage );
+
+    // current trace:
+    if ( CurrentTrace[0] >= 0 )
+      trace( CurrentTrace[0] ).copy( spikes[psi-1], current );
+
+    unlockAll();
+
     // recalculate phase resetting:
     if ( n%10 == 0 || n == repeats ) {
       for ( int k=perturbedperiods.size()>3*averageisis?
@@ -251,13 +261,6 @@ int PhaseResettingCurve::main( void )
     else
       medianprc.clear();
 
-    // voltage trace:
-    data.copy( spikes[psi-1], voltage );
-
-    // current trace:
-    if ( CurrentTrace[0] >= 0 )
-      trace( CurrentTrace[0] ).copy( spikes[psi-1], current );
-
     // plot:
     P.lock();
     P.clear();
@@ -281,6 +284,9 @@ int PhaseResettingCurve::main( void )
 
     // save:
     saveTrace( tf, tracekey, n, voltage, current, period, t, dt, p, dp );
+
+    lockAll();
+
   }
 
   tf << '\n';

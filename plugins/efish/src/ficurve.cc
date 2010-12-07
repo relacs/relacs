@@ -241,7 +241,7 @@ int FICurve::main( void )
   double si = 0.001;
   if ( signal.fixedSampleRate() )
     si = signal.minSampleInterval();
-  signal.resize( PreDuration + Duration, si, 0.0 );
+  signal.resize( 0.0, PreDuration + Duration, si, 0.0 );
   signal.setDelay( Delay );
   signal.setStartSource( 1 );
   signal.setIdent( "rectangle" );

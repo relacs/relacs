@@ -163,7 +163,7 @@ IsoResponse::~IsoResponse( void )
 
 void IsoResponse::createSignal( OutData &signal, double a1, double a2 )
 {
-  signal.resize( Duration, 1.0/2.0e5, 0 );
+  signal.resize( 0.0, Duration, 1.0/2.0e5, 0 );
   signal.setTrace( Speaker[ Side ] );
   applyOutTrace( signal );
   double n1=a1/(a1+a2);

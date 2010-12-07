@@ -123,6 +123,8 @@ int FindThreshold::main( void )
     }
     duration = durationfac*membranetau;
   }
+  if ( savetime <= 0.0 || savetime > duration+searchpause )
+    savetime = duration+searchpause;
   if ( skiptime > duration || skiptime > savetime ) {
     warning( "skiptime too long!" );
     return Failed;

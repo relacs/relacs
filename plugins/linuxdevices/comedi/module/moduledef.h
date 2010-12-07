@@ -12,7 +12,7 @@
 
 // *** KERNEL LOGGING MODE ***
 
-#define RTMODULE_DEBUG
+// #define RTMODULE_DEBUG
 // #define RTMODULE_INFO
 
 
@@ -198,6 +198,12 @@ struct traceChannelIOCT {
 #  endif
 #else
 #  define DEBUG_MSG(msg, args...)
+#endif
+
+#ifdef __KERNEL__
+#  define SDEBUG_MSG(msg, args...) printk( "rtmodule: " msg, ## args )
+#else
+#  define SDEBUG_MSG(msg, args...) fprintf( stderr, msg, ## args )
 #endif
 
 

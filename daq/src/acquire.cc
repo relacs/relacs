@@ -1617,6 +1617,12 @@ int Acquire::setupWrite( OutData &signal )
       Att[a].Att->mute();
   }
 
+  // error?
+  if ( signal.failed() ) {
+    AO[di].Signals.clear();
+    return -1;
+  }
+
   // request buffer size:
   signal.setWriteTime( BufferTime );
 
@@ -1652,6 +1658,9 @@ int Acquire::startWrite( OutData &signal )
   if ( gainChanged() ||
        signal.restart() ||
        SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
+    if ( SyncMode == AISync )
+      cerr << "Acquire::startWrite() -> called restartRead() because of gainChanged="
+	   << gainChanged() << " or signal restart=" << signal.restart() << '\n';
     vector< AOData* > aod( 1, &AO[di] );
     restartRead( aod, false, true );
   }
@@ -1823,6 +1832,13 @@ int Acquire::setupWrite( OutList &signal )
       Att[a].Att->mute();
   }
 
+  // error?
+  if ( ! success ) {
+    for ( unsigned int i=0; i<AO.size(); i++ )
+      AO[i].Signals.clear();
+    return -1;
+  }
+
   // request buffer size:
   for ( unsigned int i=0; i<AO.size(); i++ )
     AO[i].Signals.setWriteTime( BufferTime );
@@ -1872,6 +1888,9 @@ int Acquire::startWrite( OutList &signal )
   if ( gainChanged() ||
        signal[0].restart() ||
        SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
+    if ( SyncMode == AISync )
+      cerr << "Acquire::startWrite() -> called restartRead() because of gainChanged="
+	   << gainChanged() << " or signal restart=" << signal[0].restart() << '\n';
     vector< AOData* > aod;
     aod.reserve( AO.size() );
     for ( unsigned int i=0; i<AO.size(); i++ ) {
@@ -2019,11 +2038,20 @@ int Acquire::directWrite( OutData &signal )
       Att[a].Att->mute();
   }
 
+  // error?
+  if ( signal.failed() ) {
+    AO[di].Signals.clear();
+    return -1;
+  }
+
   // start writing to daq board:
   if ( ! signal.failed() ) {
     if ( gainChanged() ||
 	 signal.restart() ||
 	 SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
+      if ( SyncMode == AISync )
+	cerr << "Acquire::directWrite() -> called restartRead() because of gainChanged="
+	     << gainChanged() << " or signal restart=" << signal.restart() << '\n';
       vector< AOData* > aod( 1, &AO[di] );
       restartRead( aod, true, true );
     }
@@ -2195,11 +2223,21 @@ int Acquire::directWrite( OutList &signal )
       Att[a].Att->mute();
   }
 
+  // error?
+  if ( ! success ) {
+    for ( unsigned int i=0; i<AO.size(); i++ )
+      AO[i].Signals.clear();
+    return -1;
+  }
+
   // start writing to daq boards:
   if ( success ) {
     if ( gainChanged() ||
 	 signal[0].restart() ||
 	 SyncMode == NoSync || SyncMode == StartSync || SyncMode == TriggerSync ) {
+      if ( SyncMode == AISync )
+	cerr << "Acquire::directWrite() -> called restartRead() because of gainChanged="
+	     << gainChanged() << " or signal restart=" << signal[0].restart() << '\n';
       vector< AOData* > aod;
       aod.reserve( AO.size() );
       for ( unsigned int i=0; i<AO.size(); i++ ) {

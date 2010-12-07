@@ -150,6 +150,7 @@ int CalibEField::main( void )
   // plot:
   P.lock();
   P.clear();
+  P.resetRanges();
   P.setXLabel( "Gain" );
   string ylabel = am ? "Measured AM Intensity" : "Measured EOD Intensity";
   ylabel += " [" + LocalEODUnit + "]";
@@ -243,22 +244,34 @@ int CalibEField::main( void )
     else {
       if ( amplitude > targetintensity || r == 2 ) {
 	// reduces gain:
+	if ( gain <= mingain ) {
+	  warning( "Cannot increase attenuator level any further!<br>Requested stimulus intensity is too low." );
+	  return Failed;
+	}
 	if ( gaindir == 1 )
 	  bisect = true;
 	if ( bisect )
 	  gainfac = sqrt( gainfac );
 	gain /= gainfac;
+	if ( gain < mingain )
+	  gain = mingain;
 	latt->setGain( gain, 0.0 );
 	printlog( "Set new gain to " + Str( gain ) );
 	gaindir = -1;
       }
       else {
+	if ( gain >= maxgain ) {
+	  warning( "Cannot decrease attenuator level any further!<br>Requested stimulus intensity is too high." );
+	  return Failed;
+	}
 	// increase gain:
 	if ( gaindir == -1 )
 	  bisect = true;
 	if ( bisect )
 	  gainfac = sqrt( gainfac );
 	gain *= gainfac;
+	if ( gain > maxgain )
+	  gain = maxgain;
 	latt->setGain( gain, 0.0 );
 	printlog( "Set new gain to " + Str( gain ) );
 	gaindir = 1;

@@ -31,7 +31,7 @@ namespace efield {
 EODDetector::EODDetector( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogDetector, 1, 
 	    "EODDetector", "EField",
-	    "Jan Benda", "1.6", "Nov 23, 2010" )
+	    "Jan Benda", "1.6", "Dec 07, 2010" )
 {
   // parameter:
   Threshold = 0.0001;
@@ -144,16 +144,7 @@ int EODDetector::autoConfigure( const InData &data,
 				double tbegin, double tend )
 {
   // get rough estimate for a threshold:
-  SampleDataF d( 0.0, tend-tbegin, data.stepsize() );
-  data.copy( tbegin, d );
-  double thresh = 0.5*( max( d ) - min( d ) );
-  // detect eod peaks and troughs using this threshold:
-  EventData eodpeaks( (int)::floor( 2000.0*d.length() ), true );
-  EventData eodtroughs( (int)::floor( 2000.0*d.length() ), true );
-  AcceptEvent<SampleDataF::const_iterator,SampleDataF::const_range_iterator> A;
-  peaksTroughs( d, eodpeaks, eodtroughs, thresh, A );
-  double ampl = 0.5*(eodpeaks.meanSize( 0.0, d.length() ) -
-		     eodtroughs.meanSize( 0.0, d.length() ) );
+  double ampl = eodAmplitude( data, tbegin, tend );
   // set range:
   double min = ceil10( 0.1*ampl );
   double max = ceil10( ::floor( 10.0*ampl/min )*min );

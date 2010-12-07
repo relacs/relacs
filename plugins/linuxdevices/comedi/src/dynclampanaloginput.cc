@@ -774,6 +774,8 @@ int DynClampAnalogInput::stop( void )
   }
 
   if ( running  > 0 ) {
+    cerr << " DynClampAnalogInput::stop -> ioctl command IOC_STOP_SUBDEV on device "
+	 << ModuleDevice << " executed.\n";
     retval = ::ioctl( ModuleFd, IOC_STOP_SUBDEV, &SubdeviceID );
     if( retval < 0 ) {
       cerr << " DynClampAnalogInput::stop -> ioctl command IOC_STOP_SUBDEV on device "

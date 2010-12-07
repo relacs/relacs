@@ -182,16 +182,16 @@ int ThresholdLatencies::main( void )
     return Failed;
   }
   if ( savetracetime < duration+postduration ) {
-    warning( "savetracetime must be at least as long as the test- and post-pulse duration!" );
-    return Failed;
+    warning( "savetracetime must be at least as long as the test- and post-pulse duration! Continue anyways.", 5.0 );
+    savetracetime = duration+postduration;
   }
-  if ( delay + preduration + pre2duration + duration + postduration + searchpause < savetracetime ) {
-    warning( "Test-pulse plus both pre-pulses plus post-pulse duration plus searchpause plus delay must be at least as long as savetracetime!" );
-    return Failed;
+  if ( duration + postduration + searchpause < savetracetime ) {
+    warning( "Test-pulse plus post-pulse duration plus searchpause must be at least as long as savetracetime! Continue anyways.", 5.0 );
+    savetracetime = duration + postduration + searchpause;
   }
-  if ( delay + preduration + pre2duration + duration + postduration + measurepause < savetracetime ) {
-    warning( "Test-pulse plus both pre-pulses plus post-pulse duration plus pause plus delay must be at least as long as savetracetime!" );
-    return Failed;
+  if ( duration + postduration + measurepause < savetracetime ) {
+    warning( "Test-pulse plus post-pulse duration plus pause must be at least as long as savetracetime! Continue anyways.", 5.0 );
+    savetracetime = duration + postduration + measurepause;
   }
   if ( prepulseramp > 0 && preduration > 0.0 && preduration < prepulserampwidth ) {
     warning( "Width of pre-pulse ramp is longer than pre-pulse duration!<br>Continue with ramp set to pre-pulse width." );

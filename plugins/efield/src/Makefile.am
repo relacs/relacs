@@ -4,14 +4,41 @@ include ${top_srcdir}/moc4.mk
 pluginlibdir = $(pkglibdir)/plugins
 
 pluginlib_LTLIBRARIES = \
+    libefieldeodtools.la \
     libefieldlinearfield.la \
     libefieldeoddetector.la \
     libefieldchirpdetector.la \
     libefieldbeatdetector.la \
     libefieldtraces.la \
-    libefieldeodtools.la \
     libefieldcalibefield.la \
     libefieldjar.la
+
+
+
+libefieldeodtools_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS)
+
+libefieldeodtools_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS)
+
+libefieldeodtools_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(QT4_LIBS)
+
+libefieldeodtools_la_SOURCES = eodtools.cc
+
+libefieldeodtools_la_includedir = $(pkgincludedir)/efield
+
+libefieldeodtools_la_include_HEADERS = $(HEADER_PATH)/eodtools.h
 
 
 
@@ -62,6 +89,7 @@ libefieldeoddetector_la_LDFLAGS = \
 
 libefieldeoddetector_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
+    $(builddir)/libefieldeodtools.la \
     $(QT4_LIBS)
 
 $(libefieldeoddetector_la_OBJECTS) : moc_eoddetector.cc
@@ -159,33 +187,6 @@ libefieldtraces_la_include_HEADERS = $(HEADER_PATH)/traces.h
 
 
 
-libefieldeodtools_la_CPPFLAGS = \
-    -I$(top_srcdir)/daq/include \
-    -I$(top_srcdir)/numerics/include \
-    -I$(top_srcdir)/options/include \
-    -I$(top_srcdir)/datafile/include \
-    -I$(top_srcdir)/plot/include \
-    -I$(top_srcdir)/widgets/include \
-    -I$(top_srcdir)/relacs/include \
-    -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
-
-libefieldeodtools_la_LDFLAGS = \
-    -module -avoid-version \
-    $(QT4_LDFLAGS)
-
-libefieldeodtools_la_LIBADD = \
-    $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
-
-libefieldeodtools_la_SOURCES = eodtools.cc
-
-libefieldeodtools_la_includedir = $(pkgincludedir)/efield
-
-libefieldeodtools_la_include_HEADERS = $(HEADER_PATH)/eodtools.h
-
-
-
 libefieldcalibefield_la_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
@@ -253,14 +254,17 @@ libefieldjar_la_include_HEADERS = $(HEADER_PATH)/jar.h
 
 
 check_PROGRAMS = \
+    linktest_libefieldeodtools_la \
     linktest_libefieldlinearfield_la \
     linktest_libefieldeoddetector_la \
     linktest_libefieldchirpdetector_la \
     linktest_libefieldbeatdetector_la \
     linktest_libefieldtraces_la \
-    linktest_libefieldeodtools_la \
     linktest_libefieldcalibefield_la \
     linktest_libefieldjar_la
+
+linktest_libefieldeodtools_la_SOURCES = linktest.cc
+linktest_libefieldeodtools_la_LDADD = libefieldeodtools.la
 
 linktest_libefieldlinearfield_la_SOURCES = linktest.cc
 linktest_libefieldlinearfield_la_LDADD = libefieldlinearfield.la
@@ -276,9 +280,6 @@ linktest_libefieldbeatdetector_la_LDADD = libefieldbeatdetector.la
 
 linktest_libefieldtraces_la_SOURCES = linktest.cc
 linktest_libefieldtraces_la_LDADD = libefieldtraces.la
-
-linktest_libefieldeodtools_la_SOURCES = linktest.cc
-linktest_libefieldeodtools_la_LDADD = libefieldeodtools.la
 
 linktest_libefieldcalibefield_la_SOURCES = linktest.cc
 linktest_libefieldcalibefield_la_LDADD = libefieldcalibefield.la
