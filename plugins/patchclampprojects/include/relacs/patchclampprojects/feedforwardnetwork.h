@@ -55,11 +55,13 @@ class FeedForwardNetwork : public RePro, public ephys::Traces
 public:
   FeedForwardNetwork( void );
   virtual int main( void );
+  void saveSettings();
   void saveEvents(const vector<vector<EventData> > &SpikeTimes,const vector<vector<double> > &SignalTimes);
   void saveTraces(const vector<vector<SampleDataD> > &ge,const vector<vector<SampleDataD> > &gi,const vector<vector<double> > &SignalTimes);
   
-  void calibrateFFN(double &JeFFN, double &JeBKG, double &gBKG);
-  void stimulate(const SampleDataD &ge, SampleDataD &gi, EventData &SpikeTimes, double &signaltime, double duration);
+  int calibrateFFN(double &JeFFN, double &JeBKG, double &gBKG);
+  void stimulate(
+SampleDataD &ge, SampleDataD &gi, EventData &SpikeTimes, double &signaltime, double duration);
   // actual version
   void PulsePacket(vector<EventData> &SpikeTimes, int alpha, double sigma, int groupsize, double onset);		
   void Poisson(vector<EventData> &SpikeTimes);		
