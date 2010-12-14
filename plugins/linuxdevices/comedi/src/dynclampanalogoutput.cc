@@ -786,29 +786,33 @@ int DynClampAnalogOutput::fillWriteBuffer( void )
 
   ErrorState = 0;
 
-  if ( ! Sigs[0].deviceWriting() ) {
-    Sigs.addError( DaqError::NoData );
-    return -1;
+  for ( int k=0; k<Sigs.size(); k++ ) {
+    if ( ! Sigs[k].deviceWriting() ) {
+      Sigs.addError( DaqError::NoData );
+      return -1;
+    }
   }
 
   int maxntry = 2;
   int ern = 0;
   int elemWritten = 0;
+  bool writing = true;
 
   // try to write twice
-  for ( int tryit = 0;
-	tryit < maxntry && Sigs[0].deviceWriting(); 
-	tryit++ ){
+  for ( int tryit = 0; tryit < maxntry && writing; tryit++ ){
 
     // multiplex data into buffer:
     float *bp = (float*)(Buffer+NBuffer);
     int maxn = (BufferSize-NBuffer)/sizeof( float )/Sigs.size();
     int bytesConverted = 0;
-    for ( int i=0; i<maxn && Sigs[0].deviceWriting(); i++ ) {
+    for ( int i=0; i<maxn && writing; i++ ) {
       for ( int k=0; k<Sigs.size(); k++ ) {
 	*bp = Sigs[k].deviceValue();
-	if ( Sigs[k].deviceIndex() >= Sigs[k].size() )
+	if ( Sigs[k].deviceIndex() >= Sigs[k].size() ) {
 	  Sigs[k].incrDeviceCount();
+	  if ( ! Sigs[k].deviceWriting() )
+	    writing = false;
+	}
 	++bp;
 	++bytesConverted;
       }

@@ -23,7 +23,7 @@
 #
 ###############################################################################
 
-SEARCH=$1
+SEARCH="$1"
 if [ -z "$SEARCH" ] ; then
   echo USAGE
   echo "scaninf <spec> [-u|-s|-d|-f]"
@@ -48,19 +48,19 @@ if [ -z "$SEARCH" ] ; then
 else
   SORTOPTION=$2
   if [ -z "$SORTOPTION" ] ; then
-    find '(' -name 'info.dat' -or -name '*.inf' ')' -exec grep -i $SEARCH '{}' ';' | \
+    find '(' -name 'info.dat' -or -name '*.inf' ')' -exec grep -i "$SEARCH" '{}' ';' | \
     awk '{ print $3, $4, $5, $6, $7, $8, $9 }'
   else case $SORTOPTION in
-    ( -u ) find '(' -name 'info.dat' -or -name '*.inf' ')' -exec grep -i $SEARCH '{}' ';' | \
+    ( -u ) find '(' -name 'info.dat' -or -name '*.inf' ')' -exec grep -i "$SEARCH" '{}' ';' | \
            awk '{ print $3, $4, $5, $6, $7, $8, $9 }' | \
            sort | uniq ;;
-    ( -s ) find '(' -name 'info.dat' -or -name '*.inf' ')' -exec grep -i $SEARCH '{}' ';' | \
+    ( -s ) find '(' -name 'info.dat' -or -name '*.inf' ')' -exec grep -i "$SEARCH" '{}' ';' | \
            awk '{ print $3, $4, $5, $6, $7, $8, $9 }' | \
            sort;;
-    ( -d ) find '(' -name 'info.dat' -or -name '*.inf' ')' -exec echo '{}' ';' -exec grep -i $SEARCH '{}' ';' | \
+    ( -d ) find '(' -name 'info.dat' -or -name '*.inf' ')' -exec echo '{}' ';' -exec grep -i "$SEARCH" '{}' ';' | \
            awk '{ if ( $1=="#" ) { print filename, $3, $4, $5, $6, $7, $8, $9 } else { filename=$0 } }' | \
            sort -k2;;
-    ( -f ) find '(' -name 'info.dat' -or -name '*.inf' ')' -exec echo '{}' ';' -exec grep -i $SEARCH '{}' ';' | \
+    ( -f ) find '(' -name 'info.dat' -or -name '*.inf' ')' -exec echo '{}' ';' -exec grep -i "$SEARCH" '{}' ';' | \
            awk '{ if ( $1=="#" ) { print filename, $3, $4, $5, $6, $7, $8, $9 } else { filename=$0 } }' ;;
     ( * ) echo unknown option
     esac

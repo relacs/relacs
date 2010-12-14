@@ -72,7 +72,12 @@ Thread safety:
 Acquisition interface:
 - check whether test, prepare, and start can be used simulataneously with read/write
 - add single data read and write
-- add function for blocked write() and corresponding error checking (buffer underrun)
+- add function for blocked write() and corresponding error checking
+   (buffer underrun)
+
+Numerics:
+- EventList should not bee a vector!
+- Similar for InList and OutList.
 
 Plugins:
 - Add a dependency virtual function, that can be used to query all the plugins

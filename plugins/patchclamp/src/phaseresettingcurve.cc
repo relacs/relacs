@@ -32,7 +32,7 @@ namespace patchclamp {
 
 PhaseResettingCurve::PhaseResettingCurve( void )
   : RePro( "PhaseResettingCurve", "patchclamp",
-	   "Jan Benda", "1.0", "Nov 25, 2010" ),
+	   "Jan Benda", "1.1", "Dec 14, 2010" ),
     VUnit( "mV" ),
     IUnit( "nA" ),
     IInFac( 1.0 )
@@ -166,12 +166,10 @@ int PhaseResettingCurve::main( void )
   MapD prcphases;
   prcphases.reserve( n );
   SampleDataD medianprc;
-  SampleDataF voltage( -2.5*baseperiod, 2.5*baseperiod, data.stepsize(), 0.0 );
-  SampleDataF current;
-  if ( CurrentTrace[0] >= 0 ) {
-    current.resize( -2.5*baseperiod, 2.5*baseperiod,
-		    trace( CurrentTrace[0] ).stepsize() );
-  }
+  list< SampleDataF > voltage;
+  list< SampleDataF > current;
+  EventList prcspikes;
+  prcspikes.reserve( repeats == 0 ? 1000 : repeats );
 
   // files:
   ofstream tf;
@@ -182,7 +180,6 @@ int PhaseResettingCurve::main( void )
   header.addNumber( "ReProTime", reproStartTime(), "s", "%0.3f" );
   header.addNumber( "firing rate", meanrate, "Hz", "%0.1f" );
   header.addNumber( "period", 1000.0*baseperiod, "ms", "%0.2f" );
-  openTraceFile( tf, tracekey, header );
 
   for ( int n=1; (repeats == 0 || n<=repeats ) && softStop() <= 0; n++ ) {
 
@@ -218,11 +215,18 @@ int PhaseResettingCurve::main( void )
     prcphases.push( p, dp );
 
     // voltage trace:
-    data.copy( spikes[psi-1], voltage );
+    voltage.push_back( SampleDataF( spikes[psi-2]-spikes[psi], spikes[psi+2]-spikes[psi], data.stepsize(), 0.0 ) );
+    data.copy( spikes[psi], voltage.back() );
 
     // current trace:
-    if ( CurrentTrace[0] >= 0 )
-      trace( CurrentTrace[0] ).copy( spikes[psi-1], current );
+    if ( CurrentTrace[0] >= 0 ) {
+      current.push_back( SampleDataF( spikes[psi-2]-spikes[psi], spikes[psi+2]-spikes[psi], data.stepsize(), 0.0 ) );
+      trace( CurrentTrace[0] ).copy( spikes[psi], current.back() );
+    }
+
+    // spikes:
+    prcspikes.push( spikes, spikes[psi-nperiods/2]-baseperiod,
+		    spikes[psi+nperiods/2]+baseperiod, signalTime() );
 
     unlockAll();
 
@@ -250,8 +254,7 @@ int PhaseResettingCurve::main( void )
 	m.reserve( prcphases.size() );
 	for ( int j=0; j<prcphases.size(); j++ ) {
 	  if ( prcphases.x( j ) >= medianprc.pos( k )-0.5*binsize &&
-	       prcphases.x( j ) < medianprc.pos( k )+0.5*binsize &&
-	       prcphases.y( j ) < prcphases.x( j ) )
+	       prcphases.x( j ) < medianprc.pos( k )+0.5*binsize )
 	    m.push( prcphases.y( j ) );
 	}
 	sort( m.begin(), m.end() );
@@ -283,17 +286,35 @@ int PhaseResettingCurve::main( void )
     P.unlock();
 
     // save:
-    saveTrace( tf, tracekey, n, voltage, current, period, t, dt, p, dp );
+    if ( prctimes.size() >= 10 ) {
+      if ( prctimes.size() == 10 )
+	openTraceFile( tf, tracekey, header );
+      int inx = prctimes.size()-voltage.size();
+      saveTrace( tf, tracekey, inx, voltage, current,
+		 periods[inx], meanperiods[inx], perturbedperiods[inx],
+		 prctimes.x(inx), prctimes.y(inx),
+		 prcphases.x(inx), prcphases.y(inx) );
+    }
 
     lockAll();
 
   }
 
-  tf << '\n';
-  saveData( header, periods, meanperiods, perturbedperiods,
-	    prctimes, prcphases );
-  if ( medianprc.size() > 0 )
-    savePRC( header, medianprc );
+  if ( prctimes.size() >= 10 ) {
+    while ( voltage.size() > 0 ) {
+      int inx = prctimes.size()-voltage.size();
+      saveTrace( tf, tracekey, inx, voltage, current,
+		 periods[inx], meanperiods[inx], perturbedperiods[inx],
+		 prctimes.x(inx), prctimes.y(inx),
+		 prcphases.x(inx), prcphases.y(inx) );
+    }
+    tf << '\n';
+    saveSpikes( header, prcspikes, periods, meanperiods, perturbedperiods,
+		prctimes, prcphases );
+    saveData( header, periods, meanperiods, perturbedperiods,
+	      prctimes, prcphases );
+    savePRC( header, prcphases );
+  }
 
   // back to initial dc-current:
   directWrite( orgdcsignal );
@@ -324,32 +345,74 @@ void PhaseResettingCurve::openTraceFile( ofstream &tf, TableKey &tracekey,
 
 void PhaseResettingCurve::saveTrace( ofstream &tf, TableKey &tracekey,
 				     int index,
-				     const SampleDataF &voltage,
-				     const SampleDataF &current, double T,
+				     list< SampleDataF > &voltage,
+				     list< SampleDataF > &current,
+				     double T, double Tmean, double Tpert,
 				     double t, double dt, double p, double dp )
 {
   tf << "# index: " << index << '\n';
   tf << "# T: " << Str( 1000.0*T, 0, 2, 'f' ) << "ms\n";
+  tf << "# Tmean: " << Str( 1000.0*Tmean, 0, 2, 'f' ) << "ms\n";
+  tf << "# Tpert: " << Str( 1000.0*Tpert, 0, 2, 'f' ) << "ms\n";
   tf << "# t: " << Str( 1000.0*t, 0, 2, 'f' ) << "ms\n";
   tf << "# dt: " << Str( 1000.0*dt, 0, 2, 'f' ) << "ms\n";
-  tf << "# p: " << Str( p, 0, 3, 'f' ) << "\n";
-  tf << "# dp: " << Str( dp, 0, 3, 'f' ) << "\n";
+  tf << "# p: " << Str( p, 0, 4, 'f' ) << "\n";
+  tf << "# dp: " << Str( dp, 0, 4, 'f' ) << "\n";
   if ( ! current.empty() ) {
-    for ( int k=0; k<voltage.size(); k++ ) {
-      tracekey.save( tf, 1000.0*voltage.pos( k ), 0 );
-      tracekey.save( tf, voltage[k] );
-      tracekey.save( tf, current[k] );
+    for ( int k=0; k<voltage.front().size(); k++ ) {
+      tracekey.save( tf, 1000.0*voltage.front().pos( k ), 0 );
+      tracekey.save( tf, voltage.front()[k] );
+      tracekey.save( tf, current.front()[k] );
       tf << '\n';
     }
+    voltage.pop_front();
+    current.pop_front();
   }
   else {
-    for ( int k=0; k<voltage.size(); k++ ) {
-      tracekey.save( tf, 1000.0*voltage.pos( k ), 0 );
-      tracekey.save( tf, voltage[k] );
+    for ( int k=0; k<voltage.front().size(); k++ ) {
+      tracekey.save( tf, 1000.0*voltage.front().pos( k ), 0 );
+      tracekey.save( tf, voltage.front()[k] );
       tf << '\n';
     }
+    voltage.pop_front();
   }
   tf << '\n';
+}
+
+
+void PhaseResettingCurve::saveSpikes( const Options &header, const EventList &spikes,
+				      const ArrayD &periods, const ArrayD &meanperiods,
+				      const ArrayD &perturbedperiods,
+				      const MapD &prctimes, const MapD &prcphases )
+{
+  ofstream df( addPath( "phaseresettingcurve-spikes.dat" ).c_str(),
+	       ofstream::out | ofstream::app );
+
+  header.save( df, "# " );
+  df << "# status:\n";
+  stimulusData().save( df, "#   " );
+  df << "# settings:\n";
+  settings().save( df, "#   " );
+  df << '\n';
+
+  TableKey key;
+  key.addNumber( "t", "ms", "%7.1f" );
+  key.saveKey( df, true, false );
+  df << '\n';
+
+  for ( int k=0; k<spikes.size(); k++ ) {
+    df << "# index: " << k << '\n';
+    df << "# T: " << Str( 1000.0*periods[k], 0, 2, 'f' ) << "ms\n";
+    df << "# Tmean: " << Str( 1000.0*meanperiods[k], 0, 2, 'f' ) << "ms\n";
+    df << "# Tpert: " << Str( 1000.0*perturbedperiods[k], 0, 2, 'f' ) << "ms\n";
+    df << "# t: " << Str( 1000.0*prctimes.x(k), 0, 2, 'f' ) << "ms\n";
+    df << "# dt: " << Str( 1000.0*prctimes.y(k), 0, 2, 'f' ) << "ms\n";
+    df << "# p: " << Str( prcphases.x(k), 0, 4, 'f' ) << "\n";
+    df << "# dp: " << Str( prcphases.y(k), 0, 4, 'f' ) << "\n";
+    spikes[k].saveText( df, 1000.0, 7, 2, 'f', "-0" );
+    df << '\n';
+  }
+  df << '\n';
 }
 
 
@@ -396,8 +459,43 @@ void PhaseResettingCurve::saveData( const Options &header,
 
 
 void PhaseResettingCurve::savePRC( const Options &header,
-				   const SampleDataD &medianprc )
+				   const MapD &prcphases )
 {
+  // analyze:
+  double binsize = 0.2;
+  if ( prcphases.size() > 100 )
+    binsize = 0.05;
+  else if ( prcphases.size() > 50 )
+    binsize = 0.1;
+  SampleDataD medianprc( 0.5*binsize, 1.0, binsize, 0.0 );
+  ArrayD lqprc( medianprc.size(), 0.0 );
+  ArrayD uqprc( medianprc.size(), 0.0 );
+  ArrayD minprc( medianprc.size(), 0.0 );
+  ArrayD maxprc( medianprc.size(), 0.0 );
+  ArrayD meanprc( medianprc.size(), 0.0 );
+  ArrayD stdevprc( medianprc.size(), 0.0 );
+  ArrayD nprc( medianprc.size(), 0.0 );
+  for ( int k=0; k<medianprc.size(); k++ ) {
+    ArrayD m;
+    m.reserve( prcphases.size() );
+    for ( int j=0; j<prcphases.size(); j++ ) {
+      if ( prcphases.x( j ) >= medianprc.pos( k )-0.5*binsize &&
+	   prcphases.x( j ) < medianprc.pos( k )+0.5*binsize )
+	m.push( prcphases.y( j ) );
+    }
+    if ( m.size() > 0 ) {
+      sort( m.begin(), m.end() );
+      medianprc[k] = median( m );
+      lqprc[k] = quantile( 0.25, m );
+      uqprc[k] = quantile( 0.75, m );
+      minprc[k] = m.front();
+      maxprc[k] = m.back();
+      meanprc[k] = meanStdev( stdevprc[k], m );
+      nprc[k] = m.size();
+    }
+  }
+
+  // save:
   ofstream df( addPath( "phaseresettingcurve-prc.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
 
@@ -409,13 +507,29 @@ void PhaseResettingCurve::savePRC( const Options &header,
   df << '\n';
 
   TableKey datakey;
-  datakey.addNumber( "p", "1", "%7.4f" );
-  datakey.addNumber( "dp", "1", "%7.4f" );
+  datakey.addLabel( "p" );
+  datakey.addNumber( "bin", "1", "%7.4f" );
+  datakey.addLabel( "dp" );
+  datakey.addNumber( "median", "1", "%7.4f" );
+  datakey.addNumber( "1.quartile", "1", "%7.4f" );
+  datakey.addNumber( "3.quartile", "1", "%7.4f" );
+  datakey.addNumber( "min", "1", "%7.4f" );
+  datakey.addNumber( "max", "1", "%7.4f" );
+  datakey.addNumber( "mean", "1", "%7.4f" );
+  datakey.addNumber( "s.d.", "1", "%7.4f" );
+  datakey.addNumber( "n", "1", "%5.0f" );
   datakey.saveKey( df );
 
   for ( int k=0; k<medianprc.size(); k++ ) {
     datakey.save( df, medianprc.pos( k ), 0 );
     datakey.save( df, medianprc[k] );
+    datakey.save( df, lqprc[k] );
+    datakey.save( df, uqprc[k] );
+    datakey.save( df, minprc[k] );
+    datakey.save( df, maxprc[k] );
+    datakey.save( df, meanprc[k] );
+    datakey.save( df, stdevprc[k] );
+    datakey.save( df, nprc[k] );
     df << '\n';
   }
   

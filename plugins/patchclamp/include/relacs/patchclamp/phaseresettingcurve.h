@@ -22,6 +22,7 @@
 #ifndef _RELACS_PATCHCLAMP_PHASERESETTINGCURVE_H_
 #define _RELACS_PATCHCLAMP_PHASERESETTINGCURVE_H_ 1
 
+#include <list>
 #include <relacs/plot.h>
 #include <relacs/repro.h>
 #include <relacs/ephys/traces.h>
@@ -34,7 +35,7 @@ namespace patchclamp {
 \class PhaseResettingCurve
 \brief [RePro] Measures phase-resetting curves of spiking neurons.
 \author Jan Benda
-\version 1.0 (Nov 25, 2010)
+\version 1.1 (Dec 14, 2010)
 \par Screenshot
 \image html phaseresettingcurve.png
 
@@ -65,12 +66,16 @@ protected:
 
   void openTraceFile( ofstream &tf, TableKey &tracekey, const Options &header );
   void saveTrace( ofstream &tf, TableKey &tracekey, int index,
-		  const SampleDataF &voltage, const SampleDataF &current,
-		  double T, double t, double dt, double p, double dp );
+		  list< SampleDataF > &voltage, list< SampleDataF > &current,
+		  double T, double Tmean, double Tpert,
+		  double t, double dt, double p, double dp );
+  void saveSpikes( const Options &header, const EventList &spikes, const ArrayD &periods,
+		   const ArrayD &meanperiods, const ArrayD &perturbedperiods,
+		   const MapD &prctimes, const MapD &prcphases );
   void saveData( const Options &header, const ArrayD &periods,
 		 const ArrayD &meanperiods, const ArrayD &perturbedperiods,
 		 const MapD &prctimes, const MapD &prcphases );
-  void savePRC( const Options &header, const SampleDataD &medianprc );
+  void savePRC( const Options &header, const MapD &prcphases );
 
   Plot P;
   string VUnit;
