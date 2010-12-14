@@ -227,8 +227,11 @@ int FindThreshold::main( void )
 
     // analyze, plot, and save:
     analyze( amplitude, duration, savetime, skiptime );
-    if ( record )
+    if ( record ) {
+      if ( TrialCount == 0 )
+	openFiles( tf, tracekey );
       saveTrace( tf, tracekey, count-1 );
+    }
     plot( record, duration );
 
     // change stimulus amplitude:
@@ -262,10 +265,8 @@ int FindThreshold::main( void )
 	  Spikes.reserve( repeats > 0 ? repeats : 100 );
 	  if ( search )
 	    search = false;
-	  else {
+	  else
 	    record = true;
-	    openFiles( tf, tracekey );
-	  }
 	}
 	else {
 	  amplitudestep *= 0.5;
@@ -282,9 +283,10 @@ int FindThreshold::main( void )
 
   }
 
-  tf << '\n';
-  if ( record && TrialCount > 0 )
+  if ( record && TrialCount > 0 ) {
+    tf << '\n';
     save();
+  }
   Results.clear();
   Latencies.clear();
   Amplitudes.clear();

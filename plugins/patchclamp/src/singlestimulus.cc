@@ -35,7 +35,7 @@ namespace patchclamp {
 
 
 SingleStimulus::SingleStimulus( void )
-  : RePro( "SingleStimulus", "patchclamp", "Jan Benda", "1.3", "Dec 03, 2010" )
+  : RePro( "SingleStimulus", "patchclamp", "Jan Benda", "1.4", "Dec 14, 2010" )
 {
   IUnit = "nA";
   Offset = 0.0;
@@ -169,7 +169,7 @@ void SingleStimulus::config( void )
   if ( SpikeTrace[0] >= 0 )
     VUnit = trace( SpikeTrace[0] ).unit();
   int outtrace = index( "outtrace" );
-  if ( outtrace >= 0 ) {
+  if ( outtrace >= 0 && outtrace < outTracesSize() ) {
     IUnit = outTrace( outtrace ).unit();
     setUnit( "amplitude", IUnit );
     setUnit( "offset", IUnit );
@@ -196,11 +196,13 @@ void SingleStimulus::readConfig( StrQueue &sq )
 void SingleStimulus::notify( void )
 {
   int outtrace = index( "outtrace" );
-  IUnit = outTrace( outtrace ).unit();
-  setUnit( "amplitude", IUnit );
-  setUnit( "offset", IUnit );
-  setUnit( "offsetstep", IUnit );
-  setUnit( "minslope", "Hz/"+IUnit );
+  if ( outtrace >= 0 && outtrace < outTracesSize() ) {
+    IUnit = outTrace( outtrace ).unit();
+    setUnit( "amplitude", IUnit );
+    setUnit( "offset", IUnit );
+    setUnit( "offsetstep", IUnit );
+    setUnit( "minslope", "Hz/"+IUnit );
+  }
 }
 
 
@@ -640,8 +642,6 @@ int SingleStimulus::main( void )
   header.addNumber( "amplfac", PeakAmplitudeFac, "", "%.3f" );
   header.addNumber( "duration", 1000.0*Duration, "ms", "%.1f" );
   header.addText( "envelope", StoreFile );
-  if ( storevoltage )
-    openTraceFile( tf, tracekey, header );
 
   // variables:
   EventList spikes;
@@ -655,14 +655,16 @@ int SingleStimulus::main( void )
 
   timeStamp();
 
-  // output stimulus:  
-  for ( int counter=0; Repeats == 0 || counter<Repeats; counter++ ) {
+  // stimulus loop:  
+  for ( int count=0;
+	( Repeats <= 0 || count < Repeats ) && softStop() == 0;
+	count++ ) {
     
     // message:
     Str s =  "<b>" + StimulusLabel + "</b>";
     s += ",  Offset: <b>" + Str( Offset, 0, 1, 'f' ) + " " + IUnit + "</b>";
     s += ",  Amplitude: <b>" + Str( Amplitude, 0, 1, 'f' ) + " " + IUnit + "</b>";
-    s += ",  Loop <b>" + Str( counter+1 ) + "</b>";
+    s += ",  Loop <b>" + Str( count+1 ) + "</b>";
     if ( Repeats > 0 )
       s += " of <b>" + Str( Repeats ) + "</b>";
     message( s );
@@ -678,7 +680,7 @@ int SingleStimulus::main( void )
     if ( signal.error() ) {
       warning( "Output of stimulus failed!<br>Signal error: <b>" +
 	       signal.errorText() + "</b>," +
-	       "<br> Loop: <b>" + Str( counter+1 ) + "</b>" +
+	       "<br> Loop: <b>" + Str( count+1 ) + "</b>" +
 	       "<br>Exit now!" );
       writeZero( outtrace );
       return Failed;
@@ -687,7 +689,8 @@ int SingleStimulus::main( void )
     sleep( Duration + ( pause > 0.01 ? 0.01 : pause ) );
 
     if ( interrupt() ) {
-      state = Aborted;
+      if ( count == 0 )
+	state = Aborted;
       break;
     }
 
@@ -700,22 +703,26 @@ int SingleStimulus::main( void )
     
     analyze( spikes, rate );
     plot( spikes, rate, signal, voltage, plotmode );
-    if ( storevoltage )
-      saveTrace( tf, tracekey, counter, voltage, current );
+    if ( storevoltage ) {
+      if ( count == 0 )
+	openTraceFile( tf, tracekey, header );
+      saveTrace( tf, tracekey, count, voltage, current );
+    }
     
     sleepOn( Duration + pause );
     timeStamp();
     
-    if ( softStop() > 0 )
-      break;
-    
   }
   
-  tf << '\n';
-  saveRate( header, rate );
-  saveSpikes( header, spikes );
+  if ( state == Completed ) {
+    if ( storevoltage )
+      tf << '\n';
+    saveRate( header, rate );
+    saveSpikes( header, spikes );
+  }
+
   writeZero( outtrace );
-  return Completed;
+  return state;
 }
 
 

@@ -33,7 +33,7 @@ namespace base {
 \class TransferFunction
 \brief [RePro] Measures the transfer function with white-noise stimuli.
 \author Jan Benda
-\version 1.3 (Dec 01, 2010)
+\version 1.4 (Dec 14, 2010)
 \par Screenshot
 \image html transferfunction.png
 

@@ -107,7 +107,8 @@ void SetOutput::config( void )
 void SetOutput::notify( void )
 {
   int outtrace = index( "outtrace" );
-  setUnit( "value", outTrace( outtrace ).unit() );
+  if ( outtrace >= 0 && outtrace < outTracesSize() )
+    setUnit( "value", outTrace( outtrace ).unit() );
 }
 
 

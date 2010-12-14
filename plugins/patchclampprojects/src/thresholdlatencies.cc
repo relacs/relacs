@@ -487,8 +487,11 @@ int ThresholdLatencies::main( void )
     analyze( dcamplitude, preamplitude, prevc ? prevcamplitude : -1.0e38,
 	     pre2amplitude, amplitude, postamplitude, delay, preduration,
 	     pre2duration, duration, postduration, savetracetime, pause );
-    if ( record )
+    if ( record ) {
+      if ( TrialCount == 0 )
+	openTraceFile( tf, tracekey );
       saveTrace( tf, tracekey, count-1 );
+    }
     plot( record, preduration, pre2duration, duration, postduration );
 
     if ( ! record || adjust == 1 ) {
@@ -566,10 +569,8 @@ int ThresholdLatencies::main( void )
 	  Spikes.reserve( repeats > 0 ? repeats : 1000 );
 	  if ( search )
 	    search = false;
-	  else {
+	  else
 	    record = true;
-	    openTraceFile( tf, tracekey );
-	  }
 	}
 	else {
 	  amplitudestep *= 0.5;
@@ -591,10 +592,11 @@ int ThresholdLatencies::main( void )
 
   }
 
-  tf << '\n';
   bool usedc = fabs( orgdcamplitude ) > 1.0e-6;
-  if ( record && TrialCount > 0 )
+  if ( record && TrialCount > 0 ) {
+    tf << '\n';
     save( usedc );
+  }
   dcsignal = orgdcamplitude;
   dcsignal.setIdent( "DC=" + Str( orgdcamplitude ) + IUnit );
   dcsignal.description().addNumber( "Intensity", orgdcamplitude, IUnit );

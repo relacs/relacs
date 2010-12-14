@@ -169,6 +169,8 @@ int MembraneResistance::main( void )
 
   // write stimulus:
   sleep( pause );
+  if ( interrupt() )
+    return Aborted;
   for ( Count=0;
 	( repeats <= 0 || Count < repeats ) && softStop() == 0;
 	Count++ ) {

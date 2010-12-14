@@ -62,7 +62,8 @@ void Simple::config( void )
 void Simple::notify( void )
 {
   int outtrace = index( "outtrace" );
-  setUnit( "amplitude", outTrace( outtrace ).unit() );
+  if ( outtrace >= 0 && outtrace < outTracesSize() )
+    setUnit( "amplitude", outTrace( outtrace ).unit() );
 }
 
 

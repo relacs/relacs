@@ -27,7 +27,7 @@ namespace base {
 
 
 TransferFunction::TransferFunction( void )
-  : RePro( "TransferFunction", "base", "Jan Benda", "1.3", "Dec 01, 2010" )
+  : RePro( "TransferFunction", "base", "Jan Benda", "1.4", "Dec 14, 2010" )
 {
   // options:
   addLabel( "Stimulus" ).setStyle( OptWidget::Bold );
@@ -180,7 +180,6 @@ int TransferFunction::main( void )
   header.addInteger( "index", completeRuns() );
   header.addInteger( "ReProIndex", reproCount() );
   header.addNumber( "ReProTime", reproStartTime(), "s", "%0.3f" );
-  openTraceFile( tf, tracekey, header );
 
   // signal:
   OutData signal;
@@ -194,7 +193,8 @@ int TransferFunction::main( void )
   orgdcsignal.addDescription( "stimulus/value" );
   orgdcsignal.description().addNumber( "Intensity", orgoffset, OutUnit );
 
-  // write stimulus:
+  // stimulus loop:
+  DoneState state = Completed;
   sleep( pause );
   timeStamp();
   for ( int count=0;
@@ -224,12 +224,9 @@ int TransferFunction::main( void )
 
     sleep( duration + 0.1*pause );
     if ( interrupt() ) {
-      if ( count > 0 )
-	break;
-      else {
-	directWrite( orgdcsignal );
-	return Aborted;
-      }
+      if ( count == 0 )
+	state = Aborted;
+      break;
     }
 
     // get data:
@@ -277,27 +274,24 @@ int TransferFunction::main( void )
     P.draw();
 
     // save:
+    if ( count == 0 )
+      openTraceFile( tf, tracekey, header );
     saveTrace( tf, tracekey, count, input, output );
 
     lockAll();
 
     sleepOn( duration+pause );
-    if ( interrupt() ) {
-      if ( count > 0 )
-	break;
-      else {
-	directWrite( orgdcsignal );
-	return Aborted;
-      }
-    }
+    if ( interrupt() )
+      break;
 
   }
 
-  saveData( header );
+  if ( state == Completed )
+    saveData( header );
 
   directWrite( orgdcsignal );
 
-  return Completed;
+  return state;
 }
 
 

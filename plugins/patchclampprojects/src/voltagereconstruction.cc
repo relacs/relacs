@@ -169,20 +169,25 @@ int VoltageReconstruction::main( void )
   // files:
   ofstream tf;
   TableKey tracekey;
-  openTraceFile( tf, tracekey, header );
 
-  for ( int n=0; (repeats == 0 || n<repeats ) && softStop() <= 0; n++ ) {
+  DoneState state = Completed;
+  for ( int count=0;
+	(repeats == 0 || count<repeats ) && softStop() <= 0;
+	count++ ) {
 
     if ( repeats == 0 )
-      message( "<b>Measure</b> latencies at <b>" + Str( meanrate, 0, 0, 'f' ) + " Hz</b>: <b>" + Str( n ) + "</b>" );
+      message( "<b>Measure</b> latencies at <b>" + Str( meanrate, 0, 0, 'f' ) + " Hz</b>: <b>" + Str( count ) + "</b>" );
     else
-      message( "<b>Measure</b> latencies at <b>" + Str( meanrate, 0, 0, 'f' ) + " Hz</b>: <b>" + Str( n ) + "</b> from <b>" + Str( repeats ) + "</b>" );
+      message( "<b>Measure</b> latencies at <b>" + Str( meanrate, 0, 0, 'f' ) + " Hz</b>: <b>" + Str( count ) + "</b> from <b>" + Str( repeats ) + "</b>" );
 
     // stimulus:
     write( signal );
     sleep( ( 5.0 + rnd.uniform() )*period );
-    if ( interrupt() )
+    if ( interrupt() ) {
+      if ( count == 0 )
+	state = Aborted;
       break;
+    }
 
     // analyze latencies:
     const EventData &spikes = events( SpikeEvents[0] );
@@ -196,7 +201,7 @@ int VoltageReconstruction::main( void )
     // voltage trace:
     voltages.push_back( SampleDataF( meanvoltage.range() ) );
     data.copy( spikes[psi-1], voltages.back() );
-    meanvoltage.averageAdd( voltages.back(), n+1, voltagesq, voltagesd );
+    meanvoltage.averageAdd( voltages.back(), count+1, voltagesq, voltagesd );
     if ( voltages.size() > 5 )
       voltages.pop_front();
 
@@ -214,7 +219,7 @@ int VoltageReconstruction::main( void )
       P.plot( *p, 1000.0, Plot::Yellow, 2 );
       P.back().setAxis( Plot::X1Y2 );
     }
-    if ( n > 4 ) {
+    if ( count > 4 ) {
       P.plot( meanvoltage+voltagesd, 1000.0, Plot::Orange, 2 );
       P.back().setAxis( Plot::X1Y2 );
       P.plot( meanvoltage-voltagesd, 1000.0, Plot::Orange, 2 );
@@ -230,17 +235,21 @@ int VoltageReconstruction::main( void )
     P.unlock();
 
     // save:
-    saveTrace( tf, tracekey, n, voltages.back(), current, x, y );
+    if ( count == 0 )
+      openTraceFile( tf, tracekey, header );
+    saveTrace( tf, tracekey, count, voltages.back(), current, x, y );
   }
 
-  tf << '\n';
-  saveMeanTrace( header, meanvoltage, voltagesd );
-  saveData( header, latencies );
+  if ( state == Completed ) {
+    tf << '\n';
+    saveMeanTrace( header, meanvoltage, voltagesd );
+    saveData( header, latencies );
+  }
 
   // back to initial dc-current:
   directWrite( orgdcsignal );
 
-  return Completed;
+  return state;
 }
 
 
