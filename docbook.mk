@@ -14,7 +14,8 @@ html/index.html: $(DOCBOOK_BASE).xml $(DOCBOOK_BASE).xsl $(DOCBOOK_FILES)
 	cd $(srcdir); \
 	xmlto -o $(abs_builddir)/html -m $(DOCBOOK_BASE).xsl --skip-validation html $(DOCBOOK_BASE).xml; \
 	cp $(DOCBOOK_HTML_EXTRA) $(abs_builddir)/html/ ; \
-	test -f $(DOCBOOK_BASE).fls && for p in $$(<$(DOCBOOK_BASE).fls); do sed -e 's|^.*</pre|</pre|' $$p > tmp.html; mv tmp.html $$p; done || true
+	for p in $(abs_builddir)/html/*.html; do sed -e 's|^.*</pre|</pre|; s|src="images/|src="|; s|href="relacsapi/|href="../api/classrelacs_1_1|;' $$p > tmp.html; mv tmp.html $$p; done || true; \
+	rm -f $(abs_builddir)/html/$(DOCBOOK_BASE).fls
 
 docbook-install-html:
 	test -z "$(htmldir)" || $(MKDIR_P) "$(DESTDIR)$(htmldir)$(DOCBOOK_INSTALL_SUBDIR)"
@@ -93,7 +94,6 @@ docbook-install: docbook-run docbook-install-html docbook-install-ps docbook-ins
 docbook-uninstall: docbook-uninstall-html docbook-uninstall-ps docbook-uninstall-pdf
 
 DOCBOOK_CLEANFILES = \
-    $(DOCBOOK_BASE).fls \
     $(DOCBOOK_CLEAN_PS) \
     $(DOCBOOK_CLEAN_PDF) \
     -r \

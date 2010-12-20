@@ -575,7 +575,6 @@ void FeedForwardNetwork::stimulate(SampleDataD &ge, SampleDataD &gi, EventData &
     signalL[1].setTraceName( "E" );
     signalL[1].addDescription( "stimulus/value" );
     signalL[1].back() = 0;
-    cerr << "g LENGTH="<<signalL[0].length()<<" E LENGTH="<<signalL[1].length()<<" Sleep="<<duration + number("pause")<<'\n';
 
     write( signalL );
     if ( signalL.failed() ) {
@@ -583,6 +582,9 @@ void FeedForwardNetwork::stimulate(SampleDataD &ge, SampleDataD &gi, EventData &
       //directWrite( dcsignal );
       //return Failed;
     }
+
+    sleep( duration + number("pause")); 
+
   }
   else {
     // Let's simply put out some stimulus as a current:
@@ -602,9 +604,10 @@ void FeedForwardNetwork::stimulate(SampleDataD &ge, SampleDataD &gi, EventData &
       //directWrite( dcsignal );
       //return Failed;
     }
-  }
   
-  sleep( duration + number("pause")); 
+    sleep( duration + number("pause")); 
+
+  }
   
   signaltime = signalTime();
   if ( ! interrupt() ) {

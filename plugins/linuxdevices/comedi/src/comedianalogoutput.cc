@@ -438,6 +438,13 @@ void ComediAnalogOutput::setupChanList( OutList &sigs, unsigned int *chanlist,
   
   int aref = AREF_GROUND;
   for ( int k=0; k<sigs.size() && k<maxchanlist; k++ ) {
+
+    // check channel:
+    if ( sigs[k].channel() < 0 || sigs[k].channel() >= channels() ) {
+      sigs[k].addError( DaqError::InvalidChannel );
+      return;
+    }
+
     // minimum and maximum values:
     double min = sigs[k].requestedMin();
     double max = sigs[k].requestedMax();

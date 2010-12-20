@@ -21,7 +21,7 @@
 
 		<para>Before you start writing your code, read <xref linkend='naming' endterm='namingtitle'/>.</para>
 
-		<para>In the Pro's <emphasis>constructor</emphasis> you initialize all the variables,
+		<para>In the RePro's <function>constructor</function> you initialize all member variables (if you have some),
 		create the RePro's Options,
 		and setup the widgets the RePro is using.
 		Usually this is the MultiPlot widget which allows you to have
@@ -30,27 +30,28 @@
 		Therefore you do not want to allocate a lot of memory within
 		the constructor.</para>
 
-		<para>The <emphasis>main()</emphasis> function does all the work.
+		<para>The <function>main()</function> function does all the work.
 		In this function you usually read out the RePro's options,
 		allocate necessary memory for the data analysis,
 		initialize the plot widget, and
 		display a message in the status bar first.
 		Then you create a stimulus, 
 		and repeatedly send the stimulus to the data acquisition board,
-		<emphasis>sleep()</emphasis>, analyze the acquired data and detected events, 
+		sleep, analyze the acquired data and detected events, 
 		plot and save the results of the analysis,
 		and modify the stimulus.
 		Of course, you do not have to stick to this pattern.
 		Everything else is possible as well.</para>
 
-		<para>See also the documentation of the RePro - class for more details.</para>
+		<para>See also the <ulink url="relacsapi/RePro.html">documentation of the RePro - class</ulink> for more details.</para>
 
 		<section xml:id='reprooptions'><title>Options</title>
 		
 			<para>Usually a RePro has several parameter that determine 
 			what the RePro is supposed to do.
-			The Options class which is inherited by the RePro class
-			thrugh the Config class provides a simple interface that allows
+			The <ulink url="relacsapi/Options.html">Options class</ulink>
+                        which is inherited by the <ulink url="relacsapi/RePro.html">RePro class</ulink>
+			through the <ulink url="relacsapi/ConfigClass.html">ConfigClass class</ulink> provides a simple interface that allows
 			to save those parameters to the configuration file,
 			set them via a dialog window, or from a Macro definition.</para>
 
@@ -61,17 +62,19 @@ addNumber( "duration", "Duration of signal", 0.1, 0.01, 1000.0, 0.01, "seconds",
 			</programlisting></para>
 
 			<para>To retrieve the value of an option in the 
-			RePro's <emphasis>main()</emphasis> function do:
+			RePro's <function>main()</function> function do:
 			<programlisting>
 double duration = number( "duration" );
 			</programlisting></para>
 
 			<para>Keep in mind, that the user could change the RePro's Options while the 
-			RePro is running.</para>
+			RePro is running. With <function>settings()</function>
+                        you can retrieve the RePro's options as there were
+                        set right at the start of the RePro.</para>
 		</section>
 
 		<section xml:id='reprostimulus'><title>Stimuli</title>
-			<para>To generate a stimulus, create an OutData variable:
+			<para>To generate a stimulus, create an <ulink url="relacsapi/OutData.html">OutData</ulink> variable:
 			<programlisting>
 OutData signal;
 signal.setSampleRate( 20000.0 );
@@ -90,6 +93,17 @@ signal.setIntensity( 2.0 );
 			<programlisting>
 write( signal );
 			</programlisting></para>
+
+                        <para>After having called <function>write()</function>
+                        you usually sleep for at least the duration of the stimulus:
+			<programlisting>
+sleep( signal.duration() );
+			</programlisting></para>
+                        <warning>You have to make sure that the stimulus you passed to <function>write()</function>,
+                        i.e. the <type>OutData</type> variables, exist and are not
+                        modified while the stimulus is put out!
+                        Be in particular carefull with locally declared <type>OutData</type> instances!
+                        </warning>
 
 			<para>There is another function which allows you to set 
 			the output voltage of an output line to zero:
@@ -111,7 +125,7 @@ message( "Loop: &lt;b>5&lt;/b>" );
 
 		<section xml:id='reprowarnings'><title>Warnings</title>
 			<para>You can open a simple window displaying a warning message
-			with the <emphasis>warning()</emphasis> function:
+			with the <function>warning()</function> function:
 			<programlisting>
 warning( "Unable to create stimulus!" );
 			</programlisting>
@@ -204,7 +218,7 @@ ReProExample( void );
 			</programlisting>
 			The constructor does not get any arguments.</para>
 
-			<para>Most importantly, we need to implement the <emphasis>main()</emphasis> function:
+			<para>Most importantly, we need to implement the <function>main()</function> function:
 			<programlisting>
 virtual int main( void );
 			</programlisting></para>
@@ -268,7 +282,7 @@ ReProExample::~ReProExample( void )
 }
 			</programlisting></para>
 			
-			<para>Now it is time for the <emphasis>main()</emphasis> function.
+			<para>Now it is time for the <function>main()</function> function.
 			This is the place where everything happens.
 			<programlisting>
 int ReProExample::main( void )

@@ -79,7 +79,7 @@
 		  or clicking the
 			   <mediaobject>
 					<imageobject>
-					<imagedata fileref="fixedbutton.png" align="center"/>
+					<imagedata fileref="image/fixedbutton.png" align="center"/>
 					</imageobject>
 			   </mediaobject>
 		  button.</para></listitem>
@@ -88,7 +88,7 @@
 		  This mode can be activated by pressing <keycap>End</keycap> or clicking the
 			   <mediaobject>
 					<imageobject>
-					<imagedata fileref="continuousbutton.png" align="center"/>
+					<imagedata fileref="image/continuousbutton.png" align="center"/>
 					</imageobject>
 			   </mediaobject>
 		  button.</para></listitem>

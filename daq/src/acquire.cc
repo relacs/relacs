@@ -2277,10 +2277,8 @@ int Acquire::directWrite( OutList &signal )
 }
 
 
-int Acquire::writeReset( bool channels, bool params )
+string Acquire::writeReset( bool channels, bool params )
 {
-  int retval = 0;
-
   OutList sigs;
 
   for ( unsigned int i=0; i<AO.size(); i++ ) {
@@ -2308,14 +2306,11 @@ int Acquire::writeReset( bool channels, bool params )
     // write out data;
     directWrite( sigs );
     // error?
-    if ( ! sigs.success() ) {
-      cerr << currentTime() << " ! error in Acquire::writeReset() -> "
-	   << sigs.errorText() << "\n";
-      retval = -1;
-    }
+    if ( ! sigs.success() )
+      return sigs.errorText();
   }
 
-  return retval;
+  return "";
 }
 
 

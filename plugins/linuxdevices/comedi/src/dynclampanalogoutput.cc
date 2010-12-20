@@ -310,9 +310,9 @@ double DynClampAnalogOutput::bipolarRange( int index ) const
 }
 
 
-int DynClampAnalogOutput::setupChanList( OutList &sigs,
-					 unsigned int *chanlist,
-					 int maxchanlist )
+void DynClampAnalogOutput::setupChanList( OutList &sigs,
+					  unsigned int *chanlist,
+					  int maxchanlist )
 {
   memset( chanlist, 0, maxchanlist * sizeof( unsigned int ) );
 
@@ -322,6 +322,12 @@ int DynClampAnalogOutput::setupChanList( OutList &sigs,
     if ( sigs[k].channel() >= PARAM_CHAN_OFFSET ) {
       chanlist[k] = CR_PACK( sigs[k].channel(), 0, 0 );
       continue;
+    }
+
+    // check channel:
+    if ( sigs[k].channel() < 0 || sigs[k].channel() >= channels() ) {
+      sigs[k].addError( DaqError::InvalidChannel );
+      return;
     }
 
     // minimum and maximum values:
@@ -473,8 +479,6 @@ int DynClampAnalogOutput::setupChanList( OutList &sigs,
     //    cerr << "DYNCLAMP ChanList channel " << sigs[k].channel() << " packed " << CR_CHAN( chanlist[k] ) << '\n';
 
   }
-
-  return 0;
 }
 
 
@@ -498,6 +502,9 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
   unsigned int chanlist[MAXCHANLIST];
   setupChanList( ol, chanlist, MAXCHANLIST );
 
+  if ( ol.failed() )
+    return -1;
+
   // set chanlist:
   struct chanlistIOCT chanlistIOC;
   chanlistIOC.subdevID = SubdeviceID;
@@ -508,7 +515,7 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
 	(const comedi_polynomial_t *)ol[k].gainData();
       chanlistIOC.conversionlist[k].order = poly->order;
       if ( poly->order >= MAX_CONVERSION_COEFFICIENTS )
-	cerr << "ERROR in DynClampAnalogInput::prepareWrite -> invalid order in converion polynomial!\n";
+	cerr << "ERROR in DynClampAnalogInput::directWrite -> invalid order in converion polynomial!\n";
       chanlistIOC.conversionlist[k].expansion_origin = poly->expansion_origin;
       for ( int c=0; c<MAX_CONVERSION_COEFFICIENTS; c++ )
 	chanlistIOC.conversionlist[k].coefficients[c] = poly->coefficients[c];
@@ -669,8 +676,6 @@ int DynClampAnalogOutput::testWriteDevice( OutList &sigs )
 
 int DynClampAnalogOutput::prepareWrite( OutList &sigs )
 {
-  //  cerr << " DynClampAnalogOutput::prepareWrite(): 1\n";/////TEST/////
-
   if ( !isOpen() )
     return -1;
 
@@ -686,6 +691,9 @@ int DynClampAnalogOutput::prepareWrite( OutList &sigs )
 
   unsigned int chanlist[MAXCHANLIST];
   setupChanList( ol, chanlist, MAXCHANLIST );
+
+  if ( sigs.failed() )
+    return -1;
 
   // set chanlist:
   struct chanlistIOCT chanlistIOC;
@@ -876,8 +884,6 @@ int DynClampAnalogOutput::fillWriteBuffer( void )
 
 int DynClampAnalogOutput::startWrite( void )
 {
-  //  cerr << " DynClampAnalogOutput::startWrite(): 1\n";/////TEST/////
-
   if( !prepared() || Sigs.empty() ) {
     cerr << "AO not prepared or no signals!\n";
     return -1;
@@ -961,11 +967,11 @@ int DynClampAnalogOutput::reset( void )
   }
 
   if ( running > 0 ) {
-    cerr << " DynClampAnalogOutput::stop -> ioctl command IOC_STOP_SUBDEV on device "
+    cerr << " DynClampAnalogOutput::reset -> ioctl command IOC_STOP_SUBDEV on device "
 	 << ModuleDevice << " executed.\n";
     retval = ::ioctl( ModuleFd, IOC_STOP_SUBDEV, &SubdeviceID );
     if( retval < 0 ) {
-      cerr << " DynClampAnalogOutput::stop -> ioctl command IOC_STOP_SUBDEV on device "
+      cerr << " DynClampAnalogOutput::reset -> ioctl command IOC_STOP_SUBDEV on device "
 	   << ModuleDevice << " failed!\n";
       return -1;
     }

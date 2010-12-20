@@ -940,10 +940,8 @@ int Simulator::directWrite( OutList &signal )
 }
 
 
-int Simulator::writeReset( bool channels, bool params )
+string Simulator::writeReset( bool channels, bool params )
 {
-  int retval = 0;
-
   Sim->stopSignals();
 
   OutList sigs;
@@ -968,9 +966,15 @@ int Simulator::writeReset( bool channels, bool params )
     
   }
 
-  directWrite( sigs );
+  if ( sigs.size() > 0 ) {
+    // write out data;
+    directWrite( sigs );
+    // error?
+    if ( ! sigs.success() )
+      return sigs.errorText();
+  }
 
-  return retval;
+  return "";
 }
 
 

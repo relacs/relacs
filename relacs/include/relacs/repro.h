@@ -248,25 +248,6 @@ public:
         The error state of \a signal is set appropriately. */
   int testWrite( OutList &signal );
 
-    /*! Convert the data of \a signal into a device dependent format.
-        Subsequent calls of write( signal ) will not
-	convert the data again.
-        Once convert() is called, you have to maintain the internal
-        data buffer of \a signal, i.e. if you change the data
-	you have to call convert() again before you are able to write out 
-        the changed signal with write().
-	You may also clear the internal buffer by calling signal.clearBuffer(). */
-  //  int convert( OutData &signal );
-    /*! Convert the data of \a signal into a device dependent format.
-        Subsequent calls of write( signal ) will not
-	convert the data again.
-        Once convert() is called, you have to maintain the internal
-        data buffers of \a signal, i.e. if you change the data
-	you have to call convert() again before you are able to write out 
-        the changed signals with write().
-	You may also clear the internal buffers by calling signal.clearBuffer(). */
-  //  int convert( OutList &signal );
-
     /*! Output of a signal \a signal.
         See OutData about how to specify output channel, sampling rate, 
 	intensity, delay, etc. 
@@ -275,7 +256,9 @@ public:
         the reason is specified in the error state of \a signal. 
         After writing the signal to the daq-board, the signal wrote()
         is emitted, which can be used to check the success of 
-	the output operation. */
+	the output operation.
+	\note During the output of the stimulus, \a signal must exist 
+	and must not be modified! */
   int write( OutData &signal );
     /*! Output of multiple signals \a signal.
         See OutList about how to specify output channel, sampling rate, 
@@ -285,7 +268,9 @@ public:
         the reason is specified in the error state of \a signal. 
         After writing the signal to the daq-board, the signal wrote()
         is emitted, which can be used to check the success of 
-	the output operation. */
+	the output operation.
+	\note During the output of the stimulus, \a signal must exist 
+	and must not be modified! */
   int write( OutList &signal );
 
     /*! Direct output of a single data value as specified by \a signal

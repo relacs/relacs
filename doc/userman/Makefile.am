@@ -16,6 +16,7 @@ DOCBOOK_FILES = \
 
 DOCBOOK_HTML_EXTRA = \
     $(DOCBOOK_BASE).css \
+    warning.png \
     continuousbutton.png \
     fixedbutton.png
 

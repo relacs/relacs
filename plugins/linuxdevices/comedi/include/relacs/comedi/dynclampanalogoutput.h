@@ -168,7 +168,7 @@ protected:
   virtual int testWriteDevice( OutList &sigs );
 
     /*! Initializes the \a chanlist from \a sigs. */
-  int setupChanList( OutList &sigs, unsigned int *chanlist, int maxchanlist );
+  void setupChanList( OutList &sigs, unsigned int *chanlist, int maxchanlist );
 
     /*! Write data to a running data acquisition.
         Returns the number of data values that were popped from the \a trace- 

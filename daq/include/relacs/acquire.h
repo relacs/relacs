@@ -97,8 +97,9 @@ The new settings are automatically activated by the next call of write()
 or by explicitly calling activateGains().
 
 Analog output is performed by write().
-Its OutData argument specifies the parameter (sampling rate, channels, delay, ... )
-for the analog output operation.
+Its OutData or OutList argument specifies the parameter (sampling rate, channels, delay, ... )
+for the analog output operation and must not be modified or deleted
+while output is active.
 Before calling write(), testWrite() can be used to check if all parameter are valid.
 With writeZero() the output of a specified channel is set to zero.
 stopWrite() stops any activity related to analog output.
@@ -484,6 +485,7 @@ public:
 	Returns 0 on success.
         If the output of the signal failed, a negative number is returned and
         the reason is specified in the error state of \a signal.
+	\note During the output of the stimulus, \a signal must exist and must not be modified!
         \sa testWrite(), writeData(), writeZero(), stopWrite() */
   int write( OutData &signal );
   virtual int setupWrite( OutList &signal );
@@ -497,6 +499,7 @@ public:
 	Returns 0 on success.
         If the output of the signals failed, a negative number is returned and
         the reason is specified in the error state of \a signal.
+	\note During the output of the stimulus, \a signal must exist and must not be modified!
         \sa testWrite(), writeData(), writeZero(), stopWrite() */
   virtual int write( OutList &signal );
 
@@ -529,8 +532,9 @@ public:
 
     /*! Write a zero to all analog output channels. 
         \param[in] channels resets all physical output channels. 
-        \param[in] params resets parameter channels. */
-  virtual int writeReset( bool channels=true, bool params=true );
+        \param[in] params resets parameter channels.
+        \return an error message on failure, an empty string on success. */
+  virtual string writeReset( bool channels=true, bool params=true );
 
     /*! Set the output of channel \a channel on device \a device to zero.
         Returns 0 on success or a negative number on error. 

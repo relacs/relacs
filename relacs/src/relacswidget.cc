@@ -1696,10 +1696,16 @@ void RELACSWidget::startFirstAcquisition( void )
 
   // reset analog output for dynamic clamp:
   lockAI();
-  r = AQ->writeReset( true, true );
+  string wr = AQ->writeReset( true, true );
   unlockAI();
-  if ( r < 0 )
-    printlog( "! warning: RELACSWidget::startFirstAcquisition() -> resetting analog output failed" );
+  if ( ! wr.empty() ) {
+    printlog( "! warning: RELACSWidget::startFirstAcquisition() -> resetting analog output failed: " + wr );
+    MessageBox::warning( "RELACS Warning !",
+			 "error in resetting analog output: " + wr,
+			 true, 0.0, this );
+    startIdle();
+    return;
+  }
 
   AQ->readRestart( IL, ED );
   AID->updateMenu();
