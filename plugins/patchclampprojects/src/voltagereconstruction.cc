@@ -241,9 +241,11 @@ int VoltageReconstruction::main( void )
   }
 
   if ( state == Completed ) {
+    unlockAll();
     tf << '\n';
     saveMeanTrace( header, meanvoltage, voltagesd );
     saveData( header, latencies );
+    lockAll();
   }
 
   // back to initial dc-current:

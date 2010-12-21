@@ -547,9 +547,12 @@ int startSubdevice( int iS )
     // start dynamic clamp task: 
     retVal = init_rt_task();
     if ( retVal < 0 ) {
+      ERROR_MSG( "startSubdevice: failed to start dynamic clamp loop for subdevice %d type %s!\n",
+		 iS, subdev[iS].type == SUBDEV_IN ? "AI" : "AO" );
       subdev[iS].running = 0;
       return -ENOMEM;
     }
+    SDEBUG_MSG( "startSubdevice: successfully started rt_task!\n" );
   }
 
   subdev[iS].running = 1;
@@ -617,6 +620,7 @@ void releaseSubdevice( int iS )
   // delete FIFO and reset subdevice structure:
   rtf_destroy( subdev[iS].fifo );
   memset( &(subdev[iS]), 0, sizeof(struct subdeviceT) );
+  SDEBUG_MSG( "releaseSubdevice released subdevice %d\n", iS );
   if ( iS == subdevN - 1 )
     subdevN--;
   subdev[iS].devID = -1;
@@ -701,14 +705,13 @@ void rtDynClamp( long dummy )
   int iS, iC;
   int subdevRunning = 1;
   unsigned long readCnt = 0;
-  unsigned long fifoPutCnt = 0;
   struct chanT *pChan;
   float voltage;
   unsigned ci;
   double term;
   int triggerevs[5] = { 1, 0, 0, 0, 0 };
   int prevtriggerevs[5] = { 0, 0, 0, 0, 0 };
-  //  int vi, oi, pi; /// DEBUG
+  //  int vi, oi, pi; // DEBUG
 
   SDEBUG_MSG( "rtDynClamp: starting dynamic clamp loop at %u Hz\n", 
 	     1000000000/dynClampTask.periodLengthNs );
@@ -889,10 +892,17 @@ void rtDynClamp( long dummy )
 	    pChan->voltage = paramInput[pChan->chan];
 	  }
 	  
+	  // debug:
+	  if ( subdev[iS].running == 0 )
+	    ERROR_MSG( "rtDynClamp: ERROR! subdevice %d somehow not running\n", iS);
 	  // write to FIFO:
 	  retVal = rtf_put( pChan->fifo, &pChan->voltage, sizeof(float) );
-	  fifoPutCnt++;
+	  // debug:
+	  if ( subdev[iS].running == 0 )
+	    ERROR_MSG( "rtDynClamp: ERROR! rtf_put turned subdevice %d not running\n", iS);
+
 	  if ( retVal != sizeof(float) ) {
+	    SDEBUG_MSG( "rtDynClamp: ERROR! rtf_put failed, return value=%d\n", retVal );
 	    if ( retVal == EINVAL ) {
 	      ERROR_MSG( "rtDynClamp: ERROR! No open FIFO for AI subdevice ID %d at loopCnt %lu\n",
 			 iS, dynClampTask.loopCnt );
@@ -902,11 +912,14 @@ void rtDynClamp( long dummy )
 	      return;
 	    }
 	    subdev[iS].error = E_OVERFLOW;
-	    ERROR_MSG( "rtDynClamp: ERROR! Data buffer overflow for AI subdevice ID %d at loopCnt %lu\n",
+	    ERROR_MSG( "rtDynClamp: ERROR! FIFO buffer overflow for AI subdevice ID %d at loopCnt %lu\n",
 		       iS, dynClampTask.loopCnt );
 	    subdev[iS].running = 0;
 	    continue;
 	  }
+
+	  if ( subdev[iS].running == 0 )
+	    ERROR_MSG( "rtDynClamp: ERROR! rtf_put error handling turned subdevice %d not running\n", iS);
 
 #ifdef ENABLE_TRIGGER
 	  // trigger:
@@ -967,9 +980,11 @@ int init_rt_task( void )
   DEBUG_MSG( "init_rt_task: Trying to initialize dynamic clamp RTAI task...\n" );
 
   //* test if dynamic clamp frequency is valid:
-  if ( dynClampTask.reqFreq <= 0 || dynClampTask.reqFreq > MAX_FREQUENCY )
+  if ( dynClampTask.reqFreq <= 0 || dynClampTask.reqFreq > MAX_FREQUENCY ) {
     ERROR_MSG( "init_rt_task ERROR: %dHz -> invalid dynamic clamp frequency. Valid range is 1 .. %dHz\n", 
 	       dynClampTask.reqFreq, MAX_FREQUENCY );
+    return -1;
+  }
 
   //* initializing rt-task for dynamic clamp with high priority:
   priority = 1;

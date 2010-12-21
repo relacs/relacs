@@ -634,9 +634,15 @@ int DynClampAnalogInput::readData( void )
   /*  cerr << "DynClampAnalogInput::readData: size of device buffer: " 
        << traces[0].deviceBufferSize() << " - size of indata: " 
        << " - continuous: " << traces[0].continuous() << '\n';*/
+  int oldbuffern = BufferN;
   bool failed = false;
   int readn = BufferN*BufferElemSize;
   int maxn = BufferSize - readn;
+
+  // debug:
+  if ( maxn < 0 )
+    cerr << "DynClampAnalogInput::readData: buffer overflow! BufferN=" << BufferN
+	 << " BufferSize=" << BufferSize << " readn=" << readn << " maxn=" << maxn << '\n';
 
   // try to read twice
   for ( int tryit = 0; tryit < 2 && ! failed && maxn > 0; tryit++ ) {
@@ -703,6 +709,11 @@ int DynClampAnalogInput::readData( void )
     */
   }
 
+  // debug:
+  if ( BufferN < oldbuffern )
+    cerr << "DynClampAnalogInput::readData: buffer shrinking! BufferN=" << BufferN
+	 << " BufferSize=" << BufferSize << " readn=" << readn << " maxn=" << maxn << " oldbuffern=" << oldbuffern << '\n';
+
   // no more data to be read:
   if ( BufferN <= 0 && !running() ) {
     if ( Traces->front().continuous() )
@@ -730,6 +741,11 @@ int DynClampAnalogInput::convertData( void )
 
   // type cast for device buffer:
   float *db = (float *)Buffer;
+
+  // debug:
+  if ( BufferN*BufferElemSize > BufferSize )
+    cerr << "DynClampAnalogInput::convertData: buffer overflow! BufferN=" << BufferN
+	 << " BufferSize=" << BufferSize << " BufferN*BufferElemSize=" << BufferN*BufferElemSize << '\n';
 
   for ( int k=0; k<BufferN; k++ ) {
     // "convert:"

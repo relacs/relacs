@@ -373,6 +373,8 @@ void MembraneResistance::plot( void )
 
 void MembraneResistance::save( void )
 {
+  unlockAll();
+
   Options header;
   header.addInteger( "index", completeRuns() );
   header.addInteger( "ReProIndex", reproCount() );
@@ -406,6 +408,9 @@ void MembraneResistance::save( void )
       }
     }
   }
+
+  lockAll();
+
   if ( setdata ) {
     Options &mo = metaData( "Cell" );
     mo.setNumber( "vrest", 0.001*VRest, 0.001*VRestsd );

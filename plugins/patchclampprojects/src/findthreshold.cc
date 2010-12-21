@@ -284,8 +284,10 @@ int FindThreshold::main( void )
   }
 
   if ( record && TrialCount > 0 ) {
+    unlockAll();
     tf << '\n';
     save();
+    lockAll();
   }
   Results.clear();
   Latencies.clear();

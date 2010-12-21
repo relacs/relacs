@@ -594,8 +594,10 @@ int ThresholdLatencies::main( void )
 
   bool usedc = fabs( orgdcamplitude ) > 1.0e-6;
   if ( record && TrialCount > 0 ) {
+    unlockAll();
     tf << '\n';
     save( usedc );
+    lockAll();
   }
   dcsignal = orgdcamplitude;
   dcsignal.setIdent( "DC=" + Str( orgdcamplitude ) + IUnit );

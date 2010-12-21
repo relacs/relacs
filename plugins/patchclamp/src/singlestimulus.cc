@@ -715,10 +715,12 @@ int SingleStimulus::main( void )
   }
   
   if ( state == Completed ) {
+    unlockAll();
     if ( storevoltage )
       tf << '\n';
     saveRate( header, rate );
     saveSpikes( header, spikes );
+    lockAll();
   }
 
   writeZero( outtrace );

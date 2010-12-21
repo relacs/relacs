@@ -857,9 +857,11 @@ int init_rt_task( void )
   DEBUG_MSG( "init_rt_task: Trying to initialize dynamic clamp RTAI task...\n" );
 
   //* test if dynamic clamp frequency is valid:
-  if ( dynClampTask.reqFreq <= 0 || dynClampTask.reqFreq > MAX_FREQUENCY )
+  if ( dynClampTask.reqFreq <= 0 || dynClampTask.reqFreq > MAX_FREQUENCY ) {
     ERROR_MSG( "init_rt_task ERROR: %dHz -> invalid dynamic clamp frequency. Valid range is 1 .. %dHz\n", 
 	       dynClampTask.reqFreq, MAX_FREQUENCY );
+    return -1;
+  }
 
   //* initializing rt-task for dynamic clamp with high priority:
   priority = 1;

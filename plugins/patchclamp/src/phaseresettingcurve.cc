@@ -46,6 +46,7 @@ PhaseResettingCurve::PhaseResettingCurve( void )
   addInteger( "repeats", "Number of test-pulses", 100, 0, 1000000 );
   addNumber( "rateduration", "Time for initial estimate of firing rate", 1.0, 0.0, 100000.0, 0.01, "seconds", "ms" );
   addInteger( "averageisis", "Average ISI over", 10, 1, 100000, 1, "test-pulses" );
+  addInteger( "minsave", "Minimum number of test pulses required for saving data", 10, 1, 100000, 1 );
 
   PrevDCAmplitude = 0.0;
 
@@ -92,6 +93,7 @@ int PhaseResettingCurve::main( void )
   int repeats = integer( "repeats" );
   double rateduration = number( "rateduration" );
   int averageisis = integer( "averageisis" );
+  int minsave = integer( "minsave" );
 
   double orgdcamplitude = stimulusData().number( outTraceName( 0 ) );
   if ( dcamplitudesrc == 1 ) // dc
@@ -286,8 +288,8 @@ int PhaseResettingCurve::main( void )
     P.unlock();
 
     // save:
-    if ( prctimes.size() >= 10 ) {
-      if ( prctimes.size() == 10 )
+    if ( prctimes.size() >= minsave ) {
+      if ( prctimes.size() == minsave )
 	openTraceFile( tf, tracekey, header );
       int inx = prctimes.size()-voltage.size();
       saveTrace( tf, tracekey, inx, voltage, current,
@@ -300,7 +302,8 @@ int PhaseResettingCurve::main( void )
 
   }
 
-  if ( prctimes.size() >= 10 ) {
+  if ( prctimes.size() >= minsave ) {
+    unlockAll();
     while ( voltage.size() > 0 ) {
       int inx = prctimes.size()-voltage.size();
       saveTrace( tf, tracekey, inx, voltage, current,
@@ -314,6 +317,7 @@ int PhaseResettingCurve::main( void )
     saveData( header, periods, meanperiods, perturbedperiods,
 	      prctimes, prcphases );
     savePRC( header, prcphases );
+    lockAll();
   }
 
   // back to initial dc-current:

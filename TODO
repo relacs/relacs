@@ -1,5 +1,7 @@
-Dead locks:
-- do we need to take care about blocking lockMutex() in accept(), reset(), etc.?
+Locking:
+- dead locks: do we need to take care about blocking lockMutex() in accept(), reset(), etc.?
+- RePro should measure how long it locks the data and issue a warning if this is longer than
+  the necessay buffers of the devie drivers and interfaces.
 
 Macros:
 - Improve code by distributing more code to the commands
