@@ -95,9 +95,10 @@ void TransferFunction::notify( void )
   }
 
   int intrace = index( "intrace" );
-  if ( intrace >= 0 && intrace < traces().size() )
+  if ( intrace >= 0 && intrace < traces().size() ) {
     InName = trace( intrace ).ident();
     InUnit = trace( intrace ).unit();
+  }
 }
 
 
