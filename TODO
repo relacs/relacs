@@ -1,7 +1,5 @@
 Locking:
 - dead locks: do we need to take care about blocking lockMutex() in accept(), reset(), etc.?
-- RePro should measure how long it locks the data and issue a warning if this is longer than
-  the necessay buffers of the devie drivers and interfaces.
 
 Macros:
 - Improve code by distributing more code to the commands
@@ -89,7 +87,7 @@ Plugins:
 - Put relacs configuration files in root directory of ALL the plugin sets
 
 Relacs:
-- Check and clean up RELACSPlugin public/protected/private functions.
+- Check and clean up RELACSPlugin and RePro public/protected/private functions.
 - Parameter/Options/OptWidget: generalize selectText() and index() to all types
 - Fix command line arg names from path to dir in relacsmain and RELACSWidget.
 - The right name for dlopen can be found in the dlname field of the *.la file!

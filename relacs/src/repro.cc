@@ -576,6 +576,38 @@ void RePro::keepFocus( void )
 }
 
 
+void RePro::readLockData( void )
+{
+  LockDataTime.start();
+  RELACSPlugin::readLockData();
+}
+
+
+void RePro::unlockData( void )
+{
+  RELACSPlugin::unlockData();
+  double lockedtime = 0.001*LockDataTime.elapsed();
+  if ( traces().size() > 0 && lockedtime > trace( 0 ).updateTime() )
+    printlog( "WARNING! RePro locked data for " + Str( 1000.0*lockedtime ) + "ms." );
+}
+
+
+void RePro::lockAll( void )
+{
+  LockAllTime.start();
+  RELACSPlugin::lockAll();
+}
+
+
+void RePro::unlockAll( void )
+{
+  RELACSPlugin::unlockAll();
+  int lockedtime = 0.001*LockAllTime.elapsed();
+  if ( traces().size() > 0 && lockedtime > trace( 0 ).updateTime() )
+    printlog( "WARNING! RePro locked data for " + Str( 1000.0*lockedtime ) + "ms." );
+}
+
+
 void RePro::keyPressEvent( QKeyEvent *event )
 {
   if ( event->key() == SoftStopKey ) {

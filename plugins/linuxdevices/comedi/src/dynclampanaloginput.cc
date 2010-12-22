@@ -486,6 +486,12 @@ int DynClampAnalogInput::testReadDevice( InList &traces )
     traces.addError( DaqError::InvalidUpdateTime );
     retval = -1;
   }
+  if ( bufsize > FIFO_SIZE ) {
+    traces.addError( DaqError::InvalidUpdateTime );
+    cerr << "DynClampAnalogInput::testRead(): FIFO_SIZE is too small for update time.\n";
+    retval = -1;
+  }
+
 
   return retval;
 }

@@ -207,8 +207,7 @@ void RELACSPlugin::widgetDestroyed( QObject *obj )
 void RELACSPlugin::lockAll( void )
 {
   lock();
-  if ( RW != 0 )
-    RW->readLockData();
+  readLockData();
   lockMetaData();
   lockStimulusData();
 }
@@ -218,8 +217,7 @@ void RELACSPlugin::unlockAll( void )
 {
   unlockStimulusData();
   unlockMetaData();
-  if ( RW != 0 )
-    RW->unlockData();
+  unlockData();
   unlock();
 }
 

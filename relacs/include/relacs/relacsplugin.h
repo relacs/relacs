@@ -296,9 +296,9 @@ protected:
   void postCustomEvent( int type=0 );
 
     /*! Lock the input data and events for reading. \sa unlockData(), dataMutex() */
-  void readLockData( void );
+  virtual void readLockData( void );
     /*! Unlock the input data and events. \sa readLockData(), dataMutex() */
-  void unlockData( void );
+  virtual void unlockData( void );
     /*! Returns the mutex used for locking the input data and events.
         \sa readLockData(), unlockData() */
   QReadWriteLock &dataMutex( void );
@@ -306,11 +306,11 @@ protected:
 
  public:
 
-    /*! Lock the RELACSPlugin (via lock()), the input data and events
-        (via lockData()), the meta data (via lockMetaData()),
+    /*! Lock the %RELACSPlugin (via lock()), the input data and events
+        (via readLockData()), the meta data (via lockMetaData()),
         and the stimulus data (via lockStimulusData()). */
   virtual void lockAll( void );
-    /*! Unlock the RELACSPlugin (via unlock()), the input data and events
+    /*! Unlock the %RELACSPlugin (via unlock()), the input data and events
         (via unlockData()), the meta data (via unlockMetaData()),
 	and the stimulus data (via unlockStimulusData()). */
   virtual void unlockAll( void );
