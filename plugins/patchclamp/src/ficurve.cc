@@ -431,6 +431,7 @@ void FICurve::save( void )
   saveRate();
   saveSpikes();
   saveTraces();
+  message( "<b>FICurve finished.</b>" );
   lockAll();
 }
 

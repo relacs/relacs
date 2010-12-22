@@ -387,6 +387,7 @@ void VICurve::save( void )
 
   saveData();
   saveTrace();
+  message( "<b>VICurve finished.</b>" );
   lockAll();
 }
 

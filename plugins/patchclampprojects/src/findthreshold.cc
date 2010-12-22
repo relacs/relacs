@@ -228,9 +228,11 @@ int FindThreshold::main( void )
     // analyze, plot, and save:
     analyze( amplitude, duration, savetime, skiptime );
     if ( record ) {
+      unlockAll();
       if ( TrialCount == 0 )
 	openFiles( tf, tracekey );
       saveTrace( tf, tracekey, count-1 );
+      lockAll();
     }
     plot( record, duration );
 

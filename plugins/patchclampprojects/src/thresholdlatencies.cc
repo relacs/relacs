@@ -488,9 +488,11 @@ int ThresholdLatencies::main( void )
 	     pre2amplitude, amplitude, postamplitude, delay, preduration,
 	     pre2duration, duration, postduration, savetracetime, pause );
     if ( record ) {
+      unlockAll();
       if ( TrialCount == 0 )
 	openTraceFile( tf, tracekey );
       saveTrace( tf, tracekey, count-1 );
+      lockAll();
     }
     plot( record, preduration, pre2duration, duration, postduration );
 

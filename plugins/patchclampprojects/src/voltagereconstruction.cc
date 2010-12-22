@@ -235,9 +235,11 @@ int VoltageReconstruction::main( void )
     P.unlock();
 
     // save:
+    unlockAll();
     if ( count == 0 )
       openTraceFile( tf, tracekey, header );
     saveTrace( tf, tracekey, count, voltages.back(), current, x, y );
+    lockAll();
   }
 
   if ( state == Completed ) {

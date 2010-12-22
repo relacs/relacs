@@ -704,9 +704,11 @@ int SingleStimulus::main( void )
     analyze( spikes, rate );
     plot( spikes, rate, signal, voltage, plotmode );
     if ( storevoltage ) {
+      unlockAll();
       if ( count == 0 )
 	openTraceFile( tf, tracekey, header );
       saveTrace( tf, tracekey, count, voltage, current );
+      lockAll();
     }
     
     sleepOn( Duration + pause );
