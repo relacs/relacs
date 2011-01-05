@@ -56,8 +56,8 @@ public:
   FeedForwardNetwork( void );
   virtual int main( void );
   void saveSettings();
-  void saveEvents(const vector<vector<EventData> > &SpikeTimes,const vector<vector<double> > &SignalTimes);
-  void saveTraces(const vector<vector<SampleDataD> > &ge,const vector<vector<SampleDataD> > &gi,const vector<vector<double> > &SignalTimes);
+  void saveEvents(const vector<vector<EventData> > &SpikeTimes,const vector<vector<double> > &SignalTimes, Str name);
+  void saveTraces(const vector<vector<SampleDataD> > &ge,const vector<vector<SampleDataD> > &gi,const vector<vector<double> > &SignalTimes, double duration, Str name);
   
   int calibrateFFN(double &JeFFN, double &JeBKG, double &gBKG);
   void stimulate(
