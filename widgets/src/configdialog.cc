@@ -114,127 +114,37 @@ void ConfigDialog::setDate( const string &date )
 }
 
 
-bool ConfigDialog::dialogHeader( void ) const
+void ConfigDialog::dialogOptions( OptDialog *od )
 {
-  return UseHeader;
+  od->addOptions( *this, DialogSelectMask, DialogROMask, DialogStyle, mutex() );
+  od->setVerticalSpacing( int(9.0*::exp(-double(Options::size())/14.0))+1 );
 }
 
 
-void ConfigDialog::setDialogHeader( bool d )
+void ConfigDialog::dialogButtons( OptDialog *od )
 {
-  UseHeader = d;
+  od->setRejectCode( 0 );
+  od->addButton( "&Ok", OptDialog::Accept, 1 );
+  od->addButton( "&Apply", OptDialog::Accept );
+  od->addButton( "&Reset", OptDialog::Reset );
+  od->addButton( "&Close" );
+  connect( od, SIGNAL( dialogClosed( int ) ),
+	   this, SLOT( dClosed( int ) ) );
+  connect( od, SIGNAL( buttonClicked( int ) ),
+	   this, SIGNAL( dialogAction( int ) ) );
+  connect( od, SIGNAL( valuesChanged( void ) ),
+	   this, SIGNAL( dialogAccepted( void ) ) );
 }
 
 
-string ConfigDialog::dialogCaption( void ) const
+void ConfigDialog::dialogEmptyMessage( OptDialog *od )
 {
-  if ( DialogCaption.empty() )
-    return name() + " Settings";
-  else
-    return DialogCaption;
-}
-
-
-void ConfigDialog::setDialogCaption( const string &caption )
-{
-  DialogCaption = caption;
-}
-
-
-bool ConfigDialog::dialogHelp( void ) const
-{
-  return ( configMode() & ConfigClass::Help );
-}
-
-
-void ConfigDialog::setDialogHelp( bool d )
-{
-  if ( d )
-    addConfigMode( ConfigClass::Help );
-  else
-    delConfigMode( ConfigClass::Help );
-}
-
-
-string ConfigDialog::headerBackgroundColor( void ) const
-{
-  return HeaderBackgroundColor;
-}
-
-
-void ConfigDialog::setHeaderBackgroundColor( const string &color )
-{
-  if ( color.size() == 7 && color[0] == '#' )
-    HeaderBackgroundColor = color;
-  else
-    HeaderBackgroundColor = "";
-}
-
-
-string ConfigDialog::headerForegroundColor( void ) const
-{
-  return HeaderForegroundColor;
-}
-
-
-void ConfigDialog::setHeaderForegroundColor( const string &color )
-{
-  if ( color.size() == 7 && color[0] == '#' )
-    HeaderForegroundColor = color;
-  else
-    HeaderForegroundColor = "";
-}
-
-
-string ConfigDialog::headerImageFile( void ) const
-{
-  return HeaderImageFile;
-}
-
-
-void ConfigDialog::setHeaderImageFile( const string &file )
-{
-  HeaderImageFile = file;
-}
-
-
-string ConfigDialog::helpPath( int inx ) const
-{
-  if ( inx >= 0 && inx < helpPathes() )
-    return HelpPathes[inx];
-  else
-    return "";
-}
-
-
-int ConfigDialog::helpPathes( void ) const
-{
-  return HelpPathes.size();
-}
-
-
-void ConfigDialog::clearHelpPathes( void )
-{
-  HelpPathes.clear();
-}
-
-
-void ConfigDialog::setHelpPath( const string &path )
-{
-  HelpPathes.clear();
-  HelpPathes.push_back( path );
-}
-
-
-void ConfigDialog::addHelpPath( const string &path )
-{
-  HelpPathes.push_back( path );
-}
-
-
-string ConfigDialog::helpFileName( void ) const
-{
-  return name() + ".html";
+  QLabel *ml = new QLabel( string( "There are <b>no</b> options for <b>" +
+				   name() + "</b>!" ).c_str() );
+  od->addWidget( ml );
+  od->addButton( "&Ok" );
+  connect( od, SIGNAL( dialogClosed( int ) ),
+	   this, SLOT( dClosed( int ) ) );
 }
 
 
@@ -292,42 +202,72 @@ void ConfigDialog::addDialogStyle( int style )
 }
 
 
-bool ConfigDialog::dialogOpen( void ) const
+string ConfigDialog::dialogCaption( void ) const
 {
-  return Dialog;
-}
-
-
-void ConfigDialog::setDialogOpen( bool open )
-{
-  Dialog = open;
-}
-
-
-string ConfigDialog::helpCaption( void ) const
-{
-  if ( HelpCaption.empty() )
-    return name() + " Help";
+  if ( DialogCaption.empty() )
+    return name() + " Settings";
   else
-    return HelpCaption;
+    return DialogCaption;
 }
 
 
-void ConfigDialog::setHelpCaption( const string &caption )
+void ConfigDialog::setDialogCaption( const string &caption )
 {
-  HelpCaption = caption;
+  DialogCaption = caption;
 }
 
 
-bool ConfigDialog::helpOpen( void ) const
+bool ConfigDialog::dialogHeader( void ) const
 {
-  return Help;
+  return UseHeader;
 }
 
 
-void ConfigDialog::setHelpOpen( bool open )
+void ConfigDialog::setDialogHeader( bool d )
 {
-  Help = open;
+  UseHeader = d;
+}
+
+
+string ConfigDialog::headerBackgroundColor( void ) const
+{
+  return HeaderBackgroundColor;
+}
+
+
+void ConfigDialog::setHeaderBackgroundColor( const string &color )
+{
+  if ( color.size() == 7 && color[0] == '#' )
+    HeaderBackgroundColor = color;
+  else
+    HeaderBackgroundColor = "";
+}
+
+
+string ConfigDialog::headerForegroundColor( void ) const
+{
+  return HeaderForegroundColor;
+}
+
+
+void ConfigDialog::setHeaderForegroundColor( const string &color )
+{
+  if ( color.size() == 7 && color[0] == '#' )
+    HeaderForegroundColor = color;
+  else
+    HeaderForegroundColor = "";
+}
+
+
+string ConfigDialog::headerImageFile( void ) const
+{
+  return HeaderImageFile;
+}
+
+
+void ConfigDialog::setHeaderImageFile( const string &file )
+{
+  HeaderImageFile = file;
 }
 
 
@@ -401,37 +341,97 @@ void ConfigDialog::dialogHeaderWidget( OptDialog *od )
 }
 
 
-void ConfigDialog::dialogEmptyMessage( OptDialog *od )
+bool ConfigDialog::dialogHelp( void ) const
 {
-  QLabel *ml = new QLabel( string( "There are <b>no</b> options for <b>" +
-				   name() + "</b>!" ).c_str() );
-  od->addWidget( ml );
-  od->addButton( "&Ok" );
-  connect( od, SIGNAL( dialogClosed( int ) ),
-	   this, SLOT( dClosed( int ) ) );
+  return ( configMode() & ConfigClass::Help );
 }
 
 
-void ConfigDialog::dialogOptions( OptDialog *od )
+void ConfigDialog::setDialogHelp( bool d )
 {
-  od->addOptions( *this, DialogSelectMask, DialogROMask, DialogStyle, mutex() );
-  od->setVerticalSpacing( int(9.0*::exp(-double(Options::size())/14.0))+1 );
+  if ( d )
+    addConfigMode( ConfigClass::Help );
+  else
+    delConfigMode( ConfigClass::Help );
 }
 
 
-void ConfigDialog::dialogButtons( OptDialog *od )
+string ConfigDialog::helpCaption( void ) const
 {
-  od->setRejectCode( 0 );
-  od->addButton( "&Ok", OptDialog::Accept, 1 );
-  od->addButton( "&Apply", OptDialog::Accept );
-  od->addButton( "&Reset", OptDialog::Reset );
-  od->addButton( "&Close" );
-  connect( od, SIGNAL( dialogClosed( int ) ),
-	   this, SLOT( dClosed( int ) ) );
-  connect( od, SIGNAL( buttonClicked( int ) ),
-	   this, SIGNAL( dialogAction( int ) ) );
-  connect( od, SIGNAL( valuesChanged( void ) ),
-	   this, SIGNAL( dialogAccepted( void ) ) );
+  if ( HelpCaption.empty() )
+    return name() + " Help";
+  else
+    return HelpCaption;
+}
+
+
+void ConfigDialog::setHelpCaption( const string &caption )
+{
+  HelpCaption = caption;
+}
+
+
+string ConfigDialog::helpPath( int inx ) const
+{
+  if ( inx >= 0 && inx < helpPathes() )
+    return HelpPathes[inx];
+  else
+    return "";
+}
+
+
+int ConfigDialog::helpPathes( void ) const
+{
+  return HelpPathes.size();
+}
+
+
+void ConfigDialog::clearHelpPathes( void )
+{
+  HelpPathes.clear();
+}
+
+
+void ConfigDialog::setHelpPath( const string &path )
+{
+  HelpPathes.clear();
+  HelpPathes.push_back( path );
+}
+
+
+void ConfigDialog::addHelpPath( const string &path )
+{
+  HelpPathes.push_back( path );
+}
+
+
+string ConfigDialog::helpFileName( void ) const
+{
+  return name() + ".html";
+}
+
+
+bool ConfigDialog::dialogOpen( void ) const
+{
+  return Dialog;
+}
+
+
+void ConfigDialog::setDialogOpen( bool open )
+{
+  Dialog = open;
+}
+
+
+bool ConfigDialog::helpOpen( void ) const
+{
+  return Help;
+}
+
+
+void ConfigDialog::setHelpOpen( bool open )
+{
+  Help = open;
 }
 
 

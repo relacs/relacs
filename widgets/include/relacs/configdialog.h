@@ -123,6 +123,59 @@ public:
     /*! Set the date of the last revision of the class to \a date. */
   virtual void setDate( const string &date );
 
+    /*! Adds the options selected by dialogSelectMask() and configured by 
+        dialogReadOnlyMask() and dialogStyle() to the dialog.
+        \param od the dialog to which the options are added.
+	\sa dialog() */
+  virtual void dialogOptions( OptDialog *od );
+    /*! Add an \<Ok\>, \<Apply\>, \<Reset\>, and \<Close\> button to the dialog.
+        \param od the dialog to which the buttons are added.
+	\sa dialog() */
+  virtual void dialogButtons( OptDialog *od );
+    /*! Adds a message, indicating that this class does not have any options
+        for this dialog, and an \<Ok\> button to the dialog.
+        \param od the dialog to which the message is added.
+	\sa dialog() */
+  virtual void dialogEmptyMessage( OptDialog *od );
+
+    /*! The mask that is used to select single options for the standard dialog. */
+  int dialogSelectMask( void ) const;
+    /*! Set the mask that is used to select single options 
+        for the standard dialog to \a mask.
+        Default is 0, i.e. all options appear in the dialog. */
+  void setDialogSelectMask( int mask );
+    /*! Add \a mask to the mask that is used to select single options 
+        for the standard dialog. */
+  void addDialogSelectMask( int mask );
+    /*! The mask that is used to select single options as read-only
+        for the standard dialog. */
+  int dialogReadOnlyMask( void ) const;
+    /*! Set the mask that is used to select single options 
+        as read-only for the standard dialog to \a mask.
+        Default is 0, i.e. all options are read-writeable. */
+  void setDialogReadOnlyMask( int mask );
+    /*! Add \a mask to the mask that is used to select single options 
+        as read-only for the standard dialog. */
+  void addDialogReadOnlyMask( int mask );
+    /*! The style used for the standard dialog. */
+  int dialogStyle( void ) const;
+    /*! Set the style used for the standard dialog to \a style.
+        The implementation of dialog() uses OptWidget.
+        See there for a list of possible styles. */
+  void setDialogStyle( int style );
+    /*! Add \a style to the style used for the standard dialog. */
+  void addDialogStyle( int style );
+
+    /*! Returns the caption for the dialog. */
+  string dialogCaption( void ) const;
+    /*! Set the caption for the dialog to \a caption. */
+  void setDialogCaption( const string &caption );
+
+    /*! Returns true if a header should be displayed in the dialog. */
+  bool dialogHeader( void ) const;
+    /*! Display a header with author, version and date info in the dialog
+        if \a d is set to true. */
+  void setDialogHeader( bool d );
     /*! \return background color of the dialog header
         as a hex string (\#rrggbb).
         \sa setHeaderBackgroundColor(), headerForegroundColor(),
@@ -152,7 +205,24 @@ public:
         \param[in] file the full path of the image file.
         \sa headerImageFile(), dialogHeaderWidget() */
   void setHeaderImageFile( const string &file );
+    /*! Adds a header widget to the dialog.
+        The headerImageFile() is used as a background image.
+	name(), version(), date() and author() are displayed.
+	If dialogHelp() is enabled, a button for launching
+	the help browser is added.
+        \param od the dialog to which the header widget is added.
+	\sa dialog() */
+  virtual void dialogHeaderWidget( OptDialog *od );
 
+    /*! Returns true if a help button should be displayed in the dialog header. */
+  bool dialogHelp( void ) const;
+    /*! Add a help-button to the dialog header if \a d is set to true.
+        Modifies the ConfigClass::Help flag of configMode(). */
+  void setDialogHelp( bool d );
+    /*! Returns the caption for the help window. */
+  string helpCaption( void ) const;
+    /*! Set the caption for the help window to \a caption. */
+  void setHelpCaption( const string &caption );
     /*! Returns the \a inx-th default path used for searching help files. */
   string helpPath( int inx=0 ) const;
     /*! Returns the number of default pathes used for searching help files. */
@@ -257,79 +327,10 @@ signals:
 
 protected:
 
-    /*! Returns the caption for the dialog. */
-  string dialogCaption( void ) const;
-    /*! Set the caption for the dialog to \a caption. */
-  void setDialogCaption( const string &caption );
-    /*! Returns true if a header should be displayed in the dialog. */
-  bool dialogHeader( void ) const;
-    /*! Display a header with author, version and date info in the dialog
-        if \a d is set to true. */
-  void setDialogHeader( bool d );
-    /*! Returns true if a help button should be displayed in the dialog header. */
-  bool dialogHelp( void ) const;
-    /*! Add a help-button to the dialog header if \a d is set to true.
-        Modifies the ConfigClass::Help flag of configMode(). */
-  void setDialogHelp( bool d );
-    /*! The mask that is used to select single options for the standard dialog. */
-  int dialogSelectMask( void ) const;
-    /*! Set the mask that is used to select single options 
-        for the standard dialog to \a mask.
-        Default is 0, i.e. all options appear in the dialog. */
-  void setDialogSelectMask( int mask );
-    /*! Add \a mask to the mask that is used to select single options 
-        for the standard dialog. */
-  void addDialogSelectMask( int mask );
-    /*! The mask that is used to select single options as read-only
-        for the standard dialog. */
-  int dialogReadOnlyMask( void ) const;
-    /*! Set the mask that is used to select single options 
-        as read-only for the standard dialog to \a mask.
-        Default is 0, i.e. all options are read-writeable. */
-  void setDialogReadOnlyMask( int mask );
-    /*! Add \a mask to the mask that is used to select single options 
-        as read-only for the standard dialog. */
-  void addDialogReadOnlyMask( int mask );
-    /*! The style used for the standard dialog. */
-  int dialogStyle( void ) const;
-    /*! Set the style used for the standard dialog to \a style.
-        The implementation of dialog() uses OptWidget.
-        See there for a list of possible styles. */
-  void setDialogStyle( int style );
-    /*! Add \a style to the style used for the standard dialog. */
-  void addDialogStyle( int style );
     /*! Set the status of the dialog to \a open. 
         Use this if you reimplement dialog()
 	to inform ConfigDialog about the status of the dialog window. */
   void setDialogOpen( bool open=true );
-
-    /*! Adds a header widget to the dialog.
-        The headerImageFile() is used as a background image.
-	name(), version(), date() and author() are displayed.
-	If dialogHelp() is enabled, a button for launching
-	the help browser is added.
-        \param od the dialog to which the header widget is added.
-	\sa dialog() */
-  virtual void dialogHeaderWidget( OptDialog *od );
-    /*! Adds a message, indicating that this class does not have any options
-        for this dialog, and an \<Ok\> button to the dialog.
-        \param od the dialog to which the message is added.
-	\sa dialog() */
-  virtual void dialogEmptyMessage( OptDialog *od );
-    /*! Adds the options selected by dialogSelectMask() and configured by 
-        dialogReadOnlyMask() and dialogStyle() to the dialog.
-        \param od the dialog to which the options are added.
-	\sa dialog() */
-  virtual void dialogOptions( OptDialog *od );
-    /*! Add an \<Ok\>, \<Apply\>, \<Reset\>, and \<Close\> button to the dialog.
-        \param od the dialog to which the buttons are added.
-	\sa dialog() */
-  virtual void dialogButtons( OptDialog *od );
-
-    /*! Returns the caption for the help window. */
-  string helpCaption( void ) const;
-    /*! Set the caption for the help window to \a caption. */
-  void setHelpCaption( const string &caption );
     /*! Set the status of the help window to \a open. 
         Use this if you reimplement help()
 	to inform ConfigDialog about the status of the help window. */
