@@ -187,6 +187,9 @@ public:
         Passing infos to SaveFiles. */
   int directWrite( OutList &signal );
 
+    /*! Stop all analog output activity. */
+  void stopWrite( void );
+
     /*! Inform all plugins about changes in the stimulus data. */
   void notifyStimulusData( void );
     /*! Inform all plugins about changes in the meta data section \a section. */

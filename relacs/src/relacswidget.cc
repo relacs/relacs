@@ -1111,6 +1111,16 @@ int RELACSWidget::directWrite( OutList &signal )
 }
 
 
+void RELACSWidget::stopWrite( void )
+{
+  // stop analog output:
+  WriteLoop.stop();
+  lockSignals();
+  AQ->stopWrite();                
+  unlockSignals();
+}
+
+
 void RELACSWidget::notifyStimulusData( void )
 {
   if ( MD != 0 )
@@ -1191,12 +1201,6 @@ void RELACSWidget::stopRePro( void )
 {
   if ( ! ReProRunning )
     return;
-
-  // stop analog output:
-  WriteLoop.stop();
-  lockSignals();
-  AQ->stopWrite();                
-  unlockSignals();
 
   // wait on RePro to stop:
   if ( CurrentRePro->isRunning() ) {

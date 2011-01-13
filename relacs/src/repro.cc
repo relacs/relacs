@@ -199,6 +199,9 @@ void RePro::requestStop( void )
     InterruptLock.lock();
     Interrupt = true;
     InterruptLock.unlock();
+
+    // stop analog output:
+    stopWrite();
     
     // wake up the RePro from sleeping:
     SleepWait.wakeAll();
@@ -411,27 +414,19 @@ int RePro::testWrite( OutList &signal )
   return RW->AQ->testWrite( signal );
 }
 
-/*
-int RePro::convert( OutData &signal )
-{
-  return RW->AQ->convert( signal );
-}
-
-
-int RePro::convert( OutList &signal )
-{
-  return RW->AQ->convert( signal );
-}
-*/
 
 int RePro::write( OutData &signal )
 {
+  if ( interrupt() )
+    return -1;
   return RW->write( signal );
 }
 
 
 int RePro::write( OutList &signal )
 {
+  if ( interrupt() )
+    return -1;
   return RW->write( signal );
 }
 
