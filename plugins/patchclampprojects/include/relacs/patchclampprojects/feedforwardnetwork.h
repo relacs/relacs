@@ -56,19 +56,18 @@ public:
   FeedForwardNetwork( void );
   virtual int main( void );
   void saveSettings();
-  void saveEvents(const vector<vector<EventData> > &SpikeTimes,const vector<vector<double> > &SignalTimes, Str name);
-  void saveTraces(const vector<vector<SampleDataD> > &ge,const vector<vector<SampleDataD> > &gi,const vector<vector<double> > &SignalTimes, double duration, Str name);
+  void saveEvents(const vector<vector<EventData> > &SpikeTimes, Str name);
+  void saveTraces(const vector<vector<SampleDataD> > &ge,const vector<vector<SampleDataD> > &gi, const vector<vector<SampleDataD> > &vm,double duration, Str name);
   
   int calibrateFFN(double &JeFFN, double &JeBKG, double &gBKG);
-  void stimulate(
-SampleDataD &ge, SampleDataD &gi, EventData &SpikeTimes, double &signaltime, double duration);
+  void stimulate(SampleDataD &ge, SampleDataD &gi,SampleDataD &vm, EventData &SpikeTimes, double &signaltime, double duration);
   // actual version
   void PulsePacket(vector<EventData> &SpikeTimes, int alpha, double sigma, int groupsize, double onset);		
-  void Poisson(vector<EventData> &SpikeTimes);		
+  void Poisson(vector<EventData> &SpikeTimes, double rate, double duration, double onset);		
   void MIP(vector<EventData> &SpikeTimes);		
-  EventData convergentInput(const vector<EventData> &SpikeTimes,int numberOfRepeats, double delay);
+  EventData convergentInput(const vector<EventData> &SpikeTimes, double delay);
   // plotting
-  void rasterplot(const vector<vector<EventData> > &SpikeTimes, int group, int neuron);
+  void rasterplot(const vector<vector<EventData> > &SpikeTimes, int group, int neuron, int groupoffset);
   void traceplot(SampleDataD &ge,SampleDataD &gi, int pindex, double duration);
   
   

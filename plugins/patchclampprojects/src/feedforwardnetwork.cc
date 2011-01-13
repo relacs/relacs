@@ -76,29 +76,29 @@ FeedForwardNetwork::FeedForwardNetwork( void )
   addNumber( "duration", "Duration", 0.1, 0.01, 1000.0, 0.01,"sec","ms");
   addInteger("seedStimulus","RNG seed of the stimulus",1,1000,1);
   addNumber("pause","Pause",0.,0.,10.,0.1,"sec","ms");
+  
+  addLabel("Pulse Packet");
+  addNumber("alpha1","Number of spikes S1",1,0,1000.,1);
+  addNumber("sigma1","Temporal spread S1",0.002,0.00001,1000.,0.1,"sec","ms");	
+  addNumber("alpha2","Number of spikes S2",1,0,1000.,1);
+  addNumber("sigma2","Temporal spread S2",0.002,0.00001,1000.,0.1,"sec","ms");
+  
+  addLabel("Poisson");
+  addNumber("poissonstimulusrate1","Rate S1",0.,0.,1000.,0.1,"Hz");
+  addNumber("poissonstimulusrate2","Rate S2",0.,0.,1000.,0.1,"Hz");
+  addNumber( "duration1", "Duration S1", 0.1, 0.01, 1000.0, 0.01,"sec","ms");
+  addNumber( "duration2", "Duration S2", 0.1, 0.01, 1000.0, 0.01,"sec","ms");
     
+  addLabel("MIP");
+  addNumber("MIPstimulusrate","Rate",10.,0.00001,1000.,0.1,"Hz" );
+  addNumber("MIPcorr","Correlation",0.0,0.0,1.,0.01);
+  
   addLabel("Background Network");
   addNumber("poissonrate","Rate of background input",5000.,0.,50000.,1.,"Hz");
   addNumber( "JeBKG", "Exc. Synaptic strength", 0.3, 0.0, 1000.0, 0.1 );
   addNumber( "gBKG", "Inhibitory gain", 1., 0.0, 100.0, 0.1 );
   addInteger("seedBKG","RNG seed of the BKG",1,1000,1);
   
-  addLabel("Pulse Packet");
-  addNumber("alpha1","Number of spikes S1",1,1,1000.,1);
-  addNumber("sigma1","Temporal spread S1",0.002,0.00001,1000.,0.1,"sec","ms");	
-  addNumber("alpha2","Number of spikes S2",1,1,1000.,1);
-  addNumber("sigma2","Temporal spread S2",0.002,0.00001,1000.,0.1,"sec","ms");
-  
-  addLabel("Poisson");
-  addNumber("poissonstimulusrate1","Rate S1",0.,0.,1000.,0.1,"Hz");
-  addNumber("poissonstimulusrate2","Rate S2",0.,0.,1000.,0.1,"Hz");
-  addNumber("duration1","Duration S1",0.,0.,1000.,0.1,"Hz");
-  addNumber("duration2","Duration S2",0.,0.,1000.,0.1,"Hz");
-  
-  addLabel("MIP");
-  addNumber("MIPstimulusrate","Rate",10.,0.00001,1000.,0.1,"Hz" );
-  addNumber("MIPcorr","Correlation",0.0,0.0,1.,0.01);
-    
   addLabel("Calibration");
   addInteger("calibrationtrials","Trials",30,1,100,1);
   addNumber("calibrationalpha","Number of spikes",60,1,1000.,1);
@@ -137,7 +137,8 @@ int FeedForwardNetwork::main( void )
   double scaleJeFFN = number("scaleJeFFN");
   double JeBKG = number("JeBKG");
   
-  double gFFN = number("gFFN");
+  double gFFN1 = number("gFFN1");
+  double gFFN2 = number("gFFN2");
   double gBKG = number("gBKG");
   int nGroups = integer("nGroups");
   int nExc = integer("nExc");
@@ -145,7 +146,11 @@ int FeedForwardNetwork::main( void )
   
   // Stimulus
   double onset = number("onset");
+  double onset1 = number("onset1");
+  double onset2 = number("onset2");
   double duration = number("duration");
+  double duration1 = number("duration1");
+  double duration2 = number("duration2");
   message("Duration: "+Str(duration));
   
   // RNG
@@ -154,8 +159,14 @@ int FeedForwardNetwork::main( void )
   rngBKG.setSeed(integer("seedBKG"));
   
   // Data 
+  // SpikeTimes of the stimuli
+  vector<vector<EventData> > SpikeTimesStimulusVector(2,vector<EventData> (nExc));
+  
   // SpikeTimes as a vector of vector of EventData
   vector<vector<EventData> > SpikeTimesVector(nGroups,vector<EventData> (nExc));
+  
+  // vm as a vector
+  vector<vector<SampleDataD> > VmVector(nGroups,vector<SampleDataD> (nExc));
   
   // Conductances as a vector of vector of EventData
   vector<vector<SampleDataD> > GeVector(nGroups,vector<SampleDataD> (nExc));
@@ -198,58 +209,103 @@ int FeedForwardNetwork::main( void )
   // Stimulus generation
   if (index("stimulus")==0) {
     message("Generate Pulse Packet stimulus with sigma: "+Str(number("sigma"))+" (ms) and alpha: "+Str(number("alpha"))+" (spikes)");
-    PulsePacket(SpikeTimesVector[0],integer("alpha"),number("sigma"),nExc,onset);
+    //PulsePacket(SpikeTimesVector[0],integer("alpha1"),number("sigma1"),nExc,onset);
+    PulsePacket(SpikeTimesStimulusVector[0],integer("alpha1"),number("sigma1"),nExc,onset1); // S1
+    PulsePacket(SpikeTimesStimulusVector[1],integer("alpha2"),number("sigma2"),nExc,onset2); // S2
   }
   else if (index("stimulus")==1){
     MIP(SpikeTimesVector[0]);
     //return 0;
   }
   else if (index("stimulus")==2){
-    message("Generate poisson stimulus with rate: "+Str(number("rate")));
-    Poisson(SpikeTimesVector[0]);
+    //message("Generate poisson stimulus with rate: "+Str(number("rate")));
+    Poisson(SpikeTimesStimulusVector[0], number("poissonstimulusrate1"),duration1, onset1); // S1
+    Poisson(SpikeTimesStimulusVector[1], number("poissonstimulusrate2"),duration2, onset2); // S2
   }
   
   // Plot stimulus
   P[0].clear();
   for (int neuron=0;neuron<integer("nExc");neuron++){
-    rasterplot(SpikeTimesVector,0,neuron); 
+    rasterplot(SpikeTimesStimulusVector,0,neuron,-2*integer("nExc"));
+    rasterplot(SpikeTimesStimulusVector,1,neuron,-2*integer("nExc"));
   }
-    
+  
   // Generate FeedForwardNetwork
   // The FFN is generate by stimuluating each neuron a group with its convergent inputs from the preceeding group.
   GammaKernel gkexc(number("tau_syn_exc"),1);
   GammaKernel gkinh(number("tau_syn_inh"),1);
   // Groups
-  for (int group=1;group<nGroups && softStop() == 0;group++){
+  for (int group=0;group<nGroups && softStop() == 0;group++){
     // Neuron in groups
     for (int neuron=0;neuron<nExc;neuron++){
       // Collect the convergent input spikes
       // Excitatory spikes
-      EventData ExcInputSpikes = convergentInput(SpikeTimesVector[group-1],1,number("intergroupdelay"));
-      // Inhibitory spikes
-      // If we are in the gate group we have to change the delay
-      double delay = 0.;
-      if (group == integer("gateGroup")){
-	delay = number("gateDelay");
+      double delay1 = 0.;
+      double delay2 = 0.;
+      EventData ExcInputSpikes1;
+      EventData ExcInputSpikes2;
+      EventData InhInputSpikes1;
+      EventData InhInputSpikes2;
+      if (group==0){
+	// we have to collect the data from the stimulus, here we can have two stimuli
+	ExcInputSpikes1 = convergentInput(SpikeTimesStimulusVector[0],number("intergroupdelay")); // S1
+	ExcInputSpikes2 = convergentInput(SpikeTimesStimulusVector[1],number("intergroupdelay")); // S2
+	if (group == integer("gateGroup")){
+	  delay1 = number("gateDelay1");
+	  delay2 = number("gateDelay1");
+	}
+	else{
+	  delay1 = number("delay");
+	  delay2 = number("delay");
+	}
+	InhInputSpikes1 = convergentInput(SpikeTimesStimulusVector[0],number("intergroupdelay")+delay1);
+	InhInputSpikes2 = convergentInput(SpikeTimesStimulusVector[1],number("intergroupdelay")+delay2);
       }
-      else{
-	delay = number("delay");
+      else {
+	// we are in the FFN, here we can not have two stimuli as we only have one pre-group
+	ExcInputSpikes1 = convergentInput(SpikeTimesVector[group-1],number("intergroupdelay"));
+	// Inhibitory spikes
+	// If we are in the gate group we have to change the delay
+	if (group == integer("gateGroup")){
+	  delay1 = number("gateDelay1");
+	}
+	else{
+	  delay1 = number("delay");
+	}
+	InhInputSpikes1 = convergentInput(SpikeTimesVector[group-1],number("intergroupdelay")+delay1);
       }
-      EventData InhInputSpikes = convergentInput(SpikeTimesVector[group-1],integer("nInh"),number("intergroupdelay")+delay);
             
       // Convert input spikes into conductance traces
       // Excitatory cond input
-      SampleDataD ExcStimCond( 0.0, duration, 1.0/samplerate );
-      ExcInputSpikes.rate(ExcStimCond,gkexc);
-      ExcStimCond /= gkexc.max(); // 1 spike would have ampltiude 1
-      ExcStimCond *= JeFFN; // scale by JeFFN
-      ExcStimCond *= scaleJeFFN; // scale by scaleJeFFN
+      SampleDataD ExcStimCond1( 0.0, duration, 1.0/samplerate );
+      SampleDataD ExcStimCond2( 0.0, duration, 1.0/samplerate );
+      ExcInputSpikes1.rate(ExcStimCond1,gkexc);
+      ExcInputSpikes2.rate(ExcStimCond2,gkexc);
+      ExcStimCond1 /= gkexc.max(); // 1 spike would have ampltiude 1
+      ExcStimCond2 /= gkexc.max(); // 1 spike would have ampltiude 1
+      // we add
+      ExcStimCond1 += ExcStimCond2;
+      // we scale after we add, because exc is not used in the amplitude gating
+      ExcStimCond1 *= JeFFN; // scale by JeFFN
+      ExcStimCond1 *= scaleJeFFN; // scale by scaleJeFFN
+      
       // Inhibitory cond input
-      SampleDataD InhStimCond( 0.0, duration, 1.0/samplerate );
-      InhInputSpikes.rate(InhStimCond,gkinh);
-      InhStimCond /= gkinh.max();
-      InhStimCond *= JeFFN; // scale by JeFFN
-      InhStimCond *= gFFN; // scale by gFFN
+      SampleDataD InhStimCond1( 0.0, duration, 1.0/samplerate );
+      SampleDataD InhStimCond2( 0.0, duration, 1.0/samplerate );
+      InhInputSpikes1.rate(InhStimCond1,gkinh);
+      InhInputSpikes2.rate(InhStimCond2,gkinh);
+      InhStimCond1 /= gkinh.max();
+      InhStimCond2 /= gkinh.max();
+      message("max inhcond1: "+Str(max(InhStimCond1)));
+      message("max inhcond2: "+Str(max(InhStimCond2)));
+      // we scale first, because of the amplitude gating
+      InhStimCond1 *= gFFN1; // scale by gFFN
+      InhStimCond2 *= gFFN2; // scale by gFFN
+      // we add
+      InhStimCond1 += InhStimCond2;
+      // we scale overall
+      InhStimCond1 *= JeFFN; // scale by JeFFN
+      InhStimCond1 *= scaleJeFFN; // scale by scaleJeFFN
       
       // Background input
       EventData ExcBkg;
@@ -269,16 +325,18 @@ int FeedForwardNetwork::main( void )
       InhBkgCond *= gBKG;
       
       // combined data
-      SampleDataD ge(ExcBkgCond+ExcStimCond);
-      SampleDataD gi(InhBkgCond+InhStimCond);
+      SampleDataD ge(ExcBkgCond+ExcStimCond1);
+      SampleDataD gi(InhBkgCond+InhStimCond1);
       
       
       // Save input
       GeVector[group][neuron] = ge;
       GiVector[group][neuron] = gi;
       
+      //SampleDataD vm( 0.0, duration, 1.0/samplerate );
+      //VmVector[group][neuron] = vm;
       // Stimulation
-      stimulate(ge,gi,SpikeTimesVector[group][neuron],SignalTimesVector[group][neuron],duration);
+      stimulate(ge,gi,VmVector[group][neuron],SpikeTimesVector[group][neuron],SignalTimesVector[group][neuron],duration);
       if ( interrupt() ) {
 	break;
       }
@@ -289,7 +347,7 @@ int FeedForwardNetwork::main( void )
       tracePlotSignal( duration );
       
       // plot rasters and vm and conductance
-      rasterplot(SpikeTimesVector,group,neuron);
+      rasterplot(SpikeTimesVector,group,neuron,0);
       traceplot(ge,gi,1,duration);
         
     }
@@ -300,14 +358,15 @@ int FeedForwardNetwork::main( void )
   
   
   // save the data
-  saveEvents(SpikeTimesVector,SignalTimesVector,"stimulation");
-  saveTraces(GeVector,GiVector,SignalTimesVector,duration,"stimulation");
+  saveEvents(SpikeTimesVector,"spike_times_stimulation");
+  saveTraces(GeVector,GiVector,VmVector,duration,"stimulation");
   saveSettings();
+  saveEvents(SpikeTimesStimulusVector,"stimulus_times_stimulation");
   return state;
   
 }
   
-void FeedForwardNetwork::rasterplot(const vector<vector<EventData> > &SpikeTimes,int group, int neuron){
+void FeedForwardNetwork::rasterplot(const vector<vector<EventData> > &SpikeTimes,int group, int neuron, int groupoffset){
   
   P.lock();
   // we do not clear the plot because we only add the latest spike train
@@ -325,17 +384,17 @@ void FeedForwardNetwork::rasterplot(const vector<vector<EventData> > &SpikeTimes
   int pcolor=Plot::White;
   
   double ymax = (number("nGroups")*number("nExc"));
-  double ymin = 0;
-  ymin = -1.*ymax*0.1;
+  double ymin = -2*number("nExc");
+  //ymin = -1.*ymax*0.1;
   ymax = ymax+0.1*ymax;
   
     
-  P[0].plotHLine((group*number("nExc"))-0.5, Plot::Green, 1 );
+  P[0].plotHLine((group*number("nExc"))-0.5+groupoffset, Plot::Green, 1 );
   
   EventData ed = SpikeTimes[group][neuron];
   for (int sp=0;sp<ed.size();sp++){
     x = ed[sp];
-    y = neuron+(group*number("nExc"));
+    y = neuron+(group*number("nExc"))+groupoffset;
     P[0].plotPoint(x,xcoor,y,ycoor,lwidth,ptype,size,sizecoor,pcolor);
   }
   
@@ -366,26 +425,27 @@ void FeedForwardNetwork::rasterplot(const vector<vector<EventData> > &SpikeTimes
 
   void FeedForwardNetwork::PulsePacket(vector<EventData> &SpikeTimes, int alpha, double sigma, int groupsize, double onset)
 {
-	double time;
-	for (int neuron=0;neuron<groupsize;neuron++){
-	  for (int i=0;i<alpha;i++){
-	    time = rngStimulus.gaussian();
-	    SpikeTimes[neuron].insert((sigma*time)+onset);
-	    //message("neuron "+Str(neuron)+" time "+Str(time)+" +onset "+Str((sigma*time)+onset));
-	    //message("PP: neuron: "+Str(neuron)+" spikes "+Str(SpikeTimes[neuron].size()));
-	  }
-	}
+  message("alpha "+Str(alpha));
+  double time;
+  for (int neuron=0;neuron<groupsize;neuron++){
+    for (int i=0;i<alpha;i++){
+      time = rngStimulus.gaussian();
+      SpikeTimes[neuron].insert((sigma*time)+onset);
+      //message("neuron "+Str(neuron)+" time "+Str(time)+" +onset "+Str((sigma*time)+onset));
+      //message("PP: neuron: "+Str(neuron)+" spikes "+Str(SpikeTimes[neuron].size()));
+    }
+  }
 }
 
-void FeedForwardNetwork::Poisson(vector<EventData> &SpikeTimes)
+void FeedForwardNetwork::Poisson(vector<EventData> &SpikeTimes, double rate, double duration, double onset)
   {
     //message("pg: "+Str(number("duration"))+"  rate "+Str(number("poissonstimulusrate")));
     for (int neuron=0;neuron<number("nExc");neuron++){
       EventData pgtmp;
-      pgtmp.poisson(number("poissonstimulusrate"),0.0,number("duration")-number("onset"),rngStimulus);//-number("onset"));
+      pgtmp.poisson(rate,0.0,duration,rngStimulus);//-number("onset"));
       //message("pg "+Str(neuron)+" size "+Str(pgtmp.size()));
       for (int i=0;i<pgtmp.size();i++){
-	pgtmp[i] += number("onset");
+	pgtmp[i] += onset;
       }
       SpikeTimes[neuron] = pgtmp;
             
@@ -416,13 +476,13 @@ void FeedForwardNetwork::MIP(vector<EventData> &SpikeTimes)
     }
   }
 
-EventData FeedForwardNetwork::convergentInput(const vector<EventData> &SpikeTimes,int numberOfRepeats,double delay){
+EventData FeedForwardNetwork::convergentInput(const vector<EventData> &SpikeTimes,double delay){
   // 
   double cp = 1-number("cp");
   double p = 0.;
   // 
   EventData InputSpikeTimes;
-  
+  int numberOfRepeats = 1;
   for (int h=0;h<numberOfRepeats;h++){
 		for (int preneuron = 0;preneuron<number("nExc");preneuron++){
 			p = rngNetwork.uniform();
@@ -467,9 +527,9 @@ void FeedForwardNetwork::saveSettings(){
 
 }
 
-  void FeedForwardNetwork::saveEvents(const vector<vector<EventData> > &SpikeTimes,const vector<vector<double> > &SignalTimes, Str name){
+  void FeedForwardNetwork::saveEvents(const vector<vector<EventData> > &SpikeTimes,Str name){
   
-  ofstream df(addPath( "ffn_spike_times_"+name+'_'+Str(completeRuns())+".dat" ).c_str());
+  ofstream df(addPath( "ffn_"+name+'_'+Str(completeRuns())+".dat" ).c_str());
   
   df << "# group neuron spiketime\n";
   // SpikeTimes we save even in group 0, because this is the stimulus
@@ -485,8 +545,9 @@ void FeedForwardNetwork::saveSettings(){
       
     }
   }
-  message("Saving Spikes done");
-  
+  message("Saving "+name+"done");
+  }  
+/*
   ofstream dfs(addPath( "ffn_signal_times_"+name+'_'+Str(completeRuns())+".dat" ).c_str());
   // SignalTimes we dont save from group 0, since all are 0, because group 0 is stimulus
   dfs << "# group neuron signaltimes\n";
@@ -499,8 +560,9 @@ void FeedForwardNetwork::saveSettings(){
   message("Saving Signal Times done");
 	
 }
+  */
 
-  void FeedForwardNetwork::saveTraces(const vector<vector<SampleDataD> > &ge,const vector<vector<SampleDataD> > &gi,const vector<vector<double> > &SignalTimes, double duration,Str name){
+void FeedForwardNetwork::saveTraces(const vector<vector<SampleDataD> > &ge,const vector<vector<SampleDataD> > &gi, const vector<vector<SampleDataD> > &vm,double duration,Str name){
     ofstream dfge(addPath( "ffn_ge_trace_"+name+'_'+Str(completeRuns())+".dat" ).c_str());
     ofstream dfgi(addPath( "ffn_gi_trace_"+name+'_'+Str(completeRuns())+".dat" ).c_str());
     ofstream dfvm(addPath( "ffn_vm_trace_"+name+'_'+Str(completeRuns())+".dat" ).c_str());
@@ -510,24 +572,22 @@ void FeedForwardNetwork::saveSettings(){
     message("ge shape: "+Str(ge[0].size()));
     
     // vm trace
-    const InData &intrace = trace( SpikeTrace[0] );
+    //const InData &intrace = trace( SpikeTrace[0] );
     double samplerate = trace( SpikeTrace[0] ).sampleRate();
-    
     // time trace
     double time = 0.;
-    for (int i=0;i<ge[1][0].size();i++){
+    for (int i=0;i<ge[0][0].size();i++){
       dftime << time;
       dftime << " ";
       time += (1./samplerate);
     }
     dftime << "\n";
-    
-    for (int group=1;group<ge.size();group++){
+    for (int group=0;group<ge.size();group++){
       for (int neuron=0;neuron<ge[0].size();neuron++){
 	
-	SampleDataD vm( 0.0,duration, 1.0/samplerate );
-	double signaltime = SignalTimes[group][neuron];
-	intrace.copy(signaltime,vm);
+	//SampleDataD vm( 0.0,duration, 1.0/samplerate );
+	//double signaltime = SignalTimes[group][neuron];
+	//intrace.copy(signaltime,vm);
 	
 	for (int i=0;i<ge[group][neuron].size();i++){
 	  // ge
@@ -537,7 +597,7 @@ void FeedForwardNetwork::saveSettings(){
 	  dfgi << gi[group][neuron][i];
 	  dfgi << " ";
 	  // vm
-	  dfvm << vm[i];
+	  dfvm << vm[group][neuron][i];
 	  dfvm << " ";
 	}
 	dfge << "\n";
@@ -551,7 +611,7 @@ void FeedForwardNetwork::saveSettings(){
     
   }
   
-void FeedForwardNetwork::stimulate(SampleDataD &ge, SampleDataD &gi, EventData &SpikeTimes, double &signaltime, double duration){
+void FeedForwardNetwork::stimulate(SampleDataD &ge, SampleDataD &gi, SampleDataD &vm,EventData &SpikeTimes, double &signaltime, double duration){
    
   //ge += 0.00001;
   //gi += 0.00001;
@@ -641,6 +701,12 @@ void FeedForwardNetwork::stimulate(SampleDataD &ge, SampleDataD &gi, EventData &
     // This should copy the spikes between signaltime and signaltime+duration, with a reference of signaltime 
     spikes.copy(signaltime,signaltime+duration,signaltime,SpikeTimes);
   }
+  // cut out vm
+  double samplerate = trace( SpikeTrace[0] ).sampleRate();
+  const InData &intrace = trace( SpikeTrace[0] );
+  SampleDataD vmtmp( 0.0,duration, 1.0/samplerate );
+  intrace.copy(signaltime,vmtmp);
+  vm = vmtmp;
   
 }
   
@@ -676,6 +742,8 @@ void FeedForwardNetwork::stimulate(SampleDataD &ge, SampleDataD &gi, EventData &
       // Conductances as a vector of vector of EventData
       vector<vector<SampleDataD> > GeVector(2,vector<SampleDataD> (integer("calibrationtrials")));
       vector<vector<SampleDataD> > GiVector(2,vector<SampleDataD> (integer("calibrationtrials")));
+      // vm
+      vector<vector<SampleDataD> > VmVector(2,vector<SampleDataD> (integer("calibrationtrials")));
       // Signaltimes
       vector<vector<double> > SignalTimesVector(2,vector<double> (integer("calibrationtrials")));
   
@@ -708,7 +776,7 @@ void FeedForwardNetwork::stimulate(SampleDataD &ge, SampleDataD &gi, EventData &
       // stimulation
       //EventData SpikeTimesResponse;
       //double sigt;
-      stimulate(ge,gi,SpikeTimesVector[1][trial],SignalTimesVector[1][trial],duration);
+      stimulate(ge,gi,VmVector[1][trial],SpikeTimesVector[1][trial],SignalTimesVector[1][trial],duration);
       if ( interrupt() ) {
 	return 0;
 	// XXX Break is not enough here!
@@ -747,8 +815,8 @@ void FeedForwardNetwork::stimulate(SampleDataD &ge, SampleDataD &gi, EventData &
 	JeBKG -= JebkgStep;
       }
     }
-    saveEvents(SpikeTimesVector,SignalTimesVector,"bkg_calibration");
-    saveTraces(GeVector,GiVector,SignalTimesVector,duration,"bkg_calibration");
+    saveEvents(SpikeTimesVector,"spike_times_bkg_calibration");
+    saveTraces(GeVector,GiVector,VmVector,duration,"bkg_calibration");
       
     
     }
@@ -760,6 +828,8 @@ void FeedForwardNetwork::stimulate(SampleDataD &ge, SampleDataD &gi, EventData &
       // Conductances as a vector of vector of EventData
       vector<vector<SampleDataD> > GeVector(2,vector<SampleDataD> (integer("calibrationtrials")));
       vector<vector<SampleDataD> > GiVector(2,vector<SampleDataD> (integer("calibrationtrials")));
+      // Vm
+      vector<vector<SampleDataD> > VmVector(2,vector<SampleDataD> (integer("calibrationtrials")));
       // Signaltimes
       vector<vector<double> > SignalTimesVector(2,vector<double> (integer("calibrationtrials")));
       
@@ -808,7 +878,7 @@ void FeedForwardNetwork::stimulate(SampleDataD &ge, SampleDataD &gi, EventData &
       GiVector[1][trial] = gi;
       
       //
-      stimulate(ge,gi,SpikeTimesVector[1][trial],SignalTimesVector[1][trial],duration);
+      stimulate(ge,gi,VmVector[1][trial],SpikeTimesVector[1][trial],SignalTimesVector[1][trial],duration);
       //EventData SpikeTimesResponse;
       //double sigt;
       //stimulate(ge,gi,SpikeTimesResponse,sigt,duration);
@@ -835,8 +905,8 @@ void FeedForwardNetwork::stimulate(SampleDataD &ge, SampleDataD &gi, EventData &
       
       
     }
-    saveEvents(SpikeTimesVector,SignalTimesVector,"ffn_calibration");
-    saveTraces(GeVector,GiVector,SignalTimesVector,duration,"ffn_calibration");
+    saveEvents(SpikeTimesVector,"spike_times_ffn_calibration");
+    saveTraces(GeVector,GiVector,VmVector,duration,"ffn_calibration");
     }
       
     P.lock();
