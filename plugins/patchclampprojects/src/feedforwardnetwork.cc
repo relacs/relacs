@@ -46,14 +46,16 @@ FeedForwardNetwork::FeedForwardNetwork( void )
   addLabel( "Network" );
   addInteger( "nGroups", "Number of groups", 4, 1, 100, 1 );
   addInteger( "nExc", "Number of Exc neurons in each group", 100, 1, 1000, 1 );
-  addInteger( "nInh", "Number of Inh neurons in each group", 25, 1, 1000, 1 );
+  //addInteger( "nInh", "Number of Inh neurons in each group", 25, 1, 1000, 1 );
   addNumber( "cp", "Connection probability", 0.5, 0.0, 1.0, 0.001 );
   addNumber( "JeFFN", "Exc. Synaptic strength", 0.1, 0.0, 1000.0, 0.1 );
   addNumber( "scaleJeFFN", "Exc. Synaptic scaling", 1., 0.0, 100.0, 0.01 );
-  addNumber( "gFFN", "Inhibitory gain", 0.1, 0.0, 100.0, 0.1 );
+  addNumber( "gFFN1", "Inhibitory gain S1", 0.1, 0.0, 100.0, 0.1 );
+  addNumber( "gFFN2", "Inhibitory gain S2", 0.1, 0.0, 100.0, 0.1 );
   addNumber( "delay", "Delay between Exc & Inh", 0.003, -10.0, 10.0, 0.1 ,"sec","ms");
   addNumber("intergroupdelay","Delay between groups",0.0,0.,1.,0.001,"sec","ms");
-  addNumber( "gateDelay", "Delay between Exc & Inh in gate", 0., -10.0, 10.0, 0.1 ,"sec","ms");
+  addNumber( "gateDelay1", "Delay between Exc & Inh in gate S1", 0., -10.0, 10.0, 0.1 ,"sec","ms");
+  addNumber( "gateDelay2", "Delay between Exc & Inh in gate S2", 0., -10.0, 10.0, 0.1 ,"sec","ms");
   addInteger("gateGroup","Gate Group",2,0,100);
   addInteger("seedNetwork","RNG seed of the network",2,1000,1);
   addSelection("calibrateBKG","Background calibration","yes|no");
@@ -69,7 +71,8 @@ FeedForwardNetwork::FeedForwardNetwork( void )
   
   addLabel("Stimuli");
   addSelection("stimulus","Stimulus type","pulse packet|MIP|poisson");
-  addNumber("onset","Onset",0.05,0.,10000.,1,"sec","ms");
+  addNumber("onset1","Onset S1",0.05,0.,10000.,1,"sec","ms");
+  addNumber("onset2","Onset S2",0.05,0.,10000.,1,"sec","ms");
   addNumber( "duration", "Duration", 0.1, 0.01, 1000.0, 0.01,"sec","ms");
   addInteger("seedStimulus","RNG seed of the stimulus",1,1000,1);
   addNumber("pause","Pause",0.,0.,10.,0.1,"sec","ms");
@@ -81,11 +84,16 @@ FeedForwardNetwork::FeedForwardNetwork( void )
   addInteger("seedBKG","RNG seed of the BKG",1,1000,1);
   
   addLabel("Pulse Packet");
-  addNumber("alpha","Number of spikes",1,1,1000.,1);
-  addNumber("sigma","Temporal spread",0.002,0.00001,1000.,0.1,"sec","ms");	
+  addNumber("alpha1","Number of spikes S1",1,1,1000.,1);
+  addNumber("sigma1","Temporal spread S1",0.002,0.00001,1000.,0.1,"sec","ms");	
+  addNumber("alpha2","Number of spikes S2",1,1,1000.,1);
+  addNumber("sigma2","Temporal spread S2",0.002,0.00001,1000.,0.1,"sec","ms");
   
   addLabel("Poisson");
-  addNumber("poissonstimulusrate","Rate",0.,0.,1000.,0.1,"Hz");
+  addNumber("poissonstimulusrate1","Rate S1",0.,0.,1000.,0.1,"Hz");
+  addNumber("poissonstimulusrate2","Rate S2",0.,0.,1000.,0.1,"Hz");
+  addNumber("duration1","Duration S1",0.,0.,1000.,0.1,"Hz");
+  addNumber("duration2","Duration S2",0.,0.,1000.,0.1,"Hz");
   
   addLabel("MIP");
   addNumber("MIPstimulusrate","Rate",10.,0.00001,1000.,0.1,"Hz" );
@@ -466,11 +474,11 @@ void FeedForwardNetwork::saveSettings(){
   df << "# group neuron spiketime\n";
   // SpikeTimes we save even in group 0, because this is the stimulus
   for (int group=0;group<SpikeTimes.size();group++){
-    message("group "+Str(group));
+    //message("group "+Str(group));
     for (int neuron=0;neuron<SpikeTimes[0].size();neuron++){
-      message("neuron "+Str(neuron));
+      //message("neuron "+Str(neuron));
       for (int spike=0;spike<SpikeTimes[group][neuron].size();spike++){
-	message('spike '+Str(SpikeTimes[group][neuron][spike]));
+	//message('spike '+Str(SpikeTimes[group][neuron][spike]));
 	Str line = Str(group)+" "+Str(neuron)+" "+Str(SpikeTimes[group][neuron][spike])+"\n";
 	df << line;
       }
@@ -755,6 +763,8 @@ void FeedForwardNetwork::stimulate(SampleDataD &ge, SampleDataD &gi, EventData &
       // Signaltimes
       vector<vector<double> > SignalTimesVector(2,vector<double> (integer("calibrationtrials")));
       
+      // JeFFN
+      vector<double> JeFFNVector(vector<double> (integer("calibrationtrials")));
     // Now we tune the stimulus
     // we change duration to the regular duration because we are only interested in the spiking response
     duration = number("duration");
@@ -811,6 +821,7 @@ void FeedForwardNetwork::stimulate(SampleDataD &ge, SampleDataD &gi, EventData &
       tracePlotSignal( duration );
       traceplot(ge,gi,0,duration);
       
+      JeFFNVector[trial] = JeFFN;
       // update Je
       if (SpikeTimesVector[1][trial].size()<1){
 	JeFFN += JStep;
