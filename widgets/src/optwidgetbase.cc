@@ -240,7 +240,7 @@ void OptWidgetText::update( void )
 {
   if ( UnitLabel != 0 ) {
     InternChanged = true;
-    UnitLabel->setText( (*Param).outUnit().c_str() );
+    UnitLabel->setText( (*Param).outUnit().htmlUnit().c_str() );
     InternChanged = false;
   }
 }
@@ -529,7 +529,7 @@ void OptWidgetMultiText::update( void )
 {
   if ( UnitLabel != 0 ) {
     InternChanged = true;
-    UnitLabel->setText( (*Param).outUnit().c_str() );
+    UnitLabel->setText( (*Param).outUnit().htmlUnit().c_str() );
     InternChanged = false;
   }
 }
@@ -776,7 +776,7 @@ void OptWidgetNumber::update( void )
 {
   InternChanged = true;
   if ( UnitLabel != 0 )
-    UnitLabel->setText( (*Param).outUnit().c_str() );
+    UnitLabel->setText( (*Param).outUnit().htmlUnit().c_str() );
   if ( Editable ) {
     double val = (*Param).number( (*Param).outUnit() );
     double min = (*Param).minimum( (*Param).outUnit() );
@@ -788,7 +788,9 @@ void OptWidgetNumber::update( void )
       EW->setFormat( (*Param).format() );
     else
       EW->setFormat( "%.0f" );
+    InternRead = true;
     EW->setValue( val );
+    InternRead = false;
   }
   InternChanged = false;
 }

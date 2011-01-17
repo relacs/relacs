@@ -1473,12 +1473,12 @@ double Options::step( const string &ident, const string &unit ) const
 }
 
 
-Parameter &Options::setStep( const string &ident, double step )
+Parameter &Options::setStep( const string &ident, double step, const string &unit )
 {
   iterator pp = find( ident );
   // set values:
   if ( pp != end() ) {
-    (*pp).setStep( step );
+    (*pp).setStep( step, unit );
     Warning += (*pp).warning();
   }
 #ifndef NDEBUG
@@ -1545,18 +1545,55 @@ Str Options::outUnit( const string &ident ) const
 
 
 Parameter &Options::setUnit( const string &ident, const string &internunit, 
-			     const string &outputunit )
+			     const string &outunit )
 {
   iterator pp = find( ident );
   // set values:
   if ( pp != end() ) {
-    (*pp).setUnit( internunit, outputunit );
+    (*pp).setUnit( internunit, outunit );
     Warning += (*pp).warning();
   }
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
     cerr << "!warning in Options::setUnit( " << ident << " ) -> " << Warning << '\n';
+  }
+#endif
+  return *pp;
+}
+
+
+Parameter &Options::setOutUnit( const string &ident, 
+				const string &outputunit )
+{
+  iterator pp = find( ident );
+  // set values:
+  if ( pp != end() ) {
+    (*pp).setOutUnit( outputunit );
+    Warning += (*pp).warning();
+  }
+#ifndef NDEBUG
+  if ( ! Warning.empty() ) {
+    // error?
+    cerr << "!warning in Options::setOutUnit( " << ident << " ) -> " << Warning << '\n';
+  }
+#endif
+  return *pp;
+}
+
+
+Parameter &Options::changeUnit( const string &ident, const string &internunit )
+{
+  iterator pp = find( ident );
+  // set values:
+  if ( pp != end() ) {
+    (*pp).changeUnit( internunit );
+    Warning += (*pp).warning();
+  }
+#ifndef NDEBUG
+  if ( ! Warning.empty() ) {
+    // error?
+    cerr << "!warning in Options::changeUnit( " << ident << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;

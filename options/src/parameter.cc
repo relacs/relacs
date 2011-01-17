@@ -384,7 +384,7 @@ Parameter &Parameter::assign( const string &value )
 	  Str( String[k] ).date( year, month, day );
 	  addDate( year, month, day );
 	}
-	setUnit( "" );
+	setUnit( "", "" );
       }
       else {
 	// check for time:
@@ -404,7 +404,7 @@ Parameter &Parameter::assign( const string &value )
 	    Str( String[k] ).time( hour, minutes, seconds );
 	    addTime( hour, minutes, seconds );
 	  }
-	  setUnit( "" );
+	  setUnit( "", "" );
 	}
 	else {
 	  // check for numbers:
@@ -473,7 +473,7 @@ Parameter &Parameter::assign( const string &value )
 	      }
 	    if ( b ) {
 	      setType( Boolean );
-	      setUnit( "" );
+	      setUnit( "", "" );
 	      for ( int k=0; k<String.size(); k++ )
 		Value.push_back( String[k] == "true" ? 1.0 : 0.0 );
 	    }
@@ -1481,7 +1481,7 @@ Parameter &Parameter::addNumber( const Str &s, const string &unit )
     return *this;
   }
   double e = -1.0;
-  string u=unit;
+  string u = unit;
   double v = s.number( e, u, MAXDOUBLE );
   if ( u.empty() )
     u = OutUnit;
@@ -1490,6 +1490,12 @@ Parameter &Parameter::addNumber( const Str &s, const string &unit )
       v = 1.0;
     else if ( s == "false" )
       v = 0.0;
+    else {
+      // this is not a number:
+      Value.push_back( MAXDOUBLE );
+      Error.push_back( MAXDOUBLE );
+      return *this;
+    }
   }
   return addNumber( v, e, u );
 }
@@ -1718,13 +1724,18 @@ double Parameter::step( const string &unit ) const
 }
 
 
-Parameter &Parameter::setStep( double step )
+Parameter &Parameter::setStep( double step, const string &unit )
 {
   if ( ! isAnyNumber() ) {
     Warning = "Parameter::setStep -> parameter '" + 
       Ident + "' is not of type number!";
     return *this;
   }
+
+  double u = changeUnit( 1.0, unit, InternUnit );
+  if ( step != 0.0 )
+    step *= u;
+
   Warning = "";
   if ( step < 0.0 ) {
     if ( Minimum > -MAXDOUBLE &&
@@ -1860,7 +1871,7 @@ Parameter &Parameter::setUnit( const string &internunit,
   else
     InternUnit = internunit;
   if ( outputunit.empty() )
-    OutUnit =  InternUnit;
+    OutUnit = InternUnit;
   else
     OutUnit = outputunit;
   return *this;
@@ -1871,9 +1882,27 @@ Parameter &Parameter::setOutUnit( const string &outputunit )
 {
   Warning = "";
   if ( outputunit.empty() )
-    OutUnit =  InternUnit;
+    OutUnit = InternUnit;
   else
     OutUnit = outputunit;
+  return *this;
+}
+
+
+Parameter &Parameter::changeUnit( string internunit )
+{
+  Warning = "";
+  // check units ...
+  if ( OutUnit == "%" && internunit == "" )
+    internunit = "1";
+  // convert values:
+  double fac = changeUnit( 1.0, InternUnit, internunit );
+  for ( unsigned int k=0; k<Value.size(); k++ )
+    Value[0] *= fac;
+  for ( unsigned int k=0; k<DefaultValue.size(); k++ )
+    DefaultValue[0] *= fac;
+  // set new unit:
+  InternUnit = internunit;
   return *this;
 }
 

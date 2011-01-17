@@ -594,12 +594,13 @@ public:
         the unit \a unit or in the internal standard unit, 
         if \a unit is an empty string. */
   double step( const string &unit="" ) const;
-    /* Set the step size to \a step.
+    /* Set the step size to \a step of unit \a unit.
        If \a step is negative, the step size is set to \a maximum - \minimum
        devided by \a step.
        If \a step equals zero, the step size is set to 1/50 of
-       \a maximum - \a minimum. */
-  Parameter &setStep( double step );
+       \a maximum - \a minimum.
+       If \a unit is empty, \a step is assumed to be given in the internal unit. */
+  Parameter &setStep( double step, const string &unit="" );
     /* Set the step size to \a step.
        If \a step is negative, the step size is set to \a maximum - \minimum
        devided by \a step.
@@ -638,10 +639,13 @@ public:
     /*! Set unit of numbers to \a internunit.
         The unit used for output and dialogs is set to \a outputunit.
 	If \a outputunit is empty it is set to \a internunit. */
-  Parameter &setUnit( const string &internunit="", 
+  Parameter &setUnit( const string &internunit, 
 		      const string &outputunit="" );
     /*! Set the unit used for output and dialogs to \a outputunit. */
   Parameter &setOutUnit( const string &outputunit );
+    /*! Set the unit of numbers to \a internunit
+        and convert the value of the parameter accordingly. */
+  Parameter &changeUnit( string internunit );
   
     /*! True if parameter is of type boolean. */
   bool isBoolean( void ) const;

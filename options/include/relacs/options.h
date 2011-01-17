@@ -594,12 +594,13 @@ public:
 	neither a number nor an integer, unity is returned. */
   double step( const string &ident, const string &unit="" ) const;
     /* Set the step size of an existing number option 
-        with identifier \a ident to \a step.
+       with identifier \a ident to \a step of unit \a unit.
        If \a step is negative, the step size is set to \a maximum - \minimum
        devided by \a step.
        If \a step equals zero, the step size is set to 1/50 of
-       \a maximum - \a minimum. */
-  Parameter &setStep( const string &ident, double step );
+       \a maximum - \a minimum.
+       If \a unit is empty, \a step is assumed to be given in the internal unit. */
+  Parameter &setStep( const string &ident, double step, const string &unit="" );
     /*! Set the minimum and maximum of an existing number option 
         with identifier \a ident to \a minimum and \a maximum, respectively. */
   Parameter &setMinMax( const string &ident, double minimum=-MAXDOUBLE, 
@@ -634,11 +635,18 @@ public:
         If there is no option with identifier \a ident, or the option is
 	neither a number nor an integer, an empty string is returned. */
   Str outUnit( const string &ident ) const;
-    /*! Set the output unit and the internal unit of an existing number option 
-        with identifier \a ident to \a outputunit and inputunit, respectively.
-        If \a internunit is an empty string it is set to \a outputunit. */
-  Parameter &setUnit( const string &ident, const string &outputunit, 
-		      const string &internunit="" );
+    /*! Set the internal unit and the output unit of an existing number option 
+        with identifier \a ident to \a internunit and \a outunit, respectively.
+        If \a outunit is an empty string it is set to \a internunit. */
+  Parameter &setUnit( const string &ident, const string &internunit, 
+		      const string &outunit="" );
+    /*! Set the output unit of an existing number option 
+        with identifier \a ident to \a outputunit. */
+  Parameter &setOutUnit( const string &ident, const string &outputunit );
+    /*! Set the internal unit of an existing number option 
+        with identifier \a ident to \a inputunit.
+	The values of the parameter are converted accordingly. */
+  Parameter &changeUnit( const string &ident, const string &internunit );
 
     /*! Add a new integer option at the end of the options list. 
         Its request string for the options dialog is set to \a request,

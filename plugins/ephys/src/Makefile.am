@@ -12,7 +12,7 @@ pluginlib_LTLIBRARIES = \
     libephysneuronmodels.la \
     libephysintraspikedetector.la \
     libephysdynamicsuspikedetector.la \
-    libephyswindowmuspikedetector.la \
+    libephysthresholdsuspikedetector.la \
     libephysmotorcontrol.la \
     libephysamplifiercontrol.la
 
@@ -144,7 +144,7 @@ libephysdynamicsuspikedetector_la_include_HEADERS = $(HEADER_PATH)/dynamicsuspik
 
 
 
-libephyswindowmuspikedetector_la_CPPFLAGS = \
+libephysthresholdsuspikedetector_la_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/datafile/include \
     -I$(top_srcdir)/plot/include \
@@ -155,21 +155,21 @@ libephyswindowmuspikedetector_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     $(QT4_CPPFLAGS)
 
-libephyswindowmuspikedetector_la_LDFLAGS = \
+libephysthresholdsuspikedetector_la_LDFLAGS = \
     -module -avoid-version \
     $(QT4_LDFLAGS)
 
-libephyswindowmuspikedetector_la_LIBADD = \
+libephysthresholdsuspikedetector_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(QT4_LIBS)
 
-$(libephyswindowmuspikedetector_la_OBJECTS) : moc_windowmuspikedetector.cc
+$(libephysthresholdsuspikedetector_la_OBJECTS) : moc_thresholdsuspikedetector.cc
 
-libephyswindowmuspikedetector_la_SOURCES = windowmuspikedetector.cc
+libephysthresholdsuspikedetector_la_SOURCES = thresholdsuspikedetector.cc
 
-libephyswindowmuspikedetector_la_includedir = $(pkgincludedir)/ephys
+libephysthresholdsuspikedetector_la_includedir = $(pkgincludedir)/ephys
 
-libephyswindowmuspikedetector_la_include_HEADERS = $(HEADER_PATH)/windowmuspikedetector.h
+libephysthresholdsuspikedetector_la_include_HEADERS = $(HEADER_PATH)/thresholdsuspikedetector.h
 
 
 
@@ -239,7 +239,7 @@ check_PROGRAMS = \
     linktest_libephysneuronmodels_la \
     linktest_libephysintraspikedetector_la \
     linktest_libephysdynamicsuspikedetector_la \
-    linktest_libephyswindowmuspikedetector_la \
+    linktest_libephysthresholdsuspikedetector_la \
     linktest_libephysmotorcontrol_la \
     linktest_libephysamplifiercontrol_la
 
@@ -258,8 +258,8 @@ linktest_libephysintraspikedetector_la_LDADD = libephysintraspikedetector.la
 linktest_libephysdynamicsuspikedetector_la_SOURCES = linktest.cc
 linktest_libephysdynamicsuspikedetector_la_LDADD = libephysdynamicsuspikedetector.la
 
-linktest_libephyswindowmuspikedetector_la_SOURCES = linktest.cc
-linktest_libephyswindowmuspikedetector_la_LDADD = libephyswindowmuspikedetector.la
+linktest_libephysthresholdsuspikedetector_la_SOURCES = linktest.cc
+linktest_libephysthresholdsuspikedetector_la_LDADD = libephysthresholdsuspikedetector.la
 
 linktest_libephysmotorcontrol_la_SOURCES = linktest.cc
 linktest_libephysmotorcontrol_la_LDADD = libephysmotorcontrol.la

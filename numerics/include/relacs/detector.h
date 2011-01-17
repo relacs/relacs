@@ -184,6 +184,21 @@ public:
 		       double &threshold, double minthresh, double maxthresh,
 		       double delay, double decay, Check &check );
 
+    /*! Detect local maxima that exceed \a threshold.
+        All local maxima are stored in \a BadEvents. */
+  template < class Check >
+  void thresholdPeakHist( DataIter first, DataIter last,
+			  EventData &outevents,
+			  double &threshold, double minthresh, double maxthresh,
+			  Check &check );
+    /*! Detect local minima below \a threshold.
+        All local minima are stored in \a BadEvents. */
+  template < class Check >
+  void thresholdTroughHist( DataIter first, DataIter last,
+			    EventData &outevents,
+			    double &threshold, double minthresh, double maxthresh,
+			    Check &check );
+
   const EventData &goodEvents( void ) const { return GoodEvents; };
   const EventData &badEvents( void ) const { return BadEvents; };
   void setHistorySize( int n ) { GoodEvents.reserve( n ); BadEvents.reserve( n ); };
@@ -392,7 +407,7 @@ void Detector< DataIter, TimeIter >::peakTrough( DataIter first,
 			     minthresh, maxthresh,
 			     time, size, width );
     if ( r > 0 ) {
-      // this is really an event:
+      // this really is an event:
       outevents[0].push( time, size, width );
       checkThresh( threshold, minthresh, maxthresh );
       LastEvent = ResumeEvent;
@@ -419,7 +434,7 @@ void Detector< DataIter, TimeIter >::peakTrough( DataIter first,
 			       minthresh, maxthresh,
 			       time, size, width );
     if ( r > 0 ) {
-      // this is really an event:
+      // this really is an event:
       outevents[1].push( time, size, width );
       checkThresh( threshold, minthresh, maxthresh );
       LastEvent = ResumeEvent;
@@ -460,7 +475,7 @@ void Detector< DataIter, TimeIter >::peakTrough( DataIter first,
 				   minthresh, maxthresh, 
 				   time, size, width );
 	  if ( r > 0 ) {
-	    // this is really an event:
+	    // this really is an event:
 	    outevents[0].push( time, size, width );
 	    checkThresh( threshold, minthresh, maxthresh );
 	    LastEvent = event;
@@ -507,7 +522,7 @@ void Detector< DataIter, TimeIter >::peakTrough( DataIter first,
 				     minthresh, maxthresh,
 				     time, size, width );
 	  if ( r > 0 ) {
-	    // this is really an event:
+	    // this really is an event:
 	    outevents[1].push( time, size, width );
 	    checkThresh( threshold, minthresh, maxthresh );
 	    LastEvent = event;
@@ -581,7 +596,7 @@ void Detector< DataIter, TimeIter >::peakTroughHist( DataIter first,
 			     minthresh, maxthresh,
 			     time, size, width );
     if ( r > 0 ) {
-      // this is really an event:
+      // this really is an event:
       outevents[0].push( time, size, width );
       checkThresh( threshold, minthresh, maxthresh );
       LastEvent = ResumeEvent;
@@ -611,7 +626,7 @@ void Detector< DataIter, TimeIter >::peakTroughHist( DataIter first,
 			       minthresh, maxthresh,
 			       time, size, width );
     if ( r > 0 ) {
-      // this is really an event:
+      // this really is an event:
       outevents[1].push( time, size, width );
       checkThresh( threshold, minthresh, maxthresh );
       LastEvent = ResumeEvent;
@@ -656,7 +671,7 @@ void Detector< DataIter, TimeIter >::peakTroughHist( DataIter first,
 				   minthresh, maxthresh, 
 				   time, size, width );
 	  if ( r > 0 ) {
-	    // this is really an event:
+	    // this really is an event:
 	    outevents[0].push( time, size, width );
 	    checkThresh( threshold, minthresh, maxthresh );
 	    LastEvent = event;
@@ -716,7 +731,7 @@ void Detector< DataIter, TimeIter >::peakTroughHist( DataIter first,
 				     minthresh, maxthresh,
 				     time, size, width );
 	  if ( r > 0 ) {
-	    // this is really an event:
+	    // this really is an event:
 	    outevents[1].push( time, size, width );
 	    checkThresh( threshold, minthresh, maxthresh );
 	    LastEvent = event;
@@ -802,7 +817,7 @@ void Detector< DataIter, TimeIter >::peak( DataIter first,
 			      minthresh, maxthresh,
 			      time, size, width );
     if ( r > 0 ) {
-      // this is really an event:
+      // this really is an event:
       outevents.push( time, size, width );
       checkThresh( threshold, minthresh, maxthresh );
       LastEvent = ResumeEvent;
@@ -843,7 +858,7 @@ void Detector< DataIter, TimeIter >::peak( DataIter first,
 				    minthresh, maxthresh,
 				    time, size, width );
 	  if ( r > 0 ) {
-	    // this is really an event:
+	    // this really is an event:
 	    outevents.push( time, size, width );
 	    checkThresh( threshold, minthresh, maxthresh );
 	    LastEvent = event;
@@ -935,7 +950,7 @@ void Detector< DataIter, TimeIter >::peakHist( DataIter first,
 			      minthresh, maxthresh,
 			      time, size, width );
     if ( r > 0 ) {
-      // this is really an event:
+      // this really is an event:
       outevents.push( time, size, width );
       checkThresh( threshold, minthresh, maxthresh );
       LastEvent = ResumeEvent;
@@ -980,7 +995,7 @@ void Detector< DataIter, TimeIter >::peakHist( DataIter first,
 				    minthresh, maxthresh,
 				    time, size, width );
 	  if ( r > 0 ) {
-	    // this is really an event:
+	    // this really is an event:
 	    outevents.push( time, size, width );
 	    checkThresh( threshold, minthresh, maxthresh );
 	    LastEvent = event;
@@ -1083,7 +1098,7 @@ void Detector< DataIter, TimeIter >::trough( DataIter first,
 			      minthresh, maxthresh,
 			      time, size, width );
     if ( r > 0 ) {
-      // this is really an event:
+      // this really is an event:
       outevents.push( time, size, width );
       checkThresh( threshold, minthresh, maxthresh );
       LastEvent = ResumeEvent;
@@ -1142,7 +1157,7 @@ void Detector< DataIter, TimeIter >::trough( DataIter first,
 				    threshold, minthresh, maxthresh,
 				    time, size, width );
 	  if ( r > 0 ) {
-	    // this is really an event:
+	    // this really is an event:
 	    outevents.push( time, size, width );
 	    checkThresh( threshold, minthresh, maxthresh );
 	    LastEvent = event;
@@ -1215,7 +1230,7 @@ void Detector< DataIter, TimeIter >::troughHist( DataIter first,
 			      minthresh, maxthresh,
 			      time, size, width );
     if ( r > 0 ) {
-      // this is really an event:
+      // this really is an event:
       outevents.push( time, size, width );
       checkThresh( threshold, minthresh, maxthresh );
       LastEvent = ResumeEvent;
@@ -1287,7 +1302,7 @@ void Detector< DataIter, TimeIter >::troughHist( DataIter first,
 				    threshold, minthresh, maxthresh,
 				    time, size, width );
 	  if ( r > 0 ) {
-	    // this is really an event:
+	    // this really is an event:
 	    outevents.push( time, size, width );
 	    checkThresh( threshold, minthresh, maxthresh );
 	    LastEvent = event;
@@ -1368,7 +1383,7 @@ void Detector< DataIter, TimeIter >::dynamicPeakTrough( DataIter first,
 			     minthresh, maxthresh,
 			     time, size, width );
     if ( r > 0 ) {
-      // this is really an event:
+      // this really is an event:
       outevents[0].push( time, size, width );
       PreviousEvent = time;
       checkThresh( threshold, minthresh, maxthresh );
@@ -1396,7 +1411,7 @@ void Detector< DataIter, TimeIter >::dynamicPeakTrough( DataIter first,
 			       minthresh, maxthresh,
 			       time, size, width );
     if ( r > 0 ) {
-      // this is really an event:
+      // this really is an event:
       outevents[1].push( time, size, width );
       PreviousEvent = time;
       checkThresh( threshold, minthresh, maxthresh );
@@ -1455,7 +1470,7 @@ void Detector< DataIter, TimeIter >::dynamicPeakTrough( DataIter first,
 				   threshold, minthresh, maxthresh,
 				   time, size, width );
 	  if ( r > 0 ) {
-	    // this is really an event:
+	    // this really is an event:
 	    outevents[0].push( time, size, width );
 	    PreviousEvent = time;
 	    checkThresh( threshold, minthresh, maxthresh );
@@ -1504,7 +1519,7 @@ void Detector< DataIter, TimeIter >::dynamicPeakTrough( DataIter first,
 				     threshold, minthresh, maxthresh,
 				     time, size, width );
 	  if ( r > 0 ) {
-	    // this is really an event:
+	    // this really is an event:
 	    outevents[1].push( time, size, width );
 	    PreviousEvent = time;
 	    checkThresh( threshold, minthresh, maxthresh );
@@ -1586,7 +1601,7 @@ void Detector< DataIter, TimeIter >::dynamicPeakTroughHist( DataIter first,
 			     minthresh, maxthresh,
 			     time, size, width );
     if ( r > 0 ) {
-      // this is really an event:
+      // this really is an event:
       outevents[0].push( time, size, width );
       PreviousEvent = time;
       checkThresh( threshold, minthresh, maxthresh );
@@ -1617,7 +1632,7 @@ void Detector< DataIter, TimeIter >::dynamicPeakTroughHist( DataIter first,
 			       minthresh, maxthresh,
 			       time, size, width );
     if ( r > 0 ) {
-      // this is really an event:
+      // this really is an event:
       outevents[1].push( time, size, width );
       PreviousEvent = time;
       checkThresh( threshold, minthresh, maxthresh );
@@ -1680,7 +1695,7 @@ void Detector< DataIter, TimeIter >::dynamicPeakTroughHist( DataIter first,
 				   threshold, minthresh, maxthresh,
 				   time, size, width );
 	  if ( r > 0 ) {
-	    // this is really an event:
+	    // this really is an event:
 	    outevents[0].push( time, size, width );
 	    PreviousEvent = time;
 	    checkThresh( threshold, minthresh, maxthresh );
@@ -1742,7 +1757,7 @@ void Detector< DataIter, TimeIter >::dynamicPeakTroughHist( DataIter first,
 				     threshold, minthresh, maxthresh,
 				     time, size, width );
 	  if ( r > 0 ) {
-	    // this is really an event:
+	    // this really is an event:
 	    outevents[1].push( time, size, width );
 	    PreviousEvent = time;
 	    checkThresh( threshold, minthresh, maxthresh );
@@ -1836,7 +1851,7 @@ void Detector< DataIter, TimeIter >::dynamicPeak( DataIter first,
 			      minthresh, maxthresh,
 			      time, size, width );
     if ( r > 0 ) {
-      // this is really an event:
+      // this really is an event:
       outevents.push( time, size, width );
       PreviousEvent = time;
       checkThresh( threshold, minthresh, maxthresh );
@@ -1895,7 +1910,7 @@ void Detector< DataIter, TimeIter >::dynamicPeak( DataIter first,
 				    threshold, minthresh, maxthresh,
 				    time, size, width );
 	  if ( r > 0 ) {
-	    // this is really an event:
+	    // this really is an event:
 	    outevents.push( time, size, width );
 	    PreviousEvent = time;
 	    checkThresh( threshold, minthresh, maxthresh );
@@ -1995,7 +2010,7 @@ void Detector< DataIter, TimeIter >::dynamicPeakHist( DataIter first,
 			      minthresh, maxthresh,
 			      time, size, width );
     if ( r > 0 ) {
-      // this is really an event:
+      // this really is an event:
       outevents.push( time, size, width );
       PreviousEvent = time;
       checkThresh( threshold, minthresh, maxthresh );
@@ -2059,7 +2074,7 @@ void Detector< DataIter, TimeIter >::dynamicPeakHist( DataIter first,
 				    threshold, minthresh, maxthresh,
 				    time, size, width );
 	  if ( r > 0 ) {
-	    // this is really an event:
+	    // this really is an event:
 	    outevents.push( time, size, width );
 	    PreviousEvent = time;
 	    checkThresh( threshold, minthresh, maxthresh );
@@ -2170,7 +2185,7 @@ void Detector< DataIter, TimeIter >::dynamicTrough( DataIter first,
 			      minthresh, maxthresh,
 			      time, size, width );
     if ( r > 0 ) {
-      // this is really an event:
+      // this really is an event:
       outevents.push( time, size, width );
       PreviousEvent = time;
       checkThresh( threshold, minthresh, maxthresh );
@@ -2247,7 +2262,7 @@ void Detector< DataIter, TimeIter >::dynamicTrough( DataIter first,
 				    threshold, minthresh, maxthresh,
 				    time, size, width );
 	  if ( r > 0 ) {
-	    // this is really an event:
+	    // this really is an event:
 	    outevents.push( time, size, width );
 	    PreviousEvent = time;
 	    checkThresh( threshold, minthresh, maxthresh );
@@ -2328,7 +2343,7 @@ void Detector< DataIter, TimeIter >::dynamicTroughHist( DataIter first,
 			      minthresh, maxthresh,
 			      time, size, width );
     if ( r > 0 ) {
-      // this is really an event:
+      // this really is an event:
       outevents.push( time, size, width );
       PreviousEvent = time;
       checkThresh( threshold, minthresh, maxthresh );
@@ -2418,7 +2433,7 @@ void Detector< DataIter, TimeIter >::dynamicTroughHist( DataIter first,
 				    threshold, minthresh, maxthresh,
 				    time, size, width );
 	  if ( r > 0 ) {
-	    // this is really an event:
+	    // this really is an event:
 	    outevents.push( time, size, width );
 	    PreviousEvent = time;
 	    checkThresh( threshold, minthresh, maxthresh );
@@ -2479,7 +2494,7 @@ void Detector< DataIter, TimeIter >::rising( DataIter first,
 					     double &threshold,
 					     double minthresh, double maxthresh,
 					     Check &check )
-  {
+{
   if ( Index < first || Index >= last )
     return;
 
@@ -2501,7 +2516,7 @@ void Detector< DataIter, TimeIter >::rising( DataIter first,
 			      minthresh, maxthresh,
 			      time, size, width );
     if ( r > 0 ) {
-      // this is really an event:
+      // this really is an event:
       outevents.push( time, size, width );
       checkThresh( threshold, minthresh, maxthresh );
       LastEvent = ResumeEvent;
@@ -2539,7 +2554,7 @@ void Detector< DataIter, TimeIter >::rising( DataIter first,
 				minthresh, maxthresh,
 				time, size, width );
       if ( r > 0 ) {
-	// this is really an event:
+	// this really is an event:
 	outevents.push( time, size, width );
 	checkThresh( threshold, minthresh, maxthresh );
 	LastEvent = event;
@@ -2590,7 +2605,7 @@ void Detector< DataIter, TimeIter >::falling( DataIter first,
 			      minthresh, maxthresh,
 			      time, size, width );
     if ( r > 0 ) {
-      // this is really an event:
+      // this really is an event:
       outevents.push( time, size, width );
       checkThresh( threshold, minthresh, maxthresh );
       LastEvent = ResumeEvent;
@@ -2628,7 +2643,7 @@ void Detector< DataIter, TimeIter >::falling( DataIter first,
 				minthresh, maxthresh,
 				time, size, width );
       if ( r > 0 ) {
-	// this is really an event:
+	// this really is an event:
 	outevents.push( time, size, width );
 	checkThresh( threshold, minthresh, maxthresh );
 	LastEvent = event;
@@ -2683,7 +2698,7 @@ void Detector< DataIter, TimeIter >::dynamicRising( DataIter first,
 			      minthresh, maxthresh,
 			      time, size, width );
     if ( r > 0 ) {
-      // this is really an event:
+      // this really is an event:
       outevents.push( time, size, width );
       PreviousEvent = time;
       checkThresh( threshold, minthresh, maxthresh );
@@ -2738,7 +2753,7 @@ void Detector< DataIter, TimeIter >::dynamicRising( DataIter first,
 				minthresh, maxthresh,
 				time, size, width );
       if ( r > 0 ) {
-	// this is really an event:
+	// this really is an event:
 	outevents.push( time, size, width );
 	PreviousEvent = time;
 	checkThresh( threshold, minthresh, maxthresh );
@@ -2797,7 +2812,7 @@ void Detector< DataIter, TimeIter >::dynamicFalling( DataIter first,
 			      minthresh, maxthresh,
 			      time, size, width );
     if ( r > 0 ) {
-      // this is really an event:
+      // this really is an event:
       outevents.push( time, size, width );
       PreviousEvent = time;
       checkThresh( threshold, minthresh, maxthresh );
@@ -2852,7 +2867,7 @@ void Detector< DataIter, TimeIter >::dynamicFalling( DataIter first,
 				minthresh, maxthresh,
 				time, size, width );
       if ( r > 0 ) {
-	// this is really an event:
+	// this really is an event:
 	outevents.push( time, size, width );
 	PreviousEvent = time;
 	checkThresh( threshold, minthresh, maxthresh );
@@ -2871,6 +2886,232 @@ void Detector< DataIter, TimeIter >::dynamicFalling( DataIter first,
     }
    
     PreviousTime = currenttime;
+
+  }
+
+}
+
+
+template < typename DataIter, typename TimeIter >
+template < class Check >
+void Detector< DataIter, TimeIter >::thresholdPeakHist( DataIter first,
+							DataIter last,
+							EventData &outevents,
+							double &threshold,
+							double minthresh,
+							double maxthresh,
+							Check &check )
+{
+  if ( Index < first || Index >= last )
+    return;
+
+  DataIter lastindex( last );
+  --lastindex;
+
+  checkThresh( threshold, minthresh, maxthresh );
+
+  // check last event again:
+  if ( Resume && ResumeEvent >= first ) {
+    double time = *ResumeTime;
+    double size = 0.0;
+    double width = 0;
+    int r = check.checkEvent( first, last,
+			      ResumeEvent, ResumeTime,
+			      Index, IndexTime,
+			      LastEvent, LastTime,
+			      outevents, threshold, 
+			      minthresh, maxthresh,
+			      time, size, width );
+    if ( r > 0 ) {
+      // this really is an event:
+      outevents.push( time, size, width );
+      checkThresh( threshold, minthresh, maxthresh );
+      LastEvent = ResumeEvent;
+      LastTime = ResumeTime;
+      GoodEvents.push( *ResumeTime, *ResumeEvent );
+    }
+    else if ( r < 0 ) {
+      Resume = true;
+      return;
+    }
+    else {
+      outevents.updateMeanQuality();
+      BadEvents.push( *ResumeTime, *ResumeEvent );
+    }
+  }
+  Resume = false;
+
+  // loop through the new read data:
+  for ( ; Index < lastindex; ++Index, ++IndexTime ) {
+
+    // rising:
+    if ( Dir > 0 ) {
+      if ( *(Index+1) < *Index ) {
+	Dir = -1;               // falling
+	// peak:
+	if ( *Index > threshold ) {
+	  // this is an event:
+	  DataIter event = Index;
+	  TimeIter eventtime = IndexTime;
+	  // check this event:
+	  double time = *eventtime;
+	  double size = 0.0;
+	  double width = 0;
+	  int r = check.checkEvent( first, last,
+				    event, eventtime,
+				    Index, IndexTime,
+				    LastEvent, LastTime,
+				    outevents, threshold, 
+				    minthresh, maxthresh,
+				    time, size, width );
+	  if ( r > 0 ) {
+	    // this really is an event:
+	    outevents.push( time, size, width );
+	    checkThresh( threshold, minthresh, maxthresh );
+	    LastEvent = event;
+	    LastTime = eventtime;
+	    GoodEvents.push( *eventtime, *event );
+	  }
+	  else if ( r < 0 ) {
+	    Resume = true;
+	    ResumeEvent = event;
+	    ResumeTime = eventtime;
+	    break;
+	  }
+	  else {
+	    outevents.updateMeanQuality();
+	    BadEvents.push( *eventtime, *event );
+	  }
+	}
+	else
+	  BadEvents.push( *IndexTime, *Index );  // local sub-threshold maximum
+      }
+    }
+    // falling:
+    else if ( Dir < 0 ) {
+      if ( *(Index+1) > *Index )
+	Dir = 1;                // rising
+    }
+    // don't know:
+    else {
+      if ( *(Index+1) < *Index )
+	Dir = -1;               // falling
+      else if ( *(Index+1) > *Index )
+	Dir = 1;                // rising
+    }
+
+  }
+
+}
+
+
+template < typename DataIter, typename TimeIter >
+template < class Check >
+void Detector< DataIter, TimeIter >::thresholdTroughHist( DataIter first,
+							  DataIter last,
+							  EventData &outevents,
+							  double &threshold,
+							  double minthresh,
+							  double maxthresh,
+							  Check &check )
+{
+  if ( Index < first || Index >= last )
+    return;
+
+  DataIter lastindex( last );
+  --lastindex;
+
+  checkThresh( threshold, minthresh, maxthresh );
+
+  // check last event again:
+  if ( Resume && ResumeEvent >= first ) {
+    double time = *ResumeTime;
+    double size = 0.0;
+    double width = 0;
+    int r = check.checkEvent( first, last,
+			      ResumeEvent, ResumeTime,
+			      Index, IndexTime,
+			      LastEvent, LastTime,
+			      outevents, threshold, 
+			      minthresh, maxthresh,
+			      time, size, width );
+    if ( r > 0 ) {
+      // this really is an event:
+      outevents.push( time, size, width );
+      checkThresh( threshold, minthresh, maxthresh );
+      LastEvent = ResumeEvent;
+      LastTime = ResumeTime;
+      GoodEvents.push( *ResumeTime, *ResumeEvent );
+    }
+    else if ( r < 0 ) {
+      Resume = true;
+      return;
+    }
+    else {
+      outevents.updateMeanQuality();
+      BadEvents.push( *ResumeTime, *ResumeEvent );
+    }
+  }
+  Resume = false;
+
+  // loop through the new read data:
+  for ( ; Index < lastindex; ++Index, ++IndexTime ) {
+
+    // rising:
+    if ( Dir > 0 ) {
+      if ( *(Index+1) < *Index )
+	Dir = -1;               // falling
+    }
+    // falling:
+    else if ( Dir < 0 ) {
+      if ( *(Index+1) > *Index ) {
+	Dir = 1;                // rising
+	// trough:
+	if ( *Index < threshold ) {
+	  // this is an event:
+	  DataIter event = Index;
+	  TimeIter eventtime = IndexTime;
+	  // check this event:
+	  double time = *eventtime;
+	  double size = 0.0;
+	  double width = 0;
+	  int r = check.checkEvent( first, last,
+				    event, eventtime,
+				    Index, IndexTime,
+				    LastEvent, LastTime,
+				    outevents, threshold, 
+				    minthresh, maxthresh,
+				    time, size, width );
+	  if ( r > 0 ) {
+	    // this really is an event:
+	    outevents.push( time, size, width );
+	    checkThresh( threshold, minthresh, maxthresh );
+	    LastEvent = event;
+	    LastTime = eventtime;
+	    GoodEvents.push( *eventtime, *event );
+	  }
+	  else if ( r < 0 ) {
+	    Resume = true;
+	    ResumeEvent = event;
+	    ResumeTime = eventtime;
+	    break;
+	  }
+	  else {
+	    outevents.updateMeanQuality();
+	    BadEvents.push( *eventtime, *event );
+	  }
+	}
+	else
+	  BadEvents.push( *IndexTime, *Index );  // local sub-threshold minimum
+      }
+    }
+    // don't know:
+    else {
+      if ( *(Index+1) < *Index )
+	Dir = -1;               // falling
+      else if ( *(Index+1) > *Index )
+	Dir = 1;                // rising
+    }
 
   }
 

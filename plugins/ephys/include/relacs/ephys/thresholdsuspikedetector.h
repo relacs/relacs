@@ -1,6 +1,6 @@
 /*
-  ephys/dynamicsuspikedetector.h
-  A detector for spikes in single unit recordings.
+  ephys/thresholdsuspikedetector.h
+  
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2010 Jan Benda <benda@bio.lmu.de>
@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _RELACS_EPHYS_DYNAMICSUSPIKEDETECTOR_H_
-#define _RELACS_EPHYS_DYNAMICSUSPIKEDETECTOR_H_ 1
+#ifndef _RELACS_EPHYS_THRESHOLDSUSPIKEDETECTOR_H_
+#define _RELACS_EPHYS_THRESHOLDSUSPIKEDETECTOR_H_ 1
 
 #include <qpixmap.h>
 #include <qlabel.h>
@@ -35,63 +35,31 @@ using namespace relacs;
 namespace ephys {
 
 
-/*! 
-\class DynamicSUSpikeDetector
-\brief [Detector] A detector for spikes in single unit recordings.
+/*!
+\class ThresholdSUSpikeDetector
+\brief [Detector] Spike detection based on an absolute voltage threshold.
 \author Jan Benda
-\version 1.9 (Jun 21, 2010)
-
-\par Options
-- Detector
-- \c minthresh=10mV: Minimum threshold (\c number)
-- \c threshold=10mV: Threshold (\c number)
-- \c delay=1sec: Delay time (\c number)
-- \c decay=10sec: Decay time constant (\c number)
-- \c searchdelay=1sec: Delay time for inbetween the recording sessions (\c number)
-- \c searchdecay=10sec: Decay time constant for inbetween the recording sessions (\c number)
-- \c ratio=50%: Ratio threshold / size (\c number)
-- \c testwidth=true: Test spike width (\c boolean)
-- \c maxwidth=1.5ms: Maximum spike width (\c number)
-- \c testisi=true: Test interspike interval (\c boolean)
-- \c minisi=1ms: Minimum interspike interval (\c number)
-- \c fitpeak=false: Fit parabula to peak of spike (\c boolean)
-- \c fitwidth=0.5ms: Width of parabula fit (\c number)
-- Running average
-- \c nospike=100ms: Interval for no spike (\c number)
-- \c considerstimulus=false: Expect spikes during stimuli only (\c boolean)
-- Indicators
-- \c resolution=0.5mV: Resolution of spike size (\c number)
-- \c log=false: Logarithmic histograms (\c boolean)
-- \c update=1sec: Update time interval (\c number)
-- \c history=10sec: Maximum history time (\c number)
-- \c qualitythresh=5%: Quality threshold (\c number)
-- \c trendthresh=1%: Trend threshold (\c number)
-- \c trendtime=1sec: Trend timescale (\c number)
+\version 1.0 (Jan 17, 2011)
 */
 
 
-class DynamicSUSpikeDetector : public Filter
+class ThresholdSUSpikeDetector : public Filter
 {
   Q_OBJECT
 
 public:
 
-    /*! The constructor. */
-  DynamicSUSpikeDetector( const string &ident="", int mode=0 );
-    /*! The destructor. */
-  ~DynamicSUSpikeDetector( void );
-
+  ThresholdSUSpikeDetector( const string &ident="", int mode=0 );
   virtual int init( const InData &data, EventData &outevents,
 		    const EventList &other, const EventData &stimuli );
+  virtual void readConfig( StrQueue &sq );
   virtual void notify( void );
-  virtual int adjust( const InData &data );
   virtual int autoConfigure( const InData &data, double tbegin, double tend );
   virtual void save( const string &param );
   void save( void );
     /*! Detect spikes in a single trace of the analog data \a data. */
   virtual int detect( const InData &data, EventData &outevents,
 		      const EventList &other, const EventData &stimuli );
-
 
     /*! Returns 1: this is an event, 0: this is not an event, -1: resume next time at lastindex. 
         Update the threshold \a threshold.
@@ -117,43 +85,12 @@ public slots:
   void autoConfigure( void );
 
 
-protected:
+ protected:
 
-  Detector< InData::const_iterator, InData::const_range_iterator > D;
+  Detector< InData::const_iterator, InDataTimeIterator > D;
 
     /*! The threshold for detecting spikes. */
   double Threshold;
-    /*! Minimum value for the threshold detecting spikes. */
-  double MinThresh;
-    /*! Maximum value for the threshold detecting spikes. */
-  double MaxThresh;
-    /*! Maximum value for the threshold detecting spikes according to the input range. */
-  double MaxRangeThresh;
-    /*! Delay of the threshold dynamics in seconds. */
-  double RecordingDelay;
-    /*! Decay time constant of the threshold dynamics in seconds. */
-  double RecordingDecay;
-    /*! Delay of the threshold dynamics in seconds. */
-  double SearchDelay;
-    /*! Decay time constant of the threshold dynamics in seconds. */
-  double SearchDecay;
-
-    /*! Test spike width? */
-  bool TestWidth;
-    /*! Maximum width of a spike in seconds. */
-  double MaxWidth;
-    /*! Test interspike interval? */
-  bool TestInterval;
-    /*! Minimum interspike interval. */
-  double MinInterval;
-    /*! Fit a parabula to the spike peak? */
-  bool FitPeak;
-    /*! Width of the parabula fit in seconds. */
-  double FitWidth;
-    /*! Width of the parabula fit in indices of the input trace. */
-  int FitIndices;
-    /*! Ratio of the spike size to which the new value of the threshold is set. */
-  double Ratio;
     /*! If no spikes are detected, update statistic assuming that
         a single spike did not occur within \a NoSpikeInterval. */
   double NoSpikeInterval;
@@ -176,7 +113,7 @@ protected:
     /*! Resolution of spike sizes and thresholds. */
   double SizeResolution;
 
-  OptWidget SDW;
+  OptWidget TDW;
   static const int UpdateFlag = 8192;
 
   long LastSize;
@@ -190,6 +127,7 @@ protected:
   SampleDataD GoodSpikesHist;
   SampleDataD BadSpikesHist;
   SampleDataD AllSpikesHist;
+  string Unit;
 
   QPixmap GoodQuality;
   QPixmap OkQuality;
@@ -213,4 +151,4 @@ protected:
 
 }; /* namespace ephys */
 
-#endif /* ! _RELACS_EPHYS_DYNAMICSUSPIKEDETECTOR_H_ */
+#endif /* ! _RELACS_EPHYS_THRESHOLDSUSPIKEDETECTOR_H_ */

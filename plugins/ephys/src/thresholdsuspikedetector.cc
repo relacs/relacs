@@ -1,6 +1,6 @@
 /*
-  ephys/dynamicsuspikedetector.cc
-  A detector for spikes in single unit recordings.
+  ephys/thresholdsuspikedetector.cc
+  Spike detection based on an absolute voltage threshold.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2010 Jan Benda <benda@bio.lmu.de>
@@ -26,39 +26,23 @@
 #include <QPolygon>
 #include <QPushButton>
 #include <relacs/map.h>
-#include <relacs/basisfunction.h>
-#include <relacs/fitalgorithm.h>
-#include <relacs/str.h>
 #include <relacs/tablekey.h>
-#include <relacs/ephys/dynamicsuspikedetector.h>
+#include <relacs/ephys/thresholdsuspikedetector.h>
 using namespace relacs;
 
 namespace ephys {
 
 
-DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
+ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogDetector, 1,
-	    "DynamicSUSpikeDetector", "EPhys", "Jan Benda", "1.9", "Jun 21, 2010" ),
-    GoodSpikesHist( 0.0, 200.0, 0.5 ),
-    BadSpikesHist( 0.0, 200.0, 0.5 ),
-    AllSpikesHist( 0.0, 200.0, 0.5 )
+	    "ThresholdSUSpikeDetector", "ephys",
+	    "Jan Benda", "1.0", "Jan 17, 2011" ),
+    GoodSpikesHist( -2000.0, 2000.0, 0.5 ),
+    BadSpikesHist( -2000.0, 2000.0, 0.5 ),
+    AllSpikesHist( -2000.0, 2000.0, 0.5 )
 {
   // parameter:
-  Threshold = 10.0;
-  MinThresh = 10.0;
-  MaxThresh = 100.0;
-  RecordingDelay = 1.0;
-  RecordingDecay = 10.0;
-  SearchDelay = 1.0;
-  SearchDecay = 10.0;
-  TestWidth = true;
-  MaxWidth = 0.0015;
-  TestInterval = true;
-  MinInterval = 0.001;
-  FitPeak = false;
-  FitWidth = 0.0005;
-  FitIndices = 0;
-  Ratio = 0.5;
+  Threshold = 1.0;
   NoSpikeInterval = 0.1;
   StimulusRequired = false;
   LogHistogram = false;
@@ -68,28 +52,16 @@ DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   TrendThresh = 0.01;
   TrendTime = 1.0;
   SizeResolution = 0.5;
+  Unit = "mV";
 
   // options:
   int strongstyle = OptWidget::ValueLarge + OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack;
   addLabel( "Detector", 8 );
-  addNumber( "minthresh", "Minimum threshold", MinThresh, 0.0, 200.0, SizeResolution, "mV", "mV", "%.1f", 2+8+32 );
-  addNumber( "maxthresh", "Maximum threshold", MaxThresh, 0.0, 200.0, SizeResolution, "mV", "mV", "%.1f", 8+32 );
-  addNumber( "threshold", "Threshold", Threshold, 0.0, 200.0, 1.0, "mV", "mV", "%.1f", 2+4+32 );
-  addNumber( "delay", "Delay time", RecordingDelay, 0.0, 1000.0, 1.0, "sec", "sec", "%.0f", 0+8+32 );
-  addNumber( "decay", "Decay time constant", RecordingDecay, 0.0, 1000.0, 1.0,  "sec", "sec", "%.0f", 0+8+32 );
-  addNumber( "searchdelay", "Delay time used inbetween the recordings", SearchDelay, 0.0, 1000.0, 1.0, "sec", "sec", "%.0f", 0+8+32 );
-  addNumber( "searchdecay", "Decay time constant used inbetween the recordings", SearchDecay, 0.0, 1000.0, 1.0,  "sec", "sec", "%.0f", 0+8+32 );
-  addNumber( "ratio", "Ratio threshold / size", Ratio, 0.0, 1.0, 0.05, "1", "%", "%.0f",  2+8+32 );
-  addBoolean( "testwidth", "Test spike width", TestWidth ).setFlags( 0+8+32 );
-  addNumber( "maxwidth", "Maximum spike width", MaxWidth, 0.0001, 0.006, 0.0001, "sec", "ms", "%.1f", 0+8+32 ).setActivation( "testwidth", "true" );
-  addBoolean( "testisi", "Test interspike interval", TestInterval ).setFlags( 0+8+32 );
-  addNumber( "minisi", "Minimum interspike interval", MinInterval, 0.0, 0.1, 0.0002, "sec", "ms", "%.1f", 0+8+32 ).setActivation( "testisi", "true" );
-  addBoolean( "fitpeak", "Fit parabula to peak of spike", FitPeak ).setFlags( 0+8+32 );
-  addNumber( "fitwidth", "Width of parabula fit", FitWidth, 0.0, 0.1, 0.00001, "sec", "ms", "%.2f", 0+8+32 );
+  addNumber( "threshold", "Threshold", Threshold, -2000.0, 2000.0, SizeResolution, Unit, Unit, "%.1f", 2+8+32 );
   addLabel( "Indicators", 8 );
   addNumber( "nospike", "Interval for no spike", NoSpikeInterval, 0.0, 1000.0, 0.01, "sec", "ms", "%.0f", 0+8+32 );
   addBoolean( "considerstimulus", "Expect spikes during stimuli only", StimulusRequired, 0+8+32 );
-  addNumber( "resolution", "Resolution of spike size", SizeResolution, 0.0, 1000.0, 0.1, "mV", "mV", "%.2f", 0+8+32 );
+  addNumber( "resolution", "Resolution of spike size", SizeResolution, 0.0, 1000.0, 0.01, Unit, Unit, "%.3f", 0+8+32 );
   addBoolean( "log", "Logarithmic histograms", LogHistogram, 0+8+32 );
   addNumber( "update", "Update time interval", UpdateTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8+32 );
   addNumber( "history", "Maximum history time", HistoryTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8+32 );
@@ -97,10 +69,10 @@ DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   addNumber( "trendthresh", "Trend threshold", TrendThresh, 0.0, 1.0, 0.01, "1", "%", "%.0f", 0+8+32 );
   addNumber( "trendtime", "Trend timescale", TrendTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8+32 );
   addNumber( "rate", "Rate", 0.0, 0.0, 100000.0, 0.1, "Hz", "Hz", "%.0f", 0+4 );
-  addNumber( "size", "Spike size", 0.0, 0.0, 10000.0, 0.1, "mV", "mV", "%.1f", 2+4, strongstyle );
+  addNumber( "size", "Spike size", 0.0, 0.0, 10000.0, 0.1, Unit, Unit, "%.1f", 2+4, strongstyle );
   addInteger( "trend", "Trend", 0, 0, 4 );
   addInteger( "quality", "Quality", 0, 0, 3 );
-  addTypeStyle( OptWidget::TabLabel, Parameter::Label );
+  addTypeStyle( OptWidget::Bold, Parameter::Label );
 
   // main layout:
   QVBoxLayout *vb = new QVBoxLayout;
@@ -109,16 +81,15 @@ DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   setLayout( vb );
 
   // parameter widgets:
-  SDW.assign( ((Options*)this), 2, 4, true, 0, mutex() );
-  SDW.setMargins( 4, 2, 4, 0 );
-  SDW.setVerticalSpacing( 1 );
-  vb->addWidget( &SDW, 0, Qt::AlignHCenter );
+  TDW.assign( ((Options*)this), 2, 4, true, 0, mutex() );
+  TDW.setMargins( 4, 2, 4, 0 );
+  TDW.setVerticalSpacing( 1 );
+  vb->addWidget( &TDW, 0, Qt::AlignHCenter );
 
   setDialogSelectMask( 8 );
   setDialogReadOnlyMask( 16 );
   setConfigSelectMask( -32 );
 
-  MaxRangeThresh = 100.0;
   LastSize = 0;
   LastTime = 0.0;
   Update.start();
@@ -133,7 +104,7 @@ DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   P->noGrid();
   P->setTMarg( 1 );
   P->setRMarg( 1 );
-  P->setXLabel( "mV" );
+  P->setXLabel( Unit );
   P->setXLabelPos( 1.0, Plot::FirstMargin, 0.0, Plot::FirstAxis, Plot::Left, 0.0 );
   P->setXTics();
   P->setYRange( 0.0, Plot::AutoScale );
@@ -174,14 +145,6 @@ DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   key = new QLabel( "threshold" );
   key->setFixedHeight( is );
   gl->addWidget( key, 2, 1, Qt::AlignLeft );
-
-  pm.fill( Qt::yellow );
-  key = new QLabel;
-  key->setPixmap( pm );
-  gl->addWidget( key, 3, 0, Qt::AlignRight | Qt::AlignVCenter );
-  key = new QLabel( "min thresh" );
-  key->setFixedHeight( is );
-  gl->addWidget( key, 3, 1, Qt::AlignLeft );
 
   // indicators:
   QColor orange( 255, 165, 0 );
@@ -337,26 +300,25 @@ DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   connect( pb, SIGNAL( clicked( void ) ), this, SLOT( autoConfigure( void ) ) );
   connect( pb, SIGNAL( clicked( void ) ), this, SLOT( removeFocus( void ) ) );
 
-  /*
-  // help:
-  pb = new QPushButton( "Help" );
-  gl->addWidget( pb, 5, 1, Qt::AlignRight );
-  connect( pb, SIGNAL( clicked( void ) ), this, SLOT( help( void ) ) );
-  connect( pb, SIGNAL( clicked( void ) ), this, SLOT( removeFocus( void ) ) );
-  */
 }
 
 
-DynamicSUSpikeDetector::~DynamicSUSpikeDetector( void )
+int ThresholdSUSpikeDetector::init( const InData &data, EventData &outevents,
+				    const EventList &other, const EventData &stimuli )
 {
-}
-
-
-int DynamicSUSpikeDetector::init( const InData &data, EventData &outevents,
-				  const EventList &other, const EventData &stimuli )
-{
+  Unit = data.unit();
+  setOutUnit( "threshold", Unit );
+  setOutUnit( "size", Unit );
+  setOutUnit( "resolution", Unit );
+  setMinMax( "resolution", 0.0, 1000.0, 0.01, Unit );
+  setNotify();
+  notify();
+  postCustomEvent( 12 );
+  P->lock();
+  P->setXLabel( Unit );
+  P->unlock();
   outevents.setSizeScale( 1.0 );
-  outevents.setSizeUnit( data.unit() );
+  outevents.setSizeUnit( Unit );
   outevents.setSizeFormat( "%5.1f" );
   outevents.setWidthScale( 1000.0 );
   outevents.setWidthUnit( "ms" );
@@ -373,22 +335,16 @@ int DynamicSUSpikeDetector::init( const InData &data, EventData &outevents,
 }
 
 
-void DynamicSUSpikeDetector::notify( void )
+void ThresholdSUSpikeDetector::readConfig( StrQueue &sq )
 {
-  Threshold = number( "threshold" );
-  MinThresh = number( "minthresh" );
-  MaxThresh = number( "maxthresh" );
-  RecordingDelay = number( "delay" );
-  RecordingDecay = number( "decay" );
-  SearchDelay = number( "searchdelay" );
-  SearchDecay = number( "searchdecay" );
-  Ratio = number( "ratio" );
-  TestWidth = boolean( "testwidth" );
-  MaxWidth = number( "maxwidth" );
-  TestInterval = boolean( "testinterval" );
-  MinInterval = number( "minisi" );
-  FitPeak = boolean( "fitpeak" );
-  FitWidth = number( "fitwidth" );
+  unsetNotify(); // we have no unit of the input trace yet!
+  Options::read( sq, 0, ":" );
+}
+
+
+void ThresholdSUSpikeDetector::notify( void )
+{
+  Threshold = number( "threshold", Unit );
   NoSpikeInterval = number( "nospike" );
   StimulusRequired = boolean( "considerstimulus" );
   LogHistogram = boolean( "log" );
@@ -401,14 +357,13 @@ void DynamicSUSpikeDetector::notify( void )
   QualityThresh = number( "qualitythresh" );
   TrendThresh = number( "trendthresh" );
   TrendTime = number( "trendtime" );
-  double resolution = number( "resolution" );
+  double resolution = number( "resolution", Unit );
 
-  if ( Threshold < MinThresh ) {
-    Threshold = MinThresh;
-    setNumber( "threshold", Threshold );
-  }
-
-  if ( ::fabs( resolution - SizeResolution ) > 1.0e-5 && resolution > 0.0 ) {
+  if ( changed( "resolution" ) && resolution > 0.0 ) {
+    if ( resolution < 0.001 ) {
+      resolution = 0.001;
+      setNumber( "resolution", resolution, Unit );
+    }
     SizeResolution = resolution;
     // necessary precision:
     int pre = -1;
@@ -417,30 +372,21 @@ void DynamicSUSpikeDetector::notify( void )
       double f = pow( 10.0, -pre );
       resolution -= floor( 1.001*resolution/f ) * f;
     } while ( pre < 3 && fabs( resolution ) > 1.0e-3 );
-    setStep( "minthresh", SizeResolution );
-    setFormat( "minthresh", 4+pre, pre, 'f' );
-    setStep( "maxthresh", SizeResolution );
-    setFormat( "maxthresh", 4+pre, pre, 'f' );
     setFormat( "threshold", 4+pre, pre, 'f' );
+    setStep( "threshold", SizeResolution, Unit );
     setFormat( "size", 4+pre, pre, 'f' );
-    SDW.updateSettings( "minthresh" );
-    GoodSpikesHist = SampleDataD( 0.0, 200.0, SizeResolution );
-    BadSpikesHist = SampleDataD( 0.0, 200.0, SizeResolution );
-    AllSpikesHist = SampleDataD( 0.0, 200.0, SizeResolution );
+    double max = 1000.0*SizeResolution;
+    GoodSpikesHist = SampleDataD( -max, max, SizeResolution );
+    BadSpikesHist = SampleDataD( -max, max, SizeResolution );
+    AllSpikesHist = SampleDataD( -max, max, SizeResolution );
+    TDW.updateSettings();
   }
-  SDW.updateValues( OptWidget::changedFlag() );
+  TDW.updateValues( OptWidget::changedFlag() );
   delFlags( OptWidget::changedFlag() );
 }
 
 
-int DynamicSUSpikeDetector::adjust( const InData &data )
-{
-  MaxRangeThresh = ceil10( 2.0*data.maxValue(), 0.1 );
-  return 0;
-}
-
-
-void DynamicSUSpikeDetector::autoConfigure( void )
+void ThresholdSUSpikeDetector::autoConfigure( void )
 {
   // skip initial zeros:
   int lp = 0;
@@ -467,23 +413,15 @@ void DynamicSUSpikeDetector::autoConfigure( void )
   }
   // no zero stretch:
   if ( zp < 0 )
-    MinThresh = AllSpikesHist.pos( rp+2 );
+    Threshold = AllSpikesHist.pos( rp+2 );
   else
-    MinThresh = AllSpikesHist.pos( zp+1 );
-  // set thresholds:
-  unsetNotify();
-  setNumber( "minthresh", MinThresh );
-  if ( Threshold < MinThresh ) {
-    Threshold = MinThresh;
-    setNumber( "threshold", Threshold );
-  }
-  setNotify();
-  SDW.updateValues( OptWidget::changedFlag() );
+    Threshold = AllSpikesHist.pos( zp+1 );
+  TDW.updateValues( OptWidget::changedFlag() );
   delFlags( OptWidget::changedFlag() );
 }
 
 
-int DynamicSUSpikeDetector::autoConfigure( const InData &data,
+int ThresholdSUSpikeDetector::autoConfigure( const InData &data,
 					   double tbegin, double tend )
 {
   autoConfigure();
@@ -491,13 +429,13 @@ int DynamicSUSpikeDetector::autoConfigure( const InData &data,
 }
 
 
-void DynamicSUSpikeDetector::save( const string &param )
+void ThresholdSUSpikeDetector::save( const string &param )
 {
   save();
 }
 
 
-void DynamicSUSpikeDetector::save( void )
+void ThresholdSUSpikeDetector::save( void )
 {
   // create file:
   ofstream df( addPath( Str( ident() ).lower() + "-distr.dat" ).c_str(),
@@ -517,7 +455,7 @@ void DynamicSUSpikeDetector::save( void )
   Options::save( df, "#   " );
   df << '\n';
   TableKey key;
-  key.addNumber( "ampl", "mV", "%5.1f" );
+  key.addNumber( "ampl", Unit, "%5.1f" );
   key.addNumber( "bad", "1", "%5.0f" );
   key.addNumber( "good", "1", "%5.0f" );
   key.saveKey( df, true, false );
@@ -550,18 +488,11 @@ void DynamicSUSpikeDetector::save( void )
 }
 
 
-int DynamicSUSpikeDetector::detect( const InData &data, EventData &outevents,
-				    const EventList &other, const EventData &stimuli )
+int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
+				      const EventList &other, const EventData &stimuli )
 {
-  FitIndices = data.indices( FitWidth );
-
-  double delay = sessionRunning() ? RecordingDelay : SearchDelay;
-  double decay = sessionRunning() ? RecordingDecay : SearchDecay;
-
-  D.dynamicPeakHist( data.minBegin(), data.end(), outevents,
-		     Threshold, MinThresh,
-		     MaxThresh < MaxRangeThresh ? MaxThresh : MaxRangeThresh,
-		     delay, decay, *this );
+  D.thresholdPeakHist( data.minBegin(), data.end(), outevents,
+		       Threshold, Threshold, Threshold, *this );
 
   // update mean spike size in case of no spikes:
   if ( StimulusRequired && stimuli.size() > 0 ) {
@@ -594,9 +525,8 @@ int DynamicSUSpikeDetector::detect( const InData &data, EventData &outevents,
   }
 
   unsetNotify();
-  setNumber( "threshold", Threshold );
   setNumber( "rate", outevents.meanRate() );
-  setNumber( "size", outevents.meanSize() );
+  setNumber( "size", outevents.meanSize(), Unit );
   setNotify();
 
   // update indicator widgets:
@@ -612,6 +542,12 @@ int DynamicSUSpikeDetector::detect( const InData &data, EventData &outevents,
   // plot:
   P->lock();
   P->clear();
+  double xmin = -10.0;
+  for ( int k=0; k<AllSpikesHist.size(); k++ )
+    if ( AllSpikesHist[k] > 0.0 ) {
+      xmin = AllSpikesHist.pos( k );
+      break;
+    }
   double xmax = 10.0;
   for ( int k=AllSpikesHist.size()-1; k >= 0; k-- )
     if ( AllSpikesHist[k] > 0.0 ) {
@@ -619,7 +555,7 @@ int DynamicSUSpikeDetector::detect( const InData &data, EventData &outevents,
       break;
     }
   if ( ! P->zoomedXRange() )
-    P->setXRange( 0.0, xmax );
+    P->setXRange( xmin, xmax );
   if ( LogHistogram ) {
     SampleDataD bh( BadSpikesHist );
     for ( int k=0; k<bh.size(); k++ )
@@ -636,7 +572,6 @@ int DynamicSUSpikeDetector::detect( const InData &data, EventData &outevents,
     P->plot( GoodSpikesHist, 1.0, Plot::Green, 2, Plot::Solid );
     P->setYTics();
   }
-  P->plotVLine( MinThresh, Plot::Yellow, 2 );
   P->plotVLine( Threshold, Plot::White, 2 );
   P->draw();
   P->unlock();
@@ -689,7 +624,7 @@ int DynamicSUSpikeDetector::detect( const InData &data, EventData &outevents,
     unsetNotify();
     setInteger( "quality", Quality );
     setNotify();
-    SDW.updateValues( 2+4 );
+    TDW.updateValues( 2+4 );
     postCustomEvent( 11 );
     return 0;
   }
@@ -716,126 +651,44 @@ int DynamicSUSpikeDetector::detect( const InData &data, EventData &outevents,
   unsetNotify();
   setInteger( "quality", Quality );
   setNotify();
-  SDW.updateValues( 2+4 );
+  TDW.updateValues( 2+4 );
   postCustomEvent( 11 );
 
   return 0;
 }
 
 
-int DynamicSUSpikeDetector::checkEvent( InData::const_iterator first, 
-					InData::const_iterator last,
-					InData::const_iterator event, 
-					InData::const_range_iterator eventtime, 
-					InData::const_iterator index,
-					InData::const_range_iterator indextime, 
-					InData::const_iterator prevevent, 
-					InData::const_range_iterator prevtime, 
-					EventData &outevents,
-					double &threshold,
-					double &minthresh, double &maxthresh,
-					double &time, double &size, double &width )
-{
-  // time of spike:
+int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first, 
+					  InData::const_iterator last,
+					  InData::const_iterator event, 
+					  InData::const_range_iterator eventtime, 
+					  InData::const_iterator index,
+					  InData::const_range_iterator indextime, 
+					  InData::const_iterator prevevent, 
+					  InData::const_range_iterator prevtime, 
+					  EventData &outevents,
+					  double &threshold,
+					  double &minthresh, double &maxthresh,
+					  double &time, double &size, double &width )
+{ 
+  if ( event+1 >= last ) {
+    // resume:
+    return -1;
+  }
+  if ( event-1 < first ) {
+    // discard:
+    return 0;
+  }
+
   time = *eventtime;
+  size = *event;
 
-  // go down to the left:
-  InData::const_iterator left = event;
-  InData::const_range_iterator lefttime = eventtime;
-  if ( left <= first )
-    return 0;
-  for ( --left, --lefttime; ; --left, --lefttime ) {
-    if ( left <= first )
-      return 0;
-    if ( *(left-1) >= *(left+1) )
-      break;
-    // spike too broad?
-    if ( time - *lefttime > 3.0 * MaxWidth )
-      break;
-  }
-  double base1 = *left;
-  // go down to the right:
-  InData::const_iterator right = event;
-  InData::const_range_iterator righttime = eventtime;
-  for ( ++right, ++righttime; ; ++right, ++righttime ) {
-    if ( right+1 >= last )
-      return -1;
-    if ( *(right+1) >= *(right-1) )
-      break;
-    // spike too broad?
-    if ( *righttime - time > 3.0 * MaxWidth )
-      break;
-  }
-  double base2 = *right;
-
-  // size:
-  double base = base1<base2 ? base1 : base2;
-  size = *event - base;
-
-  // width of spike:
-  double minval = *event - 0.5 * size;
-  InData::const_iterator linx = event;
-  InData::const_range_iterator linxtime = eventtime;
-  for ( --linx, --linxtime; linx >= left; --linx, --linxtime ) {
-    if ( left <= first )
-      return 0;
-    if ( *linx <= minval )
-      break;
-  }
-  InData::const_iterator rinx = event;
-  InData::const_range_iterator rinxtime = eventtime;
-  for ( ++rinx, ++rinxtime; rinx < right; ++rinx, ++rinxtime ) {
-    if ( right >= last )
-      return -1;
-    if ( *rinx <= minval )
-      break;
-  }
-  width = *rinxtime - *linxtime;
-  if ( TestWidth && width > MaxWidth )
-    return 0;
-
-  if ( TestInterval && 
-       outevents.size() > 0 && time - outevents.back() < MinInterval )
-    return 0;
-
-  // adjust spike time by parabula fit:
-  if ( FitPeak ) {
-    MapD peak;
-    peak.reserve( FitIndices );
-    InData::const_iterator peakp = event - FitIndices/2;
-    InData::const_range_iterator peakt = eventtime - FitIndices/2;
-    for ( int k=0; k<FitIndices; k++ ) {
-      peak.push( *peakt - time, *peakp );
-      ++peakt;
-      ++peakp;
-    }
-    ArrayD sd( peak.size(), 1.0 );
-    Polynom poly;
-    ArrayD param( 3, 1.0 );
-    ArrayI paramfit( 3, 1 );
-    ArrayD uncert( 3, 0.0 );
-    double chisq = 0.0;
-    int r = linearFit( peak.x(), peak.y(), sd,
-		       poly, param, paramfit, uncert, chisq );
-    if ( r == 0 ) {
-      double offs = -0.5*param[1]/param[2];
-      if ( offs >= peak.x().front() && offs <= peak.x().back() ) {
-	time += offs;
-	size += param[0] + 0.25*(param[1]*param[1]-2.0)/param[2] - *event;
-      }
-    }
-    else
-      printlog( "Parabula fit failed and returned " + Str( r ) );
-  }
-
-  // adjust threshold:
-  threshold = Ratio * size;
-
+  // accept:
   return 1; 
 }
 
 
-void DynamicSUSpikeDetector::customEvent( QEvent *qce )
+void ThresholdSUSpikeDetector::customEvent( QEvent *qce )
 {
   if ( qce->type() == QEvent::User+11 ) {
     lock();
@@ -843,13 +696,17 @@ void DynamicSUSpikeDetector::customEvent( QEvent *qce )
     TrendIndicator->setPixmap( *TrendPixs[Trend] );
     unlock();
   }
+  else if ( qce->type() == QEvent::User+12 ) {
+    TDW.updateSettings();
+    TDW.updateValues();
+  }
   else
     Filter::customEvent( qce );
 }
 
 
-addDetector( DynamicSUSpikeDetector );
+addDetector( ThresholdSUSpikeDetector );
 
 }; /* namespace ephys */
 
-#include "moc_dynamicsuspikedetector.cc"
+#include "moc_thresholdsuspikedetector.cc"
