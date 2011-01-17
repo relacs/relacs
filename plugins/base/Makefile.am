@@ -6,7 +6,7 @@ EXTRA_DIST = \
     relacsplugins.cfg \
     macros.cfg
 
-DISTCLEANFILES = relacs.log relacs.log.old
+DISTCLEANFILES = relacslocal relacs.log relacs.log.old
 
 pkglibdir = $(libdir)/relacs
 pkgincludedir = $(includedir)/relacs

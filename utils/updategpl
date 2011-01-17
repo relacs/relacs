@@ -6,7 +6,7 @@
 # 
 #
 # RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
-# Copyright (C) 2002-2009 Jan Benda <j.benda@biologie.hu-berlin.de>
+# Copyright (C) 2002-2011 Jan Benda <benda@bio.lmu.de>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,9 +26,15 @@
 
 function rewritegpl
 {
+    VERBOSE="no";
+    if test "x$1" = "x-v"; then
+	VERBOSE="yes"
+	shift;
+    fi
     FILE="$1"
-    if test -f "$FILE" && fgrep -q 'Copyright (C) 2002' "$FILE"; then
-	sed -e 's/2002-20[0-9][0-9] Jan Benda/2002-2010 Jan Benda/' "$FILE" > tmp.txt
+    if test -f "$FILE" && fgrep -q 'Copyright (C) 200' "$FILE"; then
+	test $VERBOSE = yes && ls -l "$FILE"
+	sed -e 's/2002-20[0-9][0-9] Jan Benda/2002-2011 Jan Benda/' "$FILE" > tmp.txt
 	mv tmp.txt "$FILE"
     fi
 }
@@ -46,21 +52,33 @@ fi
 
 # .h
 for i in $(find -name '*.h'); do
-  rewritegpl $i
+  rewritegpl "$i"
 done
 
 # .cc
 for i in $(find -name '*.cc'); do
-  rewritegpl $i
+  rewritegpl "$i"
 done
 
-make distclean
+# .c
+for i in $(find -name '*.c'); do
+  rewritegpl "$i"
+done
 
 # scripts:
 # XXX need o keep permissions!!!
-for i in $(find -name '*' -type f | grep -v '^\..*\.' | egrep -v 'Makefile|Doxyfile|configure|compile|missing|depcomp|updategpl'); do
-  rewritegpl $i
+echo "check permissions for the following updated files:"
+for i in $(find -name '*' -type f | grep -v '^\..*\.' | egrep -v 'Makefile|Doxyfile|configure|compile|missing|depcomp|libtool|updategpl'); do
+  rewritegpl -v "$i"
 done
 
-# restoresome of the permissions:
-./config.status
+echo "check content of the following files:"
+echo "src/relacs_head"
+echo "src/relacslocal_head"
+echo "doc/relacs.1"
+echo "utils/updategpl"
+
+# restore some of the permissions:
+./config.status > /dev/null
+
+make distclean > /dev/null

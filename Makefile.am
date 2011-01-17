@@ -41,7 +41,7 @@ EXTRA_DIST = \
     doc/Doxyfile \
     doc/relacsall.doc
 
-DISTCLEANFILES = relacs.log relacs.log.old
+DISTCLEANFILES = relacslocal relacs.log relacs.log.old
 
 
 DX_INSTALL_SUBDIR = /api
