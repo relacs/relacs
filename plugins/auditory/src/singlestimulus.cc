@@ -353,6 +353,7 @@ int SingleStimulus::main( void )
 	Str s = "Search rate <b>" + Str( targetrate ) + " Hz</b>";
 	s += ",  " + wavetypes[WaveType] + "<b>" + StimulusLabel + "</b>";
 	s += ":  Intensity: <b>" + Str( Intensity, 0, 0, 'f' ) + " dB SPL</b>";
+	s += " at <b>" + Str( 0.001*CarrierFreq, 0, 1, 'f' ) + " kHz</b>";
 	s += ",  Loop <b>" + Str( counter+1 ) + "</b> of <b>" + Str( searchrepeats ) + "</b>";
 	message( s );
 
@@ -616,6 +617,7 @@ int SingleStimulus::main( void )
     // message:
     Str s =  wavetypes[WaveType] + ": <b>" + StimulusLabel + "</b>";
     s += ",  Intensity: <b>" + Str( Intensity, 0, 1, 'f' ) + " dB SPL</b>";
+    s += " at <b>" + Str( 0.001*CarrierFreq, 0, 1, 'f' ) + " kHz</b>";
     if ( WaveType == AM )
       s += ",  Amplitude: <b>" + Str( Amplitude, 0, 1, 'f' ) + " dB</b>";
     s += ",  Loop <b>" + Str( counter+1 ) + "</b> of <b>" + Str( Repeats ) + "</b>";

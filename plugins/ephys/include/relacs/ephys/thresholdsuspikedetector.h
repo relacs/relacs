@@ -91,12 +91,18 @@ public slots:
 
     /*! The threshold for detecting spikes. */
   double Threshold;
+    /*! Detect peaks (true) or troughs (false ). */
+  bool Peaks;
     /*! If no spikes are detected, update statistic assuming that
         a single spike did not occur within \a NoSpikeInterval. */
   double NoSpikeInterval;
     /*! True if spikes are expected during stimuli only. */
   bool StimulusRequired;
 
+    /*! Number of spike snippets to be plotted. */
+  int NSnippets;
+    /*! Width of spike snippets. */
+  double SnippetsWidth;
     /*! Plot histogram logarithmically. */
   bool LogHistogram;
     /*! Update time for histograms and indicators. */
@@ -123,7 +129,8 @@ public slots:
   double IntervalEnd;
   double IntervalWidth;
   QTime Update;
-  Plot *P;
+  Plot *SP;
+  Plot *HP;
   SampleDataD GoodSpikesHist;
   SampleDataD BadSpikesHist;
   SampleDataD AllSpikesHist;

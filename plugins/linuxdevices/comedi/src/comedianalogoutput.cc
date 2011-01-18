@@ -1024,7 +1024,7 @@ int ComediAnalogOutput::fillWriteBuffer( bool first )
 
   int maxntry = 2;
   if ( first )
-    maxntry = 50000/BufferSize;
+    maxntry = 100000/BufferSize;
 
   int ern = 0;
   int elemWritten = 0;

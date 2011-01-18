@@ -43,8 +43,11 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
 {
   // parameter:
   Threshold = 1.0;
+  Peaks = true;
   NoSpikeInterval = 0.1;
   StimulusRequired = false;
+  NSnippets = 20;
+  SnippetsWidth = 0.002;
   LogHistogram = false;
   UpdateTime = 1.0;
   HistoryTime = 10.0;
@@ -58,12 +61,15 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   int strongstyle = OptWidget::ValueLarge + OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack;
   addLabel( "Detector", 8 );
   addNumber( "threshold", "Threshold", Threshold, -2000.0, 2000.0, SizeResolution, Unit, Unit, "%.1f", 2+8+32 );
+  addBoolean( "peaks", "Detect peaks", Peaks, 2+8+32 );
   addLabel( "Indicators", 8 );
   addNumber( "nospike", "Interval for no spike", NoSpikeInterval, 0.0, 1000.0, 0.01, "sec", "ms", "%.0f", 0+8+32 );
   addBoolean( "considerstimulus", "Expect spikes during stimuli only", StimulusRequired, 0+8+32 );
   addNumber( "resolution", "Resolution of spike size", SizeResolution, 0.0, 1000.0, 0.01, Unit, Unit, "%.3f", 0+8+32 );
   addBoolean( "log", "Logarithmic histograms", LogHistogram, 0+8+32 );
   addNumber( "update", "Update time interval", UpdateTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8+32 );
+  addInteger( "nsnippets", "Number of spike snippets shown", NSnippets, 0, 10000, 5 ).setFlags( 0+8+32 );
+  addNumber( "snippetswidth", "Width of spike snippet", SnippetsWidth, 0.0, 1.0, 0.0005, "sec", "ms", "%.1f", 0+8+32 );
   addNumber( "history", "Maximum history time", HistoryTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8+32 );
   addNumber( "qualitythresh", "Quality threshold", QualityThresh, 0.0, 1.0, 0.01, "1", "%", "%.0f", 0+8+32 );
   addNumber( "trendthresh", "Trend threshold", TrendThresh, 0.0, 1.0, 0.01, "1", "%", "%.0f", 0+8+32 );
@@ -75,16 +81,16 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   addTypeStyle( OptWidget::Bold, Parameter::Label );
 
   // main layout:
-  QVBoxLayout *vb = new QVBoxLayout;
-  vb->setContentsMargins( 0, 0, 0, 0 );
-  vb->setSpacing( 0 );
-  setLayout( vb );
+  QGridLayout *gb = new QGridLayout;
+  gb->setContentsMargins( 0, 0, 0, 0 );
+  gb->setSpacing( 0 );
+  setLayout( gb );
 
   // parameter widgets:
   TDW.assign( ((Options*)this), 2, 4, true, 0, mutex() );
   TDW.setMargins( 4, 2, 4, 0 );
   TDW.setVerticalSpacing( 1 );
-  vb->addWidget( &TDW, 0, Qt::AlignHCenter );
+  gb->addWidget( &TDW, 0, 1, Qt::AlignHCenter );
 
   setDialogSelectMask( 8 );
   setDialogReadOnlyMask( 16 );
@@ -94,31 +100,43 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   LastTime = 0.0;
   Update.start();
 
-  QHBoxLayout *hb = new QHBoxLayout;
-  vb->addLayout( hb );
-  hb->setContentsMargins( 4, 4, 4, 4 );
-  hb->setSpacing( 4 );
+  SP = new Plot( Plot::Copy );
+  SP->lock();
+  SP->noGrid();
+  SP->setTMarg( 1 );
+  SP->setBMarg( 2.5 );
+  SP->setLMarg( 5 );
+  SP->setRMarg( 1 );
+  SP->setXLabel( "ms" );
+  SP->setXLabelPos( 1.0, Plot::FirstMargin, 0.0, Plot::FirstAxis, Plot::Left, 0.0 );
+  SP->setXTics();
+  SP->setXRange( -1000.0*SnippetsWidth, 1000.0*SnippetsWidth );
+  SP->setYRange( Plot::AutoScale, Plot::AutoScale );
+  SP->setYLabel( Unit );
+  SP->unlock();
+  gb->addWidget( SP, 0, 0 );
 
-  P = new Plot( Plot::Copy );
-  P->lock();
-  P->noGrid();
-  P->setTMarg( 1 );
-  P->setRMarg( 1 );
-  P->setXLabel( Unit );
-  P->setXLabelPos( 1.0, Plot::FirstMargin, 0.0, Plot::FirstAxis, Plot::Left, 0.0 );
-  P->setXTics();
-  P->setYRange( 0.0, Plot::AutoScale );
-  P->setYLabel( "" );
-  P->setLMarg( 5 );
-  P->unlock();
-  hb->addWidget( P );
+  HP = new Plot( Plot::Copy );
+  HP->lock();
+  HP->noGrid();
+  HP->setTMarg( 1 );
+  HP->setBMarg( 2.5 );
+  HP->setLMarg( 5 );
+  HP->setRMarg( 1 );
+  HP->setXLabel( Unit );
+  HP->setXLabelPos( 1.0, Plot::FirstMargin, 0.0, Plot::FirstAxis, Plot::Left, 0.0 );
+  HP->setXTics();
+  HP->setYRange( 0.0, Plot::AutoScale );
+  HP->setYLabel( "" );
+  HP->unlock();
+  gb->addWidget( HP, 1, 0 );
 
   // key to histogram plot:  XXX provide a function in Plot!
   QGridLayout *gl = new QGridLayout;
   gl->setContentsMargins( 0, 0, 0, 0 );
   gl->setVerticalSpacing( 0 );
   gl->setHorizontalSpacing( 4 );
-  hb->addLayout( gl );
+  gb->addLayout( gl, 1, 1 );
 
   int is = widget()->fontInfo().pixelSize();
   QPixmap pm( is*2, is/3 );
@@ -275,7 +293,7 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   QualityPixs[3] = &GoodQuality;
   QualityIndicator = new QLabel;
   QualityIndicator->setPixmap( *QualityPixs[Quality] );
-  gl->addWidget( QualityIndicator, 4, 0, Qt::AlignLeft );
+  gl->addWidget( QualityIndicator, 4, 1, Qt::AlignLeft );
 
   // trend indicator:
   Trend = 2;
@@ -286,7 +304,7 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   TrendPixs[4] = &GoodArrow;
   TrendIndicator = new QLabel;
   TrendIndicator->setPixmap( *TrendPixs[Trend] );
-  gl->addWidget( TrendIndicator, 5, 0, Qt::AlignLeft );
+  gl->addWidget( TrendIndicator, 5, 1, Qt::AlignLeft );
 
   // dialog:
   QPushButton *pb = new QPushButton( "Dialog" );
@@ -299,6 +317,9 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   gl->addWidget( pb, 5, 1, Qt::AlignRight );
   connect( pb, SIGNAL( clicked( void ) ), this, SLOT( autoConfigure( void ) ) );
   connect( pb, SIGNAL( clicked( void ) ), this, SLOT( removeFocus( void ) ) );
+
+  gl->setColumnStretch( 0, 1 );
+  gl->setColumnStretch( 1, 4 );
 
 }
 
@@ -314,9 +335,9 @@ int ThresholdSUSpikeDetector::init( const InData &data, EventData &outevents,
   setNotify();
   notify();
   postCustomEvent( 12 );
-  P->lock();
-  P->setXLabel( Unit );
-  P->unlock();
+  HP->lock();
+  HP->setXLabel( Unit );
+  HP->unlock();
   outevents.setSizeScale( 1.0 );
   outevents.setSizeUnit( Unit );
   outevents.setSizeFormat( "%5.1f" );
@@ -345,8 +366,14 @@ void ThresholdSUSpikeDetector::readConfig( StrQueue &sq )
 void ThresholdSUSpikeDetector::notify( void )
 {
   Threshold = number( "threshold", Unit );
+  Peaks = boolean( "peaks" );
   NoSpikeInterval = number( "nospike" );
   StimulusRequired = boolean( "considerstimulus" );
+  NSnippets = integer( "nsnippets" );
+  SnippetsWidth = number( "snippetswidth" );
+  SP->lock();
+  SP->setXRange( -1000.0*SnippetsWidth, 1000.0*SnippetsWidth );
+  SP->unlock();
   LogHistogram = boolean( "log" );
   Parameter &ht = Options::operator[]( "history" );
   if ( ht.flags( OptWidget::changedFlag() ) ) {
@@ -411,11 +438,16 @@ void ThresholdSUSpikeDetector::autoConfigure( void )
       }
     }
   }
-  // no zero stretch:
-  if ( zp < 0 )
-    Threshold = AllSpikesHist.pos( rp+2 );
+  // set threshold:
+  if ( zp < 0 ) {
+    // no zero stretch:
+    Threshold = Peaks ? AllSpikesHist.pos( rp+2 ) :  AllSpikesHist.pos( lp-2 );
+  }
   else
-    Threshold = AllSpikesHist.pos( zp+1 );
+    Threshold = AllSpikesHist.pos( zp+zn/2 );
+  unsetNotify();
+  setNumber( "threshold", Threshold );
+  setNotify();
   TDW.updateValues( OptWidget::changedFlag() );
   delFlags( OptWidget::changedFlag() );
 }
@@ -491,8 +523,13 @@ void ThresholdSUSpikeDetector::save( void )
 int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
 				      const EventList &other, const EventData &stimuli )
 {
-  D.thresholdPeakHist( data.minBegin(), data.end(), outevents,
-		       Threshold, Threshold, Threshold, *this );
+  if ( Peaks )
+    D.thresholdPeakHist( data.minBegin(), data.end(), outevents,
+			 Threshold, Threshold, Threshold, *this );
+  else
+    D.thresholdTroughHist( data.minBegin(), data.end(), outevents,
+			   Threshold, Threshold, Threshold, *this );
+
 
   // update mean spike size in case of no spikes:
   if ( StimulusRequired && stimuli.size() > 0 ) {
@@ -534,14 +571,31 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
     return 0;
   Update.start();
 
+  // snippets:
+  SP->lock();
+  SP->clear();
+  SP->plotVLine( 0, Plot::White, 2 );
+  for ( int k=0; k<NSnippets; k++ ) {
+    if ( k >= outevents.size() )
+      break;
+    double st = outevents[outevents.size()-1-k];
+    if ( st - SnippetsWidth <= data.minTime() )
+      break;
+    SampleDataD snippet( -SnippetsWidth, SnippetsWidth, data.stepsize(), 0 );
+    data.copy( st, snippet );
+    SP->plot( snippet, 1000.0, Plot::Yellow, 1, Plot::Solid );
+  }
+  SP->draw();
+  SP->unlock();
+
   // histogramms:
   D.goodEvents().sizeHist( currentTime() - HistoryTime, currentTime(), GoodSpikesHist );
   D.badEvents().sizeHist( currentTime() - HistoryTime, currentTime(), BadSpikesHist );
   AllSpikesHist = GoodSpikesHist + BadSpikesHist;
 
   // plot:
-  P->lock();
-  P->clear();
+  HP->lock();
+  HP->clear();
   double xmin = -10.0;
   for ( int k=0; k<AllSpikesHist.size(); k++ )
     if ( AllSpikesHist[k] > 0.0 ) {
@@ -554,8 +608,8 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
       xmax = AllSpikesHist.pos( k+1 );
       break;
     }
-  if ( ! P->zoomedXRange() )
-    P->setXRange( xmin, xmax );
+  if ( ! HP->zoomedXRange() )
+    HP->setXRange( xmin, xmax );
   if ( LogHistogram ) {
     SampleDataD bh( BadSpikesHist );
     for ( int k=0; k<bh.size(); k++ )
@@ -563,18 +617,18 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
     SampleDataD gh( GoodSpikesHist );
     for ( int k=0; k<gh.size(); k++ )
       gh[k] = gh[k] > 1.0 ? log( gh[k] ) : 0.0;
-    P->plot( bh, 1.0, Plot::Red, 2, Plot::Solid );
-    P->plot( gh, 1.0, Plot::Green, 2, Plot::Solid );
-    P->noYTics();
+    HP->plot( bh, 1.0, Plot::Red, 2, Plot::Solid );
+    HP->plot( gh, 1.0, Plot::Green, 2, Plot::Solid );
+    HP->noYTics();
   }
   else {
-    P->plot( BadSpikesHist, 1.0, Plot::Red, 2, Plot::Solid );
-    P->plot( GoodSpikesHist, 1.0, Plot::Green, 2, Plot::Solid );
-    P->setYTics();
+    HP->plot( BadSpikesHist, 1.0, Plot::Red, 2, Plot::Solid );
+    HP->plot( GoodSpikesHist, 1.0, Plot::Green, 2, Plot::Solid );
+    HP->setYTics();
   }
-  P->plotVLine( Threshold, Plot::White, 2 );
-  P->draw();
-  P->unlock();
+  HP->plotVLine( Threshold, Plot::White, 2 );
+  HP->draw();
+  HP->unlock();
 
   // indicators:
 
@@ -609,14 +663,23 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
   LastSpikeSize = outevents.meanSize();
 
   // gap in histogram (two peaks)?
-  int lp=0; // end of first peak in histogram
-  for ( ; lp<AllSpikesHist.size() && AllSpikesHist[lp] <= 0.0; lp++ );
-  for ( ; lp<AllSpikesHist.size() && AllSpikesHist[lp] > 0.0; lp++ );
-  int hp=lp; // start of second peak in histogram
-  for ( ; hp<AllSpikesHist.size() && AllSpikesHist[hp] <= 0.0; hp++ );
-  bool gap = ( lp < AllSpikesHist.size() &&
-	       hp < AllSpikesHist.size() &&
-	       hp > lp );
+  bool gap = false;
+  if ( Peaks ) {
+    int lp=AllSpikesHist.index( 0.0 ); // end of centered peak in histogram
+    for ( ; lp<AllSpikesHist.size() && AllSpikesHist[lp] > 0.0; lp++ );
+    int hp=lp; // start of second peak in histogram
+    for ( ; hp<AllSpikesHist.size() && AllSpikesHist[hp] <= 0.0; hp++ );
+    gap = ( lp < AllSpikesHist.size() &&
+	    hp < AllSpikesHist.size() &&
+	    hp > lp );
+  }
+  else {
+    int lp=AllSpikesHist.index( 0.0 ); // end of centered peak in histogram
+    for ( ; lp>=0 && AllSpikesHist[lp] > 0.0; lp-- );
+    int hp=lp; // start of second peak in histogram
+    for ( ; hp>=0 && AllSpikesHist[hp] <= 0.0; hp-- );
+    gap = ( lp >= 0 && hp >= 0 && hp < lp );
+  }
 
   Quality = 0;
   if ( ! gap || ! spikes ) {
@@ -681,7 +744,7 @@ int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first,
   }
 
   time = *eventtime;
-  size = *event;
+  size = fabs( *event );
 
   // accept:
   return 1; 
