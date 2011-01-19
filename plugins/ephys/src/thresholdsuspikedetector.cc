@@ -446,7 +446,7 @@ void ThresholdSUSpikeDetector::autoConfigure( void )
   else
     Threshold = AllSpikesHist.pos( zp+zn/2 );
   unsetNotify();
-  setNumber( "threshold", Threshold );
+  setNumber( "threshold", Threshold, Unit );
   setNotify();
   TDW.updateValues( OptWidget::changedFlag() );
   delFlags( OptWidget::changedFlag() );

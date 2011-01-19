@@ -797,6 +797,7 @@ void FICurve::updateSession( const vector< FIData > &results )
     // determine best side:
     as->updateBestSide();
 
+    /*
     // best side parameter:
     if ( Side == mo.index( "best side" ) &&
 	 ( ( Waveform == 1 ) ||
@@ -808,6 +809,7 @@ void FICurve::updateSession( const vector< FIData > &results )
       mo.setNumber( "best saturation", Threshold.Saturation, Threshold.SaturationSD );
       mo.setNumber( "best maxrate", Threshold.MaxRate, Threshold.MaxRateSD );
     }
+    */
 
     // f-I curves:
     MapD om, sm, fm;

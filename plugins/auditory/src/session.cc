@@ -156,6 +156,13 @@ void Session::config( void )
   metaData().addSaveFlags( MetaData::configFlag() + MetaDataRecordingSection::standardFlag() + MetaDataSave );
   
   if ( simulation() ) {
+    mo.setNumber( "left frequency", 6000.0 );
+    mo.setNumber( "left threshold", 45.0 );
+    mo.setNumber( "left slope", 25.0 );
+    mo.setNumber( "left intensity", 49.0 );
+    mo.setNumber( "left rate", 100.0 );
+    mo.setNumber( "left saturation", 58.0 );
+    mo.setNumber( "left maxrate", 325.0 );
     mo.selectText( "best side", "left" );
     mo.setNumber( "best frequency", 6000.0 );
     mo.setNumber( "best threshold", 45.0 );
@@ -272,8 +279,32 @@ void Session::main( void )
 void Session::notifyMetaData( const string &section )
 {
   if ( section == "Cell" ) {
+    Options &mo = metaData( "Cell" );
+    string ss = mo.text( "best side" );
+
+    if ( mo.changed( "best frequency" ) )
+      mo.setNumber( ss + " frequency", mo.number( "best frequency" ), mo.error( "best frequency" ) );
+    if ( mo.changed( "best threshold" ) )
+      mo.setNumber( ss + " threshold", mo.number( "best threshold" ), mo.error( "best threshold" ) );
+    if ( mo.changed( "best slope" ) )
+      mo.setNumber( ss + " slope", mo.number( "best slope" ), mo.error( "best slope" )  );
+    if ( mo.changed( "best intensity" ) )
+      mo.setNumber( ss + " intensity", mo.number( "best intensity" ), mo.error( "best intensity" )  );
+    if ( mo.changed( "best saturation" ) )
+      mo.setNumber( ss + " saturation", mo.number( "best saturation" ), mo.error( "best saturation" )  );
+    if ( mo.changed( "best maxrate" ) )
+      mo.setNumber( ss + " maxrate", mo.number( "best maxrate" ), mo.error( "best maxrate" )  );
+
+    if ( mo.changed( "best side" ) ) {
+      mo.setNumber( "best frequency", mo.number( ss + " frequency" ), mo.error( ss + " frequency" ) );
+      mo.setNumber( "best threshold", mo.number( ss + " threshold" ), mo.error( ss + " threshold" ) );
+      mo.setNumber( "best slope", mo.number( ss + " slope" ), mo.error( ss + " slope" )  );
+      mo.setNumber( "best intensity", mo.number( ss + " intensity" ), mo.error( ss + " intensity" )  );
+      mo.setNumber( "best saturation", mo.number( ss + " saturation" ), mo.error( ss + " saturation" )  );
+      mo.setNumber( "best maxrate", mo.number( ss + " maxrate" ), mo.error( ss + " maxrate" )  );
+    }
     metaData( "Cell" ).addFlags( MetaDataSave, Parameter::changedFlag() );
-    ASW->updateValues( OptWidget::changedFlag() );
+    ASW->updateValues( MetaDataDisplay );
   }
 }
 

@@ -242,6 +242,10 @@ int SingleStimulus::main( void )
     if ( cf > 0.0 )
       CarrierFreq += cf;
   }
+  if ( fabs( CarrierFreq ) < 1e-7 ) {
+    warning( "Carrier frequency is set to zero!" );
+    return Failed;
+  }
   if ( intensitybase == 1 || intensitybase == 2 ) {
     auditory::Session *as = dynamic_cast<auditory::Session*>( control( "Session" ) );
     if ( as == NULL ) {

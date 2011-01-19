@@ -384,6 +384,7 @@ void FIField::save( void )
     // best side:
     as->updateBestSide();    
 
+    /*
     // best side parameter:
     if ( Side == mo.index( "best side" ) ) {
       mo.setNumber( "best frequency", FieldData[BestIndex].Frequency );
@@ -393,6 +394,7 @@ void FIField::save( void )
       mo.setNumber( "best maxrate", FieldData[BestIndex].MaxRate, FieldData[BestIndex].MaxRateSD );
       mo.setNumber( "best saturation", FieldData[BestIndex].Saturation, FieldData[BestIndex].SaturationSD );
     }
+    */
 
     // threshold curve:
     MapD tm;

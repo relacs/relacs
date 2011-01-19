@@ -440,7 +440,7 @@ OptWidgetMultiText::OptWidgetMultiText( Options::iterator param, QWidget *label,
       OptWidget::setValueStyle( W, (*Param).style(), false, true );
     EW->setInsertPolicy( QComboBox::InsertAtTop );
     EW->setDuplicatesEnabled( false );
-    if ( (*Param).style() & OptWidget::ComboAutoCompletion == 0 )
+    if ( ( (*Param).style() & OptWidget::ComboAutoCompletion ) == 0 )
       EW->setCompleter( 0 );
     reset();
     connect( EW, SIGNAL( editTextChanged( const QString& ) ),
