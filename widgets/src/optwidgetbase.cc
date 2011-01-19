@@ -697,6 +697,7 @@ OptWidgetNumber::OptWidgetNumber( Options::iterator param, QWidget *label,
     EW->setValue( val );
     OptWidget::setValueStyle( W, (*Param).style(), false, true );
     Value = EW->value();
+    EW->setKeyboardTracking( false );
     connect( EW, SIGNAL( valueChanged( double ) ),
 	     this, SLOT( valueChanged( double ) ) );
   }

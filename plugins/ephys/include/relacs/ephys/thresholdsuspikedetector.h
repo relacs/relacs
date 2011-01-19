@@ -89,10 +89,14 @@ public slots:
 
   Detector< InData::const_iterator, InDataTimeIterator > D;
 
-    /*! The threshold for detecting spikes. */
-  double Threshold;
+    /*! The lower threshold for detecting spikes. */
+  double LowerThreshold;
     /*! Detect peaks (true) or troughs (false ). */
   bool Peaks;
+    /*! True if the UpperThreshold is used in addition to the lower threshold. */
+  bool UseUpperThresh;
+    /*! The upper threshold for detecting spikes. */
+  double UpperThreshold;
     /*! If no spikes are detected, update statistic assuming that
         a single spike did not occur within \a NoSpikeInterval. */
   double NoSpikeInterval;
@@ -119,7 +123,7 @@ public slots:
     /*! Resolution of spike sizes and thresholds. */
   double SizeResolution;
 
-  OptWidget TDW;
+  OptWidget SDW;
   static const int UpdateFlag = 8192;
 
   long LastSize;

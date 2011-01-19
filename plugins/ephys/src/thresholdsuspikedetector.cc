@@ -42,8 +42,10 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
     AllSpikesHist( -2000.0, 2000.0, 0.5 )
 {
   // parameter:
-  Threshold = 1.0;
+  LowerThreshold = 1.0;
   Peaks = true;
+  UseUpperThresh = true;
+  UpperThreshold = 10.0;
   NoSpikeInterval = 0.1;
   StimulusRequired = false;
   NSnippets = 20;
@@ -60,7 +62,9 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   // options:
   int strongstyle = OptWidget::ValueLarge + OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack;
   addLabel( "Detector", 8 );
-  addNumber( "threshold", "Threshold", Threshold, -2000.0, 2000.0, SizeResolution, Unit, Unit, "%.1f", 2+8+32 );
+  addNumber( "lowerthreshold", "Lower threshold", LowerThreshold, -2000.0, 2000.0, SizeResolution, Unit, Unit, "%.1f", 2+8+32 );
+  addBoolean( "useupperthresh", "Use upper threshold", UseUpperThresh, 0+8+32 );
+  addNumber( "upperthreshold", "Upper threshold", UpperThreshold, -2000.0, 2000.0, SizeResolution, Unit, Unit, "%.1f", 2+8+32 ).setActivation( "useupperthresh", "true" );;
   addBoolean( "peaks", "Detect peaks", Peaks, 2+8+32 );
   addLabel( "Indicators", 8 );
   addNumber( "nospike", "Interval for no spike", NoSpikeInterval, 0.0, 1000.0, 0.01, "sec", "ms", "%.0f", 0+8+32 );
@@ -87,10 +91,10 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   setLayout( gb );
 
   // parameter widgets:
-  TDW.assign( ((Options*)this), 2, 4, true, 0, mutex() );
-  TDW.setMargins( 4, 2, 4, 0 );
-  TDW.setVerticalSpacing( 1 );
-  gb->addWidget( &TDW, 0, 1, Qt::AlignHCenter );
+  SDW.assign( ((Options*)this), 2, 4, true, 0, mutex() );
+  SDW.setMargins( 4, 2, 4, 0 );
+  SDW.setVerticalSpacing( 1 );
+  gb->addWidget( &SDW, 0, 1, Qt::AlignHCenter );
 
   setDialogSelectMask( 8 );
   setDialogReadOnlyMask( 16 );
@@ -160,7 +164,7 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   key = new QLabel;
   key->setPixmap( pm );
   gl->addWidget( key, 2, 0, Qt::AlignRight | Qt::AlignVCenter );
-  key = new QLabel( "threshold" );
+  key = new QLabel( "thresholds" );
   key->setFixedHeight( is );
   gl->addWidget( key, 2, 1, Qt::AlignLeft );
 
@@ -328,7 +332,8 @@ int ThresholdSUSpikeDetector::init( const InData &data, EventData &outevents,
 				    const EventList &other, const EventData &stimuli )
 {
   Unit = data.unit();
-  setOutUnit( "threshold", Unit );
+  setOutUnit( "lowerthreshold", Unit );
+  setOutUnit( "upperthreshold", Unit );
   setOutUnit( "size", Unit );
   setOutUnit( "resolution", Unit );
   setMinMax( "resolution", 0.0, 1000.0, 0.01, Unit );
@@ -365,7 +370,21 @@ void ThresholdSUSpikeDetector::readConfig( StrQueue &sq )
 
 void ThresholdSUSpikeDetector::notify( void )
 {
-  Threshold = number( "threshold", Unit );
+  bool uut = boolean( "useupperthresh" );
+  if ( uut != UseUpperThresh ) {
+    UseUpperThresh = uut;
+    if ( UseUpperThresh ) {
+      setRequest( "lowerthreshold", "Lower threshold" );
+      addFlags( "upperthreshold", 2 );
+    }
+    else {
+      setRequest( "lowerthreshold", "Threshold" );
+      delFlags( "upperthreshold", 2 );
+    }
+    postCustomEvent( 13 );
+  }
+  LowerThreshold = number( "lowerthreshold", Unit );
+  UpperThreshold = number( "upperthreshold", Unit );
   Peaks = boolean( "peaks" );
   NoSpikeInterval = number( "nospike" );
   StimulusRequired = boolean( "considerstimulus" );
@@ -399,16 +418,33 @@ void ThresholdSUSpikeDetector::notify( void )
       double f = pow( 10.0, -pre );
       resolution -= floor( 1.001*resolution/f ) * f;
     } while ( pre < 3 && fabs( resolution ) > 1.0e-3 );
-    setFormat( "threshold", 4+pre, pre, 'f' );
-    setStep( "threshold", SizeResolution, Unit );
+    setFormat( "lowerthreshold", 4+pre, pre, 'f' );
+    setStep( "lowerthreshold", SizeResolution, Unit );
+    setFormat( "upperthreshold", 4+pre, pre, 'f' );
+    setStep( "upperthreshold", SizeResolution, Unit );
     setFormat( "size", 4+pre, pre, 'f' );
     double max = 1000.0*SizeResolution;
     GoodSpikesHist = SampleDataD( -max, max, SizeResolution );
     BadSpikesHist = SampleDataD( -max, max, SizeResolution );
     AllSpikesHist = SampleDataD( -max, max, SizeResolution );
-    TDW.updateSettings();
+    SDW.updateSettings();
   }
-  TDW.updateValues( OptWidget::changedFlag() );
+  // fix thresholds:
+  if ( UseUpperThresh ) {
+    if ( Peaks ) {
+      if ( UpperThreshold < LowerThreshold+SizeResolution ) {
+	UpperThreshold = LowerThreshold+SizeResolution;
+	setNumber( "upperthreshold", UpperThreshold );
+      }
+    }
+    else {
+      if ( UpperThreshold > LowerThreshold-SizeResolution ) {
+	UpperThreshold = LowerThreshold-SizeResolution;
+	setNumber( "upperthreshold", UpperThreshold );
+      }
+    }
+  }
+  SDW.updateValues( OptWidget::changedFlag() );
   delFlags( OptWidget::changedFlag() );
 }
 
@@ -441,14 +477,47 @@ void ThresholdSUSpikeDetector::autoConfigure( void )
   // set threshold:
   if ( zp < 0 ) {
     // no zero stretch:
-    Threshold = Peaks ? AllSpikesHist.pos( rp+2 ) :  AllSpikesHist.pos( lp-2 );
+    LowerThreshold = Peaks ? AllSpikesHist.pos( rp+2 ) : AllSpikesHist.pos( lp-2 );
+    if ( UseUpperThresh )
+      UpperThreshold = Peaks ? LowerThreshold+10.0*SizeResolution : LowerThreshold-10.0*SizeResolution;
   }
-  else
-    Threshold = AllSpikesHist.pos( zp+zn/2 );
+  else {
+    LowerThreshold = AllSpikesHist.pos( zp+zn/2 );
+    if ( UseUpperThresh ) {
+      if ( Peaks ) {
+	// skip peak right of LowerThreshold:
+	int ut = zp+zn;
+	for ( ; ut<AllSpikesHist.size() && AllSpikesHist[ut] > 0.0; ut++ );
+	if ( ut > rp )
+	  UpperThreshold = AllSpikesHist.pos( rp+2 );
+	else {
+	  // center of next zeros:
+	  zn = 0;
+	  for ( ; ut<AllSpikesHist.size() && AllSpikesHist[ut] <= 0.0; ut++, zn++ );
+	  UpperThreshold = AllSpikesHist.pos( ut-zn/2 );
+	}
+      }
+      else {
+	// skip peak left of LowerThreshold:
+	int ut = zp-1;
+	for ( ; ut>=0 && AllSpikesHist[ut] > 0.0; ut-- );
+	if ( ut < lp )
+	  UpperThreshold = AllSpikesHist.pos( lp-2 );
+	else {
+	  // center of next zeros:
+	  zn = 0;
+	  for ( ; ut>=0 && AllSpikesHist[ut] <= 0.0; ut--, zn++ );
+	  UpperThreshold = AllSpikesHist.pos( ut+zn/2 );
+	}
+      }
+    }
+  }
   unsetNotify();
-  setNumber( "threshold", Threshold, Unit );
+  setNumber( "lowerthreshold", LowerThreshold, Unit );
+  if ( UseUpperThresh )
+    setNumber( "upperthreshold", UpperThreshold, Unit );
   setNotify();
-  TDW.updateValues( OptWidget::changedFlag() );
+  SDW.updateValues( OptWidget::changedFlag() );
   delFlags( OptWidget::changedFlag() );
 }
 
@@ -525,10 +594,10 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
 {
   if ( Peaks )
     D.thresholdPeakHist( data.minBegin(), data.end(), outevents,
-			 Threshold, Threshold, Threshold, *this );
+			 LowerThreshold, LowerThreshold, LowerThreshold, *this );
   else
     D.thresholdTroughHist( data.minBegin(), data.end(), outevents,
-			   Threshold, Threshold, Threshold, *this );
+			   LowerThreshold, LowerThreshold, LowerThreshold, *this );
 
 
   // update mean spike size in case of no spikes:
@@ -570,6 +639,9 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
   if ( Update.elapsed()*0.001 < UpdateTime )
     return 0;
   Update.start();
+
+  SDW.updateValues( OptWidget::changedFlag() );
+  delFlags( OptWidget::changedFlag() );
 
   // snippets:
   SP->lock();
@@ -626,7 +698,9 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
     HP->plot( GoodSpikesHist, 1.0, Plot::Green, 2, Plot::Solid );
     HP->setYTics();
   }
-  HP->plotVLine( Threshold, Plot::White, 2 );
+  HP->plotVLine( LowerThreshold, Plot::White, 2 );
+  if ( UseUpperThresh )
+    HP->plotVLine( UpperThreshold, Plot::White, 2 );
   HP->draw();
   HP->unlock();
 
@@ -687,7 +761,6 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
     unsetNotify();
     setInteger( "quality", Quality );
     setNotify();
-    TDW.updateValues( 2+4 );
     postCustomEvent( 11 );
     return 0;
   }
@@ -714,7 +787,6 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
   unsetNotify();
   setInteger( "quality", Quality );
   setNotify();
-  TDW.updateValues( 2+4 );
   postCustomEvent( 11 );
 
   return 0;
@@ -734,17 +806,16 @@ int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first,
 					  double &minthresh, double &maxthresh,
 					  double &time, double &size, double &width )
 { 
-  if ( event+1 >= last ) {
-    // resume:
-    return -1;
-  }
-  if ( event-1 < first ) {
-    // discard:
-    return 0;
-  }
-
   time = *eventtime;
   size = fabs( *event );
+
+  if ( UseUpperThresh ) {
+    if ( ( Peaks && *event > UpperThreshold ) ||
+	 ( ! Peaks && *event < UpperThreshold ) ) {
+      // discard:
+      return 0;
+    }
+  }
 
   // accept:
   return 1; 
@@ -760,8 +831,11 @@ void ThresholdSUSpikeDetector::customEvent( QEvent *qce )
     unlock();
   }
   else if ( qce->type() == QEvent::User+12 ) {
-    TDW.updateSettings();
-    TDW.updateValues();
+    SDW.updateSettings();
+    SDW.updateValues();
+  }
+  else if ( qce->type() == QEvent::User+13 ) {
+    SDW.assign( ((Options*)this), 2, 4, true, 0, mutex() );
   }
   else
     Filter::customEvent( qce );

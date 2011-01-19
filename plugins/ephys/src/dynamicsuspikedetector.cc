@@ -604,6 +604,9 @@ int DynamicSUSpikeDetector::detect( const InData &data, EventData &outevents,
     return 0;
   Update.start();
 
+  SDW.updateValues( OptWidget::changedFlag() );
+  delFlags( OptWidget::changedFlag() );
+
   // histogramms:
   D.goodEvents().sizeHist( currentTime() - HistoryTime, currentTime(), GoodSpikesHist );
   D.badEvents().sizeHist( currentTime() - HistoryTime, currentTime(), BadSpikesHist );
@@ -689,7 +692,6 @@ int DynamicSUSpikeDetector::detect( const InData &data, EventData &outevents,
     unsetNotify();
     setInteger( "quality", Quality );
     setNotify();
-    SDW.updateValues( 2+4 );
     postCustomEvent( 11 );
     return 0;
   }
@@ -716,7 +718,6 @@ int DynamicSUSpikeDetector::detect( const InData &data, EventData &outevents,
   unsetNotify();
   setInteger( "quality", Quality );
   setNotify();
-  SDW.updateValues( 2+4 );
   postCustomEvent( 11 );
 
   return 0;
