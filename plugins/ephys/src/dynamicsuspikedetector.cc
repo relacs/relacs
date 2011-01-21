@@ -554,6 +554,13 @@ int DynamicSUSpikeDetector::detect( const InData &data, EventData &outevents,
 				    const EventList &other, const EventData &stimuli )
 {
   FitIndices = data.indices( FitWidth );
+  if ( FitIndices < 3 ) {
+    FitIndices = 3;
+    FitWidth = data.interval( FitIndices );
+    unsetNotify();
+    setNumber( "fitwidth", FitWidth );
+    setNotify();
+  }
 
   double delay = sessionRunning() ? RecordingDelay : SearchDelay;
   double decay = sessionRunning() ? RecordingDecay : SearchDecay;
@@ -801,6 +808,10 @@ int DynamicSUSpikeDetector::checkEvent( InData::const_iterator first,
 
   // adjust spike time by parabula fit:
   if ( FitPeak ) {
+    if ( event + FitIndices/2 + 1 >= last )
+      return -1;
+    if ( event - FitIndices/2 <= first )
+      return 0;
     MapD peak;
     peak.reserve( FitIndices );
     InData::const_iterator peakp = event - FitIndices/2;
@@ -824,9 +835,16 @@ int DynamicSUSpikeDetector::checkEvent( InData::const_iterator first,
 	time += offs;
 	size += param[0] + 0.25*(param[1]*param[1]-2.0)/param[2] - *event;
       }
+      else
+	return 0;
     }
     else
-      printlog( "Parabula fit failed and returned " + Str( r ) );
+      printlog( "warning: parabula fit failed and returned " + Str( r ) );
+  }
+
+  if ( outevents.size() > 0 && time <= outevents.back() ) {
+    //    cerr << "TIME " << time << " < BACK " << outevents.back() << '\n';
+    return 0;
   }
 
   // adjust threshold:

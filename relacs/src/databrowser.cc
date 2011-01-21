@@ -91,7 +91,7 @@ DataBrowser::DataBrowser( QWidget *parent )
   QObject::connect( TreeWidget, SIGNAL(itemActivated(QTreeWidgetItem *, int )), this, SLOT(list(QTreeWidgetItem *, int)));
 
   DataBrowser::session = false;
-  DataBrowser::folder = "/home/fisch/data/drugs/data/"; 
+  DataBrowser::folder = "."; 
   load(folder);
 }
 
