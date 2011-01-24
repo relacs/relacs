@@ -10,7 +10,8 @@ pluginlib_LTLIBRARIES = \
     libauditoryficurve.la \
     libauditoryfifield.la \
     libauditorysinglestimulus.la \
-    libauditorysyslatency.la
+    libauditorysyslatency.la \
+    libauditoryadaptedficurves.la
 
 
 libauditoryreceptormodel_la_CPPFLAGS = \
@@ -242,6 +243,39 @@ libauditorysyslatency_la_include_HEADERS = $(HEADER_PATH)/syslatency.h
 
 
 
+libauditoryadaptedficurves_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/acoustic/include \
+    -I$(top_srcdir)/plugins/ephys/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS)
+
+libauditoryadaptedficurves_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS)
+
+libauditoryadaptedficurves_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(builddir)/../../ephys/src/libephystraces.la \
+    $(builddir)/../../acoustic/src/libacoustictraces.la \
+    $(QT4_LIBS)
+
+$(libauditoryadaptedficurves_la_OBJECTS) : moc_adaptedficurves.cc
+
+libauditoryadaptedficurves_la_SOURCES = adaptedficurves.cc
+
+libauditoryadaptedficurves_la_includedir = $(pkgincludedir)/auditory
+
+libauditoryadaptedficurves_la_include_HEADERS = $(HEADER_PATH)/adaptedficurves.h
+
+
+
 check_PROGRAMS = \
     linktest_libauditoryreceptormodel_la \
     linktest_libauditorysearch_la \
@@ -249,7 +283,8 @@ check_PROGRAMS = \
     linktest_libauditoryficurve_la \
     linktest_libauditoryfifield_la \
     linktest_libauditorysinglestimulus_la \
-    linktest_libauditorysyslatency_la
+    linktest_libauditorysyslatency_la \
+    linktest_libauditoryadaptedficurves_la
 
 linktest_libauditoryreceptormodel_la_SOURCES = linktest.cc
 linktest_libauditoryreceptormodel_la_LDADD = libauditoryreceptormodel.la
@@ -271,6 +306,9 @@ linktest_libauditorysinglestimulus_la_LDADD = libauditorysinglestimulus.la
 
 linktest_libauditorysyslatency_la_SOURCES = linktest.cc
 linktest_libauditorysyslatency_la_LDADD = libauditorysyslatency.la
+
+linktest_libauditoryadaptedficurves_la_SOURCES = linktest.cc
+linktest_libauditoryadaptedficurves_la_LDADD = libauditoryadaptedficurves.la
 
 TESTS = $(check_PROGRAMS)
 
