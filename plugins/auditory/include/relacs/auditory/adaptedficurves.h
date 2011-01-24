@@ -47,6 +47,14 @@ public:
   AdaptedFICurves( void );
   virtual int main( void );
 
+
+protected:
+
+  void analyze( EventList &spikes, SampleDataD &rate,
+		double delay, double duration, double pause,
+		int count, double sstime, double onsettime,
+		const ArrayD &times );
+
 };
 
 

@@ -37,15 +37,19 @@ AdaptedFICurves::AdaptedFICurves( void )
   addLabel ( "Test stimuli" );
   addNumber( "intmin", "Minimum sound intensity of test stimulus", 50.0, 0.0, 200.0, 0.5, "dB SPL" );
   addNumber( "intmax", "Maximum sound intensity of test stimulus", 100.0, 0.0, 200.0, 0.5, "dB SPL" );
-  addNumber( "intstep", "Sound-intensity steps of test stimulus", 50.0, 0.0, 200.0, 0.5, "dB SPL" );
+  addNumber( "intstep", "Sound-intensity steps of test stimulus", 10.0, 0.0, 200.0, 0.5, "dB SPL" );
   addNumber( "duration", "Duration of test stimuli", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
   addLabel ( "General" );
   addSelection( "side", "Speaker", "left|right|best" );
-  addNumber( "carrierfreq", "Frequency of carrier", 5000.0, -40000.0, 40000.0, 500.0, "Hz", "kHz" );
+  addNumber( "carrierfreq", "Frequency of carrier", 0.0, -40000.0, 40000.0, 500.0, "Hz", "kHz" );
   addBoolean( "usebestfreq", "Relative to the cell's best frequency", true );
   addNumber( "ramp", "Duration of ramps for all intenisty transitions", 0.001, 0.001, 1000.0, 0.001, "s", "ms" );
   addNumber( "pause", "Pause between stimuli", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
+  addNumber( "delay", "Part of pause before stimulus", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
   addInteger( "repetitions", "Number of repetitions of the stimulus", 10, 0, 10000, 1 );
+  addLabel ( "Analysis" );
+  addNumber( "onsettime", "Onset rate occurs within", 10.0, 0.0, 1000.0, 0.002, "seconds", "ms" );
+  addNumber( "sstime", "Width for measuring initial steady-state", 10.0, 0.0, 1000.0, 0.002, "seconds", "ms" );
 }
 
 
@@ -59,12 +63,15 @@ int AdaptedFICurves::main( void )
   double intmax = number( "intmax" );
   double intstep = number( "intstep" );
   double duration = number( "duration" );
-  bool side = index( "side" );
+  int side = index( "side" );
   double carrierfrequency = number( "carrierfreq" );
   bool usebestfreq = boolean( "usebestfreq" );
   double pause = number( "pause" );
+  double delay = number( "delay" );
   double ramp = number( "ramp" );
   double repetitions = integer( "repetitions" );
+  double onsettime = number( "onsettime" );
+  double sstime = number( "sstime" );
 
   if ( side > 1 )
     side = metaData( "Cell" ).index( "best side" );
@@ -80,6 +87,7 @@ int AdaptedFICurves::main( void )
   intrange.alternateInUp();
 
   // amplitude modulation:
+  ArrayD times;
   SampleDataD am( 0.0, 10.0, 0.0005 );
   am.clear();
   int rn = am.indices( ramp );
@@ -97,6 +105,7 @@ int AdaptedFICurves::main( void )
     for ( int j=0; j<am.indices( intrange.loop()==0 ? adaptinit : adaptduration ) - rn; j++ )
       am.push( x );
     // test:
+    times.push( am.length() );
     x0 = x;
     x = ::pow( 10.0, 0.05*(*intrange - intmax) );
     for ( int j=1; j<=rn; j++ )
@@ -114,7 +123,15 @@ int AdaptedFICurves::main( void )
   OutData signal;
   signal.setTrace( Speaker[ side ] );
   signal.fill( am, carrierfrequency, "pulses" );
+  signal.setDelay( delay );
+  signal.setIntensity( intmax );
 
+  // plot trace:
+  tracePlotSignal( signal.length()+delay, delay );
+
+  // variables:
+  EventList spikes;
+  SampleDataD rate( 0.0, signal.length(), 0.001 );
   int state = Completed;
 
   timeStamp();
@@ -141,7 +158,7 @@ int AdaptedFICurves::main( void )
       return Failed;
     }
 
-    sleep( signal.length() + ( pause > 0.01 ? 0.01 : pause ) );
+    sleep( signal.length() + delay + ( pause > 0.01 ? 0.01 : pause ) );
 
     if ( interrupt() ) {
       if ( count == 0 )
@@ -149,10 +166,11 @@ int AdaptedFICurves::main( void )
       break;
     }
 
-    //    analyze( spikes, rate );
+    analyze( spikes, rate, delay, duration, pause, count,
+	     sstime, onsettime, times );
     //    plot( spikes, rate, signal, voltage, plotmode );
  
-    sleepOn( signal.length() + pause );
+    sleepOn( signal.length() + pause - delay );
     if ( interrupt() ) {
       if ( count == 0 )
         state = Aborted;
@@ -171,6 +189,47 @@ int AdaptedFICurves::main( void )
 
   writeZero( Speaker[ side ] );
   return state;
+}
+
+
+void AdaptedFICurves::analyze( EventList &spikes, SampleDataD &rate,
+			       double delay, double duration, double pause,
+			       int count, double sstime, double onsettime,
+			       const ArrayD &times )
+{
+  // spikes:
+  const EventData &se = events( SpikeEvents[0] );
+  spikes.push( se, signalTime()-delay,
+	       signalTime()+duration+pause,
+	       signalTime() );
+
+  // firing frequency:
+  se.addFrequency( rate, count, signalTime() );
+
+  // rest rate:
+  double rr = 0.0;
+  for ( int j=0; j < rate.index( 0.0 ); j++ )
+    rr += ( rate[ j ] - rr ) / ( j+1 );
+  //  response.RestRate = rr;
+
+  // steady-state rate:
+  double ssr = 0.0; 
+  for ( int j=rate.index( times[0] - sstime ); j<rate.index( times[0] ); j++ )
+    ssr += ( rate[j] - ssr ) / ( j+1 );
+  //  response.PreRate = ssr;
+  
+  // peak firing rates:
+  for ( int k=0; k<times.size(); k++ ) {
+    double maxr = ssr;
+    for ( int j=rate.index( times[k] );
+	  j<rate.index( times[k] + onsettime );
+	  j++ ) {
+      double r = rate[j];
+      if ( ::fabs( r - ssr ) > ::fabs( maxr - ssr ) )
+	maxr = r;
+    }
+    //    OnRate[k] = maxr;
+  }
 }
 
 
