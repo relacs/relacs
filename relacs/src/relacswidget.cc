@@ -1926,7 +1926,7 @@ void RELACSWidget::keyPressEvent( QKeyEvent *event )
     // keyPressEvent() called!
     QCoreApplication::sendEvent( CurrentRePro->widget(), event );
   }
-  if ( ! event->isAccepted() )
+  if ( ! event->isAccepted() && CW->currentWidget() != 0  )
     QCoreApplication::sendEvent( CW->currentWidget(), event );
   for ( unsigned int k=0; k<CN.size() && ! event->isAccepted(); k++ ) {
     if ( CN[k]->globalKeyEvents() &&
@@ -1955,7 +1955,7 @@ void RELACSWidget::keyReleaseEvent( QKeyEvent *event )
        CurrentRePro != 0 &&
        CurrentRePro->widget() != 0  )
     QCoreApplication::sendEvent( CurrentRePro->widget(), event );
-  if ( ! event->isAccepted() )
+  if ( ! event->isAccepted() && CW->currentWidget() != 0 )
     QCoreApplication::sendEvent( CW->currentWidget(), event );
   for ( unsigned int k=0; k<CN.size() && ! event->isAccepted(); k++ ) {
     if ( CN[k]->globalKeyEvents() &&
