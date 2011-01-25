@@ -821,19 +821,22 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
   if ( ! ol.success() )
     return -1;
 
-  setSettings( ol, BufferSize );
-
   int delayinx = ol[0].indices( ol[0].delay() );
   for ( int k=0; k<ol.size(); k++ )
     ol[k].deviceReset( delayinx );
 
   // set buffer size:
-  BufferSize = 5*sigs.size()*sigs[0].indices( sigs[0].writeTime() )*BufferElemSize;
+  int bi = sigs[0].indices( sigs[0].writeTime() );
+  if ( bi <= 0 )
+    bi = 100;
+  BufferSize = 5*sigs.size()*bi*BufferElemSize;
   int nbuffer = sigs.deviceBufferSize()*BufferElemSize;
   if ( nbuffer < BufferSize )
     BufferSize = nbuffer;
   if ( BufferSize > bufferSize() )
     sigs.addError( DaqError::InvalidBufferTime );
+
+  setSettings( ol, BufferSize );
 
   if ( ! ol.success() )
     return -1;

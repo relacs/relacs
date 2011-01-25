@@ -50,7 +50,7 @@ SingleStimulus::SingleStimulus( void )
   addSelection( "waveform", "Stimulus waveform", "From file|Const|Sine|Rectangular|Triangular|Sawup|Sawdown|Whitenoise|OUnoise|Sweep" );
   addText( "stimfile", "Stimulus file", "" ).setStyle( OptWidget::BrowseExisting ).setActivation( "waveform", "From file" );
   addNumber( "stimampl", "Amplitude factor (standard deviation) of stimulus file", 0.0, 0.0, 1.0, 0.01 ).setActivation( "waveform", "From file" );
-  addNumber( "amplitude", "Amplitude of stimulus", Amplitude, 0.0, 130.0, 1.0, IUnit ).setActivation( "waveform", "Const", false );;
+  addNumber( "amplitude", "Amplitude of stimulus", Amplitude, 0.0, 10000.0, 1.0, IUnit ).setActivation( "waveform", "Const", false );;
   addSelection( "freqsel", "Specify", "frequency|periods" ).setActivation( "waveform", "From file|Const|Sweep", false );
   addNumber( "freq", "Frequency of waveform", 10.0, 0.0, 1000000.0, 1.0, "Hz" ).setActivation( "freqsel", "frequency" );
   addNumber( "periods", "Number of periods", 1.0, 0.0, 1000000.0, 1.0 ).setActivation( "freqsel", "periods" );
@@ -168,14 +168,8 @@ void SingleStimulus::config( void )
 {
   if ( SpikeTrace[0] >= 0 )
     VUnit = trace( SpikeTrace[0] ).unit();
-  int outtrace = index( "outtrace" );
-  if ( outtrace >= 0 && outtrace < outTracesSize() ) {
-    IUnit = outTrace( outtrace ).unit();
-    setUnit( "amplitude", IUnit );
-    setUnit( "offset", IUnit );
-    setUnit( "offsetstep", IUnit );
-    setUnit( "minslope", "Hz/"+IUnit );
-  }
+  setText( "outtrace", outTraceNames() );
+  setToDefault( "outtrace" );
   if ( CurrentTrace[0] >= 0 ) {
     string iinunit = trace( CurrentTrace[0] ).unit();
     IInFac = Parameter::changeUnit( 1.0, iinunit, IUnit );
