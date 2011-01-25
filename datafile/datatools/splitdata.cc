@@ -105,11 +105,11 @@ void readData( DataFile &sf )
 	  df << '\n';
       }
       df << sf.line() << '\n';
-    } while ( sf.readDataLine( stopempty ) );
+    } while ( sf.readDataLine( 1 ) );
 
     int se = sf.emptyLines();
-    if ( erase )
-      se = stopempty;
+    if ( erase && se < stopempty )
+      se = 0;
     for ( int k=0; k<se; k++ )
       df << '\n';
 

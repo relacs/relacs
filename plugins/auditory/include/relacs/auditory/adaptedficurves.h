@@ -22,6 +22,7 @@
 #ifndef _RELACS_AUDITORY_ADAPTEDFICURVES_H_
 #define _RELACS_AUDITORY_ADAPTEDFICURVES_H_ 1
 
+#include <relacs/multiplot.h>
 #include <relacs/ephys/traces.h>
 #include <relacs/acoustic/traces.h>
 #include <relacs/repro.h>
@@ -53,7 +54,14 @@ protected:
   void analyze( EventList &spikes, SampleDataD &rate,
 		double delay, double duration, double pause,
 		int count, double sstime, double onsettime,
-		const ArrayD &times );
+		const MapD &times, MapD &onsetrates, MapD &ssrates );
+  void plot( const EventList &spikes, const SampleDataD &rate, const SampleDataD &am,
+	     const MapD &onsetrates, const MapD &ssrates,
+	     double adaptint );
+  void saveSpikes( Options &header, const EventList &spikes );
+  void saveRate( Options &header, const SampleDataD &rate );
+
+  MultiPlot P;
 
 };
 

@@ -20,6 +20,7 @@
 */
 
 #include <relacs/rangeloop.h>
+#include <relacs/tablekey.h>
 #include <relacs/auditory/adaptedficurves.h>
 using namespace relacs;
 
@@ -49,7 +50,10 @@ AdaptedFICurves::AdaptedFICurves( void )
   addInteger( "repetitions", "Number of repetitions of the stimulus", 10, 0, 10000, 1 );
   addLabel ( "Analysis" );
   addNumber( "onsettime", "Onset rate occurs within", 10.0, 0.0, 1000.0, 0.002, "seconds", "ms" );
-  addNumber( "sstime", "Width for measuring initial steady-state", 10.0, 0.0, 1000.0, 0.002, "seconds", "ms" );
+  addNumber( "sstime", "Width for measuring steady-states", 10.0, 0.0, 1000.0, 0.002, "seconds", "ms" );
+
+  // plot:
+  setWidget( &P );
 }
 
 
@@ -84,10 +88,10 @@ int AdaptedFICurves::main( void )
 
   // test intensities:
   RangeLoop intrange( intmin, intmax, intstep );
-  intrange.alternateInUp();
+  intrange.alternateInDown();
 
   // amplitude modulation:
-  ArrayD times;
+  MapD times;
   SampleDataD am( 0.0, 10.0, 0.0005 );
   am.clear();
   int rn = am.indices( ramp );
@@ -105,7 +109,7 @@ int AdaptedFICurves::main( void )
     for ( int j=0; j<am.indices( intrange.loop()==0 ? adaptinit : adaptduration ) - rn; j++ )
       am.push( x );
     // test:
-    times.push( am.length() );
+    times.push( *intrange, am.length() );
     x0 = x;
     x = ::pow( 10.0, 0.05*(*intrange - intmax) );
     for ( int j=1; j<=rn; j++ )
@@ -126,12 +130,85 @@ int AdaptedFICurves::main( void )
   signal.setDelay( delay );
   signal.setIntensity( intmax );
 
+  // amplitude modulation:
+  am.decibel( 1.0 );
+  am *= 2.0;
+  am += intmax;
+  am.front() = 0.0;
+  am.back() = 0.0;
+
+  // plot:
+  P.lock();
+  P.resize( 3, Plot::Copy );
+
+  P[0].clear();
+  P[0].setSize( 0.6, 0.55 );
+  P[0].setOrigin( 0.0, 0.45 );
+  P[0].setLMarg( 7 );
+  P[0].setRMarg( 2 );
+  P[0].setBMarg( 0.5 );
+  P[0].setTMarg( 1 );
+  P[0].noXTics();
+  P[0].setXRange( 0.0, 1000.0*signal.length() );
+  P[0].setYLabel( "Frequency [Hz]" );
+  P[0].setYLabelPos( 2.0, Plot::FirstMargin, 0.5, Plot::Graph, Plot::Center, -90.0 );
+  P[0].setYRange( 0.0, Plot::AutoScale );
+  P[0].setYTics( );
+
+  P[1].clear();
+  P[1].setSize( 0.6, 0.45 );
+  P[1].setOrigin( 0.0, 0.0 );
+  P[1].setLMarg( 7 );
+  P[1].setRMarg( 2 );
+  P[1].setBMarg( 5 );
+  P[1].setTMarg( 0 );
+  P[1].setXLabel( "Time [ms]" );
+  P[1].setXRange( 0.0, 1000.0*signal.length() );
+  P[1].setYLabel( "Intensity [dB SPL]" );
+  P[1].setYLabelPos( 2.0, Plot::FirstMargin, 0.5, Plot::Graph, Plot::Center, -90.0 );
+  P[1].setYRange( intmin, intmax );
+  P[1].setYTics( );
+  P[1].plot( am, 1000.0, Plot::Green, 2, Plot::Solid );
+
+  P[2].clear();
+  P[2].setSize( 0.4, 1.0 );
+  P[2].setOrigin( 0.6, 0.0 );
+  P[2].setLMarg( 7 );
+  P[2].setRMarg( 2 );
+  P[2].setBMarg( 5 );
+  P[2].setTMarg( 1 );
+  P[2].setXLabel( "Intensity [dB SPL]" );
+  P[2].setXRange( intmin, intmax );
+  P[2].setXTics();
+  P[2].setYLabel( "Frequency [Hz]" );
+  P[2].setYLabelPos( 2.0, Plot::FirstMargin, 0.5, Plot::Graph, Plot::Center, -90.0 );
+  P[2].setYRange( 0.0, Plot::AutoScale );
+  P[2].setYTics( );
+
+  P.setCommonXRange( 0, 1 );
+
+  P.draw();
+  P.unlock();
+
   // plot trace:
   tracePlotSignal( signal.length()+delay, delay );
+
+  // header:
+  Options header;
+  header.addInteger( "index1", totalRuns()-1 );
+  header.addNumber( "carrier frequency", 0.001*carrierfrequency, "kHz", "%.3f" );
+  header.addInteger( "side", side );
+  header.addNumber( "minimum intensity", intmin, "dB SPL", "%.1f" );
+  header.addNumber( "maximum intensity", intmax, "dB SPL", "%.1f" );
+  header.addNumber( "adapting intensity", adaptint, "dB SPL", "%.1f" );
+  header.addText( "session time", sessionTimeStr() ); 
+  header.addLabel( "status:" );
 
   // variables:
   EventList spikes;
   SampleDataD rate( 0.0, signal.length(), 0.001 );
+  MapD onsetrates;
+  MapD ssrates;
   int state = Completed;
 
   timeStamp();
@@ -166,9 +243,9 @@ int AdaptedFICurves::main( void )
       break;
     }
 
-    analyze( spikes, rate, delay, duration, pause, count,
-	     sstime, onsettime, times );
-    //    plot( spikes, rate, signal, voltage, plotmode );
+    analyze( spikes, rate, delay, signal.length(), pause, count,
+	     sstime, onsettime, times, onsetrates, ssrates );
+    plot( spikes, rate, am, onsetrates, ssrates, adaptint );
  
     sleepOn( signal.length() + pause - delay );
     if ( interrupt() ) {
@@ -182,8 +259,8 @@ int AdaptedFICurves::main( void )
 
   if ( state == Completed ) {
     unlockAll();
-    //    saveRate( header, rate );
-    //    saveSpikes( header, spikes );
+    saveSpikes( header, spikes );
+    saveRate( header, rate );
     lockAll();
   }
 
@@ -192,10 +269,64 @@ int AdaptedFICurves::main( void )
 }
 
 
+void AdaptedFICurves::saveSpikes( Options &header, const EventList &spikes )
+{
+  // create file:
+  ofstream df( addPath( "adaptedficurves-spikes.dat" ).c_str(),
+	       ofstream::out | ofstream::app );
+  if ( ! df.good() )
+    return;
+
+  // write header and key:
+  header.save( df, "# " );
+  stimulusData().save( df, "#   " );
+  df << "# settings:\n";
+  settings().save( df, "#   ", -1, 16, false, true );
+  df << '\n';
+  TableKey key;
+  key.addNumber( "t", "ms", "%7.1f" );
+  key.saveKey( df, true, false );
+
+  // write data:
+  spikes.saveText( df, 1000.0, 7, 1, 'f', 1, "-0" );
+  df << '\n';
+}
+
+
+void AdaptedFICurves::saveRate( Options &header, const SampleDataD &rate )
+{
+  // create file:
+  ofstream df( addPath( "adaptedficurves-rate.dat" ).c_str(),
+	       ofstream::out | ofstream::app );
+  if ( ! df.good() )
+    return;
+
+  // write header and key:
+  header.save( df, "# " );
+  stimulusData().save( df, "#   " );
+  df << "# settings:\n";
+  settings().save( df, "#   ", -1, 16, false, true );
+  df << '\n';
+  TableKey key;
+  key.addNumber( "t", "ms", "%7.1f" );
+  key.addNumber( "f", "Hz", "%5.1f" );
+  key.saveKey( df, true, false );
+
+  // write data:
+  for ( int k=0; k<rate.size(); k++ ) {
+    key.save( df, rate.pos( k ) * 1000.0, 0 );
+    key.save( df, rate[k] );
+    df << '\n';
+  }
+  df << "\n\n";
+}
+
+
 void AdaptedFICurves::analyze( EventList &spikes, SampleDataD &rate,
 			       double delay, double duration, double pause,
 			       int count, double sstime, double onsettime,
-			       const ArrayD &times )
+			       const MapD &times,
+			       MapD &onsetrates, MapD &ssrates )
 {
   // spikes:
   const EventData &se = events( SpikeEvents[0] );
@@ -218,8 +349,11 @@ void AdaptedFICurves::analyze( EventList &spikes, SampleDataD &rate,
     ssr += ( rate[j] - ssr ) / ( j+1 );
   //  response.PreRate = ssr;
   
-  // peak firing rates:
+  // peak and steady-state firing rates:
+  onsetrates.clear();
+  ssrates.clear();
   for ( int k=0; k<times.size(); k++ ) {
+    // onset:
     double maxr = ssr;
     for ( int j=rate.index( times[k] );
 	  j<rate.index( times[k] + onsettime );
@@ -228,8 +362,41 @@ void AdaptedFICurves::analyze( EventList &spikes, SampleDataD &rate,
       if ( ::fabs( r - ssr ) > ::fabs( maxr - ssr ) )
 	maxr = r;
     }
-    //    OnRate[k] = maxr;
+    onsetrates.push( times.x(k), maxr );
+    // steady-state:
+    ssrates.push( times.x(k), rate.mean( times[k] - sstime, times[k] ) );
   }
+  onsetrates.sortByX();
+}
+
+
+void AdaptedFICurves::plot( const EventList &spikes, const SampleDataD &rate,
+			    const SampleDataD &am,
+			    const MapD &onsetrates, const MapD &ssrates,
+			    double adaptint )
+{
+  P.lock();
+
+  // rate and spikes:
+  P[0].clear();
+  for ( int i=0; i<spikes.size() && i<20; i++ )
+    P[0].plot( spikes[i], 1000.0,
+	       1.0 - (i+1)*0.05, Plot::Graph, 2, Plot::StrokeUp,
+	       0.045, Plot::Graph, Plot::Red, Plot::Red );
+  P[0].plot( rate, 1000.0, Plot::Yellow, 2, Plot::Solid );
+
+
+  // f-I-curves:
+  P[2].clear();
+  P[2].plotVLine( adaptint, Plot::White, 2 );
+  P[2].plot( ssrates, 1.0, Plot::Red, 4, Plot::Solid,
+	     Plot::Circle, 10, Plot::Red, Plot::Red );
+  P[2].plot( onsetrates, 1.0, Plot::Blue, 4, Plot::Solid,
+	     Plot::Circle, 10, Plot::Blue, Plot::Blue );
+      
+  P.draw();
+
+  P.unlock();  
 }
 
 

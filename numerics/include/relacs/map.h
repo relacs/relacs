@@ -28,6 +28,9 @@
 #include <iomanip>
 #include <fstream>
 #include <sstream>
+#include <utility>
+#include <algorithm>
+#include <deque>
 #include <relacs/containerops.h>
 #include <relacs/array.h>
 #include <relacs/sampledata.h>
@@ -281,6 +284,11 @@ class Map : public Array < T >
   int insert( const T &xval, const T &yval );
     /*! Remove data pair at position \a i from the Map. */
   Map<T> &erase( int i );
+
+   /*! Sort the x and y-array by x. */
+  Map<T> &sortByX( void );
+   /*! Sort the x and y-array by y. */
+  Map<T> &sortByY( void );
 
     /*! True if size and content of map \a a and \a b are equal. */
   template < typename TT > 
@@ -981,6 +989,76 @@ Map<T> &Map<T>::erase( int i )
     for ( ; i<size(); i++ ) {
       x(i) = x(i+1);
       y(i) = y(i+1);
+    }
+  }
+
+  return *this;
+}
+
+
+template < typename T > 
+Map<T> &Map<T>::sortByX( void )
+{
+  // copy x() and y() array into array of pairs:
+  deque< pair<T,T> > tmp;
+  {
+    typename Array<T>::const_iterator xf = XData.begin();
+    typename Array<T>::const_iterator xl = XData.end();
+    typename Array<T>::const_iterator yf = begin();
+    typename Array<T>::const_iterator yl = end();
+    while ( xf != xl && yf != yl )
+      tmp.push_back( pair<T,T>( *xf++, *yf++ ) );
+  }
+    
+  sort( tmp.begin(), tmp.end() );
+
+  // copy array of pairs back into x() and y():
+  {
+    typename Array<T>::iterator xf = XData.begin();
+    typename Array<T>::iterator xl = XData.end();
+    typename Array<T>::iterator yf = begin();
+    typename Array<T>::iterator yl = end();
+    typename deque< pair<T,T> >::const_iterator tf = tmp.begin();
+    typename deque< pair<T,T> >::const_iterator tl = tmp.end();
+    while ( xf != xl && yf != yl && tf != tl ) {
+      *xf++ = tf->first;
+      *yf++ = tf->second;
+      ++tf;
+    }
+  }
+
+  return *this;
+}
+
+
+template < typename T > 
+Map<T> &Map<T>::sortByY( void )
+{
+  // copy x() and y() array into array of pairs:
+  deque< pair<T,T> > tmp;
+  {
+    typename Array<T>::const_iterator xf = XData.begin();
+    typename Array<T>::const_iterator xl = XData.end();
+    typename Array<T>::const_iterator yf = begin();
+    typename Array<T>::const_iterator yl = end();
+    while ( xf != xl && yf != yl )
+      tmp.push_back( pair<T,T>( *yf++, *xf++ ) );
+  }
+
+  sort( tmp.begin(), tmp.end() );
+
+  // copy array of pairs back into x() and y():
+  {
+    typename Array<T>::iterator xf = XData.begin();
+    typename Array<T>::iterator xl = XData.end();
+    typename Array<T>::iterator yf = begin();
+    typename Array<T>::iterator yl = end();
+    typename deque< pair<T,T> >::const_iterator tf = tmp.begin();
+    typename deque< pair<T,T> >::const_iterator tl = tmp.end();
+    while ( xf != xl && yf != yl && tf != tl ) {
+      *xf++ = tf->second;
+      *yf++ = tf->first;
+      ++tf;
     }
   }
 
