@@ -28,29 +28,34 @@ namespace auditory {
 
 
 AdaptedFICurves::AdaptedFICurves( void )
-  : RePro( "AdaptedFICurves", "auditory", "Jan Benda", "1.0", "Jan 24, 2011" )
+  : RePro( "AdaptedFICurves", "auditory", "Jan Benda", "1.0", "Jan 27, 2011" )
 {
   // add some options:
-  addLabel ( "Adaptation stimuli" );
+  addLabel( "Stimulus" ).setStyle( OptWidget::TabLabel );
+  addLabel ( "Adaptation stimulus" );
+  addSelection( "adaptbase", "Intensity of adapting stimulus relative to", "SPL|Threshold" );
   addNumber( "adaptint", "Sound intensity of adapting stimulus", 50.0, 0.0, 200.0, 0.5, "dB SPL" );
   addNumber( "adaptinit", "Duration of initial adaptation stimulus", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
-  addNumber( "adaptduration", "Duration of subsequent adaptation stimuli", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
+  addNumber( "adaptduration", "Duration of subsequent adaptation stimuli", 0.1, 0.001, 100000.0, 0.001, "s", "ms" );
   addLabel ( "Test stimuli" );
-  addNumber( "intmin", "Minimum sound intensity of test stimulus", 50.0, 0.0, 200.0, 0.5, "dB SPL" );
-  addNumber( "intmax", "Maximum sound intensity of test stimulus", 100.0, 0.0, 200.0, 0.5, "dB SPL" );
+  addSelection( "intbase", "Intensities of test stimulus relative to", "SPL|Threshold|Adaptation stimulus" );
+  addNumber( "intmin", "Minimum sound intensity of test stimulus", 50.0, 0.0, 200.0, 0.5, "dB" );
+  addNumber( "intmax", "Maximum sound intensity of test stimulus", 100.0, 0.0, 200.0, 0.5, "dB" );
   addNumber( "intstep", "Sound-intensity steps of test stimulus", 10.0, 0.0, 200.0, 0.5, "dB SPL" );
-  addNumber( "duration", "Duration of test stimuli", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
-  addLabel ( "General" );
+  addNumber( "duration", "Duration of test stimuli", 0.1, 0.001, 100000.0, 0.001, "s", "ms" );
+  addLabel( "General" ).setStyle( OptWidget::TabLabel );
   addSelection( "side", "Speaker", "left|right|best" );
   addNumber( "carrierfreq", "Frequency of carrier", 0.0, -40000.0, 40000.0, 500.0, "Hz", "kHz" );
   addBoolean( "usebestfreq", "Relative to the cell's best frequency", true );
   addNumber( "ramp", "Duration of ramps for all intenisty transitions", 0.001, 0.001, 1000.0, 0.001, "s", "ms" );
   addNumber( "pause", "Pause between stimuli", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
-  addNumber( "delay", "Part of pause before stimulus", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
+  addNumber( "delay", "Part of pause before stimulus", 0.1, 0.001, 100000.0, 0.001, "s", "ms" );
   addInteger( "repetitions", "Number of repetitions of the stimulus", 10, 0, 10000, 1 );
   addLabel ( "Analysis" );
-  addNumber( "onsettime", "Onset rate occurs within", 10.0, 0.0, 1000.0, 0.002, "seconds", "ms" );
-  addNumber( "sstime", "Width for measuring steady-states", 10.0, 0.0, 1000.0, 0.002, "seconds", "ms" );
+  addNumber( "onsettime", "Onset rate occurs within", 0.1, 0.0, 1000.0, 0.002, "seconds", "ms" );
+  addNumber( "sstime", "Width for measuring steady-states", 0.1, 0.0, 1000.0, 0.002, "seconds", "ms" );
+
+  addTypeStyle( OptWidget::Bold, Parameter::Label );
 
   // plot:
   setWidget( &P );
@@ -60,9 +65,11 @@ AdaptedFICurves::AdaptedFICurves( void )
 int AdaptedFICurves::main( void )
 {
   // get options:
+  int adaptbase = index( "adaptbase" );
   double adaptint = number( "adaptint" );
   double adaptinit = number( "adaptinit" );
   double adaptduration = number( "adaptduration" );
+  int intbase = index( "intbase" );
   double intmin = number( "intmin" );
   double intmax = number( "intmax" );
   double intstep = number( "intstep" );
@@ -84,6 +91,19 @@ int AdaptedFICurves::main( void )
     double cf = metaData( "Cell" ).number( sidestr + " frequency" );
     if ( cf > 0.0 )
       carrierfrequency += cf;
+  }
+
+  // intensities:
+  double bt = metaData( "Cell" ).number( sidestr + " threshold" );
+  if ( adaptbase == 1 )
+    adaptint += bt;
+  if ( intbase == 1 ) {
+    intmin += bt;
+    intmax += bt;
+  }
+  else if ( intbase == 2 ) {
+    intmin += adaptint;
+    intmax += adaptint;
   }
 
   // test intensities:
@@ -208,7 +228,9 @@ int AdaptedFICurves::main( void )
   EventList spikes;
   SampleDataD rate( 0.0, signal.length(), 0.001 );
   MapD onsetrates;
+  MapD onsetratessd;
   MapD ssrates;
+  MapD ssratessd;
   int state = Completed;
 
   timeStamp();
@@ -244,7 +266,7 @@ int AdaptedFICurves::main( void )
     }
 
     analyze( spikes, rate, delay, signal.length(), pause, count,
-	     sstime, onsettime, times, onsetrates, ssrates );
+	     sstime, onsettime, times, onsetrates, onsetratessd, ssrates, ssratessd );
     plot( spikes, rate, am, onsetrates, ssrates, adaptint );
  
     sleepOn( signal.length() + pause - delay );
@@ -261,6 +283,7 @@ int AdaptedFICurves::main( void )
     unlockAll();
     saveSpikes( header, spikes );
     saveRate( header, rate );
+    saveData( header, times, onsetrates, onsetratessd, ssrates, ssratessd );
     lockAll();
   }
 
@@ -269,7 +292,7 @@ int AdaptedFICurves::main( void )
 }
 
 
-void AdaptedFICurves::saveSpikes( Options &header, const EventList &spikes )
+void AdaptedFICurves::saveSpikes( const Options &header, const EventList &spikes )
 {
   // create file:
   ofstream df( addPath( "adaptedficurves-spikes.dat" ).c_str(),
@@ -281,7 +304,7 @@ void AdaptedFICurves::saveSpikes( Options &header, const EventList &spikes )
   header.save( df, "# " );
   stimulusData().save( df, "#   " );
   df << "# settings:\n";
-  settings().save( df, "#   ", -1, 16, false, true );
+  settings().save( df, "#   ", -1, 0, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -293,7 +316,7 @@ void AdaptedFICurves::saveSpikes( Options &header, const EventList &spikes )
 }
 
 
-void AdaptedFICurves::saveRate( Options &header, const SampleDataD &rate )
+void AdaptedFICurves::saveRate( const Options &header, const SampleDataD &rate )
 {
   // create file:
   ofstream df( addPath( "adaptedficurves-rate.dat" ).c_str(),
@@ -305,7 +328,7 @@ void AdaptedFICurves::saveRate( Options &header, const SampleDataD &rate )
   header.save( df, "# " );
   stimulusData().save( df, "#   " );
   df << "# settings:\n";
-  settings().save( df, "#   ", -1, 16, false, true );
+  settings().save( df, "#   ", -1, 0, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -322,11 +345,51 @@ void AdaptedFICurves::saveRate( Options &header, const SampleDataD &rate )
 }
 
 
+void AdaptedFICurves::saveData( const Options &header, const MapD &times,
+				const MapD &onsetrates, const MapD &onsetratessd,
+				const MapD &ssrates, const MapD &ssratessd )
+{
+  // create file:
+  ofstream df( addPath( "adaptedficurves-data.dat" ).c_str(),
+	       ofstream::out | ofstream::app );
+  if ( ! df.good() )
+    return;
+
+  // write header and key:
+  header.save( df, "# " );
+  stimulusData().save( df, "#   " );
+  df << "# settings:\n";
+  settings().save( df, "#   ", -1, 0, false, true );
+  df << '\n';
+  TableKey key;
+  key.addNumber( "I", "dB SPL", "%5.1f" );
+  key.addNumber( "t", "ms", "%7.1f" );
+  key.addNumber( "f_on", "Hz", "%5.1f" );
+  key.addNumber( "s.d.", "Hz", "%5.1f" );
+  key.addNumber( "f_ss", "Hz", "%5.1f" );
+  key.addNumber( "s.d.", "Hz", "%5.1f" );
+  key.saveKey( df, true, false );
+
+  // write data:
+  for ( int k=0; k<times.size(); k++ ) {
+    key.save( df, times.x(k), 0 );
+    key.save( df, times[k] * 1000.0 );
+    key.save( df, onsetrates[k] );
+    key.save( df, onsetratessd[k] );
+    key.save( df, ssrates[k] );
+    key.save( df, ssratessd[k] );
+    df << '\n';
+  }
+  df << "\n\n";
+}
+
+
 void AdaptedFICurves::analyze( EventList &spikes, SampleDataD &rate,
 			       double delay, double duration, double pause,
 			       int count, double sstime, double onsettime,
 			       const MapD &times,
-			       MapD &onsetrates, MapD &ssrates )
+			       MapD &onsetrates, MapD &onsetratessd,
+			       MapD &ssrates, MapD &ssratessd )
 {
   // spikes:
   const EventData &se = events( SpikeEvents[0] );
@@ -335,8 +398,10 @@ void AdaptedFICurves::analyze( EventList &spikes, SampleDataD &rate,
 	       signalTime() );
 
   // firing frequency:
-  se.addFrequency( rate, count, signalTime() );
+  SampleDataD ratesd( rate );
+  spikes.frequency( rate, ratesd );
 
+  /*
   // rest rate:
   double rr = 0.0;
   for ( int j=0; j < rate.index( 0.0 ); j++ )
@@ -348,25 +413,37 @@ void AdaptedFICurves::analyze( EventList &spikes, SampleDataD &rate,
   for ( int j=rate.index( times[0] - sstime ); j<rate.index( times[0] ); j++ )
     ssr += ( rate[j] - ssr ) / ( j+1 );
   //  response.PreRate = ssr;
-  
+  */
+
   // peak and steady-state firing rates:
   onsetrates.clear();
+  onsetratessd.clear();
   ssrates.clear();
+  ssratessd.clear();
   for ( int k=0; k<times.size(); k++ ) {
+    // steady-state:
+    double ssfsd = 0.0;
+    double ssf = spikes.frequency( times[k] - sstime, times[k], ssfsd );
+    ssrates.push( times.x(k), ssf );
+    ssratessd.push( times.x(k), ssfsd );
     // onset:
-    double maxr = ssr;
+    double maxr = ssf;
+    double maxrsd = 0.0;
     for ( int j=rate.index( times[k] );
 	  j<rate.index( times[k] + onsettime );
 	  j++ ) {
-      double r = rate[j];
-      if ( ::fabs( r - ssr ) > ::fabs( maxr - ssr ) )
-	maxr = r;
+      if ( ::fabs( rate[j] - ssf ) > ::fabs( maxr - ssf ) ) {
+	maxr = rate[j];
+	maxrsd = ratesd[j];
+      }
     }
     onsetrates.push( times.x(k), maxr );
-    // steady-state:
-    ssrates.push( times.x(k), rate.mean( times[k] - sstime, times[k] ) );
+    onsetratessd.push( times.x(k), maxrsd );
   }
   onsetrates.sortByX();
+  onsetratessd.sortByX();
+  ssrates.sortByX();
+  ssratessd.sortByX();
 }
 
 
