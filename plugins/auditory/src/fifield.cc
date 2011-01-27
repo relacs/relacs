@@ -156,6 +156,8 @@ int FIField::main( void )
   Pause = number( "pause" );
   SkipPause = boolean( "skippause" );
   SkipSilentIncrement = integer( "silentintincrement" );
+  UseSilent = boolean( "usesilent" );
+  MaxBaseRate = number( "maxbaserate" );
   MaxSilent = integer( "maxsilent" );
   SilentFactor = number( "silentfactor" );
   ResetSilent = index( "resetsilent" );

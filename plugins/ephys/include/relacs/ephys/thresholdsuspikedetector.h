@@ -97,6 +97,10 @@ public slots:
   bool UseUpperThresh;
     /*! The upper threshold for detecting spikes. */
   double UpperThreshold;
+    /*! Test interspike interval? */
+  bool TestInterval;
+    /*! Minimum interspike interval. */
+  double MinInterval;
     /*! If no spikes are detected, update statistic assuming that
         a single spike did not occur within \a NoSpikeInterval. */
   double NoSpikeInterval;

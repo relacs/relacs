@@ -34,13 +34,13 @@ AdaptedFICurves::AdaptedFICurves( void )
   addLabel( "Stimulus" ).setStyle( OptWidget::TabLabel );
   addLabel ( "Adaptation stimulus" );
   addSelection( "adaptbase", "Intensity of adapting stimulus relative to", "SPL|Threshold" );
-  addNumber( "adaptint", "Sound intensity of adapting stimulus", 50.0, 0.0, 200.0, 0.5, "dB SPL" );
+  addNumber( "adaptint", "Sound intensity of adapting stimulus", 50.0, -200.0, 200.0, 0.5, "dB SPL" );
   addNumber( "adaptinit", "Duration of initial adaptation stimulus", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
   addNumber( "adaptduration", "Duration of subsequent adaptation stimuli", 0.1, 0.001, 100000.0, 0.001, "s", "ms" );
   addLabel ( "Test stimuli" );
   addSelection( "intbase", "Intensities of test stimulus relative to", "SPL|Threshold|Adaptation stimulus" );
-  addNumber( "intmin", "Minimum sound intensity of test stimulus", 50.0, 0.0, 200.0, 0.5, "dB" );
-  addNumber( "intmax", "Maximum sound intensity of test stimulus", 100.0, 0.0, 200.0, 0.5, "dB" );
+  addNumber( "intmin", "Minimum sound intensity of test stimulus", 50.0, -200.0, 200.0, 0.5, "dB" );
+  addNumber( "intmax", "Maximum sound intensity of test stimulus", 100.0, -200.0, 200.0, 0.5, "dB" );
   addNumber( "intstep", "Sound-intensity steps of test stimulus", 10.0, 0.0, 200.0, 0.5, "dB SPL" );
   addNumber( "duration", "Duration of test stimuli", 0.1, 0.001, 100000.0, 0.001, "s", "ms" );
   addLabel( "General" ).setStyle( OptWidget::TabLabel );
@@ -159,7 +159,7 @@ int AdaptedFICurves::main( void )
 
   // plot:
   P.lock();
-  P.resize( 3, Plot::Copy );
+  P.resize( 4, Plot::Copy );
 
   P[0].clear();
   P[0].setSize( 0.6, 0.55 );
@@ -191,8 +191,8 @@ int AdaptedFICurves::main( void )
   P[1].plot( am, 1000.0, Plot::Green, 2, Plot::Solid );
 
   P[2].clear();
-  P[2].setSize( 0.4, 1.0 );
-  P[2].setOrigin( 0.6, 0.0 );
+  P[2].setSize( 0.4, 0.7 );
+  P[2].setOrigin( 0.6, 0.3 );
   P[2].setLMarg( 7 );
   P[2].setRMarg( 2 );
   P[2].setBMarg( 5 );
@@ -204,6 +204,21 @@ int AdaptedFICurves::main( void )
   P[2].setYLabelPos( 2.0, Plot::FirstMargin, 0.5, Plot::Graph, Plot::Center, -90.0 );
   P[2].setYRange( 0.0, Plot::AutoScale );
   P[2].setYTics( );
+
+  P[3].clear();
+  P[3].setSize( 0.4, 0.3 );
+  P[3].setOrigin( 0.6, 0.0 );
+  P[3].setLMarg( 7 );
+  P[3].setRMarg( 2 );
+  P[3].setBMarg( 5 );
+  P[3].setTMarg( 1 );
+  P[3].setXLabel( "Trial #" );
+  P[3].setXRange( 0, Plot::AutoScale );
+  P[3].setXTics();
+  P[3].setYLabel( "# Spikes" );
+  P[3].setYLabelPos( 2.0, Plot::FirstMargin, 0.5, Plot::Graph, Plot::Center, -90.0 );
+  P[3].setYRange( 0.0, Plot::AutoScale );
+  P[3].setYTics( );
 
   P.setCommonXRange( 0, 1 );
 
@@ -231,6 +246,7 @@ int AdaptedFICurves::main( void )
   MapD onsetratessd;
   MapD ssrates;
   MapD ssratessd;
+  MapD spikecount; spikecount.clear();
   int state = Completed;
 
   timeStamp();
@@ -266,8 +282,9 @@ int AdaptedFICurves::main( void )
     }
 
     analyze( spikes, rate, delay, signal.length(), pause, count,
-	     sstime, onsettime, times, onsetrates, onsetratessd, ssrates, ssratessd );
-    plot( spikes, rate, am, onsetrates, ssrates, adaptint );
+	     sstime, onsettime, times, onsetrates, onsetratessd, ssrates, ssratessd,
+	     spikecount );
+    plot( spikes, rate, am, onsetrates, ssrates, adaptint, spikecount );
  
     sleepOn( signal.length() + pause - delay );
     if ( interrupt() ) {
@@ -389,13 +406,16 @@ void AdaptedFICurves::analyze( EventList &spikes, SampleDataD &rate,
 			       int count, double sstime, double onsettime,
 			       const MapD &times,
 			       MapD &onsetrates, MapD &onsetratessd,
-			       MapD &ssrates, MapD &ssratessd )
+			       MapD &ssrates, MapD &ssratessd, MapD &spikecount )
 {
   // spikes:
   const EventData &se = events( SpikeEvents[0] );
   spikes.push( se, signalTime()-delay,
 	       signalTime()+duration+pause,
 	       signalTime() );
+
+  // spike count:
+  spikecount.push( count, spikes.back().count( 0.0, duration ) );
 
   // firing frequency:
   SampleDataD ratesd( rate );
@@ -423,7 +443,7 @@ void AdaptedFICurves::analyze( EventList &spikes, SampleDataD &rate,
   for ( int k=0; k<times.size(); k++ ) {
     // steady-state:
     double ssfsd = 0.0;
-    double ssf = spikes.frequency( times[k] - sstime, times[k], ssfsd );
+    double ssf = rate.mean( ssfsd, times[k] - sstime, times[k] );
     ssrates.push( times.x(k), ssf );
     ssratessd.push( times.x(k), ssfsd );
     // onset:
@@ -450,7 +470,7 @@ void AdaptedFICurves::analyze( EventList &spikes, SampleDataD &rate,
 void AdaptedFICurves::plot( const EventList &spikes, const SampleDataD &rate,
 			    const SampleDataD &am,
 			    const MapD &onsetrates, const MapD &ssrates,
-			    double adaptint )
+			    double adaptint, const MapD &spikecount )
 {
   P.lock();
 
@@ -470,6 +490,10 @@ void AdaptedFICurves::plot( const EventList &spikes, const SampleDataD &rate,
 	     Plot::Circle, 10, Plot::Red, Plot::Red );
   P[2].plot( onsetrates, 1.0, Plot::Blue, 4, Plot::Solid,
 	     Plot::Circle, 10, Plot::Blue, Plot::Blue );
+
+  P[3].clear();
+  P[3].plot( spikecount, 1.0, Plot::Orange, 4, Plot::Solid,
+	     Plot::Square, 10, Plot::Orange, Plot::Orange );
       
   P.draw();
 

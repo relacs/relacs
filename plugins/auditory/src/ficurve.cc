@@ -60,6 +60,8 @@ FICurve::FICurve( void )
   PreWidth = 0.05;
   Pause = 0.4;
   SkipPause = true;
+  UseSilent = false;
+  MaxBaseRate = 10.0;
   SkipSilentIncrement = true;
   MaxSilent = 100;
   SilentFactor = 3.0;
@@ -95,9 +97,11 @@ FICurve::FICurve( void )
   addSelection( "side", "Speaker", "left|right|best" );
   addLabel( "Optimization" ).setStyle( OptWidget::TabLabel );
   addLabel( "Baseline activity" );
+  addBoolean( "usesilent", "Use measured baseline activity", UseSilent );
+  addNumber( "maxbaserate", "Maximum baseline activity", MaxBaseRate, 0.0, 1000.0, 5.0, "Hz" ).setActivation( "usesilent", "false" );
   addInteger( "maxsilent", "Maximum trials used for baseline activity", MaxSilent, 0, 1000, 1 );
-  addNumber( "silentfactor", "Weight for standard deviation of baseline activity", SilentFactor, 0.0, 100.0, 0.5 );
   addSelection( "resetsilent", "Reset estimation of baseline activity at", "Never|Session|RePro" );
+  addNumber( "silentfactor", "Weight for standard deviation of baseline activity", SilentFactor, 0.0, 100.0, 0.5 ).setActivation( "usesilent", "true" );
   addLabel( "No response" );
   addBoolean( "skippause", "Skip pause if there is no response", SkipPause );
   addInteger( "silentintincrement", "Skip all stimuli below not responding ones<br> at intensity increments below", SkipSilentIncrement, 0, 1000, 1 );
@@ -204,6 +208,8 @@ int FICurve::main( void )
   Pause = number( "pause" );
   SkipPause = boolean( "skippause" );
   SkipSilentIncrement = integer( "silentintincrement" );
+  UseSilent = boolean( "usesilent" );
+  MaxBaseRate = number( "maxbaserate" );
   MaxSilent = integer( "maxsilent" );
   SilentFactor = number( "silentfactor" );
   ResetSilent = index( "resetsilent" );
@@ -722,8 +728,15 @@ void FICurve::analyzeFICurve( const vector< FIData > &results, double minrate )
       Threshold.Slope = s;
       Threshold.SlopeSD = us;
       // threshold:
-      Threshold.Threshold = ( SilentRate - b ) / s;
-      Threshold.ThresholdSD = ( SilentRateSD + ub + fabs( Threshold.Threshold * us ) ) / as;
+      if ( UseSilent ) {
+	Threshold.Threshold = ( SilentRate - b ) / s;
+	Threshold.ThresholdSD = ( SilentRateSD + ub + fabs( Threshold.Threshold * us ) ) / as;
+      }
+      else {
+	Threshold.Threshold = ( MaxBaseRate - b ) / s;
+	Threshold.ThresholdSD = ( ub + fabs( Threshold.Threshold * us ) ) / as;
+      }
+
       Threshold.Threshold += shift;
       // intensity at rate:
       Threshold.RateIntensity = ( metaData( "Cell" ).number( "best rate" ) - b ) / s;
@@ -929,7 +942,7 @@ void FICurve::resetSilentActivity( void )
   LastSilentRate = 0.0;
   SilentRateSq = 0.0;
   SilentRateSD = 0.0;
-  MaxSilentRate = 0.0;
+  MaxSilentRate = UseSilent ? 0.0 : MaxBaseRate;
 }
 
 
@@ -956,8 +969,13 @@ void FICurve::silentActivity( void )
   LastSilentRate = rate;
 
   // update standard deviation and maximum:
-  SilentRateSD = sqrt( fabs( SilentRateSq - SilentRate*SilentRate ) );
-  MaxSilentRate = SilentRate + SilentFactor*SilentRateSD;
+  if ( UseSilent ) {
+    SilentRateSD = sqrt( fabs( SilentRateSq - SilentRate*SilentRate ) );
+    MaxSilentRate = SilentRate + SilentFactor*SilentRateSD;
+  }
+  else {
+    MaxSilentRate = MaxBaseRate;
+  }
 
   // update session:
   metaData( "Cell" ).setNumber( "silent rate", SilentRate, SilentRateSD );
@@ -1010,16 +1028,14 @@ void FICurve::analyze( vector< FIData > &results )
 
   // skip intensities:
   if ( IntensityRange.currentIncrement() <= SkipSilentIncrement &&
-       fid.MeanRate <= SilentRate + 0.5*SilentFactor*SilentRateSD &&
+       fid.MeanRate <= MaxSilentRate &&
        fid.Spikes.size() >= SingleRepeat*IntBlockRepeat ) {
     bool skip = true;
     for ( int k=IntensityRange.next( 0 ); 
 	  k<IntensityRange.pos(); 
 	  k = IntensityRange.next( ++k ) ) {
-      if ( results[k].MeanRate > 
-	   SilentRate + 0.5*SilentFactor*SilentRateSD ) {
-	printlog( "mean rate " + Str( results[k].MeanRate, "%.1f" ) + "Hz > silentrate + 0.5*f*sd " + Str( SilentRate + 0.5*SilentFactor*SilentRateSD, "%.1f" ) + "Hz"
-	     + ", mean rate - silentrate + 0.5*SilentFactor*SilentRateSD: " + Str( results[k].MeanRate - SilentRate + 0.5*SilentFactor*SilentRateSD, "%.1f" ) + "Hz" ); 
+      if ( results[k].MeanRate > MaxSilentRate ) {
+	printlog( "mean rate " + Str( results[k].MeanRate, "%.1f" ) + "Hz > MaxSilentRate " + Str( MaxSilentRate, "%.1f" ) + "Hz" ); 
 	skip = false;
 	break;
       }

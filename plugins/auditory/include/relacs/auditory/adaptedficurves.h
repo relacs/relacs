@@ -82,10 +82,10 @@ protected:
 		double delay, double duration, double pause,
 		int count, double sstime, double onsettime,
 		const MapD &times, MapD &onsetrates, MapD &onsetratessd,
-		MapD &ssrates, MapD &ssratessd );
+		MapD &ssrates, MapD &ssratessd, MapD &spikecount );
   void plot( const EventList &spikes, const SampleDataD &rate, const SampleDataD &am,
 	     const MapD &onsetrates, const MapD &ssrates,
-	     double adaptint );
+	     double adaptint, const MapD &spikecount );
   void saveSpikes( const Options &header, const EventList &spikes );
   void saveRate( const Options &header, const SampleDataD &rate );
   void saveData( const Options &header,

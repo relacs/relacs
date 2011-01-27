@@ -184,14 +184,14 @@ public:
 		       double &threshold, double minthresh, double maxthresh,
 		       double delay, double decay, Check &check );
 
-    /*! Detect local maxima that exceed \a threshold.
+    /*! Detect the largest local maxima above succeding \a threshold crossings.
         All local maxima are stored in \a BadEvents. */
   template < class Check >
   void thresholdPeakHist( DataIter first, DataIter last,
 			  EventData &outevents,
 			  double &threshold, double minthresh, double maxthresh,
 			  Check &check );
-    /*! Detect local minima below \a threshold.
+    /*! Detect smallest local minima below succeding \a threshold crossings.
         All local minima are stored in \a BadEvents. */
   template < class Check >
   void thresholdTroughHist( DataIter first, DataIter last,
@@ -223,6 +223,7 @@ public:
   TimeIter MaxTime;
   double MinValue;
   double MaxValue;
+  bool EventPending;
 
   bool ResumePeak;
   bool ResumeTrough;
@@ -342,6 +343,7 @@ void Detector< DataIter, TimeIter >::init( DataIter first,
   MaxTime = firsttime;
   MinValue = first < last ? *MinIndex : 0.0;
   MaxValue = MinValue;
+  EventPending = false;
 
   ResumePeak = false;
   ResumeTrough = false;
@@ -2946,13 +2948,28 @@ void Detector< DataIter, TimeIter >::thresholdPeakHist( DataIter first,
 
     // rising:
     if ( Dir > 0 ) {
+      // peak:
       if ( *(Index+1) < *Index ) {
 	Dir = -1;               // falling
-	// peak:
 	if ( *Index > threshold ) {
-	  // this is an event:
-	  DataIter event = Index;
-	  TimeIter eventtime = IndexTime;
+	  if ( ! EventPending ||
+	       MaxIndex < first || *Index > *MaxIndex ) {
+	    MaxIndex = Index;
+	    MaxTime = IndexTime;
+	    EventPending = true;
+	  }
+	}
+	else
+	  BadEvents.push( *IndexTime, *Index );  // local sub-threshold maximum
+      }
+    }
+    // falling:
+    else if ( Dir < 0 ) {
+      // the last maximum is an event:
+      if ( EventPending && *Index <= threshold ) {
+	if ( MaxIndex >= first ) {
+	  DataIter event = MaxIndex;
+	  TimeIter eventtime = MaxTime;
 	  // check this event:
 	  double time = *eventtime;
 	  double size = 0.0;
@@ -2983,12 +3000,8 @@ void Detector< DataIter, TimeIter >::thresholdPeakHist( DataIter first,
 	    BadEvents.push( *eventtime, *event );
 	  }
 	}
-	else
-	  BadEvents.push( *IndexTime, *Index );  // local sub-threshold maximum
+	EventPending = false;
       }
-    }
-    // falling:
-    else if ( Dir < 0 ) {
       if ( *(Index+1) > *Index )
 	Dir = 1;                // rising
     }
@@ -3059,18 +3072,11 @@ void Detector< DataIter, TimeIter >::thresholdTroughHist( DataIter first,
 
     // rising:
     if ( Dir > 0 ) {
-      if ( *(Index+1) < *Index )
-	Dir = -1;               // falling
-    }
-    // falling:
-    else if ( Dir < 0 ) {
-      if ( *(Index+1) > *Index ) {
-	Dir = 1;                // rising
-	// trough:
-	if ( *Index < threshold ) {
-	  // this is an event:
-	  DataIter event = Index;
-	  TimeIter eventtime = IndexTime;
+      // the last minimum is an event:
+      if ( EventPending && *Index >= threshold ) {
+	if ( MinIndex >= first ) {
+	  DataIter event = MinIndex;
+	  TimeIter eventtime = MinTime;
 	  // check this event:
 	  double time = *eventtime;
 	  double size = 0.0;
@@ -3099,6 +3105,24 @@ void Detector< DataIter, TimeIter >::thresholdTroughHist( DataIter first,
 	  else {
 	    outevents.updateMeanQuality();
 	    BadEvents.push( *eventtime, *event );
+	  }
+	}
+	EventPending = false;
+      }
+      if ( *(Index+1) < *Index ) {
+	Dir = -1;               // falling
+      }
+    }
+    // falling:
+    else if ( Dir < 0 ) {
+      if ( *(Index+1) > *Index ) {
+	Dir = 1;                // rising
+	if ( *Index < threshold ) {
+	  if ( ! EventPending ||
+	       MinIndex < first || *Index > *MinIndex ) {
+	    MinIndex = Index;
+	    MinTime = IndexTime;
+	    EventPending = true;
 	  }
 	}
 	else

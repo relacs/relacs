@@ -65,9 +65,11 @@ Features:
 - \c side=left: Speaker (\c string)
 - Optimization
 - Baseline activity
+- \c usesilent=false: Use measured baseline activity (\c boolean)
+- \c maxbaserate=10Hz: Maximum baseline activity (\c number)
 - \c maxsilent=100: Maximum trials used for baseline activity (\c integer)
-- \c silentfactor=3: Weight for standard deviation of baseline activity (\c number)
 - \c resetsilent=Never: Reset estimation of baseline activity at (\c string)
+- \c silentfactor=3: Weight for standard deviation of baseline activity (\c number)
 - No response
 - \c skippause=true: Skip pause if there is no response (\c boolean)
 - \c silentintincrement=1: Skip all stimuli below not responding ones<br> at intensity increments below (\c integer)
@@ -193,6 +195,8 @@ protected:
   double MinRateSlope;
   double MaxRateFrac;
   double IntensityExtension;
+  bool UseSilent;
+  double MaxBaseRate;
   int MaxSilent;
   double SilentFactor;
   int ResetSilent;

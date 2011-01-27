@@ -46,6 +46,8 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   Peaks = true;
   UseUpperThresh = true;
   UpperThreshold = 10.0;
+  TestInterval = false;
+  MinInterval = 0.001;
   NoSpikeInterval = 0.1;
   StimulusRequired = false;
   NSnippets = 20;
@@ -66,6 +68,8 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   addBoolean( "useupperthresh", "Use upper threshold", UseUpperThresh, 0+8+32 );
   addNumber( "upperthreshold", "Upper threshold", UpperThreshold, -2000.0, 2000.0, SizeResolution, Unit, Unit, "%.1f", 2+8+32 ).setActivation( "useupperthresh", "true" );;
   addBoolean( "peaks", "Detect peaks", Peaks, 2+8+32 );
+  addBoolean( "testisi", "Test interspike interval", TestInterval ).setFlags( 0+8+32 );
+  addNumber( "minisi", "Minimum interspike interval", MinInterval, 0.0, 0.1, 0.0002, "sec", "ms", "%.1f", 0+8+32 ).setActivation( "testisi", "true" );
   addLabel( "Indicators", 8 );
   addNumber( "nospike", "Interval for no spike", NoSpikeInterval, 0.0, 1000.0, 0.01, "sec", "ms", "%.0f", 0+8+32 );
   addBoolean( "considerstimulus", "Expect spikes during stimuli only", StimulusRequired, 0+8+32 );
@@ -386,6 +390,8 @@ void ThresholdSUSpikeDetector::notify( void )
   LowerThreshold = number( "lowerthreshold", Unit );
   UpperThreshold = number( "upperthreshold", Unit );
   Peaks = boolean( "peaks" );
+  TestInterval = boolean( "testinterval" );
+  MinInterval = number( "minisi" );
   NoSpikeInterval = number( "nospike" );
   StimulusRequired = boolean( "considerstimulus" );
   NSnippets = integer( "nsnippets" );
@@ -655,6 +661,7 @@ int ThresholdSUSpikeDetector::detect( const InData &data, EventData &outevents,
       break;
     SampleDataD snippet( -SnippetsWidth, SnippetsWidth, data.stepsize(), 0 );
     data.copy( st, snippet );
+    snippet -= mean( snippet );
     SP->plot( snippet, 1000.0, Plot::Yellow, 1, Plot::Solid );
   }
   SP->draw();
@@ -816,6 +823,10 @@ int ThresholdSUSpikeDetector::checkEvent( InData::const_iterator first,
       return 0;
     }
   }
+
+  if ( TestInterval && 
+       outevents.size() > 0 && time - outevents.back() < MinInterval )
+    return 0;
 
   // accept:
   return 1; 
