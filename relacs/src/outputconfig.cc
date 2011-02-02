@@ -34,6 +34,8 @@ namespace relacs {
     
     setLayout(layout);
 
+    selection = widget->selectionModel();
+    indexes = selection->selectedRows();
 
     fillCells(0, false);
 
@@ -159,8 +161,9 @@ namespace relacs {
       for(int i=0; i<n; i++) {
 	int row = widget->rowCount();
 
-	QItemSelectionModel * selection = widget->selectionModel();
-	QModelIndexList indexes = selection->selectedRows(0);
+	//QItemSelectionModel * selection = widget->selectionModel();
+	//QModelIndexList indexes = selection->selectedRows();
+	indexes = selection->selectedRows();
 
 	if(indexes.count()>0) {
 	  for(int j=0; j<indexes.count(); j++) {
@@ -174,14 +177,30 @@ namespace relacs {
 	   widget->insertRow(row);
 	   fillCells(row, false);
 	}
+
+	selection->clear();
+	selection->clearSelection();
+	selection->reset();
       }
     }
   }
 
   void OutputConfig::deleteRow()
   {
-    QItemSelectionModel * selection = widget->selectionModel();
-    QModelIndexList indexes = selection->selectedRows(0);
+    //QItemSelectionModel * selection = widget->selectionModel();
+    //QModelIndexList indexes = selection->selectedRows();
+
+
+    /*foreach( const QModelIndex & index, indexes ) {
+      if (index.isValid()) {
+	cout << index.row() << endl; 
+	widget->removeRow(index.row());
+      }
+      }*/
+
+    
+    
+    indexes = selection->selectedRows();
 
     int j=0;
 
@@ -189,11 +208,17 @@ namespace relacs {
       QModelIndex index = indexes.at(i);
       int r = index.row();
       cout << r-j << "\t" << widget->rowCount() << endl;
-      if(r-j>=0 && r-j<widget->rowCount() ) {
+      if(r-j>=0 && r-j<widget->rowCount() && index.isValid() ) {
 	widget->removeRow(r-j);
 	j++;
       }
     }
+
+    
+
+    selection->clear();
+    selection->clearSelection();
+    selection->reset();
 
   }
 

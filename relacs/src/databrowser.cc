@@ -40,30 +40,30 @@ namespace relacs {
 struct DataBrowser::Stimulus
 {
   string name;
-  string sw_version;
+  string swVersion;
   long index;
   double duration;
   double soundintensity;
-  double V_factor;
+  double vFactor;
   double time;
   double stepsize;
-  Options header;
-  Options option;
+  Options Header;
+  Options Option;
 
 };
 
 struct DataBrowser::Rep
 {
 
-  //Options header;
-  Options option;
+  //Options Header;
+  Options Option;
 
 };
 
 struct DataBrowser::Cell
 {
 
-  Options head;
+  Options Head;
 
 };
 
@@ -81,9 +81,9 @@ DataBrowser::DataBrowser( QWidget *parent )
   TreeWidget->setHeaderLabels(headerLabels);
 
 
-  DataBrowser::cell = new map< string, map<long,DataBrowser::Stimulus>* >;
-  DataBrowser::protocol = new map< string, map<int,DataBrowser::Rep>* >;
-  header = new map< string, DataBrowser::Cell* >;
+  DataBrowser::Cells = new map< string, map<long,DataBrowser::Stimulus>* >;
+  DataBrowser::Protocol = new map< string, map<int,DataBrowser::Rep>* >;
+  Header = new map< string, DataBrowser::Cell* >;
 
 
   QObject::connect( TreeWidget, SIGNAL(itemDoubleClicked(QTreeWidgetItem *, int )), this, SLOT(list(QTreeWidgetItem *, int)));
@@ -101,19 +101,19 @@ DataBrowser::~DataBrowser( void )
 }
 
 
-void DataBrowser::addStimulus(const OutData &signal)
+void DataBrowser::addStimulus(const OutData &Signal)
 {
-  cout << "Stimulus: " << signal.traceName() << endl;
+  cout << "Stimulus: " << Signal.traceName() << endl;
 
   if ( TreeWidget->topLevelItemCount() > 0  && session==true )
-    TreeWidget->currentItem()->addChild( new QTreeWidgetItem( (QTreeWidget*)0, QStringList( signal.traceName().c_str() ) ) );
+    TreeWidget->currentItem()->addChild( new QTreeWidgetItem( (QTreeWidget*)0, QStringList( Signal.traceName().c_str() ) ) );
 }
 
 
-void DataBrowser::addStimulus(const OutList &signal)
+void DataBrowser::addStimulus(const OutList &Signal)
 {
-  for(int i=0; i<signal.size(); i++) {
-    OutData data = signal[i];
+  for(int i=0; i<Signal.size(); i++) {
+    OutData data = Signal[i];
     if ( TreeWidget->topLevelItemCount() > 0  && session==true )
       TreeWidget->currentItem()->addChild( new QTreeWidgetItem( (QTreeWidget*)0, QStringList( data.traceName().c_str() ) ) );
   }
@@ -145,13 +145,13 @@ void DataBrowser::endSession()
 }
 
 
-void DataBrowser::addRepro( const RePro *repro )
+void DataBrowser::addRepro( const RePro *Repro )
 {
   if ( TreeWidget->topLevelItemCount() > 0 && session==true ) {
-    QTreeWidgetItem * currentRepro = new QTreeWidgetItem( (QTreeWidget*)0, QStringList( repro->name().c_str() ) );
-    TreeWidget->topLevelItem( TreeWidget->topLevelItemCount()-1 )->addChild( currentRepro );
-    TreeWidget->setCurrentItem(currentRepro);
-    //TreeWidget->topLevelItem( TreeWidget->topLevelItemCount()-1 )->addChild( new QTreeWidgetItem( (QTreeWidget*)0, QStringList( repro->name().c_str() ) ) );
+    QTreeWidgetItem * CurrentRepro = new QTreeWidgetItem( (QTreeWidget*)0, QStringList( Repro->name().c_str() ) );
+    TreeWidget->topLevelItem( TreeWidget->topLevelItemCount()-1 )->addChild( CurrentRepro );
+    TreeWidget->setCurrentItem(CurrentRepro);
+    //TreeWidget->topLevelItem( TreeWidget->topLevelItemCount()-1 )->addChild( new QTreeWidgetItem( (QTreeWidget*)0, QStringList( Repro->name().c_str() ) ) );
   }
 }
 
@@ -194,10 +194,10 @@ void DataBrowser::list(QTreeWidgetItem * item, int col)
   //cout << "Typ: " << type << endl;
 
   map<string, map<long,DataBrowser::Stimulus>* >::iterator iterCell;
-  iterCell=DataBrowser::cell->find(item->text(col).toStdString());
+  iterCell=DataBrowser::Cells->find(item->text(col).toStdString());
 
 
-  if(type<0 && iterCell==DataBrowser::cell->end()) {
+  if(type<0 && iterCell==DataBrowser::Cells->end()) {
     DataBrowser::read(item->text(0).toStdString(), item);
     item->setExpanded(true);
   }
@@ -212,12 +212,12 @@ void DataBrowser::list(QTreeWidgetItem * item, int col)
     long fnumber = type; //item->text(col).toLong();
 
     map<string, map<long,DataBrowser::Stimulus>* >::iterator iterCell;
-    iterCell=DataBrowser::cell->find(parent->parent()->text(col).toStdString());
+    iterCell=DataBrowser::Cells->find(parent->parent()->text(col).toStdString());
 
     map<string, map<int,DataBrowser::Rep>* >::iterator iterRepro;
-    iterRepro=DataBrowser::protocol->find(parent->parent()->text(col).toStdString());
+    iterRepro=DataBrowser::Protocol->find(parent->parent()->text(col).toStdString());
 
-    if(iterCell!=DataBrowser::cell->end() && iterRepro!=DataBrowser::protocol->end()) {
+    if(iterCell!=DataBrowser::Cells->end() && iterRepro!=DataBrowser::Protocol->end()) {
       map<long,DataBrowser::Stimulus> * currentCell = iterCell->second;
 
       map<long,DataBrowser::Stimulus>::iterator it;
@@ -232,14 +232,14 @@ void DataBrowser::list(QTreeWidgetItem * item, int col)
       // cout << "repro: " << head->parent()->indexOfChild(head) << endl;
       
       if(it!=currentCell->end() && itr!=currentCell2->end()) {
-	DataBrowser::Stimulus currentStimulus = it->second;
-	DataBrowser::Rep currentRepro = itr->second;
+	DataBrowser::Stimulus CurrentStimulus = it->second;
+	DataBrowser::Rep CurrentRepro = itr->second;
 	
-	string filename = currentStimulus.name;
-	/*double dur = currentStimulus.duration;
-	double stepsize = currentStimulus.stepsize;*/
+	string filename = CurrentStimulus.name;
+	/*double dur = CurrentStimulus.duration;
+	double stepsize = CurrentStimulus.stepsize;*/
 
-	Options opt = currentRepro.option;
+	Options Opt = CurrentRepro.Option;
 
 	// Metadata options output
 	//DataBrowser::metadata->assign(&opt, 0, 1);
@@ -248,13 +248,13 @@ void DataBrowser::list(QTreeWidgetItem * item, int col)
 	/*SampleDataD sdata(0.0, dur, stepsize);
 
 	string s;
-	if(currentStimulus.sw_version.compare("oel")==0) {
+	if(CurrentStimulus.swVersion.compare("oel")==0) {
 	  s = DataBrowser::folder + filename + "/traces.sw1"; //oel
 	  const char* binfile =  s.c_str(); // const_cast<char*>( s.c_str() );
 	  extractData(sdata, 'i',  binfile, fnumber, dur, stepsize );
-	  sdata*=currentStimulus.V_factor; 
+	  sdata*=CurrentStimulus.vFactor; 
 	}
-	else if(currentStimulus.sw_version.compare("relacs")==0) {
+	else if(CurrentStimulus.swVersion.compare("relacs")==0) {
 	  s = DataBrowser::folder + filename + "/trace-1.raw"; //relacs
 	  const char* binfile =  s.c_str(); //  const_cast<char*>( s.c_str() );
 	  extractData(sdata, 'f',  binfile, fnumber, dur, stepsize);
@@ -297,9 +297,9 @@ void DataBrowser::list(QTreeWidgetItem * item, int col)
     //DataBrowser::splot->clear();
 
     map<string, map<int,DataBrowser::Rep>* >::iterator iterRepro;
-    iterRepro=DataBrowser::protocol->find(item->parent()->text(col).toStdString());
+    iterRepro=DataBrowser::Protocol->find(item->parent()->text(col).toStdString());
 
-    if(iterRepro!=DataBrowser::protocol->end()) {
+    if(iterRepro!=DataBrowser::Protocol->end()) {
 
       map<int,DataBrowser::Rep> * currentCell2 = iterRepro->second;
 
@@ -310,12 +310,12 @@ void DataBrowser::list(QTreeWidgetItem * item, int col)
       //cout << "repro: " << head->indexOfChild(item) << endl;
       
       if(itr!=currentCell2->end()) {
-	DataBrowser::Rep currentRepro = itr->second;
+	DataBrowser::Rep CurrentRepro = itr->second;
 
-	Options opt = currentRepro.option;
+	Options Opt = CurrentRepro.Option;
 
 	// Metadata options output
-	//DataBrowser::metadata->assign(&opt, 0, 1);
+	//DataBrowser::metadata->assign(&Opt, 0, 1);
       }
       else
 	cerr << "Repro does not exist!" << endl;
@@ -328,16 +328,16 @@ void DataBrowser::list(QTreeWidgetItem * item, int col)
     //DataBrowser::splot->clear();
 
     map<string, DataBrowser::Cell* >::iterator iterExp;
-    iterExp=DataBrowser::header->find(item->text(col).toStdString());
+    iterExp=DataBrowser::Header->find(item->text(col).toStdString());
 
-    if(iterExp!=DataBrowser::header->end()) {
+    if(iterExp!=DataBrowser::Header->end()) {
 
-      DataBrowser::Cell * currentExp = iterExp->second;
+      DataBrowser::Cell * CurrentExp = iterExp->second;
 
-      Options opt = currentExp->head;
+      Options Opt = CurrentExp->Head;
 
       // Metadata options output
-      //DataBrowser::metadata->assign(&opt, 0, 1);
+      //DataBrowser::metadata->assign(&Opt, 0, 1);
     }
     else
       cerr << "Cell does not exist!" << endl;
@@ -353,103 +353,103 @@ void DataBrowser::read(string cellname, QTreeWidgetItem *parent)
 
   if(type==-1) {
 
-    map<long, DataBrowser::Stimulus> * nstimuli = new map<long, DataBrowser::Stimulus>;
-    map<int, DataBrowser::Rep> * nrepro = new map<int, DataBrowser::Rep>;
+    map<long, DataBrowser::Stimulus> * NStimuli = new map<long, DataBrowser::Stimulus>;
+    map<int, DataBrowser::Rep> * NRepro = new map<int, DataBrowser::Rep>;
 
     string file = folder + cellname + "/stimuli.dat";//relacs
     string version = "relacs";
     
-    DataFile sf;
-    sf.open( file );
-    if ( !sf.good() ) {
+    DataFile Sf;
+    Sf.open( file );
+    if ( !Sf.good() ) {
       file = folder + cellname + "/trigger.dat";//oel
       version="oel";
-      sf.open( file );
-      if ( !sf.good() ) {
+      Sf.open( file );
+      if ( !Sf.good() ) {
 	cerr << "can't open neither file stimuli.dat nor trigger.dat\n";
 	return;
       }
     }
     cout << file << endl;
     
-    Options opt;
-    Options popt;
+    Options Opt;
+    Options Popt;
     
     double sampleInterval = 0.0;
 
 
     int count = 0;
     
-    while ( sf.read( 1 ) ) {
+    while ( Sf.read( 1 ) ) {
       
       //new experiment
-      if ( sf.newMetaData( 1 ) ) {
+      if ( Sf.newMetaData( 1 ) ) {
 
-	popt = sf.metaDataOptions( 1 );
-	sampleInterval = popt.number("sample interval", 0); // oel
+	Popt = Sf.metaDataOptions( 1 );
+	sampleInterval = Popt.number("sample interval", 0); // oel
 	if(sampleInterval<=0.0) {
-	  sampleInterval = popt.number("sample interval1", 0); // relacs;
+	  sampleInterval = Popt.number("sample interval1", 0); // relacs;
 	  version = "relacs";
 	}
 	
-	popt.setFlags(1);
+	Popt.setFlags(1);
 
-	DataBrowser::Cell *exp = new DataBrowser::Cell();
-	exp->head=popt;
+	DataBrowser::Cell *Exp = new DataBrowser::Cell();
+	Exp->Head=Popt;
 
-	DataBrowser::header->insert( pair<string, DataBrowser::Cell* >( cellname, exp) );
+	DataBrowser::Header->insert( pair<string, DataBrowser::Cell* >( cellname, Exp) );
 
       }
 
       // new repro:
-      if ( sf.newMetaData( 0 ) ) {
-	opt = sf.metaDataOptions( 0 );
-	string repro = opt.text("repro", 0);
+      if ( Sf.newMetaData( 0 ) ) {
+	Opt = Sf.metaDataOptions( 0 );
+	string repro = Opt.text("repro", 0);
 	//	cout << repro << endl;
 	QTreeWidgetItem *child = new QTreeWidgetItem(QStringList(QObject::tr(repro.c_str())), 0);
 	parent->addChild(child);
 	
-	opt.setFlags(1);
+	Opt.setFlags(1);
 
 	
-	DataBrowser::Rep rep;
-	rep.option=opt;
+	DataBrowser::Rep Re;
+	Re.Option=Opt;
 
-	nrepro->insert( pair<int,DataBrowser::Rep>( count, rep) );
-	DataBrowser::protocol->insert( pair<string, map< int, DataBrowser::Rep>* >( cellname, nrepro) );
+	NRepro->insert( pair<int,DataBrowser::Rep>( count, Re) );
+	DataBrowser::Protocol->insert( pair<string, map< int, DataBrowser::Rep>* >( cellname, NRepro) );
 	count++;
 
-	TableKey key = sf.key();
-	int index = key.column("Left-Speaker>sound intensity");//relacs
-	if(index < 0 || sf.data(index,0)<0)
-	  index = key.column("Right-Speaker>sound intensity");//relacs
+	TableKey Key = Sf.key();
+	int index = Key.column("Left-Speaker>sound intensity");//relacs
+	if(index < 0 || Sf.data(index,0)<0)
+	  index = Key.column("Right-Speaker>sound intensity");//relacs
 	if(index<0)
-	  index = key.column("stimulus-1>intensity");//oel
+	  index = Key.column("stimulus-1>intensity");//oel
 	
-	TableKey duration = sf.key();
-	int dur = duration.column("Left-Speaker>duration");//relacs
-	if(dur < 0 || sf.data(dur,0)<0)
-	  dur = duration.column("Right-Speaker>duration");//relacs
+	TableKey Duration = Sf.key();
+	int dur = Duration.column("Left-Speaker>duration");//relacs
+	if(dur < 0 || Sf.data(dur,0)<0)
+	  dur = Duration.column("Right-Speaker>duration");//relacs
 	if(dur<0)
-	  dur = duration.column("duration");//oel;
+	  dur = Duration.column("duration");//oel;
 	
-	TableKey traceIndex = sf.key();
-	//int traceI = duration.column("index");//relacs & oel
-	int time =  duration.column("time");
+	TableKey TraceIndex = Sf.key();
+	//int traceI = Duration.column("index");//relacs & oel
+	int time =  Duration.column("time");
 	//double ind = time / (sampleInterval*0.001);
 	//cout << ind << endl;
 	//int traceI = (int) ind;//relacs & oel
-	int factor = duration.column("factor");//oel
+	int factor = Duration.column("factor");//oel
 	//cout << traceI << endl;
 	
 	
-	ArrayD col = sf.col(index);
+	ArrayD col = Sf.col(index);
 	
 	for (int i=0; i<col.size(); i++) {
-	  //string s = "Sound intensity: " +  Str(sf.data(index,i)-3.0,5,1,'f') + " dB SPL\tStimulus duration: " +  Str(sf.data(dur,i),10,1,'f') + " ms";
-	  string s = Str(sf.data(index,i)-3.0,5,1,'f'); // dB SPL
+	  //string s = "Sound intensity: " +  Str(Sf.data(index,i)-3.0,5,1,'f') + " dB SPL\tStimulus duration: " +  Str(Sf.data(dur,i),10,1,'f') + " ms";
+	  string s = Str(Sf.data(index,i)-3.0,5,1,'f'); // dB SPL
 	  s = s.append("  dB SPL");
-	  long fnumber = sf.data(time,i) / (sampleInterval*0.001);
+	  long fnumber = Sf.data(time,i) / (sampleInterval*0.001);
 	  //string s = Str(fnumber,10,0,'f');
 	  
 	  QTreeWidgetItem *cchild = new QTreeWidgetItem(QStringList(QObject::tr(s.c_str())), fnumber);
@@ -457,25 +457,25 @@ void DataBrowser::read(string cellname, QTreeWidgetItem *parent)
 	  //string unit = "dB SPL";
 	  //cchild->setText(1, QString(QObject::tr(unit.c_str())));
 	  
-	  DataBrowser::Stimulus st;
-	  st.name=cellname;
-	  st.time=sf.data(time,i);
-	  st.index=fnumber;
-	  st.duration=sf.data(dur,i);
-	  st.soundintensity=sf.data(index,i);
-	  st.stepsize=sampleInterval;
-	  st.sw_version=version;
-	  if(!(factor < 0 || sf.data(factor,0)<0)) {
+	  DataBrowser::Stimulus St;
+	  St.name=cellname;
+	  St.time=Sf.data(time,i);
+	  St.index=fnumber;
+	  St.duration=Sf.data(dur,i);
+	  St.soundintensity=Sf.data(index,i);
+	  St.stepsize=sampleInterval;
+	  St.swVersion=version;
+	  if(!(factor < 0 || Sf.data(factor,0)<0)) {
 	    version = "oel";
-	    st.V_factor=sf.data(factor,i);
+	    St.vFactor=Sf.data(factor,i);
 	  }
 	  else {
-	    st.V_factor=-1.0;
+	    St.vFactor=-1.0;
 	    version = "relacs";
 	  }
 	  
 	  
-	  nstimuli->insert( pair<long,DataBrowser::Stimulus>( fnumber, st) );
+	  NStimuli->insert( pair<long,DataBrowser::Stimulus>( fnumber, St) );
 	  
 	  
 	}
@@ -484,7 +484,7 @@ void DataBrowser::read(string cellname, QTreeWidgetItem *parent)
       
     }
     
-    DataBrowser::cell->insert( pair<string, map< long, DataBrowser::Stimulus>* >( cellname, nstimuli) );
+    DataBrowser::Cells->insert( pair<string, map< long, DataBrowser::Stimulus>* >( cellname, NStimuli) );
     
     //treeWidget->collapseItem(parent);
     

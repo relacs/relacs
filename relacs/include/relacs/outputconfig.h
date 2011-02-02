@@ -19,6 +19,8 @@ class OutputConfig : public QWidget
 public:
   OutputConfig(QWidget *parent = 0);
   ~OutputConfig();
+  QItemSelectionModel * selection;
+  QModelIndexList indexes;
   void fillCells(int, bool);
   
 public slots:

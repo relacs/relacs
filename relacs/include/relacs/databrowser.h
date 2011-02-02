@@ -53,9 +53,9 @@ public:
   string folder;
   bool session;
 
-  void addStimulus(const OutData &signal);
-  void addStimulus(const OutList &signal);
-  void addRepro( const RePro *repro );
+  void addStimulus(const OutData &Signal);
+  void addStimulus(const OutList &Signal);
+  void addRepro( const RePro *Repro );
   void addSession( const string &path );
   void endSession( void );
   void load( const string &dir );
@@ -72,10 +72,10 @@ private:
   struct Stimulus;
   struct Rep;
   struct Cell;
-  map<string, map<long,DataBrowser::Stimulus>* > * cell; 
-  map<long, DataBrowser::Stimulus> * nstimuli;
-  map< string, map<int,DataBrowser::Rep>* > * protocol;
-  map< string, DataBrowser::Cell* > * header;
+  map<string, map<long,DataBrowser::Stimulus>* > * Cells; 
+  map<long, DataBrowser::Stimulus> * NStimuli;
+  map< string, map<int,DataBrowser::Rep>* > * Protocol;
+  map< string, DataBrowser::Cell* > * Header;
 
 };
 

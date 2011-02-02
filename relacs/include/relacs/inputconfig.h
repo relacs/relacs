@@ -19,6 +19,8 @@ class InputConfig : public QWidget
 public:
   InputConfig(QWidget *parent = 0);
   ~InputConfig();
+  QItemSelectionModel * selection;
+  QModelIndexList indexes;
   void fillCells(int, bool);
   
 public slots:
