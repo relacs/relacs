@@ -279,6 +279,7 @@ const OutData &OutData::append( float a, int n )
 const OutData &OutData::append( const OutData &od )
 {
   SampleDataF::append( (SampleDataF&)od );
+  Descriptions.insert(Descriptions.end(), od.Descriptions.begin(), od.Descriptions.end());
   return *this;
 }
 
@@ -961,7 +962,6 @@ double OutData::maximize( double max )
   return c;
 }
 
-
 void OutData::fill( const SampleDataD &am, double carrierfreq,
 		    const string &ident )
 {
@@ -1001,6 +1001,53 @@ void OutData::fill( const SampleDataD &am, double carrierfreq,
 }
 
 
+
+void OutData::fill( const OutData &am, double carrierfreq,
+		    const string &ident )
+{
+  free();
+
+  if ( carrierfreq <= 0.0 )
+    return;
+
+  setStepsize( bestSampleInterval( carrierfreq ) );
+  setRangeBack( am.length() );
+
+  if ( am.size() < 2 )
+    return;
+
+  // create lookup-table for one sine wave:
+  SampleDataF sinbuf;
+  sinbuf.sin( LinearRange( int( rint( 1.0 / ( carrierfreq * stepsize() ) ) ), 
+			   0.0, stepsize() ), carrierfreq );
+  
+  // fill am with carrier sine wave:
+  double slope = (am[1]-am[0])/am.stepsize();
+  for ( int i=0, j=0, k=1; i<size(); i++, j++ ) {
+    double t = pos( i );
+    while ( am.pos( k ) < t && k+1 < am.size() ) {
+      k++;
+      slope = (am[k]-am[k-1])/am.stepsize();
+    }
+    if ( j >= sinbuf.size() ) 
+      j=0;
+    operator[]( i ) = sinbuf[j] * ( am[k-1] + slope * ( t - am.pos(k-1) ) );
+  }
+  back() = 0.0;
+
+  Descriptions.clear();
+  Descriptions = am.Descriptions;
+  Options &opt = addDescription("stimulus/sine_wave");
+  opt.addNumber("Frequency", carrierfreq );
+  opt.addNumber("Duration", am.length() );
+  opt.addNumber("TemporalOffset", 0.0 );
+
+  setCarrierFreq( carrierfreq );
+  setIdent( ident );
+  clearError();
+}
+
+
 void OutData::loadAM( const string &filename, double carrierfreq, 
 		      const string &ident, SampleDataD *stimulus )
 {
@@ -1028,6 +1075,13 @@ void OutData::sineWave( double freq, double duration, double ampl, double r,
     ramp( r );
   back() = 0.0;
 
+  Options &opt = addDescription( "stimulus/sine_wave" );
+  opt.addNumber( "Frequency", freq );
+  opt.addNumber( "Amplitude", ampl );
+  opt.addNumber( "TemporalOffset", 0.0 );
+  opt.addNumber( "Duration", duration );
+  opt.addNumber( "Phase", 0.0 );
+
   setCarrierFreq( freq );
   setIdent( ident );
   clearError();
@@ -1044,6 +1098,15 @@ void OutData::noiseWave( double cutofffreq, double duration, double stdev,
   if ( r > 0.0 )
     ramp( r );
   back() = 0.0;
+
+  Options &opt = addDescription( "stimulus/white_noise" );
+  opt.addNumber( "Duration", duration );
+  opt.addNumber( "UpperCutoffFrequency", cutofffreq );
+  opt.addNumber( "LowerCutoffFrequency", 0.0);
+  opt.addNumber( "Mean", 0.0);
+  opt.addNumber( "Variance", std::pow(stdev,2.0));
+  opt.addNumber( "OffsetTime", 0.0);
+
 
   setCarrierFreq( cutofffreq );
   setIdent( ident );
@@ -1063,6 +1126,14 @@ void OutData::bandNoiseWave( double cutofffreqlow, double cutofffreqhigh,
     ramp( r );
   back() = 0.0;
 
+  Options &opt = addDescription( "stimulus/white_noise" );
+  opt.addNumber( "Duration", duration );
+  opt.addNumber( "UpperCutoffFrequency", cutofffreqhigh );
+  opt.addNumber( "LowerCutoffFrequency", cutofffreqlow);
+  opt.addNumber( "Mean", 0.0);
+  opt.addNumber( "Variance", std::pow(stdev,2.0));
+  opt.addNumber( "OffsetTime", 0.0);
+
   setCarrierFreq( cutofffreqhigh );
   setIdent( ident );
   clearError();
@@ -1079,7 +1150,122 @@ void OutData::ouNoiseWave( double tau, double duration, double stdev,
     ramp( r );
   back() = 0.0;
 
+  Options &opt = addDescription( "stimulus/colored_noise" );
+  opt.addNumber( "Duration", duration );
+  opt.addNumber( "CorrelationTime", tau );
+  opt.addNumber( "Mean", 0.0);
+  opt.addNumber( "Variance", std::pow(stdev,2.0));
+  opt.addNumber( "OffsetTime", 0.0);
+
   setCarrierFreq( 1/tau );
+  setIdent( ident );
+  clearError();
+}
+
+void OutData::sweepWave( double duration, double ampl, double stepsize, 
+			 double startfreq, double endfreq, double r, 
+			 const string &ident )
+{
+  sweep(0.0, duration, stepsize, startfreq, endfreq);
+  if ( ampl != 1.0 )
+    array() *= ampl;
+  if ( r > 0.0 )
+    ramp( r );
+  back() = 0.0;
+
+  Options &opt = addDescription( "stimulus/sweep_wave" );
+  opt.addNumber( "StartFrequency", startfreq );
+  opt.addNumber( "EndFrequency", endfreq );
+  opt.addNumber( "Amplitude", ampl );
+  opt.addNumber( "TemporalOffset", 0.0 );
+  opt.addNumber( "Duration", duration );
+  opt.addNumber( "Phase", 0.0 );
+
+  setIdent( ident );
+  clearError();
+}
+
+
+void OutData::rectangleWave( double duration, double ampl, double stepsize, 
+			     double period, double width, double ramp,
+			     const string &ident)
+{
+  rectangle(0.0, duration, stepsize, period, width, ramp);
+  if ( ampl != 1.0 )
+    array() *= ampl;
+  back() = 0.0;
+
+  Options &opt = addDescription( "stimulus/square_wave" );
+  opt.addNumber( "Duration", duration );
+  opt.addNumber( "TemporalOffset", 0.0 );
+  opt.addNumber( "DutyCycle", width/period );
+  opt.addNumber( "Amplitude", ampl );
+  opt.addNumber( "Frequency", 1.0/period );
+  opt.addNumber( "StartAmplitude", 0.0 );
+
+  setCarrierFreq( 1.0/period );
+  setIdent( ident );
+  clearError();
+}
+
+void OutData::sawUpWave( double duration, double ampl, double stepsize, 
+			 double period, double ramp, const string &ident)
+{
+  sawUp(0.0, duration, stepsize, period, ramp);
+  if ( ampl != 1.0 )
+    array() *= ampl;
+  back() = 0.0;
+
+  Options &opt = addDescription( "stimulus/sawtooth" );
+  opt.addNumber( "Duration", duration );
+  opt.addNumber( "TemporalOffset", 0.0 );
+  opt.addNumber( "UpstrokeWidth", period-ramp );
+  opt.addNumber( "DownstrokeWidth", ramp );
+  opt.addNumber( "Ramp", ramp );
+  opt.addNumber( "Amplitude", ampl );
+  opt.addNumber( "Period", period );
+
+  setIdent( ident );
+  clearError();
+}
+
+void OutData::sawDownWave( double duration, double ampl, double stepsize, 
+			   double period, double ramp, const string &ident)
+{
+  sawDown(0.0, duration, stepsize, period, ramp);
+  if ( ampl != 1.0 )
+    array() *= ampl;
+  back() = 0.0;
+
+  Options &opt = addDescription( "stimulus/sawtooth" );
+  opt.addNumber( "Duration", duration );
+  opt.addNumber( "TemporalOffset", 0.0 );
+  opt.addNumber( "UpstrokeWidth", ramp );
+  opt.addNumber( "DownstrokeWidth", period-ramp );
+  opt.addNumber( "Ramp", ramp );
+  opt.addNumber( "Amplitude", ampl );
+  opt.addNumber( "Period", period );
+
+  setIdent( ident );
+  clearError();
+}
+
+void OutData::triangleWave( double duration, double ampl, double stepsize, 
+			    double period, const string &ident )
+{
+  triangle(0.0, duration, stepsize, period);
+  if ( ampl != 1.0 )
+    array() *= ampl;
+  back() = 0.0;
+
+  Options &opt = addDescription( "stimulus/sawtooth" );
+  opt.addNumber( "Duration", duration );
+  opt.addNumber( "TemporalOffset", 0.0 );
+  opt.addNumber( "UpstrokeWidth", 0.5*period );
+  opt.addNumber( "DownstrokeWidth", 0.5*period );
+  opt.addNumber( "Amplitude", ampl );
+  opt.addNumber( "Period", period );
+
   setIdent( ident );
   clearError();
 }
