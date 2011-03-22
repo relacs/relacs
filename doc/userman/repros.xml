@@ -100,7 +100,7 @@ write( signal );
 sleep( signal.duration() );
 			</programlisting></para>
                         <warning>You have to make sure that the stimulus you passed to <function>write()</function>,
-                        i.e. the <type>OutData</type> variables, exist and are not
+                        i.e. the <type>OutData</type> variables, exists and is not
                         modified while the stimulus is put out!
                         Be in particular carefull with locally declared <type>OutData</type> instances!
                         </warning>

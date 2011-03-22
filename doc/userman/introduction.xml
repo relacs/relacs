@@ -1,65 +1,7 @@
 <chapter xml:id="introduction"><title>Introduction</title>
 
 <para>
-I nice introduction still needs to be written. What follows are
-some short random topics...
+I nice introduction still needs to be written.
 </para>
-
-		<section xml:id='macrossub'><title>Defining and Using Macros</title>
-
-		<para>Macros control the execution of RePros, other Macros, and shell scripts.
-		Several RePros with specified parameter settings can be 
-		executed one after the other by combining them in a macro.
-		Macros can be easily customized.
-		Read <xref linkend='macros' endterm='macrostitle'/> for more on this topic.</para>
-		</section>
-
-
-		<section xml:id='datafiles'><title>Recorded Data</title>
-
-		<para>Whenever a recording is started, a new directory is created
-		in which all recorded data are stored.
-		The directories are named yyyy-mm-dd-aa, where yyyy is the year,
-		mm the month, dd the day, and aa is aa, ab, ac ... az, ba, bb, ...</para>
-
-		<para>RELACS itself creates the following files:</para>
-
-		<para><itemizedlist>
-			<listitem><para><emphasis>traces.sw?</emphasis>: The raw data from the data acquisition board.</para></listitem>
-			<listitem><para><emphasis>*-events.dat</emphasis>: Text files with the events.</para></listitem>
-			<listitem><para><emphasis>trigger.dat</emphasis>: Text file with information of each stimulus
-		  and indices into the traces.sw? and *-events.dat files.</para></listitem>
-			<listitem><para><emphasis>repros.dat</emphasis>: The executed repros.</para></listitem>
-			<listitem><para><emphasis>info.dat</emphasis>: The data from the meta-data dialog.</para></listitem>
-		</itemizedlist></para>
-
-		<para>Each RePro may write its own files.
-		Those files are usually used for further data analysis.
-		See the documentation of the RePro for further information
-		(<guimenuitem>Help</guimenuitem> in the RePro's submenu).</para>
-		</section>
-		
-<section xml:id='pluginconcept'><title xml:id='pluginconcepttitle'>RELACS Plugins</title>
-<para>
-RELACS plugins are C++ classes compiled as shared libraries
-which are automatically loaded into the RELACS program during startup.
-They can be compiled independently of the RELACS program
-and reloaded into the running RELACS program.
-All parts of RELACS which code something specific for a setup are plugins:
-<itemizedlist>
-		<listitem><para><emphasis>RePro</emphasis>(Research Program): Analyses the acquired data, generates
-		and puts stimuli out.</para></listitem>
-		<listitem><para><emphasis>Filter</emphasis>: Filters or detects events (e.g. spikes) in the acquired data.</para></listitem>
-		<listitem><para><emphasis>Control</emphasis>: Control some hardware, analyze data independently and in parallel to the RePros,
-		or provides some usefull general information about the recording.</para></listitem>
-		<listitem><para><emphasis>Model</emphasis>: Simulate data.</para></listitem>
-		<listitem><para><emphasis>AnalogInput</emphasis>: Communication with a data acquisition driver for reading analog data.</para></listitem>
-		<listitem><para><emphasis>AnalogOutput</emphasis>: Communication with a data acquisition driver for writing analog data.</para></listitem>
-		<listitem><para><emphasis>Attenuate</emphasis>: Sets the right attenuation level for a requested output intensity.</para></listitem>
-		<listitem><para><emphasis>Attenuator</emphasis>: Sets the attenuation level of an attenuator device.</para></listitem>
-		<listitem><para><emphasis>Device</emphasis>: Any other device.</para></listitem>
-</itemizedlist></para>
-
-</section>
 
 </chapter>

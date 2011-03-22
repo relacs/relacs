@@ -6,6 +6,7 @@ DOCBOOK_INSTALL_SUBDIR = /userman
 DOCBOOK_FILES = \
     cpp.xml \
     introduction.xml \
+    general.xml \
     naming.xml \
     repros.xml \
     utilities.xml \

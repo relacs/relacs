@@ -2,6 +2,7 @@
 <!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.4//EN"
         "http://www.oasis-open.org/docbook/xml/4.4/docbookx.dtd" [
 <!ENTITY intro SYSTEM "introduction.xml">
+<!ENTITY general SYSTEM "general.xml">
 <!ENTITY gui SYSTEM "gui.xml">
 <!ENTITY config SYSTEM "configuration.xml">
 <!ENTITY macros SYSTEM "macros.xml">
@@ -34,6 +35,7 @@
 
 &intro;
 &gui;
+&general;
 &config;
 &macros;
 &repros;
