@@ -140,7 +140,7 @@ int SAM::createSignal( const InData &data, const EventData &events )
       int n = (int)::rint( Duration * DeltaF );
       if ( n < 1 )
 	n = 1;
-      Signal->sineWave( DeltaF, n/DeltaF );
+      Signal->sineWave( n/DeltaF, -1.0, DeltaF );
       ident = "SAM";
       IntensityGain = 1.0;
       TrueDeltaF = 1.0 / Signal->duration();
@@ -159,7 +159,7 @@ int SAM::createSignal( const InData &data, const EventData &events )
       int n = (int)::rint( Duration / p );
       if ( n < 1 )
 	n = 1;
-      Signal->sineWave( stimulusrate, n*p );
+      Signal->sineWave( n*p, -1.0, stimulusrate );
       ident = "sinewave";
       IntensityGain = 1.0;
     }

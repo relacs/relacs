@@ -310,7 +310,7 @@ int FIPhaseLocking::main( void )
     OutData signal;
     signal.setTrace( Speaker[ side ] );
     applyOutTrace( signal );  // to get maximum sampling rate!
-    signal.sineWave( frequency, duration, 1.0, ramp );
+    signal.sineWave( duration, -1.0, frequency, 1.0, ramp );
     signal.back() = 0;
     signal.setIntensity( decibel + 3.0103 );
 

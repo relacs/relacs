@@ -734,15 +734,16 @@ void SaveFiles::saveRePro( void )
 	ReProFiles.clear();
 	*XF << "  </section>\n";
       }
+      string dataset = ReProInfo.text( "experiment" ) + "-" +
+	ReProInfo.text( "repro" ) + "-" + Str( path() ).preventedSlash().name();
       *XF << "  <section>\n";
       *XF << "    <type>dataset</type>\n";
-      Parameter p( "name", "", ReProInfo.text( "experiment" ) + "-" +
-		   ReProInfo.text( "repro" ) + "-" + Str( path() ).preventedSlash().name() );
-      p.saveXML( *XF, 2 );
+      *XF << "    <name>" + dataset + "</name>\n";
       ReProInfo.saveXML( *XF, 0, 2 );
       if ( ! ReProSettings.empty() ) {
 	*XF << "    <section>\n";
 	*XF << "      <type>settings</type>\n";
+	*XF << "      <name>" + dataset + "-settings</name>\n";
 	ReProSettings.saveXML( *XF, 1, 3 );
 	*XF << "    </section>\n";
       }
@@ -1040,12 +1041,14 @@ void SaveFiles::createXMLFile( const InList &traces,
   XF = openFile( "metadata.xml", ios::out );
 
   if ( (*XF) ) {
+    string name = Str( path() ).preventedSlash().name();
     *XF << "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n";
     *XF << "<?xml-stylesheet type=\"text/xsl\" href=\"odml.xsl\"  xmlns:odml=\"http://www.g-node.org/odml\"?>\n";
     *XF << "<odML version=\"1\">\n";
     *XF << "  <repository>http://portal.g-node.org/odml/terminologies/v1.0/terminologies.xml</repository>\n";
     *XF << "  <section>\n";
     *XF << "    <type>hardware</type>\n";
+    *XF << "    <name>" << name << "-hardware</name>\n";
     for ( int k=0; k<RW->ADV->size(); k++ ) {
       const Device &dev = (*RW->ADV)[k];
       int dt = dev.deviceType();
@@ -1064,6 +1067,7 @@ void SaveFiles::createXMLFile( const InList &traces,
       opts.erase( "type" );
       *XF << "    <section>\n";
       *XF << "      <type>" << dts << "</type>\n";
+      *XF << "      <name>" << name << "-" << dts << "</name>\n";
       opts.saveXML( *XF, 0, 3 ); 
       *XF << "    </section>\n";
     }
@@ -1222,7 +1226,8 @@ void SaveFiles::closeFiles( void )
       *XF << "  </section>\n";
       DatasetOpen = false;
     }
-    RW->MTDT.saveXML( *XF, 1 );
+    string name = Str( path() ).preventedSlash().name();
+    RW->MTDT.saveXML( *XF, 1, 2, name );
     *XF << "</odML>\n";
     delete XF;
   }

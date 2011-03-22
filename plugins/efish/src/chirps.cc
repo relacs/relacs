@@ -174,7 +174,7 @@ void Chirps::createEOD( OutData &signal )
   if ( SineWave ) {
     // create sine wave:
     StimulusRate = FishRate + DeltaF;
-    waveform.sineWave( StimulusRate, ReadCycles / StimulusRate );
+    waveform.sineWave( ReadCycles / StimulusRate, -1.0, StimulusRate );
     pointspercycle = waveform.size() / ReadCycles;
     IntensityGain = 1.0;
   }

@@ -149,7 +149,7 @@ protected:
   StoreLevels StoreLevel;
   Str StorePath;
   Str StoreFile;
-  SampleDataD AMDB;
+  OutData AMDB;
   double MeanRate;
   SampleDataD Rate1;
   SampleDataD Rate2;

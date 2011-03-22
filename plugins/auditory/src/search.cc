@@ -245,13 +245,13 @@ int Search::main( void )
       }
       else {
 	if ( Waveform == 1 ) {
-	  signal.bandNoiseWave( MinFrequency, Frequency, Duration, 0.3, ramp );
+	  signal.bandNoiseWave( Duration, -1.0, MinFrequency, Frequency, 0.3, 0, ramp );
 	  ::relacs::clip( -1.0, 1.0, signal );
 	  meanintensity = 6.0206; // stdev=0.5
 	  meanintensity = 10.458; // stdev = 0.3
 	}
 	else {
-	  signal.sineWave( Frequency, Duration, 1.0, ramp );
+	  signal.sineWave( Duration, -1.0, Frequency, 1.0, ramp );
 	  meanintensity = 3.0103;
 	}
       }

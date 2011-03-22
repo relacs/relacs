@@ -192,7 +192,7 @@ int CalibEField::main( void )
   OutData signal;
   signal.setTrace( outtrace );
   applyOutTrace( signal );
-  signal.sineWave( frequency, duration, 1.0 );
+  signal.sineWave( duration, -1.0, frequency, 1.0 );
   signal.setIntensity( targetintensity );
   signal.back() = 0;
 
@@ -451,7 +451,7 @@ int CalibEField::main( void )
 	  duration *= 2.0;
 	  signal.setTrace( outtrace );
 	  applyOutTrace( signal );
-	  signal.sineWave( frequency, duration, 1.0 );
+	  signal.sineWave( duration, -1.0, frequency, 1.0 );
 	  signal.back() = 0;
 	  numintensities *= 2;
 	  intensitystep *= 0.5;

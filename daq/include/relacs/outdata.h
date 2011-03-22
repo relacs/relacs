@@ -642,73 +642,91 @@ class OutData : public SampleData< float >, public DaqError
     /*! Create a sine wave of constant amplitude \a ampl (1.0 = maximum amplitude)
         with freqency \a freq Hz, \a duration seconds, 
 	ramps of \a ramp seconds length, and description \a ident.
-	The sampling rate is set using bestSampleRate( \a freq ).
+	If \a stepsize is negative, the sampling rate is set using bestSampleRate( \a freq ).
 	The carrier frequency of the signal is set to \a freq.
         If \a ident is not specified, it is set to "sine wave". */
-  void sineWave( double freq, double duration, double ampl=1.0,
-		 double ramp=0.0, 
+  void sineWave( double duration, double stepsize,
+		 double freq, double ampl=1.0, double ramp=0.0, 
 		 const string &ident="sine wave" );
     /*! Create Gaussian white noise with cut-off freqency \a cutofffreq in Hz,
         \a duration seconds, 
 	ramps of \a ramp seconds length, and description \a ident.
 	The noise signal has zero mean and standard deviation \a stdev.
 	The carrier frequency of the signal is set to \a cutofffreq.
+	If \a stepsize is negative, the sampling rate is set using bestSampleRate( \a cutofffreq ).
+	If \a seed is not 0 the value it is pointing to is used as the seed for initializing a random number generator.
+	If \a *seed is 0, then the system time is used to generate a seed
+        to imitate real randomness.
+	The actually used seed is returned in \a *seed.
         If \a ident is not specified, it is set to "white noise wave". */
-  void noiseWave( double cutofffreq, double duration, double stdev=0.3,
-		  double ramp=0.0, 
+  void noiseWave( double duration, double stepsize, double cutofffreq,
+		  double stdev=1.0, unsigned long *seed=0, double ramp=0.0, 
 		  const string &ident="white noise wave" );
     /*! Create Gaussian white noise between frequencies
         \a cutofffreqlow and \a cutofffreqhigh in Hz,
         \a duration seconds, 
 	ramps of \a ramp seconds length, and description \a ident.
 	The noise signal has zero mean and standard deviation \a stdev.
+	If \a stepsize is negative, the sampling rate is set using bestSampleRate( \a cutofffreqhigh ).
 	The carrier frequency of the signal is set to \a cutofffreqhigh.
+	If \a seed is not 0 the value it is pointing to is used as the seed for initializing a random number generator.
+	If \a *seed is 0, then the system time is used to generate a seed
+        to imitate real randomness.
+	The actually used seed is returned in \a *seed.
         If \a ident is not specified, it is set to "band noise wave". */
-  void bandNoiseWave( double cutofffreqlow, double cutofffreqhigh,
-		      double duration, double stdev=0.3,
-		      double ramp=0.0,
+  void bandNoiseWave( double duration, double stepsize,
+		      double cutofffreqlow, double cutofffreqhigh,
+		      double stdev=1.0, unsigned long *seed=0, double ramp=0.0,
 		      const string &ident="band noise wave" );
     /*! Create Ohrnstein-Uhlenbeck noise with time-constant \a tau in sec,
         \a duration seconds, 
 	ramps of \a ramp seconds length, and description \a ident.
 	The noise signal has zero mean and standard deviation \a stdev.
 	The carrier frequency of the signal is set to 1/\a tau.
+	If \a stepsize is negative, the sampling rate is set using minSmapleInterval().
+	If \a seed is not 0 the value it is pointing to is used as the seed for initializing a random number generator.
+	If \a *seed is 0, then the system time is used to generate a seed
+        to imitate real randomness.
+	The actually used seed is returned in \a *seed.
         If \a ident is not specified, it is set to "ou noise wave". */
-  void ouNoiseWave( double tau, double duration, double stdev=0.3,
-		    double ramp=0.0, 
+  void ouNoiseWave( double duration, double stepsize,
+		    double tau, double stdev=0.3, unsigned long *seed=0, double ramp=0.0, 
 		    const string &ident="ou noise wave" );
   /*! Creates a frequency sweep from \a startfreq f_1 to \a endfreq
-    f_2 of constant amplitude \a ampl and with \a duration seconds. If
-    \a ident is not specified, it is set to "sweep wave". */
-  void sweepWave( double duration, double ampl, double stepsize, double startfreq, 
-		  double endfreq, double ramp=0.0, 
+    f_2 of constant amplitude \a ampl and with \a duration seconds. 
+    If \a stepsize is negative, the sampling rate is set using minSmapleInterval().
+    If \a ident is not specified, it is set to "sweep wave". */
+  void sweepWave( double duration, double stepsize,
+		  double startfreq, double endfreq,
+		  double ampl=1.0, double ramp=0.0, 
 		  const string &ident="sweep wave" );
   /*! Creates a rectangle pulse pattern with period \a period,
       duration of the rectangle \a width and constant amplitude \a
-      ampl. The up- and downstrokes have a width of \a ramp. If \a
-      ident is not specified, it is set to "rectangle wave". */
-  void rectangleWave( double duration, double ampl, double stepsize, double period, 
-		      double width, double ramp, 
+      ampl. The up- and downstrokes have a width of \a ramp.
+      If \a ident is not specified, it is set to "rectangle wave". */
+  void rectangleWave( double duration, double stepsize,
+		      double period, double width, double ramp, double ampl=1.0, 
 		      const string &ident="rectangle wave" );
   /*! Creates a sawtooth with period \a period and constant amplitude
       \a ampl with \a duration seconds. The downstroke has a width of
       \a ramp. If \a ident is not specified, it is set to "saw up
       wave". */
-  void sawUpWave( double duration, double ampl, double stepsize, double period, double ramp,
+  void sawUpWave( double duration, double stepsize,
+		  double period, double ramp, double ampl=1.0,
 		  const string &ident="saw up wave" );
   /*! Creates a sawtooth with period \a period and constant amplitude
       \a ampl with \a duration seconds. The upstroke has a width of \a
       ramp. If \a ident is not specified, it is set to "saw down
       wave". */
-  void sawDownWave( double duration, double ampl, double stepsize, double period, double ramp,
+  void sawDownWave( double duration, double stepsize,
+		    double period, double ramp, double ampl=1.0,
 		    const string &ident="saw down wave" );
   /*! Creates a triangle with period \a period and constant amplitude
       \a ampl with \a duration seconds. The upstroke and downstroke
       have a width of \a 0.5*period. If \a ident is not specified, it
       is set to "triangle wave". */
-  void triangleWave( double duration, double ampl, double stepsize, double period,
-		     const string &ident="triangle wave" );
-
+  void triangleWave( double duration, double stepsize, double period,
+		     double ampl=1.0, const string &ident="triangle wave" );
 
     /*! The index of the next element to be written to the data buffer.
         \sa incrDeviceIndex(), devieValue(), incrDeviceCount(), deviceReset() */

@@ -88,11 +88,16 @@ void MetaDataSection::save( ofstream &str )
 }
 
 
-ostream &MetaDataSection::saveXML( ostream &str, int level, int indent ) const
+ostream &MetaDataSection::saveXML( ostream &str, int level, int indent,
+				   const string &name ) const
 {
   string indstr1( level*indent, ' ' );
   str << indstr1 << "<section>\n";
   str << indstr1 << "  <type>" << configIdent() << "</type>\n";
+  if ( name.empty() )
+    str << indstr1 << "  <name>" << configIdent() << "</name>\n";
+  else
+    str << indstr1 << "  <name>" << name << "-" << configIdent() << "</name>\n";
   Options::saveXML( str, MD->saveFlags(), level+1, indent );
   str << indstr1 << "</section>\n";
   return str;
@@ -251,13 +256,14 @@ void MetaData::save( void )
 }
 
 
-ostream &MetaData::saveXML( ostream &str, int level, int indent ) const
+ostream &MetaData::saveXML( ostream &str, int level, int indent,
+			    const string &name ) const
 {
   lock();
 
   // write XML:
   for ( unsigned int k=0; k<MetaDataSections.size(); k++ )
-    MetaDataSections[k]->saveXML( str, level, indent );
+    MetaDataSections[k]->saveXML( str, level, indent, name );
 
   unlock();
   return str;

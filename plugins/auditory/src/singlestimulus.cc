@@ -830,7 +830,7 @@ void SingleStimulus::analyze( EventList &spikes, SampleDataD &rate1,
 int SingleStimulus::createStimulus( OutData &signal, const Str &file,
 				    double &duration, bool stoream )
 {
-  SampleDataD wave;
+  OutData wave;
   string wavename;
   bool store = false;
   Options header;
@@ -840,27 +840,8 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     // open file:
     ifstream str( file.c_str() );
     if ( ! str.bad() ) {
-      // skip header and read key:
-      double tfac = 1.0;
-      string s;
-      while ( getline( str, s ) && 
-	      ( s.empty() || s.find( '#' ) == 0 ) ) {
-	if ( s.find( "#Key" ) == 0 ) {
-	  for ( int k=0; 
-		getline( str, s ) && 
-		  ( s.empty() || s.find( '#' ) == 0 ); 
-		k++ ) {
-	    if ( k < 4 && s.find( "ms" ) != string::npos )
-	      tfac = 0.001;
-	  }
-	  break;
-	}
-      }
       // load data:
-      wave.load( str, "EMPTY", &s );
-
-      if ( tfac != 0.0 )
-	wave.range() *= tfac;
+      wave.load( str, file );
     }
     if ( wave.empty() ) {
       warning( "Unable to load stimulus from file " + file );
@@ -890,15 +871,14 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     if ( WaveForm == Sine || WaveForm == Whitenoise || WaveForm == OUnoise ) {
       if ( WaveForm == Sine ) {
 	PeakAmplitudeFac = 1.0;
-	wave.sin( LinearRange( 0.0, duration, 0.001 ), Frequency );
+	wave.sineWave( duration, 0.001, Frequency );
       }
       else {
-	Random rand;
-	unsigned long seed = rand.setSeed( Seed );
+	unsigned long seed = Seed;
 	if ( WaveForm == Whitenoise )
-	  wave.whiteNoise( duration, 0.001, 0.0, Frequency, rand );
+	  wave.noiseWave( duration, 0.001, Frequency, 1.0, &seed );
 	else if ( WaveForm == OUnoise )
-	  wave.ouNoise( duration, 0.001, 1.0/Frequency, rand );
+	  wave.ouNoiseWave( duration, 0.001, 1.0/Frequency, 1.0, &seed );
 	wave *= PeakAmplitudeFac;
 	int c = ::relacs::clip( -1.0, 1.0, wave );
 	double cp = 100.0*double(c)/wave.size();
@@ -912,15 +892,15 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     else {
       PeakAmplitudeFac = 1.0;
       if ( WaveForm == Rectangular ) {
-	wave.rectangle( LinearRange( 0.0, duration, 0.001 ), 1.0/Frequency, DutyCycle/Frequency, Ramp );
+	wave.rectangleWave( duration, 0.001, 1.0/Frequency, DutyCycle/Frequency, Ramp );
 	header.addText( "dutycycle", Str( 100.0*DutyCycle ) + "%" );
       }
       else if ( WaveForm == Triangular )
-	wave.triangle( LinearRange( 0.0, duration, 0.001 ), 1.0/Frequency );
+	wave.triangleWave( duration, 0.001, 1.0/Frequency );
       else if ( WaveForm == Sawup )
-	wave.sawUp( LinearRange( 0.0, duration, 0.001 ), 1.0/Frequency, Ramp );
+	wave.sawUpWave( duration, 0.001, 1.0/Frequency, Ramp );
       else if ( WaveForm == Sawdown )
-	wave.sawDown( LinearRange( 0.0, duration, 0.001 ), 1.0/Frequency, Ramp );
+	wave.sawDownWave( duration, 0.001, 1.0/Frequency, Ramp );
       if ( WaveType != Envelope )
 	wave = 2.0*wave - 1.0;
     }
@@ -962,10 +942,10 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
   if ( WaveType == AM ) {
     if ( StoreLevel == AMGenerated ) 
       store = true;
-    AMDB = SampleDataD( wave.range() );
+    AMDB = OutData( wave );
     PeakAmplitude = Amplitude / PeakAmplitudeFac;
     AMDB = PeakAmplitude * ( wave - 1.0 );
-    SampleDataD am( AMDB.range() );
+    OutData am( AMDB );
     for ( int k=0; k<am.size(); k++ )
       am[k] = ::pow (10.0, AMDB[k] / 20.0 );
     signal.fill( am, CarrierFreq );
@@ -997,7 +977,7 @@ int SingleStimulus::createStimulus( OutData &signal, const Str &file,
     wave.ramp( Ramp );
     PeakAmplitude = -20.0 * ::log10( PeakAmplitudeFac );
     Amplitude = 0.0;
-    AMDB = SampleDataD( wave.range() );
+    AMDB = OutData( wave );
     for ( int k=0; k<AMDB.size(); k++ ) {
       AMDB[k] = 20.0 * ::log10( wave[k] );
       if ( AMDB[k] < -60.0 )

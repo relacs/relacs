@@ -236,7 +236,7 @@ int FIField::main( void )
   // stimulus:
   Signal.setTrace( Speaker[ Side ] );
   applyOutTrace( Signal );  // to get maximum sampling rate!
-  Signal.sineWave( CarrierFrequency, Duration, 1.0, Ramp );
+  Signal.sineWave( Duration, -1.0, CarrierFrequency, 1.0, Ramp );
   MeanIntensity = 3.0103;
   Signal.back() = 0;
   Signal.setDelay( 0.0 );
@@ -592,7 +592,7 @@ RePro::DoneState FIField::next( vector< FIData > &results, bool msg )
       Signal.free();
       Signal.setTrace( Speaker[ Side ] );
       applyOutTrace( Signal );  // to get maximum sampling rate!
-      Signal.sineWave( CarrierFrequency, Duration, 1.0, Ramp );
+      Signal.sineWave( Duration, -1.0, CarrierFrequency, 1.0, Ramp );
       Signal.back() = 0;
       Signal.setDelay( 0.0 );
       Signal.setError( OutData::Unknown );

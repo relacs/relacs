@@ -209,7 +209,7 @@ int TransferFunction::main( void )
       s += " of <b>" + Str( repeats ) + "</b>";
     message( s );
 
-    signal.noiseWave( fmax, duration, amplitude );
+    signal.noiseWave( duration, -1.0, fmax, amplitude );
     signal.back() = 0.0;
     signal += offset;
     // debug:
