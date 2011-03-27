@@ -79,6 +79,7 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
   ReProInfo.addText( "author" );
   ReProInfo.addText( "version" );
   ReProInfo.addDate( "date" );
+  ReProInfo.addInteger( "run" );
   ReProSettings.clear();
   ReProFiles.clear();
   ReProData = false;
@@ -489,6 +490,7 @@ void SaveFiles::saveStimulus( void )
 	stimuliref[j].back().add( *pi );
 	Stimuli[j].Descriptions[k].erase( pi );
       }
+      // XXX once OutData does not have idents any more, the following lines can be erased:
       Options::iterator pd = Stimuli[j].Descriptions[k].find( "Description" );
       if ( pd != Stimuli[j].Descriptions[k].end() ) {
 	stimuliref[j].back().add( *pd );
@@ -587,6 +589,7 @@ void SaveFiles::saveStimulus( void )
 	    if ( ! att->frequencyName().empty() )
 	      StimulusKey.save( *SF, Stimuli[j].CarrierFreq );
 	  }
+	  // XXX once all RePro support descriptions, in the following line Ident should be replaced by stimulinames[]!
 	  StimulusKey.save( *SF, Stimuli[j].Ident );
 	  break;
 	}
@@ -697,6 +700,7 @@ void SaveFiles::save( const RePro &rp )
   ReProInfo.setText( "author", rp.author() );
   ReProInfo.setText( "version", rp.version() );
   ReProInfo.setText( "date", rp.date() );
+  ReProInfo.setInteger( "run", rp.allRuns() );
   ReProSettings = rp;
   StimuliRePro = rp.name();
 }
@@ -727,23 +731,26 @@ void SaveFiles::saveRePro( void )
     // xml metadata file:
     if ( XF != 0 && saving() ) {
       if ( DatasetOpen ) {
-	for ( unsigned int k=0; k<ReProFiles.size(); k++ ) {
-	  Parameter p( "file", "", ReProFiles[k] );
-	  p.saveXML( *XF, 2 );
+	if ( ReProFiles.size() > 0 ) {
+	  string files = ReProFiles[0];
+	  for ( unsigned int k=1; k<ReProFiles.size(); k++ )
+	    files += '|' + ReProFiles[k];
+	  Parameter p( "File", "", files );
+	  p.saveXML( *XF, 2, 2, false );
 	}
 	ReProFiles.clear();
 	*XF << "  </section>\n";
       }
-      string dataset = ReProInfo.text( "experiment" ) + "-" +
-	ReProInfo.text( "repro" ) + "-" + Str( path() ).preventedSlash().name();
+      string dataset = Str( path() ).preventedSlash().name()
+	+ "-" + ReProInfo.text( "repro" ) + "-" + Str( ReProInfo.integer( "run" ) );
       *XF << "  <section>\n";
       *XF << "    <type>dataset</type>\n";
-      *XF << "    <name>" + dataset + "</name>\n";
+      *XF << "    <name>dataset-" << dataset << "</name>\n";
       ReProInfo.saveXML( *XF, 0, 2 );
       if ( ! ReProSettings.empty() ) {
 	*XF << "    <section>\n";
 	*XF << "      <type>settings</type>\n";
-	*XF << "      <name>" + dataset + "-settings</name>\n";
+	*XF << "      <name>dataset-settings-" << dataset << "</name>\n";
 	ReProSettings.saveXML( *XF, 1, 3 );
 	*XF << "    </section>\n";
       }
@@ -796,7 +803,12 @@ void SaveFiles::removeFiles( void )
 ofstream *SaveFiles::openFile( const string &filename, int type )
 {
   Options &opt = RW->MTDT.section( "Recording" );
-  opt.insertText( "File", "Date", filename, MetaDataRecordingSection::standardFlag() );
+  if ( opt.exist( "File" ) )
+    opt.pushText( "File", filename );
+  else {
+    opt.insertText( "File", "Date", filename,
+		    MetaDataRecordingSection::standardFlag() + Parameter::ListFlag );
+  }
   string fs = path() + filename;
   addRemoveFile( fs );
   ofstream *f = new ofstream( fs.c_str(), ofstream::openmode( type ) );
@@ -1048,7 +1060,7 @@ void SaveFiles::createXMLFile( const InList &traces,
     *XF << "  <repository>http://portal.g-node.org/odml/terminologies/v1.0/terminologies.xml</repository>\n";
     *XF << "  <section>\n";
     *XF << "    <type>hardware</type>\n";
-    *XF << "    <name>" << name << "-hardware</name>\n";
+    *XF << "    <name>hardware-" << name << "</name>\n";
     for ( int k=0; k<RW->ADV->size(); k++ ) {
       const Device &dev = (*RW->ADV)[k];
       int dt = dev.deviceType();
@@ -1067,7 +1079,7 @@ void SaveFiles::createXMLFile( const InList &traces,
       opts.erase( "type" );
       *XF << "    <section>\n";
       *XF << "      <type>" << dts << "</type>\n";
-      *XF << "      <name>" << name << "-" << dts << "</name>\n";
+      *XF << "      <name>hardware-" << dts << "-" << name << "</name>\n";
       opts.saveXML( *XF, 0, 3 ); 
       *XF << "    </section>\n";
     }
@@ -1218,10 +1230,13 @@ void SaveFiles::closeFiles( void )
   SDF = 0;
   if ( XF != 0 ) {
     if ( DatasetOpen ) {
-      for ( unsigned int k=0; k<ReProFiles.size(); k++ ) {
-	Parameter p( "file", "", ReProFiles[k] );
-	p.saveXML( *XF, 2 );
-	}
+      if ( ReProFiles.size() > 0 ) {
+	string files = ReProFiles[0];
+	for ( unsigned int k=1; k<ReProFiles.size(); k++ )
+	  files += '|' + ReProFiles[k];
+	Parameter p( "File", "", files );
+	p.saveXML( *XF, 2, 2, false );
+      }
       ReProFiles.clear();
       *XF << "  </section>\n";
       DatasetOpen = false;
@@ -1345,6 +1360,7 @@ SaveFiles::Stimulus::Stimulus( const OutData &signal )
     Descriptions[k].erase( "type" );
     ts.preventFirst( "stimulus/" ).strip();
     TypeNames.push_back( ts );
+    // XXX once OutData does not have idents any more, the following lines can be erased:
     if ( ! signal.ident().empty() )
       Descriptions[k].addText( "Description", signal.ident() );
   }

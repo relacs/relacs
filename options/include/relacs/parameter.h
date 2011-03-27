@@ -85,7 +85,10 @@ public:
     Blank=64+128
   };
 
+    /*! This flag is set whenever the value of the Parameter is changed. */
   static const int ChangedFlag = 16384;
+    /*! If this flag is set all values of the parameter get saved even if only the first value is requested to be saved. */
+  static const int ListFlag = 32768;
   static const int NonDefault = -32768;
 
     /*! Use this label to distinguish search patterns
@@ -888,10 +891,13 @@ public:
   bool testActivation( double value, double tol=1e-8 );
 
     /*! Return string in the format "ident: value".
-        If \a detailed equals \c true the request string is written, too. */
+        If \a detailed equals \c true the request string is written, too.
+        If \a firstonly is \c true and the ListFlag is not set,
+        only the first value of the Parameter is written. */
   string save( bool detailed=false, bool firstonly=false ) const;
     /*! Write parameter to stream \a str in the format "PatternIdent: Value".
-        If \a detailed equals \c true the request string is written, too. */
+        If \a detailed equals \c true the request string is written, too.If \a firstonly is \c true and the ListFlag is not set,
+        only the first value of the Parameter is written. */
   ostream &save( ostream &str, int width=0, bool detailed=false,
 		 bool firstonly=false, const string &pattern="" ) const;
     /*! Write parameter to stream \a str according to the formats
@@ -909,8 +915,11 @@ public:
         \param[in] level the level of indentation
         \param[in] indent the indentation depth, 
                    i.e. number of white space characters per level
+        \param[in] firstonly if \c true and the ListFlag is not set,
+                   write out the first value only
         \return the output stream \a str */
-  ostream &saveXML( ostream &str, int level=0, int indent=2 ) const;
+  ostream &saveXML( ostream &str, int level=0, int indent=2,
+		    bool firstonly=true ) const;
 
     /*! Load parameter from string \a s.
         The warning message is set if \a s is invalid.

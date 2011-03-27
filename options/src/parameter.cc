@@ -2857,7 +2857,7 @@ string Parameter::save( bool detailed, bool firstonly ) const
 	str += text( 0, "(" + format() + "+-" + format().up() + ")" );
       else
 	str += text( 0 );
-      if ( ! firstonly ) {
+      if ( (Flags & ListFlag) == ListFlag || ! firstonly ) {
 	for ( int k=1; k<(int)Value.size(); k++ ) {
 	  str += "|";
 	  if ( error( k ) >= 0.0 )
@@ -2871,7 +2871,7 @@ string Parameter::save( bool detailed, bool firstonly ) const
     }
     else if ( isBoolean() ) {
       str += ( boolean( 0 ) ? "true" : "false" );
-      if ( ! firstonly ) {
+      if ( (Flags & ListFlag) == ListFlag || ! firstonly ) {
 	for ( int k=1; k<(int)Value.size(); k++ ) {
 	  str += "|";
 	  str += ( boolean( k ) ? "true" : "false" );
@@ -2880,7 +2880,7 @@ string Parameter::save( bool detailed, bool firstonly ) const
     }
     else if ( isDate() || isTime() || isText() ) {
       str += text( 0 );
-      if ( ! firstonly ) {
+      if ( (Flags & ListFlag) == ListFlag || ! firstonly ) {
 	for ( int k=1; k<(int)String.size(); k++ )
 	  str += "|" + text( k );
       }
@@ -2916,7 +2916,7 @@ ostream &Parameter::save( ostream &str, int width, bool detailed,
 	str << text( 0, "(" + format() + "+-" + format().up() + ")" );
       else
 	str << text( 0 );
-      if ( ! firstonly ) {
+      if ( (Flags & ListFlag) == ListFlag || ! firstonly ) {
 	for ( int k=1; k<(int)Value.size(); k++ ) {
 	  str << "|";
 	  if ( error( k ) >= 0.0 )
@@ -2930,7 +2930,7 @@ ostream &Parameter::save( ostream &str, int width, bool detailed,
     }
     else if ( isBoolean() ) {
       str << ( boolean( 0 ) ? "true" : "false" );
-      if ( ! firstonly ) {
+      if ( (Flags & ListFlag) == ListFlag || ! firstonly ) {
 	for ( int k=1; k<(int)Value.size(); k++ ) {
 	  str << "|" << ( boolean( k ) ? "true" : "false" );
 	}
@@ -2938,7 +2938,7 @@ ostream &Parameter::save( ostream &str, int width, bool detailed,
     }
     else if ( isDate() || isTime() || isText() ) {
       str << text( 0 );
-      if ( ! firstonly ) {
+      if ( (Flags & ListFlag) == ListFlag || ! firstonly ) {
 	for ( int k=1; k<(int)String.size(); k++ )
 	  str << "|" << text( k );
       }
@@ -2989,39 +2989,45 @@ ostream &operator<<( ostream &str, const Parameter &p )
 }
 
 
-ostream &Parameter::saveXML( ostream &str, int level, int indent ) const
+ostream &Parameter::saveXML( ostream &str, int level, int indent,
+			     bool firstonly ) const
 {
   string indstr1( level*indent, ' ' );
   string indstr2( indstr1 );
   indstr2 += string( indent, ' ' );
+  int maxinx = size();
+  if ( (Flags & ListFlag) == 0 && firstonly && maxinx >= 1 )
+    maxinx = 1;
 
   if ( isLabel() )
     str << indstr1 << "<label>" << label() << "</label>\n";
   else {
     str << indstr1 << "<property>\n";
     str << indstr2 << "<name>" << ident() << "</name>\n";
-    if ( isNumber() || isInteger() ) {
-      string vtype = "float";
-      if ( isInteger() )
-	vtype = "integer";
-      str << indstr2 << "<value>" << Str( number( 0 ), format() ).strip() << "<type>" << vtype << "</type>";
-      if ( error( 0 ) >= 0.0 )
-	str << "<error>" << Str( error( 0 ), format() ).strip() << "</error>";
-      if ( ! outUnit().empty() && outUnit() != "1" )
-	str << "<unit>" << unit() << "</unit>";
-      str << "</value>\n";
-    }
-    else if ( isBoolean() ) {
-      str << indstr2 << "<value>" << ( boolean( 0 ) ? "true" : "false" ) << "<type>boolean</type></value>\n";
-    }
-    else if ( isDate() ) {
-      str << indstr2 << "<value>" << text( 0, "%04Y-%02m-%02d" ) << "<type>date</type></value>\n";
-    }
-    else if ( isTime() ) {
-      str << indstr2 << "<value>" << text( 0, "%02H:%02M:%02S" ) << "<type>time</type></value>\n";
-    }
-    else if ( isText() ) {
-      str << indstr2 << "<value>" << text().strip() << "<type>string</type></value>\n";
+    for ( int k=0; k<maxinx; k++ ) {
+      if ( isNumber() || isInteger() ) {
+	string vtype = "float";
+	if ( isInteger() )
+	  vtype = "integer";
+	str << indstr2 << "<value>" << Str( number( k ), format() ).strip() << "<type>" << vtype << "</type>";
+	if ( error( 0 ) >= 0.0 )
+	  str << "<error>" << Str( error( k ), format() ).strip() << "</error>";
+	if ( ! outUnit().empty() && outUnit() != "1" )
+	  str << "<unit>" << unit() << "</unit>";
+	str << "</value>\n";
+      }
+      else if ( isBoolean() ) {
+	str << indstr2 << "<value>" << ( boolean( k ) ? "true" : "false" ) << "<type>boolean</type></value>\n";
+      }
+      else if ( isDate() ) {
+	str << indstr2 << "<value>" << text( k, "%04Y-%02m-%02d" ) << "<type>date</type></value>\n";
+      }
+      else if ( isTime() ) {
+	str << indstr2 << "<value>" << text( k, "%02H:%02M:%02S" ) << "<type>time</type></value>\n";
+      }
+      else if ( isText() ) {
+	str << indstr2 << "<value>" << text( k ).strip() << "<type>string</type></value>\n";
+      }
     }
     str << indstr1 << "</property>\n";
   }

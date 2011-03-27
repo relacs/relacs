@@ -97,7 +97,7 @@ ostream &MetaDataSection::saveXML( ostream &str, int level, int indent,
   if ( name.empty() )
     str << indstr1 << "  <name>" << configIdent() << "</name>\n";
   else
-    str << indstr1 << "  <name>" << name << "-" << configIdent() << "</name>\n";
+    str << indstr1 << "  <name>" << configIdent() << "-" << name << "</name>\n";
   Options::saveXML( str, MD->saveFlags(), level+1, indent );
   str << indstr1 << "</section>\n";
   return str;

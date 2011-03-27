@@ -1,3 +1,17 @@
+Metadata supprot of OutData:
+- Add constWave function to OutData
+- Add ramp functions to OutData that set also the descriptions
+- Add appendRamp function to OutData
+- Update odML terminologies accordingly.
+- Take metadata descriptions from stimulus files
+
+MetaData:
+- Implement in all RePros OutData::descriptions() by using appropriate OutData functions !
+- Stimulus section needs a file (if available)!
+- SaveFiles: finish reorganization of saveStimuli(): check XXX comments
+- Parameter::label should get a level that is used to make sections in the XML file ?
+- Check out JSON libraries and compatibility with Options
+
 Locking:
 - dead locks: do we need to take care about blocking lockMutex() in accept(), reset(), etc.?
 
@@ -16,19 +30,11 @@ Macros:
 
 Plugin documentation:
 - Each publication should get a file indicating the RePros it used:
-  - list for each publication the ussed RePros
+  - list for each publication the used RePros
   - show in the plugin summaries for each RePro the number of publications
   - add a section to each RePro linking to its publications
 - Need to document the comedi and dynclamp plugins!
 - Option for automatic screenshot at the end of stimulus (in menu)
-
-Metadata:
-- Implement in all RePros OutData::descriptions() !
-- Stimulus section needs a file (if available)!
-- SaveFiles: check section names - do we really need them?
-- SaveFiles: finish reorganization of saveStimuli().
-- Parameter::label should get a level that is used to make sections in the XML file ?
-- Check out JSON libraries and compatibility with Options
 
 Plot:
 - possibly infinite loop in line 1527 (autoscaling) from line 1534 (initTics)

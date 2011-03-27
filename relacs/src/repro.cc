@@ -369,6 +369,18 @@ int RePro::totalRuns( void ) const
 }
 
 
+int RePro::allRuns( void ) const
+{
+  return AllRuns;
+}
+
+
+int RePro::failedRuns( void ) const
+{
+  return FailedRuns;
+}
+
+
 double RePro::reproTime( void ) const
 {
   return 0.001*ReProTime.elapsed();
