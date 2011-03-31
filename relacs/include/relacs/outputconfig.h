@@ -19,8 +19,6 @@ class OutputConfig : public QWidget
 public:
   OutputConfig(QWidget *parent = 0);
   ~OutputConfig();
-  QItemSelectionModel * selection;
-  QModelIndexList indexes;
   void fillCells(int, bool);
   
 public slots:
@@ -29,13 +27,15 @@ public slots:
   void accept();
  
 private:
-  QTableWidget *widget;
-  QHBoxLayout *layout;
-  QVBoxLayout *buttonlayout;
-  QStringList list;
-  QPushButton *addButton;
-  QPushButton *removeButton;
-  QPushButton *acceptButton;
+  QTableWidget *Widget;
+  QHBoxLayout *Layout;
+  QVBoxLayout *Buttonlayout;
+  QStringList List;
+  QPushButton *AddButton;
+  QPushButton *RemoveButton;
+  QPushButton *AcceptButton;
+  QItemSelectionModel * Selection;
+  QModelIndexList Indexes;
 };
 
 
