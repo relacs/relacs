@@ -314,6 +314,7 @@ int JAR::main( void )
 	signal.setTrace( GlobalEField );
 	applyOutTrace( signal );
 	if ( SineWave ) {
+	  unlockAll();
 	  StimulusRate = FishRate + DeltaF;
 	  double p = 1.0;
 	  if ( fabs( DeltaF ) > 0.01 )
@@ -326,6 +327,7 @@ int JAR::main( void )
 	  signal.sineWave( n*p, -1.0, StimulusRate, 1.0, ramp );
 	  signal.setIdent( "sinewave" );
 	  IntensityGain = 1.0;
+	  lockAll();
 	}
 	else if ( LocalEODEvents[0] >= 0 ) {
 	  // extract an EOD waveform:
@@ -339,8 +341,10 @@ int JAR::main( void )
 	  StimulusRate = ReadCycles/signal.duration();
 	  double maxamplitude = trace( LocalEODTrace[0] ).maxValue() - trace( LocalEODTrace[0] ).minValue();
 	  IntensityGain = maxamplitude / LocalFishAmplitude / g;
+	  unlockAll();
 	  signal.repeat( (int)floor( Duration/signal.duration() ) );
 	  signal.ramp( ramp );
+	  lockAll();
 	}
 	Duration = signal.length();
 	signal.setStartSource( 1 );
@@ -701,6 +705,7 @@ void JAR::saveEOD( const Options &header )
 
 void JAR::saveTrace( void )
 {
+  unlockAll();
   Options header;
   header.addInteger( "Index", FileIndex );
   header.addNumber( "Delta f", DeltaF, "Hz", "%.1f" );
@@ -726,6 +731,7 @@ void JAR::saveTrace( void )
   saveEODFreq( header );
   saveChirps( header );
   saveChirpTraces( header );
+  lockAll();
   saveChirpEOD( header );
 }
 
@@ -1048,10 +1054,16 @@ void JAR::analyze( void )
 
   // EOD rate:
   double teod = signalTime();
-  do {
+  for ( int k=0; k<50; k++ ) {
     FishRate = eodglobal.frequency( teod - JARAverageTime, teod );
+    if ( FishRate > 1.0 )
+      break;
     teod -= JARAverageTime;
-  } while ( FishRate < 1.0 );
+  }
+  if ( FishRate <= 1.0 )
+    FishRate = eodglobal.frequency( signalTime(), signalTime() + JARAverageTime );
+  if ( FishRate <= 1.0 )
+    printlog( "warning: could not get the fishes EOD frequency!" );
 
   // Delta F:
   TrueDeltaF = sige.frequency( signalTime(), signalTime() +  JARAverageTime ) - FishRate;
@@ -1066,11 +1078,15 @@ void JAR::analyze( void )
 				       eodlocal.back() );
 
   // contrast:
-  if ( LocalEODTrace[0] >= 0 )
+  if ( LocalEODTrace[0] >= 0 ) {
+    double mt = 0.8*Duration;
+    if ( mt > 5.0 )
+      mt = 5.0;
     TrueContrast = beatContrast( trace(LocalEODTrace[0]),
 				 signalTime()+0.1*Duration,
-				 signalTime()+0.9*Duration,
+				 signalTime()+0.1*Duration + mt,
 				 fabs( DeltaF ) );
+  }
   else
     TrueContrast = 0.0;
 

@@ -107,7 +107,9 @@ protected:
   double MinThresh;
   double MaxThresh;
   double ThreshRatio;
+  double AutoRatio;
   double FilterTau;
+  double SampleInterval;
   bool AdaptThresh;
   double MaxEODPeriod;
 

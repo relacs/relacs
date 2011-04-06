@@ -1,4 +1,4 @@
-Metadata supprot of OutData:
+Metadata support of OutData:
 - Add constWave function to OutData
 - Add ramp functions to OutData that set also the descriptions
 - Add appendRamp function to OutData
@@ -13,6 +13,7 @@ MetaData:
 - Check out JSON libraries and compatibility with Options
 
 Locking:
+- RELACSWidget:: write() should unlock InData!?!
 - dead locks: do we need to take care about blocking lockMutex() in accept(), reset(), etc.?
 
 Macros:

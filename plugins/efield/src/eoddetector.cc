@@ -38,14 +38,16 @@ EODDetector::EODDetector( const string &ident, int mode )
   MinThresh = 0.0;
   MaxThresh = 1000.0;
   MaxEODPeriod = 0.01;  // 100 Hz
-  ThreshRatio = 0.5;
   AdaptThresh = false;
+  ThreshRatio = 0.5;
+  AutoRatio = 1.0;
   FilterTau = 0.1;
 
   // options:
   addNumber( "threshold", "Threshold", Threshold, MinThresh, MaxThresh, 0.01*MaxThresh, "", "", "%g", 2+8+32 );
   addBoolean( "adapt", "Adapt threshold", AdaptThresh, 2+8 );
   addNumber( "ratio", "Ratio", ThreshRatio, 0.05, 1.0, 0.05, "", "%", "%g", 2+8 ).setActivation( "adapt", "true" );
+  addNumber( "autoratio", "Auto sets threshold relative to EOD amplitude", AutoRatio, 0.05, 1.0, 0.05, "", "%", "%g", 8 );
   addNumber( "maxperiod", "Maximum EOD period", MaxEODPeriod, 0.0, 1.0, 0.0001, "s", "ms", "%g", 8 );
   addNumber( "filtertau", "Filter time constant", FilterTau, 0.0, 10000.0, 0.001, "s", "ms", "%g", 8 );
   addNumber( "rate", "Rate", 0.0, 0.0, 100000.0, 0.1, "Hz", "Hz", "%.1f", 2+4 );
@@ -105,6 +107,7 @@ int EODDetector::init( const InData &data, EventData &outevents,
   FilterIterator = data.begin();
   if ( FilterIterator < data.end() )
     MeanEOD = *FilterIterator;
+  SampleInterval = data.stepsize();
   return 0;
 }
 
@@ -115,6 +118,7 @@ void EODDetector::notify( void )
   Threshold = number( "threshold" );
   AdaptThresh = boolean( "adapt" );
   ThreshRatio = number( "ratio" );
+  AutoRatio = number( "autoratio" );
   MaxEODPeriod = number( "maxperiod" );
   FilterTau = number( "filtertau" );
   EDW.updateValues( OptWidget::changedFlag() );
@@ -149,7 +153,7 @@ int EODDetector::autoConfigure( const InData &data,
   double min = ceil10( 0.1*ampl );
   double max = ceil10( ::floor( 10.0*ampl/min )*min );
   // refine threshold:
-  Threshold = floor10( ampl, 0.1 );
+  Threshold = floor10( AutoRatio*ampl, 0.1 );
   if ( Threshold < MinThresh )
     Threshold = MinThresh;
   // update values:
@@ -206,12 +210,15 @@ int EODDetector::checkEvent( InData::const_iterator first,
     return 0;
   }
 
-  double sampleinterval = *eventtime - *(eventtime - 1);
-
   // update mean:
   if ( FilterTau > 0.0 ) {
+    if ( FilterIterator < first ) {
+      FilterIterator = last - 1 - (int)::ceil(10.0*FilterTau/SampleInterval);
+      if ( FilterIterator < first )
+	FilterIterator = first;
+    }
     while ( FilterIterator < last ) {
-      MeanEOD += ( *FilterIterator - MeanEOD )*sampleinterval/FilterTau;
+      MeanEOD += ( *FilterIterator - MeanEOD )*SampleInterval/FilterTau;
       ++FilterIterator;
     }
   }
@@ -233,7 +240,7 @@ int EODDetector::checkEvent( InData::const_iterator first,
   for ( --id, --it; id != first; --id, --it ) {
     ival = *id;
     if ( ival < maxsize ) {
-      double m = sampleinterval / ( pval - ival );
+      double m = SampleInterval / ( pval - ival );
       time = *it + m * ( maxsize - ival );
       if ( outevents.size() > 0 && time <= outevents.back() ) {
 	// discard:
