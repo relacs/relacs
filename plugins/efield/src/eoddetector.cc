@@ -40,14 +40,14 @@ EODDetector::EODDetector( const string &ident, int mode )
   MaxEODPeriod = 0.01;  // 100 Hz
   AdaptThresh = false;
   ThreshRatio = 0.5;
-  AutoRatio = 1.0;
+  AutoRatio = 0.5;
   FilterTau = 0.1;
 
   // options:
   addNumber( "threshold", "Threshold", Threshold, MinThresh, MaxThresh, 0.01*MaxThresh, "", "", "%g", 2+8+32 );
   addBoolean( "adapt", "Adapt threshold", AdaptThresh, 2+8 );
   addNumber( "ratio", "Ratio", ThreshRatio, 0.05, 1.0, 0.05, "", "%", "%g", 2+8 ).setActivation( "adapt", "true" );
-  addNumber( "autoratio", "Auto sets threshold relative to EOD amplitude", AutoRatio, 0.05, 1.0, 0.05, "", "%", "%g", 8 );
+  addNumber( "autoratio", "Auto sets threshold relative to EOD peak-to-peak amplitude", AutoRatio, 0.05, 1.0, 0.05, "", "%", "%g", 8 );
   addNumber( "maxperiod", "Maximum EOD period", MaxEODPeriod, 0.0, 1.0, 0.0001, "s", "ms", "%g", 8 );
   addNumber( "filtertau", "Filter time constant", FilterTau, 0.0, 10000.0, 0.001, "s", "ms", "%g", 8 );
   addNumber( "rate", "Rate", 0.0, 0.0, 100000.0, 0.1, "Hz", "Hz", "%.1f", 2+4 );
@@ -153,7 +153,7 @@ int EODDetector::autoConfigure( const InData &data,
   double min = ceil10( 0.1*ampl );
   double max = ceil10( ::floor( 10.0*ampl/min )*min );
   // refine threshold:
-  Threshold = floor10( AutoRatio*ampl, 0.1 );
+  Threshold = floor10( 2.0*AutoRatio*ampl, 0.1 );
   if ( Threshold < MinThresh )
     Threshold = MinThresh;
   // update values:

@@ -44,6 +44,9 @@ Session::Session( void )
   EODAmplitudes.reserve( 1000000 );  // should be enough for 24h!
   EODUnit = "";
   EODUpdate = 30;
+  WaterTemp = 0.0;
+  WaterTemps.clear();
+  WaterTemps.reserve( 1000000 );  // should be enough for 24h!
 
   // this options is needed to update LCDs via notify!
   // set by Search RePro
@@ -60,7 +63,7 @@ Session::Session( void )
   // plots:
   EODPlot.lock();
   EODPlot.resize( 2, 1, true );
-  EODPlot.setCommonXRange( 0, 1 );
+  EODPlot.setCommonXRange();
 
   EODPlot[0].setXLabel( "[sec]" );
   EODPlot[0].setXLabelPos( 1.0, Plot::FirstMargin, 0.0, Plot::FirstAxis, 
@@ -119,6 +122,8 @@ Session::Session( void )
   vb->addWidget( SessionButton );
   connect( SessionButton, SIGNAL( clicked() ),
 	   this, SLOT( toggleSession() ) );
+
+  TempDev = 0;
 }
 
 
@@ -201,6 +206,49 @@ void Session::config( void )
 }
 
 
+void Session::initDevices( void )
+{
+  TempDev = dynamic_cast< Temperature* >( device( "temp-1" ) );
+  if ( TempDev != 0 ) {
+    lockMetaData();
+    Options &mo = metaData( "Recording" );
+    mo.unsetNotify();
+    mo.erase( "temp-1" );
+    mo.addNumber( "temp-1", "Temperature", 0.0, "°C", "%.1f", 0, 
+		  OptWidget::ValueBold + OptWidget::ValueRed + OptWidget::ValueBackBlack );
+    mo.setNotify();
+    unlockMetaData();
+    lockStimulusData();
+    stimulusData().erase( "temp-1" );
+    stimulusData().addNumber( "temp-1", 0.0, "°C", "%.1f" );
+    unlockStimulusData();
+    // plots:
+    EODPlot.lock();
+    EODPlot.resize( 3, 1, true );
+    EODPlot.setCommonXRange();
+    EODPlot[0].setOrigin( 0.0, 0.0 );
+    EODPlot[0].setSize( 1.0, 0.4 );
+    EODPlot[1].setOrigin( 0.0, 0.4 );
+    EODPlot[1].setSize( 1.0, 0.3 );
+    EODPlot[2].setXLabel( "" );
+    EODPlot[2].noXTics();
+    EODPlot[2].setYFallBackRange( 20.0, 30.0 );
+    EODPlot[2].setYRange( Plot::AutoScale, Plot::AutoScale );
+    EODPlot[2].setMinYTics( 0.5 );
+    EODPlot[2].setYLabel( "°C" );
+    EODPlot[2].setYLabelPos( 2.5, Plot::FirstMargin, 0.5, Plot::Graph, 
+			     Plot::Center, -90.0 );
+    EODPlot[2].setLMarg( 8.0 );
+    EODPlot[2].setRMarg( 2.0 );
+    EODPlot[2].setTMarg( 0.5 );
+    EODPlot[2].setBMarg( 1.0 );
+    EODPlot[2].setOrigin( 0.0, 0.7 );
+    EODPlot[2].setSize( 1.0, 0.3 );
+    EODPlot.unlock();
+  }
+}
+
+
 void Session::sessionStarted( void )
 {
   SessionButton->setText( "Cell Lost (Enter)" );
@@ -208,14 +256,20 @@ void Session::sessionStarted( void )
   EODOffset = EODRates.size() - 1;
   if ( EODOffset < 0 )
     EODOffset = 0;
+
+  TemperatureOffset = WaterTemps.size() - 1;
+  if ( TemperatureOffset < 0 )
+    TemperatureOffset = 0;
 }
 
 
 void Session::sessionStopped( bool saved )
 {
   SessionButton->setText( "Cell Found (Enter)" );
-  if ( saved )
+  if ( saved ) {
     saveEOD();
+    saveTemperature();
+  }
 }
 
 
@@ -239,11 +293,43 @@ void Session::saveEOD( void )
   key.saveKey( df, true, false );
 
   // write data into file:
-  double offs = EODRates.x(EODOffset);
+  double offs = EODRates.x( EODOffset );
   for ( long k=EODOffset; k < EODRates.size() && k < EODAmplitudes.size(); k++ ) {
     key.save( df, EODRates.x(k) - offs, 0 );
     key.save( df, EODRates.y(k) );
     key.save( df, EODAmplitudes.y(k) );
+    df << '\n';
+  }
+  df << '\n' << '\n';
+}
+
+
+void Session::saveTemperature( void )
+{
+  if ( TempDev == 0 )
+    return;
+
+  // create file:
+  ofstream df( addPath( "temperatures.dat" ).c_str(),
+	       ofstream::out | ofstream::app );
+  if ( ! df.good() )
+    return;
+
+  // write header and key:
+  time_t tp = ::time( 0 );
+  struct tm *t = localtime( &tp );
+  df << "#       time: " << Str( t->tm_hour, "%02d" ) << "h" << Str( t->tm_min, "%02d" ) << "min\n";
+  df << '\n';
+  TableKey key;
+  key.addNumber( "time", "sec", "%9.2f" );
+  key.addNumber( "T", "°C", "%5.1f" );
+  key.saveKey( df, true, false );
+
+  // write data into file:
+  double offs = WaterTemps.x( TemperatureOffset );
+  for ( long k=TemperatureOffset; k < WaterTemps.size(); k++ ) {
+    key.save( df, WaterTemps.x(k) - offs, 0 );
+    key.save( df, WaterTemps.y(k) );
     df << '\n';
   }
   df << '\n' << '\n';
@@ -277,9 +363,15 @@ void Session::plot( void )
   }
 
   EODPlot.lock();
+
+  // zoom:
+  bool zoomed = ( EODPlot[0].zoomedXRange() || EODPlot[1].zoomedXRange() );
+  if ( EODPlot.size() > 2 )
+    zoomed |= EODPlot[2].zoomedXRange();
+
   // EOD rate:
   EODPlot[0].clear();
-  if ( ! EODPlot[0].zoomedXRange() && ! EODPlot[1].zoomedXRange() )
+  if ( ! zoomed )
     EODPlot[0].setXRange( xmin, xmax );
   EODPlot[0].setXLabel( xunit );
   EODPlot[0].plot( EODRates, xfac, Plot::Green, 2 );
@@ -287,9 +379,19 @@ void Session::plot( void )
   // EOD amplitude:
   EODPlot[1].clear();
   EODPlot[1].setYLabel( "Ampl. [" + EODUnit + "]" );
-  if ( ! EODPlot[0].zoomedXRange() && ! EODPlot[1].zoomedXRange() )
+  if ( ! zoomed )
     EODPlot[1].setXRange( xmin, xmax );
   EODPlot[1].plot( EODAmplitudes, xfac, Plot::Red, 2 );
+
+  // Temperature:
+  if ( EODPlot.size() > 2 ) {
+    EODPlot[2].clear();
+    if ( ! zoomed )
+      EODPlot[2].setXRange( xmin, xmax );
+    EODPlot[2].setLabel( "T=" + Str( WaterTemp, "%.1f" ) + "°C", 0.95, Plot::Graph,
+			 0.9, Plot::Graph, Plot::Right, 0.0, Plot::Orange, 2.0 );
+    EODPlot[2].plot( WaterTemps, xfac, Plot::Orange, 2 );
+  }
 
   EODPlot.draw();
 
@@ -323,6 +425,14 @@ void Session::main( void )
       EODAmplitudes.push( currentTime(), EODAmplitude );
       stimulusData().setNumber( "EOD Amplitude", EODAmplitude );
       stimulusData().setUnit( "EOD Amplitude", trace( EODTrace ).unit() );
+
+      // Temperature:
+      if ( TempDev != 0 ) {
+	WaterTemp = TempDev->temperature();
+	WaterTemps.push( currentTime(), WaterTemp );
+	metaData( "Recording" ).setNumber( "temp-1", WaterTemp );
+	stimulusData().setNumber( "temp-1", WaterTemp );
+      }
 
       plot();
     }

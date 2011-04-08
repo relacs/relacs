@@ -265,12 +265,8 @@ void Session::main( void )
 
   while ( ! interrupt() ) {
     double temp = Temp->temperature();
-    lockMetaData();
     metaData( "Recording" ).setNumber( "temp-1", temp );
-    unlockMetaData();
-    lockStimulusData();
     stimulusData().setNumber( "temp-1", temp );
-    unlockStimulusData();
     sleep( 1.0 );
   }
 }

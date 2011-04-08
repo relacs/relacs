@@ -26,6 +26,7 @@
 #include <QPushButton>
 #include <QLCDNumber>
 #include <relacs/multiplot.h>
+#include <relacs/temperature.h>
 #include <relacs/ephys/traces.h>
 #include <relacs/efield/traces.h>
 #include <relacs/efield/eodtools.h>
@@ -58,10 +59,12 @@ public:
 
   virtual void initialize( void );
   virtual void config( void );
+  virtual void initDevices( void );
 
   virtual void sessionStarted( void );
   virtual void sessionStopped( bool saved );
   void saveEOD( void );
+  void saveTemperature( void );
 
   void plot( void );
   virtual void main( void );
@@ -89,6 +92,11 @@ private:
   string EODUnit;
   int EODUpdate;
   long EODOffset;
+
+  Temperature *TempDev;
+  double WaterTemp;
+  MapD WaterTemps;
+  long TemperatureOffset;
 
   MultiPlot EODPlot;
   QGridLayout *Numbers;

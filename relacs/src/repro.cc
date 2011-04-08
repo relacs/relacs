@@ -163,7 +163,7 @@ void RePro::run( void )
   // write message:
   if ( PrintMessage ) {
     if ( completed() )
-      message( "<b>" + name() + "</b> succesfully completed after <b>" + reproTimeStr() + "</b>" );
+      message( "<b>" + name() + "</b> successfully completed after <b>" + reproTimeStr() + "</b>" );
     else if ( failed() )
       message( "<b>" + name() + "</b> stopped after <b>" + reproTimeStr() + "</b>" );
     else
