@@ -1007,19 +1007,38 @@ typename numerical_container_traits<ContainerX>::variance_type
 	 const ContainerS &vecs );
 
   /*! The serial correlation coefficients (autocorrelation)
-      r_k = cov(x_1,x_k)/var(x) 
+      \f[ \rho_k = \frac{\mathrm{cov}(x_1,x_k)}{\sqrt{\mathrm{var}(x_1)\mathrm{var}(x_k)} \f]
       of the range \a firstx, \a lastx
       for different lags \a k are returned in the range
-      \a firsty, \a lasty.
+      \a firsty, \a lasty for the lags \a k ranging from 0 to \a lasty-firsty-1.
+      With the means
+      \f[ \bar x_1 = \frac{1}{n-k}\sum_{i=1}^{n-k} x_{i} \quad , \qquad
+          \bar x_k = \frac{1}{n-k}\sum_{i=1}^{n-k} x_{i+k} \f]  
+      variances
+      \f[ \mathrm{var}(x_1) = \frac{1}{n-k}\sum_{i=1}^{n-k} (x_{i} - \bar x_1)^2 \quad , \qquad
+          \mathrm{var}(x_k) = \frac{1}{n-k}\sum_{i=1}^{n-k} (x_{i+k} - \bar x_k)^2 \f]
+      and the covariance
+      \f[ \mathrm{cov}(x_1,x_k) = \frac{1}{n-k}\sum_{i=1}^{n-k} (x_{i} - \bar x_1)(x_{i+k} - \bar x_k) \f]
+      taken over the corresponding subranges.
       \a ForwardIterX and \a ForwardIterY are forward iterators
       that point to a number. */
 template < typename ForwardIterX, typename ForwardIterY >
 void serialCorr( ForwardIterX firstx, ForwardIterX lastx,
 		 ForwardIterY firsty, ForwardIterY lasty );
   /*! The serial correlation coefficients (autocorrelation)
-      r_k = cov(x_1,x_k)/var(x) 
+      \f[ \rho_k = \frac{\mathrm{cov}(x_1,x_k)}{\sqrt{\mathrm{var}(x_1)\mathrm{var}(x_k)} \f]
       of the container \a vecx
-      for different lags \a k are returned in the container \a vecy.
+      for different lags \a k are returned in the container \a vecy
+      for the lags \a k ranging from 0 to \a vecy.size()-1.
+      With the means
+      \f[ \bar x_1 = \frac{1}{n-k}\sum_{i=1}^{n-k} x_{i} \quad , \qquad
+          \bar x_k = \frac{1}{n-k}\sum_{i=1}^{n-k} x_{i+k} \f]  
+      variances
+      \f[ \mathrm{var}(x_1) = \frac{1}{n-k}\sum_{i=1}^{n-k} (x_{i} - \bar x_1)^2 \quad , \qquad
+          \mathrm{var}(x_k) = \frac{1}{n-k}\sum_{i=1}^{n-k} (x_{i+k} - \bar x_k)^2 \f]
+      and the covariance
+      \f[ \mathrm{cov}(x_1,x_k) = \frac{1}{n-k}\sum_{i=1}^{n-k} (x_{i} - \bar x_1)(x_{i+k} - \bar x_k) \f]
+      taken over the corresponding subranges.
       \a ContainerX and \a ContainerY each hold an array of numbers
       that can be accessed via standard STL iterators. */
 template < typename ContainerX, typename ContainerY >
@@ -2725,59 +2744,60 @@ template < typename ForwardIterX, typename ForwardIterY >
 void serialCorr( ForwardIterX firstx, ForwardIterX lastx,
 		 ForwardIterY firsty, ForwardIterY lasty )
 {
-  // mean:
-  typename numerical_iterator_traits<ForwardIterX>::mean_type a = 0;
-  ForwardIterX iterx = firstx;
-  int n=1;
-  for ( ; iterx != lastx; ++iterx, ++n ) {
-    a += ( *iterx - a ) / n;
-  }
-  n--;
-
-  // variance:
-  typename numerical_iterator_traits<ForwardIterX>::variance_type var = 0;
-  if ( n > 1 ) {
-    iterx = firstx;
-    for ( int k=1; iterx != lastx; ++iterx, ++k ) {
-      typename numerical_iterator_traits<ForwardIterX>::mean_type s = *iterx - a;
-      var += ( s*s - var ) / k;
-    }
-  }
-
+  // iterate trough lags:
   ForwardIterX firstx2 = firstx;
   ForwardIterY itery = firsty;
-
-  // not enough data points:
-  if ( n < 2 || ( ::fabs(a) > 1e-8 && var/a/a < 1e-8 ) ) {
-    *itery = 1.0;
-    ++itery;
-    while ( itery != lasty ) {
-      *itery = 0.0;
-      ++itery;
-    }
-    return;
-  }
-
-  // iterate trough lags:
+  *itery = 1.0;
   while ( itery != lasty && firstx2 != lastx ) {
 
+    // mean:
+    typename numerical_iterator_traits<ForwardIterX>::mean_type a1 = 0;
+    typename numerical_iterator_traits<ForwardIterX>::mean_type a2 = 0;
     ForwardIterX iterx1 = firstx;
     ForwardIterX iterx2 = firstx2;
-    double covar = 0.0;
-    for ( int k=1; iterx1 != lastx && iterx2 != lastx; k++ ) {
-      double s1 = *iterx1 - a;
-      double s2 = *iterx2 - a;
-      covar += ( s1*s2 - covar )/k;
+    int n=0;
+    while ( iterx2 != lastx ) {
+      ++n;
+      a1 += ( *iterx1 - a1 ) / n;
+      a2 += ( *iterx2 - a2 ) / n;
       ++iterx1;
       ++iterx2;
     }
 
+    // not enough data points:
+    if ( n < 2 )
+      break;
+
+    // variances and covariance:
+    iterx1 = firstx;
+    iterx2 = firstx2;
+    typename numerical_iterator_traits<ForwardIterX>::variance_type var1 = 0;
+    typename numerical_iterator_traits<ForwardIterX>::variance_type var2 = 0;
+    typename numerical_iterator_traits<ForwardIterY>::variance_type covar = 0;
+    n=0;
+    while ( iterx2 != lastx ) {
+      ++n;
+      double s1 = *iterx1 - a1;
+      double s2 = *iterx2 - a2;
+      var1 += ( s1*s1 - var1 )/n;
+      var2 += ( s2*s2 - var2 )/n;
+      covar += ( s1*s2 - covar )/n;
+      ++iterx1;
+      ++iterx2;
+    }
+
+    // variance too small:
+    if ( ::fabs(a1) > 1e-8 && ::fabs(a2) > 1e-8 && ::sqrt(var1*var2)/a1/a2 < 1e-8 )
+      break;
+
+    typename numerical_iterator_traits<ForwardIterY>::variance_type var = ::sqrt( var1*var2 );
     *itery = var > 0.0 ? covar / var : itery == firsty ? 1.0 : 0.0;
     ++itery;
 
     ++firstx2;
   }
 
+  // fill up results:
   while ( itery != lasty ) {
     *itery = 0.0;
     ++itery;

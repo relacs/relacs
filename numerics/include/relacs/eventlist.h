@@ -546,14 +546,26 @@ public:
     /*! Compute the serial correlation coefficients
         for lag zero to lag \a sc.size()-1
         of all event intervals between time \a tbegin
-	and time \a tend seonds averaged over the trials. */
+	and time \a tend seonds from all trials.
+        Only pairs of intervals within a trial are used. */
   void serialCorr( double tbegin, double tend, ArrayD &sc ) const;
-    /*! Compute the serial correlation coefficients
+    /*! Compute for each trial the serial correlation coefficients
         for lag zero to lag \a sc.size()-1
         of all event intervals between time \a tbegin
-	and time \a tend seonds averaged over the trials.
-        In \a sd the corresponding standard deviation is returned. */
-  void serialCorr( double tbegin, double tend, ArrayD &sc, ArrayD &sd ) const;
+	and time \a tend seonds and average over trial.
+        \note: if the number of intervals per trial is too low (below several hundred)
+        the resulting serial correlations are biased to lower values.
+        \sa relacs::serialCorr() */
+  void trialAveragedSerialCorr( double tbegin, double tend, ArrayD &sc ) const;
+    /*! Compute for each trial the serial correlation coefficients
+        for lag zero to lag \a sc.size()-1
+        of all event intervals between time \a tbegin
+	and time \a tend seonds and average over trials.
+        In \a sd the standard deviation of the trial average is returned.
+        \note: if the number of intervals per trial is too low (below several hundred)
+        the resulting serial correlations are biased to lower values.
+        \sa relacs::serialCorr() */
+  void trialAveragedSerialCorr( double tbegin, double tend, ArrayD &sc, ArrayD &sd ) const;
 
     /*! Compute the phase locking as the number of spikes per period \a period
         of all events between time \a tbegin

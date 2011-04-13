@@ -22,6 +22,7 @@
 #include <cmath>
 #include <iomanip>
 #include <algorithm>
+#include <deque>
 #include <relacs/array.h>
 #include <relacs/map.h>
 #include <relacs/sampledata.h>
@@ -1205,6 +1206,65 @@ void EventList::correctedIntervalHistogram( double time,
 
 void EventList::serialCorr( double tbegin, double tend, ArrayD &sc ) const
 {
+  sc = 0.0;
+  sc[0] = 1.0;
+  if ( size() <= 0 || tend <= tbegin )
+    return;
+
+  // collect event intervals from all trials:
+  deque< ArrayD > eis;
+  for ( const_iterator i = begin(); i != end(); ++i ) {
+    eis.push_back( ArrayD() );
+    long n = (*i)->next( tbegin );
+    long p = (*i)->previous( tend );
+    if ( p <= n || p < 0 )
+      continue;
+    eis.back().reserve( p-n );
+    for ( int k=n+1; k<=p; k++ )
+      eis.back().push( (**i)[k] - (**i)[k-1] );
+  }
+
+  // for each lag:
+  for ( int j=1; j<sc.size(); j++ ) {
+    // means:
+    double a1 = 0.0;
+    double a2 = 0.0;
+    int n = 0;
+    for ( deque< ArrayD >::const_iterator i=eis.begin(); i != eis.end(); ++i ) {
+      for ( ArrayD::const_iterator k = i->begin(); k+j < i->end(); ++k ) {
+	n++;
+	a1 += ( *k - a1 )/n;
+	a2 += ( *(k+j) - a2 )/n;
+      }
+    }
+    // not enough data:
+    if ( n < 2 )
+      break;
+    // variances and covariance:
+    double v1 = 0.0;
+    double v2 = 0.0;
+    double cv = 0.0;
+    n = 0;
+    for ( deque< ArrayD >::const_iterator i=eis.begin(); i != eis.end(); ++i ) {
+      for ( ArrayD::const_iterator k = i->begin(); k+j < i->end(); ++k ) {
+	n++;
+	double s1 = *k - a1;
+	double s2 = *(k+j) - a2;
+	v1 += ( s1*s1 - v1 )/n;
+	v2 += ( s2*s2 - v2 )/n;
+	cv += ( s1*s2 - cv )/n;
+      }
+    }
+    // correlation coefficient:
+    double v = ::sqrt(v1*v2);
+    sc[j] = v > 0.0 ? cv/v : 0.0;
+  }
+}
+
+
+void EventList::trialAveragedSerialCorr( double tbegin, double tend, 
+					 ArrayD &sc ) const
+{
   vector< ArrayD > scs( sc.size() );
   unsigned int k=0;
   for ( k=0; k<scs.size(); k++ )
@@ -1216,14 +1276,13 @@ void EventList::serialCorr( double tbegin, double tend, ArrayD &sc ) const
       scs[k].push( sc[k] );
   }
 
-  for ( k=0; k<scs.size(); k++ ) {
+  for ( k=0; k<scs.size(); k++ )
     sc[k] = scs[k].mean();
-  }
 }
 
 
-void EventList::serialCorr( double tbegin, double tend, 
-			    ArrayD &sc, ArrayD &sd ) const
+void EventList::trialAveragedSerialCorr( double tbegin, double tend, 
+					 ArrayD &sc, ArrayD &sd ) const
 {
   vector< ArrayD > scs( sc.size() );
   unsigned int k=0;
@@ -1237,9 +1296,8 @@ void EventList::serialCorr( double tbegin, double tend,
   }
 
   sd.resize( sc.size(), 0.0 );
-  for ( k=0; k<scs.size(); k++ ) {
+  for ( k=0; k<scs.size(); k++ )
     sc[k] = scs[k].mean( sd[k] );
-  }
 }
 
 
