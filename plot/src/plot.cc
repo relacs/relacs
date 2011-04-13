@@ -2226,12 +2226,14 @@ void Plot::drawLabel( QPainter &paint, const Label &label )
     RGBColor c = color( label.LColor );
     QColor qcolor( c.red(), c.green(), c.blue() );
     paint.setPen( qcolor );
+    QString ls;
+    ls = QString::fromUtf8( label.Text.c_str() );
     if ( label.Just == Right )
-      paint.drawText( -w, 0, label.Text.c_str() );
+      paint.drawText( -w, 0, ls );
     else if ( label.Just == Center )
-      paint.drawText( -w/2, 0, label.Text.c_str() );
+      paint.drawText( -w/2, 0, ls );
     else
-      paint.drawText( 0, 0, label.Text.c_str() );
+      paint.drawText( 0, 0, ls );
     paint.restore();
   }
 }

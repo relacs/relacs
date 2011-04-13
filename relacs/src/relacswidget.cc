@@ -1268,6 +1268,7 @@ void RELACSWidget::customEvent( QEvent *qce )
     MC->startNextRePro( true );
   }
   else if ( qce->type() == QEvent::User+2 ) {
+    DV->updateMenu();
     AOD->updateMenu();
     ATD->updateMenu();
     ATI->updateMenu();

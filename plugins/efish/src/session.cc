@@ -234,7 +234,7 @@ void Session::initDevices( void )
     EODPlot[2].noXTics();
     EODPlot[2].setYFallBackRange( 20.0, 30.0 );
     EODPlot[2].setYRange( Plot::AutoScale, Plot::AutoScale );
-    EODPlot[2].setMinYTics( 0.5 );
+    EODPlot[2].setMinYTics( 0.1 );
     EODPlot[2].setYLabel( "°C" );
     EODPlot[2].setYLabelPos( 2.5, Plot::FirstMargin, 0.5, Plot::Graph, 
 			     Plot::Center, -90.0 );
@@ -388,8 +388,8 @@ void Session::plot( void )
     EODPlot[2].clear();
     if ( ! zoomed )
       EODPlot[2].setXRange( xmin, xmax );
-    EODPlot[2].setLabel( "T=" + Str( WaterTemp, "%.1f" ) + "°C", 0.95, Plot::Graph,
-			 0.9, Plot::Graph, Plot::Right, 0.0, Plot::Orange, 2.0 );
+    EODPlot[2].setLabel( Str( WaterTemp, "%.1f" ) + "°C", 0.95, Plot::Graph,
+			 0.1, Plot::Graph, Plot::Right, 0.0, Plot::Orange, 1.6 );
     EODPlot[2].plot( WaterTemps, xfac, Plot::Orange, 2 );
   }
 
