@@ -34,6 +34,7 @@
 #include <relacs/containerops.h>
 #include <relacs/array.h>
 #include <relacs/sampledata.h>
+#include <relacs/eventdata.h>
 #include <relacs/stats.h>
 using namespace std;
 
@@ -77,6 +78,13 @@ class Map : public Array < T >
   Map( const Array< T > &x, const Array< T > &y );
     /*! Creates a map with the same size and content as \a sa. */
   Map( const SampleData< T > &sa );
+    /*! Creates a map with the times of \a ed in the \a x vector
+        and the corresponding sizes in the \a y-vector.
+        If the sizes are not stored in \a ed but the widths,
+	then the widths are stored in the \a y-vector.
+        If neither sizes or widths are available, the \a y-vector
+        is initialized with zeros. */
+  Map( const EventData &ed );
     /*! Copy constructor. */
   Map( const Map< T > &a );
     /*! The destructor. */
@@ -278,6 +286,8 @@ class Map : public Array < T >
 
     /*! Insert the data pair \a xval, \a yval at position \a i. */
   Map<T> &insert( int i, const T &xval, const T &yval );
+    /*! Insert the data pair \a xval, \a yval as the first element of the %Map. */
+  Map<T> &push_front( const T &xval, const T &yval );
     /*! Insert the data pair \a xval, \a yval after the first element
         whose x-value is smaller than \a xval. 
         Returns the index of the inserted data element. */
@@ -640,6 +650,31 @@ Map<T>::Map( const SampleData< T > &sa )
 
 
 template < typename T > 
+Map<T>::Map( const EventData &ed )
+{
+  A[0] = &XData;
+  A[1] = this;
+  int n = ed.size();
+  if ( n > ed.capacity() )
+    n = ed.capacity();
+  reserve( n );
+  clear();
+  if ( ed.sizeBuffer() ) {
+    for ( int k=ed.minEvent(); k<ed.size(); k++ )
+      push( ed[k], ed.eventSize( k ) );
+  }
+  else if ( ed.widthBuffer() ) {
+    for ( int k=ed.minEvent(); k<ed.size(); k++ )
+      push( ed[k], ed.eventWidth( k ) );
+  }
+  else {
+    for ( int k=ed.minEvent(); k<ed.size(); k++ )
+      push( ed[k], 0 );
+  }
+}
+
+
+template < typename T > 
 Map<T>::Map( const Map< T > &a )
   : Array< T >( a.y() ),
     XData( a.x() )
@@ -962,6 +997,13 @@ Map<T> &Map<T>::insert( int i, const T &xval, const T &yval )
 
 
 template < typename T > 
+Map<T> &Map<T>::push_front( const T &xval, const T &yval )
+{
+  return insert( 0, xval, yval );
+}
+
+
+template < typename T > 
 int Map<T>::insert( const T &xval, const T &yval )
 {
   // find position:
@@ -1147,9 +1189,9 @@ T Map< T >::interpolate( double xv ) const
 template < typename T > 
 T Map<T>::minX( T &yy, int first, int last ) const
 {
-  int index = -1;
-  T min = XData.min( index, first, last );
-  yy = y( index );
+  T min = 0;
+  int index = XData.minIndex( min, first, last );
+  yy = index >= 0 ? y( index ) : 0;
   return min;
 }
 
@@ -1157,9 +1199,9 @@ T Map<T>::minX( T &yy, int first, int last ) const
 template < typename T > 
 T Map<T>::minY( T &xx, int first, int last ) const
 {
-  int index = -1;
-  T min = Array<T>::min( index, first, last );
-  xx = x( index );
+  T min = 0;
+  int index = Array<T>::minIndex( min, first, last );
+  xx = index >= 0 ? x( index ) : 0;
   return min;
 }
 
@@ -1167,9 +1209,9 @@ T Map<T>::minY( T &xx, int first, int last ) const
 template < typename T > 
 T Map<T>::maxX( T &yy, int first, int last ) const
 {
-  int index = -1;
-  T max = XData.max( index, first, last );
-  yy = y( index );
+  T max = 0;
+  int index = XData.maxIndex( max, first, last );
+  yy = index >= 0 ? y( index ) : 0;
   return max;
 }
 
@@ -1177,9 +1219,9 @@ T Map<T>::maxX( T &yy, int first, int last ) const
 template < typename T > 
 T Map<T>::maxY( T &xx, int first, int last ) const
 {
-  int index = -1;
-  T max = Array<T>::max( index, first, last );
-  xx = x( index );
+  T max = 0;
+  int index = Array<T>::maxIndex( max, first, last );
+  xx = index >= 0 ? x( index ) : 0;
   return max;
 }
 
@@ -1187,9 +1229,8 @@ T Map<T>::maxY( T &xx, int first, int last ) const
 template < typename T > 
 int Map<T>::minXIndex( T &min, T &yy, int first, int last ) const
 {
-  int index = -1;
-  min = XData.min( index, first, last );
-  yy = y( index );
+  int index = XData.minIndex( min, first, last );
+  yy = index >= 0 ? y( index ) : 0;
   return index;
 }
 
@@ -1197,9 +1238,8 @@ int Map<T>::minXIndex( T &min, T &yy, int first, int last ) const
 template < typename T > 
 int Map<T>::minYIndex( T &min, T &xx, int first, int last ) const
 {
-  int index = -1;
-  min = Array<T>::min( index, first, last );
-  xx = x( index );
+  int index = Array<T>::minIndex( min, first, last );
+  xx = index >= 0 ? x( index ) : 0;
   return index;
 }
 
@@ -1207,9 +1247,8 @@ int Map<T>::minYIndex( T &min, T &xx, int first, int last ) const
 template < typename T > 
 int Map<T>::maxXIndex( T &max, T &yy, int first, int last ) const
 {
-  int index = -1;
-  max = XData.max( index, first, last );
-  yy = y( index );
+  int index = XData.maxIndex( max, first, last );
+  yy = index >= 0 ? y( index ) : 0;
   return index;
 }
 
@@ -1217,9 +1256,8 @@ int Map<T>::maxXIndex( T &max, T &yy, int first, int last ) const
 template < typename T > 
 int Map<T>::maxYIndex( T &max, T &xx, int first, int last ) const
 {
-  int index = -1;
-  max = Array<T>::max( index, first, last );
-  xx = x( index );
+  int index = Array<T>::maxIndex( max, first, last );
+  xx = index >= 0 ? x( index ) : 0;
   return index;
 }
 
@@ -1231,8 +1269,8 @@ void Map<T>::minMaxX( T &min, T &miny, T &max, T &maxy,
   int minindex = -1;
   int maxindex = -1;
   XData.minMaxIndex( min, minindex, max, maxindex, first, last );
-  miny = y( minindex );
-  maxy = y( maxindex );
+  miny = minindex >= 0 ? y( minindex ) : 0;
+  maxy = maxindex >= 0 ? y( maxindex ) : 0;
 }
 
 
@@ -1243,8 +1281,8 @@ void Map<T>::minMaxY( T &min, T &minx, T &max, T &maxx,
   int minindex = -1;
   int maxindex = -1;
   Array<T>::minMaxIndex( min, minindex, max, maxindex, first, last );
-  minx = x( minindex );
-  maxx = x( maxindex );
+  minx = minindex >= 0 ? x( minindex ) : 0;
+  maxx = maxindex >= 0 ? x( maxindex ) : 0;
 }
 		    
 
@@ -1254,8 +1292,8 @@ void Map<T>::minMaxXIndex( T &min, int &minindex, T &miny,
 			   int first, int last ) const
 {
   XData.minMaxIndex( min, minindex, max, maxindex, first, last );
-  miny = y( minindex );
-  maxy = y( maxindex );
+  miny = minindex >= 0 ? y( minindex ) : 0;
+  maxy = maxindex >= 0 ? y( maxindex ) : 0;
 }
 
 
@@ -1265,8 +1303,8 @@ void Map<T>::minMaxYIndex( T &min, int &minindex, T &minx,
 			   int first, int last ) const
 {
   Array<T>::minMaxIndex( min, minindex, max, maxindex, first, last );
-  minx = x( minindex );
-  maxx = x( maxindex );
+  minx = minindex >= 0 ? x( minindex ) : 0;
+  maxx = maxindex >= 0 ? x( maxindex ) : 0;
 }
 
 

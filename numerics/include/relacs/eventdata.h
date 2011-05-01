@@ -328,6 +328,23 @@ public:
   void copy( double tbegin, double tend, double tref, 
 	     ArrayD &events ) const;
     /*! Copy event times between time \a tbegin
+        and time \a tend seconds and the corresponding sizes to \a events.
+        The event times in \a events are set relative to \a tbegin.
+        If the sizes are not stored but the widths,
+	then the widths are stored in the \a y-vector of \a events.
+        If neither sizes or widths are available, the \a y-vector
+        is initialized with zeros. */
+  void copy( double tbegin, double tend, MapD &events ) const;
+    /*! Copy event times between time \a tbegin
+        and time \a tend seconds and the corresponding sizes to \a events.
+        The event times in \a events are set relative to \a tref.
+        If the sizes are not stored but the widths,
+	then the widths are stored in the \a y-vector of \a events.
+        If neither sizes or widths are available, the \a y-vector
+        is initialized with zeros. */
+  void copy( double tbegin, double tend, double tref, 
+	     MapD &events ) const;
+    /*! Copy event times between time \a tbegin
         and time \a tend seconds to \a events.
         The event times in \a events are set relative to \a tbegin. */
   void copy( double tbegin, double tend, EventData &events ) const;

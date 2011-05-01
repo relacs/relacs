@@ -1135,6 +1135,37 @@ void EventData::copy( double tbegin, double tend, double tref,
 }
 
 
+void EventData::copy( double tbegin, double tend, MapD &events ) const
+{
+  copy( tbegin, tend, tbegin, events );
+}
+
+
+void EventData::copy( double tbegin, double tend, double tref, 
+		      MapD &events ) const
+{
+  long n = next( tbegin );
+  long p = previous( tend );
+
+  events.clear();
+  if ( p < n || p < 0 )
+    return;
+  events.reserve( p-n+1 );
+  if ( sizeBuffer() ) {
+    for ( long k=n; k<=p; k++ )
+      events.push( (*this)[k] - tref, eventSize( k ) );
+  }
+  else if ( widthBuffer() ) {
+    for ( long k=n; k<=p; k++ )
+      events.push( (*this)[k] - tref, eventWidth( k ) );
+  }
+  else {
+    for ( long k=n; k<=p; k++ )
+      events.push( (*this)[k] - tref, 0 );
+  }
+}
+
+
 void EventData::copy( double tbegin, double tend, EventData &events ) const
 {
   copy( tbegin, tend, tbegin, events );
