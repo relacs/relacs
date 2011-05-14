@@ -902,7 +902,7 @@ Array<T>::Array( const LinearRange &range )
 
 
 template < typename T > 
-Array<T>::~Array<T>( void )
+Array<T>::~Array( void )
 {
   if ( Buffer != 0 )
     delete [] Buffer;
