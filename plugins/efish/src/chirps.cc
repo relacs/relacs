@@ -591,6 +591,16 @@ int Chirps::main( void )
   Playback = boolean( "playback" );
   bool adjustg = boolean( "adjust" );
 
+  // checks:
+  if ( LocalEODTrace[0] < 0 ) {
+    warning( "need local recording of the EOD Trace." );
+    return Failed;
+  }
+  if ( LocalEODEvents[0] < 0 ) {
+    warning( "need EOD events of local recording of the EOD Trace." );
+    return Failed;
+  }
+
   // data:
   OutWarning = true;
   Mode = 0;

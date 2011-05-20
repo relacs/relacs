@@ -123,7 +123,7 @@ int BeatDetector::detect( const EventList &inevents, EventList &outevents,
   long lastsize0 = outevents[0].size();
   long lastsize1 = outevents[1].size();
 
-  D.dynamicPeakTrough( EventSizeIterator( inevents[0].begin() ), 
+  D.dynamicPeakTrough( EventSizeIterator( inevents[0].minBegin() ), 
 		       EventSizeIterator( inevents[0].end() - 1 ),
 		       outevents, Threshold, MinThresh, MaxThresh,
 		       Delay, Decay, *this );

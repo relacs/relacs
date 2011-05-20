@@ -128,7 +128,6 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   // configuration parameter for RELACS:
   addConfig();
   addLabel( "input data", 0, Parameter::TabLabel );
-  addInteger( "inputtraces", "Number of input-traces", 1 );
   addNumber( "inputsamplerate", "Input sampling rate", 20000.0, 1.0, 1000000.0, 1000.0, "Hz", "kHz" ); // Hertz, -> 2.4MB pro minute and channel
   addNumber( "inputtracecapacity", "Ring buffer has capacity for ", 600.0, 1.0, 1000000.0, 1.0, "s" );
   addBoolean( "inputunipolar", "Unipolar input", false );
@@ -690,23 +689,38 @@ void RELACSWidget::closeHardware( void )
 void RELACSWidget::setupInTraces( void )
 {
   IL.clear();
-  int nid = integer( "inputtraces", 0, 1 );
+  int nid = Options::size( "inputtraceid" );
   for ( int k=0; k<nid; k++ ) {
+    bool failed = false;
     InData id;
+    id.setIdent( text( "inputtraceid", k ) );
+    id.setUnit( number( "inputtracescale", k, 1.0 ),
+		text( "inputtraceunit", k, "V" ) );
+    id.setSampleRate( number( "inputsamplerate", 1000.0 ) );
+    id.setStartSource( 0 );
+    id.setUnipolar( boolean( "inputunipolar", false ) );
+    int channel = integer( "inputtracechannel", k, -1 );
+    if ( channel < 0 )
+      failed = true;
+    id.setChannel( channel );
+    int device = integer( "inputtracedevice", k, -1 );
+    if ( device < 0 )
+      failed = true;
+    id.setDevice( device );
+    id.setContinuous();
+    id.setMode( SaveFiles::SaveTrace | PlotTraceMode );
+    id.setReference( text( "inputtracereference", k, InData::referenceStr( InData::RefGround ) ) );
+    int gain = integer( "inputtracegain", k, -1 );
+    if ( gain < 0 )
+      failed = true;
+    id.setGainIndex( gain );
+    if ( failed ) {
+      printlog( "! error: inconsisten configuration of input traces" );
+      MessageBox::error( "RELACS Error !", "inconsisten configuration of input traces", this );
+      continue;
+    }
     IL.push( id );
-    IL[k].setIdent( text( "inputtraceid", k, "trace-" + Str( k+1 ) ) );
-    IL[k].setUnit( number( "inputtracescale", k, 1.0 ),
-		   text( "inputtraceunit", k, "" ) );
-    IL[k].setSampleRate( number( "inputsamplerate", 1000.0 ) );
-    IL[k].setStartSource( 0 );
-    IL[k].setUnipolar( boolean( "inputunipolar", false ) );
-    IL[k].setChannel( integer( "inputtracechannel", k, k ) );
-    IL[k].setDevice( integer( "inputtracedevice", k, 0 ) );
-    IL[k].setContinuous();
-    IL[k].setMode( SaveFiles::SaveTrace | PlotTraceMode );
-    IL[k].setReference( text( "inputtracereference", k, InData::referenceStr( InData::RefGround ) ) );
-    IL[k].setGainIndex( integer( "inputtracegain", k, 0 ) );
-    IL[k].reserve( IL[k].indices( number( "inputtracecapacity", 0, 1000.0 ) ) );
+    IL[k].reserve( id.indices( number( "inputtracecapacity", 0, 1000.0 ) ) );
     TraceStyles.push_back( PlotTrace::TraceStyle() );
     TraceStyles[k].PlotWindow = integer( "inputtraceplot", k, k );
   }

@@ -103,11 +103,11 @@ void ChirpDetector::notify( void )
 
 
 int ChirpDetector::detect( const EventData &inevents, EventData &outevents,
-			    const EventList &other, const EventData &stimuli )
+			   const EventList &other, const EventData &stimuli )
 {
   long lastsize = outevents.size();
 
-  D.peak( EventFrequencyIterator( inevents.begin() + 1 ), 
+  D.peak( EventFrequencyIterator( inevents.minBegin() + 1 ), 
 	  EventFrequencyIterator( inevents.end() ),
 	  outevents, Threshold, MinThresh, 2.0*Threshold, *this );
 

@@ -394,6 +394,8 @@ public:
     /*! Returns an iterator pointing to the first element of the EventData
         following time \a time seconds. */
   const_iterator begin( double time ) const;
+    /*! Returns an iterator pointing to the first accessible event \sa minEvent(). */
+  const_iterator minBegin( void ) const;
     /*! Returns an iterator pointing behind the last element of the EventData. */
   const_iterator end( void ) const;
 

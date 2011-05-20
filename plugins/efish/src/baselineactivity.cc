@@ -92,6 +92,16 @@ int BaselineActivity::main( void )
   int autodetect = index( "auto" );
   bool adjustg = boolean( "adjust" );
 
+  // checks:
+  if ( LocalEODTrace[0] < 0 ) {
+    warning( "need local recording of the EOD Trace." );
+    return Failed;
+  }
+  if ( LocalEODEvents[0] < 0 ) {
+    warning( "need EOD events of local recording of the EOD Trace." );
+    return Failed;
+  }
+
   // don't print repro message:
   if ( Repeats <= 0 )
     noMessage();
@@ -699,9 +709,6 @@ void BaselineActivity::analyze( int autodetect,
 				MapD &nerveamplp, MapD &nerveamplt,
 				MapD &nerveamplm )
 {
-  if ( LocalEODEvents[0] < 0  )
-    return;
-
   const EventData &localeod = events( LocalEODEvents[0] );
   const InData &localeodtrace = trace( LocalEODTrace[0] );
 

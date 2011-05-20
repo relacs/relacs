@@ -1250,6 +1250,12 @@ EventData::const_iterator EventData::begin( double time ) const
 }
 
 
+EventData::const_iterator EventData::minBegin( void ) const
+{
+  return EventData::const_iterator( *this, minEvent() );
+}
+
+
 EventData::const_iterator EventData::end( void ) const
 {
   return EventData::const_iterator( *this, size() );
