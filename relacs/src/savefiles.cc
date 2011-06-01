@@ -20,6 +20,7 @@
 */
 
 #include <cstdio>
+#include <QDir>
 #include <QDateTime>
 #include <QPainter>
 #include <QToolTip>
@@ -1127,6 +1128,7 @@ void SaveFiles::openFiles( const InList &traces, EventList &events )
   PathTime = currenttime;
 
   // generate unused name for new files/directory:
+  QDir dir( QDir::current() );
   Str pathname = "";
   PathNumber++;
   int az = ('z'-'a'+1);
@@ -1149,11 +1151,19 @@ void SaveFiles::openFiles( const InList &traces, EventList &events )
 
     if ( pathname[pathname.size()-1] == '/' ) {
       // try to create new directory:
+      /*
       char s[200];
       sprintf( s, "%s %s", "mkdir", pathname.c_str() );
       // success?
       if ( system( s ) == 0 )
 	break;
+      */
+      if ( ! dir.exists( pathname.c_str() ) ) {
+	if ( dir.mkpath( pathname.c_str() ) )
+	  break;
+	else
+	  RW->printlog( "! error: SaveFiles::openFiles -> failed to make directory " + pathname + "!" );
+      }
     }
     else {
       // try to open files:
@@ -1275,6 +1285,34 @@ void SaveFiles::deleteFiles( void )
     // remove the whole directory:
     string s = "rm -f -r " + path();
     system( s.c_str() );
+    /*
+for removing the directory we should some platform independent code like this:
+ bool MyUtil::removeDir(const QString& dirName)
+ {
+     bool result = true;
+     QDir dir(dirName);
+    if (dir.exists(dirName)) 
+     {
+         Q_FOREACH(QFileInfo info, dir.entryInfoList(QDir::NoDotAndDotDot|QDir::AllDirs|QDir::Files, QDir::DirsFirst)) 
+         {
+             if (info.isDir()) 
+                 result = removeDir(info.absoluteFilePath());
+             else 
+                 result = QFile::remove(info.absoluteFilePath());
+            if (!result) 
+                 return result;
+         }
+         result = dir.rmdir(dirName);
+     }
+     else
+     {
+         QFile file(dirName);
+         if (file.exists())
+             result = file.remove();
+     }
+    return result;
+ }//removeDir()
+     */
   }
 
   // message:
