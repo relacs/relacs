@@ -91,7 +91,7 @@ int LCDRange::value( void ) const
 
 string LCDRange::text( void ) const
 {
-  return Label->text().toLatin1().data();
+  return Label->text().toStdString();
 }
 
 

@@ -122,7 +122,7 @@ int Wait::main( void )
   // don't save files:
   noSaving();
 
-  message( "Time out at " + string( endtime.toString().toLatin1().data() ) );
+  message( "Time out at " + string( endtime.toString().toStdString() ) );
   QDateTime currenttime = QDateTime::currentDateTime();
   int maxsecs = currenttime.secsTo( endtime );
   if ( maxsecs <= 0 ) {
@@ -146,7 +146,7 @@ int Wait::main( void )
       return Aborted;
   }
 
-  message( "Timed out at " + string( currenttime.toString().toLatin1().data() ) );
+  message( "Timed out at " + string( currenttime.toString().toStdString() ) );
   return Completed;
 }
 

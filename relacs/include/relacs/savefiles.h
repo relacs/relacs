@@ -201,6 +201,10 @@ protected:
 
     /*! Close all open files */
   void closeFiles( void );
+    /*! Remove the directory \a dirname with all its files and all its sub-directories. */
+  bool removeDir( const QString &dirname );
+    /*! Generate new pathname using PathTemplate, PathTime, and PathNumber. */
+  string pathName( void ) const;
     /*! Open the file path() + filename
         as specified by \a type (ios::out, ios::in, ios::binary, ...).
         Add it to the list of files to be removed 
@@ -231,6 +235,8 @@ protected:
     /*! The path (directory or common basename)
         where all data of the current session are stored. */
   string Path;
+    /*! The path from the previous session. */
+  string PrevPath;
     /*! The template from which \a Path is generated. */
   string PathTemplate;
     /*! The default path (directory or common basename)

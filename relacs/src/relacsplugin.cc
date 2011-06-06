@@ -135,7 +135,7 @@ string RELACSPlugin::helpFileName( void ) const
 void RELACSPlugin::printlog( const string &s ) const
 {
   if ( RW == 0 )
-    cerr << QTime::currentTime().toString().toLatin1().data() << " "
+    cerr << QTime::currentTime().toString().toStdString() << " "
 	 << name() << ": " << s << endl;
   else
     RW->printlog( name() + ": " + s );

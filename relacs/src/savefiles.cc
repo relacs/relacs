@@ -42,6 +42,7 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
     RW( rw )
 {
   Path = "";
+  PrevPath = "";
   PathTemplate = "%04Y-%02m-%02d-%a2a";
   DefaultPath = "";
 
@@ -101,12 +102,7 @@ SaveFiles::SaveFiles( RELACSWidget *rw, int height,
   FileLabel->setIndent( 2 );
   FileLabel->setAlignment( Qt::AlignLeft | Qt::AlignVCenter );
   FileLabel->setToolTip( "The directory where files are currently stored" );
-  Str fn = PathTemplate;
-  fn.format( localtime( &PathTime ) );
-  fn.format( 99, 'n', 'd' );
-  fn.format( "aa", 'a' );
-  fn.format( "AA", 'A' );
-  FileLabel->setFixedWidth( QFontMetrics( HighlightFont ).boundingRect( fn.c_str() ).width() + 8 );
+  setPathTemplate( PathTemplate );
   StatusInfoLayout->addWidget( FileLabel );
 
   SaveLabel = new SpikeTrace( 0.8, 8, 3 );
@@ -803,19 +799,22 @@ void SaveFiles::removeFiles( void )
 
 ofstream *SaveFiles::openFile( const string &filename, int type )
 {
-  Options &opt = RW->MTDT.section( "Recording" );
-  if ( opt.exist( "File" ) )
-    opt.pushText( "File", filename );
-  else {
-    opt.insertText( "File", "Date", filename,
-		    MetaDataRecordingSection::standardFlag() + Parameter::ListFlag );
-  }
   string fs = path() + filename;
-  addRemoveFile( fs );
   ofstream *f = new ofstream( fs.c_str(), ofstream::openmode( type ) );
   if ( ! f->good() ) {
     f = 0;
-    RW->printlog( "SaveFiles::openFile: can't open file '" + fs + "'" );
+    RW->printlog( "! error in SaveFiles::openFile: can't open file '" + fs + "'!" );
+  }
+  else {
+    addRemoveFile( fs );
+    // add to recording section:
+    Options &opt = RW->MTDT.section( "Recording" );
+    if ( opt.exist( "File" ) )
+      opt.pushText( "File", filename );
+    else {
+      opt.insertText( "File", "Date", filename,
+		      MetaDataRecordingSection::standardFlag() + Parameter::ListFlag );
+    }
   }
   return f;
 }
@@ -1098,6 +1097,26 @@ void SaveFiles::createXMLFile( const InList &traces,
 }
 
 
+string SaveFiles::pathName( void ) const
+{
+  int az = ('z'-'a'+1);
+  Str pathname = PathTemplate;
+  pathname.format( localtime( &PathTime ) );
+  pathname.format( PathNumber, 'n', 'd' );
+  int n = PathNumber-1;
+  Str s = char( 'a' + n%az );
+  n /= az;
+  while ( n > 0 ) {
+    s.insert( 0u, 1u, char( 'a' + n%az ) );
+    n /= az;
+  }
+  pathname.format( s, 'a' );
+  s.upper();
+  pathname.format( s, 'A' );
+  return pathname;
+}
+
+
 void SaveFiles::openFiles( const InList &traces, EventList &events )
 {
   // nothing to be done, if files are already open:
@@ -1120,47 +1139,31 @@ void SaveFiles::openFiles( const InList &traces, EventList &events )
 
   setPath( defaultPath() );
 
-  // get current time:
-  time_t currenttime = RW->SN->startSessionTime();
-  // time changed?
-  if ( difftime( currenttime, PathTime ) != 0.0  )
+  PathTime = RW->SN->startSessionTime();
+  // pathname for same PathNumber changed?
+  if ( pathName() != PrevPath ) {
     PathNumber = 0;
-  PathTime = currenttime;
+    RW->printlog( "SaveFiles::openFiles -> reset PathNumber to " + Str( PathNumber ) );
+  }
 
   // generate unused name for new files/directory:
-  QDir dir( QDir::current() );
-  Str pathname = "";
   PathNumber++;
+  RW->printlog( "SaveFiles::openFiles -> incremented PathNumber to " + Str( PathNumber ) );
+  QDir dir( QDir::current() );
   int az = ('z'-'a'+1);
   for ( ; PathNumber <= az*az; PathNumber++ ) {
 
     // create file name:
-    pathname = PathTemplate;
-    pathname.format( localtime( &PathTime ) );
-    pathname.format( PathNumber, 'n', 'd' );
-    int n = PathNumber-1;
-    Str s = char( 'a' + n%az );
-    n /= az;
-    while ( n > 0 ) {
-      s.insert( 0u, 1u, char( 'a' + n%az ) );
-      n /= az;
-    }
-    pathname.format( s, 'a' );
-    s.upper();
-    pathname.format( s, 'A' );
+    string pathname = pathName();
 
     if ( pathname[pathname.size()-1] == '/' ) {
       // try to create new directory:
-      /*
-      char s[200];
-      sprintf( s, "%s %s", "mkdir", pathname.c_str() );
-      // success?
-      if ( system( s ) == 0 )
-	break;
-      */
       if ( ! dir.exists( pathname.c_str() ) ) {
-	if ( dir.mkpath( pathname.c_str() ) )
+	if ( dir.mkpath( pathname.c_str() ) ) {
+	  // valid base name found:
+	  setPath( pathname );
 	  break;
+	}
 	else
 	  RW->printlog( "! error: SaveFiles::openFiles -> failed to make directory " + pathname + "!" );
       }
@@ -1170,17 +1173,19 @@ void SaveFiles::openFiles( const InList &traces, EventList &events )
       string fs = path() + "stimuli.dat";
       ifstream f( fs.c_str() );
       // files do not exist?
-      if ( ! f.good() )
+      if ( ! f.good() ) {
+	// valid base name found:
+	setPath( pathname );
 	break;
+      }
     }
   }
   // running out of names?
   if ( PathNumber > az*az ) {
-    RW->printlog( "! panic: SaveFiles::openFiles -> can't create data file!" );
-    return;
+    RW->printlog( "! panic: SaveFiles::openFiles -> can't create data path! PathNumber=" + Str( PathNumber ) );
   }
-  // valid base name found:
-  setPath( pathname );
+
+  // anyways, we try to save what we can:
 
   // open files:
   createTraceFiles( traces );
@@ -1272,6 +1277,39 @@ void SaveFiles::closeFiles( void )
 }
 
 
+bool SaveFiles::removeDir( const QString &dirname )
+{
+  QDir dir( dirname );
+  if ( dir.exists() ) {
+    bool success = true;
+    QFileInfoList list = dir.entryInfoList( QDir::NoDotAndDotDot|QDir::AllDirs|QDir::Files|QDir::Hidden,
+					    QDir::DirsFirst );
+    for ( int i=0; i<list.size(); i++ ) {
+      QFileInfo info = list.at( i );
+      if ( info.isDir() ) {
+	if ( ! removeDir( info.absoluteFilePath() ) )
+	  success = false;
+      }
+      else {
+	if ( ! dir.remove( info.absoluteFilePath() ) ) {
+	  success = false;
+	  RW->printlog( "! error: failed to remove file " + string( info.absoluteFilePath().toStdString() ) );
+	}
+      }
+    }
+    if ( success ) {
+      success = dir.rmdir( dir.absolutePath() );
+      if ( ! success )
+	RW->printlog( "! error: failed to remove directory " + string( dirname.toStdString() ) );
+    }
+    return success;
+  }
+  else {
+    return false;
+  }
+}
+
+
 void SaveFiles::deleteFiles( void )
 {
   closeFiles();
@@ -1282,37 +1320,7 @@ void SaveFiles::deleteFiles( void )
   if ( path() != defaultPath() && 
        path() != "" &&
        path()[path().size()-1] == '/' ) {
-    // remove the whole directory:
-    string s = "rm -f -r " + path();
-    system( s.c_str() );
-    /*
-for removing the directory we should some platform independent code like this:
- bool MyUtil::removeDir(const QString& dirName)
- {
-     bool result = true;
-     QDir dir(dirName);
-    if (dir.exists(dirName)) 
-     {
-         Q_FOREACH(QFileInfo info, dir.entryInfoList(QDir::NoDotAndDotDot|QDir::AllDirs|QDir::Files, QDir::DirsFirst)) 
-         {
-             if (info.isDir()) 
-                 result = removeDir(info.absoluteFilePath());
-             else 
-                 result = QFile::remove(info.absoluteFilePath());
-            if (!result) 
-                 return result;
-         }
-         result = dir.rmdir(dirName);
-     }
-     else
-     {
-         QFile file(dirName);
-         if (file.exists())
-             result = file.remove();
-     }
-    return result;
- }//removeDir()
-     */
+    removeDir( path().c_str() );
   }
 
   // message:
@@ -1333,6 +1341,9 @@ void SaveFiles::completeFiles( void )
 
   // no files need to be deleted:
   clearRemoveFiles();
+
+  // store path:
+  PrevPath = path();
 
   // message:
   RW->printlog( "saved as " + path() );

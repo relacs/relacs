@@ -180,7 +180,7 @@ int Plugins::openPath( const string &path, const string &relativepath,
     // look for files in directory:
     QDir files( file.dir().c_str(), filename.c_str() );
     for ( unsigned int k=0; k < files.count(); k++ ) {
-      Str libfile = files.absoluteFilePath( files[k] ).toLatin1().data();
+      Str libfile = files.absoluteFilePath( files[k] ).toStdString();
       QFileInfo qfi( libfile.c_str() );
       if ( qfi.exists() ) {
 	int r = open( libfile );

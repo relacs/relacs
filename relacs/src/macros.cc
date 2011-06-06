@@ -948,7 +948,7 @@ void Macros::selectMacros( void )
     Str filename = "";
     QStringList qsl = fd->selectedFiles();
     if ( qsl.size() > 0 )
-      loadMacros( qsl[0].toLatin1().data() );
+      loadMacros( qsl[0].toStdString() );
   }
 }
 
@@ -1589,7 +1589,7 @@ ostream &operator<< ( ostream &str, const Macro &macro )
       << ( macro.Button ? "" : " nobutton" )
       << ( macro.Menu ? "" : " nomenu" );
   if ( macro.MenuAction != 0 )
-    str << "Action: " << macro.MenuAction->shortcut().toString().toLatin1().data();
+    str << "Action: " << macro.MenuAction->shortcut().toString().toStdString();
   str << " -> " << macro.Variables.save() << '\n';
   for ( unsigned int j=0; j<macro.Commands.size(); j++ )
     str << *macro.Commands[j];

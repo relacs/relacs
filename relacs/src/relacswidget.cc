@@ -497,10 +497,10 @@ RELACSWidget::~RELACSWidget( void )
 
 void RELACSWidget::printlog( const string &message ) const
 {
-  cerr << QTime::currentTime().toString().toLatin1().data() << " "
+  cerr << QTime::currentTime().toString().toStdString() << " "
        << message << endl;
   if ( LogFile != 0 )
-    *LogFile << QTime::currentTime().toString().toLatin1().data() << " "
+    *LogFile << QTime::currentTime().toString().toStdString() << " "
 	     << message << endl;
 }
 
@@ -1189,7 +1189,7 @@ void RELACSWidget::startRePro( RePro *repro, int macroaction, bool saving )
     InfoFileMacro = "";
   }
   if ( InfoFile != 0 ) {
-    *InfoFile << QTime::currentTime().toString().toLatin1().data();
+    *InfoFile << QTime::currentTime().toString().toStdString();
     *InfoFile << "   " << CurrentRePro->name() << ": " << MC->options();
   }
   //  DB->addRepro( CurrentRePro );
@@ -1361,8 +1361,8 @@ void RELACSWidget::startSession( bool startmacro )
   else {
     *InfoFile << "This is RELACS, Version " << RELACSVERSION << "\n\n";
     *InfoFile << "The session was started at time "
-	     << QTime::currentTime().toString().toLatin1().data() << " on "
-	     << QDate::currentDate().toString().toLatin1().data() << "\n\n"
+	     << QTime::currentTime().toString().toStdString() << " on "
+	     << QDate::currentDate().toString().toStdString() << "\n\n"
 	     << "Time:      Research Program:\n";
   }
 
@@ -1427,8 +1427,8 @@ void RELACSWidget::stopSession( bool saved )
   if ( InfoFile != 0 ) {
     *InfoFile << "\n\n"
 	     << "The session was stopped at time " 
-	     << QTime::currentTime().toString().toLatin1().data() << " on "
-	     << QDate::currentDate().toString().toLatin1().data() << '\n';
+	     << QTime::currentTime().toString().toStdString() << " on "
+	     << QDate::currentDate().toString().toStdString() << '\n';
     delete InfoFile;
     InfoFile = 0;
   }

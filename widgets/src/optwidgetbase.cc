@@ -176,7 +176,7 @@ OptWidgetText::OptWidgetText( Options::iterator param, QWidget *label,
   if ( Editable ) {
     W = EW = new QLineEdit( (*Param).text( "%s" ).c_str(), parent );
     OptWidget::setValueStyle( W, (*Param).style(), false, true );
-    Value = EW->text().toLatin1().data();
+    Value = EW->text().toStdString();
     connect( EW, SIGNAL( textChanged( const QString& ) ),
 	     this, SLOT( textChanged( const QString& ) ) );
     if ( (*Param).style() & OptWidget::Browse ) {
@@ -203,10 +203,10 @@ void OptWidgetText::get( void )
     InternRead = true;
     bool cn = OO->notifying();
     OO->unsetNotify();
-    (*Param).setText( EW->text().toLatin1().data() );
+    (*Param).setText( EW->text().toStdString() );
     if ( (*Param).text( 0, "%s" ) != Value )
       (*Param).addFlags( OW->changedFlag() );
-    Value = EW->text().toLatin1().data();
+    Value = EW->text().toStdString();
     OO->setNotify( cn );
     InternRead = false;
   }
@@ -253,7 +253,7 @@ void OptWidgetText::textChanged( const QString &s )
 
   if ( ContUpdate && Editable ) {
     if ( InternChanged ) {
-      Value = EW->text().toLatin1().data();
+      Value = EW->text().toStdString();
       bool cn = OO->notifying();
       OO->unsetNotify();
       (*Param).setText( Value );
@@ -264,7 +264,7 @@ void OptWidgetText::textChanged( const QString &s )
       doTextChanged( s );
   }
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
-    Widgets[k]->activateOption( Widgets[k]->param().testActivation( s.toLatin1().data() ) );
+    Widgets[k]->activateOption( Widgets[k]->param().testActivation( s.toStdString() ) );
   }
 }
 
@@ -297,10 +297,10 @@ void OptWidgetText::doTextChanged( const QString &s )
   OW->disableUpdate();
   bool cn = OO->notifying();
   OO->unsetNotify();
-  (*Param).setText( s.toLatin1().data() );
+  (*Param).setText( s.toStdString() );
   if ( (*Param).text( 0, "%s" ) != Value )
     (*Param).addFlags( OW->changedFlag() );
-  Value = EW->text().toLatin1().data();
+  Value = EW->text().toStdString();
   if ( cn )
     OO->notify();
   (*Param).delFlags( OW->changedFlag() );
@@ -330,9 +330,9 @@ void OptWidgetText::initActivation( void )
 {
   string s = "";
   if ( EW != 0 )
-    s = EW->text().toLatin1().data();
+    s = EW->text().toStdString();
   else
-    s = LW->text().toLatin1().data();
+    s = LW->text().toStdString();
   Widgets.back()->activateOption( Widgets.back()->param().testActivation( s ) );
 }
 
@@ -370,7 +370,7 @@ void OptWidgetText::browse( void )
     QStringList qsl = fd->selectedFiles();
     Str filename = "";
     if ( qsl.size() > 0 )
-      filename = qsl[0].toLatin1().data();
+      filename = qsl[0].toStdString();
     doBrowse( filename );
   }
 }
@@ -395,7 +395,7 @@ void OptWidgetText::doBrowse( Str filename )
   if ( (*Param).text( 0 ) != Value )
     (*Param).addFlags( OW->changedFlag() );
   EW->setText( (*Param).text( 0, "%s" ).c_str() );
-  Value = EW->text().toLatin1().data();
+  Value = EW->text().toStdString();
   if ( cn )
     OO->notify();
   (*Param).delFlags( OW->changedFlag() );
@@ -445,7 +445,7 @@ OptWidgetMultiText::OptWidgetMultiText( Options::iterator param, QWidget *label,
     reset();
     connect( EW, SIGNAL( editTextChanged( const QString& ) ),
 	     this, SLOT( insertText( const QString & ) ) );
-    Value = EW->itemText( 0 ).toLatin1().data();
+    Value = EW->itemText( 0 ).toStdString();
     connect( EW, SIGNAL( currentIndexChanged( const QString& ) ),
 	     this, SLOT( textChanged( const QString& ) ) );
     connect( EW, SIGNAL( activated( const QString& ) ),
@@ -468,12 +468,12 @@ void OptWidgetMultiText::get( void )
     InternRead = true;
     bool cn = OO->notifying();
     OO->unsetNotify();
-    (*Param).setText( EW->currentText().toLatin1().data() );
+    (*Param).setText( EW->currentText().toStdString() );
     for ( int k=0; k<EW->count(); k++ )
-      (*Param).addText( EW->itemText( k ).toLatin1().data() );
+      (*Param).addText( EW->itemText( k ).toStdString() );
     if ( (*Param).text( 0 ) != Value )
       (*Param).addFlags( OW->changedFlag() );
-    Value = EW->itemText( 0 ).toLatin1().data();
+    Value = EW->itemText( 0 ).toStdString();
     OO->setNotify( cn );
     InternRead = false;
   }
@@ -542,12 +542,12 @@ void OptWidgetMultiText::textChanged( const QString &s )
 
   if ( ContUpdate && Editable && Update) {
     if ( InternChanged ) {
-      Value = EW->itemText( 0 ).toLatin1().data();
+      Value = EW->itemText( 0 ).toStdString();
       bool cn = OO->notifying();
       OO->unsetNotify();
       (*Param).setText( Value );
       for ( int k=0; k<EW->count(); k++ )
-	(*Param).addText( EW->itemText( k ).toLatin1().data() );
+	(*Param).addText( EW->itemText( k ).toStdString() );
       (*Param).delFlags( OW->changedFlag() );
       OO->setNotify( cn );
     }
@@ -555,7 +555,7 @@ void OptWidgetMultiText::textChanged( const QString &s )
       doTextChanged( s );
   }
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
-    Widgets[k]->activateOption( Widgets[k]->param().testActivation( s.toLatin1().data() ) );
+    Widgets[k]->activateOption( Widgets[k]->param().testActivation( s.toStdString() ) );
   }
 }
 
@@ -582,12 +582,12 @@ void OptWidgetMultiText::doTextChanged( const QString &s )
   OW->disableUpdate();
   bool cn = OO->notifying();
   OO->unsetNotify();
-  (*Param).setText( s.toLatin1().data() );
+  (*Param).setText( s.toStdString() );
   for ( int k=0; k<EW->count(); k++ )
-    (*Param).addText( EW->itemText( k ).toLatin1().data() );
+    (*Param).addText( EW->itemText( k ).toStdString() );
   if ( (*Param).text( 0 ) != Value )
     (*Param).addFlags( OW->changedFlag() );
-  Value = EW->itemText( 0 ).toLatin1().data();
+  Value = EW->itemText( 0 ).toStdString();
   if ( cn )
     OO->notify();
   (*Param).delFlags( OW->changedFlag() );
@@ -614,9 +614,9 @@ void OptWidgetMultiText::initActivation( void )
 {
   string s = "";
   if ( EW != 0 )
-    s = EW->currentText().toLatin1().data();
+    s = EW->currentText().toStdString();
   else
-    s = LW->text().toLatin1().data();
+    s = LW->text().toStdString();
   Widgets.back()->activateOption( Widgets.back()->param().testActivation( s ) );
 }
 
@@ -1130,9 +1130,9 @@ void OptWidgetDate::valueChanged( const QDate &date )
   }
   string s = "";
   if ( DE != 0 )
-    s = DE->date().toString( Qt::ISODate ).toLatin1().data();
+    s = DE->date().toString( Qt::ISODate ).toStdString();
   else
-    s = LW->text().toLatin1().data();
+    s = LW->text().toStdString();
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
     Widgets[k]->activateOption( Widgets[k]->param().testActivation( s ) );
   }
@@ -1191,9 +1191,9 @@ void OptWidgetDate::initActivation( void )
 {
   string s = "";
   if ( DE != 0 )
-    s = DE->date().toString( Qt::ISODate ).toLatin1().data();
+    s = DE->date().toString( Qt::ISODate ).toStdString();
   else
-    s = LW->text().toLatin1().data();
+    s = LW->text().toStdString();
   Widgets.back()->activateOption( Widgets.back()->param().testActivation( s ) );
 }
 
@@ -1293,9 +1293,9 @@ void OptWidgetTime::valueChanged( const QTime &time )
   }
   string s = "";
   if ( TE != 0 )
-    s = TE->time().toString( Qt::ISODate ).toLatin1().data();
+    s = TE->time().toString( Qt::ISODate ).toStdString();
   else
-    s = LW->text().toLatin1().data();
+    s = LW->text().toStdString();
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
     Widgets[k]->activateOption( Widgets[k]->param().testActivation( s ) );
   }
@@ -1354,9 +1354,9 @@ void OptWidgetTime::initActivation( void )
 {
   string s = "";
   if ( TE != 0 )
-    s = TE->time().toString( Qt::ISODate ).toLatin1().data();
+    s = TE->time().toString( Qt::ISODate ).toStdString();
   else
-    s = LW->text().toLatin1().data();
+    s = LW->text().toStdString();
   Widgets.back()->activateOption( Widgets.back()->param().testActivation( s ) );
 }
 
