@@ -42,8 +42,9 @@ Wait::Wait( void )
   label->setAlignment( Qt::AlignHCenter );
   vb->addWidget( label );
 
-  EndTimeLabel.setAlignment( Qt::AlignHCenter );
-  vb->addWidget( &EndTimeLabel );
+  EndTimeLabel = new QLabel;
+  EndTimeLabel->setAlignment( Qt::AlignHCenter );
+  vb->addWidget( EndTimeLabel );
 
   label = new QLabel;
   vb->addWidget( label );
@@ -52,11 +53,13 @@ Wait::Wait( void )
   label->setAlignment( Qt::AlignHCenter );
   vb->addWidget( label );
 
-  RemainingTimeLabel.setAlignment( Qt::AlignHCenter );
-  vb->addWidget( &RemainingTimeLabel );
+  RemainingTimeLabel = new QLabel;
+  RemainingTimeLabel->setAlignment( Qt::AlignHCenter );
+  vb->addWidget( RemainingTimeLabel );
 
-  QPB.setOrientation( Qt::Horizontal );
-  vb->addWidget( &QPB );
+  QPB = new QProgressBar;
+  QPB->setOrientation( Qt::Horizontal );
+  vb->addWidget( QPB );
   setLayout( vb );
 }
 
@@ -156,13 +159,13 @@ void Wait::customEvent( QEvent *qce )
   switch ( qce->type() - QEvent::User ) {
   case 11: {
     WaitEvent *we = dynamic_cast<WaitEvent*>( qce );
-    QPB.setRange( we->Min, we->Max );
-    QPB.reset();
+    QPB->setRange( we->Min, we->Max );
+    QPB->reset();
     break;
   }
   case 12: {
     WaitEvent *we = dynamic_cast<WaitEvent*>( qce );
-    QPB.setValue( QPB.maximum() - we->Value );
+    QPB->setValue( QPB->maximum() - we->Value );
     int secs = we->Value;
     int mins = secs / 60;
     secs -= mins * 60;
@@ -179,17 +182,17 @@ void Wait::customEvent( QEvent *qce )
       ts += Str( hours ) + ":";
     ts += Str( mins, 2, '0' ) + ":";
     ts += Str( secs, 2, '0' );
-    RemainingTimeLabel.setText( ts.c_str() );
+    RemainingTimeLabel->setText( ts.c_str() );
     break;
   }
   case 13: {
     WaitEvent *we = dynamic_cast<WaitEvent*>( qce );
-    EndTimeLabel.setText( we->TimeStr.c_str() );
-    QFont nf( EndTimeLabel.font() );
+    EndTimeLabel->setText( we->TimeStr.c_str() );
+    QFont nf( EndTimeLabel->font() );
     nf.setPointSize( 2 * widget()->fontInfo().pointSize() );
     nf.setBold( true );
-    EndTimeLabel.setFont( nf );
-    RemainingTimeLabel.setFont( nf );
+    EndTimeLabel->setFont( nf );
+    RemainingTimeLabel->setFont( nf );
     break;
   }
   default:

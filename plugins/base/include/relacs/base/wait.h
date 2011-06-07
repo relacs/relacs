@@ -60,9 +60,9 @@ protected:
 
   virtual void customEvent( QEvent *qce );
 
-  QProgressBar QPB;
-  QLabel EndTimeLabel;
-  QLabel RemainingTimeLabel;
+  QProgressBar *QPB;
+  QLabel *EndTimeLabel;
+  QLabel *RemainingTimeLabel;
 
 };
 
