@@ -34,6 +34,7 @@ JAR::JAR( void )
   ReadCycles = 100;
   Duration = 10.0;
   Pause = 20.0;
+  Ramp = 0.5;
   DeltaFStep = 2.0;
   DeltaFMax = 12.0;
   DeltaFMin = -12.0;
@@ -56,7 +57,7 @@ JAR::JAR( void )
   addLabel( "Stimulation" );
   addNumber( "duration", "Signal duration", Duration, 1.0, 1000000.0, 1.0, "seconds" );
   addNumber( "pause", "Pause between signals", Pause, 1.0, 1000000.0, 1.0, "seconds" );
-  addNumber( "ramp", "Duration of linear ramp", 0.5, 0, 10000.0, 0.1, "seconds" );
+  addNumber( "ramp", "Duration of linear ramp", Ramp, 0, 10000.0, 0.1, "seconds" );
   addNumber( "deltafstep", "Delta f steps", DeltaFStep, 1.0, 10000.0, 1.0, "Hz" );
   addNumber( "deltafmax", "Maximum delta f", DeltaFMax, -10000.0, 10000.0, 2.0, "Hz" );
   addNumber( "deltafmin", "Minimum delta f", DeltaFMin, -10000.0, 10000.0, 2.0, "Hz" );
@@ -156,7 +157,7 @@ int JAR::main( void )
   // get options:
   Duration = number( "duration" );
   Pause = number( "pause" );
-  double ramp = number( "ramp" );
+  Ramp = number( "ramp" );
   Repeats = integer( "repeats" );
   DeltaFStep = number( "deltafstep" );
   DeltaFMax = number( "deltafmax" );
@@ -178,6 +179,7 @@ int JAR::main( void )
   SineWave = boolean( "sinewave" );
   if ( After + Before > Pause )
     Pause = Before + After;
+  GlobalEFieldEventsWarning = false;
 
   if ( EODTrace < 0 ) {
     warning( "need a recording of the EOD Trace." );
@@ -324,7 +326,7 @@ int JAR::main( void )
 	  int n = (int)::rint( Duration / p );
 	  if ( n < 1 )
 	    n = 1;
-	  signal.sineWave( n*p, -1.0, StimulusRate, 1.0, ramp );
+	  signal.sineWave( n*p, -1.0, StimulusRate, 1.0, Ramp );
 	  signal.setIdent( "sinewave" );
 	  IntensityGain = 1.0;
 	  lockAll();
@@ -343,7 +345,7 @@ int JAR::main( void )
 	  IntensityGain = maxamplitude / LocalFishAmplitude / g;
 	  unlockAll();
 	  signal.repeat( (int)floor( Duration/signal.duration() ) );
-	  signal.ramp( ramp );
+	  signal.ramp( Ramp );
 	  lockAll();
 	}
 	Duration = signal.length();
@@ -757,14 +759,12 @@ void JAR::saveEODFreq( const Options &header )
   key.saveKey( df );
 
   // write data into file:
-  for ( int k=0;
-	k<EODFrequency.size() && k<EODBeatPhase.size();
-	k++ ) {
+  for ( int k=0; k<EODFrequency.size(); k++ ) {
     key.save( df, EODFrequency.x(k), 0 );
     key.save( df, EODFrequency.y(k) );
     if ( ! LocalEODUnit.empty() )
       key.save( df, EODTransAmpl.y(k) );
-    key.save( df, EODBeatPhase.y(k) );
+    key.save( df, k<EODBeatPhase.size() ? EODBeatPhase.y(k) : 0.0 );
     df << '\n';
   }
   df << "\n\n";
@@ -866,10 +866,9 @@ void JAR::saveChirpTraces( const Options &header )
   key.addNumber( "size", "Hz", "%5.1f" );
   key.addNumber( "ampl", GlobalEODUnit, "%6.4f" );
   key.addNumber( "phase", "1", "%5.3f" );
-  if ( ! LocalEODUnit.empty() ) {
+  if ( ! LocalEODUnit.empty() )
     key.addNumber( "ampl2", LocalEODUnit, "%6.4f" );
-    key.addNumber( "beat", "1", "%5.3f" );
-  }
+  key.addNumber( "beat", "1", "%5.3f" );
   key.saveKey( df );
 
   // write data into file:
@@ -895,10 +894,9 @@ void JAR::saveChirpTraces( const Options &header )
 	  key.save( df, EODFrequency.y(j+i) );
 	  key.save( df, EODAmplitude.y(j+i) );
 	  key.save( df, EODPhases.y(j+i) );
-	  if ( ! LocalEODUnit.empty() ) {
+	  if ( ! LocalEODUnit.empty() )
 	    key.save( df, EODTransAmpl.y(j+i) );
-	    key.save( df, EODBeatPhase.y(j+i) );
-	  }
+	  key.save( df, j+i < EODBeatPhase.size() ? EODBeatPhase.y(j+i) : 0.0 );
 	  df << '\n';
 	}
       }
@@ -1157,6 +1155,11 @@ void JAR::analyze( void )
       break;
     double phase = ( t1 - t0 ) / ( eodglobal[ pi + 1 ] - t0 );
     EODBeatPhase.push( index.time() - signalTime(), phase );
+  }
+  if ( EODBeatPhase.size() < EODFrequency.size()-(int)::ceil(Ramp*FishRate) &&
+       ! GlobalEFieldEventsWarning ) {
+    warning( "Not enough EOD cycles detected in GlobalEFieldEvents, i.e. the recorded stimulus. Make sure the threshold of the GlobalEFieldStimulus detector is set appropriately." );
+    GlobalEFieldEventsWarning = true;
   }
 
   // store results:

@@ -124,6 +124,7 @@ private:
   int ReadCycles;
   double Duration;
   double Pause;
+  double Ramp;
   double DeltaFStep;
   double DeltaFMin;
   double DeltaFMax;
@@ -160,6 +161,7 @@ private:
   double TrueContrast;
   int Count;
   int FileIndex;
+  bool GlobalEFieldEventsWarning;
 
   struct ResponseData
   {
