@@ -1929,10 +1929,14 @@ void RELACSWidget::keyPressEvent( QKeyEvent *event )
     return;
   }
   HandlingEvent = true;
+
+  // PlotTrace:
   // note: because keyPressEvent() is protected, we need to call
   // this function via sendEvent().
   // This has the advantage, that all the eventFilters, etc. are called as well.
   QCoreApplication::sendEvent( PT->widget(), event );
+
+  // RePro:
   if ( ! event->isAccepted() &&
        CurrentRePro != 0 &&
        CurrentRePro->widget() != 0  ) {
@@ -1940,6 +1944,49 @@ void RELACSWidget::keyPressEvent( QKeyEvent *event )
     // So, via the RELACSPlugin::eventFilter() they also get their
     // keyPressEvent() called!
     QCoreApplication::sendEvent( CurrentRePro->widget(), event );
+  }
+
+  // Controls:
+  if ( ! event->isAccepted() && event->key() == Qt::Key_C ) {
+    QWidget *w = CW->currentWidget();
+    if ( w != 0 ) {
+      // find the child-widget that should receive focus:
+      if ( w->focusWidget() )
+	w->focusWidget()->setFocus( Qt::TabFocusReason );
+      else {
+	// XXX this algorithm should be made recursive! (same in FilterDetectors)
+	QLayout *l = w->layout();
+	while ( l && l->count() > 0 ) {
+	  bool found = false;
+	  for ( int k=0; ! found && k<l->count(); k++ ) {
+	    if ( l->itemAt( k )->widget() ) {
+	      w = l->itemAt( k )->widget();
+	      if ( w->layout() ) {
+		// if widget has layout, check items of this layout
+		l = w->layout();
+		found = true;
+	      }
+	      else if ( w->isEnabled() && w->focusPolicy() != Qt::NoFocus ) {
+		// take this widget:
+		l = 0;
+		found = true;
+	      }
+	    }
+	    else if ( l->itemAt( k )->layout() ) {
+	      l = l->itemAt( k )->layout();
+	      found = true;
+	    }
+	  }
+	  if ( ! found ) {  // layout has no suitable items
+	    w = 0;
+	    break;
+	  }
+	}
+	if ( w != 0 )
+	  w->setFocus( Qt::TabFocusReason );
+      }
+    }
+    event->accept();
   }
   if ( ! event->isAccepted() && CW->currentWidget() != 0  )
     QCoreApplication::sendEvent( CW->currentWidget(), event );
@@ -1949,9 +1996,11 @@ void RELACSWidget::keyPressEvent( QKeyEvent *event )
 	 CN[k]->widget() != CW->currentWidget() )
       QCoreApplication::sendEvent( CN[k]->widget(), event );
   }
-  if ( ! event->isAccepted() ) {
+
+  // Filter and Detectors:
+  if ( ! event->isAccepted() )
     QCoreApplication::sendEvent( FD, event );
-  }
+
   HandlingEvent = false;
 }
 
@@ -1965,11 +2014,17 @@ void RELACSWidget::keyReleaseEvent( QKeyEvent *event )
     return;
   }
   HandlingEvent = true;
+
+  // PlotTrace:
   QCoreApplication::sendEvent( PT->widget(), event );
+
+  // RePro:
   if ( ! event->isAccepted() &&
        CurrentRePro != 0 &&
        CurrentRePro->widget() != 0  )
     QCoreApplication::sendEvent( CurrentRePro->widget(), event );
+
+  // Controls:
   if ( ! event->isAccepted() && CW->currentWidget() != 0 )
     QCoreApplication::sendEvent( CW->currentWidget(), event );
   for ( unsigned int k=0; k<CN.size() && ! event->isAccepted(); k++ ) {
@@ -1978,8 +2033,11 @@ void RELACSWidget::keyReleaseEvent( QKeyEvent *event )
 	 CN[k]->widget() != CW->currentWidget() )
       QCoreApplication::sendEvent( CN[k]->widget(), event );
   }
+
+  // Filter and Detectors:
   if ( ! event->isAccepted() )
     QCoreApplication::sendEvent( FD, event );
+
   HandlingEvent = false;
 }
 

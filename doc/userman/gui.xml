@@ -352,6 +352,24 @@
                     </listitem>
                   </varlistentry>
 
+                  <varlistentry>
+                    <term>Filter/Detectors:</term>
+                    <listitem>
+			<itemizedlist>
+			<listitem><para><keycap>F</keycap>: Put keyboard focus on active filter/detector widget.</para></listitem>
+		        </itemizedlist>
+                    </listitem>
+                  </varlistentry>
+
+                  <varlistentry>
+                    <term>Controls:</term>
+                    <listitem>
+			<itemizedlist>
+			<listitem><para><keycap>C</keycap>: Put keyboard focus on active control widget.</para></listitem>
+		        </itemizedlist>
+                    </listitem>
+                  </varlistentry>
+
                 </variablelist>
 	
 		</section>

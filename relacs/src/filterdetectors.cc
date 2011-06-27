@@ -1286,13 +1286,59 @@ ostream &operator<<( ostream &str, const FilterDetectors &fd )
 
 void FilterDetectors::keyPressEvent( QKeyEvent *event )
 {
-  for ( FilterList::iterator d = FL.begin();
-	d != FL.end() && ! event->isAccepted();
-	++d ) {
-    if ( d->FilterDetector != 0 &&
-	 d->FilterDetector->globalKeyEvents() &&
-	 d->FilterDetector->widget() != 0 )
-      QCoreApplication::sendEvent( d->FilterDetector->widget(), event );
+  /* SHIFT-Right and SHIFT-Left for changing tabs must go into an eventFilter
+     (not the one of RELACSPlugin, probably the main applications eventfilter)
+     to highjack them from standard QWidgets */
+  if ( event->key() == Qt::Key_F ) {
+    QWidget *w = currentWidget();
+    if ( w != 0 ) {
+      // find the child-widget that should receive focus:
+      if ( w->focusWidget() )
+	w->focusWidget()->setFocus( Qt::TabFocusReason );
+      else {
+	// XXX this algorithm should be made recursive! (same in REALSWidget)
+	QLayout *l = w->layout();
+	while ( l && l->count() > 0 ) {
+	  bool found = false;
+	  for ( int k=0; ! found && k<l->count(); k++ ) {
+	    if ( l->itemAt( k )->widget() ) {
+	      w = l->itemAt( k )->widget();
+	      if ( w->layout() ) {
+		// if widget has layout, check items of this layout
+		l = w->layout();
+		found = true;
+	      }
+	      else if ( w->isEnabled() && w->focusPolicy() != Qt::NoFocus ) {
+		// take this widget:
+		l = 0;
+		found = true;
+	      }
+	    }
+	    else if ( l->itemAt( k )->layout() ) {
+	      l = l->itemAt( k )->layout();
+	      found = true;
+	    }
+	  }
+	  if ( ! found ) {  // layout has no suitable items
+	    w = 0;
+	    break;
+	  }
+	}
+	if ( w != 0 )
+	  w->setFocus( Qt::TabFocusReason );
+      }
+    }
+    event->accept();
+  }
+  else {  
+    for ( FilterList::iterator d = FL.begin();
+	  d != FL.end() && ! event->isAccepted();
+	  ++d ) {
+      if ( d->FilterDetector != 0 &&
+	   d->FilterDetector->globalKeyEvents() &&
+	   d->FilterDetector->widget() != 0 )
+	QCoreApplication::sendEvent( d->FilterDetector->widget(), event );
+    }
   }
 }
 
