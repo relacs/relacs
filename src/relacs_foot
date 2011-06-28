@@ -174,10 +174,12 @@ else
 	ulimit -c unlimited 
         DEBUGCOM=relacsdebug$$
         echo "gcore $COREDIR/core.$(date --iso-8601=sec)" > $DEBUGCOM
-        $DEBUGGER -x $DEBUGCOM -batch "$RELACSEXEC" "$DEBUGDUMPCORE" $@
+        $DEBUGGER -batch -x $DEBUGCOM "$RELACSEXEC" "$DEBUGDUMPCORE" $@
         rm $DEBUGCOM
 	if test "x$LOGFILE" != "x" && test -f "$LOGFILE"; then
-          cp $LOGFILE $COREDIR/$LOGFILE.$(date --iso-8601=sec)
+	  LF="$COREDIR/$LOGFILE.$(date --iso-8601=sec)"
+          cp $LOGFILE $LF
+	  echo "DUMPED CORE BY RELACS -A" >> $LF
         fi
       else
         # run RELACS from within debugger:
