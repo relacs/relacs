@@ -41,6 +41,7 @@ USETEE="no"
 DEBUG="no"
 DEBUGRUN="no"
 DEBUGATTACH="no"
+DEBUGDUMPCORE="no"
 DEBUGGER="libtool --mode=execute gdb"
 COREFILE=""
 WITHDOXYGEN="--with-doxygen"
@@ -91,19 +92,37 @@ for i; do
     -d) DEBUG="yes"
         DEBUGRUN="no"
         DEBUGATTACH="no"
+        DEBUGDUMPCORE="no"
         USELOGFILE="no"
         shift ;;
     -D) DEBUG="yes"
         DEBUGRUN="yes"
         DEBUGATTACH="no"
+        DEBUGDUMPCORE="no"
         USELOGFILE="no"
         shift ;;
     -a) DEBUG="yes"
         DEBUGRUN="no"
-        shift
-        DEBUGATTACH="$1"
+        DEBUGDUMPCORE="no"
         USELOGFILE="no"
-        shift ;;
+        shift
+	if test -n "$1"; then
+          DEBUGATTACH="$1"
+          shift
+        else
+	  DEBUGATTACH="$(ps -o pid --no-headers -C lt-relacsgui)"
+        fi ;;
+    -A) DEBUG="yes"
+        DEBUGRUN="no"
+        DEBUGATTACH="no"
+        USELOGFILE="no"
+        shift
+	if test -n "$1"; then
+          DEBUGDUMPCORE="$1"
+          shift
+        else
+	  DEBUGDUMPCORE="$(ps -o pid --no-headers -C lt-relacsgui)"
+        fi ;;
     -C) shift
         if test "x$1" != "x"; then
           COREFILE="$1"
@@ -160,8 +179,10 @@ if test "x$HELP" = "xyes"; then
   echo "  -t             Use log file but also write messages to stdout "
   echo "  -d             Run RELACS from within a debugger (disables logfile)"
   echo "  -D             Start debugger without running RELACS"
-  echo "  -a PID         Attach debugger to running RELACS with process id PID"
+  echo "  -a [PID]       Attach debugger to running RELACS with optional process id PID"
+  echo "  -A [PID]       Make a core dump of running RELACS with optional process id PID"
   echo "                 Get the pid via 'ps -C lt-relacsgui'"
+  echo "                 (this is the default if PID is ommited)."
   echo "  -C FILE        Start debugger with core-dump file FILE"
   echo "  -c             Save core dump in directory '$COREDIR' (enables -l)"
   echo "  -v             Run RELACS from within valgrind (disables logfile)"

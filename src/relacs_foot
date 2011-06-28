@@ -169,6 +169,16 @@ else
       elif test "x$DEBUGATTACH" != "xno"; then
         # attach debugger to running RELACS:
         $DEBUGGER "$RELACSEXEC" "$DEBUGATTACH" $@
+      elif test "x$DEBUGDUMPCORE" != "xno"; then
+        # attach debugger to running RELACS and dump corefile:
+	ulimit -c unlimited 
+        DEBUGCOM=relacsdebug$$
+        echo "gcore $COREDIR/core.$(date --iso-8601=sec)" > $DEBUGCOM
+        $DEBUGGER -x $DEBUGCOM -batch "$RELACSEXEC" "$DEBUGDUMPCORE" $@
+        rm $DEBUGCOM
+	if test "x$LOGFILE" != "x" && test -f "$LOGFILE"; then
+          cp $LOGFILE $COREDIR/$LOGFILE.$(date --iso-8601=sec)
+        fi
       else
         # run RELACS from within debugger:
         DEBUGCOM=relacsdebug$$
