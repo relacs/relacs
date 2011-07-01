@@ -309,6 +309,8 @@ public slots:
 
 protected:
 
+  static QWidget *firstEnabledChildWidget( QLayout *l );
+
   virtual void closeEvent( QCloseEvent* );
   virtual void keyPressEvent( QKeyEvent* );
   virtual void keyReleaseEvent( QKeyEvent* );

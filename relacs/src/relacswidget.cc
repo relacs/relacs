@@ -782,12 +782,18 @@ void RELACSWidget::updateData( void )
   AQ->convertData();
   unlockAI();
   CurrentTime = IL.currentTime();
+  if ( CurrentTime < 0.0 ) { // XXX DEBUG
+    cerr << "RELACSWidget::updateData(): CurrentTime=" << Str( CurrentTime ) << " smaller than zero!\n";
+    cerr << IL << '\n';
+  }
+  double ct = CurrentTime;
   unlockData();
   // do we need to wait for more data?
   MinTraceMutex.lock();
   double mintime = MinTraceTime;
   MinTraceMutex.unlock();
-  while ( IL.success() && CurrentTime < mintime &&
+  while ( IL.success() && 
+	  mintime > 0.0 && ct < mintime &&
 	  ( simulation() || ReadLoop.isRunning() ) ) {
     RunDataMutex.lock();
     bool rd = RunData;
@@ -807,14 +813,24 @@ void RELACSWidget::updateData( void )
     AQ->convertData();
     unlockAI();
     CurrentTime = IL.currentTime();
+    if ( CurrentTime < 0.0 ) { // XXX DEBUG
+      cerr << "RELACSWidget::updateData(): CurrentTime=" << Str( CurrentTime ) << " smaller than zero!\n";
+      cerr << IL << '\n';
+    }
+    ct = CurrentTime;
     unlockData();
+    MinTraceMutex.lock();
+    if ( mintime != MinTraceTime )
+      printlog( "! warning in RELACSWidget::updateData() -> mintime=" + Str( mintime ) + " < MinTraceTime=" + Str( MinTraceTime ) + ", currentTime=" + Str( ct ) );
+    mintime = MinTraceTime;
+    MinTraceMutex.unlock();
   }
   setMinTraceTime( 0.0 );
   // update derived data:
   writeLockData();
   AQ->readSignal( SignalTime, IL, ED ); // we probably get the latest signal start here
   AQ->readRestart( IL, ED );
-  ED.setRangeBack( CurrentTime );
+  ED.setRangeBack( ct );
   Str fdw = FD->filter( IL, ED );
   if ( !fdw.empty() )
     printlog( "! error: " + fdw.erasedMarkup() );
@@ -1920,6 +1936,27 @@ void RELACSWidget::startIdle( void )
 
 //-------------------------Keyboard Interaction----------------------------//
 
+QWidget *RELACSWidget::firstEnabledChildWidget( QLayout *l )
+{
+  if ( l == 0 || l->count() == 0 )
+    return 0;
+
+  for ( int k=0; k<l->count(); k++ ) {
+    QWidget *w = l->itemAt( k )->widget();
+    if ( w ) {
+      if ( w->layout() )
+	w = firstEnabledChildWidget( w->layout() );
+    }
+    else if ( l->itemAt( k )->layout() )
+      w = firstEnabledChildWidget( l->itemAt( k )->layout() );
+    if ( w && w->isEnabled() && w->focusPolicy() != Qt::NoFocus )
+      return w;
+  }
+
+  return 0;
+}
+
+
 void RELACSWidget::keyPressEvent( QKeyEvent *event )
 {
   // unused events are propagated back to parent widgets,
@@ -1954,35 +1991,9 @@ void RELACSWidget::keyPressEvent( QKeyEvent *event )
       if ( w->focusWidget() )
 	w->focusWidget()->setFocus( Qt::TabFocusReason );
       else {
-	// XXX this algorithm should be made recursive! (same in FilterDetectors)
-	QLayout *l = w->layout();
-	while ( l && l->count() > 0 ) {
-	  bool found = false;
-	  for ( int k=0; ! found && k<l->count(); k++ ) {
-	    if ( l->itemAt( k )->widget() ) {
-	      w = l->itemAt( k )->widget();
-	      if ( w->layout() ) {
-		// if widget has layout, check items of this layout
-		l = w->layout();
-		found = true;
-	      }
-	      else if ( w->isEnabled() && w->focusPolicy() != Qt::NoFocus ) {
-		// take this widget:
-		l = 0;
-		found = true;
-	      }
-	    }
-	    else if ( l->itemAt( k )->layout() ) {
-	      l = l->itemAt( k )->layout();
-	      found = true;
-	    }
-	  }
-	  if ( ! found ) {  // layout has no suitable items
-	    w = 0;
-	    break;
-	  }
-	}
-	if ( w != 0 )
+	if ( w->layout() )
+	  w = firstEnabledChildWidget( w->layout() );
+	if ( w && w->isEnabled() && w->focusPolicy() != Qt::NoFocus )
 	  w->setFocus( Qt::TabFocusReason );
       }
     }

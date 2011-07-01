@@ -1296,35 +1296,9 @@ void FilterDetectors::keyPressEvent( QKeyEvent *event )
       if ( w->focusWidget() )
 	w->focusWidget()->setFocus( Qt::TabFocusReason );
       else {
-	// XXX this algorithm should be made recursive! (same in REALSWidget)
-	QLayout *l = w->layout();
-	while ( l && l->count() > 0 ) {
-	  bool found = false;
-	  for ( int k=0; ! found && k<l->count(); k++ ) {
-	    if ( l->itemAt( k )->widget() ) {
-	      w = l->itemAt( k )->widget();
-	      if ( w->layout() ) {
-		// if widget has layout, check items of this layout
-		l = w->layout();
-		found = true;
-	      }
-	      else if ( w->isEnabled() && w->focusPolicy() != Qt::NoFocus ) {
-		// take this widget:
-		l = 0;
-		found = true;
-	      }
-	    }
-	    else if ( l->itemAt( k )->layout() ) {
-	      l = l->itemAt( k )->layout();
-	      found = true;
-	    }
-	  }
-	  if ( ! found ) {  // layout has no suitable items
-	    w = 0;
-	    break;
-	  }
-	}
-	if ( w != 0 )
+	if ( w->layout() )
+	  w = RELACSWidget::firstEnabledChildWidget( w->layout() );
+	if ( w && w->isEnabled() && w->focusPolicy() != Qt::NoFocus )
 	  w->setFocus( Qt::TabFocusReason );
       }
     }
