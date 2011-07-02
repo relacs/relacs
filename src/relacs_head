@@ -111,7 +111,8 @@ for i; do
           DEBUGATTACH="$1"
           shift
         else
-	  DEBUGATTACH="$(ps -o pid --no-headers -C relacsgui)"
+	  DEBUGATTACH="$(ps -o pid= -C relacsgui | head -n 1 | awk '{print $1}')"
+	  test -n "$DEBUGATTACH" && WORKPATH="$(pwdx $DEBUGATTACH | awk '{print $2}')"
         fi ;;
     -A) DEBUG="yes"
         DEBUGRUN="no"
@@ -122,7 +123,8 @@ for i; do
           DEBUGDUMPCORE="$1"
           shift
         else
-	  DEBUGDUMPCORE="$(ps -o pid --no-headers -C relacsgui)"
+	  DEBUGDUMPCORE="$(ps -o pid= -C relacsgui | head -n 1 | awk '{print $1}')"
+	  test -n "$DEBUGDUMPCORE" && WORKPATH="$(pwdx $DEBUGDUMPCORE | awk '{print $2}')"
         fi ;;
     -C) shift
         if test "x$1" != "x"; then
@@ -185,7 +187,8 @@ if test "x$HELP" = "xyes"; then
   echo "  -a [PID]       Attach debugger to running RELACS with optional process id PID"
   echo "  -A [PID]       Make a core dump of running RELACS with optional process id PID"
   echo "                 Get the pid via 'ps -C relacsgui'"
-  echo "                 (this is the default if PID is ommited)."
+  echo "                 If PID is ommited attach debugger to first relacsgui process"
+  echo "                 ps returns and set working path to the one of this process."
   echo "  -C FILE        Start debugger with core-dump file FILE"
   echo "  -c             Save core dump in directory '$COREDIR' (enables -l)"
   echo "  -v             Run RELACS from within valgrind (disables logfile)"
