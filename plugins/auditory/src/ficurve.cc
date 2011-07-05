@@ -309,7 +309,7 @@ int FICurve::main( void )
   P[1].setYFallBackRange( 0.0, 100.0 );
   P[1].setYRange( 0.0, Plot::AutoScale );
   if ( manualskip ) {
-    P[1].setMouseTracking( true );
+    P[1].setUserMouseTracking( true );
     connect( &P[1], SIGNAL( userMouseEvent( Plot::MouseEvent& ) ),
 	     this, SLOT( plotMouseEvent( Plot::MouseEvent& ) ) );
   }
@@ -345,7 +345,7 @@ int FICurve::main( void )
       Signal.free();
       if ( manualskip ) {
 	P.lock();
-	P[1].setMouseTracking( false );
+	P[1].setUserMouseTracking( false );
 	disconnect( &P[1], SIGNAL( userMouseEvent( Plot::MouseEvent& ) ),
 		    this, SLOT( plotMouseEvent( Plot::MouseEvent& ) ) );
 	P.unlock();
@@ -385,7 +385,7 @@ int FICurve::main( void )
   writeZero( Speaker[ Side ] );
   if ( manualskip ) {
     P.lock();
-    P[1].setMouseTracking( false );
+    P[1].setUserMouseTracking( false );
     disconnect( &P[1], SIGNAL( userMouseEvent( Plot::MouseEvent& ) ),
 		this, SLOT( plotMouseEvent( Plot::MouseEvent& ) ) );
     P.unlock();

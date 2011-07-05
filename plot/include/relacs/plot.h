@@ -879,6 +879,10 @@ public:
     bool released( void ) const { return ( ( Mode & 128 ) > 0 ); };
     bool moved( void ) const { return ( ( Mode & 256 ) > 0 ); };
     bool doubleClicked( void ) const { return ( ( Mode & 512 ) > 0 ); };
+    bool pressedOnly( void ) const { return ( ( Mode & (64+128+256+512) ) == 128 ); };
+    bool releasedOnly( void ) const { return ( ( Mode & (64+128+256+512) ) == 128 ); };
+    bool movedOnly( void ) const { return ( ( Mode & (64+128+256+512) ) == 256 ); };
+    bool doubleClickedOnly( void ) const { return ( ( Mode & (64+128+256+512) ) == 512 ); };
 
     void clearMouseButtons( void ) { Mode &= ~(1+2+4+64+128+256+512); };
 
@@ -936,10 +940,11 @@ public:
 
 public slots:
 
-    /*! Controls whether mouseEvent() should be called on mouse move events.
+    /*! Controls whether userMouseEvent() should be called 
+        from mouseEvent() on mouse move events.
         \param[in] enable set this to \c true if you want to have 
-        mouseEvent() called also on move events. */
-  virtual void setMouseTracking( bool enable );
+        userMouseEvent() called also on move events. */
+  void setUserMouseTracking( bool enable );
 
 
 signals:
@@ -982,6 +987,8 @@ protected:
     /*! Opens the plot popup menu (middle click). */
   void mouseMenu( MouseEvent &me );
 
+    /*! Set the appropriate mouse cursor. */
+  void mouseSetCursor( MouseEvent &me );
     /*! Zooms and moves first x-axis. */
   void mouseZoomMoveFirstX( MouseEvent &me );
     /*! Zooms and moves first y-axis. */
@@ -1095,7 +1102,7 @@ private:
   bool SubWidget;
   MultiPlot *MP;
 
-  bool MouseTracking;
+  bool UserMouseTracking;
   bool MouseDrawRect;
   int MouseX1;
   int MouseX2;

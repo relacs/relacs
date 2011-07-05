@@ -58,28 +58,13 @@ Plot::RGBColor Plot::RGBColor::lighten( double f ) const
 }
 
 
-class PlotMouseTrackingEvent : public QEvent
-{
-
-public:
-
-  PlotMouseTrackingEvent( bool enable )
-    : QEvent( Type( User+101 ) ),
-      Enable( enable )
-  {
-  }
-
-  bool Enable;
-};
-
-
 class PlotMouseAnalyseEvent : public QEvent
 {
 
 public:
 
   PlotMouseAnalyseEvent( const Plot::MouseEvent &me )
-    : QEvent( Type( User+102 ) ),
+    : QEvent( Type( User+101 ) ),
       ME( me )
   {
   }
@@ -121,7 +106,11 @@ void Plot::construct( KeepMode keep, bool subwidget, int id, MultiPlot *mp )
   SubWidget = subwidget;
   Id = id;
   MP = mp;
-  setMouseTracking( false );
+  if ( SubWidget && MP != 0 )
+    MP->setMouseTracking( true );
+  else
+    setMouseTracking( true );
+  UserMouseTracking = false;
   MouseZoom = new QAction( "&Zoom", this );
   MouseZoom->setCheckable( true );
   MouseMove = new QAction( "&Move", this );
@@ -3197,14 +3186,6 @@ void Plot::customEvent( QEvent *qce )
     break;
   }
   case 101: {
-    PlotMouseTrackingEvent *pmte = dynamic_cast<PlotMouseTrackingEvent*>( qce );
-    if ( SubWidget && MP != 0 )
-      MP->setMouseTracking( pmte->Enable );
-    else
-      QWidget::setMouseTracking( pmte->Enable );
-    break;
-  }
-  case 102: {
     PlotMouseAnalyseEvent *pme = dynamic_cast<PlotMouseAnalyseEvent*>( qce );
     mouseAnalyse( pme->ME );
     break;
@@ -3449,10 +3430,51 @@ void Plot::mouseDoubleClickEvent( QMouseEvent *qme )
 }
 
 
+void Plot::mouseSetCursor( MouseEvent &me )
+{
+  QWidget *w = this;
+  if ( SubWidget && MP != 0 ) {
+    MP->lock();
+    w = MP;
+  }
+  PMutex.lock();
+  if ( ! MouseGrabbed || me.released() ) {
+    if ( me.xCoor() == First && me.yCoor() == FirstMargin ) {
+      if ( me.xPos() < XMin[0] + 0.333*( XMax[0] - XMin[0] ) ||
+	   me.xPos() > XMin[0] + 0.667*( XMax[0] - XMin[0] ) )
+	w->setCursor( Qt::SizeHorCursor );
+      else
+	w->setCursor( Qt::OpenHandCursor );
+    }
+    else if ( me.yCoor() == First && me.xCoor() == FirstMargin ) {
+      if ( me.yPos() < YMin[0] + 0.333*( YMax[0] - YMin[0] ) ||
+	   me.yPos() > YMin[0] + 0.667*( YMax[0] - YMin[0] ) )
+	w->setCursor( Qt::SizeVerCursor );
+      else
+	w->setCursor( Qt::OpenHandCursor );
+    }
+    else {
+      if ( ( ( MouseAction == MouseMove && ! me.control() ) ||
+	     ( MouseAction == MouseZoom && me.control() ) ) &&
+	   me.xCoor() == First && me.yCoor() == First )
+	w->setCursor( Qt::OpenHandCursor );
+      else
+	w->setCursor( Qt::ArrowCursor );
+    }
+  }
+  PMutex.unlock();
+  if ( SubWidget && MP != 0 )
+    MP->unlock();
+}
+
+
 void Plot::mouseZoomMoveFirstX( MouseEvent &me )
 {
-  if ( SubWidget && MP != 0 )
+  QWidget *w = this;
+  if ( SubWidget && MP != 0 ) {
     MP->lock();
+    w = MP;
+  }
   PMutex.lock();
   // move and zoom x1 axis:
   if ( me.pressed() && me.left() &&
@@ -3471,8 +3493,10 @@ void Plot::mouseZoomMoveFirstX( MouseEvent &me )
 	MouseZoomXMin = true;
       else if ( LastMouseEvent.xPos() > XMin[0] + 0.667*( XMax[0] - XMin[0] ) )
 	MouseZoomXMax = true;
-      else
+      else {
 	MouseMoveX = true;
+	w->setCursor( Qt::ClosedHandCursor );
+      }
       MouseGrabbed = true;
     }
     // move x1 axis:
@@ -3602,8 +3626,11 @@ void Plot::mouseZoomMoveFirstX( MouseEvent &me )
 
 void Plot::mouseZoomMoveFirstY( MouseEvent &me )
 {
-  if ( SubWidget && MP != 0 )
+  QWidget *w = this;
+  if ( SubWidget && MP != 0 ) {
     MP->lock();
+    w = MP;
+  }
   PMutex.lock();
   // move y1 axis:
   if ( me.pressed() && me.left() &&
@@ -3622,8 +3649,10 @@ void Plot::mouseZoomMoveFirstY( MouseEvent &me )
 	MouseZoomYMin = true;
       else if ( me.yPos() > YMin[0] + 0.667*( YMax[0] - YMin[0] ) )
 	MouseZoomYMax = true;
-      else
+      else {
 	MouseMoveY = true;
+	w->setCursor( Qt::ClosedHandCursor );
+      }
       MouseGrabbed = true;
     }
     // move y1 axis:
@@ -3753,8 +3782,11 @@ void Plot::mouseZoomMoveFirstY( MouseEvent &me )
 
 void Plot::mouseZoomMovePlot( MouseEvent &me, bool move )
 {
-  if ( SubWidget && MP != 0 )
+  QWidget *w = this;
+  if ( SubWidget && MP != 0 ) {
     MP->lock();
+    w = MP;
+  }
   PMutex.lock();
   // start move or zoom plot:
   if ( me.pressed() && me.left() &&
@@ -3769,11 +3801,12 @@ void Plot::mouseZoomMovePlot( MouseEvent &me, bool move )
   if ( me.moved() && me.left() ) {
     if ( ! MouseGrabbed && ! MouseDrawRect && ! MouseMoveXY &&
 	 me.xCoor() == First && me.yCoor() == First ) {
-      if ( move != me.alt() ) {
+      if ( move != me.control() ) {
 	pushRanges();
 	MouseMoveXY = true;
 	if ( ! LastMouseEvent.valid() )
 	  LastMouseEvent = me;
+	w->setCursor( Qt::ClosedHandCursor );
       }
       else {
 	MouseDrawRect = true;
@@ -4142,23 +4175,11 @@ void Plot::mouseSelect( QAction *action )
 	MouseYPos.clear();
 	MouseDInx.clear();
 	MousePInx.clear();
-	if ( ! MouseTracking ) {
-	  if ( SubWidget && MP != 0 )
-	    MP->setMouseTracking( false );
-	  else
-	    QWidget::setMouseTracking( false );
-	}
 	NewData = true;
 	draw();
       }
       MouseAction = action;
       if ( MouseAction == MouseAnalyse ) {
-	if ( ! MouseTracking ) {
-	  if ( SubWidget && MP != 0 )
-	    MP->setMouseTracking( true );
-	  else
-	    QWidget::setMouseTracking( true );
-	}
 	PMutex.unlock();
 	if ( SubWidget && MP != 0 )
 	  MP->unlock();
@@ -4182,13 +4203,19 @@ void Plot::mouseSelect( QAction *action )
 
 void Plot::mouseEvent( MouseEvent &me )
 {
-  emit userMouseEvent( me );
+  PMutex.lock();
+  bool umt = UserMouseTracking;
+  PMutex.unlock();
+  if ( ! me.movedOnly() || umt )
+    emit userMouseEvent( me );
   if ( me.used() )
     return;
 
   mouseMenu( me );
   if ( me.used() )
     return;
+
+  mouseSetCursor( me );
 
   if ( MouseAction == MouseZoom )
     mouseZoomMovePlot( me, false );
@@ -4204,17 +4231,9 @@ void Plot::mouseEvent( MouseEvent &me )
 }
 
 
-void Plot::setMouseTracking( bool enable )
+void Plot::setUserMouseTracking( bool enable )
 {
-  MouseTracking = enable;
-  if ( QThread::currentThread() != GUIThread )
-    QCoreApplication::postEvent( this, new PlotMouseTrackingEvent( MouseTracking ) );
-  else {
-    if ( SubWidget && MP != 0 )
-      MP->setMouseTracking( MouseTracking );
-    else
-      QWidget::setMouseTracking( MouseTracking );
-  }
+  UserMouseTracking = enable;
 }
 
 
