@@ -39,6 +39,7 @@
 #include <relacs/attenuate.h>
 #include <relacs/acquire.h>
 #include <relacs/control.h>
+#include <relacs/controltabs.h>
 #include <relacs/databrowser.h>
 #include <relacs/filter.h>
 #include <relacs/filterdetectors.h>
@@ -261,7 +262,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     HelpPathes[k].preventSlash();
 
   // session, control tabwidget:
-  CW = new QTabWidget;
+  CW = new ControlTabs;
 
   OrgBackground = palette().color( QPalette::Window );
 
@@ -1936,26 +1937,6 @@ void RELACSWidget::startIdle( void )
 
 //-------------------------Keyboard Interaction----------------------------//
 
-QWidget *RELACSWidget::firstEnabledChildWidget( QLayout *l )
-{
-  if ( l == 0 || l->count() == 0 )
-    return 0;
-
-  for ( int k=0; k<l->count(); k++ ) {
-    QWidget *w = l->itemAt( k )->widget();
-    if ( w ) {
-      if ( w->layout() )
-	w = firstEnabledChildWidget( w->layout() );
-    }
-    else if ( l->itemAt( k )->layout() )
-      w = firstEnabledChildWidget( l->itemAt( k )->layout() );
-    if ( w && w->isEnabled() && w->focusPolicy() != Qt::NoFocus )
-      return w;
-  }
-
-  return 0;
-}
-
 
 void RELACSWidget::keyPressEvent( QKeyEvent *event )
 {
@@ -1984,21 +1965,9 @@ void RELACSWidget::keyPressEvent( QKeyEvent *event )
   }
 
   // Controls:
-  if ( ! event->isAccepted() && event->key() == Qt::Key_C ) {
-    QWidget *w = CW->currentWidget();
-    if ( w != 0 ) {
-      // find the child-widget that should receive focus:
-      if ( w->focusWidget() )
-	w->focusWidget()->setFocus( Qt::TabFocusReason );
-      else {
-	if ( w->layout() )
-	  w = firstEnabledChildWidget( w->layout() );
-	if ( w && w->isEnabled() && w->focusPolicy() != Qt::NoFocus )
-	  w->setFocus( Qt::TabFocusReason );
-      }
-    }
-    event->accept();
-  }
+  // Filter and Detectors:
+  if ( ! event->isAccepted() )
+    QCoreApplication::sendEvent( CW, event );
   if ( ! event->isAccepted() && CW->currentWidget() != 0  )
     QCoreApplication::sendEvent( CW->currentWidget(), event );
   for ( unsigned int k=0; k<CN.size() && ! event->isAccepted(); k++ ) {

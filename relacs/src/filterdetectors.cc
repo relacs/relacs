@@ -34,7 +34,7 @@ namespace relacs {
 
 
 FilterDetectors::FilterDetectors( RELACSWidget *rw, QWidget *parent )
-  : QTabWidget( parent ),
+  : PluginTabs( Qt::Key_F, parent ),
     ConfigClass( "FilterDetectors", RELACSPlugin::Core ),
     FL(),
     TraceInputTrace( 0 ),
@@ -1286,25 +1286,9 @@ ostream &operator<<( ostream &str, const FilterDetectors &fd )
 
 void FilterDetectors::keyPressEvent( QKeyEvent *event )
 {
-  /* SHIFT-Right and SHIFT-Left for changing tabs must go into an eventFilter
-     (not the one of RELACSPlugin, probably the main applications eventfilter)
-     to highjack them from standard QWidgets */
-  if ( event->key() == Qt::Key_F ) {
-    QWidget *w = currentWidget();
-    if ( w != 0 ) {
-      // find the child-widget that should receive focus:
-      if ( w->focusWidget() )
-	w->focusWidget()->setFocus( Qt::TabFocusReason );
-      else {
-	if ( w->layout() )
-	  w = RELACSWidget::firstEnabledChildWidget( w->layout() );
-	if ( w && w->isEnabled() && w->focusPolicy() != Qt::NoFocus )
-	  w->setFocus( Qt::TabFocusReason );
-      }
-    }
-    event->accept();
-  }
-  else {  
+  PluginTabs::keyPressEvent( event );
+
+  if ( ! event->isAccepted() ) {  
     for ( FilterList::iterator d = FL.begin();
 	  d != FL.end() && ! event->isAccepted();
 	  ++d ) {

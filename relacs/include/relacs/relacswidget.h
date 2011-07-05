@@ -23,7 +23,6 @@
 #define _RELACS_RELACSWIDGET_H_ 1
 
 #include <QMainWindow>
-#include <QTabWidget>
 #include <QMenu>
 #include <QAction>
 #include <QString>
@@ -68,6 +67,7 @@ class SaveFiles;
 class RePros;
 class Macros;
 class FilterDetectors;
+class ControlTabs;
 class Session;
 class Control;
 class DataBrowser;
@@ -309,8 +309,6 @@ public slots:
 
 protected:
 
-  static QWidget *firstEnabledChildWidget( QLayout *l );
-
   virtual void closeEvent( QCloseEvent* );
   virtual void keyPressEvent( QKeyEvent* );
   virtual void keyReleaseEvent( QKeyEvent* );
@@ -390,7 +388,7 @@ private:
   Model *MD;
   PlotTrace *PT;
   SaveFiles *SF;
-  QTabWidget *CW;
+  ControlTabs *CW;
   RePros *RP;
   Macros *MC;
   FilterDetectors *FD;

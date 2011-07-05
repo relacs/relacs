@@ -31,6 +31,7 @@ librelacs_la_LIBADD = \
 
 $(librelacs_la_OBJECTS) : \
     moc_control.cc \
+    moc_controltabs.cc \
     moc_databrowser.cc \
     moc_defaultrepro.cc \
     moc_defaultsession.cc \
@@ -40,6 +41,7 @@ $(librelacs_la_OBJECTS) : \
     moc_macros.cc \
     moc_metadata.cc \
     moc_outputconfig.cc \
+    moc_plugintabs.cc \
     moc_plottrace.cc \
     moc_relacsplugin.cc \
     moc_relacswidget.cc \
@@ -57,6 +59,7 @@ pkginclude_HEADERS = \
     ../include/relacs/aosim.h \
     ../include/relacs/attsim.h \
     ../include/relacs/control.h \
+    ../include/relacs/controltabs.h \
     ../include/relacs/databrowser.h \
     ../include/relacs/datathreads.h \
     ../include/relacs/defaultrepro.h \
@@ -70,6 +73,7 @@ pkginclude_HEADERS = \
     ../include/relacs/outputconfig.h \
     ../include/relacs/plottrace.h \
     ../include/relacs/plugins.h \
+    ../include/relacs/plugintabs.h \
     ../include/relacs/rangeloop.h \
     ../include/relacs/relacsplugin.h \
     ../include/relacs/relacswidget.h \
@@ -80,7 +84,6 @@ pkginclude_HEADERS = \
     ../include/relacs/settings.h \
     ../include/relacs/simulator.h \
     ../include/relacs/spiketrace.h \
-    \
     ../include/relacs/devicelist.h \
     ../include/relacs/relacsdevices.h
 
@@ -89,6 +92,7 @@ librelacs_la_SOURCES = \
     aosim.cc \
     attsim.cc \
     control.cc \
+    controltabs.cc \
     databrowser.cc \
     datathreads.cc \
     defaultrepro.cc \
@@ -102,6 +106,7 @@ librelacs_la_SOURCES = \
     outputconfig.cc \
     plottrace.cc \
     plugins.cc \
+    plugintabs.cc \
     rangeloop.cc \
     relacsplugin.cc \
     relacswidget.cc \

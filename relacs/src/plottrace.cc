@@ -926,10 +926,12 @@ void PlotTrace::autoRange( void )
 
   // toggle plot:
   Plotting = AutoOn;
-  if ( Plotting )
-    OnOffButton->setDown( false );
-  else
-    OnOffButton->setDown( true );
+  if ( OnOffButton != 0 ) {
+    if ( Plotting )
+      OnOffButton->setDown( false );
+    else
+      OnOffButton->setDown( true );
+  }
 
   // toggle fixed offset:
   setView( AutoFixed ? SignalView : WrapView );

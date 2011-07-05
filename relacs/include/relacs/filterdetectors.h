@@ -24,11 +24,11 @@
 
 #include <string>
 #include <vector>
-#include <QTabWidget>
 #include <QMenu> 
 #include <relacs/configclass.h>
 #include <relacs/inlist.h>
 #include <relacs/eventlist.h>
+#include <relacs/plugintabs.h>
 #include <relacs/plottrace.h>
 
 namespace relacs {
@@ -49,7 +49,7 @@ class RELACSWidget;
 */
 
 
-class FilterDetectors : public QTabWidget, public ConfigClass
+class FilterDetectors : public PluginTabs, public ConfigClass
 {
   Q_OBJECT
 
