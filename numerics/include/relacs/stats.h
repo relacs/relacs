@@ -169,68 +169,83 @@ template < typename Container >
 double rank( Container &vec );
 
   /*! The minimum value of the range \a first, \a last.
+      If the range is empty, 0 is returned.
       \a ForwardIter is a forward iterator that points to a number. */
 template < typename ForwardIter >
 typename iterator_traits<ForwardIter>::value_type
   min( ForwardIter first, ForwardIter last );
   /*! The minimum value of all elements of the container \a vec.
+      If the range is empty, 0 is returned.
       \a Container holds an array of numbers
       that can be accessed via standard STL const_iterators. */
 template < typename Container >
 typename Container::value_type
   min( const Container &vec );
   /*! The minimum value of the range \a first, \a last.
-      In \a index the index of the element with the minimum value is returned.
+      In \a index the index relative to \a first 
+      of the element with the minimum value is returned.
+      If the range is empty, \a index is set to -1 and 0 is returned.
       \a ForwardIter is a forward iterator that points to a number. */
 template < typename ForwardIter >
 typename iterator_traits<ForwardIter>::value_type
   min( int &index, ForwardIter first, ForwardIter last );
   /*! The minimum value of all elements of the container \a vec.
       In \a index the index of the element with the minimum value is returned.
+      If the range is empty, \a index is set to -1 and 0 is returned.
       \a Container holds an array of numbers
       that can be accessed via standard STL const_iterators. */
 template < typename Container >
 typename Container::value_type
   min( int &index, const Container &vec );
-  /*! The index of the element with the minimum value of the range \a first, \a last.
+  /*! The index of the element with the minimum value of the range \a first, \a last
+      relative to \a first.
+      If the range is empty, -1 is returned.
       \a ForwardIter is a forward iterator that points to a number. */
 template < typename ForwardIter >
 int minIndex( ForwardIter first, ForwardIter last );
   /*! The index of the element with the minimum value of all elements of the container \a vec.
+      If the range is empty, -1 is returned.
       \a Container holds an array of numbers
       that can be accessed via standard STL const_iterators. */
 template < typename Container >
 int minIndex( const Container &vec );
 
   /*! The maximum value of the range \a first, \a last.
+      If the range is empty, 0 is returned.
       \a ForwardIter is a forward iterator that points to a number. */
 template < typename ForwardIter >
 typename iterator_traits<ForwardIter>::value_type
   max( ForwardIter first, ForwardIter last );
   /*! The maximum value of all elements of the container \a vec.
+      If the range is empty, 0 is returned.
       \a Container holds an array of numbers
       that can be accessed via standard STL const_iterators. */
 template < typename Container >
 typename Container::value_type
   max( const Container &vec );
   /*! The maximum value of the range \a first, \a last.
-      In \a index the index of the element with the maximum value is returned.
+      In \a index the index relative to \a first of the element with the maximum value is returned.
+      If the range is empty, \a index is set to -1 and 0 is returned.
       \a ForwardIter is a forward iterator that points to a number. */
 template < typename ForwardIter >
 typename iterator_traits<ForwardIter>::value_type
   max( int &index, ForwardIter first, ForwardIter last );
   /*! The maximum value of all elements of the container \a vec.
       In \a index the index of the element with the maximum value is returned.
+      If the range is empty, \a index is set to -1 and 0 is returned.
       \a Container holds an array of numbers
       that can be accessed via standard STL const_iterators. */
 template < typename Container >
 typename Container::value_type
   max( int &index, const Container &vec );
-  /*! The index of the element with the maximum value of the range \a first, \a last.
+  /*! The index of the element with the maximum value of the range \a first, \a last
+      relative to \a first.
+      If the range is empty, -1 is returned.
       \a ForwardIter is a forward iterator that points to a number. */
 template < typename ForwardIter >
 int maxIndex( ForwardIter first, ForwardIter last );
   /*! The index of the element with the maximum value of all elements of the container \a vec.
+      If the range is empty, -1 is returned.
       \a Container holds an array of numbers
       that can be accessed via standard STL const_iterators. */
 template < typename Container >
@@ -238,6 +253,7 @@ int maxIndex( const Container &vec );
 
   /*! The minimum value \a min and maximum value \a max 
       of the range \a first, \a last.
+      If the range is empty, \a min and \a max are set to 0.
       \a ForwardIter is a forward iterator that points to a number. */
 template < typename ForwardIter >
 void minMax( typename iterator_traits<ForwardIter>::value_type &min,
@@ -245,6 +261,7 @@ void minMax( typename iterator_traits<ForwardIter>::value_type &min,
 	     ForwardIter first, ForwardIter last );
   /*! The minimum value \a min and maximum value \a max
       of all elements of the container \a vec.
+      If the range is empty, \a min and \a max are set to 0.
       \a Container holds an array of numbers
       that can be accessed via standard STL const_iterators. */
 template < typename Container >
@@ -252,8 +269,10 @@ void minMax( typename Container::value_type &min,
 	     typename Container::value_type &max, const Container &vec );
   /*! The minimum value \a min and maximum value \a max
       of the range \a first, \a last.
-      In \a minindex and \a maxindex the indices of the elements
+      In \a minindex and \a maxindex the indices relative to \a first of the elements
       with the minimum and maximum value are returned.
+      If the range is empty, \a min and \a max are set to 0 and
+      \a minindex and \a maxindex to -1.
       \a ForwardIter is a forward iterator that points to a number. */
 template < typename ForwardIter >
 void minMax( typename iterator_traits<ForwardIter>::value_type &min, int &minindex,
@@ -263,6 +282,8 @@ void minMax( typename iterator_traits<ForwardIter>::value_type &min, int &minind
       of all elements of the container \a vec.
       In \a minindex and \a maxindex the indices of the elements
       with the minimum and maximum value are returned.
+      If the range is empty, \a min and \a max are set to 0 and
+      \a minindex and \a maxindex to -1.
       \a Container holds an array of numbers
       that can be accessed via standard STL const_iterators. */
 template < typename Container >
@@ -270,12 +291,15 @@ void minMax( typename Container::value_type &min, int &minindex,
 	     typename Container::value_type &max, int &maxindex,
 	     const Container &vec );
   /*! The indices \a minindex and \a maxindex of the elements
-      with the minimum and maximum value of the range \a first, \a last.
+      with the minimum and maximum value of the range \a first, \a last
+      relative to \a first.
+      If the range is empty, \a minindex and \a maxindex are set to -1.
       \a ForwardIter is a forward iterator that points to a number. */
 template < typename ForwardIter >
 void minMaxIndex( int &minindex, int &maxindex, ForwardIter first, ForwardIter last );
   /*! The indices \a minindex and \a maxindex of the elements
       with the minimum and the maximum value of all elements of the container \a vec.
+      If the range is empty, \a minindex and \a maxindex are set to -1.
       \a Container holds an array of numbers
       that can be accessed via standard STL const_iterators. */
 template < typename Container >

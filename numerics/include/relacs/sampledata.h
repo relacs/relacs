@@ -972,41 +972,51 @@ class SampleData : public Array< T >
   SampleData< T > &freqFilter( const SampleData<TT> &g, bool rescale=true );
 
     /*! The minimum value of the data elements between position
-        \a first (inclusively) and \a last (exclusively). */
+        \a first (inclusively) and \a last (exclusively).
+        If the range is empty, 0 is returned. */
   T min( double first, double last ) const;
     /*! The index of the element with the minimum value of the data elements between position
-        \a first (inclusively) and \a last (exclusively). */
+        \a first (inclusively) and \a last (exclusively).
+        If the range is empty, -1 is returned. */
   int minIndex( double first, double last ) const;
     /*! The index of the element with the minimum value 
         of the data elements between position
         \a first (inclusively) and \a last (exclusively).
+        If the range is empty, -1 is returned and \a min is set to 0.
         The value of the minimum element is returned in \a min. */
   int minIndex( T &min, double first, double last ) const;
 
     /*! The maximum value of the data elements between position
-        \a first (inclusively) and \a last (exclusively). */
+        \a first (inclusively) and \a last (exclusively).
+        If the range is empty, 0 is returned. */
   T max( double first, double last ) const;
     /*! The index of the element with the maximum value of the data elements between position
-        \a first (inclusively) and \a last (exclusively). */
+        \a first (inclusively) and \a last (exclusively).
+        If the range is empty, -1 is returned. */
   int maxIndex( double first, double last ) const;
     /*! The index of the element with the maximum value 
         of the data elements between position
 	\a first (inclusively) and \a last (exclusively).
+        If the range is empty, -1 is returned and \a max is set to 0.
 	The value of the maximum element is returned in \a max. */
   int maxIndex( T &max, double first, double last ) const;
 
     /*! The minimum value \a min and maximum value \a max
         of the data elements between position
-        \a first (inclusively) and \a last (exclusively). */
+        \a first (inclusively) and \a last (exclusively).
+        If the range is empty, \a min and \a max are set to 0. */
   void minMax( T &min, T &max, double first, double last ) const;
     /*! The indices \a minindex and \a maxindex of the elements
         with the minimum and the maximum value of the data elements between position
-        \a first (inclusively) and \a last (exclusively). */
+        \a first (inclusively) and \a last (exclusively).
+        If the range is empty, \a minindex and \a maxindex are set to -1. */
   void minMaxIndex( int &minindex, int &maxindex, double first, double last ) const;
     /*! The indices \a minindex and \a maxindex of the elements
         with the minimum value \a min and the maximum value \a max
         of the data elements between position
-	\a first (inclusively) and \a last (exclusively). */
+	\a first (inclusively) and \a last (exclusively).
+        If the range is empty, \a minindex and \a maxindex are set to -1
+	and \a min and \a max to 0. */
   void minMaxIndex( T &min, int &minindex, T &max, int &maxindex,
 		    double first, double last ) const;
 
@@ -3068,7 +3078,7 @@ int SampleData< T >::minIndex( double first, double last ) const
   if ( li > size() )
     li = size();
   if ( li <= fi )
-    return 0;
+    return -1;
   else
     return fi + ::relacs::minIndex( begin()+fi, begin()+li );
 }
@@ -3085,7 +3095,7 @@ int SampleData< T >::minIndex( T &min, double first, double last ) const
     li = size();
   if ( li <= fi ) {
     min = 0.0;
-    return 0;
+    return -1;
   }
   else {
     int index = -1;
@@ -3121,7 +3131,7 @@ int SampleData< T >::maxIndex( double first, double last ) const
   if ( li > size() )
     li = size();
   if ( li <= fi )
-    return 0;
+    return -1;
   else
     return fi + ::relacs::maxIndex( begin()+fi, begin()+li );
 }
@@ -3138,7 +3148,7 @@ int SampleData< T >::maxIndex( T &max, double first, double last ) const
     li = size();
   if ( li <= fi ) {
     max = 0.0;
-    return 0;
+    return -1;
   }
   else {
     int index = -1;
@@ -3176,8 +3186,8 @@ void SampleData< T >::minMaxIndex( int &minindex, int &maxindex, double first, d
   if ( li > size() )
     li = size();
   if ( li <= fi ) {
-    minindex = 0;
-    maxindex = 0;
+    minindex = -1;
+    maxindex = -1;
   }
   else {
     ::relacs::minMaxIndex( minindex, maxindex, begin()+fi, begin()+li );
@@ -3200,8 +3210,8 @@ void SampleData< T >::minMaxIndex( T &min, int &minindex, T &max, int &maxindex,
   if ( li <= fi ) {
     min = 0.0;
     max = 0.0;
-    minindex = 0;
-    maxindex = 0;
+    minindex = -1;
+    maxindex = -1;
   }
   else {
     ::relacs::minMax( min, minindex, max, maxindex, begin()+fi, begin()+li );

@@ -482,57 +482,67 @@ class Array
     /*! The minimum value of the data elements between indices
         \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
-        Called with no arguments all data elements are considered. */
+        Called with no arguments all data elements are considered.
+        If the range is empty, 0 is returned. */
   T min( int first=0, int last=-1 ) const;
     /*! The index of the element with the minimum value of the data elements between indices
         \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
-        Called with no arguments all data elements are considered. */
+        Called with no arguments all data elements are considered.
+        If the range is empty, -1 is returned. */
   int minIndex( int first=0, int last=-1 ) const;
     /*! The index of the element with the minimum value 
         of the data elements between indices
         \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered.
-        The value of the minimum element is returned in \a min. */
+        The value of the minimum element is returned in \a min.
+        If the range is empty, -1 is returned and \a min is set to 0. */
   int minIndex( T &min, int first=0, int last=-1 ) const;
 
     /*! The maximum value of the data elements between indices
         \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
-        Called with no arguments all data elements are considered. */
+        Called with no arguments all data elements are considered.
+        If the range is empty, 0 is returned. */
   T max( int first=0, int last=-1 ) const;
     /*! The index of the element with the maximum value of the data elements between indices
         \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
-        Called with no arguments all data elements are considered. */
+        Called with no arguments all data elements are considered.
+        If the range is empty, -1 is returned. */
   int maxIndex( int first=0, int last=-1 ) const;
     /*! The index of the element with the maximum value 
         of the data elements between indices
 	\a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered.
-	The value of the maximum element is returned in \a max. */
+	The value of the maximum element is returned in \a max.
+        If the range is empty, -1 is returned and \a max is set to 0. */
   int maxIndex( T &max, int first=0, int last=-1 ) const;
 
     /*! The minimum value \a min and maximum value \a max
         of the data elements between indices
         \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
-        Called with no arguments all data elements are considered. */
+        Called with no arguments all data elements are considered.
+	If the range is empty, \a min and \a max are set to 0. */
   void minMax( T &min, T &max, int first=0, int last=-1 ) const;
     /*! The indices \a minindex and \a maxindex of the elements
         with the minimum and the maximum value of the data elements between indices
         \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
-        Called with no arguments all data elements are considered. */
+        Called with no arguments all data elements are considered.
+	If the range is empty, \a minindex and \a maxindex are set to -1. */
   void minMaxIndex( int &minindex, int &maxindex, int first=0, int last=-1 ) const;
     /*! The indices \a minindex and \a maxindex of the elements
         with the minimum value \a min and the maximum value \a max
         of the data elements between indices
 	\a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
-        Called with no arguments all data elements are considered. */
+        Called with no arguments all data elements are considered.
+	If the range is empty, \a minindex and \a maxindex are set to -1
+	and \a min and \a max to 0. */
   void minMaxIndex( T &min, int &minindex, T &max, int &maxindex,
 		    int first=0, int last=-1 ) const;
 
@@ -1868,10 +1878,14 @@ int Array<T>::minIndex( int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
+  int mini = -1;
   if ( last < 0 )
-    return ::relacs::minIndex( begin()+first, end() );
+    mini = ::relacs::minIndex( begin()+first, end() );
   else
-    return ::relacs::minIndex( begin()+first, begin()+last );
+    mini = ::relacs::minIndex( begin()+first, begin()+last );
+  if ( mini >= 0 )
+    mini += first;
+  return mini;
 }
 
 
@@ -1885,6 +1899,8 @@ int Array<T>::minIndex( T &min, int first, int last ) const
     min = ::relacs::min( index, begin()+first, end() );
   else
     min = ::relacs::min( index, begin()+first, begin()+last );
+  if ( index >= 0 )
+    index += first;
   return index;
 }
 
@@ -1906,10 +1922,14 @@ int Array<T>::maxIndex( int first, int last ) const
 {
   if ( first < 0 )
     first = 0;
+  int maxi = -1;
   if ( last < 0 )
-    return ::relacs::maxIndex( begin()+first, end() );
+    maxi = ::relacs::maxIndex( begin()+first, end() );
   else
-    return ::relacs::maxIndex( begin()+first, begin()+last );
+    maxi = ::relacs::maxIndex( begin()+first, begin()+last );
+  if ( maxi >= 0 )
+    maxi += first;
+  return maxi;
 }
 
 
@@ -1923,6 +1943,8 @@ int Array<T>::maxIndex( T &max, int first, int last ) const
     max = ::relacs::max( index, begin()+first, end() );
   else
     max = ::relacs::max( index, begin()+first, begin()+last );
+  if ( index >= 0 )
+    index += first;
   return index;
 }
 
@@ -1948,6 +1970,10 @@ void Array<T>::minMaxIndex( int &minindex, int &maxindex, int first, int last ) 
     ::relacs::minMaxIndex( minindex, maxindex, begin()+first, end() );
   else
     ::relacs::minMaxIndex( minindex, maxindex, begin()+first, begin()+last );
+  if ( minindex >= 0 )
+    minindex += first;
+  if ( maxindex >= 0 )
+    maxindex += first;
 }
 
 
@@ -1961,6 +1987,10 @@ void Array<T>::minMaxIndex( T &min, int &minindex, T &max, int &maxindex,
     ::relacs::minMax( min, minindex, max, maxindex, begin()+first, end() );
   else
     ::relacs::minMax( min, minindex, max, maxindex, begin()+first, begin()+last );
+  if ( minindex >= 0 )
+    minindex += first;
+  if ( maxindex >= 0 )
+    maxindex += first;
 }
 
 

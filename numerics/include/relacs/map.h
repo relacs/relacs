@@ -370,13 +370,15 @@ class Map : public Array < T >
         \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered.
-	In \a y the corresponding value of the y-data array is returned. */
+	In \a y the corresponding value of the y-data array is returned.
+        If the range is empty, \a y is set to 0 and 0 is returned. */
   T minX( T &y, int first=0, int last=-1 ) const;
     /*! The minimum value of the elements of the y-data array between indices
         \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered.
-	In \a x the corresponding value of the x-data array is returned. */
+	In \a x the corresponding value of the x-data array is returned.
+        If the range is empty, \a x is set to 0 and 0 is returned. */
   T minY( T &x, int first=0, int last=-1 ) const;
     /*! The index of the element with the minimum value 
         of the elements of the x-data array between indices
@@ -384,7 +386,8 @@ class Map : public Array < T >
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered.
         The value of the minimum element is returned in \a min
-        and the corresponding value of the y-data array is returned in \a y. */
+        and the corresponding value of the y-data array is returned in \a y.
+        If the range is empty, \a min and \a y are set to 0 and -1 is returned. */
   int minXIndex( T &min, T &y, int first=0, int last=-1 ) const;
     /*! The index of the element with the minimum value 
         of the elements of the y-data array between indices
@@ -392,20 +395,23 @@ class Map : public Array < T >
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered.
         The value of the minimum element is returned in \a min
-        and the corresponding value of the x-data array is returned in \a x. */
+        and the corresponding value of the x-data array is returned in \a x.
+        If the range is empty, \a min and \a x are set to 0 and -1 is returned. */
   int minYIndex( T &min, T &x, int first=0, int last=-1 ) const;
 
     /*! The maximum value of the elements of the x-data array between indices
         \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered.
-	In \a y the corresponding value of the y-data array is returned. */
+	In \a y the corresponding value of the y-data array is returned.
+        If the range is empty, \a y is set to 0 and 0 is returned. */
   T maxX( T &y, int first=0, int last=-1 ) const;
     /*! The maximum value of the elements of the y-data array between indices
         \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered.
-	In \a x the corresponding value of the x-data array is returned. */
+	In \a x the corresponding value of the x-data array is returned.
+        If the range is empty, \a x is set to 0 and 0 is returned. */
   T maxY( T &x, int first=0, int last=-1 ) const;
     /*! The index of the element with the maximum value 
         of the elements of the x-data array between indices
@@ -413,7 +419,8 @@ class Map : public Array < T >
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered.
 	The value of the maximum element is returned in \a max
-        and the corresponding value of the y-data array is returned in \a y. */
+        and the corresponding value of the y-data array is returned in \a y.
+        If the range is empty, \a max and \a x are set to 0 and -1 is returned. */
   int maxXIndex( T &max, T &x, int first=0, int last=-1 ) const;
     /*! The index of the element with the maximum value 
         of the elements of the y-data array between indices
@@ -421,7 +428,8 @@ class Map : public Array < T >
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered.
 	The value of the maximum element is returned in \a max
-        and the corresponding value of the x-data array is returned in \a x. */
+        and the corresponding value of the x-data array is returned in \a x.
+        If the range is empty, \a max and \a x are set to 0 and -1 is returned. */
   int maxYIndex( T &max, T &x, int first=0, int last=-1 ) const;
 
     /*! The minimum value \a min and the maximum value \a max
@@ -430,7 +438,8 @@ class Map : public Array < T >
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered.
 	In \a miny and \a maxy the corresponding values of the y-data array 
-	are returned. */
+	are returned.
+        If the range is empty, \a min, \a miny, \a max, and \a maxy are set to 0. */
   void minMaxX( T &min, T &miny, T &max, T &maxy,
 		int first=0, int last=-1 ) const;
     /*! The minimum value \a min and the maximum value \a max
@@ -439,7 +448,8 @@ class Map : public Array < T >
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered.
 	In \a minx and \a maxx the corresponding values of the x-data array
-	are returned. */
+	are returned.
+        If the range is empty, \a min, \a minx, \a max, and \a maxx are set to 0. */
   void minMaxY( T &min, T &minx, T &max, T &maxx,
 		int first=0, int last=-1 ) const;
     /*! The indices \a minindex and \a maxindex of the elements
@@ -449,7 +459,9 @@ class Map : public Array < T >
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered.
         The corresponding values of the y-data array are returned 
-	in \a ymin and \a ymax. */
+	in \a ymin and \a ymax.
+        If the range is empty, \a min, \a miny, \a max, and \a maxy are set to 0
+	and \a minindex and \a maxindex to -1. */
   void minMaxXIndex( T &min, int &minindex, T &miny,
 		     T &max, int &maxindex, T &maxy,
 		     int first=0, int last=-1 ) const;
@@ -459,7 +471,9 @@ class Map : public Array < T >
         \a first (inclusively) and \a last (exclusively). 
         If \a last is negative it is set behind the last data element. 
         Called with no arguments all data elements are considered.
-	The corresponding values of the x-data array are returned in \a minx and \a maxx. */
+	The corresponding values of the x-data array are returned in \a minx and \a maxx.
+        If the range is empty, \a min, \a minx, \a max, and \a maxx are set to 0
+	and \a minindex and \a maxindex to -1. */
   void minMaxYIndex( T &min, int &minindex, T &minx,
 		     T &max, int &maxindex, T &maxx,
 		     int first=0, int last=-1 ) const;
