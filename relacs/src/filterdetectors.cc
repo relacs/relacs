@@ -34,7 +34,7 @@ namespace relacs {
 
 
 FilterDetectors::FilterDetectors( RELACSWidget *rw, QWidget *parent )
-  : PluginTabs( Qt::Key_F, parent ),
+  : PluginTabs( Qt::Key_F, rw, parent ),
     ConfigClass( "FilterDetectors", RELACSPlugin::Core ),
     FL(),
     TraceInputTrace( 0 ),
@@ -44,8 +44,7 @@ FilterDetectors::FilterDetectors( RELACSWidget *rw, QWidget *parent )
     StimulusEvents( 0 ),
     Menu( 0 ),
     NeedAdjust( false ),
-    AdjustFlag( 0 ),
-    RW( rw )
+    AdjustFlag( 0 )
 {
 }
 
@@ -340,7 +339,7 @@ int FilterDetectors::events( void )
 
 
 void FilterDetectors::createStimulusEvents( InList &data, EventList &events,
-					    vector< PlotTrace::EventStyle > &eventstyles )
+					    deque< PlotTrace::EventStyle > &eventstyles )
 {
   EventData e( 6000, 0.0, 0.0, data[0].sampleInterval(),
 	       false, true );  // as the width we store the signal durations
@@ -368,7 +367,7 @@ void FilterDetectors::createStimulusEvents( InList &data, EventList &events,
 
 
 void FilterDetectors::createRestartEvents( InList &data, EventList &events,
-					   vector< PlotTrace::EventStyle > &eventstyles )
+					   deque< PlotTrace::EventStyle > &eventstyles )
 {
   EventData e( 6000, 0.0, 0.0, data[0].sampleInterval(),
 	       false, false );
@@ -396,7 +395,7 @@ void FilterDetectors::createRestartEvents( InList &data, EventList &events,
 
 
 void FilterDetectors::createRecordingEvents( InList &data, EventList &events,
-					     vector< PlotTrace::EventStyle > &eventstyles )
+					     deque< PlotTrace::EventStyle > &eventstyles )
 {
   EventData e( 6000, 0.0, 0.0, data[0].sampleInterval(),
 	       false, false );
@@ -423,8 +422,8 @@ void FilterDetectors::createRecordingEvents( InList &data, EventList &events,
 
 
 string FilterDetectors::createTracesEvents( InList &data, EventList &events,
-					    vector< PlotTrace::TraceStyle > &tracestyles,
-					    vector< PlotTrace::EventStyle > &eventstyles )
+					    deque< PlotTrace::TraceStyle > &tracestyles,
+					    deque< PlotTrace::EventStyle > &eventstyles )
 {
   string warning = "";
 

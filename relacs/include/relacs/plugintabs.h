@@ -27,6 +27,9 @@
 namespace relacs {
 
 
+class RELACSWidget;
+
+
 /*! 
 \class PluginTabs
 \author Jan Benda
@@ -41,7 +44,7 @@ class PluginTabs : public QTabWidget
 public:
 
     /*! The keyboard focus is activated by pressing \a key. */
-  PluginTabs( int key, QWidget *parent=0 );
+  PluginTabs( int key, RELACSWidget *rw, QWidget *parent=0 );
   ~PluginTabs( void );
 
     /*! Grabs ALT-KeyLeft/Right for paging through the tabs. */
@@ -52,6 +55,8 @@ protected:
 
   void keyPressEvent( QKeyEvent *event );
   static QWidget *firstEnabledChildWidget( QLayout *l );
+
+  RELACSWidget *RW;
 
 
 private:

@@ -19,6 +19,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <relacs/relacswidget.h>
 #include <relacs/plugintabs.h>
 #include <QApplication>
 #include <QKeyEvent>
@@ -27,8 +28,9 @@
 namespace relacs {
 
 
-PluginTabs::PluginTabs( int key, QWidget *parent )
+PluginTabs::PluginTabs( int key, RELACSWidget *rw, QWidget *parent )
   : QTabWidget( parent ),
+    RW( rw ),
     HotKey( key )
 {
   qApp->installEventFilter( this );

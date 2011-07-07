@@ -26,6 +26,7 @@
 #include <relacs/model.h>
 #include <relacs/acquire.h>
 #include <relacs/control.h>
+#include <relacs/controltabs.h>
 #include <relacs/filter.h>
 #include <relacs/filterdetectors.h>
 #include <relacs/relacsdevices.h>
@@ -1043,19 +1044,13 @@ void RELACSPlugin::removeFocus( void )
 
 Control *RELACSPlugin::control( int index )
 {
-  if ( index >= 0 && index < (int)RW->CN.size() )
-    return RW->CN[index];
-  return 0;
+  return RW->CW->control( index );
 }
 
 
 Control *RELACSPlugin::control( const string &name )
 {
-  for ( unsigned int k=0; k<RW->CN.size(); k++ ) {
-    if ( RW->CN[k]->name() == name )
-      return RW->CN[k];
-  }
-  return 0;
+  return RW->CW->control( name );
 }
 
 

@@ -34,7 +34,7 @@
 #include <QWaitCondition>
 #include <QSplashScreen>
 #include <QApplication>
-#include <vector>
+#include <deque>
 #include <relacs/strqueue.h>
 #include <relacs/configclass.h>
 #include <relacs/configureclasses.h>
@@ -69,7 +69,6 @@ class Macros;
 class FilterDetectors;
 class ControlTabs;
 class Session;
-class Control;
 class DataBrowser;
 
 
@@ -334,11 +333,12 @@ private:
   friend class RELACSPlugin;
   friend class Session;
   friend class Model;
+  friend class Control;
+  friend class ControlTabs;
   friend class RePro;
   friend class RePros;
   friend class PlotTrace;
   friend class Macros;
-  friend class Control;
   friend class DataBrowser;
   friend class FilterDetectors;
   friend class SaveFiles;
@@ -393,13 +393,12 @@ private:
   Macros *MC;
   FilterDetectors *FD;
   Session *SN;
-  vector<Control*> CN;
   DataBrowser *DB;
 
   InList IL;
   EventList ED;
-  vector<PlotTrace::TraceStyle> TraceStyles;
-  vector<PlotTrace::EventStyle> EventStyles;
+  deque<PlotTrace::TraceStyle> TraceStyles;
+  deque<PlotTrace::EventStyle> EventStyles;
 
   double SignalTime;
   double CurrentTime;

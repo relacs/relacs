@@ -261,33 +261,11 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   for ( int k=0; k<HelpPathes.size(); k++ )
     HelpPathes[k].preventSlash();
 
-  // session, control tabwidget:
-  CW = new ControlTabs;
-
   OrgBackground = palette().color( QPalette::Window );
 
-  // Control plugins:
-  CN.clear();
-  CN.reserve( 10 );
-  Parameter &cp = SS[ "controlplugin" ];
-  for ( int k=0; k<cp.size(); k++ ) {
-    string cm = cp.text( k, "" );
-    if ( ! cm.empty() ) {
-      Control *cn = (Control *)Plugins::create( cm, RELACSPlugin::ControlId );
-      if ( cn == 0 ) {
-	printlog( "! warning: Contol plugin " + cm + " not found!" );
-	MessageBox::warning( "RELACS Warning !", 
-			     "Contol plugin <b>" + cm + "</b> not found!",
-			     this );
-      }
-      else {
-	if ( cn->widget() != 0 )
-	  CW->addTab( cn->widget(), cn->name().c_str() );
-	cn->setRELACSWidget( this );
-	CN.push_back( cn );
-      }
-    }
-  }
+  // session, control tabwidget:
+  CW = new ControlTabs( this );
+  CW->createControls();
 
   // data browser:
   //  DB = new DataBrowser( this );
@@ -388,10 +366,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     MD->addActions( pluginmenu, doxydoc );
     pluginmenu->addSeparator();
   }
-  if ( ! CN.empty() ) {
-    for ( unsigned int k=0; k<CN.size(); k++ )
-      CN[k]->addActions( pluginmenu, doxydoc );
-  }
+  CW->addMenu( pluginmenu, doxydoc );
 
   // devices:
   DeviceMenu = menuBar()->addMenu( "De&vices" );
@@ -434,10 +409,6 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   helpmenu->addAction( "&About...", (QWidget*)this, SLOT( about() ) );
 
   // layout:
-  /*
-  int wd = FD->minimumSizeHint().width();
-  int wc = CW->minimumSizeHint().width();
-  */
   int wd = FD->sizeHint().width();
   int wc = CW->sizeHint().width();
   int w = wc > wd ? wc : wd;
@@ -475,10 +446,7 @@ RELACSWidget::~RELACSWidget( void )
     delete MD;
   }
   delete FD;
-  for ( unsigned int k=0; k<CN.size(); k++ ) {
-    Plugins::destroy( CN[k]->name(), RELACSPlugin::ControlId );
-    delete CN[k];
-  }
+  delete CW;
   delete RP;
   delete PT;
   Plugins::close();
@@ -883,11 +851,9 @@ void RELACSWidget::run( void )
   // stop all activity:
   UpdateDataWait.wakeAll();
   stopRePro();
-  for ( unsigned int k=0; k<CN.size(); k++ )
-    CN[k]->requestStop();
+  CW->requestStop();
   wakeAll();
-  for ( unsigned int k=0; k<CN.size(); k++ )
-    CN[k]->wait( 0.2 );
+  CW->wait( 0.2 );
   ReadLoop.stop();
   WriteLoop.stop();
   ThreadSleepWait.wakeAll();
@@ -1157,8 +1123,7 @@ void RELACSWidget::notifyStimulusData( void )
   if ( MD != 0 )
     MD->notifyStimulusData();
   FD->notifyStimulusData();
-  for ( unsigned int k=0; k<CN.size(); k++ )
-    CN[k]->notifyStimulusData();
+  CW->notifyStimulusData();
   RP->notifyStimulusData();
 }
 
@@ -1168,8 +1133,7 @@ void RELACSWidget::notifyMetaData( const string &section )
   if ( MD != 0 )
     MD->notifyMetaData( section );
   FD->notifyMetaData( section );
-  for ( unsigned int k=0; k<CN.size(); k++ )
-    CN[k]->notifyMetaData( section );
+  CW->notifyMetaData( section );
   RP->notifyMetaData( section );
 }
 
@@ -1390,8 +1354,7 @@ void RELACSWidget::startSession( bool startmacro )
   if ( MD != 0 )
     MD->sessionStarted();
   FD->sessionStarted();
-  for ( unsigned int k=0; k<CN.size(); k++ )
-    CN[k]->sessionStarted();
+  CW->sessionStarted();
   RP->sessionStarted();
 
   if ( startmacro )
@@ -1421,8 +1384,7 @@ void RELACSWidget::stopSession( bool saved )
   if ( MD != 0 )
     MD->sessionStopped( saved );
   FD->sessionStopped( saved );
-  for ( unsigned int k=0; k<CN.size(); k++ )
-    CN[k]->sessionStopped( saved );
+  CW->sessionStopped( saved );
   RP->sessionStopped( saved );
 
   if ( saved )
@@ -1482,11 +1444,9 @@ void RELACSWidget::stopThreads( void )
   stopRePro();
 
   // stop control threads:
-  for ( unsigned int k=0; k<CN.size(); k++ )
-    CN[k]->requestStop();
+  CW->requestStop();
   wakeAll();
-  for ( unsigned int k=0; k<CN.size(); k++ )
-    CN[k]->wait( 0.2 );
+  CW->wait( 0.2 );
 
   // stop data threads:
   RunDataMutex.lock();
@@ -1625,8 +1585,7 @@ void RELACSWidget::setMode( ModeTypes mode )
   if ( MD != 0 )
     MD->modeChanged();
   FD->modeChanged();
-  for ( unsigned int k=0; k<CN.size(); k++ )
-    CN[k]->modeChanged();
+  CW->modeChanged();
   SN->modeChanged();
   RP->modeChanged();
 }
@@ -1688,8 +1647,7 @@ void RELACSWidget::startFirstAcquisition( void )
   PT->resize();
   PT->updateMenu();
 
-  for ( unsigned int k=0; k<CN.size(); k++ )
-    CN[k]->initialize();
+  CW->initialize();
 
   // XXX before configuring, something like AQ->init would be nice
   // in order to set the IL gain factors.
@@ -1707,11 +1665,7 @@ void RELACSWidget::startFirstAcquisition( void )
   ATI->addMenu( DeviceMenu, menuindex );
 
   // controls:
-  for ( unsigned int k=0; k<CN.size(); k++ ) {
-    CN[k]->setSettings();
-    CN[k]->initDevices();
-  }
-
+  CW->initDevices();
   RP->setSettings();
 
   // start data aquisition:
@@ -1761,9 +1715,7 @@ void RELACSWidget::startFirstAcquisition( void )
   RunData = true;
   RunDataMutex.unlock();
   Thread->start( QThread::HighPriority );
-
-  for ( unsigned int k=0; k<CN.size(); k++ )
-    CN[k]->start();
+  CW->start();
 
   // get first RePro and start it:
   MC->startUp(); 
@@ -1824,8 +1776,7 @@ void RELACSWidget::startFirstSimulation( void )
   SimLabel->setText( "" );
   SimLabel->show();
 
-  for ( unsigned int k=0; k<CN.size(); k++ )
-    CN[k]->initialize();
+  CW->initialize();
 
   // XXX before configuring, something like AQ->init would be nice
   // in order to set the IL gain factors.
@@ -1843,11 +1794,7 @@ void RELACSWidget::startFirstSimulation( void )
   ATI->addMenu( DeviceMenu, menuindex );
 
   // controls:
-  for ( unsigned int k=0; k<CN.size(); k++ ) {
-    CN[k]->setSettings();
-    CN[k]->initDevices();
-  }
-
+  CW->initDevices();
   RP->setSettings();
 
   // start data aquisition:
@@ -1899,9 +1846,7 @@ void RELACSWidget::startFirstSimulation( void )
   RunData = true;
   RunDataMutex.unlock();
   Thread->start( QThread::HighPriority );
-
-  for ( unsigned int k=0; k<CN.size(); k++ )
-    CN[k]->start();
+  CW->start();
 
   // get first RePro and start it:
   MC->startUp(); 
@@ -1916,12 +1861,10 @@ void RELACSWidget::startFirstSimulation( void )
 
 void RELACSWidget::startIdle( void )
 {
-  for ( unsigned int k=0; k<CN.size(); k++ )
-    CN[k]->initialize();
+  CW->initialize();
   CFG.read( RELACSPlugin::Plugins );
   CFG.configure( RELACSPlugin::Plugins );
-  for ( unsigned int k=0; k<CN.size(); k++ )
-    CN[k]->initDevices();
+  CW->initDevices();
   RP->setSettings();
   //  IL->clearBuffer();
   //  ED.clear();
@@ -1965,17 +1908,8 @@ void RELACSWidget::keyPressEvent( QKeyEvent *event )
   }
 
   // Controls:
-  // Filter and Detectors:
   if ( ! event->isAccepted() )
     QCoreApplication::sendEvent( CW, event );
-  if ( ! event->isAccepted() && CW->currentWidget() != 0  )
-    QCoreApplication::sendEvent( CW->currentWidget(), event );
-  for ( unsigned int k=0; k<CN.size() && ! event->isAccepted(); k++ ) {
-    if ( CN[k]->globalKeyEvents() &&
-	 CN[k]->widget() != 0 &&
-	 CN[k]->widget() != CW->currentWidget() )
-      QCoreApplication::sendEvent( CN[k]->widget(), event );
-  }
 
   // Filter and Detectors:
   if ( ! event->isAccepted() )
@@ -2005,14 +1939,8 @@ void RELACSWidget::keyReleaseEvent( QKeyEvent *event )
     QCoreApplication::sendEvent( CurrentRePro->widget(), event );
 
   // Controls:
-  if ( ! event->isAccepted() && CW->currentWidget() != 0 )
-    QCoreApplication::sendEvent( CW->currentWidget(), event );
-  for ( unsigned int k=0; k<CN.size() && ! event->isAccepted(); k++ ) {
-    if ( CN[k]->globalKeyEvents() &&
-	 CN[k]->widget() != 0 &&
-	 CN[k]->widget() != CW->currentWidget() )
-      QCoreApplication::sendEvent( CN[k]->widget(), event );
-  }
+  if ( ! event->isAccepted() )
+    QCoreApplication::sendEvent( CW, event );
 
   // Filter and Detectors:
   if ( ! event->isAccepted() )
