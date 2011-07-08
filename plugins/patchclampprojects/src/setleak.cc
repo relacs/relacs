@@ -308,7 +308,7 @@ void SetLeak::customEvent( QEvent *qce )
   switch ( qce->type() - QEvent::User ) {
   case 11: {
     if ( STW.firstWidget() != 0 )
-      STW.firstWidget()->setFocus();
+      STW.firstWidget()->setFocus( Qt::TabFocusReason );
     break;
   }
   case 12: {

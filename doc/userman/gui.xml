@@ -271,7 +271,7 @@
             <variablelist>
 
                   <varlistentry>
-                    <term>General:</term>
+                    <term>General</term>
                     <listitem>
        	              <itemizedlist>
                         <listitem><para><keycap>Enter, Return</keycap>: Start/stop recording.</para></listitem>
@@ -280,26 +280,28 @@
 		        <listitem><para><keycap>Shift+Ctrl+I</keycap>: Stop all activity (idle mode).</para></listitem>
 		        <listitem><para><keycap>Alt+I</keycap>: Meta-data dialog.</para></listitem>
 		        <listitem><para><keycap>Alt+Q</keycap>: Quit RELACS.</para></listitem>
-		        <listitem><para><keycap>Shift+Ctrl+F</keycap>: Toggle full-screen mode
-			(be careful when using older Qt version (Version &lt; 3.0)!).</para></listitem>
+		        <listitem><para><keycap>Shift+Ctrl+M</keycap>: Toggle maximize window.</para></listitem>
+		        <listitem><para><keycap>Shift+Ctrl+F</keycap>: Toggle full-screen mode.</para></listitem>
 	              </itemizedlist>
                     </listitem>
                   </varlistentry>
 
                   <varlistentry>
-                    <term>Macros:</term>
+                    <term>Macros</term>
                     <listitem>
 			<itemizedlist>
-			<listitem><para><keycap>ESC</keycap>: Start the fallback macro.
+			<listitem><para><keycap>ESC</keycap>: Start the fall-back macro immediately.
 			 You can continue within the interrupted macro by hitting <keycap>R</keycap> or <keycap>N</keycap> (see below).
 			 If RELACS does not have the key focus, <keycap>ESC</keycap> transfers the key focus to RELACS.
-			 In this situation press <keycap>ESC</keycap> twice to start the fallback macro.
+			 In this situation press <keycap>ESC</keycap> a second time to start the fall-back macro.
 			 The keyfocus is, however, automatically returned to RELACS within 15 seconds.</para></listitem>
 			<listitem><para><keycap>F1-F12</keycap>: Start a macro.</para></listitem>
-			<listitem><para><keycap>Shift+ESC</keycap>: Open menu of fallback macro.</para></listitem>
+			<listitem><para><keycap>Shift+ESC</keycap>: Open menu of fall-back macro.</para></listitem>
 			<listitem><para><keycap>Shift+F1-F12</keycap>: Open macro menu.</para></listitem>
-			<listitem><para><keycap>S</keycap>: Skip current RePro and start the next RePro of the current macro.</para></listitem>
-			<listitem><para><keycap>B</keycap>: ("Break") Pause current macro by starting the fallback macro after the current RePro finished.</para></listitem>
+			<listitem><para><keycap>Space</keycap>: Kindly request the current RePro to finish. The more often <keycap>Space</keycap> is pressed, the more urgent is the request. When exactly the RePro finishes depends on its implementation. Usually, a RePro stops after the current stimulus is delivered and analyzed.</para></listitem>
+			<listitem><para><keycap>S</keycap>: Skip current RePro (stop it immediately) and start the next RePro of the current macro.</para></listitem>
+			<listitem><para><keycap>B</keycap>: ("Break") Interrupt current macro by starting the fall-back macro after the current RePro finished (as by pressing <keycap>Space</keycap>).
+			    You can continue within the interrupted macro by hitting <keycap>R</keycap> or <keycap>N</keycap> (see below).</para></listitem>
 			<listitem><para><keycap>R</keycap>: ("Resume") Resume macro with the RePro where it was interrupted by either <keycap>ESC</keycap> or <keycap>B</keycap>.</para></listitem>
 			<listitem><para><keycap>N</keycap>: ("Resume Next") Resume macro with the RePro following the one where the macro was interrupted
 			by either <keycap>ESC</keycap> or <keycap>B</keycap>.</para></listitem>
@@ -308,11 +310,11 @@
                   </varlistentry>
 
                   <varlistentry>
-                    <term>RePros:</term>
+                    <term>RePros</term>
                     <listitem>
 			<itemizedlist>
 			<listitem><para><keycap>Ctrl+O</keycap>: If the current RePro is not the fall-back RePro 
-					 of an explicitly marked fallback macro
+					 of an explicitly marked fall-back macro
 					 then launch options dialog of the current RePro,
 				 otherwise launch options dialog of the previously run RePro.</para></listitem>
 			<listitem><para><keycap>Ctrl+V</keycap>: View previously shown RePro</para></listitem>
@@ -321,8 +323,8 @@
                     </listitem>
                   </varlistentry>
 
-                  <varlistentry>
-                    <term>Plots:</term>
+                  <varlistentry xml:id='plotkeys'>
+                    <term xml:id='plotkeystitle'>Plots</term>
                     <listitem>
 			<itemizedlist>
 			<listitem><para><keycap>+</keycap>: Zoom in by dividing time axis by a factor two.</para></listitem>
@@ -353,19 +355,23 @@
                   </varlistentry>
 
                   <varlistentry>
-                    <term>Filter/Detectors:</term>
+                    <term>Filter/Detectors</term>
                     <listitem>
 			<itemizedlist>
 			<listitem><para><keycap>F</keycap>: Put keyboard focus on active filter/detector widget.</para></listitem>
+			<listitem><para><keycap>Alt+RightArrow</keycap>: Make the next filter/detector widget the active one (only if the keyboard focus is on the active filter/detector widget).</para></listitem>
+			<listitem><para><keycap>Alt+LeftArrow</keycap>: Make the previous filter/detector widget the active one (only if the keyboard focus is on the active filter/detector widget).</para></listitem>
 		        </itemizedlist>
                     </listitem>
                   </varlistentry>
 
                   <varlistentry>
-                    <term>Controls:</term>
+                    <term>Controls</term>
                     <listitem>
 			<itemizedlist>
 			<listitem><para><keycap>C</keycap>: Put keyboard focus on active control widget.</para></listitem>
+			<listitem><para><keycap>Alt+RightArrow</keycap>: Make the next control widget the active one (only if the keyboard focus is on the active control widget).</para></listitem>
+			<listitem><para><keycap>Alt+LeftArrow</keycap>: Make the previous control widget the active one (only if the keyboard focus is on the active control widget).</para></listitem>
 		        </itemizedlist>
                     </listitem>
                   </varlistentry>
@@ -428,7 +434,7 @@
                   <listitem>
 		    <itemizedlist>
 			<listitem><para><guimenuitem>Options</guimenuitem>: If the current RePro is not the fall-back RePro 
-					 of an explicitly marked fallback macro
+					 of an explicitly marked fall-back macro
 					 then launch options dialog of the current RePro,
 				 otherwise launch options dialog of the previously run RePro.</para></listitem>
 			<listitem><para><guimenuitem>View</guimenuitem>: View previously shown RePro.</para></listitem>
@@ -455,11 +461,12 @@
 			<listitem><para><guimenuitem>Reload</guimenuitem>: Reload the current macro configuration file (see <xref linkend='macros' endterm='macrostitle'/>).</para></listitem>
 			<listitem><para><guimenuitem>Load</guimenuitem>: Load a macro configuration file selected from a file browser (see <xref linkend='macros' endterm='macrostitle'/>).</para></listitem>
 			<listitem><para><guimenuitem>Switch</guimenuitem>: Switch to another macro configuration file.</para></listitem>
-			<listitem><para><guimenuitem>Skip RePro</guimenuitem>: Skip current RePro and start the next RePro of the current macro.</para></listitem>
-			<listitem><para><guimenuitem>Break</guimenuitem>: Pause current macro by starting the fallback macro after the current RePro finished.</para></listitem>
-			<listitem><para><guimenuitem>Resume</guimenuitem>: Resume macro with the RePro where it was interrupted by either <keycap>ESC</keycap> or <keycap>B</keycap> (break).</para></listitem>
+			<listitem><para><guimenuitem>Skip RePro</guimenuitem>: Skip current RePro (stop it immediately) and start the next RePro of the current macro.</para></listitem>
+			<listitem><para><guimenuitem>Break</guimenuitem>: Interrupt current macro by starting the fall-back macro after the current RePro finished (as by pressing <keycap>Space</keycap>).
+			    You can continue within the interrupted macro by selecting <guimenuitem>Resume</guimenuitem> or <guimenuitem>Resume Next</guimenuitem> (see below).</para></listitem>
+			<listitem><para><guimenuitem>Resume</guimenuitem>: Resume macro with the RePro where it was interrupted by either <keycap>ESC</keycap> or <keycap>B</keycap> (<guimenuitem>Break</guimenuitem>).</para></listitem>
 			<listitem><para><guimenuitem>Resume Next</guimenuitem>: Resume macro with the RePro following the one where the macro was interrupted
-			by either <keycap>ESC</keycap> or <keycap>B</keycap> (break).</para></listitem>
+			by either <keycap>ESC</keycap> or <keycap>B</keycap> (<guimenuitem>Break</guimenuitem>).</para></listitem>
                         <listitem>
 		    <para>These general commands are followed by a list of available macros
 		    with the following submenu:</para>
@@ -492,7 +499,7 @@
                   <varlistentry><term><guimenu>View</guimenu></term>
                   <listitem>
 		    <itemizedlist>
-			<listitem><para><emphasis>Traces</emphasis>: Various commands for customizing the PlotTrace widget.</para></listitem>
+			<listitem><para><emphasis>Traces</emphasis>: Various commands for customizing the PlotTrace widget. See <xref linkend='plotkeys' endterm='plotkeystitle'/> for details.</para></listitem>
 			<listitem><para><guimenuitem>Fullscreen Mode:</guimenuitem>: Toggle fullscreen mode.</para></listitem>
 		    </itemizedlist>	
                   </listitem>

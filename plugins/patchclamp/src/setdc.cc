@@ -401,7 +401,7 @@ void SetDC::customEvent( QEvent *qce )
 {
   switch ( qce->type() - QEvent::User ) {
   case 11: {
-    EW->setFocus();
+    EW->setFocus( Qt::TabFocusReason );
     connect( EW, SIGNAL( valueChanged( double ) ),
 	     this, SLOT( setValue( double ) ) );
     break;

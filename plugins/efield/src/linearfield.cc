@@ -255,7 +255,7 @@ void LinearField::customEvent( QEvent *qce )
   switch ( qce->type() - QEvent::User ) {
   case 11: {
     if ( O.firstWidget() != 0 )
-      O.firstWidget()->setFocus();
+      O.firstWidget()->setFocus( Qt::TabFocusReason );
     break;
   }
   case 12: {
