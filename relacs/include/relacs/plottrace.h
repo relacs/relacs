@@ -45,6 +45,8 @@ class RELACSWidget;
 
   /*! Flag for the modes of traces or events, indicating that they should be plotted. */
 static const int PlotTraceMode = 0x0008;
+  /*! Flag for the modes of traces, indicating that it should be centered vertically. */
+static const int PlotTraceCenterVertically = 0x0100;
 
 class PlotTrace : public RELACSPlugin
 {
@@ -139,6 +141,7 @@ public slots:
   void viewWrapped( void );
   void manualRange( void );
   void autoRange( void );
+  void centerVertically( void );
 
   void plotOnOff( void );
   void viewToggle( void );

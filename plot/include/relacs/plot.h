@@ -927,7 +927,13 @@ public:
     /*! Returns \c true if the user has scaled the x1-range, y1-range,
         x2-range, or the y-range with the mouse. */
   bool zoomedRange( void );
-    /*! Clears the zoom-stack. */
+    /*! The number of elements on the zoom stack. */
+  bool ranges( void ) const;  
+    /*! Set the ranges according to the last zoom-stack entry and remove it from the stack. */
+  void popRanges( void );
+    /*! Push the current ranges on the zoom stack. */
+  void pushRanges( void );
+    /*! Clears the zoom stack. */
   void resetRanges( void );
 
     /*! This factor is used by the mouseAnalyse() for
@@ -1061,10 +1067,6 @@ protected:
   };
 
   vector< RangeCopy > MouseRangeStack;
-
-  bool ranges( void ) const;  
-  void popRanges( void );
-  void pushRanges( void );
 
 
 protected slots:

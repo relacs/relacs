@@ -139,6 +139,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   addInteger( "inputtracechannel", "Input trace channel", 0 );
   addText( "inputtracereference", "Input trace reference", InData::referenceStr( InData::RefGround ) );
   addInteger( "inputtracegain", "Input trace gain", 0 );
+  addBoolean( "inputtracecenter", "Input trace center vertically", true );
   addLabel( "output data", 0, Parameter::TabLabel );
   addNumber( "maxoutputrate", "Default maximum output sampling rate", 100000.0, 1.0, 10000000.0, 1000.0, "Hz", "kHz" );
   addText( "outputtraceid", "Output trace identifier", "out-1" );
@@ -677,7 +678,10 @@ void RELACSWidget::setupInTraces( void )
       failed = true;
     id.setDevice( device );
     id.setContinuous();
-    id.setMode( SaveFiles::SaveTrace | PlotTraceMode );
+    int m = SaveFiles::SaveTrace | PlotTraceMode;
+    if ( boolean( "inputtracecenter", k ) )
+      m |= PlotTraceCenterVertically;
+    id.setMode( m );
     id.setReference( text( "inputtracereference", k, InData::referenceStr( InData::RefGround ) ) );
     int gain = integer( "inputtracegain", k, -1 );
     if ( gain < 0 )

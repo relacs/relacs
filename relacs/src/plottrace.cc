@@ -512,6 +512,7 @@ void PlotTrace::addMenu( QMenu *menu )
   Menu->addAction( "&Wrapped view", this, SLOT( viewWrapped() ), Qt::Key_Insert );
   Menu->addAction( "&Manual", this, SLOT( manualRange() ), Qt::CTRL + Qt::Key_M );
   Menu->addAction( "&Auto", this, SLOT( autoRange() ), Qt::CTRL + Qt::Key_A );
+  Menu->addAction( "&Center", this, SLOT( centerVertically() ) );
   Menu->addAction( "&Toggle Plot", this, SLOT( plotOnOff() ) );
 
   Menu->addSeparator();
@@ -957,6 +958,51 @@ void PlotTrace::autoRange( void )
 }
 
 
+void PlotTrace::centerVertically( void )
+{
+  // select plots to be centered:
+  vector<int> cp;
+  cp.reserve( VP.size() );
+  cp.clear();
+  P.lock();
+  if ( VP.size() == 1 )
+    cp.push_back( VP[0] );
+  else {
+    for ( unsigned int c=0; c<VP.size(); c++ ) {
+      if ( trace(c).mode() & PlotTraceCenterVertically )
+	cp.push_back( VP[c] );
+    }
+  }
+  P.unlock();
+  if ( cp.empty() )
+    return;
+
+  // center plots:
+  RW->readLockData();
+  P.lock();
+  double tfac = 1000.0;
+  for ( unsigned int c=0; c<cp.size(); c++ ) {
+    double xmin = P[cp[c]].xminRange()/tfac + Offset;
+    double xmax = P[cp[c]].xmaxRange()/tfac + Offset;
+    // make sure, there are enough data shown in the window:
+    if ( trace( cp[c] ).currentTime() < 0.5*(xmin+xmax) ) {
+      xmin = trace( cp[c] ).currentTime() - (xmax-xmin);
+      xmax = trace( cp[c] ).currentTime();
+    }
+    double min = 0.0;
+    double max = 0.0;
+    trace( cp[c] ).minMax( min, max, xmin, xmax );
+    if ( P[cp[c]].ranges() == 0 )
+      P[cp[c]].pushRanges();
+    double center = 0.5*(min+max);
+    double range = 0.5*(P[cp[c]].ymaxRange() - P[cp[c]].yminRange());
+    P[cp[c]].setYRange( center-range, center+range );
+  }
+  P.unlock();
+  RW->unlockData();
+}
+
+
 void PlotTrace::viewToggle( void )
 {
   P.lock();
@@ -995,6 +1041,10 @@ void PlotTrace::keyPressEvent( QKeyEvent *event )
 
   case Qt::Key_Equal:
     zoomIn();
+    break;
+
+  case Qt::Key_V:
+    centerVertically();
     break;
 
   default: {
