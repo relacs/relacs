@@ -1,4 +1,5 @@
 Metadata support of OutData:
+- Unify TraceSpec and OutDataInfo?
 - Add constWave function to OutData
 - Add ramp functions to OutData that set also the descriptions
 - Add appendRamp function to OutData

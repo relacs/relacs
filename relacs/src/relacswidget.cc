@@ -30,7 +30,7 @@
 #include <QToolTip>
 #include <QLayout>
 #include <QTextBrowser>
-#include <relacs/relacswidget.h>
+#include <relacs/outdatainfo.h>
 #include <relacs/plugins.h>
 #include <relacs/defaultsession.h>
 #include <relacs/aisim.h>
@@ -54,6 +54,7 @@
 #include <relacs/session.h>
 #include <relacs/simulator.h>
 #include <relacs/optdialog.h>
+#include <relacs/relacswidget.h>
 
 namespace relacs {
 
@@ -926,6 +927,44 @@ void RELACSWidget::activateGains( bool datalocked )
 }
 
 
+class OutDataEvent : public QEvent
+{
+
+public:
+
+  OutDataEvent( const OutData &signal, const Acquire *aq )
+    : QEvent( Type( User+5 ) ),
+      Signal( signal )
+  {
+    int inx = -1;
+    if ( ! signal.traceName().empty() )
+      inx = aq->outTraceIndex( signal.traceName() );
+    else
+      inx = signal.trace();
+    if ( inx >= 0 )
+      Signal.setTraceName( aq->outTraceName( inx ) );
+  }
+
+  OutDataInfo Signal;
+};
+
+
+class OutListEvent : public QEvent
+{
+
+public:
+
+  OutListEvent( const OutList &signal )
+    : QEvent( Type( User+6 ) )
+  {
+    for ( int k=0; k<signal.size(); k++ )
+      Signals.push_back( signal[k] );
+  }
+
+  deque< OutDataInfo > Signals;
+};
+
+
 int RELACSWidget::write( OutData &signal )
 {
   if ( AQ->readSignal( SignalTime, IL, ED ) || // we should get the start time of the latest signal here
@@ -958,6 +997,7 @@ int RELACSWidget::write( OutData &signal )
     WriteLoop.start( signal.writeTime() );
     lockSignals();
     SF->save( signal );
+    QCoreApplication::postEvent( this, new OutDataEvent( signal, AQ ) );
     unlockSignals();
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     AQ->readRestart( IL, ED );
@@ -1006,6 +1046,7 @@ int RELACSWidget::write( OutList &signal )
     WriteLoop.start( signal[0].writeTime() );
     lockSignals();
     SF->save( signal );
+    QCoreApplication::postEvent( this, new OutListEvent( signal ) );
     unlockSignals();
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     AQ->readRestart( IL, ED );
@@ -1051,6 +1092,7 @@ int RELACSWidget::directWrite( OutData &signal )
   if ( r == 0 ) {
     lockSignals();
     SF->save( signal );
+    QCoreApplication::postEvent( this, new OutDataEvent( signal, AQ ) );
     unlockSignals();
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     AQ->readRestart( IL, ED );
@@ -1095,6 +1137,7 @@ int RELACSWidget::directWrite( OutList &signal )
   if ( r == 0 ) {
     lockSignals();
     SF->save( signal );
+    QCoreApplication::postEvent( this, new OutListEvent( signal ) );
     unlockSignals();
     AQ->readSignal( SignalTime, IL, ED ); // if acquisition was restarted we here get the signal start
     AQ->readRestart( IL, ED );
@@ -1263,21 +1306,44 @@ void RELACSWidget::stopRePro( void )
 
 void RELACSWidget::customEvent( QEvent *qce )
 {
-  if ( qce->type() == QEvent::User+1 ) {
+  switch ( qce->type() - QEvent::User ) {
+
+  case 1: {
     MC->startNextRePro( true );
+    break;
   }
-  else if ( qce->type() == QEvent::User+2 ) {
+
+  case 2: {
     DV->updateMenu();
     AOD->updateMenu();
     ATD->updateMenu();
     ATI->updateMenu();
     TRIGD->updateMenu();
+    break;
   }
-  else if ( qce->type() == QEvent::User+3 ) {
+
+  case 3: {
     MessageBox::error( "RELACS Error !", "Transfering stimulus data to hardware driver failed.", this );
+    break;
   }
-  else if ( qce->type() == QEvent::User+4 ) {
+
+  case 4: {
     MessageBox::warning( "RELACS Error !", AIErrorMsg, 2.0, this );
+    break;
+  }
+
+  case 5: {
+    OutDataEvent *ode = dynamic_cast<OutDataEvent*>( qce );
+    //    DB->addStimulus( ode->Signal );
+    break;
+  }
+
+  case 6: {
+    OutListEvent *ole = dynamic_cast<OutListEvent*>( qce );
+    //    DB->addStimulus( ole->Signals );
+    break;
+  }
+
   }
 }
 
@@ -1416,7 +1482,7 @@ void RELACSWidget::stopSession( bool saved )
     InfoFile = 0;
   }
 
-  //  DB->endSession();
+  //  DB->endSession( saved );
 
   SessionStopWait.wakeAll();
 

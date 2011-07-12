@@ -22,6 +22,7 @@
 #ifndef _RELACS_DATABROWSER_H_
 #define _RELACS_DATABROWSER_H_ 1
 
+#include <deque>
 #include <QWidget>
 #include <QTreeWidget>
 #include <relacs/str.h>
@@ -31,12 +32,13 @@ namespace relacs {
 
 
 class RePro;
+class OutDataInfo;
 
 
 /*! 
 \class DataBrowser
 \brief Interface for browsing previously recorded data.
-\author Jan Benda
+\author Karin Fisch, Jan Benda
 */
 
 
@@ -50,20 +52,18 @@ public:
   DataBrowser( QWidget *parent=0 );
   ~DataBrowser( void );
 
-  string folder;
-  bool session;
-
-  void addStimulus(const OutData &Signal);
-  void addStimulus(const OutList &Signal);
-  void addRepro( const RePro *Repro );
+  void addStimulus( const OutDataInfo &signal );
+  void addStimulus( const deque< OutDataInfo > &signal );
+  void addRepro( const RePro *repro );
   void addSession( const string &path );
-  void endSession( void );
+  void endSession( bool saved );
   void load( const string &dir );
-  void read(string file, QTreeWidgetItem *parent);
+  void read( string file, QTreeWidgetItem *parent );
+
 
 public slots:
 
-  void list(QTreeWidgetItem * item, int col);
+  void list( QTreeWidgetItem * item, int col );
 
 
 private:
@@ -76,6 +76,8 @@ private:
   map<long, DataBrowser::Stimulus> * NStimuli;
   map< string, map<int,DataBrowser::Rep>* > * Protocol;
   map< string, DataBrowser::Cell* > * Header;
+  string Folder;
+  bool Session;
 
 };
 

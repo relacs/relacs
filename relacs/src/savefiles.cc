@@ -177,7 +177,7 @@ string SaveFiles::addPath( const string &file ) const
 
 void SaveFiles::storeFile( const string &file ) const
 {
-  for ( vector<string>::const_iterator sp = ReProFiles.begin(); sp != ReProFiles.end(); ++sp ) {
+  for ( deque<string>::const_iterator sp = ReProFiles.begin(); sp != ReProFiles.end(); ++sp ) {
     if ( *sp == file )
       return;
   }
@@ -430,7 +430,7 @@ void SaveFiles::save( const OutData &signal )
 
   // store stimulus:
   StimulusData = true;
-  Stimuli.push_back( Stimulus( signal ) );
+  Stimuli.push_back( signal );
 
   // reset stimulus offset:
   PrevSignalTime = SignalTime;
@@ -478,38 +478,38 @@ void SaveFiles::saveStimulus( void )
     return;
 
   // extract intensity from stimulus description:
-  vector< vector < Options > > stimuliref( Stimuli.size() );
+  deque< deque < Options > > stimuliref( Stimuli.size() );
   for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
-    for ( unsigned int k=0; k<Stimuli[j].Descriptions.size(); k++ ) {
+    for ( int k=0; k<Stimuli[j].descriptions(); k++ ) {
       stimuliref[j].push_back( Options() );
-      Options::iterator pi = Stimuli[j].Descriptions[k].find( "Intensity" );
-      if ( pi != Stimuli[j].Descriptions[k].end() ) {
+      Options::iterator pi = Stimuli[j].description( k ).find( "Intensity" );
+      if ( pi != Stimuli[j].description( k ).end() ) {
 	stimuliref[j].back().add( *pi );
-	Stimuli[j].Descriptions[k].erase( pi );
+	Stimuli[j].description( k ).erase( pi );
       }
       // XXX once OutData does not have idents any more, the following lines can be erased:
-      Options::iterator pd = Stimuli[j].Descriptions[k].find( "Description" );
-      if ( pd != Stimuli[j].Descriptions[k].end() ) {
+      Options::iterator pd = Stimuli[j].description( k ).find( "Description" );
+      if ( pd != Stimuli[j].description( k ).end() ) {
 	stimuliref[j].back().add( *pd );
-	Stimuli[j].Descriptions[k].erase( pd );
+	Stimuli[j].description( k ).erase( pd );
       }
     }
   }
 
   // generate names for stimuli:
-  vector< string > stimulinames( Stimuli.size() );
+  deque< string > stimulinames( Stimuli.size() );
   for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
     string sn = StimuliRePro;
-    for ( unsigned int k=0; k<Stimuli[j].TypeNames.size(); k++ )
-      sn += '-' + Stimuli[j].TypeNames[k];
+    for ( int k=0; k<Stimuli[j].descriptions(); k++ )
+      sn += '-' + Stimuli[j].typeName( k );
     stimulinames[j] = sn;
   }
 
   // track stimuli:
-  vector< bool > newstimuli( Stimuli.size(), false );
+  deque< bool > newstimuli( Stimuli.size(), false );
   for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
-    map < vector< Options >, string > &rsd = ReProStimuli[ stimulinames[j] ];
-    string &rsds = rsd[ Stimuli[j].Descriptions ];
+    map < deque< Options >, string > &rsd = ReProStimuli[ stimulinames[j] ];
+    string &rsds = rsd[ Stimuli[j].allDescriptions() ];
     if ( rsds.empty() ) {
       newstimuli[j] = true;
       stimulinames[j] += '-' + Str( rsd.size() );
@@ -532,11 +532,11 @@ void SaveFiles::saveStimulus( void )
       for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
 	if ( newstimuli[j] ) {
 	  *SDF << "Stimulus: " << stimulinames[j] << '\n';
-	  *SDF << "Modality: " << RW->AQ->outTrace( Stimuli[j].Trace ).modality() << '\n';
-	  *SDF << "SamplingRate: " << 0.001*Stimuli[j].SampleRate << "kHz\n";
-	  for ( unsigned int k=0; k<Stimuli[j].Descriptions.size(); k++ ) {
-	    *SDF << "Type: " << Stimuli[j].Types[k] << '\n';
-	    Stimuli[j].Descriptions[k].save( *SDF, "  " );
+	  *SDF << "Modality: " << RW->AQ->outTrace( Stimuli[j].trace() ).modality() << '\n';
+	  *SDF << "SamplingRate: " << 0.001*Stimuli[j].sampleRate() << "kHz\n";
+	  for ( int k=0; k<Stimuli[j].descriptions(); k++ ) {
+	    *SDF << "Type: " << Stimuli[j].type( k ) << '\n';
+	    Stimuli[j].description( k ).save( *SDF, "  " );
 	  }
 	  *SDF << '\n';
 	}
@@ -571,23 +571,23 @@ void SaveFiles::saveStimulus( void )
     }
     StimulusKey.save( *SF, TraceFiles[0].Trace->signalTime() - SessionTime );
     // stimulus:
-    StimulusKey.save( *SF, 1000.0*Stimuli[0].Delay );
+    StimulusKey.save( *SF, 1000.0*Stimuli[0].delay() );
     for ( int k=0; k<RW->AQ->outTracesSize(); k++ ) {
       const Attenuate *att = RW->AQ->outTraceAttenuate( k );
       unsigned int j=0;
       for ( j=0; j<Stimuli.size(); j++ ) {
-	if ( Stimuli[j].Device == RW->AQ->outTrace( k ).device() &&
-	     Stimuli[j].Channel == RW->AQ->outTrace( k ).channel() ) {
-	  Stimuli[j].Trace = k; // needed for XML
-	  StimulusKey.save( *SF, 0.001*Stimuli[j].SampleRate );
-	  StimulusKey.save( *SF, 1000.0*Stimuli[j].Length );
+	if ( Stimuli[j].device() == RW->AQ->outTrace( k ).device() &&
+	     Stimuli[j].channel() == RW->AQ->outTrace( k ).channel() ) {
+	  Stimuli[j].setTrace( k ); // needed for XML
+	  StimulusKey.save( *SF, 0.001*Stimuli[j].sampleRate() );
+	  StimulusKey.save( *SF, 1000.0*Stimuli[j].length() );
 	  if ( att != 0 ) {
-	    StimulusKey.save( *SF, Stimuli[j].Intensity );
+	    StimulusKey.save( *SF, Stimuli[j].intensity() );
 	    if ( ! att->frequencyName().empty() )
-	      StimulusKey.save( *SF, Stimuli[j].CarrierFreq );
+	      StimulusKey.save( *SF, Stimuli[j].carrierFreq() );
 	  }
 	  // XXX once all RePro support descriptions, in the following line Ident should be replaced by stimulinames[]!
-	  StimulusKey.save( *SF, Stimuli[j].Ident );
+	  StimulusKey.save( *SF, Stimuli[j].ident() );
 	  break;
 	}
       }
@@ -615,15 +615,15 @@ void SaveFiles::saveStimulus( void )
 	  *XSF << "<section>\n";
 	  *XSF << "  <type>stimulus</type>\n";
 	  *XSF << "  <name>" << stimulinames[j] << "</name>\n";
-	  Parameter pm( "Modality", "", RW->AQ->outTrace( Stimuli[j].Trace ).modality() );
+	  Parameter pm( "Modality", "", RW->AQ->outTrace( Stimuli[j].trace() ).modality() );
 	  pm.saveXML( *XSF, 1 );
-	  Parameter pr( "SamplingRate", "", 0.001*Stimuli[j].SampleRate, "kHz" );
+	  Parameter pr( "SamplingRate", "", 0.001*Stimuli[j].sampleRate(), "kHz" );
 	  pr.saveXML( *XSF, 1 );
-	  for ( unsigned int k=0; k<Stimuli[j].Descriptions.size(); k++ ) {
+	  for ( int k=0; k<Stimuli[j].descriptions(); k++ ) {
 	    *XSF << "  <section>\n";
-	    *XSF << "    <type>" << Stimuli[j].Types[k] << "</type>\n";
-	    *XSF << "    <name>" << Stimuli[j].TypeNames[k] << "</name>\n";
-	    Stimuli[j].Descriptions[k].saveXML( *XSF, 0, 2 );
+	    *XSF << "    <type>" << Stimuli[j].type( k) << "</type>\n";
+	    *XSF << "    <name>" << Stimuli[j].typeName( k ) << "</name>\n";
+	    Stimuli[j].description( k ).saveXML( *XSF, 0, 2 );
 	    *XSF << "  </section>\n";
 	  }
 	  *XSF << "</section>\n";
@@ -640,32 +640,32 @@ void SaveFiles::saveStimulus( void )
     //    int col = StimulusKey.column( "stimulus>timing>time" );
     //    StimulusKey[col++].setNumber( TraceFiles[0].Trace->signalTime() - SessionTime ).saveXML( *XF, 3 );
     // Stimulus:
-    //    StimulusKey[col++].setNumber( 1000.0*Stimuli[0].Delay ).saveXML( *XF, 3 );
+    //    StimulusKey[col++].setNumber( 1000.0*Stimuli[0].delay() ).saveXML( *XF, 3 );
     for ( int k=0; k<RW->AQ->outTracesSize(); k++ ) {
       for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
 	const Attenuate *att = RW->AQ->outTraceAttenuate( k );
-	if ( Stimuli[j].Device == RW->AQ->outTrace( k ).device() &&
-	     Stimuli[j].Channel == RW->AQ->outTrace( k ).channel() ) {
+	if ( Stimuli[j].device() == RW->AQ->outTrace( k ).device() &&
+	     Stimuli[j].channel() == RW->AQ->outTrace( k ).channel() ) {
 	  *XF << "      <section>\n";
 	  *XF << "        <type>stimulus</type>\n";
 	  *XF << "        <name>" << stimulinames[j] << "</name>\n";
 	  *XF << "        <include>stimulus-metadata.xml#" << stimulinames[j] << "</include>\n";
-	  Parameter pc( "OutputChannel", "", RW->AQ->outTraceName( Stimuli[j].Trace ) );
+	  Parameter pc( "OutputChannel", "", RW->AQ->outTraceName( Stimuli[j].trace() ) );
 	  pc.saveXML( *XF, 4 );
 	  if ( att != 0 ) {
-	    Parameter pa( att->intensityName(), "", Stimuli[j].Intensity,
+	    Parameter pa( att->intensityName(), "", Stimuli[j].intensity(),
 			  att->intensityUnit(), att->intensityFormat() );
 	    pa.saveXML( *XF, 4 );
 	    if ( ! att->frequencyName().empty() ) {
-	      Parameter pf( att->frequencyName(), "", Stimuli[j].CarrierFreq,
+	      Parameter pf( att->frequencyName(), "", Stimuli[j].carrierFreq(),
 			    att->frequencyUnit(), att->frequencyFormat() );
 	      pf.saveXML( *XF, 4 );
 	    }
 	  }
 	  for ( unsigned int i=0; i<stimuliref[j].size(); i++ ) {
 	    *XF << "        <section>\n";
-	    *XF << "          <type>" << Stimuli[j].Types[i] << "</type>\n";
-	    *XF << "          <name>" << Stimuli[j].TypeNames[i] << "</name>\n";
+	    *XF << "          <type>" << Stimuli[j].type( i ) << "</type>\n";
+	    *XF << "          <name>" << Stimuli[j].typeName( i ) << "</name>\n";
 	    stimuliref[j][i].saveXML( *XF, 0, 5 );
 	    *XF << "        </section>\n";
 	  }
@@ -788,7 +788,7 @@ void SaveFiles::clearRemoveFiles( void )
 
 void SaveFiles::removeFiles( void )
 {
-  for ( vector<string>::iterator h = RemoveFiles.begin();
+  for ( deque<string>::iterator h = RemoveFiles.begin();
 	h != RemoveFiles.end();
 	++h ) {
     remove( h->c_str() );
@@ -1352,69 +1352,6 @@ void SaveFiles::completeFiles( void )
   // back to default path:
   setPath( defaultPath() );
 }
-
-
-SaveFiles::Stimulus::Stimulus( void )
-  : Device( 0 ),
-    Channel( 0 ),
-    Trace( 0 ),
-    Delay( 0.0 ),
-    SampleRate( 0.0 ),
-    Length( 0.0 ),
-    Intensity( 0.0 ),
-    CarrierFreq( 0.0 ),
-    Ident( "" )
-{
-  Descriptions.clear();
-  Types.clear();
-  TypeNames.clear();
-}
-
-
-
-SaveFiles::Stimulus::Stimulus( const Stimulus &signal )
-  : Device( signal.Device ),
-    Channel( signal.Channel ),
-    Trace( signal.Trace ),
-    Delay( signal.Delay ),
-    SampleRate( signal.SampleRate ),
-    Length( signal.Length ),
-    Intensity( signal.Intensity ),
-    CarrierFreq( signal.CarrierFreq ),
-    Ident( signal.Ident ),
-    Descriptions( signal.Descriptions ),
-    Types( signal.Types ),
-    TypeNames( signal.TypeNames )
-{
-}
-
-
-SaveFiles::Stimulus::Stimulus( const OutData &signal )
-{
-  Device = signal.device();
-  Channel = signal.channel();
-  Trace = 0;
-  Delay = signal.delay();
-  SampleRate = signal.sampleRate();
-  Length = signal.length();
-  Intensity = signal.intensity();
-  CarrierFreq = signal.carrierFreq();
-  Ident = signal.ident();
-  Types.clear();
-  TypeNames.clear();
-  for ( int k=0; k<signal.descriptions(); k++ ) {
-    Descriptions.push_back( signal.description( k ) );
-    Str ts = Descriptions[k].text( "type", "stimulus/unknown" );
-    Types.push_back( ts );
-    Descriptions[k].erase( "type" );
-    ts.preventFirst( "stimulus/" ).strip();
-    TypeNames.push_back( ts );
-    // XXX once OutData does not have idents any more, the following lines can be erased:
-    if ( ! signal.ident().empty() )
-      Descriptions[k].addText( "Description", signal.ident() );
-  }
-}
-
 
 
 }; /* namespace relacs */

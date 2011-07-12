@@ -22,7 +22,7 @@
 #ifndef _RELACS_SAVEFILES_H_
 #define _RELACS_SAVEFILES_H_ 1
 
-#include <vector>
+#include <deque>
 #include <map>
 #include <fstream>
 #include <ctime>
@@ -33,6 +33,7 @@
 #include <relacs/options.h>
 #include <relacs/tablekey.h>
 #include <relacs/outdata.h>
+#include <relacs/outdatainfo.h>
 #include <relacs/eventdata.h>
 #include <relacs/repro.h>
 #include <relacs/spiketrace.h>
@@ -278,7 +279,7 @@ protected:
   };
 
     /*! files for all voltage traces. */
-  vector< TraceFile > TraceFiles;
+  deque< TraceFile > TraceFiles;
 
 
   struct EventFile {
@@ -309,34 +310,17 @@ protected:
       /*! The key for the event file. */
     TableKey Key;
   };
-  vector< EventFile > EventFiles;
+  deque< EventFile > EventFiles;
 
     /*! Start of current stimulus. */
   double SignalTime;
     /*! Start of previous stimulus. */
   double PrevSignalTime;
 
-  struct Stimulus {
-    Stimulus( void );
-    Stimulus( const Stimulus &signal );
-    Stimulus( const OutData &signal );
-    int Device;
-    int Channel;
-    int Trace;
-    double Delay;
-    double SampleRate;
-    double Length;
-    double Intensity;
-    double CarrierFreq;
-    string Ident;
-    vector< Options > Descriptions;
-    vector< string > Types;
-    vector< string > TypeNames;
-  };
-  vector< Stimulus > Stimuli;
+  deque< OutDataInfo > Stimuli;
   string StimuliRePro;
   map< string, int > StimuliReProCount;
-  map< string, map < vector< Options >, string > > ReProStimuli;
+  map< string, map < deque< Options >, string > > ReProStimuli;
   bool StimulusData;
   TableKey StimulusKey;
   Options StimulusOptions;
@@ -344,7 +328,7 @@ protected:
 
   Options ReProInfo;
   Options ReProSettings;
-  mutable vector< string > ReProFiles;
+  mutable deque< string > ReProFiles;
   bool ReProData;
   bool DatasetOpen;
   void saveRePro( void );
@@ -364,7 +348,7 @@ protected:
   void removeFiles( void );
     /*! A list of files which have to be deleted if the session is not
         to be saved. */
-  vector<string> RemoveFiles; 
+  deque<string> RemoveFiles; 
 
   RELACSWidget *RW;
 

@@ -25,6 +25,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <deque>
 #include <relacs/sampledata.h>
 #include <relacs/daqerror.h>
 #include <relacs/options.h>
@@ -790,7 +791,7 @@ class OutData : public SampleData< float >, public DaqError
     /*! Identifier for the output signal. */
   string Ident;
     /*! Descriptions of the output signal. */
-  vector< Options > Descriptions;
+  deque< Options > Descriptions;
     /*! True if reglitch circuit is enabled. */
   bool Reglitch;
     /*! Minimum value for which a gain should be chosen. */
