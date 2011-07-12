@@ -110,6 +110,7 @@ void DataBrowser::addStimulus( const OutDataInfo &signal )
       new QTreeWidgetItem( (QTreeWidget*)0,
 			   QStringList( signal.traceName().c_str() ) );
     TreeWidget->currentItem()->addChild( qwi );
+    TreeWidget->scrollToItem( qwi, QAbstractItemView::PositionAtBottom );
   }
 }
 
@@ -122,6 +123,7 @@ void DataBrowser::addStimulus( const deque< OutDataInfo > &signal )
 	new QTreeWidgetItem( (QTreeWidget*)0,
 			     QStringList( signal[i].traceName().c_str() ) );
       TreeWidget->currentItem()->addChild( qwi );
+      TreeWidget->scrollToItem( qwi, QAbstractItemView::PositionAtBottom );
     }
   }
 }
@@ -129,8 +131,10 @@ void DataBrowser::addStimulus( const deque< OutDataInfo > &signal )
 
 void DataBrowser::addSession( const string &path )
 {
-  TreeWidget->addTopLevelItem( new QTreeWidgetItem( (QTreeWidget*)0,
-						    QStringList( path.c_str() ) ) );
+ QTreeWidgetItem *qwi = new QTreeWidgetItem( (QTreeWidget*)0,
+					     QStringList( path.c_str() ) );
+  TreeWidget->addTopLevelItem( qwi );
+  TreeWidget->scrollToItem( qwi, QAbstractItemView::PositionAtBottom );
   Session = true;
 }
 
@@ -161,6 +165,7 @@ void DataBrowser::addRepro( const RePro *repro )
 							 QStringList( repro->name().c_str() ) );
     TreeWidget->topLevelItem( TreeWidget->topLevelItemCount()-1 )->addChild( currentrepro );
     TreeWidget->setCurrentItem( currentrepro );
+    TreeWidget->scrollToItem( currentrepro, QAbstractItemView::PositionAtBottom );
     //TreeWidget->topLevelItem( TreeWidget->topLevelItemCount()-1 )->addChild( new QTreeWidgetItem( (QTreeWidget*)0, QStringList( Repro->name().c_str() ) ) );
   }
 }
