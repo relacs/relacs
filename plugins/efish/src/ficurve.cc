@@ -418,6 +418,7 @@ void FICurve::stop( void )
 void FICurve::sessionStarted( void )
 {
   Index = 0;
+  RePro::sessionStarted();
 }
 
 

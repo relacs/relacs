@@ -452,12 +452,14 @@ int JAR::main( void )
 void JAR::sessionStarted( void )
 {
   FileIndex = 0;
+  RePro::sessionStarted();
 }
 
 
 void JAR::sessionStopped( bool saved )
 {
   FileIndex = 0;
+  RePro::sessionStopped( saved );
 }
 
 
@@ -465,7 +467,7 @@ void JAR::save( void )
 {
   unlockAll();
   Options header;
-  header.addInteger( "Index", totalRuns()-1 );
+  header.addInteger( "Index", totalRuns() );
   header.addText( "Waveform", SineWave ? "Sine-Wave" : "Fish-EOD" );
   header.addNumber( "EOD Rate", FishRate, "Hz", "%.1f" );
   header.addNumber( "EOD Amplitude", GlobalFishAmplitude, GlobalEODUnit, "%.2f" );

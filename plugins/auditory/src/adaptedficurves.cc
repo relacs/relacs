@@ -230,7 +230,7 @@ int AdaptedFICurves::main( void )
 
   // header:
   Options header;
-  header.addInteger( "index1", totalRuns()-1 );
+  header.addInteger( "index1", totalRuns() );
   header.addNumber( "carrier frequency", 0.001*carrierfrequency, "kHz", "%.3f" );
   header.addInteger( "side", side );
   header.addNumber( "minimum intensity", intmin, "dB SPL", "%.1f" );

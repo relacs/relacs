@@ -307,6 +307,8 @@ bool RePro::sleepWait( double time )
     r = SleepWait.wait( &mutex );
   else {
     unsigned long ms = (unsigned long)::rint(1.0e3*time);
+    if ( ms < 1 )
+      ms = 1;
     r = SleepWait.wait( &mutex, ms );
   }
   mutex.unlock();

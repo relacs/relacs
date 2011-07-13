@@ -417,7 +417,7 @@ void FIField::save( void )
 
   }
 
-  FIFieldHeader.setInteger( "index2", totalRuns()-1 );
+  FIFieldHeader.setInteger( "index2", totalRuns() );
   FIFieldHeader.setInteger( "side", Side );
   FIFieldHeader.setInteger( "best side", mo.index( "best side" ) );
   if ( BestIndex >= 0 ) {

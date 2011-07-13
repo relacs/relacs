@@ -277,10 +277,14 @@ int BaselineActivity::main( void )
       message( "Search Loop <b>" + Str( count ) + "</b>: <b>"
 	       + Str( SearchDuration, "%.1f" ) + "<b> s" );
 
-    // sleep:
-    if ( Repeats <= 0 || count == 0 )
+    // store current recording time:
+    if ( Repeats <= 0 || count == 0 ) {
       FirstSignal = currentTime();
-    LastSignal = currentTime();
+      LastSignal = currentTime();
+      SearchDuration = 0.0;
+    }
+
+    // sleep:
     sleep( Duration );
     if ( interrupt() )
       break;
@@ -306,6 +310,10 @@ int BaselineActivity::main( void )
 
       activateGains();
     }
+
+
+    LastSignal = FirstSignal + SearchDuration;
+    SearchDuration = currentTime() - FirstSignal;
 
     // analyze:
     analyze( autodetect, eodcycle, eodtimes, eodspikes,
@@ -545,7 +553,7 @@ void BaselineActivity::save( bool saveeodtrace, double eodduration,
 
   unlockAll();
   Options header;
-  header.addInteger( "index", totalRuns()-1 );
+  header.addInteger( "index", totalRuns() );
   header.addInteger( "trace", -1 );
   header.addNumber( "EOD rate", EODRate, "Hz", "%.1f" );
   header.addNumber( "EOD period", 1000.0 * EODPeriod, "ms", "%.3f" );
@@ -711,8 +719,6 @@ void BaselineActivity::analyze( int autodetect,
 {
   const EventData &localeod = events( LocalEODEvents[0] );
   const InData &localeodtrace = trace( LocalEODTrace[0] );
-
-  SearchDuration = currentTime() - FirstSignal;
 
   // EOD period & rate:
   EODRate = localeod.frequency( FirstSignal, FirstSignal+SearchDuration );

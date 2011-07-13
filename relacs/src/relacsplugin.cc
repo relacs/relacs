@@ -193,6 +193,14 @@ void RELACSPlugin::customEvent( QEvent *qce )
       RW->DV->updateMenu();
     break;
   }
+  case 6: {
+    QApplication::setOverrideCursor( QCursor( Qt::WaitCursor ) );
+    break;
+  }
+  case 7: {
+    QApplication::restoreOverrideCursor();
+    break;
+  }
   default:
     ConfigDialog::customEvent( qce );
   }
@@ -1286,6 +1294,18 @@ bool RELACSPlugin::globalKeyEvents( void )
 void RELACSPlugin::setGlobalKeyEvents( bool global )
 {
   GlobalKeyEvents = global;
+}
+
+
+void RELACSPlugin::setWaitMouseCursor( void )
+{
+  postCustomEvent( 6 );
+}
+
+
+void RELACSPlugin::restoreMouseCursor( void )
+{
+  postCustomEvent( 7 );
 }
 
 

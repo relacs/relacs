@@ -865,12 +865,14 @@ int Chirps::main( void )
 void Chirps::sessionStarted( void )
 {
   StimulusIndex = 0;
+  RePro::sessionStarted();
 }
 
 
 void Chirps::sessionStopped( bool saved )
 {
   StimulusIndex = 0;
+  RePro::sessionStopped( saved );
 }
 
 
@@ -1114,7 +1116,7 @@ void Chirps::saveChirpRate( int trace )
     return;
 
   // write header and key:
-  Header.setInteger( "index", totalRuns()-1 );
+  Header.setInteger( "index", totalRuns() );
   Header.save( df, "# " );
   settings().save( df, "#   " );
   df << '\n';

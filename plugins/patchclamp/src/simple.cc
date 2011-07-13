@@ -134,7 +134,7 @@ int Simple::main( void )
     else {
       // write header and key:
       Options header;
-      header.addInteger( "index", totalRuns()-1 );
+      header.addInteger( "index", totalRuns() );
       header.addText( "session time", sessionTimeStr() ); 
       header.addLabel( "settings:" );
       header.save( df, "# " );

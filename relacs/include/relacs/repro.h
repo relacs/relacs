@@ -187,13 +187,15 @@ public:
     /*! Reimplement this function to reset or initialize your RePro
         when a new session is started.
         The current implementation resets the counters completeRuns(),
-	totalRuns(), allRuns(), failedRuns(). */
+	totalRuns(), allRuns(), failedRuns().
+        So you should call from your implementation RePro::sessionStarted(). */
   virtual void sessionStarted( void );
     /*! Reimplement this function to reset your RePro 
         after a session is stopped.
         If the session was saved \a saved is set to \c true.
         The current implementation resets the counters completeRuns(),
-	totalRuns(), allRuns(), failedRuns(). */
+	totalRuns(), allRuns(), failedRuns().
+        So you should call from your implementation RePro::sessionStopped( saved ). */
   virtual void sessionStopped( bool saved );
 
     /*! In main(): true if previous call of this RePro was
@@ -210,21 +212,21 @@ public:
   bool failed( void ) const;
 
     /*! Number of completed runs of this RePro (main() returned Completed)
-        since last call of init() or reset().
+        since last call of sessionStarted() or sessionStopped().
         \sa completed(), totalRuns(), allRuns(), failedRuns() */
   int completeRuns( void ) const;
     /*! Number of runs of this RePro which did not fail
-        since last call of init() or reset(),
+        since last call of sessionStarted() or sessionStopped().
 	i.e. where main() returned Aborted or Completed.
         \sa completeRuns(), allRuns(), failedRuns() */
   int totalRuns( void ) const;
     /*! Number of runs of this RePro
-        since last call of init() or reset().
+        since last call of sessionStarted() or sessionStopped().
         \sa completeRuns(), totalRuns(), failedRuns() */
   int allRuns( void ) const;
     /*! Number of runs of this RePro which failed
         (main() returned Failed)
-        since last call of init() or reset().
+        since last call of sessionStarted() or sessionStopped().
         \sa completeRuns(), totalRuns(), allRuns() */
   int failedRuns( void ) const;
 

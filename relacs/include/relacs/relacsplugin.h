@@ -110,6 +110,9 @@ are saved to disk (via SaveFiles).
 Use update() or postCustomEvent() for thread save drawing 
 and other interactions with the GUI.
 
+For thread-save changes of the mouse cursor indicating some busy action use
+setWaitMouseCursor() and restoreMouseCursor().
+
 You can handle key press and release events of a RELACSPlugin that has a widget
 by reimplementing keyPressEvent() and keyReleaseEvent().
 Usually, the events are only delivered, if the corresponding widget() is
@@ -780,6 +783,15 @@ protected:
     /*! This function calls keyPressEvent() and keyReleaseEvent()
         by listening to the events the widget() is receiving. */
   virtual bool eventFilter( QObject *obj, QEvent *event );
+
+    /*! Set the mouse cursor of the application for indicating busy activity
+        in a thread-safe way.
+        \sa restoreMouseCursor() */
+  void setWaitMouseCursor( void );
+    /*! Restore the mouse cursor of the application
+        in a thread-safe way.
+        \sa setWaitMouseCursor() */
+  void restoreMouseCursor( void );
 
 
 public:

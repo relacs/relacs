@@ -43,7 +43,6 @@
 #include <relacs/datathreads.h>
 #include <relacs/plottrace.h>
 #include <relacs/relacsplugin.h>
-#include <relacs/databrowser.h>
 
 using namespace std;
 

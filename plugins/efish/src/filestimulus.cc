@@ -145,11 +145,15 @@ int FileStimulus::main( void )
   OutData signal;
   signal.setTrace( AM ? GlobalAMEField : GlobalEField );
   applyOutTrace( signal );
+  unlockAll();
+  setWaitMouseCursor();
   {
     OutData lsig;
     lsig.load( file, filename );
     if ( lsig.empty() ) {
       warning( "Cannot load stimulus file <b>" + file + "</b>!" );
+      restoreMouseCursor();
+      lockAll();
       return Failed;
     }
     if ( signal.fixedSampleRate() &&
@@ -166,6 +170,8 @@ int FileStimulus::main( void )
   signal.setDelay( Before );
   signal.setIdent( filename );
   Duration = signal.duration();
+  restoreMouseCursor();
+  lockAll();
 
   // data:
   Intensity = 0.0;
@@ -393,6 +399,7 @@ int FileStimulus::main( void )
 	Header.setText( "session time", sessionTimeStr() );
       }
       Header.setInteger( "trace", -1 );
+      unlockAll();
       saveAmpl();
       for ( int trace=0; trace<MaxSpikeTraces; trace++ ) {
 	if ( SpikeEvents[trace] >= 0 ) {
@@ -404,6 +411,7 @@ int FileStimulus::main( void )
 	Header.setInteger( "trace", 0 );
 	saveNerve();
       }
+      lockAll();
     }
 
   }
@@ -579,13 +587,14 @@ void FileStimulus::save( void )
   if ( Repeats <= 0 )
     return;
 
+  unlockAll();
   for ( int trace=0; trace<MaxSpikeTraces; trace++ ) {
     if ( SpikeEvents[trace] >= 0 ) {
       Header.setInteger( "trace", trace );
       saveRate( trace );
     }
   }
-
+  lockAll();
 }
 
 
@@ -681,11 +690,11 @@ void FileStimulus::analyze( void )
   FishAmplitude = eodAmplitude( trace( LocalEODTrace[0] ),
 				signalTime() + Duration, signalTime() + Duration + Pause );
 
-  // contrast:
+  // contrast: (XXX this function needs too much time! XXX)
   TrueContrast = beatContrast( trace( LocalEODTrace[0] ),
 			       signalTime()+0.1*Duration,
 			       signalTime()+0.9*Duration,
-			       Intensity/FishAmplitude );
+			       0.01, Intensity/FishAmplitude );
 
   // EOD transdermal amplitude:
   if ( UseContrast ) {

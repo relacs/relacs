@@ -738,7 +738,7 @@ void SingleStimulus::save( const EventList &spikes, const SampleDataD &rate1,
 			   const SampleDataD &rate2 )
 {
   Options header;
-  header.addInteger( "index1", totalRuns()-1 );
+  header.addInteger( "index1", totalRuns() );
   header.addNumber( "carrier frequency", 0.001*CarrierFreq, "kHz", "%.3f" );
   header.addInteger( "side", Side );
   header.addNumber( "intensity", Intensity, "dB SPL", "%.1f" );
