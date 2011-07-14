@@ -356,7 +356,7 @@ void BaselineActivity::saveSpikes( int trace, const Options &header, const Event
   }
   else
     df << "  -0\n";
-  df << '\n' << '\n';
+  df << "\n\n";
 }
 
 
@@ -394,7 +394,7 @@ void BaselineActivity::saveISIH( int trace, const Options &header,
     df << '\n';
   }
 
-  df << '\n' << '\n';
+  df << "\n\n";
 }
 
 
@@ -426,7 +426,7 @@ void BaselineActivity::saveRate( int trace, const Options &header,
     df << '\n';
   }
 
-  df << '\n' << '\n';
+  df << "\n\n";
 }
 
 
@@ -478,7 +478,7 @@ void BaselineActivity::saveNerve( const Options &header, const MapD &nerveamplp,
       df << '\n';
     }
   }
-  df << '\n' << '\n';
+  df << "\n\n";
 }
 
 
@@ -500,14 +500,17 @@ void BaselineActivity::saveEODTrace( const Options &header, double eodduration )
   key.saveKey( df, true, false );
 
   // write data into file:
-  long inx = trace( LocalEODTrace[0] ).indices( eodduration );
+  const InData &leod = trace( LocalEODTrace[0] );
+  int inx = leod.indices( eodduration );
+  if ( leod.size()-inx < leod.minIndex() )
+    inx = leod.size() - leod.minIndex();
   for ( int k=0; k<inx; k++ ) {
-    key.save( df, 1000.0 * trace( LocalEODTrace[0] ).interval( k ), 0 );
-    key.save( df, trace( LocalEODTrace[0] )[trace( LocalEODTrace[0] ).size()-inx-k] );
+    key.save( df, 1000.0 * leod.interval( k ), 0 );
+    key.save( df, leod[leod.size()-inx+k] );
     df << '\n';
   }
 
-  df << '\n' << '\n';
+  df << "\n\n";
 }
 
 
@@ -533,7 +536,7 @@ void BaselineActivity::saveEODTimes( const Options &header, const EventData &eod
     df << '\n';
   }
 
-  df << '\n' << '\n';
+  df << "\n\n";
 }
 
 

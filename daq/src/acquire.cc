@@ -1385,6 +1385,11 @@ int Acquire::testWrite( OutList &signal )
 
   signal.clearError();
 
+  if ( signal.size() == 0 ) {
+    signal.addError( DaqError::NoData );
+    return -1;
+  }
+
   // get device ids and sort signal per device:
   vector< int > dis;
   dis.reserve( signal.size() );
@@ -1700,6 +1705,11 @@ int Acquire::setupWrite( OutList &signal )
 {
   bool success = true;
   signal.clearError();
+
+  if ( signal.size() == 0 ) {
+    signal.addError( DaqError::NoData );
+    return -1;
+  }
 
   // set trace:
   applyOutTrace( signal );

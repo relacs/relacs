@@ -477,7 +477,7 @@ int RePro::writeZero( const string &trace )
 
 int RePro::stopWrite( void )
 {
-  return RW->AQ->stopWrite();
+  return RW->stopWrite();
 }
 
 

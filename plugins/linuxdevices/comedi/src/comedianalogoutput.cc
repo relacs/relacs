@@ -339,6 +339,10 @@ double ComediAnalogOutput::bipolarRange( int index ) const
 
 int ComediAnalogOutput::directWrite( OutList &sigs )
 {
+  // no signals:
+  if ( sigs.size() == 0 )
+    return -1;
+
   // setup channel ranges:
   unsigned int *chanlist = new unsigned int[512];
   memset( chanlist, 0, sizeof( chanlist ) );
@@ -382,6 +386,9 @@ int ComediAnalogOutput::directWrite( OutList &sigs )
 template < typename T >
 int ComediAnalogOutput::convert( char *cbuffer, int nbuffer )
 {
+  if ( nbuffer < (int)sizeof( T ) )
+    return 0;
+
   // conversion polynomials and scale factors:
   double minval[ Sigs.size() ];
   double maxval[ Sigs.size() ];
@@ -796,6 +803,10 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
 
   reset();
 
+  // no signals:
+  if ( sigs.size() == 0 )
+    return -1;
+
   // copy and sort signal pointers:
   OutList ol;
   ol.add( sigs );
@@ -835,6 +846,8 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
     BufferSize = nbuffer;
   if ( BufferSize > bufferSize() )
     sigs.addError( DaqError::InvalidBufferTime );
+  if ( BufferSize <= 0 )
+    sigs.addError( DaqError::NoData );
 
   setSettings( ol, BufferSize );
 
@@ -842,6 +855,14 @@ int ComediAnalogOutput::prepareWrite( OutList &sigs )
     return -1;
 
   Sigs = ol;
+  if ( Buffer != 0 ) { // should not be necessary!
+    delete [] Buffer;
+    cerr << "ComediAnalogOutput::prepareWrite() warning: Buffer was not freed!\n";
+  }
+  if ( NBuffer != 0 ) { // should not be necessary!
+    cerr << "ComediAnalogOutput::prepareWrite() warning: NBuffer=" << NBuffer << " is not zero!\n";
+    NBuffer = 0;
+  }
   Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
 
   return 0;

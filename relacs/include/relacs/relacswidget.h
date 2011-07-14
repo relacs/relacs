@@ -186,7 +186,7 @@ public:
   int directWrite( OutList &signal );
 
     /*! Stop all analog output activity. */
-  void stopWrite( void );
+  int stopWrite( void );
 
     /*! Inform all plugins about changes in the stimulus data. */
   void notifyStimulusData( void );

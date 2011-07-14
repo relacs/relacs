@@ -472,6 +472,12 @@ void CyclicArray< T >::reserve( int n )
 template < class T >
 const T &CyclicArray< T >::operator[]( int i ) const
 {
+  // XXX we do not want to crash anymore....
+  // this is the error from plot::drawLine() of an InData.
+  if ( i >= size() ) {
+    cerr << "error in CyclicArray::operator[]: i=" << i << "larger than size()=" << size() << '\n';
+    i = size()-1;
+  }
   assert( ( i >= minIndex() && i < size() ) );
   return Buffer[ i % NBuffer ];
 }

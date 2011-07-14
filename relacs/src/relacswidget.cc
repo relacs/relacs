@@ -1155,13 +1155,14 @@ int RELACSWidget::directWrite( OutList &signal )
 }
 
 
-void RELACSWidget::stopWrite( void )
+int RELACSWidget::stopWrite( void )
 {
   // stop analog output:
   WriteLoop.stop();
   lockSignals();
-  AQ->stopWrite();                
+  int r = AQ->stopWrite();                
   unlockSignals();
+  return r;
 }
 
 
