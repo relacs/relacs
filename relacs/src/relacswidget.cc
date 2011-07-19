@@ -865,11 +865,11 @@ void RELACSWidget::run( void )
   ReadDataWait.wakeAll();
   SimLoad.stop();
   if ( AQ != 0 ) {
-    lockAI();
     lockSignals();
+    lockAI();
     AQ->stop();
-    unlockSignals();
     unlockAI();
+    unlockSignals();
   }
   qApp->processEvents();
   closeHardware();
@@ -988,9 +988,17 @@ int RELACSWidget::write( OutData &signal )
   lockSignals();
   int r = AQ->setupWrite( signal );
   if ( r >= 0 ) {
+    SF->unlock();    // we assume that IL data are read locked while calling write()
+    MTDT.unlock();   // we need to unlock all, so that the data lock can be freed.
+    unlockData();
+    writeLockData(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
     lockAI();
     r = AQ->startWrite( signal );
     unlockAI();
+    unlockData();
+    readLockData();  // put the data lock back into read lock state
+    MTDT.lock();     // and the other locks as well
+    SF->lock();
   }
   unlockSignals();
   if ( r == 0 ) {
@@ -1037,9 +1045,17 @@ int RELACSWidget::write( OutList &signal )
   lockSignals();
   int r = AQ->setupWrite( signal );
   if ( r >= 0 ) {
+    SF->unlock();    // we assume that IL data are read locked while calling write()
+    MTDT.unlock();   // we need to unlock all, so that the data lock can be freed.
+    unlockData();
+    writeLockData(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
     lockAI();
     r = AQ->startWrite( signal );
     unlockAI();
+    unlockData();
+    readLockData();  // put the data lock back into read lock state
+    MTDT.lock();     // and the other locks as well
+    SF->lock();
   }
   unlockSignals();
   if ( r == 0 ) {
@@ -1085,9 +1101,17 @@ int RELACSWidget::directWrite( OutData &signal )
   if ( SF->signalPending() )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
   lockSignals();
+  SF->unlock();    // we assume that IL data are read locked while calling write()
+  MTDT.unlock();   // we need to unlock all, so that the data lock can be freed.
+  unlockData();
+  writeLockData(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
   lockAI();
   int r = AQ->directWrite( signal );
   unlockAI();
+  unlockData();
+  readLockData();  // put the data lock back into read lock state
+  MTDT.lock();     // and the other locks as well
+  SF->lock();
   unlockSignals();
   if ( r == 0 ) {
     lockSignals();
@@ -1130,9 +1154,17 @@ int RELACSWidget::directWrite( OutList &signal )
   if ( SF->signalPending() )
     printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
   lockSignals();
+  SF->unlock();    // we assume that IL data are read locked while calling write()
+  MTDT.unlock();   // we need to unlock all, so that the data lock can be freed.
+  unlockData();
+  writeLockData(); // IL data need to be write locked, because data might be truncated in Acquire::restartRead()
   lockAI();
   int r = AQ->directWrite( signal );
   unlockAI();
+  unlockData();
+  readLockData();  // put the data lock back into read lock state
+  MTDT.lock();     // and the other locks as well
+  SF->lock();
   unlockSignals();
   if ( r == 0 ) {
     lockSignals();
@@ -1533,11 +1565,11 @@ void RELACSWidget::stopThreads( void )
   // stop simulation and data acquisition:
   SimLoad.stop();
   if ( AQ != 0 ) {
-    lockAI();
     lockSignals();
+    lockAI();
     AQ->stop();
-    unlockSignals();
     unlockAI();
+    unlockSignals();
   }
 
   // process pending events posted from threads.

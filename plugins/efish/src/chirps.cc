@@ -802,6 +802,7 @@ int Chirps::main( void )
 
     // save:
     if ( Repeats > 0 ) {
+      unlockAll();
       Header.setInteger( "index", StimulusIndex );
       if ( Count == 0 ) {
 	Header.setNumber( "chirpphase", ChirpPhase );
@@ -840,6 +841,7 @@ int Chirps::main( void )
 	saveChirpNerve();
 	saveNerve();
       }
+      lockAll();
     }
     StimulusIndex++;
 
@@ -1191,12 +1193,14 @@ void Chirps::save( void )
   if ( Repeats <= 0 )
     return;
 
+  unlockAll();
   for ( int trace=0; trace<MaxSpikeTraces; trace++ ) {
     if ( SpikeEvents[trace] >= 0 ) {
       Header.setInteger( "trace", trace );
       saveChirpRate( trace );
     }
   }
+  lockAll();
 }
 
 
