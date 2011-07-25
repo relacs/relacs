@@ -31,21 +31,21 @@
 
 
 struct WAVHeader {
-  char           chunkID[4];
-  int            chunkSize;
+  char           chunkID[4];       /* 12 byte */
+  unsigned int   chunkSize;
   char           chunkFormat[4];
 
-  char           subChunk1ID[4];
-  long           subChunk1Size;
-  short          wFormatTag;
+  char           subChunk1ID[4];   /* 24 byte */
+  unsigned int   subChunk1Size;
+  unsigned short wFormatTag;
   unsigned short wChannels;
-  unsigned long  dwSamplesPerSec;
-  unsigned long  dwAvgBytesPerSec;
+  unsigned int   dwSamplesPerSec;
+  unsigned int   dwAvgBytesPerSec;
   unsigned short wBlockAlign;
   unsigned short wBitsPerSample;
 
-  char           subChunk2ID[4];
-  long           subChunk2Size;
+  char           subChunk2ID[4];   /* 8 byte */
+  unsigned int   subChunk2Size;
 
 };
 
@@ -70,10 +70,11 @@ void extractData( void )
   char buffer[2048];
   long m, n, k, t;
   signed short *swp, d;
-  /*  unsigned short *uwp;*/
   float *fp;
   float v;
-  int c;
+  int c, sn;
+  int outdatasize;
+  int outndata;
 
   BF = fopen( binfile, "r" );
   if ( BF == NULL ) {
@@ -81,12 +82,19 @@ void extractData( void )
     return;
   }
   fseek( BF, offset, SEEK_SET );
+  outdatasize = datasize;
+  outndata = ndata;
+  if ( datatype == 'f' ) {
+    outdatasize = 2;
+    outndata = ndata / datasize;
+    outndata *= outdatasize;
+  }
   DF = fopen( datfile, "wb" );
   header.chunkID[0] = 'R';
   header.chunkID[1] = 'I';
   header.chunkID[2] = 'F';
   header.chunkID[3] = 'F';
-  header.chunkSize = 36 + ndata * datachannels * datasize;
+  header.chunkSize = 36 + outndata;
   header.chunkFormat[0] = 'W';
   header.chunkFormat[1] = 'A';
   header.chunkFormat[2] = 'V';
@@ -99,21 +107,19 @@ void extractData( void )
   header.wFormatTag = 1;
   header.wChannels = datachannels;
   header.dwSamplesPerSec = (unsigned long)rint( samplerate );
-  if ( datatype == 'f' )
-    header.wBitsPerSample = 16;
-  else if ( datatype == 'i' )
-    header.wBitsPerSample = datasize*8;
+  header.wBitsPerSample = outdatasize*8;
   header.wBlockAlign = header.wChannels * header.wBitsPerSample/8;
   header.dwAvgBytesPerSec = header.dwSamplesPerSec * header.wBlockAlign;
   header.subChunk2ID[0] = 'd';
   header.subChunk2ID[1] = 'a';
   header.subChunk2ID[2] = 't';
   header.subChunk2ID[3] = 'a';
-  header.subChunk2Size = ndata * datachannels * datasize;
+  header.subChunk2Size = outndata;
   fwrite( &header, sizeof( struct WAVHeader ), 1, DF );
   n = 0;
   t = 0;
   c = 0;
+  sn = 0;
   do {
     m = fread( buffer, 1, 2048, BF );
     if ( n+m > ndata )
@@ -126,8 +132,9 @@ void extractData( void )
 	  fprintf( stderr, "warning: data value %g too high.\n", v );
 	  v = 1.0;
 	}
-	d = (signed short)rint( v*0x0fff );
+	d = (signed short)rint( v*0x7fff );
 	fwrite( &d, 2, 1, DF );
+	sn++;
 	c++;
 	if ( c >= datachannels ) {
 	  c = 0;
@@ -157,6 +164,8 @@ void extractData( void )
     }
     n += m;
   } while ( m == 2048 && n<ndata);
+  if ( n < ndata )
+    fprintf( stderr, "warning: read only %ld from %ld requested bytes.\n", n, ndata );
   fclose( DF );
   fclose( BF  );
 }
