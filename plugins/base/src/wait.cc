@@ -144,7 +144,7 @@ int Wait::main( void )
     if ( currenttime >= endtime )
       break;
     QCoreApplication::postEvent( this, new WaitEvent( currenttime.secsTo( endtime ) ) );
-    sleep( 0.1 );
+    sleepWait( 0.1 );
     if ( interrupt() )
       return Aborted;
   }

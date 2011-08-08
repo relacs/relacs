@@ -574,6 +574,7 @@ private:
   mutable QMutex GrabKeyLock;
 
   int SoftStop;
+  mutable QMutex SoftStopLock;
   int SoftStopKey;
 
   bool PrintMessage;

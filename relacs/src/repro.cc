@@ -131,7 +131,9 @@ void RePro::run( void )
 
   // init:
   ReProStartTime = sessionTime();
+  SoftStopLock.lock();
   SoftStop = 0;
+  SoftStopLock.unlock();
   GrabKeysAllowed = true;
   GrabKeysBaseSize = GrabKeys.size();
   grabKeys();
@@ -620,7 +622,9 @@ void RePro::unlockAll( void )
 void RePro::keyPressEvent( QKeyEvent *event )
 {
   if ( event->key() == SoftStopKey ) {
+    SoftStopLock.lock();
     SoftStop++;
+    SoftStopLock.unlock();
     event->accept();
   }
   else
@@ -719,19 +723,26 @@ bool RePro::eventFilter( QObject *watched, QEvent *e )
 
 int RePro::softStop( void )
 {
-  return SoftStop;
+  SoftStopLock.lock();
+  int ss = SoftStop;
+  SoftStopLock.unlock();
+  return ss;
 }
 
 
 void RePro::setSoftStop( int s )
 {
+  SoftStopLock.lock();
   SoftStop = s;
+  SoftStopLock.unlock();
 }
 
 
 void RePro::clearSoftStop( void )
 {
+  SoftStopLock.lock();
   SoftStop = 0;
+  SoftStopLock.unlock();
 }
 
 

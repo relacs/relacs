@@ -29,6 +29,8 @@ Macros:
 - add stopSession macro command
 - add dialog macro command for launching macro and repro dialogs, meta data dialog, etc.
 - Macro Options and Macro stack (B R N keys) do not work together
+- Add possibility to call shell command that returns a command line,
+   e.g. RePro call, for the Macros
 
 Plugin documentation:
 - Each publication should get a file indicating the RePros it used:

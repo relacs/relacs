@@ -60,7 +60,7 @@ int Pause::main( void )
   for ( int count=0; 
 	( repeats <= 0 || count < repeats ) && softStop() == 0; 
 	count++ ) {
-    sleep( duration );
+    sleepWait( duration );
     if ( interrupt() )
       return Aborted;
   }
