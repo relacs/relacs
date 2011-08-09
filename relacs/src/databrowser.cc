@@ -22,6 +22,7 @@
 #include <map>
 #include <string>
 #include <QHBoxLayout>
+#include <QDir>
 #include <relacs/sampledata.h>
 #include <relacs/options.h>
 #include <relacs/tabledata.h>
@@ -93,7 +94,8 @@ DataBrowser::DataBrowser( QWidget *parent )
 		    this, SLOT( list( QTreeWidgetItem*, int ) ) );
 
   Session = false;
-  Folder = "."; 
+  QDir dir;
+  Folder = dir.currentPath().toStdString(); 
   load( Folder );
 }
 
@@ -173,30 +175,39 @@ void DataBrowser::addRepro( const RePro *repro )
 
 void DataBrowser::load( const string &dir )
 {
-  DIR *hdir;
+  /*DIR *hdir;
   struct dirent *entry;
 
-  hdir = opendir( dir.c_str() );
+  hdir = opendir( dir.c_str() );*/
   //Folder = dir;
+  
+  //cout << "Directory: " << dir << endl;
 
-  do
-  {
-    entry = readdir( hdir );
-    if ( entry ) {
-      if ( strcmp( entry->d_name,".") != 0 && strcmp( entry->d_name, ".." ) != 0 ) {
-	QTreeWidgetItem *parent =
-	  new QTreeWidgetItem( TreeWidget,
-			       QStringList(QObject::tr(entry->d_name)), -1);
+  QString s(dir.c_str());
+  QDir hdir( s );
+  
+  if (hdir.exists()) {
+
+    QStringList list = hdir.entryList(QDir::Dirs,QDir::Name);
+
+    for (int i = 0; i < list.size(); ++i) {
+
+      string file = dir+"/"+list[i].toStdString()+"/stimuli.dat";
+      string file2 = dir+"/"+list[i].toStdString()+"/trigger.dat";
+
+      if(hdir.exists(QString(file.c_str())) || hdir.exists(QString(file2.c_str()))) {
+
+	//cout << list[i].toStdString() << "\t" << file << endl;
+
+	QTreeWidgetItem *parent = new QTreeWidgetItem( TreeWidget, QStringList(list[i]), -1);
 	
 	TreeWidget->insertTopLevelItem( 0, parent );
 	TreeWidget->setCurrentItem( parent );
-
-	//read(entry->d_name, parent);
-
       }
+
     }
-  } while ( entry );
-  closedir( hdir );
+
+  }
 
   TreeWidget->sortItems( 0, Qt::DescendingOrder );
 
@@ -205,8 +216,6 @@ void DataBrowser::load( const string &dir )
 
 void DataBrowser::list( QTreeWidgetItem * item, int col )
 {
-  // cout <<  treeWidget.currentColumn() << endl;
-
   int type = item->type();
   //cout << "Typ: " << type << endl;
 
@@ -224,7 +233,7 @@ void DataBrowser::list( QTreeWidgetItem * item, int col )
   if(type>0) {
 
     QTreeWidgetItem *parent = item->parent(); 
-    //cout << parent->indexOfChild(item) << ": plot!\n";
+    cout << parent->indexOfChild(item) << ": plot!\n";
 
     long fnumber = type; //item->text(col).toLong();
 
@@ -373,21 +382,21 @@ void DataBrowser::read( string cellname, QTreeWidgetItem *parent )
     map<long, Stimulus> * NStimuli = new map<long, Stimulus>;
     map<int, Rep> * NRepro = new map<int, Rep>;
 
-    string file = Folder + cellname + "/stimuli.dat";//relacs
+    string file = Folder + "/" + cellname + "/stimuli.dat";//relacs
     string version = "relacs";
     
     DataFile sf;
     sf.open( file );
     if ( !sf.good() ) {
-      file = Folder + cellname + "/trigger.dat";//oel
+      file = Folder + "/" + cellname + "/trigger.dat";//oel
       version="oel";
       sf.open( file );
       if ( !sf.good() ) {
-	cerr << "can't open neither file stimuli.dat nor trigger.dat\n";
+	cerr << "can't open file stimuli.dat or trigger.dat\n";
 	return;
       }
     }
-    cout << file << endl;
+    cout << "read " << file << endl;
     
     Options Opt;
     Options Popt;
