@@ -68,7 +68,8 @@ $ make scripts
 
 -# Either get a vanilla kernel from http://www.kernel.org,
 e.g. http://www.kernel.org/pub/linux/kernel/v2.6/linux-2.6.28.9.tar.bz2,
-place the tar file in /usr/src and unpack it with
+place the tar file in /usr/src (in case you do not have the right
+permissions do \c sudo \c chmod \c a+w \c /usr/src) and unpack it with
 \code
 $ cd /usr/src
 $ tar xjvf linux-2.6.28.9.tar.bz2
@@ -93,6 +94,7 @@ First, you configure your kernel by calling
 \code
 $ make menuconfig
 \endcode
+(You might needto install the following packages first: \c sudo \c apt-get \a install \c make \c gcc \c ncurses-dev \c zlib1g-dev).
 Possible settings you might want to change are:
   - Processor type and features: 
     - Select your Subarchitecture Type (PC-Compatible)
@@ -101,7 +103,7 @@ Possible settings you might want to change are:
   .
 Leave the configuration dialog by pressing "Exit" until you are asked "Save kernel config?".
 Select "Yes".
--# Then compile and install the kernel
+-# Then compile and install (as root) the kernel
 \code
 $ make && make modules && make modules_install && make install
 \endcode
@@ -155,7 +157,7 @@ $ sh NVIDIA-Linux-x86_64-190.42-pkg2.run -k 2.6.28.9-rtai -K
 \endcode
 (replace 2.6.28.9-rtai by the name of the kernel where you want to install the nvidia driver,
 i.e. the string '\c uname \c -r' would return if that kernel is running).
--# On a Debian system there is an alternative to steps 3. - 6. for compiling a linux kernel:
+-# On a Debian system there is an alternative to steps 3. - 6. for compiling a linux kernel. Do as root:
    -# Get the kernel-package
    \code
 $ apt-get install kernel-package
@@ -168,13 +170,14 @@ $ make-kpkg --initrd --revision r1 --config menuconfig kernel-image
    -# Install the kernel
    \code
 $ cd ..
-$ dpkg -i linux-image-2.6.28.9_r1_amd64.deb
+$ sudo dpkg -i linux-image-2.6.28.9_r1_amd64.deb
    \endcode
    -# continue with step 6.
 
 
 \subsection installcomedidriver Comedi
--# Download the current \c %comedi sources from the Git repository to \c /usr/local/src .
+-# Download the current \c %comedi sources from the Git repository to \c /usr/local/src (in case you do not have the right
+permissions do \c sudo \c chmod \c a+w \c /usr/local/src before).
 \code
 $ cd /usr/local/src
 $ git clone git://comedi.org/git/comedi/comedi.git
@@ -216,9 +219,13 @@ $ ./configure --with-linuxdir=/usr/src/linux
 \endcode
 with \c /usr/src/linux replaced by the path to the sources of the kernel
 for which you want to install \c %comedi.
--# Compile and install (as root)
+-# Compile
 \code
-$ make && make install
+$ make
+\endcode
+and install (as root)
+\code
+$ make install
 $ depmod -a
 \endcode
 -# For some strange reason, the include files for kcomedilib \c linux/comedilib.h and 
@@ -286,7 +293,11 @@ You may want to read \c ./configure \c --help as well.
 Pay attention to warnings and errors! You might need to install additional software first.
 -# Compile and install (as root)
 \code
-$ make && make install
+$ make
+\endcode
+and install (as root)
+\code
+$ make install
 \endcode
 
 
@@ -304,9 +315,13 @@ You may ignore warnings and reminders.
 \code
 $ ./configure --prefix=/usr --sysconfdir=/etc
 \endcode
--# Compile and install (as root)
+-# Compile
 \code
-$ make && make install
+$ make
+\endcode
+and install (as root)
+\code
+$ make install
 \endcode
 
 
@@ -316,8 +331,10 @@ For dynamic clamp you need an RTAI patched linux kernel and %comedi.
 
 \subsection rtaikernel Linux kernel and RTAI patch
 
--# Download the latest RTAI version (version 3.7.1) from http://www.rtai.org
-and put into \c /usr/local/src .
+-# Download the latest RTAI (http://www.rtai.org) version (version 3.7.1) from 
+the RTAI repository at http://www.rtai.org/RTAI
+and put it into \c /usr/local/src (in case you do not have the right
+permissions do \c sudo \c chmod \c a+w \c /usr/local/src).
 -# Unpack RTAI in /usr/local/src:
 \code
 $ cd /usr/local/src
@@ -347,7 +364,11 @@ $ cd /usr/src/linux
 $ patch -p1 < /usr/local/src/rtai/base/arch/x86/patches/hal-linux-2.6.28.9-x86-2.2-07.patch
 \endcode
 -# Configure, compile, and install the kernel.
-Follow the intructions given in \ref installkernel, starting at step 2.
+Follow the intructions given in \ref installvanillakernel, starting at step 2.
+On Debian, the make-kpkg command should be
+\code
+make-kpkg --initrd --append-to-version -rtai --revision r1 --config menuconfig kernel-image
+\endcode
 In the kernel configuration dialog you should do the following settings:
   - General setup: set "Local version" to -rtai (not needed if you are using \c make-kpkg)
   - Enable loadable module support: 
@@ -362,10 +383,6 @@ In the kernel configuration dialog you should do the following settings:
     - Deselect "CPU Frequency scaling"
     .
   .
-On Debian, the make-kpkg command should be
-\code
-make-kpkg --initrd --append-to-version -rtai --revision r1 --config menuconfig kernel-image
-\endcode
 -# Reboot into your new RTAI real time kernel.
 
 
