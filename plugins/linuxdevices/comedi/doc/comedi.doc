@@ -1,17 +1,18 @@
 /*!
 \mainpage Comedi Relacs Plugins
 
-\brief Interfaces to the %comedi data acquisition library for normal analog input and output as well as for dynamic clamp.
+\brief Interfaces to the Comedi data acquisition library for normal analog input and output as well as for dynamic clamp.
 
 
 Comedi (linux control and measurement device interface) provides hardware drivers
 to many data acquisition boards with a common library interface.
-The RELACS %comedi plugins access data acquisition boards by means of the %comedi library.
+The RELACS Comedi plugins access data acquisition boards by means of the Comedi library.
 
-For general information about %comedi and a list of supported devices
+For general information about Comedi and a list of supported devices
 see http://www.comedi.org
 
 \section comedicontent Content
+- \ref comediintro
 - \ref installcomedi
 - \ref installrtai
 - \ref udev
@@ -20,16 +21,30 @@ see http://www.comedi.org
 - \ref rtailinks
 
 
+\section comediintro Introduction
+
+If you only need normal ("streaming", asynchronous) data acquisition
+as it is implemented by the %ComediAnalogInput and %ComediAnalogOutput plugins,
+then follow the instructions in \ref installcomedi.
+
+If you want to use dynamic clamp, i.e. some realtime computation,
+as it is implemented by the %DynClampAnalogInput and %DynClampAnalogOutput plugins,
+then you need to install a real-time linux kernel first, as described in
+\ref installrtai.
+
+
 \section installcomedi Install comedi
 
-You should install the \c %comedi drivers and library prior to configuring RELACS,
-so that ./configure can detect the presence of the \c %comedi library.
-This requires to compile a kernel first.
+You should install the \c Comedi drivers and library prior to configuring RELACS,
+so that ./configure can detect the presence of the \c Comedi library.
+This usually requires to compile a kernel first, but see the note in
+section \ref installcomedidriver on the "in-tree" implementation of
+Comedi in recent kernels.
 
 
 \subsection installkernel Linux kernel
 
-In order to be able to install the \c %comedi drivers you need to have a kernel source tree
+In order to be able to install the \c Comedi drivers you need to have a kernel source tree
 that matches your running kernel image. Either compile your own kernel from scratch 
 (section \ref installvanillakernel , takes some time),
 or make sure that you get a matching source tree for your kernel image
@@ -40,6 +55,7 @@ or make sure that you get a matching source tree for your kernel image
 
 -# Get the soure that matches your kernel. 
 On Ubuntu/Debian you get the kernel source matching your running kernel image by executing
+as root
 \code
 $ cd /usr/src
 $ apt-get source linux-image-`uname -r`
@@ -68,8 +84,7 @@ $ make scripts
 
 -# Either get a vanilla kernel from http://www.kernel.org,
 e.g. http://www.kernel.org/pub/linux/kernel/v2.6/linux-2.6.28.9.tar.bz2,
-place the tar file in /usr/src (in case you do not have the right
-permissions do \c sudo \c chmod \c a+w \c /usr/src) and unpack it with
+place the tar file in /usr/src and unpack it as root with
 \code
 $ cd /usr/src
 $ tar xjvf linux-2.6.28.9.tar.bz2
@@ -94,11 +109,12 @@ First, you configure your kernel by calling
 \code
 $ make menuconfig
 \endcode
-(You might needto install the following packages first: \c sudo \c apt-get \a install \c make \c gcc \c ncurses-dev \c zlib1g-dev).
+(You might needto install the following packages first: \c apt-get \a install \c make \c gcc \c ncurses-dev \c zlib1g-dev).
 Possible settings you might want to change are:
   - Processor type and features: 
     - Select your Subarchitecture Type (PC-Compatible)
-    - Select the right Processor family
+    - Select the right Processor family (you find the name of your processor by looking at \c /proc/cpuinfo,
+      check \c "help" to find out, which Processor family you have to select)
     - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"
   .
 Leave the configuration dialog by pressing "Exit" until you are asked "Save kernel config?".
@@ -170,14 +186,20 @@ $ make-kpkg --initrd --revision r1 --config menuconfig kernel-image
    -# Install the kernel
    \code
 $ cd ..
-$ sudo dpkg -i linux-image-2.6.28.9_r1_amd64.deb
+$ dpkg -i linux-image-2.6.28.9_r1_amd64.deb
    \endcode
    -# continue with step 6.
 
 
 \subsection installcomedidriver Comedi
--# Download the current \c %comedi sources from the Git repository to \c /usr/local/src (in case you do not have the right
-permissions do \c sudo \c chmod \c a+w \c /usr/local/src before).
+
+Kernel versions 2.6.30 onwards have an experimental in-tree Comedi
+implementation in the driver "staging" area. You can check whether it
+works for you by following the instructions of point 11 below.  
+In case this works for you, continue with installing \ref installcomedilib.
+
+-# Download the current \c Comedi sources from the Git repository to \c /usr/local/src
+as root.
 \code
 $ cd /usr/local/src
 $ git clone git://comedi.org/git/comedi/comedi.git
@@ -192,14 +214,18 @@ $ tar xzvf comedi-HEAD-*.tar.gz
 $ tar xzvf comedilib-HEAD-*.tar.gz
 $ tar xzvf comedi_calibrate-HEAD-*.tar.gz
 \endcode
--# You may need to install the packages: \c autoconf, \c libtool, \c libgsl0-dev, \c libboost-dev.
+-# You may need to install the packages: \c autoconf, \c libtool.
 -# Make sure that you are really running the kernel
-  for which you want to install \c %comedi!
+  for which you want to install \c Comedi!
   You can check with
 \code
 $ uname -r
 \endcode
--# Change to the \c %comedi directory:
+-# Remove the Comedi staging modules to avoid conflicts:
+\code
+$ rm -r /lib/modules/`uname -r`/kernel/drivers/staging/comedi
+\endcode
+-# Change to the \c Comedi directory:
 \code
 $ cd /usr/local/src/comedi
 \endcode
@@ -212,13 +238,13 @@ You may ignore warnings and reminders.
 \code
 ./configure
 \endcode
-in case you want to install \c %comedi into your currently running kernel.
+in case you want to install \c Comedi into your currently running kernel.
 If \c /usr/src/linux is not your running kernel, then call
 \code
 $ ./configure --with-linuxdir=/usr/src/linux
 \endcode
 with \c /usr/src/linux replaced by the path to the sources of the kernel
-for which you want to install \c %comedi.
+for which you want to install \c Comedi.
 -# Compile
 \code
 $ make
@@ -229,20 +255,20 @@ $ make install
 $ depmod -a
 \endcode
 -# For some strange reason, the include files for kcomedilib \c linux/comedilib.h and 
-\c linux/comedi.h are not installed by \c %comedi to \c [prefix]/include/linux .
-These files are needed for compiling the kernel modules that use %comedi.
-Also, RTAI expects \c %comedi include files in \c [prefix]/include/linux.
-Therefore you need to copy the \c %comedi include files 
+\c linux/comedi.h are not installed by \c Comedi to \c [prefix]/include/linux .
+These files are needed for compiling the kernel modules that use Comedi.
+Also, RTAI expects \c Comedi include files in \c [prefix]/include/linux.
+Therefore you need to copy the \c Comedi include files 
 to \c [prefix]/include/linux yourself:
 \code
 $ cp include/linux/comedi.h /usr/include/linux/
 $ cp include/linux/comedilib.h /usr/include/linux/
 \endcode
--# Check loading the %comedi module:
+-# Check loading the Comedi module:
 \code
 $ modprobe comedi
 \endcode
-If you do not get any error message, then the %comedi kernel modules were
+If you do not get any error message, then the Comedi kernel modules were
 successfully compiled and can be loaded into the kernel.
 -# Check autodetection of your data acquisition board:
 \code
@@ -275,7 +301,8 @@ $ man comedi_config
 
 
 \subsection installcomedilib Comedilib
--# Change to the \c comedilib directory:
+-# You may need to install the packages: \c autoconf, \c libtool, \c bison, \c flex.
+-# Change to the \c comedilib directory as root:
 \code
 $ cd /usr/local/src/comedilib
 \endcode
@@ -293,16 +320,14 @@ You may want to read \c ./configure \c --help as well.
 Pay attention to warnings and errors! You might need to install additional software first.
 -# Compile and install (as root)
 \code
-$ make
-\endcode
-and install (as root)
-\code
-$ make install
+$ make && make install
 \endcode
 
 
 \subsection installcomedicalib Comedi_calibrate
--# Change to the \c comedi_calibrate directory:
+-# You may need to install the packages:  \c autoconf, \c libtool, 
+   \c libgsl0-dev, \c libboost-program-options-dev.
+-# Change to the \c comedi_calibrate directory as root:
 \code
 $ cd /usr/local/src/comedi_calibrate
 \endcode
@@ -315,26 +340,21 @@ You may ignore warnings and reminders.
 \code
 $ ./configure --prefix=/usr --sysconfdir=/etc
 \endcode
--# Compile
+-# Compile and install (as root)
 \code
-$ make
-\endcode
-and install (as root)
-\code
-$ make install
+$ make && make install
 \endcode
 
 
-\section installrtai Install RTAI and comedi
+\section installrtai Install RTAI and Comedi
 
-For dynamic clamp you need an RTAI patched linux kernel and %comedi.
+For dynamic clamp you need an RTAI patched linux kernel and Comedi.
 
 \subsection rtaikernel Linux kernel and RTAI patch
 
 -# Download the latest RTAI (http://www.rtai.org) version (version 3.7.1) from 
 the RTAI repository at http://www.rtai.org/RTAI
-and put it into \c /usr/local/src (in case you do not have the right
-permissions do \c sudo \c chmod \c a+w \c /usr/local/src).
+and put it into \c /usr/local/src as root.
 -# Unpack RTAI in /usr/local/src:
 \code
 $ cd /usr/local/src
@@ -377,8 +397,10 @@ In the kernel configuration dialog you should do the following settings:
   - Processor type and features: 
     - Deselect "Tickless System"
     - Select your "Subarchitecture Type" (PC-Compatible)
-    - Select the right Processor family
+    - Select the right Processor family (you find the name of your processor by looking at \c /proc/cpuinfo,
+      check \c "help" to find out, which Processor family you have to select)
     - Select "Preemption Model (Preemptible kernel (Low-Latency Desktop))"
+    - Set "Timer frequency" to 1000 Hz
   - Power Management options:
     - Deselect "CPU Frequency scaling"
     .
@@ -397,7 +419,7 @@ $ uname -r
 \code
 $ cd /usr/local/src/rtai
 \endcode
--# Configure RTAI by calling
+-# Configure RTAI by calling as root
 \code
 $ make menuconfig
 \endcode
@@ -438,19 +460,21 @@ $ depmod -a
 $ modprobe rtai_sched
 \endcode
 If this fails:
-XXX add \c lapic to the kernel parameter in the \c kernel line of the
+- add \c lapic to the kernel parameter in the \c kernel line of the
 \c grub menu in \c /boot/grub/menu.lst .
 
 
 \subsection rtaicomedi Comedi
+For an RTAI kernel you definitely have to install the Comedi drivers 
+yourself according to the following instructions:
 
 -# Follow the instructions above for installing 
 \ref installcomedidriver .
-For configuring \c %comedi you should use
+For configuring \c Comedi you should use
 \code
 $ ./configure --with-linuxdir=/usr/src/linux --with-rtaidir=/usr/realtime
 \endcode
--# Check loading the \c %comedi module:
+-# Check loading the \c Comedi module:
 \code
 $ modprobe comedi
 \endcode
@@ -477,7 +501,8 @@ $ cp /usr/local/src/comedi/comedi/Module.symvers /lib/modules/`uname -r`/comedi
 \subsection testrelacs Test RELACS
 -# If you haven't compiled RELACS yet, then follow the instructions in
 the top-level \c INSTALL file (the final \c make \c install is not necessary for testing).
-Otherwise, \c cd into the RELACS top-level directory and do
+Otherwise, \c cd into the RELACS top-level directory and do (you do not have to be root for this,
+except for loading the kernel modules in point 2)
 \code
 $ ./configure --with-rtai=/usr/realtime/include
 $ cd plugins/linuxdevices/comedi
@@ -515,7 +540,7 @@ $ chmod a+rw /dev/comedi*
     .
   .
 
-\section udev Set up udev permissions for comedi device files
+\section udev Set up udev permissions for Comedi device files
 
 -# Login as root.
 -# Create a new group "iocard":
@@ -524,7 +549,7 @@ $ addgroup --system iocard
 \endcode
 -# Add udev rules to the /etc/udev/rules.d directory:
 \code
-$ echo 'KERNEL=="comedi*", MODE="0660", GROUP="iocard"' > /etc/udev/rules.d/comedi.rules
+$ echo 'KERNEL=="comedi*", MODE="0660", GROUP="iocard"' > /etc/udev/rules.d/95-comedi.rules
 \endcode
 -# Run
 \code
@@ -536,12 +561,12 @@ to apply your new udev rules
 $ adduser <username> iocard
 \endcode
 After the next login, \c <username> is a member of the \c iocard group
-and and has sufficient permissions to access the data acquisition boards through %comedi.
+and and has sufficient permissions to access the data acquisition boards through \c Comedi.
 
 
-\section buffer Resize comedi buffer
+\section buffer Resize Comedi buffer
 
-To set the \c %comedi internal buffers to 640kB do as root:
+To set the \c Comedi internal buffers to 640kB do as root:
 \code
 $ comedi_config -r /dev/comedi0
 $ comedi_config --read-buffer 640 --write-buffer 640 /dev/comedi0 ni_pcimio
