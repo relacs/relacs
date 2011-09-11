@@ -139,11 +139,12 @@ char *moduleName = "/dev/dynclamp";
 
 char *iocNames[RTMODULE_IOC_MAXNR] = {
   "dummy",
-  "IOC_GET_SUBDEV_ID", "IOC_OPEN_SUBDEV", "IOC_CHANLIST", "IOC_COMEDI_CMD", "IOC_SYNC_CMD", 
-  "IOC_START_SUBDEV", "IOC_CHK_RUNNING", "IOC_REQ_READ", "IOC_REQ_WRITE", "IOC_REQ_CLOSE",
-  "IOC_STOP_SUBDEV", "IOC_RELEASE_SUBDEV", "IOC_SET_TRIGGER", "IOC_UNSET_TRIGGER",
-  "IOC_GET_TRACE_INFO", "IOC_SET_TRACE_CHANNEL", "IOC_GETRATE", "IOC_GETLOOPCNT",
-  "IOC_GETAOINDEX" 
+
+  "IOC_GET_SUBDEV_ID", "IOC_OPEN_SUBDEV", "IOC_CHANLIST", "IOC_COMEDI_CMD",
+  "IOC_SYNC_CMD", "IOC_START_SUBDEV", "IOC_CHK_RUNNING", "IOC_REQ_READ",
+  "IOC_REQ_WRITE", "IOC_REQ_CLOSE", "IOC_STOP_SUBDEV", "IOC_RELEASE_SUBDEV",
+  "IOC_DIO_CMD", "IOC_SET_TRIGGER", "IOC_UNSET_TRIGGER", "IOC_GET_TRACE_INFO",
+  "IOC_SET_TRACE_CHANNEL", "IOC_GETRATE", "IOC_GETLOOPCNT", "IOC_GETAOINDEX" 
 };
 
 
@@ -329,22 +330,31 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
   subdev[iS].delay = -1; 
   subdev[iS].duration = -1;
   subdev[iS].startsource = 0;
+  subdev[iS].chanN = 0;
+  subdev[iS].chanlist = 0;
 
-  // create FIFO for subdevice:
-  subdev[iS].fifo = iS;
-  retVal = rtf_create( subdev[iS].fifo, FIFO_SIZE );
-  if ( retVal ) {
-    ERROR_MSG( "openComediDevice ERROR: Creating FIFO with %d bytes buffer failed for subdevice %i, device %s\n",
-               FIFO_SIZE, iS, device[subdev[iS].devID].name );
-    return -1;
+  if ( subdev[iS].type == SUBDEV_IN || subdev[iS].type == SUBDEV_OUT ) {
+
+    // create FIFO for subdevice:
+    subdev[iS].fifo = iS;
+    retVal = rtf_create( subdev[iS].fifo, FIFO_SIZE );
+    if ( retVal ) {
+      ERROR_MSG( "openComediDevice ERROR: Creating FIFO with %d bytes buffer failed for subdevice %i, device %s\n",
+		 FIFO_SIZE, iS, device[subdev[iS].devID].name );
+      return -1;
+    }
+    else
+      DEBUG_MSG( "openComediDevice: Created FIFO with %d bytes buffer size for subdevice %i, device %s\n",
+		 FIFO_SIZE, iS, device[subdev[iS].devID].name );
+
+    // pass FIFO properties to user:
+    deviceIOC->fifoIndex = subdev[iS].fifo;
+    deviceIOC->fifoSize = FIFO_SIZE;
   }
-  else
-    DEBUG_MSG( "openComediDevice: Created FIFO with %d bytes buffer size for subdevice %i, device %s\n",
-               FIFO_SIZE, iS, device[subdev[iS].devID].name );
-
-  // pass FIFO properties to user:
-  deviceIOC->fifoIndex = subdev[iS].fifo;
-  deviceIOC->fifoSize = FIFO_SIZE;
+  else {
+    deviceIOC->fifoIndex = 0;
+    deviceIOC->fifoSize = 0;
+  }
 
   return 0;
 }
@@ -618,7 +628,10 @@ void releaseSubdevice( int iS )
   }
 
   // delete FIFO and reset subdevice structure:
-  rtf_destroy( subdev[iS].fifo );
+  if ( subdev[iS].type == SUBDEV_IN || subdev[iS].type == SUBDEV_OUT ) {
+    rtf_destroy( subdev[iS].fifo );
+  }
+
   memset( &(subdev[iS]), 0, sizeof(struct subdeviceT) );
   SDEBUG_MSG( "releaseSubdevice released subdevice %d\n", iS );
   if ( iS == subdevN - 1 )
@@ -647,6 +660,90 @@ void releaseSubdevice( int iS )
     deviceN--;
 }
 
+
+int digitalIO( struct dioIOCT *dioIOC )
+{
+  int iS = dioIOC->subdevID;
+  int iD = subdev[iS].devID;
+  int subdevice = subdev[iS].subdev;
+  comedi_t *devP = device[iD].devP;
+  unsigned int bit = 0;
+  int channel = 0;
+  int direction = 0;
+
+  if ( dioIOC->op == DIO_CONFIGURE ) {
+    if ( dioIOC->bitfield ) {
+      bit = 1;
+      for ( channel=0; channel<32; channel++ ) {
+	if ( ( dioIOC->lines & bit ) > 0 ) {
+	  direction = COMEDI_INPUT;
+	  if ( ( dioIOC->output & bit ) > 0 )
+	    direction = COMEDI_OUTPUT;
+	  if ( comedi_dio_config( devP, subdevice, channel, direction ) != 0 ) {
+	    comedi_perror( "digitalIO() -> DIO_CONFIGURE" );
+	    ERROR_MSG( "digitalIO: comedi_dio_config on device %s subdevice %d failed!\n",
+		      device[iD].name, subdevice );
+	    return -1;
+	  }
+	}
+	bit *= 2;
+      }
+    }
+    else {
+      direction = dioIOC->output ? COMEDI_OUTPUT : COMEDI_INPUT;
+      if ( comedi_dio_config( devP, subdevice, dioIOC->lines, direction ) != 0 ) {
+	comedi_perror( "digitalIO() -> DIO_CONFIGURE" );
+	ERROR_MSG( "digitalIO: comedi_dio_config on device %s subdevice %d failed!\n",
+		  device[iD].name, subdevice );
+	return -1;
+      }
+    }
+  }
+  else if ( dioIOC->op == DIO_READ ) {
+    if ( dioIOC->bitfield ) {
+      bit = 0;
+      if ( comedi_dio_bitfield( devP, subdevice, dioIOC->lines, &bit ) < 0 ) {
+	comedi_perror( "digitalIO() -> DIO_READ" );
+	ERROR_MSG( "digitalIO: comedi_dio_read on device %s subdevice %d failed!\n",
+		  device[iD].name, subdevice );
+	return -1;
+      }
+      dioIOC->output = bit & dioIOC->lines;
+    }
+    else {
+      bit = 0;
+      if ( comedi_dio_read( devP, subdevice, dioIOC->lines, &bit ) != 1 ) {
+	comedi_perror( "digitalIO() -> DIO_READ" );
+	ERROR_MSG( "digitalIO: comedi_dio_read on device %s subdevice %d failed!\n",
+		  device[iD].name, subdevice );
+	return -1;
+      }
+      dioIOC->output = bit;
+    }
+  }
+  else if ( dioIOC->op == DIO_WRITE ) {
+    if ( dioIOC->bitfield ) {
+      bit = dioIOC->output;
+      if ( comedi_dio_bitfield( devP, subdevice, dioIOC->lines, &bit ) < 0 ) {
+	comedi_perror( "digitalIO() -> DIO_WRITE" );
+	ERROR_MSG( "digitalIO: comedi_dio_write on device %s subdevice %d failed!\n",
+		  device[iD].name, subdevice );
+	return -1;
+      }
+    }
+    else {
+      if ( comedi_dio_write( devP, subdevice, dioIOC->lines, dioIOC->output ) != 1 ) {
+	comedi_perror( "digitalIO() -> DIO_WRITE" );
+	ERROR_MSG( "digitalIO: comedi_dio_write on device %s subdevice %d failed!\n",
+		  device[iD].name, subdevice );
+	return -1;
+      }
+    }
+  }
+  else
+    return -1;
+  return 0;
+}
 
 
 int setAnalogTrigger( struct triggerIOCT *triggerIOC )
@@ -1043,6 +1140,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
   static struct syncCmdIOCT syncCmdIOC;
   static struct traceInfoIOCT traceInfo;
   static struct traceChannelIOCT traceChannel;
+  static struct dioIOCT dioIOC;
   static struct triggerIOCT triggerIOC;
 
   int tmp, subdevID;
@@ -1308,6 +1406,27 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
     releaseSubdevice( subdevID );
     return 0;
 
+
+    // ******* Digital IO: ********************************************
+  case IOC_DIO_CMD:
+    retVal = copy_from_user( &dioIOC, (void __user *)arg, sizeof(struct dioIOCT) );
+    if ( retVal ) {
+      ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to dioIOCT-struct!\n" );
+      return -EFAULT;
+    }
+    if ( dioIOC.subdevID >= subdevN ) {
+      ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID in dioIOCT-struct!\n" );
+      return -EFAULT;
+    }
+    retVal = digitalIO( &dioIOC );
+    if ( retVal != 0 )
+      return -EFAULT;
+    retVal = copy_to_user( (void __user *)arg, &dioIOC, sizeof(struct dioIOCT) );
+    if ( retVal ) {
+      ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to dioIOCT-struct!\n" );
+      return -EFAULT;
+    }
+    return 0;
 
     // ******* Trigger: ***********************************************
 

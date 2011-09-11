@@ -749,7 +749,7 @@ int DynClampAnalogInput::convertData( void )
   float *db = (float *)Buffer;
 
   // debug:
-  if ( BufferN*BufferElemSize > BufferSize )
+  if ( BufferN*(int)BufferElemSize > BufferSize )
     cerr << "DynClampAnalogInput::convertData: buffer overflow! BufferN=" << BufferN
 	 << " BufferSize=" << BufferSize << " BufferN*BufferElemSize=" << BufferN*BufferElemSize << '\n';
 

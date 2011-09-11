@@ -5,10 +5,10 @@ Metadata support of OutData:
 - Add appendRamp function to OutData
 - Update odML terminologies accordingly.
 - Take metadata descriptions from stimulus files
+- Stimulus section needs a file (if available)!
 
 MetaData:
 - Implement in all RePros OutData::descriptions() by using appropriate OutData functions !
-- Stimulus section needs a file (if available)!
 - SaveFiles: finish reorganization of saveStimuli(): check XXX comments
 - Parameter::label should get a level that is used to make sections in the XML file ?
 - Check out JSON libraries and compatibility with Options
@@ -45,6 +45,11 @@ Plot:
   because of YMin or YMax isnan: probably fixed...
 - change zoom behavior on axis (centered)
 - make the zoom stack optional - remember only the default range
+- add min/maxZoomRanges to optionally restrict zooming
+- Plot::DataElement should have a MapD from which the plot is drawn using *double pointers,
+  CopyData should copy the data within the plot() functions to this buffer,
+  KeepData should do this within the draw() function
+- Plot::draw() should do all the initialization and only defer the plotting itself.
 - check alignment of grid with plotted lines at various plot widget sizes!
 
 Analog Input/Output:

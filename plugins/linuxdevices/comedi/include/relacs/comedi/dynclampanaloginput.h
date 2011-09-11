@@ -191,7 +191,7 @@ private:
     /*! Subdevice flags of the comedi analog input subdevice. */
   unsigned int CAISubDevFlags;
 
-    /*! needed by for assigning TraceInfo strings to channels. */
+    /*! Needed by for assigning TraceInfo strings to channels. */
   int SubdeviceID;
 
     /*! Name of the kernel module device file. */

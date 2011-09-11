@@ -28,7 +28,6 @@ Trigger::Trigger( void )
   : Device( TriggerType ),
     Hoops( 0 )
 {
-  //  Settings.addNumber( "temperature", 0.0, "C" );
 }
 
 
@@ -36,7 +35,6 @@ Trigger::Trigger( const string &deviceclass )
   : Device( deviceclass, TriggerType ),
     Hoops( 0 )
 {
-  //  Settings.addNumber( "temperature", 0.0, "C" );
 }
 
 

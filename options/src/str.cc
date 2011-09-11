@@ -1695,7 +1695,7 @@ double Str::number( double dflt, int index, int *next,
        ( FirstNumber.find( operator[]( n ) ) < 0 &&
 	 ( operator[]( n ) != '.' ||
 	   n+1 >= size() ||
-	     Digit.find( operator[]( n+1 ) ) < 0 ) ) )
+	   Digit.find( operator[]( n+1 ) ) < 0 ) ) )
     return dflt;
 
   // convert number:

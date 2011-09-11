@@ -73,6 +73,7 @@ libcomedidynclamp_la_LIBADD = \
 libcomedidynclamp_la_SOURCES = \
     dynclampanaloginput.cc \
     dynclampanalogoutput.cc \
+    dynclampdigitalio.cc \
     dynclamptrigger.cc \
     dynclamp.cc
 
@@ -82,6 +83,7 @@ libcomedidynclamp_la_include_HEADERS = \
     $(HEADER_PATH)/moduledef.h \
     $(HEADER_PATH)/dynclampanaloginput.h \
     $(HEADER_PATH)/dynclampanalogoutput.h \
+    $(HEADER_PATH)/dynclampdigitalio.h \
     $(HEADER_PATH)/dynclamptrigger.h
 
 

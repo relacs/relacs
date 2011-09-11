@@ -264,4 +264,12 @@ int ComediDigitalIO::readLines( int lines, int &val ) const
 }
 
 
+int ComediDigitalIO::comediSubdevice( void ) const
+{
+  if ( !isOpen() )
+    return -1;
+  return SubDevice;
+}
+
+
 }; /* namespace comedi */

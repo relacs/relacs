@@ -1,6 +1,6 @@
 /*
-  comedi/comedidigitalio.h
-  Interface for accessing digital I/O lines of a daq-board via comedi.
+  comedi/dynclampdigitalio.h
+  Interface for accessing digital I/O lines of a daq-board via comedi and the dynclamp kernel module.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2011 Jan Benda <benda@bio.lmu.de>
@@ -19,21 +19,25 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _COMEDI_COMEDIDIGITALIO_H_
-#define _COMEDI_COMEDIDIGITALIO_H_
+#ifndef _COMEDI_DYNCLAMPDIGITALIO_H_
+#define _COMEDI_DYNCLAMPDIGITALIO_H_
 
 #include <comedilib.h>
 #include <relacs/digitalio.h>
+#include <relacs/comedi/moduledef.h>
 using namespace std;
 using namespace relacs;
 
 namespace comedi {
 
 
+class ComediDigitalIO;
+
+
 /*! 
-\class ComediDigitalIO
+\class DynClampDigitalIO
 \author Jan Benda
-\brief [DigitalIO] Interface for accessing digital I/O lines of a daq-board via comedi.
+\brief [DigitalIO] Interface for accessing digital I/O lines of a daq-board via comedi and the dynclamp kernel module.
 
 \par Options
 - \c subdevice: the subdevice id of the digital I/O (check with comedi_test -t info).
@@ -41,19 +45,17 @@ namespace comedi {
 */
 
 
-class ComediDigitalIO : public DigitalIO
+class DynClampDigitalIO : public DigitalIO
 {
-
-  friend class DynClampDigitalIO;
 
 public:
 
-    /*! Create a new %ComediDigitalIO without opening a device. */
-  ComediDigitalIO( void );
+    /*! Create a new %DynClampDigitalIO without opening a device. */
+  DynClampDigitalIO( void );
     /*! Open the digital I/O driver specified by its device file \a device. */
-  ComediDigitalIO( const string &device, const Options &opts );
+  DynClampDigitalIO( const string &device, const Options &opts );
     /*! Close the daq driver. */
-  virtual ~ComediDigitalIO( void );
+  virtual ~DynClampDigitalIO( void );
 
     /*! Open a digital I/O device on the device \a device.
         The digital I/O subdevice can be specified by the "subdevice" option in \a opts.
@@ -117,24 +119,27 @@ public:
   virtual int readLines( int lines, int &val ) const;
 
 
-protected:
-
-    /*! Comedi internal index of analog input subdevice. */
-  int comediSubdevice( void ) const;
-
-
 private:
 
-    /*! Pointer to the comedi device. */
-  comedi_t *DeviceP;
+    /*! Pointer to the user space comedi interface. */
+  ComediDigitalIO *CDIO;
+
     /*! The comedi subdevice number. */
   unsigned int SubDevice;
     /*! The number of supported digital I/O lines */
   int MaxLines;
+
+    /*! Needed by for assigning TraceInfo strings to channels. */
+  int SubdeviceID;
+
+    /*! Name of the kernel module device file. */
+  string ModuleDevice;
+    /*! File descriptor for the kernel module. */
+  int ModuleFd;
 
 };
 
 
 }; /* namespace comedi */
 
-#endif /* ! _COMEDI_COMEDIDIGITALIO_H_ */
+#endif /* ! _COMEDI_DYNCLAMPDIGITALIO_H_ */

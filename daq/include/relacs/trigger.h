@@ -234,9 +234,9 @@ public:
           two levels into account.
         \arg \c blevel: the higher level for the trigger events that take
           two levels into account.
-        \arg \c threshold: the threshold parameter for detectin peak and
+        \arg \c threshold: the threshold parameter for detecting peak and
           troughs.
-        \return 0 if there arn't any parameter specified by \a opts, 
+        \return 0 if there aren't any parameter specified by \a opts, 
 	\return 1 if some trigger operation was defined by \a opts.
         This function should be used in open() like
         \code
@@ -246,25 +246,27 @@ public:
   int set( const Options &opts );
 
     /*! Add a new hoop to the trigger chain.
-        All subsequent call to the set* functions configure the new hoop.
+        All subsequent calls to the set* functions configure the new hoop.
 	\param[in] delay the time relative to the first trigger event
 	after which the trigger of this hoop has to occur.
 	\param[in] width the time interval during which the trigger of
 	this hoop has to occur.
-	\note Since most trigger devices do not have the concept of several hoops,
-	they might simply ignore any of the hoops except for the first one.
+	\note Since most trigger devices do not have the concept of
+	several hoops, they might simply ignore any of the hoops
+	except for the first one.
 	\sa setCrossing(), setPeakTrough() */
   void addHoop( double delay, double width );
 
     /*! Clear all settings.
         The next call of a set* function will specify the first hoop.
-	\note You always should call clear() before specifying new trigger settings.
+	\note You always should call clear() before specifying new
+	trigger settings.
 	\note The settings of the trigger device are not affected.
 	\sa setCrossing(), setPeakTrough() */
   void clear( void );
 
-    /*! Update the settings() of the device with the
-        current trigger parameter. */
+    /*! Update the settings() of the device with the current trigger
+        parameter. */
   void setSettings( void );
 
     /*! Call this function to transfer all settings to the trigger device
@@ -272,16 +274,17 @@ public:
 
 	The implementation of this function has to read out the
 	\a Hoop array and configure the device accordingly.
-	Note, that the number of configured hoops is \a Hoops plus one.
-	Any functionality of this interface that is not supported by the device
-	should be gracefully ignored.
+	Note that the number of configured hoops is \a Hoops plus one.
+	Any functionality of this interface that is not supported by
+	the device should be gracefully ignored.
 	Also the settings of the device should be updated,
 	e.g. by calling setSettings().
         \return 0 on success, negative numbers on complete failure,
         positive numbers if not everything is supported by the device. */
   virtual int activate( void ) = 0;
-    /*! Disable the trigger device, i.e. no more trigger events will be emitted.
-        \return 0 on success, negative numbers on failure. */
+    /*! Disable the trigger device, i.e. no more trigger events will
+        be emitted.
+	\return 0 on success, negative numbers on failure. */
   virtual int disable( void ) = 0;
 
     /*! Disables the trigger device and clears all hoops.

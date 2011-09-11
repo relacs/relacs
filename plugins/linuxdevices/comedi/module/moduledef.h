@@ -68,7 +68,7 @@
 
 //* DAQ-devices:
 
-enum subdevTypes { SUBDEV_IN=0, SUBDEV_OUT };
+enum subdevTypes { SUBDEV_IN=0, SUBDEV_OUT, SUBDEV_DIO };
 
 struct deviceIOCT {
   unsigned int subdevID;
@@ -107,6 +107,16 @@ struct syncCmdIOCT {
   unsigned long duration;
   int startsource;
   int continuous;
+};
+
+enum dioOps { DIO_CONFIGURE, DIO_READ, DIO_WRITE };
+
+struct dioIOCT {
+  unsigned int subdevID;
+  int bitfield;    /* if true, then treat lines and output as bit-fields. */
+  enum dioOps op;
+  int lines;
+  int output;
 };
 
 struct triggerIOCT {
@@ -152,18 +162,19 @@ struct traceChannelIOCT {
 #define IOC_STOP_SUBDEV         _IOW(RTMODULE_MAJOR, 11, int)
 #define IOC_RELEASE_SUBDEV      _IOW(RTMODULE_MAJOR, 12, int)
 
-#define IOC_SET_TRIGGER         _IOW(RTMODULE_MAJOR, 13, int)
-#define IOC_UNSET_TRIGGER       _IOW(RTMODULE_MAJOR, 14, int)
+#define IOC_DIO_CMD             _IOWR(RTMODULE_MAJOR, 13 ,int)
+#define IOC_SET_TRIGGER         _IOW(RTMODULE_MAJOR, 14, int)
+#define IOC_UNSET_TRIGGER       _IOW(RTMODULE_MAJOR, 15, int)
 
 // exchange info:
 
-#define IOC_GET_TRACE_INFO      _IOWR(RTMODULE_MAJOR, 15, int)
-#define IOC_SET_TRACE_CHANNEL   _IOW(RTMODULE_MAJOR,  16, int)
-#define IOC_GETRATE             _IOR(RTMODULE_MAJOR,  17, int)
-#define IOC_GETLOOPCNT          _IOR(RTMODULE_MAJOR,  18, int)
-#define IOC_GETAOINDEX          _IOR(RTMODULE_MAJOR,  19, int)
+#define IOC_GET_TRACE_INFO      _IOWR(RTMODULE_MAJOR, 16, int)
+#define IOC_SET_TRACE_CHANNEL   _IOW(RTMODULE_MAJOR,  17, int)
+#define IOC_GETRATE             _IOR(RTMODULE_MAJOR,  18, int)
+#define IOC_GETLOOPCNT          _IOR(RTMODULE_MAJOR,  19, int)
+#define IOC_GETAOINDEX          _IOR(RTMODULE_MAJOR,  20, int)
 
-#define RTMODULE_IOC_MAXNR 20
+#define RTMODULE_IOC_MAXNR 21
 
 
 // *** KERNEL LOGGING STYLE ***
