@@ -161,13 +161,18 @@ void DynClampDigitalIO::close( void )
 int DynClampDigitalIO::lines( void ) const
 { 
   if ( !isOpen() )
-    return -1;
+    return 0;
   return MaxLines;
 }
 
 
 int DynClampDigitalIO::configureLine( int line, bool output ) const
 {
+  if ( !isOpen ) 
+    return NotOpen;
+  if ( line < 0 || line >= MaxLines )
+    return WriteError;
+
   struct dioIOCT dioIOC;
   dioIOC.subdevID = SubdeviceID;
   dioIOC.bitfield = 0;
@@ -188,6 +193,9 @@ int DynClampDigitalIO::configureLine( int line, bool output ) const
 
 int DynClampDigitalIO::configureLines( int lines, int output ) const
 {
+  if ( !isOpen ) 
+    return NotOpen;
+
   struct dioIOCT dioIOC;
   dioIOC.subdevID = SubdeviceID;
   dioIOC.bitfield = 1;
@@ -208,6 +216,11 @@ int DynClampDigitalIO::configureLines( int lines, int output ) const
 
 int DynClampDigitalIO::write( int line, bool val )
 {
+  if ( !isOpen ) 
+    return NotOpen;
+  if ( line < 0 || line >= MaxLines )
+    return WriteError;
+
   struct dioIOCT dioIOC;
   dioIOC.subdevID = SubdeviceID;
   dioIOC.bitfield = 0;
@@ -227,6 +240,11 @@ int DynClampDigitalIO::write( int line, bool val )
 
 int DynClampDigitalIO::read( int line, bool &val ) const
 {
+  if ( !isOpen ) 
+    return NotOpen;
+  if ( line < 0 || line >= MaxLines )
+    return WriteError;
+
   struct dioIOCT dioIOC;
   dioIOC.subdevID = SubdeviceID;
   dioIOC.bitfield = 0;
@@ -247,6 +265,9 @@ int DynClampDigitalIO::read( int line, bool &val ) const
 
 int DynClampDigitalIO::writeLines( int lines, int val )
 {
+  if ( !isOpen ) 
+    return NotOpen;
+
   struct dioIOCT dioIOC;
   dioIOC.subdevID = SubdeviceID;
   dioIOC.bitfield = 1;
@@ -266,6 +287,9 @@ int DynClampDigitalIO::writeLines( int lines, int val )
 
 int DynClampDigitalIO::readLines( int lines, int &val ) const
 {
+  if ( !isOpen ) 
+    return NotOpen;
+
   struct dioIOCT dioIOC;
   dioIOC.subdevID = SubdeviceID;
   dioIOC.bitfield = 1;

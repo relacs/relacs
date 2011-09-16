@@ -19,6 +19,7 @@
 // *** FEATURES ***
 
 // #define ENABLE_TRIGGER
+#define ENABLE_TTLPULSE
 
 
 // *** DEVICE LINUX CONFIGURATION ***
@@ -50,9 +51,10 @@
 
 //* DAQ-devices:
 
-#define MAXDEV      4
-#define MAXSUBDEV   8
-#define MAXCHANLIST 128
+#define MAXDEV       4
+#define MAXSUBDEV    8
+#define MAXCHANLIST  128
+#define MAXTTLPULSES 5
 
 #define PARAM_CHAN_OFFSET 1000
 
@@ -109,7 +111,8 @@ struct syncCmdIOCT {
   int continuous;
 };
 
-enum dioOps { DIO_CONFIGURE, DIO_READ, DIO_WRITE };
+enum dioOps { DIO_CONFIGURE, DIO_READ, DIO_WRITE, DIO_ADD_TTLPULSE, DIO_CLEAR_TTLPULSE };
+enum ttlPulses { TTL_START_WRITE=0, TTL_END_WRITE, TTL_START_READ, TTL_END_READ };
 
 struct dioIOCT {
   unsigned int subdevID;
@@ -117,6 +120,7 @@ struct dioIOCT {
   enum dioOps op;
   int lines;
   int output;
+  enum ttlPulses pulseType; /* only for op == DIO_ADD_TTLPULSE or DIO_CLEAR_TTLPULSE*/
 };
 
 struct triggerIOCT {

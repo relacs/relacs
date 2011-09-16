@@ -167,7 +167,7 @@ void ComediDigitalIO::close( void )
 int ComediDigitalIO::lines( void ) const
 { 
   if ( !isOpen() )
-    return -1;
+    return 0;
   return MaxLines;
 }
 

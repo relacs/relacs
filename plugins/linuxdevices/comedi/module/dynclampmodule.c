@@ -134,6 +134,25 @@ struct dynClampTaskT dynClampTask;
 
 char *moduleName = "/dev/dynclamp";
 
+//* TTL pulse generation:
+#ifdef ENABLE_TTLPULSE
+comedi_t *ttlStartWriteDevice[MAXTTLPULSES] = { 0, 0, 0, 0, 0 };
+comedi_insn *ttlStartWriteInsn[MAXTTLPULSES] = { 0, 0, 0, 0, 0 };
+comedi_t *ttlEndWriteDevice[MAXTTLPULSES] = { 0, 0, 0, 0, 0 };
+comedi_insn *ttlEndWriteInsn[MAXTTLPULSES] = { 0, 0, 0, 0, 0 };
+comedi_t *ttlStartReadDevice[MAXTTLPULSES] = { 0, 0, 0, 0, 0 };
+comedi_insn *ttlStartReadInsn[MAXTTLPULSES] = { 0, 0, 0, 0, 0 };
+comedi_t *ttlEndReadDevice[MAXTTLPULSES] = { 0, 0, 0, 0, 0 };
+comedi_insn *ttlEndReadInsn[MAXTTLPULSES] = { 0, 0, 0, 0, 0 };
+
+comedi_t **ttlDevices[4] = { &ttlStartWriteDevice, &ttlEndWriteDevice,
+			     &ttlStartReadDevice, &ttlEndReadDevice, };
+comedi_insn **ttlInsns[4] = { &ttlStartWriteInsn, &ttlEndWriteInsn,
+			     &ttlStartReadInsn, &ttlEndReadInsn, };
+
+lsample_t ttlLow = 0;
+lsample_t ttlHigh = 1;
+#endif
 
 // for debug:
 
@@ -332,6 +351,7 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
   subdev[iS].startsource = 0;
   subdev[iS].chanN = 0;
   subdev[iS].chanlist = 0;
+  subdev[iS].running = 0;
 
   if ( subdev[iS].type == SUBDEV_IN || subdev[iS].type == SUBDEV_OUT ) {
 
@@ -627,11 +647,28 @@ void releaseSubdevice( int iS )
     subdev[iS].chanlist = 0;
   }
 
-  // delete FIFO and reset subdevice structure:
   if ( subdev[iS].type == SUBDEV_IN || subdev[iS].type == SUBDEV_OUT ) {
+    // delete FIFO
     rtf_destroy( subdev[iS].fifo );
   }
+  else if ( subdev[iS].type == SUBDEV_DIO ) {
+    // remove ttl pulses:
+    for ( pT = 0; pT < 4; pT++ ) {
+      for ( iT = 0; ttlDevices[pT][iT] != 0; iT++ ) {
+	if ( ttlDevices[pT][iT] == devP &&
+	     ttlInsns[pT][iT]->subdev == subdevice ) {
+	  vfree( ttlInsns[pT][iT] );
+	  for ( k = iT+1; ttlDevices[pT][k] != 0; k++ ) {
+	    ttlInsns[pT][k-1] = ttlInsns[pT][k];
+	    ttlDevices[pT][k-1] = ttlDevices[pT][k];
+	  }
+	  break;
+	}
+      }
+    }
+  }
 
+  // reset subdevice structure:
   memset( &(subdev[iS]), 0, sizeof(struct subdeviceT) );
   SDEBUG_MSG( "releaseSubdevice released subdevice %d\n", iS );
   if ( iS == subdevN - 1 )
@@ -661,7 +698,7 @@ void releaseSubdevice( int iS )
 }
 
 
-int digitalIO( struct dioIOCT *dioIOC )
+int setDigitalIO( struct dioIOCT *dioIOC )
 {
   int iS = dioIOC->subdevID;
   int iD = subdev[iS].devID;
@@ -670,6 +707,9 @@ int digitalIO( struct dioIOCT *dioIOC )
   unsigned int bit = 0;
   int channel = 0;
   int direction = 0;
+  int iT = dioIOC->pulseType;
+  int pT = 0;
+  int k = 0;
 
   if ( dioIOC->op == DIO_CONFIGURE ) {
     if ( dioIOC->bitfield ) {
@@ -680,10 +720,10 @@ int digitalIO( struct dioIOCT *dioIOC )
 	  if ( ( dioIOC->output & bit ) > 0 )
 	    direction = COMEDI_OUTPUT;
 	  if ( comedi_dio_config( devP, subdevice, channel, direction ) != 0 ) {
-	    comedi_perror( "digitalIO() -> DIO_CONFIGURE" );
-	    ERROR_MSG( "digitalIO: comedi_dio_config on device %s subdevice %d failed!\n",
+	    comedi_perror( "setDigitalIO() -> DIO_CONFIGURE" );
+	    ERROR_MSG( "setDigitalIO: comedi_dio_config on device %s subdevice %d failed!\n",
 		      device[iD].name, subdevice );
-	    return -1;
+	    return -EFAULT;
 	  }
 	}
 	bit *= 2;
@@ -692,10 +732,10 @@ int digitalIO( struct dioIOCT *dioIOC )
     else {
       direction = dioIOC->output ? COMEDI_OUTPUT : COMEDI_INPUT;
       if ( comedi_dio_config( devP, subdevice, dioIOC->lines, direction ) != 0 ) {
-	comedi_perror( "digitalIO() -> DIO_CONFIGURE" );
-	ERROR_MSG( "digitalIO: comedi_dio_config on device %s subdevice %d failed!\n",
+	comedi_perror( "setDigitalIO() -> DIO_CONFIGURE" );
+	ERROR_MSG( "setDigitalIO: comedi_dio_config on device %s subdevice %d failed!\n",
 		  device[iD].name, subdevice );
-	return -1;
+	return -EFAULT;
       }
     }
   }
@@ -703,20 +743,20 @@ int digitalIO( struct dioIOCT *dioIOC )
     if ( dioIOC->bitfield ) {
       bit = 0;
       if ( comedi_dio_bitfield( devP, subdevice, dioIOC->lines, &bit ) < 0 ) {
-	comedi_perror( "digitalIO() -> DIO_READ" );
-	ERROR_MSG( "digitalIO: comedi_dio_read on device %s subdevice %d failed!\n",
+	comedi_perror( "setDigitalIO() -> DIO_READ" );
+	ERROR_MSG( "setDigitalIO: comedi_dio_read on device %s subdevice %d failed!\n",
 		  device[iD].name, subdevice );
-	return -1;
+	return -EFAULT;
       }
       dioIOC->output = bit & dioIOC->lines;
     }
     else {
       bit = 0;
       if ( comedi_dio_read( devP, subdevice, dioIOC->lines, &bit ) != 1 ) {
-	comedi_perror( "digitalIO() -> DIO_READ" );
-	ERROR_MSG( "digitalIO: comedi_dio_read on device %s subdevice %d failed!\n",
+	comedi_perror( "setDigitalIO() -> DIO_READ" );
+	ERROR_MSG( "setDigitalIO: comedi_dio_read on device %s subdevice %d failed!\n",
 		  device[iD].name, subdevice );
-	return -1;
+	return -EFAULT;
       }
       dioIOC->output = bit;
     }
@@ -725,23 +765,56 @@ int digitalIO( struct dioIOCT *dioIOC )
     if ( dioIOC->bitfield ) {
       bit = dioIOC->output;
       if ( comedi_dio_bitfield( devP, subdevice, dioIOC->lines, &bit ) < 0 ) {
-	comedi_perror( "digitalIO() -> DIO_WRITE" );
-	ERROR_MSG( "digitalIO: comedi_dio_write on device %s subdevice %d failed!\n",
+	comedi_perror( "setDigitalIO() -> DIO_WRITE" );
+	ERROR_MSG( "setDigitalIO: comedi_dio_write on device %s subdevice %d failed!\n",
 		  device[iD].name, subdevice );
-	return -1;
+	return -EFAULT;
       }
     }
     else {
       if ( comedi_dio_write( devP, subdevice, dioIOC->lines, dioIOC->output ) != 1 ) {
-	comedi_perror( "digitalIO() -> DIO_WRITE" );
-	ERROR_MSG( "digitalIO: comedi_dio_write on device %s subdevice %d failed!\n",
+	comedi_perror( "setDigitalIO() -> DIO_WRITE" );
+	ERROR_MSG( "setDigitalIO: comedi_dio_write on device %s subdevice %d failed!\n",
 		  device[iD].name, subdevice );
-	return -1;
+	return -EFAULT;
       }
     }
   }
+#ifdef ENABLE_TTLPULSE
+  else if ( dioIOC->op == DIO_ADD_TTLPULSE ) {
+    if ( pT < TTL_START_WRITE || pT > TTL_END_READ )
+      return -EINVAL;
+    for ( iT = 0; iT < MAXTTLPULSES && ttlDevices[pT][iT] != 0; iT++ );
+    if ( iT >= MAXTTLPULSES-1 )
+      return -ENOMEM;
+    ttlDevices[pT][iT] = devP;
+    ttlInsns[pT][iT] = vmalloc( sizeof(comedi_insn) );
+    memset( ttlInsns[pT][iT], 0, sizeof(comedi_insn) );
+    ttlInsns[pT][iT]->insn = INSN_WRITE;
+    ttlInsns[pT][iT]->n = 1;
+    ttlInsns[pT][iT]->data = dioIOC->output ? &ttlHigh : &ttlLow;
+    ttlInsns[pT][iT]->subdev = subdevice;
+    ttlInsns[pT][iT]->chanspec = CR_PACK( dioIOC->lines, 0, 0 );
+  }
+  else if ( dioIOC->op == DIO_CLEAR_TTLPULSE ) {
+    for ( pT = 0; pT < 4; pT++ ) {
+      for ( iT = 0; iT < MAXTTLPULSES && ttlDevices[pT][iT] != 0; iT++ ) {
+	if ( ttlDevices[pT][iT] == devP &&
+	     ttlInsns[pT][iT]->subdev == subdevice &&
+	     ttlInsns[pT][iT]->chanspec == CR_PACK( dioIOC->lines, 0, 0 ) ) {
+	  vfree( ttlInsns[pT][iT] );
+	  for ( k = iT+1; k < MAXTTLPULSES && ttlDevices[pT][k] != 0; k++ ) {
+	    ttlInsns[pT][k-1] = ttlInsns[pT][k];
+	    ttlDevices[pT][k-1] = ttlDevices[pT][k];
+	  }
+	  break;
+	}
+      }
+    }
+  }
+#endif
   else
-    return -1;
+    return -EINVAL;
   return 0;
 }
 
@@ -799,7 +872,7 @@ int unsetAnalogTrigger( struct triggerIOCT *triggerIOC )
 void rtDynClamp( long dummy )
 {
   int retVal;
-  int iS, iC;
+  int iS, iC, iT;
   int subdevRunning = 1;
   unsigned long readCnt = 0;
   struct chanT *pChan;
@@ -808,6 +881,7 @@ void rtDynClamp( long dummy )
   double term;
   int triggerevs[5] = { 1, 0, 0, 0, 0 };
   int prevtriggerevs[5] = { 0, 0, 0, 0, 0 };
+
   //  int vi, oi, pi; // DEBUG
 
   SDEBUG_MSG( "rtDynClamp: starting dynamic clamp loop at %u Hz\n", 
@@ -823,6 +897,18 @@ void rtDynClamp( long dummy )
   while( subdevRunning ) {
     
     subdevRunning = 0;
+
+#ifdef ENABLE_TTLPULSE
+    iT = 0;
+    while ( ttlStartWriteDevice[iT] != 0 ) {
+      retVal = comedi_do_insn( ttlStartWriteDevice[iT] ,ttlStartWriteInsn[iT] );
+      if ( retVal < 1 ) {
+	if ( retVal < 0 )
+	  comedi_perror( "rtmodule: rtDynClamp ttl pulse at start write: comedi_do_insn" );
+	ERROR_MSG( "rtDynClamp: ERROR! failed to write TTL pulse %d at start write\n", iT );
+      }
+    }
+#endif
 
     /******** WRITE TO ANALOG OUTPUT: ******************************************/
     /****************************************************************************/
@@ -920,11 +1006,37 @@ void rtDynClamp( long dummy )
       }
     } // end of device loop
 
+
+#ifdef ENABLE_TTLPULSE
+    iT = 0;
+    while ( ttlEndWriteDevice[iT] != 0 ) {
+      retVal = comedi_do_insn( ttlEndWriteDevice[iT] ,ttlEndWriteInsn[iT] );
+      if ( retVal < 1 ) {
+	if ( retVal < 0 )
+	  comedi_perror( "rtmodule: rtDynClamp ttl pulse at end write: comedi_do_insn" );
+	ERROR_MSG( "rtDynClamp: ERROR! failed to write TTL pulse %d at end write\n", iT );
+      }
+    }
+#endif
+
     /******** SLEEP FOR NEURON TO REACT TO GIVEN OUTPUT: ************************/
     /****************************************************************************/
     //* PROBLEM: rt_sleep is timed using jiffies only (granularity = 1msec)
 	//* int retValSleep = rt_sleep( nano2count( INJECT_RECORD_DELAY ) );
     rt_busy_sleep( INJECT_RECORD_DELAY ); // TODO: just default
+
+
+#ifdef ENABLE_TTLPULSE
+    iT = 0;
+    while ( ttlStartReadDevice[iT] != 0 ) {
+      retVal = comedi_do_insn( ttlStartReadDevice[iT] ,ttlStartReadInsn[iT] );
+      if ( retVal < 1 ) {
+	if ( retVal < 0 )
+	  comedi_perror( "rtmodule: rtDynClamp ttl pulse at start read: comedi_do_insn" );
+	ERROR_MSG( "rtDynClamp: ERROR! failed to write TTL pulse %d at start read\n", iT );
+      }
+    }
+#endif
     
     /******** FROM ANALOG INPUT: **********************************************/
     /****************************************************************************/
@@ -1035,6 +1147,19 @@ void rtDynClamp( long dummy )
 	readCnt++; // FOR DEBUG
       }
     } // end of device loop
+
+
+#ifdef ENABLE_TTLPULSE
+    iT = 0;
+    while ( ttlEndReadDevice[iT] != 0 ) {
+      retVal = comedi_do_insn( ttlEndReadDevice[iT] ,ttlEndReadInsn[iT] );
+      if ( retVal < 1 ) {
+	if ( retVal < 0 )
+	  comedi_perror( "rtmodule: rtDynClamp ttl pulse at end read: comedi_do_insn" );
+	ERROR_MSG( "rtDynClamp: ERROR! failed to write TTL pulse %d at end read\n", iT );
+      }
+    }
+#endif
 
 
     /****************************************************************************/
@@ -1418,9 +1543,9 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid subdevice ID in dioIOCT-struct!\n" );
       return -EFAULT;
     }
-    retVal = digitalIO( &dioIOC );
+    retVal = setDigitalIO( &dioIOC );
     if ( retVal != 0 )
-      return -EFAULT;
+      return retVal;
     retVal = copy_to_user( (void __user *)arg, &dioIOC, sizeof(struct dioIOCT) );
     if ( retVal ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid pointer to dioIOCT-struct!\n" );
