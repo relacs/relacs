@@ -28,7 +28,7 @@ namespace efield {
 
 
 JAR::JAR( void )
-  : RePro( "JAR", "efield", "Jan Benda", "2.0", "Mar 09, 2010" )
+  : RePro( "JAR", "efield", "Jan Benda", "2.2", "Sep 21, 2011" )
 {
   // parameter:
   ReadCycles = 100;
@@ -51,11 +51,13 @@ JAR::JAR( void )
   JARAverageTime = 0.5;
   ChirpAverageTime = 0.02;
   EODSaveTime = 1.0;
+  GenerateStimulus = true;
   SineWave = false;
+  WarpFile = false;
 
   // add some parameter as options:
   addLabel( "Stimulation" );
-  addNumber( "duration", "Signal duration", Duration, 1.0, 1000000.0, 1.0, "seconds" );
+  addNumber( "duration", "Signal duration", Duration, 0.0, 1000000.0, 1.0, "seconds" );
   addNumber( "pause", "Pause between signals", Pause, 1.0, 1000000.0, 1.0, "seconds" );
   addNumber( "ramp", "Duration of linear ramp", Ramp, 0, 10000.0, 0.1, "seconds" );
   addNumber( "deltafstep", "Delta f steps", DeltaFStep, 1.0, 10000.0, 1.0, "Hz" );
@@ -70,7 +72,12 @@ JAR::JAR( void )
   addNumber( "amplmax", "Maximum amplitude", AmplMax, 0.1, 1000.0, 0.1, "mV/cm" ).setActivation( "amplsel", "absolute" );
   addNumber( "amplstep", "Amplitude steps", AmplStep, 0.1, 1000.0, 0.1, "mV/cm" ).setActivation( "amplsel", "absolute" );
   addInteger( "repeats", "Repeats", Repeats, 0, 1000, 2 );
-  addBoolean( "sinewave", "Use sine wave", SineWave );
+  addLabel( "Stimulus" );
+  addBoolean( "genstim", "Generate stimulus", GenerateStimulus );
+  addBoolean( "sinewave", "Use sine wave", SineWave ).setActivation( "genstim", "false" );
+  addText( "file", "Stimulus file", "" ).setStyle( OptWidget::BrowseExisting ).setActivation( "stimsel", "file" );
+  addNumber( "sigstdev", "Standard deviation of signal", 1.0, 0.01, 1.0, 0.05 ).setActivation( "stimsel", "file" );
+  addBoolean( "warpfile", "Warp stimulus file to the requested Delta fs", WarpFile ).setActivation( "stimsel", "file" );
   addLabel( "Analysis" );
   addNumber( "before", "Time before stimulation to be analyzed", Before, 0.0, 100000.0, 1.0, "seconds" );
   addNumber( "after", "Time after stimulation to be analyzed", After, 0.0, 100000.0, 1.0, "seconds" );
@@ -176,7 +183,18 @@ int JAR::main( void )
   JARAverageTime = number( "jaraverage" );
   ChirpAverageTime = number( "chirpaverage" );
   EODSaveTime = number( "eodsavetime" );
+  GenerateStimulus = boolean( "genstim" );
   SineWave = boolean( "sinewave" );
+  File = text( "file" );
+  double sigstdev = number( "sigstdev" );
+  WarpFile = boolean( "warpfile" );
+  WarpFile = false;
+  if ( ! GenerateStimulus && ! WarpFile ) {
+    deltafrange = "";
+    DeltaFMin = 0.0;
+    DeltaFMax = 0.0;
+    DeltaFStep = 1.0;
+  }
   if ( After + Before > Pause )
     Pause = Before + After;
   GlobalEFieldEventsWarning = false;
@@ -197,7 +215,7 @@ int JAR::main( void )
     warning( "need local EOD for contrasts." );
     return Failed;
   }
-  if ( !SineWave && LocalEODEvents[0] < 0 ) {
+  if ( GenerateStimulus && !SineWave && LocalEODEvents[0] < 0 ) {
     warning( "need local EOD events for EOD waveform stimulus." );
     return Failed;
   }
@@ -225,6 +243,8 @@ int JAR::main( void )
   else
     DeltaFRange.set( deltafrange );
   DeltaFRange.random();
+  OutData signal;
+  signal.clear();
 
   // data:
   Response.clear();
@@ -312,41 +332,76 @@ int JAR::main( void )
 	DeltaF = *DeltaFRange;
 	
 	// create signal:
-	OutData signal;
 	signal.setTrace( GlobalEField );
 	applyOutTrace( signal );
-	if ( SineWave ) {
-	  unlockAll();
-	  StimulusRate = FishRate + DeltaF;
-	  double p = 1.0;
-	  if ( fabs( DeltaF ) > 0.01 )
-	    p = rint( StimulusRate / fabs( DeltaF ) ) / StimulusRate;
-	  else
-	    p = 1.0/StimulusRate;
-	  int n = (int)::rint( Duration / p );
-	  if ( n < 1 )
-	    n = 1;
-	  signal.sineWave( n*p, -1.0, StimulusRate, 1.0, Ramp );
-	  signal.setIdent( "sinewave" );
-	  IntensityGain = 1.0;
-	  lockAll();
+	if ( GenerateStimulus ) {
+	  signal.clear();
+	  if ( SineWave ) {
+	    unlockAll();
+	    StimulusRate = FishRate + DeltaF;
+	    double p = 1.0;
+	    if ( fabs( DeltaF ) > 0.01 )
+	      p = rint( StimulusRate / fabs( DeltaF ) ) / StimulusRate;
+	    else
+	      p = 1.0/StimulusRate;
+	    int n = (int)::rint( Duration / p );
+	    if ( n < 1 )
+	      n = 1;
+	    signal.sineWave( n*p, -1.0, StimulusRate, 1.0, Ramp );
+	    signal.setIdent( "sinewave" );
+	    IntensityGain = 1.0;
+	    lockAll();
+	  }
+	  else if ( LocalEODEvents[0] >= 0 ) {
+	    // extract an EOD waveform:
+	    double t1 = events( LocalEODEvents[0] ).back( ReadCycles );
+	    double t2 = events( LocalEODEvents[0] ).back();
+	    trace( LocalEODTrace[0] ).copy( t1, t2, signal );
+	    double g = signal.maximize( 0 );
+	    signal.setSampleRate( trace( LocalEODTrace[0] ).sampleRate() * ( FishRate + DeltaF ) / FishRate );
+	    signal.setCarrierFreq( FishRate + DeltaF );
+	    signal.setIdent( "EOD" );
+	    StimulusRate = ReadCycles/signal.duration();
+	    double maxamplitude = trace( LocalEODTrace[0] ).maxValue() - trace( LocalEODTrace[0] ).minValue();
+	    IntensityGain = maxamplitude / LocalFishAmplitude / g;
+	    unlockAll();
+	    signal.repeat( (int)floor( Duration/signal.duration() ) );
+	    signal.ramp( Ramp );
+	    lockAll();
+	  }
 	}
-	else if ( LocalEODEvents[0] >= 0 ) {
-	  // extract an EOD waveform:
-	  double t1 = events( LocalEODEvents[0] ).back( ReadCycles );
-	  double t2 = events( LocalEODEvents[0] ).back();
-	  trace( LocalEODTrace[0] ).copy( t1, t2, signal );
-	  double g = signal.maximize( 0 );
-	  signal.setSampleRate( trace( LocalEODTrace[0] ).sampleRate() * ( FishRate + DeltaF ) / FishRate );
-	  signal.setCarrierFreq( FishRate + DeltaF );
-	  signal.setIdent( "EOD" );
-	  StimulusRate = ReadCycles/signal.duration();
-	  double maxamplitude = trace( LocalEODTrace[0] ).maxValue() - trace( LocalEODTrace[0] ).minValue();
-	  IntensityGain = maxamplitude / LocalFishAmplitude / g;
-	  unlockAll();
-	  signal.repeat( (int)floor( Duration/signal.duration() ) );
-	  signal.ramp( Ramp );
-	  lockAll();
+	else {
+	  if ( signal.empty() ) {
+	    string filename = File.name();
+	    File.expandPath();
+	    unlockAll();
+	    setWaitMouseCursor();
+	    {
+	      OutData lsig;
+	      lsig.load( File, filename );
+	      if ( lsig.empty() ) {
+		warning( "Cannot load stimulus file <b>" + File + "</b>!" );
+		restoreMouseCursor();
+		lockAll();
+		return Failed;
+	      }
+	      if ( signal.fixedSampleRate() &&
+		   fabs( signal.maxSampleRate() - lsig.sampleRate() )/signal.maxSampleRate() > 0.005 ) {
+		signal.SampleDataF::interpolate( lsig, 0.0, signal.bestSampleInterval( -1.0 ) );
+	      }
+	      else
+		signal = lsig;
+	    }
+	    if ( Duration > 0.0 && signal.length() > Duration )
+	      signal.resize( signal.indices( Duration ) );
+	    int c = ::relacs::clip( -1.0, 1.0, signal );
+	    printlog( "clipped " + Str( c ) + " from " + Str( signal.size() ) + " data points.\n" );
+	    signal.setTrace( GlobalEField );
+	    signal.setIdent( filename );
+	    IntensityGain = 1.0/sigstdev;
+	    restoreMouseCursor();
+	    lockAll();
+	  }
 	}
 	Duration = signal.length();
 	signal.setStartSource( 1 );
@@ -468,7 +523,9 @@ void JAR::save( void )
   unlockAll();
   Options header;
   header.addInteger( "Index", totalRuns() );
-  header.addText( "Waveform", SineWave ? "Sine-Wave" : "Fish-EOD" );
+  header.addText( "Waveform", GenerateStimulus ? ( SineWave ? "Sine-Wave" : "Fish-EOD" ) : "File" );
+  if ( ! GenerateStimulus )
+    header.addText( "StimulusFile", File );
   header.addNumber( "EOD Rate", FishRate, "Hz", "%.1f" );
   header.addNumber( "EOD Amplitude", GlobalFishAmplitude, GlobalEODUnit, "%.2f" );
   if ( LocalFishAmplitude > 0.0 )
@@ -487,7 +544,7 @@ void JAR::save( void )
 void JAR::saveJAR( const Options &header )
 {
   // create file:
-  ofstream df( addPath( SineWave ? "jars.dat" : "jar.dat" ).c_str(),
+  ofstream df( addPath( GenerateStimulus ? ( SineWave ? "jars.dat" : "jar.dat" ) : "jarf.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
   if ( ! df.good() )
     return;
@@ -569,7 +626,7 @@ void JAR::saveJAR( const Options &header )
 
 void JAR::saveMeanJAR( const Options &header )
 {
-  ofstream df( addPath( SineWave ? "jarmeans.dat" : "jarmean.dat" ).c_str(),
+  ofstream df( addPath( GenerateStimulus ? ( SineWave ? "jarmeans.dat" : "jarmean.dat" ) : "jarmeanf.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
   if ( ! df.good() )
     return;
@@ -679,7 +736,7 @@ void JAR::saveMeanJAR( const Options &header )
 
 void JAR::saveEOD( const Options &header )
 {
-  ofstream df( addPath( SineWave ? "jareods.dat" : "jareod.dat" ).c_str(),
+  ofstream df( addPath( GenerateStimulus ? ( SineWave ? "jareods.dat" : "jareod.dat" ) : "jareodf.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
   if ( ! df.good() )
     return;
@@ -719,7 +776,9 @@ void JAR::saveTrace( void )
     header.addNumber( "Amplitude", Contrast, "mV/cm", "%.3f" );
   header.addNumber( "Duration", Duration, "sec", "%.3f" );
   header.addNumber( "Pause", Pause, "sec", "%.3f" );
-  header.addText( "Waveform", SineWave ? "Sine-Wave" : "Fish-EOD" );
+  header.addText( "Waveform", GenerateStimulus ? ( SineWave ? "Sine-Wave" : "Fish-EOD" ) : "File" );
+  if ( ! GenerateStimulus )
+    header.addText( "StimulusFile", File );
   header.addNumber( "True Delta f", TrueDeltaF, "Hz", "%.1f" );
   if ( TrueContrast > 0.0 )
     header.addNumber( "True Contrast", 100.0*TrueContrast, "Hz", "%.1f" );
@@ -742,7 +801,7 @@ void JAR::saveTrace( void )
 
 void JAR::saveEODFreq( const Options &header )
 {
-  ofstream df( addPath( SineWave ? "jareodtracess.dat" : "jareodtraces.dat" ).c_str(),
+  ofstream df( addPath( GenerateStimulus ? ( SineWave ? "jareodtracess.dat" : "jareodtraces.dat" ) : "jareodtracesf.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
   if ( ! df.good() )
     return;
@@ -775,7 +834,7 @@ void JAR::saveEODFreq( const Options &header )
 
 void JAR::saveChirps( const Options &header )
 {
-  ofstream df( addPath( SineWave ? "jarchirpss.dat" : "jarchirps.dat" ).c_str(),
+  ofstream df( addPath( GenerateStimulus ? ( SineWave ? "jarchirpss.dat" : "jarchirps.dat" ) : "jarchirpsf.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
   if ( ! df.good() )
     return;
@@ -853,7 +912,7 @@ void JAR::saveChirps( const Options &header )
 
 void JAR::saveChirpTraces( const Options &header )
 {
-  ofstream df( addPath( SineWave ? "jarchirptracess.dat" : "jarchirptraces.dat" ).c_str(),
+  ofstream df( addPath( GenerateStimulus ? ( SineWave ? "jarchirptracess.dat" : "jarchirptraces.dat" ) : "jarchirptracesf.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
   if ( ! df.good() )
     return;
@@ -914,7 +973,7 @@ void JAR::saveChirpEOD( const Options &header )
   if ( EODTrace < 0 || EODEvents < 0 )
     return;
 
-  ofstream df( addPath( SineWave ? "jarchirpeods.dat" : "jarchirpeod.dat" ).c_str(),
+  ofstream df( addPath( GenerateStimulus ? ( SineWave ? "jarchirpeods.dat" : "jarchirpeod.dat" ) : "jarchirpeodf.dat" ).c_str(),
 	       ofstream::out | ofstream::app );
   if ( ! df.good() )
     return;
@@ -965,7 +1024,7 @@ void JAR::plot( void )
     s += ", Contrast = " + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%, ";
   else
     s += ", Amplitude = " + Str( Contrast ) + "mV/cm, ";
-  s += SineWave ? "Sine Wave" : "Fish EOD";
+  s += GenerateStimulus ? ( SineWave ? "Sine Wave" : "Fish EOD" ) : File.name();
   P[0].setTitle( s );
   P[0].plotVLine( Duration );
   P[0].plot( EODFrequency, 1.0, Plot::Green, 2, Plot::Solid );

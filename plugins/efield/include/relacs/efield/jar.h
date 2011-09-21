@@ -37,22 +37,39 @@ namespace efield {
 \class JAR
 \brief [RePro] Measure the fishes jamming avoidance response and chirp characteristics at different delta f's and beat contrasts.
 \author Jan Benda
-\version 2.0 (Mar 09, 2010)
+\version 2.2 (Sep 21, 2011)
 \bug EOD waveform stimulus broken (samplerate!).
 
-
 \par Options
-- \b duration (\c number, \e ms): Duration of stimulus.
-- \b pause (\c number, \e ms): %Pause between successive stimuli.
-- \b deltafstep (\c number, \e Hz): Increment of delta f.
-- \b deltafmax (\c number, \e Hz): Maximum delta f.
-- \b deltafmin (\c number, \e Hz): Minimum delta f.
-- \b contraststep (\c number, \e %): Increment of stimulus contrast.
-- \b contrastmax (\c number, \e %): Maximum stimulus contrast.
-- \b repeats (\c integer): Number of repetitions of the whole stimulus set.
-- \b jaraverage (\c number, \e ms): Time for measuring EOD rate.
-- \b chirpaverage (\c number, \e ms): Time for measuring EOD rate and amplitude right before a chirp.
-- \b sinewave (\c boolean): Use sinewave stimulus instead of the fishes EOD waveform.
+- Stimulation
+- \c duration=10seconds: Signal duration (\c number)
+- \c pause=20seconds: Pause between signals (\c number)
+- \c ramp=0.5seconds: Duration of linear ramp (\c number)
+- \c deltafstep=2Hz: Delta f steps (\c number)
+- \c deltafmax=12Hz: Maximum delta f (\c number)
+- \c deltafmin=-12Hz: Minimum delta f (\c number)
+- \c deltafrange=: Range of delta f's (\c string)
+- \c amplsel=contrast: Stimulus amplitude (\c string)
+- \c contrastmax=20%: Maximum contrast (\c number)
+- \c contrastmin=10%: Minimum contrast (\c number)
+- \c contraststep=10%: Contrast steps (\c number)
+- \c amplmin=1mV/cm: Minimum amplitude (\c number)
+- \c amplmax=2mV/cm: Maximum amplitude (\c number)
+- \c amplstep=1mV/cm: Amplitude steps (\c number)
+- \c repeats=200: Repeats (\c integer)
+- Stimulus
+- \c genstim=true: Generate stimulus (\c boolean)
+- \c sinewave=false: Use sine wave (\c boolean)
+- \c file=: Stimulus file (\c string)
+- \c sigstdev=1: Standard deviation of signal (\c number)
+- \c warpfile=false: Warp stimulus file to the requested Delta fs (\c boolean)
+- Analysis
+- \c before=1seconds: Time before stimulation to be analyzed (\c number)
+- \c after=5seconds: Time after stimulation to be analyzed (\c number)
+- \c savetraces=true: Save traces during pause (\c boolean)
+- \c jaraverage=500ms: Time for measuring EOD rate (\c number)
+- \c chirpaverage=20ms: Time for measuring chirp data (\c number)
+- \c eodsavetime=1000ms: Duration of EOD to be saved (\c number)
 
 \par Files
 - \b jar.dat : summary for each jamming stimulus.
@@ -141,7 +158,10 @@ private:
   double JARAverageTime;
   double ChirpAverageTime;
   double EODSaveTime;
+  bool GenerateStimulus;
   bool SineWave;
+  Str File;
+  bool WarpFile;
 
   // variables:
   double FishRate;
