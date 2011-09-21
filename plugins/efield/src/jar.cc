@@ -74,10 +74,10 @@ JAR::JAR( void )
   addInteger( "repeats", "Repeats", Repeats, 0, 1000, 2 );
   addLabel( "Stimulus" );
   addBoolean( "genstim", "Generate stimulus", GenerateStimulus );
-  addBoolean( "sinewave", "Use sine wave", SineWave ).setActivation( "genstim", "false" );
-  addText( "file", "Stimulus file", "" ).setStyle( OptWidget::BrowseExisting ).setActivation( "stimsel", "file" );
-  addNumber( "sigstdev", "Standard deviation of signal", 1.0, 0.01, 1.0, 0.05 ).setActivation( "stimsel", "file" );
-  addBoolean( "warpfile", "Warp stimulus file to the requested Delta fs", WarpFile ).setActivation( "stimsel", "file" );
+  addBoolean( "sinewave", "Use sine wave", SineWave ).setActivation( "genstim", "true" );
+  addText( "file", "Stimulus file", "" ).setStyle( OptWidget::BrowseExisting ).setActivation( "genstim", "false" );
+  addNumber( "sigstdev", "Standard deviation of signal", 1.0, 0.01, 1.0, 0.05 ).setActivation( "genstim", "false" );
+  addBoolean( "warpfile", "Warp stimulus file to the requested Delta fs", WarpFile ).setActivation( "genstim", "false" );
   addLabel( "Analysis" );
   addNumber( "before", "Time before stimulation to be analyzed", Before, 0.0, 100000.0, 1.0, "seconds" );
   addNumber( "after", "Time after stimulation to be analyzed", After, 0.0, 100000.0, 1.0, "seconds" );
