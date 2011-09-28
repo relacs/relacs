@@ -707,9 +707,10 @@ int setDigitalIO( struct dioIOCT *dioIOC )
   unsigned int bit = 0;
   int channel = 0;
   int direction = 0;
-  int iT = dioIOC->pulseType;
-  int pT = 0;
+  int pT = dioIOC->pulseType;
+  int iT = 0;
   int k = 0;
+  int found = 0;
 
   if ( dioIOC->op == DIO_CONFIGURE ) {
     if ( dioIOC->bitfield ) {
@@ -785,7 +786,7 @@ int setDigitalIO( struct dioIOCT *dioIOC )
     if ( pT < TTL_START_WRITE || pT > TTL_END_READ )
       return -EINVAL;
     for ( iT = 0; iT < MAXTTLPULSES && ttlDevices[pT][iT] != 0; iT++ );
-    if ( iT >= MAXTTLPULSES-1 )
+    if ( iT >= MAXTTLPULSES )
       return -ENOMEM;
     ttlDevices[pT][iT] = devP;
     ttlInsns[pT][iT] = vmalloc( sizeof(comedi_insn) );
@@ -797,11 +798,13 @@ int setDigitalIO( struct dioIOCT *dioIOC )
     ttlInsns[pT][iT]->chanspec = CR_PACK( dioIOC->lines, 0, 0 );
   }
   else if ( dioIOC->op == DIO_CLEAR_TTLPULSE ) {
+    found = 0;
     for ( pT = 0; pT < 4; pT++ ) {
       for ( iT = 0; iT < MAXTTLPULSES && ttlDevices[pT][iT] != 0; iT++ ) {
 	if ( ttlDevices[pT][iT] == devP &&
 	     ttlInsns[pT][iT]->subdev == subdevice &&
 	     ttlInsns[pT][iT]->chanspec == CR_PACK( dioIOC->lines, 0, 0 ) ) {
+	  found = 1;
 	  vfree( ttlInsns[pT][iT] );
 	  for ( k = iT+1; k < MAXTTLPULSES && ttlDevices[pT][k] != 0; k++ ) {
 	    ttlInsns[pT][k-1] = ttlInsns[pT][k];
@@ -809,6 +812,14 @@ int setDigitalIO( struct dioIOCT *dioIOC )
 	  }
 	  break;
 	}
+      }
+    }
+    if ( found ) {
+      if ( comedi_dio_write( devP, subdevice, dioIOC->lines, dioIOC->output ) != 1 ) {
+	comedi_perror( "setDigitalIO() -> DIO_CLEAR_TTLPULSE" );
+	ERROR_MSG( "setDigitalIO: comedi_dio_write on device %s subdevice %d failed!\n",
+		   device[iD].name, subdevice );
+	return -EFAULT;
       }
     }
   }
@@ -899,8 +910,7 @@ void rtDynClamp( long dummy )
     subdevRunning = 0;
 
 #ifdef ENABLE_TTLPULSE
-    iT = 0;
-    while ( ttlStartWriteDevice[iT] != 0 ) {
+    for ( iT = 0; iT < MAXTTLPULSES && ttlStartWriteDevice[iT] != 0; iT++ ) {
       retVal = comedi_do_insn( ttlStartWriteDevice[iT] ,ttlStartWriteInsn[iT] );
       if ( retVal < 1 ) {
 	if ( retVal < 0 )
@@ -1008,8 +1018,7 @@ void rtDynClamp( long dummy )
 
 
 #ifdef ENABLE_TTLPULSE
-    iT = 0;
-    while ( ttlEndWriteDevice[iT] != 0 ) {
+    for ( iT = 0; iT < MAXTTLPULSES && ttlEndWriteDevice[iT] != 0; iT++ ) {
       retVal = comedi_do_insn( ttlEndWriteDevice[iT] ,ttlEndWriteInsn[iT] );
       if ( retVal < 1 ) {
 	if ( retVal < 0 )
@@ -1027,8 +1036,7 @@ void rtDynClamp( long dummy )
 
 
 #ifdef ENABLE_TTLPULSE
-    iT = 0;
-    while ( ttlStartReadDevice[iT] != 0 ) {
+    for ( iT = 0; iT < MAXTTLPULSES && ttlStartReadDevice[iT] != 0; iT++ ) {
       retVal = comedi_do_insn( ttlStartReadDevice[iT] ,ttlStartReadInsn[iT] );
       if ( retVal < 1 ) {
 	if ( retVal < 0 )
@@ -1150,8 +1158,7 @@ void rtDynClamp( long dummy )
 
 
 #ifdef ENABLE_TTLPULSE
-    iT = 0;
-    while ( ttlEndReadDevice[iT] != 0 ) {
+    for ( iT = 0; iT < MAXTTLPULSES && ttlEndReadDevice[iT] != 0; iT++ ) {
       retVal = comedi_do_insn( ttlEndReadDevice[iT] ,ttlEndReadInsn[iT] );
       if ( retVal < 1 ) {
 	if ( retVal < 0 )

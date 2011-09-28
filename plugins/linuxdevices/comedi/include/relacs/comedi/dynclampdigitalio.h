@@ -118,6 +118,30 @@ public:
         \sa write() */
   virtual int readLines( int lines, int &val ) const;
 
+    /*! Make an digital I/O line an TTL pulse that is automatically generated
+        by the dynamic clamp real time loop.
+	\param[in] line the digital I/O line (channel) on which the pulse is generated.
+	\param[in] high event on which the digital I/O line is set high.
+	Can be set to TTL_START_WRITE, TTL_END_WRITE, TTL_START_READ, or TTL_END_READ
+	for setting the line high right before analog data is written,
+	right after analog data is written, righ before analog data is read,
+	or right after analog data is read, respectively.
+	\param[in] low event on which the digital I/O line is set high.
+	Can be set to TTL_START_WRITE, TTL_END_WRITE, TTL_START_READ, or TTL_END_READ
+	for setting the line low right before analog data is written,
+	right after analog data is written, righ before analog data is read,
+	or right after analog data is read, respectively.
+        \return 0 on success, otherwise a negative number indicating the error. */
+  int DynClampDigitalIO::addTTLPulse( int line, enum ttlPulses high,
+				      enum ttlPulses low );
+    /*! Clear any automatically generated pulses that are generated for an
+        digital I/O line.
+	\param[in] line the digitla I/O line (channel) for which no more TTL pulses
+	should be generated.
+	\param[in] val set the digital I/O line high if \a val is \c true
+	\return 0 on success, otherwise a negative number indicating the error. */
+  int DynClampDigitalIO::clearTTLPulse( int line, bool val );
+
 
 private:
 
