@@ -140,6 +140,9 @@ class Array
   const Array<T> &assign( const S &a );
     /*! Set the size(), capacity(), and content of the array to \a a. */
   const Array<T> &assign( const Array<T> &a );
+    /*! Set the size(), capacity(), and content of the array to the
+        range ( \a first, \a last ) of \a a. */
+  const Array<T> &assign( const Array<T> &a, int first, int last=-1 );
     /*! Assign \a range to \a this. */
   const Array<T> &assign( const LinearRange &range );
 
@@ -1046,6 +1049,35 @@ const Array<T> &Array<T>::assign( const Array<T> &a )
     NSize = n;
     if( NSize > 0 )
       memcpy( Buffer, a.data(), NSize * sizeof( T ) );
+  }
+
+  return *this;
+}
+
+
+template < typename T >
+const Array<T> &Array<T>::assign( const Array<T> &a, int first, int last )
+{
+  if ( Buffer != 0 )
+    delete [] Buffer;
+  Buffer = 0;
+  NBuffer = 0;
+  NSize = 0;
+
+  if ( last < 0 )
+    last = a.size();
+
+  int n = last - first;
+  if ( n > 0 ) {
+    if ( n > MaxBuffer )
+      n = MaxBuffer;
+    Buffer = new T[ n ];
+    if ( Buffer == 0 )
+      n = 0;
+    NBuffer = n;
+    NSize = n;
+    if( NSize > 0 )
+      memcpy( Buffer, a.data()+first, NSize * sizeof( T ) );
   }
 
   return *this;

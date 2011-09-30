@@ -2221,7 +2221,7 @@ int Str::date( int &year, int &month, int &day ) const
   const_iterator p = begin();
 
   // first number:
-  char numstr[100];
+  char numstr[255];
   int n = 0;
   while ( p != end() && ( isdigit( *p ) || ( n==0 && *p == '-' ) ) ) {
     numstr[n++] = *p;
@@ -2333,7 +2333,7 @@ int Str::time( int &hour, int &minutes, int &seconds ) const
   const_iterator p = begin();
 
   // first number:
-  char numstr[100];
+  char numstr[255];
   int n = 0;
   while ( p != end() && isdigit( *p ) ) {
     numstr[n++] = *p;
