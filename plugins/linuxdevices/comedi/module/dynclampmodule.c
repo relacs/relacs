@@ -29,7 +29,7 @@ MODULE_LICENSE( "GPL" );
 #define E_OVERFLOW  -4
 
 
-//* DAQ-DEVICES:
+// DAQ-DEVICES:
 
 struct deviceT {
   comedi_t *devP;
@@ -92,7 +92,7 @@ struct triggerT {
 };
 
 
-//* RTAI TASK:
+// RTAI TASK:
 
 struct dynClampTaskT {
   RT_TASK rtTask;
@@ -112,7 +112,7 @@ struct dynClampTaskT {
 // *** GLOBAL VARIABLES ***
 ///////////////////////////////////////////////////////////////////////////////
 
-//* DAQ-DEVICES:
+// DAQ-DEVICES:
 
 struct deviceT device[MAXDEV];
 int deviceN = 0;
@@ -128,13 +128,13 @@ struct triggerT trigger;
 int traceIndex = 0;
 int chanIndex = 0;
 
-//* RTAI TASK:
+// RTAI TASK:
 
 struct dynClampTaskT dynClampTask;
 
 char *moduleName = "/dev/dynclamp";
 
-//* TTL pulse generation:
+// TTL pulse generation:
 #ifdef ENABLE_TTLPULSE
 comedi_t *ttlStartWriteDevice[MAXTTLPULSES] = { 0, 0, 0, 0, 0 };
 comedi_insn *ttlStartWriteInsn[MAXTTLPULSES] = { 0, 0, 0, 0, 0 };
@@ -145,13 +145,11 @@ comedi_insn *ttlStartReadInsn[MAXTTLPULSES] = { 0, 0, 0, 0, 0 };
 comedi_t *ttlEndReadDevice[MAXTTLPULSES] = { 0, 0, 0, 0, 0 };
 comedi_insn *ttlEndReadInsn[MAXTTLPULSES] = { 0, 0, 0, 0, 0 };
 
-comedi_t **ttlDevices[4] = { &ttlStartWriteDevice, &ttlEndWriteDevice,
-			     &ttlStartReadDevice, &ttlEndReadDevice, };
-comedi_insn **ttlInsns[4] = { &ttlStartWriteInsn, &ttlEndWriteInsn,
-			     &ttlStartReadInsn, &ttlEndReadInsn, };
+comedi_t **ttlDevices[4];
+comedi_insn **ttlInsns[4];
 
-lsample_t ttlLow = 0;
-lsample_t ttlHigh = 1;
+lsampl_t ttlLow = 0;
+lsampl_t ttlHigh = 1;
 #endif
 
 // for debug:
@@ -236,6 +234,17 @@ void init_globals( void ) {
   memset( device, 0, sizeof(device) );
   memset( subdev, 0, sizeof(subdev) );
   memset( &dynClampTask, 0, sizeof(struct dynClampTaskT ) );
+
+#ifdef ENABLE_TTLPULSE
+  ttlDevices[0] = &ttlStartWriteDevice;
+  ttlDevices[1] = &ttlEndWriteDevice;
+  ttlDevices[2] = &ttlStartReadDevice;
+  ttlDevices[3] = &ttlEndReadDevice;
+  ttlInsns[0] = &ttlStartWriteInsn;
+  ttlInsns[1] = &ttlEndWriteInsn;
+  ttlInsns[2] = &ttlStartReadInsn;
+  ttlInsns[3] = &ttlEndReadInsn;
+#endif
 }
 
 
@@ -247,7 +256,7 @@ void init_globals( void ) {
 int getSubdevID( void )
 {
   int i = 0;
-  //* find free slot in subdev[]:
+  // find free slot in subdev[]:
   for ( i = 0; i < subdevN && subdev[i].used; i++ );
   if ( i == subdevN ) {
     if ( subdevN >= MAXSUBDEV ) {
@@ -622,6 +631,11 @@ void releaseSubdevice( int iS )
 {
   int iD = subdev[iS].devID;
   int i;
+#ifdef ENABLE_TTLPULSE
+  int pT;
+  int iT;
+  int k;
+#endif
 
   if ( !subdev[iS].used || subdev[iS].subdev < 0 ) {
     ERROR_MSG( "releaseSubdevice ERROR: Subdevice with ID %d not in use!\n", iS );
@@ -651,22 +665,24 @@ void releaseSubdevice( int iS )
     // delete FIFO
     rtf_destroy( subdev[iS].fifo );
   }
+#ifdef ENABLE_TTLPULSE
   else if ( subdev[iS].type == SUBDEV_DIO ) {
     // remove ttl pulses:
     for ( pT = 0; pT < 4; pT++ ) {
-      for ( iT = 0; ttlDevices[pT][iT] != 0; iT++ ) {
-	if ( ttlDevices[pT][iT] == devP &&
-	     ttlInsns[pT][iT]->subdev == subdevice ) {
+      for ( iT = 0; iT < MAXTTLPULSES && ttlDevices[pT][iT] != 0; iT++ ) {
+	if ( ttlDevices[pT][iT] == device[iD].devP &&
+	     ttlInsns[pT][iT]->subdev == subdev[iS].subdev ) {
 	  vfree( ttlInsns[pT][iT] );
-	  for ( k = iT+1; ttlDevices[pT][k] != 0; k++ ) {
-	    ttlInsns[pT][k-1] = ttlInsns[pT][k];
+	  for ( k = iT+1; k < MAXTTLPULSES && ttlDevices[pT][k] != 0; k++ ) {
 	    ttlDevices[pT][k-1] = ttlDevices[pT][k];
+	    ttlInsns[pT][k-1] = ttlInsns[pT][k];
 	  }
 	  break;
 	}
       }
     }
   }
+#endif
 
   // reset subdevice structure:
   memset( &(subdev[iS]), 0, sizeof(struct subdeviceT) );
@@ -707,10 +723,12 @@ int setDigitalIO( struct dioIOCT *dioIOC )
   unsigned int bit = 0;
   int channel = 0;
   int direction = 0;
+#ifdef ENABLE_TTLPULSE
   int pT = dioIOC->pulseType;
   int iT = 0;
   int k = 0;
   int found = 0;
+#endif
 
   if ( dioIOC->op == DIO_CONFIGURE ) {
     if ( dioIOC->bitfield ) {
@@ -883,7 +901,10 @@ int unsetAnalogTrigger( struct triggerIOCT *triggerIOC )
 void rtDynClamp( long dummy )
 {
   int retVal;
-  int iS, iC, iT;
+  int iS, iC;
+#ifdef ENABLE_TTLPULSE
+  int iT;
+#endif
   int subdevRunning = 1;
   unsigned long readCnt = 0;
   struct chanT *pChan;
@@ -1030,8 +1051,8 @@ void rtDynClamp( long dummy )
 
     /******** SLEEP FOR NEURON TO REACT TO GIVEN OUTPUT: ************************/
     /****************************************************************************/
-    //* PROBLEM: rt_sleep is timed using jiffies only (granularity = 1msec)
-	//* int retValSleep = rt_sleep( nano2count( INJECT_RECORD_DELAY ) );
+    // PROBLEM: rt_sleep is timed using jiffies only (granularity = 1msec)
+	// int retValSleep = rt_sleep( nano2count( INJECT_RECORD_DELAY ) );
     rt_busy_sleep( INJECT_RECORD_DELAY ); // TODO: just default
 
 
@@ -1208,14 +1229,14 @@ int init_rt_task( void )
 
   DEBUG_MSG( "init_rt_task: Trying to initialize dynamic clamp RTAI task...\n" );
 
-  //* test if dynamic clamp frequency is valid:
+  // test if dynamic clamp frequency is valid:
   if ( dynClampTask.reqFreq <= 0 || dynClampTask.reqFreq > MAX_FREQUENCY ) {
     ERROR_MSG( "init_rt_task ERROR: %dHz -> invalid dynamic clamp frequency. Valid range is 1 .. %dHz\n", 
 	       dynClampTask.reqFreq, MAX_FREQUENCY );
     return -1;
   }
 
-  //* initializing rt-task for dynamic clamp with high priority:
+  // initializing rt-task for dynamic clamp with high priority:
   priority = 1;
   retVal = rt_task_init( &dynClampTask.rtTask, rtDynClamp, dummy, stackSize, 
 			 priority, usesFPU, signal );
@@ -1226,7 +1247,7 @@ int init_rt_task( void )
   }
   DEBUG_MSG( "init_rt_task: Initialized dynamic clamp RTAI task. Trying to make it periodic...\n" );
 
-    //* START rt-task for dynamic clamp as periodic:
+    // START rt-task for dynamic clamp as periodic:
   periodTicks = start_rt_timer( nano2count( 1000000000/dynClampTask.reqFreq ) );  
   if ( rt_task_make_periodic( &dynClampTask.rtTask, rt_get_time(), periodTicks ) 
       != 0 ) {

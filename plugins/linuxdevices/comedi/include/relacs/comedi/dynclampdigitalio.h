@@ -132,15 +132,14 @@ public:
 	right after analog data is written, righ before analog data is read,
 	or right after analog data is read, respectively.
         \return 0 on success, otherwise a negative number indicating the error. */
-  int DynClampDigitalIO::addTTLPulse( int line, enum ttlPulses high,
-				      enum ttlPulses low );
+  int addTTLPulse( int line, enum ttlPulses high, enum ttlPulses low );
     /*! Clear any automatically generated pulses that are generated for an
         digital I/O line.
 	\param[in] line the digitla I/O line (channel) for which no more TTL pulses
 	should be generated.
 	\param[in] val set the digital I/O line high if \a val is \c true
 	\return 0 on success, otherwise a negative number indicating the error. */
-  int DynClampDigitalIO::clearTTLPulse( int line, bool val );
+  int clearTTLPulse( int line, bool val );
 
 
 private:

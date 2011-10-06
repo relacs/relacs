@@ -175,7 +175,7 @@ int DynClampDigitalIO::lines( void ) const
 
 int DynClampDigitalIO::configureLine( int line, bool output ) const
 {
-  if ( !isOpen ) 
+  if ( !isOpen() ) 
     return NotOpen;
   if ( line < 0 || line >= MaxLines )
     return WriteError;
@@ -201,7 +201,7 @@ int DynClampDigitalIO::configureLine( int line, bool output ) const
 
 int DynClampDigitalIO::configureLines( int lines, int output ) const
 {
-  if ( !isOpen ) 
+  if ( !isOpen() ) 
     return NotOpen;
 
   struct dioIOCT dioIOC;
@@ -225,7 +225,7 @@ int DynClampDigitalIO::configureLines( int lines, int output ) const
 
 int DynClampDigitalIO::write( int line, bool val )
 {
-  if ( !isOpen ) 
+  if ( !isOpen() ) 
     return NotOpen;
   if ( line < 0 || line >= MaxLines )
     return WriteError;
@@ -250,7 +250,7 @@ int DynClampDigitalIO::write( int line, bool val )
 
 int DynClampDigitalIO::read( int line, bool &val ) const
 {
-  if ( !isOpen ) 
+  if ( !isOpen() ) 
     return NotOpen;
   if ( line < 0 || line >= MaxLines )
     return WriteError;
@@ -276,7 +276,7 @@ int DynClampDigitalIO::read( int line, bool &val ) const
 
 int DynClampDigitalIO::writeLines( int lines, int val )
 {
-  if ( !isOpen ) 
+  if ( !isOpen() ) 
     return NotOpen;
 
   struct dioIOCT dioIOC;
@@ -299,7 +299,7 @@ int DynClampDigitalIO::writeLines( int lines, int val )
 
 int DynClampDigitalIO::readLines( int lines, int &val ) const
 {
-  if ( !isOpen ) 
+  if ( !isOpen() ) 
     return NotOpen;
 
   struct dioIOCT dioIOC;
@@ -324,7 +324,7 @@ int DynClampDigitalIO::readLines( int lines, int &val ) const
 int DynClampDigitalIO::addTTLPulse( int line, enum ttlPulses high,
 				    enum ttlPulses low )
 {
-  if ( !isOpen ) 
+  if ( !isOpen() ) 
     return NotOpen;
   if ( line < 0 || line >= MaxLines )
     return WriteError;
@@ -345,7 +345,7 @@ int DynClampDigitalIO::addTTLPulse( int line, enum ttlPulses high,
   }
   dioIOC.output = 0;
   dioIOC.pulseType = low;
-  int retval = ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
+  retval = ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
   if( retval < 0 ) {
     cerr << "! error: DynClampDigitalIO::addTTLPulse() -> "
 	 << "Adding TTL pulse low to DIO line " << line
@@ -361,7 +361,7 @@ int DynClampDigitalIO::addTTLPulse( int line, enum ttlPulses high,
 
 int DynClampDigitalIO::clearTTLPulse( int line, bool val )
 {
-  if ( !isOpen ) 
+  if ( !isOpen() ) 
     return NotOpen;
   if ( line < 0 || line >= MaxLines )
     return WriteError;
