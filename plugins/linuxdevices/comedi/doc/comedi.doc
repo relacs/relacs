@@ -18,6 +18,7 @@ see http://www.comedi.org
 - \ref udev
 - \ref buffer
 - \ref calibration
+- \ref dynamicclamp
 - \ref rtailinks
 
 
@@ -602,6 +603,32 @@ $ for C in 0 1; do
     done;
   done
 \endcode
+
+
+\section dynamicclamp Setting up dynamic clamp for RELACS
+-# Tell the configure script of RELACS where RTAI is located.
+For this, \c cd into the RELACS top-level directory and do
+\code
+$ ./configure --with-rtai=/usr/realtime/include
+\endcode
+-# Then compile the dynamic clamp plugins and the kernel module:
+\code
+$ cd plugins/linuxdevices/comedi
+$ make clean
+$ make
+\endcode
+-# Load the dynamic-clamp kernel module (as root):
+\code
+$ cd plugins/linuxdevices/comedi/module
+$ ./loadmodules.sh
+\endcode
+-# If you want to load the dynamic-clamp kernel module automatically during 
+the boot process, then call the \c loadmodules.sh script from the script
+\c /etc/rc.local . Simply add a line like this
+\code
+/where/ever/the/script/is/located/loadmodules.sh
+\endcode
+to \c /etc/rc.local.
 
 \section rtailinks Links
 - http://www.comedi.org
