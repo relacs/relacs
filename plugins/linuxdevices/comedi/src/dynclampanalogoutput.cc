@@ -189,7 +189,6 @@ int DynClampAnalogOutput::open( const string &device, const Options &opts )
     cerr << " DynClampAnalogOutput::open(): opening dynclamp-module failed\n";
     return -1;
   }
-  cerr << " DynClampAnalogOutput::open() success\n" ;
 
   // get subdevice ID from module:
   retval = ::ioctl( ModuleFd, IOC_GET_SUBDEV_ID, &SubdeviceID );
@@ -206,8 +205,6 @@ int DynClampAnalogOutput::open( const string &device, const Options &opts )
   deviceIOC.subdev = SubDevice;
   deviceIOC.subdevType = SUBDEV_OUT;
   retval = ::ioctl( ModuleFd, IOC_OPEN_SUBDEV, &deviceIOC );
-  cerr << "open(): IOC_OPEN_SUBDEV request for address done!" /// TEST
-       << &deviceIOC << '\n';
   if( retval < 0 ) {
     cerr << " DynClampAnalogOutput::open -> ioctl command IOC_OPEN_SUBDEV on device "
 	 << ModuleDevice << " failed!\n";
@@ -970,8 +967,6 @@ int DynClampAnalogOutput::reset( void )
   }
 
   if ( running > 0 ) {
-    cerr << " DynClampAnalogOutput::reset -> ioctl command IOC_STOP_SUBDEV on device "
-	 << ModuleDevice << " executed.\n";
     retval = ::ioctl( ModuleFd, IOC_STOP_SUBDEV, &SubdeviceID );
     if( retval < 0 ) {
       cerr << " DynClampAnalogOutput::reset -> ioctl command IOC_STOP_SUBDEV on device "

@@ -132,10 +132,17 @@ int DynClampDigitalIO::open( const string &device, const Options &opts )
 
   // set up TTL pulses:
   const string ttlcoms[4] = { "startwrite", "endwrite", "startread", "endread" };
-  int line = opts.integer( "ttlpulse1line", 0, -1 );
-  string highcom = opts.text( "ttlpulse1high", 0 );
-  string lowcom = opts.text( "ttlpulse1high", 0 );
-  
+  for ( int k=1; k<5; k++ ) {
+    string ns = Str( k );
+    int line = opts.integer( "ttlpulse" + ns + "line", 0, -1 );
+    string highcom = opts.text( "ttlpulse" + ns + "high", 0 );
+    int high = TTL_START_WRITE;
+    for ( ; high != TTL_UNDEFINED && highcom != ttlcoms[high]; ++high );
+    string lowcom = opts.text( "ttlpulse" + ns + "low", 0 );
+    int low = TTL_START_WRITE;
+    for ( ; low != TTL_UNDEFINED && lowcom != ttlcoms[low]; ++low );
+    addTTLPulse( line, (enum ttlPulses)high, (enum ttlPulses)low );
+  }
   
   return 0;
 }

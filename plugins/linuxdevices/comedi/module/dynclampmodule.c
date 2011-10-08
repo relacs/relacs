@@ -224,7 +224,8 @@ static inline lsampl_t value_to_sample( struct chanT *pChan, float value )
 }
 
 
-void init_globals( void ) {
+void init_globals( void )
+{
   deviceN = 0;
   subdevN = 0;
   reqCloseSubdevID = -1;
@@ -236,17 +237,16 @@ void init_globals( void ) {
   memset( &dynClampTask, 0, sizeof(struct dynClampTaskT ) );
 
 #ifdef ENABLE_TTLPULSE
-  ttlDevices[0] = &ttlStartWriteDevice;
-  ttlDevices[1] = &ttlEndWriteDevice;
-  ttlDevices[2] = &ttlStartReadDevice;
-  ttlDevices[3] = &ttlEndReadDevice;
-  ttlInsns[0] = &ttlStartWriteInsn;
-  ttlInsns[1] = &ttlEndWriteInsn;
-  ttlInsns[2] = &ttlStartReadInsn;
-  ttlInsns[3] = &ttlEndReadInsn;
+  ttlDevices[0] = ttlStartWriteDevice;
+  ttlDevices[1] = ttlEndWriteDevice;
+  ttlDevices[2] = ttlStartReadDevice;
+  ttlDevices[3] = ttlEndReadDevice;
+  ttlInsns[0] = ttlStartWriteInsn;
+  ttlInsns[1] = ttlEndWriteInsn;
+  ttlInsns[2] = ttlStartReadInsn;
+  ttlInsns[3] = ttlEndReadInsn;
 #endif
 }
-
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -811,9 +811,10 @@ int setDigitalIO( struct dioIOCT *dioIOC )
     memset( ttlInsns[pT][iT], 0, sizeof(comedi_insn) );
     ttlInsns[pT][iT]->insn = INSN_WRITE;
     ttlInsns[pT][iT]->n = 1;
-    ttlInsns[pT][iT]->data = dioIOC->output ? &ttlHigh : &ttlLow;
+    ttlInsns[pT][iT]->data = ( dioIOC->output ? &ttlHigh : &ttlLow );
     ttlInsns[pT][iT]->subdev = subdevice;
     ttlInsns[pT][iT]->chanspec = CR_PACK( dioIOC->lines, 0, 0 );
+    ERROR_MSG( "add pulse pT=%d  iT=%d  output=%d subdev=%d lines=%d\n", pT, iT, ttlInsns[pT][iT]->data[0], ttlInsns[pT][iT]->subdev, ttlInsns[pT][iT]->chanspec );
   }
   else if ( dioIOC->op == DIO_CLEAR_TTLPULSE ) {
     found = 0;
@@ -931,7 +932,9 @@ void rtDynClamp( long dummy )
     subdevRunning = 0;
 
 #ifdef ENABLE_TTLPULSE
+    ERROR_MSG( "NEW CYCLE\n" );
     for ( iT = 0; iT < MAXTTLPULSES && ttlStartWriteDevice[iT] != 0; iT++ ) {
+      //      ERROR_MSG( "generate start write pulse iT=%d  output=%d subdev=%d line=%d\n", iT, ttlStartWriteInsn[iT]->data[0], ttlStartWriteInsn[iT]->subdev, ttlStartWriteInsn[iT]->chanspec );
       retVal = comedi_do_insn( ttlStartWriteDevice[iT] ,ttlStartWriteInsn[iT] );
       if ( retVal < 1 ) {
 	if ( retVal < 0 )
@@ -1040,6 +1043,7 @@ void rtDynClamp( long dummy )
 
 #ifdef ENABLE_TTLPULSE
     for ( iT = 0; iT < MAXTTLPULSES && ttlEndWriteDevice[iT] != 0; iT++ ) {
+      //      ERROR_MSG( "generate end write pulse iT=%d  output=%d subdev=%d line=%d\n", iT, ttlEndWriteInsn[iT]->data[0], ttlEndWriteInsn[iT]->subdev, ttlEndWriteInsn[iT]->chanspec );
       retVal = comedi_do_insn( ttlEndWriteDevice[iT] ,ttlEndWriteInsn[iT] );
       if ( retVal < 1 ) {
 	if ( retVal < 0 )
@@ -1058,6 +1062,7 @@ void rtDynClamp( long dummy )
 
 #ifdef ENABLE_TTLPULSE
     for ( iT = 0; iT < MAXTTLPULSES && ttlStartReadDevice[iT] != 0; iT++ ) {
+      //      ERROR_MSG( "generate start read pulse iT=%d  output=%d subdev=%d line=%d\n", iT, ttlStartReadInsn[iT]->data[0], ttlStartReadInsn[iT]->subdev, ttlStartReadInsn[iT]->chanspec );
       retVal = comedi_do_insn( ttlStartReadDevice[iT] ,ttlStartReadInsn[iT] );
       if ( retVal < 1 ) {
 	if ( retVal < 0 )
@@ -1180,6 +1185,7 @@ void rtDynClamp( long dummy )
 
 #ifdef ENABLE_TTLPULSE
     for ( iT = 0; iT < MAXTTLPULSES && ttlEndReadDevice[iT] != 0; iT++ ) {
+      //      ERROR_MSG( "generate end read pulse iT=%d  output=%d subdev=%d line=%d\n", iT, ttlEndReadInsn[iT]->data[0], ttlEndReadInsn[iT]->subdev, ttlEndReadInsn[iT]->chanspec );
       retVal = comedi_do_insn( ttlEndReadDevice[iT] ,ttlEndReadInsn[iT] );
       if ( retVal < 1 ) {
 	if ( retVal < 0 )
