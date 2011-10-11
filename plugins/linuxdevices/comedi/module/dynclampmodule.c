@@ -677,6 +677,8 @@ void releaseSubdevice( int iS )
 	    ttlDevices[pT][k-1] = ttlDevices[pT][k];
 	    ttlInsns[pT][k-1] = ttlInsns[pT][k];
 	  }
+	  ttlDevices[pT][MAXTTLPULSES-1] = 0;
+	  ttlInsns[pT][MAXTTLPULSES-1] = 0;
 	  break;
 	}
       }
@@ -826,9 +828,11 @@ int setDigitalIO( struct dioIOCT *dioIOC )
 	  found = 1;
 	  vfree( ttlInsns[pT][iT] );
 	  for ( k = iT+1; k < MAXTTLPULSES && ttlDevices[pT][k] != 0; k++ ) {
-	    ttlInsns[pT][k-1] = ttlInsns[pT][k];
 	    ttlDevices[pT][k-1] = ttlDevices[pT][k];
+	    ttlInsns[pT][k-1] = ttlInsns[pT][k];
 	  }
+	  ttlDevices[pT][MAXTTLPULSES-1] = 0;
+	  ttlInsns[pT][MAXTTLPULSES-1] = 0;
 	  break;
 	}
       }
@@ -932,7 +936,7 @@ void rtDynClamp( long dummy )
     subdevRunning = 0;
 
 #ifdef ENABLE_TTLPULSE
-    ERROR_MSG( "NEW CYCLE\n" );
+    //    ERROR_MSG( "NEW CYCLE\n" );
     for ( iT = 0; iT < MAXTTLPULSES && ttlStartWriteDevice[iT] != 0; iT++ ) {
       //      ERROR_MSG( "generate start write pulse iT=%d  output=%d subdev=%d line=%d\n", iT, ttlStartWriteInsn[iT]->data[0], ttlStartWriteInsn[iT]->subdev, ttlStartWriteInsn[iT]->chanspec );
       retVal = comedi_do_insn( ttlStartWriteDevice[iT] ,ttlStartWriteInsn[iT] );

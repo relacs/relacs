@@ -9,6 +9,7 @@
 
 echo "please wait..."
 modprobe rtai_fifos
+modprobe rtai_math
 modprobe kcomedilib
 
 test -c /dev/dynclamp || mknod -m 666 /dev/dynclamp c 227 0
