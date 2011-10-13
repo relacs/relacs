@@ -30,7 +30,7 @@ float output[OUTPUT_N] = { 0.0 };
   /*! Parameter that are provided by the model and can be read out. */
 #define PARAMINPUT_N 3
 char *paramInputNames[PARAMINPUT_N] = { "Leak-current", "VC-current", "Voltage-gated current" };
-char *paramInputUnits[PARAMINPUT_N] = { "nA", "nA" };
+char *paramInputUnits[PARAMINPUT_N] = { "nA", "nA", "nA" };
 float paramInput[PARAMINPUT_N] = { 0.0, 0.0, 0.0 };
 
   /*! Parameter that are read by the model and are written to the model. */

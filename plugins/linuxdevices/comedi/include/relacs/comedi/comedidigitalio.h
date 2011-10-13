@@ -77,14 +77,14 @@ public:
     /*! Configure digital I/O line \a line for input (\a output = \c false) or output 
         (\a output = \c true).
         \return 0 on success, otherwise a negative number indicating the error */
-  virtual int configureLine( int line, bool output ) const;
+  virtual int configureLine( int line, bool output );
     /*! Configure digital I/O lines specified by \a lines for input (0) or output (1)
         according to \a output.
         \param[in] lines a bit mask of the digital lines to be configured.
         \param[in] output a bitmask for tha digital I/O lines that should 
 	be configured for output.
         \return 0 on success, otherwise a negative number indicating the error */
-  virtual int configureLines( int lines, int output ) const;
+  virtual int configureLines( int lines, int output );
 
     /*! Write \a val to the digital I/O line \a line.
         \param[in] line the digital line (not its bitmask!)

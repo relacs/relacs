@@ -76,17 +76,20 @@ public:
     /*! \return the number of digital I/O lines the device supports */
   virtual int lines( void ) const;
 
+    /*! Returns the ids and further info for each digital I/O line. */
+  virtual const Options &settings( void ) const;
+
     /*! Configure digital I/O line \a line for input (\a output = \c false) or output 
         (\a output = \c true).
         \return 0 on success, otherwise a negative number indicating the error */
-  virtual int configureLine( int line, bool output ) const;
+  virtual int configureLine( int line, bool output );
     /*! Configure digital I/O lines specified by \a lines for input (0) or output (1)
         according to \a output.
         \param[in] lines a bit mask of the digital lines to be configured.
         \param[in] output a bitmask for tha digital I/O lines that should 
 	be configured for output.
         \return 0 on success, otherwise a negative number indicating the error */
-  virtual int configureLines( int lines, int output ) const;
+  virtual int configureLines( int lines, int output );
 
     /*! Write \a val to the digital I/O line \a line.
         \param[in] line the digital line (not its bitmask!)
@@ -120,6 +123,8 @@ public:
 
     /*! Make an digital I/O line an TTL pulse that is automatically generated
         by the dynamic clamp real time loop.
+	The digital I/O line has to be allocated and configured for output
+	before by the allocateLine() and configureLine() functions.
 	\param[in] line the digital I/O line (channel) on which the pulse is generated.
 	\param[in] high event on which the digital I/O line is set high.
 	Can be set to TTL_START_WRITE, TTL_END_WRITE, TTL_START_READ, or TTL_END_READ
@@ -135,6 +140,8 @@ public:
   int addTTLPulse( int line, enum ttlPulses high, enum ttlPulses low );
     /*! Clear any automatically generated pulses that are generated for an
         digital I/O line.
+	The digital I/O line has to be allocated and configured for output
+	before by the allocateLine() and configureLine() functions.
 	\param[in] line the digitla I/O line (channel) for which no more TTL pulses
 	should be generated.
 	\param[in] val set the digital I/O line high if \a val is \c true
@@ -159,6 +166,11 @@ private:
   string ModuleDevice;
     /*! File descriptor for the kernel module. */
   int ModuleFd;
+
+    /*! Memorizes activated TTL pulses. */
+  enum ttlPulses TTLPulseHigh[MaxDIOLines];
+    /*! Memorizes activated TTL pulses. */
+  enum ttlPulses TTLPulseLow[MaxDIOLines];
 
 };
 

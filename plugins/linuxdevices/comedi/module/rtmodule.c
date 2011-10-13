@@ -4,14 +4,11 @@
 #include <asm/uaccess.h>
 #include <linux/vmalloc.h>
 #include <linux/fs.h>
-#include <linux/string.h>
-#include <linux/spinlock.h>
 
 #include <rtai.h>
 #include <rtai_fifos.h>
 #include <rtai_sched.h>
 #include <rtai_shm.h>
-#include <rtai_math.h>
 
 #include "moduledef.h"
 
@@ -166,33 +163,33 @@ static struct file_operations fops = {
 // *** HELPER FUNCTIONS ***
 ///////////////////////////////////////////////////////////////////////////////
 
-/*
-This function throws a "SSE register return with SSE disabled" error on compiltion!
-It is inlined in the code to avoid this problem.
-static inline float sample_to_value( struct chanT *pChan, lsampl_t sample )
+static inline void sample_to_value( struct chanT *pChan )
 {
-  double value = 0.0;
   double term = 1.0;
+  double sample = pChan->lsample - pChan->converter.expansion_origin;
   unsigned i;
-  for ( i=0; i <= pChan->converter.order; ++i ) {
-    value += pChan->converter.coefficients[i] * term;
-    term *= sample - pChan->converter.expansion_origin;
-  }
-  return value*pChan->scale;
-}
-*/
 
-static inline lsampl_t value_to_sample( struct chanT *pChan, float value )
+  pChan->voltage = 0.0;
+  for ( i=0; i <= pChan->converter.order; ++i ) {
+    pChan->voltage += pChan->converter.coefficients[i] * term;
+    term *= sample;
+  }
+  pChan->voltage *= pChan->scale;
+}
+
+
+static inline void value_to_sample( struct chanT *pChan, float value )
 {
   double sample = 0.0;
   double term = 1.0;
   unsigned i;
   value *= pChan->scale;
+  value -= pChan->converter.expansion_origin;
   for ( i=0; i <= pChan->converter.order; ++i ) {
     sample += pChan->converter.coefficients[i] * term;
-    term *= value - pChan->converter.expansion_origin;
+    term *= value;
   }
-  return (lsampl_t)sample;
+  pChan->lsample = (lsampl_t)sample;
 }
 
 
@@ -629,8 +626,6 @@ void rtDynClamp( long dummy )
   unsigned long readCnt = 0;
   unsigned long fifoPutCnt = 0;
   struct chanT *pChan;
-  unsigned ci;
-  double term;
   int triggerevs[5] = { 1, 0, 0, 0, 0 };
   int prevtriggerevs[5] = { 0, 0, 0, 0, 0 };
 
@@ -704,7 +699,7 @@ void rtDynClamp( long dummy )
 	    }
 	      
 	    // write out Sample:
-	    pChan->lsample = value_to_sample( pChan, pChan->voltage );
+	    value_to_sample( pChan, pChan->voltage ); // sets pChan->lsample
 	    retVal = comedi_do_insn( pChan->devP, &pChan->insn );
 	    if ( retVal < 1 ) {
 	      subdev[iS].running = 0;
@@ -777,14 +772,7 @@ void rtDynClamp( long dummy )
 	    continue;
 	  }
 	  // convert to voltage:
-	  pChan->voltage = 0.0;
-	  term = 1.0;
-	  for ( ci=0; ci <= pChan->converter.order; ++ci ) {
-	    pChan->voltage += pChan->converter.coefficients[ci] * term;
-	    term *= pChan->lsample - pChan->converter.expansion_origin;
-	  }
-	  pChan->voltage *= pChan->scale;
-	  // pChan->voltage = sample_to_value( &subdev[iS].chanlist[iC], pChan->lsample );
+	  sample_to_value( pChan ); // sets pChan->voltage from pChan->lsample
 	  // write to FIFO:
 	  retVal = rtf_put( pChan->fifo, &pChan->voltage, sizeof(float) );
 	  fifoPutCnt++;
@@ -848,7 +836,7 @@ int init_rt_task( void )
 {
   int stackSize = 20000;
   int priority;
-  int usesFPU = 1;
+  const int usesFPU = 1;
   void* signal = NULL;
   int dummy = 23;
   int retVal;

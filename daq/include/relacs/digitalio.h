@@ -110,6 +110,7 @@ public:
         The \a id should be the returned value of a previous call to
 	allocateLine( int ).
         \param[in] line the digital line (not its bitmask!) to be allocated.
+	\param[in] id the id under which this line should be allocated.
         \return the id, a positive number, of the allocated line (same as \a id)
         \return WriteError if the line has been already allocated
         \sa freeLines(), allocatedLine() */
@@ -122,12 +123,12 @@ public:
         \param[in] lines the bit mask of the digital lines.
 	\param[in] id the id under which this line was previously allocated.
         \sa allocateLines() */
-  bool allocatedLines( int line, int id );
+  bool allocatedLines( int lines, int id );
     /*! \return \c true if all the digitial I/O lines \a lines have been allocated,
         independent of the ids.
         \param[in] lines the bit mask of the digital lines.
         \sa allocateLines() */
-  bool allocatedLines( int line );
+  bool allocatedLines( int lines );
     /*! \return \c true if digitial I/O line \a line was allocated under id \a id.
         \param[in] line the digital line (not its bitmask!)
 	\param[in] id the id under which this line was previously allocated.
@@ -141,19 +142,28 @@ public:
 
     /*! Configure digital I/O line \a line for input (\a output = \c
         false) or output (\a output = \c true).
+	When reimplementing this function, call this function on success.
         \param[in] line the digital line (not its bitmask!)
         \param[in] output \c true if this line should be configured for output.
         \return 0 on success, otherwise a negative number indicating
-        the error */
-  virtual int configureLine( int line, bool output ) const = 0;
+        the error.
+	\sa configureLines(), lineConfiguration() */
+  virtual int configureLine( int line, bool output );
     /*! Configure digital I/O lines specified by \a lines for input
         (0) or output (1) according to \a output.
+	When reimplementing this function, call this function on success.
         \param[in] lines a bit mask of the digital lines to be configured.
         \param[in] output a bitmask for tha digital I/O lines that should 
 	be configured for output.
         \return 0 on success, otherwise a negative number indicating
-        the error */
-  virtual int configureLines( int lines, int output ) const = 0;
+        the error.
+	\sa configureLine(), lineConfiguration() */
+  virtual int configureLines( int lines, int output );
+    /*! Returns the configuation of an digital I/O line.
+        \param[in] line the digital line (channel)
+	\return \c true, if the line has been configured for output.
+	\sa configureLine(), configureLines() */
+  bool lineConfiguration( int line ) const;
 
     /*! Write \a val to the digital I/O line \a line.
         \param[in] line the digital line (not its bitmask!)
@@ -202,13 +212,16 @@ protected:
         \sa info() */
   void setInfo( void );
 
+    /*! The maximum number of digital I/O lines. */
+  static const int MaxDIOLines = 32;
+
 
 private:
 
-    /*! The maximum number of digital I/O lines. */
-  static const int MaxDIOLines = 32;
     /*! The ids of allocated digitial I/O lines. */
-  int DIOLines[32];
+  int DIOLineIDs[MaxDIOLines];
+    /*! The configuration of all digitial I/O lines. */
+  bool DIOLineWriteable[MaxDIOLines];
 
 
 };

@@ -19,7 +19,7 @@
 // *** FEATURES ***
 
 // #define ENABLE_TRIGGER
-// #define ENABLE_TTLPULSE
+#define ENABLE_TTLPULSE
 
 
 // *** DEVICE LINUX CONFIGURATION ***

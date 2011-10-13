@@ -72,12 +72,11 @@ int DynClampDigitalIO::open( const string &device, const Options &opts )
   if ( isOpen() )
     return -5;
 
-  freeLines();
-  Info.clear();
-  Settings.clear();
-  if ( device.empty() )
-    return InvalidDevice;
-  setDeviceFile( device );
+  DigitalIO::open( device, opts );
+  for ( int k=0; k<MaxDIOLines;  k++ ) {
+    TTLPulseHigh[k] = TTL_UNDEFINED;
+    TTLPulseLow[k] = TTL_UNDEFINED;
+  }
 
   // open user space coemdi:
   int retval = CDIO->open( device, opts );
@@ -132,15 +131,29 @@ int DynClampDigitalIO::open( const string &device, const Options &opts )
 
   // set up TTL pulses:
   const string ttlcoms[4] = { "startwrite", "endwrite", "startread", "endread" };
+  int id = -1;
   for ( int k=1; k<5; k++ ) {
     string ns = Str( k );
     int line = opts.integer( "ttlpulse" + ns + "line", 0, -1 );
+    if ( line < 0 )
+      continue;
     string highcom = opts.text( "ttlpulse" + ns + "high", 0 );
     int high = TTL_START_WRITE;
     for ( ; high != TTL_UNDEFINED && highcom != ttlcoms[high]; ++high );
     string lowcom = opts.text( "ttlpulse" + ns + "low", 0 );
     int low = TTL_START_WRITE;
     for ( ; low != TTL_UNDEFINED && lowcom != ttlcoms[low]; ++low );
+    if ( id < 0 ) {
+      id = allocateLine( line );
+      if ( id == WriteError )
+	continue;
+    }
+    else {
+      if ( allocateLine( line, id ) == WriteError )
+	continue;
+    }
+    if ( configureLine( line, true ) < 0 )
+      continue;
     addTTLPulse( line, (enum ttlPulses)high, (enum ttlPulses)low );
   }
   
@@ -180,8 +193,26 @@ int DynClampDigitalIO::lines( void ) const
 }
 
 
-int DynClampDigitalIO::configureLine( int line, bool output ) const
+const Options &DynClampDigitalIO::settings( void ) const
 {
+  DigitalIO::settings();
+  
+  const string ttlcoms[5] = { "startwrite", "endwrite", "startread", "endread", "none" };
+  for ( int k=0; k<MaxDIOLines; k++ ) {
+    if ( TTLPulseHigh[k] != TTL_UNDEFINED || 
+	 TTLPulseLow[k] != TTL_UNDEFINED ) {
+      Settings.addText( "line"+Str(k)+"ttlpulsehigh", ttlcoms[TTLPulseHigh[k]] );
+      Settings.addText( "line"+Str(k)+"ttlpulselow", ttlcoms[TTLPulseLow[k]] );
+    }
+  }
+
+  return Settings;
+}
+
+
+int DynClampDigitalIO::configureLine( int line, bool output )
+{
+  cerr << "CONFIGURELINE line=" << line << " output=" << output << "\n";
   if ( !isOpen() ) 
     return NotOpen;
   if ( line < 0 || line >= MaxLines )
@@ -202,11 +233,12 @@ int DynClampDigitalIO::configureLine( int line, bool output ) const
 	 << " for direction " << output << '\n';
     return WriteError;
   }
-  return 0;
+  cerr << "CONFIGURELINE SUCCESS for line " << line << " output=" << output << "\n";
+  return DigitalIO::configureLine( line, output );
 }
 
 
-int DynClampDigitalIO::configureLines( int lines, int output ) const
+int DynClampDigitalIO::configureLines( int lines, int output )
 {
   if ( !isOpen() ) 
     return NotOpen;
@@ -226,7 +258,7 @@ int DynClampDigitalIO::configureLines( int lines, int output ) const
 	 << " for direction " << output << '\n';
     return WriteError;
   }
-  return 0;
+  return DigitalIO::configureLines( lines, output );
 }
 
 
@@ -333,8 +365,27 @@ int DynClampDigitalIO::addTTLPulse( int line, enum ttlPulses high,
 {
   if ( !isOpen() ) 
     return NotOpen;
-  if ( line < 0 || line >= MaxLines )
+  if ( line < 0 || line >= MaxLines ) {
+    cerr << "! error: DynClampDigitalIO::addTTLPulse() -> invalid line " << line << '\n';
     return WriteError;
+  }
+  if ( high == TTL_UNDEFINED || low == TTL_UNDEFINED ) {
+    cerr << "! error: DynClampDigitalIO::addTTLPulse() -> unset high " << high << " or low " << low << " condition\n";
+    return WriteError;
+  }
+  if ( TTLPulseHigh[line] != TTL_UNDEFINED || 
+       TTLPulseLow[line] != TTL_UNDEFINED ) {
+    cerr << "! error: DynClampDigitalIO::addTTLPulse() -> high " << TTLPulseHigh[line] << " or low " << TTLPulseLow[line] << " condition already set for line " << line << "\n";
+    return WriteError;
+  }
+  if ( ! allocatedLine( line ) ) {
+    cerr << "! error: DynClampDigitalIO::addTTLPulse() -> line " << line << " not allocated\n";
+    return WriteError;
+  }
+  if ( ! lineConfiguration( line ) ) {
+    cerr << "! error: DynClampDigitalIO::addTTLPulse() -> line " << line << " not configured for writing\n";
+    return WriteError;
+  }
 
   struct dioIOCT dioIOC;
   dioIOC.subdevID = SubdeviceID;
@@ -362,6 +413,9 @@ int DynClampDigitalIO::addTTLPulse( int line, enum ttlPulses high,
     ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
     return WriteError;
   }
+  cerr << "ADDED TTL PULSE for line " << line << '\n';
+  TTLPulseHigh[line] = high;
+  TTLPulseLow[line] = low;
   return 0;
 }
 
@@ -370,8 +424,23 @@ int DynClampDigitalIO::clearTTLPulse( int line, bool val )
 {
   if ( !isOpen() ) 
     return NotOpen;
-  if ( line < 0 || line >= MaxLines )
+  if ( line < 0 || line >= MaxLines ) {
+    cerr << "! error: DynClampDigitalIO::addTTLPulse() -> invalid line " << line << '\n';
     return WriteError;
+  }
+  if ( TTLPulseHigh[line] == TTL_UNDEFINED || 
+       TTLPulseLow[line] == TTL_UNDEFINED ) {
+    cerr << "! error: DynClampDigitalIO::addTTLPulse() -> unset high " << TTLPulseHigh[line] << " or low " << TTLPulseLow[line] << " condition\n";
+    return WriteError;
+  }
+  if ( ! allocatedLine( line ) ) {
+    cerr << "! error: DynClampDigitalIO::addTTLPulse() -> line " << line << " not allocated\n";
+    return WriteError;
+  }
+  if ( ! lineConfiguration( line ) ) {
+    cerr << "! error: DynClampDigitalIO::addTTLPulse() -> line " << line << " not configured for writing\n";
+    return WriteError;
+  }
 
   struct dioIOCT dioIOC;
   dioIOC.subdevID = SubdeviceID;
@@ -387,6 +456,8 @@ int DynClampDigitalIO::clearTTLPulse( int line, bool val )
 	 << " failed on subdeviceid " << SubdeviceID << '\n';
     return WriteError;
   }
+  TTLPulseHigh[line] = TTL_UNDEFINED;
+  TTLPulseLow[line] = TTL_UNDEFINED;
   return 0;
 }
 

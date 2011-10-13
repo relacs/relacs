@@ -4,8 +4,6 @@
 #include <asm/uaccess.h>
 #include <linux/vmalloc.h>
 #include <linux/fs.h>
-#include <linux/string.h>
-#include <linux/spinlock.h>
 
 #include <rtai.h>
 #include <rtai_fifos.h>
@@ -194,33 +192,33 @@ static struct file_operations fops = {
 // *** HELPER FUNCTIONS ***
 ///////////////////////////////////////////////////////////////////////////////
 
-/*
-This function throws a "SSE register return with SSE disabled" error on compiltion!
-It is inlined in the code to avoid this problem.
-static inline float sample_to_value( struct chanT *pChan, lsampl_t sample )
+static inline void sample_to_value( struct chanT *pChan )
 {
-  double value = 0.0;
   double term = 1.0;
+  double sample = pChan->lsample - pChan->converter.expansion_origin;
   unsigned i;
-  for ( i=0; i <= pChan->converter.order; ++i ) {
-    value += pChan->converter.coefficients[i] * term;
-    term *= sample - pChan->converter.expansion_origin;
-  }
-  return value*pChan->scale;
-}
-*/
 
-static inline lsampl_t value_to_sample( struct chanT *pChan, float value )
+  pChan->voltage = 0.0;
+  for ( i=0; i <= pChan->converter.order; ++i ) {
+    pChan->voltage += pChan->converter.coefficients[i] * term;
+    term *= sample;
+  }
+  pChan->voltage *= pChan->scale;
+}
+
+
+static inline void value_to_sample( struct chanT *pChan, float value )
 {
   double sample = 0.0;
   double term = 1.0;
   unsigned i;
   value *= pChan->scale;
+  value -= pChan->converter.expansion_origin;
   for ( i=0; i <= pChan->converter.order; ++i ) {
     sample += pChan->converter.coefficients[i] * term;
-    term *= value - pChan->converter.expansion_origin;
+    term *= value;
   }
-  return (lsampl_t)sample;
+  pChan->lsample = (lsampl_t)sample;
 }
 
 
@@ -669,18 +667,19 @@ void releaseSubdevice( int iS )
   else if ( subdev[iS].type == SUBDEV_DIO ) {
     // remove ttl pulses:
     for ( pT = 0; pT < 4; pT++ ) {
-      for ( iT = 0; iT < MAXTTLPULSES && ttlDevices[pT][iT] != 0; iT++ ) {
+      for ( iT = 0; iT < MAXTTLPULSES && ttlDevices[pT][iT] != 0; ) {
 	if ( ttlDevices[pT][iT] == device[iD].devP &&
 	     ttlInsns[pT][iT]->subdev == subdev[iS].subdev ) {
 	  vfree( ttlInsns[pT][iT] );
-	  for ( k = iT+1; k < MAXTTLPULSES && ttlDevices[pT][k] != 0; k++ ) {
+	  for ( k = iT+1; k < MAXTTLPULSES; k++ ) {
 	    ttlDevices[pT][k-1] = ttlDevices[pT][k];
 	    ttlInsns[pT][k-1] = ttlInsns[pT][k];
 	  }
 	  ttlDevices[pT][MAXTTLPULSES-1] = 0;
 	  ttlInsns[pT][MAXTTLPULSES-1] = 0;
-	  break;
 	}
+	else
+	  iT++;
       }
     }
   }
@@ -742,8 +741,8 @@ int setDigitalIO( struct dioIOCT *dioIOC )
 	    direction = COMEDI_OUTPUT;
 	  if ( comedi_dio_config( devP, subdevice, channel, direction ) != 0 ) {
 	    comedi_perror( "setDigitalIO() -> DIO_CONFIGURE" );
-	    ERROR_MSG( "setDigitalIO: comedi_dio_config on device %s subdevice %d failed!\n",
-		      device[iD].name, subdevice );
+	    ERROR_MSG( "setDigitalIO: comedi_dio_config bitfield on device %s, subdevice %d, channel %d, direction %d failed!\n",
+		       device[iD].name, subdevice, channel, direction );
 	    return -EFAULT;
 	  }
 	}
@@ -754,8 +753,8 @@ int setDigitalIO( struct dioIOCT *dioIOC )
       direction = dioIOC->output ? COMEDI_OUTPUT : COMEDI_INPUT;
       if ( comedi_dio_config( devP, subdevice, dioIOC->lines, direction ) != 0 ) {
 	comedi_perror( "setDigitalIO() -> DIO_CONFIGURE" );
-	ERROR_MSG( "setDigitalIO: comedi_dio_config on device %s subdevice %d failed!\n",
-		  device[iD].name, subdevice );
+	ERROR_MSG( "setDigitalIO: comedi_dio_config single channel on device %s, subdevice %d, channel %d, direction %d failed!\n",
+		   device[iD].name, subdevice, dioIOC->lines, direction );
 	return -EFAULT;
       }
     }
@@ -821,20 +820,21 @@ int setDigitalIO( struct dioIOCT *dioIOC )
   else if ( dioIOC->op == DIO_CLEAR_TTLPULSE ) {
     found = 0;
     for ( pT = 0; pT < 4; pT++ ) {
-      for ( iT = 0; iT < MAXTTLPULSES && ttlDevices[pT][iT] != 0; iT++ ) {
+      for ( iT = 0; iT < MAXTTLPULSES && ttlDevices[pT][iT] != 0; ) {
 	if ( ttlDevices[pT][iT] == devP &&
 	     ttlInsns[pT][iT]->subdev == subdevice &&
 	     ttlInsns[pT][iT]->chanspec == CR_PACK( dioIOC->lines, 0, 0 ) ) {
 	  found = 1;
 	  vfree( ttlInsns[pT][iT] );
-	  for ( k = iT+1; k < MAXTTLPULSES && ttlDevices[pT][k] != 0; k++ ) {
+	  for ( k = iT+1; k < MAXTTLPULSES; k++ ) {
 	    ttlDevices[pT][k-1] = ttlDevices[pT][k];
 	    ttlInsns[pT][k-1] = ttlInsns[pT][k];
 	  }
 	  ttlDevices[pT][MAXTTLPULSES-1] = 0;
 	  ttlInsns[pT][MAXTTLPULSES-1] = 0;
-	  break;
 	}
+	else
+	  iT++;
       }
     }
     if ( found ) {
@@ -914,8 +914,6 @@ void rtDynClamp( long dummy )
   unsigned long readCnt = 0;
   struct chanT *pChan;
   float voltage;
-  unsigned ci;
-  double term;
   int triggerevs[5] = { 1, 0, 0, 0, 0 };
   int prevtriggerevs[5] = { 0, 0, 0, 0, 0 };
 
@@ -1023,7 +1021,7 @@ void rtDynClamp( long dummy )
 	      voltage += output[pChan->modelIndex];
 
 	    // write out Sample:
-	    pChan->lsample = value_to_sample( pChan, voltage );
+	    value_to_sample( pChan, voltage ); // sets pChan->lsample
 	    retVal = comedi_do_insn( pChan->devP, &pChan->insn );
 	    if ( retVal < 1 ) {
 	      subdev[iS].running = 0;
@@ -1125,13 +1123,7 @@ void rtDynClamp( long dummy )
 	      }
 	    }
 	    // convert to voltage:
-	    pChan->voltage = 0.0;
-	    term = 1.0;
-	    for ( ci=0; ci <= pChan->converter.order; ++ci ) {
-	      pChan->voltage += pChan->converter.coefficients[ci] * term;
-	      term *= pChan->lsample - pChan->converter.expansion_origin;
-	    }
-	    pChan->voltage *= pChan->scale;
+	    sample_to_value( pChan ); // sets pChan->voltage from pChan->lsample
 	    if ( pChan->modelIndex >= 0 )
 	      input[pChan->modelIndex] = pChan->voltage;
 	  }
@@ -1231,7 +1223,7 @@ int init_rt_task( void )
 {
   int stackSize = 20000;
   int priority;
-  int usesFPU = 1;
+  const int usesFPU = 1;
   void* signal = NULL;
   int dummy = 23;
   int retVal;

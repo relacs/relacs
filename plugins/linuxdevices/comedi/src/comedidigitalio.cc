@@ -64,11 +64,7 @@ int ComediDigitalIO::open( const string &device, const Options &opts )
   if ( isOpen() )
     return -5;
 
-  freeLines();
-  Info.clear();
-  Settings.clear();
-  if ( device.empty() )
-    return InvalidDevice;
+  DigitalIO::open( device, opts );
 
   // open comedi device:
   DeviceP = comedi_open( device.c_str() );
@@ -172,7 +168,7 @@ int ComediDigitalIO::lines( void ) const
 }
 
 
-int ComediDigitalIO::configureLine( int line, bool output ) const
+int ComediDigitalIO::configureLine( int line, bool output )
 {
   int direction = output ? COMEDI_OUTPUT : COMEDI_INPUT;
   if ( comedi_dio_config( DeviceP, SubDevice, line, direction ) != 0 ) {
@@ -182,11 +178,11 @@ int ComediDigitalIO::configureLine( int line, bool output ) const
 	 << " for direction " << direction << '\n';
     return WriteError;
   }
-  return 0;
+  return DigitalIO::configureLine( line, output );
 }
 
 
-int ComediDigitalIO::configureLines( int lines, int output ) const
+int ComediDigitalIO::configureLines( int lines, int output )
 {
   int bit = 1;
   for ( int channel=0; channel<32; channel++ ) {
@@ -204,7 +200,7 @@ int ComediDigitalIO::configureLines( int lines, int output ) const
     }
     bit *= 2;
   }
-  return 0;
+  return DigitalIO::configureLines( lines, output );
 }
 
 

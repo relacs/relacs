@@ -1,11 +1,13 @@
 ifneq ($(KERNELRELEASE),)
 
-EXTRA_CFLAGS += @RTAI_CPPFLAGS@ -I/usr/include/ -ffast-math -mhard-float
+EXTRA_CFLAGS += @RTAI_CPPFLAGS@ -I/usr/include/
+EXTRA_CFLAGS += -mhard-float -ffast-math
 
 # is the following really working? Are the SSE registers saved?
-EXTRA_CFLAGS += -msse -mfpmath=sse
+#EXTRA_CFLAGS += -msse -mfpmath=sse
 
 EXTRA_CFLAGS += -Wall
+
 
 obj-m := rtmodule.o dynclampmodule.o
 
@@ -47,3 +49,24 @@ installcheck:
 
 endif
 
+
+# Tis is how gcc is called for compiling the kernel modules:
+#-Wp,-MD,/home/jan/prj/relacs/relacs/trunk/plugins/linuxdevices/comedi/module/.rtmodule.o.d
+#-nostdinc -isystem -print-file-name=include /usr/lib/gcc/i586-suse-linux/4.2.1/include 
+#-D__KERNEL__ -Iinclude -I/usr/src/linux-2.6.28.9rtai/arch/x86/include
+#-include include/linux/autoconf.h
+#-Wall -Wundef -Wstrict-prototypes -Wno-trigraphs
+#-fno-strict-aliasing -fno-common -Werror-implicit-function-declaration
+#-Os -m32 -msoft-float -mregparm=3 -freg-struct-return
+#-mpreferred-stack-boundary=2 -march=i686 -mtune=pentium3 -mtune=generic
+#-Wa,-mtune=generic32 -ffreestanding -DCONFIG_AS_CFI=1
+#-DCONFIG_AS_CFI_SIGNAL_FRAME=1 -pipe -Wno-sign-compare
+#-fno-asynchronous-unwind-tables
+#-mno-sse -mno-mmx -mno-sse2 -mno-3dnow
+#-Iarch/x86/include/asm/mach-default -fno-stack-protector -fomit-frame-pointer
+#-g -Wdeclaration-after-statement -Wno-pointer-sign -fwrapv
+#-I/usr/realtime/include/ -I/usr/include -mhard-float -ffast-math
+#-Wall -DMODULE -DKBUILD_STR(s)=#s -DKBUILD_BASENAME=KBUILD_STR(rtmodule)
+#-DKBUILD_MODNAME=KBUILD_STR(rtmodule) -c
+#-o /home/jan/prj/relacs/relacs/trunk/plugins/linuxdevices/comedi/module/rtmodule.o
+#/home/jan/prj/relacs/relacs/trunk/plugins/linuxdevices/comedi/module/rtmodule.c
