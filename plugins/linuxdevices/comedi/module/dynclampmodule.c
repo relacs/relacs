@@ -739,7 +739,7 @@ int setDigitalIO( struct dioIOCT *dioIOC )
 	  direction = COMEDI_INPUT;
 	  if ( ( dioIOC->output & bit ) > 0 )
 	    direction = COMEDI_OUTPUT;
-	  if ( comedi_dio_config( devP, subdevice, channel, direction ) != 0 ) {
+	  if ( comedi_dio_config( devP, subdevice, channel, direction ) < 0 ) {
 	    comedi_perror( "setDigitalIO() -> DIO_CONFIGURE" );
 	    ERROR_MSG( "setDigitalIO: comedi_dio_config bitfield on device %s, subdevice %d, channel %d, direction %d failed!\n",
 		       device[iD].name, subdevice, channel, direction );
@@ -751,7 +751,7 @@ int setDigitalIO( struct dioIOCT *dioIOC )
     }
     else {
       direction = dioIOC->output ? COMEDI_OUTPUT : COMEDI_INPUT;
-      if ( comedi_dio_config( devP, subdevice, dioIOC->lines, direction ) != 0 ) {
+      if ( comedi_dio_config( devP, subdevice, dioIOC->lines, direction ) < 0 ) {
 	comedi_perror( "setDigitalIO() -> DIO_CONFIGURE" );
 	ERROR_MSG( "setDigitalIO: comedi_dio_config single channel on device %s, subdevice %d, channel %d, direction %d failed!\n",
 		   device[iD].name, subdevice, dioIOC->lines, direction );

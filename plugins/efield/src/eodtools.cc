@@ -177,6 +177,9 @@ public:
 		 double &minthresh, double &maxthresh,
 		 double &time, double &size, double &width )
   { 
+    if ( event <= first )
+      return 0;
+
     // time:
     time = *eventtime;
 
@@ -207,6 +210,9 @@ public:
 		   double &minthresh, double &maxthresh,
 		   double &time, double &size, double &width )
   {
+    if ( event <= first )
+      return 0;
+
     // time:
     time = *eventtime;
 

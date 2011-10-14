@@ -201,8 +201,8 @@ const Options &DynClampDigitalIO::settings( void ) const
   for ( int k=0; k<MaxDIOLines; k++ ) {
     if ( TTLPulseHigh[k] != TTL_UNDEFINED || 
 	 TTLPulseLow[k] != TTL_UNDEFINED ) {
-      Settings.addText( "line"+Str(k)+"ttlpulsehigh", ttlcoms[TTLPulseHigh[k]] );
-      Settings.addText( "line"+Str(k)+"ttlpulselow", ttlcoms[TTLPulseLow[k]] );
+      Settings.addText( "line"+Str(k)+"_ttlpulsehigh", ttlcoms[TTLPulseHigh[k]] );
+      Settings.addText( "line"+Str(k)+"_ttlpulselow", ttlcoms[TTLPulseLow[k]] );
     }
   }
 
@@ -212,7 +212,6 @@ const Options &DynClampDigitalIO::settings( void ) const
 
 int DynClampDigitalIO::configureLine( int line, bool output )
 {
-  cerr << "CONFIGURELINE line=" << line << " output=" << output << "\n";
   if ( !isOpen() ) 
     return NotOpen;
   if ( line < 0 || line >= MaxLines )
@@ -233,7 +232,6 @@ int DynClampDigitalIO::configureLine( int line, bool output )
 	 << " for direction " << output << '\n';
     return WriteError;
   }
-  cerr << "CONFIGURELINE SUCCESS for line " << line << " output=" << output << "\n";
   return DigitalIO::configureLine( line, output );
 }
 
@@ -413,7 +411,6 @@ int DynClampDigitalIO::addTTLPulse( int line, enum ttlPulses high,
     ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
     return WriteError;
   }
-  cerr << "ADDED TTL PULSE for line " << line << '\n';
   TTLPulseHigh[line] = high;
   TTLPulseLow[line] = low;
   return 0;
