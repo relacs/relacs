@@ -130,7 +130,7 @@ int DynClampDigitalIO::open( const string &device, const Options &opts )
   setInfo();
 
   // set up TTL pulses:
-  const string ttlcoms[4] = { "startwrite", "endwrite", "startread", "endread" };
+  const string ttlcoms[6] = { "startwrite", "endwrite", "startread", "endread", "startao", "endao" };
   int id = -1;
   for ( int k=1; k<5; k++ ) {
     string ns = Str( k );
@@ -197,7 +197,7 @@ const Options &DynClampDigitalIO::settings( void ) const
 {
   DigitalIO::settings();
   
-  const string ttlcoms[5] = { "startwrite", "endwrite", "startread", "endread", "none" };
+  const string ttlcoms[7] = { "startwrite", "endwrite", "startread", "endread", "startao", "endao", "none" };
   for ( int k=0; k<MaxDIOLines; k++ ) {
     if ( TTLPulseHigh[k] != TTL_UNDEFINED || 
 	 TTLPulseLow[k] != TTL_UNDEFINED ) {
@@ -359,7 +359,7 @@ int DynClampDigitalIO::readLines( int lines, int &val ) const
 
 
 int DynClampDigitalIO::addTTLPulse( int line, enum ttlPulses high,
-				    enum ttlPulses low )
+				    enum ttlPulses low, bool inithigh )
 {
   if ( !isOpen() ) 
     return NotOpen;
@@ -399,7 +399,7 @@ int DynClampDigitalIO::addTTLPulse( int line, enum ttlPulses high,
 	 << " failed on subdeviceid " << SubdeviceID << '\n';
     return WriteError;
   }
-  dioIOC.output = 0;
+  dioIOC.output = inithigh ? 1 : 0;
   dioIOC.pulseType = low;
   retval = ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
   if( retval < 0 ) {
@@ -417,7 +417,7 @@ int DynClampDigitalIO::addTTLPulse( int line, enum ttlPulses high,
 }
 
 
-int DynClampDigitalIO::clearTTLPulse( int line, bool val )
+int DynClampDigitalIO::clearTTLPulse( int line, bool high )
 {
   if ( !isOpen() ) 
     return NotOpen;
@@ -444,7 +444,7 @@ int DynClampDigitalIO::clearTTLPulse( int line, bool val )
   dioIOC.bitfield = 0;
   dioIOC.op = DIO_CLEAR_TTLPULSE;
   dioIOC.lines = line;
-  dioIOC.output = val ? 1 : 0;
+  dioIOC.output = high ? 1 : 0;
   dioIOC.pulseType = TTL_UNDEFINED;
   int retval = ::ioctl( ModuleFd, IOC_DIO_CMD, &dioIOC );
   if( retval < 0 ) {

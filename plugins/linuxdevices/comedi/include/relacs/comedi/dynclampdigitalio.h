@@ -42,6 +42,9 @@ class ComediDigitalIO;
 \par Options
 - \c subdevice: the subdevice id of the digital I/O (check with comedi_test -t info).
 - \c startsubdevice: start searching for a digital I/O subdevice at the subdevice with the specified id.
+- \c ttlpulseNline: digital I/O line (channel) on which ttl pulse \a N should be generated.
+- \c ttlpulseNhigh: condition on which ttl pulse \a N is set high (startwrite, endwrite, startread, endread, startao, or endao).
+- \c ttlpulseNlow: condition on which ttl pulse \a N is set low (startwrite, endwrite, startread, endread, startao, or endao).
 */
 
 
@@ -127,26 +130,31 @@ public:
 	before by the allocateLine() and configureLine() functions.
 	\param[in] line the digital I/O line (channel) on which the pulse is generated.
 	\param[in] high event on which the digital I/O line is set high.
-	Can be set to TTL_START_WRITE, TTL_END_WRITE, TTL_START_READ, or TTL_END_READ
-	for setting the line high right before analog data is written,
-	right after analog data is written, righ before analog data is read,
-	or right after analog data is read, respectively.
+	Can be set to TTL_START_WRITE, TTL_END_WRITE, TTL_START_READ,
+	TTL_END_READ, TTL_START_AO, or TTL_END_AO for setting the line
+	high right before analog data is written, right after analog
+	data is written, righ before analog data is read, right
+	after analog data is read, when an analog output signal is started,
+	or when an analog output signal is stopped, respectively.
 	\param[in] low event on which the digital I/O line is set high.
-	Can be set to TTL_START_WRITE, TTL_END_WRITE, TTL_START_READ, or TTL_END_READ
-	for setting the line low right before analog data is written,
-	right after analog data is written, righ before analog data is read,
-	or right after analog data is read, respectively.
+	Can be set to TTL_START_WRITE, TTL_END_WRITE, TTL_START_READ,
+	TTL_END_READ, TTL_START_AO, or TTL_END_AO for setting the line
+	high right before analog data is written, right after analog
+	data is written, righ before analog data is read, right
+	after analog data is read, when an analog output signal is started,
+	or when an analog output signal is stopped, respectively.
+	\param[in] inithigh set the digital I/O line initially high if \a high is \c true
         \return 0 on success, otherwise a negative number indicating the error. */
-  int addTTLPulse( int line, enum ttlPulses high, enum ttlPulses low );
+  int addTTLPulse( int line, enum ttlPulses high, enum ttlPulses low, bool inithigh=false );
     /*! Clear any automatically generated pulses that are generated for an
         digital I/O line.
 	The digital I/O line has to be allocated and configured for output
 	before by the allocateLine() and configureLine() functions.
 	\param[in] line the digitla I/O line (channel) for which no more TTL pulses
 	should be generated.
-	\param[in] val set the digital I/O line high if \a val is \c true
+	\param[in] high set the digital I/O line high if \a high is \c true
 	\return 0 on success, otherwise a negative number indicating the error. */
-  int clearTTLPulse( int line, bool val );
+  int clearTTLPulse( int line, bool high=false );
 
 
 private:

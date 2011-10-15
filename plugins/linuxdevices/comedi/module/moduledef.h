@@ -55,6 +55,7 @@
 #define MAXSUBDEV    8
 #define MAXCHANLIST  128
 #define MAXTTLPULSES 5
+#define MAXTTLPULSETYPES 6
 
 #define PARAM_CHAN_OFFSET 1000
 
@@ -112,7 +113,7 @@ struct syncCmdIOCT {
 };
 
 enum dioOps { DIO_CONFIGURE, DIO_READ, DIO_WRITE, DIO_ADD_TTLPULSE, DIO_CLEAR_TTLPULSE };
-enum ttlPulses { TTL_START_WRITE=0, TTL_END_WRITE, TTL_START_READ, TTL_END_READ, TTL_UNDEFINED };
+enum ttlPulses { TTL_START_WRITE=0, TTL_END_WRITE, TTL_START_READ, TTL_END_READ, TTL_START_AO, TTL_END_AO, TTL_UNDEFINED };
 
 struct dioIOCT {
   unsigned int subdevID;
@@ -184,20 +185,20 @@ struct traceChannelIOCT {
 // *** KERNEL LOGGING STYLE ***
 
 #ifdef __KERNEL__
-#  define ERROR_MSG(msg, args...) printk( KERN_ERR "rtmodule: " msg, ## args )
+#  define ERROR_MSG(msg, args...) printk( KERN_ERR "dynclampmodule: " msg, ## args )
 #else
 #  define ERROR_MSG(msg, args...) fprintf( stderr, msg, ## args )
 #endif
 
 #ifdef __KERNEL__
-#  define WARN_MSG(msg, args...) printk( KERN_WARNING "rtmodule: " msg, ## args )
+#  define WARN_MSG(msg, args...) printk( KERN_WARNING "dyclampmodule: " msg, ## args )
 #else
 #  define WARN_MSG(msg, args...) fprintf( stderr, msg, ## args )
 #endif
 
 #ifdef RTMODULE_INFO
 #  ifdef __KERNEL__
-#    define INFO_MSG(msg, args...) printk( "rtmodule: " msg, ## args )
+#    define INFO_MSG(msg, args...) printk( "dynclampmodule: " msg, ## args )
 #  else
 #    define INFO_MSG(msg, args...) fprintf( stderr, msg, ## args )
 #  endif
@@ -207,7 +208,7 @@ struct traceChannelIOCT {
 
 #ifdef RTMODULE_DEBUG
 #  ifdef __KERNEL__
-#    define DEBUG_MSG(msg, args...) printk( "rtmodule: " msg, ## args )
+#    define DEBUG_MSG(msg, args...) printk( "dynclampmodule: " msg, ## args )
 #  else
 #    define DEBUG_MSG(msg, args...) fprintf( stderr, msg, ## args )
 #  endif
@@ -216,7 +217,7 @@ struct traceChannelIOCT {
 #endif
 
 #ifdef __KERNEL__
-#  define SDEBUG_MSG(msg, args...) printk( "rtmodule: " msg, ## args )
+#  define SDEBUG_MSG(msg, args...) printk( "dynclampmodule: " msg, ## args )
 #else
 #  define SDEBUG_MSG(msg, args...) fprintf( stderr, msg, ## args )
 #endif

@@ -142,9 +142,13 @@ comedi_t *ttlStartReadDevice[MAXTTLPULSES] = { 0, 0, 0, 0, 0 };
 comedi_insn *ttlStartReadInsn[MAXTTLPULSES] = { 0, 0, 0, 0, 0 };
 comedi_t *ttlEndReadDevice[MAXTTLPULSES] = { 0, 0, 0, 0, 0 };
 comedi_insn *ttlEndReadInsn[MAXTTLPULSES] = { 0, 0, 0, 0, 0 };
+comedi_t *ttlStartAODevice[MAXTTLPULSES] = { 0, 0, 0, 0, 0 };
+comedi_insn *ttlStartAOInsn[MAXTTLPULSES] = { 0, 0, 0, 0, 0 };
+comedi_t *ttlEndAODevice[MAXTTLPULSES] = { 0, 0, 0, 0, 0 };
+comedi_insn *ttlEndAOInsn[MAXTTLPULSES] = { 0, 0, 0, 0, 0 };
 
-comedi_t **ttlDevices[4];
-comedi_insn **ttlInsns[4];
+comedi_t **ttlDevices[MAXTTLPULSETYPES];
+comedi_insn **ttlInsns[MAXTTLPULSETYPES];
 
 lsampl_t ttlLow = 0;
 lsampl_t ttlHigh = 1;
@@ -239,10 +243,14 @@ void init_globals( void )
   ttlDevices[1] = ttlEndWriteDevice;
   ttlDevices[2] = ttlStartReadDevice;
   ttlDevices[3] = ttlEndReadDevice;
+  ttlDevices[4] = ttlStartAODevice;
+  ttlDevices[5] = ttlEndAODevice;
   ttlInsns[0] = ttlStartWriteInsn;
   ttlInsns[1] = ttlEndWriteInsn;
   ttlInsns[2] = ttlStartReadInsn;
   ttlInsns[3] = ttlEndReadInsn;
+  ttlInsns[4] = ttlStartAOInsn;
+  ttlInsns[5] = ttlEndAOInsn;
 #endif
 }
 
@@ -316,7 +324,7 @@ int openComediDevice( struct deviceIOCT *deviceIOC )
     if ( !device[iDev].devP ) {
       ERROR_MSG( "comediOpenDevice: device %s could not be opened!\n",
 		 deviceIOC->devicename );
-      comedi_perror( "rtmodule: comedi_open" );    
+      comedi_perror( "dynclampmodule: comedi_open" );    
       return -1;
     }
     justOpened = 1;
@@ -416,7 +424,7 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
       if ( subdev[iS].type == SUBDEV_IN )
 	trig = 1;
     }
-    DEBUG_MSG( "dynclampmodule: checked for trigger on subdevice %d: %d\n", subdev[iS].subdev, trig );
+    DEBUG_MSG( "checked for trigger on subdevice %d: %d\n", subdev[iS].subdev, trig );
   }
 
   if ( subdev[iS].chanlist ) {
@@ -427,7 +435,7 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
             subdev[iS].chanlist[isC].chan + PARAM_CHAN_OFFSET*subdev[iS].chanlist[isC].isParamChan ) {
 	  subdev[iS].chanlist[isC].isUsed = 1;
 	  if ( trig && subdev[iS].chanlist[iC].chan == trigger.chan ) {
-	    DEBUG_MSG( "dynclampmodule: set trigger for channel %d id %d on subdevice %d with level %d\n", subdev[iS].chanlist[iC].chan, iC, subdev[iS].subdev, (int)(100.0*trigger.alevel) );
+	    DEBUG_MSG( "set trigger for channel %d id %d on subdevice %d with level %d\n", subdev[iS].chanlist[iC].chan, iC, subdev[iS].subdev, (int)(100.0*trigger.alevel) );
 	    subdev[iS].chanlist[iC].trigger = 1;
 	    subdev[iS].chanlist[iC].alevel = trigger.alevel;
 	  }
@@ -473,7 +481,7 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
       subdev[iS].chanlist[iC].prevvoltage = 0.0;
       subdev[iS].chanlist[iC].fifo = subdev[iS].fifo;
       if ( trig && subdev[iS].chanlist[iC].chan == trigger.chan ) {
-	DEBUG_MSG( "dynclampmodule: added trigger to channel %d id %d on subdevice %d with level %d\n", subdev[iS].chanlist[iC].chan, iC, subdev[iS].subdev, (int)(100.0*trigger.alevel) );
+	DEBUG_MSG( "added trigger to channel %d id %d on subdevice %d with level %d\n", subdev[iS].chanlist[iC].chan, iC, subdev[iS].subdev, (int)(100.0*trigger.alevel) );
 	subdev[iS].chanlist[iC].trigger = 1;
 	subdev[iS].chanlist[iC].alevel = trigger.alevel;
       }
@@ -633,6 +641,9 @@ void releaseSubdevice( int iS )
   int pT;
   int iT;
   int k;
+  comedi_t *devP;
+  comedi_insn *insn;
+  int retVal;
 #endif
 
   if ( !subdev[iS].used || subdev[iS].subdev < 0 ) {
@@ -666,17 +677,28 @@ void releaseSubdevice( int iS )
 #ifdef ENABLE_TTLPULSE
   else if ( subdev[iS].type == SUBDEV_DIO ) {
     // remove ttl pulses:
-    for ( pT = 0; pT < 4; pT++ ) {
+    for ( pT = 0; pT < MAXTTLPULSETYPES; pT++ ) {
       for ( iT = 0; iT < MAXTTLPULSES && ttlDevices[pT][iT] != 0; ) {
 	if ( ttlDevices[pT][iT] == device[iD].devP &&
 	     ttlInsns[pT][iT]->subdev == subdev[iS].subdev ) {
-	  vfree( ttlInsns[pT][iT] );
+	  /* remove from list: */
+	  devP = ttlDevices[pT][iT];
+	  insn = ttlInsns[pT][iT];
 	  for ( k = iT+1; k < MAXTTLPULSES; k++ ) {
 	    ttlDevices[pT][k-1] = ttlDevices[pT][k];
 	    ttlInsns[pT][k-1] = ttlInsns[pT][k];
 	  }
 	  ttlDevices[pT][MAXTTLPULSES-1] = 0;
 	  ttlInsns[pT][MAXTTLPULSES-1] = 0;
+	  /* set low: */
+	  insn->data = &ttlLow;
+	  retVal = comedi_do_insn( devP, insn );
+	  if ( retVal < 1 ) {
+	    if ( retVal < 0 )
+	      comedi_perror( "dynclampmodule: releaseSubdevice() -> clearing ttl pulse: comedi_do_insn" );
+	    ERROR_MSG( "releaseSubdevice() -> ERROR! failed to set TTL pulse %d low\n", iT );
+	  }
+	  vfree( insn );
 	}
 	else
 	  iT++;
@@ -802,11 +824,17 @@ int setDigitalIO( struct dioIOCT *dioIOC )
   }
 #ifdef ENABLE_TTLPULSE
   else if ( dioIOC->op == DIO_ADD_TTLPULSE ) {
-    if ( pT < TTL_START_WRITE || pT > TTL_END_READ )
+    if ( pT < TTL_START_WRITE || pT >= MAXTTLPULSETYPES )
       return -EINVAL;
     for ( iT = 0; iT < MAXTTLPULSES && ttlDevices[pT][iT] != 0; iT++ );
     if ( iT >= MAXTTLPULSES )
       return -ENOMEM;
+    if ( comedi_dio_write( devP, subdevice, dioIOC->lines, dioIOC->output ) != 1 ) {
+      comedi_perror( "setDigitalIO() -> DIO_ADD_TTLPULSE" );
+      ERROR_MSG( "setDigitalIO: comedi_dio_write on device %s subdevice %d failed!\n",
+		 device[iD].name, subdevice );
+      return -EFAULT;
+    }
     ttlDevices[pT][iT] = devP;
     ttlInsns[pT][iT] = vmalloc( sizeof(comedi_insn) );
     memset( ttlInsns[pT][iT], 0, sizeof(comedi_insn) );
@@ -815,11 +843,11 @@ int setDigitalIO( struct dioIOCT *dioIOC )
     ttlInsns[pT][iT]->data = ( dioIOC->output ? &ttlHigh : &ttlLow );
     ttlInsns[pT][iT]->subdev = subdevice;
     ttlInsns[pT][iT]->chanspec = CR_PACK( dioIOC->lines, 0, 0 );
-    ERROR_MSG( "add pulse pT=%d  iT=%d  output=%d subdev=%d lines=%d\n", pT, iT, ttlInsns[pT][iT]->data[0], ttlInsns[pT][iT]->subdev, ttlInsns[pT][iT]->chanspec );
+    DEBUG_MSG( "add pulse pT=%d  iT=%d  output=%d subdev=%d lines=%d\n", pT, iT, ttlInsns[pT][iT]->data[0], ttlInsns[pT][iT]->subdev, ttlInsns[pT][iT]->chanspec );
   }
   else if ( dioIOC->op == DIO_CLEAR_TTLPULSE ) {
     found = 0;
-    for ( pT = 0; pT < 4; pT++ ) {
+    for ( pT = 0; pT < MAXTTLPULSETYPES; pT++ ) {
       for ( iT = 0; iT < MAXTTLPULSES && ttlDevices[pT][iT] != 0; ) {
 	if ( ttlDevices[pT][iT] == devP &&
 	     ttlInsns[pT][iT]->subdev == subdevice &&
@@ -934,13 +962,11 @@ void rtDynClamp( long dummy )
     subdevRunning = 0;
 
 #ifdef ENABLE_TTLPULSE
-    //    ERROR_MSG( "NEW CYCLE\n" );
     for ( iT = 0; iT < MAXTTLPULSES && ttlStartWriteDevice[iT] != 0; iT++ ) {
-      //      ERROR_MSG( "generate start write pulse iT=%d  output=%d subdev=%d line=%d\n", iT, ttlStartWriteInsn[iT]->data[0], ttlStartWriteInsn[iT]->subdev, ttlStartWriteInsn[iT]->chanspec );
       retVal = comedi_do_insn( ttlStartWriteDevice[iT] ,ttlStartWriteInsn[iT] );
       if ( retVal < 1 ) {
 	if ( retVal < 0 )
-	  comedi_perror( "rtmodule: rtDynClamp ttl pulse at start write: comedi_do_insn" );
+	  comedi_perror( "dynclampmodule: rtDynClamp ttl pulse at start write: comedi_do_insn" );
 	ERROR_MSG( "rtDynClamp: ERROR! failed to write TTL pulse %d at start write\n", iT );
       }
     }
@@ -965,6 +991,16 @@ void rtDynClamp( long dummy )
 	    dynClampTask.aoIndex = subdev[iS].delay;
 	    subdev[iS].pending = 0;
 	    DEBUG_MSG( "REALTIMELOOP PENDING AO STARTED duration=%lu delay=%lu, loopCnt=%lu\n", subdev[iS].duration, subdev[iS].delay, dynClampTask.loopCnt );
+#ifdef ENABLE_TTLPULSE
+	    for ( iT = 0; iT < MAXTTLPULSES && ttlStartAODevice[iT] != 0; iT++ ) {
+	      retVal = comedi_do_insn( ttlStartAODevice[iT] ,ttlStartAOInsn[iT] );
+	      if ( retVal < 1 ) {
+		if ( retVal < 0 )
+		  comedi_perror( "dynclampmodule: rtDynClamp ttl pulse at start ao: comedi_do_insn" );
+		ERROR_MSG( "rtDynClamp: ERROR! failed to write TTL pulse %d at start ao\n", iT );
+	      }
+	    }
+#endif
 	  }
 	}
 
@@ -976,6 +1012,16 @@ void rtDynClamp( long dummy )
 	    SDEBUG_MSG( "rtDynClamp: finished subdevice %d at loop %lu\n", iS, dynClampTask.loopCnt );
 	    rtf_reset( subdev[iS].fifo );
 	    stopSubdevice( iS, /*kill=*/0 );
+#ifdef ENABLE_TTLPULSE
+	    for ( iT = 0; iT < MAXTTLPULSES && ttlEndAODevice[iT] != 0; iT++ ) {
+	      retVal = comedi_do_insn( ttlEndAODevice[iT] ,ttlEndAOInsn[iT] );
+	      if ( retVal < 1 ) {
+		if ( retVal < 0 )
+		  comedi_perror( "dynclampmodule: rtDynClamp ttl pulse at end ao: comedi_do_insn" );
+		ERROR_MSG( "rtDynClamp: ERROR! failed to write TTL pulse %d at end ao\n", iT );
+	      }
+	    }
+#endif
 	  }
 	  else if ( dynClampTask.loopCnt >= subdev[iS].delay ) {
  	    // read output from FIFO:
@@ -1029,7 +1075,7 @@ void rtDynClamp( long dummy )
 	      ERROR_MSG( "rtDynClamp: ERROR! failed to write data to AO subdevice ID %d channel %d at loopCnt %lu\n",
 			 iS, iC, dynClampTask.loopCnt );
 	      if ( retVal < 0 ) {
-		comedi_perror( "rtmodule: rtDynClamp: comedi_data_write" );
+		comedi_perror( "dynclampmodule: rtDynClamp: comedi_data_write" );
 		subdev[iS].error = E_COMEDI;
 		subdev[iS].running = 0;
 		ERROR_MSG( "rtDynClamp: ERROR! failed to write to AO subdevice ID %d channel %d at loopCnt %lu\n",
@@ -1045,11 +1091,10 @@ void rtDynClamp( long dummy )
 
 #ifdef ENABLE_TTLPULSE
     for ( iT = 0; iT < MAXTTLPULSES && ttlEndWriteDevice[iT] != 0; iT++ ) {
-      //      ERROR_MSG( "generate end write pulse iT=%d  output=%d subdev=%d line=%d\n", iT, ttlEndWriteInsn[iT]->data[0], ttlEndWriteInsn[iT]->subdev, ttlEndWriteInsn[iT]->chanspec );
       retVal = comedi_do_insn( ttlEndWriteDevice[iT] ,ttlEndWriteInsn[iT] );
       if ( retVal < 1 ) {
 	if ( retVal < 0 )
-	  comedi_perror( "rtmodule: rtDynClamp ttl pulse at end write: comedi_do_insn" );
+	  comedi_perror( "dynclampmodule: rtDynClamp ttl pulse at end write: comedi_do_insn" );
 	ERROR_MSG( "rtDynClamp: ERROR! failed to write TTL pulse %d at end write\n", iT );
       }
     }
@@ -1064,11 +1109,10 @@ void rtDynClamp( long dummy )
 
 #ifdef ENABLE_TTLPULSE
     for ( iT = 0; iT < MAXTTLPULSES && ttlStartReadDevice[iT] != 0; iT++ ) {
-      //      ERROR_MSG( "generate start read pulse iT=%d  output=%d subdev=%d line=%d\n", iT, ttlStartReadInsn[iT]->data[0], ttlStartReadInsn[iT]->subdev, ttlStartReadInsn[iT]->chanspec );
       retVal = comedi_do_insn( ttlStartReadDevice[iT] ,ttlStartReadInsn[iT] );
       if ( retVal < 1 ) {
 	if ( retVal < 0 )
-	  comedi_perror( "rtmodule: rtDynClamp ttl pulse at start read: comedi_do_insn" );
+	  comedi_perror( "dynclampmodule: rtDynClamp ttl pulse at start read: comedi_do_insn" );
 	ERROR_MSG( "rtDynClamp: ERROR! failed to write TTL pulse %d at start read\n", iT );
       }
     }
@@ -1114,7 +1158,7 @@ void rtDynClamp( long dummy )
 	      ERROR_MSG( "rtDynClamp: ERROR! failed to read data from AI subdevice ID %d channel %d at loopCnt %lu\n",
 			 iS, iC, dynClampTask.loopCnt );
 	      if ( retVal < 0 ) {
-		comedi_perror( "rtmodule: rtDynClamp: comedi_data_read" );
+		comedi_perror( "dynclampmodule: rtDynClamp: comedi_data_read" );
 		subdev[iS].running = 0;
 		subdev[iS].error = E_COMEDI;
 		ERROR_MSG( "rtDynClamp: ERROR! failed to read from AI subdevice ID %d channel %d at loopCnt %lu\n",
@@ -1181,11 +1225,10 @@ void rtDynClamp( long dummy )
 
 #ifdef ENABLE_TTLPULSE
     for ( iT = 0; iT < MAXTTLPULSES && ttlEndReadDevice[iT] != 0; iT++ ) {
-      //      ERROR_MSG( "generate end read pulse iT=%d  output=%d subdev=%d line=%d\n", iT, ttlEndReadInsn[iT]->data[0], ttlEndReadInsn[iT]->subdev, ttlEndReadInsn[iT]->chanspec );
       retVal = comedi_do_insn( ttlEndReadDevice[iT] ,ttlEndReadInsn[iT] );
       if ( retVal < 1 ) {
 	if ( retVal < 0 )
-	  comedi_perror( "rtmodule: rtDynClamp ttl pulse at end read: comedi_do_insn" );
+	  comedi_perror( "dynclampmodule: rtDynClamp ttl pulse at end read: comedi_do_insn" );
 	ERROR_MSG( "rtDynClamp: ERROR! failed to write TTL pulse %d at end read\n", iT );
       }
     }
