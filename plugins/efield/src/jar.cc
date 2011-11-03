@@ -814,6 +814,7 @@ void JAR::saveEODFreq( const Options &header )
   TableKey key;
   key.addNumber( "time", "s", "%9.5f" );
   key.addNumber( "freq", "Hz", "%5.1f" );
+  key.addNumber( "gampl", GlobalEODUnit, "%6.4f" );
   if ( ! LocalEODUnit.empty() )
     key.addNumber( "ampl", LocalEODUnit, "%6.4f" );
   key.addNumber( "beat", "1", "%5.3f" );
@@ -823,6 +824,7 @@ void JAR::saveEODFreq( const Options &header )
   for ( int k=0; k<EODFrequency.size(); k++ ) {
     key.save( df, EODFrequency.x(k), 0 );
     key.save( df, EODFrequency.y(k) );
+    key.save( df, EODAmplitude.y(k) );
     if ( ! LocalEODUnit.empty() )
       key.save( df, EODTransAmpl.y(k) );
     key.save( df, k<EODBeatPhase.size() ? EODBeatPhase.y(k) : 0.0 );
