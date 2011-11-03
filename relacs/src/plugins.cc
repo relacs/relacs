@@ -465,10 +465,25 @@ string Plugins::first( int type )
 
 int Plugins::index( const string &plugin, int type )
 {
-  for ( unsigned int k=0; k<Plugs.size(); k++ )
-    if ( ( type <= 0 || (Plugs[k].Type & type) == type ) &&
-	 Plugs[k].Ident == plugin )
-      return k;
+  if ( plugin.find( '[' ) == string::npos ) {
+    // search without pluginset name:
+    for ( unsigned int k=0; k<Plugs.size(); k++ )
+      if ( ( type <= 0 || (Plugs[k].Type & type) == type ) ) {
+	string ps = Plugs[k].Ident;
+	unsigned int n = ps.find( '[' );
+	if ( n != string::npos )
+	  ps.resize( n );
+	if ( ps == plugin )
+	  return k;
+      }
+  }
+  else {
+    // search with pluginset name:
+    for ( unsigned int k=0; k<Plugs.size(); k++ )
+      if ( ( type <= 0 || (Plugs[k].Type & type) == type ) &&
+	   Plugs[k].Ident == plugin )
+	return k;
+  }
 
   return -InvalidPlugin;
 }

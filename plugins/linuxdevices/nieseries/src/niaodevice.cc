@@ -24,6 +24,6 @@
 
 namespace nieseries {
 
-addAnalogOutput( NIAO );
+  addAnalogOutput( NIAO, nieseries );
 
 };

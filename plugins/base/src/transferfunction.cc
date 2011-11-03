@@ -424,7 +424,7 @@ void TransferFunction::saveData( const Options &header )
 }
 
 
-addRePro( TransferFunction );
+addRePro( TransferFunction, base );
 
 }; /* namespace base */
 

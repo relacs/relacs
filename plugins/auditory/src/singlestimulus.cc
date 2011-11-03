@@ -36,7 +36,7 @@ namespace auditory {
 
 
 SingleStimulus::SingleStimulus( void )
-  : RePro( "SingleStimulus", "Auditory", "Jan Benda", "1.2", "Jan 10, 2008" )
+  : RePro( "SingleStimulus", "auditory", "Jan Benda", "1.2", "Jan 10, 2008" )
 {
   Intensity = 50.0;
   Amplitude = 1.0;
@@ -1033,7 +1033,7 @@ void SingleStimulus::customEvent( QEvent *qce )
 }
 
 
-addRePro( SingleStimulus );
+addRePro( SingleStimulus, auditory );
 
 }; /* namespace auditory */
 

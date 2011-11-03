@@ -510,7 +510,7 @@ FindThreshold::Data::Data( double savetime, const InData &voltage )
 }
 
 
-addRePro( FindThreshold );
+addRePro( FindThreshold, patchclampprojects );
 
 }; /* namespace patchclampprojects */
 

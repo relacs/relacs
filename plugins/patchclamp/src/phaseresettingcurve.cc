@@ -541,7 +541,7 @@ void PhaseResettingCurve::savePRC( const Options &header,
 }
 
 
-addRePro( PhaseResettingCurve );
+addRePro( PhaseResettingCurve, patchclamp );
 
 }; /* namespace patchclamp */
 

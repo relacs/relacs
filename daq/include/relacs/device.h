@@ -86,7 +86,7 @@ class Device
 public:
 
     /*! Predefined device types. \sa deviceType(), setDeviceType() */
-  enum {
+  enum  DeviceTypes {
     MiscellaneousType = 0,
     AnalogInputType = 1,
     AnalogOutputType = 2,
@@ -96,7 +96,7 @@ public:
     AttenuateType = 6,
     ManipulatorType = 7,
     TemperatureType = 8
-  } DeviceTypes;
+  };
 
     /*! Return code indicating that the device driver is not opened. */
   static const int NotOpen = -1;

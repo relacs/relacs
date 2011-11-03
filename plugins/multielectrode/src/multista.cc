@@ -27,7 +27,7 @@ namespace multielectrode {
 
 
 MultiSTA::MultiSTA( void )
-  : RePro( "MultiSTA", "Multi-electrode", "Jan Benda", "0.1", "Jan 21, 2009" )
+  : RePro( "MultiSTA", "multielectrode", "Jan Benda", "0.1", "Jan 21, 2009" )
 {
   // add some options:
   addSelection( "averagetrace", "Input trace to be averaged", "V-1" );
@@ -162,7 +162,7 @@ void MultiSTA::config( void )
 }
 
 
-addRePro( MultiSTA );
+addRePro( MultiSTA, multielectrode );
 
 }; /* namespace multielectrode */
 

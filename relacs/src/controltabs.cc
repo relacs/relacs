@@ -39,7 +39,7 @@ ControlTabs::ControlTabs( RELACSWidget *rw, QWidget *parent )
 ControlTabs::~ControlTabs( void )
 {
   for ( deque< Control* >::iterator cp=CN.begin(); cp != CN.end(); ++cp ) {
-    Plugins::destroy( (*cp)->name(), RELACSPlugin::ControlId );
+    Plugins::destroy( (*cp)->uniqueName(), RELACSPlugin::ControlId );
     delete *cp;
     *cp = 0;
   }
@@ -66,6 +66,16 @@ void ControlTabs::createControls( void )
 	  addTab( cn->widget(), cn->name().c_str() );
 	cn->setRELACSWidget( RW );
 	CN.push_back( cn );
+      }
+    }
+  }
+
+  // check for duplicate Control names:
+  for ( deque< Control* >::iterator cp=CN.begin(); cp != CN.end(); ++cp ) {
+    for ( deque< Control* >::iterator np=cp+1; np != CN.end(); ++np ) {
+      if ( (*cp)->name() == (*np)->name() ) {
+	(*np)->setLongUniqueName();
+	setTabText( indexOf( (*np)->widget() ), (*np)->uniqueName().c_str() );
       }
     }
   }
@@ -161,6 +171,10 @@ Control *ControlTabs::control( int index )
 
 Control *ControlTabs::control( const string &name )
 {
+  for ( deque< Control* >::iterator cp=CN.begin(); cp != CN.end(); ++cp ) {
+    if ( (*cp)->uniqueName() == name )
+      return *cp;
+  }
   for ( deque< Control* >::iterator cp=CN.begin(); cp != CN.end(); ++cp ) {
     if ( (*cp)->name() == name )
       return *cp;

@@ -34,7 +34,7 @@ namespace ephys {
 
 
 MotorControl::MotorControl( void )
-  : Control( "MotorControl", "EPhys", "Jan Benda", "1.0", "Jul 1 2004" )
+  : Control( "MotorControl", "ephys", "Jan Benda", "1.0", "Jul 1 2004" )
 {
   MM.clear();
 
@@ -577,7 +577,7 @@ void MiMaPu::stop( void )
 }
 
 
-addControl( MotorControl );
+addControl( MotorControl, ephys );
 
 }; /* namespace ephys */
 

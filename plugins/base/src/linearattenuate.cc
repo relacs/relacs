@@ -120,7 +120,7 @@ void LinearAttenuate::init( void )
 }
 
 
-addAttenuate( LinearAttenuate );
+addAttenuate( LinearAttenuate, base );
 
 
 }; /* namespace base */

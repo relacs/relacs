@@ -60,6 +60,12 @@ void computeModel( void )
   // voltage clamp:
   paramInput[1] = -paramOutput[2]*(meaninput-paramOutput[3]);
   // voltage gated channel:
+  if ( paramOutput[8] > -0.001 && paramOutput[8] < 0.001 ) {
+    if ( paramOutput[8] >= 0.0 )
+      paramOutput[8] = 0.001;
+    else
+      paramOutput[8] = -0.001;
+  }
   vgate += loopInterval*1000.0/paramOutput[6]*(-vgate+1.0/(1.0+exp(-(input[0]-paramOutput[7])/paramOutput[8])));
   paramInput[2] = -0.001*paramOutput[4]*vgate*(input[0]-paramOutput[5]);
   // total injected current:

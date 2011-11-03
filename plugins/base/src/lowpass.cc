@@ -27,7 +27,7 @@ namespace base {
 
 LowPass::LowPass( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogFilter, 1,
-	    "LowPass", "Base", "Jan Benda", "0.1", "May 3 2007" ),
+	    "LowPass", "base", "Jan Benda", "0.1", "May 3 2007" ),
     LFW( (QWidget*)this )
 {
   // parameter:
@@ -81,7 +81,7 @@ int LowPass::filter( const InData &indata, InData &outdata )
 }
 
 
-addFilter( LowPass );
+addFilter( LowPass, base );
 
 }; /* namespace base */
 

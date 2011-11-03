@@ -24,7 +24,7 @@
 
 namespace misc {
 
-addDevice( AmplMode );
+  addDevice( AmplMode, misc );
 
 };
 

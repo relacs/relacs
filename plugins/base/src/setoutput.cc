@@ -32,7 +32,7 @@ const int SetOutput::ParameterFlag = 2;
 
 
 SetOutput::SetOutput( void )
-  : RePro( "SetOutput", "Base", "Jan Benda", "1.0", "Mar 21, 2009" )
+  : RePro( "SetOutput", "base", "Jan Benda", "1.0", "Mar 21, 2009" )
 {
   Interactive = false;
 
@@ -252,7 +252,7 @@ void SetOutput::customEvent( QEvent *qce )
 }
 
 
-addRePro( SetOutput );
+addRePro( SetOutput, base );
 
 }; /* namespace base */
 

@@ -53,7 +53,7 @@ const double Search::MinFrequency = 2000.0;
 
 
 Search::Search( void )
-  : RePro( "Search", "Auditory", "Jan Benda and Christian Machens", "2.2", "Jan 10, 2008" )
+  : RePro( "Search", "auditory", "Jan Benda and Christian Machens", "2.2", "Jan 10, 2008" )
 {
   // parameter:
   Intensity = 80.0;
@@ -591,7 +591,7 @@ void Search::customEvent( QEvent *qce )
 }
 
 
-addRePro( Search );
+addRePro( Search, auditory );
 
 }; /* namespace auditory */
 

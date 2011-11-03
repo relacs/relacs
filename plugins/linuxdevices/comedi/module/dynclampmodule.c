@@ -9,9 +9,12 @@
 #include <rtai_fifos.h>
 #include <rtai_sched.h>
 #include <rtai_shm.h>
-#include <rtai_math.h>
 
 #include "moduledef.h"
+
+#ifdef ENABLE_COMPUTATION
+#include <rtai_math.h>
+#endif
 
 MODULE_LICENSE( "GPL" );
 
@@ -123,8 +126,10 @@ int reqCloseSubdevID = -1;
 
 struct triggerT trigger;
 
+#ifdef ENABLE_COMPUTATION
 int traceIndex = 0;
 int chanIndex = 0;
+#endif
 
 // RTAI TASK:
 
@@ -189,8 +194,9 @@ static struct file_operations fops = {
 ///////////////////////////////////////////////////////////////////////////////
 // *** MODEL INCLUDE ***
 ///////////////////////////////////////////////////////////////////////////////
+#ifdef ENABLE_COMPUTATION
 #include "model.c"
-
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // *** HELPER FUNCTIONS ***
@@ -232,8 +238,10 @@ void init_globals( void )
   subdevN = 0;
   reqCloseSubdevID = -1;
   reqTraceSubdevID = -1;
+#ifdef ENABLE_COMPUTATION
   traceIndex = 0;
   chanIndex = 0;
+#endif
   memset( device, 0, sizeof(device) );
   memset( subdev, 0, sizeof(subdev) );
   memset( &dynClampTask, 0, sizeof(struct dynClampTaskT ) );
@@ -1236,7 +1244,9 @@ void rtDynClamp( long dummy )
 
 
     /****************************************************************************/
+#ifdef ENABLE_COMPUTATION
     computeModel();
+#endif
 
     /******** WAIT FOR CALCULATION TASK TO COMPUTE RESULT: **********************/
     /****************************************************************************/
@@ -1301,8 +1311,10 @@ int init_rt_task( void )
   }
   dynClampTask.periodLengthNs = count2nano( periodTicks );
   dynClampTask.setFreq = 1000000000 / dynClampTask.periodLengthNs;
+#ifdef ENABLE_COMPUTATION
   loopInterval = 1.0e-9*dynClampTask.periodLengthNs;
   loopRate = 1.0e9/dynClampTask.periodLengthNs;
+#endif
   INFO_MSG( "init_rt_task: periodic task successfully started... requested freq: %d , accepted freq: ~%u (period=%uns)\n", 
 	    dynClampTask.reqFreq, dynClampTask.setFreq, dynClampTask.periodLengthNs );
 
@@ -1436,6 +1448,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
 
 
   case IOC_GET_TRACE_INFO:
+#ifdef ENABLE_COMPUTATION
     retVal = copy_from_user( &traceInfo, (void __user *)arg, sizeof(struct traceInfoIOCT) );
     if ( retVal ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid user pointer for traceInfoIOCT!\n" );
@@ -1483,9 +1496,12 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
     }
     traceIndex++;
     return 0;
-
+#else
+    return -ERANGE; // Ende der Liste signalisieren
+#endif
 
   case IOC_SET_TRACE_CHANNEL:
+#ifdef ENABLE_COMPUTATION
     retVal = copy_from_user( &traceChannel, (void __user *)arg, sizeof(struct traceChannelIOCT) );
     if ( retVal ) {
       ERROR_MSG( "rtmodule_ioctl ERROR: invalid user pointer for traceChannelIOCT!\n" );
@@ -1505,6 +1521,7 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
     chanIndex++;
     if ( chanIndex >= INPUT_N )
       chanIndex = 0;
+#endif
     return 0;
 
 
@@ -1662,7 +1679,9 @@ int init_module( void )
 {
 
   // initialize model-specific variables (this also sets the modulename):
+#ifdef ENABLE_COMPUTATION
   initModel();
+#endif
 
   // register module device file:
   // TODO: adapt to kernel 2.6 convention (see char-device chapter in Linux device drivers 3)
@@ -1687,7 +1706,9 @@ int rtmodule_open( struct inode *devFile, struct file *fModule )
   DEBUG_MSG( "open: user opened device file\n" );
 
   // initialize model-specific variables:
+#ifdef ENABLE_COMPUTATION
   initModel();
+#endif
   
   return 0;
 }

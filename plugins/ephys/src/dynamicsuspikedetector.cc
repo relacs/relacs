@@ -38,7 +38,7 @@ namespace ephys {
 
 DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogDetector, 1,
-	    "DynamicSUSpikeDetector", "EPhys", "Jan Benda", "1.9", "Jun 21, 2010" ),
+	    "DynamicSUSpikeDetector", "ephys", "Jan Benda", "1.9", "Jun 21, 2010" ),
     GoodSpikesHist( 0.0, 200.0, 0.5 ),
     BadSpikesHist( 0.0, 200.0, 0.5 ),
     AllSpikesHist( 0.0, 200.0, 0.5 )
@@ -867,7 +867,7 @@ void DynamicSUSpikeDetector::customEvent( QEvent *qce )
 }
 
 
-addDetector( DynamicSUSpikeDetector );
+addDetector( DynamicSUSpikeDetector, ephys );
 
 }; /* namespace ephys */
 

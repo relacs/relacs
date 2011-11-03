@@ -103,6 +103,20 @@ RePros::RePros( RELACSWidget *rw, QWidget *parent )
     n++;
   }
 
+  // check for duplicate RePro names:
+  for ( unsigned int k=0; k<RPs.size(); k++ ) {
+    if ( RPs[k]->repro() != 0 ) {
+      for ( unsigned int j=k+1; j<RPs.size(); j++ ) {
+	if ( RPs[j]->repro() != 0 &&
+	     RPs[k]->repro()->name() == RPs[j]->repro()->name() ) {
+	  RPs[j]->repro()->setLongUniqueName();
+	  setTabText( indexOf( RPs[j]->repro()->widget() ),
+		      RPs[j]->repro()->uniqueName().c_str() );
+	}
+      }
+    }
+  }
+
   setTabPosition( North );         // tab bar on top
   setElideMode( Qt::ElideRight );  // ellipses at the right
   //  setUseScrollButtons( false );
@@ -180,7 +194,7 @@ void RePros::message( const string &msg )
 {
   Str s = msg;
   s.eraseMarkup();
-  RW->printlog( ( CurrentRePro >= 0 ? RPs[CurrentRePro]->repro()->name() + ": " : "" ) + s );
+  RW->printlog( ( CurrentRePro >= 0 ? RPs[CurrentRePro]->repro()->uniqueName() + ": " : "" ) + s );
   QApplication::postEvent( this, new ReProsEvent( msg ) );
 }
 
@@ -329,6 +343,15 @@ int RePros::nameIndex( const string &name ) const
   id.lower();
 
   for ( unsigned int k=0; k<RPs.size(); k++ ) {
+    Str idr = RPs[k]->repro()->uniqueName();
+    idr.lower();
+    if ( idr == id )
+      return k;
+  }
+  int n = id.find( '[' );
+  if ( n >= 0 )
+    id.resize( n );
+  for ( unsigned int k=0; k<RPs.size(); k++ ) {
     Str idr = RPs[k]->repro()->name();
     idr.lower();
     if ( idr == id )
@@ -358,7 +381,7 @@ void RePros::raise( RePro *repro )
     PreviousView = CurrentView;
   CurrentView = repro;
   removeTab( indexOf( repro->widget() ) );
-  insertTab( 0, repro->widget(), repro->name().c_str() );
+  insertTab( 0, repro->widget(), repro->uniqueName().c_str() );
   setCurrentWidget( repro->widget() );
 }
 
@@ -420,7 +443,7 @@ void ReProData::addMenu( QMenu *menu, int inx, bool doxydoc )
   else
     mt += ( 'a' + inx - 10 );
   mt += " ";
-  mt += RP->name();
+  mt += RP->uniqueName();
 
   QMenu *pop = menu->addMenu( mt.c_str() );
 
@@ -553,9 +576,9 @@ void ReProData::reload( void )
     RP->setRELACSWidget( RW );
     if ( RP->widget() == 0 )
       RP->setWidget( new QWidget );
-    RPs->insertTab( index, RP->widget(), RP->name().c_str() );
+    RPs->insertTab( index, RP->widget(), RP->uniqueName().c_str() );
     emit reloadRePro( Name );
-    RW->printlog( "ReProData::reload() -> loaded repro " + RP->name() );
+    RW->printlog( "ReProData::reload() -> loaded repro " + RP->uniqueName() );
   }
   else
     RW->printlog( "! error: ReProData::reload() -> cannot recreate RePro " +

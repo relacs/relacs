@@ -33,7 +33,7 @@ namespace auditory {
 
 
 SysLatency::SysLatency( void )
-  : RePro( "SysLatency", "Auditory", "Jan Benda", "1.5", "Jan 10, 2008" )
+  : RePro( "SysLatency", "auditory", "Jan Benda", "1.5", "Jan 10, 2008" )
 {
   // options:
   addLabel( "Stimulus" );
@@ -606,7 +606,7 @@ void SysLatency::analyze( double duration, double skipwin, double analysewin,
 }
 
 
-addRePro( SysLatency );
+addRePro( SysLatency, auditory );
 
 }; /* namespace auditory */
 

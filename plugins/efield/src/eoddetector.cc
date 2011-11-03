@@ -30,7 +30,7 @@ namespace efield {
 
 EODDetector::EODDetector( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogDetector, 1, 
-	    "EODDetector", "EField",
+	    "EODDetector", "efield",
 	    "Jan Benda", "1.6", "Dec 07, 2010" )
 {
   // parameter:
@@ -302,7 +302,7 @@ int EODDetector::checkEvent( InData::const_iterator first,
 }
 
 
-addDetector( EODDetector );
+addDetector( EODDetector, efield );
 
 }; /* namespace efield */
 

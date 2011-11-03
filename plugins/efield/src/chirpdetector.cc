@@ -27,7 +27,7 @@ namespace efield {
 
 ChirpDetector::ChirpDetector( const string &ident, int mode )
   : Filter( ident, mode, SingleEventDetector, 1,
-	    "ChirpDetector", "EField", 
+	    "ChirpDetector", "efield", 
 	    "Jan Benda", "1.2", "Jun 17, 2009" )
 {
   // parameter:
@@ -262,7 +262,7 @@ int ChirpDetector::checkEvent( EventFrequencyIterator first,
 }
 
 
-addDetector( ChirpDetector );
+addDetector( ChirpDetector, efield );
 
 }; /* namespace efield */
 

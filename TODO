@@ -19,11 +19,6 @@ Locking:
 
 Macros:
 - Improve code by distributing more code to the commands
-- Less friend relationships in Macros, Macro, MacroCommand
-- Check whether all variables are really needed in Macros, Macro, MacroCommand
-- Use a type-enum in MacroCommand
-- How are plugins (control, repros) found/identified? Possibility of name clashes!
-  Use plugin-set name as well.
 - delete all MacroCommands after usage!
 - add new macro command to set all sorts of internal Options (e.g. stimulusData!)
 - add stopSession macro command

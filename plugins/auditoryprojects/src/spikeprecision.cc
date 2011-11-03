@@ -33,7 +33,7 @@ namespace auditoryprojects {
 
 
 SpikePrecision::SpikePrecision( void )
-  : RePro( "SpikePrecision", "Auditoryprojects",
+  : RePro( "SpikePrecision", "auditoryprojects",
 	   "Samuel Glauser, Jan Benda", "1.5", "Jan 10, 2008" )
 {
   // default values for the options & other variables:
@@ -996,7 +996,7 @@ void SpikePrecision::customEvent( QEvent *qce )
 }
 
 
-addRePro( SpikePrecision );
+addRePro( SpikePrecision, auditoryprojects );
 
 }; /* namespace auditoryprojects */
 

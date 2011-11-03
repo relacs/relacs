@@ -1030,7 +1030,7 @@ XXX
 }
 
 
-addRePro( SAM );
+addRePro( SAM, efish );
 
 }; /* namespace efish */
 

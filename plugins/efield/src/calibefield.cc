@@ -621,7 +621,7 @@ int CalibEField::analyze( const InData &localeodtrace,
 }
 
 
-addRePro( CalibEField );
+addRePro( CalibEField, efield );
 
 }; /* namespace efield */
 

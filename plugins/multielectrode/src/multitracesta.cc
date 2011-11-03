@@ -27,7 +27,7 @@ namespace multielectrode {
 
 
 MultiTraceSTA::MultiTraceSTA( void )
-  : RePro( "MultiTraceSTA", "Multi-electrode", "Jan Benda", "0.1", "Jan 21, 2009" )
+  : RePro( "MultiTraceSTA", "multielectrode", "Jan Benda", "0.1", "Jan 21, 2009" )
 {
   // add some options:
   addSelection( "inspikes", "Input spike train", "Spikes-1" );
@@ -164,7 +164,7 @@ void MultiTraceSTA::config( void )
 }
 
 
-addRePro( MultiTraceSTA );
+addRePro( MultiTraceSTA, multielectrode );
 
 }; /* namespace multielectrode */
 

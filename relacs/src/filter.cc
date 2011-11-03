@@ -71,7 +71,7 @@ void Filter::setIdent( const string &ident )
 
 void Filter::setName( const string &name )
 {
-  ConfigDialog::setName( name );
+  RELACSPlugin::setName( name );
   if ( Type == SingleAnalogDetector ||
        Type == MultipleAnalogDetector ||
        Type == SingleEventDetector ||

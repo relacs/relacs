@@ -853,7 +853,7 @@ void ThresholdSUSpikeDetector::customEvent( QEvent *qce )
 }
 
 
-addDetector( ThresholdSUSpikeDetector );
+addDetector( ThresholdSUSpikeDetector, ephys );
 
 }; /* namespace ephys */
 

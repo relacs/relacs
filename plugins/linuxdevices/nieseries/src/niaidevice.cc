@@ -24,6 +24,6 @@
 
 namespace nieseries {
 
-addAnalogInput( NIAI );
+  addAnalogInput( NIAI, nieseries );
 
 };

@@ -939,7 +939,7 @@ ThresholdLatencies::Data::Data( double delay, double predurations, double saveti
 }
 
 
-addRePro( ThresholdLatencies );
+addRePro( ThresholdLatencies, patchclampprojects );
 
 }; /* namespace patchclampprojects */
 

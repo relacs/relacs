@@ -325,7 +325,7 @@ void SetLeak::customEvent( QEvent *qce )
 }
 
 
-addRePro( SetLeak );
+addRePro( SetLeak, patchclampprojects );
 
 }; /* namespace patchclampprojects */
 

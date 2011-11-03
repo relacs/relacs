@@ -27,9 +27,9 @@
 
 namespace comedi {
 
-addAnalogInput( DynClampAnalogInput );
-addAnalogOutput( DynClampAnalogOutput );
-addDigitalIO( DynClampDigitalIO );
-addTrigger( DynClampTrigger );
+  addAnalogInput( DynClampAnalogInput, comedi );
+  addAnalogOutput( DynClampAnalogOutput, comedi );
+  addDigitalIO( DynClampDigitalIO, comedi );
+  addTrigger( DynClampTrigger, comedi );
 
 };

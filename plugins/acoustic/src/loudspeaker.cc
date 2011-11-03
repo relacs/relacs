@@ -314,7 +314,7 @@ void LoudSpeaker::setDeviceIdent( const string &ident )
 }
 
 
-addAttenuate( LoudSpeaker );
+addAttenuate( LoudSpeaker, acoustic );
 
 
 }; /* namespace acoustic */

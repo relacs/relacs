@@ -24,7 +24,7 @@
 
 namespace misc {
 
-addDevice( TempDTM5080 );
+  addDevice( TempDTM5080, misc );
 
 };
 

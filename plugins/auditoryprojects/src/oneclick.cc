@@ -32,7 +32,7 @@ namespace auditoryprojects {
 
 
 OneClick::OneClick( void )
-  : RePro( "OneClick", "Auditoryprojects", "Alexander Wolf", "0.2", "Jan 10, 2008" )
+  : RePro( "OneClick", "auditoryprojects", "Alexander Wolf", "0.2", "Jan 10, 2008" )
 {
   // parameter:
   MinIntensity = 30.0;
@@ -263,7 +263,7 @@ void OneClick::analyze( void )
 }
 
 
-addRePro( OneClick );
+addRePro( OneClick, auditoryprojects );
 
 }; /* namespace auditoryprojects */
 

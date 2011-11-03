@@ -249,7 +249,7 @@ void AmplifierControl::customEvent( QEvent *qce )
 }
 
 
-addControl( AmplifierControl );
+addControl( AmplifierControl, ephys );
 
 }; /* namespace ephys */
 

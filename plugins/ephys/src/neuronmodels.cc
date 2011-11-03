@@ -30,7 +30,7 @@ namespace ephys {
 
 
 NeuronModels::NeuronModels( void )
-  : Model( "NeuronModels", "EPhys", "Jan Benda", "1.0", "Jan 10, 2006" )
+  : Model( "NeuronModels", "ephys", "Jan Benda", "1.0", "Jan 10, 2006" )
 {
   addOptions();
   addTypeStyle( OptWidget::Bold, Parameter::Label );
@@ -200,6 +200,6 @@ void NeuronModels::dialogOptions( OptDialog *od )
 }
 
 
-addModel( NeuronModels );
+addModel( NeuronModels, ephys );
 
 }; /* namespace ephys */

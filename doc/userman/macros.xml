@@ -97,13 +97,16 @@ pause=260ms
                         <title xml:id='macrofileactionreprotitle'>RePro</title>
 			<para>RePros are specified by the optional keyword <token>repro</token> 
 			and their name (identifier).
+                        In case, RePros from different plugin sets have the same name,
+                        a RePro can be uniquely identified by appending the name of the plugin set
+                        in '[]' to the RePro's name.
 			Optionally, the RePro name is followed by a colon and a list
 			of parameter that are separated by semicolons or new lines.
 			The values of the parameter are passed to the RePro's options.</para>
 
 			<para>Example:
 			<programlisting>
-repro ResearchProgram1: parameter11=10ms; parameter12=20; 
+repro ResearchProgram1[pluginsA]: parameter11=10ms; parameter12=20; 
 ResearchProgram2
 parameter21=10ms
 parameter22=20; 

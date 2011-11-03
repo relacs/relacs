@@ -439,7 +439,7 @@ void SetDC::customEvent( QEvent *qce )
 }
 
 
-addRePro( SetDC );
+addRePro( SetDC, patchclamp );
 
 }; /* namespace patchclamp */
 

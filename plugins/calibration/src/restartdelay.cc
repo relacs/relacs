@@ -29,7 +29,7 @@ namespace calibration {
 
 
 RestartDelay::RestartDelay( void )
-  : RePro( "RestartDelay", "Calibration", "Jan Benda", "1.3", "Feb 8, 2008" )
+  : RePro( "RestartDelay", "calibration", "Jan Benda", "1.3", "Feb 8, 2008" )
 {
   // add some options:
   addNumber( "duration", "Duration of analysis window", 0.1, 0.01, 1000.0, 0.02, "sec", "ms" );
@@ -206,7 +206,7 @@ int RestartDelay::analyze( const InData &data, double duration,
 }
 
 
-addRePro( RestartDelay );
+addRePro( RestartDelay, calibration );
 
 }; /* namespace calibration */
 

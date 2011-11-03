@@ -754,7 +754,7 @@ void FICurve::Data::analyze( int count, const InData &intrace,
 }
 
 
-addRePro( FICurve );
+addRePro( FICurve, patchclamp );
 
 }; /* namespace patchclamp */
 

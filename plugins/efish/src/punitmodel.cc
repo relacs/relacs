@@ -165,6 +165,6 @@ void PUnitModel::operator()( double t, double *x, double *dxdt, int n )
 }
 
 
-addModel( PUnitModel );
+addModel( PUnitModel, efish );
 
 }; /* namespace efish */

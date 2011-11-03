@@ -1591,7 +1591,7 @@ void Chirps::analyze( void )
 }
 
 
-addRePro( Chirps );
+addRePro( Chirps, efish );
 
 }; /* namespace efish */
 

@@ -50,6 +50,7 @@ RELACSPlugin::RELACSPlugin( const string &configident, int configgroup,
 		  name, author, version, date )
 {
   setPluginSet( pluginset );
+  UniqueName = name;
   Widget = 0;
   RW = 0;
   GlobalKeyEvents = false;
@@ -97,6 +98,13 @@ void RELACSPlugin::setLayout( QLayout *layout )
 }
 
 
+void RELACSPlugin::setName( const string &name )
+{
+  ConfigDialog::setName( name );
+  updateUniqueName();
+}
+
+
 string RELACSPlugin::pluginSet( void ) const
 {
   return PluginSet;
@@ -106,6 +114,34 @@ string RELACSPlugin::pluginSet( void ) const
 void RELACSPlugin::setPluginSet( const string &pluginset )
 {
   PluginSet = pluginset;
+}
+
+
+string RELACSPlugin::uniqueName( void ) const
+{
+  return UniqueName;
+}
+
+
+void RELACSPlugin::setShortUniqueName( void )
+{
+  UniqueName = name();
+}
+
+
+void RELACSPlugin::setLongUniqueName( void )
+{
+  // this must be the same construct as in the Plugins::addPlugin macro!
+  UniqueName = name() + "[" + pluginSet() + "]";
+}
+
+
+void RELACSPlugin::updateUniqueName( void )
+{
+  if ( UniqueName.find( '[' ) == string::npos )
+    setShortUniqueName();
+  else
+    setLongUniqueName();
 }
 
 
@@ -137,9 +173,9 @@ void RELACSPlugin::printlog( const string &s ) const
 {
   if ( RW == 0 )
     cerr << QTime::currentTime().toString().toStdString() << " "
-	 << name() << ": " << s << endl;
+	 << uniqueName() << ": " << s << endl;
   else
-    RW->printlog( name() + ": " + s );
+    RW->printlog( uniqueName() + ": " + s );
 }
 
 
@@ -178,13 +214,13 @@ void RELACSPlugin::customEvent( QEvent *qce )
   switch ( qce->type() - QEvent::User ) {
   case 3: {
     string ss = "RELACS: ";
-    ss += name();
+    ss += uniqueName();
     MessageBox::warning( ss, WarningStr, WarningTimeout, RW );
     break;
   }
   case 4: {
     string ss = "RELACS: ";
-    ss += name();
+    ss += uniqueName();
     MessageBox::information( ss, InfoStr, InfoTimeout, RW );
     break;
   }

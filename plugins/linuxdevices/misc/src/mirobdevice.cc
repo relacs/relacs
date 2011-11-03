@@ -24,7 +24,7 @@
 
 namespace misc {
 
-addDevice( Mirob );
+  addDevice( Mirob, misc );
 
 };
 

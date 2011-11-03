@@ -834,7 +834,7 @@ void BaselineActivity::analyze( int autodetect,
 }
 
 
-addRePro( BaselineActivity );
+addRePro( BaselineActivity, efish );
 
 }; /* namespace efish */
 

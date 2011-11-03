@@ -24,6 +24,6 @@
 
 namespace attcs3310 {
 
-addAttenuator( CS3310SerialNIDIO );
+  addAttenuator( CS3310SerialNIDIO, attcs3310 );
 
 };

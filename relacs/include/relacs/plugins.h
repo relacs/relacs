@@ -35,7 +35,6 @@ namespace relacs {
 \class Plugins
 \brief Dynamically load plugins (libraries) into the running program.
 \author Jan Benda
-\version 1.1
 
 Plugins has a file list with all library files that are opened
 and a plugins list containing the plugins
@@ -59,7 +58,7 @@ the list can alos be empty().
 
 Each plugin has an identifier string ident(), an index(),
 a type(), and is contained by the library file with file id fileID().
-The type() of a plugin is uesd to group plugins of different type together,
+The type() of a plugin is used to group plugins of different type together,
 i.e. classes with the same base class.
 The identifier string of the first plugin in the list with a given type
 is returned by \a first().
@@ -74,8 +73,8 @@ Errors concerning the plugin classes are retuned by classErrors().
 In order to make a class a plugin that is managed by Plugins
 addPlugin() must be "called", i.e. it must be added to the end
 of the source file. A class can be added to or removed from
-the plugins explicitely by calling add() and erase(const string&,int),
-respectively.
+the plugins explicitely by calling add() and 
+erase(const string&,const string&,int), respectively.
 */
 
 
@@ -103,7 +102,9 @@ public:
   };
 
     /*! Constructor. Does nothing. 
-        \note You should never construct a Plugins class. */
+        \note You should never construct a Plugins class.
+        Plugins construct themselfes when their library file 
+	is opened. */
   Plugins( void );
     /*! Destructor. Does nothing. */
   ~Plugins( void );
@@ -411,29 +412,31 @@ private:
   /*! \relates Plugins
       Makes a class a plugin that is managed by Plugins.
       \param[in] pluginClass the class name
+      \param[in] pluginSet the name of the plugin set
       \param[out] pluginType the type of the plugin */
-#define addPlugin( pluginClass, pluginType ) \
+#define addPlugin( pluginClass, pluginSet, pluginType )	\
 \
 void* create ## pluginClass( void ) \
 { \
   return new pluginClass(); \
 } \
 \
-class reg ## pluginClass : public Plugins \
+class Reg ## pluginClass : public Plugins \
 { \
 public: \
-  reg ## pluginClass() \
+  Reg ## pluginClass() \
   { \
-    add( # pluginClass, pluginType, create ## pluginClass, VERSION ); \
+    add( string( # pluginClass ) + "[" + # pluginSet  + "]",	\
+	 pluginType, create ## pluginClass, VERSION );	   \
   } \
 \
-  ~reg ## pluginClass() \
+  ~Reg ## pluginClass() \
   { \
-    erase( # pluginClass, pluginType ); \
+    erase( string( # pluginClass ) + "[" + # pluginSet  + "]", pluginType ); \
   } \
 }; \
 \
-reg ## pluginClass init ## pluginClass;
+Reg ## pluginClass init ## pluginClass;
 
 
 }; /* namespace relacs */

@@ -112,7 +112,6 @@ int EchoTest::main( void )
 }
 
 
-
 void EchoTest::plotMeanResponse(SampleDataF &mean) {
 
   P.lock();
@@ -123,8 +122,7 @@ void EchoTest::plotMeanResponse(SampleDataF &mean) {
 }
 
 
-
-addRePro( EchoTest );
+addRePro( EchoTest, acoustic );
 
 }; /* namespace acoustic */
 

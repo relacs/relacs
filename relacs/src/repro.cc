@@ -85,8 +85,8 @@ RePro::~RePro( void )
 
 void RePro::setName( const string &name )
 {
-  ConfigDialog::setName( name );
-  setConfigIdent( "RePro: " + name ); 
+  RELACSPlugin::setName( name );
+  setConfigIdent( "RePro: " + name );
 }
 
 

@@ -31,7 +31,7 @@ namespace acoustic {
 
 
 CalibMicrophone::CalibMicrophone( void )
-  : RePro( "CalibMicrophone", "Acoustic", "Jan Benda", "1.0", "Aug 11 2008" ),
+  : RePro( "CalibMicrophone", "acoustic", "Jan Benda", "1.0", "Aug 11 2008" ),
     Traces()
 {
   // add some parameter as options:
@@ -163,7 +163,7 @@ void CalibMicrophone::analyze( const InData &intrace,
 }
 
 
-addRePro( CalibMicrophone );
+addRePro( CalibMicrophone, acoustic );
 
 }; /* namespace acoustic */
 

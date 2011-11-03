@@ -208,8 +208,19 @@ public:
         \sa widget(), setWidget() */
   void setLayout( QLayout *layout );
 
+    /*! Set the name of the RELACSPlugin to \a name.
+        Also calls updateUniqueName(). */
+  virtual void setName( const string &name );
     /*! The name of the plugin set the class belongs to. */
   string pluginSet( void ) const;
+    /*! A unique name of the class (either "name()" or "name()[pluginSet()]" ). */
+  string uniqueName( void ) const;
+    /*! Set the unique name of the class to its name() (default). */
+  void setShortUniqueName( void );
+    /*! Set the unique name of the class to "name()[pluginSet()]". */
+  void setLongUniqueName( void );
+    /*! Updat the unique name of the class to a new name(). */
+  void updateUniqueName( void );
 
     /*! \return the plugin's options with the values at the time where
         the RELACSPlugin was started (a RePro whenever it was executed,
@@ -834,6 +845,7 @@ protected slots:
 private:
 
   string PluginSet;
+  string UniqueName;
 
   Options Settings;
 
@@ -854,52 +866,52 @@ private:
 
   /*! A macro to make the class \a deviceClass
       derived from the Device-class available as a plugin. */
-#define addDevice( deviceClass ) \
-addPlugin( deviceClass, RELACSPlugin::DeviceId )
+#define addDevice( deviceClass, pluginSet )			\
+addPlugin( deviceClass, pluginSet, RELACSPlugin::DeviceId )
   /*! A macro to make the class \a aiClass
       derived from the AnalogInput-class available as a plugin. */
-#define addAnalogInput( aiClass ) \
-addPlugin( aiClass, RELACSPlugin::AnalogInputId )
+#define addAnalogInput( aiClass, pluginSet ) \
+addPlugin( aiClass, pluginSet, RELACSPlugin::AnalogInputId )
   /*! A macro to make the class \a aoClass
       derived from the AnalogOutput-class available as a plugin. */
-#define addAnalogOutput( aoClass ) \
-addPlugin( aoClass, RELACSPlugin::AnalogOutputId )
+#define addAnalogOutput( aoClass, pluginSet ) \
+addPlugin( aoClass, pluginSet, RELACSPlugin::AnalogOutputId )
   /*! A macro to make the class \a dioClass
       derived from the DigitalIO-class available as a plugin. */
-#define addDigitalIO( dioClass ) \
-addPlugin( dioClass, RELACSPlugin::DigitalIOId )
+#define addDigitalIO( dioClass, pluginSet ) \
+addPlugin( dioClass, pluginSet, RELACSPlugin::DigitalIOId )
   /*! A macro to make the class \a triggerClass
       derived from the Trigger-class available as a plugin. */
-#define addTrigger( triggerClass ) \
-addPlugin( triggerClass, RELACSPlugin::TriggerId )
+#define addTrigger( triggerClass, pluginSet ) \
+addPlugin( triggerClass, pluginSet, RELACSPlugin::TriggerId )
   /*! A macro to make the class \a attenuatorClass
       derived from the Attenuator-class available as a plugin. */
-#define addAttenuator( attenuatorClass ) \
-addPlugin( attenuatorClass, RELACSPlugin::AttenuatorId )
+#define addAttenuator( attenuatorClass, pluginSet ) \
+addPlugin( attenuatorClass, pluginSet, RELACSPlugin::AttenuatorId )
   /*! A macro to make the class \a attenuateClass
       derived from the Attenuate-class available as a plugin. */
-#define addAttenuate( attenuateClass ) \
-addPlugin( attenuateClass, RELACSPlugin::AttenuateId )
+#define addAttenuate( attenuateClass, pluginSet ) \
+addPlugin( attenuateClass, pluginSet, RELACSPlugin::AttenuateId )
   /*! A macro to make the class \a modelClass
       derived from the Model-class available as a plugin. */
-#define addModel( modelClass ) \
-addPlugin( modelClass, RELACSPlugin::ModelId )
+#define addModel( modelClass, pluginSet ) \
+addPlugin( modelClass, pluginSet, RELACSPlugin::ModelId )
   /*! A macro to make the class \a detectorClass
       derived from the Filter-class available as a plugin. */
-#define addDetector( detectorClass ) \
-addPlugin( detectorClass, RELACSPlugin::FilterId )
+#define addDetector( detectorClass, pluginSet ) \
+addPlugin( detectorClass, pluginSet, RELACSPlugin::FilterId )
   /*! A macro to make the class \a filterClass
       derived from the Filter-class available as a plugin. */
-#define addFilter( filterClass ) \
-addPlugin( filterClass, RELACSPlugin::FilterId )
+#define addFilter( filterClass, pluginSet ) \
+addPlugin( filterClass, pluginSet, RELACSPlugin::FilterId )
   /*! A macro to make the class \a controlClass
       derived from the Control-class available as a plugin. */
-#define addControl( controlClass ) \
-addPlugin( controlClass, RELACSPlugin::ControlId )
+#define addControl( controlClass, pluginSet ) \
+addPlugin( controlClass, pluginSet, RELACSPlugin::ControlId )
   /*! A macro to make the class \a reproClass
       derived from the RePro-class available as a plugin. */
-#define addRePro( reproClass ) \
-addPlugin( reproClass, RELACSPlugin::ReProId )
+#define addRePro( reproClass, pluginSet ) \
+addPlugin( reproClass, pluginSet, RELACSPlugin::ReProId )
 
 
 }; /* namespace relacs */

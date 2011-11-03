@@ -308,6 +308,14 @@ string FilterDetectors::createFilters( void )
     }
   }
 
+  // check for duplicate Filter names:
+  for ( FilterList::iterator d = FL.begin(); d != FL.end(); ++d ) {
+    for ( FilterList::iterator f = d+1; f != FL.end(); ++f ) {
+      if ( d->FilterDetector->name() == f->FilterDetector->name() )
+	f->FilterDetector->setLongUniqueName();
+    }
+  }
+
   return warning;
 }
 

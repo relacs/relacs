@@ -34,7 +34,7 @@ namespace auditory {
 
 
 FICurve::FICurve( void )
-  : RePro( "FICurve", "Auditory", "Jan Benda", "1.4", "Oct 1, 2008" )
+  : RePro( "FICurve", "auditory", "Jan Benda", "1.4", "Oct 1, 2008" )
 {
   // parameter:
   MinIntensity = 30.0;
@@ -1250,7 +1250,7 @@ void FICurve::customEvent( QEvent *qce )
 }
 
 
-addRePro( FICurve );
+addRePro( FICurve, auditory );
 
 }; /* namespace auditory */
 

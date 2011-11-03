@@ -178,7 +178,7 @@ void Session::notifyStimulusData( void )
 }
 
 
-addControl( Session );
+addControl( Session, patchclamp );
 
 }; /* namespace patchclamp */
 

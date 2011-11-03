@@ -30,7 +30,7 @@ namespace auditory {
 
 
 ReceptorModel::ReceptorModel( void )
-  : NeuronModels( "ReceptorModel", "Auditory", "Alexander Wolf, Jan Benda",
+  : NeuronModels( "ReceptorModel", "auditory", "Alexander Wolf, Jan Benda",
 		  "1.1", "Jan 15, 2006" )
 {
   // tympanum:
@@ -342,6 +342,6 @@ void ReceptorModel::dialogOptions( OptDialog *od )
 }
 
 
-addModel( ReceptorModel );
+addModel( ReceptorModel, auditory );
 
 }; /* namespace auditory */

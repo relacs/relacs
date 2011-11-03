@@ -501,7 +501,7 @@ void AdaptedFICurves::plot( const EventList &spikes, const SampleDataD &rate,
 }
 
 
-addRePro( AdaptedFICurves );
+addRePro( AdaptedFICurves, auditory );
 
 }; /* namespace auditory */
 

@@ -24,6 +24,6 @@
 
 namespace nieseries {
 
-addDevice( NIDIO );
+  addDevice( NIDIO, nieseries );
 
 };

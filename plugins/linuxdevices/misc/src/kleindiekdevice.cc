@@ -24,7 +24,7 @@
 
 namespace misc {
 
-addDevice( Kleindiek );
+  addDevice( Kleindiek, misc );
 
 };
 

@@ -28,10 +28,10 @@
 
 namespace comedi {
 
-addAnalogInput( ComediAnalogInput );
-addAnalogOutput( ComediAnalogOutput );
-addDigitalIO( ComediDigitalIO );
-addDevice( ComediRouting );
-addDevice( ComediNIPFI );
+  addAnalogInput( ComediAnalogInput, comedi );
+  addAnalogOutput( ComediAnalogOutput, comedi );
+  addDigitalIO( ComediDigitalIO, comedi );
+  addDevice( ComediRouting, comedi );
+  addDevice( ComediNIPFI, comedi );
 
 };

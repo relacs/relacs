@@ -352,7 +352,7 @@ int FIPhaseLocking::main( void )
 }
 
 
-addRePro( FIPhaseLocking );
+addRePro( FIPhaseLocking, auditoryprojects );
 
 }; /* namespace auditoryprojects */
 

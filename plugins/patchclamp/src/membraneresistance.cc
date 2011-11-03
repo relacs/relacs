@@ -536,7 +536,7 @@ void MembraneResistance::saveExpFit( const Options &header )
 }
 
 
-addRePro( MembraneResistance );
+addRePro( MembraneResistance, patchclamp );
 
 }; /* namespace patchclamp */
 

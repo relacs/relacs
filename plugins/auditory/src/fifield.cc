@@ -643,7 +643,7 @@ RePro::DoneState FIField::next( vector< FIData > &results, bool msg )
 }
 
 
-addRePro( FIField );
+addRePro( FIField, auditory );
 
 }; /* namespace auditory */
 

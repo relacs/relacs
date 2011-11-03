@@ -578,7 +578,7 @@ void VICurve::Data::analyze( int count, const InData &intrace,
 }
 
 
-addRePro( VICurve );
+addRePro( VICurve, patchclamp );
 
 }; /* namespace patchclamp */
 

@@ -30,7 +30,7 @@ namespace base {
 
 
 SpectrumAnalyzer::SpectrumAnalyzer( void )
-  : Control( "SpectrumAnalyzer", "Base", "Jan Benda", "1.1", "Jul 24, 2009" )
+  : Control( "SpectrumAnalyzer", "base", "Jan Benda", "1.1", "Jul 24, 2009" )
 {
   // parameter:
   Trace = 0;
@@ -212,7 +212,7 @@ void SpectrumAnalyzer::main( void )
 }
 
 
-addControl( SpectrumAnalyzer );
+addControl( SpectrumAnalyzer, base );
 
 }; /* namespace base */
 

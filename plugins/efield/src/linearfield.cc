@@ -30,7 +30,7 @@ namespace efield {
 
 
 LinearField::LinearField( void )
-  : RePro( "LinearField", "EField", "Jan Benda", "1.0", "Apr 23, 2009" )
+  : RePro( "LinearField", "efield", "Jan Benda", "1.0", "Apr 23, 2009" )
 {
   // add some options:
   addNumber( "duration", "Duration of measurement", 1.0, 0.01, 1000000.0, 1.0, "s" );
@@ -268,7 +268,7 @@ void LinearField::customEvent( QEvent *qce )
 }
 
 
-addRePro( LinearField );
+addRePro( LinearField, efield );
 
 }; /* namespace efield */
 

@@ -477,7 +477,7 @@ void Session::customEvent( QEvent *qce )
 }
 
 
-addControl( Session );
+addControl( Session, efish );
 
 }; /* namespace efish */
 

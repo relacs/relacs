@@ -201,7 +201,7 @@ void Wait::customEvent( QEvent *qce )
 }
 
 
-addRePro( Wait );
+addRePro( Wait, base );
 
 }; /* namespace base */
 

@@ -34,7 +34,7 @@ namespace auditoryprojects {
 
 
 IsoResponse::IsoResponse( void )
-  : RePro( "IsoResponse", "Auditoryprojects",
+  : RePro( "IsoResponse", "auditoryprojects",
 	   "Alexander Wolf", "1.0", "Jan 10, 2008" )
 {
 
@@ -1052,7 +1052,7 @@ void IsoResponse::findScaling(  )
 }
 
 
-addRePro( IsoResponse );
+addRePro( IsoResponse, auditoryprojects );
 
 }; /* namespace auditoryprojects */
 

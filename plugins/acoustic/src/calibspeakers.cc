@@ -31,7 +31,7 @@ namespace acoustic {
 
 
 CalibSpeakers::CalibSpeakers( void )
-  : RePro( "CalibSpeakers", "Acoustic", "Jan Benda", "1.1", "Aug 12, 2008" ),
+  : RePro( "CalibSpeakers", "acoustic", "Jan Benda", "1.1", "Aug 12, 2008" ),
     Traces()
 {
   // add some parameter as options:
@@ -475,7 +475,7 @@ void CalibSpeakers::analyze( int intrace, double duration, double skip,
 }
 
 
-addRePro( CalibSpeakers );
+addRePro( CalibSpeakers, acoustic );
 
 }; /* namespace acoustic */
 

@@ -29,7 +29,7 @@ namespace auditory {
 
 
 Session::Session( void )
-  : Control( "Session", "Auditory", "Jan Benda", "1.5", "Feb 2, 2010" )
+  : Control( "Session", "auditory", "Jan Benda", "1.5", "Feb 2, 2010" )
 {
   QHBoxLayout *hb = new QHBoxLayout;
   hb->setSpacing( 0 );
@@ -655,7 +655,7 @@ void Session::plot( void )
 }
 
 
-addControl( Session );
+addControl( Session, auditory );
 
 }; /* namespace auditory */
 

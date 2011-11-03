@@ -364,7 +364,7 @@ void VoltageReconstruction::saveData( const Options &header,
 }
 
 
-addRePro( VoltageReconstruction );
+addRePro( VoltageReconstruction, patchclampprojects );
 
 }; /* namespace patchclampprojects */
 

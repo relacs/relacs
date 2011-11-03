@@ -18,7 +18,13 @@
 
 // *** FEATURES ***
 
+  /*! Needed to compute a model and to enable math support. */
+// #define ENABLE_COMPUTATION
+
+  /*! Generates internal trigger events on which analog output signals can be started. */
 // #define ENABLE_TRIGGER
+
+  /*! Sets digitial outputs high or low at various time points of the dynamic clamp loop. */
 #define ENABLE_TTLPULSE
 
 

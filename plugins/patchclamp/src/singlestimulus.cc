@@ -1086,7 +1086,7 @@ void SingleStimulus::customEvent( QEvent *qce )
 }
 
 
-addRePro( SingleStimulus );
+addRePro( SingleStimulus, patchclamp );
 
 }; /* namespace patchclamp */
 

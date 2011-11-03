@@ -308,7 +308,7 @@ void FindRate::saveData( const MapD &rates )
 }
 
 
-addRePro( FindRate );
+addRePro( FindRate, patchclamp );
 
 }; /* namespace patchclamp */
 

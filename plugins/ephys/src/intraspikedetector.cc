@@ -37,7 +37,7 @@ namespace ephys {
 
 IntraSpikeDetector::IntraSpikeDetector( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogDetector, 1,
-	    "IntraSpikeDetector", "EPhys", "Jan Benda", "1.0", "Mar 16, 2010" ),
+	    "IntraSpikeDetector", "ephys", "Jan Benda", "1.0", "Mar 16, 2010" ),
     GoodSpikesHist( 0.0, 200.0, 0.5 ),
     BadSpikesHist( 0.0, 200.0, 0.5 ),
     AllSpikesHist( 0.0, 200.0, 0.5 )
@@ -444,7 +444,7 @@ int IntraSpikeDetector::checkEvent( InData::const_iterator first,
 }
 
 
-addDetector( IntraSpikeDetector );
+addDetector( IntraSpikeDetector, ephys );
 
 }; /* namespace ephys */
 

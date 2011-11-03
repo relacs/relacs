@@ -916,7 +916,7 @@ void FeedForwardNetwork::stimulate(SampleDataD &ge, SampleDataD &gi, SampleDataD
   }
   
   
- addRePro( FeedForwardNetwork );
+ addRePro( FeedForwardNetwork, patchclampprojects );
  
 }; /* namespace patchclampprojects */
 

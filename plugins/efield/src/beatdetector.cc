@@ -27,7 +27,7 @@ namespace efield {
 
 BeatDetector::BeatDetector( const string &ident, int mode )
   : Filter( ident, mode, MultipleEventDetector, 2,
-	    "BeatDetector", "EField", 
+	    "BeatDetector", "efield", 
 	    "Jan Benda", "1.2", "Jun 17, 2009" )
 {
   // parameter:
@@ -203,7 +203,7 @@ int BeatDetector::checkTrough( EventSizeIterator first,
 }
 
 
-addDetector( BeatDetector );
+addDetector( BeatDetector, efield );
 
 }; /* namespace efield */
 

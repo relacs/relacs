@@ -1519,7 +1519,7 @@ void RELACSWidget::stopSession( bool saved )
 
   SessionStopWait.wakeAll();
 
-  if ( MC->stopSessionIndex() >= 0 && saved )
+  if ( saved )
     MC->stopSession();
 
   SF->setPath( SF->defaultPath() );
@@ -1584,8 +1584,7 @@ void RELACSWidget::stopActivity( void )
   // finish session and repro:
   SN->stopTheSession();
   // shutdown macros:
-  if ( MC->shutDownIndex() >= 0 )
-    MC->shutDown();
+  MC->shutDown();
 
   stopThreads();
 

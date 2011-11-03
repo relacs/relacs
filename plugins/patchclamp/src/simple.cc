@@ -200,7 +200,7 @@ int Simple::main( void )
 }
 
 
-addRePro( Simple );
+addRePro( Simple, patchclamp );
 
 }; /* namespace patchclamp */
 

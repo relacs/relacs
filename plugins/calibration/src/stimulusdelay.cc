@@ -28,7 +28,7 @@ namespace calibration {
 
 
 StimulusDelay::StimulusDelay( void )
-  : RePro( "StimulusDelay", "Calibration", "Jan Benda", "1.2", "Feb 8, 2008" )
+  : RePro( "StimulusDelay", "calibration", "Jan Benda", "1.2", "Feb 8, 2008" )
 {
   // add some options:
   addSelection( "intrace", "Input trace", "V-1" );
@@ -149,7 +149,7 @@ int StimulusDelay::analyze( const InData &data, double duration,
 }
 
 
-addRePro( StimulusDelay )
+addRePro( StimulusDelay, calibration )
 
 }; /* namespace calibration */
 

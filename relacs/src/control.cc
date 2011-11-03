@@ -45,7 +45,7 @@ Control::~Control( void )
 
 void Control::setName( const string &name )
 {
-  ConfigDialog::setName( name );
+  RELACSPlugin::setName( name );
   setConfigIdent( "Control: " + name );
 }
 
@@ -62,14 +62,14 @@ void Control::initDevices( void )
 
 void Control::addActions( QMenu *menu, bool doxydoc )
 {
-  menu->addAction( string( name() + " Dialog..." ).c_str(),
+  menu->addAction( string( uniqueName() + " Dialog..." ).c_str(),
 		   this, SLOT( dialog() ) );
-  menu->addAction( string( name() + " Help..." ).c_str(),
+  menu->addAction( string( uniqueName() + " Help..." ).c_str(),
 		   this, SLOT( help() ) );
-  menu->addAction( string( name() + " Screenshot" ).c_str(),
+  menu->addAction( string( uniqueName() + " Screenshot" ).c_str(),
 		   this, SLOT( saveWidget() ) );
   if ( doxydoc )
-    menu->addAction( string( name() + " Doxygen" ).c_str(),
+    menu->addAction( string( uniqueName() + " Doxygen" ).c_str(),
 		     this, SLOT( saveDoxygenOptions() ) );
 }
 

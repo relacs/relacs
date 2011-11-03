@@ -894,7 +894,7 @@ void FICurve::selectRange( void )
 }
 
 
-addRePro( FICurve );
+addRePro( FICurve, efish );
 
 }; /* namespace efish */
 

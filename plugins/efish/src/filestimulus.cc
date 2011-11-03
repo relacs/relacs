@@ -763,7 +763,7 @@ void FileStimulus::analyze( void )
 }
 
 
-addRePro( FileStimulus );
+addRePro( FileStimulus, efish );
 
 }; /* namespace efish */
 

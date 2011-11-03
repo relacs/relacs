@@ -27,7 +27,7 @@ namespace base {
 
 HighPass::HighPass( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogFilter, 1,
-	    "HighPass", "Base", "Jan Benda", "0.1", "Jan 24 2008" )
+	    "HighPass", "base", "Jan Benda", "0.1", "Jan 24 2008" )
 {
   // parameter:
   Tau = 0.001;
@@ -81,7 +81,7 @@ int HighPass::filter( const InData &indata, InData &outdata )
 }
 
 
-addFilter( HighPass );
+addFilter( HighPass, base );
 
 }; /* namespace base */
 

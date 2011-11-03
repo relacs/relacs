@@ -90,7 +90,7 @@ void Robot::keyPressEvent( QKeyEvent *e )
 }
 
 
-addControl( Robot );
+addControl( Robot, base );
 
 }; /* namespace base */
 

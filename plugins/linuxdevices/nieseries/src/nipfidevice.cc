@@ -24,6 +24,6 @@
 
 namespace nieseries {
 
-addDevice( NIPFI );
+  addDevice( NIPFI, nieseries );
 
 };

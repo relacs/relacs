@@ -114,7 +114,7 @@ void DecibelAttenuate::init( void )
 }
 
 
-addAttenuate( DecibelAttenuate );
+addAttenuate( DecibelAttenuate, base );
 
 
 }; /* namespace base */

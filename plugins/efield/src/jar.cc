@@ -1459,7 +1459,7 @@ JAR::ChirpData::ChirpData( double t, double s, double w, double er, double ea,
 }
 
 
-addRePro( JAR );
+addRePro( JAR, efield );
 
 }; /* namespace efield */
 
