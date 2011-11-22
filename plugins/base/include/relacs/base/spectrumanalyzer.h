@@ -23,6 +23,7 @@
 #define _RELACS_BASE_SPECTRUMANALYZER_H_ 1
 
 #include <relacs/control.h>
+#include <relacs/optwidget.h>
 #include <relacs/plot.h>
 using namespace relacs;
 
@@ -76,6 +77,7 @@ private:
   double FMax;
   double PMin;
 
+  OptWidget SW;
   Plot P;
 
 };

@@ -20,6 +20,7 @@
 */
 
 #include <QDateTime>
+#include <QVBoxLayout>
 #include <relacs/sampledata.h>
 #include <relacs/stats.h>
 #include <relacs/spectrum.h>
@@ -45,7 +46,7 @@ SpectrumAnalyzer::SpectrumAnalyzer( void )
   PMin = -50.0;
 
   // options:
-  addSelection( "trace", "Input trace", "V-1" );
+  addSelection( "trace", "Input trace", "V-1" ).setFlags( 8 );
   addSelection( "origin", "Analysis window", "before end of data|before signal|after signal" );
   addNumber( "offset", "Offset of analysis window", Offset, -10000.0, 10000.0, 0.1, "s", "ms" );
   addNumber( "duration", "Width of analysis window", Duration, 0.0, 100.0, 0.1, "s", "ms" );
@@ -56,8 +57,17 @@ SpectrumAnalyzer::SpectrumAnalyzer( void )
   addBoolean( "decibel", "Plot decibel relative to maximum", Decibel );
   addNumber( "pmin", "Minimum power", PMin, -1000.0, 0.0, 10.0, "dB" ).setActivation( "decibel", "true" );
 
+
+  // layout:
+  QVBoxLayout *vb = new QVBoxLayout;
+  setLayout( vb );
+  vb->setSpacing( 0 );
+  SW.setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Fixed );
+  vb->addWidget( &SW );
+
   // plot:
   P.lock();
+  P.setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding );
   P.setXLabel( "Frequency [Hz]" );
   P.setXRange( 0.0, FMax );
   P.setYLabel( "Power [dB]" );
@@ -65,7 +75,7 @@ SpectrumAnalyzer::SpectrumAnalyzer( void )
   P.setLabel( "", 0.1, Plot::Graph, 0.5, Plot::Graph, Plot::Left,
 	      0.0, Plot::Red, 5.0 );
   P.unlock();
-  setWidget( &P );
+  vb->addWidget( &P );
 }
 
 
@@ -87,11 +97,15 @@ void SpectrumAnalyzer::config( void )
     P.setYLabel( trace( Trace ).ident() + " [" + trace( Trace ).unit() + "]" );
   P.unlock();
   unlock();
+
+  SW.assign( this, 8, 0, true, 0, mutex() );
+  SW.setMargins( 0 );
 }
 
 
 void SpectrumAnalyzer::notify( void )
 {
+  SW.updateValues( OptWidget::changedFlag() );
   Trace = traceIndex( text( "trace", 0 ) );
   Origin = index( "origin" );
   Offset = number( "offset" );
