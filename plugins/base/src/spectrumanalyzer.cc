@@ -88,6 +88,10 @@ void SpectrumAnalyzer::config( void )
 {
   setText( "trace", traceNames() );
   setToDefault( "trace" );
+  if ( Options::size( "trace" ) <= 1 )
+    addFlags( "trace", 16 );
+  else
+    delFlags( "trace", 16 );
 
   lock();
   P.lock();
@@ -98,7 +102,7 @@ void SpectrumAnalyzer::config( void )
   P.unlock();
   unlock();
 
-  SW.assign( this, 8, 0, true, 0, mutex() );
+  SW.assign( this, 8, 16, true, 0, mutex() );
   SW.setMargins( 0 );
 }
 

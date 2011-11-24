@@ -76,7 +76,7 @@ private:
 public:
 
     /*! Maximum number of characters for menu entry. */
-  static const int MenuWidth = 40;
+  static const int MenuWidth = 50;
 
     /*! Constructs the Macros. */
   Macros( RELACSWidget *rw, QWidget *parent=0 );
@@ -209,9 +209,9 @@ public slots:
 private:
 
   void clearButton( void );
-  void runButton( void );
-  void stackButton( void );
-  void stackButtons( void );
+  void setRunButton( void );
+  void setStackButton( void );
+  void setStackButtons( void );
   void clearStackButtons( void );
 
     /*! The list of all Macros. */
@@ -340,9 +340,9 @@ public:
 
     /*! True if this Macro has a menu. */
   bool menu( void ) const;
-    /*! Add menu for the macro and its commands to \a menu
-        using \a text as a label. */
-  void addMenu( QMenu *menu, const string &text );
+    /*! Add menu for the macro and its commands to \a menu.
+        \a num counts the number of macro menus (not each macro gets a menu!). */
+  void addMenu( QMenu *menu, int &num );
     /*! Forms a string for the menu consisting of the macro name
         and its variables. */
   string menuStr( void ) const;
@@ -394,9 +394,9 @@ public:
     /*! Unset running or stack icons. */
   void clearButton( void );
     /*! Set the icon indicating a running macro. */
-  void runButton( void );
+  void setRunButton( void );
     /*! Set the icon indicating the stack position. */
-  void stackButton( bool base );
+  void setStackButton( bool base );
 
     /*! Generates some icons. \sa destroyIcons() */
   static void createIcons( int size );
@@ -564,8 +564,6 @@ public:
   RePro *repro( void );
     /*! Set the CommandType of the MacroCommand to ReProCom . */
   void setReProCommand( void );
-    /*! Set the RePro of this MacroCommand to \a repro. */
-  void setRePro( RePro *repro );
 
     /*! Set the index of the Macro of this MacroCommand to \a index. */
   void setMacroIndex( int index );
@@ -577,6 +575,10 @@ public:
     /*! Adds the submenu for this command to \a menu. */
   void addMenu( QMenu *menu );
 
+    /*! Check the command.
+        Returns \c true on success.
+        Otherwise, a warning message is added, and \c false is returned. */
+  bool check( int pass, string &warning );
     /*! Execute the command. Returns \c true if a RePro was executed. */
   bool execute( bool saving );
     /*! Update the macro command for the reloaded repro \a repro. */

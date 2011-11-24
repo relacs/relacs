@@ -523,26 +523,12 @@ void Macros::create( void )
   int row=0;
   int col=0;
   for ( unsigned int k=0; k<MCs.size(); k++ ) {
-    
-    string mt = "";
-    if ( MCs[k]->menu() ) {
-      mt += "&";
-      if ( mk == 0 )
-	mt += '0';
-      else if ( mk < 10 )
-	mt += ( '1' + mk - 1 );
-      else
-	mt += ( 'a' + mk - 10 );
-      mt += " ";
-      mk++;
-    }
-    mt += MCs[k]->name();
 
     // key code:
     Str keys = MCs[k]->setKey( fkc );
 
     // menu:
-    MCs[k]->addMenu( Menu, mt );
+    MCs[k]->addMenu( Menu, mk );
       
     // button:
     MCs[k]->addButton( keys );
@@ -584,7 +570,7 @@ void Macros::startNextRePro( bool saving, bool enable )
 	CurrentMacro = FallBackIndex;
 	CurrentCommand = 0;
 	ThisCommandOnly = false;
-	runButton();
+	setRunButton();
 	RW->startedMacro( MCs[CurrentMacro]->name(),
 			  MCs[CurrentMacro]->variablesStr() );
 	enable = false;
@@ -597,7 +583,7 @@ void Macros::startNextRePro( bool saving, bool enable )
 	    return;
 	  CurrentMacro = FallBackIndex;
 	  CurrentCommand = 0;
-	  runButton();
+	  setRunButton();
 	  RW->startedMacro( MCs[CurrentMacro]->name(),
 			    MCs[CurrentMacro]->variablesStr() );
 	}
@@ -609,7 +595,7 @@ void Macros::startNextRePro( bool saving, bool enable )
 	  MCs[CurrentMacro]->variables() = mc.MacroVariables;
 	  MCs[CurrentMacro]->project() = mc.MacroProject;
 	  Stack.pop_back();
-	  runButton();
+	  setRunButton();
 	}
 	else {
 	  clearButton();
@@ -617,7 +603,7 @@ void Macros::startNextRePro( bool saving, bool enable )
 	    return;
 	  CurrentMacro = FallBackIndex;
 	  CurrentCommand = 0;
-	  runButton();
+	  setRunButton();
 	  RW->startedMacro( MCs[CurrentMacro]->name(),
 			    MCs[CurrentMacro]->variablesStr() );
 	}
@@ -658,13 +644,13 @@ void Macros::startMacro( int macro, int command, bool saving,
 
   if ( newstack != 0 ) {
     Stack = *newstack;
-    stackButtons();
+    setStackButtons();
   }
 
   ThisCommandOnly = false;
   ThisMacroOnly = false;
 
-  runButton();
+  setRunButton();
 
   RW->startedMacro( MCs[CurrentMacro]->name(),
 		    MCs[CurrentMacro]->variablesStr() );
@@ -712,7 +698,7 @@ void Macros::executeMacro( int newmacro, const Str &params )
 {
   // put next command on the stack:
   if ( MCs[newmacro]->button() )
-    stackButton();
+    setStackButton();
   Stack.push_back( MacroPos( CurrentMacro, CurrentCommand + 1, 
 			     MCs[CurrentMacro]->variables(),
 			     MCs[CurrentMacro]->project() ) );
@@ -723,7 +709,7 @@ void Macros::executeMacro( int newmacro, const Str &params )
   MCs[newmacro]->project().read( prjopts );
   CurrentMacro = newmacro;
   CurrentCommand = -1;
-  runButton();
+  setRunButton();
 }
 
 
@@ -937,26 +923,26 @@ void Macros::clearButton( void )
 }
 
 
-void Macros::runButton( void )
+void Macros::setRunButton( void )
 {
   if ( CurrentMacro >= 0 && CurrentMacro < (int)MCs.size() )
-    MCs[CurrentMacro]->runButton();
+    MCs[CurrentMacro]->setRunButton();
 }
 
 
-void Macros::stackButton( void )
+void Macros::setStackButton( void )
 {
   if ( CurrentMacro >= 0 && CurrentMacro < (int)MCs.size()  )
-    MCs[CurrentMacro]->stackButton( Stack.empty() );
+    MCs[CurrentMacro]->setStackButton( Stack.empty() );
 }
 
 
-void Macros::stackButtons( void )
+void Macros::setStackButtons( void )
 {
   for ( int k = 0; k < (int)Stack.size(); k++ ) {
     int macro = Stack[k].MacroID;
     if ( macro >= 0 && macro < (int)MCs.size() )
-      MCs[macro]->stackButton( (k==0) );
+      MCs[macro]->setStackButton( (k==0) );
   }
 }
 
@@ -1291,10 +1277,25 @@ bool Macro::menu( void ) const
 }
 
 
-void Macro::addMenu( QMenu *menu, const string &text )
+void Macro::addMenu( QMenu *menu, int &num )
 {
   if ( Menu ) {
-    QMenu *firstpop = menu->addMenu( text.c_str() );
+    string mt = "";
+    if ( num < 36 ) {
+      mt += "&";
+      if ( num == 0 )
+	mt += '0';
+      else if ( num < 10 )
+	mt += ( '1' + num - 1 );
+      else
+	mt += ( 'a' + num - 10 );
+      mt += " ";
+    }
+    else
+      mt = "  ";
+    mt += name();
+    QMenu *firstpop = menu->addMenu( mt.c_str() );
+    num++;
     MenuAction = firstpop->menuAction();
     RunAction = firstpop->addAction( menuStr().c_str(), this, SLOT( run() ) );
     if ( Key )
@@ -1552,186 +1553,80 @@ string Macro::load( ifstream &macrostream, string &line, int &linenum,
 
 void Macro::check( int pass, string &warnings )
 {
+  cerr << "CHECK MACRO " << Name << '\n';
   // check the commands:
   for ( iterator cp = Commands.begin(); 
 	cp != Commands.end(); ) {
-	
-    if ( (*cp)->command() == MacroCommand::MacroCom ) {
-      if ( MCs->index( (*cp)->name() ) < 0 ) {
-	warnings += "Removed unknown Macro \"<b>";
-	warnings += (*cp)->name();
-	warnings += "</b>\" in Macro \"<b>";
-	warnings += Name;
-	warnings += "</b>\".\n";
-	cp = Commands.erase( cp );
-      }
-      else
-	++cp;
-    }
 
-    else if ( (*cp)->command() == MacroCommand::FilterCom ) {
-      if ( ! (*cp)->name().empty() &&
-	   ! MCs->RW->filterDetectors()->exist( (*cp)->name() ) ) {
-	warnings += "Removed unknown Filter \"<b>";
-	warnings += (*cp)->name();
-	warnings += "</b>\" in Macro \"<b>";
-	warnings += Name;
-	warnings += "</b>\".\n";
-	cp = Commands.erase( cp );
-      }
-      else
-	++cp;
-    }
+    cerr << "CHECK COMMAND " << (*cp)->name() << '\n';
+    if ( (*cp)->check( pass, warnings ) ) {
 
-    else if ( (*cp)->command() == MacroCommand::DetectorCom ) {
-      if ( ! (*cp)->name().empty() &&
-	   ! MCs->RW->filterDetectors()->exist( (*cp)->name() ) ) {
-	warnings += "Removed unknown Detector \"<b>";
-	warnings += (*cp)->name();
-	warnings += "</b>\" in Macro \"<b>";
-	warnings += Name;
-	warnings += "</b>\".\n";
-	cp = Commands.erase( cp );
-      }
-      else
-	++cp;
-    }
-
-    else if ( (*cp)->command() == MacroCommand::SwitchCom ) {
-      ifstream f( (*cp)->name().c_str() );
-      if ( ! f.good() ) {
-	warnings += "Removed switch to unknown file \"<b>";
-	warnings += (*cp)->name();
-	warnings += "</b>\" in Macro \"<b>";
-	warnings += Name;
-	warnings += "</b>\".\n";
-	cp = Commands.erase( cp );
-      }
-      else
-	++cp;
-    }
-
-    else if ( (*cp)->command() == MacroCommand::StartSessionCom ) {
-      ++cp;
-    }
-
-    else if ( (*cp)->command() == MacroCommand::ShellCom ) {
-      ++cp;
-    }
-	
-    else if ( (*cp)->command() == MacroCommand::MessageCom ) {
-      if ( (*cp)->parameter().empty() ) {
-	(*cp)->setParameter( (*cp)->name() );
-	(*cp)->setName( "RELACS Message" );
-      }
-      if ( (*cp)->name().empty() ) {
-	(*cp)->setName( "RELACS Message" );
-      }
-      ++cp;
-    }
-	
-    else if ( (*cp)->command() == MacroCommand::BrowseCom ) {
-      if ( (*cp)->parameter().empty() ) {
-	(*cp)->setParameter( (*cp)->name() );
-	(*cp)->setName( "RELACS Info" );
-      }
-      if ( (*cp)->name().empty() ) {
-	(*cp)->setName( "RELACS Info" );
-      }
-      ++cp;
-    }
-	
-    else {
-      // find RePro:
-      RePro *repro = MCs->RPs->nameRepro( (*cp)->name() );
-      if ( repro == 0 ) {
-	warnings += "Removed unknown RePro \"<b>";
-	warnings += (*cp)->name();
-	warnings += "</b>\" in Macro \"<b>";
-	warnings += Name;
-	warnings += "</b>\".\n";
-	cp = Commands.erase( cp );
-      }
-      else {
-	(*cp)->setRePro( repro );
-	if ( pass == 0 ) {
-	  // expand ranges:
-	  Str ps = (*cp)->parameter();
-	  vector <RangeLoop> rls;
-	  vector <int> lb;
-	  vector <int> rb;
-	  // find ranges:
-	  int o = ps.find( "(" );
-	  if ( o > 0 && ps[o-1] == 'd' )
+      if ( (*cp)->command() == MacroCommand::ReProCom &&
+	   pass == 0 ) {
+	// expand ranges:
+	Str ps = (*cp)->parameter();
+	vector <RangeLoop> rls;
+	vector <int> lb;
+	vector <int> rb;
+	// find ranges:
+	int o = ps.find( "(" );
+	if ( o > 0 && ps[o-1] == 'd' )
+	  o = -1;
+	while ( o >= 0 ) {
+	  int c = ps.findBracket( o, "(", "" );
+	  if ( c > 0 ) {
+	    lb.push_back( o );
+	    rb.push_back( c );
+	    rls.push_back( RangeLoop( ps.mid( o+1, c-1 ) ) );
+	    o = ps.find( "(", c+1 );
+	  }
+	  else
 	    o = -1;
-	  while ( o >= 0 ) {
-	    int c = ps.findBracket( o, "(", "" );
-	    if ( c > 0 ) {
-	      lb.push_back( o );
-	      rb.push_back( c );
-	      rls.push_back( RangeLoop( ps.mid( o+1, c-1 ) ) );
-	      o = ps.find( "(", c+1 );
+	}
+	if ( rls.empty() )
+	  ++cp;
+	else {
+	  // erase original repro:
+	  MacroCommand omc( *(*cp) );
+	  cp = Commands.erase( cp );
+	  // loop ranges:
+	  for ( unsigned int k=0; k<rls.size(); k++ )
+	    rls[k].reset();
+	  while ( !rls[0] ) {
+	    // create parameter:
+	    string np = ps;
+	    for ( int j=int(rls.size())-1; j>=0; j-- )
+	      np.replace( lb[j], rb[j] - lb[j] + 1, Str( *rls[j] ) );
+	    // add repro:
+	    omc.setParameter( np );
+	    if ( cp != Commands.end() ) {
+	      cp = Commands.insert( cp, new MacroCommand( omc ) );
+	      ++cp;
 	    }
-	    else
-	      o = -1;
-	  }
-	  if ( rls.empty() )
-	    ++cp;
-	  else  {
-	    // erase original repro:
-	    MacroCommand omc( *(*cp) );
-	    cp = Commands.erase( cp );
-	    // loop ranges:
-	    for ( unsigned int k=0; k<rls.size(); k++ )
-	      rls[k].reset();
-	    while ( !rls[0] ) {
-	      // create parameter:
-	      string np = ps;
-	      for ( int j=int(rls.size())-1; j>=0; j-- ) {
-		np.replace( lb[j], rb[j] - lb[j] + 1, Str( *rls[j] ) );
-	      }
-	      // add repro:
-	      omc.setParameter( np );
-	      if ( cp != Commands.end() ) {
-		cp = Commands.insert( cp, new MacroCommand( omc ) );
-		++cp;
-	      }
-	      else {
-		Commands.push_back( new MacroCommand( omc ) );
-		cp = Commands.end();
-	      }
+	    else {
+	      Commands.push_back( new MacroCommand( omc ) );
+	      cp = Commands.end();
+	    }
 		    
-	      // increment range looops:
-	      for ( int k = int(rls.size())-1; k >= 0; k-- ) {
-		++rls[k];
-		if ( !rls[k] )
-		  break;
-		else if ( k > 0 )
-		  rls[k].reset();
-	      }
+	    // increment range looops:
+	    for ( int k = int(rls.size())-1; k >= 0; k-- ) {
+	      ++rls[k];
+	      if ( !rls[k] )
+		break;
+	      else if ( k > 0 )
+		rls[k].reset();
 	    }
 	  }
 	}
-	else if ( pass == 1 ) {
-	  // check options:
-	  Options prjopt;
-	  string error = repro->checkOptions( expandParameter( (*cp)->parameter(),
-							       prjopt ) );
-	  if ( error.size() > 0 ) {
-	    warnings += "Invalid options for RePro \"<b>";
-	    warnings += repro->name();
-	    warnings += "</b>\" from Macro \"<b>";
-	    warnings += Name;
-	    warnings += "</b>\":<br>";
-	    warnings += error;
-	    warnings += ".\n";
-	  }
-	  ++cp;
-	}
-	else
-	  ++cp;
       }
+      else
+	++cp;
     }
+    else
+      cp = Commands.erase( cp );
+
+    cerr << "NEXT\n";
+
   }  // commands
 }
 
@@ -1778,14 +1673,14 @@ void Macro::clearButton( void )
 }
 
 
-void Macro::runButton( void )
+void Macro::setRunButton( void )
 {
   if ( PushButton != 0 )
     PushButton->setIcon( *RunningIcon );
 }
 
 
-void Macro::stackButton( bool base )
+void Macro::setStackButton( bool base )
 {
   if ( PushButton != 0 ) {
     if ( base )
@@ -2195,14 +2090,6 @@ void MacroCommand::setReProCommand( void )
 }
 
 
-void MacroCommand::setRePro( RePro *repro )
-{
-  RP = repro;
-  if ( repro != 0 )
-    Name = repro->uniqueName();
-}
-
-
 void MacroCommand::setMacroIndex( int index )
 {
   MacroIndex = index;
@@ -2247,8 +2134,8 @@ void MacroCommand::addMenu( QMenu *menu )
       for ( int i=0; nc+index < Macros::MenuWidth && index >= 0; i++ ) {
 	index = Params.find( ';', index+1 );
       }
-      if ( index < 0 )
-	s += Params;
+      if ( index < 0 || Params.substr( index+1 ).stripped().empty() )
+	s += Params.preventedLast( ';' );
       else
 	s += Params.substr( 0, index ) + " ...";
     }
@@ -2297,8 +2184,8 @@ void MacroCommand::addMenu( QMenu *menu )
       for ( int i=0; nc+index < Macros::MenuWidth && index >= 0; i++ ) {
 	index = Params.find( ';', index+1 );
       }
-      if ( index < 0 )
-	s += Params;
+      if ( index < 0 || Params.substr( index+1 ).stripped().empty() )
+	s += Params.preventedLast( ';' );
       else
 	s += Params.substr( 0, index ) + " ...";
     }
@@ -2326,6 +2213,148 @@ void MacroCommand::addMenu( QMenu *menu )
   }
   EnabledAction = SubMenu->addAction( Enabled ? "&Disable" : "&Enable",
 				      this, SLOT( enable() ) );
+
+  if ( ( Command == MacroCom || Command == ReProCom ) &&
+       !Params.empty() ) {
+    SubMenu->addSeparator();
+    SubMenu->addAction( "Parameter:" );
+    int index = 0;
+    int nindex = 0;
+    for ( int i=0; nindex >= 0 && i<20; i++ ) {
+      nindex = Params.find( ';', index );
+      string ms = Params.mid( index, nindex-1 ).stripped();
+      if ( !ms.empty() )
+	SubMenu->addAction( string( "  " + ms ).c_str() );
+      index = nindex+1;
+    }
+  }
+
+}
+
+
+bool MacroCommand::check( int pass, string &warnings )
+{
+  if ( Command == MacroCom ) {
+    if ( MCs->index( name() ) < 0 ) {
+      warnings += "Removed unknown Macro \"<b>";
+      warnings += name();
+      warnings += "</b>\" in Macro \"<b>";
+      warnings += MC->name();
+      warnings += "</b>\".\n";
+      return false;
+    }
+  }
+
+  else if ( Command == FilterCom ) {
+    if ( ! name().empty() &&
+	 ! MCs->RW->filterDetectors()->exist( name() ) ) {
+      warnings += "Removed unknown Filter \"<b>";
+      warnings += name();
+      warnings += "</b>\" in Macro \"<b>";
+      warnings += MC->name();
+      warnings += "</b>\".\n";
+      return false;
+    }
+  }
+
+  else if ( Command == DetectorCom ) {
+    if ( ! name().empty() &&
+	 ! MCs->RW->filterDetectors()->exist( name() ) ) {
+      warnings += "Removed unknown Detector \"<b>";
+      warnings += name();
+      warnings += "</b>\" in Macro \"<b>";
+      warnings += MC->name();
+      warnings += "</b>\".\n";
+      return false;
+    }
+  }
+
+  else if ( Command == SwitchCom ) {
+    ifstream f( name().c_str() );
+    if ( ! f.good() ) {
+      warnings += "Removed switch to unknown file \"<b>";
+      warnings += name();
+      warnings += "</b>\" in Macro \"<b>";
+      warnings += MC->name();
+      warnings += "</b>\".\n";
+      return false;
+    }
+  }
+
+  else if ( Command == StartSessionCom ) {
+    return true;
+  }
+
+  else if ( Command == ShellCom ) {
+    return true;
+  }
+	
+  else if ( Command == MessageCom ) {
+    if ( parameter().empty() ) {
+      setParameter( name() );
+      setName( "RELACS Message" );
+    }
+    if ( name().empty() ) {
+      setName( "RELACS Message" );
+    }
+  }
+	
+  else if ( Command == BrowseCom ) {
+    if ( parameter().empty() ) {
+      setParameter( name() );
+      setName( "RELACS Info" );
+    }
+    if ( name().empty() ) {
+      setName( "RELACS Info" );
+    }
+  }
+	
+  else if ( Command == ReProCom ) {
+    if ( pass == 0 ) {
+      // find RePro:
+      RePro *repro = MCs->RPs->nameRepro( name() );
+      if ( repro == 0 ) {
+	warnings += "Removed unknown RePro \"<b>";
+	warnings += name();
+	warnings += "</b>\" in Macro \"<b>";
+	warnings += MC->name();
+	warnings += "</b>\".\n";
+	return false;
+      }
+      else {
+	RP = repro;
+	if ( repro != 0 )
+	  Name = repro->uniqueName();
+      }
+    }
+    else if ( pass == 1 ) {
+      // check options:
+      Options prjopt;
+      string error = RP->checkOptions( MC->expandParameter( parameter(),
+							    prjopt ) );
+      if ( error.size() > 0 ) {
+	warnings += "Invalid options for RePro \"<b>";
+	warnings += RP->name();
+	warnings += "</b>\" from Macro \"<b>";
+	warnings += Name;
+	warnings += "</b>\":<br>";
+	warnings += error;
+	warnings += ".\n";
+      }
+    }
+
+  }
+
+  else {
+    warnings += "Removed command \"<b>";
+    warnings += name();
+    warnings += "</b>\" of unknown type in Macro \"<b>";
+    warnings += MC->name();
+    warnings += "</b>\".\n";
+    return false;
+  }
+
+  return true;
 }
 
 
@@ -2648,14 +2677,14 @@ void MacroCommand::acceptDialog( void )
 
 void MacroCommand::dialogAction( int r )
 {
+  // defaults:
+  if ( r == 3 )
+    CO.clear();
+
   // run:
   if ( r == 2 )
     MCs->startMacro( MacroNum, CommandNum );
   // Note: in case of a switch command, *this does not exist anymore?
-
-  // defaults:
-  if ( r == 3 )
-    CO.clear();
 }
 
 
@@ -2711,7 +2740,7 @@ ostream &operator<< ( ostream &str, const MacroCommand &command )
   str << "  " << command.CommandNum+1 << " ";
   if ( command.Command == MacroCommand::ReProCom )
     str << "RePro";
-  if ( command.Command == MacroCommand::MacroCom )
+  else if ( command.Command == MacroCommand::MacroCom )
     str << "Macro";
   else if ( command.Command == MacroCommand::ShellCom )
     str << "Shell";

@@ -18,10 +18,9 @@ Locking:
 - dead locks: do we need to take care about blocking lockMutex() in accept(), reset(), etc.?
 
 Macros:
-- Improve code by distributing more code to the commands
 - delete all MacroCommands after usage!
-- add new macro command to set all sorts of internal Options (e.g. stimulusData!)
 - add stopSession macro command
+- add new macro command to set all sorts of internal Options (e.g. stimulusData!)
 - add dialog macro command for launching macro and repro dialogs, meta data dialog, etc.
 - Macro Options and Macro stack (B R N keys) do not work together
 - Add possibility to call shell command that returns a command line,
