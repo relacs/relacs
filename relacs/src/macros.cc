@@ -1553,12 +1553,10 @@ string Macro::load( ifstream &macrostream, string &line, int &linenum,
 
 void Macro::check( int pass, string &warnings )
 {
-  cerr << "CHECK MACRO " << Name << '\n';
   // check the commands:
   for ( iterator cp = Commands.begin(); 
 	cp != Commands.end(); ) {
 
-    cerr << "CHECK COMMAND " << (*cp)->name() << '\n';
     if ( (*cp)->check( pass, warnings ) ) {
 
       if ( (*cp)->command() == MacroCommand::ReProCom &&
@@ -1624,8 +1622,6 @@ void Macro::check( int pass, string &warnings )
     }
     else
       cp = Commands.erase( cp );
-
-    cerr << "NEXT\n";
 
   }  // commands
 }
