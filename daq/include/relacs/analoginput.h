@@ -44,6 +44,13 @@ class AnalogOutput;
 \todo add wait function
 \todo add directread function for single point acquisition
 \todo add a flag for indicating whether device is capable of streaming input
+
+In case you want to use a analog input device within RELACS, your
+AnalogInput implementation needs to provide a void default constructor
+(i.e. with no parameters) that does not open the device.  Also,
+include the header file \c <relacs/relacsplugin.h> and make the
+AnalogInput device known to RELACS with the \c addAnalogInput(
+ClassNameOfYourAnalogInputImplementation, PluginSetName ) macro.
 */
 
 class AnalogInput : public Device

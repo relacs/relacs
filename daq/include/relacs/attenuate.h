@@ -120,6 +120,13 @@ Possible return values of write(), testWrite() and mute() are:
      to be converted into an attenuation level by the decibel()-function.
 - \c IntensityError: Another error occured during conversion of
      an intensity into an attenuation level by the decibel()-function.
+
+In case you want to use a attenuate interface within RELACS, your
+Attenuate implementation needs to provide a void default constructor
+(i.e. with no parameters) that does not open the device.  Also,
+include the header file \c <relacs/relacsplugin.h> and make the
+Attenuate device known to RELACS with the \c addAttenuate(
+ClassNameOfYourAttenuateImplementation, PluginSetName ) macro.
 */
 
 

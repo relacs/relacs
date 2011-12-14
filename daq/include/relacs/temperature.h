@@ -33,6 +33,13 @@ namespace relacs {
 \brief Virtual class for reading a temperature. 
 \author Jan Benda
 \version 1.0
+
+In case you want to use a temperature device within RELACS, your
+Temperature implementation needs to provide a void default constructor
+(i.e. with no parameters) that does not open the device.  Also,
+include the header file \c <relacs/relacsplugin.h> and make the
+Temperature device known to RELACS with the \c addDevice(
+ClassNameOfYourManipulatorImplementation, PluginSetName ) macro.
 */
 
 

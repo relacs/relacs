@@ -42,6 +42,13 @@ class AnalogInput;
 \todo add wait function for blocked writes. Returns an error code in the signals.
 \todo add probe function that returns a string of possible supported devices.
 \todo add a flag for indicating whether device is capable of streaming output
+
+In case you want to use a analog output device within RELACS, your
+AnalogOutput implementation needs to provide a void default constructor
+(i.e. with no parameters) that does not open the device.  Also,
+include the header file \c <relacs/relacsplugin.h> and make the
+AnalogOutput device known to RELACS with the \c addAnalogOutput(
+ClassNameOfYourAnalogInputImplementation, PluginSetName ) macro.
 */
 
 class AnalogOutput : public Device

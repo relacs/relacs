@@ -81,6 +81,12 @@ Possible return values of attenuate(), test() and mute() are:
 - \c Overflow: The requested attenuation level is too low,
      i.e. the requested signal amplitude is too large.
 
+In case you want to use a attenuator device within RELACS, your
+Attenuator implementation needs to provide a void default constructor
+(i.e. with no parameters) that does not open the device.  Also,
+include the header file \c <relacs/relacsplugin.h> and make the
+Attenuator device known to RELACS with the \c addAttenuator(
+ClassNameOfYourAttenuatorImplementation, PluginSetName ) macro.
 */
 
   /*! The attenuation level for which the outputline is muted. */

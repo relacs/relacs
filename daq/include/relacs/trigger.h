@@ -53,6 +53,13 @@ along with the open(), isOpen(), and close() functions.
 Towards the end of the open() function you should call set() for
 setting trigger parameters from the supplied options, followed by
 activate().
+
+In case you want to use a trigger device within RELACS, your
+DigitalIO implementation needs to provide a void default constructor
+(i.e. with no parameters) that does not open the device.  Also,
+include the header file \c <relacs/relacsplugin.h> and make the
+Trigger device known to RELACS with the \c addTrigger(
+ClassNameOfYourTriggerImplementation, PluginSetName ) macro.
 */
 
 

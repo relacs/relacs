@@ -50,6 +50,13 @@ using configureLines() or configureLine().
 
 Bits can be read from or written to the digitial I/O lines by the
 read() and write() functions.
+
+In case you want to use a digitial I/O device within RELACS, your
+DigitalIO implementation needs to provide a void default constructor
+(i.e. with no parameters) that does not open the device.  Also,
+include the header file \c <relacs/relacsplugin.h> and make the
+AnalogInput device known to RELACS with the \c addDigitalIO(
+ClassNameOfYourDigitalIOImplementation, PluginSetName ) macro.
 */
 
 class DigitalIO : public Device

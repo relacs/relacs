@@ -43,6 +43,14 @@ close(), and reset() of a device.
 You have to implement at least the isOpen(), close() and one of the
 two open() functions.
 
+In case you want to use a device within RELACS, your Device
+implementation needs to provide a void default constructor (i.e. with
+no parameters) that does not open the device.  Also, include the
+header file \c <relacs/relacsplugin.h> and make the Device known to
+RELACS with the \c addDevice( ClassNameOfYourDeviceImplementation,
+PluginSetName ) macro or one of the derived macros for any specialized
+DeviceType.
+
 A subclass of Device can be identified by its \a deviceType().
 For example, the Temperature class provides a uniqe interface for measuring
 temperatures. All classes derived from the Temperature class then
@@ -107,10 +115,14 @@ public:
     /*! Return code indicating a failure in writing to the device. */
   static const int WriteError = -4;
 
-    /*! Construct a Device of type \a type.
+    /*! Construct a Device of type \a type. This constructor is used by
+        the more specific but still abstract device classes like AnalogInput,
+	AnalogOutput, etc.
         \sa setDeviceType() */
   Device( int type=MiscellaneousType );
     /*! Construct a Device with class-name \a deviceclass and type \a type.
+        Use this constructor if your device does not fit in the predefined
+	DeviceTypes.
         \sa setDeviceClass(), setDeviceType() */
   Device( const string &deviceclass, int type=MiscellaneousType );
     /*! Destroy a Device. In case the associated device is open, close it. */

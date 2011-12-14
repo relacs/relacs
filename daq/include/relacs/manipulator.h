@@ -39,6 +39,13 @@ namespace relacs {
 
 The Manipulator class defines an interface for basic operations
 to control a manipulator. 
+
+In case you want to use a manipulator device within RELACS, your
+Attenuate implementation needs to provide a void default constructor
+(i.e. with no parameters) that does not open the device.  Also,
+include the header file \c <relacs/relacsplugin.h> and make the
+Manipulator device known to RELACS with the \c addDevice(
+ClassNameOfYourManipulatorImplementation, PluginSetName ) macro.
 */
   
 
