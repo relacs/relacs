@@ -91,7 +91,7 @@ int EchoTest::main( void )
 
     if ( (int)traceVector.size()>lastTraces) {
 
-      SampleDataF meantrace;
+      SampleDataF meantrace( data.range() );
       average( meantrace, traceVector );
 
       // sound velocity : 343 m/s für 20 °C

@@ -937,30 +937,35 @@ public:
 	provided \a sd does not equal zero. */
   double frequency( int n, double *sd=0 ) const;
     /*! Frequency (Hz) as the inverse of the event interval 
-        at time \a time (seconds). */
-  double frequencyAt( double time ) const;
+        at time \a time (seconds).
+	If there is no interval, \a defaultfrequency is returned. */
+  double frequencyAt( double time, double defaultfrequency=0.0 ) const;
 
     /*! The time course of the instantaneous frequency 1/ISI
         is returned in \a rate with \a rate.stepsize() in seconds.
 	The events between \a rate.leftMargin() and \a rate.rightMargin()
-	seconds relative to time \a time (seconds) are considered. */
-  void frequency( SampleDataD &rate, double time=0.0 ) const;
+	seconds relative to time \a time (seconds) are considered.
+        Times with no defined interval get \a defaultfrequency assigned. */
+  void frequency( SampleDataD &rate, double time=0.0, double defaultfrequency=0.0 ) const;
     /*! The time course of the instantaneous frequency 1/ISI
         for the \a trial + 1 trial is added to \a rate with
 	\a rate.stepsize() in seconds.
 	The events between \a rate.leftMargin() and \a rate.rightMargin()
-	seconds relative to time \a time (seconds) are considered. */
-  void addFrequency( SampleDataD &rate, int &trial, double time=0.0 ) const;
+	seconds relative to time \a time (seconds) are considered.
+        At times where there is no interval defined, \a defaultfrequency is used. */
+  void addFrequency( SampleDataD &rate, int &trial, double time=0.0,
+		     double defaultfrequency=0.0 ) const;
     /*! The time course of the instantaneous frequency 1/ISI
         for the \a trial + 1 trial is added to \a rate with
 	\a rate.stepsize() in seconds.
-	In \a period the updated mean interval is returned.
+	In \a ratesq the updated mean squared instantaneous frequency is returned.
         It can be used to calculate the standard deviation
-        according to sd = \a rate * sqrt( \a rate * \a period - 1 ).
+        according to sd = sqrt( \a ratesq - \a rate * \a rate ).
 	The events between \a rate.leftMargin() and \a rate.rightMargin()
-	seconds relative to time \a time (seconds) are considered. */
-  void addFrequency( SampleDataD &rate, SampleDataD &period,
-		     int &trial, double time=0.0 ) const;
+	seconds relative to time \a time (seconds) are considered.
+        At times where there is no interval defined, \a defaultfrequency is used. */
+  void addFrequency( SampleDataD &rate, SampleDataD &ratesq,
+		     int &trial, double time=0.0, double defaultfrequency=0.0 ) const;
 
     /*! The time course of the cyclic instantaneous frequency 1/ISI
         is returned in \a rate with \a rate.stepsize() in seconds.

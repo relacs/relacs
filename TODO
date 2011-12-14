@@ -26,6 +26,13 @@ Macros:
 - Add possibility to call shell command that returns a command line,
    e.g. RePro call, for the Macros
 
+Numerics:
+- LinearRange: check overflow in NSize due to too small stepsize in
+   constructors and resize, etc. and throw a warning (this happens
+   in EventData when working with microseconds spikes and the default
+   stepsize)
+- Check EventData, how we could avoid this problem
+
 Plugin documentation:
 - Each publication should get a file indicating the RePros it used:
   - list for each publication the used RePros

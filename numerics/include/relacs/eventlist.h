@@ -471,13 +471,26 @@ public:
   double frequency( double tbegin, double tend, double &sd ) const; 
     /*! The time course of the averaged instantaneous rate <1/ISI>
         between rate.rangeFront() and rate.rangeBack() seconds
-        relative to time \a time seconds is returned in \a rate. */
-  void frequency( SampleDataD &rate, double time=0.0 ) const;
+        relative to time \a time seconds is returned in \a rate.
+        If \a defaultfrequency is negative (the default) then trials
+        that have not an ISI at a particular time are not included
+        in computing the instantaneous rate. Therefore at the margins of the
+        measured interval only few or even no trial deterine the average 1/ISI.
+        Alternatively, one can set \a defaultfrequency to an instantaneous rate
+	(for example zero) that is used whenever there is no ISI defined. */
+  void frequency( SampleDataD &rate, double time=0.0, double defaultfrequency=-1.0 ) const;
     /*! The time course of the averaged instantaneous rate <1/ISI>
         between rate.rangeFront() and rate.rangeBack() seconds
         relative to time \a time seconds is returned in \a rate.
-	In \a sd the standard deviation of the rate is returned. */
-  void frequency( SampleDataD &rate, SampleDataD &sd, double time=0.0 ) const;
+	In \a sd the standard deviation of the rate is returned.
+        If \a defaultfrequency is negative (the default) then trials
+        that have not an ISI at a particular time are not included
+        in computing the instantaneous rate. Therefore at the margins of the
+        measured interval only few or even no trial deterine the average 1/ISI.
+        Alternatively, one can set \a defaultfrequency to an instantaneous rate
+	(for example zero) that is used whenever there is no ISI defined. */
+  void frequency( SampleDataD &rate, SampleDataD &sd, double time=0.0,
+		  double defaultfrequency=-1.0 ) const;
     /*! The time course of the averaged instantaneous rate <1/ISI>
         between rate.rangeFront() and rate.rangeBack() seconds
         relative to time \a time seconds is returned in \a rate.
@@ -495,12 +508,24 @@ public:
   void cyclicFrequency( SampleDataD &rate, SampleDataD &sd,
 			double time=0.0 ) const;
     /*! Mean frequency as the inverse of the mean event intervals at 
-        \a time seconds. */
-  double frequencyAt( double time ) const; 
+        \a time seconds.
+        If \a defaultfrequency is negative (the default) then trials
+        that have not an ISI that time are not included
+        in computing the instantaneous rate. Therefore at the margins of the
+        measured interval only few or even no trial deterine the average 1/ISI.
+        Alternatively, one can set \a defaultfrequency to an instantaneous rate
+	(for example zero) that is used whenever there is no ISI defined. */
+  double frequencyAt( double time, double defaultfrequency=-1.0 ) const; 
     /*! Mean frequency (Hz) as the inverse of the mean event intervals at 
         \a time seconds.
+        If \a defaultfrequency is negative (the default) then trials
+        that have not an ISI that time are not included
+        in computing the instantaneous rate. Therefore at the margins of the
+        measured interval only few or even no trial deterine the average 1/ISI.
+        Alternatively, one can set \a defaultfrequency to an instantaneous rate
+	(for example zero) that is used whenever there is no ISI defined.
         In \a sd the standard deviation in Hz is returned. */
-  double frequencyAt( double time, double &sd ) const; 
+  double frequencyAt( double time, double &sd, double defaultfrequency=-1.0 ) const; 
 
     /*! Returns in \a freqs[i].x() the position of each interevent interval
         between \a tbegin and \a tend, and in \a freqs[i].y() 1 divided by

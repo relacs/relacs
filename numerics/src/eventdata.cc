@@ -2920,33 +2920,33 @@ double EventData::frequency( int n, double *sd ) const
 }
 
 
-double EventData::frequencyAt( double time ) const
+double EventData::frequencyAt( double time, double defaultfrequency ) const
 {
   long n = next( time );
 
   if ( n < Index+R && n > 0 )
     return 1.0 / ( (*this)[n] - (*this)[n-1] );
 
-  return 0.0;
+  return defaultfrequency;
 }
 
 
-void EventData::frequency( SampleDataD &rate, double time ) const
+void EventData::frequency( SampleDataD &rate, double time, double defaultfrequency ) const
 {
   rate = 0.0;
   int trials = 0;
-  addFrequency( rate, trials, time );
+  addFrequency( rate, trials, time, defaultfrequency );
 }
 
 
 void EventData::addFrequency( SampleDataD &rate, int &trials,
-			      double time ) const
+			      double time, double defaultfrequency ) const
 {
   trials++;
   long k = next( time + rate.rangeFront() );
   for ( int i=0; i<rate.size(); i++ ) {
     for ( ; k<size() && (*this)[k] < time + rate.pos( i ); k++ );
-    double f = 0.0;
+    double f = defaultfrequency;
     if ( k<size() && k > minEvent() )
       f = 1.0 / ( (*this)[k] - (*this)[k-1] );
     rate[i] += ( f - rate[i] )/trials;
@@ -2954,21 +2954,18 @@ void EventData::addFrequency( SampleDataD &rate, int &trials,
 }
 
 
-void EventData::addFrequency( SampleDataD &rate, SampleDataD &period,
-			      int &trials, double time ) const
+void EventData::addFrequency( SampleDataD &rate, SampleDataD &ratesq,
+			      int &trials, double time, double defaultfrequency ) const
 {
   trials++;
   long k = next( time + rate.rangeFront() );
   for ( int i=0; i<rate.size(); i++ ) {
     for ( ; k<size() && (*this)[k] < time + rate.pos( i ); k++ );
-    double f = 0.0;
-    double T = 0.0;
-    if ( k<size() && k > minEvent() ) {
-      T = (*this)[k] - (*this)[k-1];
-      f = 1.0 / T;
-    }
+    double f = defaultfrequency;
+    if ( k<size() && k > minEvent() )
+      f = 1.0 / ( (*this)[k] - (*this)[k-1] );
     rate[i] += ( f - rate[i] )/trials;
-    period[i] += ( T - period[i])/trials;
+    ratesq[i] += ( f*f - ratesq[i])/trials;
   }
 }
 

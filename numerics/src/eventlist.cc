@@ -969,7 +969,7 @@ double EventList::frequency( double tbegin, double tend, double &sd ) const
 }
 
 
-void EventList::frequency( SampleDataD &rate, double time ) const
+void EventList::frequency( SampleDataD &rate, double time, double defaultfrequency ) const
 {
   rate = 0.0;
   long k[ size() ];
@@ -986,21 +986,25 @@ void EventList::frequency( SampleDataD &rate, double time ) const
 	double f = 1.0 / ( (*Events[j])[k[j]] - (*Events[j])[k[j]-1] );
 	rate[i] += ( f - rate[i] ) / (++rj);
       }
+      else if ( defaultfrequency >= 0.0 )
+	rate[i] += ( defaultfrequency - rate[i] ) / (++rj);
     }
   }
 }
 
 
 void EventList::frequency( SampleDataD &rate, SampleDataD &sd,
-			   double time ) const
+			   double time, double defaultfrequency ) const
 {
   rate = 0.0;
   sd = 0.0;
+  ArrayD rates;
+  rates.reserve( size() );
   long k[ size() ];
   for ( int j=0; j<size(); j++ )
     k[j] = Events[j]->next( rate.rangeFront() + time );
   for ( int i=0; i<rate.size(); i++ ) {
-    int rj = 0;
+    rates.clear();
     for ( int j=0; j<size(); j++ ) {
       for ( ; 
 	    k[j] < Events[j]->size() && 
@@ -1008,15 +1012,12 @@ void EventList::frequency( SampleDataD &rate, SampleDataD &sd,
 	    k[j]++ );
       if ( k[j] < Events[j]->size() && k[j] > Events[j]->minEvent() ) {
 	double T = (*Events[j])[k[j]] - (*Events[j])[k[j]-1];
-	double f = 1.0 / T;
-	sd[i] += ( T - sd[i] ) / (++rj);
-	rate[i] += ( f - rate[i] ) / rj;
-      }
+	rates.push( 1.0 / T );
+      } 
+      else if ( defaultfrequency >= 0.0 )
+	rates.push( defaultfrequency );
     }
-    double x = rate[i]*sd[i] - 1.0;
-    if ( x <= 0.0 )
-      x = 0.0;
-    sd[i] = rate[i] * ::sqrt( x );
+    rate[i] = meanStdev( sd[i], rates );
   }
 }
 
@@ -1074,7 +1075,7 @@ void EventList::cyclicFrequency( SampleDataD &rate, SampleDataD &sd,
 }
 
 
-double EventList::frequencyAt( double time ) const
+double EventList::frequencyAt( double time, double defaultfrequency ) const
 {
   double meanf = 0.0;
   int nf = 0;
@@ -1084,32 +1085,28 @@ double EventList::frequencyAt( double time ) const
       double f = 1.0 / ( (*(*i))[n] - (*(*i))[n-1] );
       meanf += ( f - meanf )/(++nf);
     }
+    else if ( defaultfrequency >= 0.0 )
+      meanf += ( defaultfrequency - meanf )/(++nf);
   }
   return meanf;
 }
 
 
-double EventList::frequencyAt( double time, double &sd ) const
+double EventList::frequencyAt( double time, double &sd, double defaultfrequency ) const
 {
-  double meanisi = 0.0;
-  double meanf = 0.0;
-  int nf = 0;
+  sd = 0.0;
+  ArrayD rates;
+  rates.reserve( size() );
   for ( const_iterator i = begin(); i != end(); ++i ) {
     long n = (*i)->next( time );
     if ( n < (*i)->size() && n > (*i)->minEvent() ) {
       double T = (*(*i))[n] - (*(*i))[n-1];
-      double f = 1.0 / T;
-      meanisi += ( T - meanisi )/(++nf);
-      meanf += ( f - meanf )/nf;
+      rates.push( 1.0 / T );
     }
+    else if ( defaultfrequency >= 0.0 )
+      rates.push( defaultfrequency );
   }
-
-  double x = meanf*meanisi - 1.0;
-  if ( x <= 0.0 )
-    x = 0.0;
-  sd = meanf * ::sqrt( x );
-
-  return meanf;
+  return meanStdev( sd, rates );
 }
 
 
