@@ -1031,7 +1031,7 @@ typename numerical_container_traits<ContainerX>::variance_type
 	 const ContainerS &vecs );
 
   /*! The serial correlation coefficients (autocorrelation)
-      \f[ \rho_k = \frac{\mathrm{cov}(x_1,x_k)}{\sqrt{\mathrm{var}(x_1)\mathrm{var}(x_k)} \f]
+      \f[ \rho_k = \frac{\mathrm{cov}(x_1,x_k)}{\sqrt{\mathrm{var}(x_1)\mathrm{var}(x_k)}} \f]
       of the range \a firstx, \a lastx
       for different lags \a k are returned in the range
       \a firsty, \a lasty for the lags \a k ranging from 0 to \a lasty-firsty-1.
@@ -1050,7 +1050,7 @@ template < typename ForwardIterX, typename ForwardIterY >
 void serialCorr( ForwardIterX firstx, ForwardIterX lastx,
 		 ForwardIterY firsty, ForwardIterY lasty );
   /*! The serial correlation coefficients (autocorrelation)
-      \f[ \rho_k = \frac{\mathrm{cov}(x_1,x_k)}{\sqrt{\mathrm{var}(x_1)\mathrm{var}(x_k)} \f]
+      \f[ \rho_k = \frac{\mathrm{cov}(x_1,x_k)}{\sqrt{\mathrm{var}(x_1)\mathrm{var}(x_k)}} \f]
       of the container \a vecx
       for different lags \a k are returned in the container \a vecy
       for the lags \a k ranging from 0 to \a vecy.size()-1.
