@@ -165,6 +165,9 @@ public:
 	closeInputs(), outputsSize(), attLinesSize(),
 	outTracesSize() */
   int inputsSize( void ) const;
+    /*! The index of the analog input device with identifier \a ident. 
+        \sa addInput() */
+  int inputIndex( const string &ident ) const;
     /*! The ananlog input device \a deviceindex.
 	\sa addInput(), inputsSize(), inputTraces(), clearInputs(), closeInputs() */
   const AnalogInput *inputDevice( int deviceindex ) const;
@@ -199,7 +202,7 @@ public:
 	inputsSize(), attLinesize(), outTracesSize() */
   int outputsSize( void ) const;
     /*! The index of the analog output device with identifier \a ident. 
-        \sa addOutput(), ooutTraceIndex() */
+        \sa addOutput(), outTraceIndex() */
   int outputIndex( const string &ident ) const;
     /*! Stop analog output, clear the list of analog output devices
         without closing the devices.

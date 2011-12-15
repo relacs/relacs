@@ -91,6 +91,16 @@ int Acquire::inputsSize( void ) const
 }
 
 
+int Acquire::inputIndex( const string &ident ) const
+{
+  for ( unsigned int k=0; k < AI.size(); k++ ) {
+    if ( AI[k].AI->deviceIdent() == ident )
+      return k;
+  }
+  return -1;
+}
+
+
 const AnalogInput *Acquire::inputDevice( int deviceindex ) const
 {
   if ( deviceindex < 0 || deviceindex >= (int)AI.size() )

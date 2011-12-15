@@ -136,14 +136,14 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   addText( "inputtraceid", "Input trace identifier", "V-1" );
   addNumber( "inputtracescale", "Input trace scale", 1.0 );
   addText( "inputtraceunit", "Input trace unit", "V" );
-  addInteger( "inputtracedevice", "Input trace device", 0 );
+  addText( "inputtracedevice", "Input trace device", "ai-1" );
   addInteger( "inputtracechannel", "Input trace channel", 0 );
   addText( "inputtracereference", "Input trace reference", InData::referenceStr( InData::RefGround ) );
   addInteger( "inputtracegain", "Input trace gain", 0 );
   addBoolean( "inputtracecenter", "Input trace center vertically", true );
   addLabel( "output data", 0, Parameter::TabLabel );
   addNumber( "maxoutputrate", "Default maximum output sampling rate", 100000.0, 1.0, 10000000.0, 1000.0, "Hz", "kHz" );
-  addText( "outputtraceid", "Output trace identifier", "out-1" );
+  addText( "outputtraceid", "Output trace identifier", "" );
   addInteger( "outputtracechannel", "Output trace channel", 0 );
   addText( "outputtracedevice", "Output trace device", "ao-1" );
   addNumber( "outputtracescale", "Output trace scale factor to Volt", 1.0, -10000000.0, 10000000.0, 0.1 );
@@ -194,9 +194,9 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   CFG.configure( RELACSPlugin::Core );
 
   // loading plugins:
-  Plugins::add( "AISim", RELACSPlugin::AnalogInputId, createAISim, VERSION );
-  Plugins::add( "AOSim", RELACSPlugin::AnalogOutputId, createAOSim, VERSION );
-  Plugins::add( "AttSim", RELACSPlugin::AttenuatorId, createAttSim, VERSION );
+  Plugins::add( "AISim[relacs]", RELACSPlugin::AnalogInputId, createAISim, VERSION );
+  Plugins::add( "AOSim[relacs]", RELACSPlugin::AnalogOutputId, createAOSim, VERSION );
+  Plugins::add( "AttSim[relacs]", RELACSPlugin::AttenuatorId, createAttSim, VERSION );
   StrQueue pluginhomes( pluginhome, "|" );
   pluginhomes.strip();
   for ( int k=0; k<SS.Options::size( "pluginpathes" ); k++ ) {
@@ -663,21 +663,32 @@ void RELACSWidget::setupInTraces( void )
   int nid = Options::size( "inputtraceid" );
   for ( int k=0; k<nid; k++ ) {
     bool failed = false;
+    string traceid = text( "inputtraceid", k, "" );
+    if ( traceid.empty() )
+      continue;
+    Str ws;
     InData id;
-    id.setIdent( text( "inputtraceid", k ) );
+    id.setIdent( traceid );
     id.setUnit( number( "inputtracescale", k, 1.0 ),
 		text( "inputtraceunit", k, "V" ) );
     id.setSampleRate( number( "inputsamplerate", 1000.0 ) );
     id.setStartSource( 0 );
     id.setUnipolar( boolean( "inputunipolar", false ) );
     int channel = integer( "inputtracechannel", k, -1 );
-    if ( channel < 0 )
+    if ( channel < 0 ) {
+      ws += ", undefined channel number";
       failed = true;
+    }
     id.setChannel( channel );
-    int device = integer( "inputtracedevice", k, -1 );
-    if ( device < 0 )
+    Str ds = text( "inputtracedevice", k, "" );
+    int devi = (int)::rint( ds.number( -1 ) );
+    if ( devi < 0 || devi >= AQ->inputsSize() )
+      devi = AQ->inputIndex( ds );
+    if ( devi < 0 ) {
+      ws += ", device <b>" + ds + "</b> not known";
       failed = true;
-    id.setDevice( device );
+    }
+    id.setDevice( devi );
     id.setContinuous();
     int m = SaveFiles::SaveTrace | PlotTraceMode;
     if ( boolean( "inputtracecenter", k ) )
@@ -685,12 +696,16 @@ void RELACSWidget::setupInTraces( void )
     id.setMode( m );
     id.setReference( text( "inputtracereference", k, InData::referenceStr( InData::RefGround ) ) );
     int gain = integer( "inputtracegain", k, -1 );
-    if ( gain < 0 )
+    if ( gain < 0 ) {
+      ws += ", undefined gain";
       failed = true;
+    }
     id.setGainIndex( gain );
     if ( failed ) {
-      printlog( "! error: inconsisten configuration of input traces" );
-      MessageBox::error( "RELACS Error !", "inconsisten configuration of input traces", this );
+      ws.erase( 0, 2 );
+      ws += " for output trace <b>" + traceid + "</b>!<br> Skip this output trace.";
+      printlog( "! warning: " + ws.erasedMarkup() );
+      MessageBox::warning( "RELACS Warning !", ws, true, 0.0, this );
       continue;
     }
     IL.push( id );
@@ -707,18 +722,26 @@ void RELACSWidget::setupOutTraces( void )
   OutData::setDefaultMaxSampleRate( number( "maxoutputrate", 100000.0 ) );
   int nod = Options::size( "outputtraceid" );
   int chan = 0;
-  int lastdi = 0;
+  int lastdevi = 0;
   for ( int k=0; k<nod; k++ ) {
+    string traceid = text( "outputtraceid", k, "" );
+    if ( traceid.empty() )
+      continue;
     Str ds = text( "outputtracedevice", k, "" );
-    int di = (int)::rint( ds.number( -1 ) );
-    if ( di < 0 || di >= AQ->outputsSize() )
-      di = AQ->outputIndex( ds );
-    if ( di != lastdi ) {
-      lastdi = di;
+    int devi = (int)::rint( ds.number( -1 ) );
+    if ( devi < 0 || devi >= AQ->outputsSize() )
+      devi = AQ->outputIndex( ds );
+    if ( devi < 0 ) {
+      Str ws = "Device <b>" + ds + "</b> for output trace <b>" + traceid + "</b> not known!<br> Skip this output trace.";
+      printlog( "! warning: " + ws.erasedMarkup() );
+      MessageBox::warning( "RELACS Warning !", ws, true, 0.0, this );
+      continue;
+    }
+    if ( devi != lastdevi ) {
+      lastdevi = devi;
       chan = 0;
     }
-    AQ->addOutTrace( text( "outputtraceid", k, "out-" + Str( k+1 ) ),
-		     di,
+    AQ->addOutTrace( traceid, devi,
 		     integer( "outputtracechannel", k, chan ),
 		     number( "outputtracescale", k, 1.0 ),
 		     text( "outputtraceunit", k, "V" ),
@@ -1727,6 +1750,12 @@ void RELACSWidget::startFirstAcquisition( void )
   SignalTime = -1.0;
   CurrentTime = 0.0;
   setupInTraces();
+  if ( IL.empty() ) {
+    printlog( "! error: No valid input traces configured!" );
+    MessageBox::error( "RELACS Error !", "No valid input traces configured!", this );
+    startIdle();
+    return;
+  }
   setupOutTraces();
 
   // events:
