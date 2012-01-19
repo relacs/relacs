@@ -3,7 +3,7 @@
   A container for EventData
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
-  Copyright (C) 2002-2011 Jan Benda <benda@bio.lmu.de>
+  Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -1709,6 +1709,136 @@ void EventList::spectrum( double tbegin, double tend, double step,
   psd.setStepsize( p.stepsize() );
   sd.setOffset( 0.0 );
   sd.setStepsize( p.stepsize() );
+}
+
+
+void EventList::spectra( const SampleDataD &stimulus, SampleDataD &g, SampleDataD &c,
+			 SampleDataD &cs, SampleDataD &ss, SampleDataD &rs ) const
+{
+  if ( g.size() <= 0 )
+    return;
+
+  c.resize( g.size() );
+  cs.resize( 2*g.size() );
+  ss.resize( g.size() );
+  rs.resize( g.size() );
+  g = 0.0;
+  c = 0.0;
+  ss = 0.0;
+  rs = 0.0;
+  cs = 0.0;
+  SampleDataD gt( g.size(), 0.0 );
+  SampleDataD ct( g.size(), 0.0 );
+  SampleDataD rst( g.size(), 0.0 );
+  SampleDataD cst( 2*g.size(), 0.0 );
+  SampleDataD rr( stimulus.range() );
+
+  int n=0;
+  for ( int i=0; i<size(); i++ ) {
+    (*this)[i].rate( rr );
+    rr -= mean( rr );
+    ::relacs::spectra( stimulus, rr, gt, ct, cst, ss, rst );
+    n++;
+    for ( int k=0; k<g.size(); k++ ) {
+      g[k] += ( gt[k] - g[k] ) / n;
+      c[k] += ( ct[k] - c[k] ) / n;
+      rs[k] += ( rst[k] - rs[k] ) / n;
+    }
+    for ( int k=0; k<cs.size(); k++ )
+      cs[k] += ( cst[k] - cs[k] ) / n;
+  }
+  // frequency axis:
+  g.setOffset( 0.0 );
+  g.setStepsize( gt.stepsize() );
+  c.setOffset( 0.0 );
+  c.setStepsize( ct.stepsize() );
+  cs.setOffset( 0.0 );
+  cs.setStepsize( cst.stepsize() );
+  rs.setOffset( 0.0 );
+  rs.setStepsize( rst.stepsize() );
+}
+
+
+void EventList::spectra( const SampleDataD &stimulus, SampleDataD &g, SampleDataD &gsd,
+			 SampleDataD &c, SampleDataD &csd, SampleDataD &cs, SampleDataD &cssd,
+			 SampleDataD &ss, SampleDataD &rs, SampleDataD &rssd ) const
+{
+  if ( g.size() <= 0 )
+    return;
+
+  gsd.resize( g.size() );
+  c.resize( g.size() );
+  csd.resize( g.size() );
+  cs.resize( 2*g.size() );
+  cssd.resize( 2*g.size() );
+  ss.resize( g.size() );
+  rs.resize( g.size() );
+  rssd.resize( g.size() );
+  g = 0.0;
+  gsd = 0.0;
+  c = 0.0;
+  csd = 0.0;
+  ss = 0.0;
+  rs = 0.0;
+  rssd = 0.0;
+  cs = 0.0;
+  cssd = 0.0;
+  SampleDataD gt( g.size(), 0.0 );
+  SampleDataD gtsq( g.size(), 0.0 );
+  SampleDataD ct( g.size(), 0.0 );
+  SampleDataD ctsq( g.size(), 0.0 );
+  SampleDataD rst( g.size(), 0.0 );
+  SampleDataD rstsq( g.size(), 0.0 );
+  SampleDataD cst( 2*g.size(), 0.0 );
+  SampleDataD cstsq( 2*g.size(), 0.0 );
+  SampleDataD rr( stimulus.range() );
+
+  int n=0;
+  for ( int i=0; i<size(); i++ ) {
+    (*this)[i].rate( rr );
+    rr -= mean( rr );
+    ::relacs::spectra( stimulus, rr, gt, ct, cst, ss, rst );
+    n++;
+    for ( int k=0; k<g.size(); k++ ) {
+      g[k] += ( gt[k] - g[k] ) / n;
+      gtsq[k] += ( gt[k]*gt[k] - gtsq[k] ) / n;
+      c[k] += ( ct[k] - c[k] ) / n;
+      ctsq[k] += ( ct[k]*ct[k] - ctsq[k] ) / n;
+      rs[k] += ( rst[k] - rs[k] ) / n;
+      rstsq[k] += ( rst[k]*rst[k] - rstsq[k] ) / n;
+    }
+    for ( int k=0; k<cs.size(); k++ ) {
+      cs[k] += ( cst[k] - cs[k] ) / n;
+      cstsq[k] += ( cst[k]*cst[k] - cstsq[k] ) / n;
+    }
+  }
+
+  // standard deviation:
+  for ( int k=0; k<g.size(); k++ ) {
+    gsd[k] = ::sqrt( ::fabs( gtsq[k] - g[k]*g[k] ) );
+    csd[k] = ::sqrt( ::fabs( ctsq[k] - c[k]*c[k] ) );
+    rssd[k] = ::sqrt( ::fabs( rstsq[k] - rs[k]*rs[k] ) );
+  }
+  for ( int k=0; k<cs.size(); k++ )
+    cssd[k] = ::sqrt( ::fabs( cstsq[k] - cs[k]*cs[k] ) );
+
+  // frequency axis:
+  g.setOffset( 0.0 );
+  g.setStepsize( gt.stepsize() );
+  gsd.setOffset( 0.0 );
+  gsd.setStepsize( gt.stepsize() );
+  c.setOffset( 0.0 );
+  c.setStepsize( ct.stepsize() );
+  csd.setOffset( 0.0 );
+  csd.setStepsize( ct.stepsize() );
+  cs.setOffset( 0.0 );
+  cs.setStepsize( cst.stepsize() );
+  cssd.setOffset( 0.0 );
+  cssd.setStepsize( cst.stepsize() );
+  rs.setOffset( 0.0 );
+  rs.setStepsize( rst.stepsize() );
+  rssd.setOffset( 0.0 );
+  rssd.setStepsize( rst.stepsize() );
 }
 
 

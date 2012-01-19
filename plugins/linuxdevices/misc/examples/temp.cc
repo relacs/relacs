@@ -3,7 +3,7 @@
   Example for TempDTM5080 temeprature measurement
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
-  Copyright (C) 2002-2011 Jan Benda <benda@bio.lmu.de>
+  Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -26,7 +26,9 @@ using namespace misc;
 
 int main( void )
 {
-  TempDTM5080 t( "/dev/ttyS0", 1 );
+  Options opts;
+  opts.addInteger( "probe", 1 );
+  TempDTM5080 t( "/dev/ttyS0", opts );
   cout << t << endl;
   for ( ; ; ) {
     cout << "temp: " << t.temperature() << '\n';

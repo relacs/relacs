@@ -6,7 +6,7 @@
 # 
 #
 # RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
-# Copyright (C) 2002-2011 Jan Benda <benda@bio.lmu.de>
+# Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -34,8 +34,7 @@ function rewritegpl
     FILE="$1"
     if test -f "$FILE" && fgrep -q 'Copyright (C) 200' "$FILE"; then
 	test $VERBOSE = yes && ls -l "$FILE"
-	sed -e 's/2002-20[0-9][0-9] Jan Benda/2002-2011 Jan Benda/' "$FILE" > tmp.txt
-	mv tmp.txt "$FILE"
+	sed -i -e 's/2002-20[0-9][0-9] Jan Benda/2002-2012 Jan Benda/' "$FILE"
     fi
 }
 
@@ -66,13 +65,13 @@ for i in $(find -name '*.c'); do
 done
 
 # scripts:
-# XXX need o keep permissions!!!
+# XXX need to keep permissions!!! Should work now, with the -i option for sed
 echo "check permissions for the following updated files:"
 for i in $(find -name '*' -type f | grep -v '^\..*\.' | egrep -v 'Makefile|Doxyfile|configure|compile|missing|depcomp|libtool|updategpl'); do
   rewritegpl -v "$i"
 done
 
-echo "check content of the following files:"
+echo "check content of the following files for additional copyright statements:"
 echo "src/relacs_head"
 echo "src/relacslocal_head"
 echo "doc/relacs.1"

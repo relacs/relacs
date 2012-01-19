@@ -37,22 +37,23 @@ ai_multiboard_SOURCES = ai_multiboard.c common.c
 dio_write_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
     -I$(srcdir)/../include
 dio_write_LDFLAGS = $(COMEDI_LDFLAGS)
 dio_write_LDADD = \
     $(COMEDI_LIBS) \
     $(top_builddir)/relacs/src/librelacs.la \
-    ../src/libcomedicomedidigitalio.la
+    ../src/libcomedistreaming.la
 dio_write_SOURCES = dio_write.cc
 
 checkao_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
     -I$(srcdir)/../include
 checkao_LDFLAGS = \
     $(QT3_LDFLAGS)
 checkao_LDADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    ../src/libcomedicomedianaolginput.la \
-    ../src/libcomedicomedianaolgoutput.la
+    ../src/libcomedistreaming.la
 checkao_SOURCES = checkao.cc

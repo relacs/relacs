@@ -3,7 +3,7 @@
   A container for EventData
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
-  Copyright (C) 2002-2011 Jan Benda <benda@bio.lmu.de>
+  Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -731,7 +731,46 @@ public:
 	is set to the appropriate values. */
   void spectrum( double tbegin, double tend, double step,
 		 SampleDataD &psd, SampleDataD &sd ) const;
-
+    /*! Returns trial-averaged spectral measures between stimulus \a stimulus
+        and the events. 
+	The size of \a g times stimulus.stepsize() determines
+	the width of the time windows used for the fourier transformations.
+	Only events during the stimulus (between stimulus.rangeFront()
+	and stimulus.rangeBack() ) are considered.
+	The sampling interval of the stimulus (stimulus.stepsize())
+	is used as the bin width for discretizing the events.
+        The frequency axis of the gain \a g, coherence \a c, stimulus spectrum \a ss,
+	response spectrum \a rs, and cross-spectrum \a cs are set to the appropriate values.
+	\param[out] \a g the gain between \a stimlus and response
+	\prama[out] \a c the coherence between \a stimulus and response (the S-R coherence \f$\gamma^2_{SR}\f$).
+        \param[out] \a cs the cross-spectrum between \a stimulus and the events.
+        \param[out] \a ss the power-spectrum of the \a stimulus.
+        \param[out] \a rs the power-spectrum of the events. */
+  void spectra( const SampleDataD &stimulus, SampleDataD &g, SampleDataD &c,
+		SampleDataD &cs, SampleDataD &ss, SampleDataD &rs ) const;
+    /*! Returns trial-averaged spectral measures between stimulus \a stimulus
+        and the events. 
+	The size of \a g times stimulus.stepsize() determines
+	the width of the time windows used for the fourier transformations.
+	Only events during the stimulus (between stimulus.rangeFront()
+	and stimulus.rangeBack() ) are considered.
+	The sampling interval of the stimulus (stimulus.stepsize())
+	is used as the bin width for discretizing the events.
+        The frequency axis of the gain \a g, coherence \a c, stimulus spectrum \a ss,
+	response spectrum \a rs, and cross-spectrum \a cs and their standard deviations
+	are set to the appropriate values.
+	\param[out] \a g the gain between \a stimlus and response
+	\param[out] \a gsd the standard deviation of the gain.
+	\prama[out] \a c the coherence between \a stimulus and response (the S-R coherence \f$\gamma^2_{SR}\f$).
+	\param[out] \a csd the standard deviation of the coherence.
+        \param[out] \a cs the cross-spectrum between \a stimulus and the events.
+	\param[out] \a cssd the standard deviation of the cross spectrum.
+        \param[out] \a ss the power-spectrum of the \a stimulus.
+        \param[out] \a rs the power-spectrum of the events.
+	\param[out] \a rssd the standard deviation of the response spectrum. */
+  void spectra( const SampleDataD &stimulus, SampleDataD &g, SampleDataD &gsd,
+		SampleDataD &c, SampleDataD &csd, SampleDataD &cs, SampleDataD &cssd,
+		SampleDataD &ss, SampleDataD &rs, SampleDataD &rssd ) const;
     /*! Returns in \a c the trial-averaged stimulus-response coherence between
         \a stimulus and each of the event trials (the S-R coherence \f$\gamma^2_{SR}\f$).
 	The size of \a c times stimulus.stepsize() determines

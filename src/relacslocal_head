@@ -5,7 +5,7 @@
 # relacslocal
 #
 # RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
-# Copyright (C) 2002-2011 Jan Benda <benda@bio.lmu.de>
+# Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -169,7 +169,7 @@ if test "x$HELP" = "xyes"; then
   echo "$RELACSSCRIPT"
   echo
   echo "Script for running RELACS locally in the source tree"
-  echo "Jan Benda, 2003-2011"
+  echo "Jan Benda, 2003-2012"
   echo
   echo "Usage:"
   echo "  $RELACSSCRIPT [options]"

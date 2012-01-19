@@ -3,7 +3,7 @@
   A simple example showing how to program your own RePro.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
-  Copyright (C) 2002-2011 Jan Benda <benda@bio.lmu.de>
+  Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ namespace examples {
 
 
 ReProExample::ReProExample( void )
-  : RePro( "ReProExample", "RePro - Example", "Examples",
+  : RePro( "ReProExample", "examples",
 	   "Jan Benda", "1.0", "July 8, 2008" )
 {
   // add some parameter as options:
@@ -48,7 +48,7 @@ int ReProExample::main( void )
   noMessage();
 
   // plot trace:
-  plotToggle( true, false, duration, 0.0 );
+  tracePlotContinuous( duration );
 
   sleep( duration );
 
@@ -56,7 +56,7 @@ int ReProExample::main( void )
 }
 
 
-addRePro( ReProExample );
+addRePro( ReProExample, examples );
 
 
 }; /* namespace examples */

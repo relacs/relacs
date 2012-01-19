@@ -3,7 +3,7 @@
   
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
-  Copyright (C) 2002-2011 Jan Benda <benda@bio.lmu.de>
+  Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -64,7 +64,7 @@ int main( int argc, char **argv )
     case 0: switch ( longindex ) {
       case 0:
 	cout << "RELACS " << RELACSVERSION << endl;
-	cout << "Copyright (C) 2002-2011 Jan Benda\n";
+	cout << "Copyright (C) 2002-2012 Jan Benda\n";
 	exit( 0 );
 	break;
       case 1:

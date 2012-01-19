@@ -1,4 +1,5 @@
 #include <unistd.h>
+#include <relacs/options.h>
 #include <relacs/digitalio.h>
 #include <relacs/comedi/comedidigitalio.h>
 
@@ -7,8 +8,8 @@ using namespace comedi;
 
 int main( int argc, char *argv[] )
 {
-  DigitalIO *DIO = new ComediDigitalIO( "/dev/comedi0" );
-  DIO->open( "/dev/comedi0" );
+  DigitalIO *DIO = new ComediDigitalIO( "/dev/comedi0", Options() );
+  DIO->open( "/dev/comedi0", Options() );
   DIO->configureLine( 0, true );
   DIO->write( 0, false );
   sleep( 1.0 );
