@@ -130,6 +130,33 @@ Options &Options::append( const Options &o )
 }
 
 
+Options &Options::insert( const Options &o, const string &atident )
+{
+  Warning = "";
+
+  if ( atident.empty() ) {
+    // insert at beginning of list:
+    Opt.insert( Opt.begin(), o.begin(), o.end() );
+  }
+  else {
+    // insert option at element specified by atident:
+
+    // search element:
+    iterator pp = find( atident );
+    if ( pp != end() ) {
+      Opt.insert( pp, o.begin(), o.end() );
+    }
+    else {
+      // not found:
+      for ( const_iterator op = o.begin(); op != o.end(); ++op ) {
+	Opt.push_back( *op );
+      }
+    }
+  }
+  return *this;
+}
+
+
 Options &Options::assign( const Options &o, int flags )
 {
   Warning = "";
@@ -175,6 +202,41 @@ Options &Options::append( const Options &o, int flags )
       Opt.push_back( *pp );
   }
 
+  return *this;
+}
+
+
+Options &Options::insert( const Options &o, int flags, const string &atident )
+{
+  Warning = "";
+
+  if ( atident.empty() ) {
+    // insert at beginning of list:
+    for ( deque< Parameter >::const_reverse_iterator op = o.Opt.rbegin(); op < o.Opt.rend(); ++op ) {
+      if ( (*op).flags( flags ) )
+	Opt.push_front( *op );
+    }
+    return *this;
+  }
+  else {
+    // insert option at element specified by atident:
+
+    // search element:
+    iterator pp = find( atident );
+    if ( pp != end() ) {
+      for ( deque< Parameter >::const_reverse_iterator op = o.Opt.rbegin(); op < o.Opt.rend(); ++op ) {
+	if ( (*op).flags( flags ) )
+	  pp = Opt.insert( pp, *op );
+      }
+    }
+    else {
+      // not found:
+      for ( const_iterator op = o.begin(); op != o.end(); ++op ) {
+	if ( (*op).flags( flags ) )
+	  Opt.push_back( *op );
+      }
+    }
+  }
   return *this;
 }
 
@@ -966,15 +1028,15 @@ Parameter &Options::insert( const Parameter &np, const string &atident )
     // insert option at element specified by atident:
 
     // search element:
-    for ( iterator pp = begin(); pp != end(); ++pp ) {
-      if ( *pp == atident ) {
-	return *Opt.insert( pp, np );
-      }
+    iterator pp = find( atident );
+    if ( pp != end() ) {
+      return *Opt.insert( pp, np );
     }
-
-    // not found:
-    Opt.push_back( np );
-    return Opt.back();
+    else {
+      // not found:
+      Opt.push_back( np );
+      return Opt.back();
+    }
   }
 }
 
@@ -2761,7 +2823,7 @@ Options &Options::combineLast( const string &ident )
 }
 
 
-Options &Options::erase( Options::iterator &p )
+Options &Options::erase( Options::iterator p )
 {
   if ( p != end() )
     Opt.erase( p );

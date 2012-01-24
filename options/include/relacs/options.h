@@ -108,6 +108,11 @@ public:
   Options &assign( const Options &o );
     /*! Append Options \a o to this. */
   Options &append( const Options &o );
+    /*! Insert Options \a o at the beginning of the options list
+        (\a atident == "") or at the position of the option with
+        identity \a atident. If the option with identity \a atident
+        does not exist, the options are appended to the end of the list. */
+  Options &insert( const Options &o, const string &atident="" );
 
     /*! Copy Options \a o that have flags() & \a flags greater than zero
         to this. If \a flags equals zero, all options are copied.
@@ -133,6 +138,12 @@ public:
         If \a flags equals NonDefault, all options whose values differ
 	from their default value are copied. */
   Options &append( const Options &o, int flags );
+    /*! Insert Options \a o that have flags() & \a flags greater than zero
+        at the beginning of the options list
+        (\a atident == "") or at the position of the option with
+        identity \a atident. If the option with identity \a atident
+        does not exist, the options are appended to the end of the list. */
+  Options &insert( const Options &o, int flags, const string &atident="" );
 
     /*! Set the value of an existing option 
         with identifier \a ident to \a value.
@@ -275,7 +286,7 @@ public:
     /*! Add parameter \a np to options. */
   Parameter &add( const Parameter &np );
     /*! Insert a new parameter \a np at the beginning of the options list
-        (\a atindent == "") or at the position of the option with
+        (\a atident == "") or at the position of the option with
         identity \a atident. If the option with identity \a atident
         does not exist, the option is appended to the end of the list. */
   Parameter &insert( const Parameter &np, const string &atident="" );
@@ -294,7 +305,7 @@ public:
 			     int flags=0, int style=0 )
     { return addText( ident, ident, dflt, flags, style ); };
     /*! Insert a new text option at the beginning of the options list
-        (\a atindent == "") or at the position of the option with
+        (\a atident == "") or at the position of the option with
         identity \a atident. If the option with identity \a atident
         does not exist, the option is appended to the end of the list.
         Its request string for the options dialog is set to \a request,
@@ -304,7 +315,7 @@ public:
 			 const string &request, const string &dflt,
 			 int flags=0, int style=0 );
     /*! Insert a new text option at the beginning of the options list
-        (\a atindent == "") or at the position of the option with
+        (\a atident == "") or at the position of the option with
         identity \a atident. If the option with identity \a atident
         does not exist, the option is appended to the end of the list.
         Its identifier string and its request string for the options dialog 
@@ -364,7 +375,7 @@ public:
 			     int flags=0, int style=0 )
     { return addSelection( ident, ident, selection, flags, style ); };
     /*! Insert a new text option at the beginning of the options list
-        (\a atindent == "") or at the position of the option with
+        (\a atident == "") or at the position of the option with
         identity \a atident. If the option with identity \a atident
         does not exist, the option is appended to the end of the list.
         Its request string for the options dialog is set to \a request,
@@ -375,7 +386,7 @@ public:
 			      const string &request, const string &selection,
 			      int flags=0, int style=0 );
     /*! Insert a new text option at the beginning of the options list
-        (\a atindent == "") or at the position of the option with
+        (\a atident == "") or at the position of the option with
         identity \a atident. If the option with identity \a atident
         does not exist, the option is appended to the end of the list.
         Its identifier string and its request string for the options dialog 
@@ -460,7 +471,7 @@ public:
 			       const string &format="", int flags=0, int style=0 )
     { return addNumber( ident, ident, 0.0, -MAXDOUBLE, MAXDOUBLE, 1.0, unit, unit, format, flags, style ); };
     /*! Insert a new number option at the beginning of the options list
-        (\a atindent == "") or at the position of the option with
+        (\a atident == "") or at the position of the option with
         identity \a atident. If the option with identity \a atident
         does not exist, the option is appended to the end of the list.
         Its request string for the options dialog is set to \a request,
@@ -477,7 +488,7 @@ public:
 			   const string &unit="", const string &outputunit="", 
 			   const string &format="", int flags=0, int style=0 );
     /*! Insert a new number option at the beginning of the options list
-        (\a atindent == "") or at the position of the option with
+        (\a atident == "") or at the position of the option with
         identity \a atident. If the option with identity \a atident
         does not exist, the option is appended to the end of the list.
         Its request string for the options dialog is set to \a request,
@@ -493,7 +504,7 @@ public:
 			   -MAXDOUBLE, MAXDOUBLE, 1.0, unit, unit,
 			   format, flags, style ); };
     /*! Insert a new number option at the beginning of the options list
-        (\a atindent == "") or at the position of the option with
+        (\a atident == "") or at the position of the option with
         identity \a atident. If the option with identity \a atident
         does not exist, the option is appended to the end of the list.
         Its identifier string and request string is set to \a ident.
@@ -508,7 +519,7 @@ public:
 			   -MAXDOUBLE, MAXDOUBLE, 1.0, unit, unit,
 			   format, flags, style ); };
     /*! Insert a new number option at the beginning of the options list
-        (\a atindent == "") or at the position of the option with
+        (\a atident == "") or at the position of the option with
         identity \a atident. If the option with identity \a atident
         does not exist, the option is appended to the end of the list.
         Its identifier string and request string is set to \a ident.
@@ -675,7 +686,7 @@ public:
     { return addInteger( ident, ident, 0, LONG_MIN, LONG_MAX, 1,
 			 unit, unit, -1, 0 ); };
     /*! Insert a new integer option at the beginning of the options list
-        (\a atindent == "") or at the position of the option with
+        (\a atident == "") or at the position of the option with
         identity \a atident. If the option with identity \a atident
         does not exist, the option is appended to the end of the list.
         Its request string for the options dialog is set to \a request,
@@ -690,7 +701,7 @@ public:
 			    const string &unit="", const string &outputunit="", 
 			    int width=0, int flags=0, int style=0 );
     /*! Insert a new integer option at the beginning of the options list
-        (\a atindent == "") or at the position of the option with
+        (\a atident == "") or at the position of the option with
         identity \a atident. If the option with identity \a atident
         does not exist, the option is appended to the end of the list.
         Its identifier string and request string is set to \a ident.
@@ -702,7 +713,7 @@ public:
     { return insertInteger( ident, atident, ident, dflt, LONG_MIN, LONG_MAX,
 			    1, unit, unit, width, flags, style ); };
     /*! Insert a new integer option at the beginning of the options list
-        (\a atindent == "") or at the position of the option with
+        (\a atident == "") or at the position of the option with
         identity \a atident. If the option with identity \a atident
         does not exist, the option is appended to the end of the list.
         Its identifier string and request string is set to \a ident.
@@ -780,7 +791,7 @@ public:
   inline Parameter &addBoolean( const string &ident, int flags=0, int style=0 )
     { return addBoolean( ident, ident, false, flags, style ); };
     /*! Insert a new boolean option at the beginning of the options list
-        (\a atindent == "") or at the position of the option with
+        (\a atident == "") or at the position of the option with
         identity \a atident. If the option with identity \a atident
         does not exist, the option is appended to the end of the list.
         Its request string for the options dialog is set to \a request,
@@ -790,7 +801,7 @@ public:
 			    const string &request="", bool dflt=false,
 			    int flags=0, int style=0 );
     /*! Insert a new boolean option at the beginning of the options list
-        (\a atindent == "") or at the position of the option with
+        (\a atident == "") or at the position of the option with
         identity \a atident. If the option with identity \a atident
         does not exist, the option is appended to the end of the list.
         Its identifier string and request string is set to \a ident.
@@ -801,7 +812,7 @@ public:
     { return insertBoolean( ident, atident, ident, dflt, flags, style ); };
   */
     /*! Insert a new boolean option at the beginning of the options list
-        (\a atindent == "") or at the position of the option with
+        (\a atident == "") or at the position of the option with
         identity \a atident. If the option with identity \a atident
         does not exist, the option is appended to the end of the list.
         Its identifier string and request string is set to \a ident. */
@@ -870,7 +881,7 @@ public:
   inline Parameter &addDate( const string &ident, int flags=0, int style=0 )
     { return addDate( ident, ident, 0, 0, 0, flags, style ); };
     /*! Insert a new date option at the beginning of the options list
-        (\a atindent == "") or at the position of the option with
+        (\a atident == "") or at the position of the option with
         identity \a atident. If the option with identity \a atident
         does not exist, the option is appended to the end of the list.
         \param[in] ident the identifier string of the new option
@@ -890,7 +901,7 @@ public:
 			 int year=0, int month=0, int day=0,
 			 int flags=0, int style=0 );
     /*! Insert a new date option at the beginning of the options list
-        (\a atindent == "") or at the position of the option with
+        (\a atident == "") or at the position of the option with
         identity \a atident. If the option with identity \a atident
         does not exist, the option is appended to the end of the list.
         \param[in] ident the identifier and request string of the new option
@@ -909,7 +920,7 @@ public:
 			 int flags=0, int style=0 )
     { return insertDate( ident, atident, ident, year, month, day, flags, style ); };
     /*! Insert a new date option at the beginning of the options list
-        (\a atindent == "") or at the position of the option with
+        (\a atident == "") or at the position of the option with
         identity \a atident. If the option with identity \a atident
         does not exist, the option is appended to the end of the list.
         The year, month and day are set to zero. 
@@ -1027,7 +1038,7 @@ public:
   inline Parameter &addTime( const string &ident, int flags=0, int style=0 )
     { return addTime( ident, ident, 0, 0, 0, flags, style ); };
     /*! Insert a new time option at the beginning of the options list
-        (\a atindent == "") or at the position of the option with
+        (\a atident == "") or at the position of the option with
         identity \a atident. If the option with identity \a atident
         does not exist, the option is appended to the end of the list.
         \param[in] ident the identifier string of the new option
@@ -1047,7 +1058,7 @@ public:
 			 int hour=0, int minutes=0, int seconds=0,
 			 int flags=0, int style=0 );
     /*! Insert a new time option at the beginning of the options list
-        (\a atindent == "") or at the position of the option with
+        (\a atident == "") or at the position of the option with
         identity \a atident. If the option with identity \a atident
         does not exist, the option is appended to the end of the list.
         \param[in] ident the identifier and request string of the new option
@@ -1066,7 +1077,7 @@ public:
 			 int flags=0, int style=0 )
     { return insertTime( ident, atident, ident, hour, minutes, seconds, flags, style ); };
     /*! Insert a new time option at the beginning of the options list
-        (\a atindent == "") or at the position of the option with
+        (\a atident == "") or at the position of the option with
         identity \a atident. If the option with identity \a atident
         does not exist, the option is appended to the end of the list.
         The hour, minutes and seconds are set to zero. 
@@ -1152,7 +1163,7 @@ public:
     /*! Add a label \a ident at the end of the options list. */
   Parameter &addLabel( const string &ident, int flags=0, int style=0 );
     /*! Insert a new label \a ident at the beginning of the options list
-        (\a atindent == "") or at the position of the option with
+        (\a atident == "") or at the position of the option with
         identity \a atident. If the option with identity \a atident
         does not exist, the option is appended to the end of the list. */
   Parameter &insertLabel( const string &ident, const string &atident="",
@@ -1169,7 +1180,7 @@ public:
     /*! Add a separator at the end of the options list. */
   Parameter &addSeparator( int flags=0, int style=0 ); 
     /*! Insert a new separator at the beginning of the options list
-        (\a atindent == "") or at the position of the option with
+        (\a atident == "") or at the position of the option with
         identity \a atident. If the option with identity \a atident
         does not exist, the option is appended to the end of the list. */
   Parameter &insertSeparator( const string &atident="", int flags=0, int style=0 );
@@ -1211,7 +1222,7 @@ public:
   Options &combineLast( const string &ident="" );
 
     /*! Remove the option where a p points to. */
-  Options &erase( iterator &p );
+  Options &erase( iterator p );
     /*! Remove all options whose identifier match \a ident from options list. */
   Options &erase( const string &ident );
     /*! Remove all options whose flag matches \a selectflag from options list. */

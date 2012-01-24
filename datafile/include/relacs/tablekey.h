@@ -46,7 +46,13 @@ class TableKey
 
 public:
 
+    /*! Construct an empty TableKey. */
   TableKey( void );
+    /*! Copy-constructor. */
+  TableKey( const TableKey &key );
+    /*! Construct an TableKey from Options \a o. */
+  TableKey( const Options &o );
+    /*! Destructor. */
   ~TableKey( void );
 
     /*! Add a new number option with value \a value to the end of the options list. 
@@ -145,6 +151,25 @@ public:
     /*! Adds all parameter from \a opts to this as specified by \a selectflag.
        \sa Options::append(const Options&, int) */
   void add( const Options &opts, int selectflag=0 );
+    /*! Insert all parameter from \a opts
+        at the beginning of the options list
+        (\a atident == "") or at the position of the column or group specifier with
+        identity \a atident. If the option with identity \a atident
+        does not exist, the options are appended to the end of the list.
+       \sa Options::insert(const Options&, const string& ) */
+  void insert( const Options &opts, const string &atident="" );
+    /*! Insert all parameter from \a opts as specified by \a selectflag
+        at the beginning of the options list
+        (\a atident == "") or at the position of the column or group specifier with
+        identity \a atident. If the option with identity \a atident
+        does not exist, the options are appended to the end of the list.
+       \sa Options::insert(const Options&, int, const string& ) */
+  void insert( const Options &opts, int selectflag, const string &atident="" );
+
+    /*! Erase the column \a column from the key. */
+  void erase( int column );
+    /*! Erase the column whose identifier string matches \a pattern from the key. */
+  void erase( const string &pattern );
 
     /*! Returns the column whose identifier string matches \a pattern.
         The first column is 0. */
@@ -217,6 +242,14 @@ public:
         \a level = 0 sets the identifier sting of the column.
 	\sa column() */
   Parameter &setGroup( const string &pattern, const string &group, int level=1 );
+    /*! Returns all groups and columns belonging to the group of level \a level
+        starting at the \a column-th column, inclusively. 
+        \a level = 0 returns solely the identifier of the column. */
+  Options groupOptions( int column, int level=1 ) const;
+    /*! Returns all groups and columns belonging to the group of level \a level
+        starting at the column specified by \a pattern, inclusively. 
+        \a level = 0 returns solely the identifier of the column. */
+  Options groupOptions( const string &pattern, int level=1 ) const;
 
     /*! Get \a i-th column. */
   const Parameter &operator[]( int i ) const;
@@ -228,7 +261,7 @@ public:
   Parameter &operator[]( const string &pattern );
 
     /*! The number of columns the TableKey describes. */
-  int columns( void ) const { return Columns.size(); };
+  int columns( void ) const;
     /*! The number of levels of the TableKey.
         0: No columns are described by the TableKey,
 	1: Each column has an identifier, but columns are not grouped.
@@ -238,7 +271,7 @@ public:
 
     /*! Returns true if the TableKey does not describe any columns.
         However, it can already contain descriptions of groups. */     
-  bool empty( void ) const { return Columns.empty(); };
+  bool empty( void ) const;
     /*! Clears the TableKey. Erases all column and group descriptions. */
   void clear( void );
 
@@ -359,7 +392,21 @@ public:
 	The numbers are separeted by \a Separator.
 	If an output column does not exist,
 	it is not written to \a str. */
-  ostream &save( ostream &str, const TableData &table, int r, int c=0 ) const;
+  ostream &save( ostream &str, const TableData &table, int r, int c=-1 ) const;
+    /*! Write the numbers from colum \a cbegin to column \a cend (exclusively)
+        of the row \a r of \a table
+        to the output stream \a str 
+	using the formats starting at column \a c.
+	If \a cend is negative, it is set behind the last column of the table.
+	If \a c is negative, the output column is set to the column
+	following the one used in the most recent call
+	of one of the save() functions.
+	If the output column is the first column,
+	\a DataStart, otherwise \a Separator is written right before the numbers.
+	The numbers are separeted by \a Separator.
+	If an output column does not exist,
+	it is not written to \a str. */
+  ostream &save( ostream &str, const TableData &table, int r, int cbegin, int cend, int c=-1 ) const;
     /*! Write the whole table \a table to the output stream \a str 
 	using the formats of the TableKey.
 	\a DataStart is written at the beginning of each line
@@ -399,30 +446,30 @@ public:
   void setSaveColumn( int col );
 
     /*! The string indicating a comment. */
-  string comment( void ) const { return Comment; };
+  string comment( void ) const;
     /*! Set the string for indicating comments to \a comment
         and the start string to \a comment + " ". */
-  void setComment( const string &comment ) { Comment = comment; KeyStart = comment + " "; };
+  void setComment( const string &comment );
 
     /*! The string introducing each line of the table header. */
-  string keyStart( void ) const { return KeyStart; };
+  string keyStart( void ) const;
     /*! Set the string introducing each line of the table header to \a start. */
-  void setKeyStart( const string &start ) { KeyStart = start; };
+  void setKeyStart( const string &start );
 
     /*! The string introducing each line of data. */
-  string dataStart( void ) const { return DataStart; };
+  string dataStart( void ) const;
     /*! Set the string introducing each line of data to \a start. */
-  void setDataStart( const string &start ) { DataStart = start; };
+  void setDataStart( const string &start );
 
     /*! The string separating two columns. */
-  string separator( void ) const { return Separator; };
+  string separator( void ) const;
     /*! Set the string separating two columns to \a separator. */
-  void setSeparator( const string &separator ) { Separator = separator; };
+  void setSeparator( const string &separator );
 
     /*! The string indicating a missing data value. */
-  string missing( void ) const { return Missing; };
+  string missing( void ) const;
     /*! Set the string indicating missing data values to \a missing. */
-  void setMissing( const string &missing ) { Missing = missing; };
+  void setMissing( const string &missing );
 
 
  private:

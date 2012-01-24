@@ -41,6 +41,35 @@ TableKey::TableKey( void )
 }
 
 
+TableKey::TableKey( const TableKey &key )
+  : Opt( key.Opt ),
+    Columns( key.Columns ),
+    Width( key.Width ),
+    PrevCol( key.PrevCol ),
+    Comment( key.Comment ),
+    KeyStart( key.KeyStart ),
+    DataStart( key.DataStart ),
+    Separator( key.Separator ),
+    Missing( key.Missing )
+{
+}
+
+
+TableKey::TableKey( const Options &o )
+  : Opt( o ),
+    Columns(),
+    Width(),
+    PrevCol( -1 ),
+    Comment( "#" ),
+    KeyStart( "# " ),
+    DataStart( "  " ),
+    Separator( "  " ),
+    Missing( "-" )
+{
+  init();
+}
+
+
 TableKey::~TableKey( void )
 {
   clear();
@@ -178,6 +207,43 @@ void TableKey::add( const Options &opts, int selectflag )
 }
 
 
+void TableKey::insert( const Options &opts, const string &atident )
+{
+  Opt.insert( opts, atident );
+  init();
+}
+
+
+void TableKey::insert( const Options &opts, int selectflag, const string &atident )
+{
+  Opt.insert( opts, selectflag, atident );
+  init();
+}
+
+
+void TableKey::erase( int column )
+{
+  if ( column >= 0 && column < (int)Columns.size() && ! Columns[column].empty() ) {
+    vector< int > inx;
+    inx.push_back( Columns[column][0] - Opt.begin() );
+    for ( int l=1; l<(int)Columns[column].size(); l++ ) {
+      if ( ( column+1 >= (int)Columns.size() || Columns[column][l] != Columns[column+1][l] ) &&
+	   ( column <= 0 || Columns[column][l] != Columns[column-1][l] ))
+	inx.push_back( Columns[column][l] - Opt.begin() );
+    }
+    for ( unsigned int k=0; k<inx.size(); k++ )
+      Opt.erase( Opt.begin() + inx[k] );
+    init();
+  }
+}
+
+
+void TableKey::erase( const string &pattern )
+{
+  erase( column( pattern ) );
+}
+
+
 int TableKey::column( const string &pattern ) const
 {
   // split pattern:
@@ -210,11 +276,13 @@ int TableKey::column( const string &pattern ) const
     if ( c > 0 && Columns[c][l] == Columns[c-1][l] )
       c++;
     else if ( (*Columns[c][l]) == sq[s] ) {
-      if ( l > 0 )
-	l--;
-      p++;
-      if ( p >= pq.size() )
-	return c;
+      do {
+	if ( l > 0 )
+	  l--;
+	p++;
+	if ( p >= pq.size() )
+	  return c;
+      } while ( pq[p].empty() );
       sq.assign( pq[p], "|" );
       s = 0;
     }
@@ -402,6 +470,31 @@ Parameter &TableKey::setGroup( const string &pattern, const string &ident,
 }
 
 
+Options TableKey::groupOptions( int column, int level ) const
+{
+  Options opts;
+  if ( column >= 0 && column < (int)Columns.size() &&
+       (int)Columns[column].size() > level ) {
+    Options::const_iterator bp = Columns[column][level];
+    while ( column < (int)Columns.size() && 
+	    Columns[column][level] == bp )
+      column++;
+    Options::const_iterator ep = Opt.end();
+    if ( column < (int)Columns.size() )
+      ep = Columns[column][level];
+    for ( Options::const_iterator pp = bp; pp != ep; ++pp )
+      opts.add( *pp );
+  }
+  return opts;
+}
+
+
+Options TableKey::groupOptions( const string &pattern, int level ) const
+{
+  return groupOptions( column( pattern ), level );
+}
+
+
 const Parameter &TableKey::operator[]( int i ) const
 {
   if ( i >= 0 && i < (int)Columns.size() )
@@ -432,12 +525,24 @@ Parameter &TableKey::operator[]( const string &pattern )
 }
 
 
+int TableKey::columns( void ) const
+{ 
+  return Columns.size();
+}
+
+
 int TableKey::level( void ) const
 {
   if ( Columns.size() > 0 )
     return Columns[0].size();
   else
     return 0;
+}
+
+
+bool TableKey::empty( void ) const
+{
+  return Columns.empty();
 }
 
 
@@ -514,7 +619,10 @@ ostream &TableKey::saveKey( ostream &str, bool key, bool num,
       if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) ) {
 	if ( n > 0 )
 	  str << Separator;
-	str << Str( (*Columns[c][0]).unit(), -Width[ c ] );
+	string us = (*Columns[c][0]).unit();
+	if ( us.empty() )
+	  us = "-";
+	str << Str( us, -Width[ c ] );
 	n++;
       }
     }
@@ -784,12 +892,15 @@ TableKey &TableKey::loadKey( const StrQueue &sq )
 	pos.back().push_back( c );
       else {
 	pos.back().push_back( (*sp).size() );
-	if ( pos.size() > 1 &&
-	     pos[pos.size()-1].size() < pos[pos.size()-2].size() ) {
+	/*
+	// this makes problems, if a unit is missing!
+	// and anyways, we do not expect weired things in the key.
+	if ( pos.size() > 1 && pos[pos.size()-1].size() < pos[pos.size()-2].size() ) {
 	  pos.pop_back();
 	  lp = sp;
 	  --sp;
 	}
+	*/
 	break;
       }
     }
@@ -800,6 +911,7 @@ TableKey &TableKey::loadKey( const StrQueue &sq )
   vector< int > numpos;
   bool num = true;
   sp = lp-1;
+
   for ( unsigned int k=0; k<pos.back().size()-1; k++ ) {
     if ( (*sp).number( 0.0, pos.back()[k] ) != double( k+1 ) ) {
       num = false;
@@ -815,18 +927,19 @@ TableKey &TableKey::loadKey( const StrQueue &sq )
   int cn = 1;
   for ( int k = pos.size()-2; k >= 0; k--, cn++ ) {
     // check whether column positions are identical:
-    if ( pos[k].size() == pos.back().size() ) {
-      bool differ = false;
-      for ( unsigned int j=0; j<pos[k].size()-1; j++ ) {
-	if ( pos[k][j] != pos.back()[j] ) {
-	  differ = true;
-	  break;
-	}
+    unsigned int n = pos[k].size();
+    if ( n > pos.back().size() )
+      n = pos.back().size();
+    int differ = abs( (int)pos.back().size() - (int)pos[k].size() );
+    for ( unsigned int j=0; j<n-1; j++ ) {
+      if ( pos[k][j] != pos.back()[j] ) {
+	differ++;
       }
-      if ( differ )
-	break;
     }
-    else
+    int maxdiffer = n / 5;
+    if ( maxdiffer < 1 )
+      maxdiffer = 1;
+    if ( differ > maxdiffer ) // allow some columns without unit
       break;
   }
   // identify table lines:
@@ -950,6 +1063,39 @@ ostream &TableKey::save( ostream &str, const TableData &table,
     return str;
 
   for ( int k=0; k<table.columns(); k++ ) {
+    if ( c >= (int)Columns.size() )
+      return str;
+    if ( c > 0 )
+      str << Separator;
+    else
+      str << DataStart;
+    Str s( r < (int)table.rows() ? table( k, r ) : 0.0, format( c ) );
+    if ( s.size() >= Width[c] )
+      str << s;
+    else
+      str << Str( s, Width[c] );
+    PrevCol = c;
+    c++;
+  }
+  return str;  
+}
+
+
+ostream &TableKey::save( ostream &str, const TableData &table,
+			 int r, int cbegin, int cend, int c ) const
+{
+  if ( c < 0 ) 
+    c = PrevCol + 1;
+
+  if ( c < 0 )
+    return str;
+
+  if ( cbegin < 0 )
+    cbegin = 0;
+  if ( cend >= table.columns() || cend < 0 )
+    cend = table.columns();
+
+  for ( int k=cbegin; k<cend; k++ ) {
     if ( c >= (int)Columns.size() )
       return str;
     if ( c > 0 )
@@ -1101,6 +1247,66 @@ void TableKey::init( void )
     Width[c] = uw > w ? uw : w;
   }
 
+}
+
+
+string TableKey::comment( void ) const
+{
+  return Comment;
+}
+
+
+void TableKey::setComment( const string &comment )
+{
+  Comment = comment; KeyStart = comment + " ";
+}
+
+
+string TableKey::keyStart( void ) const
+{
+  return KeyStart;
+}
+
+
+void TableKey::setKeyStart( const string &start )
+{
+  KeyStart = start;
+}
+
+
+string TableKey::dataStart( void ) const
+{
+  return DataStart;
+}
+
+
+void TableKey::setDataStart( const string &start )
+{
+  DataStart = start;
+}
+
+
+string TableKey::separator( void ) const
+{
+  return Separator;
+}
+
+
+void TableKey::setSeparator( const string &separator )
+{
+  Separator = separator;
+}
+
+
+string TableKey::missing( void ) const
+{
+  return Missing;
+}
+
+
+void TableKey::setMissing( const string &missing )
+{
+  Missing = missing;
 }
 
 
