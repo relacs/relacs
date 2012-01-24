@@ -70,6 +70,7 @@ FileStimulus::FileStimulus( void )
     Spikes[k].clear();
     Trials[k] = 0; 
     SpikeRate[k].clear();
+    SpikeFrequency[k].clear();
   }
   NerveAmplP.clear();
   NerveAmplT.clear();
@@ -185,6 +186,7 @@ int FileStimulus::main( void )
       Spikes[k].reserve( Repeats>0 ? Repeats : 100 );
       Trials[k] = 0;
       SpikeRate[k] = SampleDataD( -Before, Duration+After, RateDeltaT );
+      SpikeFrequency[k] = SampleDataD( -Before, Duration+After, RateDeltaT );
       MaxRate[k] = 20.0;
     }
   }
@@ -433,6 +435,7 @@ void FileStimulus::stop( void )
     if ( SpikeEvents[k] >= 0 ) {
       Spikes[k].clear();
       SpikeRate[k].clear();
+      SpikeFrequency[k].clear();
     }
   }
   NerveAmplT.clear();
@@ -460,12 +463,14 @@ void FileStimulus::saveRate( int trace )
   TableKey key;
   key.addNumber( "time", "ms", "%9.2f" );
   key.addNumber( "rate", "Hz", "%5.1f" );
+  key.addNumber( "frequency", "Hz", "%5.1f" );
   key.saveKey( df, true, false );
 
   // write data:
   for ( int j=0; j<SpikeRate[trace].size(); j++ ) {
     key.save( df, 1000.0 * SpikeRate[trace].pos( j ), 0 );
     key.save( df, SpikeRate[trace][j] );
+    key.save( df, SpikeFrequency[trace][j] );
     df << '\n';
   }
   df << '\n' << '\n';
@@ -635,6 +640,7 @@ void FileStimulus::plot( void )
 		   delta*0.8, Plot::Graph, Plot::Red, Plot::Red );
       }
       P[n].plot( SpikeRate[k], 1.0, Plot::Yellow, 2, Plot::Solid );
+      P[n].plot( SpikeFrequency[k], 1.0, Plot::Orange, 2, Plot::Solid );
     }
   }
 
@@ -663,8 +669,13 @@ void FileStimulus::analyzeSpikes( const EventData &se, int k )
   
   // spike rate:
   se.addRate( SpikeRate[k], Trials[k], 0.0, signalTime() );
+  Trials[k]--;
+  se.addFrequency( SpikeFrequency[k], Trials[k], signalTime() );
   
   double maxr = max( SpikeRate[k] );
+  double maxf = max( SpikeFrequency[k] );
+  if ( maxf > maxr )
+    maxr = maxf;
   if ( maxr+100.0 > MaxRate[k] ) {
     MaxRate[k] = ::ceil((maxr+100.0)/20.0)*20.0;
   }

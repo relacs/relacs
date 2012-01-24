@@ -780,7 +780,8 @@ public:
         If \a width is less or equal to zero it is set to
 	the stepsize of \a rate.
 	The events between \a rate.leftMargin() and \a rate.rightMargin()
-	seconds relative to time \a time (seconds) are considered. */
+	seconds relative to time \a time (seconds) are considered.
+	\a trial is incremented by one. */
   void addRate( SampleDataD &rate, int &trial, double width=0.0,
 		double time=0.0 ) const;
 
@@ -815,7 +816,8 @@ public:
 	Each event is replaced by the \a kernel,
 	which then are summed up.
 	The events between \a rate.leftMargin() and \a rate.rightMargin()
-	seconds relative to time \a time (seconds) are considered. */
+	seconds relative to time \a time (seconds) are considered.
+	\a trial is incremented by one. */
   void addRate( SampleDataD &rate, int &trial, const Kernel &kernel,
 		double time=0.0 ) const;
 
@@ -952,7 +954,8 @@ public:
 	\a rate.stepsize() in seconds.
 	The events between \a rate.leftMargin() and \a rate.rightMargin()
 	seconds relative to time \a time (seconds) are considered.
-        At times where there is no interval defined, \a defaultfrequency is used. */
+        At times where there is no interval defined, \a defaultfrequency is used.
+	\a trial is incremented by one. */
   void addFrequency( SampleDataD &rate, int &trial, double time=0.0,
 		     double defaultfrequency=0.0 ) const;
     /*! The time course of the instantaneous frequency 1/ISI
@@ -963,7 +966,8 @@ public:
         according to sd = sqrt( \a ratesq - \a rate * \a rate ).
 	The events between \a rate.leftMargin() and \a rate.rightMargin()
 	seconds relative to time \a time (seconds) are considered.
-        At times where there is no interval defined, \a defaultfrequency is used. */
+        At times where there is no interval defined, \a defaultfrequency is used.
+	\a trial is incremented by one. */
   void addFrequency( SampleDataD &rate, SampleDataD &ratesq,
 		     int &trial, double time=0.0, double defaultfrequency=0.0 ) const;
 

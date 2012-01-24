@@ -130,6 +130,7 @@ private:
   vector< SampleDataF > EFieldAmpl;
   EventList Spikes[MaxSpikeTraces];
   SampleDataD SpikeRate[MaxSpikeTraces];
+  SampleDataD SpikeFrequency[MaxSpikeTraces];
   int Trials[MaxSpikeTraces];
   double MaxRate[MaxSpikeTraces];
   vector< MapD > NerveAmplP;

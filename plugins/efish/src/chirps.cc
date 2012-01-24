@@ -1125,6 +1125,7 @@ void Chirps::saveChirpRate( int trace )
   TableKey key;
   key.addNumber( "time", "ms", "%7.2f" );
   key.addNumber( "rate", "Hz", "%5.1f" );
+  key.addNumber( "frequency", "Hz", "%5.1f" );
 
   // write data into file:
   for ( unsigned int n=0; n<SpikeRate[trace].size(); n++ ) {
@@ -1139,6 +1140,7 @@ void Chirps::saveChirpRate( int trace )
       for ( int j=0; j<SpikeRate[trace][n][m].Rate.size(); j++ ) {
 	key.save( df, 1000.0*SpikeRate[trace][n][m].Rate.pos( j ), 0 );
 	key.save( df, SpikeRate[trace][n][m].Rate[j] );
+	key.save( df, SpikeRate[trace][n][m].Frequency[j] );
 	df << '\n';
       }
       df << '\n';
@@ -1259,6 +1261,9 @@ void Chirps::plot( void )
 	  }
 	  if ( Playback )
 	    P[n].plot( SpikeRate[k][beatbin][1].Rate,
+		       1000.0, Plot::Orange, 2, Plot::Solid );
+	  else
+	    P[n].plot( SpikeRate[k][beatbin][0].Frequency,
 		       1000.0, Plot::Orange, 2, Plot::Solid );
 	  P[n].plot( SpikeRate[k][beatbin][0].Rate,
 		     1000.0, Plot::Yellow, 2, Plot::Solid );
@@ -1513,8 +1518,15 @@ void Chirps::analyze( void )
 	events(SpikeEvents[j]).addRate( SpikeRate[j][beatbin][Mode].Rate,
 					SpikeRate[j][beatbin][Mode].Trials,
 					kernel, chirptime );
+	SpikeRate[j][beatbin][Mode].Trials--;
+	events(SpikeEvents[j]).addFrequency( SpikeRate[j][beatbin][Mode].Frequency,
+					     SpikeRate[j][beatbin][Mode].Trials,
+					     chirptime );
 	
 	double maxr = max( SpikeRate[j][beatbin][Mode].Rate );
+	double maxf = max( SpikeRate[j][beatbin][Mode].Frequency );
+	if ( maxf > maxr )
+	  maxr = maxf;
 	if ( maxr+100.0 > MaxRate[j] ) {
 	  MaxRate[j] = ::ceil((maxr+100.0)/20.0)*20.0;
 	}

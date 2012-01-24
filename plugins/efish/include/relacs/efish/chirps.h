@@ -205,10 +205,12 @@ private:
 
   struct RateData
   {
-    RateData( void ) : Trials( 0 ), Rate( 0 ) {};
-    RateData( double width, double dt ) : Trials( 0 ), Rate( -width, width, dt ) {};
+    RateData( void ) : Trials( 0 ), Rate( 0 ), Frequency( 0 ) {};
+    RateData( double width, double dt ) : Trials( 0 ),
+      Rate( -width, width, dt ), Frequency( -width, width, dt ) {};
     int Trials;
     SampleDataD Rate;
+    SampleDataD Frequency;
   };
 
   EventData Spikes[MaxSpikeTraces];

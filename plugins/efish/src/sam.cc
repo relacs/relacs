@@ -78,6 +78,7 @@ SAM::SAM( void )
     Spikes[k].clear();
     AllSpikes[k].clear();
     SpikeRate[k] = 0;
+    SpikeFrequency[k] = 0;
     Trials[k] = 0; 
   }
   Offset = 0;
@@ -239,6 +240,7 @@ int SAM::main( void )
       Spikes[k].reserve( beats );
       AllSpikes[k].clear();
       SpikeRate[k] = new SampleDataD( -0.5*Period, 0.5*Period+RateDeltaT, RateDeltaT );
+      SpikeFrequency[k] = new SampleDataD( -0.5*Period, 0.5*Period+RateDeltaT, RateDeltaT );
       Trials[k] = 0;
       MaxRate[k] = 20.0;
     }
@@ -508,8 +510,10 @@ void SAM::stop( void )
       AllSpikes[k].clear();
       AllSpikes[k].reserve( 0 );
       delete SpikeRate[k];
+      delete SpikeFrequency[k];
     }
     SpikeRate[k] = 0;
+    SpikeFrequency[k] = 0;
   }
   if ( NerveTrace[0] >= 0 ) {
     NerveAmplP.clear();
@@ -541,12 +545,14 @@ void SAM::saveRate( int trace )
   TableKey key;
   key.addNumber( "time", "ms", "%9.2f" );
   key.addNumber( "rate", "Hz", "%5.1f" );
+  key.addNumber( "frequency", "Hz", "%5.1f" );
   key.saveKey( df, true, false );
 
   // write data:
   for ( int n=0; n<SpikeRate[trace]->size(); n++ ) {
     key.save( df, 1000.0 * SpikeRate[trace]->pos( n ), 0 );
     key.save( df, (*SpikeRate[trace])[n] );
+    key.save( df, (*SpikeFrequency[trace])[n] );
     df << '\n';
   }
   df << '\n' << '\n';
@@ -784,6 +790,7 @@ void SAM::plot( void )
 		       delta*0.8, Plot::Graph, Plot::Red, Plot::Red );
 	}
 	P[2*n].plot( *SpikeRate[k], 1000.0, Plot::Yellow, 2, Plot::Solid );
+	P[2*n].plot( *SpikeFrequency[k], 1000.0, Plot::Orange, 2, Plot::Solid );
       }
       else {
 	// nerve potential:
@@ -825,10 +832,16 @@ void SAM::analyzeSpikes( const EventData &se, int k,
 	   signalTime(), AllSpikes[k] );
   
   // beat spike rate:
-  for ( int j=0; j<beattimes.size(); j++ )
+  for ( int j=0; j<beattimes.size(); j++ ) {
     se.addRate( *SpikeRate[k], Trials[k], 0.0, beattimes[j] );
+    Trials[k]--;
+    se.addFrequency( *SpikeFrequency[k], Trials[k], beattimes[j] );
+  }
   
   double max = ::relacs::max( *SpikeRate[k] );
+  double maxf = ::relacs::max( *SpikeFrequency[k] );
+  if ( maxf > max )
+    max = maxf;
   if ( max+100.0 > MaxRate[k] ) {
     MaxRate[k] = ::ceil((max+100.0)/20.0)*20.0;
   }

@@ -147,6 +147,7 @@ private:
   vector < double > AllSpikes[MaxSpikeTraces];
   double RateDeltaT;
   SampleDataD *SpikeRate[MaxSpikeTraces];
+  SampleDataD *SpikeFrequency[MaxSpikeTraces];
   int Trials[MaxSpikeTraces];
   double MaxRate[MaxSpikeTraces];
 
