@@ -27,15 +27,20 @@
 if test "$1" = "--help"; then
     cat <<EOF
 
-newplugin
+newplugin [-s]
 
 Adds an entry in src/Makefile.am and
 creates a skeleton .cc and .h file
 for a new plugin.
 
+-s: add the new files to the svn repository
+
 EOF
     exit 0
 fi
+
+ADDTOSVN="$1"
+shift
 
 # get plugin type:
 echo "Select the type of the new plugin:"
@@ -66,21 +71,15 @@ done
 
 PLUGINSETPATH="${PLUGINSETPATH%/}"
 PLUGINSET="${PLUGINSETPATH##*/}"
-PLUGINSETDEFAULTNAME="${PLUGINSET}"
 
 if ! test -f "$PLUGINSETPATH/src/Makefile.am"; then
     echo "Error! '$PLUGINSETPATH/src/Makefile.am' does not exist."
+    echo "You might want to create a new plugin set first."
+    echo "For that use the shell script newpluginset."
     exit 1
 fi
 
 PLUGINLIB="$PLUGINSET$PLUGINFILE"
-
-
-# get name of plugin set:
-#read -e -p "Name of the plugin set [${PLUGINSETDEFAULTNAME}]: " PLUGINSETNAME
-#test -z "$PLUGINSETNAME" && PLUGINSETNAME="$PLUGINSETDEFAULTNAME"
-PLUGINSETNAME="$PLUGINSETDEFAULTNAME"
-
 
 # get name of the author:
 until test -n "$AUTHOR"; do
@@ -212,24 +211,114 @@ using namespace relacs;
 
 namespace ${PLUGINSET} {
 
+EOF
+
+if test "$TYPE" = "RePro"; then
+cat <<EOF >> $PLUGINSETPATH/src/${PLUGINFILE}.cc
 
 ${PLUGINNAME}::${PLUGINNAME}( void )
-  : ${TYPECLASS}( "${PLUGINNAME}", "${PLUGINSETNAME}", "${AUTHOR}", "1.0", "$(date '+%b %d, %Y')" )
+  : RePro( "${PLUGINNAME}", "${PLUGINSET}", "${AUTHOR}", "1.0", "$(date '+%b %d, %Y')" )
 {
   // add some options:
-//  addNumber( "duration", "Stimulus duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
+  // addNumber( "duration", "Stimulus duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
 }
 
 
 int ${PLUGINNAME}::main( void )
 {
   // get options:
-//  double duration = number( "duration" );
+  // double duration = number( "duration" );
   return Completed;
 }
 
+EOF
 
-add${TYPE}( ${PLUGINNAME} );
+elif test "$TYPE" = "Control"; then
+cat <<EOF >> $PLUGINSETPATH/src/${PLUGINFILE}.cc
+
+${PLUGINNAME}::${PLUGINNAME}( void )
+  : Control( "${PLUGINNAME}", "${PLUGINSET}", "${AUTHOR}", "1.0", "$(date '+%b %d, %Y')" )
+{
+  // add some options:
+  // addNumber( "duration", "Stimulus duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
+}
+
+
+void ${PLUGINNAME}::main( void )
+{
+  // get options:
+  // double duration = number( "duration" );
+}
+
+EOF
+
+elif test "$TYPE" = "Filter"; then
+cat <<EOF >> $PLUGINSETPATH/src/${PLUGINFILE}.cc
+
+${PLUGINNAME}::${PLUGINNAME}( const string &ident, int mode )
+  : Filter( ident, mode, TYPE, 1,
+            "${PLUGINNAME}", "${PLUGINSET}", "${AUTHOR}", "1.0", "$(date '+%b %d, %Y')" )
+{
+}
+
+
+int ${PLUGINNAME}::init( ... )
+{
+}
+
+
+int ${PLUGINNAME}::filter( ... )
+{
+}
+
+EOF
+
+elif test "$TYPE" = "Detector"; then
+cat <<EOF >> $PLUGINSETPATH/src/${PLUGINFILE}.cc
+
+${PLUGINNAME}::${PLUGINNAME}( const string &ident, int mode )
+  : Filter( ident, mode, TYPE, 1,
+            "${PLUGINNAME}", "${PLUGINSET}", "${AUTHOR}", "1.0", "$(date '+%b %d, %Y')" )
+{
+}
+
+
+int ${PLUGINNAME}::init( ... )
+{
+}
+
+
+int ${PLUGINNAME}::detect( ... )
+{
+}
+
+EOF
+
+elif test "$TYPE" = "Model"; then
+cat <<EOF >> $PLUGINSETPATH/src/${PLUGINFILE}.cc
+
+${PLUGINNAME}::${PLUGINNAME}( void )
+  : Model( "${PLUGINNAME}", "${PLUGINSET}", "${AUTHOR}", "1.0", "$(date '+%b %d, %Y')" )
+{
+}
+
+
+void ${PLUGINNAME}::main( void )
+{
+}
+
+
+void ${PLUGINNAME}::process( const OutData &source, OutData &dest )
+{
+  dest = source;
+}
+
+EOF
+fi
+
+cat <<EOF >> $PLUGINSETPATH/src/${PLUGINFILE}.cc
+
+add${TYPE}( ${PLUGINNAME}, ${PLUGINSET} );
 
 }; /* namespace ${PLUGINSET} */
 
@@ -285,8 +374,43 @@ class ${PLUGINNAME} : public ${TYPECLASS}
 
 public:
 
+EOF
+
+if test "$TYPE" = "RePro"; then
+cat <<EOF >> $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h
   ${PLUGINNAME}( void );
   virtual int main( void );
+EOF
+
+elif test "$TYPE" = "Control"; then
+cat <<EOF >> $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h
+  ${PLUGINNAME}( void );
+  virtual void main( void );
+EOF
+
+elif test "$TYPE" = "Filter"; then
+cat <<EOF >> $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h
+  ${PLUGINNAME}( const string &ident, int mode );
+  virtual int init( ... );
+  virtual int filter( ... )
+EOF
+
+elif test "$TYPE" = "Detector"; then
+cat <<EOF >> $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h
+  ${PLUGINNAME}( const string &ident, int mode );
+  virtual int init( ... );
+  virtual int detect( ... );
+EOF
+
+elif test "$TYPE" = "Model"; then
+cat <<EOF >> $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h
+  ${PLUGINNAME}( void );
+  virtual void main( void );
+  virtual void process( const OutData &source, OutData &dest );
+EOF
+fi
+
+cat <<EOF >> $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h
 
 };
 
@@ -297,12 +421,17 @@ public:
 EOF
 
 
-#svn add 
-echo "svn add $PLUGINSETPATH/src/${PLUGINFILE}.cc ..."
-svn add "$PLUGINSETPATH/src/${PLUGINFILE}.cc"
-echo "svn add $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h ..."
-svn add "$PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h"
+if test "$ADDTOSVN" = "-s"; then
+# add to svn:
+    echo "svn add $PLUGINSETPATH/src/${PLUGINFILE}.cc ..."
+    svn add "$PLUGINSETPATH/src/${PLUGINFILE}.cc"
+    echo "svn add $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h ..."
+    svn add "$PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h"
+fi
+
 echo "finished!"
+
+
 
 
 
