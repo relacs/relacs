@@ -55,16 +55,20 @@ or make sure that you get a matching source tree for your kernel image
 \subsubsection installkernelsources Install sources for an existing kernel
 
 -# Get the soure that matches your kernel. 
-On Ubuntu/Debian you get the kernel source matching your running kernel image by executing
-as root
+On Ubuntu/Debian you get the kernel source and header files
+matching your running kernel image by executing as root
 \code
 $ cd /usr/src
 $ apt-get source linux-image-`uname -r`
+$ apt-get install linux-headers-`uname -r`
 \endcode
-as root and cd into the kernel source directory
+as root. cd into the kernel source directory
 \code
 $ cd `uname -r`
 \endcode
+Note, that sometimes the kernel source directory that you installed with \c apt-get
+has a different name than the name of the currently running kernel that \c `uname -r`
+returns.
 -# Copy the kernel configuration file of your kernel image to the source:
 \code
 $ cp /boot/config-`uname -r` .config
@@ -242,7 +246,7 @@ You may ignore warnings and reminders.
 in case you want to install \c Comedi into your currently running kernel.
 If \c /usr/src/linux is not your running kernel, then call
 \code
-$ ./configure --with-linuxdir=/usr/src/linux
+$ ./configure --with-linuxsrcdir=/usr/src/linux
 \endcode
 with \c /usr/src/linux replaced by the path to the sources of the kernel
 for which you want to install \c Comedi.

@@ -265,7 +265,6 @@ int FICurve::main( void )
       // select intensities:
       if ( IntensityRange.finishedBlock() ) {
 	if ( softStop() > 1 ) {
-	  saveData();
 	  save();
 	  stop();
 	  return Completed;
@@ -342,8 +341,8 @@ int FICurve::main( void )
 
       sleep( signal.duration() + Pause );
       if ( interrupt() ) {
-	stop();
 	save();
+	stop();
 	return Aborted;
       }
 
@@ -373,8 +372,8 @@ int FICurve::main( void )
 	  return Failed;
 	}
 	if ( interrupt() ) {
-	  stop();
 	  save();
+	  stop();
 	  return Aborted;
 	}
       }
@@ -393,11 +392,10 @@ int FICurve::main( void )
 
     }
 
-    saveData();
+    save();
 
   }
 
-  save();
   stop();
 
   return Completed;
@@ -544,8 +542,12 @@ void FICurve::saveFICurves( int trace )
 }
 
 
-void FICurve::saveData( void )
+void FICurve::save( void )
 {
+  // check for pending data:
+  if ( IntensityRange.loop() <= 0 )
+    return;
+
   Header.setInteger( "index", Index );
   Header.setUnit( "preintensity", EOD2Unit );
   Header.setNumber( "preintensity", PreIntensityRange.value() );

@@ -96,7 +96,7 @@ public:
   void saveRate( int trace );
   void saveSpikes( int trace );
   void saveFICurves( int trace );
-  void saveData( void );
+  void save( void );
 
   void selectSlopes( void );
   void selectRange( void );
