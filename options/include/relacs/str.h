@@ -725,7 +725,7 @@ public:
   Str right( int len ) const 
     { if ( len >= 0 && len <= size() ) return string::substr( size()-len, len ); else return *this; };
   Str mid( int pos, int upto=-1 ) const 
-    { if ( upto < 0 || upto >= size() ) upto = size()-1; if ( pos < 0 || pos >= size() || upto < pos ) return ""; return string::substr( pos, upto-pos+1 ); };
+  { if ( upto < 0 || upto >= (int)size() ) upto = size()-1; if ( pos < 0 || pos >= (int)size() || upto < pos ) return ""; return string::substr( pos, upto-pos+1 ); };
   Str substr( int pos, int len=-1 ) const 
     { if ( pos < 0 || pos >= size() ) return ""; if ( len < 0 || len > size()-pos ) len = size() - pos; return string::substr( pos, len ); };
 

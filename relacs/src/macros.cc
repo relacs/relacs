@@ -2364,7 +2364,8 @@ bool MacroCommand::execute( bool saving )
   else if ( Command == ShellCom ) {
     string com = "nice " + Name + " " + Params;
     MCs->RW->printlog( "execute \"" + com + "\"" );
-    system( com.c_str() );
+    int r = system( com.c_str() );
+    MCs->RW->printlog( "execute returned " + Str( r ) );
   }
   // filter:
   else if ( Command == FilterCom ) {

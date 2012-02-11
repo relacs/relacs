@@ -2106,7 +2106,8 @@ Str Str::unit( const string &dflt, int index, int *next,
     string nstr( mid( n, findFirst( space, n )-1 ) );
     const char *sp = nstr.c_str();
     char *ep;
-    strtod( sp, &ep );
+    double val = strtod( sp, &ep );
+    val += 0.0;  // this value is not used
     n += ep - sp;
 
     // failed:
@@ -2151,7 +2152,8 @@ Str Str::unit( const string &dflt, int index, int *next,
       errno = 0;
       nstr = mid( n, findFirst( space, n )-1 );
       sp = nstr.c_str();
-      strtod( sp, &ep );
+      double error = strtod( sp, &ep );
+      error += 0.0;  // this value is not used
       n += ep - sp;
 
       // failed:
@@ -5500,11 +5502,11 @@ void Str::ReadFormat( const char *format, int &width, int &findex )
   width = abs( strtol( fp, &ep, 10 ) );
   fp = ep;
   // precision:
-  if ( *fp == '.' )
-    {
-      strtol( fp+1, &ep, 10 );
-      fp = ep;
-    }
+  if ( *fp == '.' ) {
+    long int prec = strtol( fp+1, &ep, 10 );
+    prec += 0;  // this value is not used
+    fp = ep;
+  }
   // index to format character:
   findex = fp - format;
 }
