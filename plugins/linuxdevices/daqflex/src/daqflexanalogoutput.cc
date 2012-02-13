@@ -243,7 +243,8 @@ int DAQFlexAnalogOutput::convert( char *cbuffer, int nbuffer )
 	  v = minval[k];
 	v *= scale[k];
 	// XXX calibration?
-	*bp = (v+10.0)/20.0 * 0xffff;
+	*bp = (unsigned short)( ((v+10.0)/20.0) * 0xffff );
+	//	cerr << "V=" << v << " data=" << *bp << '\n';
 	if ( Sigs[k].deviceIndex() >= Sigs[k].size() )
 	  Sigs[k].incrDeviceCount();
       }
@@ -277,6 +278,7 @@ int DAQFlexAnalogOutput::testWriteDevice( OutList &sigs )
 
 int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
 {
+  cerr << "PrepareWrite START\n";
   if ( !isOpen() )
     return -1;
 
@@ -292,7 +294,6 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
   ol.sortByChannel();
 
   // setup acquisition:
-  DAQFlexDevice->sendMessage( "AOSCAN:XFRMODE=BLOCKIO" );
   DAQFlexDevice->sendMessage( "AOSCAN:RATE=" + Str( sigs[0].sampleRate(), "%g" ) );
   if ( sigs[0].continuous() )
     DAQFlexDevice->sendMessage( "AOSCAN:SAMPLES=0" );
@@ -305,8 +306,8 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
   for( int k = 0; k < sigs.size(); k++ ) {
 
     sigs[k].setGainIndex( 0 );
-    sigs[k].setMinVoltage( BipolarRange[0] );
-    sigs[k].setMaxVoltage( -BipolarRange[0] );
+    sigs[k].setMinVoltage( -BipolarRange[0] );
+    sigs[k].setMaxVoltage( BipolarRange[0] );
 
     // allocate gain factor:
     char *gaindata = sigs[k].gainData();
@@ -345,7 +346,7 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
   int nbuffer = sigs.deviceBufferSize()*2;
   if ( nbuffer < BufferSize )
     BufferSize = nbuffer;
-  if ( BufferSize > 0xffff )
+  if ( BufferSize > 0xfffff )
     sigs.addError( DaqError::InvalidBufferTime );
   if ( BufferSize <= 0 )
     sigs.addError( DaqError::NoData );
@@ -366,17 +367,22 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
   }
   Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
 
+  cerr << "PrepareWrite STOP\n";
+
   return 0;
 }
 
 
 int DAQFlexAnalogOutput::startWrite( void )
 {
+  cerr << "StartWrite START\n";
   if ( !IsPrepared || Sigs.empty() ) {
     cerr << "AO not prepared or no signals!\n";
     return -1;
   }
+  fillWriteBuffer( true );
   DAQFlexDevice->sendMessage( "AOSCAN:START" );
+  cerr << "StartWrite STOP\n";
   return 0;
 }
 
@@ -411,6 +417,7 @@ int DAQFlexAnalogOutput::reset( void )
     return NotOpen;
 
   DAQFlexDevice->sendMessage( "AOSCAN:STOP" );
+  DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" );
 
   Settings.clear();
   ErrorState = 0;
@@ -440,6 +447,7 @@ int DAQFlexAnalogOutput::error( void ) const
 
 int DAQFlexAnalogOutput::fillWriteBuffer( bool first )
 {
+  cerr << "FillWrite START\n";
   if ( !isOpen() ) {
     Sigs.setError( DaqError::DeviceNotOpen );
     return -1;
@@ -474,9 +482,12 @@ int DAQFlexAnalogOutput::fillWriteBuffer( bool first )
     ern = libusb_bulk_transfer( DAQFlexDevice->deviceHandle(),
 				DAQFlexDevice->endpointOut(),
 				(unsigned char*)(Buffer), NBuffer,
-				&bytesWritten, 1000 );
+				&bytesWritten, 20 );
+    //    cerr << "FillWrite TRANSFER " << bytesWritten << " erro " << ern << "\n";
 
-    if ( ern == 0 && bytesWritten > 0 ) {
+    if ( ern != 0 )
+      break;
+    else if ( bytesWritten > 0 ) {
       memmove( Buffer, Buffer+bytesWritten, NBuffer-bytesWritten );
       NBuffer -= bytesWritten;
       elemWritten += bytesWritten / 2;
@@ -508,6 +519,10 @@ int DAQFlexAnalogOutput::fillWriteBuffer( bool first )
       Sigs.addError( DaqError::Busy );
       return -1;
 
+    case LIBUSB_ERROR_TIMEOUT:
+      ErrorState = 0;
+      break;
+
     default:
       ErrorState = 2;
       Sigs.addErrorStr( "Lib USB Error" );
@@ -515,6 +530,7 @@ int DAQFlexAnalogOutput::fillWriteBuffer( bool first )
       return -1;
     }
   }
+  cerr << "FillWrite STOP " << elemWritten << "\n";
   
   return elemWritten;
 }

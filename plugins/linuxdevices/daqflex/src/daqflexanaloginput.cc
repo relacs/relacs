@@ -262,7 +262,8 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
   DAQFlexDevice->sendMessage( "AISCAN:QUEUE=ENABLE" );
   DAQFlexDevice->sendMessage( "AIQUEUE:CLEAR" );
   for( int k = 0; k < traces.size(); k++ ) {
-
+    // DAQFlexDevice->sendMessage( "?AIQUEUE:COUNT" ); USE THIS AS QUEUE Element
+  
     // delay:
     if ( traces[k].delay() > 0.0 ) {
       traces[k].addError( DaqError::InvalidDelay );
@@ -278,13 +279,13 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
     // reference:
     switch ( traces[k].reference() ) {
     case InData::RefCommon: 
-      DAQFlexDevice->sendMessage( aiq + "CHANMODE=SE" );
+      DAQFlexDevice->sendMessage( aiq + "CHMODE=SE" );
       break;
     case InData::RefDifferential:
-      DAQFlexDevice->sendMessage( aiq + "CHANMODE=DIFF" );
+      DAQFlexDevice->sendMessage( aiq + "CHMODE=DIFF" );
       break;
     case InData::RefGround:
-      DAQFlexDevice->sendMessage( aiq + "CHANMODE=SE" );
+      DAQFlexDevice->sendMessage( aiq + "CHMODE=SE" );
       break;
     default:
       traces[k].addError( DaqError::InvalidReference );
@@ -322,6 +323,7 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
       }
     }
   }
+  //    DAQFlexDevice->sendMessage( "?AIQUEUE:COUNT" );
 
   if ( traces.failed() )
     return -1;
@@ -482,11 +484,11 @@ int DAQFlexAnalogInput::reset( void )
   int numbytes = 0;
   int status = 0;
   do {
-      unsigned char buffer[1024];
-      status = libusb_bulk_transfer( DAQFlexDevice->deviceHandle(),
-				     DAQFlexDevice->endpointIn(),
-				     buffer, 1024, &numbytes, 200 );
-    } while ( numbytes > 0 && status == 0 );
+    unsigned char buffer[1024];
+    status = libusb_bulk_transfer( DAQFlexDevice->deviceHandle(),
+				   DAQFlexDevice->endpointIn(),
+				   buffer, 1024, &numbytes, 200 );
+  } while ( numbytes > 0 && status == 0 );
 
   // free internal buffer:
   if ( Buffer != 0 )
@@ -510,7 +512,7 @@ int DAQFlexAnalogInput::reset( void )
 
 bool DAQFlexAnalogInput::running( void ) const
 {   
-  string response = DAQFlexDevice->sendMessage( "?AISCAN:STATUS" );
+  string response = DAQFlexDevice->sendMessage( "?AISCAN:STATUS", false );
   return ( response.find( "RUNNING" ) != string::npos );
 }
 

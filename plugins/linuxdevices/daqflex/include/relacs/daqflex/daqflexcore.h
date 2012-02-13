@@ -91,7 +91,7 @@ public:
   virtual void close( void );
   virtual int reset( void );
 
-  string sendMessage( const string &message );
+  string sendMessage( const string &message, bool display=true );
 
     /*! \return the resolution of the A/D converter. */
   unsigned short maxAIData( void ) const;
@@ -117,8 +117,8 @@ public:
 
   string productName( int productid );
   void setLibUSBError( int libusberror );
-  int sendControlTransfer( const string &message );
-  string getControlTransfer( void );
+  int sendControlTransfer( const string &message, bool display=true );
+  string getControlTransfer( bool display=true );
 
   int getEndpoints( void );
   unsigned char getEndpointInAddress( unsigned char* data, int n );

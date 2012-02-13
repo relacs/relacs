@@ -289,9 +289,10 @@ void DAQFlexCore::setLibUSBError( int libusberror )
 
 
 //Send a message to the device
-int DAQFlexCore::sendControlTransfer( const string &message )
+  int DAQFlexCore::sendControlTransfer( const string &message, bool display )
 {
-  cout << "DAQFlex Sending: " << message << "\n";
+  if ( display )
+    cerr << "DAQFlex Sending: " << message << "\n";
   unsigned char data[MaxMessageSize];
   for ( unsigned int i = 0; i < MaxMessageSize; i++ )
     data[i] = i < message.size() ? toupper( message[i] ) : 0;
@@ -305,7 +306,7 @@ int DAQFlexCore::sendControlTransfer( const string &message )
 }
 
 //Receive a message from the device. This should follow a call to sendControlTransfer.
-string DAQFlexCore::getControlTransfer( void )
+string DAQFlexCore::getControlTransfer( bool display )
 {
   unsigned char message[MaxMessageSize];
   int numbytes = libusb_control_transfer( DeviceHandle,
@@ -317,17 +318,18 @@ string DAQFlexCore::getControlTransfer( void )
   if ( ErrorState != Success )
     return "";
 
-  cout << "DAQFlex Got: " << message << "\n";
+  if ( display )
+    cerr << "DAQFlex Got: " << message << "\n";
   return (char *)message;
 }
 
 
 //Returns response if transfer successful, null if not
-string DAQFlexCore::sendMessage( const string &message )
+  string DAQFlexCore::sendMessage( const string &message, bool display )
 {
-  int r = sendControlTransfer( message );
+  int r = sendControlTransfer( message, display );
   if ( r == Success )
-    return getControlTransfer();
+    return getControlTransfer( display );
   else
     return "";
 }
