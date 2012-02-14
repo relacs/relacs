@@ -424,6 +424,8 @@ public:
   Attenuator *attenuator( void );
     /*! Returns the attenuator device that is used by this Attenuate class. */
   const Attenuator *attenuator( void ) const;
+    /*! Returns \c true if not attenuator is actually used. */
+  bool noAttenuator( void ) const;
 
     /*! Return code indicating that the device driver is not opened. */
   static const int NotOpen = Attenuator::NotOpen;
@@ -497,6 +499,8 @@ private:
   Attenuator *Att;
     /*! The device index for \a Att. */
   int Index;
+    /*! \c true if no attenuator device is used. */
+  bool NoAttenuator;
 
     /*! The device identifier of the analog output device 
         which is attenuated by this instance of the Attenuate class. */

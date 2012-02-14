@@ -29,6 +29,7 @@ Attenuate::Attenuate( void )
   : Device( AttenuateType ),
     Att( 0 ),
     Index( -1 ),
+    NoAttenuator( false ),
     AODevice( "" ),
     AOChannel( -1 ),
     IntensityName( "intensity" ),
@@ -51,6 +52,7 @@ Attenuate::Attenuate( const string &deviceclass,
   : Device( deviceclass, AttenuateType ),
     Att( 0 ),
     Index( -1 ),
+    NoAttenuator( false ),
     AODevice( "" ),
     AOChannel( -1 ),
     IntensityName( intensityname ),
@@ -73,6 +75,7 @@ int Attenuate::open( Device &att, int line )
 {
   Info.clear();
   Settings.clear();
+  NoAttenuator = false;
   Att = &dynamic_cast<Attenuator&>( att );
   Index = line;
   if ( Att == NULL )
@@ -112,14 +115,39 @@ int Attenuate::open( const string &device, const Options &opts )
 {
   Info.clear();
   Settings.clear();
-  return InvalidDevice;
+  if ( device != "none" ) {
+    NoAttenuator = false;
+    return InvalidDevice;
+  }
+
+  int line = opts.integer( "line", 0, 0 );
+  Att = 0;
+  NoAttenuator = true;
+  Index = line;
+  setDeviceFile( device );
+  setAODevice( opts.text( "aodevice", "ao-1" ) );
+  setAOChannel( opts.integer( "aochannel", 0, 0 ) );
+  if ( opts.exist( "intensityname" ) )
+    setIntensityName( opts.text( "intensityname" ) );
+  if ( opts.exist( "intensityunit" ) )
+    setIntensityUnit( opts.text( "intensityunit" ) );
+  if ( opts.exist( "intensityformat" ) )
+    setIntensityFormat( opts.text( "intensityformat" ) );
+  if ( opts.exist( "frequencyname" ) )
+    setFrequencyName( opts.text( "frequencyname" ) );
+  if ( opts.exist( "frequencyunit" ) )
+    setFrequencyUnit( opts.text( "frequencyunit" ) );
+  if ( opts.exist( "frequencyformat" ) )
+    setFrequencyFormat( opts.text( "frequencyformat" ) );
+  return 0;
 }
 
 
 bool Attenuate::isOpen( void ) const
 {
-  return ( Att != NULL && Att->isOpen() &&
-	   Index >= 0 && Index < Att->lines() );
+  return ( NoAttenuator ||
+	   ( Att != NULL && Att->isOpen() &&
+	     Index >= 0 && Index < Att->lines() ) );
 }
 
 
@@ -145,20 +173,34 @@ void Attenuate::clear( void )
 
 double Attenuate::minIntensity( double frequency ) const
 {
+  double minlevel = -100.0;
+  double maxlevel = 200.0;
+  if ( ! NoAttenuator ) {
+    minlevel = Att->minLevel();
+    maxlevel = Att->maxLevel();
+  }
+
   double intens1 = 0.0;
-  intensity( intens1, frequency, Att->minLevel() );
+  intensity( intens1, frequency, minlevel );
   double intens2 = 0.0;
-  intensity( intens2, frequency, Att->maxLevel() );
+  intensity( intens2, frequency, maxlevel );
   return intens1 < intens2 ? intens1 : intens2;
 }
 
 
 double Attenuate::maxIntensity( double frequency ) const
 {
+  double minlevel = -100.0;
+  double maxlevel = 200.0;
+  if ( ! NoAttenuator ) {
+    minlevel = Att->minLevel();
+    maxlevel = Att->maxLevel();
+  }
+
   double intens1 = 0.0;
-  intensity( intens1, frequency, Att->minLevel() );
+  intensity( intens1, frequency, minlevel );
   double intens2 = 0.0;
-  intensity( intens2, frequency, Att->maxLevel() );
+  intensity( intens2, frequency, maxlevel );
   return intens1 > intens2 ? intens1 : intens2;
 }
 
@@ -168,9 +210,15 @@ void Attenuate::intensities( vector<double> &ints, double frequency ) const
   ints.clear();
   vector<double> l;
   l.reserve( 1000 );
-  Att->levels( l );
-  if ( l.empty() )
-    return;
+  if ( NoAttenuator ) {
+    for ( int k=0; k<600; k++ )
+      l.push_back( -100.0 + k*0.5 );
+  }
+  else {
+    Att->levels( l );
+    if ( l.empty() )
+      return;
+  }
 
   ints.reserve( l.size() );
   double intens1 = 0.0;
@@ -198,7 +246,7 @@ void Attenuate::init( void )
   Device::addInfo();
   Info.addText( "analog output device", aoDevice() );
   Info.addInteger( "analog output channel", aoChannel() );
-  Info.addText( "attenuator device", Att != 0 ? Att->deviceIdent() : "" );
+  Info.addText( "attenuator device", NoAttenuator ? "None" : ( Att != 0 ? Att->deviceIdent() : "" ) );
   Info.addInteger( "attenuator line", Index );
   Info.addNumber( "minimum intensity", minIntensity( 0.0 ), IntensityUnit );
   Info.addNumber( "maximum intensity", maxIntensity( 0.0 ), IntensityUnit );
@@ -221,10 +269,12 @@ int Attenuate::write( double &intens, double frequency, double &level )
     return r;
 
   // set attenuation level:
-  if ( Att == 0 || !Att->isOpen() )
-    r = Attenuator::NotOpen;
-  else
-    r = Att->attenuate( Index, db );
+  if ( ! NoAttenuator ) {
+    if ( Att == 0 || !Att->isOpen() )
+      r = Attenuator::NotOpen;
+    else
+      r = Att->attenuate( Index, db );
+  }
 
   // calculate intensity:
   intensity( intens, frequency, db );
@@ -251,10 +301,22 @@ int Attenuate::testWrite( double &intens, double frequency, double &level )
     return r;
 
   // test attenuation level:
-  if ( Att == 0 || !Att->isOpen() )
-    r = Attenuator::NotOpen;
-  else
-    r = Att->testAttenuate( Index, db );
+  if ( NoAttenuator ) {
+    if ( db < -100.0 ) {
+      r = Overflow;
+      db = -100.0;
+    }
+    else if ( db > 200.0 ) {
+      r = Underflow;
+      db = 200.0;
+    }
+  }
+  else {
+    if ( Att == 0 || !Att->isOpen() )
+      r = Attenuator::NotOpen;
+    else
+      r = Att->testAttenuate( Index, db );
+  }
 
   // calculate intensity:
   intensity( intens, frequency, db );
@@ -266,19 +328,25 @@ int Attenuate::testWrite( double &intens, double frequency, double &level )
 
 int Attenuate::mute( void )
 {
-  if ( Att == 0 || !Att->isOpen() )
+  if ( !NoAttenuator && ( Att == 0 || !Att->isOpen() ) )
     return Attenuator::NotOpen;
 
   // settings:
   Settings.clear();
   Settings.addText( IntensityName, "muted" );
 
-  return Att->mute( Index );
+  if ( NoAttenuator )
+    return 0;
+  else
+    return Att->mute( Index );
 }
 
 
 int Attenuate::testMute( void )
 {
+  if ( NoAttenuator )
+    return 0;
+
   if ( Att == 0 || !Att->isOpen() )
     return Attenuator::NotOpen;
 
@@ -291,10 +359,12 @@ int Attenuate::attenuate( double &level )
   int r = 0;
 
   // set attenuation level:
-  if ( Att == 0 || !Att->isOpen() )
-    r = Attenuator::NotOpen;
-  else
-    r = Att->attenuate( Index, level );
+  if ( !NoAttenuator ) {
+    if ( Att == 0 || !Att->isOpen() )
+      r = Attenuator::NotOpen;
+    else
+      r = Att->attenuate( Index, level );
+  }
 
   // settings:
   Settings.clear();
@@ -306,10 +376,22 @@ int Attenuate::attenuate( double &level )
 int Attenuate::testAttenuate( double &level )
 {
   int r = 0;
-  if ( Att == 0 || !Att->isOpen() )
-    r = Attenuator::NotOpen;
-  else
-    r = Att->testAttenuate( Index, level );
+  if ( NoAttenuator ) {
+    if ( level < -100.0 ) {
+      r = Overflow;
+      level = -100.0;
+    }
+    else if ( level > 200.0 ) {
+      r = Underflow;
+      level = 200.0;
+    }
+  }
+  else {
+    if ( Att == 0 || !Att->isOpen() )
+      r = Attenuator::NotOpen;
+    else
+      r = Att->testAttenuate( Index, level );
+  }
   return r;
 }
 
@@ -419,6 +501,12 @@ Attenuator *Attenuate::attenuator( void )
 const Attenuator *Attenuate::attenuator( void ) const
 {
   return Att;
+}
+
+
+bool Attenuate::noAttenuator( void ) const
+{
+  return NoAttenuator;
 }
 
 

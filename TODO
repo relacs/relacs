@@ -1,3 +1,9 @@
+Acquire:
+- directWrite(): for support of noAttenuator we need the maximum board voltage!
+- levels(), minLevel() and other Attenuate properties should all go
+  into Attenuate in case of NoAttenuator!
+- How to make sure the right Attenuate is used for a given RePro?
+
 Metadata support of OutData:
 - Unify TraceSpec and OutDataInfo?
 - Add constWave function to OutData
@@ -142,6 +148,8 @@ Documentation:
 - RTAI include path: --with-rtai=/usr/src/rtai-3.6/base/include
 
 Libraries:
+- Weired problem in src/ while linking relacsgui:
+  trouble finding librelacsnumericsand libgsl.
 - Add relacs library tests to the libraries!
 - AM_INIT_AUTOMAKE( gnits )
 - autoreconf:

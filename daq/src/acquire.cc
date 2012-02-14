@@ -1603,13 +1603,16 @@ int Acquire::setupWrite( OutData &signal )
   AO[di].Signals.add( &signal );
 
   // set intensity or level:
+  double fac = -1.0;
   for ( unsigned int a=0; a<Att.size(); a++ ) {
     if ( ( Att[a].Id == di ) && 
 	 ( Att[a].Att->aoChannel() == signal.channel() ) ) {
+      double level = 0.0;
       if ( signal.noIntensity() && signal.noLevel() )
 	signal.addError( DaqError::NoIntensity );
       else if ( signal.noIntensity() ) {
-	double level = signal.level();
+	level = signal.level();
+	fac = 1.0;
 	int ra = Att[a].Att->attenuate( level );
 	signal.setLevel( level );
 	signal.addAttError( ra );
@@ -1617,15 +1620,22 @@ int Acquire::setupWrite( OutData &signal )
       else {
 	double intens = signal.intensity();
 	int ra = 0;
-	if ( intens == OutData::MuteIntensity )
+	if ( intens == OutData::MuteIntensity ) {
 	  ra = Att[a].Att->mute();
+	  fac = 0.0;
+	}
 	else {
-	  double level = 0.0;
 	  ra = Att[a].Att->write( intens, signal.carrierFreq(), level );
 	  signal.setIntensity( intens );
 	  signal.setLevel( level );
+	  fac = 1.0;
 	}
 	signal.addAttError( ra );
+      }
+      if ( Att[a].Att->noAttenuator() && signal.success() && fac >= 0.0 ) {
+	// without attenuator we need to scale the signal!
+	if ( fac != 0.0 )
+	  fac = ::pow( 10.0, -level/20.0 );
       }
     }
     else
@@ -1660,6 +1670,11 @@ int Acquire::setupWrite( OutData &signal )
     AO[di].Signals.clear();
     return -1;
   }
+
+  // without attenuator we need to scale the signal:
+  // the scale factor was reset to maxboardvolt by prepareWrite()!
+  if ( fac >= 0.0 )
+    signal.multiplyScale( fac );
 
   return 0;
 }
@@ -1808,21 +1823,26 @@ int Acquire::setupWrite( OutList &signal )
   }
 
   // set intensities or levels:
+  vector< vector< double > > fac( AO.size() );
   bool usedatt[Att.size()];
   for ( unsigned int a=0; a<Att.size(); a++ )
     usedatt[a] = false;
   for ( unsigned int i=0; i<AO.size(); i++ ) {
+    fac[i].resize( AO[i].Signals.size() );
     for ( int k=0; k<AO[i].Signals.size(); k++ ) {
+      fac[i][k] = -1.0;
       for ( unsigned int a=0; a<Att.size(); a++ ) {
 	if ( Att[a].Id == (int)i &&
 	     Att[a].Att->aoChannel() == AO[i].Signals[k].channel() ) {
 	  usedatt[a] = true;
+	  double level = 0.0;
 	  if ( AO[i].Signals[k].noIntensity() && AO[i].Signals[k].noLevel() ) {
 	    AO[i].Signals[k].addError( DaqError::NoIntensity );
 	    success = false;
 	  }
 	  else if ( AO[i].Signals[k].noIntensity() ) {
-	    double level = AO[i].Signals[k].level();
+	    level = AO[i].Signals[k].level();
+	    fac[i][k] = 1.0;
 	    int ra = Att[a].Att->attenuate( level );
 	    AO[i].Signals[k].setLevel( level );
 	    AO[i].Signals[k].addAttError( ra );
@@ -1830,18 +1850,27 @@ int Acquire::setupWrite( OutList &signal )
 	  else {
 	    double intens = AO[i].Signals[k].intensity();
 	    int ra = 0;
-	    if ( intens == OutData::MuteIntensity )
+	    if ( intens == OutData::MuteIntensity ) {
 	      ra = Att[a].Att->mute();
+	      fac[i][k] = 0.0;
+	    }
 	    else {
-	      double level = 0.0;
 	      ra = Att[a].Att->write( intens, AO[i].Signals[k].carrierFreq(), level );
 	      AO[i].Signals[k].setIntensity( intens );
 	      AO[i].Signals[k].setLevel( level );
+	      fac[i][k] = 1.0;
 	    }
 	    if ( ra != 0 ) {
 	      AO[i].Signals[k].addAttError( ra );
 	      success = false;
 	    }
+	  }
+	  if ( Att[a].Att->noAttenuator() &&
+	       AO[i].Signals[k].success() &&
+	       fac[i][k] >= 0.0 ) {
+	    // without attenuator we need to scale the signal!
+	    if ( fac[i][k] != 0.0 )
+	      fac[i][k] = ::pow( 10.0, -level/20.0 );
 	  }
 	}
       }
@@ -1894,6 +1923,15 @@ int Acquire::setupWrite( OutList &signal )
       AO[i].Signals.clear();
     }
     return -1;
+  }
+
+  // without attenuator we need to scale the signal:
+  // the scale factor was reset to maxboardvolt by prepareWrite()!
+  for ( unsigned int i=0; i<AO.size(); i++ ) {
+    for ( int k=0; k<AO[i].Signals.size(); k++ ) {
+      if ( fac[i][k] >= 0.0 )
+	AO[i].Signals[k].multiplyScale( fac[i][k] );
+    }
   }
 
   return 0;
@@ -2029,13 +2067,16 @@ int Acquire::directWrite( OutData &signal )
   AO[di].Signals.add( &signal );
 
   // set intensity or level:
+  double fac = -1.0;
   for ( unsigned int a=0; a<Att.size(); a++ ) {
     if ( ( Att[a].Id == di ) && 
 	 ( Att[a].Att->aoChannel() == signal.channel() ) ) {
+      double level = 0.0;
       if ( signal.noIntensity() && signal.noLevel() )
 	signal.addError( DaqError::NoIntensity );
       else if ( signal.noIntensity() ) {
-	double level = signal.level();
+	level = signal.level();
+	fac = 1.0;
 	int ra = Att[a].Att->attenuate( level );
 	signal.setLevel( level );
 	signal.addAttError( ra );
@@ -2043,15 +2084,22 @@ int Acquire::directWrite( OutData &signal )
       else {
 	double intens = signal.intensity();
 	int ra = 0;
-	if ( intens == OutData::MuteIntensity )
+	if ( intens == OutData::MuteIntensity ) {
 	  ra = Att[a].Att->mute();
+	  fac = 0.0;
+	}
 	else {
-	  double level = 0.0;
 	  ra = Att[a].Att->write( intens, signal.carrierFreq(), level );
 	  signal.setIntensity( intens );
 	  signal.setLevel( level );
+	  fac = 1.0;
 	}
 	signal.addAttError( ra );
+      }
+      if ( Att[a].Att->noAttenuator() && signal.success() && fac >= 0.0 ) {
+	// without attenuator we need to scale the signal!
+	if ( fac != 0.0 )
+	  fac = ::pow( 10.0, -level/20.0 );
       }
     }
     else
@@ -2062,6 +2110,12 @@ int Acquire::directWrite( OutData &signal )
   if ( signal.failed() ) {
     AO[di].Signals.clear();
     return -1;
+  }
+
+  // without attenuator we need to scale the signal:
+  if ( fac >= 0.0 ) {
+    // XXX    AO[di].AO->maxBoardVoltage();
+    signal.setScale( fac );
   }
 
   // start writing to daq board:
@@ -2199,21 +2253,26 @@ int Acquire::directWrite( OutList &signal )
   }
 
   // set intensities or levels:
+  vector< vector< double > > fac( AO.size() );
   bool usedatt[Att.size()];
   for ( unsigned int a=0; a<Att.size(); a++ )
     usedatt[a] = false;
   for ( unsigned int i=0; i<AO.size(); i++ ) {
+    fac[i].resize( AO[i].Signals.size() );
     for ( int k=0; k<AO[i].Signals.size(); k++ ) {
+      fac[i][k] = -1.0;
       for ( unsigned int a=0; a<Att.size(); a++ ) {
 	if ( Att[a].Id == (int)i &&
 	     Att[a].Att->aoChannel() == AO[i].Signals[k].channel() ) {
 	  usedatt[a] = true;
+	  double level = 0.0;
 	  if ( AO[i].Signals[k].noIntensity() && AO[i].Signals[k].noLevel() ) {
 	    AO[i].Signals[k].addError( DaqError::NoIntensity );
 	    success = false;
 	  }
 	  else if ( AO[i].Signals[k].noIntensity() ) {
-	    double level = AO[i].Signals[k].level();
+	    level = AO[i].Signals[k].level();
+	    fac[i][k] = 1.0;
 	    int ra = Att[a].Att->attenuate( level );
 	    AO[i].Signals[k].setLevel( level );
 	    AO[i].Signals[k].addAttError( ra );
@@ -2221,18 +2280,27 @@ int Acquire::directWrite( OutList &signal )
 	  else {
 	    double intens = AO[i].Signals[k].intensity();
 	    int ra = 0;
-	    if ( intens == OutData::MuteIntensity )
+	    if ( intens == OutData::MuteIntensity ) {
 	      ra = Att[a].Att->mute();
+	      fac[i][k] = 0.0;
+	    }
 	    else {
-	      double level = 0.0;
 	      ra = Att[a].Att->write( intens, AO[i].Signals[k].carrierFreq(), level );
 	      AO[i].Signals[k].setIntensity( intens );
 	      AO[i].Signals[k].setLevel( level );
+	      fac[i][k] = 1.0;
 	    }
 	    if ( ra != 0 ) {
 	      AO[i].Signals[k].addAttError( ra );
 	      success = false;
 	    }
+	  }
+	  if ( Att[a].Att->noAttenuator() &&
+	       AO[i].Signals[k].success() &&
+	       fac[i][k] >= 0.0 ) {
+	    // without attenuator we need to scale the signal!
+	    if ( fac[i][k] != 0.0 )
+	      fac[i][k] = ::pow( 10.0, -level/20.0 );
 	  }
 	}
       }
@@ -2248,6 +2316,16 @@ int Acquire::directWrite( OutList &signal )
     for ( unsigned int i=0; i<AO.size(); i++ )
       AO[i].Signals.clear();
     return -1;
+  }
+
+  // without attenuator we need to scale the signal:
+  for ( unsigned int i=0; i<AO.size(); i++ ) {
+    for ( int k=0; k<AO[i].Signals.size(); k++ ) {
+      if ( fac[i][k] >= 0.0 ) {
+	// XXX fc *= maxboardvolt
+	AO[i].Signals[k].setScale( fac[i][k] );
+      }
+    }
   }
 
   // start writing to daq boards:
@@ -2405,7 +2483,10 @@ double Acquire::minLevel( int trace ) const
   for ( unsigned int a=0; a<Att.size(); a++ ) {
     if ( ( Att[a].Id == OutTraces[trace].device() ) && 
 	 ( Att[a].Att->aoChannel() == OutTraces[trace].channel() ) ) {
-      return Att[a].Att->attenuator()->minLevel();
+      if ( Att[a].Att->noAttenuator() )
+	return -200.0;
+      else
+	return Att[a].Att->attenuator()->minLevel();
     }
   }
 
@@ -2427,7 +2508,10 @@ double Acquire::maxLevel( int trace ) const
   for ( unsigned int a=0; a<Att.size(); a++ ) {
     if ( ( Att[a].Id == OutTraces[trace].device() ) && 
 	 ( Att[a].Att->aoChannel() == OutTraces[trace].channel() ) ) {
-      return Att[a].Att->attenuator()->maxLevel();
+      if ( Att[a].Att->noAttenuator() )
+	return 100.0;
+      else
+	return Att[a].Att->attenuator()->maxLevel();
     }
   }
 
@@ -2450,7 +2534,13 @@ void Acquire::levels( int trace, vector<double> &l ) const
   for ( unsigned int a=0; a<Att.size(); a++ ) {
     if ( ( Att[a].Id == OutTraces[trace].device() ) && 
 	 ( Att[a].Att->aoChannel() == OutTraces[trace].channel() ) ) {
-      Att[a].Att->attenuator()->levels( l );
+      if ( Att[a].Att->noAttenuator() ) {
+	l.reserve( 600 );
+	for ( int k=0; k<600; k++ )
+	  l.push_back( -100.0 + k*0.5 );
+      }
+      else
+	Att[a].Att->attenuator()->levels( l );
       break;
     }
   }

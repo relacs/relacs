@@ -1,7 +1,8 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_INIT(relacs, 0.9.7)
-AC_CONFIG_MACRO_DIR([m4 numerics/m4 plugins/linuxdevices/comedi/m4])
+AC_CONFIG_MACRO_DIR([m4 numerics/m4 \
+    plugins/linuxdevices/comedi/m4 plugins/linuxdevices/daqflex/m4])
 
 AM_INIT_AUTOMAKE([1.10 -Wall gnits subdir-objects dist-bzip2])
 
@@ -92,6 +93,13 @@ RELACS_LIB_COMEDI()
 
 
 #################################################
+## DAQFlex for measurement computing USB boards
+#################################################
+RELACS_LIB_USB()
+RELACS_DAQFLEX=$RELACS_USB
+
+
+#################################################
 ## TML_lib (for Mirob robot)
 #################################################
 RELACS_LIB_TML()
@@ -145,6 +153,7 @@ DOXYGEN_EXTERNAL="${RELACS_DOCLIBS}"
 RELACS_PLUGINSET([comedi],[linuxdevices/comedi],[],[test "$RELACS_COMEDI" != no])
 AC_CONFIG_FILES([plugins/linuxdevices/comedi/examples/Makefile])
 AC_CONFIG_FILES([plugins/linuxdevices/comedi/module/Makefile])
+RELACS_PLUGINSET([daqflex],[linuxdevices/daqflex],[],[test "$RELACS_USB" != no])
 RELACS_NOPLUGINSET([nieseries],[linuxdevices/nieseries])
 RELACS_PLUGINSET([attcs3310],[linuxdevices/attcs3310])
 RELACS_PLUGINSET([misc],[linuxdevices/misc])
@@ -315,6 +324,7 @@ cat <<SUMMARY
     Use GSL ...................... ${RELACS_GSL}
     Use Comedi ................... ${RELACS_COMEDI}
     Use RTAI ..................... ${RELACS_RTAI}
+    Use libusb ................... ${RELACS_USB}
     Use TML_lib .................. ${RELACS_TML}
     Generate user manual ......... ${RELACS_GENERATE_DOCBOOK}
     Generate API documentation ... ${DX_SUMMARY}

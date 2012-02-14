@@ -308,6 +308,8 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
     sigs[k].setGainIndex( 0 );
     sigs[k].setMinVoltage( -BipolarRange[0] );
     sigs[k].setMaxVoltage( BipolarRange[0] );
+    if ( ! sigs[k].noIntensity() )
+      sigs[k].setScale( BipolarRange[0] );
 
     // allocate gain factor:
     char *gaindata = sigs[k].gainData();
@@ -327,6 +329,7 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
     gainp->Offset *= 2.0*max/DAQFlexDevice->maxAIData();
     gainp->Offset -= max;
     */
+
   }
 
   IsPrepared = ol.success();

@@ -209,9 +209,11 @@ int TransferFunction::main( void )
       s += " of <b>" + Str( repeats ) + "</b>";
     message( s );
 
+    unlockAll();
     signal.noiseWave( duration, -1.0, fmax, amplitude );
     signal.back() = 0.0;
     signal += offset;
+    lockAll();
     // debug:
     if ( signal.length() < duration )
       printlog( "WARNING: noiseWave() too short! duration=" + Str( duration ) +
