@@ -92,6 +92,7 @@ public:
   virtual int reset( void );
 
   string sendMessage( const string &message, bool display=true );
+  int sendControlTransfer( const string &message, bool display=true );
 
     /*! \return the resolution of the A/D converter. */
   unsigned short maxAIData( void ) const;
@@ -111,13 +112,14 @@ public:
   libusb_device_handle *deviceHandle( void );
   unsigned char endpointIn( void );
   unsigned char endpointOut( void );
+  int inPacketSize( void ) const;
+  int outPacketSize( void ) const;
 
   
  private:
 
   string productName( int productid );
   void setLibUSBError( int libusberror );
-  int sendControlTransfer( const string &message, bool display=true );
   string getControlTransfer( bool display=true );
 
   int getEndpoints( void );
@@ -130,6 +132,8 @@ public:
   libusb_device_handle *DeviceHandle;
   unsigned char EndpointIn;
   unsigned char EndpointOut;
+  int InPacketSize;
+  int OutPacketSize;
   int ProductID;
   unsigned short MaxAIData;
   double MaxAIRate;

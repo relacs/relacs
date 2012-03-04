@@ -9,7 +9,6 @@ endif
 EXTRA_DIST = \
     doc/comedi.doc \
     module/Makefile \
-    module/model.h \
     module/model.c \
     module/rtmodule.c \
     module/dynclampmodule.c \

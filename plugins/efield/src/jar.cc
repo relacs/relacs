@@ -64,6 +64,8 @@ JAR::JAR( void )
   addNumber( "deltafmax", "Maximum delta f", DeltaFMax, -10000.0, 10000.0, 2.0, "Hz" );
   addNumber( "deltafmin", "Minimum delta f", DeltaFMin, -10000.0, 10000.0, 2.0, "Hz" );
   addText( "deltafrange", "Range of delta f's", "" );
+  addInteger( "repeats", "Repeats", Repeats, 0, 1000, 2 );
+  addLabel( "Amplitudes" );
   addSelection( "amplsel", "Stimulus amplitude", "contrast|absolute" );
   addNumber( "contrastmax", "Maximum contrast", ContrastMax, 0.01, 1.0, 0.05, "1", "%", "%.0f" ).setActivation( "amplsel", "contrast" );
   addNumber( "contrastmin", "Minimum contrast", ContrastMin, 0.01, 1.0, 0.05, "1", "%", "%.0f" ).setActivation( "amplsel", "contrast" );
@@ -71,14 +73,14 @@ JAR::JAR( void )
   addNumber( "amplmin", "Minimum amplitude", AmplMin, 0.1, 1000.0, 0.1, "mV/cm" ).setActivation( "amplsel", "absolute" );
   addNumber( "amplmax", "Maximum amplitude", AmplMax, 0.1, 1000.0, 0.1, "mV/cm" ).setActivation( "amplsel", "absolute" );
   addNumber( "amplstep", "Amplitude steps", AmplStep, 0.1, 1000.0, 0.1, "mV/cm" ).setActivation( "amplsel", "absolute" );
-  addInteger( "repeats", "Repeats", Repeats, 0, 1000, 2 );
-  addLabel( "Stimulus" );
+  addLabel( "S&timulus" );
   addBoolean( "genstim", "Generate stimulus", GenerateStimulus );
   addBoolean( "sinewave", "Use sine wave", SineWave ).setActivation( "genstim", "true" );
   addText( "file", "Stimulus file", "" ).setStyle( OptWidget::BrowseExisting ).setActivation( "genstim", "false" );
   addNumber( "sigstdev", "Standard deviation of signal", 1.0, 0.01, 1.0, 0.05 ).setActivation( "genstim", "false" );
   addBoolean( "warpfile", "Warp stimulus file to the requested Delta fs", WarpFile ).setActivation( "genstim", "false" );
-  addLabel( "Analysis" );
+  addNumber( "fakefish", "Assume a fish with frequency", 0.0, 0.0, 2000.0, 10.0, "Hz" );
+  addLabel( "A&nalysis" );
   addNumber( "before", "Time before stimulation to be analyzed", Before, 0.0, 100000.0, 1.0, "seconds" );
   addNumber( "after", "Time after stimulation to be analyzed", After, 0.0, 100000.0, 1.0, "seconds" );
   addBoolean( "savetraces", "Save traces during pause", true );
@@ -183,6 +185,11 @@ int JAR::main( void )
   JARAverageTime = number( "jaraverage" );
   ChirpAverageTime = number( "chirpaverage" );
   EODSaveTime = number( "eodsavetime" );
+  double fakefish = number( "fakefish" );
+  if ( fakefish > 0.0 ) {
+    warning( "Do you really want a fish with frequency " + Str( fakefish )
+	     + " Hz to be simulated? Switch this off by setting the fakefish option to zero." );
+  }
   GenerateStimulus = boolean( "genstim" );
   SineWave = boolean( "sinewave" );
   File = text( "file" );
@@ -283,14 +290,19 @@ int JAR::main( void )
   P.unlock();
 
   // EOD rate:
-  if ( events( EODEvents ).frequency( JARAverageTime ) < 10.0 ) {
-    warning( "Missing EOD!<br>Either no fish or threshold of EOD Detector too high.", 5.0 );
-    return Failed;
+  if ( fakefish > 0.0 ) {
+    FishRate = fakefish;
   }
-  FishRate = events( EODEvents ).frequency( ReadCycles );
-  if ( FishRate <= 0.0 ) {
-    warning( "Not enough EOD cycles recorded!", 5.0 );
-    return Failed;
+  else {
+    if ( events( EODEvents ).frequency( JARAverageTime ) < 10.0 ) {
+      warning( "Missing EOD!<br>Either no fish or threshold of EOD Detector too high.", 5.0 );
+      return Failed;
+    }
+    FishRate = events( EODEvents ).frequency( ReadCycles );
+    if ( FishRate <= 0.0 ) {
+      warning( "Not enough EOD cycles recorded!", 5.0 );
+      return Failed;
+    }
   }
 
   // trigger:
@@ -337,7 +349,7 @@ int JAR::main( void )
 	if ( GenerateStimulus ) {
 	  signal.clear();
 	  if ( SineWave ) {
-	    unlockAll();
+	     unlockAll();
 	    StimulusRate = FishRate + DeltaF;
 	    double p = 1.0;
 	    if ( fabs( DeltaF ) > 0.01 )
@@ -400,11 +412,12 @@ int JAR::main( void )
 	    signal.setIdent( filename );
 	    IntensityGain = 1.0/sigstdev;
 	    restoreMouseCursor();
+	    StimulusRate = 0.0;
 	    lockAll();
 	  }
 	}
 	Duration = signal.length();
-	signal.setStartSource( 1 );
+	//	signal.setStartSource( 1 );
 	signal.setDelay( Before );
 	/*
 	Str s = "C=" + Str( 100.0 * Contrast, 0, 0, 'f' ) + "%";
@@ -417,6 +430,7 @@ int JAR::main( void )
 	  Intensity = Contrast * LocalFishAmplitude * IntensityGain;
 	else
 	  Intensity = Contrast * IntensityGain;
+	cerr << "Intensity=" << Intensity << '\n';
 	signal.setIntensity( Intensity );
 	if ( LocalBeatPeakEvents[0] >= 0 )
 	  detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", 0.7*signal.intensity() );
@@ -481,13 +495,14 @@ int JAR::main( void )
 	
 	// analyze:
 	analyze();
+	sleep( 0.1 );
 	plot();
 	saveTrace();
 	FileIndex++;
 
 	setSaving( savetraces );
 
-	sleep( Pause - Before - After );
+	sleep( Pause - Before - After - 0.1 );
 	if ( interrupt() ) {
 	  writeZero( GlobalEField );
 	  save();
@@ -1111,7 +1126,6 @@ void JAR::analyze( void )
 {
   const EventData &eodglobal = events( EODEvents );
   const EventData &eodlocal = LocalEODEvents[0] >= 0 ? events( LocalEODEvents[0] ) : events( EODEvents );
-  const EventData &sige = events( GlobalEFieldEvents );
 
   // EOD rate:
   double teod = signalTime();
@@ -1127,7 +1141,10 @@ void JAR::analyze( void )
     printlog( "warning: could not get the fishes EOD frequency!" );
 
   // Delta F:
-  TrueDeltaF = sige.frequency( signalTime(), signalTime() +  JARAverageTime ) - FishRate;
+  if ( GlobalEFieldEvents >= 0 )
+    TrueDeltaF = events( GlobalEFieldEvents ).frequency( signalTime(), signalTime() +  JARAverageTime ) - FishRate;
+  else
+    TrueDeltaF = DeltaF;
 
   // EOD amplitude:
   GlobalFishAmplitude = eodAmplitude( trace( EODTrace ),
@@ -1170,6 +1187,7 @@ void JAR::analyze( void )
     LocalEODUnit = "";
 
   EventIterator first1 = eodglobal.begin( signalTime() - Before );
+  ++first1; // XXX
   EventIterator last1 = eodglobal.begin( signalTime() + Duration + After );
   if ( last1 >= eodglobal.end() - 2 )
     last1 = eodglobal.end() - 2;
@@ -1208,16 +1226,30 @@ void JAR::analyze( void )
   EODBeatPhase.clear();
   EODBeatPhase.reserve( last1 - first1 + 2 );
   for ( EventIterator index = first1; index < last1; ++index ) {
-    long ti = sige.next( *index );
-    if ( ti >= sige.size() )
+    double t1 = 0.0;
+    if ( GlobalEFieldEvents >= 0 ) {
+      const EventData &sige = events( GlobalEFieldEvents );
+      long ti = sige.next( *index );
+      if ( ti >= sige.size() )
+	break;
+      t1 = sige[ ti ];
+    }
+    else if ( StimulusRate > 0.0 )
+      t1 = ::ceil( ( index.time() - signalTime() )*StimulusRate )/StimulusRate;
+    else
       break;
-    double t1 = sige[ ti ];
-    int pi = eodglobal.previous( t1 );
-    double t0 = eodglobal[ pi ];
-    if ( pi+1 >= eodglobal.size() )
-      break;
-    double phase = ( t1 - t0 ) / ( eodglobal[ pi + 1 ] - t0 );
-    EODBeatPhase.push( index.time() - signalTime(), phase );
+    int pi = eodglobal.previous( t1 + signalTime() );
+    if ( pi >= 0 ) {
+      double t0 = eodglobal[ pi ];
+      if ( pi+1 >= eodglobal.size() )
+	break;
+      double phase = ( t1 - t0 ) / ( eodglobal[ pi + 1 ] - t0 );
+      EODBeatPhase.push( index.time() - signalTime(), phase );
+    }
+    else {
+      cerr << "WARNING: EOD Buffer too small!\n";
+      EODBeatPhase.push( index.time() - signalTime(), 0.0 );
+    }
   }
   if ( EODBeatPhase.size() < EODFrequency.size()-(int)::ceil(Ramp*FishRate) &&
        ! GlobalEFieldEventsWarning ) {
@@ -1253,7 +1285,7 @@ void JAR::analyze( void )
 					     JARChirpEvents[k] + signalTime() - 0.7 * width );
 
       // current deltaf:
-      double cdeltaf = StimulusRate - meanrate;
+      double cdeltaf = StimulusRate > 0.0 ? StimulusRate - meanrate : 0.0;
 
       // mean amplitude before chirp:
       double meanampl = eodglobal.meanSize( JARChirpEvents[k] + signalTime() - 0.7 * width - ChirpAverageTime,
@@ -1311,12 +1343,23 @@ void JAR::analyze( void )
 
       // beat phase:
       double beatphase = 0.0;
-      gefi = sige.begin( eventfp.time() ) - 2;
-      for ( int n=0; n < 4 && gefi < sige.end(); n++, ++gefi ) {
-	double t1 = *gefi;
-	double t0 = floor( ( t1 - eodtime ) / meaninterv ) * meaninterv + eodtime;
-	double phase = ( t1 - t0 ) / meaninterv;
-	beatphase += ( phase - beatphase ) / (n+1);
+      if ( GlobalEFieldEvents >= 0 ) {
+	const EventData &sige = events( GlobalEFieldEvents );
+	gefi = sige.begin( eventfp.time() ) - 2;
+	for ( int n=0; n < 4 && gefi < sige.end(); n++, ++gefi ) {
+	  double t1 = *gefi;
+	  double t0 = floor( ( t1 - eodtime ) / meaninterv ) * meaninterv + eodtime;
+	  double phase = ( t1 - t0 ) / meaninterv;
+	  beatphase += ( phase - beatphase ) / (n+1);
+	}
+      }
+      else if ( StimulusRate > 0.0 ) {
+	for ( int n=0; n < 4; n++ ) {
+	  double t1 = ::ceil( ( eventfp.time() - signalTime() )*StimulusRate - 2 + n )/StimulusRate;
+	  double t0 = floor( ( t1 - eodtime ) / meaninterv ) * meaninterv + eodtime;
+	  double phase = ( t1 - t0 ) / meaninterv;
+	  beatphase += ( phase - beatphase ) / (n+1);
+	}	
       }
 
       // beat location:

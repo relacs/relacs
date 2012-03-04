@@ -16,9 +16,11 @@ USB_LDFLAGS=
 USB_CPPFLAGS=
 USB_LIBS=
 
-USB_LIBS="-lusb-1.0"
-RELACS_USB=yes
+# the following lines are a quick workaround for a properly installed libusb-1.0:
+#USB_LIBS="-lusb-1.0"
+#RELACS_USB=yes
 
+## the following is the real script, but it does not work yet...
 # # read arguments:
 # AC_ARG_WITH([libusb],
 # [AS_HELP_STRING([--with-libusb=DIR],[set libusb path ("/lib" and "/include" is appended)])

@@ -241,7 +241,8 @@ int DAQFlexAnalogInput::prepareRead( InList &traces )
   if ( Buffer != 0 )
     delete [] Buffer;
   BufferSize = 2 * traces.size() * traces[0].indices( traces[0].updateTime() ) *2;
-  BufferSize = (BufferSize/512+1)*512;
+  int inps = DAQFlexDevice->inPacketSize();
+  BufferSize = (BufferSize/inps+1)*inps;
   Buffer = new char[BufferSize];
   BufferN = 0;
 
@@ -361,7 +362,8 @@ int DAQFlexAnalogInput::readData( void )
   bool failed = false;
   int readn = 0;
   int buffern = BufferN*2;
-  int maxn = ((BufferSize - buffern)/512)*512;
+  int inps = DAQFlexDevice->inPacketSize();
+  int maxn = ((BufferSize - buffern)/inps)*inps;
 
   // try to read twice:
   for ( int tryit = 0; tryit < 2 && ! failed && maxn > 0; tryit++ ) {
@@ -383,7 +385,7 @@ int DAQFlexAnalogInput::readData( void )
     else if ( m > 0 ) {
       buffern += m;
       readn += m;
-      maxn = ((BufferSize - buffern)/512)*512;
+      maxn = ((BufferSize - buffern)/inps)*inps;
     }
 
   }
@@ -479,15 +481,20 @@ int DAQFlexAnalogInput::stop( void )
 int DAQFlexAnalogInput::reset( void ) 
 { 
   int retVal = stop();
+  // clear overrun condition:
+  DAQFlexDevice->sendControlTransfer( "AISCAN:RESET" , false );
+  libusb_clear_halt( DAQFlexDevice->deviceHandle(), 
+		     DAQFlexDevice->endpointIn() );
 
   // flush:
   int numbytes = 0;
   int status = 0;
   do {
-    unsigned char buffer[1024];
+    const int nbuffer = DAQFlexDevice->inPacketSize()*4;
+    unsigned char buffer[nbuffer];
     status = libusb_bulk_transfer( DAQFlexDevice->deviceHandle(),
 				   DAQFlexDevice->endpointIn(),
-				   buffer, 1024, &numbytes, 200 );
+				   buffer, nbuffer, &numbytes, 200 );
   } while ( numbytes > 0 && status == 0 );
 
   // free internal buffer:

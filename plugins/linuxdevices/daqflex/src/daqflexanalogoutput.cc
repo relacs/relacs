@@ -31,6 +31,9 @@ using namespace relacs;
 namespace daqflex {
 
 
+  // WORKS ONLY FOR 2ms updatetimes! XXXX Check what special buffersize this results in! That makes 512 Bytes - the packet size! XXX
+
+
 DAQFlexAnalogOutput::DAQFlexAnalogOutput( void ) 
   : AnalogOutput( "DAQFlexAnalogOutput", DAQFlexAnalogIOType )
 {
@@ -186,7 +189,7 @@ int DAQFlexAnalogOutput::directWrite( OutList &sigs )
       v = minval;
     v *= scale;
     // XXX    unsigned short data = comedi_from_physical( v, polynomial );
-    unsigned short data = (v+10.0)/20.0 * 0xffff;
+    unsigned short data = (unsigned short)((v+10.0)/20.0 * 0xffff);
 
     // write data:
     string response = DAQFlexDevice->sendMessage( "AO{" + Str( sigs[k].channel() ) + "}:VALUE=" + Str( data ) );
@@ -217,7 +220,7 @@ int DAQFlexAnalogOutput::convert( char *cbuffer, int nbuffer )
     scale[k] = Sigs[k].scale();
     calib[k] = (const Calibration *)Sigs[k].gainData();
     // XXX calibration?
-    zeros[k] = 10.0/20.0 * 0xffff;
+    zeros[k] = (unsigned short)( (10.0/20.0) * 0xffff );
     // XXX    zeros[k] = comedi_from_physical( 0.0, calib[k] );
   }
 
@@ -278,7 +281,6 @@ int DAQFlexAnalogOutput::testWriteDevice( OutList &sigs )
 
 int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
 {
-  cerr << "PrepareWrite START\n";
   if ( !isOpen() )
     return -1;
 
@@ -288,17 +290,24 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
   if ( sigs.size() == 0 )
     return -1;
 
+  /*
+  // clear out board buffer.
+  // this is not nice, since it actually writes data!
+  DAQFlexDevice->sendMessage( "AOSCAN:LOWCHAN=0" );
+  DAQFlexDevice->sendMessage( "AOSCAN:HIGHCHAN=0" );
+  DAQFlexDevice->sendMessage( "AOSCAN:RATE=" + Str( maxRate(), "%g" ) );
+  DAQFlexDevice->sendMessage( "AOSCAN:SAMPLES=0" );
+  DAQFlexDevice->sendMessage( "AOSCAN:START" );
+  double dummy = 1.0;
+  for ( int k=0; k<100000; k++ )
+    dummy *= (double)k/(double)(k+1);
+  DAQFlexDevice->sendMessage( "AOSCAN:STOP" );
+  */
+
   // copy and sort signal pointers:
   OutList ol;
   ol.add( sigs );
   ol.sortByChannel();
-
-  // setup acquisition:
-  DAQFlexDevice->sendMessage( "AOSCAN:RATE=" + Str( sigs[0].sampleRate(), "%g" ) );
-  if ( sigs[0].continuous() )
-    DAQFlexDevice->sendMessage( "AOSCAN:SAMPLES=0" );
-  else
-    DAQFlexDevice->sendMessage( "AOSCAN:SAMPLES=" + Str( sigs[0].size() + sigs[0].indices( sigs[0].delay() ) ) );
 
   // setup channels:
   DAQFlexDevice->sendMessage( "AOSCAN:LOWCHAN=" + Str( sigs[0].channel() ) );
@@ -332,8 +341,6 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
 
   }
 
-  IsPrepared = ol.success();
-
   if ( ! ol.success() )
     return -1;
 
@@ -341,14 +348,30 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
   for ( int k=0; k<ol.size(); k++ )
     ol[k].deviceReset( delayinx );
 
+  // setup acquisition:
+  DAQFlexDevice->sendMessage( "AOSCAN:RATE=" + Str( sigs[0].sampleRate(), "%g" ) );
+  if ( sigs[0].continuous() ) {
+    Samples = 0;
+    DAQFlexDevice->sendMessage( "AOSCAN:SAMPLES=0" );
+  }
+  else {
+    Samples = sigs.deviceBufferSize();
+    DAQFlexDevice->sendMessage( "AOSCAN:SAMPLES=" + Str( Samples ) );
+  }
+
   // set buffer size:
   int bi = sigs[0].indices( sigs[0].writeTime() );
   if ( bi <= 0 )
     bi = 100;
+  //  int outps = DAQFlexDevice->outPacketSize();
+  //  BufferSize = ((5*sigs.size()*bi*2)/outps+1)*outps;
   BufferSize = 5*sigs.size()*bi*2;
+  if ( BufferSize < DAQFlexDevice->outPacketSize() )
+    BufferSize = DAQFlexDevice->outPacketSize();
   int nbuffer = sigs.deviceBufferSize()*2;
   if ( nbuffer < BufferSize )
     BufferSize = nbuffer;
+  //    BufferSize = (nbuffer/outps+1)*outps;
   if ( BufferSize > 0xfffff )
     sigs.addError( DaqError::InvalidBufferTime );
   if ( BufferSize <= 0 )
@@ -370,7 +393,10 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
   }
   Buffer = new char[ BufferSize ];  // Buffer was deleted in reset()!
 
-  cerr << "PrepareWrite STOP\n";
+  cerr << "STARTWRITE SCALE=" << Sigs[0].scale() << '\n';
+  fillWriteBuffer( 0 );
+
+  IsPrepared = ol.success();
 
   return 0;
 }
@@ -378,14 +404,12 @@ int DAQFlexAnalogOutput::prepareWrite( OutList &sigs )
 
 int DAQFlexAnalogOutput::startWrite( void )
 {
-  cerr << "StartWrite START\n";
   if ( !IsPrepared || Sigs.empty() ) {
     cerr << "AO not prepared or no signals!\n";
     return -1;
   }
-  fillWriteBuffer( true );
   DAQFlexDevice->sendMessage( "AOSCAN:START" );
-  cerr << "StartWrite STOP\n";
+  fillWriteBuffer( 1 );
   return 0;
 }
 
@@ -403,7 +427,7 @@ int DAQFlexAnalogOutput::writeData( void )
     return -1;
   }
 
-  return fillWriteBuffer( false );
+  return fillWriteBuffer( 2 );
 }
 
 
@@ -420,6 +444,10 @@ int DAQFlexAnalogOutput::reset( void )
     return NotOpen;
 
   DAQFlexDevice->sendMessage( "AOSCAN:STOP" );
+  // clear underrun condition:
+  DAQFlexDevice->sendControlTransfer( "AOSCAN:RESET", false );
+  libusb_clear_halt( DAQFlexDevice->deviceHandle(), 
+		     DAQFlexDevice->endpointIn() );
   DAQFlexDevice->sendMessage( "?AOSCAN:STATUS" );
 
   Settings.clear();
@@ -448,9 +476,8 @@ int DAQFlexAnalogOutput::error( void ) const
 }
 
 
-int DAQFlexAnalogOutput::fillWriteBuffer( bool first )
+int DAQFlexAnalogOutput::fillWriteBuffer( int stage )
 {
-  cerr << "FillWrite START\n";
   if ( !isOpen() ) {
     Sigs.setError( DaqError::DeviceNotOpen );
     return -1;
@@ -464,29 +491,55 @@ int DAQFlexAnalogOutput::fillWriteBuffer( bool first )
   }
 
   int maxntry = 2;
-  if ( first )
+  if ( stage==0 ) {
     maxntry = 100000/BufferSize;
-
+    if ( maxntry <= 0 )
+      maxntry = 1;
+  }
+  //    maxntry = 1;
+  
   int ern = 0;
   int elemWritten = 0;
-
+  int outps = DAQFlexDevice->outPacketSize();
+  
   // try to write twice
   for ( int tryit = 0;
 	tryit < maxntry && Sigs[0].deviceWriting(); 
-	tryit++ ){
-
+	tryit++ ) {
+    
     // convert data into buffer:
     int bytesConverted = 0;
     bytesConverted = convert<unsigned short>( Buffer+NBuffer, BufferSize-NBuffer );
     NBuffer += bytesConverted;
+    /*
+    if ( NBuffer < BufferSize ) {
+      // all data converted, fill up to package size:
+      int nbuffer = (NBuffer/outps+1)*outps;
+      unsigned short *lp = (unsigned short *)(Buffer+NBuffer-2);
+      unsigned short *fp = (unsigned short *)(Buffer+NBuffer);
+      while ( NBuffer < nbuffer ) {
+	*fp++ = *lp;
+	NBuffer += 2;
+      }
+    }
+    ofstream df( "signal.dat" );
+    unsigned short *dp = (unsigned short*)Buffer;
+    for ( int k=0; k<NBuffer/2; k++ )
+      df << k << "  " << *dp++ << '\n';
+    df.close();
+    exit(0);
+    */
 
     // transfer buffer to device:
+    //    int bytesToWrite = (NBuffer/outps)*outps; //  XXX
+    int bytesToWrite = NBuffer; //  XXX
+    //    if ( stage==0 && bytesToWrite > 4*4096 ) // XXX figure out FIFO size!
+    //      bytesToWrite = 4*4096;
     int bytesWritten = 0;
     ern = libusb_bulk_transfer( DAQFlexDevice->deviceHandle(),
 				DAQFlexDevice->endpointOut(),
-				(unsigned char*)(Buffer), NBuffer,
-				&bytesWritten, 20 );
-    //    cerr << "FillWrite TRANSFER " << bytesWritten << " erro " << ern << "\n";
+				(unsigned char*)(Buffer), bytesToWrite,
+				&bytesWritten, 50 );
 
     if ( ern != 0 )
       break;
@@ -533,7 +586,6 @@ int DAQFlexAnalogOutput::fillWriteBuffer( bool first )
       return -1;
     }
   }
-  cerr << "FillWrite STOP " << elemWritten << "\n";
   
   return elemWritten;
 }

@@ -210,7 +210,9 @@ int TransferFunction::main( void )
     message( s );
 
     unlockAll();
+    signal.clear();
     signal.noiseWave( duration, -1.0, fmax, amplitude );
+    //    signal.sineWave( duration, -1.0, 614.0, amplitude, 1.0 );
     signal.back() = 0.0;
     signal += offset;
     lockAll();

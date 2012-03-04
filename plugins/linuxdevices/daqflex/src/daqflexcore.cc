@@ -115,6 +115,10 @@ int DAQFlexCore::open( const string &devicestr, const Options &opts )
 	      libusb_release_interface( DeviceHandle, 0 );
 	      continue;
 	    }
+	    InPacketSize = libusb_get_max_iso_packet_size(  device,
+							     EndpointIn );
+	    OutPacketSize = libusb_get_max_iso_packet_size(  device,
+							      EndpointOut );
 	    if ( ! serialno.empty() ) {
 	      //get the device serial number
 	      string message = sendMessage( "?DEV:MFGSER" );
@@ -230,6 +234,18 @@ unsigned char DAQFlexCore::endpointOut( void )
 }
 
 
+int DAQFlexCore::inPacketSize( void ) const
+{
+  return InPacketSize;
+}
+
+
+int DAQFlexCore::outPacketSize( void ) const
+{
+  return OutPacketSize;
+}
+
+
 string DAQFlexCore::productName( int productid )
 {
   switch( productid ) {
@@ -299,7 +315,7 @@ void DAQFlexCore::setLibUSBError( int libusberror )
   int numbytes = libusb_control_transfer( DeviceHandle,
 					  LIBUSB_REQUEST_TYPE_VENDOR + LIBUSB_ENDPOINT_OUT,
 					  StringMessage, 0, 0, data,
-					  MaxMessageSize, 1000 );
+					  MaxMessageSize, 100 );
 
   setLibUSBError( numbytes );
   return ErrorState;
@@ -312,7 +328,7 @@ string DAQFlexCore::getControlTransfer( bool display )
   int numbytes = libusb_control_transfer( DeviceHandle,
 					  LIBUSB_REQUEST_TYPE_VENDOR + LIBUSB_ENDPOINT_IN,
 					  StringMessage, 0, 0,
-					  message, MaxMessageSize, 1000 );
+					  message, MaxMessageSize, 100 );
   
   setLibUSBError( numbytes );
   if ( ErrorState != Success )
@@ -327,6 +343,7 @@ string DAQFlexCore::getControlTransfer( bool display )
 //Returns response if transfer successful, null if not
   string DAQFlexCore::sendMessage( const string &message, bool display )
 {
+  display = false;
   int r = sendControlTransfer( message, display );
   if ( r == Success )
     return getControlTransfer( display );
