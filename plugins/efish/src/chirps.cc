@@ -32,7 +32,7 @@ namespace efish {
 
 
 Chirps::Chirps( void )
-  : RePro( "Chirps", "efish", "Jan Benda", "1.8", "Apr 23, 2010" )
+  : RePro( "Chirps", "efish", "Jan Benda", "1.9", "Apr 13, 2012" )
 {
   // parameter:
   ReadCycles = 100;
@@ -42,6 +42,7 @@ Chirps::Chirps( void )
   Pause = 1.0;
   ChirpSize = 100.0;  // Hertz
   ChirpWidth = 0.014;  // seconds
+  ChirpKurtosis = 1.0;
   ChirpDip = 0.02;
   DeltaF = 10.0;
   Contrast = 0.2;
@@ -63,6 +64,7 @@ Chirps::Chirps( void )
   addNumber( "firstspace", "Time preceeding first chirp", FirstSpace, 0.01, 1000.0, 0.05, "sec", "ms" );
   addNumber( "chirpsize", "Size of chirp", ChirpSize, 0.0, 1000.0, 10.0, "Hz" );
   addNumber( "chirpwidth", "Width of chirp", ChirpWidth, 0.002, 1.0, 0.001, "sec", "ms" );
+  addNumber( "chirpkurtosis", "Kurtosis of Gaussian chirp", ChirpKurtosis, 0.01, 100.0, 0.01, "", "" );
   addNumber( "chirpampl", "Amplitude of chirp", ChirpDip, 0.0, 1.0, 0.01, "1", "%", "%.0f" );
   addLabel( "Beat parameter" );
   addNumber( "deltaf", "Delta f", DeltaF, -500.0, 500.0, 5, "Hz" );
@@ -122,6 +124,7 @@ Chirps::Chirps( void )
   ChirpKey.addNumber( "src", "-", "%3.0f" );
   ChirpKey.addNumber( "size", "Hz", "%5.1f" );
   ChirpKey.addNumber( "width", "ms", "%5.1f" );
+  ChirpKey.addNumber( "kurtosis", "1", "%5.2f" );
   ChirpKey.addNumber( "ampl", "%", "%5.1f" );
   ChirpKey.addNumber( "phase", "1", "%5.3f" );
   ChirpKey.addLabel( "eod" );
@@ -243,6 +246,7 @@ void Chirps::createEOD( OutData &signal )
   s += ", chirps=" + Str( NChirps );
   s += ", size=" + Str( ChirpSize, 0, 0, 'f' ) + "Hz";
   s += ", width=" + Str( 1000.0*ChirpWidth, 0, 0, 'f' ) + "ms";
+  s += ", kurtosis=" + Str( ChirpKurtosis, 0, 2, 'f' );
   s += ", ampl=" + Str( 100.0*ChirpDip, 0, 0, 'f' ) + "%";
   s += ", phase: " + Str( ChirpPhase, 0, 2, 'f' );
   //  signal.setComment( s );
@@ -392,10 +396,10 @@ int Chirps::createAM( OutData &signal )
   int pointsperchirp = int( rint( chirpslot / deltat ) );
   signal.reserve( firstcycle*pointsperbeat + NChirps*(mincycle*pointsperbeat+pointsperchirp) );
   double phasestep = 1.0/BeatPos;
-  double sig = 0.5*ChirpWidth/sqrt(2.0*log(10.0));
+  double sig = 0.5*ChirpWidth / ::pow( 2.0*log(10.0), 0.5/ChirpKurtosis );
 
   // first beat:
-  double p = -0.25;
+  double p = -0.25;   // current beat phase
   for ( int j=0; j<firstcycle; j++ ) {
     for ( int i=0; i<pointsperbeat; i++ ) {
       p += DeltaF*deltat;
@@ -420,7 +424,7 @@ int Chirps::createAM( OutData &signal )
     double dp = 0.0;
     for ( int i=0; i<pointsperchirp; i++ ) {
       double tt = i*deltat - t0;
-      double gg = exp( -0.5*(tt/sig)*(tt/sig) );
+      double gg = exp( -0.5 * ::pow( (tt/sig)*(tt/sig), ChirpKurtosis ) );
       double cc = ChirpSize*gg;
       p += (DeltaF + cc)*deltat;
       dp += cc * deltat;
@@ -582,6 +586,7 @@ int Chirps::main( void )
   Contrast = number( "contrast" );
   ChirpSize = number( "chirpsize" );
   ChirpWidth = number( "chirpwidth" );
+  ChirpKurtosis = number( "chirpkurtosis" );
   ChirpDip = number( "chirpampl" );
   BeatPos = integer( "beatpos" );
   BeatStart = number( "beatstart" );
@@ -921,6 +926,7 @@ void Chirps::saveChirps( void )
     ChirpKey.save( df, Response[k].Trace );
     ChirpKey.save( df, Response[k].Size );
     ChirpKey.save( df, Response[k].Width );
+    ChirpKey.save( df, Response[k].Kurtosis );
     ChirpKey.save( df, Response[k].Amplitude );
     ChirpKey.save( df, Response[k].Phase );
     ChirpKey.save( df, Response[k].EODRate );
@@ -1479,7 +1485,7 @@ void Chirps::analyze( void )
 
     // store results:
     ChirpData d( StimulusIndex, Mode, 2, ChirpTimes[k], ChirpSize,
-		 1000.0*ChirpWidth, 100.0*ChirpDip, ChirpPhase,
+		 1000.0*ChirpWidth, ChirpKurtosis, 100.0*ChirpDip, ChirpPhase,
 		 eodrate, beatfreq, beatphase, beatloc, beatbin,
 		 beatbefore, beatafter, beatpeak, beattrough );
     Response.push_back( d );

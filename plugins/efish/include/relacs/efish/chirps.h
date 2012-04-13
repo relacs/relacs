@@ -42,7 +42,7 @@ namespace efish {
 \class Chirps
 \brief [RePro] Measures responses to chirps.
 \author Jan Benda
-\version 1.8 (Apr 23, 2010)
+\version 1.9 (Apr 13, 2012)
 \todo Make independent of beat detector
 
 \par Options
@@ -52,8 +52,9 @@ namespace efish {
 - \b pause (\c number, \e ms): %Pause between successive stimuli.
 - \b deltaf (\c number, \e Hz): Beat frequency.
 - \b contrast (\c number, \e %): Contrast (AM amplitude / EOD amplitude)
-- \b chirpsize (\c number, \e Hz): Size of the chirps.
-- \b chirpwidth (\c number, \e ms): Width of the chirps.
+- \b chirpsize (\c number, \e Hz): Size of the chirp.
+- \b chirpwidth (\c number, \e ms): Width of the chirp.
+- \b chirpkurtosis (\c number): Kurtosis of Gaussian chirp (>1 broader, <1 narrower).
 - \b chirpampl (\c number, \e %): Reduction of EOD amplitude during a chirp.
 - \b repeats (\c integer): Number of stimulus repetitions (0: infinite).
 - \b beatpos (\c integer): Number of beat positions used for analysis.
@@ -131,6 +132,7 @@ private:
   double Pause;
   double ChirpSize;
   double ChirpWidth;
+  double ChirpKurtosis;
   double ChirpDip;
   int BeatPos;
   double BeatStart;
@@ -164,13 +166,13 @@ private:
   struct ChirpData
   {
     ChirpData( int i, int m, int tr, double t, 
-	       double s, double w, double a, double p,
+	       double s, double w, double k, double a, double p,
 	       double er,
 	       double bf, double bph, double bl, int bbin,
 	       double bb, double ba, 
 	       double bp, double bt ) 
       : Index( i ), Mode( m ), Trace( tr ), Time( t ), Size( s ), Width( w ),
-	 Amplitude( a ), Phase( p ), EODRate( er ),
+	Kurtosis( k ), Amplitude( a ), Phase( p ), EODRate( er ),
 	 BeatFreq( bf ), BeatPhase( bph ), BeatLoc( bl ), BeatBin( bbin ), 
 	 BeatBefore( bb ), BeatAfter( ba ), BeatPeak( bp ), BeatTrough( bt ),
 	 EODTime(), EODFreq(), EODAmpl(), Spikes(),
@@ -181,6 +183,7 @@ private:
     double Time;
     double Size;
     double Width;
+    double Kurtosis;
     double Amplitude;
     double Phase;
     double EODRate;
