@@ -25,7 +25,7 @@
 // #define ENABLE_TRIGGER
 
   /*! Sets digitial outputs high or low at various time points of the dynamic clamp loop. */
-#define ENABLE_TTLPULSE
+// #define ENABLE_TTLPULSE
 
 
 // *** DEVICE LINUX CONFIGURATION ***

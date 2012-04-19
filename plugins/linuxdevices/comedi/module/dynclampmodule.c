@@ -407,8 +407,11 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
 {
   int iS = chanlistIOC->subdevID;
   int iD = subdev[iS].devID;
-  int iC, i, isC;
+  int iC, isC;
   int trig = 0;
+#ifdef ENABLE_COMPUTATION
+  int i;
+#endif
 
   if ( subdev[iS].subdev < 0 || !subdev[iS].used ) {
     ERROR_MSG( "loadChanlist ERROR: First open an appropriate device and subdevice. Chanlist not loaded!\n" );
@@ -440,7 +443,7 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
     for ( iC = 0; iC < chanlistIOC->chanlistN; iC++ ) {
       for ( isC = 0; isC < subdev[iS].chanN; isC++ ) {
         if ( CR_CHAN(chanlistIOC->chanlist[iC]) == 
-            subdev[iS].chanlist[isC].chan + PARAM_CHAN_OFFSET*subdev[iS].chanlist[isC].isParamChan ) {
+	     subdev[iS].chanlist[isC].chan + PARAM_CHAN_OFFSET*subdev[iS].chanlist[isC].isParamChan ) {
 	  subdev[iS].chanlist[isC].isUsed = 1;
 	  if ( trig && subdev[iS].chanlist[iC].chan == trigger.chan ) {
 	    DEBUG_MSG( "set trigger for channel %d id %d on subdevice %d with level %d\n", subdev[iS].chanlist[iC].chan, iC, subdev[iS].subdev, (int)(100.0*trigger.alevel) );
@@ -497,6 +500,7 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
 	subdev[iS].chanlist[iC].trigger = 0;
 	subdev[iS].chanlist[iC].alevel = 0.0;
       }
+#ifdef ENABLE_COMPUTATION
       if ( subdev[iS].chanlist[iC].isParamChan ) {
 	subdev[iS].chanlist[iC].chan -= PARAM_CHAN_OFFSET;
 	subdev[iS].chanlist[iC].aref = 0;
@@ -505,21 +509,26 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
 	subdev[iS].chanlist[iC].scale = 1.0;
       }
       else {
+#endif
 	if ( subdev[iS].type == SUBDEV_IN ) {
 	  subdev[iS].chanlist[iC].insn.insn = INSN_READ;
+#ifdef ENABLE_COMPUTATION
 	  for ( i = 0; i < INPUT_N; i++ ) {
 	    if ( inputDevices[i] == subdev[iS].userSubdevIndex && 
 		 inputChannels[i] == subdev[iS].chanlist[iC].chan )
 	      subdev[iS].chanlist[iC].modelIndex = i;
 	  }
+#endif
 	}
 	else {
 	  subdev[iS].chanlist[iC].insn.insn = INSN_WRITE;
+#ifdef ENABLE_COMPUTATION
 	  for ( i = 0; i < OUTPUT_N; i++ ) {
 	    if ( outputDevices[i] == subdev[iS].userSubdevIndex && 
 		 outputChannels[i] == subdev[iS].chanlist[iC].chan )
 	      subdev[iS].chanlist[iC].modelIndex = i;
 	  }
+#endif
 	}
 	subdev[iS].chanlist[iC].aref = CR_AREF( chanlistIOC->chanlist[iC] );
 	subdev[iS].chanlist[iC].rangeIndex = CR_RANGE( chanlistIOC->chanlist[iC] );
@@ -529,7 +538,9 @@ int loadChanlist( struct chanlistIOCT *chanlistIOC )
 	subdev[iS].chanlist[iC].insn.chanspec = chanlistIOC->chanlist[iC];
 	memcpy( &subdev[iS].chanlist[iC].converter, &chanlistIOC->conversionlist[iC], sizeof(struct converterT) );
 	subdev[iS].chanlist[iC].scale = chanlistIOC->scalelist[iC];
+#ifdef ENABLE_COMPUTATION
       }
+#endif
     }
   }    
   return 0;
@@ -1053,9 +1064,11 @@ void rtDynClamp( long dummy )
 		  subdev[iS].running = 0;
 		  continue;
 		}
+#ifdef ENABLE_COMPUTATION
 		if ( pChan->isParamChan ) {
 		  paramOutput[pChan->chan] = pChan->voltage;
 		}
+#endif
 	      }
 	    }
 	  }
@@ -1068,12 +1081,15 @@ void rtDynClamp( long dummy )
 	for ( iC = 0; iC < subdev[iS].chanN; iC++ ) {
 	  pChan = &subdev[iS].chanlist[iC];
 	  // this is an output to the DAQ board:
+#ifdef ENABLE_COMPUTATION
 	  if ( !pChan->isParamChan ) {
+#endif
 	    voltage = pChan->voltage;
+#ifdef ENABLE_COMPUTATION
 	    // add model output to sample:
 	    if ( pChan->modelIndex >= 0 )
 	      voltage += output[pChan->modelIndex];
-
+#endif
 	    // write out Sample:
 	    value_to_sample( pChan, voltage ); // sets pChan->lsample
 	    retVal = comedi_do_insn( pChan->devP, &pChan->insn );
@@ -1090,7 +1106,9 @@ void rtDynClamp( long dummy )
 			   iS, iC, dynClampTask.loopCnt );
 	      }
 	    }
+#ifdef ENABLE_COMPUTATION
 	  }
+#endif
 	} // end of chan loop
 
       }
@@ -1158,7 +1176,9 @@ void rtDynClamp( long dummy )
 	  pChan->prevvoltage = pChan->voltage;
 
 	  // acquire sample:
+#ifdef ENABLE_COMPUTATION
 	  if ( !pChan->isParamChan ) {
+#endif
 	    retVal = comedi_do_insn( pChan->devP, &pChan->insn );     
 	    if ( retVal < 1 ) {
 	      subdev[iS].running = 0;
@@ -1176,12 +1196,14 @@ void rtDynClamp( long dummy )
 	    }
 	    // convert to voltage:
 	    sample_to_value( pChan ); // sets pChan->voltage from pChan->lsample
+#ifdef ENABLE_COMPUTATION
 	    if ( pChan->modelIndex >= 0 )
 	      input[pChan->modelIndex] = pChan->voltage;
 	  }
 	  else {
 	    pChan->voltage = paramInput[pChan->chan];
 	  }
+#endif
 	  
 	  // debug:
 	  if ( subdev[iS].running == 0 )
@@ -1521,8 +1543,10 @@ int rtmodule_ioctl( struct inode *devFile, struct file *fModule,
     chanIndex++;
     if ( chanIndex >= INPUT_N )
       chanIndex = 0;
-#endif
     return 0;
+#else
+    return -EFAULT; // Nothing done
+#endif
 
 
   case IOC_START_SUBDEV:
