@@ -3,6 +3,8 @@
 prefix="@prefix@"
 exec_prefix="@exec_prefix@"
 libdir="@libdir@"
+datarootdir="@datarootdir@"
+docdir="@docdir@/api"
 
 # Full path of the RELACS executable to be used:
 RELACSEXEC="@abs_top_builddir@/src/relacsgui"

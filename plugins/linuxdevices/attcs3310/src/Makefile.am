@@ -27,7 +27,10 @@ libattcs3310cs3310pp_la_LDFLAGS = \
 
 libattcs3310cs3310pp_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 libattcs3310cs3310pp_la_SOURCES = cs3310pp.cc cs3310ppdevice.cc
 
@@ -52,7 +55,10 @@ libattcs3310cs3310dio_la_LDFLAGS = \
 
 libattcs3310cs3310dio_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 libattcs3310cs3310dio_la_SOURCES = cs3310dio.cc cs3310diodevice.cc
 

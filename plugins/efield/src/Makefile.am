@@ -32,7 +32,13 @@ libefieldeodtools_la_LDFLAGS = \
 
 libefieldeodtools_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 libefieldeodtools_la_SOURCES = eodtools.cc
 
@@ -59,7 +65,13 @@ libefieldlinearfield_la_LDFLAGS = \
 
 libefieldlinearfield_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libefieldlinearfield_la_OBJECTS) : moc_linearfield.cc
 
@@ -90,7 +102,13 @@ libefieldeoddetector_la_LDFLAGS = \
 libefieldeoddetector_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(builddir)/libefieldeodtools.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libefieldeoddetector_la_OBJECTS) : moc_eoddetector.cc
 
@@ -119,7 +137,13 @@ libefieldchirpdetector_la_LDFLAGS = \
 
 libefieldchirpdetector_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libefieldchirpdetector_la_OBJECTS) : moc_chirpdetector.cc
 
@@ -148,7 +172,13 @@ libefieldbeatdetector_la_LDFLAGS = \
 
 libefieldbeatdetector_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libefieldbeatdetector_la_OBJECTS) : moc_beatdetector.cc
 
@@ -177,7 +207,13 @@ libefieldtraces_la_LDFLAGS = \
 
 libefieldtraces_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 libefieldtraces_la_SOURCES = traces.cc
 
@@ -208,7 +244,13 @@ libefieldcalibefield_la_LIBADD = \
     $(builddir)/../../base/src/libbaselinearattenuate.la \
     $(builddir)/libefieldtraces.la \
     $(builddir)/libefieldeodtools.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libefieldcalibefield_la_OBJECTS) : moc_calibefield.cc
 
@@ -241,7 +283,13 @@ libefieldjar_la_LIBADD = \
     $(builddir)/../../base/src/libbaselinearattenuate.la \
     $(builddir)/libefieldtraces.la \
     $(builddir)/libefieldeodtools.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libefieldjar_la_OBJECTS) : moc_jar.cc
 

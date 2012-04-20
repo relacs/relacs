@@ -38,92 +38,92 @@ AM_CPPFLAGS = \
 CLEANFILES = data.dat test.dat
 
 
-binrate_LDADD = ../src/librelacsnumerics.la
+binrate_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 binrate_SOURCES = binrate.cc
 
-coherence_LDADD = ../src/librelacsnumerics.la
+coherence_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 coherence_SOURCES = coherence.cc
 
 euler_LDADD = ../src/librelacsnumerics.la
 euler_SOURCES = euler.cc
 
-generatepairs_LDADD = ../src/librelacsnumerics.la
+generatepairs_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 generatepairs_SOURCES = generatepairs.cc
 
 isnan_LDADD = ../src/librelacsnumerics.la
 isnan_SOURCES = isnan.cc
 
-linearfit_LDADD = ../src/librelacsnumerics.la
+linearfit_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 linearfit_SOURCES = linearfit.cc
 
-marquardtfit_LDADD = ../src/librelacsnumerics.la
+marquardtfit_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 marquardtfit_SOURCES = marquardtfit.cc
 
-maxreturnval_LDADD = ../src/librelacsnumerics.la
+maxreturnval_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 maxreturnval_SOURCES = maxreturnval.cc
 
-meanreturnval_LDADD = ../src/librelacsnumerics.la
+meanreturnval_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 meanreturnval_SOURCES = meanreturnval.cc
 
-ramps_LDADD = ../src/librelacsnumerics.la
+ramps_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 ramps_SOURCES = ramps.cc
 
-randtiming_LDADD = ../src/librelacsnumerics.la
+randtiming_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 randtiming_SOURCES = randtiming.cc
 
-rfft_LDADD = ../src/librelacsnumerics.la
+rfft_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 rfft_SOURCES = rfft.cc
 
-simplexfit_LDADD = ../src/librelacsnumerics.la
+simplexfit_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 simplexfit_SOURCES = simplexfit.cc
 
-syncevents_LDADD = ../src/librelacsnumerics.la
+syncevents_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 syncevents_SOURCES = syncevents.cc
 
-transfer_LDADD = ../src/librelacsnumerics.la
+transfer_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 transfer_SOURCES = transfer.cc
 
-xarray_LDADD = ../src/librelacsnumerics.la
+xarray_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 xarray_SOURCES = xarray.cc
 
-xcontainerfuncs_LDADD = ../src/librelacsnumerics.la
+xcontainerfuncs_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 xcontainerfuncs_SOURCES = xcontainerfuncs.cc
 
-xcyclicarray_LDADD = ../src/librelacsnumerics.la
+xcyclicarray_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 xcyclicarray_SOURCES = xcyclicarray.cc
 
-xdetector_LDADD = ../src/librelacsnumerics.la
+xdetector_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 xdetector_SOURCES = xdetector.cc
 
 xkernel_LDADD = ../src/librelacsnumerics.la
 xkernel_SOURCES = xkernel.cc
 
-xinterpolation_LDADD = ../src/librelacsnumerics.la
+xinterpolation_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 xinterpolation_SOURCES = xinterpolation.cc
 
-xsmooth_LDADD = ../src/librelacsnumerics.la
+xsmooth_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 xsmooth_SOURCES = xsmooth.cc
 
-xounoise_LDADD = ../src/librelacsnumerics.la
+xounoise_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 xounoise_SOURCES = xounoise.cc
 
-xrand_LDADD = ../src/librelacsnumerics.la
+xrand_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 xrand_SOURCES = xrand.cc
 
-xsampledata_LDADD = ../src/librelacsnumerics.la
+xsampledata_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 xsampledata_SOURCES = xsampledata.cc
 
-xspectrum_LDADD = ../src/librelacsnumerics.la
+xspectrum_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 xspectrum_SOURCES = xspectrum.cc
 
-xstatstests_LDADD = ../src/librelacsnumerics.la
+xstatstests_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 xstatstests_SOURCES = xstatstests.cc
 
-xstats_LDADD = ../src/librelacsnumerics.la
+xstats_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 xstats_SOURCES = xstats.cc
 
-xmoments_LDADD = ../src/librelacsnumerics.la
+xmoments_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 xmoments_SOURCES = xmoments.cc
 
-xwhitenoise_LDADD = ../src/librelacsnumerics.la
+xwhitenoise_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 xwhitenoise_SOURCES = xwhitenoise.cc

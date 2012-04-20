@@ -249,7 +249,11 @@ RELACSDATE=`date '+%m/%d/%y'`
 AC_SUBST(RELACSDATE)
 
 # Relacs version and build date as a preprocessor define:
-AC_DEFINE_UNQUOTED([RELACSVERSION],["${VERSION} (${RELACSDATE})"])
+#AC_DEFINE_UNQUOTED([RELACSVERSION],["${VERSION} (${RELACSDATE})"])
+# Debian occasionally rebuilds identical source packages. As there is no change in
+# its functionality it is better not to change the version. Moreover, this date
+# makes it impossible to benefit from ccache for two consecutive days.
+AC_DEFINE_UNQUOTED([RELACSVERSION],["${VERSION}"])
 
 # All relacs libraries, the program, and the standard plugins
 # are built from a common source tree.

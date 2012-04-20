@@ -19,7 +19,7 @@ xplot_LDADD = \
     ../../options/src/librelacsoptions.la \
     ../src/librelacsplot.la \
     $(QT4_LIBS) \
-    $(MATH_LIBS)
+    $(MATH_LIBS) $(GSL_LIBS)
 xplot_SOURCES = xplot.cc
 
 xplots_LDADD = \
@@ -28,5 +28,5 @@ xplots_LDADD = \
     ../../options/src/librelacsoptions.la \
     ../src/librelacsplot.la \
     $(QT4_LIBS) \
-    $(MATH_LIBS)
+    $(MATH_LIBS) $(GSL_LIBS)
 xplots_SOURCES = xplots.cc

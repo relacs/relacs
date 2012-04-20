@@ -49,7 +49,11 @@ libephystraces_la_LDFLAGS = \
 
 libephystraces_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 libephystraces_la_SOURCES = traces.cc
 
@@ -76,7 +80,11 @@ libephysneuronmodels_la_LDFLAGS = \
 libephysneuronmodels_la_LIBADD = \
     librelacsspikingneuron.la \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 libephysneuronmodels_la_SOURCES = neuronmodels.cc
 
@@ -103,7 +111,13 @@ libephysintraspikedetector_la_LDFLAGS = \
 
 libephysintraspikedetector_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libephysintraspikedetector_la_OBJECTS) : moc_intraspikedetector.cc
 
@@ -132,7 +146,13 @@ libephysdynamicsuspikedetector_la_LDFLAGS = \
 
 libephysdynamicsuspikedetector_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libephysdynamicsuspikedetector_la_OBJECTS) : moc_dynamicsuspikedetector.cc
 
@@ -161,7 +181,13 @@ libephysthresholdsuspikedetector_la_LDFLAGS = \
 
 libephysthresholdsuspikedetector_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libephysthresholdsuspikedetector_la_OBJECTS) : moc_thresholdsuspikedetector.cc
 
@@ -188,7 +214,12 @@ libephysmotorcontrol_la_LDFLAGS = \
 
 libephysmotorcontrol_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libephysmotorcontrol_la_OBJECTS) : moc_motorcontrol.cc
 
@@ -220,7 +251,13 @@ libephysamplifiercontrol_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/plugins/linuxdevices/misc/src/libmiscamplmode.la \
     $(builddir)/libephystraces.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libephysamplifiercontrol_la_OBJECTS) : moc_amplifiercontrol.cc
 

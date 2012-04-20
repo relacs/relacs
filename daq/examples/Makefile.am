@@ -11,5 +11,6 @@ AM_CPPFLAGS = \
 indatatimeindex_LDADD = \
     ../../numerics/src/librelacsnumerics.la \
     ../../options/src/librelacsoptions.la \
-    ../src/librelacsdaq.la
+    ../src/librelacsdaq.la \
+    $(GSL_LIBS)
 indatatimeindex_SOURCES = indatatimeindex.cc

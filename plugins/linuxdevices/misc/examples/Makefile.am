@@ -19,5 +19,7 @@ mm3a_SOURCES = mm3a.cc
 
 temp_LDADD = \
     $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
     ../src/libmisctempdtm5080.la
 temp_SOURCES = temp.cc

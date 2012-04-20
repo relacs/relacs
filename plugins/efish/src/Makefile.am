@@ -36,7 +36,13 @@ libefishbaselineactivity_la_LIBADD = \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../efield/src/libefieldtraces.la \
     $(builddir)/../../efield/src/libefieldeodtools.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libefishbaselineactivity_la_OBJECTS) : moc_baselineactivity.cc
 
@@ -70,7 +76,13 @@ libefishsession_la_LIBADD = \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../efield/src/libefieldtraces.la \
     $(builddir)/../../efield/src/libefieldeodtools.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libefishsession_la_OBJECTS) : moc_session.cc
 
@@ -104,7 +116,13 @@ libefishpunitmodel_la_LIBADD = \
     $(top_builddir)/plugins/ephys/src/librelacsspikingneuron.la \
     $(top_builddir)/plugins/ephys/src/libephysneuronmodels.la \
     $(top_builddir)/plugins/efield/src/libefieldtraces.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 libefishpunitmodel_la_SOURCES = punitmodel.cc
 
@@ -136,7 +154,13 @@ libefishsam_la_LIBADD = \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../efield/src/libefieldtraces.la \
     $(builddir)/../../efield/src/libefieldeodtools.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libefishsam_la_OBJECTS) : moc_sam.cc
 
@@ -170,7 +194,13 @@ libefishficurve_la_LIBADD = \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../efield/src/libefieldtraces.la \
     $(builddir)/../../efield/src/libefieldeodtools.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libefishficurve_la_OBJECTS) : moc_ficurve.cc
 
@@ -204,7 +234,13 @@ libefishfilestimulus_la_LIBADD = \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../efield/src/libefieldtraces.la \
     $(builddir)/../../efield/src/libefieldeodtools.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libefishfilestimulus_la_OBJECTS) : moc_filestimulus.cc
 
@@ -238,7 +274,13 @@ libefishchirps_la_LIBADD = \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../efield/src/libefieldtraces.la \
     $(builddir)/../../efield/src/libefieldeodtools.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libefishchirps_la_OBJECTS) : moc_chirps.cc
 

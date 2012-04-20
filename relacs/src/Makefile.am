@@ -17,7 +17,7 @@ librelacs_la_CPPFLAGS = \
 
 librelacs_la_LDFLAGS = \
     -version-info 0:0:0 \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(GSL_LIBS)
 
 librelacs_la_LIBADD = \
     ../../plot/src/librelacsplot.la \

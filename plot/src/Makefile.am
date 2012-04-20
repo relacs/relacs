@@ -20,7 +20,7 @@ endif
 
 librelacsplot_la_LDFLAGS = \
     -version-info 0:0:0 \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) $(GSL_LIBS)
 
 if RELACS_TOP_BUILD
 librelacsplot_la_LIBADD = \

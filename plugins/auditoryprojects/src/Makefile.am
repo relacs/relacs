@@ -34,7 +34,13 @@ libauditoryprojectsspikeprecision_la_LIBADD = \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../acoustic/src/libacoustictraces.la \
     $(builddir)/../../auditory/src/libauditorysession.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libauditoryprojectsspikeprecision_la_OBJECTS) : moc_spikeprecision.cc
 
@@ -69,7 +75,13 @@ libauditoryprojectsisoresponse_la_LIBADD = \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../acoustic/src/libacoustictraces.la \
     $(builddir)/../../auditory/src/libauditorysession.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libauditoryprojectsisoresponse_la_OBJECTS) : moc_isoresponse.cc
 
@@ -104,7 +116,13 @@ libauditoryprojectsoneclick_la_LIBADD = \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../acoustic/src/libacoustictraces.la \
     $(builddir)/../../acoustic/src/libacousticloudspeaker.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libauditoryprojectsoneclick_la_OBJECTS) : moc_oneclick.cc
 
@@ -138,7 +156,13 @@ libauditoryprojectsfiphaselocking_la_LIBADD = \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../acoustic/src/libacoustictraces.la \
     $(builddir)/../../auditory/src/libauditorysession.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libauditoryprojectsfiphaselocking_la_OBJECTS) : moc_fiphaselocking.cc
 

@@ -13,7 +13,8 @@ librelacsdatafile_la_CPPFLAGS = \
 endif
 
 librelacsdatafile_la_LDFLAGS = \
-    -version-info 0:0:0
+    -version-info 0:0:0 \
+    $(GSL_LIBS)
 
 if RELACS_TOP_BUILD
 librelacsdatafile_la_LIBADD = \

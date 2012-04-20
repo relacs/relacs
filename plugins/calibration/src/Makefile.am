@@ -25,7 +25,12 @@ libcalibrationrestartdelay_la_LDFLAGS = \
 
 libcalibrationrestartdelay_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libcalibrationrestartdelay_la_OBJECTS) : moc_restartdelay.cc
 
@@ -53,7 +58,12 @@ libcalibrationstimulusdelay_la_LDFLAGS = \
 
 libcalibrationstimulusdelay_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libcalibrationstimulusdelay_la_OBJECTS) : moc_stimulusdelay.cc
 

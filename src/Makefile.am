@@ -1,7 +1,10 @@
 bin_SCRIPTS = \
     relacs
 
-pkglib_PROGRAMS = \
+# The next line can be removed once we assume automake >= 1.11.
+pkglibexecdir = $(libexecdir)/@PACKAGE@
+
+pkglibexec_PROGRAMS = \
     relacsgui
 
 dist_pkgdata_DATA = \

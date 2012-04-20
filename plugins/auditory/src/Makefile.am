@@ -32,8 +32,16 @@ libauditoryreceptormodel_la_LDFLAGS = \
 libauditoryreceptormodel_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(builddir)/../../ephys/src/libephysneuronmodels.la \
+    $(builddir)/../../ephys/src/librelacsspikingneuron.la \
     $(builddir)/../../acoustic/src/libacoustictraces.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 libauditoryreceptormodel_la_SOURCES = receptormodel.cc
 
@@ -61,7 +69,14 @@ libauditorysearch_la_LDFLAGS = \
 libauditorysearch_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(builddir)/../../acoustic/src/libacoustictraces.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libauditorysearch_la_OBJECTS) : moc_search.cc
 
@@ -93,7 +108,14 @@ libauditorysession_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
     $(top_builddir)/plugins/acoustic/src/libacoustictraces.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libauditorysession_la_OBJECTS) : moc_session.cc
 
@@ -128,7 +150,14 @@ libauditoryficurve_la_LIBADD = \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../acoustic/src/libacoustictraces.la \
     libauditorysession.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libauditoryficurve_la_OBJECTS) : moc_ficurve.cc
 
@@ -162,7 +191,15 @@ libauditoryfifield_la_LIBADD = \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../acoustic/src/libacoustictraces.la \
     libauditoryficurve.la \
-    $(QT4_LIBS)
+    libauditorysession.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libauditoryfifield_la_OBJECTS) : moc_fifield.cc
 
@@ -196,7 +233,14 @@ libauditorysinglestimulus_la_LIBADD = \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../acoustic/src/libacoustictraces.la \
     libauditorysession.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libauditorysinglestimulus_la_OBJECTS) : moc_singlestimulus.cc
 
@@ -231,7 +275,14 @@ libauditorysyslatency_la_LIBADD = \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../acoustic/src/libacoustictraces.la \
     libauditorysession.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libauditorysyslatency_la_OBJECTS) : moc_syslatency.cc
 
@@ -264,7 +315,14 @@ libauditoryadaptedficurves_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(builddir)/../../ephys/src/libephystraces.la \
     $(builddir)/../../acoustic/src/libacoustictraces.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libauditoryadaptedficurves_la_OBJECTS) : moc_adaptedficurves.cc
 

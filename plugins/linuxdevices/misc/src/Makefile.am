@@ -29,7 +29,10 @@ libmiscamplmode_la_LDFLAGS = \
 
 libmiscamplmode_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 libmiscamplmode_la_SOURCES = amplmode.cc amplmodedevice.cc
 
@@ -82,7 +85,10 @@ libmisckleindiek_la_LDFLAGS = \
 
 libmisckleindiek_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 libmisckleindiek_la_SOURCES = kleindiek.cc kleindiekdevice.cc
 
@@ -107,7 +113,10 @@ libmisctempdtm5080_la_LDFLAGS = \
 
 libmisctempdtm5080_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 libmisctempdtm5080_la_SOURCES = tempdtm5080.cc tempdtm5080device.cc
 

@@ -27,7 +27,11 @@ libacoustictraces_la_LDFLAGS = \
 
 libacoustictraces_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 libacoustictraces_la_SOURCES = traces.cc
 
@@ -53,7 +57,13 @@ libacousticloudspeaker_la_LDFLAGS = \
 
 libacousticloudspeaker_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 libacousticloudspeaker_la_SOURCES = loudspeaker.cc
 
@@ -82,7 +92,14 @@ libacousticcalibspeakers_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     libacoustictraces.la \
     libacousticloudspeaker.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libacousticcalibspeakers_la_OBJECTS) : moc_calibspeakers.cc
 
@@ -111,7 +128,14 @@ libacousticcalibmicrophone_la_LDFLAGS = \
 libacousticcalibmicrophone_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     libacoustictraces.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libacousticcalibmicrophone_la_OBJECTS) : moc_calibmicrophone.cc
 
@@ -140,7 +164,14 @@ libacousticechotest_la_LDFLAGS = \
 
 libacousticechotest_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libacousticechotest_la_OBJECTS) : moc_echotest.cc
 

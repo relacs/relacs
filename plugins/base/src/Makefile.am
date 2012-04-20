@@ -34,7 +34,10 @@ libbaselinearattenuate_la_LDFLAGS = \
 
 libbaselinearattenuate_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 libbaselinearattenuate_la_SOURCES = linearattenuate.cc
 
@@ -60,7 +63,10 @@ libbasedecibelattenuate_la_LDFLAGS = \
 
 libbasedecibelattenuate_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 libbasedecibelattenuate_la_SOURCES = decibelattenuate.cc
 
@@ -85,7 +91,11 @@ libbasehighpass_la_LDFLAGS = \
 
 libbasehighpass_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libbasehighpass_la_OBJECTS) : moc_highpass.cc
 
@@ -112,7 +122,11 @@ libbaselowpass_la_LDFLAGS = \
 
 libbaselowpass_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libbaselowpass_la_OBJECTS) : moc_lowpass.cc
 
@@ -140,7 +154,12 @@ libbasespectrumanalyzer_la_LDFLAGS = \
 
 libbasespectrumanalyzer_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libbasespectrumanalyzer_la_OBJECTS) : moc_spectrumanalyzer.cc
 
@@ -167,7 +186,10 @@ libbasepause_la_LDFLAGS = \
 
 libbasepause_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libbasepause_la_OBJECTS) : moc_pause.cc
 
@@ -194,7 +216,11 @@ libbasesetoutput_la_LDFLAGS = \
 
 libbasesetoutput_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libbasesetoutput_la_OBJECTS) : moc_setoutput.cc
 
@@ -221,7 +247,10 @@ libbasesimplemodel_la_LDFLAGS = \
 
 libbasesimplemodel_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 libbasesimplemodel_la_SOURCES = simplemodel.cc
 
@@ -248,7 +277,13 @@ libbasetransferfunction_la_LDFLAGS = \
 
 libbasetransferfunction_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libbasetransferfunction_la_OBJECTS) : moc_transferfunction.cc
 
@@ -277,7 +312,11 @@ libbaserobot_la_LDFLAGS = \
 
 libbaserobot_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libbaserobot_la_OBJECTS) : moc_robot.cc
 
@@ -306,7 +345,10 @@ libbasewait_la_LDFLAGS = \
 
 libbasewait_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libbasewait_la_OBJECTS) : moc_wait.cc
 

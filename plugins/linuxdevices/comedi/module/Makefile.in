@@ -33,6 +33,10 @@ module:
 
 clean:
 	$(MAKE) -C $(LINUXDIR) CC=$(CC) M=@abs_builddir@ clean
+# Michale Hanke: This COMEDI module clean target tries to clean the
+# systems /lib. This is most likely not desired for a package build.
+# ... and should not be used.
+
 
 distclean: clean
 	rm -f modules.order

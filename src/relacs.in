@@ -4,14 +4,15 @@ PACKAGE_TARNAME="@PACKAGE_TARNAME@"
 prefix="@prefix@"
 exec_prefix="@exec_prefix@"
 libdir="@libdir@"
+pkglibexecdir="@libexecdir@/@PACKAGE@"
 datarootdir="@datarootdir@"
 docdir="@docdir@/api"
 
 # Full path of the RELACS executable to be used:
-RELACSEXEC="@libdir@/relacs/relacsgui"
+RELACSEXEC="$pkglibexecdir/relacsgui"
 
 # Pathes to the RELACS libraries that need to be added to LD_LIBRARY_PATH:
-RELACSLIBPATHES="$libdir"
+RELACSLIBPATHES="@libdir@"
 # the libraries should be installed in one of the default library pathes and
 # therefore do not need to be added to LD_LIBRARY_PATH:
 RELACSLIBPATHES=
@@ -20,19 +21,19 @@ RELACSLIBPATHES=
 # and should be removed from the LD_LIBRARY_PATH:
 RELACSLIBINSTALLDIR=""
 
-PLUGINHOME="@libdir@/relacs/plugins"
-PLUGINHELPPATHES="@datadir@/relacs/help"
+PLUGINHOME="@libdir@/@PACKAGE@/plugins"
+PLUGINHELPPATHES="@datadir@/@PACKAGE@/help"
 PLUGINRELATIVE=""
 
 # Possible config files separated by '|':
-CONFCOREFILES="@sysconfdir@/relacs.cfg|@datadir@/relacs/relacs.cfg|${HOME}/.relacs/relacs.cfg"
-CONFPLUGINSFILES="@sysconfdir@/relacsplugins.cfg|@datadir@/relacs/relacsplugins.cfg|${HOME}/.relacs/relacsplugins.cfg"
+CONFCOREFILES="@datadir@/@PACKAGE@/relacs.cfg|${HOME}/.relacs/relacs.cfg"
+CONFPLUGINSFILES="@datadir@/@PACKAGE@/relacsplugins.cfg|${HOME}/.relacs/relacsplugins.cfg"
 
 # Path to the documentation:
 DOCPATH="@htmldir@"
 
 # Path to the icons:
-ICONPATH="@datadir@/relacs"
+ICONPATH="@datadir@/@PACKAGE@"
 
 # Absolute path in which this script is allowed to be executed.
 # If left empty, it is allowed to be executed everywhere.
