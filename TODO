@@ -1,3 +1,8 @@
+General:
+- relacs.cfg files should be installed in /etc/relacs and subdirectories
+- the main (demo) configuration file should show a message where to find more demos
+- make the config files more generic (lab address!)
+
 Acquire:
 - directWrite(): for support of noAttenuator we need the maximum board voltage!
 - levels(), minLevel() and other Attenuate properties should all go
