@@ -25,6 +25,7 @@ MetaData:
 - Check out JSON libraries and compatibility with Options
 
 Locking:
+- DeviceList functions like updateData need to be locked!
 - RELACSWidget:: write() should unlock InData!?!
 - dead locks: do we need to take care about blocking lockMutex() in accept(), reset(), etc.?
 

@@ -1371,9 +1371,11 @@ void RELACSWidget::customEvent( QEvent *qce )
 
   case 2: {
     DV->updateMenu();
+    lockSignals();
     AOD->updateMenu();
     ATD->updateMenu();
     ATI->updateMenu();
+    unlockSignals();
     TRIGD->updateMenu();
     break;
   }
