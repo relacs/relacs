@@ -132,8 +132,10 @@ private:
   double Pause;
   double ChirpSize;
   double ChirpWidth;
+  int ChirpSel;
   double ChirpKurtosis;
   double ChirpDip;
+  string ChirpFile;
   int BeatPos;
   double BeatStart;
   double Sigma;
@@ -147,6 +149,8 @@ private:
 
   // variables:
   int Mode;
+  MapD ChirpFreqs;
+  MapD ChirpAmpls;
   double TrueDeltaF;
   double TrueContrast;
   double Duration;
@@ -162,6 +166,7 @@ private:
   int StimulusIndex;
   bool OutWarning;
   string EOD2Unit;
+  Options FileChirpOpts;
 
   struct ChirpData
   {

@@ -23,6 +23,7 @@
 #include <fstream>
 #include <iomanip>
 #include <relacs/str.h>
+#include <relacs/datafile.h>
 #include <relacs/detector.h>
 #include <relacs/kernel.h>
 #include <relacs/efish/chirps.h>
@@ -64,8 +65,10 @@ Chirps::Chirps( void )
   addNumber( "firstspace", "Time preceeding first chirp", FirstSpace, 0.01, 1000.0, 0.05, "sec", "ms" );
   addNumber( "chirpsize", "Size of chirp", ChirpSize, 0.0, 1000.0, 10.0, "Hz" );
   addNumber( "chirpwidth", "Width of chirp", ChirpWidth, 0.002, 1.0, 0.001, "sec", "ms" );
-  addNumber( "chirpkurtosis", "Kurtosis of Gaussian chirp", ChirpKurtosis, 0.01, 100.0, 0.01, "", "" );
   addNumber( "chirpampl", "Amplitude of chirp", ChirpDip, 0.0, 1.0, 0.01, "1", "%", "%.0f" );
+  addSelection( "chirpsel", "Chirp waveform", "generated|from file" );
+  addNumber( "chirpkurtosis", "Kurtosis of Gaussian chirp", ChirpKurtosis, 0.01, 100.0, 0.01, "", "" ).setActivation( "chirpsel", "generated" );
+  addText( "file", "Chirp-waveform file", "" ).setStyle( OptWidget::BrowseExisting ).setActivation( "chirpsel", "from file" );
   addLabel( "Beat parameter" );
   addNumber( "deltaf", "Delta f", DeltaF, -500.0, 500.0, 5, "Hz" );
   addNumber( "contrast", "Contrast", Contrast, 0.01, 1.0, 0.01, "1", "%" );
@@ -199,27 +202,50 @@ void Chirps::createEOD( OutData &signal )
   double dt = waveform.sampleInterval();
   SampleDataF chirp( 0.0, 4.0*ChirpWidth, dt, 0.0 );
   chirp.clear();
-  double sig = 0.5*ChirpWidth/sqrt(2.0*log(10.0));
+  double sig = 0.5*ChirpWidth / ::pow( 2.0*log(10.0), 0.5/ChirpKurtosis );
   double T = waveform.length()/ReadCycles;
   double chirptime = 2.0*ChirpWidth;
   int j = 0;
   double p = 0.0;
   double dp = 0.0;
-  for ( double t=0.0; t<4.0*ChirpWidth; ) {
-    t = chirp.length();
-    double x = t - chirptime;
-    double g = exp( -0.5*(x/sig)*(x/sig) );
-    double f = ChirpSize*g + StimulusRate;
-    double a = 1.0 - ChirpDip*g;
-    p += f * dt;
-    dp += (f-StimulusRate) * dt;
-    for ( ; ; j++ ) {
-      if ( dt*(j+1) > p*T )
-	break;
+  if ( ChirpSel == 0 ) {
+    // generate Gaussian chirp:
+    for ( double t=0.0; t<4.0*ChirpWidth; ) {
+      t = chirp.length();
+      double x = t - chirptime;
+      double g = exp( -0.5 * ::pow( (x/sig)*(x/sig), ChirpKurtosis ) );
+      double f = ChirpSize*g + StimulusRate;
+      double a = 1.0 - ChirpDip*g;
+      p += f * dt;
+      dp += (f-StimulusRate) * dt;
+      for ( ; ; j++ ) {
+	if ( dt*(j+1) > p*T )
+	  break;
+      }
+      // interpolate:
+      double m = (waveform[(j+1) % waveform.size()] - waveform[j % waveform.size()])/dt;
+      double v = m*(p*T - j*dt) + waveform[j % waveform.size()];
+      chirp.push( a*v );
     }
-    double m = (waveform[(j+1) % waveform.size()] - waveform[j % waveform.size()])/dt;
-    double v = m*(p*T - j*dt) + waveform[j % waveform.size()];
-    chirp.push( a*v );
+  }
+  else {
+    // chirp from file:
+    for ( double t=0.0; t<4.0*ChirpWidth; ) {
+      t = chirp.length();
+      double x = t - chirptime;
+      double f = ChirpSize*ChirpFreqs.interpolate( x ) + StimulusRate;
+      double a = 1.0 - ChirpDip*ChirpAmpls.interpolate( x );
+      p += f * dt;
+      dp += (f-StimulusRate) * dt;
+      for ( ; ; j++ ) {
+	if ( dt*(j+1) > p*T )
+	  break;
+      }
+      // interpolate:
+      double m = (waveform[(j+1) % waveform.size()] - waveform[j % waveform.size()])/dt;
+      double v = m*(p*T - j*dt) + waveform[j % waveform.size()];
+      chirp.push( a*v );
+    }
   }
   for ( int k = chirp.size()-1; k > 0; k-- ) {
     if ( chirp[k-1] < 0.0 && chirp[k] >= 0.0 ) {
@@ -422,13 +448,26 @@ int Chirps::createAM( OutData &signal )
     ChirpTimes[n] = signal.length() + t0;
     BeatPhases[n] = chirpphase;   // XXX wrong for negative DeltaF!!
     double dp = 0.0;
-    for ( int i=0; i<pointsperchirp; i++ ) {
-      double tt = i*deltat - t0;
-      double gg = exp( -0.5 * ::pow( (tt/sig)*(tt/sig), ChirpKurtosis ) );
-      double cc = ChirpSize*gg;
-      p += (DeltaF + cc)*deltat;
-      dp += cc * deltat;
-      signal.push( (1.0 - ChirpDip*gg) * cos( 6.28318 * p ) );
+    if ( ChirpSel == 0 ) {
+      // generate Gaussian chirp:
+      for ( int i=0; i<pointsperchirp; i++ ) {
+	double tt = i*deltat - t0;
+	double gg = exp( -0.5 * ::pow( (tt/sig)*(tt/sig), ChirpKurtosis ) );
+	double cc = ChirpSize*gg;
+	p += (DeltaF + cc)*deltat;
+	dp += cc * deltat;
+	signal.push( (1.0 - ChirpDip*gg) * cos( 6.28318 * p ) );
+      }
+    }
+    else {
+      // chirp from file:
+      for ( int i=0; i<pointsperchirp; i++ ) {
+	double tt = i*deltat - t0;
+	double cc = ChirpSize*ChirpFreqs.interpolate( tt );
+	p += (DeltaF + cc)*deltat;
+	dp += cc * deltat;
+	signal.push( (1.0 - ChirpDip*ChirpAmpls.interpolate( tt )) * cos( 6.28318 * p ) );
+      }
     }
     ChirpPhase = dp;
 
@@ -586,8 +625,10 @@ int Chirps::main( void )
   Contrast = number( "contrast" );
   ChirpSize = number( "chirpsize" );
   ChirpWidth = number( "chirpwidth" );
+  ChirpSel = index( "chirpsel" );
   ChirpKurtosis = number( "chirpkurtosis" );
   ChirpDip = number( "chirpampl" );
+  ChirpFile = number( "file" );
   BeatPos = integer( "beatpos" );
   BeatStart = number( "beatstart" );
   Sigma = number( "sigma" );
@@ -641,6 +682,42 @@ int Chirps::main( void )
   initMultiPlot( FishAmplitude );
 
   // first stimulus:
+  if ( ChirpSel == 1 ) {
+    // from file:
+    DataFile sf( ChirpFile );
+    sf.read();
+    if ( sf.dataLines() == 0 ) {
+      warning( "Chirp-waveform file " + ChirpFile + " does not exist or does not contain any data." );
+      return 1;
+    }
+    ArrayD times = sf.col( 0 );
+    times *= Parameter::changeUnit( 1.0, sf.key().unit( 0 ), "s" );
+    ArrayD freqs = sf.col( 1 );
+    freqs /= maxAbs( freqs );
+    ArrayD ampls = sf.col( 2 );
+    if ( ampls.empty() )
+      ampls = freqs;
+    // chirp width:
+    int maxfreqinx = maxIndex( freqs );
+    int l = 0;
+    int r = freqs.size()-1;
+    for ( l=maxfreqinx-1; l>=0; l-- )
+      if ( freqs[l] < 0.1 )
+	break;
+    for ( r=maxfreqinx+1; r< freqs.size(); r++ )
+      if ( freqs[r] < 0.1 )
+	break;
+    double filechirpwidth = times[r] - times[l];
+    times -= times[maxfreqinx];
+    times *= ChirpWidth/filechirpwidth;
+    ChirpFreqs.assign( times, freqs );
+    ChirpAmpls.assign( times, ampls );
+    FileChirpOpts = sf.metaDataOptions( 0 );
+    FileChirpOpts.insertLabel( "FileChirp" );
+  }
+  else
+    FileChirpOpts.clear();
+
   OutData signal;
   if ( AM ) {
     if ( createAM( signal ) ) {
@@ -916,6 +993,7 @@ void Chirps::saveChirps( void )
   // write header and key:
   Header.save( df, "# " );
   settings().save( df, "#   " );
+  FileChirpOpts.save( df, "# " );
   df << '\n';
   ChirpKey.saveKey( df, true, false );
 
@@ -959,6 +1037,7 @@ void Chirps::saveChirpTraces( void )
   // write header and key:
   Header.save( df, "# " );
   settings().save( df, "#   " );
+  FileChirpOpts.save( df, "# " );
   df << '\n';
   ChirpTraceKey.saveKey( df, true, false );
 
@@ -992,6 +1071,7 @@ void Chirps::saveChirpSpikes( int trace )
   // write header and key:
   Header.save( df, "# " );
   settings().save( df, "#   " );
+  FileChirpOpts.save( df, "# " );
   df << '\n';
   SpikesKey.saveKey( df, true, false );
 
@@ -1027,6 +1107,7 @@ void Chirps::saveChirpNerve( void )
   // write header and key:
   Header.save( df, "# " );
   settings().save( df, "#   " );
+  FileChirpOpts.save( df, "# " );
   df << '\n';
   NerveKey.saveKey( df, true, true );
 
@@ -1073,6 +1154,7 @@ void Chirps::saveAmplitude( void )
   // write header and key:
   Header.save( df, "# " );
   settings().save( df, "#   " );
+  FileChirpOpts.save( df, "# " );
   df << '\n';
   AmplKey.saveKey( df, true, false );
 
@@ -1098,6 +1180,7 @@ void Chirps::saveSpikes( int trace )
   // write header and key:
   Header.save( df, "# " );
   settings().save( df, "#   " );
+  FileChirpOpts.save( df, "# " );
   df << '\n';
   SpikesKey.saveKey( df, true, false );
 
@@ -1127,6 +1210,7 @@ void Chirps::saveChirpRate( int trace )
   Header.setInteger( "index", totalRuns() );
   Header.save( df, "# " );
   settings().save( df, "#   " );
+  FileChirpOpts.save( df, "# " );
   df << '\n';
   TableKey key;
   key.addNumber( "time", "ms", "%7.2f" );
@@ -1168,6 +1252,7 @@ void Chirps::saveNerve( void )
   // write header and key:
   Header.save( df, "# " );
   settings().save( df, "#   " );
+  FileChirpOpts.save( df, "# " );
   df << '\n';
   NerveKey.saveKey( df, true, true );
 

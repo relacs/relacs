@@ -309,6 +309,20 @@ int FileStimulus::main( void )
 	Count++ ) {
 
     // output signal:
+    /*
+if ( noise ) {
+noisesig = signal + noise;
+    write( noisesignal );
+    if ( !noisesignal.success() ) {
+      string s = "Output of stimulus failed!<br>Error is <b>";
+      s += noisesignal.errorText() + "</b>";
+      warning( s );
+      stop();
+      return Failed;
+    }
+}
+else {
+     */
     write( signal );
     if ( !signal.success() ) {
       string s = "Output of stimulus failed!<br>Error is <b>";
