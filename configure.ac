@@ -96,7 +96,7 @@ RELACS_LIB_COMEDI()
 ## DAQFlex for measurement computing USB boards
 #################################################
 RELACS_LIB_USB()
-RELACS_DAQFLEX=$RELACS_USB
+RELACS_DAQFLEX=${RELACS_USB}
 
 
 #################################################
