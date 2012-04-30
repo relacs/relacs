@@ -40,8 +40,8 @@ namespace patchclampprojects {
 /*!
 \class FeedForwardNetwork
 \brief [RePro] FFN
-\author Jan Benda
-\version 1.0 (Feb 20, 2010)
+\author Jens Kremkow
+\version 1.0 (Jan 12, 2012)
 */
 
 
@@ -55,16 +55,18 @@ class FeedForwardNetwork : public RePro, public ephys::Traces
 public:
   FeedForwardNetwork( void );
   virtual int main( void );
+  void saveOnline(ofstream &dfvm,ofstream &dfge,ofstream &dfgi,ofstream &dfcurr,ofstream &dfsp,ofstream &dfsi,const SampleDataD &vm,const SampleDataD &ge,const SampleDataD &gi,const SampleDataD &curr,EventData &sp,double &si,int group, int neuron);
   void saveSettings();
   void saveEvents(const vector<vector<EventData> > &SpikeTimes, Str name);
-  void saveTraces(const vector<vector<SampleDataD> > &ge,const vector<vector<SampleDataD> > &gi, const vector<vector<SampleDataD> > &vm,double duration, Str name);
+  void saveTraces(const vector<vector<SampleDataD> > &ge,const vector<vector<SampleDataD> > &gi, const vector<vector<SampleDataD> > &vm, const vector<vector<SampleDataD> > &curr,double duration, Str name);
   
-  int calibrateFFN(double &JeFFN, double &JeBKG, double &gBKG);
-  void stimulate(SampleDataD &ge, SampleDataD &gi,SampleDataD &vm, EventData &SpikeTimes, double &signaltime, double duration);
+  int calibrateFFN(double &JeFFN, double &JeBKG, double &gBKG, double &noise_std, double &noise_mean);
+  void stimulate(SampleDataD &ge, SampleDataD &gi,SampleDataD &vm, SampleDataD &curr, EventData &SpikeTimes, double &signaltime, double duration, double noise_std, double noise_mean);
   // actual version
-  void PulsePacket(vector<EventData> &SpikeTimes, int alpha, double sigma, int groupsize, double onset);		
+  void PulsePacket(vector<EventData> &SpikeTimes, double alpha, double sigma, int groupsize, double onset);		
   void Poisson(vector<EventData> &SpikeTimes, double rate, double duration, double onset);		
-  void MIP(vector<EventData> &SpikeTimes);		
+  void MIP(vector<EventData> &SpikeTimes,double rate, double corr, double duration, double onset);
+  void StimulusFromFile(vector<EventData> &SpikeTimes,double duration, double onset, double startSfF);	
   EventData convergentInput(const vector<EventData> &SpikeTimes, double delay);
   // plotting
   void rasterplot(const vector<vector<EventData> > &SpikeTimes, int group, int neuron, int groupoffset);
