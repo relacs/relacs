@@ -170,6 +170,7 @@ int FeedForwardNetwork::main( void )
   //int nInh = integer("nInh");
   double noise_std = number("noise_std");
   double noise_mean = number("noise_mean");
+  double intergroupdelay = number("intergroupdelay");
   // Stimulus
   //  double onset = number("onset");
   double onset1 = number("onset1");
@@ -230,7 +231,7 @@ int FeedForwardNetwork::main( void )
     message("noise_std before calibration: "+Str(noise_std));
     message("noise_mean before calibration: "+Str(noise_mean));
     if (! calibrateFFN(JeFFN,JeBKG,gBKG,noise_std,noise_mean)){
-	return Completed;
+      return Completed;
     }
     setNumber("JeFFN",JeFFN);
     setNumber("JeBKG",JeBKG);
@@ -306,6 +307,7 @@ int FeedForwardNetwork::main( void )
     // Neuron in groups
     message("Calculating inputs in group: "+Str(group));
     for (int neuron=0;neuron<nExc;neuron++){
+      unlockAll();
       // Collect the convergent input spikes
       // Excitatory spikes
       double delay1 = 0.;
@@ -317,8 +319,8 @@ int FeedForwardNetwork::main( void )
       int nospike = 0;
       if (group==0){
 	// we have to collect the data from the stimulus, here we can have two stimuli
-	ExcInputSpikes1 = convergentInput(SpikeTimesStimulusVector[0],number("intergroupdelay")); // S1
-	ExcInputSpikes2 = convergentInput(SpikeTimesStimulusVector[1],number("intergroupdelay")); // S2
+	ExcInputSpikes1 = convergentInput(SpikeTimesStimulusVector[0],intergroupdelay); // S1
+	ExcInputSpikes2 = convergentInput(SpikeTimesStimulusVector[1],intergroupdelay); // S2
 	if (group == integer("gateGroup")){
 	  delay1 = number("gateDelay1");
 	  delay2 = number("gateDelay1");
@@ -327,12 +329,12 @@ int FeedForwardNetwork::main( void )
 	  delay1 = number("delay");
 	  delay2 = number("delay");
 	}
-	InhInputSpikes1 = convergentInput(SpikeTimesStimulusVector[0],number("intergroupdelay")+delay1);
-	InhInputSpikes2 = convergentInput(SpikeTimesStimulusVector[1],number("intergroupdelay")+delay2);
+	InhInputSpikes1 = convergentInput(SpikeTimesStimulusVector[0],intergroupdelay+delay1);
+	InhInputSpikes2 = convergentInput(SpikeTimesStimulusVector[1],intergroupdelay+delay2);
       }
       else {
 	// we are in the FFN, here we can not have two stimuli as we only have one pre-group
-	ExcInputSpikes1 = convergentInput(SpikeTimesVector[group-1],number("intergroupdelay"));
+	ExcInputSpikes1 = convergentInput(SpikeTimesVector[group-1],intergroupdelay);
 	//message("Rate: "+Str(ExcInputSpikes1.size()));
 	
 	// Inhibitory spikes
@@ -343,7 +345,7 @@ int FeedForwardNetwork::main( void )
 	else{
 	  delay1 = number("delay");
 	}
-	InhInputSpikes1 = convergentInput(SpikeTimesVector[group-1],number("intergroupdelay")+delay1);
+	InhInputSpikes1 = convergentInput(SpikeTimesVector[group-1],intergroupdelay+delay1);
 	if (ExcInputSpikes1.size()==0 && InhInputSpikes1.size()==0){
 	  nospike = 1;
 	  nospikeVector[group][neuron] = 1;
@@ -424,6 +426,7 @@ int FeedForwardNetwork::main( void )
       VmVector[group][neuron] = vm;
       SampleDataD curr( 0.0, duration, 1.0/samplerate );
       CurrVector[group][neuron] = curr;
+      lockAll();
       //}
       //message("Start stimulations");
       //sleep( number("prestim_pause")); 
@@ -445,22 +448,22 @@ int FeedForwardNetwork::main( void )
 	  // plot rasters and vm and conductance
 	  rasterplot(SpikeTimesVector,group,neuron,0);
 	  traceplot(GeVector[group][neuron],GiVector[group][neuron],1,duration);
+	  //}
+	}
+	//else {
+	//tracePlotSignal(duration);
+	//  rasterplot(SpikeTimesVector,group,neuron,0);
 	//}
       }
-	//else {
-      //tracePlotSignal(duration);
-      //  rasterplot(SpikeTimesVector,group,neuron,0);
-      //}
-    }
       else{
-      sleep(number("pause")); 
+	sleep(number("pause")); 
       }
       // save online      
       saveOnline(dfvm,dfge,dfgi,dfcurr,dfsp,dfsi,VmVector[group][neuron],GeVector[group][neuron],GiVector[group][neuron],CurrVector[group][neuron],SpikeTimesVector[group][neuron],SignalTimesVector[group][neuron],group,neuron);
     }
     if ( interrupt() ) {
-	break;
-      }
+      break;
+    }
   } 
   
   
@@ -712,7 +715,7 @@ EventData FeedForwardNetwork::convergentInput(const vector<EventData> &SpikeTime
 }
 
 void FeedForwardNetwork::saveOnline(ofstream &dfvm,ofstream &dfge,ofstream &dfgi,ofstream &dfcurr,ofstream &dfsp,ofstream &dfsi,const SampleDataD &vm,const SampleDataD &ge,const SampleDataD &gi,const SampleDataD &curr,EventData &sp,double &si,int group, int neuron){
-  
+  unlockAll();  
   // traces
   for (int i=0;i<vm.size();i++){
     // vm
@@ -747,6 +750,7 @@ void FeedForwardNetwork::saveOnline(ofstream &dfvm,ofstream &dfge,ofstream &dfgi
   Str line = Str(group)+" "+Str(neuron)+" "+Str(si)+"\n";
   dfsi << line;
   dfsi << "\n";
+  lockAll();
 }
 
 void FeedForwardNetwork::saveSettings(){
@@ -1262,13 +1266,18 @@ int FeedForwardNetwork::calibrateFFN(double &JeFFN, double &JeBKG, double &gBKG,
     // we change duration to the regular duration because we are only interested in the spiking response
     duration = number("duration");
     message("Start with stimulus");
-    for (int trial=0;trial<integer("calibrationtrials");trial++){
+    int calibrationtrials = integer("calibrationtrials");
+    int calibrationalpha = integer("calibrationalpha");
+    double calibrationsigma = number("calibrationsigma");
+    double onset1 = number("onset1");
+    for (int trial=0;trial<calibrationtrials;trial++){
+      unlockAll();
       EventData SpikeTimes;
       SpikeTimes.reserve(1000);
       double time=0.;
-      for (int i=0;i<integer("calibrationalpha");i++){
+      for (int i=0;i<calibrationalpha;i++){
 	time = rngStimulus.gaussian();
-	SpikeTimes.insert((number("calibrationsigma")*time)+number("onset1"));
+	SpikeTimes.insert((calibrationsigma*time)+onset1);
       }
       SpikeTimesVector[0][trial] = SpikeTimes;
 
@@ -1300,6 +1309,8 @@ int FeedForwardNetwork::calibrateFFN(double &JeFFN, double &JeBKG, double &gBKG,
       GeVector[1][trial] = ge;
       GiVector[1][trial] = gi;
       
+      lockAll();
+
       //
       stimulate(ge,gi,VmVector[1][trial],CurrVector[1][trial],SpikeTimesVector[1][trial],SignalTimesVector[1][trial],duration,noise_std,noise_mean);
       //EventData SpikeTimesResponse;
