@@ -2028,13 +2028,17 @@ void EventList::sum( EventData &all ) const
 }
 
 
-void EventList::sync( EventData &s, double bin, double p, bool keep ) const
+void EventList::sync( EventData &s, double bin, double p, bool keep,
+		      double advance ) const
 {
   s.clear();
   if ( empty() )
     return;
 
   // init:
+  if ( advance <= 0 )
+    advance = bin;
+
   double offs = front().offset();
   double step = front().stepsize();
   double rback = front().rangeBack();
@@ -2079,24 +2083,32 @@ void EventList::sync( EventData &s, double bin, double p, bool keep ) const
     min = 1;
   double t0 = ::floor( tstart/bin + 1.0e-6 ) * bin;
   double t1 = t0;
-  for ( int i=1; t1<=tend; i++ ) {
-    double t2=t0+i*bin;
+  double maxt = t0;
+  int i=0;
+  while ( t1 <= tend ) {
+    do {
+      t1 = t0 + i*advance;
+      i++;
+    } while ( t1 <= maxt );
+    maxt = t1 + advance;
+    double t2 = t1 + bin;
     int c=0;
     double ts = t1;
     for ( int k=0; k<size(); k++ ) {
-      while ( inx[k] < last[k] &&
-	      *inx[k] < t1 )
+      while ( inx[k] < last[k] && *inx[k] < t1 )
 	++inx[k];
-      if ( inx[k] < last[k] &&
-	   *inx[k] < t2 ) {
+      if ( inx[k] < last[k] && *inx[k] < t2 ) {
 	if ( c==0 )
 	  ts = *inx[k];
+	if ( maxt < *inx[k] )
+	  maxt = *inx[k];
 	++c;
       }
     }
     if ( c >= min )
       s.push( keep ? ts : t1 );
-    t1 = t2;
+    else
+      maxt = t1;
   }
 
 }

@@ -3593,7 +3593,7 @@ void EventData::saveBox( ostream &os, double bin, int offs, double tfac,
   bin *= tfac;
   int nn = 0;
   for ( const_iterator i = begin()+minEvent(); i != end(); ++i, ++nn ) {
-    double t = ::floor( *i * tfac / bin + 1.0e-6 );
+    double t = *i * tfac;
     os << setw( ::abs( width ) ) << t << ' ' << offs+lower << '\n';
     os << setw( ::abs( width ) ) << t << ' ' << offs+upper << '\n';
     os << setw( ::abs( width ) ) << t+bin << ' ' << offs+upper << '\n';

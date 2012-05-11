@@ -829,8 +829,11 @@ public:
 	equals or exceeds \a p, an event with the time of the time bin
         is added to \a s.
         If \a keep is set true, then the event times of the first trial
-        are added to \a s instead of the time bins. */
-  void sync( EventData &s, double bin, double p=1.0, bool keep=false ) const;
+        are added to \a s instead of the time bins.
+        If \a advance is greater than zero, the bins of width \a bin
+        are advanced \by advance and not by \a bin. */
+  void sync( EventData &s, double bin, double p=1.0, bool keep=false,
+	     double advance=0.0 ) const;
 
     /*! Generate \a trials of independent
         poisson spike trains each with rate \a rate Hertz
