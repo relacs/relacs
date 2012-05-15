@@ -32,7 +32,7 @@ namespace base {
 
 /*! 
 \class LowPass
-\brief [Filter] A simple first order low pass filter
+\brief [Filter] A simple first-order low-pass filter
 \author Jan Benda
 
 The input \a x(t) is filtered with the ordinary differential equation
@@ -40,11 +40,23 @@ The input \a x(t) is filtered with the ordinary differential equation
 to result in the low-pass filtered output \a y(t).
 The cut-off frequency of the filter is at
 \f[ f_c = \frac{1}{2 \pi \tau} \f]
- 
+
+Add the low-pass filter with the following lines to a \c relacs.cfg %file:
+\verbatim
+*FilterDetectors
+  Filter1
+        name: LV-1
+      filter: LowPass
+  inputtrace: V-1
+        save: false
+        plot: true
+  buffersize: 500000
+\endverbatim
+
 \par Options
 - \c tau=1000ms: Filter time constant (\c number)
 
-\version 0.1 (May 3 2007)
+\version 0.2 (May 12 2012)
 */
 
 
@@ -60,6 +72,7 @@ public:
   ~LowPass( void );
 
   virtual int init( const InData &indata, InData &outdata );
+  virtual int adjust( const InData &indata, InData &outdata );
   virtual void notify( void );
   virtual int filter( const InData &indata, InData &outdata );
 

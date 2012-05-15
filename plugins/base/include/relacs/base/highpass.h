@@ -32,13 +32,33 @@ namespace base {
 
 /*! 
 \class HighPass
-\brief [Filter] A simple first order high pass filter
+\brief [Filter] A simple first-order high-pass filter
 \author Jan Benda
+
+The input \a x(t) is filtered with the ordinary differential equation
+\f[ \tau \frac{dy}{dt} = x - y \f]
+to result in the low-pass filtered output \a y(t).
+The output of the high-pass filter is then
+the original signal minus the low-pass filtered signal: \a x(t)-y(t) .
+The cut-off frequency of the filter is at
+\f[ f_c = \frac{1}{2 \pi \tau} \f]
+
+Add the high-pass filter with the following lines to a \c relacs.cfg %file:
+\verbatim
+*FilterDetectors
+  Filter1
+        name: HV-1
+      filter: HighPass
+  inputtrace: V-1
+        save: false
+        plot: true
+  buffersize: 500000
+\endverbatim
 
 \par Options
 - \c tau=1ms: Time constant (\c number)
 
-\version 0.1 (Jan 24 2008)
+\version 0.2 (May 12 2012)
 */
 
 
@@ -54,6 +74,7 @@ public:
   ~HighPass( void );
 
   virtual int init( const InData &indata, InData &outdata );
+  virtual int adjust( const InData &indata, InData &outdata );
   virtual void notify( void );
   virtual int filter( const InData &indata, InData &outdata );
 

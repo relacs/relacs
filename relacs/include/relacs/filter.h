@@ -200,6 +200,35 @@ public
 		    const EventList &other, const EventData &stimuli ) { return INT_MIN; };
 
     /*! Reimplement this function to react to changes in the input gain.
+        This function is for filters that filter a single trace	of the
+	analog data given in \a indata and write their result to \a outdata.
+	The filter and the data are already locked during this function 
+	by lock() and writeLockData(), respectively.
+	Your reimplementation should return 0. */
+  virtual int adjust( const InData &indata, InData &outdata ) { return INT_MIN; };
+    /*! Reimplement this function to react to changes in the input gain.
+        This function is for filters that filter multiple traces of the
+	analog data given in \a indata and write their result to \a outdata..
+	The filter and the data are already locked during this function 
+	by lock() and writeLockData(), respectively.
+	Your reimplementation should return 0. */
+  virtual int adjust( const InList &indata, InList &outdata ) { return INT_MIN; };
+    /*! Reimplement this function to react to changes in the input gain.
+        This function is for filters that filter the events in \a inevents
+	and write their result to \a outdata.
+	The filter and the data are already locked during this function 
+	by lock() and writeLockData(), respectively.
+	Your reimplementation should return 0. */
+  virtual int adjust( const EventData &inevents, InData &outdata ) { return INT_MIN; };
+    /*! Reimplement this function to react to changes in the input gain.
+        This function is for filters that filter multiple events in \a inevents
+	and write their result to \a outdata.
+	The filter and the data are already locked during this function 
+	by lock() and writeLockData(), respectively.
+	Your reimplementation should return 0. */
+  virtual int adjust( const EventList &inevents, InList &outdata ) { return INT_MIN; };
+
+    /*! Reimplement this function to react to changes in the input gain.
         This function is for filters and detectors 
 	that detect events in a single trace of the analog data 
 	given in \a indata.

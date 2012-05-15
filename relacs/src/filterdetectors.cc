@@ -165,6 +165,10 @@ string FilterDetectors::createFilters( void )
 	    warning += fs + " <b>" + ident + "</b>: init( InData, InData ) function should not be implemented!<br>\n";
 	    failed = true;
 	  }
+	  if ( fp->adjust( indata[0], outdata[0] ) != INT_MIN ) {
+	    warning += fs + " <b>" + ident + "</b>: adjust( InData, InData ) function should not be implemented!<br>\n";
+	    failed = true;
+	  }
 	  if ( fp->filter( indata[0], outdata[0] ) != INT_MIN ) {
 	    warning += fs + " <b>" + ident + "</b>: filter( InData, InData ) function should not be implemented!<br>\n";
 	    failed = true;
@@ -173,6 +177,10 @@ string FilterDetectors::createFilters( void )
 	if ( ( fp->type() & Filter::MultipleAnalogFilter ) != Filter::MultipleAnalogFilter ) {
 	  if ( fp->init( indata, outdata ) != INT_MIN ) {
 	    warning += fs + " <b>" + ident + "</b>: init( InList, InList ) function should not be implemented!<br>\n";
+	    failed = true;
+	  }
+	  if ( fp->adjust( indata, outdata ) != INT_MIN ) {
+	    warning += fs + " <b>" + ident + "</b>: adjust( InList, InList ) function should not be implemented!<br>\n";
 	    failed = true;
 	  }
 	  if ( fp->filter( indata, outdata ) != INT_MIN ) {
@@ -185,6 +193,10 @@ string FilterDetectors::createFilters( void )
 	    warning += fs + " <b>" + ident + "</b>: init( EventData, InData ) function should not be implemented!<br>\n";
 	    failed = true;
 	  }
+	  if ( fp->adjust( inevents[0], outdata[0] ) != INT_MIN ) {
+	    warning += fs + " <b>" + ident + "</b>: adjust( EventData ) function should not be implemented!<br>\n";
+	    failed = true;
+	  }
 	  if ( fp->filter( inevents[0], outdata[0] ) != INT_MIN ) {
 	    warning += fs + " <b>" + ident + "</b>: filter( EventData, InData ) function should not be implemented!<br>\n";
 	    failed = true;
@@ -193,6 +205,10 @@ string FilterDetectors::createFilters( void )
 	if ( ( fp->type() & Filter::MultipleEventFilter ) != Filter::MultipleEventFilter ) {
 	  if ( fp->init( inevents, outdata ) != INT_MIN ) {
 	    warning += fs + " <b>" + ident + "</b>: init( EventList, InList ) function should not be implemented!<br>\n";
+	    failed = true;
+	  }
+	  if ( fp->adjust( inevents, outdata ) != INT_MIN ) {
+	    warning += fs + " <b>" + ident + "</b>: adjust( EventList, InList ) function should not be implemented!<br>\n";
 	    failed = true;
 	  }
 	  if ( fp->filter( inevents, outdata ) != INT_MIN ) {
@@ -206,6 +222,10 @@ string FilterDetectors::createFilters( void )
 	    warning += fs + " <b>" + ident + "</b>: init( InData, EventData ) function should not be implemented!<br>\n";
 	    failed = true;
 	  }
+	  if ( fp->adjust( indata[0] ) != INT_MIN ) {
+	    warning += fs + " <b>" + ident + "</b>: init( InData ) function should not be implemented!<br>\n";
+	    failed = true;
+	  }
 	  if ( fp->detect( indata[0], outevents[0], otherevents, stimulusevents ) != INT_MIN ) {
 	    warning += fs + " <b>" + ident + "</b>: detect( InData, EventData ) function should not be implemented!<br>\n";
 	    failed = true;
@@ -214,6 +234,10 @@ string FilterDetectors::createFilters( void )
 	if ( ( fp->type() & Filter::MultipleAnalogDetector ) != Filter::MultipleAnalogDetector ) {
 	  if ( fp->init( indata, outevents, otherevents, stimulusevents ) != INT_MIN ) {
 	    warning += fs + " <b>" + ident + "</b>: init( InList, EventList ) function should not be implemented!<br>\n";
+	    failed = true;
+	  }
+	  if ( fp->adjust( indata ) != INT_MIN ) {
+	    warning += fs + " <b>" + ident + "</b>: adjust( InList ) function should not be implemented!<br>\n";
 	    failed = true;
 	  }
 	  if ( fp->detect( indata, outevents, otherevents, stimulusevents ) != INT_MIN ) {
@@ -226,6 +250,10 @@ string FilterDetectors::createFilters( void )
 	    warning += fs + " <b>" + ident + "</b>: init( EventData, EventData ) function should not be implemented!<br>\n";
 	    failed = true;
 	  }
+	  if ( fp->adjust( inevents[0] ) != INT_MIN ) {
+	    warning += fs + " <b>" + ident + "</b>: adjust( EventData ) function should not be implemented!<br>\n";
+	    failed = true;
+	    }
 	  if ( fp->detect( inevents[0], outevents[0], otherevents, stimulusevents ) != INT_MIN ) {
 	    warning += fs + " <b>" + ident + "</b>: detect( EventData, EventData ) function should not be implemented!<br>\n";
 	    failed = true;
@@ -236,6 +264,10 @@ string FilterDetectors::createFilters( void )
 	    warning += fs + " <b>" + ident + "</b>: init( EventList, EventList ) function should not be implemented!<br>\n";
 	    failed = true;
 	  }
+	  if ( fp->adjust( inevents ) != INT_MIN ) {
+	    warning += fs + " <b>" + ident + "</b>: adjust( EventList ) function should not be implemented!<br>\n";
+	    failed = true;
+	  }
 	  if ( fp->detect( inevents, outevents, otherevents, stimulusevents ) != INT_MIN ) {
 	    warning += fs + " <b>" + ident + "</b>: detect( EventList, EventList ) function should not be implemented!<br>\n";
 	    failed = true;
@@ -244,20 +276,12 @@ string FilterDetectors::createFilters( void )
 
 	if ( ( fp->type() & Filter::MultipleTraces ) > 0 ) {
 	  if ( ( fp->type() & Filter::EventInput ) > 0 ) {
-	    if ( fp->adjust( indata[0] ) != INT_MIN ) {
-	      warning += fs + " <b>" + ident + "</b>: adjust( InData ) function should not be implemented!<br>\n";
-	      failed = true;
-	    }
 	    if ( fp->autoConfigure( indata[0], 0.0, 0.1 ) != INT_MIN ) {
 	      warning += fs + " <b>" + ident + "</b>: indata( InData, 0.0, 0.1 ) function should not be implemented!<br>\n";
 	      failed = true;
 	    }
 	  }
 	  else {
-	    if ( fp->adjust( inevents[0] ) != INT_MIN ) {
-	      warning += fs + " <b>" + ident + "</b>: adjust( EventData ) function should not be implemented!<br>\n";
-	      failed = true;
-	    }
 	    if ( fp->autoConfigure( inevents[0], 0.0, 0.1 ) != INT_MIN ) {
 	      warning += fs + " <b>" + ident + "</b>: autoConfigure( EventData, 0.0, 0.1 ) function should not be implemented!<br>\n";
 	      failed = true;
@@ -266,20 +290,12 @@ string FilterDetectors::createFilters( void )
 	}
 	else {
 	  if ( ( fp->type() & Filter::EventInput ) > 0 ) {
-	    if ( fp->adjust( indata ) != INT_MIN ) {
-	      warning += fs + " <b>" + ident + "</b>: adjust( InList ) function should not be implemented!<br>\n";
-	      failed = true;
-	    }
 	    if ( fp->autoConfigure( indata, 0.0, 0.1 ) != INT_MIN ) {
 	      warning += fs + " <b>" + ident + "</b>: autoConfiguer( InList, 0.0, 0.1 ) function should not be implemented!<br>\n";
 	      failed = true;
 	    }
 	  }
 	  else {
-	    if ( fp->adjust( inevents ) != INT_MIN ) {
-	      warning += fs + " <b>" + ident + "</b>: adjust( EventList ) function should not be implemented!<br>\n";
-	      failed = true;
-	    }
 	    if ( fp->autoConfigure( inevents, 0.0, 0.1 ) != INT_MIN ) {
 	      warning += fs + " <b>" + ident + "</b>: autoConfigure( EventList, 0.0, 0.1 ) function should not be implemented!<br>\n";
 	      failed = true;
@@ -704,7 +720,7 @@ string FilterDetectors::init( const InList &data, EventList &events )
 	    warning += "filter <b>" + ident + "</b>: init( EventData, InData ) function must be implemented!<br>\n";
 	  else {
 	    d->Init = false;
-	    d->FilterDetector->adjust( d->InEvents[0] );
+	    d->FilterDetector->adjust( d->InEvents[0], d->OutTraces[0] );
 	  }
 	}
 	// multiple event traces -> multiple traces
@@ -713,7 +729,7 @@ string FilterDetectors::init( const InList &data, EventList &events )
 	    warning += "filter <b>" + ident + "</b>: init( EventList, InList ) function must be implemented!<br>\n";
 	  else {
 	    d->Init = false;
-	    d->FilterDetector->adjust( d->InEvents );
+	    d->FilterDetector->adjust( d->InEvents, d->OutTraces );
 	  }
 	}
       }
@@ -724,7 +740,7 @@ string FilterDetectors::init( const InList &data, EventList &events )
 	    warning += "filter <b>" + ident + "</b>: init( InData, EventData ) function must be implemented!<br>\n";
 	  else {
 	    d->Init = false;
-	    d->FilterDetector->adjust( d->InTraces[0] );
+	    d->FilterDetector->adjust( d->InTraces[0], d->OutTraces[0] );
 	  }
 	}
 	// multiple analog traces -> multiple traces
@@ -733,7 +749,7 @@ string FilterDetectors::init( const InList &data, EventList &events )
 	    warning += "filter <b>" + ident + "</b>: init( InList, EventList ) function must be implemented!<br>\n";
 	  else {
 	    d->Init = false;
-	    d->FilterDetector->adjust( d->InTraces );
+	    d->FilterDetector->adjust( d->InTraces, d->OutTraces );
 	  }
 	}
       }
@@ -773,10 +789,18 @@ void FilterDetectors::adjust( const InList &data, const EventList &events )
 	c = true;
       // adjust:
       if ( c ) {
-	if ( d->FilterDetector->type() & Filter::MultipleTraces )
-	  d->FilterDetector->adjust( d->InEvents );
-	else
-	  d->FilterDetector->adjust( d->InEvents[0] );
+	if ( d->FilterDetector->type() & Filter::MultipleTraces ) {
+	  if ( d->FilterDetector->type() & Filter::EventDetector )
+	    d->FilterDetector->adjust( d->InEvents );
+	  else
+	    d->FilterDetector->adjust( d->InEvents, d->OutTraces );
+	}
+	else {
+	  if ( d->FilterDetector->type() & Filter::EventDetector )
+	    d->FilterDetector->adjust( d->InEvents[0] );
+	  else
+	    d->FilterDetector->adjust( d->InEvents[0], d->OutTraces[0] );
+	}
       }
     }
     else {
@@ -794,10 +818,18 @@ void FilterDetectors::adjust( const InList &data, const EventList &events )
 	c = true;
       // adjust:
       if ( c ) {
-	if ( d->FilterDetector->type() & Filter::MultipleTraces )
-	  d->FilterDetector->adjust( d->InTraces );
-	else
-	  d->FilterDetector->adjust( d->InTraces[0] );
+	if ( d->FilterDetector->type() & Filter::MultipleTraces ) {
+	  if ( d->FilterDetector->type() & Filter::EventDetector )
+	    d->FilterDetector->adjust( d->InTraces );
+	  else
+	    d->FilterDetector->adjust( d->InTraces, d->OutTraces );
+	}
+	else {
+	  if ( d->FilterDetector->type() & Filter::EventDetector )
+	    d->FilterDetector->adjust( d->InTraces[0] );
+	  else
+	    d->FilterDetector->adjust( d->InTraces[0], d->OutTraces[0] );
+	}
       }
     }
     d->FilterDetector->unlock();

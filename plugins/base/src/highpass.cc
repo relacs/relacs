@@ -27,13 +27,15 @@ namespace base {
 
 HighPass::HighPass( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogFilter, 1,
-	    "HighPass", "base", "Jan Benda", "0.1", "Jan 24 2008" )
+	    "HighPass", "base", "Jan Benda", "0.2", "May 12 2012" )
 {
   // parameter:
   Tau = 0.001;
 
   // options:
-  addNumber( "tau", "Time constant", Tau, 0.0, 10000.0, 0.0001, "s", "ms", "%.1f" );
+  addLabel( "High-pass filter", 1, OptWidget::LabelBold );
+  addNumber( "tau", "Time constant", Tau, 0.0, 10000.0, 0.0001, "s", "ms", "%.1f", 2 );
+  setDialogSelectMask( 2 );
 
   LFW.assign( ((Options*)this), 0, 0, true, 0, mutex() );
   setWidget( &LFW );
@@ -47,12 +49,18 @@ HighPass::~HighPass( void )
 
 int HighPass::init( const InData &indata, InData &outdata )
 {
-  outdata.setMinValue( -100.0 );
-  outdata.setMaxValue( 100.0 );
   Index = indata.begin();
   X = 0.0;
   DeltaT = indata.sampleInterval();
   TFac = DeltaT/Tau;
+  return 0;
+}
+
+
+int HighPass::adjust( const InData &indata, InData &outdata )
+{
+  outdata.setMinValue( indata.minValue() );
+  outdata.setMaxValue( indata.maxValue() );
   return 0;
 }
 

@@ -27,14 +27,15 @@ namespace base {
 
 LowPass::LowPass( const string &ident, int mode )
   : Filter( ident, mode, SingleAnalogFilter, 1,
-	    "LowPass", "base", "Jan Benda", "0.1", "May 3 2007" ),
-    LFW( (QWidget*)this )
+	    "LowPass", "base", "Jan Benda", "0.2", "May 12 2012" )
 {
   // parameter:
   Tau = 1.0;
 
   // options:
-  addNumber( "tau", "Filter time constant", Tau, 0.0, 10000.0, 0.001, "s", "ms", "%.1f" );
+  addLabel( "Low-pass filter", 1, OptWidget::LabelBold );
+  addNumber( "tau", "Filter time constant", Tau, 0.0, 10000.0, 0.001, "s", "ms", "%.1f", 2 );
+  setDialogSelectMask( 2 );
 
   LFW.assign( ((Options*)this), 0, 0, true, 0, mutex() );
   setWidget( &LFW );
@@ -48,12 +49,18 @@ LowPass::~LowPass( void )
 
 int LowPass::init( const InData &indata, InData &outdata )
 {
-  outdata.setMinValue( -100.0 );
-  outdata.setMaxValue( 100.0 );
   Index = indata.begin();
   X = 0.0;
   DeltaT = indata.sampleInterval();
   TFac = DeltaT/Tau;
+  return 0;
+}
+
+
+int LowPass::adjust( const InData &indata, InData &outdata )
+{
+  outdata.setMinValue( indata.minValue() );
+  outdata.setMaxValue( indata.maxValue() );
   return 0;
 }
 
