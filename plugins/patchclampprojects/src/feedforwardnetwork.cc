@@ -1001,7 +1001,7 @@ void FeedForwardNetwork::stimulate(SampleDataD &ge, SampleDataD &gi, SampleDataD
     if (trace(SpikeTrace[0]).currentTime()>signaltime+duration){
       const InData &intraceVM = trace( SpikeTrace[0] );
       intraceVM.copy(signaltime,vmtmp);
-      if (index("rec_curr")==0){
+      if ( CurrentTrace[0] >= 0 && index("rec_curr")==0 ) {
 	const InData &intraceC = trace( CurrentTrace[0] );
 	intraceC.copy(signaltime,ctmp);
       }
