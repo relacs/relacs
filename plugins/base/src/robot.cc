@@ -20,7 +20,12 @@
 */
 
 #include <relacs/base/robot.h>
+#include <QVBoxLayout>
 using namespace relacs;
+
+#define SPEED  50
+#define WAIT   true
+#define DONTWAIT false
 
 namespace base {
 
@@ -28,64 +33,207 @@ namespace base {
 Robot::Robot( void )
   : Control( "Robot", "base", "Jan Benda", "1.0", "Mar 05, 2010" )
 {
+  //  Mirob robot object
   Rob = 0;
+
+  // layout:
+  QVBoxLayout *vb = new QVBoxLayout;
+  setLayout( vb );
+  vb->setSpacing( 0 );
+  SW.setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Fixed );
+  vb->addWidget( &SW );
+
+
 }
 
 
 void Robot::initDevices( void )
 {
   for ( unsigned int k=0; k<10; k++ ) {
-    Str ns( k+1, 0 );
-    Rob = dynamic_cast< Manipulator* >( device( "robot-" + ns ) );
-    if ( Rob != 0 )
-      break;
+     Str ns( k+1, 0 );
+     //Rob = dynamic_cast< Manipulator* >( device( "robot-" + ns ) );
+     Rob = dynamic_cast< ::misc::Mirob* >( device( "robot-" + ns ) );
+     if ( Rob != 0 )
+       break;
   }
 }
 
 
+
+void Robot::keyReleaseEvent(QKeyEvent* e){
+  /* only accept the event if it is not from a autorepeat key */
+  if(e->isAutoRepeat() ) {    
+    e->ignore();   
+  } else {    
+    e->accept();
+  
+    switch ( e->key() ) {
+
+
+
+    case Qt::Key_U:
+      if ( Rob != 0 )
+	Rob->setVZ(0 );
+      break;
+
+    case Qt::Key_D:
+      if ( Rob != 0 )
+	Rob->setVZ( 0 );
+
+      break;
+
+    case Qt::Key_Up:
+      if ( Rob != 0 )
+	Rob->setVX(0 );
+
+      break;
+
+    case Qt::Key_Down:
+      if ( Rob != 0 )
+	Rob->setVX(0);
+      break;
+
+    case Qt::Key_Left:
+      if ( Rob != 0 )
+	Rob->setVY( 0 );
+      break;
+
+    case Qt::Key_Right:
+      if ( Rob != 0 )
+	Rob->setVY( 0 );
+      break;
+
+
+    default:
+      Control::keyReleaseEvent( e );
+
+    }
+  }
+  
+} 
+
+
+
 void Robot::keyPressEvent( QKeyEvent *e )
 {
-  e->accept();
+  //  fprintf(stderr, " key pressed ");
+  /* only accept the event if it is not from a autorepeat key */
+  if(e->isAutoRepeat() ) {    
+    e->ignore();   
+  } else {    
+    e->accept();
+  
+  
+    switch ( e->key() ) {
 
-  switch ( e->key() ) {
+    case Qt::Key_F:
+      if ( Rob != 0 ){
+	Rob->clearPositions();
+      }
+      break;
 
-  case Qt::Key_Up:
-    if ( Rob != 0 )
-      Rob->stepX( -10000.0 );
-    break;
 
-  case Qt::Key_Down:
-    if ( Rob != 0 )
-      Rob->stepX( 10000.0 );
-    break;
+    case Qt::Key_N:
+      if ( Rob != 0 ){
+	Rob->recordPosition();
+      }
+      break;
 
-  case Qt::Key_Left:
-    cerr << "LEFT\n";
-    if ( Rob != 0 )
-      Rob->stepY( 10000.0 );
-    break;
+    case Qt::Key_M:
+      if ( Rob != 0 ){
+	Rob->makePositionsForbiddenZone();
+      }
+      break;
 
-  case Qt::Key_Right:
-    cerr << "RIGHT\n";
-    if ( Rob != 0 )
-      Rob->stepY( -10000.0 );
-    break;
 
-  case Qt::Key_U:
-    cerr << "UP\n";
-    if ( Rob != 0 )
-      Rob->stepZ( 10000.0 );
-    break;
+    case Qt::Key_P:
+      if ( Rob != 0 ){
+	fprintf(stderr,"ROBOT: Position %f, %f, %f\n",Rob->posX(), Rob->posY(),Rob->posZ());
+      }
+      break;
 
-  case Qt::Key_D:
-    cerr << "DOWN\n";
-    if ( Rob != 0 )
-      Rob->stepZ( -10000.0 );
-    break;
+    case Qt::Key_H:
+      if ( Rob != 0 )
+	Rob->gotoNegLimitsAndSetHome();
+	
+      break;
 
-  default:
-    Control::keyPressEvent( e );
+    case Qt::Key_G:
+      if ( Rob != 0 )
+	Rob->executeRecordedTrajectory(30, false, true );
+	Rob->executeRecordedTrajectory(30, true, true );
 
+      break;
+
+    case Qt::Key_J:
+      if ( Rob != 0 )
+	Rob->startRecording( );
+      break;
+
+    case Qt::Key_K:
+      if ( Rob != 0 )
+	Rob->recordStep( );
+      break;
+
+    case Qt::Key_L:
+      if ( Rob != 0 )
+	Rob->stopRecording( );
+      break;
+
+    case Qt::Key_O:
+      if ( Rob != 0 ){
+	Rob->step(10000,10000,10000,50, WAIT);
+	Rob->step(-10000,-10000,-10000, 50, DONTWAIT);
+      }
+      break;
+
+    case Qt::Key_T:
+      if ( Rob != 0 )
+	Rob->clampTool();
+      break;
+
+    case Qt::Key_R:
+      if ( Rob != 0 )
+	Rob->releaseTool();
+      break;
+
+
+    case Qt::Key_U:
+      if ( Rob != 0 )
+	Rob->setVZ(-SPEED );
+      break;
+
+    case Qt::Key_D:
+      if ( Rob != 0 )
+	Rob->setVZ( SPEED );
+
+      break;
+
+    case Qt::Key_Up:
+      if ( Rob != 0 )
+	Rob->setVX(-SPEED );
+      break;
+
+    case Qt::Key_Down:
+      if ( Rob != 0 )
+	Rob->setVX(SPEED);
+      break;
+
+    case Qt::Key_Left:
+      if ( Rob != 0 )
+	Rob->setVY( SPEED );
+      break;
+
+    case Qt::Key_Right:
+      if ( Rob != 0 )
+	Rob->setVY( -SPEED );
+      break;
+
+
+    default:
+      Control::keyPressEvent( e );
+
+    }
   }
 }
 

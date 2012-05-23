@@ -22,8 +22,11 @@
 #ifndef _RELACS_BASE_ROBOT_H_
 #define _RELACS_BASE_ROBOT_H_ 1
 
-#include <relacs/manipulator.h>
+//#include <relacs/manipulator.h>
+#include <relacs/misc/mirob.h>
+#include <relacs/optwidget.h>
 #include <relacs/control.h>
+
 using namespace relacs;
 
 namespace base {
@@ -32,7 +35,7 @@ namespace base {
 /*!
 \class Robot
 \brief [Control] Control a robot
-\author Jan Benda
+\author Jan Benda/ Fabian Sinz
 \version 1.0 (Mar 05, 2010)
 */
 
@@ -50,8 +53,14 @@ public:
 protected:
 
   virtual void keyPressEvent( QKeyEvent *e );
+  virtual void keyReleaseEvent( QKeyEvent *e );
 
-  Manipulator *Rob;
+  //Manipulator *Rob;
+  ::misc::Mirob *Rob;
+
+ private:
+  OptWidget SW;
+
 
 };
 

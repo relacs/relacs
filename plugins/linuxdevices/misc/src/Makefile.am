@@ -58,6 +58,8 @@ libmiscmirob_la_LDFLAGS = \
     $(QT4_LDFLAGS)
 
 libmiscmirob_la_LIBADD = \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/relacs/src/librelacs.la \
     $(TML_LIBS) \
     $(QT4_LIBS)

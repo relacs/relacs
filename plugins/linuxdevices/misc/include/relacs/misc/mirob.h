@@ -22,19 +22,48 @@
 #ifndef _RELACS_MISC_MIROB_H_
 #define _RELACS_MISC_MIROB_H_ 1
 
+#include <time.h>
 #include <string>
 #include <vector>
-#include <TML_lib.h>
+#include <relacs/zones.h>
 #include <relacs/manipulator.h>
+#include <TML_lib.h>
 using namespace std;
 using namespace relacs;
 
 namespace misc {
 
 
+typedef struct Point3D positionUpdate;
+
+/******* thread to watch the robot ****** */
+struct watchdog_data { 
+  bool active, watchLimits,stopped;
+  BYTE ChannelType;
+  BYTE HostID;
+  DWORD  Baudrate;
+
+  Zones* forbiddenZones;
+
+  struct timespec sleeptime;
+
+  const char* Device;
+  const char* SetupFile;
+
+};
+typedef struct watchdog_data watchdog_data;
+
+void* watchdog(void* ptr);
+
+
+
+/*********************************************/
+
+
+
 /*!
 \class Mirob
-\author Jan Benda
+\author Jan Benda/ Fabian Sinz
 \version 1.0
 \brief [Manipulator] The %Mirob module linear robot from MPH
 */
@@ -66,11 +95,11 @@ public:
 	or a specific distance or angle. */
   virtual int stepZ( double z );
 
-    /*! Return the position of the z-axis.
+    /*! Return the position of the x-axis.
         Depending on the implementation this can be raw steps
 	or a specific distance or angle. */
   virtual double posX( void ) const;
-    /*! Return the position of the z-axis.
+    /*! Return the position of the y-axis.
         Depending on the implementation this can be raw steps
 	or a specific distance or angle. */
   virtual double posY( void ) const;
@@ -79,6 +108,8 @@ public:
 	or a specific distance or angle. */
   virtual double posZ( void ) const;
 
+    /*! Defines the current position of the axis as its home position. */
+  virtual int clear( int axis );
     /*! Defines the current position of the x axis as the home position. */
   virtual int clearX( void );
     /*! Defines the current position of the y axis as the home position. */
@@ -115,24 +146,64 @@ public:
     /*! The maximum possible amplitude for the x-axis. */
   virtual double maxAmplX( void ) const;
 
+  int setV(double vx, double vy, double vz);
+  int getV(double &vx, double &vy, double &vz);
+  int setV(double v, int ax);
+  int setVX(double v);
+  int setVY(double v);
+  int setVZ(double v);
+
+  int step(double dx, double dy, double dz, double v, bool wait);
+
+  int clampTool(void);
+  int releaseTool(void);
+
+  int startRecording(void);
+  int recordStep(void);
+  int stopRecording(void);
+  int executeRecordedTrajectory(double speed, bool forward, bool wait);
+  int gotoNegLimitsAndSetHome(void);
+
+  int recordPosition(void);
+  int clearPositions(void);
+  int makePositionsForbiddenZone(void);
 
 private:
 
-  int step( double x, int axis );
-  double pos( int axis ) const;
-
+  int activateAxis(int ax);
+  
   static const BYTE ChannelType = CHANNEL_RS232;
   static const BYTE HostID = 1;
   static const DWORD Baudrate = 115200;
   static const string SetupFile;
+  static const long MaxSpeed = 50;
+  static const double MaxAcc = 0.3183;
 
+  static const long watchdog_sleep_sec = 0;
+  static const long watchdog_sleep_nsec = 50000000;
+
+  int syncTposApos(void );
+
+  int step( double x, int axis );
+  double pos( int axis ) const;
+  int suspendUntilStop(void);
+  int suspendUntilPositionReached(double x, double y, double z, double tol);
   bool Opened;
 
   double Speed[3];
   double Acceleration[3];
+  pthread_t watchdog_thread;
+  watchdog_data watchdog_info;
+  
+  vector <positionUpdate> recordedSteps;
+  vector <Point3D> positions;
 
+  
+  positionUpdate record0;
+  Zones forbiddenZones;
+
+  
 };
-
 
 }; /* namespace misc */
 
