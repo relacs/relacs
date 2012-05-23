@@ -26,7 +26,12 @@
 #include <relacs/misc/mirob.h>
 #include <relacs/optwidget.h>
 #include <relacs/control.h>
-
+#include <QLCDNumber>
+#include <QVBoxLayout>
+#include <QPushButton>
+#include <QVBoxLayout>
+#include <QComboBox>
+#include <QTextEdit>
 using namespace relacs;
 
 namespace base {
@@ -47,20 +52,40 @@ class Robot : public Control
 public:
 
   Robot( void );
+  ~Robot( void );
   virtual void initDevices( void );
 
+public slots:
+  void clampTool(void);
+  void releaseTool(void);
+
+  void restartWatchdog(void);
+  void stopMirob(void); 
+  void startTrajRec(void);
+  void recordTrajStep(void);
+  void stopTrajRec(void);
+  void apply(void);
 
 protected:
 
   virtual void keyPressEvent( QKeyEvent *e );
   virtual void keyReleaseEvent( QKeyEvent *e );
 
+
+  QLCDNumber *XPosLCD;
+  QLCDNumber *YPosLCD;
+  QLCDNumber *ZPosLCD;
+
+  QComboBox* otherActionsBox;
+
+  QTextEdit* errorBox;
+
   //Manipulator *Rob;
   ::misc::Mirob *Rob;
 
- private:
+private:
   OptWidget SW;
-
+  
 
 };
 

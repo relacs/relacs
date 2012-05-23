@@ -20,7 +20,7 @@
 */
 
 #include <relacs/base/robot.h>
-#include <QVBoxLayout>
+
 using namespace relacs;
 
 #define SPEED  50
@@ -35,17 +35,224 @@ Robot::Robot( void )
 {
   //  Mirob robot object
   Rob = 0;
+  
+
 
   // layout:
   QVBoxLayout *vb = new QVBoxLayout;
   setLayout( vb );
-  vb->setSpacing( 0 );
+  vb->setSpacing( 4 );
   SW.setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Fixed );
   vb->addWidget( &SW );
 
+  QGridLayout *Positions = new QGridLayout;
+  Positions->setHorizontalSpacing( 2 );
+  Positions->setVerticalSpacing( 2 );
+  vb->addLayout( Positions );
+  QLabel *label;
+
+  label = new QLabel( "Mirob X-Position " );
+  label->setAlignment( Qt::AlignCenter );
+  Positions->addWidget( label, 0, 0 );
+ 
+  XPosLCD = new QLCDNumber( 8 );
+  XPosLCD->setSegmentStyle( QLCDNumber::Filled );
+  XPosLCD->setFixedHeight( label->sizeHint().height() );
+  QColor fg( Qt::green );
+  QColor bg( Qt::black );
+
+  QPalette qp( fg, fg, fg.lighter( 140 ), fg.darker( 170 ), fg.darker( 130 ), fg, fg, fg, bg );
+  XPosLCD->setPalette( qp );
+  XPosLCD->setAutoFillBackground( true );
+  Positions->addWidget( XPosLCD, 0, 1 );
+
+  label = new QLabel( "Mirob Y-Position " );
+  label->setAlignment( Qt::AlignCenter );
+  Positions->addWidget( label, 1, 0 );
+ 
+  YPosLCD = new QLCDNumber( 8 );
+  YPosLCD->setSegmentStyle( QLCDNumber::Filled );
+  YPosLCD->setFixedHeight( label->sizeHint().height() );
+  YPosLCD->setPalette( qp );
+  YPosLCD->setAutoFillBackground( true );
+  Positions->addWidget( YPosLCD, 1, 1 );
+
+  label = new QLabel( "Mirob Z-Position " );
+  label->setAlignment( Qt::AlignCenter );
+  Positions->addWidget( label, 2, 0 );
+ 
+  ZPosLCD = new QLCDNumber( 8 );
+  ZPosLCD->setSegmentStyle( QLCDNumber::Filled );
+  ZPosLCD->setFixedHeight( label->sizeHint().height() );
+  ZPosLCD->setPalette( qp );
+  ZPosLCD->setAutoFillBackground( true );
+  Positions->addWidget( ZPosLCD, 2, 1 );
+
+
+
+
+  // buttons:
+  QHBoxLayout *bb = new QHBoxLayout;
+  bb->setSpacing( 4 );
+  vb->addLayout( bb );
+
+  QFrame* line = new QFrame();
+  line->setFrameShape(QFrame::HLine);
+  line->setFrameShadow(QFrame::Sunken);
+
+  vb->addWidget(line);
+ 
+
+
+  QPushButton *StopButton = new QPushButton( "Stop!" );
+  bb->addWidget( StopButton );
+  StopButton->setFixedHeight( StopButton->sizeHint().height() );
+  connect( StopButton, SIGNAL( clicked() ),
+	   this, SLOT( stopMirob() ) );
+
+
+
+
+  vb->addWidget(line);
+
+  bb = new QHBoxLayout;
+  bb->setSpacing( 4 );
+  vb->addLayout( bb );
+
+  QPushButton *ClampButton = new QPushButton( "Clamp Tool" );
+  bb->addWidget( ClampButton );
+  ClampButton->setFixedHeight( ClampButton->sizeHint().height() );
+  connect( ClampButton, SIGNAL( clicked() ),
+	   this, SLOT( clampTool() ) );
+
+  QPushButton *ReleaseButton = new QPushButton( "Release Tool" );
+  bb->addWidget( ReleaseButton );
+  ReleaseButton->setFixedHeight( ReleaseButton->sizeHint().height() );
+  connect( ReleaseButton, SIGNAL( clicked() ),
+	   this, SLOT( releaseTool() ) );
+
+  
+//   vb->addWidget(line);
+
+//   bb = new QHBoxLayout;
+//   bb->setSpacing( 4 );
+//   vb->addLayout( bb );
+
+//   QPushButton *TrajRecButton = new QPushButton( "Start Trajectory\nRecording" );
+//   bb->addWidget( TrajRecButton );
+//   TrajRecButton->setFixedHeight( TrajRecButton->sizeHint().height() );
+//   connect( TrajRecButton, SIGNAL( clicked() ),
+// 	   this, SLOT( startTrajRec() ) );
+
+//   QPushButton *StepRecButton = new QPushButton( "Record\nStep" );
+//   bb->addWidget( StepRecButton );
+//   StepRecButton->setFixedHeight( StepRecButton->sizeHint().height() );
+//   connect( StepRecButton, SIGNAL( clicked() ),
+// 	   this, SLOT( recordTrajStep() ) );
+  
+//   QPushButton *TrajStopButton = new QPushButton( "Stop Trajectory\nRecording" );
+//   bb->addWidget( TrajStopButton );
+//   TrajStopButton->setFixedHeight( TrajStopButton->sizeHint().height() );
+//   connect( TrajStopButton, SIGNAL( clicked() ),
+// 	   this, SLOT( stopTrajRec() ) );
+
+
+  
+  bb = new QHBoxLayout;
+  bb->setSpacing( 4 );
+  vb->addLayout( bb );
+  otherActionsBox = new QComboBox;
+  bb->addWidget(otherActionsBox);
+  otherActionsBox->addItem("Go to -lim and set home");
+  otherActionsBox->addItem("Restart watchdog");
+  otherActionsBox->addItem("Go home");
+
+  QPushButton *ApplyButton = new QPushButton( "Apply" );
+  bb->addWidget( ApplyButton );
+  ApplyButton->setFixedHeight( ApplyButton->sizeHint().height() );
+  connect( ApplyButton, SIGNAL( clicked() ),
+	   this, SLOT( apply() ) );
+
+
+  bb = new QHBoxLayout;
+  bb->setSpacing( 4 );
+  vb->addLayout( bb );
+
+  errorBox = new QTextEdit();
+  errorBox->setFontPointSize(8);
+  bb->addWidget(errorBox);
+}
+
+Robot::~Robot(void){
 
 }
 
+void Robot::apply(void){
+  if (Rob != 0){
+    switch(otherActionsBox->currentIndex()){
+    case 0: // goto net limit and home
+      Rob->gotoNegLimitsAndSetHome();
+      break;
+    case 1: // restart watchdog
+      Rob->restartWatchdog();
+      break;
+    case 2: // goto home
+      Rob->absPos(0,0,0,50);
+      break;
+    default:
+      break;
+      
+    };
+
+  }
+ 
+}
+  
+
+
+void Robot::clampTool(void){
+  if (Rob != 0){
+    Rob->clampTool();
+  }
+}
+
+void Robot::releaseTool(void){
+  if (Rob != 0){
+    Rob->releaseTool();
+  }
+}
+
+void Robot::startTrajRec(void){
+  if (Rob != 0){
+    Rob->startRecording( );
+  }
+
+}
+
+void Robot::recordTrajStep(void){
+  if (Rob != 0){
+    Rob->recordStep( );
+  }
+}
+
+void Robot::stopTrajRec(void){
+  if (Rob != 0){
+    Rob->stopRecording( );
+  }
+}
+
+
+void Robot::restartWatchdog(void){
+  if (Rob != 0){
+    Rob->restartWatchdog();
+  }
+}
+
+void Robot::stopMirob(void){
+  if (Rob != 0){
+    Rob->stop();
+  }
+}
 
 void Robot::initDevices( void )
 {
@@ -53,9 +260,14 @@ void Robot::initDevices( void )
      Str ns( k+1, 0 );
      //Rob = dynamic_cast< Manipulator* >( device( "robot-" + ns ) );
      Rob = dynamic_cast< ::misc::Mirob* >( device( "robot-" + ns ) );
-     if ( Rob != 0 )
+     if ( Rob != 0 ){
+       Rob->setPosLCDs(XPosLCD, YPosLCD, ZPosLCD);
+       Rob->setLogBox(errorBox);
        break;
+     }
+       
   }
+  
 }
 
 
@@ -160,7 +372,7 @@ void Robot::keyPressEvent( QKeyEvent *e )
 
     case Qt::Key_G:
       if ( Rob != 0 )
-	Rob->executeRecordedTrajectory(30, false, true );
+	//Rob->executeRecordedTrajectory(30, false, true );
 	Rob->executeRecordedTrajectory(30, true, true );
 
       break;
@@ -187,15 +399,15 @@ void Robot::keyPressEvent( QKeyEvent *e )
       }
       break;
 
-    case Qt::Key_T:
-      if ( Rob != 0 )
-	Rob->clampTool();
-      break;
+//     case Qt::Key_T:
+//       if ( Rob != 0 )
+// 	Rob->clampTool();
+//       break;
 
-    case Qt::Key_R:
-      if ( Rob != 0 )
-	Rob->releaseTool();
-      break;
+//     case Qt::Key_R:
+//       if ( Rob != 0 )
+// 	Rob->releaseTool();
+//       break;
 
 
     case Qt::Key_U:

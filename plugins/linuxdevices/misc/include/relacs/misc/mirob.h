@@ -28,6 +28,10 @@
 #include <relacs/zones.h>
 #include <relacs/manipulator.h>
 #include <TML_lib.h>
+#include <QLCDNumber>
+#include <QTextEdit>
+#include <QString>
+
 using namespace std;
 using namespace relacs;
 
@@ -38,6 +42,12 @@ typedef struct Point3D positionUpdate;
 
 /******* thread to watch the robot ****** */
 struct watchdog_data { 
+
+  QLCDNumber *XPosLCD;
+  QLCDNumber *YPosLCD;
+  QLCDNumber *ZPosLCD;
+  QTextEdit* logBox;
+  
   bool active, watchLimits,stopped;
   BYTE ChannelType;
   BYTE HostID;
@@ -153,6 +163,9 @@ public:
   int setVY(double v);
   int setVZ(double v);
 
+  int absPos(double x, double y, double z, double speed);
+  
+
   int step(double dx, double dy, double dz, double v, bool wait);
 
   int clampTool(void);
@@ -168,10 +181,14 @@ public:
   int clearPositions(void);
   int makePositionsForbiddenZone(void);
 
+  int restartWatchdog(void);
+
+  void setPosLCDs(QLCDNumber* a, QLCDNumber* b, QLCDNumber*c );
+  void setLogBox(QTextEdit* box);
+  int stop(void);
+  
 private:
 
-  int activateAxis(int ax);
-  
   static const BYTE ChannelType = CHANNEL_RS232;
   static const BYTE HostID = 1;
   static const DWORD Baudrate = 115200;
@@ -181,6 +198,14 @@ private:
 
   static const long watchdog_sleep_sec = 0;
   static const long watchdog_sleep_nsec = 50000000;
+
+
+
+  int activateAxis(int ax);
+  
+  int startWatchdog(void);
+  int stopWatchdog(void);
+
 
   int syncTposApos(void );
 
@@ -197,6 +222,7 @@ private:
   
   vector <positionUpdate> recordedSteps;
   vector <Point3D> positions;
+  
 
   
   positionUpdate record0;

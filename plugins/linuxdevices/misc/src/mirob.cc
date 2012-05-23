@@ -50,6 +50,11 @@ using namespace relacs;
 
 namespace misc {
 
+void miroblog(const char* text, watchdog_data* info){
+  if (info->logBox != NULL){
+    info->logBox->append(QString(text));
+  }
+}
 
 void *watchdog(void* ptr){
   long p[3] = {0,0,0};
@@ -57,8 +62,7 @@ void *watchdog(void* ptr){
 
   watchdog_data* info = (watchdog_data*)ptr;
 
-  
-  cerr << "Opening watchdog thread " << endl;
+  miroblog("Unleashing watchdog",info);
   /************ open watchdog ****************/
   // open device:
   if ( TS_OpenChannel( info->Device, info->ChannelType, info->HostID, info->Baudrate ) < 0 ) {
@@ -156,7 +160,7 @@ void *watchdog(void* ptr){
     //-------- check for whether watchdog is in forbidden zone -----------
     if (info->forbiddenZones->insideZone((double)p2[0],(double)p2[1],(double)p2[2])){
       if (!info->stopped){
-	cerr << "WATCHDOG Mirob entered forbidden zone! Stopping it!" << endl;
+	miroblog("WATCHDOG Mirob entered forbidden zone! Stopping it!",info);
 	for (axis = 1; axis <=3; ++axis){
 	  if ( !TS_SelectAxis( axis ) ){
 	    cerr << "WATCHDOG Problem with selecting axis! " << TS_GetLastErrorText() << endl;
@@ -166,21 +170,26 @@ void *watchdog(void* ptr){
 	  }
 	}
 	info->stopped = true;
-	cerr << "WATCHDOG Carefully move Mirob ouside zone!" << endl;
+	miroblog("WATCHDOG Carefully move Mirob ouside zone!",info);
       }
     }else if(info->stopped){
-      cerr << "WATCHDOG Mirob ouside zone again! " << endl;
+      miroblog("WATCHDOG Mirob ouside zone again! ",info);
       info->stopped = false;
     }
     
-    
+    //--------- call position callback if exists --------
+     if (info->XPosLCD != NULL && info->YPosLCD != NULL && info->ZPosLCD != NULL){
+       info->XPosLCD->display((double)p2[0]);
+       info->YPosLCD->display((double)p2[1]);
+       info->ZPosLCD->display((double)p2[2]);
+     }
     //------------ check for errors ---------------------
     for (axis = 1; axis <=3; ++axis){
 
       if (info->watchLimits){
 	// ---- handle negative  limit hit
 	if ( (int)limitNeg[axis-1] == 0){
-	  cerr << "WATCHDOG negative limit hit on axis " << axis << "! Trying to fix this !" << endl;
+	  miroblog("WATCHDOG negative limit hit! Trying to fix this !",info);
 
 	  if ( !TS_SelectAxis( axis ) ){
 	    cerr << "WATCHDOG Problem with selecting axis! " << TS_GetLastErrorText() << endl;
@@ -356,6 +365,30 @@ int Mirob::open( const string &device, const Options &opts )
   watchdog_info.Baudrate = Baudrate;
   watchdog_info.SetupFile = SetupFile.c_str();
   watchdog_info.Device = device.c_str();
+  watchdog_info.XPosLCD = NULL;
+  watchdog_info.YPosLCD = NULL;
+  watchdog_info.ZPosLCD = NULL;
+  watchdog_info.logBox = NULL;
+  
+  startWatchdog();
+
+  /*************************************************************/
+
+
+  setDeviceName( "Mirob" );
+  setDeviceVendor( "MPH" );
+  setDeviceFile( device );
+  Device::addInfo();
+
+  
+
+  Opened = true;
+
+  return 0;
+}
+
+
+int Mirob::startWatchdog(void){
   watchdog_info.active = false;
   watchdog_info.active = false;
   watchdog_info.watchLimits = true;
@@ -382,21 +415,34 @@ int Mirob::open( const string &device, const Options &opts )
   }
   
   cerr << "[OK]" << endl;
-
-  /*************************************************************/
-
-
-  setDeviceName( "Mirob" );
-  setDeviceVendor( "MPH" );
-  setDeviceFile( device );
-  Device::addInfo();
-
-  
-
-  Opened = true;
-
   return 0;
 }
+
+int Mirob::stopWatchdog(void){
+  // closing watchdog
+  watchdog_info.active = false;
+  pthread_join(watchdog_thread, NULL); // wait for watchdog to return
+  return 0;
+}
+
+
+int Mirob::restartWatchdog(void){
+  stopWatchdog();
+  startWatchdog();
+  return 0;
+}
+
+
+void Mirob::setPosLCDs(QLCDNumber* a, QLCDNumber* b, QLCDNumber*c ){
+    watchdog_info.XPosLCD = a;
+    watchdog_info.YPosLCD = b;
+    watchdog_info.ZPosLCD = c;
+}
+
+void Mirob::setLogBox(QTextEdit* box){
+    watchdog_info.logBox = box;
+}
+
 
 void Mirob::close( void )
 {
@@ -415,9 +461,7 @@ void Mirob::close( void )
   Info.clear();
   Settings.clear();
 
-  // closing watchdog
-  watchdog_info.active = false;
-  pthread_join(watchdog_thread, NULL); // wait for watchdog to return
+  stopWatchdog();
   cerr << "MIROB closed " << endl;
 }
 
@@ -535,6 +579,29 @@ int Mirob::setV(double vx, double  vy, double vz){
 
 
 /***************** positioning part *****************************/
+
+int Mirob::stop(){
+  cerr << "MIROB Stop!" << endl;
+  for (int axis = 3; axis >= 1; --axis){
+    if (activateAxis(axis) > 0) return 1;
+
+    if (!TS_Stop()){
+	cerr << "Could not stop Mirob! " << TS_GetLastErrorText() << endl;
+	return 1;
+    }
+    if (!TS_Power(POWER_OFF)){
+	cerr << "Could not power off Mirob! " << TS_GetLastErrorText() << endl;
+	return 1;
+    }
+    if (!TS_Power(POWER_ON)){
+	cerr << "Could not power on Mirob! " << TS_GetLastErrorText() << endl;
+	return 1;
+    }
+
+
+  }  
+  return 0;
+}
                              
 int Mirob::gotoNegLimitsAndSetHome(void){
   BYTE var;
@@ -635,6 +702,51 @@ int Mirob::step( double x, int axis )
 
   return 0;
 }
+
+int Mirob::absPos( double x, double y, double z, double speed )
+{
+  speed = (speed > MaxSpeed) ? MaxSpeed : speed;
+  double d[3] = {x,y,z};
+  
+  double dx,dy,dz;
+  dx = abs(posX() - x);
+  dy = abs(posY() - y);
+  dz = abs(posZ() - z);
+
+  double v_len = sqrt(dx*dx + dy*dy + dz*dz );
+
+  double vx = speed * dx/v_len;
+  double vy = speed * dy/v_len;
+  double vz = speed * dz/v_len;
+
+  double v[3] = {vx,vy,vz};
+
+
+
+  for (int axis = 1; axis <= 3; ++axis){
+    if ( ! TS_SelectAxis( axis ) ) {
+      cerr << "Failed to select axis " << axis << "! " << TS_GetLastErrorText() << '\n';
+      return 1;
+    }
+    // move:
+    long step = long( rint( d[axis - 1] ) );
+    if ( ! TS_MoveAbsolute(step, v[axis-1], MaxAcc, UPDATE_IMMEDIATE, FROM_MEASURE)){
+      cerr << "Failed to move absolute on axis " << axis << "! " << TS_GetLastErrorText() << '\n';
+      return 1;
+
+    }
+
+//     // wait:
+//     if( ! TS_SetEventOnMotionComplete( WAIT, DONT_STOP ) ) { 
+//       cerr << "Failed to wait on axis " << axis << "! " << TS_GetLastErrorText() << '\n';
+//       return 1;
+//     }
+    
+  }
+
+  return 0;
+}
+
 
 int Mirob::suspendUntilPositionReached(double x, \
       double y, double z, double tol){
