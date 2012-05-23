@@ -49,7 +49,8 @@ pkginclude_HEADERS = \
     ../include/relacs/outlist.h \
     ../include/relacs/temperature.h \
     ../include/relacs/tracespec.h \
-    ../include/relacs/trigger.h
+    ../include/relacs/trigger.h \
+    ../include/relacs/zones.h
 
 librelacsdaq_la_SOURCES = \
     acquire.cc \
@@ -68,7 +69,8 @@ librelacsdaq_la_SOURCES = \
     outlist.cc \
     temperature.cc \
     tracespec.cc \
-    trigger.cc
+    trigger.cc \
+    zones.cc
 
 
 check_PROGRAMS = linktest_librelacsdaq_la
