@@ -13,9 +13,12 @@ pluginlib_LTLIBRARIES = \
     libbasesetoutput.la \
     libbasesimplemodel.la \
     libbasetransferfunction.la \
-    libbaserobot.la \
     libbasewait.la
 
+if RELACS_COND_TML
+pluginlib_LTLIBRARIES += \
+    libbaserobot.la
+endif
 
 
 libbaselinearattenuate_la_CPPFLAGS = \

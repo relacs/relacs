@@ -1,9 +1,11 @@
 General:
-- the main (demo) configuration file should show a message where to find more demos
-- when relacs does not find config files it should say where to find examples!
+- add a README file to share/relacs/configs/
 - make the config files more generic (lab address!)
 - check device config files
 - check all config files
+
+Robot:
+- Remove RELACS_COND_TML from plugins/base/src/Makefile.am once the necessary functionality has been moved back to Manipulator
 
 Acquire:
 - directWrite(): for support of noAttenuator we need the maximum board voltage!
