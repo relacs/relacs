@@ -3,6 +3,12 @@
 #endif
 SUBDIRS = src $(EXAMPLES)
 
+daqflexcfgdir = $(pkgdatadir)/configs/daqflex
+dist_daqflexcfg_DATA = \
+    relacs.cfg \
+    relacsplugins.cfg \
+    macros.cfg
+
 EXTRA_DIST = doc/daqflex.doc
 
 pkglibdir = $(libdir)/relacs

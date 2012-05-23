@@ -32,6 +32,9 @@ CONFPLUGINSFILES="@datadir@/@PACKAGE@/relacsplugins.cfg|${HOME}/.relacs/relacspl
 # Path to the documentation:
 DOCPATH="@htmldir@"
 
+# Path to the example configuration files:
+CFGEXAMPLESPATH="@datadir@/@PACKAGE@/configs"
+
 # Path to the icons:
 ICONPATH="@datadir@/@PACKAGE@"
 

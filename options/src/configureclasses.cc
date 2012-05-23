@@ -164,14 +164,14 @@ void ConfigureClasses::clearConfigFiles( void )
 }
 
 
-void ConfigureClasses::read( int group, const string &file )
+int ConfigureClasses::read( int group, const string &file )
 {
   // open the requested configuration file:
   ifstream sf( file.c_str() );
   if ( ! sf.good() ) {
     cerr << currentTime()
-	 << " failed to open configuration file " << file << endl;
-    return;
+	 << " failed to open configuration file " << file << '\n';
+    return 0;
   }
 
   // skip any initial lines until the first line starting with '*':
@@ -180,12 +180,12 @@ void ConfigureClasses::read( int group, const string &file )
 	  getline( sf, line ).good() );
   if ( ! sf.good() ) {
     cerr << currentTime()
-	 << " cannot read configuration from " << file << endl;
-    return;
+	 << " cannot read configuration from " << file << '\n';
+    return 0;
   }
 
   cerr << currentTime()
-       << " read configuration from " << file << endl;
+       << " read configuration from " << file << '\n';
 
   // read in configuration sections:
   while ( sf.good() ) {
@@ -206,49 +206,57 @@ void ConfigureClasses::read( int group, const string &file )
   }
 
   sf.close();
+
+  return 1;
 }
 
 
-void ConfigureClasses::read( int group, int level )
+int ConfigureClasses::read( int group, int level )
 {
   if ( group < 0 || group >= (int)ConfigFile.size() ||
        level < 0 || level >= (int)ConfigFile[group].size() )
-    return;
+    return 0;
 
-  read( group, ConfigFile[group][level].c_str() );
+  return read( group, ConfigFile[group][level].c_str() );
 }
 
 
-void ConfigureClasses::read( int group )
+int ConfigureClasses::read( int group )
 {
+  int r = 0;
   for ( unsigned int l = 0; l < ConfigFile[group].size(); l++ ) {
-    read( group, l );
+    int rr = read( group, l );
+    r += rr;
   }
+  return r;
 }
 
 
-void ConfigureClasses::read( void )
+int ConfigureClasses::read( void )
 {
+  int r = 0;
   for ( unsigned int g = 0; g < ConfigFile.size(); g++ ) {
-    read( g );
+    int rr = read( g );
+    r += rr;
   }
+  return r;
 }
 
 
-void ConfigureClasses::read( int level, ConfigClass &config )
+int ConfigureClasses::read( int level, ConfigClass &config )
 {
   int group = config.configGroup();
 
   if ( group < 0 || group >= (int)ConfigFile.size() ||
        level < 0 || level >= (int)ConfigFile[group].size() )
-    return;
+    return 0;
 
   // open the requested configuration file:
   ifstream sf( ConfigFile[group][level].c_str() );
   if ( ! sf.good() ) {
     cerr << currentTime()
-	 << " failed to open configuration file " << ConfigFile[group][level] << endl;
-    return;
+	 << " failed to open configuration file " << ConfigFile[group][level] << '\n';
+    return 0;
   }
 
   // skip any initial lines until the first line starting with '*':
@@ -257,12 +265,12 @@ void ConfigureClasses::read( int level, ConfigClass &config )
 	  getline( sf, line ).good() );
   if ( ! sf.good() ) {
     cerr << currentTime()
-	 << " cannot read configuration from " << ConfigFile[group][level] << endl;
-    return;
+	 << " cannot read configuration from " << ConfigFile[group][level] << '\n';
+    return 0;
   }
 
   cerr << currentTime()
-       << " read configuration from " << ConfigFile[group][level] << endl;
+       << " read configuration from " << ConfigFile[group][level] << '\n';
 
   // read in configuration sections:
   while ( sf.good() ) {
@@ -280,16 +288,21 @@ void ConfigureClasses::read( int level, ConfigClass &config )
   }
 
   sf.close();
+
+  return 1;
 }
 
 
-void ConfigureClasses::read( ConfigClass &config )
+int ConfigureClasses::read( ConfigClass &config )
 {
+  int r = 0;
   for ( unsigned int l = 0;
 	l < ConfigFile[config.configGroup()].size();
 	l++ ) {
-    read( l, config );
+    int rr = read( l, config );
+    r += rr;
   }
+  return r;
 }
 
 
@@ -325,7 +338,7 @@ void ConfigureClasses::configure( void )
 void ConfigureClasses::save( int group, const string &file )
 {
   cerr << currentTime()
-       << " save configuration in " << file << endl;
+       << " save configuration in " << file << '\n';
   ofstream df( file.c_str() );
   for ( ConfigClassList::iterator cp = Configs.begin(); cp != Configs.end(); ++cp ) {
     if ( (*cp)->configGroup() == group &&

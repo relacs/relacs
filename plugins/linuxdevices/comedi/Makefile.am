@@ -6,6 +6,12 @@ if RELACS_EXAMPLES_COND
 SUBDIRS += examples
 endif
 
+comedicfgdir = $(pkgdatadir)/configs/comedi
+dist_comedicfg_DATA = \
+    relacs.cfg \
+    relacsplugins.cfg \
+    macros.cfg
+
 EXTRA_DIST = \
     doc/comedi.doc \
     module/Makefile \

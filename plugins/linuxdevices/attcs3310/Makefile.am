@@ -1,5 +1,13 @@
 SUBDIRS = src
 
+attcs3310cfgdir = $(pkgdatadir)/configs/attcs3310
+dist_attcs3310cfg_DATA = \
+    relacs.cfg \
+    relacsplugins.cfg \
+    macros.cfg \
+    calib0-0.cfg \
+    calib0-1.cfg
+
 EXTRA_DIST = doc/attcs3310.doc
 
 pkglibdir = $(libdir)/relacs

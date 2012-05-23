@@ -1,10 +1,13 @@
 SUBDIRS = src
 
-EXTRA_DIST = \
-    doc/base.doc \
+basecfgdir = $(pkgdatadir)/configs/base
+dist_basecfg_DATA = \
     relacs.cfg \
     relacsplugins.cfg \
     macros.cfg
+
+EXTRA_DIST = \
+    doc/base.doc
 
 DISTCLEANFILES = relacslocal relacs.log relacs.log.old
 

@@ -86,6 +86,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
 			    const string &coreconfigfiles,
 			    const string &pluginconfigfiles,
 			    const string &docpath,
+			    const string &cfgexamplespath,
 			    const string &iconpath,
 			    bool doxydoc,
 			    QSplashScreen *splash,
@@ -190,7 +191,15 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
 
   // load config:
   SF = 0;
-  CFG.read( RELACSPlugin::Core );
+  int r = CFG.read( RELACSPlugin::Core );
+  if ( r == 0 ) {
+    printlog(  "! error: No configuration files found. Exit now." );
+    printlog(  "! error: Make sure to have a relacs.cfg and a relacsplugins.cfg file in the working directory." );
+    printlog(  "! error: You find examples in " + cfgexamplespath + " and subdirectories." );
+    MessageBox::error( "RELACS Error !", "No configuration files found.<br>\nExit now.<br>Make sure to have a relacs.cfg and a relacsplugins.cfg file in the working directory.<br>You find examples in " + cfgexamplespath + " and subdirectories.", this );
+    qApp->exit( 1 );
+    ::exit( 1 ); // do we need that?
+  }
   CFG.configure( RELACSPlugin::Core );
 
   // loading plugins:

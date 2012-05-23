@@ -1,10 +1,13 @@
 SUBDIRS = src
 
-EXTRA_DIST = \
-    doc/patchclampprojects.doc \
+patchclampprojectscfgdir = $(pkgdatadir)/configs/patchclampprojects
+dist_patchclampprojectscfg_DATA = \
     relacs.cfg \
     relacsplugins.cfg \
     macros.cfg
+
+EXTRA_DIST = \
+    doc/patchclampprojects.doc
 
 DISTCLEANFILES = relacslocal relacs.log relacs.log.old
 

@@ -238,6 +238,10 @@ AC_CONFIG_FILES([plugins/patchclampprojects/relacslocal], [chmod a+x plugins/pat
 AC_CONFIG_FILES([plugins/efield/relacslocal], [chmod a+x plugins/efield/relacslocal])
 AC_CONFIG_FILES([plugins/efish/relacslocal], [chmod a+x plugins/efish/relacslocal])
 AC_CONFIG_FILES([plugins/multielectrode/relacslocal], [chmod a+x plugins/multielectrode/relacslocal])
+AC_CONFIG_FILES([plugins/linuxdevices/comedi/relacslocal], [chmod a+x plugins/linuxdevices/comedi/relacslocal])
+AC_CONFIG_FILES([plugins/linuxdevices/daqflex/relacslocal], [chmod a+x plugins/linuxdevices/daqflex/relacslocal])
+AC_CONFIG_FILES([plugins/linuxdevices/attcs3310/relacslocal], [chmod a+x plugins/linuxdevices/attcs3310/relacslocal])
+AC_CONFIG_FILES([plugins/linuxdevices/misc/relacslocal], [chmod a+x plugins/linuxdevices/misc/relacslocal])
 
 
 #################################################

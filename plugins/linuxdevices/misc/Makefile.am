@@ -3,6 +3,12 @@ if RELACS_EXAMPLES_COND
 endif
 SUBDIRS = src $(EXAMPLES)
 
+misccfgdir = $(pkgdatadir)/configs/misc
+dist_misccfg_DATA = \
+    relacs.cfg \
+    relacsplugins.cfg \
+    macros.cfg
+
 EXTRA_DIST = doc/misc.doc
 
 pkglibdir = $(libdir)/relacs

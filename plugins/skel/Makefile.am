@@ -1,5 +1,11 @@
 SUBDIRS = src
 
+PLUGINNAMEcfgdir = $(pkgdatadir)/configs/PLUGINNAME
+dist_PLUGINNAMEcfg_DATA = \
+    relacs.cfg \
+    relacsplugins.cfg \
+    macros.cfg
+
 EXTRA_DIST = \
     doc/PLUGINNAME.doc
 

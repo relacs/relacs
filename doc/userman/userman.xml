@@ -19,10 +19,10 @@
 <bookinfo>
   <author>
     <firstname>Jan</firstname><surname>Benda</surname>
-    <affiliation><orgname>Department Biology II, LMU Munich</orgname></affiliation>
-    <email>benda@bio.lmu.de</email>
+    <affiliation><orgname>Institute for Neurobiology, University T&uuml;bingen</orgname></affiliation>
+    <email>jan.benda@uni-tuebingen.de</email>
   </author> 
-  <copyright><year>2008</year><holder>Jan Benda</holder></copyright>
+  <copyright><year>2012</year><holder>Jan Benda</holder></copyright>
   <abstract>
   <para>RELACS is a user interface for data aquisition.
   It is controllable and customizable to your specific

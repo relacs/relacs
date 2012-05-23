@@ -39,6 +39,7 @@ int main( int argc, char **argv )
   string coreconfigfiles = "relacs.cfg";
   string pluginconfigfiles = "relacsplugins.cfg";
   string docpath = "";
+  string cfgexamplespath = "";
   string iconpath = "";
   bool doxydoc = false;
 
@@ -51,6 +52,7 @@ int main( int argc, char **argv )
     { "core-config-files", 1, 0, 0 },
     { "plugins-config-files", 1, 0, 0 },
     { "doc-path", 1, 0, 0 },
+    { "cfgexamples-path", 1, 0, 0 },
     { "icon-path", 1, 0, 0 },
     { "with-doxygen", 0, 0, 0 },
     { 0, 0, 0, 0 }
@@ -98,9 +100,13 @@ int main( int argc, char **argv )
 	break;
       case 8:
 	if ( optarg && *optarg != '\0' )
-	  iconpath = optarg;
+	  cfgexamplespath = optarg;
 	break;
       case 9:
+	if ( optarg && *optarg != '\0' )
+	  iconpath = optarg;
+	break;
+      case 10:
 	doxydoc = true;
 	break;
       }
@@ -137,7 +143,8 @@ int main( int argc, char **argv )
 
   relacs::RELACSWidget relacs( pluginrelative, pluginhomes, pluginhelp,
 			       coreconfigfiles, pluginconfigfiles, 
-			       docpath, iconpath, doxydoc, splash, mode );
+			       docpath, cfgexamplespath,
+			       iconpath, doxydoc, splash, mode );
 
   if ( splashscreen )
     splash->showMessage( "Finished ...", Qt::AlignLeft | Qt::AlignBottom );

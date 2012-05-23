@@ -1,12 +1,15 @@
 SUBDIRS = src
 
-EXTRA_DIST = \
-    doc/efish.doc \
+efishcfgdir = $(pkgdatadir)/configs/efish
+dist_efishcfg_DATA = \
     relacs.cfg \
     relacsplugins.cfg \
     macros.cfg \
     macrosam.cfg \
     macrosdc.cfg
+
+EXTRA_DIST = \
+    doc/efish.doc
 
 DISTCLEANFILES = relacslocal relacs.log relacs.log.old
 

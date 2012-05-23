@@ -144,9 +144,9 @@ if test "x$USELOGFILE" = "xyes" && test "x$LOGFILE" != "x"; then
 
   # execute RELACS:
   if test "x$USETEE" = "xyes"; then
-    "$RELACSEXEC" "--plugin-relative-dir=${PLUGINRELATIVE}" "--plugin-home-dirs=${PLUGINHOME}" "--plugin-help-dirs=${PLUGINHELPPATHES}" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" "--doc-path=${DOCPATH}" "--icon-path=${ICONPATH}" "$WITHDOXYGEN" $@ 2>&1 | $TEE $LOGFILE
+    "$RELACSEXEC" "--plugin-relative-dir=${PLUGINRELATIVE}" "--plugin-home-dirs=${PLUGINHOME}" "--plugin-help-dirs=${PLUGINHELPPATHES}" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" "--doc-path=${DOCPATH}" "--cfgexamples-path=${CFGEXAMPLESPATH}" "--icon-path=${ICONPATH}" "$WITHDOXYGEN" $@ 2>&1 | $TEE $LOGFILE
   else
-    "$RELACSEXEC" "--plugin-relative-dir=${PLUGINRELATIVE}" "--plugin-home-dirs=${PLUGINHOME}" "--plugin-help-dirs=${PLUGINHELPPATHES}" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" "--doc-path=${DOCPATH}" "--icon-path=${ICONPATH}" "$WITHDOXYGEN" $@ >> $LOGFILE 2>&1
+    "$RELACSEXEC" "--plugin-relative-dir=${PLUGINRELATIVE}" "--plugin-home-dirs=${PLUGINHOME}" "--plugin-help-dirs=${PLUGINHELPPATHES}" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" "--doc-path=${DOCPATH}" "--cfgexamples-path=${CFGEXAMPLESPATH}" "--icon-path=${ICONPATH}" "$WITHDOXYGEN" $@ >> $LOGFILE 2>&1
   fi
 
 else
@@ -166,7 +166,7 @@ else
  
       if test "x$DEBUGRUN" = "xyes"; then
         # start debugger with RELACS:
-        $DEBUGGER --args "$RELACSEXEC" "--plugin-relative-dir=${PLUGINRELATIVE}" "--plugin-home-dirs=${PLUGINHOME}" "--plugin-help-dirs=${PLUGINHELPPATHES}" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" "--doc-path=${DOCPATH}" "--icon-path=${ICONPATH}" "$WITHDOXYGEN" $@
+        $DEBUGGER --args "$RELACSEXEC" "--plugin-relative-dir=${PLUGINRELATIVE}" "--plugin-home-dirs=${PLUGINHOME}" "--plugin-help-dirs=${PLUGINHELPPATHES}" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" "--doc-path=${DOCPATH}" "--cfgexamples-path=${CFGEXAMPLESPATH}" "--icon-path=${ICONPATH}" "$WITHDOXYGEN" $@
       elif test "x$DEBUGATTACH" != "xno"; then
         # attach debugger to running RELACS:
         $DEBUGGER "$RELACSEXEC" "$DEBUGATTACH" $@
@@ -205,7 +205,7 @@ else
         # run RELACS from within debugger:
         DEBUGCOM=relacsdebug$$
         echo "run" > $DEBUGCOM
-        $DEBUGGER -x $DEBUGCOM --args "$RELACSEXEC" "--plugin-relative-dir=${PLUGINRELATIVE}" "--plugin-home-dirs=${PLUGINHOME}" "--plugin-help-dirs=${PLUGINHELPPATHES}" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" "--doc-path=${DOCPATH}" "--icon-path=${ICONPATH}" "$WITHDOXYGEN" $@
+        $DEBUGGER -x $DEBUGCOM --args "$RELACSEXEC" "--plugin-relative-dir=${PLUGINRELATIVE}" "--plugin-home-dirs=${PLUGINHOME}" "--plugin-help-dirs=${PLUGINHELPPATHES}" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" "--doc-path=${DOCPATH}" "--cfgexamples-path=${CFGEXAMPLESPATH}" "--icon-path=${ICONPATH}" "$WITHDOXYGEN" $@
         rm $DEBUGCOM
       fi
 
@@ -216,13 +216,13 @@ else
   elif test "x$VALGRIND" = "xyes"; then
 
     # start valgrind with RELACS:
-    $VALGRINDER $VALGRINDERARGS "$RELACSEXEC" "--plugin-relative-dir=${PLUGINRELATIVE}" "--plugin-home-dirs=${PLUGINHOME}" "--plugin-help-dirs=${PLUGINHELPPATHES}" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" "--doc-path=${DOCPATH}" "--icon-path=${ICONPATH}" "$WITHDOXYGEN" $@
+    $VALGRINDER $VALGRINDERARGS "$RELACSEXEC" "--plugin-relative-dir=${PLUGINRELATIVE}" "--plugin-home-dirs=${PLUGINHOME}" "--plugin-help-dirs=${PLUGINHELPPATHES}" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" "--doc-path=${DOCPATH}" "--cfgexamples-path=${CFGEXAMPLESPATH}" "--icon-path=${ICONPATH}" "$WITHDOXYGEN" $@
     exit 0
 
   else
 
     # simply execute RELACS:
-    "$RELACSEXEC" "--plugin-relative-dir=${PLUGINRELATIVE}" "--plugin-home-dirs=${PLUGINHOME}" "--plugin-help-dirs=${PLUGINHELPPATHES}" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" "--doc-path=${DOCPATH}" "--icon-path=${ICONPATH}" "$WITHDOXYGEN" $@
+    "$RELACSEXEC" "--plugin-relative-dir=${PLUGINRELATIVE}" "--plugin-home-dirs=${PLUGINHOME}" "--plugin-help-dirs=${PLUGINHELPPATHES}" "--core-config-files=${CONFCOREFILES}" "--plugins-config-files=${CONFPLUGINSFILES}" "--doc-path=${DOCPATH}" "--cfgexamples-path=${CFGEXAMPLESPATH}" "--icon-path=${ICONPATH}" "$WITHDOXYGEN" $@
 
   fi
 

@@ -129,6 +129,7 @@ public:
 		const string &coreconfigfiles,
 		const string &pluginconfigfiles,
 		const string &docpath,
+		const string &cfgexamplespath,
 		const string &iconpath,
 		bool doxydoc,
 		QSplashScreen *splash,

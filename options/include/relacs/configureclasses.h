@@ -34,7 +34,6 @@ namespace relacs {
 \class ConfigureClasses
 \brief Coordinates storage of configuration settings of ConfigClass instances.
 \author Jan Benda
-\version 1.1
 
 ConfigureClasses stores a pointer to each instance of a ConfigClass.
 The configuration of each ConfigClass instance can be read in from
@@ -205,15 +204,17 @@ public:
 	the corresponding ConfigClass instances via ConfigClass::readConfig().
         \param[in] group the configuration group index.
         \param[in] file the file from which the configuration is read in.
+	\return the number of read in configuration files (0 or 1).
         \sa read( int, int), save(), configure() */
-  void read( int group, const string &file );
+  int read( int group, const string &file );
     /*! Read in the configuration file of the configuration group with
         index \a group and the level \a level and pass each section to
 	the corresponding ConfigClass instances via ConfigClass::readConfig().
         \param[in] group the configuration group index of the requested configuration file.
         \param[in] level the level of the requested configuration file.
+	\return the number of read in configuration files (0 or 1).
         \sa read( int, ConfigClass&), save(), configure() */
-  void read( int group, int level );
+  int read( int group, int level );
     /*! Read in the configuration files of all levels
         of the configuration group with index \a group and pass each section 
 	to the corresponding ConfigClass instances
@@ -222,16 +223,18 @@ public:
 	Thus, configuration files of higher levels may overwrite
 	the settings specified by the configuration files of lower levels.
         \param[in] group the configuration group index of the requested configuration files.
+	\return the number of read in configuration files.
         \sa read( ConfigClass&), save(), configure() */
-  void read( int group );
+  int read( int group );
     /*! Read in the configuration files of all configuration groups and all
         levels and pass each section to the corresponding ConfigClass
 	instances via ConfigClass::readConfig().
 	Configuration files of level 0 are read in first.
 	Thus, configuration files of higher levels may overwrite
 	the settings specified by the configuration files of lower levels.
+	\return the number of read in configuration files.
         \sa save(), configure() */
-  void read( void );
+  int read( void );
 
     /*! Read in the configuration file of the configuration group as
         specified by config.configGroup() and the level \a level.
@@ -240,8 +243,9 @@ public:
         \param[in] level the level of the requested configuration file.
 	\param[in] config the ConfigClass instance for which the 
 	configuration settings should be read in.
+	\return the number of read in configuration files (0 or 1).
         \sa read( int, int ), save(), configure() */
-  void read( int level, ConfigClass &config );
+  int read( int level, ConfigClass &config );
     /*! Read in the configuration files of the configuration group as
         specified by config.configGroup() and all levels.
 	Pass the sections for \a config to \a config
@@ -251,8 +255,9 @@ public:
 	the settings specified by the configuration files of lower levels.
 	\param[in] config the ConfigClass instance for which the 
 	configuration settings should be read in.
+	\return the number of read in configuration files.
         \sa read( int ), save(), configure() */
-  void read( ConfigClass &config );
+  int read( ConfigClass &config );
 
     /*! Configure, i.e. call ConfigClass::config() of the 
         ConfigClass instance from the configuration group with index \a group

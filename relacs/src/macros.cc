@@ -218,7 +218,7 @@ void Macros::load( const string &file, bool main )
   // open file:
   ifstream macrostream( macrofile.c_str() );
   if ( !macrostream ) {
-    Warnings += "Could not read file \"<b>";
+    Warnings += "Can't read macro configuration file \"<b>";
     Warnings += macrofile + "</b>\".\n";
     return;
   }

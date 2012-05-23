@@ -1,12 +1,14 @@
 SUBDIRS = src
 
-EXTRA_DIST = \
-    doc/auditory.doc \
+auditorycfgdir = $(pkgdatadir)/configs/auditory
+dist_auditorycfg_DATA = \
     relacs.cfg \
     relacsplugins.cfg \
     macros.cfg \
     calib0-0.cfg \
     calib0-1.cfg
+
+EXTRA_DIST = doc/auditory.doc
 
 DISTCLEANFILES = relacslocal relacs.log relacs.log.old
 

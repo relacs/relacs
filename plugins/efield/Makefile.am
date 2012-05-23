@@ -1,10 +1,13 @@
 SUBDIRS = src
 
-EXTRA_DIST = \
-    doc/efield.doc \
+efieldcfgdir = $(pkgdatadir)/configs/efield
+dist_efieldcfg_DATA = \
     relacs.cfg \
     relacsplugins.cfg \
     macros.cfg
+
+EXTRA_DIST = \
+    doc/efield.doc
 
 DISTCLEANFILES = relacslocal relacs.log relacs.log.old
 
