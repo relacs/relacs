@@ -358,7 +358,9 @@ int gain( const ContainerX &x, const ContainerY &y, ContainerG &g,
       If the input data were sampled with \a delta, then 
       the frequencies are sampled with 1/(2 N delta).
       \a ForwardIterX, \a ForwardIterY, \a ForwardIterC
-      are a forward iterators that point to real numbers. */
+      are a forward iterators that point to real numbers. 
+      \note Means are not subtracted from the data.
+  */
 template < typename ForwardIterX, typename ForwardIterY, 
   typename ForwardIterC >
 int coherence( ForwardIterX firstx, ForwardIterX lastx,

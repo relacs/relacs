@@ -115,7 +115,13 @@ private:
   double RateDeltaT;
   double Before;
   double After;
-
+  double NoiseAmpl;
+  double NoiseContrast;
+  double UpperCutoff;
+  double LowerCutoff;
+  double NoiseTau;
+  string NoiseType;
+  
   // variables:
   double Duration;
   double FishAmplitude;
