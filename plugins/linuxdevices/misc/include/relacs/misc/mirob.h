@@ -41,14 +41,21 @@ namespace misc {
 typedef struct Point3D positionUpdate;
 
 /******* thread to watch the robot ****** */
+struct GUICallback{
+  QLCDNumber *XPosLCD, *YPosLCD, *ZPosLCD,
+    *XLowLimLCD, *XHiLimLCD, *YLowLimLCD, 
+    *YHiLimLCD, *ZLowLimLCD, *ZHiLimLCD;
+
+  QTextEdit* logBox;
+
+
+};
+typedef struct GUICallback GUICallback;
+
 struct watchdog_data { 
 
-  QLCDNumber *XPosLCD;
-  QLCDNumber *YPosLCD;
-  QLCDNumber *ZPosLCD;
-  QTextEdit* logBox;
   
-  bool active, watchLimits,stopped;
+  bool active, stopped, setNegLimitAsHome;
   BYTE ChannelType;
   BYTE HostID;
   DWORD  Baudrate;
@@ -60,8 +67,50 @@ struct watchdog_data {
   const char* Device;
   const char* SetupFile;
 
+  GUICallback* gcb;
+
 };
 typedef struct watchdog_data watchdog_data;
+
+/*********************************************/
+class PosDaemon
+{
+   public:
+      PosDaemon(watchdog_data* ptr);
+      int Start();
+      int Stop();
+
+   protected:
+      int Run();
+      static void * EntryPoint(void*);
+      void Setup();
+      void Execute();
+      void Exit();
+      void log(const char* text);
+      void log(relacs::Str text);
+      
+   private:
+      watchdog_data* info;
+      pthread_t id;
+
+      void updateGUI(void);
+
+      int activateAxis(int axis);
+      int acquireInformation( void);
+      int handleLimitErrors(void);
+      int gotoNegLimitsAndSetHome(void);
+
+      bool isInsideForbiddenZone(void);
+
+      double MaxSpeed, MaxAcc;
+      BYTE limitNeg[3];
+      BYTE limitPos[3];
+      long readAPOS[3];
+      int trueAPOS[3];
+
+
+};
+
 
 void* watchdog(void* ptr);
 
@@ -183,8 +232,8 @@ public:
 
   int restartWatchdog(void);
 
-  void setPosLCDs(QLCDNumber* a, QLCDNumber* b, QLCDNumber*c );
-  void setLogBox(QTextEdit* box);
+  void setGUICallback(GUICallback* gcb);
+    
   int stop(void);
   
 private:
@@ -201,10 +250,13 @@ private:
 
 
 
+  void miroblog(const char* text);
+  void miroblog(::relacs::Str text);
+
   int activateAxis(int ax);
   
-  int startWatchdog(void);
-  int stopWatchdog(void);
+/*   int startWatchdog(void); */
+/*   int stopWatchdog(void); */
 
 
   int syncTposApos(void );
@@ -217,7 +269,8 @@ private:
 
   double Speed[3];
   double Acceleration[3];
-  pthread_t watchdog_thread;
+/*   pthread_t watchdog_thread; */
+  PosDaemon* watchdog;
   watchdog_data watchdog_info;
   
   vector <positionUpdate> recordedSteps;

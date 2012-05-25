@@ -50,56 +50,115 @@ using namespace relacs;
 
 namespace misc {
 
-void miroblog(const char* text, watchdog_data* info){
-  if (info->logBox != NULL){
-    info->logBox->append(QString(text));
+
+PosDaemon::PosDaemon(watchdog_data* ptr){
+  info = ptr;
+  MaxSpeed = 50;
+  MaxAcc = 0.3;
+}
+
+int PosDaemon::Start(){
+  log("Robot Safety Daemon: Starting ");
+  int code = pthread_create(&id, NULL, PosDaemon::EntryPoint, (void*) this);
+
+  if (!code){
+
+    int waitcycle = 0;
+    struct timespec waitForDog;
+    waitForDog.tv_sec = 1;
+    waitForDog.tv_nsec = 0;
+
+    while (info->active == false && waitcycle++ < 10){
+      log(".");
+      nanosleep(&waitForDog,NULL);
+    }
+
+    if (waitcycle == 11){
+      log("[Failed]");
+      return 1;
+    }else{
+      log("[OK]");
+    }
+  }else{
+      log("[Failed]");
+  }
+  return 0;
+}
+
+
+int PosDaemon::Stop(){
+  log("Robot Safety Daemon: Stopping Daemon.");
+  info->active = false;
+  pthread_join(id, NULL); // wait for watchdog to return
+  return 0;
+}
+
+int PosDaemon::Run()
+{
+   Setup();
+   Execute();
+   Exit();
+   return 0;
+}
+
+
+void PosDaemon::log(const char* text){
+  if (info->gcb != NULL){
+    info->gcb->logBox->append(QString(text));
+  }else{
+    cout << text << endl;
   }
 }
 
-void *watchdog(void* ptr){
-  long p[3] = {0,0,0};
-  int p2[3] = {0,0,0};
+void PosDaemon::log(relacs::Str text){
+  if (info->gcb != NULL){
+    info->gcb->logBox->append(QString(((string)text).c_str()));
+  }else{
+    cout << (string)text << endl;
+  }
 
-  watchdog_data* info = (watchdog_data*)ptr;
+}
 
-  miroblog("Unleashing watchdog",info);
+
+/*static */
+void * PosDaemon::EntryPoint(void * pthis){
+   PosDaemon * pt = (PosDaemon*)pthis;
+   pt->Run();
+   return NULL;
+}
+
+void PosDaemon::Setup(){
+
   /************ open watchdog ****************/
   // open device:
   if ( TS_OpenChannel( info->Device, info->ChannelType, info->HostID, info->Baudrate ) < 0 ) {
     cerr << "WATCHDOG Communication error! " << TS_GetLastErrorText() << endl;
-    return NULL;
   }
 
   // load setup file:
   int setupindex = TS_LoadSetup( info->SetupFile );
   if ( setupindex < 0 ) {
     cerr << "WATCHDOG Failed to load setup file! " << TS_GetLastErrorText() << endl;
-    return NULL;
   }
 
   //   setup axis:
   for ( int k=1; k<=3; k++ ) {
     if ( ! TS_SetupAxis( k, setupindex ) )  {
       cerr << "WATCHDOG Failed to setup axis " << k << "! " << TS_GetLastErrorText() << endl;
-      return NULL;
     }
     if ( ! TS_SelectAxis( k ) ) {
       cerr << "WATCHDOG Failed to select axis " << k << "! " << TS_GetLastErrorText() << endl;
-      return NULL;
     }
 
     if ( ! TS_SetTargetPositionToActual()){
       cerr << "WATCHDOG Failed to set target position to actual for axis " << k << "! " << TS_GetLastErrorText() << endl;
-      return NULL;
     }
 
     if ( ! TS_DriveInitialisation() ) {
       cerr << "WATCHDOG Failed to initialize drive for axis " << k << "! " << TS_GetLastErrorText() << endl;
-      return NULL;
     }
     if ( ! TS_Power( POWER_ON ) ) {
       cerr << "WATCHDOG Failed to power on drive for axis " << k << "! " << TS_GetLastErrorText() << endl;
-      return NULL;
     }
 
     WORD axison = 0;
@@ -107,7 +166,6 @@ void *watchdog(void* ptr){
       // Check the status of the power stage:
       if ( ! TS_ReadStatus( REG_SRL, axison ) ) {
 	cerr << "WATCHDOG Failed to read status for axis " << k << "! " << TS_GetLastErrorText() << endl;
-	return NULL;
       }
       axison = ((axison & 1<<15) != 0 ? 1 : 0);
     }
@@ -115,143 +173,254 @@ void *watchdog(void* ptr){
   // set active state true to signal Mirob that watchdog was created
   info->active = true;
   
+}
 
-  /************ watchdog on the watch ****************/
-  int axis = 1;
-  BYTE limitNeg[3] = {1,1,1};
-  BYTE limitPos[3] = {1,1,1};
-
-  while (info->active){
-    // --------- read important information -----------
-    for (axis = 1; axis <= 3; ++axis){
-
-      // select axis:
-      if ( ! TS_SelectAxis( axis ) ) {
-	cerr << "WATCHDOG Failed to select axis " << axis << "! " << TS_GetLastErrorText() << endl;
-	continue;
-      }
-
-      // check low limit switch
-      if(!TS_GetInput(INPUT_24,limitNeg[axis-1])){
-	cerr << "WATCHDOG Failed to get INPUT_24 for axis " << axis << "! " << TS_GetLastErrorText() << endl;
-	continue;
-      }
-      // check high limit switch
-      if(!TS_GetInput(INPUT_2,limitPos[axis-1])){
-	cerr << "WATCHDOG Failed to get INPUT_2 for axis " << axis << "! " << TS_GetLastErrorText() << endl;
-	continue;
-      }
+int PosDaemon::activateAxis(int axis){
+  // select axis:
+  if ( ! TS_SelectAxis( axis ) ) {
+    cerr << "WATCHDOG Failed to select axis " << axis << "! " << TS_GetLastErrorText() << endl;
+    return 1;
+  }
+  return 0;
       
-      // read position:
-      if ( ! TS_GetLongVariable( "APOS", p[axis-1]) ) {
- 	cerr << "WATCHDOG Failed to read position of axis " << axis << "! " << TS_GetLastErrorText() << endl;
-	continue;
-      }
-      p2[axis-1] = p[axis-1]; // hack to account for TML_Lib bug
+}
+
+int PosDaemon::acquireInformation(){
+  for (int axis = 1; axis <= 3; ++axis){
+
+    activateAxis(axis);
+
+    // check low limit switch
+    if(!TS_GetInput(INPUT_24,limitNeg[axis-1])){
+      cerr << "WATCHDOG Failed to get INPUT_24 for axis " << axis << "! " << TS_GetLastErrorText() << endl;
+      continue;
+    }
+    // check high limit switch
+    if(!TS_GetInput(INPUT_2,limitPos[axis-1])){
+      cerr << "WATCHDOG Failed to get INPUT_2 for axis " << axis << "! " << TS_GetLastErrorText() << endl;
+      continue;
+    }
+
+    // read position:
+    if ( ! TS_GetLongVariable( "APOS", readAPOS[axis-1]) ) {
+      cerr << "WATCHDOG Failed to read position of axis " << axis << "! " << TS_GetLastErrorText() << endl;
+      continue;
+    }
+    trueAPOS[axis-1] = readAPOS[axis-1]; // hack to account for TML_Lib bug
 
 //       if ( ! TS_ReadStatus( REG_MCR, reg[3] ) ) {
 // 	cerr << "Failed to read status for axis " << axis << "! " << TS_GetLastErrorText() << endl;
 // 	return NULL;
 //       }
-      
-      
+
+  }
+  return 0;
+  
+}
+
+bool PosDaemon::isInsideForbiddenZone(){
+  return info->forbiddenZones->insideZone((double)trueAPOS[0],(double)trueAPOS[1],(double)trueAPOS[2]);
+}
+
+void PosDaemon::updateGUI(){
+  //--------- call position callback if exists --------
+  if (info->gcb != NULL){
+    info->gcb->XPosLCD->display((double)trueAPOS[0]);
+    info->gcb->YPosLCD->display((double)trueAPOS[1]);
+    info->gcb->ZPosLCD->display((double)trueAPOS[2]);
+    
+    info->gcb->XLowLimLCD->display((int)limitNeg[0]);
+    info->gcb->XHiLimLCD->display((int)limitPos[0]);
+    
+    info->gcb->YLowLimLCD->display((int)limitNeg[1]);
+    info->gcb->YHiLimLCD->display((int)limitPos[1]);
+    
+    info->gcb->ZLowLimLCD->display((int)limitNeg[2]);
+    info->gcb->ZHiLimLCD->display((int)limitPos[2]);
+    
+  }
+
+}
+
+int PosDaemon::gotoNegLimitsAndSetHome(){
+  log("Robot Safety Daemon: Jogging to negative limits and setting new home!");
+
+  BYTE var;
+  var = 0;
+  for (int axis = 3; axis >= 1; --axis){
+    if (activateAxis(axis) > 0) return 1;
+
+    if(!TS_GetInput(INPUT_24,var)){
+      cerr << "Failed to get INPUT_24 for axis " << axis << "! " << TS_GetLastErrorText() << '\n';
+      return 1;
     }
 
+    if ((int)var == 1){
+
+//       short int status = 0;
+//       TS_Execute("var_i1 = 0x0832;");
+      
+//       TS_GetMultipleInputs("var_i1", status);
+//       cerr << "strange register " << status << endl;
+//       if(!TS_Execute("var_i1 = 0x0832; (var_i1),dm=1")) {
+// 	cerr << "Could not issue execute! " << TS_GetLastErrorText() << endl;
+// 	return 1;
+//       }
+//       TS_GetMultipleInputs("var_i1", status);
+//       cerr << "strange register " << status << endl;
+
+      // Execute jogging with the prescribed parameters; start motion immediately
+      if(!TS_MoveVelocity(-MaxSpeed, MaxAcc , UPDATE_IMMEDIATE, FROM_REFERENCE)){
+	cerr << "Failed to move to limit for axis " << axis \
+	     << "! " << TS_GetLastErrorText() << '\n';
+	return 1;
+      }
+
+      //Wait for positive limit switch to be reached. Stop at limit switch reach.
+      if (!TS_SetEventOnLimitSwitch(LSW_NEGATIVE, TRANSITION_HIGH_TO_LOW, WAIT, STOP)){
+	cerr << "Failed to wait for negative limit switch event for axis " \
+	     << axis << "! " << TS_GetLastErrorText() << '\n';
+	return 1;
+      }
+
+
+
+      // drive back
+      if(!TS_MoveVelocity(MaxSpeed, MaxAcc , UPDATE_IMMEDIATE, FROM_REFERENCE)){
+	cerr << "Failed to move to limit for axis " << axis \
+	     << "! " << TS_GetLastErrorText() << '\n';
+	return 1;
+      }
+
+
+      if (!TS_SetEventOnLimitSwitch(LSW_NEGATIVE, TRANSITION_LOW_TO_HIGH, WAIT, STOP)){
+	cerr << "Failed to wait for negative limit switch event for axis " \
+	     << axis << "! " << TS_GetLastErrorText() << '\n';
+	return 1;
+      }
+
+
+    }else{
+      cerr << "MIROB already at negative limit switch for axis "\
+	   << axis << "!" << endl;
+    }
+    if (!TS_SetPosition(0)){
+	cerr << "Failed to set position to 0 for axis " << axis \
+	     << "! " << TS_GetLastErrorText() << '\n';
+	return 1;
+
+    }
+
+  }
+  info->setNegLimitAsHome = false;
+  log("Robot Safety Daemon: New home completed!");
+  return 0;
+}
+
+int PosDaemon::handleLimitErrors(){
+  bool ishit = false;
+  double speed = 0;
+  bool positive = false;
+  //------------ check for errors ---------------------
+  for (int axis = 1; axis <=3; ++axis){
+    // ---- handle negative  limit hit
+    if ( (int)limitNeg[axis-1] == 0){
+      log("Robot Safety Daemon:  negative limit hit on axis " + Str(axis) + \
+	  "! Trying to move it back !");
+
+      speed = 30;
+      ishit = true;
+      positive = false;
+
+    }
+    // ------ handle positive limit hit
+    if ( (int)limitPos[axis-1] == 0){
+      cerr << "Robot Safety Daemon:  positive limit hit on axis " << axis << "! Moving axis back into limits!" << endl;
+      speed = -30;
+      ishit = true;
+      positive = true;
+
+    }
+
+    if (ishit){
+      activateAxis(axis);
+
+//       if(!TS_Execute("var_i1 = 0x0832; (var_i1),dm=1")) 
+// 	cerr << "Robot Safety Daemon:  could not issue execute! " << TS_GetLastErrorText() << endl;
+
+      // Execute jogging with the prescribed parameters; start motion immediately
+      if(!TS_MoveVelocity(speed, 0.3 , UPDATE_IMMEDIATE, FROM_MEASURE)){
+	cerr << "Robot Safety Daemon:  Failed to move to limit for axis " << axis \
+	     << "! " << TS_GetLastErrorText() << endl;
+      }
+
+      if (positive){
+	//Wait for positive limit switch to be reached. Stop at limit switch reach.
+	if (!TS_SetEventOnLimitSwitch(LSW_POSITIVE, TRANSITION_LOW_TO_HIGH, WAIT, STOP)){
+	  cerr << "Robot Safety Daemon:  Failed to wait for negative limit switch event for axis " \
+	       << axis << "! " << TS_GetLastErrorText() << endl;
+	}
+      }else{
+	//Wait for positive limit switch to be reached. Stop at limit switch reach.
+	if (!TS_SetEventOnLimitSwitch(LSW_NEGATIVE, TRANSITION_LOW_TO_HIGH, WAIT, STOP)){
+	  cerr << "Robot Safety Daemon:  Failed to wait for negative limit switch event for axis " \
+	       << axis << "! " << TS_GetLastErrorText() << endl;
+	}
+      }
+
+//       if(!TS_Execute("var_i1 = 0x0832; (var_i1),dm=0")) 
+// 	cerr << "Robot Safety Daemon:  could not issue execute! " << TS_GetLastErrorText() << endl;
+
+      ishit = false;
+      log("Robot Safety Daemon: Successfully moved back!");
+    }
+     
+
+  }
+  return 0;
+}
+
+void PosDaemon::Execute(){
+  int axis = 1;
+
+
+  while (info->active){
+    acquireInformation(); // read out important info from the robot
+
+    updateGUI();
     //-------- check for whether watchdog is in forbidden zone -----------
-    if (info->forbiddenZones->insideZone((double)p2[0],(double)p2[1],(double)p2[2])){
+    if (isInsideForbiddenZone()){
       if (!info->stopped){
-	miroblog("WATCHDOG Mirob entered forbidden zone! Stopping it!",info);
+	log("Robot Safety Daemon: Mirob entered forbidden zone! Stopping it!");
 	for (axis = 1; axis <=3; ++axis){
 	  if ( !TS_SelectAxis( axis ) ){
-	    cerr << "WATCHDOG Problem with selecting axis! " << TS_GetLastErrorText() << endl;
+	    cerr << "Robot Safety Daemon: Problem with selecting axis! " << TS_GetLastErrorText() << endl;
 	  }
 	  if ( !TS_Stop( ) ){
-	    cerr << "WATCHDOG Could not stop Mirob! " << TS_GetLastErrorText() << endl;
+	    cerr << "Robot Safety Daemon: Could not stop Mirob! " << TS_GetLastErrorText() << endl;
 	  }
 	}
 	info->stopped = true;
-	miroblog("WATCHDOG Carefully move Mirob ouside zone!",info);
+	log("Robot Safety Daemon: Carefully move Mirob ouside zone!");
       }
     }else if(info->stopped){
-      miroblog("WATCHDOG Mirob ouside zone again! ",info);
+      log("Robot Safety Daemon: Mirob ouside zone again! ");
       info->stopped = false;
     }
     
-    //--------- call position callback if exists --------
-     if (info->XPosLCD != NULL && info->YPosLCD != NULL && info->ZPosLCD != NULL){
-       info->XPosLCD->display((double)p2[0]);
-       info->YPosLCD->display((double)p2[1]);
-       info->ZPosLCD->display((double)p2[2]);
-     }
-    //------------ check for errors ---------------------
-    for (axis = 1; axis <=3; ++axis){
 
-      if (info->watchLimits){
-	// ---- handle negative  limit hit
-	if ( (int)limitNeg[axis-1] == 0){
-	  miroblog("WATCHDOG negative limit hit! Trying to fix this !",info);
-
-	  if ( !TS_SelectAxis( axis ) ){
-	    cerr << "WATCHDOG Problem with selecting axis! " << TS_GetLastErrorText() << endl;
-	  }
-	  if(!TS_Execute("var_i1 = 0x0832; (var_i1),dm=1")) 
-	    cerr << "WATCHDOG could not issue execute! " << TS_GetLastErrorText() << endl;
-
-	  // Execute jogging with the prescribed parameters; start motion immediately
-	  if(!TS_MoveVelocity(30, 0.3 , UPDATE_IMMEDIATE, FROM_MEASURE)){
-	    cerr << "WATCHDOG Failed to move to limit for axis " << axis \
-		 << "! " << TS_GetLastErrorText() << endl;
-	  }
-
-	  //Wait for positive limit switch to be reached. Stop at limit switch reach.
-	  if (!TS_SetEventOnLimitSwitch(LSW_NEGATIVE, TRANSITION_LOW_TO_HIGH, WAIT, STOP)){
-	    cerr << "WATCHDOG Failed to wait for negative limit switch event for axis " \
-		 << axis << "! " << TS_GetLastErrorText() << endl;
-	  }
-
-  	  if(!TS_Execute("var_i1 = 0x0832; (var_i1),dm=0")) 
-	    cerr << "WATCHDOG could not issue execute! " << TS_GetLastErrorText() << endl;
-
-
-	}
-	// ------ handle positive limit hit
-	if ( (int)limitPos[axis-1] == 0){
-	  cerr << "WATCHDOG positive limit hit on axis " << axis << "! Moving axis back into limits!" << endl;
-
-	  if ( !TS_SelectAxis( axis ) )
-	    cerr << "WATCHDOG Problem with selecting axis! " << TS_GetLastErrorText() << endl;
-
-	  if(!TS_Execute("var_i1 = 0x0832; (var_i1),dm=1")) 
-	    cerr << "WATCHDOG could not issue execute! " << TS_GetLastErrorText() << endl;
-
-
-	  // Execute jogging with the prescribed parameters; start motion immediately
-	  if(!TS_MoveVelocity(-30, 0.3 , UPDATE_IMMEDIATE, FROM_MEASURE)){
-	    cerr << "WATCHDOG Failed to move to limit for axis " << axis \
-		 << "! " << TS_GetLastErrorText() << endl;
-	  }
-
-	  //Wait for positive limit switch to be reached. Stop at limit switch reach.
-	  if (!TS_SetEventOnLimitSwitch(LSW_POSITIVE, TRANSITION_LOW_TO_HIGH, WAIT, STOP)){
-	    cerr << "WATCHDOG Failed to wait for positive limit switch event for axis " \
-		 << axis << "! " << TS_GetLastErrorText() << endl;
-	  }
-
-	  if(!TS_Execute("var_i1 = 0x0832; (var_i1),dm=0")) 
-	    cerr << "WATCHDOG could not issue execute! " << TS_GetLastErrorText() << endl;
-
-	}
-      }
-      
-
+    if (info->setNegLimitAsHome){
+      gotoNegLimitsAndSetHome();
     }
-
-
+    handleLimitErrors();
+  
     
     nanosleep(&info->sleeptime,NULL);
   }
-  
-  /************ close watchdog ****************/
+
+}
+
+void PosDaemon::Exit(){
   for ( int k=1; k<=3; k++ ) {
     if ( ! TS_SelectAxis( k ) )
       cerr << "Failed to select axis " << k << "! " << TS_GetLastErrorText() << endl;
@@ -261,12 +430,12 @@ void *watchdog(void* ptr){
       cerr << "Failed to power off drive for axis " << k << "! " << TS_GetLastErrorText() << endl;
   }
   TS_CloseChannel( -1 );
-  
-  cerr << "WATCHDOG closed " << endl;
+  cerr << "Robot Safety Daemon closed" << endl;
 
-  return NULL;
 }
 
+
+/********** MIROB **************************************************/
 
 const string Mirob::SetupFile = "mirob2.t.zip";
 
@@ -365,13 +534,17 @@ int Mirob::open( const string &device, const Options &opts )
   watchdog_info.Baudrate = Baudrate;
   watchdog_info.SetupFile = SetupFile.c_str();
   watchdog_info.Device = device.c_str();
-  watchdog_info.XPosLCD = NULL;
-  watchdog_info.YPosLCD = NULL;
-  watchdog_info.ZPosLCD = NULL;
-  watchdog_info.logBox = NULL;
-  
-  startWatchdog();
+  watchdog_info.gcb = NULL;
+  watchdog_info.active = false;
+  watchdog_info.active = false;
+  watchdog_info.forbiddenZones = &forbiddenZones;
+  watchdog_info.sleeptime.tv_sec = watchdog_sleep_sec;
+  watchdog_info.sleeptime.tv_nsec = watchdog_sleep_nsec;
+  watchdog_info.setNegLimitAsHome = false;
 
+  watchdog =  new PosDaemon(&watchdog_info);
+  watchdog->Start();
+  
   /*************************************************************/
 
 
@@ -388,59 +561,54 @@ int Mirob::open( const string &device, const Options &opts )
 }
 
 
-int Mirob::startWatchdog(void){
-  watchdog_info.active = false;
-  watchdog_info.active = false;
-  watchdog_info.watchLimits = true;
-  watchdog_info.forbiddenZones = &forbiddenZones;
-  watchdog_info.sleeptime.tv_sec = watchdog_sleep_sec;
-  watchdog_info.sleeptime.tv_nsec = watchdog_sleep_nsec;
+// int Mirob::startWatchdog(void){
+//   watchdog_info.active = false;
+//   watchdog_info.active = false;
+//   watchdog_info.forbiddenZones = &forbiddenZones;
+//   watchdog_info.sleeptime.tv_sec = watchdog_sleep_sec;
+//   watchdog_info.sleeptime.tv_nsec = watchdog_sleep_nsec;
 
 
-  cerr << "Creating watchdog ";
-  if ( pthread_create( &watchdog_thread, NULL, watchdog, (void*) &watchdog_info) > 0 ) return 1;
+//   cerr << "Creating watchdog ";
+//   if ( pthread_create( &watchdog_thread, NULL, watchdog, (void*) &watchdog_info) > 0 ) return 1;
 
-  int waitcycle = 0;
-  struct timespec waitForDog;
-  waitForDog.tv_sec = 1;
-  waitForDog.tv_nsec = 0;
+//   int waitcycle = 0;
+//   struct timespec waitForDog;
+//   waitForDog.tv_sec = 1;
+//   waitForDog.tv_nsec = 0;
 
-  while (watchdog_info.active == false && waitcycle++ < 10){
-    cerr << ".";
-    nanosleep(&waitForDog,NULL);
-  }
-  if (waitcycle == 11){
-    cerr << "[FAILED]" <<  endl;
-    return 1;
-  }
+//   while (watchdog_info.active == false && waitcycle++ < 10){
+//     cerr << ".";
+//     nanosleep(&waitForDog,NULL);
+//   }
+//   if (waitcycle == 11){
+//     cerr << "[FAILED]" <<  endl;
+//     return 1;
+//   }
   
-  cerr << "[OK]" << endl;
-  return 0;
-}
+//   cerr << "[OK]" << endl;
+//   return 0;
+// }
 
-int Mirob::stopWatchdog(void){
-  // closing watchdog
-  watchdog_info.active = false;
-  pthread_join(watchdog_thread, NULL); // wait for watchdog to return
-  return 0;
-}
+// int Mirob::stopWatchdog(void){
+//   // closing watchdog
+//   watchdog_info.active = false;
+//   pthread_join(watchdog_thread, NULL); // wait for watchdog to return
+//   return 0;
+// }
 
 
 int Mirob::restartWatchdog(void){
-  stopWatchdog();
-  startWatchdog();
+  watchdog->Stop();
+  watchdog->Start();
+
+//   stopWatchdog();
+//   startWatchdog();
   return 0;
 }
 
-
-void Mirob::setPosLCDs(QLCDNumber* a, QLCDNumber* b, QLCDNumber*c ){
-    watchdog_info.XPosLCD = a;
-    watchdog_info.YPosLCD = b;
-    watchdog_info.ZPosLCD = c;
-}
-
-void Mirob::setLogBox(QTextEdit* box){
-    watchdog_info.logBox = box;
+void Mirob::setGUICallback(GUICallback* gcb){
+  watchdog_info.gcb = gcb;
 }
 
 
@@ -461,7 +629,8 @@ void Mirob::close( void )
   Info.clear();
   Settings.clear();
 
-  stopWatchdog();
+  watchdog->Stop();
+  //  stopWatchdog();
   cerr << "MIROB closed " << endl;
 }
 
@@ -589,14 +758,14 @@ int Mirob::stop(){
 	cerr << "Could not stop Mirob! " << TS_GetLastErrorText() << endl;
 	return 1;
     }
-    if (!TS_Power(POWER_OFF)){
-	cerr << "Could not power off Mirob! " << TS_GetLastErrorText() << endl;
-	return 1;
-    }
-    if (!TS_Power(POWER_ON)){
-	cerr << "Could not power on Mirob! " << TS_GetLastErrorText() << endl;
-	return 1;
-    }
+//     if (!TS_Power(POWER_OFF)){
+// 	cerr << "Could not power off Mirob! " << TS_GetLastErrorText() << endl;
+// 	return 1;
+//     }
+//     if (!TS_Power(POWER_ON)){
+// 	cerr << "Could not power on Mirob! " << TS_GetLastErrorText() << endl;
+// 	return 1;
+//     }
 
 
   }  
@@ -604,77 +773,7 @@ int Mirob::stop(){
 }
                              
 int Mirob::gotoNegLimitsAndSetHome(void){
-  BYTE var;
-  var = 0;
-  for (int axis = 3; axis >= 1; --axis){
-    if (activateAxis(axis) > 0) return 1;
-
-    if(!TS_GetInput(INPUT_24,var)){
-      cerr << "Failed to get INPUT_24 for axis " << axis << "! " << TS_GetLastErrorText() << '\n';
-      return 1;
-    }
-
-    if (var == 1){
- //      cerr << "MIROB axis "  << axis << " INPUT_24=" << (int)var << endl;
-
-      watchdog_info.watchLimits = false; // switch off watchdog
-
-      if(!TS_Execute("var_i1 = 0x0832; (var_i1),dm=1")) {
-	cerr << "Could not issue execute! " << TS_GetLastErrorText() << endl;
-	return 1;
-      }
-
-      // Execute jogging with the prescribed parameters; start motion immediately
-      if(!TS_MoveVelocity(-MaxSpeed, MaxAcc , UPDATE_IMMEDIATE, FROM_REFERENCE)){
-	cerr << "Failed to move to limit for axis " << axis \
-	     << "! " << TS_GetLastErrorText() << '\n';
-	return 1;
-      }
-
-      //Wait for positive limit switch to be reached. Stop at limit switch reach.
-      if (!TS_SetEventOnLimitSwitch(LSW_NEGATIVE, TRANSITION_HIGH_TO_LOW, WAIT, STOP)){
-	cerr << "Failed to wait for negative limit switch event for axis " \
-	     << axis << "! " << TS_GetLastErrorText() << '\n';
-	return 1;
-      }
-
-
-      // drive back
-      if(!TS_MoveVelocity(10, MaxAcc , UPDATE_IMMEDIATE, FROM_REFERENCE)){
-	cerr << "Failed to move to limit for axis " << axis \
-	     << "! " << TS_GetLastErrorText() << '\n';
-	return 1;
-      }
-
-      //Wait for positive limit switch to be reached. Stop at limit switch reach.
-      if (!TS_SetEventOnLimitSwitch(LSW_NEGATIVE, TRANSITION_LOW_TO_HIGH, WAIT, STOP)){
-	cerr << "Failed to wait for negative limit switch event for axis " \
-	     << axis << "! " << TS_GetLastErrorText() << '\n';
-	return 1;
-      }
-
-      if(!TS_Execute("var_i1 = 0x0832; (var_i1),dm=0")) {
-	cerr << "Could not issue execute! " << TS_GetLastErrorText() << endl;
-	return 1;
-      }
-      //      TS_Stop();
-
-    }else{
-      cerr << "MIROB already at negative limit switch for axis "\
-	   << axis << "!" << endl;
-    }
-    if (!TS_SetPosition(0)){
-	cerr << "Failed to set position to 0 for axis " << axis \
-	     << "! " << TS_GetLastErrorText() << '\n';
-	return 1;
-
-    }
-    
-    watchdog_info.watchLimits = true; // switch on watchdog
-
-
-  }
-
+  watchdog_info.setNegLimitAsHome = true;
   return 0;
 }
 
@@ -1086,15 +1185,16 @@ int Mirob::recordStep(void){
   record0.x = posX();
   record0.y = posY();
   record0.z = posZ();
-  
-  cerr << "Recorded step " << recordedSteps[l].x << ", " <<  recordedSteps[l].y << ", "<<  recordedSteps[l].z << endl;
-  cerr << "New position is " << record0.x << ", " <<  record0.y << ", "<<  record0.z << endl;
-  cerr << "Recorded " << l+1 << " updates!" << endl;
+  miroblog("Recorded step " + Str(recordedSteps[l].x) 
+	   + ", " + Str(recordedSteps[l].y) + ", "+  Str(recordedSteps[l].z));
+  miroblog("New position is " + Str(record0.x) + ", " 
+	   +  Str(record0.y) + ", "+  Str(record0.z));
+  miroblog("Recorded " + Str(l+1) + " updates!");
   return 0;
 }
 
 int Mirob::stopRecording(){
-  cerr << "MIROB position recording stopped! " << endl;
+  miroblog("MIROB position recording stopped! ");
   return 0;
 }
 
@@ -1134,9 +1234,9 @@ int Mirob::recordPosition(void){
   positions.push_back( Point3D(posX(), posY(), posZ()) );
   int l = positions.size();
   
-  cerr << "MIROB: Recorded position " << positions[l-1].x
-       << ", " << positions[l-1].y << ", " << positions[l-1].z
-       << ": " << l << " positions in total!" <<  endl;
+  miroblog("MIROB: Recorded position (" + Str(positions[l-1].x)
+	   + ", " + Str(positions[l-1].y) + ", " + Str(positions[l-1].z) + 
+	   ")! " + Str(l) + " positions in total");
   return 0;
 }
   
@@ -1152,6 +1252,18 @@ int Mirob::makePositionsForbiddenZone(void){
   return 0;
 }
 
+
+void Mirob::miroblog(const char* text){
+  if (watchdog_info.gcb != NULL){
+    watchdog_info.gcb->logBox->append(QString(text));
+  }
+}
+
+void Mirob::miroblog(relacs::Str text){
+  if (watchdog_info.gcb != NULL){
+    watchdog_info.gcb->logBox->append(QString(((string)text).c_str()));
+  }
+}
 
 
 }; /* namespace misc */

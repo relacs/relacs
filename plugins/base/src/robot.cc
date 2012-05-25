@@ -40,16 +40,29 @@ Robot::Robot( void )
 
   // layout:
   QVBoxLayout *vb = new QVBoxLayout;
+  QHBoxLayout *bb;
+
   setLayout( vb );
   vb->setSpacing( 4 );
   SW.setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Fixed );
   vb->addWidget( &SW );
 
+
+  /************** Positions ***********************/
+  // base layout
   QGridLayout *Positions = new QGridLayout;
+  QLabel *label;
+
+  QColor fg( Qt::green );
+  QColor bg( Qt::black );
+  QPalette qp( fg, fg, fg.lighter( 140 ), fg.darker( 170 ), fg.darker( 130 ), fg, fg, fg, bg );
+
   Positions->setHorizontalSpacing( 2 );
   Positions->setVerticalSpacing( 2 );
   vb->addLayout( Positions );
-  QLabel *label;
+
+
+  // position watch
 
   label = new QLabel( "Mirob X-Position " );
   label->setAlignment( Qt::AlignCenter );
@@ -58,10 +71,7 @@ Robot::Robot( void )
   XPosLCD = new QLCDNumber( 8 );
   XPosLCD->setSegmentStyle( QLCDNumber::Filled );
   XPosLCD->setFixedHeight( label->sizeHint().height() );
-  QColor fg( Qt::green );
-  QColor bg( Qt::black );
 
-  QPalette qp( fg, fg, fg.lighter( 140 ), fg.darker( 170 ), fg.darker( 130 ), fg, fg, fg, bg );
   XPosLCD->setPalette( qp );
   XPosLCD->setAutoFillBackground( true );
   Positions->addWidget( XPosLCD, 0, 1 );
@@ -88,11 +98,68 @@ Robot::Robot( void )
   ZPosLCD->setAutoFillBackground( true );
   Positions->addWidget( ZPosLCD, 2, 1 );
 
+  // limit switch LEDs
+  // X
+  XLowLimLCD = new QLCDNumber( 1 );
+  XLowLimLCD->setSegmentStyle( QLCDNumber::Filled );
+  XLowLimLCD->setFixedHeight( label->sizeHint().height() );
+  XLowLimLCD->setFixedWidth( 20);
+
+  XLowLimLCD->setPalette( qp );
+  XLowLimLCD->setAutoFillBackground( true );
+  Positions->addWidget( XLowLimLCD,0,2 );
+  
+  XHiLimLCD = new QLCDNumber( 1 );
+  XHiLimLCD->setSegmentStyle( QLCDNumber::Filled );
+  XHiLimLCD->setFixedHeight( label->sizeHint().height() );
+  XHiLimLCD->setFixedWidth( 20);
+
+  XHiLimLCD->setPalette( qp );
+  XHiLimLCD->setAutoFillBackground( true );
+  Positions->addWidget( XHiLimLCD,0,3);
+
+  //Y
+  YLowLimLCD = new QLCDNumber( 1 );
+  YLowLimLCD->setSegmentStyle( QLCDNumber::Filled );
+  YLowLimLCD->setFixedHeight( label->sizeHint().height() );
+  YLowLimLCD->setFixedWidth( 20);
+
+  YLowLimLCD->setPalette( qp );
+  YLowLimLCD->setAutoFillBackground( true );
+  Positions->addWidget( YLowLimLCD,1,2 );
+  
+  YHiLimLCD = new QLCDNumber( 1 );
+  YHiLimLCD->setSegmentStyle( QLCDNumber::Filled );
+  YHiLimLCD->setFixedHeight( label->sizeHint().height() );
+  YHiLimLCD->setFixedWidth( 20);
+
+  YHiLimLCD->setPalette( qp );
+  YHiLimLCD->setAutoFillBackground( true );
+  Positions->addWidget( YHiLimLCD,1,3);
+
+  //Z
+  ZLowLimLCD = new QLCDNumber( 1 );
+  ZLowLimLCD->setSegmentStyle( QLCDNumber::Filled );
+  ZLowLimLCD->setFixedHeight( label->sizeHint().height() );
+  ZLowLimLCD->setFixedWidth( 20);
+
+  ZLowLimLCD->setPalette( qp );
+  ZLowLimLCD->setAutoFillBackground( true );
+  Positions->addWidget( ZLowLimLCD,2,2 );
+  
+  ZHiLimLCD = new QLCDNumber( 1 );
+  ZHiLimLCD->setSegmentStyle( QLCDNumber::Filled );
+  ZHiLimLCD->setFixedHeight( label->sizeHint().height() );
+  ZHiLimLCD->setFixedWidth( 20);
+
+  ZHiLimLCD->setPalette( qp );
+  ZHiLimLCD->setAutoFillBackground( true );
+  Positions->addWidget( ZHiLimLCD,2,3);
 
 
 
   // buttons:
-  QHBoxLayout *bb = new QHBoxLayout;
+  bb = new QHBoxLayout;
   bb->setSpacing( 4 );
   vb->addLayout( bb );
 
@@ -115,49 +182,7 @@ Robot::Robot( void )
 
   vb->addWidget(line);
 
-  bb = new QHBoxLayout;
-  bb->setSpacing( 4 );
-  vb->addLayout( bb );
-
-  QPushButton *ClampButton = new QPushButton( "Clamp Tool" );
-  bb->addWidget( ClampButton );
-  ClampButton->setFixedHeight( ClampButton->sizeHint().height() );
-  connect( ClampButton, SIGNAL( clicked() ),
-	   this, SLOT( clampTool() ) );
-
-  QPushButton *ReleaseButton = new QPushButton( "Release Tool" );
-  bb->addWidget( ReleaseButton );
-  ReleaseButton->setFixedHeight( ReleaseButton->sizeHint().height() );
-  connect( ReleaseButton, SIGNAL( clicked() ),
-	   this, SLOT( releaseTool() ) );
-
-  
-//   vb->addWidget(line);
-
-//   bb = new QHBoxLayout;
-//   bb->setSpacing( 4 );
-//   vb->addLayout( bb );
-
-//   QPushButton *TrajRecButton = new QPushButton( "Start Trajectory\nRecording" );
-//   bb->addWidget( TrajRecButton );
-//   TrajRecButton->setFixedHeight( TrajRecButton->sizeHint().height() );
-//   connect( TrajRecButton, SIGNAL( clicked() ),
-// 	   this, SLOT( startTrajRec() ) );
-
-//   QPushButton *StepRecButton = new QPushButton( "Record\nStep" );
-//   bb->addWidget( StepRecButton );
-//   StepRecButton->setFixedHeight( StepRecButton->sizeHint().height() );
-//   connect( StepRecButton, SIGNAL( clicked() ),
-// 	   this, SLOT( recordTrajStep() ) );
-  
-//   QPushButton *TrajStopButton = new QPushButton( "Stop Trajectory\nRecording" );
-//   bb->addWidget( TrajStopButton );
-//   TrajStopButton->setFixedHeight( TrajStopButton->sizeHint().height() );
-//   connect( TrajStopButton, SIGNAL( clicked() ),
-// 	   this, SLOT( stopTrajRec() ) );
-
-
-  
+ 
   bb = new QHBoxLayout;
   bb->setSpacing( 4 );
   vb->addLayout( bb );
@@ -166,6 +191,15 @@ Robot::Robot( void )
   otherActionsBox->addItem("Go to -lim and set home");
   otherActionsBox->addItem("Restart watchdog");
   otherActionsBox->addItem("Go home");
+
+  otherActionsBox->addItem("Clamp  Tool");
+  otherActionsBox->addItem("Release Tool");
+
+  otherActionsBox->addItem("Start recording trajectory");
+  otherActionsBox->addItem("Stop recording trajectory");
+
+  otherActionsBox->addItem("Start recording forbidden zone");
+  otherActionsBox->addItem("Stop recording forbidden zone");
 
   QPushButton *ApplyButton = new QPushButton( "Apply" );
   bb->addWidget( ApplyButton );
@@ -199,6 +233,27 @@ void Robot::apply(void){
     case 2: // goto home
       Rob->absPos(0,0,0,50);
       break;
+    case 3: // clamp Tool
+      Rob->clampTool();
+      break;
+    case 4: // release Tool
+      Rob->releaseTool();
+      break;
+    case 5: // start recording trajectory
+      Rob->startRecording( );
+      errorBox->append("Key k records new position");
+      break;
+    case 6: // stop recording trajectory
+      Rob->stopRecording( );
+      break;
+    case 7: // start recording forbidden zone
+      Rob->clearPositions();
+      errorBox->append("Move Mirob to the upper four corners of the forbidden zone");
+      errorBox->append("Key n records current corner");
+      break;
+    case 8: // stop recording forbidden zone
+      Rob->makePositionsForbiddenZone();
+      break;
     default:
       break;
       
@@ -208,45 +263,6 @@ void Robot::apply(void){
  
 }
   
-
-
-void Robot::clampTool(void){
-  if (Rob != 0){
-    Rob->clampTool();
-  }
-}
-
-void Robot::releaseTool(void){
-  if (Rob != 0){
-    Rob->releaseTool();
-  }
-}
-
-void Robot::startTrajRec(void){
-  if (Rob != 0){
-    Rob->startRecording( );
-  }
-
-}
-
-void Robot::recordTrajStep(void){
-  if (Rob != 0){
-    Rob->recordStep( );
-  }
-}
-
-void Robot::stopTrajRec(void){
-  if (Rob != 0){
-    Rob->stopRecording( );
-  }
-}
-
-
-void Robot::restartWatchdog(void){
-  if (Rob != 0){
-    Rob->restartWatchdog();
-  }
-}
 
 void Robot::stopMirob(void){
   if (Rob != 0){
@@ -261,8 +277,21 @@ void Robot::initDevices( void )
      //Rob = dynamic_cast< Manipulator* >( device( "robot-" + ns ) );
      Rob = dynamic_cast< ::misc::Mirob* >( device( "robot-" + ns ) );
      if ( Rob != 0 ){
-       Rob->setPosLCDs(XPosLCD, YPosLCD, ZPosLCD);
-       Rob->setLogBox(errorBox);
+       ::misc::GUICallback* gcb = new ::misc::GUICallback();
+       gcb->XPosLCD = XPosLCD;
+       gcb->YPosLCD = YPosLCD;
+       gcb->ZPosLCD = ZPosLCD;
+
+       gcb->XLowLimLCD = XLowLimLCD;
+       gcb->XHiLimLCD = XHiLimLCD;
+       gcb->YLowLimLCD = YLowLimLCD;
+       gcb->YHiLimLCD = YHiLimLCD;
+       gcb->ZLowLimLCD = ZLowLimLCD;
+       gcb->ZHiLimLCD = ZHiLimLCD;
+
+
+       gcb->logBox = errorBox;
+       Rob->setGUICallback(gcb);
        break;
      }
        
@@ -289,9 +318,9 @@ void Robot::keyReleaseEvent(QKeyEvent* e){
       break;
 
     case Qt::Key_D:
-      if ( Rob != 0 )
+      if ( Rob != 0 ){
 	Rob->setVZ( 0 );
-
+      }
       break;
 
     case Qt::Key_Up:
@@ -338,12 +367,6 @@ void Robot::keyPressEvent( QKeyEvent *e )
   
     switch ( e->key() ) {
 
-    case Qt::Key_F:
-      if ( Rob != 0 ){
-	Rob->clearPositions();
-      }
-      break;
-
 
     case Qt::Key_N:
       if ( Rob != 0 ){
@@ -351,11 +374,6 @@ void Robot::keyPressEvent( QKeyEvent *e )
       }
       break;
 
-    case Qt::Key_M:
-      if ( Rob != 0 ){
-	Rob->makePositionsForbiddenZone();
-      }
-      break;
 
 
     case Qt::Key_P:
@@ -370,44 +388,11 @@ void Robot::keyPressEvent( QKeyEvent *e )
 	
       break;
 
-    case Qt::Key_G:
-      if ( Rob != 0 )
-	//Rob->executeRecordedTrajectory(30, false, true );
-	Rob->executeRecordedTrajectory(30, true, true );
-
-      break;
-
-    case Qt::Key_J:
-      if ( Rob != 0 )
-	Rob->startRecording( );
-      break;
 
     case Qt::Key_K:
       if ( Rob != 0 )
 	Rob->recordStep( );
       break;
-
-    case Qt::Key_L:
-      if ( Rob != 0 )
-	Rob->stopRecording( );
-      break;
-
-    case Qt::Key_O:
-      if ( Rob != 0 ){
-	Rob->step(10000,10000,10000,50, WAIT);
-	Rob->step(-10000,-10000,-10000, 50, DONTWAIT);
-      }
-      break;
-
-//     case Qt::Key_T:
-//       if ( Rob != 0 )
-// 	Rob->clampTool();
-//       break;
-
-//     case Qt::Key_R:
-//       if ( Rob != 0 )
-// 	Rob->releaseTool();
-//       break;
 
 
     case Qt::Key_U:

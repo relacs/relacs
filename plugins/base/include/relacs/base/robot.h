@@ -56,14 +56,8 @@ public:
   virtual void initDevices( void );
 
 public slots:
-  void clampTool(void);
-  void releaseTool(void);
 
-  void restartWatchdog(void);
   void stopMirob(void); 
-  void startTrajRec(void);
-  void recordTrajStep(void);
-  void stopTrajRec(void);
   void apply(void);
 
 protected:
@@ -75,6 +69,9 @@ protected:
   QLCDNumber *XPosLCD;
   QLCDNumber *YPosLCD;
   QLCDNumber *ZPosLCD;
+
+  QLCDNumber *XLowLimLCD,*XHiLimLCD, *YLowLimLCD, 
+    *YHiLimLCD,*ZLowLimLCD,*ZHiLimLCD;
 
   QComboBox* otherActionsBox;
 
