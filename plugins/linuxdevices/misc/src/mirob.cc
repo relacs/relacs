@@ -257,17 +257,6 @@ int PosDaemon::gotoNegLimitsAndSetHome(){
 
     if ((int)var == 1){
 
-//       short int status = 0;
-//       TS_Execute("var_i1 = 0x0832;");
-      
-//       TS_GetMultipleInputs("var_i1", status);
-//       cerr << "strange register " << status << endl;
-//       if(!TS_Execute("var_i1 = 0x0832; (var_i1),dm=1")) {
-// 	cerr << "Could not issue execute! " << TS_GetLastErrorText() << endl;
-// 	return 1;
-//       }
-//       TS_GetMultipleInputs("var_i1", status);
-//       cerr << "strange register " << status << endl;
 
       // Execute jogging with the prescribed parameters; start motion immediately
       if(!TS_MoveVelocity(-MaxSpeed, MaxAcc , UPDATE_IMMEDIATE, FROM_REFERENCE)){
@@ -283,10 +272,15 @@ int PosDaemon::gotoNegLimitsAndSetHome(){
 	return 1;
       }
 
-
+      
+      if( ! TS_SetEventOnMotionComplete( WAIT, DONT_STOP ) ) { 
+	cerr << "Failed to wait on axis " << axis << "! " << TS_GetLastErrorText() << '\n';
+	return 1;
+      }
+      cerr << "Reached!" << endl;
 
       // drive back
-      if(!TS_MoveVelocity(MaxSpeed, MaxAcc , UPDATE_IMMEDIATE, FROM_REFERENCE)){
+      if(!TS_MoveVelocity(MaxSpeed, MaxAcc , UPDATE_IMMEDIATE, FROM_MEASURE)){
 	cerr << "Failed to move to limit for axis " << axis \
 	     << "! " << TS_GetLastErrorText() << '\n';
 	return 1;
