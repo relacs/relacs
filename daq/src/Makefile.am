@@ -39,6 +39,7 @@ pkginclude_HEADERS = \
     ../include/relacs/attenuate.h \
     ../include/relacs/attenuator.h \
     ../include/relacs/daqerror.h \
+    ../include/relacs/camera.h \
     ../include/relacs/device.h \
     ../include/relacs/digitalio.h \
     ../include/relacs/indata.h \
@@ -58,6 +59,7 @@ librelacsdaq_la_SOURCES = \
     analogoutput.cc \
     attenuate.cc \
     attenuator.cc \
+    camera.cc \
     daqerror.cc \
     device.cc \
     digitalio.cc \

@@ -5,11 +5,12 @@ pluginlibdir = $(pkglibdir)/plugins
 pluginlib_LTLIBRARIES = \
     libmisckleindiek.la \
     libmisctempdtm5080.la \
-    libmiscamplmode.la
+    libmiscamplmode.la \
+    libmiscusbcamera.la
 if RELACS_COND_TML
 pluginlib_LTLIBRARIES += \
     libmiscmirob.la
-endif
+endif 
 
 
 
@@ -72,6 +73,36 @@ libmiscmirob_la_include_HEADERS = $(HEADER_PATH)/mirob.h
 
 
 
+
+libmiscusbcamera_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(srcdir)/../include \
+    $(TML_CPPFLAGS) \
+    $(QT4_CPPFLAGS)
+
+libmiscusbcamera_la_LDFLAGS = \
+    -module -avoid-version \
+    $(TML_LDFLAGS) \
+    $(QT4_LDFLAGS)
+
+libmiscusbcamera_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(TML_LIBS) \
+    $(QT4_LIBS)
+
+libmiscusbcamera_la_SOURCES = usbcamera.cc usbcameradevice.cc
+
+libmiscusbcamera_la_includedir = $(pkgincludedir)/misc
+
+libmiscusbcamera_la_include_HEADERS = $(HEADER_PATH)/usbcamera.h
+
+
+
+
 libmisckleindiek_la_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
@@ -128,6 +159,9 @@ libmisctempdtm5080_la_include_HEADERS = $(HEADER_PATH)/tempdtm5080.h
 
 
 
+
+
+
 check_PROGRAMS = \
     linktest_libmiscamplmode_la \
     linktest_libmisckleindiek_la \
@@ -135,7 +169,7 @@ check_PROGRAMS = \
 if RELACS_COND_TML
 check_PROGRAMS += \
     linktest_libmiscmirob_la
-endif
+endif 
 
 linktest_libmiscamplmode_la_SOURCES = linktest.cc
 linktest_libmiscamplmode_la_LDADD = libmiscamplmode.la
@@ -143,10 +177,13 @@ linktest_libmiscamplmode_la_LDADD = libmiscamplmode.la
 linktest_libmiscmirob_la_SOURCES = linktest.cc
 linktest_libmiscmirob_la_LDADD = libmiscmirob.la
 
+
+
 linktest_libmisckleindiek_la_SOURCES = linktest.cc
 linktest_libmisckleindiek_la_LDADD = libmisckleindiek.la
 
 linktest_libmisctempdtm5080_la_SOURCES = linktest.cc
 linktest_libmisctempdtm5080_la_LDADD = libmisctempdtm5080.la
+
 
 TESTS = $(check_PROGRAMS)

@@ -28,7 +28,7 @@ namespace relacs {
 
 const string Device::DeviceTypeStrs[Device::MaxDeviceTypeStrs] =
   { "Miscellaneous", "Analog Input", "Analog Output", "Digital I/O", "Attenuator",
-    "Attenuate Interface", "Manipulator", "Temperature" };
+    "Attenuate Interface", "Manipulator", "Temperature","Camera" };
 
 
 Device::Device( int type )

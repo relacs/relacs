@@ -103,7 +103,8 @@ public:
     AttenuatorType = 5,
     AttenuateType = 6,
     ManipulatorType = 7,
-    TemperatureType = 8
+    TemperatureType = 8,
+    CameraType = 9
   };
 
     /*! Return code indicating that the device driver is not opened. */
@@ -267,7 +268,7 @@ protected:
 
 private:
 
-  static const int MaxDeviceTypeStrs = 8;
+  static const int MaxDeviceTypeStrs = 9;
   static const string DeviceTypeStrs[MaxDeviceTypeStrs];
   
   int DeviceType;
