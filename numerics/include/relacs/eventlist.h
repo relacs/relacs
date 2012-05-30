@@ -431,6 +431,11 @@ public:
         In \a sd the standard deviation of the intervals is returned. */
   double intervalAt( double time, double &sd ) const; 
 
+    /*! Returns in \a intervals the interevent intervals from all trials
+        between \a tbegin and \a tend.
+        \return the number of interevent intervals. */
+  int intervals( double tbegin, double tend, ArrayD &intervals ) const;
+
     /*! Returns in \a intrvls[i].x() the position of each interevent interval
         between \a tbegin and \a tend, and in \a intrvls[i].y() the
 	interevent interval for each trial \a i.

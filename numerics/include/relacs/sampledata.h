@@ -954,6 +954,15 @@ class SampleData : public Array< T >
   template < typename R >
   SampleData< T > &hist( const R &x );
 
+    /*! Compute cumulative of the distribution given in \a x.
+        The range is initialized with the range of \a x
+	plus one additional element.
+	The value of the first element is always 0.0 and the last one is
+	always 1.
+        \a x does not need to be normalized. */
+  template < typename R >
+  SampleData< T > &cumulative( const SampleData<R> &x );
+
      /*! Return the convolution of \a x with the container \a y.
          \a y can be shifted by \a offs indices.
          If possible, y.size() should be smaller than x.size(). */
@@ -2984,6 +2993,27 @@ template < typename T > template < typename R >
 SampleData< T > &SampleData< T >::hist( const R &x )
 {
   return hist( x.begin(), x.end() );
+}
+
+
+template < typename T > template < typename R >
+SampleData< T > &SampleData< T >::cumulative( const SampleData<R> &x )
+{
+  typename numerical_traits< T >::mean_type norm = 1;
+  if ( x.size() > 0 )
+    norm /= ::relacs::sum( x );
+  resize( x.size()+1, x.offset(), x.stepsize() );
+  typename numerical_traits< T >::mean_type cum = 0;
+  iterator iter = begin();
+  for ( typename SampleData<R>::const_iterator iterx = x.begin();
+	iterx != x.end();
+	++iterx ) {
+    *iter = cum;
+    cum += *iterx*norm;
+    ++iter;
+  }
+  *iter = cum;
+  return *this;
 }
 
 

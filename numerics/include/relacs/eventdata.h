@@ -882,19 +882,26 @@ public:
   void addCyclicInterval( SampleDataD &intervals, int &trial,
 			  double time=0.0 ) const;
 
+    /*! Returns in \a intervals the interevent intervals between \a tbegin and \a tend.
+        \return the number of interevent intervals. */
+  int intervals( double tbegin, double tend, ArrayD &intervals ) const;
+    /*! Adds to \a intervals the interevent intervals between \a tbegin and \a tend.
+        \return the number of interevent intervals. */
+  int addIntervals( double tbegin, double tend, ArrayD &intervals ) const;
+
     /*! Returns in \a intrvls.x() the position of each interevent interval
-        between \a tbegin and \a tend, and in \a intrvls.y() the
-	interevent interval.
-        The position of the interevent interval is the position of the left
+        between \a tbegin and \a tend, and in \a intrvls.y() the corresponding
+	interevent intervals.
+        The position of each interevent interval is the position of the left
 	event (\a pos = -1, default), the position of the right event 
 	(\a pos = 1), or in between the left and the right event
 	(\a pos = 0).
         \return the number of interevent intervals. */
   int intervals( double tbegin, double tend, MapD &intrvls, int pos=-1 ) const;
     /*! Adds to \a intrvls.x() the position of each interevent interval
-        between \a tbegin and \a tend, and to \a intrvls.y() the
-	interevent interval.
-        The position of the interevent interval is the position of the left
+        between \a tbegin and \a tend, and to \a intrvls.y() the corresponding
+	interevent intervals.
+        The position of each interevent interval is the position of the left
 	event (\a pos = -1, default), the position of the right event 
 	(\a pos = 1), or in between the left and the right event
 	(\a pos = 0).

@@ -891,6 +891,16 @@ double EventList::intervalAt( double time, double &sd ) const
 }
 
 
+int EventList::intervals( double tbegin, double tend, ArrayD &intervals ) const
+{
+  intervals.clear();
+  int n = 0;
+  for ( const_iterator i = begin(); i != end(); ++i )
+    n += (*i)->addIntervals( tbegin, tend, intervals );
+  return n;
+}
+
+
 int EventList::intervals( double tbegin, double tend,
 			  vector<MapD> &intrvls, int pos ) const
 {

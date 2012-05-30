@@ -306,6 +306,96 @@ double pearsonTest( double r, int n )
 }
 
 
+double pks( double z ) 
+{
+  if( z < 0.0 )
+    cerr << "Invalid argument in function pks (from KSTest via qks): z<0\n";
+  if ( z < 1e-8 )
+    return 0.0;
+  if ( z < 1.18 ) {
+    double y = exp( -1.23370055013616983/std::pow( z, 2.0 ) );
+    return 2.25675833419102515*sqrt(-log(y)) * (y+pow(y,9.0) + pow(y,25.0) + pow(y,49.0));
+  }
+  else {
+    double x = exp(-2.*std::pow(z,2.0));
+    return 1.-2.*(x-std::pow(x,4.0)+std::pow(x,9.0));
+  }
+}
+
+
+double qks( double z )
+{
+  if ( z<0.0 )
+    cerr << "Invalid argument in function qks (from KSTest): z<0\n";
+  if ( z<1e-8 )
+    return 1.0;
+  if ( z<1.18 )
+    return 1.0 - pks( z );
+  double x = exp( -2.0 * std::pow( z, 2.0 ) );
+  return 2.0 * ( x - std::pow( x, 4 ) + std::pow( x, 9.0 ) );
+}
+
+
+void KSTest( const ArrayD &data, const SampleDataD &density, double &d, double &p )
+{
+  // compute cumulative:
+  SampleDataD cum;
+  cum.cumulative( density );
+
+  double en = data.size();
+  d = 0.0;
+  double fo = 0.0;
+  for ( int j=0; j<data.size(); j++ ) {
+    double fn = (j+1)/en;   // cumulative of data as the fraction of data points
+    double ff = cum.interpolate( data[j] );  // cumulative function at the data value
+    double dt = abs( fn-ff );   // largest difference
+    if ( dt < abs( fo-ff ) )
+      dt = abs( fo-ff );
+    if ( dt > d )
+      d = dt;
+    fo = fn;
+  }
+  en = ::sqrt( en );
+  p = qks( (en+0.12+0.11/en)*d );
+}
+
+
+void runsTest( const ArrayD &data, double &z, double &p )
+{
+  if ( data.size() < 2 ) {
+    z = 0.0;
+    p = 1.0;
+    return;
+  }
+
+  int nu = 0;
+  int nl = 0;
+  int nr = 0;
+  int pr = 0;
+  for ( int j=0; j<data.size(); j++ ) {
+    int cr = 0;
+    if ( data[j] > 0 ) {
+      nu++;
+      cr = +1;
+    }
+    else {
+      nl++;
+      cr = -1;
+    }
+    if ( cr != pr && pr != 0 )
+      nr++;
+    pr = cr;
+  }
+
+  double mr = 2.0*nu*nl/(nu+nl)+1.0;
+  double sr = ::sqrt( (mr-1.0)*(mr-2.0)/(nu+nl-1.0) );
+
+  z = (nr - mr)/sr;
+
+  p = exp(-0.5*z*z)/sqrt(2.0*3.14159265358979);
+}
+
+
 double lngamma( double xx )
 {
   static double cof[6] = { 76.18009172947146, -86.50532032941677,

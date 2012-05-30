@@ -2786,6 +2786,30 @@ void EventData::addCyclicInterval( SampleDataD &intervals, int &trials,
 }
 
 
+int EventData::intervals( double tbegin, double tend, ArrayD &intervals ) const
+{
+  intervals.clear();
+  return addIntervals( tbegin, tend, intervals );
+}
+
+
+int EventData::addIntervals( double tbegin, double tend, ArrayD &intervals ) const
+{
+  long n = next( tbegin );
+  long p = previous( tend );
+  
+  if ( p <= n || p < 0 || tend <= tbegin )
+    return 0;
+
+  intervals.reserve( intervals.size() + p-n );
+
+  for ( int k=n+1; k<=p; k++ )
+    intervals.push( (*this)[k]-(*this)[k-1] );
+
+  return p-n;
+}
+
+
 int EventData::intervals( double tbegin, double tend,
 			  MapD &intrvls, int pos ) const
 {
@@ -3145,7 +3169,7 @@ void EventData::addIntervalHistogram( double tbegin, double tend,
     return;
   
   for ( int k=n+1; k<=p; k++ ) {
-    int inx = int( floor( ( (*this)[k] - (*this)[k-1] - hist.offset() )/hist.stepsize() + 1.0e-6 ) );
+    int inx = hist.index( (*this)[k] - (*this)[k-1] );
     if ( inx >= 0 && inx < hist.size() )
       hist[inx]++;
   }

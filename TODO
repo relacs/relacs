@@ -61,7 +61,7 @@ Plot:
 - possibly infinite loop in line 1527 (autoscaling) from line 1534 (initTics)
   because of YMin or YMax isnan: probably fixed...
 - change zoom behavior on axis (centered)
-- make the zoom stack optional - remember only the default range
+- make the zoom stack optional - remember only the default range or a maximum number of stack frames
 - add min/maxZoomRanges to optionally restrict zooming
 - Plot::DataElement should have a MapD from which the plot is drawn using *double pointers,
   CopyData should copy the data within the plot() functions to this buffer,
