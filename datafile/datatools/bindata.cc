@@ -287,7 +287,7 @@ void binData( ArrayD &xdata, ArrayD &ydata, ArrayD &sdata, int page,
     if ( outformat.contains( 'n' ) )
       binkey.setNumber( "n|weights", -1.0 );
     if ( outformat.contains( 'p' ) )
-      binkey.setNumber( "norm", -1.0 );
+      binkey.setNumber( "p", -1.0 );
     if ( outformat.contains( 'a' ) )
       binkey.setNumber( "mean", -1.0 );
     if ( outformat.contains( 's' ) )
@@ -430,7 +430,7 @@ void readData( DataFile &sf )
 	binkey.addNumber( "n", "1", "%5.0f" );
 	break;
       case 'p':
-	binkey.addNumber( "norm", "1", "%5.3f" );
+	binkey.addNumber( "p", "1", "%5.3f" );
 	break;
       case 'a':
 	binkey.addNumber( "mean", yunit, "%10.4g" );
