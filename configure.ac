@@ -357,3 +357,7 @@ Install relacs ... \$ sudo make install
 
 SUMMARY
 
+RELACS_PLUGINSET([camera],[camera],[base])
+
+AC_CONFIG_FILES([plugins/camera/relacslocal], [chmod a+x plugins/camera/relacslocal])
+
