@@ -81,24 +81,26 @@ libmiscusbcamera_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(TML_CPPFLAGS) \
+    -I/usr/include/opencv \
     $(QT4_CPPFLAGS)
 
 libmiscusbcamera_la_LDFLAGS = \
     -module -avoid-version \
-    $(TML_LDFLAGS) \
     $(QT4_LDFLAGS)
 
 libmiscusbcamera_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(TML_LIBS) \
-    $(QT4_LIBS)
+    $(QT4_LIBS) \
+    -lcv \
+    -lhighgui \
+    -lcvaux
+
 
 libmiscusbcamera_la_SOURCES = usbcamera.cc usbcameradevice.cc
 
 libmiscusbcamera_la_includedir = $(pkgincludedir)/misc
 
-libmiscusbcamera_la_include_HEADERS = $(HEADER_PATH)/usbcamera.h
+libmiscusbcamera_la_include_HEADERS = $(HEADER_PATH)/usbcamera.h  
 
 
 

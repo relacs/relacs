@@ -24,7 +24,12 @@
 
 #include <string>
 #include <vector>
+#include <cv.h>
+#include <highgui.h>
 #include <relacs/camera.h>
+#include <QGraphicsScene>
+#include <QGraphicsView>
+
 using namespace std;
 using namespace relacs;
 
@@ -47,14 +52,28 @@ class USBCamera : public Camera
   USBCamera( void );
   ~USBCamera( void );
 
+  
+
   virtual int open( const string &device, const Options &opts );
-  virtual bool isOpen( void ) const { return Opened; };
+  virtual bool isOpen( void ) const {return Opened; };
   virtual void close( void );
   virtual int reset( void );
 
+
+  bool isCalibrated( void ) const {return Calibrated; };
+
+  IplImage* grabFrame(void);
+  QImage grabQImage(void);
+
  protected:
   bool Opened;
+  CvCapture *source;
+  string calibFile;
+  int cameraNo;
 
+ private:
+  bool Calibrated;
+  
 
 };
 

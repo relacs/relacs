@@ -24,8 +24,11 @@
 
 #include <relacs/misc/usbcamera.h>
 #include <relacs/control.h>
+#include <vector>
 #include <QVBoxLayout>
 #include <QVBoxLayout>
+#include <QComboBox>
+#include <QRadioButton>
 
 using namespace relacs;
 
@@ -47,16 +50,23 @@ class CameraControl : public Control
 public:
 
   CameraControl( void );
+  ~CameraControl(void);
   virtual void main( void );
   virtual void initDevices( void );
 
 
 protected: 
-  ::misc::USBCamera *Cam;
+  vector<misc::USBCamera *> Cams;
+  void timerEvent(QTimerEvent*); // Timer-Funktion zum Frames-auslesen und anzeigen
+  QComboBox * cameraBox;
 
 private:
   OptWidget SW;
-
+  QLabel* _imgLabel;
+  QImage _qtImg;
+  int currentCam;
+  QRadioButton * isCalibrated;
+ 
 
 };
 

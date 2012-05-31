@@ -5,7 +5,7 @@ pluginlibdir = $(pkglibdir)/plugins
 
 pluginlib_LTLIBRARIES = \
     libcalibrationrestartdelay.la \
-    libcalibrationstimulusdelay.la
+    libcalibrationstimulusdelay.la 
 
 
 
@@ -75,15 +75,19 @@ libcalibrationstimulusdelay_la_include_HEADERS = $(HEADER_PATH)/stimulusdelay.h
 
 
 
+
+
+
 check_PROGRAMS = \
     linktest_libcalibrationrestartdelay_la \
-    linktest_libcalibrationstimulusdelay_la
+    linktest_libcalibrationstimulusdelay_la 
 
 linktest_libcalibrationrestartdelay_la_SOURCES = linktest.cc
 linktest_libcalibrationrestartdelay_la_LDADD = libcalibrationrestartdelay.la
 
 linktest_libcalibrationstimulusdelay_la_SOURCES = linktest.cc
 linktest_libcalibrationstimulusdelay_la_LDADD = libcalibrationstimulusdelay.la
+
 
 TESTS = $(check_PROGRAMS)
 

@@ -19,66 +19,87 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <cmath>
+// #include <sys/types.h>
+// #include <sys/stat.h>
+// #include <fcntl.h>
+// #include <unistd.h>
+// #include <cmath>
 #include <cstdio>
-#include <cstring>
+// #include <cstring>
 #include <iostream>
 #include <relacs/misc/usbcamera.h>
+
+
 using namespace std;
 using namespace relacs;
 
 namespace misc {
 
 
-USBCamera::USBCamera( const string &device )
-  : Camera( "USBCamera" )
+QImage ConvertImage( IplImage *source)
 {
-  Opened = false;
+    // Bilddaten übernehmen
+    unsigned char * data = ( unsigned char * ) source->imageData;
 
-  Options opts;
-  open( device, opts );
+    // QImage mit Originaldaten erstellen
+    QImage ret( data, source->width, source->height, QImage::Format_RGB888 );
+
+    // Kanäle (BGR -> RGB) und Format (RGB888 -> RGB32) ändern
+    return ret.rgbSwapped().convertToFormat( QImage::Format_RGB32 );
 }
+
+/*************************************************************************/
 
 
 USBCamera::USBCamera( void )
-  : Camera( "USBCamera" )
-{
-  Opened = true;
-  fprintf(stderr,"USB CAMERA CONTRUCTOR!\n");
+  : Camera( "USBCamera" ){
+  Opened = false;
+  Calibrated = false;
 }
+
 
 
 USBCamera::~USBCamera( void )
 {
-
+  close();
+  Opened = false;
 }
+
 
 int USBCamera::open( const string &device, const Options &opts )
 {
   Opened = true;
-
+  calibFile = opts.text( "calibfile" );
+  cameraNo = atoi(opts.text("device").c_str());
+  source = cvCaptureFromCAM( cameraNo );
+  
   return 0;
 }
+
 
 void USBCamera::close( void )
 {
   Opened = false;
   // Info.clear();
   // Settings.clear();
+  cvReleaseCapture(&source);
 
-  cerr << "CAMERA closed " << endl;
 }
 
 
 int USBCamera::reset( void )
 {
-  cerr << "CAMERA resetted " << endl;
   return 0;
 }
+
+IplImage* USBCamera::grabFrame(void){
+ return cvQueryFrame(source); 
+}
+
+QImage USBCamera::grabQImage(void){
+  return ConvertImage(grabFrame());
+}
+
 
 
 }; /* namespace misc */
