@@ -13,8 +13,8 @@ pluginlib_LTLIBRARIES = \
     libbasesetoutput.la \
     libbasesimplemodel.la \
     libbasetransferfunction.la \
-    libbasewait.la \
-    libbasecameracontrol.la
+    libbasewait.la 
+
 
 if RELACS_COND_TML
 pluginlib_LTLIBRARIES += \
@@ -366,35 +366,6 @@ libbasewait_la_include_HEADERS = $(HEADER_PATH)/wait.h
 
 
 
-libbasecameracontrol_la_CPPFLAGS = \
-    -I$(top_srcdir)/daq/include \
-    -I$(top_srcdir)/numerics/include \
-    -I$(top_srcdir)/options/include \
-    -I$(top_srcdir)/datafile/include \
-    -I$(top_srcdir)/plot/include \
-    -I$(top_srcdir)/widgets/include \
-    -I$(top_srcdir)/plugins/linuxdevices/misc/include \
-    -I$(top_srcdir)/relacs/include \
-    -I/usr/include/opencv \
-    -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
-
-libbasecameracontrol_la_LDFLAGS = \
-    -module -avoid-version \
-    $(QT4_LDFLAGS)
-
-libbasecameracontrol_la_LIBADD = \
-    $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/plugins/linuxdevices/misc/src/libmiscopencvcamera.la \
-    $(QT4_LIBS)
-
-$(libbasecameracontrol_la_OBJECTS) : moc_cameracontrol.cc
-
-libbasecameracontrol_la_SOURCES = cameracontrol.cc
-
-libbasecameracontrol_la_includedir = $(pkgincludedir)/base
-
-libbasecameracontrol_la_include_HEADERS = $(HEADER_PATH)/cameracontrol.h
 
 
 
@@ -409,8 +380,7 @@ check_PROGRAMS = \
     linktest_libbasesimplemodel_la \
     linktest_libbasetransferfunction_la \
     linktest_libbaserobot_la \
-    linktest_libbasewait_la \
-    linktest_libbasecameracontrol_la
+    linktest_libbasewait_la 
 
 linktest_libbaselinearattenuate_la_SOURCES = linktest.cc
 linktest_libbaselinearattenuate_la_LDADD = libbaselinearattenuate.la
@@ -445,7 +415,5 @@ linktest_libbaserobot_la_LDADD = libbaserobot.la
 linktest_libbasewait_la_SOURCES = linktest.cc
 linktest_libbasewait_la_LDADD = libbasewait.la
 
-linktest_libbasecameracontrol_la_SOURCES = linktest.cc
-linktest_libbasecameracontrol_la_LDADD = libbasecameracontrol.la
 
 TESTS = $(check_PROGRAMS)

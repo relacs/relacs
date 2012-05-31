@@ -160,6 +160,8 @@ RELACS_PLUGINSET([misc],[linuxdevices/misc])
 AC_CONFIG_FILES([plugins/linuxdevices/misc/examples/Makefile])
 RELACS_PLUGINSET([base],[base])
 RELACS_PLUGINSET([calibration],[calibration])
+RELACS_PLUGINSET([camera],[camera])
+#RELACS_PLUGINSET([camera],[camera],[base])
 RELACS_PLUGINSET([ephys],[ephys])
 RELACS_PLUGINSET([acoustic],[acoustic])
 RELACS_PLUGINSET([auditory],[auditory],[ephys acoustic])
@@ -230,6 +232,7 @@ AC_CONFIG_FILES([src/relacs], [chmod a+x src/relacs])
 AC_CONFIG_FILES([relacslocal], [chmod a+x relacslocal])
 AC_CONFIG_FILES([plugins/base/relacslocal], [chmod a+x plugins/base/relacslocal])
 AC_CONFIG_FILES([plugins/calibration/relacslocal], [chmod a+x plugins/calibration/relacslocal])
+AC_CONFIG_FILES([plugins/camera/relacslocal], [chmod a+x plugins/camera/relacslocal])
 AC_CONFIG_FILES([plugins/acoustic/relacslocal], [chmod a+x plugins/acoustic/relacslocal])
 AC_CONFIG_FILES([plugins/auditory/relacslocal], [chmod a+x plugins/auditory/relacslocal])
 AC_CONFIG_FILES([plugins/auditoryprojects/relacslocal], [chmod a+x plugins/auditoryprojects/relacslocal])
@@ -357,7 +360,5 @@ Install relacs ... \$ sudo make install
 
 SUMMARY
 
-RELACS_PLUGINSET([camera],[camera],[base])
 
-AC_CONFIG_FILES([plugins/camera/relacslocal], [chmod a+x plugins/camera/relacslocal])
 

@@ -1,5 +1,5 @@
 /*
-  base/cameracontrol.cc
+  camera/cameracontrol.cc
   Camera control plugin
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
@@ -23,16 +23,16 @@
 #define IMGHEIGHT 200
 #define IMGWIDTH  200
 
-#include <relacs/base/cameracontrol.h>
+#include <relacs/camera/cameracontrol.h>
 using namespace relacs;
 
-namespace base {
+namespace camera {
 
 
 /****************************************************************************************/
 
 CameraControl::CameraControl( void )
-  : Control( "CameraControl", "base", "Fabian Sinz", "1.0", "Mai 29, 2012" )
+  : Control( "CameraControl", "camera", "Fabian Sinz", "1.0", "Mai 29, 2012" )
 {
   // add some options:
   // addNumber( "duration", "Stimulus duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
@@ -126,8 +126,8 @@ void CameraControl::main( void )
 }
 
 
-addControl( CameraControl, base );
+addControl( CameraControl, camera );
 
-}; /* namespace base */
+}; /* namespace camera */
 
 #include "moc_cameracontrol.cc"

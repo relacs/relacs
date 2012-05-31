@@ -1,5 +1,5 @@
 /*
-  base/cameracontrol.h
+  camera/cameracontrol.h
   Camera control plugin
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _RELACS_BASE_CAMERACONTROL_H_
-#define _RELACS_BASE_CAMERACONTROL_H_ 1
+#ifndef _RELACS_CAMERA_CAMERACONTROL_H_
+#define _RELACS_CAMERA_CAMERACONTROL_H_ 1
 
 #include <relacs/misc/opencvcamera.h>
 #include <relacs/control.h>
@@ -32,7 +32,7 @@
 
 using namespace relacs;
 
-namespace base {
+namespace camera {
 
 
 /*!
@@ -71,6 +71,6 @@ private:
 };
 
 
-}; /* namespace base */
+}; /* namespace camera */
 
-#endif /* ! _RELACS_BASE_CAMERACONTROL_H_ */
+#endif /* ! _RELACS_CAMERA_CAMERACONTROL_H_ */
