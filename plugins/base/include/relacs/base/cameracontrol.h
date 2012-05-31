@@ -22,7 +22,7 @@
 #ifndef _RELACS_BASE_CAMERACONTROL_H_
 #define _RELACS_BASE_CAMERACONTROL_H_ 1
 
-#include <relacs/misc/usbcamera.h>
+#include <relacs/misc/opencvcamera.h>
 #include <relacs/control.h>
 #include <vector>
 #include <QVBoxLayout>
@@ -56,7 +56,7 @@ public:
 
 
 protected: 
-  vector<misc::USBCamera *> Cams;
+  vector<misc::OpenCVCamera *> Cams;
   void timerEvent(QTimerEvent*); // Timer-Funktion zum Frames-auslesen und anzeigen
   QComboBox * cameraBox;
 

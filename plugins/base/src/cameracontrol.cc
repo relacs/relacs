@@ -86,12 +86,12 @@ CameraControl::CameraControl( void )
 
 void CameraControl::initDevices( void )
 {
-  misc::USBCamera * Cam;
+  misc::OpenCVCamera * Cam;
   for ( unsigned int k=0; k<10; k++ ) {
     Cam = 0;
     Str ns( k+1, 0 );
     //Rob = dynamic_cast< Manipulator* >( device( "robot-" + ns ) );
-    Cam = dynamic_cast< misc::USBCamera* >( device( "camera-" + ns ) );
+    Cam = dynamic_cast< misc::OpenCVCamera* >( device( "camera-" + ns ) );
     if ( Cam != 0 ){
       Cams.push_back(Cam);
       cameraBox->addItem( QString( ((string)( "camera-" + ns)).c_str()));

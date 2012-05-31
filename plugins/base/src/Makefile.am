@@ -375,6 +375,7 @@ libbasecameracontrol_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(top_srcdir)/relacs/include \
+    -I/usr/include/opencv \
     -I$(srcdir)/../include \
     $(QT4_CPPFLAGS)
 
@@ -384,7 +385,7 @@ libbasecameracontrol_la_LDFLAGS = \
 
 libbasecameracontrol_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(top_builddir)/plugins/linuxdevices/misc/src/libmiscusbcamera.la \
+    $(top_builddir)/plugins/linuxdevices/misc/src/libmiscopencvcamera.la \
     $(QT4_LIBS)
 
 $(libbasecameracontrol_la_OBJECTS) : moc_cameracontrol.cc

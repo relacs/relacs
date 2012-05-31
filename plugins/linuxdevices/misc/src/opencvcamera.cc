@@ -1,6 +1,6 @@
 /*
-  misc/usbcamera.cc
-  The Usbcamera module linear robot from MPH
+  misc/opencvcamera.cc
+  The Opencvcamera module linear robot from MPH
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
@@ -27,7 +27,7 @@
 #include <cstdio>
 // #include <cstring>
 #include <iostream>
-#include <relacs/misc/usbcamera.h>
+#include <relacs/misc/opencvcamera.h>
 
 
 using namespace std;
@@ -51,22 +51,22 @@ QImage ConvertImage( IplImage *source)
 /*************************************************************************/
 
 
-USBCamera::USBCamera( void )
-  : Camera( "USBCamera" ){
+OpenCVCamera::OpenCVCamera( void )
+  : Camera( "OpenCVCamera" ){
   Opened = false;
   Calibrated = false;
 }
 
 
 
-USBCamera::~USBCamera( void )
+OpenCVCamera::~OpenCVCamera( void )
 {
   close();
   Opened = false;
 }
 
 
-int USBCamera::open( const string &device, const Options &opts )
+int OpenCVCamera::open( const string &device, const Options &opts )
 {
   Opened = true;
   calibFile = opts.text( "calibfile" );
@@ -77,7 +77,7 @@ int USBCamera::open( const string &device, const Options &opts )
 }
 
 
-void USBCamera::close( void )
+void OpenCVCamera::close( void )
 {
   Opened = false;
   // Info.clear();
@@ -87,16 +87,16 @@ void USBCamera::close( void )
 }
 
 
-int USBCamera::reset( void )
+int OpenCVCamera::reset( void )
 {
   return 0;
 }
 
-IplImage* USBCamera::grabFrame(void){
+IplImage* OpenCVCamera::grabFrame(void){
  return cvQueryFrame(source); 
 }
 
-QImage USBCamera::grabQImage(void){
+QImage OpenCVCamera::grabQImage(void){
   return ConvertImage(grabFrame());
 }
 

@@ -1,6 +1,6 @@
 /*
-  misc/usbcameradevice.cc
-  Makes Usbcamera a relacs plugin
+  misc/opencvcameradevice.cc
+  Makes Opencvcamera a relacs plugin
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
@@ -20,11 +20,11 @@
 */
 
 #include <relacs/relacsplugin.h>
-#include <relacs/misc/usbcamera.h>
+#include <relacs/misc/opencvcamera.h>
 
 namespace misc {
 
-  addDevice( USBCamera, misc );
+  addDevice( OpenCVCamera, misc );
 
 };
 

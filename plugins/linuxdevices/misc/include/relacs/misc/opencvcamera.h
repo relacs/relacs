@@ -1,6 +1,6 @@
 /*
-  misc/usbcamera.h
-  The Usbcamera module 
+  misc/opencvcamera.h
+  The Opencvcamera module 
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _RELACS_MISC_USBCAMERA_H_
-#define _RELACS_MISC_USBCAMERA_H_ 1
+#ifndef _RELACS_MISC_OPENCVCAMERA_H_
+#define _RELACS_MISC_OPENCVCAMERA_H_ 1
 
 #include <string>
 #include <vector>
@@ -37,20 +37,20 @@ namespace misc {
 
 
 /*!
-\class USBCamera
+\class OpenCVCamera
 \author Fabian Sinz
 \version 1.0
-\brief [Camera] The %USBCamera module 
+\brief [Camera] The %OpenCVCamera module 
 */
 
-class USBCamera : public Camera
+class OpenCVCamera : public Camera
 {
 
  public:
 
-  USBCamera( const string &device );
-  USBCamera( void );
-  ~USBCamera( void );
+  OpenCVCamera( const string &device );
+  OpenCVCamera( void );
+  ~OpenCVCamera( void );
 
   
 
@@ -80,4 +80,4 @@ class USBCamera : public Camera
 
 }; /* namespace misc */
 
-#endif /* ! _RELACS_MISC_USBCAMERA_H_ */
+#endif /* ! _RELACS_MISC_OPENCVCAMERA_H_ */

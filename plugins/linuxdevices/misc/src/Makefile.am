@@ -6,7 +6,7 @@ pluginlib_LTLIBRARIES = \
     libmisckleindiek.la \
     libmisctempdtm5080.la \
     libmiscamplmode.la \
-    libmiscusbcamera.la
+    libmiscopencvcamera.la
 if RELACS_COND_TML
 pluginlib_LTLIBRARIES += \
     libmiscmirob.la
@@ -74,7 +74,7 @@ libmiscmirob_la_include_HEADERS = $(HEADER_PATH)/mirob.h
 
 
 
-libmiscusbcamera_la_CPPFLAGS = \
+libmiscopencvcamera_la_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
     -I$(top_srcdir)/options/include \
@@ -84,11 +84,11 @@ libmiscusbcamera_la_CPPFLAGS = \
     -I/usr/include/opencv \
     $(QT4_CPPFLAGS)
 
-libmiscusbcamera_la_LDFLAGS = \
+libmiscopencvcamera_la_LDFLAGS = \
     -module -avoid-version \
     $(QT4_LDFLAGS)
 
-libmiscusbcamera_la_LIBADD = \
+libmiscopencvcamera_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(QT4_LIBS) \
     -lcv \
@@ -96,11 +96,11 @@ libmiscusbcamera_la_LIBADD = \
     -lcvaux
 
 
-libmiscusbcamera_la_SOURCES = usbcamera.cc usbcameradevice.cc
+libmiscopencvcamera_la_SOURCES = opencvcamera.cc opencvcameradevice.cc
 
-libmiscusbcamera_la_includedir = $(pkgincludedir)/misc
+libmiscopencvcamera_la_includedir = $(pkgincludedir)/misc
 
-libmiscusbcamera_la_include_HEADERS = $(HEADER_PATH)/usbcamera.h  
+libmiscopencvcamera_la_include_HEADERS = $(HEADER_PATH)/opencvcamera.h  
 
 
 
