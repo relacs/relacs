@@ -22,6 +22,7 @@
 #define H_MIRROR 2
 #define IMGHEIGHT 200
 #define IMGWIDTH  200
+#define INVFRAMERATE 30
 
 #include <relacs/camera/cameracontrol.h>
 using namespace relacs;
@@ -39,6 +40,7 @@ CameraControl::CameraControl( void )
  
  //  camera object
   currentCam = 0;
+  Timer = 0;
 
   // layout:
   QVBoxLayout *vb = new QVBoxLayout;
@@ -78,10 +80,39 @@ CameraControl::CameraControl( void )
   isCalibrated->setChecked(false);
   bb->addWidget(isCalibrated);
 
+  /*show whether camera is calibrated or not*/
+  bb = new QHBoxLayout;
+  vb->addLayout(bb);
+
+  QPushButton *StartButton = new QPushButton( "Start!" );
+  bb->addWidget( StartButton );
+  StartButton->setFixedHeight( StartButton->sizeHint().height() );
+  connect( StartButton, SIGNAL( clicked() ),
+	   this, SLOT( startStream() ) );
+
+  QPushButton *StopButton = new QPushButton( "Stop!" );
+  bb->addWidget( StopButton );
+  StopButton->setFixedHeight( StopButton->sizeHint().height() );
+  connect( StopButton, SIGNAL( clicked() ),
+	   this, SLOT( stopStream() ) );
 
   /* start timer which calls the time event function below*/
-  startTimer(30);
+  Timer = startTimer(INVFRAMERATE);
   
+}
+
+void CameraControl::startStream(){
+  cerr << "START!" << endl;
+  if (!Timer){
+    Timer = startTimer(INVFRAMERATE);
+  }
+}
+
+void CameraControl::stopStream(){
+  if (Timer){
+    killTimer(Timer);
+    Timer = 0;
+  }
 }
 
 void CameraControl::initDevices( void )
@@ -99,6 +130,11 @@ void CameraControl::initDevices( void )
     }
   }
 
+}
+
+string CameraControl::currentCamera(void) const{
+  QString tmp = cameraBox->currentText();
+  return tmp.toUtf8().constData();
 }
 
 CameraControl::~CameraControl( void ){

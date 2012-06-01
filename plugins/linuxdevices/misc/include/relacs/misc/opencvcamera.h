@@ -35,6 +35,8 @@ using namespace relacs;
 
 namespace misc {
 
+  QImage ConvertImage( IplImage *Source);
+
 
 /*!
 \class OpenCVCamera
@@ -61,19 +63,32 @@ class OpenCVCamera : public Camera
 
 
   bool isCalibrated( void ) const {return Calibrated; };
+  CvCapture* getCapture(void) const {return Source; };
+
+  int calibrate(CvMat* ObjectPoints2, CvMat*  ImagePoints2,CvMat* PointCounts2, CvSize ImgSize, bool estDist);
+  void saveParameters(void);
+  void recomputeUndistortionMaps(void);
+  void setCalibrated(bool toWhat);
+
 
   IplImage* grabFrame(void);
   QImage grabQImage(void);
 
  protected:
   bool Opened;
-  CvCapture *source;
-  string calibFile;
-  int cameraNo;
+  CvCapture *Source;
+  string IntrinsicFile, DistortionFile;
+  int CameraNo;
+
+  IplImage* UDMapX;
+  IplImage* UDMapY;
+
 
  private:
   bool Calibrated;
-  
+
+  CvMat *IntrinsicMatrix, *DistortionCoeffs;
+  bool EstimateDistortion;
 
 };
 

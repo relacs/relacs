@@ -28,6 +28,7 @@
 #include <QVBoxLayout>
 #include <QVBoxLayout>
 #include <QComboBox>
+#include <QPushButton>
 #include <QRadioButton>
 
 using namespace relacs;
@@ -53,6 +54,11 @@ public:
   ~CameraControl(void);
   virtual void main( void );
   virtual void initDevices( void );
+  string currentCamera() const;
+
+public slots:
+  void startStream(void); 
+  void stopStream(void); 
 
 
 protected: 
@@ -66,7 +72,7 @@ private:
   QImage _qtImg;
   int currentCam;
   QRadioButton * isCalibrated;
- 
+  int Timer;
 
 };
 
