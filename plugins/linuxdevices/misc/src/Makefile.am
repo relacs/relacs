@@ -5,11 +5,14 @@ pluginlibdir = $(pkglibdir)/plugins
 pluginlib_LTLIBRARIES = \
     libmisckleindiek.la \
     libmisctempdtm5080.la \
-    libmiscamplmode.la \
-    libmiscopencvcamera.la
+    libmiscamplmode.la
 if RELACS_COND_TML
 pluginlib_LTLIBRARIES += \
     libmiscmirob.la
+endif 
+if RELACS_COND_OPENCV
+pluginlib_LTLIBRARIES += \
+    libmiscopencvcamera.la
 endif 
 
 
@@ -73,7 +76,6 @@ libmiscmirob_la_include_HEADERS = $(HEADER_PATH)/mirob.h
 
 
 
-
 libmiscopencvcamera_la_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
@@ -81,27 +83,24 @@ libmiscopencvcamera_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    -I/usr/include/opencv \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) \
+    $(OPENCV_CPPFLAGS)
 
 libmiscopencvcamera_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) \
+    $(OPENCV_LDFLAGS)
 
 libmiscopencvcamera_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(QT4_LIBS) \
-    -lcv \
-    -lhighgui \
-    -lcvaux
-
+    $(OPENCV_LIBS)
 
 libmiscopencvcamera_la_SOURCES = opencvcamera.cc opencvcameradevice.cc
 
 libmiscopencvcamera_la_includedir = $(pkgincludedir)/misc
 
 libmiscopencvcamera_la_include_HEADERS = $(HEADER_PATH)/opencvcamera.h  
-
 
 
 
@@ -161,9 +160,6 @@ libmisctempdtm5080_la_include_HEADERS = $(HEADER_PATH)/tempdtm5080.h
 
 
 
-
-
-
 check_PROGRAMS = \
     linktest_libmiscamplmode_la \
     linktest_libmisckleindiek_la \
@@ -172,6 +168,10 @@ if RELACS_COND_TML
 check_PROGRAMS += \
     linktest_libmiscmirob_la
 endif 
+if RELACS_COND_OPENCV
+check_PROGRAMS += \
+    linktest_libmiscopencvcamera_la
+endif 
 
 linktest_libmiscamplmode_la_SOURCES = linktest.cc
 linktest_libmiscamplmode_la_LDADD = libmiscamplmode.la
@@ -179,13 +179,14 @@ linktest_libmiscamplmode_la_LDADD = libmiscamplmode.la
 linktest_libmiscmirob_la_SOURCES = linktest.cc
 linktest_libmiscmirob_la_LDADD = libmiscmirob.la
 
-
-
 linktest_libmisckleindiek_la_SOURCES = linktest.cc
 linktest_libmisckleindiek_la_LDADD = libmisckleindiek.la
 
 linktest_libmisctempdtm5080_la_SOURCES = linktest.cc
 linktest_libmisctempdtm5080_la_LDADD = libmisctempdtm5080.la
+
+linktest_libmiscopencvcamera_la_SOURCES = linktest.cc
+linktest_libmiscopencvcamera_la_LDADD = libmiscopencvcamera.la
 
 
 TESTS = $(check_PROGRAMS)

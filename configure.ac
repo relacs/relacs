@@ -107,6 +107,13 @@ AM_CONDITIONAL(RELACS_COND_TML,[test "$RELACS_TML" != no])
 
 
 #################################################
+## OpenCV (for camera)
+#################################################
+RELACS_LIB_OPENCV()
+AM_CONDITIONAL(RELACS_COND_OPENCV,[test "$RELACS_OPENCV" != no])
+
+
+#################################################
 ## RELACSDAQ
 #################################################
 DOXYGEN_PREDEF="$DOXYGEN_PREDEF HAVE_LIBRELACSDAQ"
@@ -160,8 +167,7 @@ RELACS_PLUGINSET([misc],[linuxdevices/misc])
 AC_CONFIG_FILES([plugins/linuxdevices/misc/examples/Makefile])
 RELACS_PLUGINSET([base],[base])
 RELACS_PLUGINSET([calibration],[calibration])
-RELACS_PLUGINSET([camera],[camera])
-#RELACS_PLUGINSET([camera],[camera],[base])
+RELACS_PLUGINSET([camera],[camera],[],[test "$RELACS_OPENCV" != no])
 RELACS_PLUGINSET([ephys],[ephys])
 RELACS_PLUGINSET([acoustic],[acoustic])
 RELACS_PLUGINSET([auditory],[auditory],[ephys acoustic])
@@ -337,6 +343,7 @@ cat <<SUMMARY
     Use RTAI ..................... ${RELACS_RTAI}
     Use libusb ................... ${RELACS_USB}
     Use TML_lib .................. ${RELACS_TML}
+    Use OpenCV ................... ${RELACS_OPENCV}
     Generate user manual ......... ${RELACS_GENERATE_DOCBOOK}
     Generate API documentation ... ${DX_SUMMARY}
     Compile example programs ..... ${RELACS_COMPILE_EXAMPLES}

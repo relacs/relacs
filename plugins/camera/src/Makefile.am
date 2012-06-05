@@ -17,17 +17,19 @@ libcameracameracontrol_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/plugins/linuxdevices/misc/include \
-    -I/usr/include/opencv \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT4_CPPFLAGS) \
+    $(OPENCV_CPPFLAGS)
 
 libcameracameracontrol_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT4_LDFLAGS) \
+    $(OPENCV_LDFLAGS)
 
 libcameracameracontrol_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(QT4_LIBS) \
+    $(OPENCV_LIBS)
 
 $(libcameracameracontrol_la_OBJECTS) : moc_cameracontrol.cc
 

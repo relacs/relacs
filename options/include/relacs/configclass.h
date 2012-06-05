@@ -46,7 +46,7 @@ A group of configuration files can be selected by setConfigGroup()
 
 The configMode() determines whether 
 the settings of this instance should be saved in a configuration file,
-get a configuration dialog, etc. See ConfigClass::Action or possible values.
+get a configuration dialog, etc. See ConfigClass::Action for possible values.
 
 The configSelectMask() selects a subset of items to be saved
 in a configuration file.
