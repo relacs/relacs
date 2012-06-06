@@ -26,16 +26,22 @@
 
 if test "$1" = "--help"; then
     cat <<EOF
-newpluginset
+newpluginset [-s]
 
 Creates a new plugin set.
+
+-s: add the new files to the svn repository
+
 EOF
     exit 0
 fi
 
-# get path name for new plugin:
+ADDTOSVN="$1"
+shift
+
+# get path name for new plugin set:
 while test -z "$PLUGINPATH"; do
-    read -e -p "Path name of the new plugin: " PLUGINPATH
+    read -e -p "Name with path of the new plugin set (e.g. base or linuxdevices/misc): " PLUGINPATH
     test -z "$PLUGINPATH" && echo "! Error! You need to provide a path name for the plugin!"
 done
 PLUGINPATH="${PLUGINPATH%/}"
@@ -77,7 +83,9 @@ for F in $(find skel -name '*' -not -type d | grep -v .svn); do
 done
 
 # add all to svn:
-svn add $PLUGINPATH
+if test "$ADDTOSVN" = "-s"; then
+    svn add $PLUGINPATH
+fi
 
 # edit configure.ac:
 echo "update ../configure.ac ..."
@@ -87,12 +95,12 @@ cp ../configure.ac ../configure.ac.bak
     IFS=""
     PREVLINE=""
     while read -r LINE; do
-	test -z "$LINE" && test "${PREVLINE%%(*}" = "RELACS_PLUGINSET" && break
+	test -z "$LINE" && test "${PREVLINE%%(*}" = "RELACS_PLUGINSET" -o "${PREVLINE%%(*}" = "RELACS_NOPLUGINSET" && break
 	echo "$LINE"
 	PREVLINE="$LINE"
     done
 # append new plugin set:
-    echo "RELACS_PLUGINSET([$PLUGINNAME],[$PLUGINPATH],[base])"
+    echo "RELACS_PLUGINSET([$PLUGINNAME],[$PLUGINPATH],[])"
     echo "$LINE"
 
     while read -r LINE; do
@@ -116,14 +124,18 @@ rm -f ../doc/doclinkstamp
 echo "finished!"
 echo
 echo "You may want to edit the following files:"
-echo "- $PLUGINPATH/doc/$PLUGINNAME.doc"
+echo "- configure.ac :"
+echo "  Add possible dependencies on other plugin sets"
+echo "  to the empty brackets in the line"
+echo "    RELACS_PLUGINSET([$PLUGINNAME],[$PLUGINPATH],[])"
+echo "- $PLUGINPATH/doc/$PLUGINNAME.doc :"
 echo "  Replace the string \"Sorry, no documentation\""
 echo "  by some appropriate documentation."
-echo "- $PLUGINPATH/relacs.cfg"
+echo "- $PLUGINPATH/relacs.cfg :"
 echo "  Edit all the settings."
-echo "- $PLUGINPATH/relacsplugins.cfg"
+echo "- $PLUGINPATH/relacsplugins.cfg :"
 echo "  Edit the meta data sections by adding appropriate properties."
-echo "- $PLUGINPATH/macros.cfg"
+echo "- $PLUGINPATH/macros.cfg :"
 echo "  Add some usefull macros."
 echo
 echo "Now add a new plugin to your plugin set by calling"
@@ -134,5 +146,9 @@ echo "$ bootstrap.sh"
 echo "$ ./configure"
 echo "from the relacs root directory."
 echo
+if test "$ADDTOSVN" != "-s"; then
+  echo "Do not forget to add the new files to the svn repository!"
+  echo
+fi
 
 

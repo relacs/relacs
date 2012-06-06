@@ -430,6 +430,11 @@ if test "$ADDTOSVN" = "-s"; then
 fi
 
 echo "finished!"
+echo
+if test "$ADDTOSVN" != "-s"; then
+  echo "Do not forget to add the new files to the svn repository!"
+  echo
+fi
 
 
 
