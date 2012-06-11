@@ -84,28 +84,40 @@ CameraControl::CameraControl( void )
   bb = new QHBoxLayout;
   vb->addLayout(bb);
 
-  QPushButton *StartButton = new QPushButton( "Start!" );
+  StartButton = new QPushButton( "Start Stream" );
   bb->addWidget( StartButton );
   StartButton->setFixedHeight( StartButton->sizeHint().height() );
   connect( StartButton, SIGNAL( clicked() ),
 	   this, SLOT( startStream() ) );
 
-  QPushButton *StopButton = new QPushButton( "Stop!" );
+  StopButton = new QPushButton( "Stop Stream" );
   bb->addWidget( StopButton );
   StopButton->setFixedHeight( StopButton->sizeHint().height() );
   connect( StopButton, SIGNAL( clicked() ),
 	   this, SLOT( stopStream() ) );
+  StopButton->setDisabled(true);
 
-  /* start timer which calls the time event function below*/
-  Timer = startTimer(INVFRAMERATE);
+
+
   
 }
 
+void CameraControl::disable(){
+  if (Timer){
+    killTimer(Timer);
+    Timer = 0;
+  }
+  StartButton->setDisabled(true);
+  StopButton->setDisabled(true);
+
+}
+
 void CameraControl::startStream(){
-  cerr << "START!" << endl;
   if (!Timer){
     Timer = startTimer(INVFRAMERATE);
   }
+  StartButton->setDisabled(true);
+  StopButton->setDisabled(false);
 }
 
 void CameraControl::stopStream(){
@@ -113,7 +125,12 @@ void CameraControl::stopStream(){
     killTimer(Timer);
     Timer = 0;
   }
+  StartButton->setDisabled(false);
+  StopButton->setDisabled(true);
 }
+
+
+
 
 void CameraControl::initDevices( void )
 {
@@ -124,7 +141,14 @@ void CameraControl::initDevices( void )
     //Rob = dynamic_cast< Manipulator* >( device( "robot-" + ns ) );
     Cam = dynamic_cast< misc::OpenCVCamera* >( device( "camera-" + ns ) );
     if ( Cam != 0 ){
+
       Cams.push_back(Cam);
+
+      if (Cams.size() == 1){
+	StartButton->setDisabled(false);
+	StopButton->setDisabled(false);
+	isCalibrated->setChecked(Cam->isCalibrated());
+      }
       cameraBox->addItem( QString( ((string)( "camera-" + ns)).c_str()));
       printlog("Found camera device-" + Str(ns));
     }

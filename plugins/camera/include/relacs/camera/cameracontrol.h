@@ -59,7 +59,7 @@ public:
 public slots:
   void startStream(void); 
   void stopStream(void); 
-
+  void disable(void); 
 
 protected: 
   vector<misc::OpenCVCamera *> Cams;
@@ -73,7 +73,7 @@ private:
   int currentCam;
   QRadioButton * isCalibrated;
   int Timer;
-
+  QPushButton *StartButton, *StopButton;
 };
 
 

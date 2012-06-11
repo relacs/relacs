@@ -12,7 +12,8 @@ pluginlib_LTLIBRARIES += \
 endif 
 if RELACS_COND_OPENCV
 pluginlib_LTLIBRARIES += \
-    libmiscopencvcamera.la
+    libmiscopencvcamera.la \
+    libmiscopencvstereocamera.la
 endif 
 
 
@@ -103,6 +104,33 @@ libmiscopencvcamera_la_includedir = $(pkgincludedir)/misc
 libmiscopencvcamera_la_include_HEADERS = $(HEADER_PATH)/opencvcamera.h  
 
 
+libmiscopencvstereocamera_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS) \
+    $(OPENCV_CPPFLAGS)
+
+libmiscopencvstereocamera_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS) \
+    $(OPENCV_LDFLAGS)
+
+libmiscopencvstereocamera_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(QT4_LIBS) \
+    $(OPENCV_LIBS)
+
+libmiscopencvstereocamera_la_SOURCES = opencvstereocamera.cc opencvstereocameradevice.cc
+
+libmiscopencvstereocamera_la_includedir = $(pkgincludedir)/misc
+
+libmiscopencvstereocamera_la_include_HEADERS = $(HEADER_PATH)/opencvstereocamera.h  
+
+
 
 libmisckleindiek_la_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
@@ -170,7 +198,8 @@ check_PROGRAMS += \
 endif 
 if RELACS_COND_OPENCV
 check_PROGRAMS += \
-    linktest_libmiscopencvcamera_la
+    linktest_libmiscopencvcamera_la \
+    linktest_libmiscopencvstereocamera_la
 endif 
 
 linktest_libmiscamplmode_la_SOURCES = linktest.cc
@@ -187,6 +216,9 @@ linktest_libmisctempdtm5080_la_LDADD = libmisctempdtm5080.la
 
 linktest_libmiscopencvcamera_la_SOURCES = linktest.cc
 linktest_libmiscopencvcamera_la_LDADD = libmiscopencvcamera.la
+
+linktest_libmiscopencvstereocamera_la_SOURCES = linktest.cc
+linktest_libmiscopencvstereocamera_la_LDADD = libmiscopencvstereocamera.la
 
 
 TESTS = $(check_PROGRAMS)

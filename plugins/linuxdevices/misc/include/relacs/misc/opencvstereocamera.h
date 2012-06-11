@@ -1,6 +1,6 @@
 /*
-  misc/opencvcamera.h
-  The Opencvcamera module 
+  misc/opencvstereocamera.h
+  The Opencvstereocamera module 
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
@@ -19,8 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _RELACS_MISC_OPENCVCAMERA_H_
-#define _RELACS_MISC_OPENCVCAMERA_H_ 1
+#ifndef _RELACS_MISC_OPENCVSTEREOCAMERA_H_
+#define _RELACS_MISC_OPENCVSTEREOCAMERA_H_ 1
 
 #include <string>
 #include <vector>
@@ -29,30 +29,29 @@
 #include <relacs/camera.h>
 #include <QGraphicsScene>
 #include <QGraphicsView>
-
 using namespace std;
 using namespace relacs;
 
 namespace misc {
 
-  QImage ConvertImage( IplImage *Source);
+
 
 
 /*!
-\class OpenCVCamera
+\class OpenCVStereoCamera
 \author Fabian Sinz
 \version 1.0
-\brief [Camera] The %OpenCVCamera module 
+\brief [Camera] The %OpenCVStereoCamera module 
 */
 
-class OpenCVCamera : public Camera
+class OpenCVStereoCamera : public Camera
 {
 
  public:
 
-  OpenCVCamera( const string &device );
-  OpenCVCamera( void );
-  ~OpenCVCamera( void );
+  OpenCVStereoCamera( const string &device );
+  OpenCVStereoCamera( void );
+  ~OpenCVStereoCamera( void );
 
   
 
@@ -62,36 +61,37 @@ class OpenCVCamera : public Camera
   virtual int reset( void );
 
   bool isCalibrated( void ) const {return Calibrated; };
-  CvCapture* getCapture(void) const {return Source; };
+  string getLeftCamDevice( void ) const { return LeftCamDevice;};
+  string getRightCamDevice( void ) const {return RightCamDevice;};
 
-  int calibrate(CvMat* ObjectPoints2, CvMat*  ImagePoints2,CvMat* PointCounts2, CvSize ImgSize, bool estDist);
+  int calibrate(void);
   void saveParameters(void);
-  void recomputeUndistortionMaps(void);
   void setCalibrated(bool toWhat);
 
+  void calibrate(CvMat* ObjectPoints,CvMat* ImagePoints[], CvMat* PointCounts, CvSize ImgSize);
 
-  IplImage* grabFrame(void);
-  IplImage* grabFrame(bool undistort);
-  QImage grabQImage(void);
+
+
 
  protected:
   bool Opened, Calibrated;
-  CvCapture *Source;
-  string IntrinsicFile, DistortionFile;
-  int CameraNo;
+  string FundamentalMatrixFile, EssentialMatrixFile, 
+    LeftCamDevice, RightCamDevice, 
+    IntrinsicFileLeft, IntrinsicFileRight,
+    DistortionFileLeft, DistortionFileRight,
+    RotationMatrixFile, TranslationMatrixFile;
 
-  IplImage* UDMapX;
-  IplImage* UDMapY;
-
+  CvMat *IntrinsicMatrix[2];
+  CvMat *DistortionCoeffs[2];
+  CvMat  *EssentialMatrix, *FundamentalMatrix, *RotationMatrix, *TranslationMatrix;
 
  private:
+
   
-  CvMat *IntrinsicMatrix, *DistortionCoeffs;
-  bool EstimateDistortion;
 
 };
 
 
 }; /* namespace misc */
 
-#endif /* ! _RELACS_MISC_OPENCVCAMERA_H_ */
+#endif /* ! _RELACS_MISC_OPENCVSTEREOCAMERA_H_ */

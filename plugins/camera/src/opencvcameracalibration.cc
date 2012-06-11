@@ -24,7 +24,7 @@ using namespace relacs;
 
 #define IMGWIDTH 400
 #define IMGHEIGHT 400
-
+#define INVFRAMERATE 30
 namespace camera {
 
 
@@ -53,6 +53,12 @@ OpenCVCameraCalibration::OpenCVCameraCalibration( void )
   ImgLabel->setFixedSize ( IMGWIDTH, IMGHEIGHT );
   bb->addWidget(ImgLabel);
 
+  ImgLabel2 = new QLabel;
+  ImgLabel2->setAlignment(Qt::AlignCenter);
+  ImgLabel2->setFixedSize ( IMGWIDTH, IMGHEIGHT );
+  bb->addWidget(ImgLabel2);
+
+
   QColor fg( Qt::green );
   QColor bg( Qt::black );
   QPalette qp( fg, fg, fg.lighter( 140 ), fg.darker( 170 ), fg.darker( 130 ), fg, fg, fg, bg );
@@ -60,14 +66,25 @@ OpenCVCameraCalibration::OpenCVCameraCalibration( void )
   QGridLayout *Positions = new QGridLayout;
   Positions->setHorizontalSpacing( 2 );
   Positions->setVerticalSpacing( 2 );
-  bb->addLayout( Positions );
+  vb->addLayout( Positions );
 
 
   // position watch
-
-  QLabel* label = new QLabel( "Calibration Frames Captured " );
+  QLabel* label = new QLabel( "Next capture in  " );
   label->setAlignment( Qt::AlignCenter );
   Positions->addWidget( label, 0, 0 );
+
+  CountLCD = new QLCDNumber( 3 );
+  CountLCD->setSegmentStyle( QLCDNumber::Filled );
+  CountLCD->setFixedHeight( label->sizeHint().height()*1.5 );
+
+  CountLCD->setPalette( qp );
+  CountLCD->setAutoFillBackground( true );
+  Positions->addWidget( CountLCD, 0, 1 );
+
+  label = new QLabel( "Calibration Frames Captured " );
+  label->setAlignment( Qt::AlignCenter );
+  Positions->addWidget( label, 0, 2 );
  
   FrameLCD = new QLCDNumber( 3 );
   FrameLCD->setSegmentStyle( QLCDNumber::Filled );
@@ -75,7 +92,8 @@ OpenCVCameraCalibration::OpenCVCameraCalibration( void )
 
   FrameLCD->setPalette( qp );
   FrameLCD->setAutoFillBackground( true );
-  Positions->addWidget( FrameLCD, 0, 1 );
+  Positions->addWidget( FrameLCD, 0, 3 );
+
 
 
 }
@@ -83,8 +101,12 @@ OpenCVCameraCalibration::OpenCVCameraCalibration( void )
 
 void OpenCVCameraCalibration::timerEvent(QTimerEvent*)
 {
-    ImgLabel->setPixmap(QPixmap::fromImage(QtImg.scaled(IMGWIDTH, IMGHEIGHT,Qt::KeepAspectRatio)));  
-    ImgLabel->show();
+  QtImg = misc::ConvertImage(cvQueryFrame(Capture));
+  ImgLabel->setPixmap(QPixmap::fromImage(QtImg.scaled(IMGWIDTH, IMGHEIGHT,Qt::KeepAspectRatio)));  
+  ImgLabel->show();
+
+  ImgLabel2->setPixmap(QPixmap::fromImage(QtImg2.scaled(IMGWIDTH, IMGHEIGHT,Qt::KeepAspectRatio)));  
+  ImgLabel2->show();
 }
 
 
@@ -125,13 +147,17 @@ int OpenCVCameraCalibration::main( void )
   Cam->setCalibrated(false); // set Camera to uncalibrated
 
   // lock camera control to stop it accessing the camera
+  CamContrl->disable();
   lockControl("CameraControl");
-  int timer = startTimer(30); // start timer that causes timeEvent to be called which displays the image
+  
 
-  // get capture from camera object and take picture, QtImg will be displayed by timeEvent
-  CvCapture* Capture = Cam->getCapture();
+  
+  // get capture from camera object and take picture
+  Capture = Cam->getCapture();
   assert( Capture );
-  QtImg = misc::ConvertImage(cvQueryFrame(Capture));
+  QtImg2 = misc::ConvertImage(cvQueryFrame( Capture )); // properly initialize QtImg2 before starting timer
+
+  int timer = startTimer(INVFRAMERATE); // start timer that causes timeEvent to be called which displays the image
 
 
   CvMat* ImagePoints = cvCreateMat( CalibrationFrames*InteriorPoints, 2, CV_32FC1 );
@@ -158,15 +184,20 @@ int OpenCVCameraCalibration::main( void )
       return Aborted;
     }
 
-    // take pictures
-    Image = cvQueryFrame( Capture );
+    CountLCD->display(SkipFrames - Frame++ % SkipFrames );
+    usleep(1000000/INVFRAMERATE);
  
+    // take pictures
+    //Image = cvQueryFrame( Capture );
     
 
     // Skp every SkipFrames frames to allow user to move chessboard
-    if( Frame++ % SkipFrames == 0 ){
+    if( Frame % SkipFrames == 0 ){
       CvPoint2D32f* Corners = new CvPoint2D32f[ InteriorPoints ];
 
+      //killTimer(timer);
+      Image = cvQueryFrame( Capture );
+      //startTimer(INVFRAMERATE);
 
       // Find chessboard corners:
       found = cvFindChessboardCorners( Image, BoardSize, Corners,
@@ -186,7 +217,7 @@ int OpenCVCameraCalibration::main( void )
 	for (vector<CvPoint2D32f*>::size_type i =0; i != FoundCorners.size(); ++i){
 	  cvDrawChessboardCorners( Image, BoardSize, FoundCorners[i], CornerCount, found );
 	}
-	QtImg = misc::ConvertImage(Image);
+	QtImg2 = misc::ConvertImage(Image);
 
 	// If we got a good board, add it to our data
 	if( CornerCount == InteriorPoints ){
@@ -202,7 +233,10 @@ int OpenCVCameraCalibration::main( void )
 	  Successes++;
 	  FrameLCD->display(Successes);
 	}
+      }else{
+	delete Corners;
       } 
+ 
     }
     
   } // End collection while loop
@@ -236,6 +270,7 @@ int OpenCVCameraCalibration::main( void )
   killTimer(timer);
   // unlock camera control
   unlockControl("CameraControl");
+  CamContrl->startStream();
 
 
   readLockData();

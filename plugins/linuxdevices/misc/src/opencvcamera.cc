@@ -79,10 +79,10 @@ int OpenCVCamera::open( const string &device, const Options &opts )
   Settings.clear();
 
   Opened = true;
-  
   // load camera number
   CameraNo = atoi(opts.text("device").c_str());
   Source = cvCaptureFromCAM( CameraNo );
+  
   Info.addInteger("device",CameraNo);
  
   IntrinsicFile =  opts.text( "intrinsic" );
@@ -103,8 +103,8 @@ int OpenCVCamera::open( const string &device, const Options &opts )
     cvInitUndistortMap( IntrinsicMatrix, DistortionCoeffs, UDMapX, UDMapY );
 
   }else{
-    IntrinsicMatrix = cvCreateMat( 3, 3, CV_64FC1 );
-    DistortionCoeffs = cvCreateMat( 5, 1, CV_64FC1 );
+    IntrinsicMatrix = cvCreateMat( 3, 3, CV_32FC1 );
+    DistortionCoeffs = cvCreateMat( 5, 1, CV_32FC1 );
     Calibrated = false;
   }
   
@@ -113,14 +113,15 @@ int OpenCVCamera::open( const string &device, const Options &opts )
 }
 
 
-void OpenCVCamera::close( void )
-{
+void OpenCVCamera::close( void ){
   Opened = false;
-  // Info.clear();
-  // Settings.clear();
+  Info.clear();
+  Settings.clear();
   cvReleaseCapture(&Source);
 
 }
+
+
 
 
 int OpenCVCamera::calibrate(CvMat* ObjectPoints2, CvMat*  ImagePoints2,CvMat* PointCounts2, CvSize ImgSize, 
@@ -186,21 +187,31 @@ void OpenCVCamera::setCalibrated(bool toWhat){
   Calibrated = toWhat;
 }
 
-IplImage* OpenCVCamera::grabFrame(void){
-  if (Calibrated){
-    IplImage *Image = cvQueryFrame( Source );
-    IplImage *t = cvCloneImage( Image );
-    cvRemap( t, Image, UDMapX, UDMapY );
-    cvReleaseImage( &t );
-    return Image; 
-  }
 
-  return cvQueryFrame( Source );
+IplImage* OpenCVCamera::grabFrame(bool undistort){
+  if (Opened){
+    if (Calibrated && undistort){
+      IplImage *Image = cvQueryFrame( Source );
+      IplImage *t = cvCloneImage( Image );
+      cvRemap( t, Image, UDMapX, UDMapY );
+      cvReleaseImage( &t );
+      return Image; 
+    }
+    return cvQueryFrame( Source );
+  }
+  return NULL;
 
 }
 
+
+IplImage* OpenCVCamera::grabFrame(void){
+  return grabFrame(true);
+}
+
 QImage OpenCVCamera::grabQImage(void){
-  return ConvertImage(grabFrame());
+  if (Opened)
+    return ConvertImage(grabFrame());
+  return QImage();
 }
 
 
