@@ -51,6 +51,8 @@ public:
   OpenCVStereoCameraCalibration( void );
   virtual int main( void );
 
+
+
  protected:
   
   void timerEvent(QTimerEvent*);
