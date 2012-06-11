@@ -399,8 +399,7 @@ int Chirps::createAM( OutData &signal )
     warning( "Non-Sinewave as AM not supported!" );
     return 1;
   }
-
-  signal.clear();
+  signal.clear(); 
   signal.setTrace( GlobalAMEField );
   applyOutTrace( signal );
   double sr = fabs( DeltaF ) + ChirpSize;
@@ -628,7 +627,7 @@ int Chirps::main( void )
   ChirpSel = index( "chirpsel" );
   ChirpKurtosis = number( "chirpkurtosis" );
   ChirpDip = number( "chirpampl" );
-  ChirpFile = number( "file" );
+  ChirpFile = text( "file" );
   BeatPos = integer( "beatpos" );
   BeatStart = number( "beatstart" );
   Sigma = number( "sigma" );
