@@ -689,13 +689,25 @@ int Chirps::main( void )
       warning( "Chirp-waveform file " + ChirpFile + " does not exist or does not contain any data." );
       return 1;
     }
+    if(sf.data().columns() < 2){
+      warning( "Chirp-waveform file " + ChirpFile + " needs at least two columns." );
+      return 1;
+    }
+
     ArrayD times = sf.col( 0 );
     times *= Parameter::changeUnit( 1.0, sf.key().unit( 0 ), "s" );
     ArrayD freqs = sf.col( 1 );
     freqs /= maxAbs( freqs );
-    ArrayD ampls = sf.col( 2 );
-    if ( ampls.empty() )
+    ArrayD ampls;
+    if(sf.data().columns() == 2){
       ampls = freqs;
+    }
+    else{
+      ampls = sf.col( 2 );
+      if ( ampls.empty() )
+	ampls = freqs;
+    }
+
     // chirp width:
     int maxfreqinx = maxIndex( freqs );
     int l = 0;
