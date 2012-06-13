@@ -33,7 +33,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <TML_lib.h>
-#include <relacs/relacswidget.h>
 
 #define WAIT      1
 #define STOP      1
