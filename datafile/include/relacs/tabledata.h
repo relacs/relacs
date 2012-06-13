@@ -77,8 +77,8 @@ public:
   inline double &operator()( int col, int row ) { return Data[col][row]; };
   inline const double &operator()( int col, int row ) const { return Data[col][row]; };
 
-  inline ArrayD &col( int col ) { return Data[col]; };
-  inline const ArrayD &col( int col ) const { return Data[col]; };
+  inline ArrayD &col( int col ) { if ( col >= 0 && col < (int)Data.size() ) return Data[col]; Dummya.clear(); return Dummya; };
+  inline const ArrayD &col( int col ) const { if ( col >= 0 && col < (int)Data.size() ) return Data[col]; Dummya.clear(); return Dummya; };
   inline ArrayD &operator[]( int col ) { return Data[col]; };
   inline const ArrayD &operator[]( int col ) const { return Data[col]; };
   ArrayD row( int row ) const;
@@ -98,6 +98,7 @@ private:
 
   vector< ArrayD > Data;
   int Rows;
+  mutable ArrayD Dummya;
 
 };
 

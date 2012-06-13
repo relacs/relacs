@@ -285,7 +285,7 @@ public:
   inline double operator()( int col, int row ) const { return Data( col, row ); };
   inline double operator()( const string &pattern, int row ) const { int c = key().column( pattern ); return c < 0 ? HUGE_VAL : Data( c, row ); };
   inline ArrayD &col( int col ) { return Data.col( col ); };
-  inline ArrayD &col( const string &pattern ) { int c = key().column( pattern ); if ( c < 0 ) { Dummya.clear(); return Dummya; } else return Data.col( c ); };
+  inline ArrayD &col( const string &pattern ) { return Data.col( key().column( pattern ) ); };
   bool newData( void ) const;
 
     /*! \c True if the state of the file is good for i/o operations. */
@@ -342,7 +342,6 @@ private:
 
   TableData Data;
   mutable double Dummyd;
-  mutable ArrayD Dummya;
 
   mutable StrQueue EmptyData;
   mutable Options EmptyOptions;

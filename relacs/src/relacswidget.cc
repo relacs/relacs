@@ -700,7 +700,7 @@ void RELACSWidget::setupInTraces( void )
     id.setDevice( devi );
     id.setContinuous();
     int m = SaveFiles::SaveTrace | PlotTraceMode;
-    if ( boolean( "inputtracecenter", k ) )
+    if ( boolean( "inputtracecenter", k, false ) )
       m |= PlotTraceCenterVertically;
     id.setMode( m );
     id.setReference( text( "inputtracereference", k, InData::referenceStr( InData::RefGround ) ) );

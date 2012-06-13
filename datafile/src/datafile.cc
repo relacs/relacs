@@ -131,7 +131,6 @@ void DataFile::close( void )
   Key.clear();
   Data.clear();
   DataLines = 0;
-  Dummya.clear();
   EmptyData.clear();
   EmptyOptions.clear();
 }
