@@ -13,7 +13,8 @@ pluginlib_LTLIBRARIES = \
     libbasesetoutput.la \
     libbasesimplemodel.la \
     libbasetransferfunction.la \
-    libbasewait.la 
+    libbasewait.la  \
+    libbaseenvelope.la
 
 
 if RELACS_COND_TML
@@ -369,6 +370,35 @@ libbasewait_la_include_HEADERS = $(HEADER_PATH)/wait.h
 
 
 
+libbaseenvelope_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS)
+
+libbaseenvelope_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS)
+
+libbaseenvelope_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(QT4_LIBS)
+
+$(libbaseenvelope_la_OBJECTS) : moc_envelope.cc
+
+libbaseenvelope_la_SOURCES = envelope.cc
+
+libbaseenvelope_la_includedir = $(pkgincludedir)/base
+
+libbaseenvelope_la_include_HEADERS = $(HEADER_PATH)/envelope.h
+
+
+
 check_PROGRAMS = \
     linktest_libbaselinearattenuate_la \
     linktest_libbasedecibelattenuate_la \
@@ -380,7 +410,8 @@ check_PROGRAMS = \
     linktest_libbasesimplemodel_la \
     linktest_libbasetransferfunction_la \
     linktest_libbaserobot_la \
-    linktest_libbasewait_la 
+    linktest_libbasewait_la  \
+    linktest_libbaseenvelope_la
 
 linktest_libbaselinearattenuate_la_SOURCES = linktest.cc
 linktest_libbaselinearattenuate_la_LDADD = libbaselinearattenuate.la
@@ -415,5 +446,8 @@ linktest_libbaserobot_la_LDADD = libbaserobot.la
 linktest_libbasewait_la_SOURCES = linktest.cc
 linktest_libbasewait_la_LDADD = libbasewait.la
 
+
+linktest_libbaseenvelope_la_SOURCES = linktest.cc
+linktest_libbaseenvelope_la_LDADD = libbaseenvelope.la
 
 TESTS = $(check_PROGRAMS)

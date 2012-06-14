@@ -1,3 +1,7 @@
+OptWidget:
+  updateValues called from notify from valueChanged does nothing, since DisableUpdate is set!
+  This is aproblem for all filters and detectors!
+
 General:
 - add a README file to share/relacs/configs/
 - make the config files more generic (lab address!)

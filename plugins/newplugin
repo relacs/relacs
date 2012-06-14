@@ -390,14 +390,14 @@ EOF
 
 elif test "$TYPE" = "Filter"; then
 cat <<EOF >> $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h
-  ${PLUGINNAME}( const string &ident, int mode );
+  ${PLUGINNAME}( const string &ident="", int mode=0 );
   virtual int init( ... );
-  virtual int filter( ... )
+  virtual int filter( ... );
 EOF
 
 elif test "$TYPE" = "Detector"; then
 cat <<EOF >> $PLUGINSETPATH/include/relacs/${PLUGINSET}/${PLUGINFILE}.h
-  ${PLUGINNAME}( const string &ident, int mode );
+  ${PLUGINNAME}( const string &ident="", int mode=0 );
   virtual int init( ... );
   virtual int detect( ... );
 EOF
