@@ -59,8 +59,16 @@ class OpenCVCameraCalibration : public RePro
   QLabel* ImgLabel, *ImgLabel2;
   QImage QtImg, QtImg2;
   QLCDNumber* FrameLCD, *CountLCD;
-  CvCapture* Capture;
+  VideoCapture Capture;
   misc::OpenCVCamera * Cam;
+
+ private:
+  bool disableStream;
+  Mat TmpImg;
+  vector< Mat > FoundCorners;
+
+  bool found;
+  Size BoardSize;
 };
 
 

@@ -32,6 +32,7 @@
 
 using namespace std;
 using namespace relacs;
+using namespace cv;
 
 namespace misc {
 
@@ -46,6 +47,13 @@ QImage ConvertImage( IplImage *Source){
     return ret.rgbSwapped().convertToFormat( QImage::Format_RGB32 );
 }
 
+QImage Mat2QImage(const cv::Mat src){
+  QImage qtFrame(src.data, src.size().width, src.size().height, src.step, QImage::Format_RGB888);
+  qtFrame = qtFrame.rgbSwapped();
+
+  return qtFrame;
+}
+
 /*************************************************************************/
 
 
@@ -54,12 +62,8 @@ OpenCVCamera::OpenCVCamera( void )
   Opened = false;
   Calibrated = false;
 
-  IntrinsicMatrix = NULL;
-  DistortionCoeffs = NULL;
-
   EstimateDistortion = true;
 
-  UDMapX = UDMapY = NULL;
 }
 
 
@@ -81,30 +85,28 @@ int OpenCVCamera::open( const string &device, const Options &opts )
   Opened = true;
   // load camera number
   CameraNo = atoi(opts.text("device").c_str());
-  Source = cvCaptureFromCAM( CameraNo );
-  
+  Source = VideoCapture(CameraNo);
+
   Info.addInteger("device",CameraNo);
  
-  IntrinsicFile =  opts.text( "intrinsic" );
-  Info.addText("intrinsic", IntrinsicFile);
+  ParamFile =  opts.text( "parameters" );
+  Info.addText("parameters", ParamFile);
   
-  DistortionFile = opts.text( "distortion" );
-  Info.addText("distortion", DistortionFile);
-  
-  IntrinsicMatrix = (CvMat*)cvLoad(IntrinsicFile.c_str());
-  DistortionCoeffs = (CvMat*)cvLoad(DistortionFile.c_str());
-  
-  if (IntrinsicMatrix && DistortionCoeffs){
+  FileStorage fs;
+  if (fs.open(ParamFile, FileStorage::READ)){
+    fs["intrinsic"] >> IntrinsicMatrix;
+    fs["distortion"] >> DistortionCoeffs;
+    fs.release();
     Calibrated = true;
+    Mat Image;
+    Source >> Image;
+   
+    recomputeUndistortionMaps();
 
-    IplImage *Image = cvQueryFrame( Source );
-    UDMapX = cvCreateImage( cvGetSize( Image ), IPL_DEPTH_32F, 1 );
-    UDMapY = cvCreateImage( cvGetSize( Image ), IPL_DEPTH_32F, 1 );
-    cvInitUndistortMap( IntrinsicMatrix, DistortionCoeffs, UDMapX, UDMapY );
 
   }else{
-    IntrinsicMatrix = cvCreateMat( 3, 3, CV_32FC1 );
-    DistortionCoeffs = cvCreateMat( 5, 1, CV_32FC1 );
+    IntrinsicMatrix = Mat(3, 3, CV_32FC1);
+
     Calibrated = false;
   }
   
@@ -113,67 +115,54 @@ int OpenCVCamera::open( const string &device, const Options &opts )
 }
 
 
-void OpenCVCamera::close( void ){
-  Opened = false;
-  Info.clear();
-  Settings.clear();
-  cvReleaseCapture(&Source);
-
-}
-
-
-
-
-int OpenCVCamera::calibrate(CvMat* ObjectPoints2, CvMat*  ImagePoints2,CvMat* PointCounts2, CvSize ImgSize, 
-			    bool estDist){
-  CV_MAT_ELEM( *IntrinsicMatrix, float, 0, 0 ) = 1.0;
-  CV_MAT_ELEM( *IntrinsicMatrix, float, 1, 1 ) = 1.0;
- 
-  if (estDist){
-    cvCalibrateCamera2( ObjectPoints2, ImagePoints2, PointCounts2, ImgSize, 
-  			IntrinsicMatrix, DistortionCoeffs, NULL, NULL,0 );
-  }else{
-
-    CV_MAT_ELEM( *DistortionCoeffs, float, 0, 0 ) = 0.0;
-    CV_MAT_ELEM( *DistortionCoeffs, float, 1, 0 ) = 0.0;
-    CV_MAT_ELEM( *DistortionCoeffs, float, 2, 0 ) = 0.0;
-    CV_MAT_ELEM( *DistortionCoeffs, float, 3, 0 ) = 0.0;
-    CV_MAT_ELEM( *DistortionCoeffs, float, 4, 0 ) = 0.0;
-    CV_MAT_ELEM( *DistortionCoeffs, float, 5, 0 ) = 0.0;
-
-    cvCalibrateCamera2( ObjectPoints2, ImagePoints2, PointCounts2, ImgSize, 
-    			IntrinsicMatrix, DistortionCoeffs, NULL, NULL, 
-    			CV_CALIB_FIX_K1 + CV_CALIB_FIX_K2 + CV_CALIB_FIX_K3);
-
-    CV_MAT_ELEM( *DistortionCoeffs, float, 0, 0 ) = 0.0;
-    CV_MAT_ELEM( *DistortionCoeffs, float, 1, 0 ) = 0.0;
-    CV_MAT_ELEM( *DistortionCoeffs, float, 2, 0 ) = 0.0;
-    CV_MAT_ELEM( *DistortionCoeffs, float, 3, 0 ) = 0.0;
-    CV_MAT_ELEM( *DistortionCoeffs, float, 4, 0 ) = 0.0;
-    CV_MAT_ELEM( *DistortionCoeffs, float, 5, 0 ) = 0.0;
-
+  void OpenCVCamera::close( void ){
+    Opened = false;
+    Info.clear();
+    Settings.clear();
+    Source.release();
   }
   
-  saveParameters();
-  recomputeUndistortionMaps();
-  Calibrated = true;
-  return 0;
-}
+  int OpenCVCamera::calibrate(vector < vector<Point3f> > ObjectPoints, 
+			      vector< vector<Point2f> > ImagePoints, 
+			      Size sz){
+    
+    vector<Mat> rvecs;
+    vector<Mat> tvecs;
+    calibrateCamera(ObjectPoints, ImagePoints, sz, 
+		    IntrinsicMatrix, DistortionCoeffs, 
+		    rvecs, tvecs,
+		    CV_CALIB_FIX_K1 + CV_CALIB_FIX_K2 + CV_CALIB_FIX_K3);
+    saveParameters();   
+    recomputeUndistortionMaps();
+    Calibrated = true;
+
+    return 0;
+  }
+
 
 void OpenCVCamera::saveParameters(void){
-  cerr << "OpenCVCamera: Saving parameters to " << IntrinsicFile << " and "
-       << DistortionFile << endl;
-  cvSave(IntrinsicFile.c_str(), IntrinsicMatrix );
-  cvSave(DistortionFile.c_str(), DistortionCoeffs );
+  cerr << "OpenCVCamera: Saving parameters to " << ParamFile << endl;
+
+  FileStorage fs(ParamFile, FileStorage::WRITE);
+  fs << "intrinsic" << IntrinsicMatrix;
+  fs << "distortion" << DistortionCoeffs;
+  fs.release();
 }
 
 
 void OpenCVCamera::recomputeUndistortionMaps(void){
   if (Calibrated){
-    IplImage *Image = cvQueryFrame( Source );
-    UDMapX = cvCreateImage( cvGetSize( Image ), IPL_DEPTH_32F, 1 );
-    UDMapY = cvCreateImage( cvGetSize( Image ), IPL_DEPTH_32F, 1 );
-    cvInitUndistortMap( IntrinsicMatrix, DistortionCoeffs, UDMapX, UDMapY );
+    Mat Image;
+    Source >> Image;
+
+
+    UDMapX = Mat( Image.size() ,CV_32FC1, 1 );
+    UDMapY = Mat( Image.size() , CV_32FC1, 1 );
+    initUndistortRectifyMap( IntrinsicMatrix, DistortionCoeffs, 
+			     Mat::eye(3,3, CV_32F), IntrinsicMatrix, Image.size(),
+			     CV_32FC1, UDMapX, UDMapY );
+
+   
   }else{
     cerr << "Camera needs to be calibrated to recompute undistortion maps" << endl;
   }
@@ -188,29 +177,30 @@ void OpenCVCamera::setCalibrated(bool toWhat){
 }
 
 
-IplImage* OpenCVCamera::grabFrame(bool undistort){
+Mat OpenCVCamera::grabFrame(bool undistort){
+
   if (Opened){
+    Mat Image;
+    Source >> Image;
     if (Calibrated && undistort){
-      IplImage *Image = cvQueryFrame( Source );
-      IplImage *t = cvCloneImage( Image );
-      cvRemap( t, Image, UDMapX, UDMapY );
-      cvReleaseImage( &t );
+      Mat t = Image.clone();
+      remap( t, Image, UDMapX, UDMapY, INTER_NEAREST,BORDER_CONSTANT, 0 );
       return Image; 
     }
-    return cvQueryFrame( Source );
+    return Image;
   }
-  return NULL;
+  return Mat();
 
 }
 
 
-IplImage* OpenCVCamera::grabFrame(void){
+Mat OpenCVCamera::grabFrame(void){
   return grabFrame(true);
 }
 
 QImage OpenCVCamera::grabQImage(void){
   if (Opened)
-    return ConvertImage(grabFrame());
+    return Mat2QImage(grabFrame());
   return QImage();
 }
 

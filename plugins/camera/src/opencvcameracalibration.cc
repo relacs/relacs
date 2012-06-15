@@ -22,8 +22,8 @@
 #include <relacs/camera/opencvcameracalibration.h>
 using namespace relacs;
 
-#define IMGWIDTH 400
-#define IMGHEIGHT 400
+#define IMGWIDTH 600
+#define IMGHEIGHT 600
 #define INVFRAMERATE 30
 namespace camera {
 
@@ -39,6 +39,8 @@ OpenCVCameraCalibration::OpenCVCameraCalibration( void )
   addInteger("CalibrationFrames", 5); // number of snapshots taken for calibration
   addInteger("SkipFrames", 30); // number of frames to skip between snapshots
   addBoolean("EstimateDistortion",true); // whether to estimate DistortionCoeffs
+  addNumber("SquareWidth", 24, "Chess board square width in mm");
+  addNumber("SquareHeight", 23, "Chess board square height in mm");
 
   QVBoxLayout *vb = new QVBoxLayout;
   QHBoxLayout *bb = new QHBoxLayout;
@@ -53,12 +55,6 @@ OpenCVCameraCalibration::OpenCVCameraCalibration( void )
   ImgLabel->setFixedSize ( IMGWIDTH, IMGHEIGHT );
   bb->addWidget(ImgLabel);
 
-  ImgLabel2 = new QLabel;
-  ImgLabel2->setAlignment(Qt::AlignCenter);
-  ImgLabel2->setFixedSize ( IMGWIDTH, IMGHEIGHT );
-  bb->addWidget(ImgLabel2);
-
-
   QColor fg( Qt::green );
   QColor bg( Qt::black );
   QPalette qp( fg, fg, fg.lighter( 140 ), fg.darker( 170 ), fg.darker( 130 ), fg, fg, fg, bg );
@@ -66,7 +62,7 @@ OpenCVCameraCalibration::OpenCVCameraCalibration( void )
   QGridLayout *Positions = new QGridLayout;
   Positions->setHorizontalSpacing( 2 );
   Positions->setVerticalSpacing( 2 );
-  vb->addLayout( Positions );
+  bb->addLayout( Positions );
 
 
   // position watch
@@ -77,6 +73,7 @@ OpenCVCameraCalibration::OpenCVCameraCalibration( void )
   CountLCD = new QLCDNumber( 3 );
   CountLCD->setSegmentStyle( QLCDNumber::Filled );
   CountLCD->setFixedHeight( label->sizeHint().height()*1.5 );
+  CountLCD->setFixedWidth( 50 );
 
   CountLCD->setPalette( qp );
   CountLCD->setAutoFillBackground( true );
@@ -84,16 +81,20 @@ OpenCVCameraCalibration::OpenCVCameraCalibration( void )
 
   label = new QLabel( "Calibration Frames Captured " );
   label->setAlignment( Qt::AlignCenter );
-  Positions->addWidget( label, 0, 2 );
+  Positions->addWidget( label, 1, 0 );
  
   FrameLCD = new QLCDNumber( 3 );
   FrameLCD->setSegmentStyle( QLCDNumber::Filled );
   FrameLCD->setFixedHeight( label->sizeHint().height()*1.5 );
+  FrameLCD->setFixedWidth( 50 );
 
   FrameLCD->setPalette( qp );
   FrameLCD->setAutoFillBackground( true );
-  Positions->addWidget( FrameLCD, 0, 3 );
+  Positions->addWidget( FrameLCD, 1, 1 );
 
+
+  // a few other parameters
+  disableStream = false;
 
 
 }
@@ -101,12 +102,19 @@ OpenCVCameraCalibration::OpenCVCameraCalibration( void )
 
 void OpenCVCameraCalibration::timerEvent(QTimerEvent*)
 {
-  QtImg = misc::ConvertImage(cvQueryFrame(Capture));
-  ImgLabel->setPixmap(QPixmap::fromImage(QtImg.scaled(IMGWIDTH, IMGHEIGHT,Qt::KeepAspectRatio)));  
-  ImgLabel->show();
+  if (!disableStream){
+    Capture >> TmpImg ;
+    if (FoundCorners.size() > 0){
+      	for (vector< Mat >::size_type i =0; i != FoundCorners.size(); ++i){
+      	  drawChessboardCorners( TmpImg, BoardSize, FoundCorners[i], found );
+      	}
 
-  ImgLabel2->setPixmap(QPixmap::fromImage(QtImg2.scaled(IMGWIDTH, IMGHEIGHT,Qt::KeepAspectRatio)));  
-  ImgLabel2->show();
+    }
+
+    QtImg = misc::Mat2QImage(TmpImg);
+    ImgLabel->setPixmap(QPixmap::fromImage(QtImg.scaled(IMGWIDTH, IMGHEIGHT,Qt::KeepAspectRatio)));  
+    ImgLabel->show();
+  }
 }
 
 
@@ -115,16 +123,15 @@ int OpenCVCameraCalibration::main( void )
   // get options:
   unlockData();
 
-
-
   int BoardWidth = integer("BoardWidth"); // Board width in squares
   int BoardHeight = integer("BoardHeight"); // Board height 
   int CalibrationFrames = integer("CalibrationFrames");
   int SkipFrames = integer("SkipFrames");
+  double squareWidth = number("SquareWidth");
+  double squareHeight = number("SquareHeight");
 
   int InteriorPoints = BoardWidth * BoardHeight;
-  CvSize BoardSize = cvSize( BoardWidth, BoardHeight );
-
+  BoardSize = Size( BoardWidth, BoardHeight );
   CameraControl* CamContrl = 0;
   CamContrl = dynamic_cast< CameraControl* >( control("CameraControl") );
   if (CamContrl == 0 ) {
@@ -154,29 +161,22 @@ int OpenCVCameraCalibration::main( void )
   
   // get capture from camera object and take picture
   Capture = Cam->getCapture();
-  assert( Capture );
-  QtImg2 = misc::ConvertImage(cvQueryFrame( Capture )); // properly initialize QtImg2 before starting timer
 
   int timer = startTimer(INVFRAMERATE); // start timer that causes timeEvent to be called which displays the image
 
+  vector< vector<Point3f> > ObjectPoints;
+  vector< vector<Point2f> > ImagePoints;
+  vector<Point2f> Corners;
 
-  CvMat* ImagePoints = cvCreateMat( CalibrationFrames*InteriorPoints, 2, CV_32FC1 );
-  CvMat* ObjectPoints = cvCreateMat( CalibrationFrames*InteriorPoints, 3, CV_32FC1 );
-  CvMat* PointCounts = cvCreateMat( CalibrationFrames, 1, CV_32SC1 );
+  int Successes = 0, Frame = 0;
+  found = false;
 
+  Mat Image, GrayImage;
+  Capture >> Image;
+  cvtColor(Image, GrayImage, CV_BGR2GRAY);
 
-  vector<CvPoint2D32f*> FoundCorners;
-
-  int CornerCount = 0;
-  int Successes = 0;
-  int Step, Frame = 0;
-  int found = 0;
-
-  IplImage *Image = cvQueryFrame( Capture );
-  IplImage *GrayImage = cvCreateImage( cvGetSize( Image ), 8, 1 );
-
-  // Capture Corner views loop until we've got CalibrationFrames
-  // succesful captures (all corners on the board are found)
+  // // Capture Corner views loop until we've got CalibrationFrames
+  // // succesful captures (all corners on the board are found)
 
   while( Successes < CalibrationFrames ){
     if ( interrupt() ){
@@ -187,54 +187,40 @@ int OpenCVCameraCalibration::main( void )
     CountLCD->display(SkipFrames - Frame++ % SkipFrames );
     usleep(1000000/INVFRAMERATE);
  
-    // take pictures
-    //Image = cvQueryFrame( Capture );
     
 
     // Skp every SkipFrames frames to allow user to move chessboard
     if( Frame % SkipFrames == 0 ){
-      CvPoint2D32f* Corners = new CvPoint2D32f[ InteriorPoints ];
+      
 
-      //killTimer(timer);
-      Image = cvQueryFrame( Capture );
-      //startTimer(INVFRAMERATE);
+      disableStream = true;
+      usleep(10000);
+      Capture >> Image;
+      disableStream = false;
 
       // Find chessboard corners:
-      found = cvFindChessboardCorners( Image, BoardSize, Corners,
-				       &CornerCount, CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FILTER_QUADS );
-      
+      found = findChessboardCorners(Image, BoardSize, Corners, 
+				    CV_CALIB_CB_ADAPTIVE_THRESH + CV_CALIB_CB_NORMALIZE_IMAGE);
+      //CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FILTER_QUADS);
       if (found){
-	// // Get subpixel accuracy on those corners
-	cvCvtColor( Image, GrayImage, CV_BGR2GRAY );
-
-      
-	
-	cvFindCornerSubPix( GrayImage, Corners, CornerCount, cvSize( 11, 11 ), 
-			    cvSize( -1, -1 ), cvTermCriteria( CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 30, 0.1 ));
-
-	FoundCorners.push_back(Corners);
-	// Draw it
-	for (vector<CvPoint2D32f*>::size_type i =0; i != FoundCorners.size(); ++i){
-	  cvDrawChessboardCorners( Image, BoardSize, FoundCorners[i], CornerCount, found );
-	}
-	QtImg2 = misc::ConvertImage(Image);
+      	// Get subpixel accuracy on those corners
+      	cvtColor( Image, GrayImage, CV_BGR2GRAY );
+   
+	cornerSubPix(GrayImage, Corners, Size(11,11),Size(-1,-1),
+	     TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS,30,0.1));
+	//	vector<Point2f> tmp = Corners;
+	FoundCorners.push_back(Mat(Corners,true)); // true is for copying data
 
 	// If we got a good board, add it to our data
-	if( CornerCount == InteriorPoints ){
-	  Step = Successes * InteriorPoints;
-	  for( int i=Step, j=0; j < InteriorPoints; ++i, ++j ){
-	    CV_MAT_ELEM( *ImagePoints, float, i, 0 ) = Corners[j].x;
-	    CV_MAT_ELEM( *ImagePoints, float, i, 1 ) = Corners[j].y;
-	    CV_MAT_ELEM( *ObjectPoints, float, i, 0 ) = j / BoardWidth;
-	    CV_MAT_ELEM( *ObjectPoints, float, i, 1 ) = j % BoardWidth;
-	    CV_MAT_ELEM( *ObjectPoints, float, i, 2 ) = 0.0f;
-	  }
-	  CV_MAT_ELEM( *PointCounts, int, Successes, 0 ) = InteriorPoints;
-	  Successes++;
-	  FrameLCD->display(Successes);
-	}
-      }else{
-	delete Corners;
+
+	vector<Point3f> obj;
+	for(int j=0;j<InteriorPoints;++j)
+	  obj.push_back(Point3f(squareHeight * (float)(j/BoardWidth), squareWidth*(float)(j%BoardWidth), 0.0f));
+	ImagePoints.push_back(vector<Point2f>(Corners));
+	ObjectPoints.push_back(obj);
+
+	Successes++;
+	FrameLCD->display(Successes);
       } 
  
     }
@@ -242,31 +228,11 @@ int OpenCVCameraCalibration::main( void )
   } // End collection while loop
 
 
-  // Allocate matrices according to how many chessboards found
-  CvMat* ObjectPoints2 = cvCreateMat( Successes * InteriorPoints, 3, CV_32FC1 );
-  CvMat* ImagePoints2 = cvCreateMat( Successes * InteriorPoints, 2, CV_32FC1 );
-  CvMat* PointCounts2 = cvCreateMat( Successes, 1, CV_32SC1 );
-	
-  // Transfer the points into the correct size matrices
-  for( int i = 0; i < Successes*InteriorPoints; ++i ){
-    CV_MAT_ELEM( *ImagePoints2, float, i, 0) = CV_MAT_ELEM( *ImagePoints, float, i, 0 );
-    CV_MAT_ELEM( *ImagePoints2, float, i, 1) = CV_MAT_ELEM( *ImagePoints, float, i, 1 );
-    CV_MAT_ELEM( *ObjectPoints2, float, i, 0) = CV_MAT_ELEM( *ObjectPoints, float, i, 0 );
-    CV_MAT_ELEM( *ObjectPoints2, float, i, 1) = CV_MAT_ELEM( *ObjectPoints, float, i, 1 );
-    CV_MAT_ELEM( *ObjectPoints2, float, i, 2) = CV_MAT_ELEM( *ObjectPoints, float, i, 2 );
-  }
-  
-  for( int i=0; i < Successes; ++i ){
-    CV_MAT_ELEM( *PointCounts2, int, i, 0 ) = CV_MAT_ELEM( *PointCounts, int, i, 0 );
-  }
-  cvReleaseMat( &ObjectPoints );
-  cvReleaseMat( &ImagePoints );
-  cvReleaseMat( &PointCounts );
-
-  // calibrate Camera
-  Cam->calibrate( ObjectPoints2, ImagePoints2, PointCounts2, cvGetSize( Image ), boolean("EstimateDistortion"));
-
-  // kill timer to stop display
+  // // calibrate Camera
+  //Cam->calibrate( ObjectPoints2, ImagePoints2, PointCounts2, cvGetSize( Image ), boolean("EstimateDistortion"));
+  Cam->calibrate(ObjectPoints, ImagePoints, Image.size() );
+  printlog("Calibration succeeded!");
+  // // kill timer to stop display
   killTimer(timer);
   // unlock camera control
   unlockControl("CameraControl");
@@ -275,12 +241,6 @@ int OpenCVCameraCalibration::main( void )
 
   readLockData();
   FrameLCD->display(0);
-
-  // release corner arrays
-  for (vector<CvPoint2D32f*>::size_type i =0; i != FoundCorners.size(); ++i){
-    delete  FoundCorners[i];
-  }
-  
   return Completed;
 }
 

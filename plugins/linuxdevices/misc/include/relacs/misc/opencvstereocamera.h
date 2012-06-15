@@ -31,6 +31,7 @@
 #include <QGraphicsView>
 using namespace std;
 using namespace relacs;
+using namespace cv;
 
 namespace misc {
 
@@ -68,22 +69,19 @@ class OpenCVStereoCamera : public Camera
   void saveParameters(void);
   void setCalibrated(bool toWhat);
 
-  void calibrate(CvMat* ObjectPoints,CvMat* ImagePoints[], CvMat* PointCounts, CvSize ImgSize);
+  /* void calibrate(CvMat* ObjectPoints,CvMat* ImagePoints[], CvMat* PointCounts, CvSize ImgSize); */
 
-
+  int calibrate(vector< vector<Point3f> > ObjectPoints, vector< vector<Point2f> > ImagePoints[], Size sz);
+  
 
 
  protected:
   bool Opened, Calibrated;
-  string FundamentalMatrixFile, EssentialMatrixFile, 
-    LeftCamDevice, RightCamDevice, 
-    IntrinsicFileLeft, IntrinsicFileRight,
-    DistortionFileLeft, DistortionFileRight,
-    RotationMatrixFile, TranslationMatrixFile;
-
-  CvMat *IntrinsicMatrix[2];
-  CvMat *DistortionCoeffs[2];
-  CvMat  *EssentialMatrix, *FundamentalMatrix, *RotationMatrix, *TranslationMatrix;
+  string ParamFile,LeftCamDevice, RightCamDevice, LeftParamFile, RightParamFile;
+ 
+  Mat IntrinsicMatrix[2];
+  Mat DistortionCoeffs[2];
+  Mat EssentialMatrix, FundamentalMatrix, RotationMatrix, TranslationMatrix;
 
  private:
 

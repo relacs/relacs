@@ -29,9 +29,11 @@
 #include <iostream>
 #include <relacs/misc/opencvstereocamera.h>
 
+#define length(a) ( sizeof ( a ) / sizeof ( *a ) )
 
 using namespace std;
 using namespace relacs;
+using namespace cv;
 
 namespace misc {
 
@@ -73,50 +75,36 @@ int OpenCVStereoCamera::open( const string &device, const Options &opts )
   RightCamDevice =  opts.text( "rightcam" );
   Info.addText("rightcam", RightCamDevice);
   
-  FundamentalMatrixFile = opts.text( "fundamental" );
-  Info.addText("fundamental", FundamentalMatrixFile);
+  ParamFile = opts.text( "parameters" );
+  Info.addText("parameters", ParamFile);
 
-  EssentialMatrixFile = opts.text( "essential" );
-  Info.addText("essential", EssentialMatrixFile);
+  LeftParamFile = opts.text("leftparam");
+  Info.addText("leftparam", LeftParamFile);
 
-  RotationMatrixFile = opts.text( "rotation" );
-  Info.addText("rotation", RotationMatrixFile);
-
-  TranslationMatrixFile = opts.text( "translation" );
-  Info.addText("translation", TranslationMatrixFile);
-
-
-  IntrinsicFileLeft = opts.text( "intrinsicleft" );
-  Info.addText("intrinsicleft", IntrinsicFileLeft);
-
-  DistortionFileLeft = opts.text( "distortionleft" );
-  Info.addText("distortionleft", DistortionFileLeft);
-  
-
-  IntrinsicFileRight = opts.text( "intrinsicright" );
-  Info.addText("intrinsicright", IntrinsicFileRight);
-
-  DistortionFileRight = opts.text( "distortionright" );
-  Info.addText("distortionright", DistortionFileRight);
- 
+  RightParamFile = opts.text("rightparam");
+  Info.addText("rightparam", RightParamFile);
 
   // load all intrinsics and fundamental parameters 
   // if they all exist set to calibrated, else set to uncalibrated
-
-  EssentialMatrix = (CvMat*)cvLoad(EssentialMatrixFile.c_str());
-  FundamentalMatrix = (CvMat*)cvLoad(FundamentalMatrixFile.c_str());
-  
-
-  if (EssentialMatrix && FundamentalMatrix && RotationMatrix && TranslationMatrix){
+  FileStorage fs;
+  if (fs.open(ParamFile, FileStorage::READ)){
+    fs["rotation"] >> RotationMatrix;
+    fs["essential"] >> EssentialMatrix;
+    fs["fundamental"] >> FundamentalMatrix;
+    fs["translation"] >> TranslationMatrix;
+    fs.release();
     Calibrated = true;
+
   }else{
-    EssentialMatrix = cvCreateMat( 3, 3, CV_32FC1 );
-    FundamentalMatrix = cvCreateMat( 3, 3, CV_32FC1 );
-    RotationMatrix = cvCreateMat( 3, 3, CV_32FC1 );
-    TranslationMatrix = cvCreateMat( 3, 1, CV_32FC1 );
+    EssentialMatrix = Mat(3, 3, CV_32FC1);
+    FundamentalMatrix =  Mat(3, 3, CV_32FC1);
+    RotationMatrix  = Mat(3, 3, CV_32FC1);
+    TranslationMatrix = Mat(3, 1, CV_32FC1);
+
     Calibrated = false;
   }
-  
+ 
+
 
   return 0;
 }
@@ -138,35 +126,67 @@ int OpenCVStereoCamera::calibrate(void){
 }
 
 
-  
-void OpenCVStereoCamera::calibrate(CvMat* ObjectPoints,CvMat* ImagePoints[], 
-				   CvMat* PointCounts, CvSize ImgSize){
+int OpenCVStereoCamera::calibrate(vector< vector<Point3f> > ObjectPoints, 
+				  vector< vector<Point2f> > ImagePoints[], Size sz){
 
-  IntrinsicMatrix[0] = (CvMat*)cvLoad(IntrinsicFileLeft.c_str());
-  DistortionCoeffs[0] = (CvMat*)cvLoad(DistortionFileLeft.c_str());
-
-  IntrinsicMatrix[1] = (CvMat*)cvLoad(IntrinsicFileRight.c_str());
-  DistortionCoeffs[1] = (CvMat*)cvLoad(DistortionFileRight.c_str());
-  
-  EssentialMatrix = cvCreateMat( 3, 3, CV_32FC1 );
-  FundamentalMatrix = cvCreateMat( 3, 3, CV_32FC1 );
-  RotationMatrix = cvCreateMat( 3, 3, CV_32FC1 );
-  TranslationMatrix = cvCreateMat( 3, 1, CV_32FC1 );
-
-
-  if (IntrinsicMatrix[0] && IntrinsicMatrix[1] && DistortionCoeffs[0] && DistortionCoeffs[1]){
-    cvStereoCalibrate(ObjectPoints, ImagePoints[0], ImagePoints[1], PointCounts, 
-		      IntrinsicMatrix[0], DistortionCoeffs[0], 
-		      IntrinsicMatrix[1], DistortionCoeffs[1], 
-		      ImgSize, RotationMatrix, TranslationMatrix, 
-		      EssentialMatrix, FundamentalMatrix, 
-		      cvTermCriteria(  CV_TERMCRIT_ITER+CV_TERMCRIT_EPS, 30, 1e-6), 
-		      CV_CALIB_FIX_INTRINSIC);
-    saveParameters();
-  }else{
-    cerr << "Stereocalibration Failed! You need to calibrate your cameras first!" << endl;
+  FileStorage fs;
+  if (fs.open(LeftParamFile, FileStorage::READ)){
+    fs["intrinsic"] >> IntrinsicMatrix[0];
+    fs["distortion"] >> DistortionCoeffs[0];
+    fs.release();
   }
+  if (fs.open(RightParamFile, FileStorage::READ)){
+    fs["intrinsic"] >> IntrinsicMatrix[1];
+    fs["distortion"] >> DistortionCoeffs[1];
+    fs.release();
+  }
+
+
+  stereoCalibrate(ObjectPoints, ImagePoints[0], ImagePoints[1], IntrinsicMatrix[0], DistortionCoeffs[0], 
+		  IntrinsicMatrix[0], DistortionCoeffs[0], sz, RotationMatrix, TranslationMatrix, 
+		  EssentialMatrix, FundamentalMatrix, 
+		  TermCriteria(TermCriteria::COUNT+  TermCriteria::EPS, 30, 1e-6), CALIB_FIX_INTRINSIC);
+
+  saveParameters();
+
+  return 0;
 }
+  
+  
+// void OpenCVStereoCamera::calibrate(CvMat* ObjectPoints,CvMat* ImagePoints[], 
+// 				   CvMat* PointCounts, CvSize ImgSize){
+
+
+
+//     // calibration quality check using Epipolar constraint
+//     int N = length(ObjectPoints);
+//     CvMat L1 = cvMat(N, 3, CV_32F); 
+//     CvMat L2 = cvMat(N, 3, CV_32F);
+//     // //Always work in undistorted space 
+//     // cvUndistortPoints( ImagePoints[0], ImagePoints[0], IntrinsicMatrix[0], 
+//     // 		       DistortionCoeffs[0], 0, IntrinsicMatrix[0] );
+//     // cvUndistortPoints( ImagePoints[1], ImagePoints[1], IntrinsicMatrix[1], 
+//     // 		       DistortionCoeffs[1], 0, IntrinsicMatrix[1] );
+//     // cvComputeCorrespondEpilines( ImagePoints[0], 1, FundamentalMatrix, &L1 ); 
+//     // cvComputeCorrespondEpilines( ImagePoints[1], 2, FundamentalMatrix, &L2 ); 
+//     // double avgErr = 0, err = 0; 
+//     // for(int i = 0; i < N; i++ ) {
+//     //   err = fabs(CV_MAT_ELEM(*(ImagePoints[0]), float, i, 0) * CV_MAT_ELEM(L2,float,i,0)
+//     // 		 + CV_MAT_ELEM(*(ImagePoints[0]), float, i, 1) * CV_MAT_ELEM(L2, float, i,1) 
+//     // 		 + CV_MAT_ELEM(L2, float, i,2));
+//     //   err += fabs(CV_MAT_ELEM(*(ImagePoints[1]), float, i, 0) * CV_MAT_ELEM(L1, float, i,0)
+//     // 		  + CV_MAT_ELEM(*(ImagePoints[1]), float, i, 1) * CV_MAT_ELEM(L1, float, i,1) 
+//     // 		  + CV_MAT_ELEM(L1, float, i,2));
+//     //   avgErr += err; 
+//     // } 
+//     // cerr << "Stereo Calibration Average Epipolar Error is: " <<  avgErr/N << endl ;
+
+//     // save calibration results
+//     saveParameters();
+//   }else{
+//     cerr << "Stereocalibration Failed! You need to calibrate your cameras first!" << endl;
+//   }
+// }
 
 
 
@@ -178,17 +198,17 @@ void OpenCVStereoCamera::setCalibrated(bool toWhat){
   Calibrated = toWhat;
 }
 
-
 void OpenCVStereoCamera::saveParameters(void){
-  cerr << "OpenCVStereoCamera: Saving parameters to " << EssentialMatrixFile << 
-    " and " << FundamentalMatrixFile << 
-    " and " << RotationMatrixFile << 
-    " and " << TranslationMatrixFile << endl;
-  cvSave(EssentialMatrixFile.c_str(), EssentialMatrix );
-  cvSave(FundamentalMatrixFile.c_str(), FundamentalMatrix );
-  cvSave(RotationMatrixFile.c_str(), RotationMatrix  );
-  cvSave(TranslationMatrixFile.c_str(), TranslationMatrix );
+  cerr << "OpenCVStereoCamera: Saving parameters to " << ParamFile << endl;
+
+  FileStorage fs(ParamFile, FileStorage::WRITE);
+  fs << "fundamental" << FundamentalMatrix;
+  fs << "essential" << EssentialMatrix;
+  fs << "rotation" << RotationMatrix;
+  fs << "translation" << TranslationMatrix;
+  fs.release();
 }
+
 
 
 

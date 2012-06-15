@@ -22,11 +22,12 @@
 #include <relacs/camera/opencvstereocameracalibration.h>
 using namespace relacs;
 
-#define IMGWIDTH 400
-#define IMGHEIGHT 400
+#define IMGWIDTH 500
+#define IMGHEIGHT 500
 #define INVFRAMERATE 30
 
 namespace camera {
+
 
 
 OpenCVStereoCameraCalibration::OpenCVStereoCameraCalibration( void )
@@ -66,33 +67,35 @@ OpenCVStereoCameraCalibration::OpenCVStereoCameraCalibration( void )
   QGridLayout *Positions = new QGridLayout;
   Positions->setHorizontalSpacing( 2 );
   Positions->setVerticalSpacing( 2 );
-  vb->addLayout( Positions );
+  bb->addLayout( Positions );
 
 
   // position watch
   QLabel* label = new QLabel( "Next capture in  " );
-  label->setAlignment( Qt::AlignCenter );
+  label->setAlignment( Qt::AlignRight );
   Positions->addWidget( label, 0, 0 );
 
   CountLCD = new QLCDNumber( 3 );
   CountLCD->setSegmentStyle( QLCDNumber::Filled );
   CountLCD->setFixedHeight( label->sizeHint().height()*1.5 );
+  CountLCD->setFixedWidth(50);
 
   CountLCD->setPalette( qp );
   CountLCD->setAutoFillBackground( true );
   Positions->addWidget( CountLCD, 0, 1 );
 
   label = new QLabel( "Calibration Frames Captured " );
-  label->setAlignment( Qt::AlignCenter );
-  Positions->addWidget( label, 0, 2 );
+  label->setAlignment( Qt::AlignRight );
+  Positions->addWidget( label, 1, 0 );
  
   FrameLCD = new QLCDNumber( 3 );
   FrameLCD->setSegmentStyle( QLCDNumber::Filled );
   FrameLCD->setFixedHeight( label->sizeHint().height()*1.5 );
+  FrameLCD->setFixedWidth(50);
 
   FrameLCD->setPalette( qp );
   FrameLCD->setAutoFillBackground( true );
-  Positions->addWidget( FrameLCD, 0, 3 );
+  Positions->addWidget( FrameLCD, 1, 1 );
 
   disableStream = false;
 
@@ -101,16 +104,16 @@ OpenCVStereoCameraCalibration::OpenCVStereoCameraCalibration( void )
 void OpenCVStereoCameraCalibration::timerEvent(QTimerEvent*){
   if (!disableStream){
     for (int i = 0; i != 2; ++i){
-      ImgTmp = cvQueryFrame(Capture[i]);
+      
+      Capture[i] >> ImgTmp;
 
       if (FoundCorners[i].size() > 0){
-	// Draw it
-	for (vector<CvPoint2D32f*>::size_type j =0; j != FoundCorners[i].size(); ++j){
-	  cvDrawChessboardCorners( ImgTmp, BoardSize, FoundCorners[i][j], CornerCount[i], true );
-	}
+      	for (vector< Mat >::size_type j =0; j != FoundCorners[i].size(); ++j){
+      	  drawChessboardCorners( ImgTmp, BoardSize, FoundCorners[i][j], found[i] );
+      	}
       }
-      
-      QtImg[i] = misc::ConvertImage(ImgTmp);
+
+      QtImg[i] = misc::Mat2QImage(ImgTmp);
       ImgLabel[i]->setPixmap(QPixmap::fromImage(QtImg[i].scaled(IMGWIDTH, IMGHEIGHT,Qt::KeepAspectRatio)));  
       ImgLabel[i]->show();
 
@@ -125,6 +128,7 @@ int OpenCVStereoCameraCalibration::main( void )
   unlockData();
 
 
+
   // initialize some data
   int BoardWidth = integer("BoardWidth"); // Board width in squares
   int BoardHeight = integer("BoardHeight"); // Board height 
@@ -134,7 +138,7 @@ int OpenCVStereoCameraCalibration::main( void )
   double squareHeight = number("SquareHeight");
 
   int InteriorPoints = BoardWidth * BoardHeight;
-  BoardSize = cvSize( BoardWidth, BoardHeight );
+  BoardSize = Size( BoardWidth, BoardHeight );
 
   
   // get stereo camera
@@ -189,42 +193,28 @@ int OpenCVStereoCameraCalibration::main( void )
 
     // get capture from camera object and take picture
     Capture[i] = Cam[i]->getCapture();
-    assert( Capture[i] );
-    QtImg[i] = misc::ConvertImage(cvQueryFrame( Capture[i] )); // properly initialize QtImg2 before starting timer
-
   }
   
-  int timer = startTimer(INVFRAMERATE); // start timer that causes timeEvent to be called which displays the image
+   int timer = startTimer(INVFRAMERATE); // start timer that causes timeEvent to be called which displays the image
 
-  CvMat* ImagePoints[2];
-  for (int i = 0; i != 2; ++i){
-    ImagePoints[i] = cvCreateMat( CalibrationFrames*InteriorPoints, 2, CV_32FC1 );
-  }
-    
-  CvMat* ObjectPoints = cvCreateMat( CalibrationFrames*InteriorPoints, 3, CV_32FC1 );
-  CvMat* PointCounts = cvCreateMat( CalibrationFrames, 1, CV_32SC1 );
+   vector< vector<Point3f> > ObjectPoints;
+   vector< vector<Point2f> > ImagePoints[2]; //this is an array of a vector of vectors, weird, I know
+   vector<Point2f> Corners[2];
 
-
-
-  int Successes = 0;
-  int Step, Frame = 0;
-  int found[2] = {0, 0};
-  CornerCount[0] = CornerCount[1] = 0;
+   int Successes = 0, Frame = 0;
 
   
-  IplImage *Image[2];
-  IplImage *GrayImage[2];
-  for (int i = 0; i != 2; ++i){
-    Image[i] = cvQueryFrame( Capture[i] );
-    GrayImage[i] = cvCreateImage( cvGetSize( Image[i] ), 8, 1 );
-  }
+   Mat Image[2];
+   Mat GrayImage[2];
+   for (int i = 0; i != 2; ++i){
+     Capture[i] >> Image[i];
+     cvtColor(Image[i], GrayImage[i], CV_BGR2GRAY);
+   }
   
 
   // Capture Corner views loop until we've got CalibrationFrames
   // succesful captures (all corners on the board are found)
   int i = 0;
-  bool needNewCorners = true;
-  CvPoint2D32f* Corners[2];
 
   while( Successes < CalibrationFrames ){
     if ( interrupt() ){
@@ -239,62 +229,45 @@ int OpenCVStereoCameraCalibration::main( void )
 
     // Skp every SkipFrames frames to allow user to move chessboard
     if( Frame % SkipFrames == 0 ){
-      if (needNewCorners){
-	for (i = 0; i != 2; ++i)
-	  Corners[i] = new CvPoint2D32f[ InteriorPoints ];
-	needNewCorners  = false;
-      }
+
 
       disableStream = true; // disable fetching in timerevent
       usleep(100000);
       for (i = 0; i != 2; ++i){
-      	Image[i] = cvQueryFrame( Capture[i] );
+	Capture[i] >> Image[i];
       }
       disableStream = false; // enable fetching in timerevent
 
       // Find chessboard corners:
       for (i = 0; i != 2; ++i){
-	found[i] = cvFindChessboardCorners( Image[i], BoardSize, Corners[i],
-					 &CornerCount[i], CV_CALIB_CB_ADAPTIVE_THRESH |
-					 CV_CALIB_CB_FILTER_QUADS );
+	found[i] = findChessboardCorners(Image[i], BoardSize, Corners[i], 
+					 CV_CALIB_CB_ADAPTIVE_THRESH + CV_CALIB_CB_NORMALIZE_IMAGE);
+	//CV_CALIB_CB_ADAPTIVE_THRESH | CV_CALIB_CB_FILTER_QUADS);	
       }
-      
-      if (found[0] == 1 && found[1] == 1){
+      if (found[0] && found[1]){
 
       	// Get subpixel accuracy on those corners
       	for (i = 0; i != 2; ++i){
-      	  cvCvtColor( Image[i], GrayImage[i], CV_BGR2GRAY );
-	  cvFindCornerSubPix( GrayImage[i], Corners[i], CornerCount[i], cvSize( 11, 11 ), 
-	   		      cvSize( -1, -1 ), cvTermCriteria( CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 30, 0.1 ));
-	  needNewCorners = true;
-	  FoundCorners[i].push_back(Corners[i]);
+      	  cvtColor( Image[i], GrayImage[i], CV_BGR2GRAY );
+	  cornerSubPix(GrayImage[i], Corners[i], Size(11,11),Size(-1,-1),
+		       TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS,30,0.1));
+	  FoundCorners[i].push_back(Mat(Corners[i],true)); // true is for copying data
+
 
       	}
 
       
+	// If we got a good board, add it to our data
+	vector<Point3f> obj;
+	for(int j=0;j<InteriorPoints;++j)
+	  obj.push_back(Point3f(squareHeight * (float)(j/BoardWidth), squareWidth*(float)(j%BoardWidth), 0.0f));
+	for (i = 0; i != 2; ++i)
+	  ImagePoints[i].push_back(vector<Point2f>(Corners[i]));
+	ObjectPoints.push_back(obj);
+
+	Successes++;
+	FrameLCD->display(Successes);
 	
-
-
-      	// If we got a good board, add it to our data
-      	if( CornerCount[0] == InteriorPoints  && CornerCount[1] == InteriorPoints){
-      	  Step = Successes * InteriorPoints;
-      	  for( int i=Step, j=0; j < InteriorPoints; ++i, ++j ){
-      	    for (int k = 0; k != 2; ++k){
-      	      CV_MAT_ELEM( *ImagePoints[k], float, i, 0 ) = Corners[k][j].x;
-      	      CV_MAT_ELEM( *ImagePoints[k], float, i, 1 ) = Corners[k][j].y;
-	      // cerr << Corners[k][j].x << ", " << Corners[k][j].y << " | ";
-      	    }
-	    // cerr << (float)squareHeight * (float)(j / BoardWidth) << ", " 
-	    // 	 << (float)squareWidth  * (float)(j % BoardWidth) << endl;
-      	    CV_MAT_ELEM( *ObjectPoints, float, i, 0 ) = (float)squareHeight * (float)(j / BoardWidth);
-      	    CV_MAT_ELEM( *ObjectPoints, float, i, 1 ) = (float)squareWidth  * (float)(j % BoardWidth);
-
-      	    CV_MAT_ELEM( *ObjectPoints, float, i, 2 ) = 0.0f;
-      	  }
-      	  CV_MAT_ELEM( *PointCounts, int, Successes, 0 ) = InteriorPoints;
-      	  Successes++;
-      	  FrameLCD->display(Successes);
-      	}
       }
 
     
@@ -303,10 +276,7 @@ int OpenCVStereoCameraCalibration::main( void )
     
   //// End collection while loop
 
-
-
-
-  SCam->calibrate( ObjectPoints, ImagePoints, PointCounts, cvGetSize( Image[0] ));
+  SCam->calibrate( ObjectPoints, ImagePoints, Image[0].size() );
 
   // kill timer to stop display
   killTimer(timer);
@@ -318,15 +288,10 @@ int OpenCVStereoCameraCalibration::main( void )
 
   readLockData();
   FrameLCD->display(0);
-  for (int j = 0; j != 2; ++j){
-    for (vector<CvPoint2D32f*>::size_type i =0; i != FoundCorners[j].size(); ++i){
-      delete (FoundCorners[j][i]);
-    }
-  }
-  
+ 
   return Completed;
 
-  }
+}
 
 
 addRePro( OpenCVStereoCameraCalibration, camera );

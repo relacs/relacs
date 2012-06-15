@@ -30,7 +30,7 @@
 #include <relacs/misc/opencvstereocamera.h>
 #include <relacs/camera/cameracontrol.h>
 using namespace relacs;
-
+using namespace cv;
 namespace camera {
 
 
@@ -61,15 +61,19 @@ public:
   QLabel* ImgLabel[2];
   QImage QtImg[2];
   QLCDNumber* FrameLCD, *CountLCD;
-  CvCapture* Capture[2];
+  VideoCapture Capture[2];
   misc::OpenCVCamera * Cam[2];
   misc::OpenCVStereoCamera *SCam;
+  bool found[2];
 
  private:
   bool disableStream;
-  vector<CvPoint2D32f*> FoundCorners[2];
-  IplImage *ImgTmp;
-  CvSize BoardSize;
+
+  Size BoardSize;
+  Mat ImgTmp;
+  vector< Mat > FoundCorners[2];
+
+
   int CornerCount[2];
 };
 

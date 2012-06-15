@@ -32,11 +32,12 @@
 
 using namespace std;
 using namespace relacs;
+using namespace cv;
 
 namespace misc {
 
   QImage ConvertImage( IplImage *Source);
-
+  QImage Mat2QImage(const cv::Mat src);
 
 /*!
 \class OpenCVCamera
@@ -62,31 +63,32 @@ class OpenCVCamera : public Camera
   virtual int reset( void );
 
   bool isCalibrated( void ) const {return Calibrated; };
-  CvCapture* getCapture(void) const {return Source; };
+  const VideoCapture getCapture(void) const {return Source; };
+  Mat getIntrinsicMatrix(void) const{return IntrinsicMatrix.clone();}
+  Mat getDistortionCoeffs(void) const{return DistortionCoeffs.clone();}
 
-  int calibrate(CvMat* ObjectPoints2, CvMat*  ImagePoints2,CvMat* PointCounts2, CvSize ImgSize, bool estDist);
+  int calibrate(vector< vector<Point3f> > ObjectPoints, vector< vector<Point2f> > ImagePoints, Size sz);
   void saveParameters(void);
   void recomputeUndistortionMaps(void);
   void setCalibrated(bool toWhat);
 
 
-  IplImage* grabFrame(void);
-  IplImage* grabFrame(bool undistort);
+  Mat grabFrame(void);
+  Mat grabFrame(bool undistort);
   QImage grabQImage(void);
 
  protected:
   bool Opened, Calibrated;
-  CvCapture *Source;
-  string IntrinsicFile, DistortionFile;
+  VideoCapture Source;
+  string ParamFile;
   int CameraNo;
 
-  IplImage* UDMapX;
-  IplImage* UDMapY;
+  Mat UDMapX, UDMapY;
 
 
  private:
   
-  CvMat *IntrinsicMatrix, *DistortionCoeffs;
+  Mat IntrinsicMatrix, DistortionCoeffs;
   bool EstimateDistortion;
 
 };
