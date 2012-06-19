@@ -64,12 +64,14 @@ class OpenCVStereoCamera : public Camera
   bool isCalibrated( void ) const {return Calibrated; };
   string getLeftCamDevice( void ) const { return LeftCamDevice;};
   string getRightCamDevice( void ) const {return RightCamDevice;};
+  Mat getFundamentalMatrix(void) const {return FundamentalMatrix;};
 
-  int calibrate(void);
+
   void saveParameters(void);
   void setCalibrated(bool toWhat);
 
-  /* void calibrate(CvMat* ObjectPoints,CvMat* ImagePoints[], CvMat* PointCounts, CvSize ImgSize); */
+  void transformLeftToRight( Mat & q);
+  void transformRightToLeft( Mat & q);
 
   int calibrate(vector< vector<Point3f> > ObjectPoints, vector< vector<Point2f> > ImagePoints[], Size sz);
   

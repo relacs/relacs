@@ -71,7 +71,10 @@ class OpenCVCamera : public Camera
   void saveParameters(void);
   void recomputeUndistortionMaps(void);
   void setCalibrated(bool toWhat);
-
+  
+  bool findChessboardCorners(const Size BoardSize, vector<Point2f>& Corners);
+  Mat findChessboard3D(const Mat ObjectPoints, const Mat ImagePoints);
+  Mat project(const Mat Points);
 
   Mat grabFrame(void);
   Mat grabFrame(bool undistort);

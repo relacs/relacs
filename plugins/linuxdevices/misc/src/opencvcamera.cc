@@ -106,6 +106,7 @@ int OpenCVCamera::open( const string &device, const Options &opts )
 
   }else{
     IntrinsicMatrix = Mat(3, 3, CV_32FC1);
+    DistortionCoeffs = Mat(1, 5, CV_32FC1);
 
     Calibrated = false;
   }
@@ -115,29 +116,74 @@ int OpenCVCamera::open( const string &device, const Options &opts )
 }
 
 
-  void OpenCVCamera::close( void ){
-    Opened = false;
-    Info.clear();
-    Settings.clear();
-    Source.release();
+bool OpenCVCamera::findChessboardCorners(const Size BoardSize, vector<Point2f>& Corners){
+  Mat Image = grabFrame();
+  bool found = cv::findChessboardCorners(Image, BoardSize, Corners, 
+					 CV_CALIB_CB_ADAPTIVE_THRESH + CV_CALIB_CB_NORMALIZE_IMAGE);
+  if (found){
+    Mat GrayImage;
+    cvtColor( Image, GrayImage, CV_BGR2GRAY );
+    cornerSubPix(GrayImage, Corners, Size(11,11),Size(-1,-1),
+		 TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS,30,0.1));
   }
+  return found;
   
-  int OpenCVCamera::calibrate(vector < vector<Point3f> > ObjectPoints, 
+}
+
+Mat OpenCVCamera::findChessboard3D(const Mat ObjectPoints, const Mat Corners){
+  /* The image points must be recorded with grabFrame */
+  Mat rvec, tvec, R;
+	  
+  solvePnP(ObjectPoints, Corners, IntrinsicMatrix, Mat::zeros(1,5,DistortionCoeffs.type()), rvec, tvec );
+
+  Rodrigues(rvec, R);
+  Mat O = ObjectPoints.clone().reshape(1).t(); 
+  R.convertTo(R, O.type());
+  tvec.convertTo(tvec, O.type());
+  Mat tmp = tvec * Mat::ones(1,O.cols,O.type());
+  return ((R * O) + tmp).t();
+  
+}
+
+Mat OpenCVCamera::project(const Mat Points){
+  Mat M = IntrinsicMatrix.clone();
+  M.convertTo(M,Points.type());
+
+  Mat tmp = (Points*M.t());
+  Mat tmp2 = Mat::ones((int)Points.rows, 3, Points.type());
+
+  for (int i = 0; i != tmp.rows; ++i){
+    tmp2.at<float>(i,0) = tmp.at<float>(i,0)/tmp.at<float>(i,2);
+    tmp2.at<float>(i,1) = tmp.at<float>(i,1)/tmp.at<float>(i,2);
+  }
+
+  return tmp2;
+}
+
+
+void OpenCVCamera::close( void ){
+  Opened = false;
+  Info.clear();
+  Settings.clear();
+  Source.release();
+}
+  
+int OpenCVCamera::calibrate(vector < vector<Point3f> > ObjectPoints, 
 			      vector< vector<Point2f> > ImagePoints, 
 			      Size sz){
     
-    vector<Mat> rvecs;
-    vector<Mat> tvecs;
-    calibrateCamera(ObjectPoints, ImagePoints, sz, 
-		    IntrinsicMatrix, DistortionCoeffs, 
-		    rvecs, tvecs,
-		    CV_CALIB_FIX_K1 + CV_CALIB_FIX_K2 + CV_CALIB_FIX_K3);
-    saveParameters();   
-    recomputeUndistortionMaps();
-    Calibrated = true;
-
-    return 0;
-  }
+  vector<Mat> rvecs;
+  vector<Mat> tvecs;
+  calibrateCamera(ObjectPoints, ImagePoints, sz, 
+		  IntrinsicMatrix, DistortionCoeffs, 
+		  rvecs, tvecs,0);
+  //		  CV_CALIB_FIX_K1 + CV_CALIB_FIX_K2 + CV_CALIB_FIX_K3);
+  saveParameters();   
+  recomputeUndistortionMaps();
+  Calibrated = true;
+  
+  return 0;
+}
 
 
 void OpenCVCamera::saveParameters(void){

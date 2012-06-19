@@ -117,12 +117,37 @@ void OpenCVStereoCamera::close( void ){
 
 }
 
+void OpenCVStereoCamera::transformLeftToRight( Mat& q){
+  if (Calibrated){
+    Mat R = RotationMatrix;
+    R.convertTo(R,q.type());
+
+    Mat T = TranslationMatrix;
+    T.convertTo(T,q.type());
+
+    q = q*R.t();
+    q += Mat::ones((int)q.rows,1,q.type())*T.t();
+  }else{
+    cerr << "Stereo Camera must be calibrated to transform coordinates!" << endl;
+  }
+
+}
 
 
+void OpenCVStereoCamera::transformRightToLeft( Mat& q){
+  if (Calibrated){
+    Mat R = RotationMatrix;
+    R.convertTo(R,q.type());
 
+    Mat T = TranslationMatrix;
+    T.convertTo(T,q.type());
 
-int OpenCVStereoCamera::calibrate(void){
-  return 0;
+    q -= Mat::ones((int)q.rows,1,q.type())*T.t();
+    q = q*R;
+  }else{
+    cerr << "Stereo Camera must be calibrated to transform coordinates!" << endl;
+  }
+
 }
 
 
@@ -145,7 +170,7 @@ int OpenCVStereoCamera::calibrate(vector< vector<Point3f> > ObjectPoints,
   stereoCalibrate(ObjectPoints, ImagePoints[0], ImagePoints[1], IntrinsicMatrix[0], DistortionCoeffs[0], 
 		  IntrinsicMatrix[0], DistortionCoeffs[0], sz, RotationMatrix, TranslationMatrix, 
 		  EssentialMatrix, FundamentalMatrix, 
-		  TermCriteria(TermCriteria::COUNT+  TermCriteria::EPS, 30, 1e-6), CALIB_FIX_INTRINSIC);
+		  TermCriteria(TermCriteria::COUNT+  TermCriteria::EPS, 2000, 1e-15), CV_CALIB_FIX_INTRINSIC);
 
   saveParameters();
 
@@ -153,40 +178,6 @@ int OpenCVStereoCamera::calibrate(vector< vector<Point3f> > ObjectPoints,
 }
   
   
-// void OpenCVStereoCamera::calibrate(CvMat* ObjectPoints,CvMat* ImagePoints[], 
-// 				   CvMat* PointCounts, CvSize ImgSize){
-
-
-
-//     // calibration quality check using Epipolar constraint
-//     int N = length(ObjectPoints);
-//     CvMat L1 = cvMat(N, 3, CV_32F); 
-//     CvMat L2 = cvMat(N, 3, CV_32F);
-//     // //Always work in undistorted space 
-//     // cvUndistortPoints( ImagePoints[0], ImagePoints[0], IntrinsicMatrix[0], 
-//     // 		       DistortionCoeffs[0], 0, IntrinsicMatrix[0] );
-//     // cvUndistortPoints( ImagePoints[1], ImagePoints[1], IntrinsicMatrix[1], 
-//     // 		       DistortionCoeffs[1], 0, IntrinsicMatrix[1] );
-//     // cvComputeCorrespondEpilines( ImagePoints[0], 1, FundamentalMatrix, &L1 ); 
-//     // cvComputeCorrespondEpilines( ImagePoints[1], 2, FundamentalMatrix, &L2 ); 
-//     // double avgErr = 0, err = 0; 
-//     // for(int i = 0; i < N; i++ ) {
-//     //   err = fabs(CV_MAT_ELEM(*(ImagePoints[0]), float, i, 0) * CV_MAT_ELEM(L2,float,i,0)
-//     // 		 + CV_MAT_ELEM(*(ImagePoints[0]), float, i, 1) * CV_MAT_ELEM(L2, float, i,1) 
-//     // 		 + CV_MAT_ELEM(L2, float, i,2));
-//     //   err += fabs(CV_MAT_ELEM(*(ImagePoints[1]), float, i, 0) * CV_MAT_ELEM(L1, float, i,0)
-//     // 		  + CV_MAT_ELEM(*(ImagePoints[1]), float, i, 1) * CV_MAT_ELEM(L1, float, i,1) 
-//     // 		  + CV_MAT_ELEM(L1, float, i,2));
-//     //   avgErr += err; 
-//     // } 
-//     // cerr << "Stereo Calibration Average Epipolar Error is: " <<  avgErr/N << endl ;
-
-//     // save calibration results
-//     saveParameters();
-//   }else{
-//     cerr << "Stereocalibration Failed! You need to calibrate your cameras first!" << endl;
-//   }
-// }
 
 
 

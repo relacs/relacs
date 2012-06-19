@@ -127,7 +127,9 @@ int OpenCVStereoCameraCalibration::main( void )
   // get options:
   unlockData();
 
-
+  // delete previously found corners
+  FoundCorners[0].clear();
+  FoundCorners[1].clear();
 
   // initialize some data
   int BoardWidth = integer("BoardWidth"); // Board width in squares
@@ -231,12 +233,12 @@ int OpenCVStereoCameraCalibration::main( void )
     if( Frame % SkipFrames == 0 ){
 
 
-      disableStream = true; // disable fetching in timerevent
-      usleep(100000);
+      // disable fetching in timerevent
+      disableStream = true; usleep(100000);
+      
       for (i = 0; i != 2; ++i){
 	Capture[i] >> Image[i];
       }
-      disableStream = false; // enable fetching in timerevent
 
       // Find chessboard corners:
       for (i = 0; i != 2; ++i){
@@ -250,7 +252,7 @@ int OpenCVStereoCameraCalibration::main( void )
       	for (i = 0; i != 2; ++i){
       	  cvtColor( Image[i], GrayImage[i], CV_BGR2GRAY );
 	  cornerSubPix(GrayImage[i], Corners[i], Size(11,11),Size(-1,-1),
-		       TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS,30,0.1));
+		       TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS,100,0.001));
 	  FoundCorners[i].push_back(Mat(Corners[i],true)); // true is for copying data
 
 
@@ -270,6 +272,10 @@ int OpenCVStereoCameraCalibration::main( void )
 	
       }
 
+      // enable fetching in timerevent
+      usleep(100000); disableStream = false;
+
+
     
     }
   }
@@ -283,7 +289,7 @@ int OpenCVStereoCameraCalibration::main( void )
 
   // unlock camera control
   unlockControl("CameraControl");
-  CamContrl->startStream();
+  CamContrl->stopStream();
 
 
   readLockData();

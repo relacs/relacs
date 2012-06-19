@@ -122,6 +122,7 @@ int OpenCVCameraCalibration::main( void )
 {
   // get options:
   unlockData();
+  FoundCorners.clear(); 
 
   int BoardWidth = integer("BoardWidth"); // Board width in squares
   int BoardHeight = integer("BoardHeight"); // Board height 
@@ -193,10 +194,10 @@ int OpenCVCameraCalibration::main( void )
     if( Frame % SkipFrames == 0 ){
       
 
-      disableStream = true;
-      usleep(10000);
+      // disable fetching from timerevent
+      disableStream = true; usleep(10000);
+      
       Capture >> Image;
-      disableStream = false;
 
       // Find chessboard corners:
       found = findChessboardCorners(Image, BoardSize, Corners, 
@@ -207,7 +208,7 @@ int OpenCVCameraCalibration::main( void )
       	cvtColor( Image, GrayImage, CV_BGR2GRAY );
    
 	cornerSubPix(GrayImage, Corners, Size(11,11),Size(-1,-1),
-	     TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS,30,0.1));
+	     TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS,100,0.01));
 	//	vector<Point2f> tmp = Corners;
 	FoundCorners.push_back(Mat(Corners,true)); // true is for copying data
 
@@ -223,6 +224,10 @@ int OpenCVCameraCalibration::main( void )
 	FrameLCD->display(Successes);
       } 
  
+      // enable fetching from timerevent
+     disableStream = false;  usleep(10000);
+
+
     }
     
   } // End collection while loop
@@ -236,13 +241,14 @@ int OpenCVCameraCalibration::main( void )
   killTimer(timer);
   // unlock camera control
   unlockControl("CameraControl");
-  CamContrl->startStream();
+  CamContrl->stopStream();
 
 
   readLockData();
   FrameLCD->display(0);
   return Completed;
 }
+
 
 
 addRePro( OpenCVCameraCalibration, camera );
