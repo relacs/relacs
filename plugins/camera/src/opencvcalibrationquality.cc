@@ -80,6 +80,10 @@ OpenCVCalibrationQuality::OpenCVCalibrationQuality( void )
 
   DoEpipolarError = new QCheckBox("Compute Epipolar Error");
   Positions->addWidget(DoEpipolarError,0,2);
+
+  DoPrincipalPoints = new QCheckBox("Show principal points");
+  Positions->addWidget(DoPrincipalPoints,0,3);
+
 }
 
 void OpenCVCalibrationQuality::timerEvent(QTimerEvent*)
@@ -91,8 +95,18 @@ void OpenCVCalibrationQuality::timerEvent(QTimerEvent*)
   }
 
   /*****************************************************************************************/
+  if ( DoPrincipalPoints->isChecked() ){
+    Mat tmp;
+    for (int i = 0; i != 2; ++i){
+      tmp = Cam[i]->getIntrinsicMatrix();
+
+      circle(Image[i], Point(tmp.at<double>(0,2), tmp.at<double>(1,2)), 3, Scalar(0,0,255) ,2 );
+    }
+  }
+
+  /*****************************************************************************************/
   for (int i = 0; i != 2; ++i){
-	found[i] = Cam[i]->findChessboardCorners(BoardSize, Corners[i]);
+    found[i] = Cam[i]->findChessboardCorners(Image[i], BoardSize, Corners[i]);
 
 
 	if (found[i]){
@@ -147,24 +161,7 @@ void OpenCVCalibrationQuality::timerEvent(QTimerEvent*)
 	     2, Scalar(0,255,0) ,2 );
     }
 
-
-
-// void OpenCVStereoCamera::calibrate(CvMat* ObjectPoints,CvMat* ImagePoints[], 
-// 				   CvMat* PointCounts, CvSize ImgSize){
-
-
-
-
-//     // cerr << "Stereo Calibration Average Epipolar Error is: " <<  avgErr/N << endl ;
-
-//     // save calibration results
-//     saveParameters();
-//   }else{
-//     cerr << "Stereocalibration Failed! You need to calibrate your cameras first!" << endl;
-//   }
-// }
-
-    
+   
   }
   /*****************************************************************************************/
   if ( found[0] && found[1] &&  DoEpipolarError->isChecked()){

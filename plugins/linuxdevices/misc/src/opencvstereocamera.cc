@@ -96,10 +96,10 @@ int OpenCVStereoCamera::open( const string &device, const Options &opts )
     Calibrated = true;
 
   }else{
-    EssentialMatrix = Mat(3, 3, CV_32FC1);
-    FundamentalMatrix =  Mat(3, 3, CV_32FC1);
-    RotationMatrix  = Mat(3, 3, CV_32FC1);
-    TranslationMatrix = Mat(3, 1, CV_32FC1);
+    EssentialMatrix = Mat(3, 3, CV_64FC1);
+    FundamentalMatrix =  Mat(3, 3, CV_64FC1);
+    RotationMatrix  = Mat(3, 3, CV_64FC1);
+    TranslationMatrix = Mat(3, 1, CV_64FC1);
 
     Calibrated = false;
   }
@@ -126,7 +126,11 @@ void OpenCVStereoCamera::transformLeftToRight( Mat& q){
     T.convertTo(T,q.type());
 
     q = q*R.t();
-    q += Mat::ones((int)q.rows,1,q.type())*T.t();
+    Mat tmp;
+    for (int j = 0; j != q.rows; ++j){
+      tmp = q.row(j);
+      tmp = tmp + T.t();
+    }
   }else{
     cerr << "Stereo Camera must be calibrated to transform coordinates!" << endl;
   }
@@ -139,10 +143,16 @@ void OpenCVStereoCamera::transformRightToLeft( Mat& q){
     Mat R = RotationMatrix;
     R.convertTo(R,q.type());
 
+
     Mat T = TranslationMatrix;
     T.convertTo(T,q.type());
 
-    q -= Mat::ones((int)q.rows,1,q.type())*T.t();
+    Mat tmp;
+    for (int j = 0; j != q.rows; ++j){
+      tmp = q.row(j);
+      tmp = tmp - T.t();
+    }
+
     q = q*R;
   }else{
     cerr << "Stereo Camera must be calibrated to transform coordinates!" << endl;
@@ -168,10 +178,9 @@ int OpenCVStereoCamera::calibrate(vector< vector<Point3f> > ObjectPoints,
 
 
   stereoCalibrate(ObjectPoints, ImagePoints[0], ImagePoints[1], IntrinsicMatrix[0], DistortionCoeffs[0], 
-		  IntrinsicMatrix[0], DistortionCoeffs[0], sz, RotationMatrix, TranslationMatrix, 
+		  IntrinsicMatrix[1], DistortionCoeffs[1], sz, RotationMatrix, TranslationMatrix, 
 		  EssentialMatrix, FundamentalMatrix, 
-		  TermCriteria(TermCriteria::COUNT+  TermCriteria::EPS, 2000, 1e-15), CV_CALIB_FIX_INTRINSIC);
-
+		  TermCriteria(TermCriteria::COUNT+  TermCriteria::EPS, 10000, 1e-15), CV_CALIB_FIX_INTRINSIC);
   saveParameters();
 
   return 0;

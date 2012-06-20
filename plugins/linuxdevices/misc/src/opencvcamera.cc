@@ -105,8 +105,8 @@ int OpenCVCamera::open( const string &device, const Options &opts )
 
 
   }else{
-    IntrinsicMatrix = Mat(3, 3, CV_32FC1);
-    DistortionCoeffs = Mat(1, 5, CV_32FC1);
+    IntrinsicMatrix = Mat(3, 3, CV_64FC1);
+    DistortionCoeffs = Mat(1, 5, CV_64FC1);
 
     Calibrated = false;
   }
@@ -115,6 +115,18 @@ int OpenCVCamera::open( const string &device, const Options &opts )
   return 0;
 }
 
+bool OpenCVCamera::findChessboardCorners(const Mat& Image, const Size BoardSize, vector<Point2f>& Corners){
+  bool found = cv::findChessboardCorners(Image, BoardSize, Corners, 
+					 CV_CALIB_CB_ADAPTIVE_THRESH + CV_CALIB_CB_NORMALIZE_IMAGE);
+  if (found){
+    Mat GrayImage;
+    cvtColor( Image, GrayImage, CV_BGR2GRAY );
+    cornerSubPix(GrayImage, Corners, Size(11,11),Size(-1,-1),
+		 TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS,30,0.1));
+  }
+  return found;
+  
+}
 
 bool OpenCVCamera::findChessboardCorners(const Size BoardSize, vector<Point2f>& Corners){
   Mat Image = grabFrame();
@@ -131,18 +143,34 @@ bool OpenCVCamera::findChessboardCorners(const Size BoardSize, vector<Point2f>& 
 }
 
 Mat OpenCVCamera::findChessboard3D(const Mat ObjectPoints, const Mat Corners){
+  return findChessboard3D(ObjectPoints, Corners, false);
+}
+
+
+Mat OpenCVCamera::findChessboard3D(const Mat ObjectPoints, const Mat Corners, bool undistort){
   /* The image points must be recorded with grabFrame */
   Mat rvec, tvec, R;
 	  
-  solvePnP(ObjectPoints, Corners, IntrinsicMatrix, Mat::zeros(1,5,DistortionCoeffs.type()), rvec, tvec );
+  Mat d;
+  if (undistort)
+    d = DistortionCoeffs;
+  else
+    d = Mat::zeros(1,5,DistortionCoeffs.type());
+  solvePnP(ObjectPoints, Corners, IntrinsicMatrix, d, rvec, tvec );
 
   Rodrigues(rvec, R);
-  Mat O = ObjectPoints.clone().reshape(1).t(); 
+  Mat O = ObjectPoints.clone().reshape(1); 
   R.convertTo(R, O.type());
   tvec.convertTo(tvec, O.type());
-  Mat tmp = tvec * Mat::ones(1,O.cols,O.type());
-  return ((R * O) + tmp).t();
-  
+
+
+  Mat tmp = O*R.t();
+  Mat tmp2;
+  for (int j = 0; j != tmp.rows; ++j){
+    tmp2 = tmp.row(j);
+    tmp2 = tmp2 + tvec.t();
+  }
+  return tmp;
 }
 
 Mat OpenCVCamera::project(const Mat Points){
@@ -153,8 +181,20 @@ Mat OpenCVCamera::project(const Mat Points){
   Mat tmp2 = Mat::ones((int)Points.rows, 3, Points.type());
 
   for (int i = 0; i != tmp.rows; ++i){
-    tmp2.at<float>(i,0) = tmp.at<float>(i,0)/tmp.at<float>(i,2);
-    tmp2.at<float>(i,1) = tmp.at<float>(i,1)/tmp.at<float>(i,2);
+    // tmp2.at<float>(i,0) = tmp.at<float>(i,0)/tmp.at<float>(i,2);
+    // tmp2.at<float>(i,1) = tmp.at<float>(i,1)/tmp.at<float>(i,2);
+    if (tmp2.type() == CV_32F){
+      tmp2.at<float>(i,0) = tmp.at<float>(i,0)/tmp.at<float>(i,2);
+      tmp2.at<float>(i,1) = tmp.at<float>(i,1)/tmp.at<float>(i,2);
+
+    }else if(tmp2.type() == CV_64F){
+      tmp2.at<double>(i,0) = tmp.at<double>(i,0)/tmp.at<double>(i,2);
+      tmp2.at<double>(i,1) = tmp.at<double>(i,1)/tmp.at<double>(i,2);
+
+    }else{
+      cerr << "OpenCVCamera.project: Type not kown!" << endl;
+    }
+    
   }
 
   return tmp2;
@@ -229,6 +269,7 @@ Mat OpenCVCamera::grabFrame(bool undistort){
     Mat Image;
     Source >> Image;
     if (Calibrated && undistort){
+
       Mat t = Image.clone();
       remap( t, Image, UDMapX, UDMapY, INTER_NEAREST,BORDER_CONSTANT, 0 );
       return Image; 

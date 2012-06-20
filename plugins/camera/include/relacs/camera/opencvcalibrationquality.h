@@ -57,7 +57,7 @@ class OpenCVCalibrationQuality : public RePro
 
  protected:
   void timerEvent(QTimerEvent*);
-  QCheckBox* DoReproj, *DoStereoTransform, *DoEpipolarError;
+  QCheckBox* DoReproj, *DoStereoTransform, *DoEpipolarError, *DoPrincipalPoints;
   QLabel* ImgLabel[2];
   QImage QtImg[2];
   //VideoCapture Capture[2];

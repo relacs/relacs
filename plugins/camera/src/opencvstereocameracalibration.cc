@@ -116,8 +116,6 @@ void OpenCVStereoCameraCalibration::timerEvent(QTimerEvent*){
       QtImg[i] = misc::Mat2QImage(ImgTmp);
       ImgLabel[i]->setPixmap(QPixmap::fromImage(QtImg[i].scaled(IMGWIDTH, IMGHEIGHT,Qt::KeepAspectRatio)));  
       ImgLabel[i]->show();
-
-
     }
   }
 }
@@ -253,6 +251,11 @@ int OpenCVStereoCameraCalibration::main( void )
       	  cvtColor( Image[i], GrayImage[i], CV_BGR2GRAY );
 	  cornerSubPix(GrayImage[i], Corners[i], Size(11,11),Size(-1,-1),
 		       TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS,100,0.001));
+
+	  
+	  
+
+
 	  FoundCorners[i].push_back(Mat(Corners[i],true)); // true is for copying data
 
 
