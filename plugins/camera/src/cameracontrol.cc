@@ -20,8 +20,8 @@
 */
 #define V_MIRROR 1
 #define H_MIRROR 2
-#define IMGHEIGHT 200
-#define IMGWIDTH  200
+#define IMGHEIGHT 240
+#define IMGWIDTH  320
 #define INVFRAMERATE 30
 
 #include <relacs/camera/cameracontrol.h>

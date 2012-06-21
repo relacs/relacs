@@ -93,8 +93,6 @@ OpenCVCameraCalibration::OpenCVCameraCalibration( void )
   Positions->addWidget( FrameLCD, 1, 1 );
 
 
-  // a few other parameters
-  disableStream = false;
 
 
 }
@@ -102,19 +100,17 @@ OpenCVCameraCalibration::OpenCVCameraCalibration( void )
 
 void OpenCVCameraCalibration::timerEvent(QTimerEvent*)
 {
-  if (!disableStream){
-    Capture >> TmpImg ;
-    if (FoundCorners.size() > 0){
-      	for (vector< Mat >::size_type i =0; i != FoundCorners.size(); ++i){
-      	  drawChessboardCorners( TmpImg, BoardSize, FoundCorners[i], found );
-      	}
-
+  TmpImg = Cam->grabRawFrame();
+  if (FoundCorners.size() > 0){
+    for (vector< Mat >::size_type i =0; i != FoundCorners.size(); ++i){
+      drawChessboardCorners( TmpImg, BoardSize, FoundCorners[i], found );
     }
-
-    QtImg = misc::Mat2QImage(TmpImg);
-    ImgLabel->setPixmap(QPixmap::fromImage(QtImg.scaled(IMGWIDTH, IMGHEIGHT,Qt::KeepAspectRatio)));  
-    ImgLabel->show();
+    
   }
+  
+  QtImg = misc::Mat2QImage(TmpImg);
+  ImgLabel->setPixmap(QPixmap::fromImage(QtImg.scaled(IMGWIDTH, IMGHEIGHT,Qt::KeepAspectRatio)));  
+  ImgLabel->show();
 }
 
 
@@ -154,14 +150,10 @@ int OpenCVCameraCalibration::main( void )
 
   Cam->setCalibrated(false); // set Camera to uncalibrated
 
-  // lock camera control to stop it accessing the camera
-  CamContrl->disable();
-  lockControl("CameraControl");
   
 
   
   // get capture from camera object and take picture
-  Capture = Cam->getCapture();
 
   int timer = startTimer(INVFRAMERATE); // start timer that causes timeEvent to be called which displays the image
 
@@ -173,7 +165,7 @@ int OpenCVCameraCalibration::main( void )
   found = false;
 
   Mat Image, GrayImage;
-  Capture >> Image;
+  Image = Cam->grabRawFrame();
   cvtColor(Image, GrayImage, CV_BGR2GRAY);
 
   // // Capture Corner views loop until we've got CalibrationFrames
@@ -194,10 +186,7 @@ int OpenCVCameraCalibration::main( void )
     if( Frame % SkipFrames == 0 ){
       
 
-      // disable fetching from timerevent
-      disableStream = true; usleep(10000);
-      
-      Capture >> Image;
+      Image = Cam->grabRawFrame();
 
       // Find chessboard corners:
       found = findChessboardCorners(Image, BoardSize, Corners, 
@@ -224,8 +213,6 @@ int OpenCVCameraCalibration::main( void )
 	FrameLCD->display(Successes);
       } 
  
-      // enable fetching from timerevent
-     disableStream = false;  usleep(10000);
 
 
     }
@@ -240,8 +227,8 @@ int OpenCVCameraCalibration::main( void )
   // // kill timer to stop display
   killTimer(timer);
   // unlock camera control
-  unlockControl("CameraControl");
-  CamContrl->stopStream();
+  // unlockControl("CameraControl");
+  // CamContrl->stopStream();
 
 
   readLockData();

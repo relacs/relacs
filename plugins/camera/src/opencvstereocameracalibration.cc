@@ -97,26 +97,23 @@ OpenCVStereoCameraCalibration::OpenCVStereoCameraCalibration( void )
   FrameLCD->setAutoFillBackground( true );
   Positions->addWidget( FrameLCD, 1, 1 );
 
-  disableStream = false;
 
 }
 
 void OpenCVStereoCameraCalibration::timerEvent(QTimerEvent*){
-  if (!disableStream){
-    for (int i = 0; i != 2; ++i){
-      
-      Capture[i] >> ImgTmp;
-
-      if (FoundCorners[i].size() > 0){
-      	for (vector< Mat >::size_type j =0; j != FoundCorners[i].size(); ++j){
-      	  drawChessboardCorners( ImgTmp, BoardSize, FoundCorners[i][j], found[i] );
-      	}
+  for (int i = 0; i != 2; ++i){
+    
+    ImgTmp = Cam[i]->grabRawFrame();
+    
+    if (FoundCorners[i].size() > 0){
+      for (vector< Mat >::size_type j =0; j != FoundCorners[i].size(); ++j){
+	drawChessboardCorners( ImgTmp, BoardSize, FoundCorners[i][j], found[i] );
       }
-
-      QtImg[i] = misc::Mat2QImage(ImgTmp);
-      ImgLabel[i]->setPixmap(QPixmap::fromImage(QtImg[i].scaled(IMGWIDTH, IMGHEIGHT,Qt::KeepAspectRatio)));  
-      ImgLabel[i]->show();
-    }
+      }
+    
+    QtImg[i] = misc::Mat2QImage(ImgTmp);
+    ImgLabel[i]->setPixmap(QPixmap::fromImage(QtImg[i].scaled(IMGWIDTH, IMGHEIGHT,Qt::KeepAspectRatio)));  
+    ImgLabel[i]->show();
   }
 }
 
@@ -160,10 +157,6 @@ int OpenCVStereoCameraCalibration::main( void )
     cerr << "Could not get pointer to camera control" << endl;
     readLockData();
     return 1;
-  }else{
-    printlog("Disabling camera control");
-    CamContrl->disable();
-    lockControl("CameraControl");
   }
   
 
@@ -191,8 +184,6 @@ int OpenCVStereoCameraCalibration::main( void )
       return 1;
     }
 
-    // get capture from camera object and take picture
-    Capture[i] = Cam[i]->getCapture();
   }
   
    int timer = startTimer(INVFRAMERATE); // start timer that causes timeEvent to be called which displays the image
@@ -207,7 +198,7 @@ int OpenCVStereoCameraCalibration::main( void )
    Mat Image[2];
    Mat GrayImage[2];
    for (int i = 0; i != 2; ++i){
-     Capture[i] >> Image[i];
+     Image[i] = Cam[i]->grabRawFrame();
      cvtColor(Image[i], GrayImage[i], CV_BGR2GRAY);
    }
   
@@ -231,11 +222,9 @@ int OpenCVStereoCameraCalibration::main( void )
     if( Frame % SkipFrames == 0 ){
 
 
-      // disable fetching in timerevent
-      disableStream = true; usleep(100000);
       
       for (i = 0; i != 2; ++i){
-	Capture[i] >> Image[i];
+	Image[i] = Cam[i]->grabRawFrame();
       }
 
       // Find chessboard corners:
@@ -275,9 +264,6 @@ int OpenCVStereoCameraCalibration::main( void )
 	
       }
 
-      // enable fetching in timerevent
-      usleep(100000); disableStream = false;
-
 
     
     }
@@ -290,9 +276,6 @@ int OpenCVStereoCameraCalibration::main( void )
   // kill timer to stop display
   killTimer(timer);
 
-  // unlock camera control
-  unlockControl("CameraControl");
-  CamContrl->stopStream();
 
 
   readLockData();

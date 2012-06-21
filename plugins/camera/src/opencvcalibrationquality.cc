@@ -218,17 +218,13 @@ int OpenCVCalibrationQuality::main( void )
     }
   }
 
-  // get and disable camera control
+  // get camera control
   CameraControl* CamContrl = 0;
   CamContrl = dynamic_cast< CameraControl* >( control("CameraControl") );
   if (CamContrl == 0 ) {
     cerr << "Could not get pointer to camera control" << endl;
     readLockData();
     return 1;
-  }else{
-    printlog("Disabling camera control");
-    CamContrl->disable();
-    lockControl("CameraControl");
   }
 
   // get cameras from cameracontrols
@@ -268,9 +264,6 @@ int OpenCVCalibrationQuality::main( void )
       readLockData();
       killTimer(timer);
 
-      // unlock camera control
-      unlockControl("CameraControl");
-      CamContrl->stopStream();
       break;
     }
 

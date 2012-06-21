@@ -61,7 +61,6 @@ public:
   QLabel* ImgLabel[2];
   QImage QtImg[2];
   QLCDNumber* FrameLCD, *CountLCD;
-  VideoCapture Capture[2];
   misc::OpenCVCamera * Cam[2];
   misc::OpenCVStereoCamera *SCam;
   bool found[2];

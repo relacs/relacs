@@ -39,6 +39,36 @@ namespace misc {
   QImage ConvertImage( IplImage *Source);
   QImage Mat2QImage(const cv::Mat src);
 
+ 
+
+
+
+  class VideoBuffer{
+  public:
+    VideoBuffer(int camid, int fraRt, int blen);
+    int Start();
+    int Stop();
+    Mat getCurrentFrame(void);
+    bool isReady( void ) const {return ready; };
+   protected:
+    int CameraID;
+    int BufLen;
+    int FrameRate;
+    Mat* buf;
+    int Run();
+    static void * EntryPoint(void*);
+    void Setup();
+    void Execute();
+    void Exit();
+    bool active, ready;
+   private:
+    pthread_t id;
+    VideoCapture Source;
+    int currentFrame;
+    
+  };
+
+
 /*!
 \class OpenCVCamera
 \author Fabian Sinz
@@ -63,7 +93,6 @@ class OpenCVCamera : public Camera
   virtual int reset( void );
 
   bool isCalibrated( void ) const {return Calibrated; };
-  const VideoCapture getCapture(void) const {return Source; };
   Mat getIntrinsicMatrix(void) const{return IntrinsicMatrix.clone();}
   Mat getDistortionCoeffs(void) const{return DistortionCoeffs.clone();}
 
@@ -79,15 +108,16 @@ class OpenCVCamera : public Camera
   Mat findChessboard3D(const Mat ObjectPoints, const Mat ImagePoints, bool undistort);
 
   Mat grabFrame(void);
+  Mat grabRawFrame(void);
   Mat grabFrame(bool undistort);
   QImage grabQImage(void);
 
  protected:
   bool Opened, Calibrated;
-  VideoCapture Source;
+  VideoCapture Source; // TOGO
   string ParamFile;
-  int CameraNo;
-
+  int CameraNo, FrameRate;
+  VideoBuffer* VidBuf;
   Mat UDMapX, UDMapY;
 
 
