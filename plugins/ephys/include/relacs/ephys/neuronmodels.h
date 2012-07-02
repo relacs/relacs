@@ -68,6 +68,8 @@ public:
   void setTimeStep( double deltat ) { SimDT = deltat; };
     /*! The standard deviation of the noise. */
   double noiseSD( void ) const { return NoiseSD; };
+    /*! Set the standard deviation of the noise to \a noisesd. */
+  void setNoiseSD( double noisesd ) { NoiseSD = noisesd; };
     /*! The active Spiking Neuron model. */
   SpikingNeuron *neuron( void ) const { return NM; };
 

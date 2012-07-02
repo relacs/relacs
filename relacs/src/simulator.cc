@@ -88,12 +88,12 @@ int Simulator::read( InList &data )
   for ( int k=0; k<data.size(); k++ ) {
     // no device?
     if ( data[k].device() < 0 ) {
-      continue;
-      /*
-      data[k].addError( DaqError::NoDevice );
-      data[k].setDevice( 0 );
-      success = false;
-      */
+      if ( data[k].source() <= 0 ) {
+	// filters have device = -1 but should not cause errors!
+	data[k].addError( DaqError::NoDevice );
+	data[k].setDevice( 0 );
+	success = false;
+      }
     }
     else if ( data[k].device() >= (int)AI.size() ) {
       data[k].addError( DaqError::NoDevice );

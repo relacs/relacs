@@ -210,7 +210,6 @@ void Model::restart( void )
 {
   InterruptModel = false;
   Restarted = true;
-  SignalMutex.lock();
   Thread->start( QThread::HighestPriority );
 }
 

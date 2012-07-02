@@ -116,7 +116,7 @@ void NeuronModels::main( void )
 void NeuronModels::operator()( double t, double *x, double *dxdt, int n )
 {
   CurrentInput = signal( 0.001 * t, 0 );
-  double s = ( CurrentInput + NM->offset() ) * NM->gain() + NoiseSD * rnd.gaussian();;
+  double s = ( CurrentInput + NM->offset() ) * NM->gain() + noiseSD() * rnd.gaussian();
   (*NM)( t, s, x, dxdt, n );
 }
 
@@ -168,8 +168,8 @@ void NeuronModels::addOptions( void )
 void NeuronModels::readOptions( void )
 {
   // read out options:
-  NoiseSD = number( "noise" );
-  SimDT = number( "deltat" );
+  setNoiseSD( number( "noise" ) );
+  setTimeStep( number( "deltat", "ms" ) );
   NM = Models[ index( "spikemodel" ) ];
   NM->notify();
   int integrator = index( "integrator" );

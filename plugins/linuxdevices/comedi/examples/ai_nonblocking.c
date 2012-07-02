@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
   cmd.stop_arg = 0;
   
   cmd.chanlist = chanlist;
-  cmd.chanlist_len = options.n_chan;
+  cmd.chanlist_len = 1;
 
   chanlist[0] = CR_PACK(options.channel, options.range, options.aref);
 

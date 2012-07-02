@@ -944,7 +944,7 @@ ostream &operator<<( ostream &str, const InData &id )
   str << "Dither: " << id.Dither << '\n';
   str << "Unipolar: " << id.Unipolar << '\n';
   str << "GainIndex: " << id.GainIndex << '\n';
-  str << "GainData: " << id.GainData << '\n';
+  str << "GainData: " << (void*)id.GainData << '\n';
   str << "Scale: " << id.Scale << '\n';
   str << "Unit: " << id.Unit << '\n';
   str << "Source: " << id.Source << '\n';

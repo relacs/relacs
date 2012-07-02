@@ -118,6 +118,7 @@ char *cmd_src(int src,char *buf)
 void dump_cmd(FILE *out,comedi_cmd *cmd)
 {
 	char buf[100];
+	int i;
 
 	fprintf(out,"subdevice:      %d\n",
 		cmd->subdev);
@@ -141,4 +142,13 @@ void dump_cmd(FILE *out,comedi_cmd *cmd)
 	fprintf(out,"stop:       %-8s %d\n",
 		cmd_src(cmd->stop_src,buf),
 		cmd->stop_arg);
+
+	fprintf(out,"chanlist_len: %d\n",
+		cmd->chanlist_len );
+
+	for ( i=0; i<cmd->chanlist_len; i++ ) {
+	  fprintf(out,"  chanlist[%d]: %d\n",
+		  i,
+		  cmd->chanlist[i] );
+	}
 }
