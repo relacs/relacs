@@ -376,10 +376,31 @@ public slots:
 	If a mutex was provided it is locked within this function
 	and consequently during notify() and valuesChanged().
 	This function can only be called from the GUI thread.
+	Same as a successive execution of acceptGet() and acceptNotify().
 	\sa reset(), resetDefault(), setMutex() */
   void accept( bool clearchanged );
     /*! Same as accept( bool ) with \a clearchanged set to true. */
   void accept( void );
+    /*! Set values of the Options according to the changes
+        entered by the user via the OptWidget.
+	Each options whose value was changed by the user gets 
+	the changedFlag() set.
+	If a mutex was provided it is locked within this function
+	and consequently during notify() and valuesChanged().
+	This function can only be called from the GUI thread.
+	Identical to the first part of the accept() function.
+	\sa reset(), resetDefault(), setMutex() */
+  void acceptGet( void );
+    /*! Calls the Options::notify() function
+	and emits signal valuesChanged().
+	Finally the changedFlag() is cleared 
+	if \a clearchanged is set to \c true.
+	If a mutex was provided it is locked within this function
+	and consequently during notify() and valuesChanged().
+	This function can only be called from the GUI thread.
+	Identical to the second part of the accept() function.
+	\sa reset(), resetDefault(), setMutex() */
+  void acceptNotify( bool clearchanged );
     /*! Reset all input fields to their initial values.
 	If a mutex was provided it is locked within this function.
 	This function can only be called from the GUI thread.

@@ -71,12 +71,20 @@ public:
   virtual ~Model( void );
 
     /*! Reimplement this function with your own simulation.
+        With signal() the current stimulus can be retrieved.
+	\note When parameter of the simulation are changed
+	the simulation thread is terminated by requesting main()
+	to terminate (see interrupt() )
+	and restarted by calling main() again. The input traces
+	are, however, not cleared. Use time() to keep your simulation
+	time in sync with the buffer time (and thus the stimulus times
+	used by signal()).
         \sa push(), traces(), deltat() */
   virtual void main( void );
 
     /*! Process a new signal.
         By reimplementing this function, any signals can be preprocessed
-	before they are used by the model.
+	before they are used by the model via signal() in main().
         The original signal is \a source.
 	The processed signal has to be written to \a dest.
         \a dest is initialized as an empty OutData.
@@ -91,11 +99,13 @@ public:
 
     /*! Returns the signal of output trace \a trace at time \a t. 
         Specifically, this function returns the data value 
-	of the current signal at or right before time \a t. */
+	of the current signal at or right before time \a t.
+        Time \a t is measured in seconds,
+	relative to the time of the recorded traces.*/
   double signal( double t, int trace=0 ) const;
 
     /*! Returns \c true if the simulation thread should be stopped.
-        Use this from within main()
+        Use this within main() to terminate the simulation properly.
         \code
          void MyModel::main( void )
 	 {

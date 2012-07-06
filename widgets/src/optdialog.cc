@@ -383,7 +383,9 @@ void OptDialogButton::clicked( void )
   switch ( Action ) {
   case OptDialog::Accept :
     for ( unsigned int k=0; k<OWs.size(); k++ )
-      OWs[k]->accept( false );
+      OWs[k]->acceptGet();
+    for ( unsigned int k=0; k<OWs.size(); k++ )
+      OWs[k]->acceptNotify( false );
     emit accepted();
     for ( unsigned int k=0; k<OWs.size(); k++ ) {
       OWs[k]->options()->delFlags( OptDialog::changedFlag() );

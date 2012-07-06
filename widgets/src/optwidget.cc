@@ -777,6 +777,42 @@ void OptWidget::accept( void )
 }
 
 
+void OptWidget::acceptGet( void )
+{
+  lockMutex();
+
+  // get the values:
+  for ( unsigned int k=0; k<Widgets.size(); k++ )
+    Widgets[k]->get();
+
+  unlockMutex();
+}
+
+
+void OptWidget::acceptNotify( bool clearchanged )
+{
+  lockMutex();
+
+  // notify:
+  DisableUpdate = true;
+  bool cn = Opt->notifying();
+  Opt->unsetNotify();
+  if ( cn )
+    Opt->notify();
+  Opt->setNotify( cn );
+  DisableUpdate = false;
+
+  // react to accept:
+  emit valuesChanged();
+
+  // clear changedflag:
+  if ( clearchanged )
+    Opt->delFlags( changedFlag() );
+
+  unlockMutex();
+}
+
+
 void OptWidget::reset( void )
 {
   lockMutex();

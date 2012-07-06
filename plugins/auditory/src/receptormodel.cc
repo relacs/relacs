@@ -188,7 +188,7 @@ void ReceptorModel::main( void )
   }
 
   // integrate:
-  double t = 0.0;
+  double t = 1000.0*time( 0 );  // time must be syncrhonous to recorded trace!
   while ( ! interrupt() ) {
 
     Integrate( t, simx, dxdt, simn, timeStep(), *this );
