@@ -1024,8 +1024,6 @@ void Connor::add( void )
   insertLabel( "A current", "Leak current", ModelFlag );
   insertNumber( "gka", "Leak current", "A conductivity", GKA, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
   insertNumber( "eka", "Leak current", "A reversal potential", EKA, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
-
-  SpikingNeuron::add();
 }
 
 
@@ -1154,8 +1152,6 @@ void RushRinzel::add( void )
   insertNumber( "bv0", "Leak current", "Midpoint potential of b-gate", BV0, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
   insertNumber( "bdv", "Leak current", "Dynamic range of b-gate", BDV, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
   insertNumber( "btau", "Leak current", "Time constant of b-gate", BTau, 0.0, 1000.0, 0.2, "ms" ).setFlags( ModelFlag );
-
-  SpikingNeuron::add();
 }
 
 
