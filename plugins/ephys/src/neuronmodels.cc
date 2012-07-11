@@ -35,6 +35,9 @@ NeuronModels::NeuronModels( void )
   addOptions();
   addTypeStyle( OptWidget::Bold, Parameter::Label );
   addModels();
+  MMCInx = -1;
+  MMHCInx = -1;
+  HMHCInx = -1;
 }
 
 
@@ -78,10 +81,29 @@ void NeuronModels::main( void )
     maxs = 1;
   setTimeStep( 1000.0 * deltat( 0 ) / maxs );
   int cs = 0;
+  setNoiseFac();
 
   // state variables:
   int simn = neuron()->dimension();
+  if ( GMC > 1e-8  ) {
+    MMCInx = simn;
+    simn++;
+  }
+  else
+    MMCInx = -1;
+  if ( GMHC > 1e-8  ) {
+    MMHCInx = simn;
+    simn++;
+    HMHCInx = simn;
+    simn++;
+  }
+  else {
+    MMHCInx = -1;
+    HMHCInx = -1;
+  }
   double simx[simn];
+  for ( int k=0; k<simn; k++ )
+    simx[k] = 0.0;
   double dxdt[simn];
   neuron()->init( simx );
 
@@ -116,8 +138,26 @@ void NeuronModels::main( void )
 void NeuronModels::operator()( double t, double *x, double *dxdt, int n )
 {
   CurrentInput = signal( 0.001 * t, 0 );
-  double s = ( CurrentInput + NM->offset() ) * NM->gain() + noiseSD() * rnd.gaussian();
+  double s = ( CurrentInput + NM->offset() ) * NM->gain();
+  s += noiseFac() * rnd.gaussian();
+
+  if ( MMCInx >= 0 )
+    s -= GMC*x[MMCInx]*(x[0]-EMC);
+  if ( MMHCInx >= 0 )
+    s -= GMHC * ::pow( x[MMHCInx], PMMHC ) * ::pow( x[HMHCInx], PHMHC ) * (x[0]-EMHC);
+
   (*NM)( t, s, x, dxdt, n );
+
+  if ( MMCInx >= 0 ) {
+    double m0mc = 1.0/(exp(-(x[0]-MVMC)/MWMC)+1.0);
+    dxdt[MMCInx] = ( m0mc - x[MMCInx] )/TAUMC;
+  }
+  if ( MMHCInx >= 0 ) {
+    double m0mhc = 1.0/(exp(-(x[0]-MVMHC)/MWMHC)+1.0);
+    dxdt[MMHCInx] = ( m0mhc - x[MMHCInx] )/TAUMMHC;
+    double h0mhc = 1.0/(exp(-(x[0]-HVMHC)/HWMHC)+1.0);
+    dxdt[HMHCInx] = ( h0mhc - x[HMHCInx] )/TAUHMHC;
+  }
 }
 
 
@@ -151,7 +191,12 @@ void NeuronModels::addModels( void )
   add( new Stimulus() );
   add( new MorrisLecar() );
   add( new HodgkinHuxley() );
-  add( new WangBuzsakiAdapt(), "Wang-Buzsaki" );
+  add( new Connor() );
+  //  add( new RushRinzel() );
+  //  add( new Awiszus() );
+  //  add( new TraubMiles() );
+  //  add( new TraubErmentrout2001() );
+  add( new WangBuzsaki() );
 }
 
 
@@ -159,16 +204,33 @@ void NeuronModels::addOptions( void )
 {
   addLabel( "Spike generator" );
   addSelection( "spikemodel", "Spike model", "" );
-  addNumber( "noise", "Standard deviation of current noise", 0.0, 0.0, 100.0, 1.0 );
+  addNumber( "noised", "Intensity of current noise", 0.0, 0.0, 100.0, 1.0 );
   addNumber( "deltat", "Delta t", 0.005, 0.0, 1.0, 0.001, "ms" );
   addSelection( "integrator", "Method of integration", "Euler|Midpoint|Runge-Kutta 4" );
+  addLabel( "Voltage-gated current 1 (activation only)" );
+  addNumber( "gmc", "Conductivity", 0.0, 0.0, 10000.0, 0.1 );
+  addNumber( "emc", "Reversal potential", -90.0, -200.0, 200.0, 1.0, "mV" ).setActivation( "gmc", ">0" );
+  addNumber( "mvmc", "Midpoint potential of activation", -40, -200.0, 200.0, 1.0, "mV" ).setActivation( "gmc", ">0" );
+  addNumber( "mwmc", "Width of activation", 10.0, -1000.0, 1000.0, 1.0, "mV" ).setActivation( "gmc", ">0" );
+  addNumber( "taumc", "Time constant", 10.0, 0.0, 1000.0, 1.0, "ms" ).setActivation( "gmc", ">0" );
+  addLabel( "Voltage-gated current 2  (activation and inactivation)" );
+  addNumber( "gmhc", "Conductivity", 0.0, 0.0, 10000.0, 0.1 );
+  addNumber( "emhc", "Reversal potential", -90.0, -200.0, 200.0, 1.0, "mV" ).setActivation( "gmhc", ">0" );
+  addNumber( "mvmhc", "Midpoint potential of activation", -40, -200.0, 200.0, 1.0, "mV" ).setActivation( "gmhc", ">0" );
+  addNumber( "mwmhc", "Width of activation", 10.0, -1000.0, 1000.0, 1.0, "mV" ).setActivation( "gmhc", ">0" );
+  addNumber( "taummhc", "Time constant of activation", 10.0, 0.0, 1000.0, 1.0, "ms" ).setActivation( "gmhc", ">0" );
+  addNumber( "pmmhc", "Power of activation gate", 1.0, 0.0, 100.0, 1.0 ).setActivation( "gmhc", ">0" );
+  addNumber( "hvmhc", "Midpoint potential of inactivation", -40, -200.0, 200.0, 1.0, "mV" ).setActivation( "gmhc", ">0" );
+  addNumber( "hwmhc", "Width of inactivation", 10.0, -1000.0, 1000.0, 1.0, "mV" ).setActivation( "gmhc", ">0" );
+  addNumber( "tauhmhc", "Time constant of inactivation", 10.0, 0.0, 1000.0, 1.0, "ms" ).setActivation( "gmhc", ">0" );
+  addNumber( "pmhhc", "Power of inactivation gate", 1.0, 0.0, 100.0, 1.0 ).setActivation( "gmhc", ">0" );
 }
 
 
 void NeuronModels::readOptions( void )
 {
   // read out options:
-  setNoiseSD( number( "noise" ) );
+  setNoiseD( number( "noised" ) );
   setTimeStep( number( "deltat", "ms" ) );
   NM = Models[ index( "spikemodel" ) ];
   NM->notify();
@@ -179,6 +241,22 @@ void NeuronModels::readOptions( void )
     Integrate = rk4Step;
   else
     Integrate = eulerStep;
+
+  GMC = number( "gmc" );
+  EMC = number( "emc" );
+  MVMC = number( "mvmc" );
+  MWMC = number( "mwmc" );
+  TAUMC = number( "taumc" );
+  GMHC = number( "gmhc" );
+  EMHC = number( "emhc" );
+  MVMHC = number( "mvmhc" );
+  MWMHC = number( "mwmhc" );
+  TAUMMHC = number( "taummhc" );
+  PMMHC = number( "pmmhc" );
+  HVMHC = number( "hvmhc" );
+  HWMHC = number( "hwmhc" );
+  TAUHMHC = number( "tauhmhc" );
+  PHMHC = number( "phmhc" );
 }
 
 

@@ -90,15 +90,32 @@ void PUnitModel::main( void )
     maxs = 1;
   setTimeStep( 1000.0 * deltat( 0 ) / maxs );
   int cs = 0;
+  setNoiseFac();
 
   // OU normalisation factor for noise term:
   EODFreqFac = ::sqrt( 2.0*EODFreqTau/timeStep());
 
   // state variables:
   int simn = sigdimension + neuron()->dimension();
+  if ( GMC > 1e-8  ) {
+    MMCInx = simn;
+    simn++;
+  }
+  else
+    MMCInx = -1;
+  if ( GMHC > 1e-8  ) {
+    MMHCInx = simn;
+    simn++;
+    HMHCInx = simn;
+    simn++;
+  }
+  else {
+    MMHCInx = -1;
+    HMHCInx = -1;
+  }
   double simx[simn];
   double dxdt[simn];
-  for ( int k=0; k<sigdimension; k++ )
+  for ( int k=0; k<simn; k++ )
     simx[k] = dxdt[k] = 0.0;
   neuron()->init( simx+sigdimension );
 
@@ -160,8 +177,23 @@ void PUnitModel::operator()( double t, double *x, double *dxdt, int n )
   Signal = sglobal + sglobalam;
   EOD2 += Signal;
   Signal *= SignalFac;
-  double s = EOD2 * neuron()->gain() + neuron()->offset() + noiseSD() * rand.gaussian();
+  double s = EOD2 * neuron()->gain() + neuron()->offset();
+  s += noiseFac() * rand.gaussian();
+  if ( MMCInx >= 0 )
+    s -= GMC*x[MMCInx]*(x[2]-EMC);
+  if ( MMHCInx >= 0 )
+    s -= GMHC * ::pow( x[MMHCInx], PMMHC ) * ::pow( x[HMHCInx], PHMHC ) * (x[2]-EMHC);
   (*neuron())( t, s, x+2, dxdt+2, n-2 );
+  if ( MMCInx >= 0 ) {
+    double m0mc = 1.0/(exp(-(x[2]-MVMC)/MWMC)+1.0);
+    dxdt[MMCInx] = ( m0mc - x[MMCInx] )/TAUMC;
+  }
+  if ( MMHCInx >= 0 ) {
+    double m0mhc = 1.0/(exp(-(x[2]-MVMHC)/MWMHC)+1.0);
+    dxdt[MMHCInx] = ( m0mhc - x[MMHCInx] )/TAUMMHC;
+    double h0mhc = 1.0/(exp(-(x[2]-HVMHC)/HWMHC)+1.0);
+    dxdt[HMHCInx] = ( h0mhc - x[HMHCInx] )/TAUHMHC;
+  }
 }
 
 

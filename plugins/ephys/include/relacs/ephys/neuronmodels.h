@@ -34,13 +34,35 @@ namespace ephys {
 \brief [Model] Various models of spiking (point-) neurons.
 \author Jan Benda
 \author Alexander Wolf
-\version 1.0 (Jan 10, 2006)
+\version 1.2 (Jul 11, 2012)
+
+The Gaussian white noise and the optional additional voltage gated
+currents are added to the input after the offset and gain for the
+input current has been applied.
+
 \par Options
 - Spike generator
 - \c spikemodel=Stimulus: Spike model (\c string)
-- \c noise=0: Standard deviation of current noise (\c number)
+- \c noised=0: Intensity of current noise (\c number)
 - \c deltat=0.005ms: Delta t (\c number)
 - \c integrator=Euler: Method of integration (\c string)
+- Voltage-gated current 1 (activation only)
+- \c gmc=0: Conductivity (\c number)
+- \c emc=-90mV: Reversal potential (\c number)
+- \c mvmc=-40mV: Midpoint potential of activation (\c number)
+- \c mwmc=10mV: Width of activation (\c number)
+- \c taumc=10ms: Time constant (\c number)
+- Voltage-gated current 2  (activation and inactivation)
+- \c gmhc=0: Conductivity (\c number)
+- \c emhc=-90mV: Reversal potential (\c number)
+- \c mvmhc=-40mV: Midpoint potential of activation (\c number)
+- \c mwmhc=10mV: Width of activation (\c number)
+- \c taummhc=10ms: Time constant of activation (\c number)
+- \c pmmhc=1: Power of activation gate (\c number)
+- \c hvmhc=-40mV: Midpoint potential of inactivation (\c number)
+- \c hwmhc=10mV: Width of inactivation (\c number)
+- \c tauhmhc=10ms: Time constant of inactivation (\c number)
+- \c pmhhc=1: Power of inactivation gate (\c number)
 */
 
 
@@ -66,10 +88,14 @@ public:
   double timeStep( void ) const { return SimDT; };
     /*! Set the integration time step to \a deltat. */
   void setTimeStep( double deltat ) { SimDT = deltat; };
-    /*! The standard deviation of the noise. */
-  double noiseSD( void ) const { return NoiseSD; };
-    /*! Set the standard deviation of the noise to \a noisesd. */
-  void setNoiseSD( double noisesd ) { NoiseSD = noisesd; };
+    /*! The intensity of the noise. */
+  double noiseD( void ) const { return NoiseD; };
+    /*! Set the intensity of the noise to \a noised. */
+  void setNoiseD( double noised ) { NoiseD = noised; };
+    /*! The prefactor for the Gaussian noise to get the noise intensity noiseD(). */
+  double noiseFac( void ) const { return NoiseFac; };
+    /* Uses noiseD() and timeStep() for setting noiseFac() correctly to \f$ \sqrt{ 2 D/ \Delta t} \f$. */
+  void setNoiseFac( void ) { NoiseFac = ::sqrt( 2.0*NoiseD/SimDT ); };
     /*! The active Spiking Neuron model. */
   SpikingNeuron *neuron( void ) const { return NM; };
 
@@ -94,14 +120,36 @@ public:
   void dialogModelOptions( OptDialog *od );
   virtual void dialogOptions( OptDialog *od );
 
+  double CurrentInput;
+
+  double GMC;
+  double EMC;
+  double MVMC;
+  double MWMC;
+  double TAUMC;
+  int MMCInx;
+
+  double GMHC;
+  double EMHC;
+  double MVMHC;
+  double MWMHC;
+  double TAUMMHC;
+  double PMMHC;
+  int MMHCInx;
+  double HVMHC;
+  double HWMHC;
+  double TAUHMHC;
+  double PHMHC;
+  int HMHCInx;
+
  private:
   
   vector< SpikingNeuron* > Models;
   vector< string > Titles;
   SpikingNeuron *NM;
-  double NoiseSD;
+  double NoiseD;
+  double NoiseFac;
   double SimDT;
-  double CurrentInput;
 
 };
 
