@@ -1,3 +1,5 @@
+auditory::Session plots do not work! Why????
+
 OptWidget:
   updateValues called from notify from valueChanged does nothing, since DisableUpdate is set!
   This is aproblem for all filters and detectors!
