@@ -241,7 +241,7 @@ void MetaData::notifyMetaData( const string &section )
 }
 
 
-void MetaData::save( void )
+void MetaData::save( const string &title, const Options &opts )
 {
   lock();
 
@@ -249,10 +249,17 @@ void MetaData::save( void )
   RW->SS.lock();
   ofstream of( RW->SF->addPath( RW->SS.text( "infofile" ) ).c_str() );
   RW->SS.unlock();
+
   for ( unsigned int k=0; k<MetaDataSections.size(); k++ )
     MetaDataSections[k]->save( of );
 
   unlock();
+
+  if ( ! title.empty() && ! opts.empty() ) {
+    of << "# " << title << '\n';
+    opts.save( of, "# ", -1, 0, false, true );
+  }
+
 }
 
 

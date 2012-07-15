@@ -1516,7 +1516,14 @@ void RELACSWidget::stopSession( bool saved )
 {
   printlog( "stop session" );
 
-  MTDT.save();
+  string modeltitle = "";
+  Options modelopts;
+  if ( MD != 0 && simulation() ) {
+    modeltitle = "Simulation parameter";
+    modelopts = MD->metaData();
+  }
+
+  MTDT.save( modeltitle, modelopts );
 
   if ( MD != 0 )
     MD->sessionStopped( saved );

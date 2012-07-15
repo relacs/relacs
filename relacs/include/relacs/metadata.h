@@ -214,8 +214,10 @@ public:
         \param[in] section the name of the MetaDataSection in which the change occured. */
   void notifyMetaData( const string &section );
 
-    /*! Saves the meta data into the info file of the session. */
-  void save( void );
+    /*! Saves the meta data of all sections into the info file of the session.
+        Additionally appends the meta data \a opts with title \a title
+        to the info file, if both of them are not empty. */
+  void save( const string &title="", const Options &opts = Options() );
     /*! Write meta data that have saveFlags() set in their flags()
         in XML format to output stream.
         \param[in] str the output stream

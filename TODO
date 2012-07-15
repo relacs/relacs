@@ -1,4 +1,4 @@
-auditory::Session plots do not work! Why????
+auditory::Session plots do not work! Why???? It works on my laptop!
 
 OptWidget:
   updateValues called from notify from valueChanged does nothing, since DisableUpdate is set!
@@ -29,7 +29,6 @@ Metadata support of OutData:
 - Stimulus section needs a file (if available)!
 
 MetaData:
-- Simulation mode should save model Options to info file!
 - Implement in all RePros OutData::descriptions() by using appropriate OutData functions !
 - SaveFiles: finish reorganization of saveStimuli(): check XXX comments
 - Parameter::label should get a level that is used to make sections in the XML file ?

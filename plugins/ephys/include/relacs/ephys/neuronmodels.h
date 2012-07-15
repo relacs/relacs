@@ -31,7 +31,7 @@ namespace ephys {
 
 /*! 
 \class NeuronModels
-\brief [Model] Various models of spiking (point-) neurons.
+\brief [Model] Various models of conductance-based spiking (point-) neurons.
 \author Jan Benda
 \author Alexander Wolf
 \version 1.2 (Jul 11, 2012)
@@ -83,6 +83,8 @@ public:
   virtual void process( const OutData &source, OutData &dest );
 
   virtual void operator()( double t, double *x, double *dxdt, int n );
+
+  virtual Options metaData( void );
 
     /*! The integration time step. */
   double timeStep( void ) const { return SimDT; };

@@ -158,6 +158,12 @@ void Model::notify( void )
 }
 
 
+Options Model::metaData( void )
+{
+  return *this;
+}
+
+
 double Model::signal( double t, int trace ) const 
 {
   if ( Signals.empty() || trace < 0 || trace >= (int)Signals.size() )

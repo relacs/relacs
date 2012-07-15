@@ -43,10 +43,9 @@ class ModelThread;
 /*! 
 \class Model
 \author Jan Benda
-\version 0.8
+\version 1.0
 \brief Base class of all models used by Simulate.
 \bug Check locking of signals AND traces!
-\bug restart() synchronization of real time, data buffers and signal times does not work
 */
 
 class Model : public RELACSPlugin 
@@ -71,6 +70,11 @@ public:
   virtual ~Model( void );
 
     /*! Reimplement this function with your own simulation.
+        You can check the expected input traces using
+	traces(), traceName(), deltat(), and scale().
+	Eventually you should fill all input traces
+	using push() in an infinite loop that only terminates
+	if interrupt() returns \c true..
         With signal() the current stimulus can be retrieved.
 	\note When parameter of the simulation are changed
 	the simulation thread is terminated by requesting main()
@@ -78,8 +82,7 @@ public:
 	and restarted by calling main() again. The input traces
 	are, however, not cleared. Use time() to keep your simulation
 	time in sync with the buffer time (and thus the stimulus times
-	used by signal()).
-        \sa push(), traces(), deltat() */
+	used by signal()). */
   virtual void main( void );
 
     /*! Process a new signal.
@@ -96,6 +99,12 @@ public:
         The default implementation simply restarts the simulation,
         assuming that main() first reads out the Options. */
   virtual void notify( void );
+
+    /*! This function is called at the end of a recording session
+        and should return any metadata describing the model and its parameter.
+	The metadata are then saved to the sessions info file.
+        The default implementation simply returns the %Model's Options. */
+  virtual Options metaData( void );
 
     /*! Returns the signal of output trace \a trace at time \a t. 
         Specifically, this function returns the data value 
@@ -135,11 +144,10 @@ public:
     /*! The current time of trace \a trace. 
         This is the number of so far pushed data elements times deltat(). */
   double time( int trace ) const;
-    /*! The scale for scaling the voltage into a seconday unit
+    /*! The scale for scaling the voltage into a secondary unit
         of trace \a trace of the simulated data.
 	The value in the secondary unit is \a scale times the voltage at
-	the daq board plus the \a offset.
-        \sa gain(), offset() */
+	the daq board. */
   float scale( int trace ) const;
 
     /*! Returns the averaged load of the simulation process. */
@@ -176,8 +184,7 @@ private:
 	voltage to secondary unit factor \a scale,
 	a buffer with \a nbuffer elements.
 	\sa clear() */
-  void add( const string &name, double deltat, 
-	    double scale, int nbuffer );
+  void add( const string &name, double deltat, double scale, int nbuffer );
     /*! Clear trace buffers. 
         \sa add() */
   void clear( void );

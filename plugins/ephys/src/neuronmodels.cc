@@ -135,6 +135,12 @@ void NeuronModels::main( void )
 }
 
 
+void NeuronModels::process( const OutData &source, OutData &dest )
+{
+  dest = source;
+}
+
+
 void NeuronModels::operator()( double t, double *x, double *dxdt, int n )
 {
   CurrentInput = signal( 0.001 * t, 0 );
@@ -161,9 +167,16 @@ void NeuronModels::operator()( double t, double *x, double *dxdt, int n )
 }
 
 
-void NeuronModels::process( const OutData &source, OutData &dest )
+Options NeuronModels::metaData( void )
 {
-  dest = source;
+  Options opts;
+  opts.addLabel( configIdent() );
+  opts.append( *this );
+  if ( NM != 0 ) {
+    opts.addLabel( NM->configIdent() );
+    opts.append( *NM );
+  }
+  return opts;
 }
 
 

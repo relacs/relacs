@@ -31,7 +31,7 @@ namespace auditory {
 
 /*! 
 \class ReceptorModel
-\brief [Model] Spiking neuron model stimulated through an auditory transduction chain.
+\brief [Model] Spiking neuron model stimulated through an %auditory transduction chain.
 \author Alexander Wolf
 \author Jan Benda
 
