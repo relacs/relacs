@@ -1394,7 +1394,7 @@ void EventData::push( double time, double esize, double ewidth )
       Cycles++;
     }
     else {
-      int n = NBuffer > 10 ? 3*NBuffer/2 : 10;
+      int n = NBuffer >= 10 ? 3*NBuffer/2 : 10;
       reserve( n );
     }
   }
