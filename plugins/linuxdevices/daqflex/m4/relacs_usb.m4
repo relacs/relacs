@@ -16,6 +16,8 @@ USB_LDFLAGS=
 USB_CPPFLAGS=
 USB_LIBS=
 
+RELACS_USB=no
+
 # the following lines are a quick workaround for a properly installed libusb-1.0:
 #USB_LIBS="-lusb-1.0"
 #RELACS_USB=yes
