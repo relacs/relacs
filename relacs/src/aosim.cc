@@ -106,12 +106,20 @@ double AOSim::maxRate( void ) const
 
 int AOSim::testWriteDevice( OutList &sigs )
 {
+  for ( int k=0; k<sigs.size(); k++ ) {
+    sigs[k].setMinVoltage( -10.0 );
+    sigs[k].setMaxVoltage( 10.0 );
+  }
   return sigs.failed() ? -1 : 0;
 }
 
 
 int AOSim::directWrite( OutList &sigs )
 {
+  for ( int k=0; k<sigs.size(); k++ ) {
+    sigs[k].setMinVoltage( -10.0 );
+    sigs[k].setMaxVoltage( 10.0 );
+  }
   return 0;  
 }
 
@@ -122,6 +130,11 @@ int AOSim::prepareWrite( OutList &sigs )
   if ( running() ) {
     sigs.addError( DaqError::Busy );
     return -1;
+  }
+
+  for ( int k=0; k<sigs.size(); k++ ) {
+    sigs[k].setMinVoltage( -10.0 );
+    sigs[k].setMaxVoltage( 10.0 );
   }
 
   // success:

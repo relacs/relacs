@@ -82,6 +82,7 @@ Analog Input/Output:
 - directWrite implementation should take care about synchronization as well!
   ComediAnalogOutput should use instruction lists for this.
 - Add error messages string to all devices that can be set especially from the open() call.
+- Comedi autotools check: old comedi versions do not have the setrouting function
 
 Dynamic clamp:
 - CHECK IT! Both kernel modules, optional trigger, and DynClmapAnalogOutput
