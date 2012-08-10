@@ -45,7 +45,8 @@ AS_HELP_STRING([--without-tml],[don't use TML, i.e. prevent auto-detection])],
 # check tml:
 TML_MISSING="TML not found in path ${with_tml}."
 AS_IF([test "x$with_tml" != xno],
-  [AC_CHECK_HEADERS([TML_lib.h],
+  [SUCCESS=yes
+   AC_CHECK_HEADERS([TML_lib.h],
      [if test "x$with_tml" != xdetect; then
         RELACS_TML=$with_tml
       else
@@ -55,7 +56,7 @@ AS_IF([test "x$with_tml" != xno],
      [if test "x$with_tml" != xdetect; then
         AC_MSG_ERROR(${TML_MISSING})
       fi
-      RELACS_TML=no
+      SUCCESS=no
      ])
    AC_CHECK_LIB([TML_lib], [main],
      [TML_LIBS="-lTML_lib -lz"
@@ -68,8 +69,9 @@ AS_IF([test "x$with_tml" != xno],
      [if test "x$with_tml" != xdetect; then
         AC_MSG_ERROR(${TML_MISSING})
       fi
-      RELACS_TML=no
+      SUCCESS=no
      ], [-lz])
+   AS_IF([test $SUCCESS = no],[RELACS_TML=no])
   ],
   [ RELACS_TML=no ] )
 

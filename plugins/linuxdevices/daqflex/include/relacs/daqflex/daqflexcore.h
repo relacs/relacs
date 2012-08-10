@@ -36,9 +36,6 @@ namespace daqflex {
 \author Jan Benda
 \version 1.0
 \brief [Device] The DAQFlex interface over libusb
-
-\par Options
-- \c probe: the type of the temperatur sensor (1=PT1000)
 */
 
 class DAQFlexCore : public Device

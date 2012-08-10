@@ -51,7 +51,8 @@ AS_IF([test "x$with_opencv" = xdetect],
 # check opencv:
 OPENCV_MISSING="OpenCV not found in path ${with_opencv}."
 AS_IF([test "x$with_opencv" != xno],
-  [AC_CHECK_HEADERS([cv.h highgui.h],
+  [SUCCESS=yes
+   AC_CHECK_HEADERS([cv.h highgui.h],
      [if test "x$with_opencv" != xdetect; then
         RELACS_OPENCV=$with_opencv
       else
@@ -61,7 +62,7 @@ AS_IF([test "x$with_opencv" != xno],
      [if test "x$with_opencv" != xdetect; then
         AC_MSG_ERROR(${OPENCV_MISSING})
       fi
-      RELACS_OPENCV=no
+      SUCCESS=no
      ])
    AC_CHECK_LIB(cv, [main],
      [OPENCV_LIBS="-lcv -lhighgui -lcvaux"
@@ -74,8 +75,9 @@ AS_IF([test "x$with_opencv" != xno],
      [if test "x$with_opencv" != xdetect; then
         AC_MSG_ERROR(${OPENCV_MISSING})
       fi
-      RELACS_OPENCV=no
+      SUCCESS=no
      ], [-lhighgui -lcvaux -lm])
+   AS_IF([test $SUCCESS = no],[RELACS_OPENCV=no])
   ],
   [ RELACS_OPENCV=no ] )
 

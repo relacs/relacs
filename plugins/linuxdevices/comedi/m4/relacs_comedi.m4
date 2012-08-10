@@ -45,7 +45,8 @@ AS_HELP_STRING([--without-comedi],[don't use Comedi, i.e. prevent auto-detection
 # check comedi:
 COMEDI_MISSING="Comedi not found in path ${with_comedi}."
 AS_IF([test "x$with_comedi" != xno],
-  [AC_CHECK_HEADERS([comedilib.h],
+  [SUCCESS=yes
+   AC_CHECK_HEADERS([comedilib.h],
      [if test "x$with_comedi" != xdetect; then
         RELACS_COMEDI=$with_comedi
       else
@@ -55,7 +56,7 @@ AS_IF([test "x$with_comedi" != xno],
      [if test "x$with_comedi" != xdetect; then
         AC_MSG_ERROR(${COMEDI_MISSING})
       fi
-      RELACS_COMEDI=no
+      SUCCESS=no
      ])
    AC_CHECK_LIB([comedi], [main],
      [COMEDI_LIBS="-lcomedi"
@@ -68,8 +69,9 @@ AS_IF([test "x$with_comedi" != xno],
      [if test "x$with_comedi" != xdetect; then
         AC_MSG_ERROR(${COMEDI_MISSING})
       fi
-      RELACS_COMEDI=no
+      SUCCESS=no
      ])
+   AS_IF([test $SUCCESS = no],[RELACS_COMEDI=no])
   ],
   [ RELACS_COMEDI=no ] )
 
