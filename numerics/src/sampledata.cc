@@ -394,5 +394,131 @@ SampleData<> triangle( double l, double r, double stepsize, double period )
 }
 
 
+template<>
+SampleData< double > &SampleData< double >::loadSndFile( const string &file, int channel )
+{
+  clear();
+
+  // open sound file:
+  SF_INFO sfinfo;
+  SNDFILE *infile = sf_open( file.c_str(), SFM_READ, &sfinfo );
+  if ( infile == NULL ) {
+    cerr << "Not able to open sound file " << file << ": "
+	 << sf_strerror( NULL ) << '\n';
+    return *this;
+  }
+
+  // set up:
+  double samplerate = sfinfo.samplerate;
+  if ( samplerate <= 0.0 ) {
+    cerr << "Invalid or unknown sample rate\n";
+    return *this;
+  }
+  int channels = sfinfo.channels;
+  if ( channel < 0 || channel >= channels ) {
+    cerr << "Invalid channel requested: " << channel << ">=" << channels << "\n";
+    return *this;
+  }
+  setRange( 0.0, 1.0/samplerate );
+  reserve( sfinfo.frames );
+
+  // read:
+  const int blocksize = 512;
+  double buffer[channels * blocksize];
+  int readcount = 0;
+  while ( (readcount = sf_readf_double( infile, buffer, blocksize ) ) > 0 ) {
+    for ( int k=0; k<readcount ; k++ )
+      push( buffer[k*channels + channel] );
+  }
+  
+  sf_close( infile );
+  return *this;
+}
+
+
+template<>
+SampleData< float > &SampleData< float >::loadSndFile( const string &file, int channel )
+{
+  clear();
+
+  // open sound file:
+  SF_INFO sfinfo;
+  SNDFILE *infile = sf_open( file.c_str(), SFM_READ, &sfinfo );
+  if ( infile == NULL ) {
+    cerr << "Not able to open sound file " << file << ": "
+	 << sf_strerror( NULL ) << '\n';
+    return *this;
+  }
+
+  // set up:
+  double samplerate = sfinfo.samplerate;
+  if ( samplerate <= 0.0 ) {
+    cerr << "Invalid or unknown sample rate\n";
+    return *this;
+  }
+  int channels = sfinfo.channels;
+  if ( channel < 0 || channel >= channels ) {
+    cerr << "Invalid channel requested: " << channel << ">=" << channels << "\n";
+    return *this;
+  }
+  setRange( 0.0, 1.0/samplerate );
+  reserve( sfinfo.frames );
+
+  // read:
+  const int blocksize = 512;
+  float buffer[channels * blocksize];
+  int readcount = 0;
+  while ( (readcount = sf_readf_float( infile, buffer, blocksize ) ) > 0 ) {
+    for ( int k=0; k<readcount ; k++ )
+      push( buffer[k*channels + channel] );
+  }
+  
+  sf_close( infile );
+  return *this;
+}
+
+
+template<>
+SampleData< short > &SampleData< short >::loadSndFile( const string &file, int channel )
+{
+  clear();
+
+  // open sound file:
+  SF_INFO sfinfo;
+  SNDFILE *infile = sf_open( file.c_str(), SFM_READ, &sfinfo );
+  if ( infile == NULL ) {
+    cerr << "Not able to open sound file " << file << ": "
+	 << sf_strerror( NULL ) << '\n';
+    return *this;
+  }
+
+  // set up:
+  double samplerate = sfinfo.samplerate;
+  if ( samplerate <= 0.0 ) {
+    cerr << "Invalid or unknown sample rate\n";
+    return *this;
+  }
+  int channels = sfinfo.channels;
+  if ( channel < 0 || channel >= channels ) {
+    cerr << "Invalid channel requested: " << channel << ">=" << channels << "\n";
+    return *this;
+  }
+  setRange( 0.0, 1.0/samplerate );
+  reserve( sfinfo.frames );
+
+  // read:
+  const int blocksize = 512;
+  short buffer[channels * blocksize];
+  int readcount = 0;
+  while ( (readcount = sf_readf_short( infile, buffer, blocksize ) ) > 0 ) {
+    for ( int k=0; k<readcount ; k++ )
+      push( buffer[k*channels + channel] );
+  }
+  
+  sf_close( infile );
+  return *this;
+}
+
+
 }; /* namespace relacs */
 

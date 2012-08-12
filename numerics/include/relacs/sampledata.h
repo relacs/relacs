@@ -26,6 +26,9 @@
 #include <iostream>
 #include <fstream>
 #include <iomanip>
+#ifdef HAVE_LIBSNDFILE
+#include <sndfile.h>
+#endif
 #include <relacs/array.h>
 #include <relacs/linearrange.h>
 #include <relacs/containerfuncs.h>
@@ -1355,9 +1358,19 @@ class SampleData : public Array< T >
         then the last read line is returned in \a line. */
   istream &load( istream &str, const string &stop="", string *line=0 );
   SampleData< T > &load( const string &file, const string &comment="#",
-			   const string &stop="" );
+			 const string &stop="" );
   template < typename TT >
   friend istream &operator>>( istream &str, SampleData<TT> &a );
+
+#ifdef HAVE_LIBSNDFILE
+    /*! Load a single channel from audio file \a file via libsndfile
+        (http://www.mega-nerd.com/libsndfile).
+        \a channel specifies the channel to be loaded.
+        If \a T is a \c double or a \c float the values of the SampleData
+        will range between -1 and 1. For short and int the values will
+	range between the minimum and maximum possible values. */
+  SampleData< T > &loadSndFile( const string &file, int channel=0 );
+#endif
 
 
 private:
@@ -4122,6 +4135,64 @@ istream &operator>>( istream &str, SampleData< T > &a )
 {
   return a.load( str );
 }
+
+
+#ifdef HAVE_LIBSNDFILE
+
+template<>
+  SampleData< double > &SampleData< double >::loadSndFile( const string &file, int channel );
+
+
+template<>
+  SampleData< float > &SampleData< float >::loadSndFile( const string &file, int channel );
+
+
+template<>
+  SampleData< short > &SampleData< short >::loadSndFile( const string &file, int channel );
+
+
+template < typename T > 
+SampleData< T > &SampleData< T >::loadSndFile( const string &file, int channel )
+{
+  clear();
+
+  // open sound file:
+  SF_INFO sfinfo;
+  SNDFILE *infile = sf_open( file.c_str(), SFM_READ, &sfinfo );
+  if ( infile == NULL ) {
+    cerr << "Not able to open sound file " << file << ": "
+	 << sf_strerror( NULL ) << '\n';
+    return *this;
+  }
+
+  // set up:
+  double samplerate = sfinfo.samplerate;
+  if ( samplerate <= 0.0 ) {
+    cerr << "Invalid or unknown sample rate\n";
+    return *this;
+  }
+  int channels = sfinfo.channels;
+  if ( channel < 0 || channel >= channels ) {
+    cerr << "Invalid channel requested: " << channel << ">=" << channels << "\n";
+    return *this;
+  }
+  setRange( 0.0, 1.0/samplerate );
+  reserve( sfinfo.frames );
+
+  // read:
+  const int blocksize = 512;
+  int buffer[channels * blocksize];
+  int readcount = 0;
+  while ( (readcount = sf_readf_int( infile, buffer, blocksize ) ) > 0 ) {
+    for ( int k=0; k<readcount ; k++ )
+      push( buffer[k*channels + channel] );
+  }
+  
+  sf_close( infile );
+  return *this;
+}
+
+#endif
 
 
 }; /* namespace relacs */

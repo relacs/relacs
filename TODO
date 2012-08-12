@@ -9,6 +9,7 @@ General:
 - make the config files more generic (lab address!)
 - check device config files
 - check all config files
+- update m4 files: relacs_sndfile is most up to date
 
 Robot:
 - Remove RELACS_COND_TML from plugins/base/src/Makefile.am once the necessary functionality has been moved back to Manipulator

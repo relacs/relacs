@@ -79,6 +79,12 @@ RELACS_LIB_GSL()
 
 
 #################################################
+## SNDFILE
+#################################################
+RELACS_LIB_SNDFILE()
+
+
+#################################################
 ## Qt4, moc
 #################################################
 RELACS_LIB_QT4()
@@ -339,6 +345,7 @@ AC_OUTPUT
 cat <<SUMMARY
 
     Use GSL ...................... ${RELACS_GSL}
+    Use sndfile .................. ${RELACS_SNDFILE}
     Use Comedi ................... ${RELACS_COMEDI}
     Use RTAI ..................... ${RELACS_RTAI}
     Use libusb ................... ${RELACS_USB}
