@@ -111,8 +111,19 @@ public:
   enum Gradient {
     GrayGradient=0,
     BlueGreenRedGradient,
-    BlueGreenRedWhiteGradient,
+    BlackBlueGreenRedWhiteGradient,
+    BlueRedYellowWhiteGradient,
     BlueRedGradient
+  };
+
+  class HSVGradientColor {
+  public:
+    HSVGradientColor( int hue, int sat, int val, double frac )
+      : Hue( hue ), Sat( sat ), Val( val ), Frac( frac ) {};
+    int Hue;
+    int Sat;
+    int Val;
+    double Frac;
   };
 
     /*! Positions for tic marks. */

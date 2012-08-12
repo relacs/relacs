@@ -2317,29 +2317,51 @@ void Plot::drawSurface( QPainter &paint )
   ly = SData->lastY( YMin[yaxis], YMax[yaxis] );
 
   // gradient:
+  vector<HSVGradientColor> hsvcolors;
+  switch ( SData->gradient() ) {
+  case BlueGreenRedGradient :
+    hsvcolors.reserve( 3 );
+    hsvcolors.push_back( HSVGradientColor( 240, 255, 255, 0.0 ) );
+    hsvcolors.push_back( HSVGradientColor( 120, 255, 255, 0.5 ) );
+    hsvcolors.push_back( HSVGradientColor( 0, 255, 255, 1.0 ) );
+  case BlackBlueGreenRedWhiteGradient :
+    hsvcolors.reserve( 5 );
+    hsvcolors.push_back( HSVGradientColor( 240, 255, 0, 0.0 ) );
+    hsvcolors.push_back( HSVGradientColor( 240, 255, 255, 0.05 ) );
+    hsvcolors.push_back( HSVGradientColor( 120, 255, 255, 0.5 ) );
+    hsvcolors.push_back( HSVGradientColor( 0, 255, 255, 0.95 ) );
+    hsvcolors.push_back( HSVGradientColor( 0, 0, 255, 1.0 ) );
+  case BlueRedGradient :
+    hsvcolors.reserve( 2 );
+    hsvcolors.push_back( HSVGradientColor( 240, 255, 255, 0.0 ) );
+    hsvcolors.push_back( HSVGradientColor( 360, 255, 255, 1.0 ) );
+  case BlueRedYellowWhiteGradient :
+    hsvcolors.reserve( 4 );
+    hsvcolors.push_back( HSVGradientColor( 240, 255, 255, 0.0 ) );
+    hsvcolors.push_back( HSVGradientColor( 360, 255, 255, 0.5 ) );
+    hsvcolors.push_back( HSVGradientColor( 420, 255, 255, 0.95 ) );
+    hsvcolors.push_back( HSVGradientColor( 420, 0, 255, 1.0 ) );
+  default:
+    hsvcolors.reserve( 2 );
+    hsvcolors.push_back( HSVGradientColor( 0, 0, 0, 0.0 ) );
+    hsvcolors.push_back( HSVGradientColor( 0, 0, 255, 1.0 ) );
+  }
+
   QVector<QRgb> colortable( 256 );
   int index = 0;
+  int hsvinx = 0;
   for ( QVector<QRgb>::Iterator iter = colortable.begin();
 	iter != colortable.end();
 	++iter, ++ index ) {
     double frac = double(index)/255;
-    switch ( SData->gradient() ) {
-    case BlueGreenRedGradient :
-      if ( frac < 0.5 ) {
-	double f = 2.0*frac;
-	*iter = qRgba( 0, (int)::round(f*255), (int)::round((1.0-f)*255), 255 );
-      }
-      else {
-	double f = (frac - 0.5)*2.0;
-	*iter = qRgba( (int)::round(f*255), (int)::round((1.0-f)*255), 0, 255 );
-      }
-      break;
-    case BlueRedGradient :
-      *iter = qRgba( (int)::round((frac)*255), 0, (int)::round((1.0-frac)*255), 255 );
-      break;
-    default:
-      *iter = qRgba( index, index, index, 255 );
-    }
+    if ( frac > hsvcolors[hsvinx+1].Frac )
+      hsvinx++;
+    double f = ( frac - hsvcolors[hsvinx].Frac )/( hsvcolors[hsvinx+1].Frac - hsvcolors[hsvinx].Frac );
+    int hue = ( hsvcolors[hsvinx].Hue + (int)::round( f*(hsvcolors[hsvinx+1].Hue - hsvcolors[hsvinx].Hue) ) ) % 360;
+    int sat = hsvcolors[hsvinx].Sat + (int)::round( f*(hsvcolors[hsvinx+1].Sat - hsvcolors[hsvinx].Sat) );
+    int val = hsvcolors[hsvinx].Val + (int)::round( f*(hsvcolors[hsvinx+1].Val - hsvcolors[hsvinx].Val) );
+    QColor color( QColor::fromHsv( hue, sat, val ) );
+    *iter = color.rgb();
   }
 
   // plot data:
