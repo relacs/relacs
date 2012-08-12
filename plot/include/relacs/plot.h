@@ -26,6 +26,7 @@
 #include <values.h>
 #include <string>
 #include <vector>
+#include <deque>
 #include <map>
 #include <QWidget>
 #include <QMutex>
@@ -104,6 +105,14 @@ public:
     CircleNorth, CircleSouth, CircleWest, CircleEast,
     SquareNorth, SquareSouth, SquareWest, SquareEast,
     Dot, StrokeUp, StrokeVertical, StrokeHorizontal, Box
+  };
+
+    /*! Some predefined gradients. */
+  enum Gradient {
+    GrayGradient=0,
+    BlueGreenRedGradient,
+    BlueGreenRedWhiteGradient,
+    BlueRedGradient
   };
 
     /*! Positions for tic marks. */
@@ -302,8 +311,7 @@ public:
   /*! 
     \class DataElement
     \author Jan Benda
-    \version 0.5
-    \brief Manages a single data item for plotting.
+    \brief Manages a single 2-D data item for plotting lines.
   */
 
   class DataElement
@@ -371,6 +379,64 @@ public:
     DataTypes DataType;
     Plot::LineStyle Line;
     Plot::PointStyle Point;
+
+  };
+
+
+  /*! 
+    \class SurfaceElement
+    \author Jan Benda
+    \brief Manages a single 3-D data item for plotting surfaces.
+  */
+
+  class SurfaceElement
+  {
+    friend class Plot;
+
+  public:
+
+    SurfaceElement( void );
+    virtual ~SurfaceElement( void );
+
+    void setAxis( Plot::Axis axis );
+    void setAxis( int xaxis, int yaxis );
+    int gradient( void ) const;
+    void setGradient( int gradient );
+      /*! The index of the first column in the x-range \a x1, \a x2. */
+    virtual long firstX( double x1, double x2 ) const =0;
+      /*! The index of the last column in the x-range \a x1, \a x2. */
+    virtual long lastX( double x1, double x2 ) const =0;
+      /*! The index of the first row in the y-range \a y1, \a y2. */
+    virtual long firstY( double y1, double y2 ) const =0;
+      /*! The index of the last column in the y-range \a y1, \a y2. */
+    virtual long lastY( double y1, double y2 ) const =0;
+      /*! Returns in \a x1, \a y1, \a x2, and \a y2 the rectangle
+	  that gets the value \a z of the
+          data point at row index \a rindex and column index\ a cindex. */
+    virtual void point( long rindex, long cindex,
+			double &x1, double &y1, double &x2, double &y2,
+			double &z ) const =0;
+      /*! Can be reimplemented for some initialization
+	  before initializing and drawing the plot.
+          \return \c true if the data changed */
+    virtual bool init( void ) { return true; };
+      /*! Returns a sensible x-range \a xmin and \a xmax for
+	  a given y-range \a ymin, \a ymax. */
+    virtual void xminmax( double &xmin, double &xmax, double ymin, double ymax ) const { xmin=-10.0; xmax=10.0; };
+      /*! Returns a sensible y-range \a ymin and \a ymax for
+	  a given x-range \a xmin, \a xmax. */
+    virtual void yminmax( double xmin, double xmax, double &ymin, double &ymax ) const { ymin=-10.0; ymax=10.0; };
+      /*! Passes the current ranges and pixel positions to the data element
+          after initializing but before drawing the plot. */
+    virtual void setRange( double xmin[MaxAxis], double xmax[MaxAxis], double ymin[MaxAxis], double ymax[MaxAxis],
+			   int xpmin, int xpmax, int ypmin, int ypmax ) {};
+
+  protected:
+
+    bool Own;
+    int XAxis;
+    int YAxis;
+    int GradientIndex;
 
   };
 
@@ -512,9 +578,12 @@ public:
   double xmaxRange( void ) const { return XMax[0]; };
   double yminRange( void ) const { return YMin[0]; };
   double ymaxRange( void ) const { return YMax[0]; };
+  double zminRange( void ) const { return ZMin; };
+  double zmaxRange( void ) const { return ZMax; };
 
   void setXRange( double xmin, double xmax );
   void setYRange( double ymin, double ymax );
+  void setZRange( double zmin, double zmax );
 
   void setXFallBackRange( double xmin, double xmax );
   void setYFallBackRange( double ymin, double ymax );
@@ -816,12 +885,16 @@ public:
     /*! Const reference to the first data element in the list. */
   const DataElement &front( void ) const { return *PData.front(); };
 
-    /*! Remove all plot data from the plot. */
-  void clearData( void );
-    /*! Remove plot data with index \a index from the plot. */
-  void clearData( int index );
+  int plot( const SampleData<SampleDataD> &data, double xscale, int gradient=0 );
 
-    /*!  Remove all plot data and labels from the plot. */
+    /*! Remove all 2-D plot data from the plot. */
+  void clearData( void );
+    /*! Remove 2-D plot data with index \a index from the plot. */
+  void clearData( int index );
+    /*! Remove surface plot data from the plot. */
+  void clearSurfaceData( void );
+
+    /*!  Remove all 2-D and 3-D (surface) plot data and labels from the plot. */
   void clear( void );
 
     /*! Give a hint for the prefered size of this widget. */
@@ -1066,7 +1139,7 @@ protected:
 
   };
 
-  vector< RangeCopy > MouseRangeStack;
+  deque< RangeCopy > MouseRangeStack;
 
 
 protected slots:
@@ -1085,6 +1158,7 @@ private:
   void init( void );
   void initXRange( int axis );
   void initYRange( int axis );
+  void initZRange( void );
   void initRange( void );
   void initTics( void );
   void initBorder( void );
@@ -1175,6 +1249,10 @@ private:
   double XMinPrev[MaxAxis], XMaxPrev[MaxAxis];
     /*! previously used y-ranges of the plot. */
   double YMinPrev[MaxAxis], YMaxPrev[MaxAxis];
+    /*! currently used x-range of the plot. */
+  double ZMin, ZMax;
+    /*! requested z-range of the plot (probably autoscaling). */
+  double ZMinRange, ZMaxRange;
 
     /*! Draw tics? 0: don't draw, 
         1: on the corresponding axis only, 2: on both axis. */
@@ -1282,12 +1360,12 @@ private:
     /*! Default properties for a label. */
   Label DefaultLabel;
     /*! labels. */
-  vector<Label> Labels;
+  deque<Label> Labels;
 
   void drawLabel( QPainter &paint, const Label &label );
 
     /*! The list of predefined colors. */
-  vector< RGBColor > Colors;
+  deque< RGBColor > Colors;
 
     /*! Maps the dash-style into the appropriate Qt-PenStyle. */
   map< Dash, Qt::PenStyle, less<int> > QtDash;
@@ -1481,8 +1559,31 @@ private:
 
 #endif
 
+  class SampleSurfaceElement : public SurfaceElement
+  {
+  public:
+    SampleSurfaceElement( const SampleData<SampleDataD> &data, double xscale, bool copy );
+    ~SampleSurfaceElement( void );
 
-  typedef vector<DataElement*> PDataType;
+    virtual long firstX( double x1, double x2 ) const;
+    virtual long lastX( double x1, double x2 ) const;
+    virtual long firstY( double y1, double y2 ) const;
+    virtual long lastY( double y1, double y2 ) const;
+    virtual void point( long rindex, long cindex,
+			double &x1, double &y1, double &x2, double &y2,
+			double &z ) const;
+    virtual void xminmax( double &xmin, double &xmax, double ymin, double ymax ) const;
+    virtual void yminmax( double xmin, double xmax, double &ymin, double &ymax ) const;
+
+  protected:
+    const SampleData<SampleDataD> *SD;
+    double XScale;
+  };
+
+
+  SurfaceElement* SData;
+  uchar* SurfaceData;
+  typedef deque<DataElement*> PDataType;
   PDataType PData;
   bool DrawData;
   bool NewData;
@@ -1495,6 +1596,8 @@ private:
   QThread *GUIThread;
 
   int addData( DataElement *d );
+  int setSurface( SurfaceElement *s );
+  void drawSurface( QPainter &paint );
   void drawLine( QPainter &paint, DataElement *d, int addpx );
   int drawPoints( QPainter &paint, DataElement *d );
 

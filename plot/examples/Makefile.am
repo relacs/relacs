@@ -1,6 +1,7 @@
 noinst_PROGRAMS = \
     xplot \
-    xplots
+    xplots \
+    xsurfaceplot
 
 
 AM_CPPFLAGS = \
@@ -30,3 +31,12 @@ xplots_LDADD = \
     $(QT4_LIBS) \
     $(MATH_LIBS) $(GSL_LIBS)
 xplots_SOURCES = xplots.cc
+
+xsurfaceplot_LDADD = \
+    ../../daq/src/librelacsdaq.la \
+    ../../numerics/src/librelacsnumerics.la \
+    ../../options/src/librelacsoptions.la \
+    ../src/librelacsplot.la \
+    $(QT4_LIBS) \
+    $(MATH_LIBS) $(GSL_LIBS)
+xsurfaceplot_SOURCES = xsurfaceplot.cc

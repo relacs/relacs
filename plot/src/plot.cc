@@ -26,6 +26,7 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QPolygon>
+#include <QImage>
 #include <QCursor>
 #include <QMouseEvent>
 #include <QApplication>
@@ -207,6 +208,11 @@ void Plot::construct( KeepMode keep, bool subwidget, int id, MultiPlot *mp )
     YGridStyle[k] = LineStyle( White, 1, Dotted ); 
   }
 
+  ZMin = -10.0;
+  ZMax = 10.0;
+  ZMinRange = AutoScale;
+  ZMaxRange = AutoScale;
+
   XTics[0] = 1;
   YTics[0] = 1;
 
@@ -321,6 +327,8 @@ void Plot::construct( KeepMode keep, bool subwidget, int id, MultiPlot *mp )
 			      QSizePolicy::Expanding ) );
   setFocusPolicy( Qt::NoFocus );
 
+  SData = 0;
+  SurfaceData = 0;
   DrawData = false;
   NewData = true;
   ShiftData = false;
@@ -575,6 +583,19 @@ void Plot::setYRange( double ymin, double ymax )
   else {
     YMinRange[0] = ymax;
     YMaxRange[0] = ymin;
+  }
+}
+
+
+void Plot::setZRange( double zmin, double zmax )
+{
+  if ( zmin <= zmax || zmin >= AnyScale || zmax >= AnyScale ) {
+    ZMinRange = zmin;
+    ZMaxRange = zmax;
+  }
+  else {
+    ZMinRange = zmax;
+    ZMaxRange = zmin;
   }
 }
 
@@ -1414,6 +1435,10 @@ void Plot::resizeEvent( QResizeEvent *qre )
 
 void Plot::init( void )
 {
+  if ( SData != 0 ) {
+    if( SData->init() )
+      NewData = true;
+  }
   for ( PDataType::iterator d = PData.begin(); d != PData.end(); ++d ) {
     if ( (*d)->init() )
       NewData = true;
@@ -1454,6 +1479,14 @@ void Plot::initXRange( int axis )
 	  break;
 	}
       }
+    }
+    if ( SData != 0 && SData->XAxis == axis ) {
+      double nxmin, nxmax;
+      SData->xminmax( nxmin, nxmax, ymin[SData->YAxis], ymax[SData->YAxis] );
+      if ( nxmin < AnyScale && nxmin < xmin )
+	xmin = nxmin;
+      if ( nxmax < AnyScale && nxmax > xmax )
+	xmax = nxmax;
     }
     if ( XMinRange[axis] >= AnyScale ) {
       // set xmin if appropriate:
@@ -1537,6 +1570,14 @@ void Plot::initYRange( int axis )
 	}
       }
     }
+    if ( SData != 0 && SData->YAxis == axis ) {
+      double nymin, nymax;
+      SData->yminmax( XMin[SData->XAxis], XMax[SData->XAxis], nymin, nymax );
+      if ( nymin < AnyScale && nymin < ymin )
+	ymin = nymin;
+      if ( nymax < AnyScale && nymax > ymax )
+	ymax = nymax;
+    }
     if ( YMinRange[axis] >= AnyScale ) {
       // set ymin if appropriate:
       if ( ymin < AnyScale &&
@@ -1586,6 +1627,18 @@ void Plot::initYRange( int axis )
 
   if ( YMin[axis] > YMax[axis] )
     swap( YMin[axis], YMax[axis] );
+
+}
+
+
+void Plot::initZRange( void )
+{
+  ZMin = ZMinRange;
+  ZMax = ZMaxRange;
+  if ( ZMin >= AnyScale )
+    ZMin = -10.0;
+  if ( ZMax >= AnyScale )
+    ZMax = 10.0;
 }
 
 
@@ -1595,6 +1648,7 @@ void Plot::initRange( void )
     initXRange( k );
     initYRange( k );
   }
+  initZRange();
 }
 
 
@@ -1658,7 +1712,6 @@ void Plot::initTics( void )
     Y2TicsLen = Y2TicsMarg = 0;
   }
 
-
   for ( int k=0; k<MaxAxis; k++ ) {
 
     // y tic marks:
@@ -1685,8 +1738,9 @@ void Plot::initTics( void )
     // autoscale y range:
     if ( YMaxRange[k] == AutoScale || 
 	 ( YMaxRange[k] == AutoMinScale && YMax[k] > YMaxFB[k] ) ) {
-      for ( double y=YTicsStart[k]; ; y+=YTicsIncr[k] ) {
-	if ( y >= YMax[k] ) {
+      for ( int i=0; ; i++ ) {
+	double y=YTicsStart[k] + i*YTicsIncr[k];
+	if ( (y - YMin[k])/(YMax[k] - YMin[k]) >= 1.0-1.0e-8 ) {
 	  YMax[k] = y;
 	  break;
 	}
@@ -1694,8 +1748,9 @@ void Plot::initTics( void )
     }
     if ( YMinRange[k] == AutoScale || 
 	 ( YMinRange[k] == AutoMinScale && YMin[k] >= YMinFB[k] ) ) {
-      for ( double y=YTicsStart[k]; ; y-=YTicsIncr[k] ) {
-	if ( y <= YMin[k] ) {
+      for ( int i=0; ; i++ ) {
+	double y=YTicsStart[k]-i*YTicsIncr[k];
+	if ( (y - YMin[k])/(YMax[k] - YMin[k]) <= 1.0e-8 ) {
 	  YMin[k] = y;
 	  if ( YTicsStartAutoScale[k] )
 	    YTicsStart[k] = y;
@@ -1780,8 +1835,9 @@ void Plot::initTics( void )
     // autoscale x range:
     if ( XMaxRange[k] == AutoScale || 
 	 ( XMaxRange[k] == AutoMinScale && XMax[k] > XMaxFB[k] ) ) {
-      for ( double x=XTicsStart[k]; ; x+=XTicsIncr[k] ) {
-	if ( x >= XMax[k] ) {
+      for ( int i=0; ; i++ ) {
+	double x=XTicsStart[k] + i*XTicsIncr[k];
+	if ( (x - XMin[k])/(XMax[k] - XMin[k]) >= 1.0-1.0e-8 ) {
 	  XMax[k] = x;
 	  break;
 	}
@@ -1789,8 +1845,9 @@ void Plot::initTics( void )
     }
     if ( XMinRange[k] == AutoScale || 
 	 ( XMinRange[k] == AutoMinScale && XMin[k] >= XMinFB[k] ) ) {
-      for ( double x=XTicsStart[k]; ; x-=XTicsIncr[k] ) {
-	if ( x <= XMin[k] ) {
+      for ( int i=0; ; i++ ) {
+	double x=XTicsStart[k] - i*XTicsIncr[k];
+	if ( (x - XMin[k])/(XMax[k] - XMin[k]) <= 1.0e-8 ) {
 	  XMin[k] = x;
 	  if ( XTicsStartAutoScale[k] )
 	    XTicsStart[k] = x;
@@ -2237,6 +2294,111 @@ void Plot::drawLabels( QPainter &paint )
   drawLabel( paint, Title );
   for ( unsigned int k=0; k<Labels.size(); k++ )
     drawLabel( paint, Labels[k] );
+}
+
+
+void Plot::drawSurface( QPainter &paint )
+{
+  if ( SData == 0 )
+    return;
+
+  // axis:
+  int xaxis = SData->XAxis;
+  int yaxis = SData->YAxis;
+    
+  // init data:
+  long fx = 0;
+  long lx = 0;
+  long fy = 0;
+  long ly = 0;
+  fx = SData->firstX( XMin[xaxis], XMax[xaxis] );
+  lx = SData->lastX( XMin[xaxis], XMax[xaxis] );
+  fy = SData->firstY( YMin[yaxis], YMax[yaxis] );
+  ly = SData->lastY( YMin[yaxis], YMax[yaxis] );
+
+  // gradient:
+  QVector<QRgb> colortable( 256 );
+  int index = 0;
+  for ( QVector<QRgb>::Iterator iter = colortable.begin();
+	iter != colortable.end();
+	++iter, ++ index ) {
+    double frac = double(index)/255;
+    switch ( SData->gradient() ) {
+    case BlueGreenRedGradient :
+      if ( frac < 0.5 ) {
+	double f = 2.0*frac;
+	*iter = qRgba( 0, (int)::round(f*255), (int)::round((1.0-f)*255), 255 );
+      }
+      else {
+	double f = (frac - 0.5)*2.0;
+	*iter = qRgba( (int)::round(f*255), (int)::round((1.0-f)*255), 0, 255 );
+      }
+      break;
+    case BlueRedGradient :
+      *iter = qRgba( (int)::round((frac)*255), 0, (int)::round((1.0-frac)*255), 255 );
+      break;
+    default:
+      *iter = qRgba( index, index, index, 255 );
+    }
+  }
+
+  // plot data:
+  /*
+  // this works for not evenly sampled surfaces (slow!):
+  for ( int r=fx; r<lx; r++ ) {
+    for ( int c=fy; c<ly; c++ ) {
+      double x1, y1, x2, y2, z;
+      SData->point( r, c, x1, y1, x2, y2, z );
+      if ( XMin[xaxis] <= x1 && XMax[xaxis] >= x2 && YMin[yaxis] <= y1 && YMax[yaxis] >= y2 ) {
+	int x1p = PlotX1 + (int)::rint( double(PlotX2-PlotX1)/(XMax[xaxis]-XMin[xaxis])*(x1-XMin[xaxis]) );
+	if ( x1p < PlotX1 )
+  	  x1p = PlotX1;
+	int y1p = PlotY1 + (int)::rint( double(PlotY2-PlotY1)/(YMax[yaxis]-YMin[yaxis])*(y1-YMin[yaxis]) );
+	if ( y1p > PlotY1 )
+  	  y1p = PlotY1;
+	int x2p = PlotX1 + (int)::rint( double(PlotX2-PlotX1)/(XMax[xaxis]-XMin[xaxis])*(x2-XMin[xaxis]) );
+	if ( x2p > PlotX2 )
+  	  x2p = PlotX2;
+	int y2p = PlotY1 + (int)::rint( double(PlotY2-PlotY1)/(YMax[yaxis]-YMin[yaxis])*(y2-YMin[yaxis]) );
+	if ( y2p < PlotY2 )
+  	  y2p = PlotY2;
+	double zfrac = ( z - ZMin )/(ZMax - ZMin);
+	QColor color( colortable[(int)::round( 255*zfrac )] );
+	paint.fillRect( x1p, y1p, x2p-x1p, y2p-y1p, QBrush( color ) );
+      }
+    }
+  }
+  */
+
+  // this is for evenly sampled surfaces (fast!):
+  if ( SurfaceData != 0 )
+    delete SurfaceData;
+  int w = lx - fx;
+  int h = ly - fy;
+  SurfaceData = new uchar[w*h];
+  for ( int r=0; r<w; r++ ) {
+    for ( int c=0; c<h; c++ ) {
+      double x1, y1, x2, y2, z;
+      SData->point( r+fx, c+fy, x1, y1, x2, y2, z );
+      double zfrac = ( z - ZMin )/(ZMax - ZMin);
+      int color = (int)::round( 255*zfrac );
+      SurfaceData[(h-c-1)*w+r] = color;
+    }
+  }
+  QImage image( SurfaceData, w, h, w, QImage::Format_Indexed8 );
+  image.setColorTable( colortable );
+  double x1, y1, x2, y2, z;
+  SData->point( fx, fy, x1, y1, x2, y2, z );
+  int x1p = PlotX1 + (int)::rint( double(PlotX2-PlotX1)/(XMax[xaxis]-XMin[xaxis])*(x1-XMin[xaxis]) );
+  int y1p = PlotY1 + (int)::rint( double(PlotY2-PlotY1)/(YMax[yaxis]-YMin[yaxis])*(y1-YMin[yaxis]) );
+  SData->point( lx-1, ly-1, x1, y1, x2, y2, z );
+  int x2p = PlotX1 + (int)::rint( double(PlotX2-PlotX1)/(XMax[xaxis]-XMin[xaxis])*(x2-XMin[xaxis]) );
+  int y2p = PlotY1 + (int)::rint( double(PlotY2-PlotY1)/(YMax[yaxis]-YMin[yaxis])*(y2-YMin[yaxis]) );
+  QRect target( x1p, y2p, x2p-x1p+1, y1p-y2p+1 );
+  paint.setClipping( true );
+  paint.setClipRegion( QRegion( PlotX1, PlotY2, PlotX2-PlotX1+1, PlotY1-PlotY2+1 ) );
+  paint.drawImage( target, image );
+  paint.setClipping( false );
 }
 
 
@@ -2895,6 +3057,7 @@ int Plot::drawPoints( QPainter &paint, DataElement *d )
 
 void Plot::drawData( QPainter &paint )
 {
+  drawSurface( paint );
   int addpx = 0;
   for ( PDataType::iterator d = PData.begin(); d != PData.end(); ++d ) {
     drawLine( paint, *d, addpx );
@@ -4301,6 +4464,7 @@ int Plot::addData( DataElement *d )
   return PData.size() - 1;
 }
 
+
 Plot::DataElement::DataElement( DataTypes dt )
   : Own( false ), 
     XAxis( 0 ),
@@ -4874,6 +5038,165 @@ int Plot::plot( const EventData &events, const InData &data, int origin, double 
 #endif
 
 
+int Plot::setSurface( SurfaceElement *s )
+{
+  NewData = true;
+  if ( SData != 0 )
+    delete SData;
+  SData = s;
+  if ( SurfaceData != 0 )
+    delete SurfaceData;
+  SurfaceData = 0;
+  return 1;
+}
+
+
+Plot::SurfaceElement::SurfaceElement( void )
+  : Own( false ), 
+    XAxis( 0 ),
+    YAxis( 0 )
+{
+}
+
+
+Plot::SurfaceElement::~SurfaceElement( void )
+{
+}
+
+
+void Plot::SurfaceElement::setAxis( Plot::Axis axis )
+{
+  XAxis = axis & 2 ? 1 : 0;
+  YAxis = axis & 1 ? 1 : 0;
+}
+
+
+void Plot::SurfaceElement::setAxis( int xaxis, int yaxis )
+{
+  XAxis = xaxis;
+  YAxis = yaxis;
+}
+
+
+int Plot::SurfaceElement::gradient( void ) const
+{
+  return GradientIndex;
+}
+
+
+void Plot::SurfaceElement::setGradient( int gradient )
+{
+  GradientIndex = gradient;
+}
+
+
+Plot::SampleSurfaceElement::SampleSurfaceElement( const SampleData<SampleDataD> &data, 
+						  double xscale, 
+						  bool copy )
+  : SurfaceElement()
+{
+  Own = copy;
+  if ( copy ) {
+    SampleData<SampleDataD> *sd = new SampleData<SampleDataD>( data.range() );
+    for ( int k=0; k<sd->size(); k++ )
+      (*sd)[k] = data[k];
+    SD = sd;
+  }
+  else {
+    SD = &data;
+  }
+  XScale = xscale;
+}
+
+
+Plot::SampleSurfaceElement::~SampleSurfaceElement( void )
+{
+  if ( Own ) {
+    delete SD;
+  }
+}
+
+
+long Plot::SampleSurfaceElement::firstX( double x1, double x2 ) const
+{
+  long i = long( ::floor( (x1/XScale - SD->offset())/SD->stepsize() ) );
+  if ( i<0 )
+    i=0;
+  if ( i > SD->size() )
+    i = SD->size();
+  return i;
+}
+
+
+long Plot::SampleSurfaceElement::lastX( double x1, double x2 ) const
+{
+  long i = long( ::ceil( (x2/XScale - SD->offset())/SD->stepsize() ) ) + 1;
+  //  long i = SD->index( x2/XScale )+1;
+  if ( i > SD->size() )
+    i = SD->size();
+  return i;
+}
+
+
+long Plot::SampleSurfaceElement::firstY( double y1, double y2 ) const
+{
+  long i = long( ::floor( (y1 - SD->front().offset())/SD->front().stepsize() ) );
+  if ( i<0 )
+    i=0;
+  if ( i > SD->front().size() )
+    i = SD->front().size();
+  return i;
+}
+
+
+long Plot::SampleSurfaceElement::lastY( double y1, double y2 ) const
+{
+  long i = long( ::ceil( (y2 - SD->front().offset())/SD->front().stepsize() ) ) + 1;
+  //  long i = SD->front().index( y2/XScale )+1;
+  if ( i > SD->front().size() )
+    i = SD->front().size();
+  return i;
+}
+
+
+void Plot::SampleSurfaceElement::point( long rindex, long cindex,
+					double &x1, double &y1, double &x2, double &y2,
+					double &z ) const
+{
+  x1 = XScale*SD->pos( rindex );
+  y1 = SD->front().pos( cindex );
+  x2 = XScale*SD->pos( rindex+1 );
+  y2 = SD->front().pos( cindex+1 );
+  z = (*SD)[int(rindex)][int(cindex)];
+}
+
+
+void Plot::SampleSurfaceElement::xminmax( double &xmin, double &xmax, 
+					  double ymin, double ymax ) const
+{
+  xmin = SD->rangeFront()*XScale;
+  xmax = SD->rangeBack()*XScale;
+}
+
+
+void Plot::SampleSurfaceElement::yminmax( double xmin, double xmax, 
+					  double &ymin, double &ymax ) const
+{
+  ymin = SD->front().rangeFront();
+  ymax = SD->front().rangeBack();
+}
+
+
+int Plot::plot( const SampleData<SampleDataD> &data, double xscale, int gradient )
+{
+  if ( data.empty() || data.front().empty() )
+    return -1;
+  SampleSurfaceElement *SE = new SampleSurfaceElement( data, xscale, Keep == Copy );
+  SE->setGradient( gradient );
+  return setSurface( SE );
+}
+
+
 void Plot::clearData( void )
 {
   for ( PDataType::iterator d = PData.begin(); d != PData.end(); ++d )
@@ -4896,8 +5219,21 @@ void Plot::clearData( int index )
 }
 
 
+void Plot::clearSurfaceData( void )
+{
+  if ( SData != 0 )
+    delete SData;
+  SData = 0;
+  if ( SurfaceData != 0 )
+    delete SurfaceData;
+  SurfaceData = 0;
+  NewData = true;
+}
+
+
 void Plot::clear( void )
 {
+  clearSurfaceData();
   clearData();
   clearLabels();
 }
