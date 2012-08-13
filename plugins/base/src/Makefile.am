@@ -10,6 +10,7 @@ pluginlib_LTLIBRARIES = \
     libbaselowpass.la \
     libbasespectrumanalyzer.la \
     libbasepause.la \
+    libbaserecord.la \
     libbasesetoutput.la \
     libbasesimplemodel.la \
     libbasetransferfunction.la \
@@ -203,6 +204,36 @@ libbasepause_la_SOURCES = pause.cc
 libbasepause_la_includedir = $(pkgincludedir)/base
 
 libbasepause_la_include_HEADERS = $(HEADER_PATH)/pause.h
+
+
+
+libbaserecord_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS)
+
+libbaserecord_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS)
+
+libbaserecord_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(QT4_LIBS) $(GSL_LIBS)
+
+$(libbaserecord_la_OBJECTS) : moc_record.cc
+
+libbaserecord_la_SOURCES = record.cc
+
+libbaserecord_la_includedir = $(pkgincludedir)/base
+
+libbaserecord_la_include_HEADERS = $(HEADER_PATH)/record.h
 
 
 
@@ -406,12 +437,18 @@ check_PROGRAMS = \
     linktest_libbaselowpass_la \
     linktest_libbasespectrumanalyzer_la \
     linktest_libbasepause_la \
+    linktest_libbaserecord_la \
     linktest_libbasesetoutput_la \
     linktest_libbasesimplemodel_la \
     linktest_libbasetransferfunction_la \
-    linktest_libbaserobot_la \
     linktest_libbasewait_la  \
     linktest_libbaseenvelope_la
+
+if RELACS_COND_TML
+check_PROGRAMS += \
+    linktest_libbaserobot_la
+endif
+
 
 linktest_libbaselinearattenuate_la_SOURCES = linktest.cc
 linktest_libbaselinearattenuate_la_LDADD = libbaselinearattenuate.la
@@ -430,6 +467,9 @@ linktest_libbasespectrumanalyzer_la_LDADD = libbasespectrumanalyzer.la
 
 linktest_libbasepause_la_SOURCES = linktest.cc
 linktest_libbasepause_la_LDADD = libbasepause.la
+
+linktest_libbaserecord_la_SOURCES = linktest.cc
+linktest_libbaserecord_la_LDADD = libbaserecord.la
 
 linktest_libbasesetoutput_la_SOURCES = linktest.cc
 linktest_libbasesetoutput_la_LDADD = libbasesetoutput.la
