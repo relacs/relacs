@@ -4,14 +4,17 @@ lib_LTLIBRARIES = \
 
 librelacsnumerics_la_CPPFLAGS = \
     -I$(srcdir)/../include \
-    $(GSL_CPPFLAGS)
+    $(GSL_CPPFLAGS) \
+    $(SNDFILE_CPPFLAGS)
 
 librelacsnumerics_la_LDFLAGS = \
     -version-info 0:0:0 \
-    $(GSL_LDFLAGS)
+    $(GSL_LDFLAGS) \
+    $(SNDFILE_LDFLAGS)
 
 librelacsnumerics_la_LIBADD = \
-    $(GSL_LIBS)
+    $(GSL_LIBS) \
+    $(SNDFILE_LIBS)
 
 pkgincludedir = $(includedir)/relacs
 
