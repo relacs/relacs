@@ -113,17 +113,19 @@ public:
     BlueGreenRedGradient,
     BlackBlueGreenRedWhiteGradient,
     BlueRedYellowWhiteGradient,
-    BlueRedGradient
+    BlueRedGradient,
+    BlueMagentaRedGradient
   };
 
   class HSVGradientColor {
   public:
-    HSVGradientColor( int hue, int sat, int val, double frac )
-      : Hue( hue ), Sat( sat ), Val( val ), Frac( frac ) {};
+  HSVGradientColor( int hue, int sat, int val, double frac, bool hsv=true )
+    : Hue( hue ), Sat( sat ), Val( val ), Frac( frac ), Hsv( hsv ) {};
     int Hue;
     int Sat;
     int Val;
     double Frac;
+    bool Hsv;
   };
 
     /*! Positions for tic marks. */

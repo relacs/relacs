@@ -2334,11 +2334,15 @@ void Plot::drawSurface( QPainter &paint )
   case BlueRedGradient :
     hsvcolors.reserve( 2 );
     hsvcolors.push_back( HSVGradientColor( 240, 255, 255, 0.0 ) );
+    hsvcolors.push_back( HSVGradientColor( 360, 255, 255, 1.0, false ) );
+  case BlueMagentaRedGradient :
+    hsvcolors.reserve( 2 );
+    hsvcolors.push_back( HSVGradientColor( 240, 255, 255, 0.0 ) );
     hsvcolors.push_back( HSVGradientColor( 360, 255, 255, 1.0 ) );
   case BlueRedYellowWhiteGradient :
     hsvcolors.reserve( 4 );
     hsvcolors.push_back( HSVGradientColor( 240, 255, 255, 0.0 ) );
-    hsvcolors.push_back( HSVGradientColor( 360, 255, 255, 0.5 ) );
+    hsvcolors.push_back( HSVGradientColor( 360, 255, 255, 0.5, false ) );
     hsvcolors.push_back( HSVGradientColor( 420, 255, 255, 0.95 ) );
     hsvcolors.push_back( HSVGradientColor( 420, 0, 255, 1.0 ) );
   default:
@@ -2357,10 +2361,21 @@ void Plot::drawSurface( QPainter &paint )
     if ( frac > hsvcolors[hsvinx+1].Frac )
       hsvinx++;
     double f = ( frac - hsvcolors[hsvinx].Frac )/( hsvcolors[hsvinx+1].Frac - hsvcolors[hsvinx].Frac );
-    int hue = ( hsvcolors[hsvinx].Hue + (int)::round( f*(hsvcolors[hsvinx+1].Hue - hsvcolors[hsvinx].Hue) ) ) % 360;
-    int sat = hsvcolors[hsvinx].Sat + (int)::round( f*(hsvcolors[hsvinx+1].Sat - hsvcolors[hsvinx].Sat) );
-    int val = hsvcolors[hsvinx].Val + (int)::round( f*(hsvcolors[hsvinx+1].Val - hsvcolors[hsvinx].Val) );
-    QColor color( QColor::fromHsv( hue, sat, val ) );
+    QColor color;
+    if ( hsvcolors[hsvinx+1].Hsv ) {
+      int hue = ( hsvcolors[hsvinx].Hue + (int)::round( f*(hsvcolors[hsvinx+1].Hue - hsvcolors[hsvinx].Hue) ) ) % 360;
+      int sat = hsvcolors[hsvinx].Sat + (int)::round( f*(hsvcolors[hsvinx+1].Sat - hsvcolors[hsvinx].Sat) );
+      int val = hsvcolors[hsvinx].Val + (int)::round( f*(hsvcolors[hsvinx+1].Val - hsvcolors[hsvinx].Val) );
+      color = QColor::fromHsv( hue, sat, val );
+    }
+    else {
+      QColor color1 = QColor::fromHsv( hsvcolors[hsvinx].Hue%360, hsvcolors[hsvinx].Sat, hsvcolors[hsvinx].Val );
+      QColor color2 = QColor::fromHsv( hsvcolors[hsvinx+1].Hue%360, hsvcolors[hsvinx+1].Sat, hsvcolors[hsvinx+1].Val );
+      int red = color1.red() + (int)::round( f*(color2.red() - color1.red()) );
+      int green = color1.green() + (int)::round( f*(color2.green() - color1.green()) );
+      int blue = color1.blue() + (int)::round( f*(color2.blue() - color1.blue()) );
+      color = QColor::fromRgb( red, green, blue );
+    }
     *iter = color.rgb();
   }
 
