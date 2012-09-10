@@ -393,6 +393,7 @@ SampleData<> triangle( double l, double r, double stepsize, double period )
   return triangle( LinearRange( l, r, stepsize ), period );
 }
 
+#ifdef HAVE_LIBSNDFILE
 
 template<>
 SampleData< double > &SampleData< double >::loadSndFile( const string &file, int channel )
@@ -519,6 +520,7 @@ SampleData< short > &SampleData< short >::loadSndFile( const string &file, int c
   return *this;
 }
 
+#endif
 
 }; /* namespace relacs */
 
