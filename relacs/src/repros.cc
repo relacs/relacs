@@ -72,8 +72,14 @@ RePros::RePros( RELACSWidget *rw, QWidget *parent )
       void *mp = Plugins::create( k );
       RePro *rp = (RePro*)mp;
       rp->setRELACSWidget( RW );
-      if ( rp->widget() == 0 )
-	rp->setWidget( new QWidget );
+      if ( rp->widget() == 0 ) {
+	QImage image( rp->headerImageFile().c_str() );
+	QLabel *label = new QLabel;
+	label->setPixmap( QPixmap::fromImage( image.scaled( 200, 200, Qt::KeepAspectRatio ) ) );
+	label->setAutoFillBackground( true );
+	rp->setWidget( label );
+      }
+      rp->disable();
       addTab( rp->widget(), rp->name().c_str() );
       ReProData *rd = new ReProData( Plugins::ident( k ), rp, DialogOpt,
 				     this, RW );
@@ -91,6 +97,14 @@ RePros::RePros( RELACSWidget *rw, QWidget *parent )
     MessageBox::warning( "RELACS Warning !", "No RePros found!<br>Activating Default RePro.", 4.0, this );
     RePro *rp = new DefaultRePro();
     rp->setRELACSWidget( RW );
+    if ( rp->widget() == 0 ) {
+      QImage image( rp->headerImageFile().c_str() );
+      QLabel *label = new QLabel;
+      label->setPixmap( QPixmap::fromImage( image.scaled( 200, 200, Qt::KeepAspectRatio ) ) );
+      label->setAutoFillBackground( true );
+      rp->setWidget( label );
+    }
+    rp->disable();
     addTab( rp->widget(), rp->name().c_str() );
     ReProData *rd = new ReProData( rp->name(), rp, DialogOpt, this, RW );
     RPs.push_back( rd );
@@ -574,8 +588,14 @@ void ReProData::reload( void )
   if ( mp != 0 ) {
     RP = (RePro*)mp;
     RP->setRELACSWidget( RW );
-    if ( RP->widget() == 0 )
-      RP->setWidget( new QWidget );
+    if ( RP->widget() == 0 ) {
+      QImage image( RP->headerImageFile().c_str() );
+      QLabel *label = new QLabel;
+      label->setPixmap( QPixmap::fromImage( image.scaled( 200, 200, Qt::KeepAspectRatio ) ) );
+      label->setAutoFillBackground( true );
+      RP->setWidget( label );
+    }
+    RP->disable();
     RPs->insertTab( index, RP->widget(), RP->uniqueName().c_str() );
     emit reloadRePro( Name );
     RW->printlog( "ReProData::reload() -> loaded repro " + RP->uniqueName() );

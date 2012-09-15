@@ -21,7 +21,8 @@ EXTRA_DIST = \
     module/irisdynclampmodule.c \
     module/moduledef.h \
     module/loadmodules.sh \
-    module/killmodules.sh
+    module/killmodules.sh \
+    module/reloadmodule.sh
 
 
 pkglibdir = $(libdir)/relacs

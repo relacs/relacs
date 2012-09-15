@@ -22,7 +22,6 @@
 #ifndef _RELACS_BASE_SETOUTPUT_H_
 #define _RELACS_BASE_SETOUTPUT_H_ 1
 
-#include <QPushButton>
 #include <relacs/optwidget.h>
 #include <relacs/repro.h>
 using namespace relacs;
@@ -44,7 +43,7 @@ can be specified and set.
 - \c value=0: Value to be writen to output trace (\c number)
 - \c interactive=false: Set values interactively (\c boolean)
 
-\version 1.0 (Mar 21, 2009)
+\version 1.2 (Sep 14, 2012)
 */
 
 
@@ -79,9 +78,6 @@ protected:
   bool Change;
   static const int ChannelFlag;
   static const int ParameterFlag;
-
-  QPushButton *OKButton;
-  QPushButton *CancelButton;
 
 };
 

@@ -117,7 +117,8 @@ public:
 	posting custom events via postCustomEvent, since they might be executed
 	after the RePro terminated. This includes calling message() and
 	Plot::draw() or MultiPlot::draw().
-        \sa interrupt(), sleep(), timeStamp(), sleepOn(), sleepWait() */
+	The RePro's widget is enabled during execution of main().
+        \sa interrupt(), sleep(), timeStamp(), sleepOn(), sleepWait(), enable() */
   virtual int main( void ) = 0;
 
     /*! Returns \c true if the RePro thread should be stopped immediately.
@@ -183,6 +184,13 @@ public:
         In particular, interrupt a sleep(), sleepOn(), or sleepWait().
         \sa sleepWait() */
   void wake( void );
+
+    /*! Enable the RePro's widget, i.e. allow inputs to its GUI elements.
+        \sa disable() */
+  void enable( void );
+    /*! Disable the RePro's widget, i.e. do not allow inputs to its GUI elements.
+        \sa enable() */
+  void disable( void );
 
     /*! Reimplement this function to reset or initialize your RePro
         when a new session is started.
@@ -532,6 +540,15 @@ protected:
   virtual void keyPressEvent( QKeyEvent *event );
     /*! Reimplement this function to handle key-release events. */
   virtual void keyReleaseEvent( QKeyEvent *event );
+
+
+protected slots:
+
+    /*! If you reimplement this event handler,
+        don't forget to call this implementation
+        via RePro::customEvent().
+        \sa RELACSPlugin::postCustomEvent() */
+  virtual void customEvent( QEvent *qce );
 
 
 private:

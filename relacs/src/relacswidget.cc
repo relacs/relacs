@@ -41,6 +41,7 @@
 #include <relacs/control.h>
 #include <relacs/controltabs.h>
 #include <relacs/databrowser.h>
+#include <relacs/dataindex.h>
 #include <relacs/filter.h>
 #include <relacs/filterdetectors.h>
 #include <relacs/inputconfig.h>
@@ -278,6 +279,8 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   CW = new ControlTabs( this );
   CW->createControls();
 
+  // data index:
+  DI = new DataIndex;
   // data browser:
   //  DB = new DataBrowser( this );
   //  CW->addTab( DB, "Data-Browser" );
@@ -472,6 +475,7 @@ RELACSWidget::~RELACSWidget( void )
   delete AID;
   delete AOD;
   delete KeyTime;
+  delete DI;
 }
 
 
@@ -1285,7 +1289,7 @@ void RELACSWidget::startRePro( RePro *repro, int macroaction, bool saving )
     *InfoFile << QTime::currentTime().toString().toStdString();
     *InfoFile << "   " << CurrentRePro->name() << ": " << MC->options();
   }
-  //  DB->addRepro( CurrentRePro );
+  DI->addRepro( *CurrentRePro );
 
   ReProRunning = true;
   SN->incrReProCount();
@@ -1323,7 +1327,7 @@ void RELACSWidget::stopRePro( void )
     // as long as the RePro is normally running, so that it has
     // still all internal variables available:
     QCoreApplication::sendPostedEvents();
-    qApp->processEvents( QEventLoop::AllEvents, 100 );
+    //    qApp->processEvents( QEventLoop::AllEvents, 100 );
 
     // request and wait for the RePro to properly terminate:
     CurrentRePro->requestStop();
@@ -1401,13 +1405,13 @@ void RELACSWidget::customEvent( QEvent *qce )
 
   case 5: {
     OutDataEvent *ode = dynamic_cast<OutDataEvent*>( qce );
-    //    DB->addStimulus( ode->Signal );
+    DI->addStimulus( ode->Signal );
     break;
   }
 
   case 6: {
     OutListEvent *ole = dynamic_cast<OutListEvent*>( qce );
-    //    DB->addStimulus( ole->Signals );
+    DI->addStimulus( ole->Signals );
     break;
   }
 
@@ -1484,7 +1488,7 @@ void RELACSWidget::startSession( bool startmacro )
 	     << "Time:      Research Program:\n";
   }
 
-  //  DB->addSession( SF->path() );
+  DI->addSession( SF->path(), Options() );
 
   SessionStartWait.wakeAll();
 
@@ -1556,7 +1560,7 @@ void RELACSWidget::stopSession( bool saved )
     InfoFile = 0;
   }
 
-  //  DB->endSession( saved );
+  DI->endSession( saved );
 
   SessionStopWait.wakeAll();
 

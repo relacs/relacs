@@ -61,6 +61,7 @@ pkginclude_HEADERS = \
     ../include/relacs/control.h \
     ../include/relacs/controltabs.h \
     ../include/relacs/databrowser.h \
+    ../include/relacs/dataindex.h \
     ../include/relacs/datathreads.h \
     ../include/relacs/defaultrepro.h \
     ../include/relacs/defaultsession.h \
@@ -93,6 +94,7 @@ librelacs_la_SOURCES = \
     attsim.cc \
     control.cc \
     controltabs.cc \
+    dataindex.cc \
     databrowser.cc \
     datathreads.cc \
     defaultrepro.cc \

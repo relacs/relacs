@@ -143,9 +143,12 @@ void RePro::run( void )
   InterruptLock.unlock();
   lockAll();
   RW->SF->holdOff();
+  enable();
 
   // run RePro:
   LastState = main();
+
+  disable();
 
   // update statistics:
   if ( LastState == Completed )
@@ -322,6 +325,18 @@ bool RePro::sleepWait( double time )
 void RePro::wake( void )
 {
   SleepWait.wakeAll();
+}
+
+
+void RePro::enable( void )
+{
+  postCustomEvent( 8 );
+}
+
+
+void RePro::disable( void )
+{
+  postCustomEvent( 9 );
 }
 
 
@@ -946,6 +961,25 @@ void RePro::setSaving( bool saving )
 void RePro::noSaving( void )
 {
   setSaving( false );
+}
+
+
+void RePro::customEvent( QEvent *qce )
+{
+  switch ( qce->type() - QEvent::User ) {
+  case 8: {
+    if ( widget() != 0 )
+      widget()->setEnabled( true );
+    break;
+  }
+  case 9: {
+    if ( widget() != 0 )
+      widget()->setEnabled( false );
+    break;
+  }
+  default:
+    RELACSPlugin::customEvent( qce );
+  }
 }
 
 

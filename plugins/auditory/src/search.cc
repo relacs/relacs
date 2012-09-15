@@ -587,7 +587,7 @@ void Search::customEvent( QEvent *qce )
     setSpeaker( ( side == 0 ) );
   }
   else
-    RELACSPlugin::customEvent( qce );
+    RePro::customEvent( qce );
 }
 
 

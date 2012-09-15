@@ -19,71 +19,29 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <map>
-#include <string>
 #include <QHBoxLayout>
-#include <QDir>
-#include <relacs/sampledata.h>
-#include <relacs/options.h>
-#include <relacs/tabledata.h>
-#include <relacs/tablekey.h>
-#include <relacs/datafile.h>
-#include <relacs/outdatainfo.h>
 #include <relacs/repro.h>
-#include <dirent.h>
+#include <relacs/dataindex.h>
 #include <relacs/databrowser.h>
 
 
 namespace relacs {
 
 
-struct DataBrowser::Stimulus
-{
-  string name;
-  string swVersion;
-  long index;
-  double duration;
-  double soundintensity;
-  double vFactor;
-  double time;
-  double stepsize;
-  Options Header;
-  Options Option;
-
-};
-
-struct DataBrowser::Rep
-{
-
-  //Options Header;
-  Options Option;
-
-};
-
-struct DataBrowser::Cell
-{
-
-  Options Head;
-
-};
-
-
 DataBrowser::DataBrowser( QWidget *parent )
   : QWidget( parent )
 {
-  TreeWidget = new QTreeWidget;
   QHBoxLayout *layout = new QHBoxLayout;
-  layout->addWidget( TreeWidget );
   setLayout( layout );
 
+  TreeWidget = new QTreeView;
+  layout->addWidget( TreeWidget );
+  //  TreeWidget->setModel();
+
+  /*
   QStringList headerLabels;
   headerLabels << QObject::tr("Recordings");
   TreeWidget->setHeaderLabels(headerLabels);
-
-
-  Cells = new map< string, map< long, Stimulus >* >;
-  Protocol = new map< string, map< int, Rep >* >;
-  Header = new map< string, Cell* >;
 
 
   QObject::connect( TreeWidget, SIGNAL( itemDoubleClicked( QTreeWidgetItem*, int ) ),
@@ -92,11 +50,7 @@ DataBrowser::DataBrowser( QWidget *parent )
 		    this, SLOT( list( QTreeWidgetItem*, int ) ) );
   QObject::connect( TreeWidget, SIGNAL( itemActivated( QTreeWidgetItem *, int ) ),
 		    this, SLOT( list( QTreeWidgetItem*, int ) ) );
-
-  Session = false;
-  QDir dir;
-  Folder = dir.currentPath().toStdString(); 
-  load( Folder );
+  */
 }
 
 
@@ -104,7 +58,7 @@ DataBrowser::~DataBrowser( void )
 {
 }
 
-
+/*
 void DataBrowser::addStimulus( const OutDataInfo &signal )
 {
   if ( TreeWidget->topLevelItemCount() > 0  && Session ) {
@@ -172,48 +126,6 @@ void DataBrowser::addRepro( const RePro *repro )
   }
 }
 
-
-void DataBrowser::load( const string &dir )
-{
-  /*DIR *hdir;
-  struct dirent *entry;
-
-  hdir = opendir( dir.c_str() );*/
-  //Folder = dir;
-  
-  //cout << "Directory: " << dir << endl;
-
-  QString s(dir.c_str());
-  QDir hdir( s );
-  
-  if (hdir.exists()) {
-
-    QStringList list = hdir.entryList(QDir::Dirs,QDir::Name);
-
-    for (int i = 0; i < list.size(); ++i) {
-
-      string file = dir+"/"+list[i].toStdString()+"/stimuli.dat";
-      string file2 = dir+"/"+list[i].toStdString()+"/trigger.dat";
-
-      if(hdir.exists(QString(file.c_str())) || hdir.exists(QString(file2.c_str()))) {
-
-	//cout << list[i].toStdString() << "\t" << file << endl;
-
-	QTreeWidgetItem *parent = new QTreeWidgetItem( TreeWidget, QStringList(list[i]), -1);
-	
-	TreeWidget->insertTopLevelItem( 0, parent );
-	TreeWidget->setCurrentItem( parent );
-      }
-
-    }
-
-  }
-
-  TreeWidget->sortItems( 0, Qt::DescendingOrder );
-
-}
-
-
 void DataBrowser::list( QTreeWidgetItem * item, int col )
 {
   int type = item->type();
@@ -262,8 +174,8 @@ void DataBrowser::list( QTreeWidgetItem * item, int col )
 	Rep CurrentRepro = itr->second;
 	
 	string filename = CurrentStimulus.name;
-	/*double dur = CurrentStimulus.duration;
-	double stepsize = CurrentStimulus.stepsize;*/
+	// double dur = CurrentStimulus.duration;
+	// double stepsize = CurrentStimulus.stepsize;
 
 	Options Opt = CurrentRepro.Option;
 
@@ -271,7 +183,7 @@ void DataBrowser::list( QTreeWidgetItem * item, int col )
 	//metadata->assign(&opt, 0, 1);
 		
 	
-	/*SampleDataD sdata(0.0, dur, stepsize);
+	/ * SampleDataD sdata(0.0, dur, stepsize);
 
 	string s;
 	if(CurrentStimulus.swVersion.compare("oel") == 0) {
@@ -308,7 +220,7 @@ void DataBrowser::list( QTreeWidgetItem * item, int col )
 	polyFit(times, sdata, stepsize, correctedSpikes, true);
 
 	
-	splot->show();*/
+	splot->show(); * /
       }
       else
 	cerr << "Stimulus does not exist!" << endl;
@@ -517,6 +429,108 @@ void DataBrowser::read( string cellname, QTreeWidgetItem *parent )
   }
 }
 
+*/
+
+
+DataTreeModel::DataTreeModel( DataIndex *data, QObject *parent )
+  : QAbstractItemModel( parent ),
+    Data( data )
+{
+}
+
+
+QVariant DataTreeModel::data( const QModelIndex &index, int role ) const
+{
+  if ( ! index.isValid() )
+    return QVariant();
+  
+  if ( role != Qt::DisplayRole )
+    return QVariant();
+  
+  if ( index.column() > 0 )
+    return QVariant();
+  
+  DataIndex::DataItem *item =
+    static_cast<DataIndex::DataItem*>( index.internalPointer() );
+  
+  return QVariant( QString( item->name().c_str() ) );
+}
+
+
+Qt::ItemFlags DataTreeModel::flags( const QModelIndex &index ) const
+{ 
+  if ( ! index.isValid() )
+    return 0;
+
+  return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+}
+
+
+QVariant DataTreeModel::headerData( int section, Qt::Orientation orientation,
+				    int role ) const
+{
+  if ( orientation == Qt::Horizontal && role == Qt::DisplayRole )
+    return QVariant( QString( "Name" ) );
+  
+  return QVariant();
+}
+
+
+QModelIndex DataTreeModel::index( int row, int column,
+				  const QModelIndex &parent ) const
+{
+  //  if ( !hasIndex( row, column, parent ) )
+  //    return QModelIndex();
+
+  DataIndex::DataItem *parentitem = 0;
+  if ( ! parent.isValid() )
+    parentitem = Data->cells();
+  else
+    parentitem = static_cast<DataIndex::DataItem*>( parent.internalPointer() );
+  
+  DataIndex::DataItem *childitem = parentitem->child( row );
+  if ( childitem )
+    return createIndex( row, column, childitem );
+
+  return QModelIndex();
+}
+
+
+QModelIndex DataTreeModel::parent( const QModelIndex &index ) const
+{
+  if ( ! index.isValid() )
+    return QModelIndex();
+
+  DataIndex::DataItem* childitem =
+    static_cast<DataIndex::DataItem*>( index.internalPointer() );
+  DataIndex::DataItem* parentitem = childitem->parent();
+  if ( parentitem == Data->cells() )
+    return QModelIndex();
+  return createIndex( parentitem->parent()->index( parentitem ), 0, parentitem );
+}
+
+
+int DataTreeModel::rowCount( const QModelIndex &parent ) const
+{
+  if ( parent.column() > 0 )
+    return 0;
+
+  if ( parent.isValid() ) {
+    DataIndex::DataItem* parentitem =
+      static_cast<DataIndex::DataItem*>( parent.internalPointer() );
+    return parentitem->size();
+  }
+  else
+    return Data->size();
+
+  return 0;
+}
+
+
+int DataTreeModel::columnCount( const QModelIndex &parent ) const
+{
+  return 1;
+}
 
 
 }; /* namespace relacs */

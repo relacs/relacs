@@ -1,6 +1,6 @@
 /*
   databrowser.h
-  Interface for browsing previously recorded data.
+  Interface for browsing recorded data.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
@@ -22,22 +22,20 @@
 #ifndef _RELACS_DATABROWSER_H_
 #define _RELACS_DATABROWSER_H_ 1
 
-#include <deque>
 #include <QWidget>
-#include <QTreeWidget>
-#include <relacs/str.h>
+#include <QTreeView>
+#include <QAbstractItemModel>
 using namespace std;
 
 namespace relacs {
 
 
-class RePro;
-class OutDataInfo;
+class DataIndex;
 
 
 /*! 
 \class DataBrowser
-\brief Interface for browsing previously recorded data.
+\brief Interface for browsing recorded data.
 \author Karin Fisch, Jan Benda
 */
 
@@ -46,38 +44,40 @@ class DataBrowser : public QWidget
 {
   Q_OBJECT
 
-
 public:
 
   DataBrowser( QWidget *parent=0 );
   ~DataBrowser( void );
 
-  void addStimulus( const OutDataInfo &signal );
-  void addStimulus( const deque< OutDataInfo > &signal );
-  void addRepro( const RePro *repro );
-  void addSession( const string &path );
-  void endSession( bool saved );
-  void load( const string &dir );
-  void read( string file, QTreeWidgetItem *parent );
+
+private:
+
+  QTreeView *TreeWidget;
+
+};
 
 
-public slots:
+class DataTreeModel : public QAbstractItemModel
+{
+  Q_OBJECT
 
-  void list( QTreeWidgetItem * item, int col );
+public:
+  DataTreeModel( DataIndex *data, QObject *parent = 0 );
+
+  QVariant data( const QModelIndex &index, int role ) const;
+  Qt::ItemFlags flags( const QModelIndex &index ) const;
+  QVariant headerData( int section, Qt::Orientation orientation,
+		       int role = Qt::DisplayRole ) const;
+  QModelIndex index( int row, int column,
+		     const QModelIndex &parent = QModelIndex() ) const;
+  QModelIndex parent( const QModelIndex &index ) const;
+  int rowCount( const QModelIndex &parent = QModelIndex() ) const;
+  int columnCount( const QModelIndex &parent = QModelIndex() ) const;
 
 
 private:
 
-  QTreeWidget *TreeWidget;
-  struct Stimulus;
-  struct Rep;
-  struct Cell;
-  map<string, map<long,DataBrowser::Stimulus>* > * Cells; 
-  map<long, DataBrowser::Stimulus> * NStimuli;
-  map< string, map<int,DataBrowser::Rep>* > * Protocol;
-  map< string, DataBrowser::Cell* > * Header;
-  string Folder;
-  bool Session;
+  DataIndex *Data;
 
 };
 

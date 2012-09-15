@@ -68,7 +68,7 @@ class Macros;
 class FilterDetectors;
 class ControlTabs;
 class Session;
-class DataBrowser;
+class DataIndex;
 
 
 /*! 
@@ -339,7 +339,6 @@ private:
   friend class RePros;
   friend class PlotTrace;
   friend class Macros;
-  friend class DataBrowser;
   friend class FilterDetectors;
   friend class SaveFiles;
 
@@ -393,7 +392,7 @@ private:
   Macros *MC;
   FilterDetectors *FD;
   Session *SN;
-  DataBrowser *DB;
+  DataIndex *DI;
 
   InList IL;
   EventList ED;

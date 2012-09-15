@@ -21,6 +21,7 @@
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QPushButton>
 #include <relacs/base/setoutput.h>
 using namespace relacs;
 
@@ -41,14 +42,37 @@ SetOutput::SetOutput( void )
   addNumber( "value", "Value to be writen to output trace", 0.0, -100000.0, 100000.0, 0.1 );
   addBoolean( "interactive", "Set values interactively", false );
 
-  OKButton = 0;
+  // layout:
+  QVBoxLayout *vb = new QVBoxLayout;
+
+  // parameter:
+  vb->addWidget( &STW );
+
+  // buttons:
+  QHBoxLayout *bb = new QHBoxLayout;
+  bb->setSpacing( 4 );
+  vb->addLayout( bb );
+
+  // Ok button:
+  QPushButton *okbutton = new QPushButton( "&Ok" );
+  bb->addWidget( okbutton );
+  okbutton->setFixedHeight( okbutton->sizeHint().height() );
+  connect( okbutton, SIGNAL( clicked() ),
+	   this, SLOT( setValues() ) );
   grabKey( Qt::ALT+Qt::Key_O );
   grabKey( Qt::Key_Return );
   grabKey( Qt::Key_Enter );
 
-  CancelButton = 0;
+  // Cancel button:
+  QPushButton *cancelbutton = new QPushButton( "&Cancel" );
+  bb->addWidget( cancelbutton );
+  cancelbutton->setFixedHeight( okbutton->sizeHint().height() );
+  connect( cancelbutton, SIGNAL( clicked() ),
+	   this, SLOT( keepValues() ) );
   grabKey( Qt::ALT+Qt::Key_C );
   grabKey( Qt::Key_Escape );
+
+  setLayout( vb );
 }
 
 
@@ -66,41 +90,7 @@ void SetOutput::config( void )
   }
 
   // display values:
-  widget()->hide();
-
-  if ( OKButton != 0 )
-    delete OKButton;
-  if ( CancelButton != 0 )
-    delete CancelButton;
-
-  // layout:
-  QVBoxLayout *vb = new QVBoxLayout;
-  setLayout( vb );
-
-  // parameter:
   STW.assign( &OutOpts, ParameterFlag, 0, false, 0, mutex() );
-  vb->addWidget( &STW );
-
-  // buttons:
-  QHBoxLayout *bb = new QHBoxLayout;
-  bb->setSpacing( 4 );
-  vb->addLayout( bb );
-
-  // Ok button:
-  QPushButton *OKButton = new QPushButton( "&Ok" );
-  bb->addWidget( OKButton );
-  OKButton->setFixedHeight( OKButton->sizeHint().height() );
-  connect( OKButton, SIGNAL( clicked() ),
-	   this, SLOT( setValues() ) );
-
-  // Cancel button:
-  QPushButton *CancelButton = new QPushButton( "&Cancel" );
-  bb->addWidget( CancelButton );
-  CancelButton->setFixedHeight( OKButton->sizeHint().height() );
-  connect( CancelButton, SIGNAL( clicked() ),
-	   this, SLOT( keepValues() ) );
-
-  widget()->show();
 }
 
 
@@ -143,11 +133,11 @@ int SetOutput::main( void )
   if ( Interactive ) {
     keepFocus();
     OutOpts.delFlags( Parameter::changedFlag() );
-    postCustomEvent( 11 ); // STW.setFocus();
+    postCustomEvent( 11 ); // STW.setFocus()
     // wait for input:
     Change = false;
     sleepWait();
-    postCustomEvent( 12 ); // clearFocus();
+    postCustomEvent( 12 ); // clearFocus()
     Interactive = false;
     // set new values:
     if ( Change ) {
@@ -158,6 +148,8 @@ int SetOutput::main( void )
 	  OutData sig( value );
 	  sig.setTraceName( OutOpts[k].ident() );
 	  sig.setIdent( OutOpts[k].ident() + "=" + Str( value ) + OutOpts[k].unit() );
+	  sig.addDescription( "stimulus/value" );
+	  sig.description().addNumber( OutOpts[k].ident(), value, OutOpts[k].unit() );
 	  sigs.push( sig );
 	}
       }
@@ -171,7 +163,7 @@ int SetOutput::main( void )
 	message( msg );
 	directWrite( sigs );
 	if ( sigs.failed() ) {
-	  warning( sigs.errorText() );
+	  warning( "Failed to write new values: " + sigs.errorText() );
 	  return Failed;
 	}
       }
@@ -180,6 +172,7 @@ int SetOutput::main( void )
     else {
       OutOpts.setDefaults();
       STW.updateValues();
+      return Aborted;
     }
   }
   else {
@@ -187,6 +180,9 @@ int SetOutput::main( void )
     OutData signal( value );
     signal.setIdent( "value=" + Str( value ) );
     signal.setTrace( outtrace );
+    signal.addDescription( "stimulus/value" );
+    signal.description().addNumber( OutOpts[outtrace].ident(),
+				 value, OutOpts[outtrace].unit() );
     directWrite( signal );
     if ( signal.failed() ) {
       warning( signal.errorText() );
@@ -211,22 +207,18 @@ void SetOutput::keyPressEvent( QKeyEvent *e )
 {
   if ( e->key() == Qt::Key_O && ( e->modifiers() & Qt::AltModifier ) ) {
     setValues();
-    //    OKButton->animateClick();
     e->accept();
   }
   else if ( e->key() == Qt::Key_C && ( e->modifiers() & Qt::AltModifier ) ) {
     keepValues();
-    //    CancelButton->animateClick();
     e->accept();
   }
   else if ( ( e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter ) && e->modifiers() == Qt::NoModifier ) {
     setValues();
-    //    OKButton->animateClick();
     e->accept();
   }
   else if ( e->key() == Qt::Key_Escape && e->modifiers() == Qt::NoModifier ) {
     keepValues();
-    //    CancelButton->animateClick();
     e->accept();
   }
   else
@@ -247,7 +239,7 @@ void SetOutput::customEvent( QEvent *qce )
     break;
   }
   default:
-    RELACSPlugin::customEvent( qce );
+    RePro::customEvent( qce );
   }
 }
 

@@ -320,7 +320,7 @@ void SetLeak::customEvent( QEvent *qce )
     break;
   }
   default:
-    RELACSPlugin::customEvent( qce );
+    RePro::customEvent( qce );
   }
 }
 

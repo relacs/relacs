@@ -992,7 +992,7 @@ void SpikePrecision::customEvent( QEvent *qce )
     Stack->setCurrentWidget( &SP );
   }
   else
-    RELACSPlugin::customEvent( qce );
+    RePro::customEvent( qce );
 }
 
 
