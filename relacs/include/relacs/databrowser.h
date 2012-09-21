@@ -24,13 +24,13 @@
 
 #include <QWidget>
 #include <QTreeView>
-#include <QAbstractItemModel>
 using namespace std;
 
 namespace relacs {
 
 
 class DataIndex;
+class DataTreeModel;
 
 
 /*! 
@@ -46,38 +46,13 @@ class DataBrowser : public QWidget
 
 public:
 
-  DataBrowser( QWidget *parent=0 );
+  DataBrowser( DataIndex *data, QWidget *parent=0 );
   ~DataBrowser( void );
 
 
 private:
 
   QTreeView *TreeWidget;
-
-};
-
-
-class DataTreeModel : public QAbstractItemModel
-{
-  Q_OBJECT
-
-public:
-  DataTreeModel( DataIndex *data, QObject *parent = 0 );
-
-  QVariant data( const QModelIndex &index, int role ) const;
-  Qt::ItemFlags flags( const QModelIndex &index ) const;
-  QVariant headerData( int section, Qt::Orientation orientation,
-		       int role = Qt::DisplayRole ) const;
-  QModelIndex index( int row, int column,
-		     const QModelIndex &parent = QModelIndex() ) const;
-  QModelIndex parent( const QModelIndex &index ) const;
-  int rowCount( const QModelIndex &parent = QModelIndex() ) const;
-  int columnCount( const QModelIndex &parent = QModelIndex() ) const;
-
-
-private:
-
-  DataIndex *Data;
 
 };
 

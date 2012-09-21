@@ -282,8 +282,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   // data index:
   DI = new DataIndex;
   // data browser:
-  //  DB = new DataBrowser( this );
-  //  CW->addTab( DB, "Data-Browser" );
+  //  CW->addTab( new DataBrowser( DI, this ), "Data-Browser" );
 
   // model plugin:
   MD = 0;
@@ -1488,7 +1487,7 @@ void RELACSWidget::startSession( bool startmacro )
 	     << "Time:      Research Program:\n";
   }
 
-  DI->addSession( SF->path(), Options() );
+  DI->addSession( SF->path() + "stimuli.dat", Options() );
 
   SessionStartWait.wakeAll();
 

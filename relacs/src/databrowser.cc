@@ -28,7 +28,7 @@
 namespace relacs {
 
 
-DataBrowser::DataBrowser( QWidget *parent )
+DataBrowser::DataBrowser( DataIndex *data, QWidget *parent )
   : QWidget( parent )
 {
   QHBoxLayout *layout = new QHBoxLayout;
@@ -36,21 +36,9 @@ DataBrowser::DataBrowser( QWidget *parent )
 
   TreeWidget = new QTreeView;
   layout->addWidget( TreeWidget );
-  //  TreeWidget->setModel();
 
-  /*
-  QStringList headerLabels;
-  headerLabels << QObject::tr("Recordings");
-  TreeWidget->setHeaderLabels(headerLabels);
-
-
-  QObject::connect( TreeWidget, SIGNAL( itemDoubleClicked( QTreeWidgetItem*, int ) ),
-		    this, SLOT( list( QTreeWidgetItem*, int ) ) );
-  QObject::connect( TreeWidget, SIGNAL( itemClicked( QTreeWidgetItem *, int ) ),
-		    this, SLOT( list( QTreeWidgetItem*, int ) ) );
-  QObject::connect( TreeWidget, SIGNAL( itemActivated( QTreeWidgetItem *, int ) ),
-		    this, SLOT( list( QTreeWidgetItem*, int ) ) );
-  */
+  TreeWidget->setModel( data->treeModel() );
+  data->setTreeView( TreeWidget );
 }
 
 
@@ -58,74 +46,7 @@ DataBrowser::~DataBrowser( void )
 {
 }
 
-/*
-void DataBrowser::addStimulus( const OutDataInfo &signal )
-{
-  if ( TreeWidget->topLevelItemCount() > 0  && Session ) {
-    QTreeWidgetItem *qwi =
-      new QTreeWidgetItem( (QTreeWidget*)0,
-			   QStringList( signal.traceName().c_str() ) );
-    TreeWidget->currentItem()->addChild( qwi );
-    TreeWidget->scrollToItem( qwi, QAbstractItemView::PositionAtBottom );
-  }
-}
-
-
-void DataBrowser::addStimulus( const deque< OutDataInfo > &signal )
-{
-  for( unsigned int i=0; i<signal.size(); i++ ) {
-    if ( TreeWidget->topLevelItemCount() > 0  && Session ) {
-      QTreeWidgetItem *qwi =
-	new QTreeWidgetItem( (QTreeWidget*)0,
-			     QStringList( signal[i].traceName().c_str() ) );
-      TreeWidget->currentItem()->addChild( qwi );
-      TreeWidget->scrollToItem( qwi, QAbstractItemView::PositionAtBottom );
-    }
-  }
-}
-
-
-void DataBrowser::addSession( const string &path )
-{
- QTreeWidgetItem *qwi = new QTreeWidgetItem( (QTreeWidget*)0,
-					     QStringList( path.c_str() ) );
-  TreeWidget->addTopLevelItem( qwi );
-  TreeWidget->scrollToItem( qwi, QAbstractItemView::PositionAtBottom );
-  Session = true;
-}
-
-
-void DataBrowser::endSession( bool saved )
-{
-  QTreeWidgetItem * item = TreeWidget->topLevelItem( TreeWidget->topLevelItemCount()-1 );
-
-  //  QString s =  item->text( 0 ); 
-  //  cout << "end session: " << s.toStdString() << endl;
-
-  if ( ! saved ) {
-    int i = TreeWidget->indexOfTopLevelItem( item );
-    TreeWidget->takeTopLevelItem( i );
-    delete item;
-  }
-
-  // TreeWidget->removeItemWidget( TreeWidget->topLevelItem( TreeWidget->topLevelItemCount()-1 ), 0 );
-
-  Session = false;
-}
-
-
-void DataBrowser::addRepro( const RePro *repro )
-{
-  if ( TreeWidget->topLevelItemCount() > 0 && Session ) {
-    QTreeWidgetItem *currentrepro = new QTreeWidgetItem( (QTreeWidget*)0,
-							 QStringList( repro->name().c_str() ) );
-    TreeWidget->topLevelItem( TreeWidget->topLevelItemCount()-1 )->addChild( currentrepro );
-    TreeWidget->setCurrentItem( currentrepro );
-    TreeWidget->scrollToItem( currentrepro, QAbstractItemView::PositionAtBottom );
-    //TreeWidget->topLevelItem( TreeWidget->topLevelItemCount()-1 )->addChild( new QTreeWidgetItem( (QTreeWidget*)0, QStringList( Repro->name().c_str() ) ) );
-  }
-}
-
+  /*
 void DataBrowser::list( QTreeWidgetItem * item, int col )
 {
   int type = item->type();
@@ -430,107 +351,6 @@ void DataBrowser::read( string cellname, QTreeWidgetItem *parent )
 }
 
 */
-
-
-DataTreeModel::DataTreeModel( DataIndex *data, QObject *parent )
-  : QAbstractItemModel( parent ),
-    Data( data )
-{
-}
-
-
-QVariant DataTreeModel::data( const QModelIndex &index, int role ) const
-{
-  if ( ! index.isValid() )
-    return QVariant();
-  
-  if ( role != Qt::DisplayRole )
-    return QVariant();
-  
-  if ( index.column() > 0 )
-    return QVariant();
-  
-  DataIndex::DataItem *item =
-    static_cast<DataIndex::DataItem*>( index.internalPointer() );
-  
-  return QVariant( QString( item->name().c_str() ) );
-}
-
-
-Qt::ItemFlags DataTreeModel::flags( const QModelIndex &index ) const
-{ 
-  if ( ! index.isValid() )
-    return 0;
-
-  return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
-}
-
-
-QVariant DataTreeModel::headerData( int section, Qt::Orientation orientation,
-				    int role ) const
-{
-  if ( orientation == Qt::Horizontal && role == Qt::DisplayRole )
-    return QVariant( QString( "Name" ) );
-  
-  return QVariant();
-}
-
-
-QModelIndex DataTreeModel::index( int row, int column,
-				  const QModelIndex &parent ) const
-{
-  //  if ( !hasIndex( row, column, parent ) )
-  //    return QModelIndex();
-
-  DataIndex::DataItem *parentitem = 0;
-  if ( ! parent.isValid() )
-    parentitem = Data->cells();
-  else
-    parentitem = static_cast<DataIndex::DataItem*>( parent.internalPointer() );
-  
-  DataIndex::DataItem *childitem = parentitem->child( row );
-  if ( childitem )
-    return createIndex( row, column, childitem );
-
-  return QModelIndex();
-}
-
-
-QModelIndex DataTreeModel::parent( const QModelIndex &index ) const
-{
-  if ( ! index.isValid() )
-    return QModelIndex();
-
-  DataIndex::DataItem* childitem =
-    static_cast<DataIndex::DataItem*>( index.internalPointer() );
-  DataIndex::DataItem* parentitem = childitem->parent();
-  if ( parentitem == Data->cells() )
-    return QModelIndex();
-  return createIndex( parentitem->parent()->index( parentitem ), 0, parentitem );
-}
-
-
-int DataTreeModel::rowCount( const QModelIndex &parent ) const
-{
-  if ( parent.column() > 0 )
-    return 0;
-
-  if ( parent.isValid() ) {
-    DataIndex::DataItem* parentitem =
-      static_cast<DataIndex::DataItem*>( parent.internalPointer() );
-    return parentitem->size();
-  }
-  else
-    return Data->size();
-
-  return 0;
-}
-
-
-int DataTreeModel::columnCount( const QModelIndex &parent ) const
-{
-  return 1;
-}
 
 
 }; /* namespace relacs */

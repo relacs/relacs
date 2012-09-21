@@ -33,6 +33,7 @@ $(librelacs_la_OBJECTS) : \
     moc_control.cc \
     moc_controltabs.cc \
     moc_databrowser.cc \
+    moc_dataindex.cc \
     moc_defaultrepro.cc \
     moc_defaultsession.cc \
     moc_filter.cc \
@@ -94,8 +95,8 @@ librelacs_la_SOURCES = \
     attsim.cc \
     control.cc \
     controltabs.cc \
-    dataindex.cc \
     databrowser.cc \
+    dataindex.cc \
     datathreads.cc \
     defaultrepro.cc \
     defaultsession.cc \
