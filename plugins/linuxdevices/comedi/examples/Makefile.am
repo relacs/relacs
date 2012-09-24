@@ -42,7 +42,11 @@ dio_write_CPPFLAGS = \
 dio_write_LDFLAGS = $(COMEDI_LDFLAGS)
 dio_write_LDADD = \
     $(COMEDI_LIBS) \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/relacs/src/librelacs.la \
+    $(GSL_LIBS) \
     ../src/libcomedistreaming.la
 dio_write_SOURCES = dio_write.cc
 
@@ -54,6 +58,10 @@ checkao_CPPFLAGS = \
 checkao_LDFLAGS = \
     $(QT3_LDFLAGS)
 checkao_LDADD = \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/relacs/src/librelacs.la \
+    $(GSL_LIBS) \
     ../src/libcomedistreaming.la
 checkao_SOURCES = checkao.cc

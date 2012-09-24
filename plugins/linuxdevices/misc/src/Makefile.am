@@ -93,9 +93,14 @@ libmiscopencvcamera_la_LDFLAGS = \
     $(OPENCV_LDFLAGS)
 
 libmiscopencvcamera_la_LIBADD = \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/relacs/src/librelacs.la \
     $(QT4_LIBS) \
-    $(OPENCV_LIBS)
+    $(OPENCV_LIBS) \
+    $(GSL_LIBS) \
+    -lpthread
 
 libmiscopencvcamera_la_SOURCES = opencvcamera.cc opencvcameradevice.cc
 
@@ -121,8 +126,12 @@ libmiscopencvstereocamera_la_LDFLAGS = \
 
 libmiscopencvstereocamera_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
     $(QT4_LIBS) \
-    $(OPENCV_LIBS)
+    $(OPENCV_LIBS) \
+    $(GSL_LIBS)
 
 libmiscopencvstereocamera_la_SOURCES = opencvstereocamera.cc opencvstereocameradevice.cc
 

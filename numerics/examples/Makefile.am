@@ -35,6 +35,8 @@ noinst_PROGRAMS = \
 AM_CPPFLAGS = \
     -I$(srcdir)/../include
 
+AM_LDFLAGS =  $(GSL_LDFLAGS)
+
 
 CLEANFILES = data.dat test.dat
 
@@ -45,13 +47,12 @@ binrate_SOURCES = binrate.cc
 coherence_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 coherence_SOURCES = coherence.cc
 
-euler_LDADD = ../src/librelacsnumerics.la
+euler_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 euler_SOURCES = euler.cc
 
 generatepairs_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 generatepairs_SOURCES = generatepairs.cc
 
-isnan_LDADD = ../src/librelacsnumerics.la
 isnan_SOURCES = isnan.cc
 
 linearfit_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
@@ -96,10 +97,10 @@ xcyclicarray_SOURCES = xcyclicarray.cc
 xdetector_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 xdetector_SOURCES = xdetector.cc
 
-xeventdata_LDADD = ../src/librelacsnumerics.la
+xeventdata_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 xeventdata_SOURCES = xeventdata.cc
 
-xkernel_LDADD = ../src/librelacsnumerics.la
+xkernel_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)
 xkernel_SOURCES = xkernel.cc
 
 xinterpolation_LDADD = ../src/librelacsnumerics.la $(GSL_LIBS)

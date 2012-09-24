@@ -28,6 +28,7 @@ libcomedistreaming_la_LDFLAGS = \
 libcomedistreaming_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(COMEDI_LIBS) \
     $(QT4_LIBS) $(GSL_LIBS)
@@ -70,6 +71,7 @@ libcomedidynclamp_la_LDFLAGS = \
 libcomedidynclamp_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     libcomedistreaming.la \
     $(COMEDI_LIBS) \

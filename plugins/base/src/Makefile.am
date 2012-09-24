@@ -398,9 +398,6 @@ libbasewait_la_include_HEADERS = $(HEADER_PATH)/wait.h
 
 
 
-
-
-
 libbaseenvelope_la_CPPFLAGS = \
     -I$(top_srcdir)/daq/include \
     -I$(top_srcdir)/numerics/include \
@@ -418,7 +415,11 @@ libbaseenvelope_la_LDFLAGS = \
 
 libbaseenvelope_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(QT4_LIBS) $(GSL_LIBS)
 
 $(libbaseenvelope_la_OBJECTS) : moc_envelope.cc
 

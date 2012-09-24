@@ -93,3 +93,11 @@ LIBS=${SAVE_LIBS}
 
 ])
 
+# for opencv version 2 (from Michael Hanke):
+# -   AC_CHECK_LIB(cv, [main],
+# -     [OPENCV_LIBS="-lcv -lhighgui -lcvaux"
+# +   AC_CHECK_LIB(opencv_core, [main],
+# +     [OPENCV_LIBS="-lopencv_core -lopencv_highgui -lopencv_calib3d -lopencv_imgproc"
+# -     ], [-lhighgui -lcvaux -lm])
+# +     ], [-lopencv_highgui -lm])
+

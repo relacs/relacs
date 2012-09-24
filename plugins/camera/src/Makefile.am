@@ -34,8 +34,14 @@ libcameracameracontrol_la_LDFLAGS = \
 
 libcameracameracontrol_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/plugins/linuxdevices/misc/src/libmiscopencvcamera.la \
     $(QT4_LIBS) \
-    $(OPENCV_LIBS)
+    $(OPENCV_LIBS) \
+    $(GSL_LIBS)
 
 $(libcameracameracontrol_la_OBJECTS) : moc_cameracontrol.cc
 
@@ -68,7 +74,15 @@ libcameraopencvcameracalibration_la_LDFLAGS = \
 
 libcameraopencvcameracalibration_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/plugins/linuxdevices/misc/src/libmiscopencvcamera.la \
+    $(top_builddir)/plugins/camera/src/libcameracameracontrol.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(QT4_LIBS) \
+    $(OPENCV_LIBS) \
+    $(GSL_LIBS)
 
 $(libcameraopencvcameracalibration_la_OBJECTS) : moc_opencvcameracalibration.cc
 
@@ -100,7 +114,15 @@ libcameraopencvstereocameracalibration_la_LDFLAGS = \
 
 libcameraopencvstereocameracalibration_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/plugins/linuxdevices/misc/src/libmiscopencvstereocamera.la \
+    $(top_builddir)/plugins/camera/src/libcameracameracontrol.la \
+    $(QT4_LIBS) \
+    $(OPENCV_LIBS) \
+    $(GSL_LIBS)
 
 $(libcameraopencvstereocameracalibration_la_OBJECTS) : moc_opencvstereocameracalibration.cc
 
@@ -133,7 +155,15 @@ libcameraopencvcalibrationquality_la_LDFLAGS = \
 
 libcameraopencvcalibrationquality_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS)
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/plugins/linuxdevices/misc/src/libmiscopencvstereocamera.la \
+    $(top_builddir)/plugins/camera/src/libcameracameracontrol.la \
+    $(QT4_LIBS) \
+    $(OPENCV_LIBS) \
+    $(GSL_LIBS)
 
 $(libcameraopencvcalibrationquality_la_OBJECTS) : moc_opencvcalibrationquality.cc
 
