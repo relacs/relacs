@@ -43,11 +43,10 @@ which can be modified with a dialog.
 \bug takeFirst, takeLast, combineFirst, combineLast should use find instead of ==
 
 
-Each option is identified by a string \a ident
-and has a default value \a dflt.
-For the dialog the string \a request is used to request the option.
-Number options in addition have a minimum and maximum value, 
-a step size, a unit and a format string.
+Each option is a key-value pair identified by a string \a ident and
+has a default value \a dflt.  For the dialog the string \a request is
+used to request the option.  Number options in addition have a minimum
+and maximum value, a step size, a unit and a format string.
 
 Use addNumber() and addText() to add option variables,
 which can be either numbers or strings, respectively.
@@ -155,6 +154,8 @@ public:
         i.e. they have the same number of Parameter with identical identifier
 	and value (as returned by Parameter::text()). */
   friend bool operator==( const Options &o1, const Options &o2 );
+    /*! Returns true if the name() of the Options \a o equals \a name. */
+  friend bool operator==( const Options &o, const string &name );
     /*! Returns true if the Option \a o1 is smaller than \a o2,
         i.e. \a o2 has less elements than \a o1,
 	an identifier of \a o2 is smaller than the corresponding one in \a o1,
@@ -162,6 +163,11 @@ public:
         This function is provided just to define some ordering of Options,
 	as is needed for example for an stl::map. */
   friend bool operator<( const Options &o1, const Options &o2 );
+
+    /*! The name of this section of options. */
+  string name( void ) const;
+    /*! Set the name of this section of options to \a name. */
+  void setName( const string &name );
 
     /*! Returns the warning messages of the last called 
         Option member-function. */
@@ -174,11 +180,16 @@ public:
   inline const_iterator begin( void ) const { return Opt.begin(); };
   inline const_iterator end( void ) const { return Opt.end(); };
 
+  typedef deque< Options >::iterator section_iterator;
+  inline section_iterator sectionsBegin( void ) { return Secs.begin(); };
+  inline section_iterator sectionsEnd( void ) { return Secs.end(); };
+  typedef deque< Options >::const_iterator const_section_iterator;
+  inline const_section_iterator sectionsBegin( void ) const { return Secs.begin(); };
+  inline const_section_iterator sectionsEnd( void ) const { return Secs.end(); };
+
     /*! Search for the first option that matches \a pattern.
         \a pattern can be a list of search terms separated by '>',
-	for example 'aaa>bbb'.
-	Then 'aaa' is searched first, and if 'aaa' was found,
-        'bbb' is searched in the remaining parameters.
+	for example 'aaa>bbb', to search parameter 'bbb' in section 'aaa'.
         Alternative search terms can be separated by '|'.
 	For example, if \a pattern is "date|time", then
 	"date" is searched first and if this is not found,
@@ -187,9 +198,7 @@ public:
   const_iterator find( const string &pattern ) const;
     /*! Search for the first option that matches \a pattern.
         \a pattern can be a list of search terms separated by '>',
-	for example 'aaa>bbb'.
-	Then 'aaa' is searched first, and if 'aaa' was found,
-        'bbb' is searched in the remaining parameters.
+	for example 'aaa>bbb', to search parameter 'bbb' in section 'aaa'.
         Alternative search terms can be separated by '|'.
 	For example, if \a pattern is "date|time", then
 	"date" is searched first and if this is not found,
@@ -1462,8 +1471,12 @@ public:
 
 private:
 
+    /*! Name of this section of options. */
+  string Name;
     /*! The options. */
   deque< Parameter > Opt;
+    /*! Sections of options. */
+  deque< Options > Secs;
     /*! A warning message. */
   mutable Str Warning;
     /*! Avoid recursive call of notify(). */

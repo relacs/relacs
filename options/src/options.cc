@@ -29,7 +29,9 @@ Parameter Options::Dummy = Parameter();
 
 
 Options::Options( void )
-  : Opt(),
+  : Name( "" ),
+    Opt(),
+    Secs(),
     Warning( "" ),
     Notified( false ),
     CallNotify( true )
@@ -38,7 +40,9 @@ Options::Options( void )
 
 
 Options::Options( const Options &o )
-  : Opt(),
+  : Name( "" ),
+    Opt(),
+    Secs(),
     Warning( "" ),
     Notified( false ),
     CallNotify( true )
@@ -48,7 +52,9 @@ Options::Options( const Options &o )
 
 
 Options::Options( const Options &o, int flags )
-  : Opt(),
+  : Name( "" ),
+    Opt(),
+    Secs(),
     Warning( "" ),
     Notified( false ),
     CallNotify( true )
@@ -59,7 +65,9 @@ Options::Options( const Options &o, int flags )
 
 Options::Options( const Str &opttxt, const string &assignment,
 		  const string &separator )
-  : Opt(),
+  : Name( "" ),
+    Opt(),
+    Secs(),
     Warning( "" ),
     Notified( false ),
     CallNotify( true )
@@ -69,7 +77,9 @@ Options::Options( const Str &opttxt, const string &assignment,
 
 
 Options::Options( const StrQueue &sq, const string &assignment )
-  : Opt(),
+  : Name( "" ),
+    Opt(),
+    Secs(),
     Warning( "" ),
     Notified( false ),
     CallNotify( true )
@@ -81,7 +91,9 @@ Options::Options( const StrQueue &sq, const string &assignment )
 Options::Options( istream &str, const string &assignment,
 		  const string &comment, 
 		  const string &stop, string *line )
-  : Opt(),
+  : Name( "" ),
+    Opt(),
+    Secs(),
     Warning( "" ),
     Notified( false ),
     CallNotify( true )
@@ -109,6 +121,7 @@ Options &Options::assign( const Options &o )
     return *this;
 
   Opt = o.Opt;
+  Secs = o.Secs;
   Notified = false;
   CallNotify = o.CallNotify;
 
@@ -122,9 +135,8 @@ Options &Options::append( const Options &o )
   if ( this == &o ) 
     return *this;
 
-  for ( const_iterator pp = o.begin(); pp != o.end(); ++pp ) {
+  for ( const_iterator pp = o.begin(); pp != o.end(); ++pp )
     Opt.push_back( *pp );
-  }
 
   return *this;
 }
@@ -283,6 +295,13 @@ bool operator==( const Options &o1, const Options &o2 )
 }
 
 
+bool operator==( const Options &o, const string &name )
+{
+  // XXX implement comparison with special characters ^*xxx* ...
+  return ( o.name() == name );
+}
+
+
 bool operator<( const Options &o1, const Options &o2 )
 {
   if ( o1.size() < o2.size() )
@@ -302,6 +321,18 @@ bool operator<( const Options &o1, const Options &o2 )
       return false;
   }
   return false; // all parameter are equal
+}
+
+
+string Options::name( void ) const
+{
+  return Name;
+}
+
+
+void Options::setName( const string &name )
+{
+  Name = name;
 }
 
 
@@ -372,6 +403,55 @@ Options::const_iterator Options::find( const string &pattern ) const
     Warning = "empty search string!";
     return end();
   }
+
+  /*
+    NEW IMPLEMENTATION FOR SECTIONS:
+  size_t pf = pattern.find( '<' );
+  if ( fi != npos ) {
+    // search in sections:
+    string search = pattern.substr( 0, pi );
+    string subsearch = pattern.substr( pi+1 );
+    StrQueue sq;
+    sq.assign( search, "|" );
+    for ( int j=0; j<sq.size(); ) {
+      if ( sq[j].empty() )
+	sq.erase( j );
+      else
+	j++;
+    }
+    // search:
+    for ( int s=0; s<sq.size(); s++ ) {
+      // search element:
+      for ( const_iterator sp = sectionsBegin(); sp != sectionsEnd(); ++sp ) {
+	if ( *sp == sq[s] )
+	  return sp->find( subsearch );
+      }
+    }
+  }
+  else {
+    // search in key-value pairs:
+    StrQueue sq;
+    sq.assign( pattern, "|" );
+    for ( int j=0; j<sq.size(); ) {
+      if ( sq[j].empty() )
+	sq.erase( j );
+      else
+	j++;
+    }
+    // search:
+    for ( int s=0; s<sq.size(); s++ ) {
+      // search element:
+      for ( const_iterator sp = begin(); sp != end(); ++sp ) {
+	if ( *sp == sq[s] )
+	  return sp;
+      }
+    }
+  }
+  // nothing found:
+  Warning = "requested option '" + pattern + "' not found!";
+  return end();
+  */
+
 
   const_iterator fp = end();
   bool found = false;
@@ -524,6 +604,65 @@ Options::const_iterator Options::rfind( const string &pattern ) const
     Warning = "empty search string!";
     return end();
   }
+
+
+
+  /*
+    NEW IMPLEMENTATION FOR SECTIONS:
+  size_t pf = pattern.find( '<' );
+  if ( fi != npos ) {
+    // search in sections:
+    string search = pattern.substr( 0, pi );
+    string subsearch = pattern.substr( pi+1 );
+    StrQueue sq;
+    sq.assign( search, "|" );
+    for ( int j=0; j<sq.size(); ) {
+      if ( sq[j].empty() )
+	sq.erase( j );
+      else
+	j++;
+    }
+    // search:
+    for ( int s=0; s<sq.size(); s++ ) {
+      // search element:
+      const_iterator sp = sectionsEnd();
+      if ( sp != sectionsBegin() ) {
+	do {
+	  --sp;
+	  if ( *sp == sq[s] )
+  	    return sp->rfind( subsearch );
+	} while ( sp != sectionsBegin() );
+      }
+    }
+  }
+  else {
+    // search in key-value pairs:
+    StrQueue sq;
+    sq.assign( pattern, "|" );
+    for ( int j=0; j<sq.size(); ) {
+      if ( sq[j].empty() )
+	sq.erase( j );
+      else
+	j++;
+    }
+    // search:
+    for ( int s=0; s<sq.size(); s++ ) {
+      // search element:
+      const_iterator sp = end();
+      if ( sp != begin() ) {
+	do {
+	  --sp;
+	  if ( *sp == sq[s] )
+  	    return sp;
+	} while ( sp != begin() );
+      }
+    }
+  }
+  // nothing found:
+  Warning = "requested option '" + pattern + "' not found!";
+  return end();
+  */
+
 
   const_iterator fp = end();
   bool found = false;
