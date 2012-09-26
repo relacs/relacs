@@ -36,6 +36,9 @@ using namespace std;
 namespace relacs {
 
 
+class Options;
+
+
 /*! 
 \class Parameter
 \author Jan Benda
@@ -116,11 +119,13 @@ public:
     /*! Construct and initialize a single Parameter of type Text.
         Its value an its default value are set to \a strg. */
   Parameter( const string &ident, const string &request,
-	     const string &strg, int flags=0, int style=0 );
+	     const string &strg, int flags=0, int style=0,
+	     Options *parentsection=0 );
     /*! Construct and initialize a single Parameter of type Text.
         Its value an its default value are set to \a strg. */
   Parameter( const string &ident, const string &request,
-	     const char *strg, int flags=0, int style=0 );
+	     const char *strg, int flags=0, int style=0,
+	     Options *parentsection=0 );
     /*! Construct and initialize a single Parameter of type Number. 
         Its value and its default value are set to \a number,
 	its standard deviation to \a error.
@@ -132,14 +137,16 @@ public:
 	     double number, double error,
 	     double minimum=-MAXDOUBLE, double maximum=MAXDOUBLE, double step=1.0,
 	     const string &internunit="", const string &outputunit="", 
-	     const string &format="", int flags=0, int style=0 );
+	     const string &format="", int flags=0, int style=0,
+	     Options *parentsection=0 );
     /*! Construct and initialize a single Parameter of type Number. 
         Its value and its default value are set to \a number,
 	its standard deviation to \a 0.0.
         The unit of the number is \a unit. */
   Parameter( const string &ident, const string &request,  
 	     double number, const string &unit="", 
-	     const string &format="", int flags=0, int style=0 );
+	     const string &format="", int flags=0, int style=0,
+	     Options *parentsection=0 );
     /*! Construct and initialize a single Parameter of type Number. 
         Its values are set to \a numbers,
         its default value is set to \a numbers[0],
@@ -153,7 +160,8 @@ public:
 	     const vector<double> &errors, 
 	     double minimum=-MAXDOUBLE, double maximum=MAXDOUBLE, double step=1.0,
 	     const string &internunit="", const string &outputunit="", 
-	     const string &format="", int flags=0, int style=0 );
+	     const string &format="", int flags=0, int style=0,
+	     Options *parentsection=0 );
     /*! Construct and initialize a single Parameter of type Integer.
         Its value an its default value are set to \a number,
 	its standard deviation to \a error.
@@ -165,23 +173,27 @@ public:
 	     long number, long error=-1, 
 	     long minimum=LONG_MIN, long maximum=LONG_MAX, long step=1,
 	     const string &internunit="", const string &outputunit="", 
-	     int width=0, int flags=0, int style=0 );
+	     int width=0, int flags=0, int style=0,
+	     Options *parentsection=0 );
     /*! Construct and initialize a single Parameter of type Boolean.
         Its value and its default value are set to \a dflt. */
   Parameter( const string &ident, const string &request,
-	     bool dflt, int flags=0, int style=0 );
+	     bool dflt, int flags=0, int style=0,
+	     Options *parentsection=0 );
     /*! Construct and initialize a single Parameter of \a type Date or Time.
         Its value and its default value are set to 
 	\a yearhour, \a monthminutes and \a dayseconds. */
   Parameter( const string &ident, const string &request, Type type,
 	     int yearhour, int monthminutes, int dayseconds,
-	     int flags=0, int style=0 );
+	     int flags=0, int style=0,
+	     Options *parentsection=0 );
     /*! Construct and initialize a single Parameter of type Label or
         Separator. If \a ident is empty, a Separator is constructed.
 	otherwise a label with label \a ident is constructed.
 	If \a sep is \c true, a Label gets the TabLabel-bit in its style set. */
-  Parameter( const string &ident, bool sep, int flags=0, int style=0 );
-    /*! Load option from string \a s using load(). */
+  Parameter( const string &ident, bool sep, int flags=0, int style=0,
+	     Options *parentsection=0 );
+    /*! Load parameter from string \a s using load(). */
   Parameter( const string &s, const string &assignment=":=" );
     /*! Load option by reading a single line from \a str and using load(). */
   Parameter( istream &str, const string &assignment=":=" );
@@ -239,6 +251,15 @@ public:
     /*! Returns true if the Parameter \a p has an identifier 
         equal to \a ident. */
   friend bool operator==( const Parameter &p, const string &ident );
+
+    /*! Returns a pointer to the Options where this Parameter belongs to.
+        If this Parameter does not belong to an Options, NULL is returned. */
+  Options *parentSection( void );
+    /*! Returns a const pointer to the Options where this Parameter belongs to.
+        If this Parameter does not belong to an Options, NULL is returned. */
+  const Options *parentSection( void ) const;
+    /*! Set the parent Options of this Parameter to \a parent. */
+  void setParentSection( Options *parentsection );
 
     /*! Returns \c true if the value differs from the default. */
   bool nonDefault( void ) const;
@@ -959,6 +980,9 @@ public:
 
   
 private:
+
+    /*! A pointer to the Options this parameter belongs to. */
+  Options *ParentSection;
 
     /*! Identifier string of the parameter. */
   Str Ident;

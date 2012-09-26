@@ -164,6 +164,17 @@ public:
 	as is needed for example for an stl::map. */
   friend bool operator<( const Options &o1, const Options &o2 );
 
+    /*! Returns a pointer to the Options where this Options belongs to
+        as a section.
+        If this Options does not belong to an Options, NULL is returned. */
+  Options *parentSection( void );
+    /*! Returns a const pointer to the Options where this Options belongs to
+        as a section.
+        If this Options does not belong to an Options, NULL is returned. */
+  const Options *parentSection( void ) const;
+    /*! Set the parent Options of this Options to \a parent. */
+  void setParentSection( Options *parentsection );
+
     /*! The name of this section of options. */
   string name( void ) const;
     /*! Set the name of this section of options to \a name. */
@@ -1470,6 +1481,9 @@ public:
 
 
 private:
+
+    /*! A pointer to the Options this Options belongs to. */
+  Options *ParentSection;
 
     /*! Name of this section of options. */
   string Name;

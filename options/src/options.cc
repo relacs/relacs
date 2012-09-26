@@ -29,7 +29,8 @@ Parameter Options::Dummy = Parameter();
 
 
 Options::Options( void )
-  : Name( "" ),
+  : ParentSection( 0 ),
+    Name( "" ),
     Opt(),
     Secs(),
     Warning( "" ),
@@ -40,7 +41,8 @@ Options::Options( void )
 
 
 Options::Options( const Options &o )
-  : Name( "" ),
+  : ParentSection( 0 ),
+    Name( "" ),
     Opt(),
     Secs(),
     Warning( "" ),
@@ -52,7 +54,8 @@ Options::Options( const Options &o )
 
 
 Options::Options( const Options &o, int flags )
-  : Name( "" ),
+  : ParentSection( 0 ),
+    Name( "" ),
     Opt(),
     Secs(),
     Warning( "" ),
@@ -65,7 +68,8 @@ Options::Options( const Options &o, int flags )
 
 Options::Options( const Str &opttxt, const string &assignment,
 		  const string &separator )
-  : Name( "" ),
+  : ParentSection( 0 ),
+    Name( "" ),
     Opt(),
     Secs(),
     Warning( "" ),
@@ -77,7 +81,8 @@ Options::Options( const Str &opttxt, const string &assignment,
 
 
 Options::Options( const StrQueue &sq, const string &assignment )
-  : Name( "" ),
+  : ParentSection( 0 ),
+    Name( "" ),
     Opt(),
     Secs(),
     Warning( "" ),
@@ -91,7 +96,8 @@ Options::Options( const StrQueue &sq, const string &assignment )
 Options::Options( istream &str, const string &assignment,
 		  const string &comment, 
 		  const string &stop, string *line )
-  : Name( "" ),
+  : ParentSection( 0 ),
+    Name( "" ),
     Opt(),
     Secs(),
     Warning( "" ),
@@ -120,6 +126,7 @@ Options &Options::assign( const Options &o )
   if ( this == &o ) 
     return *this;
 
+  ParentSection = o.ParentSection;
   Opt = o.Opt;
   Secs = o.Secs;
   Notified = false;
@@ -176,6 +183,7 @@ Options &Options::assign( const Options &o, int flags )
     return *this;
 
   Opt.clear();
+  ParentSection = o.ParentSection;
   for ( const_iterator pp = o.begin(); pp != o.end(); ++pp ) {
     if ( (*pp).flags( flags ) ) {
       Opt.push_back( *pp );
@@ -324,6 +332,24 @@ bool operator<( const Options &o1, const Options &o2 )
 }
 
 
+Options *Options::parentSection( void )
+{
+  return ParentSection;
+}
+
+
+const Options *Options::parentSection( void ) const
+{
+  return ParentSection;
+}
+
+
+void Options::setParentSection( Options *parentsection )
+{
+  ParentSection = parentsection;
+}
+
+
 string Options::name( void ) const
 {
   return Name;
@@ -405,9 +431,36 @@ Options::const_iterator Options::find( const string &pattern ) const
   }
 
   /*
-    NEW IMPLEMENTATION FOR SECTIONS:
-  size_t pf = pattern.find( '<' );
-  if ( fi != npos ) {
+  // NEW IMPLEMENTATION FOR SECTIONS:
+  size_t pi = pattern.find( '<' );
+  if ( pi == npos ) {
+    // search in key-value pairs:
+    StrQueue sq;
+    sq.assign( pattern, "|" );
+    for ( int j=0; j<sq.size(); ) {
+      if ( sq[j].empty() )
+	sq.erase( j );
+      else
+	j++;
+    }
+    // search:
+    for ( int s=0; s<sq.size(); s++ ) {
+      // search element:
+      for ( const_iterator pp = begin(); pp != end(); ++pp ) {
+	if ( *pp == sq[s] )
+	  return pp;
+      }
+      // search in subsections:
+      for ( const_section_iterator sp = sectionsBegin();
+	    sp != sectionsEnd();
+	    ++sp ) {
+	const_iterator pp = sp->find( sq[s] );
+	if ( pp != sp->end() )
+	  return pp;
+      }
+    }
+  }
+  else {
     // search in sections:
     string search = pattern.substr( 0, pi );
     string subsearch = pattern.substr( pi+1 );
@@ -421,29 +474,20 @@ Options::const_iterator Options::find( const string &pattern ) const
     }
     // search:
     for ( int s=0; s<sq.size(); s++ ) {
-      // search element:
-      for ( const_iterator sp = sectionsBegin(); sp != sectionsEnd(); ++sp ) {
+      // search section:
+      for ( const_section_iterator sp = sectionsBegin();
+	    sp != sectionsEnd();
+	    ++sp ) {
 	if ( *sp == sq[s] )
 	  return sp->find( subsearch );
       }
-    }
-  }
-  else {
-    // search in key-value pairs:
-    StrQueue sq;
-    sq.assign( pattern, "|" );
-    for ( int j=0; j<sq.size(); ) {
-      if ( sq[j].empty() )
-	sq.erase( j );
-      else
-	j++;
-    }
-    // search:
-    for ( int s=0; s<sq.size(); s++ ) {
-      // search element:
-      for ( const_iterator sp = begin(); sp != end(); ++sp ) {
-	if ( *sp == sq[s] )
-	  return sp;
+      // search in subsection:
+      for ( const_section_iterator sp = sectionsBegin();
+	    sp != sectionsEnd();
+	    ++sp ) {
+	const_iterator pp = sp->find( sq[s] + '>' + subsearch );
+	if ( pp != sp->end() )
+	  return pp;
       }
     }
   }
@@ -451,7 +495,6 @@ Options::const_iterator Options::find( const string &pattern ) const
   Warning = "requested option '" + pattern + "' not found!";
   return end();
   */
-
 
   const_iterator fp = end();
   bool found = false;
@@ -529,6 +572,74 @@ Options::iterator Options::find( const string &pattern )
     return end();
   }
 
+
+  /*
+  // NEW IMPLEMENTATION FOR SECTIONS:
+  size_t pi = pattern.find( '<' );
+  if ( pi == npos ) {
+    // search in key-value pairs:
+    StrQueue sq;
+    sq.assign( pattern, "|" );
+    for ( int j=0; j<sq.size(); ) {
+      if ( sq[j].empty() )
+	sq.erase( j );
+      else
+	j++;
+    }
+    // search:
+    for ( int s=0; s<sq.size(); s++ ) {
+      // search element:
+      for ( iterator pp = begin(); pp != end(); ++pp ) {
+	if ( *pp == sq[s] )
+	  return pp;
+      }
+      // search in subsections:
+      for ( section_iterator sp = sectionsBegin();
+	    sp != sectionsEnd();
+	    ++sp ) {
+	iterator pp = sp->find( sq[s] );
+	if ( pp != sp->end() )
+	  return pp;
+      }
+    }
+  }
+  else {
+    // search in sections:
+    string search = pattern.substr( 0, pi );
+    string subsearch = pattern.substr( pi+1 );
+    StrQueue sq;
+    sq.assign( search, "|" );
+    for ( int j=0; j<sq.size(); ) {
+      if ( sq[j].empty() )
+	sq.erase( j );
+      else
+	j++;
+    }
+    // search:
+    for ( int s=0; s<sq.size(); s++ ) {
+      // search section:
+      for ( section_iterator sp = sectionsBegin();
+	    sp != sectionsEnd();
+	    ++sp ) {
+	if ( *sp == sq[s] )
+	  return sp->find( subsearch );
+      }
+      // search in subsection:
+      for ( section_iterator sp = sectionsBegin();
+	    sp != sectionsEnd();
+	    ++sp ) {
+	iterator pp = sp->find( sq[s] + '>' + subsearch );
+	if ( pp != sp->end() )
+	  return pp;
+      }
+    }
+  }
+  // nothing found:
+  Warning = "requested option '" + pattern + "' not found!";
+  return end();
+  */
+
+
   iterator fp = end();
   bool found = false;
   for ( int k=0; k<3 && ! found; k++ ) {
@@ -605,12 +716,43 @@ Options::const_iterator Options::rfind( const string &pattern ) const
     return end();
   }
 
-
-
   /*
-    NEW IMPLEMENTATION FOR SECTIONS:
-  size_t pf = pattern.find( '<' );
-  if ( fi != npos ) {
+  // NEW IMPLEMENTATION FOR SECTIONS:
+  size_t pi = pattern.find( '<' );
+  if ( pi == npos ) {
+    // search in key-value pairs:
+    StrQueue sq;
+    sq.assign( pattern, "|" );
+    for ( int j=0; j<sq.size(); ) {
+      if ( sq[j].empty() )
+	sq.erase( j );
+      else
+	j++;
+    }
+    // search:
+    for ( int s=0; s<sq.size(); s++ ) {
+      // search element:
+      const_iterator pp = end();
+      if ( pp != begin() ) {
+	do {
+	  --pp;
+	  if ( *pp == sq[s] )
+  	    return pp;
+	} while ( pp != begin() );
+      }
+      // search in subsections:
+      const_section_iterator sp = sectionsEnd();
+      if ( sp != sectionsBegin() ) {
+        do {
+	  --sp;
+	  const_iterator pp = sp->rfind( sq[s] );
+	  if ( pp != sp->end() )
+	    return pp;
+	} while ( sp != sectionsBegin() );
+      }
+    }
+  }
+  else {
     // search in sections:
     string search = pattern.substr( 0, pi );
     string subsearch = pattern.substr( pi+1 );
@@ -624,37 +766,27 @@ Options::const_iterator Options::rfind( const string &pattern ) const
     }
     // search:
     for ( int s=0; s<sq.size(); s++ ) {
-      // search element:
-      const_iterator sp = sectionsEnd();
+      // search section:
+      const_section_iterator sp = sectionsEnd();
       if ( sp != sectionsBegin() ) {
 	do {
 	  --sp;
-	  if ( *sp == sq[s] )
-  	    return sp->rfind( subsearch );
+	  if ( *sp == sq[s] ) {
+  	    const_iterator pp = sp->rfind( subsearch );
+	    if ( pp != sp->end() )
+	    return pp;
+          }
 	} while ( sp != sectionsBegin() );
       }
-    }
-  }
-  else {
-    // search in key-value pairs:
-    StrQueue sq;
-    sq.assign( pattern, "|" );
-    for ( int j=0; j<sq.size(); ) {
-      if ( sq[j].empty() )
-	sq.erase( j );
-      else
-	j++;
-    }
-    // search:
-    for ( int s=0; s<sq.size(); s++ ) {
-      // search element:
-      const_iterator sp = end();
-      if ( sp != begin() ) {
+      // search in subsection:
+      const_section_iterator sp = sectionsEnd();
+      if ( sp != sectionsBegin() ) {
 	do {
 	  --sp;
-	  if ( *sp == sq[s] )
-  	    return sp;
-	} while ( sp != begin() );
+  	  const_iterator pp = sp->rfind( sq[s] + '>' + subsearch );
+	  if ( pp != sp->end() )
+	    return pp;
+	} while ( sp != sectionsBegin() );
       }
     }
   }
@@ -662,7 +794,6 @@ Options::const_iterator Options::rfind( const string &pattern ) const
   Warning = "requested option '" + pattern + "' not found!";
   return end();
   */
-
 
   const_iterator fp = end();
   bool found = false;
@@ -743,6 +874,85 @@ Options::iterator Options::rfind( const string &pattern )
     Warning = "empty search string!";
     return end();
   }
+
+  /*
+  // NEW IMPLEMENTATION FOR SECTIONS:
+  size_t pi = pattern.find( '<' );
+  if ( pi == npos ) {
+    // search in key-value pairs:
+    StrQueue sq;
+    sq.assign( pattern, "|" );
+    for ( int j=0; j<sq.size(); ) {
+      if ( sq[j].empty() )
+	sq.erase( j );
+      else
+	j++;
+    }
+    // search:
+    for ( int s=0; s<sq.size(); s++ ) {
+      // search element:
+      iterator pp = end();
+      if ( pp != begin() ) {
+	do {
+	  --pp;
+	  if ( *pp == sq[s] )
+  	    return pp;
+	} while ( pp != begin() );
+      }
+      // search in subsections:
+      section_iterator sp = sectionsEnd();
+      if ( sp != sectionsBegin() ) {
+        do {
+	  --sp;
+	  iterator pp = sp->rfind( sq[s] );
+	  if ( pp != sp->end() )
+	    return pp;
+	} while ( sp != sectionsBegin() );
+      }
+    }
+  }
+  else {
+    // search in sections:
+    string search = pattern.substr( 0, pi );
+    string subsearch = pattern.substr( pi+1 );
+    StrQueue sq;
+    sq.assign( search, "|" );
+    for ( int j=0; j<sq.size(); ) {
+      if ( sq[j].empty() )
+	sq.erase( j );
+      else
+	j++;
+    }
+    // search:
+    for ( int s=0; s<sq.size(); s++ ) {
+      // search section:
+      section_iterator sp = sectionsEnd();
+      if ( sp != sectionsBegin() ) {
+	do {
+	  --sp;
+	  if ( *sp == sq[s] ) {
+  	    iterator pp = sp->rfind( subsearch );
+	    if ( pp != sp->end() )
+	    return pp;
+          }
+	} while ( sp != sectionsBegin() );
+      }
+      // search in subsection:
+      section_iterator sp = sectionsEnd();
+      if ( sp != sectionsBegin() ) {
+	do {
+	  --sp;
+  	  iterator pp = sp->rfind( sq[s] + '>' + subsearch );
+	  if ( pp != sp->end() )
+	    return pp;
+	} while ( sp != sectionsBegin() );
+      }
+    }
+  }
+  // nothing found:
+  Warning = "requested option '" + pattern + "' not found!";
+  return end();
+  */
 
   iterator fp = end();
   bool found = false;
@@ -1150,6 +1360,7 @@ Parameter &Options::add( const Parameter &np )
 {
   Warning = "";
   Opt.push_back( np );
+  Opt.back().setParentSection( this );
   return Opt.back();
 }
 
@@ -1161,6 +1372,7 @@ Parameter &Options::insert( const Parameter &np, const string &atident )
   if ( atident.empty() ) {
     // insert at beginning of list:
     Opt.push_front( np );
+    Opt.front().setParentSection( this );
     return Opt.front();
   }
   else {
@@ -1169,11 +1381,14 @@ Parameter &Options::insert( const Parameter &np, const string &atident )
     // search element:
     iterator pp = find( atident );
     if ( pp != end() ) {
-      return *Opt.insert( pp, np );
+      Parameter &p = *Opt.insert( pp, np );
+      p.setParentSection( this );
+      return p;
     }
     else {
       // not found:
       Opt.push_back( np );
+      Opt.back().setParentSection( this );
       return Opt.back();
     }
   }
@@ -1184,7 +1399,7 @@ Parameter &Options::addText( const string &ident, const string &request,
 			     const string &dflt, int flags, int style )
 {
   // new parameter:
-  Parameter np( ident, request, dflt, flags, style );
+  Parameter np( ident, request, dflt, flags, style, this );
   // add option:
   Parameter &pp = add( np );
   // error?
@@ -1202,7 +1417,7 @@ Parameter &Options::insertText( const string &ident, const string &atident,
 				int flags, int style )
 {
   // new parameter:
-  Parameter np( ident, request, dflt, flags, style );
+  Parameter np( ident, request, dflt, flags, style, this );
   // insert option:
   Parameter &pp = insert( np, atident );
   // error?
@@ -1438,7 +1653,7 @@ Parameter &Options::addNumber( const string &ident, const string &request,
 {
   // new parameter:
   Parameter np( ident, request, dflt, -1.0, minimum, maximum, 
-		step, unit, outputunit, format, flags, style );
+		step, unit, outputunit, format, flags, style, this );
   // add option:
   Parameter &pp = add( np );
   // error?
@@ -1459,7 +1674,7 @@ Parameter &Options::insertNumber( const string &ident, const string &atident,
 {
   // new parameter:
   Parameter np( ident, request, dflt, -1.0, minimum, maximum, 
-		step, unit, outputunit, format, flags, style );
+		step, unit, outputunit, format, flags, style, this );
   // insert option:
   Parameter &pp = insert( np, atident );
   // error?
@@ -1808,7 +2023,7 @@ Parameter &Options::addInteger( const string &ident, const string &request,
 {
   // new parameter:
   Parameter np( ident, request, dflt, -1L, minimum, maximum, 
-		step, unit, outputunit, width, flags, style );
+		step, unit, outputunit, width, flags, style, this );
   // add option:
   Parameter &pp = add( np );
   // error?
@@ -1829,7 +2044,7 @@ Parameter &Options::insertInteger( const string &ident, const string &atident,
 {
   // new parameter:
   Parameter np( ident, request, dflt, -1L, minimum, maximum, 
-		step, unit, outputunit, width, flags, style );
+		step, unit, outputunit, width, flags, style, this );
   // insert option:
   Parameter &pp = insert( np, atident );
   // error?
@@ -1999,7 +2214,7 @@ Parameter &Options::addBoolean( const string &ident, const string &request,
 				bool dflt, int flags, int style )
 {
   // new parameter:
-  Parameter np( ident, request, dflt, flags, style );
+  Parameter np( ident, request, dflt, flags, style, this );
   // add option:
   Parameter &pp = add( np );
   // error?
@@ -2016,7 +2231,7 @@ Parameter &Options::insertBoolean( const string &ident, const string &atident,
 				   const string &request, bool dflt, int flags, int style )
 {
   // new parameter:
-  Parameter np( ident, request, dflt, flags, style );
+  Parameter np( ident, request, dflt, flags, style, this );
   // insert option:
   Parameter &pp = insert( np, atident );
   // error?
@@ -2139,7 +2354,7 @@ Parameter &Options::addDate( const string &ident, const string &request,
 {
   // new parameter:
   Parameter np( ident, request, Parameter::Date,
-		year, month, day, flags, style );
+		year, month, day, flags, style, this );
   // add option:
   Parameter &pp = add( np );
   // error?
@@ -2159,7 +2374,7 @@ Parameter &Options::insertDate( const string &ident, const string &atident,
 {
   // new parameter:
   Parameter np( ident, request, Parameter::Date,
-		year, month, day, flags, style );
+		year, month, day, flags, style, this );
   // insert option:
   Parameter &pp = insert( np, atident );
   // error?
@@ -2397,7 +2612,7 @@ Parameter &Options::addTime( const string &ident, const string &request,
 {
   // new parameter:
   Parameter np( ident, request, Parameter::Time,
-		hour, minutes, seconds, flags, style );
+		hour, minutes, seconds, flags, style, this );
   // add option:
   Parameter &pp = add( np );
   // error?
@@ -2417,7 +2632,7 @@ Parameter &Options::insertTime( const string &ident, const string &atident,
 {
   // new parameter:
   Parameter np( ident, request, Parameter::Time,
-		hour, minutes, seconds, flags, style );
+		hour, minutes, seconds, flags, style, this );
   // insert option:
   Parameter &pp = insert( np, atident );
   // error?
@@ -2652,7 +2867,7 @@ Parameter &Options::setDefaultTime( const string &ident,
 Parameter &Options::addLabel( const string &ident, int flags, int style )
 {
   // new parameter:
-  Parameter np( ident, false, flags, style );
+  Parameter np( ident, false, flags, style, this );
   // add option:
   Parameter &pp = add( np );
   // error?
@@ -2669,7 +2884,7 @@ Parameter &Options::insertLabel( const string &ident, const string &atident,
 				 int flags, int style )
 {
   // new parameter:
-  Parameter np( ident, false, flags, style );
+  Parameter np( ident, false, flags, style, this );
   // insert option:
   Parameter &pp = insert( np, atident );
   // error?
@@ -2728,7 +2943,7 @@ Parameter &Options::setLabel( const string &ident, const string &label )
 Parameter &Options::addSeparator( int flags, int style )
 {
   // new parameter:
-  Parameter np( "", true, flags, style );
+  Parameter np( "", true, flags, style, this );
   // add option:
   Parameter &pp = add( np );
   // error?
@@ -2744,7 +2959,7 @@ Parameter &Options::addSeparator( int flags, int style )
 Parameter &Options::insertSeparator( const string &atident, int flags, int style )
 {
   // new parameter:
-  Parameter np( "", true, flags, style );
+  Parameter np( "", true, flags, style, this );
   // insert option:
   Parameter &pp = insert( np, atident );
   // error?

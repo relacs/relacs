@@ -24,6 +24,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <iomanip>
+#include <relacs/options.h>
 #include <relacs/parameter.h>
 
 namespace relacs {
@@ -42,7 +43,9 @@ Parameter::Parameter( const Parameter &p )
 
 
 Parameter::Parameter( const string &ident, const string &request,  
-		      const string &strg, int flags, int style ) 
+		      const string &strg, int flags, int style,
+		      Options *parentsection )
+  : ParentSection( parentsection )
 {
   clear( ident, request, Text );
 
@@ -60,7 +63,9 @@ Parameter::Parameter( const string &ident, const string &request,
 
 
 Parameter::Parameter( const string &ident, const string &request,  
-		      const char *strg, int flags, int style ) 
+		      const char *strg, int flags, int style,
+		      Options *parentsection ) 
+  : ParentSection( parentsection )
 {
   clear( ident, request, Text );
 
@@ -82,7 +87,9 @@ Parameter::Parameter( const string &ident, const string &request,
 		      double number, double error,
 		      double minimum, double maximum, double step,
 		      const string &internunit, const string &outputunit, 
-		      const string &format, int flags, int style )
+		      const string &format, int flags, int style,
+		      Options *parentsection )
+  : ParentSection( parentsection )
 {
   clear( ident, request, Number );
 
@@ -105,7 +112,9 @@ Parameter::Parameter( const string &ident, const string &request,
 
 Parameter::Parameter( const string &ident, const string &request,  
 		      double number, const string &unit, 
-		      const string &format, int flags, int style )
+		      const string &format, int flags, int style,
+		      Options *parentsection )
+  : ParentSection( parentsection )
 {
   clear( ident, request, Number );
   string e;
@@ -128,7 +137,9 @@ Parameter::Parameter( const string &ident, const string &request,
 		      const vector<double> &errors, 
 		      double minimum, double maximum, double step,
 		      const string &internunit, const string &outputunit, 
-		      const string &format, int flags, int style )
+		      const string &format, int flags, int style,
+		      Options *parentsection )
+  : ParentSection( parentsection )
 {
   clear( ident, request, Number );
 
@@ -155,7 +166,9 @@ Parameter::Parameter( const string &ident, const string &request,
 		      long number, long error,
 		      long minimum, long maximum, long step,
 		      const string &internunit, const string &outputunit, 
-		      int width, int flags, int style )
+		      int width, int flags, int style,
+		      Options *parentsection )
+  : ParentSection( parentsection )
 {
   clear( ident, request, Integer );
 
@@ -177,7 +190,9 @@ Parameter::Parameter( const string &ident, const string &request,
 
 
 Parameter::Parameter( const string &ident, const string &request,  
-		      bool dflt, int flags, int style ) 
+		      bool dflt, int flags, int style,
+		      Options *parentsection ) 
+  : ParentSection( parentsection )
 {
   clear( ident, request, Boolean );
 
@@ -194,7 +209,9 @@ Parameter::Parameter( const string &ident, const string &request,
 
 Parameter::Parameter( const string &ident, const string &request, Type type,
 		      int yearhour, int monthminutes, int dayseconds,
-		      int flags, int style ) 
+		      int flags, int style,
+		      Options *parentsection ) 
+  : ParentSection( parentsection )
 {
   string e;
   if ( type != Date && type != Time ) {
@@ -220,7 +237,9 @@ Parameter::Parameter( const string &ident, const string &request, Type type,
 }
 
 
-Parameter::Parameter( const string &ident, bool sep, int flags, int style ) 
+Parameter::Parameter( const string &ident, bool sep, int flags, int style,
+		      Options *parentsection ) 
+  : ParentSection( parentsection )
 {
   Type pt = Label;
   if ( ident.empty() )
@@ -310,6 +329,7 @@ Parameter &Parameter::assign( const Parameter &p )
   if ( this == &p ) 
     return *this;
 
+  ParentSection = p.ParentSection;
   Ident = p.Ident;
   Request = p.Request;
   PType = p.PType;
@@ -501,6 +521,24 @@ bool operator==( const Parameter &p, const string &ident )
 {
   // XXX implement comparison with special characters ^*xxx* ...
   return ( p.ident() == ident );
+}
+
+
+Options *Parameter::parentSection( void )
+{
+  return ParentSection;
+}
+
+
+const Options *Parameter::parentSection( void ) const
+{
+  return ParentSection;
+}
+
+
+void Parameter::setParentSection( Options *parentsection )
+{
+  ParentSection = parentsection;
 }
 
 
