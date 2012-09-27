@@ -35,20 +35,30 @@ int main( int argc, char *argv[] )
 		 0.2, 0.01, 1000.0, 0.01, "seconds", "ms" );
   opt.addInteger( "repeats", "Repeats", 10 );
   opt.addBoolean( "sinewave", "Use Sine Wave", true );
+  opt.addLabel( "Recording" );
   opt.addDate( "recordingdate", 2009, 6, 20 );
   opt.addTime( "recordingtime", 16, 42, 13 );
   opt.insertNumber( "pause", "repeats", "Pause between Signals",
 		    0.1, 0.01, 1000.0, 0.01, "seconds", "ms", "%5.1f" );
   cout << opt;
+  cout << '\n';
 
-  cout << endl;
+  cout << "Value of parameter 'comment': " << opt.text( "comment|repeats" ) << '\n';
+  cout << "Value of parameter 'pause': " << opt.number( "Pause|pause" ) << '\n';
+  cout << "Value of parameter 'repeats': " << opt.integer( "repeats|" ) << '\n';
+  cout << "Value of parameter 'sinewave': " << opt.boolean( "||sinewave" ) << '\n';
+  cout << "Value of parameter 'recordingtime': " << opt.text( "rec|Recording>time|recordingtime" ) << '\n';
+  cout << '\n';
+
+  return 0;
+
   cout << "enter some options (ident1=value1; ident2=value2; ...): ";
   getline( cin, s );
   opt.load( s );
   opt.save( cout, "", -1, false );
 
   while ( true ) {
-    cout << endl;
+    cout << '\n';
     cout << "enter some options that should be read by the first options: ";
     getline( cin, s );
     opt.read( s );
