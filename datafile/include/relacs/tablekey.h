@@ -312,10 +312,8 @@ public:
         Each datum is written into a separate line
 	and is preceeded by its identifier.
 	Each line is started with \a start.
-	The identifiers are written into a field of width \a width characters.
         These are the data that were set with setNumber(). */
-  ostream &saveMetaData( ostream &str, const string &start="",
-			 int width=-1 ) const;
+  ostream &saveMetaData( ostream &str, const string &start="" ) const;
 
     /*! Write the number \a v to the output stream \a str 
         using the format for column \a c.

@@ -1020,13 +1020,12 @@ ostream &TableKey::saveData( ostream &str, int from, int to )
 }
 
 
-ostream &TableKey::saveMetaData( ostream &str, const string &start,
-				 int width ) const
+ostream &TableKey::saveMetaData( ostream &str, const string &start ) const
 {
   // XXX a separate algorithmen with level dependent indent would be better!
   // and different format: ident unit
   // maybe this should be an additional function!
-  return Opt.save( str, start, width );
+  return Opt.save( str, start );
 }
 
 

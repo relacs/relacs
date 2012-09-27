@@ -300,10 +300,10 @@ void FIField::saveHeader( const string &file )
     return;
 
   df << '\n';
-  FIFieldHeader.save( df, "# ", -1, 1 );
+  FIFieldHeader.save( df, "# ", 1 );
   stimulusData().save( df, "#   " );
   df << "# settings:\n";
-  settings().save( df, "#   ", -1, 32, false, true );
+  settings().save( df, "#   ", 32, false, true );
   df << '\n';
 }
 
@@ -320,7 +320,7 @@ void FIField::saveThreshold( const string &file )
   FIFieldHeader.save( df, "# " );
   stimulusData().save( df, "#   " );
   df << "# settings:\n";
-  settings().save( df, "#   ", -1, 32, false, true );
+  settings().save( df, "#   ", 32, false, true );
   df << '\n';
   TableKey key;
   key.addLabel( "threshold" );

@@ -570,7 +570,7 @@ void IsoResponse::saveSpikes( void )
   Header.save( df, "# " );
   stimulusData().save( df, "#   " );
   df << "# settings:\n";
-  settings().save( df, "#   ", -1, 0, false, true );
+  settings().save( df, "#   ", 0, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -606,7 +606,7 @@ void IsoResponse::saveRates( void )
   Header.save( df, "# " );
   stimulusData().save( df, "#   " );
   df << "# settings:\n";
-  settings().save( df, "#   ", -1, 0, false, true );
+  settings().save( df, "#   ", 0, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "I"   , "dB SPL", "%5.1f" );

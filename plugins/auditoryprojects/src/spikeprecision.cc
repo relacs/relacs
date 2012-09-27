@@ -607,7 +607,7 @@ void SpikePrecision::saveSpikes( const vector < EnvelopeFrequencyData > &results
   df << "# status:\n";
   stimulusData().save( df, "#   " );
   df << "# settings:\n";
-  settings().save( df, "#   ", -1, 16, false, true );
+  settings().save( df, "#   ", 16, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -647,7 +647,7 @@ void SpikePrecision::saveRates( const vector < EnvelopeFrequencyData > &results 
   df << "# status:\n";
   stimulusData().save( df, "#   " );
   df << "# settings:\n";
-  settings().save( df, "#   ", -1, 16, false, true );
+  settings().save( df, "#   ", 16, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%5.1f" );

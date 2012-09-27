@@ -330,7 +330,7 @@ void Search::saveEvents( const EventData &events, int count, const Options &head
     header.save( df, "# " );
     stimulusData().save( df, "#   " );
     df << "# settings:\n";
-    Options::save( df, "#   ", -1, 0, false, true );
+    Options::save( df, "#   ", 0, false, true );
     df << '\n';
     spikeskey.saveKey( df, true, false );
   }

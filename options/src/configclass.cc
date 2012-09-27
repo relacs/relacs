@@ -158,7 +158,7 @@ int ConfigClass::configSize( void ) const
 
 void ConfigClass::saveConfig( ofstream &str )
 {
-  Options::save( str, "  ", -1, ConfigSelect, CFG->Detailed, CFG->FirstOnly );
+  Options::save( str, "  ", ConfigSelect, CFG->Detailed, CFG->FirstOnly );
 }
 
 

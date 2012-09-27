@@ -64,7 +64,7 @@ void MetaDataSection::readConfig( StrQueue &sq )
 void MetaDataSection::saveConfig( ofstream &str )
 {
   MD->lock();
-  Options::save( str, "  ", -1, MD->configFlag(), true, false );
+  Options::save( str, "  ", MD->configFlag(), true, false );
   MD->unlock();
 }
 
@@ -84,7 +84,7 @@ void MetaDataSection::clear( void )
 void MetaDataSection::save( ofstream &str )
 {
   str << "# " << configIdent() << '\n';
-  Options::save( str, "# ", -1, MD->saveFlags(), false, true );
+  Options::save( str, "# ", MD->saveFlags(), false, true );
 }
 
 
@@ -163,7 +163,7 @@ void MetaDataRecordingSection::save( ofstream &str )
   setText( "Mode", RW->modeStr() );
 
   str << "# " << configIdent() << '\n';
-  Options::save( str, "# ", -1, MD->saveFlags(), false, true );
+  Options::save( str, "# ", MD->saveFlags(), false, true );
 }
 
 
@@ -257,7 +257,7 @@ void MetaData::save( const string &title, const Options &opts )
 
   if ( ! title.empty() && ! opts.empty() ) {
     of << "# " << title << '\n';
-    opts.save( of, "# ", -1, 0, false, true );
+    opts.save( of, "# ", 0, false, true );
   }
 
 }

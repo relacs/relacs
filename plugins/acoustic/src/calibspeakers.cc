@@ -356,7 +356,7 @@ void CalibSpeakers::saveIntensities( double frequency, const MapD &intensities,
   header.addText( "time", time );
   header.addLabel( "settings:" );
   header.save( df, "# " );
-  settings().save( df, "#   ", -1, 16, false, true );
+  settings().save( df, "#   ", 16, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "intens", "dB SPL", "%6.2f" );
@@ -397,7 +397,7 @@ void CalibSpeakers::saveOffsets( const MapD &offsets, const ArrayD &gains )
   header.addText( "time", time );
   header.addLabel( "settings:" );
   header.save( df, "# " );
-  settings().save( df, "#   ", -1, 16, false, true );
+  settings().save( df, "#   ", 16, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "freq", "Hz", "%7.0f" );

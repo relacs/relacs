@@ -467,7 +467,7 @@ void FICurve::saveSpikes( const string &file, const vector< FIData > &results )
   Header.save( df, "# " );
   stimulusData().save( df, "#   " );
   df << "# settings:\n";
-  settings().save( df, "#   ", -1, 16, false, true );
+  settings().save( df, "#   ", 16, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -501,7 +501,7 @@ void FICurve::saveRates( const string &file, const vector< FIData > &results )
   Header.save( df, "# " );
   stimulusData().save( df, "#   " );
   df << "# settings:\n";
-  settings().save( df, "#   ", -1, 16, false, true );
+  settings().save( df, "#   ", 16, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -547,7 +547,7 @@ void FICurve::saveFICurve( const string &file, const vector< FIData > &results )
   Header.save( df, "# " );
   stimulusData().save( df, "#   " );
   df << "# settings:\n";
-  settings().save( df, "#   ", -1, 16, false, true );
+  settings().save( df, "#   ", 16, false, true );
   df << '\n';
   TableKey key;
   key.addLabel( "stimulus" );

@@ -321,7 +321,7 @@ void AdaptedFICurves::saveSpikes( const Options &header, const EventList &spikes
   header.save( df, "# " );
   stimulusData().save( df, "#   " );
   df << "# settings:\n";
-  settings().save( df, "#   ", -1, 0, false, true );
+  settings().save( df, "#   ", 0, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -345,7 +345,7 @@ void AdaptedFICurves::saveRate( const Options &header, const SampleDataD &rate )
   header.save( df, "# " );
   stimulusData().save( df, "#   " );
   df << "# settings:\n";
-  settings().save( df, "#   ", -1, 0, false, true );
+  settings().save( df, "#   ", 0, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -376,7 +376,7 @@ void AdaptedFICurves::saveData( const Options &header, const MapD &times,
   header.save( df, "# " );
   stimulusData().save( df, "#   " );
   df << "# settings:\n";
-  settings().save( df, "#   ", -1, 0, false, true );
+  settings().save( df, "#   ", 0, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "I", "dB SPL", "%5.1f" );

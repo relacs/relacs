@@ -715,9 +715,9 @@ void SaveFiles::saveRePro( void )
     // stimulus indices file:
     if ( SF != 0 && saving() ) {
       *SF << '\n';
-      ReProInfo.save( *SF, "# ", -1, 0, false, true );
+      ReProInfo.save( *SF, "# ", 0, false, true );
       if ( ! ReProSettings.empty() ) {
-	ReProSettings.save( *SF, "# ", -1, 1, false, true );
+	ReProSettings.save( *SF, "# ", 1, false, true );
       }
 
       // save StimulusKey:

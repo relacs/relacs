@@ -690,7 +690,7 @@ void SingleStimulus::saveSpikes( Options &header, const EventList &spikes )
   header.save( df, "# " );
   stimulusData().save( df, "#   " );
   df << "# settings:\n";
-  settings().save( df, "#   ", -1, 16, false, true );
+  settings().save( df, "#   ", 16, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -715,7 +715,7 @@ void SingleStimulus::saveRate( Options &header, const SampleDataD &rate1,
   header.save( df, "# " );
   stimulusData().save( df, "#   " );
   df << "# settings:\n";
-  settings().save( df, "#   ", -1, 16, false, true );
+  settings().save( df, "#   ", 16, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );

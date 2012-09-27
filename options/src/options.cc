@@ -33,6 +33,7 @@ Options::Options( void )
     Name( "" ),
     Opt(),
     Secs(),
+    AddOpts( this ),
     Warning( "" ),
     Notified( false ),
     CallNotify( true )
@@ -45,6 +46,7 @@ Options::Options( const Options &o )
     Name( "" ),
     Opt(),
     Secs(),
+    AddOpts( this ),
     Warning( "" ),
     Notified( false ),
     CallNotify( true )
@@ -58,6 +60,7 @@ Options::Options( const Options &o, int flags )
     Name( "" ),
     Opt(),
     Secs(),
+    AddOpts( this ),
     Warning( "" ),
     Notified( false ),
     CallNotify( true )
@@ -72,6 +75,7 @@ Options::Options( const Str &opttxt, const string &assignment,
     Name( "" ),
     Opt(),
     Secs(),
+    AddOpts( this ),
     Warning( "" ),
     Notified( false ),
     CallNotify( true )
@@ -85,6 +89,7 @@ Options::Options( const StrQueue &sq, const string &assignment )
     Name( "" ),
     Opt(),
     Secs(),
+    AddOpts( this ),
     Warning( "" ),
     Notified( false ),
     CallNotify( true )
@@ -100,6 +105,7 @@ Options::Options( istream &str, const string &assignment,
     Name( "" ),
     Opt(),
     Secs(),
+    AddOpts( this ),
     Warning( "" ),
     Notified( false ),
     CallNotify( true )
@@ -429,7 +435,8 @@ Options::const_iterator Options::find( const string &pattern ) const
     Warning = "empty search string!";
     return end();
   }
-
+/*
+NEW
   string patterns = pattern;
   const_iterator pbegin = begin();
   const_section_iterator sbegin = sectionsBegin();
@@ -497,12 +504,14 @@ Options::const_iterator Options::find( const string &pattern ) const
 	    const_iterator pp = sp->find( subsearch );
 	    if ( pp != sp->end() )
 	      return pp;
+	    / *
 	    else {
 	      patterns = subsearch;
 	      pbegin = end();
 	      sbegin = sp+1;
 	      findagain = true;
 	    }
+	    * /
 	  }
 	  else {
 	    const_iterator pp = sp->find( sq[s] + '>' + subsearch );
@@ -516,6 +525,69 @@ Options::const_iterator Options::find( const string &pattern ) const
   // nothing found:
   Warning = "requested option '" + pattern + "' not found!";
   return end();
+*/
+
+  const_iterator fp = end();
+  bool found = false;
+  for ( int k=0; k<3 && ! found; k++ ) {
+
+    const_iterator pp = begin();
+    fp = end();
+
+    // split pattern:
+    StrQueue pq;
+    if ( k < 1 ) {
+      pq.assign( pattern, ">" );
+      for ( int j=0; j<pq.size(); j++ ) {
+	while ( j<pq.size() && pq[j].empty() )
+	  pq.erase( j );
+      }
+      if ( pq.empty() )
+	continue;
+    }
+    else {
+      pq.assign( pattern, "" );
+    }
+
+    for ( int p = 0; p<pq.size(); p++ ) {
+
+      // split subpattern:
+      StrQueue sq;
+      if ( k < 2 ) {
+	sq.assign( pq[p], "|" );
+	for ( int j=0; j<sq.size(); j++ ) {
+	  while ( j<sq.size() && sq[j].empty() )
+	    sq.erase( j );
+	}
+	if ( sq.empty() )
+	  continue;
+      }
+      else
+	sq.assign( pq[p], "" );
+
+      // search:
+      found = false;
+      for ( int s=0; s<sq.size(); s++ ) {
+	// search element:
+	for ( const_iterator sp = pp; sp != end(); ++sp ) {
+	  if ( *sp == sq[s] ) {
+	    found = true;
+	    fp = sp;
+	    pp = sp+1;
+	    break;
+	  }
+	}
+	if ( found ) 
+	  break;
+      }
+
+    }
+  }
+
+  // nothing found:
+  if ( ! found )
+    Warning = "requested option '" + pattern + "' not found!";
+  return fp;
 }
 
 
@@ -531,6 +603,8 @@ Options::iterator Options::find( const string &pattern )
     return end();
   }
 
+/*
+NEW
   string patterns = pattern;
   iterator pbegin = begin();
   section_iterator sbegin = sectionsBegin();
@@ -598,12 +672,14 @@ Options::iterator Options::find( const string &pattern )
 	    iterator pp = sp->find( subsearch );
 	    if ( pp != sp->end() )
 	      return pp;
+	    / *
 	    else {
 	      patterns = subsearch;
 	      pbegin = end();
 	      sbegin = sp+1;
 	      findagain = true;
 	    }
+	    * /
 	  }
 	  else {
 	    iterator pp = sp->find( sq[s] + '>' + subsearch );
@@ -617,6 +693,68 @@ Options::iterator Options::find( const string &pattern )
   // nothing found:
   Warning = "requested option '" + pattern + "' not found!";
   return end();
+*/
+  iterator fp = end();
+  bool found = false;
+  for ( int k=0; k<3 && ! found; k++ ) {
+
+    iterator pp = begin();
+    fp = end();
+
+    // split pattern:
+    StrQueue pq;
+    if ( k < 1 ) {
+      pq.assign( pattern, ">" );
+      for ( int j=0; j<pq.size(); j++ ) {
+	while ( j<pq.size() && pq[j].empty() )
+	  pq.erase( j );
+      }
+      if ( pq.empty() )
+	continue;
+    }
+    else {
+      pq.assign( pattern, "" );
+    }
+
+    for ( int p = 0; p<pq.size(); p++ ) {
+
+      // split subpattern:
+      StrQueue sq;
+      if ( k < 2 ) {
+	sq.assign( pq[p], "|" );
+	for ( int j=0; j<sq.size(); j++ ) {
+	  while ( j<sq.size() && sq[j].empty() )
+	    sq.erase( j );
+	}
+	if ( sq.empty() )
+	  continue;
+      }
+      else
+	sq.assign( pq[p], "" );
+
+      // search:
+      found = false;
+      for ( int s=0; s<sq.size(); s++ ) {
+	// search element:
+	for ( iterator sp = pp; sp != end(); ++sp ) {
+	  if ( *sp == sq[s] ) {
+	    found = true;
+	    fp = sp;
+	    pp = sp+1;
+	    break;
+	  }
+	}
+	if ( found ) 
+	  break;
+      }
+
+    }
+  }
+
+  // nothing found:
+  if ( ! found )
+    Warning = "requested option '" + pattern + "' not found!";
+  return fp;
 }
 
 
@@ -632,6 +770,8 @@ Options::const_iterator Options::rfind( const string &pattern ) const
     return end();
   }
 
+/*
+NEW
   string patterns = pattern;
   const_iterator pend = end();
   const_section_iterator send = sectionsEnd();
@@ -700,12 +840,14 @@ Options::const_iterator Options::rfind( const string &pattern ) const
 	      const_iterator pp = sp->rfind( subsearch );
 	      if ( pp != sp->end() )
 		return pp;
+	      / *
 	      else {
 		patterns = subsearch;
 		pend = end();
 		send = sp;
 		findagain = true;
 	      }
+	      * /
 	    }
 	  } while ( sp != sectionsBegin() && ! findagain );
 	}
@@ -729,6 +871,72 @@ Options::const_iterator Options::rfind( const string &pattern ) const
   // nothing found:
   Warning = "requested option '" + pattern + "' not found!";
   return end();
+*/
+  const_iterator fp = end();
+  bool found = false;
+  for ( int k=0; k<3 && ! found; k++ ) {
+
+    const_iterator pp = begin();
+    fp = end();
+
+    // split pattern:
+    StrQueue pq;
+    if ( k < 1 ) {
+      pq.assign( pattern, ">" );
+      for ( int j=0; j<pq.size(); j++ ) {
+	while ( j<pq.size() && pq[j].empty() )
+	  pq.erase( j );
+      }
+      if ( pq.empty() )
+	continue;
+    }
+    else {
+      pq.assign( pattern, "" );
+    }
+
+    for ( int p = 0; p<pq.size(); p++ ) {
+
+      // split subpattern:
+      StrQueue sq;
+      if ( k < 2 ) {
+	sq.assign( pq[p], "|" );
+	for ( int j=0; j<sq.size(); j++ ) {
+	  while ( j<sq.size() && sq[j].empty() )
+	    sq.erase( j );
+	}
+	if ( sq.empty() )
+	  continue;
+      }
+      else
+	sq.assign( pq[p], "" );
+
+      // search:
+      found = false;
+      for ( int s=0; s<sq.size(); s++ ) {
+	// search element:
+	const_iterator sp = end();
+	if ( sp == pp )
+	  break;
+	do {
+	  --sp;
+	  if ( *sp == sq[s] ) {
+	    found = true;
+	    fp = sp;
+	    pp = sp+1;
+	    break;
+	  }
+	} while ( sp != pp );
+	if ( found ) 
+	  break;
+      }
+
+    }
+  }
+
+  // nothing found:
+  if ( ! found )
+    Warning = "requested option '" + pattern + "' not found!";
+  return fp;
 }
 
 
@@ -744,6 +952,8 @@ Options::iterator Options::rfind( const string &pattern )
     return end();
   }
 
+/*
+NEW
   string patterns = pattern;
   iterator pend = end();
   section_iterator send = sectionsEnd();
@@ -812,12 +1022,14 @@ Options::iterator Options::rfind( const string &pattern )
 	      iterator pp = sp->rfind( subsearch );
 	      if ( pp != sp->end() )
 		return pp;
+	      / *
 	      else {
 		patterns = subsearch;
 		pend = end();
 		send = sp;
 		findagain = true;
 	      }
+	      * /
 	    }
 	  } while ( sp != sectionsBegin() && ! findagain );
 	}
@@ -841,6 +1053,72 @@ Options::iterator Options::rfind( const string &pattern )
   // nothing found:
   Warning = "requested option '" + pattern + "' not found!";
   return end();
+*/
+  iterator fp = end();
+  bool found = false;
+  for ( int k=0; k<3 && ! found; k++ ) {
+
+    iterator pp = begin();
+    fp = end();
+
+    // split pattern:
+    StrQueue pq;
+    if ( k < 1 ) {
+      pq.assign( pattern, ">" );
+      for ( int j=0; j<pq.size(); j++ ) {
+	while ( j<pq.size() && pq[j].empty() )
+	  pq.erase( j );
+      }
+      if ( pq.empty() )
+	continue;
+    }
+    else {
+      pq.assign( pattern, "" );
+    }
+
+    for ( int p = 0; p<pq.size(); p++ ) {
+
+      // split subpattern:
+      StrQueue sq;
+      if ( k < 2 ) {
+	sq.assign( pq[p], "|" );
+	for ( int j=0; j<sq.size(); j++ ) {
+	  while ( j<sq.size() && sq[j].empty() )
+	    sq.erase( j );
+	}
+	if ( sq.empty() )
+	  continue;
+      }
+      else
+	sq.assign( pq[p], "" );
+
+      // search:
+      found = false;
+      for ( int s=0; s<sq.size(); s++ ) {
+	// search element:
+	iterator sp = end();
+	if ( sp == pp )
+	  break;
+	do {
+	  --sp;
+	  if ( *sp == sq[s] ) {
+	    found = true;
+	    fp = sp;
+	    pp = sp+1;
+	    break;
+	  }
+	} while ( sp != pp );
+	if ( found ) 
+	  break;
+      }
+
+    }
+  }
+
+  // nothing found:
+  if ( ! found )
+    Warning = "requested option '" + pattern + "' not found!";
+  return fp;
 }
 
 
@@ -1181,9 +1459,9 @@ int Options::formatWidth( const string &ident ) const
 Parameter &Options::add( const Parameter &np )
 {
   Warning = "";
-  Opt.push_back( np );
-  Opt.back().setParentSection( this );
-  return Opt.back();
+  AddOpts->Opt.push_back( np );
+  AddOpts->Opt.back().setParentSection( this );
+  return AddOpts->Opt.back();
 }
 
 
@@ -2794,6 +3072,49 @@ Parameter &Options::insertSeparator( const string &atident, int flags, int style
 }
 
 
+Options &Options::addSection( const string &name, int flags, int style )
+{
+  Secs.push_back( Options() );
+  Secs.back().setName( name );
+  AddOpts = &Secs.back();
+  return Secs.back();
+}
+
+
+Options &Options::addSubSection( const string &name, int flags, int style )
+{
+  if ( Secs.empty() )
+    Warning += "Cannot add a subsection without having a section";
+
+  Secs.back().Secs.push_back( Options() );
+  Secs.back().Secs.back().setName( name );
+  AddOpts = &Secs.back().Secs.back();
+#ifndef NDEBUG
+  if ( !Warning.empty() )
+    cerr << "!warning in Options::addSubSection() -> " << Warning << '\n';
+#endif
+  return Secs.back().Secs.back();
+}
+
+
+Options &Options::addSubSubSection( const string &name, int flags, int style )
+{
+  if ( Secs.empty() )
+    Warning += "Cannot add a subsubsection without having a section";
+  if ( Secs.back().Secs.empty() )
+    Warning += "Cannot add a subsubsection without having a subsection";
+
+  Secs.back().Secs.back().Secs.push_back( Options() );
+  Secs.back().Secs.back().Secs.back().setName( name );
+  AddOpts = &Secs.back().Secs.back().Secs.back();
+#ifndef NDEBUG
+  if ( !Warning.empty() )
+    cerr << "!warning in Options::addSubSubSection() -> " << Warning << '\n';
+#endif
+  return Secs.back().Secs.back().Secs.back();
+}
+
+
 Parameter &Options::setDefault( const string &ident )
 {
   iterator pp = find( ident );
@@ -3274,23 +3595,35 @@ int Options::identWidth( int selectmask ) const
 }
 
 
-ostream &Options::save( ostream &str, const string &start, int width,
+ostream &Options::save( ostream &str, const string &start,
 			int selectmask, bool detailed, bool firstonly ) const
 {
   Warning = "";
 
-  if ( width < 0 )
-    width = identWidth( selectmask );
+  int width = identWidth( selectmask );
+
+  string starts = start;
 
   // write options to file:
+  if ( ! name().empty() ) {
+    str << starts << name() << ":\n";
+    starts += "    ";
+  }
   string pattern = "";
   for ( const_iterator pp = begin(); pp != end(); ++pp ) {
     if ( (*pp).isLabel() && ( (*pp).style() & Parameter::SavePatternLabel ) )
       pattern = (*pp).ident() + '>';
     if ( (*pp).flags( selectmask ) ) {
-      str << start;
+      str << starts;
       (*pp).save( str, width, detailed, firstonly, pattern ) << '\n';
     }
+  }
+  for ( const_section_iterator sp = sectionsBegin();
+	sp != sectionsEnd();
+	++sp ) {
+    //    if ( (*sp).flags( selectmask ) ) {
+    (*sp).save( str, starts, selectmask, detailed, firstonly );
+      //    }
   }
 
   return str;

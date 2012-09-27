@@ -1205,6 +1205,25 @@ public:
         does not exist, the option is appended to the end of the list. */
   Parameter &insertSeparator( const string &atident="", int flags=0, int style=0 );
 
+    /*! Add a new section of Options to the end of the sections list.
+        Subsequent calls to addText(), addNumber(), etc. add new Parameter
+	to the added section.
+        \sa addSubSection(), addSubSubSection() */
+  Options &addSection( const string &name, int flags=0, int style=0 );
+    /*! Add a new subsection of Options to the last section.
+        Subsequent calls to addText(), addNumber(), etc. add new Parameter
+	to the added subsection.
+        \note You can only add a subsection after having added a section!
+        \sa addSection(), addSubSubSection() */
+  Options &addSubSection( const string &name, int flags=0, int style=0 );
+    /*! Add a new subsubsection of Options to the last subsection
+        of the last section.
+        Subsequent calls to addText(), addNumber(), etc. add new Parameter
+	to the added subsubsection.
+        \note You can only add a subsubsection after having added a subsection!
+        \sa addSection(), addSubSection() */
+  Options &addSubSubSection( const string &name, int flags=0, int style=0 );
+
     /*! Set value of option with identifier equal to \a ident
         to its default. */
   Parameter &setDefault( const string &ident );
@@ -1349,7 +1368,7 @@ public:
         If \a selectmask equals NonDefault, all options whose values differ
 	from their default value are saved. */
   ostream &save( ostream &str, const string &start="",
-		 int width=-1, int selectmask=0, bool detailed=false,
+		 int selectmask=0, bool detailed=false,
 		 bool firstonly=false ) const;
     /*! Write options to stream \a str und use \a textformat,
         \a numberformat, \a boolformat, \a dateformat, 
@@ -1358,7 +1377,7 @@ public:
 	respectively. */
   ostream &save( ostream &str, const string &textformat,
 		 const string &numberformat, const string &boolformat="%i=%b\n",
-		 const string &dateformat="%04Y-%02m-%02d", const string &timeformat="%02H:%02M:%02S",
+		 const string &dateformat="%i=%04Y-%02m-%02d\n", const string &timeformat="%i=%02H:%02M:%02S\n",
 		 const string &labelformat="%i\n", const string &separatorformat="",
 		 int selectmask=0 ) const;
     /*! Write identifiers and their values to stream \a str */
@@ -1373,7 +1392,7 @@ public:
                    i.e. number of white space characters per level
         \return the output stream \a str */
   ostream &saveXML( ostream &str, int selectmask=0, int level=0,
-		    int indent=2 ) const;
+		    int indent=4 ) const;
 
     /*! Read options from string \a opttxt of the form 
         "parameter1=x; parameter2=y; parameter3=z; ...".
@@ -1491,6 +1510,8 @@ private:
   deque< Parameter > Opt;
     /*! Sections of options. */
   deque< Options > Secs;
+    /*! Pointer to the Options where addText(), addNumber(), etc. should be added. */
+  Options *AddOpts;
     /*! A warning message. */
   mutable Str Warning;
     /*! Avoid recursive call of notify(). */

@@ -413,7 +413,7 @@ void DeviceList<T,PluginID>::readConfig( StrQueue &sq )
 template < class T, int PluginID >
 void DeviceList<T,PluginID>::saveConfig( ofstream &str )
 {
-  Options::save( str, "  ", -1, 0, false, false );
+  Options::save( str, "  ", 0, false, false );
 }
 
 

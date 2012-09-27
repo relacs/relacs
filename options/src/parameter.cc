@@ -2942,7 +2942,7 @@ ostream &Parameter::save( ostream &str, int width, bool detailed,
     str << setw( 0 ) << Str( '-', 70 );
   else {
     // identifier:
-    str << Str( pattern+ident(), width );
+    str << Str( pattern+ident(), -width );
     if ( detailed && ident() != request() )
       str << " (" << request() << "): ";
     else

@@ -115,7 +115,7 @@ void RePro::saveConfig( ofstream &str )
 {
   setDefaults();
   ConfigClass::saveConfig( str );
-  MyProjectOpt.save( str, "  ", -1 );
+  MyProjectOpt.save( str, "  " );
 }
 
 
