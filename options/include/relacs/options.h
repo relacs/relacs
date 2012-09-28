@@ -206,7 +206,7 @@ public:
 	"date" is searched first and if this is not found,
 	"time" is searched.
         Returns end() if no match for \a pattern is found. */
-  const_iterator find( const string &pattern ) const;
+  const_iterator find( const string &pattern, int level=-1 ) const;
     /*! Search for the first option that matches \a pattern.
         \a pattern can be a list of search terms separated by '>',
 	for example 'aaa>bbb', to search parameter 'bbb' in section 'aaa'.
@@ -215,15 +215,15 @@ public:
 	"date" is searched first and if this is not found,
 	"time" is searched.
         Returns end() if no match for \a pattern is found. */
-  iterator find( const string &pattern );
+  iterator find( const string &pattern, int level=-1 );
     /*! Search for the last option that matches \a pattern.
         Returns end() if \a ident is not found. 
         See find() for details about valid patterns \a pattern. */
-  const_iterator rfind( const string &ident ) const;
+  const_iterator rfind( const string &ident, int level=-1 ) const;
     /*! Search for the last option that matches \a pattern.
         Returns end() if \a ident is not found. 
         See find() for details about valid patterns \a pattern. */
-  iterator rfind( const string &ident );
+  iterator rfind( const string &ident, int level=-1 );
 
     /*! Get \a i-th options. */
   const Parameter &operator[]( int i ) const;

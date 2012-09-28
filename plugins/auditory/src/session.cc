@@ -160,7 +160,6 @@ void Session::config( void )
     mo.setNumber( "left threshold", 45.0 );
     mo.setNumber( "left slope", 25.0 );
     mo.setNumber( "left intensity", 49.0 );
-    mo.setNumber( "left rate", 100.0 );
     mo.setNumber( "left saturation", 58.0 );
     mo.setNumber( "left maxrate", 325.0 );
     mo.selectText( "best side", "left" );

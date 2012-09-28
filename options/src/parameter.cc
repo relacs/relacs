@@ -959,9 +959,11 @@ Parameter &Parameter::addText( const string &strg, bool clear )
     for ( int k=0; k<sq.size(); k++ ) {
       int year, month, day;
       int d = String[ String.size() - sq.size() + k ].date( year, month, day );
-      if ( d != 0 )
-	Warning += "string '" + String[ String.size() - sq.size() + k ]
-	  + "' is not a valid date!";
+      if ( d != 0 ) {
+	if ( ! String[ String.size() - sq.size() + k ].empty() )
+	  Warning += "string '" + String[ String.size() - sq.size() + k ]
+	    + "' is not a valid date!";
+      }
       else 
 	addDate( year, month, day );
     }
@@ -970,9 +972,11 @@ Parameter &Parameter::addText( const string &strg, bool clear )
     for ( int k=0; k<sq.size(); k++ ) {
       int hour, minutes, seconds;
       int d = String[ String.size() - sq.size() + k ].time( hour, minutes, seconds );
-      if ( d != 0 )
-	Warning += "string '" + String[ String.size() - sq.size() + k ]
-	  + "' is not a valid time!";
+      if ( d != 0 ) {
+	if ( ! String[ String.size() - sq.size() + k ].empty() )
+	  Warning += "string '" + String[ String.size() - sq.size() + k ]
+	    + "' is not a valid time!";
+      }
       else 
 	addTime( hour, minutes, seconds );
     }
@@ -1143,9 +1147,11 @@ Parameter &Parameter::addDefaultText( const string &strg )
     for ( int k=0; k<sq.size(); k++ ) {
       int year, month, day;
       int d = DefaultString[ DefaultString.size() - sq.size() + k ].date( year, month, day );
-      if ( d != 0 )
-	Warning += "string '" + DefaultString[ DefaultString.size() - sq.size() + k ]
-	  + "' is not a valid date!";
+      if ( d != 0 ) {
+	if ( DefaultString[ DefaultString.size() - sq.size() + k ].empty() )
+	  Warning += "string '" + DefaultString[ DefaultString.size() - sq.size() + k ]
+	    + "' is not a valid date!";
+      }
       else 
 	addDefaultDate( year, month, day );
     }
@@ -1154,9 +1160,11 @@ Parameter &Parameter::addDefaultText( const string &strg )
     for ( int k=0; k<sq.size(); k++ ) {
       int hour, minutes, seconds;
       int d = DefaultString[ DefaultString.size() - sq.size() + k ].time( hour, minutes, seconds );
-      if ( d != 0 )
-	Warning += "string '" + DefaultString[ DefaultString.size() - sq.size() + k ]
-	  + "' is not a valid time!";
+      if ( d != 0 ) {
+	if ( DefaultString[ DefaultString.size() - sq.size() + k ].empty() )
+	  Warning += "string '" + DefaultString[ DefaultString.size() - sq.size() + k ]
+	    + "' is not a valid time!";
+      }
       else 
 	addDefaultTime( hour, minutes, seconds );
     }

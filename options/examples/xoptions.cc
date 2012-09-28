@@ -44,6 +44,7 @@ int main( int argc, char *argv[] )
   opt.addNumber( "win", "Length of analysis window",
 		 0.1, 0.01, 1000.0, 0.01, "seconds", "ms" );
   opt.addBoolean( "type", "Full analysis", true );
+  opt.addText( "Nasty |x|>1", "some special value" );
   opt.addSection( "Results" );
   opt.addInteger( "numres", "Number of results reported", 7 );
   opt.addSubSection( "Color" );
@@ -61,6 +62,7 @@ int main( int argc, char *argv[] )
   cout << "Value of parameter 'sinewave': " << opt.boolean( "||sinewave" ) << '\n';
   cout << "Value of parameter 'recordingtime': " << opt.text( "rec|Recording>time|recordingtime" ) << '\n';
   cout << "Value of parameter 'type': " << opt.boolean( "Analysis>type" ) << '\n';
+  cout << "Value of parameter 'Nasty |x|<1': " << opt.text( "Nasty |x|>1" ) << '\n';
   cout << "Value of parameter 'Analysis>numres': " << opt.integer( "Analysis>numres" ) << '\n';
   cout << "Value of parameter 'Results>numres': " << opt.integer( "Results>numres" ) << '\n';
   cout << "Value of parameter 'Results>Color>background': " << opt.text( "Results>Color>background" ) << '\n';

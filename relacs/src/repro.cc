@@ -93,14 +93,22 @@ void RePro::setName( const string &name )
 void RePro::readConfig( StrQueue &sq )
 {
   for ( int k=0; k<sq.size(); k++ ) {
-    if ( sq[k].find( "project:" ) >= 0 ) {
+    size_t p = sq[k].find( "project" );
+    size_t c = string::npos;
+    if ( p != string::npos )
+      c = sq[k].find_first_not_of( ' ', p+7 );
+    if ( c != string::npos && sq[k][c] == ':' ) {
       MyProjectOpt.read( sq[k] );
       sq.erase( k );
       break;
     }
   }
   for ( int k=0; k<sq.size(); k++ ) {
-    if ( sq[k].find( "experiment:" ) >= 0 ) {
+    size_t p = sq[k].find( "experiment" );
+    size_t c = string::npos;
+    if ( p != string::npos )
+      c = sq[k].find_first_not_of( ' ', p+10 );
+    if ( c != string::npos && sq[k][c] == ':' ) {
       MyProjectOpt.read( sq[k] );
       sq.erase( k );
       break;
