@@ -82,10 +82,6 @@ public:
     Time=32,
       /*! The parameter is a label. */
     Label=64,
-      /*! The parameter is a separator. */
-    Separator=128,
-      /*! The parameter is a label or a separator. */
-    Blank=64+128
   };
 
     /*! This flag is set whenever the value of the Parameter is changed. */
@@ -187,9 +183,7 @@ public:
 	     int yearhour, int monthminutes, int dayseconds,
 	     int flags=0, int style=0,
 	     Options *parentsection=0 );
-    /*! Construct and initialize a single Parameter of type Label or
-        Separator. If \a ident is empty, a Separator is constructed.
-	otherwise a label with label \a ident is constructed.
+    /*! Construct and initialize a single Parameter of type Label.
 	If \a sep is \c true, a Label gets the TabLabel-bit in its style set. */
   Parameter( const string &ident, bool sep, int flags=0, int style=0,
 	     Options *parentsection=0 );
@@ -835,10 +829,6 @@ public:
 
     /*! True if parameter is of type label (parameter without value). */
   bool isLabel( void ) const;
-    /*! True if parameter is of type separator (parameter without identity and value). */
-  bool isSeparator( void ) const;
-    /*! True if parameter is of type label or separator. */
-  bool isBlank( void ) const;
     /*! Returns the label, i.e. the identifier. */
   inline string label( void ) const { return ident(); };
     /*! Set the label (i.e. identifier string) to \ a label. */
@@ -923,11 +913,12 @@ public:
 		 bool firstonly=false, const string &pattern="" ) const;
     /*! Write parameter to stream \a str according to the formats
         \a textformat, \a numberformat, \a boolformat, \a dateformat, 
-	\a timeformat, \a labelformat, and \a separatorformat. */
+	\a timeformat, and \a labelformat. 
+	\note No newline is added to the stream. */
   ostream &save( ostream &str, const string &textformat,
 		 const string &numberformat, const string &boolformat,
 		 const string &dateformat, const string &timeformat,
-		 const string &labelformat, const string &separatorformat ) const;
+		 const string &labelformat ) const;
     /*! Write parameter to stream \a str using save() */
   friend ostream &operator<< ( ostream &str, const Parameter &p );
 

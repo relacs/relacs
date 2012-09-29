@@ -278,7 +278,7 @@ int SpikePrecision::main( void )
   else  // dB SPL
     Intensity = intensity;
 
-  settings().setTypeFlags( 16, -Parameter::Blank );
+  settings().setTypeFlags( 16, -Parameter::Label );
 
   // setup frequency range:
   FreqRange.set( freqrangestr );

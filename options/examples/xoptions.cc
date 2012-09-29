@@ -35,7 +35,6 @@ int main( int argc, char *argv[] )
 		 0.2, 0.01, 1000.0, 0.01, "seconds", "ms" );
   opt.addInteger( "repeats", "Repeats", 10 );
   opt.addBoolean( "sinewave", "Use Sine Wave", true );
-  opt.addLabel( "Recording" );
   opt.addDate( "recordingdate", 2009, 6, 20 );
   opt.addTime( "recordingtime", 16, 42, 13 );
   opt.insertNumber( "pause", "repeats", "Pause between Signals",
@@ -49,10 +48,13 @@ int main( int argc, char *argv[] )
   opt.addInteger( "numres", "Number of results reported", 7 );
   opt.addSubSection( "Color" );
   opt.addSelection( "background", "Background color", "red|green|blue" );
-  opt.addSelection( "foreground", "Foreground color", "blue|green|red" );
+  opt.addText( "foreground", "Foreground color", "" );
   opt.addSubSection( "Animal" );
-  opt.addSelection( "mammal", "Mammal", "Monkey|Mice|Elephant" );
+  opt.addSelection( "mammal", "Mammal", "Monkey|~|Elephant" );
   opt.addSelection( "fish", "Fish", "Trout|Pike|Carp" );
+
+  cout << opt.save() << '\n';
+  cout << '\n';
   cout << opt;
   cout << '\n';
 
@@ -66,6 +68,9 @@ int main( int argc, char *argv[] )
   cout << "Value of parameter 'Analysis>numres': " << opt.integer( "Analysis>numres" ) << '\n';
   cout << "Value of parameter 'Results>numres': " << opt.integer( "Results>numres" ) << '\n';
   cout << "Value of parameter 'Results>Color>background': " << opt.text( "Results>Color>background" ) << '\n';
+  cout << "Value of parameter 'Results>mammal 0': *" << opt.text( "Results>mammal", 0 ) << "*\n";
+  cout << "Value of parameter 'Results>mammal 1': *" << opt.text( "Results>mammal", 1 ) << "*\n";
+  cout << "Value of parameter 'Results>mammal 2': *" << opt.text( "Results>mammal", 2 ) << "*\n";
   cout << '\n';
 
   return 0;

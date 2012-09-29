@@ -2632,7 +2632,7 @@ void MacroCommand::acceptDialog( void )
     Options po( MC->expandParameter( Params, prjopt ) );
     po.readAppend( MacroVars, OptDialog::changedFlag() );
     po.readAppend( MacroProject, OptDialog::changedFlag() );
-    Params = po.save( "; " );
+    Params = po.save();
     // update menu:
     Str s = MenuShortcut;
     s += "Macro " + Name;

@@ -181,7 +181,7 @@ int FICurve::main( void )
   }
 
   // get options:
-  settings().setTypeFlags( 16, -Parameter::Blank );
+  settings().setTypeFlags( 16, -Parameter::Label );
   MinIntensity = number( "intmin" );
   MaxIntensity = number( "intmax" );
   IntensityStep = number( "intstep" );

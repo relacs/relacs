@@ -179,7 +179,7 @@ int SingleStimulus::main( void )
   }
 
   // get options:
-  settings().setTypeFlags( 16, -Parameter::Blank );
+  settings().setTypeFlags( 16, -Parameter::Label );
   WaveType = (WaveTypes)index( "type" );
   WaveForm = (WaveForms)index( "waveform" );
   Str stimfile = text( "stimfile" );

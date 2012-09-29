@@ -3098,39 +3098,7 @@ Parameter &Options::setLabel( const string &ident, const string &label )
 }
 
 
-Parameter &Options::addSeparator( int flags, int style )
-{
-  // new parameter:
-  Parameter np( "", true, flags, style, this );
-  // add option:
-  Parameter &pp = add( np );
-  // error?
-  Warning += np.warning();
-#ifndef NDEBUG
-  if ( !Warning.empty() )
-    cerr << "!warning in Options::addSeparator() -> " << Warning << '\n';
-#endif
-  return pp;
-}
-
-
-Parameter &Options::insertSeparator( const string &atident, int flags, int style )
-{
-  // new parameter:
-  Parameter np( "", true, flags, style, this );
-  // insert option:
-  Parameter &pp = insert( np, atident );
-  // error?
-  Warning += np.warning();
-#ifndef NDEBUG
-  if ( !Warning.empty() )
-    cerr << "!warning in Options::insertSeparator() -> " << Warning << '\n';
-#endif
-  return pp;
-}
-
-
-Options &Options::addSection( const string &name, int flags, int style )
+Options &Options::addSection( const string &name, int style )
 {
   Secs.push_back( Options() );
   Secs.back().setName( name );
@@ -3139,7 +3107,7 @@ Options &Options::addSection( const string &name, int flags, int style )
 }
 
 
-Options &Options::addSubSection( const string &name, int flags, int style )
+Options &Options::addSubSection( const string &name, int style )
 {
   if ( Secs.empty() )
     Warning += "Cannot add a subsection without having a section";
@@ -3155,7 +3123,7 @@ Options &Options::addSubSection( const string &name, int flags, int style )
 }
 
 
-Options &Options::addSubSubSection( const string &name, int flags, int style )
+Options &Options::addSubSubSection( const string &name, int style )
 {
   if ( Secs.empty() )
     Warning += "Cannot add a subsubsection without having a section";
@@ -3241,7 +3209,7 @@ Options &Options::takeFirst( const string &ident )
 
   if ( ident.empty() ) {
     for ( iterator ip = begin(); ip != end(); ++ip )
-      if ( !ip->isBlank() ) {
+      if ( !ip->isLabel() ) {
 	for ( iterator pp = ip+1; pp != end(); )
 	  if ( *pp == *ip ) {
 	    // delete option:
@@ -3276,7 +3244,7 @@ Options &Options::takeLast( const string &ident )
 
   if ( ident.empty() ) {
     for ( iterator ip = end()-1; ip != begin(); --ip ) {
-      if ( !ip->isBlank() ) {
+      if ( !ip->isLabel() ) {
 	iterator pp = ip;
 	do {
 	  --pp;
@@ -3310,7 +3278,7 @@ Options &Options::combineFirst( const string &ident )
 
   if ( ident.empty() ) {
     for ( iterator ip = begin(); ip != end(); ++ip )
-      if ( !ip->isBlank() ) {
+      if ( !ip->isLabel() ) {
 	for ( iterator pp = ip+1; pp != end(); )
 	  if ( *pp == *ip ) {
 	    (*ip).addText( (*pp).text() );
@@ -3347,7 +3315,7 @@ Options &Options::combineLast( const string &ident )
 
   if ( ident.empty() ) {
     for ( iterator ip = end()-1; ip != begin(); --ip ) {
-      if ( !ip->isBlank() ) {
+      if ( !ip->isLabel() ) {
 	iterator pp = ip;
 	do {
 	  --pp;
@@ -3440,9 +3408,9 @@ Options &Options::clear( void )
 
 Options &Options::strip( void )
 {
-  // delete all Label and Separator:
+  // delete all Label:
   for ( iterator pp = begin(); pp != end(); ) {
-    if ( pp->isBlank() ) {
+    if ( pp->isLabel() ) {
       // delete option:
       pp = Opt.erase( pp );
     }
@@ -3456,7 +3424,13 @@ Options &Options::strip( void )
 int Options::size( void ) const
 {
   Warning = "";
-  return Opt.size();
+  int n = Opt.size();
+  for ( const_section_iterator sp = sectionsBegin();
+	sp != sectionsEnd();
+	++sp ) {
+    n += sp->size();
+  }
+  return n;
 }
 
 
@@ -3465,9 +3439,13 @@ int Options::size( int flags ) const
   Warning = "";
   int n=0;
   for ( const_iterator pp = begin(); pp != end(); ++pp ) {
-    if ( (*pp).flags( flags ) ) {
+    if ( (*pp).flags( flags ) )
       n++;
-    }
+  }
+  for ( const_section_iterator sp = sectionsBegin();
+	sp != sectionsEnd();
+	++sp ) {
+    n += sp->size( flags );
   }
   return n;
 }
@@ -3476,7 +3454,7 @@ int Options::size( int flags ) const
 bool Options::empty( void ) const
 {
   Warning = "";
-  return Opt.empty();
+  return ( size() <= 0 );
 }
 
 
@@ -3630,7 +3608,7 @@ Options &Options::delTypeStyle( int style, int typemask )
 }
 
 
-int Options::identWidth( int selectmask ) const
+int Options::identWidth( int selectmask, bool detailed ) const
 {
   Warning = "";
 
@@ -3642,9 +3620,11 @@ int Options::identWidth( int selectmask ) const
       pwidth = (*pp).ident().size() + 1;
     if ( (*pp).flags( selectmask ) ) {
       unsigned int w = (*pp).ident().size();
-      if ( pwidth > 0 && ! (*pp).isBlank() )
+      if ( detailed && (*pp).ident() != (*pp).request() )
+	w += 3 + (*pp).request().size();
+      if ( pwidth > 0 && ! (*pp).isLabel() )
 	w += pwidth;
-      if ( !(*pp).isBlank() && w > width )
+      if ( !(*pp).isLabel() && w > width )
 	width = w;
     }
   }
@@ -3658,7 +3638,7 @@ ostream &Options::save( ostream &str, const string &start,
 {
   Warning = "";
 
-  int width = identWidth( selectmask );
+  int width = identWidth( selectmask, detailed );
 
   string starts = start;
 
@@ -3679,9 +3659,8 @@ ostream &Options::save( ostream &str, const string &start,
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    //    if ( (*sp).flags( selectmask ) ) {
-    (*sp).save( str, starts, selectmask, detailed, firstonly );
-      //    }
+    if ( sp->size( selectmask ) > 0 )
+      (*sp).save( str, starts, selectmask, detailed, firstonly );
   }
 
   return str;
@@ -3691,30 +3670,49 @@ ostream &Options::save( ostream &str, const string &start,
 ostream &Options::save( ostream &str, const string &textformat,
 			const string &numberformat, const string &boolformat,
 			const string &dateformat, const string &timeformat,
-			const string &labelformat,
-			const string &separatorformat, int selectmask ) const
+			const string &labelformat, int selectmask,
+			const string &start ) const
 {
   Warning = "";
 
+  string starts = start;
+
   // write options to file:
+  if ( ! name().empty() ) {
+    Str f( labelformat );
+    f.format( name(), 'i' );
+    f.format( name(), 's' );
+    str << starts << f << '\n';
+    starts += "    ";
+  }
   for ( const_iterator pp = begin(); pp != end(); ++pp ) {
     if ( (*pp).flags( selectmask ) ) {
+      str << starts;
       (*pp).save( str, textformat, numberformat, boolformat,
-		  dateformat, timeformat, labelformat, separatorformat );
+		  dateformat, timeformat, labelformat );
+      str << '\n';
     }
+  }
+  for ( const_section_iterator sp = sectionsBegin();
+	sp != sectionsEnd();
+	++sp ) {
+    if ( sp->size( selectmask ) > 0 )
+      (*sp).save( str, textformat, numberformat, boolformat,
+		  dateformat, timeformat, labelformat, selectmask, starts );
   }
 
   return str;
 }
 
 
-string Options::save( string separator, 
-		      int selectmask, bool firstonly ) const
+string Options::save( int selectmask, bool firstonly ) const
 {
   Warning = "";
 
   // write options to string:
   string str;
+  if ( ! name().empty() )
+    str += name() + ": { ";
   int n=0;
   string pattern = "";
   for ( const_iterator pp = begin(); pp != end(); ++pp ) {
@@ -3722,13 +3720,25 @@ string Options::save( string separator,
       pattern = (*pp).ident() + '>';
     if ( (*pp).flags( selectmask ) ) {
       if ( n > 0 )
-	str += separator;
-      if ( ! pattern.empty() && ! (*pp).isBlank() )
+	str += ", ";
+      if ( ! pattern.empty() && ! (*pp).isLabel() )
 	str += pattern;
       str += (*pp).save( false, firstonly );
       n++;
     }
   }
+  for ( const_section_iterator sp = sectionsBegin();
+	sp != sectionsEnd();
+	++sp ) {
+    if ( sp->size( selectmask ) > 0 ) {
+      if ( n > 0 )
+	str += ", ";
+      str += (*sp).save( selectmask, firstonly );
+      ++n;
+    }
+  }
+  if ( ! name().empty() )
+    str += " }";
 
   return str;
 }
@@ -3937,9 +3947,9 @@ Options &Options::read( const Options &o, int flags, int flag )
 }
 
 
-bool Options::readAppend( const Parameter &p, bool appendseparator )
+bool Options::readAppend( const Parameter &p )
 {
-  if ( ! ( p.isSeparator() && p.ident().empty() && appendseparator ) ) {
+  if ( ! p.ident().empty() ) {
     for ( iterator pp = begin(); pp != end(); ++pp ) {
       if ( (*pp).read( p ) ) {
 	// notify the change:
@@ -3966,12 +3976,12 @@ bool Options::readAppend( const Parameter &p, bool appendseparator )
 }
 
 
-Options &Options::readAppend( const Options &o, int flags, bool appendseparator )
+Options &Options::readAppend( const Options &o, int flags )
 {
   for ( const_iterator op = o.begin(); op != o.end(); ++op ) {
     if ( (*op).flags( flags ) ) {
       bool app = true;
-      if ( ! ( (*op).isSeparator() && (*op).ident().empty() && appendseparator ) ) {
+      if ( ! (*op).ident().empty() ) {
 	for ( iterator pp = begin(); pp != end(); ++pp ) {
 	  if ( (*pp).read( *op ) ) {
 	    app = false;
@@ -3995,7 +4005,7 @@ Options &Options::readAppend( const Options &o, int flags, bool appendseparator 
 }
 
 
-Options &Options::readAppend( const StrQueue &sq, bool appendseparator,
+Options &Options::readAppend( const StrQueue &sq,
 			      const string &assignment )
 {
   Warning = "";
@@ -4006,7 +4016,7 @@ Options &Options::readAppend( const StrQueue &sq, bool appendseparator,
     Warning += np.warning();
 
     bool app = true;
-    if ( ! ( np.isSeparator() && np.ident().empty() && appendseparator ) ) {
+    if ( ! np.ident().empty() ) {
       for ( iterator pp = begin(); pp != end(); ++pp ) {
 	if ( (*pp).read( np ) ) {
 	  app = false;

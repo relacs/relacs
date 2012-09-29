@@ -58,7 +58,6 @@ MainWidget::MainWidget( void )
   Opt1.addText( "storepath", "Save stimuli in custom directory", "" ).setStyle( OptWidget::BrowseDirectory ).setActivation( "storemode", "custom" );
   Opt1.addSelection( "storelevel", "Save", "all|generated|noise|none" ).setUnit( "stimuli" );
 
-  Opt2.addSeparator();
   Opt2.addBoolean( "sinewave", "Use Sine Wave", false );
   Opt2.addBoolean( "loop", "Loop", true, 1 ).setStyle( OptWidget::LabelSmall |  OptWidget::ValueRed );
   Opt2.addDate( "date", "Date", 2009, 6, 20 );

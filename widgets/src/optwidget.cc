@@ -443,14 +443,6 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
 	}
 	Layout.back()->setColumnMinimumWidth( 0, 20 );
       }
-      // separator:
-      else if ( (*pp).isSeparator() ) {
-	OptWidgetSeparator *s = new OptWidgetSeparator( pp, Opt, this, OMutex );
-	if ( style & BreakLinesStyle )
-	  Layout.back()->addWidget( s->valueWidget(), row, 0, 1, 4 );
-	else
-	  Layout.back()->addWidget( s->valueWidget(), row, 0, 1, 5 );
-      }
       // nothing:
       else {
 	added = false;

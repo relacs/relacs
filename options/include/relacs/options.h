@@ -382,14 +382,14 @@ public:
     /*! Add a text-selection option at the end of the options list. 
         Its request string for the options dialog is set to \a request,
         its identifier string is set to \a ident.
-        The option has a list \a selection of strings (separated by '|')
+        The option has a list \a selection of strings (separated by ", ")
         that can be selected. */
   Parameter &addSelection( const string &ident, const string &request,  
 			   const string &selection, int flags=0, int style=0 );
     /*! Add a text option at the end of the options list. 
         Its identifier string and its request string for the options dialog 
 	are set to \a ident.
-	The option has a list \a selection of strings (separated by '|')
+	The option has a list \a selection of strings (separated by ", ")
         that can be selected. */
   inline Parameter &addSelection( const string &ident, const string &selection="", 
 			     int flags=0, int style=0 )
@@ -400,7 +400,7 @@ public:
         does not exist, the option is appended to the end of the list.
         Its request string for the options dialog is set to \a request,
         its identifier string is set to \a ident.
-	The option has a list \a selection of strings (separated by '|')
+	The option has a list \a selection of strings (separated by ", ")
         that can be selected. */
   Parameter &insertSelection( const string &ident, const string &atident, 
 			      const string &request, const string &selection,
@@ -411,7 +411,7 @@ public:
         does not exist, the option is appended to the end of the list.
         Its identifier string and its request string for the options dialog 
 	are set to \a ident.
-	The option has a list \a selection of strings (separated by '|')
+	The option has a list \a selection of strings (separated by ", ")
         that can be selected. */
   inline Parameter &insertSelection( const string &ident, const string &atident="", 
 				     const string &selection="", int flags=0, int style=0 )
@@ -1188,41 +1188,33 @@ public:
         does not exist, the option is appended to the end of the list. */
   Parameter &insertLabel( const string &ident, const string &atident="",
 			  int flags=0, int style=0 );
-    /*! Return the label of a label or separator
+    /*! Return the label of a label
         with identifier equal to \a ident. 
         If there is no option with identifier \a ident
 	an empty string is returned. */
   Str label( const string &ident ) const;
-    /*! Set the lable of an existing label or separator
+    /*! Set the lable of an existing label
         with identifier \a ident to \a label. */
   Parameter &setLabel( const string &ident, const string &label );
-
-    /*! Add a separator at the end of the options list. */
-  Parameter &addSeparator( int flags=0, int style=0 ); 
-    /*! Insert a new separator at the beginning of the options list
-        (\a atident == "") or at the position of the option with
-        identity \a atident. If the option with identity \a atident
-        does not exist, the option is appended to the end of the list. */
-  Parameter &insertSeparator( const string &atident="", int flags=0, int style=0 );
 
     /*! Add a new section of Options to the end of the sections list.
         Subsequent calls to addText(), addNumber(), etc. add new Parameter
 	to the added section.
         \sa addSubSection(), addSubSubSection() */
-  Options &addSection( const string &name, int flags=0, int style=0 );
+  Options &addSection( const string &name, int style=0 );
     /*! Add a new subsection of Options to the last section.
         Subsequent calls to addText(), addNumber(), etc. add new Parameter
 	to the added subsection.
         \note You can only add a subsection after having added a section!
         \sa addSection(), addSubSubSection() */
-  Options &addSubSection( const string &name, int flags=0, int style=0 );
+  Options &addSubSection( const string &name, int style=0 );
     /*! Add a new subsubsection of Options to the last subsection
         of the last section.
         Subsequent calls to addText(), addNumber(), etc. add new Parameter
 	to the added subsubsection.
         \note You can only add a subsubsection after having added a subsection!
         \sa addSection(), addSubSection() */
-  Options &addSubSubSection( const string &name, int flags=0, int style=0 );
+  Options &addSubSubSection( const string &name, int style=0 );
 
     /*! Set value of option with identifier equal to \a ident
         to its default. */
@@ -1255,7 +1247,6 @@ public:
     /*! Combine values of Text-Parameters with identical identifier
         by adding the text values to the last one and
 	deleting the following.
-	The combined values are separated by \a separator.
         If an identifier \a ident is specified,
         only options with this identifier are processed. */
   Options &combineLast( const string &ident="" );
@@ -1270,12 +1261,13 @@ public:
   Options &pop( void );
     /*! Remove all options. */
   Options &clear( void );
-    /*! Remove all options without value, i.e. Labels, Separators, GroupBoxes. */
+    /*! Remove all options without value, i.e. Labels. */
   Options &strip( void );
 
-    /*! Total number of options. */
+    /*! Total number of key-value pairs in this Options and all its sections. */
   int size( void ) const;
-    /*! Total number of options that have \a selectflag set in their flags().
+    /*! Total number of key-value pairs in this Options and all its sections
+        that have \a selectflag set in their flags().
         If \a selectflag equals zero, all options are counted.
 	If \a selectflag is negative, only options whose values differ
 	from the default value and have abs(\a selectflag) set in their flags
@@ -1283,7 +1275,8 @@ public:
         If \a selectflag equals NonDefault, all options whose values differ
 	from their default value are counted. */
   int size( int selectflag ) const;
-    /*! True if there are no options. */
+    /*! True if there are no key-value pairs in this Options and all
+        its sections. */
   bool empty( void ) const;
     /*! True if option with identifier \a ident exist. */
   bool exist( const string &ident ) const;
@@ -1344,11 +1337,14 @@ public:
         whose type matches \a typemask (see Parameter::types() ). */
   Options &delTypeStyle( int style, int typemask );
 
-    /*! Length of largest identifier. */
-  int identWidth( int selectmask=0 ) const;
+    /*! Length of largest identifier.
+        If \a detailed is \c true, then include length of request string as well. */
+  int identWidth( int selectmask=0, bool detailed=false ) const;
 
     /*! Write identifiers and their values to a string
-        separated by \a separator.
+        separated by ", ".
+        If you place the resulting string withing curly braces,
+	you get a valid YAML string (i.e. "{ " + save() + " }" ).
 	Saves only options that have \a selectmask set in their flags().
         If \a selectmask equals zero, all options are saved.
 	If \a selectmask is negative, only options whose values differ
@@ -1356,9 +1352,9 @@ public:
 	are saved.
         If \a selectmask equals NonDefault, all options whose values differ
 	from their default value are saved. */
-  string save( string separator="; ", 
-	       int selectmask=0, bool firstonly=false ) const;
-    /*! Write identifiers and their values to stream \a str.
+  string save( int selectmask=0, bool firstonly=false ) const;
+    /*! Write identifiers and their values to stream \a str
+        as a valid YAML document.
         Start each line with \a start.
 	Saves only options that have \a selectmask set in their flags().
         If \a selectmask equals zero, all options are saved.
@@ -1370,16 +1366,16 @@ public:
   ostream &save( ostream &str, const string &start="",
 		 int selectmask=0, bool detailed=false,
 		 bool firstonly=false ) const;
-    /*! Write options to stream \a str und use \a textformat,
-        \a numberformat, \a boolformat, \a dateformat, 
-	\a timeformat, \a labelformat, and \a separatorformat
-	for formatting text, number, boolean, label, and separator parameter,
-	respectively. */
+    /*! Write each key-value pair as a separate line to stream \a str
+        and use \a textformat, \a numberformat, \a boolformat, \a
+        dateformat, \a timeformat, and \a labelformat for formatting
+        text, number, boolean, and label parameter, respectively.
+        Each line is started with \a start. */
   ostream &save( ostream &str, const string &textformat,
-		 const string &numberformat, const string &boolformat="%i=%b\n",
-		 const string &dateformat="%i=%04Y-%02m-%02d\n", const string &timeformat="%i=%02H:%02M:%02S\n",
-		 const string &labelformat="%i\n", const string &separatorformat="",
-		 int selectmask=0 ) const;
+		 const string &numberformat, const string &boolformat="%i=%b",
+		 const string &dateformat="%i=%04Y-%02m-%02d", const string &timeformat="%i=%02H:%02M:%02S",
+		 const string &labelformat="%i", int selectmask=0,
+		 const string &start="" ) const;
     /*! Write identifiers and their values to stream \a str */
   friend ostream &operator<< ( ostream &str, const Options &o );
 
@@ -1442,20 +1438,14 @@ public:
     /*! Read options from the parameter \a p.
         If no option with the identifier equal to \a p's identifier
         exist \a p is appended to the options.
-	If \a appendseparator is true,
-	separators with empty identifier are appended.
         Returns \c true if \a p was read, \c false if it was appended. */
-  bool readAppend( const Parameter &p, bool appendseparator=true );
+  bool readAppend( const Parameter &p );
     /*! Read options from the options \a o.
-        All options \a o that do not exist are appended.
-	If \a appendseparator is true,
-	separators with empty identifier are appended. */
-  Options &readAppend( const Options &o, int flags=0, bool appendseparator=true );
+        All options \a o that do not exist are appended.. */
+  Options &readAppend( const Options &o, int flags=0 );
     /*! Read options from the list of strings \a sq.
-        All options from \a sq that do not exist are appended.
-	If \a appendseparator is true,
-	separators with empty identifier are appended. */
-  Options &readAppend( const StrQueue &sq, bool appendseparator=true,
+        All options from \a sq that do not exist are appended. */
+  Options &readAppend( const StrQueue &sq,
 		       const string &assignment=":=" );
 
 

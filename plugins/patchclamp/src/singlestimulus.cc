@@ -208,7 +208,7 @@ int SingleStimulus::main( void )
   }
 
   // store options:
-  settings().setTypeFlags( 16, -Parameter::Blank );
+  settings().setTypeFlags( 16, -Parameter::Label );
 
   // get options:
   WaveForm = (WaveForms)index( "waveform" );

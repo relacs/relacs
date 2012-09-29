@@ -1352,12 +1352,12 @@ void RELACSPlugin::saveDoxygenOptions( void )
   cout << "\\author " << author() << '\n';
   cout << "\\version " << version() << " (" << date() << ")\n";
   cout << "\\par Options\n";
-  Options::save( cout, "- \\c %i=%s: %r (\\c %T)\n",
-		 "- \\c %i=%g%u: %r (\\c %T)\n",
-		 "- \\c %i=%b: %r (\\c %T)\n",
-		 "- \\c %i=%04Y-%02m-%02d: %r (\\c %T)\n",
-		 "- \\c %i=%02H:%02M:%02S: %r (\\c %T)\n",
-		 "- %i\n" );
+  Options::save( cout, "- \\c %i=%s: %r (\\c %T)",
+		 "- \\c %i=%g%u: %r (\\c %T)",
+		 "- \\c %i=%b: %r (\\c %T)",
+		 "- \\c %i=%04Y-%02m-%02d: %r (\\c %T)",
+		 "- \\c %i=%02H:%02M:%02S: %r (\\c %T)",
+		 "- %i" );
 }
 
 

@@ -710,7 +710,7 @@ void SaveFiles::saveRePro( void )
   if ( ReProData ) {
 
     ReProSettings.setFlags( 0 );
-    ReProSettings.setTypeFlags( 1, -Parameter::Blank );
+    ReProSettings.setTypeFlags( 1, -Parameter::Label );
     
     // stimulus indices file:
     if ( SF != 0 && saving() ) {

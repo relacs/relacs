@@ -243,7 +243,7 @@ Parameter::Parameter( const string &ident, bool sep, int flags, int style,
 {
   Type pt = Label;
   if ( ident.empty() )
-    pt = Separator;
+    Warning += "empty label";
   else if ( sep )
     style |= TabLabel;
 
@@ -384,7 +384,7 @@ Parameter &Parameter::assign( const string &value )
   if ( isText() && size() > 1 ) {
     selectText( value );
   }
-  else if ( ! isBlank() ) {
+  else if ( ! isLabel() ) {
     setText( value );
     if ( isNotype() ) {
       // check for date:
@@ -813,8 +813,6 @@ Str Parameter::text( int index, const string &format, const string &unit ) const
     typestr = "time";
   else if ( isLabel() )
     typestr = "label";
-  else if ( isSeparator() )
-    typestr = "separator";
   f.format( typestr, 'T' );
 
   Str s( "" );
@@ -932,9 +930,27 @@ Parameter &Parameter::addText( const string &strg, bool clear )
   Warning = "";
 
   // split strg:
-  StrQueue sq( strg, "|" );
+  StrQueue sq;
+  if ( strg.find( '|' ) != string::npos )
+    sq.assign( strg, "|" );  // compatibility with old styles
+  else {
+    if ( ! strg.empty() && strg[0] == '[' ) {
+      Str s = strg;
+      s.preventFirst( '[' );
+      s.preventLast( ']' );
+      sq.assign( s, "," );
+    }
+    else
+      sq.assign( strg, "" );
+  }
   if ( sq.empty() )
     sq.add( "" );
+  // remove leading and trailing spaces, and make '~' an empty string:
+  for ( int k=0; k<sq.size(); k++ ) {
+    sq[k].strip( ' ' );
+    if ( sq[k] == "~" )
+      sq[k].clear();
+  }
 
   // clear:
   if ( clear ) {
@@ -981,7 +997,7 @@ Parameter &Parameter::addText( const string &strg, bool clear )
 	addTime( hour, minutes, seconds );
     }
   }
-  else if ( ! isBlank() ) {
+  else if ( ! isLabel() ) {
     // get numbers:
     for ( int k=0; k<sq.size(); k++ )
       addNumber( String[ String.size() - sq.size() + k ], "" );
@@ -1048,8 +1064,6 @@ Str Parameter::defaultText( int index, const string &format,
     typestr = "time";
   else if ( isLabel() )
     typestr = "label";
-  else if ( isSeparator() )
-    typestr = "separator";
   f.format( typestr, 'T' );
 
   string u( unit );
@@ -1136,9 +1150,27 @@ Parameter &Parameter::addDefaultText( const string &strg )
   Warning = "";
 
   // split strg:
-  StrQueue sq( strg, "|" );
+  StrQueue sq;
+  if ( strg.find( '|' ) != string::npos )
+    sq.assign( strg, "|" );  // compatibility with old styles
+  else {
+    if ( ! strg.empty() && strg[0] == '[' ) {
+      Str s = strg;
+      s.preventFirst( '[' );
+      s.preventLast( ']' );
+      sq.assign( s, "," );
+    }
+    else
+      sq.assign( strg, "" );
+  }
   if ( sq.empty() )
     sq.add( "" );
+  // remove leading and trailing spaces, and make '~' an empty string:
+  for ( int k=0; k<sq.size(); k++ ) {
+    sq[k].strip( ' ' );
+    if ( sq[k] == "~" )
+      sq[k].clear();
+  }
 
   // add sq:
   DefaultString.add( sq );
@@ -1188,7 +1220,27 @@ Parameter &Parameter::selectText( const string &strg, int add )
   }
 
   // split strg:
-  StrQueue sq( strg, "|" );
+  StrQueue sq;
+  if ( strg.find( '|' ) != string::npos )
+    sq.assign( strg, "|" );  // compatibility with old styles
+  else {
+    if ( ! strg.empty() && strg[0] == '[' ) {
+      Str s = strg;
+      s.preventFirst( '[' );
+      s.preventLast( ']' );
+      sq.assign( s, "," );
+    }
+    else
+      sq.assign( strg, "" );
+  }
+  if ( sq.empty() )
+    sq.add( "" );
+  // remove leading and trailing spaces, and make '~' an empty string:
+  for ( int k=0; k<sq.size(); k++ ) {
+    sq[k].strip( ' ' );
+    if ( sq[k] == "~" )
+      sq[k].clear();
+  }
 
   int inx = String.find( sq[0] );
   if ( inx < 0 ) {
@@ -1242,7 +1294,7 @@ Parameter &Parameter::selectText( const string &strg, int add )
 	addTime( hour, minutes, seconds );
     }
   }
-  else if ( ! isBlank() ) {
+  else if ( ! isLabel() ) {
     Value.clear();
     Error.clear();
     for ( int k=0; k<String.size(); k++ )
@@ -2682,18 +2734,6 @@ bool Parameter::isLabel( void ) const
 }
 
 
-bool Parameter::isSeparator( void ) const
-{
-  return ( PType == Separator );
-}
-
-
-bool Parameter::isBlank( void ) const
-{
-  return ( PType == Label || PType == Separator );
-}
-
-
 bool Parameter::isNotype( void ) const
 {
   return ( PType == NoType );
@@ -2740,7 +2780,7 @@ Parameter &Parameter::setToDefault( void )
     DefaultMinutes = Minutes;
     DefaultSeconds = Seconds;
   }
-  else if ( ! isBlank() )
+  else if ( ! isLabel() )
     DefaultValue = Value;
   DefaultString = String;
   return *this;
@@ -2889,46 +2929,66 @@ string Parameter::save( bool detailed, bool firstonly ) const
   string str;
   if ( isLabel() )
     str = label();
-  else if ( ! isSeparator() ) {
+  else {
     // identifier:
     str = ident();
     if ( detailed && ident() != request() )
       str += " (" + request() + "): ";
     else
-      str += "=";
+      str += ": ";
 
     // value:
+    bool fulllist = ( size() > 1 &&
+		      ( (Flags & ListFlag) == ListFlag || ! firstonly ) );
     if ( isNumber() || isInteger() ) {
+      if ( fulllist )
+	str += "[";
       if ( error( 0 ) >= 0.0 )
 	str += text( 0, "(" + format() + "+-" + format().up() + ")" );
       else
 	str += text( 0 );
-      if ( (Flags & ListFlag) == ListFlag || ! firstonly ) {
+      if ( fulllist ) {
 	for ( int k=1; k<(int)Value.size(); k++ ) {
-	  str += "|";
+	  str += ", ";
 	  if ( error( k ) >= 0.0 )
 	    str += text( k, "(" + format() + "+-" + format().up() + ")" );
 	  else
 	    str += text( k );
 	}
+	str += "]";
       }
       if ( outUnit() != "1" )
 	str += outUnit();
     }
     else if ( isBoolean() ) {
+      if ( fulllist )
+	str += "[";
       str += ( boolean( 0 ) ? "true" : "false" );
-      if ( (Flags & ListFlag) == ListFlag || ! firstonly ) {
+      if ( fulllist ) {
 	for ( int k=1; k<(int)Value.size(); k++ ) {
-	  str += "|";
+	  str += ", ";
 	  str += ( boolean( k ) ? "true" : "false" );
 	}
+	str += "]";
       }
     }
     else if ( isDate() || isTime() || isText() ) {
-      str += text( 0 );
-      if ( (Flags & ListFlag) == ListFlag || ! firstonly ) {
-	for ( int k=1; k<(int)String.size(); k++ )
-	  str += "|" + text( k );
+      if ( fulllist )
+	str += "[";
+      string val = text( 0 );
+      if ( val.empty() )
+	str += '~';
+      else
+	str += val;
+      if ( fulllist ) {
+	for ( int k=1; k<(int)String.size(); k++ ) {
+	  val = text( k );
+	  if ( val.empty() )
+	    str += ", ~";
+	  else
+	    str += ", " + val;
+	}
+	str += "]";
       }
     }
   }
@@ -2946,47 +3006,65 @@ ostream &Parameter::save( ostream &str, int width, bool detailed,
     else
       str << setw( 0 ) << label();
   }
-  else if ( isSeparator() )
-    str << setw( 0 ) << Str( '-', 70 );
   else {
     // identifier:
-    str << Str( pattern+ident(), -width );
+    string is = pattern+ident();
     if ( detailed && ident() != request() )
-      str << " (" << request() << "): ";
-    else
-      str << ": ";
+      is += " (" + request() + ")";
+    str << Str( is, -width );
+    str << ": ";
 
     // value:
+    bool fulllist = ( size() > 1 &&
+		      ( (Flags & ListFlag) == ListFlag || ! firstonly ) );
     if ( isNumber() || isInteger() ) {
+      if ( fulllist )
+	str << "[";
       if ( error( 0 ) >= 0.0 )
 	str << text( 0, "(" + format() + "+-" + format().up() + ")" );
       else
 	str << text( 0 );
-      if ( (Flags & ListFlag) == ListFlag || ! firstonly ) {
+      if ( fulllist ) {
 	for ( int k=1; k<(int)Value.size(); k++ ) {
-	  str << "|";
+	  str << ", ";
 	  if ( error( k ) >= 0.0 )
 	    str << text( k, "(" + format() + "+-" + format().up() + ")" );
 	  else
 	    str << text( k );
 	}
+	str << "]";
       }
       if ( outUnit() != "1" )
 	str << outUnit();
     }
     else if ( isBoolean() ) {
+      if ( fulllist )
+	str << "[";
       str << ( boolean( 0 ) ? "true" : "false" );
-      if ( (Flags & ListFlag) == ListFlag || ! firstonly ) {
+      if ( fulllist ) {
 	for ( int k=1; k<(int)Value.size(); k++ ) {
-	  str << "|" << ( boolean( k ) ? "true" : "false" );
+	  str << ", " << ( boolean( k ) ? "true" : "false" );
 	}
+	str << "]";
       }
     }
     else if ( isDate() || isTime() || isText() ) {
-      str << text( 0 );
-      if ( (Flags & ListFlag) == ListFlag || ! firstonly ) {
-	for ( int k=1; k<(int)String.size(); k++ )
-	  str << "|" << text( k );
+      if ( fulllist )
+	str << "[";
+      string val = text( 0 );
+      if ( val.empty() )
+	str << '~';
+      else
+	str << val;
+      if ( fulllist ) {
+	for ( int k=1; k<(int)String.size(); k++ ) {
+	  val = text( k );
+	  if ( val.empty() )
+	    str << ", " << '~';
+	  else
+	    str << ", " << val;
+	}
+	str << "]";
       }
     }
     else if ( isNotype() )
@@ -3002,8 +3080,7 @@ ostream &Parameter::save( ostream &str, int width, bool detailed,
 ostream &Parameter::save( ostream &str, const string &textformat,
 			  const string &numberformat, const string &boolformat,
 			  const string &dateformat, const string &timeformat,
-			  const string &labelformat,
-			  const string &separatorformat ) const
+			  const string &labelformat ) const
 {
   if ( isText() )
     str << text( textformat );
@@ -3017,8 +3094,6 @@ ostream &Parameter::save( ostream &str, const string &textformat,
     str << text( timeformat );
   else if ( isLabel() )
     str << text( labelformat );
-  else if ( isSeparator() )
-    str << text( separatorformat );
   else if ( isNotype() )
     str << "! no type !";
   else
@@ -3117,6 +3192,8 @@ Parameter &Parameter::load( Str s, const string &assignment )
 	  }
 	}
       }
+      ident.strip();
+      request.strip();
 
       // first character of value:
       n = s.findFirstNot( Str::WhiteSpace, m+1 );
@@ -3138,9 +3215,9 @@ Parameter &Parameter::load( Str s, const string &assignment )
       setToDefault();
     }
     else {
-      // no value: label or separator
+      // no value: label
       if ( s[n] == '-' ) {
-	// separator
+	// label with tab style:
 	int m = s.findFirstNot( " -", n );
 	n = s.findLastNot( Str::WhiteSpace + "-" );
 	string val = "";
@@ -3157,10 +3234,6 @@ Parameter &Parameter::load( Str s, const string &assignment )
 	*this = Parameter( val, false );
       }
     }
-  }
-  else {
-    // separator:
-    *this = Parameter( "", true );
   }
 
   Flags |= ChangedFlag;

@@ -126,7 +126,7 @@ int FIField::main( void )
 
   // get options:
   settings().delFlags( 16 );
-  settings().setTypeFlags( 32, -Parameter::Blank );
+  settings().setTypeFlags( 32, -Parameter::Label );
   MinFreq = number( "freqmin" );
   MaxFreq = number( "freqmax" );
   FreqStep = number( "freqstep" );

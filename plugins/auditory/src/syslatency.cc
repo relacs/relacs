@@ -93,7 +93,7 @@ int SysLatency::main( void )
   }
 
   // get options:
-  settings().setTypeFlags( 16, -Parameter::Blank );
+  settings().setTypeFlags( 16, -Parameter::Label );
   double targetrate = number( "rate" );
   int pwaves = integer( "pwaves" );
   double pintensity = number( "pintensity" );

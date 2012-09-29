@@ -1212,7 +1212,7 @@ void TableKey::init( void )
   Options::iterator pp = Opt.begin();
   for ( ; pp != Opt.end(); ++pp ) {
     groups.insert( groups.begin(), pp );
-    if ( ! (*pp).isBlank() )
+    if ( ! (*pp).isLabel() )
       break;
   }
 
@@ -1223,7 +1223,7 @@ void TableKey::init( void )
   Columns.clear();
   unsigned int l = 0;
   for ( ; pp != Opt.end(); ++pp )
-    if ( (*pp).isBlank() ) {
+    if ( (*pp).isLabel() ) {
       l++;
       if ( l >= groups.size() )
 	cerr << "! fatal error in TableKey::init() -> l >= groups.size() !\n";

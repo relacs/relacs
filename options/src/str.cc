@@ -3614,7 +3614,7 @@ Str Str::preventedFirst( const string &s ) const
 Str &Str::preventLast( char c )
 {
   int l = size();
-  if ( l > 0 && size() >= l && at( l-1 ) == c )
+  if ( l > 0 && at( l-1 ) == c )
     string::resize( l-1 );
 
   return *this;
