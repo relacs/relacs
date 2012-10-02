@@ -68,7 +68,7 @@ ReceptorModel::ReceptorModel( void )
   addLabel( "Boltzmann, 2(imax-imin)(1/(1+exp[-slope2*x^2])-1/2)+imin" ).setStyle( OptWidget::MathLabel );
   addNumber( "slope2", "Slope of square Boltzmann", Slope2, 0.0, 1.0e10, 5.0e4, "mPa^-2" ).setActivation( "matchslope2", "false" );
   addBoolean( "matchslope2", "Set slope of square Boltzmann to match square", true );
-  addTypeStyle( OptWidget::Bold, Parameter::Label );
+  addValueTypeStyle( OptWidget::Bold, Parameter::Label );
   addFlags( 2 );
   delFlags( 2, 1 );
 

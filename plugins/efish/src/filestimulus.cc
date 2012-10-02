@@ -76,8 +76,8 @@ namespace efish {
     addNumber( "before", "Spikes recorded before stimulus", Before, 0.0, 1000.0, 0.005, "seconds", "ms" );
     addNumber( "after", "Spikes recorded after stimulus", After, 0.0, 1000.0, 0.005, "seconds", "ms" );
     addBoolean( "adjust", "Adjust input gain?", true );
-    addTypeStyle( OptWidget::Bold, Parameter::Label );
-    addTypeStyle( OptWidget::TabLabel, Parameter::Label );
+    addValueTypeStyle( OptWidget::Bold, Parameter::Label );
+    addValueTypeStyle( OptWidget::TabLabel, Parameter::Label );
 
     // variables:
     FishAmplitude = 0.0;

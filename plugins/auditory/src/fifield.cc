@@ -68,7 +68,7 @@ FIField::FIField( void )
   Options::erase( "carrierfreq" );
   Options::erase( "usebestfreq" );
 
-  addTypeStyle( OptWidget::Bold, Parameter::Label );
+  addValueTypeStyle( OptWidget::Bold, Parameter::Label );
 
   UseThresh = false;
   UseSaturation = false;
@@ -126,7 +126,7 @@ int FIField::main( void )
 
   // get options:
   settings().delFlags( 16 );
-  settings().setTypeFlags( 32, -Parameter::Label );
+  settings().setValueTypeFlags( 32, -Parameter::Label );
   MinFreq = number( "freqmin" );
   MaxFreq = number( "freqmax" );
   FreqStep = number( "freqstep" );

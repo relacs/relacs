@@ -76,31 +76,31 @@ TableKey::~TableKey( void )
 }
 
 
-Parameter &TableKey::addNumber( const string &ident, const string &unit, 
+Parameter &TableKey::addNumber( const string &name, const string &unit, 
 				const string &format, int flags, double value )
 {
-  Parameter &p = Opt.addNumber( ident, ident, value, -MAXDOUBLE, MAXDOUBLE, 1.0,
+  Parameter &p = Opt.addNumber( name, name, value, -MAXDOUBLE, MAXDOUBLE, 1.0,
 				unit, unit, format, flags );
   init();
   return p;
 }
 
 
-Parameter &TableKey::addNumber( const string &ident, const string &unit, 
+Parameter &TableKey::addNumber( const string &name, const string &unit, 
 				const string &format, double value, int flags )
 {
-  Parameter &p = Opt.addNumber( ident, ident, value, -MAXDOUBLE, MAXDOUBLE, 1.0,
+  Parameter &p = Opt.addNumber( name, name, value, -MAXDOUBLE, MAXDOUBLE, 1.0,
 				unit, unit, format, flags );
   init();
   return p;
 }
 
 
-Parameter &TableKey::insertNumber( const string &ident, const string &atident, 
+Parameter &TableKey::insertNumber( const string &name, const string &atname, 
 				   const string &unit, const string &format,
 				   int flags )
 {
-  Parameter &p = Opt.insertNumber( ident, atident, ident, 0.0,
+  Parameter &p = Opt.insertNumber( name, atname, name, 0.0,
 				   -MAXDOUBLE, MAXDOUBLE, 1.0,
 				   unit, unit, format, flags );
   init();
@@ -108,24 +108,24 @@ Parameter &TableKey::insertNumber( const string &ident, const string &atident,
 }
 
 
-Parameter &TableKey::setNumber( const string &ident, double number,
+Parameter &TableKey::setNumber( const string &name, double number,
 				const string &unit )
 {
-  return operator[]( ident ).setNumber( number, unit );
+  return operator[]( name ).setNumber( number, unit );
 }
 
 
-Parameter &TableKey::setInteger( const string &ident, long number,
+Parameter &TableKey::setInteger( const string &name, long number,
 				 const string &unit )
 {
-  return operator[]( ident ).setInteger( number, unit );
+  return operator[]( name ).setInteger( number, unit );
 }
 
 
-Parameter &TableKey::addText( const string &ident, const string &format,
+Parameter &TableKey::addText( const string &name, const string &format,
 			      int flags, const string &value )
 {
-  Parameter &p = Opt.addText( ident, ident, value, flags );
+  Parameter &p = Opt.addText( name, name, value, flags );
   p.setFormat( format );
   p.setUnit( "-" );
   init();
@@ -133,10 +133,10 @@ Parameter &TableKey::addText( const string &ident, const string &format,
 }
 
 
-Parameter &TableKey::addText( const string &ident, const string &format,
+Parameter &TableKey::addText( const string &name, const string &format,
 			      const string &value, int flags )
 {
-  Parameter &p = Opt.addText( ident, ident, value, flags );
+  Parameter &p = Opt.addText( name, name, value, flags );
   p.setFormat( format );
   p.setUnit( "-" );
   init();
@@ -144,10 +144,10 @@ Parameter &TableKey::addText( const string &ident, const string &format,
 }
 
 
-Parameter &TableKey::addText( const string &ident, int width, int flags,
+Parameter &TableKey::addText( const string &name, int width, int flags,
 			      const string &value )
 {
-  Parameter &p = Opt.addText( ident, ident, value, flags );
+  Parameter &p = Opt.addText( name, name, value, flags );
   p.setFormat( width );
   p.setUnit( "-" );
   init();
@@ -155,10 +155,10 @@ Parameter &TableKey::addText( const string &ident, int width, int flags,
 }
 
 
-Parameter &TableKey::addText( const string &ident, int width, const string &value,
+Parameter &TableKey::addText( const string &name, int width, const string &value,
 			      int flags )
 {
-  Parameter &p = Opt.addText( ident, ident, value, flags );
+  Parameter &p = Opt.addText( name, name, value, flags );
   p.setFormat( width );
   p.setUnit( "-" );
   init();
@@ -166,10 +166,10 @@ Parameter &TableKey::addText( const string &ident, int width, const string &valu
 }
 
 
-Parameter &TableKey::insertText( const string &ident, const string &atident, 
+Parameter &TableKey::insertText( const string &name, const string &atname, 
 				 const string &format, int flags )
 {
-  Parameter &p = Opt.insertText( ident, atident, ident, "", flags );
+  Parameter &p = Opt.insertText( name, atname, name, "", flags );
   p.setFormat( format );
   p.setUnit( "-" );
   init();
@@ -177,24 +177,24 @@ Parameter &TableKey::insertText( const string &ident, const string &atident,
 }
 
 
-Parameter &TableKey::setText( const string &ident, const string &text )
+Parameter &TableKey::setText( const string &name, const string &text )
 {
-  return operator[]( ident ).setText( text );
+  return operator[]( name ).setText( text );
 }
 
 
-Parameter &TableKey::addLabel( const string &ident, int flags )
+Parameter &TableKey::addLabel( const string &name, int flags )
 {
-  Parameter &p = Opt.addLabel( ident, flags );
+  Parameter &p = Opt.addLabel( name, flags );
   init();
   return p;
 }
 
 
-Parameter &TableKey::insertLabel( const string &ident, const string &atident,
+Parameter &TableKey::insertLabel( const string &name, const string &atname,
 				  int flags )
 {
-  Parameter &p = Opt.insertLabel( ident, atident, flags );
+  Parameter &p = Opt.insertLabel( name, atname, flags );
   init();
   return p;
 }
@@ -207,16 +207,16 @@ void TableKey::add( const Options &opts, int selectflag )
 }
 
 
-void TableKey::insert( const Options &opts, const string &atident )
+void TableKey::insert( const Options &opts, const string &atname )
 {
-  Opt.insert( opts, atident );
+  Opt.insert( opts, atname );
   init();
 }
 
 
-void TableKey::insert( const Options &opts, int selectflag, const string &atident )
+void TableKey::insert( const Options &opts, int selectflag, const string &atname )
 {
-  Opt.insert( opts, selectflag, atident );
+  Opt.insert( opts, selectflag, atname );
   init();
 }
 
@@ -294,34 +294,34 @@ int TableKey::column( const string &pattern ) const
 }
 
 
-Str TableKey::ident( int column ) const
+Str TableKey::name( int column ) const
 {
   if ( column >= 0 && column < (int)Columns.size() && ! Columns[column].empty() )
-    return (*Columns[column][0]).ident();
+    return (*Columns[column][0]).name();
   else
     return "";
 }
 
 
-Str TableKey::ident( const string &pattern ) const
+Str TableKey::name( const string &pattern ) const
 {
-  return ident( column( pattern ) );
+  return name( column( pattern ) );
 }
 
 
-Parameter &TableKey::setIdent( int column, const string &ident )
+Parameter &TableKey::setName( int column, const string &name )
 {
   if ( column >= 0 && column < (int)Columns.size() &&
        ! Columns[column].empty() )
-    return (*Columns[column][0]).setIdent( ident );
+    return (*Columns[column][0]).setName( name );
   else
     return Dummy;
 }
 
 
-Parameter &TableKey::setIdent( const string &pattern, const string &ident )
+Parameter &TableKey::setName( const string &pattern, const string &name )
 {
-  return setIdent( column( pattern ), ident );
+  return setName( column( pattern ), name );
 }
 
 
@@ -399,9 +399,9 @@ Parameter &TableKey::setFormat( int column, const string &format )
 }
 
 
-Parameter &TableKey::setFormat( const string &ident, const string &format )
+Parameter &TableKey::setFormat( const string &name, const string &format )
 {
-  return setFormat( column( ident ), format );
+  return setFormat( column( name ), format );
 }
 
 
@@ -441,7 +441,7 @@ Str TableKey::group( int column, int level ) const
 {
   if ( column >= 0 && column < (int)Columns.size() &&
        (int)Columns[column].size() > level )
-    return (*Columns[column][level]).ident();
+    return (*Columns[column][level]).name();
   else
     return "";
 }
@@ -453,20 +453,20 @@ Str TableKey::group( const string &pattern, int level ) const
 }
 
 
-Parameter &TableKey::setGroup( int column, const string &ident, int level )
+Parameter &TableKey::setGroup( int column, const string &name, int level )
 {
   if ( column >= 0 && column < (int)Columns.size() &&
        (int)Columns[column].size() > level )
-    return (*Columns[column][level]).setIdent( ident );
+    return (*Columns[column][level]).setName( name );
   else
     return Dummy;
 }
 
 
-Parameter &TableKey::setGroup( const string &pattern, const string &ident,
+Parameter &TableKey::setGroup( const string &pattern, const string &name,
 			       int level )
 {
-  return setGroup( column( pattern ), ident, level );
+  return setGroup( column( pattern ), name, level );
 }
 
 
@@ -574,7 +574,7 @@ ostream &TableKey::saveKey( ostream &str, bool key, bool num,
 	if ( flags == 0 || ( (*Columns[c-1][l]).flags() & flags ) ) {
 	  if ( n > 0 )
 	    str << Separator;
-	  str << Str( (*Columns[c-1][l]).ident(), -w );
+	  str << Str( (*Columns[c-1][l]).name(), -w );
 	  w = Width[c];
 	  n++;
 	}
@@ -585,20 +585,20 @@ ostream &TableKey::saveKey( ostream &str, bool key, bool num,
     if ( flags == 0 || ( (*Columns.back()[l]).flags() & flags ) ) {
       if ( n > 0 )
 	str << Separator;
-      str << (*Columns.back()[l]).ident();
+      str << (*Columns.back()[l]).name();
       n++;
     }
     str << '\n';
   }
 
-  // ident:
+  // name:
   int n = 0;
   str << KeyStart;
   for ( unsigned int c=0; c<Columns.size(); c++ ) {
     if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) ) {
       if ( n > 0 )
 	str << Separator;
-      str << Str( (*Columns[c][0]).ident(), -Width[ c ] );
+      str << Str( (*Columns[c][0]).name(), -Width[ c ] );
       n++;
     }
   }
@@ -673,7 +673,7 @@ ostream &TableKey::saveKeyLaTeX( ostream &str, bool num, bool units,
 	if ( flags == 0 || ( (*Columns[c-1][l]).flags() & flags ) ) {
 	  if ( n > 0 )
 	    str << " & ";
-	  str << "\\multicolumn{" << w << "}{l}{" << (*Columns[c-1][l]).ident().latex() << "}";
+	  str << "\\multicolumn{" << w << "}{l}{" << (*Columns[c-1][l]).name().latex() << "}";
 	  w = 1;
 	  n++;
 	}
@@ -684,20 +684,20 @@ ostream &TableKey::saveKeyLaTeX( ostream &str, bool num, bool units,
     if ( flags == 0 || ( (*Columns.back()[l]).flags() & flags ) ) {
       if ( n > 0 )
 	str << " & ";
-      str << "\\multicolumn{" << w << "}{l}{" << (*Columns.back()[l]).ident().latex() << "}";
+      str << "\\multicolumn{" << w << "}{l}{" << (*Columns.back()[l]).name().latex() << "}";
       n++;
     }
     str << " \\\\\n";
   }
 
-  // ident:
+  // name:
   int n = 0;
   str << "  ";
   for ( unsigned int c=0; c<Columns.size(); c++ ) {
     if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) ) {
       if ( n > 0 )
 	str << " & ";
-      str << "\\multicolumn{1}{l}{" << (*Columns[c][0]).ident().latex() << "}";
+      str << "\\multicolumn{1}{l}{" << (*Columns[c][0]).name().latex() << "}";
       n++;
     }
   }
@@ -765,7 +765,7 @@ ostream &TableKey::saveKeyHTML( ostream &str, bool num, bool units,
       if ( Columns[c][l] != Columns[c-1][l] ) {
 	if ( flags == 0 || ( (*Columns[c-1][l]).flags() & flags ) ) {
 	  str << "            <th colspan=\"" << w << "\" align=\"left\">"
-	      << (*Columns[c-1][l]).ident().html() << "</th>\n";
+	      << (*Columns[c-1][l]).name().html() << "</th>\n";
 	  w = 1;
 	}
       }
@@ -774,17 +774,17 @@ ostream &TableKey::saveKeyHTML( ostream &str, bool num, bool units,
     }
     if ( flags == 0 || ( (*Columns.back()[l]).flags() & flags ) ) {
       str << "            <th colspan=\"" << w << "\" align=\"left\">"
-	  << (*Columns.back()[l]).ident().html() << "</th>\n";
+	  << (*Columns.back()[l]).name().html() << "</th>\n";
     }
     str << "          </tr>\n";
   }
 
-  // ident:
+  // name:
   str << "          <tr class=\"datanames\">\n";
   for ( unsigned int c=0; c<Columns.size(); c++ ) {
     if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) ) {
       str << "            <th align=\"left\">"
-	  << (*Columns[c][0]).ident().html() << "</th>\n";
+	  << (*Columns[c][0]).name().html() << "</th>\n";
     }
   }
   str << "          </tr>\n";
@@ -843,7 +843,7 @@ TableKey &TableKey::loadKey( const StrQueue &sq )
   string key = "Key";
   string comment = Str( KeyStart ).strip();
 
-  // skip empty lines and key identifier:
+  // skip empty lines and key nameifier:
   while ( sp != sq.end() ) {
     int p = (*sp).first();
     int c = (*sp).find( comment );
@@ -926,7 +926,7 @@ TableKey &TableKey::loadKey( const StrQueue &sq )
   // number of column lines:
   int cn = 1;
   for ( int k = pos.size()-2; k >= 0; k--, cn++ ) {
-    // check whether column positions are identical:
+    // check whether column positions are nameical:
     unsigned int n = pos[k].size();
     if ( n > pos.back().size() )
       n = pos.back().size();
@@ -942,7 +942,7 @@ TableKey &TableKey::loadKey( const StrQueue &sq )
     if ( differ > maxdiffer ) // allow some columns without unit
       break;
   }
-  // identify table lines:
+  // nameify table lines:
   int level = pos.size() - cn;
   bool units = ( cn > 1 );
 
@@ -952,13 +952,13 @@ TableKey &TableKey::loadKey( const StrQueue &sq )
     for ( int j=0; j<level; j++ ) {
       if ( inx[j] < int(pos[j].size())-1 && pos[j][inx[j]] == pos[level][k] ) {
 	int index = pos[j][inx[j]];
-	string ident = (*(fp+j)).wordAt( index, Str::DoubleWhiteSpace, comment );
-	addLabel( ident );
+	string name = (*(fp+j)).wordAt( index, Str::DoubleWhiteSpace, comment );
+	addLabel( name );
 	inx[j]++;
       }
     }
     int index = pos[level][k];
-    string ident = (*(fp+level)).wordAt( index, Str::DoubleWhiteSpace, comment );
+    string name = (*(fp+level)).wordAt( index, Str::DoubleWhiteSpace, comment );
     index = units ? pos[level+1][k] : 0;
     string unit = units ? (*(fp+level+1)).wordAt( index, Str::DoubleWhiteSpace, comment ) : "";
     int width = pos[level][k+1] - pos[level][k] - 2;  // this '2' is separator dependent!
@@ -967,7 +967,7 @@ TableKey &TableKey::loadKey( const StrQueue &sq )
       if ( w > width )
 	width = w;
     }
-    addNumber( ident, unit, "%" + Str( width ) + "g" );
+    addNumber( name, unit, "%" + Str( width ) + "g" );
   }
 
   return *this;
@@ -1023,7 +1023,7 @@ ostream &TableKey::saveData( ostream &str, int from, int to )
 ostream &TableKey::saveMetaData( ostream &str, const string &start ) const
 {
   // XXX a separate algorithmen with level dependent indent would be better!
-  // and different format: ident unit
+  // and different format: name unit
   // maybe this should be an additional function!
   return Opt.save( str, start );
 }
@@ -1240,7 +1240,7 @@ void TableKey::init( void )
   Width.resize( Columns.size() );
   for ( unsigned int c=0; c<Width.size(); c++ ) {
     int fw = (*Columns[c][0]).formatWidth();
-    int iw = (*Columns[c][0]).ident().size();
+    int iw = (*Columns[c][0]).name().size();
     int uw = (*Columns[c][0]).unit().size();
     int w = fw > iw ? fw : iw;
     Width[c] = uw > w ? uw : w;

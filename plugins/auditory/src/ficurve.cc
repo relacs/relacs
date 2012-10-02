@@ -120,7 +120,7 @@ FICurve::FICurve( void )
   addSelection( "setcurves", "F-I curves to be passed to session", "none|mean rate|onset + steady-state|mean + onset + steady-state" );
   addFlags( 1 );
 
-  addTypeStyle( OptWidget::Bold, Parameter::Label );
+  addValueTypeStyle( OptWidget::Bold, Parameter::Label );
 
   // variables:
   NSilent = 0;
@@ -181,7 +181,7 @@ int FICurve::main( void )
   }
 
   // get options:
-  settings().setTypeFlags( 16, -Parameter::Label );
+  settings().setValueTypeFlags( 16, -Parameter::Label );
   MinIntensity = number( "intmin" );
   MaxIntensity = number( "intmax" );
   IntensityStep = number( "intstep" );

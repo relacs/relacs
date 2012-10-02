@@ -1366,7 +1366,7 @@ OptWidgetLabel::OptWidgetLabel( Options::iterator param, Options *oo,
   : OptWidgetBase( param, 0, oo, ow, mutex )
 {
   string id = ( (*Param).style() & OptWidget::MathLabel ) ?
-    (*Param).ident().htmlUnit() : (*Param).ident().html();
+    (*Param).name().htmlUnit() : (*Param).name().html();
   QLabel *l = new QLabel( id.c_str(), parent );
   l->setTextFormat( Qt::RichText );
   l->setAlignment( Qt::AlignLeft );
@@ -1385,7 +1385,7 @@ OptWidgetSeparator::OptWidgetSeparator( Options::iterator param, Options *oo,
   layout->setContentsMargins( 0, 0, 0, 0 );
   h->setLayout( layout );
   W = h;
-  if ( (*Param).ident().empty() ) {
+  if ( (*Param).name().empty() ) {
     QLabel *line = new QLabel;
     layout->addWidget( line );
     line->setFrameStyle( QFrame::HLine | QFrame::Sunken );
@@ -1402,12 +1402,12 @@ OptWidgetSeparator::OptWidgetSeparator( Options::iterator param, Options *oo,
     line->setMidLineWidth( 0 );
     line->setFixedHeight( 4 );
     layout->setStretchFactor( line, 10 );
-    QLabel *label = new QLabel( (*Param).ident().c_str() );
+    QLabel *label = new QLabel( (*Param).name().c_str() );
     layout->addWidget( label );
     OptWidget::setLabelStyle( label, (*Param).style() );
     label->setAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
     int w = label->sizeHint().width();
-    label->setFixedWidth( w + 4*w/(*Param).ident().size() );
+    label->setFixedWidth( w + 4*w/(*Param).name().size() );
     layout->setStretchFactor( label, 1 );
     line = new QLabel;
     layout->addWidget( line );

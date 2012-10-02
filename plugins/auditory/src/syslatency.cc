@@ -56,7 +56,7 @@ SysLatency::SysLatency( void )
   addNumber( "coincwin", "Window width for coincident spikes", 0.0005, 0.0, 1.0, 0.0005, "seconds", "ms" );
   addBoolean( "adjust", "Adjust input gain", true );
 
-  addTypeStyle( OptWidget::Bold, Parameter::Label );
+  addValueTypeStyle( OptWidget::Bold, Parameter::Label );
 
   // plot:
   P.lock();
@@ -93,7 +93,7 @@ int SysLatency::main( void )
   }
 
   // get options:
-  settings().setTypeFlags( 16, -Parameter::Label );
+  settings().setValueTypeFlags( 16, -Parameter::Label );
   double targetrate = number( "rate" );
   int pwaves = integer( "pwaves" );
   double pintensity = number( "pintensity" );

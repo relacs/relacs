@@ -92,7 +92,7 @@ SingleStimulus::SingleStimulus( void )
   addText( "storepath", "Save stimuli in custom directory", "" ).setStyle( OptWidget::BrowseDirectory ).setActivation( "storemode", "custom" );
   addSelection( "storelevel", "Save", "all|am+generated|generated|noise|none" ).setUnit( "stimuli" );
 
-  addTypeStyle( OptWidget::Bold, Parameter::Label );
+  addValueTypeStyle( OptWidget::Bold, Parameter::Label );
 
   // setup plots:
   Stack = new QStackedLayout;
@@ -179,7 +179,7 @@ int SingleStimulus::main( void )
   }
 
   // get options:
-  settings().setTypeFlags( 16, -Parameter::Label );
+  settings().setValueTypeFlags( 16, -Parameter::Label );
   WaveType = (WaveTypes)index( "type" );
   WaveForm = (WaveForms)index( "waveform" );
   Str stimfile = text( "stimfile" );

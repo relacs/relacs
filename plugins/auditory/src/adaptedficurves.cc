@@ -55,7 +55,7 @@ AdaptedFICurves::AdaptedFICurves( void )
   addNumber( "onsettime", "Onset rate occurs within", 0.1, 0.0, 1000.0, 0.002, "seconds", "ms" );
   addNumber( "sstime", "Width for measuring steady-states", 0.1, 0.0, 1000.0, 0.002, "seconds", "ms" );
 
-  addTypeStyle( OptWidget::Bold, Parameter::Label );
+  addValueTypeStyle( OptWidget::Bold, Parameter::Label );
 
   // plot:
   setWidget( &P );

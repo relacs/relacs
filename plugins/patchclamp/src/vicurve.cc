@@ -58,7 +58,7 @@ VICurve::VICurve( void )
   addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
   addNumber( "ton", "Timepoint of onset-voltage measurement", 0.01, 0.0, 100.0, 0.001, "sec", "ms" );
   addBoolean( "plotstdev", "Plot standard deviation of membrane potential", true );
-  addTypeStyle( OptWidget::TabLabel, Parameter::Label );
+  addValueTypeStyle( OptWidget::TabLabel, Parameter::Label );
 
   P.lock();
   P.resize( 2, 2, true );

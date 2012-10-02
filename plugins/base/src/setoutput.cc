@@ -146,10 +146,10 @@ int SetOutput::main( void )
 	if ( OutOpts[k].changed() ) {
 	  double value = OutOpts[k].number();
 	  OutData sig( value );
-	  sig.setTraceName( OutOpts[k].ident() );
-	  sig.setIdent( OutOpts[k].ident() + "=" + Str( value ) + OutOpts[k].unit() );
+	  sig.setTraceName( OutOpts[k].name() );
+	  sig.setIdent( OutOpts[k].name() + "=" + Str( value ) + OutOpts[k].unit() );
 	  sig.addDescription( "stimulus/value" );
-	  sig.description().addNumber( OutOpts[k].ident(), value, OutOpts[k].unit() );
+	  sig.description().addNumber( OutOpts[k].name(), value, OutOpts[k].unit() );
 	  sigs.push( sig );
 	}
       }
@@ -181,8 +181,8 @@ int SetOutput::main( void )
     signal.setIdent( "value=" + Str( value ) );
     signal.setTrace( outtrace );
     signal.addDescription( "stimulus/value" );
-    signal.description().addNumber( OutOpts[outtrace].ident(),
-				 value, OutOpts[outtrace].unit() );
+    signal.description().addNumber( OutOpts[outtrace].name(),
+				 value, OutOpts[outtrace].name() );
     directWrite( signal );
     if ( signal.failed() ) {
       warning( signal.errorText() );

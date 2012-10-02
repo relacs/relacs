@@ -1,6 +1,6 @@
 /*
   options.cc
-  The Options class contains options
+  A hierarchical name-value list for configuration files and dialogs.
 
   RELACS - Relaxed ELectrophysiological data Acquisition, Control, and Stimulation
   Copyright (C) 2002-2012 Jan Benda <benda@bio.lmu.de>
@@ -155,19 +155,19 @@ Options &Options::append( const Options &o )
 }
 
 
-Options &Options::insert( const Options &o, const string &atident )
+Options &Options::insert( const Options &o, const string &atname )
 {
   Warning = "";
 
-  if ( atident.empty() ) {
+  if ( atname.empty() ) {
     // insert at beginning of list:
     Opt.insert( Opt.begin(), o.begin(), o.end() );
   }
   else {
-    // insert option at element specified by atident:
+    // insert option at element specified by atname:
 
     // search element:
-    iterator pp = find( atident );
+    iterator pp = find( atname );
     if ( pp != end() ) {
       Opt.insert( pp, o.begin(), o.end() );
     }
@@ -232,11 +232,11 @@ Options &Options::append( const Options &o, int flags )
 }
 
 
-Options &Options::insert( const Options &o, int flags, const string &atident )
+Options &Options::insert( const Options &o, int flags, const string &atname )
 {
   Warning = "";
 
-  if ( atident.empty() ) {
+  if ( atname.empty() ) {
     // insert at beginning of list:
     for ( deque< Parameter >::const_reverse_iterator op = o.Opt.rbegin(); op < o.Opt.rend(); ++op ) {
       if ( (*op).flags( flags ) )
@@ -245,10 +245,10 @@ Options &Options::insert( const Options &o, int flags, const string &atident )
     return *this;
   }
   else {
-    // insert option at element specified by atident:
+    // insert option at element specified by atname:
 
     // search element:
-    iterator pp = find( atident );
+    iterator pp = find( atname );
     if ( pp != end() ) {
       for ( deque< Parameter >::const_reverse_iterator op = o.Opt.rbegin(); op < o.Opt.rend(); ++op ) {
 	if ( (*op).flags( flags ) )
@@ -267,9 +267,9 @@ Options &Options::insert( const Options &o, int flags, const string &atident )
 }
 
 
-Parameter *Options::assign( const string &ident, const string &value )
+Parameter *Options::assign( const string &name, const string &value )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).assign( value );
@@ -278,7 +278,7 @@ Parameter *Options::assign( const string &ident, const string &value )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::assign( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::assign( " << name << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -300,7 +300,7 @@ bool operator==( const Options &o1, const Options &o2 )
   for ( Options::const_iterator p1 = o1.begin(), p2 = o2.begin();
 	p1 != o1.end() && p2 != o2.end();
 	++p1, ++p2 ) {
-    if ( (*p1).ident() != (*p2).ident() )
+    if ( (*p1).name() != (*p2).name() )
       return false;
     if ( (*p1).text() != (*p2).text() )
       return false;
@@ -325,9 +325,9 @@ bool operator<( const Options &o1, const Options &o2 )
   for ( Options::const_iterator p1 = o1.begin(), p2 = o2.begin();
 	p1 != o1.end() && p2 != o2.end();
 	++p1, ++p2 ) {
-    if ( (*p1).ident() < (*p2).ident() )
+    if ( (*p1).name() < (*p2).name() )
       return true;
-    else if ( (*p1).ident() > (*p2).ident() )
+    else if ( (*p1).name() > (*p2).name() )
       return false;
     if ( (*p1).text() < (*p2).text() )
       return true;
@@ -400,9 +400,9 @@ Parameter &Options::operator[]( int i )
 }
 
 
-const Parameter &Options::operator[]( const string &ident ) const
+const Parameter &Options::operator[]( const string &name ) const
 {
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() )
     return *pp;
   else {
@@ -412,9 +412,9 @@ const Parameter &Options::operator[]( const string &ident ) const
 }
 
 
-Parameter &Options::operator[]( const string &ident )
+Parameter &Options::operator[]( const string &name )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   if ( pp != end() )
     return *pp;
   else {
@@ -471,7 +471,7 @@ Options::const_iterator Options::find( const string &pattern, int level ) const
 	  // search element:
 	  //	  cerr << "SEARCH " << k << " FOR " << sq[s] << '\n';
 	  for ( const_iterator pp = pbegin; pp != end(); ++pp ) {
-	    //	    cerr << "CHECK PARAMETER " << pp->ident() << '\n';
+	    //	    cerr << "CHECK PARAMETER " << pp->name() << '\n';
 	    if ( *pp == sq[s] )
 	      return pp;
 	  }
@@ -1180,15 +1180,15 @@ Options::iterator Options::rfind( const string &pattern, int level )
 }
 
 
-Str Options::request( const string &ident ) const
+Str Options::request( const string &name ) const
 {
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() ) {
     Str s = (*pp).request();
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::request( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::request( " << name << " ) -> " << Warning << '\n';
 #endif
     return s;
   }
@@ -1197,9 +1197,9 @@ Str Options::request( const string &ident ) const
 }
 
 
-Parameter &Options::setRequest( const string &ident, const string &request )
+Parameter &Options::setRequest( const string &name, const string &request )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setRequest( request );
@@ -1208,22 +1208,22 @@ Parameter &Options::setRequest( const string &ident, const string &request )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setRequest( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setRequest( " << name << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
 }
 
 
-Parameter::Type Options::type( const string &ident ) const
+Parameter::ValueType Options::valueType( const string &name ) const
 {
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() ) {
-    Parameter::Type t = (*pp).type();
+    Parameter::ValueType t = (*pp).valueType();
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::type( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::valueType( " << name << " ) -> " << Warning << '\n';
 #endif
     return t;
   }
@@ -1232,33 +1232,33 @@ Parameter::Type Options::type( const string &ident ) const
 }
 
 
-Parameter &Options::setType( const string &ident, Parameter::Type type )
+Parameter &Options::setValueType( const string &name, Parameter::ValueType type )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
-    (*pp).setType( type );
+    (*pp).setValueType( type );
     Warning += (*pp).warning();
   }
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setType( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setValueType( " << name << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
 }
 
 
-int Options::flags( const string &ident ) const
+int Options::flags( const string &name ) const
 {
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() ) {
     int m = (*pp).flags();
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::flags( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::flags( " << name << " ) -> " << Warning << '\n';
 #endif
     return m;
   }
@@ -1267,9 +1267,9 @@ int Options::flags( const string &ident ) const
 }
 
 
-Parameter &Options::setFlags( const string &ident, int flags )
+Parameter &Options::setFlags( const string &name, int flags )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setFlags( flags );
@@ -1278,16 +1278,16 @@ Parameter &Options::setFlags( const string &ident, int flags )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setFlags( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setFlags( " << name << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
 }
 
 
-Parameter &Options::addFlags( const string &ident, int flags )
+Parameter &Options::addFlags( const string &name, int flags )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).addFlags( flags );
@@ -1296,16 +1296,16 @@ Parameter &Options::addFlags( const string &ident, int flags )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::addFlags( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::addFlags( " << name << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
 }
 
 
-Parameter &Options::delFlags( const string &ident, int flags )
+Parameter &Options::delFlags( const string &name, int flags )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).delFlags( flags );
@@ -1314,16 +1314,16 @@ Parameter &Options::delFlags( const string &ident, int flags )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::delFlags( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::delFlags( " << name << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
 }
 
 
-Parameter &Options::clearFlags( const string &ident )
+Parameter &Options::clearFlags( const string &name )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).clearFlags();
@@ -1332,16 +1332,16 @@ Parameter &Options::clearFlags( const string &ident )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::clearFlags( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::clearFlags( " << name << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
 }
 
 
-bool Options::changed( const string &ident )
+bool Options::changed( const string &name )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     return (*pp).changed();
@@ -1349,22 +1349,22 @@ bool Options::changed( const string &ident )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::changed( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::changed( " << name << " ) -> " << Warning << '\n';
   }
 #endif
   return false;
 }
 
 
-int Options::style( const string &ident ) const
+int Options::style( const string &name ) const
 {
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() ) {
     int m = (*pp).style();
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::style( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::style( " << name << " ) -> " << Warning << '\n';
 #endif
     return m;
   }
@@ -1373,9 +1373,9 @@ int Options::style( const string &ident ) const
 }
 
 
-Parameter &Options::setStyle( const string &ident, int style )
+Parameter &Options::setStyle( const string &name, int style )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setStyle( style );
@@ -1384,16 +1384,16 @@ Parameter &Options::setStyle( const string &ident, int style )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setStyle( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setStyle( " << name << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
 }
 
 
-Parameter &Options::addStyle( const string &ident, int style )
+Parameter &Options::addStyle( const string &name, int style )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).addStyle( style );
@@ -1402,16 +1402,16 @@ Parameter &Options::addStyle( const string &ident, int style )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::addStyle( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::addStyle( " << name << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
 }
 
 
-Parameter &Options::delStyle( const string &ident, int style )
+Parameter &Options::delStyle( const string &name, int style )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).delStyle( style );
@@ -1420,22 +1420,22 @@ Parameter &Options::delStyle( const string &ident, int style )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::delStyle( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::delStyle( " << name << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
 }
 
 
-int Options::size( const string &ident ) const
+int Options::size( const string &name ) const
 {
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() ) {
     int s = (*pp).size();
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::size( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::size( " << name << " ) -> " << Warning << '\n';
 #endif
     return s;
   }
@@ -1444,15 +1444,15 @@ int Options::size( const string &ident ) const
 }
 
 
-Str Options::format( const string &ident ) const
+Str Options::format( const string &name ) const
 {
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() ) {
     Str s = (*pp).format();
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::format( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::format( " << name << " ) -> " << Warning << '\n';
 #endif
     return s;
   }
@@ -1461,9 +1461,9 @@ Str Options::format( const string &ident ) const
 }
 
 
-Parameter &Options::setFormat( const string &ident, int width, int prec, char fmt )
+Parameter &Options::setFormat( const string &name, int width, int prec, char fmt )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set values:
   if ( pp != end() ) {
     (*pp).setFormat( width, prec, fmt );
@@ -1472,16 +1472,16 @@ Parameter &Options::setFormat( const string &ident, int width, int prec, char fm
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setFormat( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setFormat( " << name << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
 }
 
 
-Parameter &Options::setFormat( const string &ident, const string &format )
+Parameter &Options::setFormat( const string &name, const string &format )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set values:
   if ( pp != end() ) {
     (*pp).setFormat( format );
@@ -1490,22 +1490,22 @@ Parameter &Options::setFormat( const string &ident, const string &format )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setFormat( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setFormat( " << name << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
 }
 
 
-int Options::formatWidth( const string &ident ) const
+int Options::formatWidth( const string &name ) const
 {
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() ) {
     int w = (*pp).formatWidth();
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::formatWidth( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::formatWidth( " << name << " ) -> " << Warning << '\n';
 #endif
     return w;
   }
@@ -1523,21 +1523,21 @@ Parameter &Options::add( const Parameter &np )
 }
 
 
-Parameter &Options::insert( const Parameter &np, const string &atident )
+Parameter &Options::insert( const Parameter &np, const string &atname )
 {
   Warning = "";
 
-  if ( atident.empty() ) {
+  if ( atname.empty() ) {
     // insert at beginning of list:
     Opt.push_front( np );
     Opt.front().setParentSection( this );
     return Opt.front();
   }
   else {
-    // insert option at element specified by atident:
+    // insert option at element specified by atname:
 
     // search element:
-    iterator pp = find( atident );
+    iterator pp = find( atname );
     if ( pp != end() ) {
       Parameter &p = *Opt.insert( pp, np );
       p.setParentSection( this );
@@ -1553,51 +1553,51 @@ Parameter &Options::insert( const Parameter &np, const string &atident )
 }
 
 
-Parameter &Options::addText( const string &ident, const string &request,  
+Parameter &Options::addText( const string &name, const string &request,  
 			     const string &dflt, int flags, int style )
 {
   // new parameter:
-  Parameter np( ident, request, dflt, flags, style, this );
+  Parameter np( name, request, dflt, flags, style, this );
   // add option:
   Parameter &pp = add( np );
   // error?
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::addText( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::addText( " << name << " ) -> " << Warning << '\n';
 #endif
   return pp;
 }
 
 
-Parameter &Options::insertText( const string &ident, const string &atident, 
+Parameter &Options::insertText( const string &name, const string &atname, 
 				const string &request, const string &dflt,
 				int flags, int style )
 {
   // new parameter:
-  Parameter np( ident, request, dflt, flags, style, this );
+  Parameter np( name, request, dflt, flags, style, this );
   // insert option:
-  Parameter &pp = insert( np, atident );
+  Parameter &pp = insert( np, atname );
   // error?
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::insertText( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::insertText( " << name << " ) -> " << Warning << '\n';
 #endif
   return pp;
 }
 
 
-Str Options::text( const string &ident, int index, const string &dflt,
+Str Options::text( const string &name, int index, const string &dflt,
 		   const string &format, const string &unit ) const
 {
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() ) {
     Str s = (*pp).text( index, format, unit );
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::text( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::text( " << name << " ) -> " << Warning << '\n';
 #endif
     return s;
   }
@@ -1606,9 +1606,9 @@ Str Options::text( const string &ident, int index, const string &dflt,
 }
 
 
-Parameter &Options::setText( const string &ident, const string &strg )
+Parameter &Options::setText( const string &name, const string &strg )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setText( strg );
@@ -1617,7 +1617,7 @@ Parameter &Options::setText( const string &ident, const string &strg )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setText( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setText( " << name << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -1632,9 +1632,9 @@ Parameter &Options::setText( const string &ident, const string &strg )
 }
 
 
-Parameter &Options::pushText( const string &ident, const string &strg )
+Parameter &Options::pushText( const string &name, const string &strg )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).addText( strg );
@@ -1643,7 +1643,7 @@ Parameter &Options::pushText( const string &ident, const string &strg )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::pushText( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::pushText( " << name << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -1658,9 +1658,9 @@ Parameter &Options::pushText( const string &ident, const string &strg )
 }
 
 
-Parameter &Options::setText( const string &ident, const Parameter &p )
+Parameter &Options::setText( const string &name, const Parameter &p )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setText( p );
@@ -1669,7 +1669,7 @@ Parameter &Options::setText( const string &ident, const Parameter &p )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setText( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setText( " << name << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -1684,16 +1684,16 @@ Parameter &Options::setText( const string &ident, const Parameter &p )
 }
 
 
-Str Options::defaultText( const string &ident,
+Str Options::defaultText( const string &name,
 			     const string &format, const string &unit ) const
 {
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() ) {
     Str s = (*pp).defaultText( format, unit );
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::defaultText( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::defaultText( " << name << " ) -> " << Warning << '\n';
 #endif
     return s;
   }
@@ -1702,9 +1702,9 @@ Str Options::defaultText( const string &ident,
 }
 
 
-Parameter &Options::setDefaultText( const string &ident, const string &dflt )
+Parameter &Options::setDefaultText( const string &name, const string &dflt )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setDefaultText( dflt );
@@ -1713,44 +1713,44 @@ Parameter &Options::setDefaultText( const string &ident, const string &dflt )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setDefaultText( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setDefaultText( " << name << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
 }
 
 
-Parameter &Options::addSelection( const string &ident,
+Parameter &Options::addSelection( const string &name,
 				  const string &request,  
 				  const string &selection,
 				  int flags, int style )
 {
-  return addText( ident, request, selection,
+  return addText( name, request, selection,
 		  flags, style | Parameter::SelectText );
 }
 
 
-Parameter &Options::insertSelection( const string &ident,
-				     const string &atident, 
+Parameter &Options::insertSelection( const string &name,
+				     const string &atname, 
 				     const string &request,
 				     const string &selection,
 				     int flags, int style )
 {
-  return insertText( ident, atident, request, selection,
+  return insertText( name, atname, request, selection,
 		     flags, style | Parameter::SelectText );
 }
 
 
-Parameter &Options::selectText( const string &ident, const string &strg,
+Parameter &Options::selectText( const string &name, const string &strg,
 				int add )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   if ( pp != end() ) {
     (*pp).selectText( strg, add );
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::selectText( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::selectText( " << name << " ) -> " << Warning << '\n';
 #endif
 
     // notify the change:
@@ -1769,15 +1769,15 @@ Parameter &Options::selectText( const string &ident, const string &strg,
 }
 
 
-int Options::index( const string &ident ) const
+int Options::index( const string &name ) const
 {
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() ) {
     int inx = (*pp).index();
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::index( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::index( " << name << " ) -> " << Warning << '\n';
 #endif
     return inx;
   }
@@ -1786,15 +1786,15 @@ int Options::index( const string &ident ) const
 }
 
 
-int Options::index( const string &ident, const string &strg ) const
+int Options::index( const string &name, const string &strg ) const
 {
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() ) {
     int inx = (*pp).index( strg );
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::index( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::index( " << name << " ) -> " << Warning << '\n';
 #endif
     return inx;
   }
@@ -1803,14 +1803,14 @@ int Options::index( const string &ident, const string &strg ) const
 }
 
 
-Parameter &Options::addNumber( const string &ident, const string &request,  
+Parameter &Options::addNumber( const string &name, const string &request,  
 			       double dflt, double minimum, double maximum,
 			       double step,
 			       const string &unit, const string &outputunit, 
 			       const string &format, int flags, int style )
 {
   // new parameter:
-  Parameter np( ident, request, dflt, -1.0, minimum, maximum, 
+  Parameter np( name, request, dflt, -1.0, minimum, maximum, 
 		step, unit, outputunit, format, flags, style, this );
   // add option:
   Parameter &pp = add( np );
@@ -1818,43 +1818,43 @@ Parameter &Options::addNumber( const string &ident, const string &request,
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::addNumber( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::addNumber( " << name << " ) -> " << Warning << '\n';
 #endif
   return pp;
 }
 
 
-Parameter &Options::insertNumber( const string &ident, const string &atident, 
+Parameter &Options::insertNumber( const string &name, const string &atname, 
 				  const string &request, double dflt, 
 				  double minimum, double maximum, double step,
 				  const string &unit, const string &outputunit, 
 				  const string &format, int flags, int style )
 {
   // new parameter:
-  Parameter np( ident, request, dflt, -1.0, minimum, maximum, 
+  Parameter np( name, request, dflt, -1.0, minimum, maximum, 
 		step, unit, outputunit, format, flags, style, this );
   // insert option:
-  Parameter &pp = insert( np, atident );
+  Parameter &pp = insert( np, atname );
   // error?
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::insertNumber( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::insertNumber( " << name << " ) -> " << Warning << '\n';
 #endif
   return pp;
 }
 
 
-double Options::number( const string &ident, double dflt,
+double Options::number( const string &name, double dflt,
 			const string &unit, int index ) const
 {
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() ) {
     double v = (*pp).number( unit, index );
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::number( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::number( " << name << " ) -> " << Warning << '\n';
 #endif
     return v;
   }
@@ -1863,15 +1863,15 @@ double Options::number( const string &ident, double dflt,
 }
 
 
-double Options::error( const string &ident, const string &unit, int index ) const
+double Options::error( const string &name, const string &unit, int index ) const
 {
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() ) {
     double v = (*pp).error( unit, index );
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::error( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::error( " << name << " ) -> " << Warning << '\n';
 #endif
     return v;
   }
@@ -1880,10 +1880,10 @@ double Options::error( const string &ident, const string &unit, int index ) cons
 }
 
 
-Parameter &Options::setNumber( const string &ident, double number, 
+Parameter &Options::setNumber( const string &name, double number, 
 			       double error, const string &unit )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setNumber( number, error, unit );
@@ -1892,7 +1892,7 @@ Parameter &Options::setNumber( const string &ident, double number,
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setNumber( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setNumber( " << name << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -1907,10 +1907,10 @@ Parameter &Options::setNumber( const string &ident, double number,
 }
 
 
-Parameter &Options::pushNumber( const string &ident, double number, 
+Parameter &Options::pushNumber( const string &name, double number, 
 				double error, const string &unit )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).addNumber( number, error, unit );
@@ -1919,7 +1919,7 @@ Parameter &Options::pushNumber( const string &ident, double number,
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::pushNumber( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::pushNumber( " << name << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -1934,9 +1934,9 @@ Parameter &Options::pushNumber( const string &ident, double number,
 }
 
 
-Parameter &Options::setNumber( const string &ident, const Parameter &p )
+Parameter &Options::setNumber( const string &name, const Parameter &p )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setNumber( p );
@@ -1945,7 +1945,7 @@ Parameter &Options::setNumber( const string &ident, const Parameter &p )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setNumber( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setNumber( " << name << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -1960,15 +1960,15 @@ Parameter &Options::setNumber( const string &ident, const Parameter &p )
 }
 
 
-double Options::defaultNumber( const string &ident, const string &unit ) const
+double Options::defaultNumber( const string &name, const string &unit ) const
 {
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() ) {
     double v = (*pp).defaultNumber( unit );
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::defaultNumber( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::defaultNumber( " << name << " ) -> " << Warning << '\n';
 #endif
     return v;
   }
@@ -1977,10 +1977,10 @@ double Options::defaultNumber( const string &ident, const string &unit ) const
 }
 
 
-Parameter &Options::setDefaultNumber( const string &ident, double dflt, 
+Parameter &Options::setDefaultNumber( const string &name, double dflt, 
 				      const string &unit )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setDefaultNumber( dflt, unit );
@@ -1989,22 +1989,22 @@ Parameter &Options::setDefaultNumber( const string &ident, double dflt,
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setDefaultNumber( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setDefaultNumber( " << name << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
 }
 
 
-double Options::minimum( const string &ident, const string &unit ) const
+double Options::minimum( const string &name, const string &unit ) const
 {
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() ) {
     double v = (*pp).minimum( unit );
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::minimum( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::minimum( " << name << " ) -> " << Warning << '\n';
 #endif
     return v;
   }
@@ -2013,15 +2013,15 @@ double Options::minimum( const string &ident, const string &unit ) const
 }
 
 
-double Options::maximum( const string &ident, const string &unit ) const
+double Options::maximum( const string &name, const string &unit ) const
 {
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() ) {
     double v = (*pp).maximum( unit );
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::maximum( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::maximum( " << name << " ) -> " << Warning << '\n';
 #endif
     return v;
   }
@@ -2030,15 +2030,15 @@ double Options::maximum( const string &ident, const string &unit ) const
 }
 
 
-double Options::step( const string &ident, const string &unit ) const
+double Options::step( const string &name, const string &unit ) const
 {
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() ) {
     double v = (*pp).step( unit );
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::step( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::step( " << name << " ) -> " << Warning << '\n';
 #endif
     return v;
   }
@@ -2047,9 +2047,9 @@ double Options::step( const string &ident, const string &unit ) const
 }
 
 
-Parameter &Options::setStep( const string &ident, double step, const string &unit )
+Parameter &Options::setStep( const string &name, double step, const string &unit )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set values:
   if ( pp != end() ) {
     (*pp).setStep( step, unit );
@@ -2058,17 +2058,17 @@ Parameter &Options::setStep( const string &ident, double step, const string &uni
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setStep( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setStep( " << name << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
 }
 
 
-Parameter &Options::setMinMax( const string &ident, double minimum, 
+Parameter &Options::setMinMax( const string &name, double minimum, 
 			       double maximum, double step, const string &unit )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set values:
   if ( pp != end() ) {
     (*pp).setMinMax( minimum, maximum, step, unit );
@@ -2077,22 +2077,22 @@ Parameter &Options::setMinMax( const string &ident, double minimum,
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setMinMax( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setMinMax( " << name << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
 }
 
 
-Str Options::unit( const string &ident ) const
+Str Options::unit( const string &name ) const
 {
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() ) {
     Str s = (*pp).unit();
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::unit( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::unit( " << name << " ) -> " << Warning << '\n';
 #endif
     return s;
   }
@@ -2101,15 +2101,15 @@ Str Options::unit( const string &ident ) const
 }
 
 
-Str Options::outUnit( const string &ident ) const
+Str Options::outUnit( const string &name ) const
 {
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() ) {
     Str s = (*pp).outUnit();
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::outUnit( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::outUnit( " << name << " ) -> " << Warning << '\n';
 #endif
     return s;
   }
@@ -2118,10 +2118,10 @@ Str Options::outUnit( const string &ident ) const
 }
 
 
-Parameter &Options::setUnit( const string &ident, const string &internunit, 
+Parameter &Options::setUnit( const string &name, const string &internunit, 
 			     const string &outunit )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set values:
   if ( pp != end() ) {
     (*pp).setUnit( internunit, outunit );
@@ -2130,17 +2130,17 @@ Parameter &Options::setUnit( const string &ident, const string &internunit,
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setUnit( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setUnit( " << name << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
 }
 
 
-Parameter &Options::setOutUnit( const string &ident, 
+Parameter &Options::setOutUnit( const string &name, 
 				const string &outputunit )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set values:
   if ( pp != end() ) {
     (*pp).setOutUnit( outputunit );
@@ -2149,16 +2149,16 @@ Parameter &Options::setOutUnit( const string &ident,
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setOutUnit( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setOutUnit( " << name << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
 }
 
 
-Parameter &Options::changeUnit( const string &ident, const string &internunit )
+Parameter &Options::changeUnit( const string &name, const string &internunit )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set values:
   if ( pp != end() ) {
     (*pp).changeUnit( internunit );
@@ -2167,20 +2167,20 @@ Parameter &Options::changeUnit( const string &ident, const string &internunit )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::changeUnit( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::changeUnit( " << name << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
 }
 
 
-Parameter &Options::addInteger( const string &ident, const string &request,  
+Parameter &Options::addInteger( const string &name, const string &request,  
 				long dflt, long minimum, long maximum, long step,
 				const string &unit, const string &outputunit, 
 				int width, int flags, int style )
 {
   // new parameter:
-  Parameter np( ident, request, dflt, -1L, minimum, maximum, 
+  Parameter np( name, request, dflt, -1L, minimum, maximum, 
 		step, unit, outputunit, width, flags, style, this );
   // add option:
   Parameter &pp = add( np );
@@ -2188,43 +2188,43 @@ Parameter &Options::addInteger( const string &ident, const string &request,
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::addInteger( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::addInteger( " << name << " ) -> " << Warning << '\n';
 #endif
   return pp;
 }
 
 
-Parameter &Options::insertInteger( const string &ident, const string &atident, 
+Parameter &Options::insertInteger( const string &name, const string &atname, 
 				   const string &request, long dflt, 
 				   long minimum, long maximum, long step,
 				   const string &unit, const string &outputunit, 
 				   int width, int flags, int style )
 {
   // new parameter:
-  Parameter np( ident, request, dflt, -1L, minimum, maximum, 
+  Parameter np( name, request, dflt, -1L, minimum, maximum, 
 		step, unit, outputunit, width, flags, style, this );
   // insert option:
-  Parameter &pp = insert( np, atident );
+  Parameter &pp = insert( np, atname );
   // error?
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::insertInteger( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::insertInteger( " << name << " ) -> " << Warning << '\n';
 #endif
   return pp;
 }
 
 
-long Options::integer( const string &ident,
+long Options::integer( const string &name,
 		       const string &unit, long dflt, int index ) const
 {
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() ) {
     long i = (*pp).integer( unit, index );
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::integer( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::integer( " << name << " ) -> " << Warning << '\n';
 #endif
     return i;
   }
@@ -2233,10 +2233,10 @@ long Options::integer( const string &ident,
 }
 
 
-Parameter &Options::setInteger( const string &ident, long number, long error,
+Parameter &Options::setInteger( const string &name, long number, long error,
 				const string &unit )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setInteger( number, error, unit );
@@ -2245,7 +2245,7 @@ Parameter &Options::setInteger( const string &ident, long number, long error,
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setInteger( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setInteger( " << name << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -2260,10 +2260,10 @@ Parameter &Options::setInteger( const string &ident, long number, long error,
 }
 
 
-Parameter &Options::pushInteger( const string &ident, long number, long error,
+Parameter &Options::pushInteger( const string &name, long number, long error,
 				 const string &unit )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).addInteger( number, error, unit );
@@ -2272,7 +2272,7 @@ Parameter &Options::pushInteger( const string &ident, long number, long error,
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::pushInteger( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::pushInteger( " << name << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -2287,9 +2287,9 @@ Parameter &Options::pushInteger( const string &ident, long number, long error,
 }
 
 
-Parameter &Options::setInteger( const string &ident, const Parameter &p )
+Parameter &Options::setInteger( const string &name, const Parameter &p )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setInteger( p );
@@ -2298,7 +2298,7 @@ Parameter &Options::setInteger( const string &ident, const Parameter &p )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setInteger( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setInteger( " << name << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -2313,15 +2313,15 @@ Parameter &Options::setInteger( const string &ident, const Parameter &p )
 }
 
 
-long Options::defaultInteger( const string &ident, const string &unit ) const
+long Options::defaultInteger( const string &name, const string &unit ) const
 {
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() ) {
     long i = (*pp).defaultInteger( unit );
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::defaultInteger( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::defaultInteger( " << name << " ) -> " << Warning << '\n';
 #endif
     return i;
   }
@@ -2330,10 +2330,10 @@ long Options::defaultInteger( const string &ident, const string &unit ) const
 }
 
 
-Parameter &Options::setDefaultInteger( const string &ident, long dflt, 
+Parameter &Options::setDefaultInteger( const string &name, long dflt, 
 				 const string &unit )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setDefaultInteger( dflt, unit );
@@ -2342,17 +2342,17 @@ Parameter &Options::setDefaultInteger( const string &ident, long dflt,
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setDefaultInteger( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setDefaultInteger( " << name << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
 }
 
 
-Parameter &Options::setMinMax( const string &ident, long minimum, 
+Parameter &Options::setMinMax( const string &name, long minimum, 
 			       long maximum, long step, const string &unit )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setMinMax( minimum, maximum, step, unit );
@@ -2361,56 +2361,56 @@ Parameter &Options::setMinMax( const string &ident, long minimum,
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setMinMax( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setMinMax( " << name << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
 }
 
 
-Parameter &Options::addBoolean( const string &ident, const string &request,  
+Parameter &Options::addBoolean( const string &name, const string &request,  
 				bool dflt, int flags, int style )
 {
   // new parameter:
-  Parameter np( ident, request, dflt, flags, style, this );
+  Parameter np( name, request, dflt, flags, style, this );
   // add option:
   Parameter &pp = add( np );
   // error?
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::addBoolean( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::addBoolean( " << name << " ) -> " << Warning << '\n';
 #endif
   return pp;
 }
 
 
-Parameter &Options::insertBoolean( const string &ident, const string &atident, 
+Parameter &Options::insertBoolean( const string &name, const string &atname, 
 				   const string &request, bool dflt, int flags, int style )
 {
   // new parameter:
-  Parameter np( ident, request, dflt, flags, style, this );
+  Parameter np( name, request, dflt, flags, style, this );
   // insert option:
-  Parameter &pp = insert( np, atident );
+  Parameter &pp = insert( np, atname );
   // error?
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::insertBoolean( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::insertBoolean( " << name << " ) -> " << Warning << '\n';
 #endif
   return pp;
 }
 
 
-bool Options::boolean( const string &ident, bool dflt, int index ) const
+bool Options::boolean( const string &name, bool dflt, int index ) const
 {
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() ) {
     bool b = (*pp).boolean( index );
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::boolean( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::boolean( " << name << " ) -> " << Warning << '\n';
 #endif
     return b;
   }
@@ -2419,9 +2419,9 @@ bool Options::boolean( const string &ident, bool dflt, int index ) const
 }
 
 
-Parameter &Options::setBoolean( const string &ident, bool b )
+Parameter &Options::setBoolean( const string &name, bool b )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setBoolean( b );
@@ -2430,7 +2430,7 @@ Parameter &Options::setBoolean( const string &ident, bool b )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setBoolean( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setBoolean( " << name << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -2445,9 +2445,9 @@ Parameter &Options::setBoolean( const string &ident, bool b )
 }
 
 
-Parameter &Options::setBoolean( const string &ident, const Parameter &p )
+Parameter &Options::setBoolean( const string &name, const Parameter &p )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setBoolean( p );
@@ -2456,7 +2456,7 @@ Parameter &Options::setBoolean( const string &ident, const Parameter &p )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setBoolean( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setBoolean( " << name << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -2471,15 +2471,15 @@ Parameter &Options::setBoolean( const string &ident, const Parameter &p )
 }
 
 
-bool Options::defaultBoolean( const string &ident ) const
+bool Options::defaultBoolean( const string &name ) const
 {
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() ) {
     bool b = (*pp).defaultBoolean();
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::defaultBoolean( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::defaultBoolean( " << name << " ) -> " << Warning << '\n';
 #endif
     return b;
   }
@@ -2488,9 +2488,9 @@ bool Options::defaultBoolean( const string &ident ) const
 }
 
 
-Parameter &Options::setDefaultBoolean( const string &ident, bool dflt )
+Parameter &Options::setDefaultBoolean( const string &name, bool dflt )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setDefaultBoolean( dflt );
@@ -2499,19 +2499,19 @@ Parameter &Options::setDefaultBoolean( const string &ident, bool dflt )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setDefaultBoolean( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setDefaultBoolean( " << name << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
 }
 
 
-Parameter &Options::addDate( const string &ident, const string &request,  
+Parameter &Options::addDate( const string &name, const string &request,  
 			     int year, int month, int day,
 			     int flags, int style )
 {
   // new parameter:
-  Parameter np( ident, request, Parameter::Date,
+  Parameter np( name, request, Parameter::Date,
 		year, month, day, flags, style, this );
   // add option:
   Parameter &pp = add( np );
@@ -2519,45 +2519,45 @@ Parameter &Options::addDate( const string &ident, const string &request,
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::addDate( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::addDate( " << name << " ) -> " << Warning << '\n';
 #endif
   return pp;
 }
 
 
-Parameter &Options::insertDate( const string &ident, const string &atident, 
+Parameter &Options::insertDate( const string &name, const string &atname, 
 				const string &request,
 				int year, int month, int day,
 				int flags, int style )
 {
   // new parameter:
-  Parameter np( ident, request, Parameter::Date,
+  Parameter np( name, request, Parameter::Date,
 		year, month, day, flags, style, this );
   // insert option:
-  Parameter &pp = insert( np, atident );
+  Parameter &pp = insert( np, atname );
   // error?
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::insertDate( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::insertDate( " << name << " ) -> " << Warning << '\n';
 #endif
   return pp;
 }
 
 
-const Parameter &Options::date( const string &ident, int index,
+const Parameter &Options::date( const string &name, int index,
 				int &year, int &month, int &day ) const
 {
   year = 0;
   month = 0;
   day = 0;
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() ) {
     (*pp).date( year, month, day, index );
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::date( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::date( " << name << " ) -> " << Warning << '\n';
 #endif
     return *pp;
   }
@@ -2568,10 +2568,10 @@ const Parameter &Options::date( const string &ident, int index,
 }
 
 
-Parameter &Options::setDate( const string &ident,
+Parameter &Options::setDate( const string &name,
 			     int year, int month, int day )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setDate( year, month, day );
@@ -2580,7 +2580,7 @@ Parameter &Options::setDate( const string &ident,
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setDate( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setDate( " << name << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -2595,9 +2595,9 @@ Parameter &Options::setDate( const string &ident,
 }
 
 
-Parameter &Options::setDate( const string &ident, const string &date )
+Parameter &Options::setDate( const string &name, const string &date )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setDate( date );
@@ -2606,7 +2606,7 @@ Parameter &Options::setDate( const string &ident, const string &date )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setDate( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setDate( " << name << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -2621,9 +2621,9 @@ Parameter &Options::setDate( const string &ident, const string &date )
 }
 
 
-Parameter &Options::setDate( const string &ident, const struct tm &date )
+Parameter &Options::setDate( const string &name, const struct tm &date )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setDate( date );
@@ -2632,7 +2632,7 @@ Parameter &Options::setDate( const string &ident, const struct tm &date )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setDate( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setDate( " << name << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -2647,9 +2647,9 @@ Parameter &Options::setDate( const string &ident, const struct tm &date )
 }
 
 
-Parameter &Options::setDate( const string &ident, const time_t &time )
+Parameter &Options::setDate( const string &name, const time_t &time )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setDate( time );
@@ -2658,7 +2658,7 @@ Parameter &Options::setDate( const string &ident, const time_t &time )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setDate( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setDate( " << name << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -2673,9 +2673,9 @@ Parameter &Options::setDate( const string &ident, const time_t &time )
 }
 
 
-Parameter &Options::setCurrentDate( const string &ident )
+Parameter &Options::setCurrentDate( const string &name )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setCurrentDate();
@@ -2684,7 +2684,7 @@ Parameter &Options::setCurrentDate( const string &ident )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setCurrentDate( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setCurrentDate( " << name << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -2699,9 +2699,9 @@ Parameter &Options::setCurrentDate( const string &ident )
 }
 
 
-Parameter &Options::setDate( const string &ident, const Parameter &p )
+Parameter &Options::setDate( const string &name, const Parameter &p )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setDate( p );
@@ -2710,7 +2710,7 @@ Parameter &Options::setDate( const string &ident, const Parameter &p )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setDate( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setDate( " << name << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -2725,16 +2725,16 @@ Parameter &Options::setDate( const string &ident, const Parameter &p )
 }
 
 
-const Parameter &Options::defaultDate( const string &ident, int index,
+const Parameter &Options::defaultDate( const string &name, int index,
 				       int &year, int &month, int &day ) const
 {
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() ) {
     (*pp).defaultDate( year, month, day, index );
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::defaultDate( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::defaultDate( " << name << " ) -> " << Warning << '\n';
 #endif
     return *pp;
   }
@@ -2745,10 +2745,10 @@ const Parameter &Options::defaultDate( const string &ident, int index,
 }
 
 
-Parameter &Options::setDefaultDate( const string &ident,
+Parameter &Options::setDefaultDate( const string &name,
 				    int year, int month, int day )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setDefaultDate( year, month, day );
@@ -2757,19 +2757,19 @@ Parameter &Options::setDefaultDate( const string &ident,
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setDefaultDate( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setDefaultDate( " << name << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
 }
 
 
-Parameter &Options::addTime( const string &ident, const string &request,  
+Parameter &Options::addTime( const string &name, const string &request,  
 			     int hour, int minutes, int seconds,
 			     int flags, int style )
 {
   // new parameter:
-  Parameter np( ident, request, Parameter::Time,
+  Parameter np( name, request, Parameter::Time,
 		hour, minutes, seconds, flags, style, this );
   // add option:
   Parameter &pp = add( np );
@@ -2777,45 +2777,45 @@ Parameter &Options::addTime( const string &ident, const string &request,
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::addTime( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::addTime( " << name << " ) -> " << Warning << '\n';
 #endif
   return pp;
 }
 
 
-Parameter &Options::insertTime( const string &ident, const string &atident, 
+Parameter &Options::insertTime( const string &name, const string &atname, 
 				const string &request,
 				int hour, int minutes, int seconds,
 				int flags, int style )
 {
   // new parameter:
-  Parameter np( ident, request, Parameter::Time,
+  Parameter np( name, request, Parameter::Time,
 		hour, minutes, seconds, flags, style, this );
   // insert option:
-  Parameter &pp = insert( np, atident );
+  Parameter &pp = insert( np, atname );
   // error?
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::insertTime( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::insertTime( " << name << " ) -> " << Warning << '\n';
 #endif
   return pp;
 }
 
 
-const Parameter &Options::time( const string &ident, int index,
+const Parameter &Options::time( const string &name, int index,
 				int &hour, int &minutes, int &seconds ) const
 {
   hour = 0;
   minutes = 0;
   seconds = 0;
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() ) {
     (*pp).time( hour, minutes, seconds, index );
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::time( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::time( " << name << " ) -> " << Warning << '\n';
 #endif
     return *pp;
   }
@@ -2826,10 +2826,10 @@ const Parameter &Options::time( const string &ident, int index,
 }
 
 
-Parameter &Options::setTime( const string &ident,
+Parameter &Options::setTime( const string &name,
 			     int hour, int minutes, int seconds )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setTime( hour, minutes, seconds );
@@ -2838,7 +2838,7 @@ Parameter &Options::setTime( const string &ident,
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setTime( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setTime( " << name << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -2853,9 +2853,9 @@ Parameter &Options::setTime( const string &ident,
 }
 
 
-Parameter &Options::setTime( const string &ident, const string &time )
+Parameter &Options::setTime( const string &name, const string &time )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setTime( time );
@@ -2864,7 +2864,7 @@ Parameter &Options::setTime( const string &ident, const string &time )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setTime( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setTime( " << name << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -2879,9 +2879,9 @@ Parameter &Options::setTime( const string &ident, const string &time )
 }
 
 
-Parameter &Options::setTime( const string &ident, const struct tm &time )
+Parameter &Options::setTime( const string &name, const struct tm &time )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setTime( time );
@@ -2890,7 +2890,7 @@ Parameter &Options::setTime( const string &ident, const struct tm &time )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setTime( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setTime( " << name << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -2905,9 +2905,9 @@ Parameter &Options::setTime( const string &ident, const struct tm &time )
 }
 
 
-Parameter &Options::setTime( const string &ident, const time_t &time )
+Parameter &Options::setTime( const string &name, const time_t &time )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setTime( time );
@@ -2916,7 +2916,7 @@ Parameter &Options::setTime( const string &ident, const time_t &time )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setTime( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setTime( " << name << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -2931,9 +2931,9 @@ Parameter &Options::setTime( const string &ident, const time_t &time )
 }
 
 
-Parameter &Options::setCurrentTime( const string &ident )
+Parameter &Options::setCurrentTime( const string &name )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setCurrentTime();
@@ -2942,7 +2942,7 @@ Parameter &Options::setCurrentTime( const string &ident )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setCurrentTime( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setCurrentTime( " << name << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -2957,9 +2957,9 @@ Parameter &Options::setCurrentTime( const string &ident )
 }
 
 
-Parameter &Options::setTime( const string &ident, const Parameter &p )
+Parameter &Options::setTime( const string &name, const Parameter &p )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setTime( p );
@@ -2968,7 +2968,7 @@ Parameter &Options::setTime( const string &ident, const Parameter &p )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setTime( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setTime( " << name << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -2983,16 +2983,16 @@ Parameter &Options::setTime( const string &ident, const Parameter &p )
 }
 
 
-const Parameter &Options::defaultTime( const string &ident, int index,
+const Parameter &Options::defaultTime( const string &name, int index,
 				       int &hour, int &minutes, int &seconds ) const
 {
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() ) {
     (*pp).defaultTime( hour, minutes, seconds, index );
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::defaultTime( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::defaultTime( " << name << " ) -> " << Warning << '\n';
 #endif
     return *pp;
   }
@@ -3003,10 +3003,10 @@ const Parameter &Options::defaultTime( const string &ident, int index,
 }
 
 
-Parameter &Options::setDefaultTime( const string &ident,
+Parameter &Options::setDefaultTime( const string &name,
 				    int hour, int minutes, int seconds )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setDefaultTime( hour, minutes, seconds );
@@ -3015,55 +3015,55 @@ Parameter &Options::setDefaultTime( const string &ident,
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setDefaultTime( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setDefaultTime( " << name << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
 }
 
 
-Parameter &Options::addLabel( const string &ident, int flags, int style )
+Parameter &Options::addLabel( const string &name, int flags, int style )
 {
   // new parameter:
-  Parameter np( ident, false, flags, style, this );
+  Parameter np( name, false, flags, style, this );
   // add option:
   Parameter &pp = add( np );
   // error?
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::addLabel( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::addLabel( " << name << " ) -> " << Warning << '\n';
 #endif
   return pp;
 }
 
 
-Parameter &Options::insertLabel( const string &ident, const string &atident,
+Parameter &Options::insertLabel( const string &name, const string &atname,
 				 int flags, int style )
 {
   // new parameter:
-  Parameter np( ident, false, flags, style, this );
+  Parameter np( name, false, flags, style, this );
   // insert option:
-  Parameter &pp = insert( np, atident );
+  Parameter &pp = insert( np, atname );
   // error?
   Warning += np.warning();
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::insertLabel( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::insertLabel( " << name << " ) -> " << Warning << '\n';
 #endif
   return pp;
 }
 
 
-Str Options::label( const string &ident ) const
+Str Options::label( const string &name ) const
 {
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   if ( pp != end() ) {
     Str s = (*pp).label();
     Warning += (*pp).warning();
 #ifndef NDEBUG
     if ( ! Warning.empty() )
-      cerr << "!warning in Options::label( " << ident << " ) -> " << Warning << '\n';
+      cerr << "!warning in Options::label( " << name << " ) -> " << Warning << '\n';
 #endif
     return s;
   }
@@ -3072,9 +3072,9 @@ Str Options::label( const string &ident ) const
 }
 
 
-Parameter &Options::setLabel( const string &ident, const string &label )
+Parameter &Options::setLabel( const string &name, const string &label )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setLabel( label );
@@ -3083,7 +3083,7 @@ Parameter &Options::setLabel( const string &ident, const string &label )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setLabel( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setLabel( " << name << " ) -> " << Warning << '\n';
   }
 #endif
 
@@ -3144,9 +3144,9 @@ Options &Options::addSubSubSection( const string &name, int style )
 }
 
 
-Parameter &Options::setDefault( const string &ident )
+Parameter &Options::setDefault( const string &name )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setDefault();
@@ -3155,7 +3155,7 @@ Parameter &Options::setDefault( const string &ident )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setDefault( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setDefault( " << name << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
@@ -3175,9 +3175,9 @@ Options &Options::setDefaults( int flags )
 }
 
 
-Parameter &Options::setToDefault( const string &ident )
+Parameter &Options::setToDefault( const string &name )
 {
-  iterator pp = find( ident );
+  iterator pp = find( name );
   // set value:
   if ( pp != end() ) {
     (*pp).setToDefault();
@@ -3186,7 +3186,7 @@ Parameter &Options::setToDefault( const string &ident )
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {
     // error?
-    cerr << "!warning in Options::setToDefault( " << ident << " ) -> " << Warning << '\n';
+    cerr << "!warning in Options::setToDefault( " << name << " ) -> " << Warning << '\n';
   }
 #endif
   return *pp;
@@ -3206,11 +3206,11 @@ Options &Options::setToDefaults( int flags )
 }
 
 
-Options &Options::takeFirst( const string &ident )
+Options &Options::takeFirst( const string &name )
 {
   Warning = "";
 
-  if ( ident.empty() ) {
+  if ( name.empty() ) {
     for ( iterator ip = begin(); ip != end(); ++ip )
       if ( !ip->isLabel() ) {
 	for ( iterator pp = ip+1; pp != end(); )
@@ -3223,10 +3223,10 @@ Options &Options::takeFirst( const string &ident )
       }
   }
   else {
-    iterator pp = find( ident );
+    iterator pp = find( name );
     if ( pp != end() ) {
       for ( ++pp; pp != end(); )
-	if ( *pp == ident ) {
+	if ( *pp == name ) {
 	  // delete option:
 	  pp = Opt.erase( pp );
 	}
@@ -3238,14 +3238,14 @@ Options &Options::takeFirst( const string &ident )
 }
 
 
-Options &Options::takeLast( const string &ident )
+Options &Options::takeLast( const string &name )
 {
   Warning = "";
 
   if ( size() < 2 )
     return *this;
 
-  if ( ident.empty() ) {
+  if ( name.empty() ) {
     for ( iterator ip = end()-1; ip != begin(); --ip ) {
       if ( !ip->isLabel() ) {
 	iterator pp = ip;
@@ -3260,11 +3260,11 @@ Options &Options::takeLast( const string &ident )
     };
   }
   else {
-    iterator pp = rfind( ident );
+    iterator pp = rfind( name );
     if ( pp != end() && pp != begin() ) {
       do {
 	--pp;
-	if ( *pp == ident ) {
+	if ( *pp == name ) {
 	  // delete option:
 	  pp = Opt.erase( pp );
 	}
@@ -3275,11 +3275,11 @@ Options &Options::takeLast( const string &ident )
 }
 
 
-Options &Options::combineFirst( const string &ident )
+Options &Options::combineFirst( const string &name )
 {
   Warning = "";
 
-  if ( ident.empty() ) {
+  if ( name.empty() ) {
     for ( iterator ip = begin(); ip != end(); ++ip )
       if ( !ip->isLabel() ) {
 	for ( iterator pp = ip+1; pp != end(); )
@@ -3293,10 +3293,10 @@ Options &Options::combineFirst( const string &ident )
       }
   }
   else {
-    iterator ip = find( ident );
+    iterator ip = find( name );
     if ( ip != end() ) {
       for ( iterator pp=ip+1; pp != end(); )
-	if ( *pp == ident ) {
+	if ( *pp == name ) {
 	  (*ip).addText( (*pp).text() );
 	  // delete option:
 	  pp = Opt.erase( pp );
@@ -3309,14 +3309,14 @@ Options &Options::combineFirst( const string &ident )
 }
 
 
-Options &Options::combineLast( const string &ident )
+Options &Options::combineLast( const string &name )
 {
   Warning = "";
 
   if ( size() < 2 )
     return *this;
 
-  if ( ident.empty() ) {
+  if ( name.empty() ) {
     for ( iterator ip = end()-1; ip != begin(); --ip ) {
       if ( !ip->isLabel() ) {
 	iterator pp = ip;
@@ -3332,12 +3332,12 @@ Options &Options::combineLast( const string &ident )
     };
   }
   else {
-    iterator ip = rfind( ident );
+    iterator ip = rfind( name );
     if ( ip != end() && ip != begin() ) {
       iterator pp = ip;
       do {
 	--pp;
-	if ( *pp == ident ) {
+	if ( *pp == name ) {
 	  (*ip).addText( (*pp).text() );
 	  // delete option:
 	  pp = Opt.erase( pp );
@@ -3357,20 +3357,20 @@ Options &Options::erase( Options::iterator p )
 }
 
 
-Options &Options::erase( const string &ident )
+Options &Options::erase( const string &name )
 {
   Warning = "";
 
   bool erased = false;
   iterator pp = end();
-  while ( (pp = find( ident )) != end() ) {
+  while ( (pp = find( name )) != end() ) {
     Opt.erase( pp );
     erased = true;
   }
 
   // option not found:
   if ( ! erased )
-    Warning = "requested option '" + ident + "' not found!";
+    Warning = "requested option '" + name + "' not found!";
 
   return *this;
 }
@@ -3461,10 +3461,10 @@ bool Options::empty( void ) const
 }
 
 
-bool Options::exist( const string &ident ) const
+bool Options::exist( const string &name ) const
 {
   Warning = "";
-  const_iterator pp = find( ident );
+  const_iterator pp = find( name );
   return ( pp != end() );
 }
 
@@ -3502,10 +3502,10 @@ Options &Options::delFlags( int flags, int selectflag )
 }
 
 
-Options &Options::setTypeFlags( int flags, int typemask )
+Options &Options::setValueTypeFlags( int flags, int typemask )
 {
   for ( iterator pp = begin(); pp != end(); ++pp ) {
-    if ( (*pp).types( typemask ) ) {
+    if ( (*pp).valueTypes( typemask ) ) {
       (*pp).setFlags( flags );
     }
   }
@@ -3513,10 +3513,10 @@ Options &Options::setTypeFlags( int flags, int typemask )
 }
 
 
-Options &Options::addTypeFlags( int flags, int typemask )
+Options &Options::addValueTypeFlags( int flags, int typemask )
 {
   for ( iterator pp = begin(); pp != end(); ++pp ) {
-    if ( (*pp).types( typemask ) ) {
+    if ( (*pp).valueTypes( typemask ) ) {
       (*pp).addFlags( flags );
     }
   }
@@ -3524,10 +3524,10 @@ Options &Options::addTypeFlags( int flags, int typemask )
 }
 
 
-Options &Options::delTypeFlags( int flags, int typemask )
+Options &Options::delValueTypeFlags( int flags, int typemask )
 {
   for ( iterator pp = begin(); pp != end(); ++pp ) {
-    if ( (*pp).types( typemask ) ) {
+    if ( (*pp).valueTypes( typemask ) ) {
       (*pp).delFlags( flags );
     }
   }
@@ -3578,10 +3578,10 @@ int Options::styleSize( int style ) const
 }
 
 
-Options &Options::setTypeStyle( int style, int typemask )
+Options &Options::setValueTypeStyle( int style, int typemask )
 {
   for ( iterator pp = begin(); pp != end(); ++pp ) {
-    if ( (*pp).types( typemask ) ) {
+    if ( (*pp).valueTypes( typemask ) ) {
       (*pp).setStyle( style );
     }
   }
@@ -3589,10 +3589,10 @@ Options &Options::setTypeStyle( int style, int typemask )
 }
 
 
-Options &Options::addTypeStyle( int style, int typemask )
+Options &Options::addValueTypeStyle( int style, int typemask )
 {
   for ( iterator pp = begin(); pp != end(); ++pp ) {
-    if ( (*pp).types( typemask ) ) {
+    if ( (*pp).valueTypes( typemask ) ) {
       (*pp).addStyle( style );
     }
   }
@@ -3600,10 +3600,10 @@ Options &Options::addTypeStyle( int style, int typemask )
 }
 
 
-Options &Options::delTypeStyle( int style, int typemask )
+Options &Options::delValueTypeStyle( int style, int typemask )
 {
   for ( iterator pp = begin(); pp != end(); ++pp ) {
-    if ( (*pp).types( typemask ) ) {
+    if ( (*pp).valueTypes( typemask ) ) {
       (*pp).delStyle( style );
     }
   }
@@ -3611,19 +3611,19 @@ Options &Options::delTypeStyle( int style, int typemask )
 }
 
 
-int Options::identWidth( int selectmask, bool detailed ) const
+int Options::nameWidth( int selectmask, bool detailed ) const
 {
   Warning = "";
 
-  // search largest identifier:
+  // search largest name:
   unsigned int width = 0;
   unsigned int pwidth = 0;
   for ( const_iterator pp = begin(); pp != end(); ++pp ) {
     if ( (*pp).isLabel() && ( (*pp).style() & Parameter::SavePatternLabel ) )
-      pwidth = (*pp).ident().size() + 1;
+      pwidth = (*pp).name().size() + 1;
     if ( (*pp).flags( selectmask ) ) {
-      unsigned int w = (*pp).ident().size();
-      if ( detailed && (*pp).ident() != (*pp).request() )
+      unsigned int w = (*pp).name().size();
+      if ( detailed && (*pp).name() != (*pp).request() )
 	w += 3 + (*pp).request().size();
       if ( pwidth > 0 && ! (*pp).isLabel() )
 	w += pwidth;
@@ -3641,7 +3641,7 @@ ostream &Options::save( ostream &str, const string &start,
 {
   Warning = "";
 
-  int width = identWidth( selectmask, detailed );
+  int width = nameWidth( selectmask, detailed );
 
   string starts = start;
 
@@ -3653,7 +3653,7 @@ ostream &Options::save( ostream &str, const string &start,
   string pattern = "";
   for ( const_iterator pp = begin(); pp != end(); ++pp ) {
     if ( (*pp).isLabel() && ( (*pp).style() & Parameter::SavePatternLabel ) )
-      pattern = (*pp).ident() + '>';
+      pattern = (*pp).name() + '>';
     if ( (*pp).flags( selectmask ) ) {
       str << starts;
       (*pp).save( str, width, detailed, firstonly, pattern ) << '\n';
@@ -3720,7 +3720,7 @@ string Options::save( int selectmask, bool firstonly ) const
   string pattern = "";
   for ( const_iterator pp = begin(); pp != end(); ++pp ) {
     if ( (*pp).isLabel() && ( (*pp).style() & Parameter::SavePatternLabel ) )
-      pattern = (*pp).ident() + '>';
+      pattern = (*pp).name() + '>';
     if ( (*pp).flags( selectmask ) ) {
       if ( n > 0 )
 	str += ", ";
@@ -3764,7 +3764,7 @@ ostream &Options::saveXML( ostream &str, int selectmask, int level,
 
   if ( ! name().empty() ) {
     str << indstr1 << "<section>\n";
-    //    str << indstr2 << "  <type> type() </type>\n";
+    //    str << indstr2 << "  <type> valueType() </type>\n";
     str << indstr2 << "<name>" << name() << "</name>\n";
     level++;
   }
@@ -3802,19 +3802,19 @@ Options &Options::read( const string &opttxt, int flag,
     if ( sp->empty() )
       continue;
 
-    // get identifier:
-    string ident = (*sp).ident( 0, assignment, Str::WhiteSpace + '-' );
-    if ( ! ident.empty() ) {
+    // get name:
+    string name = (*sp).ident( 0, assignment, Str::WhiteSpace + '-' );
+    if ( ! name.empty() ) {
       string value = (*sp).value( 0, assignment );
       // set value:
       string error = Warning;
-      Parameter *pp = assign( pattern == 0 ? ident : *pattern + ident, value );
+      Parameter *pp = assign( pattern == 0 ? name : *pattern + name, value );
       // set flags:
       if ( pp != 0 && flag != 0 )
 	pp->addFlags( flag );
       if ( pattern != 0 && pp != 0 &&
 	   (*pp).isLabel() && ( (*pp).style() & Parameter::ReadPatternLabel ) )
-	*pattern = (*pp).ident() + '>';
+	*pattern = (*pp).name() + '>';
       Warning = error + Warning;
     }
 
@@ -3973,7 +3973,7 @@ Options &Options::read( const Options &o, int flags, int flag )
 
 bool Options::readAppend( const Parameter &p )
 {
-  if ( ! p.ident().empty() ) {
+  if ( ! p.name().empty() ) {
     for ( iterator pp = begin(); pp != end(); ++pp ) {
       if ( (*pp).read( p ) ) {
 	// notify the change:
@@ -4005,7 +4005,7 @@ Options &Options::readAppend( const Options &o, int flags )
   for ( const_iterator op = o.begin(); op != o.end(); ++op ) {
     if ( (*op).flags( flags ) ) {
       bool app = true;
-      if ( ! (*op).ident().empty() ) {
+      if ( ! (*op).name().empty() ) {
 	for ( iterator pp = begin(); pp != end(); ++pp ) {
 	  if ( (*pp).read( *op ) ) {
 	    app = false;
@@ -4040,7 +4040,7 @@ Options &Options::readAppend( const StrQueue &sq,
     Warning += np.warning();
 
     bool app = true;
-    if ( ! np.ident().empty() ) {
+    if ( ! np.name().empty() ) {
       for ( iterator pp = begin(); pp != end(); ++pp ) {
 	if ( (*pp).read( np ) ) {
 	  app = false;

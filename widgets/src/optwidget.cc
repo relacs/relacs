@@ -33,17 +33,17 @@ class UpdateEvent : public QEvent
 {
 public:
   UpdateEvent( int type )
-    : QEvent( QEvent::Type( QEvent::User+type ) ), Ident( "" ), Flags( 0 ) {};
-  UpdateEvent( int type, const string &ident )
-    : QEvent( QEvent::Type( QEvent::User+type ) ), Ident( ident ), Flags( 0 ) {};
+    : QEvent( QEvent::Type( QEvent::User+type ) ), Name( "" ), Flags( 0 ) {};
+  UpdateEvent( int type, const string &name )
+    : QEvent( QEvent::Type( QEvent::User+type ) ), Name( name ), Flags( 0 ) {};
   UpdateEvent( int type, int flags )
-    : QEvent( QEvent::Type( QEvent::User+type ) ), Ident( "" ), Flags( flags ) {};
+    : QEvent( QEvent::Type( QEvent::User+type ) ), Name( "" ), Flags( flags ) {};
   UpdateEvent( const UpdateEvent &ue )
-    : QEvent( QEvent::Type( ue.type() ) ), Ident( ue.Ident ), Flags( ue.Flags ) {};
-  string ident( void ) const { return Ident; };
+    : QEvent( QEvent::Type( ue.type() ) ), Name( ue.Name ), Flags( ue.Flags ) {};
+  string name( void ) const { return Name; };
   int flags( void ) const { return Flags; };
 private:
-  string Ident;
+  string Name;
   int Flags;
 };
 
@@ -206,10 +206,10 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
 
     if ( tabs ) {
       QWidget *w = new QWidget;
-      if ( (*pp).ident().contains( '&' ) )
-	tabwidget->addTab( w, (*pp).ident().c_str() );
+      if ( (*pp).name().contains( '&' ) )
+	tabwidget->addTab( w, (*pp).name().c_str() );
       else
-	tabwidget->addTab( w, ( "&" + (*pp).ident() ).c_str() );
+	tabwidget->addTab( w, ( "&" + (*pp).name() ).c_str() );
       parent = w;
       for ( ++pp; pp != Opt->end(); ++pp )
 	if ( selectmask <= 0 || ( (*pp).flags() & selectmask ) )
@@ -252,15 +252,15 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
       string rs = (*pp).request();
       if ( style & NameFrontStyle ) {
 	if ( style & HighlightNameStyle )
-	  rs = "<nobr><tt>" + (*pp).ident() + "</tt>: " + rs + "</nobr>";
+	  rs = "<nobr><tt>" + (*pp).name() + "</tt>: " + rs + "</nobr>";
 	else
-	  rs = (*pp).ident() + ": " + rs;
+	  rs = (*pp).name() + ": " + rs;
       }
       else if ( style & NameBehindStyle ) {
 	if ( style & HighlightNameStyle )
-	  rs = "<nobr>" + rs + " <tt>(" + (*pp).ident() + ")</tt></nobr>";
+	  rs = "<nobr>" + rs + " <tt>(" + (*pp).name() + ")</tt></nobr>";
 	else
-	  rs += " (" + (*pp).ident() + ")";
+	  rs += " (" + (*pp).name() + ")";
       }
       // text:
       if ( (*pp).isText() ) {
@@ -823,14 +823,14 @@ void OptWidget::resetDefault( void )
 }
 
 
-void OptWidget::updateValue( const string &ident )
+void OptWidget::updateValue( const string &name )
 {
   if ( DisableUpdate )
     return;
   if ( QThread::currentThread() != GUIThread )
-    QCoreApplication::postEvent( this, new UpdateEvent( 1, ident ) );
+    QCoreApplication::postEvent( this, new UpdateEvent( 1, name ) );
   else {
-    UpdateEvent *ue = new UpdateEvent( 1, ident );
+    UpdateEvent *ue = new UpdateEvent( 1, name );
     customEvent( ue );
     delete ue;
   }
@@ -867,14 +867,14 @@ void OptWidget::updateValues( int flag )
 }
 
 
-void OptWidget::updateSettings( const string &ident )
+void OptWidget::updateSettings( const string &name )
 {
   if ( DisableUpdate )
     return;
   if ( QThread::currentThread() != GUIThread )
-    QCoreApplication::postEvent( this, new UpdateEvent( 4, ident ) );
+    QCoreApplication::postEvent( this, new UpdateEvent( 4, name ) );
   else {
-    UpdateEvent *ue = new UpdateEvent( 4, ident );
+    UpdateEvent *ue = new UpdateEvent( 4, name );
     customEvent( ue );
     delete ue;
   }
@@ -922,9 +922,9 @@ void OptWidget::customEvent( QEvent *e )
     }
     switch ( e->type() - QEvent::User ) {
     case 1: {
-      // updateValues( ident )
+      // updateValues( name )
       for ( unsigned int k=0; k<Widgets.size(); k++ ) {
-	if ( Widgets[k]->param().ident() == ue->ident() ) {
+	if ( Widgets[k]->param().name() == ue->name() ) {
 	  Widgets[k]->reset();
 	  break;
 	}
@@ -949,9 +949,9 @@ void OptWidget::customEvent( QEvent *e )
       break;
     }
     case 4: {
-      // updaeSettings( ident )
+      // updaeSettings( name )
       for ( unsigned int k=0; k<Widgets.size(); k++ ) {
-	if ( Widgets[k]->param().ident() == ue->ident() ) {
+	if ( Widgets[k]->param().name() == ue->name() ) {
 	  Widgets[k]->update();
 	  break;
 	}

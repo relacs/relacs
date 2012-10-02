@@ -69,7 +69,7 @@ FICurve::FICurve( void )
   addNumber( "minratefrac", "Minimum required rate differences", MinRateFrac, 0.0, 1.0, 0.05, "1", "%" );
   //  addNumber( "minrateslope", "Minimum slope of f-I curve", MinRateSlope, 0.0, 1000.0, 10.0, "Hz/mV/cm" );
   addBoolean( "adjust", "Adjust input gain?", true );
-  addTypeStyle( OptWidget::TabLabel, Parameter::Label );
+  addValueTypeStyle( OptWidget::TabLabel, Parameter::Label );
   
   // variables:
   IntensityRange.clear();

@@ -27,31 +27,31 @@ using namespace relacs;
 
 void print( const Parameter &p )
 {
-  cout << "   p.text(): " << p.text( 0 );
+  cout << "p.text()     : " << p.text( 0 );
   for ( int k=1; k<p.size(); k++ )
     cout << "|" << p.text( k );
-  cout << endl;
+  cout << '\n';
 
   if ( p.isAnyNumber() ) {
-    cout << " p.number(): " << p.number( 0 );
+    cout << "p.number()   : " << p.number( 0 );
     for ( int k=1; k<p.size(); k++ )
       cout << "|" << p.number( k );
-    cout << endl;
+    cout << '\n';
 
-    cout << "  p.error(): " << p.error( 0 );
+    cout << "p.error()   : " << p.error( 0 );
     for ( int k=1; k<p.size(); k++ )
       cout << "|" << p.error( k );
-    cout << endl;
+    cout << '\n';
   }
 
-  cout << "   p.unit(): " << p.unit() << endl;
-  cout << "p.outUnit(): " << p.outUnit() << endl;
-  cout << " p.format(): " << p.format() << endl;
-  cout << "   p.type(): " << p.type() << endl;
-  cout << "   p.text(): " << p.text( "r='%r', i=%i, s=%s, n=%g, e=%G, u=%u, date=%Y-%m-%d, time=%H:%M:%S" ) << endl;
-  cout << "          p: ";
+  cout << "p.unit()     : " << p.unit() << '\n';
+  cout << "p.outUnit()  : " << p.outUnit() << '\n';
+  cout << "p.format()   : " << p.format() << '\n';
+  cout << "p.valueType(): " << p.valueType() << '\n';
+  cout << "p.text()     : " << p.text( "r='%r', i=%i, s=%s, n=%g, e=%G, u=%u, date=%Y-%m-%d, time=%H:%M:%S" ) << '\n';
+  cout << "p            : ";
   p.save( cout, 0, false );
-  cout << endl;
+  cout << '\n';
 }
 
 
@@ -59,76 +59,76 @@ int main( int argc, char *argv[] )
 {
   Parameter tp( "textid", "enter a text", "char-text" );
 
-  cout << endl;
-  cout << "Text-Parameter set to: " << "char_text" << endl;
+  cout << '\n';
+  cout << "Text-Parameter set to: " << "char_text" << '\n';
   print( tp );
 
-  cout << endl;
-  cout << "Text-Parameter set to: " << "(2.0+-0.3)Hz" << endl;
+  cout << '\n';
+  cout << "Text-Parameter set to: " << "(2.0+-0.3)Hz" << '\n';
   tp.setText( "(2.0+-0.3)Hz" );
   print( tp );
 
-  cout << endl;
-  cout << "Text-Parameter set to: " << "aa|bb||cc" << endl;
+  cout << '\n';
+  cout << "Text-Parameter set to: " << "aa|bb||cc" << '\n';
   tp.setText( "aa|bb||cc" );
   print( tp );
 
-  cout << endl;
-  cout << "Text-Parameter set to: " << "2|0.4kHz|(43+-5)" << endl;
+  cout << '\n';
+  cout << "Text-Parameter set to: " << "2|0.4kHz|(43+-5)" << '\n';
   tp.setText( "2|0.4kHz|(43+-5)" );
   print( tp );
 
-  cout << endl;
-  cout << "Text-Parameter setDefault()" << endl;
+  cout << '\n';
+  cout << "Text-Parameter setDefault()" << '\n';
   tp.setDefault();
   print( tp );
 
 
   Parameter np( "numberid", "enter a number", 234.0, 56.0, 0.0, 1000.0, 20.0, "Hz", "kHz", "%5.3f" );
 
-  cout << endl;
-  cout << "Number-Parameter set to: " << "234.0, 56.0, 0.0, 1000.0, 20.0, \"Hz\", \"kHz\", \"%5.3f\"" << endl;
+  cout << '\n';
+  cout << "Number-Parameter set to: " << "234.0, 56.0, 0.0, 1000.0, 20.0, \"Hz\", \"kHz\", \"%5.3f\"" << '\n';
   print( np );
 
-  cout << endl;
-  cout << "Number-Parameter set to: " << "3400.0, -1.0, \"mHz\"" << endl;
+  cout << '\n';
+  cout << "Number-Parameter set to: " << "3400.0, -1.0, \"mHz\"" << '\n';
   np.setNumber( 3400.0, -1.0, "mHz" );
   print( np );
 
-  cout << endl;
-  cout << "Number-Parameter added: " << "780.0, 92.0" << endl;
+  cout << '\n';
+  cout << "Number-Parameter added: " << "780.0, 92.0" << '\n';
   np.addNumber( 780.0, 92.0 );
   print( np );
 
-  cout << endl;
-  cout << "Number-Parameter setDefault " << endl;
+  cout << '\n';
+  cout << "Number-Parameter setDefault " << '\n';
   np.setDefault();
   print( np );
 
   Parameter cp( "percentageid", "enter percent", 0.3, -1.0, 0.0, 2.0, 0.01, "%", "1", "%5.1f" );
-  cout << endl;
-  cout << "Percent-Parameter set to: " << "0.3, 0.0, 0.0, 2.0, 0.01, \"\", \"%\", \"%5.1f\"" << endl;
+  cout << '\n';
+  cout << "Percent-Parameter set to: " << "0.3, 0.0, 0.0, 2.0, 0.01, \"\", \"%\", \"%5.1f\"" << '\n';
   print( cp );
 
   Parameter ip( "integerid", "enter integer", 4L, -1L, 0L, 100L, 2L, "", "", -1 );
-  cout << endl;
+  cout << '\n';
   print( ip );
 
   Parameter dp( "dateid", "enter date", Parameter::Date, 2009, 6, 20 );
-  cout << endl;
+  cout << '\n';
   print( dp );
 
   Parameter tip( "timeid", "enter time", Parameter::Time, 23, 59, 3 );
-  cout << endl;
+  cout << '\n';
   print( tip );
 
   while ( true ) {
-    cout << endl;
+    cout << '\n';
     Parameter pp;
     cout << "enter a parameter (ident=value): ";
     cin >> pp;
-    cout << "   p.type(): " << pp.type() << endl;
-    cout << " p.format(): " << pp.format() << endl;
+    cout << "p.valueType(): " << pp.valueType() << '\n';
+    cout << "p.format()   : " << pp.format() << '\n';
     print( pp );
   }
 

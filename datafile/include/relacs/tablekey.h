@@ -55,140 +55,140 @@ public:
     /*! Destructor. */
   ~TableKey( void );
 
-    /*! Add a new number option with value \a value to the end of the options list. 
-        Its identifier string and request string is set to \a ident.
-        The option has a unit \a unit and a format string \a format 
+    /*! Add a new column for numbers with name name() and value \a value to the key. 
+        The column has a unit \a unit and a format string \a format 
 	(ANSI C printf() syntax, only %%g, %%f, %%e are allowed, 
 	since the number is a double). */
-  Parameter &addNumber( const string &ident, const string &unit="", 
+  Parameter &addNumber( const string &name, const string &unit="", 
 			const string &format="", int flags=0, double value=0.0 );
-    /*! Add a new number option with value \a value to the end of the options list. 
-        Its identifier string and request string is set to \a ident.
-        The option has a unit \a unit and a format string \a format 
+    /*! Add a new column with name name() and value \a value to the key. 
+        The column has a unit \a unit and a format string \a format 
 	(ANSI C printf() syntax, only %%g, %%f, %%e are allowed, 
 	since the number is a double). */
-  Parameter &addNumber( const string &ident, const string &unit, 
+  Parameter &addNumber( const string &name, const string &unit, 
 			const string &format, double value, int flags=0 );
-    /*! Insert a new number option at the beginning of the options list
-        (\a atindent == "") or at the position of the option with
-        identity \a atident. If the option with identity \a atident
-        does not exist, the option is appended to the end of the list.
-        Its identifier string and request string is set to \a ident.
-        The option has a unit \a unit and a format string \a format 
+    /*! Insert a new column for numbers with name name() and value value()
+        at the beginning of the key
+        (\a atindent == "") or at the position of the column with
+        name \a atname. If the column with name \a atname
+        does not exist, the column is appended to the end of the key.
+        The column has a unit \a unit and a format string \a format 
 	(ANSI C printf() syntax, only %%g, %%f, %%e are allowed, 
 	since the number is a double). */
-  Parameter &insertNumber( const string &ident, const string &atident="", 
+  Parameter &insertNumber( const string &name, const string &atname="", 
 			   const string &unit="", const string &format="",
 			   int flags=0 );
-    /*! Set the value of an existing number option 
-        with identifier \a ident to \a number. */
-  Parameter &setNumber( const string &ident, double number,
+    /*! Set the value of an existing colum 
+        with name \a name to \a number. */
+  Parameter &setNumber( const string &name, double number,
 			const string &unit="" );
-    /*! Set the value of an existing number option 
-        with identifier \a ident to \a number. */
-  Parameter &setInteger( const string &ident, long number,
+    /*! Set the value of an existing column 
+        with name \a name to \a number. */
+  Parameter &setInteger( const string &name, long number,
 			 const string &unit="" );
 
-    /*! Add a new text option with value \a value to the end of the options list. 
-        Its identifier string and request string is set to \a ident,
-	the unit to "-".
-        The option has format string \a format (%s). */
-  Parameter &addText( const string &ident, const string &format="",
+    /*! Add a new column for strings with name name() and value \a value to the key. 
+        The column has a format string \a format 
+	(ANSI C printf() syntax, only %%s)
+	and its unit is set to '-'. */
+  Parameter &addText( const string &name, const string &format="",
 		      int flags=0, const string &value="" );
-    /*! Add a new text option with value \a value to the end of the options list. 
-        Its identifier string and request string is set to \a ident,
-	the unit to "-".
-        The option has format string \a format (%s). */
-  Parameter &addText( const string &ident, const string &format,
+    /*! Add a new column for strings with name name() and value \a value to the key. 
+        The column has a format string \a format 
+	(ANSI C printf() syntax, only %%s)
+	and its unit is set to '-'. */
+  Parameter &addText( const string &name, const string &format,
 		      const string &value, int flags=0 );
-    /*! Add a new text option with value \a value to the end of the options list. 
-        Its identifier string and request string is set to \a ident,
-	the unit to "-".
-        The option is formatted to a \c abs( \c width \c ) long string.
+    /*! Add a new column for strings with name name() and value \a value to the key. 
+	The unit is set to '-'.
+        The column is formatted to a \c abs( \c width \c ) long string.
         If \a width is positive then the string is aligned to the right,
         if \a width is positive it is aligned to the left. */
-  Parameter &addText( const string &ident, int width, int flags=0,
+  Parameter &addText( const string &name, int width, int flags=0,
 		      const string &value="" );
-    /*! Add a new text option with value \a value to the end of the options list. 
-        Its identifier string and request string is set to \a ident,
-	the unit to "-".
-        The option is formatted to a \c abs( \c width \c ) long string.
+    /*! Add a new column for strings with name name() and value \a value to the key. 
+	The unit is set to '-'.
+        The column is formatted to a \c abs( \c width \c ) long string.
         If \a width is positive then the string is aligned to the right,
         if \a width is positive it is aligned to the left. */
-  Parameter &addText( const string &ident, int width, const string &value,
+  Parameter &addText( const string &name, int width, const string &value,
 		      int flags=0 );
-    /*! Insert a new text option at the beginning of the options list
-        (\a atindent == "") or at the position of the option with
-        identity \a atident. If the option with identity \a atident
-        does not exist, the option is appended to the end of the list.
-        Its identifier string and request string is set to \a ident,
-	the unit to "-".
-        The option has a format string \a format (%s). */
-  Parameter &insertText( const string &ident, const string &atident="", 
+    /*! Insert a new column for strings with name name() and value \a value
+        at the beginning of the key
+        (\a atindent == "") or at the position of the column with
+        name \a atname. If the column with name \a atname
+        does not exist, the column is appended to the end of the key.
+        The column has a format string \a format 
+	(ANSI C printf() syntax, only %%s)
+	and its unit is set to '-'. */
+  Parameter &insertText( const string &name, const string &atname="", 
 			 const string &format="", int flags=0 );
-    /*! Insert a new text option at the beginning of the options list
-        (\a atindent == "") or at the position of the option with
-        identity \a atident. If the option with identity \a atident
-        does not exist, the option is appended to the end of the list.
-        Its identifier string and request string is set to \a ident,
-	the unit to "-".
-        The option is formatted to a \a width long string. */
-  Parameter &insertText( const string &ident, const string &atident, 
+    /*! Insert a new column for strings with name name() and value \a value
+        at the beginning of the key
+        (\a atindent == "") or at the position of the column with
+        name \a atname. If the column with name \a atname
+        does not exist, the column is appended to the end of the key.
+	The unit is set to '-'.
+        The column is formatted to a \c abs( \c width \c ) long string.
+        If \a width is positive then the string is aligned to the right,
+        if \a width is positive it is aligned to the left. */
+  Parameter &insertText( const string &name, const string &atname, 
 			 int width, int flags=0 );
-    /*! Set the value of an existing number option 
-        with identifier \a ident to \a number. */
-  Parameter &setText( const string &ident, const string &text );
+    /*! Set the value of an existing tet column 
+        with name \a name to \a text. */
+  Parameter &setText( const string &name, const string &text );
 
-    /*! Add a label \a ident at the end of the options list. */
-  Parameter &addLabel( const string &ident, int flags=0 );
-    /*! Insert a new label \a ident at the beginning of the options list
-        (\a atindent == "") or at the position of the option with
-        identity \a atident. If the option with identity \a atident
-        does not exist, the option is appended to the end of the list. */
-  Parameter &insertLabel( const string &ident, const string &atident="",
+    /*! Add a label \a name at the end of the key. */
+  Parameter &addLabel( const string &name, int flags=0 );
+    /*! Insert a new group with name name()
+        at the beginning of the key
+        (\a atindent == "") or at the position of the column with
+        name \a atname. If the column with name \a atname
+        does not exist, the group is appended to the end of the key. */
+  Parameter &insertLabel( const string &name, const string &atname="",
 			  int flags=0 );
 
-    /*! Adds all parameter from \a opts to this as specified by \a selectflag.
+    /*! Adds all parameter from \a opts to the key as specified by \a selectflag.
        \sa Options::append(const Options&, int) */
   void add( const Options &opts, int selectflag=0 );
     /*! Insert all parameter from \a opts
-        at the beginning of the options list
-        (\a atident == "") or at the position of the column or group specifier with
-        identity \a atident. If the option with identity \a atident
-        does not exist, the options are appended to the end of the list.
+        at the beginning of the key
+        (\a atname == "") or at the position of the column or group specifier with
+        name \a atname. If the column or group with name \a atname
+        does not exist, the options are appended to the end of the key.
        \sa Options::insert(const Options&, const string& ) */
-  void insert( const Options &opts, const string &atident="" );
+  void insert( const Options &opts, const string &atname="" );
     /*! Insert all parameter from \a opts as specified by \a selectflag
-        at the beginning of the options list
-        (\a atident == "") or at the position of the column or group specifier with
-        identity \a atident. If the option with identity \a atident
-        does not exist, the options are appended to the end of the list.
+        at the beginning of the key
+        (\a atname == "") or at the position of the column or group specifier with
+        name \a atname. If the column or group with name \a atname
+        does not exist, the options are appended to the end of the key.
        \sa Options::insert(const Options&, int, const string& ) */
-  void insert( const Options &opts, int selectflag, const string &atident="" );
+  void insert( const Options &opts, int selectflag, const string &atname="" );
 
     /*! Erase the column \a column from the key. */
   void erase( int column );
-    /*! Erase the column whose identifier string matches \a pattern from the key. */
+    /*! Erase the column whose name string matches \a pattern from the key. */
   void erase( const string &pattern );
 
-    /*! Returns the column whose identifier string matches \a pattern.
+    /*! Returns the column whose name string matches \a pattern.
         The first column is 0. */
   int column( const string &pattern ) const;
-    /*! Returns the column whose identifier string matches \a pattern.
+    /*! Returns the column whose name string matches \a pattern.
         The first column is 0. */
   inline int operator()( const string &pattern ) const
     { return column( pattern ); };
 
-    /*! Returns the identifier string of the \a column-th column. */
-  Str ident( int column ) const;
-    /*! Returns the identifier string of the column specified by \a pattern.
+    /*! Returns the name string of the \a column-th column. */
+  Str name( int column ) const;
+    /*! Returns the name string of the column specified by \a pattern.
         \sa column() */
-  Str ident( const string &pattern ) const;
-    /*! Set the identifier string of the \a column-th column to \a ident. */
-  Parameter &setIdent( int column, const string &ident );
-    /*! Set the identifier string of the column specified by \a pattern 
-        to \a ident. \sa column() */
-  Parameter &setIdent( const string &pattern, const string &ident );
+  Str name( const string &pattern ) const;
+    /*! Set the name string of the \a column-th column to \a name. */
+  Parameter &setName( int column, const string &name );
+    /*! Set the name string of the column specified by \a pattern 
+        to \a name. \sa column() */
+  Parameter &setName( const string &pattern, const string &name );
     /*! Returns the unit of the \a column-th column. */
   Str unit( int column ) const;
     /*! Returns the unit of the column specified by \a pattern.
@@ -224,31 +224,31 @@ public:
     /*! Returns \c true if the column specified by \a pattern contains strings.
         \sa column() */
   bool isText( const string &pattern ) const;
-    /*! Returns the group identifier string of level \a level
+    /*! Returns the group name string of level \a level
         for the \a column-th column. 
-        \a level = 0 returns the identifier sting of the column. */
+        \a level = 0 returns the name sting of the column. */
   Str group( int column, int level=1 ) const;
-    /*! Returns the group identifier string of level \a level
+    /*! Returns the group name string of level \a level
         for the column specified by \a pattern. 
-        \a level = 0 returns the identifier sting of the column.
+        \a level = 0 returns the name sting of the column.
 	\sa column() */
   Str group( const string &pattern, int level=1 ) const;
-    /*! Set the group identifier string of level \a level
+    /*! Set the group name string of level \a level
         for the \a column-th column to \a group. 
-        \a level = 0 sets the identifier sting of the column. */
+        \a level = 0 sets the name sting of the column. */
   Parameter &setGroup( int column, const string &group, int level=1 );
-    /*! Set the group identifier string of level \a level
+    /*! Set the group name string of level \a level
         for the column specified by \a pattern to \a group. 
-        \a level = 0 sets the identifier sting of the column.
+        \a level = 0 sets the name sting of the column.
 	\sa column() */
   Parameter &setGroup( const string &pattern, const string &group, int level=1 );
     /*! Returns all groups and columns belonging to the group of level \a level
         starting at the \a column-th column, inclusively. 
-        \a level = 0 returns solely the identifier of the column. */
+        \a level = 0 returns solely the name of the column. */
   Options groupOptions( int column, int level=1 ) const;
     /*! Returns all groups and columns belonging to the group of level \a level
         starting at the column specified by \a pattern, inclusively. 
-        \a level = 0 returns solely the identifier of the column. */
+        \a level = 0 returns solely the name of the column. */
   Options groupOptions( const string &pattern, int level=1 ) const;
 
     /*! Get \a i-th column. */
@@ -264,7 +264,7 @@ public:
   int columns( void ) const;
     /*! The number of levels of the TableKey.
         0: No columns are described by the TableKey,
-	1: Each column has an identifier, but columns are not grouped.
+	1: Each column has an name, but columns are not grouped.
         2: Columns are grouped.
         3: Groups of columns are grouped... */
   int level( void ) const;
@@ -310,7 +310,7 @@ public:
   ostream &saveData( ostream &str, int from, int to );
     /*! Write the data stored in the TableKey to \a str.
         Each datum is written into a separate line
-	and is preceeded by its identifier.
+	and is preceeded by its name.
 	Each line is started with \a start.
         These are the data that were set with setNumber(). */
   ostream &saveMetaData( ostream &str, const string &start="" ) const;

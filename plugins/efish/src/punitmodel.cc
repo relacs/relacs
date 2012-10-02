@@ -59,7 +59,7 @@ PUnitModel::PUnitModel( void )
 
   addModels();
 
-  addTypeStyle( OptWidget::Bold, Parameter::Label );
+  addValueTypeStyle( OptWidget::Bold, Parameter::Label );
 }
 
 

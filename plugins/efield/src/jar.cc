@@ -87,7 +87,7 @@ JAR::JAR( void )
   addNumber( "jaraverage", "Time for measuring EOD rate", JARAverageTime, 0.01, 10000.0, 0.02, "seconds", "ms" );
   addNumber( "chirpaverage", "Time for measuring chirp data", ChirpAverageTime, 0.01, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "eodsavetime", "Duration of EOD to be saved", EODSaveTime, 0.0, 10000.0, 0.01, "seconds", "ms" );
-  addTypeStyle( OptWidget::TabLabel, Parameter::Label );
+  addValueTypeStyle( OptWidget::TabLabel, Parameter::Label );
   
   // variables:
   GlobalFishAmplitude = 0.0;

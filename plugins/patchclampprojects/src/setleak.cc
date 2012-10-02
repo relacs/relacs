@@ -51,7 +51,7 @@ SetLeak::SetLeak( void )
   addLabel( "Resulting membrane properties:" ).setFlags( 2 );
   addNumber( "Rdc", "New membrane resistance 1/R=1/R_m+g", 0.0, 0.0, 1.0e8, 1.0, "MOhm" ).setFlags( 2 );
   addNumber( "taudc", "New membrane time constant", 0.0, 0.0, 1.0e6, 0.001, "s", "ms" ).setFlags( 2 );
-  addTypeStyle( OptWidget::Bold, Parameter::Label );
+  addValueTypeStyle( OptWidget::Bold, Parameter::Label );
 
   // layout:
   QVBoxLayout *vb = new QVBoxLayout;

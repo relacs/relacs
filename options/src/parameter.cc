@@ -42,12 +42,12 @@ Parameter::Parameter( const Parameter &p )
 }
 
 
-Parameter::Parameter( const string &ident, const string &request,  
+Parameter::Parameter( const string &name, const string &request,  
 		      const string &strg, int flags, int style,
 		      Options *parentsection )
   : ParentSection( parentsection )
 {
-  clear( ident, request, Text );
+  clear( name, request, Text );
 
   string e;
   setText( strg );
@@ -62,12 +62,12 @@ Parameter::Parameter( const string &ident, const string &request,
 }
 
 
-Parameter::Parameter( const string &ident, const string &request,  
+Parameter::Parameter( const string &name, const string &request,  
 		      const char *strg, int flags, int style,
 		      Options *parentsection ) 
   : ParentSection( parentsection )
 {
-  clear( ident, request, Text );
+  clear( name, request, Text );
 
   string e;
   string s( strg );
@@ -83,7 +83,7 @@ Parameter::Parameter( const string &ident, const string &request,
 }
 
 
-Parameter::Parameter( const string &ident, const string &request, 
+Parameter::Parameter( const string &name, const string &request, 
 		      double number, double error,
 		      double minimum, double maximum, double step,
 		      const string &internunit, const string &outputunit, 
@@ -91,7 +91,7 @@ Parameter::Parameter( const string &ident, const string &request,
 		      Options *parentsection )
   : ParentSection( parentsection )
 {
-  clear( ident, request, Number );
+  clear( name, request, Number );
 
   string e;
   setUnit( internunit, outputunit );
@@ -110,13 +110,13 @@ Parameter::Parameter( const string &ident, const string &request,
 }
 
 
-Parameter::Parameter( const string &ident, const string &request,  
+Parameter::Parameter( const string &name, const string &request,  
 		      double number, const string &unit, 
 		      const string &format, int flags, int style,
 		      Options *parentsection )
   : ParentSection( parentsection )
 {
-  clear( ident, request, Number );
+  clear( name, request, Number );
   string e;
   setUnit( unit, unit );
   e += Warning;
@@ -132,7 +132,7 @@ Parameter::Parameter( const string &ident, const string &request,
 }
 
 
-Parameter::Parameter( const string &ident, const string &request, 
+Parameter::Parameter( const string &name, const string &request, 
 		      const vector<double> &numbers,
 		      const vector<double> &errors, 
 		      double minimum, double maximum, double step,
@@ -141,7 +141,7 @@ Parameter::Parameter( const string &ident, const string &request,
 		      Options *parentsection )
   : ParentSection( parentsection )
 {
-  clear( ident, request, Number );
+  clear( name, request, Number );
 
   string e;
   setUnit( internunit, outputunit );
@@ -162,7 +162,7 @@ Parameter::Parameter( const string &ident, const string &request,
 }
 
 
-Parameter::Parameter( const string &ident, const string &request, 
+Parameter::Parameter( const string &name, const string &request, 
 		      long number, long error,
 		      long minimum, long maximum, long step,
 		      const string &internunit, const string &outputunit, 
@@ -170,7 +170,7 @@ Parameter::Parameter( const string &ident, const string &request,
 		      Options *parentsection )
   : ParentSection( parentsection )
 {
-  clear( ident, request, Integer );
+  clear( name, request, Integer );
 
   string e;
   setUnit( internunit, outputunit );
@@ -189,12 +189,12 @@ Parameter::Parameter( const string &ident, const string &request,
 }
 
 
-Parameter::Parameter( const string &ident, const string &request,  
+Parameter::Parameter( const string &name, const string &request,  
 		      bool dflt, int flags, int style,
 		      Options *parentsection ) 
   : ParentSection( parentsection )
 {
-  clear( ident, request, Boolean );
+  clear( name, request, Boolean );
 
   string e;
   setBoolean( dflt );
@@ -207,7 +207,8 @@ Parameter::Parameter( const string &ident, const string &request,
 }
 
 
-Parameter::Parameter( const string &ident, const string &request, Type type,
+Parameter::Parameter( const string &name, const string &request,
+		      ValueType type,
 		      int yearhour, int monthminutes, int dayseconds,
 		      int flags, int style,
 		      Options *parentsection ) 
@@ -219,7 +220,7 @@ Parameter::Parameter( const string &ident, const string &request, Type type,
     type = Date;
   }
 
-  clear( ident, request, type );
+  clear( name, request, type );
 
   if ( isDate() )
     setDate( yearhour, monthminutes, dayseconds );
@@ -237,17 +238,16 @@ Parameter::Parameter( const string &ident, const string &request, Type type,
 }
 
 
-Parameter::Parameter( const string &ident, bool sep, int flags, int style,
+Parameter::Parameter( const string &name, bool sep, int flags, int style,
 		      Options *parentsection ) 
   : ParentSection( parentsection )
 {
-  Type pt = Label;
-  if ( ident.empty() )
+  if ( name.empty() )
     Warning += "empty label";
   else if ( sep )
     style |= TabLabel;
 
-  clear( ident, ident, pt );
+  clear( name, name, Label );
   setFlags( flags );
   setStyle( style );
 }
@@ -272,11 +272,12 @@ Parameter::~Parameter( void )
 }
 
 
-Parameter &Parameter::clear( const string &ident, const string &request, Type type )
+Parameter &Parameter::clear( const string &name, const string &request,
+			     ValueType type )
 {
-  Ident = ident;
-  Request = request.empty() ? ident : request;
-  PType = type;
+  Name = name;
+  Request = request.empty() ? name : request;
+  VType = type;
   Flags = 0;
   if ( ( ! String.empty() && ! String[0].empty() ) || 
        ( ! Value.empty() && Value[ 0 ] != 0.0 ) )
@@ -330,9 +331,9 @@ Parameter &Parameter::assign( const Parameter &p )
     return *this;
 
   ParentSection = p.ParentSection;
-  Ident = p.Ident;
+  Name = p.Name;
   Request = p.Request;
-  PType = p.PType;
+  VType = p.VType;
   Flags = p.Flags;
   if ( ( ! String.empty() && ! p.String.empty() && String[0] != p.String[0] ) || 
        ( ! Value.empty() && ! p.Value.empty() && Value[0] != p.Value[0] ) )
@@ -395,7 +396,7 @@ Parameter &Parameter::assign( const string &value )
 	  date = false;
       }
       if ( date ) {
-	setType( Date );
+	setValueType( Date );
 	Year.clear();
 	Month.clear();
 	Day.clear();
@@ -415,7 +416,7 @@ Parameter &Parameter::assign( const string &value )
 	    time = false;
 	}
 	if ( time ) {
-	  setType( Time );
+	  setValueType( Time );
 	  Hour.clear();
 	  Minutes.clear();
 	  Seconds.clear();
@@ -439,7 +440,7 @@ Parameter &Parameter::assign( const string &value )
 	      num = false;
 	  }
 	  if ( num ) {
-	    setType( Number );
+	    setValueType( Number );
 	    Value.clear();
 	    Error.clear();
 	    for ( int k=0; k<String.size(); k++ )
@@ -450,7 +451,7 @@ Parameter &Parameter::assign( const string &value )
 	    for ( unsigned int k=0; integer && k<Value.size(); k++ )
 	      if ( ::fabs( Value[k] - rint( Value[k] ) ) > 1.0e-8 )
 		integer = false;
-	    setType( integer ? Integer : Number );
+	    setValueType( integer ? Integer : Number );
 	    if ( integer ) {
 	      setFormat( "%.0f" );
 	      setStep( 1.0 );
@@ -492,13 +493,13 @@ Parameter &Parameter::assign( const string &value )
 		break;
 	      }
 	    if ( b ) {
-	      setType( Boolean );
+	      setValueType( Boolean );
 	      setUnit( "", "" );
 	      for ( int k=0; k<String.size(); k++ )
 		Value.push_back( String[k] == "true" ? 1.0 : 0.0 );
 	    }
 	    else {
-	      setType( Text );
+	      setValueType( Text );
 	    }
 	  }
 	}
@@ -513,14 +514,14 @@ Parameter &Parameter::assign( const string &value )
 
 bool operator==( const Parameter &p1, const Parameter &p2 )
 {
-  return ( p1.ident() == p2.ident() );
+  return ( p1.name() == p2.name() );
 }
 
 
-bool operator==( const Parameter &p, const string &ident )
+bool operator==( const Parameter &p, const string &name )
 {
   // XXX implement comparison with special characters ^*xxx* ...
-  return ( p.ident() == ident );
+  return ( p.name() == name );
 }
 
 
@@ -563,15 +564,15 @@ Str Parameter::warning( void ) const
 }
 
 
-Str Parameter::ident( void ) const
+Str Parameter::name( void ) const
 {
-  return Ident;
+  return Name;
 }
 
 
-Parameter &Parameter::setIdent( const string &ident )
+Parameter &Parameter::setName( const string &name )
 {
-  Ident = ident;
+  Name = name;
   return *this;
 }
 
@@ -589,23 +590,23 @@ Parameter &Parameter::setRequest( const string &request )
 }
 
 
-Parameter::Type Parameter::type( void ) const
+Parameter::ValueType Parameter::valueType( void ) const
 {
-  return PType;
+  return VType;
 }
 
 
-bool Parameter::types( int mask ) const
+bool Parameter::valueTypes( int mask ) const
 {
   return ( mask == 0 ||
-	   ( mask > 0 && ( mask & type() ) > 0 ) ||
-	   ( mask < 0 && ( -mask & type() ) == 0 ) );
+	   ( mask > 0 && ( mask & valueType() ) > 0 ) ||
+	   ( mask < 0 && ( -mask & valueType() ) == 0 ) );
 }
 
 
-Parameter &Parameter::setType( Type pt )
+Parameter &Parameter::setValueType( ValueType type )
 {
-  PType = pt;
+  VType = type;
   return *this;
 }
 
@@ -795,7 +796,7 @@ int Parameter::size( void ) const
 
 bool Parameter::isText( void ) const
 {
-  return ( PType == Text );
+  return ( VType == Text );
 }
 
 
@@ -805,31 +806,31 @@ Str Parameter::text( int index, const string &format, const string &unit ) const
 
   if ( index < 0 ) {
     Warning = "Parameter::text -> negative index for parameter '" +
-      Ident + "' requested!";
+      Name + "' requested!";
     return "";
   }
 
   if ( isText() && index >= String.size() ) {
     Warning = "Parameter::text -> requested parameter '" +
-      Ident + "' has only " + Str( String.size() ) + " text values !";
+      Name + "' has only " + Str( String.size() ) + " text values !";
     return "";
   }
 
   if ( isAnyNumber() && index >= (int)Value.size() ) {
     Warning = "Parameter::text -> requested parameter '" +
-      Ident + "' has only " + Str( Value.size() ) + " number values !";
+      Name + "' has only " + Str( Value.size() ) + " number values !";
     return "";
   }
 
   if ( isDate() && index >= (int)Year.size() ) {
     Warning = "Parameter::text -> requested parameter '" +
-      Ident + "' has only " + Str( Year.size() ) + " date values !";
+      Name + "' has only " + Str( Year.size() ) + " date values !";
     return "";
   }
 
   if ( isTime() && index >= (int)Hour.size() ) {
     Warning = "Parameter::text -> requested parameter '" +
-      Ident + "' has only " + Str( Hour.size() ) + " time values !";
+      Name + "' has only " + Str( Hour.size() ) + " time values !";
     return "";
   }
 
@@ -837,7 +838,7 @@ Str Parameter::text( int index, const string &format, const string &unit ) const
   if ( f.empty() )
     f = Format;
 
-  f.format( Ident, 'i' );
+  f.format( Name, 'i' );
   f.format( Request, 'r' );
 
   string typestr = "notype";
@@ -952,7 +953,7 @@ Parameter &Parameter::setText( const Parameter &p )
 {
   Warning = "";
   if ( ! isText() || ! p.isText() ) {
-    Warning = "Parameter::setText() -> '" + Ident + "' or '" + p.ident()
+    Warning = "Parameter::setText() -> '" + Name + "' or '" + p.name()
       + "' is not of type text!";
     return *this;
   }
@@ -1056,31 +1057,31 @@ Str Parameter::defaultText( int index, const string &format,
 
   if ( index < 0 ) {
     Warning = "Parameter::defaultText -> negative index for parameter '" +
-      Ident + "' requested!";
+      Name + "' requested!";
     return "";
   }
 
   if ( isText() && index >= DefaultString.size() ) {
     Warning = "Parameter::defaultText -> requested parameter '" +
-      Ident + "' has only " + Str( DefaultString.size() ) + " values !";
+      Name + "' has only " + Str( DefaultString.size() ) + " values !";
     return "";
   }
 
   if ( isAnyNumber() && index >= (int)Value.size() ) {
     Warning = "Parameter::defaultText -> requested parameter '" +
-      Ident + "' has only " + Str( Value.size() ) + " values !";
+      Name + "' has only " + Str( Value.size() ) + " values !";
     return "";
   }
 
   if ( isDate() && index >= (int)DefaultYear.size() ) {
     Warning = "Parameter::defaultText -> requested parameter '" +
-      Ident + "' has only " + Str( Year.size() ) + " date values !";
+      Name + "' has only " + Str( Year.size() ) + " date values !";
     return "";
   }
 
   if ( isTime() && index >= (int)DefaultHour.size() ) {
     Warning = "Parameter::defaultText -> requested parameter '" +
-      Ident + "' has only " + Str( Hour.size() ) + " time values !";
+      Name + "' has only " + Str( Hour.size() ) + " time values !";
     return "";
   }
 
@@ -1088,7 +1089,7 @@ Str Parameter::defaultText( int index, const string &format,
   if ( f.empty() )
     f = Format;
 
-  f.format( Ident, 'i' );
+  f.format( Name, 'i' );
   f.format( Request, 'r' );
 
   string typestr = "notype";
@@ -1257,7 +1258,7 @@ Parameter &Parameter::selectText( const string &strg, int add )
 {
   if ( ! isText() ) {
     Warning = "Parameter::selectText -> parameter '" + 
-      Ident + "' is not of type text!";
+      Name + "' is not of type text!";
     return *this;
   }
 
@@ -1351,7 +1352,7 @@ int Parameter::index( void ) const
 {
   if ( ! isText() ) {
     Warning = "Parameter::selectText -> parameter '" + 
-      Ident + "' is not of type text!";
+      Name + "' is not of type text!";
     return 0;
   }
   int inx = String.find( String[0], 1 );
@@ -1363,7 +1364,7 @@ int Parameter::index( const string &strg ) const
 {
   if ( ! isText() ) {
     Warning = "Parameter::selectText -> parameter '" + 
-      Ident + "' is not of type text!";
+      Name + "' is not of type text!";
     return 0;
   }
 
@@ -1443,13 +1444,13 @@ double Parameter::changeUnit( double val, const Str &oldunit,
 
 bool Parameter::isAnyNumber( void ) const
 {
-  return ( PType == Number || PType == Integer || PType == Boolean );
+  return ( VType == Number || VType == Integer || VType == Boolean );
 }
 
 
 bool Parameter::isNumber( void ) const
 {
-  return ( PType == Number );
+  return ( VType == Number );
 }
 
 
@@ -1458,12 +1459,12 @@ double Parameter::number( const string &unit, int index ) const
   Warning = "";
   if ( ! isAnyNumber() && ! isText() ) {
     Warning = "Parameter::number -> parameter '" + 
-      Ident + "' is not of type number!";
+      Name + "' is not of type number!";
     return 0.0;
   }
   if ( index < 0 || index >= (int)Value.size() ) {
     Warning = "Parameter::number -> invalid index " +
-      Str( index ) + " requested for parameter '" + Ident + "' !";
+      Str( index ) + " requested for parameter '" + Name + "' !";
     return 0.0;
   }
 
@@ -1476,12 +1477,12 @@ double Parameter::error( const string &unit, int index ) const
   Warning = "";
   if ( ! isAnyNumber() && ! isText() ) {
     Warning = "Parameter::error -> parameter '" + 
-      Ident + "' is not of type number!";
+      Name + "' is not of type number!";
     return 0.0;
   }
   if ( index < 0 || index >= (int)Error.size() ) {
     Warning = "Parameter::error -> invalid index " +
-      Str( index ) + " requested for parameter '" + Ident + "' !";
+      Str( index ) + " requested for parameter '" + Name + "' !";
     return 0.0;
   }
 
@@ -1498,7 +1499,7 @@ Parameter &Parameter::setNumber( double number, double error,
   Warning = "";
   if ( ! isAnyNumber() && ! isText() ) {
     Warning = "Parameter::setNumber -> parameter '" + 
-      Ident + "' is not of type number!";
+      Name + "' is not of type number!";
     return *this;
   }
   return addNumber( number, error, unit, true );
@@ -1512,7 +1513,7 @@ Parameter &Parameter::setNumbers( const vector<double> &numbers,
   Warning = "";
   if ( ! isAnyNumber() && ! isText() ) {
     Warning = "Parameter::setNumbers -> parameter '" + 
-      Ident + "' is not of type number!";
+      Name + "' is not of type number!";
     return *this;
   }
   if ( numbers.size() == 0 ) {
@@ -1541,7 +1542,7 @@ Parameter &Parameter::setNumber( const Parameter &p )
 {
   Warning = "";
   if ( ! isNumber() || ! p.isNumber() ) {
-    Warning = "Parameter::setNumber() -> '" + Ident + "' or '" + p.ident()
+    Warning = "Parameter::setNumber() -> '" + Name + "' or '" + p.name()
       + "' is not of type number!";
     return *this;
   }
@@ -1565,7 +1566,7 @@ Parameter &Parameter::addNumber( double number, double error,
   Warning = "";
   if ( ! isAnyNumber() && ! isText() ) {
     Warning = "Parameter::addNumber -> parameter '" + 
-      Ident + "' is not of type number!";
+      Name + "' is not of type number!";
     return *this;
   }
 
@@ -1617,7 +1618,7 @@ Parameter &Parameter::addNumber( const Str &s, const string &unit )
 {
   if ( ! isAnyNumber() && ! isText() ) {
     Warning = "Parameter::addNumber -> parameter '" + 
-      Ident + "' is not of type number!";
+      Name + "' is not of type number!";
     return *this;
   }
   double e = -1.0;
@@ -1643,7 +1644,7 @@ Parameter &Parameter::addNumber( const Str &s, const string &unit )
 
 bool Parameter::isInteger( void ) const
 {
-  return ( PType == Integer );
+  return ( VType == Integer );
 }
 
 
@@ -1651,7 +1652,7 @@ long Parameter::integer( const string &unit, int index ) const
 { 
   if ( ! isAnyNumber() && ! isText() ) {
     Warning = "Parameter::integer -> parameter '" + 
-      Ident + "' is not of type number!";
+      Name + "' is not of type number!";
     return 0;
   }
   return static_cast<long>( rint( number( unit, index ) ) );
@@ -1663,7 +1664,7 @@ Parameter &Parameter::setInteger( long number, long error,
 {
   if ( ! isAnyNumber() && ! isText() ) {
     Warning = "Parameter::setInteger -> parameter '" + 
-      Ident + "' is not of type number!";
+      Name + "' is not of type number!";
     return *this;
   }
   return setNumber( static_cast<double>( number ),
@@ -1675,7 +1676,7 @@ Parameter &Parameter::setInteger( const Parameter &p )
 {
   Warning = "";
   if ( ! isInteger() || ! p.isInteger() ) {
-    Warning = "Parameter::setInteger() -> '" + Ident + "' or '" + p.ident()
+    Warning = "Parameter::setInteger() -> '" + Name + "' or '" + p.name()
       + "' is not of type integer!";
     return *this;
   }
@@ -1697,7 +1698,7 @@ Parameter &Parameter::addInteger( long number, long error, const string &unit )
 {
   if ( ! isAnyNumber() && ! isText() ) {
     Warning = "Parameter::addInteger -> parameter '" + 
-      Ident + "' is not of type number!";
+      Name + "' is not of type number!";
     return *this;
   }
   return addNumber( static_cast<double>( number ),
@@ -1710,12 +1711,12 @@ double Parameter::defaultNumber( const string &unit, int index ) const
   Warning = "";
   if ( ! isAnyNumber() && ! isText() ) {
     Warning = "Parameter::defaultNumber -> parameter '" + 
-      Ident + "' is not of type number!";
+      Name + "' is not of type number!";
     return 0.0;
   }
   if ( index < 0 || index >= (int)DefaultValue.size() ) {
     Warning = "Parameter::defaultNumber -> invalid index " +
-      Str( index ) + " requested for parameter '" + Ident + "' !";
+      Str( index ) + " requested for parameter '" + Name + "' !";
     return 0.0;
   }
 
@@ -1728,7 +1729,7 @@ Parameter &Parameter::setDefaultNumber( double dflt, const string &unit )
   Warning = "";
   if ( ! isAnyNumber() && ! isText() ) {
     Warning = "Parameter::setDefaultNumber -> parameter '" + 
-      Ident + "' is not of type number!";
+      Name + "' is not of type number!";
     return *this;
   }
   DefaultValue.clear();
@@ -1742,7 +1743,7 @@ Parameter &Parameter::addDefaultNumber( double number, const string &unit )
   Warning = "";
   if ( ! isAnyNumber() && ! isText() ) {
     Warning = "Parameter::addDefaultNumber -> parameter '" + 
-      Ident + "' is not of type number!";
+      Name + "' is not of type number!";
     return *this;
   }
 
@@ -1777,7 +1778,7 @@ Parameter &Parameter::addDefaultNumber( const Str &s, const string &unit )
 {
   if ( ! isAnyNumber() && ! isText() ) {
     Warning = "Parameter::addDefaultNumber -> parameter '" + 
-      Ident + "' is not of type number!";
+      Name + "' is not of type number!";
     return *this;
   }
   double e = -1.0;
@@ -1799,7 +1800,7 @@ long Parameter::defaultInteger( const string &unit, int index ) const
 { 
   if ( ! isAnyNumber() && ! isText() ) {
     Warning = "Parameter::defaultInteger -> parameter '" + 
-      Ident + "' is not of type number!";
+      Name + "' is not of type number!";
     return 0.0;
   }
   return static_cast<long>( rint( defaultNumber( unit, index ) ) );
@@ -1810,7 +1811,7 @@ Parameter &Parameter::setDefaultInteger( long dflt, const string &unit )
 {
   if ( ! isAnyNumber() && ! isText() ) {
     Warning = "Parameter::setDefaultInteger -> parameter '" + 
-      Ident + "' is not of type number!";
+      Name + "' is not of type number!";
     return *this;
   }
   return setDefaultNumber( static_cast<double>( dflt ), unit );
@@ -1821,7 +1822,7 @@ Parameter &Parameter::addDefaultInteger( double number, const string &unit )
 {
   if ( ! isAnyNumber() && ! isText() ) {
     Warning = "Parameter::addDefaultInteger -> parameter '" + 
-      Ident + "' is not of type number!";
+      Name + "' is not of type number!";
     return *this;
   }
   return addDefaultNumber( static_cast<double>( number ), unit );
@@ -1832,7 +1833,7 @@ double Parameter::minimum( const string &unit ) const
 { 
   if ( ! isAnyNumber() ) {
     Warning = "Parameter::minimum -> parameter '" + 
-      Ident + "' is not of type number!";
+      Name + "' is not of type number!";
     return 0.0;
   }
   Warning = "";
@@ -1844,7 +1845,7 @@ double Parameter::maximum( const string &unit ) const
 { 
   if ( ! isAnyNumber() ) {
     Warning = "Parameter::maximum -> parameter '" + 
-      Ident + "' is not of type number!";
+      Name + "' is not of type number!";
     return 0.0;
   }
   Warning = "";
@@ -1856,7 +1857,7 @@ double Parameter::step( const string &unit ) const
 { 
   if ( ! isAnyNumber() ) {
     Warning = "Parameter::step -> parameter '" + 
-      Ident + "' is not of type number!";
+      Name + "' is not of type number!";
     return 0.0;
   }
   Warning = "";
@@ -1868,7 +1869,7 @@ Parameter &Parameter::setStep( double step, const string &unit )
 {
   if ( ! isAnyNumber() ) {
     Warning = "Parameter::setStep -> parameter '" + 
-      Ident + "' is not of type number!";
+      Name + "' is not of type number!";
     return *this;
   }
 
@@ -1907,7 +1908,7 @@ Parameter &Parameter::setStep( long step )
 {
   if ( ! isAnyNumber() ) {
     Warning = "Parameter::setStep -> parameter '" + 
-      Ident + "' is not of type number!";
+      Name + "' is not of type number!";
     return *this;
   }
   return setStep( static_cast<double>( step ) );
@@ -1919,7 +1920,7 @@ Parameter &Parameter::setMinMax( double minimum, double maximum,
 {
   if ( ! isAnyNumber() ) {
     Warning = "Parameter::setMinMax -> parameter '" + 
-      Ident + "' is not of type number!";
+      Name + "' is not of type number!";
     return *this;
   }
   Warning = "";
@@ -1955,7 +1956,7 @@ Parameter &Parameter::setMinMax( long minimum, long maximum, long step,
 {
   if ( ! isAnyNumber() ) {
     Warning = "Parameter::setMinMax -> parameter '" + 
-      Ident + "' is not of type number!";
+      Name + "' is not of type number!";
     return *this;
   }
   double min = minimum == LONG_MIN ? -MAXDOUBLE : static_cast<double>( minimum );
@@ -2049,7 +2050,7 @@ Parameter &Parameter::changeUnit( string internunit )
 
 bool Parameter::isBoolean( void ) const
 {
-  return ( PType == Boolean );
+  return ( VType == Boolean );
 }
 
 
@@ -2058,12 +2059,12 @@ bool Parameter::boolean( int index ) const
   Warning = "";
   if ( ! isAnyNumber() && ! isText() ) {
     Warning = "Parameter::boolean -> parameter '" + 
-      Ident + "' is not of type number!";
+      Name + "' is not of type number!";
     return false;
   }
   if ( index < 0 || index >= (int)Value.size() ) {
     Warning = "Parameter::boolean -> invalid index " +
-      Str( index ) + " requested for parameter '" + Ident + "' !";
+      Str( index ) + " requested for parameter '" + Name + "' !";
     return false;
   }
 
@@ -2075,7 +2076,7 @@ Parameter &Parameter::setBoolean( bool b )
 {
   if ( ! isAnyNumber() && ! isText() ) {
     Warning = "Parameter::setBoolean -> parameter '" + 
-      Ident + "' is not of type number!";
+      Name + "' is not of type number!";
     return *this;
   }
   return setNumber( b ? 1.0 : 0.0 );
@@ -2086,7 +2087,7 @@ Parameter &Parameter::setBoolean( const Parameter &p )
 {
   Warning = "";
   if ( ! isBoolean() || ! p.isBoolean() ) {
-    Warning = "Parameter::setBoolean() -> '" + Ident + "' or '" + p.ident()
+    Warning = "Parameter::setBoolean() -> '" + Name + "' or '" + p.name()
       + "' is not of type boolean!";
     return *this;
   }
@@ -2107,13 +2108,13 @@ bool Parameter::defaultBoolean( int index ) const
   Warning = "";
   if ( ! isAnyNumber() && ! isText() ) {
     Warning = "Parameter::defaultBoolean -> parameter '" + 
-      Ident + "' is not of type number!";
+      Name + "' is not of type number!";
     return false;
   }
 
   if ( index < 0 || index >= (int)Value.size() ) {
     Warning = "Parameter::defaultBoolean -> invalid index " +
-      Str( index ) + " requested for parameter '" + Ident + "' !";
+      Str( index ) + " requested for parameter '" + Name + "' !";
     return false;
   }
 
@@ -2125,7 +2126,7 @@ Parameter &Parameter::setDefaultBoolean( bool dflt )
 {
   if ( ! isAnyNumber() && ! isText() ) {
     Warning = "Parameter::setDefaultBoolean -> parameter '" + 
-      Ident + "' is not of type number!";
+      Name + "' is not of type number!";
     return *this;
   }
   return setDefaultNumber( dflt ? 1.0 : 0.0 );
@@ -2134,7 +2135,7 @@ Parameter &Parameter::setDefaultBoolean( bool dflt )
 
 bool Parameter::isDate( void ) const
 {
-  return ( PType == Date );
+  return ( VType == Date );
 }
 
 
@@ -2142,12 +2143,12 @@ int Parameter::year( int index ) const
 {
   if ( ! isDate() ) {
     Warning = "Parameter::year -> parameter '" + 
-      Ident + "' is not of type date!";
+      Name + "' is not of type date!";
     return -1;
   }
   if ( index < 0 || index >= (int)Year.size() ) {
     Warning = "Parameter::year -> invalid index " +
-      Str( index ) + " requested for parameter '" + Ident + "' !";
+      Str( index ) + " requested for parameter '" + Name + "' !";
     return -1;
   }
   return Year[index];
@@ -2158,12 +2159,12 @@ int Parameter::month( int index ) const
 {
   if ( ! isDate() ) {
     Warning = "Parameter::month -> parameter '" + 
-      Ident + "' is not of type date!";
+      Name + "' is not of type date!";
     return 0;
   }
   if ( index < 0 || index >= (int)Month.size() ) {
     Warning = "Parameter::month -> invalid index " +
-      Str( index ) + " requested for parameter '" + Ident + "' !";
+      Str( index ) + " requested for parameter '" + Name + "' !";
     return -1;
   }
   return Month[index];
@@ -2174,12 +2175,12 @@ int Parameter::day( int index ) const
 {
   if ( ! isDate() ) {
     Warning = "Parameter::day -> parameter '" + 
-      Ident + "' is not of type date!";
+      Name + "' is not of type date!";
     return 0;
   }
   if ( index < 0 || index >= (int)Day.size() ) {
     Warning = "Parameter::day -> invalid index " +
-      Str( index ) + " requested for parameter '" + Ident + "' !";
+      Str( index ) + " requested for parameter '" + Name + "' !";
     return -1;
   }
   return Day[index];
@@ -2193,12 +2194,12 @@ void Parameter::date( int &year, int &month, int &day, int index ) const
   day = 0;
   if ( ! isDate() ) {
     Warning = "Parameter::date -> parameter '" + 
-      Ident + "' is not of type date!";
+      Name + "' is not of type date!";
     return;
   }
   if ( index < 0 || index >= (int)Year.size() ) {
     Warning = "Parameter::date -> invalid index " +
-      Str( index ) + " requested for parameter '" + Ident + "' !";
+      Str( index ) + " requested for parameter '" + Name + "' !";
     return;
   }
   year = Year[index];
@@ -2211,7 +2212,7 @@ Parameter &Parameter::setDate( int year, int month, int day )
 {
   if ( ! isDate() ) {
     Warning = "Parameter::setDate -> parameter '" + 
-      Ident + "' is not of type date!";
+      Name + "' is not of type date!";
     return *this;
   }
 
@@ -2239,7 +2240,7 @@ Parameter &Parameter::addDate( int year, int month, int day )
 {
   if ( ! isDate() ) {
     Warning = "Parameter::addDate -> parameter '" + 
-      Ident + "' is not of type date!";
+      Name + "' is not of type date!";
     return *this;
   }
 
@@ -2306,7 +2307,7 @@ Parameter &Parameter::setDate( const Parameter &p )
 {
   Warning = "";
   if ( ! isDate() || ! p.isDate() ) {
-    Warning = "Parameter::setDate() -> '" + Ident + "' or '" + p.ident()
+    Warning = "Parameter::setDate() -> '" + Name + "' or '" + p.name()
       + "' is not of type date!";
     return *this;
   }
@@ -2329,12 +2330,12 @@ int Parameter::defaultYear( int index ) const
 {
   if ( ! isDate() ) {
     Warning = "Parameter::defaultYear -> parameter '" + 
-      Ident + "' is not of type date!";
+      Name + "' is not of type date!";
     return 0;
   }
   if ( index < 0 || index >= (int)DefaultYear.size() ) {
     Warning = "Parameter::defaultYear -> invalid index " +
-      Str( index ) + " requested for parameter '" + Ident + "' !";
+      Str( index ) + " requested for parameter '" + Name + "' !";
     return -1;
   }
   return DefaultYear[index];
@@ -2345,12 +2346,12 @@ int Parameter::defaultMonth( int index ) const
 {
   if ( ! isDate() ) {
     Warning = "Parameter::defaultMonth -> parameter '" + 
-      Ident + "' is not of type date!";
+      Name + "' is not of type date!";
     return 0;
   }
   if ( index < 0 || index >= (int)DefaultMonth.size() ) {
     Warning = "Parameter::defaultMonth -> invalid index " +
-      Str( index ) + " requested for parameter '" + Ident + "' !";
+      Str( index ) + " requested for parameter '" + Name + "' !";
     return -1;
   }
   return DefaultMonth[index];
@@ -2361,12 +2362,12 @@ int Parameter::defaultDay( int index ) const
 {
   if ( ! isDate() ) {
     Warning = "Parameter::defaultDay -> parameter '" + 
-      Ident + "' is not of type date!";
+      Name + "' is not of type date!";
     return 0;
   }
   if ( index < 0 || index >= (int)DefaultDay.size() ) {
     Warning = "Parameter::defaultDay -> invalid index " +
-      Str( index ) + " requested for parameter '" + Ident + "' !";
+      Str( index ) + " requested for parameter '" + Name + "' !";
     return -1;
   }
   return DefaultDay[index];
@@ -2380,12 +2381,12 @@ void Parameter::defaultDate( int &year, int &month, int &day, int index ) const
   day = 0;
   if ( ! isDate() ) {
     Warning = "Parameter::defaultDate -> parameter '" + 
-      Ident + "' is not of type date!";
+      Name + "' is not of type date!";
     return;
   }
   if ( index < 0 || index >= (int)DefaultYear.size() ) {
     Warning = "Parameter::defaultDate -> invalid index " +
-      Str( index ) + " requested for parameter '" + Ident + "' !";
+      Str( index ) + " requested for parameter '" + Name + "' !";
     return;
   }
   year = DefaultYear[index];
@@ -2398,7 +2399,7 @@ Parameter &Parameter::setDefaultDate( int year, int month, int day )
 {
   if ( ! isDate() ) {
     Warning = "Parameter::setDefaultDate -> parameter '" + 
-      Ident + "' is not of type date!";
+      Name + "' is not of type date!";
     return *this;
   }
 
@@ -2421,7 +2422,7 @@ Parameter &Parameter::addDefaultDate( int year, int month, int day )
 {
   if ( ! isDate() ) {
     Warning = "Parameter::addDefaultDate -> parameter '" + 
-      Ident + "' is not of type date!";
+      Name + "' is not of type date!";
     return *this;
   }
 
@@ -2453,7 +2454,7 @@ Parameter &Parameter::setDefaultDate( const string &date )
 
 bool Parameter::isTime( void ) const
 {
-  return ( PType == Time );
+  return ( VType == Time );
 }
 
 
@@ -2461,12 +2462,12 @@ int Parameter::hour( int index ) const
 {
   if ( ! isTime() ) {
     Warning = "Parameter::hour -> parameter '" + 
-      Ident + "' is not of type time!";
+      Name + "' is not of type time!";
     return 0;
   }
   if ( index < 0 || index >= (int)Hour.size() ) {
     Warning = "Parameter::hour -> invalid index " +
-      Str( index ) + " requested for parameter '" + Ident + "' !";
+      Str( index ) + " requested for parameter '" + Name + "' !";
     return -1;
   }
   return Hour[index];
@@ -2477,12 +2478,12 @@ int Parameter::minutes( int index ) const
 {
   if ( ! isTime() ) {
     Warning = "Parameter::minutes -> parameter '" + 
-      Ident + "' is not of type time!";
+      Name + "' is not of type time!";
     return 0;
   }
   if ( index < 0 || index >= (int)Minutes.size() ) {
     Warning = "Parameter::minutes -> invalid index " +
-      Str( index ) + " requested for parameter '" + Ident + "' !";
+      Str( index ) + " requested for parameter '" + Name + "' !";
     return -1;
   }
   return Minutes[index];
@@ -2493,12 +2494,12 @@ int Parameter::seconds( int index ) const
 {
   if ( ! isTime() ) {
     Warning = "Parameter::seconds -> parameter '" + 
-      Ident + "' is not of type time!";
+      Name + "' is not of type time!";
     return 0;
   }
   if ( index < 0 || index >= (int)Seconds.size() ) {
     Warning = "Parameter::seconds -> invalid index " +
-      Str( index ) + " requested for parameter '" + Ident + "' !";
+      Str( index ) + " requested for parameter '" + Name + "' !";
     return -1;
   }
   return Seconds[index];
@@ -2512,12 +2513,12 @@ void Parameter::time( int &hour, int &minutes, int &seconds, int index ) const
   seconds = 0;
   if ( ! isTime() ) {
     Warning = "Parameter::time -> parameter '" + 
-      Ident + "' is not of type time!";
+      Name + "' is not of type time!";
     return;
   }
   if ( index < 0 || index >= (int)Hour.size() ) {
     Warning = "Parameter::time -> invalid index " +
-      Str( index ) + " requested for parameter '" + Ident + "' !";
+      Str( index ) + " requested for parameter '" + Name + "' !";
     return;
   }
   hour = Hour[index];
@@ -2530,7 +2531,7 @@ Parameter &Parameter::setTime( int hour, int minutes, int seconds )
 {
   if ( ! isTime() ) {
     Warning = "Parameter::setTime -> parameter '" + 
-      Ident + "' is not of type time!";
+      Name + "' is not of type time!";
     return *this;
   }
 
@@ -2558,7 +2559,7 @@ Parameter &Parameter::addTime( int hour, int minutes, int seconds )
 {
   if ( ! isTime() ) {
     Warning = "Parameter::addTime -> parameter '" + 
-      Ident + "' is not of type time!";
+      Name + "' is not of type time!";
     return *this;
   }
 
@@ -2625,7 +2626,7 @@ Parameter &Parameter::setTime( const Parameter &p )
 {
   Warning = "";
   if ( ! isTime() || ! p.isTime() ) {
-    Warning = "Parameter::setTime() -> '" + Ident + "' or '" + p.ident()
+    Warning = "Parameter::setTime() -> '" + Name + "' or '" + p.name()
       + "' is not of type time!";
     return *this;
   }
@@ -2648,12 +2649,12 @@ int Parameter::defaultHour( int index ) const
 {
   if ( ! isTime() ) {
     Warning = "Parameter::defaultHour -> parameter '" + 
-      Ident + "' is not of type time!";
+      Name + "' is not of type time!";
     return 0;
   }
   if ( index < 0 || index >= (int)DefaultHour.size() ) {
     Warning = "Parameter::defaultHour -> invalid index " +
-      Str( index ) + " requested for parameter '" + Ident + "' !";
+      Str( index ) + " requested for parameter '" + Name + "' !";
     return -1;
   }
   return DefaultHour[index];
@@ -2664,12 +2665,12 @@ int Parameter::defaultMinutes( int index ) const
 {
   if ( ! isTime() ) {
     Warning = "Parameter::defaultMinutes -> parameter '" + 
-      Ident + "' is not of type time!";
+      Name + "' is not of type time!";
     return 0;
   }
   if ( index < 0 || index >= (int)DefaultMinutes.size() ) {
     Warning = "Parameter::defaultMinutes -> invalid index " +
-      Str( index ) + " requested for parameter '" + Ident + "' !";
+      Str( index ) + " requested for parameter '" + Name + "' !";
     return -1;
   }
   return DefaultMinutes[index];
@@ -2680,12 +2681,12 @@ int Parameter::defaultSeconds( int index ) const
 {
   if ( ! isTime() ) {
     Warning = "Parameter::defaultSeconds -> parameter '" + 
-      Ident + "' is not of type time!";
+      Name + "' is not of type time!";
     return 0;
   }
   if ( index < 0 || index >= (int)DefaultSeconds.size() ) {
     Warning = "Parameter::defaultSeconds -> invalid index " +
-      Str( index ) + " requested for parameter '" + Ident + "' !";
+      Str( index ) + " requested for parameter '" + Name + "' !";
     return -1;
   }
   return DefaultSeconds[index];
@@ -2699,12 +2700,12 @@ void Parameter::defaultTime( int &hour, int &minutes, int &seconds, int index ) 
   seconds = 0;
   if ( ! isDate() ) {
     Warning = "Parameter::defaultTime -> parameter '" + 
-      Ident + "' is not of type date!";
+      Name + "' is not of type date!";
     return;
   }
   if ( index < 0 || index >= (int)DefaultHour.size() ) {
     Warning = "Parameter::defaultTime -> invalid index " +
-      Str( index ) + " requested for parameter '" + Ident + "' !";
+      Str( index ) + " requested for parameter '" + Name + "' !";
     return;
   }
   hour = DefaultHour[index];
@@ -2717,7 +2718,7 @@ Parameter &Parameter::setDefaultTime( int hour, int minutes, int seconds )
 {
   if ( ! isTime() ) {
     Warning = "Parameter::setDefaultTime -> parameter '" + 
-      Ident + "' is not of type time!";
+      Name + "' is not of type time!";
     return *this;
   }
 
@@ -2740,7 +2741,7 @@ Parameter &Parameter::addDefaultTime( int hour, int minutes, int seconds )
 {
   if ( ! isTime() ) {
     Warning = "Parameter::addDefaultTime -> parameter '" + 
-      Ident + "' is not of type time!";
+      Name + "' is not of type time!";
     return *this;
   }
 
@@ -2772,19 +2773,19 @@ Parameter &Parameter::setDefaultTime( const string &time )
 
 bool Parameter::isLabel( void ) const
 {
-  return ( PType == Label );
+  return ( VType == Label );
 }
 
 
 bool Parameter::isNotype( void ) const
 {
-  return ( PType == NoType );
+  return ( VType == NoType );
 }
 
 
 bool Parameter::empty( void ) const
 {
-  return ( PType == NoType || Ident.empty() );
+  return ( VType == NoType || Name.empty() );
 }
 
 
@@ -2972,9 +2973,9 @@ string Parameter::save( bool detailed, bool firstonly ) const
   if ( isLabel() )
     str = label();
   else {
-    // identifier:
-    str = ident();
-    if ( detailed && ident() != request() )
+    // nameifier:
+    str = name();
+    if ( detailed && name() != request() )
       str += " (" + request() + "): ";
     else
       str += ": ";
@@ -3049,9 +3050,9 @@ ostream &Parameter::save( ostream &str, int width, bool detailed,
       str << setw( 0 ) << label();
   }
   else {
-    // identifier:
-    string is = pattern+ident();
-    if ( detailed && ident() != request() )
+    // nameifier:
+    string is = pattern+name();
+    if ( detailed && name() != request() )
       is += " (" + request() + ")";
     str << Str( is, -width );
     str << ": ";
@@ -3166,7 +3167,7 @@ ostream &Parameter::saveXML( ostream &str, int level, int indent,
     str << indstr1 << "<label>" << label() << "</label>\n";
   else {
     str << indstr1 << "<property>\n";
-    str << indstr2 << "<name>" << ident() << "</name>\n";
+    str << indstr2 << "<name>" << name() << "</name>\n";
     for ( int k=0; k<maxinx; k++ ) {
       if ( isNumber() || isInteger() ) {
 	string vtype = "float";
@@ -3204,34 +3205,34 @@ Parameter &Parameter::load( Str s, const string &assignment )
   // clear parameter:
   clear();
 
-  Str ident = s.ident( 0, assignment );
+  Str name = s.ident( 0, assignment );
   Str request = "";
-  if ( ident.empty() )
-    Warning += "\"" + s.stripped() + "\": missing identifier! ";
+  if ( name.empty() )
+    Warning += "\"" + s.stripped() + "\": missing nameifier! ";
   else {
-    if ( ident.size() > 2 && ident[ident.size()-1] == ')' ) {
+    if ( name.size() > 2 && name[name.size()-1] == ')' ) {
       // request string:
-      int n = ident.rfind( '(' );
+      int n = name.rfind( '(' );
       if ( n >= 0 ) {
-	request = ident.mid( n+1, ident.size()-2 );
-	ident.erase( n-1 );
-	ident.strip();
+	request = name.mid( n+1, name.size()-2 );
+	name.erase( n-1 );
+	name.strip();
 	request.strip();
       }
     }
     Str value = s.value( 0, assignment );
     if ( value.empty() ) {
       // no value: label
-      if ( ident.size() > 2 && ident[0] == '-' && ident[ident.size()-1] == '-' ) {
+      if ( name.size() > 2 && name[0] == '-' && name[name.size()-1] == '-' ) {
 	// label with tab style:
-	*this = Parameter( ident.substr( 1, ident.size()-2 ), true );
+	*this = Parameter( name.substr( 1, name.size()-2 ), true );
       }
       else
-	*this = Parameter( ident, false );
+	*this = Parameter( name, false );
     }
     else {
       // set parameter with value:
-      clear( ident, request, NoType );
+      clear( name, request, NoType );
       assign( value );
       setToDefault();
     }
@@ -3255,10 +3256,10 @@ bool Parameter::read( const Str &s, const string &assignment )
 }
 
 
-bool Parameter::read( const string &ident, const string &value )
+bool Parameter::read( const string &name, const string &value )
 {
   Warning = "";
-  if ( *this == ident ) {
+  if ( *this == name ) {
     assign( value );
     return true;
   }
@@ -3270,7 +3271,7 @@ bool Parameter::read( const string &ident, const string &value )
 bool Parameter::read( const Parameter &p )
 {
   Warning = "";
-  if ( ident() == p.ident() ) {
+  if ( name() == p.name() ) {
     if ( isDate() && p.isDate() ) {
       if ( ! Year.empty() && ! p.Year.empty() &&
 	   ( Year[0] != p.Year[0] || Month[0] != p.Month[0] || Day[0] != p.Day[0] ) )

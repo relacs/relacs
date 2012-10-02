@@ -33,7 +33,7 @@ NeuronModels::NeuronModels( void )
   : Model( "NeuronModels", "ephys", "Jan Benda", "1.0", "Jan 10, 2006" )
 {
   addOptions();
-  addTypeStyle( OptWidget::Bold, Parameter::Label );
+  addValueTypeStyle( OptWidget::Bold, Parameter::Label );
   addModels();
   MMCInx = -1;
   MMHCInx = -1;
@@ -192,7 +192,7 @@ void NeuronModels::add( SpikingNeuron *model, const string &title )
   model->setConfigIdent( "Model: " + model->name() );
   model->setConfigGroup( RELACSPlugin::Plugins );
   model->add();
-  model->addTypeStyle( OptWidget::Bold, Parameter::Label );
+  model->addValueTypeStyle( OptWidget::Bold, Parameter::Label );
   model->unsetNotify();
   Models.push_back( model );
   Titles.push_back( ts );

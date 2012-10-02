@@ -42,19 +42,16 @@ class Options;
 /*! 
 \class Parameter
 \author Jan Benda
-\version 1.0
+\version 2.0
 \brief A Parameter has a name, value and unit.
 
-
-A single parameter has a value, which can be of different types
-(numbers, booleans, dates, times, text, etc., see setType() ).
-The parameter is uniquely identified by its ident-string.
-Number parameters have in addition a unit and a format string,
-which is used to generate pretty formated output.
-This value can be changed by a dialog (as in Options)
-or set to a default value.
-For that purpose, the parameter has a request string, 
-which is used in such dialogs.
+Parameter basically are name-value pairs.  The parameter is uniquely
+identified by its name().  The value can be of different types (number(),
+boolean(), date(), time(), text(), etc., see setValueType() ).  Number
+parameters have in addition a unit() and a format() string, which is used
+to generate pretty formatted output.  The value can be changed by one
+of the setText(), setNumber(), etc. functions or set to a default
+value.
 */
 
 class Parameter 
@@ -62,7 +59,7 @@ class Parameter
 public:
   
     /*! Type of the parameter's value. */
-  enum Type {
+  enum ValueType {
       /*! No type specified yet. */
     NoType=0,
       /*! The parameter's value is a string. */
@@ -104,9 +101,9 @@ public:
   static const long TabLabel = 0x04000000;
 
     /*! Construct a single Parameter. 
-        Use setType() to define the type of the parameter,
+        Use setValueType() to define the type of the parameter,
 	setRequest() to define the request string, which is used
-	for dialogs, setIdent() to give the parameter a unique identifier.
+	for dialogs, setName() to give the parameter a unique name.
         With the set*() functions, the values of the parameter
         can be initialized. */
   Parameter( void );
@@ -114,12 +111,12 @@ public:
   Parameter( const Parameter &p );
     /*! Construct and initialize a single Parameter of type Text.
         Its value an its default value are set to \a strg. */
-  Parameter( const string &ident, const string &request,
+  Parameter( const string &name, const string &request,
 	     const string &strg, int flags=0, int style=0,
 	     Options *parentsection=0 );
     /*! Construct and initialize a single Parameter of type Text.
         Its value an its default value are set to \a strg. */
-  Parameter( const string &ident, const string &request,
+  Parameter( const string &name, const string &request,
 	     const char *strg, int flags=0, int style=0,
 	     Options *parentsection=0 );
     /*! Construct and initialize a single Parameter of type Number. 
@@ -129,7 +126,7 @@ public:
 	\a minimum and \a maximum. 
         The unit of the number is \a interunit. 
 	For output and dialogs \a outputunit is used as unit. */
-  Parameter( const string &ident, const string &request,  
+  Parameter( const string &name, const string &request,  
 	     double number, double error,
 	     double minimum=-MAXDOUBLE, double maximum=MAXDOUBLE, double step=1.0,
 	     const string &internunit="", const string &outputunit="", 
@@ -139,7 +136,7 @@ public:
         Its value and its default value are set to \a number,
 	its standard deviation to \a 0.0.
         The unit of the number is \a unit. */
-  Parameter( const string &ident, const string &request,  
+  Parameter( const string &name, const string &request,  
 	     double number, const string &unit="", 
 	     const string &format="", int flags=0, int style=0,
 	     Options *parentsection=0 );
@@ -151,7 +148,7 @@ public:
 	\a minimum and \a maximum. 
         The unit of the number is \a interunit. 
 	For output and dialogs \a outputunit is used as unit. */
-  Parameter( const string &ident, const string &request,  
+  Parameter( const string &name, const string &request,  
 	     const vector<double> &numbers,
 	     const vector<double> &errors, 
 	     double minimum=-MAXDOUBLE, double maximum=MAXDOUBLE, double step=1.0,
@@ -165,7 +162,7 @@ public:
         \a minimum and \a maximum. 
         The unit of the number is \a interunit. 
 	For output and dialogs \a outputunit is used as unit. */
-  Parameter( const string &ident, const string &request, 
+  Parameter( const string &name, const string &request, 
 	     long number, long error=-1, 
 	     long minimum=LONG_MIN, long maximum=LONG_MAX, long step=1,
 	     const string &internunit="", const string &outputunit="", 
@@ -173,19 +170,19 @@ public:
 	     Options *parentsection=0 );
     /*! Construct and initialize a single Parameter of type Boolean.
         Its value and its default value are set to \a dflt. */
-  Parameter( const string &ident, const string &request,
+  Parameter( const string &name, const string &request,
 	     bool dflt, int flags=0, int style=0,
 	     Options *parentsection=0 );
     /*! Construct and initialize a single Parameter of \a type Date or Time.
         Its value and its default value are set to 
 	\a yearhour, \a monthminutes and \a dayseconds. */
-  Parameter( const string &ident, const string &request, Type type,
+  Parameter( const string &name, const string &request, ValueType type,
 	     int yearhour, int monthminutes, int dayseconds,
 	     int flags=0, int style=0,
 	     Options *parentsection=0 );
     /*! Construct and initialize a single Parameter of type Label.
 	If \a sep is \c true, a Label gets the TabLabel-bit in its style set. */
-  Parameter( const string &ident, bool sep, int flags=0, int style=0,
+  Parameter( const string &name, bool sep, int flags=0, int style=0,
 	     Options *parentsection=0 );
     /*! Load parameter from string \a s using load(). */
   Parameter( const string &s, const string &assignment=":=" );
@@ -195,13 +192,13 @@ public:
   ~Parameter( void );
 
     /*! Clear the parameter.
-        Set the identity string to \a ident, the request string to \a request,
+        Set the identity string to \a name, the request string to \a request,
 	and the type to \a type.
 	The value of the parameter and the default value is cleared.
         If the value of the parameter is changing 
 	then the changedFlag() is set. */
-  Parameter &clear( const string &ident="", const string &request="",
-		    Type type=NoType );
+  Parameter &clear( const string &name="", const string &request="",
+		    ValueType type=NoType );
 
     /*! Copy content of parameter \a p to this.
         If the value of the parameter is changing 
@@ -240,11 +237,11 @@ public:
   Parameter &assign( const string &value );
 
     /*! Returns true if the two Parameters \a p1 and \a p2 are equal,
-        i.e. they have the same identifier. */
+        i.e. they have the same name. */
   friend bool operator==( const Parameter &p1, const Parameter &p2 );
-    /*! Returns true if the Parameter \a p has an identifier 
-        equal to \a ident. */
-  friend bool operator==( const Parameter &p, const string &ident );
+    /*! Returns true if the Parameter \a p has an name 
+        equal to \a name. */
+  friend bool operator==( const Parameter &p, const string &name );
 
     /*! Returns a pointer to the Options where this Parameter belongs to.
         If this Parameter does not belong to an Options, NULL is returned. */
@@ -263,9 +260,9 @@ public:
   Str warning( void ) const;
 
     /*! Returns the identity string. */
-  Str ident( void ) const;
-    /*! Set identity string to \a ident. */
-  Parameter &setIdent( const string &ident );
+  Str name( void ) const;
+    /*! Set identity string to \a name. */
+  Parameter &setName( const string &name );
   
     /*! Returns the request string. */
   Str request( void ) const;
@@ -273,14 +270,14 @@ public:
   Parameter &setRequest( const string &request );
 
     /*! The type of the parameter. */
-  Type type( void ) const;
+  ValueType valueType( void ) const;
     /*! True if one of the bits specified by \a mask corresponds to the
         parameter's type, or \a mask equals zero,
 	or \a mask is negative and the parameter's type
 	is not contained in abs( mask ). */
-  bool types( int mask ) const;
-    /*! Set type of parameter to \a pt. */
-  Parameter &setType( Type pt );
+  bool valueTypes( int mask ) const;
+    /*! Set type of parameter to \a typex. */
+  Parameter &setValueType( ValueType type );
 
     /*! The flags of the parameter. */
   int flags( void ) const;
@@ -367,7 +364,7 @@ public:
 	%y: last two digits of year (0..99),
 	%Y: year (1970...).
         %u is the unit string,
-        %i is the identifier string, and
+        %i is the name (identifier) string, and
         %r is the request string.
         %T is the type of the parameter as a human readable string.
  	If \a format is empty, the format set by setFormat() is used.
@@ -389,7 +386,7 @@ public:
 	then the changedFlag() is set. */
   Parameter &setText( const string &strg );
     /*! Set value of text parameter to the one of \a p,
-        if \a this and \a p are both of type() Text.
+        if \a this and \a p are both of valueType() Text.
 	If the value of the parameter is changing 
 	then the changedFlag() is set. */
   Parameter &setText( const Parameter &p );
@@ -498,7 +495,7 @@ public:
 				const string &unit="" )
     { return setNumbers( numbers, -1.0, unit ); };
     /*! Set number value, error, and unit to the ones of \a p,
-        if \a this and \a p are both of type() Number.
+        if \a this and \a p are both of valueType() Number.
         If the value of the parameter is changing 
 	then the changedFlag() is set. */
   Parameter &setNumber( const Parameter &p );
@@ -550,7 +547,7 @@ public:
   inline Parameter &setInteger( long number, const string &unit="" )
     { return setInteger( number, -1, unit ); };
     /*! Set integer value, error, and unit to the ones of \a p,
-        if \a this and \a p are both of type() Integer.
+        if \a this and \a p are both of valueType() Integer.
         If the value of the parameter is changing 
 	then the changedFlag() is set. */
   Parameter &setInteger( const Parameter &p );
@@ -674,7 +671,7 @@ public:
 	then the changedFlag() is set. */
   Parameter &setBoolean( bool b );
     /*! Set boolean value to the one of \a p,
-        if \a this and \a p are both of type() Boolean.
+        if \a this and \a p are both of valueType() Boolean.
         If the value of the parameter is changing 
 	then the changedFlag() is set. */
   Parameter &setBoolean( const Parameter &p );
@@ -726,7 +723,7 @@ public:
 	then the changedFlag() is set. */
   Parameter &setCurrentDate( void );
     /*! Set date value to the one of \a p,
-        if \a this and \a p are both of type() Date.
+        if \a this and \a p are both of valueType() Date.
         If the value of the parameter is changing 
 	then the changedFlag() is set. */
   Parameter &setDate( const Parameter &p );
@@ -797,7 +794,7 @@ public:
 	then the changedFlag() is set. */
   Parameter &setCurrentTime( void );
     /*! Set time value to the one of \a p,
-        if \a this and \a p are both of type() Time.
+        if \a this and \a p are both of valueType() Time.
         If the value of the parameter is changing 
 	then the changedFlag() is set. */
   Parameter &setTime( const Parameter &p );
@@ -829,14 +826,14 @@ public:
 
     /*! True if parameter is of type label (parameter without value). */
   bool isLabel( void ) const;
-    /*! Returns the label, i.e. the identifier. */
-  inline string label( void ) const { return ident(); };
-    /*! Set the label (i.e. identifier string) to \ a label. */
-  inline Parameter &setLabel( const string &label ) { return setIdent( label ); };
+    /*! Returns the label, i.e. the name. */
+  inline string label( void ) const { return name(); };
+    /*! Set the label (i.e. name) to \ a label. */
+  inline Parameter &setLabel( const string &label ) { return setName( label ); };
 
     /*! True if parameter is of no type. */
   bool isNotype( void ) const;
-    /*! True if parameter is of no type and has no indentifier string. */
+    /*! True if parameter is of no type and has no name. */
   bool empty( void ) const;
   
     /*! Set value of parameter to its default. */
@@ -901,12 +898,12 @@ public:
         \sa setActivation(), activationNumber(), activationComparison() */
   bool testActivation( double value, double tol=1e-8 );
 
-    /*! Return string in the format "ident: value".
+    /*! Return string in the format "name: value".
         If \a detailed equals \c true the request string is written, too.
         If \a firstonly is \c true and the ListFlag is not set,
         only the first value of the Parameter is written. */
   string save( bool detailed=false, bool firstonly=false ) const;
-    /*! Write parameter to stream \a str in the format "PatternIdent: Value".
+    /*! Write parameter to stream \a str in the format "PatternName: Value".
         If \a detailed equals \c true the request string is written, too.If \a firstonly is \c true and the ListFlag is not set,
         only the first value of the Parameter is written. */
   ostream &save( ostream &str, int width=0, bool detailed=false,
@@ -940,20 +937,20 @@ public:
     /*! Load parameter from a line get from stream \a str using load(). */
   friend istream &operator>> ( istream &str, Parameter &p );
 
-    /*! Read parameter value from string \a s if it has the same identifier.
+    /*! Read parameter value from string \a s if it has the same name.
         Uses assign() to assign the value of the parameter.
         Returns true if a value was assigned.
         If the value of the parameter is changing 
 	then the changedFlag() is set. */
   bool read( const Str &s, const string &assignment=":=" );
     /*! Read parameter value from string \a value
-        if \a ident equals the parameters identifier.
+        if \a name equals the parameters name.
         Uses assign() to assign the value of the parameter.
         Returns true if a value was assigned.
         If the value of the parameter is changing 
 	then the changedFlag() is set. */
-  bool read( const string &ident, const string &value );
-    /*! Read parameter value from \a p if it has the same identifier.
+  bool read( const string &name, const string &value );
+    /*! Read parameter value from \a p if it has the same name.
         Numbers and Errors are converted from \a p's unit to the
 	internal unit of the parameter.
         Returns true if a value was assigned.
@@ -975,12 +972,12 @@ private:
     /*! A pointer to the Options this parameter belongs to. */
   Options *ParentSection;
 
-    /*! Identifier string of the parameter. */
-  Str Ident;
-    /*! Request string for the Options::dialog(). */
+    /*! Name string of the parameter. */
+  Str Name;
+    /*! Request string for a dialog. */
   Str Request;
-    /*! Specifies the type of the parameter. */
-  Type PType;
+    /*! Specifies the type of the parameter's value. */
+  ValueType VType;
     /*! Set some freely defineable flags. */
   int Flags;
     /*! Some flags defining the style how the parameter is displayed. */

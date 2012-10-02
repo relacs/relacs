@@ -135,7 +135,7 @@ FeedForwardNetwork::FeedForwardNetwork( void )
   addLabel( "Setup" );
   addSelection("rec_curr","record currents","yes|no");
   
-  addTypeStyle( OptWidget::TabLabel, Parameter::Label );
+  addValueTypeStyle( OptWidget::TabLabel, Parameter::Label );
   
   P.clear();
   P.lock();

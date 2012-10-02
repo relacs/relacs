@@ -66,7 +66,7 @@ SAM::SAM( void )
   addNumber( "before", "Spikes recorded before stimulus", Before, 0.0, 1000.0, 0.005, "seconds", "ms" );
   addNumber( "after", "Spikes recorded after stimulus", After, 0.0, 1000.0, 0.005, "seconds", "ms" );
   addBoolean( "adjust", "Adjust input gain?", true );
-  addTypeStyle( OptWidget::TabLabel, Parameter::Label );
+  addValueTypeStyle( OptWidget::TabLabel, Parameter::Label );
   
   // variables:
   Signal = 0;

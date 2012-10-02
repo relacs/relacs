@@ -293,7 +293,7 @@ public:
         Otherwise, accept() has to be called in order
 	to apply the changes to the Options \a o.
         The standard layout \a style = 0 puts each option into a separate line.
-        If \a style = 1 then the option's identifier is in one line
+        If \a style = 1 then the option's name is in one line
         and the options value and unit is in the following line.
         \a mutex is a mutex that is used by OptWidget to lock
         access to the options \a o while they are accessed from OptWidget functions.
@@ -412,14 +412,14 @@ public slots:
         \sa reset(), accept(), setMutex() */
   void resetDefault( void );
 
-    /*! Read out the value of the option with identifier string \a ident
+    /*! Read out the value of the option with name \a name
         and update the input field accordingly.
 	Can be called from any thread.
 	If a mutex was provided it is locked while the options
 	are accessed.
 	In a multithreaded program this is usually after this function returns.
         \sa updateValues(), updateSettings(), setMutex() */
-  void updateValue( const string &ident );
+  void updateValue( const string &name );
     /*! Read out the values of all options 
         and update their input fields accordingly.
 	If a mutex was provided it is locked while the options
@@ -435,13 +435,13 @@ public slots:
         \sa updateValue(), updateSettings(), setMutex() */
   void updateValues( int flag );
     /*! Read out the value, range, stepsize, and unit
-        of the option with identifier string \a ident
+        of the option with name \a name
         and update the input field accordingly.
 	If a mutex was provided it is locked while the options
 	are accessed.
 	In a multithreaded program this is usually after this function returns.
         \sa updateValue(), updateValues(), setMutex() */
-  void updateSettings( const string &ident );
+  void updateSettings( const string &name );
     /*! Read out the value, range, stepsize, and unit
         of all options and update their input fields accordingly.
 	If a mutex was provided it is locked while the options

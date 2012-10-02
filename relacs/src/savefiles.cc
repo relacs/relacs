@@ -710,7 +710,7 @@ void SaveFiles::saveRePro( void )
   if ( ReProData ) {
 
     ReProSettings.setFlags( 0 );
-    ReProSettings.setTypeFlags( 1, -Parameter::Label );
+    ReProSettings.setValueTypeFlags( 1, -Parameter::Label );
     
     // stimulus indices file:
     if ( SF != 0 && saving() ) {
@@ -1017,7 +1017,7 @@ void SaveFiles::createStimulusFile( const InList &traces,
       StimulusKey.addLabel( "data" );
       const Options &data = *this;
       for( int k=0; k<data.size(); k++ )
-	StimulusKey.addNumber( data[k].ident(), data[k].outUnit(), data[k].format() );
+	StimulusKey.addNumber( data[k].name(), data[k].outUnit(), data[k].format() );
     }
     unlock();
     StimulusKey.addLabel( "stimulus" );
