@@ -1202,23 +1202,32 @@ public:
   Parameter &setLabel( const string &name, const string &label );
 
     /*! Add a new section of Options to the end of the sections list.
+        The new section is named \a name and is of the optional
+	type \a type.
         Subsequent calls to addText(), addNumber(), etc. add new Parameter
 	to the added section.
         \sa addSubSection(), addSubSubSection() */
-  Options &addSection( const string &name, int style=0 );
+  Options &addSection( const string &name, const string &type="",
+		       int style=0 );
     /*! Add a new subsection of Options to the last section.
+        The new subsection is named \a name and is of the optional
+	type \a type.
         Subsequent calls to addText(), addNumber(), etc. add new Parameter
 	to the added subsection.
         \note You can only add a subsection after having added a section!
         \sa addSection(), addSubSubSection() */
-  Options &addSubSection( const string &name, int style=0 );
+  Options &addSubSection( const string &name, const string &type="",
+			  int style=0 );
     /*! Add a new subsubsection of Options to the last subsection
         of the last section.
+        The new subsubsection is named \a name and is of the optional
+	type \a type.
         Subsequent calls to addText(), addNumber(), etc. add new Parameter
 	to the added subsubsection.
         \note You can only add a subsubsection after having added a subsection!
         \sa addSection(), addSubSection() */
-  Options &addSubSubSection( const string &name, int style=0 );
+  Options &addSubSubSection( const string &name, const string &type="",
+			     int style=0 );
 
     /*! Set value of option with name equal to \a name
         to its default. */

@@ -21,6 +21,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <fstream>
 #include <relacs/options.h>
 using namespace relacs;
 
@@ -39,14 +40,14 @@ int main( int argc, char *argv[] )
   opt.addTime( "recordingtime", 16, 42, 13 );
   opt.insertNumber( "pause", "repeats", "Pause between Signals",
 		    0.1, 0.01, 1000.0, 0.01, "seconds", "ms", "%5.1f" );
-  opt.addSection( "Analysis" );
+  opt.addSection( "Analysis", "analysis/basics" );
   opt.addNumber( "win", "Length of analysis window",
 		 0.1, 0.01, 1000.0, 0.01, "seconds", "ms" );
   opt.addBoolean( "type", "Full analysis", true );
   opt.addText( "Nasty |x|>1", "some special value" );
   opt.addSection( "Results" );
   opt.addInteger( "numres", "Number of results reported", 7 );
-  opt.addSubSection( "Color" );
+  opt.addSubSection( "Color", "color/rgb" );
   opt.addSelection( "background", "Background color", "red|green|blue" );
   opt.addText( "foreground", "Foreground color", "" );
   opt.addSubSection( "Animal" );
@@ -57,7 +58,7 @@ int main( int argc, char *argv[] )
   cout << '\n';
   opt.saveXML( cout );
   cout << '\n';
-  cout << opt;
+  opt.save( cout, "", 0, true );
   cout << '\n';
 
   cout << "Value of parameter 'comment': " << opt.text( "comment|repeats" ) << '\n';
@@ -73,6 +74,16 @@ int main( int argc, char *argv[] )
   cout << "Value of parameter 'Results>mammal 0': *" << opt.text( "Results>mammal", 0 ) << "*\n";
   cout << "Value of parameter 'Results>mammal 1': *" << opt.text( "Results>mammal", 1 ) << "*\n";
   cout << "Value of parameter 'Results>mammal 2': *" << opt.text( "Results>mammal", 2 ) << "*\n";
+  cout << '\n';
+
+  ofstream ff( "tmp.dat" );
+  opt.save( ff, "", 0, true );
+  ff.close();
+
+  Options opt2;
+  ifstream sf( "tmp.dat" );
+  opt2.load( sf );
+  opt2.save( cout, "", 0, true );
   cout << '\n';
 
   return 0;

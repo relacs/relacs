@@ -31,6 +31,7 @@ Parameter Options::Dummy = Parameter();
 Options::Options( void )
   : ParentSection( 0 ),
     Name( "" ),
+    Type( "" ),
     Opt(),
     Secs(),
     AddOpts( this ),
@@ -44,6 +45,7 @@ Options::Options( void )
 Options::Options( const Options &o )
   : ParentSection( 0 ),
     Name( "" ),
+    Type( "" ),
     Opt(),
     Secs(),
     AddOpts( this ),
@@ -58,6 +60,7 @@ Options::Options( const Options &o )
 Options::Options( const Options &o, int flags )
   : ParentSection( 0 ),
     Name( "" ),
+    Type( "" ),
     Opt(),
     Secs(),
     AddOpts( this ),
@@ -73,6 +76,7 @@ Options::Options( const Str &opttxt, const string &assignment,
 		  const string &separator )
   : ParentSection( 0 ),
     Name( "" ),
+    Type( "" ),
     Opt(),
     Secs(),
     AddOpts( this ),
@@ -87,6 +91,7 @@ Options::Options( const Str &opttxt, const string &assignment,
 Options::Options( const StrQueue &sq, const string &assignment )
   : ParentSection( 0 ),
     Name( "" ),
+    Type( "" ),
     Opt(),
     Secs(),
     AddOpts( this ),
@@ -103,6 +108,7 @@ Options::Options( istream &str, const string &assignment,
 		  const string &stop, string *line )
   : ParentSection( 0 ),
     Name( "" ),
+    Type( "" ),
     Opt(),
     Secs(),
     AddOpts( this ),
@@ -132,6 +138,8 @@ Options &Options::assign( const Options &o )
   if ( this == &o ) 
     return *this;
 
+  Name = o.Name;
+  Type = o.Type;
   ParentSection = o.ParentSection;
   Opt = o.Opt;
   Secs = o.Secs;
@@ -365,6 +373,18 @@ string Options::name( void ) const
 void Options::setName( const string &name )
 {
   Name = name;
+}
+
+
+string Options::type( void ) const
+{
+  return Type;
+}
+
+
+void Options::setType( const string &type )
+{
+  Type = type;
 }
 
 
@@ -3098,23 +3118,27 @@ Parameter &Options::setLabel( const string &name, const string &label )
 }
 
 
-Options &Options::addSection( const string &name, int style )
+Options &Options::addSection( const string &name, const string &type,
+			      int style )
 {
   Secs.push_back( Options() );
   Secs.back().setName( name );
+  Secs.back().setType( type );
   Secs.back().unsetNotify();
   AddOpts = &Secs.back();
   return Secs.back();
 }
 
 
-Options &Options::addSubSection( const string &name, int style )
+Options &Options::addSubSection( const string &name, const string &type,
+				 int style )
 {
   if ( Secs.empty() )
     Warning += "Cannot add a subsection without having a section";
 
   Secs.back().Secs.push_back( Options() );
   Secs.back().Secs.back().setName( name );
+  Secs.back().Secs.back().setType( type );
   Secs.back().Secs.back().unsetNotify();
   AddOpts = &Secs.back().Secs.back();
 #ifndef NDEBUG
@@ -3125,7 +3149,8 @@ Options &Options::addSubSection( const string &name, int style )
 }
 
 
-Options &Options::addSubSubSection( const string &name, int style )
+Options &Options::addSubSubSection( const string &name, const string &type,
+				    int style )
 {
   if ( Secs.empty() )
     Warning += "Cannot add a subsubsection without having a section";
@@ -3134,6 +3159,7 @@ Options &Options::addSubSubSection( const string &name, int style )
 
   Secs.back().Secs.back().Secs.push_back( Options() );
   Secs.back().Secs.back().Secs.back().setName( name );
+  Secs.back().Secs.back().Secs.back().setType( type );
   Secs.back().Secs.back().Secs.back().unsetNotify();
   AddOpts = &Secs.back().Secs.back().Secs.back();
 #ifndef NDEBUG
@@ -3405,6 +3431,7 @@ Options &Options::clear( void )
 {
   Warning = "";
   Opt.clear();
+  Secs.clear();
   return *this;
 }
 
@@ -3646,8 +3673,11 @@ ostream &Options::save( ostream &str, const string &start,
   string starts = start;
 
   // write options to file:
-  if ( ! name().empty() ) {
-    str << starts << name() << ":\n";
+  if ( ! name().empty() || ! type().empty() ) {
+    str << starts << ( name().empty() ? type() : name() );
+    if ( ! name().empty() && ! type().empty() && detailed )
+      str << " (" << type() << ")";
+    str << ":\n";
     starts += "    ";
   }
   string pattern = "";
@@ -3685,6 +3715,7 @@ ostream &Options::save( ostream &str, const string &textformat,
     Str f( labelformat );
     f.format( name(), 'i' );
     f.format( name(), 's' );
+    f.format( type(), 'T' );
     str << starts << f << '\n';
     starts += "    ";
   }
@@ -3714,8 +3745,12 @@ string Options::save( int selectmask, bool firstonly ) const
 
   // write options to string:
   string str;
-  if ( ! name().empty() )
-    str += name() + ": { ";
+  if ( ! name().empty() || ! type().empty() ) {
+    str += ( name().empty() ? type() : name() );
+    if ( ! name().empty() && ! type().empty() )
+      str += " (" + type() + ")";
+    str += ": { ";
+  }
   int n=0;
   string pattern = "";
   for ( const_iterator pp = begin(); pp != end(); ++pp ) {
@@ -3764,8 +3799,10 @@ ostream &Options::saveXML( ostream &str, int selectmask, int level,
 
   if ( ! name().empty() ) {
     str << indstr1 << "<section>\n";
-    //    str << indstr2 << "  <type> valueType() </type>\n";
-    str << indstr2 << "<name>" << name() << "</name>\n";
+    if ( ! type().empty() )
+      str << indstr2 << "<type>" << type() << "</type>\n";
+    if ( ! name().empty() )
+      str << indstr2 << "<name>" << name() << "</name>\n";
     level++;
   }
   for ( const_iterator pp = begin(); pp != end(); ++pp ) {
