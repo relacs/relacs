@@ -260,20 +260,20 @@ public:
 
     /*! Returns the warning messages of the last called 
         Parameter member-function. */
-  Str warning( void ) const { return Warning; };
+  Str warning( void ) const;
 
     /*! Returns the identity string. */
-  Str ident( void ) const { return Ident; };
+  Str ident( void ) const;
     /*! Set identity string to \a ident. */
   Parameter &setIdent( const string &ident );
   
     /*! Returns the request string. */
-  Str request( void ) const { return Request; };
+  Str request( void ) const;
     /*! Set request string to \a request. */
   Parameter &setRequest( const string &request );
 
     /*! The type of the parameter. */
-  Type type( void ) const { return PType; };
+  Type type( void ) const;
     /*! True if one of the bits specified by \a mask corresponds to the
         parameter's type, or \a mask equals zero,
 	or \a mask is negative and the parameter's type
@@ -283,7 +283,7 @@ public:
   Parameter &setType( Type pt );
 
     /*! The flags of the parameter. */
-  int flags( void ) const { return Flags; };
+  int flags( void ) const;
     /*! True if one of the bits specified by \a selectflag is set 
         in the parameter's flags, or \a selectflag equals zero,
 	or \a selectflag is negative and the parameter's value differs
@@ -303,13 +303,13 @@ public:
     /*! The flag that is used to mark options whose value has been changed.
         It is preset to a constant value (16384) and
 	cannot be changed by the user. */
-  static int changedFlag( void ) { return ChangedFlag; };
+  static int changedFlag( void );
     /*! Return \c true if the changedFlag() is set,
         i.e. whose value has been changed. */
   bool changed( void ) const;
 
     /*! The style of the parameter. */
-  int style( void ) const { return Style; };
+  int style( void ) const;
     /*! Set style of parameter to \a style. */
   Parameter &setStyle( int style );
     /*! Add the bits specified by \a style to the parameter's style. */

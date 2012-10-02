@@ -1391,15 +1391,15 @@ public:
 		    int indent=4 ) const;
 
     /*! Read options from string \a opttxt of the form 
-        "parameter1=x; parameter2=y; parameter3=z; ...".
+        "parameter1: x, parameter2: y, parameter3: z, ...".
         If the parameters 'parameter1', 'parameter2', ... match the
         identifier of an option, its value is set to x, y, z, ... respectively,
-	and \a flag is added to its flags. */
+	and \a flag is added to its flags, if \a flag is not 0. */
   Options &read( const string &opttxt, int flag,
-		 const string &assignment=":=", const string &separator=";",
+		 const string &assignment=":=", const string &separator=",;",
 		 string *pattern=0 );
   Options &read( const string &opttxt, const string &assignment=":=",
-		 const string &separator=";", string *pattern=0 )
+		 const string &separator=",;", string *pattern=0 )
     { return read( opttxt, 0, assignment, separator, pattern ); };
     /*! Read a single line from stream \a str and set options. */
   friend istream &operator>> ( istream &str, Options &o );

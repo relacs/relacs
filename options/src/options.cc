@@ -3102,6 +3102,7 @@ Options &Options::addSection( const string &name, int style )
 {
   Secs.push_back( Options() );
   Secs.back().setName( name );
+  Secs.back().unsetNotify();
   AddOpts = &Secs.back();
   return Secs.back();
 }
@@ -3114,6 +3115,7 @@ Options &Options::addSubSection( const string &name, int style )
 
   Secs.back().Secs.push_back( Options() );
   Secs.back().Secs.back().setName( name );
+  Secs.back().Secs.back().unsetNotify();
   AddOpts = &Secs.back().Secs.back();
 #ifndef NDEBUG
   if ( !Warning.empty() )
@@ -3132,6 +3134,7 @@ Options &Options::addSubSubSection( const string &name, int style )
 
   Secs.back().Secs.back().Secs.push_back( Options() );
   Secs.back().Secs.back().Secs.back().setName( name );
+  Secs.back().Secs.back().Secs.back().unsetNotify();
   AddOpts = &Secs.back().Secs.back().Secs.back();
 #ifndef NDEBUG
   if ( !Warning.empty() )
@@ -3755,10 +3758,29 @@ ostream &operator<< ( ostream &str, const Options &o )
 ostream &Options::saveXML( ostream &str, int selectmask, int level,
 			   int indent ) const
 {
+  string indstr1( level*indent, ' ' );
+  string indstr2( indstr1 );
+  indstr2 += string( indent, ' ' );
+
+  if ( ! name().empty() ) {
+    str << indstr1 << "<section>\n";
+    //    str << indstr2 << "  <type> type() </type>\n";
+    str << indstr2 << "<name>" << name() << "</name>\n";
+    level++;
+  }
   for ( const_iterator pp = begin(); pp != end(); ++pp ) {
     if ( (*pp).flags( selectmask ) ) {
       (*pp).saveXML( str, level, indent );
     }
+  }
+  for ( const_section_iterator sp = sectionsBegin();
+	sp != sectionsEnd();
+	++sp ) {
+    if ( sp->size( selectmask ) > 0 )
+      (*sp).saveXML( str, selectmask, level, indent );
+  }
+  if ( ! name().empty() ) {
+    str << indstr1 << "</section>\n";
   }
   return str;
 }
@@ -3773,9 +3795,12 @@ Options &Options::read( const string &opttxt, int flag,
   CallNotify = false;
 
   // split up opttxt:
-  StrQueue sq( Str( opttxt ).stripped().preventLast( separator ), separator );
+  StrQueue sq( Str( opttxt ).stripped(), separator );
 
   for ( StrQueue::iterator sp=sq.begin(); sp != sq.end(); ++sp ) {
+
+    if ( sp->empty() )
+      continue;
 
     // get identifier:
     string ident = (*sp).ident( 0, assignment, Str::WhiteSpace + '-' );
@@ -3784,10 +3809,9 @@ Options &Options::read( const string &opttxt, int flag,
       // set value:
       string error = Warning;
       Parameter *pp = assign( pattern == 0 ? ident : *pattern + ident, value );
-      // set style:
-      if ( pp != 0 && flag != 0 ) {
+      // set flags:
+      if ( pp != 0 && flag != 0 )
 	pp->addFlags( flag );
-      }
       if ( pattern != 0 && pp != 0 &&
 	   (*pp).isLabel() && ( (*pp).style() & Parameter::ReadPatternLabel ) )
 	*pattern = (*pp).ident() + '>';

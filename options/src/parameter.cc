@@ -557,6 +557,18 @@ bool Parameter::nonDefault( void ) const
 }
 
 
+Str Parameter::warning( void ) const
+{
+  return Warning;
+}
+
+
+Str Parameter::ident( void ) const
+{
+  return Ident;
+}
+
+
 Parameter &Parameter::setIdent( const string &ident )
 {
   Ident = ident;
@@ -564,10 +576,22 @@ Parameter &Parameter::setIdent( const string &ident )
 }
 
 
+Str Parameter::request( void ) const
+{
+  return Request;
+}
+
+
 Parameter &Parameter::setRequest( const string &request )
 {
   Request = request;
   return *this;
+}
+
+
+Parameter::Type Parameter::type( void ) const
+{
+  return PType;
 }
 
 
@@ -583,6 +607,12 @@ Parameter &Parameter::setType( Type pt )
 {
   PType = pt;
   return *this;
+}
+
+
+int Parameter::flags( void ) const
+{
+  return Flags;
 }
 
 
@@ -623,9 +653,21 @@ Parameter &Parameter::clearFlags( void )
 }
 
 
+int Parameter::changedFlag( void )
+{
+  return ChangedFlag;
+}
+
+
 bool Parameter::changed( void ) const
 {
   return ( Flags & ChangedFlag );
+}
+
+
+int Parameter::style( void ) const
+{
+  return Style;
 }
 
 
@@ -3002,7 +3044,7 @@ ostream &Parameter::save( ostream &str, int width, bool detailed,
 {
   if ( isLabel() ) {
     if ( ( style() & TabLabel ) > 0 )
-      str << setw( 0 ) << Str( '-', 5 ) << " " << Str( label() + " ", -64, '-' );
+      str << '-' << label() << '-';
     else
       str << setw( 0 ) << label();
   }
@@ -3162,77 +3204,36 @@ Parameter &Parameter::load( Str s, const string &assignment )
   // clear parameter:
   clear();
 
-  // first character of identifier:
-  int n = s.findFirstNot( Str::WhiteSpace );
-  if ( n >= 0 ) {
-    // find colon:
-    int m = s.findFirst( assignment, n );
-    if ( m >= n ) {
-      // last character of identifier:
-      int l = n;
-      if ( m > n ) {
-	l = s.findLastNot( Str::WhiteSpace, m-1 );
-	if ( l < n )
-	  l = m;
-	else
-	  l++;
+  Str ident = s.ident( 0, assignment );
+  Str request = "";
+  if ( ident.empty() )
+    Warning += "\"" + s.stripped() + "\": missing identifier! ";
+  else {
+    if ( ident.size() > 2 && ident[ident.size()-1] == ')' ) {
+      // request string:
+      int n = ident.rfind( '(' );
+      if ( n >= 0 ) {
+	request = ident.mid( n+1, ident.size()-2 );
+	ident.erase( n-1 );
+	ident.strip();
+	request.strip();
       }
-      Str ident;
-      Str request;
-      if ( l <= n )
-	Warning += "\"" + s.stripped() + "\": missing identifier! ";
-      else {
-	ident = s.substr( n, l-n );
-	if ( ident.size() > 2 && ident[ident.size()-1] == ')' ) {
-	  // request string:
-	  n = ident.rfind( '(' );
-	  if ( n >= 0 ) {
-	    request = ident.mid( n+1, ident.size()-2 );
-	    ident.erase( n-1 );
-	  }
-	}
-      }
-      ident.strip();
-      request.strip();
-
-      // first character of value:
-      n = s.findFirstNot( Str::WhiteSpace, m+1 );
-      if ( n <= m )
-	n = m+1;
-      // last character of value:
-      if ( n < s.size() && s[n] == '"' ) {
-	n++;
-	m = s.find( '"', n );
-	if ( m<0 )
-	  m = s.size();
+    }
+    Str value = s.value( 0, assignment );
+    if ( value.empty() ) {
+      // no value: label
+      if ( ident.size() > 2 && ident[0] == '-' && ident[ident.size()-1] == '-' ) {
+	// label with tab style:
+	*this = Parameter( ident.substr( 1, ident.size()-2 ), true );
       }
       else
-	m = s.findLastNot( Str::WhiteSpace )+1;
-      string val = m >= n ? s.substr( n, m-n ) : "";
-      // set parameter:
-      clear( ident, request, NoType );
-      assign( val );
-      setToDefault();
+	*this = Parameter( ident, false );
     }
     else {
-      // no value: label
-      if ( s[n] == '-' ) {
-	// label with tab style:
-	int m = s.findFirstNot( " -", n );
-	n = s.findLastNot( Str::WhiteSpace + "-" );
-	string val = "";
-	if ( n >= m && m >= 0 )
-	  val = s.substr( m, n+1-m );
-	*this = Parameter( val, true );
-      }
-      else {
-	// label:
-	int m = s.findLastNot( Str::WhiteSpace );
-	string val = "";
-	if ( m >= n )
-	  val = s.substr( n, m+1-n );
-	*this = Parameter( val, false );
-      }
+      // set parameter with value:
+      clear( ident, request, NoType );
+      assign( value );
+      setToDefault();
     }
   }
 

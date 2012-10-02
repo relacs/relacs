@@ -3313,8 +3313,7 @@ int Str::findBracket( int index, const string &brackets,
 }
 
 
-Str &Str::stripBracket( const string &brackets, 
-			      const string &comment )
+Str &Str::stripBracket( const string &brackets, const string &comment )
 {
   if ( comment.size() > 0 ) {
     int l = find( comment );
@@ -3336,8 +3335,7 @@ Str &Str::stripBracket( const string &brackets,
 }
 
 
-Str Str::strippedBracket( const string &brackets, 
-				const string &comment ) const
+Str Str::strippedBracket( const string &brackets, const string &comment ) const
 {
   Str s( *this );
   return s.stripBracket( brackets, comment );

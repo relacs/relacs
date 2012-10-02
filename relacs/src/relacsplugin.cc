@@ -1357,7 +1357,7 @@ void RELACSPlugin::saveDoxygenOptions( void )
 		 "- \\c %i=%b: %r (\\c %T)",
 		 "- \\c %i=%04Y-%02m-%02d: %r (\\c %T)",
 		 "- \\c %i=%02H:%02M:%02S: %r (\\c %T)",
-		 "- %i" );
+		 "- \\c %i" );
 }
 
 

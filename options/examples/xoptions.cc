@@ -55,6 +55,8 @@ int main( int argc, char *argv[] )
 
   cout << opt.save() << '\n';
   cout << '\n';
+  opt.saveXML( cout );
+  cout << '\n';
   cout << opt;
   cout << '\n';
 
