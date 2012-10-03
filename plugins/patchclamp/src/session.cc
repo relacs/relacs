@@ -99,7 +99,7 @@ void Session::config( void )
   mo.addNumber( "ithreshon", "Threshold for onset spikes", 0.0, -1000.0, 1000.0, 1.0, "nA", "nA", "%.3f", MetaDataReset );
   mo.addNumber( "ithreshss", "Threshold for periodic firing", 0.0, -1000.0, 1000.0, 1.0, "nA", "nA", "%.3f", MetaDataReset );
 
-  mo.addStyle( OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack, MetaDataDisplay );
+  mo.addStyles( OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack, MetaDataDisplay );
   metaData().delSaveFlags( MetaData::dialogFlag() + MetaData::presetDialogFlag() );
   metaData().addSaveFlags( MetaData::configFlag() + MetaDataRecordingSection::standardFlag() + MetaDataSave );
 

@@ -85,15 +85,18 @@ public:
     /*! Copy Options \a o that have flags() & \a flags greater than zero
         to this. If \a flags equals zero, all options are copied. */
   Options( const Options &o, int flags );
-  /*! Create options from string \a opttxt.
-      See load( const Str &opttxt, const string &separator ) for details. */
+    /*! Constructs an empty Options with name \a name, type string \a type,
+        flag \a flags, and style flag \a style. */
+  Options( const string &name, const string &type, int flags, int style );
+    /*! Create options from string \a opttxt.
+        See load( const Str &opttxt, const string &separator ) for details. */
   Options( const Str &opttxt, const string &assignment=":=",
 	   const string &separator=";" );
-  /*! Create options from strings \a sq.
-      See load( const StrQueue &sq ) for details. */
+    /*! Create options from strings \a sq.
+        See load( const StrQueue &sq ) for details. */
   Options( const StrQueue &sq, const string &assignment=":=" );
-  /*! Create options from input stream \a str.
-      See load( istream &str, const string &comment, const string &stop, string *line ) for details. */
+     /*! Create options from input stream \a str.
+         See load( istream &str, const string &comment, const string &stop, string *line ) for details. */
   Options( istream &str, const string &assignment=":=",
 	   const string &comment="", 
 	   const string &stop="", string *line=0 );
@@ -177,12 +180,44 @@ public:
     /*! The name of this section of options. */
   string name( void ) const;
     /*! Set the name of this section of options to \a name. */
-  void setName( const string &name );
+  Options &setName( const string &name );
 
-    /*! The type of this section of options. */
+    /*! The type specifyier of this section of options. */
   string type( void ) const;
-    /*! Set the type of this section of options to \a type. */
-  void setType( const string &type );
+    /*! Set the type specifier of this section of options to \a type. */
+  Options &setType( const string &type );
+
+    /*! The flag for this secion of options. */
+  int flag( void ) const;
+    /*! True if one of the bits specified by \a selectflag is set 
+        in the Option's flag(), or \a selectflag equals zero.. */
+  bool flag( int selectflag ) const;
+    /*! Set the flag of this section of options to \a flag. */
+  Options &setFlag( int flag );
+    /*! Add the bits specified by \a flag to the flag
+        of this section of options. */
+  Options &addFlag( int flag );
+    /*! Clear the bits specified by \a flag in the flag
+        of this section of options. */
+  Options &delFlag( int flag );
+    /*! Set all bits of the flag of this section of options,
+        i.e. set it to 0xffffff. */
+  Options &clearFlag( void );
+
+    /*! The style flag for name() and type() of this secion of options. */
+  int style( void ) const;
+    /*! Set the style flag for name() and type()
+        of this section of options to \a style. */
+  Options &setStyle( int style );
+    /*! Add the bits specified by \a style in the style flag
+        for name() and type() of this section of options. */
+  Options &addStyle( int style );
+    /*! Clear the bits specified by \a style in the style flag
+        for name() and type() of this section of options. */
+  Options &delStyle( int style );
+    /*! Clear all bits of the style of this section of options,
+        i.e. set it to 0. */
+  Options &clearStyle( void );
 
     /*! Returns the warning messages of the last called 
         Option member-function. */
@@ -238,55 +273,48 @@ public:
     /*! Get the option with name \a name. */
   Parameter &operator[]( const string &name );
 
-      /*! Returns the request string of the option 
-          with name equal to \a name. */
+      /*! Returns the request string of the option with name \a name. */
   Str request( const string &name ) const;
     /*! Set request string of the option 
-        with name equal to \a name to \a request. */
+        with name \a name to \a request. */
   Parameter &setRequest( const string &name, const string &request );
 
-    /*! The type of the option 
-        with name equal to \a name. */
+    /*! The type of the option with name \a name. */
   Parameter::ValueType valueType( const string &name ) const;
-    /*! Set type of the option 
-        with name equal to \a name to \a type. */
+    /*! Set type of the option with name \a name to \a type. */
   Parameter &setValueType( const string &name, Parameter::ValueType type );
 
-    /*! The flags of the option 
-        with name equal to \a name. */
+    /*! The flags of the option with name \a name. */
   int flags( const string &name ) const;
-    /*! Set the flags of the option 
-        with name equal to \a name to \a flags. */
+    /*! Set the flags of the option with name \a name to \a flags. */
   Parameter &setFlags( const string &name, int flags );
     /*! Add the bits specified by \a flags to the flags of the option 
-        with name equal to \a name. */
+        with name \a name. */
   Parameter &addFlags( const string &name, int flags );
     /*! Clear the bits specified by \a flags of the flags of the option 
-        with name equal to \a name. */
+        with name \a name. */
   Parameter &delFlags( const string &name, int flags );
     /*! Clear all bits of the flags of the option 
-        with name equal to \a name. */
+        with name \a name. */
   Parameter &clearFlags( const string &name );
     /*! Return \a true if the changedFlag() of the option 
-        with name equal to \a name is set,
+        with name \a name is set,
         i.e. whose value has been changed.. */
   bool changed( const string &name );
 
-    /*! The style of the option 
-        with name equal to \a name. */
+    /*! The style of the option with name \a name. */
   int style( const string &name ) const;
-    /*! Set the style of the option 
-        with name equal to \a name to \a style. */
+    /*! Set the style of the option with name \a name to \a style. */
   Parameter &setStyle( const string &name, int style );
     /*! Add the bits specified by \a style to the style of the option 
-        with name equal to \a name. */
+        with name \a name. */
   Parameter &addStyle( const string &name, int style );
     /*! Clear the bits specified by \a style of the style of the option 
-        with name equal to \a name. */
+        with name \a name. */
   Parameter &delStyle( const string &name, int style );
 
     /*! Return the format string of the option 
-        with name equal to \a name. 
+        with name \a name. 
         If there is no option with name \a name, or the option is
 	neither a number nor an integer, an empty string is returned. */
   Str format( const string &name ) const;
@@ -303,7 +331,7 @@ public:
   int formatWidth( const string &name ) const;
 
     /*! If several values correspond to the option
-        with name equal to \a name
+        with name \a name
         size() returns the number of values. */
   int size( const string &name ) const;
 
@@ -349,13 +377,13 @@ public:
 				const string &dflt="", int flags=0, int style=0 )
     { return insertText( name, atname, name, dflt, flags, style ); };
     /*! Return the \a index-th string of the text option 
-        with name equal to \a name. 
+        with name \a name. 
         If there is no option with name \a name, or the option is
 	not a text, an empty string is returned. */
   Str text( const string &name, int index, const string &dflt="",
 	    const string &format="", const string &unit="" ) const;
     /*! Return the first string of the text option 
-        with name equal to \a name. 
+        with name \a name. 
         If there is no option with name \a name, or the option is
 	not a text, an empty string is returned. */
   inline Str text( const string &name, const string &dflt="",
@@ -374,7 +402,7 @@ public:
         with name \a name. */
   Parameter &pushText( const string &name, const string &strg );
     /*! Return the default string of the text option 
-        with name equal to \a name. 
+        with name \a name. 
         If there is no option with name \a name, or the option is
 	not a text, an empty string is returned. */
   Str defaultText( const string &name,
@@ -556,13 +584,13 @@ public:
     { return insertNumber( name, atname, name, 0.0,
 			   -MAXDOUBLE, MAXDOUBLE, 1.0, unit, unit,
 			   format, flags, style ); };
-    /*! Return the \a index-th number of the option with name equal to \a name. 
+    /*! Return the \a index-th number of the option with name \a name. 
         If there is no option with name \a name, or the option is 
 	neither a number nor an integer, zero is returned. */
   double number( const string &name, double dflt=0.0, const string &unit="", int index=0 ) const;
   double number( const string &name, const string &unit, double dflt=0.0, int index=0 ) const
     { return number( name, dflt, unit, index ); };
-    /*! Return the \a index-th number of the option with name equal to \a name. 
+    /*! Return the \a index-th number of the option with name \a name. 
         If there is no option with name \a name, or the option is 
 	neither a number nor an integer, zero is returned. */
   double number( const string &name, int index, double dflt=0.0, const string &unit="" ) const
@@ -570,12 +598,12 @@ public:
   double number( const string &name, int index, const string &unit, double dflt=0.0 ) const
     { return number( name, dflt, unit, index ); };
     /*! Return the \a index-th standard deviation of the option 
-        with name equal to \a name. 
+        with name \a name. 
         If there is no option with name \a name, or the option is
 	neither a number nor an integer, zero is returned. */
   double error( const string &name, const string &unit="", int index=0 ) const;
     /*! Return the \a index-th standard deviation of the option 
-        with name equal to \a name. 
+        with name \a name. 
         If there is no option with name \a name, or the option is
 	neither a number nor an integer, zero is returned. */
   double error( const string &name, int index, const string &unit="" ) const
@@ -605,7 +633,7 @@ public:
 	then the changedFlag() is set. */
   Parameter &setNumber( const string &name, const Parameter &p );
     /*! Return the default number of the option 
-        with name equal to \a name. 
+        with name \a name. 
         If there is no option with name \a name, or the option is
 	neither a number nor an integer, zero is returned. */
   double defaultNumber( const string &name, const string &unit="" ) const;
@@ -614,17 +642,17 @@ public:
   Parameter &setDefaultNumber( const string &name, double dflt, 
 			       const string &unit="" );
     /*! Return the minimum number of the option 
-        with name equal to \a name. 
+        with name \a name. 
         If there is no option with name \a name, or the option is
 	neither a number nor an integer, zero is returned. */
   double minimum( const string &name, const string &unit="" ) const;
     /*! Return the maximum number of the option 
-        with name equal to \a name. 
+        with name \a name. 
         If there is no option with name \a name, or the option is
 	neither a number nor an integer, zero is returned. */
   double maximum( const string &name, const string &unit="" ) const;
     /*! Return the step size of the option 
-        with name equal to \a name. 
+        with name \a name. 
         If there is no option with name \a name, or the option is
 	neither a number nor an integer, unity is returned. */
   double step( const string &name, const string &unit="" ) const;
@@ -661,12 +689,12 @@ public:
     { return Parameter::ceil10( v, scale ); };
 
     /*! Return the internal unit of the option 
-        with name equal to \a name. 
+        with name \a name. 
         If there is no option with name \a name, or the option is
 	neither a number nor an integer, an empty string is returned. */
   Str unit( const string &name ) const;
     /*! Return the unit used for output and dialogs
-        of the option with name equal to \a name. 
+        of the option with name \a name. 
         If there is no option with name \a name, or the option is
 	neither a number nor an integer, an empty string is returned. */
   Str outUnit( const string &name ) const;
@@ -749,12 +777,12 @@ public:
     { return insertInteger( name, atname, name, 0, LONG_MIN, LONG_MAX,
 			    1, unit, unit, width, flags, style ); };
     /*! Return the \a index-th integer number of the option 
-        with name equal to \a name. 
+        with name \a name. 
         If there is no option with name \a name, or the option is
 	neither a number nor an integer, zero is returned. */
   long integer( const string &name, const string &unit="", long dflt=0, int index=0 ) const;
     /*! Return the \a index-th integer number of the option 
-        with name equal to \a name. 
+        with name \a name. 
         If there is no option with name \a name, or the option is
 	neither a number nor an integer, zero is returned. */
   long integer( const string &name, int index, long dflt=0, const string &unit="" ) const
@@ -784,7 +812,7 @@ public:
 	then the changedFlag() is set. */
   Parameter &setInteger( const string &name, const Parameter &p );
     /*! Return the default number of the integer option 
-        with name equal to \a name. 
+        with name \a name. 
         If there is no option with name \a name, or the option is
 	neither a number nor an integer, zero is returned. */
   long defaultInteger( const string &name, const string &unit="" ) const;
@@ -843,7 +871,7 @@ public:
   Parameter &insertBoolean( const string &name, const string &atname, 
 			    int flags=0, int style=0 )
     { return insertBoolean( name, atname, name, false, flags, style ); };
-    /*! Return the boolean of the option with name equal to \a name. 
+    /*! Return the boolean of the option with name \a name. 
         If there is no option with name \a name, or the option is
 	neither a boolean, nor a number, nor an integer, 
 	false is returned. */
@@ -860,7 +888,7 @@ public:
 	then the changedFlag() is set. */
   Parameter &setBoolean( const string &name, const Parameter &p );
     /*! Return the default boolean of the option 
-        with name equal to \a name. 
+        with name \a name. 
         If there is no option with name \a name, or the option is
 	neither a boolean, nor a number nor an integer, 
 	false is returned. */
@@ -1193,7 +1221,7 @@ public:
   Parameter &insertLabel( const string &name, const string &atname="",
 			  int flags=0, int style=0 );
     /*! Return the label of a label
-        with name equal to \a name. 
+        with name \a name. 
         If there is no option with name \a name
 	an empty string is returned. */
   Str label( const string &name ) const;
@@ -1202,40 +1230,43 @@ public:
   Parameter &setLabel( const string &name, const string &label );
 
     /*! Add a new section of Options to the end of the sections list.
-        The new section is named \a name and is of the optional
-	type \a type.
+        The new section is named \a name, has the optional
+	type specifier \a type, some \a flag for selecting this section,
+	and is formatted according to the \a style flag.
         Subsequent calls to addText(), addNumber(), etc. add new Parameter
 	to the added section.
         \sa addSubSection(), addSubSubSection() */
   Options &addSection( const string &name, const string &type="",
-		       int style=0 );
+		       int flag=0xffffff, int style=0 );
     /*! Add a new subsection of Options to the last section.
-        The new subsection is named \a name and is of the optional
-	type \a type.
+        The new subsection is named \a name, has the optional
+	type specifier \a type, some \a flag for selecting this section,
+	and is formatted according to the \a style flag.
         Subsequent calls to addText(), addNumber(), etc. add new Parameter
 	to the added subsection.
         \note You can only add a subsection after having added a section!
         \sa addSection(), addSubSubSection() */
   Options &addSubSection( const string &name, const string &type="",
-			  int style=0 );
+			  int flag=0xffffff, int style=0 );
     /*! Add a new subsubsection of Options to the last subsection
         of the last section.
-        The new subsubsection is named \a name and is of the optional
-	type \a type.
+        The new subsubsection is named \a name, has the optional
+	type specifier \a type, some \a flag for selecting this section,
+	and is formatted according to the \a style flag.
         Subsequent calls to addText(), addNumber(), etc. add new Parameter
 	to the added subsubsection.
         \note You can only add a subsubsection after having added a subsection!
         \sa addSection(), addSubSection() */
   Options &addSubSubSection( const string &name, const string &type="",
-			     int style=0 );
+			     int flag=0xffffff, int style=0 );
 
-    /*! Set value of option with name equal to \a name
+    /*! Set value of option with name \a name
         to its default. */
   Parameter &setDefault( const string &name );
     /*! Set values of all options to their default. */
   Options &setDefaults( int flags=0 );
 
-    /*! Set default of option with name equal to \a name
+    /*! Set default of option with name \a name
         to its value. */
   Parameter &setToDefault( const string &name );
     /*! Set defaults of all options to their values. */
@@ -1332,11 +1363,11 @@ public:
   Options &delValueTypeFlags( int flags, int typemask );
 
     /*! Set style of all options to \a style. */
-  Options &setStyle( int style, int selectflag=0 );
+  Options &setStyles( int style, int selectflag=0 );
     /*! Add the bits specified by \a style to the style of all options. */
-  Options &addStyle( int style, int selectflag=0 );
+  Options &addStyles( int style, int selectflag=0 );
     /*! Clear the bits specified by \a style of the style of all options. */
-  Options &delStyle( int style, int selectflag=0 );
+  Options &delStyles( int style, int selectflag=0 );
     /*! Total number of options that have the style \a style set in their style(). */
   int styleSize( int style ) const;
 
@@ -1511,6 +1542,10 @@ private:
   string Name;
     /*! Type of this section of options. */
   string Type;
+    /*! Flag for this section. */
+  int Flag;
+    /*! Style flag for the section Name and Type. */
+  int Style;
     /*! The options. */
   deque< Parameter > Opt;
     /*! Sections of options. */

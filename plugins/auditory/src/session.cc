@@ -150,7 +150,7 @@ void Session::config( void )
 
   mo.addNumber( "silent rate", "Silent rate", -1.0, "Hz", "%.1f", MetaDataReset );
 
-  mo.addStyle( OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack, MetaDataDisplay );
+  mo.addStyles( OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack, MetaDataDisplay );
 
   metaData().delSaveFlags( MetaData::dialogFlag() + MetaData::presetDialogFlag() );
   metaData().addSaveFlags( MetaData::configFlag() + MetaDataRecordingSection::standardFlag() + MetaDataSave );

@@ -32,6 +32,8 @@ Options::Options( void )
   : ParentSection( 0 ),
     Name( "" ),
     Type( "" ),
+    Flag( 0xffffff ),
+    Style( 0 ),
     Opt(),
     Secs(),
     AddOpts( this ),
@@ -46,6 +48,8 @@ Options::Options( const Options &o )
   : ParentSection( 0 ),
     Name( "" ),
     Type( "" ),
+    Flag( 0xffffff ),
+    Style( 0 ),
     Opt(),
     Secs(),
     AddOpts( this ),
@@ -61,6 +65,8 @@ Options::Options( const Options &o, int flags )
   : ParentSection( 0 ),
     Name( "" ),
     Type( "" ),
+    Flag( 0xffffff ),
+    Style( 0 ),
     Opt(),
     Secs(),
     AddOpts( this ),
@@ -72,11 +78,29 @@ Options::Options( const Options &o, int flags )
 }
 
 
+Options::Options( const string &name, const string &type, int flags, int style )
+  : ParentSection( 0 ),
+    Name( name ),
+    Type( type ),
+    Flag( flags ),
+    Style( style ),
+    Opt(),
+    Secs(),
+    AddOpts( this ),
+    Warning( "" ),
+    Notified( false ),
+    CallNotify( true )
+{
+}
+
+
 Options::Options( const Str &opttxt, const string &assignment,
 		  const string &separator )
   : ParentSection( 0 ),
     Name( "" ),
+    Flag( 0xffffff ),
     Type( "" ),
+    Style( 0 ),
     Opt(),
     Secs(),
     AddOpts( this ),
@@ -92,6 +116,8 @@ Options::Options( const StrQueue &sq, const string &assignment )
   : ParentSection( 0 ),
     Name( "" ),
     Type( "" ),
+    Flag( 0xffffff ),
+    Style( 0 ),
     Opt(),
     Secs(),
     AddOpts( this ),
@@ -109,6 +135,8 @@ Options::Options( istream &str, const string &assignment,
   : ParentSection( 0 ),
     Name( "" ),
     Type( "" ),
+    Flag( 0xffffff ),
+    Style( 0 ),
     Opt(),
     Secs(),
     AddOpts( this ),
@@ -140,6 +168,8 @@ Options &Options::assign( const Options &o )
 
   Name = o.Name;
   Type = o.Type;
+  Flag = o.Flag;
+  Style = o.Style;
   ParentSection = o.ParentSection;
   Opt = o.Opt;
   Secs = o.Secs;
@@ -370,9 +400,10 @@ string Options::name( void ) const
 }
 
 
-void Options::setName( const string &name )
+Options & Options::setName( const string &name )
 {
   Name = name;
+  return *this;
 }
 
 
@@ -382,9 +413,85 @@ string Options::type( void ) const
 }
 
 
-void Options::setType( const string &type )
+Options & Options::setType( const string &type )
 {
   Type = type;
+  return *this;
+}
+
+
+int Options::flag( void ) const
+{
+  return Flag;
+}
+
+
+bool Options::flag( int selectflag ) const
+{
+  return ( selectflag == 0 ||
+	   ( selectflag > 0 && ( flag() & selectflag ) ) );
+}
+
+
+Options & Options::setFlag( int flag )
+{
+  Flag = flag;
+  return *this;
+}
+
+
+Options &Options::addFlag( int flag )
+{
+  Flag |= flag;
+  return *this;
+}
+
+
+Options &Options::delFlag( int flag )
+{
+  Flag &= ~flag;
+  return *this;
+}
+
+
+Options &Options::clearFlag( void )
+{
+  Flag = 0xffffff;
+  return *this;
+}
+
+
+int Options::style( void ) const
+{
+  return Style;
+}
+
+
+Options &Options::setStyle( int style )
+{
+  Style = style;
+  return *this;
+}
+
+
+Options &Options::addStyle( int style )
+{
+  Style |= style;
+  return *this;
+}
+
+
+Options &Options::delStyle( int style )
+{
+  Style &= ~style;
+  return *this;
+}
+
+
+Options &Options::clearStyle( void )
+{
+  Style = 0;
+  return *this;
 }
 
 
@@ -3119,11 +3226,9 @@ Parameter &Options::setLabel( const string &name, const string &label )
 
 
 Options &Options::addSection( const string &name, const string &type,
-			      int style )
+			      int flags, int style )
 {
-  Secs.push_back( Options() );
-  Secs.back().setName( name );
-  Secs.back().setType( type );
+  Secs.push_back( Options( name, type, flags, style ) );
   Secs.back().unsetNotify();
   AddOpts = &Secs.back();
   return Secs.back();
@@ -3131,14 +3236,12 @@ Options &Options::addSection( const string &name, const string &type,
 
 
 Options &Options::addSubSection( const string &name, const string &type,
-				 int style )
+				 int flags, int style )
 {
   if ( Secs.empty() )
     Warning += "Cannot add a subsection without having a section";
 
-  Secs.back().Secs.push_back( Options() );
-  Secs.back().Secs.back().setName( name );
-  Secs.back().Secs.back().setType( type );
+  Secs.back().Secs.push_back( Options( name, type, flags, style ) );
   Secs.back().Secs.back().unsetNotify();
   AddOpts = &Secs.back().Secs.back();
 #ifndef NDEBUG
@@ -3150,16 +3253,14 @@ Options &Options::addSubSection( const string &name, const string &type,
 
 
 Options &Options::addSubSubSection( const string &name, const string &type,
-				    int style )
+				    int flags, int style )
 {
   if ( Secs.empty() )
     Warning += "Cannot add a subsubsection without having a section";
   if ( Secs.back().Secs.empty() )
     Warning += "Cannot add a subsubsection without having a subsection";
 
-  Secs.back().Secs.back().Secs.push_back( Options() );
-  Secs.back().Secs.back().Secs.back().setName( name );
-  Secs.back().Secs.back().Secs.back().setType( type );
+  Secs.back().Secs.back().Secs.push_back( Options( name, type, flags, style ) );
   Secs.back().Secs.back().Secs.back().unsetNotify();
   AddOpts = &Secs.back().Secs.back().Secs.back();
 #ifndef NDEBUG
@@ -3475,7 +3576,8 @@ int Options::size( int flags ) const
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    n += sp->size( flags );
+    if ( sp->flag( flags ) )
+      n += sp->size( flags );
   }
   return n;
 }
@@ -3562,7 +3664,7 @@ Options &Options::delValueTypeFlags( int flags, int typemask )
 }
 
 
-Options &Options::setStyle( int style, int selectflag )
+Options &Options::setStyles( int style, int selectflag )
 {
   for ( iterator pp = begin(); pp != end(); ++pp )
     if ( (*pp).flags( selectflag ) ) {
@@ -3572,7 +3674,7 @@ Options &Options::setStyle( int style, int selectflag )
 }
 
 
-Options &Options::addStyle( int style, int selectflag )
+Options &Options::addStyles( int style, int selectflag )
 {
   for ( iterator pp = begin(); pp != end(); ++pp )
     if ( (*pp).flags( selectflag ) ) {
@@ -3582,7 +3684,7 @@ Options &Options::addStyle( int style, int selectflag )
 }
 
 
-Options &Options::delStyle( int style, int selectflag )
+Options &Options::delStyles( int style, int selectflag )
 {
   for ( iterator pp = begin(); pp != end(); ++pp )
     if ( (*pp).flags( selectflag ) ) {
@@ -3692,7 +3794,7 @@ ostream &Options::save( ostream &str, const string &start,
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( sp->size( selectmask ) > 0 )
+    if ( sp->flag( selectmask ) && sp->size( selectmask ) > 0 )
       (*sp).save( str, starts, selectmask, detailed, firstonly );
   }
 
@@ -3730,7 +3832,7 @@ ostream &Options::save( ostream &str, const string &textformat,
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( sp->size( selectmask ) > 0 )
+    if ( sp->flag( selectmask ) && sp->size( selectmask ) > 0 )
       (*sp).save( str, textformat, numberformat, boolformat,
 		  dateformat, timeformat, labelformat, selectmask, starts );
   }
@@ -3768,7 +3870,7 @@ string Options::save( int selectmask, bool firstonly ) const
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( sp->size( selectmask ) > 0 ) {
+    if ( sp->flag( selectmask ) && sp->size( selectmask ) > 0 ) {
       if ( n > 0 )
 	str += ", ";
       str += (*sp).save( selectmask, firstonly );
@@ -3813,7 +3915,7 @@ ostream &Options::saveXML( ostream &str, int selectmask, int level,
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( sp->size( selectmask ) > 0 )
+    if ( sp->flag( selectmask ) && sp->size( selectmask ) > 0 )
       (*sp).saveXML( str, selectmask, level, indent );
   }
   if ( ! name().empty() ) {

@@ -873,11 +873,11 @@ void RePro::dialog( void )
     dialogEmptyMessage( od );
   else {
     // repro options:
-    Options::addStyle( OptWidget::LabelBlue, MacroFlag );
-    Options::delStyle( OptWidget::LabelBlue, OverwriteFlag );
-    Options::addStyle( OptWidget::LabelGreen, OverwriteFlag );
-    Options::delStyle( OptWidget::LabelGreen, CurrentFlag );
-    Options::addStyle( OptWidget::LabelRed, CurrentFlag );
+    Options::addStyles( OptWidget::LabelBlue, MacroFlag );
+    Options::delStyles( OptWidget::LabelBlue, OverwriteFlag );
+    Options::addStyles( OptWidget::LabelGreen, OverwriteFlag );
+    Options::delStyles( OptWidget::LabelGreen, CurrentFlag );
+    Options::addStyles( OptWidget::LabelRed, CurrentFlag );
     OptWidget *roptw = od->addOptions( *this, dialogSelectMask(), 
 				       dialogReadOnlyMask(), dialogStyle(),
 				       mutex() );
@@ -913,9 +913,9 @@ void RePro::dialog( void )
 void RePro::dClosed( int r )
 {
   ConfigDialog::dClosed( r );
-  Options::delStyle( OptWidget::LabelBlue, MacroFlag );
-  Options::delStyle( OptWidget::LabelGreen, OverwriteFlag );
-  Options::delStyle( OptWidget::LabelRed, CurrentFlag );
+  Options::delStyles( OptWidget::LabelBlue, MacroFlag );
+  Options::delStyles( OptWidget::LabelGreen, OverwriteFlag );
+  Options::delStyles( OptWidget::LabelRed, CurrentFlag );
   Options::delFlags( MacroFlag + OverwriteFlag + CurrentFlag );
 }
 

@@ -53,7 +53,7 @@ EODDetector::EODDetector( const string &ident, int mode )
   addNumber( "rate", "Rate", 0.0, 0.0, 100000.0, 0.1, "Hz", "Hz", "%.1f", 2+4 );
   addNumber( "size", "Size", 0.0, 0.0, 100000.0, 0.1, "", "", "%.3f", 2+4 );
   addNumber( "meanvolts", "Average", 0.0, -10000.0, 10000.0, 0.1, "", "", "%.1f", 2+4 );
-  addStyle( OptWidget::ValueLarge + OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack, 4 );
+  addStyles( OptWidget::ValueLarge + OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack, 4 );
 
   // main layout:
   QVBoxLayout *vb = new QVBoxLayout;
