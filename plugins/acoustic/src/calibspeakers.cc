@@ -78,7 +78,7 @@ int CalibSpeakers::main( void )
 {
   // get options:
   settings().setValueTypeFlags( 16, -Parameter::Label );
-  RangeLoop frequencyrange( text( "frequencyrange" ) );
+  RangeLoop frequencyrange( allText( "frequencyrange" ) );
   double minintensity = number( "intmin" );
   double intensityrange = number( "intrange" );
   double intensitystep = number( "intstep" );

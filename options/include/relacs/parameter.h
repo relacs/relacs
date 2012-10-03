@@ -379,6 +379,10 @@ public:
         in the unit specified by \a unit.
         If \a unit is empty, then outUnit() is used. */ 
   Str text( const string &format="", const string &unit="" ) const;
+    /*! Return all values of the parameter formatted according to \a format
+        using \a unit, and concatenated using \a separator.
+        See text() for details. */
+  Str allText( const string &format="", const string &unit="", const string &separator=", " ) const;
     /*! Set value of text parameter to \a strg.
         The text is splitted into several strings at each '|'.
         Each of the strings is also converted into numbers.

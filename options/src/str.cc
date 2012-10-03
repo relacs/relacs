@@ -2359,9 +2359,12 @@ int Str::time( int &hour, int &minutes, int &seconds ) const
   if ( n == 0 )
     return -1;
   minutes = strtol( numstr, 0, 10 );
-  if ( *p != ':' )
-    return -1;
-  ++p;
+  if ( *p != ':' ) {
+    if ( p != end() )
+      return -1;
+  }
+  else
+    ++p;
   
   // third number:
   n = 0;
@@ -2371,8 +2374,9 @@ int Str::time( int &hour, int &minutes, int &seconds ) const
   }
   numstr[n] = '\0';
   if ( n == 0 )
-    return -1;
-  seconds = strtol( numstr, 0, 10 );
+    seconds = 0;
+  else
+    seconds = strtol( numstr, 0, 10 );
 
   // check ranges:
   if ( hour < 0 || hour > 24 )

@@ -183,7 +183,7 @@ SpikePrecision::~SpikePrecision( void )
 int SpikePrecision::main( void )
 {
   // get options:
-  string freqrangestr   = text( "freqrange" );
+  string freqrangestr   = allText( "freqrange" );
   Amplitude 		= number( "amplitude" );
   double intensity	= number( "intensity" );
   int intensitybase	= index( "intensitybase" );

@@ -378,17 +378,22 @@ public:
     { return insertText( name, atname, name, dflt, flags, style ); };
     /*! Return the \a index-th string of the text option 
         with name \a name. 
-        If there is no option with name \a name, or the option is
-	not a text, an empty string is returned. */
+        If there is no option with name \a name an empty string is returned. */
   Str text( const string &name, int index, const string &dflt="",
 	    const string &format="", const string &unit="" ) const;
     /*! Return the first string of the text option 
         with name \a name. 
-        If there is no option with name \a name, or the option is
-	not a text, an empty string is returned. */
+        If there is no option with name \a name an empty string is returned. */
   inline Str text( const string &name, const string &dflt="",
 		   const string &format="", const string &unit="" ) const
     { return text( name, 0, dflt, format, unit ); };
+    /*! Return all values of the parameter with name \a name,
+        formatted according to \a format
+        using \a unit, and concatenated using \a separator.
+        If there is no option with name \a name an empty string is returned.
+        See Parameter::text() for details. */
+  Str allText( const string &name, const string &dflt="", const string &format="",
+	       const string &unit="", const string &separator=", " ) const;
     /*! Set the value of an existing text option 
         with name \a name to \a strg. */
   Parameter &setText( const string &name, const string &strg );

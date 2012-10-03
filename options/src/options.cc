@@ -98,8 +98,8 @@ Options::Options( const Str &opttxt, const string &assignment,
 		  const string &separator )
   : ParentSection( 0 ),
     Name( "" ),
-    Flag( 0xffffff ),
     Type( "" ),
+    Flag( 0xffffff ),
     Style( 0 ),
     Opt(),
     Secs(),
@@ -1725,6 +1725,24 @@ Str Options::text( const string &name, int index, const string &dflt,
 #ifndef NDEBUG
     if ( ! Warning.empty() )
       cerr << "!warning in Options::text( " << name << " ) -> " << Warning << '\n';
+#endif
+    return s;
+  }
+  else
+    return dflt;
+}
+
+
+Str Options::allText( const string &name, const string &dflt, const string &format,
+		      const string &unit, const string &separator ) const
+{
+  const_iterator pp = find( name );
+  if ( pp != end() ) {
+    Str s = (*pp).allText( format, unit, separator );
+    Warning += (*pp).warning();
+#ifndef NDEBUG
+    if ( ! Warning.empty() )
+      cerr << "!warning in Options::allText( " << name << " ) -> " << Warning << '\n';
 #endif
     return s;
   }

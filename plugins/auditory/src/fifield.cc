@@ -131,7 +131,7 @@ int FIField::main( void )
   MaxFreq = number( "freqmax" );
   FreqStep = number( "freqstep" );
   FreqFac = number( "freqfac" );
-  FreqStr = text( "freqrange" );
+  FreqStr = allText( "freqrange" );
   FreqShuffle = RangeLoop::Sequence( index( "freqshuffle" ) );
   FreqIncrement = integer( "freqincrement" );
   ReducedFreqIncrement = integer( "reducedfreqincrement" );

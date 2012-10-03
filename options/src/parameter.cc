@@ -943,6 +943,17 @@ Str Parameter::text( const string &format, const string &unit ) const
 }
 
 
+Str Parameter::allText( const string &format, const string &unit, const string &separator ) const
+{
+  string s = "";
+  if ( size() > 0 )
+    s = text( 0, format, unit );
+  for ( int k=1; k<size(); k++ )
+    s += separator + text( k, format, unit );
+  return s;
+}
+
+
 Parameter &Parameter::setText( const string &strg )
 {
   return addText( strg, true );
