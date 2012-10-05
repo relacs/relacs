@@ -33,20 +33,21 @@ int main( int argc, char **argv )
   const int n=4096;
   SampleDataD data( n*16, 0.0, 0.00005 );
   for ( int k=0; k<data.size(); k++ )
-    //    data[k] = 1.0*sin( 2.0*M_PI*100.0*data.pos( k )  );
-    data[k] = sin( 2.0*M_PI*50.0*data.pos( k ) ) + 0.5*sin(  2.0*M_PI*100.0*data.pos( k )  );
+    data[k] = 1.0*sin( 2.0*M_PI*100.0*data.pos( k )  );
+    //    data[k] = sin( 2.0*M_PI*100.0*data.pos( k ) ) + 0.5*sin(  2.0*M_PI*100.0*data.pos( k )  );
   cerr << "Power of data (mean squared amplitudes): " << power( data ) << '\n';
+  cerr << "Variance of data: " << variance( data ) << '\n';
 
   // power spectrum:
   SampleDataD powera( n, 0.0, 0.5/data.stepsize()/n );
   rPSD( data.begin(), data.end(), powera.begin(), powera.end(),
-	false, hanning );
+	true, hanning );
   cerr << "Power of powera (sum of power spectrum): " << sum( powera ) << '\n';
   cout << powera << "\n\n";
 
   // power spectrum of sample data:
   SampleDataD powersd( n );
-  rPSD( data, powersd, false, hanning );
+  rPSD( data, powersd, true, hanning );
   cerr << "Power of powersd (sum of power spectrum): " << sum( powersd ) << '\n';
   cout << powersd << "\n\n";
 
@@ -60,6 +61,23 @@ int main( int argc, char **argv )
   hcPower( datafft, powerfft );
   cerr << "Power of powerfft (sum of power spectrum): " << sum( powerfft ) << '\n';
   cout << powerfft << "\n\n";
+
+  // check normalization for various data sizes:
+  double f = 1.0;
+  for ( int k=1; f<=10.0; k++ ) {
+    f = k*0.1;
+    data.resize( (int)::ceil(n*f) );
+    cout << double(data.size())/double(n);
+    for ( int k=0; k<data.size(); k++ )
+      data[k] = 1.0*sin( 2.0*M_PI*100.0*data.pos( k )  );
+    cout << "  " << power( data );
+
+    // power spectrum of sample data:
+    SampleDataD powersd( n );
+    rPSD( data, powersd, true, hanning );
+    cout << "  " << sum( powersd ) << '\n';
+
+  }
 
   return 0;
 }

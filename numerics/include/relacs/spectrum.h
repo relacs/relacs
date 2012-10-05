@@ -258,6 +258,11 @@ double welch( int j, int n );
       the number of data points of the power spectrum.
       The chunks may overlap by half according to \a overlap. 
       Each chunk is windowed through a \a window function.
+      The final chunk may exceed the data. In that case it is
+      discarded, if it contains less than N data elements.
+      Otherwise it is filled up with zeros and weighted appropriately.
+      To avoid zero padding the data buffer should contain a multiple of
+      N (\a overlap = \c true) or 2N (\a overlap = \c false) data points.
       If the input data were sampled with \a delta, then 
       the frequencies are sampled with 1/(2 N delta).
       \a ForwardIterX is a forward iterator that points to a real number.
@@ -279,6 +284,11 @@ int rPSD( const ContainerX &x, ContainerP &p,
       The chunks may overlap by half according to \a overlap. 
       Each chunk is windowed through a \a window function
       before passing it to rFFT().
+      The final chunk may exceed the data. In that case it is
+      discarded, if it contains less than N/2 data elements.
+      Otherwise it is filled up with zeros and weighted appropriately.
+      To avoid zero padding the data buffer should contain a multiple of
+      N/2 (\a overlap = \c true) or N (\a overlap = \c false) data points.
       If the input data were sampled with \a delta, then 
       the frequencies are sampled with 1/(N delta).
       The gain, phase, real parts, and imaginary parts of the transfer function can
@@ -306,6 +316,11 @@ int transfer( const ContainerX &x, const ContainerY &y, ContainerH &h,
       The chunks may overlap by half according to \a overlap. 
       Each chunk is windowed through a \a window function
       before passing it to rFFT().
+      The final chunk may exceed the data. In that case it is
+      discarded, if it contains less than N/2 data elements.
+      Otherwise it is filled up with zeros and weighted appropriately.
+      To avoid zero padding the data buffer should contain a multiple of
+      N/2 (\a overlap = \c true) or N (\a overlap = \c false) data points.
       If the input data were sampled with \a delta, then 
       the frequencies are sampled with 1/(N delta).
       The gain, phase, real parts, and imaginary parts of the transfer function can
@@ -335,6 +350,11 @@ int transfer( const ContainerX &x, const ContainerY &y,
       the number of data points in the range \a firstg, \a lastg.
       The chunks may overlap by half according to \a overlap. 
       Each chunk is windowed through a \a window function.
+      The final chunk may exceed the data. In that case it is
+      discarded, if it contains less than N data elements.
+      Otherwise it is filled up with zeros and weighted appropriately.
+      To avoid zero padding the data buffer should contain a multiple of
+      N (\a overlap = \c true) or 2N (\a overlap = \c false) data points.
       If the input data were sampled with \a delta, then 
       the frequencies are sampled with 1/(2 N delta).
       \a ForwardIterX, \a ForwardIterY, and \a ForwardG
@@ -355,6 +375,11 @@ int gain( const ContainerX &x, const ContainerY &y, ContainerG &g,
       the number of data points in the range \a firstc, \a lastc.
       The chunks may overlap by half according to \a overlap. 
       Each chunk is windowed through a \a window function.
+      The final chunk may exceed the data. In that case it is
+      discarded, if it contains less than N data elements.
+      Otherwise it is filled up with zeros and weighted appropriately.
+      To avoid zero padding the data buffer should contain a multiple of
+      N (\a overlap = \c true) or 2N (\a overlap = \c false) data points.
       If the input data were sampled with \a delta, then 
       the frequencies are sampled with 1/(2 N delta).
       \a ForwardIterX, \a ForwardIterY, \a ForwardIterC
@@ -386,6 +411,11 @@ double coherenceInfo( ContainerC &c, double deltaf );
       the number of data points in the range \a firstc, \a lastc.
       The chunks may overlap by half according to \a overlap. 
       Each chunk is windowed through a \a window function.
+      The final chunk may exceed the data. In that case it is
+      discarded, if it contains less than N/2 data elements.
+      Otherwise it is filled up with zeros and weighted appropriately.
+      To avoid zero padding the data buffer should contain a multiple of
+      N/2 (\a overlap = \c true) or N (\a overlap = \c false) data points.
       If the input data were sampled with \a delta, then 
       the frequencies are sampled with 1/(N delta).
       \a ForwardIterX, \a ForwardIterY, \a ForwardIterC
@@ -1113,10 +1143,19 @@ int rPSD( ForwardIterX firstx, ForwardIterX lastx,
   for ( ForwardIterP iterp=firstp; iterp != lastp; ++iterp )
     *iterp = 0.0;
 
+  // normalization factor:
+  ValueTypeP wwn = 0.0;
+  for ( int k=0; k<nw; ++k ) {
+    ValueTypeP w = window( k, nw );
+    wwn += w*w;
+  }
+  ValueTypeP norm = 2.0/wwn/nw;
+
   // cycle through the data:
   int c = 0;
-  ForwardIterX iterx=firstx;
-  while ( iterx != lastx ) {
+  ForwardIterX iterx = firstx;
+  ForwardIterX iterx2 = iterx;
+  while ( iterx != lastx && iterx2 != lastx ) {
 
     // copy chunk of data into buffer and apply window:
     ValueTypeX buffer[nw];
@@ -1124,16 +1163,25 @@ int rPSD( ForwardIterX firstx, ForwardIterX lastx,
     if ( overlap ) {
       for ( ; k<nw/2 && iterx != lastx; ++k, ++iterx )
 	buffer[k] = *iterx * window( k, nw );
-      ForwardIterX iterx2=iterx;
-      for ( ; k<nw && iterx2 != lastx; ++k, ++iterx2 )
+      for ( iterx2=iterx; k<nw && iterx2 != lastx; ++k, ++iterx2 )
 	buffer[k] = *iterx2 * window( k, nw );
     }
     else {
       for ( ; k<nw && iterx != lastx; ++k, ++iterx )
 	buffer[k] = *iterx * window( k, nw );
     }
-    for ( ; k<nw; k++ )
-      buffer[k] = 0.0;
+    if ( c >= 1 && k < nw/2 )
+      break;
+    ValueTypeP normfac = norm;
+    if ( k < nw ) {
+      ValueTypeP wwz = 0.0;
+      for ( ; k<nw; k++ ) {
+	buffer[k] = 0.0;
+	ValueTypeP w = window( k, nw );
+	wwz += w*w;
+      }
+      normfac *= wwn / ( wwn - wwz );
+    }
 
     // fourier transform:
     rFFT( buffer, buffer+nw );
@@ -1143,30 +1191,19 @@ int rPSD( ForwardIterX firstx, ForwardIterX lastx,
     // first element:
     ForwardIterP iterp=firstp;
     ValueTypeP power = buffer[0] * buffer[0];
-    *iterp += ( power - *iterp ) / c;
+    *iterp += ( 0.5*power*normfac - *iterp ) / c;
     ++iterp;
     // remaining elements:
     for ( int k=1; iterp != lastp; ++iterp, ++k ) {
       power = buffer[k] * buffer[k] + buffer[nw-k] * buffer[nw-k];
-      *iterp += ( 2.0*power - *iterp ) / c;
+      *iterp += ( power*normfac - *iterp ) / c;
     }
 
   }
 
-  // normalize psd:
-  ValueTypeP norm = 0.0;
-  for ( int k=0; k<nw; ++k ) {
-    ValueTypeP w = window( k, nw );
-    norm += w*w;
-  }
-  norm = 1.0/norm/nw;
-
-  ForwardIterP iterp=firstp;
-  for ( int k=0; iterp != lastp && k<nw/2; ++iterp )
-    *iterp *= norm;
   // last element:
-  if ( iterp != lastp )
-    *iterp *= 0.25;
+  if ( np == nw/2 )
+    *(firstp+nw/2) *= 0.25;
 
   return 0;
 }
@@ -1222,11 +1259,19 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
     im[k] = 0.0;
   }
 
+  // normalization factor:
+  ValueTypeH wwn = 0.0;
+  for ( int k=0; k<nw; ++k ) {
+    ValueTypeH w = window( k, nw );
+    wwn += w*w;
+  }
+
   // cycle through the data:
   int c = 0;
   ForwardIterX iterx = firstx;
+  ForwardIterX iterx2 = iterx;
   ForwardIterY itery = firsty;
-  while ( iterx != lastx ) {
+  while ( iterx != lastx && iterx2 != lastx ) {
 
     // copy chunk of x data into buffer and apply window:
     ValueTypeX bufferx[nw];
@@ -1234,14 +1279,15 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
     if ( overlap ) {
       for ( ; k<nw/2 && iterx != lastx; ++k, ++iterx )
 	bufferx[k] = *iterx * window( k, nw );
-      ForwardIterX iterx2 = iterx;
-      for ( ; k<nw && iterx2 != lastx; ++k, ++iterx2 )
+      for ( iterx2=iterx; k<nw && iterx2 != lastx; ++k, ++iterx2 )
 	bufferx[k] = *iterx2 * window( k, nw );
     }
     else {
       for ( ; k<nw && iterx != lastx; ++k, ++iterx )
 	bufferx[k] = *iterx * window( k, nw );
     }
+    if ( c >= 1 && k < nw/2 )
+      break;
     for ( ; k<nw; k++ )
       bufferx[k] = 0.0;
 
@@ -1262,8 +1308,16 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
       for ( ; k<nw && itery != lasty; ++k, ++itery )
 	buffery[k] = *itery * window( k, nw );
     }
-    for ( ; k<nw; k++ )
-      buffery[k] = 0.0;
+    ValueTypeH normfac = 2.0;
+    if ( k < nw ) {
+      ValueTypeH wwz = 0.0;
+      for ( ; k<nw; k++ ) {
+	buffery[k] = 0.0;
+	ValueTypeH w = window( k, nw );
+	wwz += w*w;
+      }
+      normfac = wwn / ( wwn - wwz );
+    }
 
     // fourier transform y data:
     rFFT( buffery, buffery+nw );
@@ -1273,17 +1327,17 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
     // first element xx:
     BidirectIterH iterxp = firsth;
     ValueTypeH powerxp = bufferx[0] * bufferx[0];
-    *iterxp += ( powerxp - *iterxp ) / c;
+    *iterxp += ( powerxp*normfac - *iterxp ) / c;
     ++iterxp;
     // first element Re xy:
     ValueTypeH* iterre = re;
     ValueTypeH powerre = bufferx[0] * buffery[0];
-    *iterre += ( powerre - *iterre ) / c;
+    *iterre += ( powerre*normfac - *iterre ) / c;
     ++iterre;
     // first element Im xy:
     ValueTypeH* iterim = im;
     ValueTypeH powerim = 0.0;
-    *iterim += ( powerim - *iterim ) / c;
+    *iterim += ( powerim*normfac - *iterim ) / c;
     ++iterim;
     // remaining elements:
     for ( int k=1; k<np; ++k ) {
@@ -1292,13 +1346,13 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
       ValueTypeY yr = buffery[k];
       ValueTypeY yi = buffery[nw-k];
       powerxp = xr*xr + xi*xi;
-      *iterxp += ( powerxp - *iterxp ) / c;
+      *iterxp += ( powerxp*normfac - *iterxp ) / c;
       ++iterxp;
       powerre = xr*yr + xi*yi;
-      *iterre += ( powerre - *iterre ) / c;
+      *iterre += ( powerre*normfac - *iterre ) / c;
       ++iterre;
       powerim = xr*yi - xi*yr;
-      *iterim += ( powerim - *iterim ) / c;
+      *iterim += ( powerim*normfac - *iterim ) / c;
       ++iterim;
     }
 
@@ -1390,11 +1444,19 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
     im[k] = 0.0;
   }
 
+  // normalization factor:
+  ValueTypeC wwn = 0.0;
+  for ( int k=0; k<nw; ++k ) {
+    ValueTypeC w = window( k, nw );
+    wwn += w*w;
+  }
+
   // cycle through the data:
   int c = 0;
   ForwardIterX iterx = firstx;
+  ForwardIterX iterx2 = iterx;
   ForwardIterY itery = firsty;
-  while ( iterx != lastx ) {
+  while ( iterx != lastx && iterx2 != lastx ) {
 
     // copy chunk of x data into buffer and apply window:
     ValueTypeX bufferx[nw];
@@ -1402,14 +1464,15 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
     if ( overlap ) {
       for ( ; k<nw/2 && iterx != lastx; ++k, ++iterx )
 	bufferx[k] = *iterx * window( k, nw );
-      ForwardIterX iterx2 = iterx;
-      for ( ; k<nw && iterx2 != lastx; ++k, ++iterx2 )
+      for ( iterx2=iterx; k<nw && iterx2 != lastx; ++k, ++iterx2 )
 	bufferx[k] = *iterx2 * window( k, nw );
     }
     else {
       for ( ; k<nw && iterx != lastx; ++k, ++iterx )
 	bufferx[k] = *iterx * window( k, nw );
     }
+    if ( c >= 1 && k < nw/2 )
+      break;
     for ( ; k<nw; k++ )
       bufferx[k] = 0.0;
 
@@ -1430,8 +1493,16 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
       for ( ; k<nw && itery != lasty; ++k, ++itery )
 	buffery[k] = *itery * window( k, nw );
     }
-    for ( ; k<nw; k++ )
-      buffery[k] = 0.0;
+    ValueTypeC normfac = 1.0;
+    if ( k < nw ) {
+      ValueTypeC wwz = 0.0;
+      for ( ; k<nw; k++ ) {
+	buffery[k] = 0.0;
+	ValueTypeC w = window( k, nw );
+	wwz += w*w;
+      }
+      normfac = wwn / ( wwn - wwz );
+    }
 
     // fourier transform y data:
     rFFT( buffery, buffery+nw );
@@ -1441,22 +1512,22 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
     // first element xx:
     BidirectIterH iterxp = firsth;
     ValueTypeH powerxp = bufferx[0] * bufferx[0];
-    *iterxp += ( powerxp - *iterxp ) / c;
+    *iterxp += ( powerxp*normfac - *iterxp ) / c;
     ++iterxp;
     // first element yy:
     BidirectIterC iteryp = firstc;
     ValueTypeC poweryp = buffery[0] * buffery[0];
-    *iteryp += ( poweryp - *iteryp ) / c;
+    *iteryp += ( poweryp*normfac - *iteryp ) / c;
     ++iteryp;
     // first element Re xy:
     ValueTypeH* iterre = re;
     ValueTypeH powerre = bufferx[0] * buffery[0];
-    *iterre += ( powerre - *iterre ) / c;
+    *iterre += ( powerre*normfac - *iterre ) / c;
     ++iterre;
     // first element Im xy:
     ValueTypeH* iterim = im;
     ValueTypeH powerim = 0.0;
-    *iterim += ( powerim - *iterim ) / c;
+    *iterim += ( powerim*normfac - *iterim ) / c;
     ++iterim;
     // remaining elements:
     for ( int k=1; k<np; ++k ) {
@@ -1465,16 +1536,16 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
       ValueTypeY yr = buffery[k];
       ValueTypeY yi = buffery[nw-k];
       powerxp = xr*xr + xi*xi;
-      *iterxp += ( powerxp - *iterxp ) / c;
+      *iterxp += ( powerxp*normfac - *iterxp ) / c;
       ++iterxp;
       poweryp = yr*yr + yi*yi;
-      *iteryp += ( poweryp - *iteryp ) / c;
+      *iteryp += ( poweryp*normfac - *iteryp ) / c;
       ++iteryp;
       powerre = xr*yr + xi*yi;
-      *iterre += ( powerre - *iterre ) / c;
+      *iterre += ( powerre*normfac - *iterre ) / c;
       ++iterre;
       powerim = xr*yi - xi*yr;
-      *iterim += ( powerim - *iterim ) / c;
+      *iterim += ( powerim*normfac - *iterim ) / c;
       ++iterim;
     }
 
@@ -1572,11 +1643,19 @@ int gain( ForwardIterX firstx, ForwardIterX lastx,
     im[k] = 0.0;
   }
 
+  // normalization factor:
+  ValueTypeG wwn = 0.0;
+  for ( int k=0; k<nw; ++k ) {
+    ValueTypeG w = window( k, nw );
+    wwn += w*w;
+  }
+
   // cycle through the data:
   int c = 0;
   ForwardIterX iterx = firstx;
+  ForwardIterX iterx2 = iterx;
   ForwardIterY itery = firsty;
-  while ( iterx != lastx ) {
+  while ( iterx != lastx && iterx2 != lastx ) {
 
     // copy chunk of x data into buffer and apply window:
     ValueTypeX bufferx[nw];
@@ -1584,14 +1663,15 @@ int gain( ForwardIterX firstx, ForwardIterX lastx,
     if ( overlap ) {
       for ( ; k<nw/2 && iterx != lastx; ++k, ++iterx )
 	bufferx[k] = *iterx * window( k, nw );
-      ForwardIterX iterx2 = iterx;
-      for ( ; k<nw && iterx2 != lastx; ++k, ++iterx2 )
+      for ( iterx2=iterx; k<nw && iterx2 != lastx; ++k, ++iterx2 )
 	bufferx[k] = *iterx2 * window( k, nw );
     }
     else {
       for ( ; k<nw && iterx != lastx; ++k, ++iterx )
 	bufferx[k] = *iterx * window( k, nw );
     }
+    if ( c >= 1 && k < nw/2 )
+      break;
     for ( ; k<nw; k++ )
       bufferx[k] = 0.0;
 
@@ -1612,8 +1692,16 @@ int gain( ForwardIterX firstx, ForwardIterX lastx,
       for ( ; k<nw && itery != lasty; ++k, ++itery )
 	buffery[k] = *itery * window( k, nw );
     }
-    for ( ; k<nw; k++ )
-      buffery[k] = 0.0;
+    ValueTypeG normfac = 1.0;
+    if ( k < nw ) {
+      ValueTypeG wwz = 0.0;
+      for ( ; k<nw; k++ ) {
+	buffery[k] = 0.0;
+	ValueTypeG w = window( k, nw );
+	wwz += w*w;
+      }
+      normfac = wwn / ( wwn - wwz );
+    }
 
     // fourier transform y data:
     rFFT( buffery, buffery+nw );
@@ -1623,17 +1711,17 @@ int gain( ForwardIterX firstx, ForwardIterX lastx,
     // first element xx:
     ForwardIterG iterxp = firstg;
     ValueTypeG powerxp = bufferx[0] * bufferx[0];
-    *iterxp += ( powerxp - *iterxp ) / c;
+    *iterxp += ( powerxp*normfac - *iterxp ) / c;
     ++iterxp;
     // first element Re xy:
     ValueTypeG* iterre = re;
     ValueTypeG powerre = bufferx[0] * buffery[0];
-    *iterre += ( powerre - *iterre ) / c;
+    *iterre += ( powerre*normfac - *iterre ) / c;
     ++iterre;
     // first element Im xy:
     ValueTypeG* iterim = im;
     ValueTypeG powerim = 0.0;
-    *iterim += ( powerim - *iterim ) / c;
+    *iterim += ( powerim*normfac - *iterim ) / c;
     ++iterim;
     // remaining elements:
     for ( int k=1; iterxp != lastg; ++k ) {
@@ -1642,13 +1730,13 @@ int gain( ForwardIterX firstx, ForwardIterX lastx,
       ValueTypeY yr = buffery[k];
       ValueTypeY yi = buffery[nw-k];
       powerxp = xr*xr + xi*xi;
-      *iterxp += ( powerxp - *iterxp ) / c;
+      *iterxp += ( powerxp*normfac - *iterxp ) / c;
       ++iterxp;
       powerre = xr*yr + xi*yi;
-      *iterre += ( powerre - *iterre ) / c;
+      *iterre += ( powerre*normfac - *iterre ) / c;
       ++iterre;
       powerim = xr*yi - xi*yr;
-      *iterim += ( powerim - *iterim ) / c;
+      *iterim += ( powerim*normfac - *iterim ) / c;
       ++iterim;
     }
 
@@ -1723,11 +1811,19 @@ int coherence( ForwardIterX firstx, ForwardIterX lastx,
     cp[k] = 0.0;
   }
 
+  // normalization factor:
+  ValueTypeC wwn = 0.0;
+  for ( int k=0; k<nw; ++k ) {
+    ValueTypeC w = window( k, nw );
+    wwn += w*w;
+  }
+
   // cycle through the data:
   int c = 0;
   ForwardIterX iterx = firstx;
+  ForwardIterX iterx2 = iterx;
   ForwardIterY itery = firsty;
-  while ( iterx != lastx ) {
+  while ( iterx != lastx && iterx2 != lastx ) {
 
     // copy chunk of x data into buffer and apply window:
     ValueTypeX bufferx[nw];
@@ -1735,14 +1831,15 @@ int coherence( ForwardIterX firstx, ForwardIterX lastx,
     if ( overlap ) {
       for ( ; k<nw/2 && iterx != lastx; ++k, ++iterx )
 	bufferx[k] = *iterx * window( k, nw );
-      ForwardIterX iterx2 = iterx;
-      for ( ; k<nw && iterx2 != lastx; ++k, ++iterx2 )
+      for ( iterx2=iterx; k<nw && iterx2 != lastx; ++k, ++iterx2 )
 	bufferx[k] = *iterx2 * window( k, nw );
     }
     else {
       for ( ; k<nw && iterx != lastx; ++k, ++iterx )
 	bufferx[k] = *iterx * window( k, nw );
     }
+    if ( c >= 1 && k < nw/2 )
+      break;
     for ( ; k<nw; k++ )
       bufferx[k] = 0.0;
 
@@ -1763,8 +1860,16 @@ int coherence( ForwardIterX firstx, ForwardIterX lastx,
       for ( ; k<nw && itery != lasty; ++k, ++itery )
 	buffery[k] = *itery * window( k, nw );
     }
-    for ( ; k<nw; k++ )
-      buffery[k] = 0.0;
+    ValueTypeC normfac = 1.0;
+    if ( k < nw ) {
+      ValueTypeC wwz = 0.0;
+      for ( ; k<nw; k++ ) {
+	buffery[k] = 0.0;
+	ValueTypeC w = window( k, nw );
+	wwz += w*w;
+      }
+      normfac = wwn / ( wwn - wwz );
+    }
 
     // fourier transform y data:
     rFFT( buffery, buffery+nw );
@@ -1774,22 +1879,22 @@ int coherence( ForwardIterX firstx, ForwardIterX lastx,
     // first element xx:
     ValueTypeC* iterxp = xp;
     ValueTypeC powerxp = bufferx[0] * bufferx[0];
-    *iterxp += ( powerxp - *iterxp ) / c;
+    *iterxp += ( powerxp*normfac - *iterxp ) / c;
     ++iterxp;
     // first element yy:
     ValueTypeC* iteryp = yp;
     ValueTypeC poweryp = buffery[0] * buffery[0];
-    *iteryp += ( poweryp - *iteryp ) / c;
+    *iteryp += ( poweryp*normfac - *iteryp ) / c;
     ++iteryp;
     // first element Re xy:
     ForwardIterC iterc = firstc;
     ValueTypeC powerc = bufferx[0] * buffery[0];
-    *iterc += ( powerc - *iterc ) / c;
+    *iterc += ( powerc*normfac - *iterc ) / c;
     ++iterc;
     // first element Im xy:
     ValueTypeC* itercp = cp;
     ValueTypeC powercp = 0.0;
-    *itercp += ( powercp - *itercp ) / c;
+    *itercp += ( powercp*normfac - *itercp ) / c;
     ++itercp;
     // remaining elements:
     for ( int k=1; iterc != lastc; ++k ) {
@@ -1798,16 +1903,16 @@ int coherence( ForwardIterX firstx, ForwardIterX lastx,
       ValueTypeY yr = buffery[k];
       ValueTypeY yi = buffery[nw-k];
       powerxp = xr*xr + xi*xi;
-      *iterxp += ( powerxp - *iterxp ) / c;
+      *iterxp += ( powerxp*normfac - *iterxp ) / c;
       ++iterxp;
       poweryp = yr*yr + yi*yi;
-      *iteryp += ( poweryp - *iteryp ) / c;
+      *iteryp += ( poweryp*normfac - *iteryp ) / c;
       ++iteryp;
       powerc = xr*yr + xi*yi;
-      *iterc += ( powerc - *iterc ) / c;
+      *iterc += ( powerc*normfac - *iterc ) / c;
       ++iterc;
       powercp = xr*yi - xi*yr;
-      *itercp += ( powercp - *itercp ) / c;
+      *itercp += ( powercp*normfac - *itercp ) / c;
       ++itercp;
     }
 
@@ -1899,11 +2004,20 @@ int rCSD( ForwardIterX firstx, ForwardIterX lastx,
   for ( int k=0; k<nw; ++k )
     cp[k] = 0.0;
 
+  // normalization factor:
+  ValueTypeC wwn = 0.0;
+  for ( int k=0; k<nw; ++k ) {
+    ValueTypeC w = window( k, nw );
+    wwn += w*w;
+  }
+  ValueTypeC norm = 2.0/wwn/nw;
+
   // cycle through the data:
   int c = 0;
   ForwardIterX iterx = firstx;
+  ForwardIterX iterx2 = iterx;
   ForwardIterY itery = firsty;
-  while ( iterx != lastx ) {
+  while ( iterx != lastx && iterx2 != lastx ) {
 
     // copy chunk of x data into buffer and apply window:
     ValueTypeX bufferx[nw];
@@ -1911,14 +2025,15 @@ int rCSD( ForwardIterX firstx, ForwardIterX lastx,
     if ( overlap ) {
       for ( ; k<nw/2 && iterx != lastx; ++k, ++iterx )
 	bufferx[k] = *iterx * window( k, nw );
-      ForwardIterX iterx2 = iterx;
-      for ( ; k<nw && iterx2 != lastx; ++k, ++iterx2 )
+      for ( iterx2=iterx; k<nw && iterx2 != lastx; ++k, ++iterx2 )
 	bufferx[k] = *iterx2 * window( k, nw );
     }
     else {
       for ( ; k<nw && iterx != lastx; ++k, ++iterx )
 	bufferx[k] = *iterx * window( k, nw );
     }
+    if ( c >= 1 && k < nw/2 )
+      break;
     for ( ; k<nw; k++ )
       bufferx[k] = 0.0;
 
@@ -1939,8 +2054,16 @@ int rCSD( ForwardIterX firstx, ForwardIterX lastx,
       for ( ; k<nw && itery != lasty; ++k, ++itery )
 	buffery[k] = *itery * window( k, nw );
     }
-    for ( ; k<nw; k++ )
-      buffery[k] = 0.0;
+    ValueTypeC normfac = norm;
+    if ( k < nw ) {
+      ValueTypeC wwz = 0.0;
+      for ( ; k<nw; k++ ) {
+	buffery[k] = 0.0;
+	ValueTypeC w = window( k, nw );
+	wwz += w*w;
+      }
+      normfac *= wwn / ( wwn - wwz );
+    }
 
     // fourier transform y data:
     rFFT( buffery, buffery+nw );
@@ -1950,12 +2073,12 @@ int rCSD( ForwardIterX firstx, ForwardIterX lastx,
     // first element Re xy:
     ForwardIterC iterc = firstc;
     ValueTypeC powerc = bufferx[0] * buffery[0];
-    *iterc += ( powerc - *iterc ) / c;
+    *iterc += ( 0.5*powerc*normfac - *iterc ) / c;
     ++iterc;
     // first element Im xy:
     ValueTypeC* itercp = cp;
     ValueTypeC powercp = 0.0;
-    *itercp += ( powercp - *itercp ) / c;
+    *itercp += ( 0.5*powercp*normfac - *itercp ) / c;
     ++itercp;
     // remaining elements:
     for ( int k=1; iterc != lastc; ++k ) {
@@ -1964,30 +2087,24 @@ int rCSD( ForwardIterX firstx, ForwardIterX lastx,
       ValueTypeY yr = buffery[k];
       ValueTypeY yi = buffery[nw-k];
       powerc = xr*yr + xi*yi;
-      *iterc += ( powerc - *iterc ) / c;
+      *iterc += ( powerc*normfac - *iterc ) / c;
       ++iterc;
       powercp = xr*yi - xi*yr;
-      *itercp += ( powercp - *itercp ) / c;
+      *itercp += ( powercp*normfac - *itercp ) / c;
       ++itercp;
     }
 
   }
 
-  // normalize:
-  ValueTypeC norm = 0.0;
-  for ( int k=0; k<nw; ++k ) {
-    ValueTypeC w = window( k, nw );
-    norm += w*w;
-  }
-  norm = 1.0/norm/nw;
-
   // compute cross spectrum:
   ValueTypeC* firstcp = cp;
   while ( firstc != lastc ) {
-    *firstc = norm * ( (*firstc) * (*firstc) + (*firstcp) * (*firstcp) );
+    *firstc = (*firstc) * (*firstc) + (*firstcp) * (*firstcp);
     ++firstc;
     ++firstcp;
   }
+  --firstc;
+  *firstc *= 0.25;
 
   return 0;
 }
@@ -2053,11 +2170,20 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
   for ( int k=0; k<np; ++k )
     xp[k] = 0.0;
 
+  // normalization factor:
+  ValueTypeYP wwn = 0.0;
+  for ( int k=0; k<nw; ++k ) {
+    ValueTypeYP w = window( k, nw );
+    wwn += w*w;
+  }
+  ValueTypeYP norm = 2.0/wwn/nw;
+
   // cycle through the data:
   int c = 0;
   ForwardIterX iterx = firstx;
+  ForwardIterX iterx2 = iterx;
   ForwardIterY itery = firsty;
-  while ( iterx != lastx ) {
+  while ( iterx != lastx && iterx2 != lastx ) {
 
     // copy chunk of x data into buffer and apply window:
     ValueTypeX bufferx[nw];
@@ -2065,14 +2191,15 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
     if ( overlap ) {
       for ( ; k<nw/2 && iterx != lastx; ++k, ++iterx )
 	bufferx[k] = *iterx * window( k, nw );
-      ForwardIterX iterx2 = iterx;
-      for ( ; k<nw && iterx2 != lastx; ++k, ++iterx2 )
+      for ( iterx2=iterx; k<nw && iterx2 != lastx; ++k, ++iterx2 )
 	bufferx[k] = *iterx2 * window( k, nw );
     }
     else {
       for ( ; k<nw && iterx != lastx; ++k, ++iterx )
 	bufferx[k] = *iterx * window( k, nw );
     }
+    if ( c >= 1 && k < nw/2 )
+      break;
     for ( ; k<nw; k++ )
       bufferx[k] = 0.0;
 
@@ -2093,8 +2220,16 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
       for ( ; k<nw && itery != lasty; ++k, ++itery )
 	buffery[k] = *itery * window( k, nw );
     }
-    for ( ; k<nw; k++ )
-      buffery[k] = 0.0;
+    ValueTypeYP normfac = norm;
+    if ( k < nw ) {
+      ValueTypeYP wwz = 0.0;
+      for ( ; k<nw; k++ ) {
+	buffery[k] = 0.0;
+	ValueTypeYP w = window( k, nw );
+	wwz += w*w;
+      }
+      normfac *= wwn / ( wwn - wwz );
+    }
 
     // fourier transform y data:
     rFFT( buffery, buffery+nw );
@@ -2104,22 +2239,22 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
     // first element xx:
     ForwardIterYP iterxp = xp;
     ValueTypeYP powerxp = bufferx[0] * bufferx[0];
-    *iterxp += ( powerxp - *iterxp ) / c;
+    *iterxp += ( 0.5*powerxp*normfac - *iterxp ) / c;
     ++iterxp;
     // first element yy:
     ForwardIterYP iteryp = firstyp;
     ValueTypeYP poweryp = buffery[0] * buffery[0];
-    *iteryp += ( poweryp - *iteryp ) / c;
+    *iteryp += ( 0.5*poweryp*normfac - *iteryp ) / c;
     ++iteryp;
     // first element Re xy:
     ForwardIterC iterc = firstc;
     ValueTypeC powerc = bufferx[0] * buffery[0];
-    *iterc += ( powerc - *iterc ) / c;
+    *iterc += ( 0.5*powerc*normfac - *iterc ) / c;
     ++iterc;
     // first element Im xy:
     ForwardIterG iterg = firstg;
     ValueTypeG powerg = 0.0;
-    *iterg += ( powerg - *iterg ) / c;
+    *iterg += ( 0.5*powerg*normfac - *iterg ) / c;
     ++iterg;
     // remaining elements:
     for ( int k=1; iterc != lastc; ++k ) {
@@ -2128,37 +2263,24 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
       ValueTypeY yr = buffery[k];
       ValueTypeY yi = buffery[nw-k];
       powerxp = xr*xr + xi*xi;
-      *iterxp += ( powerxp - *iterxp ) / c;
+      *iterxp += ( powerxp*normfac - *iterxp ) / c;
       ++iterxp;
       poweryp = yr*yr + yi*yi;
-      *iteryp += ( poweryp - *iteryp ) / c;
+      *iteryp += ( poweryp*normfac - *iteryp ) / c;
       ++iteryp;
       powerc = xr*yr + xi*yi;
-      *iterc += ( powerc - *iterc ) / c;
+      *iterc += ( powerc*normfac - *iterc ) / c;
       ++iterc;
       powerg = xr*yi - xi*yr;
-      *iterg += ( powerg - *iterg ) / c;
+      *iterg += ( powerg*normfac - *iterg ) / c;
       ++iterg;
     }
 
   }
 
-  // normalize:
-  ValueTypeYP norm = 0.0;
-  for ( int k=0; k<nw; ++k ) {
-    ValueTypeYP w = window( k, nw );
-    norm += w*w;
-  }
-  norm = 1.0/norm/nw;
-
-  // normalize and compute auto spectra and coherence:
+  // compute auto spectra and coherence:
   ValueTypeYP* firstxp = xp;
   while ( firstc != lastc ) {
-    *firstxp *= norm;
-    *firstyp *= norm;
-    *firstc *= norm;
-    *firstg *= norm;
-
     ValueTypeG gr = (*firstc) / (*firstxp);
     ValueTypeG gi = (*firstg) / (*firstxp);
     ValueTypeG g = ::sqrt( gr*gr + gi*gi );
@@ -2175,6 +2297,10 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
     ++firstg;
     ++firstc;
   }
+
+  // last element:
+  if ( np == nw/2 )
+    *(firstyp+nw/2) *= 0.25;
 
   return 0;
 }
@@ -2252,11 +2378,20 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
   if ( lastcp - firstcp < np )
     return -4;
 
+  // normalization factor:
+  ValueTypeYP wwn = 0.0;
+  for ( int k=0; k<nw; ++k ) {
+    ValueTypeYP w = window( k, nw );
+    wwn += w*w;
+  }
+  ValueTypeYP norm = 2.0/wwn/nw;
+
   // cycle through the data:
   int c = 0;
   ForwardIterX iterx = firstx;
+  ForwardIterX iterx2 = iterx;
   ForwardIterY itery = firsty;
-  while ( iterx != lastx ) {
+  while ( iterx != lastx && iterx2 != lastx ) {
 
     // copy chunk of x data into buffer and apply window:
     ValueTypeX bufferx[nw];
@@ -2264,14 +2399,15 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
     if ( overlap ) {
       for ( ; k<nw/2 && iterx != lastx; ++k, ++iterx )
 	bufferx[k] = *iterx * window( k, nw );
-      ForwardIterX iterx2 = iterx;
-      for ( ; k<nw && iterx2 != lastx; ++k, ++iterx2 )
+      for ( iterx2=iterx; k<nw && iterx2 != lastx; ++k, ++iterx2 )
 	bufferx[k] = *iterx2 * window( k, nw );
     }
     else {
       for ( ; k<nw && iterx != lastx; ++k, ++iterx )
 	bufferx[k] = *iterx * window( k, nw );
     }
+    if ( c >= 1 && k < nw/2 )
+      break;
     for ( ; k<nw; k++ )
       bufferx[k] = 0.0;
 
@@ -2292,8 +2428,16 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
       for ( ; k<nw && itery != lasty; ++k, ++itery )
 	buffery[k] = *itery * window( k, nw );
     }
-    for ( ; k<nw; k++ )
-      buffery[k] = 0.0;
+    ValueTypeYP normfac = norm;
+    if ( k < nw ) {
+      ValueTypeYP wwz = 0.0;
+      for ( ; k<nw; k++ ) {
+	buffery[k] = 0.0;
+	ValueTypeYP w = window( k, nw );
+	wwz += w*w;
+      }
+      normfac *= wwn / ( wwn - wwz );
+    }
 
     // fourier transform y data:
     rFFT( buffery, buffery+nw );
@@ -2303,22 +2447,22 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
     // first element xx:
     ForwardIterXP iterxp = firstxp;
     ValueTypeXP powerxp = bufferx[0] * bufferx[0];
-    *iterxp += ( powerxp - *iterxp ) / c;
+    *iterxp += ( 0.5*powerxp*normfac - *iterxp ) / c;
     ++iterxp;
     // first element yy:
     ForwardIterYP iteryp = firstyp;
     ValueTypeYP poweryp = buffery[0] * buffery[0];
-    *iteryp += ( poweryp - *iteryp ) / c;
+    *iteryp += ( 0.5*poweryp*normfac - *iteryp ) / c;
     ++iteryp;
     // first element Re xy:
     ForwardIterC iterc = firstc;
     ValueTypeC powerc = bufferx[0] * buffery[0];
-    *iterc += ( powerc - *iterc ) / c;
+    *iterc += ( 0.5*powerc*normfac - *iterc ) / c;
     ++iterc;
     // first element Im xy:
     ForwardIterCP itercp = firstcp;
     ValueTypeCP powercp = 0.0;
-    *itercp += ( powercp - *itercp ) / c;
+    *itercp += ( 0.5*powercp*normfac - *itercp ) / c;
     ++itercp;
     // remaining elements:
     for ( int k=1; iterc != lastc; ++k ) {
@@ -2327,36 +2471,23 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
       ValueTypeY yr = buffery[k];
       ValueTypeY yi = buffery[nw-k];
       powerxp = xr*xr + xi*xi;
-      *iterxp += ( powerxp - *iterxp ) / c;
+      *iterxp += ( powerxp*normfac - *iterxp ) / c;
       ++iterxp;
       poweryp = yr*yr + yi*yi;
-      *iteryp += ( poweryp - *iteryp ) / c;
+      *iteryp += ( poweryp*normfac - *iteryp ) / c;
       ++iteryp;
       powerc = xr*yr + xi*yi;
-      *iterc += ( powerc - *iterc ) / c;
+      *iterc += ( powerc*normfac - *iterc ) / c;
       ++iterc;
       powercp = xr*yi - xi*yr;
-      *itercp += ( powercp - *itercp ) / c;
+      *itercp += ( powercp*normfac - *itercp ) / c;
       ++itercp;
     }
 
   }
 
-  // normalize:
-  ValueTypeXP norm = 0.0;
-  for ( int k=0; k<nw; ++k ) {
-    ValueTypeXP w = window( k, nw );
-    norm += w*w;
-  }
-  norm = 1.0/norm/nw;
-
-  // normalize and compute auto, cross spectra and coherence:
+  // compute auto, cross spectra and coherence:
   while ( firstc != lastc ) {
-    *firstxp *= norm;
-    *firstyp *= norm;
-    *firstc *= norm;
-    *firstcp *= norm;
-
     ValueTypeG gr = (*firstc) / (*firstxp);
     ValueTypeG gi = (*firstcp) / (*firstxp);
     *firstg = ::sqrt( gr*gr + gi*gi );
@@ -2372,6 +2503,13 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
     ++firstg;
     ++firstc;
     ++firstcp;
+  }
+
+  // last element:
+  if ( np == nw/2 ) {
+    *(firstxp+nw/2) *= 0.25;
+    *(firstyp+nw/2) *= 0.25;
+    *(firstcp+nw/2) *= 0.25;
   }
 
   return 0;
