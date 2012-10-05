@@ -37,7 +37,7 @@ Simple::Simple( void )
   addSelection( "stimulus", "Stimulus type", "constant|ramp|sine 1p|sine 2p|zero" );
   addBoolean( "samerate", "Use sampling rate of input", true );
   addNumber( "samplerate", "Sampling rate of output", 1000.0, 0.0, 10000000.0, 1000.0, "Hz", "kHz" ).setActivation( "samerate", "false" );
-  addNumber( "pause", "Duration of pause bewteen outputs", 0.4, 0.001, 1.0, 0.001, "sec", "ms" );
+  addNumber( "pause", "Duration of pause between outputs", 0.4, 0.001, 1.0, 0.001, "sec", "ms" );
   addInteger( "repeats", "Repeats", 100, 0, 10000, 1 );
   addBoolean( "save", "Save recorded traces", false );
 
