@@ -113,10 +113,15 @@ int main( int argc, char **argv )
 	   threshold, threshold, threshold, checksd );
   cout << "SampleData: detected " << outevents.size() << " events.\n";
  
+  // Detect peaks in a SampleData using the peaks() function without check function:
+  outevents.clear();
+  peaks( signal, outevents, threshold );
+  cout << "SampleData::peaks(): detected " << outevents.size() << " events.\n";
+ 
   // Detect peaks in a SampleData using the peaks() function:
   outevents.clear();
   peaks( signal, outevents, threshold, checksd );
-  cout << "SampleData::peaks(): detected " << outevents.size() << " events.\n";
+  cout << "SampleData::peaks( check ): detected " << outevents.size() << " events.\n";
 
   // Detect peaks in Arrays:
   ArrayD time( LinearRange( 0.0, 1.0, 0.001 ) );

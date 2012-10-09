@@ -259,7 +259,7 @@ double welch( int j, int n );
       The chunks may overlap by half according to \a overlap. 
       Each chunk is windowed through a \a window function.
       The final chunk may exceed the data. In that case it is
-      discarded, if it contains less than N data elements.
+      discarded, if it contains less than 1.5*N data elements.
       Otherwise it is filled up with zeros and weighted appropriately.
       To avoid zero padding the data buffer should contain a multiple of
       N (\a overlap = \c true) or 2N (\a overlap = \c false) data points.
@@ -285,7 +285,7 @@ int rPSD( const ContainerX &x, ContainerP &p,
       Each chunk is windowed through a \a window function
       before passing it to rFFT().
       The final chunk may exceed the data. In that case it is
-      discarded, if it contains less than N/2 data elements.
+      discarded, if it contains less than 0.75*N data elements.
       Otherwise it is filled up with zeros and weighted appropriately.
       To avoid zero padding the data buffer should contain a multiple of
       N/2 (\a overlap = \c true) or N (\a overlap = \c false) data points.
@@ -317,7 +317,7 @@ int transfer( const ContainerX &x, const ContainerY &y, ContainerH &h,
       Each chunk is windowed through a \a window function
       before passing it to rFFT().
       The final chunk may exceed the data. In that case it is
-      discarded, if it contains less than N/2 data elements.
+      discarded, if it contains less than 0.75*N data elements.
       Otherwise it is filled up with zeros and weighted appropriately.
       To avoid zero padding the data buffer should contain a multiple of
       N/2 (\a overlap = \c true) or N (\a overlap = \c false) data points.
@@ -351,7 +351,7 @@ int transfer( const ContainerX &x, const ContainerY &y,
       The chunks may overlap by half according to \a overlap. 
       Each chunk is windowed through a \a window function.
       The final chunk may exceed the data. In that case it is
-      discarded, if it contains less than N data elements.
+      discarded, if it contains less than 1.5*N data elements.
       Otherwise it is filled up with zeros and weighted appropriately.
       To avoid zero padding the data buffer should contain a multiple of
       N (\a overlap = \c true) or 2N (\a overlap = \c false) data points.
@@ -376,7 +376,7 @@ int gain( const ContainerX &x, const ContainerY &y, ContainerG &g,
       The chunks may overlap by half according to \a overlap. 
       Each chunk is windowed through a \a window function.
       The final chunk may exceed the data. In that case it is
-      discarded, if it contains less than N data elements.
+      discarded, if it contains less than 1.5*N data elements.
       Otherwise it is filled up with zeros and weighted appropriately.
       To avoid zero padding the data buffer should contain a multiple of
       N (\a overlap = \c true) or 2N (\a overlap = \c false) data points.
@@ -412,7 +412,7 @@ double coherenceInfo( ContainerC &c, double deltaf );
       The chunks may overlap by half according to \a overlap. 
       Each chunk is windowed through a \a window function.
       The final chunk may exceed the data. In that case it is
-      discarded, if it contains less than N/2 data elements.
+      discarded, if it contains less than 0.75*N data elements.
       Otherwise it is filled up with zeros and weighted appropriately.
       To avoid zero padding the data buffer should contain a multiple of
       N/2 (\a overlap = \c true) or N (\a overlap = \c false) data points.
@@ -1170,7 +1170,7 @@ int rPSD( ForwardIterX firstx, ForwardIterX lastx,
       for ( ; k<nw && iterx != lastx; ++k, ++iterx )
 	buffer[k] = *iterx * window( k, nw );
     }
-    if ( c >= 1 && k < nw/2 )
+    if ( c >= 1 && k < 3*nw/4 )
       break;
     ValueTypeP normfac = norm;
     if ( k < nw ) {
@@ -1286,7 +1286,7 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
       for ( ; k<nw && iterx != lastx; ++k, ++iterx )
 	bufferx[k] = *iterx * window( k, nw );
     }
-    if ( c >= 1 && k < nw/2 )
+    if ( c >= 1 && k < 3*nw/4 )
       break;
     for ( ; k<nw; k++ )
       bufferx[k] = 0.0;
@@ -1471,7 +1471,7 @@ int transfer( ForwardIterX firstx, ForwardIterX lastx,
       for ( ; k<nw && iterx != lastx; ++k, ++iterx )
 	bufferx[k] = *iterx * window( k, nw );
     }
-    if ( c >= 1 && k < nw/2 )
+    if ( c >= 1 && k < 3*nw/4 )
       break;
     for ( ; k<nw; k++ )
       bufferx[k] = 0.0;
@@ -1670,7 +1670,7 @@ int gain( ForwardIterX firstx, ForwardIterX lastx,
       for ( ; k<nw && iterx != lastx; ++k, ++iterx )
 	bufferx[k] = *iterx * window( k, nw );
     }
-    if ( c >= 1 && k < nw/2 )
+    if ( c >= 1 && k < 3*nw/4 )
       break;
     for ( ; k<nw; k++ )
       bufferx[k] = 0.0;
@@ -1838,7 +1838,7 @@ int coherence( ForwardIterX firstx, ForwardIterX lastx,
       for ( ; k<nw && iterx != lastx; ++k, ++iterx )
 	bufferx[k] = *iterx * window( k, nw );
     }
-    if ( c >= 1 && k < nw/2 )
+    if ( c >= 1 && k < 3*nw/4 )
       break;
     for ( ; k<nw; k++ )
       bufferx[k] = 0.0;
@@ -2032,7 +2032,7 @@ int rCSD( ForwardIterX firstx, ForwardIterX lastx,
       for ( ; k<nw && iterx != lastx; ++k, ++iterx )
 	bufferx[k] = *iterx * window( k, nw );
     }
-    if ( c >= 1 && k < nw/2 )
+    if ( c >= 1 && k < 3*nw/4 )
       break;
     for ( ; k<nw; k++ )
       bufferx[k] = 0.0;
@@ -2198,7 +2198,7 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
       for ( ; k<nw && iterx != lastx; ++k, ++iterx )
 	bufferx[k] = *iterx * window( k, nw );
     }
-    if ( c >= 1 && k < nw/2 )
+    if ( c >= 1 && k < 3*nw/4 )
       break;
     for ( ; k<nw; k++ )
       bufferx[k] = 0.0;
@@ -2406,7 +2406,7 @@ int spectra( ForwardIterX firstx, ForwardIterX lastx,
       for ( ; k<nw && iterx != lastx; ++k, ++iterx )
 	bufferx[k] = *iterx * window( k, nw );
     }
-    if ( c >= 1 && k < nw/2 )
+    if ( c >= 1 && k < 3*nw/4 )
       break;
     for ( ; k<nw; k++ )
       bufferx[k] = 0.0;
