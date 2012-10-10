@@ -31,7 +31,8 @@ ThresholdLatencies::ThresholdLatencies( void )
   : RePro( "ThresholdLatencies", "patchclampprojects", "Jan Benda", "1.2", "Nov 03, 2010" ),
     VUnit( "mV" ),
     IUnit( "nA" ),
-    IInFac( 1.0 )
+    IInFac( 1.0 ),
+    RecordNow( false )
 {
   // add some options:
   addLabel( "Test-Pulse" );
@@ -205,6 +206,7 @@ int ThresholdLatencies::main( void )
     warning( "Invalid input voltage trace or missing input spikes!" );
     return Failed;
   }
+  RecordNow = false;
 
   // don't print repro message:
   noMessage();
@@ -541,13 +543,15 @@ int ThresholdLatencies::main( void )
     // switch modes:
     if ( ! record ) {
       // find threshold:
-      if ( Results.size() > 1 &&
-	   ( ( Results[Results.size()-2].SpikeCount <= 0 &&
-	       Results[Results.size()-1].SpikeCount > 0 ) ||
-	     ( Results[Results.size()-2].SpikeCount > 0 &&
-	       Results[Results.size()-1].SpikeCount <= 0 ) ) ) {
-	if ( amplitudestep <= finalamplitudestep ) {
-	  amplitudestep = finalamplitudestep;
+      if ( RecordNow ||
+	   ( Results.size() > 1 &&
+	     ( ( Results[Results.size()-2].SpikeCount <= 0 &&
+		 Results[Results.size()-1].SpikeCount > 0 ) ||
+	       ( Results[Results.size()-2].SpikeCount > 0 &&
+		 Results[Results.size()-1].SpikeCount <= 0 ) ) ) ) {
+	if ( RecordNow || amplitudestep <= finalamplitudestep ) {
+	  if ( ! RecordNow )
+	    amplitudestep = finalamplitudestep;
 	  pause = measurepause;
 	  count = 0;
 	  Results.clear();
@@ -573,6 +577,10 @@ int ThresholdLatencies::main( void )
 	    search = false;
 	  else
 	    record = true;
+	  if ( RecordNow ) {
+	    search = false;
+	    record = true;
+	  }
 	}
 	else {
 	  amplitudestep *= 0.5;
@@ -902,6 +910,19 @@ void ThresholdLatencies::plot( bool record, double preduration, double pre2durat
     P.plot( Results.back().Voltage, 1000.0, Plot::Yellow, 4, Plot::Solid );
   P.draw();
   P.unlock();
+}
+
+
+void ThresholdLatencies::keyPressEvent( QKeyEvent *event )
+{
+  if ( event->key() == Qt::Key_M ) {
+    lock();
+    RecordNow = true;
+    unlock();
+    event->accept();
+  }
+  else
+    RePro::keyPressEvent( event );
 }
 
 

@@ -73,6 +73,9 @@ namespace patchclampprojects {
 - \c savetracetime=500ms: Length of trace to be saved and analyzed (from test-pulse on) (\c number)
 - \c repeats=10: Repetitions of stimulus (\c integer)
 
+\par Key shortcuts
+- \c M: Start measuring now.
+
 Possible stimulus configurations are shown in the figure:
 \image html thresholdlatenciesstimuli.png
 The left column shows the stimuli without a DC input
@@ -108,10 +111,13 @@ public:
 
 protected:
 
+  virtual void keyPressEvent( QKeyEvent *event );
+
   Plot P;
   string VUnit;
   string IUnit;
   double IInFac;
+  bool RecordNow;
 
   double PrevMeanTestAmplitude;
   double PrevMeanDCTestAmplitude;

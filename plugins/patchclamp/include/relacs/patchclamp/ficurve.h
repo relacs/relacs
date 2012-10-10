@@ -50,6 +50,7 @@ namespace patchclamp {
 - \c istep=0.001nA: Minimum step-size of current (\c number)
 - \c userm=false: Use membrane resistance for estimating istep from vstep (\c boolean)
 - \c vstep=1mV: Minimum step-size of voltage (\c number)
+- \c optimizeimin=false: Skip currents that do not evoke action potentials (\c boolean)
 - Timing
 - \c duration=100ms: Duration of current output (\c number)
 - \c delay=100ms: Delay before current pulses (\c number)
