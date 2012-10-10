@@ -569,11 +569,11 @@ public:
 	    const string &space=Space ) const;
 
     /*! Returns the stripped() string befor the first occurence of one
-        of the characters specified in \a a. */
+        of the characters specified in \a a after position \a index. */
   Str ident( int index=0, const string &a=":=",
 	     const string &space=Space ) const;
     /*! Returns the stripped() string right behind the first occurence of one
-        of the characters specified in \a a. */
+        of the characters specified in \a a after position \a index. */
   Str value( int index=0, const string &a=":=",
 	     const string &space=Space ) const;
 
@@ -702,14 +702,28 @@ public:
   static const string &bracket( void ) { return Bracket; };
   static void setBracket( const string &bracket ) { Bracket = bracket; };
 
-    /*! Find corresponding closing bracket for the one at position \a index. */
+    /*! Find corresponding closing bracket for the one at position \a index.
+        The opening brackets are the ones contained in \a brackets.
+        The corresponding closing brackets are retrieved from RightBracket
+        using LeftBracket. If the opening bracket is not contained in
+	LeftBracket, the closing bracket is assumed to be the same 
+	as the opening bracket.
+	\return the index of the closing bracket, or -1 if not found.
+        \sa stripBracket(), strippedBracket()*/
   int findBracket( int index=0, const string &brackets=Bracket, 
 		   const string &comment=Comment ) const;
-
+    /*! Remove everything from the string except the characters
+        between the first opening bracket from \a brackets
+	and the corresponding closing bracket.
+        \sa findBracket(), strippedBracket() */
   Str &stripBracket( const string &brackets=Bracket, 
-			const string &comment=Comment );
+		     const string &comment=Comment );
+    /*! Returns the string
+        between the first opening bracket from \a brackets
+	and the corresponding closing bracket.
+        \sa findBracket(), stripBracket() */
   Str strippedBracket( const string &brackets=Bracket, 
-			  const string &comment=Comment ) const;
+		       const string &comment=Comment ) const;
 
 
   // manipulation:
@@ -720,19 +734,35 @@ public:
   Str &resize( int len, char ch ) 
     { if ( len >= 0 ) string::resize( len, ch ); return *this; };
 
-  Str left( int len ) const 
-    { if ( len >= 0 ) return string::substr( 0, len ); else return *this; };
-  Str right( int len ) const 
-    { if ( len >= 0 && len <= size() ) return string::substr( size()-len, len ); else return *this; };
-  Str mid( int pos, int upto=-1 ) const 
-  { if ( upto < 0 || upto >= (int)size() ) upto = size()-1; if ( pos < 0 || pos >= (int)size() || upto < pos ) return ""; return string::substr( pos, upto-pos+1 ); };
-  Str substr( int pos, int len=-1 ) const 
-    { if ( pos < 0 || pos >= size() ) return ""; if ( len < 0 || len > size()-pos ) len = size() - pos; return string::substr( pos, len ); };
+    /*! \return the first \a len characters of the string
+        or the complete string if \a len < 0 .
+        \sa right(), mid(), substr() */
+  Str left( int len ) const;
+    /*! \return the last \a len characters of the string
+        or the complete string if \a len < 0 .
+        \sa left(), mid(), substr() */
+  Str right( int len ) const;
+    /*! \return the characters between index \a pos 
+        and index \a upto inclusively.
+	\a upto is set to the index of the last character in the string
+	if \a upto < 0.
+	If \a pos < 0, or \a pos is larger than size() or \a pos > \a upto
+	an empty string is returned.
+        \sa left(), right(), substr() */
+  Str mid( int pos, int upto=-1 ) const;
+    /*! \return the \a len characters starting at index \a pos.
+	If \a len < 0 all characters up to the end of the string are returned.
+	If \a pos < 0, or \a pos is larger than size()
+	an empty string is returned.
+        \sa left(), right(), mid() */
+  Str substr( int pos, int len=-1 ) const;
 
 
-    /*! Erase substring at \a pos with length \a n. */
-  Str &erase( int pos, int n=-1 ) 
-    { string::size_type nn = n < 0 ? npos : n; string::erase( pos, nn ); return *this; };
+    /*! Erase substring at \a pos with length \a n.
+        If \a pos < 0, nothing is erased.
+        If \a len < 0 (default), all characters from index \a pos
+        to the end of the string are erased. */
+  Str &erase( int pos, int n=-1 );
     /*! Remove all sequences in the string which equal \a s. 
         Returns the number of removed sequences. */
   int erase( const string &s );

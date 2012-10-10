@@ -54,7 +54,8 @@ int main( int argc, char *argv[] )
   opt.addSelection( "mammal", "Mammal", "Monkey|~|Elephant" );
   opt.addSelection( "fish", "Fish", "Trout|Pike|Carp" );
 
-  cout << opt.save() << '\n';
+  string os = opt.save();
+  cout << os << '\n';
   cout << '\n';
   opt.saveXML( cout );
   cout << '\n';
@@ -76,6 +77,14 @@ int main( int argc, char *argv[] )
   cout << "Value of parameter 'Results>mammal 2': *" << opt.text( "Results>mammal", 2 ) << "*\n";
   cout << '\n';
 
+  // read in values from string:
+  cout << os << '\n';
+  opt.read( os );
+  opt.save( cout, "", 0, true );
+  cout << '\n';
+
+  return 0;
+
   ofstream ff( "tmp.dat" );
   opt.save( ff, "", 0, true );
   ff.close();
@@ -85,8 +94,6 @@ int main( int argc, char *argv[] )
   opt2.load( sf );
   opt2.save( cout, "", 0, true );
   cout << '\n';
-
-  return 0;
 
   cout << "enter some options (ident1=value1; ident2=value2; ...): ";
   getline( cin, s );

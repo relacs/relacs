@@ -258,11 +258,48 @@ public:
     /*! Search for the last option that matches \a pattern.
         Returns end() if \a name is not found. 
         See find() for details about valid patterns \a pattern. */
-  const_iterator rfind( const string &name, int level=-1 ) const;
+  const_iterator rfind( const string &pattern, int level=-1 ) const;
     /*! Search for the last option that matches \a pattern.
         Returns end() if \a name is not found. 
         See find() for details about valid patterns \a pattern. */
-  iterator rfind( const string &name, int level=-1 );
+  iterator rfind( const string &pattern, int level=-1 );
+
+    /*! Search for the first section of Options that matches \a pattern.
+        \a pattern can be a list of search terms separated by '>',
+	for example 'aaa>bbb', to search subsection 'bbb' in section 'aaa'.
+        Alternative search terms can be separated by '|'.
+	For example, if \a pattern is "date|time", then
+	"date" is searched first and if this is not found,
+	"time" is searched.
+        Returns sectionsEnd() if no match for \a pattern is found. */
+  const_section_iterator findSection( const string &pattern, int level=-1 ) const;
+    /*! Search for the first section of Options that matches \a pattern.
+        \a pattern can be a list of search terms separated by '>',
+	for example 'aaa>bbb', to search subsection 'bbb' in section 'aaa'.
+        Alternative search terms can be separated by '|'.
+	For example, if \a pattern is "date|time", then
+	"date" is searched first and if this is not found,
+	"time" is searched.
+        Returns sectionsEnd() if no match for \a pattern is found. */
+  section_iterator findSection( const string &pattern, int level=-1 );
+    /*! Search for the last section of Options that matches \a pattern.
+        \a pattern can be a list of search terms separated by '>',
+	for example 'aaa>bbb', to search subsection 'bbb' in section 'aaa'.
+        Alternative search terms can be separated by '|'.
+	For example, if \a pattern is "date|time", then
+	"date" is searched first and if this is not found,
+	"time" is searched.
+        Returns sectionsEnd() if no match for \a pattern is found. */
+  const_section_iterator rfindSection( const string &pattern, int level=-1 ) const;
+    /*! Search for the last section of Options that matches \a pattern.
+        \a pattern can be a list of search terms separated by '>',
+	for example 'aaa>bbb', to search subsection 'bbb' in section 'aaa'.
+        Alternative search terms can be separated by '|'.
+	For example, if \a pattern is "date|time", then
+	"date" is searched first and if this is not found,
+	"time" is searched.
+        Returns sectionsEnd() if no match for \a pattern is found. */
+  section_iterator rfindSection( const string &pattern, int level=-1 );
 
     /*! Get \a i-th options. */
   const Parameter &operator[]( int i ) const;

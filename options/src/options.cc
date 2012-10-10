@@ -553,7 +553,6 @@ Parameter &Options::operator[]( const string &name )
 
 Options::const_iterator Options::find( const string &pattern, int level ) const
 {
-  //  cerr << "\nXXXXXXXXXXXXXXX START SEARCH *" << pattern << "* IN " << name() << " XXXXXXXXXXXXXXXXX\n";
   Warning = "";
 
   if ( empty() )
@@ -568,7 +567,6 @@ Options::const_iterator Options::find( const string &pattern, int level ) const
   int uptolevel = level < 0 ? 3 : level+1;
 
   for ( int k=fromlevel; k<uptolevel; k++ ) {
-    //    cerr << name() << " K=" << k << '\n';
     string patterns = pattern;
     const_iterator pbegin = begin();
     const_section_iterator sbegin = sectionsBegin();
@@ -580,7 +578,6 @@ Options::const_iterator Options::find( const string &pattern, int level ) const
 	// search in key-value pairs:
 	if ( pi == patterns.size()-1 )
 	  patterns.resize( patterns.size()-1 );
-	//	cerr << "SEARCH ALL " << patterns << '\n';
 	StrQueue sq;
 	if ( k < 2 ) {
 	  sq.assign( patterns, "|" );
@@ -596,9 +593,7 @@ Options::const_iterator Options::find( const string &pattern, int level ) const
 	// search all alternatives:
 	for ( int s=0; s<sq.size(); s++ ) {
 	  // search element:
-	  //	  cerr << "SEARCH " << k << " FOR " << sq[s] << '\n';
 	  for ( const_iterator pp = pbegin; pp != end(); ++pp ) {
-	    //	    cerr << "CHECK PARAMETER " << pp->name() << '\n';
 	    if ( *pp == sq[s] )
 	      return pp;
 	  }
@@ -616,7 +611,6 @@ Options::const_iterator Options::find( const string &pattern, int level ) const
 	// search in sections:
 	string search = patterns.substr( 0, pi );
 	string subsearch = patterns.substr( pi+1 );
-	//	cerr << "SEARCH SECTIONS *" << search << "* WITH *" << subsearch << "*\n";
 	StrQueue sq;
 	if ( k < 2 ) {
 	  sq.assign( search, "|" );
@@ -631,7 +625,6 @@ Options::const_iterator Options::find( const string &pattern, int level ) const
 	  sq.assign( search, "" );
 	// search:
 	for ( int s=0; s<sq.size() && ! findagain; s++ ) {
-	  //	  cerr << "SEARCH SECTIONS " << k << " FOR " << sq[s] << '\n';
 	  // search parameter:
 	  for ( const_iterator pp = pbegin; pp != end(); ++pp ) {
 	    if ( *pp == sq[s] ) {
@@ -649,14 +642,6 @@ Options::const_iterator Options::find( const string &pattern, int level ) const
 	      const_iterator pp = sp->find( subsearch, k );
 	      if ( pp != sp->end() )
 		return pp;
-	      /*
-	      else {
-		patterns = subsearch;
-		pbegin = end();
-		sbegin = sp+1;
-		findagain = true;
-	      }
-	      */
 	    }
 	    else {
 	      const_iterator pp = sp->find( sq[s] + '>' + subsearch, k );
@@ -670,72 +655,8 @@ Options::const_iterator Options::find( const string &pattern, int level ) const
   }
   // nothing found:
   Warning = "requested option '" + pattern + "' not found!";
-  //  cerr << "NOT FOUND IN " << name() << '\n';
   return end();
 
-  /*
-  const_iterator fp = end();
-  bool found = false;
-  for ( int k=0; k<3 && ! found; k++ ) {
-
-    const_iterator pp = begin();
-    fp = end();
-
-    // split pattern:
-    StrQueue pq;
-    if ( k < 1 ) {
-      pq.assign( pattern, ">" );
-      for ( int j=0; j<pq.size(); j++ ) {
-	while ( j<pq.size() && pq[j].empty() )
-	  pq.erase( j );
-      }
-      if ( pq.empty() )
-	continue;
-    }
-    else {
-      pq.assign( pattern, "" );
-    }
-
-    for ( int p = 0; p<pq.size(); p++ ) {
-
-      // split subpattern:
-      StrQueue sq;
-      if ( k < 2 ) {
-	sq.assign( pq[p], "|" );
-	for ( int j=0; j<sq.size(); j++ ) {
-	  while ( j<sq.size() && sq[j].empty() )
-	    sq.erase( j );
-	}
-	if ( sq.empty() )
-	  continue;
-      }
-      else
-	sq.assign( pq[p], "" );
-
-      // search:
-      found = false;
-      for ( int s=0; s<sq.size(); s++ ) {
-	// search element:
-	for ( const_iterator sp = pp; sp != end(); ++sp ) {
-	  if ( *sp == sq[s] ) {
-	    found = true;
-	    fp = sp;
-	    pp = sp+1;
-	    break;
-	  }
-	}
-	if ( found ) 
-	  break;
-      }
-
-    }
-  }
-
-  // nothing found:
-  if ( ! found )
-    Warning = "requested option '" + pattern + "' not found!";
-  return fp;
-  */
 }
 
 
@@ -830,14 +751,6 @@ Options::iterator Options::find( const string &pattern, int level )
 	      iterator pp = sp->find( subsearch, k );
 	      if ( pp != sp->end() )
 		return pp;
-	      /*
-	      else {
-		patterns = subsearch;
-		pbegin = end();
-		sbegin = sp+1;
-		findagain = true;
-	      }
-	      */
 	    }
 	    else {
 	      iterator pp = sp->find( sq[s] + '>' + subsearch, k );
@@ -852,70 +765,6 @@ Options::iterator Options::find( const string &pattern, int level )
   // nothing found:
   Warning = "requested option '" + pattern + "' not found!";
   return end();
-
-  /*
-  iterator fp = end();
-  bool found = false;
-  for ( int k=0; k<3 && ! found; k++ ) {
-
-    iterator pp = begin();
-    fp = end();
-
-    // split pattern:
-    StrQueue pq;
-    if ( k < 1 ) {
-      pq.assign( pattern, ">" );
-      for ( int j=0; j<pq.size(); j++ ) {
-	while ( j<pq.size() && pq[j].empty() )
-	  pq.erase( j );
-      }
-      if ( pq.empty() )
-	continue;
-    }
-    else {
-      pq.assign( pattern, "" );
-    }
-
-    for ( int p = 0; p<pq.size(); p++ ) {
-
-      // split subpattern:
-      StrQueue sq;
-      if ( k < 2 ) {
-	sq.assign( pq[p], "|" );
-	for ( int j=0; j<sq.size(); j++ ) {
-	  while ( j<sq.size() && sq[j].empty() )
-	    sq.erase( j );
-	}
-	if ( sq.empty() )
-	  continue;
-      }
-      else
-	sq.assign( pq[p], "" );
-
-      // search:
-      found = false;
-      for ( int s=0; s<sq.size(); s++ ) {
-	// search element:
-	for ( iterator sp = pp; sp != end(); ++sp ) {
-	  if ( *sp == sq[s] ) {
-	    found = true;
-	    fp = sp;
-	    pp = sp+1;
-	    break;
-	  }
-	}
-	if ( found ) 
-	  break;
-      }
-
-    }
-  }
-
-  // nothing found:
-  if ( ! found )
-    Warning = "requested option '" + pattern + "' not found!";
-  return fp;
-  */
 }
 
 
@@ -1011,14 +860,6 @@ Options::const_iterator Options::rfind( const string &pattern, int level ) const
 		const_iterator pp = sp->rfind( subsearch, k );
 		if ( pp != sp->end() )
 		  return pp;
-		/*
-		else {
-		  patterns = subsearch;
-		  pend = end();
-		  send = sp;
-		  findagain = true;
-		}
-		*/
 	      }
 	    } while ( sp != sectionsBegin() && ! findagain );
 	  }
@@ -1043,73 +884,6 @@ Options::const_iterator Options::rfind( const string &pattern, int level ) const
   // nothing found:
   Warning = "requested option '" + pattern + "' not found!";
   return end();
-  /*
-  const_iterator fp = end();
-  bool found = false;
-  for ( int k=0; k<3 && ! found; k++ ) {
-
-    const_iterator pp = begin();
-    fp = end();
-
-    // split pattern:
-    StrQueue pq;
-    if ( k < 1 ) {
-      pq.assign( pattern, ">" );
-      for ( int j=0; j<pq.size(); j++ ) {
-	while ( j<pq.size() && pq[j].empty() )
-	  pq.erase( j );
-      }
-      if ( pq.empty() )
-	continue;
-    }
-    else {
-      pq.assign( pattern, "" );
-    }
-
-    for ( int p = 0; p<pq.size(); p++ ) {
-
-      // split subpattern:
-      StrQueue sq;
-      if ( k < 2 ) {
-	sq.assign( pq[p], "|" );
-	for ( int j=0; j<sq.size(); j++ ) {
-	  while ( j<sq.size() && sq[j].empty() )
-	    sq.erase( j );
-	}
-	if ( sq.empty() )
-	  continue;
-      }
-      else
-	sq.assign( pq[p], "" );
-
-      // search:
-      found = false;
-      for ( int s=0; s<sq.size(); s++ ) {
-	// search element:
-	const_iterator sp = end();
-	if ( sp == pp )
-	  break;
-	do {
-	  --sp;
-	  if ( *sp == sq[s] ) {
-	    found = true;
-	    fp = sp;
-	    pp = sp+1;
-	    break;
-	  }
-	} while ( sp != pp );
-	if ( found ) 
-	  break;
-      }
-
-    }
-  }
-
-  // nothing found:
-  if ( ! found )
-    Warning = "requested option '" + pattern + "' not found!";
-  return fp;
-  */
 }
 
 
@@ -1205,14 +979,6 @@ Options::iterator Options::rfind( const string &pattern, int level )
 		iterator pp = sp->rfind( subsearch, k );
 		if ( pp != sp->end() )
 		  return pp;
-		/*
-		else {
-		  patterns = subsearch;
-		  pend = end();
-		  send = sp;
-		  findagain = true;
-		}
-		*/
 	      }
 	    } while ( sp != sectionsBegin() && ! findagain );
 	  }
@@ -1237,73 +1003,288 @@ Options::iterator Options::rfind( const string &pattern, int level )
   // nothing found:
   Warning = "requested option '" + pattern + "' not found!";
   return end();
-  /*
-  iterator fp = end();
-  bool found = false;
-  for ( int k=0; k<3 && ! found; k++ ) {
+}
 
-    iterator pp = begin();
-    fp = end();
 
-    // split pattern:
-    StrQueue pq;
-    if ( k < 1 ) {
-      pq.assign( pattern, ">" );
-      for ( int j=0; j<pq.size(); j++ ) {
-	while ( j<pq.size() && pq[j].empty() )
-	  pq.erase( j );
+Options::const_section_iterator Options::findSection( const string &pattern, int level ) const
+{
+  Warning = "";
+
+  if ( empty() )
+    return sectionsEnd();
+
+  if ( pattern.empty() ) {
+    Warning = "empty search string!";
+    return sectionsEnd();
+  }
+
+  int fromlevel = level < 0 ? 0 : level;
+  int uptolevel = level < 0 ? 3 : level+1;
+
+  for ( int k=fromlevel; k<uptolevel; k++ ) {
+    string patterns = pattern;
+    size_t pi = patterns.find( '>' );
+    // search in sections:
+    if ( k > 0 )
+      pi = string::npos;
+    string search = patterns.substr( 0, pi );
+    string subsearch = "";
+    if ( pi != string::npos )
+      subsearch = patterns.substr( pi+1 );
+    StrQueue sq;
+    if ( k < 2 ) {
+      sq.assign( search, "|" );
+      for ( int j=0; j<sq.size(); ) {
+	if ( sq[j].empty() )
+	  sq.erase( j );
+	else
+	  j++;
       }
-      if ( pq.empty() )
-	continue;
     }
-    else {
-      pq.assign( pattern, "" );
-    }
-
-    for ( int p = 0; p<pq.size(); p++ ) {
-
-      // split subpattern:
-      StrQueue sq;
-      if ( k < 2 ) {
-	sq.assign( pq[p], "|" );
-	for ( int j=0; j<sq.size(); j++ ) {
-	  while ( j<sq.size() && sq[j].empty() )
-	    sq.erase( j );
+    else
+      sq.assign( search, "" );
+    // search:
+    for ( int s=0; s<sq.size(); s++ ) {
+      // search section:
+      for ( const_section_iterator sp = sectionsBegin();
+	    sp != sectionsEnd();
+	    ++sp ) {
+	if ( *sp == sq[s] ) {
+	  if ( subsearch.empty() )
+	    return sp;
+	  else {
+	    const_section_iterator pp = sp->findSection( subsearch, k );
+	    if ( pp != sp->sectionsEnd() )
+	      return pp;
+	  }
 	}
-	if ( sq.empty() )
-	  continue;
       }
-      else
-	sq.assign( pq[p], "" );
+      for ( const_section_iterator sp = sectionsBegin();
+	    sp != sectionsEnd();
+	    ++sp ) {
+	const_section_iterator pp = sp->findSection( sq[s] + '>' + subsearch, k );
+	if ( pp != sp->sectionsEnd() )
+	  return pp;
+      }
+    }
+  }
+  // nothing found:
+  Warning = "requested option '" + pattern + "' not found!";
+  return sectionsEnd();
 
-      // search:
-      found = false;
-      for ( int s=0; s<sq.size(); s++ ) {
-	// search element:
-	iterator sp = end();
-	if ( sp == pp )
-	  break;
+}
+
+
+Options::section_iterator Options::findSection( const string &pattern, int level )
+{
+  Warning = "";
+
+  if ( empty() )
+    return sectionsEnd();
+
+  if ( pattern.empty() ) {
+    Warning = "empty search string!";
+    return sectionsEnd();
+  }
+
+  int fromlevel = level < 0 ? 0 : level;
+  int uptolevel = level < 0 ? 3 : level+1;
+
+  for ( int k=fromlevel; k<uptolevel; k++ ) {
+    string patterns = pattern;
+    size_t pi = patterns.find( '>' );
+    // search in sections:
+    if ( k > 0 )
+      pi = string::npos;
+    string search = patterns.substr( 0, pi );
+    string subsearch = "";
+    if ( pi != string::npos )
+      subsearch = patterns.substr( pi+1 );
+    StrQueue sq;
+    if ( k < 2 ) {
+      sq.assign( search, "|" );
+      for ( int j=0; j<sq.size(); ) {
+	if ( sq[j].empty() )
+	  sq.erase( j );
+	else
+	  j++;
+      }
+    }
+    else
+      sq.assign( search, "" );
+    // search:
+    for ( int s=0; s<sq.size(); s++ ) {
+      // search section:
+      for ( section_iterator sp = sectionsBegin();
+	    sp != sectionsEnd();
+	    ++sp ) {
+	if ( *sp == sq[s] ) {
+	  if ( subsearch.empty() )
+	    return sp;
+	  else {
+	    section_iterator pp = sp->findSection( subsearch, k );
+	    if ( pp != sp->sectionsEnd() )
+	      return pp;
+	  }
+	}
+      }
+      for ( section_iterator sp = sectionsBegin();
+	    sp != sectionsEnd();
+	    ++sp ) {
+	section_iterator pp = sp->findSection( sq[s] + '>' + subsearch, k );
+	if ( pp != sp->sectionsEnd() )
+	  return pp;
+      }
+    }
+  }
+  // nothing found:
+  Warning = "requested option '" + pattern + "' not found!";
+  return sectionsEnd();
+
+}
+
+
+Options::const_section_iterator Options::rfindSection( const string &pattern, int level ) const
+{
+  Warning = "";
+
+  if ( empty() )
+    return sectionsEnd();
+
+  if ( pattern.empty() ) {
+    Warning = "empty search string!";
+    return sectionsEnd();
+  }
+
+  int fromlevel = level < 0 ? 0 : level;
+  int uptolevel = level < 0 ? 3 : level+1;
+
+  for ( int k=fromlevel; k<uptolevel; k++ ) {
+    string patterns = pattern;
+    size_t pi = patterns.find( '>' );
+    // search in sections:
+    if ( k > 0 )
+      pi = string::npos;
+    string search = patterns.substr( 0, pi );
+    string subsearch = "";
+    if ( pi != string::npos )
+      subsearch = patterns.substr( pi+1 );
+    StrQueue sq;
+    if ( k < 2 ) {
+      sq.assign( search, "|" );
+      for ( int j=0; j<sq.size(); ) {
+	if ( sq[j].empty() )
+	  sq.erase( j );
+	else
+	  j++;
+      }
+    }
+    else
+      sq.assign( search, "" );
+    // search:
+    for ( int s=0; s<sq.size(); s++ ) {
+      // search section:
+      const_section_iterator sp = sectionsEnd();
+      if ( sp != sectionsBegin() ) {
 	do {
 	  --sp;
 	  if ( *sp == sq[s] ) {
-	    found = true;
-	    fp = sp;
-	    pp = sp+1;
-	    break;
+	    if ( subsearch.empty() )
+	      return sp;
+	    else {
+	      const_section_iterator pp = sp->rfindSection( subsearch, k );
+	      if ( pp != sp->sectionsEnd() )
+		return pp;
+	    }
 	  }
-	} while ( sp != pp );
-	if ( found ) 
-	  break;
+	} while ( sp != sectionsBegin() );
       }
-
+      sp = sectionsEnd();
+      if ( sp != sectionsBegin() ) {
+	do {
+	  --sp;
+	  const_section_iterator pp = sp->rfindSection( sq[s] + '>' + subsearch, k );
+	  if ( pp != sp->sectionsEnd() )
+	    return pp;
+	} while ( sp != sectionsBegin() );
+      }
     }
   }
-
   // nothing found:
-  if ( ! found )
-    Warning = "requested option '" + pattern + "' not found!";
-  return fp;
-  */
+  Warning = "requested option '" + pattern + "' not found!";
+  return sectionsEnd();
+}
+
+
+Options::section_iterator Options::rfindSection( const string &pattern, int level )
+{
+  Warning = "";
+
+  if ( empty() )
+    return sectionsEnd();
+
+  if ( pattern.empty() ) {
+    Warning = "empty search string!";
+    return sectionsEnd();
+  }
+
+  int fromlevel = level < 0 ? 0 : level;
+  int uptolevel = level < 0 ? 3 : level+1;
+
+  for ( int k=fromlevel; k<uptolevel; k++ ) {
+    string patterns = pattern;
+    size_t pi = patterns.find( '>' );
+    // search in sections:
+    if ( k > 0 )
+      pi = string::npos;
+    string search = patterns.substr( 0, pi );
+    string subsearch = "";
+    if ( pi != string::npos )
+      subsearch = patterns.substr( pi+1 );
+    StrQueue sq;
+    if ( k < 2 ) {
+      sq.assign( search, "|" );
+      for ( int j=0; j<sq.size(); ) {
+	if ( sq[j].empty() )
+	  sq.erase( j );
+	else
+	  j++;
+      }
+    }
+    else
+      sq.assign( search, "" );
+    // search:
+    for ( int s=0; s<sq.size(); s++ ) {
+      // search section:
+      section_iterator sp = sectionsEnd();
+      if ( sp != sectionsBegin() ) {
+	do {
+	  --sp;
+	  if ( *sp == sq[s] ) {
+	    if ( subsearch.empty() )
+	      return sp;
+	    else {
+	      section_iterator pp = sp->rfindSection( subsearch, k );
+	      if ( pp != sp->sectionsEnd() )
+		return pp;
+	    }
+	  }
+	} while ( sp != sectionsBegin() );
+      }
+      sp = sectionsEnd();
+      if ( sp != sectionsBegin() ) {
+	do {
+	  --sp;
+	  section_iterator pp = sp->rfindSection( sq[s] + '>' + subsearch, k );
+	  if ( pp != sp->sectionsEnd() )
+	    return pp;
+	} while ( sp != sectionsBegin() );
+      }
+    }
+  }
+  // nothing found:
+  Warning = "requested option '" + pattern + "' not found!";
+  return sectionsEnd();
 }
 
 
@@ -3951,14 +3932,29 @@ Options &Options::read( const string &opttxt, int flag,
   bool cn = CallNotify;
   CallNotify = false;
 
-  // split up opttxt:
-  StrQueue sq( Str( opttxt ).stripped(), separator );
+  // remove white space and curly braces:
+  Str s = opttxt;
+  s.strip();
+  if ( ! s.empty() && s[0] == '{' ) {
+    s.preventFirst( '{' );
+    s.preventLast( '}' );
+    s.strip();
+  }
 
+  // find subsection:
+  int bi = s.find( '{' );
+  int si = -1;
+  if ( bi > 0 ) {
+    si = s.findLast( separator, bi );
+    if ( si < 0 )
+      si = 0;
+  }
+
+  // split up parameter list:
+  StrQueue sq( s.left( si ).stripped(), separator, "{[(\"" );
   for ( StrQueue::iterator sp=sq.begin(); sp != sq.end(); ++sp ) {
-
     if ( sp->empty() )
       continue;
-
     // get name:
     string name = (*sp).ident( 0, assignment, Str::WhiteSpace + '-' );
     if ( ! name.empty() ) {
@@ -3972,9 +3968,38 @@ Options &Options::read( const string &opttxt, int flag,
       if ( pattern != 0 && pp != 0 &&
 	   (*pp).isLabel() && ( (*pp).style() & Parameter::ReadPatternLabel ) )
 	*pattern = (*pp).name() + '>';
-      Warning = error + Warning;
+      Warning += error;
     }
+  }
 
+  // split up sections:
+  while ( si >= 0 ) {
+    // read section:
+    if ( separator.find( s[si] ) != string::npos )
+      si++;
+    Str name = s.ident( si, assignment, Str::WhiteSpace + '-' );
+    name.erase( name.find( '(' ) );  // erase section type specifier
+    name.strip();
+    int ri = s.findBracket( bi, "{[(\"", "" );
+    string secstr = s.mid( bi+1, ri-1 );
+    string error = Warning;
+    section_iterator sp = findSection( name );
+    Warning += error;
+    if ( sp != sectionsEnd() ) {
+      error = Warning;
+      sp->read( secstr, flag, assignment, separator, pattern );
+      Warning += error;
+    }
+    if ( ri < 0 )
+      break;
+    // find next section:
+    bi = s.find( '{', ri+1 );
+    int li = -1;
+    if ( bi > 0 )
+      li = s.findLast( separator, bi );
+    if ( li <= ri )
+      break;
+    si = li;
   }
 
 #ifndef NDEBUG

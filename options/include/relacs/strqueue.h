@@ -50,6 +50,9 @@ class StrQueue : public StrDeque
     /*! Assign the fields of \a s separated by \a separator to
         the StrQueue. */
   StrQueue( const Str &s, const string &separator );
+    /*! Assign the fields of \a s separated by \a separator to
+        the StrQueue while respecting \a brackets. */
+  StrQueue( const Str &s, const string &separator, const string &brackets );
     /*! Deconstructs a StrQueue. */
   ~StrQueue( void ) {};
 
@@ -65,10 +68,18 @@ class StrQueue : public StrDeque
     /*! Assign the fields of \a s separated by \a separator to
         the StrQueue. */
   StrQueue &assign( const Str &s, const string &separator );
+    /*! Assign the fields of \a s separated by \a separator to
+        the StrQueue while respecting \a brackets. */
+  StrQueue &assign( const Str &s, const string &separator,
+		    const string &brackets );
 
     /*! Append the fields of \a s separated by \a separator to
         the StrQueue. */
   StrQueue &append( const Str &s, const string &separator );
+    /*! Append the fields of \a s separated by \a separator to
+        the StrQueue while respecting \a brackets. */
+  StrQueue &append( const Str &s, const string &separator,
+		    const string &brackets );
 
     /*! Write the elements of the StrQueue into \a s separated by \a separator. */
   StrQueue &copy( string &s, const string &separator );

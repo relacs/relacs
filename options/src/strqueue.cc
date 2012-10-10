@@ -37,20 +37,33 @@ StrQueue::StrQueue( const Str &s, const string &separator )
 }
 
 
+StrQueue::StrQueue( const Str &s, const string &separator,
+		    const string &brackets )
+  : StrDeque()
+{
+  assign( s, separator, brackets );
+}
+
+
 StrQueue &StrQueue::assign( const Str &s, const string &separator )
 {
   clear();
-
   return append( s, separator );
+}
+
+
+StrQueue &StrQueue::assign( const Str &s, const string &separator,
+			    const string &brackets )
+{
+  clear();
+  return append( s, separator, brackets );
 }
 
 
 StrQueue &StrQueue::assign( const string &s )
 {
   clear();
-
   add( s );
-
   return *this;
 }
 
@@ -73,6 +86,29 @@ StrQueue &StrQueue::append( const Str &s, const string &separator )
 	add( s.mid( word, index-1 ) );
     }
   } while ( word >= 0 );
+
+  return *this;
+}
+
+
+StrQueue &StrQueue::append( const Str &s, const string &separator,
+			    const string &brackets )
+{
+  if ( separator.empty() ) {
+    add( s );
+    return *this;
+  }
+
+  int index = 0;
+  int next = 0;
+  do {
+    next = s.findSeparator( index, separator, brackets );
+    if ( next > index )
+      add( s.mid( index, next-1 ) );
+    else
+      add( s.mid( index ) );
+    index = next+1;
+  } while ( next >= 0 );
 
   return *this;
 }

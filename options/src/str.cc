@@ -2537,11 +2537,11 @@ Str Str::unit( const string &search, const string &dflt,
 Str Str::ident( int index, const string &a,
 		const string &space ) const
 {
-  int ai = findFirst( a );
+  int ai = findFirst( a, index );
   if ( ai < 0 )
     ai = size();
 
-  int f = findFirstNot( space );
+  int f = findFirstNot( space, index );
   int l = findLastNot( space, ai-1 );
 
   if ( f < 0 || l < 0 || l < f )
@@ -2554,7 +2554,7 @@ Str Str::ident( int index, const string &a,
 Str Str::value( int index, const string &a,
 		const string &space ) const
 {
-  int ai = findFirst( a );
+  int ai = findFirst( a, index );
   if ( ai < 0 )
     return "";
 
@@ -2750,7 +2750,7 @@ int Str::find( const char *s, int index, bool cs,
 
 
 int Str::find( char c, int index, bool cs, 
-		  int word, const string &space ) const
+	       int word, const string &space ) const
 { 
   if ( index < 0 || index >= size() )
     return -1;
@@ -3282,7 +3282,7 @@ int Str::findBracket( int index, const string &brackets,
 		      const string &comment ) const
 {
   // no valid index:
-  if ( index < 0 || index + 1 >= size() )
+  if ( index < 0 || index >= size() )
     return -1;
 
   // not an open bracket:
@@ -3295,7 +3295,7 @@ int Str::findBracket( int index, const string &brackets,
   char close = k<0 ? open : RightBracket[k];
 
   // find brackets:
-  for ( ; ; ) {
+  do {
     index++;
     int c = find( close, index );
     int o = findFirst( brackets, index );
@@ -3306,14 +3306,13 @@ int Str::findBracket( int index, const string &brackets,
       return -1;
       
     // another opening bracket:
-    if ( o >= 0 && o < c ) {
-      index = findBracket( o, brackets );
-      if ( index < 0 )
-	return -1;
-    }
+    if ( o >= 0 && o < c && ( l < 0 || o < l ) )
+      index = findBracket( o, brackets, comment );
     else
       return c;
-  }
+  } while ( index >= 0 );
+
+  return -1;
 }
 
 
@@ -3329,7 +3328,7 @@ Str &Str::stripBracket( const string &brackets, const string &comment )
   if ( o < 0 ) 
     return *this;
 
-  int c = findBracket( o, brackets, "" );
+  int c = findBracket( o, brackets, comment );
 
   string::erase( 0, o + 1 );
   if ( c > o )
@@ -3346,7 +3345,54 @@ Str Str::strippedBracket( const string &brackets, const string &comment ) const
 }
 
 
+Str Str::left( int len ) const 
+{
+  if ( len >= 0 )
+    return string::substr( 0, len );
+  else
+    return *this;
+}
+
+
+Str Str::right( int len ) const 
+{
+  if ( len >= 0 && len <= size() )
+    return string::substr( size()-len, len );
+  else
+    return *this;
+}
+
+
+Str Str::mid( int pos, int upto ) const 
+{
+  if ( upto < 0 || upto >= (int)size() )
+    upto = size()-1;
+  if ( pos < 0 || pos >= (int)size() || upto < pos )
+    return "";
+  return string::substr( pos, upto-pos+1 );
+}
+
+
+Str Str::substr( int pos, int len ) const 
+{
+  if ( pos < 0 || pos >= size() )
+    return "";
+  if ( len < 0 || len > size()-pos )
+    len = size() - pos;
+  return string::substr( pos, len );
+}
+
+
 ///// erase /////////////////////////////////////////////////////////////////
+
+Str &Str::erase( int pos, int n ) 
+{
+  string::size_type nn = n < 0 ? npos : n;
+  if ( pos >=0 && pos < size() )
+    string::erase( pos, nn );
+  return *this;
+}
+
 
 int Str::erase( const string &s )
 {
@@ -4387,7 +4433,7 @@ int Str::findSeparator( int index, const string &separator,
   bool bs = ( separator.find( ' ' ) != npos );
 
   // double-blank mode:
-  bool db = ( separator.find( "  " ) );
+  bool db = ( separator.find( "  " ) != npos );
 
   // set search index:
   int i = index;
@@ -4427,11 +4473,11 @@ int Str::findSeparator( int index, const string &separator,
     }
     break;
   }
-  
+
   // no valid separator found:
   if ( i < 0 || i >= int( l ) )
     return -1;
-  
+
   // return position of separator:
   return i;
 }
