@@ -98,7 +98,7 @@ public:
      /*! Create options from input stream \a str.
          See load( istream &str, const string &comment, const string &stop, string *line ) for details. */
   Options( istream &str, const string &assignment=":=",
-	   const string &comment="", 
+	   const string &comment="#", 
 	   const string &stop="", string *line=0 );
     /*! Deconstructs an options list. */
   virtual ~Options( void );
@@ -180,12 +180,12 @@ public:
     /*! The name of this section of options. */
   string name( void ) const;
     /*! Set the name of this section of options to \a name. */
-  Options &setName( const string &name );
+  virtual void setName( const string &name );
 
     /*! The type specifyier of this section of options. */
   string type( void ) const;
     /*! Set the type specifier of this section of options to \a type. */
-  Options &setType( const string &type );
+  void setType( const string &type );
 
     /*! The flag for this secion of options. */
   int flag( void ) const;
@@ -372,12 +372,15 @@ public:
         size() returns the number of values. */
   int size( const string &name ) const;
 
-    /*! Add parameter \a np to options. */
+    /*! Add parameter \a np to options.
+        \sa insert(), endSection(), clearSections() */
   Parameter &add( const Parameter &np );
-    /*! Insert a new parameter \a np at the beginning of the options list
-        (\a atname == "") or at the position of the option with
-        name \a atname. If the option with name \a atname
-        does not exist, the option is appended to the end of the list. */
+    /*! Insert a new Parameter \a np at the position of the Parameter
+        specified by \a atname.  list (\a atname == "") or. If \a
+        atname is empty or no Parameter is found for \a atname, the
+        Parameter is inserted at the beginning or appended to the end
+        of the currently active section, respectively.
+	\sa add(), endSection(), clearSections() */
   Parameter &insert( const Parameter &np, const string &atname="" );
 
     /*! Add a text option at the end of the options list. 
@@ -1277,7 +1280,7 @@ public:
 	and is formatted according to the \a style flag.
         Subsequent calls to addText(), addNumber(), etc. add new Parameter
 	to the added section.
-        \sa addSubSection(), addSubSubSection() */
+        \sa addSubSection(), addSubSubSection(), endSection(), clearSections() */
   Options &addSection( const string &name, const string &type="",
 		       int flag=0xffffff, int style=0 );
     /*! Add a new subsection of Options to the last section.
@@ -1287,7 +1290,7 @@ public:
         Subsequent calls to addText(), addNumber(), etc. add new Parameter
 	to the added subsection.
         \note You can only add a subsection after having added a section!
-        \sa addSection(), addSubSubSection() */
+        \sa addSection(), addSubSubSection(), endSection(), clearSections() */
   Options &addSubSection( const string &name, const string &type="",
 			  int flag=0xffffff, int style=0 );
     /*! Add a new subsubsection of Options to the last subsection
@@ -1298,9 +1301,19 @@ public:
         Subsequent calls to addText(), addNumber(), etc. add new Parameter
 	to the added subsubsection.
         \note You can only add a subsubsection after having added a subsection!
-        \sa addSection(), addSubSection() */
+        \sa addSection(), addSubSection(), endSection(), clearSections() */
   Options &addSubSubSection( const string &name, const string &type="",
 			     int flag=0xffffff, int style=0 );
+    /*! End the currently active section such that subsequent calls
+        to addText(), addNumber(), etc. add new Parameter
+	to the parent section.
+        \sa addSection(), addSubSection(), addSubSubSection(), clearSections() */
+  void endSection( void );
+    /*! Reset the currently active section such that subsequent calls
+        to addText(), addNumber(), etc. add new Parameter
+	to this Options.
+        \sa addSection(), addSubSection(), addSubSubSection(), endSection() */
+  void clearSections( void );
 
     /*! Set value of option with name \a name
         to its default. */
@@ -1337,15 +1350,17 @@ public:
         only options with this name are processed. */
   Options &combineLast( const string &name="" );
 
-    /*! Remove the option where a p points to. */
+    /*! Remove the Parameter where \a p points to. */
   Options &erase( iterator p );
-    /*! Remove all options whose name match \a name from options list. */
-  Options &erase( const string &name );
+    /*! Remove all Parameter specified by \a pattern.
+        \sa find() */
+  Options &erase( const string &pattern );
     /*! Remove all options whose flag matches \a selectflag from options list. */
   Options &erase( int selectflag );
-    /*! Remove last option. */
+    /*! Remove last Parameter from the currently active section.
+        \sa endSection(), clearSections() */
   Options &pop( void );
-    /*! Remove all options. */
+    /*! Remove all Parameter and sections of Options. */
   Options &clear( void );
     /*! Remove all options without value, i.e. Labels. */
   Options &strip( void );
@@ -1480,10 +1495,11 @@ public:
         "parameter1: x, parameter2: y, parameter3: z, ...".
         If the parameters 'parameter1', 'parameter2', ... match the
         name of an option, its value is set to x, y, z, ... respectively,
-	and \a flag is added to its flags, if \a flag is not 0. */
+	and \a flag is added to its flags, if \a flag is not 0.
+        \return the Options for which to continue to read. */
   Options &read( const string &opttxt, int flag,
 		 const string &assignment=":=", const string &separator=",;",
-		 string *pattern=0 );
+		 string *pattern=0, int *indent=0 );
   Options &read( const string &opttxt, const string &assignment=":=",
 		 const string &separator=",;", string *pattern=0 )
     { return read( opttxt, 0, assignment, separator, pattern ); };
@@ -1500,10 +1516,10 @@ public:
 	then the last read line is returned in \a line.
 	The warning message is set. */
   istream &read( istream &str, int flag, const string &assignment=":=",
-		 const string &comment="", 
+		 const string &comment="#", 
 		 const string &stop="", Str *line=0 );
   istream &read( istream &str, const string &assignment=":=",
-		 const string &comment="", 
+		 const string &comment="#", 
 		 const string &stop="", Str *line=0 ) 
     { return read( str, 0, assignment, comment, stop, line ); };
     /*! Read options from the list of strings \a sq. 
@@ -1523,8 +1539,10 @@ public:
 
     /*! Read options from the parameter \a p.
         If no option with the name equal to \a p's name
-        exist \a p is appended to the options.
-        Returns \c true if \a p was read, \c false if it was appended. */
+        exist \a p is appended to the active section
+	of Options.
+        Returns \c true if \a p was read, \c false if it was appended.
+        \sa read(), endSection(), clearSections() */
   bool readAppend( const Parameter &p );
     /*! Read options from the options \a o.
         All options \a o that do not exist are appended.. */
@@ -1554,7 +1572,7 @@ public:
 	then the last read line is returned in \a line.
 	The warning message is set. */
   istream &load( istream &str, const string &assignment=":=",
-		 const string &comment="", 
+		 const string &comment="#", 
 		 const string &stop="", string *line=0 );
     /*! Create new options from the list of strings \a sq. 
 	Each line is assumed to be a single option, which is loaded with

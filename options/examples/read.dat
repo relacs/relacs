@@ -1,0 +1,24 @@
+# this is a test file for backwards compatibility:
+Test
+comment      : no comment  # no more
+duration     : 310ms
+pause        : 100.0ms
+repeats      : 10
+sinewave     : true
+recordingdate: 2009-06-20
+recordingtime: 16:42:13
+Analysis
+win        : 420ms
+type       : false
+Nasty |x|>1: some special value
+Results
+numres: 23
+Color
+background: red
+foreground: pink
+Animal
+mammal: Elephant
+fish  : Trout
+Files
+master: maindata.dat
+data  : data.dat

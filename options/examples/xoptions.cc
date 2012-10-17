@@ -31,6 +31,7 @@ int main( int argc, char *argv[] )
   Options opt;
   string s;
 
+  opt.setName( "Test" );
   opt.addText( "comment", "this is a special stimulus" );
   opt.addNumber( "duration", "Duration of Signal",
 		 0.2, 0.01, 1000.0, 0.01, "seconds", "ms" );
@@ -53,9 +54,11 @@ int main( int argc, char *argv[] )
   opt.addSubSection( "Animal" );
   opt.addSelection( "mammal", "Mammal", "Monkey|~|Elephant" );
   opt.addSelection( "fish", "Fish", "Trout|Pike|Carp" );
+  opt.addSection( "Files", "analysis/files" );
+  opt.addText( "master", "Master file", "main.dat" );
+  opt.addText( "data", "Data file", "data.dat" );
 
-  string os = opt.save();
-  cout << os << '\n';
+  cout << opt.save() << '\n';
   cout << '\n';
   opt.saveXML( cout );
   cout << '\n';
@@ -75,25 +78,80 @@ int main( int argc, char *argv[] )
   cout << "Value of parameter 'Results>mammal 0': *" << opt.text( "Results>mammal", 0 ) << "*\n";
   cout << "Value of parameter 'Results>mammal 1': *" << opt.text( "Results>mammal", 1 ) << "*\n";
   cout << "Value of parameter 'Results>mammal 2': *" << opt.text( "Results>mammal", 2 ) << "*\n";
+  cout << "Value of parameter 'Files>data': *" << opt.text( "Files>data" ) << "*\n";
   cout << '\n';
 
+  // set values in opt2:
+  Options opt2 = opt;
+  opt2.setText( "comment", "no comment" );
+  opt2.setText( "foreground", "pink" );
+  opt2.setBoolean( "type", false );
+  opt2.setNumber( "duration", 0.31 );
+  opt2.setNumber( "Analysis>win", 0.42 );
+  opt2.setInteger( "Results>numres", 23 );
+  opt2.selectText( "Animal>mammal", "Elephant" );
+  opt2.setText( "Files>master", "maindata.dat" );
+
   // read in values from string:
+  cout << "read in values from string:\n";
+  string os = opt2.save();
   cout << os << '\n';
   opt.read( os );
   opt.save( cout, "", 0, true );
   cout << '\n';
 
-  return 0;
+  // set default:
+  cout << "set default:\n";
+  opt.setDefaults();
+  opt.save( cout, "", 0, true );
+  cout << '\n';
 
-  ofstream ff( "tmp.dat" );
-  opt.save( ff, "", 0, true );
-  ff.close();
-
-  Options opt2;
-  ifstream sf( "tmp.dat" );
-  opt2.load( sf );
+  // read in values from file:
+  cout << "read in values from file:\n";
   opt2.save( cout, "", 0, true );
   cout << '\n';
+  {
+    ofstream ff( "tmp.dat" );
+    ff << "# This is the current yaml style:\n";
+    opt2.save( ff, "", 0, false, true );
+  }
+  {
+    ifstream sf( "tmp.dat" );
+    opt.read( sf );
+  }
+  opt.save( cout, "", 0, true );
+  cout << '\n';
+  cout << "read in values from file without indentation:\n";
+  opt.setDefaults();
+  {
+    ifstream sf( "read.dat" );
+    opt.read( sf );
+  }
+  opt.save( cout, "", 0, true );
+  cout << '\n';
+
+  return 0;
+
+  // read in values from options:
+  cout << "read in values from options:\n";
+  opt.setDefaults();
+  opt.read( opt2 );
+  opt.save( cout, "", 0, true );
+  cout << '\n';
+
+  return 0;
+
+  // load options from file:
+  cout << "load options from file:\n";
+  opt2.clear();
+  {
+    ifstream sf( "tmp.dat" );
+    opt2.load( sf );
+  }
+  opt2.save( cout, "", 0, true );
+  cout << '\n';
+
+  return 0;
 
   cout << "enter some options (ident1=value1; ident2=value2; ...): ";
   getline( cin, s );

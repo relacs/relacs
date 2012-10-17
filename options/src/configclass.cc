@@ -141,7 +141,7 @@ void ConfigClass::setConfigureClasses( ConfigureClasses *cfg )
 
 void ConfigClass::readConfig( StrQueue &sq )
 {
-  Options::read( sq, 0, ":" );
+  Options::read( sq, 0 );
 }
 
 
