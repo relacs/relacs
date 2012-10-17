@@ -47,13 +47,13 @@ OneClick::OneClick( void )
 
 
   // add some parameter as options:
-  addLabel( "Intensities" ).setStyle( OptWidget::Bold );
+  addSection( "Intensities" ).setStyle( OptWidget::Bold );
   addNumber( "intmin", "Minimum Click intensity", MinIntensity, 0.0, 200.0, 5.0, "dB SPL" );
   addNumber( "intmax", "Maximum Click intensity", MaxIntensity, 0.0, 200.0, 5.0, "dB SPL" );
   addNumber( "intstep", "Click intensity step", IntensityStep, 0.0, 200.0, 1.0, "dB SPL" );
   addInteger( "repeat", "Number of repetitions of the whole f-I curve measurement", IntRepeat, 1, 1000, 1 );
 
-  addLabel( "Waveform" ).setStyle( OptWidget::Bold );
+  addSection( "Waveform" ).setStyle( OptWidget::Bold );
   addNumber( "duration", "Duration of stimulus", Duration, 0.0, 0.1, 0.000001, "seconds", "microsec" );
   //  addNumber( "latency", "Latency after stimulus", Latency, 0.0, 10.0, 0.05, "seconds", "ms" );
   addNumber( "pause", "Pause", Pause, 0.0, 10.0, 0.05, "seconds", "ms" );

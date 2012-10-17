@@ -1,4 +1,5 @@
 Options:
+- Reset parentSection pointers at assing, append, etc!
 - Options::read -> Options::assign( ident, value ): what if value is "[ a, b, c]"?
 - get rid of SavePatternLabel in save(), read()
 - change save() functions to take flags that specify what to put out

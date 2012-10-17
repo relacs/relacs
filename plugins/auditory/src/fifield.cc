@@ -48,18 +48,19 @@ FIField::FIField( void )
   MinRateFrac = 0.3;
 
   // add some parameter as options:
-  insertLabel( "Frequencies", "Intensities" ).setStyle( OptWidget::TabLabel );
-  insertLabel( "Range", "Intensities" );
-  insertNumber( "freqmin", "Intensities", "Minimum stimulus frequency", MinFreq, 2000.0, 80000.0, 1000.0, "Hz", "kHz" );
-  insertNumber( "freqmax", "Intensities", "Maximum stimulus frequency", MaxFreq, 2000.0, 80000.0, 1000.0, "Hz", "kHz" );
-  insertNumber( "freqstep", "Intensities", "Frequency step", FreqStep, 0.0, 10000.0, 100.0, "Hz", "kHz" );
-  insertNumber( "freqfac", "Intensities", "Frequency factor", FreqFac, 0.0, 100.0, 0.01 ).setFormat( "%.9f" );
-  insertText( "freqrange", "Intensities", "Frequency range", FreqStr ).setUnit( "kHz" );
-  insertSelection( "freqshuffle", "Intensities", "Order of frequencies", RangeLoop::sequenceStrings() );
-  insertInteger( "freqincrement", "Intensities", "Initial increment for frequencies", FreqIncrement, -1000, 1000, 1 );
-  insertLabel( "Optimization", "Intensities" );
-  insertInteger( "reducedfreqincrement", "Intensities", "Reduce frequency range at frequency increments below", ReducedFreqIncrement, 0, 1000, 1 );
-  insertInteger( "reducedfreqnumber", "Intensities", "Number of frequencies used for the reduced frequency range", ReducedFreqNumber, 0, 1000, 1 );
+  Options &fo = insertSection( "Frequencies", "Intensities" ).setStyle( OptWidget::TabLabel );
+  fo.addSection( "Range" );
+  fo.addNumber( "freqmin", "Minimum stimulus frequency", MinFreq, 2000.0, 80000.0, 1000.0, "Hz", "kHz" );
+  fo.addNumber( "freqmax", "Maximum stimulus frequency", MaxFreq, 2000.0, 80000.0, 1000.0, "Hz", "kHz" );
+  fo.addNumber( "freqstep", "Frequency step", FreqStep, 0.0, 10000.0, 100.0, "Hz", "kHz" );
+  fo.addNumber( "freqfac", "Frequency factor", FreqFac, 0.0, 100.0, 0.01 ).setFormat( "%.9f" );
+  fo.addText( "freqrange", "Frequency range", FreqStr ).setUnit( "kHz" );
+  fo.addSelection( "freqshuffle", "Order of frequencies", RangeLoop::sequenceStrings() );
+  fo.addInteger( "freqincrement", "Initial increment for frequencies", FreqIncrement, -1000, 1000, 1 );
+  fo.addSection( "Optimization" );
+  fo.addInteger( "reducedfreqincrement", "Reduce frequency range at frequency increments below", ReducedFreqIncrement, 0, 1000, 1 );
+  fo.addInteger( "reducedfreqnumber", "Number of frequencies used for the reduced frequency range", ReducedFreqNumber, 0, 1000, 1 );
+
   insertNumber( "minratefrac", "setbest", "Fraction of maximum rate required for f-I curve analysis", MinRateFrac, 0.0, 1.0, 0.1, "1", "%" );
   Options::erase( "usethresh" );
   Options::erase( "usesat" );

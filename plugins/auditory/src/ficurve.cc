@@ -74,7 +74,7 @@ FICurve::FICurve( void )
   SetCurves = 1;
 
   // add some parameter as options:
-  addLabel( "Intensities" ).setStyle( OptWidget::TabLabel );
+  addSection( "Intensities" ).setStyle( OptWidget::TabLabel );
   addNumber( "intmin", "Minimum stimulus intensity", MinIntensity, -200.0, 200.0, 5.0, "dB SPL" ).setActivation( "useprevints", "no" );
   addNumber( "intmax", "Maximum stimulus intensity", MaxIntensity, 0.0, 200.0, 5.0, "dB SPL" ).setActivation( "useprevints", "no" );
   addNumber( "intstep", "Sound intensity step", IntensityStep, 0.0, 200.0, 1.0, "dB SPL" ).setActivation( "useprevints", "no" );
@@ -87,7 +87,7 @@ FICurve::FICurve( void )
   addInteger( "blockrepeat", "Number of repetitions of a fixed intensity increment", IntBlockRepeat, 1, 10000, 1 );
   addInteger( "repeat", "Number of repetitions of the whole f-I curve measurement", IntRepeat, 0, 10000, 1 );
   addBoolean( "manualskip", "Show buttons for manual selection of intensities", false );
-  addLabel( "Waveform" ).setStyle( OptWidget::TabLabel );
+  addSection( "Waveform" ).setStyle( OptWidget::TabLabel );
   addSelection( "waveform", "Waveform of stimulus", "sine|noise" );
   addNumber( "carrierfreq", "Frequency of carrier", CarrierFrequency, -40000.0, 40000.0, 500.0, "Hz", "kHz" );
   addBoolean( "usebestfreq", "Relative to the cell's best frequency", UseBestFreq );
@@ -95,22 +95,22 @@ FICurve::FICurve( void )
   addNumber( "duration", "Duration of stimulus", Duration, 0.0, 1000.0, 0.05, "seconds", "ms" );
   addNumber( "pause", "Pause", Pause, 0.0, 1000.0, 0.05, "seconds", "ms" );
   addSelection( "side", "Speaker", "left|right|best" );
-  addLabel( "Optimization" ).setStyle( OptWidget::TabLabel );
-  addLabel( "Baseline activity" );
+  addSection( "Optimization" ).setStyle( OptWidget::TabLabel );
+  addSubSection( "Baseline activity" );
   addBoolean( "usesilent", "Use measured baseline activity", UseSilent );
   addNumber( "maxbaserate", "Maximum baseline activity", MaxBaseRate, 0.0, 1000.0, 5.0, "Hz" ).setActivation( "usesilent", "false" );
   addInteger( "maxsilent", "Maximum trials used for baseline activity", MaxSilent, 0, 1000, 1 );
   addSelection( "resetsilent", "Reset estimation of baseline activity at", "Never|Session|RePro" );
   addNumber( "silentfactor", "Weight for standard deviation of baseline activity", SilentFactor, 0.0, 100.0, 0.5 ).setActivation( "usesilent", "true" );
-  addLabel( "No response" );
+  addSubSection( "No response" );
   addBoolean( "skippause", "Skip pause if there is no response", SkipPause );
   addInteger( "silentintincrement", "Skip all stimuli below not responding ones<br> at intensity increments below", SkipSilentIncrement, 0, 1000, 1 );
-  addLabel( "Slope" );
+  addSubSection( "Slope" );
   addInteger( "slopeintincrement", "Optimize slopes at intensity increments below", SlopeIntIncrement, 0, 1000, 1 );
   addNumber( "minrateslope", "Minimum slope of firing rate", MinRateSlope, 0.0, 1000.0, 1.0, "Hz/dB" );
   addNumber( "maxratefrac", "Fraction of maximum firing rate above which slopes are optimized", MaxRateFrac, 0.0, 1.0, 0.1, "1", "%" );
   addNumber( "extint", "Extend intensity range by", IntensityExtension, 0.0, 100.0, 1.0, "dB SPL" );
-  addLabel( "Analysis" ).setStyle( OptWidget::TabLabel );
+  addSection( "Analysis" ).setStyle( OptWidget::TabLabel );
   addNumber( "ratedt", "Bin width for firing rate", RateDt, 0.0, 1.0, 0.0005, "seconds", "ms" );
   addNumber( "prewidth", "Window length for baseline firing rate", PreWidth, 0.0, 10.0, 0.05, "seconds", "ms" );
   addNumber( "peakwidth", "Window length for peak firing rate", PeakWidth, 0.0, 10.0, 0.01, "seconds", "ms" );

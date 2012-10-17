@@ -986,13 +986,13 @@ Parameter &Parameter::addText( const string &strg, bool clear )
   // split strg:
   StrQueue sq;
   if ( strg.find( '|' ) != string::npos )
-    sq.assign( strg, "|" );  // compatibility with old styles
+    sq.assign( strg, "|", "\"" );  // compatibility with old styles
   else {
     if ( ! strg.empty() && strg[0] == '[' ) {
       Str s = strg;
       s.preventFirst( '[' );
       s.preventLast( ']' );
-      sq.assign( s, "," );
+      sq.assign( s, ",", "\"" );
     }
     else
       sq.assign( strg, "" );
@@ -1002,6 +1002,10 @@ Parameter &Parameter::addText( const string &strg, bool clear )
   // remove leading and trailing spaces, and make '~' an empty string:
   for ( int k=0; k<sq.size(); k++ ) {
     sq[k].strip( ' ' );
+    if ( ! sq[k].empty() && sq[k][0] == '"' && sq[k][sq[k].size()-1] == '"' ) {
+      sq[k].erase( 0, 1 );
+      sq[k].erase( sq[k].size() - 1 );
+    }
     if ( sq[k] == "~" )
       sq[k].clear();
   }
@@ -2984,7 +2988,7 @@ string Parameter::save( bool detailed, bool firstonly ) const
   if ( isLabel() )
     str = label();
   else {
-    // nameifier:
+    // name:
     str = name();
     if ( detailed && name() != request() )
       str += " (" + request() + "): ";
@@ -3032,6 +3036,8 @@ string Parameter::save( bool detailed, bool firstonly ) const
       string val = text( 0 );
       if ( val.empty() )
 	str += '~';
+      else if ( val.find_first_of( ",{}[]:=" ) != string::npos )
+	str += '"' + val + '"';
       else
 	str += val;
       if ( fulllist ) {
@@ -3061,7 +3067,7 @@ ostream &Parameter::save( ostream &str, int width, bool detailed,
       str << setw( 0 ) << label();
   }
   else {
-    // nameifier:
+    // name:
     string is = pattern+name();
     if ( detailed && name() != request() )
       is += " (" + request() + ")";
@@ -3108,6 +3114,8 @@ ostream &Parameter::save( ostream &str, int width, bool detailed,
       string val = text( 0 );
       if ( val.empty() )
 	str << '~';
+      else if ( val.find_first_of( ",{}[]:=" ) != string::npos )
+	str << '"' << val << '"';
       else
 	str << val;
       if ( fulllist ) {
@@ -3219,7 +3227,7 @@ Parameter &Parameter::load( Str s, const string &assignment )
   Str name = s.ident( 0, assignment );
   Str request = "";
   if ( name.empty() )
-    Warning += "\"" + s.stripped() + "\": missing nameifier! ";
+    Warning += "\"" + s.stripped() + "\": missing name! ";
   else {
     if ( name.size() > 2 && name[name.size()-1] == ')' ) {
       // request string:

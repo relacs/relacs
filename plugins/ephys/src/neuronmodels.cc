@@ -169,11 +169,10 @@ void NeuronModels::operator()( double t, double *x, double *dxdt, int n )
 
 Options NeuronModels::metaData( void )
 {
-  Options opts;
-  opts.addLabel( configIdent() );
-  opts.append( *this );
+  Options opts( *this );
+  opts.setName( configIdent() );
   if ( NM != 0 ) {
-    opts.addLabel( NM->configIdent() );
+    opts.addSection( NM->configIdent() );
     opts.append( *NM );
   }
   return opts;
@@ -215,18 +214,18 @@ void NeuronModels::addModels( void )
 
 void NeuronModels::addOptions( void )
 {
-  addLabel( "Spike generator" );
+  addSection( "Spike generator" );
   addSelection( "spikemodel", "Spike model", "" );
   addNumber( "noised", "Intensity of current noise", 0.0, 0.0, 100.0, 1.0 );
   addNumber( "deltat", "Delta t", 0.005, 0.0, 1.0, 0.001, "ms" );
   addSelection( "integrator", "Method of integration", "Euler|Midpoint|Runge-Kutta 4" );
-  addLabel( "Voltage-gated current 1 (activation only)" );
+  addSection( "Voltage-gated current 1 (activation only)" );
   addNumber( "gmc", "Conductivity", 0.0, 0.0, 10000.0, 0.1 );
   addNumber( "emc", "Reversal potential", -90.0, -200.0, 200.0, 1.0, "mV" ).setActivation( "gmc", ">0" );
   addNumber( "mvmc", "Midpoint potential of activation", -40, -200.0, 200.0, 1.0, "mV" ).setActivation( "gmc", ">0" );
   addNumber( "mwmc", "Width of activation", 10.0, -1000.0, 1000.0, 1.0, "mV" ).setActivation( "gmc", ">0" );
   addNumber( "taumc", "Time constant", 10.0, 0.0, 1000.0, 1.0, "ms" ).setActivation( "gmc", ">0" );
-  addLabel( "Voltage-gated current 2  (activation and inactivation)" );
+  addSection( "Voltage-gated current 2  (activation and inactivation)" );
   addNumber( "gmhc", "Conductivity", 0.0, 0.0, 10000.0, 0.1 );
   addNumber( "emhc", "Reversal potential", -90.0, -200.0, 200.0, 1.0, "mV" ).setActivation( "gmhc", ">0" );
   addNumber( "mvmhc", "Midpoint potential of activation", -40, -200.0, 200.0, 1.0, "mV" ).setActivation( "gmhc", ">0" );

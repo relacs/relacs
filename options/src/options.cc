@@ -52,11 +52,21 @@ Options::Options( const Options &o )
     Style( o.Style ),
     Opt( o. Opt ),
     Secs( o.Secs ),
-    AddOpts( o.AddOpts ),
+    AddOpts( this ),
     Warning( "" ),
     Notified( false ),
     CallNotify( o.CallNotify )
 {
+  // XXX this needs to copy recursively everything
+  // XXX and set the parentSections in all parameter and sections right!!!
+  // XXX Same for all other assigns and appends!
+  // XXX Also check Parameter::assign etc. !!
+  for ( iterator pp = begin(); pp != end(); ++pp )
+    pp->setParentSection( this );
+  for ( section_iterator sp = sectionsBegin();
+	sp != sectionsEnd();
+	++sp )
+    sp->setParentSection( this );
 }
 
 
@@ -172,6 +182,7 @@ Options &Options::assign( const Options &o )
   ParentSection = o.ParentSection;
   Opt = o.Opt;
   Secs = o.Secs;
+  AddOpts = this;
   Notified = false;
   CallNotify = o.CallNotify;
 
@@ -186,7 +197,11 @@ Options &Options::append( const Options &o )
     return *this;
 
   for ( const_iterator pp = o.begin(); pp != o.end(); ++pp )
-    Opt.push_back( *pp );
+    AddOpts->Opt.push_back( *pp );
+  for ( const_section_iterator sp = o.sectionsBegin();
+	sp != o.sectionsEnd();
+	++sp )
+    AddOpts->Secs.push_back( *sp );
 
   return *this;
 }
@@ -260,9 +275,22 @@ Options &Options::append( const Options &o, int flags )
   if ( this == &o ) 
     return *this;
 
+  // add Parameter to current section:
   for ( const_iterator pp = o.begin(); pp != o.end(); ++pp ) {
     if ( (*pp).flags( flags ) )
-      Opt.push_back( *pp );
+      AddOpts->Opt.push_back( *pp );
+  }
+  // add Sections to current section:
+  for ( const_section_iterator sp = o.sectionsBegin();
+	sp != o.sectionsEnd();
+	++sp ) {
+    if ( sp->flag( flags ) ) {
+      // add empty section:
+      AddOpts->Secs.push_back( Options( sp->name(), sp->type(),
+					sp->flag(), sp->style() ) );
+      // add only appropriate Parameter and Sections:
+      AddOpts->Secs.back().append( *sp, flags );
+    }
   }
 
   return *this;
@@ -425,8 +453,8 @@ int Options::flag( void ) const
 
 bool Options::flag( int selectflag ) const
 {
-  return ( selectflag == 0 ||
-	   ( selectflag > 0 && ( flag() & selectflag ) ) );
+  return ( selectflag == 0 || selectflag == NonDefault || 
+	   ( ( flag() & abs(selectflag) ) ) );
 }
 
 
@@ -3273,6 +3301,37 @@ Options &Options::addSubSubSection( const string &name, const string &type,
 }
 
 
+Options &Options::insertSection( const string &name, const string &atpattern,
+				 const string &type, int flag, int style )
+{
+  // insert at front:
+  if ( atpattern.empty() ) {
+    AddOpts->Secs.push_front( Options( name, type, flag, style ) );
+    AddOpts->Secs.front().setParentSection( this );
+    AddOpts = &AddOpts->Secs.front();
+  }
+  else {
+    // insert at atpattern:
+    section_iterator sp = findSection( atpattern );
+    if ( sp != sectionsEnd() ) {
+      Options *ps = sp->parentSection();
+      if ( ps != 0 ) {
+	Options &no = *(ps->Secs.insert( sp, Options( name, type, flag, style ) ));
+	no.setParentSection( ps );
+	AddOpts = &no;
+      }
+    }
+    else {
+      // not found, add to sections:
+      AddOpts->Secs.push_back( Options( name, type, flag, style ) );
+      AddOpts->Secs.back().setParentSection( this );
+      AddOpts = &AddOpts->Secs.back();
+    }
+  }
+  return *AddOpts;
+}
+
+
 void Options::endSection( void )
 {
   Options *newaddopts = AddOpts->parentSection();
@@ -3544,7 +3603,6 @@ Options &Options::erase( int selectflag )
     else
       ++pp;
   }
-
   return *this;
 }
 
@@ -3564,6 +3622,7 @@ Options &Options::clear( void )
   Warning = "";
   Opt.clear();
   Secs.clear();
+  AddOpts = this;
   return *this;
 }
 
@@ -3986,96 +4045,106 @@ Options &Options::read( const string &opttxt, int flag,
     s.preventLast( '}' );
     s.strip();
   }
-
-  // find subsection:
-  int bi = s.find( '{' );
-  int si = -1;
-  if ( bi > 0 ) {
-    si = s.findLast( separator, bi );
-    if ( si < 0 )
-      si = 0;
-  }
+  if ( s.empty() )
+    return *retopt;
 
   // split up parameter list:
-  StrQueue sq( s.left( si ).stripped(), separator, "{[(\"" );
-  for ( StrQueue::iterator sp=sq.begin(); sp != sq.end(); ++sp ) {
-    if ( sp->empty() )
-      continue;
-    // get name:
-    string name = sp->ident( 0, assignment, Str::WhiteSpace + '-' );
-    if ( ! name.empty() ) {
-      string value = sp->value( 0, assignment );
-      if ( sp == sq.end()-1 && value.empty() && si < 0 ) {
-	// a section:
-	if ( name == Options::name() )
-	  break;
-	// this is a new section:
-	string error = Warning;
-	Options *ps = this;
-	bool found = false;
-	do {
-	  section_iterator si = ps->findSection( name );
-	  if ( si != ps->sectionsEnd() ) {
-	    retopt = &(*si);
-	    found = true;
-	    break;
-	  }
-	  ps = ps->parentSection();
-	} while ( ps != 0 );
-	Warning = error;
-	if ( ! found )
-	  Warning += "requested section '" + name + "' not found!";
-	break;
-      }
-      // set value for Parameter:
-      string error = Warning;
-      Parameter *pp = assign( pattern == 0 ? name : *pattern + name, value );
-      // set flags:
-      if ( pp != 0 && flag != 0 )
-	pp->addFlags( flag );
-      if ( pattern != 0 && pp != 0 &&
-	   (*pp).isLabel() && ( (*pp).style() & Parameter::ReadPatternLabel ) )
-	*pattern = (*pp).name() + '>';
-      Warning += error;
+  int index = 0;
+  int next = 0;
+  do {
+    // XXX keep care of leftover closing curly bracket here!
+    // extract name:
+    next = s.findSeparator( index, assignment, "\"" );
+    Str name = s.mid( index, next-1 );
+    name.strip( Str::WhiteSpace + '-' );
+    if ( ! name.empty() && name[name.size()-1] == ')' ) {
+      name.erase( name.find( '(' ) );  // erase request string/section type specifier
+      name.strip( Str::WhiteSpace + '-' );
     }
-  }
-
-  // split up sections:
-  while ( si >= 0 ) {
-    // read section:
-    if ( separator.find( s[si] ) != string::npos )
-      si++;
-    Str name = s.ident( si, assignment, Str::WhiteSpace + '-' );
-    name.erase( name.find( '(' ) );  // erase section type specifier
-    name.strip();
-    int ri = s.findBracket( bi, "{[(\"", "" );
-    string secstr = s.mid( bi+1, ri-1 );
-    if ( name == Options::name() ) {
-      string error = Warning;
-      read( secstr, flag, assignment, separator, pattern );
-      Warning = error + Warning;
+    // go to value:
+    if ( next >= 0 )
+      index = s.findFirstNot( Str::WhiteSpace, next+1 );
+    else
+      index = -1;
+    if ( index >= 0 ) {
+      // end of value:
+      next = s.findSeparator( index, separator, "{[\"" );
+      if ( s[index] == '{' ) {
+	// subsection:
+	index = s.findFirstNot( Str::WhiteSpace, index+1 );
+	int r = s.findLastNot( Str::WhiteSpace, next<0?s.size()-1:next-1  );
+	bool closing = false;
+	if ( r >= 0 && s[r] == '}' ) {
+	  r = s.findLastNot( Str::WhiteSpace, r-1  );
+	  closing = true;
+	}
+	if ( r > index ) {
+	  // read section:
+	  string secstr = s.mid( index, r );
+	  if ( name == Options::name() ) {
+	    string error = Warning;
+	    read( secstr, flag, assignment, separator, pattern );
+	    Warning = error + Warning;
+	  }
+	  else {
+	    string error = Warning;
+	    section_iterator sp = findSection( name );
+	    Warning = error + Warning;
+	    if ( sp != sectionsEnd() ) {
+	      error = Warning;
+	      sp->read( secstr, flag, assignment, separator, pattern );
+	      Warning = error + Warning;
+	      if ( ! closing )
+		retopt = &(*sp);
+	    }
+	  }
+	}
+	else {
+	  // empty sections:
+	  break;
+	}
+      }
+      else {
+	// value:
+	next = s.findSeparator( index, separator, "[\"" );
+	int r = s.findLastNot( Str::WhiteSpace, next<0?s.size()-1:next-1  );
+	string value = s.mid( index, r );
+	// set value for Parameter:
+	string error = Warning;
+	Parameter *pp = assign( pattern == 0 ? name : *pattern + name, value );
+	// set flags:
+	if ( pp != 0 && flag != 0 )
+	  pp->addFlags( flag );
+	if ( pattern != 0 && pp != 0 &&
+	     (*pp).isLabel() && ( (*pp).style() & Parameter::ReadPatternLabel ) )
+	  *pattern = (*pp).name() + '>';
+	Warning += error;
+      }
+      index = next<0 ? -1 : next+1;
     }
     else {
+      // empty last value, i.e. a section:
+      if ( name == Options::name() )
+	break;
+      // this is a new section:
       string error = Warning;
-      section_iterator sp = findSection( name );
-      Warning = error + Warning;
-      if ( sp != sectionsEnd() ) {
-	error = Warning;
-	sp->read( secstr, flag, assignment, separator, pattern );
-	Warning = error + Warning;
-      }
+      Options *ps = this;
+      bool found = false;
+      do {
+	section_iterator spp = ps->findSection( name );
+	if ( spp != ps->sectionsEnd() ) {
+	  retopt = &(*spp);
+	  found = true;
+	  break;
+	}
+	ps = ps->parentSection();
+      } while ( ps != 0 );
+      Warning = error;
+      if ( ! found )
+	Warning += "requested section '" + name + "' not found!";
+      break;
     }
-    if ( ri < 0 )
-      break;
-    // find next section:
-    bi = s.find( '{', ri+1 );
-    int li = -1;
-    if ( bi > 0 )
-      li = s.findLast( separator, bi );
-    if ( li <= ri )
-      break;
-    si = li;
-  }
+  } while ( index >= 0 );
 
 #ifndef NDEBUG
   if ( ! Warning.empty() )

@@ -423,8 +423,8 @@ void SysLatency::save( double carrierfrequency, int side, double pduration,
 		       double offset, double slope, double meanrate )
 {
   if ( ! metaData( "Cell" ).exist( "system latency" ) )
-    metaData( "Cell" ).insertNumber( "system latency", "metadata", "System latency",
-				-1.0, "s", "%.1f", 1+4 ).setUnit( "s", "ms" );
+    metaData( "Cell" ).addNumber( "system latency", "System latency",
+				     -1.0, "s", "%.1f", 1+4 ).setUnit( "s", "ms" );
   metaData( "Cell" ).setNumber( "system latency", coinclatency );
 
   Options header;

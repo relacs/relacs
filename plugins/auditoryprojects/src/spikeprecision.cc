@@ -48,7 +48,7 @@ SpikePrecision::SpikePrecision( void )
   Sigma2                = 0.02;
   FreqRange.clear();
 
-  // insert options in the options menu:
+  // options:
   addLabel( "Stimulus" ).setStyle( OptWidget::Bold | OptWidget::TabLabel );
   addText( "freqrange", "Frequency range", "" ).setUnit( "Hz" );
   addNumber( "amplitude", "Amplitude of envelope", Amplitude, 0.0, 130.0, 1.0, "dB", "dB" );
