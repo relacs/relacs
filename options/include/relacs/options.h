@@ -233,10 +233,10 @@ public:
   inline const_iterator begin( void ) const { return Opt.begin(); };
   inline const_iterator end( void ) const { return Opt.end(); };
 
-  typedef deque< Options >::iterator section_iterator;
+  typedef deque< Options* >::iterator section_iterator;
   inline section_iterator sectionsBegin( void ) { return Secs.begin(); };
   inline section_iterator sectionsEnd( void ) { return Secs.end(); };
-  typedef deque< Options >::const_iterator const_section_iterator;
+  typedef deque< Options* >::const_iterator const_section_iterator;
   inline const_section_iterator sectionsBegin( void ) const { return Secs.begin(); };
   inline const_section_iterator sectionsEnd( void ) const { return Secs.end(); };
 
@@ -1641,7 +1641,7 @@ private:
     /*! The options. */
   deque< Parameter > Opt;
     /*! Sections of options. */
-  deque< Options > Secs;
+  deque< Options* > Secs;
     /*! Pointer to the Options where addText(), addNumber(), etc. should be added. */
   Options *AddOpts;
     /*! A warning message. */

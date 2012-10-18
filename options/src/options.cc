@@ -50,23 +50,12 @@ Options::Options( const Options &o )
     Type( o.Type ),
     Flag( o.Flag ),
     Style( o.Style ),
-    Opt( o. Opt ),
-    Secs( o.Secs ),
     AddOpts( this ),
     Warning( "" ),
     Notified( false ),
     CallNotify( o.CallNotify )
 {
-  // XXX this needs to copy recursively everything
-  // XXX and set the parentSections in all parameter and sections right!!!
-  // XXX Same for all other assigns and appends!
-  // XXX Also check Parameter::assign etc. !!
-  for ( iterator pp = begin(); pp != end(); ++pp )
-    pp->setParentSection( this );
-  for ( section_iterator sp = sectionsBegin();
-	sp != sectionsEnd();
-	++sp )
-    sp->setParentSection( this );
+  assign( o );
 }
 
 
@@ -181,7 +170,19 @@ Options &Options::assign( const Options &o )
   Style = o.Style;
   ParentSection = o.ParentSection;
   Opt = o.Opt;
-  Secs = o.Secs;
+  // XXX this needs to copy recursively everything
+  // XXX and set the parentSections in all parameter and sections right!!!
+  // XXX Same for all other assigns and appends!
+  // XXX Also check Parameter::assign etc. !!
+  for ( iterator pp = begin(); pp != end(); ++pp )
+    pp->setParentSection( this );
+  for ( const_section_iterator sp = o.sectionsBegin();
+	sp != o.sectionsEnd();
+	++sp ) {
+    Options *o = new Options( **sp );
+    o->setParentSection( this );
+    Secs.push_back( o );
+  }
   AddOpts = this;
   Notified = false;
   CallNotify = o.CallNotify;
@@ -196,12 +197,17 @@ Options &Options::append( const Options &o )
   if ( this == &o ) 
     return *this;
 
-  for ( const_iterator pp = o.begin(); pp != o.end(); ++pp )
+  for ( const_iterator pp = o.begin(); pp != o.end(); ++pp ) {
     AddOpts->Opt.push_back( *pp );
+    AddOpts->Opt.back().setParentSection( AddOpts );
+  }
   for ( const_section_iterator sp = o.sectionsBegin();
 	sp != o.sectionsEnd();
-	++sp )
-    AddOpts->Secs.push_back( *sp );
+	++sp ) {
+    Options *o = new Options( **sp );
+    o->setParentSection( AddOpts );
+    AddOpts->Secs.push_back( o );
+  }
 
   return *this;
 }
@@ -277,19 +283,23 @@ Options &Options::append( const Options &o, int flags )
 
   // add Parameter to current section:
   for ( const_iterator pp = o.begin(); pp != o.end(); ++pp ) {
-    if ( (*pp).flags( flags ) )
+    if ( (*pp).flags( flags ) ) {
       AddOpts->Opt.push_back( *pp );
+      AddOpts->Opt.back().setParentSection( AddOpts );
+    }
   }
   // add Sections to current section:
   for ( const_section_iterator sp = o.sectionsBegin();
 	sp != o.sectionsEnd();
 	++sp ) {
-    if ( sp->flag( flags ) ) {
+    if ( (*sp)->flag( flags ) ) {
       // add empty section:
-      AddOpts->Secs.push_back( Options( sp->name(), sp->type(),
-					sp->flag(), sp->style() ) );
+      Options *o = new Options( (*sp)->name(), (*sp)->type(),
+				(*sp)->flag(), (*sp)->style() );
+      o->setParentSection( AddOpts );
+      AddOpts->Secs.push_back( o );
       // add only appropriate Parameter and Sections:
-      AddOpts->Secs.back().append( *sp, flags );
+      AddOpts->Secs.back()->append( **sp, flags );
     }
   }
 
@@ -626,8 +636,8 @@ Options::const_iterator Options::find( const string &pattern, int level ) const
 	  for ( const_section_iterator sp = sbegin;
 		sp != sectionsEnd();
 		++sp ) {
-	    const_iterator pp = sp->find( sq[s], k );
-	    if ( pp != sp->end() )
+	    const_iterator pp = (*sp)->find( sq[s], k );
+	    if ( pp != (*sp)->end() )
 	      return pp;
 	  }
 	}
@@ -663,14 +673,14 @@ Options::const_iterator Options::find( const string &pattern, int level ) const
 	  for ( const_section_iterator sp = sbegin;
 		sp != sectionsEnd() && ! findagain;
 		++sp ) {
-	    if ( *sp == sq[s] ) {
-	      const_iterator pp = sp->find( subsearch, k );
-	      if ( pp != sp->end() )
+	    if ( **sp == sq[s] ) {
+	      const_iterator pp = (*sp)->find( subsearch, k );
+	      if ( pp != (*sp)->end() )
 		return pp;
 	    }
 	    else {
-	      const_iterator pp = sp->find( sq[s] + '>' + subsearch, k );
-	      if ( pp != sp->end() )
+	      const_iterator pp = (*sp)->find( sq[s] + '>' + subsearch, k );
+	      if ( pp != (*sp)->end() )
 		return pp;
 	    }
 	  }
@@ -735,8 +745,8 @@ Options::iterator Options::find( const string &pattern, int level )
 	  for ( section_iterator sp = sbegin;
 		sp != sectionsEnd();
 		++sp ) {
-	    iterator pp = sp->find( sq[s], k );
-	    if ( pp != sp->end() )
+	    iterator pp = (*sp)->find( sq[s], k );
+	    if ( pp != (*sp)->end() )
 	      return pp;
 	  }
 	}
@@ -772,14 +782,14 @@ Options::iterator Options::find( const string &pattern, int level )
 	  for ( section_iterator sp = sbegin;
 		sp != sectionsEnd() && ! findagain;
 		++sp ) {
-	    if ( *sp == sq[s] ) {
-	      iterator pp = sp->find( subsearch, k );
-	      if ( pp != sp->end() )
+	    if ( **sp == sq[s] ) {
+	      iterator pp = (*sp)->find( subsearch, k );
+	      if ( pp != (*sp)->end() )
 		return pp;
 	    }
 	    else {
-	      iterator pp = sp->find( sq[s] + '>' + subsearch, k );
-	      if ( pp != sp->end() )
+	      iterator pp = (*sp)->find( sq[s] + '>' + subsearch, k );
+	      if ( pp != (*sp)->end() )
 		return pp;
 	    }
 	  }
@@ -839,8 +849,8 @@ Options::const_iterator Options::rfind( const string &pattern, int level ) const
 	  if ( sp != sectionsBegin() ) {
 	    do {
 	      --sp;
-	      const_iterator pp = sp->rfind( sq[s], k );
-	      if ( pp != sp->end() )
+	      const_iterator pp = (*sp)->rfind( sq[s], k );
+	      if ( pp != (*sp)->end() )
 		return pp;
 	    } while ( sp != sectionsBegin() );
 	  }
@@ -878,12 +888,12 @@ Options::const_iterator Options::rfind( const string &pattern, int level ) const
 	  if ( sp != sectionsBegin() ) {
 	    do {
 	      --sp;
-	      const_iterator pp = sp->rfind( sq[s] + '>' + subsearch, k );
-	      if ( pp != sp->end() )
+	      const_iterator pp = (*sp)->rfind( sq[s] + '>' + subsearch, k );
+	      if ( pp != (*sp)->end() )
 		return pp;
-	      if ( *sp == sq[s] ) {
-		const_iterator pp = sp->rfind( subsearch, k );
-		if ( pp != sp->end() )
+	      if ( **sp == sq[s] ) {
+		const_iterator pp = (*sp)->rfind( subsearch, k );
+		if ( pp != (*sp)->end() )
 		  return pp;
 	      }
 	    } while ( sp != sectionsBegin() && ! findagain );
@@ -958,8 +968,8 @@ Options::iterator Options::rfind( const string &pattern, int level )
 	  if ( sp != sectionsBegin() ) {
 	    do {
 	      --sp;
-	      iterator pp = sp->rfind( sq[s], k );
-	      if ( pp != sp->end() )
+	      iterator pp = (*sp)->rfind( sq[s], k );
+	      if ( pp != (*sp)->end() )
 		return pp;
 	    } while ( sp != sectionsBegin() );
 	  }
@@ -997,12 +1007,12 @@ Options::iterator Options::rfind( const string &pattern, int level )
 	  if ( sp != sectionsBegin() ) {
 	    do {
 	      --sp;
-	      iterator pp = sp->rfind( sq[s] + '>' + subsearch, k );
-	      if ( pp != sp->end() )
+	      iterator pp = (*sp)->rfind( sq[s] + '>' + subsearch, k );
+	      if ( pp != (*sp)->end() )
 		return pp;
-	      if ( *sp == sq[s] ) {
-		iterator pp = sp->rfind( subsearch, k );
-		if ( pp != sp->end() )
+	      if ( **sp == sq[s] ) {
+		iterator pp = (*sp)->rfind( subsearch, k );
+		if ( pp != (*sp)->end() )
 		  return pp;
 	      }
 	    } while ( sp != sectionsBegin() && ! findagain );
@@ -1074,12 +1084,12 @@ Options::const_section_iterator Options::findSection( const string &pattern, int
       for ( const_section_iterator sp = sectionsBegin();
 	    sp != sectionsEnd();
 	    ++sp ) {
-	if ( *sp == sq[s] ) {
+	if ( **sp == sq[s] ) {
 	  if ( subsearch.empty() )
 	    return sp;
 	  else {
-	    const_section_iterator pp = sp->findSection( subsearch, k );
-	    if ( pp != sp->sectionsEnd() )
+	    const_section_iterator pp = (*sp)->findSection( subsearch, k );
+	    if ( pp != (*sp)->sectionsEnd() )
 	      return pp;
 	  }
 	}
@@ -1087,8 +1097,8 @@ Options::const_section_iterator Options::findSection( const string &pattern, int
       for ( const_section_iterator sp = sectionsBegin();
 	    sp != sectionsEnd();
 	    ++sp ) {
-	const_section_iterator pp = sp->findSection( sq[s] + '>' + subsearch, k );
-	if ( pp != sp->sectionsEnd() )
+	const_section_iterator pp = (*sp)->findSection( sq[s] + '>' + subsearch, k );
+	if ( pp != (*sp)->sectionsEnd() )
 	  return pp;
       }
     }
@@ -1143,12 +1153,12 @@ Options::section_iterator Options::findSection( const string &pattern, int level
       for ( section_iterator sp = sectionsBegin();
 	    sp != sectionsEnd();
 	    ++sp ) {
-	if ( *sp == sq[s] ) {
+	if ( **sp == sq[s] ) {
 	  if ( subsearch.empty() )
 	    return sp;
 	  else {
-	    section_iterator pp = sp->findSection( subsearch, k );
-	    if ( pp != sp->sectionsEnd() )
+	    section_iterator pp = (*sp)->findSection( subsearch, k );
+	    if ( pp != (*sp)->sectionsEnd() )
 	      return pp;
 	  }
 	}
@@ -1156,8 +1166,8 @@ Options::section_iterator Options::findSection( const string &pattern, int level
       for ( section_iterator sp = sectionsBegin();
 	    sp != sectionsEnd();
 	    ++sp ) {
-	section_iterator pp = sp->findSection( sq[s] + '>' + subsearch, k );
-	if ( pp != sp->sectionsEnd() )
+	section_iterator pp = (*sp)->findSection( sq[s] + '>' + subsearch, k );
+	if ( pp != (*sp)->sectionsEnd() )
 	  return pp;
       }
     }
@@ -1213,12 +1223,12 @@ Options::const_section_iterator Options::rfindSection( const string &pattern, in
       if ( sp != sectionsBegin() ) {
 	do {
 	  --sp;
-	  if ( *sp == sq[s] ) {
+	  if ( **sp == sq[s] ) {
 	    if ( subsearch.empty() )
 	      return sp;
 	    else {
-	      const_section_iterator pp = sp->rfindSection( subsearch, k );
-	      if ( pp != sp->sectionsEnd() )
+	      const_section_iterator pp = (*sp)->rfindSection( subsearch, k );
+	      if ( pp != (*sp)->sectionsEnd() )
 		return pp;
 	    }
 	  }
@@ -1228,8 +1238,8 @@ Options::const_section_iterator Options::rfindSection( const string &pattern, in
       if ( sp != sectionsBegin() ) {
 	do {
 	  --sp;
-	  const_section_iterator pp = sp->rfindSection( sq[s] + '>' + subsearch, k );
-	  if ( pp != sp->sectionsEnd() )
+	  const_section_iterator pp = (*sp)->rfindSection( sq[s] + '>' + subsearch, k );
+	  if ( pp != (*sp)->sectionsEnd() )
 	    return pp;
 	} while ( sp != sectionsBegin() );
       }
@@ -1285,12 +1295,12 @@ Options::section_iterator Options::rfindSection( const string &pattern, int leve
       if ( sp != sectionsBegin() ) {
 	do {
 	  --sp;
-	  if ( *sp == sq[s] ) {
+	  if ( **sp == sq[s] ) {
 	    if ( subsearch.empty() )
 	      return sp;
 	    else {
-	      section_iterator pp = sp->rfindSection( subsearch, k );
-	      if ( pp != sp->sectionsEnd() )
+	      section_iterator pp = (*sp)->rfindSection( subsearch, k );
+	      if ( pp != (*sp)->sectionsEnd() )
 		return pp;
 	    }
 	  }
@@ -1300,8 +1310,8 @@ Options::section_iterator Options::rfindSection( const string &pattern, int leve
       if ( sp != sectionsBegin() ) {
 	do {
 	  --sp;
-	  section_iterator pp = sp->rfindSection( sq[s] + '>' + subsearch, k );
-	  if ( pp != sp->sectionsEnd() )
+	  section_iterator pp = (*sp)->rfindSection( sq[s] + '>' + subsearch, k );
+	  if ( pp != (*sp)->sectionsEnd() )
 	    return pp;
 	} while ( sp != sectionsBegin() );
       }
@@ -3255,11 +3265,12 @@ Parameter &Options::setLabel( const string &name, const string &label )
 Options &Options::addSection( const string &name, const string &type,
 			      int flags, int style )
 {
-  Secs.push_back( Options( name, type, flags, style ) );
-  Secs.back().setParentSection( this );
-  Secs.back().unsetNotify();
-  AddOpts = &Secs.back();
-  return Secs.back();
+  Options *o = new Options( name, type, flags, style );
+  Secs.push_back( o );
+  o->setParentSection( this );
+  o->unsetNotify();
+  AddOpts = o;
+  return *o;
 }
 
 
@@ -3269,15 +3280,16 @@ Options &Options::addSubSection( const string &name, const string &type,
   if ( Secs.empty() )
     Warning += "Cannot add a subsection without having a section";
 
-  Secs.back().Secs.push_back( Options( name, type, flags, style ) );
-  Secs.back().Secs.back().setParentSection( &Secs.back() );
-  Secs.back().Secs.back().unsetNotify();
-  AddOpts = &Secs.back().Secs.back();
+  Options *o = new Options( name, type, flags, style );
+  Secs.back()->Secs.push_back( o );
+  o->setParentSection( Secs.back() );
+  o->unsetNotify();
+  AddOpts = o;
 #ifndef NDEBUG
   if ( !Warning.empty() )
     cerr << "!warning in Options::addSubSection() -> " << Warning << '\n';
 #endif
-  return Secs.back().Secs.back();
+  return *o;
 }
 
 
@@ -3286,18 +3298,19 @@ Options &Options::addSubSubSection( const string &name, const string &type,
 {
   if ( Secs.empty() )
     Warning += "Cannot add a subsubsection without having a section";
-  if ( Secs.back().Secs.empty() )
+  if ( Secs.back()->Secs.empty() )
     Warning += "Cannot add a subsubsection without having a subsection";
 
-  Secs.back().Secs.back().Secs.push_back( Options( name, type, flags, style ) );
-  Secs.back().Secs.back().Secs.back().setParentSection( &Secs.back().Secs.back() );
-  Secs.back().Secs.back().Secs.back().unsetNotify();
-  AddOpts = &Secs.back().Secs.back().Secs.back();
+  Options *o = new Options( name, type, flags, style );
+  Secs.back()->Secs.back()->Secs.push_back( o );
+  o->setParentSection( Secs.back()->Secs.back() );
+  o->unsetNotify();
+  AddOpts = o;
 #ifndef NDEBUG
   if ( !Warning.empty() )
     cerr << "!warning in Options::addSubSubSection() -> " << Warning << '\n';
 #endif
-  return Secs.back().Secs.back().Secs.back();
+  return *o;
 }
 
 
@@ -3306,26 +3319,29 @@ Options &Options::insertSection( const string &name, const string &atpattern,
 {
   // insert at front:
   if ( atpattern.empty() ) {
-    AddOpts->Secs.push_front( Options( name, type, flag, style ) );
-    AddOpts->Secs.front().setParentSection( this );
-    AddOpts = &AddOpts->Secs.front();
+    Options *o = new Options( name, type, flag, style );
+    AddOpts->Secs.push_front( o );
+    o->setParentSection( this );
+    AddOpts = o;
   }
   else {
     // insert at atpattern:
     section_iterator sp = findSection( atpattern );
     if ( sp != sectionsEnd() ) {
-      Options *ps = sp->parentSection();
+      Options *ps = (*sp)->parentSection();
       if ( ps != 0 ) {
-	Options &no = *(ps->Secs.insert( sp, Options( name, type, flag, style ) ));
-	no.setParentSection( ps );
-	AddOpts = &no;
+	Options *o = new Options( name, type, flag, style );
+	ps->Secs.insert( sp, o );
+	o->setParentSection( ps );
+	AddOpts = o;
       }
     }
     else {
       // not found, add to sections:
-      AddOpts->Secs.push_back( Options( name, type, flag, style ) );
-      AddOpts->Secs.back().setParentSection( this );
-      AddOpts = &AddOpts->Secs.back();
+      Options *o = new Options( name, type, flag, style );
+      AddOpts->Secs.push_back( o );
+      o->setParentSection( this );
+      AddOpts = o;
     }
   }
   return *AddOpts;
@@ -3376,8 +3392,8 @@ Options &Options::setDefaults( int flags )
   for ( section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( sp->flag( flags ) )
-      sp->setDefaults( flags );
+    if ( (*sp)->flag( flags ) )
+      (*sp)->setDefaults( flags );
   }
   return *this;
 }
@@ -3413,8 +3429,8 @@ Options &Options::setToDefaults( int flags )
   for ( section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( sp->flag( flags ) )
-      sp->setToDefaults( flags );
+    if ( (*sp)->flag( flags ) )
+      (*sp)->setToDefaults( flags );
   }
   return *this;
 }
@@ -3621,6 +3637,11 @@ Options &Options::clear( void )
 {
   Warning = "";
   Opt.clear();
+  for ( section_iterator sp = sectionsBegin();
+	sp != sectionsEnd();
+	++sp ) {
+    delete *sp;
+  }
   Secs.clear();
   AddOpts = this;
   return *this;
@@ -3649,7 +3670,7 @@ int Options::size( void ) const
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    n += sp->size();
+    n += (*sp)->size();
   }
   return n;
 }
@@ -3666,8 +3687,8 @@ int Options::size( int flags ) const
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( sp->flag( flags ) )
-      n += sp->size( flags );
+    if ( (*sp)->flag( flags ) )
+      n += (*sp)->size( flags );
   }
   return n;
 }
@@ -3884,8 +3905,8 @@ ostream &Options::save( ostream &str, const string &start,
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( sp->flag( selectmask ) && sp->size( selectmask ) > 0 )
-      sp->save( str, starts, selectmask, detailed, firstonly );
+    if ( (*sp)->flag( selectmask ) && (*sp)->size( selectmask ) > 0 )
+      (*sp)->save( str, starts, selectmask, detailed, firstonly );
   }
 
   return str;
@@ -3922,8 +3943,8 @@ ostream &Options::save( ostream &str, const string &textformat,
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( sp->flag( selectmask ) && sp->size( selectmask ) > 0 )
-      sp->save( str, textformat, numberformat, boolformat,
+    if ( (*sp)->flag( selectmask ) && (*sp)->size( selectmask ) > 0 )
+      (*sp)->save( str, textformat, numberformat, boolformat,
 		dateformat, timeformat, labelformat, selectmask, starts );
   }
 
@@ -3960,10 +3981,10 @@ string Options::save( int selectmask, bool firstonly ) const
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( sp->flag( selectmask ) && sp->size( selectmask ) > 0 ) {
+    if ( (*sp)->flag( selectmask ) && (*sp)->size( selectmask ) > 0 ) {
       if ( n > 0 )
 	str += ", ";
-      str += sp->save( selectmask, firstonly );
+      str += (*sp)->save( selectmask, firstonly );
       ++n;
     }
   }
@@ -4005,8 +4026,8 @@ ostream &Options::saveXML( ostream &str, int selectmask, int level,
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( sp->flag( selectmask ) && sp->size( selectmask ) > 0 )
-      sp->saveXML( str, selectmask, level, indent );
+    if ( (*sp)->flag( selectmask ) && (*sp)->size( selectmask ) > 0 )
+      (*sp)->saveXML( str, selectmask, level, indent );
   }
   if ( ! name().empty() ) {
     str << indstr1 << "</section>\n";
@@ -4092,10 +4113,10 @@ Options &Options::read( const string &opttxt, int flag,
 	    Warning = error + Warning;
 	    if ( sp != sectionsEnd() ) {
 	      error = Warning;
-	      sp->read( secstr, flag, assignment, separator, pattern );
+	      (*sp)->read( secstr, flag, assignment, separator, pattern );
 	      Warning = error + Warning;
 	      if ( ! closing )
-		retopt = &(*sp);
+		retopt = *sp;
 	    }
 	  }
 	}
@@ -4133,7 +4154,7 @@ Options &Options::read( const string &opttxt, int flag,
       do {
 	section_iterator spp = ps->findSection( name );
 	if ( spp != ps->sectionsEnd() ) {
-	  retopt = &(*spp);
+	  retopt = *spp;
 	  found = true;
 	  break;
 	}
@@ -4273,7 +4294,7 @@ bool Options::read( const Parameter &p, int flag )
   for ( section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( sp->read( p, flag ) ) {
+    if ( (*sp)->read( p, flag ) ) {
       // notify the change:
       if ( CallNotify && ! Notified ) {
 	Notified = true;
@@ -4305,12 +4326,12 @@ Options &Options::read( const Options &o, int flags, int flag )
   for ( const_section_iterator op = o.sectionsBegin();
 	op != o.sectionsEnd();
 	++op ) {
-    if ( op->flag( flags ) ) {
+    if ( (*op)->flag( flags ) ) {
       for ( section_iterator sp = sectionsBegin();
 	    sp != sectionsEnd();
 	    ++sp ) {
-	if ( op->name() == sp->name() ) {
-	  sp->read( *op, flags, flag );
+	if ( (*op)->name() == (*sp)->name() ) {
+	  (*sp)->read( **op, flags, flag );
 	  changed = true;
 	  break;
 	}
