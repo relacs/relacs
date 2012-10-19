@@ -51,7 +51,7 @@ SAM::SAM( void )
   After=0.0;
 
   // add some parameter as options:
-  addLabel( "Stimulus" );
+  addSection( "Stimulus" );
   addNumber( "duration", "Duration of signal", Duration, 0.01, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "pause", "Pause between signals", Pause, 0.0, 1000.0, 0.01, "seconds", "ms" );
   addSelection( "freqsel", "Stimulus frequency is", "relative to EOD|absolute" );
@@ -60,7 +60,7 @@ SAM::SAM( void )
   addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 );
   addBoolean( "am", "Amplitude modulation", AM ).setActivation( "freqsel", "relative to EOD" );
   addBoolean( "sinewave", "Use sine wave", SineWave );
-  addLabel( "Analysis" );
+  addSection( "Analysis" );
   addNumber( "skip", "Skip", Skip, 0.0, 100.0, 0.1, "Periods" );
   addInteger( "ratebins", "Number of bins for firing rate", RateN, 2, 1000 );
   addNumber( "before", "Spikes recorded before stimulus", Before, 0.0, 1000.0, 0.005, "seconds", "ms" );
@@ -110,13 +110,13 @@ SAM::SAM( void )
 
   SpikesKey.addNumber( "time", "ms", "%9.2f" );
 
-  NerveKey.addLabel( "peak" );
+  NerveKey.addSection( "peak" );
   NerveKey.addNumber( "time", "ms", "%9.2f" );
   NerveKey.addNumber( "ampl", "uV", "%6.1f" );
-  NerveKey.addLabel( "trough" );
+  NerveKey.addSection( "trough" );
   NerveKey.addNumber( "time", "ms", "%9.2f" );
   NerveKey.addNumber( "ampl", "uV", "%6.1f" );
-  NerveKey.addLabel( "average" );
+  NerveKey.addSection( "average" );
   NerveKey.addNumber( "time", "ms", "%9.2f" );
   NerveKey.addNumber( "ampl", "uV", "%7.2f" );
 

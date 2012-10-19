@@ -89,7 +89,7 @@ public:
   virtual int main( void );
 
     /*! Save event data. */
-  void saveEvents( const EventData &events, int count, const Options &header );
+  void saveEvents( const EventData &events, int count, Options &header );
 
 
 public slots:

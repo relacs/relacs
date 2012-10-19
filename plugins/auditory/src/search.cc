@@ -208,9 +208,9 @@ int Search::main( void )
 
   // Header:
   Options header;
-  header.addInteger( "index" );
-  header.addText( "session time" );
-  header.addLabel( "status:" );
+  header.addInteger( "index", totalRuns() );
+  header.addText( "session time", sessionTimeStr() );
+  header.addSection( "status:" );
 
   // stimulus:
   OutData signal;
@@ -294,10 +294,6 @@ int Search::main( void )
 
     // save:
     if ( repeats > 0 ) {
-      if ( count == 0 ) {
-	header.setInteger( "index", totalRuns() );
-	header.setText( "session time", sessionTimeStr() );
-      }
       for ( int trace=1; trace < events().size(); trace++ ) {
 	saveEvents( events( trace ), count, header );
       }
@@ -313,7 +309,7 @@ int Search::main( void )
 }
 
 
-void Search::saveEvents( const EventData &events, int count, const Options &header )
+void Search::saveEvents( const EventData &events, int count, Options &header )
 {
   // create file:
   ofstream df;
@@ -327,10 +323,10 @@ void Search::saveEvents( const EventData &events, int count, const Options &head
   spikeskey.addNumber( "time", "ms", "%9.2f" );
   if ( count == 0 ) {
     df << '\n' << '\n';
-    header.save( df, "# " );
-    stimulusData().save( df, "#   " );
-    df << "# settings:\n";
-    Options::save( df, "#   ", 0, false, true );
+    header.append( stimulusData() );
+    header.addSection( "settings" );
+    header.append( settings() );
+    header.save( df, "# ", 0, false, true );
     df << '\n';
     spikeskey.saveKey( df, true, false );
   }

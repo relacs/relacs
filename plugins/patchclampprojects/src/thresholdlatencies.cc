@@ -35,7 +35,7 @@ ThresholdLatencies::ThresholdLatencies( void )
     RecordNow( false )
 {
   // add some options:
-  addLabel( "Test-Pulse" );
+  addSection( "Test-Pulse" );
   addSelection( "durationsel", "Set duration of stimulus", "in milliseconds|as multiples of membrane time constant" );
   addNumber( "duration", "Duration of stimulus", 0.1, 0.0, 1000.0, 0.001, "sec", "ms" ).setActivation( "durationsel", "in milliseconds" );
   addNumber( "durationfac", "Duration of stimulus", 1.0, 0.0, 1000.0, 0.1, "tau_m" ).setActivation( "durationsel", "as multiples of membrane time constant" );
@@ -44,7 +44,7 @@ ThresholdLatencies::ThresholdLatencies( void )
   addNumber( "startamplitudestep", "Initial size of amplitude steps used for searching threshold", 0.1, 0.0, 1000.0, 0.001 );
   addNumber( "amplitudestep", "Final size of amplitude steps used for oscillating around threshold", 0.01, 0.0, 1000.0, 0.001 );
   addSelection( "adjust", "Adjust", "DC|none|stimulus|DC" );
-  addLabel( "First Pre-Pulse" );
+  addSection( "First Pre-Pulse" );
   addNumber( "preduration", "Duration of first pre-pulse stimulus", 0.0, 0.0, 1000.0, 0.001, "sec", "ms" );
   addSelection( "preamplitudesrc", "Set amplitude of first pre-pulse to", "custom|previous DC|threshold|VC|VC rest" ).setActivation( "preduration", ">0" );
   addNumber( "preamplitude", "Amplitude of first pre-pulse stimulus", 0.1, 0.0, 1000.0, 0.01 ).setActivation( "preamplitudesrc", "custom" );
@@ -52,15 +52,15 @@ ThresholdLatencies::ThresholdLatencies( void )
   addNumber( "prevcgain", "Gain for voltage clamp of first pre-pulse", 0.0, -1000.0, 1000.0, 0.1, "mS" ).setActivation( "preamplitudesrc", "VC|VC rest" );
   addSelection( "prepulseramp", "Start first pre-pulse with a ramp", "none|linear|cosine" ).setActivation( "preduration", ">0" );
   addNumber( "prepulserampwidth", "Width of the ramp", 0.0, 0.0, 1000.0, 0.001, "sec", "ms" ).setActivation( "prepulseramp", "none", false );
-  addLabel( "Second Pre-Pulse" );
+  addSection( "Second Pre-Pulse" );
   addNumber( "pre2duration", "Duration of second pre-pulse stimulus", 0.0, 0.0, 1000.0, 0.001, "sec", "ms" );
   addSelection( "pre2amplitudesrc", "Set amplitude of second pre-pulse to", "custom|previous DC|threshold" ).setActivation( "pre2duration", ">0" );
   addNumber( "pre2amplitude", "Amplitude of second pre-pulse stimulus", 0.1, 0.0, 1000.0, 0.01 ).setActivation( "pre2amplitudesrc", "custom" );
-  addLabel( "Post-Pulse" );
+  addSection( "Post-Pulse" );
   addNumber( "postduration", "Duration of post-pulse stimulus", 0.0, 0.0, 1000.0, 0.001, "sec", "ms" );
   addSelection( "postamplitudesrc", "Set post-pulse amplitude to", "custom|previous DC|threshold" ).setActivation( "postduration", ">0" );
   addNumber( "postamplitude", "Amplitude of post-pulse stimulus", 0.1, 0.0, 1000.0, 0.01 ).setActivation( "postamplitudesrc", "custom" );
-  addLabel( "Timing" );
+  addSection( "Timing" );
   addNumber( "searchpause", "Duration of pause between outputs during search", 0.5, 0.0, 1000.0, 0.01, "sec", "ms" );
   addNumber( "pause", "Duration of pause between outputs", 1.0, 0.0, 1000.0, 0.01, "sec", "ms" );
   addNumber( "delay", "Time before stimullus onset", 0.05, 0.0, 1000.0, 0.01, "sec", "ms" );
@@ -812,7 +812,7 @@ void ThresholdLatencies::saveSpikes( void )
 void ThresholdLatencies::saveData( bool dc )
 {
   TableKey datakey;
-  datakey.addLabel( "Data" );
+  datakey.addSection( "Data" );
   datakey.addNumber( "duration", "ms", "%6.1f", Header.number( "duration" ) );
   double basd = 0.0;
   double bam = DCAmplitudes.mean( basd );
@@ -853,7 +853,7 @@ void ThresholdLatencies::saveData( bool dc )
   double lm = Latencies.mean( lsd );
   datakey.addNumber( "latency", "ms", "%6.2f", 1000.0*lm );
   datakey.addNumber( "s.d.", "ms", "%6.2f", 1000.0*lsd );
-  datakey.addLabel( "Traces" );
+  datakey.addSection( "Traces" );
   datakey.add( stimulusData() );
 
   ofstream df;

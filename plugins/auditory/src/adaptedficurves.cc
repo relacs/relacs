@@ -31,19 +31,19 @@ AdaptedFICurves::AdaptedFICurves( void )
   : RePro( "AdaptedFICurves", "auditory", "Jan Benda", "1.0", "Jan 27, 2011" )
 {
   // add some options:
-  addLabel( "Stimulus" ).setStyle( OptWidget::TabLabel );
-  addLabel ( "Adaptation stimulus" );
+  addSection( "Stimulus" ).setStyle( OptWidget::TabLabel );
+  addSubSection ( "Adaptation stimulus" );
   addSelection( "adaptbase", "Intensity of adapting stimulus relative to", "SPL|Threshold" );
   addNumber( "adaptint", "Sound intensity of adapting stimulus", 50.0, -200.0, 200.0, 0.5, "dB SPL" );
   addNumber( "adaptinit", "Duration of initial adaptation stimulus", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
   addNumber( "adaptduration", "Duration of subsequent adaptation stimuli", 0.1, 0.001, 100000.0, 0.001, "s", "ms" );
-  addLabel ( "Test stimuli" );
+  addSubSection ( "Test stimuli" );
   addSelection( "intbase", "Intensities of test stimulus relative to", "SPL|Threshold|Adaptation stimulus" );
   addNumber( "intmin", "Minimum sound intensity of test stimulus", 50.0, -200.0, 200.0, 0.5, "dB" );
   addNumber( "intmax", "Maximum sound intensity of test stimulus", 100.0, -200.0, 200.0, 0.5, "dB" );
   addNumber( "intstep", "Sound-intensity steps of test stimulus", 10.0, 0.0, 200.0, 0.5, "dB SPL" );
   addNumber( "duration", "Duration of test stimuli", 0.1, 0.001, 100000.0, 0.001, "s", "ms" );
-  addLabel( "General" ).setStyle( OptWidget::TabLabel );
+  addSection( "General" ).setStyle( OptWidget::TabLabel );
   addSelection( "side", "Speaker", "left|right|best" );
   addNumber( "carrierfreq", "Frequency of carrier", 0.0, -40000.0, 40000.0, 500.0, "Hz", "kHz" );
   addBoolean( "usebestfreq", "Relative to the cell's best frequency", true );
@@ -51,7 +51,7 @@ AdaptedFICurves::AdaptedFICurves( void )
   addNumber( "pause", "Pause between stimuli", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
   addNumber( "delay", "Part of pause before stimulus", 0.1, 0.001, 100000.0, 0.001, "s", "ms" );
   addInteger( "repetitions", "Number of repetitions of the stimulus", 10, 0, 10000, 1 );
-  addLabel ( "Analysis" );
+  addSubSection ( "Analysis" );
   addNumber( "onsettime", "Onset rate occurs within", 0.1, 0.0, 1000.0, 0.002, "seconds", "ms" );
   addNumber( "sstime", "Width for measuring steady-states", 0.1, 0.0, 1000.0, 0.002, "seconds", "ms" );
 
@@ -237,7 +237,6 @@ int AdaptedFICurves::main( void )
   header.addNumber( "maximum intensity", intmax, "dB SPL", "%.1f" );
   header.addNumber( "adapting intensity", adaptint, "dB SPL", "%.1f" );
   header.addText( "session time", sessionTimeStr() ); 
-  header.addLabel( "status:" );
 
   // variables:
   EventList spikes;
@@ -298,6 +297,10 @@ int AdaptedFICurves::main( void )
 
   if ( state == Completed ) {
     unlockAll();
+    header.addSection( "status" );
+    header.append( stimulusData() );
+    header.addSection( "settings" );
+    header.append( settings() );
     saveSpikes( header, spikes );
     saveRate( header, rate );
     saveData( header, times, onsetrates, onsetratessd, ssrates, ssratessd );
@@ -318,10 +321,7 @@ void AdaptedFICurves::saveSpikes( const Options &header, const EventList &spikes
     return;
 
   // write header and key:
-  header.save( df, "# " );
-  stimulusData().save( df, "#   " );
-  df << "# settings:\n";
-  settings().save( df, "#   ", 0, false, true );
+  header.save( df, "# ", false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -342,10 +342,7 @@ void AdaptedFICurves::saveRate( const Options &header, const SampleDataD &rate )
     return;
 
   // write header and key:
-  header.save( df, "# " );
-  stimulusData().save( df, "#   " );
-  df << "# settings:\n";
-  settings().save( df, "#   ", 0, false, true );
+  header.save( df, "# ", false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -373,10 +370,7 @@ void AdaptedFICurves::saveData( const Options &header, const MapD &times,
     return;
 
   // write header and key:
-  header.save( df, "# " );
-  stimulusData().save( df, "#   " );
-  df << "# settings:\n";
-  settings().save( df, "#   ", 0, false, true );
+  header.save( df, "# ", false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "I", "dB SPL", "%5.1f" );

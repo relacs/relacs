@@ -32,19 +32,24 @@ int main( int argc, char *argv[] )
 {
   TableKey key;
 
-  key.addGroup( "Stimulus" );
+  key.addSection( "Stimulus" );
   key.addNumber( "n", "-", "%2.0f" );
-  key.addNumber( "I", "mV/cm", "%5.2f" );
-  key.addGroup( "Firing Frequency" );
+  key.addNumber( "I", "mV/cm", "%5.1f" );
+  key.addSection( "Results" );
+  key.addSubSection( "Firing Frequency" );
   key.addNumber( "f0", "Hz", "%5.2f" );
-  key.addNumber( "fpeakfff", "Hz", "%5.2f" );
-  key.addNumber( "fs", "Hzzzzzz", "%5.2f" );
-  key.addGroup( "f-I curves" );
-  key.addSubGroup( "Time Constants" );
-  key.addNumber( "tau", "ms", "%5.2f" );
+  key.addNumber( "fpeakfff", "Hz", "%5.3f" );
+  key.addNumber( "fs", "Hzzzzzz", "%6.4f" );
+  key.addSection( "Timescales" );
+  key.addNumber( "tau", "ms", "%7.5f" );
+  key.addNumber( "delay", "ms", "%8.6f" );
+
+  key.saveMetaData( cout );
+  cout << '\n';
 
   cout << key;
-  vector< double > v( 6, 2.5678 );
+
+  vector< double > v( 7, 2.5678 );
   key.save( cout, v, 0 ) << endl;
 
   ofstream df( "tmp.dat" );
@@ -60,6 +65,28 @@ int main( int argc, char *argv[] )
   key2.loadKey( sq );
   cout << '\n' << key2 << endl;
   key2.saveMetaData( cout );
+
+  cout << '\n';
+  cout << "Column of \"n\" : " << key2.column( "n" ) << '\n';
+  cout << "Column of \"Results\" : " << key2.column( "Results" ) << '\n';
+  cout << "Column of \"Results>fpeakfff\" : " << key2.column( "Results>fpeakfff" ) << '\n';
+  cout << "Column of \"Results>Firing Frequency>fs\" : " << key2.column( "Results>Firing Frequency>fs" ) << '\n';
+  cout << "Column of \"Timescales\" : " << key2.column( "Timescales" ) << '\n';
+  cout << "Column of \"Timescales>tau\" : " << key2.column( "Timescales>tau" ) << '\n';
+  cout << "Column of \"Timescales>tau>delay\" : " << key2.column( "Timescales>tau>delay" ) << '\n';
+  cout << '\n';
+
+  cout << "Erase column 5:\n";
+  key.erase( 5 );
+  cout << key << '\n';
+
+  cout << "Erase \"delay\":\n";
+  key.erase( "delay" );
+  cout << key << '\n';
+
+  cout << "Erase \"Stimulus\":\n";
+  key.erase( "Stimulus" );
+  cout << key << '\n';
 
   return 0;
 }

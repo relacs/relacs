@@ -986,17 +986,17 @@ void SaveFiles::createStimulusFile( const InList &traces,
 
     // create key:
     StimulusKey.clear();
-    StimulusKey.addLabel( "traces" );
+    StimulusKey.addSection( "traces" );
     for ( unsigned int k=0; k<TraceFiles.size(); k++ ) {
       if ( TraceFiles[k].Stream != 0 ) {
-	StimulusKey.addLabel( traces[k].ident() );
+	StimulusKey.addSubSection( traces[k].ident() );
 	StimulusKey.addNumber( "index", "float", "%10.0f" );
       }
     }
-    StimulusKey.addLabel( "events" );
+    StimulusKey.addSection( "events" );
     for ( unsigned int k=0; k<EventFiles.size(); k++ )
       if ( EventFiles[k].Stream != 0 ) {
-	StimulusKey.addLabel( events[k].ident() );
+	StimulusKey.addSubSection( events[k].ident() );
 	StimulusKey.addNumber( "index", "line", "%10.0f" );
 	EventFiles[k].SaveMeanRate = ( events[k].mode() & SaveMeanRate );
 	if ( EventFiles[k].SaveMeanRate )
@@ -1013,19 +1013,18 @@ void SaveFiles::createStimulusFile( const InList &traces,
       }
     lock();
     if ( !Options::empty() ) {
-      StimulusKey.addLabel( "data" );
-      StimulusKey.addLabel( "data" );
+      StimulusKey.addSection( "data" );
       const Options &data = *this;
       for( int k=0; k<data.size(); k++ )
 	StimulusKey.addNumber( data[k].name(), data[k].outUnit(), data[k].format() );
     }
     unlock();
-    StimulusKey.addLabel( "stimulus" );
-    StimulusKey.addLabel( "timing" );
+    StimulusKey.addSection( "stimulus" );
+    StimulusKey.addSubSection( "timing" );
     StimulusKey.addNumber( "time", "s", "%11.5f" );
     StimulusKey.addNumber( "delay", "ms", "%5.1f" );
     for ( int k=0; k<RW->AQ->outTracesSize(); k++ ) {
-      StimulusKey.addLabel( RW->AQ->outTraceName( k ) );
+      StimulusKey.addSubSection( RW->AQ->outTraceName( k ) );
       StimulusKey.addNumber( "rate", "kHz", "%8.3f" );
       StimulusKey.addNumber( "duration", "ms", "%8.0f" );
       const Attenuate *att = RW->AQ->outTraceAttenuate( k );

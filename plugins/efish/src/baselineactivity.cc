@@ -44,19 +44,19 @@ BaselineActivity::BaselineActivity( void )
   ChirpMin = 10.0;
 
   // add some parameter as options:
-  addLabel( "Timing" ).setStyle( OptWidget::Bold );
+  addSection( "Timing" ).setStyle( OptWidget::Bold );
   addNumber( "duration", "Duration", Duration, 0.01, 100.0, 0.05, "sec", "ms" );
   addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 );
-  addLabel( "Analysis" ).setStyle( OptWidget::Bold );
+  addSection( "Analysis" ).setStyle( OptWidget::Bold );
   addNumber( "isimax", "Maximum interspike-interval", 0.02, 0.001, 1.0, 0.001, "sec", "ms" );
   addNumber( "isistep", "Interspike-interval resolution", 0.0002, 0.0001, 0.01, 0.0002, "sec", "ms" );
   addNumber( "ratedt", "Resolution of firing rate", 0.00005, 0.00001, 0.01, 0.00002, "s", "ms" );
   addNumber( "ratetmax", "Maximum time for firing rate", 0.002, 0.00001, 0.01, 0.00002, "s", "ms" );
-  addLabel( "Files" ).setStyle( OptWidget::Bold );
+  addSection( "Files" ).setStyle( OptWidget::Bold );
   addNumber( "eodduration", "EOD duration", 2.0, 0.1, 10.0, 0.1, "sec", "ms" );
   addBoolean( "saveeodtrace", "Save EOD trace", false );
   addBoolean( "saveeodtimes", "Save EOD times", false );
-  addLabel( "Control" ).setStyle( OptWidget::Bold );
+  addSection( "Control" ).setStyle( OptWidget::Bold );
   addText( "auto", "Automatically set detector parameter?", "never|once|always", 0, OptWidget::SelectText );
   addBoolean( "adjust", "Adjust input gain?", true );
 
@@ -444,13 +444,13 @@ void BaselineActivity::saveNerve( const Options &header, const MapD &nerveamplp,
   settings().save( df, "#   " );
   df << '\n';
   TableKey key;
-  key.addLabel( "peak" );
+  key.addSection( "peak" );
   key.addNumber( "time", "ms", "%9.2f" );
   key.addNumber( "ampl", "uV", "%6.1f" );
-  key.addLabel( "trough" );
+  key.addSection( "trough" );
   key.addNumber( "time", "ms", "%9.2f" );
   key.addNumber( "ampl", "uV", "%6.1f" );
-  key.addLabel( "average" );
+  key.addSection( "average" );
   key.addNumber( "time", "ms", "%9.2f" );
   key.addNumber( "ampl", "uV", "%6.1f" );
   key.saveKey( df, true, true );

@@ -52,7 +52,7 @@ namespace efish {
     NoiseType = "Gaussian";
 
     // add some parameter as options:
-    addLabel( "Stimulus" );
+    addSection( "Stimulus" );
     addText( "file", "Stimulus file", "" ).setStyle( OptWidget::BrowseExisting );
     addNumber( "sigstdev", "Standard deviation of signal", SigStdev, 0.01, 1.0, 0.05 );
     addNumber( "pause", "Pause between signals", Pause, 0.0, 1000.0, 0.01, "seconds", "ms" );
@@ -62,7 +62,7 @@ namespace efish {
     addBoolean( "am", "Amplitude modulation", AM );
     addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 );
 
-    addLabel( "Additional noise",0, OptWidget::Bold );
+    addSection( "Additional noise",0, OptWidget::Bold );
     addSelection( "noisetype", "Type of noise.", "none|Gaussian|Ornstein-Uhlenbeck");
     addNumber( "uppercutoff", "Upper cutoff frequency.", UpperCutoff, 0.0, 10000.0, 1.0, "","Hz" ).setActivation("noisetype","Gaussian");
     addNumber( "lowercutoff", "Lower cutoff frequency.", LowerCutoff, 0.0, 10000.0, 1.0, "","Hz" ).setActivation("noisetype","Gaussian");
@@ -71,7 +71,7 @@ namespace efish {
     addNumber( "noiseampl", "Amplitude of the additional noise.", NoiseAmpl, 0.01, 100.00, 0.05, "mV/cm" ).setActivation( "amplsel", "absolute");
 
 
-    addLabel( "Analysis" ).setStyle( OptWidget::Bold );
+    addSection( "Analysis" ).setStyle( OptWidget::Bold );
     addNumber( "binwidth", "Bin width", RateDeltaT, 0.0001, 1.0, 0.002, "seconds", "ms" );
     addNumber( "before", "Spikes recorded before stimulus", Before, 0.0, 1000.0, 0.005, "seconds", "ms" );
     addNumber( "after", "Spikes recorded after stimulus", After, 0.0, 1000.0, 0.005, "seconds", "ms" );
@@ -118,13 +118,13 @@ namespace efish {
 
     SpikesKey.addNumber( "time", "ms", "%9.2f" );
 
-    NerveKey.addLabel( "peak" );
+    NerveKey.addSection( "peak" );
     NerveKey.addNumber( "time", "ms", "%9.2f" );
     NerveKey.addNumber( "ampl", "uV", "%6.1f" );
-    NerveKey.addLabel( "trough" );
+    NerveKey.addSection( "trough" );
     NerveKey.addNumber( "time", "ms", "%9.2f" );
     NerveKey.addNumber( "ampl", "uV", "%6.1f" );
-    NerveKey.addLabel( "average" );
+    NerveKey.addSection( "average" );
     NerveKey.addNumber( "time", "ms", "%9.2f" );
     NerveKey.addNumber( "ampl", "uV", "%7.2f" );
 

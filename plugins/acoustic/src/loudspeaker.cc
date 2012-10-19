@@ -252,9 +252,9 @@ void LoudSpeaker::saveCalibration( const string &file,
   if ( SamplingRate > 0.0 )
     header.addNumber( "sampling rate", 0.001*SamplingRate, "kHz" );
   header.addText( "date", date );
-  header.addLabel( "settings:" );
+  header.addSection( "settings" );
+  header.append( *this );
   header.save( df, "# " );
-  Options::save( df, "#   " );
   df << '\n';
   TableKey key;
   key.addNumber( frequencyName(), frequencyUnit(), frequencyFormat() );

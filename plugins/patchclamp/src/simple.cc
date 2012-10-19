@@ -136,9 +136,9 @@ int Simple::main( void )
       Options header;
       header.addInteger( "index", totalRuns() );
       header.addText( "session time", sessionTimeStr() ); 
-      header.addLabel( "settings:" );
+      header.addSection( "settings" );
+      header.append( settings() );
       header.save( df, "# " );
-      Options::save( df, "#   ", 0, false, true );
       df << '\n';
       key.addNumber( "t", "ms", "%7.2f" );
       key.addNumber( trace( intrace ).ident(), trace( intrace ).unit(), "%7.2f" );

@@ -57,7 +57,7 @@ Chirps::Chirps( void )
   Playback = false;
 
   // add some parameter as options:
-  addLabel( "Chirp parameter" );
+  addSection( "Chirp parameter" );
   addInteger( "nchirps", "Number of chirps", NChirps, 1, 10000, 2 );
   addInteger( "beatpos", "Number of beat positions", BeatPos, 1, 100, 1 );
   addNumber( "beatstart", "Beat position of first chirp", BeatStart, 0.0, 1.0, 0.01, "1" );
@@ -69,7 +69,7 @@ Chirps::Chirps( void )
   addSelection( "chirpsel", "Chirp waveform", "generated|from file" );
   addNumber( "chirpkurtosis", "Kurtosis of Gaussian chirp", ChirpKurtosis, 0.01, 100.0, 0.01, "", "" ).setActivation( "chirpsel", "generated" );
   addText( "file", "Chirp-waveform file", "" ).setStyle( OptWidget::BrowseExisting ).setActivation( "chirpsel", "from file" );
-  addLabel( "Beat parameter" );
+  addSection( "Beat parameter" );
   addNumber( "deltaf", "Delta f", DeltaF, -500.0, 500.0, 5, "Hz" );
   addNumber( "contrast", "Contrast", Contrast, 0.01, 1.0, 0.01, "1", "%" );
   addBoolean( "am", "Amplitude modulation", AM );
@@ -77,7 +77,7 @@ Chirps::Chirps( void )
   addBoolean( "playback", "Playback AM", Playback );
   addNumber( "pause", "Pause between signals", Pause, 0.01, 1000.0, 0.05, "sec", "ms" );
   addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 );
-  addLabel( "Analysis" );
+  addSection( "Analysis" );
   addNumber( "sigma", "Standard deviation of rate smoothing kernel", Sigma, 0.0, 1.0, 0.0001, "seconds", "ms" );
   addBoolean( "adjust", "Adjust input gain?", true );
   addValueTypeStyle( OptWidget::TabLabel, Parameter::Label );
@@ -121,7 +121,7 @@ Chirps::Chirps( void )
   Header.addLabel( "settings:" );
 
   // tablekeys:
-  ChirpKey.addLabel( "chirp" );
+  ChirpKey.addSection( "chirp" );
   ChirpKey.addNumber( "inx", "1", "%3.0f" );
   ChirpKey.addNumber( "time", "sec", "%9.5f" );
   ChirpKey.addNumber( "src", "-", "%3.0f" );
@@ -130,9 +130,9 @@ Chirps::Chirps( void )
   ChirpKey.addNumber( "kurtosis", "1", "%5.2f" );
   ChirpKey.addNumber( "ampl", "%", "%5.1f" );
   ChirpKey.addNumber( "phase", "1", "%5.3f" );
-  ChirpKey.addLabel( "eod" );
+  ChirpKey.addSection( "eod" );
   ChirpKey.addNumber( "rate", "Hz", "%5.1f" );
-  ChirpKey.addLabel( "beat" );
+  ChirpKey.addSection( "beat" );
   ChirpKey.addNumber( "freq", "Hz", "%5.1f" );
   ChirpKey.addNumber( "phase", "1", "%5.3f" );
   ChirpKey.addNumber( "loc", "1", "%5.3f" );
@@ -151,13 +151,13 @@ Chirps::Chirps( void )
 
   SpikesKey.addNumber( "time", "ms", "%8.2f" );
 
-  NerveKey.addLabel( "peak" );
+  NerveKey.addSection( "peak" );
   NerveKey.addNumber( "time", "ms", "%7.2f" );
   NerveKey.addNumber( "ampl", "uV", "%6.1f" );
-  NerveKey.addLabel( "trough" );
+  NerveKey.addSection( "trough" );
   NerveKey.addNumber( "time", "ms", "%7.2f" );
   NerveKey.addNumber( "ampl", "uV", "%6.1f" );
-  NerveKey.addLabel( "average" );
+  NerveKey.addSection( "average" );
   NerveKey.addNumber( "time", "ms", "%7.2f" );
   NerveKey.addNumber( "ampl", "uV", "%7.2f" );
 

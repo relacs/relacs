@@ -3,7 +3,7 @@ Options:
 - Options::read -> Options::assign( ident, value ): what if value is "[ a, b, c]"?
 - get rid of SavePatternLabel in save(), read()
 - change save() functions to take flags that specify what to put out
-- remove addLabel, insertLabel, and Label type in Options and TableKey
+- remove addLabel, insertLabel, and Label type in Options
 - check config files (in particular empty comments, etc!)
 
 auditory::Session plots do not work! Why???? It works on my laptop!

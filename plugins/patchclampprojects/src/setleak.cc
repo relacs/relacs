@@ -42,13 +42,13 @@ SetLeak::SetLeak( void )
   setDialogSelectMask( 1 );
 
   // dialog:
-  addLabel( "Passive membrane properties of the cell:" ).setFlags( 2 );
+  addSection( "Passive membrane properties of the cell:" ).setFlags( 2 );
   addNumber( "Rm", "Resistance R_m", 0.0, 0.0, 1.0e8, 1.0, "MOhm", "MOhm", "%.1f" ).setFlags( 2+4 );
   addNumber( "Taum", "Time constant tau_m", 0.0, 0.0, 1.0e6, 0.001, "s", "ms", "%.1f" ).setFlags( 2+4 );
-  addLabel( "Injected current I=g(E-V):" ).setFlags( 2 );
+  addSection( "Injected current I=g(E-V):" ).setFlags( 2 );
   addNumber( "gdc", "Additional leak conductance g", 0.0, -1.0e8, 1.0e8, 1.0, "nS" ).setFlags( 2 );
   addNumber( "Edc", "Reversal potential E", 0.0, -1000.0, 1000.0, 1.0, "mV" ).setFlags( 2 );
-  addLabel( "Resulting membrane properties:" ).setFlags( 2 );
+  addSection( "Resulting membrane properties:" ).setFlags( 2 );
   addNumber( "Rdc", "New membrane resistance 1/R=1/R_m+g", 0.0, 0.0, 1.0e8, 1.0, "MOhm" ).setFlags( 2 );
   addNumber( "taudc", "New membrane time constant", 0.0, 0.0, 1.0e6, 0.001, "s", "ms" ).setFlags( 2 );
   addValueTypeStyle( OptWidget::Bold, Parameter::Label );

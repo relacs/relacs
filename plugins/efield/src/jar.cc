@@ -56,7 +56,7 @@ JAR::JAR( void )
   WarpFile = false;
 
   // add some parameter as options:
-  addLabel( "Stimulation" );
+  addSection( "Stimulation" );
   addNumber( "duration", "Signal duration", Duration, 0.0, 1000000.0, 1.0, "seconds" );
   addNumber( "pause", "Pause between signals", Pause, 1.0, 1000000.0, 1.0, "seconds" );
   addNumber( "ramp", "Duration of linear ramp", Ramp, 0, 10000.0, 0.1, "seconds" );
@@ -65,7 +65,7 @@ JAR::JAR( void )
   addNumber( "deltafmin", "Minimum delta f", DeltaFMin, -10000.0, 10000.0, 2.0, "Hz" );
   addText( "deltafrange", "Range of delta f's", "" );
   addInteger( "repeats", "Repeats", Repeats, 0, 1000, 2 );
-  addLabel( "Amplitudes" );
+  addSection( "Amplitudes" );
   addSelection( "amplsel", "Stimulus amplitude", "contrast|absolute" );
   addNumber( "contrastmax", "Maximum contrast", ContrastMax, 0.01, 1.0, 0.05, "1", "%", "%.0f" ).setActivation( "amplsel", "contrast" );
   addNumber( "contrastmin", "Minimum contrast", ContrastMin, 0.01, 1.0, 0.05, "1", "%", "%.0f" ).setActivation( "amplsel", "contrast" );
@@ -73,14 +73,14 @@ JAR::JAR( void )
   addNumber( "amplmin", "Minimum amplitude", AmplMin, 0.1, 1000.0, 0.1, "mV/cm" ).setActivation( "amplsel", "absolute" );
   addNumber( "amplmax", "Maximum amplitude", AmplMax, 0.1, 1000.0, 0.1, "mV/cm" ).setActivation( "amplsel", "absolute" );
   addNumber( "amplstep", "Amplitude steps", AmplStep, 0.1, 1000.0, 0.1, "mV/cm" ).setActivation( "amplsel", "absolute" );
-  addLabel( "S&timulus" );
+  addSection( "S&timulus" );
   addBoolean( "genstim", "Generate stimulus", GenerateStimulus );
   addBoolean( "sinewave", "Use sine wave", SineWave ).setActivation( "genstim", "true" );
   addText( "file", "Stimulus file", "" ).setStyle( OptWidget::BrowseExisting ).setActivation( "genstim", "false" );
   addNumber( "sigstdev", "Standard deviation of signal", 1.0, 0.01, 1.0, 0.05 ).setActivation( "genstim", "false" );
   addBoolean( "warpfile", "Warp stimulus file to the requested Delta fs", WarpFile ).setActivation( "genstim", "false" );
   addNumber( "fakefish", "Assume a fish with frequency", 0.0, 0.0, 2000.0, 10.0, "Hz" );
-  addLabel( "A&nalysis" );
+  addSection( "A&nalysis" );
   addNumber( "before", "Time before stimulation to be analyzed", Before, 0.0, 100000.0, 1.0, "seconds" );
   addNumber( "after", "Time after stimulation to be analyzed", After, 0.0, 100000.0, 1.0, "seconds" );
   addBoolean( "savetraces", "Save traces during pause", true );
@@ -571,20 +571,20 @@ void JAR::saveJAR( const Options &header )
 
   // write key:
   TableKey key;
-  key.addLabel( "stimulus" );
+  key.addSection( "stimulus" );
   if ( UseContrast )
     key.addNumber( "contrast", "%", "%8.1f" );
   else
     key.addNumber( "amplitude", "mV/cm", "%6.3f" );
   key.addNumber( "deltaf", "Hz", "%5.1f" );
   key.addNumber( "index", "1", "%5.0f" );
-  key.addLabel( "jar" );
+  key.addSection( "jar" );
   if ( UseContrast )
     key.addNumber( "contrast", "%", "%6.1f" );
   key.addNumber( "first", "Hz", "%5.1f" );
   key.addNumber( "last", "Hz", "%5.1f" );
   key.addNumber( "jar", "Hz", "%5.1f" );
-  key.addLabel( "chirps" );
+  key.addSection( "chirps" );
   key.addNumber( "num", "1", "%f" );
   key.addNumber( "size", "Hz", "%5.1f" );
   key.addNumber( "s.d.", "Hz", "%5.1f" );
@@ -653,14 +653,14 @@ void JAR::saveMeanJAR( const Options &header )
 
   // write key:
   TableKey key;
-  key.addLabel( "stimulus" );
+  key.addSection( "stimulus" );
   if ( UseContrast )
     key.addNumber( "contrast", "%", "%8.1f" );
   else
     key.addNumber( "amplitude", "mV/cm", "%6.3f" );
   key.addNumber( "deltaf", "Hz", "%6.1f" );
   key.addNumber( "n", "1", "%3.0f" );
-  key.addLabel( "jar" );
+  key.addSection( "jar" );
   if ( UseContrast )
     key.addNumber( "contrast", "%", "%8.1f" );
   key.addNumber( "s.d.", "%", "%5.1f" );
@@ -670,7 +670,7 @@ void JAR::saveMeanJAR( const Options &header )
   key.addNumber( "s.d.", "Hz", "%5.1f" );
   key.addNumber( "jar", "Hz", "%5.1f" );
   key.addNumber( "s.d.", "Hz", "%5.1f" );
-  key.addLabel( "chirps" );
+  key.addSection( "chirps" );
   key.addNumber( "total", "1", "%5.0f" );
   key.addNumber( "num", "1", "%5.1f" );
   key.addNumber( "s.d.", "1", "%5.1f" );
@@ -862,7 +862,7 @@ void JAR::saveChirps( const Options &header )
 
   // write key:
   TableKey key;
-  key.addLabel( "chirp" );
+  key.addSection( "chirp" );
   key.addNumber( "time", "s", "%10.5f" );
   key.addNumber( "size", "Hz", "%5.1f" );
   key.addNumber( "width", "ms", "%5.1f" );
@@ -870,7 +870,7 @@ void JAR::saveChirps( const Options &header )
   key.addNumber( "adiff", GlobalEODUnit, "%6.4f" );
   key.addNumber( "dip", "%", "%5.1f" );
   key.addNumber( "phase", "1", "%5.3f" );
-  key.addLabel( "beat" );
+  key.addSection( "beat" );
   key.addNumber( "phase", "1", "%5.3f" );
   key.addNumber( "loc", "1", "%5.3f" );
   key.addNumber( "df", "Hz", "%5.1f" );

@@ -512,9 +512,9 @@ void DynamicSUSpikeDetector::save( void )
   header.addText( "ident", ident() );
   header.addText( "detector", name() );
   header.addText( "session time", sessionTimeStr() );
-  header.addLabel( "settings:" );
+  header.addSection( "settings" );
+  header.append( *this );
   header.save( df, "# " );
-  Options::save( df, "#   " );
   df << '\n';
   TableKey key;
   key.addNumber( "ampl", "mV", "%5.1f" );

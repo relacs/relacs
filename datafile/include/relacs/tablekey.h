@@ -38,7 +38,6 @@ class TableData;
 /*!
 \class TableKey
 \author Jan Benda
-\version 1.0
 \brief Handling a table header
 */
 
@@ -139,58 +138,49 @@ public:
         with name \a name to \a text. */
   Parameter &setText( const string &name, const string &text );
 
-    /*! Add a new group \a name with level \a level to the key.
-        \a level = 0 is the top-level group.
-        Subsequent calls to addNumber() adds columns to this group.
-        \sa addSubGroup(), addSubSubGroup(), insertGroup() */
-  Options &addGroup( int level, const string &name, int flags=0 );
-    /*! Add a new top-level group \a name to the key.
-        Subsequent calls to addNumber() adds columns to this group.
-        \sa addSubGroup(), addSubSubGroup(), insertGroup() */
-  Options &addGroup( const string &name, int flags=0 );
-    /*! Add a new second-level group \a name to the key.
-        Subsequent calls to addNumber() adds columns to this group.
-        \sa addGroup(), addSubSubGroup(), insertGroup() */
-  Options &addSubGroup( const string &name, int flags=0 );
-    /*! Add a new third-level group \a name to the key.
-        Subsequent calls to addNumber() adds columns to this group.
-        \sa addGroup(), addSubGroup(), insertGroup() */
-  Options &addSubSubGroup( const string &name, int flags=0 );
-    /*! Insert a new group of columns before the group
+    /*! Add a new section \a name with level \a level to the key.
+        \a level = 0 is the top-level section.
+        Subsequent calls to addNumber() adds columns to this section.
+        \sa addSubSection(), addSubSubSection(), insertSection() */
+  Options &addSection( int level, const string &name, int flags=0 );
+    /*! Add a new top-level section \a name to the key.
+        Subsequent calls to addNumber() adds columns to this section.
+        \sa addSubSection(), addSubSubSection(), insertSection() */
+  Options &addSection( const string &name, int flags=0 );
+    /*! Add a new second-level section \a name to the key.
+        Subsequent calls to addNumber() adds columns to this section.
+        \sa addSection(), addSubSubSection(), insertSection() */
+  Options &addSubSection( const string &name, int flags=0 );
+    /*! Add a new third-level section \a name to the key.
+        Subsequent calls to addNumber() adds columns to this section.
+        \sa addSection(), addSubSection(), insertSection() */
+  Options &addSubSubSection( const string &name, int flags=0 );
+    /*! Insert a new section of columns before the section
         specified by \a atpattern.
 	If \a atpattern is not found or if \atpattern is empty,
-	the new group is added to the beginning or the end
-	of the currently active group, respectively.
-        The new group is named \a name and has some \a flag for selecting this group.
-        Subsequent calls to addNumber() adds columns to the inserted group.
-        \sa addGroup(), addSubGroup(), addSubSubGroup() */
-  Options &insertGroup( const string &name, const string &atname="",
+	the new section is added to the beginning or the end
+	of the currently active section, respectively.
+        The new section is named \a name and has some \a flag for selecting this section.
+        Subsequent calls to addNumber() adds columns to the inserted section.
+        \sa addSection(), addSubSection(), addSubSubSection() */
+  Options &insertSection( const string &name, const string &atname="",
 			int flags=0 );
 
-    /*! Add a label \a name at the end of the key. */
-  Options &addLabel( const string &name, int flags=0 );
-    /*! Insert a new group with name name()
-        at the beginning of the key
-        (\a atindent == "") or at the position of the column with
-        name \a atname. If the column with name \a atname
-        does not exist, the group is appended to the end of the key. */
-  Options &insertLabel( const string &name, const string &atname="",
-			int flags=0 );
-
-    /*! Adds all parameter from \a opts to the key as specified by \a selectflag.
-       \sa Options::append(const Options&, int) */
+    /*! Adds all Parameters and sections from \a opts
+        to the key as specified by \a selectflag.
+        \sa Options::append(const Options&, int) */
   void add( const Options &opts, int selectflag=0 );
-    /*! Insert all parameter from \a opts
+    /*! Insert all Parameters and sections from \a opts
         at the beginning of the key
-        (\a atname == "") or at the position of the column or group specifier with
-        name \a atname. If the column or group with name \a atname
+        (\a atname == "") or at the position of the column or section specifier with
+        name \a atname. If the column or section with name \a atname
         does not exist, the options are appended to the end of the key.
        \sa Options::insert(const Options&, const string& ) */
   void insert( const Options &opts, const string &atname="" );
-    /*! Insert all parameter from \a opts as specified by \a selectflag
-        at the beginning of the key
-        (\a atname == "") or at the position of the column or group specifier with
-        name \a atname. If the column or group with name \a atname
+    /*! Insert all Parameter and sections from \a opts as
+        specified by \a selectflag at the beginning of the key
+        (\a atname == "") or at the position of the column or section specifier with
+        name \a atname. If the column or section with name \a atname
         does not exist, the options are appended to the end of the key.
        \sa Options::insert(const Options&, int, const string& ) */
   void insert( const Options &opts, int selectflag, const string &atname="" );
@@ -253,24 +243,24 @@ public:
     /*! Returns \c true if the column specified by \a pattern contains strings.
         \sa column() */
   bool isText( const string &pattern ) const;
-    /*! Returns the group name string of level \a level
+    /*! Returns the section name string of level \a level
         for the \a column-th column. 
         \a level = 0 returns the name string of the column. */
-  Str group( int column, int level=1 ) const;
-    /*! Returns the group name string of level \a level
+  Str section( int column, int level=1 ) const;
+    /*! Returns the section name string of level \a level
         for the column specified by \a pattern. 
         \a level = 0 returns the name string of the column.
 	\sa column() */
-  Str group( const string &pattern, int level=1 ) const;
-    /*! Set the group name string of level \a level
-        for the \a column-th column to \a group. 
+  Str section( const string &pattern, int level=1 ) const;
+    /*! Set the section name string of level \a level
+        for the \a column-th column to \a section. 
         \a level = 0 sets the name string of the column. */
-  void setGroup( int column, const string &group, int level=1 );
-    /*! Set the group name string of level \a level
-        for the column specified by \a pattern to \a group. 
+  void setSection( int column, const string &section, int level=1 );
+    /*! Set the section name string of level \a level
+        for the column specified by \a pattern to \a section. 
         \a level = 0 sets the name string of the column.
 	\sa column() */
-  void setGroup( const string &pattern, const string &group, int level=1 );
+  void setSection( const string &pattern, const string &section, int level=1 );
 
     /*! Get \a i-th column. */
   const Parameter &operator[]( int i ) const;
@@ -285,15 +275,15 @@ public:
   int columns( void ) const;
     /*! The number of levels of the TableKey.
         0: No columns are described by the TableKey,
-	1: Each column has an name, but columns are not grouped.
-        2: Columns are grouped.
-        3: Groups of columns are grouped... */
+	1: Each column has an name, but columns are not grouped in sections.
+        2: Columns are grouped in sections.
+        3: Groups of columns are grouped in sections ... */
   int level( void ) const;
 
     /*! Returns true if the TableKey does not describe any columns.
-        However, it can already contain descriptions of groups. */     
+        However, it can already contain descriptions of sections. */     
   bool empty( void ) const;
-    /*! Clears the TableKey. Erases all column and group descriptions. */
+    /*! Clears the TableKey. Erases all column and section descriptions. */
   void clear( void );
 
     /*! Write the table header to \a str.
@@ -494,14 +484,14 @@ public:
  private:
 
   void init( void );
-  void addParams( Options *o, deque < Options::section_iterator > &groups, int &level );
+  void addParams( Options *o, deque < Options::section_iterator > &sections, int &level );
 
   template < typename T >
   ostream &saveVector( ostream &str, const vector< T > &vec, int c=-1 ) const;
 
   Options Opt;
 
-  deque< deque < Options::section_iterator > > Groups;
+  deque< deque < Options::section_iterator > > Sections;
   deque < Options::iterator > Columns;
   vector < int > Width;
   mutable int PrevCol;

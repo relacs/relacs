@@ -108,8 +108,6 @@ FIField::FIField( void )
   FIFieldHeader.addNumber( "best maximum rate", "Hz", "%.1f" );
   FIFieldHeader.addInteger( "best nfit" );
   FIFieldHeader.addText( "session time" ).setFlags( 1 );
-  FIFieldHeader.addLabel( "status:" ).setFlags( 1 );
-  Header.erase( "status:" );
 }
 
 
@@ -301,10 +299,7 @@ void FIField::saveHeader( const string &file )
     return;
 
   df << '\n';
-  FIFieldHeader.save( df, "# ", 1 );
-  stimulusData().save( df, "#   " );
-  df << "# settings:\n";
-  settings().save( df, "#   ", 32, false, true );
+  FIFieldHeader.save( df, "# ", 1+32, false, true );
   df << '\n';
 }
 
@@ -324,17 +319,17 @@ void FIField::saveThreshold( const string &file )
   settings().save( df, "#   ", 32, false, true );
   df << '\n';
   TableKey key;
-  key.addLabel( "threshold" );
+  key.addSection( "threshold" );
   key.addNumber( "f_c", "kHz", "%6.3f" );
   key.addNumber( "I_th", "dB SPL", "%5.1f" );
   key.addNumber( "s.d.", "dB SPL", "%5.1f" );
   key.addNumber( "slope", "Hz/dB", "%5.1f" );
   key.addNumber( "s.d.", "Hz/dB", "%5.1f" );
-  key.addLabel( "rate" );
+  key.addSection( "rate" );
   key.addNumber( "I_r", "dB SPL", "%5.1f" );
   key.addNumber( "s.d.", "dB SPL", "%5.1f" );
   key.addNumber( "r", "Hz", "%5.1f" );
-  key.addLabel( "saturation" );
+  key.addSection( "saturation" );
   key.addNumber( "I_max", "dB SPL", "%5.1f" );
   key.addNumber( "s.d.", "dB SPL", "%5.1f" );
   key.addNumber( "f_max", "Hz", "%5.1f" );
@@ -511,6 +506,12 @@ RePro::DoneState FIField::next( vector< FIData > &results, bool msg )
 	FIFieldHeader.setInteger( "index2", totalRuns() );
 	FIFieldHeader.setInteger( "side", Side );
 	FIFieldHeader.setText( "session time", sessionTimeStr() );
+	FIFieldHeader.erase( "status" );
+	FIFieldHeader.addSection( "status" );
+	FIFieldHeader.append( stimulusData() );
+	FIFieldHeader.erase( "settings" );
+	FIFieldHeader.addSection( "settings" );
+	FIFieldHeader.append( settings(), 32 );
 	saveHeader( "fifieldspikes.dat" );
 	saveHeader( "fifieldrates.dat" );
 	saveHeader( "fifieldficurves.dat" );

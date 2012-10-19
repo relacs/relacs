@@ -36,7 +36,7 @@ SysLatency::SysLatency( void )
   : RePro( "SysLatency", "auditory", "Jan Benda", "1.5", "Jan 10, 2008" )
 {
   // options:
-  addLabel( "Stimulus" );
+  addSection( "Stimulus" );
   addNumber( "rate", "Target firing rate", 100.0, 0.0, 1000.0, 20.0, "Hz" );
   addInteger( "pwaves", "Number of cycles of pertubation", 10, 0, 1000, 1 );
   addNumber( "pintensity", "Intensity of pertubations", 10.0, 0.0, 100.0, 1.0, "dB" );
@@ -48,7 +48,7 @@ SysLatency::SysLatency( void )
   addNumber( "pause", "Pause", 0.6, 0.0, 10.0, 0.05, "seconds", "ms" );
   addInteger( "repeats", "Number of stimulus repetitions", 10, 0, 10000, 2 );
   addSelection( "side", "Speaker", "left|right|best" );
-  addLabel( "Analysis" );
+  addSection( "Analysis" );
   addNumber( "skipwin", "Initial portion of stimulus not used for analysis", 0.1, 0.0, 100.0, 0.01, "seconds", "ms" );
   addNumber( "analysewin", "Window used for ISI analysis", 0.01, 0.0, 100.0, 0.01, "seconds", "ms" );
   addNumber( "maxlat", "Maximum latency", 0.01, 0.0, 1.0, 0.001, "seconds", "ms" );
@@ -313,10 +313,7 @@ void SysLatency::saveSpikes( Options &header, const EventList &spikes )
     return;
 
   // write header and key:
-  header.save( df, "# " );
-  stimulusData().save( df, "#   " );
-  df << "# settings:\n";
-  settings().save( df, "#   ", 16, false, true );
+  header.save( df, "# ", 0, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -337,10 +334,7 @@ void SysLatency::saveTrigger( Options &header, const ArrayD &trigger )
     return;
 
   // write header and key:
-  header.save( df, "# " );
-  stimulusData().save( df, "#   " );
-  df << "# settings:\n";
-  settings().save( df, "#   ", 16, false, true );
+  header.save( df, "# ", 0, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -365,10 +359,7 @@ void SysLatency::saveCoincidentSpikes( Options &header,
     return;
 
   // write header and key:
-  header.save( df, "# " );
-  stimulusData().save( df, "#   " );
-  df << "# settings:\n";
-  settings().save( df, "#   ", 16, false, true );
+  header.save( df, "# ", 0, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "lat", "ms", "%5.1f" );
@@ -394,10 +385,7 @@ void SysLatency::savePRC( Options &header, const MapD &prc )
     return;
 
   // write header and key:
-  header.save( df, "# " );
-  stimulusData().save( df, "#   " );
-  df << "# settings:\n";
-  settings().save( df, "#   ", 16, false, true );
+  header.save( df, "# ", 0, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "1", "%5.3f" );
@@ -442,7 +430,10 @@ void SysLatency::save( double carrierfrequency, int side, double pduration,
   header.addNumber( "prc slope", slope, "", "%.3f" );
   header.addNumber( "prc offset", offset, "", "%.3f" );
   header.addText( "session time", sessionTimeStr() );
-  header.addLabel( "status:" );
+  header.addSection( "status:" );
+  header.append( stimulusData() );
+  header.addSection( "settings" );
+  header.append( settings(), 16 );
 
   saveSpikes( header, spikes );
   saveTrigger( header, trigger );

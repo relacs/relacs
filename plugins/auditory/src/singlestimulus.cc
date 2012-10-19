@@ -48,7 +48,7 @@ SingleStimulus::SingleStimulus( void )
   Sigma2 = 0.02;
 
   // options:
-  addLabel( "Waveform" ).setStyle( OptWidget::TabLabel );
+  addSection( "Waveform" ).setStyle( OptWidget::TabLabel );
   addSelection( "type", "Type of stimulus", "Wave|Envelope|AM" );
   addSelection( "waveform", "Stimulus waveform", "From file|Const|Sine|Rectangular|Triangular|Sawup|Sawdown|Whitenoise|OUnoise" );
   addText( "stimfile", "Stimulus file", "" ).setStyle( OptWidget::BrowseExisting ).setActivation( "waveform", "From file" );
@@ -59,16 +59,16 @@ SingleStimulus::SingleStimulus( void )
   addInteger( "seed", "Seed for random number generation", 0 ).setActivation( "waveform", "Whitenoise|OUnoise" );;
   addNumber( "duration", "Maximum duration of stimulus", Duration, 0.0, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "ramp", "Ramp of stimulus", 0.002, 0.0, 10.0, 0.001, "seconds", "ms" );
-  addLabel( "Stimulus" ).setStyle( OptWidget::TabLabel );
+  addSection( "Stimulus" ).setStyle( OptWidget::TabLabel );
   addNumber( "intensity", "Stimulus intensity", Intensity, -200.0, 200.0, 5.0, "dB" );
   addSelection( "intensitybase", "Stimulus intensity relative to", "SPL|threshold|rate|previous" );
   addNumber( "repeats", "Number of stimulus presentations", Repeats, 1, 10000, 1, "times" );
   addNumber( "pause", "Duration of pause between stimuli", 1.0, 0.0, 1000.0, 0.01, "seconds", "ms" );
   addSelection( "side", "Speaker", "left|right|best" );
-  addLabel( "Carrier" );
+  addSubSection( "Carrier" );
   addNumber( "carrierfreq", "Carrier frequency", CarrierFreq, -40000.0, 40000.0, 500.0, "Hz", "kHz" );
   addBoolean( "usebestfreq", "Relative to the cell's best frequency", true );
-  addLabel( "Intensity - search" ).setStyle( OptWidget::TabLabel );
+  addSection( "Intensity - search" ).setStyle( OptWidget::TabLabel );
   addBoolean( "userate", "Search intensity for target firing rate", true );
   addNumber( "rate", "Target firing rate", 100.0, 0.0, 1000.0, 10.0, "Hz" ).setActivation( "userate", "true" );
   addNumber( "ratetol", "Tolerance for target firing rate", 5.0, 0.0, 1000.0, 1.0, "Hz" ).setActivation( "userate", "true" );
@@ -82,12 +82,12 @@ SingleStimulus::SingleStimulus( void )
   addNumber( "minslope", "Minimum slope required for interpolation", 4.0, 0.0, 100.0, 0.5, "Hz/dB" ).setActivation( "userate", "true" );
   addNumber( "searchduration", "Maximum duration of stimulus", 0.0, 0.0, 1000.0, 0.01, "seconds", "ms" ).setActivation( "userate", "true" );
   addNumber( "searchpause", "Duration of pause between stimuli", 0.0, 0.0, 1000.0, 0.01, "seconds", "ms" ).setActivation( "userate", "true" );
-  addLabel( "Analysis" ).setStyle( OptWidget::TabLabel );
+  addSection( "Analysis" ).setStyle( OptWidget::TabLabel );
   addNumber( "skipwin", "Initial portion of stimulus not used for analysis", SkipWin, 0.0, 100.0, 0.01, "seconds", "ms" );
   addNumber( "sigma1", "Standard deviation of rate smoothing kernel 1", Sigma1, 0.0, 1.0, 0.0001, "seconds", "ms" );
   addNumber( "sigma2", "Standard deviation of rate smoothing kernel 2", Sigma2, 0.0, 1.0, 0.001, "seconds", "ms" );
   addBoolean( "adjust", "Adjust input gain", true );
-  addLabel( "Save stimuli" );
+  addSubSection( "Save stimuli" );
   addSelection( "storemode", "Save stimuli in", "session|repro|custom" ).setUnit( "path" );
   addText( "storepath", "Save stimuli in custom directory", "" ).setStyle( OptWidget::BrowseDirectory ).setActivation( "storemode", "custom" );
   addSelection( "storelevel", "Save", "all|am+generated|generated|noise|none" ).setUnit( "stimuli" );
@@ -687,10 +687,7 @@ void SingleStimulus::saveSpikes( Options &header, const EventList &spikes )
     return;
 
   // write header and key:
-  header.save( df, "# " );
-  stimulusData().save( df, "#   " );
-  df << "# settings:\n";
-  settings().save( df, "#   ", 16, false, true );
+  header.save( df, "# ", 16, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -712,10 +709,7 @@ void SingleStimulus::saveRate( Options &header, const SampleDataD &rate1,
     return;
 
   // write header and key:
-  header.save( df, "# " );
-  stimulusData().save( df, "#   " );
-  df << "# settings:\n";
-  settings().save( df, "#   ", 16, false, true );
+  header.save( df, "# ", 16, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -747,7 +741,10 @@ void SingleStimulus::save( const EventList &spikes, const SampleDataD &rate1,
   header.addNumber( "duration", 1000.0*Duration, "ms", "%.1f" );
   header.addText( "envelope", StoreFile );
   header.addText( "session time", sessionTimeStr() ); 
-  header.addLabel( "status:" );
+  header.addSection( "status" );
+  header.append( stimulusData() );
+  header.addSection( "settings" );
+  header.append( settings() );
 
   saveSpikes( header, spikes );
   saveRate( header, rate1, rate2 );

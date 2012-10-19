@@ -36,14 +36,14 @@ VICurve::VICurve( void )
     IInFac( 1.0 )
 {
   // add some options:
-  addLabel( "Stimuli" );
+  addSection( "Stimuli" );
   addSelection( "ibase", "Currents are relative to", "zero|DC|threshold" );
   addNumber( "imin", "Minimum injected current", -1.0, -1000.0, 1000.0, 0.001 );
   addNumber( "imax", "Maximum injected current", 1.0, -1000.0, 1000.0, 0.001 );
   addNumber( "istep", "Minimum step-size of current", 0.001, 0.001, 1000.0, 0.001 ).setActivation( "userm", "false" );
   addBoolean( "userm", "Use membrane resistance for estimating istep from vstep", false );
   addNumber( "vstep", "Minimum step-size of voltage", 1.0, 0.001, 10000.0, 0.1 ).setActivation( "userm", "true" );
-  addLabel( "Timing" );
+  addSection( "Timing" );
   addNumber( "duration", "Duration of current output", 0.1, 0.001, 1000.0, 0.001, "sec", "ms" );
   addNumber( "delay", "Delay before current pulses", 0.1, 0.001, 10.0, 0.001, "sec", "ms" );
   addNumber( "pause", "Duration of pause between current pulses", 0.4, 0.001, 1000.0, 0.001, "sec", "ms" );
@@ -53,7 +53,7 @@ VICurve::VICurve( void )
   addInteger( "singlerepeat", "Number of immediate repetitions of a single stimulus", 1, 1, 10000, 1 );
   addInteger( "blockrepeat", "Number of repetitions of a fixed intensity increment", 10, 1, 10000, 1 );
   addInteger( "repeat", "Number of repetitions of the whole V-I curve measurement", 1, 0, 10000, 1 );
-  addLabel( "Analysis" );
+  addSection( "Analysis" );
   addNumber( "vmin", "Minimum value for membrane voltage", -100.0, -1000.0, 1000.0, 1.0 );
   addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
   addNumber( "ton", "Timepoint of onset-voltage measurement", 0.01, 0.0, 100.0, 0.001, "sec", "ms" );
@@ -384,6 +384,10 @@ void VICurve::save( void )
       break;
     }
   }
+  Header.addSection( "status" );
+  Header.append( stimulusData() );
+  Header.addSection( "settings" );
+  Header.append( settings() );
 
   saveData();
   saveTrace();
@@ -398,28 +402,24 @@ void VICurve::saveData( void )
 	       ofstream::out | ofstream::app );
 
   Header.save( df, "# " );
-  df << "# status:\n";
-  stimulusData().save( df, "#   " );
-  df << "# settings:\n";
-  settings().save( df, "#   " );
   df << '\n';
 
   TableKey datakey;
-  datakey.addLabel( "Stimulus" );
+  datakey.addSection( "Stimulus" );
   datakey.addNumber( "I", IUnit, "%6.3f" );
   datakey.addNumber( "IDC", IUnit, "%6.3f" );
   datakey.addNumber( "trials", "1", "%6.0f" );
-  datakey.addLabel( "Rest" );
+  datakey.addSection( "Rest" );
   datakey.addNumber( "Vrest", VUnit, "%6.1f" );
   datakey.addNumber( "s.d.", VUnit, "%6.1f" );
-  datakey.addLabel( "Steady-state" );
+  datakey.addSection( "Steady-state" );
   datakey.addNumber( "Vss", VUnit, "%6.1f" );
   datakey.addNumber( "s.d.", VUnit, "%6.1f" );
-  datakey.addLabel( "Peak" );
+  datakey.addSection( "Peak" );
   datakey.addNumber( "Vpeak", VUnit, "%6.1f" );
   datakey.addNumber( "s.d.", VUnit, "%6.1f" );
   datakey.addNumber( "tpeak", "ms", "%6.1f" );
-  datakey.addLabel( "Onset" );
+  datakey.addSection( "Onset" );
   datakey.addNumber( "Vpeak", VUnit, "%6.1f" );
   datakey.addNumber( "s.d.", VUnit, "%6.1f" );
   datakey.saveKey( df );
@@ -451,10 +451,6 @@ void VICurve::saveTrace( void )
 	       ofstream::out | ofstream::app );
 
   Header.save( df, "# " );
-  df << "# status:\n";
-  stimulusData().save( df, "#   " );
-  df << "# settings:\n";
-  settings().save( df, "#   " );
   df << '\n';
 
   TableKey datakey;

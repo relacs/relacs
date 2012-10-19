@@ -182,6 +182,10 @@ int PhaseResettingCurve::main( void )
   header.addNumber( "ReProTime", reproStartTime(), "s", "%0.3f" );
   header.addNumber( "firing rate", meanrate, "Hz", "%0.1f" );
   header.addNumber( "period", 1000.0*baseperiod, "ms", "%0.2f" );
+  header.addSection( "status" );
+  header.append( stimulusData() );
+  header.addSection( "settings" );
+  header.append( settings() );
 
   for ( int n=1; (repeats == 0 || n<=repeats ) && softStop() <= 0; n++ ) {
 
@@ -337,10 +341,6 @@ void PhaseResettingCurve::openTraceFile( ofstream &tf, TableKey &tracekey,
   tf.open( addPath( "phaseresettingcurve-traces.dat" ).c_str(),
 	   ofstream::out | ofstream::app );
   header.save( tf, "# " );
-  tf << "# status:\n";
-  stimulusData().save( tf, "#   " );
-  tf << "# settings:\n";
-  settings().save( tf, "#   " );
   tf << '\n';
   tracekey.saveKey( tf, true, false );
   tf << '\n';
@@ -393,10 +393,6 @@ void PhaseResettingCurve::saveSpikes( const Options &header, const EventList &sp
 	       ofstream::out | ofstream::app );
 
   header.save( df, "# " );
-  df << "# status:\n";
-  stimulusData().save( df, "#   " );
-  df << "# settings:\n";
-  settings().save( df, "#   " );
   df << '\n';
 
   TableKey key;
@@ -431,10 +427,6 @@ void PhaseResettingCurve::saveData( const Options &header,
 	       ofstream::out | ofstream::app );
 
   header.save( df, "# " );
-  df << "# status:\n";
-  stimulusData().save( df, "#   " );
-  df << "# settings:\n";
-  settings().save( df, "#   " );
   df << '\n';
 
   TableKey datakey;
@@ -504,16 +496,12 @@ void PhaseResettingCurve::savePRC( const Options &header,
 	       ofstream::out | ofstream::app );
 
   header.save( df, "# " );
-  df << "# status:\n";
-  stimulusData().save( df, "#   " );
-  df << "# settings:\n";
-  settings().save( df, "#   " );
   df << '\n';
 
   TableKey datakey;
-  datakey.addLabel( "p" );
+  datakey.addSection( "p" );
   datakey.addNumber( "bin", "1", "%7.4f" );
-  datakey.addLabel( "dp" );
+  datakey.addSection( "dp" );
   datakey.addNumber( "median", "1", "%7.4f" );
   datakey.addNumber( "1.quartile", "1", "%7.4f" );
   datakey.addNumber( "3.quartile", "1", "%7.4f" );

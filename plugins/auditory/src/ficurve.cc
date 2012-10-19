@@ -164,7 +164,6 @@ FICurve::FICurve( void )
   Header.addInteger( "nfit" );
   Header.addNumber( "silent rate", "Hz", "%.1f" );
   Header.addText( "session time" );
-  Header.addLabel( "status:" );
 }
 
 
@@ -464,10 +463,7 @@ void FICurve::saveSpikes( const string &file, const vector< FIData > &results )
     return;
 
   // write header and key:
-  Header.save( df, "# " );
-  stimulusData().save( df, "#   " );
-  df << "# settings:\n";
-  settings().save( df, "#   ", 16, false, true );
+  Header.save( df, "# ", 0, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -498,10 +494,7 @@ void FICurve::saveRates( const string &file, const vector< FIData > &results )
     return;
 
   // write header and key:
-  Header.save( df, "# " );
-  stimulusData().save( df, "#   " );
-  df << "# settings:\n";
-  settings().save( df, "#   ", 16, false, true );
+  Header.save( df, "# ", 0, false, true );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.1f" );
@@ -544,33 +537,30 @@ void FICurve::saveFICurve( const string &file, const vector< FIData > &results )
     return;
 
   // write header and key:
-  Header.save( df, "# " );
-  stimulusData().save( df, "#   " );
-  df << "# settings:\n";
-  settings().save( df, "#   ", 16, false, true );
+  Header.save( df, "# ", 0, false, true );
   df << '\n';
   TableKey key;
-  key.addLabel( "stimulus" );
+  key.addSection( "stimulus" );
   key.addNumber( "I_r", "dB SPL", "%5.1f" );
   key.addNumber( "I", "dB SPL", "%5.1f" );
   key.addNumber( "n", "1", "%3.0f" );
-  key.addLabel( "firing rate" );
+  key.addSection( "firing rate" );
   key.addNumber( "f", "Hz", "%5.1f" );
   key.addNumber( "s.d.", "Hz", "%5.1f" );
-  key.addLabel( "baseline" );
+  key.addSection( "baseline" );
   key.addNumber( "f_b", "Hz", "%5.1f" );
   key.addNumber( "s.d.", "Hz", "%5.1f" );
-  key.addLabel( "peak rate" );
+  key.addSection( "peak rate" );
   key.addNumber( "f_on", "Hz", "%5.1f" );
   key.addNumber( "s.d.", "Hz", "%5.1f" );
   key.addNumber( "t_on", "ms", "%5.1f" );
-  key.addLabel( "steady-state" );
+  key.addSection( "steady-state" );
   key.addNumber( "f_ss", "Hz", "%5.1f" );
   key.addNumber( "s.d.", "Hz", "%5.1f" );
-  key.addLabel( "spike count" );
+  key.addSection( "spike count" );
   key.addNumber( "count", "1", "%7.1f" );
   key.addNumber( "s.d.", "1", "%7.1f" );
-  key.addLabel( "latency" );
+  key.addSection( "latency" );
   key.addNumber( "latency", "ms", "%6.1f" );
   key.addNumber( "s.d.", "ms", "%6.1f" );
   key.saveKey( df, true, true );
@@ -849,6 +839,12 @@ void FICurve::save( const vector< FIData > &results )
   analyzeFICurve( results );
 
   setHeader();
+  Header.erase( "status" );
+  Header.addSection( "status" );
+  Header.append( stimulusData() );
+  Header.erase( "settings" );
+  Header.addSection( "settings" );
+  Header.append( settings(), 16 );
   updateSession( results );
 
   saveSpikes( "fispikes.dat", results );

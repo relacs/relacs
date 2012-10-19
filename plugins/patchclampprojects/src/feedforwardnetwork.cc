@@ -47,7 +47,7 @@ FeedForwardNetwork::FeedForwardNetwork( void )
   : RePro( "FeedForwardNetwork", "patchclampprojects", "Jens Kremkow", "1.0", "Oct 29, 2010" )
 {
   // add some options:
-  addLabel( "Network" );
+  addSection( "Network" );
   addInteger( "nGroups", "Number of groups", 4, 1, 100, 1 );
   addInteger( "nExc", "Number of Exc neurons in each group", 100, 1, 1000, 1 );
   //addInteger( "nInh", "Number of Inh neurons in each group", 25, 1, 1000, 1 );
@@ -71,13 +71,13 @@ FeedForwardNetwork::FeedForwardNetwork( void )
   addSelection("stimulate","Stimulate","yes|no");
   
   
-  addLabel("Synapses");
+  addSection("Synapses");
   addNumber("E_ex","Excitatory reversal potential",0.0,-100.,100.,0.1,"mV");
   addNumber("E_in","Inhibitory reversal potential",-85.0,-100.,100.,0.1,"mV");
   addNumber("tau_syn_exc","Excitatory synaptic time-constant",0.001,0.0,1.,0.00001,"sec","ms");
   addNumber("tau_syn_inh","Inhibitory synaptic time-constant",0.01,0.0,1.,0.00001,"sec","ms");
   
-  addLabel("Stimuli");
+  addSection("Stimuli");
   addSelection("stimulus","Stimulus type","pulse packet|MIP|poisson|file");
   addNumber("onset1","Onset S1",0.05,0.,10000.,1,"sec","ms");
   addNumber("onset2","Onset S2",0.05,0.,10000.,1,"sec","ms");
@@ -89,23 +89,23 @@ FeedForwardNetwork::FeedForwardNetwork( void )
   addSelection("plot_trace","Plot Trace","yes|no");
   //addSelection("skip","Skip when no input spikes","yes|no");
   
-  addLabel("Pulse Packet");
+  addSection("Pulse Packet");
   addNumber("alpha1","Number of spikes S1",1,0,1000.,1);
   addNumber("sigma1","Temporal spread S1",0.002,0.00001,1000.,0.1,"sec","ms");	
   addNumber("alpha2","Number of spikes S2",1,0,1000.,1);
   addNumber("sigma2","Temporal spread S2",0.002,0.00001,1000.,0.1,"sec","ms");
   
-  addLabel("Poisson");
+  addSection("Poisson");
   addNumber("poissonstimulusrate1","Rate S1",0.,0.,1000.,0.1,"Hz");
   addNumber("poissonstimulusrate2","Rate S2",0.,0.,1000.,0.1,"Hz");
   addNumber( "duration1", "Duration S1", 0.1, 0.01, 1000.0, 0.01,"sec","ms");
   addNumber( "duration2", "Duration S2", 0.1, 0.01, 1000.0, 0.01,"sec","ms");
   
-  addLabel("Spikes from File");
+  addSection("Spikes from File");
   addNumber( "durationSfF", "Duration SfF", 0.1, 0.01, 1000.0, 0.01,"sec","ms");
   addNumber( "startSfF", "Start SfF", 0., 0., 1000.0, 0.0,"sec","ms");
 
-  addLabel("Background Network");
+  addSection("Background Network");
   addNumber("poissonrate","Rate of background input",5000.,0.,50000.,1.,"Hz");
   addNumber( "JeBKG", "Exc. Synaptic strength", 0.3, 0.0, 1000.0, 0.1 );
   addNumber( "gBKG", "Inhibitory gain", 1., 0.0, 100.0, 0.1 );
@@ -113,7 +113,7 @@ FeedForwardNetwork::FeedForwardNetwork( void )
   addNumber("noise_std","noise std",0.,0.0,100.,0.01);
   addNumber("noise_mean","noise mean",0.,-100,100.,0.01);
   
-  addLabel("Calibration");
+  addSection("Calibration");
   addInteger("calibrationtrials","Trials",30,1,100,1);
   addNumber("calibrationalpha","Number of spikes",60,1,1000.,1);
   addNumber("calibrationsigma","Temporal spread",0.002,0.00001,1000.,0.1,"sec","ms");
@@ -126,13 +126,13 @@ FeedForwardNetwork::FeedForwardNetwork( void )
   addNumber("noise_mean_step","noise mean step",0.,0.,100,0.001);
   addNumber("noise_mean_step_FFN","noise mean step FFN",0.,0.,100,0.001); 
 
-  addLabel("MIP");
+  addSection("MIP");
   addNumber("MIPstimulusrate1","Rate S1",10.,0.00001,1000.,0.1,"Hz" );
   addNumber("MIPcorr1","Correlation S1",0.0,0.0,1.,0.01);
   addNumber("MIPstimulusrate2","Rate S2",10.,0.00001,1000.,0.1,"Hz" );
   addNumber("MIPcorr2","Correlation S2",0.0,0.0,1.,0.01);
   
-  addLabel( "Setup" );
+  addSection( "Setup" );
   addSelection("rec_curr","record currents","yes|no");
   
   addValueTypeStyle( OptWidget::TabLabel, Parameter::Label );

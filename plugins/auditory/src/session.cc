@@ -111,7 +111,7 @@ void Session::config( void )
   lockMetaData();
   Options &mo = metaData( "Cell" );
   mo.unsetNotify();
-  mo.addLabel( "Cell properties", MetaDataSave );
+  mo.addSection( "Cell properties", MetaDataSave );
 
   mo.addSelection( "best side", "Best side", "left|right", MetaDataReadOnly+MetaDataDisplay ).setUnit( "speaker" );
   mo.addNumber( "best frequency", "Best frequency", -1000.0, -1000.0, 100000.0, 500.0, "Hz", "kHz", "%.1f", MetaDataDisplay+MetaDataReset );

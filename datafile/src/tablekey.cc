@@ -29,7 +29,7 @@ namespace relacs {
 
 TableKey::TableKey( void )
   : Opt(),
-    Groups(),
+    Sections(),
     Columns(),
     Width(),
     PrevCol( -1 ),
@@ -44,7 +44,7 @@ TableKey::TableKey( void )
 
 TableKey::TableKey( const TableKey &key )
   : Opt( key.Opt ),
-    Groups( key.Groups ),
+    Sections( key.Sections ),
     Columns( key.Columns ),
     Width( key.Width ),
     PrevCol( key.PrevCol ),
@@ -59,7 +59,7 @@ TableKey::TableKey( const TableKey &key )
 
 TableKey::TableKey( const Options &o )
   : Opt( o ),
-    Groups(),
+    Sections(),
     Columns(),
     Width(),
     PrevCol( -1 ),
@@ -186,7 +186,7 @@ Parameter &TableKey::setText( const string &name, const string &text )
 }
 
 
-Options &TableKey::addGroup( int level, const string &name, int flags )
+Options &TableKey::addSection( int level, const string &name, int flags )
 {
   Options &o = Opt.addSection( level, name, "", flags );
   init();
@@ -194,7 +194,7 @@ Options &TableKey::addGroup( int level, const string &name, int flags )
 }
 
 
-Options &TableKey::addGroup( const string &name, int flags )
+Options &TableKey::addSection( const string &name, int flags )
 {
   Options &o = Opt.addSection( name, "", flags );
   init();
@@ -202,7 +202,7 @@ Options &TableKey::addGroup( const string &name, int flags )
 }
 
 
-Options &TableKey::addSubGroup( const string &name, int flags )
+Options &TableKey::addSubSection( const string &name, int flags )
 {
   Options &o = Opt.addSubSection( name, "", flags );
   init();
@@ -210,7 +210,7 @@ Options &TableKey::addSubGroup( const string &name, int flags )
 }
 
 
-Options &TableKey::addSubSubGroup( const string &name, int flags )
+Options &TableKey::addSubSubSection( const string &name, int flags )
 {
   Options &o = Opt.addSubSubSection( name, "", flags );
   init();
@@ -218,25 +218,12 @@ Options &TableKey::addSubSubGroup( const string &name, int flags )
 }
 
 
-Options &TableKey::insertGroup( const string &name, const string &atname,
+Options &TableKey::insertSection( const string &name, const string &atname,
 				int flags )
 {
   Options &o = Opt.insertSection( name, atname, "", flags );
   init();
   return o;
-}
-
-
-Options &TableKey::addLabel( const string &name, int flags )
-{
-  return addGroup( name, flags );
-}
-
-
-Options &TableKey::insertLabel( const string &name, const string &atname,
-				int flags )
-{
-  return insertGroup( name, atname, flags );
 }
 
 
@@ -282,16 +269,30 @@ void TableKey::erase( int column )
 
 void TableKey::erase( const string &pattern )
 {
-  erase( column( pattern ) );
+  Opt.erase( pattern );
+  init();
 }
 
 
 int TableKey::column( const string &pattern ) const
 {
   Options::const_iterator pp = Opt.find( pattern );
-  for ( unsigned int c=0; c<Columns.size(); c++ ) {
-    if ( Columns[c] == pp )
-      return c;
+  if ( pp != Opt.end() ) {
+    for ( unsigned int c=0; c<Columns.size(); c++ ) {
+      if ( Columns[c] == pp )
+	return c;
+    }
+  }
+  else {
+    Options::const_section_iterator sp = Opt.findSection( pattern );
+    if ( sp != Opt.sectionsEnd() ) {
+      for ( unsigned int c=0; c<Sections.size(); c++ ) {
+	for ( unsigned int l=0; l<Sections[c].size(); l++ ) {
+	  if ( Sections[c][l] == sp )
+	    return c;
+	}
+      }
+    }
   }
   return -1;
 }
@@ -432,39 +433,39 @@ bool TableKey::isText( const string &pattern ) const
 }
 
 
-Str TableKey::group( int column, int level ) const
+Str TableKey::section( int column, int level ) const
 {
   if ( column >= 0 && column < (int)Columns.size() ) {
     if ( level <= 0 )
       return Columns[column]->name();
-    else if ( (int)Groups[column].size() > level-1 )
-      return (*Groups[column][level-1])->name();
+    else if ( (int)Sections[column].size() > level-1 )
+      return (*Sections[column][level-1])->name();
   }
   return "";
 }
 
 
-Str TableKey::group( const string &pattern, int level ) const
+Str TableKey::section( const string &pattern, int level ) const
 {
-  return group( column( pattern ), level );
+  return section( column( pattern ), level );
 }
 
 
-void TableKey::setGroup( int column, const string &name, int level )
+void TableKey::setSection( int column, const string &name, int level )
 {
   if ( column >= 0 && column < (int)Columns.size() ) {
     if ( level <= 0 )
       Columns[column]->setName( name );
-    else if ( (int)Groups[column].size() > level-1 )
-      (*Groups[column][level-1])->setName( name );
+    else if ( (int)Sections[column].size() > level-1 )
+      (*Sections[column][level-1])->setName( name );
   }
 }
 
 
-void TableKey::setGroup( const string &pattern, const string &name,
+void TableKey::setSection( const string &pattern, const string &name,
 			 int level )
 {
-  setGroup( column( pattern ), name, level );
+  setSection( column( pattern ), name, level );
 }
 
 
@@ -507,8 +508,8 @@ int TableKey::columns( void ) const
 int TableKey::level( void ) const
 {
   if ( Columns.size() > 0 ) {
-    if ( Groups.size() > 0 )
-      return Groups[0].size()+1;
+    if ( Sections.size() > 0 )
+      return Sections[0].size()+1;
     else
       return 1;
   }
@@ -526,7 +527,7 @@ bool TableKey::empty( void ) const
 void TableKey::clear( void )
 {
   Opt.clear();
-  Groups.clear();
+  Sections.clear();
   Columns.clear();
   Width.clear();
 }
@@ -542,17 +543,17 @@ ostream &TableKey::saveKey( ostream &str, bool key, bool num,
   if ( key )
     str << Str( KeyStart ).strip() << "Key" << '\n';
 
-  // groups:
-  for ( unsigned int l=Groups[0].size()-1; l>=0; l-- ) {
+  // sections:
+  for ( int l=(int)Sections[0].size()-1; l>=0; l-- ) {
     str << KeyStart;
     int w = Width[0];
     int n = 0;
-    for ( unsigned int c=1; c<Groups.size(); c++ ) {
-      if ( Groups[c][l] != Groups[c-1][l] ) {
-	if ( (*Groups[c-1][l])->flag( flags ) ) {
+    for ( unsigned int c=1; c<Sections.size(); c++ ) {
+      if ( Sections[c][l] != Sections[c-1][l] ) {
+	if ( (*Sections[c-1][l])->flag( flags ) ) {
 	  if ( n > 0 )
 	    str << Separator;
-	  str << Str( (*Groups[c-1][l])->name(), -w );
+	  str << Str( (*Sections[c-1][l])->name(), -w );
 	  w = Width[c];
 	  n++;
 	}
@@ -560,10 +561,10 @@ ostream &TableKey::saveKey( ostream &str, bool key, bool num,
       else if ( Columns[c]->flags( flags ) )
 	w += Separator.size() + Width[c];
     }
-    if ( (*Groups.back()[l])->flag( flags ) ) {
+    if ( (*Sections.back()[l])->flag( flags ) ) {
       if ( n > 0 )
 	str << Separator;
-      str << (*Groups.back()[l])->name();
+      str << (*Sections.back()[l])->name();
       n++;
     }
     str << '\n';
@@ -641,17 +642,17 @@ ostream &TableKey::saveKeyLaTeX( ostream &str, bool num, bool units,
   str << "}\n";
   str << "  \\hline\n";
 
-  // groups:
-  for ( unsigned int l=Groups[0].size()-1; l>=0; l-- ) {
+  // sections:
+  for ( unsigned int l=Sections[0].size()-1; l>=0; l-- ) {
     str << "  ";
     int w = 1;
     int n = 0;
-    for ( unsigned int c=1; c<Groups.size(); c++ ) {
-      if ( Groups[c][l] != Groups[c-1][l] ) {
-	if ( (*Groups[c-1][l])->flag( flags ) ) {
+    for ( unsigned int c=1; c<Sections.size(); c++ ) {
+      if ( Sections[c][l] != Sections[c-1][l] ) {
+	if ( (*Sections[c-1][l])->flag( flags ) ) {
 	  if ( n > 0 )
 	    str << " & ";
-	  str << "\\multicolumn{" << w << "}{l}{" << Str( (*Groups[c-1][l])->name() ).latex() << "}";
+	  str << "\\multicolumn{" << w << "}{l}{" << Str( (*Sections[c-1][l])->name() ).latex() << "}";
 	  w = 1;
 	  n++;
 	}
@@ -659,10 +660,10 @@ ostream &TableKey::saveKeyLaTeX( ostream &str, bool num, bool units,
       else if ( Columns[c]->flags( flags ) )
 	w++;
     }
-    if ( (*Groups.back()[l])->flag( flags ) ) {
+    if ( (*Sections.back()[l])->flag( flags ) ) {
       if ( n > 0 )
 	str << " & ";
-      str << "\\multicolumn{" << w << "}{l}{" << Str( (*Groups.back()[l])->name() ).latex() << "}";
+      str << "\\multicolumn{" << w << "}{l}{" << Str( (*Sections.back()[l])->name() ).latex() << "}";
       n++;
     }
     str << " \\\\\n";
@@ -735,24 +736,24 @@ ostream &TableKey::saveKeyHTML( ostream &str, bool num, bool units,
   str << "      <table class=\"data\">\n";
   str << "        <thead class=\"datakey\">\n";
 
-  // groups:
-  for ( unsigned int l=Groups[0].size()-1; l>=0; l-- ) {
-    str << "          <tr class=\"group" << l << "\">\n";
+  // sections:
+  for ( unsigned int l=Sections[0].size()-1; l>=0; l-- ) {
+    str << "          <tr class=\"section" << l << "\">\n";
     int w = 1;
-    for ( unsigned int c=1; c<Groups.size(); c++ ) {
-      if ( Groups[c][l] != Groups[c-1][l] ) {
-	if ( (*Groups[c-1][l])->flag( flags ) ) {
+    for ( unsigned int c=1; c<Sections.size(); c++ ) {
+      if ( Sections[c][l] != Sections[c-1][l] ) {
+	if ( (*Sections[c-1][l])->flag( flags ) ) {
 	  str << "            <th colspan=\"" << w << "\" align=\"left\">"
-	      << Str( (*Groups[c-1][l])->name() ).html() << "</th>\n";
+	      << Str( (*Sections[c-1][l])->name() ).html() << "</th>\n";
 	  w = 1;
 	}
       }
       else if ( Columns[c]->flags( flags ) )
 	w ++;
     }
-    if ( (*Groups.back()[l])->flag( flags ) ) {
+    if ( (*Sections.back()[l])->flag( flags ) ) {
       str << "            <th colspan=\"" << w << "\" align=\"left\">"
-	  << Str( (*Groups.back()[l])->name() ).html() << "</th>\n";
+	  << Str( (*Sections.back()[l])->name() ).html() << "</th>\n";
     }
     str << "          </tr>\n";
   }
@@ -931,7 +932,7 @@ TableKey &TableKey::loadKey( const StrQueue &sq )
       if ( inx[j] < int(pos[j].size())-1 && pos[j][inx[j]] == pos[level][k] ) {
 	int index = pos[j][inx[j]];
 	string name = (*(fp+j)).wordAt( index, Str::DoubleWhiteSpace, comment );
-	addGroup( j, name );
+	addSection( j, name );
 	inx[j]++;
       }
     }
@@ -1182,24 +1183,26 @@ void TableKey::setSaveColumn( int col )
 }
 
 
-void TableKey::addParams( Options *o, deque < Options::section_iterator > &groups, int &level )
+void TableKey::addParams( Options *o, deque < Options::section_iterator > &sections, int &level )
 {
   level++;
 
   if ( o->sectionsBegin() == o->sectionsEnd() ) {
     for ( Options::iterator pp=o->begin(); pp != o->end(); ++pp ) {
       Columns.push_back( pp );
-      Groups.push_back( groups );
+      Sections.push_back( sections );
     }
   }
   else {
-    for ( Options::section_iterator sp=o->sectionsBegin(); sp != o->sectionsEnd(); ++sp ) {
-      if ( level >= (int)groups.size() )
-	groups.push_front( sp );
+    for ( Options::section_iterator sp=o->sectionsBegin();
+	  sp != o->sectionsEnd();
+	  ++sp ) {
+      if ( level >= (int)sections.size() )
+	sections.push_front( sp );
       else
-	groups[0] = sp;
-      addParams( *sp, groups, level );
-      groups.erase( groups.begin(), groups.end()-level+1 );
+	sections[0] = sp;
+      addParams( *sp, sections, level );
+      sections.erase( sections.begin(), sections.end()-level-1 );
     }
   }
 
@@ -1211,23 +1214,21 @@ void TableKey::init( void )
 {
   // columns:
   Columns.clear();
-  Groups.clear();
-  deque < Options::section_iterator > groups;
+  Sections.clear();
+  deque < Options::section_iterator > sections;
   int level = -1;
-  addParams( &Opt, groups, level );
+  addParams( &Opt, sections, level );
 
-  // dublicate groups:
+  // dublicate sections:
   unsigned int gs = 0;
-  for ( unsigned int k=0; k<Groups.size(); k++ ) {
-    if ( gs < Groups[k].size() )
-      gs = Groups[k].size();
+  for ( unsigned int k=0; k<Sections.size(); k++ ) {
+    if ( gs < Sections[k].size() )
+      gs = Sections[k].size();
   }
-  for ( unsigned int k=0; k<Groups.size(); k++ ) {
-    while ( Groups[k].size() < gs )
-      Groups[k].push_front( Groups[k].front() );
+  for ( unsigned int k=0; k<Sections.size(); k++ ) {
+    while ( Sections[k].size() < gs )
+      Sections[k].push_front( Sections[k].front() );
   }
-
-  cerr << "INIT COLUMN.SIZE=" << Columns.size() << " GROUPS.SIZE=" << Groups.size() << " gs=" << gs << '\n';
 
   // width of each column:
   Width.resize( Columns.size() );
