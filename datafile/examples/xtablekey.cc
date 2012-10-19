@@ -32,16 +32,15 @@ int main( int argc, char *argv[] )
 {
   TableKey key;
 
-  key.addLabel( "Stimulus" );
-  key.addLabel( "Stimulus" );
+  key.addGroup( "Stimulus" );
   key.addNumber( "n", "-", "%2.0f" );
   key.addNumber( "I", "mV/cm", "%5.2f" );
-  key.addLabel( "Firing Frequency" );
+  key.addGroup( "Firing Frequency" );
   key.addNumber( "f0", "Hz", "%5.2f" );
   key.addNumber( "fpeakfff", "Hz", "%5.2f" );
   key.addNumber( "fs", "Hzzzzzz", "%5.2f" );
-  key.addLabel( "f-I curves" );
-  key.addLabel( "Time Constants" );
+  key.addGroup( "f-I curves" );
+  key.addSubGroup( "Time Constants" );
   key.addNumber( "tau", "ms", "%5.2f" );
 
   cout << key;

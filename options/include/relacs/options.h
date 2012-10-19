@@ -1277,6 +1277,21 @@ public:
         with name \a name to \a label. */
   Parameter &setLabel( const string &name, const string &label );
 
+    /*! Add a new subsection of level \a level.
+        The new section is named \a name, has the optional
+	type specifier \a type, some \a flag for selecting this section,
+	and is formatted according to the \a style flag.
+	\a level = 0 is the upper level, i.e. a new section is added.
+	Higher \a levels add sections lower in the hierachy,
+	i.e. \a level = 1 adds a subsection, \a \a level = 2 a subsubsection, etc.
+        Subsequent calls to addText(), addNumber(), etc. add new Parameter
+	to the added section.
+        \sa addSubSection(), addSubSubSection(), insertSection(),
+	endSection(), clearSections() */
+  Options &addSection( int level, const string &name, const string &type="",
+		       int flag=0xffffff, int style=0 );
+  Options &addSection( int level, const string &name, int flag, int style=0 )
+    { return addSection( level, name, "", flag, style ); };
     /*! Add a new section of Options to the end of the sections list.
         The new section is named \a name, has the optional
 	type specifier \a type, some \a flag for selecting this section,
@@ -1382,16 +1397,26 @@ public:
         only options with this name are processed. */
   Options &combineLast( const string &name="" );
 
-    /*! Remove the Parameter where \a p points to. */
+    /*! Remove the Parameter where \a p points to.
+        \a p can also be contained in a subsection of Options. */
   Options &erase( iterator p );
-    /*! Remove all Parameter specified by \a pattern.
-        \sa find() */
+    /*! Remove the Options where \a s points to.
+        \a s can also be contained in a subsection of Options. */
+  Options &erase( section_iterator p );
+    /*! Remove the Options where \a s points to.
+        \a s can also be contained in a subsection of Options. */
+  Options &erase( Options *s );
+    /*! Remove all Parameter and Options specified by \a pattern.
+        \sa find(), findSection() */
   Options &erase( const string &pattern );
-    /*! Remove all options whose flag matches \a selectflag from options list. */
+    /*! Remove all Parameter and Options whose flag matches \a selectflag. */
   Options &erase( int selectflag );
     /*! Remove last Parameter from the currently active section.
         \sa endSection(), clearSections() */
   Options &pop( void );
+    /*! Remove last Options from the currently active section.
+        \sa endSection(), clearSections() */
+  Options &popSection( void );
     /*! Remove all Parameter and sections of Options. */
   Options &clear( void );
     /*! Remove all options without value, i.e. Labels. */

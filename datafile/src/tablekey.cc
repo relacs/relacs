@@ -29,6 +29,7 @@ namespace relacs {
 
 TableKey::TableKey( void )
   : Opt(),
+    Groups(),
     Columns(),
     Width(),
     PrevCol( -1 ),
@@ -43,6 +44,7 @@ TableKey::TableKey( void )
 
 TableKey::TableKey( const TableKey &key )
   : Opt( key.Opt ),
+    Groups( key.Groups ),
     Columns( key.Columns ),
     Width( key.Width ),
     PrevCol( key.PrevCol ),
@@ -57,6 +59,7 @@ TableKey::TableKey( const TableKey &key )
 
 TableKey::TableKey( const Options &o )
   : Opt( o ),
+    Groups(),
     Columns(),
     Width(),
     PrevCol( -1 ),
@@ -183,20 +186,57 @@ Parameter &TableKey::setText( const string &name, const string &text )
 }
 
 
-Parameter &TableKey::addLabel( const string &name, int flags )
+Options &TableKey::addGroup( int level, const string &name, int flags )
 {
-  Parameter &p = Opt.addLabel( name, flags );
+  Options &o = Opt.addSection( level, name, "", flags );
   init();
-  return p;
+  return o;
 }
 
 
-Parameter &TableKey::insertLabel( const string &name, const string &atname,
-				  int flags )
+Options &TableKey::addGroup( const string &name, int flags )
 {
-  Parameter &p = Opt.insertLabel( name, atname, flags );
+  Options &o = Opt.addSection( name, "", flags );
   init();
-  return p;
+  return o;
+}
+
+
+Options &TableKey::addSubGroup( const string &name, int flags )
+{
+  Options &o = Opt.addSubSection( name, "", flags );
+  init();
+  return o;
+}
+
+
+Options &TableKey::addSubSubGroup( const string &name, int flags )
+{
+  Options &o = Opt.addSubSubSection( name, "", flags );
+  init();
+  return o;
+}
+
+
+Options &TableKey::insertGroup( const string &name, const string &atname,
+				int flags )
+{
+  Options &o = Opt.insertSection( name, atname, "", flags );
+  init();
+  return o;
+}
+
+
+Options &TableKey::addLabel( const string &name, int flags )
+{
+  return addGroup( name, flags );
+}
+
+
+Options &TableKey::insertLabel( const string &name, const string &atname,
+				int flags )
+{
+  return insertGroup( name, atname, flags );
 }
 
 
@@ -223,16 +263,18 @@ void TableKey::insert( const Options &opts, int selectflag, const string &atname
 
 void TableKey::erase( int column )
 {
-  if ( column >= 0 && column < (int)Columns.size() && ! Columns[column].empty() ) {
-    vector< int > inx;
-    inx.push_back( Columns[column][0] - Opt.begin() );
-    for ( int l=1; l<(int)Columns[column].size(); l++ ) {
-      if ( ( column+1 >= (int)Columns.size() || Columns[column][l] != Columns[column+1][l] ) &&
-	   ( column <= 0 || Columns[column][l] != Columns[column-1][l] ))
-	inx.push_back( Columns[column][l] - Opt.begin() );
+  if ( column >= 0 && column < (int)Columns.size() ) {
+    // remove column identifier:
+    Options *ps = Columns[column]->parentSection();
+    ps->erase( Columns[column] );
+    // remove all empty sections of this column:
+    while ( ps->empty() ) {
+      Options *pps = ps->parentSection();
+      if ( pps == 0 )
+	break;
+      pps->erase( ps );
+      ps = pps;
     }
-    for ( unsigned int k=0; k<inx.size(); k++ )
-      Opt.erase( Opt.begin() + inx[k] );
     init();
   }
 }
@@ -246,58 +288,19 @@ void TableKey::erase( const string &pattern )
 
 int TableKey::column( const string &pattern ) const
 {
-  // split pattern:
-  StrQueue pq( pattern, ">" );
-  while ( pq[0].empty() ) {
-    pq.erase( 0 );
-    if ( pq.empty() )
-      return -1;
+  Options::const_iterator pp = Opt.find( pattern );
+  for ( unsigned int c=0; c<Columns.size(); c++ ) {
+    if ( Columns[c] == pp )
+      return c;
   }
-  int p = 0;
-  StrQueue sq( pq[p], "|" );
-  int s = 0;
-
-  // level index:
-  int l = pq.size() - 1;
-  if ( l >= level() )
-    l = level() - 1;
-
-  for ( unsigned int c=0; ; ) {
-    if ( c >= Columns.size() ) {
-      c = 0;
-      s++;
-      if ( s >= sq.size() ) {
-	s = 0;
-	l--;
-	if ( l < 0 )
-	  break;
-      }
-    }
-    if ( c > 0 && Columns[c][l] == Columns[c-1][l] )
-      c++;
-    else if ( (*Columns[c][l]) == sq[s] ) {
-      do {
-	if ( l > 0 )
-	  l--;
-	p++;
-	if ( p >= pq.size() )
-	  return c;
-      } while ( pq[p].empty() );
-      sq.assign( pq[p], "|" );
-      s = 0;
-    }
-    else
-      c++;
-  }
-
   return -1;
 }
 
 
 Str TableKey::name( int column ) const
 {
-  if ( column >= 0 && column < (int)Columns.size() && ! Columns[column].empty() )
-    return (*Columns[column][0]).name();
+  if ( column >= 0 && column < (int)Columns.size() )
+    return Columns[column]->name();
   else
     return "";
 }
@@ -311,9 +314,8 @@ Str TableKey::name( const string &pattern ) const
 
 Parameter &TableKey::setName( int column, const string &name )
 {
-  if ( column >= 0 && column < (int)Columns.size() &&
-       ! Columns[column].empty() )
-    return (*Columns[column][0]).setName( name );
+  if ( column >= 0 && column < (int)Columns.size() )
+    return Columns[column]->setName( name );
   else
     return Dummy;
 }
@@ -327,9 +329,8 @@ Parameter &TableKey::setName( const string &pattern, const string &name )
 
 Str TableKey::unit( int column ) const
 {
-  if ( column >= 0 && column < (int)Columns.size() &&
-       ! Columns[column].empty() )
-    return (*Columns[column][0]).unit();
+  if ( column >= 0 && column < (int)Columns.size() )
+    return Columns[column]->unit();
   else
     return "";
 }
@@ -343,9 +344,8 @@ Str TableKey::unit( const string &pattern ) const
 
 Parameter &TableKey::setUnit( int column, const string &unit )
 {
-  if ( column >= 0 && column < (int)Columns.size() &&
-       ! Columns[column].empty() )
-    return (*Columns[column][0]).setUnit( unit );
+  if ( column >= 0 && column < (int)Columns.size() )
+    return Columns[column]->setUnit( unit );
   else
     return Dummy;
 }
@@ -359,9 +359,8 @@ Parameter &TableKey::setUnit( const string &pattern, const string &unit )
 
 Str TableKey::format( int column ) const
 {
-  if ( column >= 0 && column < (int)Columns.size() &&
-       ! Columns[column].empty() )
-    return (*Columns[column][0]).format();
+  if ( column >= 0 && column < (int)Columns.size() )
+    return Columns[column]->format();
   else
     return "";
 }
@@ -375,9 +374,8 @@ Str TableKey::format( const string &pattern ) const
 
 int TableKey::formatWidth( int column ) const
 {
-  if ( column >= 0 && column < (int)Columns.size() &&
-       ! Columns[column].empty() )
-    return (*Columns[column][0]).formatWidth();
+  if ( column >= 0 && column < (int)Columns.size() )
+    return Columns[column]->formatWidth();
   else
     return 0;
 }
@@ -391,9 +389,8 @@ int TableKey::formatWidth( const string &pattern ) const
 
 Parameter &TableKey::setFormat( int column, const string &format )
 {
-  if ( column >= 0 && column < (int)Columns.size() &&
-       ! Columns[column].empty() )
-    return (*Columns[column][0]).setFormat( format );
+  if ( column >= 0 && column < (int)Columns.size() )
+    return Columns[column]->setFormat( format );
   else
     return Dummy;
 }
@@ -407,9 +404,8 @@ Parameter &TableKey::setFormat( const string &name, const string &format )
 
 bool TableKey::isNumber( int column ) const
 {
-  if ( column >= 0 && column < (int)Columns.size() &&
-       ! Columns[column].empty() )
-    return (*Columns[column][0]).isAnyNumber();
+  if ( column >= 0 && column < (int)Columns.size() )
+    return Columns[column]->isAnyNumber();
   else
     return false;
 }
@@ -423,9 +419,8 @@ bool TableKey::isNumber( const string &pattern ) const
 
 bool TableKey::isText( int column ) const
 {
-  if ( column >= 0 && column < (int)Columns.size() &&
-       ! Columns[column].empty() )
-    return (*Columns[column][0]).isText();
+  if ( column >= 0 && column < (int)Columns.size() )
+    return Columns[column]->isText();
   else
     return false;
 }
@@ -439,11 +434,13 @@ bool TableKey::isText( const string &pattern ) const
 
 Str TableKey::group( int column, int level ) const
 {
-  if ( column >= 0 && column < (int)Columns.size() &&
-       (int)Columns[column].size() > level )
-    return (*Columns[column][level]).name();
-  else
-    return "";
+  if ( column >= 0 && column < (int)Columns.size() ) {
+    if ( level <= 0 )
+      return Columns[column]->name();
+    else if ( (int)Groups[column].size() > level-1 )
+      return (*Groups[column][level-1])->name();
+  }
+  return "";
 }
 
 
@@ -453,52 +450,28 @@ Str TableKey::group( const string &pattern, int level ) const
 }
 
 
-Parameter &TableKey::setGroup( int column, const string &name, int level )
+void TableKey::setGroup( int column, const string &name, int level )
 {
-  if ( column >= 0 && column < (int)Columns.size() &&
-       (int)Columns[column].size() > level )
-    return (*Columns[column][level]).setName( name );
-  else
-    return Dummy;
-}
-
-
-Parameter &TableKey::setGroup( const string &pattern, const string &name,
-			       int level )
-{
-  return setGroup( column( pattern ), name, level );
-}
-
-
-Options TableKey::groupOptions( int column, int level ) const
-{
-  Options opts;
-  if ( column >= 0 && column < (int)Columns.size() &&
-       (int)Columns[column].size() > level ) {
-    Options::const_iterator bp = Columns[column][level];
-    while ( column < (int)Columns.size() && 
-	    Columns[column][level] == bp )
-      column++;
-    Options::const_iterator ep = Opt.end();
-    if ( column < (int)Columns.size() )
-      ep = Columns[column][level];
-    for ( Options::const_iterator pp = bp; pp != ep; ++pp )
-      opts.add( *pp );
+  if ( column >= 0 && column < (int)Columns.size() ) {
+    if ( level <= 0 )
+      Columns[column]->setName( name );
+    else if ( (int)Groups[column].size() > level-1 )
+      (*Groups[column][level-1])->setName( name );
   }
-  return opts;
 }
 
 
-Options TableKey::groupOptions( const string &pattern, int level ) const
+void TableKey::setGroup( const string &pattern, const string &name,
+			 int level )
 {
-  return groupOptions( column( pattern ), level );
+  setGroup( column( pattern ), name, level );
 }
 
 
 const Parameter &TableKey::operator[]( int i ) const
 {
   if ( i >= 0 && i < (int)Columns.size() )
-    return *Columns[i][0];
+    return *Columns[i];
   else
     return Dummy;
 }
@@ -507,7 +480,7 @@ const Parameter &TableKey::operator[]( int i ) const
 Parameter &TableKey::operator[]( int i )
 {
   if ( i >= 0 && i < (int)Columns.size() )
-    return *Columns[i][0];
+    return *Columns[i];
   else
     return Dummy;
 }
@@ -533,8 +506,12 @@ int TableKey::columns( void ) const
 
 int TableKey::level( void ) const
 {
-  if ( Columns.size() > 0 )
-    return Columns[0].size();
+  if ( Columns.size() > 0 ) {
+    if ( Groups.size() > 0 )
+      return Groups[0].size()+1;
+    else
+      return 1;
+  }
   else
     return 0;
 }
@@ -549,6 +526,7 @@ bool TableKey::empty( void ) const
 void TableKey::clear( void )
 {
   Opt.clear();
+  Groups.clear();
   Columns.clear();
   Width.clear();
 }
@@ -557,7 +535,7 @@ void TableKey::clear( void )
 ostream &TableKey::saveKey( ostream &str, bool key, bool num,
 			    bool units, int flags ) const
 {
-  if ( Columns[0].size() < 1 )
+  if ( Columns.size() < 1 )
     return str;
 
   // key marker:
@@ -565,27 +543,27 @@ ostream &TableKey::saveKey( ostream &str, bool key, bool num,
     str << Str( KeyStart ).strip() << "Key" << '\n';
 
   // groups:
-  for ( unsigned int l=Columns[0].size()-1; l>0; l-- ) {
+  for ( unsigned int l=Groups[0].size()-1; l>=0; l-- ) {
     str << KeyStart;
     int w = Width[0];
     int n = 0;
-    for ( unsigned int c=1; c<Columns.size(); c++ ) {
-      if ( Columns[c][l] != Columns[c-1][l] ) {
-	if ( flags == 0 || ( (*Columns[c-1][l]).flags() & flags ) ) {
+    for ( unsigned int c=1; c<Groups.size(); c++ ) {
+      if ( Groups[c][l] != Groups[c-1][l] ) {
+	if ( (*Groups[c-1][l])->flag( flags ) ) {
 	  if ( n > 0 )
 	    str << Separator;
-	  str << Str( (*Columns[c-1][l]).name(), -w );
+	  str << Str( (*Groups[c-1][l])->name(), -w );
 	  w = Width[c];
 	  n++;
 	}
       }
-      else if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) )
+      else if ( Columns[c]->flags( flags ) )
 	w += Separator.size() + Width[c];
     }
-    if ( flags == 0 || ( (*Columns.back()[l]).flags() & flags ) ) {
+    if ( (*Groups.back()[l])->flag( flags ) ) {
       if ( n > 0 )
 	str << Separator;
-      str << (*Columns.back()[l]).name();
+      str << (*Groups.back()[l])->name();
       n++;
     }
     str << '\n';
@@ -595,10 +573,10 @@ ostream &TableKey::saveKey( ostream &str, bool key, bool num,
   int n = 0;
   str << KeyStart;
   for ( unsigned int c=0; c<Columns.size(); c++ ) {
-    if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) ) {
+    if ( Columns[c]->flags( flags ) ) {
       if ( n > 0 )
 	str << Separator;
-      str << Str( (*Columns[c][0]).name(), -Width[ c ] );
+      str << Str( Columns[c]->name(), -Width[ c ] );
       n++;
     }
   }
@@ -607,7 +585,7 @@ ostream &TableKey::saveKey( ostream &str, bool key, bool num,
   // unit:
   bool unit = false;
   for ( unsigned int c=0; c<Columns.size(); c++ ) {
-    if ( ! (*Columns[c][0]).unit().empty() ) {
+    if ( Columns[c]->flags( flags ) && ! Columns[c]->unit().empty() ) {
       unit = true;
       break;
     }
@@ -616,10 +594,10 @@ ostream &TableKey::saveKey( ostream &str, bool key, bool num,
     n = 0;
     str << KeyStart;
     for ( unsigned int c=0; c<Columns.size(); c++ ) {
-      if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) ) {
+      if ( Columns[c]->flags( flags ) ) {
 	if ( n > 0 )
 	  str << Separator;
-	string us = (*Columns[c][0]).unit();
+	string us = Columns[c]->unit();
 	if ( us.empty() )
 	  us = "-";
 	str << Str( us, -Width[ c ] );
@@ -634,7 +612,7 @@ ostream &TableKey::saveKey( ostream &str, bool key, bool num,
     n = 0;
     str << KeyStart;
     for ( unsigned int c=0; c<Columns.size(); c++ ) {
-      if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) ) {
+      if ( Columns[c]->flags( flags ) ) {
 	if ( n > 0 )
 	  str << Separator;
 	str << Str( c+1, Width[ c ] );
@@ -651,40 +629,40 @@ ostream &TableKey::saveKey( ostream &str, bool key, bool num,
 ostream &TableKey::saveKeyLaTeX( ostream &str, bool num, bool units,
 				 int flags ) const
 {
-  if ( Columns[0].size() < 1 )
+  if ( Columns.size() < 1 )
     return str;
 
   // begin tabular:
   str << "\\begin{tabular}{";
   for ( unsigned int c=0; c<Columns.size(); c++ ) {
-    if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) )
+    if ( Columns[c]->flags( flags ) )
       str << 'r';
   }
   str << "}\n";
   str << "  \\hline\n";
 
   // groups:
-  for ( unsigned int l=Columns[0].size()-1; l>0; l-- ) {
+  for ( unsigned int l=Groups[0].size()-1; l>=0; l-- ) {
     str << "  ";
     int w = 1;
     int n = 0;
-    for ( unsigned int c=1; c<Columns.size(); c++ ) {
-      if ( Columns[c][l] != Columns[c-1][l] ) {
-	if ( flags == 0 || ( (*Columns[c-1][l]).flags() & flags ) ) {
+    for ( unsigned int c=1; c<Groups.size(); c++ ) {
+      if ( Groups[c][l] != Groups[c-1][l] ) {
+	if ( (*Groups[c-1][l])->flag( flags ) ) {
 	  if ( n > 0 )
 	    str << " & ";
-	  str << "\\multicolumn{" << w << "}{l}{" << (*Columns[c-1][l]).name().latex() << "}";
+	  str << "\\multicolumn{" << w << "}{l}{" << Str( (*Groups[c-1][l])->name() ).latex() << "}";
 	  w = 1;
 	  n++;
 	}
       }
-      else if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) )
-	w ++;
+      else if ( Columns[c]->flags( flags ) )
+	w++;
     }
-    if ( flags == 0 || ( (*Columns.back()[l]).flags() & flags ) ) {
+    if ( (*Groups.back()[l])->flag( flags ) ) {
       if ( n > 0 )
 	str << " & ";
-      str << "\\multicolumn{" << w << "}{l}{" << (*Columns.back()[l]).name().latex() << "}";
+      str << "\\multicolumn{" << w << "}{l}{" << Str( (*Groups.back()[l])->name() ).latex() << "}";
       n++;
     }
     str << " \\\\\n";
@@ -694,10 +672,10 @@ ostream &TableKey::saveKeyLaTeX( ostream &str, bool num, bool units,
   int n = 0;
   str << "  ";
   for ( unsigned int c=0; c<Columns.size(); c++ ) {
-    if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) ) {
+    if ( Columns[c]->flags( flags ) ) {
       if ( n > 0 )
 	str << " & ";
-      str << "\\multicolumn{1}{l}{" << (*Columns[c][0]).name().latex() << "}";
+      str << "\\multicolumn{1}{l}{" << Columns[c]->name().latex() << "}";
       n++;
     }
   }
@@ -706,7 +684,7 @@ ostream &TableKey::saveKeyLaTeX( ostream &str, bool num, bool units,
   // unit:
   bool unit = false;
   for ( unsigned int c=0; c<Columns.size(); c++ ) {
-    if ( ! (*Columns[c][0]).unit().empty() ) {
+    if ( ! Columns[c]->unit().empty() ) {
       unit = true;
       break;
     }
@@ -715,10 +693,10 @@ ostream &TableKey::saveKeyLaTeX( ostream &str, bool num, bool units,
     n = 0;
     str << "  ";
     for ( unsigned int c=0; c<Columns.size(); c++ ) {
-      if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) ) {
+      if ( Columns[c]->flags( flags ) ) {
 	if ( n > 0 )
 	  str << " & ";
-	str << "\\multicolumn{1}{l}{" << (*Columns[c][0]).unit().latexUnit() << "}";
+	str << "\\multicolumn{1}{l}{" << Columns[c]->unit().latexUnit() << "}";
 	n++;
       }
     }
@@ -730,7 +708,7 @@ ostream &TableKey::saveKeyLaTeX( ostream &str, bool num, bool units,
     n = 0;
     str << "  ";
     for ( unsigned int c=0; c<Columns.size(); c++ ) {
-      if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) ) {
+      if ( Columns[c]->flags( flags ) ) {
 	if ( n > 0 )
 	  str << " & ";
 	str << c+1;
@@ -750,7 +728,7 @@ ostream &TableKey::saveKeyLaTeX( ostream &str, bool num, bool units,
 ostream &TableKey::saveKeyHTML( ostream &str, bool num, bool units,
 				int flags ) const
 {
-  if ( Columns[0].size() < 1 )
+  if ( Columns.size() < 1 )
     return str;
 
   // begin table:
@@ -758,23 +736,23 @@ ostream &TableKey::saveKeyHTML( ostream &str, bool num, bool units,
   str << "        <thead class=\"datakey\">\n";
 
   // groups:
-  for ( unsigned int l=Columns[0].size()-1; l>0; l-- ) {
+  for ( unsigned int l=Groups[0].size()-1; l>=0; l-- ) {
     str << "          <tr class=\"group" << l << "\">\n";
     int w = 1;
-    for ( unsigned int c=1; c<Columns.size(); c++ ) {
-      if ( Columns[c][l] != Columns[c-1][l] ) {
-	if ( flags == 0 || ( (*Columns[c-1][l]).flags() & flags ) ) {
+    for ( unsigned int c=1; c<Groups.size(); c++ ) {
+      if ( Groups[c][l] != Groups[c-1][l] ) {
+	if ( (*Groups[c-1][l])->flag( flags ) ) {
 	  str << "            <th colspan=\"" << w << "\" align=\"left\">"
-	      << (*Columns[c-1][l]).name().html() << "</th>\n";
+	      << Str( (*Groups[c-1][l])->name() ).html() << "</th>\n";
 	  w = 1;
 	}
       }
-      else if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) )
+      else if ( Columns[c]->flags( flags ) )
 	w ++;
     }
-    if ( flags == 0 || ( (*Columns.back()[l]).flags() & flags ) ) {
+    if ( (*Groups.back()[l])->flag( flags ) ) {
       str << "            <th colspan=\"" << w << "\" align=\"left\">"
-	  << (*Columns.back()[l]).name().html() << "</th>\n";
+	  << Str( (*Groups.back()[l])->name() ).html() << "</th>\n";
     }
     str << "          </tr>\n";
   }
@@ -782,9 +760,9 @@ ostream &TableKey::saveKeyHTML( ostream &str, bool num, bool units,
   // name:
   str << "          <tr class=\"datanames\">\n";
   for ( unsigned int c=0; c<Columns.size(); c++ ) {
-    if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) ) {
+    if ( Columns[c]->flags( flags ) ) {
       str << "            <th align=\"left\">"
-	  << (*Columns[c][0]).name().html() << "</th>\n";
+	  << Columns[c]->name().html() << "</th>\n";
     }
   }
   str << "          </tr>\n";
@@ -792,7 +770,7 @@ ostream &TableKey::saveKeyHTML( ostream &str, bool num, bool units,
   // unit:
   bool unit = false;
   for ( unsigned int c=0; c<Columns.size(); c++ ) {
-    if ( ! (*Columns[c][0]).unit().empty() ) {
+    if ( ! Columns[c]->unit().empty() ) {
       unit = true;
       break;
     }
@@ -800,9 +778,9 @@ ostream &TableKey::saveKeyHTML( ostream &str, bool num, bool units,
   if ( units && unit ) {
     str << "          <tr class=\"dataunits\">\n";
     for ( unsigned int c=0; c<Columns.size(); c++ ) {
-      if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) ) {
+      if ( Columns[c]->flags( flags ) ) {
 	str << "            <th align=\"left\">"
-	    << (*Columns[c][0]).unit().htmlUnit() << "</th>\n";
+	    << Columns[c]->unit().htmlUnit() << "</th>\n";
       }
     }
     str << "          </tr>\n";
@@ -812,7 +790,7 @@ ostream &TableKey::saveKeyHTML( ostream &str, bool num, bool units,
   if ( num ) {
     str << "          <tr class=\"datanums\">\n";
     for ( unsigned int c=0; c<Columns.size(); c++ ) {
-      if ( flags == 0 || ( (*Columns[c][0]).flags() & flags ) ) {
+      if ( Columns[c]->flags( flags ) ) {
 	str << "            <th align=\"right\">"
 	    << c+1 << "</th>\n";
       }
@@ -843,7 +821,7 @@ TableKey &TableKey::loadKey( const StrQueue &sq )
   string key = "Key";
   string comment = Str( KeyStart ).strip();
 
-  // skip empty lines and key nameifier:
+  // skip empty lines and key identifier:
   while ( sp != sq.end() ) {
     int p = (*sp).first();
     int c = (*sp).find( comment );
@@ -926,7 +904,7 @@ TableKey &TableKey::loadKey( const StrQueue &sq )
   // number of column lines:
   int cn = 1;
   for ( int k = pos.size()-2; k >= 0; k--, cn++ ) {
-    // check whether column positions are nameical:
+    // check whether column positions are identical:
     unsigned int n = pos[k].size();
     if ( n > pos.back().size() )
       n = pos.back().size();
@@ -942,7 +920,7 @@ TableKey &TableKey::loadKey( const StrQueue &sq )
     if ( differ > maxdiffer ) // allow some columns without unit
       break;
   }
-  // nameify table lines:
+  // identify table lines:
   int level = pos.size() - cn;
   bool units = ( cn > 1 );
 
@@ -953,7 +931,7 @@ TableKey &TableKey::loadKey( const StrQueue &sq )
       if ( inx[j] < int(pos[j].size())-1 && pos[j][inx[j]] == pos[level][k] ) {
 	int index = pos[j][inx[j]];
 	string name = (*(fp+j)).wordAt( index, Str::DoubleWhiteSpace, comment );
-	addLabel( name );
+	addGroup( j, name );
 	inx[j]++;
       }
     }
@@ -980,13 +958,13 @@ ostream &TableKey::saveData( ostream &str )
   for ( unsigned int c=0; c<Columns.size(); c++ ) {
     if ( c > 0 )
       str << Separator;
-    Str s = (*Columns[c][0]).text();
+    Str s = Columns[c]->text();
     if ( s.empty() )
       s = Missing;
     if ( s.size() >= Width[c] )
       str << s;
     else {
-      if ( (*Columns[c][0]).isText() )
+      if ( Columns[c]->isText() )
 	str << Str( s, -Width[c] );
       else
 	str << Str( s, Width[c] );
@@ -1004,13 +982,13 @@ ostream &TableKey::saveData( ostream &str, int from, int to )
       str << Separator;
     else 
       str << DataStart;
-    Str s = (*Columns[c][0]).text();
+    Str s = Columns[c]->text();
     if ( s.empty() )
       s = Missing;
     if ( s.size() >= Width[c] )
       str << s;
     else {
-      if ( (*Columns[c][0]).isText() )
+      if ( Columns[c]->isText() )
 	str << Str( s, -Width[c] );
       else
 	str << Str( s, Width[c] );
@@ -1022,9 +1000,8 @@ ostream &TableKey::saveData( ostream &str, int from, int to )
 
 ostream &TableKey::saveMetaData( ostream &str, const string &start ) const
 {
-  // XXX a separate algorithmen with level dependent indent would be better!
-  // and different format: name unit
-  // maybe this should be an additional function!
+  // XXX better would be a different format: name unit
+  // XXX this could be one ofthe other save functions in Options
   return Opt.save( str, start );
 }
 
@@ -1205,43 +1182,59 @@ void TableKey::setSaveColumn( int col )
 }
 
 
-void TableKey::init( void )
+void TableKey::addParams( Options *o, deque < Options::section_iterator > &groups, int &level )
 {
-  // group levels:
-  vector< Options::iterator > groups( 0 );
-  Options::iterator pp = Opt.begin();
-  for ( ; pp != Opt.end(); ++pp ) {
-    groups.insert( groups.begin(), pp );
-    if ( ! (*pp).isLabel() )
-      break;
+  level++;
+
+  if ( o->sectionsBegin() == o->sectionsEnd() ) {
+    for ( Options::iterator pp=o->begin(); pp != o->end(); ++pp ) {
+      Columns.push_back( pp );
+      Groups.push_back( groups );
+    }
+  }
+  else {
+    for ( Options::section_iterator sp=o->sectionsBegin(); sp != o->sectionsEnd(); ++sp ) {
+      if ( level >= (int)groups.size() )
+	groups.push_front( sp );
+      else
+	groups[0] = sp;
+      addParams( *sp, groups, level );
+      groups.erase( groups.begin(), groups.end()-level+1 );
+    }
   }
 
-  if ( groups.size() == 0 )
-    cerr << "! fatal error in TableKey::init() -> groups.size() == 0 !\n";
+  level--;
+}
 
+
+void TableKey::init( void )
+{
   // columns:
   Columns.clear();
-  unsigned int l = 0;
-  for ( ; pp != Opt.end(); ++pp )
-    if ( (*pp).isLabel() ) {
-      l++;
-      if ( l >= groups.size() )
-	cerr << "! fatal error in TableKey::init() -> l >= groups.size() !\n";
-      groups.erase( groups.begin() + l );
-      groups.insert( groups.begin() + 1, pp );
-    }
-    else {
-      groups.front() = pp;
-      Columns.push_back( groups );
-      l = 0;
-    }
+  Groups.clear();
+  deque < Options::section_iterator > groups;
+  int level = -1;
+  addParams( &Opt, groups, level );
+
+  // dublicate groups:
+  unsigned int gs = 0;
+  for ( unsigned int k=0; k<Groups.size(); k++ ) {
+    if ( gs < Groups[k].size() )
+      gs = Groups[k].size();
+  }
+  for ( unsigned int k=0; k<Groups.size(); k++ ) {
+    while ( Groups[k].size() < gs )
+      Groups[k].push_front( Groups[k].front() );
+  }
+
+  cerr << "INIT COLUMN.SIZE=" << Columns.size() << " GROUPS.SIZE=" << Groups.size() << " gs=" << gs << '\n';
 
   // width of each column:
   Width.resize( Columns.size() );
   for ( unsigned int c=0; c<Width.size(); c++ ) {
-    int fw = (*Columns[c][0]).formatWidth();
-    int iw = (*Columns[c][0]).name().size();
-    int uw = (*Columns[c][0]).unit().size();
+    int fw = Columns[c]->formatWidth();
+    int iw = Columns[c]->name().size();
+    int uw = Columns[c]->unit().size();
     int w = fw > iw ? fw : iw;
     Width[c] = uw > w ? uw : w;
   }

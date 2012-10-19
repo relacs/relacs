@@ -3262,55 +3262,48 @@ Parameter &Options::setLabel( const string &name, const string &label )
 }
 
 
+Options &Options::addSection( int level, const string &name, const string &type,
+			      int flags, int style )
+{
+  Options *so = this;
+  for ( int l=0; l<level; l++ ) {
+    if ( so->Secs.empty() ) {
+      Warning += "Cannot add a subsection without having the appropriate parent section";
+      return *this;
+    }
+    so = so->Secs.back();
+  }
+  Options *o = new Options( name, type, flags, style );
+  o->setParentSection( this );
+  o->unsetNotify();
+  so->Secs.push_back( o );
+  AddOpts = o;
+#ifndef NDEBUG
+  if ( !Warning.empty() )
+    cerr << "!warning in Options::addSection() -> " << Warning << '\n';
+#endif
+  return *o;
+}
+
+
 Options &Options::addSection( const string &name, const string &type,
 			      int flags, int style )
 {
-  Options *o = new Options( name, type, flags, style );
-  Secs.push_back( o );
-  o->setParentSection( this );
-  o->unsetNotify();
-  AddOpts = o;
-  return *o;
+  return addSection( 0, name, type, flags, style );
 }
 
 
 Options &Options::addSubSection( const string &name, const string &type,
 				 int flags, int style )
 {
-  if ( Secs.empty() )
-    Warning += "Cannot add a subsection without having a section";
-
-  Options *o = new Options( name, type, flags, style );
-  Secs.back()->Secs.push_back( o );
-  o->setParentSection( Secs.back() );
-  o->unsetNotify();
-  AddOpts = o;
-#ifndef NDEBUG
-  if ( !Warning.empty() )
-    cerr << "!warning in Options::addSubSection() -> " << Warning << '\n';
-#endif
-  return *o;
+  return addSection( 1, name, type, flags, style );
 }
 
 
 Options &Options::addSubSubSection( const string &name, const string &type,
 				    int flags, int style )
 {
-  if ( Secs.empty() )
-    Warning += "Cannot add a subsubsection without having a section";
-  if ( Secs.back()->Secs.empty() )
-    Warning += "Cannot add a subsubsection without having a subsection";
-
-  Options *o = new Options( name, type, flags, style );
-  Secs.back()->Secs.back()->Secs.push_back( o );
-  o->setParentSection( Secs.back()->Secs.back() );
-  o->unsetNotify();
-  AddOpts = o;
-#ifndef NDEBUG
-  if ( !Warning.empty() )
-    cerr << "!warning in Options::addSubSubSection() -> " << Warning << '\n';
-#endif
-  return *o;
+  return addSection( 2, name, type, flags, style );
 }
 
 
@@ -3589,6 +3582,31 @@ Options &Options::erase( Options::iterator p )
 }
 
 
+Options &Options::erase( Options::section_iterator s )
+{
+  if ( s != sectionsEnd() ) {
+    Options *po = (*s)->parentSection();
+    po->Secs.erase( s );
+  }
+  return *this;
+}
+
+
+Options &Options::erase( Options *s )
+{
+  for ( section_iterator sp = sectionsBegin();
+	sp != sectionsEnd();
+	++sp ) {
+    if ( *sp == s ) {
+      Options *po = (*sp)->parentSection();
+      po->Secs.erase( sp );
+      break;
+    }
+  }
+  return *this;
+}
+
+
 Options &Options::erase( const string &pattern )
 {
   Warning = "";
@@ -3601,9 +3619,16 @@ Options &Options::erase( const string &pattern )
     erased = true;
   }
 
-  // option not found:
+  section_iterator sp = sectionsEnd();
+  while ( (sp = findSection( pattern )) != sectionsEnd() ) {
+    Options *po = (*sp)->parentSection();
+    po->Secs.erase( sp );
+    erased = true;
+  }
+
+  // not found:
   if ( ! erased )
-    Warning = "requested option '" + pattern + "' not found!";
+    Warning = "cannot erase '" + pattern + "': not found!";
 
   return *this;
 }
@@ -3614,11 +3639,21 @@ Options &Options::erase( int selectflag )
   Warning = "";
   // search element:
   for ( iterator pp = begin(); pp != end(); ) {
-    if ( (*pp).flags( selectflag ) )
+    if ( pp->flags( selectflag ) )
       pp = Opt.erase( pp );
     else
       ++pp;
   }
+
+  for ( section_iterator sp = sectionsBegin(); sp != sectionsEnd(); ) {
+    if ( (*sp)->flag( selectflag ) )
+      sp = Secs.erase( sp );
+    else {
+      (*sp)->erase( selectflag );
+      ++sp;
+    }
+  }
+
   return *this;
 }
 
@@ -3628,6 +3663,18 @@ Options &Options::pop( void )
   Warning = "";
   if ( ! AddOpts->Opt.empty() )
     AddOpts->Opt.pop_back();
+
+  return *this;
+}
+
+
+Options &Options::popSection( void )
+{
+  Warning = "";
+  if ( ! AddOpts->Secs.empty() ) {
+    delete AddOpts->Secs.back();
+    AddOpts->Secs.pop_back();
+  }
 
   return *this;
 }

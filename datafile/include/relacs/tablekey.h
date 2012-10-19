@@ -23,6 +23,7 @@
 #define _RELACS_TABLEKEY_H_ 1
 
 
+#include <deque>
 #include <vector>
 #include <relacs/array.h>
 #include <relacs/options.h>
@@ -138,15 +139,43 @@ public:
         with name \a name to \a text. */
   Parameter &setText( const string &name, const string &text );
 
+    /*! Add a new group \a name with level \a level to the key.
+        \a level = 0 is the top-level group.
+        Subsequent calls to addNumber() adds columns to this group.
+        \sa addSubGroup(), addSubSubGroup(), insertGroup() */
+  Options &addGroup( int level, const string &name, int flags=0 );
+    /*! Add a new top-level group \a name to the key.
+        Subsequent calls to addNumber() adds columns to this group.
+        \sa addSubGroup(), addSubSubGroup(), insertGroup() */
+  Options &addGroup( const string &name, int flags=0 );
+    /*! Add a new second-level group \a name to the key.
+        Subsequent calls to addNumber() adds columns to this group.
+        \sa addGroup(), addSubSubGroup(), insertGroup() */
+  Options &addSubGroup( const string &name, int flags=0 );
+    /*! Add a new third-level group \a name to the key.
+        Subsequent calls to addNumber() adds columns to this group.
+        \sa addGroup(), addSubGroup(), insertGroup() */
+  Options &addSubSubGroup( const string &name, int flags=0 );
+    /*! Insert a new group of columns before the group
+        specified by \a atpattern.
+	If \a atpattern is not found or if \atpattern is empty,
+	the new group is added to the beginning or the end
+	of the currently active group, respectively.
+        The new group is named \a name and has some \a flag for selecting this group.
+        Subsequent calls to addNumber() adds columns to the inserted group.
+        \sa addGroup(), addSubGroup(), addSubSubGroup() */
+  Options &insertGroup( const string &name, const string &atname="",
+			int flags=0 );
+
     /*! Add a label \a name at the end of the key. */
-  Parameter &addLabel( const string &name, int flags=0 );
+  Options &addLabel( const string &name, int flags=0 );
     /*! Insert a new group with name name()
         at the beginning of the key
         (\a atindent == "") or at the position of the column with
         name \a atname. If the column with name \a atname
         does not exist, the group is appended to the end of the key. */
-  Parameter &insertLabel( const string &name, const string &atname="",
-			  int flags=0 );
+  Options &insertLabel( const string &name, const string &atname="",
+			int flags=0 );
 
     /*! Adds all parameter from \a opts to the key as specified by \a selectflag.
        \sa Options::append(const Options&, int) */
@@ -226,30 +255,22 @@ public:
   bool isText( const string &pattern ) const;
     /*! Returns the group name string of level \a level
         for the \a column-th column. 
-        \a level = 0 returns the name sting of the column. */
+        \a level = 0 returns the name string of the column. */
   Str group( int column, int level=1 ) const;
     /*! Returns the group name string of level \a level
         for the column specified by \a pattern. 
-        \a level = 0 returns the name sting of the column.
+        \a level = 0 returns the name string of the column.
 	\sa column() */
   Str group( const string &pattern, int level=1 ) const;
     /*! Set the group name string of level \a level
         for the \a column-th column to \a group. 
-        \a level = 0 sets the name sting of the column. */
-  Parameter &setGroup( int column, const string &group, int level=1 );
+        \a level = 0 sets the name string of the column. */
+  void setGroup( int column, const string &group, int level=1 );
     /*! Set the group name string of level \a level
         for the column specified by \a pattern to \a group. 
-        \a level = 0 sets the name sting of the column.
+        \a level = 0 sets the name string of the column.
 	\sa column() */
-  Parameter &setGroup( const string &pattern, const string &group, int level=1 );
-    /*! Returns all groups and columns belonging to the group of level \a level
-        starting at the \a column-th column, inclusively. 
-        \a level = 0 returns solely the name of the column. */
-  Options groupOptions( int column, int level=1 ) const;
-    /*! Returns all groups and columns belonging to the group of level \a level
-        starting at the column specified by \a pattern, inclusively. 
-        \a level = 0 returns solely the name of the column. */
-  Options groupOptions( const string &pattern, int level=1 ) const;
+  void setGroup( const string &pattern, const string &group, int level=1 );
 
     /*! Get \a i-th column. */
   const Parameter &operator[]( int i ) const;
@@ -473,12 +494,15 @@ public:
  private:
 
   void init( void );
+  void addParams( Options *o, deque < Options::section_iterator > &groups, int &level );
+
   template < typename T >
   ostream &saveVector( ostream &str, const vector< T > &vec, int c=-1 ) const;
 
   Options Opt;
 
-  vector < vector < Options::iterator > > Columns;
+  deque< deque < Options::section_iterator > > Groups;
+  deque < Options::iterator > Columns;
   vector < int > Width;
   mutable int PrevCol;
 
