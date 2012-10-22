@@ -4098,10 +4098,11 @@ Options &Options::read( const string &opttxt, int flag,
     // end of section, keep searching the parent:
     *indent = newindent;
     Options *ps = parentSection();
-    if ( ps != 0 ) {
+    if ( ps != 0 )
       return ps->read( opttxt, flag, assignment, separator, pattern, indent );
-    }
-    return *retopt;
+    // if there is no parent section, we keep reading the current section
+    // mainly  needed for compatibility with the old style config files.
+    //    return *retopt;
   }
   if ( indent != 0 )
     *indent = newindent;

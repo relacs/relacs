@@ -1,6 +1,6 @@
 Options:
 - Reset parentSection pointers at assing, append, etc!
-- Options::read -> Options::assign( ident, value ): what if value is "[ a, b, c]"?
+- Options::read -> Options::assign( ident, value ): how are units treated? "[ a, b, c]kHz" or [a, b, ckHz]?
 - get rid of SavePatternLabel in save(), read()
 - change save() functions to take flags that specify what to put out
 - remove addLabel, insertLabel, and Label type in Options
