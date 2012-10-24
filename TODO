@@ -1,9 +1,9 @@
 Options:
-- Reset parentSection pointers at assing, append, etc!
+- Reset parentSection pointers and create new Options in assign, append, etc!
 - Options::read -> Options::assign( ident, value ): how are units treated? "[ a, b, c]kHz" or [a, b, ckHz]?
-- get rid of SavePatternLabel in save(), read()
+- Check read() etc. how Parameter are assigned. Is the whole section path is used to identify the Parameter?
 - change save() functions to take flags that specify what to put out
-- remove addLabel, insertLabel, and Label type in Options
+- MetaData: remove LabelFlag
 - check config files (in particular empty comments, etc!)
 
 auditory::Session plots do not work! Why???? It works on my laptop!

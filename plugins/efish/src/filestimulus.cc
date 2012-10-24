@@ -61,23 +61,18 @@ namespace efish {
     addNumber( "amplitude", "Amplitude", Amplitude, 0.1, 1000.0, 0.1, "mV/cm" ).setActivation( "amplsel", "absolute" );
     addBoolean( "am", "Amplitude modulation", AM );
     addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 );
-
-    addSection( "Additional noise",0, OptWidget::Bold );
+    addSection( "Additional noise" );
     addSelection( "noisetype", "Type of noise.", "none|Gaussian|Ornstein-Uhlenbeck");
     addNumber( "uppercutoff", "Upper cutoff frequency.", UpperCutoff, 0.0, 10000.0, 1.0, "","Hz" ).setActivation("noisetype","Gaussian");
     addNumber( "lowercutoff", "Lower cutoff frequency.", LowerCutoff, 0.0, 10000.0, 1.0, "","Hz" ).setActivation("noisetype","Gaussian");
     addNumber( "noisetau","Time constant of the Ornstein-Uhlenbeck process",NoiseTau,0.0,500.0,0.01,"seconds","ms" ).setActivation("noisetype","Ornstein-Uhlenbeck");
     addNumber( "noisecontrast", "Contrast of the added noise",NoiseContrast, 0.000, 1.00, 0.005, "", "%" ).setActivation("amplsel", "contrast");
     addNumber( "noiseampl", "Amplitude of the additional noise.", NoiseAmpl, 0.01, 100.00, 0.05, "mV/cm" ).setActivation( "amplsel", "absolute");
-
-
-    addSection( "Analysis" ).setStyle( OptWidget::Bold );
+    addSection( "Analysis" );
     addNumber( "binwidth", "Bin width", RateDeltaT, 0.0001, 1.0, 0.002, "seconds", "ms" );
     addNumber( "before", "Spikes recorded before stimulus", Before, 0.0, 1000.0, 0.005, "seconds", "ms" );
     addNumber( "after", "Spikes recorded after stimulus", After, 0.0, 1000.0, 0.005, "seconds", "ms" );
     addBoolean( "adjust", "Adjust input gain?", true );
-    addValueTypeStyle( OptWidget::Bold, Parameter::Label );
-    addValueTypeStyle( OptWidget::TabLabel, Parameter::Label );
 
     // variables:
     FishAmplitude = 0.0;
@@ -107,7 +102,7 @@ namespace efish {
     Header.addText( "file" );
     Header.addNumber( "duration", "sec", "%.3f" );
     Header.addText( "session time" );
-    Header.addLabel( "settings:" );
+    Header.addSection( "settings:" );
      
     // tablekeys:
     AmplKey.addNumber( "time", "ms", "%9.2f", 3 );
@@ -231,6 +226,10 @@ namespace efish {
       NerveMeanAmplT = SampleDataD( -Before, Duration+After, 0.001 );
       NerveMeanAmplM = SampleDataD( -Before, Duration+After, 0.001 );
     }
+
+    Header.erase( "settings" );
+    Header.addSection( "settings" );
+    Header.append( settings() );
 
     // trigger:
     //  setupTrigger( events );
@@ -573,7 +572,6 @@ namespace efish {
 
     // write header and key:
     Header.save( df, "# " );
-    settings().save( df, "#   " );
     df << '\n';
     TableKey key;
     key.addNumber( "time", "ms", "%9.2f" );
@@ -603,7 +601,6 @@ namespace efish {
     if ( Count == 0 ) {
       df << '\n' << '\n';
       Header.save( df, "# " );
-      settings().save( df, "#   " );
       df << '\n';
       NerveKey.saveKey( df, true, true );
     }
@@ -635,7 +632,6 @@ namespace efish {
     if ( Count == 0 ) {
       df << '\n' << '\n';
       Header.save( df, "# " );
-      settings().save( df, "#   " );
       df << '\n';
       if ( UseContrast ) {
 	AmplKey.setUnit( 1, LocalEODUnit );
@@ -681,7 +677,6 @@ namespace efish {
     if ( Count == 0 ) {
       df << '\n' << '\n';
       Header.save( df, "# " );
-      settings().save( df, "#   " );
       df << '\n';
       SpikesKey.saveKey( df, true, false );
     }

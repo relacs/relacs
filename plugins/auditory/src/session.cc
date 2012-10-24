@@ -111,7 +111,7 @@ void Session::config( void )
   lockMetaData();
   Options &mo = metaData( "Cell" );
   mo.unsetNotify();
-  mo.addSection( "Cell properties", MetaDataSave );
+  mo.addSection( "Cell properties", MetaDataSave+MetaDataDisplay );
 
   mo.addSelection( "best side", "Best side", "left|right", MetaDataReadOnly+MetaDataDisplay ).setUnit( "speaker" );
   mo.addNumber( "best frequency", "Best frequency", -1000.0, -1000.0, 100000.0, 500.0, "Hz", "kHz", "%.1f", MetaDataDisplay+MetaDataReset );
@@ -195,7 +195,8 @@ void Session::initDevices( void )
     unlockStimulusData();
   }
 
-  ASW->assign( &metaData( "Cell" ), MetaDataDisplay, MetaDataReadOnly, true, 
+  ASW->assign( *metaData( "Cell" ).findSection( "Cell properties" ),
+	       MetaDataDisplay, MetaDataReadOnly, true, 
 	       OptWidget::BreakLinesStyle + OptWidget::ExtraSpaceStyle,
 	       metaDataMutex() );
   ASW->setVerticalSpacing( 2 );

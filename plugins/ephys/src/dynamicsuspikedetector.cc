@@ -100,7 +100,7 @@ DynamicSUSpikeDetector::DynamicSUSpikeDetector( const string &ident, int mode )
   addNumber( "size", "Spike size", 0.0, 0.0, 10000.0, 0.1, "mV", "mV", "%.1f", 2+4, strongstyle );
   addInteger( "trend", "Trend", 0, 0, 4 );
   addInteger( "quality", "Quality", 0, 0, 3 );
-  addValueTypeStyle( OptWidget::TabLabel, Parameter::Label );
+  addDialogStyle( OptWidget::TabSectionStyle );
 
   // main layout:
   QVBoxLayout *vb = new QVBoxLayout;

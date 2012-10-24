@@ -341,7 +341,6 @@ void BaselineActivity::saveSpikes( int trace, const Options &header, const Event
 
   // write header and key:
   header.save( df, "# " );
-  settings().save( df, "#   " );
   df << '\n';
   TableKey key;
   key.addNumber( "time", "ms", "%8.2f" );
@@ -371,7 +370,6 @@ void BaselineActivity::saveISIH( int trace, const Options &header,
 
   // write header and key:
   header.save( df, "# " );
-  settings().save( df, "#   " );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%5.2f" );
@@ -410,7 +408,6 @@ void BaselineActivity::saveRate( int trace, const Options &header,
 
   // write header and key:
   header.save( df, "# " );
-  settings().save( df, "#   " );
   df << '\n';
   TableKey key;
   key.addNumber( "time", "ms", "%5.3f" );
@@ -441,7 +438,6 @@ void BaselineActivity::saveNerve( const Options &header, const MapD &nerveamplp,
 
   // write header and key:
   header.save( df, "# " );
-  settings().save( df, "#   " );
   df << '\n';
   TableKey key;
   key.addSection( "peak" );
@@ -492,7 +488,6 @@ void BaselineActivity::saveEODTrace( const Options &header, double eodduration )
 
   // write header and key:
   header.save( df, "# " );
-  settings().save( df, "#   " );
   df << '\n';
   TableKey key;
   key.addNumber( "t", "ms", "%7.2f" );
@@ -524,7 +519,6 @@ void BaselineActivity::saveEODTimes( const Options &header, const EventData &eod
 
   // write header and key:
   header.save( df, "# " );
-  settings().save( df, "#   " );
   df << '\n';
   TableKey key;
   key.addNumber( "time", "ms", "%8.2f" );
@@ -570,7 +564,8 @@ void BaselineActivity::save( bool saveeodtrace, double eodduration,
     }
   }
   header.addText( "session time", sessionTimeStr() );  
-  header.addLabel( "settings:" );
+  header.addSection( "settings" );
+  header.append( settings() );
 
   for ( int trace=0; trace<MaxSpikeTraces; trace++ ) {
     if ( SpikeEvents[trace] >= 0 ) {

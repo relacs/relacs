@@ -48,7 +48,7 @@ SingleStimulus::SingleStimulus( void )
   Sigma2 = 0.02;
 
   // options:
-  addSection( "Waveform" ).setStyle( OptWidget::TabLabel );
+  addSection( "Waveform" );
   addSelection( "type", "Type of stimulus", "Wave|Envelope|AM" );
   addSelection( "waveform", "Stimulus waveform", "From file|Const|Sine|Rectangular|Triangular|Sawup|Sawdown|Whitenoise|OUnoise" );
   addText( "stimfile", "Stimulus file", "" ).setStyle( OptWidget::BrowseExisting ).setActivation( "waveform", "From file" );
@@ -59,7 +59,7 @@ SingleStimulus::SingleStimulus( void )
   addInteger( "seed", "Seed for random number generation", 0 ).setActivation( "waveform", "Whitenoise|OUnoise" );;
   addNumber( "duration", "Maximum duration of stimulus", Duration, 0.0, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "ramp", "Ramp of stimulus", 0.002, 0.0, 10.0, 0.001, "seconds", "ms" );
-  addSection( "Stimulus" ).setStyle( OptWidget::TabLabel );
+  addSection( "Stimulus" );
   addNumber( "intensity", "Stimulus intensity", Intensity, -200.0, 200.0, 5.0, "dB" );
   addSelection( "intensitybase", "Stimulus intensity relative to", "SPL|threshold|rate|previous" );
   addNumber( "repeats", "Number of stimulus presentations", Repeats, 1, 10000, 1, "times" );
@@ -68,7 +68,7 @@ SingleStimulus::SingleStimulus( void )
   addSubSection( "Carrier" );
   addNumber( "carrierfreq", "Carrier frequency", CarrierFreq, -40000.0, 40000.0, 500.0, "Hz", "kHz" );
   addBoolean( "usebestfreq", "Relative to the cell's best frequency", true );
-  addSection( "Intensity - search" ).setStyle( OptWidget::TabLabel );
+  addSection( "Intensity - search" );
   addBoolean( "userate", "Search intensity for target firing rate", true );
   addNumber( "rate", "Target firing rate", 100.0, 0.0, 1000.0, 10.0, "Hz" ).setActivation( "userate", "true" );
   addNumber( "ratetol", "Tolerance for target firing rate", 5.0, 0.0, 1000.0, 1.0, "Hz" ).setActivation( "userate", "true" );
@@ -82,7 +82,7 @@ SingleStimulus::SingleStimulus( void )
   addNumber( "minslope", "Minimum slope required for interpolation", 4.0, 0.0, 100.0, 0.5, "Hz/dB" ).setActivation( "userate", "true" );
   addNumber( "searchduration", "Maximum duration of stimulus", 0.0, 0.0, 1000.0, 0.01, "seconds", "ms" ).setActivation( "userate", "true" );
   addNumber( "searchpause", "Duration of pause between stimuli", 0.0, 0.0, 1000.0, 0.01, "seconds", "ms" ).setActivation( "userate", "true" );
-  addSection( "Analysis" ).setStyle( OptWidget::TabLabel );
+  addSection( "Analysis" );
   addNumber( "skipwin", "Initial portion of stimulus not used for analysis", SkipWin, 0.0, 100.0, 0.01, "seconds", "ms" );
   addNumber( "sigma1", "Standard deviation of rate smoothing kernel 1", Sigma1, 0.0, 1.0, 0.0001, "seconds", "ms" );
   addNumber( "sigma2", "Standard deviation of rate smoothing kernel 2", Sigma2, 0.0, 1.0, 0.001, "seconds", "ms" );
@@ -91,8 +91,6 @@ SingleStimulus::SingleStimulus( void )
   addSelection( "storemode", "Save stimuli in", "session|repro|custom" ).setUnit( "path" );
   addText( "storepath", "Save stimuli in custom directory", "" ).setStyle( OptWidget::BrowseDirectory ).setActivation( "storemode", "custom" );
   addSelection( "storelevel", "Save", "all|am+generated|generated|noise|none" ).setUnit( "stimuli" );
-
-  addValueTypeStyle( OptWidget::Bold, Parameter::Label );
 
   // setup plots:
   Stack = new QStackedLayout;
@@ -179,7 +177,7 @@ int SingleStimulus::main( void )
   }
 
   // get options:
-  settings().setValueTypeFlags( 16, -Parameter::Label );
+  settings().setValueTypeFlags( 16, -Parameter::Section );
   WaveType = (WaveTypes)index( "type" );
   WaveForm = (WaveForms)index( "waveform" );
   Str stimfile = text( "stimfile" );

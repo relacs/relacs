@@ -77,28 +77,27 @@ public:
     Date=16,
       /*! The parameter's value is a time that contains hour, minutes, and seconds. */
     Time=32,
-      /*! The parameter is a label. */
-    Label=64,
+      /*! A section.
+	  \note A Parameter cannot be a section.
+          This type is for the \a typemask of the Options::setValueTypeFlags()
+          functions. */
+    Section=64,
   };
 
     /*! This flag is set whenever the value of the Parameter is changed. */
   static const int ChangedFlag = 16384;
-    /*! If this flag is set all values of the parameter get saved even if only the first value is requested to be saved. */
-  static const int ListFlag = 32768;
+    /*! Use this flag to select Parameter whose value differs
+        from their default value. */
   static const int NonDefault = -32768;
 
-    /*! Use this label to distinguish search patterns
-        while saving parameter. */
-  static const long SavePatternLabel = 0x01000000;
-    /*! Use this label to distinguish search patterns
-        while reading parameter. */
-  static const long ReadPatternLabel = 0x02000000;
     /*! If this bit is set in the Parameter's style
         you can only select from text options with multiple values,
         but not add new values. */
   static const long SelectText = 0x01000000;
-    /*! Mark a Label as a tab. */
-  static const long TabLabel = 0x04000000;
+    /*! If this bit is set in the Parameter's style
+        all values of the parameter get saved
+        even if only the first value is requested to be saved. */
+  static const int ListAlways = 0x02000000;
 
     /*! Construct a single Parameter. 
         Use setValueType() to define the type of the parameter,
@@ -179,10 +178,6 @@ public:
   Parameter( const string &name, const string &request, ValueType type,
 	     int yearhour, int monthminutes, int dayseconds,
 	     int flags=0, int style=0,
-	     Options *parentsection=0 );
-    /*! Construct and initialize a single Parameter of type Label.
-	If \a sep is \c true, a Label gets the TabLabel-bit in its style set. */
-  Parameter( const string &name, bool sep, int flags=0, int style=0,
 	     Options *parentsection=0 );
     /*! Load parameter from string \a s using load(). */
   Parameter( const string &s, const string &assignment=":=" );
@@ -271,11 +266,11 @@ public:
 
     /*! The type of the parameter. */
   ValueType valueType( void ) const;
-    /*! True if one of the bits specified by \a mask corresponds to the
-        parameter's type, or \a mask equals zero,
+    /*! \return \c true if one of the bits specified by \a mask corresponds
+        to the parameter's type, or \a mask equals zero,
 	or \a mask is negative and the parameter's type
 	is not contained in abs( mask ). */
-  bool valueTypes( int mask ) const;
+  bool valueType( int mask ) const;
     /*! Set type of parameter to \a typex. */
   Parameter &setValueType( ValueType type );
 
@@ -828,13 +823,6 @@ public:
         See Str::time() for valid date strings. */
   Parameter &setDefaultTime( const string &time );
 
-    /*! True if parameter is of type label (parameter without value). */
-  bool isLabel( void ) const;
-    /*! Returns the label, i.e. the name. */
-  inline string label( void ) const { return name(); };
-    /*! Set the label (i.e. name) to \ a label. */
-  inline Parameter &setLabel( const string &label ) { return setName( label ); };
-
     /*! True if parameter is of no type. */
   bool isNotype( void ) const;
     /*! True if parameter is of no type and has no name. */
@@ -904,22 +892,22 @@ public:
 
     /*! Return string in the format "name: value".
         If \a detailed equals \c true the request string is written, too.
-        If \a firstonly is \c true and the ListFlag is not set,
+        If \a firstonly is \c true and the ListAlways style bit is not set,
         only the first value of the Parameter is written. */
   string save( bool detailed=false, bool firstonly=false ) const;
-    /*! Write parameter to stream \a str in the format "PatternName: Value".
-        If \a detailed equals \c true the request string is written, too.If \a firstonly is \c true and the ListFlag is not set,
+    /*! Write parameter to stream \a str in the format "name: value".
+        If \a detailed equals \c true the request string is written, too.
+	If \a firstonly is \c true and the ListAlways styel bit is not set,
         only the first value of the Parameter is written. */
   ostream &save( ostream &str, int width=0, bool detailed=false,
-		 bool firstonly=false, const string &pattern="" ) const;
+		 bool firstonly=false ) const;
     /*! Write parameter to stream \a str according to the formats
         \a textformat, \a numberformat, \a boolformat, \a dateformat, 
-	\a timeformat, and \a labelformat. 
+	and \a timeformat. 
 	\note No newline is added to the stream. */
   ostream &save( ostream &str, const string &textformat,
 		 const string &numberformat, const string &boolformat,
-		 const string &dateformat, const string &timeformat,
-		 const string &labelformat ) const;
+		 const string &dateformat, const string &timeformat ) const;
     /*! Write parameter to stream \a str using save() */
   friend ostream &operator<< ( ostream &str, const Parameter &p );
 
@@ -928,7 +916,7 @@ public:
         \param[in] level the level of indentation
         \param[in] indent the indentation depth, 
                    i.e. number of white space characters per level
-        \param[in] firstonly if \c true and the ListFlag is not set,
+        \param[in] firstonly if \c true and the ListAlways style bit is not set,
                    write out the first value only
         \return the output stream \a str */
   ostream &saveXML( ostream &str, int level=0, int indent=2,

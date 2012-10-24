@@ -360,7 +360,7 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
 	sp != o->sectionsEnd();
 	++sp ) {
     if ( tabs && level == 0 &&
-	 ( (style & TabLabelStyle ) || ( (*sp)->style() & TabLabel ) ) ) {
+	 ( (style & TabSectionStyle ) || ( (*sp)->style() & TabSection ) ) ) {
       // finish parameter:
       if ( row > 0 && (style & ExtraSpaceStyle) == 0 )
 	Layout.back()->addItem( new QSpacerItem( 10, 0, QSizePolicy::Minimum,
@@ -387,17 +387,21 @@ void OptWidget::assignOptions( Options *o, bool tabs, int style,
     }
     else {
       // this section is set as a label:
-      OptWidgetSection *l = new OptWidgetSection( sp, Opt, this, OMutex );
+      OptWidgetSection *s = new OptWidgetSection( sp, Opt, this, OMutex );
+      int sstyle = 0;
+      if ( (style & BoldSectionsStyle ) )
+	sstyle |= Bold;
+      setLabelStyle( s->valueWidget(), (*sp)->style() | sstyle );
       if ( style & BreakLinesStyle ) {
-	Layout.back()->addWidget( l->valueWidget(), row, 0, 1, 4,
+	Layout.back()->addWidget( s->valueWidget(), row, 0, 1, 4,
 				  Qt::AlignLeft | Qt::AlignBottom );
       }
       else {
-	Layout.back()->addWidget( l->valueWidget(), row, 0, 1, 5,
+	Layout.back()->addWidget( s->valueWidget(), row, 0, 1, 5,
 				  Qt::AlignLeft | Qt::AlignBottom );
 	// the following is necessary to eliminate expanding space on top of the label:
 	QLabel *spacer = new QLabel;
-	spacer->setFixedHeight( l->valueWidget()->sizeHint().height() );
+	spacer->setFixedHeight( s->valueWidget()->sizeHint().height() );
 	Layout.back()->addWidget( spacer, row, 2 );
       }
       Layout.back()->setColumnMinimumWidth( 0, 20 );
@@ -452,7 +456,7 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
 	sp != o->sectionsEnd();
 	++sp ) {
     if ( (*sp)->flag( SelectMask ) && (*sp)->size( SelectMask ) > 0 ) {
-      tabs = ( (style & TabLabelStyle ) || ( (*sp)->style() & TabLabel ) );
+      tabs = ( (style & TabSectionStyle ) || ( (*sp)->style() & TabSection ) );
       break;
     }
   }
@@ -505,6 +509,12 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
   int row = 0;
   int level = -1;
   assignOptions( Opt, tabs, style, row, level, parent, tabwidget );
+
+  // finish parameter:
+  if ( row > 0 && (style & ExtraSpaceStyle) == 0 )
+    Layout.back()->addItem( new QSpacerItem( 10, 0, QSizePolicy::Minimum,
+					     QSizePolicy::Expanding ),
+			    row, 2 );
 
   // init activation/inactivation:
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {

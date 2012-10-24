@@ -80,7 +80,6 @@ Chirps::Chirps( void )
   addSection( "Analysis" );
   addNumber( "sigma", "Standard deviation of rate smoothing kernel", Sigma, 0.0, 1.0, 0.0001, "seconds", "ms" );
   addBoolean( "adjust", "Adjust input gain?", true );
-  addValueTypeStyle( OptWidget::TabLabel, Parameter::Label );
 
   // variables:
   OutWarning = true;
@@ -118,7 +117,7 @@ Chirps::Chirps( void )
   Header.addNumber( "lower trans. amplitude", "", "%.2f" );
   Header.addText( "repro time" );
   Header.addText( "session time" );
-  Header.addLabel( "settings:" );
+  Header.addSection( "settings" );
 
   // tablekeys:
   ChirpKey.addSection( "chirp" );
@@ -670,6 +669,10 @@ int Chirps::main( void )
     return Failed;
   }
 
+  Header.erase( "settings" );
+  Header.addSection( "settings" );
+  Header.append( settings() );
+
   // trigger:
   //  setupTrigger( data, events );
 
@@ -723,11 +726,9 @@ int Chirps::main( void )
     times *= ChirpWidth/filechirpwidth;
     ChirpFreqs.assign( times, freqs );
     ChirpAmpls.assign( times, ampls );
-    FileChirpOpts = sf.metaDataOptions( 0 );
-    FileChirpOpts.insertLabel( "FileChirp" );
+    Header.addSection( "FileChirp" );
+    Header.append( sf.metaDataOptions( 0 ) );
   }
-  else
-    FileChirpOpts.clear();
 
   OutData signal;
   if ( AM ) {
@@ -1003,8 +1004,6 @@ void Chirps::saveChirps( void )
 
   // write header and key:
   Header.save( df, "# " );
-  settings().save( df, "#   " );
-  FileChirpOpts.save( df, "# " );
   df << '\n';
   ChirpKey.saveKey( df, true, false );
 
@@ -1047,8 +1046,6 @@ void Chirps::saveChirpTraces( void )
 
   // write header and key:
   Header.save( df, "# " );
-  settings().save( df, "#   " );
-  FileChirpOpts.save( df, "# " );
   df << '\n';
   ChirpTraceKey.saveKey( df, true, false );
 
@@ -1081,8 +1078,6 @@ void Chirps::saveChirpSpikes( int trace )
 
   // write header and key:
   Header.save( df, "# " );
-  settings().save( df, "#   " );
-  FileChirpOpts.save( df, "# " );
   df << '\n';
   SpikesKey.saveKey( df, true, false );
 
@@ -1117,8 +1112,6 @@ void Chirps::saveChirpNerve( void )
 
   // write header and key:
   Header.save( df, "# " );
-  settings().save( df, "#   " );
-  FileChirpOpts.save( df, "# " );
   df << '\n';
   NerveKey.saveKey( df, true, true );
 
@@ -1164,8 +1157,6 @@ void Chirps::saveAmplitude( void )
 
   // write header and key:
   Header.save( df, "# " );
-  settings().save( df, "#   " );
-  FileChirpOpts.save( df, "# " );
   df << '\n';
   AmplKey.saveKey( df, true, false );
 
@@ -1190,8 +1181,6 @@ void Chirps::saveSpikes( int trace )
 
   // write header and key:
   Header.save( df, "# " );
-  settings().save( df, "#   " );
-  FileChirpOpts.save( df, "# " );
   df << '\n';
   SpikesKey.saveKey( df, true, false );
 
@@ -1220,8 +1209,6 @@ void Chirps::saveChirpRate( int trace )
   // write header and key:
   Header.setInteger( "index", totalRuns() );
   Header.save( df, "# " );
-  settings().save( df, "#   " );
-  FileChirpOpts.save( df, "# " );
   df << '\n';
   TableKey key;
   key.addNumber( "time", "ms", "%7.2f" );
@@ -1262,8 +1249,6 @@ void Chirps::saveNerve( void )
 
   // write header and key:
   Header.save( df, "# " );
-  settings().save( df, "#   " );
-  FileChirpOpts.save( df, "# " );
   df << '\n';
   NerveKey.saveKey( df, true, true );
 

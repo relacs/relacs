@@ -1379,8 +1379,9 @@ void OptWidgetTime::initActivation( void )
 }
 
 
-OptWidgetSection::OptWidgetSection( Options::section_iterator sec, Options *oo,
-				    OptWidget *ow, QMutex *mutex, QWidget *parent )
+OptWidgetSection::OptWidgetSection( Options::section_iterator sec,
+				    Options *oo, OptWidget *ow,
+				    QMutex *mutex, QWidget *parent )
   : OptWidgetBase( oo->end(), 0, oo, ow, mutex ),
     Sec( sec )
 {
@@ -1392,7 +1393,6 @@ OptWidgetSection::OptWidgetSection( Options::section_iterator sec, Options *oo,
   l->setAlignment( Qt::AlignLeft );
   l->setWordWrap( false );
   W = l;
-  OptWidget::setLabelStyle( W, (*Sec)->style() );
 }
 
 

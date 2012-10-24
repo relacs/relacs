@@ -44,7 +44,7 @@ PUnitModel::PUnitModel( void )
   VoltageScale = 1.0;
 
   // options:
-  addSection( "General" ).setStyle( OptWidget::TabLabel );
+  addSection( "General" );
   addSubSection( "EOD" );
   addNumber( "eodfreq", "Frequency", EODFreq, 0.0, 2000.0, 10.0, "Hz" );
   addNumber( "eodfreqsd", "SD of frequency", EODFreqSD, 0.0, 1000.0, 2.0, "Hz" );
@@ -52,14 +52,12 @@ PUnitModel::PUnitModel( void )
   addNumber( "eodampl1", "Amplitude 1", EODAmpl1, 0.0, 100.0, 0.1, "mV/cm" );
   addNumber( "eodampl2", "Amplitude 2", EODAmpl2, 0.0, 100.0, 0.1, "mV/cm" );
   addNumber( "sigfac", "Factor for signal", SignalFac, 0.0, 100000.0, 0.1 );
-  addSection( "Spikes" );
+  addSubSection( "Spikes" );
   addNumber( "voltagescale", "Scale factor for membrane potential", VoltageScale, 0.0, 100.0, 0.1 );
 
   addOptions();
 
   addModels();
-
-  addValueTypeStyle( OptWidget::Bold, Parameter::Label );
 }
 
 

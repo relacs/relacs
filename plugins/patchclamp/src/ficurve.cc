@@ -60,7 +60,6 @@ FICurve::FICurve( void )
   addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
   addInteger( "diffincrement", "Optimize range at current increments below", 0, 0, 10000 );
   addNumber( "maxratediff", "Maximum difference between onset and steady-state firing rate for optimization", 10.0, 0.0, 1000.0, 1.0, "Hz" ).setActivation( "diffincrement", ">0" );
-  addValueTypeStyle( OptWidget::TabLabel, Parameter::Label );
 
   P.lock();
   P.resize( 2, 2, true );

@@ -135,8 +135,6 @@ FeedForwardNetwork::FeedForwardNetwork( void )
   addSection( "Setup" );
   addSelection("rec_curr","record currents","yes|no");
   
-  addValueTypeStyle( OptWidget::TabLabel, Parameter::Label );
-  
   P.clear();
   P.lock();
   P.resize( 2, 1, true );

@@ -394,11 +394,11 @@ int MetaData::dialog( void )
   for ( unsigned int k=0; k<MetaDataSections.size(); k++ ) {
     if ( ! MetaDataSections[k]->ownTab() && ! MetaDataSections[k]->empty() ) {
       if ( ! dflttab ) {
-	DialogOpts.addLabel( "&Meta Data", LabelFlag, OptWidget::TabLabel );
+	DialogOpts.addSection( "&Meta Data", LabelFlag, OptWidget::TabSection );
 	dflttab = true;
 	usedtabs += 'm';
       }
-      DialogOpts.addLabel( MetaDataSections[k]->configIdent(), LabelFlag, OptWidget::Bold );
+      DialogOpts.addSubSection( MetaDataSections[k]->configIdent(), LabelFlag, OptWidget::Bold );
       DialogOpts.append( *MetaDataSections[k], dialogFlag() );
     }
   }
@@ -416,7 +416,7 @@ int MetaData::dialog( void )
 	  }
 	}
       }
-      DialogOpts.addLabel( label, LabelFlag, OptWidget::TabLabel );
+      DialogOpts.addSection( label, LabelFlag, OptWidget::TabSection );
       DialogOpts.append( *MetaDataSections[k], dialogFlag() );
     }
   }
@@ -457,7 +457,7 @@ void MetaData::dialogChanged( void )
     if ( DialogOpts[k].flags() & LabelFlag ) {
       // find section:
       for ( unsigned int j=0; j<MetaDataSections.size(); j++ ) {
-	if ( DialogOpts[k].label() == MetaDataSections[j]->configIdent() ) {
+	if ( DialogOpts[k].name() == MetaDataSections[j]->configIdent() ) {
 	  if ( secinx >= 0 && changed )
 	    notifyMetaData( MetaDataSections[secinx]->configIdent() );
 	  secinx = j;
@@ -495,16 +495,16 @@ void MetaData::presetDialog( void )
   for ( unsigned int k=0; k<MetaDataSections.size(); k++ ) {
     if ( ! MetaDataSections[k]->ownTab() && ! MetaDataSections[k]->empty() ) {
       if ( ! dflttab ) {
-	PresetDialogOpts.addLabel( "Meta Data", LabelFlag, OptWidget::TabLabel );
+	PresetDialogOpts.addSection( "Meta Data", LabelFlag, OptWidget::TabSection );
 	dflttab = true;
       }
-      PresetDialogOpts.addLabel( MetaDataSections[k]->configIdent(), LabelFlag, OptWidget::Bold );
+      PresetDialogOpts.addSubSection( MetaDataSections[k]->configIdent(), LabelFlag, OptWidget::Bold );
       PresetDialogOpts.append( *MetaDataSections[k], dialogFlag() | presetDialogFlag() );
     }
   }
   for ( unsigned int k=0; k<MetaDataSections.size(); k++ ) {
     if ( MetaDataSections[k]->ownTab() && ! MetaDataSections[k]->empty() ) {
-      PresetDialogOpts.addLabel( MetaDataSections[k]->configIdent(), LabelFlag, OptWidget::TabLabel );
+      PresetDialogOpts.addSection( MetaDataSections[k]->configIdent(), LabelFlag, OptWidget::TabSection );
       PresetDialogOpts.append( *MetaDataSections[k], dialogFlag() | presetDialogFlag() );
     }
   }
@@ -544,7 +544,7 @@ void MetaData::presetDialogChanged( void )
     if ( PresetDialogOpts[k].flags() & LabelFlag ) {
       // find section:
       for ( unsigned int j=0; j<MetaDataSections.size(); j++ ) {
-	if ( PresetDialogOpts[k].label() == MetaDataSections[j]->configIdent() ) {
+	if ( PresetDialogOpts[k].name() == MetaDataSections[j]->configIdent() ) {
 	  if ( secinx >= 0 && changed )
 	    notifyMetaData( MetaDataSections[secinx]->configIdent() );
 	  secinx = j;

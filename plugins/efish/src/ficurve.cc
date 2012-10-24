@@ -69,7 +69,6 @@ FICurve::FICurve( void )
   addNumber( "minratefrac", "Minimum required rate differences", MinRateFrac, 0.0, 1.0, 0.05, "1", "%" );
   //  addNumber( "minrateslope", "Minimum slope of f-I curve", MinRateSlope, 0.0, 1000.0, 10.0, "Hz/mV/cm" );
   addBoolean( "adjust", "Adjust input gain?", true );
-  addValueTypeStyle( OptWidget::TabLabel, Parameter::Label );
   
   // variables:
   IntensityRange.clear();
@@ -86,7 +85,7 @@ FICurve::FICurve( void )
   Header.addNumber( "trans. amplitude", "", "%.2f" );
   Header.addText( "repro time" );
   Header.addText( "session time" );
-  Header.addLabel( "settings:" );
+  Header.addSection( "settings" );
 
   // plot:
   setWidget( &P );
@@ -430,7 +429,6 @@ void FICurve::saveRate( int trace )
 
   // write header and key:
   Header.save( df, "# " );
-  settings().save( df, "#   " );
   df << '\n';
   TableKey key;
   key.addNumber( "time", "ms", "%6.1f" );
@@ -470,7 +468,6 @@ void FICurve::saveSpikes( int trace )
   
   // write header and key:
   Header.save( df, "# " );
-  settings().save( df, "#   " );
   df << '\n';
   TableKey key;
   key.addNumber( "time", "ms", "%6.2f" );
@@ -505,7 +502,6 @@ void FICurve::saveFICurves( int trace )
   
   // write header and key:
   Header.save( df, "# " );
-  settings().save( df, "#   " );
   df << '\n';
   TableKey key;
   key.addNumber( "inx", "1", "%5.0f" );
@@ -556,6 +552,9 @@ void FICurve::save( void )
   Header.setNumber( "trans. amplitude", FishAmplitude );
   Header.setText( "repro time", reproTimeStr() );
   Header.setText( "session time", sessionTimeStr() );
+  Header.erase( "settings" );
+  Header.addSection( "settings" );
+  Header.append( settings() );
 
   for ( int trace=0; trace<MaxSpikeTraces; trace++ ) {
     if ( SpikeEvents[trace] >= 0 ) {

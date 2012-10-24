@@ -47,6 +47,8 @@ RePro::RePro( const string &name, const string &pluginset,
     ProjectOpt(),
     MyProjectOpt()
 {
+  addDialogStyle( OptWidget::TabSectionStyle );
+
   LastState = Continue;
   CompleteRuns = 0;
   TotalRuns = 0;
@@ -881,8 +883,8 @@ void RePro::dialog( void )
     OptWidget *roptw = od->addOptions( *this, dialogSelectMask(), 
 				       dialogReadOnlyMask(), dialogStyle(),
 				       mutex() );
-    if ( Options::styleSize( OptWidget::TabLabel ) == 0 &&
-	 ( dialogStyle() & OptWidget::TabLabelStyle ) == 0 ) {
+    if ( Options::styleSize( OptWidget::TabSection ) == 0 &&
+	 ( dialogStyle() & OptWidget::TabSectionStyle ) == 0 ) {
       roptw->setMargins( 2 );
       od->addSeparator();
     }

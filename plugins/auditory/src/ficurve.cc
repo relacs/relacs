@@ -74,7 +74,7 @@ FICurve::FICurve( void )
   SetCurves = 1;
 
   // add some parameter as options:
-  addSection( "Intensities" ).setStyle( OptWidget::TabLabel );
+  addSection( "Intensities" );
   addNumber( "intmin", "Minimum stimulus intensity", MinIntensity, -200.0, 200.0, 5.0, "dB SPL" ).setActivation( "useprevints", "no" );
   addNumber( "intmax", "Maximum stimulus intensity", MaxIntensity, 0.0, 200.0, 5.0, "dB SPL" ).setActivation( "useprevints", "no" );
   addNumber( "intstep", "Sound intensity step", IntensityStep, 0.0, 200.0, 1.0, "dB SPL" ).setActivation( "useprevints", "no" );
@@ -87,7 +87,7 @@ FICurve::FICurve( void )
   addInteger( "blockrepeat", "Number of repetitions of a fixed intensity increment", IntBlockRepeat, 1, 10000, 1 );
   addInteger( "repeat", "Number of repetitions of the whole f-I curve measurement", IntRepeat, 0, 10000, 1 );
   addBoolean( "manualskip", "Show buttons for manual selection of intensities", false );
-  addSection( "Waveform" ).setStyle( OptWidget::TabLabel );
+  addSection( "Waveform" );
   addSelection( "waveform", "Waveform of stimulus", "sine|noise" );
   addNumber( "carrierfreq", "Frequency of carrier", CarrierFrequency, -40000.0, 40000.0, 500.0, "Hz", "kHz" );
   addBoolean( "usebestfreq", "Relative to the cell's best frequency", UseBestFreq );
@@ -95,7 +95,7 @@ FICurve::FICurve( void )
   addNumber( "duration", "Duration of stimulus", Duration, 0.0, 1000.0, 0.05, "seconds", "ms" );
   addNumber( "pause", "Pause", Pause, 0.0, 1000.0, 0.05, "seconds", "ms" );
   addSelection( "side", "Speaker", "left|right|best" );
-  addSection( "Optimization" ).setStyle( OptWidget::TabLabel );
+  addSection( "Optimization" );
   addSubSection( "Baseline activity" );
   addBoolean( "usesilent", "Use measured baseline activity", UseSilent );
   addNumber( "maxbaserate", "Maximum baseline activity", MaxBaseRate, 0.0, 1000.0, 5.0, "Hz" ).setActivation( "usesilent", "false" );
@@ -110,7 +110,7 @@ FICurve::FICurve( void )
   addNumber( "minrateslope", "Minimum slope of firing rate", MinRateSlope, 0.0, 1000.0, 1.0, "Hz/dB" );
   addNumber( "maxratefrac", "Fraction of maximum firing rate above which slopes are optimized", MaxRateFrac, 0.0, 1.0, 0.1, "1", "%" );
   addNumber( "extint", "Extend intensity range by", IntensityExtension, 0.0, 100.0, 1.0, "dB SPL" );
-  addSection( "Analysis" ).setStyle( OptWidget::TabLabel );
+  addSection( "Analysis" );
   addNumber( "ratedt", "Bin width for firing rate", RateDt, 0.0, 1.0, 0.0005, "seconds", "ms" );
   addNumber( "prewidth", "Window length for baseline firing rate", PreWidth, 0.0, 10.0, 0.05, "seconds", "ms" );
   addNumber( "peakwidth", "Window length for peak firing rate", PeakWidth, 0.0, 10.0, 0.01, "seconds", "ms" );
@@ -119,8 +119,6 @@ FICurve::FICurve( void )
   addBoolean( "setbest", "Set results to the session variables", SetBest );
   addSelection( "setcurves", "F-I curves to be passed to session", "none|mean rate|onset + steady-state|mean + onset + steady-state" );
   addFlags( 1 );
-
-  addValueTypeStyle( OptWidget::Bold, Parameter::Label );
 
   // variables:
   NSilent = 0;
@@ -180,7 +178,7 @@ int FICurve::main( void )
   }
 
   // get options:
-  settings().setValueTypeFlags( 16, -Parameter::Label );
+  settings().setValueTypeFlags( 16, -Parameter::Section );
   MinIntensity = number( "intmin" );
   MaxIntensity = number( "intmax" );
   IntensityStep = number( "intstep" );

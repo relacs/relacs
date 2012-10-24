@@ -710,7 +710,7 @@ void SaveFiles::saveRePro( void )
   if ( ReProData ) {
 
     ReProSettings.setFlags( 0 );
-    ReProSettings.setValueTypeFlags( 1, -Parameter::Label );
+    ReProSettings.setValueTypeFlags( 1, -Parameter::Section );
     
     // stimulus indices file:
     if ( SF != 0 && saving() ) {
@@ -813,7 +813,7 @@ ofstream *SaveFiles::openFile( const string &filename, int type )
       opt.pushText( "File", filename );
     else {
       opt.insertText( "File", "Date", filename,
-		      MetaDataRecordingSection::standardFlag() + Parameter::ListFlag );
+		      MetaDataRecordingSection::standardFlag(), Parameter::ListAlways );
     }
   }
   return f;

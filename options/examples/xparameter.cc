@@ -136,6 +136,5 @@ int main( int argc, char *argv[] )
   /*
   Parameter ip( "integerid", "enter a integer", 2L );
   Parameter bp( "booleanid", "enter a boolean", true );
-  Parameter lp( "text", Parameter::Label );
   */
 }

@@ -238,7 +238,8 @@ class OptWidgetSection : public OptWidgetBase
 {
   Q_OBJECT
 public:
-  OptWidgetSection( Options::section_iterator sec, Options *oo, OptWidget *ow,
+  OptWidgetSection( Options::section_iterator sec,
+		    Options *oo, OptWidget *ow,
 		    QMutex *mutex=0, QWidget *parent=0 );
 private:
   Options::section_iterator Sec;

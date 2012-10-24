@@ -86,7 +86,6 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
   addNumber( "size", "Spike size", 0.0, 0.0, 10000.0, 0.1, Unit, Unit, "%.1f", 2+4, strongstyle );
   addInteger( "trend", "Trend", 0, 0, 4 );
   addInteger( "quality", "Quality", 0, 0, 3 );
-  addValueTypeStyle( OptWidget::Bold, Parameter::Label );
 
   // main layout:
   QGridLayout *gb = new QGridLayout;

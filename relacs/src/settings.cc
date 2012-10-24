@@ -73,7 +73,7 @@ Settings::Settings( RELACSWidget* rw )
   addText( "sessiontimeformat", "Format for session runtime", "%Hh%02Mmin%02Ssec" );
   addText( "reprotimeformat", "Format for repro runtime", "%Mmin%02Ssec" );
 
-  addValueTypeStyle( OptWidget::Bold, Parameter::Label );
+  addDialogStyle( OptWidget::Bold );
 
   setDialogReadOnlyMask( 1 );
   setDialogHelp( false );

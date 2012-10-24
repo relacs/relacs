@@ -87,7 +87,6 @@ JAR::JAR( void )
   addNumber( "jaraverage", "Time for measuring EOD rate", JARAverageTime, 0.01, 10000.0, 0.02, "seconds", "ms" );
   addNumber( "chirpaverage", "Time for measuring chirp data", ChirpAverageTime, 0.01, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "eodsavetime", "Duration of EOD to be saved", EODSaveTime, 0.0, 10000.0, 0.01, "seconds", "ms" );
-  addValueTypeStyle( OptWidget::TabLabel, Parameter::Label );
   
   // variables:
   GlobalFishAmplitude = 0.0;
@@ -547,7 +546,8 @@ void JAR::save( void )
     header.addNumber( "Trans. Amplitude", LocalFishAmplitude, LocalEODUnit, "%.2f" );
   header.addText( "RePro Time", reproTimeStr() );
   header.addText( "Session Time", sessionTimeStr() );
-  header.addLabel( "settings:" );
+  header.addSection( "settings" );
+  header.append( settings() );
 
   saveJAR( header );
   saveMeanJAR( header );
@@ -566,7 +566,6 @@ void JAR::saveJAR( const Options &header )
 
   // write header:
   header.save( df, "# " );
-  settings().save( df, "#   " );
   df << '\n';
 
   // write key:
@@ -648,7 +647,6 @@ void JAR::saveMeanJAR( const Options &header )
 
   // write header:
   header.save( df, "# " );
-  settings().save( df, "#   " );
   df << '\n';
 
   // write key:
@@ -758,7 +756,6 @@ void JAR::saveEOD( const Options &header )
 
   // write header:
   header.save( df, "# " );
-  settings().save( df, "#   " );
   df << '\n';
 
   // write key:

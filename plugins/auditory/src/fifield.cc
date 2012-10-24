@@ -48,7 +48,7 @@ FIField::FIField( void )
   MinRateFrac = 0.3;
 
   // add some parameter as options:
-  Options &fo = insertSection( "Frequencies", "Intensities" ).setStyle( OptWidget::TabLabel );
+  Options &fo = insertSection( "Frequencies", "Intensities" );
   fo.addSection( "Range" );
   fo.addNumber( "freqmin", "Minimum stimulus frequency", MinFreq, 2000.0, 80000.0, 1000.0, "Hz", "kHz" );
   fo.addNumber( "freqmax", "Maximum stimulus frequency", MaxFreq, 2000.0, 80000.0, 1000.0, "Hz", "kHz" );
@@ -68,8 +68,6 @@ FIField::FIField( void )
   Options::erase( "waveform" );
   Options::erase( "carrierfreq" );
   Options::erase( "usebestfreq" );
-
-  addValueTypeStyle( OptWidget::Bold, Parameter::Label );
 
   UseThresh = false;
   UseSaturation = false;
@@ -125,7 +123,7 @@ int FIField::main( void )
 
   // get options:
   settings().delFlags( 16 );
-  settings().setValueTypeFlags( 32, -Parameter::Label );
+  settings().setValueTypeFlags( 32, -Parameter::Section );
   MinFreq = number( "freqmin" );
   MaxFreq = number( "freqmax" );
   FreqStep = number( "freqstep" );

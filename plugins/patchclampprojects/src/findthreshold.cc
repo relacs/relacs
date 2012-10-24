@@ -50,7 +50,6 @@ FindThreshold::FindThreshold( void )
   addNumber( "savetime", "Length of trace to be saved and analyzed", 0.5, 0.0, 1000.0, 0.01, "sec", "ms" );
   addNumber( "skiptime", "Initial time skipped from spike-count analysis", 0.0, 0.0, 1000.0, 0.01, "sec", "ms" );
   addInteger( "repeats", "Repetitions of stimulus", 10, 0, 10000, 1 );
-  addValueTypeStyle( OptWidget::TabLabel, Parameter::Label );
 
   // plot:
   P.lock();

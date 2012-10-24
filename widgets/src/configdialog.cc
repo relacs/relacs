@@ -116,8 +116,9 @@ void ConfigDialog::setDate( const string &date )
 
 void ConfigDialog::dialogOptions( OptDialog *od )
 {
-  od->addOptions( *this, DialogSelectMask, DialogROMask, DialogStyle, mutex() );
-  od->setVerticalSpacing( int(9.0*::exp(-double(Options::size())/14.0))+1 );
+  OptWidget *ow = od->addOptions( *this, DialogSelectMask, DialogROMask,
+				  DialogStyle, mutex() );
+  od->setVerticalSpacing( (int)::floor(9.0*::exp(-double(ow->lines())/8.0))+1 );
 }
 
 

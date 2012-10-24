@@ -54,6 +54,7 @@ RELACSPlugin::RELACSPlugin( const string &configident, int configgroup,
   Widget = 0;
   RW = 0;
   GlobalKeyEvents = false;
+  addDialogStyle( OptWidget::BoldSectionsStyle );
 }
 
 

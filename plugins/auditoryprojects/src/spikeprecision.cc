@@ -49,7 +49,7 @@ SpikePrecision::SpikePrecision( void )
   FreqRange.clear();
 
   // options:
-  addSection( "Stimulus" ).setStyle( OptWidget::Bold | OptWidget::TabLabel );
+  addSection( "Stimulus" );
   addText( "freqrange", "Frequency range", "" ).setUnit( "Hz" );
   addNumber( "amplitude", "Amplitude of envelope", Amplitude, 0.0, 130.0, 1.0, "dB", "dB" );
   addNumber( "intensity", "Stimulus intensity", Intensity, 0.0, 200.0, 5.0, "dB SPL", "dB SPL" );
@@ -60,7 +60,7 @@ SpikePrecision::SpikePrecision( void )
   addNumber( "carrierfreq", "Carrier frequency", CarrierFrequency, -40000.0, 40000.0, 500.0, "Hz", "kHz" );
   addBoolean( "usebestfreq", "Relative to the cell's best frequency", true );
   addSelection( "side", "Speaker", "left|right|best" );
-  addSection( "Waveform" ).setStyle( OptWidget::Bold | OptWidget::TabLabel );
+  addSection( "Waveform" );
   addSelection( "waveform", "Type of amplitude modulation", "sine|rectangular|triangular|sawup|sawdown|noise gap|noise cutoff" );
   addNumber( "dutycycle", "Duty-cycle of rectangular waveform", 0.5, 0.0, 1.0, 0.05, "1", "%" ).setActivation( "waveform", "rectangular" );
   addText( "stimfile", "Stimulus file", "" ).setStyle( OptWidget::BrowseExisting ).setActivation( "waveform", "noise gap|noise cutoff" );
@@ -70,13 +70,13 @@ SpikePrecision::SpikePrecision( void )
   addBoolean( "rescale", "Rescale filtered noise-gap stimuli", true ).setActivation( "waveform", "noise gap" );
   addNumber( "ramp2", "Ramp for rectangles and saw tooths", 0.0, 0.0, 1.0, 0.001, "seconds", "ms" ).setActivation( "waveform", "rectangular|sawup|sawdown" );
   addNumber( "ramp", "Ramp at beginning and end of stimulus", 0.002, 0.0, 1.0, 0.001, "seconds", "ms" );
-  addSection( "Intensity - search" ).setStyle( OptWidget::Bold | OptWidget::TabLabel );
+  addSection( "Intensity - search" );
   addBoolean( "userate", "Search intensity for target firing rate", true );
   addNumber( "rate", "Target firing rate", 100.0, 0.0, 1000.0, 10.0, "Hz", "Hz" ).setActivation( "userate", "true" );
   addNumber( "ratetol", "Tolerance for target firing rate", 5.0, 0.0, 1000.0, 1.0, "Hz", "Hz" ).setActivation( "userate", "true" );
   addNumber( "intensitystep", "Initial intensity step", 8.0, 0.0, 100.0, 1.0, "dB", "dB" ).setActivation( "userate", "true" );
   addNumber( "searchrepeats", "Number of search stimulus presentations", 2, 1, 100, 1, "times", "times" ).setActivation( "userate", "true" );
-  addSection( "Analysis" ).setStyle( OptWidget::Bold | OptWidget::TabLabel );
+  addSection( "Analysis" );
   addNumber( "skipwin", "Initial portion of stimulus not used for analysis", SkipWindow, 0.0, 100.0, 0.01, "seconds", "ms" );
   addNumber( "sigma1", "Standard deviation of rate smoothing kernel 1", Sigma1, 0.0, 1.0, 0.0001, "seconds", "ms" );
   addNumber( "sigma2", "Standard deviation of rate smoothing kernel 2", Sigma2, 0.0, 1.0, 0.001, "seconds", "ms" );
@@ -278,7 +278,7 @@ int SpikePrecision::main( void )
   else  // dB SPL
     Intensity = intensity;
 
-  settings().setValueTypeFlags( 16, -Parameter::Label );
+  settings().setValueTypeFlags( 16, -Parameter::Section );
 
   // setup frequency range:
   FreqRange.set( freqrangestr );

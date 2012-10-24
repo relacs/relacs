@@ -31,7 +31,7 @@ AdaptedFICurves::AdaptedFICurves( void )
   : RePro( "AdaptedFICurves", "auditory", "Jan Benda", "1.0", "Jan 27, 2011" )
 {
   // add some options:
-  addSection( "Stimulus" ).setStyle( OptWidget::TabLabel );
+  addSection( "Stimulus" );
   addSubSection ( "Adaptation stimulus" );
   addSelection( "adaptbase", "Intensity of adapting stimulus relative to", "SPL|Threshold" );
   addNumber( "adaptint", "Sound intensity of adapting stimulus", 50.0, -200.0, 200.0, 0.5, "dB SPL" );
@@ -43,7 +43,7 @@ AdaptedFICurves::AdaptedFICurves( void )
   addNumber( "intmax", "Maximum sound intensity of test stimulus", 100.0, -200.0, 200.0, 0.5, "dB" );
   addNumber( "intstep", "Sound-intensity steps of test stimulus", 10.0, 0.0, 200.0, 0.5, "dB SPL" );
   addNumber( "duration", "Duration of test stimuli", 0.1, 0.001, 100000.0, 0.001, "s", "ms" );
-  addSection( "General" ).setStyle( OptWidget::TabLabel );
+  addSection( "General" );
   addSelection( "side", "Speaker", "left|right|best" );
   addNumber( "carrierfreq", "Frequency of carrier", 0.0, -40000.0, 40000.0, 500.0, "Hz", "kHz" );
   addBoolean( "usebestfreq", "Relative to the cell's best frequency", true );
@@ -54,8 +54,6 @@ AdaptedFICurves::AdaptedFICurves( void )
   addSubSection ( "Analysis" );
   addNumber( "onsettime", "Onset rate occurs within", 0.1, 0.0, 1000.0, 0.002, "seconds", "ms" );
   addNumber( "sstime", "Width for measuring steady-states", 0.1, 0.0, 1000.0, 0.002, "seconds", "ms" );
-
-  addValueTypeStyle( OptWidget::Bold, Parameter::Label );
 
   // plot:
   setWidget( &P );

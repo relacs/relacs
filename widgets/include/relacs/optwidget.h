@@ -216,27 +216,21 @@ public:
         but not add new values. */
   static const long SelectText = Parameter::SelectText;
     /*! Enables auto completion mode of editable combo boxes. */
-  static const long ComboAutoCompletion = 0x02000000;
+  static const long ComboAutoCompletion = 0x04000000;
     /*! Browse for existing file. */
-  static const long BrowseExisting = 0x04000000;
+  static const long BrowseExisting = 0x08000000;
     /*! Browse for any file. */
-  static const long BrowseAny = 0x08000000;
+  static const long BrowseAny = 0x10000000;
     /*! Browse for directories. */
-  static const long BrowseDirectory = 0x10000000;
+  static const long BrowseDirectory = 0x20000000;
     /*! Browse for some file or directory. */
   static const long Browse = BrowseExisting + BrowseAny + BrowseDirectory;
     /*! Do not strip the current working directory from the path. */
-  static const long BrowseAbsolute = 0x20000000;
+  static const long BrowseAbsolute = 0x40000000;
     /*! Use LCD numbers to display a number. */
   static const long ValueLCD = 0x01000000;
-    /*! Use this label to distinguish search patterns
-        while saving parameter. */
-  static const long SavePatternLabel = Parameter::SavePatternLabel;
-    /*! Use this label to distinguish search patterns
-        while reading parameter. */
-  static const long ReadPatternLabel = Parameter::ReadPatternLabel;
-    /*! Label is a new tab. */
-  static const long TabLabel = 0x04000000;
+    /*! Section is a new tab. */
+  static const long TabSection = 0x04000000;
     /*! Try to format label as a mathematical equation. */
   static const long MathLabel = 0x08000000;
 
@@ -244,8 +238,8 @@ public:
   static const int BreakLinesStyle = 0x0001;
     /*! Insert extra space between two options. */
   static const int ExtraSpaceStyle = 0x0002;
-    /*! Labels are introducing new tabs. */
-  static const int TabLabelStyle = 0x0004;
+    /*! Top level sections are introducing new tabs. */
+  static const int TabSectionStyle = 0x0004;
     /*! Print the options name in front of the request string. */
   static const int NameFrontStyle = 0x0008;
     /*! Print the options name behind the request string. */
@@ -253,6 +247,8 @@ public:
     /*! Use a different font for the option's name.
         Only used in combination with NameFrontStyle or NameBehindStyle. */
   static const int HighlightNameStyle = 0x0020;
+    /*! Display all section names using a bold font. */
+  static const int BoldSectionsStyle = 0x0040;
 
 
     /*! Constructs an empty OptWidget.

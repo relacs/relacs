@@ -166,7 +166,6 @@ private:
   int StimulusIndex;
   bool OutWarning;
   string EOD2Unit;
-  Options FileChirpOpts;
 
   struct ChirpData
   {

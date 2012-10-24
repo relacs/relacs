@@ -46,7 +46,7 @@ SingleStimulus::SingleStimulus( void )
   Sigma = 0.01;
 
   // options:
-  addSection( "Waveform" ).setStyle( OptWidget::TabLabel );
+  addSection( "Waveform" );
   addSelection( "waveform", "Stimulus waveform", "From file|Const|Sine|Rectangular|Triangular|Sawup|Sawdown|Whitenoise|OUnoise|Sweep" );
   addText( "stimfile", "Stimulus file", "" ).setStyle( OptWidget::BrowseExisting ).setActivation( "waveform", "From file" );
   addNumber( "stimampl", "Amplitude factor (standard deviation) of stimulus file", 0.0, 0.0, 1.0, 0.01 ).setActivation( "waveform", "From file" );
@@ -60,7 +60,7 @@ SingleStimulus::SingleStimulus( void )
   addNumber( "endfreq", "End sweep with frequency", 100.0, 0.0, 1000000.0, 1.0 ).setActivation( "waveform", "Sweep" );
   addNumber( "duration", "Maximum duration of stimulus", Duration, 0.0, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "ramp", "Ramp of stimulus", 0.002, 0.0, 10.0, 0.001, "seconds", "ms" );
-  addSection( "Stimulus" ).setStyle( OptWidget::TabLabel );
+  addSection( "Stimulus" );
   addNumber( "offset", "Stimulus mean", Offset, -2000.0, 2000.0, 5.0, IUnit );
   addSelection( "offsetbase", "Stimulus mean relative to", "absolute|amplitude|current|threshold|previous" );
   addBoolean( "samerate", "Use sampling rate of input", true ).setActivation( "waveform", "From file", false );
@@ -68,7 +68,7 @@ SingleStimulus::SingleStimulus( void )
   addNumber( "repeats", "Number of stimulus presentations", Repeats, 0, 10000, 1, "times" );
   addNumber( "pause", "Duration of pause between stimuli", 1.0, 0.0, 1000.0, 0.01, "seconds", "ms" );
   addSelection( "outtrace", "Output trace", "V-1" );
-  addSection( "Offset - search" ).setStyle( OptWidget::TabLabel );
+  addSection( "Offset - search" );
   addBoolean( "userate", "Search offset for target firing rate", false );
   addNumber( "rate", "Target firing rate", 100.0, 0.0, 1000.0, 10.0, "Hz" ).setActivation( "userate", "true" );
   addNumber( "ratetol", "Tolerance for target firing rate", 5.0, 0.0, 1000.0, 1.0, "Hz" ).setActivation( "userate", "true" );
@@ -82,7 +82,7 @@ SingleStimulus::SingleStimulus( void )
   addNumber( "minslope", "Minimum slope required for interpolation", 4.0, 0.0, 100.0, 0.5, "Hz/"+IUnit ).setActivation( "userate", "true" );
   addNumber( "searchduration", "Maximum duration of stimulus", 0.0, 0.0, 1000.0, 0.01, "seconds", "ms" ).setActivation( "userate", "true" );
   addNumber( "searchpause", "Duration of pause between stimuli", 0.0, 0.0, 1000.0, 0.01, "seconds", "ms" ).setActivation( "userate", "true" );
-  addSection( "Analysis" ).setStyle( OptWidget::TabLabel );
+  addSection( "Analysis" );
   addNumber( "skipwin", "Initial portion of stimulus not used for analysis", SkipWin, 0.0, 100.0, 0.01, "seconds", "ms" );
   addNumber( "sigma", "Standard deviation of rate smoothing kernel", Sigma, 0.0, 1.0, 0.0001, "seconds", "ms" );
   addBoolean( "storevoltage", "Save voltage trace", true );
@@ -91,8 +91,6 @@ SingleStimulus::SingleStimulus( void )
   addSelection( "storemode", "Save stimuli in", "session|repro|custom" ).setUnit( "path" );
   addText( "storepath", "Save stimuli in custom directory", "" ).setStyle( OptWidget::BrowseDirectory ).setActivation( "storemode", "custom" );
   addSelection( "storelevel", "Save", "all|generated|noise|none" ).setUnit( "stimuli" );
-
-  addValueTypeStyle( OptWidget::Bold, Parameter::Label );
 
   // setup plots:
   Stack = new QStackedLayout;
@@ -208,7 +206,7 @@ int SingleStimulus::main( void )
   }
 
   // store options:
-  settings().setValueTypeFlags( 16, -Parameter::Label );
+  settings().setValueTypeFlags( 16, -Parameter::Section );
 
   // get options:
   WaveForm = (WaveForms)index( "waveform" );

@@ -204,7 +204,7 @@ public:
         of this section of options. */
   Options &delFlag( int flag );
     /*! Set all bits of the flag of this section of options,
-        i.e. set it to 0xffffff. */
+        i.e. set it to 0. */
   Options &clearFlag( void );
 
     /*! The style flag for name() and type() of this secion of options. */
@@ -221,6 +221,12 @@ public:
     /*! Clear all bits of the style of this section of options,
         i.e. set it to 0. */
   Options &clearStyle( void );
+
+    /*! \return \c true if one of the bits specified by \a mask corresponds
+        to the Parameter::Section bit, or \a mask equals zero,
+	or \a mask is negative and the Parameter::Section bit
+	is not contained in abs( mask ). */
+  bool checkType( int mask ) const;
 
     /*! Returns the warning messages of the last called 
         Option member-function. */
@@ -1260,23 +1266,6 @@ public:
   Parameter &setDefaultTime( const string &name,
 			     int hour, int minutes, int seconds );
 
-    /*! Add a label \a name at the end of the options list. */
-  Parameter &addLabel( const string &name, int flags=0, int style=0 );
-    /*! Insert a new label \a name at the beginning of the options list
-        (\a atname == "") or at the position of the option with
-        name \a atname. If the option with name \a atname
-        does not exist, the option is appended to the end of the list. */
-  Parameter &insertLabel( const string &name, const string &atname="",
-			  int flags=0, int style=0 );
-    /*! Return the label of a label
-        with name \a name. 
-        If there is no option with name \a name
-	an empty string is returned. */
-  Str label( const string &name ) const;
-    /*! Set the lable of an existing label
-        with name \a name to \a label. */
-  Parameter &setLabel( const string &name, const string &label );
-
     /*! Add a new subsection of level \a level.
         The new section is named \a name, has the optional
 	type specifier \a type, some \a flag for selecting this section,
@@ -1289,7 +1278,7 @@ public:
         \sa addSubSection(), addSubSubSection(), insertSection(),
 	endSection(), clearSections() */
   Options &addSection( int level, const string &name, const string &type="",
-		       int flag=0xffffff, int style=0 );
+		       int flag=0, int style=0 );
   Options &addSection( int level, const string &name, int flag, int style=0 )
     { return addSection( level, name, "", flag, style ); };
     /*! Add a new section of Options to the end of the sections list.
@@ -1301,7 +1290,7 @@ public:
         \sa addSubSection(), addSubSubSection(), insertSection(),
 	endSection(), clearSections() */
   Options &addSection( const string &name, const string &type="",
-		       int flag=0xffffff, int style=0 );
+		       int flag=0, int style=0 );
   Options &addSection( const string &name, int flag, int style=0 )
     { return addSection( name, "", flag, style ); };
     /*! Add a new subsection of Options to the last section.
@@ -1314,7 +1303,7 @@ public:
         \sa addSection(), addSubSubSection(), insertSection(),
 	endSection(), clearSections() */
   Options &addSubSection( const string &name, const string &type="",
-			  int flag=0xffffff, int style=0 );
+			  int flag=0, int style=0 );
   Options &addSubSection( const string &name, int flag, int style=0 )
     { return addSubSection( name, "", flag, style ); };
     /*! Add a new subsubsection of Options to the last subsection
@@ -1328,7 +1317,7 @@ public:
         \sa addSection(), addSubSection(), insertSection(),
 	endSection(), clearSections() */
   Options &addSubSubSection( const string &name, const string &type="",
-			     int flag=0xffffff, int style=0 );
+			     int flag=0, int style=0 );
   Options &addSubSubSection( const string &name, int flag, int style=0 )
     { return addSubSubSection( name, "", flag, style ); };
     /*! Insert a new section of Options before the section
@@ -1344,8 +1333,7 @@ public:
         \sa addSection(), addSubSection(), addSubSubSection(), endSection(),
 	clearSections(), findSection()  */
   Options &insertSection( const string &name, const string &atpattern,
-			  const string &type="", int flag=0xffffff,
-			  int style=0 );
+			  const string &type="", int flag=0, int style=0 );
   Options &insertSection( const string &name, const string &atpattern,
 			  int flag, int style=0 )
     { return insertSection( name, atpattern, "", flag, style ); };
@@ -1419,8 +1407,6 @@ public:
   Options &popSection( void );
     /*! Remove all Parameter and sections of Options. */
   Options &clear( void );
-    /*! Remove all options without value, i.e. Labels. */
-  Options &strip( void );
 
     /*! Total number of key-value pairs in this Options and all its sections. */
   int size( void ) const;
@@ -1476,24 +1462,30 @@ public:
         whose type matches \a typemask (see Parameter::vallueTypes() ). */
   Options &delValueTypeFlags( int flags, int typemask );
 
-    /*! Set style of all options to \a style. */
+    /*! Set style of all Parameter and sections that match \a selectflag
+        to \a style. */
   Options &setStyles( int style, int selectflag=0 );
-    /*! Add the bits specified by \a style to the style of all options. */
+    /*! Add the bits specified by \a style to the style of
+        all Parameter and sections that match \a selectflag. */
   Options &addStyles( int style, int selectflag=0 );
-    /*! Clear the bits specified by \a style of the style of all options. */
+    /*! Clear the bits specified by \a style of the style of
+        all Parameter and sections that match \a selectflag. */
   Options &delStyles( int style, int selectflag=0 );
-    /*! Total number of options that have the style \a style set in their style(). */
+    /*! Total number of Parameter in all asections
+        that have the style \a style set in their style(). */
   int styleSize( int style ) const;
 
-    /*! Set style of all options whose type matches \a typemask 
+    /*! Set style of all Parameter and sections whose type matches \a typemask 
         (see Parameter::valueTypes() ) to \a style. */
-  Options &setValueTypeStyle( int style, int typemask );
-    /*! Add the bits specified by \a style to the style of all options
-        whose type matches \a typemask (see Parameter::valueTypes() ). */
-  Options &addValueTypeStyle( int style, int typemask );
-    /*! Clear the bits specified by \a style of the style of all options
-        whose type matches \a typemask (see Parameter::valueTypes() ). */
-  Options &delValueTypeStyle( int style, int typemask );
+  Options &setValueTypeStyles( int style, int typemask );
+    /*! Add the bits specified by \a style to the style of all Parameter
+        and sections whose type matches \a typemask
+	(see Parameter::valueTypes() ). */
+  Options &addValueTypeStyles( int style, int typemask );
+    /*! Clear the bits specified by \a style of the style of all Parameter
+        and sections whose type matches \a typemask
+	(see Parameter::valueTypes() ). */
+  Options &delValueTypeStyles( int style, int typemask );
 
     /*! Length of largest name.
         If \a detailed is \c true, then include length of request string as well. */
@@ -1526,13 +1518,13 @@ public:
 		 bool firstonly=false ) const;
     /*! Write each key-value pair as a separate line to stream \a str
         and use \a textformat, \a numberformat, \a boolformat, \a
-        dateformat, \a timeformat, and \a labelformat for formatting
-        text, number, boolean, and label parameter, respectively.
+        dateformat, \a timeformat, and \a sectionformat for formatting
+        text, number, boolean, date, and time parameter, or sections, respectively.
         Each line is started with \a start. */
   ostream &save( ostream &str, const string &textformat,
 		 const string &numberformat, const string &boolformat="%i=%b",
 		 const string &dateformat="%i=%04Y-%02m-%02d", const string &timeformat="%i=%02H:%02M:%02S",
-		 const string &labelformat="%i", int selectmask=0,
+		 const string &sectionformat="%i", int selectmask=0,
 		 const string &start="" ) const;
     /*! Write names and their values to stream \a str */
   friend ostream &operator<< ( ostream &str, const Options &o );
@@ -1556,10 +1548,10 @@ public:
         \return the Options for which to continue to read. */
   Options &read( const string &opttxt, int flag,
 		 const string &assignment=":=", const string &separator=",;",
-		 string *pattern=0, int *indent=0 );
+		 int *indent=0 );
   Options &read( const string &opttxt, const string &assignment=":=",
-		 const string &separator=",;", string *pattern=0 )
-    { return read( opttxt, 0, assignment, separator, pattern ); };
+		 const string &separator=",;" )
+    { return read( opttxt, 0, assignment, separator ); };
     /*! Read a single line from stream \a str and set options. */
   friend istream &operator>> ( istream &str, Options &o );
     /*! Read from stream \a str and set the values of existing

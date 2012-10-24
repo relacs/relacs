@@ -66,7 +66,6 @@ SAM::SAM( void )
   addNumber( "before", "Spikes recorded before stimulus", Before, 0.0, 1000.0, 0.005, "seconds", "ms" );
   addNumber( "after", "Spikes recorded after stimulus", After, 0.0, 1000.0, 0.005, "seconds", "ms" );
   addBoolean( "adjust", "Adjust input gain?", true );
-  addValueTypeStyle( OptWidget::TabLabel, Parameter::Label );
   
   // variables:
   Signal = 0;
@@ -102,7 +101,6 @@ SAM::SAM( void )
   Header.addNumber( "EOD rate", "Hz", "%.1f" );
   Header.addNumber( "trans. amplitude", "", "%.2f" );
   Header.addText( "session time" );
-  Header.addLabel( "settings:" );
 
   // tablekeys:
   AmplKey.addNumber( "time", "ms", "%9.2f" );
@@ -257,6 +255,10 @@ int SAM::main( void )
     NerveMeanAmplT = SampleDataD( -0.5*Period, 0.5*Period, 0.0005 );
     NerveMeanAmplM = SampleDataD( -0.5*Period, 0.5*Period, 0.0005 );
   }
+
+  Header.erase( "settings" );
+  Header.addSection( "settings" );
+  Header.append( settings() );
 
   // plot trace:
   tracePlotSignal( Before+Duration+After, Before );
@@ -540,7 +542,6 @@ void SAM::saveRate( int trace )
 
   // write header and key:
   Header.save( df, "# " );
-  settings().save( df, "#   " );
   df << '\n';
   TableKey key;
   key.addNumber( "time", "ms", "%9.2f" );

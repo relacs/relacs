@@ -238,21 +238,6 @@ Parameter::Parameter( const string &name, const string &request,
 }
 
 
-Parameter::Parameter( const string &name, bool sep, int flags, int style,
-		      Options *parentsection ) 
-  : ParentSection( parentsection )
-{
-  if ( name.empty() )
-    Warning += "empty label";
-  else if ( sep )
-    style |= TabLabel;
-
-  clear( name, name, Label );
-  setFlags( flags );
-  setStyle( style );
-}
-
-
 Parameter::Parameter( const string &s, const string &assignment )
 {
   load( s, assignment );
@@ -385,7 +370,7 @@ Parameter &Parameter::assign( const string &value )
   if ( isText() && size() > 1 ) {
     selectText( value );
   }
-  else if ( ! isLabel() ) {
+  else {
     setText( value );
     if ( isNotype() ) {
       // check for date:
@@ -596,7 +581,7 @@ Parameter::ValueType Parameter::valueType( void ) const
 }
 
 
-bool Parameter::valueTypes( int mask ) const
+bool Parameter::valueType( int mask ) const
 {
   return ( mask == 0 ||
 	   ( mask > 0 && ( mask & valueType() ) > 0 ) ||
@@ -854,8 +839,6 @@ Str Parameter::text( int index, const string &format, const string &unit ) const
     typestr = "date";
   else if ( isTime() )
     typestr = "time";
-  else if ( isLabel() )
-    typestr = "label";
   f.format( typestr, 'T' );
 
   Str s( "" );
@@ -1055,7 +1038,7 @@ Parameter &Parameter::addText( const string &strg, bool clear )
 	addTime( hour, minutes, seconds );
     }
   }
-  else if ( ! isLabel() ) {
+  else {
     // get numbers:
     for ( int k=0; k<sq.size(); k++ )
       addNumber( String[ String.size() - sq.size() + k ], "" );
@@ -1120,8 +1103,6 @@ Str Parameter::defaultText( int index, const string &format,
     typestr = "date";
   else if ( isTime() )
     typestr = "time";
-  else if ( isLabel() )
-    typestr = "label";
   f.format( typestr, 'T' );
 
   string u( unit );
@@ -1352,7 +1333,7 @@ Parameter &Parameter::selectText( const string &strg, int add )
 	addTime( hour, minutes, seconds );
     }
   }
-  else if ( ! isLabel() ) {
+  else {
     Value.clear();
     Error.clear();
     for ( int k=0; k<String.size(); k++ )
@@ -2786,12 +2767,6 @@ Parameter &Parameter::setDefaultTime( const string &time )
 }
 
 
-bool Parameter::isLabel( void ) const
-{
-  return ( VType == Label );
-}
-
-
 bool Parameter::isNotype( void ) const
 {
   return ( VType == NoType );
@@ -2838,7 +2813,7 @@ Parameter &Parameter::setToDefault( void )
     DefaultMinutes = Minutes;
     DefaultSeconds = Seconds;
   }
-  else if ( ! isLabel() )
+  else
     DefaultValue = Value;
   DefaultString = String;
   return *this;
@@ -2985,71 +2960,67 @@ bool Parameter::testActivation( double value, double tol )
 string Parameter::save( bool detailed, bool firstonly ) const
 {
   string str;
-  if ( isLabel() )
-    str = label();
-  else {
-    // name:
-    str = name();
-    if ( detailed && name() != request() )
-      str += " (" + request() + "): ";
-    else
-      str += ": ";
+  // name:
+  str = name();
+  if ( detailed && name() != request() )
+    str += " (" + request() + "): ";
+  else
+    str += ": ";
 
-    // value:
-    bool fulllist = ( size() > 1 &&
-		      ( (Flags & ListFlag) == ListFlag || ! firstonly ) );
-    if ( isNumber() || isInteger() ) {
-      if ( fulllist )
-	str += "[";
-      if ( error( 0 ) >= 0.0 )
-	str += text( 0, "(" + format() + "+-" + format().up() + ")" );
-      else
-	str += text( 0 );
-      if ( fulllist ) {
-	for ( int k=1; k<(int)Value.size(); k++ ) {
-	  str += ", ";
-	  if ( error( k ) >= 0.0 )
-	    str += text( k, "(" + format() + "+-" + format().up() + ")" );
-	  else
-	    str += text( k );
-	}
-	str += "]";
+  // value:
+  bool fulllist = ( size() > 1 &&
+		    ( (Style & ListAlways) || ! firstonly ) );
+  if ( isNumber() || isInteger() ) {
+    if ( fulllist )
+      str += "[";
+    if ( error( 0 ) >= 0.0 )
+      str += text( 0, "(" + format() + "+-" + format().up() + ")" );
+    else
+      str += text( 0 );
+    if ( fulllist ) {
+      for ( int k=1; k<(int)Value.size(); k++ ) {
+	str += ", ";
+	if ( error( k ) >= 0.0 )
+	  str += text( k, "(" + format() + "+-" + format().up() + ")" );
+	else
+	  str += text( k );
       }
-      if ( outUnit() != "1" )
-	str += outUnit();
+      str += "]";
     }
-    else if ( isBoolean() ) {
-      if ( fulllist )
-	str += "[";
-      str += ( boolean( 0 ) ? "true" : "false" );
-      if ( fulllist ) {
-	for ( int k=1; k<(int)Value.size(); k++ ) {
-	  str += ", ";
-	  str += ( boolean( k ) ? "true" : "false" );
-	}
-	str += "]";
+    if ( outUnit() != "1" )
+      str += outUnit();
+  }
+  else if ( isBoolean() ) {
+    if ( fulllist )
+      str += "[";
+    str += ( boolean( 0 ) ? "true" : "false" );
+    if ( fulllist ) {
+      for ( int k=1; k<(int)Value.size(); k++ ) {
+	str += ", ";
+	str += ( boolean( k ) ? "true" : "false" );
       }
+      str += "]";
     }
-    else if ( isDate() || isTime() || isText() ) {
-      if ( fulllist )
-	str += "[";
-      string val = text( 0 );
-      if ( val.empty() )
-	str += '~';
-      else if ( val.find_first_of( ",{}[]:=" ) != string::npos )
-	str += '"' + val + '"';
-      else
-	str += val;
-      if ( fulllist ) {
-	for ( int k=1; k<(int)String.size(); k++ ) {
-	  val = text( k );
-	  if ( val.empty() )
-	    str += ", ~";
-	  else
-	    str += ", " + val;
-	}
-	str += "]";
+  }
+  else if ( isDate() || isTime() || isText() ) {
+    if ( fulllist )
+      str += "[";
+    string val = text( 0 );
+    if ( val.empty() )
+      str += '~';
+    else if ( val.find_first_of( ",{}[]:=" ) != string::npos )
+      str += '"' + val + '"';
+    else
+      str += val;
+    if ( fulllist ) {
+      for ( int k=1; k<(int)String.size(); k++ ) {
+	val = text( k );
+	if ( val.empty() )
+	  str += ", ~";
+	else
+	  str += ", " + val;
       }
+      str += "]";
     }
   }
 
@@ -3058,82 +3029,74 @@ string Parameter::save( bool detailed, bool firstonly ) const
 
 
 ostream &Parameter::save( ostream &str, int width, bool detailed,
-			  bool firstonly, const string &pattern ) const
+			  bool firstonly ) const
 {
-  if ( isLabel() ) {
-    if ( ( style() & TabLabel ) > 0 )
-      str << '-' << label() << '-';
-    else
-      str << setw( 0 ) << label();
-  }
-  else {
-    // name:
-    string is = pattern+name();
-    if ( detailed && name() != request() )
-      is += " (" + request() + ")";
-    str << Str( is, -width );
-    str << ": ";
+  // name:
+  string is = name();
+  if ( detailed && name() != request() )
+    is += " (" + request() + ")";
+  str << Str( is, -width );
+  str << ": ";
 
-    // value:
-    bool fulllist = ( size() > 1 &&
-		      ( (Flags & ListFlag) == ListFlag || ! firstonly ) );
-    if ( isNumber() || isInteger() ) {
-      if ( fulllist )
-	str << "[";
-      if ( error( 0 ) >= 0.0 )
-	str << text( 0, "(" + format() + "+-" + format().up() + ")" );
-      else
-	str << text( 0 );
-      if ( fulllist ) {
-	for ( int k=1; k<(int)Value.size(); k++ ) {
-	  str << ", ";
-	  if ( error( k ) >= 0.0 )
-	    str << text( k, "(" + format() + "+-" + format().up() + ")" );
-	  else
-	    str << text( k );
-	}
-	str << "]";
-      }
-      if ( outUnit() != "1" )
-	str << outUnit();
-    }
-    else if ( isBoolean() ) {
-      if ( fulllist )
-	str << "[";
-      str << ( boolean( 0 ) ? "true" : "false" );
-      if ( fulllist ) {
-	for ( int k=1; k<(int)Value.size(); k++ ) {
-	  str << ", " << ( boolean( k ) ? "true" : "false" );
-	}
-	str << "]";
-      }
-    }
-    else if ( isDate() || isTime() || isText() ) {
-      if ( fulllist )
-	str << "[";
-      string val = text( 0 );
-      if ( val.empty() )
-	str << '~';
-      else if ( val.find_first_of( ",{}[]:=" ) != string::npos )
-	str << '"' << val << '"';
-      else
-	str << val;
-      if ( fulllist ) {
-	for ( int k=1; k<(int)String.size(); k++ ) {
-	  val = text( k );
-	  if ( val.empty() )
-	    str << ", " << '~';
-	  else
-	    str << ", " << val;
-	}
-	str << "]";
-      }
-    }
-    else if ( isNotype() )
-      str << "! no type !";
+  // value:
+  bool fulllist = ( size() > 1 &&
+		    ( (Style & ListAlways) || ! firstonly ) );
+  if ( isNumber() || isInteger() ) {
+    if ( fulllist )
+      str << "[";
+    if ( error( 0 ) >= 0.0 )
+      str << text( 0, "(" + format() + "+-" + format().up() + ")" );
     else
-      str << "! unknown type !";
+      str << text( 0 );
+    if ( fulllist ) {
+      for ( int k=1; k<(int)Value.size(); k++ ) {
+	str << ", ";
+	if ( error( k ) >= 0.0 )
+	  str << text( k, "(" + format() + "+-" + format().up() + ")" );
+	else
+	  str << text( k );
+      }
+      str << "]";
+    }
+    if ( outUnit() != "1" )
+      str << outUnit();
   }
+  else if ( isBoolean() ) {
+    if ( fulllist )
+      str << "[";
+    str << ( boolean( 0 ) ? "true" : "false" );
+    if ( fulllist ) {
+      for ( int k=1; k<(int)Value.size(); k++ ) {
+	str << ", " << ( boolean( k ) ? "true" : "false" );
+      }
+      str << "]";
+    }
+  }
+  else if ( isDate() || isTime() || isText() ) {
+    if ( fulllist )
+      str << "[";
+    string val = text( 0 );
+    if ( val.empty() )
+      str << '~';
+    else if ( val.find_first_of( ",{}[]:=" ) != string::npos )
+      str << '"' << val << '"';
+    else
+      str << val;
+    if ( fulllist ) {
+      for ( int k=1; k<(int)String.size(); k++ ) {
+	val = text( k );
+	if ( val.empty() )
+	  str << ", " << '~';
+	else
+	  str << ", " << val;
+      }
+      str << "]";
+    }
+  }
+  else if ( isNotype() )
+    str << "! no type !";
+  else
+    str << "! unknown type !";
 
   return str;
 }
@@ -3141,8 +3104,7 @@ ostream &Parameter::save( ostream &str, int width, bool detailed,
 
 ostream &Parameter::save( ostream &str, const string &textformat,
 			  const string &numberformat, const string &boolformat,
-			  const string &dateformat, const string &timeformat,
-			  const string &labelformat ) const
+			  const string &dateformat, const string &timeformat ) const
 {
   if ( isText() )
     str << text( textformat );
@@ -3154,8 +3116,6 @@ ostream &Parameter::save( ostream &str, const string &textformat,
     str << text( dateformat );
   else if ( isTime() )
     str << text( timeformat );
-  else if ( isLabel() )
-    str << text( labelformat );
   else if ( isNotype() )
     str << "! no type !";
   else
@@ -3179,41 +3139,37 @@ ostream &Parameter::saveXML( ostream &str, int level, int indent,
   string indstr2( indstr1 );
   indstr2 += string( indent, ' ' );
   int maxinx = size();
-  if ( (Flags & ListFlag) == 0 && firstonly && maxinx >= 1 )
+  if ( (Style & ListAlways) == 0 && firstonly && maxinx >= 1 )
     maxinx = 1;
 
-  if ( isLabel() )
-    str << indstr1 << "<label>" << label() << "</label>\n";
-  else {
-    str << indstr1 << "<property>\n";
-    str << indstr2 << "<name>" << name() << "</name>\n";
-    for ( int k=0; k<maxinx; k++ ) {
-      if ( isNumber() || isInteger() ) {
-	string vtype = "float";
-	if ( isInteger() )
-	  vtype = "integer";
-	str << indstr2 << "<value>" << Str( number( k ), format() ).strip() << "<type>" << vtype << "</type>";
-	if ( error( 0 ) >= 0.0 )
-	  str << "<error>" << Str( error( k ), format() ).strip() << "</error>";
-	if ( ! outUnit().empty() && outUnit() != "1" )
-	  str << "<unit>" << unit() << "</unit>";
-	str << "</value>\n";
-      }
-      else if ( isBoolean() ) {
-	str << indstr2 << "<value>" << ( boolean( k ) ? "true" : "false" ) << "<type>boolean</type></value>\n";
-      }
-      else if ( isDate() ) {
-	str << indstr2 << "<value>" << text( k, "%04Y-%02m-%02d" ) << "<type>date</type></value>\n";
-      }
-      else if ( isTime() ) {
-	str << indstr2 << "<value>" << text( k, "%02H:%02M:%02S" ) << "<type>time</type></value>\n";
-      }
-      else if ( isText() ) {
-	str << indstr2 << "<value>" << text( k ).strip() << "<type>string</type></value>\n";
-      }
+  str << indstr1 << "<property>\n";
+  str << indstr2 << "<name>" << name() << "</name>\n";
+  for ( int k=0; k<maxinx; k++ ) {
+    if ( isNumber() || isInteger() ) {
+      string vtype = "float";
+      if ( isInteger() )
+	vtype = "integer";
+      str << indstr2 << "<value>" << Str( number( k ), format() ).strip() << "<type>" << vtype << "</type>";
+      if ( error( 0 ) >= 0.0 )
+	str << "<error>" << Str( error( k ), format() ).strip() << "</error>";
+      if ( ! outUnit().empty() && outUnit() != "1" )
+	str << "<unit>" << unit() << "</unit>";
+      str << "</value>\n";
     }
-    str << indstr1 << "</property>\n";
+    else if ( isBoolean() ) {
+      str << indstr2 << "<value>" << ( boolean( k ) ? "true" : "false" ) << "<type>boolean</type></value>\n";
+    }
+    else if ( isDate() ) {
+      str << indstr2 << "<value>" << text( k, "%04Y-%02m-%02d" ) << "<type>date</type></value>\n";
+    }
+    else if ( isTime() ) {
+      str << indstr2 << "<value>" << text( k, "%02H:%02M:%02S" ) << "<type>time</type></value>\n";
+    }
+    else if ( isText() ) {
+      str << indstr2 << "<value>" << text( k ).strip() << "<type>string</type></value>\n";
+    }
   }
+  str << indstr1 << "</property>\n";
 
   return str;
 }
@@ -3242,12 +3198,14 @@ Parameter &Parameter::load( Str s, const string &assignment )
     Str value = s.value( 0, assignment );
     if ( value.empty() ) {
       // no value: label
+      /* XXX
       if ( name.size() > 2 && name[0] == '-' && name[name.size()-1] == '-' ) {
 	// label with tab style:
 	*this = Parameter( name.substr( 1, name.size()-2 ), true );
       }
       else
 	*this = Parameter( name, false );
+	*/
     }
     else {
       // set parameter with value:

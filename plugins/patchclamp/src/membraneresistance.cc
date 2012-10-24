@@ -49,7 +49,6 @@ MembraneResistance::MembraneResistance( void )
   addBoolean( "nossfit", "Fix steady-state potential for fit", true );
   addBoolean( "plotstdev", "Plot standard deviation of membrane potential", true );
   addSelection( "setdata", "Set results to the session variables", "rest only|always|never" );
-  addValueTypeStyle( OptWidget::Bold, Parameter::Label );
 
   // plot:
   P.lock();
