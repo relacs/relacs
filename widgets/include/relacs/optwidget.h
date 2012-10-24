@@ -24,6 +24,7 @@
 
 #include <vector>
 #include <QWidget>
+#include <QTabWidget>
 #include <QEvent>
 #include <QMutex>
 #include <QLabel>
@@ -479,9 +480,11 @@ private:
   friend class OptWidgetBoolean;
   friend class OptWidgetDate;
   friend class OptWidgetTime;
-  friend class OptWidgetLabel;
-  friend class OptWidgetSeparator;
+  friend class OptWidgetSection;
 
+  void assignOptions( Options *o, bool tabs, int style,
+		      int &row, int &level,
+		      QWidget *parent, QTabWidget *tabwidget );
   void addWidget( OptWidgetBase *owb );
   void disableUpdate( void );
   void enableUpdate( void );

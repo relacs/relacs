@@ -172,8 +172,6 @@ Options &Options::assign( const Options &o )
   Opt = o.Opt;
   // XXX this needs to copy recursively everything
   // XXX and set the parentSections in all parameter and sections right!!!
-  // XXX Same for all other assigns and appends!
-  // XXX Also check Parameter::assign etc. !!
   for ( iterator pp = begin(); pp != end(); ++pp )
     pp->setParentSection( this );
   for ( const_section_iterator sp = o.sectionsBegin();
@@ -246,13 +244,30 @@ Options &Options::assign( const Options &o, int flags )
   if ( this == &o ) 
     return *this;
 
-  Opt.clear();
+  Name = o.Name;
+  Type = o.Type;
+  Flag = o.Flag;
+  Style = o.Style;
   ParentSection = o.ParentSection;
+  Opt.clear();
   for ( const_iterator pp = o.begin(); pp != o.end(); ++pp ) {
-    if ( (*pp).flags( flags ) ) {
+    if ( pp->flags( flags ) ) {
       Opt.push_back( *pp );
+      Opt.back().setParentSection( this );
     }
   }
+  for ( const_section_iterator sp = o.sectionsBegin();
+	sp != o.sectionsEnd();
+	++sp ) {
+    if ( (*sp)->flag( flags ) || (*sp)->size( flags ) > 0 ) {  // XXX Not really! What about changedFlag?
+      Options *o = new Options( **sp );
+      o->setParentSection( this );
+      Secs.push_back( o );
+    }
+  }
+  AddOpts = this;
+  Notified = false;
+  CallNotify = o.CallNotify;
 
   return *this;
 }

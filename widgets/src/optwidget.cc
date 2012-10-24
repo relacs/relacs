@@ -21,7 +21,6 @@
 
 #include <QCoreApplication>
 #include <QVBoxLayout>
-#include <QTabWidget>
 #include <QFileDialog>
 #include <relacs/optwidget.h>
 #include <relacs/optwidgetbase.h>
@@ -140,6 +139,277 @@ OptWidget &OptWidget::operator=( Options *o )
 }
 
 
+void OptWidget::assignOptions( Options *o, bool tabs, int style,
+			       int &row, int &level,
+			       QWidget *parent, QTabWidget *tabwidget )
+{
+  level++;
+
+  // parameter:
+  Options::iterator pp = o->begin();
+  // next selected parameter:
+  for ( ; pp != o->end(); ++pp ) {
+    if ( pp->flags( SelectMask ) )
+      break;
+  }
+  QLabel *l;
+  while ( pp != o->end() ) {
+    bool added = true;
+    // request string:
+    string rs = pp->request();
+    if ( style & NameFrontStyle ) {
+      if ( style & HighlightNameStyle )
+	rs = "<nobr><tt>" + pp->name() + "</tt>: " + rs + "</nobr>";
+      else
+	rs = pp->name() + ": " + rs;
+    }
+    else if ( style & NameBehindStyle ) {
+      if ( style & HighlightNameStyle )
+	rs = "<nobr>" + rs + " <tt>(" + pp->name() + ")</tt></nobr>";
+      else
+	rs += " (" + pp->name() + ")";
+    }
+    // text:
+    if ( pp->isText() ) {
+      l = new QLabel( rs.c_str() );
+      setLabelStyle( l, pp->style() );
+      if ( style & BreakLinesStyle )
+	Layout.back()->addWidget( l, row, 1, 1, 2,
+				  Qt::AlignLeft | Qt::AlignVCenter );
+      else
+	Layout.back()->addWidget( l, row, 1,
+				  Qt::AlignLeft | Qt::AlignVCenter );
+      QLabel *ul = 0;
+      if ( ! pp->outUnit().empty() && ( pp->style() & Browse ) == 0 ) {
+	ul = unitLabel( *pp );
+	setLabelStyle( ul, pp->style() );
+	if ( style & BreakLinesStyle )
+	  Layout.back()->addWidget( ul, row+1, 2,
+				    Qt::AlignLeft | Qt::AlignVCenter );
+	else
+	  Layout.back()->addWidget( ul, row, 3,
+				    Qt::AlignLeft | Qt::AlignVCenter );
+      }
+      if ( pp->size() <= 1 ) {
+	OptWidgetText *t = new OptWidgetText( pp, l, Opt, this, OMutex );
+	if ( t->editable() ) {
+	  if ( FirstWidget == 0 )
+	    FirstWidget = t->valueWidget();
+	  LastWidget = t->valueWidget();
+	}
+	if ( style & BreakLinesStyle ) {
+	  row++;
+	  if ( ul != 0 || t->browseButton() != 0 )
+	    Layout.back()->addWidget( t->valueWidget(), row, 1 );
+	  else
+	    Layout.back()->addWidget( t->valueWidget(), row, 1, 1, 2 );
+	}
+	else
+	  Layout.back()->addWidget( t->valueWidget(), row, 2 );
+	t->setUnitLabel( ul );
+	if ( t->browseButton() != 0 ) {
+	  if ( style & BreakLinesStyle )
+	    Layout.back()->addWidget( t->browseButton(), row, 2,
+				      Qt::AlignLeft | Qt::AlignVCenter );
+	  else
+	    Layout.back()->addWidget( t->browseButton(), row, 3,
+				      Qt::AlignLeft | Qt::AlignVCenter );
+	}
+      }
+      else {
+	OptWidgetMultiText *t = new OptWidgetMultiText( pp, l, Opt, this, OMutex );
+	if ( t->editable() ) {
+	  if ( FirstWidget == 0 )
+	    FirstWidget = t->valueWidget();
+	  LastWidget = t->valueWidget();
+	}
+	if ( style & BreakLinesStyle ) {
+	  row++;
+	  if ( ul != 0 )
+	    Layout.back()->addWidget( t->valueWidget(), row, 1 );
+	  else
+	    Layout.back()->addWidget( t->valueWidget(), row, 1, 1, 2 );
+	}
+	else
+	  Layout.back()->addWidget( t->valueWidget(), row, 2 );
+	t->setUnitLabel( ul );
+      }
+    }
+    // number:
+    else if ( pp->isNumber() || pp->isInteger() ) {
+      l = new QLabel( rs.c_str() );
+      setLabelStyle( l, pp->style() );
+      if ( style & BreakLinesStyle )
+	Layout.back()->addWidget( l, row, 1, 1, 2,
+				  Qt::AlignLeft | Qt::AlignVCenter );
+      else
+	Layout.back()->addWidget( l, row, 1,
+				  Qt::AlignLeft | Qt::AlignVCenter );
+      OptWidgetNumber *n = new OptWidgetNumber( pp, l, Opt, this, OMutex );
+      if ( n->editable() ) {
+	if ( FirstWidget == 0 )
+	  FirstWidget = n->valueWidget();
+	LastWidget = n->valueWidget();
+      }
+      if ( style & BreakLinesStyle ) {
+	row++;
+	Layout.back()->addWidget( n->valueWidget(), row, 1 );
+      }
+      else
+	Layout.back()->addWidget( n->valueWidget(), row, 2 );
+      QLabel *ul = unitLabel( *pp );
+      setLabelStyle( ul, pp->style() );
+      if ( style & BreakLinesStyle )
+	Layout.back()->addWidget( ul, row, 2,
+				  Qt::AlignLeft | Qt::AlignVCenter );
+      else
+	Layout.back()->addWidget( ul, row, 3,
+				  Qt::AlignLeft | Qt::AlignVCenter );
+      n->setUnitLabel( ul );
+    }
+    // boolean:
+    else if ( pp->isBoolean() ) {
+      OptWidgetBoolean *b = new OptWidgetBoolean( pp, Opt, this, rs, OMutex );
+      if ( b->editable() ) {
+	if ( FirstWidget == 0 )
+	  FirstWidget = b->valueWidget();
+	LastWidget = b->valueWidget();
+      }
+      if ( style & BreakLinesStyle )
+	Layout.back()->addWidget( b->valueWidget(), row, 1, 1, 2,
+				  Qt::AlignLeft | Qt::AlignVCenter );
+      else {
+	Layout.back()->addWidget( b->valueWidget(), row, 1, 1, 3,
+				  Qt::AlignLeft | Qt::AlignVCenter );
+	// the following is necessary to eliminate expanding space on top of the boolean:
+	QLabel *spacer = new QLabel;
+	spacer->setFixedHeight( b->valueWidget()->sizeHint().height() );
+	Layout.back()->addWidget( spacer, row, 2 );
+      }
+    }
+    // date:
+    else if ( pp->isDate() ) {
+      l = new QLabel( rs.c_str() );
+      setLabelStyle( l, pp->style() );
+      if ( style & BreakLinesStyle )
+	Layout.back()->addWidget( l, row, 1, 1, 2,
+				  Qt::AlignLeft | Qt::AlignVCenter );
+      else
+	Layout.back()->addWidget( l, row, 1,
+				  Qt::AlignLeft | Qt::AlignVCenter );
+      OptWidgetDate *d = new OptWidgetDate( pp, l, Opt, this, OMutex );
+      if ( d->editable() ) {
+	if ( FirstWidget == 0 )
+	  FirstWidget = d->valueWidget();
+	LastWidget = d->valueWidget();
+      }
+      if ( style & BreakLinesStyle ) {
+	row++;
+	Layout.back()->addWidget( d->valueWidget(), row, 1 );
+      }
+      else
+	Layout.back()->addWidget( d->valueWidget(), row, 2 );
+    }
+    // time:
+    else if ( pp->isTime() ) {
+      l = new QLabel( rs.c_str() );
+      setLabelStyle( l, pp->style() );
+      if ( style & BreakLinesStyle )
+	Layout.back()->addWidget( l, row, 1, 1, 2,
+				  Qt::AlignLeft | Qt::AlignVCenter );
+      else
+	Layout.back()->addWidget( l, row, 1,
+				  Qt::AlignLeft | Qt::AlignVCenter );
+      OptWidgetTime *t = new OptWidgetTime( pp, l, Opt, this, OMutex );
+      if ( t->editable() ) {
+	if ( FirstWidget == 0 )
+	  FirstWidget = t->valueWidget();
+	LastWidget = t->valueWidget();
+      }
+      if ( style & BreakLinesStyle ) {
+	row++;
+	Layout.back()->addWidget( t->valueWidget(), row, 1 );
+      }
+      else
+	Layout.back()->addWidget( t->valueWidget(), row, 2 );
+    }
+    // nothing:
+    else {
+      added = false;
+      row--;
+    }
+    // extra space:
+    if ( (style & ExtraSpaceStyle) > 0 && added ) {
+      row++;
+      Layout.back()->addItem( new QSpacerItem( 10, 0, QSizePolicy::Minimum, QSizePolicy::Expanding ), row, 2 );
+    }
+    row++;
+    // max line count:
+    if ( row > MaxLines ) {
+      MaxLines = row;
+    }
+    // next selected parameter:
+    for ( ++pp; pp != o->end(); ++pp ) {
+      if ( pp->flags( SelectMask ) )
+	break;
+    }
+  }
+
+  // sections:
+  for ( Options::section_iterator sp = o->sectionsBegin();
+	sp != o->sectionsEnd();
+	++sp ) {
+    if ( tabs && level == 0 &&
+	 ( (style & TabLabelStyle ) || ( (*sp)->style() & TabLabel ) ) ) {
+      // finish parameter:
+      if ( row > 0 && (style & ExtraSpaceStyle) == 0 )
+	Layout.back()->addItem( new QSpacerItem( 10, 0, QSizePolicy::Minimum,
+						 QSizePolicy::Expanding ),
+				row, 2 );
+      // this section starts a new tab:
+      QWidget *w = new QWidget;
+      if ( (*sp)->name().find( '&' ) != string::npos )
+	tabwidget->addTab( w, (*sp)->name().c_str() );
+      else
+	tabwidget->addTab( w, ( "&" + (*sp)->name() ).c_str() );
+      parent = w;
+      row = 0;
+      // add layout to current widget:
+      Layout.push_back( new QGridLayout );
+      if ( VerticalSpacing >= 0 )
+	Layout.back()->setVerticalSpacing( VerticalSpacing );
+      if ( HorizontalSpacing >= 0 )
+	Layout.back()->setHorizontalSpacing( HorizontalSpacing );
+      if ( TopMargin >= 0 )
+	Layout.back()->setContentsMargins( LeftMargin, TopMargin,
+					   RightMargin, BottomMargin );
+      parent->setLayout( Layout.back() );
+    }
+    else {
+      // this section is set as a label:
+      OptWidgetSection *l = new OptWidgetSection( sp, Opt, this, OMutex );
+      if ( style & BreakLinesStyle ) {
+	Layout.back()->addWidget( l->valueWidget(), row, 0, 1, 4,
+				  Qt::AlignLeft | Qt::AlignBottom );
+      }
+      else {
+	Layout.back()->addWidget( l->valueWidget(), row, 0, 1, 5,
+				  Qt::AlignLeft | Qt::AlignBottom );
+	// the following is necessary to eliminate expanding space on top of the label:
+	QLabel *spacer = new QLabel;
+	spacer->setFixedHeight( l->valueWidget()->sizeHint().height() );
+	Layout.back()->addWidget( spacer, row, 2 );
+      }
+      Layout.back()->setColumnMinimumWidth( 0, 20 );
+      row++;
+    }
+    assignOptions( *sp, tabs, style, row, level, parent, tabwidget );
+  }
+
+  level--;
+}
+
+
 OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
 			      bool contupdate, int style, QMutex *mutex )
 {
@@ -172,16 +442,17 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
   ReadOnlyMask = romask;
   ContinuousUpdate = contupdate;
 
-  Options::iterator pp = Opt->begin();
-
   MainWidget = this;
   QWidget *parent = this;
   QTabWidget *tabwidget = 0;
+
+  // check for tab style:
   bool tabs = false;
-  for ( ; pp != Opt->end(); ++pp ) {
-    if ( selectmask <= 0 || ( (*pp).flags() & selectmask ) ) {
-      tabs = ( (*pp).isLabel() && 
-	       ( (style & TabLabelStyle ) || ( (*pp).style() & TabLabel ) ) );
+  for ( Options::const_section_iterator sp = o->sectionsBegin();
+	sp != o->sectionsEnd();
+	++sp ) {
+    if ( (*sp)->flag( SelectMask ) && (*sp)->size( SelectMask ) > 0 ) {
+      tabs = ( (style & TabLabelStyle ) || ( (*sp)->style() & TabLabel ) );
       break;
     }
   }
@@ -190,42 +461,36 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
   l->setSpacing( 0 );
   l->setContentsMargins( 0, 0, 0, 0 );
   parent->setLayout( l );
+  bool needgridlayout = false;
   if ( tabs ) {
     tabwidget = new QTabWidget;
     l->addWidget( tabwidget );
     MainWidget = tabwidget;
+    // is there a parameter?
+    for ( Options::iterator pp = o->begin(); pp != o->end(); ++pp ) {
+      if ( pp->flags( SelectMask ) ) {
+	// top level Options has parameter, we need to add a tab:
+	QWidget *w = new QWidget;
+	if ( Opt->name().find( '&' ) != string::npos )
+	  tabwidget->addTab( w, Opt->name().c_str() );
+	else
+	  tabwidget->addTab( w, ( "&" + Opt->name() ).c_str() );
+	parent = w;
+	needgridlayout = true;
+	break;
+      }
+    }
   }
   else {
     QWidget *w = new QWidget;
     l->addWidget( w );
     MainWidget = w;
     parent = w;
+    needgridlayout = true;
   }
 
-  while ( pp != Opt->end() ) {
-
-    if ( tabs ) {
-      QWidget *w = new QWidget;
-      if ( (*pp).name().contains( '&' ) )
-	tabwidget->addTab( w, (*pp).name().c_str() );
-      else
-	tabwidget->addTab( w, ( "&" + (*pp).name() ).c_str() );
-      parent = w;
-      for ( ++pp; pp != Opt->end(); ++pp )
-	if ( selectmask <= 0 || ( (*pp).flags() & selectmask ) )
-	  break;
-    }
-
-    int lines = 0;
-    for ( Options::iterator op = pp; op != Opt->end(); ++op ) {
-      if ( selectmask <= 0 || ( (*pp).flags() & selectmask ) ) {
-	if ( tabs && (*op).isLabel() &&
-	     ( (style & TabLabelStyle ) || ( (*op).style() & TabLabel ) ) )
-	  break;
-	lines++;
-      }
-    }
-
+  // add layout to current widget:
+  if ( needgridlayout ) {
     Layout.push_back( new QGridLayout );
     if ( VerticalSpacing >= 0 )
       Layout.back()->setVerticalSpacing( VerticalSpacing );
@@ -235,247 +500,20 @@ OptWidget &OptWidget::assign( Options *o, int selectmask, int romask,
       Layout.back()->setContentsMargins( LeftMargin, TopMargin,
 					 RightMargin, BottomMargin );
     parent->setLayout( Layout.back() );
-    QLabel *l;
-
-    int row = 0;
-    while ( pp != Opt->end() ) {
-
-      if ( tabs && (*pp).isLabel() &&
-	   ( (style & TabLabelStyle ) || ( (*pp).style() & TabLabel ) ) ) {
-	if ( (style & ExtraSpaceStyle) == 0 )
-	  Layout.back()->addItem( new QSpacerItem( 10, 0, QSizePolicy::Minimum, QSizePolicy::Expanding ), row, 2 );
-	break;
-      }
-
-      bool added = true;
-      // request string:
-      string rs = (*pp).request();
-      if ( style & NameFrontStyle ) {
-	if ( style & HighlightNameStyle )
-	  rs = "<nobr><tt>" + (*pp).name() + "</tt>: " + rs + "</nobr>";
-	else
-	  rs = (*pp).name() + ": " + rs;
-      }
-      else if ( style & NameBehindStyle ) {
-	if ( style & HighlightNameStyle )
-	  rs = "<nobr>" + rs + " <tt>(" + (*pp).name() + ")</tt></nobr>";
-	else
-	  rs += " (" + (*pp).name() + ")";
-      }
-      // text:
-      if ( (*pp).isText() ) {
-	l = new QLabel( rs.c_str() );
-	setLabelStyle( l, (*pp).style() );
-	if ( style & BreakLinesStyle )
-	  Layout.back()->addWidget( l, row, 1, 1, 2,
-				    Qt::AlignLeft | Qt::AlignVCenter );
-	else
-	  Layout.back()->addWidget( l, row, 1,
-				    Qt::AlignLeft | Qt::AlignVCenter );
-	QLabel *ul = 0;
-	if ( ! (*pp).outUnit().empty() && ( (*pp).style() & Browse ) == 0 ) {
-	  ul = unitLabel( *pp );
-	  setLabelStyle( ul, (*pp).style() );
-	  if ( style & BreakLinesStyle )
-	    Layout.back()->addWidget( ul, row+1, 2,
-				      Qt::AlignLeft | Qt::AlignVCenter );
-	  else
-	    Layout.back()->addWidget( ul, row, 3,
-				      Qt::AlignLeft | Qt::AlignVCenter );
-	}
-	if ( (*pp).size() <= 1 ) {
-	  OptWidgetText *t = new OptWidgetText( pp, l, Opt, this, OMutex );
-	  if ( t->editable() ) {
-	    if ( FirstWidget == 0 )
-	      FirstWidget = t->valueWidget();
-	    LastWidget = t->valueWidget();
-	  }
-	  if ( style & BreakLinesStyle ) {
-	    row++;
-	    if ( ul != 0 || t->browseButton() != 0 )
-	      Layout.back()->addWidget( t->valueWidget(), row, 1 );
-	    else
-	      Layout.back()->addWidget( t->valueWidget(), row, 1, 1, 2 );
-	  }
-	  else
-	    Layout.back()->addWidget( t->valueWidget(), row, 2 );
-	  t->setUnitLabel( ul );
-	  if ( t->browseButton() != 0 ) {
-	    if ( style & BreakLinesStyle )
-	      Layout.back()->addWidget( t->browseButton(), row+1, 2,
-					Qt::AlignLeft | Qt::AlignVCenter );
-	    else
-	      Layout.back()->addWidget( t->browseButton(), row, 3,
-					Qt::AlignLeft | Qt::AlignVCenter );
-	  }
-	}
-	else {
-	  OptWidgetMultiText *t = new OptWidgetMultiText( pp, l, Opt, this, OMutex );
-	  if ( t->editable() ) {
-	    if ( FirstWidget == 0 )
-	      FirstWidget = t->valueWidget();
-	    LastWidget = t->valueWidget();
-	  }
-	  if ( style & BreakLinesStyle ) {
-	    row++;
-	    if ( ul != 0 )
-	      Layout.back()->addWidget( t->valueWidget(), row, 1 );
-	    else
-	      Layout.back()->addWidget( t->valueWidget(), row, 1, 1, 2 );
-	  }
-	  else
-	    Layout.back()->addWidget( t->valueWidget(), row, 2 );
-	  t->setUnitLabel( ul );
-	}
-      }
-      // number:
-      else if ( (*pp).isNumber() || (*pp).isInteger() ) {
-	l = new QLabel( rs.c_str() );
-	setLabelStyle( l, (*pp).style() );
-	if ( style & BreakLinesStyle )
-	  Layout.back()->addWidget( l, row, 1, 1, 2,
-				    Qt::AlignLeft | Qt::AlignVCenter );
-	else
-	  Layout.back()->addWidget( l, row, 1,
-				    Qt::AlignLeft | Qt::AlignVCenter );
-	OptWidgetNumber *n = new OptWidgetNumber( pp, l, Opt, this, OMutex );
-	if ( n->editable() ) {
-	  if ( FirstWidget == 0 )
-	    FirstWidget = n->valueWidget();
-	  LastWidget = n->valueWidget();
-	}
-	if ( style & BreakLinesStyle ) {
-	  row++;
-	  Layout.back()->addWidget( n->valueWidget(), row, 1 );
-	}
-	else
-	  Layout.back()->addWidget( n->valueWidget(), row, 2 );
-	QLabel *ul = unitLabel( *pp );
-	setLabelStyle( ul, (*pp).style() );
-	if ( style & BreakLinesStyle )
-	  Layout.back()->addWidget( ul, row, 2,
-				    Qt::AlignLeft | Qt::AlignVCenter );
-	else
-	  Layout.back()->addWidget( ul, row, 3,
-				    Qt::AlignLeft | Qt::AlignVCenter );
-	n->setUnitLabel( ul );
-      }
-      // boolean:
-      else if ( (*pp).isBoolean() ) {
-	OptWidgetBoolean *b = new OptWidgetBoolean( pp, Opt, this, rs, OMutex );
-	if ( b->editable() ) {
-	  if ( FirstWidget == 0 )
-	    FirstWidget = b->valueWidget();
-	  LastWidget = b->valueWidget();
-	}
-	if ( style & BreakLinesStyle )
-	  Layout.back()->addWidget( b->valueWidget(), row, 1, 1, 2,
-				    Qt::AlignLeft | Qt::AlignVCenter );
-	else {
-	  Layout.back()->addWidget( b->valueWidget(), row, 1, 1, 3,
-				    Qt::AlignLeft | Qt::AlignVCenter );
-	  // the following is necessary to eliminate expanding space on top of the boolean:
-	  QLabel *spacer = new QLabel;
-	  spacer->setFixedHeight( b->valueWidget()->sizeHint().height() );
-	  Layout.back()->addWidget( spacer, row, 2 );
-	}
-      }
-      // date:
-      else if ( (*pp).isDate() ) {
-	l = new QLabel( rs.c_str() );
-	setLabelStyle( l, (*pp).style() );
-	if ( style & BreakLinesStyle )
-	  Layout.back()->addWidget( l, row, 1, 1, 2,
-				    Qt::AlignLeft | Qt::AlignVCenter );
-	else
-	  Layout.back()->addWidget( l, row, 1,
-				    Qt::AlignLeft | Qt::AlignVCenter );
-	OptWidgetDate *d = new OptWidgetDate( pp, l, Opt, this, OMutex );
-	if ( d->editable() ) {
-	  if ( FirstWidget == 0 )
-	    FirstWidget = d->valueWidget();
-	  LastWidget = d->valueWidget();
-	}
-	if ( style & BreakLinesStyle ) {
-	  row++;
-	  Layout.back()->addWidget( d->valueWidget(), row, 1 );
-	}
-	else
-	  Layout.back()->addWidget( d->valueWidget(), row, 2 );
-      }
-      // time:
-      else if ( (*pp).isTime() ) {
-	l = new QLabel( rs.c_str() );
-	setLabelStyle( l, (*pp).style() );
-	if ( style & BreakLinesStyle )
-	  Layout.back()->addWidget( l, row, 1, 1, 2,
-				    Qt::AlignLeft | Qt::AlignVCenter );
-	else
-	  Layout.back()->addWidget( l, row, 1,
-				    Qt::AlignLeft | Qt::AlignVCenter );
-	OptWidgetTime *t = new OptWidgetTime( pp, l, Opt, this, OMutex );
-	if ( t->editable() ) {
-	  if ( FirstWidget == 0 )
-	    FirstWidget = t->valueWidget();
-	  LastWidget = t->valueWidget();
-	}
-	if ( style & BreakLinesStyle ) {
-	  row++;
-	  Layout.back()->addWidget( t->valueWidget(), row, 1 );
-	}
-	else
-	  Layout.back()->addWidget( t->valueWidget(), row, 2 );
-      }
-      // label:
-      else if ( (*pp).isLabel() ) {
-	OptWidgetLabel *l = new OptWidgetLabel( pp, Opt, this, OMutex );
-	if ( style & BreakLinesStyle ) {
-	  Layout.back()->addWidget( l->valueWidget(), row, 0, 1, 4,
-				    Qt::AlignLeft | Qt::AlignBottom );
-	}
-	else {
-	  Layout.back()->addWidget( l->valueWidget(), row, 0, 1, 5,
-				    Qt::AlignLeft | Qt::AlignBottom );
-	  // the following is necessary to eliminate expanding space on top of the label:
-	  QLabel *spacer = new QLabel;
-	  spacer->setFixedHeight( l->valueWidget()->sizeHint().height() );
-	  Layout.back()->addWidget( spacer, row, 2 );
-	}
-	Layout.back()->setColumnMinimumWidth( 0, 20 );
-      }
-      // nothing:
-      else {
-	added = false;
-	row--;
-      }
-      // extra space:
-      if ( (style & ExtraSpaceStyle) > 0 && added ) {
-	row++;
-	Layout.back()->addItem( new QSpacerItem( 10, 0, QSizePolicy::Minimum, QSizePolicy::Expanding ), row, 2 );
-      }
-      row++;
-      // max line count:
-      if ( row > MaxLines ) {
-	MaxLines = row;
-      }
-      // next selected option:
-      for ( ++pp; pp != Opt->end(); ++pp )
-	if ( selectmask <= 0 || ( (*pp).flags() & selectmask ) )
-	  break;
-
-    }
-
-    if ( row > 0 && (style & ExtraSpaceStyle) == 0 && pp == Opt->end() )
-      Layout.back()->addItem( new QSpacerItem( 10, 0, QSizePolicy::Minimum, QSizePolicy::Expanding ), row, 2 );
-
   }
+
+  int row = 0;
+  int level = -1;
+  assignOptions( Opt, tabs, style, row, level, parent, tabwidget );
 
   // init activation/inactivation:
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
-    string aname = Widgets[k]->param().activationName();
+    if ( Widgets[k]->param() == Opt->end() )
+      continue;
+    string aname = Widgets[k]->param()->activationName();
     if ( aname.size() > 0 ) {
       for ( unsigned int i=0; i<Widgets.size(); i++ ) {
-	if ( Widgets[i]->param() == aname )
+	if ( *Widgets[i]->param() == aname )
 	  Widgets[i]->addActivation( Widgets[k] );
       }
     }
@@ -924,7 +962,8 @@ void OptWidget::customEvent( QEvent *e )
     case 1: {
       // updateValues( name )
       for ( unsigned int k=0; k<Widgets.size(); k++ ) {
-	if ( Widgets[k]->param().name() == ue->name() ) {
+	if ( Widgets[k]->param() != Opt->end() &&
+	     Widgets[k]->param()->name() == ue->name() ) {
 	  Widgets[k]->reset();
 	  break;
 	}
@@ -941,9 +980,10 @@ void OptWidget::customEvent( QEvent *e )
     case 3: {
       // updateValues( flags )
       for ( unsigned int k=0; k<Widgets.size(); k++ ) {
-	if ( Widgets[k]->param().flags( ue->flags() ) ) {
+	if ( Widgets[k]->param() != Opt->end() &&
+	     Widgets[k]->param()->flags( ue->flags() ) ) {
 	  Widgets[k]->reset();
-	  Widgets[k]->param().delFlags( ue->flags() );
+	  Widgets[k]->param()->delFlags( ue->flags() );
 	}
       }
       break;
@@ -951,7 +991,8 @@ void OptWidget::customEvent( QEvent *e )
     case 4: {
       // updaeSettings( name )
       for ( unsigned int k=0; k<Widgets.size(); k++ ) {
-	if ( Widgets[k]->param().name() == ue->name() ) {
+	if ( Widgets[k]->param() != Opt->end() &&
+	     Widgets[k]->param()->name() == ue->name() ) {
 	  Widgets[k]->update();
 	  break;
 	}
@@ -968,9 +1009,10 @@ void OptWidget::customEvent( QEvent *e )
     case 6: {
       // updateSettings( flags )
       for ( unsigned int k=0; k<Widgets.size(); k++ ) {
-	if ( Widgets[k]->param().flags( ue->flags() ) ) {
+	if ( Widgets[k]->param() != Opt->end() &&
+	     Widgets[k]->param()->flags( ue->flags() ) ) {
 	  Widgets[k]->update();
-	  Widgets[k]->param().delFlags( ue->flags() );
+	  Widgets[k]->param()->delFlags( ue->flags() );
 	}
       }
       break;

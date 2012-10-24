@@ -48,11 +48,11 @@ OptWidgetBase::OptWidgetBase( Options::iterator param, QWidget *label,
     InternChanged( false ),
     InternRead( false )
 {
-  if ( OW->readOnlyMask() < 0 ||
-       ( OW->readOnlyMask() > 0 && ( (*param).flags() & OW->readOnlyMask() ) ) )
+  if ( Param == OO->end() || OW->readOnlyMask() < 0 ||
+       ( OW->readOnlyMask() > 0 && ( Param->flags() & OW->readOnlyMask() ) ) )
     Editable = false;
   else
-    (*Param).delFlags( OW->changedFlag() );
+    Param->delFlags( OW->changedFlag() );
   ow->addWidget( this );
 }
 
@@ -122,9 +122,15 @@ bool OptWidgetBase::editable( void ) const
 }
 
 
-Parameter &OptWidgetBase::param( void )
+Options::const_iterator OptWidgetBase::param( void ) const
 {
-  return *Param;
+  return Param;
+}
+
+
+Options::iterator OptWidgetBase::param( void )
+{
+  return Param;
 }
 
 
@@ -151,7 +157,7 @@ void OptWidgetBase::addActivation( OptWidgetBase *w )
 
 void OptWidgetBase::activateOption( bool eq )
 {
-  bool ac = (*Param).activation() ? eq : !eq;
+  bool ac = Param != OO->end() ? ( Param->activation() ? eq : !eq ) : true;
 
   if ( LabelW != 0 )
     LabelW->setEnabled( ac );
@@ -174,12 +180,12 @@ OptWidgetText::OptWidgetText( Options::iterator param, QWidget *label,
     BrowseButton( 0 )
 {
   if ( Editable ) {
-    W = EW = new QLineEdit( (*Param).text( "%s" ).c_str(), parent );
-    OptWidget::setValueStyle( W, (*Param).style(), false, true );
+    W = EW = new QLineEdit( Param->text( "%s" ).c_str(), parent );
+    OptWidget::setValueStyle( W, Param->style(), false, true );
     Value = EW->text().toStdString();
     connect( EW, SIGNAL( textChanged( const QString& ) ),
 	     this, SLOT( textChanged( const QString& ) ) );
-    if ( (*Param).style() & OptWidget::Browse ) {
+    if ( Param->style() & OptWidget::Browse ) {
       BrowseButton = new QPushButton( "Browse...", parent );
       UnitBrowseW = BrowseButton;
       connect( BrowseButton, SIGNAL( clicked( void ) ),
@@ -187,8 +193,8 @@ OptWidgetText::OptWidgetText( Options::iterator param, QWidget *label,
     }
   }
   else {
-    LW = new QLabel( (*Param).text( "%s" ).c_str(), parent );
-    OptWidget::setValueStyle( LW, (*Param).style() );
+    LW = new QLabel( Param->text( "%s" ).c_str(), parent );
+    OptWidget::setValueStyle( LW, Param->style() );
     //    LW->setBackgroundMode( QWidget::PaletteMid );
     LW->setFrameStyle( QFrame::Panel | QFrame::Sunken );
     LW->setLineWidth( 2 );
@@ -203,9 +209,9 @@ void OptWidgetText::get( void )
     InternRead = true;
     bool cn = OO->notifying();
     OO->unsetNotify();
-    (*Param).setText( EW->text().toStdString() );
-    if ( (*Param).text( 0, "%s" ) != Value )
-      (*Param).addFlags( OW->changedFlag() );
+    Param->setText( EW->text().toStdString() );
+    if ( Param->text( 0, "%s" ) != Value )
+      Param->addFlags( OW->changedFlag() );
     Value = EW->text().toStdString();
     OO->setNotify( cn );
     InternRead = false;
@@ -217,10 +223,10 @@ void OptWidgetText::reset( void )
 {
   InternChanged = true;
   if ( Editable ) {
-    EW->setText( (*Param).text( 0, "%s" ).c_str() );
+    EW->setText( Param->text( 0, "%s" ).c_str() );
   }
   else {
-    LW->setText( (*Param).text( 0, "%s" ).c_str() );
+    LW->setText( Param->text( 0, "%s" ).c_str() );
   }
   InternChanged = false;
 }
@@ -230,7 +236,7 @@ void OptWidgetText::resetDefault( void )
 {
   if ( Editable ) {
     InternChanged = true;
-    EW->setText( (*Param).defaultText( "%s" ).c_str() );
+    EW->setText( Param->defaultText( "%s" ).c_str() );
     InternChanged = false;
   }
 }
@@ -240,7 +246,7 @@ void OptWidgetText::update( void )
 {
   if ( UnitLabel != 0 ) {
     InternChanged = true;
-    UnitLabel->setText( (*Param).outUnit().htmlUnit().c_str() );
+    UnitLabel->setText( Param->outUnit().htmlUnit().c_str() );
     InternChanged = false;
   }
 }
@@ -256,15 +262,16 @@ void OptWidgetText::textChanged( const QString &s )
       Value = EW->text().toStdString();
       bool cn = OO->notifying();
       OO->unsetNotify();
-      (*Param).setText( Value );
-      (*Param).delFlags( OW->changedFlag() );
+      Param->setText( Value );
+      Param->delFlags( OW->changedFlag() );
       OO->setNotify( cn );
     }
     else
       doTextChanged( s );
   }
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
-    Widgets[k]->activateOption( Widgets[k]->param().testActivation( s.toStdString() ) );
+    if ( Widgets[k]->param() != OO->end() )
+      Widgets[k]->activateOption( Widgets[k]->param()->testActivation( s.toStdString() ) );
   }
 }
 
@@ -297,13 +304,13 @@ void OptWidgetText::doTextChanged( const QString &s )
   OW->disableUpdate();
   bool cn = OO->notifying();
   OO->unsetNotify();
-  (*Param).setText( s.toStdString() );
-  if ( (*Param).text( 0, "%s" ) != Value )
-    (*Param).addFlags( OW->changedFlag() );
+  Param->setText( s.toStdString() );
+  if ( Param->text( 0, "%s" ) != Value )
+    Param->addFlags( OW->changedFlag() );
   Value = EW->text().toStdString();
   if ( cn )
     OO->notify();
-  (*Param).delFlags( OW->changedFlag() );
+  Param->delFlags( OW->changedFlag() );
   OO->setNotify( cn );
   OW->enableUpdate();
   unlockMutex();
@@ -333,7 +340,8 @@ void OptWidgetText::initActivation( void )
     s = EW->text().toStdString();
   else
     s = LW->text().toStdString();
-  Widgets.back()->activateOption( Widgets.back()->param().testActivation( s ) );
+  if ( Widgets.back()->param() != OO->end() )
+    Widgets.back()->activateOption( Widgets.back()->param()->testActivation( s ) );
 }
 
 
@@ -345,8 +353,8 @@ void OptWidgetText::browse( void )
     QCoreApplication::postEvent( this, new OptWidgetTextEvent( 2 ) );
     return;
   }
-  Str file = (*Param).text( 0 );
-  int style = (*Param).style();
+  Str file = Param->text( 0 );
+  int style = Param->style();
   unlockMutex();
   QFileDialog* fd = new QFileDialog( 0 );
   if ( style & OptWidget::BrowseExisting ) {
@@ -384,21 +392,21 @@ void OptWidgetText::doBrowse( Str filename )
     QCoreApplication::postEvent( this, new OptWidgetTextEvent( 3, filename ) );
     return;
   }
-  if ( ( (*Param).style() & OptWidget::BrowseAbsolute ) == 0 )
+  if ( ( Param->style() & OptWidget::BrowseAbsolute ) == 0 )
     filename.stripWorkingPath( 3 );
-  if ( ( (*Param).style() & OptWidget::BrowseDirectory ) )
+  if ( ( Param->style() & OptWidget::BrowseDirectory ) )
     filename.provideSlash();
   OW->disableUpdate();
   bool cn = OO->notifying();
   OO->unsetNotify();
-  (*Param).setText( filename );
-  if ( (*Param).text( 0 ) != Value )
-    (*Param).addFlags( OW->changedFlag() );
-  EW->setText( (*Param).text( 0, "%s" ).c_str() );
+  Param->setText( filename );
+  if ( Param->text( 0 ) != Value )
+    Param->addFlags( OW->changedFlag() );
+  EW->setText( Param->text( 0, "%s" ).c_str() );
   Value = EW->text().toStdString();
   if ( cn )
     OO->notify();
-  (*Param).delFlags( OW->changedFlag() );
+  Param->delFlags( OW->changedFlag() );
   OO->setNotify( cn );
   OW->enableUpdate();
   unlockMutex();
@@ -433,14 +441,14 @@ OptWidgetMultiText::OptWidgetMultiText( Options::iterator param, QWidget *label,
 {
   if ( Editable ) {
     W = EW = new QComboBox( parent );
-    EW->setEditable( ((*Param).style() & OptWidget::SelectText) == 0 );
-    if ( ((*Param).style() & OptWidget::SelectText) > 0 )
-      OptWidget::setValueStyle( W, (*Param).style(), false, true, true );
+    EW->setEditable( (Param->style() & OptWidget::SelectText) == 0 );
+    if ( (Param->style() & OptWidget::SelectText) > 0 )
+      OptWidget::setValueStyle( W, Param->style(), false, true, true );
     else
-      OptWidget::setValueStyle( W, (*Param).style(), false, true );
+      OptWidget::setValueStyle( W, Param->style(), false, true );
     EW->setInsertPolicy( QComboBox::InsertAtTop );
     EW->setDuplicatesEnabled( false );
-    if ( ( (*Param).style() & OptWidget::ComboAutoCompletion ) == 0 )
+    if ( ( Param->style() & OptWidget::ComboAutoCompletion ) == 0 )
       EW->setCompleter( 0 );
     reset();
     connect( EW, SIGNAL( editTextChanged( const QString& ) ),
@@ -452,8 +460,8 @@ OptWidgetMultiText::OptWidgetMultiText( Options::iterator param, QWidget *label,
 	     this, SLOT( textChanged( const QString& ) ) );
   }
   else {
-    LW = new QLabel( (*Param).text().c_str(), parent );
-    OptWidget::setValueStyle( LW, (*Param).style() );
+    LW = new QLabel( Param->text().c_str(), parent );
+    OptWidget::setValueStyle( LW, Param->style() );
     //    LW->setBackgroundMode( QWidget::PaletteMid );
     LW->setFrameStyle( QFrame::Panel | QFrame::Sunken );
     LW->setLineWidth( 2 );
@@ -468,11 +476,11 @@ void OptWidgetMultiText::get( void )
     InternRead = true;
     bool cn = OO->notifying();
     OO->unsetNotify();
-    (*Param).setText( EW->currentText().toStdString() );
+    Param->setText( EW->currentText().toStdString() );
     for ( int k=0; k<EW->count(); k++ )
-      (*Param).addText( EW->itemText( k ).toStdString() );
-    if ( (*Param).text( 0 ) != Value )
-      (*Param).addFlags( OW->changedFlag() );
+      Param->addText( EW->itemText( k ).toStdString() );
+    if ( Param->text( 0 ) != Value )
+      Param->addFlags( OW->changedFlag() );
     Value = EW->itemText( 0 ).toStdString();
     OO->setNotify( cn );
     InternRead = false;
@@ -486,11 +494,11 @@ void OptWidgetMultiText::reset( void )
   if ( Editable ) {
     Update = false;
     EW->clear();
-    if ( (*Param).size() > 0 ) {
-      string first = (*Param).text( 0 );
+    if ( Param->size() > 0 ) {
+      string first = Param->text( 0 );
       int firstindex = 0;
-      for ( int k=0; k<(*Param).size(); k++ ) {
-	string s = (*Param).text( k );
+      for ( int k=0; k<Param->size(); k++ ) {
+	string s = Param->text( k );
 	EW->addItem( s.c_str() );
 	if ( s == first )
 	  firstindex = k;
@@ -507,7 +515,7 @@ void OptWidgetMultiText::reset( void )
     Update = true;
   }
   else {
-    LW->setText( (*Param).text( 0 ).c_str() );
+    LW->setText( Param->text( 0 ).c_str() );
   }
   InternChanged = false;
 }
@@ -518,7 +526,7 @@ void OptWidgetMultiText::resetDefault( void )
   if ( Editable ) {
     InternChanged = true;
     Update = false;
-    EW->setEditText( (*Param).defaultText().c_str() );
+    EW->setEditText( Param->defaultText().c_str() );
     Update = true;
     InternChanged = false;
   }
@@ -529,7 +537,7 @@ void OptWidgetMultiText::update( void )
 {
   if ( UnitLabel != 0 ) {
     InternChanged = true;
-    UnitLabel->setText( (*Param).outUnit().htmlUnit().c_str() );
+    UnitLabel->setText( Param->outUnit().htmlUnit().c_str() );
     InternChanged = false;
   }
 }
@@ -545,17 +553,18 @@ void OptWidgetMultiText::textChanged( const QString &s )
       Value = EW->itemText( 0 ).toStdString();
       bool cn = OO->notifying();
       OO->unsetNotify();
-      (*Param).setText( Value );
+      Param->setText( Value );
       for ( int k=0; k<EW->count(); k++ )
-	(*Param).addText( EW->itemText( k ).toStdString() );
-      (*Param).delFlags( OW->changedFlag() );
+	Param->addText( EW->itemText( k ).toStdString() );
+      Param->delFlags( OW->changedFlag() );
       OO->setNotify( cn );
     }
     else
       doTextChanged( s );
   }
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
-    Widgets[k]->activateOption( Widgets[k]->param().testActivation( s.toStdString() ) );
+    if ( Widgets[k]->param() != OO->end() )
+      Widgets[k]->activateOption( Widgets[k]->param()->testActivation( s.toStdString() ) );
   }
 }
 
@@ -582,15 +591,15 @@ void OptWidgetMultiText::doTextChanged( const QString &s )
   OW->disableUpdate();
   bool cn = OO->notifying();
   OO->unsetNotify();
-  (*Param).setText( s.toStdString() );
+  Param->setText( s.toStdString() );
   for ( int k=0; k<EW->count(); k++ )
-    (*Param).addText( EW->itemText( k ).toStdString() );
-  if ( (*Param).text( 0 ) != Value )
-    (*Param).addFlags( OW->changedFlag() );
+    Param->addText( EW->itemText( k ).toStdString() );
+  if ( Param->text( 0 ) != Value )
+    Param->addFlags( OW->changedFlag() );
   Value = EW->itemText( 0 ).toStdString();
   if ( cn )
     OO->notify();
-  (*Param).delFlags( OW->changedFlag() );
+  Param->delFlags( OW->changedFlag() );
   OO->setNotify( cn );
   OW->enableUpdate();
   unlockMutex();
@@ -617,7 +626,8 @@ void OptWidgetMultiText::initActivation( void )
     s = EW->currentText().toStdString();
   else
     s = LW->text().toStdString();
-  Widgets.back()->activateOption( Widgets.back()->param().testActivation( s ) );
+  if ( Widgets.back()->param() != OO->end() )
+    Widgets.back()->activateOption( Widgets.back()->param()->testActivation( s ) );
 }
 
 
@@ -683,47 +693,47 @@ OptWidgetNumber::OptWidgetNumber( Options::iterator param, QWidget *label,
     LCDW( 0 )
 {
   if ( Editable ) {
-    double val = (*Param).number( (*Param).outUnit() );
-    double min = (*Param).minimum( (*Param).outUnit() );
-    double max = (*Param).maximum( (*Param).outUnit() );
-    double step = (*Param).step( (*Param).outUnit() );
+    double val = Param->number( Param->outUnit() );
+    double min = Param->minimum( Param->outUnit() );
+    double max = Param->maximum( Param->outUnit() );
+    double step = Param->step( Param->outUnit() );
     W = EW = new DoubleSpinBox( parent );
     EW->setRange( min, max );
     EW->setSingleStep( step );
-    if ( (*Param).isNumber() )
-      EW->setFormat( (*Param).format() );
+    if ( Param->isNumber() )
+      EW->setFormat( Param->format() );
     else
       EW->setFormat( "%.0f" );
     EW->setValue( val );
-    OptWidget::setValueStyle( W, (*Param).style(), false, true );
+    OptWidget::setValueStyle( W, Param->style(), false, true );
     Value = EW->value();
     EW->setKeyboardTracking( false );
     connect( EW, SIGNAL( valueChanged( double ) ),
 	     this, SLOT( valueChanged( double ) ) );
   }
   else {
-    if ( (*Param).style() & OptWidget::ValueLCD ) {
+    if ( Param->style() & OptWidget::ValueLCD ) {
       LCDW = new QLCDNumber( parent );
       LCDW->setSegmentStyle( QLCDNumber::Filled );
       LCDW->setSmallDecimalPoint( true );
-      LCDW->display( (*Param).text().c_str() );	
-      OptWidget::setValueStyle( LCDW, (*Param).style(), true );
+      LCDW->display( Param->text().c_str() );	
+      OptWidget::setValueStyle( LCDW, Param->style(), true );
       // size:
-      if ( ( (*Param).style() & OptWidget::ValueHuge ) == OptWidget::ValueHuge )
+      if ( ( Param->style() & OptWidget::ValueHuge ) == OptWidget::ValueHuge )
 	LCDW->setFixedHeight( 16 * LCDW->sizeHint().height() / 10 );
-      else if ( (*Param).style() & OptWidget::ValueLarge )
+      else if ( Param->style() & OptWidget::ValueLarge )
 	LCDW->setFixedHeight( 13 * LCDW->sizeHint().height() / 10 );
-      else if ( (*Param).style() & OptWidget::ValueSmall )
+      else if ( Param->style() & OptWidget::ValueSmall )
 	LCDW->setFixedHeight( 8 * LCDW->sizeHint().height() / 10 );
       W = LCDW;
     }
     else {
-      LW = new QLabel( (*Param).text().c_str(), parent );
+      LW = new QLabel( Param->text().c_str(), parent );
       //    LW->setBackgroundMode( QWidget::PaletteMid );
       LW->setAlignment( Qt::AlignRight | Qt::AlignVCenter );
       LW->setFrameStyle( QFrame::Panel | QFrame::Sunken );
       LW->setLineWidth( 2 );
-      OptWidget::setValueStyle( LW, (*Param).style() );
+      OptWidget::setValueStyle( LW, Param->style() );
       LW->setFixedHeight( LW->sizeHint().height() );
       W = LW;
     }
@@ -737,9 +747,9 @@ void OptWidgetNumber::get( void )
     InternRead = true;
     bool cn = OO->notifying();
     OO->unsetNotify();
-    (*Param).setNumber( EW->value(), (*Param).outUnit() );
-    if ( fabs( (*Param).number( (*Param).outUnit() ) - Value ) > 0.0001*(*Param).step() )
-      (*Param).addFlags( OW->changedFlag() );
+    Param->setNumber( EW->value(), Param->outUnit() );
+    if ( fabs( Param->number( Param->outUnit() ) - Value ) > 0.0001*Param->step() )
+      Param->addFlags( OW->changedFlag() );
     Value = EW->value();
     OO->setNotify( cn );
     InternRead = false;
@@ -751,13 +761,13 @@ void OptWidgetNumber::reset( void )
 {
   InternChanged = true;
   if ( Editable ) {
-    EW->setValue( (*Param).number( (*Param).outUnit() ) );
+    EW->setValue( Param->number( Param->outUnit() ) );
   }
   else {
-    if ( (*Param).style() & OptWidget::ValueLCD )
-      LCDW->display( (*Param).text( "", (*Param).outUnit() ).c_str() );
+    if ( Param->style() & OptWidget::ValueLCD )
+      LCDW->display( Param->text( "", Param->outUnit() ).c_str() );
     else
-      LW->setText( (*Param).text( "", (*Param).outUnit() ).c_str() );
+      LW->setText( Param->text( "", Param->outUnit() ).c_str() );
   }
   InternChanged = false;
 }
@@ -767,7 +777,7 @@ void OptWidgetNumber::resetDefault( void )
 {
   if ( Editable ) {
     InternChanged = true;
-    EW->setValue( (*Param).defaultNumber( (*Param).outUnit() ) );
+    EW->setValue( Param->defaultNumber( Param->outUnit() ) );
     InternChanged = false;
   }
 }
@@ -777,16 +787,16 @@ void OptWidgetNumber::update( void )
 {
   InternChanged = true;
   if ( UnitLabel != 0 )
-    UnitLabel->setText( (*Param).outUnit().htmlUnit().c_str() );
+    UnitLabel->setText( Param->outUnit().htmlUnit().c_str() );
   if ( Editable ) {
-    double val = (*Param).number( (*Param).outUnit() );
-    double min = (*Param).minimum( (*Param).outUnit() );
-    double max = (*Param).maximum( (*Param).outUnit() );
-    double step = (*Param).step( (*Param).outUnit() );
+    double val = Param->number( Param->outUnit() );
+    double min = Param->minimum( Param->outUnit() );
+    double max = Param->maximum( Param->outUnit() );
+    double step = Param->step( Param->outUnit() );
     EW->setRange( min, max );
     EW->setSingleStep( step );
-    if ( (*Param).isNumber() )
-      EW->setFormat( (*Param).format() );
+    if ( Param->isNumber() )
+      EW->setFormat( Param->format() );
     else
       EW->setFormat( "%.0f" );
     InternRead = true;
@@ -807,8 +817,8 @@ void OptWidgetNumber::valueChanged( double v )
       Value = EW->value();
       bool cn = OO->notifying();
       OO->unsetNotify();
-      (*Param).setNumber( Value, (*Param).outUnit() );
-      (*Param).delFlags( OW->changedFlag() );
+      Param->setNumber( Value, Param->outUnit() );
+      Param->delFlags( OW->changedFlag() );
       OO->setNotify( cn );
     }
     else
@@ -816,10 +826,11 @@ void OptWidgetNumber::valueChanged( double v )
   }
 
   double tol = 0.2;
-  if ( (*Param).isNumber() )
-    tol = 0.01*(*Param).step();
+  if ( Param->isNumber() )
+    tol = 0.01*Param->step();
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
-    Widgets[k]->activateOption( Widgets[k]->param().testActivation( v, tol ) );
+    if ( Widgets[k]->param() != OO->end() )
+      Widgets[k]->activateOption( Widgets[k]->param()->testActivation( v, tol ) );
   }
 }
 
@@ -846,13 +857,13 @@ void OptWidgetNumber::doValueChanged( double v )
   OW->disableUpdate();
   bool cn = OO->notifying();
   OO->unsetNotify();
-  (*Param).setNumber( v, (*Param).outUnit() );
-  if ( fabs( v - Value ) > 0.0001*(*Param).step() )
-    (*Param).addFlags( OW->changedFlag() );
+  Param->setNumber( v, Param->outUnit() );
+  if ( fabs( v - Value ) > 0.0001*Param->step() )
+    Param->addFlags( OW->changedFlag() );
   Value = EW->value();
   if ( cn )
     OO->notify();
-  (*Param).delFlags( OW->changedFlag() );
+  Param->delFlags( OW->changedFlag() );
   OO->setNotify( cn );
   OW->enableUpdate();
   unlockMutex();
@@ -872,7 +883,7 @@ void OptWidgetNumber::initActivation( void )
 {
   double v = 0.0;
   if ( EW == 0 && LCDW == 0 )
-    v = (*Param).number( (*Param).outUnit() );
+    v = Param->number( Param->outUnit() );
   else {
     if ( EW != 0 )
       v = EW->value();
@@ -880,9 +891,10 @@ void OptWidgetNumber::initActivation( void )
       v = LCDW->value();
   }
   double tol = 0.2;
-  if ( (*Param).isNumber() )
-    tol = 0.01*(*Param).step();
-  Widgets.back()->activateOption( Widgets.back()->param().testActivation( v, tol ) );
+  if ( Param->isNumber() )
+    tol = 0.01*Param->step();
+  if ( Widgets.back()->param() != OO->end() )
+    Widgets.back()->activateOption( Widgets.back()->param()->testActivation( v, tol ) );
 }
 
 
@@ -908,9 +920,9 @@ OptWidgetBoolean::OptWidgetBoolean( Options::iterator param, Options *oo,
   W->setLayout( hb );
   EW = new QCheckBox;
   hb->addWidget( EW );
-  OptWidget::setValueStyle( EW, (*Param).style(), false, true );
+  OptWidget::setValueStyle( EW, Param->style(), false, true );
   QLabel *label = new QLabel( request.c_str() );
-  OptWidget::setLabelStyle( label, (*Param).style() );
+  OptWidget::setLabelStyle( label, Param->style() );
   hb->addWidget( label );
   LabelW = label;
   reset();
@@ -932,9 +944,9 @@ void OptWidgetBoolean::get( void )
     InternRead = true;
     bool cn = OO->notifying();
     OO->unsetNotify();
-    (*Param).setBoolean( EW->isChecked() );
-    if ( (*Param).boolean( 0 ) != Value )
-      (*Param).addFlags( OW->changedFlag() );
+    Param->setBoolean( EW->isChecked() );
+    if ( Param->boolean( 0 ) != Value )
+      Param->addFlags( OW->changedFlag() );
     Value = EW->isChecked();
     OO->setNotify( cn );
     InternRead = false;
@@ -945,7 +957,7 @@ void OptWidgetBoolean::get( void )
 void OptWidgetBoolean::reset( void )
 {
   InternChanged = true;
-  EW->setChecked( (*Param).boolean() );
+  EW->setChecked( Param->boolean() );
   InternChanged = false;
 }
 
@@ -954,7 +966,7 @@ void OptWidgetBoolean::resetDefault( void )
 {
   if ( Editable ) {
     InternChanged = true;
-    EW->setChecked( (*Param).defaultBoolean() );
+    EW->setChecked( Param->defaultBoolean() );
     InternChanged = false;
   }
 }
@@ -970,8 +982,8 @@ void OptWidgetBoolean::valueChanged( bool v )
       Value = EW->isChecked();
       bool cn = OO->notifying();
       OO->unsetNotify();
-      (*Param).setBoolean( Value );
-      (*Param).delFlags( OW->changedFlag() );
+      Param->setBoolean( Value );
+      Param->delFlags( OW->changedFlag() );
       OO->setNotify( cn );
     }
     else
@@ -979,7 +991,8 @@ void OptWidgetBoolean::valueChanged( bool v )
   }
   string b( v ? "true" : "false" );
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
-    Widgets[k]->activateOption( Widgets[k]->param().testActivation( b ) );
+    if ( Widgets[k]->param() != OO->end() )
+      Widgets[k]->activateOption( Widgets[k]->param()->testActivation( b ) );
   }
 }
 
@@ -1006,13 +1019,13 @@ void OptWidgetBoolean::doValueChanged( bool v )
   OW->disableUpdate();
   bool cn = OO->notifying();
   OO->unsetNotify();
-  (*Param).setBoolean( v );
-  if ( (*Param).boolean( 0 ) != Value )
-    (*Param).addFlags( OW->changedFlag() );
+  Param->setBoolean( v );
+  if ( Param->boolean( 0 ) != Value )
+    Param->addFlags( OW->changedFlag() );
   Value = EW->isChecked();
   if ( cn )
     OO->notify();
-  (*Param).delFlags( OW->changedFlag() );
+  Param->delFlags( OW->changedFlag() );
   OO->setNotify( cn );
   OW->enableUpdate();
   unlockMutex();
@@ -1031,7 +1044,8 @@ void OptWidgetBoolean::customEvent( QEvent *e )
 void OptWidgetBoolean::initActivation( void )
 {
   string b( EW->isChecked() ? "true" : "false" );
-  Widgets.back()->activateOption( Widgets.back()->param().testActivation( b ) );
+  if ( Widgets.back()->param() != OO->end() )
+    Widgets.back()->activateOption( Widgets.back()->param()->testActivation( b ) );
 }
 
 
@@ -1046,11 +1060,11 @@ OptWidgetDate::OptWidgetDate( Options::iterator param, QWidget *label,
     Day( 0 )
 {
   if ( Editable ) {
-    Year = (*Param).year( 0 );
-    Month = (*Param).month( 0 );
-    Day = (*Param).day( 0 );
+    Year = Param->year( 0 );
+    Month = Param->month( 0 );
+    Day = Param->day( 0 );
     W = DE = new QDateEdit( QDate( Year, Month, Day ), parent );
-    OptWidget::setValueStyle( W, (*Param).style(), false, true );
+    OptWidget::setValueStyle( W, Param->style(), false, true );
     DE->setDisplayFormat( "yyyy-MM-dd" );
     Year = DE->date().year();
     Month = DE->date().month();
@@ -1059,8 +1073,8 @@ OptWidgetDate::OptWidgetDate( Options::iterator param, QWidget *label,
 	     this, SLOT( valueChanged( const QDate& ) ) );
   }
   else {
-    LW = new QLabel( (*Param).text().c_str(), parent );
-    OptWidget::setValueStyle( LW, (*Param).style() );
+    LW = new QLabel( Param->text().c_str(), parent );
+    OptWidget::setValueStyle( LW, Param->style() );
     //    LW->setBackgroundMode( QWidget::PaletteMid );
     LW->setFrameStyle( QFrame::Panel | QFrame::Sunken );
     LW->setLineWidth( 2 );
@@ -1075,11 +1089,11 @@ void OptWidgetDate::get( void )
     InternRead = true;
     bool cn = OO->notifying();
     OO->unsetNotify();
-    (*Param).setDate( DE->date().year(), DE->date().month(), DE->date().day() );
-    if ( (*Param).year( 0 ) != Year ||
-	 (*Param).month( 0 ) != Month ||
-	 (*Param).day( 0 ) != Day )
-      (*Param).addFlags( OW->changedFlag() );
+    Param->setDate( DE->date().year(), DE->date().month(), DE->date().day() );
+    if ( Param->year( 0 ) != Year ||
+	 Param->month( 0 ) != Month ||
+	 Param->day( 0 ) != Day )
+      Param->addFlags( OW->changedFlag() );
     Year = DE->date().year();
     Month = DE->date().month();
     Day = DE->date().day();
@@ -1092,7 +1106,7 @@ void OptWidgetDate::get( void )
 void OptWidgetDate::reset( void )
 {
   InternChanged = true;
-  DE->setDate( QDate( (*Param).year(), (*Param).month(), (*Param).day() ) );
+  DE->setDate( QDate( Param->year(), Param->month(), Param->day() ) );
   InternChanged = false;
 }
 
@@ -1101,9 +1115,9 @@ void OptWidgetDate::resetDefault( void )
 {
   if ( Editable ) {
     InternChanged = true;
-    DE->setDate( QDate( (*Param).defaultYear(),
-			(*Param).defaultMonth(),
-			(*Param).defaultDay() ) );
+    DE->setDate( QDate( Param->defaultYear(),
+			Param->defaultMonth(),
+			Param->defaultDay() ) );
     InternChanged = false;
   }
 }
@@ -1121,8 +1135,8 @@ void OptWidgetDate::valueChanged( const QDate &date )
       Day = DE->date().day();
       bool cn = OO->notifying();
       OO->unsetNotify();
-      (*Param).setDate( Year, Month, Day );
-      (*Param).delFlags( OW->changedFlag() );
+      Param->setDate( Year, Month, Day );
+      Param->delFlags( OW->changedFlag() );
       OO->setNotify( cn );
     }
     else
@@ -1134,7 +1148,8 @@ void OptWidgetDate::valueChanged( const QDate &date )
   else
     s = LW->text().toStdString();
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
-    Widgets[k]->activateOption( Widgets[k]->param().testActivation( s ) );
+    if ( Widgets[k]->param() != OO->end() )
+      Widgets[k]->activateOption( Widgets[k]->param()->testActivation( s ) );
   }
 }
 
@@ -1161,17 +1176,17 @@ void OptWidgetDate::doValueChanged( const QDate &date )
   OW->disableUpdate();
   bool cn = OO->notifying();
   OO->unsetNotify();
-  (*Param).setDate( date.year(), date.month(), date.day() );
-  if ( (*Param).year( 0 ) != Year ||
-       (*Param).month( 0 ) != Month ||
-       (*Param).day( 0 ) != Day )
-    (*Param).addFlags( OW->changedFlag() );
-  Year = (*Param).year( 0 );
-  Month = (*Param).month( 0 );
-  Day = (*Param).day( 0 );
+  Param->setDate( date.year(), date.month(), date.day() );
+  if ( Param->year( 0 ) != Year ||
+       Param->month( 0 ) != Month ||
+       Param->day( 0 ) != Day )
+    Param->addFlags( OW->changedFlag() );
+  Year = Param->year( 0 );
+  Month = Param->month( 0 );
+  Day = Param->day( 0 );
   if ( cn )
     OO->notify();
-  (*Param).delFlags( OW->changedFlag() );
+  Param->delFlags( OW->changedFlag() );
   OO->setNotify( cn );
   OW->enableUpdate();
   unlockMutex();
@@ -1194,7 +1209,8 @@ void OptWidgetDate::initActivation( void )
     s = DE->date().toString( Qt::ISODate ).toStdString();
   else
     s = LW->text().toStdString();
-  Widgets.back()->activateOption( Widgets.back()->param().testActivation( s ) );
+  if ( Widgets.back()->param() != OO->end() )
+    Widgets.back()->activateOption( Widgets.back()->param()->testActivation( s ) );
 }
 
 
@@ -1209,11 +1225,11 @@ OptWidgetTime::OptWidgetTime( Options::iterator param, QWidget *label,
     Seconds( 0 )
 {
   if ( Editable ) {
-    Hour = (*Param).hour( 0 );
-    Minutes = (*Param).minutes( 0 );
-    Seconds = (*Param).seconds( 0 );
+    Hour = Param->hour( 0 );
+    Minutes = Param->minutes( 0 );
+    Seconds = Param->seconds( 0 );
     W = TE = new QTimeEdit( QTime( Hour, Minutes, Seconds ), parent );
-    OptWidget::setValueStyle( W, (*Param).style(), false, true );
+    OptWidget::setValueStyle( W, Param->style(), false, true );
     TE->setDisplayFormat( "hh:mm:ss" );
     Hour = TE->time().hour();
     Minutes = TE->time().minute();
@@ -1222,8 +1238,8 @@ OptWidgetTime::OptWidgetTime( Options::iterator param, QWidget *label,
 	     this, SLOT( valueChanged( const QTime& ) ) );
   }
   else {
-    LW = new QLabel( (*Param).text().c_str(), parent );
-    OptWidget::setValueStyle( LW, (*Param).style() );
+    LW = new QLabel( Param->text().c_str(), parent );
+    OptWidget::setValueStyle( LW, Param->style() );
     //    LW->setBackgroundMode( QWidget::PaletteMid );
     LW->setFrameStyle( QFrame::Panel | QFrame::Sunken );
     LW->setLineWidth( 2 );
@@ -1238,11 +1254,11 @@ void OptWidgetTime::get( void )
     InternRead = true;
     bool cn = OO->notifying();
     OO->unsetNotify();
-    (*Param).setTime( TE->time().hour(), TE->time().minute(), TE->time().second() );
-    if ( (*Param).hour( 0 ) != Hour ||
-	 (*Param).minutes( 0 ) != Minutes ||
-	 (*Param).seconds( 0 ) != Seconds )
-      (*Param).addFlags( OW->changedFlag() );
+    Param->setTime( TE->time().hour(), TE->time().minute(), TE->time().second() );
+    if ( Param->hour( 0 ) != Hour ||
+	 Param->minutes( 0 ) != Minutes ||
+	 Param->seconds( 0 ) != Seconds )
+      Param->addFlags( OW->changedFlag() );
     Hour = TE->time().hour();
     Minutes = TE->time().minute();
     Seconds = TE->time().second();
@@ -1255,7 +1271,7 @@ void OptWidgetTime::get( void )
 void OptWidgetTime::reset( void )
 {
   InternChanged = true;
-  TE->setTime( QTime( (*Param).hour(), (*Param).minutes(), (*Param).seconds() ) );
+  TE->setTime( QTime( Param->hour(), Param->minutes(), Param->seconds() ) );
   InternChanged = false;
 }
 
@@ -1264,9 +1280,9 @@ void OptWidgetTime::resetDefault( void )
 {
   if ( Editable ) {
     InternChanged = true;
-    TE->setTime( QTime( (*Param).defaultHour(),
-			(*Param).defaultMinutes(),
-			(*Param).defaultSeconds() ) );
+    TE->setTime( QTime( Param->defaultHour(),
+			Param->defaultMinutes(),
+			Param->defaultSeconds() ) );
     InternChanged = false;
   }
 }
@@ -1284,8 +1300,8 @@ void OptWidgetTime::valueChanged( const QTime &time )
       Seconds = TE->time().second();
       bool cn = OO->notifying();
       OO->unsetNotify();
-      (*Param).setTime( Hour, Minutes, Seconds );
-      (*Param).delFlags( OW->changedFlag() );
+      Param->setTime( Hour, Minutes, Seconds );
+      Param->delFlags( OW->changedFlag() );
       OO->setNotify( cn );
     }
     else
@@ -1297,7 +1313,8 @@ void OptWidgetTime::valueChanged( const QTime &time )
   else
     s = LW->text().toStdString();
   for ( unsigned int k=0; k<Widgets.size(); k++ ) {
-    Widgets[k]->activateOption( Widgets[k]->param().testActivation( s ) );
+    if ( Widgets[k]->param() != OO->end() )
+      Widgets[k]->activateOption( Widgets[k]->param()->testActivation( s ) );
   }
 }
 
@@ -1324,17 +1341,17 @@ void OptWidgetTime::doValueChanged( const QTime &time )
   OW->disableUpdate();
   bool cn = OO->notifying();
   OO->unsetNotify();
-  (*Param).setTime( time.hour(), time.minute(), time.second() );
-  if ( (*Param).hour( 0 ) != Hour ||
-       (*Param).minutes( 0 ) != Minutes ||
-       (*Param).seconds( 0 ) != Seconds )
-    (*Param).addFlags( OW->changedFlag() );
-  Hour = (*Param).hour( 0 );
-  Minutes = (*Param).minutes( 0 );
-  Seconds = (*Param).seconds( 0 );
+  Param->setTime( time.hour(), time.minute(), time.second() );
+  if ( Param->hour( 0 ) != Hour ||
+       Param->minutes( 0 ) != Minutes ||
+       Param->seconds( 0 ) != Seconds )
+    Param->addFlags( OW->changedFlag() );
+  Hour = Param->hour( 0 );
+  Minutes = Param->minutes( 0 );
+  Seconds = Param->seconds( 0 );
   if ( cn )
     OO->notify();
-  (*Param).delFlags( OW->changedFlag() );
+  Param->delFlags( OW->changedFlag() );
   OO->setNotify( cn );
   OW->enableUpdate();
   unlockMutex();
@@ -1357,66 +1374,25 @@ void OptWidgetTime::initActivation( void )
     s = TE->time().toString( Qt::ISODate ).toStdString();
   else
     s = LW->text().toStdString();
-  Widgets.back()->activateOption( Widgets.back()->param().testActivation( s ) );
+  if ( Widgets.back()->param() != OO->end() )
+    Widgets.back()->activateOption( Widgets.back()->param()->testActivation( s ) );
 }
 
 
-OptWidgetLabel::OptWidgetLabel( Options::iterator param, Options *oo,
-				OptWidget *ow, QMutex *mutex, QWidget *parent )
-  : OptWidgetBase( param, 0, oo, ow, mutex )
+OptWidgetSection::OptWidgetSection( Options::section_iterator sec, Options *oo,
+				    OptWidget *ow, QMutex *mutex, QWidget *parent )
+  : OptWidgetBase( oo->end(), 0, oo, ow, mutex ),
+    Sec( sec )
 {
-  string id = ( (*Param).style() & OptWidget::MathLabel ) ?
-    (*Param).name().htmlUnit() : (*Param).name().html();
+  Str name = (*Sec)->name();
+  string id = ( (*Sec)->style() & OptWidget::MathLabel ) ?
+    name.htmlUnit() : name.html();
   QLabel *l = new QLabel( id.c_str(), parent );
   l->setTextFormat( Qt::RichText );
   l->setAlignment( Qt::AlignLeft );
   l->setWordWrap( false );
   W = l;
-  OptWidget::setLabelStyle( W, (*Param).style() );
-}
-
-
-OptWidgetSeparator::OptWidgetSeparator( Options::iterator param, Options *oo,
-					OptWidget *ow, QMutex *mutex, QWidget *parent )
-  : OptWidgetBase( param, 0, oo, ow, mutex )
-{
-  QWidget *h = new QWidget( parent );
-  QHBoxLayout *layout = new QHBoxLayout;
-  layout->setContentsMargins( 0, 0, 0, 0 );
-  h->setLayout( layout );
-  W = h;
-  if ( (*Param).name().empty() ) {
-    QLabel *line = new QLabel;
-    layout->addWidget( line );
-    line->setFrameStyle( QFrame::HLine | QFrame::Sunken );
-    line->setLineWidth( 1 );
-    line->setMidLineWidth( 0 );
-    line->setFixedHeight( 4 );
-  }
-  else {
-    QLabel *line;
-    line = new QLabel;
-    layout->addWidget( line );
-    line->setFrameStyle( QFrame::HLine | QFrame::Sunken );
-    line->setLineWidth( 1 );
-    line->setMidLineWidth( 0 );
-    line->setFixedHeight( 4 );
-    layout->setStretchFactor( line, 10 );
-    QLabel *label = new QLabel( (*Param).name().c_str() );
-    layout->addWidget( label );
-    OptWidget::setLabelStyle( label, (*Param).style() );
-    label->setAlignment( Qt::AlignHCenter | Qt::AlignVCenter );
-    int w = label->sizeHint().width();
-    label->setFixedWidth( w + 4*w/(*Param).name().size() );
-    layout->setStretchFactor( label, 1 );
-    line = new QLabel;
-    layout->addWidget( line );
-    line->setFrameStyle( QFrame::HLine | QFrame::Sunken );
-    line->setLineWidth( 1 );
-    line->setMidLineWidth( 0 );
-    line->setFixedHeight( 4 );
-    layout->setStretchFactor( line, 30 );
-  }
+  OptWidget::setLabelStyle( W, (*Sec)->style() );
 }
 
 

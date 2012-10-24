@@ -60,7 +60,8 @@ public:
   void activateOption( bool eq );
   QWidget *valueWidget( void );
   bool editable( void ) const;
-  Parameter &param( void );
+  Options::const_iterator param( void ) const;
+  Options::iterator param( void );
   void setUnitLabel( QLabel *l );
  protected:
   virtual void initActivation( void );
@@ -233,21 +234,15 @@ private:
 };
 
 
-class OptWidgetLabel : public OptWidgetBase
+class OptWidgetSection : public OptWidgetBase
 {
   Q_OBJECT
 public:
-  OptWidgetLabel( Options::iterator param, Options *oo, OptWidget *ow,
-		  QMutex *mutex=0, QWidget *parent=0 );
-};
+  OptWidgetSection( Options::section_iterator sec, Options *oo, OptWidget *ow,
+		    QMutex *mutex=0, QWidget *parent=0 );
+private:
+  Options::section_iterator Sec;
 
-
-class OptWidgetSeparator : public OptWidgetBase
-{
-  Q_OBJECT
-public:
-  OptWidgetSeparator( Options::iterator param, Options *oo, OptWidget *ow,
-		      QMutex *mutex=0, QWidget *parent=0 );
 };
 
 
