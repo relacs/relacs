@@ -3269,12 +3269,12 @@ Options &Options::addSubSubSection( const string &name, const string &type,
 Options &Options::insertSection( const string &name, const string &atpattern,
 				 const string &type, int flag, int style )
 {
+  Options *o = new Options( name, type, flag, style );
+
   // insert at front:
   if ( atpattern.empty() ) {
-    Options *o = new Options( name, type, flag, style );
     AddOpts->Secs.push_front( o );
-    o->setParentSection( this );
-    AddOpts = o;
+    o->setParentSection( AddOpts );
   }
   else {
     // insert at atpattern:
@@ -3282,20 +3282,18 @@ Options &Options::insertSection( const string &name, const string &atpattern,
     if ( sp != sectionsEnd() ) {
       Options *ps = (*sp)->parentSection();
       if ( ps != 0 ) {
-	Options *o = new Options( name, type, flag, style );
 	ps->Secs.insert( sp, o );
 	o->setParentSection( ps );
-	AddOpts = o;
       }
     }
     else {
       // not found, add to sections:
-      Options *o = new Options( name, type, flag, style );
       AddOpts->Secs.push_back( o );
-      o->setParentSection( this );
-      AddOpts = o;
+      o->setParentSection( AddOpts );
     }
   }
+
+  AddOpts = o;
   return *AddOpts;
 }
 
@@ -3983,7 +3981,7 @@ ostream &Options::save( ostream &str, const string &start,
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( (*sp)->flag( selectmask ) && (*sp)->size( selectmask ) > 0 )
+    if ( (*sp)->flag( selectmask ) )
       (*sp)->save( str, starts, selectmask, detailed, firstonly );
   }
 
@@ -4021,7 +4019,7 @@ ostream &Options::save( ostream &str, const string &textformat,
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( (*sp)->flag( selectmask ) && (*sp)->size( selectmask ) > 0 )
+    if ( (*sp)->flag( selectmask ) )
       (*sp)->save( str, textformat, numberformat, boolformat,
 		dateformat, timeformat, sectionformat, selectmask, starts );
   }
@@ -4054,7 +4052,7 @@ string Options::save( int selectmask, bool firstonly ) const
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( (*sp)->flag( selectmask ) && (*sp)->size( selectmask ) > 0 ) {
+    if ( (*sp)->flag( selectmask ) ) {
       if ( n > 0 )
 	str += ", ";
       str += (*sp)->save( selectmask, firstonly );
@@ -4099,7 +4097,7 @@ ostream &Options::saveXML( ostream &str, int selectmask, int level,
   for ( const_section_iterator sp = sectionsBegin();
 	sp != sectionsEnd();
 	++sp ) {
-    if ( (*sp)->flag( selectmask ) && (*sp)->size( selectmask ) > 0 )
+    if ( (*sp)->flag( selectmask ) )
       (*sp)->saveXML( str, selectmask, level, indent );
   }
   if ( ! name().empty() ) {
