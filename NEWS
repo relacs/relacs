@@ -1,4 +1,13 @@
+Version 0.9.8
+
+November, 2012
+  Made internal representation of key-value pais is hierarchical 
+  to simplify lots of code and to better fit the odML standard.
+
 Version 0.9.7
+
+October, 2012
+  Tagged this version as the current stable one.
 
 March, 2011
   Full odML metadata support.
