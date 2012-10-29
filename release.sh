@@ -46,6 +46,8 @@ if test "x${MAKE}" = x; then
     MAKE=make
 fi
 
+$MAKE="$MAKE -j 6"
+
 # minimal clean up:
 echo "Clean up *.la files:"
 find . -name '*.la' -print -delete
