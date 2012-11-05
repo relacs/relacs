@@ -3221,6 +3221,50 @@ Parameter &Parameter::load( Str s, const string &assignment )
 }
 
 
+Parameter &Parameter::loadNameValue( Str name, const string &value )
+{
+  // clear parameter:
+  clear();
+
+  Str request = "";
+  if ( name.empty() )
+    Warning += "\"" + name.stripped() + "\": missing name! ";
+  else {
+    if ( name.size() > 2 && name[name.size()-1] == ')' ) {
+      // request string:
+      int n = name.rfind( '(' );
+      if ( n >= 0 ) {
+	request = name.mid( n+1, name.size()-2 );
+	name.erase( n-1 );
+	name.strip();
+	request.strip();
+      }
+    }
+    if ( value.empty() ) {
+      // no value: label
+      /* XXX
+      if ( name.size() > 2 && name[0] == '-' && name[name.size()-1] == '-' ) {
+	// label with tab style:
+	*this = Parameter( name.substr( 1, name.size()-2 ), true );
+      }
+      else
+	*this = Parameter( name, false );
+	*/
+    }
+    else {
+      // set parameter with value:
+      clear( name, request, NoType );
+      assign( value );
+      setToDefault();
+    }
+  }
+
+  Flags |= ChangedFlag;
+
+  return *this;
+}
+
+
 bool Parameter::read( const Str &s, const string &assignment )
 {
   Warning = "";

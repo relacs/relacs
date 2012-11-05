@@ -91,7 +91,7 @@ public:
     /*! Create options from string \a opttxt.
         See load( const Str &opttxt, const string &separator ) for details. */
   Options( const Str &opttxt, const string &assignment=":=",
-	   const string &separator=";" );
+	   const string &separator=",;" );
     /*! Create options from strings \a sq.
         See load( const StrQueue &sq ) for details. */
   Options( const StrQueue &sq, const string &assignment=":=" );
@@ -1608,7 +1608,7 @@ public:
 	set to parameter1, parameter2, parameter3, ... 
 	and their values set to x, y, z, ..., respectively. */
   Options &load( const Str &opttxt, const string &assignment=":=",
-		 const string &separator=";" );
+		 const string &separator=",;", int *indent=0 );
     /*! Read from stream \a str and create new options, until end of file
         or a line beginning with \a stop is reached. 
 	If \a stop equals the \a StopEmpty string,

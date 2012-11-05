@@ -926,6 +926,10 @@ public:
         The warning message is set if \a s is invalid.
         The changedFlag() is set. */
   Parameter &load( Str s, const string &assignment=":=" );
+    /*! Load parameter from string \a name and \a value.
+        The warning message is set if \a name or \a value are invalid.
+        The changedFlag() is set. */
+  Parameter &loadNameValue( Str name, const string &value );
     /*! Load parameter from a line get from stream \a str using load(). */
   friend istream &operator>> ( istream &str, Parameter &p );
 

@@ -3233,7 +3233,7 @@ Options &Options::addSection( int level, const string &name, const string &type,
     so = so->Secs.back();
   }
   Options *o = new Options( name, type, flags, style );
-  o->setParentSection( this );
+  o->setParentSection( so );
   o->unsetNotify();
   so->Secs.push_back( o );
   AddOpts = o;
@@ -4128,7 +4128,7 @@ Options &Options::read( const string &opttxt, int flag,
     // mainly  needed for compatibility with the old style config files.
     //    return *retopt;
   }
-  if ( indent != 0 )
+  if ( indent != 0 && newindent >= 0 )
     *indent = newindent;
 
   // remove white space and curly braces:
@@ -4165,10 +4165,10 @@ Options &Options::read( const string &opttxt, int flag,
       if ( s[index] == '{' ) {
 	// subsection:
 	index = s.findFirstNot( Str::WhiteSpace, index+1 );
-	int r = s.findLastNot( Str::WhiteSpace, next<0?s.size()-1:next-1  );
+	int r = s.findLastNot( Str::WhiteSpace, next<0?s.size()-1:next-1 );
 	bool closing = false;
 	if ( r >= 0 && s[r] == '}' ) {
-	  r = s.findLastNot( Str::WhiteSpace, r-1  );
+	  r = s.findLastNot( Str::WhiteSpace, r-1 );
 	  closing = true;
 	}
 	if ( r > index ) {
@@ -4200,7 +4200,7 @@ Options &Options::read( const string &opttxt, int flag,
       else {
 	// value:
 	next = s.findSeparator( index, separator, "[\"" );
-	int r = s.findLastNot( Str::WhiteSpace, next<0?s.size()-1:next-1  );
+	int r = s.findLastNot( Str::WhiteSpace, next<0?s.size()-1:next-1 );
 	string value = s.mid( index, r );
 	// set value for Parameter:
 	string error = Warning;
@@ -4513,8 +4513,209 @@ Options &Options::readAppend( const StrQueue &sq,
 
 
 Options &Options::load( const Str &opttxt, const string &assignment,
-			const string &separator )
+			const string &separator, int *indent )
 {
+  Warning = "";
+  bool cn = CallNotify;
+  CallNotify = false;
+
+  Options *retopt = this;
+  Str s = opttxt;
+  int newindent = s.findFirstNot( " {" );
+  if ( indent != 0 && newindent >= 0 && newindent < *indent ) {
+    // end of section, keep searching the parent:
+    *indent = newindent;
+    Options *ps = parentSection();
+    if ( ps != 0 )
+      return ps->load( opttxt, assignment, separator, indent );
+    // if there is no parent section, we keep reading the current section
+    // mainly  needed for compatibility with the old style config files.
+    //    return *retopt;
+  }
+  int changeindent = 0;
+  if ( indent != 0 && newindent >= 0 ) {
+    changeindent = newindent - *indent;
+    *indent = newindent;
+  }
+
+  // remove white space and curly braces:
+  s.strip();
+  if ( ! s.empty() && s[0] == '{' ) {
+    s.preventFirst( '{' );
+    s.preventLast( '}' );
+    s.strip();
+  }
+  if ( s.empty() )
+    return *retopt;
+
+  // split up parameter list:
+  int index = 0;
+  int next = 0;
+  do {
+    // XXX keep care of leftover closing curly bracket here!
+    // extract name:
+    next = s.findSeparator( index, assignment, "\"" );
+    Str name = s.mid( index, next-1 );
+    name.strip( Str::WhiteSpace );
+    // go to value:
+    if ( next >= 0 )
+      index = s.findFirstNot( Str::WhiteSpace, next+1 );
+    else
+      index = -1;
+    if ( index >= 0 ) {
+      // end of value:
+      next = s.findSeparator( index, separator, "{[\"" );
+      if ( s[index] == '{' ) {
+	// subsection:
+	index = s.findFirstNot( Str::WhiteSpace, index+1 );
+	int r = s.findLastNot( Str::WhiteSpace, next<0?s.size()-1:next-1 );
+	bool closing = false;
+	if ( r >= 0 && s[r] == '}' ) {
+	  r = s.findLastNot( Str::WhiteSpace, r-1 );
+	  closing = true;
+	}
+	if ( r > index ) {
+	  // load section:
+	  string secstr = s.mid( index, r );
+	  Str type = "";
+	  int ri = name.find( '(' );
+	  if ( name.size() > 2 && name[name.size()-1] == ')' && ri > 0 ) {
+	    type = name.mid( ri+1, name.size()-2 );
+	    type.strip();
+	    name.erase( ri );
+	    name.strip();
+	  }
+	  int style = 0;
+	  if ( name.size() > 2 &&
+	       name[0] == '-' &&
+	       name[name.size()-1] == '-' ) {
+	    //	    style = XXX;
+	    name.strip( Str::WhiteSpace + '-' );
+	  }
+	  cerr << "X" << this->name() << " A SECTION NAME: " << name << " TYPE=" << type << '\n';
+	  if ( Name.empty() && Opt.empty() && Secs.empty() ) {
+	cerr << "X SET THIS SECTION\n";
+	    setName( name );
+	    setType( type );
+	    setStyle( style );
+	    load( secstr, assignment, separator );
+	  }
+	  else {
+	    /*
+	    if ( Secs.empty() ) {
+	cerr << "X DOWNGRADE THIS SECTION\n";
+	      // downgrade current options:
+	      Options *o = new Options( *this );
+	      o->setParentSection( this );
+	      o->unsetNotify();
+	      Secs.push_back( o );
+	      Opt.clear();
+	      setName( "" );
+	      setType( "" );
+	      setStyle( 0 );
+	    }
+	    */
+	cerr << "X ADD TO THIS SECTION\n";
+	    Options *o = new Options( name, type, 0, style );
+	    o->setParentSection( this );
+	    o->unsetNotify();
+	    Secs.push_back( o );
+	    AddOpts = o;
+	    string error = Warning;
+	    o->load( secstr, assignment, separator );
+	    Warning = error + Warning;
+	    if ( ! closing )
+	      retopt = o;
+	  }
+	}
+	else {
+	  // empty sections:
+	  break;
+	}
+      }
+      else {
+	// value:
+	next = s.findSeparator( index, separator, "[\"" );
+	int r = s.findLastNot( Str::WhiteSpace, next<0?s.size()-1:next-1 );
+	string value = s.mid( index, r );
+	// load new parameter:
+	Parameter np;
+	np.loadNameValue( name, value );
+	np.setParentSection( this );
+	Warning += np.warning();
+	Opt.push_back( np );
+      }
+      index = next<0 ? -1 : next+1;
+    }
+    else {
+      // empty last value, i.e. a section:
+      Str type = "";
+      int ri = name.find( '(' );
+      if ( name.size() > 2 && name[name.size()-1] == ')' && ri > 0 ) {
+	type = name.mid( ri+1, name.size()-2 );
+	type.strip();
+	name.erase( ri );
+	name.strip();
+      }
+      int style = 0;
+      if ( name.size() > 2 &&
+	   name[0] == '-' &&
+	   name[name.size()-1] == '-' ) {
+	//	    style = XXX;
+	name.strip( Str::WhiteSpace + '-' );
+      }
+      cerr << this->name() << " A SECTION NAME: " << name << " TYPE=" << type << '\n';
+      // this is a new section:
+      if ( Name.empty() && Opt.empty() && Secs.empty() ) {
+	cerr << "SET THIS SECTION\n";
+	setName( name );
+	setType( type );
+	setStyle( style );
+      }
+      else {
+	// XXX Need too keep track of the last sections indent!
+	if ( changeindent < 0 && Secs.empty() ) {
+	  // downgrade current options:
+	cerr << "DOWNGRADE THIS SECTION\n";
+	  Options *o = new Options( *this );
+	  o->setParentSection( this );
+	  o->unsetNotify();
+	  Secs.push_back( o );
+	  Opt.clear();
+	  setName( "" );
+	  setType( "" );
+	  setStyle( 0 );
+	}
+	cerr << "ADD TO THIS SECTION\n";
+	Options *o = new Options( name, type, 0, style );
+	o->setParentSection( this );
+	o->unsetNotify();
+	Secs.push_back( o );
+	AddOpts = o;
+	retopt = o;
+      }
+      break;
+    }
+  } while ( index >= 0 );
+
+#ifndef NDEBUG
+  if ( ! Warning.empty() )
+    cerr << "!warning in Options::read() -> " << Warning << '\n';
+#endif
+
+  // notify the change:
+  CallNotify = cn;
+  if ( CallNotify && ! Notified ) {
+    Notified = true;
+    notify();
+    Notified = false;
+  }
+
+  return *retopt;
+
+
+
+  /*
   Warning = "";
 
   string s = opttxt.stripped().preventLast( separator );
@@ -4537,6 +4738,7 @@ Options &Options::load( const Str &opttxt, const string &assignment,
 #endif
 
   return *this;
+  */
 }
 
 
@@ -4546,7 +4748,8 @@ istream &Options::load( istream &str, const string &assignment,
 {
   Warning = "";
   Str s = "";
-  Parameter np;
+  int indent = -1;
+  Options *copt = this;
   bool stopempty = ( stop == StrQueue::StopEmpty );
 
   // read first line:
@@ -4554,11 +4757,9 @@ istream &Options::load( istream &str, const string &assignment,
     s = line;
     // erase comments:
     s.stripComment( comment );
-    // create option:
-    np.load( s, assignment );
-    Warning += np.warning();
-    np.setParentSection( this );
-    Opt.push_back( np );
+    // load line:
+    copt = &copt->load( s, assignment, ",;", &indent );
+    Warning += copt->warning();
   }
  
   // get line:
@@ -4569,13 +4770,11 @@ istream &Options::load( istream &str, const string &assignment,
       break;
 
     // erase comments:
-    s.stripComment();
+    s.stripComment( comment );
 
-    // create option:
-    np.load( s, assignment );
-    Warning += np.warning();
-    np.setParentSection( this );
-    Opt.push_back( np );
+    // load line:
+    copt = &copt->load( s, assignment, ",;", &indent );
+    Warning += copt->warning();
   }
   
   // store last read line:
@@ -4589,13 +4788,12 @@ istream &Options::load( istream &str, const string &assignment,
 Options &Options::load( const StrQueue &sq, const string &assignment )
 {
   Warning = "";
+  int indent = -1;
+  Options *copt = this;
   for ( StrQueue::const_iterator i = sq.begin(); i != sq.end(); ++i ) {
-    // create option:
-    Parameter np;
-    np.load( *i, assignment );
-    Warning += np.warning();
-    np.setParentSection( this );
-    Opt.push_back( np );
+    // load string:
+    copt = &copt->load( *i, assignment, ",;", &indent );
+    Warning += copt->warning();
   }
 #ifndef NDEBUG
   if ( ! Warning.empty() ) {

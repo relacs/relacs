@@ -142,19 +142,34 @@ int main( int argc, char *argv[] )
   opt.save( cout, "", 0, true );
   cout << '\n';
 
-  return 0;
-
   // load options from file:
   cout << "load options from file:\n";
-  opt2.clear();
+  Options opt3;
   {
     ifstream sf( "tmp.dat" );
-    opt2.load( sf );
+    opt3.load( sf );
   }
-  opt2.save( cout, "", 0, true );
+  opt3.save( cout, "", 0, true );
+  cout << '\n';
+
+  // load options from file without indentation:
+  cout << "load options from file without indentation:\n";
+  Options opt4;
+  {
+    ifstream sf( "read.dat" );
+    opt4.load( sf );
+  }
+  opt4.save( cout, "", 0, true );
   cout << '\n';
 
   return 0;
+
+  // load options from string:
+  cout << "load options from string:\n";
+  Options opt5;
+  opt5.load( os );
+  opt5.save( cout, "", 0, true );
+  cout << '\n';
 
   cout << "enter some options (ident1=value1; ident2=value2; ...): ";
   getline( cin, s );
