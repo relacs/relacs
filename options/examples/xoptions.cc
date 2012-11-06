@@ -147,6 +147,9 @@ int main( int argc, char *argv[] )
   Options opt3;
   {
     ifstream sf( "tmp.dat" );
+    string s;
+    //    getline( sf, s );
+    //    getline( sf, s );
     opt3.load( sf );
   }
   opt3.save( cout, "", 0, true );
@@ -157,12 +160,13 @@ int main( int argc, char *argv[] )
   Options opt4;
   {
     ifstream sf( "read.dat" );
+    string s;
+    //    getline( sf, s );
+    //    getline( sf, s );
     opt4.load( sf );
   }
   opt4.save( cout, "", 0, true );
   cout << '\n';
-
-  return 0;
 
   // load options from string:
   cout << "load options from string:\n";
@@ -170,6 +174,8 @@ int main( int argc, char *argv[] )
   opt5.load( os );
   opt5.save( cout, "", 0, true );
   cout << '\n';
+
+  return 0;
 
   cout << "enter some options (ident1=value1; ident2=value2; ...): ";
   getline( cin, s );

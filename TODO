@@ -4,7 +4,6 @@ Options:
 - Check read() etc. how Parameter are assigned. Is the whole section path is used to identify the Parameter?
 - change save() functions to take flags that specify what to put out
 - Options/Parameter::save() quote nasty names and types/requests!
-- Options::load() keep track of indentation levels
 - Check Parameter::load() functions and constructors: do we still need load( s, assignment ) ?
 - Check and refine Parameter::load() and read() functions
 - Options::load() should set TabStyle for section names

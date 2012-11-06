@@ -1607,8 +1607,9 @@ public:
         New options are created with the names and request strings
 	set to parameter1, parameter2, parameter3, ... 
 	and their values set to x, y, z, ..., respectively. */
-  Options &load( const Str &opttxt, const string &assignment=":=",
-		 const string &separator=",;", int *indent=0 );
+  Options &load( const Str &opttxt,
+		 const string &assignment=":=", const string &separator=",;",
+		 int *indent=0, int *indentspacing=0, int *level=0 );
     /*! Read from stream \a str and create new options, until end of file
         or a line beginning with \a stop is reached. 
 	If \a stop equals the \a StopEmpty string,

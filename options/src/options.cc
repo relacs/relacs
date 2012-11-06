@@ -4115,10 +4115,14 @@ Options &Options::read( const string &opttxt, int flag,
   bool cn = CallNotify;
   CallNotify = false;
 
+  int myindent = -1;
+  if ( indent == 0 )
+    indent = &myindent;
+
   Options *retopt = this;
   Str s = opttxt;
   int newindent = s.findFirstNot( " {" );
-  if ( indent != 0 && newindent >= 0 && newindent < *indent ) {
+  if ( newindent >= 0 && newindent < *indent ) {
     // end of section, keep searching the parent:
     *indent = newindent;
     Options *ps = parentSection();
@@ -4128,7 +4132,7 @@ Options &Options::read( const string &opttxt, int flag,
     // mainly  needed for compatibility with the old style config files.
     //    return *retopt;
   }
-  if ( indent != 0 && newindent >= 0 )
+  if ( newindent >= 0 )
     *indent = newindent;
 
   // remove white space and curly braces:
@@ -4512,8 +4516,9 @@ Options &Options::readAppend( const StrQueue &sq,
 }
 
 
-Options &Options::load( const Str &opttxt, const string &assignment,
-			const string &separator, int *indent )
+Options &Options::load( const Str &opttxt,
+			const string &assignment, const string &separator,
+			int *indent, int *indentspacing, int *level )
 {
   Warning = "";
   bool cn = CallNotify;
@@ -4522,21 +4527,6 @@ Options &Options::load( const Str &opttxt, const string &assignment,
   Options *retopt = this;
   Str s = opttxt;
   int newindent = s.findFirstNot( " {" );
-  if ( indent != 0 && newindent >= 0 && newindent < *indent ) {
-    // end of section, keep searching the parent:
-    *indent = newindent;
-    Options *ps = parentSection();
-    if ( ps != 0 )
-      return ps->load( opttxt, assignment, separator, indent );
-    // if there is no parent section, we keep reading the current section
-    // mainly  needed for compatibility with the old style config files.
-    //    return *retopt;
-  }
-  int changeindent = 0;
-  if ( indent != 0 && newindent >= 0 ) {
-    changeindent = newindent - *indent;
-    *indent = newindent;
-  }
 
   // remove white space and curly braces:
   s.strip();
@@ -4547,6 +4537,17 @@ Options &Options::load( const Str &opttxt, const string &assignment,
   }
   if ( s.empty() )
     return *retopt;
+
+  int myindent = -1;
+  if ( indent == 0 )
+    indent = &myindent;
+  int myindentspacing = 0;
+  if ( indentspacing == 0 )
+    indent = &myindentspacing;
+  int mylevel = -1;
+  if ( level == 0 )
+    level = &mylevel;
+  *level++;
 
   // split up parameter list:
   int index = 0;
@@ -4592,18 +4593,15 @@ Options &Options::load( const Str &opttxt, const string &assignment,
 	    //	    style = XXX;
 	    name.strip( Str::WhiteSpace + '-' );
 	  }
-	  cerr << "X" << this->name() << " A SECTION NAME: " << name << " TYPE=" << type << '\n';
 	  if ( Name.empty() && Opt.empty() && Secs.empty() ) {
-	cerr << "X SET THIS SECTION\n";
 	    setName( name );
 	    setType( type );
 	    setStyle( style );
-	    load( secstr, assignment, separator );
+	    load( secstr, assignment, separator, indent, indentspacing, level );
 	  }
 	  else {
-	    /*
-	    if ( Secs.empty() ) {
-	cerr << "X DOWNGRADE THIS SECTION\n";
+	    if ( *level == 0 && Secs.empty() &&
+		 parentSection() == 0 && ! Name.empty() ) {
 	      // downgrade current options:
 	      Options *o = new Options( *this );
 	      o->setParentSection( this );
@@ -4614,15 +4612,13 @@ Options &Options::load( const Str &opttxt, const string &assignment,
 	      setType( "" );
 	      setStyle( 0 );
 	    }
-	    */
-	cerr << "X ADD TO THIS SECTION\n";
 	    Options *o = new Options( name, type, 0, style );
 	    o->setParentSection( this );
 	    o->unsetNotify();
 	    Secs.push_back( o );
 	    AddOpts = o;
 	    string error = Warning;
-	    o->load( secstr, assignment, separator );
+	    o->load( secstr, assignment, separator, indent, indentspacing, level );
 	    Warning = error + Warning;
 	    if ( ! closing )
 	      retopt = o;
@@ -4649,6 +4645,19 @@ Options &Options::load( const Str &opttxt, const string &assignment,
     }
     else {
       // empty last value, i.e. a section:
+      int changeindent = *indentspacing > 0 ? *indentspacing : 1;
+      bool firstsection = false;
+      if ( newindent >= 0 ) {
+	if ( *indent >= 0 ) {
+	  changeindent = newindent - *indent;
+	  if ( *indentspacing == 0 )
+	    *indentspacing = changeindent;
+	}
+	else
+	  firstsection = true;
+	*indent = newindent;
+      }
+      // extract name and type:
       Str type = "";
       int ri = name.find( '(' );
       if ( name.size() > 2 && name[name.size()-1] == ')' && ri > 0 ) {
@@ -4664,19 +4673,17 @@ Options &Options::load( const Str &opttxt, const string &assignment,
 	//	    style = XXX;
 	name.strip( Str::WhiteSpace + '-' );
       }
-      cerr << this->name() << " A SECTION NAME: " << name << " TYPE=" << type << '\n';
       // this is a new section:
-      if ( Name.empty() && Opt.empty() && Secs.empty() ) {
-	cerr << "SET THIS SECTION\n";
+      if ( firstsection && Name.empty() && Opt.empty() && Secs.empty() ) {
+	// this is the name of the current options:
 	setName( name );
 	setType( type );
 	setStyle( style );
       }
       else {
-	// XXX Need too keep track of the last sections indent!
-	if ( changeindent < 0 && Secs.empty() ) {
+	if ( changeindent == 0 && Secs.empty() &&
+	     parentSection() == 0 && ! Name.empty() ) {
 	  // downgrade current options:
-	cerr << "DOWNGRADE THIS SECTION\n";
 	  Options *o = new Options( *this );
 	  o->setParentSection( this );
 	  o->unsetNotify();
@@ -4685,14 +4692,35 @@ Options &Options::load( const Str &opttxt, const string &assignment,
 	  setName( "" );
 	  setType( "" );
 	  setStyle( 0 );
+	  changeindent = 1;
 	}
-	cerr << "ADD TO THIS SECTION\n";
-	Options *o = new Options( name, type, 0, style );
-	o->setParentSection( this );
-	o->unsetNotify();
-	Secs.push_back( o );
-	AddOpts = o;
-	retopt = o;
+	if ( changeindent > 0 ) {
+	  Options *o = new Options( name, type, 0, style );
+	  o->setParentSection( this );
+	  o->unsetNotify();
+	  Secs.push_back( o );
+	  AddOpts = o;
+	  retopt = o;
+	}
+	else {
+	  int is = 4;
+	  if ( *indentspacing > 0 )
+	    is = *indentspacing;
+	  Options *pps = this;
+	  Options *ps = parentSection();
+	  for ( int k=0; k < -changeindent/is && ps != 0; k++ ) {
+	    pps = ps;
+	    ps = ps->parentSection();
+	  }
+	  if ( ps == 0 )
+	    ps = pps;
+	  Options *o = new Options( name, type, 0, style );
+	  o->setParentSection( ps );
+	  o->unsetNotify();
+	  ps->Secs.push_back( o );
+	  AddOpts = o;
+	  retopt = o;
+	}
       }
       break;
     }
@@ -4710,6 +4738,8 @@ Options &Options::load( const Str &opttxt, const string &assignment,
     notify();
     Notified = false;
   }
+
+  *level--;
 
   return *retopt;
 
@@ -4749,6 +4779,8 @@ istream &Options::load( istream &str, const string &assignment,
   Warning = "";
   Str s = "";
   int indent = -1;
+  int indentspacing = 0;
+  int level = -1;
   Options *copt = this;
   bool stopempty = ( stop == StrQueue::StopEmpty );
 
@@ -4758,7 +4790,7 @@ istream &Options::load( istream &str, const string &assignment,
     // erase comments:
     s.stripComment( comment );
     // load line:
-    copt = &copt->load( s, assignment, ",;", &indent );
+    copt = &copt->load( s, assignment, ",;", &indent, &indentspacing, &level );
     Warning += copt->warning();
   }
  
@@ -4773,7 +4805,7 @@ istream &Options::load( istream &str, const string &assignment,
     s.stripComment( comment );
 
     // load line:
-    copt = &copt->load( s, assignment, ",;", &indent );
+    copt = &copt->load( s, assignment, ",;", &indent, &indentspacing, &level );
     Warning += copt->warning();
   }
   
@@ -4789,10 +4821,12 @@ Options &Options::load( const StrQueue &sq, const string &assignment )
 {
   Warning = "";
   int indent = -1;
+  int indentspacing = 0;
+  int level = -1;
   Options *copt = this;
   for ( StrQueue::const_iterator i = sq.begin(); i != sq.end(); ++i ) {
     // load string:
-    copt = &copt->load( *i, assignment, ",;", &indent );
+    copt = &copt->load( *i, assignment, ",;", &indent, &indentspacing, &level );
     Warning += copt->warning();
   }
 #ifndef NDEBUG
