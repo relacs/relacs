@@ -4543,11 +4543,11 @@ Options &Options::load( const Str &opttxt,
     indent = &myindent;
   int myindentspacing = 0;
   if ( indentspacing == 0 )
-    indent = &myindentspacing;
+    indentspacing = &myindentspacing;
   int mylevel = -1;
   if ( level == 0 )
     level = &mylevel;
-  *level++;
+  (*level)++;
 
   // split up parameter list:
   int index = 0;
@@ -4739,7 +4739,7 @@ Options &Options::load( const Str &opttxt,
     Notified = false;
   }
 
-  *level--;
+  (*level)--;
 
   return *retopt;
 

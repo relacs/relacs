@@ -97,6 +97,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
     Mode( mode ),
     SS( this ),
     MTDT( this ),
+    CW( 0 ),
     SignalTime( -1.0 ),
     CurrentTime( 0.0 ),
     ReadLoop( this ),
@@ -1235,6 +1236,8 @@ int RELACSWidget::stopWrite( void )
 
 void RELACSWidget::notifyStimulusData( void )
 {
+  if ( CW == 0 )
+    return;
   if ( MD != 0 )
     MD->notifyStimulusData();
   FD->notifyStimulusData();
@@ -1245,6 +1248,8 @@ void RELACSWidget::notifyStimulusData( void )
 
 void RELACSWidget::notifyMetaData( const string &section )
 {
+  if ( CW == 0 )
+    return;
   if ( MD != 0 )
     MD->notifyMetaData( section );
   FD->notifyMetaData( section );
@@ -1910,6 +1915,12 @@ void RELACSWidget::startFirstSimulation( void )
   SignalTime = -1.0;
   CurrentTime = 0.0;
   setupInTraces();
+  if ( IL.empty() ) {
+    printlog( "! error: No valid input traces configured!" );
+    MessageBox::error( "RELACS Error !", "No valid input traces configured!", this );
+    startIdle();
+    return;
+  }
   setupOutTraces();
 
   // events:
