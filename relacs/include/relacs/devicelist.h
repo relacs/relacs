@@ -232,36 +232,39 @@ int DeviceList<T,PluginID>::create( DD &devices, int m, const string &dflt )
 {
   Warnings = "";
 
-  // get device entries:
-  deque< Options::const_iterator > devicesecs;
+  int n = 0;
   int failed = 0;
+  bool taken = false;
   for ( int j=1; failed<=5; j++ ) {
     // check for device entry in options:
-    Options::const_iterator dp = find( "Device" + Str( j, 0 ) );
-    if ( dp != Options::end() ) {
-      failed = 0;
-      devicesecs.push_back( dp );
-    }
-    else
+    Options *deviceopts = 0;
+    if ( ! taken && failed == 5 ) {
+      // take the options list as a single device:
+      deviceopts = this;
       failed++;
-  }
-  devicesecs.push_back( Options::end() );
-
-  int n = 0;
-  for ( unsigned int j=0; j<devicesecs.size()-1; j++ ) {
-
-    // get section of options:
-    Options deviceopts;
-    for ( Options::const_iterator dp=devicesecs[j];
-	  dp !=devicesecs[j+1];
-	  ++dp ) {
-      deviceopts.add( *dp );
+      if ( deviceopts->empty() )
+	continue;
+    }
+    else {
+      string search = "Device" + Str( j, 0 );
+      if ( Options::name() == search )
+	deviceopts = this;
+      else {
+	Options::section_iterator dp = findSection( search );
+	if ( dp == Options::sectionsEnd() ) {
+	  failed++;
+	  continue;
+	}
+	deviceopts = *dp;
+      }
+      failed = 0;
+      taken = true;
     }
 
     // get plugin:
     string ms = "";
-    if ( m >= 0 && m < deviceopts.size( "plugin" ) )
-      ms = deviceopts.text( "plugin", m );
+    if ( m >= 0 && m < deviceopts->size( "plugin" ) )
+      ms = deviceopts->text( "plugin", m );
     if ( ms.empty() )
       ms = dflt;
     if ( ms == "0" )
@@ -271,7 +274,7 @@ int DeviceList<T,PluginID>::create( DD &devices, int m, const string &dflt )
       k = Plugins::index( ms, PluginID );
 
     // check plugin:
-    string ident = deviceopts.text( "ident" );
+    string ident = deviceopts->text( "ident" );
     if ( ident.empty() ) {
       Warnings += "You need to provide an identifier for the <b>" + ms
 	+ "</b> plugin !\n";
@@ -311,7 +314,7 @@ int DeviceList<T,PluginID>::create( DD &devices, int m, const string &dflt )
 	    devices.swapBack( dv );
 	}
 	// open device:
-	Str ds = deviceopts.text( "device" );
+	Str ds = deviceopts->text( "device" );
 	/*
 	for ( int i = 0; i<devices.size(); i++ ) {
 	  if ( devices[i].deviceIdent() == ds ) {
@@ -323,12 +326,12 @@ int DeviceList<T,PluginID>::create( DD &devices, int m, const string &dflt )
 	*/
 	Device *d = devices.device( ds );
 	if ( d != 0 ) {
-	  dv->open( *d, deviceopts );
+	  dv->open( *d, *deviceopts );
 	  if ( dv->isOpen() )
 	    ds = "";
 	}
 	if ( ! ds.empty() )
-	  dv->open( ds, deviceopts );
+	  dv->open( ds, *deviceopts );
 	if ( dv->isOpen() )
 	  n++;
 	else {

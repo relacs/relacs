@@ -597,7 +597,7 @@ int RELACSWidget::openHardware( int n, int errorlevel )
 
 int RELACSWidget::setupHardware( int n )
 {
-  openHardware( n, 0 );
+  // XXX WHY DO WE NEED THIS TWICE???????  openHardware( n, 0 );
   int r = openHardware( n, 1 );
 
   // setup Acquire:
