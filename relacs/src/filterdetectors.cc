@@ -87,241 +87,259 @@ void FilterDetectors::readConfig( StrQueue &sq )
 string FilterDetectors::createFilters( void )
 {
   string warning="";
-  int n=10;
-  for ( int k=0; k<n; k++ ) {
 
-    // another filter?
-    string label = "Filter" + Str( k );
-    if ( Options::exist( label ) ) {
-      n = k+10;
-      label = label + '>';
-
-      // create filter instance:
-      string ident = text( label + "name" );
-      string filter = text( label + "filter" );
-      Filter *fp = (Filter*)( Plugins::create( filter,
-					       RELACSPlugin::FilterId ) );
-      if ( fp == 0 ) {
-	warning += "<b>" + ident + "</b>: Plugin \"<b>" + filter + "</b>\" not found!<br>\n";
+  int n = 5;
+  bool taken = false;
+  for ( int k=0; k<=n; k++ ) {
+    // check for filter entry in options:
+    Options *filteropts = 0;
+    if ( ! taken && k == n ) {
+      // take the options list as a single filter:
+      filteropts = this;
+      if ( filteropts->empty() )
 	continue;
+    }
+    else {
+      string search = "Filter" + Str( k );
+      if ( Options::name() == search )
+	filteropts = this;
+      else {
+	Options::section_iterator dp = findSection( search );
+	if ( dp == Options::sectionsEnd() )
+	  continue;
+	filteropts = *dp;
+      }
+      n = k+5;
+      taken = true;
+    }
+
+    // create filter instance:
+    string ident = filteropts->text( "name" );
+    string filter = filteropts->text( "filter" );
+    Filter *fp = (Filter*)( Plugins::create( filter,
+					     RELACSPlugin::FilterId ) );
+    if ( fp == 0 ) {
+      warning += "<b>" + ident + "</b>: Plugin \"<b>" + filter + "</b>\" not found!<br>\n";
+      continue;
+    }
+
+    fp->setRELACSWidget( RW );
+    string fs = ( fp->type() & Filter::EventDetector ) ? "detector" : "filter";
+
+    // filter parameter:
+    int mode = 0;
+    if ( filteropts->boolean( "save", false ) )
+      mode |= SaveFiles::SaveTrace;
+    if ( filteropts->boolean( "savesize", false ) )
+      mode |= SaveFiles::SaveSize;
+    if ( filteropts->boolean( "savewidth", false ) )
+      mode |= SaveFiles::SaveWidth;
+    if ( filteropts->boolean( "savemeanrate", false ) )
+      mode |= SaveFiles::SaveMeanRate;
+    if ( filteropts->boolean( "savemeansize", false ) )
+      mode |= SaveFiles::SaveMeanSize;
+    if ( filteropts->boolean( "savemeanwidth", false ) )
+      mode |= SaveFiles::SaveMeanWidth;
+    if ( filteropts->boolean( "savemeanquality", false ) )
+      mode |= SaveFiles::SaveMeanQuality;
+    if ( filteropts->boolean( "plot", true ) )
+      mode |= PlotTraceMode;
+    vector< string > intrace;
+    Options::const_iterator ip = filteropts->find( "inputtrace" );
+    if ( ip != filteropts->end() ) {
+      intrace.resize( (*ip).size() );
+      for ( unsigned int j=0; j<intrace.size(); j++ ) {
+	intrace[j] = (*ip).text( j );
+      }
+    }
+    else {
+      warning += fs + " <b>" + ident + "</b>: no inputtrace specified!<br>\n";
+      continue;
+    }
+
+    vector< string > othertrace;
+    Options::const_iterator op = filteropts->find( "othertrace" );
+    if ( op != filteropts->end() ) {
+      othertrace.resize( (*op).size() );
+      for ( unsigned int j=0; j<othertrace.size(); j++ )
+	othertrace[j] = (*op).text( j );
+    }
+    int buffersize = filteropts->integer( "buffersize", 0, 1000 );
+    bool storesize = filteropts->boolean( "storesize", false );
+    bool storewidth = filteropts->boolean( "storewidth", false );
+
+    // check filter implementation:
+    bool failed = false;
+    {
+      InList indata;
+      indata.resize( 2, 10, 0.001 );
+      InList outdata;
+      outdata.resize( 2, 10, 0.001 );
+      EventList inevents( 2, 10 );
+      EventList outevents( 2, 10 );
+      EventList otherevents( 2, 10 );
+      EventData stimulusevents( 2, 10 );
+      if ( ( fp->type() & Filter::SingleAnalogFilter ) != Filter::SingleAnalogFilter ) {
+	if ( fp->init( indata[0], outdata[0] ) != INT_MIN ) {
+	  warning += fs + " <b>" + ident + "</b>: init( InData, InData ) function should not be implemented!<br>\n";
+	  failed = true;
+	}
+	if ( fp->adjust( indata[0], outdata[0] ) != INT_MIN ) {
+	  warning += fs + " <b>" + ident + "</b>: adjust( InData, InData ) function should not be implemented!<br>\n";
+	  failed = true;
+	}
+	if ( fp->filter( indata[0], outdata[0] ) != INT_MIN ) {
+	  warning += fs + " <b>" + ident + "</b>: filter( InData, InData ) function should not be implemented!<br>\n";
+	  failed = true;
+	}
+      }
+      if ( ( fp->type() & Filter::MultipleAnalogFilter ) != Filter::MultipleAnalogFilter ) {
+	if ( fp->init( indata, outdata ) != INT_MIN ) {
+	  warning += fs + " <b>" + ident + "</b>: init( InList, InList ) function should not be implemented!<br>\n";
+	  failed = true;
+	}
+	if ( fp->adjust( indata, outdata ) != INT_MIN ) {
+	  warning += fs + " <b>" + ident + "</b>: adjust( InList, InList ) function should not be implemented!<br>\n";
+	  failed = true;
+	}
+	if ( fp->filter( indata, outdata ) != INT_MIN ) {
+	  warning += fs + " <b>" + ident + "</b>: filter( InList, InList ) function should not be implemented!<br>\n";
+	  failed = true;
+	}
+      }
+      if ( ( fp->type() & Filter::SingleEventFilter ) != Filter::SingleEventFilter ) {
+	if ( fp->init( inevents[0], outdata[0] ) != INT_MIN ) {
+	  warning += fs + " <b>" + ident + "</b>: init( EventData, InData ) function should not be implemented!<br>\n";
+	  failed = true;
+	}
+	if ( fp->adjust( inevents[0], outdata[0] ) != INT_MIN ) {
+	  warning += fs + " <b>" + ident + "</b>: adjust( EventData ) function should not be implemented!<br>\n";
+	  failed = true;
+	}
+	if ( fp->filter( inevents[0], outdata[0] ) != INT_MIN ) {
+	  warning += fs + " <b>" + ident + "</b>: filter( EventData, InData ) function should not be implemented!<br>\n";
+	  failed = true;
+	}
+      }
+      if ( ( fp->type() & Filter::MultipleEventFilter ) != Filter::MultipleEventFilter ) {
+	if ( fp->init( inevents, outdata ) != INT_MIN ) {
+	  warning += fs + " <b>" + ident + "</b>: init( EventList, InList ) function should not be implemented!<br>\n";
+	  failed = true;
+	}
+	if ( fp->adjust( inevents, outdata ) != INT_MIN ) {
+	  warning += fs + " <b>" + ident + "</b>: adjust( EventList, InList ) function should not be implemented!<br>\n";
+	  failed = true;
+	}
+	if ( fp->filter( inevents, outdata ) != INT_MIN ) {
+	  warning += fs + " <b>" + ident + "</b>: filter( EventList, InList ) function should not be implemented!<br>\n";
+	  failed = true;
+	}
       }
 
-      fp->setRELACSWidget( RW );
-      string fs = ( fp->type() & Filter::EventDetector ) ? "detector" : "filter";
-
-      // filter parameter:
-      int mode = 0;
-      if ( boolean( label + "save", false ) )
-	mode |= SaveFiles::SaveTrace;
-      if ( boolean( label + "savesize", false ) )
-	mode |= SaveFiles::SaveSize;
-      if ( boolean( label + "savewidth", false ) )
-	mode |= SaveFiles::SaveWidth;
-      if ( boolean( label + "savemeanrate", false ) )
-	mode |= SaveFiles::SaveMeanRate;
-      if ( boolean( label + "savemeansize", false ) )
-	mode |= SaveFiles::SaveMeanSize;
-      if ( boolean( label + "savemeanwidth", false ) )
-	mode |= SaveFiles::SaveMeanWidth;
-      if ( boolean( label + "savemeanquality", false ) )
-	mode |= SaveFiles::SaveMeanQuality;
-      if ( boolean( label + "plot", true ) )
-	mode |= PlotTraceMode;
-      vector< string > intrace;
-      Options::const_iterator ip = Options::find( label + "inputtrace" );
-      if ( ip != Options::end() ) {
-	intrace.resize( (*ip).size() );
-	for ( unsigned int j=0; j<intrace.size(); j++ ) {
-	  intrace[j] = (*ip).text( j );
+      if ( ( fp->type() & Filter::SingleAnalogDetector ) != Filter::SingleAnalogDetector ) {
+	if ( fp->init( indata[0], outevents[0], otherevents, stimulusevents ) != INT_MIN ) {
+	  warning += fs + " <b>" + ident + "</b>: init( InData, EventData ) function should not be implemented!<br>\n";
+	  failed = true;
+	}
+	if ( fp->adjust( indata[0] ) != INT_MIN ) {
+	  warning += fs + " <b>" + ident + "</b>: init( InData ) function should not be implemented!<br>\n";
+	  failed = true;
+	}
+	if ( fp->detect( indata[0], outevents[0], otherevents, stimulusevents ) != INT_MIN ) {
+	  warning += fs + " <b>" + ident + "</b>: detect( InData, EventData ) function should not be implemented!<br>\n";
+	  failed = true;
 	}
       }
-      else
-	warning += fs + " <b>" + ident + "</b>: no inputtrace specified!<br>\n";
-
-      vector< string > othertrace;
-      Options::const_iterator op = Options::find( label + "othertrace" );
-      if ( op != Options::end() ) {
-	othertrace.resize( (*op).size() );
-	for ( unsigned int j=0; j<othertrace.size(); j++ )
-	  othertrace[j] = (*op).text( j );
+      if ( ( fp->type() & Filter::MultipleAnalogDetector ) != Filter::MultipleAnalogDetector ) {
+	if ( fp->init( indata, outevents, otherevents, stimulusevents ) != INT_MIN ) {
+	  warning += fs + " <b>" + ident + "</b>: init( InList, EventList ) function should not be implemented!<br>\n";
+	  failed = true;
+	}
+	if ( fp->adjust( indata ) != INT_MIN ) {
+	  warning += fs + " <b>" + ident + "</b>: adjust( InList ) function should not be implemented!<br>\n";
+	  failed = true;
+	}
+	if ( fp->detect( indata, outevents, otherevents, stimulusevents ) != INT_MIN ) {
+	  warning += fs + " <b>" + ident + "</b>: detect( InList, EventList ) function should not be implemented!<br>\n";
+	  failed = true;
+	}
       }
-      int buffersize = integer( label + "buffersize", 0, 1000 );
-      bool storesize = boolean( label + "storesize", false );
-      bool storewidth = boolean( label + "storewidth", false );
+      if ( ( fp->type() & Filter::SingleEventDetector ) != Filter::SingleEventDetector ) {
+	if ( fp->init( inevents[0], outevents[0], otherevents, stimulusevents ) != INT_MIN ) {
+	  warning += fs + " <b>" + ident + "</b>: init( EventData, EventData ) function should not be implemented!<br>\n";
+	  failed = true;
+	}
+	if ( fp->adjust( inevents[0] ) != INT_MIN ) {
+	  warning += fs + " <b>" + ident + "</b>: adjust( EventData ) function should not be implemented!<br>\n";
+	  failed = true;
+	}
+	if ( fp->detect( inevents[0], outevents[0], otherevents, stimulusevents ) != INT_MIN ) {
+	  warning += fs + " <b>" + ident + "</b>: detect( EventData, EventData ) function should not be implemented!<br>\n";
+	  failed = true;
+	}
+      }
+      if ( ( fp->type() & Filter::MultipleEventDetector ) != Filter::MultipleEventDetector ) {
+	if ( fp->init( inevents, outevents, otherevents, stimulusevents ) != INT_MIN ) {
+	  warning += fs + " <b>" + ident + "</b>: init( EventList, EventList ) function should not be implemented!<br>\n";
+	  failed = true;
+	}
+	if ( fp->adjust( inevents ) != INT_MIN ) {
+	  warning += fs + " <b>" + ident + "</b>: adjust( EventList ) function should not be implemented!<br>\n";
+	  failed = true;
+	}
+	if ( fp->detect( inevents, outevents, otherevents, stimulusevents ) != INT_MIN ) {
+	  warning += fs + " <b>" + ident + "</b>: detect( EventList, EventList ) function should not be implemented!<br>\n";
+	  failed = true;
+	}
+      }
 
-      // check filter implementation:
-      bool failed = false;
-      {
-	InList indata;
-	indata.resize( 2, 10, 0.001 );
-	InList outdata;
-	outdata.resize( 2, 10, 0.001 );
-	EventList inevents( 2, 10 );
-	EventList outevents( 2, 10 );
-	EventList otherevents( 2, 10 );
-	EventData stimulusevents( 2, 10 );
-	if ( ( fp->type() & Filter::SingleAnalogFilter ) != Filter::SingleAnalogFilter ) {
-	  if ( fp->init( indata[0], outdata[0] ) != INT_MIN ) {
-	    warning += fs + " <b>" + ident + "</b>: init( InData, InData ) function should not be implemented!<br>\n";
+      if ( ( fp->type() & Filter::MultipleTraces ) > 0 ) {
+	if ( ( fp->type() & Filter::EventInput ) > 0 ) {
+	  if ( fp->autoConfigure( indata[0], 0.0, 0.1 ) != INT_MIN ) {
+	    warning += fs + " <b>" + ident + "</b>: indata( InData, 0.0, 0.1 ) function should not be implemented!<br>\n";
 	    failed = true;
-	  }
-	  if ( fp->adjust( indata[0], outdata[0] ) != INT_MIN ) {
-	    warning += fs + " <b>" + ident + "</b>: adjust( InData, InData ) function should not be implemented!<br>\n";
-	    failed = true;
-	  }
-	  if ( fp->filter( indata[0], outdata[0] ) != INT_MIN ) {
-	    warning += fs + " <b>" + ident + "</b>: filter( InData, InData ) function should not be implemented!<br>\n";
-	    failed = true;
-	  }
-	}
-	if ( ( fp->type() & Filter::MultipleAnalogFilter ) != Filter::MultipleAnalogFilter ) {
-	  if ( fp->init( indata, outdata ) != INT_MIN ) {
-	    warning += fs + " <b>" + ident + "</b>: init( InList, InList ) function should not be implemented!<br>\n";
-	    failed = true;
-	  }
-	  if ( fp->adjust( indata, outdata ) != INT_MIN ) {
-	    warning += fs + " <b>" + ident + "</b>: adjust( InList, InList ) function should not be implemented!<br>\n";
-	    failed = true;
-	  }
-	  if ( fp->filter( indata, outdata ) != INT_MIN ) {
-	    warning += fs + " <b>" + ident + "</b>: filter( InList, InList ) function should not be implemented!<br>\n";
-	    failed = true;
-	  }
-	}
-	if ( ( fp->type() & Filter::SingleEventFilter ) != Filter::SingleEventFilter ) {
-	  if ( fp->init( inevents[0], outdata[0] ) != INT_MIN ) {
-	    warning += fs + " <b>" + ident + "</b>: init( EventData, InData ) function should not be implemented!<br>\n";
-	    failed = true;
-	  }
-	  if ( fp->adjust( inevents[0], outdata[0] ) != INT_MIN ) {
-	    warning += fs + " <b>" + ident + "</b>: adjust( EventData ) function should not be implemented!<br>\n";
-	    failed = true;
-	  }
-	  if ( fp->filter( inevents[0], outdata[0] ) != INT_MIN ) {
-	    warning += fs + " <b>" + ident + "</b>: filter( EventData, InData ) function should not be implemented!<br>\n";
-	    failed = true;
-	  }
-	}
-	if ( ( fp->type() & Filter::MultipleEventFilter ) != Filter::MultipleEventFilter ) {
-	  if ( fp->init( inevents, outdata ) != INT_MIN ) {
-	    warning += fs + " <b>" + ident + "</b>: init( EventList, InList ) function should not be implemented!<br>\n";
-	    failed = true;
-	  }
-	  if ( fp->adjust( inevents, outdata ) != INT_MIN ) {
-	    warning += fs + " <b>" + ident + "</b>: adjust( EventList, InList ) function should not be implemented!<br>\n";
-	    failed = true;
-	  }
-	  if ( fp->filter( inevents, outdata ) != INT_MIN ) {
-	    warning += fs + " <b>" + ident + "</b>: filter( EventList, InList ) function should not be implemented!<br>\n";
-	    failed = true;
-	  }
-	}
-
-	if ( ( fp->type() & Filter::SingleAnalogDetector ) != Filter::SingleAnalogDetector ) {
-	  if ( fp->init( indata[0], outevents[0], otherevents, stimulusevents ) != INT_MIN ) {
-	    warning += fs + " <b>" + ident + "</b>: init( InData, EventData ) function should not be implemented!<br>\n";
-	    failed = true;
-	  }
-	  if ( fp->adjust( indata[0] ) != INT_MIN ) {
-	    warning += fs + " <b>" + ident + "</b>: init( InData ) function should not be implemented!<br>\n";
-	    failed = true;
-	  }
-	  if ( fp->detect( indata[0], outevents[0], otherevents, stimulusevents ) != INT_MIN ) {
-	    warning += fs + " <b>" + ident + "</b>: detect( InData, EventData ) function should not be implemented!<br>\n";
-	    failed = true;
-	  }
-	}
-	if ( ( fp->type() & Filter::MultipleAnalogDetector ) != Filter::MultipleAnalogDetector ) {
-	  if ( fp->init( indata, outevents, otherevents, stimulusevents ) != INT_MIN ) {
-	    warning += fs + " <b>" + ident + "</b>: init( InList, EventList ) function should not be implemented!<br>\n";
-	    failed = true;
-	  }
-	  if ( fp->adjust( indata ) != INT_MIN ) {
-	    warning += fs + " <b>" + ident + "</b>: adjust( InList ) function should not be implemented!<br>\n";
-	    failed = true;
-	  }
-	  if ( fp->detect( indata, outevents, otherevents, stimulusevents ) != INT_MIN ) {
-	    warning += fs + " <b>" + ident + "</b>: detect( InList, EventList ) function should not be implemented!<br>\n";
-	    failed = true;
-	  }
-	}
-	if ( ( fp->type() & Filter::SingleEventDetector ) != Filter::SingleEventDetector ) {
-	  if ( fp->init( inevents[0], outevents[0], otherevents, stimulusevents ) != INT_MIN ) {
-	    warning += fs + " <b>" + ident + "</b>: init( EventData, EventData ) function should not be implemented!<br>\n";
-	    failed = true;
-	  }
-	  if ( fp->adjust( inevents[0] ) != INT_MIN ) {
-	    warning += fs + " <b>" + ident + "</b>: adjust( EventData ) function should not be implemented!<br>\n";
-	    failed = true;
-	    }
-	  if ( fp->detect( inevents[0], outevents[0], otherevents, stimulusevents ) != INT_MIN ) {
-	    warning += fs + " <b>" + ident + "</b>: detect( EventData, EventData ) function should not be implemented!<br>\n";
-	    failed = true;
-	  }
-	}
-	if ( ( fp->type() & Filter::MultipleEventDetector ) != Filter::MultipleEventDetector ) {
-	  if ( fp->init( inevents, outevents, otherevents, stimulusevents ) != INT_MIN ) {
-	    warning += fs + " <b>" + ident + "</b>: init( EventList, EventList ) function should not be implemented!<br>\n";
-	    failed = true;
-	  }
-	  if ( fp->adjust( inevents ) != INT_MIN ) {
-	    warning += fs + " <b>" + ident + "</b>: adjust( EventList ) function should not be implemented!<br>\n";
-	    failed = true;
-	  }
-	  if ( fp->detect( inevents, outevents, otherevents, stimulusevents ) != INT_MIN ) {
-	    warning += fs + " <b>" + ident + "</b>: detect( EventList, EventList ) function should not be implemented!<br>\n";
-	    failed = true;
-	  }
-	}
-
-	if ( ( fp->type() & Filter::MultipleTraces ) > 0 ) {
-	  if ( ( fp->type() & Filter::EventInput ) > 0 ) {
-	    if ( fp->autoConfigure( indata[0], 0.0, 0.1 ) != INT_MIN ) {
-	      warning += fs + " <b>" + ident + "</b>: indata( InData, 0.0, 0.1 ) function should not be implemented!<br>\n";
-	      failed = true;
-	    }
-	  }
-	  else {
-	    if ( fp->autoConfigure( inevents[0], 0.0, 0.1 ) != INT_MIN ) {
-	      warning += fs + " <b>" + ident + "</b>: autoConfigure( EventData, 0.0, 0.1 ) function should not be implemented!<br>\n";
-	      failed = true;
-	    }
 	  }
 	}
 	else {
-	  if ( ( fp->type() & Filter::EventInput ) > 0 ) {
-	    if ( fp->autoConfigure( indata, 0.0, 0.1 ) != INT_MIN ) {
-	      warning += fs + " <b>" + ident + "</b>: autoConfiguer( InList, 0.0, 0.1 ) function should not be implemented!<br>\n";
-	      failed = true;
-	    }
-	  }
-	  else {
-	    if ( fp->autoConfigure( inevents, 0.0, 0.1 ) != INT_MIN ) {
-	      warning += fs + " <b>" + ident + "</b>: autoConfigure( EventList, 0.0, 0.1 ) function should not be implemented!<br>\n";
-	      failed = true;
-	    }
+	  if ( fp->autoConfigure( inevents[0], 0.0, 0.1 ) != INT_MIN ) {
+	    warning += fs + " <b>" + ident + "</b>: autoConfigure( EventData, 0.0, 0.1 ) function should not be implemented!<br>\n";
+	    failed = true;
 	  }
 	}
-
       }
-      if ( failed )
-	continue;
-
-      // take and setup filter:
-      fp->setParent( this );
-      fp->setIdent( ident );
-      fp->setMode( mode );
-      
-      // insert detector in list:
-      FL.push_back( FilterData( fp, filter, intrace, othertrace,
-				buffersize, storesize, storewidth ) );
-
-
-      // add detector to widget:
-      if ( fp->widget() != 0 )
-	addTab( fp->widget(), fp->ident().c_str() );
+      else {
+	if ( ( fp->type() & Filter::EventInput ) > 0 ) {
+	  if ( fp->autoConfigure( indata, 0.0, 0.1 ) != INT_MIN ) {
+	    warning += fs + " <b>" + ident + "</b>: autoConfiguer( InList, 0.0, 0.1 ) function should not be implemented!<br>\n";
+	    failed = true;
+	  }
+	}
+	else {
+	  if ( fp->autoConfigure( inevents, 0.0, 0.1 ) != INT_MIN ) {
+	    warning += fs + " <b>" + ident + "</b>: autoConfigure( EventList, 0.0, 0.1 ) function should not be implemented!<br>\n";
+	    failed = true;
+	  }
+	}
+      }
 
     }
+    if ( failed )
+      continue;
+
+    // take and setup filter:
+    fp->setParent( this );
+    fp->setIdent( ident );
+    fp->setMode( mode );
+      
+    // insert detector in list:
+    FL.push_back( FilterData( fp, filter, intrace, othertrace,
+			      buffersize, storesize, storewidth ) );
+
+
+    // add detector to widget:
+    if ( fp->widget() != 0 )
+      addTab( fp->widget(), fp->ident().c_str() );
+
   }
 
   // check for duplicate Filter names:

@@ -67,7 +67,8 @@ int main( int argc, char *argv[] )
   cout << '\n';
 
   cout << "Value of parameter 'comment': " << opt.text( "comment|repeats" ) << '\n';
-  cout << "Value of parameter 'pause': " << opt.number( "Pause|pause" ) << '\n';
+  cout << "Value of parameter 'Pause|pause': " << opt.number( "Pause|pause" ) << '\n';
+  cout << "Value of parameter 'Test>pause': " << opt.number( "Test>pause" ) << '\n';
   cout << "Value of parameter 'repeats': " << opt.integer( "repeats|" ) << '\n';
   cout << "Value of parameter 'sinewave': " << opt.boolean( "||sinewave" ) << '\n';
   cout << "Value of parameter 'recordingtime': " << opt.text( "rec|Recording>time|recordingtime" ) << '\n';

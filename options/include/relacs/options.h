@@ -41,11 +41,12 @@ namespace relacs {
 \bug return values of type Parameter& are not defined if name is not found!
 \bug takeFirst, takeLast, combineFirst, combineLast should use find instead of ==
 
-
-Each option is a key-value pair identified by a string \a name and
-has a default value \a dflt.  For the dialog the string \a request is
-used to request the option.  Number options in addition have a minimum
-and maximum value, a step size, a unit and a format string.
+An Options class contains a list of name-value pairs that are
+identified by a string \a name and have a default value \a dflt.  For
+the dialog the string \a request is used to request the value of the
+name-value pair.  Name-value pairs whose value-type is a Number have
+in addition a minimum and maximum value, a step size, a unit, and a
+format string. See class Parameter for more details on the name-value pairs.
 
 Use addNumber() and addText() to add option variables,
 which can be either numbers or strings, respectively.
@@ -62,6 +63,9 @@ and defaultText().
 Minimum and maximum values can be read with minimum() and maximum().
 The corresponding unit and formatting string can be read with unit() 
 and format().
+
+In addition to the name-value pairs, an Options class contains further
+Options, i.e. a list of sections of name-value pairs.
 
 The total number of defined options is returned by size().
 To check wether an option with a certain name exist use exist().
@@ -280,7 +284,8 @@ public:
 	For example, if \a pattern is "date|time", then
 	"date" is searched first and if this is not found,
 	"time" is searched.
-        Returns sectionsEnd() if no match for \a pattern is found. */
+        Returns sectionsEnd() if no match for \a pattern is found.
+        \note the name() of this Options is not found. */
   const_section_iterator findSection( const string &pattern, int level=-1 ) const;
     /*! Search for the first section of Options that matches \a pattern.
         \a pattern can be a list of search terms separated by '>',
@@ -289,7 +294,8 @@ public:
 	For example, if \a pattern is "date|time", then
 	"date" is searched first and if this is not found,
 	"time" is searched.
-        Returns sectionsEnd() if no match for \a pattern is found. */
+        Returns sectionsEnd() if no match for \a pattern is found.
+        \note the name() of this Options is not found. */
   section_iterator findSection( const string &pattern, int level=-1 );
     /*! Search for the last section of Options that matches \a pattern.
         \a pattern can be a list of search terms separated by '>',
@@ -298,7 +304,8 @@ public:
 	For example, if \a pattern is "date|time", then
 	"date" is searched first and if this is not found,
 	"time" is searched.
-        Returns sectionsEnd() if no match for \a pattern is found. */
+        Returns sectionsEnd() if no match for \a pattern is found.
+        \note the name() of this Options is not found. */
   const_section_iterator rfindSection( const string &pattern, int level=-1 ) const;
     /*! Search for the last section of Options that matches \a pattern.
         \a pattern can be a list of search terms separated by '>',
@@ -307,7 +314,8 @@ public:
 	For example, if \a pattern is "date|time", then
 	"date" is searched first and if this is not found,
 	"time" is searched.
-        Returns sectionsEnd() if no match for \a pattern is found. */
+        Returns sectionsEnd() if no match for \a pattern is found.
+        \note the name() of this Options is not found. */
   section_iterator rfindSection( const string &pattern, int level=-1 );
 
     /*! Get \a i-th options. */
@@ -1408,9 +1416,9 @@ public:
     /*! Remove all Parameter and sections of Options. */
   Options &clear( void );
 
-    /*! Total number of key-value pairs in this Options and all its sections. */
+    /*! Total number of name-value pairs in this Options and all its sections. */
   int size( void ) const;
-    /*! Total number of key-value pairs in this Options and all its sections
+    /*! Total number of name-value pairs in this Options and all its sections
         that have \a selectflag set in their flags().
         If \a selectflag equals zero, all options are counted.
 	If \a selectflag is negative, only options whose values differ
@@ -1419,11 +1427,18 @@ public:
         If \a selectflag equals NonDefault, all options whose values differ
 	from their default value are counted. */
   int size( int selectflag ) const;
-    /*! True if there are no key-value pairs in this Options and all
+    /*! True if there are no name-value pairs in this Options and all
         its sections. */
   bool empty( void ) const;
-    /*! True if option with name \a name exist. */
-  bool exist( const string &name ) const;
+    /*! True if a name-value pair with name \a name exist somewhere in
+        the hierarchy of Options.
+        \sa find(), existSection() */
+  bool exist( const string &pattern ) const;
+    /*! True if a section (including the name() of this Options) of
+        name-value pairs with name \a name exist somewhere in the
+        hierarchy of Options.
+	\sa findSection(), exist() */
+  bool existSection( const string &pattern ) const;
 
     /*! Set flags of all options that are selected by \a selectflag to \a flags. 
         If \a selectflag equals zero, all options are considered.
@@ -1516,7 +1531,7 @@ public:
   ostream &save( ostream &str, const string &start="",
 		 int selectmask=0, bool detailed=false,
 		 bool firstonly=false ) const;
-    /*! Write each key-value pair as a separate line to stream \a str
+    /*! Write each name-value pair as a separate line to stream \a str
         and use \a textformat, \a numberformat, \a boolformat, \a
         dateformat, \a timeformat, and \a sectionformat for formatting
         text, number, boolean, date, and time parameter, or sections, respectively.

@@ -699,6 +699,13 @@ Options::const_iterator Options::find( const string &pattern, int level ) const
 	  sq.assign( search, "" );
 	// search:
 	for ( int s=0; s<sq.size() && ! findagain; s++ ) {
+	  // section name:
+	  if ( *this == sq[s] ) {
+	    patterns = subsearch;
+	    pbegin = begin();
+	    findagain = true;
+	    break;
+	  }
 	  // search parameter:
 	  for ( const_iterator pp = pbegin; pp != end(); ++pp ) {
 	    if ( *pp == sq[s] ) {
@@ -3694,11 +3701,22 @@ bool Options::empty( void ) const
 }
 
 
-bool Options::exist( const string &name ) const
+bool Options::exist( const string &pattern ) const
 {
   Warning = "";
-  const_iterator pp = find( name );
+  const_iterator pp = find( pattern );
   return ( pp != end() );
+}
+
+
+bool Options::existSection( const string &pattern ) const
+{
+  Warning = "";
+  if ( *this == pattern )
+    return true;
+
+  const_section_iterator sp = findSection( pattern );
+  return ( sp != sectionsEnd() );
 }
 
 
