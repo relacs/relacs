@@ -20,6 +20,7 @@
 */
 
 #include <relacs/base/robot.h>
+#include <relacs/relacsdevices.h>
 
 using namespace relacs;
 
@@ -37,7 +38,6 @@ Robot::Robot( void )
   Rob = 0;
   
 
-
   // layout:
   QVBoxLayout *vb = new QVBoxLayout;
   QHBoxLayout *bb;
@@ -50,111 +50,10 @@ Robot::Robot( void )
 
   /************** Positions ***********************/
   // base layout
-  QGridLayout *Positions = new QGridLayout;
   QLabel *label;
-
   QColor fg( Qt::green );
   QColor bg( Qt::black );
   QPalette qp( fg, fg, fg.lighter( 140 ), fg.darker( 170 ), fg.darker( 130 ), fg, fg, fg, bg );
-
-  Positions->setHorizontalSpacing( 2 );
-  Positions->setVerticalSpacing( 2 );
-  vb->addLayout( Positions );
-
-
-  // position watch
-
-  label = new QLabel( "Mirob X-Position " );
-  label->setAlignment( Qt::AlignCenter );
-  Positions->addWidget( label, 0, 0 );
- 
-  XPosLCD = new QLCDNumber( 8 );
-  XPosLCD->setSegmentStyle( QLCDNumber::Filled );
-  XPosLCD->setFixedHeight( label->sizeHint().height() );
-
-  XPosLCD->setPalette( qp );
-  XPosLCD->setAutoFillBackground( true );
-  Positions->addWidget( XPosLCD, 0, 1 );
-
-  label = new QLabel( "Mirob Y-Position " );
-  label->setAlignment( Qt::AlignCenter );
-  Positions->addWidget( label, 1, 0 );
- 
-  YPosLCD = new QLCDNumber( 8 );
-  YPosLCD->setSegmentStyle( QLCDNumber::Filled );
-  YPosLCD->setFixedHeight( label->sizeHint().height() );
-  YPosLCD->setPalette( qp );
-  YPosLCD->setAutoFillBackground( true );
-  Positions->addWidget( YPosLCD, 1, 1 );
-
-  label = new QLabel( "Mirob Z-Position " );
-  label->setAlignment( Qt::AlignCenter );
-  Positions->addWidget( label, 2, 0 );
- 
-  ZPosLCD = new QLCDNumber( 8 );
-  ZPosLCD->setSegmentStyle( QLCDNumber::Filled );
-  ZPosLCD->setFixedHeight( label->sizeHint().height() );
-  ZPosLCD->setPalette( qp );
-  ZPosLCD->setAutoFillBackground( true );
-  Positions->addWidget( ZPosLCD, 2, 1 );
-
-  // limit switch LEDs
-  // X
-  XLowLimLCD = new QLCDNumber( 1 );
-  XLowLimLCD->setSegmentStyle( QLCDNumber::Filled );
-  XLowLimLCD->setFixedHeight( label->sizeHint().height() );
-  XLowLimLCD->setFixedWidth( 20);
-
-  XLowLimLCD->setPalette( qp );
-  XLowLimLCD->setAutoFillBackground( true );
-  Positions->addWidget( XLowLimLCD,0,2 );
-  
-  XHiLimLCD = new QLCDNumber( 1 );
-  XHiLimLCD->setSegmentStyle( QLCDNumber::Filled );
-  XHiLimLCD->setFixedHeight( label->sizeHint().height() );
-  XHiLimLCD->setFixedWidth( 20);
-
-  XHiLimLCD->setPalette( qp );
-  XHiLimLCD->setAutoFillBackground( true );
-  Positions->addWidget( XHiLimLCD,0,3);
-
-  //Y
-  YLowLimLCD = new QLCDNumber( 1 );
-  YLowLimLCD->setSegmentStyle( QLCDNumber::Filled );
-  YLowLimLCD->setFixedHeight( label->sizeHint().height() );
-  YLowLimLCD->setFixedWidth( 20);
-
-  YLowLimLCD->setPalette( qp );
-  YLowLimLCD->setAutoFillBackground( true );
-  Positions->addWidget( YLowLimLCD,1,2 );
-  
-  YHiLimLCD = new QLCDNumber( 1 );
-  YHiLimLCD->setSegmentStyle( QLCDNumber::Filled );
-  YHiLimLCD->setFixedHeight( label->sizeHint().height() );
-  YHiLimLCD->setFixedWidth( 20);
-
-  YHiLimLCD->setPalette( qp );
-  YHiLimLCD->setAutoFillBackground( true );
-  Positions->addWidget( YHiLimLCD,1,3);
-
-  //Z
-  ZLowLimLCD = new QLCDNumber( 1 );
-  ZLowLimLCD->setSegmentStyle( QLCDNumber::Filled );
-  ZLowLimLCD->setFixedHeight( label->sizeHint().height() );
-  ZLowLimLCD->setFixedWidth( 20);
-
-  ZLowLimLCD->setPalette( qp );
-  ZLowLimLCD->setAutoFillBackground( true );
-  Positions->addWidget( ZLowLimLCD,2,2 );
-  
-  ZHiLimLCD = new QLCDNumber( 1 );
-  ZHiLimLCD->setSegmentStyle( QLCDNumber::Filled );
-  ZHiLimLCD->setFixedHeight( label->sizeHint().height() );
-  ZHiLimLCD->setFixedWidth( 20);
-
-  ZHiLimLCD->setPalette( qp );
-  ZHiLimLCD->setAutoFillBackground( true );
-  Positions->addWidget( ZHiLimLCD,2,3);
 
 
 
@@ -163,140 +62,218 @@ Robot::Robot( void )
   bb->setSpacing( 4 );
   vb->addLayout( bb );
 
+  StateGroup = new QButtonGroup();
+  vModeButton = new QRadioButton("Free steering mode");
+  posModeButton = new QRadioButton("Positioning mode");
+  StateGroup->addButton(vModeButton);
+  StateGroup->addButton(posModeButton);
+  vModeButton->setChecked(true);
+
+  connect( vModeButton, SIGNAL( clicked() ),
+	   this, SLOT( changeMode() ) );
+  connect( posModeButton, SIGNAL( clicked() ),
+	   this, SLOT( changeMode() ) );
+
+  bb->addWidget(vModeButton);
+  bb->addWidget(posModeButton);
+
+  //---------------------------------------------------------
+  bb = new QHBoxLayout;
+  bb->setSpacing( 4 );
+  vb->addLayout( bb );
+
+  CoordGroup = new QButtonGroup();
+  rawCoordButton = new QRadioButton("Raw Coordinates");
+  transCoordButton = new QRadioButton("Mirob Coordinates");
+  CoordGroup->addButton(rawCoordButton);
+  CoordGroup->addButton(transCoordButton);
+
+  rawCoordButton->setChecked(true);
+
+  connect( rawCoordButton, SIGNAL( clicked() ),
+	   this, SLOT( changeCoordinateSystem() ) );
+  connect( transCoordButton, SIGNAL( clicked() ),
+	   this, SLOT( changeCoordinateSystem() ) );
+
+  bb->addWidget(rawCoordButton);
+  bb->addWidget(transCoordButton);
+
+
   QFrame* line = new QFrame();
   line->setFrameShape(QFrame::HLine);
   line->setFrameShadow(QFrame::Sunken);
 
   vb->addWidget(line);
  
+  // sliders for  velocity
+  QGridLayout *Positions = new QGridLayout;
+  Positions->setHorizontalSpacing( 2 );
+  Positions->setVerticalSpacing( 4 );
+  vb->addLayout( Positions );
+
+  label = new QLabel( "x velocity");
+  label->setAlignment( Qt::AlignCenter );
+  Positions->addWidget( label, 0, 0 );
+  vX = new QSlider(Qt::Horizontal);
+  vX->setEnabled(false);
+  Positions->addWidget(vX,1,0);
+
+  label = new QLabel( "y velocity");
+  label->setAlignment( Qt::AlignCenter );
+  Positions->addWidget( label, 0, 1 );
+  vY = new QSlider(Qt::Horizontal);
+  vY->setEnabled(false);
+
+  Positions->addWidget(vY,1,1);
+
+  label = new QLabel( "z velocity");
+  label->setAlignment( Qt::AlignCenter );
+  Positions->addWidget( label, 0, 2 );
+  vZ = new QSlider(Qt::Horizontal);
+  vZ->setEnabled(false);
+  Positions->addWidget(vZ,1,2);
+
+  // position LCDs
+  label = new QLabel( "x position");
+  label->setAlignment( Qt::AlignCenter );
+  Positions->addWidget( label, 2, 0 );
+  posX = new QLCDNumber(6);
+  posX->setDecMode();
+  Positions->addWidget(posX,3,0);
+  posX->setSegmentStyle( QLCDNumber::Filled );
+  posX->setPalette( qp );
+  posX->setAutoFillBackground( true );
+
+  label = new QLabel( "y position");
+  label->setAlignment( Qt::AlignCenter );
+  Positions->addWidget( label, 2, 1 );
+  posY = new QLCDNumber(6);
+  posY->setDecMode();
+  Positions->addWidget(posY,3,1);
+  posY->setSegmentStyle( QLCDNumber::Filled );
+  posY->setPalette( qp );
+  posY->setAutoFillBackground( true );
+
+  label = new QLabel( "z position");
+  label->setAlignment( Qt::AlignCenter );
+  Positions->addWidget( label, 2, 2 );
+  posZ = new QLCDNumber(6);
+  posZ->setDecMode();
+  Positions->addWidget(posZ,3,2);
+  posZ->setSegmentStyle( QLCDNumber::Filled );
+  posZ->setPalette( qp );
+  posZ->setAutoFillBackground( true );
+
+  // postion double spin boxes
+  setPosX = new QDoubleSpinBox;
+  setPosX->setMaximum(1e6);
+  setPosX->setMinimum(-1e6);
+  Positions->addWidget(setPosX,4,0);
+  
+  setPosY = new QDoubleSpinBox;
+  setPosY->setMaximum(1e6);
+  setPosY->setMinimum(-1e6);
+  Positions->addWidget(setPosY,4,1);
+
+  setPosZ = new QDoubleSpinBox;
+  setPosZ->setMaximum(1e6);
+  setPosZ->setMinimum(-1e6);
+  Positions->addWidget(setPosZ,4,2);
+
+  updatePos = new QPushButton("update position");
+  Positions->addWidget(updatePos,5,1);
+  connect( updatePos, SIGNAL( clicked() ),
+	   this, SLOT( updatePositions() ) );
+  
+
+  // start timer
+  Timer = startTimer(30);
+  
 
 
-  QPushButton *StopButton = new QPushButton( "Stop!" );
-  bb->addWidget( StopButton );
-  StopButton->setFixedHeight( StopButton->sizeHint().height() );
-  connect( StopButton, SIGNAL( clicked() ),
-	   this, SLOT( stopMirob() ) );
 
 
 
 
-  vb->addWidget(line);
 
- 
-  bb = new QHBoxLayout;
-  bb->setSpacing( 4 );
-  vb->addLayout( bb );
-  otherActionsBox = new QComboBox;
-  bb->addWidget(otherActionsBox);
-  otherActionsBox->addItem("Go to -lim and set home");
-  otherActionsBox->addItem("Restart watchdog");
-  otherActionsBox->addItem("Go home");
-
-  otherActionsBox->addItem("Clamp  Tool");
-  otherActionsBox->addItem("Release Tool");
-
-  otherActionsBox->addItem("Start recording trajectory");
-  otherActionsBox->addItem("Stop recording trajectory");
-
-  otherActionsBox->addItem("Start recording forbidden zone");
-  otherActionsBox->addItem("Stop recording forbidden zone");
-
-  QPushButton *ApplyButton = new QPushButton( "Apply" );
-  bb->addWidget( ApplyButton );
-  ApplyButton->setFixedHeight( ApplyButton->sizeHint().height() );
-  connect( ApplyButton, SIGNAL( clicked() ),
-	   this, SLOT( apply() ) );
-
-
-  bb = new QHBoxLayout;
-  bb->setSpacing( 4 );
-  vb->addLayout( bb );
-
-  errorBox = new QTextEdit();
-  errorBox->setFontPointSize(8);
-  bb->addWidget(errorBox);
 }
 
 Robot::~Robot(void){
-
+  killTimer(Timer);
+  Timer = 0;
 }
 
-void Robot::apply(void){
-  if (Rob != 0){
-    switch(otherActionsBox->currentIndex()){
-    case 0: // goto net limit and home
-      Rob->gotoNegLimitsAndSetHome();
-      break;
-    case 1: // restart watchdog
-      Rob->restartWatchdog();
-      break;
-    case 2: // goto home
-      Rob->absPos(0,0,0,50);
-      break;
-    case 3: // clamp Tool
-      Rob->clampTool();
-      break;
-    case 4: // release Tool
-      Rob->releaseTool();
-      break;
-    case 5: // start recording trajectory
-      Rob->startRecording( );
-      errorBox->append("Key k records new position");
-      break;
-    case 6: // stop recording trajectory
-      Rob->stopRecording( );
-      break;
-    case 7: // start recording forbidden zone
-      Rob->clearPositions();
-      errorBox->append("Move Mirob to the upper four corners of the forbidden zone");
-      errorBox->append("Key n records current corner");
-      break;
-    case 8: // stop recording forbidden zone
-      Rob->makePositionsForbiddenZone();
-      break;
-    default:
-      break;
-      
-    };
 
-  }
- 
-}
-  
-
-void Robot::stopMirob(void){
+void Robot::changeCoordinateSystem(void){
   if (Rob != 0){
-    Rob->stop();
+    if (rawCoordButton->isChecked()){
+      Rob->setCoordinateSystem(MIROB_COORD_RAW);
+    }else if (transCoordButton->isChecked()){
+      Rob->setCoordinateSystem(MIROB_COORD_TRANS);
+    }
   }
 }
+
+
+void Robot::changeMode(void){
+  if (Rob != 0){
+    if (vModeButton->isChecked()){
+      Rob->setState(ROBOT_FREE);
+      setPosX->setEnabled(false);
+      setPosY->setEnabled(false);
+      setPosZ->setEnabled(false);
+      updatePos->setEnabled(false);
+    }else if (posModeButton->isChecked()){
+      Rob->setState(ROBOT_POS);
+      setPosX->setEnabled(true);
+      setPosY->setEnabled(true);
+      setPosZ->setEnabled(true);
+      updatePos->setEnabled(true);
+    }
+  }
+}
+
+void Robot::updatePositions(void){
+  if (Rob != 0){
+    Rob->setPos(setPosX->value(),setPosY->value(),setPosZ->value(),50);
+  }
+
+}
+
 
 void Robot::initDevices( void )
 {
-  for ( unsigned int k=0; k<10; k++ ) {
+  //cerr << *devices() << '\n';
+  unsigned int k   ;
+  for (  k=0; k<10; k++ ) {
      Str ns( k+1, 0 );
-     //Rob = dynamic_cast< Manipulator* >( device( "robot-" + ns ) );
      Rob = dynamic_cast< ::misc::Mirob* >( device( "robot-" + ns ) );
-     if ( Rob != 0 ){
-       ::misc::GUICallback* gcb = new ::misc::GUICallback();
-       gcb->XPosLCD = XPosLCD;
-       gcb->YPosLCD = YPosLCD;
-       gcb->ZPosLCD = ZPosLCD;
-
-       gcb->XLowLimLCD = XLowLimLCD;
-       gcb->XHiLimLCD = XHiLimLCD;
-       gcb->YLowLimLCD = YLowLimLCD;
-       gcb->YHiLimLCD = YHiLimLCD;
-       gcb->ZLowLimLCD = ZLowLimLCD;
-       gcb->ZHiLimLCD = ZHiLimLCD;
-
-
-       gcb->logBox = errorBox;
-       Rob->setGUICallback(gcb);
+     if (Rob != 0)
        break;
-     }
-       
   }
   
+  // set the slider values after ROB was initialized
+  vX->setMaximum((int)Rob->getMaxSpeed());
+  vX->setMinimum(0);
+  vX->setValue((int)Rob->getMaxSpeed()/3);
+  vY->setMaximum((int)Rob->getMaxSpeed());
+  vY->setMinimum(0);
+  vY->setValue((int)Rob->getMaxSpeed()/3);
+  vZ->setMaximum((int)Rob->getMaxSpeed());
+  vZ->setMinimum(0);
+  vZ->setValue((int)Rob->getMaxSpeed()/3);
+  vX->setEnabled(true);
+  vY->setEnabled(true);
+  vZ->setEnabled(true);
+
+
+}
+
+void Robot::timerEvent(QTimerEvent*)
+{
+  posX->display(Rob->pos(1));
+  posY->display(Rob->pos(2));
+  posZ->display(Rob->pos(3));
 }
 
 
@@ -313,13 +290,14 @@ void Robot::keyReleaseEvent(QKeyEvent* e){
 
 
     case Qt::Key_U:
-      if ( Rob != 0 )
+      if ( Rob != 0 ){
 	Rob->setVZ(0 );
+      }
       break;
 
     case Qt::Key_D:
       if ( Rob != 0 ){
-	Rob->setVZ( 0 );
+	Rob->setVZ(0 );
       }
       break;
 
@@ -357,8 +335,6 @@ void Robot::keyReleaseEvent(QKeyEvent* e){
 
 void Robot::keyPressEvent( QKeyEvent *e )
 {
-  //  fprintf(stderr, " key pressed ");
-  /* only accept the event if it is not from a autorepeat key */
   if(e->isAutoRepeat() ) {    
     e->ignore();   
   } else {    
@@ -367,63 +343,44 @@ void Robot::keyPressEvent( QKeyEvent *e )
   
     switch ( e->key() ) {
 
-
-    case Qt::Key_N:
+    case Qt::Key_T:
       if ( Rob != 0 ){
-	Rob->recordPosition();
+	Rob->switchClampState();
       }
-      break;
-
-
-
-    case Qt::Key_P:
-      if ( Rob != 0 ){
-	fprintf(stderr,"ROBOT: Position %f, %f, %f\n",Rob->posX(), Rob->posY(),Rob->posZ());
-      }
-      break;
-
-    case Qt::Key_H:
-      if ( Rob != 0 )
-	Rob->gotoNegLimitsAndSetHome();
-	
-      break;
-
-
-    case Qt::Key_K:
-      if ( Rob != 0 )
-	Rob->recordStep( );
       break;
 
 
     case Qt::Key_U:
-      if ( Rob != 0 )
-	Rob->setVZ(-SPEED );
+      if ( Rob != 0 ){
+	Rob->setVZ(-vZ->value() );
+      }
       break;
 
     case Qt::Key_D:
-      if ( Rob != 0 )
-	Rob->setVZ( SPEED );
+      if ( Rob != 0 ){
+	Rob->setVZ( vZ->value() );
+      }
 
       break;
 
     case Qt::Key_Up:
       if ( Rob != 0 )
-	Rob->setVX(-SPEED );
+	Rob->setVX(-vX->value() );
       break;
 
     case Qt::Key_Down:
       if ( Rob != 0 )
-	Rob->setVX(SPEED);
+	Rob->setVX(vX->value());
       break;
 
     case Qt::Key_Left:
       if ( Rob != 0 )
-	Rob->setVY( SPEED );
+	Rob->setVY( vY->value() );
       break;
 
     case Qt::Key_Right:
       if ( Rob != 0 )
-	Rob->setVY( -SPEED );
+	Rob->setVY( -vY->value() );
       break;
 
 

@@ -96,15 +96,15 @@ public:
     /*! Return the position of the x-axis.
         Depending on the implementation this can be raw steps
 	or a specific distance or angle. */
-  virtual double posX( void ) const;
+  virtual double posX( void );
     /*! Return the position of the y-axis.
         Depending on the implementation this can be raw steps
 	or a specific distance or angle. */
-  virtual double posY( void ) const;
+  virtual double posY( void );
     /*! Return the position of the z-axis.
         Depending on the implementation this can be raw steps
 	or a specific distance or angle. */
-  virtual double posZ( void ) const;
+  virtual double posZ( void );
 
     /*! Set the amplitude of a step of the x-axis to \a posampl.
         If \a negampl >= 0.0 set the negative amplitude to \a negampl,

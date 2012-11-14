@@ -28,59 +28,99 @@
 #include <relacs/zones.h>
 #include <relacs/manipulator.h>
 #include <TML_lib.h>
-#include <QLCDNumber>
-#include <QTextEdit>
-#include <QString>
+#include <queue>
 
+#define ROBOT_HALT 0
+#define ROBOT_FREE 1
+#define ROBOT_POS  2
+#define ROBOT_STOP 3
+
+#define MIROB_COORD_RAW 0
+#define MIROB_COORD_TRANS 1
+
+#define RAW2TRANS 0
+#define TRANS2RAW 1
 
 using namespace std;
 using namespace relacs;
 
+class XMLDocument;
+
 namespace misc {
 
+  int inv3(double A[3][3], double (&result)[3][3]);
 
-typedef struct Point3D positionUpdate;
+struct PositionUpdate{
+  double x,y,z,speed;
+  
+  PositionUpdate(){
+    x = y = z = speed = 0.0;
+  }
 
-/******* thread to watch the robot ****** */
-struct GUICallback{
-  QLCDNumber *XPosLCD, *YPosLCD, *ZPosLCD,
-    *XLowLimLCD, *XHiLimLCD, *YLowLimLCD, 
-    *YHiLimLCD, *ZLowLimLCD, *ZHiLimLCD;
-
-  QTextEdit* logBox;
-
-
+  PositionUpdate(double xx, double yy, double zz, double s){
+    x = xx;
+    y = yy;
+    z = zz;
+    speed = s;
+  }
 };
-typedef struct GUICallback GUICallback;
 
-struct watchdog_data { 
+typedef struct PositionUpdate PositionUpdate;
+
+
+struct robotDaemon_data { 
 
   
   bool active, stopped, setNegLimitAsHome;
   BYTE ChannelType;
   BYTE HostID;
   DWORD  Baudrate;
+  
 
   Zones* forbiddenZones;
-
+  
   struct timespec sleeptime;
 
   const char* Device;
   const char* SetupFile;
 
-  GUICallback* gcb;
+  // thread mutex variables
+  pthread_mutex_t mutex;
+  pthread_cond_t cond; 
+
+  // current speed variables
+  double v[3];
+  bool vChanged;
+
+  // clamp tool states
+  bool toolClamped;
+  bool clampChanged;
+
+  // mode state
+  int mode;
+
+  // state information
+  int pos[3];
+
+  queue<PositionUpdate*> positionQueue;
+
 
 };
-typedef struct watchdog_data watchdog_data;
+typedef struct robotDaemon_data robotDaemon_data;
 
 /*********************************************/
-class PosDaemon
+class TMLRobotDaemon
 {
    public:
-      PosDaemon(watchdog_data* ptr);
+      TMLRobotDaemon(robotDaemon_data* ptr);
       int Start();
       int Stop();
-
+      int Shutdown();
+      int reset();
+      int clampTool(void);
+      int releaseTool(void);
+      
+      int getMode(void) const {return info->mode;};
    protected:
       int Run();
       static void * EntryPoint(void*);
@@ -89,31 +129,43 @@ class PosDaemon
       void Exit();
       void log(const char* text);
       void log(relacs::Str text);
-      
-   private:
-      watchdog_data* info;
-      pthread_t id;
 
-      void updateGUI(void);
+   private:
+      bool motionIssued;
+      robotDaemon_data* info;
+      pthread_t id;
+      static const char* LOGPREFIX;
 
       int activateAxis(int axis);
-      int acquireInformation( void);
-      int handleLimitErrors(void);
-      int gotoNegLimitsAndSetHome(void);
+ 
+      int getPos(int) const;
+      double positionError();
+      bool motionComplete();
+      void updateInfo();
+
+      int setPos(double x, double y, double z, double speed);
 
       bool isInsideForbiddenZone(void);
-
+      /* int hack(int k); */
       double MaxSpeed, MaxAcc;
       BYTE limitNeg[3];
       BYTE limitPos[3];
-      long readAPOS[3];
-      int trueAPOS[3];
+      WORD MER[3], MCR[3], SRL[3], ISR[3], SRH[3];
+      /* long readAPOS[3]; */
+      /* int trueAPOS[3]; */
+
+      int setV(double v, int ax); // this function should only be called from the thread
+
+      // variables for position monitoring
+      int tmp_apos2; 
+      long tmp_apos;
 
 
+      PositionUpdate *positionTarget;
 };
 
 
-void* watchdog(void* ptr);
+void* robotDaemon(void* ptr);
 
 
 
@@ -158,15 +210,15 @@ public:
     /*! Return the position of the x-axis.
         Depending on the implementation this can be raw steps
 	or a specific distance or angle. */
-  virtual double posX( void ) const;
+  virtual double posX( void );
     /*! Return the position of the y-axis.
         Depending on the implementation this can be raw steps
 	or a specific distance or angle. */
-  virtual double posY( void ) const;
+  virtual double posY( void );
     /*! Return the position of the z-axis.
         Depending on the implementation this can be raw steps
 	or a specific distance or angle. */
-  virtual double posZ( void ) const;
+  virtual double posZ( void );
 
     /*! Defines the current position of the axis as its home position. */
   virtual int clear( int axis );
@@ -213,74 +265,70 @@ public:
   int setVY(double v);
   int setVZ(double v);
 
-  int absPos(double x, double y, double z, double speed);
+  long getMaxSpeed() const {return MaxSpeed; } ;
+
+  void setCoordinateSystem(int mode){CoordinateMode = mode;}
+
+  int getMode() const {return robotDaemon->getMode();};
+  void setState(int mode);
+  int setPos(double x, double y, double z, double speed);
   
 
   int step(double dx, double dy, double dz, double v, bool wait);
 
   int clampTool(void);
   int releaseTool(void);
+  int switchClampState(void);  int gotoNegLimitsAndSetHome(void);
 
-  int startRecording(void);
-  int recordStep(void);
-  int stopRecording(void);
-  int executeRecordedTrajectory(double speed, bool forward, bool wait);
-  int gotoNegLimitsAndSetHome(void);
+  double pos( int axis );
 
-  int recordPosition(void);
-  int clearPositions(void);
-  int makePositionsForbiddenZone(void);
-
-  int restartWatchdog(void);
-
-  void setGUICallback(GUICallback* gcb);
     
   int stop(void);
+  static const char* LOGPREFIX;
   
 private:
 
   static const BYTE ChannelType = CHANNEL_RS232;
   static const BYTE HostID = 1;
   static const DWORD Baudrate = 115200;
-  static const string SetupFile;
-  static const long MaxSpeed = 50;
-  static const double MaxAcc = 0.3183;
+  /* static const string SetupFile; */
+  /* static const long MaxSpeed = 100; */
+  /* static const double MaxAcc = 0.3183; */
 
-  static const long watchdog_sleep_sec = 0;
-  static const long watchdog_sleep_nsec = 50000000;
+  long MaxSpeed;
+  double MaxAcc; //  = 0.3183
+  const char* SetupFile;
 
+  static const long robotDaemon_sleep_sec = 0;
+  static const long robotDaemon_sleep_nsec = 10000000;
 
+  int CoordinateMode;
 
   void miroblog(const char* text);
   void miroblog(::relacs::Str text);
-
-  int activateAxis(int ax);
   
-/*   int startWatchdog(void); */
-/*   int stopWatchdog(void); */
-
-
-  int syncTposApos(void );
+  int loadConfigurationFile(const char* filename);
+  
+  void transformCoordinates(double& x, double& y, double& z, int direction);
+  double* transformCoordinates(double * x, int direction);
 
   int step( double x, int axis );
-  double pos( int axis ) const;
-  int suspendUntilStop(void);
-  int suspendUntilPositionReached(double x, double y, double z, double tol);
   bool Opened;
 
   double Speed[3];
   double Acceleration[3];
-/*   pthread_t watchdog_thread; */
-  PosDaemon* watchdog;
-  watchdog_data watchdog_info;
+/*   pthread_t robotDaemon_thread; */
+  TMLRobotDaemon* robotDaemon;
+  robotDaemon_data robotDaemon_info;
   
-  vector <positionUpdate> recordedSteps;
-  vector <Point3D> positions;
-  
+  // coordinate system remapping
+  double B[3][3]; // basis vectors in the raw coordinate system
+  double iB[3][3]; // inverse of B
+  double b0[3]; // coordinate system offspring in raw coordinate system
 
   
-  positionUpdate record0;
   Zones forbiddenZones;
+  XMLDocument* xml;
 
   
 };

@@ -107,19 +107,19 @@ int Manipulator::home( void )
 }
 
 
-double Manipulator::posX( void ) const
+double Manipulator::posX( void ) 
 {
   return 0.0;
 }
 
 
-double Manipulator::posY( void ) const
+double Manipulator::posY( void ) 
 {
   return 0.0;
 }
 
 
-double Manipulator::posZ( void ) const
+double Manipulator::posZ( void ) 
 {
   return 0.0;
 }

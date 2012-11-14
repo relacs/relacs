@@ -32,6 +32,12 @@
 #include <QVBoxLayout>
 #include <QComboBox>
 #include <QTextEdit>
+#include <QDial>
+#include <QRadioButton>
+#include <QLCDNumber>
+#include <QDoubleSpinBox>
+#include <QButtonGroup>
+
 using namespace relacs;
 
 namespace base {
@@ -57,32 +63,33 @@ public:
 
 public slots:
 
-  void stopMirob(void); 
-  void apply(void);
+  void changeMode(void); 
+  void changeCoordinateSystem(void); 
+  void updatePositions(void); 
 
 protected:
 
   virtual void keyPressEvent( QKeyEvent *e );
   virtual void keyReleaseEvent( QKeyEvent *e );
 
+  void timerEvent(QTimerEvent*); 
 
-  QLCDNumber *XPosLCD;
-  QLCDNumber *YPosLCD;
-  QLCDNumber *ZPosLCD;
 
-  QLCDNumber *XLowLimLCD,*XHiLimLCD, *YLowLimLCD, 
-    *YHiLimLCD,*ZLowLimLCD,*ZHiLimLCD;
+  QSlider* vX,* vY, *vZ;
+  QLCDNumber *posX, *posY, *posZ;
+  QDoubleSpinBox *setPosX, *setPosY, *setPosZ;
 
-  QComboBox* otherActionsBox;
+  QPushButton *updatePos;
 
-  QTextEdit* errorBox;
+  QRadioButton *vModeButton, *posModeButton, *rawCoordButton, *transCoordButton;
 
+  QButtonGroup* StateGroup, *CoordGroup;
   //Manipulator *Rob;
   ::misc::Mirob *Rob;
 
 private:
   OptWidget SW;
-  
+  int Timer;
 
 };
 
