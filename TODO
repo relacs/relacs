@@ -9,6 +9,7 @@ Options:
 - Options::load() should set TabStyle for section names
 - MetaData: remove LabelFlag
 - check config files (in particular empty comments, etc!)
+- OutData: rename Ident to name
 - are uniqueNames also used for relacsplugins.cfg ?
 
 auditory::Session plots do not work! Why???? It works on my laptop!

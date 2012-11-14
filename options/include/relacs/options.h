@@ -1345,6 +1345,84 @@ public:
   Options &insertSection( const string &name, const string &atpattern,
 			  int flag, int style=0 )
     { return insertSection( name, atpattern, "", flag, style ); };
+
+    /*! Add \a opt as a new subsection of level \a level.  If \a name
+        is not an empty string, the name of the new section is set to
+        \a name.  If \a type is not an empty string, the type of the
+        new section is set to \a type.  \a flag and \a style are added
+        to the new sections \a flag and \a style flag, respectively.
+        \a level = 0 is the upper level, i.e. a new section is added.
+        Higher \a levels add sections lower in the hierachy, i.e. \a
+        level = 1 adds a subsection, \a \a level = 2 a subsubsection,
+        etc.  Subsequent calls to addText(), addNumber(), etc. add new
+        Parameter to the added section.
+        \sa addSubSection(), addSubSubSection(), insertSection(),
+	endSection(), clearSections() */
+  Options &addSection( int level, const Options &opt, const string &name="", const string &type="",
+		       int flag=0, int style=0 );
+  Options &addSection( int level, const Options &opt, const string &name, int flag, int style=0 )
+    { return addSection( level, opt, name, "", flag, style ); };
+    /*! Add \a opt as a new section to the end of this Options section
+        list.  If \a name is not an empty string, the name of the new
+        section is set to \a name.  If \a type is not an empty string,
+        the type of the new section is set to \a type.  \a flag and \a
+        style are added to the new sections \a flag and \a style flag,
+        respectively.  Subsequent calls to addText(),
+        addNumber(), etc. add new Parameter to the added section.
+        \sa addSubSection(), addSubSubSection(), insertSection(),
+	endSection(), clearSections() */
+  Options &addSection( const Options &opt, const string &name="", const string &type="",
+		       int flag=0, int style=0 );
+  Options &addSection( const Options &opt, const string &name, int flag, int style=0 )
+    { return addSection( opt, name, "", flag, style ); };
+    /*! Add \a opt as a new subsection to the last section.  If \a name
+        is not an empty string, the name of the new section is set to
+        \a name.  If \a type is not an empty string, the type of the
+        new section is set to \a type.  \a flag and \a style are added
+        to the new sections \a flag and \a style flag, respectively.
+	Subsequent calls to addText(), addNumber(), etc. add new
+        Parameter to the added section.
+	\note You can only add a subsection after having added a section!
+	\sa addSection(), addSubSubSection(), insertSection(),
+        endSection(), clearSections() */
+  Options &addSubSection( const Options &opt, const string &name="", const string &type="",
+			  int flag=0, int style=0 );
+  Options &addSubSection( const Options &opt, const string &name, int flag, int style=0 )
+    { return addSubSection( opt, name, "", flag, style ); };
+    /*! Add \a opt as a new subsubsection to the last
+        subsection of the last section.  If \a name is not an empty
+        string, the name of the new section is set to \a name.  If \a
+        type is not an empty string, the type of the new section is
+        set to \a type.  \a flag and \a style are added to the new
+        sections \a flag and \a style flag, respectively.
+        Subsequent calls to addText(), addNumber(), etc. add new
+        Parameter to the added section.
+        \note You can only add a subsubsection after having added a subsection!
+        \sa addSection(), addSubSection(), insertSection(),
+	endSection(), clearSections() */
+  Options &addSubSubSection( const Options &opt, const string &name="", const string &type="",
+			     int flag=0, int style=0 );
+  Options &addSubSubSection( const Options &opt, const string &name, int flag, int style=0 )
+    { return addSubSubSection( opt, name, "", flag, style ); };
+    /*! Insert \a opt as a new section of Options before the section
+        specified by \a atpattern.  If \a atpattern is not found or if
+        \atpattern is empty, the new section is added to the beginning
+        or the end of the currently active Options' section list,
+        respectively.  If \a name is not an empty string, the name of
+        the new section is set to \a name.  If \a type is not an empty
+        string, the type of the new section is set to \a type.  \a
+        flag and \a style are added to the new sections \a flag and \a
+        style flag, respectively.
+        Subsequent calls to addText(), addNumber(), etc. add new Parameter
+	to the inserted section.
+        \sa addSection(), addSubSection(), addSubSubSection(), endSection(),
+	clearSections(), findSection()  */
+  Options &insertSection( const Options &opt, const string &name, const string &atpattern,
+			  const string &type="", int flag=0, int style=0 );
+  Options &insertSection( const Options &opt, const string &name, const string &atpattern,
+			  int flag, int style=0 )
+    { return insertSection( opt, name, atpattern, "", flag, style ); };
+
     /*! End the currently active section such that subsequent calls
         to addText(), addNumber(), etc. add new Parameter
 	to the parent section.

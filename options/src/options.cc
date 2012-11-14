@@ -3305,6 +3305,95 @@ Options &Options::insertSection( const string &name, const string &atpattern,
 }
 
 
+Options &Options::addSection( int level, const Options &opt, const string &name, const string &type,
+			      int flags, int style )
+{
+  Options *so = this;
+  for ( int l=0; l<level; l++ ) {
+    if ( so->Secs.empty() ) {
+      Warning += "Cannot add a subsection without having the appropriate parent section";
+      return *this;
+    }
+    so = so->Secs.back();
+  }
+  Options *o = new Options( opt );
+  if ( ! name.empty() )
+    o->setName( name );
+  if ( ! type.empty() )
+    o->setType( type );
+  o->addFlag( flags );
+  o->addStyle( style );
+  o->setParentSection( so );
+  o->unsetNotify();
+  so->Secs.push_back( o );
+  AddOpts = o;
+#ifndef NDEBUG
+  if ( !Warning.empty() )
+    cerr << "!warning in Options::addSection() -> " << Warning << '\n';
+#endif
+  return *o;
+}
+
+
+Options &Options::addSection( const Options &opt, const string &name, const string &type,
+			      int flags, int style )
+{
+  return addSection( 0, opt, name, type, flags, style );
+}
+
+
+Options &Options::addSubSection( const Options &opt, const string &name, const string &type,
+				 int flags, int style )
+{
+  return addSection( 1, opt, name, type, flags, style );
+}
+
+
+Options &Options::addSubSubSection( const Options &opt, const string &name, const string &type,
+				    int flags, int style )
+{
+  return addSection( 2, opt, name, type, flags, style );
+}
+
+
+Options &Options::insertSection( const Options &opt, const string &name, const string &atpattern,
+				 const string &type, int flag, int style )
+{
+  Options *o = new Options( opt );
+  if ( ! name.empty() )
+    o->setName( name );
+  if ( ! type.empty() )
+    o->setType( type );
+  o->addFlag( flag );
+  o->addStyle( style );
+
+  // insert at front:
+  if ( atpattern.empty() ) {
+    AddOpts->Secs.push_front( o );
+    o->setParentSection( AddOpts );
+  }
+  else {
+    // insert at atpattern:
+    section_iterator sp = findSection( atpattern );
+    if ( sp != sectionsEnd() ) {
+      Options *ps = (*sp)->parentSection();
+      if ( ps != 0 ) {
+	ps->Secs.insert( sp, o );
+	o->setParentSection( ps );
+      }
+    }
+    else {
+      // not found, add to sections:
+      AddOpts->Secs.push_back( o );
+      o->setParentSection( AddOpts );
+    }
+  }
+
+  AddOpts = o;
+  return *AddOpts;
+}
+
+
 void Options::endSection( void )
 {
   Options *newaddopts = AddOpts->parentSection();

@@ -294,35 +294,15 @@ class OutData : public SampleData< float >, public DaqError
 	to \a sigdelay seconds. */
   void setSignalDelay( double sigdelay );
 
-    /*! The description of the signal. */
+    /*! A string identifying the signal. */
   string ident( void ) const;
-    /*! Set the description of the ouput signal to \a ident. */
+    /*! Set the identifier of the ouput signal to \a ident. */
   void setIdent( const string &ident );
 
-    /*! The number of descriptions.
-        \sa description(), addDescription(), clearDescriptions() */
-  int descriptions( void ) const;
-    /*! Returns the description of the \a i-th component of the output signal.
-        \sa descriptions(), addDescription(), clearDescriptions() */
-  const Options &description( int i ) const;
-    /*! Returns the description of the \a i-th component of the output signal.
-        \sa descriptions(), addDescription(), clearDescriptions() */
-  Options &description( int i );
-    /*! Returns the description of the component of the output signal
-        that was last added by addDescription().
-        \sa descriptions(), addDescription(), clearDescriptions() */
+    /*! Returns the description of the output signal. */
   const Options &description( void ) const;
-    /*! Returns the description of the component of the output signal
-        that was last added by addDescription().
-        \sa descriptions(), addDescription(), clearDescriptions() */
+    /*! Returns the description of the output signal. */
   Options &description( void );
-    /*! Add a description for another component of the output signal.
-        \param[in] type the type of description, e.g. "stimulus/squarewave".
-        \sa descriptions(), description(), clearDescriptions() */
-  Options &addDescription( const string &type );
-    /*! Erase all descriptions.
-        \sa descriptions(), description(), addDescription() */
-  void clearDescriptions( void );
 
     /*! Returns \c true if reglitch circuit to make glitches more uniform
         is enabled. */
@@ -790,8 +770,8 @@ class OutData : public SampleData< float >, public DaqError
   string TraceName;
     /*! Identifier for the output signal. */
   string Ident;
-    /*! Descriptions of the output signal. */
-  deque< Options > Descriptions;
+    /*! Description of the output signal. */
+  Options Description;
     /*! True if reglitch circuit is enabled. */
   bool Reglitch;
     /*! Minimum value for which a gain should be chosen. */
@@ -828,9 +808,6 @@ class OutData : public SampleData< float >, public DaqError
   int DeviceDelay;
     /*! Counts repetitions of outputs. -1: delay emulation, 0: first time. */
   int DeviceCount;
-
-    /*! A dummy description. */
-  mutable Options Dummy;
 
     /*! Default minimum possible sampling interval in seconds. */
   static double DefaultMinSampleInterval;
