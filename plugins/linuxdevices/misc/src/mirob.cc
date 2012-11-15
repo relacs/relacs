@@ -150,6 +150,8 @@ int Mirob::loadConfigurationFile(){
       node2->QueryDoubleText(&b0[i++]);
   }
 
+
+
   inv3(B,iB);
   return 0;
 }
@@ -300,36 +302,38 @@ int Mirob::getV(double &x, double &y, double &z){
 
 int Mirob::setV(double v, int ax){
 
-  double tmp[3];
+  // get current velocity along the axis 
+  double currV[3];
+  for (int i = 0; i != 3; ++i){
+    currV[i] = robotDaemon_info.v[i];
+  }
+  
   if (CoordinateMode == MIROB_COORD_TRANS){
-
-    double proj =  robotDaemon_info.v[0]*iB[ax-1][0] +
-      robotDaemon_info.v[1]*iB[ax-1][1] +
-      robotDaemon_info.v[2]*iB[ax-1][2];
-
-    tmp[0] = robotDaemon_info.v[0] + (v-proj)*B[0][ax-1];
-    tmp[1] = robotDaemon_info.v[1] + (v-proj)*B[1][ax-1];
-    tmp[2] = robotDaemon_info.v[2] + (v-proj)*B[2][ax-1];
-
-    pthread_mutex_lock( &robotDaemon_info.mutex );
-
-    for (int i=0; i != 3; ++i){
-      robotDaemon_info.v[i] = tmp[i];
-    }
-    robotDaemon_info.vChanged = true;
-    pthread_mutex_unlock( &robotDaemon_info.mutex );
-
-
+    transformVelocities(currV,RAW2TRANS);
+    currV[ax-1] = v;
+    transformVelocities(currV,TRANS2RAW);
   }else if (CoordinateMode == MIROB_COORD_RAW){
-    pthread_mutex_lock( &robotDaemon_info.mutex );
-    robotDaemon_info.v[ax-1] = v;
-    robotDaemon_info.vChanged = true;
-    pthread_mutex_unlock( &robotDaemon_info.mutex );
-    
+    currV[ax-1] = v;
   }else{
     cerr << LOGPREFIX << "setV(double, int) Coordinate Mode not known!\n";
     return 1;
   }
+
+  // limit velocities to maxspeed
+  double speed = sqrt(currV[0]*currV[0] + currV[1]*currV[1] + currV[2]*currV[2] );
+  if (speed > MaxSpeed){
+    for (int i = 0; i != 3; ++i){
+      currV[i] *=MaxSpeed/speed;
+    }
+  }
+
+  pthread_mutex_lock( &robotDaemon_info.mutex );
+  
+  for (int i=0; i != 3; ++i){
+    robotDaemon_info.v[i] = currV[i];
+  }
+  robotDaemon_info.vChanged = true;
+  pthread_mutex_unlock( &robotDaemon_info.mutex );
 
   return 0;
 }
@@ -353,20 +357,10 @@ int Mirob::setVZ(double v){
 int Mirob::setV(double vx, double  vy, double vz){
   
   if (CoordinateMode == MIROB_COORD_TRANS){
-    double tmpx, tmpy, tmpz;
-    tmpx = vx*B[0][0] + vy*B[0][1] + vz*B[0][2];
-    tmpy = vx*B[1][0] + vy*B[1][1] + vz*B[1][2];
-    tmpz = vx*B[2][0] + vy*B[2][1] + vz*B[2][2];
-    vx = tmpx; vy = tmpy; vz = tmpz;
+    transformVelocities(vx,vy,vz,TRANS2RAW);
   }
 
-  double speed = sqrt(vx*vx + vy*vy + vz*vz );
-  if (speed > MaxSpeed){
-    vx *= MaxSpeed/speed;
-    vy *= MaxSpeed/speed;
-    vz *= MaxSpeed/speed;
 
-  }
   return (setVX(vx) + setVY(vy) + setVZ(vz) > 0) ? 1 : 0; 
 
 }

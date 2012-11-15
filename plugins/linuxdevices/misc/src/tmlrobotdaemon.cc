@@ -253,7 +253,7 @@ void TMLRobotDaemon::Execute(){
   while (info->active){
 
     updateInfo();
-    fprintf(stderr,"%04hX %04hX %04hX \r",SRL[0],SRL[1],SRL[2]);
+    //fprintf(stderr,"%04hX %04hX %04hX \r",SRL[0],SRL[1],SRL[2]);
     //cerr << LOGPREFIX << "Motion " << motionComplete() << endl;
     // if the clamp state has changed
     if (info->clampChanged){
