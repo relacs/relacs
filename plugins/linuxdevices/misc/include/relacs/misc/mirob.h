@@ -27,6 +27,8 @@
 #include <vector>
 #include <relacs/zones.h>
 #include <relacs/manipulator.h>
+#include <relacs/misc/tmlrobotdaemon.h>
+#include <relacs/misc/tinyxml2.h>
 #include <TML_lib.h>
 #include <queue>
 
@@ -43,134 +45,12 @@
 
 using namespace std;
 using namespace relacs;
-
-class XMLDocument;
+using namespace tinyxml2;
+//class XMLDocument;
 
 namespace misc {
 
   int inv3(double A[3][3], double (&result)[3][3]);
-
-struct PositionUpdate{
-  double x,y,z,speed;
-  
-  PositionUpdate(){
-    x = y = z = speed = 0.0;
-  }
-
-  PositionUpdate(double xx, double yy, double zz, double s){
-    x = xx;
-    y = yy;
-    z = zz;
-    speed = s;
-  }
-};
-
-typedef struct PositionUpdate PositionUpdate;
-
-
-struct robotDaemon_data { 
-
-  
-  bool active, stopped, setNegLimitAsHome;
-  BYTE ChannelType;
-  BYTE HostID;
-  DWORD  Baudrate;
-  
-
-  Zones* forbiddenZones;
-  
-  struct timespec sleeptime;
-
-  const char* Device;
-  const char* SetupFile;
-
-  // thread mutex variables
-  pthread_mutex_t mutex;
-  pthread_cond_t cond; 
-
-  // current speed variables
-  double v[3];
-  bool vChanged;
-
-  // clamp tool states
-  bool toolClamped;
-  bool clampChanged;
-
-  // mode state
-  int mode;
-
-  // state information
-  int pos[3];
-
-  queue<PositionUpdate*> positionQueue;
-
-
-};
-typedef struct robotDaemon_data robotDaemon_data;
-
-/*********************************************/
-class TMLRobotDaemon
-{
-   public:
-      TMLRobotDaemon(robotDaemon_data* ptr);
-      int Start();
-      int Stop();
-      int Shutdown();
-      int reset();
-      int clampTool(void);
-      int releaseTool(void);
-      
-      int getMode(void) const {return info->mode;};
-   protected:
-      int Run();
-      static void * EntryPoint(void*);
-      void Setup();
-      void Execute();
-      void Exit();
-      void log(const char* text);
-      void log(relacs::Str text);
-
-   private:
-      bool motionIssued;
-      robotDaemon_data* info;
-      pthread_t id;
-      static const char* LOGPREFIX;
-
-      int activateAxis(int axis);
- 
-      int getPos(int) const;
-      double positionError();
-      bool motionComplete();
-      void updateInfo();
-
-      int setPos(double x, double y, double z, double speed);
-
-      bool isInsideForbiddenZone(void);
-      /* int hack(int k); */
-      double MaxSpeed, MaxAcc;
-      BYTE limitNeg[3];
-      BYTE limitPos[3];
-      WORD MER[3], MCR[3], SRL[3], ISR[3], SRH[3];
-      /* long readAPOS[3]; */
-      /* int trueAPOS[3]; */
-
-      int setV(double v, int ax); // this function should only be called from the thread
-
-      // variables for position monitoring
-      int tmp_apos2; 
-      long tmp_apos;
-
-
-      PositionUpdate *positionTarget;
-};
-
-
-void* robotDaemon(void* ptr);
-
-
-
-/*********************************************/
-
 
 
 /*!
@@ -269,48 +149,52 @@ public:
 
   void setCoordinateSystem(int mode){CoordinateMode = mode;}
 
-  int getMode() const {return robotDaemon->getMode();};
-  void setState(int mode);
-  int setPos(double x, double y, double z, double speed);
-  
+  int getState() const {return robotDaemon->getState();};
+  void setState(int state);
 
-  int step(double dx, double dy, double dz, double v, bool wait);
+  int setPos(double x, double y, double z, double speed);
+
 
   int clampTool(void);
   int releaseTool(void);
-  int switchClampState(void);  int gotoNegLimitsAndSetHome(void);
+  int switchClampState(void);  
 
   double pos( int axis );
 
     
   int stop(void);
+
   static const char* LOGPREFIX;
   
 private:
 
-  static const BYTE ChannelType = CHANNEL_RS232;
-  static const BYTE HostID = 1;
-  static const DWORD Baudrate = 115200;
-  /* static const string SetupFile; */
-  /* static const long MaxSpeed = 100; */
-  /* static const double MaxAcc = 0.3183; */
+  /* static const BYTE ChannelType = CHANNEL_RS232; */
+  /* static const BYTE HostID = 1; */
+  /* static const DWORD Baudrate = 115200; */
+  /* /\* static const string SetupFile; *\/ */
+  /* /\* static const long MaxSpeed = 100; *\/ */
+  /* /\* static const double MaxAcc = 0.3183; *\/ */
+  /* const char* SetupFile; */
+
+  /* static const long robotDaemon_sleep_sec = 0; */
+  /* static const long robotDaemon_sleep_nsec = 10000000; */
 
   long MaxSpeed;
   double MaxAcc; //  = 0.3183
-  const char* SetupFile;
-
-  static const long robotDaemon_sleep_sec = 0;
-  static const long robotDaemon_sleep_nsec = 10000000;
+  string configFileName;
 
   int CoordinateMode;
 
-  void miroblog(const char* text);
-  void miroblog(::relacs::Str text);
   
-  int loadConfigurationFile(const char* filename);
+  int loadConfigurationFile();
+  int saveConfigurationFile();
   
   void transformCoordinates(double& x, double& y, double& z, int direction);
   double* transformCoordinates(double * x, int direction);
+
+  void transformVelocities(double& x, double& y, double& z, int direction);
+  double* transformVelocities(double * x, int direction);
+
 
   int step( double x, int axis );
   bool Opened;
@@ -325,10 +209,10 @@ private:
   double B[3][3]; // basis vectors in the raw coordinate system
   double iB[3][3]; // inverse of B
   double b0[3]; // coordinate system offspring in raw coordinate system
-
+  
   
   Zones forbiddenZones;
-  XMLDocument* xml;
+  XMLDocument xml;
 
   
 };

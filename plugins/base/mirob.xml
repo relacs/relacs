@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+
+<mirob overwrite="true">
+  <maxspeed>100.0</maxspeed>
+  <maxacceleration>0.3183</maxacceleration>
+  <basis>
+    <row>
+      <col>1</col>
+      <col>0</col>
+      <col>0</col>
+    </row>
+    <row>
+      <col>0</col>
+      <col>2</col>
+      <col>0</col>
+    </row>
+    <row>
+      <col>0</col>
+      <col>0</col>
+      <col>1</col>
+    </row>
+    <offspring>
+      <col>0</col>
+      <col>0</col>
+      <col>0</col>
+    </offspring>
+  </basis>
+
+  <setupfile>mirob2.t.zip</setupfile>
+
+  <daemonsleeptime>
+    <seconds>0</seconds>
+    <nanoseconds>10000000</nanoseconds>
+  </daemonsleeptime>
+
+  <baudrate>115200</baudrate>
+  <hostid>1</hostid>
+    
+</mirob>

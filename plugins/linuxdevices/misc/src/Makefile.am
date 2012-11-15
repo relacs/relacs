@@ -69,11 +69,12 @@ libmiscmirob_la_LIBADD = \
     $(TML_LIBS) \
     $(QT4_LIBS)
 
-libmiscmirob_la_SOURCES = mirob.cc mirobdevice.cc tinyxml2.cpp
+libmiscmirob_la_SOURCES = mirob.cc mirobdevice.cc tinyxml2.cpp tmlrobotdaemon.cc
 
 libmiscmirob_la_includedir = $(pkgincludedir)/misc
 
-libmiscmirob_la_include_HEADERS = $(HEADER_PATH)/mirob.h 
+libmiscmirob_la_include_HEADERS = $(HEADER_PATH)/mirob.h $(HEADER_PATH)/tmlrobotdaemon.h \
+	$(HEADER_PATH)/tinyxml2.h 
 
 
 

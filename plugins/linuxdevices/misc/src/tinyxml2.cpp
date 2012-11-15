@@ -21,8 +21,8 @@ must not be misrepresented as being the original software.
 distribution.
 */
 
-#include "tinyxml2.h"
-
+//#include "tinyxml2.h" // changed this path from the original
+#include <relacs/misc/tinyxml2.h>// changed this path from the original
 #include <new>		// yes, this one new style header, is in the Android SDK.
 #   ifdef ANDROID_NDK
 #   include <stddef.h>
