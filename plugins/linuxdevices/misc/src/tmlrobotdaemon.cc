@@ -55,12 +55,10 @@ const char* TMLRobotDaemon::LOGPREFIX = "ROBOT DAEMON: ";
 
 TMLRobotDaemon::TMLRobotDaemon(robotDaemon_data* ptr){
   info = ptr;
-  MaxSpeed = 50;
-  MaxAcc = 0.3;
+  motionIssued = false;
   // create the mutex shared by TMLRobotDaemon and Mirob
   pthread_mutex_init(&info->mutex,NULL);
   pthread_cond_init(&info->cond,NULL);
-  positionTarget = NULL;
 
 }
 /*****************************************************************/
@@ -279,26 +277,15 @@ void TMLRobotDaemon::Execute(){
 
     //---------------------------------------------
     }else if (info->state == ROBOT_POS){
-      //cerr << LOGPREFIX << "Queue length" << info->positionQueue.size() << '\r';
-      if (positionTarget != NULL){ // we still have a current target
-	//if (positionError() < 100.){
-	if (motionIssued && motionComplete()){
-	  // cerr << positionError() <<"=Position Error < 100" << endl;
-	  // cerr << "Position Target == NULL" << endl;
-	  cerr << LOGPREFIX << "Motion Complete" << motionComplete() << endl;
-	  delete positionTarget;
-	  positionTarget = NULL;
-	  motionIssued = false;
-	}
+      //      cerr << info->positionQueue.size() << endl;
+      if (motionIssued && motionComplete()){
+	cerr << LOGPREFIX << "Motion Completed." << endl;
+	motionIssued = false;
+	info->positionQueue.pop();
       }else if (info->positionQueue.size() > 0){
 	pthread_mutex_lock( &info->mutex );
-	cerr << "Setting Position Target" << endl;
-
-	positionTarget = info->positionQueue.front();
-	motionIssued = false;
-	setPos(positionTarget->x, positionTarget->y, positionTarget->z, positionTarget->speed);
-	info->positionQueue.pop();
-	log("Setting New Position");
+	setPos(info->positionQueue.front()->x, info->positionQueue.front()->y, 
+	       info->positionQueue.front()->z, info->positionQueue.front()->speed);
 	pthread_mutex_unlock( &info->mutex );
       }
 

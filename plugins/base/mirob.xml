@@ -30,7 +30,7 @@
 
   <daemonsleeptime>
     <seconds>0</seconds>
-    <nanoseconds>10000000</nanoseconds>
+    <nanoseconds>1000000</nanoseconds>
   </daemonsleeptime>
 
   <baudrate>115200</baudrate>

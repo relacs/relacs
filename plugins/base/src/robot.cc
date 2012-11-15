@@ -133,33 +133,43 @@ Robot::Robot( void )
   vZ->setEnabled(false);
   Positions->addWidget(vZ,1,2);
 
+  line = new QFrame();
+  line->setFrameShape(QFrame::HLine);
+  line->setFrameShadow(QFrame::Sunken);
+
+  vb->addWidget(line);
+  Positions = new QGridLayout;
+  Positions->setHorizontalSpacing( 2 );
+  Positions->setVerticalSpacing( 4 );
+  vb->addLayout( Positions );
+
   // position LCDs
   label = new QLabel( "x position");
   label->setAlignment( Qt::AlignCenter );
-  Positions->addWidget( label, 2, 0 );
+  Positions->addWidget( label, 0, 0 );
   posX = new QLCDNumber(6);
   posX->setDecMode();
-  Positions->addWidget(posX,3,0);
+  Positions->addWidget(posX,1,0);
   posX->setSegmentStyle( QLCDNumber::Filled );
   posX->setPalette( qp );
   posX->setAutoFillBackground( true );
 
   label = new QLabel( "y position");
   label->setAlignment( Qt::AlignCenter );
-  Positions->addWidget( label, 2, 1 );
+  Positions->addWidget( label, 0, 1 );
   posY = new QLCDNumber(6);
   posY->setDecMode();
-  Positions->addWidget(posY,3,1);
+  Positions->addWidget(posY,1,1);
   posY->setSegmentStyle( QLCDNumber::Filled );
   posY->setPalette( qp );
   posY->setAutoFillBackground( true );
 
   label = new QLabel( "z position");
   label->setAlignment( Qt::AlignCenter );
-  Positions->addWidget( label, 2, 2 );
+  Positions->addWidget( label, 0, 2 );
   posZ = new QLCDNumber(6);
   posZ->setDecMode();
-  Positions->addWidget(posZ,3,2);
+  Positions->addWidget(posZ,1,2);
   posZ->setSegmentStyle( QLCDNumber::Filled );
   posZ->setPalette( qp );
   posZ->setAutoFillBackground( true );
@@ -168,22 +178,27 @@ Robot::Robot( void )
   setPosX = new QDoubleSpinBox;
   setPosX->setMaximum(1e6);
   setPosX->setMinimum(-1e6);
-  Positions->addWidget(setPosX,4,0);
+  Positions->addWidget(setPosX,2,0);
   
   setPosY = new QDoubleSpinBox;
   setPosY->setMaximum(1e6);
   setPosY->setMinimum(-1e6);
-  Positions->addWidget(setPosY,4,1);
+  Positions->addWidget(setPosY,2,1);
 
   setPosZ = new QDoubleSpinBox;
   setPosZ->setMaximum(1e6);
   setPosZ->setMinimum(-1e6);
-  Positions->addWidget(setPosZ,4,2);
+  Positions->addWidget(setPosZ,2,2);
 
   updatePos = new QPushButton("update position");
-  Positions->addWidget(updatePos,5,1);
+  Positions->addWidget(updatePos,3,1);
   connect( updatePos, SIGNAL( clicked() ),
 	   this, SLOT( updatePositions() ) );
+
+  transferPos = new QPushButton("transfer position");
+  Positions->addWidget(transferPos,3,0);
+  connect( transferPos, SIGNAL( clicked() ),
+	   this, SLOT( transferPositions() ) );
   
 
   // start timer
@@ -235,9 +250,23 @@ void Robot::changeMode(void){
 
 void Robot::updatePositions(void){
   if (Rob != 0){
-    Rob->setPos(setPosX->value(),setPosY->value(),setPosZ->value(),50);
+    double v[3];
+    v[0] = vX->value();
+    v[1] = vY->value();
+    v[2] = vZ->value();
+    double speed = sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+    Rob->setPos(setPosX->value(),setPosY->value(),setPosZ->value(),speed);
   }
 
+}
+
+void Robot::transferPositions(void){
+  if (Rob != 0){
+    setPosX->setValue(posX->value());
+    setPosY->setValue(posY->value());
+    setPosZ->setValue(posZ->value());
+    
+  }
 }
 
 
@@ -266,6 +295,13 @@ void Robot::initDevices( void )
   vY->setEnabled(true);
   vZ->setEnabled(true);
 
+  // set state
+  Rob->setState(ROBOT_FREE);
+  vModeButton->setChecked(true);
+  setPosX->setEnabled(false);
+  setPosY->setEnabled(false);
+  setPosZ->setEnabled(false);
+  updatePos->setEnabled(false);
 
 }
 

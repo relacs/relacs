@@ -365,6 +365,17 @@ int Mirob::setV(double vx, double  vy, double vz){
 
 }
 
+/*************************************************************/
+
+int Mirob::setCoordinateFrame(double newB[3][3], double newOffspring[3]){
+  for (int i = 0; i != 3; ++i){
+    for (int j = 0; j != 3; ++j){
+      B[i][j] = newB[i][j];
+    }
+    b0[i] = newOffspring[i];
+  }
+  return 0;
+}
 
 /***************** positioning part *****************************/
 
@@ -508,6 +519,7 @@ double Mirob::posZ( void )
 
 int Mirob::clear(int axis)
 {
+  cerr << LOGPREFIX << "clear(int axis) is not supported!" << endl;
   return 0;
 }
 /*************************************************************/
@@ -574,19 +586,21 @@ int Mirob::home( void )
 int Mirob::setAmplX( double posampl, double negampl )
 {
 
+  cerr << LOGPREFIX << "setAmplX is not supported!" << endl;
   return 0;
 }
 
 
 int Mirob::setAmplY( double posampl, double negampl )
 {
-
+  cerr << LOGPREFIX << "setAmplY is not supported!" << endl;
   return 0;
 }
 
 
 int Mirob::setAmplZ( double posampl, double negampl )
 {
+  cerr << LOGPREFIX << "setAmplZ is not supported!" << endl;
 
   return 0;
 }
@@ -594,13 +608,16 @@ int Mirob::setAmplZ( double posampl, double negampl )
 
 double Mirob::minAmplX( void ) const
 {
-  return 1.0;
+  cerr << LOGPREFIX << "minAmplX is not supported!" << endl;
+
+  return 0;
 }
 
 
 double Mirob::maxAmplX( void ) const
 {
-  return 80.0;
+  cerr << LOGPREFIX << "maxAmplX is not supported!" << endl;
+  return 0;
 }
 
 

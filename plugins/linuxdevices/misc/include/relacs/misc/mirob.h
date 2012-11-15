@@ -161,6 +161,7 @@ public:
 
   double pos( int axis );
 
+  int setCoordinateFrame(double newB[3][3], double newOffspring[3]);
     
   int stop(void);
 

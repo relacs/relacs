@@ -158,7 +158,6 @@ class TMLRobotDaemon
       long tmp_apos;
 
 
-      PositionUpdate *positionTarget;
 };
 
 

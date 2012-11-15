@@ -66,7 +66,7 @@ public slots:
   void changeMode(void); 
   void changeCoordinateSystem(void); 
   void updatePositions(void); 
-
+  void transferPositions(void);
 protected:
 
   virtual void keyPressEvent( QKeyEvent *e );
@@ -79,7 +79,7 @@ protected:
   QLCDNumber *posX, *posY, *posZ;
   QDoubleSpinBox *setPosX, *setPosY, *setPosZ;
 
-  QPushButton *updatePos;
+  QPushButton *updatePos, *transferPos;
 
   QRadioButton *vModeButton, *posModeButton, *rawCoordButton, *transCoordButton;
 
