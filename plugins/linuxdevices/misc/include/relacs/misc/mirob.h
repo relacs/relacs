@@ -148,12 +148,15 @@ public:
   long getMaxSpeed() const {return MaxSpeed; } ;
 
   void setCoordinateSystem(int mode){CoordinateMode = mode;}
+  int getCoordinateSystem(void) const {return CoordinateMode;}
 
   int getState() const {return robotDaemon->getState();};
   void setState(int state);
 
   int setPos(double x, double y, double z, double speed);
-
+  int setPos(double x, double y, double z) {
+    return setPos(x,y,z,MaxSpeed);
+  }
 
   int clampTool(void);
   int releaseTool(void);
@@ -162,7 +165,8 @@ public:
   double pos( int axis );
 
   int setCoordinateFrame(double newB[3][3], double newOffspring[3]);
-    
+  void getCoordinateFrame(double (&newB)[3][3], double (&newOffspring)[3]);
+
   int stop(void);
 
   static const char* LOGPREFIX;

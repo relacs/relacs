@@ -113,8 +113,10 @@ int Mirob::loadConfigurationFile(){
   double tmp;
   root->FirstChildElement("maxspeed")->QueryDoubleText(&tmp);
   MaxSpeed = (long)tmp;
+  robotDaemon_info.MaxSpeed = tmp;
   // extract maximal acceleration
   root->FirstChildElement("maxacceleration")->QueryDoubleText(&MaxAcc);
+  robotDaemon_info.MaxAcc = MaxAcc;
 
   robotDaemon_info.SetupFile = root->FirstChildElement("setupfile")->GetText();
   
@@ -255,6 +257,10 @@ int Mirob::open( const string &device, const Options &opts )
   void Mirob::setState(int state)
   { 
     pthread_mutex_lock( &robotDaemon_info.mutex );
+    if (state != ROBOT_POS){
+         queue<PositionUpdate*> empty;
+	 swap(robotDaemon_info.positionQueue , empty );
+    }
     robotDaemon_info.state = state;
     pthread_mutex_unlock( &robotDaemon_info.mutex );
   }
@@ -310,7 +316,7 @@ int Mirob::setV(double v, int ax){
   
   if (CoordinateMode == MIROB_COORD_TRANS){
     transformVelocities(currV,RAW2TRANS);
-    currV[ax-1] = v;
+    currV[ax-1] = v; ///sqrt(B[0,ax-1]*B[0,ax-1] + B[1,ax-1]*B[1,ax-1] + B[2,ax-1]*B[2,ax-1])
     transformVelocities(currV,TRANS2RAW);
   }else if (CoordinateMode == MIROB_COORD_RAW){
     currV[ax-1] = v;
@@ -368,13 +374,28 @@ int Mirob::setV(double vx, double  vy, double vz){
 /*************************************************************/
 
 int Mirob::setCoordinateFrame(double newB[3][3], double newOffspring[3]){
+  cerr << LOGPREFIX << "Setting new coordinate frame" << endl;
   for (int i = 0; i != 3; ++i){
     for (int j = 0; j != 3; ++j){
       B[i][j] = newB[i][j];
+      cerr << B[i][j] << " ";
     }
     b0[i] = newOffspring[i];
+    cerr << b0[i] << endl;
   }
+
   return 0;
+}
+
+/*************************************************************/
+
+void Mirob::getCoordinateFrame(double (&newB)[3][3], double (&newOffspring)[3]){
+  for (int i = 0; i != 3; ++i){
+    for (int j = 0; j != 3; ++j){
+      newB[i][j] = B[i][j];
+    }
+    newOffspring[i] = b0[i];
+  }
 }
 
 /***************** positioning part *****************************/
@@ -400,7 +421,6 @@ int Mirob::step( double x, int axis )
 
 int Mirob::setPos( double x, double y, double z, double speed )
 {
-
   if (CoordinateMode ==  MIROB_COORD_TRANS){
     transformCoordinates(x,y,z, TRANS2RAW);
   }else if (CoordinateMode != MIROB_COORD_RAW){
@@ -447,6 +467,11 @@ void Mirob::transformCoordinates(double& x, double& y, double& z, int direction)
 
 void Mirob::transformVelocities(double& x, double& y, double& z, int direction){
   double tmp[3];
+  double norm[3];
+  for (int i = 0; i != 3; ++i){
+    norm[i] = sqrt(B[0][i]*B[0][i] + B[1][i]*B[1][i] + B[2][i]*B[2][i]);
+  }
+
   if (direction == RAW2TRANS){
     for (int i = 0; i != 3; ++i){
       tmp[i] = iB[i][0]*x + iB[i][1]*y + iB[i][2]*z;
@@ -456,7 +481,7 @@ void Mirob::transformVelocities(double& x, double& y, double& z, int direction){
       tmp[i] = B[i][0]*x + B[i][1]*y + B[i][2]*z;
     }
   }
-  x = tmp[0]; y = tmp[1]; z = tmp[2];
+  x = tmp[0]/norm[0]; y = tmp[1]/norm[1]; z = tmp[2]/norm[2];
   
 }
 

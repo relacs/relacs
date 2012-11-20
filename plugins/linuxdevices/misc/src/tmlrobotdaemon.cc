@@ -322,7 +322,7 @@ void TMLRobotDaemon::Exit(){
 /*****************************************************************/
 
 int TMLRobotDaemon::setV(double v, int ax){
-  if (activateAxis(ax) > 0 || !TS_MoveVelocity(v,MaxAcc,UPDATE_IMMEDIATE,FROM_MEASURE)){
+  if (activateAxis(ax) > 0 || !TS_MoveVelocity(v,info->MaxAcc,UPDATE_IMMEDIATE,FROM_MEASURE)){
     cerr << LOGPREFIX << "Failed to set velocity "
 	 << v << " for axis " << ax << "! " 
 	 << TS_GetLastErrorText() << '\n';
@@ -423,9 +423,7 @@ int TMLRobotDaemon::getPos( int axis ) const
 /*****************************************************************/
 
 int TMLRobotDaemon::setPos(double x, double y, double z, double speed){
-  double MaxSpeed = 100;
-  double MaxAcc = 0.3183;
-  speed = (speed > MaxSpeed) ? MaxSpeed : speed;
+  speed = (speed > info->MaxSpeed) ? info->MaxSpeed : speed;
   double d[3] = {x,y,z};
   
   double dx,dy,dz;
@@ -448,7 +446,7 @@ int TMLRobotDaemon::setPos(double x, double y, double z, double speed){
     }
     // move:
     long step = long( rint( d[axis - 1] ) );
-    if ( ! TS_MoveAbsolute(step, v[axis-1], MaxAcc, UPDATE_IMMEDIATE, FROM_MEASURE)){
+    if ( ! TS_MoveAbsolute(step, v[axis-1], info->MaxAcc, UPDATE_IMMEDIATE, FROM_MEASURE)){
       cerr << LOGPREFIX << "Failed to move absolute on axis " 
 	   << axis << "! " << TS_GetLastErrorText() << '\n';
       return 1;

@@ -95,6 +95,8 @@ struct robotDaemon_data {
   int pos[3];
 
   queue<PositionUpdate*> positionQueue;
+  long MaxSpeed;
+  double MaxAcc;
 
 
 };
@@ -144,7 +146,6 @@ class TMLRobotDaemon
 
       bool isInsideForbiddenZone(void);
       /* int hack(int k); */
-      double MaxSpeed, MaxAcc;
       BYTE limitNeg[3];
       BYTE limitPos[3];
       WORD MER[3], MCR[3], SRL[3], ISR[3], SRH[3];
