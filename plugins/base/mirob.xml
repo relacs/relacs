@@ -5,19 +5,19 @@
   <maxacceleration>0.3183</maxacceleration>
   <basis>
     <row>
-      <col>0.816497</col>
-      <col>-0.408248</col>
-      <col>-0.408248</col>
+      <col>1</col>
+      <col>0</col>
+      <col>0</col>
     </row>
     <row>
-      <col>0.408248</col>
-      <col>0.908248y</col>
-      <col>-0.091752</col>
+      <col>0</col>
+      <col>1</col>
+      <col>0</col>
     </row>
     <row>
-      <col>0.408248</col>
-      <col>-0.091752</col>
-      <col>0.908248</col>
+      <col>0</col>
+      <col>0</col>
+      <col>1</col>
     </row>
     <offspring>
       <col>0</col>

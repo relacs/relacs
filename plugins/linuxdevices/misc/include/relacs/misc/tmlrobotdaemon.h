@@ -110,7 +110,6 @@ class TMLRobotDaemon
       int Start();
       int Stop();
       int Shutdown();
-      int reset();
       int clampTool(void);
       int releaseTool(void);
       
@@ -130,7 +129,7 @@ class TMLRobotDaemon
       void log(relacs::Str text);
 
    private:
-      bool motionIssued;
+      bool motionIssued, stopRobot;
       robotDaemon_data* info;
       pthread_t id;
       static const char* LOGPREFIX;

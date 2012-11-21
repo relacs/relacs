@@ -26,6 +26,8 @@ using namespace relacs;
 #include <QStringList>
 #include <QHeaderView>
 #include <QTableWidgetItem>
+#include <QGroupBox>
+
 namespace misc {
 
 
@@ -36,71 +38,91 @@ MirobCalibration::MirobCalibration( void )
   // addNumber( "duration", "Stimulus duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
 
   QVBoxLayout *vb = new QVBoxLayout;
-  QHBoxLayout *bb = new QHBoxLayout;
-  setLayout( vb );
-  vb->setSpacing( 4 );
-  vb->addLayout(bb);
+  setLayout(vb);
+  QGroupBox * gbb;
 
-
-
-
-  // show basis
+  //--------------- coordinate frame part ---------------------------
+  gbb = new QGroupBox("Coordinate Frame");
+  vb->addWidget(gbb);
+  QVBoxLayout *vb2 = new QVBoxLayout;
+  QGridLayout *Positions = new QGridLayout;
+  Positions->setHorizontalSpacing( 10 );
+  Positions->setVerticalSpacing( 10 );
+  vb2->addLayout( Positions );  
+  gbb->setLayout(vb2);
+  
+  // coordinate frame 
   coordinateFrame = new QTableWidget(3, 4);
   QStringList labels;
   labels << tr("BV 1") << tr("BV 2") << tr("BV 3") << tr("offspring");
   coordinateFrame->setHorizontalHeaderLabels(labels);
-  // coordinateFrame->horizontalHeader()->setResizeMode(0, QHeaderView::Stretch); // Interactive, Fixed, Stretch, ResizeToContents, Custom
 
   labels.clear();
   labels << tr("x") << tr("y") << tr("z") ;
   coordinateFrame->setVerticalHeaderLabels(labels);
-  // coordinateFrame->verticalHeader()->setResizeMode(0, QHeaderView::Stretch);
   coordinateFrame->setShowGrid(false);
 
   connect(coordinateFrame,
     SIGNAL(itemChanged(QTableWidgetItem *)), this, SLOT(basisItemChanged(QTableWidgetItem *)));
 
-  bb->addWidget(coordinateFrame);
-
-  //----------------
-
-  QGridLayout *Positions = new QGridLayout;
-  Positions->setHorizontalSpacing( 2 );
-  Positions->setVerticalSpacing( 2 );
-  bb->addLayout( Positions );
-
-  qB0 = new QRadioButton("offspring");
-  qB0->setChecked(true);
-  qB1 = new QRadioButton("basis vec. 1");
-  qB2 = new QRadioButton("basis vec. 2");
-  qB3 = new QRadioButton("basis vec. 3");
+  Positions->addWidget(coordinateFrame,0,0,4,1);
   
-  Positions->addWidget(qB0,0,0);
-  Positions->addWidget(qB1,1,0);
-  Positions->addWidget(qB2,2,0);
-  Positions->addWidget(qB3,3,0);
-  
+  // basis items
+  BasisVecs = new QComboBox();
+  BasisVecs->addItem("offspring",0);
+  BasisVecs->addItem("x - basis vector",1);
+  BasisVecs->addItem("y - basis vector",2);
+  BasisVecs->addItem("z - basis vector",3);
+  Positions->addWidget(BasisVecs,0,1);
 
 
+  // buttons
   // -------------------
   Set = new QPushButton("Set");
   connect( Set, SIGNAL( clicked() ),
 	   this, SLOT( setValue() ) );
-  Positions->addWidget(Set, 4, 0);  
+  Positions->addWidget(Set, 1, 1);  
   // -------------------
-  toOffspring = new QPushButton("go to offspring");
-  connect( toOffspring, SIGNAL( clicked() ),
-	   this, SLOT( gotoOffspring() ) );
-  Positions->addWidget(toOffspring, 5,0);
+  go2 = new QPushButton("go to");
+  connect( go2, SIGNAL( clicked() ),
+	   this, SLOT( goTo() ) );
+  Positions->addWidget(go2, 2,1);
 
-  // -------------------
-  Set = new QPushButton("Trace Out Coord. System");
-  connect( Set, SIGNAL( clicked() ),
-	   this, SLOT( traceOutCoord() ) );
-  Positions->addWidget(Set, 6,0);  
+  //--------------- trajectory part ---------------------------
+  gbb = new QGroupBox("Trajectories");
+  vb->addWidget(gbb);
+  vb2 = new QVBoxLayout;
+  Positions = new QGridLayout;
+  Positions->setHorizontalSpacing( 10 );
+  Positions->setVerticalSpacing( 10 );
+  vb2->addLayout( Positions );  
+  gbb->setLayout(vb2);
+
+  
+  Trajectories = new QComboBox();
+  Positions->addWidget(Trajectories,0,0);
+
+  Go2StartingPoint = new QPushButton("Go To Starting Point");
+  connect( Go2StartingPoint, SIGNAL( clicked() ),
+	   this, SLOT( go2Start() ) );
+  Positions->addWidget(Go2StartingPoint, 0, 1);  
 
 
-  // -------------------
+  SetStart = new QPushButton("Set Start");
+  connect( SetStart, SIGNAL( clicked() ),
+	   this, SLOT( setStart() ) );
+  Positions->addWidget(SetStart, 1, 0);  
+
+
+  ConvexHull = new QPushButton("Run Trajectory From Here");
+  connect( ConvexHull, SIGNAL( clicked() ),
+	   this, SLOT( runTrajectoryFromHere() ) );
+  Positions->addWidget(ConvexHull, 1, 1);  
+
+
+
+
+  // -------      Done Button    ------------
   Done = new QPushButton("Done");
   connect( Done, SIGNAL( clicked() ),
   	   this, SLOT( calibDone() ) );
@@ -127,6 +149,15 @@ int MirobCalibration::main( void )
     printlog("No robot found");
     return 1;
   }
+
+  // load trajectories
+  vector<string> trajNames = Rob->getTrajectoryKeys();
+  Trajectories->clear();
+  for (vector<string>::iterator it=trajNames.begin() ; it < trajNames.end(); it++ ){
+    Trajectories->addItem(QString( it->c_str()));
+  }
+
+
   // -----------------
   // set coordinate frame to table
   double basis[3][3];
@@ -154,7 +185,7 @@ int MirobCalibration::main( void )
     usleep(100000);
   }
 
-
+  Rob->setCalibrated(true);
   // get options:
   // double duration = number( "duration" );
   return Completed;
@@ -174,27 +205,25 @@ void MirobCalibration::setValue(void){
   double basis[3][3];
   Rob->getCoordinateFrame(basis,offspring);
 
-  if (qB0->isChecked()){
+  if(BasisVecs->currentIndex() == 0){
     offspring[0] = (double)Rob->posX();
     offspring[1] = (double)Rob->posY();
     offspring[2] = (double)Rob->posZ();
-
   }else{
-    if (qB1->isChecked()){
+    if (BasisVecs->currentIndex() == 1){
       col = 0;
-    }else if (qB2->isChecked()){
+    }else if (BasisVecs->currentIndex() == 2){
       col = 1;
-    }else if (qB3->isChecked()){
+    }else if (BasisVecs->currentIndex() == 3){
       col = 2;
     }
     
     basis[0][col] = (double)Rob->posX() - offspring[0];
     basis[1][col] = (double)Rob->posY() - offspring[1];
     basis[2][col] = (double)Rob->posZ() - offspring[2];
+
+
   }
-
-
-
   Rob->setCoordinateFrame(basis,offspring);
 
   Rob->getCoordinateFrame(basis,offspring);
@@ -207,37 +236,64 @@ void MirobCalibration::setValue(void){
     coordinateFrame->setItem(ridx,3,item);
   }
 
-
   Rob->setCoordinateSystem(mode);
-
-  
-}
-
-//------------------------------------------------------
-void MirobCalibration::traceOutCoord(){
-  Rob->setState(ROBOT_POS);
-  Rob->setCoordinateSystem(MIROB_COORD_TRANS);
-  Rob->setPos(0,0,0);
-  Rob->setPos(1,0,0);
-  Rob->setPos(0,0,0);
-  Rob->setPos(0,1,0);
-  Rob->setPos(0,0,0);
-  Rob->setPos(0,0,1);
-  Rob->setPos(0,0,0);
+ 
 }
 
 
+
 //------------------------------------------------------
-void MirobCalibration::gotoOffspring(){
+void MirobCalibration::goTo(){
   Rob->setState(ROBOT_POS);
   double offspring[3];
   double basis[3][3];
   Rob->getCoordinateFrame(basis,offspring);
 
   Rob->setCoordinateSystem(MIROB_COORD_RAW);
-  Rob->setPos(offspring[0], offspring[1], offspring[2]);
+
+  if(BasisVecs->currentIndex() == 0){
+    Rob->setPos(offspring[0], offspring[1], offspring[2]);
+  }else{
+    int col = 0;
+    if (BasisVecs->currentIndex() == 1){
+      col = 0;
+    }else if (BasisVecs->currentIndex() == 2){
+      col = 1;
+    }else if (BasisVecs->currentIndex() == 3){
+      col = 2;
+    }
+    Rob->setPos(offspring[0]+basis[0][col], offspring[1]+basis[0][col], offspring[2]+basis[0][col]);
+
+  }
+
 }
 
+//------------------------------------------------------
+void MirobCalibration::setStart(){
+  Rob->setState(ROBOT_POS);
+  Rob->setCoordinateSystem(MIROB_COORD_TRANS);
+  Rob->setTrajectoryStart(Trajectories->currentText().toStdString(),
+			  Rob->posX(), Rob->posY(), Rob->posZ() );
+  Rob->setTrajectoryCalibrated(Trajectories->currentText().toStdString(), true);
+}
+
+//------------------------------------------------------
+void MirobCalibration::runTrajectoryFromHere(){
+  Rob->setCoordinateSystem(MIROB_COORD_TRANS);
+  bool calib = Rob->isCalibrated();
+  Rob->setCalibrated(true);
+  Rob->runTrajectory(Trajectories->currentText().toStdString(), Rob->posX(), Rob->posY(), Rob->posZ());
+  Rob->setCalibrated(calib);
+}
+
+//------------------------------------------------------
+void MirobCalibration::go2Start(){
+  Rob->setCoordinateSystem(MIROB_COORD_TRANS);
+  bool calib = Rob->isCalibrated();
+  Rob->setCalibrated(true);
+  Rob->goToTrajectoryStart(Trajectories->currentText().toStdString());
+  Rob->setCalibrated(calib);
+}
 //------------------------------------------------------
 
 void MirobCalibration::basisItemChanged(QTableWidgetItem * item){
@@ -253,7 +309,17 @@ void MirobCalibration::basisItemChanged(QTableWidgetItem * item){
   }
   Rob->setCoordinateFrame(basis,offspring);
 
+  // load trajectories
+  vector<string> trajNames = Rob->getTrajectoryKeys();
+  for (vector<string>::iterator it=trajNames.begin() ; it < trajNames.end(); it++ ){
+    Rob->setTrajectoryCalibrated( *it, false);
+  }
+
+
 }
+
+
+
 
 addRePro( MirobCalibration, misc );
 

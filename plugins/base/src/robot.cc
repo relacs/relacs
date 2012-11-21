@@ -22,6 +22,8 @@
 #include <relacs/base/robot.h>
 #include <relacs/relacsdevices.h>
 
+#include <QGroupBox>
+
 using namespace relacs;
 
 #define SPEED  50
@@ -40,7 +42,9 @@ Robot::Robot( void )
 
   // layout:
   QVBoxLayout *vb = new QVBoxLayout;
+  
   QHBoxLayout *bb;
+  QGroupBox * gbb;
 
   setLayout( vb );
   vb->setSpacing( 4 );
@@ -57,31 +61,38 @@ Robot::Robot( void )
 
 
 
-  // buttons:
+  // ------------ radio buttons -------------------:
   bb = new QHBoxLayout;
   bb->setSpacing( 4 );
-  vb->addLayout( bb );
+  vb->addLayout(bb);
+  QVBoxLayout *vb2 = new QVBoxLayout;
+
+  gbb = new QGroupBox("Robot State");
 
   StateGroup = new QButtonGroup();
-  vModeButton = new QRadioButton("Free steering mode");
-  posModeButton = new QRadioButton("Positioning mode");
+  vModeButton = new QRadioButton("free steering mode");
+  posModeButton = new QRadioButton("positioning mode");
+  haltModeButton = new QRadioButton("halt mode");
   StateGroup->addButton(vModeButton);
   StateGroup->addButton(posModeButton);
+  StateGroup->addButton(haltModeButton);
   vModeButton->setChecked(true);
 
   connect( vModeButton, SIGNAL( clicked() ),
 	   this, SLOT( changeMode() ) );
   connect( posModeButton, SIGNAL( clicked() ),
 	   this, SLOT( changeMode() ) );
+  connect( haltModeButton, SIGNAL( clicked() ),
+	   this, SLOT( changeMode() ) );
 
-  bb->addWidget(vModeButton);
-  bb->addWidget(posModeButton);
-
+  vb2->addWidget(vModeButton);
+  vb2->addWidget(posModeButton);
+  vb2->addWidget(haltModeButton);
+  gbb->setLayout(vb2);
+  bb->addWidget(gbb);
   //---------------------------------------------------------
-  bb = new QHBoxLayout;
-  bb->setSpacing( 4 );
-  vb->addLayout( bb );
-
+  gbb = new QGroupBox("Coordinate System");
+  vb2 = new QVBoxLayout;
   CoordGroup = new QButtonGroup();
   rawCoordButton = new QRadioButton("Raw Coordinates");
   transCoordButton = new QRadioButton("Mirob Coordinates");
@@ -95,81 +106,75 @@ Robot::Robot( void )
   connect( transCoordButton, SIGNAL( clicked() ),
 	   this, SLOT( changeCoordinateSystem() ) );
 
-  bb->addWidget(rawCoordButton);
-  bb->addWidget(transCoordButton);
+  vb2->addWidget(rawCoordButton);
+  vb2->addWidget(transCoordButton);
+  gbb->setLayout(vb2);
+  bb->addWidget(gbb);
 
 
-  QFrame* line = new QFrame();
-  line->setFrameShape(QFrame::HLine);
-  line->setFrameShadow(QFrame::Sunken);
+  //----------- positioning -------------------
 
-  vb->addWidget(line);
- 
-  // sliders for  velocity
+  gbb = new QGroupBox("Positioning");
   QGridLayout *Positions = new QGridLayout;
-  Positions->setHorizontalSpacing( 2 );
-  Positions->setVerticalSpacing( 4 );
-  vb->addLayout( Positions );
+  Positions->setHorizontalSpacing( 10 );
+  Positions->setVerticalSpacing( 10 );
+  vb->addWidget(gbb);
 
-  label = new QLabel( "x velocity");
-  label->setAlignment( Qt::AlignCenter );
-  Positions->addWidget( label, 0, 0 );
+
+  gbb->setLayout(Positions);
+  label = new QLabel( "velocity");
+  label->setAlignment( Qt::AlignLeft );
+  Positions->addWidget( label, 0, 1 );
+  label = new QLabel( "actual");
+  label->setAlignment( Qt::AlignLeft );
+  Positions->addWidget( label, 0, 2 );
+  label = new QLabel( "input");
+  label->setAlignment( Qt::AlignLeft );
+  Positions->addWidget( label, 0, 3 );
+  label = new QLabel( "x");
+  label->setAlignment( Qt::AlignLeft );
+  Positions->addWidget( label, 1, 0 );
+  label = new QLabel( "y");
+  label->setAlignment( Qt::AlignLeft );
+  Positions->addWidget( label, 2, 0 );
+  label = new QLabel( "z");
+  label->setAlignment( Qt::AlignLeft );
+  Positions->addWidget( label, 3, 0 );
+
+
+
   vX = new QSlider(Qt::Horizontal);
   vX->setEnabled(false);
-  Positions->addWidget(vX,1,0);
+  Positions->addWidget(vX,1,1);
 
-  label = new QLabel( "y velocity");
-  label->setAlignment( Qt::AlignCenter );
-  Positions->addWidget( label, 0, 1 );
   vY = new QSlider(Qt::Horizontal);
   vY->setEnabled(false);
+  Positions->addWidget(vY,2,1);
 
-  Positions->addWidget(vY,1,1);
-
-  label = new QLabel( "z velocity");
-  label->setAlignment( Qt::AlignCenter );
-  Positions->addWidget( label, 0, 2 );
   vZ = new QSlider(Qt::Horizontal);
   vZ->setEnabled(false);
-  Positions->addWidget(vZ,1,2);
+  Positions->addWidget(vZ,3,1);
 
-  line = new QFrame();
-  line->setFrameShape(QFrame::HLine);
-  line->setFrameShadow(QFrame::Sunken);
-
-  vb->addWidget(line);
-  Positions = new QGridLayout;
-  Positions->setHorizontalSpacing( 2 );
-  Positions->setVerticalSpacing( 4 );
-  vb->addLayout( Positions );
 
   // position LCDs
-  label = new QLabel( "x position");
-  label->setAlignment( Qt::AlignCenter );
-  Positions->addWidget( label, 0, 0 );
+ 
   posX = new QLCDNumber(6);
   posX->setDecMode();
-  Positions->addWidget(posX,1,0);
+  Positions->addWidget(posX,1,2);
   posX->setSegmentStyle( QLCDNumber::Filled );
   posX->setPalette( qp );
   posX->setAutoFillBackground( true );
-
-  label = new QLabel( "y position");
-  label->setAlignment( Qt::AlignCenter );
-  Positions->addWidget( label, 0, 1 );
+ 
   posY = new QLCDNumber(6);
   posY->setDecMode();
-  Positions->addWidget(posY,1,1);
+  Positions->addWidget(posY,2,2);
   posY->setSegmentStyle( QLCDNumber::Filled );
   posY->setPalette( qp );
   posY->setAutoFillBackground( true );
 
-  label = new QLabel( "z position");
-  label->setAlignment( Qt::AlignCenter );
-  Positions->addWidget( label, 0, 2 );
   posZ = new QLCDNumber(6);
   posZ->setDecMode();
-  Positions->addWidget(posZ,1,2);
+  Positions->addWidget(posZ,3,2);
   posZ->setSegmentStyle( QLCDNumber::Filled );
   posZ->setPalette( qp );
   posZ->setAutoFillBackground( true );
@@ -178,28 +183,55 @@ Robot::Robot( void )
   setPosX = new QDoubleSpinBox;
   setPosX->setMaximum(1e6);
   setPosX->setMinimum(-1e6);
-  Positions->addWidget(setPosX,2,0);
+  Positions->addWidget(setPosX,1,3);
   
   setPosY = new QDoubleSpinBox;
   setPosY->setMaximum(1e6);
   setPosY->setMinimum(-1e6);
-  Positions->addWidget(setPosY,2,1);
+  Positions->addWidget(setPosY,2,3);
 
   setPosZ = new QDoubleSpinBox;
   setPosZ->setMaximum(1e6);
   setPosZ->setMinimum(-1e6);
-  Positions->addWidget(setPosZ,2,2);
+  Positions->addWidget(setPosZ,3,3);
 
+  
   updatePos = new QPushButton("update position");
-  Positions->addWidget(updatePos,3,1);
+  Positions->addWidget(updatePos,4,1);
   connect( updatePos, SIGNAL( clicked() ),
 	   this, SLOT( updatePositions() ) );
 
   transferPos = new QPushButton("transfer position");
-  Positions->addWidget(transferPos,3,0);
+  Positions->addWidget(transferPos,4,2);
   connect( transferPos, SIGNAL( clicked() ),
 	   this, SLOT( transferPositions() ) );
+
+  Stop = new QPushButton("STOP");
+  Positions->addWidget(Stop,4,3);
+  connect( Stop, SIGNAL( clicked() ),
+	   this, SLOT( stopRobot() ) );
+
+  Reset = new QPushButton("Reset");
+  connect( Reset, SIGNAL( clicked() ),
+	   this, SLOT( reset() ) );
+  vb->addWidget(Reset);
+
   
+  // --------- trajectories ------------
+  gbb = new QGroupBox("Trajectories");
+  QHBoxLayout *bb2 = new QHBoxLayout;
+  Trajectories = new QComboBox();
+  bb2->addWidget(Trajectories);
+
+  RunTrajectory = new QPushButton("Run");
+  bb2->addWidget(RunTrajectory);
+  connect( RunTrajectory, SIGNAL( clicked() ),
+	   this, SLOT( runCurrentTrajectory() ) );
+  RunTrajectory->setStyleSheet("* { background-color: rgb(255,100,100) }");
+  gbb->setLayout(bb2);
+  vb->addWidget(gbb);
+
+
 
   // start timer
   Timer = startTimer(30);
@@ -216,6 +248,12 @@ Robot::Robot( void )
 Robot::~Robot(void){
   killTimer(Timer);
   Timer = 0;
+}
+
+void Robot::reset(void){
+  if (Rob != 0){
+    Rob->reset();
+  }
 }
 
 
@@ -244,6 +282,9 @@ void Robot::changeMode(void){
       setPosY->setEnabled(true);
       setPosZ->setEnabled(true);
       updatePos->setEnabled(true);
+    }else if (haltModeButton->isChecked()){
+      Rob->stop();
+      updatePos->setEnabled(false);
     }
   }
 }
@@ -303,15 +344,83 @@ void Robot::initDevices( void )
   setPosZ->setEnabled(false);
   updatePos->setEnabled(false);
 
+  //set trajectories
+  vector<string> trajNames = Rob->getTrajectoryKeys();
+  for (vector<string>::iterator it=trajNames.begin() ; it < trajNames.end(); it++ ){
+    Trajectories->addItem(QString( it->c_str()));
+  }
+
 }
+
+void Robot::stopRobot(){
+  if (Rob != 0){
+    Rob->stop();
+  }
+
+}
+
+
+
 
 void Robot::timerEvent(QTimerEvent*)
 {
   posX->display(Rob->pos(1));
   posY->display(Rob->pos(2));
   posZ->display(Rob->pos(3));
+  
+  if (Rob != 0){
+    int state = Rob->getState();
+    if (state == ROBOT_FREE){
+      vModeButton->setChecked(true);
+    }else if (state == ROBOT_POS){
+      posModeButton->setChecked(true);
+    }else if (state == ROBOT_HALT){
+      haltModeButton->setChecked(true);
+    }else{
+      vModeButton->setChecked(false);
+      posModeButton->setChecked(false);
+      haltModeButton->setChecked(false);
+    }
+
+    //-----------
+    int coord = Rob->getCoordinateSystem();
+    if (coord == MIROB_COORD_TRANS){
+      transCoordButton->setChecked(true);
+    }else if (coord == MIROB_COORD_RAW){
+      rawCoordButton->setChecked(true);
+    }else{
+      transCoordButton->setChecked(false);
+      rawCoordButton->setChecked(false);
+    }
+
+    if (!Rob->isCalibrated()){
+      RunTrajectory->setEnabled(false);
+      RunTrajectory->setStyleSheet("* { background-color: rgb(255,100,100) }");
+  
+    }else{
+     
+      if (Rob->trajectoryCalibrated(Trajectories->currentText().toStdString())){
+	RunTrajectory->setEnabled(true);
+	RunTrajectory->setStyleSheet("* { background-color: rgb(100,255,100) }");
+	
+      }else{
+	RunTrajectory->setEnabled(false);
+	RunTrajectory->setStyleSheet("* { background-color: rgb(255,100,100) }");
+      }
+
+    }
+
+    
+  }
+
 }
 
+
+void Robot::runCurrentTrajectory(void){
+  if (Rob != 0){
+    Rob->runTrajectory(Trajectories->currentText().toStdString());
+  }
+}
 
 
 void Robot::keyReleaseEvent(QKeyEvent* e){

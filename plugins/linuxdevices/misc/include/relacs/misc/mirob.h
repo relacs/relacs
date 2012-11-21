@@ -31,6 +31,8 @@
 #include <relacs/misc/tinyxml2.h>
 #include <TML_lib.h>
 #include <queue>
+#include<map>
+
 
 #define ROBOT_HALT 0
 #define ROBOT_FREE 1
@@ -149,6 +151,8 @@ public:
 
   void setCoordinateSystem(int mode){CoordinateMode = mode;}
   int getCoordinateSystem(void) const {return CoordinateMode;}
+  bool isCalibrated(void) const {return Calibrated;}
+  void setCalibrated(bool c){Calibrated = c;};
 
   int getState() const {return robotDaemon->getState();};
   void setState(int state);
@@ -169,6 +173,14 @@ public:
 
   int stop(void);
 
+  int loadTrajectoryFile(const char * filename);
+  int runTrajectory(string name);
+  int runTrajectory(string name, const double x, const double y, const double z);
+  int goToTrajectoryStart(string name);
+  vector<string> getTrajectoryKeys(void);
+  bool trajectoryCalibrated(string name) {return trajectoriesCalibrated[name];};
+  int setTrajectoryCalibrated(string name, bool val) {trajectoriesCalibrated[name]= val; return 0;}
+  int setTrajectoryStart(string name, const double x, const double y, const double z);
   static const char* LOGPREFIX;
   
 private:
@@ -203,6 +215,7 @@ private:
 
   int step( double x, int axis );
   bool Opened;
+  bool Calibrated;
 
   double Speed[3];
   double Acceleration[3];
@@ -218,8 +231,8 @@ private:
   
   Zones forbiddenZones;
   XMLDocument xml;
-
-  
+  map<string, vector<PositionUpdate*> > trajectories;
+  map<string, bool> trajectoriesCalibrated;
 };
 
 }; /* namespace misc */

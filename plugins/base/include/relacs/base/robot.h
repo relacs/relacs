@@ -37,6 +37,7 @@
 #include <QLCDNumber>
 #include <QDoubleSpinBox>
 #include <QButtonGroup>
+#include <QComboBox>
 
 using namespace relacs;
 
@@ -67,6 +68,9 @@ public slots:
   void changeCoordinateSystem(void); 
   void updatePositions(void); 
   void transferPositions(void);
+  void stopRobot(void);
+  void runCurrentTrajectory(void);
+  void reset(void);
 protected:
 
   virtual void keyPressEvent( QKeyEvent *e );
@@ -79,13 +83,14 @@ protected:
   QLCDNumber *posX, *posY, *posZ;
   QDoubleSpinBox *setPosX, *setPosY, *setPosZ;
 
-  QPushButton *updatePos, *transferPos;
+  QPushButton *updatePos, *transferPos, *Stop, *RunTrajectory, *Reset;
 
-  QRadioButton *vModeButton, *posModeButton, *rawCoordButton, *transCoordButton;
+  QRadioButton *vModeButton, *posModeButton, *haltModeButton, *rawCoordButton, *transCoordButton;
 
   QButtonGroup* StateGroup, *CoordGroup;
   //Manipulator *Rob;
   ::misc::Mirob *Rob;
+  QComboBox *Trajectories;
 
 private:
   OptWidget SW;

@@ -53,7 +53,7 @@ namespace misc{
 
 const char* Mirob::LOGPREFIX = "MIROB: ";
 
-
+  typedef map<string, vector<PositionUpdate*> >::iterator trajIter;
 
 int inv3(double A[3][3], double (&result)[3][3]){
   double determinant =    +A[0][0]*(A[1][1]*A[2][2]-A[2][1]*A[1][2])
@@ -102,6 +102,69 @@ Mirob::~Mirob( void )
 {
   close();
 }
+/*************************************************************/
+
+int Mirob::loadTrajectoryFile(const char * filename){
+  XMLDocument txml;
+  txml.LoadFile( filename);
+
+  for( const XMLElement* node=txml.FirstChildElement("trajectory"); 
+       node; node=node->NextSiblingElement("trajectory") ) {
+      vector<PositionUpdate*> tmp;
+      
+      const XMLElement* node3=node->FirstChildElement("start");
+      PositionUpdate *tmp2 = new PositionUpdate();
+      node3->FirstChildElement("x")->QueryDoubleText(&(tmp2->x));
+      node3->FirstChildElement("y")->QueryDoubleText(&(tmp2->y));
+      node3->FirstChildElement("z")->QueryDoubleText(&(tmp2->z));
+      tmp.push_back(tmp2);
+      
+
+      for( const XMLElement* node2=node->FirstChildElement("node"); 
+       node2; node2=node2->NextSiblingElement("node") ){
+	PositionUpdate *tmp2 = new PositionUpdate();
+	node2->FirstChildElement("x")->QueryDoubleText(&(tmp2->x));
+	node2->FirstChildElement("y")->QueryDoubleText(&(tmp2->y));
+	node2->FirstChildElement("z")->QueryDoubleText(&(tmp2->z));
+	node2->FirstChildElement("v")->QueryDoubleText(&(tmp2->speed));
+	tmp.push_back(tmp2);
+      }
+      trajectories.insert(pair<string, vector<PositionUpdate*> > 
+			    (string(node->Attribute("name")),tmp));
+      trajectoriesCalibrated.insert(pair<string, bool>(string(node->Attribute("name")),true));
+
+  }
+  return 0;
+}
+  
+vector<string> Mirob::getTrajectoryKeys(){
+  vector<string> retval;
+  for(map<string,vector<PositionUpdate*> >::iterator it = trajectories.begin(); 
+      it != trajectories.end(); ++it) {
+    retval.push_back(it->first);
+  }
+  return retval;
+}
+
+
+/*************************************************************/
+ int Mirob::setTrajectoryStart(string name, const double x, const double y, const double z){
+   trajIter it = trajectories.find(name);
+   if(it == trajectories.end()){
+     return 1;
+   }
+   trajectories[name][0]->x = x;
+   trajectories[name][0]->y = y;
+   trajectories[name][0]->z = z;
+   // PositionUpdate* tmp = trajectories[name][0];
+   // for (vector<PositionUpdate*>::size_type i = 0; i != trajectories[name].size(); ++i){
+   //   trajectories[name][i]->x += x - tmp->x;
+   //   trajectories[name][i]->y += y - tmp->y;
+   //   trajectories[name][i]->z += z - tmp->z;
+   // }
+   return 0;
+ }
+
 /*************************************************************/
 
 int Mirob::loadConfigurationFile(){
@@ -219,7 +282,9 @@ int Mirob::open( const string &device, const Options &opts )
 
   configFileName = opts.text("config");
   loadConfigurationFile();
-
+  
+  loadTrajectoryFile("trajectories.xml");
+  getTrajectoryKeys();
   /* Start Robot Daemon */
   robotDaemon_info.Device = device.c_str();
   robotDaemon_info.active = false;
@@ -258,8 +323,9 @@ int Mirob::open( const string &device, const Options &opts )
   { 
     pthread_mutex_lock( &robotDaemon_info.mutex );
     if (state != ROBOT_POS){
-         queue<PositionUpdate*> empty;
-	 swap(robotDaemon_info.positionQueue , empty );
+      cerr << LOGPREFIX << "Clearing position queue" << endl;
+      queue<PositionUpdate*> empty;
+      swap(robotDaemon_info.positionQueue , empty );
     }
     robotDaemon_info.state = state;
     pthread_mutex_unlock( &robotDaemon_info.mutex );
@@ -287,7 +353,17 @@ void Mirob::close( void )
 
 int Mirob::reset( void )
 {
-  return robotDaemon->reset();
+  robotDaemon->Shutdown();
+  robotDaemon =  new TMLRobotDaemon(&robotDaemon_info);
+
+  cerr << LOGPREFIX << " waiting for daemon to start" << endl;
+  pthread_mutex_lock( &robotDaemon_info.mutex );
+  robotDaemon->Start();
+  // wait until Setup has finished (sends the cond signal)
+  pthread_cond_wait( &robotDaemon_info.cond, &robotDaemon_info.mutex );
+  pthread_mutex_unlock( &robotDaemon_info.mutex );
+
+  return 0;
 }
 
 
@@ -670,6 +746,47 @@ int Mirob::switchClampState(void){
   pthread_mutex_unlock( &robotDaemon_info.mutex );
   return 0;
 }
+
+/*******************************************************/
+int Mirob::goToTrajectoryStart(string name){
+  if (Calibrated){
+    vector<PositionUpdate*> tmp = trajectories[name];
+    setCoordinateSystem(MIROB_COORD_TRANS);
+    setState(ROBOT_POS);
+
+    setPos(tmp[0]->x,tmp[0]->y,tmp[0]->z,MaxSpeed);
+    return 0;
+  }else{
+    return 1;
+  }
+
+}
+
+
+/*******************************************************/
+ int Mirob::runTrajectory(string name){
+    vector<PositionUpdate*> tmp = trajectories[name];
+    return runTrajectory(name, tmp[0]->x ,tmp[0]->y ,tmp[0]->z);
+}
+
+/*******************************************************/
+ int Mirob::runTrajectory(string name, const double x, const double y, const double z){
+  if (Calibrated){
+    vector<PositionUpdate*> tmp = trajectories[name];
+    setCoordinateSystem(MIROB_COORD_TRANS);
+    setState(ROBOT_POS);
+
+    setPos(x,y,z,MaxSpeed);
+    for (vector<PositionUpdate*>::size_type i =1; i < tmp.size(); ++i){
+      setPos(x + tmp[i]->x,y + tmp[i]->y,z + tmp[i]->z,tmp[i]->speed);
+    }
+    return 0;
+  }else{
+    return 1;
+  }
+
+}
+
 
 // void Mirob::miroblog(const char* text){
   

@@ -28,6 +28,7 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QRadioButton>
+#include <QComboBox>
 
 using namespace relacs;
 
@@ -53,20 +54,20 @@ class MirobCalibration : public RePro
 
  public slots:
   void calibDone();
-  void gotoOffspring();
+  void goTo();
   void setValue();
-  void traceOutCoord();
   void basisItemChanged(QTableWidgetItem *);
-  
+  void setStart();
+  void runTrajectoryFromHere();
+  void go2Start();
  private:
     ::misc::Mirob *Rob;
   QTableWidget* coordinateFrame;
   double B[3][3];
   double b0[3];
-  QPushButton *Done, * toOffspring, *Set, *DriveCoord;
-  QRadioButton *qB0, *qB1, *qB2, *qB3;
+  QPushButton *Done, * go2, *Set, *SetStart, *ConvexHull, *Go2StartingPoint;
   bool done;
-  
+  QComboBox *Trajectories, *BasisVecs;
 };
 
 

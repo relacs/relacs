@@ -56,6 +56,7 @@ const char* TMLRobotDaemon::LOGPREFIX = "ROBOT DAEMON: ";
 TMLRobotDaemon::TMLRobotDaemon(robotDaemon_data* ptr){
   info = ptr;
   motionIssued = false;
+  stopRobot = false;
   // create the mutex shared by TMLRobotDaemon and Mirob
   pthread_mutex_init(&info->mutex,NULL);
   pthread_cond_init(&info->cond,NULL);
@@ -93,13 +94,13 @@ void * TMLRobotDaemon::EntryPoint(void * pthis){
 /*****************************************************************/
 int TMLRobotDaemon::Stop(){
     pthread_mutex_lock(&info->mutex);
-    info->state = ROBOT_FREE;
     info->v[0] = 0.;
     info->v[1] = 0.;
     info->v[2] = 0.;
-    info->vChanged = true;
-    
+    info->vChanged=true;
+    stopRobot = true;
     pthread_mutex_unlock(&info->mutex);
+    
     return 0;
 }
 
@@ -251,6 +252,18 @@ void TMLRobotDaemon::Execute(){
   while (info->active){
 
     updateInfo();
+
+    if (stopRobot){
+      cerr << LOGPREFIX << "Stopping robot!" << endl;
+      for (int i =1; i !=4; ++i){
+	if (activateAxis(i) > 0 || !TS_Stop()){
+	  cerr << LOGPREFIX << "Could not stop robot!" << endl;
+	}
+      }
+      info->state = ROBOT_HALT;
+      stopRobot = false;
+    }
+
     //fprintf(stderr,"%04hX %04hX %04hX \r",SRL[0],SRL[1],SRL[2]);
     //cerr << LOGPREFIX << "Motion " << motionComplete() << endl;
     // if the clamp state has changed
@@ -278,6 +291,11 @@ void TMLRobotDaemon::Execute(){
     //---------------------------------------------
     }else if (info->state == ROBOT_POS){
       //      cerr << info->positionQueue.size() << endl;
+      if (motionIssued && info->positionQueue.size()==0){
+	cerr << LOGPREFIX << "Motion was apparently aborted!" << endl;
+	motionIssued = false;
+      }
+
       if (motionIssued && motionComplete()){
 	cerr << LOGPREFIX << "Motion Completed." << endl;
 	motionIssued = false;
@@ -517,10 +535,6 @@ bool TMLRobotDaemon::isInsideForbiddenZone(){
 
 
 
-
-int TMLRobotDaemon::reset( void ){
-  return 0;
-}
 
 
 
