@@ -52,8 +52,34 @@ using namespace tinyxml2;
 
 namespace misc {
 
-  int inv3(double A[3][3], double (&result)[3][3]);
+int inv3(double A[3][3], double (&result)[3][3]);
 
+
+class Trajectory
+{
+
+ public:
+  Trajectory();
+  Trajectory(const XMLElement * node);
+
+  void setAnchor(PositionUpdate* a);
+  void setStart(PositionUpdate* s);
+  PositionUpdate* resetToAnchor(double x, double y, double z);
+  PositionUpdate* resetToAnchor();
+  PositionUpdate* resetToStart(double x, double y, double z);
+  PositionUpdate* resetToStart();
+  PositionUpdate* next();
+  PositionUpdate* startPoint() const {return start;};
+  int  setCalibrated(bool val){Calibrated = val; return 0;};
+  bool isCalibrated() const {return Calibrated;}
+ private: 
+  bool Calibrated;
+  int anchorIndex;
+  vector<PositionUpdate*>::size_type currentIndex;
+  PositionUpdate *start, *anchor;
+  double delta[3];
+  vector<PositionUpdate*> nodes;
+};
 
 /*!
 \class Mirob
@@ -178,9 +204,10 @@ public:
   int runTrajectory(string name, const double x, const double y, const double z);
   int goToTrajectoryStart(string name);
   vector<string> getTrajectoryKeys(void);
-  bool trajectoryCalibrated(string name) {return trajectoriesCalibrated[name];};
-  int setTrajectoryCalibrated(string name, bool val) {trajectoriesCalibrated[name]= val; return 0;}
+  int setTrajectoryCalibrated(string name, bool val);
+  bool trajectoryCalibrated(string name);
   int setTrajectoryStart(string name, const double x, const double y, const double z);
+  int setTrajectoryAnchor(string name, const double x, const double y, const double z);
   static const char* LOGPREFIX;
   
 private:
@@ -231,8 +258,7 @@ private:
   
   Zones forbiddenZones;
   XMLDocument xml;
-  map<string, vector<PositionUpdate*> > trajectories;
-  map<string, bool> trajectoriesCalibrated;
+  map<string, Trajectory* > trajectories;
 };
 
 }; /* namespace misc */

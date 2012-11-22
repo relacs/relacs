@@ -85,7 +85,7 @@ protected:
 
   QPushButton *updatePos, *transferPos, *Stop, *RunTrajectory, *Reset;
 
-  QRadioButton *vModeButton, *posModeButton, *haltModeButton, *rawCoordButton, *transCoordButton;
+  QRadioButton *vModeButton, *posModeButton, *haltModeButton, *errModeButton, *rawCoordButton, *transCoordButton;
 
   QButtonGroup* StateGroup, *CoordGroup;
   //Manipulator *Rob;

@@ -100,18 +100,23 @@ MirobCalibration::MirobCalibration( void )
 
   
   Trajectories = new QComboBox();
-  Positions->addWidget(Trajectories,0,0);
+  Positions->addWidget(Trajectories,0,0,1,2);
 
   Go2StartingPoint = new QPushButton("Go To Starting Point");
   connect( Go2StartingPoint, SIGNAL( clicked() ),
 	   this, SLOT( go2Start() ) );
-  Positions->addWidget(Go2StartingPoint, 0, 1);  
+  Positions->addWidget(Go2StartingPoint, 1, 0);  
 
 
   SetStart = new QPushButton("Set Start");
   connect( SetStart, SIGNAL( clicked() ),
 	   this, SLOT( setStart() ) );
-  Positions->addWidget(SetStart, 1, 0);  
+  Positions->addWidget(SetStart, 2, 0);  
+
+  SetAnchor = new QPushButton("Set Anchor");
+  connect( SetAnchor, SIGNAL( clicked() ),
+	   this, SLOT( setAnchor() ) );
+  Positions->addWidget(SetAnchor, 2, 1);  
 
 
   ConvexHull = new QPushButton("Run Trajectory From Here");
@@ -274,8 +279,17 @@ void MirobCalibration::setStart(){
   Rob->setCoordinateSystem(MIROB_COORD_TRANS);
   Rob->setTrajectoryStart(Trajectories->currentText().toStdString(),
 			  Rob->posX(), Rob->posY(), Rob->posZ() );
-  Rob->setTrajectoryCalibrated(Trajectories->currentText().toStdString(), true);
 }
+
+//------------------------------------------------------
+void MirobCalibration::setAnchor(){
+  Rob->setState(ROBOT_POS);
+  Rob->setCoordinateSystem(MIROB_COORD_TRANS);
+  Rob->setTrajectoryAnchor(Trajectories->currentText().toStdString(),
+			  Rob->posX(), Rob->posY(), Rob->posZ() );
+
+}
+
 
 //------------------------------------------------------
 void MirobCalibration::runTrajectoryFromHere(){

@@ -33,7 +33,7 @@
 #define ROBOT_HALT 0
 #define ROBOT_FREE 1
 #define ROBOT_POS  2
-#define ROBOT_STOP 3
+#define ROBOT_ERR 3
 
 using namespace std;
 using namespace relacs;
@@ -55,6 +55,11 @@ struct PositionUpdate{
     z = zz;
     speed = s;
   }
+  
+  friend std::ostream& operator << (std::ostream& stream, PositionUpdate &p){
+    stream << "\n\t x:" << p.x << "\ty: "<< p.y << "\tz: " << p.z << "\tspeed: " << p.speed << "\n";
+    return stream;
+  }    
 };
 
 typedef struct PositionUpdate PositionUpdate;
@@ -82,7 +87,6 @@ struct robotDaemon_data {
 
   // current speed variables
   double v[3];
-  bool vChanged;
 
   // clamp tool states
   bool toolClamped;
@@ -129,7 +133,7 @@ class TMLRobotDaemon
       void log(relacs::Str text);
 
    private:
-      bool motionIssued, stopRobot;
+      //bool motionIssued;
       robotDaemon_data* info;
       pthread_t id;
       static const char* LOGPREFIX;
@@ -156,7 +160,12 @@ class TMLRobotDaemon
       // variables for position monitoring
       int tmp_apos2; 
       long tmp_apos;
-
+      
+      // tracking variables
+      double old_v[3];
+      int old_state;
+      bool old_tool_state;
+      queue<PositionUpdate*>::size_type old_queue_len;
 
 };
 

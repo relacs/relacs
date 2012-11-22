@@ -70,12 +70,15 @@ Robot::Robot( void )
   gbb = new QGroupBox("Robot State");
 
   StateGroup = new QButtonGroup();
-  vModeButton = new QRadioButton("free steering mode");
-  posModeButton = new QRadioButton("positioning mode");
-  haltModeButton = new QRadioButton("halt mode");
+  vModeButton = new QRadioButton("free steering state");
+  posModeButton = new QRadioButton("positioning state");
+  haltModeButton = new QRadioButton("halt state");
+  errModeButton = new QRadioButton("error state");
+  errModeButton->setEnabled(false);
   StateGroup->addButton(vModeButton);
   StateGroup->addButton(posModeButton);
   StateGroup->addButton(haltModeButton);
+  StateGroup->addButton(errModeButton);
   vModeButton->setChecked(true);
 
   connect( vModeButton, SIGNAL( clicked() ),
@@ -84,10 +87,13 @@ Robot::Robot( void )
 	   this, SLOT( changeMode() ) );
   connect( haltModeButton, SIGNAL( clicked() ),
 	   this, SLOT( changeMode() ) );
+  connect( errModeButton, SIGNAL( clicked() ),
+	   this, SLOT( changeMode() ) );
 
   vb2->addWidget(vModeButton);
   vb2->addWidget(posModeButton);
   vb2->addWidget(haltModeButton);
+  vb2->addWidget(errModeButton);
   gbb->setLayout(vb2);
   bb->addWidget(gbb);
   //---------------------------------------------------------
@@ -372,11 +378,21 @@ void Robot::timerEvent(QTimerEvent*)
     int state = Rob->getState();
     if (state == ROBOT_FREE){
       vModeButton->setChecked(true);
+      rawCoordButton->setChecked(true);
+      transCoordButton->setEnabled(false);
+      Rob->setCoordinateSystem(MIROB_COORD_RAW);
     }else if (state == ROBOT_POS){
+      transCoordButton->setEnabled(true);
       posModeButton->setChecked(true);
     }else if (state == ROBOT_HALT){
+      transCoordButton->setEnabled(true);
       haltModeButton->setChecked(true);
+    }else if (state == ROBOT_ERR){
+      transCoordButton->setEnabled(true);
+      errModeButton->setChecked(true);
     }else{
+      transCoordButton->setEnabled(false);
+      errModeButton->setChecked(true);
       vModeButton->setChecked(false);
       posModeButton->setChecked(false);
       haltModeButton->setChecked(false);

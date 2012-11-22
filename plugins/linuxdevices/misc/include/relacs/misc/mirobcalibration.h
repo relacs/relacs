@@ -58,6 +58,7 @@ class MirobCalibration : public RePro
   void setValue();
   void basisItemChanged(QTableWidgetItem *);
   void setStart();
+  void setAnchor();
   void runTrajectoryFromHere();
   void go2Start();
  private:
@@ -65,7 +66,7 @@ class MirobCalibration : public RePro
   QTableWidget* coordinateFrame;
   double B[3][3];
   double b0[3];
-  QPushButton *Done, * go2, *Set, *SetStart, *ConvexHull, *Go2StartingPoint;
+  QPushButton *Done, * go2, *Set, *SetStart, *ConvexHull, *Go2StartingPoint, *SetAnchor;
   bool done;
   QComboBox *Trajectories, *BasisVecs;
 };

@@ -55,8 +55,8 @@ const char* TMLRobotDaemon::LOGPREFIX = "ROBOT DAEMON: ";
 
 TMLRobotDaemon::TMLRobotDaemon(robotDaemon_data* ptr){
   info = ptr;
-  motionIssued = false;
-  stopRobot = false;
+  //motionIssued = false;
+  
   // create the mutex shared by TMLRobotDaemon and Mirob
   pthread_mutex_init(&info->mutex,NULL);
   pthread_cond_init(&info->cond,NULL);
@@ -97,8 +97,9 @@ int TMLRobotDaemon::Stop(){
     info->v[0] = 0.;
     info->v[1] = 0.;
     info->v[2] = 0.;
-    info->vChanged=true;
-    stopRobot = true;
+    info->state = ROBOT_HALT;
+    // info->vChanged=true;
+    // stopRobot = true;
     pthread_mutex_unlock(&info->mutex);
     
     return 0;
@@ -248,72 +249,111 @@ Main loop of pthread.
 
  */
 void TMLRobotDaemon::Execute(){
+  // initialize state variable
+  old_state = info->state;
+  for (int i = 0; i != 3; ++i){
+    old_v[i] = info->v[i];
+  }
+  old_tool_state = info->toolClamped;
+  old_queue_len = 0;
 
+  
   while (info->active){
 
     updateInfo();
-
-    if (stopRobot){
-      cerr << LOGPREFIX << "Stopping robot!" << endl;
-      for (int i =1; i !=4; ++i){
-	if (activateAxis(i) > 0 || !TS_Stop()){
-	  cerr << LOGPREFIX << "Could not stop robot!" << endl;
+    
+    // if the state has changed
+    if (info->state != old_state){
+      if (info->state == ROBOT_POS){ 
+	if (old_state == ROBOT_FREE){
+	  for (int i =1; i !=4; ++i){
+	    if (activateAxis(i) > 0 || !TS_Stop()){
+	      cerr << LOGPREFIX << "Could not stop robot!" << endl;
+	    }
+	  }	  
 	}
+	
+      }else if(info->state == ROBOT_FREE){
+	if (old_state == ROBOT_POS){
+	  cerr << LOGPREFIX << "Clearing position queue" << endl;
+	  queue<PositionUpdate*> empty;
+	  swap(info->positionQueue , empty );
+	  //motionIssued = false;
+
+	}
+      }else if(info->state == ROBOT_HALT){
+	for (int i =1; i !=4; ++i){
+	  if (activateAxis(i) > 0 || !TS_Stop()){
+	    cerr << LOGPREFIX << "Could not stop robot!" << endl;
+	  }
+	}
+      }else if(info->state == ROBOT_ERR){
+
       }
-      info->state = ROBOT_HALT;
-      stopRobot = false;
     }
 
-    //fprintf(stderr,"%04hX %04hX %04hX \r",SRL[0],SRL[1],SRL[2]);
-    //cerr << LOGPREFIX << "Motion " << motionComplete() << endl;
-    // if the clamp state has changed
-    if (info->clampChanged){
-      if (info->toolClamped){
-	clampTool();
-      }else{
-	releaseTool();
-      }
-      info->clampChanged = false;
-    }
-
+    // -------- now act according to state ------------------
 
     if (info->state == ROBOT_FREE){
-	
       // if a new velcity has been issued
-      if (info->vChanged){
+      if ( (old_v[0] - info->v[0])*(old_v[0] - info->v[0]) + 
+	   (old_v[1] - info->v[1])*(old_v[1] - info->v[1]) + 
+	   (old_v[2] - info->v[2])*(old_v[2] - info->v[2]) > 1){
 	for (int axis = 1; axis <=3; ++axis){
 	  setV(info->v[axis-1],axis); 
 	}
-	info->vChanged = false;
       }
-      
-
     //---------------------------------------------
     }else if (info->state == ROBOT_POS){
-      //      cerr << info->positionQueue.size() << endl;
-      if (motionIssued && info->positionQueue.size()==0){
-	cerr << LOGPREFIX << "Motion was apparently aborted!" << endl;
-	motionIssued = false;
+      if (old_queue_len == 0 && info->positionQueue.size() > 0){// new movement issued
+	if (info->positionQueue.size() > 0){
+	  cerr << LOGPREFIX << "Going to " << *(info->positionQueue.front()) << endl;
+	  pthread_mutex_lock( &info->mutex );
+	  setPos(info->positionQueue.front()->x, info->positionQueue.front()->y, 
+		 info->positionQueue.front()->z, info->positionQueue.front()->speed);
+	  pthread_mutex_unlock( &info->mutex );
+	}
+	updateInfo();
       }
 
-      if (motionIssued && motionComplete()){
-	cerr << LOGPREFIX << "Motion Completed." << endl;
-	motionIssued = false;
-	info->positionQueue.pop();
-      }else if (info->positionQueue.size() > 0){
-	pthread_mutex_lock( &info->mutex );
-	setPos(info->positionQueue.front()->x, info->positionQueue.front()->y, 
-	       info->positionQueue.front()->z, info->positionQueue.front()->speed);
-	pthread_mutex_unlock( &info->mutex );
+      if ( motionComplete()){
+	//motionIssued = false;
+	if (info->positionQueue.size() > 0){
+	  cerr << LOGPREFIX << "Motion Completed." << endl;
+	  info->positionQueue.pop();
+	   
+	  if (info->positionQueue.size() > 0){
+	    cerr << LOGPREFIX << "Going to " << *(info->positionQueue.front()) << endl;
+	    pthread_mutex_lock( &info->mutex );
+	    setPos(info->positionQueue.front()->x, info->positionQueue.front()->y, 
+		   info->positionQueue.front()->z, info->positionQueue.front()->speed);
+	    pthread_mutex_unlock( &info->mutex );
+	  }
+	}
       }
 
     }else if (info->state == ROBOT_HALT){
+      if (old_tool_state != info->toolClamped){
+	if (info->toolClamped){
+	  clampTool();
+	}else{
+	  releaseTool();
+	}
+	
+      }
 
-    }else if (info->state == ROBOT_STOP){
+    }else if (info->state == ROBOT_ERR){
 
     }
 
-  
+    // update state variable
+    old_state = info->state;
+    for (int i = 0; i != 3; ++i){
+      old_v[i] = info->v[i];
+    }
+    old_tool_state = info->toolClamped;
+    old_queue_len=info->positionQueue.size();
+    // sleep 
     nanosleep(&info->sleeptime,NULL);
   }
 
@@ -472,7 +512,7 @@ int TMLRobotDaemon::setPos(double x, double y, double z, double speed){
     }
    
   }
-  motionIssued = true;
+  //motionIssued = true;
   return 0;
 
 }

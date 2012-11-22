@@ -51,9 +51,117 @@ using namespace tinyxml2;
 
 namespace misc{
 
+
+  Trajectory::Trajectory(){
+    Calibrated = false;
+    anchorIndex = 0;
+    start = new PositionUpdate();
+    anchor = new PositionUpdate();
+
+  }
+
+
+  Trajectory::Trajectory(const XMLElement* node){
+    Calibrated = false;
+    anchorIndex = 0;
+    start = new PositionUpdate();
+    anchor = new PositionUpdate();
+
+    bool isAnchor = false;
+    int i = 0;
+    for( const XMLElement* node2=node->FirstChildElement("node"); 
+	 node2; node2=node2->NextSiblingElement("node") ){
+      PositionUpdate *tmp2 = new PositionUpdate();
+      node2->FirstChildElement("x")->QueryDoubleText(&(tmp2->x));
+      node2->FirstChildElement("y")->QueryDoubleText(&(tmp2->y));
+      node2->FirstChildElement("z")->QueryDoubleText(&(tmp2->z));
+      node2->FirstChildElement("v")->QueryDoubleText(&(tmp2->speed));
+      nodes.push_back(tmp2);
+
+      node2->QueryBoolAttribute( "anchor", &isAnchor );
+      if (isAnchor){
+	anchorIndex = i;
+	isAnchor = false;
+      }
+      ++i;
+    }
+  }
+
+  
+  void Trajectory::setAnchor(PositionUpdate* a){
+    anchor = a;
+    start->x = a->x - nodes[anchorIndex]->x;
+    start->y = a->y - nodes[anchorIndex]->y;
+    start->z = a->z - nodes[anchorIndex]->z;
+    //cerr << "Setting start and anchor to " << *start << *anchor << endl;
+    Calibrated = true;
+  }
+
+  void Trajectory::setStart(PositionUpdate* s){
+    start = s;
+    anchor->x = s->x + nodes[anchorIndex]->x;
+    anchor->y = s->y + nodes[anchorIndex]->y;
+    anchor->z = s->z + nodes[anchorIndex]->z;
+    
+    Calibrated = true;
+  }
+
+  PositionUpdate* Trajectory::resetToAnchor(double x, double y, double z){
+       currentIndex = 0;
+      delta[0] = x - nodes[anchorIndex]->x;
+      delta[1] = y - nodes[anchorIndex]->y;
+      delta[2] = z - nodes[anchorIndex]->z;
+
+      
+      return new PositionUpdate(nodes[0]->x + delta[0],
+			    nodes[0]->y + delta[1],
+			    nodes[0]->z + delta[2], nodes[0]->speed);
+
+    
+  }
+
+  PositionUpdate* Trajectory::resetToAnchor(){
+    if (!Calibrated){
+      return NULL;
+    }else{
+      return resetToAnchor(anchor->x, anchor->y, anchor->z);
+    }
+  }
+ 
+  PositionUpdate* Trajectory::resetToStart(){
+    if (!Calibrated){
+      return NULL;
+    }else{
+      return resetToStart(start->x, start->y, start->z);
+    }
+  }
+ 
+  PositionUpdate* Trajectory::resetToStart(double x, double y, double z){
+      currentIndex = 0;
+      delta[0] = x;
+      delta[1] = y;
+      delta[2] = z;
+      return new PositionUpdate(nodes[0]->x + delta[0],
+			    nodes[0]->y + delta[1],
+			    nodes[0]->z + delta[2], nodes[0]->speed);
+  }
+
+  PositionUpdate* Trajectory::next(){
+    if (currentIndex == nodes.size()-1){
+      return NULL;
+    }else{
+      ++currentIndex;
+      return new PositionUpdate(nodes[currentIndex]->x + delta[0],
+			    nodes[currentIndex]->y + delta[1],
+			    nodes[currentIndex]->z + delta[2], nodes[currentIndex]->speed);
+    }    
+  }
+
+//===================================================================
+
 const char* Mirob::LOGPREFIX = "MIROB: ";
 
-  typedef map<string, vector<PositionUpdate*> >::iterator trajIter;
+  typedef map<string, Trajectory* >::iterator trajIter;
 
 int inv3(double A[3][3], double (&result)[3][3]){
   double determinant =    +A[0][0]*(A[1][1]*A[2][2]-A[2][1]*A[1][2])
@@ -110,28 +218,9 @@ int Mirob::loadTrajectoryFile(const char * filename){
 
   for( const XMLElement* node=txml.FirstChildElement("trajectory"); 
        node; node=node->NextSiblingElement("trajectory") ) {
-      vector<PositionUpdate*> tmp;
       
-      const XMLElement* node3=node->FirstChildElement("start");
-      PositionUpdate *tmp2 = new PositionUpdate();
-      node3->FirstChildElement("x")->QueryDoubleText(&(tmp2->x));
-      node3->FirstChildElement("y")->QueryDoubleText(&(tmp2->y));
-      node3->FirstChildElement("z")->QueryDoubleText(&(tmp2->z));
-      tmp.push_back(tmp2);
-      
-
-      for( const XMLElement* node2=node->FirstChildElement("node"); 
-       node2; node2=node2->NextSiblingElement("node") ){
-	PositionUpdate *tmp2 = new PositionUpdate();
-	node2->FirstChildElement("x")->QueryDoubleText(&(tmp2->x));
-	node2->FirstChildElement("y")->QueryDoubleText(&(tmp2->y));
-	node2->FirstChildElement("z")->QueryDoubleText(&(tmp2->z));
-	node2->FirstChildElement("v")->QueryDoubleText(&(tmp2->speed));
-	tmp.push_back(tmp2);
-      }
-      trajectories.insert(pair<string, vector<PositionUpdate*> > 
-			    (string(node->Attribute("name")),tmp));
-      trajectoriesCalibrated.insert(pair<string, bool>(string(node->Attribute("name")),true));
+      trajectories.insert(pair<string, Trajectory* > 
+			    (string(node->Attribute("name")),new Trajectory(node)));
 
   }
   return 0;
@@ -139,7 +228,7 @@ int Mirob::loadTrajectoryFile(const char * filename){
   
 vector<string> Mirob::getTrajectoryKeys(){
   vector<string> retval;
-  for(map<string,vector<PositionUpdate*> >::iterator it = trajectories.begin(); 
+  for(map<string,Trajectory* >::iterator it = trajectories.begin(); 
       it != trajectories.end(); ++it) {
     retval.push_back(it->first);
   }
@@ -153,17 +242,39 @@ vector<string> Mirob::getTrajectoryKeys(){
    if(it == trajectories.end()){
      return 1;
    }
-   trajectories[name][0]->x = x;
-   trajectories[name][0]->y = y;
-   trajectories[name][0]->z = z;
-   // PositionUpdate* tmp = trajectories[name][0];
-   // for (vector<PositionUpdate*>::size_type i = 0; i != trajectories[name].size(); ++i){
-   //   trajectories[name][i]->x += x - tmp->x;
-   //   trajectories[name][i]->y += y - tmp->y;
-   //   trajectories[name][i]->z += z - tmp->z;
-   // }
+   trajectories[name]->setStart(new PositionUpdate(x,y,z,MaxSpeed));
    return 0;
  }
+
+/*************************************************************/
+ int Mirob::setTrajectoryAnchor(string name, const double x, const double y, const double z){
+   trajIter it = trajectories.find(name);
+   if(it == trajectories.end()){
+     return 1;
+   }
+   trajectories[name]->setAnchor(new PositionUpdate(x,y,z,0));
+   return 0;
+ }
+
+/*************************************************************/
+ int Mirob::setTrajectoryCalibrated(string name, bool val){
+   trajIter it = trajectories.find(name);
+   if(it == trajectories.end()){
+     return 1;
+   }
+   trajectories[name]->setCalibrated(val);
+   return 0;
+ }
+
+/*************************************************************/
+bool Mirob::trajectoryCalibrated(string name){
+   trajIter it = trajectories.find(name);
+   if(it == trajectories.end()){
+     return false;
+   }
+   return trajectories[name]->isCalibrated();
+ }
+ 
 
 /*************************************************************/
 
@@ -292,7 +403,6 @@ int Mirob::open( const string &device, const Options &opts )
   robotDaemon_info.v[0] = 0.0;
   robotDaemon_info.v[1] = 0.0;
   robotDaemon_info.v[2] = 0.0;
-  robotDaemon_info.vChanged = true;
   robotDaemon_info.toolClamped = false;
   robotDaemon_info.clampChanged = false;
   robotDaemon_info.state = ROBOT_HALT;
@@ -322,11 +432,8 @@ int Mirob::open( const string &device, const Options &opts )
   void Mirob::setState(int state)
   { 
     pthread_mutex_lock( &robotDaemon_info.mutex );
-    if (state != ROBOT_POS){
-      cerr << LOGPREFIX << "Clearing position queue" << endl;
-      queue<PositionUpdate*> empty;
-      swap(robotDaemon_info.positionQueue , empty );
-    }
+    // if (state != ROBOT_POS){
+    // }
     robotDaemon_info.state = state;
     pthread_mutex_unlock( &robotDaemon_info.mutex );
   }
@@ -414,7 +521,6 @@ int Mirob::setV(double v, int ax){
   for (int i=0; i != 3; ++i){
     robotDaemon_info.v[i] = currV[i];
   }
-  robotDaemon_info.vChanged = true;
   pthread_mutex_unlock( &robotDaemon_info.mutex );
 
   return 0;
@@ -450,14 +556,14 @@ int Mirob::setV(double vx, double  vy, double vz){
 /*************************************************************/
 
 int Mirob::setCoordinateFrame(double newB[3][3], double newOffspring[3]){
-  cerr << LOGPREFIX << "Setting new coordinate frame" << endl;
+  // cerr << LOGPREFIX << "Setting new coordinate frame" << endl;
   for (int i = 0; i != 3; ++i){
     for (int j = 0; j != 3; ++j){
       B[i][j] = newB[i][j];
-      cerr << B[i][j] << " ";
+      // cerr << B[i][j] << " ";
     }
     b0[i] = newOffspring[i];
-    cerr << b0[i] << endl;
+    // cerr << b0[i] << endl;
   }
 
   return 0;
@@ -726,7 +832,6 @@ double Mirob::maxAmplX( void ) const
 int Mirob::clampTool(void){
   pthread_mutex_lock( &robotDaemon_info.mutex );
   robotDaemon_info.toolClamped = true;
-  robotDaemon_info.clampChanged = true;
   pthread_mutex_unlock( &robotDaemon_info.mutex );
   return 0;
 }
@@ -734,7 +839,6 @@ int Mirob::clampTool(void){
 int Mirob::releaseTool(void){
   pthread_mutex_lock( &robotDaemon_info.mutex );
   robotDaemon_info.toolClamped = false;
-  robotDaemon_info.clampChanged = true;
   pthread_mutex_unlock( &robotDaemon_info.mutex );
   return 0;
 }
@@ -742,7 +846,6 @@ int Mirob::releaseTool(void){
 int Mirob::switchClampState(void){
   pthread_mutex_lock( &robotDaemon_info.mutex );
   robotDaemon_info.toolClamped = !robotDaemon_info.toolClamped;
-  robotDaemon_info.clampChanged = true;
   pthread_mutex_unlock( &robotDaemon_info.mutex );
   return 0;
 }
@@ -750,11 +853,12 @@ int Mirob::switchClampState(void){
 /*******************************************************/
 int Mirob::goToTrajectoryStart(string name){
   if (Calibrated){
-    vector<PositionUpdate*> tmp = trajectories[name];
+    PositionUpdate* tmp = trajectories[name]->startPoint();
     setCoordinateSystem(MIROB_COORD_TRANS);
     setState(ROBOT_POS);
+    //cerr << "Trajectory start is " << *tmp << endl;
 
-    setPos(tmp[0]->x,tmp[0]->y,tmp[0]->z,MaxSpeed);
+    setPos(tmp->x,tmp->y,tmp->z,MaxSpeed);
     return 0;
   }else{
     return 1;
@@ -765,20 +869,18 @@ int Mirob::goToTrajectoryStart(string name){
 
 /*******************************************************/
  int Mirob::runTrajectory(string name){
-    vector<PositionUpdate*> tmp = trajectories[name];
-    return runTrajectory(name, tmp[0]->x ,tmp[0]->y ,tmp[0]->z);
+    PositionUpdate* tmp = trajectories[name]->startPoint();
+    return runTrajectory(name, tmp->x ,tmp->y ,tmp->z);
 }
 
 /*******************************************************/
  int Mirob::runTrajectory(string name, const double x, const double y, const double z){
   if (Calibrated){
-    vector<PositionUpdate*> tmp = trajectories[name];
     setCoordinateSystem(MIROB_COORD_TRANS);
     setState(ROBOT_POS);
-
-    setPos(x,y,z,MaxSpeed);
-    for (vector<PositionUpdate*>::size_type i =1; i < tmp.size(); ++i){
-      setPos(x + tmp[i]->x,y + tmp[i]->y,z + tmp[i]->z,tmp[i]->speed);
+    for (PositionUpdate* tmp = trajectories[name]->resetToStart(x,y,z); 
+	 tmp != NULL; tmp = trajectories[name]->next()){
+      setPos(tmp->x,tmp->y,tmp->z,tmp->speed);
     }
     return 0;
   }else{
