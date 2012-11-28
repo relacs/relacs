@@ -60,6 +60,17 @@ namespace misc{
 
   }
 
+  Trajectory::~Trajectory(){
+    Calibrated = false;
+    anchorIndex = 0;
+    delete start;
+    delete anchor;
+    for (vector<PositionUpdate*>::size_type k = 0; k != nodes.size(); ++k){
+      delete nodes[k];
+    }
+  }
+
+  
 
   Trajectory::Trajectory(const XMLElement* node){
     Calibrated = false;
@@ -69,15 +80,17 @@ namespace misc{
 
     bool isAnchor = false;
     int i = 0;
+    PositionUpdate *tmp2;
+    
     for( const XMLElement* node2=node->FirstChildElement("node"); 
 	 node2; node2=node2->NextSiblingElement("node") ){
-      PositionUpdate *tmp2 = new PositionUpdate();
+      tmp2 = new PositionUpdate();
       node2->FirstChildElement("x")->QueryDoubleText(&(tmp2->x));
       node2->FirstChildElement("y")->QueryDoubleText(&(tmp2->y));
       node2->FirstChildElement("z")->QueryDoubleText(&(tmp2->z));
       node2->FirstChildElement("v")->QueryDoubleText(&(tmp2->speed));
       nodes.push_back(tmp2);
-
+      
       node2->QueryBoolAttribute( "anchor", &isAnchor );
       if (isAnchor){
 	anchorIndex = i;
@@ -89,6 +102,7 @@ namespace misc{
 
   
   void Trajectory::setAnchor(PositionUpdate* a){
+    delete anchor;
     anchor = a;
     start->x = a->x - nodes[anchorIndex]->x;
     start->y = a->y - nodes[anchorIndex]->y;
@@ -98,6 +112,7 @@ namespace misc{
   }
 
   void Trajectory::setStart(PositionUpdate* s){
+    delete start;
     start = s;
     anchor->x = s->x + nodes[anchorIndex]->x;
     anchor->y = s->y + nodes[anchorIndex]->y;
@@ -107,15 +122,15 @@ namespace misc{
   }
 
   PositionUpdate* Trajectory::resetToAnchor(double x, double y, double z){
-       currentIndex = 0;
-      delta[0] = x - nodes[anchorIndex]->x;
-      delta[1] = y - nodes[anchorIndex]->y;
-      delta[2] = z - nodes[anchorIndex]->z;
+    currentIndex = 0;
+    delta[0] = x - nodes[anchorIndex]->x;
+    delta[1] = y - nodes[anchorIndex]->y;
+    delta[2] = z - nodes[anchorIndex]->z;
 
       
-      return new PositionUpdate(nodes[0]->x + delta[0],
-			    nodes[0]->y + delta[1],
-			    nodes[0]->z + delta[2], nodes[0]->speed);
+    return new PositionUpdate(nodes[0]->x + delta[0],
+			      nodes[0]->y + delta[1],
+			      nodes[0]->z + delta[2], nodes[0]->speed);
 
     
   }
@@ -208,6 +223,13 @@ Mirob::Mirob( void )
 
 Mirob::~Mirob( void )
 {
+  for(map<string,Trajectory* >::iterator it = trajectories.begin(); 
+      it != trajectories.end(); ++it) {
+    delete it->second;
+  }
+
+  delete robotDaemon;
+
   close();
 }
 /*************************************************************/
@@ -461,6 +483,7 @@ void Mirob::close( void )
 int Mirob::reset( void )
 {
   robotDaemon->Shutdown();
+  delete robotDaemon;
   robotDaemon =  new TMLRobotDaemon(&robotDaemon_info);
 
   cerr << LOGPREFIX << " waiting for daemon to start" << endl;
@@ -664,7 +687,8 @@ void Mirob::transformVelocities(double& x, double& y, double& z, int direction){
     }
   }
   x = tmp[0]/norm[0]; y = tmp[1]/norm[1]; z = tmp[2]/norm[2];
-  
+
+
 }
 
 /*************************************************************/
@@ -859,6 +883,7 @@ int Mirob::goToTrajectoryStart(string name){
     //cerr << "Trajectory start is " << *tmp << endl;
 
     setPos(tmp->x,tmp->y,tmp->z,MaxSpeed);
+    delete tmp;
     return 0;
   }else{
     return 1;
@@ -881,6 +906,7 @@ int Mirob::goToTrajectoryStart(string name){
     for (PositionUpdate* tmp = trajectories[name]->resetToStart(x,y,z); 
 	 tmp != NULL; tmp = trajectories[name]->next()){
       setPos(tmp->x,tmp->y,tmp->z,tmp->speed);
+      delete tmp;
     }
     return 0;
   }else{

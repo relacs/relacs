@@ -319,6 +319,8 @@ void TMLRobotDaemon::Execute(){
 	//motionIssued = false;
 	if (info->positionQueue.size() > 0){
 	  cerr << LOGPREFIX << "Motion Completed." << endl;
+	  delete info->positionQueue.front();
+
 	  info->positionQueue.pop();
 	   
 	  if (info->positionQueue.size() > 0){

@@ -78,7 +78,7 @@ public:
   QGraphicsScene *GoWhere;
   QGraphicsView *View;
   QLabel *Instructions;
-  QWidget *Init;
+  QWidget *Init, *Exec;
   Plot P;
   int LandmarkCounter;
   QPen* pen;

@@ -52,6 +52,7 @@ class Trajectory
 
  public:
   Trajectory();
+  ~Trajectory();
   Trajectory(const XMLElement * node);
 
   void setAnchor(PositionUpdate* a);
