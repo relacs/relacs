@@ -28,7 +28,9 @@
 #include <relacs/zones.h>
 #include <relacs/manipulator.h>
 #include <TML_lib.h>
+//#include <relacs/misc/mirob.h>
 #include <queue>
+
 
 #define ROBOT_HALT 0
 #define ROBOT_FREE 1
@@ -42,13 +44,15 @@ using namespace relacs;
 namespace misc {
 
 
-struct PositionUpdate{
+class PositionUpdate {
+ public:
+
   double x,y,z,speed;
   
   PositionUpdate(){
     x = y = z = speed = 0.0;
   }
-
+  
   PositionUpdate(double xx, double yy, double zz, double s){
     x = xx;
     y = yy;
@@ -60,9 +64,27 @@ struct PositionUpdate{
     stream << "\n\t x:" << p.x << "\ty: "<< p.y << "\tz: " << p.z << "\tspeed: " << p.speed << "\n";
     return stream;
   }    
-};
 
-typedef struct PositionUpdate PositionUpdate;
+  /* friend PositionUpdate operator+(const PositionUpdate &lhs, const PositionUpdate &rhs){ */
+  /*   double s = lhs.speed > rhs.speed ? rhs.speed : lhs.speed; */
+  /*   return PositionUpdate(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z,s); */
+
+  /* } */
+
+  /* friend PositionUpdate operator-(const PositionUpdate &lhs, const PositionUpdate &rhs){ */
+  /*   double s = lhs.speed > rhs.speed ? rhs.speed : lhs.speed; */
+  /*   return PositionUpdate(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z,s); */
+
+  /* } */
+
+  /* friend PositionUpdate operator-(const PositionUpdate& in){ */
+  /*   return PositionUpdate(-in.x, -in.y , -in.z,in.speed); */
+  /* } */
+  
+
+
+};
+/* typedef struct PositionUpdate PositionUpdate; */
 
 
 struct robotDaemon_data { 
@@ -91,7 +113,6 @@ struct robotDaemon_data {
   // clamp tool states
   bool toolClamped;
   bool clampChanged;
-
   // mode state
   int state;
 
@@ -101,7 +122,6 @@ struct robotDaemon_data {
   queue<PositionUpdate*> positionQueue;
   long MaxSpeed;
   double MaxAcc;
-
 
 };
 typedef struct robotDaemon_data robotDaemon_data;

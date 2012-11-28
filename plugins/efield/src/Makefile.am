@@ -11,7 +11,8 @@ pluginlib_LTLIBRARIES = \
     libefieldbeatdetector.la \
     libefieldtraces.la \
     libefieldcalibefield.la \
-    libefieldjar.la
+    libefieldjar.la \
+    libefieldrobotfield.la
 
 
 
@@ -301,6 +302,37 @@ libefieldjar_la_include_HEADERS = $(HEADER_PATH)/jar.h
 
 
 
+libefieldrobotfield_la_CPPFLAGS = \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/linuxdevices/misc/include \
+    -I$(srcdir)/../include \
+    $(QT4_CPPFLAGS)
+
+libefieldrobotfield_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT4_LDFLAGS)
+
+libefieldrobotfield_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/plugins/linuxdevices/misc/src/libmiscmirob.la \
+    $(QT4_LIBS)
+
+$(libefieldrobotfield_la_OBJECTS) : moc_robotfield.cc
+
+libefieldrobotfield_la_SOURCES = robotfield.cc
+
+libefieldrobotfield_la_includedir = $(pkgincludedir)/efield
+
+libefieldrobotfield_la_include_HEADERS = $(HEADER_PATH)/robotfield.h 
+
+
+
 check_PROGRAMS = \
     linktest_libefieldeodtools_la \
     linktest_libefieldlinearfield_la \
@@ -309,7 +341,8 @@ check_PROGRAMS = \
     linktest_libefieldbeatdetector_la \
     linktest_libefieldtraces_la \
     linktest_libefieldcalibefield_la \
-    linktest_libefieldjar_la
+    linktest_libefieldjar_la \
+    linktest_libefieldrobotfield_la
 
 linktest_libefieldeodtools_la_SOURCES = linktest.cc
 linktest_libefieldeodtools_la_LDADD = libefieldeodtools.la
@@ -334,5 +367,8 @@ linktest_libefieldcalibefield_la_LDADD = libefieldcalibefield.la
 
 linktest_libefieldjar_la_SOURCES = linktest.cc
 linktest_libefieldjar_la_LDADD = libefieldjar.la
+
+linktest_libefieldrobotfield_la_SOURCES = linktest.cc
+linktest_libefieldrobotfield_la_LDADD = libefieldrobotfield.la
 
 TESTS = $(check_PROGRAMS)

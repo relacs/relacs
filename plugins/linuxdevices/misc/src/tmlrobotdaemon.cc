@@ -27,7 +27,6 @@
 #include <cstdio>
 #include <cstring>
 #include <iostream>
-#include <relacs/misc/mirob.h>
 #include <relacs/misc/tmlrobotdaemon.h>
 #include <pthread.h>
 #include <termios.h>

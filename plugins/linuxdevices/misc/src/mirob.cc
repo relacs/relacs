@@ -889,6 +889,16 @@ int Mirob::goToTrajectoryStart(string name){
 
 }
 
+/*******************************************************/
+  int Mirob::positionQueueLength(){
+    int ret = -1;
+    pthread_mutex_lock( &robotDaemon_info.mutex );
+    ret = (int)robotDaemon_info.positionQueue.size();
+    pthread_mutex_unlock( &robotDaemon_info.mutex );
+    return ret;
+
+  }
+
 
 // void Mirob::miroblog(const char* text){
   

@@ -34,11 +34,6 @@
 #include<map>
 
 
-#define ROBOT_HALT 0
-#define ROBOT_FREE 1
-#define ROBOT_POS  2
-#define ROBOT_STOP 3
-
 #define MIROB_COORD_RAW 0
 #define MIROB_COORD_TRANS 1
 
@@ -51,9 +46,6 @@ using namespace tinyxml2;
 //class XMLDocument;
 
 namespace misc {
-
-int inv3(double A[3][3], double (&result)[3][3]);
-
 
 class Trajectory
 {
@@ -80,6 +72,9 @@ class Trajectory
   double delta[3];
   vector<PositionUpdate*> nodes;
 };
+
+int inv3(double A[3][3], double (&result)[3][3]);
+
 
 /*!
 \class Mirob
@@ -209,6 +204,7 @@ public:
   int setTrajectoryStart(string name, const double x, const double y, const double z);
   int setTrajectoryAnchor(string name, const double x, const double y, const double z);
   static const char* LOGPREFIX;
+  int positionQueueLength(void);
   
 private:
 
