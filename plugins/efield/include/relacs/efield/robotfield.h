@@ -22,7 +22,9 @@
 #ifndef _RELACS_EFIELD_ROBOTFIELD_H_
 #define _RELACS_EFIELD_ROBOTFIELD_H_ 1
 
+#include <relacs/plot.h>
 #include <relacs/repro.h>
+#include <relacs/efield/traces.h>
 #include <relacs/misc/mirob.h>
 #include <QPushButton>
 #include <QStackedLayout>
@@ -51,7 +53,9 @@ namespace efield {
 */
 
 
-class RobotField : public RePro
+class RobotField
+  : public RePro,
+    public efield::Traces
 {
   Q_OBJECT
 
@@ -65,6 +69,7 @@ public:
 
  protected:
   void customEvent( QEvent *qce );
+  void saveData( const SampleData< SampleDataD > &results );
 
  private:
   ::misc::Mirob *Rob;
@@ -73,7 +78,8 @@ public:
   QGraphicsScene *GoWhere;
   QGraphicsView *View;
   QLabel *Instructions;
-  QWidget *Init, *Exec;
+  QWidget *Init;
+  Plot P;
   int LandmarkCounter;
   QPen* pen;
   PositionUpdate *Landmarks[3];

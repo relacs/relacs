@@ -20,8 +20,9 @@
 */
 
 
-#include <relacs/efield/robotfield.h>
 #include <QPen>
+#include <relacs/efield/outdata.h>
+#include <relacs/efield/robotfield.h>
 
 
 using namespace relacs;
@@ -65,12 +66,8 @@ RobotField::RobotField( void )
   Init->setLayout(iniLayout);
   Stack->addWidget(Init);
 
- 
-
   QVBoxLayout *execLayout = new QVBoxLayout;
-  Exec = new QWidget;
-  Exec->setLayout(execLayout);
-  Stack->addWidget(Exec);
+  Stack->addWidget( &P );
 
   setLayout(Stack);
 }
@@ -196,20 +193,60 @@ int RobotField::main( void )
   Rob->setCoordinateSystem(MIROB_COORD_TRANS);
   Rob->setState(ROBOT_POS);
 
+  // @FABIAN:
+  // create stimulus:
+  double duration = 0.5;
+  OutData signal;
+  signal.sineWave( duration, 0.0005, 1000.0 ); // 0.5sec langer 1000Hz sinus mit 20kHz
+  signal.back() = 0.0;   // last element should be zero, so that the stimululs really ends.
+  signal.setTrace( GlobalEField );  // GlobalEField kommt aus efield::Traces und bezeichnet direkte Stimuluation mit den globalen stimuluselektroden
+
+  // results:
+  SampleData< SampleDataD > results( 0.0, 1.0, 1.0/resolution );   // @FABIAN: das sollten die x Werte sein
+  for ( int r=0; r<results.size(); r++ )
+    results[r] = SampleDataD( 0.0, 1.0, 1.0/resolution, 0.0 );   /// @FABIAN: und das die y-WErte (erster, letzter, stepsize, default-value)
+
   // got to different grid points and measure
-  for (double x = 0; x <= 1.; x += 1./(resolution-1) ){
-    for (double y = 0; y <= 1.; y += 1./(resolution-1) ){
+  // @FABIAN: da haette ich gerne indices:
+  for ( int ix=0; ix<resolution; ix++ ){
+    for ( int iy=0; iy<resolution; iy++ ){
+      //  for (double x = 0; x <= 1.; x += 1./(resolution-1) ){
+      //    for (double y = 0; y <= 1.; y += 1./(resolution-1) ){
+      double x = double(ix)/resolution; // @FABIAN oder so aehnlich...
+      double y = double(iy)/resolution;
       Rob->setPos(b[0] + x*d1[0] + y*d2[0],
 			       b[1] + x*d1[1] + y*d2[1],
 		  b[2] + x*d1[2] + y*d2[2],speed);
 
       // @JAN: Gaebe es hier etwas Eleganteres um darauf zu warten dass Mirob da ist?
-      usleep(50000);
+      // Da moechte ich mir ja mal was ueberlegen, so in der Richtung, dass Device
+      // eine wait() function bekommt, in die Code wie folgender (oder besser) hineingeht.
+      sleep( 0.05 );   // @FABIAN: das ist RePro::sleep() , was auch die Daten freigibt (unlockAll() etc.) - sonst haengt das RELACS waehrend des usleep()
       while (Rob->positionQueueLength() > 0){
-	usleep(50000);
+	sleep( 0.05 );
       }
 
       // @JAN: Hier brauchste ich: play stimulus, record electrode
+      write( signal );
+      sleep( signal.duration() + 0.01 );
+
+      // analyze:
+      const InData &data = trace( "V-2" ); // "V-2" ist der Name der Spur wie sie in relacs.cfg angegeben ist.
+      SampleDataD response( 0.0, signal.duration(), signal.stepsize() );   // numerics/include/relacs/sampledata.h
+      data.copy( signalTime(), response );   // jetzt ist in response die gemessene Spannung waehrend des gesamten Stimulus.
+      // z.B.
+      double stdev = stdev( response );
+      results[ix][iy] = stdev;
+
+      // plot:
+      P.lock();
+      P.clear();
+      P.plot( results, 1.0, Plot::BlackBlueGreenRedWhiteGradient );  // @FABIAN: siehe plot/examples/xsurfaceplot.cc
+      P.unlock();
+      P.draw();
+
+      // save:
+      // hier koennten wir noch die response speichern....      
 
     }
   }
@@ -217,10 +254,46 @@ int RobotField::main( void )
   Rob->setState(state);
 
   // @JAN: Hier brauchste ich: close file oder andere Aufraeumarbeiten
+  saveData( results );
 
   
   return Completed;
 }
+
+
+  void RobotField::saveData( const SampleData< SampleDataD > &results );
+  {
+    ofstream df( addPath( "robotfield-data.dat" ).c_str(),
+		 ofstream::out | ofstream::app );
+
+    Options header;
+    header.addInteger( "index", completeRuns() );
+    header.addInteger( "ReProIndex", reproCount() );
+    header.addNumber( "ReProTime", reproStartTime(), "s", "%0.3f" );
+    header.save( df, "# " );
+    df << "# status:\n";
+    stimulusData().save( df, "#   " );
+    df << "# settings:\n";
+    settings().save( df, "#   " );
+    df << '\n';
+
+    TableKey datakey;
+    datakey.addNumber( "x", "mm", "%6.2f" );
+    datakey.addNumber( "y", "mm", "%6.2f" );
+    datakey.addNumber( "a", "mV", "%6.3f" );
+    datakey.saveKey( df );
+
+    for ( int ix=0; ix<results.size(); ix++ ) {
+      for ( int iy=0; iy<results.size(); iy++ ) {
+	datakey.save( df, 1000.0*results.pos( ix ), 0 );
+	datakey.save( df, 1000.0*results[ix].pos( iy ) );
+	datakey.save( df, results[ix][iy] );
+	df << '\n';
+      }
+    }
+  
+    df << "\n\n";
+  }
 
 
 void RobotField::setLandMark(){
