@@ -216,10 +216,8 @@ int RobotField::main( void )
   while (LandmarkCounter < 2){
     sleepWait();
     postCustomEvent( 13 );
-    if ( interrupt() ){
-      readLockData();
+    if ( interrupt() )
       return Aborted;
-    }
 
   }
   printlog("Edges determined. Starting measurement ...");
@@ -265,14 +263,14 @@ int RobotField::main( void )
       //    for (double y = 0; y <= 1.; y += 1./(resolution-1) ){
       x = double(ix)/(resolution-1); // @FABIAN oder so aehnlich...
       y = double(iy)/(resolution-1);
-      Rob->setPos(b[0] + x*d1[0] + y*d2[0],
+      Rob->setPos(b[0] + x*d1[0] + y*d2[0],   // @FABIAN XXX ist da alles mit mutexes gelockt (im demon????)
 		  b[1] + x*d1[1] + y*d2[1],
 		  b[2] + x*d1[2] + y*d2[2],speed);
 
       cerr << "Moving to new position." << endl;
 
-      sleep( 0.05 );  
-      while (Rob->positionQueueLength() > 0){
+      sleep( 0.05 );                           // @FABIAN XXX eventuell mal 0.1 statt 0.05 sec ausprobieren
+      while (Rob->positionQueueLength() > 0){  // @FABIAN XXX ist da alles mit mutexes gelockt (im demon????)
 	sleep( 0.05 );
       }
       sleep( 0.1 );  // wait to get rid of movement artifacts
