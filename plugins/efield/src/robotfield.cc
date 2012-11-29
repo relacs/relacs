@@ -21,8 +21,9 @@
 
 
 #include <QPen>
-// #include <relacs/efield/outdata.h>
+#include <relacs/outdata.h>
 #include <relacs/efield/robotfield.h>
+#include <relacs/tablekey.h>
 
 
 using namespace relacs;
@@ -150,20 +151,20 @@ void RobotField::customEvent( QEvent *qce )
     settings().save( df, "#   " );
     df << '\n';
 
-    // TableKey datakey;
-    // datakey.addNumber( "x", "mm", "%6.2f" );
-    // datakey.addNumber( "y", "mm", "%6.2f" );
-    // datakey.addNumber( "a", "mV", "%6.3f" );
-    // datakey.saveKey( df );
+    TableKey datakey;
+    datakey.addNumber( "x", "mm", "%6.2f" );
+    datakey.addNumber( "y", "mm", "%6.2f" );
+    datakey.addNumber( "a", "mV", "%6.3f" );
+    datakey.saveKey( df );
 
-    // for ( int ix=0; ix<results.size(); ix++ ) {
-    //   for ( int iy=0; iy<results.size(); iy++ ) {
-    // 	datakey.save( df, 1000.0*results.pos( ix ), 0 );
-    // 	datakey.save( df, 1000.0*results[ix].pos( iy ) );
-    // 	datakey.save( df, results[ix][iy] );
-    // 	df << '\n';
-    //   }
-    // }
+    for ( int ix=0; ix<results.size(); ix++ ) {
+      for ( int iy=0; iy<results.size(); iy++ ) {
+    	datakey.save( df, 1000.0*results.pos( ix ), 0 );
+    	datakey.save( df, 1000.0*results[ix].pos( iy ) );
+    	datakey.save( df, results[ix][iy] );
+    	df << '\n';
+      }
+    }
   
     df << "\n\n";
   }
@@ -221,7 +222,7 @@ int RobotField::main( void )
     }
 
   }
-  
+  printlog("Edges determined. Starting measurement ...");
 
   // ---------- stimulate and record -------------------
   postCustomEvent( 12 );
@@ -268,23 +269,34 @@ int RobotField::main( void )
 		  b[1] + x*d1[1] + y*d2[1],
 		  b[2] + x*d1[2] + y*d2[2],speed);
 
+      cerr << "Moving to new position." << endl;
+
       sleep( 0.05 );  
       while (Rob->positionQueueLength() > 0){
 	sleep( 0.05 );
       }
       sleep( 0.1 );  // wait to get rid of movement artifacts
+      cerr << "Position reached!" << endl;
 
+      // printlog("Measuring signal!");
+      cerr << "measuring signal" << endl;
       write( signal );
       sleep( signal.duration() + 0.01 );
 
+
+      cerr << "analyse signal" << endl;
       // analyze:
       const InData &data = trace( "field" ); // "field" is the name of the trace in relacs.cfg
+      cerr << "get signal" << endl;
       SampleDataD response( 0.0, signal.duration(), signal.stepsize() );   // numerics/include/relacs/sampledata.h
+      cerr << "copy to response" << endl;
       data.copy( signalTime(), response );   // the response is now the measured voltage during the whole stimulus 
       // z.B.
+      cerr << "compute std" << endl;
       double sn = stdev( response );
       results[ix][iy] = sn;
 
+      cerr << "plot data" << endl;
       // plot:
       P.lock();
       P.clear();
@@ -292,6 +304,7 @@ int RobotField::main( void )
       P.unlock();
       P.draw();
 
+      cerr << "Done" << endl;
       // save:
       // hier koennten wir noch die response speichern....      
 

@@ -62,16 +62,16 @@ class Trajectory
   PositionUpdate* resetToStart(double x, double y, double z);
   PositionUpdate* resetToStart();
   PositionUpdate* next();
-  PositionUpdate* startPoint() const {return start;};
+  PositionUpdate* startPoint() const {return Start;};
   int  setCalibrated(bool val){Calibrated = val; return 0;};
   bool isCalibrated() const {return Calibrated;}
  private: 
   bool Calibrated;
-  int anchorIndex;
-  vector<PositionUpdate*>::size_type currentIndex;
-  PositionUpdate *start, *anchor;
-  double delta[3];
-  vector<PositionUpdate*> nodes;
+  int AnchorIndex;
+  vector<PositionUpdate*>::size_type CurrentIndex;
+  PositionUpdate *Start, *Anchor;
+  double Delta[3];
+  vector<PositionUpdate*> Nodes;
 };
 
 int inv3(double A[3][3], double (&result)[3][3]);
@@ -176,7 +176,7 @@ public:
   bool isCalibrated(void) const {return Calibrated;}
   void setCalibrated(bool c){Calibrated = c;};
 
-  int getState() const {return robotDaemon->getState();};
+  int getState() const {return RobotDaemon->getState();};
   void setState(int state);
 
   int setPos(double x, double y, double z, double speed);
@@ -217,12 +217,10 @@ private:
   /* /\* static const double MaxAcc = 0.3183; *\/ */
   /* const char* SetupFile; */
 
-  /* static const long robotDaemon_sleep_sec = 0; */
-  /* static const long robotDaemon_sleep_nsec = 10000000; */
 
   long MaxSpeed;
   double MaxAcc; //  = 0.3183
-  string configFileName;
+  string ConfigFileName;
 
   int CoordinateMode;
 
@@ -243,9 +241,8 @@ private:
 
   double Speed[3];
   double Acceleration[3];
-/*   pthread_t robotDaemon_thread; */
-  TMLRobotDaemon* robotDaemon;
-  robotDaemon_data robotDaemon_info;
+  TMLRobotDaemon* RobotDaemon;
+  robotDaemon_data RobotDaemonInfo;
   
   // coordinate system remapping
   double B[3][3]; // basis vectors in the raw coordinate system
@@ -253,9 +250,9 @@ private:
   double b0[3]; // coordinate system offspring in raw coordinate system
   
   
-  Zones forbiddenZones;
-  XMLDocument xml;
-  map<string, Trajectory* > trajectories;
+  Zones ForbiddenZones;
+  XMLDocument XML;
+  map<string, Trajectory* > Trajectories;
 };
 
 }; /* namespace misc */

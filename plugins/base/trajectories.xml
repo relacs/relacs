@@ -1,0 +1,130 @@
+<?xml version="1.0"?>
+<trajectory name="trace base">
+  <node><x>1</x><y>0</y><z>0</z><v>20</v></node>
+  <node><x>0</x><y>0</y><z>0</z><v>20</v></node>
+  <node><x>0</x><y>1</y><z>0</z><v>20</v></node>
+  <node anchor="true"><x>0</x><y>0</y><z>0</z><v>20</v></node>
+  <node><x>0</x><y>0</y><z>1</z><v>20</v></node>
+  <node><x>0</x><y>0</y><z>0</z><v>20</v></node>
+</trajectory>
+
+<trajectory name="global field">
+  <node><x>10</x><y>10</y><z>10</z><v>50</v></node>
+  <node><x>10</x><y>20</y><z>10</z><v>50</v></node>
+  <node><x>10</x><y>30</y><z>10</z><v>50</v></node>
+  <node><x>10</x><y>40</y><z>10</z><v>50</v></node>
+  <node><x>10</x><y>50</y><z>10</z><v>50</v></node>
+  <node><x>10</x><y>60</y><z>10</z><v>50</v></node>
+  <node><x>10</x><y>70</y><z>10</z><v>50</v></node>
+  <node><x>10</x><y>80</y><z>10</z><v>50</v></node>
+  <node><x>10</x><y>90</y><z>10</z><v>50</v></node>
+  <node><x>10</x><y>100</y><z>10</z><v>50</v></node>
+  <node><x>20</x><y>10</y><z>10</z><v>50</v></node>
+  <node><x>20</x><y>20</y><z>10</z><v>50</v></node>
+  <node><x>20</x><y>30</y><z>10</z><v>50</v></node>
+  <node><x>20</x><y>40</y><z>10</z><v>50</v></node>
+  <node><x>20</x><y>50</y><z>10</z><v>50</v></node>
+  <node><x>20</x><y>60</y><z>10</z><v>50</v></node>
+  <node><x>20</x><y>70</y><z>10</z><v>50</v></node>
+  <node><x>20</x><y>80</y><z>10</z><v>50</v></node>
+  <node><x>20</x><y>90</y><z>10</z><v>50</v></node>
+  <node><x>20</x><y>100</y><z>10</z><v>50</v></node>
+  <node><x>30</x><y>10</y><z>10</z><v>50</v></node>
+  <node><x>30</x><y>20</y><z>10</z><v>50</v></node>
+  <node><x>30</x><y>30</y><z>10</z><v>50</v></node>
+  <node><x>30</x><y>40</y><z>10</z><v>50</v></node>
+  <node><x>30</x><y>50</y><z>10</z><v>50</v></node>
+  <node><x>30</x><y>60</y><z>10</z><v>50</v></node>
+  <node><x>30</x><y>70</y><z>10</z><v>50</v></node>
+  <node><x>30</x><y>80</y><z>10</z><v>50</v></node>
+  <node><x>30</x><y>90</y><z>10</z><v>50</v></node>
+  <node><x>30</x><y>100</y><z>10</z><v>50</v></node>
+  <node><x>40</x><y>10</y><z>10</z><v>50</v></node>
+  <node><x>40</x><y>20</y><z>10</z><v>50</v></node>
+  <node><x>40</x><y>30</y><z>10</z><v>50</v></node>
+  <node><x>40</x><y>40</y><z>10</z><v>50</v></node>
+  <node><x>40</x><y>50</y><z>10</z><v>50</v></node>
+  <node><x>40</x><y>60</y><z>10</z><v>50</v></node>
+  <node><x>40</x><y>70</y><z>10</z><v>50</v></node>
+  <node><x>40</x><y>80</y><z>10</z><v>50</v></node>
+  <node><x>40</x><y>90</y><z>10</z><v>50</v></node>
+  <node><x>40</x><y>100</y><z>10</z><v>50</v></node>
+  <node><x>50</x><y>10</y><z>10</z><v>50</v></node>
+  <node><x>50</x><y>20</y><z>10</z><v>50</v></node>
+  <node><x>50</x><y>30</y><z>10</z><v>50</v></node>
+  <node><x>50</x><y>40</y><z>10</z><v>50</v></node>
+  <node><x>50</x><y>50</y><z>10</z><v>50</v></node>
+  <node><x>50</x><y>60</y><z>10</z><v>50</v></node>
+  <node><x>50</x><y>70</y><z>10</z><v>50</v></node>
+  <node><x>50</x><y>80</y><z>10</z><v>50</v></node>
+  <node><x>50</x><y>90</y><z>10</z><v>50</v></node>
+  <node><x>50</x><y>100</y><z>10</z><v>50</v></node>
+  <node><x>60</x><y>10</y><z>10</z><v>50</v></node>
+  <node><x>60</x><y>20</y><z>10</z><v>50</v></node>
+  <node><x>60</x><y>30</y><z>10</z><v>50</v></node>
+  <node><x>60</x><y>40</y><z>10</z><v>50</v></node>
+  <node><x>60</x><y>50</y><z>10</z><v>50</v></node>
+  <node><x>60</x><y>60</y><z>10</z><v>50</v></node>
+  <node><x>60</x><y>70</y><z>10</z><v>50</v></node>
+  <node><x>60</x><y>80</y><z>10</z><v>50</v></node>
+  <node><x>60</x><y>90</y><z>10</z><v>50</v></node>
+  <node><x>60</x><y>100</y><z>10</z><v>50</v></node>
+  <node><x>70</x><y>10</y><z>10</z><v>50</v></node>
+  <node><x>70</x><y>20</y><z>10</z><v>50</v></node>
+  <node><x>70</x><y>30</y><z>10</z><v>50</v></node>
+  <node><x>70</x><y>40</y><z>10</z><v>50</v></node>
+  <node><x>70</x><y>50</y><z>10</z><v>50</v></node>
+  <node><x>70</x><y>60</y><z>10</z><v>50</v></node>
+  <node><x>70</x><y>70</y><z>10</z><v>50</v></node>
+  <node><x>70</x><y>80</y><z>10</z><v>50</v></node>
+  <node><x>70</x><y>90</y><z>10</z><v>50</v></node>
+  <node><x>70</x><y>100</y><z>10</z><v>50</v></node>
+  <node><x>80</x><y>10</y><z>10</z><v>50</v></node>
+  <node><x>80</x><y>20</y><z>10</z><v>50</v></node>
+  <node><x>80</x><y>30</y><z>10</z><v>50</v></node>
+  <node><x>80</x><y>40</y><z>10</z><v>50</v></node>
+  <node><x>80</x><y>50</y><z>10</z><v>50</v></node>
+  <node><x>80</x><y>60</y><z>10</z><v>50</v></node>
+  <node><x>80</x><y>70</y><z>10</z><v>50</v></node>
+  <node><x>80</x><y>80</y><z>10</z><v>50</v></node>
+  <node><x>80</x><y>90</y><z>10</z><v>50</v></node>
+  <node><x>80</x><y>100</y><z>10</z><v>50</v></node>
+  <node><x>90</x><y>10</y><z>10</z><v>50</v></node>
+  <node><x>90</x><y>20</y><z>10</z><v>50</v></node>
+  <node><x>90</x><y>30</y><z>10</z><v>50</v></node>
+  <node><x>90</x><y>40</y><z>10</z><v>50</v></node>
+  <node><x>90</x><y>50</y><z>10</z><v>50</v></node>
+  <node><x>90</x><y>60</y><z>10</z><v>50</v></node>
+  <node><x>90</x><y>70</y><z>10</z><v>50</v></node>
+  <node><x>90</x><y>80</y><z>10</z><v>50</v></node>
+  <node><x>90</x><y>90</y><z>10</z><v>50</v></node>
+  <node><x>90</x><y>100</y><z>10</z><v>50</v></node>
+  <node><x>100</x><y>10</y><z>10</z><v>50</v></node>
+  <node><x>100</x><y>20</y><z>10</z><v>50</v></node>
+  <node><x>100</x><y>30</y><z>10</z><v>50</v></node>
+  <node><x>100</x><y>40</y><z>10</z><v>50</v></node>
+  <node><x>100</x><y>50</y><z>10</z><v>50</v></node>
+  <node><x>100</x><y>60</y><z>10</z><v>50</v></node>
+  <node><x>100</x><y>70</y><z>10</z><v>50</v></node>
+  <node><x>100</x><y>80</y><z>10</z><v>50</v></node>
+  <node><x>100</x><y>90</y><z>10</z><v>50</v></node>
+  <node><x>100</x><y>100</y><z>10</z><v>50</v></node>
+</trajectory>
+
+<trajectory name="random">
+  <node><x>74</x><y>73</y><z>25</z><v>45</v></node>
+  <node><x>14</x><y>78</y><z>63</z><v>26</v></node>
+  <node><x>33</x><y>93</y><z>53</z><v>41</v></node>
+  <node><x>35</x><y>44</y><z>75</z><v>10</v></node>
+  <node><x>66</x><y>50</y><z>67</z><v>30</v></node>
+  <node><x>46</x><y>18</y><z>1</z><v>8</v></node>
+  <node><x>12</x><y>90</y><z>91</z><v>10</v></node>
+  <node><x>20</x><y>59</y><z>4</z><v>22</v></node>
+  <node><x>94</x><y>6</y><z>35</z><v>12</v></node>
+  <node><x>22</x><y>67</y><z>77</z><v>29</v></node>
+</trajectory>
+
+<trajectory name="move down">
+  <node><x>0</x><y>0</y><z>0</z><v>50</v></node>
+  <node anchor="true"><x>0</x><y>0</y><z>-200</z><v>20</v></node>
+</trajectory>

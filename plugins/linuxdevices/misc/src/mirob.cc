@@ -54,19 +54,19 @@ namespace misc{
 
   Trajectory::Trajectory(){
     Calibrated = false;
-    anchorIndex = 0;
-    start = new PositionUpdate();
-    anchor = new PositionUpdate();
+    AnchorIndex = 0;
+    Start = new PositionUpdate();
+    Anchor = new PositionUpdate();
 
   }
 
   Trajectory::~Trajectory(){
     Calibrated = false;
-    anchorIndex = 0;
-    delete start;
-    delete anchor;
-    for (vector<PositionUpdate*>::size_type k = 0; k != nodes.size(); ++k){
-      delete nodes[k];
+    AnchorIndex = 0;
+    delete Start;
+    delete Anchor;
+    for (vector<PositionUpdate*>::size_type k = 0; k != Nodes.size(); ++k){
+      delete Nodes[k];
     }
   }
 
@@ -74,9 +74,9 @@ namespace misc{
 
   Trajectory::Trajectory(const XMLElement* node){
     Calibrated = false;
-    anchorIndex = 0;
-    start = new PositionUpdate();
-    anchor = new PositionUpdate();
+    AnchorIndex = 0;
+    Start = new PositionUpdate();
+    Anchor = new PositionUpdate();
 
     bool isAnchor = false;
     int i = 0;
@@ -89,11 +89,11 @@ namespace misc{
       node2->FirstChildElement("y")->QueryDoubleText(&(tmp2->y));
       node2->FirstChildElement("z")->QueryDoubleText(&(tmp2->z));
       node2->FirstChildElement("v")->QueryDoubleText(&(tmp2->speed));
-      nodes.push_back(tmp2);
+      Nodes.push_back(tmp2);
       
       node2->QueryBoolAttribute( "anchor", &isAnchor );
       if (isAnchor){
-	anchorIndex = i;
+	AnchorIndex = i;
 	isAnchor = false;
       }
       ++i;
@@ -102,35 +102,35 @@ namespace misc{
 
   
   void Trajectory::setAnchor(PositionUpdate* a){
-    delete anchor;
-    anchor = a;
-    start->x = a->x - nodes[anchorIndex]->x;
-    start->y = a->y - nodes[anchorIndex]->y;
-    start->z = a->z - nodes[anchorIndex]->z;
-    //cerr << "Setting start and anchor to " << *start << *anchor << endl;
+    delete Anchor;
+    Anchor = a;
+    Start->x = a->x - Nodes[AnchorIndex]->x;
+    Start->y = a->y - Nodes[AnchorIndex]->y;
+    Start->z = a->z - Nodes[AnchorIndex]->z;
+    //cerr << "Setting Start and anchor to " << *Start << *Anchor << endl;
     Calibrated = true;
   }
 
   void Trajectory::setStart(PositionUpdate* s){
-    delete start;
-    start = s;
-    anchor->x = s->x + nodes[anchorIndex]->x;
-    anchor->y = s->y + nodes[anchorIndex]->y;
-    anchor->z = s->z + nodes[anchorIndex]->z;
+    delete Start;
+    Start = s;
+    Anchor->x = s->x + Nodes[AnchorIndex]->x;
+    Anchor->y = s->y + Nodes[AnchorIndex]->y;
+    Anchor->z = s->z + Nodes[AnchorIndex]->z;
     
     Calibrated = true;
   }
 
   PositionUpdate* Trajectory::resetToAnchor(double x, double y, double z){
-    currentIndex = 0;
-    delta[0] = x - nodes[anchorIndex]->x;
-    delta[1] = y - nodes[anchorIndex]->y;
-    delta[2] = z - nodes[anchorIndex]->z;
+    CurrentIndex = 0;
+    Delta[0] = x - Nodes[AnchorIndex]->x;
+    Delta[1] = y - Nodes[AnchorIndex]->y;
+    Delta[2] = z - Nodes[AnchorIndex]->z;
 
       
-    return new PositionUpdate(nodes[0]->x + delta[0],
-			      nodes[0]->y + delta[1],
-			      nodes[0]->z + delta[2], nodes[0]->speed);
+    return new PositionUpdate(Nodes[0]->x + Delta[0],
+			      Nodes[0]->y + Delta[1],
+			      Nodes[0]->z + Delta[2], Nodes[0]->speed);
 
     
   }
@@ -139,7 +139,7 @@ namespace misc{
     if (!Calibrated){
       return NULL;
     }else{
-      return resetToAnchor(anchor->x, anchor->y, anchor->z);
+      return resetToAnchor(Anchor->x, Anchor->y, Anchor->z);
     }
   }
  
@@ -147,28 +147,28 @@ namespace misc{
     if (!Calibrated){
       return NULL;
     }else{
-      return resetToStart(start->x, start->y, start->z);
+      return resetToStart(Start->x, Start->y, Start->z);
     }
   }
  
   PositionUpdate* Trajectory::resetToStart(double x, double y, double z){
-      currentIndex = 0;
-      delta[0] = x;
-      delta[1] = y;
-      delta[2] = z;
-      return new PositionUpdate(nodes[0]->x + delta[0],
-			    nodes[0]->y + delta[1],
-			    nodes[0]->z + delta[2], nodes[0]->speed);
+      CurrentIndex = 0;
+      Delta[0] = x;
+      Delta[1] = y;
+      Delta[2] = z;
+      return new PositionUpdate(Nodes[0]->x + Delta[0],
+			    Nodes[0]->y + Delta[1],
+			    Nodes[0]->z + Delta[2], Nodes[0]->speed);
   }
 
   PositionUpdate* Trajectory::next(){
-    if (currentIndex == nodes.size()-1){
+    if (CurrentIndex == Nodes.size()-1){
       return NULL;
     }else{
-      ++currentIndex;
-      return new PositionUpdate(nodes[currentIndex]->x + delta[0],
-			    nodes[currentIndex]->y + delta[1],
-			    nodes[currentIndex]->z + delta[2], nodes[currentIndex]->speed);
+      ++CurrentIndex;
+      return new PositionUpdate(Nodes[CurrentIndex]->x + Delta[0],
+			    Nodes[CurrentIndex]->y + Delta[1],
+			    Nodes[CurrentIndex]->z + Delta[2], Nodes[CurrentIndex]->speed);
     }    
   }
 
@@ -205,7 +205,7 @@ int inv3(double A[3][3], double (&result)[3][3]){
 Mirob::Mirob( const string &device )
   : Manipulator( "Mirob" )
 {
-  robotDaemon = 0;
+  RobotDaemon = 0;
   Opened = false;
  
   Options opts;
@@ -216,19 +216,19 @@ Mirob::Mirob( const string &device )
 Mirob::Mirob( void )
   : Manipulator( "Mirob" )
 {
-  robotDaemon = 0;
+  RobotDaemon = 0;
   
   Opened = false;
 }
 
 Mirob::~Mirob( void )
 {
-  for(map<string,Trajectory* >::iterator it = trajectories.begin(); 
-      it != trajectories.end(); ++it) {
+  for(map<string,Trajectory* >::iterator it = Trajectories.begin(); 
+      it != Trajectories.end(); ++it) {
     delete it->second;
   }
 
-  delete robotDaemon;
+  delete RobotDaemon;
 
   close();
 }
@@ -241,17 +241,16 @@ int Mirob::loadTrajectoryFile(const char * filename){
   for( const XMLElement* node=txml.FirstChildElement("trajectory"); 
        node; node=node->NextSiblingElement("trajectory") ) {
       
-      trajectories.insert(pair<string, Trajectory* > 
+      Trajectories.insert(pair<string, Trajectory* > 
 			    (string(node->Attribute("name")),new Trajectory(node)));
-
   }
   return 0;
 }
   
 vector<string> Mirob::getTrajectoryKeys(){
   vector<string> retval;
-  for(map<string,Trajectory* >::iterator it = trajectories.begin(); 
-      it != trajectories.end(); ++it) {
+  for(map<string,Trajectory* >::iterator it = Trajectories.begin(); 
+      it != Trajectories.end(); ++it) {
     retval.push_back(it->first);
   }
   return retval;
@@ -260,41 +259,41 @@ vector<string> Mirob::getTrajectoryKeys(){
 
 /*************************************************************/
  int Mirob::setTrajectoryStart(string name, const double x, const double y, const double z){
-   trajIter it = trajectories.find(name);
-   if(it == trajectories.end()){
+   trajIter it = Trajectories.find(name);
+   if(it == Trajectories.end()){
      return 1;
    }
-   trajectories[name]->setStart(new PositionUpdate(x,y,z,MaxSpeed));
+   Trajectories[name]->setStart(new PositionUpdate(x,y,z,MaxSpeed));
    return 0;
  }
 
 /*************************************************************/
  int Mirob::setTrajectoryAnchor(string name, const double x, const double y, const double z){
-   trajIter it = trajectories.find(name);
-   if(it == trajectories.end()){
+   trajIter it = Trajectories.find(name);
+   if(it == Trajectories.end()){
      return 1;
    }
-   trajectories[name]->setAnchor(new PositionUpdate(x,y,z,0));
+   Trajectories[name]->setAnchor(new PositionUpdate(x,y,z,0));
    return 0;
  }
 
 /*************************************************************/
  int Mirob::setTrajectoryCalibrated(string name, bool val){
-   trajIter it = trajectories.find(name);
-   if(it == trajectories.end()){
+   trajIter it = Trajectories.find(name);
+   if(it == Trajectories.end()){
      return 1;
    }
-   trajectories[name]->setCalibrated(val);
+   Trajectories[name]->setCalibrated(val);
    return 0;
  }
 
 /*************************************************************/
 bool Mirob::trajectoryCalibrated(string name){
-   trajIter it = trajectories.find(name);
-   if(it == trajectories.end()){
+   trajIter it = Trajectories.find(name);
+   if(it == Trajectories.end()){
      return false;
    }
-   return trajectories[name]->isCalibrated();
+   return Trajectories[name]->isCalibrated();
  }
  
 
@@ -302,34 +301,34 @@ bool Mirob::trajectoryCalibrated(string name){
 
 int Mirob::loadConfigurationFile(){
   //  XMLDocument xml;
-  xml.LoadFile( configFileName.c_str());
-  XMLElement* root = xml.RootElement();
+  XML.LoadFile( ConfigFileName.c_str());
+  XMLElement* root = XML.RootElement();
 
   // extract max speed
   double tmp;
   root->FirstChildElement("maxspeed")->QueryDoubleText(&tmp);
   MaxSpeed = (long)tmp;
-  robotDaemon_info.MaxSpeed = tmp;
+  RobotDaemonInfo.MaxSpeed = tmp;
   // extract maximal acceleration
   root->FirstChildElement("maxacceleration")->QueryDoubleText(&MaxAcc);
-  robotDaemon_info.MaxAcc = MaxAcc;
+  RobotDaemonInfo.MaxAcc = MaxAcc;
 
-  robotDaemon_info.SetupFile = root->FirstChildElement("setupfile")->GetText();
+  RobotDaemonInfo.SetupFile = root->FirstChildElement("setupfile")->GetText();
   
   
   int tmp2;
   root->FirstChildElement("hostid")->QueryIntText(&tmp2);
-  robotDaemon_info.HostID = (BYTE)tmp2;
+  RobotDaemonInfo.HostID = (BYTE)tmp2;
 
   
   root->FirstChildElement("daemonsleeptime")->FirstChildElement("seconds")->QueryIntText(&tmp2);
-  robotDaemon_info.sleeptime.tv_sec = tmp2;
+  RobotDaemonInfo.sleeptime.tv_sec = tmp2;
 
   root->FirstChildElement("daemonsleeptime")->FirstChildElement("nanoseconds")->QueryIntText(&tmp2);
-  robotDaemon_info.sleeptime.tv_nsec = tmp2;
+  RobotDaemonInfo.sleeptime.tv_nsec = tmp2;
 
   root->FirstChildElement("baudrate")->QueryIntText(&tmp2);
-  robotDaemon_info.Baudrate = tmp2;
+  RobotDaemonInfo.Baudrate = tmp2;
 
   int i = 0,j=0;
   for( const XMLElement* node=root->FirstChildElement("basis")->FirstChildElement("row"); 
@@ -358,7 +357,7 @@ int Mirob::loadConfigurationFile(){
 /*************************************************************/
 
 int Mirob::saveConfigurationFile(){
-  XMLElement* root = xml.RootElement();
+  XMLElement* root = XML.RootElement();
   if (root->BoolAttribute("overwrite")){
     stringstream ss;
    
@@ -372,7 +371,7 @@ int Mirob::saveConfigurationFile(){
 	node2->DeleteChildren();
 
 	ss << B[i][j++];
-	node2->InsertEndChild(xml.NewText(ss.str().c_str()));
+	node2->InsertEndChild(XML.NewText(ss.str().c_str()));
         ss.str( "" );  ss.clear();
 
       }
@@ -387,13 +386,13 @@ int Mirob::saveConfigurationFile(){
 	node2->DeleteChildren();
 
 	ss << b0[i++];
-	node2->InsertEndChild(xml.NewText(ss.str().c_str()));
+	node2->InsertEndChild(XML.NewText(ss.str().c_str()));
         ss.str( "" );  ss.clear();
 
     }
 
 
-    xml.SaveFile(configFileName.c_str());
+    XML.SaveFile(ConfigFileName.c_str());
   }
   return 0;
 
@@ -413,30 +412,30 @@ int Mirob::open( const string &device, const Options &opts )
   CoordinateMode = MIROB_COORD_RAW;
 
 
-  configFileName = opts.text("config");
+  ConfigFileName = opts.text("config");
   loadConfigurationFile();
   
-  loadTrajectoryFile("trajectories.xml");
+  loadTrajectoryFile(opts.text("trajectories").c_str());
   getTrajectoryKeys();
   /* Start Robot Daemon */
-  robotDaemon_info.Device = device.c_str();
-  robotDaemon_info.active = false;
-  robotDaemon_info.forbiddenZones = &forbiddenZones;
-  robotDaemon_info.v[0] = 0.0;
-  robotDaemon_info.v[1] = 0.0;
-  robotDaemon_info.v[2] = 0.0;
-  robotDaemon_info.toolClamped = false;
-  robotDaemon_info.clampChanged = false;
-  robotDaemon_info.state = ROBOT_HALT;
-  robotDaemon_info.ChannelType = CHANNEL_RS232;
-  robotDaemon =  new TMLRobotDaemon(&robotDaemon_info);
+  RobotDaemonInfo.Device = device.c_str();
+  RobotDaemonInfo.active = false;
+  RobotDaemonInfo.ForbiddenZones = &ForbiddenZones;
+  RobotDaemonInfo.v[0] = 0.0;
+  RobotDaemonInfo.v[1] = 0.0;
+  RobotDaemonInfo.v[2] = 0.0;
+  RobotDaemonInfo.toolClamped = false;
+  RobotDaemonInfo.clampChanged = false;
+  RobotDaemonInfo.state = ROBOT_HALT;
+  RobotDaemonInfo.ChannelType = CHANNEL_RS232;
+  RobotDaemon =  new TMLRobotDaemon(&RobotDaemonInfo);
 
   cerr << LOGPREFIX << " waiting for daemon to start" << endl;
-  pthread_mutex_lock( &robotDaemon_info.mutex );
-  robotDaemon->Start();
+  pthread_mutex_lock( &RobotDaemonInfo.mutex );
+  RobotDaemon->Start();
   // wait until Setup has finished (sends the cond signal)
-  pthread_cond_wait( &robotDaemon_info.cond, &robotDaemon_info.mutex );
-  pthread_mutex_unlock( &robotDaemon_info.mutex );
+  pthread_cond_wait( &RobotDaemonInfo.cond, &RobotDaemonInfo.mutex );
+  pthread_mutex_unlock( &RobotDaemonInfo.mutex );
 
 
   // finish open
@@ -453,11 +452,11 @@ int Mirob::open( const string &device, const Options &opts )
 
   void Mirob::setState(int state)
   { 
-    pthread_mutex_lock( &robotDaemon_info.mutex );
+    pthread_mutex_lock( &RobotDaemonInfo.mutex );
     // if (state != ROBOT_POS){
     // }
-    robotDaemon_info.state = state;
-    pthread_mutex_unlock( &robotDaemon_info.mutex );
+    RobotDaemonInfo.state = state;
+    pthread_mutex_unlock( &RobotDaemonInfo.mutex );
   }
 
 /*************************************************************/
@@ -469,7 +468,7 @@ void Mirob::close( void )
   Info.clear();
   Settings.clear();
 
-  robotDaemon->Shutdown();
+  RobotDaemon->Shutdown();
   Opened = false;
   cerr << LOGPREFIX << "Closed! " << endl;
   cerr << LOGPREFIX << "Saving configuration ..." << endl;
@@ -482,16 +481,16 @@ void Mirob::close( void )
 
 int Mirob::reset( void )
 {
-  robotDaemon->Shutdown();
-  delete robotDaemon;
-  robotDaemon =  new TMLRobotDaemon(&robotDaemon_info);
+  RobotDaemon->Shutdown();
+  delete RobotDaemon;
+  RobotDaemon =  new TMLRobotDaemon(&RobotDaemonInfo);
 
   cerr << LOGPREFIX << " waiting for daemon to start" << endl;
-  pthread_mutex_lock( &robotDaemon_info.mutex );
-  robotDaemon->Start();
+  pthread_mutex_lock( &RobotDaemonInfo.mutex );
+  RobotDaemon->Start();
   // wait until Setup has finished (sends the cond signal)
-  pthread_cond_wait( &robotDaemon_info.cond, &robotDaemon_info.mutex );
-  pthread_mutex_unlock( &robotDaemon_info.mutex );
+  pthread_cond_wait( &RobotDaemonInfo.cond, &RobotDaemonInfo.mutex );
+  pthread_mutex_unlock( &RobotDaemonInfo.mutex );
 
   return 0;
 }
@@ -499,9 +498,9 @@ int Mirob::reset( void )
 
 /****************** velocity part *******************************/
 int Mirob::getV(double &x, double &y, double &z){
-  x = robotDaemon_info.v[0];
-  y = robotDaemon_info.v[1];
-  z = robotDaemon_info.v[2];
+  x = RobotDaemonInfo.v[0];
+  y = RobotDaemonInfo.v[1];
+  z = RobotDaemonInfo.v[2];
   
   if (CoordinateMode == MIROB_COORD_TRANS){
     transformVelocities(x,y,z,TRANS2RAW);
@@ -517,7 +516,7 @@ int Mirob::setV(double v, int ax){
   // get current velocity along the axis 
   double currV[3];
   for (int i = 0; i != 3; ++i){
-    currV[i] = robotDaemon_info.v[i];
+    currV[i] = RobotDaemonInfo.v[i];
   }
   
   if (CoordinateMode == MIROB_COORD_TRANS){
@@ -539,12 +538,12 @@ int Mirob::setV(double v, int ax){
     }
   }
 
-  pthread_mutex_lock( &robotDaemon_info.mutex );
+  pthread_mutex_lock( &RobotDaemonInfo.mutex );
   
   for (int i=0; i != 3; ++i){
-    robotDaemon_info.v[i] = currV[i];
+    RobotDaemonInfo.v[i] = currV[i];
   }
-  pthread_mutex_unlock( &robotDaemon_info.mutex );
+  pthread_mutex_unlock( &RobotDaemonInfo.mutex );
 
   return 0;
 }
@@ -606,7 +605,7 @@ void Mirob::getCoordinateFrame(double (&newB)[3][3], double (&newOffspring)[3]){
 /***************** positioning part *****************************/
 
 int Mirob::stop(){
-  return robotDaemon->Stop();
+  return RobotDaemon->Stop();
 }
 /*************************************************************/
                             
@@ -633,9 +632,9 @@ int Mirob::setPos( double x, double y, double z, double speed )
 	 << "Coordinate mode not known!" << '\n';
     return 1;
   }
-  pthread_mutex_lock( &robotDaemon_info.mutex );
-  robotDaemon_info.positionQueue.push(new PositionUpdate(x,y,z,speed));
-  pthread_mutex_unlock( &robotDaemon_info.mutex );
+  pthread_mutex_lock( &RobotDaemonInfo.mutex );
+  RobotDaemonInfo.positionQueue.push(new PositionUpdate(x,y,z,speed));
+  pthread_mutex_unlock( &RobotDaemonInfo.mutex );
  
   return 0;
 }
@@ -714,12 +713,12 @@ int Mirob::stepZ( double z )
 double Mirob::pos( int axis ) 
 {
   if (CoordinateMode == MIROB_COORD_RAW){
-    return (double) robotDaemon_info.pos[axis-1];
+    return (double) RobotDaemonInfo.pos[axis-1];
 
   }else if (CoordinateMode ==  MIROB_COORD_TRANS){
     double coord[3];
     for (int i= 0; i != 3; ++i){
-      coord[i] = (double)robotDaemon_info.pos[i];
+      coord[i] = (double)RobotDaemonInfo.pos[i];
     }
 
     transformCoordinates(coord, RAW2TRANS);
@@ -854,30 +853,30 @@ double Mirob::maxAmplX( void ) const
 
 /**************** tool control part ***************************/
 int Mirob::clampTool(void){
-  pthread_mutex_lock( &robotDaemon_info.mutex );
-  robotDaemon_info.toolClamped = true;
-  pthread_mutex_unlock( &robotDaemon_info.mutex );
+  pthread_mutex_lock( &RobotDaemonInfo.mutex );
+  RobotDaemonInfo.toolClamped = true;
+  pthread_mutex_unlock( &RobotDaemonInfo.mutex );
   return 0;
 }
 
 int Mirob::releaseTool(void){
-  pthread_mutex_lock( &robotDaemon_info.mutex );
-  robotDaemon_info.toolClamped = false;
-  pthread_mutex_unlock( &robotDaemon_info.mutex );
+  pthread_mutex_lock( &RobotDaemonInfo.mutex );
+  RobotDaemonInfo.toolClamped = false;
+  pthread_mutex_unlock( &RobotDaemonInfo.mutex );
   return 0;
 }
 
 int Mirob::switchClampState(void){
-  pthread_mutex_lock( &robotDaemon_info.mutex );
-  robotDaemon_info.toolClamped = !robotDaemon_info.toolClamped;
-  pthread_mutex_unlock( &robotDaemon_info.mutex );
+  pthread_mutex_lock( &RobotDaemonInfo.mutex );
+  RobotDaemonInfo.toolClamped = !RobotDaemonInfo.toolClamped;
+  pthread_mutex_unlock( &RobotDaemonInfo.mutex );
   return 0;
 }
 
 /*******************************************************/
 int Mirob::goToTrajectoryStart(string name){
   if (Calibrated){
-    PositionUpdate* tmp = trajectories[name]->startPoint();
+    PositionUpdate* tmp = Trajectories[name]->startPoint();
     setCoordinateSystem(MIROB_COORD_TRANS);
     setState(ROBOT_POS);
     //cerr << "Trajectory start is " << *tmp << endl;
@@ -894,7 +893,7 @@ int Mirob::goToTrajectoryStart(string name){
 
 /*******************************************************/
  int Mirob::runTrajectory(string name){
-    PositionUpdate* tmp = trajectories[name]->startPoint();
+    PositionUpdate* tmp = Trajectories[name]->startPoint();
     return runTrajectory(name, tmp->x ,tmp->y ,tmp->z);
 }
 
@@ -903,8 +902,8 @@ int Mirob::goToTrajectoryStart(string name){
   if (Calibrated){
     setCoordinateSystem(MIROB_COORD_TRANS);
     setState(ROBOT_POS);
-    for (PositionUpdate* tmp = trajectories[name]->resetToStart(x,y,z); 
-	 tmp != NULL; tmp = trajectories[name]->next()){
+    for (PositionUpdate* tmp = Trajectories[name]->resetToStart(x,y,z); 
+	 tmp != NULL; tmp = Trajectories[name]->next()){
       setPos(tmp->x,tmp->y,tmp->z,tmp->speed);
       delete tmp;
     }
@@ -918,9 +917,9 @@ int Mirob::goToTrajectoryStart(string name){
 /*******************************************************/
   int Mirob::positionQueueLength(){
     int ret = -1;
-    pthread_mutex_lock( &robotDaemon_info.mutex );
-    ret = (int)robotDaemon_info.positionQueue.size();
-    pthread_mutex_unlock( &robotDaemon_info.mutex );
+    pthread_mutex_lock( &RobotDaemonInfo.mutex );
+    ret = (int)RobotDaemonInfo.positionQueue.size();
+    pthread_mutex_unlock( &RobotDaemonInfo.mutex );
     return ret;
 
   }

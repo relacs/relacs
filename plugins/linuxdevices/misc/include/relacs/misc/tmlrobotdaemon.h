@@ -96,7 +96,7 @@ struct robotDaemon_data {
   DWORD  Baudrate;
   
 
-  Zones* forbiddenZones;
+  Zones* ForbiddenZones;
   
   struct timespec sleeptime;
 
