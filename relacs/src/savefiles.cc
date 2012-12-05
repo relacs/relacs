@@ -478,21 +478,19 @@ void SaveFiles::saveStimulus( void )
     return;
 
   // extract intensity from stimulus description:
-  deque< deque < Options > > stimuliref( Stimuli.size() );
+  deque< Options > stimuliref( Stimuli.size() );
   for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
-    for ( int k=0; k<Stimuli[j].descriptions(); k++ ) {
-      stimuliref[j].push_back( Options() );
-      Options::iterator pi = Stimuli[j].description( k ).find( "Intensity" );
-      if ( pi != Stimuli[j].description( k ).end() ) {
-	stimuliref[j].back().add( *pi );
-	Stimuli[j].description( k ).erase( pi );
-      }
-      // XXX once OutData does not have idents any more, the following lines can be erased:
-      Options::iterator pd = Stimuli[j].description( k ).find( "Description" );
-      if ( pd != Stimuli[j].description( k ).end() ) {
-	stimuliref[j].back().add( *pd );
-	Stimuli[j].description( k ).erase( pd );
-      }
+    stimuliref[j] = Stimuli[j].description();
+    Options::iterator pi = Stimuli[j].description().find( "Intensity" );
+    if ( pi != Stimuli[j].description().end() ) {
+      stimuliref[j].add( *pi );   // XXX ??? XXX
+      Stimuli[j].description().erase( pi );
+    }
+    // XXX once OutData does not have idents any more, the following lines can be erased:
+    Options::iterator pd = Stimuli[j].description().find( "Description" );
+    if ( pd != Stimuli[j].description().end() ) {
+      stimuliref[j].add( *pd ); // XXXX
+      Stimuli[j].description().erase( pd );
     }
   }
 
@@ -500,16 +498,23 @@ void SaveFiles::saveStimulus( void )
   deque< string > stimulinames( Stimuli.size() );
   for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
     string sn = StimuliRePro;
-    for ( int k=0; k<Stimuli[j].descriptions(); k++ )
-      sn += '-' + Stimuli[j].typeName( k );
+    for ( Options::const_section_iterator si=Stimuli[j].description().sectionsBegin();
+	  si != Stimuli[j].description().sectionsEnd();
+	  ++si ) {
+      Str tn = (*si)->type();
+      if ( tn.empty() )
+	tn = (*si)->name();
+      tn.eraseFirst( "stimulus/" );
+      sn += '-' + tn;
+    }
     stimulinames[j] = sn;
   }
 
   // track stimuli:
   deque< bool > newstimuli( Stimuli.size(), false );
   for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
-    map < deque< Options >, string > &rsd = ReProStimuli[ stimulinames[j] ];
-    string &rsds = rsd[ Stimuli[j].allDescriptions() ];
+    map < Options, string > &rsd = ReProStimuli[ stimulinames[j] ];
+    string &rsds = rsd[ Stimuli[j].description() ];
     if ( rsds.empty() ) {
       newstimuli[j] = true;
       stimulinames[j] += '-' + Str( rsd.size() );
@@ -534,9 +539,14 @@ void SaveFiles::saveStimulus( void )
 	  *SDF << "Stimulus: " << stimulinames[j] << '\n';
 	  *SDF << "Modality: " << RW->AQ->outTrace( Stimuli[j].trace() ).modality() << '\n';
 	  *SDF << "SamplingRate: " << 0.001*Stimuli[j].sampleRate() << "kHz\n";
-	  for ( int k=0; k<Stimuli[j].descriptions(); k++ ) {
-	    *SDF << "Type: " << Stimuli[j].type( k ) << '\n';
-	    Stimuli[j].description( k ).save( *SDF, "  " );
+	  for ( Options::const_section_iterator si=Stimuli[j].description().sectionsBegin();
+		si != Stimuli[j].description().sectionsEnd();
+		++si ) {
+	    string ts = (*si)->type();
+	    if ( ts.empty() )
+	      ts = (*si)->name();
+	    *SDF << "Type: " << ts << '\n';
+	    (*si)->save( *SDF, "  " );
 	  }
 	  *SDF << '\n';
 	}
@@ -619,13 +629,7 @@ void SaveFiles::saveStimulus( void )
 	  pm.saveXML( *XSF, 1 );
 	  Parameter pr( "SamplingRate", "", 0.001*Stimuli[j].sampleRate(), "kHz" );
 	  pr.saveXML( *XSF, 1 );
-	  for ( int k=0; k<Stimuli[j].descriptions(); k++ ) {
-	    *XSF << "  <section>\n";
-	    *XSF << "    <type>" << Stimuli[j].type( k) << "</type>\n";
-	    *XSF << "    <name>" << Stimuli[j].typeName( k ) << "</name>\n";
-	    Stimuli[j].description( k ).saveXML( *XSF, 0, 2 );
-	    *XSF << "  </section>\n";
-	  }
+	  Stimuli[j].description().saveXML( *XSF, 0, 2 );
 	  *XSF << "</section>\n";
 	}
       }
@@ -662,13 +666,7 @@ void SaveFiles::saveStimulus( void )
 	      pf.saveXML( *XF, 4 );
 	    }
 	  }
-	  for ( unsigned int i=0; i<stimuliref[j].size(); i++ ) {
-	    *XF << "        <section>\n";
-	    *XF << "          <type>" << Stimuli[j].type( i ) << "</type>\n";
-	    *XF << "          <name>" << Stimuli[j].typeName( i ) << "</name>\n";
-	    stimuliref[j][i].saveXML( *XF, 0, 5 );
-	    *XF << "        </section>\n";
-	  }
+	  stimuliref[j].saveXML( *XF, 0, 5 );
 	  *XF << "      </section>\n";
 	  break;
 	}

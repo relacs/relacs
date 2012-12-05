@@ -59,12 +59,12 @@ void readData( DataFile &sf )
     for ( int l=0; l<sf.levels(); l++ ) {
       for ( unsigned int k=0; k<aparam.size(); k++ ) {
 	if ( alevel[k] == l || alevel[k] < 0 ) {
-	  Options::iterator p = sf.metaDataOptions( l ).find( aparam[k]->ident() );
+	  Options::iterator p = sf.metaDataOptions( l ).find( aparam[k]->name() );
 	  if ( p != sf.metaDataOptions( l ).end() ) {
 	    if ( p->isText() ) {
 	      aparam[k]->setText( p->text() );
 	      if ( ! aunit[k] ) {
-		aparam[k]->setType( Parameter::Text );
+		aparam[k]->setValueType( Parameter::Text );
 		aparam[k]->setFormat( "%-10s" );
 		aunit[k] = true;
 	      }

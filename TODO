@@ -1,4 +1,8 @@
 Options:
+- rework addSection(), newSection(), append(), add(), merge(), or whatever.
+- Add iterator that iterates through all sections and subsections ?
+- OutData::append check it for the right use of appendSection, check all other Description
+- SaveFiles: check all stimulus related stuff!!!
 - Reset parentSection pointers and create new Options in assign, append, etc!
 - Options::read -> Options::assign( ident, value ): how are units treated? "[ a, b, c]kHz" or [a, b, ckHz]?
 - Check read() etc. how Parameter are assigned. Is the whole section path is used to identify the Parameter?
@@ -19,6 +23,7 @@ OptWidget:
   This is aproblem for all filters and detectors!
 
 General:
+- relacshelp should know whether doxygen is there, or whether the files it is operating on, exist.
 - add a README file to share/relacs/configs/
 - make the config files more generic (lab address!)
 - check device config files

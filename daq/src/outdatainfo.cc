@@ -39,9 +39,7 @@ OutDataInfo::OutDataInfo( void )
     CarrierFreq( 0.0 ),
     Ident( "" )
 {
-  Descriptions.clear();
-  Types.clear();
-  TypeNames.clear();
+  Description.clear();
 }
 
 
@@ -58,9 +56,7 @@ OutDataInfo::OutDataInfo( const OutDataInfo &signal )
     Level( signal.Level ),
     CarrierFreq( signal.CarrierFreq ),
     Ident( signal.Ident ),
-    Descriptions( signal.Descriptions ),
-    Types( signal.Types ),
-    TypeNames( signal.TypeNames )
+    Description( signal.Description )
 {
 }
 
@@ -78,19 +74,10 @@ OutDataInfo::OutDataInfo( const OutData &signal )
   Level = signal.level();
   CarrierFreq = signal.carrierFreq();
   Ident = signal.ident();
-  Types.clear();
-  TypeNames.clear();
-  for ( int k=0; k<signal.descriptions(); k++ ) {
-    Descriptions.push_back( signal.description( k ) );
-    Str ts = Descriptions[k].text( "type", "stimulus/unknown" );
-    Types.push_back( ts );
-    Descriptions[k].erase( "type" );
-    ts.preventFirst( "stimulus/" ).strip();
-    TypeNames.push_back( ts );
-    // XXX once OutData does not have idents any more, the following lines can be erased:
-    if ( ! signal.ident().empty() )
-      Descriptions[k].addText( "Description", signal.ident() );
-  }
+  Description = signal.description();
+  // XXX once OutData does not have idents any more, the following lines can be erased:
+  //  if ( ! signal.ident().empty() )
+  //    Description.addText( "Description", signal.ident() );
 }
 
 
@@ -263,97 +250,15 @@ void OutDataInfo::setIdent( const string &ident )
 }
 
 
-int OutDataInfo::descriptions( void ) const
-{
-  return Descriptions.size();
-}
-
-
-const Options &OutDataInfo::description( int i ) const
-{
-  if ( i < 0 || i >= (int)Descriptions.size() ) {
-    Dummy.clear();
-    return Dummy;
-  }
-  else
-    return Descriptions[ i ];
-}
-
-
-Options &OutDataInfo::description( int i )
-{
-  if ( i < 0 || i >= (int)Descriptions.size() ) {
-    Dummy.clear();
-    return Dummy;
-  }
-  else
-    return Descriptions[ i ];
-}
-
-
 const Options &OutDataInfo::description( void ) const
 {
-  if ( Descriptions.empty() ) {
-    Dummy.clear();
-    return Dummy;
-  }
-  else
-    return Descriptions.back();
+  return Description;
 }
 
 
 Options &OutDataInfo::description( void )
 {
-  if ( Descriptions.empty() ) {
-    Dummy.clear();
-    return Dummy;
-  }
-  else
-    return Descriptions.back();
-}
-
-
-const deque< Options > &OutDataInfo::allDescriptions( void ) const
-{
-  return Descriptions;
-}
-
-
-deque< Options > &OutDataInfo::allDescriptions( void )
-{
-  return Descriptions;
-}
-
-
-Options &OutDataInfo::addDescription( const string &type )
-{
-  Descriptions.push_back( Options() );
-  Descriptions.back().addText( "type", type );
-  return Descriptions.back();
-}
-
-
-void OutDataInfo::clearDescriptions( void )
-{
-  Descriptions.clear();
-}
-
-
-string OutDataInfo::type( int i ) const
-{
-  if ( i < 0 || i >= (int)Types.size() )
-    return "";
-  else
-    return Types[ i ];
-}
-
-
-string OutDataInfo::typeName( int i ) const
-{
-  if ( i < 0 || i >= (int)TypeNames.size() )
-    return "";
-  else
-    return TypeNames[ i ];
+  return Description;
 }
 
 

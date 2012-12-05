@@ -96,7 +96,6 @@ OutData::OutData( const OutData  &od )
   DeviceDelay = od.DeviceDelay;
   DeviceCount = od.DeviceCount;
   setError( od.error() );
-  Dummy.clear();
 }
 
 
@@ -140,7 +139,6 @@ void OutData::construct( void )
   DeviceDelay = 0;
   DeviceCount = 0;
   clearError();
-  Dummy.clear();
 }
 
 
@@ -225,7 +223,6 @@ const OutData &OutData::assign( const OutData &od )
   DeviceDelay = od.DeviceDelay;
   DeviceCount = od.DeviceCount;
   setError( od.error() );
-  Dummy.clear();
   return *this;
 }
 
@@ -264,7 +261,6 @@ const OutData &OutData::copy( OutData &od ) const
   od.DeviceDelay = DeviceDelay;
   od.DeviceCount = DeviceCount;
   od.setError( error() );
-  Dummy.clear();
   return *this;
 }
 
@@ -279,7 +275,7 @@ const OutData &OutData::append( float a, int n )
 const OutData &OutData::append( const OutData &od )
 {
   SampleDataF::append( (SampleDataF&)od );
-  Description.appendSection( od.Description );
+  Description.addSection( od.Description ); // XXX
   return *this;
 }
 
@@ -983,16 +979,17 @@ void OutData::fill( const OutData &am, double carrierfreq,
   }
   back() = 0.0;
 
-  Descriptions.clear();
-  Descriptions = am.Descriptions;
-  for ( unsigned int i=0; i<Descriptions.size(); i++ ) {
-    Descriptions[i].addText( "Function", "AM" );
-  }
-  Options &opt = addDescription( "stimulus/sine_wave" );
-  opt.addText( "Function", "Carrier" );
-  opt.addNumber( "Frequency", carrierfreq, "Hz" );
-  opt.addNumber( "Duration", am.length(), "s" );
-  opt.addNumber( "TemporalOffset", 0.0, "s" );
+  Description = am.Description;
+  for ( Options::section_iterator si=Description.sectionsBegin();
+	  si != Description.sectionsEnd();
+	++si )
+    (*si)->addText( "Function", "AM" );
+  Description.clearSections();
+  Description.addSection( "", "stimulus/sine_wave" );
+  Description.addText( "Function", "Carrier" );
+  Description.addNumber( "Frequency", carrierfreq, "Hz" );
+  Description.addNumber( "Duration", am.length(), "s" );
+  Description.addNumber( "TemporalOffset", 0.0, "s" );
 
   setCarrierFreq( carrierfreq );
   setIdent( ident );
@@ -1029,13 +1026,13 @@ void OutData::sineWave( double duration, double stepsize,
     ramp( r );
   back() = 0.0;
 
-  Descriptions.clear();
-  Options &opt = addDescription( "stimulus/sine_wave" );
-  opt.addNumber( "Frequency", freq, "Hz" );
-  opt.addNumber( "Amplitude", ampl, unit() );
-  opt.addNumber( "TemporalOffset", 0.0, "s" );
-  opt.addNumber( "Duration", duration, "s" );
-  opt.addNumber( "Phase", 0.0 );
+  Description.clear();
+  Description.addSection( "", "stimulus/sine_wave" );
+  Description.addNumber( "Frequency", freq, "Hz" );
+  Description.addNumber( "Amplitude", ampl, unit() );
+  Description.addNumber( "TemporalOffset", 0.0, "s" );
+  Description.addNumber( "Duration", duration, "s" );
+  Description.addNumber( "Phase", 0.0 );
 
   setCarrierFreq( freq );
   setIdent( ident );
@@ -1059,14 +1056,14 @@ void OutData::noiseWave( double duration, double stepsize,
     ramp( r );
   back() = 0.0;
 
-  Descriptions.clear();
-  Options &opt = addDescription( "stimulus/white_noise" );
-  opt.addNumber( "TemporalOffset", 0.0, "s" );
-  opt.addNumber( "Duration", duration, "s" );
-  opt.addNumber( "UpperCutoffFrequency", cutofffreq, "Hz" );
-  opt.addNumber( "LowerCutoffFrequency", 0.0, "Hz" );
-  opt.addNumber( "Mean", 0.0, unit() );
-  opt.addNumber( "StDev", stdev, unit() );
+  Description.clear();
+  Description.addSection( "", "stimulus/white_noise" );
+  Description.addNumber( "TemporalOffset", 0.0, "s" );
+  Description.addNumber( "Duration", duration, "s" );
+  Description.addNumber( "UpperCutoffFrequency", cutofffreq, "Hz" );
+  Description.addNumber( "LowerCutoffFrequency", 0.0, "Hz" );
+  Description.addNumber( "Mean", 0.0, unit() );
+  Description.addNumber( "StDev", stdev, unit() );
 
   setCarrierFreq( cutofffreq );
   setIdent( ident );
@@ -1091,14 +1088,14 @@ void OutData::bandNoiseWave( double duration, double stepsize,
     ramp( r );
   back() = 0.0;
 
-  Descriptions.clear();
-  Options &opt = addDescription( "stimulus/white_noise" );
-  opt.addNumber( "TemporalOffset", 0.0, "s" );
-  opt.addNumber( "Duration", duration, "s" );
-  opt.addNumber( "UpperCutoffFrequency", cutofffreqhigh, "Hz" );
-  opt.addNumber( "LowerCutoffFrequency", cutofffreqlow, "Hz" );
-  opt.addNumber( "Mean", 0.0, unit() );
-  opt.addNumber( "StDev", stdev, unit() );
+  Description.clear();
+  Description.addSection( "", "stimulus/white_noise" );
+  Description.addNumber( "TemporalOffset", 0.0, "s" );
+  Description.addNumber( "Duration", duration, "s" );
+  Description.addNumber( "UpperCutoffFrequency", cutofffreqhigh, "Hz" );
+  Description.addNumber( "LowerCutoffFrequency", cutofffreqlow, "Hz" );
+  Description.addNumber( "Mean", 0.0, unit() );
+  Description.addNumber( "StDev", stdev, unit() );
 
   setCarrierFreq( cutofffreqhigh );
   setIdent( ident );
@@ -1122,13 +1119,13 @@ void OutData::ouNoiseWave( double duration, double stepsize,
     ramp( r );
   back() = 0.0;
 
-  Descriptions.clear();
-  Options &opt = addDescription( "stimulus/colored_noise" );
-  opt.addNumber( "TemporalOffset", 0.0, "s" );
-  opt.addNumber( "Duration", duration, "s" );
-  opt.addNumber( "CorrelationTime", tau, "s" );
-  opt.addNumber( "Mean", 0.0, unit() );
-  opt.addNumber( "StDev", stdev, unit() );
+  Description.clear();
+  Description.addSection( "", "stimulus/colored_noise" );
+  Description.addNumber( "TemporalOffset", 0.0, "s" );
+  Description.addNumber( "Duration", duration, "s" );
+  Description.addNumber( "CorrelationTime", tau, "s" );
+  Description.addNumber( "Mean", 0.0, unit() );
+  Description.addNumber( "StDev", stdev, unit() );
 
   setCarrierFreq( 1/tau );
   setIdent( ident );
@@ -1150,14 +1147,14 @@ void OutData::sweepWave( double duration, double stepsize,
     ramp( r );
   back() = 0.0;
 
-  Descriptions.clear();
-  Options &opt = addDescription( "stimulus/sweep_wave" );
-  opt.addNumber( "StartFrequency", startfreq, "Hz" );
-  opt.addNumber( "EndFrequency", endfreq, "Hz" );
-  opt.addNumber( "Amplitude", ampl, unit() );
-  opt.addNumber( "TemporalOffset", 0.0, "s" );
-  opt.addNumber( "Duration", duration, "s" );
-  opt.addNumber( "Phase", 0.0 );
+  Description.clear();
+  Description.addSection( "", "stimulus/sweep_wave" );
+  Description.addNumber( "StartFrequency", startfreq, "Hz" );
+  Description.addNumber( "EndFrequency", endfreq, "Hz" );
+  Description.addNumber( "Amplitude", ampl, unit() );
+  Description.addNumber( "TemporalOffset", 0.0, "s" );
+  Description.addNumber( "Duration", duration, "s" );
+  Description.addNumber( "Phase", 0.0 );
 
   setIdent( ident );
   clearError();
@@ -1173,14 +1170,14 @@ void OutData::rectangleWave( double duration, double stepsize,
     array() *= ampl;
   back() = 0.0;
 
-  Descriptions.clear();
-  Options &opt = addDescription( "stimulus/square_wave" );
-  opt.addNumber( "Duration", duration, "s" );
-  opt.addNumber( "TemporalOffset", 0.0, "s" );
-  opt.addNumber( "DutyCycle", width/period );
-  opt.addNumber( "Amplitude", ampl, unit() );
-  opt.addNumber( "Frequency", 1.0/period, "Hz" );
-  opt.addNumber( "StartAmplitude", 0.0 );
+  Description.clear();
+  Description.addSection( "", "stimulus/square_wave" );
+  Description.addNumber( "Duration", duration, "s" );
+  Description.addNumber( "TemporalOffset", 0.0, "s" );
+  Description.addNumber( "DutyCycle", width/period );
+  Description.addNumber( "Amplitude", ampl, unit() );
+  Description.addNumber( "Frequency", 1.0/period, "Hz" );
+  Description.addNumber( "StartAmplitude", 0.0 );
 
   setCarrierFreq( 1.0/period );
   setIdent( ident );
@@ -1196,15 +1193,15 @@ void OutData::sawUpWave( double duration, double stepsize,
     array() *= ampl;
   back() = 0.0;
 
-  Descriptions.clear();
-  Options &opt = addDescription( "stimulus/sawtooth" );
-  opt.addNumber( "Duration", duration, "s" );
-  opt.addNumber( "TemporalOffset", 0.0, "s" );
-  opt.addNumber( "UpstrokeWidth", period-ramp, "s" );
-  opt.addNumber( "DownstrokeWidth", ramp, "s" );
-  opt.addNumber( "Ramp", ramp, "s" );
-  opt.addNumber( "Amplitude", ampl, unit() );
-  opt.addNumber( "Period", period, "s" );
+  Description.clear();
+  Description.addSection( "", "stimulus/sawtooth" );
+  Description.addNumber( "Duration", duration, "s" );
+  Description.addNumber( "TemporalOffset", 0.0, "s" );
+  Description.addNumber( "UpstrokeWidth", period-ramp, "s" );
+  Description.addNumber( "DownstrokeWidth", ramp, "s" );
+  Description.addNumber( "Ramp", ramp, "s" );
+  Description.addNumber( "Amplitude", ampl, unit() );
+  Description.addNumber( "Period", period, "s" );
 
   setIdent( ident );
   clearError();
@@ -1220,15 +1217,15 @@ void OutData::sawDownWave( double duration, double stepsize,
     array() *= ampl;
   back() = 0.0;
 
-  Descriptions.clear();
-  Options &opt = addDescription( "stimulus/sawtooth" );
-  opt.addNumber( "Duration", duration, "s" );
-  opt.addNumber( "TemporalOffset", 0.0, "s" );
-  opt.addNumber( "UpstrokeWidth", ramp, "s" );
-  opt.addNumber( "DownstrokeWidth", period-ramp, "s" );
-  opt.addNumber( "Ramp", ramp, "s" );
-  opt.addNumber( "Amplitude", ampl, unit() );
-  opt.addNumber( "Period", period, "s" );
+  Description.clear();
+  Description.addSection( "", "stimulus/sawtooth" );
+  Description.addNumber( "Duration", duration, "s" );
+  Description.addNumber( "TemporalOffset", 0.0, "s" );
+  Description.addNumber( "UpstrokeWidth", ramp, "s" );
+  Description.addNumber( "DownstrokeWidth", period-ramp, "s" );
+  Description.addNumber( "Ramp", ramp, "s" );
+  Description.addNumber( "Amplitude", ampl, unit() );
+  Description.addNumber( "Period", period, "s" );
 
   setIdent( ident );
   clearError();
@@ -1243,14 +1240,14 @@ void OutData::triangleWave( double duration, double stepsize,
     array() *= ampl;
   back() = 0.0;
 
-  Descriptions.clear();
-  Options &opt = addDescription( "stimulus/sawtooth" );
-  opt.addNumber( "Duration", duration, "s" );
-  opt.addNumber( "TemporalOffset", 0.0, "s" );
-  opt.addNumber( "UpstrokeWidth", 0.5*period, "s" );
-  opt.addNumber( "DownstrokeWidth", 0.5*period, "s" );
-  opt.addNumber( "Amplitude", ampl, unit() );
-  opt.addNumber( "Period", period, "s" );
+  Description.clear();
+  Description.addSection( "", "stimulus/sawtooth" );
+  Description.addNumber( "Duration", duration, "s" );
+  Description.addNumber( "TemporalOffset", 0.0, "s" );
+  Description.addNumber( "UpstrokeWidth", 0.5*period, "s" );
+  Description.addNumber( "DownstrokeWidth", 0.5*period, "s" );
+  Description.addNumber( "Amplitude", ampl, unit() );
+  Description.addNumber( "Period", period, "s" );
 
   setIdent( ident );
   clearError();

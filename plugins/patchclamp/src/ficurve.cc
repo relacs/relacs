@@ -209,7 +209,7 @@ int FICurve::main( void )
   OutData signal( duration, 1.0/samplerate );
   signal.setTrace( CurrentOutput[0] );
   signal.setDelay( delay );
-  signal.addDescription( "stimulus/pulse" );
+  signal.description().addSection( "", "stimulus/pulse" );
   signal.description().addNumber( "Intensity", dccurrent, IUnit );
   signal.description().addNumber( "IntensityOffset", dccurrent, IUnit );
   signal.description().addNumber( "Duration", 1000.0*duration, "ms" );
@@ -218,7 +218,7 @@ int FICurve::main( void )
   OutData dcsignal( dccurrent );
   dcsignal.setTrace( CurrentOutput[0] );
   dcsignal.setIdent( "DC=" + Str( dccurrent ) + IUnit );
-  dcsignal.addDescription( "stimulus/value" );
+  dcsignal.description().addSection( "", "stimulus/value" );
   dcsignal.description().addNumber( "Intensity", dccurrent, IUnit );
 
   // write stimulus:

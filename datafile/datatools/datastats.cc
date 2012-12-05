@@ -462,7 +462,7 @@ void extractMetaData( const DataFile &sf, vector<Str> &acols,
       if ( amode[k] == 2 && ( acol[k] == l || acol[k] < 0 ) ) {
 	if ( opt.empty() )
 	  opt = sf.metaDataOptions( l );
-	Options::iterator p = opt.find( aparam[k]->ident() );
+	Options::iterator p = opt.find( aparam[k]->name() );
 	if ( p != opt.end() ) {
 	  aparam[k]->setNumber( p->number() );
 	  aparam[k]->setUnit( p->unit() );
@@ -491,9 +491,9 @@ void extractMetaData( const DataFile &sf, vector<Str> &acols,
 		     << ": " << acol[k] << '\n';
 	    }
 	  }
-	  string ts = sf.key().ident( acol[k] );
+	  string ts = sf.key().name( acol[k] );
 	  if ( !ts.empty() )
-	    aparam[k]->setIdent( ts );
+	    aparam[k]->setName( ts );
 	  string us = sf.key().unit( acol[k] );
 	  if ( !us.empty() )
 	    aparam[k]->setUnit( us );
@@ -802,7 +802,7 @@ void readData( DataFile &sf )
     }
     if ( amode[k] == 0 && acol[k] > 0 )
       acol[k]--;
-    aparam[k]->setIdent( acols[k].substr( i ) );
+    aparam[k]->setName( acols[k].substr( i ) );
   }
 
   // setup parameter units:

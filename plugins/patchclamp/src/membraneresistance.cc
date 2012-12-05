@@ -154,7 +154,7 @@ int MembraneResistance::main( void )
   signal.setIdent( "I=" + Str( DCCurrent + Amplitude ) + IUnit );
   signal.back() = DCCurrent;
   signal.setTrace( CurrentOutput[0] );
-  signal.addDescription( "stimulus/pulse" );
+  signal.description().addSection( "", "stimulus/pulse" );
   signal.description().addNumber( "Intensity", DCCurrent + Amplitude, IUnit );
   signal.description().addNumber( "IntensityOffset", DCCurrent, IUnit );
   signal.description().addNumber( "Duration", 1000.0*Duration, "ms" );
@@ -163,7 +163,7 @@ int MembraneResistance::main( void )
   OutData dcsignal( DCCurrent );
   dcsignal.setTrace( CurrentOutput[0] );
   dcsignal.setIdent( "DC=" + Str( DCCurrent ) + IUnit );
-  dcsignal.addDescription( "stimulus/value" );
+  dcsignal.description().addSection( "", "stimulus/value" );
   dcsignal.description().addNumber( "Intensity", DCCurrent, IUnit );
 
   // write stimulus:

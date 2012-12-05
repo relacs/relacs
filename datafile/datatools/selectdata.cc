@@ -114,7 +114,7 @@ int readData( DataFile &sf )
       else {
 	for ( int j=0; j<optinx[k].size(); j++ ) {
 	  // XXX: match k with metaData levels!
-	  Parameter p = sf.metaDataOptions( k )[ optinx[k][j].ident() ];
+	  Parameter p = sf.metaDataOptions( k )[ optinx[k][j].name() ];
 	  if ( p.isAnyNumber() ) {
 	    double v1 = p.number( optinx[k][j].unit() );
 	    double v2 = optinx[k][j].number();

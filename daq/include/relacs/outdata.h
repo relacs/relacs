@@ -25,7 +25,6 @@
 #include <fstream>
 #include <string>
 #include <vector>
-#include <deque>
 #include <relacs/sampledata.h>
 #include <relacs/daqerror.h>
 #include <relacs/options.h>

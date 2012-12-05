@@ -191,7 +191,7 @@ int TransferFunction::main( void )
   OutData orgdcsignal( orgoffset );
   orgdcsignal.setTrace( outtrace );
   orgdcsignal.setIdent( "DC=" + Str( orgoffset ) + OutUnit );
-  orgdcsignal.addDescription( "stimulus/value" );
+  orgdcsignal.description().addSection( "", "stimulus/value" );
   orgdcsignal.description().addNumber( "Intensity", orgoffset, OutUnit );
 
   // stimulus loop:

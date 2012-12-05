@@ -22,7 +22,6 @@
 #ifndef _RELACS_OUTDATAINFO_H_
 #define _RELACS_OUTDATAINFO_H_ 1
  
-#include <deque>
 #include <relacs/options.h>
 #include <relacs/outdatainfo.h>
 
@@ -159,43 +158,10 @@ namespace relacs {
       /*! Set the description of the ouput signal to \a ident. */
     void setIdent( const string &ident );
 
-      /*! The number of descriptions.
-          \sa description(), addDescription(), clearDescriptions() */
-    int descriptions( void ) const;
-      /*! Returns the description of the \a i-th component of the output signal.
-          \sa descriptions(), addDescription(), clearDescriptions() */
-    const Options &description( int i ) const;
-      /*! Returns the description of the \a i-th component of the output signal.
-          \sa descriptions(), addDescription(), clearDescriptions() */
-    Options &description( int i );
-      /*! Returns the description of the component of the output signal
-          that was last added by addDescription().
-	  \sa descriptions(), allDescriptions(), addDescription(), clearDescriptions() */
+      /*! Returns the description of the output signal. */
     const Options &description( void ) const;
-      /*! Returns the description of the component of the output signal
-          that was last added by addDescription().
-	  \sa descriptions(), allDescriptions(), addDescription(), clearDescriptions() */
+      /*! Returns the description of the output signal. */
     Options &description( void );
-      /*! Returns all descriptions of the output signal.
-          \sa descriptions(), description(), addDescription(), clearDescriptions() */
-    const deque< Options > &allDescriptions( void ) const;
-      /*! Returns all descriptions of the output signal.
-          \sa descriptions(), description(), addDescription(), clearDescriptions() */
-    deque< Options > &allDescriptions( void );
-      /*! Add a description for another component of the output signal.
-          \param[in] type the type of description, e.g. "stimulus/squarewave".
-	  \sa descriptions(), description(), clearDescriptions() */
-    Options &addDescription( const string &type );
-      /*! Erase all descriptions.
-          \sa descriptions(), description(), addDescription() */
-    void clearDescriptions( void );
-      /*! Returns the type of the \a i-th component of the output signal.
-          \sa description() */
-    string type( int i ) const;
-      /*! Returns the type with the leading "stimulus/" removed 
-	  of the \a i-th component of the output signal.
-          \sa type(), description() */
-    string typeName( int i ) const;
 
 
   protected:
@@ -222,15 +188,8 @@ namespace relacs {
     double CarrierFreq;
       /*! Identifier for the output signal. */
     string Ident;
-      /*! Descriptions of the output signal. */
-    deque< Options > Descriptions;
-      /*! The stimulus types extracted from the Description. */
-    deque< string > Types;
-      /*! The stimulus types without the leading "stimulus/". */
-    deque< string > TypeNames;
-
-      /*! A dummy description. */
-    mutable Options Dummy;
+      /*! Description of the output signal. */
+    Options Description;
     
   };
 

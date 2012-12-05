@@ -2181,7 +2181,7 @@ SampleData< T > &SampleData< T >::ouNoise( int n, double step,
 {
   clear();
   setRange( 0.0, step );
-  randNorm( n, r );
+  Array< T >::randNorm( n, r );
 
   // invalid tau:
   if ( tau < stepsize() )

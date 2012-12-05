@@ -108,7 +108,7 @@ int FindRate::main( void )
   OutData orgdcsignal( orgdcamplitude );
   orgdcsignal.setTrace( CurrentOutput[0] );
   orgdcsignal.setIdent( "DC=" + Str( orgdcamplitude ) + IUnit );
-  orgdcsignal.addDescription( "stimulus/value" );
+  orgdcsignal.description().addSection( "", "stimulus/value" );
   orgdcsignal.description().addNumber( "Intensity", orgdcamplitude, IUnit );
     
   // plot trace:
@@ -130,7 +130,7 @@ int FindRate::main( void )
   OutData signal( dcamplitude );
   signal.setTrace( CurrentOutput[0] );
   signal.setIdent( "DC=" + Str( dcamplitude ) + IUnit );
-  signal.addDescription( "stimulus/value" );
+  signal.description().addSection( "", "stimulus/value" );
   signal.description().addNumber( "Intensity", dcamplitude, IUnit );
     
   double minampl = dcamplitude;

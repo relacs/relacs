@@ -364,7 +364,7 @@ void extractUnits( const DataFile &sf, string &xunit,
       xunit = "-";
     if ( plt != NULL )
       fprintf( plt, "set xlabel '%s [%s]'\n", 
-	       sf.key().ident( xcol ).c_str(), xunit.c_str() );
+	       sf.key().name( xcol ).c_str(), xunit.c_str() );
     
     yunit = sf.key().unit( ycol );
     if ( yunit.empty() )
@@ -493,7 +493,7 @@ void readData( DataFile &sf )
     }
     if ( amode[k] == 0 && acol[k] > 0 )
       acol[k] -= 1;
-    aparam[k]->setIdent( acols[k].substr( i ) );
+    aparam[k]->setName( acols[k].substr( i ) );
   }
 
   if ( keyonly ) {
@@ -511,7 +511,7 @@ void readData( DataFile &sf )
 	if ( amode[k] == 2 && ( acol[k] == l || acol[k] < 0 ) ) {
 	  if ( opt.empty() )
 	    opt.load( sf.metaData( l ).strippedComments( "-#" ) );
-	  Options::iterator p = opt.find( aparam[k]->ident() );
+	  Options::iterator p = opt.find( aparam[k]->name() );
 	  if ( p != opt.end() ) {
 	    aparam[k]->setNumber( p->number() );
 	    aparam[k]->setUnit( p->unit() );
@@ -534,9 +534,9 @@ void readData( DataFile &sf )
 	      if ( c >= 0 )
 		acol[k] = c;
 	    }
-	    string ts = sf.key().ident( acol[k] );
+	    string ts = sf.key().name( acol[k] );
 	    if ( !ts.empty() ) {
-	      aparam[k]->setIdent( ts );
+	      aparam[k]->setName( ts );
 	    }
 	  }
 	}

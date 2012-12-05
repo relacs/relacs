@@ -320,7 +320,7 @@ protected:
   deque< OutDataInfo > Stimuli;
   string StimuliRePro;
   map< string, int > StimuliReProCount;
-  map< string, map < deque< Options >, string > > ReProStimuli;
+  map< string, map < Options, string > > ReProStimuli;
   bool StimulusData;
   TableKey StimulusKey;
   Options StimulusOptions;
