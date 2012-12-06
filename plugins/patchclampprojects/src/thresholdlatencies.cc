@@ -259,26 +259,26 @@ int ThresholdLatencies::main( void )
   signal.setTrace( CurrentOutput[0] );
   signal.setDelay( delay );
   if ( preduration > 0.0 ) {
-    signal.addDescription( "stimulus/pulse" );
+    signal.description().addSection( "", "stimulus/pulse" );
     signal.description().addNumber( "TOffs", 0.0, "ms" );
     signal.description().addNumber( "Intensity", preamplitude, IUnit );
     signal.description().addNumber( "IntensityOffset", dcamplitude, IUnit );
     signal.description().addNumber( "Duration", 1000.0*preduration, "ms" );
   }
   if ( pre2duration > 0.0 ) {
-    signal.addDescription( "stimulus/pulse" );
+    signal.description().addSection( "", "stimulus/pulse" );
     signal.description().addNumber( "TOffs", 1000.0*preduration, "ms" );
     signal.description().addNumber( "Intensity", pre2amplitude, IUnit );
     signal.description().addNumber( "IntensityOffset", dcamplitude, IUnit );
     signal.description().addNumber( "Duration", 1000.0*pre2duration, "ms" );
   }
-  signal.addDescription( "stimulus/pulse" );
+  signal.description().addSection( "", "stimulus/pulse" );
   signal.description().addNumber( "TOffs", 1000.0*(preduration+pre2duration), "ms" );
   signal.description().addNumber( "Intensity", amplitude, IUnit );
   signal.description().addNumber( "IntensityOffset", dcamplitude, IUnit );
   signal.description().addNumber( "Duration", 1000.0*preduration, "ms" );
   if ( postduration > 0.0 ) {
-    signal.addDescription( "stimulus/pulse" );
+    signal.description().addSection( "", "stimulus/pulse" );
     signal.description().addNumber( "TOffs", 1000.0*(preduration+duration), "ms" );
     signal.description().addNumber( "Intensity", postamplitude, IUnit );
     signal.description().addNumber( "IntensityOffset", dcamplitude, IUnit );
@@ -289,7 +289,7 @@ int ThresholdLatencies::main( void )
   OutData vcsignal( preduration + pre2duration + duration + postduration, trace( SpikeTrace[0] ).stepsize() );
   vcsignal.setTraceName( "VC" );
   vcsignal.setDelay( delay );
-  vcsignal.addDescription( "stimulus/pulse" );
+  vcsignal.description().addSection( "", "stimulus/pulse" );
   vcsignal.description().addNumber( "TOffs", 0.0, "ms" );
   vcsignal.description().addNumber( "Intensity", prevcamplitude, "mV" );
   vcsignal.description().addNumber( "IntensityOffset", 0.0, "mV" );
@@ -298,7 +298,7 @@ int ThresholdLatencies::main( void )
   OutData vcgainsignal( preduration + duration + postduration, trace( SpikeTrace[0] ).stepsize() );
   vcgainsignal.setTraceName( "VCgain" );
   vcgainsignal.setDelay( delay );
-  vcgainsignal.addDescription( "stimulus/pulse" );
+  vcgainsignal.description().addSection( "", "stimulus/pulse" );
   vcgainsignal.description().addNumber( "TOffs", 0.0, "ms" );
   vcgainsignal.description().addNumber( "Intensity", prevcgain, "mS" );
   vcgainsignal.description().addNumber( "IntensityOffset", 0.0, "mS" );
@@ -316,7 +316,7 @@ int ThresholdLatencies::main( void )
   OutData dcsignal( dcamplitude );
   dcsignal.setTrace( CurrentOutput[0] );
   dcsignal.setIdent( "DC=" + Str( dcamplitude ) + IUnit );
-  dcsignal.addDescription( "stimulus/value" );
+  dcsignal.description().addSection( "", "stimulus/value" );
   dcsignal.description().addNumber( "Intensity", dcamplitude, IUnit );
 
   // measure resting potential:

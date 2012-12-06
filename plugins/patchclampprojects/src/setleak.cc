@@ -249,12 +249,12 @@ int SetLeak::main( void )
   signal[0] = OutData( g );
   signal[0].setIdent( "g=" + Str( g ) + "nS" );
   signal[0].setTraceName( "g" );
-  signal[0].addDescription( "stimulus/value" );
+  signal[0].description().addSection( "", "stimulus/value" );
   signal[0].description().addNumber( "Intensity", g, "nS" );
   signal[1] = OutData( E );
   signal[1].setIdent( "E=" + Str( E ) + "mV" );
   signal[1].setTraceName( "E" );
-  signal[1].addDescription( "stimulus/value" );
+  signal[1].description().addSection( "", "stimulus/value" );
   signal[1].description().addNumber( "Intensity", E, "mV" );
   directWrite( signal );
   if ( signal.failed() ) {
