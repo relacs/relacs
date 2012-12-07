@@ -63,14 +63,14 @@ ThresholdSUSpikeDetector::ThresholdSUSpikeDetector( const string &ident, int mod
 
   // options:
   int strongstyle = OptWidget::ValueLarge + OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack;
-  addSection( "Detector", 8 );
+  newSection( "Detector", 8 );
   addNumber( "lowerthreshold", "Lower threshold", LowerThreshold, -2000.0, 2000.0, SizeResolution, Unit, Unit, "%.1f", 2+8+32 );
   addBoolean( "useupperthresh", "Use upper threshold", UseUpperThresh, 0+8+32 );
   addNumber( "upperthreshold", "Upper threshold", UpperThreshold, -2000.0, 2000.0, SizeResolution, Unit, Unit, "%.1f", 2+8+32 ).setActivation( "useupperthresh", "true" );;
   addBoolean( "peaks", "Detect peaks", Peaks, 2+8+32 );
   addBoolean( "testisi", "Test interspike interval", TestInterval ).setFlags( 0+8+32 );
   addNumber( "minisi", "Minimum interspike interval", MinInterval, 0.0, 0.1, 0.0002, "sec", "ms", "%.1f", 0+8+32 ).setActivation( "testisi", "true" );
-  addSection( "Indicators", 8 );
+  newSection( "Indicators", 8 );
   addNumber( "nospike", "Interval for no spike", NoSpikeInterval, 0.0, 1000.0, 0.01, "sec", "ms", "%.0f", 0+8+32 );
   addBoolean( "considerstimulus", "Expect spikes during stimuli only", StimulusRequired, 0+8+32 );
   addNumber( "resolution", "Resolution of spike size", SizeResolution, 0.0, 1000.0, 0.01, Unit, Unit, "%.3f", 0+8+32 );
@@ -556,7 +556,7 @@ void ThresholdSUSpikeDetector::save( void )
   header.addText( "ident", ident() );
   header.addText( "detector", name() );
   header.addText( "session time", sessionTimeStr() );
-  header.addSection( "settings" );
+  header.newSection( "settings" );
   header.append( *this );
   header.save( df, "# " );
   df << '\n';

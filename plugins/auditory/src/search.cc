@@ -210,7 +210,7 @@ int Search::main( void )
   Options header;
   header.addInteger( "index", totalRuns() );
   header.addText( "session time", sessionTimeStr() );
-  header.addSection( "status:" );
+  header.newSection( "status:" );
 
   // stimulus:
   OutData signal;
@@ -324,7 +324,7 @@ void Search::saveEvents( const EventData &events, int count, Options &header )
   if ( count == 0 ) {
     df << '\n' << '\n';
     header.append( stimulusData() );
-    header.addSection( "settings" );
+    header.newSection( "settings" );
     header.append( settings() );
     header.save( df, "# ", 0, false, true );
     df << '\n';

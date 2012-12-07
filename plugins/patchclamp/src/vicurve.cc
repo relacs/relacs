@@ -36,14 +36,14 @@ VICurve::VICurve( void )
     IInFac( 1.0 )
 {
   // add some options:
-  addSection( "Stimuli" );
+  newSection( "Stimuli" );
   addSelection( "ibase", "Currents are relative to", "zero|DC|threshold" );
   addNumber( "imin", "Minimum injected current", -1.0, -1000.0, 1000.0, 0.001 );
   addNumber( "imax", "Maximum injected current", 1.0, -1000.0, 1000.0, 0.001 );
   addNumber( "istep", "Minimum step-size of current", 0.001, 0.001, 1000.0, 0.001 ).setActivation( "userm", "false" );
   addBoolean( "userm", "Use membrane resistance for estimating istep from vstep", false );
   addNumber( "vstep", "Minimum step-size of voltage", 1.0, 0.001, 10000.0, 0.1 ).setActivation( "userm", "true" );
-  addSection( "Timing" );
+  newSection( "Timing" );
   addNumber( "duration", "Duration of current output", 0.1, 0.001, 1000.0, 0.001, "sec", "ms" );
   addNumber( "delay", "Delay before current pulses", 0.1, 0.001, 10.0, 0.001, "sec", "ms" );
   addNumber( "pause", "Duration of pause between current pulses", 0.4, 0.001, 1000.0, 0.001, "sec", "ms" );
@@ -53,7 +53,7 @@ VICurve::VICurve( void )
   addInteger( "singlerepeat", "Number of immediate repetitions of a single stimulus", 1, 1, 10000, 1 );
   addInteger( "blockrepeat", "Number of repetitions of a fixed intensity increment", 10, 1, 10000, 1 );
   addInteger( "repeat", "Number of repetitions of the whole V-I curve measurement", 1, 0, 10000, 1 );
-  addSection( "Analysis" );
+  newSection( "Analysis" );
   addNumber( "vmin", "Minimum value for membrane voltage", -100.0, -1000.0, 1000.0, 1.0 );
   addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
   addNumber( "ton", "Timepoint of onset-voltage measurement", 0.01, 0.0, 100.0, 0.001, "sec", "ms" );
@@ -195,7 +195,7 @@ int VICurve::main( void )
   OutData signal( duration, 1.0/samplerate );
   signal.setTrace( CurrentOutput[0] );
   signal.setDelay( delay );
-  signal.description().addSection( "", "stimulus/pulse" );
+  signal.description().newSection( "", "stimulus/pulse" );
   signal.description().addNumber( "Intensity", dccurrent, IUnit );
   signal.description().addNumber( "IntensityOffset", dccurrent, IUnit );
   signal.description().addNumber( "Duration", 1000.0*duration, "ms" );
@@ -204,7 +204,7 @@ int VICurve::main( void )
   OutData dcsignal( dccurrent );
   dcsignal.setTrace( CurrentOutput[0] );
   dcsignal.setIdent( "DC=" + Str( dccurrent ) + IUnit );
-  dcsignal.description().addSection( "", "stimulus/value" );
+  dcsignal.description().newSection( "", "stimulus/value" );
   dcsignal.description().addNumber( "Intensity", dccurrent, IUnit );
 
   // write stimulus:
@@ -383,9 +383,9 @@ void VICurve::save( void )
       break;
     }
   }
-  Header.addSection( "status" );
+  Header.newSection( "status" );
   Header.append( stimulusData() );
-  Header.addSection( "settings" );
+  Header.newSection( "settings" );
   Header.append( settings() );
 
   saveData();
@@ -404,21 +404,21 @@ void VICurve::saveData( void )
   df << '\n';
 
   TableKey datakey;
-  datakey.addSection( "Stimulus" );
+  datakey.newSection( "Stimulus" );
   datakey.addNumber( "I", IUnit, "%6.3f" );
   datakey.addNumber( "IDC", IUnit, "%6.3f" );
   datakey.addNumber( "trials", "1", "%6.0f" );
-  datakey.addSection( "Rest" );
+  datakey.newSection( "Rest" );
   datakey.addNumber( "Vrest", VUnit, "%6.1f" );
   datakey.addNumber( "s.d.", VUnit, "%6.1f" );
-  datakey.addSection( "Steady-state" );
+  datakey.newSection( "Steady-state" );
   datakey.addNumber( "Vss", VUnit, "%6.1f" );
   datakey.addNumber( "s.d.", VUnit, "%6.1f" );
-  datakey.addSection( "Peak" );
+  datakey.newSection( "Peak" );
   datakey.addNumber( "Vpeak", VUnit, "%6.1f" );
   datakey.addNumber( "s.d.", VUnit, "%6.1f" );
   datakey.addNumber( "tpeak", "ms", "%6.1f" );
-  datakey.addSection( "Onset" );
+  datakey.newSection( "Onset" );
   datakey.addNumber( "Vpeak", VUnit, "%6.1f" );
   datakey.addNumber( "s.d.", VUnit, "%6.1f" );
   datakey.saveKey( df );

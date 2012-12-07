@@ -252,7 +252,7 @@ void LoudSpeaker::saveCalibration( const string &file,
   if ( SamplingRate > 0.0 )
     header.addNumber( "sampling rate", 0.001*SamplingRate, "kHz" );
   header.addText( "date", date );
-  header.addSection( "settings" );
+  header.newSection( "settings" );
   header.append( *this );
   header.save( df, "# " );
   df << '\n';

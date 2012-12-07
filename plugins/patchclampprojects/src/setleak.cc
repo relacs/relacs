@@ -42,13 +42,13 @@ SetLeak::SetLeak( void )
   setDialogSelectMask( 1 );
 
   // dialog:
-  addSection( "Passive membrane properties of the cell:" ).setFlags( 2 );
+  newSection( "Passive membrane properties of the cell:" ).setFlags( 2 );
   addNumber( "Rm", "Resistance R_m", 0.0, 0.0, 1.0e8, 1.0, "MOhm", "MOhm", "%.1f" ).setFlags( 2+4 );
   addNumber( "Taum", "Time constant tau_m", 0.0, 0.0, 1.0e6, 0.001, "s", "ms", "%.1f" ).setFlags( 2+4 );
-  addSection( "Injected current I=g(E-V):" ).setFlags( 2 );
+  newSection( "Injected current I=g(E-V):" ).setFlags( 2 );
   addNumber( "gdc", "Additional leak conductance g", 0.0, -1.0e8, 1.0e8, 1.0, "nS" ).setFlags( 2 );
   addNumber( "Edc", "Reversal potential E", 0.0, -1000.0, 1000.0, 1.0, "mV" ).setFlags( 2 );
-  addSection( "Resulting membrane properties:" ).setFlags( 2 );
+  newSection( "Resulting membrane properties:" ).setFlags( 2 );
   addNumber( "Rdc", "New membrane resistance 1/R=1/R_m+g", 0.0, 0.0, 1.0e8, 1.0, "MOhm" ).setFlags( 2 );
   addNumber( "taudc", "New membrane time constant", 0.0, 0.0, 1.0e6, 0.001, "s", "ms" ).setFlags( 2 );
 
@@ -249,12 +249,12 @@ int SetLeak::main( void )
   signal[0] = OutData( g );
   signal[0].setIdent( "g=" + Str( g ) + "nS" );
   signal[0].setTraceName( "g" );
-  signal[0].description().addSection( "", "stimulus/value" );
+  signal[0].description().newSection( "", "stimulus/value" );
   signal[0].description().addNumber( "Intensity", g, "nS" );
   signal[1] = OutData( E );
   signal[1].setIdent( "E=" + Str( E ) + "mV" );
   signal[1].setTraceName( "E" );
-  signal[1].description().addSection( "", "stimulus/value" );
+  signal[1].description().newSection( "", "stimulus/value" );
   signal[1].description().addNumber( "Intensity", E, "mV" );
   directWrite( signal );
   if ( signal.failed() ) {

@@ -49,7 +49,7 @@ FIField::FIField( void )
 
   // add some parameter as options:
   Options &fo = insertSection( "Frequencies", "Intensities" );
-  fo.addSection( "Range" );
+  fo.newSection( "Range" );
   fo.addNumber( "freqmin", "Minimum stimulus frequency", MinFreq, 2000.0, 80000.0, 1000.0, "Hz", "kHz" );
   fo.addNumber( "freqmax", "Maximum stimulus frequency", MaxFreq, 2000.0, 80000.0, 1000.0, "Hz", "kHz" );
   fo.addNumber( "freqstep", "Frequency step", FreqStep, 0.0, 10000.0, 100.0, "Hz", "kHz" );
@@ -57,7 +57,7 @@ FIField::FIField( void )
   fo.addText( "freqrange", "Frequency range", FreqStr ).setUnit( "kHz" );
   fo.addSelection( "freqshuffle", "Order of frequencies", RangeLoop::sequenceStrings() );
   fo.addInteger( "freqincrement", "Initial increment for frequencies", FreqIncrement, -1000, 1000, 1 );
-  fo.addSection( "Optimization" );
+  fo.newSection( "Optimization" );
   fo.addInteger( "reducedfreqincrement", "Reduce frequency range at frequency increments below", ReducedFreqIncrement, 0, 1000, 1 );
   fo.addInteger( "reducedfreqnumber", "Number of frequencies used for the reduced frequency range", ReducedFreqNumber, 0, 1000, 1 );
 
@@ -317,17 +317,17 @@ void FIField::saveThreshold( const string &file )
   settings().save( df, "#   ", 32, false, true );
   df << '\n';
   TableKey key;
-  key.addSection( "threshold" );
+  key.newSection( "threshold" );
   key.addNumber( "f_c", "kHz", "%6.3f" );
   key.addNumber( "I_th", "dB SPL", "%5.1f" );
   key.addNumber( "s.d.", "dB SPL", "%5.1f" );
   key.addNumber( "slope", "Hz/dB", "%5.1f" );
   key.addNumber( "s.d.", "Hz/dB", "%5.1f" );
-  key.addSection( "rate" );
+  key.newSection( "rate" );
   key.addNumber( "I_r", "dB SPL", "%5.1f" );
   key.addNumber( "s.d.", "dB SPL", "%5.1f" );
   key.addNumber( "r", "Hz", "%5.1f" );
-  key.addSection( "saturation" );
+  key.newSection( "saturation" );
   key.addNumber( "I_max", "dB SPL", "%5.1f" );
   key.addNumber( "s.d.", "dB SPL", "%5.1f" );
   key.addNumber( "f_max", "Hz", "%5.1f" );
@@ -505,10 +505,10 @@ RePro::DoneState FIField::next( vector< FIData > &results, bool msg )
 	FIFieldHeader.setInteger( "side", Side );
 	FIFieldHeader.setText( "session time", sessionTimeStr() );
 	FIFieldHeader.erase( "status" );
-	FIFieldHeader.addSection( "status" );
+	FIFieldHeader.newSection( "status" );
 	FIFieldHeader.append( stimulusData() );
 	FIFieldHeader.erase( "settings" );
-	FIFieldHeader.addSection( "settings" );
+	FIFieldHeader.newSection( "settings" );
 	FIFieldHeader.append( settings(), 32 );
 	saveHeader( "fifieldspikes.dat" );
 	saveHeader( "fifieldrates.dat" );

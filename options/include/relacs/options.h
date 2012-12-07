@@ -1283,24 +1283,24 @@ public:
 	i.e. \a level = 1 adds a subsection, \a \a level = 2 a subsubsection, etc.
         Subsequent calls to addText(), addNumber(), etc. add new Parameter
 	to the added section.
-        \sa addSubSection(), addSubSubSection(), insertSection(),
+        \sa newSubSection(), newSubSubSection(), addSection(), insertSection(),
 	endSection(), clearSections() */
-  Options &addSection( int level, const string &name, const string &type="",
+  Options &newSection( int level, const string &name, const string &type="",
 		       int flag=0, int style=0 );
-  Options &addSection( int level, const string &name, int flag, int style=0 )
-    { return addSection( level, name, "", flag, style ); };
+  Options &newSection( int level, const string &name, int flag, int style=0 )
+    { return newSection( level, name, "", flag, style ); };
     /*! Add a new section of Options to the end of the sections list.
         The new section is named \a name, has the optional
 	type specifier \a type, some \a flag for selecting this section,
 	and is formatted according to the \a style flag.
         Subsequent calls to addText(), addNumber(), etc. add new Parameter
 	to the added section.
-        \sa addSubSection(), addSubSubSection(), insertSection(),
+        \sa newSubSection(), newSubSubSection(), addSection(), insertSection(),
 	endSection(), clearSections() */
-  Options &addSection( const string &name, const string &type="",
+  Options &newSection( const string &name, const string &type="",
 		       int flag=0, int style=0 );
-  Options &addSection( const string &name, int flag, int style=0 )
-    { return addSection( name, "", flag, style ); };
+  Options &newSection( const string &name, int flag, int style=0 )
+    { return newSection( name, "", flag, style ); };
     /*! Add a new subsection of Options to the last section.
         The new subsection is named \a name, has the optional
 	type specifier \a type, some \a flag for selecting this section,
@@ -1308,12 +1308,12 @@ public:
         Subsequent calls to addText(), addNumber(), etc. add new Parameter
 	to the added subsection.
         \note You can only add a subsection after having added a section!
-        \sa addSection(), addSubSubSection(), insertSection(),
+        \sa newSection(), newSubSubSection(), addSection(), insertSection(),
 	endSection(), clearSections() */
-  Options &addSubSection( const string &name, const string &type="",
+  Options &newSubSection( const string &name, const string &type="",
 			  int flag=0, int style=0 );
-  Options &addSubSection( const string &name, int flag, int style=0 )
-    { return addSubSection( name, "", flag, style ); };
+  Options &newSubSection( const string &name, int flag, int style=0 )
+    { return newSubSection( name, "", flag, style ); };
     /*! Add a new subsubsection of Options to the last subsection
         of the last section.
         The new subsubsection is named \a name, has the optional
@@ -1322,12 +1322,25 @@ public:
         Subsequent calls to addText(), addNumber(), etc. add new Parameter
 	to the added subsubsection.
         \note You can only add a subsubsection after having added a subsection!
-        \sa addSection(), addSubSection(), insertSection(),
+        \sa newSection(), newSubSection(), addSection(), insertSection(),
 	endSection(), clearSections() */
-  Options &addSubSubSection( const string &name, const string &type="",
+  Options &newSubSubSection( const string &name, const string &type="",
 			     int flag=0, int style=0 );
-  Options &addSubSubSection( const string &name, int flag, int style=0 )
-    { return addSubSubSection( name, "", flag, style ); };
+  Options &newSubSubSection( const string &name, int flag, int style=0 )
+    { return newSubSubSection( name, "", flag, style ); };
+    /*! Add a new section of Options to the end of the currently active
+        Option's sections list.
+        The new section is named \a name, has the optional
+	type specifier \a type, some \a flag for selecting this section,
+	and is formatted according to the \a style flag.
+        Subsequent calls to addText(), addNumber(), etc. add new Parameter
+	to the added section.
+        \sa newSection(), newSubSection(), newSubSubSection(), insertSection(),
+	endSection(), clearSections() */
+  Options &addSection( const string &name, const string &type="",
+		       int flag=0, int style=0 );
+  Options &addSection( const string &name, int flag, int style=0 )
+    { return addSection( name, "", flag, style ); };
     /*! Insert a new section of Options before the section
         specified by \a atpattern.
 	If \a atpattern is not found or if \atpattern is empty,
@@ -1338,8 +1351,8 @@ public:
 	and is formatted according to the \a style flag.
         Subsequent calls to addText(), addNumber(), etc. add new Parameter
 	to the inserted section.
-        \sa addSection(), addSubSection(), addSubSubSection(), endSection(),
-	clearSections(), findSection()  */
+        \sa newSection(), newSubSection(), newSubSubSection(), addSection(),
+	endSection(), clearSections(), findSection()  */
   Options &insertSection( const string &name, const string &atpattern,
 			  const string &type="", int flag=0, int style=0 );
   Options &insertSection( const string &name, const string &atpattern,
@@ -1356,12 +1369,12 @@ public:
         level = 1 adds a subsection, \a \a level = 2 a subsubsection,
         etc.  Subsequent calls to addText(), addNumber(), etc. add new
         Parameter to the added section.
-        \sa addSubSection(), addSubSubSection(), insertSection(),
-	endSection(), clearSections() */
-  Options &addSection( int level, const Options &opt, const string &name="", const string &type="",
+        \sa newSubSection(), newSubSubSection(), addSection(),
+	insertSection(), endSection(), clearSections() */
+  Options &newSection( int level, const Options &opt, const string &name="", const string &type="",
 		       int flag=0, int style=0 );
-  Options &addSection( int level, const Options &opt, const string &name, int flag, int style=0 )
-    { return addSection( level, opt, name, "", flag, style ); };
+  Options &newSection( int level, const Options &opt, const string &name, int flag, int style=0 )
+    { return newSection( level, opt, name, "", flag, style ); };
     /*! Add \a opt as a new section to the end of this Options section
         list.  If \a name is not an empty string, the name of the new
         section is set to \a name.  If \a type is not an empty string,
@@ -1369,12 +1382,12 @@ public:
         style are added to the new sections \a flag and \a style flag,
         respectively.  Subsequent calls to addText(),
         addNumber(), etc. add new Parameter to the added section.
-        \sa addSubSection(), addSubSubSection(), insertSection(),
+        \sa newSubSection(), newSubSubSection(), addSection(), insertSection(),
 	endSection(), clearSections() */
-  Options &addSection( const Options &opt, const string &name="", const string &type="",
+  Options &newSection( const Options &opt, const string &name="", const string &type="",
 		       int flag=0, int style=0 );
-  Options &addSection( const Options &opt, const string &name, int flag, int style=0 )
-    { return addSection( opt, name, "", flag, style ); };
+  Options &newSection( const Options &opt, const string &name, int flag, int style=0 )
+    { return newSection( opt, name, "", flag, style ); };
     /*! Add \a opt as a new subsection to the last section.  If \a name
         is not an empty string, the name of the new section is set to
         \a name.  If \a type is not an empty string, the type of the
@@ -1383,12 +1396,12 @@ public:
 	Subsequent calls to addText(), addNumber(), etc. add new
         Parameter to the added section.
 	\note You can only add a subsection after having added a section!
-	\sa addSection(), addSubSubSection(), insertSection(),
+	\sa newSection(), newSubSubSection(), addSection(), insertSection(),
         endSection(), clearSections() */
-  Options &addSubSection( const Options &opt, const string &name="", const string &type="",
+  Options &newSubSection( const Options &opt, const string &name="", const string &type="",
 			  int flag=0, int style=0 );
-  Options &addSubSection( const Options &opt, const string &name, int flag, int style=0 )
-    { return addSubSection( opt, name, "", flag, style ); };
+  Options &newSubSection( const Options &opt, const string &name, int flag, int style=0 )
+    { return newSubSection( opt, name, "", flag, style ); };
     /*! Add \a opt as a new subsubsection to the last
         subsection of the last section.  If \a name is not an empty
         string, the name of the new section is set to \a name.  If \a
@@ -1398,12 +1411,25 @@ public:
         Subsequent calls to addText(), addNumber(), etc. add new
         Parameter to the added section.
         \note You can only add a subsubsection after having added a subsection!
-        \sa addSection(), addSubSection(), insertSection(),
+        \sa newSection(), newSubSection(), addSection(), insertSection(),
 	endSection(), clearSections() */
-  Options &addSubSubSection( const Options &opt, const string &name="", const string &type="",
+  Options &newSubSubSection( const Options &opt, const string &name="", const string &type="",
 			     int flag=0, int style=0 );
-  Options &addSubSubSection( const Options &opt, const string &name, int flag, int style=0 )
-    { return addSubSubSection( opt, name, "", flag, style ); };
+  Options &newSubSubSection( const Options &opt, const string &name, int flag, int style=0 )
+    { return newSubSubSection( opt, name, "", flag, style ); };
+    /*! Add \a opt as a new section to the end of the currently active
+        Option's sections list.
+        The new section is named \a name, has the optional
+	type specifier \a type, some \a flag for selecting this section,
+	and is formatted according to the \a style flag.
+        Subsequent calls to addText(), addNumber(), etc. add new Parameter
+	to the added section.
+        \sa newSection(), newSubSection(), newSubSubSection(), insertSection(),
+	endSection(), clearSections() */
+  Options &addSection( const Options &opt, const string &name, const string &type="",
+		       int flag=0, int style=0 );
+  Options &addSection( const Options &opt, const string &name, int flag, int style=0 )
+    { return addSection( opt, name, "", flag, style ); };
     /*! Insert \a opt as a new section of Options before the section
         specified by \a atpattern.  If \a atpattern is not found or if
         \atpattern is empty, the new section is added to the beginning
@@ -1415,8 +1441,8 @@ public:
         style flag, respectively.
         Subsequent calls to addText(), addNumber(), etc. add new Parameter
 	to the inserted section.
-        \sa addSection(), addSubSection(), addSubSubSection(), endSection(),
-	clearSections(), findSection()  */
+        \sa newSection(), newSubSection(), newSubSubSection(), addSection(),
+	endSection(), clearSections(), findSection()  */
   Options &insertSection( const Options &opt, const string &name, const string &atpattern,
 			  const string &type="", int flag=0, int style=0 );
   Options &insertSection( const Options &opt, const string &name, const string &atpattern,
@@ -1426,13 +1452,13 @@ public:
     /*! End the currently active section such that subsequent calls
         to addText(), addNumber(), etc. add new Parameter
 	to the parent section.
-        \sa clearSections(), addSection(), addSubSection(), addSubSubSection(),
+        \sa clearSections(), newSection(), newSubSection(), newSubSubSection(),
 	insertSection() */
   void endSection( void );
     /*! Reset the currently active section such that subsequent calls
         to addText(), addNumber(), etc. add new Parameter
 	to this Options.
-        \sa endSection(), addSection(), addSubSection(), addSubSubSection(),
+        \sa endSection(), newSection(), newSubSection(), newSubSubSection(),
 	insertSection() */
   void clearSections( void );
 

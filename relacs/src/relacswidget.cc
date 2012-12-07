@@ -132,7 +132,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
 
   // configuration parameter for RELACS:
   addConfig();
-  addSection( "input data" );
+  newSection( "input data" );
   addNumber( "inputsamplerate", "Input sampling rate", 20000.0, 1.0, 1000000.0, 1000.0, "Hz", "kHz" ); // Hertz, -> 2.4MB pro minute and channel
   addNumber( "inputtracecapacity", "Ring buffer has capacity for ", 600.0, 1.0, 1000000.0, 1.0, "s" );
   addBoolean( "inputunipolar", "Unipolar input", false );
@@ -144,7 +144,7 @@ RELACSWidget::RELACSWidget( const string &pluginrelative,
   addText( "inputtracereference", "Input trace reference", InData::referenceStr( InData::RefGround ) );
   addInteger( "inputtracegain", "Input trace gain", 0 );
   addBoolean( "inputtracecenter", "Input trace center vertically", true );
-  addSection( "output data" );
+  newSection( "output data" );
   addNumber( "maxoutputrate", "Default maximum output sampling rate", 100000.0, 1.0, 10000000.0, 1000.0, "Hz", "kHz" );
   addText( "outputtraceid", "Output trace identifier", "" );
   addInteger( "outputtracechannel", "Output trace channel", 0 );

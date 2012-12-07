@@ -100,7 +100,7 @@ int VoltageReconstruction::main( void )
   OutData orgdcsignal( orgdcamplitude );
   orgdcsignal.setTrace( CurrentOutput[0] );
   orgdcsignal.setIdent( "DC=" + Str( orgdcamplitude ) + IUnit );
-  orgdcsignal.description().addSection( "", "stimulus/value" );
+  orgdcsignal.description().newSection( "", "stimulus/value" );
   orgdcsignal.description().addNumber( "Intensity", orgdcamplitude, IUnit );
 
   // measure firing rate:
@@ -139,7 +139,7 @@ int VoltageReconstruction::main( void )
   signal.back() = dcamplitude;
   signal.setTrace( CurrentOutput[0] );
   signal.setIdent( "I=" + Str( dcamplitude + amplitude ) + IUnit );
-  signal.description().addSection( "", "stimulus/pulse" );
+  signal.description().newSection( "", "stimulus/pulse" );
   signal.description().addNumber( "Intensity", dcamplitude + amplitude, IUnit );
   signal.description().addNumber( "IntensityOffset", dcamplitude, IUnit );
   signal.description().addNumber( "Duration", 1000.0*duration, "ms" );

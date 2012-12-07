@@ -74,7 +74,7 @@ FICurve::FICurve( void )
   SetCurves = 1;
 
   // add some parameter as options:
-  addSection( "Intensities" );
+  newSection( "Intensities" );
   addNumber( "intmin", "Minimum stimulus intensity", MinIntensity, -200.0, 200.0, 5.0, "dB SPL" ).setActivation( "useprevints", "no" );
   addNumber( "intmax", "Maximum stimulus intensity", MaxIntensity, 0.0, 200.0, 5.0, "dB SPL" ).setActivation( "useprevints", "no" );
   addNumber( "intstep", "Sound intensity step", IntensityStep, 0.0, 200.0, 1.0, "dB SPL" ).setActivation( "useprevints", "no" );
@@ -87,7 +87,7 @@ FICurve::FICurve( void )
   addInteger( "blockrepeat", "Number of repetitions of a fixed intensity increment", IntBlockRepeat, 1, 10000, 1 );
   addInteger( "repeat", "Number of repetitions of the whole f-I curve measurement", IntRepeat, 0, 10000, 1 );
   addBoolean( "manualskip", "Show buttons for manual selection of intensities", false );
-  addSection( "Waveform" );
+  newSection( "Waveform" );
   addSelection( "waveform", "Waveform of stimulus", "sine|noise" );
   addNumber( "carrierfreq", "Frequency of carrier", CarrierFrequency, -40000.0, 40000.0, 500.0, "Hz", "kHz" );
   addBoolean( "usebestfreq", "Relative to the cell's best frequency", UseBestFreq );
@@ -95,22 +95,22 @@ FICurve::FICurve( void )
   addNumber( "duration", "Duration of stimulus", Duration, 0.0, 1000.0, 0.05, "seconds", "ms" );
   addNumber( "pause", "Pause", Pause, 0.0, 1000.0, 0.05, "seconds", "ms" );
   addSelection( "side", "Speaker", "left|right|best" );
-  addSection( "Optimization" );
-  addSubSection( "Baseline activity" );
+  newSection( "Optimization" );
+  newSubSection( "Baseline activity" );
   addBoolean( "usesilent", "Use measured baseline activity", UseSilent );
   addNumber( "maxbaserate", "Maximum baseline activity", MaxBaseRate, 0.0, 1000.0, 5.0, "Hz" ).setActivation( "usesilent", "false" );
   addInteger( "maxsilent", "Maximum trials used for baseline activity", MaxSilent, 0, 1000, 1 );
   addSelection( "resetsilent", "Reset estimation of baseline activity at", "Never|Session|RePro" );
   addNumber( "silentfactor", "Weight for standard deviation of baseline activity", SilentFactor, 0.0, 100.0, 0.5 ).setActivation( "usesilent", "true" );
-  addSubSection( "No response" );
+  newSubSection( "No response" );
   addBoolean( "skippause", "Skip pause if there is no response", SkipPause );
   addInteger( "silentintincrement", "Skip all stimuli below not responding ones<br> at intensity increments below", SkipSilentIncrement, 0, 1000, 1 );
-  addSubSection( "Slope" );
+  newSubSection( "Slope" );
   addInteger( "slopeintincrement", "Optimize slopes at intensity increments below", SlopeIntIncrement, 0, 1000, 1 );
   addNumber( "minrateslope", "Minimum slope of firing rate", MinRateSlope, 0.0, 1000.0, 1.0, "Hz/dB" );
   addNumber( "maxratefrac", "Fraction of maximum firing rate above which slopes are optimized", MaxRateFrac, 0.0, 1.0, 0.1, "1", "%" );
   addNumber( "extint", "Extend intensity range by", IntensityExtension, 0.0, 100.0, 1.0, "dB SPL" );
-  addSection( "Analysis" );
+  newSection( "Analysis" );
   addNumber( "ratedt", "Bin width for firing rate", RateDt, 0.0, 1.0, 0.0005, "seconds", "ms" );
   addNumber( "prewidth", "Window length for baseline firing rate", PreWidth, 0.0, 10.0, 0.05, "seconds", "ms" );
   addNumber( "peakwidth", "Window length for peak firing rate", PeakWidth, 0.0, 10.0, 0.01, "seconds", "ms" );
@@ -538,27 +538,27 @@ void FICurve::saveFICurve( const string &file, const vector< FIData > &results )
   Header.save( df, "# ", 0, false, true );
   df << '\n';
   TableKey key;
-  key.addSection( "stimulus" );
+  key.newSection( "stimulus" );
   key.addNumber( "I_r", "dB SPL", "%5.1f" );
   key.addNumber( "I", "dB SPL", "%5.1f" );
   key.addNumber( "n", "1", "%3.0f" );
-  key.addSection( "firing rate" );
+  key.newSection( "firing rate" );
   key.addNumber( "f", "Hz", "%5.1f" );
   key.addNumber( "s.d.", "Hz", "%5.1f" );
-  key.addSection( "baseline" );
+  key.newSection( "baseline" );
   key.addNumber( "f_b", "Hz", "%5.1f" );
   key.addNumber( "s.d.", "Hz", "%5.1f" );
-  key.addSection( "peak rate" );
+  key.newSection( "peak rate" );
   key.addNumber( "f_on", "Hz", "%5.1f" );
   key.addNumber( "s.d.", "Hz", "%5.1f" );
   key.addNumber( "t_on", "ms", "%5.1f" );
-  key.addSection( "steady-state" );
+  key.newSection( "steady-state" );
   key.addNumber( "f_ss", "Hz", "%5.1f" );
   key.addNumber( "s.d.", "Hz", "%5.1f" );
-  key.addSection( "spike count" );
+  key.newSection( "spike count" );
   key.addNumber( "count", "1", "%7.1f" );
   key.addNumber( "s.d.", "1", "%7.1f" );
-  key.addSection( "latency" );
+  key.newSection( "latency" );
   key.addNumber( "latency", "ms", "%6.1f" );
   key.addNumber( "s.d.", "ms", "%6.1f" );
   key.saveKey( df, true, true );
@@ -838,10 +838,10 @@ void FICurve::save( const vector< FIData > &results )
 
   setHeader();
   Header.erase( "status" );
-  Header.addSection( "status" );
+  Header.newSection( "status" );
   Header.append( stimulusData() );
   Header.erase( "settings" );
-  Header.addSection( "settings" );
+  Header.newSection( "settings" );
   Header.append( settings(), 16 );
   updateSession( results );
 

@@ -115,7 +115,7 @@ int PhaseResettingCurve::main( void )
   OutData orgdcsignal( orgdcamplitude );
   orgdcsignal.setTrace( CurrentOutput[0] );
   orgdcsignal.setIdent( "DC=" + Str( orgdcamplitude ) + IUnit );
-  orgdcsignal.description().addSection( "", "stimulus/value" );
+  orgdcsignal.description().newSection( "", "stimulus/value" );
   orgdcsignal.description().addNumber( "Intensity", orgdcamplitude, IUnit );
 
   // measure firing rate:
@@ -147,7 +147,7 @@ int PhaseResettingCurve::main( void )
   signal.back() = dcamplitude;
   signal.setTrace( CurrentOutput[0] );
   signal.setIdent( "I=" + Str( dcamplitude + amplitude ) + IUnit );
-  signal.description().addSection( "", "stimulus/pulse" );
+  signal.description().newSection( "", "stimulus/pulse" );
   signal.description().addNumber( "Intensity", dcamplitude + amplitude, IUnit );
   signal.description().addNumber( "IntensityOffset", dcamplitude, IUnit );
   signal.description().addNumber( "Duration", 1000.0*duration, "ms" );
@@ -182,9 +182,9 @@ int PhaseResettingCurve::main( void )
   header.addNumber( "ReProTime", reproStartTime(), "s", "%0.3f" );
   header.addNumber( "firing rate", meanrate, "Hz", "%0.1f" );
   header.addNumber( "period", 1000.0*baseperiod, "ms", "%0.2f" );
-  header.addSection( "status" );
+  header.newSection( "status" );
   header.append( stimulusData() );
-  header.addSection( "settings" );
+  header.newSection( "settings" );
   header.append( settings() );
 
   for ( int n=1; (repeats == 0 || n<=repeats ) && softStop() <= 0; n++ ) {
@@ -499,9 +499,9 @@ void PhaseResettingCurve::savePRC( const Options &header,
   df << '\n';
 
   TableKey datakey;
-  datakey.addSection( "p" );
+  datakey.newSection( "p" );
   datakey.addNumber( "bin", "1", "%7.4f" );
-  datakey.addSection( "dp" );
+  datakey.newSection( "dp" );
   datakey.addNumber( "median", "1", "%7.4f" );
   datakey.addNumber( "1.quartile", "1", "%7.4f" );
   datakey.addNumber( "3.quartile", "1", "%7.4f" );

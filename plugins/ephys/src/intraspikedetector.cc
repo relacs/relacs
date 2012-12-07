@@ -57,14 +57,14 @@ IntraSpikeDetector::IntraSpikeDetector( const string &ident, int mode )
 
   // options:
   int strongstyle = OptWidget::ValueLarge + OptWidget::ValueBold + OptWidget::ValueGreen + OptWidget::ValueBackBlack;
-  addSection( "Detector", 8 );
+  newSection( "Detector", 8 );
   addNumber( "threshold", "Detection threshold", Threshold, 0.0, 200.0, SizeResolution, "mV", "mV", "%.1f", 2+8+32 );
   addNumber( "abspeak", "Absolute threshold", AbsPeak, -200.0, 200.0, SizeResolution, "mV", "mV", "%.1f", 2+8+32 ).setActivation( "testpeak", "true" );
   addBoolean( "testwidth", "Test spike width", TestWidth ).setFlags( 0+8+32 );
   addNumber( "maxwidth", "Maximum spike width", MaxWidth, 0.0001, 1.000, 0.0001, "sec", "ms", "%.1f", 0+8+32 ).setActivation( "testwidth", "true" );
   addBoolean( "fitpeak", "Fit parabula to peak of spike", FitPeak ).setFlags( 0+8+32 );
   addNumber( "fitwidth", "Width of parabula fit", FitWidth, 0.0, 0.1, 0.00001, "sec", "ms", "%.2f", 0+8+32 );
-  addSection( "Indicators", 8 );
+  newSection( "Indicators", 8 );
   addNumber( "resolution", "Resolution of spike size", SizeResolution, 0.0, 1000.0, 0.1, "mV", "mV", "%.2f", 0+8+32 );
   addBoolean( "log", "Logarithmic histograms", LogHistogram, 0+8+32 );
   addNumber( "update", "Update time interval", UpdateTime, 0.2, 1000.0, 0.2, "sec", "sec", "%.1f", 0+8+32 );
@@ -237,7 +237,7 @@ void IntraSpikeDetector::save( void )
   header.addText( "ident", ident() );
   header.addText( "detector", name() );
   header.addText( "session time", sessionTimeStr() );
-  header.addSection( "settings" );
+  header.newSection( "settings" );
   header.append( *this );
   header.save( df, "# " );
   df << '\n';

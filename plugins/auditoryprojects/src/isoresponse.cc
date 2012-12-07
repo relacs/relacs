@@ -77,35 +77,35 @@ IsoResponse::IsoResponse( void )
 
   // add some parameter as options:
 
-  addSection( "Stimulus" );
+  newSection( "Stimulus" );
 
-  addSubSection( "Frequencies" );
+  newSubSection( "Frequencies" );
   addText( "use_best_freq", "Frequency reference", "absolute|best|isothresh" ).setStyle( Parameter::SelectText );
   addNumber( "dist_best_freq", "Distance of f1 and f2 from best Frequency (for 'best')", DistBestFrequency, 500.0, 20000.0, 500.0, "Hz", "kHz*3/pi" );
   addNumber( "dist_freq", "Distance between f1 and f2 (for 'isothresh')", DistFrequencies, 500.0, 20000.0, 500.0, "Hz", "kHz*3/pi" );
   addNumber( "f1", "1st Frequency", Frequency1, 2000.0, 40000.0, 500.0, "Hz", "kHz" );
   addNumber( "f2", "2nd Frequency", Frequency2, 2000.0, 40000.0, 500.0, "Hz", "kHz*3/pi" );
 
-  addSubSection( "Intensities" );
+  newSubSection( "Intensities" );
   addNumber( "intmin", "Minimum stimulus intensity", MinIntensity, 0.0, 200.0, 5.0, "dB SPL" );
   addNumber( "intmax", "Maximum stimulus intensity", MaxIntensity, 0.0, 200.0, 5.0, "dB SPL" );
   addNumber( "intres", "Final intensity resolution", FinalResolution, 0.5, 10.0, 0.5, "dB SPL" );
   addNumber( "estres", "Resolution for estimation of FR-range", EstimResolution, 1.0, 20.0, 1.0, "dB SPL" );
   addText( "intshuffle", "Order of intensities", RangeLoop::sequenceStrings() ).setStyle( Parameter::SelectText );
 
-  addSubSection( "Stimulus Structure" );
+  newSubSection( "Stimulus Structure" );
   addBoolean( "short_stim", "Measure Onset Response only", ShortStim );
   addNumber( "duration", "Stimulus duration", Duration, 0.0, 10.0, 0.005, "seconds", "ms" );
   addNumber( "pause", "Pause between stimuli", Pause, 0.0, 10.0, 0.01, "seconds", "ms" );
   addNumber( "onwidth", "Window length for onset firing rate", OnWidth, 0.0, 10.0, 0.005, "seconds", "ms" );
   addNumber( "sswidth", "Window length for steady-state firing rate", SSWidth, 0.0, 10.0, 0.01, "seconds", "ms" );
 
-  addSection( "Analysis" );
+  newSection( "Analysis" );
   addInteger( "repeats", "Number of repeats for each stimulus",  Repeats, 1, 100, 1 );
   addInteger( "estrepeats", "Repeats for stimulus while estimating f-I-curve",  EstRepeats, 1, 100, 1 );
   addText( "side", "Speaker", "best|left|right" ).setStyle( Parameter::SelectText );
 
-  addSubSection( "Analysis Bounds" );
+  newSubSection( "Analysis Bounds" );
   addNumber( "intup", "Increases upper intensity bound by: ", IntensityUp, 0.0, 20.0, 1.0, "dB SPL" );
   addBoolean( "switch_high", "Higher bound FR fixed", Switch_high );
   addNumber( "per_high", "Percentage of max FR", FRhigh_per , 0.0, 1.0, 0.01, "1", "%" );
@@ -115,7 +115,7 @@ IsoResponse::IsoResponse( void )
   addNumber( "fix_low", "Absolute value for lower bound of FR", FRlow_fix , 0.0, 800.0, 10, "Hz" );
   addNumber( "minfr", "Minimum firing rater response", MinFR , 0.0, 800.0, 10, "Hz" );
 
-  addSubSection( "Iso-Response-Sets" );
+  newSubSection( "Iso-Response-Sets" );
   addInteger( "isonumber", "Number of Iso-Response-Sets evaluated", IrsNumber, 1, 100, 1 );
   addInteger( "isopoints", "Number of data points on each IRS", IrsPoints, 2, 100, 1 );
 
@@ -535,9 +535,9 @@ int IsoResponse::main( void )
     Header.setNumber( "best", BestFreq );
     Header.setNumber( "freq1", Frequency1 );
     Header.setNumber( "freq2", Frequency2 );
-    Header.addSection( "status" );
+    Header.newSection( "status" );
     Header.append( stimulusData() );
-    Header.addSection( "settings" );
+    Header.newSection( "settings" );
     Header.append( settings() );
     saveSpikes();
     saveRates();

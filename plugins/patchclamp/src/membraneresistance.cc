@@ -37,14 +37,14 @@ MembraneResistance::MembraneResistance( void )
     IInFac( 1.0 )
 {
   // add some options:
-  addSection( "Stimulus" );
+  newSection( "Stimulus" );
   addNumber( "amplitude", "Amplitude of output signal", -1.0, -1000.0, 1000.0, 0.1 ).setActivation( "userm", "false" );
   addBoolean( "userm", "Compute amplitude from vstep and estimated membrane resistance", false );
   addNumber( "vstep", "Steady-state voltage amplitude induced by output signal", -1.0, -1000.0, 1000.0, 0.1, "mV" ).setActivation( "userm", "true" );
   addNumber( "duration", "Duration of output", 0.1, 0.001, 1000.0, 0.001, "sec", "ms" );
   addNumber( "pause", "Duration of pause bewteen outputs", 0.4, 0.001, 1.0, 0.001, "sec", "ms" );
   addInteger( "repeats", "Repetitions of stimulus", 10, 0, 10000, 1 );
-  addSection( "Analysis" );
+  newSection( "Analysis" );
   addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
   addBoolean( "nossfit", "Fix steady-state potential for fit", true );
   addBoolean( "plotstdev", "Plot standard deviation of membrane potential", true );
@@ -154,7 +154,7 @@ int MembraneResistance::main( void )
   signal.setIdent( "I=" + Str( DCCurrent + Amplitude ) + IUnit );
   signal.back() = DCCurrent;
   signal.setTrace( CurrentOutput[0] );
-  signal.description().addSection( "", "stimulus/pulse" );
+  signal.description().newSection( "", "stimulus/pulse" );
   signal.description().addNumber( "Intensity", DCCurrent + Amplitude, IUnit );
   signal.description().addNumber( "IntensityOffset", DCCurrent, IUnit );
   signal.description().addNumber( "Duration", 1000.0*Duration, "ms" );
@@ -163,7 +163,7 @@ int MembraneResistance::main( void )
   OutData dcsignal( DCCurrent );
   dcsignal.setTrace( CurrentOutput[0] );
   dcsignal.setIdent( "DC=" + Str( DCCurrent ) + IUnit );
-  dcsignal.description().addSection( "", "stimulus/value" );
+  dcsignal.description().newSection( "", "stimulus/value" );
   dcsignal.description().addNumber( "Intensity", DCCurrent, IUnit );
 
   // write stimulus:
@@ -392,9 +392,9 @@ void MembraneResistance::save( void )
   header.addNumber( "Tauoff", TauMOff, "ms", "%0.1f" );
   header.addNumber( "Vsag", fabs( VPeak-VSS ), VUnit, "%0.1f" );
   header.addNumber( "relVsag", 100.0*fabs( (VPeak-VSS)/(VSS-VRest) ), "%", "%0.1f" );
-  header.addSection( "status" );
+  header.newSection( "status" );
   header.append( stimulusData() );
-  header.addSection( "settings" );
+  header.newSection( "settings" );
   header.append( settings() );
 
   saveData();
@@ -428,36 +428,36 @@ void MembraneResistance::save( void )
 void MembraneResistance::saveData( void )
 {
   TableKey datakey;
-  datakey.addSection( "Stimulus" );
+  datakey.newSection( "Stimulus" );
   datakey.addNumber( "dI", IUnit, "%6.3f", Amplitude );
   datakey.addNumber( "IDC", IUnit, "%6.3f", DCCurrent );
   datakey.addNumber( "trials", "1", "%6.0f", (double)Count );
   datakey.addNumber( "duration", "ms", "%6.1f", 1000.0*Duration );
-  datakey.addSection( "Rest" );
+  datakey.newSection( "Rest" );
   datakey.addNumber( "Vrest", VUnit, "%6.1f", VRest );
   datakey.addNumber( "s.d.", VUnit, "%6.1f", VRestsd );
-  datakey.addSection( "Steady-state" );
+  datakey.newSection( "Steady-state" );
   datakey.addNumber( "Vss", VUnit, "%6.1f", VSS );
   datakey.addNumber( "s.d.", VUnit, "%6.1f", VSSsd );
   datakey.addNumber( "R", "MOhm", "%6.1f", RMss );
-  datakey.addSection( "Peak" );
+  datakey.newSection( "Peak" );
   datakey.addNumber( "Vpeak", VUnit, "%6.1f", VPeak );
   datakey.addNumber( "s.d.", VUnit, "%6.1f", VPeaksd );
   datakey.addNumber( "tpeak", "ms", "%6.1f", 1000.0*VPeakTime );
-  datakey.addSection( "Onset" );
+  datakey.newSection( "Onset" );
   datakey.addNumber( "R", "MOhm", "%6.1f", RMOn );
   datakey.addNumber( "C", "pF", "%6.1f", CMOn );
   datakey.addNumber( "tau", "ms", "%6.1f", TauMOn );
-  datakey.addSection( "Offset" );
+  datakey.newSection( "Offset" );
   datakey.addNumber( "R", "MOhm", "%6.1f", RMOff );
   datakey.addNumber( "C", "pF", "%6.1f", CMOff );
   datakey.addNumber( "tau", "ms", "%6.1f", TauMOff );
-  datakey.addSection( "Sag" );
+  datakey.newSection( "Sag" );
   datakey.addNumber( "Vsag", VUnit, "%6.1f", fabs( VPeak-VSS ) );
   datakey.addNumber( "s.d.", VUnit, "%6.1f", sqrt( VPeaksd*VPeaksd + VSSsd*VSSsd ) );
   datakey.addNumber( "relVsag", "%", "%6.1f", 100.0*fabs( (VPeak-VSS)/(VSS-VRest) ) );
   datakey.addNumber( "s.d.", "%", "%6.1f", 100.0*sqrt( VPeaksd*VPeaksd + fabs((VRest-VPeak)*VSSsd/(VSS-VRest))*fabs((VRest-VPeak)*VSSsd/(VSS-VRest)) )/fabs(VSS-VRest) );
-  datakey.addSection( "Status" );
+  datakey.newSection( "Status" );
   datakey.add( stimulusData() );
 
   ofstream df;
@@ -511,10 +511,10 @@ void MembraneResistance::saveExpFit( const Options &header )
   df << '\n';
 
   TableKey datakey;
-  datakey.addSection( "Onset" );
+  datakey.newSection( "Onset" );
   datakey.addNumber( "t", "ms", "%6.1f" );
   datakey.addNumber( "V", VUnit, "%6.2f" );
-  datakey.addSection( "Offset" );
+  datakey.newSection( "Offset" );
   datakey.addNumber( "t", "ms", "%6.1f" );
   datakey.addNumber( "V", VUnit, "%6.2f" );
   datakey.saveKey( df );

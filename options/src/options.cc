@@ -3228,7 +3228,7 @@ Parameter &Options::setDefaultTime( const string &name,
 }
 
 
-Options &Options::addSection( int level, const string &name, const string &type,
+Options &Options::newSection( int level, const string &name, const string &type,
 			      int flags, int style )
 {
   Options *so = this;
@@ -3246,30 +3246,40 @@ Options &Options::addSection( int level, const string &name, const string &type,
   AddOpts = o;
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::addSection() -> " << Warning << '\n';
+    cerr << "!warning in Options::newSection() -> " << Warning << '\n';
 #endif
   return *o;
+}
+
+
+Options &Options::newSection( const string &name, const string &type,
+			      int flags, int style )
+{
+  return newSection( 0, name, type, flags, style );
+}
+
+
+Options &Options::newSubSection( const string &name, const string &type,
+				 int flags, int style )
+{
+  return newSection( 1, name, type, flags, style );
+}
+
+
+Options &Options::newSubSubSection( const string &name, const string &type,
+				    int flags, int style )
+{
+  return newSection( 2, name, type, flags, style );
 }
 
 
 Options &Options::addSection( const string &name, const string &type,
 			      int flags, int style )
 {
-  return addSection( 0, name, type, flags, style );
-}
-
-
-Options &Options::addSubSection( const string &name, const string &type,
-				 int flags, int style )
-{
-  return addSection( 1, name, type, flags, style );
-}
-
-
-Options &Options::addSubSubSection( const string &name, const string &type,
-				    int flags, int style )
-{
-  return addSection( 2, name, type, flags, style );
+  Options *o = &AddOpts->newSection( 0, name, type, flags, style );
+  AddOpts->clearSections();
+  AddOpts = o;
+  return *o;
 }
 
 
@@ -3305,7 +3315,7 @@ Options &Options::insertSection( const string &name, const string &atpattern,
 }
 
 
-Options &Options::addSection( int level, const Options &opt, const string &name, const string &type,
+Options &Options::newSection( int level, const Options &opt, const string &name, const string &type,
 			      int flags, int style )
 {
   Options *so = this;
@@ -3329,30 +3339,40 @@ Options &Options::addSection( int level, const Options &opt, const string &name,
   AddOpts = o;
 #ifndef NDEBUG
   if ( !Warning.empty() )
-    cerr << "!warning in Options::addSection() -> " << Warning << '\n';
+    cerr << "!warning in Options::newSection() -> " << Warning << '\n';
 #endif
   return *o;
+}
+
+
+Options &Options::newSection( const Options &opt, const string &name, const string &type,
+			      int flags, int style )
+{
+  return newSection( 0, opt, name, type, flags, style );
+}
+
+
+Options &Options::newSubSection( const Options &opt, const string &name, const string &type,
+				 int flags, int style )
+{
+  return newSection( 1, opt, name, type, flags, style );
+}
+
+
+Options &Options::newSubSubSection( const Options &opt, const string &name, const string &type,
+				    int flags, int style )
+{
+  return newSection( 2, opt, name, type, flags, style );
 }
 
 
 Options &Options::addSection( const Options &opt, const string &name, const string &type,
 			      int flags, int style )
 {
-  return addSection( 0, opt, name, type, flags, style );
-}
-
-
-Options &Options::addSubSection( const Options &opt, const string &name, const string &type,
-				 int flags, int style )
-{
-  return addSection( 1, opt, name, type, flags, style );
-}
-
-
-Options &Options::addSubSubSection( const Options &opt, const string &name, const string &type,
-				    int flags, int style )
-{
-  return addSection( 2, opt, name, type, flags, style );
+  Options *o = &AddOpts->newSection( 0, opt, name, type, flags, style );
+  AddOpts->clearSections();
+  AddOpts = o;
+  return *o;
 }
 
 
@@ -3792,8 +3812,8 @@ bool Options::empty( void ) const
 
 bool Options::exist( const string &pattern ) const
 {
-  Warning = "";
   const_iterator pp = find( pattern );
+  Warning = "";
   return ( pp != end() );
 }
 
@@ -3805,6 +3825,7 @@ bool Options::existSection( const string &pattern ) const
     return true;
 
   const_section_iterator sp = findSection( pattern );
+  Warning = "";
   return ( sp != sectionsEnd() );
 }
 

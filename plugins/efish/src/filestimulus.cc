@@ -52,7 +52,7 @@ namespace efish {
     NoiseType = "Gaussian";
 
     // add some parameter as options:
-    addSection( "Stimulus" );
+    newSection( "Stimulus" );
     addText( "file", "Stimulus file", "" ).setStyle( OptWidget::BrowseExisting );
     addNumber( "sigstdev", "Standard deviation of signal", SigStdev, 0.01, 1.0, 0.05 );
     addNumber( "pause", "Pause between signals", Pause, 0.0, 1000.0, 0.01, "seconds", "ms" );
@@ -61,14 +61,14 @@ namespace efish {
     addNumber( "amplitude", "Amplitude", Amplitude, 0.1, 1000.0, 0.1, "mV/cm" ).setActivation( "amplsel", "absolute" );
     addBoolean( "am", "Amplitude modulation", AM );
     addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 );
-    addSection( "Additional noise" );
+    newSection( "Additional noise" );
     addSelection( "noisetype", "Type of noise.", "none|Gaussian|Ornstein-Uhlenbeck");
     addNumber( "uppercutoff", "Upper cutoff frequency.", UpperCutoff, 0.0, 10000.0, 1.0, "","Hz" ).setActivation("noisetype","Gaussian");
     addNumber( "lowercutoff", "Lower cutoff frequency.", LowerCutoff, 0.0, 10000.0, 1.0, "","Hz" ).setActivation("noisetype","Gaussian");
     addNumber( "noisetau","Time constant of the Ornstein-Uhlenbeck process",NoiseTau,0.0,500.0,0.01,"seconds","ms" ).setActivation("noisetype","Ornstein-Uhlenbeck");
     addNumber( "noisecontrast", "Contrast of the added noise",NoiseContrast, 0.000, 1.00, 0.005, "", "%" ).setActivation("amplsel", "contrast");
     addNumber( "noiseampl", "Amplitude of the additional noise.", NoiseAmpl, 0.01, 100.00, 0.05, "mV/cm" ).setActivation( "amplsel", "absolute");
-    addSection( "Analysis" );
+    newSection( "Analysis" );
     addNumber( "binwidth", "Bin width", RateDeltaT, 0.0001, 1.0, 0.002, "seconds", "ms" );
     addNumber( "before", "Spikes recorded before stimulus", Before, 0.0, 1000.0, 0.005, "seconds", "ms" );
     addNumber( "after", "Spikes recorded after stimulus", After, 0.0, 1000.0, 0.005, "seconds", "ms" );
@@ -102,7 +102,7 @@ namespace efish {
     Header.addText( "file" );
     Header.addNumber( "duration", "sec", "%.3f" );
     Header.addText( "session time" );
-    Header.addSection( "settings:" );
+    Header.newSection( "settings:" );
      
     // tablekeys:
     AmplKey.addNumber( "time", "ms", "%9.2f", 3 );
@@ -113,13 +113,13 @@ namespace efish {
 
     SpikesKey.addNumber( "time", "ms", "%9.2f" );
 
-    NerveKey.addSection( "peak" );
+    NerveKey.newSection( "peak" );
     NerveKey.addNumber( "time", "ms", "%9.2f" );
     NerveKey.addNumber( "ampl", "uV", "%6.1f" );
-    NerveKey.addSection( "trough" );
+    NerveKey.newSection( "trough" );
     NerveKey.addNumber( "time", "ms", "%9.2f" );
     NerveKey.addNumber( "ampl", "uV", "%6.1f" );
-    NerveKey.addSection( "average" );
+    NerveKey.newSection( "average" );
     NerveKey.addNumber( "time", "ms", "%9.2f" );
     NerveKey.addNumber( "ampl", "uV", "%7.2f" );
 
@@ -228,7 +228,7 @@ namespace efish {
     }
 
     Header.erase( "settings" );
-    Header.addSection( "settings" );
+    Header.newSection( "settings" );
     Header.append( settings() );
 
     // trigger:

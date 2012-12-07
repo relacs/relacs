@@ -1,5 +1,5 @@
 Options:
-- rework addSection(), newSection(), append(), add(), merge(), or whatever.
+- rework append(), add(), merge(), or whatever.
 - Add section( int ) function that returns the i-th section.
 - Add iterator that iterates through all sections and subsections ?
 - OutData::append check it for the right use of appendSection, check all other Description

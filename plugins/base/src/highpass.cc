@@ -33,7 +33,7 @@ HighPass::HighPass( const string &ident, int mode )
   Tau = 0.001;
 
   // options:
-  addSection( "High-pass filter", 1, OptWidget::LabelBold );
+  newSection( "High-pass filter", 1, OptWidget::LabelBold );
   addNumber( "tau", "Time constant", Tau, 0.0, 10000.0, 0.0001, "s", "ms", "%.1f", 2 );
   setDialogSelectMask( 2 );
 

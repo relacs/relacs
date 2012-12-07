@@ -36,7 +36,7 @@ Envelope::Envelope( const string &ident, int mode )
   MeanTau = 1.0;
 
   // options:
-  addSection( "Envelope filter", 1, OptWidget::LabelBold );
+  newSection( "Envelope filter", 1, OptWidget::LabelBold );
   addBoolean( "demean", "Remove mean", DeMean );
   addNumber( "demeantau", "Time constant for computing mean", MeanTau, 0.0, 10000.0, 0.01, "s", "ms", "%.0f", 2 ).setActivation( "demean", "true" );
   addSelection( "rectification", "Rectification", "truncate|rectify|square" );

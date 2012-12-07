@@ -234,7 +234,7 @@ int SetDC::main( void )
     OutData dcsignal( DCAmplitude );
     dcsignal.setTrace( OutCurrent );
     dcsignal.setIdent( "DC=" + Str( DCAmplitude ) + IUnit );
-    dcsignal.description().addSection( "", "stimulus/value" );
+    dcsignal.description().newSection( "", "stimulus/value" );
     dcsignal.description().addNumber( "Intensity", DCAmplitude, IUnit );
     directWrite( dcsignal );
     if ( dcsignal.overflow() ) {
@@ -301,7 +301,7 @@ int SetDC::main( void )
     OutData dcsignal( DCAmplitude );
     dcsignal.setTrace( OutCurrent );
     dcsignal.setIdent( "DC=" + Str( DCAmplitude ) + IUnit );
-    dcsignal.description().addSection( "", "stimulus/value" );
+    dcsignal.description().newSection( "", "stimulus/value" );
     dcsignal.description().addNumber( "Intensity", DCAmplitude, IUnit );
     directWrite( dcsignal );
     if ( dcsignal.failed() ) {

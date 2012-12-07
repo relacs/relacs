@@ -35,7 +35,7 @@ ThresholdLatencies::ThresholdLatencies( void )
     RecordNow( false )
 {
   // add some options:
-  addSection( "Test-Pulse" );
+  newSection( "Test-Pulse" );
   addSelection( "durationsel", "Set duration of stimulus", "in milliseconds|as multiples of membrane time constant" );
   addNumber( "duration", "Duration of stimulus", 0.1, 0.0, 1000.0, 0.001, "sec", "ms" ).setActivation( "durationsel", "in milliseconds" );
   addNumber( "durationfac", "Duration of stimulus", 1.0, 0.0, 1000.0, 0.1, "tau_m" ).setActivation( "durationsel", "as multiples of membrane time constant" );
@@ -52,15 +52,15 @@ ThresholdLatencies::ThresholdLatencies( void )
   addNumber( "prevcgain", "Gain for voltage clamp of first pre-pulse", 0.0, -1000.0, 1000.0, 0.1, "mS" ).setActivation( "preamplitudesrc", "VC|VC rest" );
   addSelection( "prepulseramp", "Start first pre-pulse with a ramp", "none|linear|cosine" ).setActivation( "preduration", ">0" );
   addNumber( "prepulserampwidth", "Width of the ramp", 0.0, 0.0, 1000.0, 0.001, "sec", "ms" ).setActivation( "prepulseramp", "none", false );
-  addSection( "Second Pre-Pulse" );
+  newSection( "Second Pre-Pulse" );
   addNumber( "pre2duration", "Duration of second pre-pulse stimulus", 0.0, 0.0, 1000.0, 0.001, "sec", "ms" );
   addSelection( "pre2amplitudesrc", "Set amplitude of second pre-pulse to", "custom|previous DC|threshold" ).setActivation( "pre2duration", ">0" );
   addNumber( "pre2amplitude", "Amplitude of second pre-pulse stimulus", 0.1, 0.0, 1000.0, 0.01 ).setActivation( "pre2amplitudesrc", "custom" );
-  addSection( "Post-Pulse" );
+  newSection( "Post-Pulse" );
   addNumber( "postduration", "Duration of post-pulse stimulus", 0.0, 0.0, 1000.0, 0.001, "sec", "ms" );
   addSelection( "postamplitudesrc", "Set post-pulse amplitude to", "custom|previous DC|threshold" ).setActivation( "postduration", ">0" );
   addNumber( "postamplitude", "Amplitude of post-pulse stimulus", 0.1, 0.0, 1000.0, 0.01 ).setActivation( "postamplitudesrc", "custom" );
-  addSection( "Timing" );
+  newSection( "Timing" );
   addNumber( "searchpause", "Duration of pause between outputs during search", 0.5, 0.0, 1000.0, 0.01, "sec", "ms" );
   addNumber( "pause", "Duration of pause between outputs", 1.0, 0.0, 1000.0, 0.01, "sec", "ms" );
   addNumber( "delay", "Time before stimullus onset", 0.05, 0.0, 1000.0, 0.01, "sec", "ms" );
@@ -259,26 +259,26 @@ int ThresholdLatencies::main( void )
   signal.setTrace( CurrentOutput[0] );
   signal.setDelay( delay );
   if ( preduration > 0.0 ) {
-    signal.description().addSection( "", "stimulus/pulse" );
+    signal.description().newSection( "", "stimulus/pulse" );
     signal.description().addNumber( "TOffs", 0.0, "ms" );
     signal.description().addNumber( "Intensity", preamplitude, IUnit );
     signal.description().addNumber( "IntensityOffset", dcamplitude, IUnit );
     signal.description().addNumber( "Duration", 1000.0*preduration, "ms" );
   }
   if ( pre2duration > 0.0 ) {
-    signal.description().addSection( "", "stimulus/pulse" );
+    signal.description().newSection( "", "stimulus/pulse" );
     signal.description().addNumber( "TOffs", 1000.0*preduration, "ms" );
     signal.description().addNumber( "Intensity", pre2amplitude, IUnit );
     signal.description().addNumber( "IntensityOffset", dcamplitude, IUnit );
     signal.description().addNumber( "Duration", 1000.0*pre2duration, "ms" );
   }
-  signal.description().addSection( "", "stimulus/pulse" );
+  signal.description().newSection( "", "stimulus/pulse" );
   signal.description().addNumber( "TOffs", 1000.0*(preduration+pre2duration), "ms" );
   signal.description().addNumber( "Intensity", amplitude, IUnit );
   signal.description().addNumber( "IntensityOffset", dcamplitude, IUnit );
   signal.description().addNumber( "Duration", 1000.0*preduration, "ms" );
   if ( postduration > 0.0 ) {
-    signal.description().addSection( "", "stimulus/pulse" );
+    signal.description().newSection( "", "stimulus/pulse" );
     signal.description().addNumber( "TOffs", 1000.0*(preduration+duration), "ms" );
     signal.description().addNumber( "Intensity", postamplitude, IUnit );
     signal.description().addNumber( "IntensityOffset", dcamplitude, IUnit );
@@ -289,7 +289,7 @@ int ThresholdLatencies::main( void )
   OutData vcsignal( preduration + pre2duration + duration + postduration, trace( SpikeTrace[0] ).stepsize() );
   vcsignal.setTraceName( "VC" );
   vcsignal.setDelay( delay );
-  vcsignal.description().addSection( "", "stimulus/pulse" );
+  vcsignal.description().newSection( "", "stimulus/pulse" );
   vcsignal.description().addNumber( "TOffs", 0.0, "ms" );
   vcsignal.description().addNumber( "Intensity", prevcamplitude, "mV" );
   vcsignal.description().addNumber( "IntensityOffset", 0.0, "mV" );
@@ -298,7 +298,7 @@ int ThresholdLatencies::main( void )
   OutData vcgainsignal( preduration + duration + postduration, trace( SpikeTrace[0] ).stepsize() );
   vcgainsignal.setTraceName( "VCgain" );
   vcgainsignal.setDelay( delay );
-  vcgainsignal.description().addSection( "", "stimulus/pulse" );
+  vcgainsignal.description().newSection( "", "stimulus/pulse" );
   vcgainsignal.description().addNumber( "TOffs", 0.0, "ms" );
   vcgainsignal.description().addNumber( "Intensity", prevcgain, "mS" );
   vcgainsignal.description().addNumber( "IntensityOffset", 0.0, "mS" );
@@ -316,7 +316,7 @@ int ThresholdLatencies::main( void )
   OutData dcsignal( dcamplitude );
   dcsignal.setTrace( CurrentOutput[0] );
   dcsignal.setIdent( "DC=" + Str( dcamplitude ) + IUnit );
-  dcsignal.description().addSection( "", "stimulus/value" );
+  dcsignal.description().newSection( "", "stimulus/value" );
   dcsignal.description().addNumber( "Intensity", dcamplitude, IUnit );
 
   // measure resting potential:
@@ -811,7 +811,7 @@ void ThresholdLatencies::saveSpikes( void )
 void ThresholdLatencies::saveData( bool dc )
 {
   TableKey datakey;
-  datakey.addSection( "Data" );
+  datakey.newSection( "Data" );
   datakey.addNumber( "duration", "ms", "%6.1f", Header.number( "duration" ) );
   double basd = 0.0;
   double bam = DCAmplitudes.mean( basd );
@@ -852,7 +852,7 @@ void ThresholdLatencies::saveData( bool dc )
   double lm = Latencies.mean( lsd );
   datakey.addNumber( "latency", "ms", "%6.2f", 1000.0*lm );
   datakey.addNumber( "s.d.", "ms", "%6.2f", 1000.0*lsd );
-  datakey.addSection( "Traces" );
+  datakey.newSection( "Traces" );
   datakey.add( stimulusData() );
 
   ofstream df;

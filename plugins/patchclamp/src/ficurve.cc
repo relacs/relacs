@@ -36,7 +36,7 @@ FICurve::FICurve( void )
     IInFac( 1.0 )
 {
   // add some options:
-  addSection( "Stimuli" );
+  newSection( "Stimuli" );
   addSelection( "ibase", "Currents are relative to", "zero|DC|threshold" );
   addNumber( "imin", "Minimum injected current", 0.0, -1000.0, 1000.0, 0.001 );
   addNumber( "imax", "Maximum injected current", 1.0, -1000.0, 1000.0, 0.001 );
@@ -44,7 +44,7 @@ FICurve::FICurve( void )
   addBoolean( "userm", "Use membrane resistance for estimating istep from vstep", false );
   addNumber( "vstep", "Minimum step-size of voltage", 1.0, 0.001, 10000.0, 0.1 ).setActivation( "userm", "true" );
   addBoolean( "optimizeimin", "Skip currents that do not evoke action potentials", false );
-  addSection( "Timing" );
+  newSection( "Timing" );
   addNumber( "duration", "Duration of current output", 0.1, 0.001, 1000.0, 0.001, "sec", "ms" );
   addNumber( "delay", "Delay before current pulses", 0.1, 0.001, 10.0, 0.001, "sec", "ms" );
   addNumber( "pause", "Duration of pause between current pulses", 0.4, 0.001, 1000.0, 0.001, "sec", "ms" );
@@ -54,7 +54,7 @@ FICurve::FICurve( void )
   addInteger( "singlerepeat", "Number of immediate repetitions of a single stimulus", 1, 1, 10000, 1 );
   addInteger( "blockrepeat", "Number of repetitions of a fixed intensity increment", 10, 1, 10000, 1 );
   addInteger( "repeat", "Number of repetitions of the whole f-I curve measurement", 1, 0, 10000, 1 );
-  addSection( "Analysis" );
+  newSection( "Analysis" );
   addNumber( "fmax", "Maximum firing rate", 100.0, 0.0, 2000.0, 1.0, "Hz" );
   addNumber( "vmax", "Maximum steady-state potential", -50.0, -2000.0, 2000.0, 1.0, "mV" );
   addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
@@ -209,7 +209,7 @@ int FICurve::main( void )
   OutData signal( duration, 1.0/samplerate );
   signal.setTrace( CurrentOutput[0] );
   signal.setDelay( delay );
-  signal.description().addSection( "", "stimulus/pulse" );
+  signal.description().newSection( "", "stimulus/pulse" );
   signal.description().addNumber( "Intensity", dccurrent, IUnit );
   signal.description().addNumber( "IntensityOffset", dccurrent, IUnit );
   signal.description().addNumber( "Duration", 1000.0*duration, "ms" );
@@ -218,7 +218,7 @@ int FICurve::main( void )
   OutData dcsignal( dccurrent );
   dcsignal.setTrace( CurrentOutput[0] );
   dcsignal.setIdent( "DC=" + Str( dccurrent ) + IUnit );
-  dcsignal.description().addSection( "", "stimulus/value" );
+  dcsignal.description().newSection( "", "stimulus/value" );
   dcsignal.description().addNumber( "Intensity", dccurrent, IUnit );
 
   // write stimulus:
@@ -427,9 +427,9 @@ void FICurve::save( void )
 {
   message( "<b>Saving ...</b>" );
   tracePlotContinuous();
-  Header.addSection( "status" );
+  Header.newSection( "status" );
   Header.append( stimulusData() );
-  Header.addSection( "settings" );
+  Header.newSection( "settings" );
   Header.append( settings() );
   unlockAll();
   saveData();
@@ -450,31 +450,31 @@ void FICurve::saveData( void )
   df << '\n';
 
   TableKey datakey;
-  datakey.addSection( "Stimulus" );
+  datakey.newSection( "Stimulus" );
   datakey.addNumber( "I", IUnit, "%6.3f" );
   datakey.addNumber( "IDC", IUnit, "%6.3f" );
   datakey.addNumber( "trials", "1", "%6.0f" );
-  datakey.addSection( "Firing rate" );
+  datakey.newSection( "Firing rate" );
   datakey.addNumber( "f", "Hz", "%5.1f" );
   datakey.addNumber( "s.d.", "Hz", "%5.1f" );
-  datakey.addSection( "Baseline" );
+  datakey.newSection( "Baseline" );
   datakey.addNumber( "f_b", "Hz", "%5.1f" );
   datakey.addNumber( "s.d.", "Hz", "%5.1f" );
   datakey.addNumber( "v_rest", VUnit, "%6.1f" );
   datakey.addNumber( "s.d.", VUnit, "%6.1f" );
-  datakey.addSection( "Peak rate" );
+  datakey.newSection( "Peak rate" );
   datakey.addNumber( "f_on", "Hz", "%5.1f" );
   datakey.addNumber( "s.d.", "Hz", "%5.1f" );
   datakey.addNumber( "t_on", "ms", "%5.1f" );
-  datakey.addSection( "Steady-state" );
+  datakey.newSection( "Steady-state" );
   datakey.addNumber( "f_ss", "Hz", "%5.1f" );
   datakey.addNumber( "s.d.", "Hz", "%5.1f" );
   datakey.addNumber( "v_rest", VUnit, "%6.1f" );
   datakey.addNumber( "s.d.", VUnit, "%6.1f" );
-  datakey.addSection( "Spike count" );
+  datakey.newSection( "Spike count" );
   datakey.addNumber( "count", "1", "%7.1f" );
   datakey.addNumber( "s.d.", "1", "%7.1f" );
-  datakey.addSection( "Latency" );
+  datakey.newSection( "Latency" );
   datakey.addNumber( "latency", "ms", "%6.1f" );
   datakey.addNumber( "s.d.", "ms", "%6.1f" );
   datakey.saveKey( df );

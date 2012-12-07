@@ -190,7 +190,7 @@ void Session::config( void )
 
   Options &mo = metaData( "Cell" );
   mo.unsetNotify();
-  mo.addSection( "Cell properties" );
+  mo.newSection( "Cell properties" );
   // following options are set by the BaselineActivity RePro
   mo.addNumber( "EOD Frequency", "EOD Frequency", 0.0, 0.0, 2000.0, 10.0, "Hz", "Hz", "%0.0f" );
   for ( int k=0; k<SpikeTraces; k++ ) {

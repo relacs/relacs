@@ -141,20 +141,20 @@ public:
     /*! Add a new section \a name with level \a level to the key.
         \a level = 0 is the top-level section.
         Subsequent calls to addNumber() adds columns to this section.
-        \sa addSubSection(), addSubSubSection(), insertSection() */
-  Options &addSection( int level, const string &name, int flags=0 );
+        \sa newSubSection(), newSubSubSection(), insertSection() */
+  Options &newSection( int level, const string &name, int flags=0 );
     /*! Add a new top-level section \a name to the key.
         Subsequent calls to addNumber() adds columns to this section.
-        \sa addSubSection(), addSubSubSection(), insertSection() */
-  Options &addSection( const string &name, int flags=0 );
+        \sa newSubSection(), newSubSubSection(), insertSection() */
+  Options &newSection( const string &name, int flags=0 );
     /*! Add a new second-level section \a name to the key.
         Subsequent calls to addNumber() adds columns to this section.
-        \sa addSection(), addSubSubSection(), insertSection() */
-  Options &addSubSection( const string &name, int flags=0 );
+        \sa newSection(), newSubSubSection(), insertSection() */
+  Options &newSubSection( const string &name, int flags=0 );
     /*! Add a new third-level section \a name to the key.
         Subsequent calls to addNumber() adds columns to this section.
-        \sa addSection(), addSubSection(), insertSection() */
-  Options &addSubSubSection( const string &name, int flags=0 );
+        \sa newSection(), newSubSection(), insertSection() */
+  Options &newSubSubSection( const string &name, int flags=0 );
     /*! Insert a new section of columns before the section
         specified by \a atpattern.
 	If \a atpattern is not found or if \atpattern is empty,
@@ -162,7 +162,7 @@ public:
 	of the currently active section, respectively.
         The new section is named \a name and has some \a flag for selecting this section.
         Subsequent calls to addNumber() adds columns to the inserted section.
-        \sa addSection(), addSubSection(), addSubSubSection() */
+        \sa newSection(), newSubSection(), newSubSubSection() */
   Options &insertSection( const string &name, const string &atname="",
 			int flags=0 );
 

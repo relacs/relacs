@@ -43,7 +43,7 @@ FICurve::FICurve( void )
   MinRateSlope = 100.0;
 
   // add some parameter as options:
-  addSection( "Test-Intensities" );
+  newSection( "Test-Intensities" );
   addNumber( "duration", "Duration of test stimulus", Duration, 0.01, 1000.0, 0.05, "seconds", "ms" );
   addNumber( "maxintfac", "Maximum intensity of test stimulus", 1.6, 0.0, 2.0, 0.1, "1", "%" );
   addNumber( "minintfac", "Minimum intensity of test stimulus", 0.2, 0.0, 2.0, 0.1, "1", "%" );
@@ -53,13 +53,13 @@ FICurve::FICurve( void )
   addInteger( "singlerepeats", "Number of immediate repetitions of an intensity", 1, 1, 100000, 2 );
   addSelection( "intshuffle", "Order of intensities", RangeLoop::sequenceStrings() );
   addInteger( "intincrement", "Initial increment", IntIncrement, -1000, 1000, 1 );
-  addSection( "Pre-Intensities" );
+  newSection( "Pre-Intensities" );
   addNumber( "preduration", "Duration of adapting stimulus", PreDuration, 0.0, 1000.0, 0.05, "seconds", "ms" );
   addNumber( "maxpreintfac", "Maximum intensity of adapting stimulus", 1.4, 0.0, 2.0, 0.1, "1", "%" ).setActivation( "preduration", ">0" );
   addNumber( "minpreintfac", "Minimum intensity of adapting stimulus", 0.6, 0.0, 2.0, 0.1, "1", "%" ).setActivation( "preduration", ">0" );
   addInteger( "npreints", "Number of intensities for adapting stimuli", 5, 2, 500, 1 ).setActivation( "preduration", ">0" );
   addSelection( "preintshuffle", "Order of  adapting intensities", RangeLoop::sequenceStrings() ).setActivation( "preduration", ">0" );
-  addSection( "Control" );
+  newSection( "Control" );
   addBoolean( "am", "Amplitude modulation", true );
   addNumber( "pause", "Pause between stimuli", Pause, 0.0, 1000.0, 0.05, "seconds", "ms" );
   addNumber( "delay", "Part of pause before stimulus", Delay, 0.0, 1000.0, 0.01, "seconds", "ms" );
@@ -85,7 +85,7 @@ FICurve::FICurve( void )
   Header.addNumber( "trans. amplitude", "", "%.2f" );
   Header.addText( "repro time" );
   Header.addText( "session time" );
-  Header.addSection( "settings" );
+  Header.newSection( "settings" );
 
   // plot:
   setWidget( &P );
@@ -553,7 +553,7 @@ void FICurve::save( void )
   Header.setText( "repro time", reproTimeStr() );
   Header.setText( "session time", sessionTimeStr() );
   Header.erase( "settings" );
-  Header.addSection( "settings" );
+  Header.newSection( "settings" );
   Header.append( settings() );
 
   for ( int trace=0; trace<MaxSpikeTraces; trace++ ) {

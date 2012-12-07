@@ -44,7 +44,7 @@ ReceptorModel::ReceptorModel( void )
   Slope2 = 600000;
 
   // options:
-  addSection( "Transduction chain" );
+  newSection( "Transduction chain" );
   addSelection( "tymp", "Tympanum model", "Scaling|None|Scaling|Oscillator" );
   addNumber( "freq", "Eigenfrequency", 5.0, 0.5, 40.0, 0.1, "kHz" );
   addNumber( "tdec", "Decay constant", TDec, 0.01, 10.0, 0.01, "ms" );
@@ -52,20 +52,20 @@ ReceptorModel::ReceptorModel( void )
   addOptions();
   addFlags( 1 );
 
-  addSubSection( "Square = ax^2+imin, a=(imax-imin)/cut^2" ).setStyle( OptWidget::MathLabel );
-  addSubSection( "Square saturated = imax, for |x|>=cut" ).setStyle( OptWidget::MathLabel );
-  addSubSection( "Linear = b|x|+imin, b=(imax-imin)/cut" ).setStyle( OptWidget::MathLabel );
-  addSubSection( "Linear saturated = imax, for |x|>=cut" ).setStyle( OptWidget::MathLabel );
-  addSubSection( "Box = imin, for |x|<cut, = imax else" ).setStyle( OptWidget::MathLabel );
-  addSubSection( "None = ax, a=(imax-imin)/cut" ).setStyle( OptWidget::MathLabel );
+  newSubSection( "Square = ax^2+imin, a=(imax-imin)/cut^2" ).setStyle( OptWidget::MathLabel );
+  newSubSection( "Square saturated = imax, for |x|>=cut" ).setStyle( OptWidget::MathLabel );
+  newSubSection( "Linear = b|x|+imin, b=(imax-imin)/cut" ).setStyle( OptWidget::MathLabel );
+  newSubSection( "Linear saturated = imax, for |x|>=cut" ).setStyle( OptWidget::MathLabel );
+  newSubSection( "Box = imin, for |x|<cut, = imax else" ).setStyle( OptWidget::MathLabel );
+  newSubSection( "None = ax, a=(imax-imin)/cut" ).setStyle( OptWidget::MathLabel );
   addNumber( "imax", "Maximum current", Imax, -500.0, 500.0, 1.0, "muA/cm^2" );
   addNumber( "imin", "Minimum current (zero point current)", Imin, -500.0, 500.0, 1.0, "muA/cm^2" );
   addNumber( "cut", "Amplitude of tympanum where imax is reached", CutPoint, 0.0, 1000.0, 0.0001, "mPa" );
-  addSubSection( "Boltzmann, (imax/(1-f_0))*(1/(1+exp[-slope*(x-x0)])+1/(1+exp[slope*(x+x0)])-f_0)+imin" ).setStyle( OptWidget::MathLabel );
+  newSubSection( "Boltzmann, (imax/(1-f_0))*(1/(1+exp[-slope*(x-x0)])+1/(1+exp[slope*(x+x0)])-f_0)+imin" ).setStyle( OptWidget::MathLabel );
   addNumber( "slope", "Slope of Boltzmann", Slope, 0.0, 100000.0, 1.0, "mPa^-1" ).setActivation( "matchslope", "false" );
   addBoolean( "matchslope", "Set slope of Boltzmann to match square", true );
   addNumber( "x0", "1/2 of Imax-Imin is reached", X0, 0.0, 10.0, 0.0001, "mPa" );
-  addSubSection( "Boltzmann, 2(imax-imin)(1/(1+exp[-slope2*x^2])-1/2)+imin" ).setStyle( OptWidget::MathLabel );
+  newSubSection( "Boltzmann, 2(imax-imin)(1/(1+exp[-slope2*x^2])-1/2)+imin" ).setStyle( OptWidget::MathLabel );
   addNumber( "slope2", "Slope of square Boltzmann", Slope2, 0.0, 1.0e10, 5.0e4, "mPa^-2" ).setActivation( "matchslope2", "false" );
   addBoolean( "matchslope2", "Set slope of square Boltzmann to match square", true );
   addFlags( 2 );

@@ -33,7 +33,7 @@ LowPass::LowPass( const string &ident, int mode )
   Tau = 1.0;
 
   // options:
-  addSection( "Low-pass filter", 1, OptWidget::LabelBold );
+  newSection( "Low-pass filter", 1, OptWidget::LabelBold );
   addNumber( "tau", "Filter time constant", Tau, 0.0, 10000.0, 0.001, "s", "ms", "%.1f", 2 );
   setDialogSelectMask( 2 );
 

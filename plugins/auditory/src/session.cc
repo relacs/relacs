@@ -111,7 +111,7 @@ void Session::config( void )
   lockMetaData();
   Options &mo = metaData( "Cell" );
   mo.unsetNotify();
-  mo.addSection( "Cell properties", MetaDataSave+MetaDataDisplay );
+  mo.newSection( "Cell properties", MetaDataSave+MetaDataDisplay );
 
   mo.addSelection( "best side", "Best side", "left|right", MetaDataReadOnly+MetaDataDisplay ).setUnit( "speaker" );
   mo.addNumber( "best frequency", "Best frequency", -1000.0, -1000.0, 100000.0, 500.0, "Hz", "kHz", "%.1f", MetaDataDisplay+MetaDataReset );
@@ -276,6 +276,9 @@ void Session::notifyMetaData( const string &section )
 {
   if ( section == "Cell" ) {
     Options &mo = metaData( "Cell" );
+    if ( ! mo.existSection( "Cell properties" ) )
+      return;
+
     string ss = mo.text( "best side" );
 
     if ( mo.changed( "best frequency" ) )

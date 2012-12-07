@@ -89,7 +89,7 @@ void Session::config( void )
   lockMetaData();
   Options &mo = metaData( "Cell" );
   mo.unsetNotify();
-  mo.addSection( "Cell properties", MetaDataSave+MetaDataDisplay );
+  mo.newSection( "Cell properties", MetaDataSave+MetaDataDisplay );
 
   mo.addNumber( "vrest", "Resting potential V_rest", -1.0, -10.0, 10.0, 1.0, "V", "mV", "%.1f", MetaDataDisplay+MetaDataReset );
   mo.addNumber( "rm", "Resistance R_m", -1.0, -1.0, 1000000.0, 1.0, "MOhm", "MOhm", "%.1f", MetaDataDisplay+MetaDataReset );

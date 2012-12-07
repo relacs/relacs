@@ -36,7 +36,7 @@ SysLatency::SysLatency( void )
   : RePro( "SysLatency", "auditory", "Jan Benda", "1.5", "Jan 10, 2008" )
 {
   // options:
-  addSection( "Stimulus" );
+  newSection( "Stimulus" );
   addNumber( "rate", "Target firing rate", 100.0, 0.0, 1000.0, 20.0, "Hz" );
   addInteger( "pwaves", "Number of cycles of pertubation", 10, 0, 1000, 1 );
   addNumber( "pintensity", "Intensity of pertubations", 10.0, 0.0, 100.0, 1.0, "dB" );
@@ -48,7 +48,7 @@ SysLatency::SysLatency( void )
   addNumber( "pause", "Pause", 0.6, 0.0, 10.0, 0.05, "seconds", "ms" );
   addInteger( "repeats", "Number of stimulus repetitions", 10, 0, 10000, 2 );
   addSelection( "side", "Speaker", "left|right|best" );
-  addSection( "Analysis" );
+  newSection( "Analysis" );
   addNumber( "skipwin", "Initial portion of stimulus not used for analysis", 0.1, 0.0, 100.0, 0.01, "seconds", "ms" );
   addNumber( "analysewin", "Window used for ISI analysis", 0.01, 0.0, 100.0, 0.01, "seconds", "ms" );
   addNumber( "maxlat", "Maximum latency", 0.01, 0.0, 1.0, 0.001, "seconds", "ms" );
@@ -428,9 +428,9 @@ void SysLatency::save( double carrierfrequency, int side, double pduration,
   header.addNumber( "prc slope", slope, "", "%.3f" );
   header.addNumber( "prc offset", offset, "", "%.3f" );
   header.addText( "session time", sessionTimeStr() );
-  header.addSection( "status:" );
+  header.newSection( "status:" );
   header.append( stimulusData() );
-  header.addSection( "settings" );
+  header.newSection( "settings" );
   header.append( settings(), 16 );
 
   saveSpikes( header, spikes );

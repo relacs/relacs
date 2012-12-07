@@ -30,7 +30,7 @@ TransferFunction::TransferFunction( void )
   : RePro( "TransferFunction", "base", "Jan Benda", "1.4", "Dec 14, 2010" )
 {
   // options:
-  addSection( "Stimulus" );
+  newSection( "Stimulus" );
   addSelection( "outtrace", "Output trace", "V-1" );
   addSelection( "offsetbase", "Set offset relative to", "custom|current" ).setUnit( "value" );
   addNumber( "offset", "Offset", 0.0, -100000.0, 100000.0, 0.001, "", "" );
@@ -39,7 +39,7 @@ TransferFunction::TransferFunction( void )
   addNumber( "duration", "Duration of noise stimulus", 1.0, 0.0, 100.0, 0.1, "s", "ms" );
   addNumber( "pause", "Length of pause inbetween successive stimuli", 1.0, 0.0, 100.0, 0.1, "s", "ms" );
   addInteger( "repeats", "Repeats", 100, 0, 10000, 1 );
-  addSection( "Analysis" );
+  newSection( "Analysis" );
   addSelection( "intrace", "Input trace", "V-1" );
   addSelection( "size", "Number of data points for FFT", "1024|64|128|256|512|1024|2048|4096|8192|16384|32768|65536|131072|262144|524288|1048576" );
   addBoolean( "overlap", "Overlap FFT windows", true );
@@ -191,7 +191,7 @@ int TransferFunction::main( void )
   OutData orgdcsignal( orgoffset );
   orgdcsignal.setTrace( outtrace );
   orgdcsignal.setIdent( "DC=" + Str( orgoffset ) + OutUnit );
-  orgdcsignal.description().addSection( "", "stimulus/value" );
+  orgdcsignal.description().newSection( "", "stimulus/value" );
   orgdcsignal.description().addNumber( "Intensity", orgoffset, OutUnit );
 
   // stimulus loop:

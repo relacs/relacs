@@ -394,11 +394,11 @@ int MetaData::dialog( void )
   for ( unsigned int k=0; k<MetaDataSections.size(); k++ ) {
     if ( ! MetaDataSections[k]->ownTab() && ! MetaDataSections[k]->empty() ) {
       if ( ! dflttab ) {
-	DialogOpts.addSection( "&Meta Data", LabelFlag, OptWidget::TabSection );
+	DialogOpts.newSection( "&Meta Data", LabelFlag, OptWidget::TabSection );
 	dflttab = true;
 	usedtabs += 'm';
       }
-      DialogOpts.addSubSection( MetaDataSections[k]->configIdent(), LabelFlag, OptWidget::Bold );
+      DialogOpts.newSubSection( MetaDataSections[k]->configIdent(), LabelFlag, OptWidget::Bold );
       DialogOpts.append( *MetaDataSections[k], dialogFlag() );
     }
   }
@@ -416,7 +416,7 @@ int MetaData::dialog( void )
 	  }
 	}
       }
-      DialogOpts.addSection( label, LabelFlag, OptWidget::TabSection );
+      DialogOpts.newSection( label, LabelFlag, OptWidget::TabSection );
       DialogOpts.append( *MetaDataSections[k], dialogFlag() );
     }
   }
@@ -495,16 +495,16 @@ void MetaData::presetDialog( void )
   for ( unsigned int k=0; k<MetaDataSections.size(); k++ ) {
     if ( ! MetaDataSections[k]->ownTab() && ! MetaDataSections[k]->empty() ) {
       if ( ! dflttab ) {
-	PresetDialogOpts.addSection( "Meta Data", LabelFlag, OptWidget::TabSection );
+	PresetDialogOpts.newSection( "Meta Data", LabelFlag, OptWidget::TabSection );
 	dflttab = true;
       }
-      PresetDialogOpts.addSubSection( MetaDataSections[k]->configIdent(), LabelFlag, OptWidget::Bold );
+      PresetDialogOpts.newSubSection( MetaDataSections[k]->configIdent(), LabelFlag, OptWidget::Bold );
       PresetDialogOpts.append( *MetaDataSections[k], dialogFlag() | presetDialogFlag() );
     }
   }
   for ( unsigned int k=0; k<MetaDataSections.size(); k++ ) {
     if ( MetaDataSections[k]->ownTab() && ! MetaDataSections[k]->empty() ) {
-      PresetDialogOpts.addSection( MetaDataSections[k]->configIdent(), LabelFlag, OptWidget::TabSection );
+      PresetDialogOpts.newSection( MetaDataSections[k]->configIdent(), LabelFlag, OptWidget::TabSection );
       PresetDialogOpts.append( *MetaDataSections[k], dialogFlag() | presetDialogFlag() );
     }
   }

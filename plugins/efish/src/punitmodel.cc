@@ -44,15 +44,15 @@ PUnitModel::PUnitModel( void )
   VoltageScale = 1.0;
 
   // options:
-  addSection( "General" );
-  addSubSection( "EOD" );
+  newSection( "General" );
+  newSubSection( "EOD" );
   addNumber( "eodfreq", "Frequency", EODFreq, 0.0, 2000.0, 10.0, "Hz" );
   addNumber( "eodfreqsd", "SD of frequency", EODFreqSD, 0.0, 1000.0, 2.0, "Hz" );
   addNumber( "eodfreqtau", "Timescale of frequency", EODFreqTau, 0.5, 100000.0, 0.5, "s" );
   addNumber( "eodampl1", "Amplitude 1", EODAmpl1, 0.0, 100.0, 0.1, "mV/cm" );
   addNumber( "eodampl2", "Amplitude 2", EODAmpl2, 0.0, 100.0, 0.1, "mV/cm" );
   addNumber( "sigfac", "Factor for signal", SignalFac, 0.0, 100000.0, 0.1 );
-  addSubSection( "Spikes" );
+  newSubSection( "Spikes" );
   addNumber( "voltagescale", "Scale factor for membrane potential", VoltageScale, 0.0, 100.0, 0.1 );
 
   addOptions();

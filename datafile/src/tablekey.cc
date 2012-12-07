@@ -186,33 +186,33 @@ Parameter &TableKey::setText( const string &name, const string &text )
 }
 
 
-Options &TableKey::addSection( int level, const string &name, int flags )
+Options &TableKey::newSection( int level, const string &name, int flags )
 {
-  Options &o = Opt.addSection( level, name, "", flags );
+  Options &o = Opt.newSection( level, name, "", flags );
   init();
   return o;
 }
 
 
-Options &TableKey::addSection( const string &name, int flags )
+Options &TableKey::newSection( const string &name, int flags )
 {
-  Options &o = Opt.addSection( name, "", flags );
+  Options &o = Opt.newSection( name, "", flags );
   init();
   return o;
 }
 
 
-Options &TableKey::addSubSection( const string &name, int flags )
+Options &TableKey::newSubSection( const string &name, int flags )
 {
-  Options &o = Opt.addSubSection( name, "", flags );
+  Options &o = Opt.newSubSection( name, "", flags );
   init();
   return o;
 }
 
 
-Options &TableKey::addSubSubSection( const string &name, int flags )
+Options &TableKey::newSubSubSection( const string &name, int flags )
 {
-  Options &o = Opt.addSubSubSection( name, "", flags );
+  Options &o = Opt.newSubSubSection( name, "", flags );
   init();
   return o;
 }
@@ -932,7 +932,7 @@ TableKey &TableKey::loadKey( const StrQueue &sq )
       if ( inx[j] < int(pos[j].size())-1 && pos[j][inx[j]] == pos[level][k] ) {
 	int index = pos[j][inx[j]];
 	string name = (*(fp+j)).wordAt( index, Str::DoubleWhiteSpace, comment );
-	addSection( j, name );
+	newSection( j, name );
 	inx[j]++;
       }
     }

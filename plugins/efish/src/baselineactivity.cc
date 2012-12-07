@@ -44,19 +44,19 @@ BaselineActivity::BaselineActivity( void )
   ChirpMin = 10.0;
 
   // add some parameter as options:
-  addSection( "Timing" ).setStyle( OptWidget::Bold );
+  newSection( "Timing" ).setStyle( OptWidget::Bold );
   addNumber( "duration", "Duration", Duration, 0.01, 100.0, 0.05, "sec", "ms" );
   addInteger( "repeats", "Repeats", Repeats, 0, 100000, 2 );
-  addSection( "Analysis" ).setStyle( OptWidget::Bold );
+  newSection( "Analysis" ).setStyle( OptWidget::Bold );
   addNumber( "isimax", "Maximum interspike-interval", 0.02, 0.001, 1.0, 0.001, "sec", "ms" );
   addNumber( "isistep", "Interspike-interval resolution", 0.0002, 0.0001, 0.01, 0.0002, "sec", "ms" );
   addNumber( "ratedt", "Resolution of firing rate", 0.00005, 0.00001, 0.01, 0.00002, "s", "ms" );
   addNumber( "ratetmax", "Maximum time for firing rate", 0.002, 0.00001, 0.01, 0.00002, "s", "ms" );
-  addSection( "Files" ).setStyle( OptWidget::Bold );
+  newSection( "Files" ).setStyle( OptWidget::Bold );
   addNumber( "eodduration", "EOD duration", 2.0, 0.1, 10.0, 0.1, "sec", "ms" );
   addBoolean( "saveeodtrace", "Save EOD trace", false );
   addBoolean( "saveeodtimes", "Save EOD times", false );
-  addSection( "Control" ).setStyle( OptWidget::Bold );
+  newSection( "Control" ).setStyle( OptWidget::Bold );
   addText( "auto", "Automatically set detector parameter?", "never|once|always", 0, OptWidget::SelectText );
   addBoolean( "adjust", "Adjust input gain?", true );
 
@@ -440,13 +440,13 @@ void BaselineActivity::saveNerve( const Options &header, const MapD &nerveamplp,
   header.save( df, "# " );
   df << '\n';
   TableKey key;
-  key.addSection( "peak" );
+  key.newSection( "peak" );
   key.addNumber( "time", "ms", "%9.2f" );
   key.addNumber( "ampl", "uV", "%6.1f" );
-  key.addSection( "trough" );
+  key.newSection( "trough" );
   key.addNumber( "time", "ms", "%9.2f" );
   key.addNumber( "ampl", "uV", "%6.1f" );
-  key.addSection( "average" );
+  key.newSection( "average" );
   key.addNumber( "time", "ms", "%9.2f" );
   key.addNumber( "ampl", "uV", "%6.1f" );
   key.saveKey( df, true, true );
@@ -564,7 +564,7 @@ void BaselineActivity::save( bool saveeodtrace, double eodduration,
     }
   }
   header.addText( "session time", sessionTimeStr() );  
-  header.addSection( "settings" );
+  header.newSection( "settings" );
   header.append( settings() );
 
   for ( int trace=0; trace<MaxSpikeTraces; trace++ ) {

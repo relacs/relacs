@@ -38,15 +38,15 @@ Settings::Settings( RELACSWidget* rw )
   : ConfigDialog( "Settings", RELACSPlugin::Core, "Settings" ),
     RW( rw )
 {
-  addSection( "General" );
+  newSection( "General" );
   addNumber( "readinterval", "Interval for periodic acquisition of data", 0.01, 0.001, 1000.0, 0.001, "seconds", "ms" );
   addNumber( "processinterval", "Interval for periodic processing of data", 0.10, 0.001, 1000.0, 0.001, "seconds", "ms" );
-  addSection( "Plugins" );
+  newSection( "Plugins" );
   addText( "pluginpathes", "Plugin pathes", "" );
   addText( "pluginhelppathes", "Pathes to plugin help files", "" );
   addText( "controlplugin", "Control plugin", "" );
   addText( "modelplugin", "Model plugin", "" );
-  addSection( "Pathes" );
+  newSection( "Pathes" );
     /* A string specifying the format of the file name. 
        In addition to the time format specifiers 
        %y year
@@ -63,12 +63,12 @@ Settings::Settings( RELACSWidget* rw )
   addText( "defaultpath", "Default path", "dry/" ).setStyle( OptWidget::BrowseDirectory );
   addText( "repropath", "Base directory for RePros to store some general stuff", "reprodata" ).setStyle( OptWidget::BrowseDirectory );
   addText( "infofile", "Name of info file", "info.dat", 1 );
-  addSection( "Save" );
+  newSection( "Save" );
   addBoolean( "saverelacscore", "Save core configuration of RELACS to session", true );
   addBoolean( "saverelacsplugins", "Save configuration of RELACS-plugins to session", true );
   addBoolean( "saverelacslog", "Save log of RELACS to session", true );
   addBoolean( "saveattenuators", "Save calibration files for attenuators to session", true );
-  addSection( "Date/time formats" );
+  newSection( "Date/time formats" );
   addText( "elapsedformat", "Format for elapsed time", "%02H:%02M" );
   addText( "sessiontimeformat", "Format for session runtime", "%Hh%02Mmin%02Ssec" );
   addText( "reprotimeformat", "Format for repro runtime", "%Mmin%02Ssec" );
