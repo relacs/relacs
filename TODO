@@ -4,6 +4,7 @@ Options:
 - Add iterator that iterates through all sections and subsections ?
 - OutData::append check it for the right use of appendSection, check all other Description
 - SaveFiles: check all stimulus related stuff!!!
+- ThresholdLatencie check stimulus descriptions
 - Reset parentSection pointers and create new Options in assign, append, etc!
 - Options::read -> Options::assign( ident, value ): how are units treated? "[ a, b, c]kHz" or [a, b, ckHz]?
 - Check read() etc. how Parameter are assigned. Is the whole section path is used to identify the Parameter?

@@ -377,7 +377,7 @@ int ThresholdLatencies::main( void )
 						    currentTime() );
 
     // signal:
-    int sdi = 0;
+    Options::section_iterator sdi = signal.description().sectionsBegin();
     // pre-pulse:
     if ( preduration > 0.0 && prepulseramp > 0 && ! prevc ) {
       int w = signal.indices( prepulserampwidth );
@@ -393,16 +393,16 @@ int ThresholdLatencies::main( void )
       }
       for ( int k=w; k<signal.index( preduration ); k++ )
 	signal[k] = preamplitude;
-      signal.description( sdi ).setNumber( "Intensity", preamplitude, IUnit );
-      signal.description( sdi ).setNumber( "IntensityOffset", dcamplitude, IUnit );
-      sdi++;
+      (*sdi)->setNumber( "Intensity", preamplitude, IUnit );
+      (*sdi)->setNumber( "IntensityOffset", dcamplitude, IUnit );
+      ++sdi;
     }
     else if ( preduration > 0.0 ) {
       for ( int k=0; k<signal.index( preduration ); k++ )
 	signal[k] = preamplitude;
-      signal.description( sdi ).setNumber( "Intensity", preamplitude, IUnit );
-      signal.description( sdi ).setNumber( "IntensityOffset", dcamplitude, IUnit );
-      sdi++;
+      (*sdi)->setNumber( "Intensity", preamplitude, IUnit );
+      (*sdi)->setNumber( "IntensityOffset", dcamplitude, IUnit );
+      ++sdi;
     }
     // pre2-pulse:
     if ( pre2duration > 0.0 ) {
@@ -410,26 +410,26 @@ int ThresholdLatencies::main( void )
 	    k<signal.index( preduration + pre2duration );
 	    k++ )
 	signal[k] = pre2amplitude;
-      signal.description( sdi ).setNumber( "Intensity", pre2amplitude, IUnit );
-      signal.description( sdi ).setNumber( "IntensityOffset", dcamplitude, IUnit );
-      sdi++;
+      (*sdi)->setNumber( "Intensity", pre2amplitude, IUnit );
+      (*sdi)->setNumber( "IntensityOffset", dcamplitude, IUnit );
+      ++sdi;
     }
     // test-pulse:
     for ( int k=signal.index( preduration + pre2duration );
 	  k<signal.index( preduration + pre2duration + duration );
 	  k++ )
       signal[k] = amplitude;
-    signal.description( sdi ).setNumber( "Intensity", amplitude, IUnit );
-    signal.description( sdi ).setNumber( "IntensityOffset", dcamplitude, IUnit );
-    sdi++;
+    (*sdi)->setNumber( "Intensity", amplitude, IUnit );
+    (*sdi)->setNumber( "IntensityOffset", dcamplitude, IUnit );
+    ++sdi;
     // post-pulse:
     for ( int k=signal.index( preduration + pre2duration + duration );
 	  k<signal.size();
 	  k++ )
       signal[k] = postamplitude;
     if ( postduration > 0.0 ) {
-      signal.description( sdi ).setNumber( "Intensity", postamplitude, IUnit );
-      signal.description( sdi ).setNumber( "IntensityOffset", dcamplitude, IUnit );
+      (*sdi)->setNumber( "Intensity", postamplitude, IUnit );
+      (*sdi)->setNumber( "IntensityOffset", dcamplitude, IUnit );
     }
     signal.back() = dcamplitude;
     if ( preduration > 0.0 )
