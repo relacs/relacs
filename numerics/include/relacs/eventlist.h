@@ -26,6 +26,7 @@
 #include <vector>
 #include <iostream>
 #include <relacs/random.h>
+#include <relacs/spectrum.h>
 #include <relacs/eventdata.h>
 
 using namespace std;
@@ -722,24 +723,32 @@ public:
         of the events between \a tbegin and \a tend.
 	The size of \a psd times \a step determines
 	the width of the time windows used for the fourier transformations.
+	The data chunks are windowed by the \a window function and
+	may overlap by half if \a overlap is set to \c true.
 	The bin width for discretizing the events is set to \a step.
         The frequency axis of the spectrum \a psd is set to the appropriate values. */
   void spectrum( double tbegin, double tend, double step,
-		 SampleDataD &psd ) const;
+		 SampleDataD &psd,
+		 bool overlap=true, double (*window)( int j, int n )=bartlett ) const;
     /*! Returns in \a psd the trial averaged powerspectrum density
         of the events between \a tbegin and \a tend.
 	In \a sd the corresponding standard deviation is returned.
 	The size of \a psd times \a step determines
 	the width of the time windows used for the fourier transformations.
+	The data chunks are windowed by the \a window function and
+	may overlap by half if \a overlap is set to \c true.
 	The bin width for discretizing the events is set to \a step.
         The frequency axis of the spectrum \a psd and its standard deviation \a sd
 	is set to the appropriate values. */
   void spectrum( double tbegin, double tend, double step,
-		 SampleDataD &psd, SampleDataD &sd ) const;
+		 SampleDataD &psd, SampleDataD &sd,
+		 bool overlap=true, double (*window)( int j, int n )=bartlett ) const;
     /*! Returns trial-averaged spectral measures between stimulus \a stimulus
         and the events. 
 	The size of \a g times stimulus.stepsize() determines
 	the width of the time windows used for the fourier transformations.
+	The data chunks are windowed by the \a window function and
+	may overlap by half if \a overlap is set to \c true.
 	Only events during the stimulus (between stimulus.rangeFront()
 	and stimulus.rangeBack() ) are considered.
 	The sampling interval of the stimulus (stimulus.stepsize())
@@ -752,11 +761,14 @@ public:
         \param[out] \a ss the power-spectrum of the \a stimulus.
         \param[out] \a rs the power-spectrum of the events. */
   void spectra( const SampleDataD &stimulus, SampleDataD &g, SampleDataD &c,
-		SampleDataD &cs, SampleDataD &ss, SampleDataD &rs ) const;
+		SampleDataD &cs, SampleDataD &ss, SampleDataD &rs,
+		bool overlap=true, double (*window)( int j, int n )=bartlett ) const;
     /*! Returns trial-averaged spectral measures between stimulus \a stimulus
         and the events. 
 	The size of \a g times stimulus.stepsize() determines
 	the width of the time windows used for the fourier transformations.
+	The data chunks are windowed by the \a window function and
+	may overlap by half if \a overlap is set to \c true.
 	Only events during the stimulus (between stimulus.rangeFront()
 	and stimulus.rangeBack() ) are considered.
 	The sampling interval of the stimulus (stimulus.stepsize())
@@ -775,50 +787,35 @@ public:
 	\param[out] \a rssd the standard deviation of the response spectrum. */
   void spectra( const SampleDataD &stimulus, SampleDataD &g, SampleDataD &gsd,
 		SampleDataD &c, SampleDataD &csd, SampleDataD &cs, SampleDataD &cssd,
-		SampleDataD &ss, SampleDataD &rs, SampleDataD &rssd ) const;
-    /*! Returns in \a c the trial-averaged stimulus-response coherence between
+		SampleDataD &ss, SampleDataD &rs, SampleDataD &rssd,
+		bool overlap=true, double (*window)( int j, int n )=bartlett ) const;
+    /*! Returns in \a c the stimulus-response coherence between
         \a stimulus and each of the event trials (the S-R coherence \f$\gamma^2_{SR}\f$).
+	Cross and power spectra are computed for each trial and averaged before
+	computing the coherence.
 	The size of \a c times stimulus.stepsize() determines
 	the width of the time windows used for the fourier transformations.
+	The data chunks are windowed by the \a window function and
+	may overlap by half if \a overlap is set to \c true.
 	Only events during the stimulus (between stimulus.rangeFront()
 	and stimulus.rangeBack() ) are considered.
 	The sampling interval of the stimulus (stimulus.stepsize())
 	is used as the bin width for discretizing the events.
         The frequency axis of the coherence \a c is set to the appropriate values. */
-  void coherence( const SampleDataD &stimulus, SampleDataD &c ) const;
-    /*! Returns in \a c the trial-averaged stimulus-response coherence between 
-        \a stimulus and each of the event trials (the S-R coherence \f$\gamma^2_{SR}\f$).
-	In \a sd the corresponding standard deviation is returned.
-	The size of \a c times stimulus.stepsize() determines
-	the width of the time windows used for the fourier transformations.
-	Only events during the stimulus (between stimulus.rangeFront()
-	and stimulus.rangeBack() ) are considered.
-	The sampling interval of the stimulus (stimulus.stepsize())
-	is used as the bin width for discretizing the events.
-        The frequency axis of the coherence \a c and its standard deviation \a sd
-	is set to the appropriate values. */
-  void coherence( const SampleDataD &stimulus,
-		  SampleDataD &c, SampleDataD &sd ) const;
+  void coherence( const SampleDataD &stimulus, SampleDataD &c,
+		  bool overlap=true, double (*window)( int j, int n )=bartlett ) const;
     /*! Returns in \a c the square-root of the coherence between pairs of event trials
         averaged over all pairs	(the response-response (R-R) coherence \f$\gamma_{RR}\f$).
 	The size of \a c times \a step determines
 	the width of the time windows used for the fourier transformations.
+	The data chunks are windowed by the \a window function and
+	may overlap by half if \a overlap is set to \c true.
 	Only events during the \a tbegin and \a tend are considered.
 	The bin width for discretizing the events is set to \a step.
         The frequency axis of the coherence \a c is set to the appropriate values. */
   void coherence( double tbegin, double tend, double step,
-		  SampleDataD &c ) const;
-    /*! Returns in \a c the square-root of the coherence between pairs of event trials
-        averaged over all pairs	(the response-response (R-R) coherence \f$\gamma_{RR}\f$).
-	In \a sd the corresponding standard deviation is returned.
-	The size of \a c times \a step determines
-	the width of the time windows used for the fourier transformations.
-	Only events during the \a tbegin and \a tend are considered.
-	The bin width for discretizing the events is set to \a step.
-        The frequency axis of the coherence \a c and its standard deviation \a sd
-	is set to the appropriate values. */
-  void coherence( double tbegin, double tend, double step,
-		  SampleDataD &c, SampleDataD &sd ) const;
+		  SampleDataD &c,
+		  bool overlap=true, double (*window)( int j, int n )=bartlett ) const;
 
     /*! The mean latenceny and standard deviation \a sd of the events
         following time \a time. */

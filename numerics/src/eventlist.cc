@@ -1668,7 +1668,8 @@ int EventList::average( double tbegin, double tend, const SampleDataD &trace,
 
 
 void EventList::spectrum( double tbegin, double tend, double step,
-			  SampleDataD &psd ) const
+			  SampleDataD &psd,
+			  bool overlap, double (*window)( int j, int n ) ) const
 {
   psd = 0.0;
   SampleDataD p( psd.size(), 0.0 );
@@ -1678,7 +1679,7 @@ void EventList::spectrum( double tbegin, double tend, double step,
   for ( int i=0; i<size(); i++ ) {
     (*this)[i].rate( rr );
     rr -= mean( rr );
-    rPSD( rr, p );
+    rPSD( rr, p, overlap, window );
     n++;
     for ( int k=0; k<psd.size(); k++ )
       psd[k] += ( p[k] - psd[k] ) / n;
@@ -1691,7 +1692,8 @@ void EventList::spectrum( double tbegin, double tend, double step,
 
 
 void EventList::spectrum( double tbegin, double tend, double step,
-			  SampleDataD &psd, SampleDataD &sd ) const
+			  SampleDataD &psd, SampleDataD &sd,
+			  bool overlap, double (*window)( int j, int n ) ) const
 {
   SampleDataD p( psd.size(), 0.0 );
   SampleDataD psq( psd.size(), 0.0 );
@@ -1701,7 +1703,7 @@ void EventList::spectrum( double tbegin, double tend, double step,
   for ( int i=0; i<size(); i++ ) {
     (*this)[i].rate( rr );
     rr -= mean( rr );
-    rPSD( rr, p );
+    rPSD( rr, p, overlap, window );
     n++;
     for ( int k=0; k<psd.size(); k++ ) {
       psd[k] += ( p[k] - psd[k] ) / n;
@@ -1723,7 +1725,8 @@ void EventList::spectrum( double tbegin, double tend, double step,
 
 
 void EventList::spectra( const SampleDataD &stimulus, SampleDataD &g, SampleDataD &c,
-			 SampleDataD &cs, SampleDataD &ss, SampleDataD &rs ) const
+			 SampleDataD &cs, SampleDataD &ss, SampleDataD &rs,
+			 bool overlap, double (*window)( int j, int n ) ) const
 {
   if ( g.size() <= 0 )
     return;
@@ -1747,7 +1750,7 @@ void EventList::spectra( const SampleDataD &stimulus, SampleDataD &g, SampleData
   for ( int i=0; i<size(); i++ ) {
     (*this)[i].rate( rr );
     rr -= mean( rr );
-    ::relacs::spectra( stimulus, rr, gt, ct, cst, ss, rst );
+    ::relacs::spectra( stimulus, rr, gt, ct, cst, ss, rst, overlap, window );
     n++;
     for ( int k=0; k<g.size(); k++ ) {
       g[k] += ( gt[k] - g[k] ) / n;
@@ -1771,7 +1774,8 @@ void EventList::spectra( const SampleDataD &stimulus, SampleDataD &g, SampleData
 
 void EventList::spectra( const SampleDataD &stimulus, SampleDataD &g, SampleDataD &gsd,
 			 SampleDataD &c, SampleDataD &csd, SampleDataD &cs, SampleDataD &cssd,
-			 SampleDataD &ss, SampleDataD &rs, SampleDataD &rssd ) const
+			 SampleDataD &ss, SampleDataD &rs, SampleDataD &rssd,
+			 bool overlap, double (*window)( int j, int n ) ) const
 {
   if ( g.size() <= 0 )
     return;
@@ -1807,7 +1811,7 @@ void EventList::spectra( const SampleDataD &stimulus, SampleDataD &g, SampleData
   for ( int i=0; i<size(); i++ ) {
     (*this)[i].rate( rr );
     rr -= mean( rr );
-    ::relacs::spectra( stimulus, rr, gt, ct, cst, ss, rst );
+    ::relacs::spectra( stimulus, rr, gt, ct, cst, ss, rst, overlap, window );
     n++;
     for ( int k=0; k<g.size(); k++ ) {
       g[k] += ( gt[k] - g[k] ) / n;
@@ -1852,61 +1856,37 @@ void EventList::spectra( const SampleDataD &stimulus, SampleDataD &g, SampleData
 }
 
 
-void EventList::coherence( const SampleDataD &stimulus, SampleDataD &c ) const
+void EventList::coherence( const SampleDataD &stimulus, SampleDataD &c,
+			   bool overlap, double (*window)( int j, int n ) ) const
 {
   c = 0.0;
-  SampleDataD cohere( c.size(), 0.0 );
+  int nfft = 1;
+  for ( nfft=1; nfft<c.size(); nfft <<= 1 );
+  SampleDataD crossspec( 2*nfft, 0.0 );
+  SampleDataD signalspec( nfft, 0.0 );
+  SampleDataD responsespec( nfft, 0.0 );
+  SampleDataD cp( 2*nfft, 0.0 );
+  SampleDataD rp( nfft, 0.0 );
   SampleDataD rr( stimulus.range() );
 
   int n=0;
   for ( int i=0; i<size(); i++ ) {
     (*this)[i].rate( rr );
     rr -= mean( rr );
-    ::relacs::coherence( stimulus, rr, cohere );
+    ::relacs::crossSpectra( stimulus, rr, cp, signalspec, rp, overlap, window );
     n++;
-    for ( int k=0; k<c.size(); k++ )
-      c[k] += ( cohere[k] - c[k] ) / n;
+    for ( int k=0; k<cp.size(); k++ )
+      crossspec[k] += ( cp[k] - crossspec[k] ) / n;
+    for ( int k=0; k<rp.size(); k++ )
+      responsespec[k] += ( rp[k] - responsespec[k] ) / n;
   }
-  // frequency axis:
-  c.setOffset( 0.0 );
-  c.setStepsize( cohere.stepsize() );
-}
-
-
-void EventList::coherence( const SampleDataD &stimulus,
-			   SampleDataD &c, SampleDataD &sd ) const
-{
-  SampleDataD cohere( c.size(), 0.0 );
-  SampleDataD csq( c.size(), 0.0 );
-  SampleDataD rr( stimulus.range() );
-
-  int n=0;
-  for ( int i=0; i<size(); i++ ) {
-    (*this)[i].rate( rr );
-    rr -= mean( rr );
-    ::relacs::coherence( stimulus, rr, cohere );
-    n++;
-    for ( int k=0; k<c.size(); k++ ) {
-      c[k] += ( cohere[k] - c[k] ) / n;
-      csq[k] += ( cohere[k]*cohere[k] - csq[k] ) / n;
-    }
-  }
-
-  // standard deviation:
-  sd.resize( c.size() );
-  for ( int k=0; k<c.size(); k++ )
-    sd[k] = ::sqrt( ::fabs( csq[k] - c[k]*c[k] ) );
-
-  // frequency axis:
-  c.setOffset( 0.0 );
-  c.setStepsize( cohere.stepsize() );
-  sd.setOffset( 0.0 );
-  sd.setStepsize( cohere.stepsize() );
+  ::relacs::coherence( crossspec, signalspec, responsespec, c );
 }
 
 
 void EventList::coherence( double tbegin, double tend, double step,
-			   SampleDataD &c ) const
+			   SampleDataD &c,
+			   bool overlap, double (*window)( int j, int n ) ) const
 {
   c = 0.0;
   // convolve events with kernel:
@@ -1915,60 +1895,31 @@ void EventList::coherence( double tbegin, double tend, double step,
   for ( const_iterator i = begin(); i != end(); ++i, ++k ) {
     (*i)->rate( rr[k] );
   }
+  int nfft = 1;
+  for ( nfft=1; nfft<c.size(); nfft <<= 1 );
+  SampleDataD crossspec( 2*nfft, 0.0 );
+  SampleDataD responsespec( nfft, 0.0 );
+  SampleDataD cp( 2*nfft, 0.0 );
+  SampleDataD rp( nfft, 0.0 );
+  SampleDataD dp( nfft, 0.0 );
 
   // pairwise coherence:
-  SampleDataD cohere( c.size(), 0.0 );
   int n=0;
+  int nr=0;
   for ( unsigned int i=0; i<rr.size(); i++ ) {
     for ( unsigned int j=i+1; j<rr.size(); j++ ) {
-      ::relacs::coherence( rr[i], rr[j], cohere );
+      ::relacs::crossSpectra( rr[i], rr[j], cp, rp, dp, overlap, window );
       n++;
-      for ( int k=0; k<c.size(); k++ )
-	c[k] += ( ::sqrt(cohere[k]) - c[k] ) / n;
+      for ( int k=0; k<cp.size(); k++ )
+	crossspec[k] += ( cp[k] - crossspec[k] ) / n;
     }
+    nr++;
+    for ( int k=0; k<rp.size(); k++ )
+      responsespec[k] += ( rp[k] - responsespec[k] ) / nr;
   }
-
-  // frequency axis:
-  c.setOffset( 0.0 );
-  c.setStepsize( cohere.stepsize() );
-}
-
-
-void EventList::coherence( double tbegin, double tend, double step,
-			   SampleDataD &c, SampleDataD &sd ) const
-{
-  // convolve events with kernel:
-  vector< SampleDataD > rr( size(), SampleDataD( tbegin, tend, step, 0 ) );
-  int k=0;
-  for ( const_iterator i = begin(); i != end(); ++i, ++k ) {
-    (*i)->rate( rr[k] );
-  }
-
-  // pairwise coherence:
-  SampleDataD cohere( c.size(), 0.0 );
-  SampleDataD csq( c.size(), 0.0 );
-  int n=0;
-  for ( unsigned int i=0; i<rr.size(); i++ ) {
-    for ( unsigned int j=i+1; j<rr.size(); j++ ) {
-      ::relacs::coherence( rr[i], rr[j], cohere );
-      n++;
-      for ( int k=0; k<c.size(); k++ ) {
-	c[k] += ( ::sqrt(cohere[k]) - c[k] ) / n;
-	csq[k] += ( ::sqrt(cohere[k]*cohere[k]) - csq[k] ) / n;
-      }
-    }
-  }
-
-  // standard deviation:
-  sd.resize( c.size() );
+  ::relacs::coherence( crossspec, responsespec, responsespec, c );
   for ( int k=0; k<c.size(); k++ )
-    sd[k] = ::sqrt( ::fabs( csq[k] - c[k]*c[k] ) );
-
-  // frequency axis:
-  c.setOffset( 0.0 );
-  c.setStepsize( cohere.stepsize() );
-  sd.setOffset( 0.0 );
-  sd.setStepsize( cohere.stepsize() );
+    c = ::sqrt( c[k] );
 }
 
 

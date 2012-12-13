@@ -28,6 +28,7 @@
 #include <iostream>
 #include <relacs/array.h>
 #include <relacs/random.h>
+#include <relacs/spectrum.h>
 #include <relacs/linearrange.h>
 
 using namespace std;
@@ -1113,31 +1114,40 @@ public:
 	between \a tbegin and \a tend.
 	The size of \a psd times \a step determines
 	the width of the time windows used for the fourier transformations.
+	The data chunks are windowed by the \a window function and
+	may overlap by half if \a overlap is set to \c true.
 	The bin width for discretizing the events is set to \a step.
         The frequency axis of the spectrum \a psd is set to the appropriate values. */
   void spectrum( double tbegin, double tend, double step,
-		 SampleDataD &psd ) const;
+		 SampleDataD &psd,
+		 bool overlap=true, double (*window)( int j, int n )=bartlett ) const;
 
     /*! Returns in \a c the stimulus-response coherence between 
         \a stimulus and the events (the S-R coherence).
 	The size of \a c times stimulus.stepsize() determines
 	the width of the time windows used for the fourier transformations.
+	The data chunks are windowed by the \a window function and
+	may overlap by half if \a overlap is set to \c true.
 	Only events during the stimulus (between stimulus.rangeFront()
 	and stimulus.rangeBack() ) are considered.
 	The sampling interval of the stimulus (stimulus.stepsize())
 	is used as the bin width for discretizing the events.
         The frequency axis of the coherence \a c is set to the appropriate values. */
-  void coherence( const SampleDataD &stimulus, SampleDataD &c ) const;
+  void coherence( const SampleDataD &stimulus, SampleDataD &c,
+		  bool overlap=true, double (*window)( int j, int n )=bartlett ) const;
     /*! Returns in \a c the coherence between 
         the events and the events in \a e
 	(the response-response (R-R) coherence).
 	The size of \a c times \a step determines
 	the width of the time windows used for the fourier transformations.
+	The data chunks are windowed by the \a window function and
+	may overlap by half if \a overlap is set to \c true.
 	Only events during the \a tbegin and \a tend are considered.
 	The bin width for discretizing the events is set to \a step.
         The frequency axis of the coherence \a c is set to the appropriate values. */
   void coherence( const EventData &e, double tbegin, double tend,
-		  double step, SampleDataD &c ) const;
+		  double step, SampleDataD &c,
+		  bool overlap=true, double (*window)( int j, int n )=bartlett ) const;
 
     /*! Latency of first event relative to \a time in seonds. 
         A negative number is returned, if there is no event. */

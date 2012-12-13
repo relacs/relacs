@@ -1293,6 +1293,11 @@ class SampleData : public Array< T >
 			   SampleData<RR> &cs, 
 			   SampleData<RR> &xps, SampleData<RR> &yps,
 			   bool overlap, double (*window)( int j, int n ) );
+    /*! Compute coherence \a c from the cross spectrum \a cp and the power spectra \a xp
+        and \a yp. */
+  template < typename TT >
+  friend void coherence( const SampleData<TT> &cp, const SampleData<TT> &xp,
+			 const SampleData<TT> &yp, SampleData<TT> &c );
 
     /*! Returns in \a meantrace the average over \a traces
         at each position \a pos() of \a meantrace.
@@ -1713,6 +1718,20 @@ template < typename TT, typename SS, typename RR >
 	       SampleData<RR> &xs, SampleData<RR> &ys,
 	       bool overlap=true, 
 	       double (*window)( int j, int n )=bartlett );
+  /*! Compute power spectra (\a xps and \a yps)
+      and cross spectrum (\a cs) between \a x and \a y.
+      \a TT, \a SS, and \a RR are real numbers. */
+template < typename TT, typename SS, typename RR >
+  int crossSpectra( const SampleData<TT> &x, const SampleData<SS> &y,
+		    SampleData<RR> &cs, 
+		    SampleData<RR> &xps, SampleData<RR> &yps,
+		    bool overlap=true,
+		    double (*window)( int j, int n )=bartlett );
+  /*! Compute coherence \a c from the cross spectrum \a cp and the power spectra \a xp
+      and \a yp. */
+template < typename TT >
+  void coherence( const SampleData<TT> &cp, const SampleData<TT> &xp,
+		  const SampleData<TT> &yp, SampleData<TT> &c );
 
 
 template < typename T > 
@@ -3909,6 +3928,15 @@ int crossSpectra( const SampleData<TT> &x, const SampleData<SS> &y,
   yps.setRange( 0.0, 0.5/x.stepsize()/n );
   return spectra( x.array(), y.array(), cs.array(),
 		  xps.array(), yps.array(), overlap, window );
+}
+
+
+template < typename TT >
+void coherence( const SampleData<TT> &cp, const SampleData<TT> &xp,
+		const SampleData<TT> &yp, SampleData<TT> &c )
+{
+  c.setRange( 0.0, xp.stepsize() );
+  coherence( cp.array(), xp.array(), yp.array(), c.array() );
 }
 
 

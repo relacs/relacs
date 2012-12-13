@@ -3432,26 +3432,29 @@ int EventData::average( double tbegin, double tend, const SampleDataD &trace,
 
 
 void EventData::spectrum( double tbegin, double tend, double step,
-			  SampleDataD &psd ) const
+			  SampleDataD &psd,
+			  bool overlap, double (*window)( int j, int n ) ) const
 {
   SampleDataD rr( tbegin, tend, step );
   rate( rr );
   rr -= mean( rr );
-  ::relacs::rPSD( rr, psd );
+  ::relacs::rPSD( rr, psd, overlap, window );
 }
 
 
-void EventData::coherence( const SampleDataD &stimulus, SampleDataD &c ) const
+void EventData::coherence( const SampleDataD &stimulus, SampleDataD &c,
+			   bool overlap, double (*window)( int j, int n ) ) const
 {
   SampleDataD rr( stimulus.range() );
   rate( rr );
   rr -= mean( rr );
-  ::relacs::coherence( stimulus, rr, c );
+  ::relacs::coherence( stimulus, rr, c, overlap, window );
 }
 
 
 void EventData::coherence( const EventData &e, double tbegin, double tend,
-			   double step, SampleDataD &c ) const
+			   double step, SampleDataD &c,
+			   bool overlap, double (*window)( int j, int n ) ) const
 {
   SampleDataD r1( tbegin, tend, step );
   rate( r1 );
@@ -3461,7 +3464,7 @@ void EventData::coherence( const EventData &e, double tbegin, double tend,
   e.rate( r2 );
   r2 -= mean( r2 );
 
-  ::relacs::coherence( r1, r2, c );
+  ::relacs::coherence( r1, r2, c, overlap, window );
 }
 
 
