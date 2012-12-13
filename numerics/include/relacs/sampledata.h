@@ -9,12 +9,12 @@
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 3 of the License, or
   (at your option) any later version.
-  
+
   RELACS is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
@@ -1262,29 +1262,37 @@ class SampleData : public Array< T >
   template < typename RR >
   friend double coherenceInfo( const SampleData< RR > &c, 
 			       double f0, double f1 );
-    /*! Compute cross spectrum \a c of \a x and \a y.
+    /*! Compute cross power spectrum (squared magnitude of cross spectrum) \a cps of \a x and \a y.
 	\a TT, \a SS, and \a RR are real numbers. */
   template < typename TT, typename SS, typename RR >
   friend int rCSD( const SampleData<TT> &x, const SampleData<SS> &y,
-		   SampleData<RR> &c,
+		   SampleData<RR> &cps,
 		   bool overlap, double (*window)( int j, int n ) );
-    /*! Compute gain \a g, coherence \a c and powerspectrum \a ys
+    /*! Compute gain \a g, coherence \a c and powerspectrum \a yps
         between \a x and \a y.
 	\a TT, \a SS, and \a RR are real numbers. */
   template < typename TT, typename SS, typename RR >
   friend int spectra( const SampleData<TT> &x, const SampleData<SS> &y,
 		      SampleData<RR> &g, SampleData<RR> &c,
-		      SampleData<RR> &ys,
+		      SampleData<RR> &yps,
 		      bool overlap, double (*window)( int j, int n ) );
-    /*! Compute gain \a g, coherence \a c, auto- (\a xs and \a ys)
-        and cross spectra (\a cs) between \a x and \a y.
+    /*! Compute gain \a g, coherence \a c, auto- (\a xps and \a yps)
+        and cross power spectra (\a cps) between \a x and \a y.
 	\a TT, \a SS, and \a RR are real numbers. */
   template < typename TT, typename SS, typename RR >
   friend int spectra( const SampleData<TT> &x, const SampleData<SS> &y,
 		      SampleData<RR> &g, SampleData<RR> &c,
-		      SampleData<RR> &cs, 
-		      SampleData<RR> &xs, SampleData<RR> &ys,
+		      SampleData<RR> &cps, 
+		      SampleData<RR> &xps, SampleData<RR> &yps,
 		      bool overlap, double (*window)( int j, int n ) );
+    /*! Compute power spectra (\a xps and \a yps)
+        and cross spectrum (\a cs) between \a x and \a y.
+	\a TT, \a SS, and \a RR are real numbers. */
+  template < typename TT, typename SS, typename RR >
+  friend int crossSpectra( const SampleData<TT> &x, const SampleData<SS> &y,
+			   SampleData<RR> &cs, 
+			   SampleData<RR> &xps, SampleData<RR> &yps,
+			   bool overlap, double (*window)( int j, int n ) );
 
     /*! Returns in \a meantrace the average over \a traces
         at each position \a pos() of \a meantrace.
@@ -1302,27 +1310,114 @@ class SampleData : public Array< T >
 
     /*! Return in \a peaks and \a troughs 
         detected peaks and troughs in \a x, respectively.
+	Peaks and troughs must at least be separated by \a threshold.
         Uses the algorithm from B. Todd and D. Andrews 
         ("The identification of peaks in physiological signals.",
-	Computers and Biomedical Research, 32, 322-335, 1999).*/
+	Computers and Biomedical Research, 32, 322-335, 1999).
+        See class Detector for details. */
+  template < typename TT >
+  friend void peaksTroughs( const SampleData<TT> &x, EventData &peaks,
+			    EventData &troughs, double threshold );
+    /*! Return in \a peaks and \a troughs 
+        detected peaks and troughs in \a x, respectively.
+	Peaks and troughs must at least be separated by \a threshold.
+	\a check is a class with the member functions checkPeak() and checkTrough()
+	that have the following signature:
+	\code
+	int checkPeak( SampleData::const_iterator first, SampleData::const_iterator last,
+  		       SampleData::const_iterator event, SampleData::const_range_iterator eventtime,
+		       SampleData::const_iterator index, SampleData::const_range_iterator indextime,
+		       SampleData::const_iterator prevevent, SampleData::const_range_iterator prevtime,
+		       EventList &outevents, double &threshold, double &minthresh, double &maxthresh,
+		       double &time, double &size, double &width );
+        int checkTrough( SampleData::const_iterator first, SampleData::const_iterator last,
+	   	         SampleData::const_iterator event, SampleData::const_range_iterator eventtime,
+		         SampleData::const_iterator index, SampleData::const_range_iterator indextime,
+		         SampleData::const_iterator prevevent, SampleData::const_range_iterator prevtime,
+		         EventList &outevents, double &threshold, double &minthresh, double &maxthresh,
+		         double &time, double &size, double &width );
+        \endcode
+	These functions are called to check detected peaks or troughs, respectively.
+	They should return \c 1 to accept the event, or \c 0 to discard the detected event.
+	In the first case, \a time, \a size and \a width should be set to the time, size, and width
+	of the event, respectively. \a time is preset to *eventtime.
+	These function may also change the detection \a threshold.
+        Uses the algorithm from B. Todd and D. Andrews 
+        ("The identification of peaks in physiological signals.",
+	Computers and Biomedical Research, 32, 322-335, 1999).
+        See class Detector for details. */
   template < typename TT, class Check >
   friend void peaksTroughs( const SampleData<TT> &x,
 			    EventData &peaks, EventData &troughs,
 			    double &threshold, Check &check );
     /*! Return in \a events detected peaks in \a x.
+	Peaks and troughs must at least be separated by \a threshold.
         Uses the algorithm from B. Todd and D. Andrews 
         ("The identification of peaks in physiological signals.",
-	Computers and Biomedical Research, 32, 322-335, 1999).*/
+	Computers and Biomedical Research, 32, 322-335, 1999).
+        See class Detector for details. */
+  template < typename TT >
+  friend void peaks( const SampleData<TT> &x, EventData &events, double threshold );
+    /*! Return in \a events detected peaks in \a x.
+	Peaks and troughs must at least be separated by \a threshold.
+	\a check is a class with the member function checkEvent()
+	that has the following signature:
+	\code
+        int checkEvent( SampleData::const_iterator first, SampleData::const_iterator last,
+  		        SampleData::const_iterator event, SampleData::const_range_iterator eventtime,
+		        SampleData::const_iterator index, SampleData::const_range_iterator indextime,
+		        SampleData::const_iterator prevevent, SampleData::const_range_iterator prevtime,
+		        EventData &outevents, double &threshold, double &minthresh, double &maxthresh,
+		        double &time, double &size, double &width );
+        \endcode
+	This function is called to check detected peaks.
+	It should return \c 1 to accept the event, or \c 0 to discard the detected event.
+	In the first case, \a time, \a size and \a width should be set to the time, size, and width
+	of the event, respectively. \a time is preset to *eventtime.
+	This function may also change the detection \a threshold.
+        Uses the algorithm from B. Todd and D. Andrews 
+        ("The identification of peaks in physiological signals.",
+	Computers and Biomedical Research, 32, 322-335, 1999).
+        See class Detector for details. */
   template < typename TT, class Check >
   friend void peaks( const SampleData<TT> &x, EventData &events,
 		     double &threshold, Check &check );
     /*! Return in \a events detected troughs in \a x.
+	Peaks and troughs must at least be separated by \a threshold.
         Uses the algorithm from B. Todd and D. Andrews 
         ("The identification of peaks in physiological signals.",
-	Computers and Biomedical Research, 32, 322-335, 1999).*/
+	Computers and Biomedical Research, 32, 322-335, 1999).
+        See class Detector for details. */
+  template < typename TT >
+  void troughs( const SampleData<TT> &x, EventData &events, double threshold );
+    /*! Return in \a events detected troughs in \a x.
+	Peaks and troughs must at least be separated by \a threshold.
+	\a check is a class with the member function checkEvent()
+	that has the following signature:
+	\code
+        int checkEvent( SampleData::const_iterator first, SampleData::const_iterator last,
+  		        SampleData::const_iterator event, SampleData::const_range_iterator eventtime,
+		        SampleData::const_iterator index, SampleData::const_range_iterator indextime,
+		        SampleData::const_iterator prevevent, SampleData::const_range_iterator prevtime,
+		        EventData &outevents, double &threshold, double &minthresh, double &maxthresh,
+		        double &time, double &size, double &width );
+        \endcode
+	This function is called to check detected troughs.
+	It should return \c 1 to accept the event, or \c 0 to discard the detected event.
+	In the first case, \a time, \a size and \a width should be set to the time, size, and width
+	of the event, respectively. \a time is preset to *eventtime.
+	This function may also change the detection \a threshold.
+        Uses the algorithm from B. Todd and D. Andrews 
+        ("The identification of peaks in physiological signals.",
+	Computers and Biomedical Research, 32, 322-335, 1999).
+        See class Detector for details. */
   template < typename TT, class Check >
   void troughs( const SampleData<TT> &x, EventData &events,
 		double &threshold, Check &check );
+    /*! Return in \a events detected events in \a x
+        that cross \a threshold with a positive slope. */
+  template < typename TT >
+  void rising( const SampleData<TT> &x, EventData &events, double threshold );
     /*! Return in \a events detected events in \a x
         that cross \a threshold with a positive slope. */
   template < typename TT, class Check >
@@ -1330,9 +1425,13 @@ class SampleData : public Array< T >
 	       double &threshold, Check &check );
     /*! Return in \a events detected events in \a x
         that cross \a threshold with a negative slope. */
+  template < typename TT >
+  void falling( const SampleData<TT> &x, EventData &events, double threshold );
+    /*! Return in \a events detected events in \a x
+        that cross \a threshold with a negative slope. */
   template < typename TT, class Check >
   void falling( const SampleData<TT> &x, EventData &events,
-	      double &threshold, Check &check );
+		double &threshold, Check &check );
 
     /*! Write content of the SampleData into stream \a str.
         Each element is written in a line.
@@ -2090,7 +2189,7 @@ SampleData< T > &SampleData< T >::ouNoise( int n, double step,
 {
   clear();
   setRange( 0.0, step );
-  randNorm( n, r );
+  Array< T >::randNorm( n, r );
 
   // invalid tau:
   if ( tau < stepsize() )
@@ -3798,6 +3897,21 @@ int spectra( const SampleData<TT> &x, const SampleData<SS> &y,
 }
 
 
+template < typename TT, typename SS, typename RR >
+int crossSpectra( const SampleData<TT> &x, const SampleData<SS> &y,
+		  SampleData<RR> &cs, SampleData<RR> &xps, SampleData<RR> &yps,
+		  bool overlap, double (*window)( int j, int n ) )
+{
+  int n = 1;
+  for ( n = 1; n < cs.size(); n <<= 1 );
+  cs.setRange( 0.0, 1.0/x.stepsize()/n );
+  xps.setRange( 0.0, 0.5/x.stepsize()/n );
+  yps.setRange( 0.0, 0.5/x.stepsize()/n );
+  return spectra( x.array(), y.array(), cs.array(),
+		  xps.array(), yps.array(), overlap, window );
+}
+
+
 template < typename TT > 
 void average( SampleData<TT> &meantrace,
 	      const vector< SampleData<TT> > &traces )
@@ -3887,6 +4001,22 @@ void average( SampleData<TT> &meantrace, SampleData<TT> &stdev,
 }
 
 
+template < typename TT >
+void peaksTroughs( const SampleData<TT> &x,
+		   EventData &peaks, EventData &troughs,
+		   double threshold )
+{
+  EventList peaktroughs( &peaks );
+  peaktroughs.add( &troughs );
+  AcceptEvent< typename SampleData<TT>::const_iterator, typename SampleData<TT>::const_range_iterator > check;
+  Detector< typename SampleData<TT>::const_iterator, 
+    typename SampleData<TT>::const_range_iterator > D;
+  D.init( x.begin(), x.end(), x.range().begin() );
+  D.peakTrough( x.begin(), x.end(), peaktroughs,
+		threshold, threshold, threshold, check );
+}
+
+
 template < typename TT, class Check >
 void peaksTroughs( const SampleData<TT> &x,
 		   EventData &peaks, EventData &troughs,
@@ -3899,6 +4029,20 @@ void peaksTroughs( const SampleData<TT> &x,
   D.init( x.begin(), x.end(), x.range().begin() );
   D.peakTrough( x.begin(), x.end(), peaktroughs,
 		threshold, threshold, threshold, check );
+}
+
+
+template < typename TT >
+void peaks( const SampleData<TT> &x,
+	    EventData &events,
+	    double threshold )
+{
+  AcceptEvent< typename SampleData<TT>::const_iterator, typename SampleData<TT>::const_range_iterator > check;
+  Detector< typename SampleData<TT>::const_iterator, 
+    typename SampleData<TT>::const_range_iterator > D;
+  D.init( x.begin(), x.end(), x.range().begin() );
+  D.peak( x.begin(), x.end(), events,
+	  threshold, threshold, threshold, check );
 }
 
 
@@ -3915,6 +4059,20 @@ void peaks( const SampleData<TT> &x,
 }
 
 
+template < typename TT >
+void troughs( const SampleData<TT> &x,
+	      EventData &events,
+	      double threshold )
+{
+  AcceptEvent< typename SampleData<TT>::const_iterator, typename SampleData<TT>::const_range_iterator > check;
+  Detector< typename SampleData<TT>::const_iterator, 
+    typename SampleData<TT>::const_range_iterator > D;
+  D.init( x.begin(), x.end(), x.range().begin() );
+  D.trough( x.begin(), x.end(), events,
+	    threshold, threshold, threshold, check );
+}
+
+
 template < typename TT, class Check >
 void troughs( const SampleData<TT> &x,
 	      EventData &events,
@@ -3924,6 +4082,20 @@ void troughs( const SampleData<TT> &x,
     typename SampleData<TT>::const_range_iterator > D;
   D.init( x.begin(), x.end(), x.range().begin() );
   D.trough( x.begin(), x.end(), events,
+	    threshold, threshold, threshold, check );
+}
+
+
+template < typename TT >
+void rising( const SampleData<TT> &x,
+	     EventData &events,
+	     double threshold )
+{
+  AcceptEvent< typename SampleData<TT>::const_iterator, typename SampleData<TT>::const_range_iterator > check;
+  Detector< typename SampleData<TT>::const_iterator, 
+    typename SampleData<TT>::const_range_iterator > D;
+  D.init( x.begin(), x.end(), x.range().begin() );
+  D.rising( x.begin(), x.end(), events,
 	    threshold, threshold, threshold, check );
 }
 
@@ -3938,6 +4110,20 @@ void rising( const SampleData<TT> &x,
   D.init( x.begin(), x.end(), x.range().begin() );
   D.rising( x.begin(), x.end(), events,
 	    threshold, threshold, threshold, check );
+}
+
+
+template < typename TT >
+void falling( const SampleData<TT> &x,
+	      EventData &events,
+	      double threshold )
+{
+  AcceptEvent< typename SampleData<TT>::const_iterator, typename SampleData<TT>::const_range_iterator > check;
+  Detector< typename SampleData<TT>::const_iterator, 
+    typename SampleData<TT>::const_range_iterator > D;
+  D.init( x.begin(), x.end(), x.range().begin() );
+  D.falling( x.begin(), x.end(), events,
+	     threshold, threshold, threshold, check );
 }
 
 
